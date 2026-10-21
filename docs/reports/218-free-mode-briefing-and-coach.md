@@ -91,3 +91,73 @@
 - **顺带**：`BeltModule.describe()` 的「点一下用一个」改成「双击用一个」（架构设计 217 后的回信）。
 - 差别：方案说腰带那步「现在是空的」。科技发随身技能（160 补一）以后，进图时腰带可能不空；第一次进自由模式时科技还没点，所以照原文没改。
 - **测试**：`test_prologue3.run_outro_218`（序章三撤离 → 交代 → 结算，只弹一次；序章二直接结算；正文无 `{`、无数字），`test_author_090`（自由模式没有规则卡，教练三步都挖得到洞、Esc 走完、记在局外；规则卡存档改用机关沙漏验），`test_map_screen_166`（`free_mode_map` 数据；217 百科那行改在序章一规则卡上验），`test_tutorial_text_112`（序章事件 38 条；自由模式规则为空）。全套 28996 项通过。
+
+## 八、补充一（2026-10-21）：作者四条拍板
+
+作者 2026-10-21 06:16 对第六节的回答：「1. 第一次点击【出发】前　2. 按推荐　3. 不用　4. 按推荐」。
+
+### 8.1 交代挪到开局屏：第一次点【出发】前
+
+v3.63 把交代挂在序章三撤离之后（`ChapterDef.outro_event`），作者定的位置是**开局屏第三页第一次按【出发】的那一下之前**：按下【出发】→ 先整屏弹「军团的交代」→ 「知道了」→ 才走原来的 `flow.begin(spawn_id)` 入局转场。意思是接应者在你出发前交代，而不是上一趟回来时。
+
+- **一次性，按存档记**：`MetaState.briefing_seen: Array[StringName]`（按事件 id），和 `coach_seen` 一样的写法，存档字段同名。看过之后再按【出发】不弹。
+- **挂在章节上**：`ChapterDef.outro_event` 改名 `departure_event`（含义变了，不留旧名；导入器不认 `outro_event`，`prologue_3.json` 那行删掉）。`free_mode.json` 和 `clockwork_hourglass.json` 都配 `"departure_event": "tut3_outro"`，同一个事件 id → 先选哪一章出发就在哪一章弹，只弹一次。事件文件改名 `briefing_legion.json`（它不再属于序章三），标题「军团的交代」不变，正文用 23:25 压短的那版。
+- **怎么弹**：`SetupScreen` 的【出发】回调里，先问 `flow.departure_briefing(chapter)`（返回要弹的 `EventDef` 或 null）；要弹就让导演在开局屏之上推一层事件屏（`Screen.EVENT`，`def` 带上、没有节点、不画地上、不放背包 / B 键 —— 这几条 v3.63 的交代屏已经做了，照搬），选项「知道了」的后果走一个回调：记 `briefing_seen`、关事件屏、接着原来的出发流程。配图照旧 `assets/chest/bg/cursed_depths.png`，开局屏第三页的纸还在底下，事件屏是叠层。
+- **删掉 v3.63 的撤离后那一跳**：`GameFlow.extract()` 里 `outro_event()` 那段和 `flow.resume()` 的收尾路径删掉，`test_prologue3` 里「撤离后先到事件屏」那条改成「撤离后直接到结算」；新加「第一次按出发先弹交代、记过之后不弹」。
+
+### 8.2 负重那一步：按推荐，指背包按钮（v3.63 已是）
+
+### 8.3 机关沙漏章不配教练
+
+`clockwork_hourglass.json` 删掉 v3.63 加的 `"coach": "free_mode_map"`。教练只在自由模式放；玩家先选沙漏的话这一局没有教练，交代（8.1）两章都弹，不受影响。
+
+### 8.4 217 批三剩下的两个教练：一并做
+
+按 217 §4.3 原文：
+
+| 教练 | 什么时候 | 步 | 目标 |
+|---|---|---|---|
+| `prologue_bag` | 序章一第一次打开背包窗 | ① 棋盘与包：先放包再放东西 ② 拿起一件按 {key:R} 转一格，右键放回 ③ 双击 = 快速置入；拖出棋盘 = 地上 ④ 底下三枚火漆签：耐力档 / 估算输出 / 负重 | `BagWindow.control_rect(id)`：`board`、`strip_stamina`、`strip_dps`、`strip_load` |
+| `prologue_prebattle` | 序章一第一场战斗进战前准备 | ① 左边对手的棋盘与铭牌 ② 中缝天平：粗估的强弱，不是结果 ③ 右边自己的棋盘，整理好按开战 | `PrebattleScreen.control_rect(id)`：`enemy_board`、`scale`、`my_board`、`fight_button` |
+
+- `ChapterDef` 的 `coach` / `coach_battle` 收成一个字典 `coaches: {"map": id, "battle": id, "bag": id, "prebattle": id}`；导入器认旧字段写进字典（旧 json 不改也能跑），新 json 直接写字典。`coach_seen` 照旧按教练 id 记。暂停菜单「重放教程」列出这一章的所有教练，各一颗。
+- 背包窗与战前屏各加 `add_coach_target(id, control)` 表，照 `BattleView.control_rect` 的写法；背包窗的教练在窗第一次 `setup` 完、布局稳定后放（教练开着时拖拽不响应，和战斗屏 hold 同理）；战前屏的教练在名牌与天平都刷出来之后放。
+- 序章一的负重签：序章不算负重，签上大字是「当前 / 上限」（216 §8），第④步的字就按这个说：「负重签：棋盘上东西的总重，这几张图不限重，正式进去才算」。
+- 测试：两个教练的目标 id 都找得到（`CoachOverlay.problems` 传 `known_ids`）；第一次开窗放、第二次不放；暂停菜单重放列到四颗。
+
+### 8.5 待定（按推荐）
+
+1. 交代两章同一个事件、按事件 id 记一次（推荐）还是只给自由模式配。
+2. `outro_event` 直接改名删旧路径（推荐）还是留着备用 —— 140 的原则是没用的不留。
+
+## 九、补充一落地（v3.64，架构方案执行 2026-10-21）
+
+8.1～8.4 照做，8.5 两条都按推荐。和方案不一样的地方：
+
+1. **事件 id 用 `briefing_legion`**。8.1 写的是两章都配 `"departure_event": "tut3_outro"`，但事件文件已经改名 `briefing_legion.json`，为了 id 和文件名一致，id 也跟着改了。旧的 `data/events/tut3_outro.tres` 已删。
+2. **交代怎么接回出发**：
+   - `GameFlow.show_briefing(def, then)` 记住弹交代时停在哪一屏，然后 `_go(EVENT, {def, briefing: true})`。导演会把事件屏叠在开局屏上；这时没有一局，不会换成地图底。
+   - 点「知道了」走 `GameFlow.close_briefing()`：先记 `briefing_seen`、存局外，再调 `then`，也就是 `SetupScreen._go_now()`，原来的出发流程原样搬进去。如果 `then` 没把屏换走（开不了局），就回到原来那一屏。
+   - `SetupScreen.depart()` 弹了交代就返回 true。测试里走开局屏出发的地方改用 `flow_support.depart(setup)`，它会替玩家点「知道了」。
+3. **撤离后那一跳全删**：`GameFlow` 里的 `outro_event()`、`_outro_run` 和 `_show_result` 里那一段都删了。导演里 v3.63 加的「局结束不画地上」也一并退回：交代屏现在是叠在开局屏上，那时没有一局，本来就不画地上。
+4. **背包窗教程是六步，不是四步**。三枚签各挖一个洞，各用一句话：
+   - ①～③ 指棋盘：先放包；按 R 转、右键放回；双击在棋盘和地上之间挪、拖出去是放地上；
+   - ④ 耐力签、⑤ 输出签、⑥ 负重签，⑥ 用的是「这几张图不限重，正式进去才算」。
+   - 一步一件事，所以是六步；作者要压成四步就改 `data/authoring/coach/prologue_bag.json`。
+5. **战前屏教程三步**：对手（名牌 + 棋盘）、天平、自己（名牌 + 棋盘）。`fight_button` 也登记了，但这三步都没指它。
+6. **重放按钮在调试台**。166 的「重放教程」本来就在调试台，不在暂停菜单，所以这次也放调试台：「重放教程」当场放地图那份；「重放战斗 / 背包 / 战前教程」是删掉看过的记录，下一次进那一屏再放。
+7. **代码**：
+   - `ChapterDef.coaches` 字典配 `COACH_KINDS` 和 `coach_for(kind)`；导入器的 `legacy_coaches` 把旧的 `coach` / `coach_battle` 收进字典，认不得的屏会报错。
+   - `CoachOverlay.due` / `run_on` 是共用的「该不该放 / 放完记一笔」。
+   - `BagWindow.COACH_TARGETS` / `control_rect` / `maybe_coach`：地图、事件、营地三处开窗都会调。
+   - `PrebattleScreen.COACH_TARGETS` / `control_rect`。
+   - 两屏都等一帧再放，用的是 `process_frame` 单次连接，屏关了连接跟着断。
+8. **腰带那步**：已改成「商店里买得到」。
+9. **交代正文**：用的是压短版。截图看，右栏还差一行才能不滚就看到百科那行，所以按「只动第一段」的规矩把第一段压成「三趟都活着回来了。下一趟没有图，废墟每次都不一样。」，并且和第二段并成一段。「来接你的人把纸推过来」和「路得你自己走」这两句修饰删了，后三段一字没动。现在不用滚就能看到百科那行。
+10. **测试**：
+   - `test_prologue3.run_departure_briefing_218`：序章三撤离直接结算；两章同一个交代，弹一次、记看过、跟存档；局还没开时字也换得掉、不写数字。
+   - `test_setup_pages_161`：真按「出发」，叠出交代、开局屏在底下、局没开、没有整理背包，点「知道了」进图。
+   - `test_map_screen_166`：背包窗六步、四个目标都挖得到洞，记看过，调试台重放；`coaches` 字典、旧字段导入、沙漏不配。
+   - `test_battle_coach`：战前三步、四个目标都找得到、记看过。
+   - `test_tutorial_text_112`：序章事件回到 37 条。
+

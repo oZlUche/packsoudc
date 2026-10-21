@@ -142,7 +142,7 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 	setup.show_page(2)
 	t.eq(setup.run_seed, 4242, "调试台指定了下一局种子：进第三页用它")
 	setup.pick_spawn(setup.preview().entry_ids()[0])
-	var went: bool = setup.depart()
+	var went: bool = Support.depart(setup)
 	t.check(went, "出发")
 	if went:
 		t.eq(flow.run.run_seed, 4242, "这一局用的是它")
@@ -185,7 +185,7 @@ static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
 	want = setup.reveal_payload()
 	t.check(is_equal_approx(float(want["ring_gap"]), pv.ring_gap() * MapPreview.ZOOM_IN), "182：挑了出生点、微放大过：圈距跟着放大")
 	var spawn: int = setup.spawn_id
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	t.eq(flow.map_reveal, {}, "交出去就清")
 	var map = game.base()
 	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图屏")
@@ -250,7 +250,7 @@ static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
 	s2.show_page(2)
 	s2.preview().finish()
 	s2.pick_spawn(s2.preview().entry_ids()[0])
-	s2.depart()
+	Support.depart(s2)
 	t.check(not g2.base().revealing(), "淡入关着：不转场")
 	t.eq(g2.base()._view.node_front, INF, "一步到位")
 	g2.queue_free()

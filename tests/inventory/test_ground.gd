@@ -1,5 +1,6 @@
 ## 128（作者定）：不画暂存区 —— 格子外的整块屏幕就是「地上」，拖出背包放哪就在哪，每个节点各自一片地
 extends RefCounted
+const Support := preload("res://tests/run/flow_support.gd")
 
 const GAME := "res://ui/game/game.tscn"
 const SAVE := "user://test_ground_run.json"
@@ -305,7 +306,7 @@ static func frame_director_ground(t: TestCase, root: Window) -> void:
 			setup.choose_chapter(gi)
 	for inst in flow.meta.warehouse.items().duplicate():
 		setup.carry_in((inst as ItemInstance).uid)
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var map = game.base()
 	var run: RunState = flow.run
 	map.pick_spawn(run.map.entry_ids[0])

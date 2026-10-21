@@ -1,6 +1,7 @@
 ## 213（作者 2026-10-20：「开局预览在地图列表里切换时会跟着变，就这么做」）：开局第三页的预览认格阵（机关沙漏）——
 ## 纸按 `safe_area` 对准底图、每层一条虚线、第 0 层画入口可挑出生点、出发走入局转场一层层长出来；同心环的数值不变
 extends RefCounted
+const Support := preload("res://tests/run/flow_support.gd")
 
 const Setup := preload("res://tests/ui/test_setup_180.gd")
 const B192 := preload("res://tests/ui/test_map_backdrop_192.gd")
@@ -99,7 +100,7 @@ static func frame_lattice_paper_matches_reveal(t: TestCase, root: Window) -> voi
 	var payload: Dictionary = setup.reveal_payload()
 	t.check(not payload.is_empty() and float(payload.get("ring_gap", 0.0)) > 0.0 and payload.has("spawn_at"), "带转场载荷（层距、出生点）")
 	var from: Rect2 = pv.get_global_transform() * pv.paper_on_screen()
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var map = game.base()
 	var view: MapView = map._view
 	t.check(map.revealing(), "在转场")

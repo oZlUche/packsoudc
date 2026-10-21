@@ -84,8 +84,10 @@ var seen_loot: Dictionary = {}
 var recorder: CalibrationRecorder = null
 var _queue: Array[Dictionary] = []
 var _settled: bool = false
-## 218：收尾事件弹过的那一局（换了一局自然不算弹过）
-var _outro_run: RunState = null
+## 218 补充一：出发前的交代关掉之后接着做的事（开局屏的出发）；没在等 = 空
+var _briefing_then: Callable = Callable()
+## 218 补充一：弹交代之前在哪一屏（接着做的事没换屏时回到这里）
+var _briefing_from: int = -1
 ## 196：营地里刚歇过 —— `{"node": 点 id, "restored": 这次一共回了几点}`，营地屏打开时读了冒一行字、清掉。没歇过是空
 var camp_rest: Dictionary = {}
 ## 196：这一次 [method choose_event] 选的是营地屏上的选项（歇完不跳屏、结果页不弹）
@@ -350,6 +352,36 @@ func begin_direct(chapter: ChapterDef, seed: int = -1) -> RunState:
 		return null
 	show_intro()
 	return state
+
+
+## 218 补充一（作者定）：这一章第一次按「出发」之前该弹的交代（[member ChapterDef.departure_event]，这个存档没看过、定义找得到）；不弹 null
+func departure_briefing(chapter: ChapterDef) -> EventDef:
+	if chapter == null or chapter.departure_event == &"" or event_defs == null:
+		return null
+	if meta != null and meta.briefing_seen.has(chapter.departure_event):
+		return null
+	return event_defs.get(chapter.departure_event, null)
+
+
+## 218 补充一：在当前这一屏上叠一层事件屏弹交代（没有节点、局还没开）；「知道了」之后记看过、接着做 [param then]
+func show_briefing(def: EventDef, then: Callable) -> void:
+	_briefing_then = then
+	_briefing_from = screen
+	_go(Screen.EVENT, {"def": def, "briefing": true})
+
+
+## 218 补充一：交代屏上点了「知道了」—— 记看过、存局外，接着出发；出发没换屏（开不了局）就回到原来那一屏
+func close_briefing() -> void:
+	var def: EventDef = last_payload.get("def", null) if bool(last_payload.get("briefing", false)) else null
+	if def != null and meta != null and not meta.briefing_seen.has(def.id):
+		meta.briefing_seen.append(def.id)
+		save_meta()
+	var then := _briefing_then
+	_briefing_then = Callable()
+	if then.is_valid():
+		then.call()
+	if screen == Screen.EVENT and _briefing_from >= 0:
+		_go(_briefing_from, {})
 
 
 ## 084：章节的开场事件（`ChapterDef.intro_event`）：站在出生点上先弹一屏。没配、没站上去、找不到定义都不弹；返回弹了没有
@@ -1379,22 +1411,10 @@ func _flush() -> void:
 	_go(Screen.MAP)
 
 
-## 一局结束了：记账（只一次）然后进结算屏。218：撤离成功、这一章有收尾事件的，先弹那一屏（一局一次），关掉再回到这里进结算
+## 一局结束了：记账（只一次）然后进结算屏
 func _show_result() -> void:
 	_settle_run()
-	var outro := outro_event()
-	if outro != null and _outro_run != run:
-		_outro_run = run
-		_go(Screen.EVENT, {"def": outro, "node": run.current_node(), "outro": true})
-		return
 	_go(Screen.RESULT, {"result": result})
-
-
-## 218：这一局该弹的收尾事件（撤离成功、这一章配了 [member ChapterDef.outro_event]、定义找得到）；没有 null
-func outro_event() -> EventDef:
-	if result == null or not result.is_extracted() or run == null or run.chapter == null or run.chapter.outro_event == &"" or run.events == null:
-		return null
-	return run.events.def_by_id(run.chapter.outro_event)
 
 
 ## 087：这一局现在是不是「BOSS 已倒下、收完就撤」的状态

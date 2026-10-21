@@ -47,6 +47,8 @@ var battles_won: int = 0
 var seen_rules: Array[StringName] = []
 ## 166：看过的界面教程（[CoachOverlay] 的步骤 id，序章是 `prologue_map`）—— 每个存档位放一次，调试台里能重放
 var coach_seen: Array[String] = []
+## 218 补充一（作者定）：看过的出发前交代（[member ChapterDef.departure_event] 的事件 id）—— 每个存档位放一次，几章配同一个就只在先出发的那一章弹
+var briefing_seen: Array[StringName] = []
 ## 091（计划书阶段 3）：剧情 / 事件的**局外旗标**（名字 → 数）。事件的条件 `has_flag` 看它、后果 `set_flag` 立它；跟局外存档。
 ## 「剧情推进到哪」「见过谁」就记在这里，营地对话、章节开场按它挑话
 var flags: Dictionary = {}
@@ -546,6 +548,7 @@ func to_dict() -> Dictionary:
 		"seen_rules": _names_of(seen_rules),
 		"reactions_seen": _names_of(reactions_seen),     # 175
 		"coach_seen": coach_seen.duplicate(),
+		"briefing_seen": _names_of(briefing_seen),     # 218 补充一
 		"flags": flags.duplicate(),
 		"tech_levels": tech_levels.duplicate(),
 		"tech_deposits": tech_deposits.duplicate(true),
@@ -642,6 +645,8 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m.seen_rules.append(StringName(String(id)))
 	for id in d.get("coach_seen", []):
 		m.coach_seen.append(String(id))
+	for id in d.get("briefing_seen", []):
+		m.briefing_seen.append(StringName(String(id)))
 	for id in d.get("reactions_seen", []):
 		m.reactions_seen.append(StringName(String(id)))
 	for key in d.get("flags", {}):

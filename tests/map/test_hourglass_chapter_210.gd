@@ -144,7 +144,7 @@ static func frame_setup_and_depart(t: TestCase, root: Window) -> void:
 		if ids.is_empty() or not setup.pick_spawn(ids[0]):
 			continue
 		pick = ids[0]
-		if setup.depart():
+		if Support.depart(setup):
 			went = true
 			break
 	t.check(went, "出发（%s）" % setup.can_depart())

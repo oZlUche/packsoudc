@@ -8,6 +8,9 @@
 class_name ChapterDef
 extends Resource
 
+## 218 补充一：[member coaches] 认的四个屏
+const COACH_KINDS: Array[StringName] = [&"map", &"battle", &"bag", &"prebattle"]
+
 @export var id: StringName = &""
 @export var display_name: String = ""
 ## 088：别的语言的名字，`{"en": "Knife"}`；界面用 [method Names.of] 取（当前语言没有就用 display_name）
@@ -74,12 +77,12 @@ extends Resource
 @export var outro_event: StringName = &""
 ## 091（作者定 10.2 第 3 条）：这一章的「本图规则」卡（≤ 3 条）—— 第一次进图弹一页（局外记住看过了），暂停菜单里能再看。空 = 不弹
 @export var rules: Array[String] = []
-## 166（作者定）：这一章开头的界面教程（`data/authoring/coach/<id>.json` 的步骤：阴影里挖洞指着顶端栏的读数，点哪都下一步）。
-## 第一次露出地图时放一次（[member MetaState.coach_seen]），调试台能重放。空 = 不放；序章一是 `prologue_map`
-@export var coach: StringName = &""
-## 166 补充二：这一章第一场战斗的界面教程（同一种步骤文件，目标是回放层的控件 —— [constant BattleView.COACH_TARGETS]）。
-## 战斗屏淡入后放一次，期间回放停着；看过记在 [member MetaState.coach_seen]。空 = 不放；序章一是 `prologue_battle`
-@export var coach_battle: StringName = &""
+## 166（作者定）/ 218 补充一（217 批三）：这一章的界面教程，按屏放 —— `{"map": 地图, "battle": 战斗回放, "bag": 背包窗, "prebattle": 战前准备}` → `data/authoring/coach/<id>.json` 的步骤
+## （阴影里挖洞指着那一屏的控件，点哪都下一步）。各在那一屏第一次露出来时放一次（[member MetaState.coach_seen] 按教程 id 记），调试台能重放。
+## 缺的键 = 那一屏不放；序章一四份都有，自由模式只有 `map`。导入器认旧字段 `coach` / `coach_battle`（写进 `map` / `battle`）
+@export var coaches: Dictionary = {}
+## 218 补充一（作者定）：开局屏第一次按「出发」之前弹的一屏交代（`data/events/` 里的 id；[member MetaState.briefing_seen] 按事件 id 记一次）。空 = 不弹
+@export var departure_event: StringName = &""
 
 @export_group("一局的模块（101）")
 ## 101 第 0 刀：这一局装哪些**本体模块**（[RunModule] 构件，各带参数）。空 = 用默认清单（[method RunModules.standard]）。
@@ -118,3 +121,8 @@ extends Resource
 ## 这个角色在这一章能不能选
 func allows_character(id: StringName) -> bool:
 	return characters.is_empty() or characters.has(id)
+
+
+## 218 补充一：[member coaches] 里这一屏的教程 id（[constant COACH_KINDS] 之一）；没有 = &""
+func coach_for(kind: StringName) -> StringName:
+	return StringName(String(coaches.get(String(kind), "")))

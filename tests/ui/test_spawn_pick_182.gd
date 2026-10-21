@@ -150,7 +150,7 @@ static func frame_pick_on_page_3(t: TestCase, root: Window) -> void:
 	if not ids.is_empty():
 		var pick: int = ids[ids.size() - 1]
 		setup.pick_spawn(pick)
-		t.check(setup.depart(), "出发")
+		t.check(Support.depart(setup), "出发")
 		t.eq(flow.run.phase, RunState.Phase.ON_MAP, "新局不进挑出生点阶段")
 		t.eq(flow.run.travel.current_id, pick, "站在挑的出生点上")
 		t.check(ids.all(func(id: int) -> bool: return id == pick or flow.run.map.get_node(id).type == &"search"), "另几个入口变成搜索点")

@@ -2050,16 +2050,34 @@ static func _warn_build_caps(def: EnemyDef, pool: EnemyPool, at: String, ctx: Co
 ## 这是「导入器不认识具体类型」的第一次真实检验。
 static func import_chapter(data: Dictionary, ctx: Context, report: ImportReport) -> ChapterDef:
 	var def := ChapterDef.new()
-	_fill(def, data, "", ctx, report)
+	_fill(def, legacy_coaches(data), "", ctx, report)
 	_validate_chapter(def, ctx, report)
 	for i in def.rules.size():     # 112：规则卡也认 {item:} {enemy:}
 		check_text_refs(def.rules[i], "rules[%d]" % i, ctx, report)
 	return def
 
 
+## 218 补充一：旧的 `coach` / `coach_battle` 两个字段收进 `coaches` 字典（`map` / `battle`），旧 json 不改也能导
+static func legacy_coaches(data: Dictionary) -> Dictionary:
+	if not data.has("coach") and not data.has("coach_battle"):
+		return data
+	var out := data.duplicate()
+	var coaches: Dictionary = (out.get("coaches", {}) as Dictionary).duplicate() if out.get("coaches", {}) is Dictionary else {}
+	for pair in [["coach", "map"], ["coach_battle", "battle"]]:
+		if out.has(pair[0]):
+			if String(out[pair[0]]) != "" and not coaches.has(pair[1]):
+				coaches[pair[1]] = String(out[pair[0]])
+			out.erase(pair[0])
+	out["coaches"] = coaches
+	return out
+
+
 ## 比引擎严格：地图来源得真的能拿出图来。生成器没登记、预设文件不在，都是内容错误。
 static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportReport) -> void:
 	_require_id(def.id, "章节", report)
+	for k in def.coaches:
+		if not ChapterDef.COACH_KINDS.has(StringName(String(k))):
+			report.error("coaches", "认不得的教程屏「%s」（只认 %s）" % [k, ", ".join(ChapterDef.COACH_KINDS)])
 	if def.difficulty < 0:
 		report.error("difficulty", "难度不能为负")
 	if def.enemy_pool != &"" and not ctx.pools.is_empty() and not ctx.pools.has(def.enemy_pool):

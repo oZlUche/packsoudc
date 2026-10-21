@@ -56,7 +56,7 @@ const LABELS := {
 	"count_dealt": "算造成的", "count_taken": "算受到的", "min_cells": "最少格子数", "exact_grade": "体积恰好", "per_cell": "乘格子数", "first_amount": "首次给", "again_amount": "再次给", "has_stat": "显式带有的属性", "rarity_pow": "按 2^稀有度给", "plus": "再加", "first_kind_only": "同种一局只算一次", "by_type": "按节点类型", "closing_extract": "过半关一个撤离点", "safes": "保险箱个数", "safe_size": "保险箱大小",
 	"grants_unlock": "通关给的解锁", "hidden_by_unlock": "拿到此解锁后收起", "characters": "可选角色", "vitality_bonus": "额外体力", "starting_items": "开局道具",
 	"starting_keepsakes": "开局特殊道具", "next_chapter": "下一章", "allow_carry_in": "允许从仓库带入", "auto_spawn": "直接站在出生点", "skip_setup": "不走开局屏",
-	"intro_event": "开场事件", "outro_event": "收尾事件", "node_tooltips": "节点浮窗", "tooltip_mode": "浮窗模板", "tooltip_texts": "浮窗文字", "rings": "环", "kind": "种类",
+	"intro_event": "开场事件", "departure_event": "出发前的交代", "coaches": "界面教程", "outro_event": "收尾事件", "node_tooltips": "节点浮窗", "tooltip_mode": "浮窗模板", "tooltip_texts": "浮窗文字", "rings": "环", "kind": "种类",
 	"slots": "槽位数", "node_count": "点数", "quota": "配额", "type_weights": "类型权重", "ring_template": "环模板", "scales": "规模", "routes": "路线",
 	"mix": "配比", "min_share": "最低占比", "risk_band": "风险区间", "reward_band": "回报区间", "ends_at": "终点类型", "spawns_zones": "岔出高危区", "type_risk": "类型风险", "type_reward": "类型回报",
 	"mandatory_types": "必有的类型", "danger_risk_multiplier": "危险等级风险倍率", "danger_reward_multiplier": "危险等级回报倍率", "ev_tolerance": "期望容差",

@@ -355,7 +355,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 	t.eq(setup.preset_items().size(), defense.items.size(), "重摆棋盘后预设套还在")
 	setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
 	setup.set_run_seed(7)
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var run: RunState = flow.run
 	t.check(run.board.items().any(func(i) -> bool: return (i as ItemInstance).def.id == &"round_shield"), "一局的棋盘上有坚守的圆盾")
 	# 遮罩

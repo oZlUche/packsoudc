@@ -25,10 +25,10 @@ static func run_coach_data(t: TestCase) -> void:
 		if def == null:
 			continue
 		if def.id == &"prologue":
-			t.eq(def.coach_battle, &"prologue_battle", "序章一写了战斗教程")
-		elif def.coach_battle != &"":
-			var s := CoachOverlay.load_steps(def.coach_battle)
-			t.check(not s.is_empty() and CoachOverlay.problems(s, BattleView.COACH_TARGETS).is_empty(), "%s 的战斗教程 %s 读得到、没问题" % [def.id, def.coach_battle])
+			t.eq(def.coach_for(&"battle"), &"prologue_battle", "序章一写了战斗教程")
+		elif def.coach_for(&"battle") != &"":
+			var s := CoachOverlay.load_steps(def.coach_for(&"battle"))
+			t.check(not s.is_empty() and CoachOverlay.problems(s, BattleView.COACH_TARGETS).is_empty(), "%s 的战斗教程 %s 读得到、没问题" % [def.id, def.coach_for(&"battle")])
 
 
 ## 容器的排布是延迟的，同一帧里手动排一遍（从外到里）
@@ -48,8 +48,7 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 		t.check(false, "找不到出生点旁边就是战斗点的种子")
 		return
 	var ch := c.chapter.duplicate() as ChapterDef     # 别改缓存里的那份
-	ch.coach = &""
-	ch.coach_battle = &"prologue_battle"
+	ch.coaches = {"battle": "prologue_battle", "prebattle": "prologue_prebattle"}     # 218 补充一：战前屏的也一并验
 	var p := Support.paths(PREFIX)
 	Support.cleanup(PREFIX)
 	var game = load(GAME).instantiate()
@@ -65,7 +64,25 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 	map.pick_spawn(int(found["entry"]))
 	map.step(int(found["next"]))
 	var pre = game.overlay()
-	t.check(pre != null and pre.screen == GameFlow.Screen.PREBATTLE and pre.start_battle(), "战前准备 → 开战")
+	t.check(pre != null and pre.screen == GameFlow.Screen.PREBATTLE, "到了战前准备")
+	if pre != null and pre.screen == GameFlow.Screen.PREBATTLE:
+		# 218 补充一（217 批三）：第一次进战前屏放三步（对手、天平、自己），四个目标都找得到；走完记在局外
+		_lay_out(pre)
+		t.check(pre.show_coach(), "战前教程开了")
+		var po: CoachOverlay = pre.coach()
+		if po != null:
+			t.eq(po.get_parent(), pre, "盖在战前屏上")
+			t.eq(po.steps.size(), 3, "三步")
+			for id in pre.COACH_TARGETS:
+				var r: Rect2 = pre.control_rect(id)
+				t.check(r.size.x > 0.0 and r.size.y > 0.0, "战前 %s 找得到（%s）" % [id, r])
+			for i in 3:
+				t.check(po.hole().size.x > 0.0, "战前第 %d 步挖了洞" % (i + 1))
+				po.next()
+		t.is_null(pre.coach(), "三步点完：收掉")
+		t.check(flow.meta.coach_seen.has("prologue_prebattle"), "战前教程记在局外")
+		t.check(not CoachOverlay.due(flow, &"prologue_prebattle"), "看过了：下一次不放")
+	t.check(pre != null and pre.start_battle(), "战前准备 → 开战")
 	var screen = game.overlay()
 	if screen == null or screen.screen != GameFlow.Screen.BATTLE:
 		t.check(false, "没到回放屏")
@@ -104,9 +121,9 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 	t.check(view.now() > 0.0, "时间走起来了（%.2f 秒）" % view.now())
 	t.check(flow.meta.coach_seen.has("prologue_battle"), "记在局外")
 	t.check(not screen.coach_due(), "看过了：下一场不放")
-	ch.coach_battle = &""
+	ch.coaches = {}
 	t.check(not screen.coach_due(), "没写战斗教程的章：不放")
-	ch.coach_battle = &"prologue_battle"
+	ch.coaches = {"battle": "prologue_battle"}
 	map.replay_battle_coach()
 	t.check(not flow.meta.coach_seen.has("prologue_battle") and screen.coach_due(), "调试台「重放战斗教程」：下一场再放")
 	flow.to_main_menu()

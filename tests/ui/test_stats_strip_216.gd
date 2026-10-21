@@ -72,7 +72,7 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 	var ids: Array[int] = pv.entry_ids()
 	t.check(not ids.is_empty() and setup.pick_spawn(ids[0]), "挑一个入口")
 	setup.close_hint()
-	t.check(setup.depart(), "出发")
+	t.check(Support.depart(setup), "出发")
 	var map = game.base()
 	if map.has_method("rules_open") and map.rules_open():
 		map.close_rules()

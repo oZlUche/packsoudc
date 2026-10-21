@@ -82,7 +82,7 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 			t.check(not TextTemplate.plain((opt as EventOption).label, TextTemplate.option_context(ctx, opt)).contains("{"), "%s 选项没漏换" % id)
 		for digits in ["三秒一下", "二十多点", "十二点", "六秒一次", "输两场"]:
 			t.check(not def.text.contains(digits), "%s 不再写死「%s」" % [id, digits])
-	t.eq(n, 38, "三张序章 38 条事件都查了（113 加了序章三的 12 条，218 加了交代）")
+	t.eq(n, 37, "三张序章 37 条事件都查了（113 加了序章三的 12 条）")
 	var ch := load(ContentPaths.asset_file("chapters", "prologue_2")) as ChapterDef
 	for line in ch.rules:
 		var shown := TextTemplate.plain(line, ctx)

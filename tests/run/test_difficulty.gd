@@ -222,7 +222,7 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 	for seed in range(1, 30):
 		setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
 		setup.set_run_seed(seed)
-		if setup.depart():
+		if Support.depart(setup):
 			went = true
 			break
 	t.check(went, "出发")

@@ -132,7 +132,17 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 	t.check(not setup.next_page() and setup._enter_btn.disabled, "182：没挑出生点，「出发」灰着、走不了")
 	setup.pick_spawn(setup.preview().entry_ids()[0])
 	t.check(setup.next_page(), "出发")
+	# 218 补充一（作者定）：第一次按「出发」先在开局屏上叠一层「军团的交代」，「知道了」之后才进图
+	var brief = game.overlay()
+	t.check(brief != null and brief.screen == GameFlow.Screen.EVENT and brief.is_briefing(), "先弹交代（叠在开局屏上）")
+	t.eq(game.base(), setup, "开局屏还在底下")
+	t.is_null(flow.run, "局还没开")
+	if brief != null and brief.screen == GameFlow.Screen.EVENT:
+		t.check(brief.find_children("*", "Button", true, false).all(func(b): return (b as Button).text != "整理背包（B）"), "没有整理背包")
+		t.check(brief.choose(0), "知道了")
+	t.check(flow.meta.briefing_seen.has(&"briefing_legion"), "记看过")
 	t.eq(game.base().screen, GameFlow.Screen.MAP, "进了地图")
+	t.is_null(game.overlay(), "交代收掉了")
 	t.eq(flow.run.phase, RunState.Phase.ON_MAP, "182：直接站在挑的出生点上")
 	flow.to_main_menu()
 	game.queue_free()
