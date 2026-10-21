@@ -157,16 +157,20 @@ static func run_result_and_meta(t: TestCase) -> void:
 	t.eq((r.to_dict()["items"] as Array).size(), r.carried.size(), "历史只写 id")
 
 	var kept := 0
+	var racked := 0
 	for inst in r.carried:
 		if MetaState.keeps(inst.def):
 			kept += 1
+		elif BagRack.holds(inst.def):
+			racked += 1
 	var m := MetaState.new()
 	var got := m.absorb(r)
-	t.eq(int(got["items"]), kept, "带回来 %d 件（包只计图鉴）" % kept)
-	t.check(m.has_pending_board() and m.board.item_count() == kept, "棋盘原样带回来等着置入")
+	t.eq(int(got["items"]), kept + racked, "带回来 %d 件 + %d 个包（225：包也带回）" % [kept, racked])
+	t.check(m.has_pending_board() and m.board.item_count() == kept + racked, "棋盘原样带回来等着置入")
 	t.eq(m.warehouse.item_count(), 0, "仓库没自动进")
-	t.eq(int(m.store_all()["moved"]), kept, "一键置入全进了（默认仓库够大）")
+	t.eq(int(m.store_all()["moved"]), kept + racked, "一键置入全进了（默认仓库够大）")
 	t.eq(m.warehouse.item_count(), kept, "仓库里就是这些")
+	t.eq(m.rack.item_count(), racked, "225：包进了包架")
 	t.eq(m.funds, r.balance, "钱带出来了")
 	t.eq(m.score, r.value, "累计价值")
 	t.eq(m.best_value, r.value, "单局最高")
@@ -192,7 +196,7 @@ static func run_result_and_meta(t: TestCase) -> void:
 	var r3 := RunResult.settle(s3)
 	var got3 := m.absorb(r3)
 	m.store_all()
-	t.eq(m.warehouse.item_count(), before + int(got3["items"]), "撞号的也全进了仓库")
+	t.eq(m.warehouse.item_count() + m.rack.item_count(), before + racked + int(got3["items"]), "撞号的也全进了仓库（包进包架）")
 	var uids := {}
 	for inst in m.warehouse.items():
 		uids[(inst as ItemInstance).uid] = true
@@ -408,13 +412,16 @@ static func run_flow_extract(t: TestCase) -> void:
 	t.eq(r.value, board_value, "价值对")
 	t.eq(r.battles_won, int(run.tally["battles_won"]), "打赢的场数跟着计数")
 	var kept := 0
+	var racked := 0
 	for inst in r.carried:
 		if MetaState.keeps(inst.def):
 			kept += 1
-	t.check(f.meta.has_pending_board() and f.meta.board.item_count() == kept, "棋盘原样带回来了（%d 件非包）" % kept)
+		elif BagRack.holds(inst.def):
+			racked += 1
+	t.check(f.meta.has_pending_board() and f.meta.board.item_count() == kept + racked, "棋盘原样带回来了（%d 件 + %d 个包）" % [kept, racked])
 	f.finish_result()
 	t.eq(f.screen, GameFlow.Screen.META, "→ 局外")
-	t.eq(int(f.store_all()["moved"]), kept, "一键置入")
+	t.eq(int(f.store_all()["moved"]), kept + racked, "一键置入")
 	t.eq(f.meta.warehouse.item_count(), kept, "仓库里就是棋盘上的那些")
 	t.eq(f.meta.funds, r.balance, "钱带出来了")
 	t.eq(MetaSave.read(c.items, META).warehouse.item_count(), kept, "局外存了，读回来一样")
@@ -519,7 +526,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	game.base().proceed()
 	t.eq(game.base().screen, GameFlow.Screen.META, "→ 局外")
 	t.eq(flow.meta.board, null, "离开结算屏：空棋盘丢了")
-	t.eq(flow.meta.warehouse.item_count(), int(stored["moved"]), "仓库里就是背出去的")
+	t.eq(flow.meta.warehouse.item_count() + flow.meta.rack.item_count(), int(stored["moved"]), "仓库 + 包架里就是背出去的（225：包进包架）")
 	flow.to_main_menu()
 	game.queue_free()
 	Support.cleanup("flow")

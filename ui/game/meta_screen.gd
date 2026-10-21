@@ -232,7 +232,7 @@ func layout() -> void:
 	_margin.add_theme_constant_override("margin_right", int(MARGIN + right_gutter()))
 	var mid_w := middle_width(screen)
 	if _wh != null and flow.meta.board != null:
-		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0 - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(1, flow.meta.board.size.x))))))
+		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0 - _wh.rack_room() - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(1, flow.meta.board.size.x))))))
 
 
 ## 178：右半边收起时，右边空出调试台箭头那一条（箭头钉在屏幕右上，别压在中列上）
@@ -431,6 +431,8 @@ var _sell_tag: StringName = &""
 var _sell_tag_pick: OptionButton = null
 var _sell_preview: Label = null
 var _sell_line: Label = null
+## 225：出售页的包架（双击卖一只）
+var _sell_rack: Control = null
 
 
 ## 基地商店：卖掉仓库里的东西 —— 双击右边仓库的一件卖一件（164：这一页不再自己画仓库），或按稀有度一键卖。得的钱进局外的钱（作者：暂无出售效果，先攒着）
@@ -455,6 +457,11 @@ func _build_sell(root: Control) -> Control:
 	row.add_child(_button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
 	_sell_line = _label("", 13, UiPalette.STAMINA)
 	page.add_child(_sell_line)
+	# 225：包架也是货源 —— 双击一只卖掉（一键出售不碰包：包是装备不是战利品）
+	_sell_rack = BagRackView.boxed(flow.meta.rack, font)
+	_sell_rack.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	page.add_child(_sell_rack)
+	BagRackView.view_in(_sell_rack).item_double_clicked.connect(func(_v: ContainerView, uid: int): sell_bag(uid))
 	flow.meta.warehouse.changed.connect(_on_sell_stock_changed)
 	_rebuild_sell_tags()
 	set_sell_filter(0)
@@ -542,6 +549,21 @@ func sell(uid: int) -> int:
 	if got >= 0 and _sell_line != null:
 		_sell_line.text = UiText.t("meta.sold_one") % [name, got, flow.meta.funds]
 	return got
+
+
+## 225：卖包架上的一只；返回得了多少（没这只 -1）
+func sell_bag(uid: int) -> int:
+	var inst := flow.meta.rack.get_item(uid)
+	var name := Names.of(inst.def) if inst != null else ""
+	var got := flow.sell_bag(uid)
+	if got >= 0 and _sell_line != null:
+		_sell_line.text = UiText.t("meta.sold_one") % [name, got, flow.meta.funds]
+	return got
+
+
+## 225：出售页的包架视图（测试看）
+func sell_rack_view() -> BagRackView:
+	return BagRackView.view_in(_sell_rack) if _sell_rack != null else null
 
 
 ## 按当前那一档一键卖；返回 {"count", "funds"}

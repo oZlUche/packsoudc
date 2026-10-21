@@ -709,6 +709,14 @@ func sell_item(uid: int) -> int:
 	return got
 
 
+## 225：卖包架上的一只（出售页双击）
+func sell_bag(uid: int) -> int:
+	var got := meta.sell_bag(uid, sell_ratio())
+	if got >= 0:
+		save_meta()
+	return got
+
+
 func sell_where(max_rarity: int, tag: StringName = &"") -> Dictionary:
 	var got := meta.sell_where(max_rarity, sell_ratio(), tag)
 	if int(got["count"]) > 0:

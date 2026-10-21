@@ -5,9 +5,9 @@
     "en": "Warehouse"
   },
   "category": "meta",
-  "text": "{zone:仓库}是基地里的一块格子，不要求包，所有格子都能用；撤离带回来的东西在这里置入，开局时从这里拖进初始包带进下一局。放得进初始包的就是带的，没有第二套规则数件数；带回仓库的只有非包道具，包只记图鉴。\n\n仓库空着时第一局会发一套开局装备。仓库有「整理」，格子多了能上下滚动；出售页按稀有度一键卖或双击卖，钱进局外攒着。科技「仓库扩建」让它往下长，里面的东西原地不动。",
+  "text": "{zone:仓库}是基地里的一块格子，不要求包，所有格子都能用；撤离带回来的东西在这里置入，开局时从这里拖进包里带进下一局。放得进包的就是带的，没有第二套规则数件数；包不进仓库，放在旁边的包架上。\n\n仓库空着时第一局会发一套开局装备。仓库有「整理」，格子多了能上下滚动；出售页按稀有度一键卖或双击卖（包架上的包也能双击卖，一键出售不碰包），钱进局外攒着。科技「仓库扩建」让它往下长，里面的东西原地不动。",
   "texts": {
-    "en": "The {zone:仓库} is a grid at your base. It needs no bag, and every cell is usable. Things you bring back when you extract are stored here, and at the start of a run you drag things from here into your starting bag to take them into the next run. Whatever fits in the starting bag comes along; there is no second rule counting items. Only items that aren't bags return to the Warehouse; bags are only recorded in the Collection.\n\nIf the Warehouse is empty, your first run hands out a set of starting gear. The Warehouse has Sort, and it scrolls up and down once it has many rows. On the sell page you can sell by Rarity with one click or sell single items with a double-click, and the coins are kept between runs. The Warehouse Expansion tech makes it grow downward, and everything inside stays where it is."
+    "en": "The {zone:仓库} is a grid at your base. It needs no bag, and every cell is usable. Things you bring back when you extract are stored here, and at the start of a run you drag things from here into your bags to take them into the next run. Whatever fits in your bags comes along; there is no second rule counting items. Bags don't go into the Warehouse; they go on the Bag Rack next to it.\n\nIf the Warehouse is empty, your first run hands out a set of starting gear. The Warehouse has Sort, and it scrolls up and down once it has many rows. On the sell page you can sell by Rarity with one click or sell single items with a double-click (bags on the Bag Rack sell with a double-click too; selling all never touches bags), and the coins are kept between runs. The Warehouse Expansion tech makes it grow downward, and everything inside stays where it is."
   },
   "related": [
     "tidy",

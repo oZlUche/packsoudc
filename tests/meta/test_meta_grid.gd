@@ -74,7 +74,7 @@ static func run_rules_pipeline(t: TestCase) -> void:
 
 
 static func run_absorb_board_codex(t: TestCase) -> void:
-	t.begin("局外 · 撤离棋盘原样带回（包只计图鉴）；一键置入放不下的跳过（177 补 1.1）；图鉴累计、点亮一次；存档 v2 往返")
+	t.begin("局外 · 撤离棋盘原样带回（225：包也带回、置入时进包架）；一键置入放不下的跳过（177 补 1.1）；图鉴累计、点亮一次；存档 v2 往返")
 
 	var c := _content()
 	var kit := _kit(c)
@@ -93,10 +93,11 @@ static func run_absorb_board_codex(t: TestCase) -> void:
 	var m := MetaState.new(_tiny_rules(Vector2i(2, 2)))
 	var got := m.absorb(r)
 	t.check(m.has_pending_board(), "撤离之后带回来的棋盘等着清")
-	t.eq(int(got["items"]), expected.size(), "带回 %d 件非包道具" % expected.size())
+	t.eq(int(got["items"]), expected.size() + bags, "带回 %d 件道具 + %d 个包" % [expected.size(), bags])
 	t.eq(m.board.size, s.board.size, "带回来的棋盘和原来一样大")
-	t.check(not m.board.requires_bag, "不要求包：所有格子默认可用（包换成默认背景）")
-	t.eq(m.board.bags().size(), 0, "包没带回来")
+	t.check(m.board.requires_bag, "225：包照旧铺着，这块棋盘要求包")
+	t.eq(m.board.bags().size(), bags, "225：包也带回来了")
+	t.eq(m.rack.item_count(), 0, "包架还没动：置入时才进")
 	var at_place := 0
 	for inst in m.board.items():
 		var item := inst as ItemInstance
@@ -117,7 +118,10 @@ static func run_absorb_board_codex(t: TestCase) -> void:
 	# 一键置入：2×2 的仓库放不下的跳过（177 补 1.1），剩下的留在棋盘上
 	var stored := m.store_all()
 	t.check(int(stored["moved"]) >= 0 and int(stored["left"]) > 0 and String(stored["stuck"]) != "", "放不下的跳过：放进 %d、第一件卡住的「%s」、剩 %d" % [stored["moved"], stored["stuck"], stored["left"]])
-	t.eq(m.warehouse.item_count(), int(stored["moved"]), "仓库里就是放进去的那几件")
+	t.eq(m.warehouse.item_count() + m.rack.item_count(), int(stored["moved"]), "仓库 + 包架里就是放进去的那几件")
+	t.check(m.board.bags().size() + m.rack.item_count() == bags, "包要么进了包架、要么还垫着没搬走的货")
+	for b in m.board.bags():
+		t.check(m.board.is_bag_with_contents((b as ItemInstance).uid), "留在棋盘上的包上面都还有货")
 	t.check(m.has_pending_board(), "带回来的棋盘还没清空")
 
 	# 第二局撤离：图鉴累加、不再算点亮；带回来的并进去一件不丢
@@ -140,6 +144,9 @@ static func run_absorb_board_codex(t: TestCase) -> void:
 	for inst in big.warehouse.items():
 		uids[(inst as ItemInstance).uid] = true
 	t.eq(uids.size(), big.warehouse.item_count(), "仓库里 uid 两两不同")
+	t.check(big.rack.item_count() > 0 and big.rack.items().all(func(i): return (i as ItemInstance).def.is_bag), "225：包都进了包架（%d 只）" % big.rack.item_count())
+	for inst in big.rack.items():
+		t.check(not uids.has((inst as ItemInstance).uid), "包架的 uid 不和仓库撞")
 	big.absorb(RunResult.settle(_extracted(c, 24, kit)))
 	big.discard_board()
 	t.check(not big.has_pending_board(), "不要了：清掉")
@@ -152,6 +159,10 @@ static func run_absorb_board_codex(t: TestCase) -> void:
 	t.eq(back.warehouse.item_count(), m.warehouse.item_count(), "仓库件数一样")
 	t.eq(back.board.item_count(), m.board.item_count(), "带回来的棋盘也在")
 	t.eq(back.codex, m.codex, "图鉴一样")
+	t.eq(back.bags(), m.bags(), "225：包架一样")
+	var text_big := MetaSave.to_text(big)
+	t.eq(MetaSave.to_text(MetaSave.from_text(text_big, c.items, big.rules)), text_big, "225：有包架的也逐字节相同")
+	t.eq(MetaSave.from_text(text_big, c.items, big.rules).bags(), big.bags(), "225：包架读回来几种几只都一样")
 	# 098：v1 现在走迁移链升上来（v1 → v2 是恒等），不再作废；升不上去的版本才是 null
 	t.not_null(MetaSave.from_text("{\"version\": 1}", c.items), "旧版（v1）经迁移链读得回来")
 	t.is_null(MetaSave.from_text("{\"version\": 0}", c.items), "链上没有这一级（v0）→ null")

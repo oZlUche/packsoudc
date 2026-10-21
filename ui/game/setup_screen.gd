@@ -27,6 +27,8 @@ extends GameScreen
 
 ## 地上容器的 id（局外的 100 / 101 之外）
 const STASH_ID := 110
+## 225：包架空、棋盘上也没包时军需官发的那只（最差的包）
+const FALLBACK_BAG := &"sack"
 
 var chapter_index: int = 0
 var character_index: int = 0
@@ -48,6 +50,11 @@ var stash: ItemStash = null
 ## 090：地上那些东西的来处：uid → {"origin", "rot"}（回主菜单按原位放回）
 var _pending: Dictionary = {}
 var _stash_box: VBoxContainer = null
+## 225：中栏顶上的包架（挂牌 + 一列）与它的视图
+var _rack_box: Control = null
+var _rack_view: BagRackView = null
+## 225：状态行没别的话说时写这一句（「军需官发的」）；换角色、重摆棋盘时清掉
+var _note := ""
 var _stash_view: GroundLayer = null
 var _stash_title: Label = null
 
@@ -263,10 +270,14 @@ func _build_kit_page() -> Control:
 	_board_host = _vbox(6)
 	left.add_child(_board_host)
 
-	# 090：中间是地上（有上一局带回来的东西才显示）；没有也占着中间，把仓库框推到右边
-	var middle := _vbox(0)
+	# 090：中间是地上（有上一局带回来的东西才显示）；没有也占着中间，把仓库框推到右边。
+	# 225：中栏顶上是包架（一直在），地上在它下面
+	var middle := _vbox(16)
 	middle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(middle)
+	_rack_box = BagRackView.boxed(flow.meta.rack, font)
+	_rack_view = BagRackView.view_in(_rack_box)
+	middle.add_child(_rack_box)
 	_stash_box = _vbox(6)
 	middle.add_child(_stash_box)
 
@@ -295,6 +306,9 @@ func _build_kit_page() -> Control:
 	play.add_child(_drag)     # 容器把它铺到和整行一样大，盖在两块板上
 	_drag.register_view(_warehouse_view)
 	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
+	_drag.register_view(_rack_view)     # 225：包架 ⇄ 棋盘
+	_rack_view.item_double_clicked.connect(quick_move)
+	flow.meta.rack.changed.connect(_refresh)
 	w.changed.connect(_refresh)
 	_warehouse_pages.minimum_size_changed.connect(_fit_warehouse)
 	_area.resized.connect(_fit_warehouse)
@@ -464,7 +478,7 @@ func _build_stash() -> void:
 	_stash_view.item_double_clicked.connect(quick_move)
 	_drag.drop_filter = _allow_drop
 	stash.changed.connect(_refresh)
-	_stash_box.visible = not _pending.is_empty()
+	_stash_box.visible = stash.item_count() > 0     # 225：只有包（进了包架）时地上那一栏不出来
 
 
 ## 090：落点规则。仓库的东西进不了地上（进去就等于出发时丢掉）；地上的东西上棋盘要这一章允许带入
@@ -473,6 +487,8 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 		return false
 	if target == stash:
 		return _pending.has(inst.uid)
+	if target == flow.meta.rack:
+		return BagRack.holds(inst.def) and not _preset_uids.has(inst.uid)     # 225：包架只收包，预设套的包留在棋盘上
 	if target == board and _pending.has(inst.uid):
 		var c := chapter()
 		return c == null or c.allow_carry_in
@@ -743,6 +759,7 @@ func choose_preset(i: int) -> void:
 	preset_index = clampi(i, -1, sets.size() - 1)
 	_clear_preset()
 	_apply_preset()
+	ensure_bag()     # 225：换回「不带」时棋盘上可能一只包都没了
 	_color_presets()
 	_refresh()
 
@@ -936,7 +953,10 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		return false
 	var why := ""
 	var ok := false
-	if flow.meta.warehouse.owns(from) or from == stash:
+	if from == flow.meta.rack:     # 225：包架 → 棋盘
+		ok = board != null and InventoryService.transfer_auto(from, uid, board)
+		why = "" if ok else UiText.t("setup.no_room_bag") % Names.of(inst.def)
+	elif flow.meta.warehouse.owns(from) or from == stash:
 		if board == null:
 			return false
 		if not _allow_drop(inst, board):
@@ -945,10 +965,11 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 			ok = carry_in(uid)
 			why = "" if ok else UiText.t("setup.no_room_bag") % Names.of(inst.def)
 	elif from == board:
-		if not MetaState.keeps(inst.def):
-			why = UiText.t("setup.starting_bag") % Names.of(inst.def)
-		elif _preset_uids.has(uid):
+		if _preset_uids.has(uid):
 			why = UiText.t("setup.preset_stays")
+		elif BagRack.holds(inst.def):     # 225：包 → 包架（空包才行）
+			ok = rack_bag(uid)
+			why = "" if ok else UiText.t("rack.has_contents") % Names.of(inst.def)
 		else:
 			ok = carry_out(uid)
 			why = "" if ok else UiText.t("setup.no_room_warehouse") % Names.of(inst.def)
@@ -968,7 +989,22 @@ func store(uid: int) -> bool:
 	return ok
 
 
-## 把棋盘上的一件放回仓库。包不行（它是初始包，不是仓库的东西）
+## 225：棋盘上的一只包收回包架（上面还有东西的不行）
+func rack_bag(uid: int) -> bool:
+	if board == null or _preset_uids.has(uid):
+		return false
+	var inst := board.get_item(uid)
+	if inst == null or not BagRack.holds(inst.def) or board.is_bag_with_contents(uid):
+		return false
+	board.remove(uid)
+	var ok := flow.meta.put_bag(inst)
+	if not ok:
+		board.try_add(inst, true)
+	_refresh()
+	return ok
+
+
+## 把棋盘上的一件放回仓库。包不行（225：包回包架，见 [method rack_bag]）
 func carry_out(uid: int) -> bool:
 	if board == null:
 		return false
@@ -1247,7 +1283,7 @@ func escape() -> bool:
 #endregion
 
 
-## 棋盘上带着的都下来：仓库来的回仓库；090 地上来的回地上
+## 棋盘上带着的都下来：仓库来的回仓库；090 地上来的回地上；225 包回包架（预设套的包不算 —— 那是预设发的）
 func _return_carried() -> void:
 	if board == null:
 		return
@@ -1257,6 +1293,11 @@ func _return_carried() -> void:
 			stash.insert(inst)
 		elif not flow.meta.take_back(inst):
 			push_warning("setup: %s 放不回仓库，丢弃" % inst.def.id)
+	for inst in board.items():
+		var it := inst as ItemInstance
+		if BagRack.holds(it.def) and not _preset_uids.has(it.uid) and not board.is_bag_with_contents(it.uid):
+			board.remove(it.uid)
+			flow.meta.put_bag(it)
 
 
 ## 090：回主菜单 —— 上一局带回来的（不管还在地上还是已经拖上了棋盘）按原位放回带回来的棋盘；
@@ -1270,7 +1311,9 @@ func _restore_pending() -> void:
 	_pending.clear()
 
 
-## 按角色造棋盘：初始包摆好。包的 uid 走局外的号段，免得和从仓库拖来的撞号
+## 按角色造棋盘：初始包摆好。包的 uid 走局外的号段，免得和从仓库拖来的撞号。
+## 225（补充二 §11.2）：第一次选这个角色先把初始包发进包架；再从包架把初始包摆上来（包架里有几只摆几只，拖回包架即收起）；
+## 棋盘上一只包都没有、包架也空、又没挑预设 → 军需官发一只粗麻袋（[method ensure_bag]）
 func _rebuild_board() -> void:
 	UiTheme.clear_children(_board_host)
 	if _board_view != null and _drag != null:
@@ -1282,16 +1325,19 @@ func _rebuild_board() -> void:
 	var ch := character()
 	if ch == null:     # 140：没有角色就没有棋盘（左栏那条红字说明了）
 		return
+	flow.meta.grant_starting_bags(ch, flow.items)
 	board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
 	board.begin_batch()
+	var rack := flow.meta.rack
 	for id in ch.starting_bags:
-		var def := flow.items.get_def(id)
-		if def == null:
+		var inst := rack.first_of(id)
+		if inst == null:
 			continue
-		var inst := ItemInstance.create(def, 0)
-		inst.uid = flow.meta.allocate_uid()
-		board.try_add(inst, true)
+		rack.remove(inst.uid)
+		if not board.try_add(inst, true):
+			flow.meta.put_bag(inst)
 	board.end_batch()
+	_note = ""
 	_board_host.add_child(_label(UiText.t("setup.pack_title") % [Names.of(ch), ch.board_size.x, ch.board_size.y], 15, UiPalette.DIM))     # 180
 	_board_view = InventoryView.new()
 	_board_view.label_font = font
@@ -1308,6 +1354,25 @@ func _rebuild_board() -> void:
 	_board_view.item_double_clicked.connect(quick_move)     # 109：每次重建棋盘视图都要重新接
 	board.changed.connect(_refresh)
 	_apply_preset()     # 096：挑着的预设套跟着角色换过来
+	ensure_bag()
+
+
+## 225（§9.4 第 2 条兜底）：棋盘上一只包都没有、包架也空、又没挑预设 → 发一只粗麻袋（最差那只），状态行说「军需官发的」。
+## 发了返回 true。这只袋子和预设套一样算「发的」：只在棋盘上挪、进不了包架（免得回主菜单再进来白拿一只去卖），出发了就跟着走
+func ensure_bag() -> bool:
+	if board == null or not board.bags().is_empty() or preset() != null or flow.meta.rack.item_count() > 0:
+		return false
+	var def := flow.items.get_def(FALLBACK_BAG)
+	if def == null:
+		return false
+	var inst := ItemInstance.create(def, 0)
+	inst.uid = flow.meta.allocate_uid()
+	if not board.try_add(inst, true):
+		return false
+	_preset_uids[inst.uid] = true
+	_note = UiText.t("rack.granted") % Names.of(def)
+	_refresh()
+	return true
 
 
 ## 161：第一页的角色卡（名牌、生命 / 耐力方块、体力爱心、技能）与棋盘预览（只看不拖）
@@ -1445,4 +1510,5 @@ func _refresh() -> void:
 		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and needs_spawn())     # 182：没挑出生点「出发」灰着
 	if _status != null:
 		var why := can_depart()
-		_status.text = why if why != "" and not carried().is_empty() else (UiText.t("setup.unarmed") if _page > 0 and unarmed() else "")
+		var hint := UiText.t("setup.unarmed") if _page > 0 and unarmed() else ""
+		_status.text = why if why != "" and not carried().is_empty() else _note + hint     # 225：「军需官发的」在前
