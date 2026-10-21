@@ -149,6 +149,7 @@ func open(payload: Dictionary) -> void:
 	_shelf.setup(m.warehouse, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
 	_drag.register_view(_shelf.view)
 	_shelf.view.item_double_clicked.connect(_on_shelf_double_clicked)
+	_shelf.view.actions_for = func(uid: int) -> Array: return _wh.warehouse_actions(uid, _tab == "warehouse") if _wh != null else []     # 230
 	m.warehouse.changed.connect(_refresh_shelf_title)
 
 	# 家页：这一局、战绩（粗布框里）。178：带回来的背包搬到「仓库」页
@@ -178,6 +179,7 @@ func open(payload: Dictionary) -> void:
 	_no_board = _label(UiText.t("meta.no_board"), 15, UiPalette.DIM)
 	wh_col.add_child(_no_board)
 	_wh = WarehousePanelScript.new()
+	_wh.sell_one = sell
 	_wh.setup(flow, font, _shelf, _drag)
 	_wh.changed.connect(_refresh)
 	wh_col.add_child(_wh)
@@ -466,6 +468,9 @@ func _build_sell(root: Control) -> Control:
 	_sell_rack.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	page.add_child(_sell_rack)
 	BagRackView.view_in(_sell_rack).item_double_clicked.connect(func(_v: ContainerView, uid: int): sell_bag(uid))
+	BagRackView.view_in(_sell_rack).actions_for = func(uid: int) -> Array:     # 230：出售页的包架 = 出售 N 币
+		var inst := flow.meta.rack.get_item(uid)
+		return [ItemActions.sell(inst, MetaState.sell_price(inst.def, flow.sell_ratio()), sell_bag)] if inst != null else []
 	flow.meta.warehouse.changed.connect(_on_sell_stock_changed)
 	_rebuild_sell_tags()
 	set_sell_filter(0)
@@ -575,6 +580,9 @@ func sell_filtered() -> Dictionary:
 	var got := flow.sell_where(sell_filter_max(), _sell_tag)
 	if _sell_line != null:
 		_sell_line.text = UiText.t("meta.sold_many") % [int(got["count"]), int(got["funds"]), flow.meta.funds] if int(got["count"]) > 0 else UiText.t("meta.nothing_to_sell")
+		var skipped := flow.meta.locked_matching(sell_filter_max(), _sell_tag)
+		if skipped > 0:
+			_sell_line.text += UiText.t("meta.sell_skipped") % skipped     # 230
 	return got
 
 

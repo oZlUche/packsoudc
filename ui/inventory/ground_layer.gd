@@ -1606,10 +1606,14 @@ func _gui_input(event: InputEvent) -> void:
 	if stash == null or not (event is InputEventMouseButton):
 		return
 	var mb := event as InputEventMouseButton
-	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
+	if not mb.pressed or not mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 		return
 	var uid := uid_at_local(mb.position)
 	if uid < 0:
+		return
+	if mb.button_index == MOUSE_BUTTON_RIGHT:
+		item_context.emit(self, uid)     # 230：右键 = 钉住悬浮窗
+		accept_event()
 		return
 	if mb.double_click:
 		item_double_clicked.emit(self, uid)     # 084：双击 = 快速置入棋盘
@@ -1666,6 +1670,7 @@ func _draw() -> void:
 		if not ItemPainter.draw_art(self, inst.def, rot, at, InventoryView.CELL, tint, base, ItemPainter.variant_of(inst)):
 			ItemPainter.draw_item(self, cells, at, InventoryView.CELL, body, edge)
 			ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of_item(inst), font, 13, ink)
+		ItemPainter.draw_lock(self, inst, rot, at, InventoryView.CELL, tint)     # 230
 		var sil := ItemSilhouette.of(inst.def, rot)
 		if sil["mask"] != null:     # 198：有道具图的描边 / 高亮沿轮廓走（没图的格子已经沿外形描过了）
 			for poly in (sil["outline"] as Array):

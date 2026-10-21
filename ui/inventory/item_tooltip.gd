@@ -103,6 +103,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		if TagRegistry.category_of(StringName(String(t))) != "source":
 			listed.append(t)
 	var sub := UiTheme.outline("[color=%s]%s[/color]" % [rarity_style, rarity_name(def.rarity)])
+	if inst != null and inst.is_locked_by_player():
+		sub += " · " + UiText.t("tip.locked")     # 230：副行末尾「· 已锁定」
 	var head_rest: Array[String] = ["[font_size=%d]%s[/font_size]" % [SUB_SIZE, sub]]
 	if not listed.is_empty():
 		head_rest.append("[font_size=%d]%s[/font_size]" % [SUB_SIZE, tag_icons(listed)])     # 193 补充三：标签另起一行画图标

@@ -329,6 +329,7 @@ func _draw() -> void:
 休眠" if dormant else ""), font, 13, text_color
 				)
 		ItemPainter.draw_charges(self, item, item.rotation, anchor, cell_px, tint)     # 208：耐久没满、又没这一档的图：左下角次数点
+		ItemPainter.draw_lock(self, item, item.rotation, anchor, cell_px, tint)     # 230：玩家锁住的：左上角小锁
 		if highlights.has(item.uid):
 			var hb := item.def.shape.size_rotated(item.rotation)
 			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))

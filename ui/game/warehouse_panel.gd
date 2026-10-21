@@ -49,6 +49,8 @@ var _size_label: Label = null
 ## 224：结算屏第二页 —— 「一键置入」「整理」换石键图按钮（150 × 56，字由代码写），按钮行间隔 14；在 [method setup] 之前设
 var art_buttons := false
 var _buttons: HBoxContainer = null
+## 230：悬浮窗「出售」怎么卖一件（`func(uid) -> int`）；基地屏换成自己的（写出售页那一行）。不给 = 直接卖、存档
+var sell_one: Callable = Callable()
 
 
 ## [param shelf] / [param drag] 给了 = 基地「家」页（仓库在别处、拖拽层是整屏那一层）
@@ -114,6 +116,7 @@ func _build() -> void:
 		_shelf.setup(_meta.warehouse, _font, _drag, TechWarehousePages.plan_of(_flow.tech_defs))
 		_drag.register_view(_shelf.view)
 		_shelf.view.item_double_clicked.connect(quick_move)
+		_shelf.view.actions_for = func(uid: int) -> Array: return warehouse_actions(uid, true)     # 230
 	_shelf.page_changed.connect(func(_i: int): _refresh())     # 「整理」只管当前页：翻页了按钮跟着亮灭
 	_rebuild_board_view()
 
@@ -164,6 +167,7 @@ func _rebuild_board_view() -> void:
 	_board_box.add_child(frame)
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
+	_board_view.actions_for = board_actions     # 230
 
 
 ## 224：带回来的背包的外框（素皮带框九宫格，四边 54、中段平铺；格子缩进 [constant BOARD_FRAME_PAD]）。没图 = 空框只留边距
@@ -290,6 +294,54 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	if ok:
 		changed.emit()
 	return ok
+#endregion
+
+
+#region 230 悬浮窗按钮
+## 带回来的背包上一件：置入仓库 / 收进包架（包）→ 锁定
+func board_actions(uid: int) -> Array:
+	var inst := _meta.board.get_item(uid) if _meta.board != null else null
+	if inst == null:
+		return []
+	var bag := BagRack.holds(inst.def)
+	var quick := ItemActions.make(&"quick", UiText.t("act.to_rack" if bag else "act.store"), func(): quick_move(_board_view, uid))
+	if bag and _meta.board.is_bag_with_contents(uid):
+		ItemActions.disable(quick, UiText.t("act.bag_full"))
+	return [quick, ItemActions.lock(inst, _meta.board, _saved)]
+
+
+## 仓库里一件：（[param with_quick] 且有带回来的背包时）摆上背包 → 锁定 | 锁定同类 → 出售 | 出售同类
+func warehouse_actions(uid: int, with_quick: bool) -> Array:
+	var inst := _meta.warehouse.get_item(uid)
+	if inst == null:
+		return []
+	var out: Array = []
+	if with_quick and _meta.board != null:
+		out.append(ItemActions.make(&"quick", UiText.t("act.to_board"), func(): quick_move(_shelf.view, uid)))
+	var page := _shelf.current_page() if _shelf != null else null
+	out.append(ItemActions.lock(inst, page if page != null and page.has_item(uid) else _meta.warehouse, _saved))
+	out.append(ItemActions.lock_same(inst, _meta.warehouse, _saved))
+	var seller := sell_one if sell_one.is_valid() else _sell
+	var price_of := func(i: ItemInstance) -> int: return MetaState.sell_price(i.def, _flow.sell_ratio())
+	out.append(ItemActions.sell(inst, price_of.call(inst), seller))
+	out.append(ItemActions.sell_same(inst, _meta.warehouse, price_of, seller))
+	return out
+
+
+func _sell(uid: int) -> int:
+	var got := _flow.sell_item(uid)
+	if got >= 0:
+		changed.emit()
+	return got
+
+
+## 锁了 / 解了：存档、重画
+func _saved() -> void:
+	_flow.save_meta()
+	if _shelf != null and _shelf.view != null:
+		_shelf.view.queue_redraw()
+	if _board_view != null:
+		_board_view.queue_redraw()
 #endregion
 
 

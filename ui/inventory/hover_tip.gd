@@ -51,6 +51,8 @@ class TipWindow extends PanelContainer:
 	var foot_row: HBoxContainer
 	var foot: RichTextLabel
 	var set_label: Label
+	## 230：脚注下面的道具操作按钮（一行两颗 / 一颗占满，[method HoverTip.set_actions]）
+	var actions_box: VBoxContainer
 	var col: VBoxContainer
 	## 词条 id → {"name", "text"}（停在关键词上开子窗时查）
 	var terms: Dictionary = {}
@@ -104,6 +106,10 @@ class TipWindow extends PanelContainer:
 		set_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		set_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		foot_row.add_child(set_label)
+		actions_box = UiTheme.vbox(int(TipButton.GAP))
+		actions_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		actions_box.visible = false
+		col.add_child(actions_box)
 
 	## 一条虚线（脚注上面那条；188 信仰窗的分段也用）
 	func dashed(width: float) -> Control:
@@ -165,6 +171,7 @@ class TipWindow extends PanelContainer:
 	## 185：状态说明 —— 名字行 / 分隔线 / 效果（[method Glossary.buff_tip_parts]）
 	func set_status(head_bb: String, body_bb: String) -> void:
 		item_mode = false
+		clear_actions()
 		set_width(full_width)
 		head.visible = true
 		sep.visible = true
@@ -176,6 +183,7 @@ class TipWindow extends PanelContainer:
 	## 只写一段文字（地图上的点、子窗）
 	func set_text(bbcode: String) -> void:
 		item_mode = false
+		clear_actions()
 		set_width(full_width)
 		head.visible = false
 		sep.visible = false
@@ -199,6 +207,13 @@ class TipWindow extends PanelContainer:
 		sep.visible = has_body
 		body.visible = has_body
 		set_label.text = String(full.get("set", ""))
+
+	## 230：按钮行清空藏起
+	func clear_actions() -> void:
+		for c in actions_box.get_children():
+			actions_box.remove_child(c)
+			c.queue_free()
+		actions_box.visible = false
 
 	func text() -> String:
 		if not item_mode:
@@ -309,6 +324,7 @@ func watch(view: ContainerView) -> void:
 		return
 	_views.append(view)
 	view.gui_input.connect(func(event: InputEvent): _on_view_input(view, event))
+	view.item_context.connect(pin_on)     # 230：右键 = 立刻钉住
 	view.mouse_exited.connect(func():
 		if _for_view != view:
 			return
@@ -464,6 +480,85 @@ func show_item(full: Dictionary, at: Vector2) -> void:
 	_panel.set_item(full)
 	_panel.terms = _terms_dict(full.get("terms", {}))
 	_open_main(at)
+
+
+#region 230 道具操作按钮
+## 主窗脚注下面的按钮（[ItemActions] 排行：两两并排、成对不拆、放不下半宽拆行）；空 = 不画
+func set_actions(actions: Array) -> void:
+	_panel.clear_actions()
+	if actions.is_empty():
+		return
+	for row in ItemActions.rows(actions, TipButton.fits_half):
+		var line := UiTheme.hbox(int(TipButton.GAP))
+		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		for a in row:
+			var b := TipButton.make(a, TipButton.HALF if (row as Array).size() == 2 else TipButton.FULL)
+			b.chosen.connect(_on_action)
+			line.add_child(b)
+		_panel.actions_box.add_child(line)
+	_panel.actions_box.visible = true
+	_queue_refit()
+
+
+## 主窗现在的按钮（测试看；按行的顺序）
+func action_buttons() -> Array[TipButton]:
+	var out: Array[TipButton] = []
+	for line in _panel.actions_box.get_children():
+		if line.is_queued_for_deletion():
+			continue
+		for b in line.get_children():
+			if b is TipButton:
+				out.append(b)
+	return out
+
+
+## 按钮排成了几行、每行几颗（测试看）
+func action_rows() -> Array:
+	var out: Array = []
+	for line in _panel.actions_box.get_children():
+		if not line.is_queued_for_deletion():
+			out.append(line.get_children().map(func(b): return String((b as TipButton).action.id)))
+	return out
+
+
+func _actions_of(view: ContainerView, uid: int) -> Array:
+	return view.actions_for.call(uid) if view != null and view.actions_for.is_valid() else []
+
+
+## 点了一颗：做完。钉住的窗留着、内容刷新（那件还在的话）；没钉住的收起（东西多半已经不在原处）
+func _on_action(a: ItemActions.Action) -> void:
+	if a.run.is_valid():
+		a.run.call()
+	if not is_instance_valid(self) or not _panel.visible:
+		return
+	if _panel.pinned and _for_view != null and is_instance_valid(_for_view) and _shown_item(_for_view, _uid) != null:
+		_refresh_item()
+	else:
+		hide_tip()
+
+
+## 钉住的道具窗原地重写一遍（锁了 / 解了之后），不重新计钉
+func _refresh_item() -> void:
+	var inst := _for_view.container().get_item(_uid)
+	var board: GridInventory = (_for_view as InventoryView).inventory if _for_view is InventoryView else null
+	var full := ItemTooltip.describe_full(inst, board)
+	_panel.set_item(full)
+	_panel.terms = _terms_dict(full.get("terms", {}))
+	set_actions(_actions_of(_for_view, _uid))
+	_queue_refit()
+
+
+## 右键一件 = 立刻钉住它的窗（230 两者都要：省掉等一秒多，按钮展开）
+func pin_on(view: ContainerView, uid: int) -> void:
+	var inst := _shown_item(view, uid)
+	if inst == null:
+		return
+	if not (_panel.visible and _for_view == view and _uid == uid):
+		_close_from(0)
+		_show_for(view, uid, inst, view.get_local_mouse_position())
+	pin(_panel)
+	_on_source = true
+#endregion
 
 
 func _open_main(at: Vector2) -> void:
@@ -831,6 +926,7 @@ func _show_for(view: ContainerView, uid: int, inst: ItemInstance, local: Vector2
 	if view is InventoryView:
 		board = (view as InventoryView).inventory
 	show_item(ItemTooltip.describe_full(inst, board), view.get_global_position() + local)
+	set_actions(_actions_of(view, uid))     # 230
 
 
 func _begin_leave(view: ContainerView, local: Vector2) -> void:

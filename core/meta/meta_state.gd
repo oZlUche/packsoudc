@@ -204,7 +204,7 @@ func put_bag(inst: ItemInstance) -> bool:
 ## 卖包架上的一只（基地出售页双击）：按定价的 [param ratio] 进钱。返回得了多少；没这只 -1
 func sell_bag(uid: int, ratio: float = 0.5) -> int:
 	var inst := rack.get_item(uid)
-	if inst == null:
+	if inst == null or inst.is_locked_by_player():
 		return -1
 	var price := sell_price(inst.def, ratio)
 	rack.remove(uid)
@@ -473,7 +473,7 @@ func mark_rules_seen(chapter_id: StringName) -> void:
 ## 091（作者定）：基地商店 —— 卖掉仓库里的一件，按定价的 [param ratio] 进钱（钱现在还没处花，先攒着）。返回得了多少；没这件 -1
 func sell_item(uid: int, ratio: float = 0.5) -> int:
 	var inst := warehouse.get_item(uid)
-	if inst == null:
+	if inst == null or inst.is_locked_by_player():     # 230：锁住的不卖
 		return -1
 	var price := sell_price(inst.def, ratio)
 	warehouse.remove(uid)
@@ -497,6 +497,16 @@ func sell_where(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") -> D
 	return out
 
 
+## 230：一键出售这一档里锁着、被跳过的有几件
+func locked_matching(max_rarity: int, tag: StringName = &"") -> int:
+	var n := 0
+	for inst in warehouse.items():
+		var it := inst as ItemInstance
+		if it.is_locked_by_player() and (max_rarity < 0 or it.def.rarity <= max_rarity) and (tag == &"" or it.def.tags.has(tag)):
+			n += 1
+	return n
+
+
 ## 一键出售会卖几件、得多少（不动仓库）
 func sell_preview(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") -> Dictionary:
 	var out := {"count": 0, "funds": 0}
@@ -516,6 +526,8 @@ func _sellable(max_rarity: int, tag: StringName = &"") -> Array[ItemInstance]:
 			continue
 		if tag != &"" and not it.def.tags.has(tag):
 			continue
+		if it.is_locked_by_player():
+			continue     # 230：一键出售跳过锁住的
 		out.append(it)
 	return out
 

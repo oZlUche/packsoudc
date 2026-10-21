@@ -308,6 +308,8 @@ func _build_kit_page() -> Control:
 	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
 	_drag.register_view(_rack_view)     # 225：包架 ⇄ 棋盘
 	_rack_view.item_double_clicked.connect(quick_move)
+	_warehouse_view.actions_for = item_actions.bind(_warehouse_view)     # 230
+	_rack_view.actions_for = item_actions.bind(_rack_view)
 	flow.meta.rack.changed.connect(_refresh)
 	w.changed.connect(_refresh)
 	_warehouse_pages.minimum_size_changed.connect(_fit_warehouse)
@@ -476,6 +478,7 @@ func _build_stash() -> void:
 	_stash_box.add_child(_stash_view)
 	_drag.register_view(_stash_view)
 	_stash_view.item_double_clicked.connect(quick_move)
+	_stash_view.actions_for = item_actions.bind(_stash_view)     # 230
 	_drag.drop_filter = _allow_drop
 	stash.changed.connect(_refresh)
 	_stash_box.visible = stash.item_count() > 0     # 225：只有包（进了包架）时地上那一栏不出来
@@ -978,6 +981,52 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	return ok
 
 
+## 230：悬浮窗按钮。第一颗 = 双击做的那件事（带上 / 摆上棋盘 / 放回仓库 / 收回包架），然后锁定、出售（仓库里的）、置入（地上的）、奉为主信仰（信物）
+func item_actions(uid: int, view: ContainerView) -> Array:
+	var from := view.container() if view != null else null
+	var inst := from.get_item(uid) if from != null else null
+	if inst == null:
+		return []
+	var save := func():
+		flow.save_meta()
+		view.queue_redraw()
+	var quick := ItemActions.make(&"quick", "", func(): quick_move(view, uid))
+	var out: Array = [quick]
+	if from == flow.meta.rack:
+		quick.label = UiText.t("act.to_board")
+	elif flow.meta.warehouse.owns(from):
+		quick.label = UiText.t("act.carry")
+		if board != null and not _allow_drop(inst, board):
+			ItemActions.disable(quick, UiText.t("setup.no_brought_back"))
+		out.append(ItemActions.lock(inst, from, save))
+		out.append(ItemActions.lock_same(inst, flow.meta.warehouse, save))
+		out.append(ItemActions.sell(inst, MetaState.sell_price(inst.def, flow.sell_ratio()), _sell_one))
+		out.append(ItemActions.sell_same(inst, flow.meta.warehouse, func(i: ItemInstance) -> int: return MetaState.sell_price(i.def, flow.sell_ratio()), _sell_one))
+	elif from == stash:
+		quick.label = UiText.t("act.to_board")
+		if board != null and not _allow_drop(inst, board):
+			ItemActions.disable(quick, UiText.t("setup.no_brought_back"))
+		out.append(ItemActions.make(&"store", UiText.t("act.store"), func(): store(uid)))
+		out.append(ItemActions.lock(inst, from, save))
+	elif from == board:
+		quick.label = UiText.t("act.to_rack" if BagRack.holds(inst.def) else "act.to_warehouse")
+		if _preset_uids.has(uid):
+			ItemActions.disable(quick, UiText.t("setup.preset_stays"))
+		out.append(ItemActions.lock(inst, from, save))
+		if inst.def.is_anchor():
+			out.append(ItemActions.anchor(inst, board, reseat_anchor))
+	if board == null and from != board:
+		ItemActions.disable(quick, "")
+	return out
+
+
+## 230：仓库里卖一件（悬浮窗「出售」）
+func _sell_one(uid: int) -> int:
+	var got := flow.sell_item(uid)
+	_refresh()
+	return got
+
+
 ## 090：把地上的一件收进仓库（= 置入）。放不下返回 false
 func store(uid: int) -> bool:
 	if stash == null or stash.get_item(uid) == null:
@@ -1359,7 +1408,7 @@ func _rebuild_board() -> void:
 	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_readout)
 	_drag.register_view(_board_view)
-	_board_view.item_context.connect(func(_v: ContainerView, uid: int): reseat_anchor(uid))     # 099：开局屏的棋盘同一套
+	_board_view.actions_for = item_actions.bind(_board_view)     # 230：右键 = 钉住悬浮窗，信物奉为主信仰改成按钮
 	_board_view.item_double_clicked.connect(quick_move)     # 109：每次重建棋盘视图都要重新接
 	board.changed.connect(_refresh)
 	_apply_preset()     # 096：挑着的预设套跟着角色换过来

@@ -54,6 +54,22 @@ static func reserve_uid_above(value: int) -> void:
 	_next_uid = maxi(_next_uid, value + 1)
 
 
+## 230：玩家锁定（防手滑：锁住的不卖、不丢到地上、不献祭、不进铸炉；可以拖、可以搬）。存在 [member state] 里，没锁不写键（存档逐字节不变）。
+## 不是 207 的「扎根」（[method GridInventory.is_locked]）
+const LOCKED_KEY := "locked"
+
+
+func is_locked_by_player() -> bool:
+	return bool(state.get(LOCKED_KEY, false))
+
+
+func set_locked(on: bool) -> void:
+	if on:
+		state[LOCKED_KEY] = true
+	else:
+		state.erase(LOCKED_KEY)
+
+
 ## 148：还剩几次（[member ItemDef.wear]）。没有耐久的返回 -1；老档里没记的按满算
 func charges() -> int:
 	if def == null or def.wear == null:

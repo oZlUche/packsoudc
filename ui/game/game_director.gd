@@ -115,6 +115,7 @@ func _ready() -> void:
 	add_child(ground)
 	GroundLayer.set_current(ground)
 	ground.item_double_clicked.connect(_on_ground_double)     # 134
+	ground.actions_for = ground_actions     # 230
 	HoverTip.codex_page = func(name: String) -> String: return flow.encyclopedia().page_for(name)     # 220 E
 	HoverTip.open_codex = open_codex
 	# 089：存档位 —— 用默认路径（正式游戏）时按位存：老的单文件存档先搬进第 1 位，再切到设置里记的那一位。
@@ -179,6 +180,15 @@ func _on_ground_double(_view: ContainerView, uid: int) -> void:
 	var top := _overlay if _overlay != null else _base
 	if top != null:
 		top.ground_double_clicked(uid)
+
+
+## 230：地上一件的按钮 —— 放进背包（和双击同一条路：最上面那块面板或那一屏接）→ 锁定
+func ground_actions(uid: int) -> Array:
+	var inst := ground.stash.get_item(uid) if ground.stash != null else null
+	if inst == null:
+		return []
+	return [ItemActions.make(&"to_pack", UiText.t("act.to_pack"), func(): ground.item_double_clicked.emit(ground, uid)),
+		ItemActions.lock(inst, ground.stash)]
 
 
 func _exit_tree() -> void:

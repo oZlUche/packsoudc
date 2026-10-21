@@ -119,6 +119,7 @@ func open(payload: Dictionary) -> void:
 	# 084：容器里双击 → 试着放进背包（没空间就到地上）；没亮的不动。
 	# 玩家自己的东西放回容器不会变成「未知」：LootView 把绑定之后才出现的都当亮过
 	_loot.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_take(uid))
+	_tip_double(_loot, "act.take")     # 230
 	_tip.can_show = func(_v: ContainerView, uid: int) -> bool: return not _loot.is_locked(uid)     # 没亮的不说是什么
 	# 没亮的只能在容器里挪位（换「下一个」是谁），拖出去要等亮了 —— 作者定的。
 	# 只锁容器里没亮的那几件：自己棋盘上的包与道具随便挪（084 修：原来按 is_revealed 判，把玩家自己的东西也卡住了）

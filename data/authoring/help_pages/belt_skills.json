@@ -5,7 +5,7 @@
     "en": "Belt and Carried Tools"
   },
   "category": "bag",
-  "order": 8,
+  "order": 9,
   "text": "屏幕右下角那排圆槽是{b}腰带{/b}，放的是随身技能：用一次少一个的小招，不是道具 —— 不占棋盘、没有重量、不进包也不进仓库，撤离时没用完的就没了。每个槽放一种，同一种叠在一起，角上的数字是还剩几个；槽的数量有限，都占满了就买不进新的一种。\n\n双击圆槽用一个，用不了的时候槽上会说为什么。有的只能在地图上用，比如{b}急救包{/b}回体力（体力满了用不了）；有的只能在战前准备屏用，比如{b}烟雾弹{/b}：这一仗直接躲开，不打、没有战利品、也不掉体力，但核心的战斗躲不开。随身技能现在从商店的「随身」一行买，买下直接进腰带。",
   "texts": {
     "en": "The row of round slots in the bottom-right corner of the screen is your {b}Belt{/b}. It holds carried tools: small tricks that are used up one at a time. They are not items: they take no space on the board, have no Weight, and go into neither bags nor the Warehouse; any left unused when you extract are lost. Each slot holds one kind, copies of the same kind stack, and the number in the corner shows how many are left. Slots are limited; once they are all full, you can't buy a new kind.\n\nDouble-click a slot to use one; when it can't be used, the slot tells you why. Some work only on the map, such as the {b}Aid Pack{/b}, which restores Vitality (not usable at full Vitality). Some work only on the Pre-battle screen, such as the {b}Smoke Bomb{/b}: you dodge this battle entirely, with no fight, no Loot and no Vitality lost, but you can't dodge the battle at the core. For now, carried tools are bought from the Carried row in the Shop and go straight onto your Belt."

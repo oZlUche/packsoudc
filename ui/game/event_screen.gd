@@ -126,6 +126,7 @@ func _open_result(payload: Dictionary) -> void:
 			if _bag == null:
 				toggle_bag()
 			return bag_panel()))     # 双击 = 进包（背包开着也进）
+		_tip_double(_harvest, "act.take")     # 230
 		col.add_child(_harvest)
 		_drag = DragLayer.new()
 		_drag.label_font = font
