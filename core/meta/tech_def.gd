@@ -18,6 +18,8 @@ extends Resource
 @export var column: int = 0
 ## 118：说明面板「效果」区的一句总述（占位符照 112，不写数字 —— 数字由各级的 [method TechEffect.describe_level] 生成）
 @export_multiline var description: String = ""
+## 221 F5: description in other languages, {"en": ...}; read with [method Names.description_of]
+@export var descriptions: Dictionary = {}
 ## 每升一级做什么
 @export var effect: TechEffect = null
 ## 各级要什么：下标 0 = 升到第 1 级；有几项就有几级

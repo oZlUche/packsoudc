@@ -10,6 +10,9 @@ display_names = {
 "en": "Collector"
 }
 description = "图鉴点亮 {amount} 种道具（撤离成功时背包里的会点亮）。"
+descriptions = {
+"en": "Light up {amount} items in the Collection (what is in your pack when you extract gets lit)."
+}
 order = 5
 kind = &"codex_count"
 amount = 10

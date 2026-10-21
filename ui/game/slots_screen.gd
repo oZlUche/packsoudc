@@ -39,7 +39,7 @@ func _row(n: int) -> Control:
 	panel.add_child(row)
 	var summary := flow.slots.summary(n, flow.items, flow.meta_rules) if flow.slots != null else {"exists": false}
 	var exists := bool(summary.get("exists", false))
-	var text := UiText.t("slots.slot") % n + "　"
+	var text := UiText.t("slots.slot") % n + UiText.t("slots.sep")
 	if exists:
 		text += UiText.t("slots.summary") % [int(summary.get("runs", 0)) + 1, int(summary.get("extractions", 0)), int(summary.get("deaths", 0)),
 			UiText.t("slots.in_run") if bool(summary.get("has_run", false)) else ""]
@@ -75,7 +75,7 @@ func new_game_here(n: int) -> bool:
 func delete_slot(n: int) -> bool:
 	if _armed_delete != n:
 		_armed_delete = n
-		_hint.text = UiText.t("slots.confirm_delete") + "（%s）" % (UiText.t("slots.slot") % n)
+		_hint.text = UiText.t("slots.confirm_delete_slot") % (UiText.t("slots.slot") % n)
 		return false
 	_armed_delete = -1
 	flow.delete_slot(n)

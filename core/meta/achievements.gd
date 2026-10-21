@@ -32,7 +32,7 @@ func check() -> Array[AchievementDef]:
 		for g in def.grants:
 			meta.grant_unlock(g)
 			opened.append_array(unlock_names(g))
-		notes.append("成就达成【%s】%s" % [Names.of(def), "：解锁 " + "、".join(opened) if not opened.is_empty() else ""])
+		notes.append(UiText.t("ach.done_note") % [Names.of(def), UiText.t("ach.done_unlocks") % UiText.t("hud.buff_sep").join(opened) if not opened.is_empty() else ""])
 		got.append(def)
 	return got
 
@@ -59,13 +59,13 @@ func unlock_names(unlock_id: StringName) -> Array[String]:
 		for id in items.all_ids():
 			var def := items.get_def(id)
 			if def != null and def.requires_unlock == unlock_id:
-				out.append("道具「%s」" % Names.of(def))
+				out.append(UiText.t("ach.unlock_item") % Names.of(def))
 	for c in chapters:
 		if c != null and c.requires_unlock == unlock_id:
-			out.append("地图「%s」" % Names.of(c))
+			out.append(UiText.t("ach.unlock_map") % Names.of(c))
 	for d in difficulties:
 		if d != null and d.requires_unlock == unlock_id:
-			out.append("难度「%s」" % Names.of(d))
+			out.append(UiText.t("ach.unlock_difficulty") % Names.of(d))
 	return out
 
 

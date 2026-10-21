@@ -10,6 +10,9 @@
   ],
   "column": 2,
   "description": "商店的东西更便宜。",
+  "descriptions": {
+    "en": "Shop prices are lower."
+  },
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

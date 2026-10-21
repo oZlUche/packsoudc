@@ -34,5 +34,8 @@ display_names = {
 requires = Array[StringName]([&"thorough_search"])
 column = 2
 description = "敌人的东西更容易掉。"
+descriptions = {
+"en": "Enemies drop their things more often."
+}
 effect = SubResource("Resource_ekyr3")
 tiers = Array[ExtResource("3_mo3bi")]([SubResource("Resource_bqae7"), SubResource("Resource_5lovd"), SubResource("Resource_8u1tc")])

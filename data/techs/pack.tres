@@ -33,5 +33,8 @@ display_names = {
 }
 requires = Array[StringName]([&"safe_box"])
 description = "出发时多带一笔钱：按角色自己的开局钱加百分比。"
+descriptions = {
+"en": "Set out with extra money: a percentage of the character's own starting money."
+}
 effect = SubResource("Resource_3wda7")
 tiers = Array[ExtResource("3_l4xpf")]([SubResource("Resource_al8cp"), SubResource("Resource_vsc1q"), SubResource("Resource_shidj")])

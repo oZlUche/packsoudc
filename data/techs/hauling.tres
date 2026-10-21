@@ -39,5 +39,8 @@ order = 2
 requires = Array[StringName]([&"endurance"])
 column = 1
 description = "背得更多再开始吃力：按角色自己的负重上限加百分比。"
+descriptions = {
+"en": "Carry more before it gets heavy: a percentage of the character's own Load limit."
+}
 effect = SubResource("Resource_cmqce")
 tiers = Array[ExtResource("3_labor")]([SubResource("Resource_y5are"), SubResource("Resource_ww64o"), SubResource("Resource_ksjuv")])

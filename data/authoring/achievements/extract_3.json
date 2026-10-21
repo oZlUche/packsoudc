@@ -5,6 +5,9 @@
     "en": "Veteran"
   },
   "description": "撤离三次。",
+  "descriptions": {
+    "en": "Extract three times."
+  },
   "order": 2,
   "amount": 3,
   "grants": [

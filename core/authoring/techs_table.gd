@@ -1,7 +1,7 @@
 ## 科技树配置表 `docs/techs.xlsx` → 科技 JSON（119，作者定：科技树写成配置表，是否点亮读另一张表 = 存档的 `tech_levels`）。
 ##
 ## 表里机器读的两张（「说明」页是人话，不读）：
-## - 节点：id、名称、英文名、列、排序、前置（「、」分开）、说明、效果构件、构件参数（JSON）、每级说明模板 → `techs/<id>.json`
+## - 节点：id、名称、英文名、列、排序、前置（「、」分开）、说明、英文说明、效果构件、构件参数（JSON）、每级说明模板 → `techs/<id>.json`
 ## - 等级：科技 id、级、钱、材料（`steel_ingot: 2；rivet_box: 1`）、效果参数（JSON）→ `tiers`；`tech_run_buff` 节点每级再生成
 ##   `run_buffs/tech_<id>_<级>.json`（scope META，`effects[0]` = 节点的 `effect` 类型 + 这一级的参数），节点的 `effect.buffs` 跟着填好
 ##
@@ -42,6 +42,7 @@ static func fields(sheets: Dictionary, problems: Array[String] = []) -> Dictiona
 			"en": XlsxReader.cell_text(row.get("英文名", "")).strip_edges(),
 			"column": 0, "order": 0, "requires": [],
 			"description": XlsxReader.cell_text(row.get("说明", "")).strip_edges(),
+			"description_en": XlsxReader.cell_text(row.get("英文说明", "")).strip_edges(),
 			"effect": XlsxReader.cell_text(row.get("效果构件", "")).strip_edges(),
 			"params": XlsxReader.json_cell(row.get("构件参数（JSON）", null), "%s 的构件参数" % where, problems),
 			"template": XlsxReader.cell_text(row.get("每级说明模板", "")).strip_edges(),
@@ -74,8 +75,9 @@ static func fields(sheets: Dictionary, problems: Array[String] = []) -> Dictiona
 				problems.append("%s：每级说明模板里有写死的数字，写成 {字段} 占位符：%s" % [where, f["template"]])
 		elif f["template"] != "":
 			problems.append("%s：每级说明模板只 tech_run_buff 用，%s 这格留空" % [where, type])
-		if TextLint.has_bare_number(f["description"]):
-			problems.append("%s：说明里有写死的数字：%s" % [where, f["description"]])
+		for key in ["description", "description_en"]:
+			if TextLint.has_bare_number(f[key]):
+				problems.append("%s：说明里有写死的数字：%s" % [where, f[key]])
 		out[id] = f
 	for id in out:
 		for req in out[id]["requires"]:
@@ -129,6 +131,8 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 			"column": t["column"], "description": t["description"], "effect": effect, "tiers": tiers}
 		if t["en"] != "":
 			node["display_names"] = {"en": t["en"]}
+		if t["description_en"] != "":
+			node["descriptions"] = {"en": t["description_en"]}
 		var report := ImportReport.new()
 		var def := ContentImporter.import_tech(node, ctx, report)
 		if not report.ok():
@@ -204,13 +208,13 @@ static func markdown(f: Dictionary) -> String:
 		"",
 		"## 节点",
 		"",
-		"| id | 名称 | 英文名 | 列 | 排序 | 前置 | 说明 | 效果构件 | 构件参数 | 每级说明模板 |",
-		"|---|---|---|---|---|---|---|---|---|---|",
+		"| id | 名称 | 英文名 | 列 | 排序 | 前置 | 说明 | 英文说明 | 效果构件 | 构件参数 | 每级说明模板 |",
+		"|---|---|---|---|---|---|---|---|---|---|---|",
 	]
 	for id in f:
 		var t: Dictionary = f[id]
 		lines.append(_row([id, t["name"], t["en"], str(t["column"]), str(t["order"]), "、".join(PackedStringArray(t["requires"])),
-			t["description"], t["effect"], _json_text(t["params"]), t["template"]]))
+			t["description"], t["description_en"], t["effect"], _json_text(t["params"]), t["template"]]))
 	lines.append_array(["", "## 等级", "", "| 科技 id | 级 | 钱 | 材料 | 效果参数 |", "|---|---|---|---|---|"])
 	for id in f:
 		var tiers: Array = f[id]["tiers"]

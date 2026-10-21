@@ -39,19 +39,19 @@ func open(_payload: Dictionary) -> void:
 	var col := _vbox(10)
 	col.custom_minimum_size.x = 520
 	center.add_child(col)
-	col.add_child(_label("设置", 26, UiPalette.FG))
+	col.add_child(_label(UiText.t("menu.settings"), 26, UiPalette.FG))
 	_build_display(col)
 	_build_sound(col)
 	col.add_child(HSeparator.new())
-	col.add_child(_label("战利品 / 容器屏", 15, UiPalette.DIM))
-	_auto_close_btn = _toggle("拿走最后一件后自动关闭", toggle_loot_auto_close)
+	col.add_child(_label(UiText.t("settings.loot_section"), 15, UiPalette.DIM))
+	_auto_close_btn = _toggle(UiText.t("settings.loot_auto_close"), toggle_loot_auto_close)
 	col.add_child(_auto_close_btn)
 	col.add_child(HSeparator.new())
-	col.add_child(_label("背景底色", 15, UiPalette.DIM))
+	col.add_child(_label(UiText.t("settings.bg_section"), 15, UiPalette.DIM))
 	var bg_row := _hbox(8)
 	for t in UiPalette.BG_THEMES:
 		var tid := String(t["id"])
-		var b := _button(String(t["name"]), func(): set_bg_theme(tid), 13, UiPalette.Tier.MINOR)
+		var b := _button(UiText.pick(t["name"]), func(): set_bg_theme(tid), 13, UiPalette.Tier.MINOR)
 		b.toggle_mode = true
 		var box := b.get_theme_stylebox("normal") as StyleBoxFlat
 		if box != null:
@@ -61,21 +61,21 @@ func open(_payload: Dictionary) -> void:
 		_bg_btns[tid] = b
 		bg_row.add_child(b)
 	col.add_child(bg_row)
-	_fades_btn = _toggle("换屏淡入", toggle_ui_fades)     # 157
+	_fades_btn = _toggle(UiText.t("settings.fades"), toggle_ui_fades)     # 157
 	col.add_child(_fades_btn)
 	var cursor_row := _hbox(8)
-	cursor_row.add_child(_label("光标", 14, UiPalette.FG))
+	cursor_row.add_child(_label(UiText.t("settings.cursor"), 14, UiPalette.FG))
 	for skin in UiCursor.SKINS:
 		var sid := String(skin)
-		var cb := _button(String(UiCursor.SKINS[skin]), func(): set_cursor_skin(sid), 13, UiPalette.Tier.MINOR)
+		var cb := _button(UiText.pick(UiCursor.SKINS[skin]), func(): set_cursor_skin(sid), 13, UiPalette.Tier.MINOR)
 		cb.toggle_mode = true
 		_cursor_btns[sid] = cb
 		cursor_row.add_child(cb)
 	col.add_child(cursor_row)
 	col.add_child(HSeparator.new())
-	col.add_child(_label("老手", 15, UiPalette.DIM))
-	col.add_child(_wrapped("全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计。", 12, UiPalette.DIM, 500))
-	_unlock_all_btn = _toggle("全部解锁", toggle_unlock_all)
+	col.add_child(_label(UiText.t("settings.veteran"), 15, UiPalette.DIM))
+	col.add_child(_wrapped(UiText.t("settings.unlock_all_desc"), 12, UiPalette.DIM, 500))
+	_unlock_all_btn = _toggle(UiText.t("settings.unlock_all"), toggle_unlock_all)
 	col.add_child(_unlock_all_btn)
 	col.add_child(HSeparator.new())
 	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
@@ -93,7 +93,7 @@ func open(_payload: Dictionary) -> void:
 		row.add_child(_button("打开日志文件夹", open_log_folder, 13, UiPalette.Tier.MINOR))
 		col.add_child(row)
 		col.add_child(HSeparator.new())
-	col.add_child(_button("返回" if back.is_valid() else "回主菜单", go_back, 14))
+	col.add_child(_button(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back, 14))
 	_refresh()
 
 
@@ -101,12 +101,12 @@ func open(_payload: Dictionary) -> void:
 ## 主菜单的设置和 Esc 暂停菜单里嵌的是同一屏，两个入口都有它
 func _build_display(col: VBoxContainer) -> void:
 	add_to_group(GameDirector.DISPLAY_GROUP)     # F11 切了模式，这一节跟着刷新
-	col.add_child(_label("显示", 15, UiPalette.DIM))
+	col.add_child(_label(UiText.t("settings.display"), 15, UiPalette.DIM))
 	var mode_row := _hbox(8)
-	mode_row.add_child(_label("窗口", 14, UiPalette.FG))
-	for m in [[WindowSetup.WINDOWED, "窗口"], [WindowSetup.FULLSCREEN, "全屏"]]:
+	mode_row.add_child(_label(UiText.t("settings.window_row"), 14, UiPalette.FG))
+	for m in [[WindowSetup.WINDOWED, "settings.windowed"], [WindowSetup.FULLSCREEN, "settings.fullscreen"]]:
 		var mode: String = m[0]
-		var b := _button(String(m[1]), func(): set_window_mode(mode), 13, UiPalette.Tier.MINOR)
+		var b := _button(UiText.t(String(m[1])), func(): set_window_mode(mode), 13, UiPalette.Tier.MINOR)
 		b.toggle_mode = true
 		_mode_btns[mode] = b
 		mode_row.add_child(b)
@@ -126,17 +126,17 @@ func _build_display(col: VBoxContainer) -> void:
 		_res_btns[p] = rb
 		rows[aspect].add_child(rb)
 	if shown.is_empty():     # 屏幕比最小一档还小：窗口就是屏幕那么大
-		col.add_child(_label("分辨率：随屏幕", 13, UiPalette.DIM))
-	_res_note = _label("全屏按桌面分辨率", 12, UiPalette.DIM)
+		col.add_child(_label(UiText.t("settings.res_follow_screen"), 13, UiPalette.DIM))
+	_res_note = _label(UiText.t("settings.fullscreen_note"), 12, UiPalette.DIM)
 	col.add_child(_res_note)
-	_grid_btn = _toggle("棋盘格线", toggle_show_grid)     # 187
+	_grid_btn = _toggle(UiText.t("settings.grid"), toggle_show_grid)     # 187
 	col.add_child(_grid_btn)
 
 
 ## 204：「声音」一节 —— 音效音量一行（− / + 一步 10%，按钮本身响 `ui.press`，当场听到新音量）。音乐那行等第一首曲子再露出来（待定 4.2）
 func _build_sound(col: VBoxContainer) -> void:
 	col.add_child(HSeparator.new())
-	col.add_child(_label("声音", 15, UiPalette.DIM))
+	col.add_child(_label(UiText.t("settings.sound"), 15, UiPalette.DIM))
 	var row := _hbox(8)
 	_sfx_label = _label("", 14, UiPalette.FG)
 	_sfx_label.custom_minimum_size.x = 120
@@ -291,13 +291,13 @@ func toggle_unlock_all() -> void:
 func _refresh() -> void:
 	refresh_display()
 	if _sfx_label != null:
-		_sfx_label.text = "音效 %d%%" % roundi(flow.settings.sfx_volume * 100.0)
+		_sfx_label.text = UiText.t("settings.sfx_volume") % roundi(flow.settings.sfx_volume * 100.0)
 	if _tooltip_btn != null:
 		_tooltip_btn.set_pressed_no_signal(flow.settings.node_tooltips_preview)
 		_tooltip_btn.text = "节点浮窗预览：%s" % ("开（不管章节）" if flow.settings.node_tooltips_preview else "关（按章节：第二章开）")
 	if _auto_close_btn != null:
 		_auto_close_btn.set_pressed_no_signal(flow.settings.loot_auto_close)
-		_auto_close_btn.text = "拿走最后一件后自动关闭：%s" % ("开" if flow.settings.loot_auto_close else "关（手动关）")
+		_auto_close_btn.text = UiText.t("settings.loot_auto_close_state") % (UiText.t("settings.on") if flow.settings.loot_auto_close else UiText.t("settings.off_manual"))
 	if _trace_btn != null:
 		_trace_btn.set_pressed_no_signal(flow.settings.battle_trace)
 		_trace_btn.text = "战斗日志：%s" % ("开" if flow.settings.battle_trace else "关")
@@ -306,10 +306,10 @@ func _refresh() -> void:
 		_debug_btn.text = "调试模式：%s" % ("开" if flow.settings.debug_mode else "关")
 	if _grid_btn != null:
 		_grid_btn.set_pressed_no_signal(grid_on())
-		_grid_btn.text = "棋盘格线：%s" % ("开" if grid_on() else "关")
+		_grid_btn.text = UiText.t("settings.grid_state") % (UiText.t("settings.on") if grid_on() else UiText.t("settings.off"))
 	if _fades_btn != null:
 		_fades_btn.set_pressed_no_signal(flow.settings.ui_fades)
-		_fades_btn.text = "换屏淡入：%s" % ("开" if flow.settings.ui_fades else "关")
+		_fades_btn.text = UiText.t("settings.fades_state") % (UiText.t("settings.on") if flow.settings.ui_fades else UiText.t("settings.off"))
 	for sid in _cursor_btns:
 		(_cursor_btns[sid] as Button).set_pressed_no_signal(String(sid) == (flow.settings.cursor_skin if UiCursor.SKINS.has(flow.settings.cursor_skin) else UiCursor.DEFAULT_SKIN))
 	for tid in _bg_btns:
@@ -317,7 +317,7 @@ func _refresh() -> void:
 		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == UiPalette.bg_theme)
 	if _unlock_all_btn != null:
 		_unlock_all_btn.set_pressed_no_signal(flow.settings.unlock_all)
-		_unlock_all_btn.text = "全部解锁：%s" % ("开（章节 / 难度 / 道具全开，成就不计）" if flow.settings.unlock_all else "关")
+		_unlock_all_btn.text = UiText.t("settings.unlock_all_state") % (UiText.t("settings.unlock_all_on") if flow.settings.unlock_all else UiText.t("settings.off"))
 
 
 ## 090：Esc = 返回上一级（同「返回 / 回主菜单」按钮）

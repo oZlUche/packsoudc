@@ -72,7 +72,7 @@ func proceed() -> void:
 
 func _on_finished() -> void:
 	if _next == null and _next_slot != null:
-		_next = IconButton.make_art(CONTINUE_ART, "continue", UiText.t("battle.continue"), "", proceed)
+		_next = IconButton.make_art(CONTINUE_ART, "continue" if UiText.lang == "zh" else "continue_en", UiText.t("battle.continue"), "", proceed)
 		_next_slot.add_child(_next)
 	_seen_end = true     # 157：拖时间轴拖到头会再「看完」一次
 

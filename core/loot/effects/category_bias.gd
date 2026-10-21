@@ -9,4 +9,4 @@ func modify(ctx: LootContext) -> void:
 	ctx.add_category_bias(tag, amount)
 
 func describe() -> String:
-	return UiText.t("loot.category_bias") % [tag, amount]
+	return UiText.t("loot.category_bias") % [Glossary.tag_name(tag), amount]

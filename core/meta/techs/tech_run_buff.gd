@@ -18,7 +18,7 @@ func derive(meta: MetaState, level: int) -> void:
 
 
 func describe() -> String:
-	return "开局带一条局外 buff"
+	return UiText.t("tech.run_buff")
 
 
 func describe_level(level: int, buff_defs: Dictionary = {}) -> String:

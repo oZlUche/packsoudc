@@ -33,7 +33,7 @@ var _current := 0
 ## 一共列几个页签（含没解锁的）与每级几页（[method TechWarehousePages.plan_of]）
 var _max_pages := 0
 var _per_level := 1
-var _tech_name := "仓库扩建"
+var _tech_name := UiText.t("wh.expand_tech")
 var _hover_tab := -1
 var _hover_t := 0.0
 
@@ -157,8 +157,8 @@ func _refresh() -> void:
 		var b := _tabs[i]
 		var locked := is_locked(i)
 		b.disabled = locked
-		b.text = "%s\n%s" % [numeral(i), "　" if locked else "%d件" % warehouse.page(i).item_count()]     # 锁着的第二行留空给锁
-		b.tooltip_text = "%s到第 %d 级解锁" % [_tech_name, ceili(float(i) / float(_per_level))] if locked else "第%s页　%d 件" % [numeral(i), warehouse.page(i).item_count()]
+		b.text = "%s\n%s" % [numeral(i), "　" if locked else UiText.t("wh.tab_count") % warehouse.page(i).item_count()]     # 锁着的第二行留空给锁
+		b.tooltip_text = UiText.t("wh.tab_locked_tip") % [_tech_name, ceili(float(i) / float(_per_level))] if locked else UiText.t("wh.tab_tip") % [numeral(i), warehouse.page(i).item_count()]
 		b.queue_redraw()
 	if is_locked(_current) or view.inventory == null:
 		show_page(clampi(_current, 0, warehouse.page_count() - 1))
@@ -204,4 +204,6 @@ func _draw_lock(b: Button, i: int) -> void:
 
 ## 页名：一、二、三……（十以后照写数字）
 static func numeral(i: int) -> String:
+	if UiText.lang != "zh":     # 221 F5b: digits in English
+		return str(i + 1)
 	return NUMERALS[i] if i >= 0 and i < NUMERALS.size() else str(i + 1)

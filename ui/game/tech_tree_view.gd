@@ -99,7 +99,7 @@ func state_of(id: StringName) -> State:
 static func level_text(m: MetaState, def: TechDef) -> String:
 	var lv := TechService.level(m, def.id)
 	if def.max_level() <= 1:
-		return "已点亮" if lv >= 1 else "未点亮"
+		return UiText.t("tech.lit") if lv >= 1 else UiText.t("tech.unlit")
 	return "Lv %d / %d" % [lv, def.max_level()]
 
 

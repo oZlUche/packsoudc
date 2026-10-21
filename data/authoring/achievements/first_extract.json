@@ -5,6 +5,9 @@
     "en": "First Extraction"
   },
   "description": "从诅咒之地撤离一次。",
+  "descriptions": {
+    "en": "Extract from the Cursed Lands once."
+  },
   "order": 1,
   "grants": [
     "ach_first_extract"
