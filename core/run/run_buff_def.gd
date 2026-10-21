@@ -55,4 +55,4 @@ func summary() -> String:
 	for r in rules:
 		if r != null and Glossary.rule_text(r) != "":
 			parts.append(Glossary.rule_text(r))
-	return "；".join(parts) if not parts.is_empty() else Names.description_of(self)
+	return UiText.t("faith.perk_sep").join(parts) if not parts.is_empty() else Names.description_of(self)

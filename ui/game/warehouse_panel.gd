@@ -74,9 +74,9 @@ func _build() -> void:
 	col.add_child(_line)
 	var buttons := UiTheme.hbox(8)
 	col.add_child(buttons)
-	_store_btn = UiTheme.make_button("一键置入", store_all, UiPalette.Tier.SECONDARY, 13)
+	_store_btn = UiTheme.make_button(UiText.t("wh.store_all"), store_all, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_store_btn)
-	_tidy_btn = UiTheme.make_button("整理", tidy, UiPalette.Tier.SECONDARY, 13)
+	_tidy_btn = UiTheme.make_button(UiText.t("wh.tidy"), tidy, UiPalette.Tier.SECONDARY, 13)
 	buttons.add_child(_tidy_btn)
 
 	if _drag == null:
@@ -142,16 +142,16 @@ func warehouse_view() -> InventoryView:
 
 ## 一键置入的提示行。177 补 1.1：放不下的跳过了，列出卡住的名字（最多三个，多的写「等」）
 static func store_text(got: Dictionary) -> String:
-	var line := "放进 %d 件" % int(got["moved"])
+	var line := UiText.t("wh.stored") % int(got["moved"])
 	var names: Array = got.get("stuck_names", [])
 	if names.is_empty() and String(got.get("stuck", "")) != "":
 		names = [String(got["stuck"])]
 	if names.is_empty():
 		return line
-	var shown := "、".join(PackedStringArray(names.slice(0, STUCK_SHOWN)))
+	var shown := UiText.t("hud.buff_sep").join(PackedStringArray(names.slice(0, STUCK_SHOWN)))
 	if names.size() > STUCK_SHOWN:
-		shown += "等"
-	return line + "；仓库放不下 %d 件（%s）—— 挪一挪仓库，或者不要了" % [int(got["left"]), shown]
+		shown = UiText.t("wh.and_more") % shown
+	return line + UiText.t("wh.stuck") % [int(got["left"]), shown]
 
 
 #region 公开动作
@@ -165,7 +165,7 @@ func store_all() -> Dictionary:
 
 func discard_board() -> void:
 	_flow.discard_board()
-	_line.text = "带回来的背包清空了"
+	_line.text = UiText.t("wh.board_cleared")
 	changed.emit()
 
 
@@ -176,7 +176,7 @@ func tidy() -> bool:
 		return false
 	var ok := GridTidy.tidy(page)
 	if page.item_count() > 1:
-		_line.text = "这一页整理好了" if ok else "这堆东西排不开，没动"
+		_line.text = UiText.t("wh.page_tidied") if ok else UiText.t("wh.tidy_failed")
 	changed.emit()
 	return ok
 
@@ -191,14 +191,14 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 	if from == _meta.board:
 		ok = InventoryService.transfer_auto(_meta.board, uid, _meta.warehouse)
 		if not ok:
-			_line.text = "仓库放不下「%s」" % Names.of(inst.def)
+			_line.text = UiText.t("setup.no_room_warehouse") % Names.of(inst.def)
 		else:
 			if _shelf != null:
 				_shelf.show_item(uid)
 	elif _meta.warehouse.owns(from) and _meta.board != null:
 		ok = InventoryService.transfer_auto(_meta.warehouse, uid, _meta.board)
 		if not ok:
-			_line.text = "带回来的背包里放不下「%s」" % Names.of(inst.def)
+			_line.text = UiText.t("wh.board_no_room") % Names.of(inst.def)
 	if ok:
 		changed.emit()
 	return ok
@@ -209,14 +209,14 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 func _sync_board_label() -> void:
 	if _board_label == null or _meta.board == null:
 		return
-	_board_label.text = "带回来的背包　已清空" if _meta.board.item_count() == 0 else "带回来的背包　位置照旧，包已换成默认背景"
+	_board_label.text = UiText.t("wh.board_label_empty") if _meta.board.item_count() == 0 else UiText.t("wh.board_label")
 
 
 func _refresh() -> void:
 	if _meta.board == null and _board_view != null or _meta.board != null and (_board_view == null or _board_view.inventory != _meta.board):
 		_rebuild_board_view()
 	if _size_label != null:
-		_size_label.text = "仓库　%d 页，每页 %d × %d 格，不需要包" % [_meta.warehouse.page_count(), _meta.warehouse.size.x, _meta.warehouse.size.y]
+		_size_label.text = UiText.t("wh.size_label") % [_meta.warehouse.page_count(), _meta.warehouse.size.x, _meta.warehouse.size.y]
 	_sync_board_label()
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
@@ -224,4 +224,4 @@ func _refresh() -> void:
 	var page := _shelf.current_page() if _shelf != null else null
 	_tidy_btn.disabled = page == null or page.item_count() <= 1
 	if _line != null and _line.text == "":
-		_line.text = "带回来的背包里还有 %d 件：置入仓库；不管的话开局屏里它们到地上，出发就没了" % _meta.board.item_count() if pending else "仓库 %d 件" % _meta.warehouse.item_count()
+		_line.text = UiText.t("wh.pending") % _meta.board.item_count() if pending else UiText.t("wh.count") % _meta.warehouse.item_count()

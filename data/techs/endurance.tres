@@ -29,5 +29,8 @@ display_names = {
 }
 column = 1
 description = "体力上限更高，在图上走得更远：按角色自己的体力上限加百分比。"
+descriptions = {
+"en": "Higher max Vitality, so you travel further on the map: a percentage of the character's own max Vitality."
+}
 effect = SubResource("Resource_2ojyd")
 tiers = Array[ExtResource("3_qqmiq")]([SubResource("Resource_jxqi0"), SubResource("Resource_boy6c"), SubResource("Resource_531px")])

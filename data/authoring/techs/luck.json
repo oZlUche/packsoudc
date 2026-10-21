@@ -9,6 +9,9 @@
   ],
   "column": 2,
   "description": "敌人的东西更容易掉。",
+  "descriptions": {
+    "en": "Enemies drop their things more often."
+  },
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

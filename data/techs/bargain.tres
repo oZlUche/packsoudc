@@ -30,5 +30,8 @@ order = 1
 requires = Array[StringName]([&"thorough_search"])
 column = 2
 description = "商店的东西更便宜。"
+descriptions = {
+"en": "Shop prices are lower."
+}
 effect = SubResource("Resource_3dbfo")
 tiers = Array[ExtResource("3_hlnqw")]([SubResource("Resource_glqmy"), SubResource("Resource_g3r2s")])

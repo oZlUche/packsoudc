@@ -19,13 +19,13 @@ func describe() -> String:
 
 
 func describe_level(level: int, _buff_defs: Dictionary = {}) -> String:
-	return "保险箱共 " + _text(cols * level, rows * level)
+	return UiText.t("tech.safe_total") % _text(cols * level, rows * level)
 
 
 static func _text(c: int, r: int) -> String:
 	var parts: Array[String] = []
 	if c != 0:
-		parts.append("+%d 列" % c)
+		parts.append(UiText.t("tech.safe_cols") % c)
 	if r != 0:
-		parts.append("+%d 行" % r)
-	return "、".join(parts) if not parts.is_empty() else "不变"
+		parts.append(UiText.t("tech.safe_rows") % r)
+	return UiText.t("hud.buff_sep").join(parts) if not parts.is_empty() else UiText.t("tech.safe_unchanged")

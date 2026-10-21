@@ -19,13 +19,13 @@ func derive(meta: MetaState, level: int) -> void:
 
 
 func describe() -> String:
-	return "开局腰带里多 %d 个%s" % [count, _name()]
+	return UiText.t("tech.belt_grant") % [count, _name()]
 
 
 func describe_level(level: int, _buff_defs: Dictionary = {}) -> String:
-	return "开局腰带里多 %d 个%s" % [count * level, _name()]
+	return UiText.t("tech.belt_grant") % [count * level, _name()]
 
 
 func _name() -> String:
 	var def := BeltSkillDef.find(skill)
-	return def.display_name if def != null else String(skill)
+	return Names.of(def) if def != null else String(skill)

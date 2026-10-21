@@ -8,6 +8,9 @@
     "warehouse"
   ],
   "description": "局内的保险箱多出格子，撤不出来也能多保住几件。",
+  "descriptions": {
+    "en": "The safe in a run gets more cells, so more is kept even if you fail to extract."
+  },
   "effect": {
     "type": "tech_safe_size",
     "rows": 1

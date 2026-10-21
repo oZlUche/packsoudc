@@ -26,5 +26,8 @@ display_names = {
 requires = Array[StringName]([&"endurance"])
 column = 1
 description = "打输了少扣体力，最少还是扣一点。"
+descriptions = {
+"en": "Lose less Vitality when you lose a battle, but always at least one point."
+}
 effect = SubResource("Resource_2cdqy")
 tiers = Array[ExtResource("3_xleoc")]([SubResource("Resource_vnxmu")])

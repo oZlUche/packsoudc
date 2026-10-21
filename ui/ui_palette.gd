@@ -8,12 +8,12 @@ extends RefCounted
 const BG := Color("101216")
 ## 091（作者定）：背景底色可选，默认比原来浅一点。设置屏挑，存在 [GameSettings.bg_theme]
 const BG_THEMES := [
-	{"id": "graphite", "name": "石墨（默认）", "color": Color("262b33")},
-	{"id": "dark", "name": "深夜", "color": Color("101216")},
-	{"id": "slate", "name": "石板", "color": Color("1b2028")},
-	{"id": "dusk", "name": "暮色", "color": Color("2a2733")},
-	{"id": "moss", "name": "苔绿", "color": Color("1f2a24")},
-	{"id": "mist", "name": "雾灰（最浅）", "color": Color("3a3f48")},
+	{"id": "graphite", "name": {"zh": "石墨（默认）", "en": "Graphite (default)"}, "color": Color("262b33")},
+	{"id": "dark", "name": {"zh": "深夜", "en": "Midnight"}, "color": Color("101216")},
+	{"id": "slate", "name": {"zh": "石板", "en": "Slate"}, "color": Color("1b2028")},
+	{"id": "dusk", "name": {"zh": "暮色", "en": "Dusk"}, "color": Color("2a2733")},
+	{"id": "moss", "name": {"zh": "苔绿", "en": "Moss"}, "color": Color("1f2a24")},
+	{"id": "mist", "name": {"zh": "雾灰（最浅）", "en": "Mist (lightest)"}, "color": Color("3a3f48")},
 ]
 const BG_DEFAULT := "graphite"
 static var bg_theme: String = BG_DEFAULT

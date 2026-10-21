@@ -21,6 +21,8 @@ const BINARY: Array[StringName] = [&"codex_has", &"unlock", &"keepsake"]
 @export var display_names: Dictionary = {}
 ## 解锁途径（成就页写的那句：怎么做才能完成）
 @export_multiline var description: String = ""
+## 221 F5: description in other languages, {"en": ...}
+@export var descriptions: Dictionary = {}
 ## 没完成前只显示「？？？」，途径也藏（彩蛋）
 @export var hidden: bool = false
 ## 成就页的先后（小的在前）

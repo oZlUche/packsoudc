@@ -10,6 +10,9 @@
   ],
   "column": 1,
   "description": "背得更多再开始吃力：按角色自己的负重上限加百分比。",
+  "descriptions": {
+    "en": "Carry more before it gets heavy: a percentage of the character's own Load limit."
+  },
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

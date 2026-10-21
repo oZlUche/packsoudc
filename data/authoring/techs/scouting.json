@@ -10,6 +10,9 @@
   ],
   "column": 2,
   "description": "隐形的猎手走近到一定距离就看得见。",
+  "descriptions": {
+    "en": "Hidden hunters become visible once they come close enough."
+  },
   "effect": {
     "type": "tech_run_buff",
     "buffs": [

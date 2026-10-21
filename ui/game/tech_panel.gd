@@ -57,7 +57,7 @@ func _build() -> void:
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(left)
-	left.add_child(UiTheme.make_label("科技树　从下往上点亮；点一个节点看下面", 13, UiPalette.DIM))
+	left.add_child(UiTheme.make_label(UiText.t("tech.tree_intro"), 13, UiPalette.DIM))
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(300, 300)
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -78,11 +78,11 @@ func _build() -> void:
 	_name = UiTheme.make_label("", 20, UiPalette.FG)
 	right.add_child(_name)
 	right.add_child(HSeparator.new())
-	right.add_child(UiTheme.make_label("效果", 13, UiPalette.DIM))
+	right.add_child(UiTheme.make_label(UiText.t("tech.effect"), 13, UiPalette.DIM))
 	_effect = UiTheme.vbox(4)
 	right.add_child(_effect)
 	right.add_child(HSeparator.new())
-	right.add_child(UiTheme.make_label("费用", 13, UiPalette.DIM))
+	right.add_child(UiTheme.make_label(UiText.t("tech.cost"), 13, UiPalette.DIM))
 	_cost = UiTheme.vbox(4)
 	right.add_child(_cost)
 	_action = Button.new()
@@ -94,7 +94,7 @@ func _build() -> void:
 	var zone_col := UiTheme.vbox(8)
 	row.add_child(zone_col)
 	right = zone_col
-	right.add_child(UiTheme.make_wrapped("上交区　交给选中的节点：从右边的仓库拖进来或双击（上交即消耗，交了不能退）", 13, UiPalette.DIM, ZONE_SIZE.x * InventoryView.CELL))
+	right.add_child(UiTheme.make_wrapped(UiText.t("tech.zone_intro"), 13, UiPalette.DIM, ZONE_SIZE.x * InventoryView.CELL))
 	_zone = GridInventory.new(ZONE_SIZE, 0, false)
 	_zone.accept_filter = _wanted
 	_zone.changed.connect(_on_zone_changed)
@@ -138,17 +138,17 @@ func submit(uid: int) -> bool:
 		return false
 	var def := _flow.tech_of(_selected)
 	if def == null:
-		_line.text = "先在左边选一个科技"
+		_line.text = UiText.t("tech.pick_first")
 		return false
 	if not TechService.prereqs_met(_meta, def):
-		_line.text = "「%s」还锁着：先点亮前置" % Names.of(def)
+		_line.text = UiText.t("tech.locked") % Names.of(def)
 		return false
 	if not TechService.can_submit(_meta, def, inst.def):
-		_line.text = "「%s」不是它下一级要的" % Names.of(inst.def)
+		_line.text = UiText.t("tech.not_wanted") % Names.of(inst.def)
 		return false
 	var ok := _flow.submit_tech(def.id, uid)
 	if ok:
-		_line.text = "交了「%s」" % Names.of(inst.def)
+		_line.text = UiText.t("tech.handed_in") % Names.of(inst.def)
 		changed.emit()
 	return ok
 
@@ -169,7 +169,7 @@ func submit_many(item_id: StringName, k: int) -> int:
 			done += 1
 	if done > 0:
 		var item_def := _flow.items.get_def(item_id) if _flow.items != null else null
-		_line.text = "交了 %d 件「%s」" % [done, Names.of(item_def) if item_def != null else String(item_id)]
+		_line.text = UiText.t("tech.handed_in_many") % [done, Names.of(item_def) if item_def != null else String(item_id)]
 		changed.emit()
 		_refresh()
 	return done
@@ -184,7 +184,7 @@ func upgrade(id: StringName) -> bool:
 	var ok := _flow.upgrade_tech(id)
 	if ok:
 		var def := _flow.tech_of(id)
-		_line.text = "%s %s" % [Names.of(def), "点亮了" if def.max_level() <= 1 else "升到 Lv %d" % TechService.level(_meta, id)]
+		_line.text = UiText.t("tech.lit_up") % Names.of(def) if def.max_level() <= 1 else UiText.t("tech.leveled_up") % [Names.of(def), TechService.level(_meta, id)]
 		changed.emit()
 	return ok
 
@@ -246,7 +246,7 @@ func _on_zone_changed() -> void:
 		_zone.remove(it.uid)
 		if TechService.deposit(_meta, def, it.def):
 			_flow.save_meta()
-			_line.text = "交了「%s」" % Names.of(it.def)
+			_line.text = UiText.t("tech.handed_in") % Names.of(it.def)
 			changed.emit()
 
 
@@ -257,7 +257,7 @@ func _on_drag_finished(uid: int, dropped: bool) -> void:
 	var inst := _meta.warehouse.get_item(uid)
 	if inst != null and DragLayer.visible_rect(_zone_view).has_point(_zone_view.get_global_mouse_position()):
 		var def := _flow.tech_of(_selected)
-		_line.text = "先在左边选一个科技" if def == null else "「%s」不是它下一级要的" % Names.of(inst.def)
+		_line.text = UiText.t("tech.pick_first") if def == null else UiText.t("tech.not_wanted") % Names.of(inst.def)
 
 
 func _refresh() -> void:
@@ -271,25 +271,26 @@ func _refresh() -> void:
 	_zone_view.modulate = Color(1, 1, 1, 1) if def != null and TechService.prereqs_met(_meta, def) and TechService.next_tier(_meta, def) != null \
 		else Color(1, 1, 1, 0.35)     # 没选 / 锁住 / 满级：上交区灰着
 	if def == null:
-		_name.text = "（选一个科技）"
+		_name.text = UiText.t("tech.none_selected")
 		_action.visible = false
 		return
 	var lv := TechService.level(_meta, def.id)
 	var tier := TechService.next_tier(_meta, def)
-	_name.text = "%s　%s" % [Names.of(def), TechTreeView.level_text(_meta, def)]
+	_name.text = UiText.t("tech.name_level") % [Names.of(def), TechTreeView.level_text(_meta, def)]
 
 	# 效果：一句总述 + 现在 / 下一级
-	if def.description.strip_edges() != "":
-		_effect.add_child(UiTheme.make_wrapped(TextTemplate.plain(def.description, {}), 14, UiPalette.FG, PANEL_WIDTH))
+	var desc := Names.description_of(def)
+	if desc.strip_edges() != "":
+		_effect.add_child(UiTheme.make_wrapped(TextTemplate.plain(desc, {}), 14, UiPalette.FG, PANEL_WIDTH))
 	if def.effect != null:
 		if lv >= 1:
-			_effect.add_child(UiTheme.make_wrapped("现在：" + def.effect.describe_level(lv, _flow.buff_defs), 13, UiPalette.HEAL, PANEL_WIDTH))
+			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.now") % def.effect.describe_level(lv, _flow.buff_defs), 13, UiPalette.HEAL, PANEL_WIDTH))
 		if tier != null:
-			_effect.add_child(UiTheme.make_wrapped("下一级：" + def.effect.describe_level(lv + 1, _flow.buff_defs), 13, UiPalette.FG, PANEL_WIDTH))
+			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.next") % def.effect.describe_level(lv + 1, _flow.buff_defs), 13, UiPalette.FG, PANEL_WIDTH))
 
 	# 费用
 	if tier == null:
-		_cost.add_child(UiTheme.make_label("已满级", 14, UiPalette.HEAL))
+		_cost.add_child(UiTheme.make_label(UiText.t("tech.maxed"), 14, UiPalette.HEAL))
 		_action.visible = false
 		return
 	var missing := TechService.missing_prereqs(_meta, def, _flow.tech_defs)
@@ -297,9 +298,9 @@ func _refresh() -> void:
 		var names: Array[String] = []
 		for m in missing:
 			names.append(Names.of(m))
-		_cost.add_child(UiTheme.make_wrapped("需要先点亮：%s" % "、".join(names), 13, UiPalette.DIM, PANEL_WIDTH))
+		_cost.add_child(UiTheme.make_wrapped(UiText.t("tech.needs_prereq") % UiText.t("hud.buff_sep").join(names), 13, UiPalette.DIM, PANEL_WIDTH))
 	var rich := _meta.funds >= tier.funds
-	_cost.add_child(UiTheme.make_label("钱　需要 %d / 持有 %d" % [tier.funds, _meta.funds], 13, UiPalette.HEAL if rich else UiPalette.DIM))
+	_cost.add_child(UiTheme.make_label(UiText.t("tech.funds") % [tier.funds, _meta.funds], 13, UiPalette.HEAL if rich else UiPalette.DIM))
 	var keys: Array = tier.items.keys()
 	keys.sort()
 	var owned := _owned_counts()
@@ -312,20 +313,20 @@ func _refresh() -> void:
 		var name := Names.of(item_def) if item_def != null else String(key)
 		var own := int(owned.get(String(key), 0))
 		var row := UiTheme.hbox(12)
-		row.add_child(UiTheme.make_label("%s　已交 %d / 需要 %d%s" % [name, have, need, "　✓" if have >= need else ""], 13,
+		row.add_child(UiTheme.make_label(UiText.t("tech.material") % [name, have, need, UiText.t("tech.material_done") if have >= need else ""], 13,
 			UiPalette.HEAL if have >= need else UiPalette.FG))
-		row.add_child(UiTheme.make_label("拥有 %d" % own, 13, UiPalette.FG if own > 0 else UiPalette.DIM))
+		row.add_child(UiTheme.make_label(UiText.t("tech.owned") % own, 13, UiPalette.FG if own > 0 else UiPalette.DIM))
 		var k := mini(maxi(0, need - have), own)
 		if open and k > 0:
 			var btn := Button.new()
-			btn.text = "交 %d" % k
+			btn.text = UiText.t("tech.submit_k") % k
 			UiPalette.style_button(btn, UiPalette.Tier.SECONDARY, UiPalette.button_font_size(13, UiPalette.Tier.SECONDARY))
 			btn.pressed.connect(submit_many.bind(id, k))
 			row.add_child(btn)
 			_submit_buttons[String(key)] = btn
 		_cost.add_child(row)
 	_action.visible = true
-	_action.text = "点亮" if def.max_level() <= 1 else "升级"     # 单级「点亮」、多级「升级」
+	_action.text = UiText.t("tech.light_up") if def.max_level() <= 1 else UiText.t("tech.upgrade")     # 单级「点亮」、多级「升级」
 	_action.disabled = not TechService.ready(_meta, def)
 
 

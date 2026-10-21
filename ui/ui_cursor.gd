@@ -9,7 +9,7 @@ extends RefCounted
 
 const HOTSPOT := Vector2(2, 2)
 ## 三套材质：id → 设置屏上的名字。第一个是默认
-const SKINS := {"mithril": "秘银", "iron": "铁", "leather": "皮革"}
+const SKINS := {"mithril": {"zh": "秘银", "en": "Mithril"}, "iron": {"zh": "铁", "en": "Iron"}, "leather": {"zh": "皮革", "en": "Leather"}}
 const DEFAULT_SKIN := "mithril"
 ## 图名 → 光标形状
 const SHAPES := {

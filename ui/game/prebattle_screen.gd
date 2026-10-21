@@ -79,7 +79,7 @@ func open(payload: Dictionary) -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	_belt_row = _hbox(10)     # 147：腰带里能在战前用的（160：名字后面带数量）
 	buttons.add_child(_belt_row)
-	var flag := IconButton.make_art(FIGHT_ART, "fight", UiText.t("pre.fight"), "", start_battle)
+	var flag := IconButton.make_art(FIGHT_ART, "fight" if UiText.lang == "zh" else "fight_en", UiText.t("pre.fight"), "", start_battle)
 	flag.hit_rect = FIGHT_HIT if flag.has_art() else Rect2()
 	_start_btn = flag
 	buttons.add_child(_start_btn)

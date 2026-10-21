@@ -21,7 +21,7 @@ const COL_GAP := 24.0
 const SHELF_HEAD := 44.0
 ## 左列五个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家。
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
-const TABS := [["warehouse", "仓库"], ["sell", "出售"], ["tech", "科技"], ["codex", "图鉴"], ["achievements", "成就"]]
+const TABS := [["warehouse", "meta.tab_warehouse"], ["sell", "meta.tab_sell"], ["tech", "meta.tab_tech"], ["codex", "meta.tab_codex"], ["achievements", "meta.tab_achievements"]]
 ## 178：这几页不显示右半边的仓库，中列吃满
 const NO_SHELF_TABS := ["codex", "achievements"]
 
@@ -83,10 +83,10 @@ func open(payload: Dictionary) -> void:
 	var left := _vbox(12)
 	left.custom_minimum_size.x = LEFT_W
 	_cols.add_child(left)
-	left.add_child(_label("基地", 30, UiPalette.FG))
+	left.add_child(_label(UiText.t("meta.title"), 30, UiPalette.FG))
 	for pair in TABS:
 		var key: String = pair[0]
-		var b := UiTheme.make_home_button(pair[1], func(): toggle_tab(key))
+		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): toggle_tab(key))
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -109,10 +109,10 @@ func open(payload: Dictionary) -> void:
 		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and flow.meta.has_pending_board():
 			show_tab("warehouse"))
 	left.add_child(_hint)
-	_new_run_btn = UiTheme.make_home_button("再来一局", flow.new_run, true)
+	_new_run_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true)
 	_new_run_btn.custom_minimum_size = Vector2(LEFT_W, 76)
 	left.add_child(_new_run_btn)
-	var menu_btn := UiTheme.make_home_button("回主菜单", flow.to_main_menu)
+	var menu_btn := UiTheme.make_home_button(UiText.t("setup.main_menu"), flow.to_main_menu)
 	menu_btn.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 	menu_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(menu_btn)
@@ -129,7 +129,7 @@ func open(payload: Dictionary) -> void:
 	var head := _hbox(8)
 	head.custom_minimum_size.y = SHELF_HEAD
 	_right.add_child(head)
-	_shelf_title = _label("仓库", 20, UiPalette.FG)
+	_shelf_title = _label(UiText.t("meta.tab_warehouse"), 20, UiPalette.FG)
 	_shelf_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(_shelf_title)
 	if DevGate.on():     # 186：调试台只在开发包里有
@@ -165,21 +165,21 @@ func open(payload: Dictionary) -> void:
 	var just: RunResult = payload.get("result", null)
 	if just != null:
 		var c := UiPalette.HEAL if just.is_extracted() else UiPalette.HP
-		info.add_child(_wrapped("刚才这一局：%s" % ("撤离，背出来 %d 件、值 %d 币、带出 %d 币" % [just.carried.size(), just.value, just.balance]
-			if just.is_extracted() else ("战败，保险箱里的 %d 件带出来了" % just.safe_items.size() if not just.safe_items.is_empty() else "战败，什么都没带出来")), 15,
+		info.add_child(_wrapped(UiText.t("meta.just_run") % (UiText.t("meta.just_extracted") % [just.carried.size(), just.value, just.balance]
+			if just.is_extracted() else (UiText.t("meta.just_died_safe") % just.safe_items.size() if not just.safe_items.is_empty() else UiText.t("meta.just_died"))), 15,
 			UiPalette.for_tone(c, tone), 460))
 	# 092：离开结算屏时地上一键出售了 —— 提示一句
 	var sold: Dictionary = payload.get("stash_sold", {})
 	if int(sold.get("count", 0)) > 0:
-		info.add_child(_wrapped("上一局地上没背出来的 %d 件已一键出售，得 %d 币。" % [int(sold["count"]), int(sold["funds"])], 14, UiPalette.STAMINA, 460))
-	info.add_child(_wrapped("%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d\n钱 %d　图鉴 %d / %d" % [
+		info.add_child(_wrapped(UiText.t("meta.stash_sold") % [int(sold["count"]), int(sold["funds"])], 14, UiPalette.STAMINA, 460))
+	info.add_child(_wrapped(UiText.t("meta.stats") % [
 		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids(true).size()], 15, UiPalette.FG, 460))
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
 	var wh_page := _cloth()
 	_pages["warehouse"] = wh_page
 	var wh_col := _vbox(10)
 	wh_page.add_child(wh_col)
-	_no_board = _label("没有带回来的东西", 15, UiPalette.DIM)
+	_no_board = _label(UiText.t("meta.no_board"), 15, UiPalette.DIM)
 	wh_col.add_child(_no_board)
 	_wh = WarehousePanelScript.new()
 	_wh.setup(flow, font, _shelf, _drag)
@@ -278,7 +278,7 @@ func drag_layer() -> DragLayer:
 
 func _refresh_shelf_title() -> void:
 	if _shelf_title != null:
-		_shelf_title.text = "仓库　%d 件　%d 页" % [flow.meta.warehouse.item_count(), flow.meta.warehouse.page_count()]
+		_shelf_title.text = UiText.t("meta.shelf_title") % [flow.meta.warehouse.item_count(), flow.meta.warehouse.page_count()]
 
 
 ## 双击右边仓库的一件：按当前页 —— 仓库 → 置入带回来的背包（178：原来在家页）；出售 → 卖；科技 → 上交；家 / 图鉴 / 成就 → 不做事
@@ -431,7 +431,7 @@ func tech_panel():
 
 #region 出售（091，作者定：基地内商店）
 ## 「白色 / 绿色及以下 / … / 全部」→ 稀有度上限（-1 = 全部）
-const SELL_FILTERS := [["白色", 0], ["绿色及以下", 1], ["蓝色及以下", 2], ["紫色及以下", 3], ["金色及以下", 4], ["全部", -1]]
+const SELL_FILTERS := [["meta.sell_white", 0], ["meta.sell_green", 1], ["meta.sell_blue", 2], ["meta.sell_purple", 3], ["meta.sell_gold", 4], ["meta.all", -1]]
 var _sell_filter: int = 0
 var _sell_pick: OptionButton = null
 ## 177 补 1.2：标签下拉（单选，待定补 1 选 A；&"" = 不限标签）
@@ -446,13 +446,13 @@ func _build_sell(root: Control) -> Control:
 	var page := _vbox(8)
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(page)
-	page.add_child(_wrapped("出售　双击右边仓库里的一件卖掉；或选一档稀有度（再挑一个标签）一键卖。回定价的 %d%%，钱进局外，可用于科技" % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
+	page.add_child(_wrapped(UiText.t("meta.sell_intro") % int(round(flow.sell_ratio() * 100)), 15, UiPalette.DIM, 460))
 	var row := _hbox(10)
 	page.add_child(row)
-	row.add_child(_label("一键出售", 13, UiPalette.DIM))
+	row.add_child(_label(UiText.t("meta.sell_all"), 13, UiPalette.DIM))
 	_sell_pick = OptionButton.new()
 	for i in SELL_FILTERS.size():
-		_sell_pick.add_item(String(SELL_FILTERS[i][0]), i)
+		_sell_pick.add_item(UiText.t(String(SELL_FILTERS[i][0])), i)
 	_sell_pick.item_selected.connect(set_sell_filter)
 	row.add_child(_sell_pick)
 	_sell_tag_pick = OptionButton.new()
@@ -460,7 +460,7 @@ func _build_sell(root: Control) -> Control:
 	row.add_child(_sell_tag_pick)
 	_sell_preview = _label("", 13, UiPalette.FG)
 	row.add_child(_sell_preview)
-	row.add_child(_button("一键出售", func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
+	row.add_child(_button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY))
 	_sell_line = _label("", 13, UiPalette.STAMINA)
 	page.add_child(_sell_line)
 	flow.meta.warehouse.changed.connect(_on_sell_stock_changed)
@@ -518,7 +518,7 @@ func _rebuild_sell_tags() -> void:
 	if not tags.has(_sell_tag):
 		_sell_tag = &""
 	_sell_tag_pick.clear()
-	_sell_tag_pick.add_item("不限标签")
+	_sell_tag_pick.add_item(UiText.t("meta.sell_any_tag"))
 	_sell_tag_pick.set_item_metadata(0, "")
 	var last_rank := -1
 	for t in tags:
@@ -548,7 +548,7 @@ func sell(uid: int) -> int:
 	var name := Names.of(inst.def) if inst != null else ""
 	var got := flow.sell_item(uid)
 	if got >= 0 and _sell_line != null:
-		_sell_line.text = "卖掉「%s」，得 %d 币；现在有 %d 币" % [name, got, flow.meta.funds]
+		_sell_line.text = UiText.t("meta.sold_one") % [name, got, flow.meta.funds]
 	return got
 
 
@@ -556,7 +556,7 @@ func sell(uid: int) -> int:
 func sell_filtered() -> Dictionary:
 	var got := flow.sell_where(sell_filter_max(), _sell_tag)
 	if _sell_line != null:
-		_sell_line.text = "卖掉 %d 件，得 %d 币；现在有 %d 币" % [int(got["count"]), int(got["funds"]), flow.meta.funds] if int(got["count"]) > 0 else "这一档没有可卖的"
+		_sell_line.text = UiText.t("meta.sold_many") % [int(got["count"]), int(got["funds"]), flow.meta.funds] if int(got["count"]) > 0 else UiText.t("meta.nothing_to_sell")
 	return got
 
 
@@ -568,7 +568,7 @@ func _refresh_sell() -> void:
 	if _sell_preview == null:
 		return
 	var p := flow.meta.sell_preview(sell_filter_max(), flow.sell_ratio(), _sell_tag)
-	_sell_preview.text = "会卖 %d 件，得 %d 币" % [int(p["count"]), int(p["funds"])]
+	_sell_preview.text = UiText.t("meta.sell_preview") % [int(p["count"]), int(p["funds"])]
 #endregion
 
 
@@ -580,10 +580,10 @@ func _build_achievements(root: Control) -> Control:
 	root.add_child(page)
 	var head := _hbox(8)
 	page.add_child(head)
-	head.add_child(_label("成就　完成了给解锁（道具 / 地图 / 难度）；途径写在每一条上", 15, UiPalette.DIM))
-	for pair in [["all", "全部"], ["done", "已解锁"], ["todo", "未解锁"]]:
+	head.add_child(_label(UiText.t("meta.ach_intro"), 15, UiPalette.DIM))
+	for pair in [["all", "meta.all"], ["done", "meta.ach_filter_done"], ["todo", "meta.ach_filter_todo"]]:
 		var key: String = pair[0]
-		var b := _button(pair[1], func(): show_achievement_filter(key), 13, UiPalette.Tier.MINOR)
+		var b := _button(UiText.t(pair[1]), func(): show_achievement_filter(key), 13, UiPalette.Tier.MINOR)
 		b.toggle_mode = true
 		_ach_filter_btns[key] = b
 		head.add_child(b)
@@ -631,7 +631,7 @@ func _fill_achievements() -> void:
 		if m.has_achievement(def.id):
 			done_n += 1
 	if _ach_hint != null:
-		_ach_hint.text = ("全部解锁开着：成就不计　" if flow.settings != null and flow.settings.unlock_all else "") + "完成 %d / %d" % [done_n, total]
+		_ach_hint.text = (UiText.t("meta.ach_unlock_all_on") if flow.settings != null and flow.settings.unlock_all else "") + UiText.t("meta.ach_count") % [done_n, total]
 	if total == 0:
 		_ach_list.add_child(_label("（没有成就的内容：data/authoring/achievements/）", 12, UiPalette.DIM))
 		return
@@ -642,7 +642,7 @@ func _fill_achievements() -> void:
 		_ach_rows.append({"id": def.id, "done": done})
 		_ach_list.add_child(_achievement_row(def, done))
 	if _ach_rows.is_empty():
-		_ach_list.add_child(_label("（这一栏空着）", 12, UiPalette.DIM))
+		_ach_list.add_child(_label(UiText.t("meta.ach_empty"), 12, UiPalette.DIM))
 
 
 func _achievement_row(def: AchievementDef, done: bool) -> Control:
@@ -654,23 +654,23 @@ func _achievement_row(def: AchievementDef, done: bool) -> Control:
 	var secret := def.hidden and not done
 	var head := _hbox(12)
 	col.add_child(head)
-	head.add_child(_label(("？？？" if secret else Names.of(def)), 16, UiPalette.HEAL if done else UiPalette.FG))
+	head.add_child(_label((UiText.t("meta.secret") if secret else Names.of(def)), 16, UiPalette.HEAL if done else UiPalette.FG))
 	var status := ""
 	if done:
 		var t := m.achievement_time(def.id)
-		status = "✓ 已完成" + ("　%s" % Time.get_date_string_from_unix_time(t) if t > 0 else "")
+		status = UiText.t("meta.ach_done") + (UiText.t("meta.ach_done_date") % Time.get_date_string_from_unix_time(t) if t > 0 else "")
 	elif secret:
-		status = "未完成"
+		status = UiText.t("meta.ach_not_done")
 	else:
-		status = "未完成　进度 %s" % def.progress_text(m)
+		status = UiText.t("meta.ach_progress") % def.progress_text(m)
 	head.add_child(_label(status, 13, UiPalette.HEAL if done else UiPalette.DIM))
-	col.add_child(_wrapped("途径：" + ("？？？" if secret else Names.description_of(def)), 13, UiPalette.FG, 700))
+	col.add_child(_wrapped(UiText.t("meta.ach_how") % (UiText.t("meta.secret") if secret else Names.description_of(def)), 13, UiPalette.FG, 700))
 	var opens: Array[String] = []
 	for g in def.grants:
 		opens.append_array(flow.unlock_names(g))
 		if flow.unlock_names(g).is_empty():
-			opens.append("解锁 %s" % g)
-	col.add_child(_wrapped("解锁：" + ("、".join(opens) if not opens.is_empty() else "无（只是一枚徽章）"), 12, UiPalette.DIM, 700))
+			opens.append(UiText.t("meta.unlock_id") % g)
+	col.add_child(_wrapped(UiText.t("meta.ach_grants") % (UiText.t("hud.buff_sep").join(opens) if not opens.is_empty() else UiText.t("meta.ach_badge_only")), 12, UiPalette.DIM, 700))
 	return panel
 #endregion
 
@@ -695,7 +695,7 @@ func _build_codex(root: Control) -> Control:
 			total_n += 1
 			if m.codex_lit(vid):
 				lit_n += 1
-	page.add_child(_label("图鉴　带出过的点亮（%d / %d，含赐福版），右上角是累计件数；停在一格上看属性，叠着的格子点开看异体" % [lit_n, total_n], 15, UiPalette.DIM))
+	page.add_child(_label(UiText.t("meta.codex_intro") % [lit_n, total_n], 15, UiPalette.DIM))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED     # 139：按宽度定列数，不横向滚
@@ -719,7 +719,7 @@ func _build_codex(root: Control) -> Control:
 	var keeps: Array = flow.items.keepsake_ids()
 	if not keeps.is_empty():
 		keeps.sort()
-		inner.add_child(_label("特殊道具　不占背包，代表一种能力", 14, UiPalette.DIM))
+		inner.add_child(_label(UiText.t("meta.codex_keepsakes"), 14, UiPalette.DIM))
 		var kgrid := GridContainer.new()
 		kgrid.add_theme_constant_override("h_separation", CODEX_GAP)
 		inner.add_child(kgrid)
@@ -788,7 +788,7 @@ func show_variants(tile: CodexTile) -> void:
 	box.name = "VariantsPopup"
 	var col := _vbox(6)
 	box.add_child(col)
-	col.add_child(_label("%s　的异体（%d / %d 点亮）" % [Names.of(tile.def), tile.variants_lit(), tile.variants.size()], 14, UiPalette.FG))
+	col.add_child(_label(UiText.t("meta.variants_title") % [Names.of(tile.def), tile.variants_lit(), tile.variants.size()], 14, UiPalette.FG))
 	var row := _hbox(8)
 	col.add_child(row)
 	_variant_tiles.clear()
@@ -801,7 +801,7 @@ func show_variants(tile: CodexTile) -> void:
 		cell.add_child(vt)
 		row.add_child(cell)
 		_variant_tiles.append(vt)
-	col.add_child(_button("关闭", close_variants, 12, UiPalette.Tier.MINOR))
+	col.add_child(_button(UiText.t("meta.close"), close_variants, 12, UiPalette.Tier.MINOR))
 	add_child(box)
 	box.position = (tile.global_position + Vector2(0, tile.size.y + 6)).clamp(Vector2.ZERO, get_viewport_rect().size - Vector2(400, 200))
 	_variants_popup = box
@@ -825,10 +825,10 @@ func variant_tiles() -> Array[CodexTile]:
 ## 「原件」/「蛮神版」……
 func _variant_kind(def: ItemDef) -> String:
 	if def == null or not def.is_blessed():
-		return "原件"
+		return UiText.t("meta.variant_base")
 	var fid := FaithTags.id_of_tag(def.faith_tag())
 	var fd: FaithDef = flow.faith_defs.get(fid, null) if flow.faith_defs != null else null
-	return "%s版" % (Names.of(fd) if fd != null else String(fid))
+	return UiText.t("meta.variant_blessed") % (Names.of(fd) if fd != null else String(fid))
 
 
 ## 停在一格上：点亮的开完整的道具说明；没获得的只写名字与「未获得」
@@ -842,10 +842,10 @@ func _on_tile_hovered(tile: CodexTile) -> void:
 	elif tile.def.requires_unlock != &"" and not flow.unlocked(tile.def.requires_unlock):
 		# 091：锁着的写怎么解锁（哪一枚成就）
 		var ach := flow.achievement_granting(tile.def.requires_unlock)
-		var how := "完成成就「%s」：%s" % [Names.of(ach), Names.description_of(ach)] if ach != null else "解锁 %s" % tile.def.requires_unlock
-		_codex_tip.show_text("[b]%s[/b]\n[color=#8b93a1]未解锁：%s[/color]" % [Names.of(tile.def), how], at)
+		var how := UiText.t("meta.codex_how_ach") % [Names.of(ach), Names.description_of(ach)] if ach != null else UiText.t("meta.unlock_id") % tile.def.requires_unlock
+		_codex_tip.show_text(UiText.t("meta.codex_locked_tip") % [Names.of(tile.def), how], at)
 	else:
-		_codex_tip.show_text("[b]%s[/b]\n[color=#8b93a1]未获得：撤离成功时背包里的会点亮[/color]" % Names.of(tile.def), at)
+		_codex_tip.show_text(UiText.t("meta.codex_unseen_tip") % Names.of(tile.def), at)
 
 
 func codex_tiles() -> Array[CodexTile]:
@@ -895,7 +895,7 @@ func escape() -> bool:
 func pending_text() -> String:
 	if not flow.meta.has_pending_board():
 		return ""
-	return "带回来的背包还有 %d 件没清空，去「仓库」页置入；不管的话，开局屏里它们会放到地上，出发就没了" % flow.meta.board.item_count()
+	return UiText.t("meta.pending") % flow.meta.board.item_count()
 
 
 func toggle_buff(id: StringName) -> bool:

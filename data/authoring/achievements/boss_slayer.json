@@ -5,6 +5,9 @@
     "en": "Core Breaker"
   },
   "description": "击败一次核心（BOSS）。",
+  "descriptions": {
+    "en": "Defeat the core boss once."
+  },
   "order": 4,
   "kind": "boss_kills",
   "grants": [
