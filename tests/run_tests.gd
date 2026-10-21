@@ -82,6 +82,9 @@ func _load_suites() -> void:
 func _initialize() -> void:
 	_case = TestCase.new()
 	_started = Time.get_ticks_msec()
+	# 复测 10-21 第 3 条：不读玩家真实的 user://settings.json（本机切了英文跑全套会红）—— 默认路径改到一份测试专用的、每次从默认值开始
+	GameSettings.redirect = "user://test_default_settings.json"
+	GameSettings.remove()
 	BattleArchive.enabled = false     # 117：几百场测试战斗不写战斗日志；测日志的套件自己开、自己关
 	UiTheme.install()     # 121：和游戏一样装上界面主题（frame_ 用例进树的控件下一帧起都继承到）
 	GameDirector.fades_allowed = false     # 157：换屏不淡入，屏幕用例的时序和以前一样
