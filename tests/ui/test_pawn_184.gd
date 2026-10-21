@@ -111,6 +111,14 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 	t.eq(view.zoom, z, "缩放不动")
 	t.check(not view.following(), "淡入关着：没有补间，一步到位")
 
+	var inset0 := view.content_inset
+	view.content_inset = Rect2(0.0, 40.0, 0.0, 400.0)     # 底下读数占得高：人落在安全区下边、屏幕上照样看得见
+	view.pan = Vector2(700.0, 700.0) - (view.positions()[here] as Vector2) * view.zoom
+	var sp := view.to_screen(view.positions()[here])
+	t.check(sp.y > view.safe_rect().end.y and sp.y < view.size.y, "人在安全区下边、屏内")
+	t.check(not view.offscreen_rect().has_area(), "人在屏上看得见：不出小棋子（作者 10-21：提示要贴着棋子）")
+	view.content_inset = inset0
+	view.pan = view.focus_pan(here)
 	view.pan += Vector2(safe.size.x * 3.0, safe.size.y * 3.0)     # 拖到屏外
 	var off := view.offscreen_rect()
 	t.check(off.has_area(), "人出了屏：屏边出现指向他的小棋子")

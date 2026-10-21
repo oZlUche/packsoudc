@@ -248,6 +248,12 @@ func safe_rect() -> Rect2:
 	return Rect2(lo, room)
 
 
+## 人看不看得见：整个视图扣掉顶端栏（底下的读数只占两角，不算挡住）
+func visible_rect() -> Rect2:
+	var top := minf(content_inset.position.y, size.y * 0.5)
+	return Rect2(Vector2(0.0, top), size - Vector2(0.0, top))
+
+
 func _process(delta: float) -> void:
 	_pulse = fmod(_pulse + delta * 2.0, TAU)
 	_march = fmod(_march + delta * MARCH_SPEED, PATH_DASH + PATH_GAP)
@@ -963,7 +969,7 @@ func _offscreen_point() -> Vector2:
 		return Vector2.INF
 	var safe := safe_rect()
 	var p := to_screen(pos[current_id])
-	if safe.has_point(p):
+	if visible_rect().has_point(p):     # 人看得见就不指（底下两角的读数只占角落，夹在中间的人照样看得见）
 		return Vector2.INF
 	var inner := safe.grow(-OFFSCREEN_INSET)
 	var c := inner.get_center()
