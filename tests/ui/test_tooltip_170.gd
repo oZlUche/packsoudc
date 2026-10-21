@@ -19,7 +19,7 @@ static func run_item_layout(t: TestCase) -> void:
 	var foot := String(full["foot"])
 	t.check(head.begins_with("[outline_size="), "头从名字开始（名字描边）")
 	t.check(head.contains("[font_size=%d][b]" % ItemTooltip.NAME_SIZE) and head.contains(Names.of_item(knife)), "名字粗体 %d" % ItemTooltip.NAME_SIZE)
-	t.eq([ItemTooltip.NAME_SIZE, ItemTooltip.SUB_SIZE, ItemTooltip.DESC_SIZE, ItemTooltip.BODY_SIZE, ItemTooltip.FOOT_SIZE], [19, 13, 14, 15, 13], "定稿字号：名字 19、副行 13、说明 14、正文 15、脚注 13")
+	t.eq([ItemTooltip.NAME_SIZE, ItemTooltip.SUB_SIZE, ItemTooltip.DESC_SIZE, ItemTooltip.BODY_SIZE, ItemTooltip.FOOT_SIZE], [20, 14, 15, 16, 14], "定稿字号：名字 20、副行 14、说明 15、正文 16、脚注 14")
 	t.eq(HoverTip.MAX_WIDTH, 360.0, "定稿宽 360")
 	var name_at := head.find(Names.of_item(knife))
 	var rarity_at := head.find(ItemTooltip.rarity_name(knife.def.rarity))
