@@ -141,7 +141,7 @@ static func status_style(def: BuffDef) -> String:
 
 ## 「火焰伤害」这几个字（整段带色；物理之类没有色的原样）
 static func damage_words(type: StringName) -> String:
-	var words := "%s伤害" % damage_type_name(type)
+	var words := UiText.t("gloss.damage_words") % damage_type_name(type)
 	if not DAMAGE_STYLES.has(type):
 		return words
 	return "[color=%s%s]%s[/color]" % [TextTemplate.STYLE_PREFIX, DAMAGE_STYLES[type], words]
@@ -155,7 +155,7 @@ static func mark_rich(text: String, terms: Array) -> String:
 	var types: Array = DAMAGE_STYLES.keys()
 	types.sort_custom(func(a, b) -> bool: return damage_type_name(a).length() > damage_type_name(b).length())
 	for type in types:
-		var words := "%s伤害" % damage_type_name(type)
+		var words := UiText.t("gloss.damage_words") % damage_type_name(type)
 		if not out.contains(words):
 			continue
 		var token := "\u0003%d\u0003" % holders.size()
@@ -214,7 +214,7 @@ static func mod_text(m: StatModifier, sentence: bool = false) -> String:
 			return "%s %+d%%" % [nm, roundi(m.amount * 100.0)]
 		return "%s %s" % [nm, ("%+d" % roundi(m.amount)) if TextTemplate.is_whole(m.amount) else "%+.1f" % m.amount]
 	if m.amount == 0.0:
-		return "%s（无效果）" % stat_name(m.stat)
+		return UiText.t("gloss.no_effect_stat") % stat_name(m.stat)
 	if m.is_mult():     # 133：乘算「伤害 +25%」
 		return "%s %+d%%" % [stat_name(m.stat), roundi(m.amount)]
 	if BattleStats.PERCENT_DISPLAY.has(m.stat):
@@ -227,7 +227,7 @@ static func mods_text(mods: Array) -> String:
 	var out: Array[String] = []
 	for m in mods:
 		out.append(mod_text(m as StatModifier))
-	return "、".join(out)
+	return UiText.t("hud.buff_sep").join(out)
 
 
 #region 185（作者 2026-10-17 定稿）：效果悬浮窗 —— 名字行 + 现在的合计
@@ -284,8 +284,8 @@ static func _val_plain(s: String) -> String:
 ## 增益 / 减益 / 系统
 static func buff_kind(def: BuffDef) -> String:
 	if def != null and def.system:
-		return "系统"
-	return "减益" if def != null and def.is_debuff else "增益"
+		return UiText.t("gloss.kind_system")
+	return UiText.t("gloss.kind_debuff") if def != null and def.is_debuff else UiText.t("gloss.kind_buff")
 
 
 ## 名字行（BBCode）：名字（状态色、描边）+ 可叠层的 ×层数 + 右边的增益 / 减益 / 系统小字。[param stacks] ≤ 0 = 不写层数（图鉴、子窗）
@@ -323,13 +323,13 @@ static func buff_effect_lines(def: BuffDef, stacks: int = 1) -> Array[String]:
 		dmg.append(line if line != "" else rule_text(rule))
 	var heal: Array[String] = []
 	if def.heal_cut > 0:
-		heal.append("恢复量减半" if def.heal_cut == 50 else "恢复量归零" if def.heal_cut >= 100 else "恢复量少 %d%%" % def.heal_cut)
+		heal.append(UiText.t("gloss.heal_half") if def.heal_cut == 50 else UiText.t("gloss.heal_zero") if def.heal_cut >= 100 else UiText.t("gloss.heal_cut") % def.heal_cut)
 	if def.heal_echo != &"":
 		var per := def.heal_echo_per_point
-		heal.append(("每次恢复获得等量的%s" if is_equal_approx(per, 1.0) else "每次恢复按 " + TextTemplate.num(per) + " 倍获得%s") % status_name(def.heal_echo))
+		heal.append(UiText.t("gloss.heal_echo") % status_name(def.heal_echo) if is_equal_approx(per, 1.0) else UiText.t("gloss.heal_echo_mult") % [TextTemplate.num(per), status_name(def.heal_echo)])
 	if not heal.is_empty():
 		heal.append_array(dmg)     # 作者原话：「恢复量归零，每秒受到 N 点火焰伤害」一句说完
-		lines.append("，".join(heal))
+		lines.append(UiText.t("gloss.clause_sep").join(heal))
 	else:
 		lines.append_array(dmg)
 	for a in def.axes:
@@ -344,17 +344,17 @@ static func buff_effect_lines(def: BuffDef, stacks: int = 1) -> Array[String]:
 		total.amount = mod.amount * n
 		lines.append(mod_text(total))
 	for k in def.damage_taken_by_type.keys():
-		lines.append("受到的%s伤害 +%s%%" % [damage_type_name(StringName(String(k))), TextTemplate.num(float(def.damage_taken_by_type[k]) * n)])
+		lines.append(UiText.t("gloss.damage_taken") % [damage_type_name(StringName(String(k))), TextTemplate.num(float(def.damage_taken_by_type[k]) * n)])
 	var pct := TextTemplate.num(def.per_stack_percent * n)
 	match def.decay_halve_on:
 		BuffDef.HALVE_WEAPON_FIRED:
-			lines.append("下一次出手的冷却 +%s%%" % pct)
+			lines.append(UiText.t("gloss.next_fire_cooldown") % pct)
 		BuffDef.HALVE_STAMINA_PAID:
-			lines.append("下一次付耐力多付 %s%%" % pct)
+			lines.append(UiText.t("gloss.next_stamina_cost") % pct)
 	if not def.on_apply.is_empty():
-		lines.append("上身时：" + effects_text(def.on_apply))
+		lines.append(UiText.t("gloss.on_apply") % effects_text(def.on_apply))
 	if not def.on_expire.is_empty():
-		lines.append("到期时：" + effects_text(def.on_expire))
+		lines.append(UiText.t("gloss.on_expire") % effects_text(def.on_expire))
 	return lines
 
 
@@ -366,8 +366,8 @@ static func _self_damage_text(rule: AbilityRule, n: int) -> String:
 	if d == null or d.target != CombatEffect.Target.SELF or not d.per_stack or d.percent_of != &"":
 		return ""
 	var secs := (rule.cadence as CooldownCadence).seconds
-	var every := "每秒" if is_equal_approx(secs, 1.0) else "每 %s 秒" % TextTemplate.num(secs)
-	return "%s受到 %s 点%s伤害" % [every, TextTemplate.num(d.amount * n), damage_type_name(d.damage_type)]
+	var key := "gloss.self_damage_per_sec" if is_equal_approx(secs, 1.0) else "gloss.self_damage_every"
+	return UiText.t(key).format({"s": TextTemplate.num(secs), "n": TextTemplate.num(d.amount * n), "t": damage_type_name(d.damage_type)})
 
 
 ## 时间那一行：[param time_left] ≥ 0（战斗里，回放时刻）写「还剩 N 秒」；< 0 写定义里的时长；永续的没有
@@ -375,10 +375,10 @@ static func buff_time_line(def: BuffDef, time_left: float = -1.0) -> String:
 	if def == null:
 		return ""
 	if time_left >= 0.0:
-		return "还剩 %d 秒" % ceili(time_left)
+		return UiText.t("gloss.time_left") % ceili(time_left)
 	if def.seconds_per_stack > 0 and def.is_stackable():
-		return "每层 %d 秒" % def.seconds_per_stack
-	return "" if def.is_permanent() else "持续 %s 秒" % TextTemplate.num(def.duration_sec)
+		return UiText.t("gloss.time_per_stack") % def.seconds_per_stack
+	return "" if def.is_permanent() else UiText.t("gloss.time_lasts") % TextTemplate.num(def.duration_sec)
 
 
 ## 效果段（BBCode）：效果行 + 时间行，数值上色；[param marked] 时同时标关键词（菌血句里的「中毒」）与伤害色
@@ -464,13 +464,20 @@ static func rule_text(rule: AbilityRule, skip_stamina: bool = false) -> String:
 		var when := trigger_text(rule.trigger)
 		line = ("[%s] " % when) if when != "" else ""
 		if cad != "":
-			line += cad + "，"
+			line += cad + UiText.t("gloss.clause_sep")
 	var bits: Array[String] = []
 	var costs := costs_text(rule, skip_stamina)
 	if costs != "":
 		bits.append(costs)
 	bits.append(effects_text(rule.effects))
-	return line + "，".join(bits)
+	return line + cap(UiText.t("gloss.clause_sep").join(bits))
+
+
+## 221 F5：英文句首大写（中文原样）
+static func cap(text: String) -> String:
+	if UiText.lang == "zh" or text == "":
+		return text
+	return text.left(1).to_upper() + text.substr(1)
 
 
 ## 自发且有冷却：方括号里直接写「每 N 秒」
@@ -483,7 +490,7 @@ static func cadence_text(rule: AbilityRule) -> String:
 	var cd := rule.cadence as CooldownCadence
 	if cd == null:
 		return ""
-	return ("每 %.1f 秒" if _scheduled(rule) else "每 %.1f 秒最多一次") % cd.seconds
+	return UiText.t("gloss.every_sec" if _scheduled(rule) else "gloss.every_sec_max_once") % cd.seconds
 
 
 ## 145：规则列表「时机」那一列 = 扳机句 + 节奏（自发的只写「每 N 秒」）
@@ -508,7 +515,7 @@ static func costs_text(rule: AbilityRule, skip_stamina: bool = false) -> String:
 		var d := (c as Cost).describe()
 		if d != "":
 			bits.append(d)
-	return "，".join(bits)
+	return UiText.t("gloss.clause_sep").join(bits)
 
 
 static func effects_text(effects: Array) -> String:
@@ -522,15 +529,18 @@ static func effects_text(effects: Array) -> String:
 			d = String(ContentSchema.registry_name_of(e))
 		if out != "":
 			# 175 补 5.4（作者定）：造成伤害之后紧跟施加，写成一句两段「造成 X 点火焰伤害，并施加 N 层灼伤」
-			out += "，并" if (prev is DealDamage or prev is FireEnchant) and e is ApplyStatus else "，"
+			out += UiText.t("gloss.and_then") if (prev is DealDamage or prev is FireEnchant) and e is ApplyStatus else UiText.t("gloss.clause_sep")
 		out += d
 		prev = e
-	return out if out != "" else "（没有效果）"
+	return out if out != "" else UiText.t("gloss.no_effect")
 
 
-const TRIGGER_NAMES := {"on_schedule": "自发", "on_battle_start": "开战时", "on_item_fired": "出手时", "on_damage": "受伤时",
-	"on_before_damage": "受伤前", "on_stacks_at_least": "层数够时", "on_resource_below": "资源低于时",
-	"on_status_applied": "施加时", "on_status_removed": "状态掉光时", "on_overtime": "加时开始时"}
+const TRIGGER_NAMES := {"on_schedule": {"zh": "自发", "en": "Automatic"}, "on_battle_start": {"zh": "开战时", "en": "At battle start"},
+	"on_item_fired": {"zh": "出手时", "en": "On attack"}, "on_damage": {"zh": "受伤时", "en": "When hit"},
+	"on_before_damage": {"zh": "受伤前", "en": "Before damage"}, "on_stacks_at_least": {"zh": "层数够时", "en": "At enough stacks"},
+	"on_resource_below": {"zh": "资源低于时", "en": "When a resource runs low"},
+	"on_status_applied": {"zh": "施加时", "en": "On apply"}, "on_status_removed": {"zh": "状态掉光时", "en": "When a status runs out"},
+	"on_overtime": {"zh": "加时开始时", "en": "When overtime starts"}}
 
 
 ## 时机的类别名（百科「时机」那一页的词条用）：自发 / 开战时 / 施加时……
@@ -538,7 +548,12 @@ static func trigger_name(trigger: Trigger) -> String:
 	if trigger == null:
 		return ""
 	var key := String(ContentSchema.registry_name_of(trigger))
-	return String(TRIGGER_NAMES.get(key, key))
+	return trigger_key_name(key)
+
+
+## 221 F5：时机类别名按语言取（百科「时机」页也用）
+static func trigger_key_name(key: String) -> String:
+	return UiText.pick(TRIGGER_NAMES.get(key, null), key)
 
 
 ## 142：规则行方括号里那句 —— 扳机自己按字段说（[method Trigger.describe]）；没写的退回类别名

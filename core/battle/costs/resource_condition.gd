@@ -49,19 +49,18 @@ func pay(_ctx: RuleContext) -> void:
 
 ## 142：「若你的生命不低于 70%」「若对手的耐力不到 50%」；几个界都填了就用「、」连起来
 func describe() -> String:
-	var who := "你" if on_self else "对手"
 	var res := Glossary.resource_name(resource_key)
 	var bits: Array[String] = []
 	if min_percent >= 0:
-		bits.append("不低于 %d%%" % min_percent)
+		bits.append(UiText.t("cost.res_min_pct") % min_percent)
 	if max_percent >= 0:
-		bits.append("不高于 %d%%" % max_percent)
+		bits.append(UiText.t("cost.res_max_pct") % max_percent)
 	if absolute_min >= 0.0:
-		bits.append("不低于 %s 点" % TextTemplate.num(absolute_min))
+		bits.append(UiText.t("cost.res_min_abs") % TextTemplate.num(absolute_min))
 	if absolute_max >= 0.0:
-		bits.append("不高于 %s 点" % TextTemplate.num(absolute_max))
-	var line := "若%s的%s%s" % [who, res, "、".join(bits)]
-	return ("并非（%s）" % line) if negate else line
+		bits.append(UiText.t("cost.res_max_abs") % TextTemplate.num(absolute_max))
+	var key := ("cost.res_unless_self" if negate else "cost.res_if_self") if on_self else ("cost.res_unless_opp" if negate else "cost.res_if_opp")
+	return UiText.t(key) % [res, UiText.t("cost.res_and").join(bits)]
 
 
 ## 151：条件满足的概率（取反 = 一减它）

@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "腰带 %+d 格" % amount
+	return UiText.t("bonus.belt_slots") % amount

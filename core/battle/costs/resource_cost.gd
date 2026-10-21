@@ -49,8 +49,8 @@ func trace_info(ctx: RuleContext) -> Dictionary:
 func describe() -> String:
 	var res := Glossary.resource_name(resource_key)
 	if amount_stat != &"":
-		return "消耗%s（%s）" % [res, Glossary.stat_name(amount_stat)]
-	return "消耗 %s %s" % [TextTemplate.num(amount), res]
+		return UiText.t("cost.spend_stat") % [res, Glossary.stat_name(amount_stat)]
+	return UiText.t("cost.spend") % [TextTemplate.num(amount), res]
 
 
 ## 151：耐力能持续几成（155 补：耐力上限 + 一场的回复，[method PowerWeights.stamina_sustain]）；别的资源不打折

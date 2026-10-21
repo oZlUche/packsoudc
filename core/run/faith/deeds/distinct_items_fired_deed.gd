@@ -23,5 +23,6 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	var what := ("带「%s」的" % Glossary.tag_name(tag)) if tag != &"" else ""
-	return "一场里每种%s道具首次出手 +%d%s" % [what, amount, ("（每场最多 %d）" % cap) if cap > 0 else ""]
+	if tag != &"":
+		return UiText.t("deed.distinct_tagged") % [Glossary.tag_name(tag), amount, (UiText.t("deed.cap") % cap) if cap > 0 else ""]
+	return UiText.t("deed.distinct") % [amount, (UiText.t("deed.cap") % cap) if cap > 0 else ""]

@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "每个搜索点多搜 %d 次" % amount
+	return UiText.t("bonus.extra_searches") % amount

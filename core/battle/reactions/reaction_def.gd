@@ -78,7 +78,7 @@ func describe_effects() -> String:
 	var marks := {}
 	for raw in scaling:
 		var row := raw as Dictionary
-		marks[int(row.get("effect", -1))] = "（× 反应层数的一半）" if String(row.get("kind", "")) == KIND_HALF else "（× 反应层数）"
+		marks[int(row.get("effect", -1))] = UiText.t("rule.react_half") if String(row.get("kind", "")) == KIND_HALF else UiText.t("rule.react_full")
 	var shown := effects_for(1) if not scaling.is_empty() else effects
 	var bits: Array[String] = []
 	for i in effects.size():
@@ -89,7 +89,7 @@ func describe_effects() -> String:
 		if d == "":
 			continue
 		bits.append(d + String(marks.get(i, "")))
-	return "，".join(bits) if not bits.is_empty() else "（没有效果）"
+	return UiText.t("tip.sep").join(bits) if not bits.is_empty() else UiText.t("rule.no_effect")
 
 
 ## 一行随 N 变的数字在量 [param n] 时是多少

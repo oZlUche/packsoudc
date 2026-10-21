@@ -12,4 +12,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "每走 %d 步，下一步不计入倒计时" % every
+	return UiText.t("bonus.travel_discount") % every

@@ -29,8 +29,8 @@ func apply(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	if to == null:
-		return "转化 ?"
-	return "%s转为%s" % [DamageTypes.name_of(from), Names.of(to)]
+		return UiText.t("fx.convert_unknown")
+	return UiText.t("fx.convert") % [DamageTypes.name_of(from), Names.of(to)]
 
 
 ## 151：估值 —— 拿掉 [member from] 的那几层（勾了「复制」就不拿）+ 换上 [member to] × 比例；层数按估算上下文假定

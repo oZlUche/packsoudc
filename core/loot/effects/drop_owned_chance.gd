@@ -12,4 +12,4 @@ func modify(ctx: LootContext) -> void:
 	ctx.add_drop_owned_chance(StatMath.from_percent(percent))
 
 func describe() -> String:
-	return "敌人掉落自身道具的概率 %+d%%" % percent
+	return UiText.t("loot.drop_owned") % percent

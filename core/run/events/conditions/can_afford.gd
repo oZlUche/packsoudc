@@ -10,4 +10,4 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	return "需要 %d 币" % amount
+	return UiText.t("cond.coins") % amount

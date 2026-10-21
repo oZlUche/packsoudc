@@ -22,9 +22,9 @@ func open(payload: Dictionary) -> void:
 
 	var left := _vbox(8)
 	row.add_child(left)
-	_frame_title("保险箱　%d × %d 格" % [_safe.size.x, _safe.size.y])     # 157：标题在石板框的标题条上
-	left.add_child(_wrapped("放进来的东西就算带出去了：结算时不管撤离还是行动失败都进仓库。包放不进来。拖过来，或双击棋盘上的东西。", 12, UiPalette.DIM, 340))
-	left.add_child(_wrapped("关上（或走开）就送回基地，之后不能再改动；空着关上不算。", 12, UiPalette.HP, 340))
+	_frame_title(UiText.t("safe.title") % [_safe.size.x, _safe.size.y])     # 157：标题在石板框的标题条上
+	left.add_child(_wrapped(UiText.t("safe.intro"), 12, UiPalette.DIM, 340))
+	left.add_child(_wrapped(UiText.t("safe.warning"), 12, UiPalette.HP, 340))
 	_view = InventoryView.new()
 	_view.label_font = font
 	_view.inventory = _safe
@@ -34,8 +34,8 @@ func open(payload: Dictionary) -> void:
 	_line = _label("", 13, UiPalette.HEAL)
 	left.add_child(_line)
 	var buttons := _hbox(8)
-	var back := _button("关上保险箱", to_map, 13, UiPalette.Tier.PRIMARY)
-	back.tooltip_text = "里面有东西：锁上、送回基地，不能再改；空着：只是收起，回来还能开（Esc）"
+	var back := _button(UiText.t("safe.close"), to_map, 13, UiPalette.Tier.PRIMARY)
+	back.tooltip_text = UiText.t("safe.close_tip")
 	buttons.add_child(back)
 	left.add_child(buttons)
 
@@ -61,7 +61,7 @@ func take_back(uid: int) -> bool:
 		return false
 	var where := _take_to_player(_safe, uid)
 	if where == "storage":
-		_line.text = "背包放不下「%s」，放在了地上" % Names.of(inst.def)
+		_line.text = UiText.t("safe.to_ground") % Names.of(inst.def)
 	return where != ""
 
 
@@ -69,18 +69,18 @@ func take_back(uid: int) -> bool:
 func put_in(uid: int) -> bool:
 	var run := flow.run
 	if not _is_open():
-		_line.text = "保险箱已经锁上了"
+		_line.text = UiText.t("safe.locked")
 		return false
 	var from := run.holder_of(uid)
 	if from == null:
 		return false
 	var inst := from.get_item(uid)
 	if inst == null or not MetaState.keeps(inst.def):
-		_line.text = "包放不进保险箱"
+		_line.text = UiText.t("safe.no_bags")
 		return false
 	if InventoryService.transfer_auto(from, uid, _safe):
 		return true
-	_line.text = "保险箱放不下「%s」" % Names.of(inst.def)
+	_line.text = UiText.t("safe.no_room") % Names.of(inst.def)
 	return false
 
 
@@ -105,4 +105,4 @@ func _refresh() -> void:
 	var value := 0
 	for inst in _safe.items():
 		value += ItemValue.of((inst as ItemInstance).def)
-	_line.text = "保险箱里 %d 件、值 %d 币 —— 已视为带出" % [_safe.item_count(), value]
+	_line.text = UiText.t("safe.status") % [_safe.item_count(), value]

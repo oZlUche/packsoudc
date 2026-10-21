@@ -13,7 +13,7 @@ func check(ctx: EventContext) -> bool:
 
 func describe() -> String:
 	if max_bracket < 0:
-		return "需要段位 ≥ %d" % min_bracket
+		return UiText.t("cond.bracket_min") % min_bracket
 	if min_bracket <= 0:
-		return "需要段位 ≤ %d" % max_bracket
-	return "需要段位 %d～%d" % [min_bracket, max_bracket]
+		return UiText.t("cond.bracket_max") % max_bracket
+	return UiText.t("cond.bracket_range") % [min_bracket, max_bracket]

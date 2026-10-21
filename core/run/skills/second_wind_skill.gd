@@ -11,12 +11,12 @@ func is_active() -> bool:
 
 func activate(run: RunState) -> String:
 	if run == null or run.vitality == null:
-		return "没有体力"
+		return UiText.t("skill.no_vitality")
 	if run.vitality.current >= run.vitality.maximum:
-		return "体力是满的"
+		return UiText.t("bonus.vitality_full")
 	run.vitality.restore(amount, &"skill")
 	return ""
 
 
 func describe() -> String:
-	return "恢复 %d 点体力" % amount
+	return UiText.t("skill.second_wind") % amount

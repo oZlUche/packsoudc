@@ -17,7 +17,10 @@ enum Camp { GODS, CHURCH }
 @export var camp: Camp = Camp.GODS
 ## 信仰的对象（神的名字），给文字用
 @export var god: String = ""
+## 221 F5：别的语言的 god 与说明（{"en": …}）
+@export var gods: Dictionary = {}
 @export_multiline var description: String = ""
+@export var descriptions: Dictionary = {}
 ## 信力（报告 082）：过了几道阈值就是第几阶（非递减、正数）；信仰道具上按阶解锁的功能见 [ItemDef.faith_bonuses]
 @export var thresholds: Array[int] = []
 ## 攒信力的行为（[FaithDeed] 构件）：这个信仰认哪些事、各给几点
@@ -93,7 +96,7 @@ func offerings_summary() -> String:
 	for r in offerings:
 		if r != null:
 			parts.append((r as OfferingRule).describe())
-	return "；".join(parts)
+	return UiText.t("faith.perk_sep").join(parts)
 
 
 ## 行为各一句
@@ -102,7 +105,7 @@ func deeds_summary() -> String:
 	for d in deeds:
 		if d != null and String(d.describe()) != "":
 			parts.append(String(d.describe()))
-	return "、".join(parts)
+	return UiText.t("hud.buff_sep").join(parts)
 
 
 ## 装回全部定义：id → FaithDef，按 id 升序

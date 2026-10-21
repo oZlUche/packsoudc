@@ -21,7 +21,7 @@ func pay(_ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	return "%d%% 几率" % percent
+	return UiText.t("cost.chance") % percent
 
 
 ## 151：几率本身

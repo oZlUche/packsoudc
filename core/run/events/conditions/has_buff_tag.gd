@@ -13,6 +13,6 @@ func describe() -> String:
 	# 标记多半和同名的地图 buff 一起发（marked）：有就写那个 buff 的名字
 	var path := ContentPaths.asset_file("run_buffs", String(tag))
 	if path != "" and ResourceLoader.exists(path):
-		return "需要「%s」" % content_name("run_buffs", tag)
+		return UiText.t("cond.needs_named") % content_name("run_buffs", tag)
 	var name := TagRegistry.name_of(tag)
-	return "需要「%s」" % name if name != "" and name != String(tag) else "需要特定的状态"
+	return UiText.t("cond.needs_named") % name if name != "" and name != String(tag) else UiText.t("cond.needs_state")

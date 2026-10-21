@@ -10,4 +10,4 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	return "需要体力 ≥ %d" % amount
+	return UiText.t("cond.vitality") % amount

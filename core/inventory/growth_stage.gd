@@ -61,4 +61,4 @@ static func effect_text_of(p_mods: Array, p_rules: Array, note: String) -> Strin
 			bits.append(Glossary.rule_text(r))
 	if note != "":
 		bits.append(TextTemplate.render(note, {}))
-	return "；".join(bits) if not bits.is_empty() else "（无）"
+	return UiText.t("repair.sep").join(bits) if not bits.is_empty() else UiText.t("tip.none_paren")

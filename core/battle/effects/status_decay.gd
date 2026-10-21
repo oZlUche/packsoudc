@@ -14,4 +14,4 @@ func apply(ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	return "倒数一秒"
+	return UiText.t("fx.decay")

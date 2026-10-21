@@ -9,4 +9,4 @@ func apply(_h: Hunter, sys: HunterSystem) -> void:
 
 
 func describe() -> String:
-	return "输了退回上一步"
+	return UiText.t("hunter.loss_expel")

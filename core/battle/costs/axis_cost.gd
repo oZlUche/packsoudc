@@ -19,7 +19,7 @@ func pay(ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	return "消耗你 %d 层%s" % [absi(stacks), StatAxes.name_of(axis, stacks)]
+	return UiText.t("cost.consume_own") % [absi(stacks), StatAxes.name_of(axis, stacks)]
 
 
 ## 151：吃层打折（吃掉的层本身有价值）

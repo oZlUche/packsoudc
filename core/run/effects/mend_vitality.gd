@@ -7,9 +7,9 @@ extends BeltEffect
 
 func blocked_reason(run: RunState) -> String:
 	if run == null or run.vitality == null:
-		return "没有体力可回"
+		return UiText.t("bonus.no_vitality")
 	if run.vitality.is_full():
-		return "体力是满的"
+		return UiText.t("bonus.vitality_full")
 	return ""
 
 
@@ -18,4 +18,4 @@ func apply(run: RunState) -> void:
 
 
 func describe() -> String:
-	return "体力 +%d" % amount
+	return UiText.t("bonus.mend") % amount

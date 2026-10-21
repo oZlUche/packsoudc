@@ -27,11 +27,14 @@ func pay(_ctx: RuleContext) -> void:
 
 ## 142：「若对手有流血」「若你流血至少 3 层」「若对手没有流血」
 func describe() -> String:
-	var who := "你" if on_self else "对手"
 	var s := Glossary.status_name(buff_id)
 	if negate:
-		return "若%s没有%s" % [who, s] if stacks <= 1 else "若%s%s不到 %d 层" % [who, s, stacks]
-	return "若%s有%s" % [who, s] if stacks <= 1 else "若%s%s至少 %d 层" % [who, s, stacks]
+		if stacks <= 1:
+			return UiText.t("cost.status_self_none" if on_self else "cost.status_opp_none") % s
+		return UiText.t("cost.status_self_below" if on_self else "cost.status_opp_below") % [s, stacks]
+	if stacks <= 1:
+		return UiText.t("cost.status_self_has" if on_self else "cost.status_opp_has") % s
+	return UiText.t("cost.status_self_min" if on_self else "cost.status_opp_min") % [s, stacks]
 
 
 ## 151：条件满足的概率（取反 = 一减它）

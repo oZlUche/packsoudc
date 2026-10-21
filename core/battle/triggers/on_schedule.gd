@@ -26,4 +26,4 @@ func is_self_driven() -> bool:
 
 ## 142：自发的不写「自发」，方括号里写频率（[method Glossary.rule_text] 拼「每 N 秒」）
 func describe() -> String:
-	return "自发"
+	return UiText.t("trig.self_driven")

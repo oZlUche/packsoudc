@@ -61,11 +61,11 @@ static func shift(battle: BattleContext, who: CombatantRuntime, p_axis: StringNa
 
 func describe() -> String:
 	if not StatAxes.has(axis):
-		return "改 %s ?" % axis
-	var head := "%s%s %d 层" % ["使对手" if target == Target.OPPONENT else ("双方" if target == Target.BOTH else ""),
-		StatAxes.name_of(axis, delta), absi(delta)]
+		return UiText.t("fx.axis_unknown") % axis
+	var key := "fx.axis_opp" if target == Target.OPPONENT else ("fx.axis_both" if target == Target.BOTH else "fx.axis_self")
+	var head := UiText.t(key) % [StatAxes.name_of(axis, delta), absi(delta)]
 	if overflow_to != &"" and StatAxes.has(overflow_to):
-		head += "（%s满了多出的层数改为%s）" % [StatAxes.what_of(axis), StatAxes.name_of(overflow_to, 1)]
+		head += UiText.t("fx.axis_overflow") % [StatAxes.what_of(axis), StatAxes.name_of(overflow_to, 1)]
 	return head
 
 

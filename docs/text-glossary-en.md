@@ -133,3 +133,17 @@
 | 角色名 | 见数据 | Brutus / Marcus / Andreus |
 
 交代、教练、事件里的英文用接应者的口吻：短句，第二人称，不带说明书腔。百科用手册口吻。
+
+## F5 补充（221 §九）
+
+| 中文 | English | 备注 |
+|---|---|---|
+| 轻装 | Unburdened | 负重第 0 档；吃力 / 超重见负重 |
+| 随身（商店那一排） | Carried | 随身技能写 carried tool |
+| 猎手名 | 见数据 | 追猎者 Stalker、守路人 Road Warden |
+| 猎手的输法 | 见数据 | 击退 Repel、驱逐 Expel、驱逐并驻守 Expel and Hold |
+| 角色技能 | 见数据 | Old Paths / Slippery / Raised in the Wild / Tough / Spoils of War / Drill / Second Wind / Assault / Slip |
+| 自发 / 开战时 / 出手时 / 受伤时 | Automatic / At battle start / On attack / When hit | 时机类别名（`Glossary.TRIGGER_NAMES`） |
+| 增益 / 减益 / 系统 | Buff / Debuff / System | 状态悬浮窗名字行右边的小字 |
+
+规则句（道具悬浮窗）的英文：扳机写成方括号里大写开头的短句（[When hit]），条件与效果小写接在后面，整行句首由 `Glossary.cap` 大写；伤害一律写「<类型名> damage」，`Glossary.mark_rich` 认这个写法上色。

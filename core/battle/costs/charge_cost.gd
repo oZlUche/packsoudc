@@ -27,7 +27,7 @@ func pay(ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	return "每第 %d 次才生效" % n
+	return UiText.t("cost.every_nth") % n
 
 
 ## 151：攒 n 次放一次

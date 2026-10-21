@@ -11,4 +11,4 @@ func apply(h: Hunter, sys: HunterSystem) -> void:
 
 
 func describe() -> String:
-	return "输了它退 %d 步、歇 %d 步" % [steps, cooldown]
+	return UiText.t("hunter.loss_retreat") % [steps, cooldown]

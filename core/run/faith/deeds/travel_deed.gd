@@ -13,4 +13,4 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	return "每走 %d 步 +%d" % [maxi(1, every_steps), amount]
+	return UiText.t("deed.travel") % [maxi(1, every_steps), amount]

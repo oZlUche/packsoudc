@@ -44,12 +44,16 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 
 
 func describe() -> String:
-	var who := "你" if on_self else "对手"
 	var res := Glossary.resource_name(resource_key)
 	if full:
-		return "%s的%s回满时" % [who, res]
+		return UiText.t("trig.res_full_self" if on_self else "trig.res_full_opp") % res
 	var at := ("%d%%" % percent) if percent > 0 else TextTemplate.num(absolute)
-	return "%s的%s%s %s 时" % [who, res, "不低于" if direction == Direction.ABOVE else "低于", at]
+	var key := ""
+	if direction == Direction.ABOVE:
+		key = "trig.res_above_self" if on_self else "trig.res_above_opp"
+	else:
+		key = "trig.res_below_self" if on_self else "trig.res_below_opp"
+	return UiText.t(key) % [res, at]
 
 
 ## 151：满足的时间占比（低于 p% 占 p 成；高于反过来；回满按门槛占比）× 频率（没有冷却 = 资源一变就问，按受击频率）

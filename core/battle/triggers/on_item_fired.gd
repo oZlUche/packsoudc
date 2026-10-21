@@ -78,20 +78,20 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 
 func describe() -> String:
 	if self_only:
-		return "出手时"
+		return UiText.t("trig.self_fired")
 	if not same_side:
-		return "对手出手时" if source_tags.is_empty() else "对手的%s出手时" % _tag_names()
-	var what := "道具" if source_tags.is_empty() else _tag_names()
+		return UiText.t("trig.opp_fired") if source_tags.is_empty() else UiText.t("trig.opp_tag_fired") % _tag_names()
+	var what := UiText.t("trig.item") if source_tags.is_empty() else _tag_names()
 	if source == Source.LINKED:
-		return "相连的%s出手时" % what
-	return "你的%s%s出手时" % ["" if include_self else "其他", what]
+		return UiText.t("trig.linked_fired") % what
+	return UiText.t("trig.own_fired" if include_self else "trig.other_fired") % what
 
 
 func _tag_names() -> String:
 	var names: Array[String] = []
 	for t in source_tags:
 		names.append(Glossary.tag_name(t))
-	return "、".join(names)
+	return UiText.t("trig.tag_or").join(names)
 
 
 ## 151：一秒命中几次 —— 听对手出手按假定受击频率；听连结的邻居按假定邻居频率；听全场再加上自己（勾了「算自己」）

@@ -107,7 +107,7 @@ func _generate_terms() -> void:
 	for key in Glossary.STAT_NAMES:
 		_add_named("stat:" + String(key), Glossary.stat_name(StringName(key)), "stat")
 	for key in Glossary.TRIGGER_NAMES:
-		_add_named("trigger:" + String(key), String(Glossary.TRIGGER_NAMES[key]), "trigger")
+		_add_named("trigger:" + String(key), Glossary.trigger_key_name(String(key)), "trigger")
 
 
 func _add_named(id: String, title: String, group: String) -> void:

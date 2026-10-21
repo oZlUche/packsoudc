@@ -10,4 +10,4 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	return "这个技能现在用不了"
+	return UiText.t("cond.skill_not_ready")

@@ -33,4 +33,4 @@ static func current(ctx: RuleContext) -> Dictionary:
 
 
 func describe() -> String:
-	return "按顺时针轮流读装载的晶石，打出它的伤害类型、施加它的元素；没装晶石时造成%s伤害" % Glossary.damage_type_name(damage_type)
+	return UiText.t("fx.fire_loaded") % Glossary.damage_type_name(damage_type)

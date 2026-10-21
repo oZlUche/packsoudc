@@ -16,5 +16,5 @@ func subscribed_events() -> Array[StringName]:
 	return [BattleEvent.BEFORE_DAMAGE] as Array[StringName]
 
 
-func _when() -> String:
-	return "前"
+func _phase() -> int:
+	return PHASE_BEFORE

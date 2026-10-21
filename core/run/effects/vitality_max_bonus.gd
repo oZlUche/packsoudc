@@ -19,4 +19,4 @@ func describe() -> String:
 		parts.append("%+d%%" % percent)
 	if amount != 0 or percent == 0:
 		parts.append("%+d" % amount)
-	return "体力上限 " + "、".join(parts)
+	return UiText.t("bonus.vitality_max") % UiText.t("tip.list_sep").join(parts)

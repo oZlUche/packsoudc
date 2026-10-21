@@ -43,15 +43,15 @@ func apply(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	if cancel:
-		return "免疫这一次伤害"
+		return UiText.t("fx.negate")
 	if invert:
-		return "反转这一次伤害"
+		return UiText.t("fx.invert")
 	var parts: Array[String] = []
 	if percent != 0:
 		parts.append("%+d%%" % percent)
 	if flat != 0.0:
 		parts.append("%+.0f" % flat)
-	return "伤害 " + "、".join(parts) if not parts.is_empty() else "不改动伤害"
+	return UiText.t("fx.modify") % UiText.t("hud.buff_sep").join(parts) if not parts.is_empty() else UiText.t("fx.no_change")
 
 
 ## 151：估值 —— 改的是哪一下看扳机：主人受击时少挨的为正，主人出手时多打的为正。反转按「这一下变成治疗」，取消按「这一下没了」

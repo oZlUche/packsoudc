@@ -33,7 +33,7 @@ func row(level: int) -> EncumbranceLevel:
 
 func name_of(level: int) -> String:
 	var r := row(level)
-	return Names.of(r) if r != null else "轻装"
+	return Names.of(r) if r != null else UiText.t("run.load_light")
 
 
 func travel_mult_of(level: int) -> int:
@@ -74,5 +74,5 @@ func effect_text(level: int) -> String:
 		var pct := roundi(m.amount) if m.is_mult() else roundi(m.amount * 100.0)     # 加算的上限 / 回复按基线比例写，所以也显示成百分数
 		parts.append("%s %s%d%%" % [what, "+" if pct > 0 else "−", absi(pct)])
 	if r.travel_mult > 1:
-		parts.append("走一步%s −%d" % [Glossary.COUNTDOWN_WORD, r.travel_mult])
-	return "、".join(parts)
+		parts.append(UiText.t("run.load_step_cost") % r.travel_mult)
+	return UiText.t("hud.buff_sep").join(parts)

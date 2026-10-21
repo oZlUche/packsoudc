@@ -7,6 +7,8 @@ extends Resource
 @export var id: StringName = &""
 ## 给玩家看的名字（「击退」）
 @export var display_name: String = ""
+## 221 F5：别的语言的名字
+@export var display_names: Dictionary = {}
 ## 随机选时的权重（[LossPickRandom]）
 @export var weight: float = 1.0
 ## 输了之后按顺序发生的事
@@ -20,7 +22,7 @@ func summary() -> String:
 		var lo := o as HunterLossOutcome
 		if lo != null and lo.describe() != "":
 			parts.append(lo.describe())
-	var name := display_name if display_name != "" else String(id)
+	var name := Names.of(self) if display_name != "" else String(id)
 	if parts.is_empty():
 		return name
-	return "%s：%s" % [name, "，".join(parts)] if name != "" else "，".join(parts)
+	return UiText.t("hunter.loss_named") % [name, UiText.t("log.comma_sep").join(parts)] if name != "" else UiText.t("log.comma_sep").join(parts)

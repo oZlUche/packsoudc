@@ -33,8 +33,8 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 func describe() -> String:
 	var s := Glossary.status_name(buff_id)
 	if by_self:
-		return "你给%s施加%s时" % ["自己" if on_self else "对手", s]
-	return "%s被施加%s时" % ["你" if on_self else "对手", s]
+		return UiText.t("trig.you_apply_self" if on_self else "trig.you_apply_opp") % s
+	return UiText.t("trig.applied_self" if on_self else "trig.applied_opp") % s
 
 
 ## 151：本件自己施加的那个 buff 按它施加的频率；别的按假定频率

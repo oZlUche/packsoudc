@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "打赢的钱 ×%s" % String.num(factor, 2)
+	return UiText.t("bonus.battle_reward") % String.num(factor, 2)
