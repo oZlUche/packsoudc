@@ -6,6 +6,9 @@
 script = ExtResource("1_ah2pa")
 id = &"teleport"
 display_name = "传送点"
+display_names = {
+"en": "Teleporters"
+}
 category = &"map"
 order = 8
 text = "传送点是一种特殊的路：两端可以隔得很远，走它不经过途中任何点，计的是这条路自己写着的步数，通常比一步多。地图上画成紫色虚线。
@@ -13,4 +16,11 @@ text = "传送点是一种特殊的路：两端可以隔得很远，走它不经
 传送和走一步是同一套结算：计步数、侵蚀推进、目的地的事照常发生，离开的点上{zone:地上}的东西照样留在那里。有没有传送点、花几点，由这一章的地图配置定，有的图一条也没有。
 
 ---"
+texts = {
+"en": "A teleporter is a special kind of path: its two ends can be far apart, taking it skips every spot in between, and it costs the number of steps written on the path itself, usually more than one. On the map it is drawn as a purple dashed line.
+
+Teleporting resolves just like taking a step: steps are counted, Erosion advances, and whatever happens at the destination happens as usual; things on the {zone:地上} at the spot you leave stay there as always. Whether a map has teleporters, and how many steps they cost, is set by the chapter's map; some maps have none at all.
+
+---"
+}
 related = Array[String](["map_and_steps", "staging_zone"])

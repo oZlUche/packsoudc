@@ -6,8 +6,16 @@
 script = ExtResource("1_tcw08")
 id = &"staging_zone"
 display_name = "地上"
+display_names = {
+"en": "Ground"
+}
 order = 3
 text = "{zone:地上}就是棋盘之外的整块屏幕：拖出棋盘，放手在哪就落在哪，不用找框、不限件数。东西在地上的位置只是个样子，不占格、不碰撞、可以叠着放，后放的在上；被面板挡住的会自己让到旁边。地上的东西对任何系统都不存在：不参战、不吃邻接、不算套装、撤离时也不带出去。
 
 每个点有自己的一片地。在一个点里打开背包、战利品、战前准备、搜索，看到的都是同一片地、同一些东西在同一个位置。走出这个点时，地上的东西留在那个点上，回来还在原处；地图上标得出哪些点存着东西。撤离时地上没背出来的那几件在结算屏上会提一句，离开结算屏时按基地的出售比例一键卖掉。"
+texts = {
+"en": "The {zone:地上} is the whole screen outside the board: drag something off the board and it lands wherever you let go. There is no frame to aim for and no limit on how many things it holds. Where an item sits on the Ground is only for show: it takes up no cells, doesn't collide, and can be stacked, with the last one placed on top; anything hidden behind a panel moves aside on its own. To every game system, items on the Ground don't exist: they don't fight, get no Adjacency, don't count toward sets, and aren't carried out when you extract.
+
+Each spot has its own patch of Ground. Within one spot, the pack, Loot, Pre-battle and search screens all show the same Ground, with the same items in the same places. When you leave a spot, whatever is on its Ground stays at that spot, right where it was when you come back; the map marks which spots have things left on them. When you extract, the Results screen mentions the items left on the Ground that you didn't carry out, and when you leave the Results screen they are all sold at once at your base's sell rate."
+}
 related = Array[String](["drag_and_rotate", "quick_place", "settlement_and_warehouse"])

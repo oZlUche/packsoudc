@@ -5,6 +5,9 @@
     "en": "Frostbite"
   },
   "description": "对手身上反应层数那么多层【流血】变为不可解除，减半也不会少于这些层。",
+  "descriptions": {
+    "en": "That many stacks of Bleed on the opponent (equal to the reaction stacks) can no longer be removed, and halving can't take them below that."
+  },
   "elements": [
     "ice",
     "bleed"

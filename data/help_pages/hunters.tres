@@ -6,9 +6,17 @@
 script = ExtResource("1_uamvg")
 id = &"hunters"
 display_name = "猎手"
+display_names = {
+"en": "Hunters"
+}
 category = &"map"
 order = 6
 text = "猎手是进阶难度才有的机制：地图上会动的单位，不和节点互动，只找你。你每走一步它们动一回合，各在自己的领地里按自己的性子走，靠近、远离、游荡、埋伏或巡逻，互不进对方的领地。有的一直看得见，有的靠近才看见，有的隐形，侦察能让隐形的提前显形。
 
 进了感知范围地图日志会说一句；够得着就先弹一屏「迎战 / 逃跑」。逃跑按成功率掷，没逃掉扣体力照打。迎战的对手按你当时的段位现造，打赢它死、掉落更多；打输按它的定义扣体力，它可能退走、消失，或把你赶回上一个点并驻守。"
+texts = {
+"en": "Hunters appear only on higher difficulties. They are units that move on the map, never interact with nodes, and come only for you. Each step you take, they move one turn, each in its own territory and by its own temperament: approaching, retreating, wandering, lying in ambush or patrolling, and none enters another's territory. Some are always visible, some show up only when you are close, and some are invisible; scouting can reveal invisible ones early.
+
+When you come within one's sensing range, the map Log says so; when it can reach you, a Fight / Flee screen pops up first. Fleeing rolls against a success chance; if you fail, you lose Vitality and fight anyway. If you fight, the opponent is built on the spot for your current tier. Win and it dies, dropping more loot; lose and you lose Vitality as its definition says, and it may withdraw, vanish, or drive you back to the previous node and stand guard there."
+}
 related = Array[String](["vitality", "battle_and_prebattle", "erosion"])

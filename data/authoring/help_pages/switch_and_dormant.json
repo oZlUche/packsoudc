@@ -1,9 +1,15 @@
 {
   "id": "switch_and_dormant",
   "display_name": "切换与休眠",
+  "display_names": {
+    "en": "Switching and Dormancy"
+  },
   "category": "faith",
   "order": 4,
   "text": "换神不花钱：右键棋盘上另一枚信物，或者把它拿起来再放下。换了之后，原来那位神的道具进入休眠：战斗里不出手、不给也不吃邻接加成、不算套装；有通用效果的道具，比如盾的固定减伤、武器本身的攻击力，仍保留通用的那部分，只丢信力加成。只靠信仰起作用的东西休眠就彻底失效。\n\n休眠的道具在棋盘上画灰、标着「休眠」。信力按神各记一池，切出去不清零，切回来接着攒；没激活的神不记。诸神之间天然互斥，所以带几枚信物其实是带了几种随时能切的流派，代价只是它们各占的格子。",
+  "texts": {
+    "en": "Switching gods is free: right-click another Anchor on your board, or pick it up and put it down again. Once you switch, the previous god's items go dormant: in battle they don't attack, neither give nor receive Adjacency bonuses, and don't count toward sets. Items with general effects, such as a shield's flat damage reduction or a weapon's own attack, keep that general part and lose only their Faith bonus. Anything that works only through Faith stops working entirely while dormant.\n\nDormant items are greyed out on the board and marked Dormant. Faith is tracked in a separate pool for each god: switching away doesn't reset it, and switching back lets you keep building it; gods that haven't been activated track nothing. The gods naturally exclude one another, so carrying several Anchors really means carrying several builds you can switch between at any time, at the cost of only the cells they take up."
+  },
   "related": [
     "anchor_and_right_click",
     "anchor_activation"

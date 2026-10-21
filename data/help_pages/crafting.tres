@@ -14,4 +14,9 @@ order = 4
 text = "把一件道具拖到棋盘上另一件上面，正好只压着这一件、两件有配方，两件立刻合成一件新的，落在被压那件的位置。放不下自动找位，再不行到{zone:地上}。
 
 拿起一件时，能和它合成的那几件会亮一圈；压上去预览是绿的。{zone:地上}的那件不能当被压的一方，把它拖到棋盘上那件上面就行。合成只在一局里发生。"
+texts = {
+"en": "Drag an item onto another item on the board. If it covers exactly that one item and the two have a recipe, they instantly combine into a new item, placed where the covered item was. If the new item doesn't fit there, it finds a spot automatically; failing that, it goes to the {zone:地上}.
+
+When you pick up an item, the items it can be crafted with get a highlight ring; holding it over one shows a green preview. An item on the {zone:地上} can't be the one underneath; drag it onto the item on the board instead. Crafting only happens during a run."
+}
 see_items = Array[StringName]([&"knife", &"poison_vial", &"poisoned_knife", &"salted_meat", &"bandage_roll"])

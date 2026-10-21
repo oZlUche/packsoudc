@@ -6,9 +6,17 @@
 script = ExtResource("1_2lue7")
 id = &"quick_place"
 display_name = "双击快速置入"
+display_names = {
+"en": "Double-Click to Place"
+}
 category = &"bag"
 order = 2
 text = "双击一件道具，它自动找位挪到「对面」：{zone:地上}的双击进棋盘，放不下会提示；棋盘上的双击进当前屏的容器，战利品箱、搜索收获箱、祭品台、保险箱都算，没有容器时到地上。战利品箱里双击一件，亮了的才动，先试棋盘，放不下到地上。
 
 商店里双击商品就是买，自动找位、先包后地上，钱不够没反应。基地也一样：仓库和带回来的棋盘之间双击互放，出售页双击一件卖一件，科技页双击一件交给选中的节点。自动找位按行扫过去，每个位置先试原朝向再转。"
+texts = {
+"en": "Double-click an item and it automatically finds a spot on the \"other side\". Double-click one on the {zone:地上} and it goes to the Board, with a notice if it doesn't fit. Double-click one on the Board and it goes to the container on the current screen (loot boxes, search haul boxes, the Offering table and Safes all count), or to the Ground if there is none. Double-click an item in a loot box and only highlighted items move, trying the Board first, then the Ground.
+
+In a shop, double-clicking an item buys it, placing it automatically, bags first, then the Ground; if you can't afford it, nothing happens. The base works the same way: double-click to move items between the Warehouse and the Board you brought back, double-click an item on the sell page to sell it, and double-click an item on the tech page to hand it to the selected node. Auto-placement scans row by row, trying each spot in the original orientation first, then rotated."
+}
 related = Array[String](["drag_and_rotate", "shop", "safe_box", "tidy"])

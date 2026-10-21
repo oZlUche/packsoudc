@@ -20,54 +20,80 @@ const COUNTDOWN_WORD := "倒计时"
 ## 但**说明文字一字不动**：编辑器的词典、文档、将来的帮助页照用。没写 `tip` 按 true，取文字一律走 [method term_text]
 const TERMS := {
 	# 107：时机词与直白的资源词，字面就是意思，不弹
-	"自发": {"text": "不等任何事件，按自己的冷却周期反复出手 —— 武器的普通攻击都是自发的。", "tip": false},
-	"开战时": {"text": "战斗开始那一瞬触发一次。", "tip": false},
-	"出手时": {"text": "有道具出手时跟着触发（连带）。", "tip": false},
-	"受伤时": {"text": "受到伤害之后触发。", "tip": false},
-	"层数够时": {"text": "身上某个状态叠到指定层数时触发。", "tip": false},
+	"自发": {"text": "不等任何事件，按自己的冷却周期反复出手 —— 武器的普通攻击都是自发的。", "tip": false, "en": {"name": "Automatic", "text": "Fires on its own cooldown, again and again, without waiting for anything. A weapon's normal attack is automatic."}},
+	"开战时": {"text": "战斗开始那一瞬触发一次。", "tip": false, "en": {"name": "At battle start", "text": "Triggers once, the moment the battle begins."}},
+	"出手时": {"text": "有道具出手时跟着触发（连带）。", "tip": false, "en": {"name": "On use", "text": "Triggers along with an item when that item fires (chained)."}},
+	"受伤时": {"text": "受到伤害之后触发。", "tip": false, "en": {"name": "When hit", "text": "Triggers after taking damage."}},
+	"层数够时": {"text": "身上某个状态叠到指定层数时触发。", "tip": false, "en": {"name": "At stacks", "text": "Triggers when a status on you reaches the given number of stacks."}},
 	# 130
-	"施加时": {"text": "某个状态被施加、层数增加的那一瞬触发；叠满后只刷新时长的那一下不算。默认只认自己施加的。", "tip": false},
-	"资源低于时": {"text": "生命 / 耐力等降到阈值以下时触发。", "tip": false},
-	"冷却": {"text": "两次出手之间的间隔（秒），急速会缩短它。", "tip": false},
-	"耐力": {"text": "出手要花的资源，每秒按回复速度补回；不够就出不了手，等回够再动。", "tip": false},
-	"耗耐力": {"text": "这一下出手要花的耐力。", "tip": false},
-	"信力": {"text": "按信仰要求的行为攒的点数；过了阈值，这个信仰的道具解锁更多功能。", "tip": false},
+	"施加时": {"text": "某个状态被施加、层数增加的那一瞬触发；叠满后只刷新时长的那一下不算。默认只认自己施加的。", "tip": false, "en": {"name": "On apply", "text": "Triggers the moment a status is applied and its stacks go up. Refreshing the duration of a capped status doesn't count. By default only counts statuses you applied."}},
+	"资源低于时": {"text": "生命 / 耐力等降到阈值以下时触发。", "tip": false, "en": {"name": "Below threshold", "text": "Triggers when Health, Stamina or similar drops below the threshold."}},
+	"冷却": {"text": "两次出手之间的间隔（秒），急速会缩短它。", "tip": false, "en": {"name": "Cooldown", "text": "The time between two uses, in seconds. Haste shortens it."}},
+	"耐力": {"text": "出手要花的资源，每秒按回复速度补回；不够就出不了手，等回够再动。", "tip": false, "en": {"name": "Stamina", "text": "What using an item costs. It refills every second at your regen rate; if you don't have enough, the item waits until you do."}},
+	"耗耐力": {"text": "这一下出手要花的耐力。", "tip": false, "en": {"name": "Stamina cost", "text": "How much Stamina this use costs."}},
+	"信力": {"text": "按信仰要求的行为攒的点数；过了阈值，这个信仰的道具解锁更多功能。", "tip": false, "en": {"name": "Faith", "text": "Points earned by doing what a Faith asks. Past each threshold, that Faith's items unlock more."}},
 	# 129：负重
-	"负重": {"text": "作战棋盘上所有东西（包本身也算）的重量之和；地上、保险箱、仓库里的不算。超过角色的负重上限就开始吃力。"},
-	"吃力": {"text": "负重超过上限：急速 −10%、耐力回复 −10%。"},
-	"超重": {"text": "负重超过上限的 1.25 倍：急速 −25%、耐力回复 −25%、耐力上限 −20%。"},
-	"寸步难行": {"text": "负重超过上限的 1.5 倍：超重的减益照旧，地图上每走一步（传送也算）" + COUNTDOWN_WORD + " −2；原地等待不翻倍。"},
-	"地上": {"text": "棋盘之外的整块屏幕：拖出棋盘放哪就落在哪。不参战、不吃邻接、不算套装、撤离不带走；留在这个点上，回来还在原处。", "tip": false},
+	"负重": {"text": "作战棋盘上所有东西（包本身也算）的重量之和；地上、保险箱、仓库里的不算。超过角色的负重上限就开始吃力。", "en": {"name": "Load", "text": "The total weight of everything on your battle Board, bags included. Things on the Ground, in Safes or in the Warehouse don't count. Go over your character's Load limit and you start to struggle."}},
+	"吃力": {"text": "负重超过上限：急速 −10%、耐力回复 −10%。", "en": {"name": "Burdened", "text": "Load over the limit: Haste −10%, Stamina regen −10%."}},
+	"超重": {"text": "负重超过上限的 1.25 倍：急速 −25%、耐力回复 −25%、耐力上限 −20%。", "en": {"name": "Overloaded", "text": "Load over 1.25 times the limit: Haste −25%, Stamina regen −25%, Max stamina −20%."}},
+	"寸步难行": {"text": "负重超过上限的 1.5 倍：超重的减益照旧，地图上每走一步（传送也算）" + COUNTDOWN_WORD + " −2；原地等待不翻倍。", "en": {"name": "Immobile", "text": "Load over 1.5 times the limit: the Overloaded penalties still apply, and every step on the map (teleports too) costs Countdown −2. Waiting in place is not doubled."}},
+	"地上": {"text": "棋盘之外的整块屏幕：拖出棋盘放哪就落在哪。不参战、不吃邻接、不算套装、撤离不带走；留在这个点上，回来还在原处。", "tip": false, "en": {"name": "Ground", "text": "The whole screen outside the Board: drop something off the Board and it lands where you let go. It doesn't fight, doesn't count for adjacency or sets, and isn't taken when you extract. It stays at this spot, right where you left it."}},
 	# 以下都带玩家猜不到的规则（换算、结算顺序、叠层方式），照弹
-	"急速": {"text": "出手速度的倍率，越高冷却越短。"},
+	"急速": {"text": "出手速度的倍率，越高冷却越短。", "en": {"name": "Haste", "text": "A multiplier on attack speed. The higher it is, the shorter the cooldown."}},
 	# 153（作者定）：防护改名格挡，只有盾牌给，几面盾只算最高的一面
-	"格挡": {"text": "只有盾牌给格挡。每次受到直接伤害（武器造成的）固定减少这个数，减到零为止；带几面盾只算最高的一面，加固 / 破绽在它之上加减，破绽为负时反而多挨。buff 造成的灼烧、中毒、流血不算直接伤害，格挡挡不住。"},
-	"护甲": {"text": "先于生命被扣的一层。开战时按护甲上限充满，之后不自己回复。中毒、流血无视护甲。"},
-	"直接伤害": {"text": "武器造成的伤害。格挡（加固 / 破绽）只减它；buff 造成的伤害（灼烧、中毒、流血）不是直接伤害。"},
-	"永续": {"text": "不会过期，一直到战斗结束（除非被清除）。"},
-	"叠层": {"text": "同一个状态可以叠多层，效果按层数累加；没写上限就不限层。"},
-	"合成": {"text": "把一件道具拖到另一件上面，两件有配方就立刻合成一件新的；装不下就到地上。"},
-	"增益槽": {"text": "这件道具的一种格位：邻居占着它，邻居就得到写着的加成。"},
-	"受益槽": {"text": "这件道具的一种格位：每被邻居点亮一格，自己就得一份写着的加成。"},
-	"装载槽": {"text": "法杖的晶石座：放上去的魔晶石把它带的供给交给法杖。一颗晶石只给一把法杖（压着两把的给后放的那把），占了同一把的几个装载槽也只算一份。"},
+	"格挡": {"text": "只有盾牌给格挡。每次受到直接伤害（武器造成的）固定减少这个数，减到零为止；带几面盾只算最高的一面，加固 / 破绽在它之上加减，破绽为负时反而多挨。buff 造成的灼烧、中毒、流血不算直接伤害，格挡挡不住。", "en": {"name": "Block", "text": "Only shields give Block. Every hit of direct damage (from weapons) is reduced by this amount, down to zero. With several shields only the highest counts; Fortified / Exposed add to or subtract from it, and if Exposed takes it below zero you take extra. Burn, Poison and Bleed from buffs are not direct damage, so Block doesn't stop them."}},
+	"护甲": {"text": "先于生命被扣的一层。开战时按护甲上限充满，之后不自己回复。中毒、流血无视护甲。", "en": {"name": "Armor", "text": "A layer lost before Health. It fills to Max Armor at the start of a battle and doesn't recover on its own. Poison and Bleed ignore Armor."}},
+	"直接伤害": {"text": "武器造成的伤害。格挡（加固 / 破绽）只减它；buff 造成的伤害（灼烧、中毒、流血）不是直接伤害。", "en": {"name": "Direct damage", "text": "Damage dealt by weapons. Block (Fortified / Exposed) only reduces this. Damage from buffs (Burn, Poison, Bleed) is not direct damage."}},
+	"永续": {"text": "不会过期，一直到战斗结束（除非被清除）。", "en": {"name": "Permanent", "text": "Never expires; lasts until the end of the battle (unless removed)."}},
+	"叠层": {"text": "同一个状态可以叠多层，效果按层数累加；没写上限就不限层。", "en": {"name": "Stacking", "text": "A status can stack many times, and its effect adds up per stack. If no cap is written, there is none."}},
+	"合成": {"text": "把一件道具拖到另一件上面，两件有配方就立刻合成一件新的；装不下就到地上。", "en": {"name": "Crafting", "text": "Drag one item onto another; if the two have a recipe, they instantly craft into a new item. If it doesn't fit, it goes to the Ground."}},
+	"增益槽": {"text": "这件道具的一种格位：邻居占着它，邻居就得到写着的加成。", "en": {"name": "Grant slot", "text": "A kind of cell on this item: a neighbor sitting on it gets the bonus written there."}},
+	"受益槽": {"text": "这件道具的一种格位：每被邻居点亮一格，自己就得一份写着的加成。", "en": {"name": "Receive slot", "text": "A kind of cell on this item: for each one a neighbor lights up, this item gets one share of the bonus written there."}},
+	"装载槽": {"text": "法杖的晶石座：放上去的魔晶石把它带的供给交给法杖。一颗晶石只给一把法杖（压着两把的给后放的那把），占了同一把的几个装载槽也只算一份。", "en": {"name": "Load slot", "text": "A staff's crystal socket: a Crystal placed on it hands its supply to the staff. One Crystal feeds only one staff (if it covers two, the one placed later), and several load slots of the same staff count once."}},
 	# 107（作者定）：这两条写的是**buff**（每层每秒掉血、无视格挡与护甲），不是武器的伤害类型 —— 同名的标签
 	# 「中毒」「流血」指类型，那边 tip 为 false。两边文字都保留
-	"中毒": {"text": "每层每秒造成毒伤，无视格挡与护甲，永续叠层。"},
-	"流血": {"text": "每层每秒造成流血伤害，无视格挡与护甲，永续叠层。"},
+	"中毒": {"text": "每层每秒造成毒伤，无视格挡与护甲，永续叠层。", "en": {"name": "Poison", "text": "Deals poison damage every second per stack, ignores Block and Armor, permanent, stacks."}},
+	"流血": {"text": "每层每秒造成流血伤害，无视格挡与护甲，永续叠层。", "en": {"name": "Bleed", "text": "Deals bleed damage every second per stack, ignores Block and Armor, permanent, stacks."}},
 }
 
 
-## 一条固定词条的说明文字（词条不存在给空）。107：`tip` 关掉的词照样取得到文字
+## 一条固定词条的说明文字（词条不存在给空）。107：`tip` 关掉的词照样取得到文字。221 F4：按当前语言取（`en` 写了用它），
+## [param name] 可以是中文键，也可以是当前语言下的名字（[method term_key]）
 static func term_text(name: String) -> String:
-	var entry = TERMS.get(name, null)
+	var entry = TERMS.get(term_key(name), null)
 	if entry == null:
 		return ""
-	return String((entry as Dictionary).get("text", "")) if entry is Dictionary else String(entry)
+	if not (entry is Dictionary):
+		return String(entry)
+	var tr: Variant = (entry as Dictionary).get(UiText.lang, null)
+	if tr is Dictionary and String((tr as Dictionary).get("text", "")) != "":
+		return String(tr["text"])
+	return String((entry as Dictionary).get("text", ""))
+
+
+## 221 F4：固定词条在当前语言下叫什么（[param key] 是 [constant TERMS] 的中文键；没写这种语言的名字照原词）
+static func term_name(key: String, lang: String = "") -> String:
+	var entry = TERMS.get(key, null)
+	var tr: Variant = (entry as Dictionary).get(lang if lang != "" else UiText.lang, null) if entry is Dictionary else null
+	return String((tr as Dictionary).get("name", key)) if tr is Dictionary else key
+
+
+## 221 F4：一个词对应哪条固定词条（中文键本身，或某种语言下的名字）；不是词条给空
+static func term_key(word: String) -> String:
+	if TERMS.has(word):
+		return word
+	for key in TERMS:
+		var entry = TERMS[key]
+		if entry is Dictionary:
+			for lang in entry:
+				if entry[lang] is Dictionary and String((entry[lang] as Dictionary).get("name", "")) == word:
+					return String(key)
+	return ""
 
 
 ## 这条固定词条要不要弹词条（107：没写按 true；词条不存在给 false）
 static func term_tip(name: String) -> bool:
-	var entry = TERMS.get(name, null)
+	var entry = TERMS.get(term_key(name), null)
 	if entry == null:
 		return false
 	return bool((entry as Dictionary).get("tip", true)) if entry is Dictionary else true
@@ -611,9 +637,10 @@ static func terms_in(text: String, extra: Dictionary = {}) -> Array:
 	for name in extra:
 		var v = extra[name]
 		names[String(name)] = v if v is Dictionary else {"id": String(name), "text": String(v)}
-	for name in TERMS:
-		if not names.has(name) and term_tip(name):     # 107：tip 关掉的词不弹，也因此不被 mark 标出
-			names[name] = {"id": name, "text": term_text(name)}
+	for key in TERMS:
+		var name := term_name(String(key))     # 221 F4：英文正文里认英文名，id 还是中文键
+		if not names.has(name) and term_tip(key):     # 107：tip 关掉的词不弹，也因此不被 mark 标出
+			names[name] = {"id": key, "text": term_text(key)}
 	for name in names:
 		var at := plain.find(name)
 		if at >= 0:

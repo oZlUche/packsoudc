@@ -150,9 +150,85 @@ static func run_smoke_221(t: TestCase) -> void:
 	UiText.lang = "en"
 	var names: Array = ch.map_source.scale_options().map(func(o: Dictionary) -> String: return String(o["display_name"]))
 	var craft := UiText.t("craft.done") % ["Knife", "Poison Vial", "Poisoned Knife"]
-	var bars := [UiText.t("battle.bar_hp"), UiText.t("battle.bar_stamina")]
+	var bars := [Glossary.resource_name(&"hp"), Glossary.resource_name(&"stamina"), Glossary.resource_name(&"mana")]
 	UiText.lang = "zh"
 	t.eq(names, ["Small", "Medium", "Large"], "规模名是英文")
 	t.check(_han().search(craft) == null, "合成那一句没有汉字：%s" % craft)
-	t.eq(bars, ["HP", "Stamina"], "条上的资源名首字母大写")
-	t.eq(UiText.t("battle.bar_hp"), "hp", "中文照旧")
+	t.eq(bars, ["Health", "Stamina", "Mana"], "F4：条上的资源名取 Glossary.RESOURCE_NAMES")
+	t.eq(Glossary.resource_name(&"hp"), "生命", "中文也写名字，不写键名")
+
+
+## 221 F4：百科英文 —— 54 页机制页标题与正文、固定词条、反应说明都有英文；英文下整本书的页标题没有汉字，
+## 机制页正文、反应讲解没有汉字；「相关」写的词条中文键在英文下照样连得上
+static func run_encyclopedia_english(t: TestCase) -> void:
+	t.begin("221 F4 · 百科英文：机制页、固定词条、反应说明齐全；英文下页标题与机制页正文没有汉字")
+	var han := _han()
+	var token := RegEx.create_from_string("\\{[^}]*\\}")
+	var digit := RegEx.create_from_string("[0-9]")
+	var help := GameFlow.load_help_pages()
+	var bad: Array[String] = []
+	for h in help:
+		var def := h as HelpPageDef
+		var en := String(def.texts.get("en", ""))
+		if String(def.display_names.get("en", "")) == "" or en == "":
+			bad.append("%s：没有英文" % def.id)
+			continue
+		var zh_tokens := token.search_all(def.text).map(func(m: RegExMatch) -> String: return m.get_string())
+		var en_tokens := token.search_all(en).map(func(m: RegExMatch) -> String: return m.get_string())
+		zh_tokens.sort()
+		en_tokens.sort()
+		var zh_set := {}
+		var en_set := {}
+		for x in zh_tokens:
+			zh_set[x] = true
+		for x in en_tokens:
+			en_set[x] = true
+		if not _same_keys(zh_set, en_set):
+			bad.append("%s：占位符和中文不一样" % def.id)
+		var bare := token.sub(en, "", true)
+		if bare.contains("**"):
+			bad.append("%s：有 **" % def.id)
+		for m in digit.search_all(bare):
+			if not token.sub(def.text, "", true).contains(m.get_string()):
+				bad.append("%s：英文写了中文里没有的数字 %s" % [def.id, m.get_string()])
+				break
+	for key in Glossary.TERMS:
+		var e: Dictionary = Glossary.TERMS[key]
+		var en: Dictionary = e.get("en", {})
+		if String(en.get("name", "")) == "" or String(en.get("text", "")) == "" or han.search(String(en["name"]) + String(en["text"])) != null:
+			bad.append("词条 %s：英文不齐" % key)
+	for def in ReactionResolver.all():
+		if String(def.descriptions.get("en", "")) == "":
+			bad.append("反应 %s：没有英文说明" % def.id)
+	t.eq(bad, [] as Array[String], "%d 页机制页、%d 条词条、反应说明都有英文" % [help.size(), Glossary.TERMS.size()])
+	var db := ItemDatabase.new()
+	db.load_dir()
+	UiText.lang = "en"
+	var book := Encyclopedia.build(help, db)
+	var titles: Array[String] = []
+	var bodies: Array[String] = []
+	for id in book.ids():
+		var p := book.page(id)
+		if han.search(String(p["title"])) != null:
+			titles.append("%s：%s" % [id, p["title"]])
+		if not String(id).contains(":"):
+			var shown := TextTemplate.strip_bbcode(TextTemplate.plain(book.render(id), {"char_name": "Brutus"}))
+			if han.search(shown) != null:
+				bodies.append("%s：%s" % [id, shown.left(60)])
+	var intro := Encyclopedia.reaction_intro(ReactionResolver.by_id(&"poison_bleed"))
+	var block_page := book.page_for(Glossary.term_name("格挡"))
+	UiText.lang = "zh"
+	t.eq(titles, [] as Array[String], "英文下页标题没有汉字")
+	t.eq(bodies, [] as Array[String], "英文下机制页正文（连「相关」「相关道具」）没有汉字")
+	t.check(han.search(intro) == null and intro.begins_with("Fungal Blood: Toxin meets Blood."), "反应讲解是英文：%s" % intro)
+	t.eq(block_page, "term:格挡", "英文名「Block」连到格挡那一页")
+	t.eq(Glossary.term_text("Block"), Glossary.term_text("格挡"), "中文下按英文名也查得到同一条（取中文说明）")
+
+
+static func _same_keys(a: Dictionary, b: Dictionary) -> bool:
+	if a.size() != b.size():
+		return false
+	for k in a:
+		if not b.has(k):
+			return false
+	return true

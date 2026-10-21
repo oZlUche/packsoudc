@@ -673,9 +673,18 @@ const TEXT := {
 	# —— 221 F3 顺带（游戏测试 2026-10-21 第 4 条）——
 	"craft.done": {"zh": "「%s」和「%s」合成了「%s」。", "en": "%s and %s crafted into %s."},
 	"craft.to_ground": {"zh": "背包里装不下它：放在了地上。走之前记得放回包里，地上的东西会留在这个点上。", "en": "It doesn't fit in your pack, so it's on the Ground. Put it back in a bag before you leave: anything on the Ground stays at this spot."},
-	"battle.bar_hp": {"zh": "hp", "en": "HP"},     # 回放屏血条上的字（中文原样是键名）
-	"battle.bar_stamina": {"zh": "stamina", "en": "Stamina"},
-	"battle.bar_mana": {"zh": "mana", "en": "Mana"},
+	# —— 221 F4：百科拼接句（core/text/encyclopedia.gd）——
+	"codex.effects": {"zh": "效果：%s", "en": "Effects: %s"},
+	"codex.reaction_intro": {"zh": "%s：%s碰上%s。%s　百科里点亮了这一页。", "en": "%s: %s meets %s. %s It now has a page in the Encyclopedia."},
+	"codex.not_triggered": {"zh": "还没有引发过。", "en": "Not triggered yet."},
+	"codex.see_also": {"zh": "相关：%s", "en": "See also: %s"},
+	"codex.sep": {"zh": "　", "en": " · "},
+	"codex.from": {"zh": "来自：%s", "en": "From: %s"},
+	"codex.items": {"zh": "相关道具：%s", "en": "Items: %s"},
+	"codex.recipes": {"zh": "配方：", "en": "Recipes:"},
+	"codex.recipe_line": {"zh": "　%s + %s → %s", "en": "  %s + %s → %s"},
+	"codex.recipe_note": {"zh": "：%s", "en": ": %s"},
+	"codex.unknown": {"zh": "？", "en": "?"},
 	# —— 221 F1：faith perks ——
 	"perk.no_active_faith": {"zh": "没有激活的信仰", "en": "No active Faith"},
 	"perk.faith_short": {"zh": "信力不够（要 %d）", "en": "Not enough Faith points (need %d)"},

@@ -127,3 +127,16 @@ F1 代码量最大（几百处换键），F4 字最多。建议执行按 F1 → 
 3. **顺带改中文（架构设计确认）**：F2 报的两处疑点按架构设计的答复改了措辞 —— `tut_intro`「军队」改「军团」，`tut2_search_2` 标题「两把武器」改「两套打法」（和正文第一句一致），英文跟着改。
 4. **顺带修游戏测试报的英文问题**（2026-10-21 冒烟报告第 4 条）：耐力火漆签的小字英文改成 `−5.0 · +3.0`，不再压到下一枚签；开局屏地图规模加 `display_names`（`MapScaleProfile.display_names`，Small / Medium / Large）；回放屏条上的资源名走 `battle.bar_*`（英文 HP / Stamina / Mana，中文照旧是键名 hp / stamina）；合成那一句与「放在了地上」换键。第一次反应暂停的说明句属百科拼接，随 F4 做。
 5. 测试：`test_map_screen_166` 加「没写英文也报」「按语言取、没写回落中文」；两处故意写坏的样例补上英文，只测它原本要测的那一条；`test_english_ui_221` 加一组查规模名、合成句、条上的资源名。
+
+## 八、F4 落地（执行，2026-10-21，v3.71）
+
+按 §1.2 的 F4 落了：百科整本有英文。
+
+1. **54 页机制页**：每页加 `display_names.en` 与 `texts.en`，占位符（`{ui:}` / `{zone:}` 等）和中文一一对应，不写 `**`，不写中文里没有的数字；用词照 `docs/text-glossary-en.md`，表里没有的取现有数据里的英文名（道具、状态、信仰、营地设施等）。
+2. **固定词条**：`Glossary.TERMS` 每条加 `"en": {"name", "text"}`（格挡 Block、负重 Load、地上 Ground 等）。`Glossary.term_name(key)` 按语言给名字，`term_key(word)` 认中文键或任一语言的名字，`term_text` / `term_tip` / `terms_in` 都走它 —— 所以英文正文里写的 Block 也连得到格挡那一页，词条页的 id 仍是中文键 `term:格挡`。
+3. **百科自动页的拼接句**：「效果」「相关」「出自」「相关道具 / 配方」「未知」与反应讲解那一句都换成 `codex.*` 键；十种反应加 `descriptions.en`。第一次反应暂停（220）的说明句就是 `Encyclopedia.reaction_intro`，英文下整句是英文（冒烟报告第 5 条）。`GameFlow.encyclopedia()` 换语言后重建。
+4. **回放条的资源名（架构设计要的）**：条上的字取 `Glossary.resource_name`（中文 生命 / 耐力 / 法力，英文 Health / Stamina / Mana），`battle.bar_*` 三个键删了 —— 中文条上不再是键名 hp / stamina。
+5. **顺带改中文**：「战斗与战前准备」页还写着「没有会出手的道具时『开战』是灰的」，按 222 改成「照样能点，只会提醒一句；空手开战就是纯挨打」，英文跟着改；没有新字。
+6. **翻译时看到的中文疑点（没改，报架构设计）**：god_hunt 页像是没写完（结尾 `---`，没有阶的效果）；anchor_and_right_click、multipliers、settlement_and_warehouse、teleport 结尾多一个 `---`（英文照留，段数对得上）；anchor_activation「信物跟着包带回仓库」和 bags 页「包不进仓库」打架；shop 页「定价的一部分」与界面「半价」不一致；direct_damage_and_block「只有直接攻击会招致反应」的「反应」容易和元素反应混；multipliers「乘算之和低到负一倍以下时按零算」按「(1+和) 按零算」译。characters 页六个被动没有英文名，暂定 Old Paths / Slippery / Raised in the Wild / Tough / Spoils of War / Drill，角色数据加英文时照用。
+7. 测试：`test_english_ui_221` 加一组百科英文 —— 54 页都有英文且占位符一致、词条英文齐全、反应都有英文说明；英文下整本书页标题、机制页正文没有汉字；反应讲解整句英文；按英文名 Block 连到 `term:格挡`。条上资源名那条改成查 Health / Stamina / Mana 与中文「生命」。
+

@@ -1,9 +1,15 @@
 {
   "id": "god_sun",
   "display_name": "日神",
+  "display_names": {
+    "en": "The Sun God"
+  },
   "category": "faith",
   "order": 6,
   "text": "{faith:sun}掌太阳、火与周期性的重复，西方蛮族信祂。信力看的是你造成的火焰伤害，每场有上限；还看道具成功出手的次数。献祭爱金属、火焰、宝石，以及体积正好为中的道具。日神赐福金属制品，赐福版激活即有急速，到了阶还省耐力。\n\n一阶起开战时随机几把武器附上火焰伤害；二阶可以在神坛上祈祷，攒局内永久的火焰加成，越祈越快，放大所有火焰来源；三阶全部武器都附火，开战时还带几层灵巧让耐力消耗更省；四阶敌人必定额外掉一件，稀有度按点的类型定，核心掉的最好。",
+  "texts": {
+    "en": "{faith:sun} rules the sun, fire and cyclical repetition, and is worshipped by the western barbarians. You gain Faith from the Fire damage you deal, capped per battle, and from each successful item activation. Offerings favor metal, fire, gems, and items of exactly medium size. The Sun God blesses metal goods. A blessed version gains Haste as soon as the faith is active, and at the right Rank it also costs less Stamina.\n\nFrom Rank one, a few random weapons gain Fire damage at the start of battle; at Rank two, you can pray at an Altar to build a Fire bonus that lasts for the rest of the run, growing faster the more you pray and amplifying every Fire source; at Rank three, every weapon gains Fire, and you also start battle with a few stacks of Nimble, so Stamina costs drop further; at Rank four, enemies always drop one extra item, its rarity set by the type of node, with the core dropping the best."
+  },
   "related": [
     "special_rites",
     "faith_power_and_tiers",

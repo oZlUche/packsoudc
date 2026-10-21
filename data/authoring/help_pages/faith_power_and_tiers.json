@@ -1,9 +1,15 @@
 {
   "id": "faith_power_and_tiers",
   "display_name": "信力与阶",
+  "display_names": {
+    "en": "Faith Points and Ranks"
+  },
   "category": "faith",
   "order": 1,
   "text": "信力是按信仰要求的行为攒的点数，只给此刻激活的信仰记。每位神看的事不一样：有的看打出去和挨到的伤害，有的看道具出手、回血、置入或获得某类道具、踩点、赢下战斗。按场计的行为往往有每场上限。信力过了一道阈值就升一阶，阈值一道比一道高。\n\n阶决定两样东西：信仰道具上写的按阶功能，与这位神的等级效果，到了的亮、没到的灰。有些加成不按阶而按信力累计，每攒够一截多一份、有上限。信了之后顶端栏有一枚这位神的徽记，鼠标停上去看信力、阶和增长方式。各神的池子各自记，切换不清零。",
+  "texts": {
+    "en": "Faith points are earned by doing what your Faith asks, and only the currently active Faith keeps count. Each god watches for different deeds: some count the damage you deal and take, others count items activating, healing, placing or gaining certain kinds of items, stepping onto spots, or winning battles. Deeds counted per battle often have a per-battle cap. When your Faith points pass a threshold, you rise one Rank, and each threshold is higher than the last.\n\nRank decides two things: the Rank-based effects written on Faith items, and the god's tier effects. Those you have reached light up; the rest stay grey. Some bonuses scale with total Faith points rather than Rank, adding one more share for each chunk you collect, up to a cap. Once you follow a god, their emblem appears in the top bar; hover over it to see your Faith points, Rank and how to earn more. Each god's pool is tracked separately, and switching doesn't reset it."
+  },
   "related": [
     "anchor_activation",
     "altar_offering",

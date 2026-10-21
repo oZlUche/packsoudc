@@ -6,10 +6,18 @@
 script = ExtResource("1_yoh5e")
 id = &"grant_receive_slots"
 display_name = "增益槽与受益槽"
+display_names = {
+"en": "Grant and Receive Slots"
+}
 category = &"bag"
 order = 5
 text = "道具轮廓外的相邻格可能标着格位，邻居占住它就点亮。增益槽是「我给邻居」：站在这些格子上、标签符合的邻居各得一份写着的加成，有的还会挂上一条规则，比如毒箭挨着弓，弓每次出手就多带一层中毒。受益槽是「邻居给我」：每被点亮一格，自己得一份加成。装载槽是法杖的晶石座：放上去的魔晶石把它带的供给交给法杖；一颗晶石只给一把法杖，压着两把的装载槽就给后放的那把，占了同一把的几个装载槽也只算一份。
 
 一件邻居只能点亮一个增益槽和一个受益槽，大件压住三格也只算一个；同类格位各格同质，谁占哪格没有区别。格位随物品一起旋转。通过槽连在一起的两件是连结的，配件能听见那把武器出手。这些加成在开战前算一次，{zone:地上}的东西不算邻居。"
+texts = {
+"en": "Cells adjacent to an item's outline may be marked as slots, and a neighbor that occupies one lights it up. A Grant slot means \"I give to my neighbor\": each neighbor with a matching tag standing on these cells gets one share of the listed bonus, and some slots also attach a rule. For example, with poison arrows next to a bow, every bow attack adds one more stack of Poison. A Receive slot means \"my neighbor gives to me\": for each cell lit up, the item itself gets one share of the bonus. A Crystal socket is a staff's crystal mount: a Crystal placed on it hands its supply to the staff. One Crystal feeds only one staff; a Crystal sitting on the sockets of two staffs feeds the one placed later, and a Crystal covering several sockets of the same staff still counts only once.
+
+A single neighbor lights at most one Grant slot and one Receive slot; a large item covering three cells still counts as one. Slots of the same kind are identical, so it makes no difference which cell is taken. Slots rotate with their item. Two items joined through a slot are linked, so an accessory can hear that weapon attack. These bonuses are calculated once before battle, and things on the {zone:地上} don't count as neighbors."
+}
 related = Array[String](["bags", "auto_battle", "multipliers", "增益槽", "受益槽"])
 see_items = Array[StringName]([&"poison_arrows", &"longbow"])

@@ -18,6 +18,9 @@ display_names = {
 "en": "Shatter"
 }
 description = "按反应的层数额外削减对手的护甲，没有伤害。"
+descriptions = {
+"en": "Strips extra Armor from the opponent based on the reaction stacks. Deals no damage."
+}
 elements = Array[StringName]([&"fire", &"ice"])
 effects = Array[ExtResource("1_dss5f")]([SubResource("Resource_q6r8x")])
 scaling = [{
