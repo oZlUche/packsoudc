@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.73 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.74 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4411,6 +4411,7 @@ res://
 | v3.71 | 2026-10-21 | **221 F4 百科英文**：54 页机制页 `display_names.en` / `texts.en`；`Glossary.TERMS` 每条加 `en`，`term_name` / `term_key` 让英文名也连到中文键的词条页；百科拼接句换 `codex.*` 键，反应加 `descriptions.en`（第一次反应暂停的说明句随之英文）；回放条资源名取 `Glossary.resource_name`，删 `battle.bar_*`；「战斗与战前准备」页按 222 改正；出生点小窗路线名与特点句（`RouteStyle.PLAYER_TEXT`）加英文 |
 | v3.72 | 2026-10-21 | **221 F4 补充**：帮助页按架构设计裁定改措辞（删结尾 `---`、信物撤离回仓库、护符包例外、卖出半价、回应规则、乘算低于负一），中英一起；`RunSkill.display_names`，九个角色技能写 `en`，技能名走 `Names.of` |
 | v3.73 | 2026-10-21 | **221 F5a 局内其余屏英文**：地图 / 猎手 / 商店（含「随身」）/ 铸炉 / 保险箱 / 事件条件 / 信仰 / 道具规则句 / 悬浮窗 / 技能小结的固定字过 `UiText`（约 380 键）；`Glossary` 拼接换 `gloss.*` 键、`Glossary.cap`；`HunterDef.display_names`/`descriptions`、`HunterLossOption.display_names`、`FaithBonus.notes`、`FaithDef.gods`/`descriptions`（F5c 用） |
+| v3.74 | 2026-10-21 | **开战 / 继续按钮换图（作者 14:30，14:43 选战旗 / 纸卷）**：战前屏「开战」是战旗图（`assets/ui/battle/fight*.png` 四态，216×134，只点旗面 `IconButton.hit_rect`，灰态 `_disabled` + `sync_art()`）；战斗屏回放中不放按钮（删「跳过并继续」`battle.skip_continue`），看完或拖到头才在那一格落下「继续」纸卷（`continue*.png` 三态，246×94）；序章战斗教程第四步指那一格、改说「看完这里会出现继续」 |
 | v3.61 | 2026-10-20 | **216 补充：负重签总在**（作者 2026-10-20 16:20）：`StatsStrip` 三张签总在（216 待定 3.2 作废）；不算负重的章负重签大字「当前 / 上限」、小字空着，没上限只写当前重量，悬浮窗说「这一章不算负重」；负重规则不动；测试 216 改验 |
 | v3.60 | 2026-10-20 | **214 头像定稿：铜币侧像 + 圆框**（美术设计交图，作者选乙）：3 角色 + 30 敌人头像 256 进 `assets/portraits/`（只拷 1x）；`portrait_frame` 换深铜圆框（`margin` 0、`inset` 0，整张等比缩放），`portrait_empty` 换磨平旧币；头像、框、空位导入开 `mipmaps/generate`；`PortraitSlot.texture_filter = LINEAR_WITH_MIPMAPS`；测试 157 框外扩按 json 验、加 mipmap 两条 |
 | v3.59 | 2026-10-20 | **216 补充：数值签精修图 + 背包窗一格 72**（UI替换美术交图，作者选乙）：`assets/ui/stats_strip/` 签底 / 三枚火漆 / `layout.json` / `frame_player_72.png`；新 `BagWindow`（`ui/game/bag_window.gd`，继承 `FloatingWindow`，`setup_bag(run, font, on_close, drag, hint_sink)`）按 `bag_window` 摆：8×6 时 660×620、标题行不写字当把手 + 分隔线、右上圆钮 0.72、棋盘格子在 (42,82) 一格 72、皮带外框九宫格外扩 24、数值栏在棋盘下居中，棋盘大了窗跟着长；地图 / 事件 / 休息三屏用它；`FloatingWindow` 去掉 `bare`，加 `_grip` / `center_shift`；`InventoryPanel.cell_px`（setup 前设，默认 60）；`SlabStyle` 三项 `@export`（复制改边距不再丢两层）；测试 216 背包窗那条改验尺寸与摆位 |
