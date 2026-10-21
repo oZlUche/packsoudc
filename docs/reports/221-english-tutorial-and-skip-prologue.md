@@ -32,7 +32,7 @@
 | **F2 事件** | 37 条 `tut*` + `briefing_legion`：`titles.en` / `texts.en` / 每个选项 `labels.en`；`hint_when_hidden` 加兄弟字段 `hints_when_hidden: {"en": …}`（同 `labels` 的取法） | 中文约 5 600 字。占位符原样保留（`{item:scimitar}` 等 34 处），英文里名字由 `Names.of` 换 |
 | **F3 教练** | 五份 coach json 每步加 `texts: {"en": …}`；`CoachOverlay` 取字走 `Names.pick(step.texts, step.text)`；`problems()` 顺带查 en 非空 | 约 550 字，半天的量 |
 | **F4 百科** | 54 页 `titles.en` + `texts.en`；`Glossary.TERMS` 每条加 en；百科自动页的拼接句补齐中英分支（`Encyclopedia` 里已有几处 `if UiText.lang == "zh"` 的写法，照那样） | 中文约 12 600 字，是最大的一批 |
-| F5 其余界面 | 局外屏、设置屏、商店、铸炉、科技板、成就、结算细项、道具说明全部 95 条、敌人 / buff / 信仰说明 | 自由模式要玩顺英文版才需要；和教程无关，排最后，可以拖 |
+| F5 其余界面 | 局外屏、设置屏、商店（含「随身」那排）、铸炉、科技板、成就、结算细项、道具说明全部 95 条、敌人 / buff / 信仰说明、技能 summary 的说明部分、百科 buff 页的自动效果句（复测二：12 页仍中英夹杂，如「每秒受到 1 点Bleed伤害」，`Encyclopedia` 的拼接句要分中英） | 自由模式要玩顺英文版才需要；和教程无关，排最后，可以拖 |
 
 F1–F4 做完，英文玩家能从主菜单切英文、打完三张序章、读懂交代和百科；F5 做完才算整个游戏有英文版。
 
