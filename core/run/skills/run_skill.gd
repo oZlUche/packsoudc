@@ -12,6 +12,8 @@ extends Resource
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 221 F4：别的语言的名字（{"en": …}），经 [Names] 取
+@export var display_names: Dictionary = {}
 @export_multiline var description: String = ""
 ## 常驻的效果：一局规则（体力上限、逃跑、属性加成……）或掉落
 @export var passive: Array[Effect] = []
@@ -78,4 +80,4 @@ func summary() -> String:
 		if e != null and e.has_method("describe") and String(e.call("describe")) != "":
 			parts.append(String(e.call("describe")))
 	var tail := "、".join(parts)
-	return display_name + ("（" + tail + "）" if tail != "" else "")
+	return Names.of(self) + ("（" + tail + "）" if tail != "" else "")

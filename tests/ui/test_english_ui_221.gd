@@ -175,6 +175,24 @@ static func run_route_text_english(t: TestCase) -> void:
 	t.eq(RouteStyle.player_text(&"combat")["name"], "战斗", "中文照旧")
 	t.eq(RouteStyle.player_text(&"nope"), {}, "没登记的风格给空")
 
+
+## 架构设计 2026-10-21：角色技能的英文名写进角色数据（display_names.en），和百科「角色」页用的一致
+static func run_skill_names_english(t: TestCase) -> void:
+	t.begin("221 F4 顺带 · 角色技能都有英文名")
+	var bad: Array[String] = []
+	var seen := 0
+	for f in DirAccess.get_files_at("res://data/characters"):
+		if not f.ends_with(".tres"):
+			continue
+		var c := load("res://data/characters".path_join(f)) as CharacterDef
+		for sk in c.skills:
+			seen += 1
+			var en := String(sk.display_names.get("en", ""))
+			if en == "" or _han().search(en) != null:
+				bad.append(String(sk.id))
+	t.check(seen >= 9, "三个角色的技能都查了（%d）" % seen)
+	t.eq(bad, [] as Array[String], "每个技能都有英文名")
+
 ## 221 F4：百科英文 —— 54 页机制页标题与正文、固定词条、反应说明都有英文；英文下整本书的页标题没有汉字，
 ## 机制页正文、反应讲解没有汉字；「相关」写的词条中文键在英文下照样连得上
 static func run_encyclopedia_english(t: TestCase) -> void:

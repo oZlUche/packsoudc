@@ -25,6 +25,9 @@
       "type": "passive",
       "id": "familiar_paths",
       "display_name": "熟门熟路",
+      "display_names": {
+        "en": "Old Paths"
+      },
       "description": "每走 {travel_discount_every} 步，下一步不计入倒计时。",
       "passive": [
         {
@@ -36,6 +39,9 @@
       "type": "passive",
       "id": "slippery",
       "display_name": "溜得掉",
+      "display_names": {
+        "en": "Slippery"
+      },
       "description": "猎手更难发现你，从猎手面前逃跑更容易；首次战败于敌人时不扣体力。",
       "passive": [
         {
@@ -54,6 +60,9 @@
       "type": "slip",
       "id": "slip",
       "display_name": "脱身",
+      "display_names": {
+        "en": "Slip"
+      },
       "description": "开战前脱离：不战斗、不扣体力、无战利品，该点视为已用（核心点不可用）；对猎手使用必定逃脱。",
       "uses": 2,
       "cooldown_steps": 4

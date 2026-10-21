@@ -73,15 +73,15 @@ func can_use(id: StringName) -> String:
 	if d == null:
 		return UiText.t("log.skill_unknown")
 	if not d.is_active():
-		return UiText.t("log.skill_passive") % d.display_name
+		return UiText.t("log.skill_passive") % Names.of(d)
 	if run != null and run.phase != RunState.Phase.ON_MAP:
 		return UiText.t("log.not_on_map")
 	if is_armed(id):
-		return UiText.t("log.skill_armed") % d.display_name
+		return UiText.t("log.skill_armed") % Names.of(d)
 	if uses_of(id) == 0:
-		return UiText.t("log.skill_no_uses") % d.display_name
+		return UiText.t("log.skill_no_uses") % Names.of(d)
 	if cooldown_of(id) > 0:
-		return UiText.t("log.skill_cooldown") % [d.display_name, cooldown_of(id)]
+		return UiText.t("log.skill_cooldown") % [Names.of(d), cooldown_of(id)]
 	return ""
 
 
