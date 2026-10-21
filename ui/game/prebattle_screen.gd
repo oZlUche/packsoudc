@@ -109,7 +109,7 @@ func open(payload: Dictionary) -> void:
 
 
 #region 公开动作
-## 按「开战」。打不起来（棋盘上没有会出手的东西）返回 false
+## 按「开战」。没有待打的仗返回 false。222（作者定）：棋盘上一件会出手的都没有也能开战，照常打、照常按打输结算
 func start_battle() -> bool:
 	if can_start() != "":
 		return false
@@ -120,10 +120,12 @@ func start_battle() -> bool:
 func can_start() -> String:
 	if flow.run == null or flow.run.events.pending_battle.is_empty():
 		return UiText.t("pre.no_battle")
-	var spec := flow.run.compile_player()
-	if spec.active_items().is_empty():
-		return UiText.t("pre.no_attacker")
 	return ""
+
+
+## 222：棋盘上一件会出手的东西都没有 —— 只提醒一句，不拦「开战」
+func unarmed() -> bool:
+	return flow.run != null and flow.run.compile_player().active_items().is_empty()
 
 
 ## 136：按「溜走」。返回空串 = 溜了
@@ -207,7 +209,7 @@ func _refresh() -> void:
 		_seam.set_strength(strength_of(spec), strength_of(mine))
 	var why := can_start()
 	_start_btn.disabled = why != ""
-	_why.text = why
+	_why.text = why if why != "" else (UiText.t("pre.no_attacker") if unarmed() else "")
 	if _slip_btn != null:
 		var slip := flow.slip_skill()
 		var left := flow.run.skills.uses_of(slip.id)

@@ -1086,6 +1086,11 @@ func _fit_nav() -> void:
 	_nav_box.offset_right = -right
 
 
+## 222（作者定「出发前有提示，空手也可以进战斗」）：棋盘上一件会出手的东西都没有 —— 「出发」上面常显一句接应者的话，不拦
+func unarmed() -> bool:
+	return board != null and BattleCompiler.compile_board(board).active_items().is_empty()
+
+
 ## 出发。开不了（生成不出图、超上限）返回 false，留在这一屏说明原因。
 ## 218 补充一（作者定）：这一章配了出发前的交代、这个存档没看过 —— 先叠一层事件屏弹它，「知道了」之后才真出发（返回 true：交代弹出来了）
 func depart() -> bool:
@@ -1440,4 +1445,4 @@ func _refresh() -> void:
 		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and needs_spawn())     # 182：没挑出生点「出发」灰着
 	if _status != null:
 		var why := can_depart()
-		_status.text = why if why != "" and not carried().is_empty() else ""
+		_status.text = why if why != "" and not carried().is_empty() else (UiText.t("setup.unarmed") if _page > 0 and unarmed() else "")
