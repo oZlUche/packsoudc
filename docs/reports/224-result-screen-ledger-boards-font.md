@@ -130,3 +130,5 @@
 
 **稀有度六色核完（美术设计 15:38）**：改的是 `data/authoring/ui/text_colors.json` 的 `rarity`，账单不另配。新六对（0..5）：light `#525862 #186521 #1b56a4 #842ca7 #7c4d00 #a8221b`，dark `#d8dce3 #5fa85f #5598e6 #bd7bde #e0b040 #ee6253`（`/mnt/project-files/art/ui/ledger/rarity/rarity_colors.json`，并排图 `rarity_compare.png`，逐档理由同目录 README）。改动理由：浅版 0 普通由墨色改冷石板灰（原来和标签分不开）、4 传说由橄榄绿挪到琥珀金、5 神话避开甲款总价值的朱红；深版 2 / 3 / 5 在蜡板上提亮，深版 5 在 PANEL 上从 4.04 提到 5.40（原来唯一会触发 TextColorCheck 警告的一档）。对比度：浅版在 PAPER ≥ 6.2、在甲大理石凹面 ≥ 4.2；深版在 PANEL ≥ 5.4。执行留意：深版 2 / 3 / 5 从此和 `ItemPainter.RARITY_COLORS`（棋盘格色，087 作者定，不动）不再相同，`test_text_colors_169` 只断言第 0 档相等，照旧过；没有代码把稀有度色写死进 BBCode。
 
+**账单底定稿 甲（美术设计 15:44；作者 15:41 在美术设计线程：「甲的整体可以，不过边框不用那么复杂，稍微简易一点，颜色白灰」）**：白灰大理石，外框只留一层斜面加一道墨线；图 768×528，origin **(−24, −24)**（盖掉上面的 (−32, −32)），dim 色 `#68655f`，其余字色不变；只交甲，定稿说明在 `/mnt/project-files/art/ui/ledger/README.md`，执行已收。
+
