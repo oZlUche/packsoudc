@@ -69,8 +69,6 @@ var show_ticker: bool = false
 var bronze: bool = false
 ## 铜面板：内容离场地边
 const BRONZE_PAD := 4
-## 铜面板：战报那块嵌槽里字的最小宽（底栏左半）
-const REPORT_WIDTH := 300.0
 ## 两块棋盘的外框（自己素皮带、对手生皮）
 const BOARD_FRAMES := ["player", "corpse"]
 ## 整块的竖排（[method add_footer] 往它底下加）
@@ -80,9 +78,9 @@ var _speed_btn: IconButton
 ## 157：时间轴（可拖）、收尾战报、双方名牌的位置（面板顶上）
 var _timeline: ReplayTimeline
 var _report: RichTextLabel
-## 铜面板：底栏（战报嵌槽 · 宿主的「继续」· 空）与战报那块嵌槽
+## 铜面板：底栏（空 · 宿主的「继续」· 空）；战报不显示（作者 19:09）
 var _footer: HBoxContainer = null
-var _report_plate: InlayPlate = null
+var _report_hidden := false
 var _plate_slots: Array[Control] = []
 ## 157：拖时间轴之前在不在放（松手按原状态接着放）
 var _resume_after_scrub := false
@@ -134,8 +132,6 @@ func play(result: BattleResult, names: Array = []) -> void:
 	_timeline.load_result(result)
 	_report.text = ""
 	_report.visible = false
-	if _report_plate != null:
-		_report_plate.visible = false
 	_sync_buttons()
 
 
@@ -484,9 +480,7 @@ func _finish() -> void:
 	)
 	_timeline.cursor = _result.duration_sec()
 	_report.text = report_of(_result, _names)     # 157：收尾战报（跳过也出）
-	_report.visible = true
-	if _report_plate != null:
-		_report_plate.visible = true
+	_report.visible = not _report_hidden
 	_sync_buttons()
 	if result_cue(_result) != &"":
 		_sfx(result_cue(_result))
@@ -813,9 +807,9 @@ func _get_minimum_size() -> Vector2:
 	return _root.get_combined_minimum_size() + Vector2.ONE * BRONZE_PAD * 2 if bronze and _root != null else Vector2.ZERO
 
 
-## 铜面板：战报那块嵌槽（测试看；不是铜面板 null）
-func report_plate() -> InlayPlate:
-	return _report_plate
+## 战报显不显示（铜面板不显示，测试看）
+func report_shown() -> bool:
+	return _report.visible
 
 
 ## 宿主的控件挂在回放最底下（时间轴、战报之下），压在斗技场图上（铜面板：「继续」那一格，场地图一直铺到底，夹在底栏正中）。进树之后调
@@ -827,23 +821,17 @@ func add_footer(c: Control) -> void:
 		_root.add_child(c)
 
 
-## 铜面板的底栏：左半是战报（垫一块 [InlayPlate]，不直接写在场地上 —— 复测 v3.79 裸字），正中留给宿主的「继续」，右半空着让「继续」居中
+## 铜面板的底栏：正中留给宿主的「继续」，左右两半空着让它居中。作者 19:09：左下的战报不画（战报的字照样算，测试与调试看 [method report]）
 func _build_footer() -> void:
 	_footer = UiTheme.hbox(12)
 	_root.add_child(_footer)
-	var left := MarginContainer.new()
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_footer.add_child(left)
-	_report_plate = InlayPlate.new()
-	_report_plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_report_plate.visible = false
-	left.add_child(_report_plate)
-	_report.custom_minimum_size.x = REPORT_WIDTH     # 自动换行的字：排版前宽 0 会一字一行把面板撑高
-	_report_plate.add_child(_report)
-	var right := Control.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_footer.add_child(right)
+	for i in 2:
+		var half := Control.new()
+		half.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		half.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_footer.add_child(half)
+	_report_hidden = true
+	add_child(_report)     # 不进排版，一直藏着
 
 
 ## 铜面板：底图 cover、顶对齐（[method UiTheme.dress_backdrop] 是居中裁）—— 宿主变大小时重算

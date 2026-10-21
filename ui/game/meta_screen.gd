@@ -23,7 +23,7 @@ const SHELF_HEAD := 44.0
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
 const TABS := [["warehouse", "meta.tab_warehouse"], ["sell", "meta.tab_sell"], ["tech", "meta.tab_tech"], ["codex", "meta.tab_codex"], ["achievements", "meta.tab_achievements"]]
 ## 178：这几页不显示右半边的仓库，中列吃满
-const NO_SHELF_TABS := ["codex", "achievements"]
+const NO_SHELF_TABS := ["codex", "achievements", "tech"]     # 229：科技页也收起右半边
 
 var _wh = null
 var _new_run_btn: Button
@@ -222,13 +222,12 @@ func layout() -> void:
 	if _right == null:
 		return
 	var screen := size if size.x > 0.0 and size.y > 0.0 else (get_viewport_rect().size if is_inside_tree() else Vector2(1920, 1080))
-	# 科技页（树 + 说明板 + 上交区）最窄要多宽先让给它；别的页按中列宽自己排（图鉴按宽算列数，不能拿它的最小宽来挤）
-	var mid_min: float = (_pages["tech"] as Control).get_combined_minimum_size().x if _tab == "tech" and _pages.has("tech") else 0.0
-	var half := maxf(0.0, minf(screen.x * 0.5 - MARGIN, screen.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP - mid_min))
+	# 229：科技页也收起右半边，中列的页都按中列宽自己排（图鉴按宽算列数），右半边只按半屏算
+	var half := maxf(0.0, minf(screen.x * 0.5 - MARGIN, screen.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP))
 	var frame := _frame_margins()
 	var c := _shelf.fit(half - frame.x, screen.y - 2.0 * MARGIN - SHELF_HEAD - 8.0 - frame.y)     # 收起时也按半屏算，切回来格子不变
 	if not _right.visible:
-		half = 0.0     # 178：图鉴 / 成就页收起右半边，中列吃满
+		half = 0.0     # 178：图鉴 / 成就页（229：科技页）收起右半边，中列吃满
 	_right.custom_minimum_size.x = half
 	_margin.add_theme_constant_override("margin_right", int(MARGIN + right_gutter()))
 	var mid_w := middle_width(screen)
@@ -277,16 +276,13 @@ func _refresh_shelf_title() -> void:
 		_shelf_title.text = UiText.t("meta.shelf_title") % [UiText.count(flow.meta.warehouse.item_count(), "unit.item"), UiText.count(flow.meta.warehouse.page_count(), "unit.page")]
 
 
-## 双击右边仓库的一件：按当前页 —— 仓库 → 置入带回来的背包（178：原来在家页）；出售 → 卖；科技 → 上交；家 / 图鉴 / 成就 → 不做事
+## 双击右边仓库的一件：按当前页 —— 仓库 → 置入带回来的背包（178：原来在家页）；出售 → 卖；家 → 不做事（229：科技页收起了仓库，上交走材料行的【交 k】）
 func _on_shelf_double_clicked(view: ContainerView, uid: int) -> void:
 	match _tab:
 		"warehouse":
 			_wh.quick_move(view, uid)
 		"sell":
 			sell(uid)
-		"tech":
-			if _tech != null:
-				_tech.submit(uid)
 #endregion
 
 
@@ -413,7 +409,7 @@ var _tech = null
 func _build_tech(root: Control) -> Control:
 	_tech = TechPanelScript.new()
 	_tech.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tech.setup(flow, font, _drag)
+	_tech.setup(flow, font)
 	_tech.changed.connect(_refresh)
 	root.add_child(_tech)
 	return _tech

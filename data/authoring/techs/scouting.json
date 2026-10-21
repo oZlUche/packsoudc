@@ -5,7 +5,6 @@
     "en": "Scouting"
   },
   "requires": [
-    "luck",
     "bargain"
   ],
   "column": 2,

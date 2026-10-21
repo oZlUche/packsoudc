@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.81 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.82 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3546,6 +3546,8 @@ func player_spec() -> CombatantSpec …
 
 **科技派生值不入档**（120，作者定）：`tech_levels` 是唯一的进度事实，仓库行数、`safe_bonus`、`tech_buffs` 一律由它 + 科技定义推算（`TechEffect.derive(meta, level)` 幂等，`TechService.derive(meta, defs)`；升级、读档、新建空档、开发区改级数走同一条路），存档里去掉 `tech_buffs` / `safe_bonus`（不升版本）。读档顺序是**先读进度表、再算容量、最后装仓库**：`MetaState.from_dict(d, items, rules, tech_defs)` 在还空着的仓库上 derive，再 `GridInventory.from_dict(w, items, 算出的尺寸)` 放回物品 —— 原位越界 / 被占的先 `try_add` 找空位，还放不下就临时加行并告警，一件不丢；仓库缩行（`shrink_rows`）只删底下的空行。没传 `tech_defs` 时按存档里的尺寸建仓库（兜底）。
 基地「科技」页（`ui/game/tech_panel.gd`）改成**左树右板**：左 `TechTreeView`（`ui/game/tech_tree_view.gd`，深度 0 在最下面往上长，按前置画线，两端都点亮是橙线；节点三种样子：已点亮橙底 / 可点亮亮边呼吸 / 锁住暗字，选中的加一圈前景色边；多级一个节点写 Lv n / m，单级写已点亮 / 未点亮）；右板从上到下 名称 → 效果（总述 + 现在 / 下一级）→ 费用（钱、材料已交 / 需要、锁住的写「需要先点亮：…」、满级写已满级）→【点亮】（单级）/【升级】（多级）。下面上交区 + 默认收起的仓库格子，**上交只给选中的节点**（110 的「谁要就给谁」去掉）。首批三列十个节点（后勤 / 体魄 / 探索，数值占位），科技给的十八条局外 buff 在基地右栏的开发开关里归「科技给的」分组。
+
+**229（v3.82）现状**：科技页收起基地右半边的仓库、上交区删掉，上交只走说明板材料行的【交 k】。左树区 `TreeArea`（`tech_panel.gd` 内类）：羊皮底纸 `tech/tech_tree_hide`（936 × 700，放不下等比缩到九成），树放在离图边 `content_inset` 的双线框里居中；每列顶上一枚段头签 `HeaderTag`（`tech.col_<列>`），连线墨 / 朱红圆头。右边 320 宽羊皮说明板：铜名牌（名称 + 等级）→ 效果 → 账目行（名称｜数｜拥有 n｜【交 k】）→【点亮 / 升级】。树要装进羊皮内框：每列同深度最多并排两个，`test_tech_tree` 守着树宽 ≤ 792。
 仓库视图都包进 `ScrollBox`（只竖向，最多约 10 行高）；`DragLayer.view_at` 用视图**当前**全局矩形与裁剪祖先的交集（`visible_rect`），滚走的部分不接落点。
 仓库「整理」（`GridTidy`）改成**先同类再大小**：种类序是代码常量 `KIND_ORDER`（武器 → 盾 / 防具 / 插件 → 信仰 → 药剂 / 食物 → 弹药 / 工具 / 试剂 → 材料 / 零件 / 宝石 → 珍宝 / 其他，取第一个命中的标签）。
 
@@ -4421,6 +4423,7 @@ res://
 | v3.79 | 2026-10-21 | **铜面板三屏**（UI替换美术 bronze3 + battle_stats v2，作者 15:19–16:22；改 8.8）：战前准备、战斗回放、战利品 / 搜索三屏换铜面板（`_bronze_panel`，没有标题条）；棋盘一律套深色外框 `BoardFrame`（`frames_dark`）与深色格缝；数值签换嵌槽签（`StatsStrip.use_inlay`，新签 生命 / 耐力 / 特殊能力，`specials_of` = 免疫 + 常驻加成）；战前屏去掉标题、玩法说明、敌人读数行和天平（`BalanceSeam` 删），两列中间 `PrebattleLane`（刻线、铜钉、双剑铜章），属性签两排压在两块棋盘下面同一条线；序章战前教程第二步改指两排签（`stats`）；回放 `BattleView.bronze`：斗技场图整张铺、美术条、状态小标垫嵌槽、不画「▸ 武器名」；战利品屏「全部拾取」1.3 倍带字、右上铜圆钮 52 |
 | v3.80 | 2026-10-21 | **223 背包窗角色卡**（作者 16:07 选蜡板、甲 角色卡）：背包窗加宽到 984，x 660 一条竖分隔线，右栏放名牌（等比缩到 272×112）和 `CharacterCard`（`ui/widgets/character_card.gd`）：身体三行 生命上限 / 耐力上限 / 回气 每秒 取 `effective_baseline()`，比角色基线多少写 ▲▼，悬浮窗按来源列（`CharacterCard.sources`）；两条被动（`skill_entries`）。▲▼ 进字集固定符号，中文子集重裁；教程目标 `character_card`。同版两处小改：**战前准备屏左右对调**（作者 18:19「统一位置」）：自己的棋盘与地上在左、对手在右，跟回放一致（`PrebattleScreen` 行里 `_right` 挪到第 0 位，序章战前教程、「战斗与战前准备」百科页、`tut_battle` 的左右说法随之改）；回放的斗技场图也铺到「继续」那一栏（`BattleView.add_footer`，UI替换美术 18:16） |
 | v3.81 | 2026-10-21 | **铜面板复测五处**（游戏测试 v3.79 报告）：叠层面板在顶端栏下面居中（`HudHost.bar_height_in`，`GameScreen._centered_panel` 的居中区 `offset_top`），战前准备与回放矮下来放得进 1000 高减顶端栏（名牌肖像 `Nameplate.COMPACT_PORTRAIT` 72、战前面板边距 50、空的提示行不占行、回放 `BRONZE_PAD` 4 与行距 8）；战利品屏三张签比棋盘宽时面板加宽、签右对齐棋盘（`StatsStrip.span_for`）；签里字放不下收字号（`StatsStrip.fit_size`，最小 11）；回放条上的字 17 号、描边 5，条高 26；战报垫一块嵌槽（`InlayPlate`，`ui/widgets/inlay_plate.gd`），和「继续」排在底栏同一行（`BattleView` 底栏：战报 · 继续 · 空） |
+| v3.82 | 2026-10-21 | **229 科技页铺开**（作者 18:39 乙 只铺开不加节点；补充一）：科技页收起右半边仓库（`NO_SHELF_TABS`），上交区删掉（上交只走材料行【交 k】）；左树右板 —— `TreeArea` 羊皮底纸 `tech/tech_tree_hide`、树在双线框里居中，右边 320 宽羊皮说明板（铜名牌、账目行）；前置三处改链（不屈 ← 筋骨、讨价 ← 幸运、侦察 ← 讨价，表与 JSON 同改），`TechTreeView._place` 只在列间垫 `H_GAP`，列头段头签 `HeaderTag`，连线墨 / 朱红圆头。同版回放三处（作者 19:09）：条上只写数（火漆说明是哪条）、左下战报不画（`BattleView.report_shown`；`InlayPlate` 随之删）、「继续」按胜负换旗（`BattleScreen.continue_art`：`continue_win` / `continue_lose`，图没到用纸卷，按钮位按图大小留） |
 | v3.77 | 2026-10-21 | **224 结算屏：账单、石键、格线常开、Cinzel**：第一页换成逐行显出的账单 `LedgerView`（十行 + 合计、经验占位列；大理石碑板 `result/ledger_stele` 直接画在石板上；0.4 s 起每 0.35 s 一行、数字 0.3 s 滚到位，点一下 / 按键全显，全显前「继续」不可点）；两页「继续」与第二页「一键置入」「整理」换石键图按钮（`UiTheme.make_art_text_button`，字由代码写），第二页按钮同一行、钉在滚动区外；`RunState.tally` 加 `elite_won` / `boss_won` / `searches`（同一个点只算一次，`searched_nodes` 进存档）/ `crafts`；数字字体 Cinzel Bold（`UiPalette.numeral_font()`，只裁数字与 I V X）；稀有度六色换美术核过的一套；092 的地上一键出售撤销（地上的撤离时就没了）；187 格线设置删掉、格线常开，仓库棕底浅格线、带回来的背包套皮带框；作者 16:32：标题刻进标题牌 `result/title_plate`、结算页去掉裸露说明字（`WarehousePanel.art_buttons` 时隐藏）、第二页仓库右对齐；221 补充五的事件文字（中英） |
 | v3.61 | 2026-10-20 | **216 补充：负重签总在**（作者 2026-10-20 16:20）：`StatsStrip` 三张签总在（216 待定 3.2 作废）；不算负重的章负重签大字「当前 / 上限」、小字空着，没上限只写当前重量，悬浮窗说「这一章不算负重」；负重规则不动；测试 216 改验 |
 | v3.60 | 2026-10-20 | **214 头像定稿：铜币侧像 + 圆框**（美术设计交图，作者选乙）：3 角色 + 30 敌人头像 256 进 `assets/portraits/`（只拷 1x）；`portrait_frame` 换深铜圆框（`margin` 0、`inset` 0，整张等比缩放），`portrait_empty` 换磨平旧币；头像、框、空位导入开 `mipmaps/generate`；`PortraitSlot.texture_filter = LINEAR_WITH_MIPMAPS`；测试 157 框外扩按 json 验、加 mipmap 两条 |

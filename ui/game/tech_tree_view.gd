@@ -1,5 +1,6 @@
 ## 科技树（118，作者定）：节点按 [member TechDef.column] 横排、按深度竖排 —— **深度 0 在最下面，往上长**。
-## 节点之间按前置（[member TechDef.requires]）画线：从前置的顶边中点到本节点的底边中点，两端都点亮了是橙色，否则线色。
+## 节点之间按前置（[member TechDef.requires]）画线：从前置的顶边中点到本节点的底边中点，两端都点亮了是朱红，否则墨色（229：宽 3 圆头，颜色读树区底纸的 json `line`）。
+## 229：每列顶上一枚段头签（[HeaderTag]，`tech.col_<列>`）；列与列之间只垫一道 [constant H_GAP]，外侧交给 [constant MARGIN]。
 ##
 ## 节点三种样子：**已点亮**（主按钮橙底白字）、**可点亮**（前置都满足、还没点：深底亮边，边框慢慢呼吸）、**锁住**（暗字无边）。
 ## 选中的节点再加一圈前景色的边。点一个节点发 [signal selected]；数据（等级、前置）全看 [TechService]，这里只画
@@ -13,7 +14,14 @@ const NODE_SIZE := Vector2(160, 60)
 const H_GAP := 28.0
 ## 深度之间（画线的地方）
 const V_GAP := 46.0
-const MARGIN := 12.0
+const MARGIN := 6.0
+## 列头签那一行（签高 + 到最上一层节点的距离）
+const HEADER_H := HeaderTag.HEIGHT + 14.0
+## 连线（229 美术设计：树区底纸 json 的 `line`；没图按这个）
+const PAPER_ART := "tech/tech_tree_hide"
+const LINE_INK := Color("3a2c20")
+const LINE_LIT := Color("b3261e")
+const LINE_W := 3.0
 
 enum State { LIT, AVAILABLE, LOCKED }
 
@@ -29,6 +37,18 @@ var _rects: Dictionary = {}
 var _boxes: Dictionary = {}
 var _selected: StringName = &""
 var _t: float = 0.0
+## 列号 → 那一列的中线 x（列头签对着它）
+var _col_mid: Dictionary = {}
+var _line_ink := LINE_INK
+var _line_lit := LINE_LIT
+var _line_w := LINE_W
+
+
+func _init() -> void:
+	var line: Dictionary = UiTheme.art_meta(PAPER_ART).get("line", {})
+	_line_ink = Color(String(line.get("ink", LINE_INK.to_html(false))))
+	_line_lit = Color(String(line.get("lit", LINE_LIT.to_html(false))))
+	_line_w = float(line.get("width", LINE_W))
 
 
 func setup(p_meta: MetaState, p_defs: Array[TechDef], p_font: Font) -> void:
@@ -59,6 +79,18 @@ func rebuild() -> void:
 		add_child(b)
 		_fit_text(b, r.size.x - 18.0)     # 两边留白 6 + 选中描边 3
 		_nodes[def.id] = b
+	var tags: Dictionary = {}
+	var widest := 0.0
+	for c in _col_mid:
+		var key := "tech.col_%d" % int(c)
+		if UiText.TEXT.has(key):
+			tags[c] = HeaderTag.new(UiText.t(key))
+			widest = maxf(widest, (tags[c] as HeaderTag).size.x)
+	for c in tags:     # 三枚取最宽那枚的宽度（UI替换美术 18:59）
+		var tag: HeaderTag = tags[c]
+		tag.widen(widest)
+		tag.position = Vector2(floorf(float(_col_mid[c]) - widest * 0.5), MARGIN)
+		add_child(tag)
 	queue_redraw()
 
 
@@ -123,7 +155,8 @@ static func level_text(m: MetaState, def: TechDef) -> String:
 
 
 #region 排位
-## 列手写、深度按前置算（作者定）。同列同深度的几个按 order、id 并排；每列宽 = 那列最多并排几个
+## 列手写、深度按前置算（作者定）。同列同深度的几个按 order、id 并排；每列宽 = 那列最多并排几个。
+## 229：列与列之间一道 [constant H_GAP]（原来每列两侧各垫一道）；顶上留 [constant HEADER_H] 放列头签
 func _place() -> void:
 	var lay := TechService.layout(defs)
 	var slots := {}     # Vector2i(列, 深度) → [def…]
@@ -146,10 +179,13 @@ func _place() -> void:
 		widths[at.x] = maxi(widths[at.x], list.size())
 	var col_x: Array[float] = []
 	var x := MARGIN
+	_col_mid.clear()
 	for c in max_col + 1:
 		col_x.append(x)
 		var n := maxi(1, widths[c])
-		x += n * NODE_SIZE.x + (n - 1) * H_GAP + H_GAP * 2
+		var w := n * NODE_SIZE.x + (n - 1) * H_GAP
+		_col_mid[c] = x + w * 0.5
+		x += w + H_GAP
 	for key in slots:
 		var at: Vector2i = key
 		var list: Array = slots[at]
@@ -157,10 +193,10 @@ func _place() -> void:
 		var col_w := n * NODE_SIZE.x + (n - 1) * H_GAP
 		var row_w := list.size() * NODE_SIZE.x + (list.size() - 1) * H_GAP
 		var start: float = col_x[at.x] + (col_w - row_w) / 2.0
-		var y := MARGIN + (max_depth - at.y) * (NODE_SIZE.y + V_GAP)     # 深度 0 在最下面
+		var y := MARGIN + HEADER_H + (max_depth - at.y) * (NODE_SIZE.y + V_GAP)     # 深度 0 在最下面
 		for i in list.size():
 			_rects[(list[i] as TechDef).id] = Rect2(Vector2(start + i * (NODE_SIZE.x + H_GAP), y), NODE_SIZE)
-	custom_minimum_size = Vector2(x - H_GAP + MARGIN, MARGIN * 2 + (max_depth + 1) * NODE_SIZE.y + max_depth * V_GAP)
+	custom_minimum_size = Vector2(x - H_GAP + MARGIN, MARGIN * 2 + HEADER_H + (max_depth + 1) * NODE_SIZE.y + max_depth * V_GAP)
 #endregion
 
 
@@ -204,8 +240,12 @@ func _draw() -> void:
 				continue
 			var from: Rect2 = _rects[req]
 			var lit := TechService.level(meta, req) >= 1 and TechService.level(meta, def.id) >= 1
-			draw_line(Vector2(from.get_center().x, from.position.y), Vector2(to.get_center().x, to.end.y),
-				UiPalette.BTN_PRIMARY if lit else UiPalette.LINE.lightened(0.25), 3.0 if lit else 2.0, true)
+			var a := Vector2(from.get_center().x, from.position.y)
+			var b := Vector2(to.get_center().x, to.end.y)
+			var c := _line_lit if lit else _line_ink
+			draw_line(a, b, c, _line_w, true)
+			draw_circle(a, _line_w * 0.5, c)     # 圆头
+			draw_circle(b, _line_w * 0.5, c)
 
 
 ## 可点亮的节点边框慢慢呼吸（选中的那个不闪）

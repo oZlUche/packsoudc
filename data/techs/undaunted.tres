@@ -23,7 +23,7 @@ display_name = "不屈"
 display_names = {
 "en": "Undaunted"
 }
-requires = Array[StringName]([&"endurance"])
+requires = Array[StringName]([&"sinew"])
 column = 1
 description = "打输了少扣体力，最少还是扣一点。"
 descriptions = {

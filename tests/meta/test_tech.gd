@@ -297,7 +297,7 @@ static func frame_scroll_drag(t: TestCase, root: Window) -> void:
 
 
 static func frame_tech_panel(t: TestCase, root: Window) -> void:
-	t.begin("110 · 科技页：双击上交、不要的提示、拖进上交区记账、钱够才亮【升级】、升级后仓库多一页")
+	t.begin("110 / 229 · 科技页：材料行【交 k】上交、不要的没有按钮、钱够才亮【升级】、升级后仓库多一页；上交区删了，树区垫羊皮")
 	ItemInstance.reset_uid_counter()
 	var db := _db()
 	var m := _meta()
@@ -320,24 +320,18 @@ static func frame_tech_panel(t: TestCase, root: Window) -> void:
 	t.check(btn.disabled, "没交没钱：灰")
 
 	var plank := _add(m, db, &"hardwood_plank")
-	t.check(not panel.submit(plank.uid), "双击硬木板：第 4 级不要")
-	t.check(panel.line_text().contains("不是它下一级要的"), "提示：%s" % panel.line_text())
-	t.check(m.warehouse.has_item(plank.uid), "硬木板还在")
-
-	var a := _add(m, db, &"steel_ingot")
-	t.check(panel.submit(a.uid), "双击钢锭：交了")
-	t.eq(TechService.deposited(m, &"warehouse", &"steel_ingot"), 1, "记了 1 块")
-	t.check(MetaSave.exists(META), "交了就存盘")
-
-	# 拖进上交区：等价于把一件放进那块格子
-	var b := _add(m, db, &"steel_ingot")
-	m.warehouse.remove(b.uid)
-	t.check(panel.zone().place(b, Vector2i.ZERO, 0), "钢锭落进上交区")
-	t.eq(panel.zone().item_count(), 0, "上交区当场清空（记账拿走）")
+	_add(m, db, &"steel_ingot")
+	_add(m, db, &"steel_ingot")
+	m.changed.emit()
+	t.is_null(panel.submit_button(&"hardwood_plank"), "硬木板：第 4 级不要，没有【交】钮")
+	t.not_null(panel.submit_button(&"steel_ingot"), "钢锭：材料行有【交 k】")
+	t.eq(panel.submit_many(&"steel_ingot", 2), 2, "229：上交只走材料行的【交 k】—— 两块钢锭交了")
 	t.eq(TechService.deposited(m, &"warehouse", &"steel_ingot"), 2, "记了 2 块")
-	var c := _add(m, db, &"rivet_box")
-	m.warehouse.remove(c.uid)
-	t.check(not panel.zone().place(c, Vector2i.ZERO, 0), "上交区不收不要的（铆钉盒）")
+	t.check(MetaSave.exists(META), "交了就存盘")
+	t.check(m.warehouse.has_item(plank.uid), "硬木板还在")
+	t.check(not panel.has_method("submit") and not panel.has_method("zone"), "229：上交区删了（没有单件上交、没有上交区）")
+	var area = panel.tree_area()
+	t.check(area != null and area.paper.texture != null and area.paper_rect().encloses(area.inner_rect()), "229：树区垫羊皮，树放在双线框里")
 
 	btn = panel.upgrade_button(&"warehouse")
 	t.check(btn.disabled, "材料齐了但没钱：还是灰")

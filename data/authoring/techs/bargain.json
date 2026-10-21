@@ -6,7 +6,7 @@
   },
   "order": 1,
   "requires": [
-    "thorough_search"
+    "luck"
   ],
   "column": 2,
   "description": "商店的东西更便宜。",

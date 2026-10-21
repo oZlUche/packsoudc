@@ -27,7 +27,7 @@ display_names = {
 "en": "Haggling"
 }
 order = 1
-requires = Array[StringName]([&"thorough_search"])
+requires = Array[StringName]([&"luck"])
 column = 2
 description = "商店的东西更便宜。"
 descriptions = {
