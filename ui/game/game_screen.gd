@@ -300,6 +300,27 @@ func _bronze_panel(min_size: Vector2, margin: int = -1) -> Container:
 	return _centered_panel(min_size, margin, true)
 
 
+## 作者 2026-10-21：战前 / 战斗两块铜面板一样大 —— 两屏都撑到「见过的两边内容里大的那个」（窗口尺寸变了重新记）
+static var _duel_min := Vector2.ZERO
+static var _duel_view := Vector2.ZERO
+
+
+## 按上面那条定本屏铜框的最小尺寸；[param other] 是垫在底下的另一块（开战过场时传战前那块），一起撑齐
+func _fit_duel_panel(other: Control = null) -> void:
+	if _overlay_frame == null:
+		return
+	var view := get_viewport_rect().size if is_inside_tree() else Vector2.ZERO
+	if view != _duel_view:
+		_duel_view = view
+		_duel_min = Vector2.ZERO
+	_overlay_frame.custom_minimum_size = Vector2.ZERO
+	_duel_min = _duel_min.max(_overlay_frame.get_combined_minimum_size())
+	if other != null:
+		_duel_min = _duel_min.max(other.get_combined_minimum_size())
+		other.custom_minimum_size = _duel_min
+	_overlay_frame.custom_minimum_size = _duel_min
+
+
 ## 157：叠层的标题写进石板框的标题条（原来各屏自己在内容里摆的那一行）；返回那个标签，之后改字直接改它
 func _frame_title(text: String) -> Label:
 	return _overlay_frame.set_title(text) if _overlay_frame != null else _label(text, UiTheme.OVERLAY_TITLE_SIZE, UiPalette.FG)
