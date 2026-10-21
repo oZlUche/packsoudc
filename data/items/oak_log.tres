@@ -19,6 +19,9 @@ display_names = {
 "en": "Oak Log"
 }
 description = "一截还带树皮的硬木。"
+descriptions = {
+"en": "A length of hardwood, bark still on."
+}
 shape = SubResource("Resource_oll58")
 weight = 6
 tags = Array[StringName]([&"material", &"nature", &"wood"])

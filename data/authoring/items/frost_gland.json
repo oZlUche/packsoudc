@@ -5,6 +5,9 @@
     "en": "Frost Gland"
   },
   "description": "摸上去是凉的。挨着它的武器每次出手，都给对手添一层【寒冷】。",
+  "descriptions": {
+    "en": "Cold to the touch. Each time an adjacent weapon activates, it gives the opponent one stack of Chill."
+  },
   "shape": [
     "1"
   ],

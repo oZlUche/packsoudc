@@ -12,3 +12,6 @@ display_names = {
 inputs = Array[StringName]([&"ration", &"raw_salt"])
 output = &"salted_meat"
 note = "把粗盐块拖到口粮上：腌成肉干。"
+notes = {
+"en": "Drag the Rock Salt onto the Ration: it cures into Salted Meat."
+}

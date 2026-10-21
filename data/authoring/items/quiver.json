@@ -4,7 +4,10 @@
   "display_names": {
     "en": "Quiver"
   },
-  "description": "只装箭和弓，取箭更利落。",
+  "description": "只装箭和远射的家伙，取箭更利落。",
+  "descriptions": {
+    "en": "Arrows and ranged weapons only. Makes for a cleaner draw."
+  },
   "shape": [
     "1",
     "1",

@@ -5,6 +5,9 @@
     "en": "Honey Jar"
   },
   "description": "蜂蜡挤出来的那点甜。",
+  "descriptions": {
+    "en": "The little sweetness pressed out of the beeswax."
+  },
   "shape": [
     "1"
   ],

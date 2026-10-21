@@ -9,5 +9,8 @@
     "linen_bolt"
   ],
   "output": "bandage_roll",
-  "note": "把亚麻布卷拖到纱布上：卷成绷带。"
+  "note": "把亚麻布卷拖到纱布上：卷成绷带。",
+  "notes": {
+    "en": "Drag the Linen Bolt onto the Bandage: it rolls into a Bandage Roll."
+  }
 }

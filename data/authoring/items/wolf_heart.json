@@ -5,6 +5,9 @@
     "en": "Wolf Heart"
   },
   "description": "还温着时取下来的，巫医出高价。",
+  "descriptions": {
+    "en": "Taken while still warm. Witch doctors pay well for it."
+  },
   "shape": [
     "1"
   ],

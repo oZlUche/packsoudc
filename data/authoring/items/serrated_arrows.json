@@ -5,6 +5,9 @@
     "en": "Serrated Arrows"
   },
   "description": "倒钩的箭头，拔出来比射进去还疼。",
+  "descriptions": {
+    "en": "Barbed heads. They hurt more coming out than going in."
+  },
   "shape": [
     "1"
   ],

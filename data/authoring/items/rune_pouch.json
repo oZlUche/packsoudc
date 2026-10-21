@@ -5,6 +5,9 @@
     "en": "Rune Pouch"
   },
   "description": "绣着符文的小囊，晶石放在里面不会磨损。",
+  "descriptions": {
+    "en": "A small rune-stitched pouch. Crystals kept inside lose no Durability."
+  },
   "shape": [
     "11",
     "11"

@@ -5,6 +5,9 @@
     "en": "Festering Blade"
   },
   "description": "伤口不会愈合，只会烂下去。",
+  "descriptions": {
+    "en": "Its wounds never heal. They only fester."
+  },
   "shape": [
     "10",
     "11",

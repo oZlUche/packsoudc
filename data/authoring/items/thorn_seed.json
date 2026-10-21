@@ -4,7 +4,10 @@
   "display_names": {
     "en": "Thorn Seed"
   },
-  "description": "自然之神的种子：放进背包，随倒计时长大。长到茎叶就扎根，挨打时扎回去；长到绽放连包一起扎根。",
+  "description": "自然之神的种子：放进背包，随倒计时长大。长到茎叶就扎根，挨打时扎回去；长到绽放连包一起扎根，刺更硬，还会让打你的人流血。",
+  "descriptions": {
+    "en": "A seed of the God of Nature: put it in your pack and it grows with the Countdown. At Sprout it takes root and pricks back when you're hit; at Bloom it roots its whole bag, its thorns harden, and whoever hits you bleeds."
+  },
   "shape": [
     "1"
   ],

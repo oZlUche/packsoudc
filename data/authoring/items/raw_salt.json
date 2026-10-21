@@ -5,6 +5,9 @@
     "en": "Rock Salt"
   },
   "description": "没化开的盐，内陆值钱。",
+  "descriptions": {
+    "en": "Salt still in the rock. Worth good money inland."
+  },
   "shape": [
     "1"
   ],

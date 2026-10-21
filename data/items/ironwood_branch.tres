@@ -19,6 +19,9 @@ display_names = {
 "en": "Ironwood Branch"
 }
 description = "比铁沉的木头，难得。"
+descriptions = {
+"en": "Wood heavier than iron. Hard to come by."
+}
 shape = SubResource("Resource_c7hid")
 rarity = 2
 weight = 4

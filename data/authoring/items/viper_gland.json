@@ -5,6 +5,9 @@
     "en": "Viper Gland"
   },
   "description": "挤一滴进去，寻常的毒就烈了。",
+  "descriptions": {
+    "en": "Squeeze in one drop and ordinary poison turns virulent."
+  },
   "shape": [
     "1"
   ],

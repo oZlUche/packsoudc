@@ -23,6 +23,9 @@ display_names = {
 "en": "Hunting Bag"
 }
 description = "猎人装猎物的袋子，血腥味让里面的东西更凶。"
+descriptions = {
+"en": "A hunter's bag for game. The smell of blood makes what's inside fiercer."
+}
 shape = SubResource("Resource_4mwbd")
 rarity = 2
 tags = Array[StringName]([&"leather"])

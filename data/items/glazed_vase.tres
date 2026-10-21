@@ -19,6 +19,9 @@ display_names = {
 "en": "Glazed Vase"
 }
 description = "釉色流转，别磕了。"
+descriptions = {
+"en": "The glaze seems to flow. Don't chip it."
+}
 shape = SubResource("Resource_hscbp")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"clay"])

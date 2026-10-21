@@ -23,11 +23,16 @@ const BACKDROP_BLEED := 0.05
 const LOGO := "res://assets/ui/menu/title_boot.png"
 const LOGO_WIDTH := 1116.0
 const LOGO_TOP := 90.0
-const TITLE := "背包搜打撤"
+## 221: the words on this screen by language (the boot screen can't use UiText; same text as `game.title`)
+const WORDS := {
+	"zh": {"title": "背包搜打撤", "loading": "载入中……", "failed": "载入失败，请重启游戏", "size": 128},
+	"en": {"title": "Pack & Extract", "loading": "Loading…", "failed": "Loading failed. Please restart the game.", "size": 96},
+}
+## same file as GameSettings.DEFAULT_PATH (can't reference it)
+const SETTINGS := "user://settings.json"
 const TITLE_COLOR := Color("f0e2c4")
 const TITLE_OUTLINE_COLOR := Color("1a1410")
 const TITLE_OUTLINE := 6
-const TITLE_SIZE := 128
 const TITLE_SPACING := 6
 const TITLE_TOP := 90.0
 const DESIGN_HEIGHT := 1080.0
@@ -46,10 +51,13 @@ var _title_font: Font = null
 var _body_font: Font = null
 var _backdrop: Texture2D = null
 var _logo: Texture2D = null
+## "zh" / "en", read from the settings file
+var lang := "zh"
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	lang = read_lang()
 	_title_font = _font(TITLE_FONT)
 	_body_font = _font(BODY_FONT)
 	_backdrop = load(BACKDROP) as Texture2D if ResourceLoader.exists(BACKDROP) else null
@@ -96,10 +104,11 @@ func _draw() -> void:
 		draw_texture_rect(_logo, Rect2(Vector2((size.x - wide) * 0.5, LOGO_TOP * k), Vector2(wide, wide * _logo.get_height() / maxf(_logo.get_width(), 1.0))), false, dim)
 	elif _title_font != null and size.y > 0.0:
 		var s := size.y / DESIGN_HEIGHT
-		var font_size := int(round(TITLE_SIZE * s))
+		var title := String(WORDS[lang]["title"])
+		var font_size := int(round(int(WORDS[lang]["size"]) * s))
 		var widths: Array[float] = []
 		var total := 0.0
-		for ch in TITLE:     # 字距：一个字一个字往右排（Font 没有字距参数），整排居中
+		for ch in title:     # 字距：一个字一个字往右排（Font 没有字距参数），整排居中
 			widths.append(_title_font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
 			total += widths.back() + TITLE_SPACING
 		var at := Vector2((size.x - total + TITLE_SPACING) * 0.5, TITLE_TOP * s + _title_font.get_ascent(font_size))
@@ -107,15 +116,15 @@ func _draw() -> void:
 		for wd in widths:
 			spots.append(at)
 			at.x += wd + TITLE_SPACING
-		for i in TITLE.length():     # 先整排描边、再整排填字（后一个字的描边不压前一个字）
-			draw_string_outline(_title_font, spots[i], TITLE[i], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, TITLE_OUTLINE, TITLE_OUTLINE_COLOR)
-		for i in TITLE.length():
-			draw_string(_title_font, spots[i], TITLE[i], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, TITLE_COLOR)
+		for i in title.length():     # 先整排描边、再整排填字（后一个字的描边不压前一个字）
+			draw_string_outline(_title_font, spots[i], title[i], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, TITLE_OUTLINE, TITLE_OUTLINE_COLOR)
+		for i in title.length():
+			draw_string(_title_font, spots[i], title[i], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, TITLE_COLOR)
 	var bar := Rect2(mid.x - BAR_W * 0.5, mid.y + 20, BAR_W, BAR_H)
 	draw_rect(bar, Color(DIM, 0.35))
 	draw_rect(Rect2(bar.position, Vector2(BAR_W * progress, BAR_H)), FG)
 	if _body_font != null:
-		var note := "载入失败，请重启游戏" if failed else "载入中……"
+		var note := String(WORDS[lang]["failed"] if failed else WORDS[lang]["loading"])
 		draw_string(_body_font, Vector2(0, bar.end.y + 30), note, HORIZONTAL_ALIGNMENT_CENTER, size.x, 16, DIM)
 
 
@@ -129,6 +138,15 @@ static func cover_rect(tex_size: Vector2, screen: Vector2) -> Rect2:
 
 
 ## 打包的字体；不在就用引擎默认（不崩）
+## the language saved in the settings file; anything unreadable is "zh"
+static func read_lang(path: String = SETTINGS) -> String:
+	if not FileAccess.file_exists(path):
+		return "zh"
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var l := String((data as Dictionary).get("language", "zh")) if data is Dictionary else "zh"
+	return l if WORDS.has(l) else "zh"
+
+
 static func _font(path: String) -> Font:
 	if ResourceLoader.exists(path):
 		return load(path) as Font

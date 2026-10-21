@@ -5,6 +5,9 @@
     "en": "Forge Token"
   },
   "description": "三件道具在铸炉里熔铸成的附魔牌。拖到一件武器上放手：武器获得这条附魔（永久，覆盖原有的）。",
+  "descriptions": {
+    "en": "An enchantment token cast from three items at the Forge. Drag it onto a weapon and let go: the weapon gains this enchantment (permanent, replacing any it had)."
+  },
   "shape": [
     "1"
   ],

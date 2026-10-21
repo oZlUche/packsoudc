@@ -4,7 +4,10 @@
   "display_names": {
     "en": "Blight Censer"
   },
-  "description": "毒烟熏过的甲，一碰就裂。",
+  "description": "毒烟一熏，对面的盾就脆了。",
+  "descriptions": {
+    "en": "One whiff of its poison smoke and the enemy's shield turns brittle."
+  },
   "shape": [
     "1",
     "1"

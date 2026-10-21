@@ -5,6 +5,9 @@
     "en": "Brass Gear"
   },
   "description": "齿口精细的小齿轮。",
+  "descriptions": {
+    "en": "A small, finely toothed gear."
+  },
   "shape": [
     "1"
   ],

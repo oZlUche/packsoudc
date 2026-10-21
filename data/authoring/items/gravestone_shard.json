@@ -5,6 +5,9 @@
     "en": "Gravestone Shard"
   },
   "description": "刻字磨平了的半块石碑。",
+  "descriptions": {
+    "en": "Half a headstone, its carving worn smooth."
+  },
   "shape": [
     "1"
   ],

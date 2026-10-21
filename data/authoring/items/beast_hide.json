@@ -5,6 +5,9 @@
     "en": "Raw Hide"
   },
   "description": "刚剥下来的皮，还得鞣。",
+  "descriptions": {
+    "en": "Freshly skinned. Still needs tanning."
+  },
   "shape": [
     "111",
     "111"

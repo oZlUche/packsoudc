@@ -18,5 +18,8 @@ display_names = {
 "en": "Rope Coil"
 }
 description = "盘好的粗麻绳。"
+descriptions = {
+"en": "Thick hemp rope, neatly coiled."
+}
 shape = SubResource("Resource_8msc6")
 tags = Array[StringName]([&"material", &"crafted", &"cloth"])

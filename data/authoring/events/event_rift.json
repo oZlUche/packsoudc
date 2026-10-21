@@ -1,10 +1,19 @@
 {
   "id": "event_rift",
   "title": "裂隙",
+  "titles": {
+    "en": "The Rift"
+  },
   "text": "地面裂开一道缝，底下有风。跳进去会落到别处，落在哪儿说不准。",
+  "texts": {
+    "en": "The ground splits open, and wind rises from below. Jump in and you land somewhere else. No telling where."
+  },
   "options": [
     {
       "label": "跳进去",
+      "labels": {
+        "en": "Jump in"
+      },
       "outcomes": [
         {
           "type": "teleport",
@@ -13,12 +22,18 @@
         },
         {
           "type": "say",
-          "text": "风把你卷了进去。"
+          "text": "风把你卷了进去。",
+          "texts": {
+            "en": "The wind pulls you in."
+          }
         }
       ]
     },
     {
       "label": "顺着风走到底（需要步数 ≥ {steps_within_min_steps}）",
+      "labels": {
+        "en": "Follow the wind to the end (needs steps ≥ {steps_within_min_steps})"
+      },
       "requires": [
         {
           "type": "steps_within",
@@ -38,7 +53,10 @@
       ]
     },
     {
-      "label": "绕开"
+      "label": "绕开",
+      "labels": {
+        "en": "Go around"
+      }
     }
   ]
 }

@@ -48,6 +48,9 @@ display_names = {
 "en": "Bloodlust Bracer"
 }
 description = "闻到血腥，手就快了。"
+descriptions = {
+"en": "Smell blood, and the hands get faster."
+}
 shape = SubResource("Resource_05ut1")
 rarity = 2
 tags = Array[StringName]([&"part", &"leather", &"bleed"])

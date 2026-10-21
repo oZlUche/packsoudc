@@ -13,7 +13,10 @@ enum Scope { META, MAP }
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 221 F5: other languages, {"en": ...}; read with [Names]
+@export var display_names: Dictionary = {}
 @export var description: String = ""
+@export var descriptions: Dictionary = {}
 ## 局外的还是一局里的
 @export var scope: Scope = Scope.MAP
 ## 地图 buff 走几步失效，0 = 整局；局外的忽略（作者：做成字段）

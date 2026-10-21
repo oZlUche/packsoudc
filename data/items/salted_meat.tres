@@ -27,6 +27,9 @@ display_names = {
 "en": "Salted Meat"
 }
 description = "腌透的肉，耐放也顶饿。"
+descriptions = {
+"en": "Salted through. Keeps well and fills you up."
+}
 shape = SubResource("Resource_vwxib")
 rarity = 1
 tags = Array[StringName]([&"nature", &"food", &"flesh"])

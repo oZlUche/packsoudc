@@ -1,10 +1,19 @@
 {
   "id": "event_cache",
   "title": "上锁的箱子",
+  "titles": {
+    "en": "A Locked Chest"
+  },
   "text": "角落里有一只上了锁的铁箱，锁已经锈得差不多了。",
+  "texts": {
+    "en": "An iron chest sits locked in the corner. The lock is nearly rusted through."
+  },
   "options": [
     {
       "label": "撬开（体力 -{spend_vitality_amount}）",
+      "labels": {
+        "en": "Pry it open (Vitality -{spend_vitality_amount})"
+      },
       "requires": [
         {
           "type": "vitality_at_least"
@@ -20,12 +29,18 @@
         },
         {
           "type": "say",
-          "text": "锁应声而断。"
+          "text": "锁应声而断。",
+          "texts": {
+            "en": "The lock snaps."
+          }
         }
       ]
     },
     {
-      "label": "走开"
+      "label": "走开",
+      "labels": {
+        "en": "Walk away"
+      }
     }
   ]
 }

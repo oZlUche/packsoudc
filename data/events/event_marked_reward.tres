@@ -20,6 +20,9 @@ item = &"salve"
 [sub_resource type="Resource" id="Resource_f25k2"]
 script = ExtResource("5_32i03")
 text = "「上次的事，谢了。」他塞给你一个医疗包。"
+texts = {
+"en": "\"Thanks for last time.\" He presses a Salve into your hand."
+}
 
 [sub_resource type="Resource" id="Resource_4yy8h"]
 script = ExtResource("7_ymhac")
@@ -28,16 +31,28 @@ tag = &"marked"
 [sub_resource type="Resource" id="Resource_w34en"]
 script = ExtResource("1_ffilk")
 label = "他认出了你"
+labels = {
+"en": "He knows you"
+}
 requires = Array[ExtResource("6_xea7y")]([SubResource("Resource_4yy8h")])
 outcomes = Array[ExtResource("2_fi8xx")]([SubResource("Resource_mwi0h"), SubResource("Resource_x5mwx"), SubResource("Resource_f25k2")])
 
 [sub_resource type="Resource" id="Resource_qj52l"]
 script = ExtResource("1_ffilk")
 label = "走过去"
+labels = {
+"en": "Walk past"
+}
 
 [resource]
 script = ExtResource("8_44km7")
 id = &"event_marked_reward"
 title = "熟面孔"
+titles = {
+"en": "A Familiar Face"
+}
 text = "路边坐着的人抬起头看你。"
+texts = {
+"en": "Someone sitting by the road looks up at you."
+}
 options = Array[ExtResource("1_ffilk")]([SubResource("Resource_w34en"), SubResource("Resource_qj52l")])

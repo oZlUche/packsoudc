@@ -5,6 +5,9 @@
     "en": "Panacea"
   },
   "description": "传说什么毒都解，至少解得不少。",
+  "descriptions": {
+    "en": "Said to cure any poison. It cures plenty, at least."
+  },
   "shape": [
     "1",
     "1"

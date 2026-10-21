@@ -5,6 +5,9 @@
     "en": "Nail Keg"
   },
   "description": "一小桶铁钉。",
+  "descriptions": {
+    "en": "A small keg of iron nails."
+  },
   "shape": [
     "11",
     "11"

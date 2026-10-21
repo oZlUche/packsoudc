@@ -12,3 +12,6 @@ display_names = {
 inputs = Array[StringName]([&"antidote_satchel", &"styptic_dressing"])
 output = &"panacea"
 note = "把止血敷料拖到解毒药囊上：合成万灵药。"
+notes = {
+"en": "Drag the Styptic Dressing onto the Antidote Satchel: they make a Panacea."
+}

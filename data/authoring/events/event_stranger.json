@@ -1,10 +1,19 @@
 {
   "id": "event_stranger",
   "title": "陌生人",
+  "titles": {
+    "en": "A Stranger"
+  },
   "text": "一个瘦削的人靠在墙边，向你伸出手。",
+  "texts": {
+    "en": "A gaunt man leans against the wall and holds out his hand."
+  },
   "options": [
     {
       "label": "给他 {change_money_amount|abs} 币",
+      "labels": {
+        "en": "Give him {change_money_amount|abs} coins"
+      },
       "requires": [
         {
           "type": "can_afford"
@@ -21,16 +30,25 @@
         },
         {
           "type": "say",
-          "text": "他记住了你的脸。"
+          "text": "他记住了你的脸。",
+          "texts": {
+            "en": "He remembers your face."
+          }
         }
       ]
     },
     {
       "label": "不理他",
+      "labels": {
+        "en": "Ignore him"
+      },
       "outcomes": [
         {
           "type": "say",
-          "text": "他缩回了手。"
+          "text": "他缩回了手。",
+          "texts": {
+            "en": "He pulls his hand back."
+          }
         }
       ]
     }

@@ -57,6 +57,9 @@ display_names = {
 "en": "Pendulum Blade"
 }
 description = "大钟里拆出来的摆锤，边缘磨成了刃。"
+descriptions = {
+"en": "A pendulum pulled from a great clock, its edge ground into a blade."
+}
 shape = SubResource("Resource_8g6sj")
 rarity = 2
 weight = 8

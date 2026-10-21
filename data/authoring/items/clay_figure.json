@@ -5,6 +5,9 @@
     "en": "Clay Figure"
   },
   "description": "随葬的小人，表情认真。",
+  "descriptions": {
+    "en": "A little grave figure with a very serious face."
+  },
   "shape": [
     "1",
     "1"

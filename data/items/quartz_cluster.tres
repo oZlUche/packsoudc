@@ -19,6 +19,9 @@ display_names = {
 "en": "Quartz Cluster"
 }
 description = "一丛透亮的石英。"
+descriptions = {
+"en": "A cluster of clear quartz."
+}
 shape = SubResource("Resource_hgj3o")
 rarity = 1
 tags = Array[StringName]([&"material", &"nature", &"gem"])

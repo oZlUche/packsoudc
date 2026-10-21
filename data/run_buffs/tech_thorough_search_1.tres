@@ -13,6 +13,9 @@ script = ExtResource("2_bje5h")
 script = ExtResource("5_ryd7t")
 id = &"tech_thorough_search_1"
 display_name = "细搜（科技）"
+display_names = {
+"en": "Thorough Search (Tech)"
+}
 description = "每个搜索点多搜 {extra_searches_amount} 次"
 scope = 0
 effects = Array[ExtResource("1_3hn3p")]([SubResource("Resource_1jy25")])

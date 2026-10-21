@@ -18,6 +18,9 @@ display_names = {
 "en": "Copper Ingot"
 }
 description = "熔好的铜，匀净。"
+descriptions = {
+"en": "Smelted copper, clean and even."
+}
 shape = SubResource("Resource_wfr2e")
 rarity = 1
 tags = Array[StringName]([&"material", &"crafted", &"metal", &"supply"])

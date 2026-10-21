@@ -1,10 +1,19 @@
 {
   "id": "extract_default",
   "title": "撤离点",
+  "titles": {
+    "en": "Extraction Point"
+  },
   "text": "能出去的地方。{c:warn}撤了这一局就结束{/c}：包里的东西带回仓库，地上的留在这儿，钱带出去。\n\n费用：{extract_fee} 币（零即免费）。",
+  "texts": {
+    "en": "A way out. {c:warn}Extract and this run ends{/c}: what's in your bag goes back to the Warehouse, what's on the Ground stays here, and your coins come with you.\n\nFee: {extract_fee} coins (zero means free)."
+  },
   "options": [
     {
       "label": "撤离",
+      "labels": {
+        "en": "Extract"
+      },
       "outcomes": [
         {
           "type": "extract"
@@ -12,7 +21,10 @@
       ]
     },
     {
-      "label": "再看看"
+      "label": "再看看",
+      "labels": {
+        "en": "Not yet"
+      }
     }
   ]
 }

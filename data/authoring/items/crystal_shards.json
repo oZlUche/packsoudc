@@ -5,6 +5,9 @@
     "en": "Crystal Shards"
   },
   "description": "魔晶石用尽后碎成的一小堆碎片，不再供给法杖，还能卖几个钱。",
+  "descriptions": {
+    "en": "The little heap a spent Crystal shatters into. It no longer feeds a staff, but it's still worth a few coins."
+  },
   "shape": [
     "1"
   ],

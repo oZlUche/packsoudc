@@ -18,6 +18,9 @@ display_names = {
 "en": "Raw Amber"
 }
 description = "封着一只远古小虫。"
+descriptions = {
+"en": "A tiny ancient insect sealed inside."
+}
 shape = SubResource("Resource_tl6u2")
 rarity = 2
 tags = Array[StringName]([&"material", &"nature", &"gem"])

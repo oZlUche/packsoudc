@@ -5,7 +5,13 @@
     "en": "God of the Earth"
   },
   "god": "大地之神（体积、空间）",
+  "gods": {
+    "en": "God of the Earth (volume, space)"
+  },
   "description": "帝国祭祀的主神之一，但信徒很少，对应种族也极为低调",
+  "descriptions": {
+    "en": "One of the chief gods in the Empire's rites, but with very few followers; its people keep a very low profile."
+  },
   "thresholds": [
     25,
     100,

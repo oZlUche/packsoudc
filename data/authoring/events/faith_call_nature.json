@@ -1,10 +1,19 @@
 {
   "id": "faith_call_nature",
   "title": "自然之神的藤",
+  "titles": {
+    "en": "Vines of the God of Nature"
+  },
   "text": "祭坛已经被藤蔓裹住，缝隙里长出小小的白花。藤蔓里托着一枚木牌，像是专为你留的。",
+  "texts": {
+    "en": "Vines have wrapped the altar, and small white flowers grow from the cracks. Cradled in the vines is a wooden token, as if left there just for you."
+  },
   "options": [
     {
       "label": "取下木牌",
+      "labels": {
+        "en": "Take the wooden token"
+      },
       "tags": [
         "offering"
       ],
@@ -15,12 +24,18 @@
         },
         {
           "type": "say",
-          "text": "自然之神的护符上，藤还在长。"
+          "text": "自然之神的护符上，藤还在长。",
+          "texts": {
+            "en": "On the charm of the God of Nature, the vine is still growing."
+          }
         }
       ]
     },
     {
-      "label": "不拿，离开"
+      "label": "不拿，离开",
+      "labels": {
+        "en": "Leave it and go"
+      }
     }
   ]
 }
