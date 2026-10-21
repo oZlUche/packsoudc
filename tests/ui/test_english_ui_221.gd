@@ -158,6 +158,23 @@ static func run_smoke_221(t: TestCase) -> void:
 	t.eq(Glossary.resource_name(&"hp"), "生命", "中文也写名字，不写键名")
 
 
+
+## 复测 2026-10-21 第 1 条：开局第三页出生点小窗的路线名与特点句在英文里没有汉字，中文照旧
+static func run_route_text_english(t: TestCase) -> void:
+	t.begin("221 F4 顺带 · 英文：出生点小窗的路线名与特点句")
+	var bad: Array[String] = []
+	UiText.lang = "en"
+	for style in RouteStyle.PLAYER_TEXT:
+		var rt := RouteStyle.player_text(style)
+		if _han().search(String(rt["name"]) + String(rt["text"])) != null:
+			bad.append(String(style))
+	var en_combat := RouteStyle.player_text(&"combat")
+	UiText.lang = "zh"
+	t.eq(bad, [] as Array[String], "三种路线英文都没有汉字")
+	t.eq(en_combat["name"], "Combat", "战斗路线叫 Combat")
+	t.eq(RouteStyle.player_text(&"combat")["name"], "战斗", "中文照旧")
+	t.eq(RouteStyle.player_text(&"nope"), {}, "没登记的风格给空")
+
 ## 221 F4：百科英文 —— 54 页机制页标题与正文、固定词条、反应说明都有英文；英文下整本书的页标题没有汉字，
 ## 机制页正文、反应讲解没有汉字；「相关」写的词条中文键在英文下照样连得上
 static func run_encyclopedia_english(t: TestCase) -> void:

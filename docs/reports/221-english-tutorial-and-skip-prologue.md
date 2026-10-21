@@ -137,6 +137,7 @@ F1 代码量最大（几百处换键），F4 字最多。建议执行按 F1 → 
 3. **百科自动页的拼接句**：「效果」「相关」「出自」「相关道具 / 配方」「未知」与反应讲解那一句都换成 `codex.*` 键；十种反应加 `descriptions.en`。第一次反应暂停（220）的说明句就是 `Encyclopedia.reaction_intro`，英文下整句是英文（冒烟报告第 5 条）。`GameFlow.encyclopedia()` 换语言后重建。
 4. **回放条的资源名（架构设计要的）**：条上的字取 `Glossary.resource_name`（中文 生命 / 耐力 / 法力，英文 Health / Stamina / Mana），`battle.bar_*` 三个键删了 —— 中文条上不再是键名 hp / stamina。
 5. **顺带改中文**：「战斗与战前准备」页还写着「没有会出手的道具时『开战』是灰的」，按 222 改成「照样能点，只会提醒一句；空手开战就是纯挨打」，英文跟着改；没有新字。
-6. **翻译时看到的中文疑点（没改，报架构设计）**：god_hunt 页像是没写完（结尾 `---`，没有阶的效果）；anchor_and_right_click、multipliers、settlement_and_warehouse、teleport 结尾多一个 `---`（英文照留，段数对得上）；anchor_activation「信物跟着包带回仓库」和 bags 页「包不进仓库」打架；shop 页「定价的一部分」与界面「半价」不一致；direct_damage_and_block「只有直接攻击会招致反应」的「反应」容易和元素反应混；multipliers「乘算之和低到负一倍以下时按零算」按「(1+和) 按零算」译。characters 页六个被动没有英文名，暂定 Old Paths / Slippery / Raised in the Wild / Tough / Spoils of War / Drill，角色数据加英文时照用。
-7. 测试：`test_english_ui_221` 加一组百科英文 —— 54 页都有英文且占位符一致、词条英文齐全、反应都有英文说明；英文下整本书页标题、机制页正文没有汉字；反应讲解整句英文；按英文名 Block 连到 `term:格挡`。条上资源名那条改成查 Health / Stamina / Mana 与中文「生命」。
+6. **顺带修复测发现的漏翻**（复测 2026-10-21 新发现第 1 条）：开局第三页出生点小窗的路线名与特点句（`RouteStyle.PLAYER_TEXT`）加 `en`（Combat / Balanced / Search），`player_text()` 按语言取。
+7. **翻译时看到的中文疑点（没改，报架构设计）**：god_hunt 页像是没写完（结尾 `---`，没有阶的效果）；anchor_and_right_click、multipliers、settlement_and_warehouse、teleport 结尾多一个 `---`（英文照留，段数对得上）；anchor_activation「信物跟着包带回仓库」和 bags 页「包不进仓库」打架；shop 页「定价的一部分」与界面「半价」不一致；direct_damage_and_block「只有直接攻击会招致反应」的「反应」容易和元素反应混；multipliers「乘算之和低到负一倍以下时按零算」按「(1+和) 按零算」译。characters 页六个被动没有英文名，暂定 Old Paths / Slippery / Raised in the Wild / Tough / Spoils of War / Drill，角色数据加英文时照用。
+8. 测试：`test_english_ui_221` 加一组百科英文、一组出生点路线英文 —— 54 页都有英文且占位符一致、词条英文齐全、反应都有英文说明；英文下整本书页标题、机制页正文没有汉字；反应讲解整句英文；按英文名 Block 连到 `term:格挡`。条上资源名那条改成查 Health / Stamina / Mana 与中文「生命」。
 
