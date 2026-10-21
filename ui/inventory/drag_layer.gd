@@ -190,6 +190,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 			return
 
 	set_process_input(true)
+	InventoryView.set_focused(_inst, get_tree() if is_inside_tree() else null)     # 作者 10-21：拿起的这件就是点中的那件（地上拿起的也算）
 	_highlight_partners()
 	UiCursor.set_drag(true)     # 157
 	_hint_grids(true)     # 187
