@@ -122,3 +122,5 @@
 
 **账单底已出（美术设计 15:11）**：三款样稿 甲 碑板（推荐）/ 乙 账簿 / 丙 蜡板，在 `/mnt/project-files/art/ui/ledger/`（README、`out/ledger_<stele|book|wax>.png` + @2x + json、`out/layout.json`、`mocks/page_*.png`）。整图不拉伸，图比账面大（框 / 耳朵 / 阴影在外），图左上 = 账面左上 + origin（碑板 (−80, −24)、账簿 (−22, −22)、蜡板 (−18, −18)）；行间线、表头双线、合计双线、分栏线 x 300 / 600 都在图里，代码不画线。字：标签 x 18 思源宋体 18 基线 +27；数量右对齐 x 584 Cinzel Bold 20 基线 +28，串里的汉字退回思源宋体；经验右对齐 x 704「—」16 dim；表头 14 基线 26；总价值标签思源粗体 22 基线 +29、数字 Cinzel Bold 32 基线 +33；三款字色各一套在 layout.json。Cinzel ttf 在 `/mnt/project-files/art/fonts/chosen/`（来源 `Cinzel_SOURCE.txt`），打包时另补 `assets/fonts/LICENSES/OFL_Cinzel.txt`。材质按作者 15:02 的规矩（美术风格的选择按推荐）默认 **甲 碑板**，作者另选再换图。
 
+**稀有度行的颜色（作者 15:23）**：「代表稀有度的字体要有颜色，和稀有度本身对应，颜色要足够显眼但不跳脱」。做法：稀有度名用 `UiPalette.rarity_color(r, tone)`（`data/authoring/ui/text_colors.json` 的六档，dark / light 两套，tone 跟账单底走），serif_bold 18；美术设计把六档放到碑板 / 账簿 / 蜡板三款底上核一遍，暗的提亮、扎眼的压一压，改在 `text_colors.json` 里（全游戏的稀有度字色一起受益），执行只照表取色、不另写颜色。
+
