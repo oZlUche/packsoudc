@@ -12,6 +12,8 @@ extends Resource
 ## 113：条件没过时给玩家看的一句（模板，可用占位符）。不显示的选项在事件屏底部灰字显示它；灰掉的选项用它替代条件的默认说明。
 ## 教程的门禁靠它说「为什么现在不行」（「先把护符放进包里」）
 @export var hint_when_hidden: String = ""
+## 221 F2：别的语言的那一句，`{"en": "…"}`（同 [member labels]）
+@export var hints_when_hidden: Dictionary = {}
 @export var requires: Array[EventCondition] = []
 @export var outcomes: Array[EventOutcome] = []
 
@@ -19,6 +21,11 @@ extends Resource
 ## 当前语言（或指定语言）下的选项文字；没写回落 label（[method Names.pick]）
 func label_for(lang: String = "") -> String:
 	return Names.pick(labels, label, lang)
+
+
+## 221 F2：当前语言（或指定语言）下的「为什么现在不行」；没写回落 hint_when_hidden
+func hint_for(lang: String = "") -> String:
+	return Names.pick(hints_when_hidden, hint_when_hidden, lang)
 
 
 ## 每一条条件都过了才能选。返回第一条没过的说明；空串 = 能选

@@ -1,10 +1,19 @@
 {
   "id": "tut2_battle_ward",
   "title": "{enemy:shieldbearer}",
+  "titles": {
+    "en": "{enemy:shieldbearer}"
+  },
   "text": "{item:warding_charm}每秒给它叠一层护甲（{item_stat:warding_charm:max_armor} 点，一直叠、没有上限），用剑砍只是在砍盾。\n\n毒不看护甲：{item:poisoned_knife}扎进去，它的盾再厚也一样掉血。",
+  "texts": {
+    "en": "Its {item:warding_charm} stacks Armor on it every second ({item_stat:warding_charm:max_armor} a stack, and it never stops, no cap). Swinging a sword at it just hits the shield.\n\nPoison ignores Armor. Stick it with a {item:poisoned_knife} and it bleeds no matter how thick the shield gets."
+  },
   "options": [
     {
       "label": "进入战前准备",
+      "labels": {
+        "en": "Go to Pre-battle"
+      },
       "outcomes": [
         {
           "type": "proceed"

@@ -12,13 +12,24 @@ script = ExtResource("3_qg2m3")
 [sub_resource type="Resource" id="Resource_2o1ax"]
 script = ExtResource("1_tky82")
 label = "进入战前准备"
+labels = {
+"en": "Go to Pre-battle"
+}
 outcomes = Array[ExtResource("2_353qe")]([SubResource("Resource_v1n4x")])
 
 [resource]
 script = ExtResource("5_jxo1u")
 id = &"tut2_battle_cure"
 title = "{enemy:apothecary}"
+titles = {
+"en": "{enemy:apothecary}"
+}
 text = "它随身带着解毒的东西，中毒一冒头就被清掉。
 
 毒对它没用；{item:longsword}硬砍反而最快。"
+texts = {
+"en": "It carries its own antidotes. Poison gets cleared the moment it shows up.
+
+Poison is wasted on it. Hacking away with the {item:longsword} is the fastest way through."
+}
 options = Array[ExtResource("1_tky82")]([SubResource("Resource_2o1ax")])

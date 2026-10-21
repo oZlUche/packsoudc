@@ -114,3 +114,63 @@ static func run_stale_wording_217(t: TestCase) -> void:
 	t.check(ration.contains("耐力上限加 %d" % cap), "口粮那条讲耐力上限（按数据 %d）" % cap)
 	var free := load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef
 	t.check(free.rules.is_empty(), "218：自由模式规则卡拆了（总规则进序章三的交代，负重进教程）")
+
+
+## 221 F2：三张序章的事件与「军团的交代」都有英文 —— 标题、正文、每个选项、藏起来的那句；
+## 英文的占位符和中文一样（翻译不丢 {item:…}），不写 `**`、不写阿拉伯数字；切到英文渲染出来没有汉字、没有漏换的记号
+static func run_tutorial_events_english(t: TestCase) -> void:
+	t.begin("221 F2 · 序章事件与交代：标题、正文、选项、藏起来那句、结果里说的话都有英文；占位符和中文一样、渲染后没有汉字")
+	var defs := EventPlacer.load_all()
+	var ctx := {"char_name": "Brutus", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1}
+	var token := RegEx.create_from_string("\\{[^}]*\\}")
+	var han := RegEx.create_from_string("[\\x{4e00}-\\x{9fff}]")
+	var digit := RegEx.create_from_string("[0-9]")
+	var bad: Array[String] = []
+	var n := 0
+	for id in defs:
+		if not (String(id).begins_with("tut") or id == &"briefing_legion"):
+			continue
+		n += 1
+		var def := defs[id] as EventDef
+		var pairs := [["title", def.title, def.titles], ["text", def.text, def.texts]]
+		for i in def.options.size():
+			var opt := def.options[i] as EventOption
+			pairs.append(["options[%d].label" % i, opt.label, opt.labels, TextTemplate.option_context(ctx, opt)])     # 选项里的数取这个选项自己的字段
+			if opt.hint_when_hidden != "":
+				pairs.append(["options[%d].hint" % i, opt.hint_when_hidden, opt.hints_when_hidden])
+			for o in opt.outcomes:
+				if o is Say:
+					pairs.append(["options[%d].say" % i, (o as Say).text, (o as Say).texts])
+		for pair in pairs:
+			var where := "%s.%s" % [id, pair[0]]
+			var en := String((pair[2] as Dictionary).get("en", ""))
+			if en == "":
+				bad.append(where + "：没有英文")
+				continue
+			if _tokens(token, String(pair[1])) != _tokens(token, en):
+				bad.append(where + "：占位符和中文不一样")
+			var bare := token.sub(en, "", true)
+			if bare.contains("**") or digit.search(bare) != null:
+				bad.append(where + "：有 ** 或阿拉伯数字")
+			UiText.lang = "en"
+			var shown := TextTemplate.plain(en, pair[3] if pair.size() > 3 else ctx)
+			UiText.lang = "zh"
+			if han.search(shown) != null or shown.contains("{"):
+				bad.append(where + "：渲染后还有汉字或记号（%s）" % shown.left(40))
+	t.eq(n, 38, "37 条序章事件 + 交代")
+	t.eq(bad, [] as Array[String], "都齐")
+	var intro := defs[&"tut_intro"] as EventDef
+	UiText.lang = "en"
+	var title := intro.title_for()
+	UiText.lang = "zh"
+	t.eq(title, String(intro.titles["en"]), "切到英文：事件屏取英文标题")
+	t.eq(intro.title_for(), intro.title, "切回中文")
+
+
+static func _tokens(re: RegEx, s: String) -> Array:
+	var out := {}
+	for m in re.search_all(s):
+		out[m.get_string()] = true
+	var keys := out.keys()
+	keys.sort()
+	return keys

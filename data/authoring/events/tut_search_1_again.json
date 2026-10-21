@@ -1,10 +1,19 @@
 {
   "id": "tut_search_1_again",
   "title": "再翻一次",
+  "titles": {
+    "en": "Search Again"
+  },
   "text": "第一次翻出了一把{item:shortsword}和一瓶{item:salve}。这里还安静，再翻一次，看看还有什么。",
+  "texts": {
+    "en": "The first pass turned up a {item:shortsword} and a {item:salve}. Still quiet. Search again and see what else is down there."
+  },
   "options": [
     {
       "label": "再搜一次",
+      "labels": {
+        "en": "Search again"
+      },
       "outcomes": [
         {
           "type": "open_search"

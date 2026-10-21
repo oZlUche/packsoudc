@@ -1,10 +1,19 @@
 {
   "id": "tut2_lesson",
   "title": "对症",
+  "titles": {
+    "en": "Right Tool"
+  },
   "text": "两次岔路走下来该看出来了：这里没有一套万能的装备。\n\n出手快的怕固定减伤，出手重的怕一次性护甲；叠盾的怕毒，带解药的怕硬砍。每到一个岔路口，先把鼠标停在点上看对手带了什么，再决定带什么、合成什么、走哪边。带错了会输，输了扣体力，一场扣 {loss_cost} 点，你现在还有 {vitality} 点 —— 学会看对手，比一场战斗的胜负重要。\n\n前面就是撤离点。",
+  "texts": {
+    "en": "Two forks in, you should see it by now: there's no gear that wins everything here.\n\nFast hitters hate flat Block. Heavy hitters hate one-time Armor. Shield-stackers hate poison. Antidote-carriers hate brute force. At every fork, hover over the spot first, see what the enemy carries, then decide what to bring, what to craft and which way to go. Bring the wrong thing and you lose. Lose and it costs Vitality: {loss_cost} a fight, and you have {vitality} left. Learning to read the enemy matters more than any single fight.\n\nThe extraction point is just ahead."
+  },
   "options": [
     {
-      "label": "继续"
+      "label": "继续",
+      "labels": {
+        "en": "Continue"
+      }
     }
   ]
 }

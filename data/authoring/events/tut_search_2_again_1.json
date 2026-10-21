@@ -1,10 +1,19 @@
 {
   "id": "tut_search_2_again_1",
   "title": "还有",
+  "titles": {
+    "en": "There's More"
+  },
   "text": "翻出一把{item:scimitar}和一个{item:poison_vial}。{item:poison_vial}自己也能下毒，只是慢。{c:good}把它拖到{item:knife}上面{/c}，两件立刻合成一把{item:poisoned_knife}：借{item:knife}的快手，一刀一层毒。毒{b}无视格挡和护甲{/b} —— 前面那个守卫披着甲，正好用它。{item:scimitar}也带上：放血和毒碰在一起会起反应，到时候看。\n\n下面还压着东西，再翻一次。",
+  "texts": {
+    "en": "Out come a {item:scimitar} and a {item:poison_vial}. The {item:poison_vial} can poison on its own, just slowly. {c:good}Drag it onto the {item:knife}{/c} and the two instantly craft into a {item:poisoned_knife}: the {item:knife}'s quick hand, one stack of poison per cut. Poison {b}ignores Block and Armor{/b}. The guard up ahead wears armor, so this is the tool for him. Take the {item:scimitar} too: bleed and poison react when they meet. You'll see.\n\nThere's still something buried underneath. Search once more."
+  },
   "options": [
     {
       "label": "再搜一次",
+      "labels": {
+        "en": "Search again"
+      },
       "outcomes": [
         {
           "type": "open_search"

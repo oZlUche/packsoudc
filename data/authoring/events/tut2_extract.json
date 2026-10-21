@@ -1,10 +1,19 @@
 {
   "id": "tut2_extract",
   "title": "撤离",
+  "titles": {
+    "en": "Extract"
+  },
   "text": "到撤离点了。撤了这一局就结束：包里的东西带回{zone:仓库}。\n\n撤出去直接进最后一张序章：祭坛。",
+  "texts": {
+    "en": "You've reached the extraction point. Extract and this run is over: what's in your bags goes back to the {zone:仓库}.\n\nOut there, the last prologue is waiting: the Altar."
+  },
   "options": [
     {
       "label": "撤离",
+      "labels": {
+        "en": "Extract"
+      },
       "outcomes": [
         {
           "type": "extract"
@@ -12,7 +21,10 @@
       ]
     },
     {
-      "label": "再整理一下"
+      "label": "再整理一下",
+      "labels": {
+        "en": "Tidy up first"
+      }
     }
   ]
 }

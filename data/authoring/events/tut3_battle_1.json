@@ -1,12 +1,24 @@
 {
   "id": "tut3_battle_1",
   "title": "{enemy:raider}",
+  "titles": {
+    "en": "{enemy:raider}"
+  },
   "text": "前面有个{enemy:raider}，一把小刀，不难对付。\n\n信力是这样涨的：{faith:brute}看你打出去和挨到的伤害，每点算 {faith_deed:brute:damage:multiplier} 信力，一场最多 {faith_deed:brute:damage:cap}；还有失去体力，每点算 {faith_deed:brute:vitality_lost:multiplier} —— 输了也不白输。\n\n打完把鼠标停到顶端栏的徽记上看看。",
+  "texts": {
+    "en": "A {enemy:raider} up ahead. One small knife. Not much trouble.\n\nHere's how Faith grows. {faith:brute} watches the damage you deal and the damage you take: {faith_deed:brute:damage:multiplier} Faith per point, up to {faith_deed:brute:damage:cap} a battle. Lost Vitality counts too, {faith_deed:brute:vitality_lost:multiplier} per point. Even a loss isn't wasted.\n\nAfter the fight, hover over the emblem in the top bar and have a look."
+  },
   "options": [
     {
       "label": "进入战前准备",
+      "labels": {
+        "en": "Enter Pre-battle"
+      },
       "hide_when_locked": true,
       "hint_when_hidden": "先把{item:charm_brute}放进包里（按 {key:B} 打开背包；留在上一个点的话，回去拿），信了{faith:brute}再打。",
+      "hints_when_hidden": {
+        "en": "Put the {item:charm_brute} in your bag first (press {key:B} to open your pack; if you left it at the last spot, go back for it). Follow {faith:brute}, then fight."
+      },
       "requires": [
         {
           "type": "faith_active"
@@ -20,6 +32,9 @@
     },
     {
       "label": "先回地图",
+      "labels": {
+        "en": "Back to the map"
+      },
       "outcomes": [
         {
           "type": "revisit_later"

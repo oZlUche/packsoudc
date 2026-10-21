@@ -12,13 +12,24 @@ script = ExtResource("3_gf4uf")
 [sub_resource type="Resource" id="Resource_nwpue"]
 script = ExtResource("1_v8ufr")
 label = "搜索"
+labels = {
+"en": "Search"
+}
 outcomes = Array[ExtResource("2_i6yt6")]([SubResource("Resource_v01jv")])
 
 [resource]
 script = ExtResource("5_4lfyp")
 id = &"tut2_search_1"
 title = "两件护具"
+titles = {
+"en": "Two Pieces of Gear"
+}
 text = "这里埋着两件护具。搜两次，两件都拿到手 —— 但包里装不下两件，得选一件带上。
 
 先搜。"
+texts = {
+"en": "Two pieces of protective gear are buried here. Search twice and you'll have both, but your bag won't hold both. You'll have to pick one.
+
+Search first."
+}
 options = Array[ExtResource("1_v8ufr")]([SubResource("Resource_nwpue")])

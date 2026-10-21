@@ -12,11 +12,20 @@ script = ExtResource("3_7iqd3")
 [sub_resource type="Resource" id="Resource_rpyl3"]
 script = ExtResource("1_mf2o3")
 label = "迎战"
+labels = {
+"en": "Fight"
+}
 outcomes = Array[ExtResource("2_2e5oq")]([SubResource("Resource_si5df")])
 
 [resource]
 script = ExtResource("5_j6yno")
 id = &"tut_search_2_encounter"
 title = "惊动了"
+titles = {
+"en": "Something Stirs"
+}
 text = "翻动的声响引来了一个{enemy:brute}。这一次什么都没来得及拿，先过{ui:战前准备}：把包整理好再开战。"
+texts = {
+"en": "The noise drew a {enemy:brute}. No time to grab anything this round. Go through {ui:战前准备} first: sort your bag, then fight."
+}
 options = Array[ExtResource("1_mf2o3")]([SubResource("Resource_rpyl3")])

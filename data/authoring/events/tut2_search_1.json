@@ -1,10 +1,19 @@
 {
   "id": "tut2_search_1",
   "title": "两件护具",
+  "titles": {
+    "en": "Two Pieces of Gear"
+  },
   "text": "这里埋着两件护具。搜两次，两件都拿到手 —— 但包里装不下两件，得选一件带上。\n\n先搜。",
+  "texts": {
+    "en": "Two pieces of protective gear are buried here. Search twice and you'll have both, but your bag won't hold both. You'll have to pick one.\n\nSearch first."
+  },
   "options": [
     {
       "label": "搜索",
+      "labels": {
+        "en": "Search"
+      },
       "outcomes": [
         {
           "type": "open_search"

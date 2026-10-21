@@ -1,10 +1,19 @@
 {
   "id": "tut3_search",
   "title": "蛮族的埋藏",
+  "titles": {
+    "en": "The Barbarian Cache"
+  },
   "text": "这里埋着蛮族的东西。搜三次，都很安静。",
+  "texts": {
+    "en": "Barbarian things are buried here. Three searches, all quiet."
+  },
   "options": [
     {
       "label": "搜索",
+      "labels": {
+        "en": "Search"
+      },
       "outcomes": [
         {
           "type": "open_search"

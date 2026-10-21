@@ -12,13 +12,24 @@ script = ExtResource("3_ov5jf")
 [sub_resource type="Resource" id="Resource_lcxmc"]
 script = ExtResource("1_rwj8x")
 label = "再搜一次"
+labels = {
+"en": "Search again"
+}
 outcomes = Array[ExtResource("2_noc6n")]([SubResource("Resource_yyejs")])
 
 [resource]
 script = ExtResource("5_cdmbv")
 id = &"tut2_search_1_again"
 title = "{item:tower_shield}"
+titles = {
+"en": "{item:tower_shield}"
+}
 text = "翻出一面{item:tower_shield}：每挨一下固定减 {item_stat:tower_shield:block} 点伤害。对付出手快、每下轻的对手，几乎打不痛你；对付一锤子 {item_stat:warhammer:damage} 点的，减那 {item_stat:tower_shield:block} 点等于没减。
 
 再搜一次。"
+texts = {
+"en": "You dig up a {item:tower_shield}: every hit you take is cut by a flat {item_stat:tower_shield:block}. Against a fast enemy with light hits, it barely hurts you. Against one that lands {item_stat:warhammer:damage} a swing, taking {item_stat:tower_shield:block} off is as good as nothing.
+
+Search again."
+}
 options = Array[ExtResource("1_rwj8x")]([SubResource("Resource_lcxmc")])

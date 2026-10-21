@@ -12,17 +12,31 @@ script = ExtResource("3_hg5di")
 [sub_resource type="Resource" id="Resource_8qolm"]
 script = ExtResource("1_55gbi")
 label = "撤离"
+labels = {
+"en": "Extract"
+}
 outcomes = Array[ExtResource("2_sq26k")]([SubResource("Resource_28mcs")])
 
 [sub_resource type="Resource" id="Resource_d52a3"]
 script = ExtResource("1_55gbi")
 label = "再整理一下"
+labels = {
+"en": "Tidy up first"
+}
 
 [resource]
 script = ExtResource("5_b81fk")
 id = &"tut3_extract"
 title = "撤离"
+titles = {
+"en": "Extract"
+}
 text = "到撤离点了。三张序章都过了。
 
 {item:charm_brute}和{item:charm_sun}跟着包回{zone:仓库}，下一局带哪枚进去，就从哪位神开始。再往上的阶（{faith_threshold:brute:3}、{faith_threshold:brute:4}）有立即击败非首领敌人和不死，{ui:自由模式}里慢慢攒。"
+texts = {
+"en": "You've reached the extraction point. That's all three prologues done.
+
+The {item:charm_brute} and the {item:charm_sun} go back to the {zone:仓库} with your bag. Whichever one you carry into the next run, that's the god you start with. The higher Ranks ({faith_threshold:brute:3}, {faith_threshold:brute:4}) bring instant kills on non-boss enemies, and a way to cheat death. Build up to them in {ui:自由模式}."
+}
 options = Array[ExtResource("1_55gbi")]([SubResource("Resource_8qolm"), SubResource("Resource_d52a3")])

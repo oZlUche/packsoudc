@@ -1,10 +1,19 @@
 {
   "id": "tut3_rest_2",
   "title": "第二座神坛",
+  "titles": {
+    "en": "The Second Altar"
+  },
   "text": "到第二阶了，神坛上多了两个特殊操作：\n\n「祈求赐福」花 {faith_perk:brute:altar_bless:cost} 信力，把一件东西换成{faith:brute}赐福的版本；「献祭生命上限」每次扣 {faith_perk:brute:altar_sacrifice_hp:hp_cost} 点生命上限，换 {faith_perk:brute:altar_sacrifice_hp:faith_gain} 信力，或者换这局造成伤害 +{faith_perk:brute:altar_sacrifice_hp:damage_percent}%、急速 +{faith_perk:brute:altar_sacrifice_hp:haste_percent}%，每次自己挑。\n\n{b}只能选一个{/b}：选了，这座神坛就关了，献祭也不能再做 —— 这就是二选一。",
+  "texts": {
+    "en": "You've reached Rank two. The altar now has two special actions:\n\n\"Ask for a blessing\" costs {faith_perk:brute:altar_bless:cost} Faith and turns one item into a version blessed by {faith:brute}. \"Offer your max Health\" takes {faith_perk:brute:altar_sacrifice_hp:hp_cost} max Health each time, in exchange for {faith_perk:brute:altar_sacrifice_hp:faith_gain} Faith, or for +{faith_perk:brute:altar_sacrifice_hp:damage_percent}% damage dealt and +{faith_perk:brute:altar_sacrifice_hp:haste_percent}% Haste for this run. You choose each time.\n\n{b}You get one.{/b} Pick it and this altar closes, and no more Offerings either. That's what pick one means."
+  },
   "options": [
     {
       "label": "献祭或特殊操作，二选一",
+      "labels": {
+        "en": "Offering or special action, pick one"
+      },
       "hide_when_locked": true,
       "requires": [
         {
@@ -23,6 +32,9 @@
     },
     {
       "label": "回 {rest_restore} 点体力",
+      "labels": {
+        "en": "Restore {rest_restore} Vitality"
+      },
       "hide_when_locked": true,
       "requires": [
         {
@@ -37,6 +49,9 @@
     },
     {
       "label": "倒计时 −{pass_time_actions}，回 {rest_total} 点体力",
+      "labels": {
+        "en": "Countdown −{pass_time_actions}, restore {rest_total} Vitality"
+      },
       "hide_when_locked": true,
       "requires": [
         {
@@ -57,7 +72,10 @@
       ]
     },
     {
-      "label": "不算用掉"
+      "label": "不算用掉",
+      "labels": {
+        "en": "Not now"
+      }
     }
   ],
   "scene": "rest_camp"

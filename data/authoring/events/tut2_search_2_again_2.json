@@ -1,10 +1,19 @@
 {
   "id": "tut2_search_2_again_2",
   "title": "{item:longsword}",
+  "titles": {
+    "en": "{item:longsword}"
+  },
   "text": "一把{item:longsword}：一下 {item_stat:longsword:damage} 点，慢，但总伤害比{item:knife}高得多。对付血厚、没什么花样的对手用它最省事。\n\n再搜一次，还有一样东西。",
+  "texts": {
+    "en": "A {item:longsword}: {item_stat:longsword:damage} damage a swing. Slow, but far more total damage than the {item:knife}. Against an enemy with lots of Health and no tricks, it's the easy choice.\n\nSearch again. There's one more thing."
+  },
   "options": [
     {
       "label": "再搜一次",
+      "labels": {
+        "en": "Search again"
+      },
       "outcomes": [
         {
           "type": "open_search"

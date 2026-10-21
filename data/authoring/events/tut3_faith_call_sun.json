@@ -1,10 +1,19 @@
 {
   "id": "tut3_faith_call_sun",
   "title": "日神的低语",
+  "titles": {
+    "en": "Whispers of the Sun God"
+  },
   "text": "另一座祭坛，烧得正旺。一枚{item:charm_sun}摆在火边。\n\n拿了放进包里，你信的就换成{faith:sun}：{faith:brute}那几行字会变灰（休眠），顶端栏的徽记换成{faith:sun}的。{b}两位神的信力各记各的，不会丢{/b}。\n\n想换回来：{b}右键{/b}{item:charm_brute}（或者把它拿起来再放下）—— 最后放下的那枚信物说了算。换神没有代价。",
+  "texts": {
+    "en": "Another altar, burning hot. A {item:charm_sun} lies by the fire.\n\nTake it and put it in your bag, and you follow {faith:sun} instead. The lines tied to {faith:brute} turn grey (dormant), and the emblem in the top bar becomes the one for {faith:sun}. {b}Each god keeps its own Faith. You lose nothing.{/b}\n\nWant to switch back? {b}Right-click{/b} the {item:charm_brute} (or pick it up and put it down again). The last Anchor you put down is the one that counts. Switching gods costs nothing."
+  },
   "options": [
     {
       "label": "接过日神的护符",
+      "labels": {
+        "en": "Take the Sun God's charm"
+      },
       "tags": [
         "offering"
       ],
@@ -15,7 +24,10 @@
         },
         {
           "type": "say",
-          "text": "两枚护符，两位神。最后放下的那枚说了算。"
+          "text": "两枚护符，两位神。最后放下的那枚说了算。",
+          "texts": {
+            "en": "Two charms, two gods. Whichever you set down last has the final say."
+          }
         }
       ]
     }
