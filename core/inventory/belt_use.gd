@@ -28,5 +28,5 @@ func describe() -> String:
 	for e in effects:
 		if e != null:
 			parts.append(e.describe())
-	var at: String = {When.MAP: "地图上", When.PREBATTLE: "战前准备屏上", When.ANY: "地图上或战前准备屏上"}[when]
-	return "%s用：%s" % [at, "；".join(parts)]
+	var key: String = {When.MAP: "item.belt_use_map", When.PREBATTLE: "item.belt_use_prebattle", When.ANY: "item.belt_use_any"}[when]
+	return UiText.t(key) % UiText.t("repair.sep").join(parts)

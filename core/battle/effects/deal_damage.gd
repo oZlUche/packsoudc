@@ -146,20 +146,24 @@ func describe() -> String:
 	var parts: Array[String] = []
 	var fixed := damage_stat == &"" and amount > 0.0
 	if fixed:
-		parts.append("%s 点" % TextTemplate.num(amount))
-	if percent_of != &"" and percent > 0:
-		var whose := {Target.OPPONENT: "对手", Target.SELF: "自己", Target.BOTH: "目标"}[percent_of_target] as String
-		parts.append("%s %d%% %s" % [whose, percent, PERCENT_OF_NAMES.get(String(percent_of), String(percent_of))])
-	var head := ""
-	if per_target_stack != &"":
-		head = "对手每层%s" % Glossary.status_name(per_target_stack)
-	elif per_stack:
-		head = "每层"
+		parts.append(UiText.t("fx.dmg_points") % TextTemplate.num(amount))
+	var pct := percent_of != &"" and percent > 0
+	if pct:
+		var whose := {Target.OPPONENT: "fx.pct_opp", Target.SELF: "fx.pct_self", Target.BOTH: "fx.pct_target"}[percent_of_target] as String
+		parts.append(UiText.t(whose) % [percent, UiText.pick(PERCENT_OF_NAMES.get(String(percent_of), null), String(percent_of))])
 	var what := " + ".join(parts)
+	var type_name := Glossary.damage_type_name(damage_type)
+	var line := ""
 	if what == "":
-		return "%s造成%s伤害" % [head, Glossary.damage_type_name(damage_type)]
-	var joiner := "的" if percent_of != &"" and percent > 0 else ""
-	return "%s造成 %s%s%s伤害" % [head, what, joiner, Glossary.damage_type_name(damage_type)]
+		line = UiText.t("fx.deal_type") % type_name
+	else:
+		line = UiText.t("fx.deal_pct" if pct else "fx.deal") % [what, type_name]
+	if per_target_stack != &"":
+		return UiText.t("fx.per_target_stack") % [Glossary.status_name(per_target_stack), line]
+	if per_stack:
+		return UiText.t("fx.per_stack") % line
+	return line
 
 
-const PERCENT_OF_NAMES := {"max_hp": "最大生命", "current_hp": "当前生命", "missing_hp": "已损失生命"}
+const PERCENT_OF_NAMES := {"max_hp": {"zh": "最大生命", "en": "max Health"}, "current_hp": {"zh": "当前生命", "en": "current Health"},
+	"missing_hp": {"zh": "已损失生命", "en": "missing Health"}}

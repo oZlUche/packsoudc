@@ -34,13 +34,13 @@ func text_of() -> String:
 		return ""     # 没信仰：空槽
 	var line := run.faith_power.line() if run.faith_power != null else ""
 	if art_of(id) == null:
-		return run.faith_line() + ("　" + line if line != "" else "")
+		return run.faith_line() + (UiText.t("tip.gap") + line if line != "" else "")
 	var def := run.active_faith()
 	if def == null or run.faith_power == null:
 		return ""
 	var p := run.faith_power.points_of(id)
 	var next := def.next_threshold(p)
-	return "Lv.%d　%d%s" % [def.tier_of(p), p, (" / %d" % next) if next >= 0 else ""]
+	return UiText.t("hud.faith_level") % [def.tier_of(p), p, (" / %d" % next) if next >= 0 else ""]
 
 
 func _paint() -> void:

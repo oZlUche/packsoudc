@@ -45,7 +45,10 @@
           ]
         }
       ],
-      "note": "弹开更久"
+      "note": "弹开更久",
+      "notes": {
+        "en": "Deflects for longer"
+      }
     }
   ],
   "combat": {

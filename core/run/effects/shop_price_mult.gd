@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "商店售价 ×%.2f" % factor
+	return UiText.t("bonus.shop_price") % factor

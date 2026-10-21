@@ -10,4 +10,4 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	return "置入价值 ≥ %d 的道具 +%d" % [min_value, amount]
+	return UiText.t("deed.place_item") % [min_value, amount]

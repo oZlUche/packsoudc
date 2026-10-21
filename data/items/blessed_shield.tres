@@ -107,6 +107,9 @@ script = ExtResource("13_hpahx")
 tier = 2
 rules = Array[ExtResource("3_ppj1f")]([SubResource("Resource_tuaju")])
 note = "弹开更久"
+notes = {
+"en": "Deflects for longer"
+}
 
 [sub_resource type="Resource" id="Resource_rh8uo"]
 script = ExtResource("15_vi1ei")

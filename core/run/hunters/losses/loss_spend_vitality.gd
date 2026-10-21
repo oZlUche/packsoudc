@@ -10,4 +10,4 @@ func apply(_h: Hunter, sys: HunterSystem) -> void:
 
 
 func describe() -> String:
-	return "输了体力 -%d" % amount
+	return UiText.t("hunter.loss_vitality") % amount

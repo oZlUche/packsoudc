@@ -37,7 +37,7 @@ func has_content() -> bool:
 
 
 func text_of() -> String:
-	return "腰带" if slots != null else ""
+	return UiText.t("hud.belt") if slots != null else ""
 
 
 ## 用一个随身技能。返回用不了的原因（空串 = 用了）

@@ -1,7 +1,13 @@
 {
   "id": "hunter_1",
   "display_name": "追猎者",
+  "display_names": {
+    "en": "Stalker"
+  },
   "description": "有人在跟着你。它的脚步声停在了不远处。",
+  "descriptions": {
+    "en": "Someone is following you. Their footsteps have stopped not far away."
+  },
   "behavior": {
     "type": "approach"
   },
@@ -9,6 +15,9 @@
     {
       "id": "repel",
       "display_name": "击退",
+      "display_names": {
+        "en": "Repel"
+      },
       "outcomes": [
         {
           "type": "spend_vitality"
@@ -21,6 +30,9 @@
     {
       "id": "expel",
       "display_name": "驱逐",
+      "display_names": {
+        "en": "Expel"
+      },
       "outcomes": [
         {
           "type": "spend_vitality"

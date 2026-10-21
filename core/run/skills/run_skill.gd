@@ -37,7 +37,7 @@ func map_usable() -> bool:
 
 ## 主动使用。返回空串 = 用了；否则是不能用的原因。[RunSkills] 已经查过次数与冷却，这里只做自己的事
 func activate(_run: RunState) -> String:
-	return "这个技能没有主动效果"
+	return UiText.t("skill.no_active")
 
 
 ## 立了旗等下一场战斗的技能：开打前改双方的战斗单位（[RunSkills.prepare_battle] 调，用完旗子撤）
@@ -79,5 +79,5 @@ func summary() -> String:
 	for e in passive:
 		if e != null and e.has_method("describe") and String(e.call("describe")) != "":
 			parts.append(String(e.call("describe")))
-	var tail := "、".join(parts)
-	return Names.of(self) + ("（" + tail + "）" if tail != "" else "")
+	var tail := UiText.t("tip.list_sep").join(parts)
+	return Names.of(self) + (UiText.t("skill.summary_tail") % tail if tail != "" else "")

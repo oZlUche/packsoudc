@@ -8,4 +8,4 @@ func gain(event: StringName, _payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	return "搜一次 +%d" % amount
+	return UiText.t("deed.explore") % amount

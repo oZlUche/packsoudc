@@ -14,7 +14,7 @@ func check(ctx: EventContext) -> bool:
 
 func describe() -> String:
 	if min_depth <= 0 and max_depth < 0:
-		return "需要这里已被侵蚀"
+		return UiText.t("cond.eroded")
 	if max_depth < 0:
-		return "需要侵蚀深度 ≥ %d" % min_depth
-	return "需要侵蚀深度 %d～%d" % [min_depth, max_depth]
+		return UiText.t("cond.erosion_min") % min_depth
+	return UiText.t("cond.erosion_range") % [min_depth, max_depth]

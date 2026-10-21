@@ -23,7 +23,12 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	var what := ("带「%s」的" % Glossary.tag_name(tag)) if tag != &"" else ""
+	var cap_text := (UiText.t("deed.cap") % cap) if cap > 0 else ""
 	if min_cells > 0:
-		what += "%s型及以上的" % ItemVolume.grade_name(ItemVolume.grade_of_cells(min_cells))     # 188 补充一：不写「体积」
-	return "%s道具每出手一次 +%d%s" % [what if what != "" else "", amount, ("（每场最多 %d）" % cap) if cap > 0 else ""]
+		var grade := ItemVolume.grade_name(ItemVolume.grade_of_cells(min_cells))     # 188 补充一：不写「体积」
+		if tag != &"":
+			return UiText.t("deed.triggered_tag_grade") % [Glossary.tag_name(tag), grade, amount, cap_text]
+		return UiText.t("deed.triggered_grade") % [grade, amount, cap_text]
+	if tag != &"":
+		return UiText.t("deed.triggered_tag") % [Glossary.tag_name(tag), amount, cap_text]
+	return UiText.t("deed.triggered") % [amount, cap_text]

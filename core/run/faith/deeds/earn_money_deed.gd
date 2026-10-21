@@ -13,4 +13,4 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	return "每进账 %d 币 +%d" % [maxi(1, per_amount), amount]
+	return UiText.t("deed.earn_money") % [maxi(1, per_amount), amount]

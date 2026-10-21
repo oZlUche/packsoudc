@@ -14,4 +14,4 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 
 func describe() -> String:
-	return "道具每成功出手一次 +%d%s" % [amount, ("（每场最多 %d）" % cap) if cap > 0 else ""]
+	return UiText.t("deed.item_cycle") % [amount, (UiText.t("deed.cap") % cap) if cap > 0 else ""]

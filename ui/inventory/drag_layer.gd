@@ -802,7 +802,7 @@ static func enchant_hint(token: ItemInstance, weapon: ItemInstance) -> String:
 	var ench := Forge.enchant_of(token)
 	var text := UiText.t("bag.enchant") % [Forge.prefix(ench), Names.of(weapon.def)]
 	if not Forge.enchant_of(weapon).is_empty():
-		text += UiText.t("bag.enchant_replace") % Forge.prefix(Forge.enchant_of(weapon)).trim_suffix("的")
+		text += UiText.t("bag.enchant_replace") % Forge.prefix(Forge.enchant_of(weapon)).trim_suffix("的").strip_edges()     # en prefixes end with a space
 	return text
 
 

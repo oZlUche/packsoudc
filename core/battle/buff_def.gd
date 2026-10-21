@@ -96,8 +96,8 @@ func sentence_text(lang: String = "") -> String:
 ## 给界面看的时长一句：「永续」/「持续 N 秒」
 func duration_text() -> String:
 	if seconds_per_stack > 0 and is_stackable():
-		return "按层计时"     # 175 补充四：燃血 / 菌血（具体那句在词条正文里）
-	return "永续" if is_permanent() else "持续 %.1f 秒" % duration_sec
+		return UiText.t("battle.dur_per_stack")     # 175 补充四：燃血 / 菌血（具体那句在词条正文里）
+	return UiText.t("battle.dur_permanent") if is_permanent() else UiText.t("battle.dur_seconds") % duration_sec
 
 @export_group("效果")
 ## 152（作者定）：**每层**带几层标准轴 ——「每层血怒 = 一层【强攻】+ 一层【加速】」。层数跟着 buff 走（[BuffAxis]）。

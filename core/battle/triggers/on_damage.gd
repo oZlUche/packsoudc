@@ -19,11 +19,8 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 	return (not crit_only or event.get_bool(&"crit")) and super.matches(ctx, event)
 
 
-func describe() -> String:
-	var line := super()
-	if not crit_only:
-		return line
-	return line.replace("受到攻击", "受到暴击").replace("攻击命中", "暴击命中").replace("伤害时", "暴击时")
+func _phase() -> int:
+	return PHASE_CRIT if crit_only else PHASE_ON
 
 
 ## 151：只认暴击的再乘假定暴击率

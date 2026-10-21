@@ -8,4 +8,4 @@ func apply(h: Hunter, sys: HunterSystem) -> void:
 
 
 func describe() -> String:
-	return "输了它消失"
+	return UiText.t("hunter.loss_vanish")

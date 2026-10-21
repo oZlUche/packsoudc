@@ -16,7 +16,7 @@ func pay(ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	return "每场最多 %d 次" % max_uses
+	return UiText.t("cost.per_battle") % max_uses
 
 
 ## 151：一场里用得完几成 = min(1, 次数 ÷ (一秒几次 × H))

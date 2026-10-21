@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "侵蚀扣体力少扣 %d 点" % amount
+	return UiText.t("bonus.erosion_resist") % amount

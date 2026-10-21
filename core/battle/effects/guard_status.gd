@@ -22,5 +22,5 @@ func apply(ctx: RuleContext) -> void:
 
 func describe() -> String:
 	if buff == null:
-		return "锁定 ?"
-	return "%s %d 层%s不可解除" % ["使对手" if target == Target.OPPONENT else "使你", stacks, Names.of(buff)]
+		return UiText.t("fx.guard_unknown")
+	return UiText.t("fx.guard_opp" if target == Target.OPPONENT else "fx.guard_self") % [stacks, Names.of(buff)]

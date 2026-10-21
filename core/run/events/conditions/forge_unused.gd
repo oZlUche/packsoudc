@@ -8,4 +8,4 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	return "这座铸炉已经用过了"
+	return UiText.t("forge.used")

@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "逃跑 %+.0f%%" % (amount * 100.0)
+	return UiText.t("bonus.flee") % (amount * 100.0)

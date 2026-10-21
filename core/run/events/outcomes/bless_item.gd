@@ -17,7 +17,7 @@ func apply(ctx: EventContext) -> void:
 			var was := Names.of(inst.def)
 			var v := Blessings.bless_instance(inst, ctx.items, fid)
 			if v != null:
-				ctx.log.append("「%s」受了赐福，成了「%s」" % [was, Names.of(v)])
+				ctx.log.append(UiText.t("outcome.blessed") % [was, Names.of(v)])
 				if c != null and c.has_signal("changed"):
 					c.changed.emit()
 			return

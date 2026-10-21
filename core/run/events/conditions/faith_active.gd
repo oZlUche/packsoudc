@@ -18,5 +18,5 @@ func check(ctx: EventContext) -> bool:
 
 
 func describe() -> String:
-	var who := "信仰" if faith == &"" else "「%s」" % content_name("faiths", faith)
-	return "需要激活%s" % who if min_tier <= 0 else "需要%s至少 %d 级" % [who, min_tier]
+	var who := UiText.t("cond.faith_any") if faith == &"" else UiText.t("cond.quoted") % content_name("faiths", faith)
+	return UiText.t("cond.faith_active") % who if min_tier <= 0 else UiText.t("cond.faith_level") % [who, min_tier]

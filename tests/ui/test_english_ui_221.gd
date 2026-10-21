@@ -193,6 +193,49 @@ static func run_skill_names_english(t: TestCase) -> void:
 	t.check(seen >= 9, "三个角色的技能都查了（%d）" % seen)
 	t.eq(bad, [] as Array[String], "每个技能都有英文名")
 
+
+## 221 F5a：英文下每件道具的悬浮窗（规则句、属性、标签、加成）、每个状态的说明、百科里状态 / 反应 / 时机页都没有汉字。
+## 道具自己的说明（F5c 的数据）先摘掉再查，这里只管代码拼出来的字
+static func run_rule_text_english(t: TestCase) -> void:
+	t.begin("221 F5a · 英文：道具悬浮窗、状态说明、百科状态页没有汉字")
+	var han := _han()
+	var db := ItemDatabase.new()
+	db.load_dir()
+	UiText.lang = "en"
+	var bad: Array[String] = []
+	var n := 0
+	for id in db.all_ids():
+		var def := db.get_def(StringName(id))
+		if def == null:
+			continue
+		n += 1
+		var text := ItemTooltip.describe(ItemInstance.create(def))
+		var desc := Names.description_of(def)
+		if desc != "":
+			text = text.replace(desc, "")
+		text = _tags_off(text)
+		if han.search(text) != null:
+			bad.append("%s：%s" % [id, text.left(80)])
+	var buffs: Array[String] = []
+	for f in DirAccess.get_files_at("res://data/buffs"):
+		if f.ends_with(".tres"):
+			var b := load("res://data/buffs".path_join(f)) as BuffDef
+			var body := _tags_off(Glossary.describe_buff(b, 2))
+			if han.search(body) != null:
+				buffs.append("%s：%s" % [b.id, body.left(80)])
+	var book := Encyclopedia.build(GameFlow.load_help_pages(), db)
+	var pages: Array[String] = []
+	for id in book.ids():
+		if String(id).begins_with("buff:") or String(id).begins_with("reaction:") or String(id).begins_with("trigger:"):
+			var shown := _tags_off(TextTemplate.plain(book.render(id), {"char_name": "Brutus"}))
+			if han.search(shown) != null:
+				pages.append("%s：%s" % [id, shown.left(80)])
+	UiText.lang = "zh"
+	t.check(n > 100, "查了 %d 件道具" % n)
+	t.eq(bad, [] as Array[String], "道具悬浮窗（不算说明）没有汉字")
+	t.eq(buffs, [] as Array[String], "状态说明没有汉字")
+	t.eq(pages, [] as Array[String], "百科状态 / 反应 / 时机页没有汉字")
+
 ## 221 F4：百科英文 —— 54 页机制页标题与正文、固定词条、反应说明都有英文；英文下整本书的页标题没有汉字，
 ## 机制页正文、反应讲解没有汉字；「相关」写的词条中文键在英文下照样连得上
 static func run_encyclopedia_english(t: TestCase) -> void:
@@ -267,3 +310,8 @@ static func _same_keys(a: Dictionary, b: Dictionary) -> bool:
 		if not b.has(k):
 			return false
 	return true
+
+
+## 去掉 BBCode 标签（小写字母开头的 [tag] / [/tag]），方括号里的扳机句（[At battle start]、[开战时]）留着一起查
+static func _tags_off(text: String) -> String:
+	return RegEx.create_from_string("\\[/?[a-z_]+[^\\]]*\\]").sub(text, "", true)

@@ -12,7 +12,7 @@ func check(ctx: EventContext) -> bool:
 
 func describe() -> String:
 	if max_steps < 0:
-		return "需要步数 ≥ %d" % min_steps
+		return UiText.t("cond.steps_min") % min_steps
 	if min_steps <= 0:
-		return "需要步数 ≤ %d" % max_steps
-	return "需要步数 %d～%d" % [min_steps, max_steps]
+		return UiText.t("cond.steps_max") % max_steps
+	return UiText.t("cond.steps_range") % [min_steps, max_steps]

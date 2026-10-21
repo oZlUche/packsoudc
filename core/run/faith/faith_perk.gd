@@ -26,7 +26,7 @@ func describe() -> String:
 	var extra := TextTemplate.render(note, params()) if note != "" else ""
 	if main == "" or extra == "":
 		return main + extra
-	return "%s　%s" % [main, extra]
+	return UiText.t("faith.perk_note") % [main, extra]
 
 
 ## 子类重写：按字段拼的主句

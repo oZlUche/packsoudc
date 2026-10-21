@@ -7,7 +7,7 @@ extends FaithDeed
 @export var won_only: bool = false
 @export var by_type: Dictionary = {}
 
-const TYPE_NAMES := {"battle": "普通", "elite": "精英", "hunter": "猎手", "core": "BOSS"}
+const TYPE_NAMES := {"battle": {"zh": "普通", "en": "Normal"}, "elite": {"zh": "精英", "en": "Elite"}, "hunter": {"zh": "猎手", "en": "Hunter"}, "core": {"zh": "BOSS", "en": "Boss"}}
 
 
 func gain(event: StringName, payload: Dictionary) -> int:
@@ -24,6 +24,6 @@ func describe() -> String:
 	if not by_type.is_empty():
 		var parts: Array[String] = []
 		for k in by_type:
-			parts.append("%s +%d" % [TYPE_NAMES.get(String(k), String(k)), int(by_type[k])])
-		return ("打赢" if won_only else "进入") + "战斗：" + "、".join(parts)
-	return ("打赢一场 +%d" if won_only else "打一场 +%d") % amount
+			parts.append("%s +%d" % [UiText.pick(TYPE_NAMES.get(String(k), null), String(k)), int(by_type[k])])
+		return (UiText.t("deed.battle_won_by_type") if won_only else UiText.t("deed.battle_by_type")) % UiText.t("hud.buff_sep").join(parts)
+	return (UiText.t("deed.battle_won") if won_only else UiText.t("deed.battle_fought")) % amount

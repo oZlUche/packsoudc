@@ -34,7 +34,7 @@ const MAX_DEPTH := 3
 const RING_WIDTH := 2.0
 const RING_COLOR := Color("d4a84f")
 ## 220 E：词条子窗底部那一行（点了开百科的对应页）
-const CODEX_LINK := "百科 >"
+const CODEX_LINK := "百科 >"     # zh text; shown via UiText "tip.codex_link"
 const CODEX_META := "codex:"
 
 ## 220 E：导演挂上的两个钩子 —— 词条名 → 百科页 id（查不到给空），和「开这一页」。没挂（测试里单独造的悬浮窗）就不画那一行
@@ -150,7 +150,7 @@ class TipWindow extends PanelContainer:
 		foot_sep.visible = page != ""
 		foot_row.visible = page != ""
 		set_label.text = ""
-		UiTheme.set_rich(foot, "" if page == "" else "[url=%s%s][u]%s[/u][/url]" % [HoverTip.CODEX_META, page, HoverTip.CODEX_LINK])
+		UiTheme.set_rich(foot, "" if page == "" else "[url=%s%s][u]%s[/u][/url]" % [HoverTip.CODEX_META, page, UiText.t("tip.codex_link")])
 
 	## 220 E：这扇窗底部链到的百科页（没有给空；测试看）
 	func codex() -> String:
@@ -206,7 +206,7 @@ class TipWindow extends PanelContainer:
 		var parts: Array[String] = [head.text]
 		if body.visible:
 			parts.append(body.text)
-		parts.append(foot.text + ("　" + set_label.text if set_label.text != "" else ""))
+		parts.append(foot.text + (UiText.t("tip.gap") + set_label.text if set_label.text != "" else ""))
 		return "\n".join(parts)
 
 	func reset_state() -> void:

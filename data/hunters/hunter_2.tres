@@ -22,6 +22,9 @@ script = ExtResource("5_n00tl")
 script = ExtResource("2_bb1f7")
 id = &"repel"
 display_name = "击退"
+display_names = {
+"en": "Repel"
+}
 outcomes = Array[ExtResource("3_j6ak4")]([SubResource("Resource_jidfe"), SubResource("Resource_hy4wn")])
 
 [sub_resource type="Resource" id="Resource_uvoxk"]
@@ -34,6 +37,9 @@ script = ExtResource("6_28eav")
 script = ExtResource("2_bb1f7")
 id = &"expel"
 display_name = "驱逐"
+display_names = {
+"en": "Expel"
+}
 outcomes = Array[ExtResource("3_j6ak4")]([SubResource("Resource_uvoxk"), SubResource("Resource_nnmnq")])
 
 [sub_resource type="Resource" id="Resource_0hrrj"]
@@ -46,13 +52,22 @@ script = ExtResource("7_tqfby")
 script = ExtResource("2_bb1f7")
 id = &"expel_guard"
 display_name = "驱逐并驻守"
+display_names = {
+"en": "Expel and Hold"
+}
 outcomes = Array[ExtResource("3_j6ak4")]([SubResource("Resource_0hrrj"), SubResource("Resource_bm1a7")])
 
 [resource]
 script = ExtResource("8_v5ssu")
 id = &"hunter_2"
 display_name = "守路人"
+display_names = {
+"en": "Road Warden"
+}
 description = "它在这一带巡逻，见了你就追。输了它可能把你打退，也可能把你赶回去，甚至守在原地不让你过。"
+descriptions = {
+"en": "It patrols this stretch and gives chase on sight. If you lose, it may beat you back, drive you back the way you came, or even stand its ground and bar your way."
+}
 level = 2
 visibility = 1
 sense_range = 4.0

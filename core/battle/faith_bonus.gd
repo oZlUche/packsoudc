@@ -26,6 +26,8 @@ const FIELD_WHEN := {
 @export var rules: Array[AbilityRule] = []
 ## 给界面的补充一句，接在按字段拼的主句后面（104 第十节：不再和主句各写一遍数）；是 [TextTemplate] 模板，数写 `{per_points}` 这类字段名
 @export var note: String = ""
+## 221 F5：别的语言的补充一句（{"en": …}）
+@export var notes: Dictionary = {}
 
 
 ## 现在给几份（0 = 不生效）：[param p_tier] 现在第几阶、[param points] 现在多少信力
@@ -45,16 +47,16 @@ func times_for(p_tier: int, points: int) -> int:
 func gate_text() -> String:
 	match mode:
 		"active":
-			return "激活即"
+			return UiText.t("bonus.gate_active")
 		"scaled":
-			return "每 %d 信力一份%s" % [per_points, ("，最多 %d 份" % max_shares) if max_shares > 0 else ""]
+			return UiText.t("bonus.gate_scaled") % [per_points, (UiText.t("bonus.gate_cap") % max_shares) if max_shares > 0 else ""]
 		_:
 			return "Lv.%d" % tier
 
 
 ## 给界面的一整句（104 第十节）：生效条件 + 属性修饰 + 规则 + 作者补充。道具浮窗、信仰浮窗都用它，数只来自字段
 func describe() -> String:
-	return "%s：%s" % [gate_text(), effect_text()]
+	return gate_text() + UiText.t("tip.colon") + effect_text()
 
 
 ## 193：只要效果那半句（属性修饰 + 规则 + 作者补充），不带生效条件 —— 信仰窗按级列赐福道具时用
@@ -66,8 +68,8 @@ func effect_text() -> String:
 		if r is AbilityRule:
 			bits.append(Glossary.rule_text(r))
 	if note != "":
-		bits.append(TextTemplate.render(note, TextParams.of(self)))
-	return "；".join(bits) if not bits.is_empty() else "（无）"
+		bits.append(TextTemplate.render(Names.pick(notes, note), TextParams.of(self)))
+	return UiText.t("repair.sep").join(bits) if not bits.is_empty() else UiText.t("tip.none_paren")
 
 
 ## 193：信仰窗里归到第几级（按阶 = 那一阶；激活即 / 按信力 = 1 级）

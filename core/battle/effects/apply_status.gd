@@ -55,9 +55,9 @@ static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) 
 ## 087（作者定）：只写名词，不写细节 —— 「血怒」的「伤害 +10%」、永续与层数上限都在词条的侧窗里（[Glossary.describe_buff]）
 func describe() -> String:
 	if buff == null:
-		return "施加 ?"
+		return UiText.t("fx.apply_unknown")
 	# 175 补 5.4（作者定）：「施加 N 层灼伤」—— 层数总写出来
-	return "%s %d 层%s" % ["施加" if target != Target.SELF else "获得", maxi(1, stacks), Names.of(buff)]
+	return UiText.t("fx.apply" if target != Target.SELF else "fx.gain") % [maxi(1, stacks), Names.of(buff)]
 
 
 ## 151：估值 —— 层数 × 一层在那一边身上总共值多少（[method BuffDef.stack_value]，从那一边的角度）；

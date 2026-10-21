@@ -16,7 +16,7 @@ func apply(ctx: EventContext) -> void:
 	if got > 0:
 		ctx.belts_given.append("%s ×%d" % [name, got])
 	else:
-		ctx.log.append("腰带满了，%s没放进去" % name)
+		ctx.log.append(UiText.t("outcome.belt_full") % name)
 
 
 func describe() -> String:

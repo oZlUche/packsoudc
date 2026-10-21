@@ -10,7 +10,10 @@ enum Visibility { HIDDEN, VISIBLE, NEAR }
 
 @export var id: StringName = &""
 @export var display_name: String = ""
+## 221 F5：别的语言的名字与说明（{"en": …}），经 [Names] 取
+@export var display_names: Dictionary = {}
 @export var description: String = ""
+@export var descriptions: Dictionary = {}
 @export var level: int = 1
 ## 地图上看不看得见：一直看不见 / 一直看得见 / 进了 near_range 才看得见
 @export var visibility: Visibility = Visibility.NEAR
@@ -90,6 +93,6 @@ func summary() -> String:
 		var names: Array[String] = []
 		for o in all:
 			if o != null:
-				names.append((o as HunterLossOption).display_name if (o as HunterLossOption).display_name != "" else String((o as HunterLossOption).id))
+				names.append(Names.of(o) if (o as HunterLossOption).display_name != "" else String((o as HunterLossOption).id))
 		parts.append("输了：%s 之一" % " / ".join(names))
 	return "　".join(parts)

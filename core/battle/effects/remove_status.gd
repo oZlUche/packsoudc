@@ -57,12 +57,13 @@ static func take(ctx: RuleContext, who: CombatantRuntime, id: StringName, n: int
 
 ## 142：写目标与状态名（不写 id）：「清掉对手全部流血」「移除你 2 层中毒」「清除对手全部增益」
 func describe() -> String:
-	var who := {Target.OPPONENT: "对手", Target.SELF: "你", Target.BOTH: "双方"}[target] as String
+	var who := UiText.t({Target.OPPONENT: "fx.who_opp", Target.SELF: "fx.who_you", Target.BOTH: "fx.who_both"}[target] as String)
 	if all_debuffs or all_buffs:
-		return "清除%s全部%s" % [who, "增益与减益" if all_debuffs and all_buffs else ("减益" if all_debuffs else "增益")]
+		var kind := "fx.kind_all" if all_debuffs and all_buffs else ("fx.kind_debuffs" if all_debuffs else "fx.kind_buffs")
+		return UiText.t("fx.clear_all") % [who, UiText.t(kind)]
 	if stacks <= 0:
-		return "清掉%s全部%s" % [who, Glossary.status_name(buff_id)]
-	return "移除%s %d 层%s" % [who, stacks, Glossary.status_name(buff_id)]
+		return UiText.t("fx.strip_all") % [who, Glossary.status_name(buff_id)]
+	return UiText.t("fx.strip") % [who, stacks, Glossary.status_name(buff_id)]
 
 
 ## 151：估值 —— 拿掉那几层在那一边身上「还剩的价值」：从自己身上拿掉减益为正、拿掉增益为负；对手身上的反过来。

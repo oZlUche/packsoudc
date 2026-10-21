@@ -65,7 +65,7 @@ func text_of() -> String:
 	if cd == null:
 		return ""
 	if has_dial():
-		return "倒计时"     # 只为显隐：栏上不写字
+		return UiText.t("hud.countdown")     # 只为显隐：栏上不写字
 	var left := cd.left()
 	var text := UiText.t("hud.countdown_line") % [left, cd.limit()]
 	var closing := cd.closing_extract_id()

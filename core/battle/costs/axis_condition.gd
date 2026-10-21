@@ -26,9 +26,9 @@ func pay(_ctx: RuleContext) -> void:
 
 
 func describe() -> String:
-	var who := "你" if on_self else "对手"
 	var n := absi(stacks) if stacks != 0 else 1
-	return "若%s的%s%s %d 层" % [who, StatAxes.name_of(axis, stacks), "不到" if negate else "至少", n]
+	var key := ("cost.axis_self_below" if negate else "cost.axis_self_min") if on_self else ("cost.axis_opp_below" if negate else "cost.axis_opp_min")
+	return UiText.t(key) % [StatAxes.name_of(axis, stacks), n]
 
 
 ## 151：条件满足的概率（取反 = 一减它）

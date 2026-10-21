@@ -13,10 +13,10 @@ func is_active() -> bool:
 
 func activate(run: RunState) -> String:
 	if run == null or run.skills == null:
-		return "没有技能状态"
+		return UiText.t("skill.no_state")
 	run.skills.evade_left = maxi(run.skills.evade_left, steps)
 	return ""
 
 
 func describe() -> String:
-	return "躲开猎手 %d 步" % steps
+	return UiText.t("skill.evade") % steps

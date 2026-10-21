@@ -10,4 +10,4 @@ func modify(ctx: RunContext) -> void:
 
 
 func describe() -> String:
-	return "休息多回 %d 点体力" % amount
+	return UiText.t("bonus.rest") % amount

@@ -16,4 +16,4 @@ func check(ctx: EventContext) -> bool:
 
 func describe() -> String:
 	# 旗标是内部记账，玩家只看一句
-	return "条件还没满足"
+	return UiText.t("cond.not_met")

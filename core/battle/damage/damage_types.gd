@@ -75,7 +75,7 @@ static func describe(id: StringName, lang: String = "") -> String:
 	var head := nature(id, lang)
 	if head == "":
 		return text
-	return "%s。%s" % [head, text] if text != "" else head
+	return (("%s. %s" if (lang if lang != "" else UiText.lang) == "en" else "%s。%s") % [head, text]) if text != "" else head
 
 
 ## 175 补充五：真实伤害的性质 ——「真实 · 物理」（大类按 [member DamageTypeDef.family] 的名字）；不是真实伤害返回空
