@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v3.70 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v3.71 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4408,6 +4408,7 @@ res://
 | v3.68 | 2026-10-21 | **221 F2 教程事件英文**：37 条序章事件与 `briefing_legion` 补 `titles` / `texts` / `labels` 的 en；`EventOption.hints_when_hidden` + `hint_for()`；`Say.texts`；`{char}` 回落按语言取；`test_tutorial_text_112` 查英文齐全与占位符一致 |
 | v3.69 | 2026-10-21 | **221 F3 教练英文**：五份 coach json 每步 `texts.en`；`CoachOverlay.text_of(step)` 按语言取；`problems()` 查 `texts.en` |
 | v3.70 | 2026-10-21 | **222 空手进战斗**：开局屏棋盘上没有会出手的东西时「出发」上面常显一句提示（`SetupScreen.unarmed()`，`setup.unarmed`），不拦；`PrebattleScreen.can_start()` 去掉空手那条，空手照常开战、按打输结算，`pre.no_attacker` 只作提醒；新套件 `test_unarmed_222` |
+| v3.71 | 2026-10-21 | **221 F4 百科英文**：54 页机制页 `display_names.en` / `texts.en`；`Glossary.TERMS` 每条加 `en`，`term_name` / `term_key` 让英文名也连到中文键的词条页；百科拼接句换 `codex.*` 键，反应加 `descriptions.en`（第一次反应暂停的说明句随之英文）；回放条资源名取 `Glossary.resource_name`，删 `battle.bar_*`；「战斗与战前准备」页按 222 改正；出生点小窗路线名与特点句（`RouteStyle.PLAYER_TEXT`）加英文 |
 | v3.61 | 2026-10-20 | **216 补充：负重签总在**（作者 2026-10-20 16:20）：`StatsStrip` 三张签总在（216 待定 3.2 作废）；不算负重的章负重签大字「当前 / 上限」、小字空着，没上限只写当前重量，悬浮窗说「这一章不算负重」；负重规则不动；测试 216 改验 |
 | v3.60 | 2026-10-20 | **214 头像定稿：铜币侧像 + 圆框**（美术设计交图，作者选乙）：3 角色 + 30 敌人头像 256 进 `assets/portraits/`（只拷 1x）；`portrait_frame` 换深铜圆框（`margin` 0、`inset` 0，整张等比缩放），`portrait_empty` 换磨平旧币；头像、框、空位导入开 `mipmaps/generate`；`PortraitSlot.texture_filter = LINEAR_WITH_MIPMAPS`；测试 157 框外扩按 json 验、加 mipmap 两条 |
 | v3.59 | 2026-10-20 | **216 补充：数值签精修图 + 背包窗一格 72**（UI替换美术交图，作者选乙）：`assets/ui/stats_strip/` 签底 / 三枚火漆 / `layout.json` / `frame_player_72.png`；新 `BagWindow`（`ui/game/bag_window.gd`，继承 `FloatingWindow`，`setup_bag(run, font, on_close, drag, hint_sink)`）按 `bag_window` 摆：8×6 时 660×620、标题行不写字当把手 + 分隔线、右上圆钮 0.72、棋盘格子在 (42,82) 一格 72、皮带外框九宫格外扩 24、数值栏在棋盘下居中，棋盘大了窗跟着长；地图 / 事件 / 休息三屏用它；`FloatingWindow` 去掉 `bare`，加 `_grip` / `center_shift`；`InventoryPanel.cell_px`（setup 前设，默认 60）；`SlabStyle` 三项 `@export`（复制改边距不再丢两层）；测试 216 背包窗那条改验尺寸与摆位 |

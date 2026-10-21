@@ -1,9 +1,15 @@
 {
   "id": "buffs_and_stacks",
   "display_name": "buff 与叠层",
+  "display_names": {
+    "en": "Buffs and Stacks"
+  },
   "category": "combat",
   "order": 3,
   "text": "战斗里一切属性变化都由 buff 承载，包括生命上限。不特别说明时 buff 永续、可叠层：叠上就一直在，直到被清除或战斗结束，效果按层数累加、没有层数上限；不可叠层的固定一层，会过期的往往是这种。上限涨了当前值同量涨，上限降了当前值截到新上限。\n\n作用于角色本身的通用增减成对出现：加速与减速、强攻与虚弱、易伤与坚韧、回春与失血等等，正负层直接相抵，buff 栏里按层数画一格。加时带来的层数无法驱散。buff 自己也能带规则，灼烧每层每秒掉血就是这么来的。所有 buff 战斗结束全部清空。\n\n流血与中毒的后手：这两种状态本身掉血不快，真正的收益来自别的道具接着它们做事。有的在对手被施加流血或中毒的那一瞬给自己加一层增益（只认自己施加的）；有的把对手身上的中毒整个换成更凶的剧毒；有的等对手的流血攒够层数，一口气消耗掉打出一刀；还有的在对手带着流血时让普通攻击更痛。混着带，两条线还能互相喂。",
+  "texts": {
+    "en": "In battle, every stat change is carried by a buff, max Health included. Unless stated otherwise, a buff is permanent and stackable: once applied it stays until it is removed or the battle ends, its effect adds up per stack, and there is no stack limit. A non-stackable buff always has exactly one stack; buffs that expire are usually of this kind. When a maximum goes up, the current value rises by the same amount; when a maximum goes down, the current value is cut to the new maximum.\n\nThe general boosts and penalties on a character come in pairs: Haste and Slow, Might and Weak, Vulnerable and Hardy, Renewal and Bleeding Out, and so on. Positive and negative stacks cancel each other out directly, and the buff bar shows the pair as one entry by stack count. Stacks that come from Overtime can't be dispelled. A buff can carry its own rules too: that is how Burn deals damage per stack every second. All buffs are cleared when a battle ends.\n\nFollow-ups to Bleed and Poison: these two statuses don't deal damage quickly on their own; the real payoff comes from other items that build on them. Some give you a stack of a buff the moment your opponent gets Bleed or Poison (only when you applied it). Some turn all the Poison on your opponent into the nastier Virulent Poison. Some wait until your opponent's Bleed builds up enough stacks, then consume them all at once for a single strike. Others make your normal attacks hurt more while your opponent has Bleed. Mix them, and the two lines can even feed each other."
+  },
   "related": [
     "auto_battle",
     "direct_damage_and_block",

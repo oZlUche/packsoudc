@@ -5,6 +5,9 @@
     "en": "Combustion"
   },
   "description": "按反应的层数造成一下火焰伤害，再叠一半层数的【灼伤】。",
+  "descriptions": {
+    "en": "Deals one burst of Fire damage based on the reaction stacks, then applies half that many stacks of Burn."
+  },
   "elements": [
     "fire",
     "poison"

@@ -6,9 +6,17 @@
 script = ExtResource("1_caayo")
 id = &"erosion"
 display_name = "侵蚀"
+display_names = {
+"en": "Erosion"
+}
 category = &"map"
 order = 7
 text = "侵蚀是进阶难度才有的机制：从某一步起，地图从最外一圈开始逐层向内被侵蚀，每隔一段再进一层。推进前几步会预警，快被侵蚀的那一圈闪红环，地图上写着下一档还有几步。
 
 被侵蚀的点永远能走，只是有代价：走进去扣体力，越深扣越多；侵蚀得深了还可能毁掉包里最值钱的一件，有的难度还丢钱。最内一圈也被侵蚀后进入终局，更重的效果从此生效。出口在外面、宝藏在里面、外面正在烂掉，每一步都在问值不值得再深入。"
+texts = {
+"en": "Erosion appears only at higher difficulties. From a certain step onward, the map is eroded from the outermost ring inward, one ring at a time, advancing another ring after each interval. A warning comes a few steps before each advance: the ring about to be eroded flashes red, and the map shows how many steps remain until the next stage.
+
+Eroded spots can always be entered, but at a cost: stepping into one costs Vitality, and the deeper the Erosion, the more it costs. Deep Erosion may also destroy the most valuable item in your pack, and some difficulties take coins too. Once the innermost ring is eroded as well, the endgame begins and heavier effects apply from then on. The exits are on the outside, the treasure is on the inside, and the outside is rotting away: every step asks whether going deeper is worth it."
+}
 related = Array[String](["vitality", "countdown_and_closing", "extraction_and_defeat"])

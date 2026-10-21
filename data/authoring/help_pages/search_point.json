@@ -1,8 +1,14 @@
 {
   "id": "search_point",
   "display_name": "搜索点",
+  "display_names": {
+    "en": "Search Spots"
+  },
   "order": 1,
   "text": "踩上搜索点先过一屏事件，选「搜索」就开始搜一次，这一次的收获在搜索屏里一件件亮出来，亮了的直接拖进包或{zone:地上}。关掉搜索屏回到事件屏，可以再搜，也可以走；每个点能搜的次数有上限，搜满了只能离开。\n\n每多搜一次，撞上敌人的概率就更高。掷中遭遇的那一次什么都翻不到，直接迎战，先过战前准备；打赢了先拿对方的战利品，没拿完的并进这个点的收获箱，然后接着搜；打输了不扣体力，但这个点不能再搜，之前翻到的还能带走。走得越远、搜得越多，遭遇的敌人越强。",
+  "texts": {
+    "en": "Stepping onto a search spot opens an event screen first. Choose Search to search once; what you find is revealed piece by piece on the search screen, and anything revealed can be dragged straight into a bag or onto the {zone:地上}. Closing the search screen takes you back to the event screen, where you can search again or leave. Each spot can only be searched a limited number of times; once that is used up, all you can do is leave.\n\nEvery extra search raises the chance of running into an enemy. A search that rolls an encounter turns up nothing and goes straight to a fight, starting with Pre-battle. Win, and you take the enemy's Loot first; whatever you leave behind is added to the spot's find box, and you keep searching. Lose, and it costs no Vitality, but the spot can't be searched again; you can still take what you already found. The farther you go and the more you search, the stronger the enemies you meet."
+  },
   "related": [
     "battle_and_prebattle",
     "staging_zone",

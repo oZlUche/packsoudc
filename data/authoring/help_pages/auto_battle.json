@@ -1,8 +1,14 @@
 {
   "id": "auto_battle",
   "display_name": "自动战斗怎么跑",
+  "display_names": {
+    "en": "How Auto Battle Works"
+  },
   "category": "combat",
   "text": "开战前先把棋盘编译成战斗单位：角色基线加上每件参战道具，包体、增益槽与受益槽、套装、信力阶的加成在这一步算成初始属性。然后整场战斗一次算完，回放只是重演，没有任何操作。战斗是事件驱动的，没有帧：每件道具按自己的冷却周期自发出手，模拟直接跳到下一个会发生事的时刻。\n\n每条规则分四层：什么时候触发、多久一次、付什么代价、做什么。同一时刻先处理到期的 buff 再处理出手。打到一定时间进入加时：双方受到的伤害逐步增加，再往后生命上限逐步下降，所以没有平局；同一刻双双倒下按倒下前血量、再按总伤害裁决。",
+  "texts": {
+    "en": "Before a battle, your board is compiled into a combat unit: the character's base stats plus every item that takes part. Bag bonuses, Grant and Receive slots, sets and Faith Rank bonuses are all worked into the starting stats at this step. Then the whole battle is calculated at once; the replay only shows it again, and you take no actions. Battles are event-driven, with no frames: each item acts on its own on its Cooldown cycle, and the simulation jumps straight to the next moment when something happens.\n\nEvery rule has four layers: when it triggers, how often, what it costs, and what it does. At any given moment, expiring buffs are handled before attacks. Once a battle runs long enough it goes into Overtime: damage taken by both sides rises step by step, and later max Health falls step by step, so there are no draws. If both sides fall at the same moment, the result is decided by Health before falling, then by total damage dealt."
+  },
   "related": [
     "stamina_and_cooldown",
     "buffs_and_stacks",

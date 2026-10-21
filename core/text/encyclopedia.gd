@@ -86,7 +86,7 @@ func _add(id: String, title: String, group: String, text: String, related: Array
 
 func _generate_terms() -> void:
 	for name in Glossary.TERMS:
-		_add("term:" + String(name), String(name), "term", Glossary.term_text(String(name)))
+		_add("term:" + String(name), Glossary.term_name(String(name)), "term", Glossary.term_text(String(name)))     # 221 F4：页 id 用中文键，标题按语言
 	for t in TagRegistry.ids():
 		var tag := StringName(String(t))
 		if TagRegistry.is_internal(tag) or FaithTags.id_of_tag(tag) != &"":
@@ -111,7 +111,7 @@ func _generate_terms() -> void:
 
 
 func _add_named(id: String, title: String, group: String) -> void:
-	if Glossary.TERMS.has(title) or _links.has(title):
+	if Glossary.term_key(title) != "" or _links.has(title):
 		return
 	_add(id, title, group, Glossary.term_text(title))
 
@@ -122,7 +122,7 @@ static func reaction_text(def: ReactionDef) -> String:
 	var desc := Names.description_of(def)
 	if desc != "":
 		lines.append(desc)
-	lines.append("效果：" + def.describe_effects())     # 175 补充四：随 N 变的标「× 反应层数」
+	lines.append(UiText.t("codex.effects") % def.describe_effects())     # 175 补充四：随 N 变的标「× 反应层数」
 	return "\n".join(lines)
 
 
@@ -131,7 +131,7 @@ static func reaction_intro(def: ReactionDef) -> String:
 	var a := ReactionResolver.element_name(def.elements[0]) if def.elements.size() > 0 else "?"
 	var b := ReactionResolver.element_name(def.elements[1]) if def.elements.size() > 1 else "?"
 	var desc := Glossary.strip_bbcode(Names.description_of(def)).strip_edges()
-	return "%s：%s碰上%s。%s　百科里点亮了这一页。" % [Names.of(def), a, b, desc]
+	return UiText.t("codex.reaction_intro") % [Names.of(def), a, b, desc]
 
 
 ## 175：「火 + 毒」
@@ -252,22 +252,21 @@ func render(id: String, ctx: Dictionary = {}) -> String:
 	var text := String(p["text"])
 	if String(p["group"]) == "reaction" and reaction_lit.is_valid() and not bool(reaction_lit.call(StringName(id.trim_prefix("reaction:")))):
 		var def := ReactionResolver.by_id(StringName(id.trim_prefix("reaction:")))     # 175：没引发过 —— 只写两种元素
-		text = (pair_line(def) if def != null else "") + "\n" + ("还没有引发过。" if UiText.lang == "zh" else "Not triggered yet.")
+		text = (pair_line(def) if def != null else "") + "\n" + UiText.t("codex.not_triggered")
 	var body := link_words(TextTemplate.render(text, ctx), id)
 	var tail: Array[String] = []
 	var rel: Array[String] = []
 	for r in p.get("related", []):
-		var target := String(r) if _pages.has(String(r)) else page_for(String(r))
+		var target := String(r) if _pages.has(String(r)) else ("term:" + String(r) if _pages.has("term:" + String(r)) else page_for(String(r)))     # 221 F4：「相关」写的是词条中文键，英文下标题不同
 		if target != "" and target != id:
 			rel.append(link(target))
 	if not rel.is_empty():
-		tail.append(("相关：" if UiText.lang == "zh" else "See also: ") + "　".join(rel))
+		tail.append(UiText.t("codex.see_also") % UiText.t("codex.sep").join(rel))
 	var names: Array[String] = []
 	for item_id in p.get("items", []):
 		names.append(_item_name(StringName(String(item_id))))
 	if not names.is_empty():
-		var label := "来自：" if String(p["group"]) == "buff" else ("相关道具：" if UiText.lang == "zh" else "Items: ")
-		tail.append(label + "、".join(names))
+		tail.append(UiText.t("codex.from" if String(p["group"]) == "buff" else "codex.items") % UiText.t("hud.buff_sep").join(names))
 	if id == RECIPE_PAGE:
 		tail.append_array(recipe_lines())
 	if tail.is_empty():
@@ -296,7 +295,7 @@ func recipe_lines() -> Array[String]:
 	var out: Array[String] = []
 	if recipes.is_empty():
 		return out
-	out.append("配方：" if UiText.lang == "zh" else "Recipes:")
+	out.append(UiText.t("codex.recipes"))
 	for r in recipes:
 		if r.inputs.size() != 2:
 			continue
@@ -306,9 +305,9 @@ func recipe_lines() -> Array[String]:
 		for item_id in ids:
 			names.append(_item_name(item_id))
 			all_lit = all_lit and not (lit.is_valid() and not bool(lit.call(item_id)))
-		var line := "　%s + %s → %s" % names
+		var line := UiText.t("codex.recipe_line") % names
 		if all_lit and r.note != "":
-			line += "：" + r.note
+			line += UiText.t("codex.recipe_note") % r.note
 		out.append(line)
 	return out
 
@@ -318,6 +317,6 @@ func _item_name(id: StringName) -> String:
 	if def == null:
 		return String(id)
 	if lit.is_valid() and not bool(lit.call(id)):
-		return "？"
+		return UiText.t("codex.unknown")
 	return Names.of(def)
 #endregion

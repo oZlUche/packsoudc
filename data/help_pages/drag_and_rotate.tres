@@ -6,8 +6,16 @@
 script = ExtResource("1_kxlwg")
 id = &"drag_and_rotate"
 display_name = "拖放与旋转"
+display_names = {
+"en": "Drag and Rotate"
+}
 category = &"bag"
 text = "左键按住一件道具就拿起来，拖的时候按 {key:R} 顺时针转一格，右键或 {key:Esc} 取消放回原处。落点按物品的左上角算，预览有三种颜色：绿是干净落点，黄是压着别人、放手会把人顶出来，红是地形不许，出界、没被包覆盖、跨了两个包、包不收这类标签都算。
 
 顶出来一件直接拿在手上，多于一件全部到{zone:地上}。包不参与顶替：往包上丢东西是放进包里，拖一个包压到另一个包上是替换，旧包连内容物摘下、内容物到地上。装着东西的包能整体拖走，但换了朝向之后挂不住的内容物会脱落到地上。"
+texts = {
+"en": "Hold the left mouse button on an item to pick it up. While dragging, press {key:R} to rotate it one step clockwise; right-click or press {key:Esc} to cancel and put it back where it was. The drop position is measured from the item's top-left corner, and the preview shows one of three colors: green is a clean spot; yellow means it overlaps another item, which gets pushed out when you let go; red means the terrain won't allow it, which covers being out of bounds, not being covered by a Bag, straddling two Bags, or carrying a tag the Bag won't accept.
+
+If one item gets pushed out, it goes straight into your hand; if more than one, they all go to the {zone:地上}. Bags never get pushed: dropping something on a Bag puts it inside, and dragging one Bag onto another replaces it, taking the old Bag off along with its contents and sending the contents to the Ground. A Bag with items in it can be dragged as a whole, but after a rotation, any contents that no longer fit fall off onto the Ground."
+}
 related = Array[String](["bags", "quick_place", "staging_zone", "合成"])

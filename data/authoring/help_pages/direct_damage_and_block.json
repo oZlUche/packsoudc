@@ -1,9 +1,15 @@
 {
   "id": "direct_damage_and_block",
   "display_name": "直接伤害与格挡",
+  "display_names": {
+    "en": "Direct Damage and Block"
+  },
   "category": "combat",
   "order": 1,
   "text": "一切扣血都走同一条管线：先看类型能不能被护甲吸收，再过受伤前效果，减伤、免疫、反转都在这里，再按百分比与固定增减算，然后才轮到格挡。格挡只有盾牌给，只减直接伤害，也就是武器出手造成的那一下，固定减掉写着的数、减到零为止。带几面盾只算格挡最高的那一面；加固在它之上再加，破绽往下减，减成负数反而多挨。\n\nbuff 造成的伤害不是直接伤害：中毒、流血、灼烧都绕过格挡，中毒与流血连护甲也无视。只有直接攻击会招致反应，反伤、吸血这类规则不会被持续伤害触发，所以两件反伤道具不会互相对轰。伤害类型和乘区是两回事：乘区放大伤害的数值，类型决定它吃不吃护甲与格挡。",
+  "texts": {
+    "en": "All Health loss runs through the same pipeline. First, the damage type decides whether Armor can absorb it. Next come pre-damage effects: reduction, immunity and reversal all happen here. Then percentage and flat increases and decreases apply, and only after that does Block come in. Only shields give Block, and Block reduces only direct damage, meaning the hit a weapon deals when it strikes. It subtracts the listed amount, down to zero. If you carry several shields, only the one with the highest Block counts; Fortified adds on top of it and Exposed subtracts from it, and if Block goes negative you take extra damage instead.\n\nDamage from buffs is not direct damage: Poison, Bleed and Burn all bypass Block, and Poison and Bleed ignore Armor as well. Only direct attacks provoke responses. Rules such as Reflect and Drain are never triggered by damage over time, so two Reflect items will not bounce damage back and forth at each other. Damage type and multipliers are separate things: multipliers scale the amount, while the type decides whether Armor and Block apply."
+  },
   "related": [
     "armor",
     "buffs_and_stacks",
