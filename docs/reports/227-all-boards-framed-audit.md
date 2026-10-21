@@ -71,3 +71,7 @@
 
 `/mnt/project-files/art/ui/board/out/frame_plain.png` / `frame_plain_dark.png`，212×212，**margin 46、`cells_offset` 16**（§三 估的 ≈40 / ≈16 以此为准）；`layout.json` 的 `pieces` 已加 `plain` / `plain_dark` 两条（NinePatchRect 四边同 margin，`axis_stretch = TILE`，中段 120 px = 两格；格缝仍由代码按 `cell_seams` 画）。浅色 tone light 白灰石边，深色给青铜屏。已直接发执行，`BoardFrame` 落地时随 `layout.json` 一起拷进 `assets/ui/board/`。
 
+## 补充二：青铜三屏先落了一个 `BoardFrame`（执行 2026-10-21 18:08，PR #248 v3.79）
+
+执行在青铜三屏里先建了 `ui/widgets/board_frame.gd`：`BoardFrame.around(view, kind)`，只认 `frames_dark`，另带 `dark_seams()`；战前 / 战斗 / 战利品的棋盘都已用它。做 227 时扩成 §三 的 `wrap(view, kind, dark)`，`_nine` / `frame_pad` 搬进去，类名不变。**路径定在 `ui/widgets/`**（不是 §三 写的 `ui/inventory/`）：放 inventory 会被 `add_theme` 计数器扫到，widgets 不扫。§三 / §四 里的路径以此为准。
+

@@ -129,3 +129,12 @@
 
 作者 16:07 在美术设计的卡上选了**蜡板**底板（`card_wax.png`）；甲 / 乙按推荐 **甲 角色卡**，乙的「这包给的」块不做。派执行，排在 224 之后：窗 984、右栏坐标与卡内坐标按 §七 与美术 `out/layout.json`；新件 `ui/widgets/character_card.gd`（§四里的 `stats_panel` 改此名），`layout.json` 的 `bag_window.col`，教练目标 `character_card`；测试 `test_bag_window_216` 改尺寸、新 `test_character_card_223`（空包三行 = `effective_baseline()`、局外加成后 ▲、被动两条、英文无汉字）。
 
+
+## 九、落地（执行，2026-10-21，v3.80）
+
+- **窗**：`assets/ui/stats_strip/layout.json` 的 `bag_window` 改 984×620、收起钮 (918, 13)，加 `divider_v`（x 660，y 66 → 606）与 `col`（x 686，名牌 y 78 272×112，卡 y 202 272×228）；`BagWindow` 画竖线（`divider_v()`，棋盘变大时右移、下端跟着窗长），右栏摆名牌与角色卡。
+- **名牌**：现有 `Nameplate`（没有副行）。它最矮是 96 肖像 + 上下边 = 132，比 112 高，所以整块等比缩到 112 高，宽按缩后撑到 272（肖像画出来约 81）。
+- **角色卡** `ui/widgets/character_card.gd`（`CharacterCard`）：`refresh(run)`；身体三行取 `effective_baseline()`（生命 / 耐力取整，回气一位小数），和角色本身的基线比，多了写 ▲N（good 色），少了写 ▼N（bad 色）。每行的悬浮窗写当前值、角色本身的值，再按来源一条一条列（局外和一局里拿的 buff 各一条、难度、角色、信仰；`CharacterCard.sources`）。被动 = `CharacterDef.skill_entries()`（主动藏着不列），说明最多两行，超出截断加「…」，全文进悬浮窗。底板 `assets/ui/stats_panel/card_wax.png`（九宫 16），卡内坐标、字色和刻线照美术的 `layout.json`（`styles.wax`）。开窗、包变了都重算。
+- **教程目标** `character_card`。
+- **字体**：▲▼ 加进 `tools/font_charset.py` 的固定符号，四套中文子集都重裁过（Cinzel 没动，留给 224 补充二）。
+- **测试**：新 `test_character_card_223`（三行 = 有效基线、没加成不写箭头、筋骨 +10% 后 ▲ 与来源、两条被动、英文无汉字）；`test_stats_strip_216` 背包窗那段加窗宽、竖线、名牌和卡的位置。

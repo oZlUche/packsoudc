@@ -71,6 +71,7 @@ var bronze: bool = false
 const BRONZE_PAD := 14
 ## 两块棋盘的外框（自己素皮带、对手生皮）
 const BOARD_FRAMES := ["player", "corpse"]
+## 整块的竖排（[method add_footer] 往它底下加）
 var _root: VBoxContainer = null
 var _play_btn: IconButton
 var _speed_btn: IconButton
@@ -700,10 +701,10 @@ func _build() -> void:
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	if bronze:     # 高按内容：场地图跟着内容（名牌、条、棋盘、时间轴）一起长
 		root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, BRONZE_PAD)
-		_root = root
 		root.minimum_size_changed.connect(update_minimum_size)
 	root.add_theme_constant_override("separation", 12)
 	add_child(root)
+	_root = root
 
 	var header := HBoxContainer.new()
 	_header = header
@@ -797,7 +798,12 @@ func _build() -> void:
 
 
 func _get_minimum_size() -> Vector2:
-	return _root.get_combined_minimum_size() + Vector2.ONE * BRONZE_PAD * 2 if _root != null else Vector2.ZERO
+	return _root.get_combined_minimum_size() + Vector2.ONE * BRONZE_PAD * 2 if bronze and _root != null else Vector2.ZERO
+
+
+## 宿主的控件挂在回放最底下（时间轴、战报之下），压在斗技场图上（铜面板：「继续」那一格，场地图一直铺到底）。进树之后调
+func add_footer(c: Control) -> void:
+	_root.add_child(c)
 
 
 ## 铜面板：底图 cover、顶对齐（[method UiTheme.dress_backdrop] 是居中裁）—— 宿主变大小时重算

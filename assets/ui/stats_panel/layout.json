@@ -1,0 +1,167 @@
+{
+ "design": [
+  1600,
+  1000
+ ],
+ "note": "223 补充一：背包窗右栏角色卡。坐标都是设计像素；窗内坐标以窗左上为原点，卡内坐标以卡左上为原点",
+ "bag_window": {
+  "window_size": [
+   984,
+   620
+  ],
+  "window_center": [
+   800,
+   510
+  ],
+  "why_984": "左半边 = 原来整扇 660 一字不动（棋盘皮带框外沿在窗内 x 636），竖线放在原窗右沿 660，右栏两边各留 26 → 660 + 26 + 272 + 26 = 984。932 放不下：右栏会压到皮带框上",
+  "divider_v": {
+   "x": 660,
+   "y0": 66,
+   "y1": 606,
+   "color": "#786e64",
+   "width": 1.2,
+   "note": "同标题分隔线；标题分隔线跟着拉通到新窗宽"
+  },
+  "minimize_topleft": [
+   918,
+   13
+  ],
+  "col": {
+   "x": 686,
+   "width": 272,
+   "nameplate": {
+    "y": 78,
+    "size": [
+     272,
+     112
+    ],
+    "note": "现有 Nameplate，不要副行（名字竖向居中），宽撑到 272"
+   },
+   "card": {
+    "y": 202,
+    "size": [
+     272,
+     228
+    ]
+   },
+   "bag_block": {
+    "y": 442,
+    "height": "24 + 30 × 行数（只列非零，没有就不画）",
+    "note": "乙案才有"
+   }
+  }
+ },
+ "panel": {
+  "image": "card_<wax|parchment>.png（@2x 同名，边距翻倍）",
+  "image_size": [
+   272,
+   228
+  ],
+  "nine_patch": {
+   "margin": [
+    16,
+    16,
+    16,
+    16
+   ],
+   "stretch": "STRETCH（默认）",
+   "note": "角色卡按原大用；乙案块用同一张压扁成 272 × (24 + 30n)。右下 2 px 是阴影"
+  }
+ },
+ "card": {
+  "body_rows": {
+   "count": 3,
+   "top": 12,
+   "height": 30,
+   "note": "第 i 行上沿 = 12 + 30i，基线 = 上沿 + 20"
+  },
+  "label": {
+   "x": 20,
+   "font": "serif_regular",
+   "size": 15,
+   "unit": "「每秒」写成小字跟在标签后：serif_regular 11、dim 色、左距 5"
+  },
+  "value": {
+   "right_x": 252,
+   "font": "serif_bold",
+   "size": 15,
+   "align": "right",
+   "delta": "▲N / ▼N 跟在数值后面：serif_regular 12，左距 4，▲ good 色、▼ bad 色，整串右对齐到 right_x"
+  },
+  "divider": {
+   "y": [
+    105,
+    108
+   ],
+   "note": "身体和被动之间两道刻线（不要也行：去掉后被动上移 3）"
+  },
+  "passives": {
+   "top": 111,
+   "height": 53,
+   "count": 2,
+   "name": {
+    "dy": 18,
+    "font": "serif_bold",
+    "size": 15,
+    "color": "value"
+   },
+   "summary": {
+    "dy": 34,
+    "line_height": 15,
+    "font": "serif_regular",
+    "size": 12,
+    "color": "dim",
+    "max_lines": 2,
+    "width": 232
+   },
+   "note": "第 i 条上沿 = 111 + 53i；两条之间一道刻线。summary 超过两行就截断加「…」，全文进悬浮窗"
+  },
+  "rules": {
+   "x0": 18,
+   "x1": 254,
+   "note": "行间线由代码画（九宫格会把画进图里的线拉歪）：每道线 = styles.rule 里的几条 1 px 横线，dy 是往下偏几像素"
+  }
+ },
+ "bag_block": {
+  "rows_top": 12,
+  "row_height": 30,
+  "note": "字和线同 card.body_rows"
+ },
+ "styles": {
+  "wax": {
+   "tone": "dark",
+   "label": "#e8dcc4",
+   "value": "#f6ecd6",
+   "dim": "#b3a48a",
+   "good": "#a9cf86",
+   "bad": "#f08470",
+   "rule": [
+    {
+     "color": "#0e0a08",
+     "alpha": 0.7,
+     "dy": 0
+    },
+    {
+     "color": "#e9dcc3",
+     "alpha": 0.14,
+     "dy": 1
+    }
+   ]
+  },
+  "parchment": {
+   "tone": "light",
+   "label": "#2e2219",
+   "value": "#2e2219",
+   "dim": "#6f6356",
+   "good": "#4f7a32",
+   "bad": "#b23a2a",
+   "rule": [
+    {
+     "color": "#7d6a50",
+     "alpha": 0.45,
+     "dy": 0
+    }
+   ]
+  }
+ }
+}

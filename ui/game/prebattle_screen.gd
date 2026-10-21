@@ -1,7 +1,7 @@
 ## 战前准备屏（084，作者定）：踩上战斗点（或事件里选了开打、搜索遭遇了）先到这里，不是直接开打。
 ##
-## 左边是对手：从节点内容重建的棋盘（[method EnemyKit.board_of]）与一排属性签（生命 / 耐力 / 耗气 / DPS / 特殊能力）—— 和真打出来的是同一份编译（4.2）；
-## 右边是自己的棋盘与地上（[InventoryPanel]），随便拖：拖出棋盘 = 放到地上（不参战，打完还在地上；走了留在这个点、回来能拿）。
+## 右边是对手（作者 2026-10-21 18:19：和回放统一，自己在左）：从节点内容重建的棋盘（[method EnemyKit.board_of]）与一排属性签（生命 / 耐力 / 耗气 / DPS / 特殊能力）—— 和真打出来的是同一份编译（4.2）；
+## 左边是自己的棋盘与地上（[InventoryPanel]），随便拖：拖出棋盘 = 放到地上（不参战，打完还在地上；走了留在这个点、回来能拿）。
 ## 只有一个按钮「开战」：棋盘上一件会出手的东西都没有时灰掉（打不起来的仗不让开）。这一屏是**必须过的**：不能收起回地图，也走不了。
 extends GameScreen
 
@@ -48,7 +48,7 @@ func open(payload: Dictionary) -> void:
 	var col := _vbox(14)
 	panel.add_child(col)
 
-	# 157：对阵式 —— 左对手、右自己，两列等宽；属性签在两块棋盘下面同一条线上（battle_stats v2 `prebattle_row`）
+	# 157：对阵式，两列等宽；作者 2026-10-21 18:19：和战斗回放统一 —— 自己在左、对手在右。属性签在两块棋盘下面同一条线上（battle_stats v2 `prebattle_row`）
 	var row := _hbox(0)
 	col.add_child(row)
 	_left = _vbox(10)
@@ -90,6 +90,8 @@ func open(payload: Dictionary) -> void:
 	_player_strip = _inv.detach_strip()
 	_player_strip.use_inlay(true, StatsStrip.ORDER_PLAYER)
 	_right.add_child(_player_strip)
+	row.move_child(_right, 0)     # 自己那列放最左，中缝其次，对手那列在右
+	row.move_child(_lane, 1)
 
 	# 「开战」居中、主档；腰带件在左，信仰 / 技能给的动作在右，原因写在下面一行
 	var buttons := _hbox(10)
