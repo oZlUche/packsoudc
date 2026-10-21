@@ -13,7 +13,6 @@ var _table: GridInventory = null
 var _table_view: InventoryView
 var _head: Label
 var _preview: Label
-var _line: Label
 var _offer_btn: Button
 var _action_btns: Array = []
 var _actions_box: VBoxContainer = null
@@ -54,13 +53,11 @@ func open(payload: Dictionary) -> void:
 	back.tooltip_text = UiText.t("altar.back_tip")
 	buttons.add_child(back)
 	left.add_child(buttons)
-	_line = _label("", 13, UiPalette.HEAL)
-	left.add_child(_line)
 	# 特殊操作（按等级刷；献祭升了级当场多出来）
 	_actions_box = _vbox(6)
 	left.add_child(_actions_box)
 
-	_inv = _mount_bag(row, _table_view, func(text: String): _line.text = text, _table)     # 棋盘上双击 → 祭品台
+	_inv = _mount_bag(row, _table_view, Callable(), _table)     # 棋盘上双击 → 祭品台；226 批一：回话走告示层
 	_table_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
 	_tip_double(_table_view, "act.take_back")     # 230
 	_tip_quick(_inv, "act.offer", func(inst: ItemInstance) -> String:
@@ -94,10 +91,10 @@ func put_on_table(uid: int) -> bool:
 		return false
 	var inst := from.get_item(uid)
 	if inst != null and inst.is_locked_by_player():
-		_line.text = UiText.t("item.locked_no") % Names.of(inst.def)     # 230
+		say(UiText.t("item.locked_no") % Names.of(inst.def))     # 230
 		return false
 	if inst == null or not def.accepts_offering(inst.def):
-		_line.text = UiText.t("altar.rejected") % [Names.of(inst.def) if inst != null else "?", Names.of(def)]
+		say(UiText.t("altar.rejected") % [Names.of(inst.def) if inst != null else "?", Names.of(def)])
 		return false
 	return InventoryService.transfer_auto(from, uid, _table)
 
@@ -126,7 +123,7 @@ func offer() -> Dictionary:
 		for inst in insts:
 			_table.remove((inst as ItemInstance).uid)
 		flow.save()
-		_line.text = UiText.t("setup.list_sep").join(got["log"])
+		say(UiText.t("setup.list_sep").join(got["log"]))
 	_refresh()
 	return got
 
@@ -145,7 +142,7 @@ func special(perk: FaithPerk) -> String:
 		take_back((inst as ItemInstance).uid)
 	var line := AltarModule.of(flow.run).special(perk, _node, option) if AltarModule.of(flow.run) != null else ""
 	if line != "":
-		_line.text = line
+		say(line)
 		flow.save()
 		flow.close_altar()
 	return line

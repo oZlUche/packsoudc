@@ -100,7 +100,9 @@ var _warehouse_view: InventoryView = null
 ## 163：仓库分页（[member _warehouse_view] 是它当前页的视图）
 var _warehouse_pages: WarehousePages = null
 var _readout: RichTextLabel = null
-var _status: Label
+## 226 批一：「出发」上面那句常显的话（出发不了的原因、空手提示、军需官发的）—— 本地红字行删了：
+## 变了才走一次告示卷轴，平时写在「出发」的悬浮窗里（[method status_text]）
+var _status := ""
 ## 右下那一组（状态字 + 两颗大按钮）；第三页按地图纸的右沿往左挪（180 定稿）
 var _nav_box: VBoxContainer = null
 ## 标题前面那段空（第三页 = [constant PAPER_INSET]，让开地图纸的毛边）
@@ -796,8 +798,8 @@ func _apply_preset() -> void:
 			_preset_uids[inst.uid] = true
 		else:
 			missed.append(Names.of(idef))
-	if not missed.is_empty() and _status != null:
-		_status.text = UiText.t("setup.preset_missed") % UiText.t("setup.list_sep").join(missed)
+	if not missed.is_empty():
+		warn(UiText.t("setup.preset_missed") % UiText.t("setup.list_sep").join(missed))
 
 
 ## 096：棋盘上预设套的实例
@@ -976,8 +978,8 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		else:
 			ok = carry_out(uid)
 			why = "" if ok else UiText.t("setup.no_room_warehouse") % Names.of(inst.def)
-	if why != "" and _status != null:
-		_status.text = why
+	if why != "":
+		warn(why)
 	return ok
 
 
@@ -1132,9 +1134,6 @@ func _build_nav() -> void:
 	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	box.offset_right = -36
 	box.offset_bottom = -36
-	_status = _wrapped("", 13, UiPalette.HP, 520)
-	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	box.add_child(_status)
 	var row := _hbox(16)
 	row.alignment = BoxContainer.ALIGNMENT_END
 	_back_btn = _button(UiText.t("setup.back"), prev_page, BACK_FONT, UiPalette.Tier.MINOR)     # 180 补二：大两号，仍比「出发」小
@@ -1176,12 +1175,31 @@ func unarmed() -> bool:
 	return board != null and BattleCompiler.compile_board(board).active_items().is_empty()
 
 
+## 226 批一：「出发」上面那句（测试看）；空串 = 没话
+func status_text() -> String:
+	return _status
+
+
+## 那句变了：新的不空就走一次告示卷轴（出发不了的原因是要紧的），并写进「出发」的悬浮窗
+func _set_status(text: String) -> void:
+	if text == _status:
+		return
+	_status = text
+	if text != "":
+		if can_depart() != "":
+			warn(text)
+		else:
+			say(text)
+	if _enter_btn != null:
+		_enter_btn.tooltip_text = text
+
+
 ## 出发。开不了（生成不出图、超上限）返回 false，留在这一屏说明原因。
 ## 218 补充一（作者定）：这一章配了出发前的交代、这个存档没看过 —— 先叠一层事件屏弹它，「知道了」之后才真出发（返回 true：交代弹出来了）
 func depart() -> bool:
 	var why := can_depart()
 	if why != "":
-		_status.text = why
+		warn(why)
 		return false
 	var brief := flow.departure_briefing(chapter())
 	if brief != null:
@@ -1200,7 +1218,7 @@ func _go_now() -> bool:
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id)
 	flow.map_reveal = {}
 	if run == null:
-		_status.text = UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source"))
+		warn(UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source")))
 		return false
 	flow.next_run_seed = -1     # 180：调试台指定的种子只管一局
 	_remember_last(c)
@@ -1566,7 +1584,6 @@ func _refresh() -> void:
 		_summary.text = summary_text()
 	if _enter_btn != null:
 		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and needs_spawn())     # 182：没挑出生点「出发」灰着
-	if _status != null:
-		var why := can_depart()
-		var hint := UiText.t("setup.unarmed") if _page > 0 and unarmed() else ""
-		_status.text = why if why != "" and not carried().is_empty() else _note + hint     # 225：「军需官发的」在前
+	var why := can_depart()
+	var hint := UiText.t("setup.unarmed") if _page > 0 and unarmed() else ""
+	_set_status(why if why != "" and not carried().is_empty() else _note + hint)     # 225：「军需官发的」在前

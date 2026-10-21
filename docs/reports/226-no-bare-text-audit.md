@@ -227,3 +227,11 @@
 
 **叠层标题带已出图（UI替换美术 2026-10-21 18:22）**：`/mnt/project-files/art/ui/kit/out/band.png`，甲 纸签版，随字长的燕尾纸带；全部 `OverlayFrame` 一起换，逐屏对照在 `kit/README.md`。其余原始控件已按推荐交执行。两处按 226 画的：音量读数并进步进件 [−][80%][+]；底色键名去括号注解。读档屏「读取存档」在样稿里走了叠层标题带 —— **按样稿**（§1.2 本就允许；叠层窗一律标题带，整屏才用石标题牌），不另通知执行。
 
+## 八、批一落地（v3.89）
+
+- **告示层**：`NoticeLayer`（ui/widgets/notice_layer.gd）由 `GameDirector` 造一层（`notices`，z 150：所有屏与地上之上、百科之下），`NoticeLayer.current()`；单测里没有导演时 `GameScreen.notice_layer()` 在屏上自己挂一层。`GameScreen.say / warn` 成为基类方法；面板、腰带这类子节点用 `NoticeLayer.post(self, text, urgent)` 往上找。一句一卷，顶端栏下方居中（卷顶 y 78）往下叠、间距 6，最多两卷，同一句只重置时间，3 秒（要紧 5 秒）收卷。
+- **告示卷轴**：`NoticeScroll`（ui/widgets/notice_scroll.gd），图 `assets/ui/notice/notice_scroll_paper(_urgent)` 九宫格 + `notice_scroll_roller(_urgent)`；几何照美术 README 末节（纸宽 = 字宽 + 52、高 34，轴 18 × 54、中心在纸边外 4，整卷 + 28）；字思源宋体 18 墨色，钉在整卷中心、用纸的矩形裁切（两边收 6）；开卷 0.25 s ease-out、收卷 0.22 s ease-in + 0.1 s 淡出，动效关着直接到终态。动效的细调归「界面动画」。
+- **删掉的本地回话行**：商店 `_line`（`line_text()` 读告示）、神坛 `_line`、保险箱 `_line`（状态那句并进标题条 `safe.title_count`）、铸炉 `_line`、仓库面板 `_line`（含空闲时的「仓库 N 件 / 还有 N 件」读数，`wh.pending / wh.count` 删）、科技 `_line`、出售页 `_sell_line`、读档屏 `_hint`（「三位都满了」、备份提示、「再点一次确认删除」都上卷）、开局屏 `_status`（变了才上一卷；出发不了的原因、空手提示、军需官发的写进「出发」的悬浮窗，`status_text()` 读）、腰带圆上方的飘字（`BeltSlots.flash` 上要紧卷）、战斗面板「▸ 刚出手的那件」。
+- 地图顶端栏下的提示行组件 `notice` 删了（`HudWidgets.KINDS` / 默认布局里都没了，旧存的布局里那一条读档时跳过）；`HudHost.notice` 和 `MapScreen.say / warn` 转给告示层，`notice_widget()` 返回告示层。`InventoryPanel` 没接 `hint_sink` 时默认上卷（节点屏都不再接本地 Label；搜刮屏也开始说话）。
+- 测试：新套件 `test_notice_226`；186 / 087 / 109 / 222 / 225 / 177 / 188 / 角色开局几处断言跟着改读告示。截图 `/mnt/project-files/art/ui/notice/shots226/`（地图开着背包窗时两卷，含游戏测试报的「锁着，先解锁」）。
+

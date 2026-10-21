@@ -841,7 +841,7 @@ const TEXT := {
 	"safe.locked": {"zh": "保险箱已经锁上了", "en": "The safe is already locked"},
 	"safe.no_bags": {"zh": "包放不进保险箱", "en": "Bags don't go in the safe"},
 	"safe.no_room": {"zh": "保险箱放不下「%s」", "en": "No room in the safe for \"%s\""},
-	"safe.status": {"zh": "保险箱里 %d 件、值 %d 币 —— 已视为带出", "en": "In the safe: %d items, worth %d coins. Counted as carried out"},
+	"safe.title_count": {"zh": "保险箱　%d × %d 格　%d 件", "en": "Safe · %d × %d cells · %d items"},
 	# —— 221 F5a：forge_summary ——
 	"forge.sum_when": {"zh": "什么时候：%s", "en": "When: %s"},
 	"forge.dir_dealt": {"zh": "造成", "en": "dealt"},
@@ -1295,8 +1295,6 @@ const TEXT := {
 	"wh.board_label_empty": {"zh": "带回来的背包　已清空", "en": "Brought-back pack · empty"},
 	"wh.board_label": {"zh": "带回来的背包　位置照旧，包已换成默认背景", "en": "Brought-back pack · same layout; the bags now show as plain background"},
 	"wh.size_label": {"zh": "仓库　%d 页，每页 %d × %d 格，不需要包", "en": "Warehouse · %d pages, %d × %d cells each, no bags needed"},
-	"wh.pending": {"zh": "带回来的背包里还有 %d 件：置入仓库；不管的话开局屏里它们到地上，出发就没了（包回包架）", "en": "Still in the pack you brought back: %d. Put them in the Warehouse; otherwise they go to the Ground at Setup and are lost when you set out (bags go back to the Bag Rack)"},
-	"wh.count": {"zh": "仓库 %d 件", "en": "Warehouse · %d items"},
 	# —— 221 F5b：achievements ——
 	"ach.done_note": {"zh": "成就达成【%s】%s", "en": "Achievement complete: %s%s"},
 	"ach.done_unlocks": {"zh": "：解锁 %s", "en": " · unlocks %s"},

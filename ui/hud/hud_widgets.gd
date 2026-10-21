@@ -15,7 +15,6 @@ const KINDS := {
 	&"belt": "res://ui/hud/widgets/belt_widget.gd",
 	&"hud_bar": "res://ui/hud/widgets/hud_bar.gd",
 	&"legend": "res://ui/hud/widgets/legend_widget.gd",
-	&"notice": "res://ui/hud/widgets/notice_widget.gd",     # 186：顶端栏下面的提示行
 	&"dev_drawer": PART,
 	&"bag_button": PART,
 	&"reopen_button": PART,

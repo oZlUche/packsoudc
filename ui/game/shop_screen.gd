@@ -16,7 +16,6 @@ var _belt_btns: Array[Button] = []
 var _sell_view: InventoryView
 var _refresh_btn: Button
 var _wallet_line: Label
-var _line: Label
 var _inv: InventoryPanelScript
 
 
@@ -46,8 +45,6 @@ func open(payload: Dictionary) -> void:
 	_sell_view.inventory = _session.sell_box if _session != null else GridInventory.new(ShopSession.SLOT_MIN, 0, false)
 	_sell_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	sell_col.add_child(_sell_view)
-	_line = _label("", 13, UiPalette.FG)
-	left.add_child(_line)
 	var buttons := _hbox(8)
 	_refresh_btn = _button("", refresh_stock, 13)
 	buttons.add_child(_refresh_btn)
@@ -58,7 +55,7 @@ func open(payload: Dictionary) -> void:
 	left.add_child(buttons)
 
 	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
-	_inv = _mount_bag(row, _sell_view, func(text: String): _say(text))
+	_inv = _mount_bag(row, _sell_view, Callable())     # 226 批一：面板的回话走告示层
 	_drag.drop_outside_to_stash = false     # 店里放到外面 = 放回原处，不算买也不算卖
 	_drag.drop_filter = _allow_drop
 	_drag.craft_filter = _allow_craft     # 审查 A1：没付钱的商品不能拿去合成（会被消耗掉、结不了账）
@@ -137,8 +134,9 @@ func sell_view() -> InventoryView:
 	return _sell_view
 
 
+## 226 批一：最新一句告示（测试看）
 func line_text() -> String:
-	return _line.text
+	return notice_layer().current_text()
 #endregion
 
 
@@ -238,8 +236,7 @@ func _cant_sell(inst: ItemInstance) -> String:
 
 
 func _say(text: String) -> void:
-	if _line != null:
-		_line.text = text
+	say(text)     # 226 批一：本地回话行删了，走告示卷轴
 
 
 ## 重摆栏位（开店、刷新之后）

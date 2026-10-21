@@ -57,8 +57,12 @@ var _minimized: GameScreen = null
 ## 220 E：从词条小窗「百科 >」开的那本百科（盖在整个屏栈和地上之上；关了回原处，底下哪一屏都不动）
 var _codex: GameScreen = null
 const CODEX_Z := 200
+## 226 批一：告示层盖在所有屏、地上之上，百科之下
+const NOTICE_Z := 150
 ## 128：地上 —— 一个节点一层，导演持有唯一一份，盖在整个屏栈上面（只有道具本身接鼠标，各屏的面板登记了地方、东西会让开）
 var ground: GroundLayer = null
+## 226 批一：全游戏的告示层（[method GameScreen.say] / [method GameScreen.warn] 都写到这里）
+var notices: NoticeLayer = null
 ## 地上在这些屏里画（一局里、在某个点上的界面）；战斗回放、结算、局外都不画
 const GROUND_SCREENS := [
 	GameFlow.Screen.MAP, GameFlow.Screen.LOOT, GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP, GameFlow.Screen.EVENT,
@@ -114,6 +118,11 @@ func _ready() -> void:
 	ground.visible = false
 	add_child(ground)
 	GroundLayer.set_current(ground)
+	notices = NoticeLayer.new()
+	notices.z_index = NOTICE_Z
+	notices.motion = UiMotion.enabled(flow.settings)
+	add_child(notices)
+	NoticeLayer.set_current(notices)
 	ground.item_double_clicked.connect(_on_ground_double)     # 134
 	ground.actions_for = ground_actions     # 230
 	HoverTip.codex_page = func(name: String) -> String: return flow.encyclopedia().page_for(name)     # 220 E
@@ -157,6 +166,9 @@ func _on_screen_changed(screen: int, payload: Dictionary) -> void:
 	ground.stash = flow.run.storage if flow.run != null else null
 	_switch_screen(screen, payload)
 	_sync_ground()
+	if notices != null:
+		notices.motion = UiMotion.enabled(flow.settings)     # 设置里关了动效：告示直接开合
+		move_child(notices, -1)
 
 
 ## 128：地上画不画（最上面那一屏是一局里某个点上的界面才画），并保持在屏栈之上
@@ -194,6 +206,8 @@ func ground_actions(uid: int) -> Array:
 func _exit_tree() -> void:
 	if GroundLayer.current() == ground:
 		GroundLayer.set_current(null)
+	if NoticeLayer.current() == notices:
+		NoticeLayer.set_current(null)
 	if HoverTip.open_codex == open_codex:
 		HoverTip.codex_page = Callable()
 		HoverTip.open_codex = Callable()

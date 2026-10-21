@@ -33,7 +33,7 @@ const POP_SEC := 0.12
 
 ## 铜面板三屏（UI替换美术 battle_stats v2 `battle_bars` + bronze3，作者 2026-10-21）：[member bronze] 时没有黑底，
 ## 条和状态小标直接压在斗技场图上 —— 生命在上、耐力在下（隔 [constant ART_BAR_GAP]），左头一枚火漆，槽 + 九宫填充 + 护甲盖在生命上；
-## 字浅色深描边写在槽里；每个状态小标垫一块小嵌槽（[constant SLOT_SIZE]），层数浅字写在槽里；「▸ 武器名」那行不画（无裸字）
+## 字浅色深描边写在槽里；每个状态小标垫一块小嵌槽（[constant SLOT_SIZE]），层数浅字写在槽里；「▸ 武器名」那行删了（226 批一：出手的物品自己会闪）
 const ART_DIR := "stats_strip/"
 const ART_BAR_H := 26.0
 const ART_BAR_GAP := 10.0
@@ -109,8 +109,6 @@ const TIMER_RING_UNDER := Color(0, 0, 0, 0.45)
 var _arrival: Dictionary = {}
 var _arrivals: int = 0
 var _dead: bool = false
-## 最近一次出手的物品名，给一点「谁在动」的反馈
-var _last_fired: String = ""
 var _fired_at: float = -99.0
 
 ## uid -> 显示名。日志里只有 uid，名字是表现层的事。
@@ -274,7 +272,6 @@ func reset(snapshot: Dictionary) -> void:
 	_arrival.clear()
 	_arrivals = 0
 	_dead = false
-	_last_fired = ""
 	var res: Dictionary = snapshot.get("resources", {})
 	for key in res:
 		var pair: Array = res[key]
@@ -422,8 +419,7 @@ func mark_dead() -> void:
 	queue_redraw()
 
 
-func note_fired(uid: int, now: float) -> void:
-	_last_fired = String(item_names.get(uid, UiText.t("battle.missing")))
+func note_fired(_uid: int, now: float) -> void:
 	_fired_at = now
 	queue_redraw()
 
@@ -587,12 +583,6 @@ func _draw() -> void:
 			_draw_timer_ring(String(id), drawn, EffectIcons.tint_of(String(id), def, group))
 			_chips.append([rect, String(id)])
 			x += w + 6
-
-	if _last_fired != "" and not bronze:
-		draw_string(
-			label_font, Vector2(PAD, size.y - PAD), "▸ " + _last_fired,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.DIM
-		)
 
 
 ## 175 补 5.5：图标格 —— 单色图按 [method EffectIcons.tint_of] 着色（保底的彩色成品用白），层数描边画在右下角；悬停时垫一层淡底

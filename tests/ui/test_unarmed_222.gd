@@ -16,7 +16,7 @@ static func frame_unarmed(t: TestCase, root: Window) -> void:
 	setup.show_page(1)
 	setup.choose_preset(-1)     # 不带预设：只有角色的初始包
 	t.check(setup.unarmed(), "不带预设：棋盘上没有会出手的")
-	t.eq(setup._status.text, hint, "「出发」上面一句提示")
+	t.eq(setup.status_text(), hint, "「出发」上面一句提示")
 	var armed := -1
 	for i in flow.presets().size():
 		setup.choose_preset(i)
@@ -24,11 +24,11 @@ static func frame_unarmed(t: TestCase, root: Window) -> void:
 			armed = i
 			break
 	t.check(armed >= 0, "有一套预设带着武器")
-	t.eq(setup._status.text, "", "放上武器：提示没了")
+	t.eq(setup.status_text(), "", "放上武器：提示没了")
 	setup.choose_preset(-1)
 	setup.show_page(2)
 	setup.set_run_seed(7)     # 固定一张图，测试不随种子变
-	t.eq(setup._status.text, hint, "第三页也常显")
+	t.eq(setup.status_text(), hint, "第三页也常显")
 	var pv: MapPreview = setup.preview()
 	pv.size = Vector2(640, 600)
 	pv.finish()

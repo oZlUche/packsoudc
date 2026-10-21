@@ -49,7 +49,6 @@ static func default_for(p_screen: String) -> HudLayout:
 		for id in [&"encumbrance", &"buffs", &"erosion", &"distances"]:
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small", not hidden_by_default(id)))
 		l.entries.append(entry(&"countdown", "bar_center", Vector2.ZERO, 0, "large"))
-		l.entries.append(entry(&"notice", "top", NOTICE_OFFSET))     # 186：栏下面居中，一会儿出一会儿没
 		for id in BAR_RIGHT:
 			l.entries.append(entry(id, "bar_right", Vector2.ZERO, 0, "small", not hidden_by_default(id)))
 		l.entries.append(entry(&"routes", "bottom_left", CORNER_OFFSET, 0))
@@ -68,8 +67,6 @@ const HIDDEN_BY_DEFAULT: Array[StringName] = [&"distances", &"encumbrance"]
 ## 默认藏不藏：上面那几件，加上主动技能藏着（166 补充一，[constant RunSkills.ACTIVE_HIDDEN]）时的技能按钮
 static func hidden_by_default(id: StringName) -> bool:
 	return id in HIDDEN_BY_DEFAULT or (id == &"skills" and RunSkills.ACTIVE_HIDDEN)
-## 186：提示行离顶端栏多远
-const NOTICE_OFFSET := Vector2(0, 8)
 ## 160：腰带在右下角；166：路线与图例在左下角
 const BELT_OFFSET := Vector2(-8, -8)
 const CORNER_OFFSET := Vector2(16, -16)     # 作者 2026-10-13：图例往右上挪一点，说明文字不贴边框

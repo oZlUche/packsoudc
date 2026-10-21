@@ -177,7 +177,7 @@ static func frame_setup_rack(t: TestCase, root: Window) -> void:
 	t.check(setup.ensure_bag(), "发了一只")
 	var sack: ItemInstance = setup.board.bags()[0]
 	t.eq(sack.def.id, &"sack", "粗麻袋")
-	t.check(setup._status.text.contains(Names.of(sack.def)), "状态行说军需官发的")
+	t.check(setup.status_text().contains(Names.of(sack.def)), "状态那句说军需官发的")
 	t.check(not setup._allow_drop(sack, flow.meta.rack) and not setup.rack_bag(sack.uid), "发的袋子进不了包架")
 	setup._return_bags()
 	t.eq(flow.meta.rack.item_count(), 0, "回主菜单也不进包架（免得白拿去卖）")
@@ -250,6 +250,6 @@ static func frame_sell_bag(t: TestCase, root: Window) -> void:
 	view.item_double_clicked.emit(view, uid)
 	t.check(f.meta.funds > funds, "卖了进钱（%d → %d）" % [funds, f.meta.funds])
 	t.eq(f.meta.rack.count_of(&"sack"), 1, "粗麻袋剩一只")
-	t.check(screen._sell_line.text != "", "出售行说了一句")
+	t.check(screen.notice_layer().current_text() != "", "出售行说了一句")
 	screen.queue_free()
 	_cleanup()
