@@ -38,7 +38,21 @@ func text_of() -> String:
 	var def := run.active_faith()
 	if def == null or run.faith_power == null:
 		return ""
-	var p := run.faith_power.points_of(id)
+	return text_at(run.faith_power.points_of(id))
+
+
+## 231 补充二：信力滚数（有徽记那种写法才滚）
+func roll_value() -> int:
+	var id := run.active_faith_id()
+	if id == &"" or art_of(id) == null or run.active_faith() == null or run.faith_power == null:
+		return -1
+	return run.faith_power.points_of(id)
+
+
+func text_at(p: int) -> String:
+	var def := run.active_faith()
+	if def == null:
+		return text_of()
 	var next := def.next_threshold(p)
 	return UiText.t("hud.faith_level") % [def.tier_of(p), p, (" / %d" % next) if next >= 0 else ""]
 

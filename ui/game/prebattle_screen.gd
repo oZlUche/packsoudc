@@ -111,7 +111,7 @@ func open(payload: Dictionary) -> void:
 		var perk := p as FaithPerk
 		for a in perk.prebattle_actions(flow.run, _type):
 			var option: StringName = a["option"]
-			var pb := _button(String(a["label"]), func(): flow.smite(option), 14)
+			var pb := _button(String(a["label"]), func(): smite(option), 14)
 			pb.disabled = String(a["why"]) != ""
 			pb.tooltip_text = String(a["why"]) if pb.disabled else perk.describe()
 			pb.set_meta("perk_option", option)
@@ -160,7 +160,17 @@ func outro(on: bool, sec: float = 0.2) -> Rect2:
 func start_battle() -> bool:
 	if can_start() != "":
 		return false
+	HudHost.hold_in(get_tree())     # 231 补充二：结算是同步算完的，顶栏等回放看完再变
 	return flow.start_battle()
+
+
+## 093：蛮神秒杀（按钮）。顶栏同样按住到回放看完（231 补充二）
+func smite(option: StringName) -> bool:
+	HudHost.hold_in(get_tree())
+	var ok := flow.smite(option)
+	if not ok:
+		HudHost.release_in(get_tree(), false)
+	return ok
 
 
 ## 现在能不能开战：空串 = 能，否则是原因

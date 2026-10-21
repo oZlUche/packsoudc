@@ -32,9 +32,12 @@ func _idle_mouse_filter() -> Control.MouseFilter:
 	return Control.MOUSE_FILTER_STOP     # 停上去看提示
 
 
-## 这一刻画几颗、几颗是红的
+## 这一刻画几颗、几颗是红的（上次刷时记下的 —— 231 补充二：顶栏按住时不跟着变）
 func hearts() -> Vector2i:
-	return Vector2i(run.vitality.maximum, run.vitality.current) if run != null else Vector2i.ZERO
+	return _hearts
+
+
+var _hearts := Vector2i.ZERO
 
 
 func heart_size() -> float:
@@ -53,6 +56,7 @@ func grid() -> Vector2i:
 
 
 func _paint() -> void:
+	_hearts = Vector2i(run.vitality.maximum, run.vitality.current) if run != null else Vector2i.ZERO
 	tooltip_text = _text.text
 	var g := grid()
 	var s := heart_size()
