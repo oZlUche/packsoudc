@@ -29,13 +29,18 @@ static func of(def: ItemDef, rot: int) -> Dictionary:
 	rot = posmod(rot, 4)
 	if def == null or def.shape == null:
 		return _empty()
-	var img := _art_image(def) if ItemPainter.art_available() else null
-	if img != null:
+	# 237：有图就按图的键查表，**命中就不碰贴图** —— `get_image()` 是把贴图从显卡读回来（整条渲染管线同步一次），
+	# 地上层每个鼠标事件、每帧重绘都走到这里，以前每次都读一回
+	var tex := ItemPainter.art_of(def) if ItemPainter.art_available() else null
+	if tex != null:
 		var akey := "art|%s|%d" % [def.id, rot]
 		if not _cache.has(akey):
-			var span := def.shape.size_rotated(0) * int(InventoryView.CELL)
-			_cache[akey] = from_image(img, rot, span)
-		return _cache[akey]
+			var img := tex.get_image()
+			if img != null:
+				var span := def.shape.size_rotated(0) * int(InventoryView.CELL)
+				_cache[akey] = from_image(img, rot, span)
+		if _cache.has(akey):
+			return _cache[akey]
 	var key := "cells|%s|%d" % [def.shape.to_bits(rot), rot]
 	if not _cache.has(key):
 		_cache[key] = from_cells(def.shape.cells_rotated(rot))

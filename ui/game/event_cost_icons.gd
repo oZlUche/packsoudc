@@ -66,6 +66,19 @@ static func describe(kinds: Array[String]) -> String:
 static func strip(kinds: Array[String]) -> Texture2D:
 	if kinds.is_empty():
 		return null
+	# 237：同一组代价拼过就复用 —— 拼图要把每张小图从显卡读回来（`get_image()`，一次整条管线同步），以前每个选项按钮、每次开事件屏都拼
+	var key := UiTheme.asset_root + "|" + ",".join(kinds)
+	if _strips.has(key):
+		return _strips[key]
+	var out := _build_strip(kinds)
+	_strips[key] = out
+	return out
+
+
+static var _strips: Dictionary = {}
+
+
+static func _build_strip(kinds: Array[String]) -> Texture2D:
 	var img := Image.create_empty(kinds.size() * (SIZE + GAP) - GAP, SIZE, false, Image.FORMAT_RGBA8)
 	for i in kinds.size():
 		var tex := UiTheme.art("cost_" + kinds[i])
@@ -88,7 +101,7 @@ static func strip(kinds: Array[String]) -> Texture2D:
 static func glyph_slots(kinds: Array[String]) -> Array[int]:
 	var out: Array[int] = []
 	for i in kinds.size():
-		if UiTheme.art("cost_" + kinds[i]) == null:
+		if not UiTheme.has_art("cost_" + kinds[i]):
 			out.append(i)
 	return out
 
