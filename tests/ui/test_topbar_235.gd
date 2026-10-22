@@ -36,7 +36,7 @@ static func _host(root: Window, screen: Control) -> Array:
 
 
 static func frame_skin(t: TestCase, root: Window) -> void:
-	t.begin("235 · 丙款栏皮：栏高 86；组左右各让 100（石块外沿 + 12）、在石块上下沿 8～78 之间居中；栏里的件带自己的凹槽；两头 104 宽贴屏边、热区是凸起的石块")
+	t.begin("235 · 丙款栏皮：栏高 100（作者 10-22 13:31 下缘扩出回纹带）；组左右各让 100（石块外沿 + 12）、在石块上下沿 8～78 之间居中；栏里的件带自己的凹槽；两头 104 宽贴屏边、热区是凸起的石块")
 	t.check(HudBarScript.has_skin(), "丙款皮的图在")
 	var screen := FakeScreen.new()
 	screen.size = HOST_SIZE
@@ -48,7 +48,7 @@ static func frame_skin(t: TestCase, root: Window) -> void:
 		return
 	var host: HudHost = got[0]
 	var bar := host.widget(&"hud_bar")
-	t.eq(host.bar_height(), 86.0, "栏高 = 石面 86（投影与日晷下凸不占布局）")
+	t.eq(host.bar_height(), 100.0, "栏高 = 石面 100（投影与日晷下凸不占布局）")
 	t.eq(host.bar_side(), 100.0, "左右各让 100")
 	t.eq(bar.get_theme_stylebox("panel").get_class(), "StyleBoxEmpty", "栏的底空着（皮由栏自己画）")
 	var vit := host.widget(&"vitality")
