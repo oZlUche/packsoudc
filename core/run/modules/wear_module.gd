@@ -12,7 +12,6 @@ const ID := &"wear"
 ## 这一场用掉了几件的耐久：{uid: 剩几次}
 signal worn(left: Dictionary)
 
-var _run: RunState = null
 
 
 static func of(run: RunState) -> WearModule:

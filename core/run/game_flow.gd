@@ -250,6 +250,7 @@ func show_slots() -> void:
 
 ## 当前的这一局丢掉（回主菜单、换存档位、删当前位）：局、结算、排着没看的屏都清掉
 func _reset_run() -> void:
+	_drop_run(null)
 	run = null
 	result = null
 	_queue.clear()
@@ -1297,6 +1298,14 @@ func _forget_seen(uids: Array[int]) -> void:
 
 
 #region 接线
+## 236：换掉的那一局下一帧放掉（[method RunState.dispose] 解环）—— 换屏的这一帧结算屏、`result`、`last_battle` 还可能在读它。
+## lambda 抓着旧局，等到下一帧它还在
+func _drop_run(next: RunState) -> void:
+	var old := run
+	if old != null and old != next:
+		(func() -> void: old.dispose()).call_deferred()
+
+
 ## 117：按设置给这一局开 / 关战斗的内部日志与回放存档（设置屏切换时也调，当场生效）
 func apply_battle_trace() -> void:
 	if run == null or run.events == null:
@@ -1307,6 +1316,7 @@ func apply_battle_trace() -> void:
 
 
 func _adopt(state: RunState) -> void:
+	_drop_run(state)
 	run = state
 	result = null
 	_settled = false

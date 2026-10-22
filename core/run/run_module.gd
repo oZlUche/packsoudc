@@ -18,6 +18,9 @@
 class_name RunModule
 extends Resource
 
+## 装进的那一局（[method install] 里记下；236：[method dispose] 时放掉，不然模块与局互相抓着、一局放不掉）
+var _run: RunState = null
+
 ## 存档里的键、`mechanic_tags` 的键、`run.module(id)` 的 id。返回空 = 不进 `modules` 存档（难度机制那种自己另有存档键的）
 @abstract func id() -> StringName
 
@@ -41,3 +44,9 @@ func restore(_d: Dictionary) -> void:
 ## 给开局屏的规则卡、编辑器看的一句话
 func describe() -> String:
 	return ""
+
+
+## 236：这一局不要了（开了新局 / 读档盖掉，[method RunState.dispose]）—— 放掉对局的引用、断开自己接在局外的东西。
+## 只解环，不存档、不发信号。覆盖时记得 `super()`
+func dispose() -> void:
+	_run = null

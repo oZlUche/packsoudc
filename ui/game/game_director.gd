@@ -143,6 +143,12 @@ func _ready() -> void:
 	flow.to_main_menu()
 
 
+## 236 ②：关窗前等战斗日志写完（写盘在工作线程上，最后一场别只写一半）
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		BattleTraceWriter.flush()
+
+
 ## 现在显示的底屏 / 叠层（测试看）
 func base() -> GameScreen:
 	return _base

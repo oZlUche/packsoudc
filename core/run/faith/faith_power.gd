@@ -22,6 +22,11 @@ func setup(p_run: RunState) -> void:
 	run = p_run
 
 
+## 236：这一局不要了（[method RunState.dispose]）—— 放掉对局的引用（局 ↔ 系统互相抓着，一局放不掉）
+func dispose() -> void:
+	run = null
+
+
 func points_of(id: StringName) -> int:
 	return int(points.get(String(id), 0))
 

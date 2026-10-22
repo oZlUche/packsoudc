@@ -19,7 +19,6 @@ var nodes: Dictionary = {}
 var spots: Dictionary = {}
 ## 198 补充一：`node_id → {uid: 斜度（弧度）}` —— 斜着躺的回来还斜着（没斜的不记）
 var tilts: Dictionary = {}
-var _run: RunState = null
 ## 读档拿到的那份，等 install 里有道具库了再装回来
 var _saved: Dictionary = {}
 

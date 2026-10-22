@@ -15,7 +15,6 @@ const ID := &"growth"
 ## 某件升了阶（以后的动画、音效挂这里）
 signal grown(uid: int, stage: int)
 
-var _run: RunState = null
 ## uid -> 在棋盘上时的置入序号（进存档：读档回来不把还在棋盘上的当成「刚放上来」）
 var _seen: Dictionary = {}
 ## uid -> 实例（不进存档）：离开棋盘之后还找得到它、给它清零

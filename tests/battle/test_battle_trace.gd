@@ -135,6 +135,9 @@ static func run_writer_and_prune(t: TestCase) -> void:
 		var r := BattleSim.run(pair[0], pair[1], _rng(), 60.0, null, trace)
 		info["node"] = i
 		bases.append(BattleTraceWriter.write(trace, r, info, DIR, 2))
+	t.check(BattleTraceWriter._task >= 0, "236：最后一场的拼文本与写盘交给了工作线程")
+	BattleTraceWriter.flush()     # 236：写盘在工作线程上，查文件前先等完
+	t.eq(BattleTraceWriter._task, -1, "236：flush 之后手上没有在写的")
 	for ext in [BattleArchive.TRACE_EXT, BattleArchive.TEXT_EXT, BattleArchive.REPLAY_EXT]:
 		t.check(FileAccess.file_exists(bases[2] + String(ext)), "最新一场有 %s" % ext)
 		t.check(not FileAccess.file_exists(bases[0] + String(ext)), "最旧一场的 %s 删了" % ext)
@@ -221,6 +224,7 @@ static func run_replay_log_tool(t: TestCase) -> void:
 	var trace := BattleTrace.new()
 	var r := BattleSim.run(pair[0], pair[1], _rng(), 60.0, null, trace)
 	var base := BattleTraceWriter.write(trace, r, {"run_seed": 1, "chapter": "t", "node": 1, "enemy": "e", "names": [{}, {}], "boards": [{}, {}]}, DIR)
+	BattleTraceWriter.flush()
 	var exe := OS.get_executable_path()
 	var root := ProjectSettings.globalize_path("res://")
 	var out: Array = []

@@ -19,7 +19,6 @@ signal closed(count: int)
 
 var inventory: GridInventory = null
 var locked: bool = false
-var _run: RunState = null
 ## 读档拿到的那份，等 install 里有内容库了再还原
 var _saved: Dictionary = {}
 

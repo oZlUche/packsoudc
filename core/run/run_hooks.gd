@@ -50,6 +50,11 @@ func register(name: StringName, fn: Callable) -> void:
 	_fns[name] = fn
 
 
+## 236：全撤掉（[method RunState.dispose]：骨架接的那几条是抓着这一局的 lambda，不撤就和局成环）
+func clear() -> void:
+	_fns.clear()
+
+
 ## 这一条有人接吗（用来决定走默认那条路，比如没人接 `relocate` 就直接交给旅程）
 func has(name: StringName) -> bool:
 	return _fns.has(name) and (_fns[name] as Callable).is_valid()

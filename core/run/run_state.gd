@@ -1357,3 +1357,30 @@ func _tally_search(n: MapNode) -> void:
 	if n != null and not searched_nodes.has(n.id):
 		searched_nodes[n.id] = true
 		tally["searches"] = int(tally.get("searches", 0)) + 1
+
+
+#region 放掉（236）
+## 这一局不要了（[GameFlow] 开新局 / 读档盖掉之后的下一帧调）：只解环，不存档、不发信号。
+## 局与模块、系统、hook 表互相抓着，[method _wire_events] 接在旅程 / 节点事件 / 棋盘 / 钱 / 体力上的 lambda 也抓着局 ——
+## 引用计数放不掉成环的东西，不解开就每开一局泄一整份（模块、地图、道具实例）。
+## 解完之后 `modules` 是空的、hook 全是默认值，这一局不能再玩、也不该再存
+func dispose() -> void:
+	hooks.clear()
+	for m in modules.values():
+		(m as RunModule).dispose()
+	modules.clear()
+	for sys in [faith_power, skills, hunters, travel.erosion if travel != null else null]:
+		if sys != null:
+			sys.dispose()
+	for o in [self, events, travel, travel.clock if travel != null else null, board, storage, wallet, vitality, pending_loot]:
+		if o != null:
+			_cut_signals(o)
+	loot_seen = Callable()
+
+
+## 把 [param o] 身上所有信号的所有连接断掉
+static func _cut_signals(o: Object) -> void:
+	for sig in o.get_signal_list():
+		for c in o.get_signal_connection_list(sig["name"]):
+			o.disconnect(sig["name"], c["callable"])
+#endregion
