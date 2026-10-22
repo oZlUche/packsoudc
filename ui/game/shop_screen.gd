@@ -56,12 +56,12 @@ func open(payload: Dictionary) -> void:
 	_belt_row = _vbox(8)
 	side.add_child(_belt_row)
 	var buttons := _hbox(8)
-	_refresh_btn = _button("", refresh_stock, 13)
+	_refresh_btn = ScrollKey.make(UiText.t("shop.refresh"), refresh_stock, true)     # 纸卷键：刷新带币座，价钱写在金币右边
 	buttons.add_child(_refresh_btn)
-	var back := _button(UiText.t("camp.fold"), to_map, 13)
+	var back := ScrollKey.make(UiText.t("camp.fold"), to_map)
 	back.tooltip_text = UiText.t("shop.fold_tip")
 	buttons.add_child(back)
-	buttons.add_child(_button(UiText.t("shop.leave"), leave, 13))
+	buttons.add_child(ScrollKey.make(UiText.t("shop.leave"), leave))
 	side.add_child(buttons)
 
 	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
@@ -295,7 +295,7 @@ func _rebuild_belt() -> void:
 	for i in _session.belt_offers.size():
 		var idx := i
 		var def := BeltSkillDef.find(StringName(String(_session.belt_offers[i]["id"])))
-		var b := _button("", func(): buy_belt(idx), 13)
+		var b := ScrollKey.make("", func(): buy_belt(idx), true)
 		b.tooltip_text = UiText.t("shop.belt_tip") % [Names.description_of(def), def.describe()] if def != null else ""
 		_belt_row.add_child(b)
 		_belt_btns.append(b)
@@ -315,7 +315,7 @@ func _refresh() -> void:
 	if _session == null:
 		return
 	_wallet_line.text = UiText.t("shop.wallet") % flow.run.wallet.balance
-	_refresh_btn.text = UiText.t("shop.refresh") % _session.refresh_cost()
+	ScrollKey.show_price(_refresh_btn, UiText.t("shop.refresh"), _session.refresh_cost())
 	_refresh_btn.disabled = not _session.can_refresh()
 	for i in _shelf_views.size():
 		var price := _shelf_row.get_child(i).get_node_or_null("Price%d" % i) as Label
@@ -326,5 +326,5 @@ func _refresh() -> void:
 		var offer: Dictionary = _session.belt_offers[i]
 		var def := BeltSkillDef.find(StringName(String(offer["id"])))
 		var sold := _session.belt_sold.has(i)
-		_belt_btns[i].text = UiText.t("shop.belt_sold") % Names.of(def) if sold else UiText.t("shop.belt_price") % [Names.of(def) if def != null else String(offer["id"]), int(offer["price"])]
+		ScrollKey.show_price(_belt_btns[i], Names.of(def) if def != null else String(offer["id"]), int(offer["price"]), sold)     # 卖掉了压已售戳
 		_belt_btns[i].disabled = sold

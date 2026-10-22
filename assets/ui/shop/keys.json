@@ -1,0 +1,65 @@
+{
+ "style": "丙 纸卷（同战斗屏继续纸卷）",
+ "design": [
+  1600,
+  1000
+ ],
+ "tone": "light",
+ "pad": 6,
+ "image_origin": [
+  -6,
+  -6
+ ],
+ "height": 56,
+ "key": {
+  "files": "key_<normal|hover|pressed|disabled>.png",
+  "image": [
+   132,
+   68
+  ],
+  "nine_slice_margin": [
+   20,
+   20,
+   20,
+   20
+  ],
+  "use": "收起、离开；宽 = 字宽 + 52（最窄 116）"
+ },
+ "key_coin": {
+  "files": "key_coin_<态>.png",
+  "image": [
+   212,
+   68
+  ],
+  "nine_slice_margin": [
+   20,
+   20,
+   96,
+   20
+  ],
+  "coin_cap": 90,
+  "use": "刷新、「随身」买钮；宽 = 字宽 + 52 + coin_cap。右端 coin_cap 宽的币座固定不拉，金币画在图里"
+ },
+ "label": {
+  "font": "serif_bold",
+  "size": 22,
+  "colors": {
+   "normal": "#2e2219",
+   "hover": "#16110d",
+   "pressed": "#2e2219",
+   "disabled": "#9a8f7c"
+  },
+  "pressed_offset_y": 1,
+  "center": "普通键在整颗键里居中；币座键在左边 [0, 宽 − coin_cap] 里居中再右挪 2"
+ },
+ "price": {
+  "font": "serif_bold",
+  "size": 20,
+  "colors": "同 label",
+  "x": "按钮左 + 宽 − coin_cap + 37（左对齐）",
+  "center_y": 28,
+  "note": "只写数字（10、30），「币」字不写，金币就是单位"
+ },
+ "sold": "「随身」买钮卖掉了：disabled 态 + 226 的已售戳（art/ui/notice/out/stamp_sold.png，英文 stamp_sold_en）52×52，中心对准币座中心 (宽 − coin_cap/2, 28)",
+ "text_keys": "刷新钮的字拆成「刷新 / Restock」+ 价钱数字；随身钮拆成名字 + 价钱数字（现在的 shop.refresh「刷新（%d 币）」、shop.belt_price「%s　%d 币」不再整句写）"
+}

@@ -795,9 +795,7 @@ const TEXT := {
 	"shop.belt_bought": {"zh": "买下了「%s」，放进了腰带", "en": "Bought \"%s\"; it's in your Belt"},
 	"shop.cant_buy": {"zh": "「%s」买不了：%s", "en": "Can't buy \"%s\": %s"},
 	"shop.wallet": {"zh": "货币 %d　商品按真实尺寸摆着；拖进棋盘或地上就买下", "en": "Coins %d · goods are shown at their real size; drag one onto the Board or the Ground to buy it"},
-	"shop.refresh": {"zh": "刷新（%d 币）", "en": "Restock (%d coins)"},
-	"shop.belt_sold": {"zh": "%s　已售", "en": "%s · Sold"},
-	"shop.belt_price": {"zh": "%s　%d 币", "en": "%s · %d coins"},
+	"shop.refresh": {"zh": "刷新", "en": "Restock"},
 	# —— 221 F5a：forge ——
 	"forge.description": {"zh": "把三件道具分别放进【时机】【效果】【数值】三个槽：时机槽定什么时候、效果槽定做什么、数值槽定多大，各按道具的材质、用途、稀有度查表。三槽都放了才能铸；铸成一枚铸牌，拖到武器上就是附魔（永久，后来者覆盖前者）。铸炉用一次就熄。", "en": "Put one item in each of the Timing, Effect and Value slots: Timing decides when, Effect decides what, Value decides how much, each looked up by the item's material, use and rarity. Fill all three to forge a Forge Token; drag it onto a weapon to enchant it (permanent; a newer enchantment replaces the old one). The Forge goes out after one use."},
 	"forge.forge_btn": {"zh": "铸", "en": "Forge"},

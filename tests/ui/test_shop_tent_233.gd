@@ -38,9 +38,9 @@ static func frame_tent(t: TestCase, root: Window) -> void:
 	t.eq(frame.title_label.theme_type_variation, UiTheme.LABEL_TENT_SIGN, "标题用布招牌的变体")
 	t.eq(frame.title_label.horizontal_alignment, HORIZONTAL_ALIGNMENT_CENTER, "字居中")
 	t.eq(frame.title_label.get_theme_color("font_color"), UiTheme.TENT_SIGN_INK, "浅色字（红布上），不被浅底的墨字主题盖掉")
-	frame.size = Vector2(1200, 700)
-	t.eq(frame.tent_peak_at(), Vector2(600 - 210, -56), "尖顶左上 = (W/2 − 210, −56)")
-	t.eq(frame.tent_sign_at(), Vector2(600 - 138, -4), "布牌左上 = (W/2 − 138, −4)")
+	frame.size = Vector2(1400, 800)     # 纸卷键比平板按钮宽，整扇最窄 1286
+	t.eq(frame.tent_peak_at(), Vector2(700 - 210, -56), "尖顶左上 = (W/2 − 210, −56)")
+	t.eq(frame.tent_sign_at(), Vector2(700 - 138, -4), "布牌左上 = (W/2 − 138, −4)")
 	t.eq(frame.outset_top(), 56.0, "窗顶上要让出 56")
 	var body_top: float = box.content_margin_top + frame.title_bar.get_combined_minimum_size().y + OverlayFrame.GAP
 	t.check(body_top >= 70.0 + OverlayFrame.TENT_SIGN_CLEAR - 0.01, "内容从布牌流苏下面开始（%.0f ≥ 76），第一行字不被流苏挡" % body_top)
