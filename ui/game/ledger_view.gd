@@ -73,11 +73,11 @@ static func rows_for(r: RunResult, lit: int) -> Array[Dictionary]:
 	var carried := r.carried.size() if extracted else 0
 	var safe := r.safe_items.size()
 	if extracted and safe > 0:
-		out.append(_num_row("carried", [carried, safe], "ledger.items_safe"))
+		out.append(_num_row("carried", [carried, safe], UiText.key_for("ledger.items_safe", carried)))
 	elif not extracted and safe > 0:
 		out.append(_num_row("carried", [safe], "ledger.safe_only"))
 	else:
-		out.append(_num_row("carried", [carried], "ledger.items"))
+		out.append(_num_row("carried", [carried], UiText.key_for("ledger.items", carried)))
 	var best := -1
 	var brought: Array = r.safe_items.duplicate()
 	if extracted:

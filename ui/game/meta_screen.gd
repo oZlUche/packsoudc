@@ -157,7 +157,7 @@ func open(payload: Dictionary) -> void:
 	var just: RunResult = payload.get("result", null)
 	if just != null:
 		var c := UiPalette.HEAL if just.is_extracted() else UiPalette.HP
-		info.add_child(_wrapped(UiText.t("meta.just_run") % (UiText.t("meta.just_extracted") % [just.carried.size(), just.value, just.balance]
+		info.add_child(_wrapped(UiText.t("meta.just_run") % (UiText.tn("meta.just_extracted", just.carried.size()) % [just.carried.size(), just.value, just.balance]
 			if just.is_extracted() else (UiText.t("meta.just_died_safe") % just.safe_items.size() if not just.safe_items.is_empty() else UiText.t("meta.just_died"))), 15,
 			UiPalette.for_tone(c, tone), 460))
 	info.add_child(_wrapped(UiText.t("meta.stats") % [

@@ -409,7 +409,7 @@ static func _enemy_into(ctx: Dictionary, content: Dictionary, run: RunState) -> 
 	if spec != null:
 		ctx["enemy_hp"] = spec.max_hp_int()
 		ctx["enemy_dps"] = "%.1f" % spec.rough_dps()
-		ctx["battle_data"] = UiText.t("tip.battle_data") % [Names.of(def), spec.max_hp_int(), names.size(), UiText.t("tip.list_sep").join(names)]
+		ctx["battle_data"] = UiText.tn("tip.battle_data", names.size()) % [Names.of(def), spec.max_hp_int(), names.size(), UiText.t("tip.list_sep").join(names)]
 	else:
 		ctx["battle_data"] = Names.of(def)
 

@@ -46,7 +46,10 @@ static func run_english_counts(t: TestCase) -> void:
 	t.eq(UiText.count(2, "unit.page"), "2 pages", "两页复数")
 	t.eq(UiText.t("meta.shelf_title") % [UiText.count(0, "unit.item"), UiText.count(1, "unit.page")], "Warehouse · 0 items · 1 page", "仓库标题")
 	t.eq(UiText.t("notice.safe_closed") % UiText.count(1, "unit.item"), "The safe has closed: 1 item sent home", "保险箱告示一件单数")
+	t.eq(UiText.tn("safe.title_count", 1) % [3, 3, 1], "Safe · 3 × 3 cells · 1 item", "保险箱标题一件单数")
+	t.eq(UiText.tn("safe.title_count", 2) % [3, 3, 2], "Safe · 3 × 3 cells · 2 items", "保险箱标题两件复数")
 	UiText.lang = "zh"
+	t.eq(UiText.tn("safe.title_count", 1) % [3, 3, 1], "保险箱　3 × 3 格　1 件", "保险箱标题中文不变")
 	t.eq(UiText.t("notice.safe_closed") % UiText.count(1, "unit.item"), "保险箱关上了：1 件送回基地", "保险箱告示中文不变")
 	t.eq(UiText.t("meta.shelf_title") % [UiText.count(3, "unit.item"), UiText.count(1, "unit.page")], "仓库　3 件　1 页", "中文不变")
 	UiText.lang = lang0
