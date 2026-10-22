@@ -94,7 +94,8 @@ static func frame_result_v2(t: TestCase, root: Window) -> void:
 	t.check(wh.get_parent().get_child(0) == wh, "仓库面板在最上面（保险箱与分隔线都没了）")
 	var shelf: WarehousePages = wh.shelf()
 	var row: Node = shelf.get_parent().get_parent()
-	t.check(row.get_child(row.get_child_count() - 1) == shelf.get_parent() and row.get_child(row.get_child_count() - 2).size_flags_horizontal == Control.SIZE_EXPAND_FILL, "仓库在那一行最右（前面一块撑开的空）")
+	var last := row.get_child_count() - 2     # 228 补一：最后一件是离右沿 24 的空位
+	t.check(row.get_child(last) == shelf.get_parent() and row.get_child(last - 1).size_flags_horizontal == Control.SIZE_EXPAND_FILL and (row.get_child(last + 1) as Control).custom_minimum_size.x == preload("res://ui/game/warehouse_panel.gd").RESULT_SHELF_RIGHT, "仓库在那一行最右（前面一块撑开的空，后面空 24）")
 	var wide := Control.new()
 	wide.size = Vector2(1332, 700)
 	screen._fit_shelf(wide)

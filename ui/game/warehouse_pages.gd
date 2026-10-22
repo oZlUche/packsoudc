@@ -27,6 +27,10 @@ var tab_box: VBoxContainer = null
 var tab_variation: StringName = &""
 ## 页签多高（挂牌 60，绳子在上面）
 var tab_height := TAB_H
+## 格子外面套的框（[method setup] 之前给；空 = 不套，只有格子自己那圈深边）。228 结算第二页套基地那副木架 PANEL_SHELF，页签在框外左边
+var frame_variation: StringName = &""
+## 套上的框（没套是 null）
+var frame: PanelContainer = null
 
 var _tabs: Array[Button] = []
 var _current := 0
@@ -53,12 +57,34 @@ func setup(p_warehouse: Warehouse, font: Font, p_drag: DragLayer = null, plan: D
 	view.ground = InventoryView.GROUND_WAREHOUSE     # 224：棕底、浅格线在道具下面、外圈深色细边（三处一样）
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	if frame_variation != &"":
+		frame = UiTheme.panel(PanelContainer.new(), -1, frame_variation)
+		frame.name = "ShelfFrame"
+		frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(frame)
+		frame.add_child(view)
+		_finish_setup()
+		return
 	add_child(view)
 	var edge_room := Control.new()     # 外圈深边（4 px）画在格子外面：右边垫一个空件，默认间距 4 正好让出它，别被滚动区裁掉（结算屏仓库右对齐时）
 	edge_room.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(edge_room)
+	_finish_setup()
+
+
+func _finish_setup() -> void:
 	warehouse.changed.connect(_refresh)
 	_refresh()
+
+
+## 框占掉的宽、高（两边合计；没套框是 0）
+func frame_pad() -> Vector2:
+	if frame == null:
+		return Vector2.ZERO
+	var box := frame.get_theme_stylebox("panel")
+	return Vector2(box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT), box.get_margin(SIDE_TOP) + box.get_margin(SIDE_BOTTOM))
 
 
 func current() -> int:
@@ -92,7 +118,8 @@ static func cell_for(width: float, height: float, page: Vector2i) -> float:
 func fit(width: float, height: float) -> float:
 	if view == null or warehouse == null:
 		return InventoryView.CELL
-	view.cell_px = cell_for(width, height, warehouse.size)
+	var pad := frame_pad()
+	view.cell_px = cell_for(width - pad.x, height - pad.y, warehouse.size)
 	return view.cell_px
 
 

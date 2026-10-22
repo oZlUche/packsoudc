@@ -277,9 +277,10 @@ func _fit_shelf(area: Control) -> void:
 	if flow.meta.board != null:
 		used += BOARD_CELL * flow.meta.board.size.x + 2.0 * WarehousePanelScript.BOARD_FRAME_PAD + WarehousePanelScript.ROW_GAP
 	used += WarehousePanelScript.ROW_GAP + 4.0     # 228：仓库右对齐那块空位两边各一道行距（原来少算一道，第二页铺满整屏后仓库顶出右沿）
+	used += WarehousePanelScript.RESULT_SHELF_RIGHT + WarehousePanelScript.ROW_GAP     # 木架框离右沿那块空，和它前面那道行距
 	var w := area.size.x - 2.0 * PAGE_MARGIN - used
 	var top := _plank.custom_minimum_size.y + 10.0 if is_instance_valid(_plank) else 0.0     # 228：标题木牌那一行
-	var h := area.size.y - 2.0 * PAGE_MARGIN - top - CONTINUE_SIZE.y - 2.0 * CONTINUE_BLEED - 10.0 - 12.0     # 按钮行、行距、分页签顶上那点空
+	var h := area.size.y - 2.0 * PAGE_MARGIN - top - CONTINUE_SIZE.y - 2.0 * CONTINUE_BLEED - 10.0 - 12.0 - WarehousePanelScript.RESULT_SHELF_TOP     # 按钮行、行距、分页签顶上那点空、离挂钉板那点空
 	_wh.shelf().fit(w, h)
 
 
