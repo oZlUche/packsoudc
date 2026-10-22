@@ -82,7 +82,8 @@ func open(_payload: Dictionary) -> void:
 	_unlock_all_btn = _toggle(UiText.t("settings.unlock_all"), toggle_unlock_all)
 	_unlock_all_btn.tooltip_text = UiText.t("settings.unlock_all_desc")     # 226 批二：说明进开关的悬浮窗
 	col.add_child(_unlock_all_btn)
-	var export_btn := _button(UiText.t("settings.export_data"), export_balance_data, 13, UiPalette.Tier.MINOR)     # 242：平的小按钮，玩家版也有
+	var export_btn := StoneChip.make(UiText.t("settings.export_data"), func(): export_balance_data())     # 242：玩家版也有；和同页选项同一张石签（UI替换美术），只是不切换
+	export_btn.toggle_mode = false
 	export_btn.tooltip_text = UiText.t("settings.export_data_desc")
 	export_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(export_btn)
