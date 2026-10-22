@@ -1410,6 +1410,7 @@ func _rebuild_board() -> void:
 	_board_view.show_adjacency = true
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_board_view)
+	BoardFrame.wrap(_board_view)     # 227：皮带框 + 格缝（同背包窗），外面那块皮面板照旧
 	_readout = _log_box(13)
 	_readout.custom_minimum_size = Vector2(ch.board_size.x * InventoryView.CELL, 48)     # 180：只两行
 	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -1496,13 +1497,14 @@ func _rebuild_card() -> void:
 		one.add_child(text)
 	if board == null:
 		return
-	_grooves[2].custom_minimum_size.x = ch.board_size.x * InventoryView.CELL + 2 * RIGHT_PAD
 	_preview_view = InventoryView.new()
 	_preview_view.label_font = font
 	_preview_view.inventory = board
 	_preview_view.show_adjacency = false
 	_preview_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_preview_host.add_child(_preview_view)     # 179：底下不再列有哪些背包
+	var frame := BoardFrame.wrap(_preview_view)     # 227：皮带框 + 格缝
+	_grooves[2].custom_minimum_size.x = ch.board_size.x * InventoryView.CELL + 2.0 * (RIGHT_PAD + frame.inset())
 
 
 ## 179：三块图标牌 [id, 数字, 说明]：负重上限（有才有）、棋盘、开局金币（有才有）

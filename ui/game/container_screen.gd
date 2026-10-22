@@ -87,7 +87,6 @@ func open(payload: Dictionary) -> void:
 	_loot = LootView.new()
 	_loot.label_font = font
 	_loot.inventory = _container
-	_loot.seams = BoardFrame.dark_seams()
 	# 每档稀有度搜几秒是节点规则里的数（058 第 5 条）：会话有自己的规则，尸体容器用这一局的
 	var search_rules: SearchRules = _session.rules if _session != null else (flow.run.node_rules.search if flow.run != null and flow.run.node_rules != null else null)
 	if search_rules != null and not search_rules.reveal_seconds.is_empty():
@@ -110,11 +109,12 @@ func open(payload: Dictionary) -> void:
 	else:
 		_minimize_btn = _corner("btn_minimize", "－", UiText.t("camp.fold") + "\n" + (UiText.t("loot.extract_results") if _boss else UiText.t("loot.leave_rest")), to_map)
 
-	_inv = _mount_bag(_stage, _loot, Callable(), _container)     # 084：棋盘上双击 → 放回容器；回话不显示（作者 21:16 删了那一行）
+	BoardFrame.mark(_loot, _loot_frame, BoardFrame.dark_seams())     # 227：外框是上面那张铜面板深色框
+	_inv = _mount_bag(_stage, _loot, Callable(), _container, "")     # 084：棋盘上双击 → 放回容器；回话不显示（作者 21:16 删了那一行）
 	_strip = _inv.detach_strip()     # 216：数值栏摆到「全部拾取」那一行
 	_strip.use_inlay(false)     # 铜面板：152 宽嵌槽签、浅字
 	_stage.add_child(_strip)
-	_inv.board_view.seams = BoardFrame.dark_seams()
+	BoardFrame.mark(_inv.board_view, _player_frame, BoardFrame.dark_seams())
 	_stage.move_child(_inv, _player_frame.get_index() + 1)
 	# 084：容器里双击 → 试着放进背包（没空间就到地上）；没亮的不动。
 	# 玩家自己的东西放回容器不会变成「未知」：LootView 把绑定之后才出现的都当亮过

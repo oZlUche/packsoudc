@@ -8,7 +8,6 @@
 extends GameScreen
 
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
-const ContainerScreenScript := preload("res://ui/game/container_screen.gd")
 
 var _wh = null
 var _safe_view: InventoryView = null
@@ -231,10 +230,10 @@ func _add_safe(page: Control) -> void:
 	_safe_view.label_font = font
 	_safe_view.inventory = _safe_display(r)
 	_safe_view.show_adjacency = false
-	_safe_view.seams = ContainerScreenScript.board_layout().get("cell_seams", {})
 	var pad := 2.0 * WarehousePanelScript.BOARD_FRAME_PAD
 	_safe_view.cell_px = minf(SAFE_CELL, floorf((SAFE_MAX_W - pad) / float(maxi(1, r.safe_size.x))))
 	var frame := WarehousePanelScript.framed(_safe_view, "SafeFrame")
+	BoardFrame.mark(_safe_view, frame)     # 227：皮带框 + 浅色格缝
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sz := Vector2(_safe_view.cell_px * r.safe_size.x, _safe_view.cell_px * r.safe_size.y) + Vector2(pad, pad)
 	page.add_child(_place(frame, SAFE_AT, sz))

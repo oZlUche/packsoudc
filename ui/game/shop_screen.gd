@@ -11,7 +11,7 @@ var _session: ShopSession = null
 var _shelf_row: HBoxContainer
 var _shelf_views: Array[InventoryView] = []
 ## 160 补一：「随身」那一排的按钮（第 i 个 = [member ShopSession.belt_offers] 第 i 格）
-var _belt_row: HBoxContainer = null
+var _belt_row: VBoxContainer = null     # 227：随身那几颗竖着排（英文按钮长，横排会把帐篷撑出屏）
 var _belt_btns: Array[Button] = []
 var _sell_view: InventoryView
 var _refresh_btn: Button
@@ -33,17 +33,28 @@ func open(payload: Dictionary) -> void:
 	left.add_child(_wallet_line)
 	_shelf_row = _hbox(10)
 	left.add_child(_shelf_row)
-	_belt_row = _hbox(8)
-	left.add_child(_belt_row)
+	BoardFrame.wrap(_shelf_row, "plain")     # 227：整排货架一块素框（每个货位各套一块，帐篷就宽出屏了）
+	# 227：货架和出售区都加了框，竖着放不下 —— 出售区和按钮并排（出售区左、随身与按钮右）
+	var lower := _hbox(16)
+	left.add_child(lower)
 	var sell_col := _vbox(4)
-	left.add_child(sell_col)
-	sell_col.add_child(_label(UiText.t("shop.sell_area"), 13, UiPalette.DIM))
+	lower.add_child(sell_col)
+	var sell_note := _label(UiText.t("shop.sell_area"), 13, UiPalette.DIM)
+	sell_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # 227：按出售区的宽折行（英文一行会把帐篷撑出屏）
+	sell_note.custom_minimum_size.x = 1.0
+	sell_col.add_child(sell_note)
 	_sell_view = InventoryView.new()
 	_sell_view.label_font = font
 	_sell_view.show_adjacency = false
 	_sell_view.inventory = _session.sell_box if _session != null else GridInventory.new(ShopSession.SLOT_MIN, 0, false)
 	_sell_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	sell_col.add_child(_sell_view)
+	BoardFrame.wrap(_sell_view)     # 227：素框 + 格缝
+	var side := _vbox(8)
+	side.size_flags_vertical = Control.SIZE_SHRINK_END     # 按钮落在出售区底边那一行
+	lower.add_child(side)
+	_belt_row = _vbox(8)
+	side.add_child(_belt_row)
 	var buttons := _hbox(8)
 	_refresh_btn = _button("", refresh_stock, 13)
 	buttons.add_child(_refresh_btn)
@@ -51,7 +62,7 @@ func open(payload: Dictionary) -> void:
 	back.tooltip_text = UiText.t("shop.fold_tip")
 	buttons.add_child(back)
 	buttons.add_child(_button(UiText.t("shop.leave"), leave, 13))
-	left.add_child(buttons)
+	side.add_child(buttons)
 
 	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
 	_inv = _mount_bag(row, _sell_view, Callable())     # 226 批一：面板的回话走告示层
@@ -259,6 +270,7 @@ func _rebuild() -> void:
 		view.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_buy(uid))
 		view.actions_for = func(_uid: int) -> Array: return [_buy_action(idx)]     # 230
 		col.add_child(view)
+		view.seams = BoardFrame.light_seams().merged({"edge": true})     # 227：框是整排那块，每个货位自己描一圈缝
 		var inst := _session.item_at(i)     # 卖掉的格子是空的（价签只写「已售」，用不到尺寸）
 		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)

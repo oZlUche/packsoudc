@@ -160,11 +160,11 @@ func _rebuild_board_view() -> void:
 		_board_view.cell_px = board_cell
 	else:
 		_board_view.cell_px = _shelf.view.cell_px if _shelf != null and _shelf.view != null else InventoryView.CELL     # 139：和仓库一样大
-	_board_view.seams = ContainerScreenScript.board_layout().get("cell_seams", {})     # 224：格缝同战利品屏
 	_board_scroll = ScrollBox.wrap(_board_view, BOARD_MIN_ROWS)     # 带回来的棋盘也可能很高：竖向滚动
 	_board_scroll.set_meta("tight", true)
 	ScrollBox.set_rows(_board_scroll, _board_view, BOARD_MIN_ROWS)
 	var frame := framed(_board_scroll, "BoardFrame")
+	BoardFrame.mark(_board_view, frame)     # 224 / 227：皮带框 + 浅色格缝（同背包窗）
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_box.add_child(frame)
 	_drag.register_view(_board_view)
