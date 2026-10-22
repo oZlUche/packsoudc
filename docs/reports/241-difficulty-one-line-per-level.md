@@ -49,3 +49,9 @@
 ## 四、派工
 
 执行一单。小修线的决定卡若作者改选「只缩短文字」（乙），这单撤回，小修自己改一句话即可。
+
+## 五、落地（执行，2026-10-22，v4.22）
+
+按甲做，数值一个没改。`data/authoring/difficulties/`：`ascension_1` 只剩体力上限 −1（「体力上限少一点」/ "Less max Vitality"）；新 `ascension_2`（+ 侵蚀原数，「越深侵蚀越重」/ "Erosion grows deeper"）、`ascension_3`（+ 猎手 `hunter_1`、段位表 [0, 5, 10, 20]，「猎手循迹追来」/ "Hunters track you"）；`display_name` 进阶一 / 二 / 三，`description` 各写全本级所含的机制与解锁条件。`DifficultyDef.grants_unlock`（导入器按字段直接认）；`GameFlow._settle_run` 在章节解锁旁边：撤离成功且这一局的难度写了 `grants_unlock` 就发。Ⅰ 发 `ascension_2`，Ⅱ 发 `ascension_3`，Ⅲ 不发；「满载而归」照旧发 `ascension_1`。内容往返检查一致，快照不变（难度不进道具快照），字库不缺字。
+
+测试：新 `test_difficulty_ladder_241`（三级的机制组成、体力 −1、中文一行 ≤ 十字、解锁链、猎手段位表；纸卷中英三行都是一行高；在 Ⅰ / Ⅱ 撤离分别开 Ⅱ / Ⅲ）；`test_setup_180` 梯子 0–3、纸上三行各一行高；`test_difficulty` 的 `_locked` 改成优先挑带侵蚀的那一档（原先默认第一档进阶一带侵蚀）。截图：`/mnt/project-files/art/ui/difficulty241/ladder_zh.png`（开局屏第三页，难度 Ⅲ，纸上三行各一行）。

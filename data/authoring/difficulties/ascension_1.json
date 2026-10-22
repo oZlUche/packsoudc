@@ -4,50 +4,17 @@
   "display_names": {
     "en": "Ascension I"
   },
-  "description": "侵蚀开启（本体第七阶段），体力上限 {vitality_max_bonus_amount|signed}。局外解锁后可选。",
+  "description": "体力上限 {vitality_max_bonus_amount|signed}。局外解锁后可选。",
   "descriptions": {
-    "en": "Erosion is on (stage seven of the base game), max Vitality {vitality_max_bonus_amount|signed}. Selectable once unlocked outside of runs."
+    "en": "Max Vitality {vitality_max_bonus_amount|signed}. Selectable once unlocked outside of runs."
   },
-  "challenge": "体力上限少一点；越往深处走，侵蚀越重，包里的东西会受损；猎手会循着你的脚步追来。",
+  "challenge": "体力上限少一点",
   "challenges": {
-    "en": "A little less max Vitality; the deeper you go, the heavier the Erosion, and things in your pack get damaged; hunters follow your footsteps."
+    "en": "Less max Vitality"
   },
   "level": 1,
   "requires_unlock": "ascension_1",
-  "mechanics": [
-    {
-      "type": "erosion",
-      "effects": [
-        {
-          "type": "spend_vitality",
-          "per_depth": 1
-        },
-        {
-          "type": "damage_item",
-          "from_depth": 2,
-          "chance": 0.25
-        },
-        {
-          "type": "drain_money",
-          "amount": 10,
-          "enabled": false,
-          "only_total": true
-        }
-      ]
-    },
-    {
-      "type": "hunters",
-      "hunter_ids": [
-        "hunter_1"
-      ],
-      "bracket_steps": [
-        0,
-        5,
-        10,
-        20
-      ]
-    }
-  ],
+  "grants_unlock": "ascension_2",
   "effects": [
     {
       "type": "vitality_max_bonus",
