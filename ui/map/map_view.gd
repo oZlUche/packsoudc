@@ -125,6 +125,9 @@ var spawn_mask: bool = false:
 		spawn_mask = v
 		queue_redraw()
 var _pulse: float = 0.0
+## 236 ③：透出地图的叠层压着时隔帧重绘（地图屏按导演的话设）
+var throttled := false
+var _skipped := false
 ## 184（作者 2026-10-17 15:36 / 15:37）：大图上一眼看清「我在哪」「哪步能走」——
 ## 玩家是一枚立在当前节点正中的小兵棋子（屏幕定长），走一步从旧节点弧线跳过去；可走的边画成行进的粗虚线墨路、
 ## 终点套一圈定长墨环、多于一步的写「计二步」；走一步人出了屏幕中央三分之一，镜头平移把人带回中央；被拖出屏外时屏边有指向他的小棋子。
@@ -269,7 +272,9 @@ func _process(delta: float) -> void:
 		_land_t += delta
 		if _land_t >= LAND_SEC:
 			_land_t = -1.0
-	queue_redraw()
+	_skipped = throttled and not _skipped
+	if not _skipped:
+		queue_redraw()
 
 
 ## 画布多大（布局说了算）。

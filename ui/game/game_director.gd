@@ -256,16 +256,21 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 			_minimized = null
 			_overlay.visible = true
 			_overlay.process_mode = Node.PROCESS_MODE_INHERIT
+			_sync_base()
 			return
 		_drop_minimized()
 		_overlay = _make(screen, payload)
 		_overlay.z_index = OVERLAY_Z
 		add_child(_overlay)
 		_overlay.open(payload)
+		var tw: Tween = null
 		if prev != null:
 			_overlay.call("intro_from", prev)
 		else:
-			_fade_in(_overlay, OVERLAY_FADE)     # 157：撤叠层直接撤，不等
+			tw = _fade_in(_overlay, OVERLAY_FADE)     # 157：撤叠层直接撤，不等
+		if tw != null:
+			tw.finished.connect(_sync_base)     # 236 ③：淡入完了才藏底屏（淡入时还透着地图）
+		_sync_base()
 		return
 	if bool(payload.get("minimized", false)) and _overlay != null:
 		# 084：收起 = 最小化：藏起来、停掉它的计时（揭示动画不在背后偷跑），流程与会话都还在
@@ -275,6 +280,7 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 		AudioHub.play(&"ui.close")
 		_minimized.visible = false
 		_minimized.process_mode = Node.PROCESS_MODE_DISABLED
+		_sync_base()
 	else:
 		_drop_overlay()
 		_drop_minimized()     # 换了屏（走了一步、结算……）：藏着的那一屏也过期了
@@ -331,8 +337,21 @@ func _drop_overlay(silent: bool = false) -> void:
 	if _overlay != null:
 		_overlay.queue_free()
 		_overlay = null
+		_sync_base()
 		if not silent:
 			AudioHub.play(&"ui.close")
+
+
+## 236 ③：盖死底屏的叠层（[method GameScreen.covers_base]）完全显出来之后，底屏藏起来、停掉 —— 地图每帧的重绘、
+## 读数层、地上弹开解算都不跑；叠层撤掉 / 换掉 / 收起时恢复。透出底屏的叠层开着时告诉底屏一声（地图隔帧重绘）
+func _sync_base() -> void:
+	if _base == null:
+		return
+	var hide := _overlay != null and _overlay.covers_base() and _overlay.modulate.a >= 1.0
+	if _base.visible == hide:
+		_base.visible = not hide
+		_base.process_mode = Node.PROCESS_MODE_DISABLED if hide else Node.PROCESS_MODE_INHERIT
+	_base.set_overlaid(_overlay != null and not hide)
 
 
 func _drop_minimized() -> void:

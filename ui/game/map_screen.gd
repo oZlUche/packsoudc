@@ -93,6 +93,12 @@ func refresh() -> void:
 	_after_move()
 
 
+## 236 ③：透出地图的叠层压在上面时地图隔帧重绘（呼吸、虚线 60 → 30 Hz，压暗了看不出）
+func set_overlaid(on: bool) -> void:
+	if _view != null:
+		_view.throttled = on
+
+
 #region 公开动作
 ## 182：新的一局在开局第三页就挑好了出生点、直接站在上面；这条路只留给停在挑出生点阶段的旧存档（与不经开局屏的直开）一版
 func pick_spawn(id: int) -> bool:

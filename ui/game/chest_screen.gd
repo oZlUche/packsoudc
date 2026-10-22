@@ -45,6 +45,11 @@ var bg_tone: StringName = UiTheme.TONE_DARK
 var _center: CenterContainer = null
 
 
+## 236 ③：整屏底图盖死地图
+func covers_base() -> bool:
+	return true
+
+
 func open(payload: Dictionary) -> void:
 	node = payload.get("node", null)
 	if node == null and flow != null and flow.run != null:

@@ -55,6 +55,11 @@ var _slot_hosts: Array[Control] = []
 var _out_host: Control
 
 
+## 236 ③：整屏底图盖死地图
+func covers_base() -> bool:
+	return true
+
+
 func open(payload: Dictionary) -> void:
 	_node = payload.get("node", null)
 	_layout = layout()
