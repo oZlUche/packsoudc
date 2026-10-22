@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="DifficultyDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_av66y"]
+[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="2_ny6q8"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="3_5hkdk"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="4_6f6gp"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="5_0cce5"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_damage_item.gd" id="6_sfow5"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="7_ktknq"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="8_tbpkp"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="9_7jwm7"]
+
+[sub_resource type="Resource" id="Resource_5oci1"]
+script = ExtResource("2_ny6q8")
+amount = -1
+
+[sub_resource type="Resource" id="Resource_x4owo"]
+script = ExtResource("5_0cce5")
+per_depth = 1
+
+[sub_resource type="Resource" id="Resource_86x0a"]
+script = ExtResource("6_sfow5")
+from_depth = 2
+chance = 0.25
+
+[sub_resource type="Resource" id="Resource_40tp2"]
+script = ExtResource("7_ktknq")
+amount = 10
+enabled = false
+only_total = true
+
+[sub_resource type="Resource" id="Resource_8v61c"]
+script = ExtResource("8_tbpkp")
+effects = Array[ExtResource("4_6f6gp")]([SubResource("Resource_x4owo"), SubResource("Resource_86x0a"), SubResource("Resource_40tp2")])
+
+[resource]
+script = ExtResource("9_7jwm7")
+id = &"ascension_2"
+display_name = "进阶二"
+display_names = {
+"en": "Ascension II"
+}
+description = "侵蚀开启（本体第七阶段），体力上限 {vitality_max_bonus_amount|signed}。在进阶一撤离一次后解锁。"
+descriptions = {
+"en": "Erosion is on (stage seven of the base game), max Vitality {vitality_max_bonus_amount|signed}. Unlocked by extracting once on Ascension I."
+}
+challenge = "越深侵蚀越重"
+challenges = {
+"en": "Erosion grows deeper"
+}
+level = 2
+requires_unlock = &"ascension_2"
+grants_unlock = &"ascension_3"
+mechanics = Array[ExtResource("3_5hkdk")]([SubResource("Resource_8v61c")])
+effects = Array[ExtResource("1_av66y")]([SubResource("Resource_5oci1")])

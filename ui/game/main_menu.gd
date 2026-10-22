@@ -34,10 +34,6 @@ const NOTICE_SIZE := 15
 static var _shown_once := false
 
 var _continue_btn: Button = null
-## 221 G：「新的游戏」下面那行「跳过序章」—— 点一次只是武装（字换成确认句），[constant SKIP_ARM_SEC] 秒内再点才开
-var _skip_btn: Button = null
-var _skip_armed := false
-const SKIP_ARM_SEC := 4.0
 var _scenery: MenuBackdrop = null
 ## 游戏名：字标图（[TextureRect]）或文字（[Label]）
 var _title: Control = null
@@ -94,8 +90,6 @@ func open(_payload: Dictionary) -> void:
 	if flow.profile_exists():
 		_continue_btn = _line(_primary, UiText.t("menu.continue"), func(): flow.continue_game(), UiTheme.MENU_PRIMARY_SIZE)
 	_line(_primary, UiText.t("menu.new_run"), func(): flow.start_new_game(), UiTheme.MENU_PRIMARY_SIZE)
-	_skip_armed = false
-	_skip_btn = _line(_primary, UiText.t("menu.skip_prologue"), skip_prologue) if not flow.tutorial_chapters().is_empty() else null
 	_column.add_child(_spacer(PRIMARY_TO_SECONDARY))
 	_secondary = _vbox(SECONDARY_GAP)
 	_column.add_child(_secondary)
@@ -134,33 +128,6 @@ func open(_payload: Dictionary) -> void:
 	if not resized.is_connected(_layout):
 		resized.connect(_layout)
 	_layout()
-
-
-## 221 G：「跳过序章」—— 第一次点只换字等确认，再点一次才开新存档（跳过在这份存档里收不回来）。返回开没开
-func skip_prologue() -> bool:
-	if _skip_btn == null:
-		return false
-	if not _skip_armed:
-		_skip_armed = true
-		_skip_btn.text = UiText.t("menu.skip_prologue_confirm")
-		if is_inside_tree():
-			get_tree().create_timer(SKIP_ARM_SEC).timeout.connect(disarm_skip)
-		return false
-	_skip_armed = false
-	flow.start_new_game_skipping()
-	return true
-
-
-## 几秒没再点：字换回来
-func disarm_skip() -> void:
-	if not is_instance_valid(_skip_btn):
-		return
-	_skip_armed = false
-	_skip_btn.text = UiText.t("menu.skip_prologue")
-
-
-func skip_button() -> Button:
-	return _skip_btn
 
 
 ## 一行字挂进 [param box]

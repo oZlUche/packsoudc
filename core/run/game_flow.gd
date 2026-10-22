@@ -16,6 +16,8 @@ signal screen_changed(screen: int, payload: Dictionary)
 ## 101 第 5 刀：当前的这一局换了（开局 / 读档 / 回主菜单时 `null`）。UI 据此把只属于一局的东西挂上 / 摘掉
 ## （[ItemTooltip] 的信仰探针就是这么接的 —— core 不认识 ui）
 signal run_changed(state: RunState)
+## 240：新存档第一章（序章一）读完开场事件、回到地图那一刻 —— 问一句要不要教程（一份存档只问一次，见 [method accept_tutorial] / [method decline_tutorial]）
+signal tutorial_ask
 
 var items: ItemDatabase = null
 var enemies: EnemyDatabase = null
@@ -161,44 +163,33 @@ func continue_game() -> bool:
 
 ## 主菜单「新的游戏」：开一份新存档 —— 挑一个空位切过去再开局；三位都满了去读取存档屏（删一个再来）。单文件模式就是 new_run
 func start_new_game() -> bool:
-	return _start_new(false)
+	return _start_new()
 
 
-## 221 G：主菜单「跳过序章」—— 和「新的游戏」一样开一份新存档（位满了同样去存档位屏，那边开的也跳过），开第一局之前先 [method skip_prologue]
-func start_new_game_skipping() -> bool:
-	return _start_new(true)
-
-
-func _start_new(skip: bool) -> bool:
+func _start_new() -> bool:
 	if slots == null:
-		if skip:
-			skip_prologue()
 		new_run()
 		return true
 	var n := slots.first_empty()
 	if n < 0:
-		_go(Screen.SLOTS, {"full": true, "skip_prologue": skip})
+		_go(Screen.SLOTS, {"full": true})
 		return false
-	return new_game_in(n, skip)
+	return new_game_in(n)
 
 
-## 在第 n 位开新存档（那一位有东西就先删）；[param skip] = 跳过序章（221 G）
-func new_game_in(n: int, skip: bool = false) -> bool:
+## 在第 n 位开新存档（那一位有东西就先删）
+func new_game_in(n: int) -> bool:
 	if slots == null:
-		if skip:
-			skip_prologue()
 		new_run()
 		return true
 	save_meta()
 	slots.remove(n)
 	use_slot(n)
-	if skip:
-		skip_prologue()
 	new_run()
 	return true
 
 
-## 221 G：跳过序章时补的两枚信物（序章三撤离时随包回仓库的那两枚）
+## 221 G：跳过序章时补的两枚信物（240：入口从主菜单搬到开场一问的【不需要】）（序章三撤离时随包回仓库的那两枚）
 const SKIP_PROLOGUE_ITEMS: Array[StringName] = [&"charm_brute", &"charm_sun"]
 
 
@@ -221,6 +212,40 @@ func skip_prologue() -> void:
 			defs.append(def)
 	meta.grant(defs)
 	save_meta()
+
+
+## 240：问过要不要教程的局外旗标（一份存档只问一次）
+const TUTORIAL_ASKED := &"tutorial_asked"
+
+
+## 240：这一章的开场事件选完了该不该问 —— 是第一张教程、这份存档还没问过
+func _wants_tutorial_ask(chapter: ChapterDef) -> bool:
+	if meta == null or chapter == null or meta.flag(TUTORIAL_ASKED) != 0:
+		return false
+	var tuts := tutorial_chapters()
+	return not tuts.is_empty() and tuts[0] == chapter
+
+
+## 240：开场一问选【需要】—— 记下问过，教程照走
+func accept_tutorial() -> void:
+	if meta == null:
+		return
+	meta.set_flag(TUTORIAL_ASKED)
+	save_meta()
+
+
+## 240：开场一问选【不需要】—— 记下问过、补上三张序章留下的东西（[method skip_prologue]），这一局悄悄结束
+## （不进结算、不记场次，局内存档删掉），再开新的一局：教程全通了，落到开局屏
+func decline_tutorial() -> void:
+	if meta == null:
+		return
+	meta.set_flag(TUTORIAL_ASKED)
+	skip_prologue()     # 内含存局外
+	if writable():
+		RunSave.remove(save_path)
+	_reset_run()
+	run_changed.emit(null)
+	new_run()
 
 
 ## 读第 n 位：切过去，然后和「继续」一样。空位返回 false
@@ -1061,6 +1086,9 @@ func _settle_run() -> void:
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)
+		# 241：在这一档难度撤离一次，开下一档
+		if result.is_extracted() and run != null and run.difficulty != null and run.difficulty.grants_unlock != &"":
+			meta.grant_unlock(run.difficulty.grants_unlock)
 		check_achievements()     # 091：这一局的账记完了，看成就
 		if writable():
 			MetaSave.write(meta, meta_path)
@@ -1228,6 +1256,7 @@ func choose_event(i: int) -> bool:
 		return false
 	var def := run.events.pending_event()
 	var node := run.events.pending_node()
+	var ask := def != null and run.chapter != null and def.id == run.chapter.intro_event and _wants_tutorial_ask(run.chapter)     # 240
 	_camp_choice = def != null and def.scene == EventDef.SCENE_REST_CAMP
 	_camp_extra = 0
 	camp_rest = {}
@@ -1239,6 +1268,8 @@ func choose_event(i: int) -> bool:
 		_back_to_camp(node, def)     # 196：营地里歇完不跳屏 —— 营地重开，篝火熄、冒一行体力
 	save_meta()     # 091：选项可能立了局外旗标（set_flag）
 	_flush()
+	if ask and run != null and screen == Screen.MAP:
+		tutorial_ask.emit()     # 240：书页合上回到地图，紧接着问要不要教程
 	return true
 
 

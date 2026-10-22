@@ -14,8 +14,6 @@ const TEXT := {
 	# 主菜单
 	"game.title": {"zh": "背包搜打撤", "en": "Pack & Extract"},     # author 2026-10-21 15:40
 	"menu.new_run": {"zh": "新的游戏", "en": "New game"},
-	"menu.skip_prologue": {"zh": "跳过序章", "en": "Skip the prologue"},     # 221 G
-	"menu.skip_prologue_confirm": {"zh": "再点一次：这份存档不再有序章", "en": "Click again: this save skips the prologue for good"},
 	"menu.continue": {"zh": "继续", "en": "Continue"},
 	"menu.load": {"zh": "读取存档", "en": "Load game"},
 	"slots.title": {"zh": "读取存档", "en": "Load game"},
@@ -137,6 +135,10 @@ const TEXT := {
 	"map.pause_main_menu": {"zh": "回主菜单", "en": "Main menu"},
 	"map.rules_title": {"zh": "本图规则　%s", "en": "Map rules · %s"},
 	"map.rules_ok": {"zh": "知道了（Esc）", "en": "Got it (Esc)"},
+	"tut_ask.title": {"zh": "要带你走一遍吗？", "en": "Want a walkthrough?"},     # 240：开场一问
+	"tut_ask.body": {"zh": "序章三张图手把手教你搜、打、撤。老手可以直接去自由模式，开局那套和两枚护符照样在仓库里等你。", "en": "The three prologue runs teach you to search, fight and get out. If you know the drill, head straight for free mode: the starter kit and both charms will be waiting in your storeroom."},
+	"tut_ask.yes": {"zh": "需要", "en": "Yes"},
+	"tut_ask.no": {"zh": "不需要", "en": "No need"},
 	"map.hunter_loss": {"zh": "　输了会怎样 —— %s", "en": " · If you lose: %s"},
 	"map.lens": {"zh": "放大镜", "en": "Magnifier"},
 	"map.lens_tip": {"zh": "放大镜（N）\n%s", "en": "Magnifier (N)\n%s"},

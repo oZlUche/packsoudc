@@ -135,6 +135,10 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 		if ladder[i].challenge != "":
 			t.check(setup._challenge.text().contains(ladder[i].challenge), "列出第 %d 级的挑战" % ladder[i].level)
 	t.eq(ladder[1].display_name, "进阶一", "进阶去掉「（占位）」")
+	t.eq(ladder.map(func(d): return (d as DifficultyDef).level), [0, 1, 2, 3], "241：进阶拆成三级")
+	t.eq(setup._challenge.rows().size(), 3, "241：纸上三行（Ⅰ / Ⅱ / Ⅲ）")
+	for row in setup._challenge.rows():
+		t.eq(float(row["h"]), ChallengeScroll.ROW_MIN_H, "241：%s 一行高" % row["text"])
 	setup.choose_scale(&"medium")
 	flow.next_run_seed = 4242
 	setup.show_page(1)

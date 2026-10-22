@@ -14,11 +14,17 @@ static func _content() -> TestSupport.Content:
 
 
 ## 第一个要解锁的难度；没有返回 null
+## 要解锁的一档；241 拆级后进阶一只剩体力 −1，优先挑带侵蚀的那一档（装机制的断言要看得到侵蚀）
 static func _locked(c: TestSupport.Content) -> DifficultyDef:
+	var first: DifficultyDef = null
 	for d in c.difficulties:
-		if d.requires_unlock != &"":
+		if d.requires_unlock == &"":
+			continue
+		if first == null:
+			first = d
+		if _has_mechanic(d, &"erosion"):
 			return d
-	return null
+	return first
 
 
 ## 一档难度对体力上限加的数（从定义里算，不写死）

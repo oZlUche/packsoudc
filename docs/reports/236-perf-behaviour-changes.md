@@ -112,6 +112,8 @@
 - 推到 17 张：`rest/bg_*` 4、`forge/bg_*` 4（含英文版）、`assets/chest/bg/*` 5、`setup/bg_*` 3、`battle/battle_bg` 1，`.import` 改 `compress/mode=2`、`high_quality=true`、`mipmaps/generate=true`。主菜单三张（2112 × 1320）、基地与结算库房（1920 × 1080）没在这 17 张里，照旧无损。
 - 读回像素的地方只有营地小件的点击遮罩（`rest_camp_screen._mask`，本来就先 `decompress()`），不读底图，压了不受影响。宝箱底图预读不做（架构设计同意）。
 
+补（2026-10-22，游戏测试 v4.18 复测）：云端 Xvfb 的 llvmpipe 下，perf_probe 测得战斗屏帧时间从 38 ms 涨到 108 ms，只把 `battle/battle_bg` 退回无压缩就回到 38.5 ms。这是软件解码造成的：llvmpipe 没有硬件 BC7 解码，每次采样都在 CPU 上解压。真显卡原生支持 BC7，这个结论不适用于真机。云端帧时间以后按「软件渲染基线」看，不拿来和 v4.17 比。如果作者反馈战斗屏掉帧，先只把 `battle/battle_bg` 退回无压缩。
+
 ## 八、补：退出时崩溃（执行，2026-10-22，v4.19）
 
 游戏测试复测 v4.16 报：玩过一局后 `quit()` 退出，进程 Aborted（退出码 134），v4.15 同脚本为 0。二分落在甲批第二项（战斗日志上工作线程）：`BattleTraceWriter.write` 交出去的任务只在下一次 `write`、`BattleArchive.list()` 或关窗通知时被等；主菜单「退出」与脚本走 `get_tree().quit()`，不发关窗通知，最后一场的任务从没被等过。没等过的任务连同绑定的参数（trace / result）一直挂在 `WorkerThreadPool` 里，到引擎收尾时才放，那时脚本语言已经关了，于是崩溃。（存档是同步写的，不受影响；Windows 上表现为退出时弹崩溃框。）
