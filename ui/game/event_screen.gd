@@ -161,7 +161,7 @@ func harvest_row() -> HarvestRow:
 ##
 ## 返回右栏底部放选项的容器，调用方往里加按钮；正文在可滚的区域里，选项贴在底部
 func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
-	var panel := _centered_panel(PANEL_SIZE, 0, false, true)
+	var panel := _centered_panel(PANEL_SIZE, 0, OverlayFrame.SKIN_BOOK)
 	if _overlay_frame.book:
 		return _book_page(panel, image_path, title, body)
 	var row := _hbox(0)

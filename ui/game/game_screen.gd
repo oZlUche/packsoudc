@@ -310,21 +310,44 @@ func _modal_panel(title: String, margin: int = 16) -> OverlayFrame:
 
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，石板框放中间（157：[OverlayFrame]，标题写进 [method _frame_title]）。
 ## 返回框的内容区，各屏往里加东西；128：框占着地上的地方
-func _centered_panel(min_size: Vector2, margin: int = 16, bronze: bool = false, book: bool = false) -> Container:
+## [param skin]：[constant OverlayFrame.SKIN_SLAB] / 铜 / 书 / 帐篷（233）
+func _centered_panel(min_size: Vector2, margin: int = 16, skin: StringName = OverlayFrame.SKIN_SLAB) -> Container:
 	_shade(OVERLAY_SHADE)     # 157 补充三：地图压暗透出来，石板浮在上面
 	var center := _full_center()
 	center.offset_top = HudHost.bar_height_in(get_tree()) if is_inside_tree() else 0.0     # 复测 v3.79：面板在顶端栏下面居中，不压住红心和金币
 	add_child(center)
-	_overlay_frame = OverlayFrame.new(margin, bronze, book)
+	_overlay_frame = OverlayFrame.new(margin, skin)
 	_overlay_frame.custom_minimum_size = min_size
 	_reserve_ground(_overlay_frame)
 	center.add_child(_overlay_frame)
+	if _overlay_frame.outset_top() > 0.0:     # 233：帐篷尖顶伸出窗顶 56 —— 窗离顶端栏不够就整块往下挪，尖顶不被盖住
+		var fit := _make_room_above.bind(center)     # 方法 Callable：屏先被释放时，延后那一下自己作废（lambda 会留个悬空的 self）
+		resized.connect(fit)
+		_overlay_frame.minimum_size_changed.connect(fit)
+		fit.call_deferred()
 	return _overlay_frame.content
+
+
+## 233：窗居中后离顶端栏的空隙不到皮要的上伸量就把居中区往下让（居中区下移 d，窗只下移 d / 2）
+func _make_room_above(center: Control) -> void:
+	if _overlay_frame == null or not is_instance_valid(center):
+		return
+	var bar := HudHost.bar_height_in(get_tree()) if is_inside_tree() else 0.0
+	var gap := (size.y - bar - _overlay_frame.get_combined_minimum_size().y) * 0.5
+	center.offset_top = bar + 2.0 * maxf(0.0, _overlay_frame.outset_top() - gap)
+
+
+## 233：窗顶离顶端栏底边多远（测试看；帐篷要 ≥ 尖顶高）
+func overlay_top_gap() -> float:
+	if _overlay_frame == null:
+		return 0.0
+	var bar := HudHost.bar_height_in(get_tree()) if is_inside_tree() else 0.0
+	return _overlay_frame.get_global_rect().position.y - get_global_rect().position.y - bar
 
 
 ## 铜面板三屏（战前准备 / 战斗 / 战利品，UI替换美术 甲 铜战板）：同 [method _centered_panel]，框换铜面板、没有标题条
 func _bronze_panel(min_size: Vector2, margin: int = -1) -> Container:
-	return _centered_panel(min_size, margin, true)
+	return _centered_panel(min_size, margin, OverlayFrame.SKIN_BRONZE)
 
 
 ## 作者 2026-10-21：战前 / 战斗两块铜面板一样大 —— 两屏都撑到「见过的两边内容里大的那个」（窗口尺寸变了重新记）
