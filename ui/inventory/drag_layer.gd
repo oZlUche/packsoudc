@@ -198,6 +198,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	InventoryView.set_focused(_inst, get_tree() if is_inside_tree() else null)     # 作者 10-21：拿起的这件就是点中的那件（地上拿起的也算）
 	_highlight_partners()
 	UiCursor.set_drag(true)     # 157
+	_show_footprints(true)
 	queue_redraw()
 	AudioHub.play(SfxMaterial.pick_cue(_inst.def))     # 206：上手按材质响
 	drag_started.emit(uid)
@@ -226,6 +227,7 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	set_process_input(true)
 	_highlight_partners()
 	UiCursor.set_drag(true)     # 157
+	_show_footprints(true)
 	if is_inside_tree():
 		update_preview(get_global_mouse_position())
 	queue_redraw()
@@ -1049,7 +1051,14 @@ func _end_drag() -> void:
 	_payload = {}
 	set_process_input(false)
 	UiCursor.set_drag(false)     # 157：光标还原
+	_show_footprints(false)
 	queue_redraw()
+
+
+## 239：拿起时所有棋盘逐格描出占格（按组：战前的敌人棋盘、商店货架这些没登记的视图也算），放下 / 取消收起
+func _show_footprints(on: bool) -> void:
+	if is_inside_tree():
+		get_tree().call_group(InventoryView.GROUP, "set_footprints", on)
 
 
 func _draw() -> void:
@@ -1076,6 +1085,7 @@ func _draw() -> void:
 			self, cells, anchor, cell,
 			Names.of_item(_inst), font, 11 if is_bag else 13, Color("f2f4f8")
 		)
+	InventoryView.draw_footprint(self, _inst.def, cells, anchor, cell, is_bag or InventoryView.footprint_hollow(_inst.def))     # 239：手里那件也逐格描
 	if not is_bag and not (view_at(mouse) is InventoryView):
 		_draw_held_markers(anchor, cell)
 	if craft_hint != "":     # 140：压在能合的那件上：残影下面一行小字
@@ -1096,6 +1106,7 @@ func _draw() -> void:
 			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * cell
 			var item_cells := item.def.cells_rotated(int(g["rot"]))
 			if ItemPainter.draw_art(self, item.def, int(g["rot"]), at, cell, Color(1, 1, 1, 0.9), Transform2D.IDENTITY, ItemPainter.variant_of(item)):
+				InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false)     # 239：袋里各件描自己的稀有度框
 				continue
 			var c_body := ItemPainter.body_color(item.def)
 			c_body.a = 0.9
@@ -1106,6 +1117,7 @@ func _draw() -> void:
 				self, item_cells, at, cell,
 				Names.of_item(item), font, 12, Color("f2f4f8")
 			)
+			InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false)
 		_draw_straddlers(font)
 
 
