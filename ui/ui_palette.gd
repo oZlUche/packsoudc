@@ -313,15 +313,25 @@ static func font_file(file: String) -> FontFile:
 	return _font_files[file]
 
 
+## 237：下面几个取字体的函数都只建一次、全局共用（键 = 用途）。以前每次调用都 `SystemFont.new()` + `FontVariation.new()`，
+## 而战斗面板、属性签等的 `_draw` 里每次重绘都在调 —— Windows 上 `SystemFont` 一设 `font_names` 就去找Microsoft YaHei并把整个
+## 字体文件（十几 MB）读进内存，每帧几次到几十次，战斗就卡成一格一格；字体对象又各带一份字形缓存，没一个能复用。
+## 调用方只读这些字体（挂到控件 / 主题上），共用一份画出来一模一样
+static var _fonts: Dictionary = {}
+
+
 ## 系统字体（168 之前的默认字体，现在是后备）：Godot 内置字体不含 CJK 字形，中文会显示成方块
 static func system_font(bold: bool = false) -> SystemFont:
-	var f := SystemFont.new()
-	f.font_names = PackedStringArray(
-		["Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "SimHei", "sans-serif"]
-	)
-	if bold:
-		f.font_weight = 700
-	return f
+	var key := "system_bold" if bold else "system"
+	if not _fonts.has(key):
+		var f := SystemFont.new()
+		f.font_names = PackedStringArray(
+			["Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "SimHei", "sans-serif"]
+		)
+		if bold:
+			f.font_weight = 700
+		_fonts[key] = f
+	return _fonts[key]
 
 
 ## 包一层：[param file] 打底，缺字走 [param fallback]；文件不在就直接是 [param fallback]
@@ -335,29 +345,42 @@ static func _wrap(file: String, fallback: Font) -> Font:
 	return v
 
 
+## 按用途记住一份（[param make] 只在第一次调）
+static func _font_for(key: String, make: Callable) -> Font:
+	if not _fonts.has(key):
+		_fonts[key] = make.call()
+	return _fonts[key]
+
+
 ## 正文、读数、按钮：思源宋体 Regular
 static func cjk_font() -> Font:
-	return _wrap(FONT_BODY, system_font())
+	return _font_for("body", func() -> Font: return _wrap(FONT_BODY, system_font()))
 
 
 ## 真粗体：富文本的 [b] 用它（思源宋体 Bold，不让引擎把常规体描粗 —— 描出来的发糊）
 static func cjk_font_bold() -> Font:
-	return _wrap(FONT_BOLD, system_font(true))
+	return _font_for("bold", func() -> Font: return _wrap(FONT_BOLD, system_font(true)))
 
 
 ## 标题、名牌：朱雀仿宋（技术预览版，缺字时混进思源宋体 Bold）
 static func title_font() -> Font:
-	return _wrap(FONT_TITLE, cjk_font_bold())
+	return _font_for("title", func() -> Font: return _wrap(FONT_TITLE, cjk_font_bold()))
 
 
 ## 大标题（主菜单游戏名、章节名、宝箱屏说明）：马善政，缺字走标题字体
 static func display_font() -> Font:
-	return _wrap(FONT_DISPLAY, title_font())
+	return _font_for("display", func() -> Font: return _wrap(FONT_DISPLAY, title_font()))
 
 
 ## 224：结算账单的数字（Cinzel Bold）；一串里的汉字（「27 件 · 保险箱 2 件」）落到思源宋体
 static func numeral_font() -> Font:
-	return _wrap(FONT_NUMERAL, cjk_font())
+	return _font_for("numeral", func() -> Font: return _wrap(FONT_NUMERAL, cjk_font()))
+
+
+## 夹具换了字体目录 / 文件时清掉（正常游戏不用）
+static func clear_font_cache() -> void:
+	_fonts.clear()
+	_font_files.clear()
 #endregion
 
 
