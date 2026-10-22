@@ -17,8 +17,8 @@ const SETTLE_FRAMES := 30
 ## 一屏超过这么久没换屏就算卡住（秒，真实时间）
 const STALL_SEC := 180.0
 const MAX_FRAMES := 60000
-## 回放看完（继续旗出来了）再等几帧，让结算动效走完
-const AFTER_VERDICT_FRAMES := 60
+## 回放看完（继续旗出来了）再等一秒（真实时间），让结算动效走完
+const AFTER_VERDICT_SEC := 1.0
 
 var _game: Node = null
 var _flow: GameFlow = null
@@ -37,7 +37,7 @@ var _cur: Dictionary = {}
 ## 同步调用的耗时记录：[标签, 毫秒]
 var _stalls: Array = []
 var _after_fight := false
-var _verdict_frames := 0
+var _verdict_msec := -1
 var _loot_frames := 0
 var _booted := false
 ## 这一帧回放屏套用了哪些战斗事件（名字），写进 csv 的 events 列
@@ -132,6 +132,10 @@ func _act(screen: int) -> bool:
 		_timed("教程提示「下一步」", func() -> void: (coaches[0] as CoachOverlay).next())
 		_screen_frames = SETTLE_FRAMES - 6     # 提示一步一步点，别等太久
 		return false
+	var base = _game.base()
+	if base != null and base.has_method("tutorial_ask_open") and base.tutorial_ask_open():
+		_timed("240 开场一问选「需要」", func() -> void: base.accept_tutorial())     # 照旧走序章
+		return false
 	match screen:
 		GameFlow.Screen.MAIN_MENU:
 			if _runs_done >= _runs_wanted:
@@ -198,15 +202,22 @@ func _act_event() -> void:
 	if ev == null:
 		_timed("事件屏没有等着的事件：resume", func() -> void: _flow.resume())
 		return
-	var pick := 0
+	var pick := -1
 	var label := ""
+	var ctx = run.events._event_ctx(run.events.pending_node())
 	for i in ev.options.size():
+		if (ev.options[i] as EventOption).locked_reason(ctx) != "":
+			continue     # 选不了的跳过（序章一精英要先合出毒匕首，没有就走「就这么上」）
+		if pick < 0:
+			pick = i
 		var l := String((ev.options[i] as EventOption).label)
 		if l.contains("迎战"):
 			pick = i
 			break
 		if _after_fight and l == "离开":
 			pick = i
+	if pick < 0:
+		pick = 0
 	label = String((ev.options[pick] as EventOption).label)
 	var tag := "事件「%s」选「%s」" % [ev.id, label]
 	if label.contains("迎战"):
@@ -358,11 +369,14 @@ func _act_battle() -> void:
 			_bench_frames(v)
 			return
 	if not screen.verdict_shown():
+		_verdict_msec = -1
 		return
-	_verdict_frames += 1
-	if _verdict_frames < AFTER_VERDICT_FRAMES:
+	# 按真实时间等（_act 每隔一轮稳定帧才叫一次、帧率又跟机器走，按调用次数数会等成几分钟）
+	if _verdict_msec < 0:
+		_verdict_msec = Time.get_ticks_msec()
+	if Time.get_ticks_msec() - _verdict_msec < AFTER_VERDICT_SEC * 1000.0:
 		return
-	_verdict_frames = 0
+	_verdict_msec = -1
 	_timed("回放看完「继续」", func() -> void: screen.proceed())
 
 

@@ -1086,6 +1086,9 @@ func _settle_run() -> void:
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)
+		# 241：在这一档难度撤离一次，开下一档
+		if result.is_extracted() and run != null and run.difficulty != null and run.difficulty.grants_unlock != &"":
+			meta.grant_unlock(run.difficulty.grants_unlock)
 		check_achievements()     # 091：这一局的账记完了，看成就
 		if writable():
 			MetaSave.write(meta, meta_path)

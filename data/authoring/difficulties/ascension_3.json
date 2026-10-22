@@ -1,0 +1,57 @@
+{
+  "id": "ascension_3",
+  "display_name": "进阶三",
+  "display_names": {
+    "en": "Ascension III"
+  },
+  "description": "侵蚀开启（本体第七阶段），猎手循着脚步追来，体力上限 {vitality_max_bonus_amount|signed}。在进阶二撤离一次后解锁。",
+  "descriptions": {
+    "en": "Erosion is on (stage seven of the base game) and hunters follow your footsteps, max Vitality {vitality_max_bonus_amount|signed}. Unlocked by extracting once on Ascension II."
+  },
+  "challenge": "猎手循迹追来",
+  "challenges": {
+    "en": "Hunters track you"
+  },
+  "level": 3,
+  "requires_unlock": "ascension_3",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "damage_item",
+          "from_depth": 2,
+          "chance": 0.25
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ]
+    }
+  ],
+  "effects": [
+    {
+      "type": "vitality_max_bonus",
+      "amount": -1
+    }
+  ]
+}

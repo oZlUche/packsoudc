@@ -1,0 +1,46 @@
+{
+  "id": "ascension_2",
+  "display_name": "进阶二",
+  "display_names": {
+    "en": "Ascension II"
+  },
+  "description": "侵蚀开启（本体第七阶段），体力上限 {vitality_max_bonus_amount|signed}。在进阶一撤离一次后解锁。",
+  "descriptions": {
+    "en": "Erosion is on (stage seven of the base game), max Vitality {vitality_max_bonus_amount|signed}. Unlocked by extracting once on Ascension I."
+  },
+  "challenge": "越深侵蚀越重",
+  "challenges": {
+    "en": "Erosion grows deeper"
+  },
+  "level": 2,
+  "requires_unlock": "ascension_2",
+  "grants_unlock": "ascension_3",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "damage_item",
+          "from_depth": 2,
+          "chance": 0.25
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        }
+      ]
+    }
+  ],
+  "effects": [
+    {
+      "type": "vitality_max_bonus",
+      "amount": -1
+    }
+  ]
+}

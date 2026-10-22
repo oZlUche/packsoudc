@@ -25,6 +25,8 @@ extends Resource
 @export var level: int = 0
 ## 局外解锁 id，空 = 一直可选
 @export var requires_unlock: StringName = &""
+## 241：在这一档成功撤离就发的局外解锁 id（Ⅰ 发 ascension_2、Ⅱ 发 ascension_3，同 [member ChapterDef.grants_unlock]），空 = 不发
+@export var grants_unlock: StringName = &""
 ## 开哪些机制
 @export var mechanics: Array[RunMechanic] = []
 ## 数值修饰（RunEffect / LootEffect）
