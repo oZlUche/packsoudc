@@ -27,11 +27,19 @@ var back: Callable = Callable()
 
 func open(_payload: Dictionary) -> void:
 	_backdrop()
-	# 172：加了「显示」一节后，1000 高的视口放不下整列（开发区在时更长）—— 包一层只竖着滚的滚动框，放得下照样居中
+	# 172：加了「显示」一节后，1000 高的视口放不下整列（开发区在时更长）—— 包一层只竖着滚的滚动框，放得下照样居中。
+	# UI替换美术 10-22：标题牌固定在板顶刻线上、不跟着滚；滚动框从标题牌下面开始，滚过去的内容不压刻线
+	var frame := _vbox(10)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_slab_screen().add_child(frame)     # 157 补充三：内容在一整块石板上
+	var plate := TitlePlate.new(UiText.t("menu.settings"))     # 226 批二：标题刻在标题牌上
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	frame.add_child(plate)
+	_plate = plate
 	var scroll := ScrollContainer.new()
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_slab_screen().add_child(scroll)     # 157 补充三：内容在一整块石板上
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	frame.add_child(scroll)
 	var center := CenterContainer.new()
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -39,10 +47,6 @@ func open(_payload: Dictionary) -> void:
 	var col := _vbox(10)
 	col.custom_minimum_size.x = 520
 	center.add_child(col)
-	var plate := TitlePlate.new(UiText.t("menu.settings"))     # 226 批二：标题刻在标题牌上
-	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(plate)
-	_plate = plate
 	_build_display(col)
 	_build_sound(col)
 	col.add_child(HSeparator.new())
@@ -106,7 +110,9 @@ func open(_payload: Dictionary) -> void:
 		var row := _hbox(8)
 		_trace_btn = _toggle("战斗日志", toggle_battle_trace)
 		row.add_child(_trace_btn)
-		row.add_child(_button("打开日志文件夹", open_log_folder, 13, UiPalette.Tier.MINOR))
+		var open_btn := StoneChip.make("打开日志文件夹", open_log_folder)     # UI替换美术：和整页同一张石签，不切换
+		open_btn.toggle_mode = false
+		row.add_child(open_btn)
 		dev.add_child(row)
 		dev.add_child(HSeparator.new())
 	var back_key := ScrollKey.make(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back)     # 乙 石刻

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.25 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.26 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4465,6 +4465,7 @@ res://
 | v4.23 | 2026-10-22 | **242 平衡方法第一批**：流派木桩 `ArchetypeBuilder` / `tools/build_archetypes.gd`（五路 × 四段 × 三种子 → `data/authoring/calibration/archetypes.json`）；扫表 `BalanceMatrix` / `tools/bench_matrix.gd`（每格 300 场、四张表进 `docs/reports/balance/`）；`CalibrationRecorder.record_run` → `user://calibration/runs.jsonl`，快照带版本号；`config/version` 0.1.0；设置「导出平衡数据」（`DataExport`，zip 到桌面）；`BattleArchive.KEEP` 50 → 200；`EnemyPlacer.bag_fits` 改公开；`bench_hunters` 默认难度改Ⅲ（241 后猎手在Ⅲ）。首跑两张表与结论见报告 242 §九 |
 | v4.24 | 2026-10-22 | **242 补充二：玩家版也记战斗日志**：`BattleArchive.default_on()` 恒真；`GameSettings.trace_on()` = `battle_trace or not DevGate.on()`，`GameFlow.apply_battle_trace` 用它（旧版导出包存的「关」不算数）；开关与打开文件夹仍只在开发区，玩家经「导出平衡数据」带走 |
 | v4.25 | 2026-10-22 | **两处按钮换 kit 件**（UI替换美术，游戏测试报的深蓝平板键）：设置「老手」区「导出平衡数据」换成 `StoneChip.make`（不切换、按字宽靠左）；地图暂停窗五颗键全换 `ScrollKey.make`（一列整宽一样宽，「继续（Esc）」排第一、不另标色） |
+| v4.26 | 2026-10-22 | **UI替换美术第二批**：暂停窗打开时 `NoticeLayer.clear()` 收掉地图留着的告示（「挑一个出生点」不再压在窗与嵌进来的设置页上，窗里再说的照常出来）；设置页标题牌移出滚动框、固定在板顶刻线上，滚动框从它下面开始（滚过去的内容不压刻线）；开发区「打开日志文件夹」换石签 |
 | v3.88 | 2026-10-21 | **224 补充二 结算屏第二版**（作者 17:22–17:23 六条）：结算屏两页板边换 `slab_edge_plain`（`UiTheme.slab` / `GameScreen._slab_screen` 的 `edge_art` 参数）；第一页 ×1.2、图 2 倍分辨率按 1x 尺寸画（`LedgerView` `draw_texture_rect`、标题牌 `EXPAND_IGNORE_SIZE`）；账单击败的敌人 / 精英 / 首领分三行；撤离时保险箱在账单右边（皮带框 + 格缝），第二页只剩带回的棋盘（格子 72，`WarehousePanel.board_cell`）和贴右上的仓库（`WarehousePages.fit` 量石板内容区）；战败没有第二页，`MetaState.absorb` 战败时保险箱带出的直接进仓库（包进包架），放不下才进待置入棋盘；新套件 `test_result_v2_224` |
 | v3.87 | 2026-10-21 | **232 局内非矩形第一轮**（作者 19:23 选 1 / 2 / 6 / 10，待定按推荐）：事件窗是一本摊开的书（`OverlayFrame` `book` 皮、`EventScreen._book_page` 绝对摆位、标题进右页、`EventImage.area(…, light)`）；背包窗是一只背包（`BagWindow._back` 四件皮料随窗宽摆、翻盖即把手 `grip_rect`、`FloatingWindow.outset` 夹边）；腰带 1–6 格是整张弯皮带（`BeltSlots.belt_layouts / curved`，命中半径 36，7 格起退回直圆槽；`BeltWidget` 不进凹槽）；图例是双尾旗九宫格（`LegendWidget.pennant_box`，最窄 158）。缺图都退回原来的皮；新套件 `test_bag_window_232`、`test_event_book_232` |
 | v3.86 | 2026-10-21 | **230 悬浮窗道具按钮 + 锁定**（作者 19:01 选丙）：`ItemActions` 供给层（`Action` 数据、`lock` / `lock_same` / `sell` / `sell_same` / `anchor`、`rows()` 两两并排成对不拆）；`ContainerView.actions_for(uid)` 各屏登记；`TipButton` 平墨签按钮（危险两步「再点一次」）；`HoverTip` 脚注下画按钮行、右键 `pin_on` 立刻钉住、点了原地刷新；玩家锁 `ItemInstance.state["locked"]` 守出售 / 一键出售 / 出售区 / 祭品台 / 铸炉 / 丢地上，小锁角标 `ItemPainter.draw_lock`；信物右键切换改成「奉为主信仰」按钮；新帮助页 `item_actions`；新套件 `test_item_actions_230` |

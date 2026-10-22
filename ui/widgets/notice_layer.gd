@@ -133,6 +133,12 @@ func set_top(top: float) -> void:
 
 
 ## 拿走第 [param i] 卷：收卷完了再释放（关着动效当场释放）
+## 收掉全部（UI替换美术 10-22：暂停窗打开时，地图那一屏留着的「挑一个出生点」之类别压在窗上；窗里再说的照常出来）
+func clear() -> void:
+	for i in range(_lines.size() - 1, -1, -1):
+		_drop(i)
+
+
 func _drop(i: int) -> void:
 	var s: NoticeScroll = _lines[i]["scroll"]
 	_lines.remove_at(i)
