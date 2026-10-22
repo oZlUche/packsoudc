@@ -144,6 +144,8 @@ const TEXT := {
 	"map.reopen_none": {"zh": "这里没有可重开的界面", "en": "Nothing here to reopen"},
 	"map.bag": {"zh": "背包", "en": "Pack"},
 	"map.bag_hint": {"zh": "整理棋盘上的东西，打架前先排好", "en": "Arrange what's on your Board. Sort it before a fight"},
+	"map.menu_end": {"zh": "本局菜单", "en": "Run menu"},
+	"map.menu_end_hint": {"zh": "继续、设置、百科、回主菜单", "en": "Resume, settings, encyclopedia, main menu"},
 	"map.enemy_reward": {"zh": "　打赢 +%d 币", "en": " · Win: +%d coins"},
 	"map.skill_armed": {"zh": "已准备", "en": "ready"},
 	"map.skill_uses": {"zh": "剩 %d 次", "en": "%d uses left"},

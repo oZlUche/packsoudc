@@ -28,11 +28,10 @@ func setup(p_run: RunState, p_screen: Control) -> void:
 ## 232：弯皮带自己就是底 —— 不要 HUD 凹槽（栏里栏外都空底）；退回直圆槽时还给凹槽
 func _sync_skin() -> void:
 	var bent := slots != null and slots.curved()
-	groovable = not bent
 	if bent and theme_type_variation != UiTheme.PANEL_BARE:
 		theme_type_variation = UiTheme.PANEL_BARE
 		UiTheme.apply_tone(self, UiTheme.PANEL_BARE)
-	elif not bent and theme_type_variation == UiTheme.PANEL_BARE and not in_bar:
+	elif not bent and theme_type_variation == UiTheme.PANEL_BARE:
 		theme_type_variation = UiTheme.PANEL_HUD
 		UiTheme.apply_tone(self, UiTheme.PANEL_HUD)
 

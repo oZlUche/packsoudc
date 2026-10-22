@@ -21,8 +21,6 @@ signal arranged()
 ## 同一行里两件之间、行与行之间的空隙
 const GAP := 6
 const LINE_GAP := 4
-## 190：顶端栏有长槽时栏里同一行两件之间的空隙（中间放一枚铜点）
-const BAR_GAP := 24
 ## 166：顶端栏至少多高、左右留多宽、里面的组上下至少留多少。
 ## 作者 2026-10-13（「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」）：64 → 88，组在板边上下内边距之间居中（底下的投影不算）
 const BAR_HEIGHT := 88.0
@@ -198,12 +196,24 @@ static func bar_height_in(tree: SceneTree) -> float:
 	return host.bar_height() if host != null and host.is_visible_in_tree() else 0.0
 
 
-## 166：一件读数在屏幕上的包围盒（教程挖洞用：部件挪了位置教程跟着走）；没有 / 藏着返回空矩形
+## 235：场上顶端栏往下伸到哪（石刻皮的日晷下凸压在地图上；没有读数层 / 藏着 / 没有石刻皮 = 0）：告示卷排在它下面
+static func overhang_in(tree: SceneTree) -> float:
+	var host := tree.get_first_node_in_group(GROUP) as HudHost if tree != null else null
+	if host == null or not host.is_visible_in_tree() or not host._skinned():
+		return 0.0
+	return HudBarScript.dial_bottom()
+
+
+## 166：一件读数在屏幕上的包围盒（教程挖洞用：部件挪了位置教程跟着走）；没有 / 藏着返回空矩形。
+## 235：栏两头（[constant HudWidgets.BAR_ENDS]）是栏里的按钮，给那块石块
 func rect_of(id: StringName) -> Rect2:
+	if HudWidgets.BAR_ENDS.has(id):
+		var bar := _bar()
+		return bar.call("end_rect", HudWidgets.BAR_ENDS[id]) if bar != null else Rect2()
 	var w: HudWidget = widgets.get(id, null)
 	if w == null or not w.is_visible_in_tree():
 		return Rect2()
-	return w.get_global_rect()
+	return w.focus_rect()
 
 
 ## 150 补 1：右边那一条占多宽（地图屏把地图往左让这么多）；调试台开着时连它让出的一起算
@@ -222,34 +232,34 @@ func _frame(anchor: String) -> Rect2:
 	return Rect2(0.0, _bar_h, w, maxf(0.0, size.y - _bar_h))
 
 
-## 166：顶端栏里排组的那块（左右各留 [constant BAR_SIDE]；上下去掉栏底的内边距 —— 有石板就是板面那一段，不含底下的投影）
+## 166：顶端栏里排组的那块（左右各留 [method bar_side]；上下去掉栏底的内边距 —— 有石板就是板面那一段，不含底下的投影）
 func _bar_frame() -> Rect2:
 	var m := _bar_margins()
 	var side := bar_side()
 	return Rect2(side, m.x, maxf(0.0, size.x - side * 2.0), maxf(0.0, _bar_h - m.x - m.y))
 
 
-## 顶端栏左右各留多宽（栏本身还是铺满）
+## 顶端栏左右各留多宽（栏本身还是铺满）。235：石刻皮按两头石块外沿 + 间隙（`topbar.json`），不再按屏宽的一成
 func bar_side() -> float:
+	if _skinned():
+		return HudBarScript.side_inset()
 	return maxf(BAR_SIDE, size.x * BAR_SIDE_FRAC)
 
 
-## 栏底的上、下内边距（没栏 0）。190：有长槽图时是槽身上下（`groove.json` 的 `band`，按栏高等比），组在槽身里竖向居中
+## 栏底的上、下内边距（没栏 0）。235：石刻皮是两头石块的上下沿，组在这一段里竖向居中
 func _bar_margins() -> Vector2:
 	var bar := _bar()
 	if bar == null:
 		return Vector2.ZERO
-	if _grooved():
-		var h := _bar_h if _bar_h > 0.0 else BAR_HEIGHT
-		var b := HudBarScript.band(h)
-		return Vector2(b.x, h - b.y)
+	if _skinned():
+		return HudBarScript.band_margins()
 	var box := bar.get_theme_stylebox("panel")
 	return Vector2.ZERO if box == null else Vector2(box.content_margin_top, box.content_margin_bottom)
 
 
-## 190：顶端栏在、而且有长槽图
-func _grooved() -> bool:
-	return _bar() != null and HudBarScript.has_groove()
+## 235：顶端栏在、而且有石刻皮
+func _skinned() -> bool:
+	return _bar() != null and HudBarScript.has_skin()
 
 
 ## 有没有顶端栏（布局里那件看得见）
@@ -274,7 +284,6 @@ func arrange() -> void:
 	var groups := {}
 	var order: Array[String] = []
 	var bar := _bar()
-	var grooved := _grooved()
 	for e in layout.entries:
 		var w: HudWidget = widgets.get(StringName(e["id"]), null)
 		if w == null or not w.visible or w == bar:
@@ -286,10 +295,10 @@ func arrange() -> void:
 				offset = Vector2.ZERO     # 栏里的槽不用偏移：一个槽一组
 			else:
 				anchor = BAR_FALLBACK[anchor]
-		w.set_in_bar(HudLayout.in_bar(anchor), grooved)     # 190：栏里有槽 = 坐在槽底上
+		w.set_in_bar(HudLayout.in_bar(anchor))
 		var key := "%s@%s" % [anchor, offset]
 		if not groups.has(key):
-			groups[key] = {"anchor": anchor, "offset": offset, "lines": {}, "gap": BAR_GAP if grooved and HudLayout.in_bar(anchor) else GAP}
+			groups[key] = {"anchor": anchor, "offset": offset, "lines": {}}
 			order.append(key)
 		var lines: Dictionary = groups[key]["lines"]
 		var ln := int(e.get("line", 0))
@@ -299,21 +308,17 @@ func arrange() -> void:
 	# 166：先定顶端栏多高（里面最高的一组 + 上下留白），铺满顶部；栏里的槽在栏里摆
 	_bar_h = 0.0
 	if bar != null:
-		_bar_h = BAR_HEIGHT
+		_bar_h = HudBarScript.design_height() if _skinned() else BAR_HEIGHT
 		var m := _bar_margins()
 		for key in order:
 			if HudLayout.in_bar(String(groups[key]["anchor"])):
 				_bar_h = maxf(_bar_h, _measure(groups[key]).y + maxf(BAR_PAD, m.x) + maxf(BAR_PAD, m.y))
 		bar.position = Vector2.ZERO
 		bar.size = Vector2(size.x, _bar_h)
-		var dots: Array[Vector2] = []
 		for key in order:
 			var a := String(groups[key]["anchor"])
 			if HudLayout.in_bar(a):
 				_place_group(groups[key], _bar_frame(), HudLayout.BAR_ANCHORS[a])
-				if grooved:
-					dots.append_array(_dots_of(groups[key]))
-		bar.call("set_dots", dots)
 	# 再摆右边那一条，量出它占多宽；其余的在剩下那块里摆
 	_right = extra_right
 	for key in order:
@@ -349,7 +354,7 @@ func _rows(g: Dictionary) -> Array:
 			var s := (w as HudWidget).get_combined_minimum_size()
 			row_size.x += s.x
 			row_size.y = maxf(row_size.y, s.y)
-		row_size.x += float(g.get("gap", GAP)) * maxi(0, ws.size() - 1)
+		row_size.x += GAP * maxi(0, ws.size() - 1)
 		rows.append({"ws": ws, "size": row_size})
 		group_size.x = maxf(group_size.x, row_size.x)
 		group_size.y += row_size.y
@@ -384,36 +389,10 @@ func _place_group(g: Dictionary, frame: Rect2, pivot: Vector2) -> void:
 		for w in row["ws"]:
 			var hw := w as HudWidget
 			var s := hw.get_combined_minimum_size()
-			hw.position = Vector2(x, y + pivot.y * (row_size.y - s.y)) + (hw.bar_nudge() if hw.in_bar else Vector2.ZERO)
+			hw.position = Vector2(x, y + pivot.y * (row_size.y - s.y))
 			hw.size = s
-			x += s.x + float(g.get("gap", GAP))
+			x += s.x + GAP
 		y += row_size.y + LINE_GAP
-
-
-## 190：栏里一组的铜点：同一行相邻两件之间的正中各一枚；屏幕控件（右槽的图标按钮）之间不放，整组左边放一枚。
-## 竖向在那一行的中线（第一行就是槽身中线）
-func _dots_of(g: Dictionary) -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	var half := float(g.get("gap", GAP)) * 0.5
-	var first := true
-	for row in _rows(g)[0]:
-		var ws: Array = (row["ws"] as Array).filter(func(w): return (w as HudWidget).occupied())
-		if ws.is_empty():
-			continue
-		var w0 := ws[0] as HudWidget
-		var cy := w0.position.y - w0.bar_nudge().y + w0.size.y * 0.5
-		var parts := true
-		for w in ws:
-			parts = parts and w is HudPartWidget
-		if parts:
-			if first:
-				out.append(Vector2(w0.position.x - half, cy))
-		else:
-			for i in range(1, ws.size()):
-				var a := ws[i - 1] as HudWidget
-				out.append(Vector2(a.position.x + a.size.x + half, cy))
-		first = false
-	return out
 #endregion
 
 

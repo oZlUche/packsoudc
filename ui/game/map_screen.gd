@@ -37,7 +37,6 @@ var _routes_box: VBoxContainer
 var _log: RichTextLabel
 ## 166：调试台里的「地上 N 件」
 var _ground_line: Label
-var _bag_btn: IconButton
 var _reopen_btn: IconButton
 var _skills_box: HBoxContainer
 ## 166：序章开头的静态教程（开着时盖在最上面）
@@ -904,9 +903,7 @@ func _build_parts() -> void:
 	# 作者 2026-10-12：提示行（章节、种子、在哪个点、操作说明，「布局已保存」这类回话）挪进调试台，不再是部件
 	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
 	# 090（作者定）：三个互动按键放大到 300%
-	# 166（作者定）：背包与「回到这个点」换成顶端栏里的图标按钮（背包 / 放大镜），快捷键照旧
-	_bag_btn = IconButton.make("bag", UiText.t("map.bag"), UiText.t("map.bag"), UiText.t("map.bag_hint"), toggle_bag, "B")
-	_part(&"bag_button", _bag_btn)
+	# 166（作者定）：「回到这个点」是顶端栏里的图标按钮（放大镜），快捷键照旧。235：背包是栏的右头（[method hud_end]）
 	_reopen_btn = IconButton.make("lens", UiText.t("map.lens"), UiText.t("map.lens"), UiText.t("map.reopen_hint"), func(): reopen(), "N")
 	_reopen_btn.disabled = true
 	_part(&"reopen_button", _reopen_btn)
@@ -925,6 +922,14 @@ func _part(id: StringName, c: Control, full_width: bool = false) -> void:
 		c.custom_minimum_size.x = PART_WIDTH
 	_parts[id] = c
 	_shelf.add_child(c)
+
+
+## 235：顶端栏两头按下 —— 左 = 本局菜单（和 Esc 同一个开关），右 = 背包（和 B 同一个开关）
+func hud_end(side: StringName) -> void:
+	if side == &"left":
+		toggle_pause()
+	else:
+		toggle_bag()
 
 
 ## 读数层的组件来领这一屏的部件（[HudPartWidget]）。没有这个 id 返回 null
