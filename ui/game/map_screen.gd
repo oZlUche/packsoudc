@@ -293,6 +293,7 @@ func toggle_pause() -> void:
 		_pause.queue_free()
 		_pause = null
 		return
+	notice_layer().clear()     # 地图那一屏的告示不压在暂停窗上（UI替换美术 10-22）
 	_pause = _shade(0.72, true)
 	var panel := _modal_panel(UiText.t("map.pause_title"), 28)
 	_pause.get_child(0).add_child(panel)
