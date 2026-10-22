@@ -148,6 +148,12 @@ static func frame_entries(t: TestCase, root: Window) -> void:
 	book.set_query("合成")
 	t.check(book.listed().has("crafting"), "搜索：目录只列命中的页")
 	book.set_query("")
+	# 乙 石刻：搜索框是刻槽 + 放大镜，目录是 entry 条，正在看的那页按下（书签）
+	t.check(book._search is StoneField and book._search.find_child("SearchIcon", false, false) != null, "搜索框刻槽 + 放大镜")
+	var entries: Array = book._toc.get_children().filter(func(n: Node) -> bool: return n is Button and n.has_meta("page"))
+	t.check(not entries.is_empty() and entries.all(func(b: Button) -> bool: return b is StoneChip and b.is_entry), "目录是石刻目录条")
+	var on: Array = entries.filter(func(b: Button) -> bool: return b.button_pressed)
+	t.check(on.size() == 1 and String(on[0].get_meta("page")) == book.current_page(), "只有正在看的那页是书签")
 	t.check(book.listed().size() > 20, "清掉搜索：全目录（%d 页）" % book.listed().size())
 	t.check(game.escape() and flow.screen == GameFlow.Screen.MAIN_MENU, "Esc 回主菜单")
 

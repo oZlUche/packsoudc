@@ -36,8 +36,7 @@ func open(payload: Dictionary) -> void:
 	left.custom_minimum_size.x = TOC_WIDTH
 	row.add_child(left)
 	_frame_title(UiText.t("menu.encyclopedia"))     # 157：标题在石板框的标题条上
-	_search = LineEdit.new()
-	_search.placeholder_text = UiText.t("codex.search")
+	_search = StoneField.new(UiText.t("codex.search"))     # 乙 石刻：刻槽输入框 + 放大镜
 	_search.text_changed.connect(set_query)
 	left.add_child(_search)
 	var toc_scroll := ScrollContainer.new()
@@ -88,6 +87,9 @@ func open_page(id: String, remember: bool = true) -> bool:
 	_title.text = String(book.page(id)["title"])
 	UiTheme.set_rich(_body, book.render(id, _ctx))     # 169：颜色名按所在的底取版
 	_prev_btn.disabled = _history.is_empty()
+	for c in _toc.get_children():
+		if c is Button and c.has_meta("page"):
+			(c as Button).set_pressed_no_signal(String(c.get_meta("page")) == id)
 	return true
 
 
@@ -148,8 +150,7 @@ func _fill_toc() -> void:
 
 
 func _page_button(id: String) -> Button:
-	var b := _button(String(book.page(id)["title"]), func(): open_page(id), 13, UiPalette.Tier.MINOR)
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var b := StoneChip.entry(String(book.page(id)["title"]), func(): open_page(id))     # 乙 石刻：目录条，正在看的那页是书签
 	b.set_meta("page", id)
+	b.set_pressed_no_signal(id == _current)
 	return b

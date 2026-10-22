@@ -296,3 +296,15 @@
   - 控件自带的 `tooltip_text`（挂牌、段头签、按钮）换成道具悬浮窗那块深皮底浅字：主题里 `TooltipPanel` / `TooltipLabel`，浅底的字色小主题也把 `TooltipLabel` 写回浅字。
 - 英文仓库页签第二行件数只写数字（`wh.tab_count`，原来「x0」，UI替换美术 02:29）。
 - 测试 tests/ui/test_stone_keys.gd；截图 /mnt/project-files/art/ui/kit/shots_keys/。
+
+## 十五、乙 石刻：设置屏与百科（v3.99）
+
+- **`StoneChip`**（ui/widgets/stone_chip.gd，`extends Button`，字由部件画：普通态宋体、选中态粗体，按粗体留宽）：
+  - 选项签 `StoneChip.make(字, 动作, 色样)`：`kit/chip_*`，高 40，宽 = 粗体字宽 + 38，toggle_mode，选中 = `chip_on`。底色签左边 14 × 14 色样（左 14、上 13，里圈一道浅线），字往右让 24。设置的窗口 / 分辨率 / 底色 / 光标。
+  - 开关行 `StoneChip.toggle`：`chip_normal` 拉满整行，开着底也不变，左头印 `kit/check_on / off`，字从 48 起。设置的三个开关（开发区的也是）。
+  - 目录条 `StoneChip.entry`：`kit/entry_*`，高 36，字 17 从 14 起，正在看的那页按下 = `entry_on`（书签）。百科左栏。
+- **`StoneStepper`**（ui/widgets/stone_stepper.gd）：[−][读数牌][+]，钮 36 × 36（`kit/step_*`），读数牌 `kit/plate` 九宫格 14、粗宋 18 墨字。设置音效音量（226 §1.5：读数并进步进件，原来那行裸字删）。
+- **`StoneField`**（ui/widgets/stone_field.gd，`extends LineEdit`）：`kit/field_normal / focus`，高 36，字从 36 起，左头放大镜 `kit/icon_search`。百科搜索框。
+- **滚动条**：主题里 `VScrollBar` / `HScrollBar` 全局换 `kit/sb_groove(_h)` + `kit/sb_grab_<态>(_h)`（宽 14）。
+- 设置「光标」改段头签；「返回 / 回主菜单」纸卷键。分辨率行头的「16:9」小字、开发区说明留给批四。
+- 测试 tests/ui/test_stone_chips.gd、test_encyclopedia（目录条与搜索框）；截图 /mnt/project-files/art/ui/kit/shots_settings/。
