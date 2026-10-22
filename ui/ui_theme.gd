@@ -939,6 +939,14 @@ static func slab(c: PanelContainer, edge_art: String = "") -> PanelContainer:
 	return c
 
 
+## 一张九宫格图（边距读同名 json 的 `margin`），内边距跟图边一样；没图 null。贴图走 [method art_cached]（_draw 里画也不会白块）
+static func art_box(name: String) -> StyleBoxTexture:
+	var box := _art_box(name)
+	if box != null:
+		box.texture = art_cached(name)
+	return box
+
+
 ## 九宫格底：图 + json 的边距（没写边距按图边长的四分之一）。没图 null。
 ## [param title_strip] 真 = 石板框：顶边的内边距只留到标题条上沿（标题条 [OverlayFrame] 自己占住刻线上方那一条）；
 ## [param content] ≥ 0 = 内边距用它（换皮不改排版），否则跟图边一样

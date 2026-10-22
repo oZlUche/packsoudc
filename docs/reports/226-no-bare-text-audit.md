@@ -261,3 +261,12 @@
 - **卖掉的随身钮**：禁用态 + 226 的已售戳（`notice/stamp_sold`，英文 `_en`），52 × 52，中心对准币座中心。
 - **字键**：`shop.refresh` 改成只写「刷新 / Restock」，`shop.belt_price`、`shop.belt_sold` 删（价钱不再拼进字里，「币」字由金币图代替）。
 - 测试 tests/ui/test_shop_keys.gd（含缺图退路）；截图 /mnt/project-files/art/ui/shop/shots_keys/。
+
+## 十二、批三之一落地（v3.96）：叠层标题带 + 商店
+
+- **叠层标题带**（补充四）：`OverlayFrame` 石板皮的标题条底下铺 `kit/band`（乙 石刻浅槽，九宫格 20 / 18 / 24 / 18，四周出血 6），横贯整条标题条；标题墨字 20 号粗宋，从槽左头 18 起（`band`、`band_rect()`）。帐篷 / 书 / 铜三种皮不铺。神坛的 `stele_band` 等神坛换青石碑时一起换。
+- **商店价签**：每格下面的「N 币　a×b」换铜挂牌 `PriceTag`（`notice/price_bronze`，宽 = 字宽 + 38，高 40，上 12 是挂绳，深棕字）；卖掉的照写价钱，再盖已售戳（56 × 56，中心对准价签右上角，压到商品格上）。
+- **出售区**：说明行换段头签「出售区」，「拖进来就卖，回定价的一半」进签的悬浮窗（`shop.sell_tag` / `shop.sell_tip`，删 `shop.sell_area`）。
+- **执行的判断**：顶上「货币 N　商品按真实尺寸……」整行删，没做标题条右槽的钱币牌 —— 帐篷标题是正中的布招牌，右槽在檐下飘着；钱数顶端栏一直写着（进店也在）。后半句照 §2.6 删。
+- `UiTheme.art_box(name)`：九宫格图，贴图走 `art_cached`（_draw 里画不白块）。
+- 测试 tests/ui/test_bare_text_batch3.gd；截图 /mnt/project-files/art/ui/notice/shots226c/。

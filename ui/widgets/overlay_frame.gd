@@ -40,6 +40,11 @@ var tent := false
 const TENT_SIDE_PAD := 12
 ## 帐篷：布招牌的流苏下沿以下再空这么多，内容才开始（标题条照美术在 14..50，字心对着红布中心 y 32）
 const TENT_SIGN_CLEAR := 6
+## 226 批三（kit 乙 石刻 `band`）：石板皮的标题条底下铺一道横贯整条的浅槽，墨字从槽左头 18 起；图四周多 6（出血）
+const BAND_ART := "kit/band"
+## 铺了标题带（只有石板皮；铜 / 书 / 帐篷各有自己的标题位置）
+var band := false
+var _band_box: StyleBoxTexture = null
 
 ## 皮：石板（默认）/ 铜面板 / 书 / 帐篷；要的图缺了一律退回石板，[member skin] 记实际用上的那张
 const SKIN_SLAB := &"slab"
@@ -90,6 +95,14 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 		title_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		title_label.custom_minimum_size.y = TENT_TITLE_H
 		title_bar.custom_minimum_size.y = tent_title_bar_height(box)
+	band = not tent and textured and UiTheme.art_cached(BAND_ART) != null
+	if band:
+		var spec := UiTheme.art_meta(BAND_ART)
+		var lab: Dictionary = spec.get("label", {})
+		title_label.add_theme_font_override("font", UiPalette.cjk_font_bold())
+		title_label.add_theme_font_size_override("font_size", int(lab.get("size", 20)))
+		title_label.add_theme_color_override("font_color", Color(String(lab.get("color", "#2e2219"))))     # 槽是浅石：不管板深浅都写墨字
+		title_bar.custom_minimum_size.y = maxf(title_bar.custom_minimum_size.y, float(spec.get("height", 36)))
 	title_bar.add_child(title_label)
 	slots = UiTheme.hbox(8)
 	title_bar.add_child(slots)
@@ -102,7 +115,12 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 		var pad := maxi(0, want - int(box.content_margin_left))
 		var side := pad + (TENT_SIDE_PAD if tent else 0)
 		UiTheme.margins(content, side, 0, side, pad)
-		UiTheme.margins(head, 0, 0, 0, 0)
+		if band:     # 字从槽左头 18 起，右边的槽留 8
+			UiTheme.margins(head, int(UiTheme.art_meta(BAND_ART).get("label", {}).get("x", 18)), 0, 8, 0)
+		else:
+			UiTheme.margins(head, 0, 0, 0, 0)
+		if band:
+			head.resized.connect(queue_redraw)
 	else:
 		UiTheme.panel(self, want, UiTheme.PANEL_OVERLAY)
 		UiTheme.margins(content, 0, 0, 0, 0)
@@ -223,7 +241,22 @@ func outset_top() -> float:
 	return -tent_peak_at().y if tent else 0.0
 
 
+## 标题带画在哪（框坐标，含四周出血）；没铺是空矩形
+func band_rect() -> Rect2:
+	var head := title_bar.get_parent() as Control if band and title_bar != null else null
+	if head == null:
+		return Rect2()
+	var pad := float(UiTheme.art_meta(BAND_ART).get("pad", 6))
+	return Rect2(head.get_global_position() - get_global_position(), head.size).grow(pad)
+
+
 func _draw() -> void:
+	if band:
+		if _band_box == null:
+			_band_box = UiTheme.art_box(BAND_ART)
+		if _band_box != null:
+			draw_style_box(_band_box, band_rect())     # 在石板上、标题字下
+		return
 	if not tent:
 		return
 	var peak := UiTheme.art_cached(TENT_PEAK)     # 在篷面上、标题字下（子节点画在 _draw 之后）

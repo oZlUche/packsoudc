@@ -15,7 +15,6 @@ var _belt_row: VBoxContainer = null     # 227：随身那几颗竖着排（英�
 var _belt_btns: Array[Button] = []
 var _sell_view: InventoryView
 var _refresh_btn: Button
-var _wallet_line: Label
 var _inv: InventoryPanelScript
 
 
@@ -29,8 +28,7 @@ func open(payload: Dictionary) -> void:
 	var left := _vbox(8)
 	row.add_child(left)
 	_frame_title(UiText.t("node.label.shop"))     # 157：标题在石板框的标题条上，说明留在原处
-	_wallet_line = _label("", 13, UiPalette.DIM)
-	left.add_child(_wallet_line)
+	# 226 批三：「货币 N　商品按真实尺寸……」那行删 —— 钱数顶端栏一直写着，后半句删
 	_shelf_row = _hbox(10)
 	left.add_child(_shelf_row)
 	BoardFrame.wrap(_shelf_row, "plain")     # 227：整排货架一块素框（每个货位各套一块，帐篷就宽出屏了）
@@ -39,10 +37,10 @@ func open(payload: Dictionary) -> void:
 	left.add_child(lower)
 	var sell_col := _vbox(4)
 	lower.add_child(sell_col)
-	var sell_note := _label(UiText.t("shop.sell_area"), 13, UiPalette.DIM)
-	sell_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # 227：按出售区的宽折行（英文一行会把帐篷撑出屏）
-	sell_note.custom_minimum_size.x = 1.0
-	sell_col.add_child(sell_note)
+	var sell_tag := HeaderTag.new(UiText.t("shop.sell_tag"))     # 226 批三：出售区说明换段头签，「拖进来就卖……」进签的悬浮窗
+	sell_tag.mouse_filter = Control.MOUSE_FILTER_PASS
+	sell_tag.tooltip_text = UiText.t("shop.sell_tip")
+	sell_col.add_child(sell_tag)
 	_sell_view = InventoryView.new()
 	_sell_view.label_font = font
 	_sell_view.show_adjacency = false
@@ -275,7 +273,8 @@ func _rebuild() -> void:
 		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)
 		var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
-		var price := _label(UiText.t("shop.sold_tag") if sold else UiText.t("shop.price_tag") % [int(_session.stock[i]["price"]), size.x, size.y], 12, UiPalette.DIM if sold else UiPalette.STAMINA)
+		var price := PriceTag.new(UiText.t("shop.price_tag") % [int(_session.stock[i]["price"]), size.x, size.y])     # 226 批三：铜挂牌，卖掉了盖戳
+		price.sold = sold
 		price.name = "Price%d" % idx
 		col.add_child(price)
 		_shelf_row.add_child(col)
@@ -314,14 +313,12 @@ func buy_belt(i: int) -> String:
 func _refresh() -> void:
 	if _session == null:
 		return
-	_wallet_line.text = UiText.t("shop.wallet") % flow.run.wallet.balance
 	ScrollKey.show_price(_refresh_btn, UiText.t("shop.refresh"), _session.refresh_cost())
 	_refresh_btn.disabled = not _session.can_refresh()
 	for i in _shelf_views.size():
-		var price := _shelf_row.get_child(i).get_node_or_null("Price%d" % i) as Label
-		if price != null and _session.sold.has(i):
-			price.text = UiText.t("shop.sold_tag")
-			price.theme_type_variation = UiTheme.LABEL_DIM     # 121：卖掉了换暗色变体
+		var price := _shelf_row.get_child(i).get_node_or_null("Price%d" % i) as PriceTag
+		if price != null:
+			price.sold = _session.sold.has(i)
 	for i in _belt_btns.size():
 		var offer: Dictionary = _session.belt_offers[i]
 		var def := BeltSkillDef.find(StringName(String(offer["id"])))
