@@ -151,7 +151,7 @@ static func frame_out_of_run_screens(t: TestCase, root: Window) -> void:
 
 
 static func frame_node_screens(t: TestCase, root: Window) -> void:
-	t.begin("226 批四守门 · 局内：地图（HUD）、事件书、商店、神坛、铸炉（台面便条）、搜刮、保险箱都没有裸字")
+	t.begin("226 批四守门 · 局内：地图（HUD）、事件书、商店、神坛、铸炉（便条）、搜刮、保险箱都没有裸字")
 	DevGate.force_player = true
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
@@ -183,7 +183,13 @@ static func frame_node_screens(t: TestCase, root: Window) -> void:
 		bad.append_array(audit(screen, String(row[0])))
 		if row[0] == "forge":
 			var note := screen.find_child("ForgeNote", true, false) as Control
-			t.check(note != null and note.theme_type_variation == UiTheme.PANEL_SUMMARY_NOTE, "铸炉「将铸出」几行写在台面便条上")
+			t.check(note != null and note.theme_type_variation == UiTheme.PANEL_SUMMARY_NOTE, "铸炉「将铸出」几行写在便条上")
+			var slot_notes: Array = []
+			for i in 3:
+				var sn := screen.find_child("SlotNote%d" % i, true, false) as Control
+				if sn != null and sn.theme_type_variation == UiTheme.PANEL_SUMMARY_NOTE and sn.find_children("*", "RichTextLabel", true, false).size() == 1:
+					slot_notes.append(sn)
+			t.eq(slot_notes.size(), 3, "铸炉三槽下的小字各写在一张便条上")
 		screen.free()
 	DevGate.force_player = false
 	Support.cleanup(PREFIX + "n")
