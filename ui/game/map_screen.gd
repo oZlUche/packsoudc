@@ -298,12 +298,13 @@ func toggle_pause() -> void:
 	_pause.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.content.add_child(col)
-	col.add_child(_button(UiText.t("map.pause_resume"), toggle_pause, 14, UiPalette.Tier.PRIMARY))
-	col.add_child(_button(UiText.t("map.pause_settings"), pause_settings, 14))
-	col.add_child(_button(UiText.t("map.pause_encyclopedia"), func(): pause_encyclopedia(), 14))     # 114
+	# UI替换美术：一列商店纸卷键，整宽一样宽（「继续」排第一、不另标色）
+	col.add_child(ScrollKey.make(UiText.t("map.pause_resume"), toggle_pause))
+	col.add_child(ScrollKey.make(UiText.t("map.pause_settings"), pause_settings))
+	col.add_child(ScrollKey.make(UiText.t("map.pause_encyclopedia"), func(): pause_encyclopedia()))     # 114
 	if _run != null and _run.chapter != null and not _run.chapter.rules.is_empty():
-		col.add_child(_button(UiText.t("map.pause_rules"), func(): show_rules(), 14))     # 091：再看一遍规则卡
-	col.add_child(_button(UiText.t("map.pause_main_menu"), func(): flow.save_and_quit(), 14))     # 166：进点自动存档；这里回去之前也静默存一次
+		col.add_child(ScrollKey.make(UiText.t("map.pause_rules"), func(): show_rules()))     # 091：再看一遍规则卡
+	col.add_child(ScrollKey.make(UiText.t("map.pause_main_menu"), func(): flow.save_and_quit()))     # 166：进点自动存档；这里回去之前也静默存一次
 
 
 func pause_open() -> bool:
