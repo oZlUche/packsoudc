@@ -24,7 +24,12 @@
       "label": "再整理一下",
       "labels": {
         "en": "Tidy up first"
-      }
+      },
+      "outcomes": [
+        {
+          "type": "revisit_later"
+        }
+      ]
     }
   ]
 }

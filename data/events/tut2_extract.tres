@@ -1,31 +1,36 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_fs7h8"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_mcgcr"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/extract.gd" id="3_a7rd5"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_7n7fx"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_wsep0"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_mcgcr"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_a7rd5"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/extract.gd" id="3_7n7fx"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_wsep0"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/revisit_later.gd" id="5_38ug0"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_kv4ym"]
 
-[sub_resource type="Resource" id="Resource_38ug0"]
-script = ExtResource("3_a7rd5")
+[sub_resource type="Resource" id="Resource_3npnb"]
+script = ExtResource("3_7n7fx")
 
-[sub_resource type="Resource" id="Resource_kv4ym"]
-script = ExtResource("1_fs7h8")
+[sub_resource type="Resource" id="Resource_c3620"]
+script = ExtResource("1_mcgcr")
 label = "撤离"
 labels = {
 "en": "Extract"
 }
-outcomes = Array[ExtResource("2_mcgcr")]([SubResource("Resource_38ug0")])
+outcomes = Array[ExtResource("2_a7rd5")]([SubResource("Resource_3npnb")])
 
-[sub_resource type="Resource" id="Resource_3npnb"]
-script = ExtResource("1_fs7h8")
+[sub_resource type="Resource" id="Resource_s8ip6"]
+script = ExtResource("5_38ug0")
+
+[sub_resource type="Resource" id="Resource_ufpg8"]
+script = ExtResource("1_mcgcr")
 label = "再整理一下"
 labels = {
 "en": "Tidy up first"
 }
+outcomes = Array[ExtResource("2_a7rd5")]([SubResource("Resource_s8ip6")])
 
 [resource]
-script = ExtResource("5_wsep0")
+script = ExtResource("6_kv4ym")
 id = &"tut2_extract"
 title = "撤离"
 titles = {
@@ -39,4 +44,4 @@ texts = {
 
 Out there, the last prologue is waiting: the Altar."
 }
-options = Array[ExtResource("1_fs7h8")]([SubResource("Resource_kv4ym"), SubResource("Resource_3npnb")])
+options = Array[ExtResource("1_mcgcr")]([SubResource("Resource_c3620"), SubResource("Resource_ufpg8")])

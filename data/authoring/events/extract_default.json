@@ -24,7 +24,12 @@
       "label": "再看看",
       "labels": {
         "en": "Not yet"
-      }
+      },
+      "outcomes": [
+        {
+          "type": "revisit_later"
+        }
+      ]
     }
   ]
 }
