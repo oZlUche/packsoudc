@@ -646,6 +646,8 @@ static func reaction_color(e: BattleEvent) -> Color:
 ## 事件条。回放时最有用的其实不是血条，而是「刚才到底发生了什么」——
 ## 内容配错时这一栏比血条先告诉你。
 func _log_event(e: BattleEvent) -> void:
+	if _ticker == null:
+		return     # 237：正式游戏没有播报栏，每条事件的字都不必拼（_log_line 本来就会早退，拼字白拼）
 	match e.name:
 		BattleEvent.DAMAGE:
 			var amt := StatMath.to_int(absi(e.get_int(&"amount")))
@@ -686,7 +688,7 @@ func _log_event(e: BattleEvent) -> void:
 ## 跳转时一次补上几十条，用光标的话它们会全挤成同一个时间。
 func _log_line(at: int, text: String) -> void:
 	if _ticker == null:
-		return     # 157 补充一：正式游戏不播报（_log_event 照旧跑，收尾战报要它累加的数）
+		return     # 157 补充一：正式游戏不播报
 	_ticker.append_text(UiTheme.ink_bbcode(
 		"[color=#5d6470]%5.2f[/color]  %s\n" % [StatMath.to_float(at), text], UiTheme.tone_at(_ticker)
 	))

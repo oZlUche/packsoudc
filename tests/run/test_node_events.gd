@@ -349,6 +349,30 @@ static func run_search(t: TestCase) -> void:
 		t.eq(l3.size(), 1, "赢了有战利品")
 
 
+## 237：会话结束、没人再拿着它就该放掉 —— 闭包里抓着自己（ended 的回调、encounter_builder）会成环，一局里每个搜索点都漏一份
+static func run_search_freed(t: TestCase) -> void:
+	t.begin("节点事件 · 搜索会话结束后放得掉（闭包不成环）")
+	var w := _world(970)
+	w.travel.step_to(_node(w, &"search").id)
+	var s := w.events.current_search
+	t.check(s != null, "开了会话")
+	if s == null:
+		return
+	var wr: WeakRef = weakref(s)
+	var guard := 0
+	while w.events.current_search != null and guard < 50:
+		guard += 1
+		if w.events.current_search.can_search():
+			w.events.current_search.search()
+		elif w.events.current_search.active:
+			w.events.current_search.leave()
+		else:
+			break
+	t.check(w.events.current_search == null, "会话收掉了")
+	s = null
+	t.check(wr.get_ref() == null, "没人拿着之后会话放掉了（闭包没绑住自己）")
+
+
 static func run_exploration(t: TestCase) -> void:
 	t.begin("节点事件 · 踩上去才造的敌人跟探索度挂钩：走得多、搜得多，随机点与搜索遭遇的敌人更强")
 

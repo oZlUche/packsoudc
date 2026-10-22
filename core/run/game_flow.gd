@@ -253,6 +253,7 @@ func _reset_run() -> void:
 	run = null
 	result = null
 	_queue.clear()
+	seen_loot.clear()     # 237：局没了，「亮过」的记录也没意义（uid 是一局一排的）
 
 
 func new_run() -> void:
@@ -825,6 +826,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		meta.discard_board()     # 搬空了的空棋盘（一键置入后留着显示的）一并丢
 	if not taken.is_empty() or character != null or lost:
 		save_meta()
+	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
 	_grant_keepsakes(chapter)
 	var reveal := map_reveal
