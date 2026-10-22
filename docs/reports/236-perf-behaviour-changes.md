@@ -97,3 +97,11 @@
 - **执行**：甲批一单，作者 2026-10-22 12:52「发吧」确认，已派；乙、丙、丁按 §三 的前提。
 - **代码审阅精简**：没有新活；237 §4.1 第二批照旧自行合并。甲批和它的第二批都动 `map_view` / `ground_layer`，谁后合谁解冲突。
 - **美术设计**：石碑 1× 导出一张（`ledger_stele` 源文件按 922 × 634 出）。 224 补充三已让美术设计重出去线的石板（1x + @2x 都在 out/v2/），执行按 ⑤ 直接用 1x 那张即可，不用再另要。
+
+## 六、甲批落地（执行，2026-10-22，v4.16）
+
+- **④ 放旧局**：`RunModule` 基类收了 `_run` 和 `dispose()`（九个模块不再各写一份 `_run`）；`FaithPower / RunSkills / HunterSystem / ErosionField` 各加 `dispose()`；`RunHooks.clear()`；`RunState.dispose()` 撤 hook → 模块 `dispose` → 清模块表 → 四个系统 `dispose` → 把局与旅程 / 时钟 / 节点事件 / 棋盘 / 仓 / 钱 / 体力 / 待拾取身上所有信号的连接断掉（`_wire_events` 的 lambda 都抓着局）。`GameFlow._drop_run` 在 `_reset_run` 与 `_adopt`（换的不是同一局时）里把旧局的 `dispose` 延到下一帧。`events` 不置空（换屏那一帧的旧屏退出时可能还摸它）。测试 `test_run_dispose_236`：dispose 后弱引用为空；对照组不 dispose 放不掉。
+- **② 战斗日志**：`BattleTraceWriter.write` 主线程只定文件头和文件名，拼三份文本、写盘、`prune` 交 `WorkerThreadPool`；下一场开写前、`BattleArchive.list()`（回放浏览器）前、关窗（`NOTIFICATION_WM_CLOSE_REQUEST`）前 `flush()`。`test_battle_trace` 查文件前 flush，并断言最后一场是交给了线程。
+- **③ 盖死即停 —— 和方案不一样的地方**：方案把战斗、战前、搜刮列为「整屏底图」，但 226 之后这三屏是**居中的铜面板 + 半透明压暗**，地图从四周透出来（截图核过）；藏掉底屏会露出空底，所以它们 `covers_base()` 仍是 false。真正盖死的是**铸炉、休息营地、宝箱**三屏（自带不透明整屏底），只这三个返回 true。导演 `_sync_base()`：盖死的叠层淡入完（`modulate.a` 到 1）才把地图屏 `visible = false`、`PROCESS_MODE_DISABLED`，撤掉 / 换掉 / 收起时恢复。透出地图的叠层开着时地图隔帧重绘（`MapView.throttled`，60 → 30 Hz）—— 战斗、战前、搜刮走的是这一条。测试 `test_director_covers_236`。
+- **⑤ 贴图**：五张地图底图 `.import` 开 `mipmaps/generate`（不设 size_limit），`MapView.texture_filter = LINEAR_WITH_MIPMAPS` 才用得上；`result/ledger_stele.png` 换美术设计 224 补充三重出的 1× 图（922 × 634），`origin [-29, -29]` 与 `draw_size` 不动（两者本来就是 1× 设计坐标，美术那份 json 也是这个数，方案里「改 −14」不用改）。`UiTheme.release_art(prefix)` / `art_is_cached(name)`：铸炉屏退出放 `forge/bg_`、战斗屏退出放 `battle/battle_bg`；其余整屏底图（营地、宝箱、主菜单、库房）走的是 `UiTheme.art()` / `load()`，没进 `_art_cache`，节点放掉就跟着放，不用另放。
+- **⑦ 启动预热**：`GameDirector.warm_up()` 在 `_ready` 末尾跑，主菜单亮起来的三帧里各做一类：五种字体 + 两种系统字体各量一次字、挂一块看不见的 2 × 2 小块把字按 16 / 22 / 24 号画一遍（字形进缓存）；同一块挂上裁切材质（`UiMotion.warm`）让着色器编译；`art_cached(battle/battle_bg)` 预读斗技场底图，然后放掉那一小块。**宝箱底图没预热**：它在 `assets/chest/bg/`，不在 `art_cached` 的根下，而且宝箱不在「第一次迎战卡」那条路上。测试 `test_warm_up_236`。
