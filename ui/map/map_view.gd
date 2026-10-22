@@ -252,7 +252,7 @@ func safe_rect() -> Rect2:
 	var hi := content_inset.size
 	var room := size - lo - hi
 	if room.x < size.x * 0.5 or room.y < size.y * 0.5:
-		return Rect2(Vector2.ZERO, size)
+		return visible_rect()     # 让不出来就只让顶端栏：居中 / 夹边也不会把人塞到栏底下（游戏测试 10-22：点小棋子回来人在栏下）
 	return Rect2(lo, room)
 
 
