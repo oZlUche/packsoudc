@@ -105,3 +105,9 @@
 - **③ 盖死即停 —— 和方案不一样的地方**：方案把战斗、战前、搜刮列为「整屏底图」，但 226 之后这三屏是**居中的铜面板 + 半透明压暗**，地图从四周透出来（截图核过）；藏掉底屏会露出空底，所以它们 `covers_base()` 仍是 false。真正盖死的是**铸炉、休息营地、宝箱**三屏（自带不透明整屏底），只这三个返回 true。导演 `_sync_base()`：盖死的叠层淡入完（`modulate.a` 到 1）才把地图屏 `visible = false`、`PROCESS_MODE_DISABLED`，撤掉 / 换掉 / 收起时恢复。透出地图的叠层开着时地图隔帧重绘（`MapView.throttled`，60 → 30 Hz）—— 战斗、战前、搜刮走的是这一条。测试 `test_director_covers_236`。
 - **⑤ 贴图**：五张地图底图 `.import` 开 `mipmaps/generate`（不设 size_limit），`MapView.texture_filter = LINEAR_WITH_MIPMAPS` 才用得上；`result/ledger_stele.png` 换美术设计 224 补充三重出的 1× 图（922 × 634），`origin [-29, -29]` 与 `draw_size` 不动（两者本来就是 1× 设计坐标，美术那份 json 也是这个数，方案里「改 −14」不用改）。`UiTheme.release_art(prefix)` / `art_is_cached(name)`：铸炉屏退出放 `forge/bg_`、战斗屏退出放 `battle/battle_bg`；其余整屏底图（营地、宝箱、主菜单、库房）走的是 `UiTheme.art()` / `load()`，没进 `_art_cache`，节点放掉就跟着放，不用另放。
 - **⑦ 启动预热**：`GameDirector.warm_up()` 在 `_ready` 末尾跑，主菜单亮起来的三帧里各做一类：五种字体 + 两种系统字体各量一次字、挂一块看不见的 2 × 2 小块把字按 16 / 22 / 24 号画一遍（字形进缓存）；同一块挂上裁切材质（`UiMotion.warm`）让着色器编译；`art_cached(battle/battle_bg)` 预读斗技场底图，然后放掉那一小块。**宝箱底图没预热**：它在 `assets/chest/bg/`，不在 `art_cached` 的根下，而且宝箱不在「第一次迎战卡」那条路上。测试 `test_warm_up_236`。
+
+## 七、乙批落地（执行，2026-10-22，v4.18）
+
+- 先试 `rest/bg_ruins` 一张（BC7 高质量 + mipmap），1920 × 1080 同机位压前 / 压后与 2× 局部在 `/mnt/project-files/art/ui/rest/bc7_trial/`：整图平均差 < 1/255、最大 14/255，美术设计看过夜空渐变、星点、细墨线与月牙边都没问题；架构设计同意安装包多约 40 MB（每张导入后 3.1 MB，原来无损 0.48 MB 左右）换显存每张 9.2 → 3.1 MB（含 mipmap）。
+- 推到 17 张：`rest/bg_*` 4、`forge/bg_*` 4（含英文版）、`assets/chest/bg/*` 5、`setup/bg_*` 3、`battle/battle_bg` 1，`.import` 改 `compress/mode=2`、`high_quality=true`、`mipmaps/generate=true`。主菜单三张（2112 × 1320）、基地与结算库房（1920 × 1080）没在这 17 张里，照旧无损。
+- 读回像素的地方只有营地小件的点击遮罩（`rest_camp_screen._mask`，本来就先 `decompress()`），不读底图，压了不受影响。宝箱底图预读不做（架构设计同意）。

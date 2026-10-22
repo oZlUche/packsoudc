@@ -46,6 +46,8 @@ const MEDAL_OUT := 0.25
 ## 231：「继续」那一格的高（旗 134、铜章 132 上下伸出去；往下多伸一点 —— 旗底有 8 px 留白）。235 补：顶端栏 86 → 100，格子 102 → 88，面板仍放得进 1000 高
 const SLOT_HEIGHT := 88.0
 const SLOT_DROP := 4.0
+## 美术设计 v4.17 补：顶端栏加高后「继续」旗尾尖压进面板内沿；整组旗（旗杆连旗）往上挪到尾尖离内沿 8 px，铜章不动
+const FLAG_RAISE := 18.0
 
 
 func open(payload: Dictionary) -> void:
@@ -154,7 +156,8 @@ func _center_slot() -> void:
 
 func _slot_spot(c: Control) -> Vector2:
 	var sz := c.get_combined_minimum_size().max(c.size)
-	return ((_next_slot.size - sz) * 0.5 + Vector2(0, SLOT_DROP)).floor()
+	var drop := SLOT_DROP - (FLAG_RAISE if c == _next else 0.0)
+	return ((_next_slot.size - sz) * 0.5 + Vector2(0, drop)).floor()
 
 
 ## 231：看完了 —— 铜章里输的剑垂下、赢的剑举起（一倍速 0.4 s），再淡掉，继续旗在同一格展开；跳过 / 拖到头 / 动效关着直接终态

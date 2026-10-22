@@ -81,3 +81,5 @@
 作者原话（美术设计线）：「两头的浮雕和下方边缘重合了，扩张顶端栏的下缘，避免重合」。美术设计重出栏皮：石面 86 → 100（`design_height`），两头与平铺段图高 104 → 118（`strip_height`），回纹带挪到石块下面 y 87～95、整条贯通；日晷底座宽 302 → 274、轴心 (151, 6) → (137, 6)，下凸仍到 124。指针、轴心、凹槽图不变。
 
 执行：换 `assets/ui/hud/topbar/` 的两头三态、`bar_tile`、`dial_base` 与 `topbar.json` 的数（库里的文件名与 `states_suffix` 写法照旧，`dial.bottom 124` 留着）。栏里的组照旧按石块上下沿 8～78 居中（`band_margins` 本来就按热区算），不按 100 居中。栏高多出 14，战前 / 战斗两块铜面板在 1000 高下放不进顶端栏下面（896 > 884），把战斗屏「继续」那一格 `SLOT_HEIGHT` 102 → 88（旗与铜章本来就上下伸出格子）。测试 `test_topbar_235` 栏高改 100。
+
+补二（v4.18，美术设计看 v4.17 截图后提）：格子压到 88 后「继续」旗尾尖压进了铜面板内沿。整组旗（旗杆连旗）往上挪 18 px（`BattleScreen.FLAG_RAISE`，只挪旗，铜章还按 `SLOT_DROP` 摆），1600×900 截图里尾尖离内沿 7 px（设计尺寸约 8 px）；旗杆顶仍在时间轴下面。对比图：`/mnt/project-files/art/ui/topbar/landed100/battle_end_flag_before.png` / `battle_end_flag_up.png`。
