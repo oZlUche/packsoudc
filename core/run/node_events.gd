@@ -693,7 +693,8 @@ func _open_search(node: MapNode, auto: bool = false) -> void:
 		session = SearchSession.new(node, rules.search, items, _rng_for(node, "search"), _depth_of(node))
 		session.extra_searches = hooks.run_context().extra_searches
 		session.search_floor = SearchSession.floor_for(node, rules.search, difficulty_def)     # 127
-		var s := session
+		# 237：闭包里只拿会话的弱引用 —— 会话自己的信号回调 / encounter_builder 抓着自己就成了环，一局里每个搜索点的会话都放不掉
+		var wr: WeakRef = weakref(session)
 		var sr := rules.search
 		var bless_rng := _rng_for(node, "bless_search")
 		session.substitute = func(ids: Array[StringName]) -> Array[StringName]:
@@ -703,8 +704,9 @@ func _open_search(node: MapNode, auto: bool = false) -> void:
 			var fixed = node.content.get("encounter", null)
 			if fixed is Dictionary and EnemyKit.has_enemy(fixed):
 				return (fixed as Dictionary).duplicate(true)
-			return _enemy_for(node, &"search", _rng_for(node, "ambush:%d" % s.searches_done))
-		session.ended.connect(func(reason: StringName): _close_search(node, s, reason))
+			var live := wr.get_ref() as SearchSession     # 会话自己在调，一定还活着
+			return _enemy_for(node, &"search", _rng_for(node, "ambush:%d" % (live.searches_done if live != null else 0)))
+		session.ended.connect(func(reason: StringName): _close_search(node, wr.get_ref() as SearchSession, reason))
 		current_search = session
 		search_opened.emit(node, session)
 	if not auto:
@@ -826,8 +828,8 @@ func open_chest(node: MapNode) -> bool:
 	var base := rules.search
 	session.substitute = func(ids: Array[StringName]) -> Array[StringName]:
 		return hooks.bless_substitute(ids, base.bless_chance, base.bless_chance_active, bless_rng)     # 095：赐福版照换
-	var s := session
-	session.ended.connect(func(reason: StringName): _close_search(node, s, reason))
+	var wr: WeakRef = weakref(session)     # 237：同上，不让会话绑住自己
+	session.ended.connect(func(reason: StringName): _close_search(node, wr.get_ref() as SearchSession, reason))
 	var chest := ChestPlacer.chest_of(node).duplicate()
 	chest["opened"] = true
 	node.content[ChestPlacer.KEY] = chest
