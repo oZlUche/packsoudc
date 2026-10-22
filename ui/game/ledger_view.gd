@@ -1,4 +1,4 @@
-## 224（作者定）：结算第一页的账单 —— 十一行 + 合计（作者 16:00 去掉了表头；补充二 击败的敌人 / 精英 / 首领分三行），三栏：项目 | 数量 | 经验（经验先占位写「—」）。
+## 224（作者定）：结算第一页的账单 —— 十一行 + 合计（作者 16:00 去掉了表头；补充二 击败的敌人 / 精英 / 首领分三行），两栏：项目 | 数量（补充三，作者 2026-10-22 12:45：经验列去掉、合计改「总分」，以后有对应系统再把分数转成经验）。
 ## 底是 `result/ledger_stele`（美术设计定稿甲：半透明的大理石光影与刻线，直接画在结算页的石板上，不另垫底）；字和数由这里写：
 ## 标签思源宋体 22，数量 Cinzel Bold 24 右对齐（「27 件 · 保险箱 2 件」里的汉字落到思源宋体），最高稀有度写稀有度名、用稀有度色，
 ## 合计行标签粗体 26、数 Cinzel 38 朱红。补充二：整页放大 1.2 倍，图是 2 倍分辨率、按 [constant ART_SIZE] 缩着画。规格见 `art/ui/ledger/out/v2/layout.json`。
@@ -18,8 +18,7 @@ const ART_ORIGIN := Vector2(-29, -29)
 ## 图按这个（1x）大小画（文件是 2 倍分辨率）
 const ART_SIZE := Vector2(922, 634)
 const LABEL_X := 22.0
-const NUMBER_RIGHT := 701.0
-const XP_RIGHT := 845.0
+const NUMBER_RIGHT := 845.0
 const FIRST_DELAY := 0.4
 const ROW_GAP := 0.35
 const ROLL_SEC := 0.3
@@ -191,7 +190,3 @@ func _draw() -> void:
 		var px := 38 if total else (22 if font == _bold_font else 24)
 		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 		draw_string(font, Vector2(NUMBER_RIGHT - w, y + (40 if total else (32 if font == _bold_font else 34))), text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, row["color"])
-		var xp := UiText.t("ledger.xp_total") if total else UiText.t("ledger.none")
-		var xp_px := 18 if total else 19
-		var xw := _body_font.get_string_size(xp, HORIZONTAL_ALIGNMENT_LEFT, -1, xp_px).x
-		draw_string(_body_font, Vector2(XP_RIGHT - xw, y + (33 if total else 32)), xp, HORIZONTAL_ALIGNMENT_LEFT, -1, xp_px, INK_DIM)
