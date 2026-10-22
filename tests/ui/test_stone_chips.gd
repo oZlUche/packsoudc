@@ -4,6 +4,7 @@ extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
+const TechTree := preload("res://tests/meta/test_tech_tree.gd")
 const PREFIX := "stone_chips"
 
 
@@ -41,3 +42,38 @@ static func frame_settings_stone(t: TestCase, root: Window) -> void:
 	t.check(sb != null and sb.texture == UiTheme.art_cached("kit/sb_grab_normal"), "竖滚动条把手是石刻")
 	screen.free()
 	Support.cleanup(PREFIX)
+
+
+static func frame_base_stone(t: TestCase, root: Window) -> void:
+	t.begin("乙 石刻：基地 —— 出售两个下拉是木牌框 + 箭头 + 浅纸弹出单、一键出售主档木牌、成就筛选木牌、科技节点木牌 + 选中圈、升级主档木牌、图鉴浅格")
+	var c = NodeScreens._content()
+	var f := Support.flow(c, PREFIX + "b", 10000.0)
+	var screen = load("res://ui/game/meta_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	screen.screen = GameFlow.Screen.META
+	root.add_child(screen)
+	screen.open({})
+	for ob: OptionButton in [screen._sell_pick, screen._sell_tag_pick]:
+		t.check(ob.theme_type_variation == UiTheme.BUTTON_HOME and ob.get_theme_icon("arrow") == UiTheme.art_cached("kit/drop_arrow"), "下拉：木牌框 + 石刻箭头")
+		var panel := ob.get_popup().get_theme_stylebox("panel") as StyleBoxTexture
+		t.check(panel != null and panel.texture == UiTheme.art_cached("kit/popup"), "弹出单是浅纸")
+	t.eq(screen._sell_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "一键出售 = 主档木牌")
+	for b: Button in screen._ach_filter_btns.values():
+		t.check(b.theme_type_variation == UiTheme.BUTTON_HOME and b.toggle_mode, "成就筛选「%s」是木牌、可切换" % b.text)
+	var tree := TechTreeView.new()
+	root.add_child(tree)
+	var defs: Array[TechDef] = [TechTree._tech("a"), TechTree._tech("b", ["a"])]
+	tree.setup(f.meta, defs, UiPalette.cjk_font())
+	tree.select(&"a")
+	var box := tree.node_button(&"a").get_theme_stylebox("normal") as StyleBoxTexture
+	t.check(box != null and box.texture == UiTheme.art_cached("home/btn_wood"), "可点亮的节点是木牌")
+	var locked := tree.node_button(&"b").get_theme_stylebox("normal") as StyleBoxTexture
+	t.check(locked != null and locked.texture == UiTheme.art_cached("home/btn_wood_disabled"), "锁住的是灰木牌")
+	t.check(tree.find_child("SelRing", false, false) != null, "选中圈那层在最上面")
+	tree.free()
+	t.eq(screen._tech._action.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "升级 = 主档木牌")
+	screen.show_tab("codex")
+	t.check(not screen._codex_tiles.is_empty() and CodexTile._box(CodexTile.CELL_ART, 16.0) != null, "图鉴格有浅亚麻格底")
+	screen.free()
+	Support.cleanup(PREFIX + "b")

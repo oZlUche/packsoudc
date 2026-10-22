@@ -308,3 +308,11 @@
 - **滚动条**：主题里 `VScrollBar` / `HScrollBar` 全局换 `kit/sb_groove(_h)` + `kit/sb_grab_<态>(_h)`（宽 14）。
 - 设置「光标」改段头签；「返回 / 回主菜单」纸卷键。分辨率行头的「16:9」小字、开发区说明留给批四。
 - 测试 tests/ui/test_stone_chips.gd、test_encyclopedia（目录条与搜索框）；截图 /mnt/project-files/art/ui/kit/shots_settings/。
+
+## 十六、乙 石刻：基地各页（v4.00）
+
+- **出售**：稀有度 / 标签两个下拉框用家的木牌四态（`BUTTON_HOME`），箭头 `kit/drop_arrow`，字左对齐墨色；弹出单 `kit/popup`（九宫格 16）、悬停行 `kit/popup_hover`（`UiTheme.dress_wood_option`）。「一键出售」换主档木牌（`BUTTON_HOME_PRIMARY`，字 20，第二行照旧写会卖几件、得几币）。
+- **成就**：「全部 / 已解锁 / 未解锁」换木牌（toggle，选中 = 按下的那块），字 16。
+- **科技**：节点换木牌 —— 已点亮 `home/btn_wood_primary`、可点亮 `home/btn_wood`（慢慢亮暗呼吸）、锁住 `home/btn_wood_disabled`，墨字；选中叠一圈 `kit/node_sel`（九宫格 20，四边外扩 5），画在最上面一层（`SelRing`）。「升级 / 点亮」换主档木牌，材料行的「交 N 件」换木牌。
+- **图鉴**：格底 `kit/codex_cell`（已收集）/ `codex_cell_dim`（还没有），九宫格 16；没点亮的道具照常画图、压成影子 `Color(0.34, 0.32, 0.31)`，没图的色块同样压暗，异体叠影用深一档的亚麻；名字墨字 12（没点亮灰墨）离底 10；左上异体签 `kit/codex_badge`（浅字）、右上件数 `kit/codex_count`（墨字）。
+- 测试 tests/ui/test_stone_chips.gd（`frame_base_stone`）；截图 /mnt/project-files/art/ui/kit/shots_base/。

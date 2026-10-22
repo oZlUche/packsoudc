@@ -87,10 +87,8 @@ func _build() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(spacer)
-	_action = Button.new()
-	UiPalette.style_button(_action, UiPalette.Tier.PRIMARY, UiPalette.button_font_size(14, UiPalette.Tier.PRIMARY))
+	_action = UiTheme.make_home_button("", func(): upgrade(_selected), true)     # 乙 石刻：升级 = 主档木牌
 	_action.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_action.pressed.connect(func(): upgrade(_selected))
 	col.add_child(_action)
 
 
@@ -255,10 +253,7 @@ func _refresh() -> void:
 			UiText.t("tech.owned") % own, have >= need, UiText.t("tech.material_tip") % [name, have, need])
 		var k := mini(maxi(0, need - have), own)
 		if open and k > 0:
-			var btn := Button.new()
-			btn.text = UiText.t("tech.submit_k") % k
-			UiPalette.style_button(btn, UiPalette.Tier.SECONDARY, UiPalette.button_font_size(13, UiPalette.Tier.SECONDARY))
-			btn.pressed.connect(submit_many.bind(id, k))
+			var btn := UiTheme.make_home_button(UiText.t("tech.submit_k") % k, submit_many.bind(id, k), false, Vector2.ZERO, 16)     # 乙 石刻：木牌
 			btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			row.add_child(btn)
 			_submit_buttons[String(key)] = btn

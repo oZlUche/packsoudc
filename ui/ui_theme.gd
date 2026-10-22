@@ -499,6 +499,45 @@ static func make_home_button(text: String, handler: Callable, primary: bool = fa
 	return b
 
 
+## 乙 石刻：基地出售页的下拉框 —— 框用家的木牌四态（[constant BUTTON_HOME]），箭头 `kit/drop_arrow`，字左对齐墨色；
+## 弹出单 `kit/popup`（九宫格 16）、悬停行 `kit/popup_hover`（12 / 10 / 10 / 10）、墨字。缺图照旧
+const WOOD_OPTION_INK := Color("3e2818")
+static func dress_wood_option(ob: OptionButton, font_size: int = 16) -> void:
+	if art_cached(ART_HOME_BTN) == null:
+		return
+	ob.theme_type_variation = BUTTON_HOME
+	ob.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	ob.add_theme_font_size_override("font_size", font_size)
+	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		ob.add_theme_color_override(c, WOOD_OPTION_INK)
+	var arrow := art_cached("kit/drop_arrow")
+	if arrow != null:
+		ob.add_theme_icon_override("arrow", arrow)
+	ob.add_theme_constant_override("arrow_margin", 8)
+	var pop := ob.get_popup()
+	var panel := art_cached("kit/popup")
+	if panel != null:
+		var box := StyleBoxTexture.new()
+		box.texture = panel
+		box.set_texture_margin_all(16.0)
+		box.set_content_margin_all(12.0)
+		pop.add_theme_stylebox_override("panel", box)
+	var hover_tex := art_cached("kit/popup_hover")
+	if hover_tex != null:
+		var hb := StyleBoxTexture.new()
+		hb.texture = hover_tex
+		hb.texture_margin_left = 12.0
+		hb.texture_margin_top = 10.0
+		hb.texture_margin_right = 10.0
+		hb.texture_margin_bottom = 10.0
+		pop.add_theme_stylebox_override("hover", hb)
+	pop.add_theme_font_override("font", UiPalette.cjk_font())
+	pop.add_theme_font_size_override("font_size", font_size)
+	for c in ["font_color", "font_hover_color", "font_accelerator_color"]:
+		pop.add_theme_color_override(c, WOOD_OPTION_INK)
+	pop.add_theme_color_override("font_disabled_color", INK_SOFT)
+
+
 ## 224：结算屏的图按钮 —— `<art>_normal / _hover / _pressed / _disabled.png` 四态（图四周各比按钮大 [param bleed]，留给阴影），
 ## 字不在图上、由这里写（serif_bold，[param center] 是字在按钮里的中心；按下往下挪 1 px）。缺图退回平板按钮
 const ART_BTN_INK := {"normal": Color("2e2219"), "hover": Color("16110d"), "pressed": Color("2e2219"), "disabled": Color("8d8a84")}
