@@ -105,3 +105,29 @@ status.md「占位数值清单」里，①② 管 `enemies` / `enemy_pools` / `i
 - 不做整局无头机器人跑「撤离率」：`/mnt/project-files/testing/playtest.gd` 能整局打，但它的取舍是脚本定的，撤离率反映的是脚本不是玩家；对局层的数只认作者实玩。
 - 不做联网遥测（§五）。
 - 不在这份报告里定任何数：目标带是建议，数由作者定、工具只打印。
+
+## 八 补充一：别人的玩家版也在记；派工（作者 18:48「发」）
+
+作者 18:47 问：「如果我将玩家版exe发给其他人，他们的游玩记录能否也被储存，如果交给我是否也可以用作配置」——**能**。记录器在 `GameDirector` 装配里、不走开发开关，玩家版每走一步照记；jsonl 一行一份，几个人的文件首尾相接当一份读即可。三处要补（已并入这次派工）：战斗日志只留五十场；快照没有版本号，几版混着会偏；别人翻 AppData 不方便。
+
+### 8.1 派给执行线的一批（一次做完、一个 PR）
+
+| 项 | 做什么 | 定下的细节 |
+|---|---|---|
+| ① 流派木桩 | `tools/build_archetypes.gd` | 五路（`burst` / `rapid` / `bleed` / 盾偏向 / 防具偏向）× 猎手段位 0 / 5 / 10 / 20 步；每段件数、稀有度上限取 `standard_ruins` 对应档；`LootPacker.pack` 贪心摆进开局棋盘（后两段加一个包）；每路每段三个种子；输出 `dummies.json`（073 格式，段号 → 木桩），默认写 `res://data/authoring/calibration/archetypes.json`，不占 `dummies.json`（留给真实木桩） |
+| ② 扫表 | `tools/bench_matrix.gd` | 参数：木桩文件、池 id（默认 `standard_ruins`）、难度、每格场数（默认 300）、种子；复用 `HunterBench.win_rate` 的造敌路径（`EnemyPlacer.pick/build_content` → `EnemyKit.spec_of` → `BattleSim.run`）；输出 markdown 到 `docs/reports/balance/<日期>-<池>.md`：胜率 / 平均时长 / 赢时余血 / 同段五路极差四张表，表头写参数与 git 短哈希。只打印，不改数 |
+| ③ 对局记录 | `CalibrationRecorder.record_run(result, version)` | `_settle_run()` 记完账后追加一行 `RunResult.to_dict()` + `version` + `character` + `difficulty` 到 `user://calibration/runs.jsonl`；每步快照也加 `version` 字段 |
+| ④ 版本号 | `project.godot` `config/version`、`export_presets.cfg` 两个 `product_version` | 填 `0.1.0`（238 提过一直是空）；`version` 字段读 `ProjectSettings.get_setting("application/config/version")`；主菜单角落不显示（没要求，别加字） |
+| ⑤ 导出按钮 | 设置页「老手」区（117 的打开日志文件夹按钮旁） | 「导出平衡数据」：`ZIPPacker` 把 `user://calibration/` + `user://battle_logs/` 打成 `背包搜打撤-数据-<日期>.zip` 放到桌面（`OS.get_system_dir(SYSTEM_DIR_DESKTOP)`，取不到就放 user:// 并打开文件夹）；按钮样式平的（230 规则）；说明进悬浮窗；键 `settings.export_data` / `settings.export_data_desc` 中英；完成提示走 `say`。玩家版可见 |
+| ⑥ 战斗日志上限 | `BattleArchive.KEEP` | 50 → 200（三份一场约几十 KB，两百场不到十 MB） |
+| ⑦ 第〇层、第一层各跑一次 | `bench_battle.gd -- power` + `bench_matrix.gd` 对 ① 的木桩 | 两张表进 `docs/reports/balance/`，第一张表的几行结论写进本报告 §九（哪里不单调、哪路偏强） |
+
+### 8.2 不做
+
+- 不改任何数值 json；表给作者看。
+- 不加联网上传。
+- 收回来的多人数据怎么合：拿到文件再说（`cat` 即可），不做合并工具。
+
+### 8.3 测试
+
+① 五路 × 四段都能摆进棋盘、`DummyBuilder.compile` 编得过；② 一格 10 场跑通、markdown 四张表都有；③ `runs.jsonl` 一局一行、带版本；⑤ zip 里两个目录都在；⑥ 滚动删到 200。`tests/battle/test_calibration.gd` 旁边加。
