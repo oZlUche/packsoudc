@@ -328,6 +328,7 @@ func _centered_panel(min_size: Vector2, margin: int = 16, skin: StringName = Ove
 	_overlay_frame.custom_minimum_size = min_size
 	_reserve_ground(_overlay_frame)
 	center.add_child(_overlay_frame)
+	center.offset_bottom = -_overlay_frame.outset_bottom()     # 神坛石碑：石基伸出窗底 56，居中时让出来
 	if _overlay_frame.outset_top() > 0.0:     # 233：帐篷尖顶伸出窗顶 56 —— 窗离顶端栏不够就整块往下挪，尖顶不被盖住
 		var fit := _make_room_above.bind(center)     # 方法 Callable：屏先被释放时，延后那一下自己作废（lambda 会留个悬空的 self）
 		resized.connect(fit)
@@ -336,12 +337,12 @@ func _centered_panel(min_size: Vector2, margin: int = 16, skin: StringName = Ove
 	return _overlay_frame.content
 
 
-## 233：窗居中后离顶端栏的空隙不到皮要的上伸量就把居中区往下让（居中区下移 d，窗只下移 d / 2）
+## 233：窗居中后离顶端栏的空隙不到皮要的上伸量就把居中区往下让（居中区下移 d，窗只下移 d / 2）；底下伸出去的那截（碑的石基）先扣掉
 func _make_room_above(center: Control) -> void:
 	if _overlay_frame == null or not is_instance_valid(center):
 		return
 	var bar := HudHost.bar_height_in(get_tree()) if is_inside_tree() else 0.0
-	var gap := (size.y - bar - _overlay_frame.get_combined_minimum_size().y) * 0.5
+	var gap := (size.y - bar - _overlay_frame.outset_bottom() - _overlay_frame.get_combined_minimum_size().y) * 0.5
 	center.offset_top = bar + 2.0 * maxf(0.0, _overlay_frame.outset_top() - gap)
 
 

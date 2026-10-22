@@ -512,7 +512,7 @@ static func dress_wood_option(ob: OptionButton, font_size: int = 16) -> void:
 
 
 ## 乙 石刻：神坛二选一的下拉 —— 框用 `kit/chip_*`（同 [StoneChip] 的九宫格，高 40），箭头、弹出单同 [method dress_wood_option]；缺图不动
-static func dress_chip_option(ob: OptionButton, font_size: int = 16) -> void:
+static func dress_chip_option(ob: OptionButton, font_size: int = 16, disabled_ink: Color = INK_SOFT) -> void:
 	if art_cached(StoneChip.ART + "normal") == null:
 		return
 	var spec: Dictionary = art_meta(StoneChip.LAYOUT).get("chip", {})
@@ -539,7 +539,7 @@ static func dress_chip_option(ob: OptionButton, font_size: int = 16) -> void:
 	ob.custom_minimum_size.y = StoneChip.HEIGHT
 	ob.focus_mode = Control.FOCUS_NONE
 	_dress_drop(ob, font_size, ink)
-	ob.add_theme_color_override("font_disabled_color", INK_SOFT)
+	ob.add_theme_color_override("font_disabled_color", disabled_ink)
 
 
 ## 下拉共用：左对齐墨字、石刻箭头、浅纸弹出单（悬停一条 `kit/popup_hover`）
