@@ -9,15 +9,18 @@ const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func run_gate(t: TestCase) -> void:
-	t.begin("186 · DevGate：命令行跑的是开发包；打开 force_player 就是玩家包，调试模式与战斗日志默认跟着关")
+	t.begin("186 · DevGate：命令行跑的是开发包；打开 force_player 就是玩家包，调试模式跟着关；242 补充二：战斗日志玩家包照记")
 	t.check(DevGate.on(), "测试是开发包")
 	var gs := GameSettings.new()
 	t.check(gs.debug_on(), "开发包：调试模式按存的值（默认开）")
 	DevGate.force_player = true
 	t.check(not DevGate.on(), "强制玩家包")
 	t.check(not gs.debug_on() and gs.debug_mode, "玩家包：调试模式不生效，存的值不动")
-	t.check(not BattleArchive.default_on(), "战斗日志默认关（同一个开关）")
+	t.check(BattleArchive.default_on(), "242 补充二：战斗日志玩家包也默认开")
+	gs.battle_trace = false
+	t.check(gs.trace_on(), "玩家包：存过的「关」（旧版导出包的默认）不算数，照记")
 	DevGate.force_player = false
+	t.check(not gs.trace_on(), "开发包：按开发区开关（关就不记）")
 	t.eq(HudLayout.VERSION, 7, "布局版本 7（默认布局加了提示行）")
 	var d := HudLayout.default_for("map")
 	t.check(d.entry_of(&"notice").is_empty() and not HudWidgets.KINDS.has(&"notice"), "226 批一：提示行组件删了（回话走告示层）")

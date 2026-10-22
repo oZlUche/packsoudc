@@ -28,7 +28,8 @@ var unlock_all: bool = false
 var bg_theme: String = ""
 ## 109（作者定）：战斗倍速跨局继承 —— 在战斗里切一次，下一场（下一局、重开游戏）照这个速度开场。只认 [constant BATTLE_SPEEDS] 里的值
 var battle_speed: float = 1.0
-## 117（作者定）：战斗的内部日志与回放存档（user://battle_logs）。非导出包默认开、导出包默认关（[method BattleArchive.default_on]）
+## 117（作者定）：战斗的内部日志与回放存档（user://battle_logs）。242 补充二起默认开（[method BattleArchive.default_on]）；
+## 开关只在开发包的设置里，玩家包一律按开算（[method trace_on]）
 var battle_trace: bool = BattleArchive.default_on()
 ## 150 补 2（作者定）：调试模式 —— 开着时地图屏摆出只给开发看的组件（事件日志等，布局里 `debug_only` 的那几件）。
 ## 现在默认开；发布版把这里的默认改成关（一处改）
@@ -64,6 +65,11 @@ const RESOLUTIONS: Array[Vector2i] = [
 ## 186：调试模式此刻生效没有 —— 玩家包里永远关着（[DevGate]），存档里记的值不动
 func debug_on() -> bool:
 	return DevGate.on() and debug_mode
+
+
+## 242 补充二：这一局记不记战斗日志。玩家包没有开关，旧版本存下的「关」（那时导出包默认关）不算数
+func trace_on() -> bool:
+	return battle_trace or not DevGate.on()
 
 
 func to_dict() -> Dictionary:
