@@ -30,7 +30,7 @@ func open(payload: Dictionary) -> void:
 	left.add_child(_view)
 	BoardFrame.wrap(_view)     # 227：素框 + 格缝
 	var buttons := _hbox(8)
-	var back := _button(UiText.t("safe.close"), to_map, 13, UiPalette.Tier.PRIMARY)
+	var back := ScrollKey.make(UiText.t("safe.close"), to_map)     # 乙 石刻：商店纸卷键
 	back.tooltip_text = UiText.t("safe.intro") + "\n" + UiText.t("safe.close_tip")     # 226 批二：说明并进「关上」的悬浮窗，重复的那句警告删了
 	buttons.add_child(back)
 	left.add_child(buttons)

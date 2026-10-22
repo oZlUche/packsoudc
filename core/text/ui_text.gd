@@ -119,7 +119,7 @@ const TEXT := {
 	"map.row_coins": {"zh": "带出的钱", "en": "Coins you leave with"},
 	"map.row_coin_value": {"zh": "%d 币", "en": "%d coins"},
 	"map.row_ground": {"zh": "留在地上", "en": "Left on the Ground"},
-	"map.row_items": {"zh": "%d 件 · 值 %d 币%s", "en": "%d items · worth %d%s"},
+	"map.row_items": {"zh": "%s · 值 %d 币%s", "en": "%s · worth %d%s"},     # %s = UiText.count(n, "unit.item")
 	"map.extract_ground_tip": {"zh": "地上不参战也不出关，留在地上的不带出去。想带走先放进棋盘（B）", "en": "The Ground doesn't fight and doesn't leave; what's left there stays behind. To take it, put it on the Board (B)"},
 	"map.extract_ground_rare": {"zh": "（%d 件稀有以上）", "en": " (%d Rare+)"},
 	"map.extract_confirm": {"zh": "确定撤离", "en": "Extract"},
@@ -549,8 +549,8 @@ const TEXT := {
 	"altar.used": {"zh": "这个休息处的神坛已经用过了，关了", "en": "This altar has been used and is now closed"},
 	"altar.drag_hint": {"zh": "把祭品拖上台来", "en": "Drag offerings onto the table"},
 	"altar.used_short": {"zh": "用过了", "en": "Used"},
-	"altar.offer_line": {"zh": "%d 件 · 信力 +%d（Lv.%d → Lv.%d）", "en": "%d items · Faith +%d (Lv.%d → Lv.%d)"},
-	"altar.preview": {"zh": "献祭 %d 件：信力 +%d（Lv.%d → Lv.%d）", "en": "Offer %d items: Faith +%d (Lv.%d → Lv.%d)"},
+	"altar.offer_line": {"zh": "%s · 信力 +%d（Lv.%d → Lv.%d）", "en": "%s · Faith +%d (Lv.%d → Lv.%d)"},     # %s = UiText.count(n, "unit.item")
+	"altar.preview": {"zh": "献祭 %s：信力 +%d（Lv.%d → Lv.%d）", "en": "Offer %s: Faith +%d (Lv.%d → Lv.%d)"},
 	# ui/game/chest_screen.gd
 	"chest.idle": {"zh": "点击宝箱开锁", "en": "Click the chest to pick the lock"},
 	"chest.back": {"zh": "回地图", "en": "Back to map"},
@@ -1223,7 +1223,7 @@ const TEXT := {
 	"tech.pages_total": {"zh": "仓库共 %d 页", "en": "Warehouse: %d pages in all"},
 	# —— 221 F5b：warehouse ——
 	"wh.expand_tech": {"zh": "仓库扩建", "en": "Warehouse expansion"},     # fallback when the tech is missing
-	"wh.tab_count": {"zh": "%d件", "en": "x%d"},     # page tab, second line
+	"wh.tab_count": {"zh": "%d件", "en": "%d"},     # page tab, second line
 	"wh.tab_locked_tip": {"zh": "%s到第 %d 级解锁", "en": "Unlocks at %s level %d"},
 	"wh.tab_tip": {"zh": "第%s页　%d 件", "en": "Page %s · items: %d"},
 	"wh.store_all": {"zh": "一键置入", "en": "Put all away"},

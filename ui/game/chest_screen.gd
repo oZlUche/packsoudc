@@ -90,7 +90,7 @@ func open(payload: Dictionary) -> void:
 	view.custom_minimum_size = _closed_tex.get_size() if _closed_tex != null else PLACEHOLDER_SIZE
 	center.add_child(view)
 
-	var back := _button(UiText.t("chest.back"), leave, 13, UiPalette.Tier.MINOR)
+	var back := ScrollKey.short(UiText.t("chest.back"), leave)     # 乙 石刻：矮纸卷
 	back.focus_mode = Control.FOCUS_NONE     # 确认键是开锁键，别让按钮抢走
 	back.tooltip_text = UiText.t("chest.back_tip")
 	add_child(back)

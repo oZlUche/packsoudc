@@ -109,5 +109,5 @@ static func attach(b: Button, opt: EventOption) -> int:
 			var top := (b.size.y - SIZE) * 0.5
 			for i in missing:
 				b.draw_string(font, Vector2(left + i * (SIZE + GAP), top + SIZE - 2), glyph_of(kinds[i]),
-					HORIZONTAL_ALIGNMENT_CENTER, SIZE, SIZE, UiPalette.FG))
+					HORIZONTAL_ALIGNMENT_CENTER, SIZE, SIZE, b.get_theme_color("font_color")))     # 字色随按钮（纸卷是墨字）
 	return kinds.size()
