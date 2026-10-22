@@ -45,11 +45,11 @@ func open(payload: Dictionary) -> void:
 	BoardFrame.wrap(_table_view)     # 227：素框 + 格缝
 	# 226 批三：预览行并进「献祭」按钮第二行；「把祭品拖上台来」空态不写（preview_text 仍读得到）
 	var buttons := _hbox(8)
-	_offer_btn = _button(UiText.t("altar.offer"), offer, 14, UiPalette.Tier.PRIMARY)
+	_offer_btn = ScrollKey.primary(UiText.t("altar.offer"), offer, true)     # 乙 石刻：主键压蜡封，预览是第二行小字
 	_offer_btn.disabled = true
 	_offer_btn.tooltip_text = UiText.t("altar.intro") + ((UiText.t("altar.offerings") % def.offerings_summary()) if def != null and not def.offerings.is_empty() else "")
 	buttons.add_child(_offer_btn)
-	var back := _button(UiText.t("setup.back"), to_map, 13)
+	var back := ScrollKey.make(UiText.t("setup.back"), to_map)
 	back.tooltip_text = UiText.t("altar.back_tip")
 	buttons.add_child(back)
 	left.add_child(buttons)
@@ -224,7 +224,7 @@ func _refresh() -> void:
 	else:
 		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
 		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
-	_offer_btn.text = UiText.t("altar.offer") + ("\n" + line if line != "" else "")
+	ScrollKey.show_sub(_offer_btn, UiText.t("altar.offer"), line)
 	for b in _action_btns:
 		(b as Button).disabled = (b as Button).disabled or not open
 

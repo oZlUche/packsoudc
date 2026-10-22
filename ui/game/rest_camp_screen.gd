@@ -194,7 +194,7 @@ func _state(i: int, p: StringName) -> Dictionary:
 func _extra_option(i: int, ctx: Dictionary) -> void:
 	var opt := _def.options[i] as EventOption
 	var state := _state(i, &"")
-	var b := _button(TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)), func(): choose(i), 14, UiPalette.Tier.SECONDARY)
+	var b := ScrollKey.make(TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)), func(): choose(i))
 	b.disabled = not bool(state["ok"])
 	_extra_btns.append(b)
 
@@ -206,7 +206,7 @@ func _build_footer() -> void:
 	row.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	add_child(row)
 	if flow.run != null:
-		row.add_child(_button(UiText.t("event.sort_pack"), toggle_bag, 13, UiPalette.Tier.MINOR))     # 和事件屏一样能整理背包
+		row.add_child(ScrollKey.short(UiText.t("event.sort_pack"), toggle_bag))     # 和事件屏一样能整理背包
 	for b in _extra_btns:
 		row.add_child(b)
 

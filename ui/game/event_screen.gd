@@ -8,6 +8,8 @@ extends GameScreen
 const PANEL_SIZE := Vector2(1320, 760)
 const IMAGE_WIDTH := 640.0
 const TEXT_WIDTH := 560.0
+## 纸卷选项的字离左头卷轴
+const OPTION_INDENT := 40.0
 
 var _def: EventDef = null
 var _node: MapNode = null
@@ -66,7 +68,9 @@ func _open_options() -> void:
 		col.add_child(_wrapped(line, 13, UiPalette.DIM, 420))
 	# 083：事件屏上也能整理背包（教程的「先整理再开打」要在这里做；15 节第 7 项的尾巴）
 	if flow.run != null and not is_briefing():     # 218 补充一：交代时局还没开
-		col.add_child(_button(UiText.t("event.sort_pack"), toggle_bag, 13, UiPalette.Tier.MINOR))
+		var sort := ScrollKey.short(UiText.t("event.sort_pack"), toggle_bag)     # 乙 石刻：矮纸卷
+		sort.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		col.add_child(sort)
 
 
 func _open_result(payload: Dictionary) -> void:
@@ -255,11 +259,15 @@ func intro_heading() -> String:
 	return Names.of(ch) if ch.display_name != "" else String(ch.id)
 
 
-## 一个选项：整行宽、左对齐、够高
+## 一个选项：整行宽、左对齐（乙 石刻：商店纸卷键拉满整行；缺图的平板按钮照旧 64 高）
 func _option_button(text: String, handler: Callable) -> Button:
-	var b := _button(text, handler, 17)     # 090：200% = 34 号（选项是整行的，300% 会把长句挤成两三行）
+	var b := ScrollKey.make(text, handler)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.custom_minimum_size.y = 64
+	if b is ScrollKey:
+		(b as ScrollKey).indent(OPTION_INDENT)
+	else:
+		b.add_theme_font_size_override("font_size", UiPalette.button_font_size(17, UiPalette.Tier.SECONDARY))
+		b.custom_minimum_size.y = 64
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return b
 

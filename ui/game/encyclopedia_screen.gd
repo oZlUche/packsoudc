@@ -47,13 +47,15 @@ func open(payload: Dictionary) -> void:
 	_toc = _vbox(2)
 	_toc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	toc_scroll.add_child(_toc)
-	left.add_child(_button(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back, 14))
+	var back_key := ScrollKey.make(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back)     # 乙 石刻
+	back_key.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	left.add_child(back_key)
 
 	var right := _vbox(10)
 	right.custom_minimum_size.x = PAGE_WIDTH
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(right)
-	_prev_btn = _button(UiText.t("codex.prev"), go_previous, 13, UiPalette.Tier.MINOR)
+	_prev_btn = ScrollKey.short(UiText.t("codex.prev"), go_previous)
 	_prev_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(_prev_btn)
 	_title = _label("", 24, UiPalette.FG)

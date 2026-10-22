@@ -280,3 +280,19 @@
 - **神坛**：预览行并进「献祭」按钮第二行（「N 件 · 信力 +N（Lv.a → Lv.b）」，用过了写「用过了」），台上没东西时不写（`preview_text()` 照旧）。
 - 设置音量步进件等石刻小控件那批一起做（要 kit 的 stepper 图）。
 - 截图 /mnt/project-files/art/ui/notice/shots226d/（confirm、hunter、sell、achievements、warehouse，中英）。
+
+## 十四、乙 石刻纸卷键 + v3.97 复测修正（v3.98）
+
+- **纸卷键再加两种**（`ScrollKey`，规格 `kit/layout.json` 的 `key_primary`）：
+  - 主键 `ScrollKey.primary(字, 动作, two_line)`：纸卷左头压蜡封（`kit/key_primary_*`，九宫格左 36），字在 [16, 宽] 里居中，最窄 132。`two_line` = 底下留一行小字（`sub`，宋体 14），整颗高 64；`ScrollKey.show_sub(b, 大字, 小字)` 缺图的平板按钮照旧拼成第二行。
+  - 矮键 `ScrollKey.short`：同纸卷压到 44 高，字 18。
+  - 整行左对齐的键用 `indent(px)` 让开左头卷轴（事件选项 40）。
+- **换上的地方**：神坛「献祭」主键（预览是小字第二行，不再把窗撑宽）/「返回」纸卷；保险箱「关上保险箱」纸卷；读档「读取」「在此开新档」主键、「删除」矮键、「回主菜单」纸卷；事件选项与「继续」整行纸卷、「整理背包」矮键；营地选项纸卷、「整理背包」矮键；宝箱「回地图」矮键；百科「上一页」矮键、「回主菜单 / 返回」纸卷。事件代价图标里补画的字随按钮字色（纸上是墨字）。
+- **v3.97 复测（游戏测试 02:44）**：
+  - 英文单复数：同时 main 上 #274 已用 `UiText.tn` + `_one` 键补齐（`altar.offer_line`、`altar.preview`、`map.row_items` 等），合并时取它的写法。
+  - 撤离确认付不起时「带出的钱」夹到 0，不写负数。
+  - 地图节点纸签（猎手名、撤离点关闭）攒到最后画，走过的路线不压字；倒计时琥珀字压深（`darkened(0.5)`），红字压 0.2。
+  - 按着左键在拖时不弹道具悬浮窗（`HoverTip` 看鼠标事件的 `button_mask`），合成提示签不再被盖。
+  - 控件自带的 `tooltip_text`（挂牌、段头签、按钮）换成道具悬浮窗那块深皮底浅字：主题里 `TooltipPanel` / `TooltipLabel`，浅底的字色小主题也把 `TooltipLabel` 写回浅字。
+- 英文仓库页签第二行件数只写数字（`wh.tab_count`，原来「x0」，UI替换美术 02:29）。
+- 测试 tests/ui/test_stone_keys.gd；截图 /mnt/project-files/art/ui/kit/shots_keys/。

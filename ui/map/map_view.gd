@@ -159,6 +159,8 @@ const TAG_H := 20.0
 const TAG_FONT := 12
 ## 226 批三：节点旁的纸签（猎手名、撤离点关闭）这一帧摆过的，互相错开
 var _node_tags: Array[Rect2] = []
+## 节点上的纸签（猎手名、撤离点关闭）攒到最后再画：走过的路线虚线不压字。每项 [text, at, ink]
+var _tag_queue: Array = []
 ## 两枚签叠在一起时错开多少
 const TAG_NUDGE := 10.0
 const FOLLOW_SEC := 0.3
@@ -580,6 +582,7 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 #region 绘制
 func _draw() -> void:
 	_node_tags.clear()
+	_tag_queue.clear()
 	if _paper.has_area():     # 192：底图钉在画布上 —— 桌面（屏幕坐标）→ 纸影 → 底图 → 装饰层，后三样和路网同一个变换
 		var desk := UiTheme.art_cached(ART_DESK)
 		if desk != null:
@@ -694,6 +697,8 @@ func _draw() -> void:
 		if pos.has(hid) and float(grow.get(hid, 1.0)) >= 1.0:
 			_draw_hunter(to_screen(pos[hid]), String((mark as Dictionary).get("label", "")))
 	_draw_player_layer(pos, grow, rect)
+	for q in _tag_queue:
+		_draw_tag(String(q[0]), q[1], _node_tags, q[2])
 	if spawn_mask:
 		_draw_spawn_mask(pos, grow)
 
@@ -790,7 +795,7 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, f
 func _draw_hunter(p: Vector2, label: String) -> void:
 	draw_arc(p, NODE_RADIUS + 7.0, 0.0, TAU, 32, UiPalette.HP, 3.0, true)
 	if label != "":     # 226 批三：名字写在纸签上（原来是红字直接写在地图纸上）
-		_draw_tag(label, p + Vector2(0.0, -NODE_RADIUS - 8.0 - TAG_H * 0.5), _node_tags, UiPalette.HP)
+		_tag_queue.append([label, p + Vector2(0.0, -NODE_RADIUS - 8.0 - TAG_H * 0.5), UiPalette.HP.darkened(0.2)])
 
 
 func _draw_node(n: MapNode, p: Vector2) -> void:
@@ -846,7 +851,8 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 			var d := NODE_RADIUS * 0.8
 			draw_line(p + Vector2(-d, -d), p + Vector2(d, d), col, 3.0, true)
 			draw_line(p + Vector2(-d, d), p + Vector2(d, -d), col, 3.0, true)
-		_draw_tag(text, p + Vector2(0.0, NODE_RADIUS + 6.0 + TAG_H * 0.5), _node_tags, col)     # 226 批三：纸签（原来是纯色块）
+		# 226 批三：纸签（原来是纯色块）；浅纸上琥珀太淡，字压深
+		_tag_queue.append([text, p + Vector2(0.0, NODE_RADIUS + 6.0 + TAG_H * 0.5), col.darkened(0.2 if closed else 0.5)])
 
 
 ## 底图是浅纸时，按深底配的前景 / 暗色字换成字色模板的浅版（169）

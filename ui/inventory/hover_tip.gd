@@ -892,6 +892,10 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 	var mm := event as InputEventMouseMotion
 	if mm == null:
 		return
+	if mm.button_mask & MOUSE_BUTTON_MASK_LEFT and not _panel.pinned:     # 按着左键 = 在拖：别弹道具窗盖住拖拽的合成提示签
+		if _panel.visible:
+			hide_tip()
+		return
 	var uid := _uid_under(view, mm.position)
 	if _panel.pinned:
 		_on_source = _panel.visible and view == _for_view and uid == _uid     # 钉住了：只记还在不在源上

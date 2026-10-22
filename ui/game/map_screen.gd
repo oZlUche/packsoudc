@@ -170,7 +170,7 @@ func _open_confirm(node: MapNode) -> void:
 		carried += 1
 		carried_value += ItemValue.of((inst as ItemInstance).def)
 	ledger.add_row(UiText.t("map.row_carried"), UiText.tn("map.row_items", carried) % [carried, carried_value, ""])
-	ledger.add_row(UiText.t("map.row_coins"), UiText.t("map.row_coin_value") % (_run.wallet.balance - maxi(0, fee)))
+	ledger.add_row(UiText.t("map.row_coins"), UiText.t("map.row_coin_value") % maxi(0, _run.wallet.balance - maxi(0, fee)))     # 付不起时不写负数
 	var left := _run.storage.item_count()
 	if left > 0:
 		var left_value := 0

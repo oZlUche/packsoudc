@@ -713,6 +713,9 @@ static func text_theme(tone: StringName) -> Theme:
 	# 180 定稿：难度计数器的数字永远写在黑翻页卡上 —— 摆在浅色地图纸上也还是白字
 	t.set_type_variation(LABEL_FLIP_NUM, "Label")
 	t.set_color("font_color", LABEL_FLIP_NUM, Color.WHITE)
+	# 控件自带的悬浮窗是深皮底：挂在浅底上的控件也写浅字
+	t.set_type_variation("TooltipLabel", "Label")
+	t.set_color("font_color", "TooltipLabel", UiPalette.FG)
 	_tone_themes[tone] = t
 	return t
 
@@ -1059,6 +1062,13 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
 	var paper: StyleBox = layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY)
 	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
+	# 226 批三补：控件自带的 tooltip_text（挂牌、段头签、按钮）也用这块深皮浅字，不再是引擎的小黑框
+	var tip_box: StyleBox = paper.duplicate() if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN)
+	tip_box.set_content_margin_all(12.0)
+	t.set_stylebox("panel", "TooltipPanel", tip_box)
+	t.set_color("font_color", "TooltipLabel", UiPalette.FG)
+	t.set_font("font", "TooltipLabel", _font)
+	t.set_font_size("font_size", "TooltipLabel", 15)
 	# 157 补充二：名牌底 —— 有图是九宫格（内边距按图边），没图是深底细边。
 	# 作者 2026-10-17：改铜质名牌（士兵牌样式，深铜底亮字；铜板本身不透明，不再垫板身；左上的穿链孔在边距里，内容不压它）
 	t.set_type_variation(PANEL_NAMEPLATE, "PanelContainer")

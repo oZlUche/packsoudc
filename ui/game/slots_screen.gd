@@ -32,7 +32,9 @@ func open(payload: Dictionary) -> void:
 	for n in range(1, SaveSlots.COUNT + 1):
 		col.add_child(_row(n))
 	col.add_child(HSeparator.new())
-	col.add_child(_button(UiText.t("slots.back"), flow.to_main_menu, 14, UiPalette.Tier.MINOR))
+	var back := ScrollKey.make(UiText.t("slots.back"), flow.to_main_menu)
+	back.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_child(back)
 
 
 func _row(n: int) -> Control:
@@ -56,11 +58,11 @@ func _row(n: int) -> Control:
 	row.add_child(l)
 	var slot := n
 	if exists:
-		row.add_child(_button(UiText.t("slots.load"), func(): load_slot(slot), 14, UiPalette.Tier.PRIMARY))
-		var del := _button(UiText.t("slots.delete"), func(): delete_slot(slot), 14, UiPalette.Tier.MINOR)
+		row.add_child(ScrollKey.primary(UiText.t("slots.load"), func(): load_slot(slot)))     # 乙 石刻：读、开新档是主键，删是矮键
+		var del := ScrollKey.short(UiText.t("slots.delete"), func(): delete_slot(slot))
 		row.add_child(del)
 	else:
-		row.add_child(_button(UiText.t("slots.new_here"), func(): new_game_here(slot), 14, UiPalette.Tier.PRIMARY))
+		row.add_child(ScrollKey.primary(UiText.t("slots.new_here"), func(): new_game_here(slot)))
 	_rows[n] = panel
 	return panel
 

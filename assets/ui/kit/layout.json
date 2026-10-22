@@ -1,0 +1,266 @@
+{
+ "version": "乙 石刻",
+ "design": [
+  1600,
+  1000
+ ],
+ "pad": 6,
+ "image_origin": [
+  -6,
+  -6
+ ],
+ "note": "所有图四周各多 6 px（阴影、蜡封、书签会伸出去），图左上 = 控件左上 − (6, 6)；nine_slice_margin 是图上的像素、已含这 6。字全部由代码写。",
+ "band": {
+  "file": "band.png",
+  "image": [
+   232,
+   48
+  ],
+  "height": 36,
+  "tone": "light",
+  "nine_slice_margin": [
+   20,
+   18,
+   24,
+   18
+  ],
+  "width": "整条标题条",
+  "label": {
+   "font": "serif_bold",
+   "size": 20,
+   "color": "#2e2219",
+   "x": 18,
+   "center_y": 18.0
+  },
+  "use": "OverlayFrame 标题条（事件、神坛、商店、百科、读档、保险箱、异体弹窗……所有叠层窗）；铜面板三屏没有标题条，不用"
+ },
+ "chip": {
+  "files": "chip_<normal|hover|pressed|disabled|on>.png",
+  "image": [
+   132,
+   52
+  ],
+  "height": 40,
+  "nine_slice_margin": [
+   18,
+   18,
+   24,
+   18
+  ],
+  "tone": "light",
+  "label": {
+   "size": 18,
+   "font": "serif（普通态 Regular，on 态 Bold）",
+   "colors": {
+    "normal": "#2e2219",
+    "hover": "#16110d",
+    "pressed": "#2e2219",
+    "disabled": "#8d8a84",
+    "on": "#2e2219"
+   }
+  },
+  "width": "字宽 + 38（按粗体留宽）；底色键左边多 24 放色样（代码画 14×14 方块，左 14、上 13）",
+  "states": "toggle_mode 按钮：pressed（选中）= on 图，hover_pressed 也用 on；按下那一下的 pressed 图给非切换的签用",
+  "use": "设置：窗口 / 分辨率 / 底色 / 光标的各选项（一组里只有一个 on）"
+ },
+ "toggle": {
+  "files": "check_off.png / check_on.png",
+  "image": [
+   38,
+   38
+  ],
+  "use": "设置的开 / 关行：底用 chip_normal 拉长整行，左头 icon = check_on / off（左 10、竖直居中），字左对齐从 48 起。开关的字可以去掉「：开 / 关」，由印表示（可选）"
+ },
+ "stepper": {
+  "files": "step_minus_<态>.png、step_plus_<态>.png、plate.png（读数牌，九宫格）",
+  "button": [
+   36,
+   36
+  ],
+  "plate_margin": [
+   14,
+   14,
+   14,
+   14
+  ],
+  "plate_label": {
+   "size": 18,
+   "font": "serif_bold",
+   "color": "#2e2219"
+  },
+  "use": "设置的音量：[−][80%][+] 三件一排、间隔 4（226 §1.5 读数并进步进件）"
+ },
+ "field": {
+  "files": "field_normal.png / field_focus.png + icon_search.png",
+  "image": [
+   212,
+   48
+  ],
+  "height": 36,
+  "nine_slice_margin": [
+   16,
+   16,
+   16,
+   16
+  ],
+  "text_left": 36,
+  "icon_at": [
+   10,
+   8
+  ],
+  "colors": {
+   "text": "#2e2219",
+   "placeholder": "#8a7a64"
+  },
+  "use": "百科搜索框（LineEdit normal / focus）"
+ },
+ "entry": {
+  "files": "entry_<normal|hover|pressed|on>.png",
+  "image": [
+   232,
+   48
+  ],
+  "height": 36,
+  "nine_slice_margin": [
+   32,
+   18,
+   14,
+   18
+  ],
+  "tone": "light",
+  "label": {
+   "size": 17,
+   "x": "14",
+   "font": "Regular，on 用 Bold",
+   "colors": {
+    "normal": "#2e2219",
+    "hover": "#16110d",
+    "pressed": "#2e2219",
+    "disabled": "#8d8a84",
+    "on": "#2e2219"
+   }
+  },
+  "use": "百科左栏目录（on = 正在看的那页）；条与条间隔 4"
+ },
+ "scrollbar": {
+  "files": "sb_groove(_h).png、sb_grab_<normal|hover|pressed>(_h).png",
+  "width": 14,
+  "groove_margin": "竖：上下各 8+6；横（_h，转了 90°）：左右各 8+6",
+  "grab_margin": "竖：上下各 10+6；横：左右各 10+6",
+  "use": "所有浅底屏的 VScrollBar / HScrollBar（设置、百科左栏与正文、科技树横条、图鉴）"
+ },
+ "key_primary": {
+  "files": "key_primary_<normal|hover|pressed|disabled>.png",
+  "image": [
+   172,
+   68
+  ],
+  "height": "56（矮版 44 也行，同图）",
+  "nine_slice_margin": [
+   36,
+   20,
+   20,
+   20
+  ],
+  "label": "同商店纸卷键（serif_bold 22，颜色见 shop layout），字在 [16, 宽] 里居中",
+  "use": "要动真格的主键：神坛「献祭」、读档「在此开新档」；普通键直接用商店的 art/ui/shop/out/key_<态>.png"
+ },
+ "base": {
+  "drop_arrow": {
+   "files": "drop_arrow.png / _hover / _disabled",
+   "image": [
+    32,
+    32
+   ],
+   "use": "出售页两个下拉框（OptionButton）的 arrow 图标；框本身用 home/btn_wood 四态，字左对齐 12、墨色 #3e2818"
+  },
+  "popup": {
+   "file": "popup.png",
+   "nine_slice_margin": [
+    16,
+    16,
+    16,
+    16
+   ],
+   "tone": "light",
+   "use": "下拉弹出单 PopupMenu 的 panel"
+  },
+  "popup_hover": {
+   "file": "popup_hover.png",
+   "nine_slice_margin": [
+    12,
+    10,
+    10,
+    10
+   ],
+   "use": "PopupMenu 的 hover 行"
+  },
+  "node_sel": {
+   "file": "node_sel.png",
+   "nine_slice_margin": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "outset": 5,
+   "use": "科技节点的选中圈，叠在节点上、四边外扩 5；节点本身：未点亮 = home/btn_wood，已点亮 = btn_wood_primary，还不能点 = btn_wood_disabled"
+  },
+  "codex_cell": {
+   "files": "codex_cell.png（已收集）/ codex_cell_dim.png（还没有）",
+   "image": [
+    108,
+    124
+   ],
+   "nine_slice_margin": [
+    16,
+    16,
+    16,
+    16
+   ],
+   "tone": "light",
+   "unlit_item": "没点亮的道具照常画图，modulate = Color(0.34, 0.32, 0.31)（作者 18:27：道具蒙一层阴影，不是整块黑）；没有图的色块同样压暗",
+   "name": {
+    "size": 12,
+    "x": 9,
+    "baseline_from_bottom": 10,
+    "color_lit": "#2e2219",
+    "color_unlit": "#7c6e5a"
+   },
+   "use": "图鉴格底（CodexTile 96×112）：浅亚麻底 + 胡桃木细边，替换现在的 PANEL 深底"
+  },
+  "codex_badge": {
+   "file": "codex_badge.png",
+   "nine_slice_margin": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "at": [
+    7,
+    7
+   ],
+   "text": {
+    "size": 11,
+    "color": "#f6eedb"
+   },
+   "use": "左上角异体签「1/3」：深红皮签、浅字（换掉蓝块）"
+  },
+  "codex_count": {
+   "file": "codex_count.png",
+   "nine_slice_margin": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "at": "右上，距右 7、上 7",
+   "text": {
+    "size": 11,
+    "color": "#2e2219"
+   },
+   "use": "右上角累计件数「×3」：铜签墨字（换掉绿块）"
+  }
+ }
+}
