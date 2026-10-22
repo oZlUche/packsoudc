@@ -483,11 +483,18 @@ static func make_button(text: String, handler: Callable, tier: int = UiPalette.T
 	return b
 
 
-## 164：家的木牌按钮（[constant BUTTON_HOME]；[param primary] = 「再来一局」那颗）
-static func make_home_button(text: String, handler: Callable, primary: bool = false) -> Button:
+## 164：家的木牌按钮（[constant BUTTON_HOME]；[param primary] = 「再来一局」那颗）。
+## 228：[param min_size] / [param font_size] 给了就拉到那么大、字换那个号（结算第二页的「一键置入」「整理」180 × 67）
+static func make_home_button(text: String, handler: Callable, primary: bool = false, min_size: Vector2 = Vector2.ZERO, font_size: int = 0) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.theme_type_variation = BUTTON_HOME_PRIMARY if primary else BUTTON_HOME
+	if min_size != Vector2.ZERO:
+		b.custom_minimum_size = min_size
+		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if font_size > 0:
+		b.add_theme_font_size_override("font_size", font_size)
 	b.pressed.connect(handler)
 	return b
 

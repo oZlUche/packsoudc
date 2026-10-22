@@ -21,8 +21,10 @@ const BOARD_CELL := 72.0
 const SLAB_EDGE := "slab_edge_plain"
 ## 第 2 步内容离石板内沿的边距
 const PAGE_MARGIN := 32
-## 第 2 步的石板内容区（量仓库格子用）
+## 第 2 步的内容区（量仓库格子用；228 起是整屏那幅基地库间画）
 var _area: Control = null
+## 228：第 2 步的标题木牌
+var _plank: Control = null
 ## 177（作者 2026-10-16「将撤离界面分为两部」）：撤离分两步 —— 1 看账，2 置入仓库；战败只有一步
 var _step: int = 1
 var _r: RunResult = null
@@ -45,6 +47,14 @@ const TITLE_PLATE_AT := Vector2(608, 92)
 const TITLE_PLATE_SIZE := Vector2(384, 72)
 const TITLE_PLATE_ORIGIN := Vector2(-7, -7)
 const TITLE_SIZE := 43
+## 228（作者 17:33 选第三案）：第二页是回到基地的木头库间 —— 整屏一幅画（tone dark），标题刻在挂着的浅木牌上（墨字），「继续」换琥珀木牌
+const STOREROOM_ART := "result/bg_storeroom"
+const STORE_CONTINUE_ART := "result/btn_wood_continue"
+## 228：标题木牌（`title_plank.json`）：图 396 × 114，牌在图内 (6, 36) 384 × 72，九宫格两头 60 不拉伸；字号 40
+const PLANK_ART := "result/title_plank"
+const PLANK_TITLE_SIZE := 40
+## 228：第一页 → 第二页交叉淡出（从营门走回家里）
+const PAGE_FADE_SEC := 0.35
 
 
 func open(payload: Dictionary) -> void:
@@ -56,8 +66,21 @@ func open(payload: Dictionary) -> void:
 ## 177：撤离时第 1 步的「继续」—— 屏内重建成第 2 步（不加屏、不改 GameFlow）
 func to_step(n: int) -> void:
 	_step = n
-	UiTheme.clear_children(self)
+	# 228：旧页挪进一层盖在新页上、淡出后丢掉；不动的时候（测试、关了动效）当场清
+	var old: Control = null
+	if UiMotion.enabled(flow.settings if flow != null else null) and is_inside_tree():
+		old = Control.new()
+		old.name = "PageFadeOut"
+		old.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		for c in get_children():
+			if c != _own_notices:
+				c.reparent(old, false)
+	else:
+		UiTheme.clear_children(self)
 	_build()
+	if old != null:
+		add_child(old)
+		UiMotion.fade(old, true, 1.0, 0.0, PAGE_FADE_SEC).finished.connect(old.queue_free)
 
 
 ## 现在第几步（战败、没账都算 1）
@@ -83,6 +106,7 @@ func continue_button() -> Button:
 func _build() -> void:
 	_wh = null
 	_area = null
+	_plank = null
 	_safe_view = null
 	_ledger = null
 	_continue = null
@@ -93,13 +117,15 @@ func _build() -> void:
 		return
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, PAGE_MARGIN)
-	_area = _slab_screen(Vector2.ZERO, SLAB_EDGE)
+	UiTheme.margins(margin, PAGE_MARGIN, PAGE_MARGIN, PAGE_MARGIN, PAGE_MARGIN)
+	_area = _painted_screen(STOREROOM_ART) if _r != null else _slab_screen(Vector2.ZERO, SLAB_EDGE)     # 228：第二页是基地的木头库间
 	_area.add_child(margin)
 	# 反馈：仓库面板按自己的最小高度占满，把底部的继续按钮挤出窗口。内容放进竖向滚动，按钮钉在底下
 	var outer := _vbox(10)
 	margin.add_child(outer)
+	if _r != null:
+		_plank = _title_plank(UiText.t("result.store_title"))
+		outer.add_child(_plank)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -134,11 +160,46 @@ func _place(c: Control, at: Vector2, sz: Vector2) -> Control:
 	return c
 
 
-## 224：两页同一款「继续」图按钮（字由代码写）
-func _continue_button(handler: Callable) -> Button:
+## 224：「继续」图按钮（字由代码写）；228：第一页石键、第二页琥珀木牌（同尺寸、同字心）
+func _continue_button(handler: Callable, art: String = CONTINUE_ART) -> Button:
 	var en := UiText.lang == "en"
-	return UiTheme.make_art_text_button(UiText.t("menu.continue"), handler, CONTINUE_ART, CONTINUE_SIZE,
+	return UiTheme.make_art_text_button(UiText.t("menu.continue"), handler, art, CONTINUE_SIZE,
 		CONTINUE_LABEL_AT_EN if en else CONTINUE_LABEL_AT, 28 if en else 34, CONTINUE_BLEED)
+
+
+## 228：第二页顶上挂着的标题木牌 —— 九宫格（两头不拉伸），字写在牌面正中；牌是浅木（tone light）、墨字。
+## 牌宽按字撑（至少图上那块 384），图上方 36 是两根麻绳
+func _title_plank(text: String) -> Control:
+	var meta := UiTheme.art_meta(PLANK_ART)
+	var rect: Array = meta.get("plank_rect_in_image", [6, 36, 384, 72])
+	var m: Array = meta.get("margin", [60, 54, 60, 20])
+	var box := Control.new()
+	box.name = "TitlePlank"
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	UiTheme.set_tone(box, StringName(String(meta.get("tone", "light"))))
+	var title := UiTheme.make_title_label(text, PLANK_TITLE_SIZE)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var text_w := title.get_minimum_size().x
+	var plank := Vector2(maxf(float(rect[2]), text_w + float(m[0]) + float(m[2])), float(rect[3]))
+	var img := Vector2(plank.x + 2.0 * float(rect[0]), plank.y + float(rect[1]) + 6.0)
+	box.custom_minimum_size = img
+	var tex := UiTheme.art_cached(PLANK_ART)
+	if tex != null:
+		var n := NinePatchRect.new()
+		n.texture = tex
+		n.patch_margin_left = int(m[0])
+		n.patch_margin_top = int(m[1])
+		n.patch_margin_right = int(m[2])
+		n.patch_margin_bottom = int(m[3])
+		n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		n.size = Vector2(img.x, tex.get_size().y)
+		box.add_child(n)
+	title.position = Vector2(float(rect[0]), float(rect[1]))
+	title.size = plank
+	box.add_child(title)
+	return box
 
 
 ## 177 第 1 步（撤离）/ 唯一一步（战败）：标题牌，下面账单（224），账单下居中「继续」（全显之前不可点）。
@@ -215,8 +276,10 @@ func _fit_shelf(area: Control) -> void:
 	var used: float = _wh.rack_room()
 	if flow.meta.board != null:
 		used += BOARD_CELL * flow.meta.board.size.x + 2.0 * WarehousePanelScript.BOARD_FRAME_PAD + WarehousePanelScript.ROW_GAP
+	used += WarehousePanelScript.ROW_GAP + 4.0     # 228：仓库右对齐那块空位两边各一道行距（原来少算一道，第二页铺满整屏后仓库顶出右沿）
 	var w := area.size.x - 2.0 * PAGE_MARGIN - used
-	var h := area.size.y - 2.0 * PAGE_MARGIN - CONTINUE_SIZE.y - 2.0 * CONTINUE_BLEED - 10.0 - 12.0     # 按钮行、行距、分页签顶上那点空
+	var top := _plank.custom_minimum_size.y + 10.0 if is_instance_valid(_plank) else 0.0     # 228：标题木牌那一行
+	var h := area.size.y - 2.0 * PAGE_MARGIN - top - CONTINUE_SIZE.y - 2.0 * CONTINUE_BLEED - 10.0 - 12.0     # 按钮行、行距、分页签顶上那点空
 	_wh.shelf().fit(w, h)
 
 
@@ -241,7 +304,7 @@ func _add_safe(page: Control) -> void:
 
 ## 「继续」（[method proceed]）：224 起放进仓库面板按钮行的右端（作者 16:32：序章之间那句「下面直接进…」也删了）
 func _add_proceed(outer: VBoxContainer) -> void:
-	_continue = _continue_button(proceed)
+	_continue = _continue_button(proceed, STORE_CONTINUE_ART)     # 228：琥珀木牌
 	var row: HBoxContainer = _wh.button_row() if _wh != null else null
 	if row == null:
 		outer.add_child(_continue)

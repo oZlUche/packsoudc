@@ -68,3 +68,14 @@
 
 **顺带（游戏测试 v3.78 清单 17:52）**：基地「仓库」页的「一键置入 / 整理」还是平按钮 —— `WarehousePanel._small_button` 在 `art_buttons` 为假时走 `make_button`。228 落地时一并改：`_small_button` 不再分支，一律 `make_home_button`（木牌），结算页拉到 180×67、基地页用 home 原尺寸；`art_buttons` 旗子删掉。基地与结算第二页同一套木牌，正合「回到基地」。
 
+
+## 七、落地（v3.93，执行 2026-10-22）
+
+- 第二页 `_painted_screen("result/bg_storeroom")`：整屏 cover、tone dark；没图退回纯色底。第一页石板、石键、标题石牌都不动。
+- 标题木牌 `_title_plank`：`result/title_plank` 九宫格（margin 照 json），牌宽按字撑（至少 384），字 40 号墨字、写在牌面 (6, 36) 384 × 72 上；放在第二页内容最上面一行、水平居中（不按 §三 的绝对坐标 —— 第二页整屏流式排版，木牌占一行，下面的棋盘和仓库往下让）。新键 `result.store_title`「置入仓库 / Into the Warehouse」。
+- 「继续」第二页换 `btn_wood_continue`（四态，252 × 77、出血 7、字心同石键）。
+- `WarehousePanel._small_button` 一律木牌（§六 顺带那条）：结算页 180 × 67、字 26（英 22），基地「仓库」页 home 原尺寸。`art_buttons` 旗子留着，意思改成「结算页排法」（仓库右对齐、木签、木牌拉大）。
+- 分页签：结算页用开局第二页那款木签（`BUTTON_SETUP_TAB`，高 60），没另做 `tab_mark` 标记 —— 开局第二页同一间木屋同一种签，看着一致。
+- 交叉淡出：`to_step` 把旧页挪进 `PageFadeOut` 盖在新页上，0.35 s 淡出后丢掉（动效关着当场清）。
+- 顺带修：`_fit_shelf` 少算了仓库右对齐那根空位的一道行距 —— 第二页铺满整屏后仓库顶出右沿 30 px。
+- 测试 `test_result_storeroom_228`（24 断言）；截图 `/mnt/project-files/art/ui/result/storeroom/shots228/`（result1 / result2，中英）。

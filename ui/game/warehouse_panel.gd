@@ -45,8 +45,14 @@ var _board_scroll: ScrollContainer = null
 var _last_said := ""
 var _store_btn: Button
 var _tidy_btn: Button
-## 224：结算屏第二页 —— 「一键置入」「整理」换石键图按钮（补充二 180 × 67，字由代码写），按钮行间隔 14；在 [method setup] 之前设
+## 224 / 228：结算屏第二页 —— 仓库连同分页签右对齐、分页签换开局那款木签、「一键置入」「整理」木牌拉到 180 × 67，按钮行间隔 14；在 [method setup] 之前设
 var art_buttons := false
+## 228：结算第二页木牌小钮的大小与字号（英文「Put all away」小一号）
+const RESULT_BUTTON_SIZE := Vector2(180, 67)
+const RESULT_BUTTON_FONT := 26
+const RESULT_BUTTON_FONT_EN := 22
+## 228：结算第二页仓库分页签（同开局第二页的木签）
+const RESULT_TAB_H := 60.0
 ## 224 补充二：带回来的棋盘格子定死这个边长（结算屏 72，同背包窗）；0 = 跟仓库一样大。在 [method setup] 之前设
 var board_cell := 0.0
 var _buttons: HBoxContainer = null
@@ -89,6 +95,9 @@ func _build() -> void:
 		var right := UiTheme.vbox(6)
 		row.add_child(right)
 		_shelf = WarehousePages.new()
+		if art_buttons:     # 228：基地木头库间里的仓库，分页签同开局那款木签
+			_shelf.tab_variation = UiTheme.BUTTON_SETUP_TAB
+			_shelf.tab_height = RESULT_TAB_H
 		right.add_child(_shelf)
 
 	var buttons := UiTheme.hbox(14 if art_buttons else 8)
@@ -116,11 +125,11 @@ func _build() -> void:
 	_rebuild_board_view()
 
 
+## 228：一律木牌（基地「仓库」页与结算第二页同一套 —— 回到家）；结算页拉到 [constant RESULT_BUTTON_SIZE]
 func _small_button(text: String, handler: Callable) -> Button:
 	if art_buttons:
-		var en := UiText.lang == "en"     # 补充二：英文「Put all away」26 号顶满，小一号
-		return UiTheme.make_art_text_button(text, handler, "result/btn_small_stone", Vector2(180, 67), Vector2(90, 33), 22 if en else 26, 7.0)
-	return UiTheme.make_button(text, handler, UiPalette.Tier.SECONDARY, 13)
+		return UiTheme.make_home_button(text, handler, false, RESULT_BUTTON_SIZE, RESULT_BUTTON_FONT_EN if UiText.lang == "en" else RESULT_BUTTON_FONT)
+	return UiTheme.make_home_button(text, handler)
 
 
 ## 226 批一：回话 —— 告示卷轴（本地那行字删了）
