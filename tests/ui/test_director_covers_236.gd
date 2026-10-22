@@ -8,7 +8,7 @@ const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func frame_covers_base(t: TestCase, root: Window) -> void:
-	t.begin("236 · 盖死即停：开铸炉（整屏底图）→ 地图藏起来、不跑 _process；回地图恢复；透出地图的叠层不停、地图隔帧重绘；淡入时还透着地图")
+	t.begin("236 · 盖死即停：开铸炉（整屏底图）→ 地图藏起来、不跑 _process；回地图恢复；透出地图的叠层不停、地图隔帧重绘；淡入时还透着地图；离树时收掉写日志任务")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	Support.cleanup("covers236")
@@ -56,5 +56,9 @@ static func frame_covers_base(t: TestCase, root: Window) -> void:
 	game._sync_base()
 	t.check(not base.visible, "淡入完：藏起来")
 	game._drop_overlay(true)
+	# 236 补：退出时导演收掉战斗日志的工作线程任务（没等过的任务留到引擎收尾才放，进程退出时崩）
+	BattleTraceWriter._task = WorkerThreadPool.add_task(func() -> void: pass)
+	root.remove_child(game)
+	t.eq(BattleTraceWriter._task, -1, "导演离开场景树时等完了写日志的任务")
 	game.queue_free()
 	Support.cleanup("covers236")

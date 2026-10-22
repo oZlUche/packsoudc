@@ -111,3 +111,9 @@
 - 先试 `rest/bg_ruins` 一张（BC7 高质量 + mipmap），1920 × 1080 同机位压前 / 压后与 2× 局部在 `/mnt/project-files/art/ui/rest/bc7_trial/`：整图平均差 < 1/255、最大 14/255，美术设计看过夜空渐变、星点、细墨线与月牙边都没问题；架构设计同意安装包多约 40 MB（每张导入后 3.1 MB，原来无损 0.48 MB 左右）换显存每张 9.2 → 3.1 MB（含 mipmap）。
 - 推到 17 张：`rest/bg_*` 4、`forge/bg_*` 4（含英文版）、`assets/chest/bg/*` 5、`setup/bg_*` 3、`battle/battle_bg` 1，`.import` 改 `compress/mode=2`、`high_quality=true`、`mipmaps/generate=true`。主菜单三张（2112 × 1320）、基地与结算库房（1920 × 1080）没在这 17 张里，照旧无损。
 - 读回像素的地方只有营地小件的点击遮罩（`rest_camp_screen._mask`，本来就先 `decompress()`），不读底图，压了不受影响。宝箱底图预读不做（架构设计同意）。
+
+## 八、补：退出时崩溃（执行，2026-10-22，v4.19）
+
+游戏测试复测 v4.16 报：玩过一局后 `quit()` 退出，进程 Aborted（退出码 134），v4.15 同脚本为 0。二分落在甲批第二项（战斗日志上工作线程）：`BattleTraceWriter.write` 交出去的任务只在下一次 `write`、`BattleArchive.list()` 或关窗通知时被等；主菜单「退出」与脚本走 `get_tree().quit()`，不发关窗通知，最后一场的任务从没被等过。没等过的任务连同绑定的参数（trace / result）一直挂在 `WorkerThreadPool` 里，到引擎收尾时才放，那时脚本语言已经关了，于是崩溃。（存档是同步写的，不受影响；Windows 上表现为退出时弹崩溃框。）
+
+修法：`GameDirector._exit_tree` 先 `BattleTraceWriter.flush()`，所有退出的路子都会让导演离开场景树。关窗通知那一处保留。测试 `test_director_covers_236` 加一条：手上挂着一个任务时导演离树，`_task` 回到 −1。试玩脚本 `playtest.gd … 1` 退出码 134 → 0。

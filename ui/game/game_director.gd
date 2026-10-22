@@ -199,7 +199,7 @@ func _warm_step(step: int) -> void:
 #endregion
 
 
-## 236 第二项：关窗前等战斗日志写完（写盘在工作线程上，最后一场别只写一半）
+## 236 第二项：关窗前等战斗日志写完（写盘在工作线程上，最后一场别只写一半）；quit() 的路子在 [method _exit_tree] 里等
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		BattleTraceWriter.flush()
@@ -266,6 +266,7 @@ func ground_actions(uid: int) -> Array:
 
 
 func _exit_tree() -> void:
+	BattleTraceWriter.flush()     # 236 补：退出（主菜单「退出」走 quit()，不发关窗通知）前收掉工作线程上的任务，没等过的任务留到引擎收尾才放会崩
 	if GroundLayer.current() == ground:
 		GroundLayer.set_current(null)
 	if NoticeLayer.current() == notices:
