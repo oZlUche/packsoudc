@@ -326,3 +326,16 @@
 - **地图图例不换**：规格表写的是「深色底板换 `PANEL_NODE_HINT` 纸签」，但图例在 232 已由作者（19:23）选定为双尾旗（`hud/legend_pennant`），以作者的选择为准。
 - **v4.00 复测修正**：科技节点木牌两头的钉子让开 20（`TechTreeView.PEG_ROOM`），英文长名「Warehouse Expansion」不再压钉子。
 - 测试：test_setup_179（三块板、角色纸条、预设纸条）、test_altar（石签 + 下拉框）、test_stone_chips（仓库页签）。截图 /mnt/project-files/art/ui/kit/shots_tabs/。
+
+## 十八、乙 青石碑：神坛（v4.02）
+
+作者 2026-10-21 18:41 选乙（UI替换美术 `out/altar/`，核对图 `mocks/altar_final.png`）。
+
+- **碑身**：`OverlayFrame` 新皮 `SKIN_STELE` —— `UiTheme.layered_box("altar/stele_edge", "altar/stele_body", true)`（板身 512 平铺 + 板边九宫格 `[44, 60, 44, 40]`，标题条高 36），深底浅字。缺图退回石板。
+- **山墙**：`altar/stele_gable`（372 × 92）左上在 (窗宽 / 2 − 186, −70)，画在板上、压住板顶 22；神徽 `faith/<神>.png` 原尺寸 32 居中在窗顶中点上方 30（`OverlayFrame.emblem`）。
+- **石基**：`altar/stele_base` 横向九宫格（左右 192，中段 TILE_FIT），宽 = 窗宽 + 40，左上 (−20, 窗高 − 36)，往下伸出 56。
+- **标题带**：这扇换 `altar/stele_band`（深槽，字 #eef2f3）；别的叠层照旧 `kit/band`。
+- **居中**：窗上伸 70（`outset_top`）、下伸 56（`outset_bottom`），`GameScreen._centered_panel` 居中时把石基那截让出来，离顶端栏不够再往下挪（同 233 帐篷）。
+- **石祭台**：`altar/altar_table`（344 × 438 定尺寸）垫在祭品台框下面，框（227 plain，272 × 272）左上 = 图左上 + (36, 86)。
+- **核对修正**（UI替换美术）：碑面上灰着的石签、下拉字色改 #c8ced1（`StoneChip.set_state_ink`、`dress_chip_option` 的 `disabled_ink`；灰图中心透明，墨灰落在深碑面上看不见）；标题去掉重复的神名（`altar.head` 只填 `faith_power.line()`）；英文「Pray for a Blessing」缩短。
+- 测试 tests/ui/test_stone_chips.gd（`frame_altar_stele`）；截图 /mnt/project-files/art/ui/kit/shots_stele/。

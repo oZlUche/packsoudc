@@ -92,6 +92,12 @@ static func entry(text: String, handler: Callable) -> Button:
 	return b
 
 
+## 换某一态的字色（[param state]：normal / hover / pressed / disabled / on）—— 放在深底上的灰签要浅字（神坛石碑）
+func set_state_ink(state: String, ink: Color) -> void:
+	_colors[state] = ink
+	queue_redraw()
+
+
 func _font_size() -> int:
 	return ENTRY_FONT if is_entry else FONT_SIZE
 

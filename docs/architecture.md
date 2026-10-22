@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.01 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.02 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4437,6 +4437,7 @@ res://
 | v3.99 | 2026-10-22 | **乙 石刻：设置屏与百科**：新部件 `StoneChip`（选项签 / 开关行 / 目录条，字由部件画）、`StoneStepper`（[−][读数牌][+]）、`StoneField`（刻槽输入框 + 放大镜）；滚动条主题全局换 `kit/sb_*`；设置屏全换、音量读数并进步进件；百科搜索框与左栏目录换上 |
 | v4.00 | 2026-10-22 | **乙 石刻：基地各页**：出售下拉 `UiTheme.dress_wood_option`（木牌框 + `kit/drop_arrow` + `kit/popup` 弹出单）、一键出售 / 科技升级换主档木牌、成就筛选与材料「交」换木牌；`TechTreeView` 节点换木牌三态 + `kit/node_sel` 选中圈；`CodexTile` 换 `kit/codex_cell(_dim)` 浅格、皮签 / 铜签角标、没点亮压影 |
 | v4.01 | 2026-10-22 | **乙 石刻：仓库页签、开局、神坛**：基地仓库分页签换开局挂牌木签；开局第一页角色列表换 `BUTTON_MAP_ENTRY` 纸条、两块底板换 `PANEL_PACK_LEATHER`；第二页预设换纸条（高 52）；神坛特殊操作换 `StoneChip`、二选一下拉 `UiTheme.dress_chip_option`；科技木牌节点让开钉子（`PEG_ROOM`） |
+| v4.02 | 2026-10-22 | **乙 青石碑：神坛**：`OverlayFrame.SKIN_STELE`（碑身 `altar/stele_edge` + `stele_body` 平铺、山墙 `stele_gable` 嵌神徽 `emblem`、石基 `stele_base`、标题带 `stele_band` 浅字）；`outset_bottom` 居中时让出石基；祭品台框摆在石祭台 `altar/altar_table` 台面上 |
 | v3.88 | 2026-10-21 | **224 补充二 结算屏第二版**（作者 17:22–17:23 六条）：结算屏两页板边换 `slab_edge_plain`（`UiTheme.slab` / `GameScreen._slab_screen` 的 `edge_art` 参数）；第一页 ×1.2、图 2 倍分辨率按 1x 尺寸画（`LedgerView` `draw_texture_rect`、标题牌 `EXPAND_IGNORE_SIZE`）；账单击败的敌人 / 精英 / 首领分三行；撤离时保险箱在账单右边（皮带框 + 格缝），第二页只剩带回的棋盘（格子 72，`WarehousePanel.board_cell`）和贴右上的仓库（`WarehousePages.fit` 量石板内容区）；战败没有第二页，`MetaState.absorb` 战败时保险箱带出的直接进仓库（包进包架），放不下才进待置入棋盘；新套件 `test_result_v2_224` |
 | v3.87 | 2026-10-21 | **232 局内非矩形第一轮**（作者 19:23 选 1 / 2 / 6 / 10，待定按推荐）：事件窗是一本摊开的书（`OverlayFrame` `book` 皮、`EventScreen._book_page` 绝对摆位、标题进右页、`EventImage.area(…, light)`）；背包窗是一只背包（`BagWindow._back` 四件皮料随窗宽摆、翻盖即把手 `grip_rect`、`FloatingWindow.outset` 夹边）；腰带 1–6 格是整张弯皮带（`BeltSlots.belt_layouts / curved`，命中半径 36，7 格起退回直圆槽；`BeltWidget` 不进凹槽）；图例是双尾旗九宫格（`LegendWidget.pennant_box`，最窄 158）。缺图都退回原来的皮；新套件 `test_bag_window_232`、`test_event_book_232` |
 | v3.86 | 2026-10-21 | **230 悬浮窗道具按钮 + 锁定**（作者 19:01 选丙）：`ItemActions` 供给层（`Action` 数据、`lock` / `lock_same` / `sell` / `sell_same` / `anchor`、`rows()` 两两并排成对不拆）；`ContainerView.actions_for(uid)` 各屏登记；`TipButton` 平墨签按钮（危险两步「再点一次」）；`HoverTip` 脚注下画按钮行、右键 `pin_on` 立刻钉住、点了原地刷新；玩家锁 `ItemInstance.state["locked"]` 守出售 / 一键出售 / 出售区 / 祭品台 / 铸炉 / 丢地上，小锁角标 `ItemPainter.draw_lock`；信物右键切换改成「奉为主信仰」按钮；新帮助页 `item_actions`；新套件 `test_item_actions_230` |

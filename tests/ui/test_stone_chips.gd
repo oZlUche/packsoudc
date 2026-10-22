@@ -80,3 +80,39 @@ static func frame_base_stone(t: TestCase, root: Window) -> void:
 	t.check(not screen._codex_tiles.is_empty() and CodexTile._box(CodexTile.CELL_ART, 16.0) != null, "图鉴格有浅亚麻格底")
 	screen.free()
 	Support.cleanup(PREFIX + "b")
+
+
+static func frame_altar_stele(t: TestCase, root: Window) -> void:
+	t.begin("乙 青石碑：神坛整扇窗是碑 —— 碑身石板、山墙嵌神徽、石基、深槽标题带浅字；祭品台的框摆在石祭台台面上")
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	var f := Support.flow(c, PREFIX + "a")
+	if f.faith_defs.is_empty():
+		f.faith_defs = FaithDef.load_all()
+	f.begin(c.chapter, kit, 1)
+	f.pick_spawn(f.run.map.entry_ids[0])
+	Support.activate(f.run, &"charm_brute")
+	var screen = load("res://ui/game/altar_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	root.add_child(screen)
+	screen.open({"node": f.run.current_node()})
+	var frame: OverlayFrame = screen.overlay_frame()
+	t.eq(frame.skin, OverlayFrame.SKIN_STELE, "皮是青石碑")
+	t.check(frame.get_theme_stylebox("panel") is SlabStyle, "碑身 = 板身平铺 + 板边九宫格")
+	t.eq(UiTheme.tone_at(frame), UiTheme.TONE_DARK, "深底浅字")
+	t.eq(frame.emblem, UiTheme.art_cached("faith/brute"), "山墙石窝里是蛮神的神徽")
+	t.eq(frame.outset_top(), 70.0, "山墙伸出窗顶 70")
+	t.eq(frame.outset_bottom(), 56.0, "石基伸出窗底 56")
+	t.check(frame.band and frame.title_label.get_theme_color("font_color") == Color("eef2f3"), "标题带是深槽、字浅色")
+	var stand: Control = screen.find_child("AltarTable", true, false)
+	t.check(stand != null and stand.custom_minimum_size == Vector2(344, 438), "石祭台定尺寸 344 × 438")
+	var table_frame := screen._table_view.get_parent() as BoardFrame
+	t.check(table_frame != null and table_frame.get_parent() == stand and table_frame.position == Vector2(36, 86), "祭品台的框在台面上 (36, 86)")
+	t.check(BoardFrame.framed(screen._table_view), "祭品台照旧有框和格缝")
+	t.check(not screen.head_text().contains("%s　%s" % [Names.of(f.run.active_faith()), Names.of(f.run.active_faith())]), "标题里神名只写一次（%s）" % screen.head_text())
+	f.run.faith_power.add_points(&"brute", 100)
+	for b: Button in screen._action_btns:
+		t.eq((b as StoneChip)._colors["disabled"], screen.STELE_DISABLED_INK, "碑面上的灰签用浅字")
+	screen.free()
+	Support.cleanup(PREFIX + "a")

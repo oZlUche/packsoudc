@@ -45,17 +45,34 @@ const BAND_ART := "kit/band"
 ## 铺了标题带（只有石板皮；铜 / 书 / 帐篷各有自己的标题位置）
 var band := false
 var _band_box: StyleBoxTexture = null
+## 标题带用哪张（石板 `kit/band`，石碑 `altar/stele_band`）
+var _band_art := BAND_ART
+## 乙 石碑（UI替换美术，作者 2026-10-21 18:41 选乙）：神坛整扇窗是碑 —— 碑身 = 板身平铺 + 板边九宫格（同石板的做法），
+## 碑顶（带神徽石槽）伸出窗顶、石基伸出窗底，两件都画在板上；标题带换深槽浅字。摆位读 `altar/stele_gable.json`、`stele_base.json`
+const STELE_EDGE := "altar/stele_edge"
+const STELE_BODY := "altar/stele_body"
+const STELE_GABLE := "altar/stele_gable"
+const STELE_BASE := "altar/stele_base"
+const STELE_BAND := "altar/stele_band"
+var stele := false
+## 碑顶石槽里的神徽（原尺寸画，不放大；空 = 空槽）
+var emblem: Texture2D = null:
+	set(v):
+		emblem = v
+		queue_redraw()
+var _base_box: StyleBoxTexture = null
 
 ## 皮：石板（默认）/ 铜面板 / 书 / 帐篷；要的图缺了一律退回石板，[member skin] 记实际用上的那张
 const SKIN_SLAB := &"slab"
 const SKIN_BRONZE := &"bronze"
 const SKIN_BOOK := &"book"
 const SKIN_TENT := &"tent"
+const SKIN_STELE := &"stele"
 var skin: StringName = SKIN_SLAB
 
 
 ## [param margin] 是各屏原来给面板的内边距：平面底照旧当外框内边距；九宫格底时外框边距由图定，多出来的部分垫在内容区里。
-## [param p_skin]：[constant SKIN_SLAB] / [constant SKIN_BRONZE] / [constant SKIN_BOOK]（232）/ [constant SKIN_TENT]（233）；缺图退回石板
+## [param p_skin]：[constant SKIN_SLAB] / [constant SKIN_BRONZE] / [constant SKIN_BOOK]（232）/ [constant SKIN_TENT]（233）/ [constant SKIN_STELE]（神坛石碑）；缺图退回石板
 func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 	book = p_skin == SKIN_BOOK and UiTheme.art_cached(BOOK_ART) != null
 	if book:
@@ -68,12 +85,20 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 		_init_bronze(margin)
 		return
 	tent = p_skin == SKIN_TENT and UiTheme.art_cached(TENT_ART) != null
+	var stele_box: SlabStyle = UiTheme.layered_box(STELE_EDGE, STELE_BODY, true) if p_skin == SKIN_STELE else null
+	stele = stele_box != null
 	var box: StyleBox
 	if tent:
 		skin = SKIN_TENT
 		box = _tent_box()
 		add_theme_stylebox_override("panel", box)
 		UiTheme.set_tone(self, StringName(String(UiTheme.art_meta(TENT_ART).get("tone", "light"))))
+	elif stele:
+		skin = SKIN_STELE
+		box = stele_box
+		_band_art = STELE_BAND
+		add_theme_stylebox_override("panel", box)
+		UiTheme.set_tone(self, UiTheme.art_tone(STELE_EDGE))
 	else:
 		UiTheme.slab(self)     # 157 补充三：一整块石板；深底浅字、浅底墨字
 		box = UiTheme.current().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
@@ -95,9 +120,9 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 		title_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		title_label.custom_minimum_size.y = TENT_TITLE_H
 		title_bar.custom_minimum_size.y = tent_title_bar_height(box)
-	band = not tent and textured and UiTheme.art_cached(BAND_ART) != null
+	band = not tent and textured and UiTheme.art_cached(_band_art) != null
 	if band:
-		var spec := UiTheme.art_meta(BAND_ART)
+		var spec := UiTheme.art_meta(_band_art)
 		var lab: Dictionary = spec.get("label", {})
 		title_label.add_theme_font_override("font", UiPalette.cjk_font_bold())
 		title_label.add_theme_font_size_override("font_size", int(lab.get("size", 20)))
@@ -116,7 +141,7 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 		var side := pad + (TENT_SIDE_PAD if tent else 0)
 		UiTheme.margins(content, side, 0, side, pad)
 		if band:     # 字从槽左头 18 起，右边的槽留 8
-			UiTheme.margins(head, int(UiTheme.art_meta(BAND_ART).get("label", {}).get("x", 18)), 0, 8, 0)
+			UiTheme.margins(head, int(UiTheme.art_meta(_band_art).get("label", {}).get("x", 18)), 0, 8, 0)
 		else:
 			UiTheme.margins(head, 0, 0, 0, 0)
 		if band:
@@ -236,9 +261,37 @@ func tent_sign_at() -> Vector2:
 	return Vector2(roundf((size.x - w) * 0.5), y)
 
 
-## 这张皮在窗顶上面还要占多高（帐篷的尖顶；别的皮 0）—— [method GameScreen._centered_panel] 拿它给顶端栏让位
+## 这张皮在窗顶上面还要占多高（帐篷的尖顶、碑的碑顶；别的皮 0）—— [method GameScreen._centered_panel] 拿它给顶端栏让位
 func outset_top() -> float:
+	if stele:
+		return -stele_gable_at().y
 	return -tent_peak_at().y if tent else 0.0
+
+
+## 这张皮在窗底下还要占多高（碑的石基；别的皮 0）—— 居中时一并让出来
+func outset_bottom() -> float:
+	if not stele:
+		return 0.0
+	return float((UiTheme.art_meta(STELE_BASE).get("outset", [20, 36, 56]) as Array)[2])
+
+
+## 石碑：碑顶图左上（框坐标）—— 水平居中，往上伸出窗顶
+func stele_gable_at() -> Vector2:
+	var at: Array = UiTheme.art_meta(STELE_GABLE).get("at", [-186, -70])
+	return Vector2(roundf(size.x * 0.5 + float(at[0])), float(at[1]))
+
+
+## 石碑：神徽的中心（框坐标，窗顶边中点往上）
+func stele_emblem_center() -> Vector2:
+	var c: Array = UiTheme.art_meta(STELE_GABLE).get("emblem_center", [0, -30])
+	return Vector2(roundf(size.x * 0.5 + float(c[0])), float(c[1]))
+
+
+## 石碑：石基画在哪（框坐标）—— 两边各伸出、压住碑底一截、往下伸出
+func stele_base_rect() -> Rect2:
+	var o: Array = UiTheme.art_meta(STELE_BASE).get("outset", [20, 36, 56])
+	var side := float(o[0])
+	return Rect2(Vector2(-side, size.y - float(o[1])), Vector2(size.x + 2.0 * side, float(o[1]) + float(o[2])))
 
 
 ## 标题带画在哪（框坐标，含四周出血）；没铺是空矩形
@@ -246,16 +299,19 @@ func band_rect() -> Rect2:
 	var head := title_bar.get_parent() as Control if band and title_bar != null else null
 	if head == null:
 		return Rect2()
-	var pad := float(UiTheme.art_meta(BAND_ART).get("pad", 6))
+	var pad := float(UiTheme.art_meta(_band_art).get("pad", 6))
 	return Rect2(head.get_global_position() - get_global_position(), head.size).grow(pad)
 
 
 func _draw() -> void:
 	if band:
 		if _band_box == null:
-			_band_box = UiTheme.art_box(BAND_ART)
+			_band_box = UiTheme.art_box(_band_art)
 		if _band_box != null:
 			draw_style_box(_band_box, band_rect())     # 在石板上、标题字下
+	if stele:
+		_draw_stele()
+	if band or not tent:
 		return
 	if not tent:
 		return
@@ -265,6 +321,21 @@ func _draw() -> void:
 	var sign_tex := UiTheme.art_cached(TENT_SIGN)
 	if sign_tex != null:
 		draw_texture(sign_tex, tent_sign_at())
+
+
+## 石碑的两件伸出去的石头：碑顶（盖住板顶那一截、压在标题带上）+ 神徽，石基（压住碑脚）。都在内容之下
+func _draw_stele() -> void:
+	var gable := UiTheme.art_cached(STELE_GABLE)
+	if gable != null:
+		draw_texture(gable, stele_gable_at())
+	if emblem != null:
+		draw_texture(emblem, (stele_emblem_center() - emblem.get_size() * 0.5).round())
+	if _base_box == null:
+		_base_box = UiTheme.art_box(STELE_BASE)
+		if _base_box != null:
+			_base_box.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	if _base_box != null:
+		draw_style_box(_base_box, stele_base_rect())
 
 
 ## 书的摆位（`event_book.json`：panel_at、image_rect、text_rect、title_h，面板坐标）

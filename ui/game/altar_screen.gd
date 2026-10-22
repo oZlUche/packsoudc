@@ -7,6 +7,10 @@
 extends GameScreen
 
 const TABLE_ID := 4
+## 乙 石碑：石祭台（定尺寸 344 × 438，祭品台的框放在台面上 `board_frame_at`）
+const ALTAR_TABLE_ART := "altar/altar_table"
+## 石签、下拉灰着时的字色：灰图中心透明、字直接落在深色碑面上，墨灰看不见（UI替换美术 10-22：对碑面约 3.3:1）
+const STELE_DISABLED_INK := Color("c8ced1")
 
 var _node: MapNode = null
 var _table: GridInventory = null
@@ -24,7 +28,9 @@ func open(payload: Dictionary) -> void:
 	_node = payload.get("node", null)
 	var run := flow.run
 	var def := run.active_faith()
-	var panel := _centered_panel(Vector2(0, 0))
+	var panel := _centered_panel(Vector2(0, 0), 16, OverlayFrame.SKIN_STELE)     # 乙 石碑：整扇窗是碑，碑顶石槽里嵌神徽
+	if def != null:
+		_overlay_frame.emblem = UiTheme.art_cached("faith/%s" % def.id)
 	var col := _vbox(10)
 	panel.add_child(col)
 	_head = _frame_title("")     # 157：标题在石板框的标题条上
@@ -42,7 +48,8 @@ func open(payload: Dictionary) -> void:
 	_table_view.show_adjacency = false
 	_table_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_table_view)
-	BoardFrame.wrap(_table_view)     # 227：素框 + 格缝
+	var table_frame := BoardFrame.wrap(_table_view)     # 227：素框 + 格缝
+	_seat_on_altar(left, table_frame)
 	# 226 批三：预览行并进「献祭」按钮第二行；「把祭品拖上台来」空态不写（preview_text 仍读得到）
 	var buttons := _hbox(8)
 	_offer_btn = ScrollKey.primary(UiText.t("altar.offer"), offer, true)     # 乙 石刻：主键压蜡封，预览是第二行小字
@@ -83,6 +90,29 @@ func take_back(uid: int) -> bool:
 
 
 ## 把棋盘 / 地上的一件放上祭品台（不能献的不收）。测试直接调
+## 乙 石碑：祭品台的框摆在石祭台图（`altar/altar_table`，定尺寸）台面上的固定位置，图垫在框下面；没图照旧只有框
+func _seat_on_altar(column: Control, table_frame: BoardFrame) -> void:
+	var art := UiTheme.art_cached(ALTAR_TABLE_ART)
+	if art == null:
+		return
+	var stand := Control.new()
+	stand.name = "AltarTable"
+	stand.custom_minimum_size = art.get_size()
+	stand.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	stand.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var pic := TextureRect.new()
+	pic.texture = art
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stand.add_child(pic)
+	var at := table_frame.get_index()
+	column.remove_child(table_frame)
+	stand.add_child(table_frame)
+	var off: Array = UiTheme.art_meta(ALTAR_TABLE_ART).get("board_frame_at", [36, 86])
+	table_frame.position = Vector2(float(off[0]), float(off[1]))
+	column.add_child(stand)
+	column.move_child(stand, at)
+
+
 func put_on_table(uid: int) -> bool:
 	var run := flow.run
 	var def := run.active_faith()
@@ -183,6 +213,8 @@ func _rebuild_actions() -> void:
 		var arow := _hbox(6)
 		var b := StoneChip.make(perk.altar_label(), func(): special(perk))     # 乙 石刻：特殊操作是石签（不切换，点了就做）
 		b.toggle_mode = false
+		if b is StoneChip:
+			(b as StoneChip).set_state_ink("disabled", STELE_DISABLED_INK)
 		var why := perk.altar_available(run, _node)
 		b.disabled = why != "" or not _altar_open()
 		b.tooltip_text = why if why != "" else perk.describe() + "\n" + UiText.t("altar.actions")     # 226 批二：「特殊操作（二选一……）」那行删了，括号里的话进按钮悬浮窗
@@ -196,7 +228,7 @@ func _rebuild_actions() -> void:
 					label = String(MapNodeStyle.of(t)["label"]) if MapNodeTypes.has(t) else String(t)
 				pick.add_item(label, i)
 			pick.set_meta("options", perk.altar_options())
-			UiTheme.dress_chip_option(pick)
+			UiTheme.dress_chip_option(pick, 16, STELE_DISABLED_INK)
 			arow.add_child(pick)
 			b.set_meta("pick", pick)
 		_action_btns.append(b)
@@ -213,7 +245,7 @@ func _refresh() -> void:
 		_head.text = UiText.t("altar.no_faith")
 		_offer_btn.disabled = true
 		return
-	_head.text = UiText.t("altar.head") % [Names.of(def), run.faith_power.line()]
+	_head.text = UiText.t("altar.head") % run.faith_power.line()     # line() 自己以神名开头
 	var p := preview()
 	var open := _altar_open()
 	_offer_btn.disabled = int(p["points"]) <= 0 or not open
