@@ -7,6 +7,7 @@ const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
 const Setup180 := preload("res://tests/ui/test_setup_180.gd")
 const Drawer139 := preload("res://tests/ui/test_base_drawer_139.gd")
+const Steps177 := preload("res://tests/ui/test_result_steps_177.gd")
 const PREFIX := "boards227"
 
 ## 造了 [InventoryView] 却不在本文件里套框的：面板由用它的屏套（[method GameScreen._mount_bag]、背包窗、战前）；沙盒是开发工具
@@ -175,6 +176,28 @@ static func frame_base_pages(t: TestCase, root: Window) -> void:
 	t.check(problem(bare) != "", "棕底棋盘没套木架：报出来")
 	base.free()
 	Drawer139._cleanup()
+
+
+static func frame_storeroom(t: TestCase, root: Window) -> void:
+	t.begin("227 补测 · 结算第二页储物间：仓库（棕底）棋盘在木架里")
+	var c = NodeScreens._content()
+	var f := Support.flow(c, PREFIX + "r", 10000.0)
+	f.last_absorbed = {"lit": 0}
+	var screen = load("res://ui/game/result_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	screen.screen = GameFlow.Screen.RESULT
+	screen.size = Vector2(1600, 1000)
+	root.add_child(screen)
+	screen.open({"result": Steps177._extracted_result(Steps177._defs(c)[0])})
+	screen.ledger().reveal_all()
+	screen.to_step(2)
+	var grounded: Array = screen.find_children("*", "InventoryView", true, false).filter(
+			func(v): return (v as InventoryView).is_visible_in_tree() and not (v as InventoryView).ground.is_empty())
+	t.check(not grounded.is_empty(), "储物间有棕底棋盘（%d）" % grounded.size())
+	t.eq(audit(screen, "储物间"), [] as Array[String], "都有外框")
+	screen.free()
+	Support.cleanup(PREFIX + "r")
 
 
 static func frame_notice_cap_tent(t: TestCase, root: Window) -> void:
