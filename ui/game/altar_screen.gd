@@ -221,7 +221,7 @@ func _refresh() -> void:
 	elif int(p["count"]) == 0:
 		_preview.text = UiText.t("altar.drag_hint")
 	else:
-		_preview.text = UiText.t("altar.preview") % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+		_preview.text = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
 	for b in _action_btns:
 		(b as Button).disabled = (b as Button).disabled or not open
 

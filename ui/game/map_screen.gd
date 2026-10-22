@@ -166,7 +166,7 @@ func _open_confirm(node: MapNode) -> void:
 	for inst in _run.board.items():
 		carried += 1
 		carried_value += ItemValue.of((inst as ItemInstance).def)
-	col.add_child(_wrapped(UiText.t("map.extract_carried") % [carried, carried_value, _run.wallet.balance - maxi(0, fee)], 14, UiPalette.FG, 480))
+	col.add_child(_wrapped(UiText.tn("map.extract_carried", carried) % [carried, carried_value, _run.wallet.balance - maxi(0, fee)], 14, UiPalette.FG, 480))
 	var left := _run.storage.item_count()
 	if left > 0:
 		var left_value := 0
@@ -176,7 +176,7 @@ func _open_confirm(node: MapNode) -> void:
 			left_value += ItemValue.of(def)
 			if def.rarity >= 2:
 				rare += 1
-		col.add_child(_wrapped(UiText.t("map.extract_ground_left") % [
+		col.add_child(_wrapped(UiText.tn("map.extract_ground_left", left) % [
 			left, left_value, UiText.t("map.extract_ground_rare") % rare if rare > 0 else ""], 14, UiPalette.STAMINA, 480))
 	var buttons := _hbox(8)
 	var go := _button(UiText.t("map.extract_confirm"), func(): confirm_extract(), 14)

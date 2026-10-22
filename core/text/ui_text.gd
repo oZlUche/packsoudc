@@ -64,9 +64,13 @@ const TEXT := {
 	"repair.prev": {"zh": "存档文件损坏，已从上一份恢复", "en": "the save file was damaged and the previous copy was restored"},
 	"repair.salvaged": {"zh": "进行中的那一局因版本更新作废，带着的东西已放回仓库", "en": "the run in progress could not continue after the update; what you carried is back in the warehouse"},
 	"repair.refunded": {"zh": "%d 件道具已随版本更新折算为 %d 钱", "en": "%d items removed by the update were refunded for %d coins"},
+	"repair.refunded_one": {"zh": "%d 件道具已随版本更新折算为 %d 钱", "en": "%d item removed by the update was refunded for %d coins"},
 	"repair.replaced": {"zh": "%d 件换成了新版本里的对应道具", "en": "%d items were replaced with their new versions"},
+	"repair.replaced_one": {"zh": "%d 件换成了新版本里的对应道具", "en": "%d item was replaced with its new version"},
 	"repair.rehomed": {"zh": "%d 件放不回原位，换了位置", "en": "%d items did not fit their old spot and were moved"},
+	"repair.rehomed_one": {"zh": "%d 件放不回原位，换了位置", "en": "%d item did not fit its old spot and was moved"},
 	"repair.dropped": {"zh": "%d 件按版本说明移除", "en": "%d items were removed as the update notes say"},
+	"repair.dropped_one": {"zh": "%d 件按版本说明移除", "en": "%d item was removed as the update notes say"},
 	"repair.unenchanted": {"zh": "%d 件的附魔已失效、被摘掉", "en": "%d enchantments no longer exist and were removed"},     # 175
 	"slots.newer_tag": {"zh": "　（更新版本的存档）", "en": " (saved by a newer version)"},
 	"menu.meta": {"zh": "仓库与战绩", "en": "Warehouse & records"},
@@ -115,7 +119,9 @@ const TEXT := {
 	"map.extract_fee": {"zh": "这是付费撤离点：%d 币（现有 %d 币%s）", "en": "This is a paid extraction point: %d coins (you have %d coins%s)"},
 	"map.extract_cant_afford": {"zh": "，付不起", "en": ", can't afford it"},
 	"map.extract_carried": {"zh": "棋盘上 %d 件、值 %d 币会背出去进仓库；剩 %d 币带出", "en": "%d items on the Board, worth %d coins, go to the Warehouse; you leave with %d coins"},
+	"map.extract_carried_one": {"zh": "棋盘上 %d 件、值 %d 币会背出去进仓库；剩 %d 币带出", "en": "%d item on the Board, worth %d coins, goes to the Warehouse; you leave with %d coins"},
 	"map.extract_ground_left": {"zh": "地上还有 %d 件（值 %d 币%s）不会带出去 —— 地上不参战也不出关。想带走先放进棋盘（B）", "en": "%d items on the Ground (worth %d coins%s) stay behind: the Ground doesn't fight and doesn't leave. To take them, put them on the Board (B)"},
+	"map.extract_ground_left_one": {"zh": "地上还有 %d 件（值 %d 币%s）不会带出去 —— 地上不参战也不出关。想带走先放进棋盘（B）", "en": "%d item on the Ground (worth %d coins%s) stays behind: the Ground doesn't fight and doesn't leave. To take it, put it on the Board (B)"},
 	"map.extract_ground_rare": {"zh": "，其中 %d 件稀有以上", "en": ", %d of them Rare or better"},
 	"map.extract_confirm": {"zh": "确定撤离", "en": "Extract"},
 	"map.extract_cancel": {"zh": "再想想", "en": "Not yet"},
@@ -210,6 +216,7 @@ const TEXT := {
 	"node.extract_closed": {"zh": "这个撤离点已经关闭（倒计时过半）。", "en": "This extraction point has closed (Countdown past halfway)."},
 	"node.extract_closes_at": {"zh": Glossary.COUNTDOWN_WORD + "剩 %d 时关闭（还有 %d）。", "en": "Closes at Countdown %d (%d to go)."},
 	"node.stash": {"zh": "地上（%d 件）：", "en": "Ground (%d items): "},
+	"node.stash_one": {"zh": "地上（%d 件）：", "en": "Ground (%d item): "},
 	"node.stash_sep": {"zh": "、", "en": ", "},
 	# —— 221 F1：bag ——
 	# ui/inventory/item_tooltip.gd
@@ -462,8 +469,10 @@ const TEXT := {
 	"setup.cap_board": {"zh": "棋盘", "en": "Board"},
 	"setup.cap_coins": {"zh": "开局金币", "en": "Starting coins"},
 	"setup.carry_max": {"zh": "最多带 %d 件", "en": "Carry up to %d items"},
+	"setup.carry_max_one": {"zh": "最多带 %d 件", "en": "Carry up to %d item"},
 	"setup.carry_rarity": {"zh": "稀有度不超过 %d", "en": "Rarity up to %d"},
 	"setup.ground_count": {"zh": "地上　%d 件", "en": "Ground · %d items"},
+	"setup.ground_count_one": {"zh": "地上　%d 件", "en": "Ground · %d item"},
 	# ui/game/result_screen.gd
 	"result.none": {"zh": "没有可结算的一局", "en": "No run to show results for"},
 	"result.extracted": {"zh": "撤离成功", "en": "Extracted"},
@@ -484,7 +493,9 @@ const TEXT := {
 	"ledger.total": {"zh": "总价值", "en": "Total value"},
 	"ledger.dot": {"zh": "%d · %d", "en": "%d · %d"},
 	"ledger.items": {"zh": "%d 件", "en": "%d items"},
+	"ledger.items_one": {"zh": "%d 件", "en": "%d item"},
 	"ledger.items_safe": {"zh": "%d 件 · 保险箱 %d 件", "en": "%d items · %d in the safe"},
+	"ledger.items_safe_one": {"zh": "%d 件 · 保险箱 %d 件", "en": "%d item · %d in the safe"},
 	"ledger.safe_only": {"zh": "保险箱 %d 件", "en": "%d in the safe"},
 	"ledger.none": {"zh": "—", "en": "—"},
 	"ledger.xp_total": {"zh": "合计 —", "en": "Total —"},
@@ -544,6 +555,7 @@ const TEXT := {
 	"altar.used": {"zh": "这个休息处的神坛已经用过了，关了", "en": "This altar has been used and is now closed"},
 	"altar.drag_hint": {"zh": "把祭品拖上台来", "en": "Drag offerings onto the table"},
 	"altar.preview": {"zh": "献祭 %d 件：信力 +%d（Lv.%d → Lv.%d）", "en": "Offer %d items: Faith +%d (Lv.%d → Lv.%d)"},
+	"altar.preview_one": {"zh": "献祭 %d 件：信力 +%d（Lv.%d → Lv.%d）", "en": "Offer %d item: Faith +%d (Lv.%d → Lv.%d)"},
 	# ui/game/chest_screen.gd
 	"chest.idle": {"zh": "点击宝箱开锁", "en": "Click the chest to pick the lock"},
 	"chest.back": {"zh": "回地图", "en": "Back to map"},
@@ -659,6 +671,7 @@ const TEXT := {
 	"ui.hotkey": {"zh": "（%s）", "en": " (%s)"},
 	# core/enemies/enemy_kit.gd：地图底下那一行敌人摘要
 	"enemy.summary": {"zh": "%s　生命 %d　%d 件：%s", "en": "%s · Health %d · %d items: %s"},
+	"enemy.summary_one": {"zh": "%s　生命 %d　%d 件：%s", "en": "%s · Health %d · %d item: %s"},
 	"enemy.carried": {"zh": "　携带 %d 件", "en": " · carrying %d"},
 	# —— 221 F3 顺带（游戏测试 2026-10-21 第 4 条）——
 	"craft.done": {"zh": "「%s」和「%s」合成了「%s」。", "en": "%s and %s crafted into %s."},
@@ -819,6 +832,7 @@ const TEXT := {
 	"safe.no_bags": {"zh": "包放不进保险箱", "en": "Bags don't go in the safe"},
 	"safe.no_room": {"zh": "保险箱放不下「%s」", "en": "No room in the safe for \"%s\""},
 	"safe.title_count": {"zh": "保险箱　%d × %d 格　%d 件", "en": "Safe · %d × %d cells · %d items"},
+	"safe.title_count_one": {"zh": "保险箱　%d × %d 格　%d 件", "en": "Safe · %d × %d cells · %d item"},
 	# —— 221 F5a：forge_summary ——
 	"forge.sum_when": {"zh": "什么时候：%s", "en": "When: %s"},
 	"forge.dir_dealt": {"zh": "造成", "en": "dealt"},
@@ -1069,6 +1083,7 @@ const TEXT := {
 	# —— 221 F5a：text template context (core/text/text_template.gd) ——
 	"tip.difficulty_default": {"zh": "普通", "en": "Normal"},
 	"tip.battle_data": {"zh": "%s　生命 %d　%d 件：%s", "en": "%s  Health %d  %d items: %s"},
+	"tip.battle_data_one": {"zh": "%s　生命 %d　%d 件：%s", "en": "%s  Health %d  %d item: %s"},
 	# —— 221 F5a：stats (buff_def, passive_note, stamina_estimate, faith_bonus) ——
 	"battle.dur_per_stack": {"zh": "按层计时", "en": "Timed per stack"},
 	"battle.dur_permanent": {"zh": "永续", "en": "Permanent"},
@@ -1122,6 +1137,7 @@ const TEXT := {
 	"meta.new_run": {"zh": "再来一局", "en": "Another run"},
 	"meta.just_run": {"zh": "刚才这一局：%s", "en": "Last run: %s"},
 	"meta.just_extracted": {"zh": "撤离，背出来 %d 件、值 %d 币、带出 %d 币", "en": "extracted with %d items worth %d coins, plus %d coins"},
+	"meta.just_extracted_one": {"zh": "撤离，背出来 %d 件、值 %d 币、带出 %d 币", "en": "extracted with %d item worth %d coins, plus %d coins"},
 	"meta.just_died_safe": {"zh": "战败，保险箱里的 %d 件带出来了", "en": "defeated; items saved in the safe: %d"},
 	"meta.just_died": {"zh": "战败，什么都没带出来", "en": "defeated; nothing made it out"},
 	"meta.stats": {"zh": "%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d\n钱 %d　图鉴 %d / %d", "en": "Runs %d · extracted %d · died %d · total value %d · best run %d\nCoins %d · Collection %d / %d"},
@@ -1287,8 +1303,17 @@ static func t(key: String) -> String:
 
 ## 数 + 量词：「3 页」/ 3 pages；数为 1 且有 `<unit>_one` 时取它（英文单数）
 static func count(n: int, unit: String) -> String:
-	var key := unit + "_one" if n == 1 and TEXT.has(unit + "_one") else unit
-	return t(key) % n
+	return t(key_for(unit, n)) % n
+
+
+## 按数取键：数为 1 且有 `<key>_one`（英文单数的写法）就取它，否则原键
+static func key_for(key: String, n: int) -> String:
+	return key + "_one" if n == 1 and TEXT.has(key + "_one") else key
+
+
+## 同 [method t]，按 [param n] 分单复数（见 [method key_for]）
+static func tn(key: String, n: int) -> String:
+	return t(key_for(key, n))
 
 
 ## 一张「语言 → 文字」的小表按当前语言取；没有就中文、再没有给 [param fallback]；传进来的不是表就原样

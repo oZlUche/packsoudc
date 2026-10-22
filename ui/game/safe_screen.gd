@@ -102,4 +102,4 @@ func _refresh() -> void:
 	if _safe == null:
 		return
 	# 226 批一：状态行删了 —— 件数并进标题条
-	_frame_title(UiText.t("safe.title_count") % [_safe.size.x, _safe.size.y, _safe.item_count()])
+	_frame_title(UiText.tn("safe.title_count", _safe.item_count()) % [_safe.size.x, _safe.size.y, _safe.item_count()])

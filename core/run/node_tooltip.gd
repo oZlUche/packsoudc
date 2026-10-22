@@ -103,7 +103,7 @@ static func stash_text(run: RunState, node: MapNode) -> String:
 	var parts: Array[String] = []
 	for name in order:
 		parts.append(name if int(counts[name]) == 1 else "%s ×%d" % [name, counts[name]])
-	return "[color=#f0ad4e]%s[/color]%s" % [UiText.t("node.stash") % items.size(), UiText.t("node.stash_sep").join(parts)]
+	return "[color=#f0ad4e]%s[/color]%s" % [UiText.tn("node.stash", items.size()) % items.size(), UiText.t("node.stash_sep").join(parts)]
 
 
 ## 浮窗里要不要画对手的棋盘：没用过的战斗点、内容里有敌人
