@@ -6,6 +6,8 @@ var _tooltip_btn: Button = null
 var _unlock_all_btn: Button = null
 ## 标题牌：告示卷排在它下面（[method notice_top]）
 var _plate: Control = null
+## 「导出平衡数据」石签：导出的告示卷排在它右边（[method notice_spot]）
+var _export_btn: Control = null
 ## 117：开发区的「战斗日志」开关（导出包里整块不画）
 var _trace_btn: Button = null
 ## 150 补 2：调试模式开关
@@ -94,6 +96,7 @@ func open(_payload: Dictionary) -> void:
 	export_btn.tooltip_text = UiText.t("settings.export_data_desc")
 	export_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(export_btn)
+	_export_btn = export_btn
 	col.add_child(HSeparator.new())
 	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
 		var dev := _vbox(8)     # 226 批四：开发区的说明字不算裸字，守门测试放过（只在开发包里有）
@@ -275,11 +278,11 @@ func export_balance_data() -> String:
 	var dir := DataExport.target_dir()
 	var path := dir.path_join(DataExport.file_name())
 	if DataExport.pack(path) < 0:
-		warn(UiText.t("settings.export_data_failed") % ProjectSettings.globalize_path(path))
+		_post(UiText.t("settings.export_data_failed") % ProjectSettings.globalize_path(path), true)
 		return ""
 	if dir.begins_with("user://"):
 		OS.shell_open(ProjectSettings.globalize_path(dir))
-	say(export_notice(path))
+	_post(export_notice(path))
 	return path
 
 
@@ -294,6 +297,26 @@ func notice_top() -> float:
 	if _plate == null or not is_instance_valid(_plate) or not _plate.is_inside_tree():
 		return 0.0
 	return _plate.get_global_rect().end.y + NoticeLayer.GAP
+
+
+## 游戏测试 v4.26：标题牌下面紧挨着「显示」段头签，卷压住它的右半边 —— 卷排到刚点的那颗石签右边（那一行只有它，右边空着），
+## 竖着对齐石签；石签不在 / 右边放不下（卷伸出板面）才照 [method notice_top] 排在标题牌下面。返回 [卷左沿离屏中线多远（负 = 中线左边）, 卷顶]
+func notice_spot(text: String) -> Vector2:
+	var probe := NoticeScroll.make(text)
+	var sz := probe.custom_minimum_size
+	probe.free()
+	if _export_btn != null and is_instance_valid(_export_btn) and _export_btn.is_inside_tree():
+		var btn := _export_btn.get_global_rect()
+		var left := btn.end.x + NoticeLayer.GAP
+		if left + sz.x <= (_plate.get_parent() as Control).get_global_rect().end.x:     # 板面（标题牌所在的内容区）右沿
+			var x := left - notice_layer().get_global_rect().get_center().x
+			return Vector2(x if x != 0.0 else 0.5, btn.get_center().y - sz.y / 2.0)
+	return Vector2(0.0, notice_top())
+
+
+func _post(text: String, urgent: bool = false) -> void:
+	var spot := notice_spot(text)
+	notice_layer().push(text, urgent, notice_cap(), spot.x, spot.y)
 
 
 ## 091（作者定）：挑背景底色，立刻生效并存盘
