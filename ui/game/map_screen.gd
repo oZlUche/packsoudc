@@ -169,7 +169,7 @@ func _open_confirm(node: MapNode) -> void:
 	for inst in _run.board.items():
 		carried += 1
 		carried_value += ItemValue.of((inst as ItemInstance).def)
-	ledger.add_row(UiText.t("map.row_carried"), UiText.t("map.row_items") % [UiText.count(carried, "unit.item"), carried_value, ""])
+	ledger.add_row(UiText.t("map.row_carried"), UiText.tn("map.row_items", carried) % [carried, carried_value, ""])
 	ledger.add_row(UiText.t("map.row_coins"), UiText.t("map.row_coin_value") % maxi(0, _run.wallet.balance - maxi(0, fee)))     # 付不起时不写负数
 	var left := _run.storage.item_count()
 	if left > 0:
@@ -180,7 +180,7 @@ func _open_confirm(node: MapNode) -> void:
 			left_value += ItemValue.of(def)
 			if def.rarity >= 2:
 				rare += 1
-		ledger.add_row(UiText.t("map.row_ground"), UiText.t("map.row_items") % [UiText.count(left, "unit.item"), left_value, UiText.t("map.extract_ground_rare") % rare if rare > 0 else ""], UiPalette.STAMINA)
+		ledger.add_row(UiText.t("map.row_ground"), UiText.tn("map.row_items", left) % [left, left_value, UiText.t("map.extract_ground_rare") % rare if rare > 0 else ""], UiPalette.STAMINA)
 	var buttons := _hbox(8)
 	var go := _button(UiText.t("map.extract_confirm"), func(): confirm_extract(), 14)
 	go.disabled = not affordable

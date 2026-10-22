@@ -134,13 +134,13 @@ func summary() -> String:
 	if salvaged:
 		parts.append(UiText.t("repair.salvaged"))
 	if not refunded.is_empty():
-		parts.append(UiText.t("repair.refunded") % [refunded.size(), refund_total()])
+		parts.append(UiText.tn("repair.refunded", refunded.size()) % [refunded.size(), refund_total()])
 	if not replaced.is_empty():
-		parts.append(UiText.t("repair.replaced") % replaced.size())
+		parts.append(UiText.tn("repair.replaced", replaced.size()) % replaced.size())
 	if not rehomed.is_empty():
-		parts.append(UiText.t("repair.rehomed") % rehomed.size())
+		parts.append(UiText.tn("repair.rehomed", rehomed.size()) % rehomed.size())
 	if not dropped.is_empty():
-		parts.append(UiText.t("repair.dropped") % dropped.size())
+		parts.append(UiText.tn("repair.dropped", dropped.size()) % dropped.size())
 	if not unenchanted.is_empty():
 		parts.append(UiText.t("repair.unenchanted") % unenchanted.size())
 	return UiText.t("repair.head") + UiText.t("repair.sep").join(parts)

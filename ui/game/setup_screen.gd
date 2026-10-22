@@ -1522,7 +1522,7 @@ static func cap_tiles(ch: CharacterDef) -> Array:
 static func carry_caps_text(ch: CharacterDef) -> String:
 	var caps: Array[String] = []
 	if ch.carry_max_items >= 0:
-		caps.append(UiText.t("setup.carry_max") % ch.carry_max_items)
+		caps.append(UiText.tn("setup.carry_max", ch.carry_max_items) % ch.carry_max_items)
 	if ch.carry_rarity_cap >= 0:
 		caps.append(UiText.t("setup.carry_rarity") % ch.carry_rarity_cap)
 	return UiText.t("setup.sep").join(caps)
@@ -1569,7 +1569,7 @@ func _refresh() -> void:
 			lines.append(carry_text(c, scale_id, carry_value()))
 		_readout.append_text("\n".join(lines))
 	if _stash_title != null and stash != null:
-		_stash_title.text = UiText.t("setup.ground_count") % stash.item_count()
+		_stash_title.text = UiText.tn("setup.ground_count", stash.item_count()) % stash.item_count()
 	if _summary != null:
 		_summary.text = summary_text()
 	if _enter_btn != null:

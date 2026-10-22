@@ -222,8 +222,8 @@ func _refresh() -> void:
 	elif int(p["count"]) == 0:
 		_preview = UiText.t("altar.drag_hint")
 	else:
-		_preview = UiText.t("altar.preview") % [UiText.count(int(p["count"]), "unit.item"), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
-		line = UiText.t("altar.offer_line") % [UiText.count(int(p["count"]), "unit.item"), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
 	ScrollKey.show_sub(_offer_btn, UiText.t("altar.offer"), line)
 	for b in _action_btns:
 		(b as Button).disabled = (b as Button).disabled or not open
