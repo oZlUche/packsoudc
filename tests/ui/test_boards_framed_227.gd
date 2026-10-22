@@ -1,11 +1,12 @@
 ## 227（作者 2026-10-21 17:25「所有的棋盘都要显示（包括格子）」）：全游戏每一块棋盘都有外框和格线 ——
-## 运行时把有棋盘的屏开一遍，凡 [InventoryView]：外框（祖先里有 [BoardFrame]，或屏自己摆的框 [method BoardFrame.mark]）或仓库的棕底，
-## 且格缝或棕底；源码里造 [InventoryView] 的文件都得接上框（沙盒、测试除外）
+## 运行时把有棋盘的屏开一遍，凡 [InventoryView]：外框（祖先里有 [BoardFrame]，或屏自己摆的框 [method BoardFrame.mark]），
+## 且格缝；棕底仓库的外框是木架 / 仓库框（补测：不再直接放行）；源码里造 [InventoryView] 的文件都得接上框（沙盒、测试除外）
 extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
 const Setup180 := preload("res://tests/ui/test_setup_180.gd")
+const Drawer139 := preload("res://tests/ui/test_base_drawer_139.gd")
 const PREFIX := "boards227"
 
 ## 造了 [InventoryView] 却不在本文件里套框的：面板由用它的屏套（[method GameScreen._mount_bag]、背包窗、战前）；沙盒是开发工具
@@ -16,14 +17,30 @@ const STATIC_EXEMPT := {
 }
 
 
+## 仓库（棕底）棋盘认的外框：基地 / 结算的木架、开局第二页的仓库框
+const GROUND_FRAMES: Array[StringName] = [UiTheme.PANEL_SHELF, UiTheme.PANEL_STASH_FRAME]
+
+
 ## 一个视图过不过：返回空串 = 过，否则是缺什么
 static func problem(v: InventoryView) -> String:
 	var grounded := not v.ground.is_empty()
-	if not grounded and not BoardFrame.framed(v):
+	if grounded:
+		return "" if BoardFrame.framed(v) or in_ground_frame(v) else "仓库没有外框（木架 / 仓库框）"
+	if not BoardFrame.framed(v):
 		return "没有外框"
-	if not grounded and v.seams.is_empty():
+	if v.seams.is_empty():
 		return "没有格缝"
 	return ""
+
+
+## 棕底棋盘的祖先里有没有木架 / 仓库框
+static func in_ground_frame(v: Control) -> bool:
+	var n := v.get_parent()
+	while n != null:
+		if n is Control and GROUND_FRAMES.has((n as Control).theme_type_variation):
+			return true
+		n = n.get_parent()
+	return false
 
 
 ## [param n] 底下所有看得见的棋盘视图里不过的：["屏 · 路径：缺什么"]
@@ -131,6 +148,33 @@ static func frame_setup_pages(t: TestCase, root: Window) -> void:
 	t.eq(bad, [] as Array[String], "都有外框和格线")
 	game.free()
 	Support.cleanup(PREFIX + "s")
+
+
+static func frame_base_pages(t: TestCase, root: Window) -> void:
+	t.begin("227 补测 · 基地家、仓库页、出售页：仓库（棕底）棋盘也得在木架里，丢了框要报")
+	var f := Drawer139._flow()
+	for id in [&"knife", &"bandage"]:
+		var def := f.items.get_def(id)
+		if def != null:
+			f.meta.warehouse.try_add(ItemInstance.create(def))
+	var base = Drawer139._screen(f, root)
+	var bad: Array[String] = audit(base, "基地家")
+	var seen := 0
+	for tab in ["warehouse", "sell"]:
+		base.show_tab(tab)
+		bad.append_array(audit(base, "基地 %s" % tab))
+		for c in base.find_children("*", "InventoryView", true, false):
+			if (c as InventoryView).is_visible_in_tree() and not (c as InventoryView).ground.is_empty():
+				seen += 1
+	t.check(seen > 0, "仓库页 / 出售页有棕底棋盘（%d）" % seen)
+	t.eq(bad, [] as Array[String], "都有外框")
+	var bare := InventoryView.new()
+	bare.inventory = GridInventory.new(Vector2i(3, 3), 0, false)
+	bare.ground = InventoryView.GROUND_WAREHOUSE
+	base.add_child(bare)
+	t.check(problem(bare) != "", "棕底棋盘没套木架：报出来")
+	base.free()
+	Drawer139._cleanup()
 
 
 static func frame_notice_cap_tent(t: TestCase, root: Window) -> void:
