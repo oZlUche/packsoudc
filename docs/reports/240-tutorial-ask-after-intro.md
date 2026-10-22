@@ -39,3 +39,11 @@
 ## 四、派工
 
 执行一单，直接做。
+
+## 五、落地（执行，2026-10-22，v4.21）
+
+按甲做。`GameFlow`：新信号 `tutorial_ask`；`choose_event` 选的是当前章 `intro_event`、这一章是第一张教程、局外旗标 `TUTORIAL_ASKED`（`tutorial_asked`）没立 → `_flush()` 回到地图后发信号；`accept_tutorial()` 立旗标存盘；`decline_tutorial()` 立旗标 → `skip_prologue()`（本体不动）→ 删局内存档（不然「继续」会回到序章一）→ `_reset_run()` + `run_changed.emit(null)` → `new_run()` 落开局屏。不进结算、不记场次。删了 `start_new_game_skipping`、`new_game_in` / `_start_new` 的跳过参数、存档位屏的 `skip_prologue` 载荷、主菜单那一行与武装 / 确认、`menu.skip_prologue*` 两个键。
+
+`MapScreen.show_tutorial_ask()`：规则卡同款（压暗 + 铜框标题「要带你走一遍吗？」+ 羊皮纸正文），【需要】`ScrollKey.primary`、【不需要】`ScrollKey.make` 并排。卡开着时点地图、开背包、重开、教练都不动；Esc 不替玩家选。【需要】关卡后接着放教练。
+
+测试：`test_skip_prologue_221` 改成走开场一问（字中英齐、旧键删了；【不需要】→ 三解锁 + 望远镜 + 两枚信物 + 开局套、局收掉、没有局内存档、场次不变、落开局屏、重读还在；【需要】→ 旗标立、局还在、Esc 不关卡、同一存档再开不再问）；`test_main_menu_197` 次档不再有「跳过序章」。截图：`/mnt/project-files/art/ui/tutorial_ask240/`（ask_zh、ask_en、after_decline）。

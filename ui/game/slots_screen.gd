@@ -4,12 +4,9 @@ extends GameScreen
 
 var _rows: Dictionary = {}
 var _armed_delete: int = -1
-## 221 G：从「跳过序章」来的 —— 在这里开的新存档也跳过序章
-var _skip_prologue := false
 
 
 func open(payload: Dictionary) -> void:
-	_skip_prologue = bool(payload.get("skip_prologue", false))     # 221 G：主菜单「跳过序章」时位满了来的
 	_backdrop()
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -76,7 +73,7 @@ func load_slot(n: int) -> bool:
 
 
 func new_game_here(n: int) -> bool:
-	return flow.new_game_in(n, _skip_prologue)
+	return flow.new_game_in(n)
 
 
 ## 点两次才删：第一次只是武装起来、提示一句

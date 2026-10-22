@@ -203,6 +203,10 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 		map.call("_maybe_coach")
 		t.is_null(map.coach(), "开场事件压着（屏 %s）：先不放" % flow.screen)
 		Support.settle(flow)
+	t.check(map.tutorial_ask_open(), "240：开场事件选完先问要不要教程")
+	map.call("_maybe_coach")
+	t.is_null(map.coach(), "240：卡开着，教程先不放")
+	map.accept_tutorial()     # 240：【需要】
 	t.is_null(map.get("_rules"), "220：序章一没有规则卡，不弹")
 	map.toggle_pause()
 	var pause_labels: Array = map._pause.find_children("*", "Button", true, false).map(func(b): return (b as Button).text)
