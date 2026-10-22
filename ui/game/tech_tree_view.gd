@@ -3,7 +3,8 @@
 ## 229：每列顶上一枚段头签（[HeaderTag]，`tech.col_<列>`）；列与列之间只垫一道 [constant H_GAP]，外侧交给 [constant MARGIN]。
 ##
 ## 节点三种样子：**已点亮**（主按钮橙底白字）、**可点亮**（前置都满足、还没点：深底亮边，边框慢慢呼吸）、**锁住**（暗字无边）。
-## 选中的节点再加一圈前景色的边。点一个节点发 [signal selected]；数据（等级、前置）全看 [TechService]，这里只画
+## 选中的节点再加一圈前景色的边。乙 石刻（有图时）：已点亮 = 家的主档木牌、可点亮 = 木牌（慢慢亮暗呼吸）、锁住 = 灰木牌，墨字；
+## 选中叠一圈 `kit/node_sel`（四边外扩 5）。点一个节点发 [signal selected]；数据（等级、前置）全看 [TechService]，这里只画
 class_name TechTreeView
 extends Control
 
@@ -22,6 +23,12 @@ const PAPER_ART := "tech/tech_tree_hide"
 const LINE_INK := Color("3a2c20")
 const LINE_LIT := Color("b3261e")
 const LINE_W := 3.0
+## 乙 石刻木牌节点与选中圈
+const WOOD_ART := {0: "home/btn_wood_primary", 1: "home/btn_wood", 2: "home/btn_wood_disabled"}
+const SEL_ART := "kit/node_sel"
+const SEL_OUTSET := 5.0
+## 锁住的灰木牌上写深墨（名字和等级要看得清，灰牌本身就说明锁着）
+const LOCKED_INK := Color("4a443c")
 
 enum State { LIT, AVAILABLE, LOCKED }
 
@@ -42,6 +49,9 @@ var _col_mid: Dictionary = {}
 var _line_ink := LINE_INK
 var _line_lit := LINE_LIT
 var _line_w := LINE_W
+## 选中圈画在最上面这层（节点按钮是子控件，自己的 _draw 会被它们盖住）
+var _ring: Control = null
+var _ring_box: StyleBoxTexture = null
 
 
 func _init() -> void:
@@ -91,7 +101,29 @@ func rebuild() -> void:
 		tag.widen(widest)
 		tag.position = Vector2(floorf(float(_col_mid[c]) - widest * 0.5), MARGIN)
 		add_child(tag)
+	_ring = Control.new()
+	_ring.name = "SelRing"
+	_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ring.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_ring.draw.connect(_draw_ring)
+	add_child(_ring)
 	queue_redraw()
+
+
+## 选中圈：`kit/node_sel` 九宫格（20），四边外扩 [constant SEL_OUTSET]；没图不画（退回描边）
+func _draw_ring() -> void:
+	if _selected == &"" or not _rects.has(_selected) or not _wood():
+		return
+	if _ring_box == null:
+		_ring_box = StyleBoxTexture.new()
+		_ring_box.texture = UiTheme.art_cached(SEL_ART)
+		_ring_box.set_texture_margin_all(20.0)
+	if _ring_box.texture != null:
+		_ring.draw_style_box(_ring_box, (_rects[_selected] as Rect2).grow(SEL_OUTSET + 6.0))     # 图四周多 6
+
+
+func _wood() -> bool:
+	return UiTheme.art_cached(String(WOOD_ART[1])) != null
 
 
 ## 名字长（英文）放不下就把字号往下收，别被截掉（游戏测试 10-21：Warehouse Expansion 截成 Expansio）
@@ -119,6 +151,8 @@ func select(id: StringName) -> bool:
 	_selected = id
 	for def in defs:
 		_style(_nodes[def.id], def)
+	if _ring != null:
+		_ring.queue_redraw()
 	selected.emit(id)
 	return true
 
@@ -203,31 +237,44 @@ func _place() -> void:
 #region 画
 func _style(b: Button, def: TechDef) -> void:
 	var st := state_of(def.id)
-	var box := StyleBoxFlat.new()
-	box.set_corner_radius_all(4)
-	box.set_content_margin_all(6)
-	var fg := UiPalette.FG
-	match st:
-		State.LIT:
-			box.bg_color = UiPalette.BTN_PRIMARY
-			fg = UiPalette.BTN_PRIMARY_TEXT
-		State.AVAILABLE:
-			box.bg_color = UiPalette.PANEL
-			box.border_color = UiPalette.BTN_SECONDARY_EDGE
-			box.set_border_width_all(2)
-			fg = UiPalette.FG
-		State.LOCKED:
-			box.bg_color = UiPalette.PANEL.darkened(0.2)
-			fg = UiPalette.DIM
-	if def.id == _selected:
-		box.border_color = UiPalette.FG
-		box.set_border_width_all(3)
-	# 121 特例：节点的样子按点亮状态实时换、可点亮的边框还要呼吸（_process 改这份底的边色），每个节点得有自己的一份
+	var box: StyleBox = _wood_box(st)
+	var fg := UiTheme.INK if st != State.LOCKED else LOCKED_INK
+	if box == null:
+		var flat := StyleBoxFlat.new()
+		flat.set_corner_radius_all(4)
+		flat.set_content_margin_all(6)
+		match st:
+			State.LIT:
+				flat.bg_color = UiPalette.BTN_PRIMARY
+				fg = UiPalette.BTN_PRIMARY_TEXT
+			State.AVAILABLE:
+				flat.bg_color = UiPalette.PANEL
+				flat.border_color = UiPalette.BTN_SECONDARY_EDGE
+				flat.set_border_width_all(2)
+				fg = UiPalette.FG
+			State.LOCKED:
+				flat.bg_color = UiPalette.PANEL.darkened(0.2)
+				fg = UiPalette.DIM
+		if def.id == _selected:
+			flat.border_color = UiPalette.FG
+			flat.set_border_width_all(3)
+		box = flat
+	# 121 特例：节点的样子按点亮状态实时换、可点亮的还要呼吸（_process 改这份底），每个节点得有自己的一份
 	for k in ["normal", "hover", "pressed", "focus"]:
 		b.add_theme_stylebox_override(k, box)
 	for k in ["font_color", "font_hover_color", "font_pressed_color"]:
 		b.add_theme_color_override(k, fg)
 	_boxes[def.id] = box
+
+
+## 乙 石刻木牌（点亮 / 可点亮 / 锁住三张图）；没图 null（退回平板样子）
+func _wood_box(st: State) -> StyleBoxTexture:
+	if not _wood():
+		return null
+	var wood := UiTheme.art_box(String(WOOD_ART[int(st)]))
+	if wood != null:
+		wood.set_content_margin_all(6)
+	return wood
 
 
 func _draw() -> void:
@@ -255,5 +302,9 @@ func _process(delta: float) -> void:
 	for id in _boxes:
 		if id == _selected or state_of(id) != State.AVAILABLE:
 			continue
-		(_boxes[id] as StyleBoxFlat).border_color = UiPalette.BTN_SECONDARY_EDGE.lerp(UiPalette.FG, k * 0.6)
+		var bx: StyleBox = _boxes[id]
+		if bx is StyleBoxTexture:
+			(bx as StyleBoxTexture).modulate_color = Color.WHITE.lerp(Color(1.06, 1.05, 1.02), k)     # 木牌：慢慢亮一点再暗回去
+		else:
+			(bx as StyleBoxFlat).border_color = UiPalette.BTN_SECONDARY_EDGE.lerp(UiPalette.FG, k * 0.6)
 #endregion

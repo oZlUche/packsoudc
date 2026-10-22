@@ -416,6 +416,9 @@ func tech_panel():
 #region 出售（091，作者定：基地内商店）
 ## 「白色 / 绿色及以下 / … / 全部」→ 稀有度上限（-1 = 全部）
 const SELL_FILTERS := [["meta.sell_white", 0], ["meta.sell_green", 1], ["meta.sell_blue", 2], ["meta.sell_purple", 3], ["meta.sell_gold", 4], ["meta.all", -1]]
+## 乙 石刻：「一键出售」主档木牌两行字、成就筛选木牌的字号
+const SELL_BTN_FONT := 20
+const ACH_FILTER_FONT := 16
 var _sell_filter: int = 0
 var _sell_pick: OptionButton = null
 ## 177 补 1.2：标签下拉（单选，待定补 1 选 A；&"" = 不限标签）
@@ -438,15 +441,17 @@ func _build_sell(root: Control) -> Control:
 	for i in SELL_FILTERS.size():
 		_sell_pick.add_item(UiText.t(String(SELL_FILTERS[i][0])), i)
 	_sell_pick.item_selected.connect(set_sell_filter)
+	UiTheme.dress_wood_option(_sell_pick)     # 乙 石刻：木牌框 + 箭头 + 浅纸弹出单
 	row.add_child(_sell_pick)
 	_sell_tag_pick = OptionButton.new()
 	_sell_tag_pick.item_selected.connect(func(i: int): set_sell_tag(StringName(String(_sell_tag_pick.get_item_metadata(i)))))
+	UiTheme.dress_wood_option(_sell_tag_pick)
 	row.add_child(_sell_tag_pick)
 	# 美术设计 20:38：一行放不下（两个下拉 + 预览 + 大按钮把中列撑宽，右边仓库被挤出屏幕）—— 预览与按钮另起一行
 	var row2 := _hbox(10)
 	row2.alignment = BoxContainer.ALIGNMENT_END
 	page.add_child(row2)
-	var sell_btn := _button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY)
+	var sell_btn := UiTheme.make_home_button(UiText.t("meta.sell_all"), func(): sell_filtered(), true, Vector2.ZERO, SELL_BTN_FONT)     # 乙 石刻：主档木牌
 	_sell_btn = sell_btn     # 226 批三：「会卖 N 件，得 N 币」写在按钮第二行
 	sell_btn.tooltip_text = UiText.t("meta.sell_intro") % int(round(flow.sell_ratio() * 100))     # 226 批二：说明那段与行首「一键出售」删了，卖价比例进按钮悬浮窗
 	row2.add_child(sell_btn)
@@ -596,7 +601,7 @@ func _build_achievements(root: Control) -> Control:
 	page.add_child(head)
 	for pair in [["all", "meta.all"], ["done", "meta.ach_filter_done"], ["todo", "meta.ach_filter_todo"]]:
 		var key: String = pair[0]
-		var b := _button(UiText.t(pair[1]), func(): show_achievement_filter(key), 13, UiPalette.Tier.MINOR)
+		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_achievement_filter(key), false, Vector2.ZERO, ACH_FILTER_FONT)     # 乙 石刻：木牌，选中 = 按下的那块
 		b.toggle_mode = true
 		_ach_filter_btns[key] = b
 		head.add_child(b)
