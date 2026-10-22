@@ -9,7 +9,7 @@ extends GameScreen
 
 const SLOT_SIZE := Vector2i(4, 4)
 ## 194 §2：槽下小字的字号
-const SUMMARY_SIZE := 13
+const SUMMARY_SIZE := 14
 const ART_DIR := "res://assets/ui/forge/"
 const LAYOUT_PATH := ART_DIR + "layout.json"
 ## 说明石板：字号、板面离石板外框的边（底图像素）
@@ -19,8 +19,13 @@ const HOVER_LIFT := 1.12
 const SLATE_INSET := Vector2(28, 36)
 ## 「将铸出」便条上的字号
 const PREVIEW_SIZE := 15
-## 便条钉在哪（底图像素）：layout 的 text 区（工作台正面）让背包下的数值栏占了，便条挪到挂板与背包之间，同背包一样宽
-const NOTE_RECT := Rect2(1236, 392, 672, 120)
+## 便条钉在哪（底图像素）：layout 的 text 区（工作台正面）让背包下的数值栏占了，便条钉在挂板下沿（上沿压住下框 16），同挂板一样宽；高随行数
+const NOTE_RECT := Rect2(1316, 330, 560, 0)
+## 槽下便条：上沿（底图像素，槽框下 8）与左右内边距
+const SLOT_NOTE_TOP := 980.0
+const NOTE_PAD := 12
+## 便条左上角有图钉：字从图钉下面起
+const NOTE_PIN_ROOM := 18
 
 var _node: MapNode = null
 ## 时机、效果、数值三个槽
@@ -31,6 +36,7 @@ var _out_view: InventoryView = null
 var _preview: Label
 ## 194 §2：每槽下面的三行小字（时机、效果、数值）
 var _summaries: Array[RichTextLabel] = []
+var _slot_notes: Array[PanelContainer] = []
 ## 194 §2：两槽满时按空槽 default 行试算的那一句
 ## 风箱把手（三张图跟着状态换）
 var _forge_btn: TextureButton
@@ -73,11 +79,16 @@ func open(payload: Dictionary) -> void:
 		_slot_frame(v)
 		_reserve_ground(host)
 		_slot_hosts.append(host)
+		var note := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, NOTE_PAD, NOTE_PIN_ROOM, NOTE_PAD, 10)     # 226 批四：槽下小字写在便条上（石带在游戏里看不出来）
+		note.name = "SlotNote%d" % i
+		note.visible = false
+		add_child(note)
+		var cap := _rect(caption_rects[i] if i < caption_rects.size() else {})
+		_spots[note] = Rect2(cap.position.x, SLOT_NOTE_TOP, cap.size.x, 0.0)
+		_reserve_ground(note)     # 小字写长了会越过石带：地上的东西别压着它
 		var sum := UiTheme.rich_block(float(SLOT_SIZE.x * InventoryView.CELL), SUMMARY_SIZE)
-		add_child(sum)
-		_spots[sum] = _rect(caption_rects[i] if i < caption_rects.size() else {})
-		_reserve_ground(sum)     # 小字写长了会越过石带：地上的东西别压着它
-		sum.set_meta(&"exempt_bare_text", "ForgeArt")     # 226 守门：字写在底图的石带上
+		note.add_child(sum)
+		_slot_notes.append(note)
 		_summaries.append(sum)
 		_slots.append(g)
 		_slot_views.append(v)
@@ -218,6 +229,9 @@ func _place() -> void:
 	_slate.size.x = _slate.custom_minimum_size.x
 	_preview.custom_minimum_size.x = maxf(0.0, _text_note.size.x - _text_note.get_theme_stylebox("panel").get_minimum_size().x)     # 便条定宽、按行数收高
 	_text_note.reset_size.call_deferred()
+	for i in _slot_notes.size():
+		_summaries[i].custom_minimum_size.x = maxf(0.0, _slot_notes[i].size.x - NOTE_PAD * 2)
+		_slot_notes[i].reset_size.call_deferred()
 	_place_piece(_forge_btn, "handle", s, offset)
 	_place_piece(_back_btn, "sign", s, offset)
 
@@ -359,6 +373,8 @@ func _refresh() -> void:
 		var inst: ItemInstance = _slots[i].items()[0] if _slots[i].item_count() == 1 else null
 		var lines := Forge.slot_summary(ForgeTable.SLOTS[i], inst.def) if inst != null else ([] as Array[String])
 		UiTheme.set_rich(_summaries[i], _summary_bbcode(lines))
+		_slot_notes[i].visible = not lines.is_empty()
+		_slot_notes[i].reset_size.call_deferred()
 	var ench := preview()
 	_forge_btn.disabled = ench.is_empty() or not open
 	_forge_btn.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/handle_ready"))     # 221：把手与底图上的铭牌画着字，英文版另一套
