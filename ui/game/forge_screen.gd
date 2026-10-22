@@ -169,6 +169,19 @@ static func _rect(d: Dictionary) -> Rect2:
 
 
 ## 227：槽套深色素框 —— 框往外挪一个缩进，格子还在底图那块槛上
+## 槽下便条左右贴齐槽框外沿（框摆好之后才知道实际 rect）；高随行数
+func _align_slot_notes() -> void:
+	for i in _slot_notes.size():
+		var frame := _slot_views[i].get_parent() as Control
+		var note := _slot_notes[i]
+		if frame == null:
+			continue
+		var r := frame.get_global_rect()
+		_summaries[i].custom_minimum_size.x = maxf(0.0, r.size.x - NOTE_PAD * 2)
+		note.global_position.x = r.position.x
+		note.reset_size()
+
+
 func _slot_frame(v: InventoryView) -> void:
 	var f := BoardFrame.wrap(v, "plain", true)
 	f.position = -Vector2.ONE * f.inset()
@@ -229,9 +242,7 @@ func _place() -> void:
 	_slate.size.x = _slate.custom_minimum_size.x
 	_preview.custom_minimum_size.x = maxf(0.0, _text_note.size.x - _text_note.get_theme_stylebox("panel").get_minimum_size().x)     # 便条定宽、按行数收高
 	_text_note.reset_size.call_deferred()
-	for i in _slot_notes.size():
-		_summaries[i].custom_minimum_size.x = maxf(0.0, _slot_notes[i].size.x - NOTE_PAD * 2)
-		_slot_notes[i].reset_size.call_deferred()
+	_align_slot_notes.call_deferred()
 	_place_piece(_forge_btn, "handle", s, offset)
 	_place_piece(_back_btn, "sign", s, offset)
 
@@ -374,7 +385,7 @@ func _refresh() -> void:
 		var lines := Forge.slot_summary(ForgeTable.SLOTS[i], inst.def) if inst != null else ([] as Array[String])
 		UiTheme.set_rich(_summaries[i], _summary_bbcode(lines))
 		_slot_notes[i].visible = not lines.is_empty()
-		_slot_notes[i].reset_size.call_deferred()
+	_align_slot_notes.call_deferred()     # 字换了行数，便条跟着收放
 	var ench := preview()
 	_forge_btn.disabled = ench.is_empty() or not open
 	_forge_btn.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/handle_ready"))     # 221：把手与底图上的铭牌画着字，英文版另一套

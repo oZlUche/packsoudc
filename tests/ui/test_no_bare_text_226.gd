@@ -190,6 +190,13 @@ static func frame_node_screens(t: TestCase, root: Window) -> void:
 				if sn != null and sn.theme_type_variation == UiTheme.PANEL_SUMMARY_NOTE and sn.find_children("*", "RichTextLabel", true, false).size() == 1:
 					slot_notes.append(sn)
 			t.eq(slot_notes.size(), 3, "铸炉三槽下的小字各写在一张便条上")
+			screen._align_slot_notes()
+			var aligned := true
+			for i in mini(slot_notes.size(), screen._slot_views.size()):
+				var fr: Rect2 = (screen._slot_views[i].get_parent() as Control).get_global_rect()
+				var nr: Rect2 = (slot_notes[i] as Control).get_global_rect()
+				aligned = aligned and absf(nr.position.x - fr.position.x) < 1.0 and absf(nr.end.x - fr.end.x) < 1.0
+			t.check(aligned, "槽下便条左右贴齐槽框外沿")
 		screen.free()
 	DevGate.force_player = false
 	Support.cleanup(PREFIX + "n")
