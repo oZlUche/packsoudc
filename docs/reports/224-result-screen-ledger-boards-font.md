@@ -204,3 +204,33 @@
 - 战败：只有标题牌、账单、继续；`_has_store_step()` 只看 `is_extracted()`。`MetaState.absorb` 战败分支：包进包架 → 仓库 → 放不下才进待置入的棋盘。删 `result.lost_all / lost_safe / safe_line`。
 - 测试：新套件 `test_result_v2_224`（战败进仓库 / 溢出进棋盘；板边、摆位、2 倍图、保险箱框、第二页棋盘 72、仓库靠右、英文字号）；`test_result_steps_177`、`test_screens_157`、`test_author_092` 跟着改。截图 `/mnt/project-files/art/ui/ledger/shots_v2/`。
 
+
+## 十、补充三：合计行改「总分」、经验列去掉（作者 2026-10-22 12:45）→ 派执行 + 美术设计
+
+作者原话：「结算的第二页最后一栏【总价值】改成【总分】，经验列去掉，以后有对应系统直接将分数转化为经验就行」。
+
+> 账单在结算的**第一页**（第二页是 228 的仓库），改的就是这张账单；作者说的「最后一栏」是合计行。
+
+### 改什么
+
+| 处 | 现状（v3.88） | 改成 |
+|---|---|---|
+| 合计行标签 | `ledger.total` = 「总价值」/ Total value | 「总分」/ Score。数值不变：`r.value + r.safe_value`（`ledger_view.gd:93`），和 `MetaState.score` 累加的是同一个数（`meta_state.gd:260/284`），「统计」里的「累计价值」= 这个分的总和 |
+| 经验列 | 每行写「—」，合计行写「合计 —」（`ledger_view.gd:194–197`，`XP_RIGHT 845`） | 整列删：常量、两处 `draw_string`、文本键 `ledger.xp_total`；`ledger.none` 留着（最高稀有度为空时还用） |
+| 数量列 | 右对齐在 `NUMBER_RIGHT 701`，右边是经验列 | 右对齐挪到 **845**（原经验列右沿），数量列占到右边 |
+| 图 `result/ledger_stele` | 两道分栏线画在图里（账面 x 360 / 720） | 只留 360 那道；720 那道去掉。美术设计改 `art/ui/ledger/v2.py`：`COLS0 = (300,)`、`NUM_R` 取原 `XP_R`、`xp` 字段删，重跑出 `out/v2/`（1x + @2x）和 layout.json，执行换图 |
+| 菜单「统计」 | 「累计价值」（en Score） | 顺手改「累计总分」，英文已经是 Score，不动 |
+
+### 不改什么
+
+- 行数、行高、逐行显出、点击全显、滚数：原样（`test_result_v2_224.gd` 的「十一行 + 合计」照旧过）。
+- 分数怎么换经验：作者说以后有系统再定，这次不建 XP 字段、不加换算。
+
+### 顺带
+
+236 ⑤ 本来要把这张图改成 1x 导出（2x 图 1844×1268 在 1x 画是白费显存）；这次反正要重出图，**执行若已在做 236 甲批，就一起按 1x 出**；没做就先只去线，1x 留给 236。
+
+### 派单
+
+- 美术设计：改 v2.py 去掉第二道分栏线，重出 `out/v2/ledger_stele.png`（+ @2x）与 layout.json（`columns_x [360]`，`number_right_x 845`，无 `xp_*`）。
+- 执行：换图 + `ledger_view.gd`（删 `XP_RIGHT` 与经验列绘制，`NUMBER_RIGHT` 845，头注释三栏改两栏）+ `ui_text.gd`（`ledger.total` 总分 / Score，删 `ledger.xp_total`，`menu.stats` 累计总分）+ 对应测试文案。
