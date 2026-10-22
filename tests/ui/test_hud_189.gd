@@ -1,10 +1,9 @@
 ## 189 / 190（作者 2026-10-18 定案：「乙的整体风格，但是倒计时要换成日晷样式」「去掉数字倒计时，而是设计成鼠标移动上去时出现悬浮窗」
-## 「日晷记住要刻上去的，而不是额外的部件」）：顶端栏一条贯通的浅槽、栏里的件坐在槽底上、相邻两件之间铜点；
-## 倒计时 = 刻在槽底的半圆日规，栏上没有数字，停上去弹「倒计时」悬浮窗
+## 「日晷记住要刻上去的，而不是额外的部件」）：倒计时 = 半圆日规，栏上没有数字，停上去弹「倒计时」悬浮窗。
+## 长槽与铜点在 235 丙款栏皮里退役（栏皮与两头见 test_topbar_235）
 extends RefCounted
 
 const CS := preload("res://tests/run/test_character_skills.gd")
-const HudBarScript := preload("res://ui/hud/widgets/hud_bar.gd")
 const Support := preload("res://tests/run/flow_support.gd")
 const HOST_SIZE := Vector2(1600, 1000)
 
@@ -31,62 +30,6 @@ static func _host(root: Window, run: RunState, screen: Control = null) -> HudHos
 	host.setup(run, screen, layout)
 	host.arrange()
 	return host
-
-
-static func frame_groove(t: TestCase, root: Window) -> void:
-	t.begin("190 · 顶端栏：一条贯通的长槽（左右各留 14）；左槽三件之间两枚铜点、间距 ≥ 24；栏里的件坐在槽底上（墨字），拖出栏回自带凹槽；组在槽身里居中、轴心落在 y 63")
-	t.check(HudBarScript.has_groove(), "有槽图")
-	var run := _run()
-	if run == null:
-		t.check(false, "开不了局")
-		return
-	var host := _host(root, run)
-	var bar := host.widget(&"hud_bar")
-	if run.active_faith_id() == &"":
-		host.arrange()
-		t.eq((bar.call("dots") as Array).filter(func(d): return d.x < HOST_SIZE.x * 0.5).size(), 1, "没信仰：信仰那格空着，旁边不放铜点")
-		Support.activate(run, &"charm_brute")
-		host.refresh()
-		host.arrange()
-	t.check(run.active_faith_id() != &"", "有信仰")
-	t.eq(bar.call("groove_rect"), Rect2(14, 0, HOST_SIZE.x - 28, host.bar_height()), "槽铺满栏高、左右各留 14")
-	t.eq(host.bar_height(), HudHost.BAR_HEIGHT, "栏高还是 88")
-	var vit := host.widget(&"vitality")
-	var wallet := host.widget(&"wallet")
-	var faith := host.widget(&"faith")
-	var band: Vector2 = HudBarScript.band(host.bar_height())
-	var mid := (band.x + band.y) * 0.5
-	t.eq(band, Vector2(12, 68), "槽身 12～68")
-	t.check(absf(vit.position.y + vit.size.y * 0.5 - mid) <= 1.0, "体力在槽身中线（%s）" % (vit.position.y + vit.size.y * 0.5))
-	t.check(wallet.position.x - (vit.position.x + vit.size.x) >= 24.0 - 0.01 and faith.position.x - (wallet.position.x + wallet.size.x) >= 24.0 - 0.01, "相邻两件间距 ≥ 24")
-	var dots: Array[Vector2] = bar.call("dots")
-	var on_mid := 0
-	for d in dots:
-		if absf(d.y - mid) <= 1.0 and d.x > vit.position.x and d.x < faith.position.x:
-			on_mid += 1
-	t.eq(on_mid, 2, "左槽三件之间两枚铜点（%s）" % str(dots))
-	t.eq(wallet.theme_type_variation, UiTheme.PANEL_BARE, "栏里的货币没有自己的凹槽")
-	t.eq(UiTheme.tone_at(wallet), UiTheme.TONE_LIGHT, "浅底墨字")
-	t.check(wallet.in_bar, "知道自己在栏里")
-	var cd := host.widget(&"countdown")
-	if cd.visible:
-		var pivot_y: float = cd.position.y + (cd.size.y - 52.0) * 0.5 + 46.0
-		t.check(absf(pivot_y - 63.0) <= 1.0, "轴心在 y 63（%s）" % pivot_y)
-		t.check(absf(cd.position.x + cd.size.x * 0.5 - HOST_SIZE.x * 0.5) <= 1.0, "日规在栏正中")
-	# 拖出栏：回自带的凹槽
-	host.layout.entry_of(&"wallet")["anchor"] = "top_left"
-	host.layout.entry_of(&"wallet")["offset"] = Vector2(0, 20)
-	host.arrange()
-	t.eq(wallet.theme_type_variation, UiTheme.PANEL_HUD, "拖出栏：回自带的凹槽")
-	t.check(not wallet.in_bar, "不在栏里了")
-	host.arrange()
-	var dots2: Array[Vector2] = bar.call("dots")
-	var left_mid := 0
-	for d in dots2:
-		if absf(d.y - mid) <= 1.0 and d.x < HOST_SIZE.x * 0.5:
-			left_mid += 1
-	t.eq(left_mid, 1, "左槽剩两件：一枚铜点")
-	host.queue_free()
 
 
 static func run_dial(t: TestCase) -> void:

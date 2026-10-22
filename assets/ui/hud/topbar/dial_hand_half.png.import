@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://rqfdlybc1l1v"
-path="res://.godot/imported/dot.png-d850b2e7078209d7a9dbb1447cea50a8.ctex"
+uid="uid://ccikpe7pib7i7"
+path="res://.godot/imported/dial_hand_half.png-703272be60b26fbd589811c38640b5ea.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/hud/dot.png"
-dest_files=["res://.godot/imported/dot.png-d850b2e7078209d7a9dbb1447cea50a8.ctex"]
+source_file="res://assets/ui/hud/topbar/dial_hand_half.png"
+dest_files=["res://.godot/imported/dial_hand_half.png-703272be60b26fbd589811c38640b5ea.ctex"]
 
 [params]
 

@@ -16,7 +16,6 @@ const KINDS := {
 	&"hud_bar": "res://ui/hud/widgets/hud_bar.gd",
 	&"legend": "res://ui/hud/widgets/legend_widget.gd",
 	&"dev_drawer": PART,
-	&"bag_button": PART,
 	&"reopen_button": PART,
 	&"skills": PART,
 	&"routes": PART,
@@ -24,9 +23,11 @@ const KINDS := {
 const PART := "res://ui/hud/hud_part_widget.gd"
 ## 186：只在开发包里造的（[DevGate]）—— 玩家包里宿主跳过，不是藏起来
 const DEV_ONLY: Array[StringName] = [&"dev_drawer"]
+## 235：顶端栏两头（栏皮里的按钮，不是组件、不进布局）：教程目标 id → 哪一头（[method HudHost.rect_of]）
+const BAR_ENDS := {&"menu_end": &"left", &"bag_end": &"right"}
 ## 屏幕那几块的中文名（摆读数时没内容的露这个名字）
 const PART_TITLES := {
-	&"dev_drawer": "调试台", &"bag_button": "背包", &"reopen_button": "放大镜", &"skills": "技能", &"routes": "路线",
+	&"dev_drawer": "调试台", &"reopen_button": "放大镜", &"skills": "技能", &"routes": "路线",
 }
 
 

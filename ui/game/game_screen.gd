@@ -56,12 +56,12 @@ func notice_layer() -> NoticeLayer:
 
 ## 给玩家的一句（告示卷轴）
 func say(text: String) -> void:
-	notice_layer().push(text, false, notice_cap(), notice_beside())
+	notice_layer().push(text, false, notice_cap(), notice_beside(), notice_top())
 
 
 ## 要紧的一句（朱红卷、停得久）
 func warn(text: String) -> void:
-	notice_layer().push(text, true, notice_cap(), notice_beside())
+	notice_layer().push(text, true, notice_cap(), notice_beside(), notice_top())
 
 
 ## 这一屏告示最多叠几卷：帐篷（233）窗顶紧挨顶端栏，第二卷会压住布招牌 —— 只留一卷，新的顶掉旧的
@@ -72,6 +72,11 @@ func notice_cap() -> int:
 ## 告示卷从屏中线往右多远起排（0 = 居中）：神坛碑顶的神徽正在卷的位置上，卷挪到碑顶右边（同样只留一卷）
 func notice_beside() -> float:
 	return _overlay_frame.notice_beside() if _overlay_frame != null else 0.0
+
+
+## 告示卷顶离屏顶多远（0 = 照 [constant NoticeLayer.TOP]）。235：地图屏让开顶端栏的日晷下凸（叠层屏的窗盖着日晷，照旧）
+func notice_top() -> float:
+	return 0.0
 
 
 ## 第一次显示。[param payload] 是 flow 给的（战斗结果、会话……）

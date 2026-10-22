@@ -100,7 +100,7 @@ static func run_coach_data(t: TestCase) -> void:
 	t.begin("166 · 教程步骤是数据：序章地图那份四步（体力、货币、背包、放大镜），目标都是登记过的读数部件；坏的报出来")
 	var steps := CoachOverlay.load_steps(&"prologue_map")
 	var targets: Array = steps.map(func(s: Dictionary) -> String: return String(s["target"]))
-	t.eq(targets, ["vitality", "wallet", "bag_button", "reopen_button"], "四步按顺序")
+	t.eq(targets, ["vitality", "wallet", "bag_end", "reopen_button"], "四步按顺序（235：背包指栏的右头）")
 	t.eq(CoachOverlay.problems(steps), [] as Array[String], "没有问题")
 	var bad := CoachOverlay.problems([{"target": "nope", "text": "x", "texts": {"en": "x"}}, {"target": "wallet", "texts": {"en": "x"}}])
 	t.check(bad.size() == 2 and bad[0].contains("nope") and bad[1].contains("没写说明"), "坏目标、没写字都报：%s" % "；".join(bad))
@@ -114,7 +114,7 @@ static func run_coach_data(t: TestCase) -> void:
 	t.eq(CoachOverlay.load_steps(&"no_such_coach"), [], "没有这份：空")
 	# 218：自由模式那份三步（日晷、背包按钮、腰带）；负重读数默认藏着，所以指背包按钮
 	var free := CoachOverlay.load_steps(&"free_mode_map")
-	t.eq(free.map(func(s: Dictionary) -> String: return String(s["target"])), ["countdown", "bag_button", "belt"], "218：自由模式三步按顺序")
+	t.eq(free.map(func(s: Dictionary) -> String: return String(s["target"])), ["countdown", "bag_end", "belt"], "218：自由模式三步按顺序（235：背包指栏的右头）")
 	t.eq(CoachOverlay.problems(free), [] as Array[String], "218：没有问题")
 	t.check(free.all(func(s: Dictionary) -> bool: return TextLint.scan({"text": String(s["text"])}).is_empty()), "218：不写数字")
 	t.eq((load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef).coach_for(&"map"), &"free_mode_map", "218：自由模式配了这份")

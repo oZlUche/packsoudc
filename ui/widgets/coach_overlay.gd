@@ -62,13 +62,13 @@ static func load_steps(id: StringName) -> Array:
 
 
 ## 步骤里有问题的地方（target 不在 [param known_ids] 里、没写字）；空 = 没问题。
-## [param known_ids] 空 = 地图屏的读数部件（[method HudWidgets.has]）；166 补充二：战斗屏传 [constant BattleView.COACH_TARGETS]
+## [param known_ids] 空 = 地图屏的读数部件（[method HudWidgets.has]）与顶端栏两头（235，[constant HudWidgets.BAR_ENDS]）；166 补充二：战斗屏传 [constant BattleView.COACH_TARGETS]
 static func problems(p_steps: Array, known_ids: Array = []) -> Array[String]:
 	var out: Array[String] = []
 	for i in p_steps.size():
 		var s: Dictionary = p_steps[i]
 		var target := StringName(String(s.get("target", "")))
-		var known := known_ids.has(target) if not known_ids.is_empty() else HudWidgets.has(target)
+		var known := known_ids.has(target) if not known_ids.is_empty() else (HudWidgets.has(target) or HudWidgets.BAR_ENDS.has(target))
 		if not known:
 			out.append("steps[%d]：没有这个目标 '%s'" % [i, target])
 		if String(s.get("text", "")) == "":
