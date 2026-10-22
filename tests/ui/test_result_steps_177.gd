@@ -203,7 +203,7 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	t.eq(nums.get("带出的东西"), "2 件 · 保险箱 1 件", "带出的东西一行写件数")
 	t.eq(nums.get("最高稀有度"), ItemTooltip.rarity_name(gun.rarity), "最高稀有度写稀有度名")
 	t.eq(nums.get("带出金币"), "153", "带出金币")
-	t.eq(nums.get("总价值"), "993", "总价值 = 953 + 40（177 待定 1 选 A）")
+	t.eq(nums.get("总分"), "993", "总分 = 953 + 40（177 待定 1 选 A；224 补充三改名）")
 	t.check(not ledger.is_revealed() and not ledger.rows()[0]["shown"], "进屏时还没显出")
 	var plate := screen.find_child("TitlePlate", true, false) as TextureRect
 	t.check(plate != null and plate.texture != null, "224（作者 16:32）：标题刻在标题牌上")
@@ -251,7 +251,7 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	root.add_child(lost)
 	lost.open({"result": d})
 	t.eq(lost.numbers().get("带出的东西"), "保险箱 1 件", "224：战败同一张账单，带出的东西只有保险箱那半句")
-	t.eq(lost.numbers().get("总价值"), "40", "总价值 = 保险箱")
+	t.eq(lost.numbers().get("总分"), "40", "总分 = 保险箱")
 	t.eq(lost.numbers().get("带出金币"), "0", "钱没了")
 	t.eq(lost.safe_view(), null, "224 补充二：战败不显示保险箱")
 	var said: Array = []

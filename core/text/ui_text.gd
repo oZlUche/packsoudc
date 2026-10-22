@@ -80,7 +80,7 @@ const TEXT := {
 	"menu.quit": {"zh": "退出", "en": "Quit"},
 	"menu.language": {"zh": "语言：中文（点击切换 English）", "en": "Language: English (click for 中文)"},
 	"menu.lang_short": {"zh": "中 / EN", "en": "中 / EN"},     # 197 补充一：主菜单左下那一行的语言开关
-	"menu.stats": {"zh": "第 %d 局　撤离 %d 次　战败 %d 次　仓库 %d 件　累计价值 %d　钱 %d", "en": "Run %d · extracted %d · died %d · warehouse %d items · score %d · funds %d"},
+	"menu.stats": {"zh": "第 %d 局　撤离 %d 次　战败 %d 次　仓库 %d 件　累计总分 %d　钱 %d", "en": "Run %d · extracted %d · died %d · warehouse %d items · score %d · funds %d"},
 	# buff 制作器
 	"buff.title": {"zh": "Buff 制作器", "en": "Buff maker"},
 	"buff.list": {"zh": "Buff", "en": "Buffs"},
@@ -496,7 +496,7 @@ const TEXT := {
 	"ledger.carried": {"zh": "带出的东西", "en": "Brought out"},
 	"ledger.rarity": {"zh": "最高稀有度", "en": "Rarest find"},
 	"ledger.coins": {"zh": "带出金币", "en": "Coins carried out"},
-	"ledger.total": {"zh": "总价值", "en": "Total value"},
+	"ledger.total": {"zh": "总分", "en": "Score"},
 	"ledger.dot": {"zh": "%d · %d", "en": "%d · %d"},
 	"ledger.items": {"zh": "%d 件", "en": "%d items"},
 	"ledger.items_one": {"zh": "%d 件", "en": "%d item"},
@@ -504,7 +504,6 @@ const TEXT := {
 	"ledger.items_safe_one": {"zh": "%d 件 · 保险箱 %d 件", "en": "%d item · %d in the safe"},
 	"ledger.safe_only": {"zh": "保险箱 %d 件", "en": "%d in the safe"},
 	"ledger.none": {"zh": "—", "en": "—"},
-	"ledger.xp_total": {"zh": "合计 —", "en": "Total —"},
 	# ui/game/event_screen.gd
 	"event.sort_pack": {"zh": "整理背包（B）", "en": "Sort pack (B)"},
 	"event.got_items": {"zh": "得到：%s（已放到地上）", "en": "Got: %s (left on the Ground)"},
@@ -1150,7 +1149,7 @@ const TEXT := {
 	"meta.just_extracted_one": {"zh": "撤离，背出来 %d 件、值 %d 币、带出 %d 币", "en": "extracted with %d item worth %d coins, plus %d coins"},
 	"meta.just_died_safe": {"zh": "战败，保险箱里的 %d 件带出来了", "en": "defeated; items saved in the safe: %d"},
 	"meta.just_died": {"zh": "战败，什么都没带出来", "en": "defeated; nothing made it out"},
-	"meta.stats": {"zh": "%d 局　撤离 %d　战败 %d　累计价值 %d　单局最高 %d\n钱 %d　图鉴 %d / %d", "en": "Runs %d · extracted %d · died %d · total value %d · best run %d\nCoins %d · Collection %d / %d"},
+	"meta.stats": {"zh": "%d 局　撤离 %d　战败 %d　累计总分 %d　单局最高 %d\n钱 %d　图鉴 %d / %d", "en": "Runs %d · extracted %d · died %d · score %d · best run %d\nCoins %d · Collection %d / %d"},
 	"meta.shelf_title": {"zh": "仓库　%s　%s", "en": "Warehouse · %s · %s"},
 	"meta.pending": {"zh": "带回来的背包还有 %d 件没清空，去「仓库」页置入；不管的话，开局屏里它们会放到地上，出发就没了（包回包架）", "en": "Items still in the pack you brought back: %d. Put them away on the Warehouse tab; otherwise they go to the Ground at Setup and are lost when you set out (bags go back to the Bag Rack)"},
 	"meta.all": {"zh": "全部", "en": "All"},     # sell filter and achievement filter
