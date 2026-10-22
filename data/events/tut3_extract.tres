@@ -1,31 +1,36 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_55gbi"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_sq26k"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/extract.gd" id="3_hg5di"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_eh4gm"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_b81fk"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_sq26k"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_hg5di"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/extract.gd" id="3_eh4gm"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_b81fk"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/revisit_later.gd" id="5_28mcs"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_8qolm"]
 
-[sub_resource type="Resource" id="Resource_28mcs"]
-script = ExtResource("3_hg5di")
+[sub_resource type="Resource" id="Resource_d52a3"]
+script = ExtResource("3_eh4gm")
 
-[sub_resource type="Resource" id="Resource_8qolm"]
-script = ExtResource("1_55gbi")
+[sub_resource type="Resource" id="Resource_wu5mu"]
+script = ExtResource("1_sq26k")
 label = "撤离"
 labels = {
 "en": "Extract"
 }
-outcomes = Array[ExtResource("2_sq26k")]([SubResource("Resource_28mcs")])
+outcomes = Array[ExtResource("2_hg5di")]([SubResource("Resource_d52a3")])
 
-[sub_resource type="Resource" id="Resource_d52a3"]
-script = ExtResource("1_55gbi")
+[sub_resource type="Resource" id="Resource_f266p"]
+script = ExtResource("5_28mcs")
+
+[sub_resource type="Resource" id="Resource_8mujs"]
+script = ExtResource("1_sq26k")
 label = "再整理一下"
 labels = {
 "en": "Tidy up first"
 }
+outcomes = Array[ExtResource("2_hg5di")]([SubResource("Resource_f266p")])
 
 [resource]
-script = ExtResource("5_b81fk")
+script = ExtResource("6_8qolm")
 id = &"tut3_extract"
 title = "撤离"
 titles = {
@@ -39,4 +44,4 @@ texts = {
 
 The {item:charm_brute} and the {item:charm_sun} go back to the {zone:仓库} with your bag. Whichever one you carry into the next run, that's the god you start with. The higher Ranks ({faith_threshold:brute:3}, {faith_threshold:brute:4}) bring instant kills on non-boss enemies, and a way to cheat death. Build up to them in {ui:自由模式}."
 }
-options = Array[ExtResource("1_55gbi")]([SubResource("Resource_8qolm"), SubResource("Resource_d52a3")])
+options = Array[ExtResource("1_sq26k")]([SubResource("Resource_wu5mu"), SubResource("Resource_8mujs")])

@@ -1,31 +1,36 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_wwjr2"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_8ybje"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/extract.gd" id="3_kxrt3"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_3pk44"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_3heij"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_8ybje"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_kxrt3"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/extract.gd" id="3_3pk44"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_3heij"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/revisit_later.gd" id="5_7rcik"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_d6uot"]
 
-[sub_resource type="Resource" id="Resource_7rcik"]
-script = ExtResource("3_kxrt3")
+[sub_resource type="Resource" id="Resource_vwjvj"]
+script = ExtResource("3_3pk44")
 
-[sub_resource type="Resource" id="Resource_d6uot"]
-script = ExtResource("1_wwjr2")
+[sub_resource type="Resource" id="Resource_jfcj4"]
+script = ExtResource("1_8ybje")
 label = "撤离"
 labels = {
 "en": "Extract"
 }
-outcomes = Array[ExtResource("2_8ybje")]([SubResource("Resource_7rcik")])
+outcomes = Array[ExtResource("2_kxrt3")]([SubResource("Resource_vwjvj")])
 
-[sub_resource type="Resource" id="Resource_vwjvj"]
-script = ExtResource("1_wwjr2")
+[sub_resource type="Resource" id="Resource_7e6gq"]
+script = ExtResource("5_7rcik")
+
+[sub_resource type="Resource" id="Resource_w51j2"]
+script = ExtResource("1_8ybje")
 label = "再看看"
 labels = {
 "en": "Not yet"
 }
+outcomes = Array[ExtResource("2_kxrt3")]([SubResource("Resource_7e6gq")])
 
 [resource]
-script = ExtResource("5_3heij")
+script = ExtResource("6_d6uot")
 id = &"extract_default"
 title = "撤离点"
 titles = {
@@ -39,4 +44,4 @@ texts = {
 
 Fee: {extract_fee} coins (zero means free)."
 }
-options = Array[ExtResource("1_wwjr2")]([SubResource("Resource_d6uot"), SubResource("Resource_vwjvj")])
+options = Array[ExtResource("1_8ybje")]([SubResource("Resource_jfcj4"), SubResource("Resource_w51j2")])

@@ -130,7 +130,7 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 	view.animate_moves = false
 	view._gui_input(click)
 	t.check(view.pan.distance_to(view.focus_pan(here)) < 0.5, "点它：回到自己")
-	t.check(not view.offscreen_rect().has_area(), "回来了：小棋子收起")
+	t.check(not view.offscreen_rect().has_area(), "回来了：小棋子收起（人 %s，可见区 %s，跟着 %s，size %s）" % [view.to_screen(view.positions()[here]), view.visible_rect(), view.following(), view.size])
 
 	# 跳：开着动画时从旧点弧线跳过去，跳的时候墨路先不画
 	var moves := flow.run.travel.available_moves()
