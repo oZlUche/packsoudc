@@ -50,8 +50,10 @@ static func _stem_of(file: String) -> String:
 	return ""
 
 
-## 回放存档列表，**新的在前**：`[{path, stem, when, chapter, node, enemy, winner, duration}]`。读不了的文件跳过
+## 回放存档列表，**新的在前**：`[{path, stem, when, chapter, node, enemy, winner, duration}]`。读不了的文件跳过。
+## 236：先等手上那一场写完（刚打完的那场也列得出来）
 static func list(dir: String = DIR) -> Array[Dictionary]:
+	BattleTraceWriter.flush()
 	var out: Array[Dictionary] = []
 	var all := stems(dir)
 	all.reverse()

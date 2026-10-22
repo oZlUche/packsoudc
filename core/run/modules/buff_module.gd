@@ -14,7 +14,6 @@ signal buffs_changed()
 
 ## 每条 `{"id": String, "left": int}`（left = 还能走几步，-1 = 整局）
 var entries: Array[Dictionary] = []
-var _run: RunState = null
 
 
 ## 这一局的 buff 模块（没装返回 null）

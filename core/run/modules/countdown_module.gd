@@ -14,7 +14,6 @@ signal notice(text: String)
 
 ## 这一局从仓库带进来的道具总价值（094；超带换倒计时看它）。开局由 `module_inputs[&"countdown"]["carry_value"]` 给
 var carry_value: int = 0
-var _run: RunState = null
 
 
 ## 这一局的倒计时模块（没装返回 null）

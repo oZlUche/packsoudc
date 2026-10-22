@@ -973,6 +973,23 @@ static func art_cached(name: String) -> Texture2D:
 static var _art_cache: Dictionary = {}
 
 
+## 236 第五项：按路径前缀（相对 [member asset_root]）把 [method art_cached] 记住的图放掉，返回放了几张。
+## 只给整屏底图用（1920 级一张 9 MB 显存）：各屏离开时放掉自己的，下次进屏再读（几十毫秒）；小件不放，重读不值
+static func release_art(prefix: String) -> int:
+	var root := asset_root + prefix
+	var gone := 0
+	for path in _art_cache.keys():
+		if String(path).begins_with(root):
+			_art_cache.erase(path)
+			gone += 1
+	return gone
+
+
+## 236 第五项：缓存里有没有这张（测试与预热看）
+static func art_is_cached(name: String) -> bool:
+	return _art_cache.has(asset_root + name)
+
+
 ## 贴图旁边的 `<name>.json`（九宫格边距 `margin: [左, 上, 右, 下]`、石板框的 `title_height`）；没有或读不成字典是空字典
 ## 237：按路径记住读到的（没有的不记，美术后到也能读到）—— 地图屏、石碑叠层等在 `_draw` 里每次重绘都来读，以前每次开文件、解析
 static func art_meta(name: String) -> Dictionary:

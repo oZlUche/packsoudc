@@ -18,7 +18,6 @@ signal used(skill_id: StringName)
 
 ## 技能 id → 几个（有序：先来的在前面的格子）
 var stacks: Dictionary = {}
-var _run: RunState = null
 var _saved: Dictionary = {}
 var _installed := false
 

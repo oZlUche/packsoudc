@@ -44,6 +44,11 @@ func setup(p_run: RunState, p_config: HunterMechanic, p_defs: Dictionary) -> voi
 				_encounter_def(defs[id], o)
 
 
+## 236：这一局不要了（[method RunState.dispose]）—— 放掉对局的引用（局 ↔ 系统互相抓着，一局放不掉）
+func dispose() -> void:
+	run = null
+
+
 #region 查询
 func rng() -> RandomNumberGenerator:
 	return run.rng.next(STREAM)

@@ -40,6 +40,11 @@ func setup(p_run: RunState, p_mechanic: ErosionMechanic) -> void:
 			max_band = maxi(max_band, run.map.get_node(id).erosion_band)
 
 
+## 236：这一局不要了（[method RunState.dispose]）—— 放掉对局的引用（局 ↔ 系统互相抓着，一局放不掉）
+func dispose() -> void:
+	run = null
+
+
 #region 状态
 func started() -> bool:
 	return eroded_bands >= 0

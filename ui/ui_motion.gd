@@ -79,6 +79,16 @@ static func _clip(c: Control, amount: float, horizontal: bool = false) -> Shader
 	return m
 
 
+## 236 第七项：启动预热 —— 给 [param c] 挂上裁切材质（着色器在它第一次被画时编译；战旗第一次展开就不用再等编译）
+static func warm(c: Control) -> ShaderMaterial:
+	return _clip(c, 1.0)
+
+
+## 裁切着色器建过没有（测试看）
+static func is_warm() -> bool:
+	return _clip_shader != null
+
+
 ## 裁切到头了就把材质摘掉（终态和没动过一样）
 static func _unclip(c: Control) -> void:
 	var m := c.material as ShaderMaterial

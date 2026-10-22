@@ -28,7 +28,6 @@ var stat_bonus: Dictionary = {}
 ## 105：特殊操作攒的**标准轴层数**（轴 → 累计层数；日神祈祷攒的「炽烈」）。
 ## 开战时由 [method RunState.compile_player] 填进 [member CompileInput.axes]，种在系统层（常驻，净化洗不掉）
 var axis_bonus: Dictionary = {}
-var _run: RunState = null
 
 
 ## 这一局的神坛模块（没装返回 null）

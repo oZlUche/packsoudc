@@ -35,6 +35,11 @@ func setup(p_run: RunState, p_defs: Array[RunSkill]) -> void:
 			cooldowns[String(d.id)] = 0
 
 
+## 236：这一局不要了（[method RunState.dispose]）—— 放掉对局的引用（局 ↔ 系统互相抓着，一局放不掉）
+func dispose() -> void:
+	run = null
+
+
 func skill(id: StringName) -> RunSkill:
 	for d in defs:
 		if d != null and d.id == id:

@@ -10,11 +10,20 @@ class_name BattleTraceWriter
 extends RefCounted
 
 
-## 写三份文件，返回这场的文件主干的完整路径（不带扩展名）；写不了返回空
+## 236 第二项：拼三份文本、写盘、滚动删旧都在工作线程上做（开着日志时开战那一帧不再卡）；同一时间只有一份在写，
+## 下一场开写前先等上一份写完（文件名要看目录里有没有重名）
+static var _task: int = -1
+
+
+## 写三份文件，返回这场的文件主干的完整路径（不带扩展名）；写不了返回空。
+## 文件头与文件名在调用的这一帧定好，文本与写盘交给工作线程 —— 要马上读文件的先 [method flush]
 static func write(trace: BattleTrace, result: BattleResult, info: Dictionary, dir: String = BattleArchive.DIR, keep: int = BattleArchive.KEEP) -> String:
 	if trace == null or result == null:
 		return ""
-	DirAccess.make_dir_recursive_absolute(dir)
+	flush()
+	if DirAccess.make_dir_recursive_absolute(dir) != OK and not DirAccess.dir_exists_absolute(dir):
+		push_warning("BattleTraceWriter: 建不了 %s" % dir)
+		return ""
 	var when := Time.get_datetime_string_from_system(false, true)
 	var head := info.duplicate(true)
 	head.erase("boards")     # 棋盘只进回放存档：日志头写道具名表就够查，整张棋盘太占地方
@@ -23,10 +32,23 @@ static func write(trace: BattleTrace, result: BattleResult, info: Dictionary, di
 	head["duration"] = result.duration
 	head["initial"] = result.initial
 	trace.header = head
-	var stem := BattleArchive.new_stem(dir, info)
-	var base := dir.path_join(stem)
+	var base := dir.path_join(BattleArchive.new_stem(dir, info))
+	var copy := info.duplicate(true)
+	_task = WorkerThreadPool.add_task(_write_files.bind(trace, result, copy, when, base, dir, keep), false, "BattleTraceWriter")
+	return base
+
+
+## 等手上那一份写完（测试查文件前、回放浏览器列目录前、退出前）
+static func flush() -> void:
+	if _task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_task)
+		_task = -1
+
+
+## 工作线程上：开战之后 trace / result 不再被改，读它们是安全的
+static func _write_files(trace: BattleTrace, result: BattleResult, info: Dictionary, when: String, base: String, dir: String, keep: int) -> void:
 	if not _store(base + BattleArchive.TRACE_EXT, trace.to_jsonl()):
-		return ""
+		return
 	_store(base + BattleArchive.TEXT_EXT, trace.to_text())
 	var replay := {
 		"version": BattleArchive.VERSION, "when": when, "run_seed": info.get("run_seed", 0), "chapter": String(info.get("chapter", "")),
@@ -36,7 +58,6 @@ static func write(trace: BattleTrace, result: BattleResult, info: Dictionary, di
 	}
 	_store(base + BattleArchive.REPLAY_EXT, JSON.stringify(replay))
 	BattleArchive.prune(dir, keep)
-	return base
 
 
 static func _store(path: String, text: String) -> bool:

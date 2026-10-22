@@ -14,7 +14,6 @@ signal done(detail: Dictionary)
 ## 配方表（内容，持有方给；没有就是这一局不合成）。[GameFlow] 在接管一局时赋上，
 ## 开局也可以由 `module_inputs[&"crafting"]["recipes"]` 给
 var recipes: Array[RecipeDef] = []
-var _run: RunState = null
 
 
 ## 这一局的合成模块（没装返回 null）
