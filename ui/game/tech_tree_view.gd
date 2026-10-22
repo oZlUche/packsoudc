@@ -11,6 +11,8 @@ extends Control
 signal selected(id: StringName)
 
 const NODE_SIZE := Vector2(160, 60)
+## 木牌左右各有一颗钉子：字两头让开这么宽（游戏测试 10-22：Warehouse Expansion 压到钉子）
+const PEG_ROOM := 20.0
 ## 列与列、同格并排的节点之间
 const H_GAP := 28.0
 ## 深度之间（画线的地方）
@@ -87,7 +89,7 @@ func rebuild() -> void:
 		var id := def.id
 		b.pressed.connect(func(): select(id))
 		add_child(b)
-		_fit_text(b, r.size.x - 18.0)     # 两边留白 6 + 选中描边 3
+		_fit_text(b, r.size.x - (2.0 * PEG_ROOM if _wood() else 18.0))     # 木牌：让开两头的钉子；平板：两边留白 6 + 选中描边 3
 		_nodes[def.id] = b
 	var tags: Dictionary = {}
 	var widest := 0.0
@@ -274,6 +276,8 @@ func _wood_box(st: State) -> StyleBoxTexture:
 	var wood := UiTheme.art_box(String(WOOD_ART[int(st)]))
 	if wood != null:
 		wood.set_content_margin_all(6)
+		wood.content_margin_left = PEG_ROOM
+		wood.content_margin_right = PEG_ROOM
 	return wood
 
 

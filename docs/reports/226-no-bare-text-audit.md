@@ -316,3 +316,13 @@
 - **科技**：节点换木牌 —— 已点亮 `home/btn_wood_primary`、可点亮 `home/btn_wood`（慢慢亮暗呼吸）、锁住 `home/btn_wood_disabled`，墨字；选中叠一圈 `kit/node_sel`（九宫格 20，四边外扩 5），画在最上面一层（`SelRing`）。「升级 / 点亮」换主档木牌，材料行的「交 N 件」换木牌。
 - **图鉴**：格底 `kit/codex_cell`（已收集）/ `codex_cell_dim`（还没有），九宫格 16；没点亮的道具照常画图、压成影子 `Color(0.34, 0.32, 0.31)`，没图的色块同样压暗，异体叠影用深一档的亚麻；名字墨字 12（没点亮灰墨）离底 10；左上异体签 `kit/codex_badge`（浅字）、右上件数 `kit/codex_count`（墨字）。
 - 测试 tests/ui/test_stone_chips.gd（`frame_base_stone`）；截图 /mnt/project-files/art/ui/kit/shots_base/。
+
+## 十七、乙 石刻：仓库页签、开局、神坛（v4.01）
+
+- **基地仓库**：分页签换开局那款挂绳木牌（`BUTTON_SETUP_TAB`，高 60，`setup/tab_on / tab_normal / tab_locked`），三处（基地、开局第二页、结算）一样了；锁着的页签页名提亮成 #b8a98c（`UiTheme.SETUP_TAB_LOCKED_INK`），锁照旧。
+- **开局第一页**：角色列表换选地图那种纸条（`BUTTON_MAP_ENTRY`，高 60、字 16，选中压蜡封）；角色列表、角色卡两块底板换第二页那块皮（`PANEL_PACK_LEATHER`，仍是深底、字色不变），棋盘预览栏照旧凹槽板。
+- **开局第二页**：「不带预设 / 坚守 / 强攻」也换纸条，高 52。
+- **神坛**：特殊操作换石签（`StoneChip`，不切换，点了就做）；二选一下拉框用 `kit/chip_*` 当框、加石刻箭头，弹出单同出售页（`UiTheme.dress_chip_option`；和 `dress_wood_option` 共用 `_dress_drop`）。
+- **地图图例不换**：规格表写的是「深色底板换 `PANEL_NODE_HINT` 纸签」，但图例在 232 已由作者（19:23）选定为双尾旗（`hud/legend_pennant`），以作者的选择为准。
+- **v4.00 复测修正**：科技节点木牌两头的钉子让开 20（`TechTreeView.PEG_ROOM`），英文长名「Warehouse Expansion」不再压钉子。
+- 测试：test_setup_179（三块板、角色纸条、预设纸条）、test_altar（石签 + 下拉框）、test_stone_chips（仓库页签）。截图 /mnt/project-files/art/ui/kit/shots_tabs/。

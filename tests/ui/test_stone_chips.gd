@@ -59,6 +59,9 @@ static func frame_base_stone(t: TestCase, root: Window) -> void:
 		var panel := ob.get_popup().get_theme_stylebox("panel") as StyleBoxTexture
 		t.check(panel != null and panel.texture == UiTheme.art_cached("kit/popup"), "弹出单是浅纸")
 	t.eq(screen._sell_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "一键出售 = 主档木牌")
+	t.eq(screen._shelf.tab_variation, UiTheme.BUTTON_SETUP_TAB, "仓库分页签是开局那款挂牌木签")
+	t.eq(screen._shelf._tabs[0].custom_minimum_size.y, 60.0, "挂牌高 60")
+	t.eq(screen._shelf._tabs[0].get_theme_color("font_disabled_color"), UiTheme.SETUP_TAB_LOCKED_INK, "锁着的页名提亮")
 	for b: Button in screen._ach_filter_btns.values():
 		t.check(b.theme_type_variation == UiTheme.BUTTON_HOME and b.toggle_mode, "成就筛选「%s」是木牌、可切换" % b.text)
 	var tree := TechTreeView.new()

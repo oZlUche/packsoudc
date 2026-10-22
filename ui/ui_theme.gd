@@ -92,6 +92,8 @@ const PANEL_BARE := &"PanelBare"
 ## 182：点节点时屏幕正中弹的提示窗（[NodeHintCard]）—— 浅底纸签
 const PANEL_NODE_HINT := &"PanelNodeHint"
 const BUTTON_SETUP_TAB := &"ButtonSetupTab"
+## 开局挂牌页签锁着时的页名色
+const SETUP_TAB_LOCKED_INK := Color("b8a98c")
 const BUTTON_MAP_ENTRY := &"ButtonMapEntry"
 const BUTTON_MAP_SUB := &"ButtonMapSub"
 const BUTTON_SETUP_BACK := &"ButtonSetupBack"
@@ -506,10 +508,46 @@ static func dress_wood_option(ob: OptionButton, font_size: int = 16) -> void:
 	if art_cached(ART_HOME_BTN) == null:
 		return
 	ob.theme_type_variation = BUTTON_HOME
+	_dress_drop(ob, font_size, WOOD_OPTION_INK)
+
+
+## 乙 石刻：神坛二选一的下拉 —— 框用 `kit/chip_*`（同 [StoneChip] 的九宫格，高 40），箭头、弹出单同 [method dress_wood_option]；缺图不动
+static func dress_chip_option(ob: OptionButton, font_size: int = 16) -> void:
+	if art_cached(StoneChip.ART + "normal") == null:
+		return
+	var spec: Dictionary = art_meta(StoneChip.LAYOUT).get("chip", {})
+	var m: Array = spec.get("nine_slice_margin", [18, 18, 24, 18])
+	var ink := Color(String(spec.get("label", {}).get("colors", {}).get("normal", "#2e2219")))
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var box := StyleBoxTexture.new()
+		box.texture = art_cached(StoneChip.ART + state)
+		if box.texture == null:
+			box.texture = art_cached(StoneChip.ART + "normal")
+		box.texture_margin_left = float(m[0])
+		box.texture_margin_top = float(m[1])
+		box.texture_margin_right = float(m[2])
+		box.texture_margin_bottom = float(m[3])
+		box.set_expand_margin_all(6.0)
+		box.content_margin_left = StoneChip.PAD_X
+		box.content_margin_right = StoneChip.PAD_X
+		box.content_margin_top = 0.0
+		box.content_margin_bottom = 0.0
+		ob.add_theme_stylebox_override(state, box)
+	ob.add_theme_stylebox_override("hover_pressed", ob.get_theme_stylebox("pressed"))
+	ob.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	ob.add_theme_font_override("font", UiPalette.cjk_font())
+	ob.custom_minimum_size.y = StoneChip.HEIGHT
+	ob.focus_mode = Control.FOCUS_NONE
+	_dress_drop(ob, font_size, ink)
+	ob.add_theme_color_override("font_disabled_color", INK_SOFT)
+
+
+## 下拉共用：左对齐墨字、石刻箭头、浅纸弹出单（悬停一条 `kit/popup_hover`）
+static func _dress_drop(ob: OptionButton, font_size: int, ink: Color) -> void:
 	ob.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	ob.add_theme_font_size_override("font_size", font_size)
 	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
-		ob.add_theme_color_override(c, WOOD_OPTION_INK)
+		ob.add_theme_color_override(c, ink)
 	var arrow := art_cached("kit/drop_arrow")
 	if arrow != null:
 		ob.add_theme_icon_override("arrow", arrow)
@@ -534,7 +572,7 @@ static func dress_wood_option(ob: OptionButton, font_size: int = 16) -> void:
 	pop.add_theme_font_override("font", UiPalette.cjk_font())
 	pop.add_theme_font_size_override("font_size", font_size)
 	for c in ["font_color", "font_hover_color", "font_accelerator_color"]:
-		pop.add_theme_color_override(c, WOOD_OPTION_INK)
+		pop.add_theme_color_override(c, ink)
 	pop.add_theme_color_override("font_disabled_color", INK_SOFT)
 
 
@@ -1434,6 +1472,7 @@ static func _setup_art(t: Theme) -> void:
 	t.set_type_variation(BUTTON_SETUP_TAB, BUTTON_DIM)
 	if _art_button(t, BUTTON_SETUP_TAB, ART_SETUP_TAB, [0, 0, 0, 0], {"normal": "normal", "hover": "normal", "pressed": "on", "hover_pressed": "on", "disabled": "locked"}, content):
 		_button_ink(t, BUTTON_SETUP_TAB, INK)
+		t.set_color("font_disabled_color", BUTTON_SETUP_TAB, SETUP_TAB_LOCKED_INK)     # 锁着的深木牌上页名提亮（UI替换美术 10-22），锁照旧
 	# 地图条目 / 规模：选中是 on 图（按钮按下态），墨字
 	for spec in [[BUTTON_MAP_ENTRY, ART_MAP_ENTRY], [BUTTON_MAP_SUB, ART_MAP_SUB]]:
 		t.set_type_variation(spec[0], BUTTON_DIM)

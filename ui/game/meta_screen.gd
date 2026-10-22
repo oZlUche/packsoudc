@@ -19,6 +19,8 @@ const MARGIN := 24.0
 const COL_GAP := 24.0
 ## 右半边标题行的高（「仓库　N 件」与调试台箭头）
 const SHELF_HEAD := 44.0
+## 仓库分页签（挂牌）多高，同开局屏第二页
+const SHELF_TAB_H := 60.0
 ## 左列五个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家。
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
 const TABS := [["warehouse", "meta.tab_warehouse"], ["sell", "meta.tab_sell"], ["tech", "meta.tab_tech"], ["codex", "meta.tab_codex"], ["achievements", "meta.tab_achievements"]]
@@ -136,6 +138,8 @@ func open(payload: Dictionary) -> void:
 	_shelf_frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_right.add_child(_shelf_frame)
 	_shelf = WarehousePages.new()
+	_shelf.tab_variation = UiTheme.BUTTON_SETUP_TAB     # 乙 石刻：分页签同开局、结算那款挂牌木签
+	_shelf.tab_height = SHELF_TAB_H
 	_shelf_frame.add_child(_shelf)
 	_shelf.setup(m.warehouse, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
 	_drag.register_view(_shelf.view)
