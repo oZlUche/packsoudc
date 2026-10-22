@@ -131,6 +131,13 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 	view._gui_input(click)
 	t.check(view.pan.distance_to(view.focus_pan(here)) < 0.5, "点它：回到自己")
 	t.check(not view.offscreen_rect().has_area(), "回来了：小棋子收起（人 %s，可见区 %s，跟着 %s，size %s）" % [view.to_screen(view.positions()[here]), view.visible_rect(), view.following(), view.size])
+	# 游戏测试 10-22：上下读数占得太多（安全区让不出一半）时，居中照样让开顶端栏，人不会落在栏底下
+	var inset1 := view.content_inset
+	view.content_inset = Rect2(0.0, 100.0, 0.0, 400.0)
+	view.pan = view.focus_pan(here)
+	t.check(view.visible_rect().has_point(view.to_screen(view.positions()[here])), "让不出一半：人照样在顶端栏下面看得见")
+	t.check(not view.offscreen_rect().has_area(), "不出小棋子")
+	view.content_inset = inset1
 
 	# 跳：开着动画时从旧点弧线跳过去，跳的时候墨路先不画
 	var moves := flow.run.travel.available_moves()
