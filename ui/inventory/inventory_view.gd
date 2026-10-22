@@ -36,6 +36,10 @@ const COLOR_BAD := Color(0.9, 0.3, 0.3, 0.35)
 const COLOR_DISPLACE := Color(0.95, 0.72, 0.25, 0.38)
 ## 即将被顶出来的那几件，描一圈边，让人看清代价
 const COLOR_VICTIM := Color(0.98, 0.62, 0.25)
+## 239：拿起时逐格描占格 —— 小方框向内缩多少、线多粗、淡填多浓
+const FOOTPRINT_INSET := 3.0
+const FOOTPRINT_LINE := 1.5
+const FOOTPRINT_FILL := 0.16
 ## 所有棋盘视图都在这一组里（点中一件时整组重画）
 const GROUP := &"inventory_views"
 
@@ -141,6 +145,52 @@ func _on_inventory_changed() -> void:
 		custom_minimum_size = want
 		size = want
 	queue_redraw()
+
+
+#region 占格（239）
+## 239：拖拽中（拖拽层按组开关，没登记到拖拽层的棋盘也算）每件道具的占格逐格描出来
+var footprints := false
+
+
+func set_footprints(on: bool) -> void:
+	if footprints == on:
+		return
+	footprints = on
+	queue_redraw()
+
+
+## 239：占格逐格的小方框（向内缩 [constant FOOTPRINT_INSET]），棋盘与拖拽残影共用
+static func footprint_cells(cells: Array[Vector2i], anchor: Vector2, px: float) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for c in cells:
+		out.append(Rect2(anchor + Vector2(c) * px + Vector2.ONE * FOOTPRINT_INSET, Vector2.ONE * (px - 2.0 * FOOTPRINT_INSET)))
+	return out
+
+
+## 239：包只描灰框不填（内容物压在上面要看得见）
+static func footprint_hollow(def: ItemDef) -> bool:
+	return def != null and def.is_bag and not def.has_faith()
+
+
+## 239：描一件的占格 —— 道具稀有度色细框 + 同色淡填；[param hollow] 为真（包）只描灰框
+static func draw_footprint(ci: CanvasItem, def: ItemDef, cells: Array[Vector2i], anchor: Vector2, px: float, hollow: bool) -> void:
+	var line := COLOR_BAG_EDGE if hollow else ItemPainter.rarity_color(def)
+	for r in footprint_cells(cells, anchor, px):
+		if not hollow:
+			ci.draw_rect(r, Color(line, FOOTPRINT_FILL), true)
+		ci.draw_rect(r, line, false, FOOTPRINT_LINE)
+
+
+func _draw_footprints() -> void:
+	for bag in inventory.bags():
+		var b := bag as ItemInstance
+		draw_footprint(self, b.def, b.cells(), cell_origin_px(b.origin), cell_px, true)
+	for inst in inventory.items():
+		var item := inst as ItemInstance
+		if inventory.acts_as_bag(item.def):
+			continue
+		draw_footprint(self, item.def, item.cells(), cell_origin_px(item.origin), cell_px, footprint_hollow(item.def))
+#endregion
 
 
 #region 坐标换算
@@ -338,6 +388,9 @@ func _draw() -> void:
 			var at := anchor + Vector2(box.x * cell_px - 18.0, 4.0)
 			draw_rect(Rect2(at, Vector2(16, 16)), UiPalette.HEAL, true)
 			draw_string(font, at + Vector2(2.0, 13.0), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("101216"))
+
+	if footprints:
+		_draw_footprints()     # 239：拿起时逐格描占格，压在图上、在邻接标记与落点预览之下
 
 	# 邻接标记：画在物品之上、落点预览之下。
 	# 压在物品身上才看得出「这一格已经被谁占住了」—— 那正是标记点亮与否的判据。

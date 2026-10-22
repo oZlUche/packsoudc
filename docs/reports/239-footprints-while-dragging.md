@@ -38,3 +38,9 @@
 ## 四、派工
 
 执行一单，直接做。
+
+## 五、落地（执行，2026-10-22，v4.20）
+
+按甲做。`InventoryView`：`footprints` + `set_footprints(on)`（变了才重画）；静态 `footprint_cells(cells, anchor, px)`（向内缩 `FOOTPRINT_INSET` 3 px）、`footprint_hollow(def)`（`is_bag` 且不带信仰 = 包，只描灰框）、`draw_footprint(...)`（1.5 px 稀有度色线 + 16 % 同色淡填），视图与残影共用；`_draw_footprints()` 在道具画完之后、邻接标记之前：棋盘上当底层的包描灰框，其余各件按稀有度（自由容器里的包也只描灰框）。`DragLayer`：`_on_grab_requested` 与 `grab_free` 上手时、`_end_drag` 收尾时 `_show_footprints(on)` 按 `InventoryView.GROUP` 组调用（战前敌人棋盘这类没登记的视图一起显）；`_draw` 在残影图之后逐格描手里那件，摆好的一袋描灰框，袋里各件描自己的稀有度框。地上（`GroundLayer`）不画。
+
+测试 `tests/ui/test_footprints_239.gd`：L 形三格三个框、按锚点与格宽、包只描不填；拿起 → 登记与没登记的棋盘都开、放下 / 取消 / 游离上手（`grab_free`）开关对。截图：`/mnt/project-files/art/ui/footprints239/pre_drag.png`（战前拿起一件：两块棋盘逐格描，残影上手里那件也描）。
