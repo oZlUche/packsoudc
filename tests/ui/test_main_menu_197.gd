@@ -94,7 +94,7 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 		t.eq(lines[1].get_theme_font_size("font_size"), 34, "次档 34 号")
 		t.check(lines.all(func(b): return b.theme_type_variation == UiTheme.BUTTON_MENU_LINE), "都是描边字，不是木牌")
 		var texts: Array = lines.map(func(b): return b.text)
-		t.eq(texts.slice(1), [UiText.t("menu.skip_prologue"), UiText.t("menu.meta"), UiText.t("menu.encyclopedia"), UiText.t("menu.settings")], "221：「新的游戏」下面一行小字「跳过序章」；次档：仓库与战绩 / 百科 / 设置")
+		t.eq(texts.slice(1), [UiText.t("menu.meta"), UiText.t("menu.encyclopedia"), UiText.t("menu.settings")], "240：「跳过序章」搬到开场一问；次档：仓库与战绩 / 百科 / 设置")
 		t.check(not UiTheme.menu_line_lit(lines[1]), "没焦点：不亮")
 		lines[1].grab_focus()
 		t.check(UiTheme.menu_line_lit(lines[1]), "键盘焦点：亮、画菱形")

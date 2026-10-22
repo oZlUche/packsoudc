@@ -55,6 +55,8 @@ var _pause_book: Control = null
 ## 091（作者定 10.2 第 3 条）：「本图规则」卡 —— 第一次进这一章弹出来（局外记住看过了），暂停菜单里能再看
 var _rules: Control = null
 var _rules_first: bool = false
+## 240：开场一问「要带你走一遍吗？」（新存档序章一读完开场事件后弹，[signal GameFlow.tutorial_ask]）
+var _ask: Control = null
 ## 180 §4：入局转场 —— 从开局第三页的预览拉近到这张图（[method begin_reveal]）。总长、各段起止（秒）
 const REVEAL_SEC := 1.4
 const REVEAL_PAPER := Vector2(0.0, 0.5)
@@ -230,7 +232,7 @@ func bag_panel() -> Control:
 
 ## 134（作者定）：地上双击 —— 背包开着就交给背包面板；没开就进包并打开背包（放不下只开背包、面板里提示）
 func ground_double_clicked(uid: int) -> bool:
-	if _bag != null or _confirm != null or _pause != null or _rules != null:
+	if _bag != null or _confirm != null or _pause != null or _rules != null or _ask != null:
 		return false
 	return _ground_to_bag(uid, func():
 		if _bag == null:
@@ -240,7 +242,7 @@ func ground_double_clicked(uid: int) -> bool:
 
 ## 084：还没走，重新打开这个点的最后一个界面（没拿完的战利品 / 还开着的搜索或商店 / 等着的事件或一场）。没有可开的返回 false
 func reopen() -> bool:
-	if _bag != null or _confirm != null or _pause != null or _rules != null:
+	if _bag != null or _confirm != null or _pause != null or _rules != null or _ask != null:
 		return false
 	_view.clear_hover()
 	var ok := flow.reopen_node()
@@ -262,6 +264,8 @@ func escape() -> bool:
 	if _rules != null:
 		close_rules()
 		return true
+	if _ask != null:
+		return true     # 240：开场一问得二选一，Esc 不替玩家选
 	if _pause_book != null:
 		close_pause_encyclopedia()
 		return true
@@ -408,6 +412,53 @@ func _remember_zoom(z: float) -> void:
 
 func rules_open() -> bool:
 	return _rules != null
+
+
+## 240：开场一问 —— 规则卡同款：压暗 + 铜框 + 羊皮纸，两把石刻键【需要】【不需要】并排
+func show_tutorial_ask() -> void:
+	if _ask != null or _run == null:
+		return
+	_ask = _shade(0.72, true)
+	_ask.name = "TutorialAsk"
+	var panel := _modal_panel(UiText.t("tut_ask.title"), 28)
+	_ask.get_child(0).add_child(panel)
+	var col := _vbox(16)
+	panel.content.add_child(col)
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, RULES_PAPER_PAD.x, RULES_PAPER_PAD.y, RULES_PAPER_PAD.x, RULES_PAPER_PAD.y)
+	paper.name = "TutorialAskPaper"
+	col.add_child(paper)
+	paper.add_child(UiTheme.rich_block(520, 16, UiText.t("tut_ask.body")))
+	var keys := _hbox(24)
+	keys.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(keys)
+	keys.add_child(ScrollKey.primary(UiText.t("tut_ask.yes"), accept_tutorial))
+	keys.add_child(ScrollKey.make(UiText.t("tut_ask.no"), decline_tutorial))
+
+
+func tutorial_ask_open() -> bool:
+	return _ask != null
+
+
+## 240：【需要】—— 记下问过、关卡，教程接着走
+func accept_tutorial() -> void:
+	if _ask == null:
+		return
+	_close_ask()
+	flow.accept_tutorial()
+	_maybe_coach.call_deferred()     # 卡收起来才轮到教程
+
+
+## 240：【不需要】—— 这一局悄悄收掉，直接去开局屏（[method GameFlow.decline_tutorial]）
+func decline_tutorial() -> void:
+	if _ask == null:
+		return
+	_close_ask()
+	flow.decline_tutorial()
+
+
+func _close_ask() -> void:
+	_ask.queue_free()
+	_ask = null
 #endregion
 
 
@@ -653,7 +704,7 @@ func _after_move() -> void:
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
-	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null or _pause != null or _rules != null:
+	if button != MOUSE_BUTTON_LEFT or _bag != null or _confirm != null or _pause != null or _rules != null or _ask != null:
 		return
 	if _run.phase == RunState.Phase.PICK_SPAWN:
 		if not pick_spawn(id):
@@ -889,6 +940,8 @@ func _build() -> void:
 	add_child(_tip)
 	_build_parts()
 	_build_drawer()
+	if not flow.tutorial_ask.is_connected(show_tutorial_ask):
+		flow.tutorial_ask.connect(show_tutorial_ask)     # 240
 	flow.screen_changed.connect(func(s: int, _p: Dictionary):
 		if s != GameFlow.Screen.MAP and _tip != null:
 			_tip.hide_tip()     # 193 §3.2：换屏（进点开事件屏……）那一刻收掉浮窗，不等鼠标事件
@@ -1049,7 +1102,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	match key.keycode:
 		KEY_B:
-			if _confirm == null and _pause == null and _rules == null:
+			if _confirm == null and _pause == null and _rules == null and _ask == null:
 				toggle_bag()
 		KEY_N:
 			reopen()
@@ -1109,7 +1162,7 @@ func coach_steps() -> Array:
 func _maybe_coach() -> void:
 	if _coach != null or _run == null or _run.chapter == null or _run.chapter.coach_for(&"map") == &"":
 		return
-	if flow.screen != GameFlow.Screen.MAP or _rules != null or _pause != null or not is_visible_in_tree():
+	if flow.screen != GameFlow.Screen.MAP or _rules != null or _ask != null or _pause != null or not is_visible_in_tree():
 		return
 	if flow.meta != null and flow.meta.coach_seen.has(String(_run.chapter.coach_for(&"map"))):
 		return
