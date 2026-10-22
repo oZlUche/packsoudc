@@ -79,3 +79,9 @@
 - 交叉淡出：`to_step` 把旧页挪进 `PageFadeOut` 盖在新页上，0.35 s 淡出后丢掉（动效关着当场清）。
 - 顺带修：`_fit_shelf` 少算了仓库右对齐那根空位的一道行距 —— 第二页铺满整屏后仓库顶出右沿 30 px。
 - 测试 `test_result_storeroom_228`（24 断言）；截图 `/mnt/project-files/art/ui/result/storeroom/shots228/`（result1 / result2，中英）。
+
+## 八、补一：仓库套木架框（v3.95，美术设计 2026-10-22 01:09 看截图提）
+
+- 第二页的仓库格子套基地那副木架框（`home/shelf`，`PANEL_SHELF`，九宫格 22），页签留在框外左边。`WarehousePages` 加 `frame_variation`（`setup` 之前给），套上后 `frame` 是那个框，`fit` 扣掉 `frame_pad()`。
+- 仓库离屏幕右沿空 `RESULT_SHELF_RIGHT` 24（那一排最后放一个空位），离挂钉板往下让 `RESULT_SHELF_TOP` 16；`_fit_shelf` 跟着扣。
+- 截图：/mnt/project-files/art/ui/result/storeroom/shots228b/。

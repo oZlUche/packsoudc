@@ -53,6 +53,9 @@ const RESULT_BUTTON_FONT := 26
 const RESULT_BUTTON_FONT_EN := 22
 ## 228：结算第二页仓库分页签（同开局第二页的木签）
 const RESULT_TAB_H := 60.0
+## 228（美术设计 10-22 01:09）：结算第二页的仓库套木架框，离屏幕右沿、顶上挂钉板各让出这么多
+const RESULT_SHELF_RIGHT := 24.0
+const RESULT_SHELF_TOP := 16.0
 ## 224 补充二：带回来的棋盘格子定死这个边长（结算屏 72，同背包窗）；0 = 跟仓库一样大。在 [method setup] 之前设
 var board_cell := 0.0
 var _buttons: HBoxContainer = null
@@ -95,10 +98,18 @@ func _build() -> void:
 		var right := UiTheme.vbox(6)
 		row.add_child(right)
 		_shelf = WarehousePages.new()
-		if art_buttons:     # 228：基地木头库间里的仓库，分页签同开局那款木签
+		if art_buttons:     # 228：基地木头库间里的仓库，分页签同开局那款木签，格子套基地那副木架框
 			_shelf.tab_variation = UiTheme.BUTTON_SETUP_TAB
 			_shelf.tab_height = RESULT_TAB_H
+			_shelf.frame_variation = UiTheme.PANEL_SHELF
+			var top := Control.new()
+			top.custom_minimum_size.y = RESULT_SHELF_TOP - 6.0     # vbox 自带 6 的间距
+			right.add_child(top)
 		right.add_child(_shelf)
+		if art_buttons:
+			var edge := Control.new()
+			edge.custom_minimum_size.x = RESULT_SHELF_RIGHT
+			row.add_child(edge)
 
 	var buttons := UiTheme.hbox(14 if art_buttons else 8)
 	_buttons = buttons

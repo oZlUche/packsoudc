@@ -62,9 +62,15 @@ static func frame_storeroom_page(t: TestCase, root: Window) -> void:
 	var shelf: WarehousePages = wh.shelf()
 	t.eq(shelf.tab_variation, UiTheme.BUTTON_SETUP_TAB, "分页签同开局的木签")
 	t.check(shelf.tab_count() > 0 and shelf.tab(0).custom_minimum_size.y == WarehousePanel.RESULT_TAB_H, "木签高 60")
+	# 美术设计 10-22 01:09：仓库格子套基地那副木架框，页签在框外左边；离右沿、挂钉板各让出一截
+	t.check(shelf.frame != null and shelf.frame.theme_type_variation == UiTheme.PANEL_SHELF and shelf.view.get_parent() == shelf.frame, "格子套木架框（PANEL_SHELF）")
+	t.check(shelf.tab_box.get_parent() == shelf, "页签在框外")
+	t.eq(shelf.frame_pad(), Vector2(44, 44), "框四边各 22")
 	# 仓库右对齐那根空位两边的行距都算上：整排不顶出右沿
 	var used: float = screen._area.size.x - 2.0 * screen.PAGE_MARGIN
 	t.check(wh.get_combined_minimum_size().x <= used + 0.5, "仓库一行（%.0f）不超出内容区（%.0f）" % [wh.get_combined_minimum_size().x, used])
+	var row_end: Control = shelf.get_parent().get_parent().get_child(-1)
+	t.eq(row_end.custom_minimum_size.x, WarehousePanel.RESULT_SHELF_RIGHT, "框右边再空 24（那一排最后一件是空位）")
 	screen.free()
 	Support.cleanup(PREFIX)
 
