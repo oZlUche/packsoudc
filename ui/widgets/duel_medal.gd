@@ -15,11 +15,16 @@ const GRIP := [Vector2(46.0, 85.45), Vector2(82.0, 85.45)]
 const TIP := [Vector2(93.57, 28.76), Vector2(34.43, 28.76)]
 ## 两剑交点（火星从这儿迸）
 const CROSS := Vector2(64.5, 61)
+## 守姿（作者 2026-10-22 08:13：「两把剑彼此之间要拉开距离然后接近，距离要长到足够分开（不接触）」）：
+## 回放开始时两把剑各自往外让开、立得更直，彼此不碰；出手时从守姿冲到对面劈下，再退回守姿
+const GUARD_DEG := 30.0
+const GUARD_OFF := Vector2(-22, 0)
+const SPREAD_SEC := 0.3
 ## 劈（作者 2026-10-21 22:24：角度到 45–60°、距离再大，先往后上方提起再劈下）：
-## 提起 —— 往背离对面的方向转、往后上方提；劈下 —— 转过头、往对面推；收回原位。各段多久（一倍速，合计 0.22 s）
+## 提起 —— 从守姿再往背离对面的方向转、往后上方提；劈下 —— 转过头、冲到对面（从守姿算一共走 42 px）；退回守姿。各段多久（一倍速，合计 0.22 s）
 const WINDUP_DEG := 30.0
 const WINDUP_LIFT := Vector2(-8, -10)
-const STRIKE_DEG := 55.0
+const STRIKE_DEG := 45.0
 const STRIKE_PUSH := Vector2(20, 4)
 const WINDUP_SEC := 0.07
 const CHOP_SEC := 0.05
@@ -54,6 +59,8 @@ var _ring := -1.0
 var _ring_color := Color.WHITE
 ## 终局：-2 = 还没分，-1 = 平局，0 / 1 = 谁赢
 var _winner := -2
+## 拉开了没有（拉开后两把剑的「原位」是守姿，不再交叉）
+var _spread := false
 
 
 func _init() -> void:
@@ -75,18 +82,50 @@ func strike(side: int) -> void:
 		return
 	var dir := 1.0 if side == 0 else -1.0
 	var mirror := Vector2(dir, 1.0)
-	var up := deg_to_rad(-WINDUP_DEG) * dir
+	var rest := _rest_rot(side)
+	var home := _rest_off(side)
+	var up := rest + deg_to_rad(-WINDUP_DEG) * dir
+	var lift := home + WINDUP_LIFT * mirror
 	var down := deg_to_rad(STRIKE_DEG) * dir
 	var tw := _fresh(side)
 	tw.set_parallel()
 	tw.tween_method(_set_rot.bind(side), _rot[side], up, WINDUP_SEC / rate)
-	tw.tween_method(_set_off.bind(side), _off[side], WINDUP_LIFT * mirror, WINDUP_SEC / rate)
+	tw.tween_method(_set_off.bind(side), _off[side], lift, WINDUP_SEC / rate)
 	tw.chain().set_parallel()
 	tw.tween_method(_set_rot.bind(side), up, down, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
-	tw.tween_method(_set_off.bind(side), WINDUP_LIFT * mirror, STRIKE_PUSH * mirror, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
+	tw.tween_method(_set_off.bind(side), lift, STRIKE_PUSH * mirror, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
 	tw.chain().set_parallel()
-	tw.tween_method(_set_rot.bind(side), down, 0.0, RECOVER_SEC / rate)
-	tw.tween_method(_set_off.bind(side), STRIKE_PUSH * mirror, Vector2.ZERO, RECOVER_SEC / rate)
+	tw.tween_method(_set_rot.bind(side), down, rest, RECOVER_SEC / rate)
+	tw.tween_method(_set_off.bind(side), STRIKE_PUSH * mirror, home, RECOVER_SEC / rate)
+
+
+## 回放开始：两把剑从交叉的样子拉开到守姿（彼此不碰）。[param animate] false = 直接摆好
+func spread(animate: bool = true) -> void:
+	if _spread or _winner != -2:
+		return
+	_spread = true
+	for s in 2:
+		if not animate:
+			_rot[s] = _rest_rot(s)
+			_off[s] = _rest_off(s)
+			continue
+		var tw := _fresh(s).set_parallel()
+		tw.tween_method(_set_rot.bind(s), _rot[s], _rest_rot(s), SPREAD_SEC)
+		tw.tween_method(_set_off.bind(s), _off[s], _rest_off(s), SPREAD_SEC)
+	queue_redraw()
+
+
+func is_spread() -> bool:
+	return _spread
+
+
+## 这把剑歇着时的转角 / 位移：拉开了是守姿，没拉开是原图交叉的样子
+func _rest_rot(side: int) -> float:
+	return deg_to_rad(-GUARD_DEG) * (1.0 if side == 0 else -1.0) if _spread else 0.0
+
+
+func _rest_off(side: int) -> Vector2:
+	return GUARD_OFF * Vector2(1.0 if side == 0 else -1.0, 1.0) if _spread else Vector2.ZERO
 
 
 ## [param side] 那一方挨了打：那把剑后仰一下、剑身白闪；[param big] 交点迸火星
@@ -98,10 +137,10 @@ func hit(side: int, big: bool = false) -> void:
 	var tw := _fresh(side)
 	tw.tween_method(_set_flash.bind(side), 1.0, 0.0, sec)
 	if rate < 4.0:
-		var back := deg_to_rad(-RECOIL_DEG) * (1.0 if side == 0 else -1.0)
+		var back := _rest_rot(side) + deg_to_rad(-RECOIL_DEG) * (1.0 if side == 0 else -1.0)
 		tw.parallel().tween_method(_set_rot.bind(side), _rot[side], back, sec * 0.4)
-		tw.tween_method(_set_rot.bind(side), back, 0.0, sec * 0.6)
-		_set_off(Vector2.ZERO, side)
+		tw.tween_method(_set_rot.bind(side), back, _rest_rot(side), sec * 0.6)
+		_set_off(_rest_off(side), side)
 	if big:
 		_spark_seed += 1
 		create_tween().tween_method(_set_spark, 0.0, 1.0, SPARK_SEC / maxf(rate, 1.0))
