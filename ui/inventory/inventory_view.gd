@@ -410,6 +410,8 @@ func _draw_seams(grid_px: Vector2) -> void:
 		var fy := y * cell_px
 		draw_line(Vector2(trim, fy), Vector2(grid_px.x - trim, fy), seam, seam_w)
 		draw_line(Vector2(trim, fy + off), Vector2(grid_px.x - trim, fy + off), hi, hi_w)
+	if bool(seams.get("edge", false)):     # 227：一块框里并排好几块（商店货架）—— 各自描一圈缝，分得清是哪一格
+		draw_rect(Rect2(Vector2.ZERO, grid_px).grow(-seam_w * 0.5), seam, false, seam_w)
 
 
 ## 224：[member ground] 的底 —— 外圈深色细边（圆角，画在格子外面）、底色、几层内格线（两端各留 trim，线在道具下面）

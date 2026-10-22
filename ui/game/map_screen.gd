@@ -9,6 +9,8 @@
 ## 暂停菜单「回主菜单」前静默存一次）；日志与「地上 N 件」挪进调试台，调试台盖在地图上、顶缘在顶端栏下面；序章开头的静态教程（[CoachOverlay]）
 extends GameScreen
 
+## 227：悬浮窗里敌人棋盘的格子（正常 60，框又占两边各 40 —— 缩一档放得进纸签）
+const ENEMY_TIP_CELL := 44.0
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 ## 路线卡片的宽（左下角）
@@ -672,7 +674,9 @@ func _update_tooltip(id: int) -> void:
 		var v := InventoryView.new()
 		v.label_font = font
 		v.inventory = EnemyKit.board_of(node.content, flow.items)
-		extra = v
+		v.cell_px = ENEMY_TIP_CELL
+		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		extra = BoardFrame.wrap(v, "corpse")     # 227：生皮框 + 格缝，格子小一档（纸签里放得下）
 	# 101 第 5 刀：浮窗文字里的样式码（`{c:hp}`）—— 169 起由悬浮窗按自己的底换成真颜色（浅纸暗字）
 	var text := NodeTooltip.text_for(_run, _run.chapter, node)
 	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra)

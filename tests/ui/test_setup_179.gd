@@ -67,7 +67,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	for i in flow.characters.size():
 		setup.choose_character(i)
 		var ch: CharacterDef = setup.character()
-		t.eq(setup._grooves[2].custom_minimum_size.x, ch.board_size.x * InventoryView.CELL + 2 * setup.RIGHT_PAD, "%s：棋盘栏按棋盘宽" % ch.id)
+		t.eq(setup._grooves[2].custom_minimum_size.x, ch.board_size.x * InventoryView.CELL + 2.0 * (setup.RIGHT_PAD + BoardFrame.box("player", false).content_margin_left), "%s：棋盘栏按棋盘宽（227：加皮带框两边的缩进）" % ch.id)
 		var texts: Array[String] = []
 		for l in _labels(setup._card) + _labels(setup._preview_host):
 			texts.append(l.text)

@@ -42,6 +42,7 @@ func open(payload: Dictionary) -> void:
 	_table_view.show_adjacency = false
 	_table_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_table_view)
+	BoardFrame.wrap(_table_view)     # 227：素框 + 格缝
 	_preview = _label("", 13, UiPalette.STAMINA)
 	left.add_child(_preview)
 	var buttons := _hbox(8)

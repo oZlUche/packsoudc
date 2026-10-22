@@ -65,6 +65,7 @@ func open(payload: Dictionary) -> void:
 		v.inventory = g
 		v.show_adjacency = false
 		host.add_child(v)
+		_slot_frame(v)
 		_reserve_ground(host)
 		_slot_hosts.append(host)
 		var sum := UiTheme.rich_block(float(SLOT_SIZE.x * InventoryView.CELL), SUMMARY_SIZE)
@@ -81,6 +82,7 @@ func open(payload: Dictionary) -> void:
 	_out_view.inventory = _out
 	_out_view.show_adjacency = false
 	_out_host.add_child(_out_view)
+	_slot_frame(_out_view)
 	_reserve_ground(_out_host)
 
 	_slate = _wrapped(UiText.t("forge.description"), SLATE_SIZE, UiPalette.FG, 400)
@@ -99,7 +101,7 @@ func open(payload: Dictionary) -> void:
 
 	_bag_host = _host(_rect(_layout.get("bag", {})))
 	_reserve_ground(_bag_host)
-	_inv = _mount_bag(_bag_host, _slot_views[0], Callable(), null)     # 棋盘上双击 → 第一个空槽（见 put_in）
+	_inv = _mount_bag(_bag_host, _slot_views[0], Callable(), null, "player", true)     # 227：夜里的炉台用深色皮带框     # 棋盘上双击 → 第一个空槽（见 put_in）
 	move_child(_drag, -1)
 	move_child(_tip, -1)
 	for i in _slot_views.size():
@@ -142,6 +144,12 @@ static func layout() -> Dictionary:
 
 static func _rect(d: Dictionary) -> Rect2:
 	return Rect2(float(d.get("x", 0)), float(d.get("y", 0)), float(d.get("w", 0)), float(d.get("h", 0)))
+
+
+## 227：槽套深色素框 —— 框往外挪一个缩进，格子还在底图那块槛上
+func _slot_frame(v: InventoryView) -> void:
+	var f := BoardFrame.wrap(v, "plain", true)
+	f.position = -Vector2.ONE * f.inset()
 
 
 ## 一块空的宿主，按底图上的矩形摆

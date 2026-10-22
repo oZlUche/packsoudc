@@ -75,3 +75,14 @@
 
 执行在青铜三屏里先建了 `ui/widgets/board_frame.gd`：`BoardFrame.around(view, kind)`，只认 `frames_dark`，另带 `dark_seams()`；战前 / 战斗 / 战利品的棋盘都已用它。做 227 时扩成 §三 的 `wrap(view, kind, dark)`，`_nine` / `frame_pad` 搬进去，类名不变。**路径定在 `ui/widgets/`**（不是 §三 写的 `ui/inventory/`）：放 inventory 会被 `add_theme` 计数器扫到，widgets 不扫。§三 / §四 里的路径以此为准。
 
+
+## 补充三：落地（v3.92，执行 2026-10-22）
+
+- **`BoardFrame.wrap(view, kind = "", dark = false)`**（`ui/widgets/board_frame.gd`）：浅框读 `assets/ui/board/layout.json` 的 `pieces`，深框先找铜面板 `frames_dark`、没有再找 board 的 `<kind>_dark`（`plain_dark`）。`kind` 空 = 视图的格子容器 `requires_bag` 就 `player`、否则 `plain`。格缝跟内垫：铜面板深框深缝，其余（含 `plain_dark`，内垫是浅灰）浅缝。`around(view, kind)` 留作深色那一支（战前 / 战斗沿用）。注意 GDScript 全局有 `wrap(值, 下限, 上限)`：类里调自己要写 `BoardFrame.wrap`。
+- **格缝没改成视图默认**（§三.2 的做法没做）：默认深底格那条路留着，靠守门测试兜 —— 格缝要配框里的浅灰内垫才看得见，单开格缝不加框反而是一块透明格。
+- **`mark(view, frame)`**：外框是屏自己摆的一张图的（搜刮 / 战利品屏、背包窗、结算带回的棋盘、结算第一页保险箱）登记一下，格缝跟着设。`framed(view)` = 祖先有 `BoardFrame` 或登记过。
+- **`GameScreen._mount_bag(..., frame = "player", dark = false)`**：节点屏右边的背包一律套皮带框；铸炉传深色，搜刮屏传空串（自己摆框）。
+- 逐块：商店背包 / 出售区（`plain`）/ 货架；神坛祭品台、保险箱（`plain`）；铸炉三槽 + 出牌槽（`plain` 深色，框往外挪一个缩进 16，格子还在底图的槛上）+ 背包（`player` 深色）；开局第一页预览、第二页棋盘（`player`，第二页外面那块皮面板照旧）；地图悬浮窗敌人棋盘（`corpse`，格子 60 → 44）。科技页上交区 229 已删，地上（开局）是 128 起的 `GroundLayer` 不是棋盘，都不涉及。
+- **商店的两处变动**（执行判断）：每个货位各套一块框，帐篷宽出 1600 屏 —— 改成**整排货架一块素框**，每个货位自己描一圈缝（`seams.edge`）分开；竖向也放不下 —— **出售区和「随身 / 刷新 / 收起 / 离开」并排**（出售区在左，随身那几颗竖着排、按钮落在它底边那一行；出售区的说明按框宽折行 —— 英文横排会把帐篷撑出屏）。截图 `/mnt/project-files/art/ui/board/shots227/`。
+- 守门 `tests/ui/test_boards_framed_227.gd`：运行时开商店、神坛、铸炉、搜刮、保险箱、开局两页，凡看得见的 `InventoryView` 都要（框或棕底）且（格缝或棕底）；源码检查 `ui/` 下造了 `InventoryView` / `LootView` 的文件都得接 `BoardFrame.` 或棕底（`inventory_panel.gd` 与两个沙盒豁免）。
+- 同单带上：游戏测试 v3.91 报的帐篷屏告示压招牌 —— 帐篷屏告示只留一卷（新的顶掉旧的），见架构 v3.92。

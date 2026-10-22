@@ -13,7 +13,6 @@ class_name BagWindow
 extends FloatingWindow
 
 const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
-const ContainerScreenScript := preload("res://ui/game/container_screen.gd")
 const ART_DIR := "res://assets/ui/stats_strip/"
 const LAYOUT := ART_DIR + "layout.json"
 ## 收起钮用战利品屏那枚（56 的切图按 `minimize.scale` 画）
@@ -93,7 +92,7 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	panel.cell_px = float(_spec["cell"])
 	panel.hint_sink = hint_sink
 	panel.setup(run, font, drag)
-	panel.board_view.seams = ContainerScreenScript.board_layout().get("cell_seams", {})
+	BoardFrame.mark(panel.board_view, frame)     # 227：外框是上面那张 72 px 皮带框，格缝浅色
 	_canvas.add_child(panel)
 
 	var ch := run.character

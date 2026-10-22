@@ -57,6 +57,7 @@ static func frame_tent(t: TestCase, root: Window) -> void:
 	var top: float = center.offset_top + (screen.size.y - center.offset_top - fh) * 0.5
 	t.check(top - bar >= 56.0 - 0.01, "窗太高时整块往下挪：窗顶离栏 %.1f ≥ 56" % (top - bar))
 	frame.custom_minimum_size = Vector2(600, 300)
+	screen.size = Vector2(1600, 2000)     # 227 起货架、出售区都带框，内容本身就有七百多高 —— 屏高给足
 	screen.resized.emit()
 	t.eq(center.offset_top, bar, "空隙够了不挪")
 	screen.free()

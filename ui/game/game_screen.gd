@@ -56,12 +56,17 @@ func notice_layer() -> NoticeLayer:
 
 ## 给玩家的一句（告示卷轴）
 func say(text: String) -> void:
-	notice_layer().push(text)
+	notice_layer().push(text, false, notice_cap())
 
 
 ## 要紧的一句（朱红卷、停得久）
 func warn(text: String) -> void:
-	notice_layer().push(text, true)
+	notice_layer().push(text, true, notice_cap())
+
+
+## 这一屏告示最多叠几卷：帐篷（233）窗顶紧挨顶端栏，第二卷会压住布招牌 —— 只留一卷，新的顶掉旧的
+func notice_cap() -> int:
+	return 1 if _overlay_frame != null and _overlay_frame.tent else NoticeLayer.MAX_LINES
 
 
 ## 第一次显示。[param payload] 是 flow 给的（战斗结果、会话……）
@@ -107,12 +112,15 @@ func _ground_to_bag(uid: int, open_bag: Callable) -> bool:
 ## [param other] 是左边对面的那块视图（祭品台 / 保险箱 / 容器 / 出售区）：登记到拖拽层、由悬浮窗盯着；
 ## [param hint_sink] 接面板的提示（`func(text: String)`）；[param quick_target] 是棋盘上双击的去处（商店没有）。
 ## 加进树的顺序就是 z 序：面板进 [param row] → 拖拽层 → 悬浮窗，拖拽层要在面板之后加才盖得住。
-## 各屏自己的规矩（`drop_filter`、`can_show`……）回来之后接到 [member _drag] / [member _tip] 上
-func _mount_bag(row: Control, other: ContainerView, hint_sink: Callable, quick_target: ItemContainer = null) -> InventoryPanelScript:
+## 各屏自己的规矩（`drop_filter`、`can_show`……）回来之后接到 [member _drag] / [member _tip] 上。
+## 227：棋盘套 [param frame] 外框（[method BoardFrame.wrap]，[param dark] 是铜面板 / 夜里那套深色框）；空串 = 屏自己摆框（搜刮屏）
+func _mount_bag(row: Control, other: ContainerView, hint_sink: Callable, quick_target: ItemContainer = null, frame: String = "player", dark: bool = false) -> InventoryPanelScript:
 	var inv := InventoryPanelScript.new()
 	_drag = DragLayer.new()
 	_drag.label_font = font
 	inv.setup(flow.run, font, _drag)
+	if frame != "":
+		BoardFrame.wrap(inv.board_view, frame, dark)
 	inv.quick_target = quick_target
 	inv.hint_sink = hint_sink
 	row.add_child(inv)

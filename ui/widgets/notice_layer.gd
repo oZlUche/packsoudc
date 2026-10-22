@@ -31,15 +31,16 @@ static func set_current(layer: NoticeLayer) -> void:
 
 
 ## 往 [param from] 所在的那一层写一句：导演的那层，没有就找最近的屏自己挂的那层；都没有不写
+## （233 复测：卷数上限跟着那一屏走 —— 屏有 `notice_cap()` 就照它）
 static func post(from: Node, text: String, urgent: bool = false) -> void:
+	var n := from
+	while n != null and not n.has_method("notice_layer"):
+		n = n.get_parent()
 	var layer := current()
 	if layer == null:
-		var n := from
-		while n != null and not n.has_method("notice_layer"):
-			n = n.get_parent()
 		layer = n.call("notice_layer") if n != null else null
 	if layer != null:
-		layer.push(text, urgent)
+		layer.push(text, urgent, int(n.call("notice_cap")) if n != null and n.has_method("notice_cap") else MAX_LINES)
 
 
 func _init() -> void:
@@ -63,15 +64,15 @@ func _exit_tree() -> void:
 		_current = null
 
 
-## 写一句（[param urgent] = 要紧：朱红卷、停得久）
-func push(text: String, urgent: bool = false) -> void:
+## 写一句（[param urgent] = 要紧：朱红卷、停得久）。[param cap] 是这一次最多留几卷（233 复测：帐篷屏只留一卷，第二卷会压住窗顶的布招牌）
+func push(text: String, urgent: bool = false, cap: int = MAX_LINES) -> void:
 	if text == "":
 		return
 	for l in _lines:
 		if (l["scroll"] as NoticeScroll).text == text:
 			l["left"] = URGENT_SEC if urgent else SHOW_SEC
 			return
-	while _lines.size() >= MAX_LINES:
+	while _lines.size() >= maxi(1, cap):
 		_drop(0)
 	var s := NoticeScroll.make(text, urgent)
 	s.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
