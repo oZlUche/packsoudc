@@ -55,7 +55,7 @@ var _slot_hosts: Array[Control] = []
 var _out_host: Control
 
 
-## 236 ③：整屏底图盖死地图
+## 236 第三项：整屏底图盖死地图
 func covers_base() -> bool:
 	return true
 
@@ -424,6 +424,11 @@ func _refresh() -> void:
 
 
 ## 风箱把手现在是哪一张（ready / idle / off；测试看）
+## 236 第五项：离开铸炉放掉整屏的炉台底图（亮 / 熄、中 / 英各一张，9 MB 一张）
+func _exit_tree() -> void:
+	UiTheme.release_art("forge/bg_")
+
+
 func handle_state() -> StringName:
 	if not _forge_open():
 		return &"off"

@@ -125,7 +125,7 @@ var spawn_mask: bool = false:
 		spawn_mask = v
 		queue_redraw()
 var _pulse: float = 0.0
-## 236 ③：透出地图的叠层压着时隔帧重绘（地图屏按导演的话设）
+## 236 第三项：透出地图的叠层压着时隔帧重绘（地图屏按导演的话设）
 var throttled := false
 var _skipped := false
 ## 184（作者 2026-10-17 15:36 / 15:37）：大图上一眼看清「我在哪」「哪步能走」——
@@ -221,6 +221,7 @@ var _junction_graph: MapGraph = null
 func _ready() -> void:
 	_font = UiPalette.cjk_font()
 	clip_contents = true
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS     # 236 第五项：底图（3840 × 2400）导入带 mipmap，缩小到 0.4 倍画不闪不糊
 	resized.connect(_on_resized)
 
 

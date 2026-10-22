@@ -141,9 +141,65 @@ func _ready() -> void:
 	flow.check_achievements()     # 091：读档后补算（老存档、新加的成就）
 	flow.apply_item_locks()
 	flow.to_main_menu()
+	warm_up()
 
 
-## 236 ②：关窗前等战斗日志写完（写盘在工作线程上，最后一场别只写一半）
+#region 启动预热（236 第七项）
+## 作者本机：头一两次走到【迎战】卡几秒，之后都顺 —— 那是第一次要付的冷启动账：系统字体第一次建（Windows 读整份系统中文字体）
+## 并把字形画进缓存、战旗裁切着色器第一次编译、斗技场底图第一次解码。这几样挪到主菜单亮起来的那几帧里付掉，一帧一类
+const WARM_TEXT := "永战撤 Pack 0123"
+const WARM_SIZES := [16, 22, 24]
+## 预热用的那一小块（垫在所有屏下面，被盖住；画完字、编完着色器就放掉）
+var _warm: Control = null
+
+
+func warm_up() -> void:
+	for step in 3:
+		await get_tree().process_frame
+		if not is_inside_tree():
+			return
+		_warm_step(step)
+
+
+## 一口气做完（测试看，不等帧）
+func warm_now() -> void:
+	for step in 3:
+		_warm_step(step)
+
+
+func _warm_step(step: int) -> void:
+	match step:
+		0:
+			var fonts: Array[Font] = [UiPalette.cjk_font(), UiPalette.cjk_font_bold(), UiPalette.title_font(), UiPalette.display_font(),
+				UiPalette.numeral_font(), UiPalette.system_font(), UiPalette.system_font(true)]
+			for f in fonts:
+				f.get_string_size(WARM_TEXT)     # 字体文件这一刻读进来（系统字体是缺字时的后备，也要直接摸一下）
+			var w := Control.new()
+			w.name = "Warm"
+			w.size = Vector2(2, 2)
+			w.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			w.modulate.a = 0.01     # 看不见（主菜单淡入的那几帧也透不出来），但照样画
+			w.draw.connect(func() -> void:     # 画一遍：字形这一刻画进缓存
+				for f in fonts:
+					for px in WARM_SIZES:
+						w.draw_string(f, Vector2(0, px), WARM_TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, px))
+			if _warm != null:
+				_warm.queue_free()
+			_warm = w
+			add_child(_warm)
+			move_child(_warm, 0)
+		1:
+			if _warm != null:
+				UiMotion.warm(_warm)     # 下一次画它时编译
+		2:
+			UiTheme.art_cached(UiTheme.ART_BATTLE_BG)     # 进战斗屏时 load() 拿到同一份；打完由战斗屏放掉
+			if _warm != null:
+				_warm.queue_free()
+				_warm = null
+#endregion
+
+
+## 236 第二项：关窗前等战斗日志写完（写盘在工作线程上，最后一场别只写一半）
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		BattleTraceWriter.flush()
@@ -269,7 +325,7 @@ func _switch_screen(screen: int, payload: Dictionary) -> void:
 		else:
 			tw = _fade_in(_overlay, OVERLAY_FADE)     # 157：撤叠层直接撤，不等
 		if tw != null:
-			tw.finished.connect(_sync_base)     # 236 ③：淡入完了才藏底屏（淡入时还透着地图）
+			tw.finished.connect(_sync_base)     # 236 第三项：淡入完了才藏底屏（淡入时还透着地图）
 		_sync_base()
 		return
 	if bool(payload.get("minimized", false)) and _overlay != null:
@@ -342,7 +398,7 @@ func _drop_overlay(silent: bool = false) -> void:
 			AudioHub.play(&"ui.close")
 
 
-## 236 ③：盖死底屏的叠层（[method GameScreen.covers_base]）完全显出来之后，底屏藏起来、停掉 —— 地图每帧的重绘、
+## 236 第三项：盖死底屏的叠层（[method GameScreen.covers_base]）完全显出来之后，底屏藏起来、停掉 —— 地图每帧的重绘、
 ## 读数层、地上弹开解算都不跑；叠层撤掉 / 换掉 / 收起时恢复。透出底屏的叠层开着时告诉底屏一声（地图隔帧重绘）
 func _sync_base() -> void:
 	if _base == null:

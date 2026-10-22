@@ -93,7 +93,7 @@ func refresh() -> void:
 	_after_move()
 
 
-## 236 ③：透出地图的叠层压在上面时地图隔帧重绘（呼吸、虚线 60 → 30 Hz，压暗了看不出）
+## 236 第三项：透出地图的叠层压在上面时地图隔帧重绘（呼吸、虚线 60 → 30 Hz，压暗了看不出）
 func set_overlaid(on: bool) -> void:
 	if _view != null:
 		_view.throttled = on

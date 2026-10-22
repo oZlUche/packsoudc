@@ -58,7 +58,7 @@ var _board_text: RichTextLabel = null
 var _scroll: Control = null
 
 
-## 236 ③：整屏底图盖死地图
+## 236 第三项：整屏底图盖死地图
 func covers_base() -> bool:
 	return true
 

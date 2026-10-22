@@ -307,6 +307,7 @@ func _exit_tree() -> void:
 	if _outgoing != null and is_instance_valid(_outgoing):
 		_outgoing.queue_free()     # 过场没演完就被换走了：垫着的战前屏也一起走
 	_outgoing = null
+	UiTheme.release_art(UiTheme.ART_BATTLE_BG)     # 236 第五项：启动预热读进来的斗技场底图，打完放掉（下一场再读）
 
 
 ## 回放看完（或跳到底）了没有 —— 084：胜负（只给调试看的那一行）此后才写
