@@ -86,6 +86,11 @@ func open(payload: Dictionary) -> void:
 	_medal.rate = _view.speed()
 	_next_slot.add_child(_medal)
 	_view.event_applied.connect(_on_event)
+	# 作者 10-22：开打前两把剑先拉开 —— 有开战过场就等它演完再拉（_end_intro），没有就开场拉
+	if _motion:
+		_spread_unless_intro.call_deferred()
+	else:
+		_medal.spread(false)
 
 	if result != null:
 		_view.play(result, [UiText.t("battle.me"), enemy_name])
@@ -191,6 +196,11 @@ func _on_event(e: BattleEvent) -> void:
 
 
 ## 铜章（测试看）
+func _spread_unless_intro() -> void:
+	if _medal != null and not _intro_running:
+		_medal.spread(true)
+
+
 func medal() -> DuelMedal:
 	return _medal
 
@@ -280,6 +290,8 @@ func _end_intro() -> void:
 		return
 	_intro_running = false
 	_land_medal()
+	if _medal != null:
+		_medal.spread(true)     # 作者 10-22：开打前两把剑先拉开
 	if _outgoing != null and is_instance_valid(_outgoing):
 		_outgoing.queue_free()
 	_outgoing = null
