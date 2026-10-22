@@ -67,7 +67,7 @@ func _exit_tree() -> void:
 
 
 ## 写一句（[param urgent] = 要紧：朱红卷、停得久）。[param cap] 是这一次最多留几卷（233 复测：帐篷屏只留一卷，第二卷会压住窗顶的布招牌）；
-## [param beside] > 0 = 卷不居中、从屏中线往右这么远起排（神坛碑顶正对着卷的位置，v4.02 复测）；
+## [param beside] 不是 0 = 卷不居中、左沿从屏中线往右这么远起排（神坛碑顶正对着卷的位置，v4.02 复测）；
 ## [param top] > [constant TOP] = 卷顶往下挪到这（235：地图屏让开日晷下凸）
 func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: float = 0.0, top: float = 0.0) -> void:
 	if text == "":
@@ -149,9 +149,9 @@ func _drop(i: int) -> void:
 		_col.remove_child(s)     # 关着动效：立刻离开排版（下一句马上顶上来）
 
 
-## 卷排在哪：[param beside] = 0 居中；> 0 从屏中线往右这么远起排
+## 卷排在哪：[param beside] = 0 居中；不是 0 = 卷左沿从屏中线往右这么远起排（负 = 中线左边；游戏测试 v4.26：设置页卷排在导出石签右边）
 func _place(beside: float, top: float = 0.0) -> void:
 	set_top(top)
-	_col.grow_horizontal = Control.GROW_DIRECTION_END if beside > 0.0 else Control.GROW_DIRECTION_BOTH
-	_col.offset_left = maxf(0.0, beside)
-	_col.offset_right = maxf(0.0, beside)
+	_col.grow_horizontal = Control.GROW_DIRECTION_END if beside != 0.0 else Control.GROW_DIRECTION_BOTH
+	_col.offset_left = beside
+	_col.offset_right = beside
