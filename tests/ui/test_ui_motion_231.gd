@@ -112,6 +112,25 @@ static func frame_duel_medal(t: TestCase, root: Window) -> void:
 	m.strike(0)
 	t.check(m._tweens[0] == before and is_zero_approx(m.pose(0)["deg"]), "倍速 4：只闪不挥（左剑没新动作）")
 	m.rate = 1.0
+	m.spread(true)
+	for s in 2:
+		(m._tweens[s] as Tween).custom_step(1.0)
+	t.check(m.is_spread() and is_equal_approx(m.pose(0)["deg"], -DuelMedal.GUARD_DEG) and m.pose(0)["offset"] == DuelMedal.GUARD_OFF, "作者 10-22：拉开 —— 左剑立成守姿、往外让")
+	t.check(is_equal_approx(m.pose(1)["deg"], DuelMedal.GUARD_DEG) and m.pose(1)["offset"] == DuelMedal.GUARD_OFF * Vector2(-1, 1), "右剑对称")
+	var ends := []
+	for s in 2:
+		var grip: Vector2 = DuelMedal.GRIP[s]
+		var tip: Vector2 = DuelMedal.TIP[s]
+		var off: Vector2 = m.pose(s)["offset"]
+		var at := grip + off
+		ends.append([at, at + (tip - grip).rotated(deg_to_rad(m.pose(s)["deg"]))])
+	var left_x := maxf(ends[0][0].x, ends[0][1].x)
+	var right_x := minf(ends[1][0].x, ends[1][1].x)
+	t.check(right_x - left_x >= 16.0, "守姿里两把剑隔开（不碰）：左剑最右 %.0f、右剑最左 %.0f" % [left_x, right_x])
+	m.strike(0)
+	(m._tweens[0] as Tween).custom_step(1.0)
+	t.check(is_equal_approx(m.pose(0)["deg"], -DuelMedal.GUARD_DEG) and m.pose(0)["offset"] == DuelMedal.GUARD_OFF, "拉开后劈完退回守姿（不回交叉）")
+	t.check(DuelMedal.STRIKE_PUSH.x - DuelMedal.GUARD_OFF.x >= 36.0, "出手时冲过去的距离够长")
 	t.eq(m.winner(), -2, "还没分")
 	m.set_final(0, false)
 	t.eq(m.winner(), 0, "左赢")
@@ -189,6 +208,7 @@ static func frame_battle_intro(t: TestCase, root: Window) -> void:
 	screen._end_intro()
 	t.check(not screen.intro_running() and view.is_playing(), "演完：回放开始")
 	t.eq(medal.get_parent(), screen._next_slot, "铜章落在继续那一格")
+	t.check(medal.is_spread(), "落地后两把剑拉开成守姿（作者 10-22）")
 	t.check(pre.is_queued_for_deletion(), "垫着的战前屏放掉")
 	t.eq(result.log.size() if result != null else -2, log_size, "回放日志一条没变")
 	# 一条条放完：分胜负演着，继续旗等着展开
