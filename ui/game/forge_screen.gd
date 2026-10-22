@@ -177,7 +177,15 @@ func _align_slot_notes() -> void:
 		if frame == null:
 			continue
 		var r := frame.get_global_rect()
-		_summaries[i].custom_minimum_size.x = maxf(0.0, r.size.x - NOTE_PAD * 2)
+		# 左下「返回」路标伸进了时机槽便条的左下角：便条照样贴齐槽框，字往右让开路标（v4.06 复测：英文第三、四行被盖住）
+		var left := float(NOTE_PAD)
+		var sign := _back_btn.get_global_rect() if _back_btn != null else Rect2()
+		if sign.has_area() and sign.position.x < r.position.x and sign.end.x > r.position.x and sign.position.y > r.end.y:
+			left = sign.end.x - r.position.x + NOTE_PAD * 0.5
+		var box := note.get_theme_stylebox("panel")
+		if box != null:
+			box.content_margin_left = left
+		_summaries[i].custom_minimum_size.x = maxf(0.0, r.size.x - left - NOTE_PAD)
 		note.global_position.x = r.position.x
 		note.reset_size()
 

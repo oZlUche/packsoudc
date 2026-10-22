@@ -197,6 +197,11 @@ static func frame_node_screens(t: TestCase, root: Window) -> void:
 				var nr: Rect2 = (slot_notes[i] as Control).get_global_rect()
 				aligned = aligned and absf(nr.position.x - fr.position.x) < 1.0 and absf(nr.end.x - fr.end.x) < 1.0
 			t.check(aligned, "槽下便条左右贴齐槽框外沿")
+			var sign: Rect2 = screen._back_btn.get_global_rect()
+			var n0 := slot_notes[0] as Control if not slot_notes.is_empty() else null
+			if n0 != null and sign.end.x > n0.global_position.x:
+				var text_left: float = n0.global_position.x + n0.get_theme_stylebox("panel").content_margin_left
+				t.check(text_left >= sign.end.x, "时机槽便条的字让开「返回」路标（字左沿 %.0f，路标右沿 %.0f）" % [text_left, sign.end.x])
 		screen.free()
 	DevGate.force_player = false
 	Support.cleanup(PREFIX + "n")
