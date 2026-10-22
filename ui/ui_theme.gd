@@ -91,6 +91,10 @@ const PANEL_SUMMARY_NOTE := &"PanelSummaryNote"
 const PANEL_BARE := &"PanelBare"
 ## 182：点节点时屏幕正中弹的提示窗（[NodeHintCard]）—— 浅底纸签
 const PANEL_NODE_HINT := &"PanelNodeHint"
+## 226 批四守门（tests/ui/test_no_bare_text_226.gd）：算「控件」的底 —— 字的祖先里有这些变体之一就算坐在控件上（牌、纸、签、板、提示框）
+const PLATE_VARIANTS: Array[StringName] = [PANEL_NAMEPLATE, PANEL_PARCHMENT, PANEL_SUMMARY_NOTE, PANEL_NODE_HINT, PANEL_TOOLTIP,
+	PANEL_DIFF_TITLE, PANEL_FLIP_COUNTER, PANEL_DARK, PANEL_GROOVE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_HOME_BOX,
+	PANEL_CAP_TILE, PANEL_HUD, &"TooltipPanel"]
 const BUTTON_SETUP_TAB := &"ButtonSetupTab"
 ## 开局挂牌页签锁着时的页名色
 const SETUP_TAB_LOCKED_INK := Color("b8a98c")

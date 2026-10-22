@@ -339,3 +339,17 @@
 - **石祭台**：`altar/altar_table`（344 × 438 定尺寸）垫在祭品台框下面，框（227 plain，272 × 272）左上 = 图左上 + (36, 86)。
 - **核对修正**（UI替换美术）：碑面上灰着的石签、下拉字色改 #c8ced1（`StoneChip.set_state_ink`、`dress_chip_option` 的 `disabled_ink`；灰图中心透明，墨灰落在深碑面上看不见）；标题去掉重复的神名（`altar.head` 只填 `faith_power.line()`）；英文「Pray for a Blessing」缩短。
 - 测试 tests/ui/test_stone_chips.gd（`frame_altar_stele`）；截图 /mnt/project-files/art/ui/kit/shots_stele/。
+
+## 十九、批四落地（v4.03）：垫纸、开发说明、守门测试
+
+- **v4.02 复测修正**（游戏测试）：神坛告示卷轴不再压碑顶神徽 —— 石碑窗、帐篷窗告示只留一卷（`notice_cap()` = 1），石碑窗的卷轴挪到山墙右侧（`OverlayFrame.notice_beside()` = 山墙右沿 + 16，`NoticeLayer.push(..., beside)` 从这里往右排）；英文献祭单数「Offered 1 item」（`log.offered_one`，`UiText.tn`）。
+- **设置屏**：分辨率下面那行说明删了（全屏时的说明进悬浮窗）；分辨率行右边的「16:9」小字删了，比例进按钮悬浮窗；屏太小一档都没有时，换一枚灰着的石签「跟随屏幕」。开发区整块打 `exempt_bare_text`（只在开发包里有）。
+- **百科**：标题、分隔线、正文垫一张羊皮纸（`PANEL_PARCHMENT`，左右 40、上下 26），标题墨色。
+- **地图规则卡**：规则几行垫羊皮纸，「知道了」换纸卷主键（`ScrollKey.primary`）。
+- **主菜单**：备份 / 读档修复那几句写在右下角一张便条上（`PANEL_SUMMARY_NOTE`，墨红 `INK_WARN`），没有不占位。
+- **读档屏**：读档修复报告同样写在便条上，居中。
+- **结算标题**、**战斗飘字**、**回放浏览器播报 / 非铜面板战报**、**结算信仰节奏量尺（开发）**：分别是标题牌图上的字、画面效果、开发工具，打 `exempt_bare_text` 标记。
+- **铸炉**：挂板说明、三槽下的石带小字、台面上「将铸出」几行都写在底图画好的位置（196 §5 炉台版），打 `exempt_bare_text`（`ForgeArt`）。台面那几行要不要另垫便条，交 UI替换美术定。
+- **守门测试** `tests/ui/test_no_bare_text_226.gd`：headless 开开局三页、基地家与五个页签、设置、百科、读档、主菜单（带备份告示）、地图（HUD）、事件书、商店、神坛、铸炉、搜刮、保险箱，凡看得见有字的 `Label / RichTextLabel`，祖先链里得有：按钮；字件类（HeaderTag、TitlePlate、PriceTag、NoticeScroll、NoticeLayer、StatsStrip、HoverTip、ItemTooltip、CapTile、HudHost、DevDrawer、LedgerView）；`UiTheme.PLATE_VARIANTS` 里的底（名牌、羊皮纸、便条、纸签、提示框、铜牌、翻页计数器、深色内垫、凹槽板、背包皮、仓库框、家的粗布框、图标牌、HUD 板、引擎悬浮窗）；叠层窗标题条；书皮窗的书页；或 `exempt_bare_text` 标记。不然报「屏 · 字（节点名）」。
+- 另：227 守门里「别的叠层照旧两卷」那条从神坛换成搜刮（神坛现在是石碑，一卷）。
+- 截图 /mnt/project-files/art/ui/kit/shots_paper/（settings_zh、ency_zh、skills_zh、rules_crop、menu_note、slots_note）、shots_stele/notice_beside_en.png。

@@ -72,6 +72,7 @@ func open(payload: Dictionary) -> void:
 		add_child(sum)
 		_spots[sum] = _rect(caption_rects[i] if i < caption_rects.size() else {})
 		_reserve_ground(sum)     # 小字写长了会越过石带：地上的东西别压着它
+		sum.set_meta(&"exempt_bare_text", "ForgeArt")     # 226 守门：字写在底图的石带上
 		_summaries.append(sum)
 		_slots.append(g)
 		_slot_views.append(v)
@@ -87,9 +88,11 @@ func open(payload: Dictionary) -> void:
 
 	_slate = _wrapped(UiText.t("forge.description"), SLATE_SIZE, UiPalette.FG, 400)
 	add_child(_slate)
+	_slate.set_meta(&"exempt_bare_text", "ForgeArt")     # 226 守门：字写在底图的挂板上
 	_spots[_slate] = _rect(_layout.get("slate", {}))
 	_text_box = _vbox(2)
 	add_child(_text_box)
+	_text_box.set_meta(&"exempt_bare_text", "ForgeArt")     # 226 守门：底图给「将铸出」留的台面
 	_spots[_text_box] = _rect(_layout.get("text", {}))
 	_preview = _label("", 13, UiPalette.STAMINA)
 	_text_box.add_child(_preview)

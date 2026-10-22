@@ -465,6 +465,7 @@ func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false
 	l.add_theme_font_size_override("font_size", (28 if crit else 20) if amount >= 10 else (22 if crit else 16))
 	# 121 特例：飘字（字号按数大小、颜色按伤害类型 / 暴击 / 治疗），画布那一类，不进主题
 	l.add_theme_color_override("font_color", UiPalette.HEAL if heal else (UiPalette.CRIT if crit else UiPalette.damage_color(type)))
+	l.set_meta(&"exempt_bare_text", "effect")     # 226 守门：战斗飘字是画面效果，不是一行字
 	l.position = Vector2(
 		PAD + randf_range(0.0, size.x - PAD * 2 - 40), size.y * 0.45 + randf_range(-8.0, 8.0)
 	)
@@ -486,6 +487,7 @@ func popup_text(text: String, color: Color, time_scale: float = 1.0) -> Label:
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_color_override("font_outline_color", UiTheme.OUTLINE_COLOR)
 	l.add_theme_constant_override("outline_size", UiTheme.OUTLINE_SIZE * 3)
+	l.set_meta(&"exempt_bare_text", "effect")     # 226 守门：战斗飘字是画面效果，不是一行字
 	l.position = Vector2(size.x * 0.5 - 30.0, size.y * 0.3)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(l)

@@ -112,7 +112,7 @@ func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 	if int(out["points"]) <= 0:
 		return out
 	out["tier_after"] = _run.faith_power.add_points(def.id, int(out["points"]))
-	(out["log"] as Array[String]).append(UiText.t("log.offered") % [int(out["count"]), Names.of(def), int(out["points"])])
+	(out["log"] as Array[String]).append(UiText.tn("log.offered", int(out["count"])) % [int(out["count"]), Names.of(def), int(out["points"])])
 	if int(out["tier_after"]) > int(out["tier_before"]):
 		(out["log"] as Array[String]).append(UiText.t("log.faith_tier_up") % [Names.of(def), int(out["tier_after"])])
 	for p in perks():

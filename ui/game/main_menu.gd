@@ -47,6 +47,8 @@ var _primary: VBoxContainer = null
 var _secondary: VBoxContainer = null
 var _foot: HBoxContainer = null
 var _notices: VBoxContainer = null
+## 226 批四：垫在提示下面的便条
+var _note_paper: PanelContainer = null
 
 
 func open(_payload: Dictionary) -> void:
@@ -117,15 +119,20 @@ func open(_payload: Dictionary) -> void:
 	for link in links:
 		_foot.add_child(link)
 
-	# 098：这个存档位读不回来、已备份的那一句；173：读档时对账 / 挪位 / 打捞过 —— 右下角小字，没有不占位
+	# 098：这个存档位读不回来、已备份的那一句；173：读档时对账 / 挪位 / 打捞过 —— 右下角，没有不占位。
+	# 226 批四：写在一张便条上（浅底墨字，`PANEL_SUMMARY_NOTE`）
+	_note_paper = UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_SUMMARY_NOTE)
+	_note_paper.name = "MenuNoticePaper"
+	area.add_child(_note_paper)
 	_notices = _vbox(4)
 	_notices.name = "MenuNotices"
-	area.add_child(_notices)
+	_note_paper.add_child(_notices)
 	for text in [flow.backup_notice(), flow.repair_notice()]:
 		if text != "":
-			var l := _label(text, NOTICE_SIZE, UiPalette.STAMINA)
+			var l := _label(text, NOTICE_SIZE, UiTheme.INK_WARN)
 			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			_notices.add_child(l)
+	_note_paper.visible = _notices.get_child_count() > 0
 	if not resized.is_connected(_layout):
 		resized.connect(_layout)
 	_layout()
@@ -206,8 +213,8 @@ func _layout() -> void:
 	_column.scale = Vector2.ONE * c
 	_column.reset_size()
 	_column.position = Vector2((LEFT - UiTheme.MENU_LINE_INDENT) * c, h - (BOTTOM + _column.size.y) * c)
-	_notices.reset_size()
-	_notices.position = Vector2(w - NOTICE_MARGIN * c - _notices.size.x, h - NOTICE_MARGIN * c - _notices.size.y)
+	_note_paper.reset_size()
+	_note_paper.position = Vector2(w - NOTICE_MARGIN * c - _note_paper.size.x, h - NOTICE_MARGIN * c - _note_paper.size.y)
 
 
 ## 切到下一种界面语言：写进设置并存盘，然后把菜单原地重建（按钮文字立刻换）

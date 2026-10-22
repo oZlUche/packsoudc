@@ -111,6 +111,12 @@ static func frame_altar_stele(t: TestCase, root: Window) -> void:
 	t.check(table_frame != null and table_frame.get_parent() == stand and table_frame.position == Vector2(36, 86), "祭品台的框在台面上 (36, 86)")
 	t.check(BoardFrame.framed(screen._table_view), "祭品台照旧有框和格缝")
 	t.check(not screen.head_text().contains("%s　%s" % [Names.of(f.run.active_faith()), Names.of(f.run.active_faith())]), "标题里神名只写一次（%s）" % screen.head_text())
+	t.check(screen.notice_cap() == 1 and screen.notice_beside() > 186.0, "告示只留一卷、挪到碑顶右边（v4.02 复测：卷压住神徽）")
+	screen.say("一")
+	t.check(screen.notice_layer()._col.offset_left > 186.0, "卷从碑顶右沿外起排")
+	UiText.lang = "en"
+	t.eq(UiText.tn("log.offered", 1) % [1, "X", 4], "Offered 1 item, X +4 Faith", "英文单数")
+	UiText.lang = "zh"
 	f.run.faith_power.add_points(&"brute", 100)
 	for b: Button in screen._action_btns:
 		t.eq((b as StoneChip)._colors["disabled"], screen.STELE_DISABLED_INK, "碑面上的灰签用浅字")

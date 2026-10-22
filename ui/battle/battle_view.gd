@@ -776,6 +776,7 @@ func _build() -> void:
 		_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
 		UiTheme.set_tone(_ticker, on_bg)
+		_ticker.set_meta(&"exempt_bare_text", "dev")     # 226 守门：播报只在开发工具的回放浏览器里有
 		root.add_child(_ticker)
 	else:
 		var spacer := Control.new()     # 157 补充一：播报那块空间让给棋盘，控制条压在底下
@@ -806,6 +807,7 @@ func _build() -> void:
 		_build_footer()
 	else:
 		UiTheme.set_tone(_report, on_bg)
+		_report.set_meta(&"exempt_bare_text", "dev")     # 226 守门：非铜面板的战报只在开发工具（回放浏览器、沙盒）里出
 		root.add_child(_report)
 	_tip = HoverTip.new()
 	add_child(_tip)

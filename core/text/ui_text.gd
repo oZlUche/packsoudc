@@ -602,7 +602,8 @@ const TEXT := {
 	"log.prebattle_only": {"zh": "只能在开战前用", "en": "Only usable right before a battle"},
 	# core/run/modules/altar_module.gd
 	"log.altar_describe": {"zh": "神坛：献祭换信力，或者做一次特殊操作（每个点一次机会）", "en": "Altar: make an Offering for Faith, or perform one special rite (one chance per altar)"},
-	"log.offered": {"zh": "献祭 %d 件，%s +%d 信力", "en": "Offered %d item(s), %s +%d Faith"},
+	"log.offered": {"zh": "献祭 %d 件，%s +%d 信力", "en": "Offered %d items, %s +%d Faith"},
+	"log.offered_one": {"zh": "献祭 %d 件，%s +%d 信力", "en": "Offered %d item, %s +%d Faith"},
 	"log.faith_tier_up": {"zh": "%s升到 Lv.%d", "en": "%s rose to Lv.%d"},
 	"log.list_sep": {"zh": "、", "en": ", "},
 	"log.blessed": {"zh": "%s的目光落在「%s」上：它成了「%s」", "en": "%s's gaze falls on %s: it is now %s"},

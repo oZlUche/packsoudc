@@ -224,10 +224,12 @@ func _build_summary() -> void:
 	var title := UiTheme.make_title_label(UiText.t("result.extracted") if extracted else UiText.t("result.defeat"), TITLE_SIZE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.set_meta(&"exempt_bare_text", "TitlePlate")     # 226 守门：字摆在同位置那块标题牌图上
 	page.add_child(_place(title, TITLE_PLATE_AT, TITLE_PLATE_SIZE))
 	# 104：信力节奏的量尺（数值都是占位，作者打几局对着这一行调表）；开发版可以导 CSV
 	if r.faith_pace != "" and GameSettings.dev_build():     # 作者 2026-10-17：调表用的量尺只在开发环境
 		var pace_row := _hbox(12)
+		pace_row.set_meta(&"exempt_bare_text", "dev")     # 226 守门：开发量尺
 		pace_row.add_child(_label(r.faith_pace, 13, LedgerView.INK_DIM))
 		var pace_note := _label("", 12, LedgerView.INK_DIM)
 		var export_csv := func():
