@@ -374,10 +374,13 @@ func loot_view() -> LootView:
 	return _loot
 
 
-## 090：Esc = 收起回地图（最小化）。BOSS 的战利品屏不接：那儿「收起」= 不要剩下的直接撤离，不能一个 Esc 误触
+## 090：Esc = 收起回地图（最小化）。BOSS 的战利品屏不接：那儿「收起」= 不要剩下的直接撤离，不能一个 Esc 误触。
+## 作者 10-22：搜索屏的 Esc = 关闭（同右上角关闭，回到「再搜 / 走」），不收起
 func escape() -> bool:
 	if _boss:
 		return false
+	if _session != null:
+		return close_search()
 	return to_map()
 
 
