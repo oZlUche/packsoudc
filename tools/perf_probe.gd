@@ -126,11 +126,11 @@ func _boot() -> void:
 ## 返回 true = 收工
 func _act(screen: int) -> bool:
 	var run: RunState = _flow.run
-	# 教程气泡（地图屏 / 背包窗 / 战斗屏的 CoachOverlay）挡着就先按「下一步」—— 它 hold 着回放
+	# 教程提示（地图屏 / 背包窗 / 战斗屏的 CoachOverlay）挡着就先按「下一步」—— 它 hold 着回放
 	var coaches := root.find_children("*", "CoachOverlay", true, false)
 	if not coaches.is_empty():
-		_timed("教程气泡「下一步」", func() -> void: (coaches[0] as CoachOverlay).next())
-		_screen_frames = SETTLE_FRAMES - 6     # 气泡一步一步点，别等太久
+		_timed("教程提示「下一步」", func() -> void: (coaches[0] as CoachOverlay).next())
+		_screen_frames = SETTLE_FRAMES - 6     # 提示一步一步点，别等太久
 		return false
 	match screen:
 		GameFlow.Screen.MAIN_MENU:
@@ -263,7 +263,7 @@ func _bench_apply(v: BattleView) -> void:
 			v.release()
 	var all_ms := (Time.get_ticks_usec() - t_all) / 1000.0
 	print("\nbench：逐条 _apply %d 条事件，共 %.1f ms（平均 %.3f ms/条）" % [n, all_ms, all_ms / maxf(1.0, n)])
-	print("  %-22s %6s %9s %9s %9s" % ["事件", "条数", "合计ms", "均ms", "峰ms"])
+	print("  %-22s %6s %9s %9s %9s" % ["事件", "条数", "合计ms", "均ms", "最大ms"])
 	var keys := stats.keys()
 	keys.sort_custom(func(a, b): return stats[a][1] > stats[b][1])
 	for k in keys:
@@ -491,7 +491,7 @@ func _report(why: String) -> void:
 	print("perf_probe 结束：%s（%d 帧，%.1f 秒）" % [why, _frames, Time.get_ticks_msec() / 1000.0])
 	print("")
 	print("%-28s %6s %8s %8s %8s %8s %8s %7s %7s %7s %8s %7s %6s %5s %5s" % [
-		"屏", "帧", "帧ms均", "帧ms峰", "proc均", "proc峰", "对象", "Δ对象", "节点", "孤儿", "静态MB", "纹理MB", "绘制", "盘连", "地连"])
+		"屏", "帧", "帧ms均", "帧ms最大", "proc均", "proc最大", "对象", "对象增减", "节点", "孤儿", "静态MB", "纹理MB", "绘制", "盘连", "地连"])
 	for p in _phases:
 		var n := maxi(1, int(p["frames"]))
 		print("%-28s %6d %8.1f %8.1f %8.1f %8.1f %8d %+7d %7d %7d %8.1f %7.1f %6d %5d %5d" % [

@@ -314,8 +314,8 @@ static func font_file(file: String) -> FontFile:
 
 
 ## 237：下面几个取字体的函数都只建一次、全局共用（键 = 用途）。以前每次调用都 `SystemFont.new()` + `FontVariation.new()`，
-## 而战斗面板、属性签等的 `_draw` 里每次重绘都在调 —— Windows 上 `SystemFont` 一设 `font_names` 就去找微软雅黑并把整个
-## 字体文件（十几 MB）读进内存，每帧几次到几十次，战斗就卡成幻灯片；字体对象又各带一份字形缓存，没一个能复用。
+## 而战斗面板、属性签等的 `_draw` 里每次重绘都在调 —— Windows 上 `SystemFont` 一设 `font_names` 就去找Microsoft YaHei并把整个
+## 字体文件（十几 MB）读进内存，每帧几次到几十次，战斗就卡成一格一格；字体对象又各带一份字形缓存，没一个能复用。
 ## 调用方只读这些字体（挂到控件 / 主题上），共用一份画出来一模一样
 static var _fonts: Dictionary = {}
 
