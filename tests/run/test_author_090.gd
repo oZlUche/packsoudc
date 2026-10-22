@@ -234,8 +234,8 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 		game.queue_free()
 		Support.cleanup("090")
 		return
-	# 叠层上的 Esc = 收起（最小化）
-	t.check(game.escape(), "搜索屏 Esc 接了")
+	# 搜索屏的「收起」（角上的按钮）= 最小化
+	t.check(ov.to_map(), "搜索屏收起")
 	t.is_null(game.overlay(), "叠层收起了")
 	t.check(game.minimized() == ov and not ov.visible, "藏着没销毁")
 	t.eq(flow.screen, GameFlow.Screen.MAP, "→ 地图")
@@ -245,12 +245,17 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	map._on_node_pressed(cur, MOUSE_BUTTON_LEFT, false)
 	t.check(game.overlay() == ov and ov.visible and game.minimized() == null, "点当前节点：收起的那一屏原样回来了")
 	# 再收起、点别的节点不算恢复（照旧是走一步的意思，这里只验当前节点那一条）
-	t.check(game.escape(), "再 Esc 收起")
+	t.check(ov.to_map(), "再收起")
 	t.check(game.minimized() == ov, "又藏起来了")
 	map._on_node_pressed(cur, MOUSE_BUTTON_RIGHT, false)
 	t.is_null(game.overlay(), "右键当前节点不算")
 	map._on_node_pressed(cur, MOUSE_BUTTON_LEFT, false)
 	t.check(game.overlay() == ov, "左键当前节点又回来了")
+	# 作者 10-22：搜索屏的 Esc = 关闭（同右上角关闭：回到「再搜 / 走」的事件屏），不是收起
+	t.check(game.escape(), "搜索屏 Esc 接了")
+	t.check(game.minimized() == null, "没收起")
+	t.eq(flow.screen, GameFlow.Screen.EVENT, "关了搜索屏：回到事件屏")
+	t.check(flow.run.events.pending_event() != null, "等着选「再搜 / 走」")
 	# 会话结束了再点当前节点：没有可开的，只提示
 	flow.run.events.current_search.leave()
 	if game.overlay() != null:
