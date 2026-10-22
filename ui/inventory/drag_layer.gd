@@ -63,6 +63,11 @@ var craft_filter: Callable = Callable()
 var craft_note: Callable = Callable()
 ## 140：此刻残影下面那行合成提示（没压在能合的那件上 = 空串）。[method update_preview] 算，[method _draw] 画
 var craft_hint: String = ""
+const HINT_FONT := 13
+const HINT_TAG_H := 22.0
+## 合成提示的字色：深绿墨（纸签是浅的）
+const HINT_INK := Color("2f6b2a")
+var _hint_box: StyleBoxTexture = null
 ## 175 第三批：铸牌附魔 `func(token: ItemInstance, grid: GridInventory, weapon_uid: int) -> bool` —— 手上是铸牌、压在恰好一件武器上，
 ## 预览画绿的、残影下面写「附魔：嗜血的长剑」，放手就调它（成了算放下，铸牌被消耗）。不给 = 压上去照常顶替
 var enchant_drop: Callable = Callable()
@@ -825,6 +830,20 @@ func _hint_for(partner: ItemInstance) -> String:
 	return text + (UiText.t("tip.colon") + note if note != "" else "")
 
 
+## 226 批三：合成 / 附魔提示写在纸签上（地图墨路签那张 `map/tag_paper`），左上角在 [param at]，跟着残影走
+func _draw_hint_tag(at: Vector2, font: Font) -> void:
+	var tw := font.get_string_size(craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_FONT).x
+	var box := Rect2(at, Vector2(tw + 16.0, HINT_TAG_H))
+	if _hint_box == null:
+		_hint_box = UiTheme.art_box(UiTheme.ART_MAP_TAG)
+	if _hint_box != null:
+		draw_style_box(_hint_box, box)
+	else:
+		draw_rect(box, Color(UiTheme.PAPER, 0.95))
+		draw_rect(box, Color(UiTheme.INK, 0.6), false, 1.0)
+	draw_string(font, Vector2(box.position.x + 8.0, box.position.y + HINT_TAG_H * 0.5 + HINT_FONT * 0.36), craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_FONT, HINT_INK)
+
+
 func _set_craft_hint(text: String) -> void:
 	if craft_hint != text:
 		craft_hint = text
@@ -1063,9 +1082,7 @@ func _draw() -> void:
 		var rows := 0
 		for c in cells:
 			rows = maxi(rows, (c as Vector2i).y + 1)
-		var at := anchor + Vector2(0.0, rows * cell + 16.0)
-		draw_string_outline(font, at, craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color(0, 0, 0, 0.85))
-		draw_string(font, at, craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("8fd98f"))
+		_draw_hint_tag(anchor + Vector2(0.0, rows * cell + 4.0), font)
 
 	# 包里的东西要跟着残影一起画，否则玩家看不出自己正拖着什么。
 	# 按本地坐标算它们在当前朝向下的位置 —— 包转了，它们就跟着转

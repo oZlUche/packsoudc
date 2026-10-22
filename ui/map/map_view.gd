@@ -157,6 +157,8 @@ const END_RING_R := 28.0
 const END_RING_W := 2.0
 const TAG_H := 20.0
 const TAG_FONT := 12
+## 226 批三：节点旁的纸签（猎手名、撤离点关闭）这一帧摆过的，互相错开
+var _node_tags: Array[Rect2] = []
 ## 两枚签叠在一起时错开多少
 const TAG_NUDGE := 10.0
 const FOLLOW_SEC := 0.3
@@ -577,6 +579,7 @@ func press(p: Vector2, button: int = MOUSE_BUTTON_LEFT, shift: bool = false) -> 
 
 #region 绘制
 func _draw() -> void:
+	_node_tags.clear()
 	if _paper.has_area():     # 192：底图钉在画布上 —— 桌面（屏幕坐标）→ 纸影 → 底图 → 装饰层，后三样和路网同一个变换
 		var desk := UiTheme.art_cached(ART_DESK)
 		if desk != null:
@@ -786,8 +789,8 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, f
 ## 猎手：节点外一圈红环 + 名字（占位画法）
 func _draw_hunter(p: Vector2, label: String) -> void:
 	draw_arc(p, NODE_RADIUS + 7.0, 0.0, TAU, 32, UiPalette.HP, 3.0, true)
-	if label != "" and _font != null:
-		draw_string(_font, p + Vector2(NODE_RADIUS + 10.0, -NODE_RADIUS), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UiPalette.HP)
+	if label != "":     # 226 批三：名字写在纸签上（原来是红字直接写在地图纸上）
+		_draw_tag(label, p + Vector2(0.0, -NODE_RADIUS - 8.0 - TAG_H * 0.5), _node_tags, UiPalette.HP)
 
 
 func _draw_node(n: MapNode, p: Vector2) -> void:
@@ -843,9 +846,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 			var d := NODE_RADIUS * 0.8
 			draw_line(p + Vector2(-d, -d), p + Vector2(d, d), col, 3.0, true)
 			draw_line(p + Vector2(-d, d), p + Vector2(d, -d), col, 3.0, true)
-		var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
-		draw_rect(Rect2(p + Vector2(-tw / 2.0 - 4.0, NODE_RADIUS + 6.0), Vector2(tw + 8.0, 17.0)), Color(UiPalette.PANEL, 0.9))
-		draw_string(_font, p + Vector2(-tw / 2.0, NODE_RADIUS + 19.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
+		_draw_tag(text, p + Vector2(0.0, NODE_RADIUS + 6.0 + TAG_H * 0.5), _node_tags, col)     # 226 批三：纸签（原来是纯色块）
 
 
 ## 底图是浅纸时，按深底配的前景 / 暗色字换成字色模板的浅版（169）
@@ -1068,7 +1069,7 @@ func pawn_rect(foot: Vector2, h: float = PAWN_H, squash: float = 1.0, art_name: 
 
 
 ## 步数 / 传送的小纸签，中心在 [param at]；和已经摆了的签叠上就往下错开
-func _draw_tag(text: String, at: Vector2, placed: Array[Rect2]) -> void:
+func _draw_tag(text: String, at: Vector2, placed: Array[Rect2], ink: Color = UiTheme.INK) -> void:
 	if _font == null:
 		return
 	var tw := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_FONT).x
@@ -1091,7 +1092,7 @@ func _draw_tag(text: String, at: Vector2, placed: Array[Rect2]) -> void:
 	else:
 		draw_rect(box, Color(UiTheme.PAPER, 0.9))
 		draw_rect(box, Color(UiTheme.INK, 0.6), false, 1.0)
-	draw_string(_font, Vector2(box.position.x + 8.0, box.position.y + TAG_H * 0.5 + TAG_FONT * 0.36), text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_FONT, UiTheme.INK)
+	draw_string(_font, Vector2(box.position.x + 8.0, box.position.y + TAG_H * 0.5 + TAG_FONT * 0.36), text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_FONT, ink)
 
 
 ## 摆过的签（测试看）：这一帧画了哪些字
