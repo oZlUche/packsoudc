@@ -357,8 +357,15 @@
 - **主菜单**：备份 / 读档修复那几句写在右下角一张便条上（`PANEL_SUMMARY_NOTE`，墨红 `INK_WARN`），没有不占位。
 - **读档屏**：读档修复报告同样写在便条上，居中。
 - **结算标题**、**战斗飘字**、**回放浏览器播报 / 非铜面板战报**、**结算信仰节奏量尺（开发）**：分别是标题牌图上的字、画面效果、开发工具，打 `exempt_bare_text` 标记。
-- **铸炉**：挂板说明、三槽下的石带小字、台面上「将铸出」几行都写在底图画好的位置（196 §5 炉台版），打 `exempt_bare_text`（`ForgeArt`）。台面那几行要不要另垫便条，交 UI替换美术定。
+- **铸炉**：挂板说明、三槽下的石带小字写在底图画好的牌子上（196 §5 炉台版），打 `exempt_bare_text`（`ForgeArt`）。「将铸出」几行见 §二十一。
 - **守门测试** `tests/ui/test_no_bare_text_226.gd`：headless 开开局三页、基地家与五个页签、设置、百科、读档、主菜单（带备份告示）、地图（HUD）、事件书、商店、神坛、铸炉、搜刮、保险箱，凡看得见有字的 `Label / RichTextLabel`，祖先链里得有：按钮；字件类（HeaderTag、TitlePlate、PriceTag、NoticeScroll、NoticeLayer、StatsStrip、HoverTip、ItemTooltip、CapTile、HudHost、DevDrawer、LedgerView）；`UiTheme.PLATE_VARIANTS` 里的底（名牌、羊皮纸、便条、纸签、提示框、铜牌、翻页计数器、深色内垫、凹槽板、背包皮、仓库框、家的粗布框、图标牌、HUD 板、引擎悬浮窗）；叠层窗标题条；书皮窗的书页；或 `exempt_bare_text` 标记。不然报「屏 · 字（节点名）」。
 - **守门第一遍报出来的**（按 §十九 第 3 条贴这里）：摸底工具逐屏报过设置（16:9、分辨率说明、开发说明）、百科正文、规则卡、结算标题、战斗飘字、回放播报、主菜单 / 读档告示、HUD（钱包、图例）、事件书页、技能页战绩框；测试本身第一遍只剩铸炉两行（台面「将铸出」、挂板说明）。前几样上面已垫纸或删掉；HUD、事件书页、家的粗布框按白名单放行；铸炉按底图字位豁免。
 - 另：227 守门里「别的叠层照旧两卷」那条从神坛换成搜刮（神坛现在是石碑，一卷）。
 - 截图 /mnt/project-files/art/ui/kit/shots_paper/（settings_zh、ency_zh、skills_zh、rules_crop、menu_note、slots_note）、shots_stele/notice_beside_en.png。
+
+## 二十一、v4.03 核对小改（v4.04，UI替换美术 2026-10-22）
+
+- **便条字号**：主菜单、读档屏的告示便条字 13 → 15；主菜单便条各行左对齐（原来右对齐，两行长短不齐）。
+- **铸炉「将铸出」垫便条**：几行字写在 `PANEL_SUMMARY_NOTE` 便条（`ForgeNote`）上，墨字，「还差……」那行 `INK_WARN`，字 15 号，长句折行，便条按行数收高。UI替换美术要的位置是 layout 的 `text` 区（工作台正面），但那里已经让背包下面的数值栏（`StatsStrip`）占了，字和栏叠在一起；便条改钉在挂板和背包之间（底图像素 `ForgeScreen.NOTE_RECT` = (1236, 392, 672, 120)，同背包一样宽）。不再豁免。
+- 守门测试加：铸炉有 `ForgeNote`、主菜单便条 15 号左对齐。截图 /mnt/project-files/art/ui/kit/shots_paper/forge_missing.png、forge_ready.png。
+
