@@ -706,8 +706,7 @@ func _draw_art_bar(key: String, current: int, maximum: int, y: float) -> void:
 		var hp_cap := maxi(1, maximum)
 		var armor := armor_value()
 		if armor > 0:
-			_hslice(UiTheme.art_cached(ART_DIR + "bar_armor"), Rect2(trough.position + Vector2(2, 2), Vector2(inner * clampf(float(armor) / float(hp_cap), 0.0, 1.0), ART_BAR_H - 4.0)), UiPalette.ARMOR_FRAME)
-			text += UiText.t("battle.armor_on_bar") % armor     # 106：护甲的数写在生命条上
+			_hslice(UiTheme.art_cached(ART_DIR + "bar_armor"), Rect2(trough.position + Vector2(2, 2), Vector2(inner * clampf(float(armor) / float(hp_cap), 0.0, 1.0), ART_BAR_H - 4.0)), UiPalette.ARMOR_FRAME)     # 作者 10-22：护甲只看这层条，条上不再写「甲 N」
 	var seal := UiTheme.art_cached(ART_DIR + String(ART_SEAL.get(key, "")))
 	if seal != null:
 		var side := seal.get_size() * ART_SEAL_SCALE
