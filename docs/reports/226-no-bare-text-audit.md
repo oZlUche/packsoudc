@@ -339,3 +339,11 @@
 - **石祭台**：`altar/altar_table`（344 × 438 定尺寸）垫在祭品台框下面，框（227 plain，272 × 272）左上 = 图左上 + (36, 86)。
 - **核对修正**（UI替换美术）：碑面上灰着的石签、下拉字色改 #c8ced1（`StoneChip.set_state_ink`、`dress_chip_option` 的 `disabled_ink`；灰图中心透明，墨灰落在深碑面上看不见）；标题去掉重复的神名（`altar.head` 只填 `faith_power.line()`）；英文「Pray for a Blessing」缩短。
 - 测试 tests/ui/test_stone_chips.gd（`frame_altar_stele`）；截图 /mnt/project-files/art/ui/kit/shots_stele/。
+
+## 十九、补充五：批四的口径（2026-10-22，架构）
+
+执行问批四有没有新规格或排序，答：规格仍是 §1.4 + §六那行（事件 / 规则 / 百科 / 科技板 / 读档纸条 / 回放卷轴）+ §十五留下的两处（分辨率行头的「16:9」小字、开发区说明），只补三条口径，顺序不变（垫纸 → 守门测试）。
+
+1. **事件窗不另垫纸。** 232 之后事件窗是整张书皮，正文落在右页 `text_rect` 里 —— 书页本身就是纸，再铺 `PANEL_PARCHMENT` 是纸上叠纸。守门测试把书皮窗的 `text_rect` 下的 `RichTextLabel` 算在控件上（和叠层标题条一样白名单）。
+2. **科技说明板已经在纸上**（`tech_panel.gd` 用 `PANEL_PARCHMENT`），批四只核边距不动它；挑战卷轴同理。剩下真要垫的：章节规则卡、百科正文页、读档屏的修复报告、回放卷轴的字；标题刻在纸头（§1.4）。
+3. **守门测试白名单**（§六）：`PLATE_VARIANTS` 以外还算控件的 —— `Button` 的祖先链、`OverlayFrame` 标题条（石板皮已经坐在 `kit/band` 上，铜 / 书 / 帐篷 / 青石碑各有自己的标题图位，一律放行）、书皮窗 `text_rect`、`BoardFrame` 的名牌、`DevGate` 下的一切、`meta.exempt_bare_text` 标的退路字。先按现有屏跑一遍，报出来的清单贴进 §二十再删，不要为了过测试把字塞进不相干的控件。
