@@ -84,7 +84,7 @@ static func frame_base_warehouse_wood(t: TestCase, root: Window) -> void:
 	wh.setup(f, UiPalette.cjk_font())
 	for b: Button in [wh._store_btn, wh._tidy_btn]:
 		t.check(_home(b) and b.custom_minimum_size == Vector2.ZERO, "「%s」木牌、原尺寸" % b.text)
-	t.eq(wh.shelf().tab_variation, &"", "基地的分页签照旧")
+	t.eq(wh.shelf().tab_variation, &"", "面板自带的分页签照旧（基地那副由基地屏换成挂牌木签）")
 	wh.free()
 	Support.cleanup(PREFIX + "b")
 

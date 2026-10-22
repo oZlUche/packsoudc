@@ -181,7 +181,8 @@ func _rebuild_actions() -> void:
 	for p in actions:
 		var perk := p as FaithPerk
 		var arow := _hbox(6)
-		var b := _button(perk.altar_label(), func(): special(perk), 13)
+		var b := StoneChip.make(perk.altar_label(), func(): special(perk))     # 乙 石刻：特殊操作是石签（不切换，点了就做）
+		b.toggle_mode = false
 		var why := perk.altar_available(run, _node)
 		b.disabled = why != "" or not _altar_open()
 		b.tooltip_text = why if why != "" else perk.describe() + "\n" + UiText.t("altar.actions")     # 226 批二：「特殊操作（二选一……）」那行删了，括号里的话进按钮悬浮窗
@@ -195,6 +196,7 @@ func _rebuild_actions() -> void:
 					label = String(MapNodeStyle.of(t)["label"]) if MapNodeTypes.has(t) else String(t)
 				pick.add_item(label, i)
 			pick.set_meta("options", perk.altar_options())
+			UiTheme.dress_chip_option(pick)
 			arow.add_child(pick)
 			b.set_meta("pick", pick)
 		_action_btns.append(b)

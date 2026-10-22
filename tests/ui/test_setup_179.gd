@@ -32,8 +32,12 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.is_null(setup.screen_slab(), "不再是整块石板")
 	t.not_null(setup.get_node_or_null(^"PaintedContent"), "内容区铺满全屏（大厅背景上）")
 	t.eq(setup._grooves.size(), 3, "三栏三块板")
-	for g in setup._grooves:
-		t.eq((g as PanelContainer).theme_type_variation, UiTheme.PANEL_GROOVE, "凹槽板变体")
+	for i in setup._grooves.size():     # 乙 石刻：角色列表、角色卡垫第二页那块皮，棋盘栏照旧凹槽
+		t.eq((setup._grooves[i] as PanelContainer).theme_type_variation, UiTheme.PANEL_GROOVE if i == 2 else UiTheme.PANEL_PACK_LEATHER, "第 %d 栏的板" % (i + 1))
+	t.check(not setup._character_btns.is_empty() and setup._character_btns.all(func(b: Button) -> bool:
+		return b.theme_type_variation == UiTheme.BUTTON_MAP_ENTRY and b.toggle_mode and b.custom_minimum_size.y == setup.MAP_ENTRY_H), "角色列表是选地图那种纸条")
+	t.check(setup._character_btns[setup.character_index].button_pressed, "选中的那条按下（压蜡封）")
+	t.check(setup._preset_btns.all(func(b: Button) -> bool: return b.theme_type_variation == UiTheme.BUTTON_MAP_ENTRY and b.custom_minimum_size.y == setup.PRESET_ENTRY_H), "不带 / 坚守 / 强攻也是纸条，高 52")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_GROOVE), UiTheme.TONE_DARK, "凹槽板深底（白字）")
 	t.eq(setup._grooves[1].size_flags_horizontal, Control.SIZE_EXPAND_FILL, "中栏撑满")
 	t.eq(setup._grooves[2].size_flags_horizontal, Control.SIZE_SHRINK_END, "棋盘栏贴右")
@@ -44,7 +48,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.eq(UiTheme.tone_at(setup._area), UiTheme.TONE_LIGHT, "内容区记着浅底")
 	t.check(setup._title is TitlePlate and setup._title.text == "选角色", "226 批二：页标题刻在标题牌上、页码去掉（%s）" % setup._title.text)
 	for g in setup._grooves:
-		t.eq(UiTheme.tone_at(g), UiTheme.TONE_DARK, "凹槽板里是深底")
+		t.eq(UiTheme.tone_at(g), UiTheme.TONE_DARK, "板里是深底")
 		t.check(not g.theme_type_variation.is_empty() and (g as Control).theme == null, "凹槽板没挂墨字主题")
 	# 作者 2026-10-17 08:02：大厅只给第一页，第二页木板拼接 / 仓库，第三页桌上的军用地图 —— 翻页换画；没图纯色底、标题白字
 	t.eq(setup.PAGE_ART, [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG], "三页三幅画")

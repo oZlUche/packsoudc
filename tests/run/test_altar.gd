@@ -343,6 +343,10 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	screen = game.overlay()
 	t.check(screen != null and screen._action_btns.size() == 2, "Lv.2：特殊操作按钮随等级刷出来（祈求赐福 + 献祭生命上限，不用重开）")
 	if screen != null and screen._action_btns.size() == 2:
+		t.check(screen._action_btns.all(func(b: Button) -> bool: return b is StoneChip and not b.toggle_mode), "乙 石刻：特殊操作是石签、点了就做（不切换）")
+		var picks: Array = screen._action_btns.filter(func(b: Button) -> bool: return b.has_meta("pick")).map(func(b: Button): return b.get_meta("pick"))
+		t.check(not picks.is_empty() and picks.all(func(ob: OptionButton) -> bool:
+			return (ob.get_theme_stylebox("normal") as StyleBoxTexture).texture == UiTheme.art_cached("kit/chip_normal") and ob.get_theme_icon("arrow") == UiTheme.art_cached("kit/drop_arrow")), "二选一下拉：石签框 + 石刻箭头")
 		var hp_perk: FaithPerk = null
 		for p in AltarModule.of(run).actions():
 			if p is AltarSacrificeHpPerk:

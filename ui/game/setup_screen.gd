@@ -130,6 +130,8 @@ const PAPER_CLEARANCE := 24.0
 const FRAME_INSET := 44
 const TAB_TAG_H := 60.0
 const MAP_ENTRY_H := 60.0
+## 乙 石刻：第二页「不带 / 坚守 / 强攻」也是那种纸条，矮一点
+const PRESET_ENTRY_H := 52.0
 const MAP_SUB_H := 44.0
 const NAV_BTN_H := 84.0
 const NAV_PAPER_GAP := 60.0
@@ -218,7 +220,7 @@ static func _paper_art() -> bool:
 func _build_character_page() -> Control:
 	var row := _hbox(36)
 	_grooves.clear()
-	var left_board := _groove(14, 10, 14, 10)
+	var left_board := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)     # 乙 石刻：角色列表、角色卡垫第二页那块皮
 	left_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(left_board)
 	var left := _vbox(8)
@@ -226,7 +228,7 @@ func _build_character_page() -> Control:
 	left_board.add_child(left)
 	_char_box = _vbox(8)     # 226 批二：段头「角色」与缺数据那句删了
 	left.add_child(_char_box)
-	var mid_board := _groove(30, 24, 30, 28)
+	var mid_board := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)
 	mid_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(mid_board)
@@ -494,12 +496,13 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 
 ## 一列单选按钮（章节 / 难度 / 角色 / 预设 / 规模各一列）：每个名字一个左对齐的按钮，按下调 `on_pick(序号)`；
 ## 选中的是哪个由 [method _mark_choice] 标。返回这一列的按钮，顺序同 [param names]
-func _choice_column(box: Control, names: Array[String], on_pick: Callable, size: int = 14) -> Array[Button]:
+func _choice_column(box: Control, names: Array[String], on_pick: Callable, size: int = 14, entry_h: float = MAP_ENTRY_H) -> Array[Button]:
 	var btns: Array[Button] = []
 	for i in names.size():
 		var idx := i
 		var b := _button(names[i], func(): on_pick.call(idx), size)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, UiTheme.ART_MAP_ENTRY, entry_h)     # 乙 石刻：同第三页选地图的纸条，选中压蜡封
 		btns.append(b)
 		box.add_child(b)
 	return btns
@@ -508,7 +511,7 @@ func _choice_column(box: Control, names: Array[String], on_pick: Callable, size:
 ## 121：一列里第 [param index] 个是选中的（前景色），其余暗色（[method UiTheme.mark]）
 func _mark_choice(btns: Array, index: int) -> void:
 	for k in btns.size():
-		UiTheme.mark(btns[k], k == index)
+		_mark_entry(btns[k], k == index)
 
 
 #region 公开动作
@@ -724,7 +727,7 @@ func _rebuild_characters() -> void:
 	var names: Array[String] = []
 	for ch in _characters:
 		names.append(Names.of(ch) if ch.display_name != "" else String(ch.id))
-	_character_btns = _choice_column(_char_box, names, choose_character)
+	_character_btns = _choice_column(_char_box, names, choose_character, 16)
 
 
 ## 096：预设套那一栏：「不带」+ 每套一个按钮（悬停看说明）
@@ -738,7 +741,7 @@ func _rebuild_presets() -> void:
 	for def in flow.presets():
 		names.append(Names.of(def))
 		tips.append(Names.description_of(def))
-	_preset_btns = _choice_column(_preset_box, names, func(i: int): choose_preset(i - 1))     # 第 0 个是「不带」
+	_preset_btns = _choice_column(_preset_box, names, func(i: int): choose_preset(i - 1), 14, PRESET_ENTRY_H)     # 第 0 个是「不带」
 	for i in _preset_btns.size():
 		_preset_btns[i].tooltip_text = tips[i]
 	_color_presets()
