@@ -1163,6 +1163,43 @@ static func _fill(t: Theme, bg: Color) -> void:
 		t.set_color("font_color", type, UiPalette.FG)
 	t.set_stylebox("panel", "Tree", _box(panel_bg, UiPalette.LINE, 4))
 	t.set_color("font_color", "Tree", UiPalette.FG)
+	_kit_scrollbars(t)
+
+
+## 乙 石刻滚动条（kit `sb_groove(_h)` + `sb_grab_<态>(_h)`）：宽 14，图四周多 6；槽沿长向两头各 14 不拉、把手各 16。缺图用引擎默认
+static func _kit_scrollbars(t: Theme) -> void:
+	for horizontal in [false, true]:
+		var suffix := "_h" if horizontal else ""
+		var type := "HScrollBar" if horizontal else "VScrollBar"
+		var groove := _kit_bar_box("kit/sb_groove" + suffix, horizontal, 14.0)
+		if groove == null:
+			continue
+		t.set_stylebox("scroll", type, groove)
+		t.set_stylebox("scroll_focus", type, groove)
+		for pair in [["grabber", "normal"], ["grabber_highlight", "hover"], ["grabber_pressed", "pressed"]]:
+			var g := _kit_bar_box("kit/sb_grab_%s%s" % [pair[1], suffix], horizontal, 16.0)
+			if g != null:
+				t.set_stylebox(String(pair[0]), type, g)
+
+
+static func _kit_bar_box(name: String, horizontal: bool, along: float) -> StyleBoxTexture:
+	var tex := art_cached(name)
+	if tex == null:
+		return null
+	var s := StyleBoxTexture.new()
+	s.texture = tex
+	var across := 12.0
+	s.texture_margin_left = along if horizontal else across
+	s.texture_margin_right = along if horizontal else across
+	s.texture_margin_top = across if horizontal else along
+	s.texture_margin_bottom = across if horizontal else along
+	s.set_expand_margin_all(6.0)
+	# 横着量宽 14（竖条左右各 7）；沿长向的内边距给把手留最短
+	s.content_margin_left = 10.0 if horizontal else 7.0
+	s.content_margin_right = 10.0 if horizontal else 7.0
+	s.content_margin_top = 7.0 if horizontal else 10.0
+	s.content_margin_bottom = 7.0 if horizontal else 10.0
+	return s
 
 
 static func _button_variation(t: Theme, name: StringName, tier: int) -> void:

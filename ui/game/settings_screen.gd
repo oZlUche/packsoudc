@@ -18,8 +18,8 @@ var _bg_btns: Dictionary = {}
 var _mode_btns: Dictionary = {}
 var _res_btns: Dictionary = {}
 var _res_note: Label = null
-## 204：「声音」一节的音效音量读数
-var _sfx_label: Label = null
+## 204：「声音」一节的音效音量（读数写在步进件的石牌上）
+var _sfx: StoneStepper = null
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
 var back: Callable = Callable()
 
@@ -52,12 +52,11 @@ func open(_payload: Dictionary) -> void:
 	var bg_row := _hbox(8)
 	for t in UiPalette.BG_THEMES:
 		var tid := String(t["id"])
-		var b := _button(UiText.pick(t["name"]), func(): set_bg_theme(tid), 13, UiPalette.Tier.MINOR)
-		b.toggle_mode = true
+		var b := StoneChip.make(UiText.pick(t["name"]), func(): set_bg_theme(tid), t["color"])     # 乙 石刻：底色签左边一块色样
 		if t.has("note"):
 			b.tooltip_text = UiText.pick(t["note"])     # 226 批二：「默认」「最浅」进悬浮窗
 		var box := b.get_theme_stylebox("normal") as StyleBoxFlat
-		if box != null:
+		if box != null and not b is StoneChip:     # 缺图的平板按钮：按钮底就是那档底色
 			var swatch := box.duplicate() as StyleBoxFlat
 			swatch.bg_color = t["color"]
 			b.ready.connect(func():     # 226 批二：按下态边距更宽，按它撑宽（不然选中那键字被裁成「石」「Graphi」）；进了树才取得到主题里的按下态
@@ -72,11 +71,10 @@ func open(_payload: Dictionary) -> void:
 	_fades_btn = _toggle(UiText.t("settings.fades"), toggle_ui_fades)     # 157
 	col.add_child(_fades_btn)
 	var cursor_row := _hbox(8)
-	cursor_row.add_child(_label(UiText.t("settings.cursor"), 14, UiPalette.FG))
+	cursor_row.add_child(HeaderTag.new(UiText.t("settings.cursor")))     # 226：「光标」上段头签
 	for skin in UiCursor.SKINS:
 		var sid := String(skin)
-		var cb := _button(UiText.pick(UiCursor.SKINS[skin]), func(): set_cursor_skin(sid), 13, UiPalette.Tier.MINOR)
-		cb.toggle_mode = true
+		var cb := StoneChip.make(UiText.pick(UiCursor.SKINS[skin]), func(): set_cursor_skin(sid))
 		_cursor_btns[sid] = cb
 		cursor_row.add_child(cb)
 	col.add_child(cursor_row)
@@ -101,7 +99,9 @@ func open(_payload: Dictionary) -> void:
 		row.add_child(_button("打开日志文件夹", open_log_folder, 13, UiPalette.Tier.MINOR))
 		col.add_child(row)
 		col.add_child(HSeparator.new())
-	col.add_child(_button(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back, 14))
+	var back_key := ScrollKey.make(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back)     # 乙 石刻
+	back_key.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_child(back_key)
 	_refresh()
 
 
@@ -113,8 +113,7 @@ func _build_display(col: VBoxContainer) -> void:
 	var mode_row := _hbox(8)
 	for m in [[WindowSetup.WINDOWED, "settings.windowed"], [WindowSetup.FULLSCREEN, "settings.fullscreen"]]:
 		var mode: String = m[0]
-		var b := _button(UiText.t(String(m[1])), func(): set_window_mode(mode), 13, UiPalette.Tier.MINOR)
-		b.toggle_mode = true
+		var b := StoneChip.make(UiText.t(String(m[1])), func(): set_window_mode(mode))
 		_mode_btns[mode] = b
 		mode_row.add_child(b)
 	col.add_child(mode_row)
@@ -128,8 +127,7 @@ func _build_display(col: VBoxContainer) -> void:
 			rows[aspect] = row
 			col.add_child(row)
 		var size: Vector2i = p
-		var rb := _button(WindowSetup.label(p), func(): set_resolution(size), 13, UiPalette.Tier.MINOR)
-		rb.toggle_mode = true
+		var rb := StoneChip.make(WindowSetup.label(p), func(): set_resolution(size))
 		_res_btns[p] = rb
 		rows[aspect].add_child(rb)
 	if shown.is_empty():     # 屏幕比最小一档还小：窗口就是屏幕那么大
@@ -142,13 +140,10 @@ func _build_display(col: VBoxContainer) -> void:
 func _build_sound(col: VBoxContainer) -> void:
 	col.add_child(HSeparator.new())
 	col.add_child(HeaderTag.new(UiText.t("settings.sound")))
-	var row := _hbox(8)
-	_sfx_label = _label("", 14, UiPalette.FG)
-	_sfx_label.custom_minimum_size.x = 120
-	row.add_child(_sfx_label)
-	row.add_child(_button("−", func(): step_sfx_volume(-1), 13, UiPalette.Tier.MINOR))
-	row.add_child(_button("+", func(): step_sfx_volume(1), 13, UiPalette.Tier.MINOR))
-	col.add_child(row)
+	# 226 §1.5 + 乙 石刻：读数并进步进件 [−][音效 80%][+]
+	_sfx = StoneStepper.new(func(): step_sfx_volume(-1), func(): step_sfx_volume(1))
+	_sfx.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_child(_sfx)
 
 
 ## 204：音效音量调一步（[param dir] = ±1，一步 10%，夹在 0～100%）；当场套用、存盘
@@ -196,12 +191,9 @@ func refresh_display() -> void:
 		_res_note.visible = full
 
 
-## 一个开关按钮：辅助档、按下保持、左对齐（这一屏的几个布尔项）
+## 一个开关行（这一屏的几个布尔项）：乙 石刻 —— 石签拉满整行、左头印表示开 / 关（[method StoneChip.toggle]）
 func _toggle(text: String, handler: Callable) -> Button:
-	var b := _button(text, handler, 14, UiPalette.Tier.MINOR)
-	b.toggle_mode = true
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	return b
+	return StoneChip.toggle(text, handler)
 
 
 ## 090：返回上一级 —— 嵌在暂停菜单里就回暂停菜单，独立的一屏就回主菜单
@@ -283,8 +275,8 @@ func toggle_unlock_all() -> void:
 
 func _refresh() -> void:
 	refresh_display()
-	if _sfx_label != null:
-		_sfx_label.text = UiText.t("settings.sfx_volume") % roundi(flow.settings.sfx_volume * 100.0)
+	if _sfx != null:
+		_sfx.set_text(UiText.t("settings.sfx_volume") % roundi(flow.settings.sfx_volume * 100.0))
 	if _tooltip_btn != null:
 		_tooltip_btn.set_pressed_no_signal(flow.settings.node_tooltips_preview)
 		_tooltip_btn.text = "节点浮窗预览：%s" % ("开（不管章节）" if flow.settings.node_tooltips_preview else "关（按章节：第二章开）")
