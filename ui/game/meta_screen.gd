@@ -47,7 +47,7 @@ var _codex_tip: HoverTip = null
 var _ach_filter: String = "all"
 var _ach_filter_btns: Dictionary = {}
 var _ach_list: VBoxContainer = null
-var _ach_hint: Label = null
+var _ach_warn: HeaderTag = null
 var _ach_rows: Array = []
 ## 139：调试台抽屉
 var _drawer: DevDrawer = null
@@ -60,7 +60,7 @@ var _middle: VBoxContainer = null
 var _right: VBoxContainer = null
 var _shelf: WarehousePages = null
 var _shelf_frame: PanelContainer = null
-var _shelf_title: Label = null
+var _shelf_title: HeaderTag = null
 ## 178：「仓库」页没有带回来的棋盘时那一行
 
 
@@ -120,8 +120,8 @@ func open(payload: Dictionary) -> void:
 	var head := _hbox(8)
 	head.custom_minimum_size.y = SHELF_HEAD
 	_right.add_child(head)
-	_shelf_title = _label(UiText.t("meta.tab_warehouse"), 20, UiPalette.FG)
-	_shelf_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_shelf_title = HeaderTag.hanging(UiText.t("meta.tab_warehouse"))     # 226 批三：木架顶一块挂牌只写「仓库」，件数与页数进它的悬浮窗（每页件数页签上有）
+	_shelf_title.mouse_filter = Control.MOUSE_FILTER_PASS
 	head.add_child(_shelf_title)
 	if DevGate.on():     # 186：调试台只在开发包里有
 		_drawer = DevDrawer.new()
@@ -265,7 +265,7 @@ func drag_layer() -> DragLayer:
 
 func _refresh_shelf_title() -> void:
 	if _shelf_title != null:
-		_shelf_title.text = UiText.t("meta.shelf_title") % [UiText.count(flow.meta.warehouse.item_count(), "unit.item"), UiText.count(flow.meta.warehouse.page_count(), "unit.page")]
+		_shelf_title.tooltip_text = UiText.t("meta.shelf_title") % [UiText.count(flow.meta.warehouse.item_count(), "unit.item"), UiText.count(flow.meta.warehouse.page_count(), "unit.page")]
 
 
 ## 双击右边仓库的一件：按当前页 —— 仓库 → 置入带回来的背包（178：原来在家页）；出售 → 卖；家 → 不做事（229：科技页收起了仓库，上交走材料行的【交 k】）
@@ -421,7 +421,8 @@ var _sell_pick: OptionButton = null
 ## 177 补 1.2：标签下拉（单选，待定补 1 选 A；&"" = 不限标签）
 var _sell_tag: StringName = &""
 var _sell_tag_pick: OptionButton = null
-var _sell_preview: Label = null
+var _sell_btn: Button = null
+var _sell_preview := ""
 ## 225：出售页的包架（双击卖一只）
 var _sell_rack: Control = null
 
@@ -445,9 +446,8 @@ func _build_sell(root: Control) -> Control:
 	var row2 := _hbox(10)
 	row2.alignment = BoxContainer.ALIGNMENT_END
 	page.add_child(row2)
-	_sell_preview = _label("", 13, UiPalette.FG)
-	row2.add_child(_sell_preview)
 	var sell_btn := _button(UiText.t("meta.sell_all"), func(): sell_filtered(), 13, UiPalette.Tier.PRIMARY)
+	_sell_btn = sell_btn     # 226 批三：「会卖 N 件，得 N 币」写在按钮第二行
 	sell_btn.tooltip_text = UiText.t("meta.sell_intro") % int(round(flow.sell_ratio() * 100))     # 226 批二：说明那段与行首「一键出售」删了，卖价比例进按钮悬浮窗
 	row2.add_child(sell_btn)
 	# 225：包架也是货源 —— 双击一只卖掉（一键出售不碰包：包是装备不是战利品）
@@ -574,14 +574,15 @@ func sell_filtered() -> Dictionary:
 
 
 func sell_preview_text() -> String:
-	return _sell_preview.text if _sell_preview != null else ""
+	return _sell_preview
 
 
 func _refresh_sell() -> void:
-	if _sell_preview == null:
+	if _sell_btn == null:
 		return
 	var p := flow.meta.sell_preview(sell_filter_max(), flow.sell_ratio(), _sell_tag)
-	_sell_preview.text = UiText.t("meta.sell_preview") % [int(p["count"]), int(p["funds"])]
+	_sell_preview = UiText.t("meta.sell_preview") % [int(p["count"]), int(p["funds"])]
+	_sell_btn.text = UiText.t("meta.sell_all") + "\n" + _sell_preview
 #endregion
 
 
@@ -599,8 +600,9 @@ func _build_achievements(root: Control) -> Control:
 		b.toggle_mode = true
 		_ach_filter_btns[key] = b
 		head.add_child(b)
-	_ach_hint = _label("", 12, UiPalette.STAMINA)
-	page.add_child(_ach_hint)
+	_ach_warn = HeaderTag.new(UiText.t("meta.ach_unlock_all_on"))     # 226 批三：「全部解锁开着」改一枚警示签；「完成 N / N」进「全部」钮
+	_ach_warn.visible = false
+	head.add_child(_ach_warn)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.custom_minimum_size.y = 300
@@ -642,8 +644,10 @@ func _fill_achievements() -> void:
 	for def in flow.achievement_defs:
 		if m.has_achievement(def.id):
 			done_n += 1
-	if _ach_hint != null:
-		_ach_hint.text = (UiText.t("meta.ach_unlock_all_on") if flow.settings != null and flow.settings.unlock_all else "") + UiText.t("meta.ach_count") % [done_n, total]
+	if _ach_warn != null:
+		_ach_warn.visible = flow.settings != null and flow.settings.unlock_all
+	if _ach_filter_btns.has("all"):
+		(_ach_filter_btns["all"] as Button).text = UiText.t("meta.ach_all_count") % [done_n, total]
 	if total == 0:
 		return     # 226 批二：空态的字删了
 	for def in flow.achievement_defs:

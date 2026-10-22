@@ -158,15 +158,19 @@ func _open_confirm(node: MapNode) -> void:
 	panel.content.add_child(col)
 	var fee := _run.events.extract_fee(node)
 	var affordable := fee <= 0 or _run.wallet.can_afford(fee)
+	# 226 批三：三句说明换成小号账目行（撤离费 / 背出去进仓库 / 带出的钱 / 留在地上）
+	var ledger := LedgerRows.new()
+	ledger.name = "ExtractLedger"
+	col.add_child(ledger)
 	if fee > 0:
-		col.add_child(_wrapped(UiText.t("map.extract_fee") % [fee, _run.wallet.balance, "" if affordable else UiText.t("map.extract_cant_afford")],
-			14, UiPalette.FG if affordable else UiPalette.HP, 480))
+		ledger.add_row(UiText.t("map.row_fee"), UiText.t("map.row_fee_value") % fee + ("" if affordable else UiText.t("map.extract_cant_afford")), Color(0, 0, 0, 0) if affordable else UiPalette.HP)
 	var carried := 0
 	var carried_value := 0
 	for inst in _run.board.items():
 		carried += 1
 		carried_value += ItemValue.of((inst as ItemInstance).def)
-	col.add_child(_wrapped(UiText.tn("map.extract_carried", carried) % [carried, carried_value, _run.wallet.balance - maxi(0, fee)], 14, UiPalette.FG, 480))
+	ledger.add_row(UiText.t("map.row_carried"), UiText.tn("map.row_items", carried) % [carried, carried_value, ""])
+	ledger.add_row(UiText.t("map.row_coins"), UiText.t("map.row_coin_value") % (_run.wallet.balance - maxi(0, fee)))
 	var left := _run.storage.item_count()
 	if left > 0:
 		var left_value := 0
@@ -176,11 +180,12 @@ func _open_confirm(node: MapNode) -> void:
 			left_value += ItemValue.of(def)
 			if def.rarity >= 2:
 				rare += 1
-		col.add_child(_wrapped(UiText.tn("map.extract_ground_left", left) % [
-			left, left_value, UiText.t("map.extract_ground_rare") % rare if rare > 0 else ""], 14, UiPalette.STAMINA, 480))
+		ledger.add_row(UiText.t("map.row_ground"), UiText.tn("map.row_items", left) % [left, left_value, UiText.t("map.extract_ground_rare") % rare if rare > 0 else ""], UiPalette.STAMINA)
 	var buttons := _hbox(8)
 	var go := _button(UiText.t("map.extract_confirm"), func(): confirm_extract(), 14)
 	go.disabled = not affordable
+	if left > 0:
+		go.tooltip_text = UiText.t("map.extract_ground_tip")     # 地上的东西不带出 —— 原来那句的后半截
 	buttons.add_child(go)
 	buttons.add_child(_button(UiText.t("map.extract_cancel"), cancel_extract, 14, UiPalette.Tier.MINOR))
 	col.add_child(buttons)

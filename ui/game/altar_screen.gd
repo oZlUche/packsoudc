@@ -12,7 +12,7 @@ var _node: MapNode = null
 var _table: GridInventory = null
 var _table_view: InventoryView
 var _head: Label
-var _preview: Label
+var _preview := ""
 var _offer_btn: Button
 var _action_btns: Array = []
 var _actions_box: VBoxContainer = null
@@ -43,8 +43,7 @@ func open(payload: Dictionary) -> void:
 	_table_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_table_view)
 	BoardFrame.wrap(_table_view)     # 227：素框 + 格缝
-	_preview = _label("", 13, UiPalette.STAMINA)
-	left.add_child(_preview)
+	# 226 批三：预览行并进「献祭」按钮第二行；「把祭品拖上台来」空态不写（preview_text 仍读得到）
 	var buttons := _hbox(8)
 	_offer_btn = _button(UiText.t("altar.offer"), offer, 14, UiPalette.Tier.PRIMARY)
 	_offer_btn.disabled = true
@@ -166,7 +165,7 @@ func head_text() -> String:
 
 
 func preview_text() -> String:
-	return _preview.text if _preview != null else ""
+	return _preview
 #endregion
 
 
@@ -216,12 +215,16 @@ func _refresh() -> void:
 	var p := preview()
 	var open := _altar_open()
 	_offer_btn.disabled = int(p["points"]) <= 0 or not open
+	var line := ""
 	if not open:
-		_preview.text = UiText.t("altar.used")
+		_preview = UiText.t("altar.used")
+		line = UiText.t("altar.used_short")
 	elif int(p["count"]) == 0:
-		_preview.text = UiText.t("altar.drag_hint")
+		_preview = UiText.t("altar.drag_hint")
 	else:
-		_preview.text = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+	_offer_btn.text = UiText.t("altar.offer") + ("\n" + line if line != "" else "")
 	for b in _action_btns:
 		(b as Button).disabled = (b as Button).disabled or not open
 
