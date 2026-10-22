@@ -323,10 +323,10 @@ static func roll_enemy_bags(
 		var d := items.get_def(id)
 		if d != null and d.shape != null and (biggest == null or _long_side(d) > _long_side(biggest)):
 			biggest = d
-	if biggest != null and not out.any(func(b): return _bag_fits(items.get_def(b), biggest)):
+	if biggest != null and not out.any(func(b): return bag_fits(items.get_def(b), biggest)):
 		var fitting: Array[BagPoolEntry] = []
 		for e in cands:
-			if _bag_fits(items.get_def(e.bag), biggest):
+			if bag_fits(items.get_def(e.bag), biggest):
 				fitting.append(e)
 		if not fitting.is_empty():
 			out.append(BagPool.pick(fitting, rng))
@@ -364,7 +364,7 @@ static func _long_side(d: ItemDef) -> int:
 
 
 ## 包（矩形）的外框装得下这件的外框（可转 90°），而且不限标签或收它
-static func _bag_fits(bag: ItemDef, d: ItemDef) -> bool:
+static func bag_fits(bag: ItemDef, d: ItemDef) -> bool:
 	if bag == null or bag.shape == null or d.shape == null:
 		return false
 	if not bag.bag_accept_tags.is_empty() and not bag.bag_accept_tags.any(func(t): return d.tags.has(t)):

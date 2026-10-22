@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.22 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.23 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1634,7 +1634,7 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
 - `BattleTrace`（`core/battle/battle_trace.gd`）挂在 `BattleContext.trace`，**默认 null**：每个记录点一行 `if trace != null`，关着零开销。记录不碰战斗状态、不取额外随机数 —— 开不开同一场逐条一样，掩码不变式照旧（测试守着）。每条 `{seq, t（定点秒）, side, kind, data}`：
   `event`（`emit` 的每一条，不看 VIEW_EVENTS、不看有没有人听；同步派发的 `before_damage` 也记）、`rule_fire` / `rule_skip`（`RuleEngine`：道具 uid、buff、时机类、下次就绪；跳过写原因 —— 频率没放行，或哪条消耗 / 条件不过，资源消耗写要多少有多少，`Cost.trace_info`）、`damage_pipeline`（`DamageResolver`：原始值 → 火焰加成 → 护甲 → 受伤前增减 / 反转 / 取消 → 格挡 → 受到伤害轴 → 最终与扣血前后）、`rng`（战斗里的掷骰都走 `BattleContext.roll(用途, lo, hi, need)`：取数和直接 `randi_range` 一模一样，记用途与值）、`buff`（叠层 / 移除 / 到期，带层数与到期时刻）、`schedule`（一刻结算了几条自发规则）、`snapshot`（开战、每 5 秒、结束）。
   方案写的 `TracedRng`（包一层随机数生成器）改成了 `roll`：GDScript 覆盖不了原生类的非虚方法，包一层拦不住原生调用。
-- `BattleSim.run(…, trace)` 多一个可选参数；`NodeEvents._fight`（猎手也走它）在 `trace_info` 非空时建 trace，跑完由 `BattleTraceWriter` 写进 `user://battle_logs/`：`<时间>_<种子>_n<点>_<章节>_<对手>` 三份 —— `.jsonl`（首行文件头，程序读）、`.txt`（人读）、`.replay.json`（`BattleResult.to_dict` + 名字表 + 双方棋盘，`JSON.from_native` 保住 int 键与定点整数）。文件头写现实时间、种子、章节、点、敌人内容、道具名表、开战快照、时限。只留最近 50 场（`BattleArchive.prune`）。战斗沙盒同样写（章节记 `sandbox`），基准与校准不写。
+- `BattleSim.run(…, trace)` 多一个可选参数；`NodeEvents._fight`（猎手也走它）在 `trace_info` 非空时建 trace，跑完由 `BattleTraceWriter` 写进 `user://battle_logs/`：`<时间>_<种子>_n<点>_<章节>_<对手>` 三份 —— `.jsonl`（首行文件头，程序读）、`.txt`（人读）、`.replay.json`（`BattleResult.to_dict` + 名字表 + 双方棋盘，`JSON.from_native` 保住 int 键与定点整数）。文件头写现实时间、种子、章节、点、敌人内容、道具名表、开战快照、时限。只留最近 200 场（`BattleArchive.prune`，242 起；原 50）。战斗沙盒同样写（章节记 `sandbox`），基准与校准不写。
 - 回放存档**不存双方编译结果**（作者定）；buff 只存 id，读回来按道具能施加的 buff + 系统衰竭查定义。
 - 开关：`GameSettings.battle_trace`，非导出包默认开、导出包默认关（`BattleArchive.default_on`）；`GameFlow.apply_battle_trace` 按它给这一局填 `NodeEvents.trace_info`。设置屏「开发」区（只在非导出包里画）一行开关 + 「打开日志文件夹」。测试入口开跑前 `BattleArchive.enabled = false`，几百场测试战斗不写文件。
 - 看：开发工具（启动选择器）的「战斗回放」（`ui/battle/replay_browser.tscn`）列存档、点一场交给 `BattleView` 重演；游戏里**没有入口**（作者定）。命令行 `tools/replay_log.gd -- <file.jsonl | --latest> [--summary]` 把日志排成人读格式打到标准输出（给无窗口环境的线程读），`--summary` 只打双方伤害、出手 / 跳过次数、暴击率、buff 层数。
@@ -3594,6 +3594,10 @@ func player_spec() -> CombatantSpec …
 随机数走 `RunRNG` 的 `hunters` 流。`RunContext` 多三个字段（侦察距离、感知倍率、逃跑加成），角色的被动技能（072）、局外 buff、难度修饰都能往里加数。
 **校准**（073）：正式游戏每走一步记一份玩家配置（`CalibrationRecorder` → `user://calibration/snapshots.jsonl`），`tools/build_dummies.gd` 按难度的段位表分段（或固定段长）、每段挑离平均读数最近的真实配置当木桩，
 `tools/bench_hunters.gd` 让木桩对猎手池里每一档打几百场，打印胜率并排「猎手表里这一段的档 / 最接近 50% 的哪一档」—— 工具只做统计，作者对着表改强度规则。数值等系统完整后多场测试。
+**平衡方法第一批**（242）：`ArchetypeBuilder`（`tools/build_archetypes.gd`）在没有真实快照时造**流派木桩**——五路（`burst` / `rapid` / `bleed` / 盾 / 防具）× 难度Ⅲ的段位（0 / 5 / 10 / 20 步）× 三个种子；段 k 按池的第 k 档掷件数、取稀有度上限，挑道具走敌人的 `EnemyPlacer.choose_items`（流派 = 这一路的标签，防御两路补一件武器），摆进开局棋盘（marcus 的 8 × 6 与开局包，后两段多一个皮包；一件哪个包都装不下就添一个装得下的，长边 4 的用长条包并排铺满它的外框），写 `data/authoring/calibration/archetypes.json`（073 格式，键 `流派/段/种子`；`dummies.json` 留给真实木桩）。
+`BalanceMatrix`（`tools/bench_matrix.gd`）是 `HunterBench` 的推广：木桩按（流派, 段）分组 × 池的每一档，每格 N 场（默认 300，均摊给几个种子；第 i 场的敌人与随机源只看种子、档、i，五路同格打同一串敌人），时限与加时按 `standard` 节点规则；写 `docs/reports/balance/<日期>-<池>.md`：胜率、平均时长、赢时余血、同段五路极差四张表 + 单调性检查，表头带参数与 git 短哈希。只打印不改数。
+`CalibrationRecorder.record_run(result, run)`：`_settle_run` 记完账后往 `user://calibration/runs.jsonl` 追加一行（`RunResult.to_dict()` + `version` + `character` + `difficulty`）；快照也带 `version`（`application/config/version`，现为 0.1.0；导出预设的 `product_version` 0.1.0.0，Windows 要四段）。
+设置「老手」区的「导出平衡数据」（`DataExport`，玩家版也有）：`ZIPPacker` 把 `user://calibration/` 与 `user://battle_logs/` 打成 `背包搜打撤-数据-<日期>.zip` 放桌面（取不到放 user:// 并打开文件夹）。
 
 ### 8.6 序章与章节的门（083）
 
@@ -4458,6 +4462,7 @@ res://
 | v4.20 | 2026-10-22 | **239 拿起时显出占格**：拖拽中每块棋盘（按 `InventoryView.GROUP` 组开关，没登记到拖拽层的也算）逐格描每件道具的占格（稀有度色 1.5 px 框 + 16 % 淡填，包只描灰框），残影上手里那件同样逐格描；`InventoryView.footprint_cells / footprint_hollow / draw_footprint` 视图与残影共用 |
 | v4.21 | 2026-10-22 | **240 跳过序章改成开场一问**：主菜单「跳过序章」删掉；新存档序章一读完开场事件，`GameFlow.tutorial_ask` → `MapScreen.show_tutorial_ask()` 弹羊皮纸卡「要带你走一遍吗？」，【需要】立旗标 `tutorial_asked` 照走教程，【不需要】`decline_tutorial()` = `skip_prologue()` + 这一局悄悄收掉（删局内存档、不记场次）+ 落开局屏；一份存档只问一次 |
 | v4.22 | 2026-10-22 | **241 难度拆三级、每级一行**：进阶一（体力上限 −1）/ 二（+ 侵蚀）/ 三（+ 猎手），每个 json 带齐到本级的机制、`challenge` 只写本级一行；`DifficultyDef.grants_unlock`，`_settle_run` 撤离成功时发（Ⅰ → `ascension_2`、Ⅱ → `ascension_3`）；数值不变。顺带修 `tools/perf_probe.gd`：回放看完按真实时间等一秒（原先按调用次数数，帧率低时会超时报卡住）、开场一问自动选「需要」、事件跳过选不了的选项（序章一精英） |
+| v4.23 | 2026-10-22 | **242 平衡方法第一批**：流派木桩 `ArchetypeBuilder` / `tools/build_archetypes.gd`（五路 × 四段 × 三种子 → `data/authoring/calibration/archetypes.json`）；扫表 `BalanceMatrix` / `tools/bench_matrix.gd`（每格 300 场、四张表进 `docs/reports/balance/`）；`CalibrationRecorder.record_run` → `user://calibration/runs.jsonl`，快照带版本号；`config/version` 0.1.0；设置「导出平衡数据」（`DataExport`，zip 到桌面）；`BattleArchive.KEEP` 50 → 200；`EnemyPlacer.bag_fits` 改公开；`bench_hunters` 默认难度改Ⅲ（241 后猎手在Ⅲ）。首跑两张表与结论见报告 242 §九 |
 | v3.88 | 2026-10-21 | **224 补充二 结算屏第二版**（作者 17:22–17:23 六条）：结算屏两页板边换 `slab_edge_plain`（`UiTheme.slab` / `GameScreen._slab_screen` 的 `edge_art` 参数）；第一页 ×1.2、图 2 倍分辨率按 1x 尺寸画（`LedgerView` `draw_texture_rect`、标题牌 `EXPAND_IGNORE_SIZE`）；账单击败的敌人 / 精英 / 首领分三行；撤离时保险箱在账单右边（皮带框 + 格缝），第二页只剩带回的棋盘（格子 72，`WarehousePanel.board_cell`）和贴右上的仓库（`WarehousePages.fit` 量石板内容区）；战败没有第二页，`MetaState.absorb` 战败时保险箱带出的直接进仓库（包进包架），放不下才进待置入棋盘；新套件 `test_result_v2_224` |
 | v3.87 | 2026-10-21 | **232 局内非矩形第一轮**（作者 19:23 选 1 / 2 / 6 / 10，待定按推荐）：事件窗是一本摊开的书（`OverlayFrame` `book` 皮、`EventScreen._book_page` 绝对摆位、标题进右页、`EventImage.area(…, light)`）；背包窗是一只背包（`BagWindow._back` 四件皮料随窗宽摆、翻盖即把手 `grip_rect`、`FloatingWindow.outset` 夹边）；腰带 1–6 格是整张弯皮带（`BeltSlots.belt_layouts / curved`，命中半径 36，7 格起退回直圆槽；`BeltWidget` 不进凹槽）；图例是双尾旗九宫格（`LegendWidget.pennant_box`，最窄 158）。缺图都退回原来的皮；新套件 `test_bag_window_232`、`test_event_book_232` |
 | v3.86 | 2026-10-21 | **230 悬浮窗道具按钮 + 锁定**（作者 19:01 选丙）：`ItemActions` 供给层（`Action` 数据、`lock` / `lock_same` / `sell` / `sell_same` / `anchor`、`rows()` 两两并排成对不拆）；`ContainerView.actions_for(uid)` 各屏登记；`TipButton` 平墨签按钮（危险两步「再点一次」）；`HoverTip` 脚注下画按钮行、右键 `pin_on` 立刻钉住、点了原地刷新；玩家锁 `ItemInstance.state["locked"]` 守出售 / 一键出售 / 出售区 / 祭品台 / 铸炉 / 丢地上，小锁角标 `ItemPainter.draw_lock`；信物右键切换改成「奉为主信仰」按钮；新帮助页 `item_actions`；新套件 `test_item_actions_230` |

@@ -82,6 +82,10 @@ func open(_payload: Dictionary) -> void:
 	_unlock_all_btn = _toggle(UiText.t("settings.unlock_all"), toggle_unlock_all)
 	_unlock_all_btn.tooltip_text = UiText.t("settings.unlock_all_desc")     # 226 批二：说明进开关的悬浮窗
 	col.add_child(_unlock_all_btn)
+	var export_btn := _button(UiText.t("settings.export_data"), export_balance_data, 13, UiPalette.Tier.MINOR)     # 242：平的小按钮，玩家版也有
+	export_btn.tooltip_text = UiText.t("settings.export_data_desc")
+	export_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_child(export_btn)
 	col.add_child(HSeparator.new())
 	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
 		var dev := _vbox(8)     # 226 批四：开发区的说明字不算裸字，守门测试放过（只在开发包里有）
@@ -254,6 +258,19 @@ func toggle_ui_fades() -> void:
 func open_log_folder() -> void:
 	DirAccess.make_dir_recursive_absolute(BattleArchive.DIR)
 	OS.shell_open(ProjectSettings.globalize_path(BattleArchive.DIR))
+
+
+## 242：校准记录 + 战斗日志打成 zip 放桌面；取不到桌面放 user:// 并打开那个文件夹。返回写到的路径（失败空串）
+func export_balance_data() -> String:
+	var dir := DataExport.target_dir()
+	var path := dir.path_join(DataExport.file_name())
+	if DataExport.pack(path) < 0:
+		warn(UiText.t("settings.export_data_failed") % ProjectSettings.globalize_path(path))
+		return ""
+	if dir.begins_with("user://"):
+		OS.shell_open(ProjectSettings.globalize_path(dir))
+	say(UiText.t("settings.export_data_done") % ProjectSettings.globalize_path(path))
+	return path
 
 
 ## 091（作者定）：挑背景底色，立刻生效并存盘

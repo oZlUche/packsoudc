@@ -1090,6 +1090,8 @@ func _settle_run() -> void:
 		if result.is_extracted() and run != null and run.difficulty != null and run.difficulty.grants_unlock != &"":
 			meta.grant_unlock(run.difficulty.grants_unlock)
 		check_achievements()     # 091：这一局的账记完了，看成就
+		if recorder != null:
+			recorder.record_run(result, run)     # 242：对局结果进 runs.jsonl（带版本号）
 		if writable():
 			MetaSave.write(meta, meta_path)
 			RunSave.remove(save_path)
