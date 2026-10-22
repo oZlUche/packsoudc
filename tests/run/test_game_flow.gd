@@ -511,6 +511,9 @@ static func frame_director(t: TestCase, root: Window) -> void:
 	t.eq(flow.screen, GameFlow.Screen.MAP, "没撤")
 	t.eq(run.travel.current_id, target, "还站在撤离点上")
 	t.check(map.extract(), "再按一次撤离")
+	var ledger := map._confirm.find_child("ExtractLedger", true, false) as LedgerRows
+	var row_labels: Array = ledger.rows().map(func(r: Dictionary) -> String: return String(r["label"])) if ledger != null else []
+	t.check(row_labels.has(UiText.t("map.row_carried")) and row_labels.has(UiText.t("map.row_coins")), "226 批三：撤离确认是账目行（%s）" % [row_labels])
 	t.check(map.confirm_extract(), "确定撤离")
 	t.eq(game.base().screen, GameFlow.Screen.RESULT, "→ 结算")
 	var result: RunResult = flow.result
