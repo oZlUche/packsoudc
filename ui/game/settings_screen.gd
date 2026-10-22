@@ -4,6 +4,8 @@ extends GameScreen
 var _auto_close_btn: Button = null
 var _tooltip_btn: Button = null
 var _unlock_all_btn: Button = null
+## 标题牌：告示卷排在它下面（[method notice_top]）
+var _plate: Control = null
 ## 117：开发区的「战斗日志」开关（导出包里整块不画）
 var _trace_btn: Button = null
 ## 150 补 2：调试模式开关
@@ -40,6 +42,7 @@ func open(_payload: Dictionary) -> void:
 	var plate := TitlePlate.new(UiText.t("menu.settings"))     # 226 批二：标题刻在标题牌上
 	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(plate)
+	_plate = plate
 	_build_display(col)
 	_build_sound(col)
 	col.add_child(HSeparator.new())
@@ -269,8 +272,21 @@ func export_balance_data() -> String:
 		return ""
 	if dir.begins_with("user://"):
 		OS.shell_open(ProjectSettings.globalize_path(dir))
-	say(UiText.t("settings.export_data_done") % ProjectSettings.globalize_path(path))
+	say(export_notice(path))
 	return path
+
+
+## 游戏测试 10-22：告示只写放到哪、文件名 —— 整条路径太长，卷轴拉满整屏
+static func export_notice(path: String) -> String:
+	var key := "settings.export_data_done_folder" if path.begins_with("user://") else "settings.export_data_done"
+	return UiText.t(key) % path.get_file()
+
+
+## 游戏测试 10-22：告示卷排在标题牌下面，不压住「设置」两个字
+func notice_top() -> float:
+	if _plate == null or not is_instance_valid(_plate) or not _plate.is_inside_tree():
+		return 0.0
+	return _plate.get_global_rect().end.y + NoticeLayer.GAP
 
 
 ## 091（作者定）：挑背景底色，立刻生效并存盘
