@@ -94,8 +94,6 @@ const GROUND_WAREHOUSE := {
 @export var show_adjacency: bool = true
 ## 085：物品右上角的小记号（uid → 文字），比如配了对等着合成的「合」。持有方设，改了 queue_redraw
 var badges: Dictionary = {}
-## 175：物品左下角的元素小图标（uid → [元素 id…]）。对阵屏给敌人棋盘设：看得出对面会带什么印。持有方设，改了 queue_redraw
-var elements: Dictionary = {}
 ## 085：亮一圈的物品（uid → true）：拖着的那件能和它合成。拖拽层设
 var highlights: Dictionary = {}
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
@@ -334,8 +332,6 @@ func _draw() -> void:
 			var hb := item.def.shape.size_rotated(item.rotation)
 			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))
 			draw_rect(Rect2(anchor - Vector2(3, 3), Vector2(hb) * cell_px + Vector2(6, 6)), Color(COLOR_HIGHLIGHT, pulse), false, 3.0)
-		if elements.has(item.uid):
-			_draw_elements(item, anchor, elements[item.uid])
 		if badges.has(item.uid):
 			var badge := String(badges[item.uid])
 			var box := item.def.shape.size_rotated(item.rotation)
@@ -476,37 +472,6 @@ const MARK_INSET_RECEIVE := 9.0
 const MARK_COLORS := {"grant": UiPalette.GRANT, "receive": UiPalette.RECEIVE, "load": UiPalette.MANA}
 ## 角括号单边长度，占格边的比例
 const MARK_CORNER := 0.3
-
-
-## 175：元素小图标 —— 左下角一排深色圆片，元素的伤害色描圈、写单字（火 / 冰 / 雷 / 毒 / 血；图标交美术）
-func _draw_elements(item: ItemInstance, anchor: Vector2, els: Array) -> void:
-	var box := item.def.shape.size_rotated(item.rotation)
-	var font := label_font if label_font != null else get_theme_default_font()
-	var r := 11.0
-	var fs := 14
-	for i in els.size():
-		var el := StringName(String(els[i]))
-		var c := anchor + Vector2(4.0 + r + i * (r * 2.0 + 3.0), box.y * cell_px - 4.0 - r)
-		draw_circle(c, r, Color(0.08, 0.08, 0.1, 0.9))
-		draw_arc(c, r, 0.0, TAU, 24, UiPalette.damage_color(el), 2.0)
-		var ch := ReactionResolver.element_name(el, "zh")
-		var at := c + Vector2(-font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x * 0.5, fs * 0.36)
-		draw_string(font, at, ch, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, UiPalette.damage_color(el))
-
-
-## 175：一块棋盘上每件道具带的元素（编译后，含别人挂上来的规则；不带的不列）—— 给 [member elements] 用
-static func elements_of_board(board: GridInventory) -> Dictionary:
-	var out := {}
-	if board == null:
-		return out
-	var spec := BattleCompiler.compile_board(board)
-	if spec == null:
-		return out
-	for it in spec.items:
-		var els := ReactionResolver.elements_of_item(it as CompiledItem)
-		if not els.is_empty():
-			out[(it as CompiledItem).source_uid] = els
-	return out
 
 
 func _draw_adjacency() -> void:

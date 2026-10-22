@@ -1,4 +1,4 @@
-## 175 第一批的可见性：悬浮窗「可引发」、对阵屏的元素小图标、百科的反应页（没引发过只写两种元素）、
+## 175 第一批的可见性：悬浮窗「可引发」、百科的反应页（没引发过只写两种元素）、
 ## 局外记账（引发过的反应跟存档）、回放的反应弹字与日志行、buff 词条写印 / 截治疗 / 恢复叠层；
 ## 补充四：反应效果写「× 反应层数」、词条写按层计时 / 减半时机 / 按类型易伤、回放悬浮窗写「其中 N 层不可解除」
 extends RefCounted
@@ -13,16 +13,13 @@ static func _db() -> ItemDatabase:
 
 
 static func run_tooltip(t: TestCase) -> void:
-	t.begin("175 · 悬浮窗：法杖装着火晶石与雷晶石写「可引发：【过载】」；单独看没有这一行；对阵屏给它标火、雷")
+	t.begin("175 · 悬浮窗：法杖装着火晶石与雷晶石写「可引发：【过载】」；单独看没有这一行（作者 10-22：棋盘上的元素标记去掉了）")
 	var db := _db()
 	var b := Staff._staff_board(db, &"fire_crystal", &"lightning_crystal")
 	var staff: ItemInstance = b["staff"]
 	var text := ItemTooltip.describe(staff, b["board"])
 	t.check(text.contains("可引发：【过载】"), "棋盘上：可引发过载（%s）" % text)
 	t.check(not ItemTooltip.describe(staff).contains("可引发"), "单独看（没装晶石）：不写")
-	var els := InventoryView.elements_of_board(b["board"])
-	t.eq(els.get(staff.uid, []), [&"fire", &"lightning"] as Array[StringName], "法杖带火、雷（按元素顺序）")
-	t.check(not els.has((b["left"] as ItemInstance).uid), "晶石自己不出手，不标")
 
 
 static func run_encyclopedia(t: TestCase) -> void:
