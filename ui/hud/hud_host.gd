@@ -196,12 +196,13 @@ static func bar_height_in(tree: SceneTree) -> float:
 	return host.bar_height() if host != null and host.is_visible_in_tree() else 0.0
 
 
-## 235：场上顶端栏往下伸到哪（石刻皮的日晷下凸压在地图上；没有读数层 / 藏着 / 没有石刻皮 = 0）：告示卷排在它下面
-static func overhang_in(tree: SceneTree) -> float:
-	var host := tree.get_first_node_in_group(GROUP) as HudHost if tree != null else null
-	if host == null or not host.is_visible_in_tree() or not host._skinned():
+## 235：顶端栏往下伸到哪（石刻皮的日晷下凸压在地图上；布局里栏藏着 / 没有石刻皮 = 0）：告示卷排在它下面。
+## 只看布局与皮，不等这一遍排完（开图那一刻说的话也要让开，游戏测试 v4.10 复测）
+func overhang() -> float:
+	if layout == null or not HudBarScript.has_skin():
 		return 0.0
-	return HudBarScript.dial_bottom()
+	var e := layout.entry_of(&"hud_bar")
+	return HudBarScript.dial_bottom() if not e.is_empty() and bool(e.get("visible", true)) else 0.0
 
 
 ## 166：一件读数在屏幕上的包围盒（教程挖洞用：部件挪了位置教程跟着走）；没有 / 藏着返回空矩形。
@@ -295,7 +296,7 @@ func arrange() -> void:
 				offset = Vector2.ZERO     # 栏里的槽不用偏移：一个槽一组
 			else:
 				anchor = BAR_FALLBACK[anchor]
-		w.set_in_bar(HudLayout.in_bar(anchor))
+		w.set_in_bar(HudLayout.in_bar(anchor), _skinned())
 		var key := "%s@%s" % [anchor, offset]
 		if not groups.has(key):
 			groups[key] = {"anchor": anchor, "offset": offset, "lines": {}}

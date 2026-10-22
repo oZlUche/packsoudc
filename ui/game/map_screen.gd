@@ -75,6 +75,7 @@ func open(payload: Dictionary) -> void:
 	_run = flow.run
 	_build()
 	_adopt()
+	notice_layer().set_top(notice_top())     # 235：上一屏留下的告示卷（开局屏的「先挑出生点」）也让开日晷
 	var reveal: Dictionary = payload.get("reveal", {})
 	if reveal_allowed(reveal):
 		begin_reveal(reveal)     # 180：规则卡、教程等转场完再放
@@ -1072,6 +1073,12 @@ func say(text: String) -> void:
 func warn(text: String) -> void:
 	_say(text)
 	super(text)
+
+
+## 235：告示卷排在顶端栏的日晷下凸下面（没有石刻栏 = 照旧）
+func notice_top() -> float:
+	var h := _hud_host.overhang() if _hud_host != null else 0.0
+	return h + NoticeLayer.GAP if h > 0.0 else 0.0
 
 
 ## 186：提示行（测试看）—— 226 批一起就是告示层

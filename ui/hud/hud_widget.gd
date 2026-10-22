@@ -182,8 +182,14 @@ func set_editing(on: bool) -> void:
 	refresh()
 
 
-## 190：宿主排完一遍告诉这件在不在栏里。235：石刻栏皮上的件都带自己的凹槽（长槽与铜点退役），没变就不动
-func set_in_bar(on: bool) -> void:
+## 190：宿主排完一遍告诉这件在不在栏里、栏是不是石刻皮（[param skinned]）。235：石刻栏里带凹槽的件换浅色凹槽
+## （[constant UiTheme.PANEL_HUD_WELL]），拖出栏回通用凹槽；自有底的件（倒计时的晷面、弯皮带）不动。没变就不动
+func set_in_bar(on: bool, skinned: bool = false) -> void:
+	if theme_type_variation == UiTheme.PANEL_HUD or theme_type_variation == UiTheme.PANEL_HUD_WELL:
+		var want := UiTheme.PANEL_HUD_WELL if on and skinned else UiTheme.PANEL_HUD
+		if theme_type_variation != want:
+			theme_type_variation = want
+			UiTheme.apply_tone(self, want)
 	if in_bar == on:
 		return
 	in_bar = on
