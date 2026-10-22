@@ -1,5 +1,5 @@
 ## 237：量「每次新建系统字体」的成本 —— 修复前（每次 SystemFont.new + FontVariation.new）对修复后（UiPalette 缓存），
-## 以及一个大字体文件 load_dynamic_font 一次要多久（给「Windows 上每帧读微软雅黑」做参照）：
+## 以及一个大字体文件 load_dynamic_font 一次要多久（给「Windows 上每帧读Microsoft YaHei」做参照）：
 ##
 ##     godot --headless --path . --script res://tools/perf_fonts.gd -- /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc
 extends CliTool
