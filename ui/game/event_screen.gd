@@ -278,7 +278,14 @@ func choose(i: int) -> bool:
 	if is_briefing():
 		flow.close_briefing()
 		return true
-	return flow.choose_event(i)
+	if flow.choose_event(i):
+		return true
+	# 作者 10-22：点了选项没反应 —— 这一屏的事件已经不是局里等着选的那个了（死页）：照局里的状态往下走，日志里记一笔
+	var pend: EventDef = flow.run.events.pending_event() if flow.run != null else null
+	push_warning("EventScreen: option %d of %s refused (pending %s)" % [i, _def.id if _def != null else &"-", pend.id if pend != null else &"-"])
+	if pend != _def:
+		flow.resume()
+	return false
 
 
 ## 通用的「往下走」：选项页选第一个能选的，结果页继续

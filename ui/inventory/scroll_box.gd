@@ -12,12 +12,12 @@ static func wrap(view: InventoryView, max_rows: int = 10) -> ScrollContainer:
 	_fit(sc, view, max_rows)
 	sc.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	sc.add_child(view)
-	# 仓库长高了（扩建）、格子放大了（139）：窗口跟着变，高到上限为止
+	# 仓库长高了（扩建）、格子放大了（139）：窗口跟着变，高到上限为止。
+	# 跟格子视图自己的尺寸走，不连容器的 changed：容器比这一屏活得久，连上去的回调屏关了也摘不掉
 	var refit := func():
 		if is_instance_valid(sc):
 			_fit(sc, view, int(sc.get_meta("max_rows", max_rows)))
-	if view.inventory != null:
-		view.inventory.changed.connect(refit)
+	view.resized.connect(refit)
 	view.cell_px_changed.connect(refit)
 	return sc
 
