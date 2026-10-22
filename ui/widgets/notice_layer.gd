@@ -10,7 +10,7 @@ const SHOW_SEC := 3.0
 const URGENT_SEC := 5.0
 const MAX_LINES := 2
 const GAP := 6.0
-## 卷顶离屏顶（顶端栏下面；没有顶端栏的屏同一处）。235：石刻栏的日晷下凸在屏中线上，卷排在它下面（[method HudHost.overhang_in]）
+## 卷顶离屏顶（顶端栏下面；没有顶端栏的屏同一处）。235：地图屏上石刻栏的日晷下凸在屏中线上，卷排在它下面（屏的 `notice_top()`）
 const TOP := 78.0
 
 static var _current: NoticeLayer = null
@@ -41,7 +41,8 @@ static func post(from: Node, text: String, urgent: bool = false) -> void:
 		layer = n.call("notice_layer") if n != null else null
 	if layer != null:
 		layer.push(text, urgent, int(n.call("notice_cap")) if n != null and n.has_method("notice_cap") else MAX_LINES,
-			float(n.call("notice_beside")) if n != null and n.has_method("notice_beside") else 0.0)
+			float(n.call("notice_beside")) if n != null and n.has_method("notice_beside") else 0.0,
+			float(n.call("notice_top")) if n != null and n.has_method("notice_top") else 0.0)
 
 
 func _init() -> void:
@@ -66,11 +67,12 @@ func _exit_tree() -> void:
 
 
 ## 写一句（[param urgent] = 要紧：朱红卷、停得久）。[param cap] 是这一次最多留几卷（233 复测：帐篷屏只留一卷，第二卷会压住窗顶的布招牌）；
-## [param beside] > 0 = 卷不居中、从屏中线往右这么远起排（神坛碑顶正对着卷的位置，v4.02 复测）
-func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: float = 0.0) -> void:
+## [param beside] > 0 = 卷不居中、从屏中线往右这么远起排（神坛碑顶正对着卷的位置，v4.02 复测）；
+## [param top] > [constant TOP] = 卷顶往下挪到这（235：地图屏让开日晷下凸）
+func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: float = 0.0, top: float = 0.0) -> void:
 	if text == "":
 		return
-	_place(beside)
+	_place(beside, top)
 	for l in _lines:
 		if (l["scroll"] as NoticeScroll).text == text:
 			l["left"] = URGENT_SEC if urgent else SHOW_SEC
@@ -125,6 +127,11 @@ func _process(delta: float) -> void:
 	step(delta)
 
 
+## 卷顶挪到 [param top]（不到 [constant TOP] 按 TOP）；挂着的卷跟着挪
+func set_top(top: float) -> void:
+	_col.offset_top = maxf(TOP, top)
+
+
 ## 拿走第 [param i] 卷：收卷完了再释放（关着动效当场释放）
 func _drop(i: int) -> void:
 	var s: NoticeScroll = _lines[i]["scroll"]
@@ -137,8 +144,8 @@ func _drop(i: int) -> void:
 
 
 ## 卷排在哪：[param beside] = 0 居中；> 0 从屏中线往右这么远起排
-func _place(beside: float) -> void:
-	_col.offset_top = maxf(TOP, HudHost.overhang_in(get_tree()) + GAP) if is_inside_tree() else TOP
+func _place(beside: float, top: float = 0.0) -> void:
+	set_top(top)
 	_col.grow_horizontal = Control.GROW_DIRECTION_END if beside > 0.0 else Control.GROW_DIRECTION_BOTH
 	_col.offset_left = maxf(0.0, beside)
 	_col.offset_right = maxf(0.0, beside)

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.10 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.11 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4445,7 +4445,8 @@ res://
 | v4.07 | 2026-10-22 | 铸炉时机槽便条的字让开左下「返回」路标（便条仍贴齐槽框，左边距加到路标右沿外） |
 | v4.08 | 2026-10-22 | **234 游戏图标「缝格背包」**：`assets/icon/icon.png`（256）与 `icon.ico`（16 / 24 / 32 / 48 / 64 / 128 / 256，16 / 32 用美术手调图）；`config/icon`、`config/windows_native_icon`，两个导出预设 `application/icon` + `file_description`，导出带上 `*.ico`；删 `icon.svg`；测试 `test_icon_234` |
 | v4.09 | 2026-10-22 | **234 图标 24 档手调**：`icon.ico` 的 24 档换成美术按 32 档画法手调的一张（缩图版铜扣和格子糊），其余各档原样 |
-| v4.10 | 2026-10-22 | **235 顶端栏石刻皮、两头做成按钮**：`hud_bar` 画 `assets/ui/hud/topbar/` 的平铺段（从日晷两边往外、只铺在两头之间）+ 下半圆日晷底座；两头是 `IconButton` 三态（热区 = 凸起的石块），左 = 本局菜单（= Esc），右 = 背包（= B），按下交给所在屏的 `hud_end(side)`，不进 150 布局。倒计时在栏里只画扇面 / 指针 / 轴心（180° 左、90° 下、0° 右），拖出栏回小日规。`bar_side()` 与上下留白读 `topbar.json`，栏高 86；长槽与铜点退役。`HudWidgets.KINDS` 删 `bag_button`，`HudLayout.RETIRED` 让旧布局静默跳过它；教程目标 `bag_end` / `menu_end`（`HudWidgets.BAR_ENDS`）；告示卷排在日晷下凸下面（`HudHost.overhang_in`）。测试 `test_topbar_235` |
+| v4.10 | 2026-10-22 | **235 顶端栏石刻皮、两头做成按钮**：`hud_bar` 画 `assets/ui/hud/topbar/` 的平铺段（从日晷两边往外、只铺在两头之间）+ 下半圆日晷底座；两头是 `IconButton` 三态（热区 = 凸起的石块），左 = 本局菜单（= Esc），右 = 背包（= B），按下交给所在屏的 `hud_end(side)`，不进 150 布局。倒计时在栏里只画扇面 / 指针 / 轴心（180° 左、90° 下、0° 右），拖出栏回小日规。`bar_side()` 与上下留白读 `topbar.json`，栏高 86；长槽与铜点退役。`HudWidgets.KINDS` 删 `bag_button`，`HudLayout.RETIRED` 让旧布局静默跳过它；教程目标 `bag_end` / `menu_end`（`HudWidgets.BAR_ENDS`）；告示卷排在日晷下凸下面（`HudHost.overhang()`）。测试 `test_topbar_235` |
+| v4.11 | 2026-10-22 | **开战 / 继续旗换旗杆**（作者 10:22「旗杆颜色太暗，看着像不存在」，UI替换美术 乙「铁杆铜头」）：`assets/ui/battle/` 的 `fight*` / `continue_win*` / `continue_lose*` 24 张换图，尺寸与可点区不变。补 235：顶端栏里带凹槽的件换美术的浅色凹槽（变体 `PanelHudWell`，`hud/topbar/well`），拖出栏回通用凹槽；告示卷只在地图屏自己说话时让到日晷下面（屏的 `notice_top()`，开图时 `NoticeLayer.set_top` 把上一屏留下的卷也挪下去），叠层屏照旧 y 78 |
 | v3.88 | 2026-10-21 | **224 补充二 结算屏第二版**（作者 17:22–17:23 六条）：结算屏两页板边换 `slab_edge_plain`（`UiTheme.slab` / `GameScreen._slab_screen` 的 `edge_art` 参数）；第一页 ×1.2、图 2 倍分辨率按 1x 尺寸画（`LedgerView` `draw_texture_rect`、标题牌 `EXPAND_IGNORE_SIZE`）；账单击败的敌人 / 精英 / 首领分三行；撤离时保险箱在账单右边（皮带框 + 格缝），第二页只剩带回的棋盘（格子 72，`WarehousePanel.board_cell`）和贴右上的仓库（`WarehousePages.fit` 量石板内容区）；战败没有第二页，`MetaState.absorb` 战败时保险箱带出的直接进仓库（包进包架），放不下才进待置入棋盘；新套件 `test_result_v2_224` |
 | v3.87 | 2026-10-21 | **232 局内非矩形第一轮**（作者 19:23 选 1 / 2 / 6 / 10，待定按推荐）：事件窗是一本摊开的书（`OverlayFrame` `book` 皮、`EventScreen._book_page` 绝对摆位、标题进右页、`EventImage.area(…, light)`）；背包窗是一只背包（`BagWindow._back` 四件皮料随窗宽摆、翻盖即把手 `grip_rect`、`FloatingWindow.outset` 夹边）；腰带 1–6 格是整张弯皮带（`BeltSlots.belt_layouts / curved`，命中半径 36，7 格起退回直圆槽；`BeltWidget` 不进凹槽）；图例是双尾旗九宫格（`LegendWidget.pennant_box`，最窄 158）。缺图都退回原来的皮；新套件 `test_bag_window_232`、`test_event_book_232` |
 | v3.86 | 2026-10-21 | **230 悬浮窗道具按钮 + 锁定**（作者 19:01 选丙）：`ItemActions` 供给层（`Action` 数据、`lock` / `lock_same` / `sell` / `sell_same` / `anchor`、`rows()` 两两并排成对不拆）；`ContainerView.actions_for(uid)` 各屏登记；`TipButton` 平墨签按钮（危险两步「再点一次」）；`HoverTip` 脚注下画按钮行、右键 `pin_on` 立刻钉住、点了原地刷新；玩家锁 `ItemInstance.state["locked"]` 守出售 / 一键出售 / 出售区 / 祭品台 / 铸炉 / 丢地上，小锁角标 `ItemPainter.draw_lock`；信物右键切换改成「奉为主信仰」按钮；新帮助页 `item_actions`；新套件 `test_item_actions_230` |

@@ -28,6 +28,8 @@ const PANEL_DARK := &"PanelDark"
 const PANEL_LINE := &"PanelLine"
 ## 150：地图屏读数组件（[HudWidget]）的底与字：无边窄底、14 号小档、34 号大档（倒计时那种一行大字）
 const PANEL_HUD := &"PanelHud"
+## 235：石刻顶端栏里的读数格与按钮格 —— 浅色石面上的凹槽（`hud/topbar/well`）；栏外照旧 [constant PANEL_HUD]
+const PANEL_HUD_WELL := &"PanelHudWell"
 const LABEL_HUD := &"LabelHud"
 const LABEL_HUD_LARGE := &"LabelHudLarge"
 ## 作者 2026-10-12：地图顶栏那一排放大到 200%（28 号）
@@ -94,7 +96,7 @@ const PANEL_NODE_HINT := &"PanelNodeHint"
 ## 226 批四守门（tests/ui/test_no_bare_text_226.gd）：算「控件」的底 —— 字的祖先里有这些变体之一就算坐在控件上（牌、纸、签、板、提示框）
 const PLATE_VARIANTS: Array[StringName] = [PANEL_NAMEPLATE, PANEL_PARCHMENT, PANEL_SUMMARY_NOTE, PANEL_NODE_HINT, PANEL_TOOLTIP,
 	PANEL_DIFF_TITLE, PANEL_FLIP_COUNTER, PANEL_DARK, PANEL_GROOVE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_HOME_BOX,
-	PANEL_CAP_TILE, PANEL_HUD, &"TooltipPanel"]
+	PANEL_CAP_TILE, PANEL_HUD, PANEL_HUD_WELL, &"TooltipPanel"]
 const BUTTON_SETUP_TAB := &"ButtonSetupTab"
 ## 开局挂牌页签锁着时的页名色
 const SETUP_TAB_LOCKED_INK := Color("b8a98c")
@@ -124,7 +126,7 @@ const BUTTON_MENU_FOOT := &"ButtonMenuFoot"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
-	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
+	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, PANEL_HUD_WELL, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, LABEL_TENT_SIGN, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
@@ -185,6 +187,8 @@ const ART_SLAB_EDGE := "slab_edge"
 const ART_SLAB_BAR := "slab_bar"
 ## 235：石刻顶端栏的平铺段（在就是石刻皮，栏的底空着）
 const ART_TOPBAR_TILE := "hud/topbar/bar_tile"
+## 235：石刻顶端栏里那几格的浅色凹槽
+const ART_HUD_WELL := "hud/topbar/well"
 const ART_INSET := "inset"
 ## 石板顶边：标题条下沿到板边九宫格上边距之间留给刻线的那一段
 const TITLE_LINE_GAP := 6.0
@@ -741,7 +745,7 @@ const PANEL_TONES := {
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
 	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
 	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_LIGHT, PANEL_PACK_LEATHER: TONE_DARK, PANEL_STASH_FRAME: TONE_DARK,
-	PANEL_SUMMARY_NOTE: TONE_LIGHT, PANEL_BARE: TONE_LIGHT, PANEL_NODE_HINT: TONE_LIGHT,
+	PANEL_SUMMARY_NOTE: TONE_LIGHT, PANEL_BARE: TONE_LIGHT, PANEL_NODE_HINT: TONE_LIGHT, PANEL_HUD_WELL: TONE_LIGHT,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
@@ -749,7 +753,7 @@ const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
 	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER,
 	PANEL_PARCHMENT: ART_PARCHMENT_STRIP, PANEL_DIFF_TITLE: ART_DIFF_TITLE, PANEL_PACK_LEATHER: ART_PACK_LEATHER,
-	PANEL_STASH_FRAME: ART_STASH_FRAME, PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE, PANEL_NODE_HINT: ART_NODE_HINT}
+	PANEL_STASH_FRAME: ART_STASH_FRAME, PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE, PANEL_NODE_HINT: ART_NODE_HINT, PANEL_HUD_WELL: ART_HUD_WELL}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
 const INK_DEFAULT := Color("2e2219")
@@ -1198,6 +1202,9 @@ static func _fill(t: Theme, bg: Color) -> void:
 	var hud_box := _box(panel_bg, UiPalette.LINE, HUD_MARGIN)
 	hud_box.set_border_width_all(0)
 	t.set_stylebox("panel", PANEL_HUD, hud_art if hud_art != null else hud_box)
+	t.set_type_variation(PANEL_HUD_WELL, "PanelContainer")
+	var well_art: StyleBox = _art_box(ART_HUD_WELL, false, HUD_MARGIN)
+	t.set_stylebox("panel", PANEL_HUD_WELL, well_art if well_art != null else t.get_stylebox("panel", PANEL_HUD))
 	# 166：顶端栏（横贯顶部的一条，左右留 16）与栏里的图标按钮（平时透明，悬停 / 按下才露底）。
 	# 157 补充三：栏是一条独立的长石板（同一套板身 + 自己的长条板边 `slab_bar`），没图是半透明深底 + 下边一条线。
 	# 板边的上下内边距 = 栏里的组居中的那一块（[HudHost] 读），底下那道投影不算进去

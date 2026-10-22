@@ -55,7 +55,18 @@ static func frame_skin(t: TestCase, root: Window) -> void:
 	t.check(absf(vit.position.x - 100.0) < 0.5, "心格从 x 100 开始（%s）" % vit.position.x)
 	t.check(absf(vit.position.y + vit.size.y * 0.5 - 43.0) <= 1.0, "左组在 8～78 之间居中（%s）" % (vit.position.y + vit.size.y * 0.5))
 	t.eq(host._bar_frame(), Rect2(100, 8, HOST_SIZE.x - 200.0, 70), "栏里排组的那块：x 100 ～ 屏宽 − 100，y 8 ～ 78")
-	t.eq(host.widget(&"wallet").theme_type_variation, UiTheme.PANEL_HUD, "栏里的件带自己的凹槽（长槽退役）")
+	var wallet := host.widget(&"wallet")
+	t.eq(wallet.theme_type_variation, UiTheme.PANEL_HUD_WELL, "栏里的件坐在米色凹槽里（长槽退役）")
+	t.eq(UiTheme.tone_at(wallet), UiTheme.TONE_LIGHT, "浅底墨字")
+	t.eq(host.overhang(), 124.0, "栏往下伸到日晷下沿 124（告示卷排在它下面）")
+	host.layout.entry_of(&"wallet")["anchor"] = "top_left"
+	host.layout.entry_of(&"wallet")["offset"] = Vector2(0, 20)
+	host.arrange()
+	t.eq(wallet.theme_type_variation, UiTheme.PANEL_HUD, "拖出栏：回通用凹槽")
+	host.layout.entry_of(&"wallet")["anchor"] = "bar_left"
+	host.layout.entry_of(&"wallet")["offset"] = Vector2.ZERO
+	host.arrange()
+	t.eq(wallet.theme_type_variation, UiTheme.PANEL_HUD_WELL, "拖回栏：又是米色凹槽")
 	var left: IconButton = bar.call("end_button", HudBarScript.LEFT)
 	var right: IconButton = bar.call("end_button", HudBarScript.RIGHT)
 	t.check(left != null and right != null and left.has_art() and right.has_art(), "两头是图按钮")
@@ -134,6 +145,22 @@ static func frame_dial(t: TestCase, root: Window) -> void:
 	t.eq(cd.hand_tip(), Vector2.INF, "不在栏里：不画栏上的指针")
 	host.queue_free()
 	screen.queue_free()
+
+
+static func frame_notice_top(t: TestCase, root: Window) -> void:
+	t.begin("235 · 告示卷：地图屏说的话让到日晷下面（top），别的屏照旧 y 78；set_top 让挂着的卷跟着挪（开局屏留下的那卷）")
+	var layer := NoticeLayer.new()
+	root.add_child(layer)
+	layer.push("一", false, NoticeLayer.MAX_LINES, 0.0, 130.0)
+	var col := layer.get_node("Scrolls") as Control
+	t.eq(col.offset_top, 130.0, "带 top：卷顶 130")
+	layer.push("二")
+	t.eq(col.offset_top, NoticeLayer.TOP, "不带：回 78")
+	layer.set_top(130.0)
+	t.eq(col.offset_top, 130.0, "set_top：挂着的卷跟着挪")
+	layer.set_top(10.0)
+	t.eq(col.offset_top, NoticeLayer.TOP, "不到 78 按 78")
+	layer.queue_free()
 
 
 static func run_layout(t: TestCase) -> void:
