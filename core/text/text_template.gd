@@ -194,11 +194,22 @@ static func cached_regex(pattern: String) -> RegEx:
 	return _regex_cache[pattern]
 
 
-## 剥掉全部 BBCode 标签（`[b]` `[color=…]` `[url=…]`……，凡 `[字母…]`），只留文字：搜索、测试比对纯文字用。
+## RichTextLabel 认的 BBCode 标签名（Godot 4 内置那一套）。[method strip_bbcode] 只剥这些 ——
+## 别的方括号是正文（英文触发词「[When this item activates]」之类），留着
+const BBCODE_TAGS := [
+	"b", "i", "u", "s", "code", "char", "p", "br", "center", "left", "right", "fill", "indent",
+	"url", "hint", "img", "font", "font_size", "opentype_features", "lang", "table", "cell", "ul", "ol",
+	"lb", "rb", "color", "bgcolor", "fgcolor", "outline_size", "outline_color",
+	"wave", "tornado", "fade", "rainbow", "pulse", "shake", "dropcap", "hr",
+	"lrm", "rlm", "lre", "rle", "lro", "rlo", "pdf", "alm", "zwj", "zwnj", "wj", "shy",
+]
+
+
+## 剥掉 BBCode 标签（`[b]` `[color=…]` `[url=…]`……，只认 [constant BBCODE_TAGS] 里的名字），只留文字：搜索、测试比对纯文字用。
 ## [method plain] 只剥样式码对应的三种，Label 里 `[url]` 之类要不要留是那边的事
 static func strip_bbcode(text: String) -> String:
 	var out := cached_regex("\\[img[^\\]]*\\][^\\[]*\\[/img\\]").sub(text, "", true)     # 170：行内图标整个去掉（路径不是字）
-	return cached_regex("\\[/?[a-zA-Z][^\\]]*\\]").sub(out, "", true)
+	return cached_regex("\\[/?(?:%s)(?=[\\]= ])[^\\]]*\\]" % "|".join(BBCODE_TAGS)).sub(out, "", true)
 
 
 ## 112：正文里引用了哪些道具 / 敌人 / 信仰（113 加 `{faith…:}`；`{item:id}` `{enemy:id}` `{item_stat:id:字段}`）→ [{kind, id}]。导入器拿它查 id
