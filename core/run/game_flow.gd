@@ -1193,7 +1193,9 @@ func reopen_node() -> bool:
 	if run == null or run.is_over() or entry.is_empty():
 		return false
 	if bool(entry.get("rest", false)):
-		run.events.handle(run.current_node())     # 反馈：没用完的休息点，站着再把选项打开
+		var here := run.current_node()
+		here.content.erase("revisit_event")
+		run.events.handle(here)     # 反馈：没用完的休息点 / 作者 10-22：选了「先回地图」的点（撤离点「再整理一下」），站着再把选项打开
 		_flush()
 		return true
 	entry["restore"] = true
@@ -1216,6 +1218,8 @@ func _reopen_entry() -> Dictionary:
 	if run.pending_loot != null:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
 	var here := run.current_node()
+	if here != null and bool(here.content.get("revisit_event", false)):
+		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 10-22：「先回地图」的点，点节点 / 放大镜就再弹
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
