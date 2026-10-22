@@ -10,7 +10,7 @@ const SHOW_SEC := 3.0
 const URGENT_SEC := 5.0
 const MAX_LINES := 2
 const GAP := 6.0
-## 卷顶离屏顶（顶端栏下面；没有顶端栏的屏同一处）
+## 卷顶离屏顶（顶端栏下面；没有顶端栏的屏同一处）。235：石刻栏的日晷下凸在屏中线上，卷排在它下面（[method HudHost.overhang_in]）
 const TOP := 78.0
 
 static var _current: NoticeLayer = null
@@ -138,6 +138,7 @@ func _drop(i: int) -> void:
 
 ## 卷排在哪：[param beside] = 0 居中；> 0 从屏中线往右这么远起排
 func _place(beside: float) -> void:
+	_col.offset_top = maxf(TOP, HudHost.overhang_in(get_tree()) + GAP) if is_inside_tree() else TOP
 	_col.grow_horizontal = Control.GROW_DIRECTION_END if beside > 0.0 else Control.GROW_DIRECTION_BOTH
 	_col.offset_left = maxf(0.0, beside)
 	_col.offset_right = maxf(0.0, beside)

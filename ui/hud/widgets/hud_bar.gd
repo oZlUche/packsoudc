@@ -1,28 +1,48 @@
-## 166（作者定）：顶端栏 —— 横贯顶部的一条底（主题变体 [constant UiTheme.PANEL_HUD_BAR]：美术的大理石九宫格，没图是半透明深底）。
-## 它本身不写字：栏里摆什么由布局里锚在 `bar_left / bar_center / bar_right` 的条目决定（[HudHost] 排），
+## 166（作者定）：顶端栏 —— 横贯顶部的一条底。它本身不写字：栏里摆什么由布局里锚在 `bar_left / bar_center / bar_right` 的条目决定（[HudHost] 排），
 ## 所以「摆读数」时照样能把东西拖进拖出、换槽，栏自己也能藏。大小由宿主定（整屏宽 × 栏高）；宿主把它排成第一个子节点，垫在栏里的组件下面
 ##
-## 190（189 作者定案「乙」）：板上铺一条贯通的浅槽（`hud/groove` 九宫格，两端铜包角不拉伸，左右各留 [constant GROOVE_SIDE]），
-## 栏里的件坐在槽底上；相邻两件之间一枚铜点（`hud/dot`，位置由宿主排完给 [method set_dots]）。没有槽图就不画，栏里的件退回各自的凹槽
+## 235（作者 2026-10-22「按推荐来」）：石刻栏皮 —— 浅色石刻一整条，图与数值在 `hud/topbar/`（`topbar.json`）：
+## 中间平铺段从日晷底座左右两边往外铺、只铺在两头之间；正中下半圆日晷底座（刻度在图里，扇面 / 指针 / 轴心归倒计时那件画，
+## 底座下凸压在地图上、不占布局高度）；两头最后盖上去。两头是真按钮（[IconButton] 三态，热区是那块凸起的石块）：
+## 左 = 本局菜单（等同 Esc），右 = 背包（右槽的小背包钮并进来了）。按下发 [signal end_pressed]，接到所在屏的 `hud_end(side)`。
+## 两头不进 150 的布局（不能拖、不能藏）。缺皮退回主题变体的底（`slab_bar` 石板），两头照样在、写字
 extends HudWidget
 
-const GROOVE_ART := "hud/groove"
-const DOT_ART := "hud/dot"
-## 槽图的原始高（`band` 按栏高等比缩）
-const GROOVE_H := 88.0
-const GROOVE_SIDE := 14.0
+## 两头按下：[constant LEFT] / [constant RIGHT]
+signal end_pressed(side: StringName)
 
-## 铜点的中心（栏的坐标）
-var _dots: Array[Vector2] = []
-var _groove_box: StyleBoxTexture = null
+const SKIN := "hud/topbar/"
+const LEFT := &"left"
+const RIGHT := &"right"
+
+## side → 那一头的按钮
+var _ends: Dictionary = {}
+var _meta: Dictionary = {}
 
 
 func _init() -> void:
 	super()
 	theme_type_variation = UiTheme.PANEL_HUD_BAR
-	UiTheme.apply_tone(self, UiTheme.PANEL_HUD_BAR)     # 大理石是浅底：栏里直接挂的字跟着换墨色
-	groovable = false
+	UiTheme.apply_tone(self, UiTheme.PANEL_HUD_BAR)
 	_text.visible = false
+	_meta = skin()
+	# 两头放在一块不排版的底上（栏是 PanelContainer，直接挂的子节点会被撑满）
+	var box := Control.new()
+	box.name = "Ends"
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(box)
+	resized.connect(_place_ends)     # 按栏宽摆（底空着，那块底和栏一样大；不等容器排）
+	var bag := UiText.t("map.bag") + UiText.t("ui.hotkey") % "B" + "\n" + UiText.t("map.bag_hint")
+	var menu := UiText.t("map.menu_end") + UiText.t("ui.hotkey") % "Esc" + "\n" + UiText.t("map.menu_end_hint")
+	for side in [LEFT, RIGHT]:
+		var b := IconButton.make_art(UiTheme.asset_root + SKIN, "end_" + String(side), UiText.t("map.menu_end" if side == LEFT else "map.bag"),
+			menu if side == LEFT else bag, func(): end_pressed.emit(side))
+		b.name = "End_" + String(side)
+		var hit: Array = (_meta.get("ends", {}) as Dictionary).get("hit_" + String(side), [])
+		if hit.size() == 4 and b.has_art():
+			b.hit_rect = Rect2(float(hit[0]), float(hit[1]), float(hit[2]) - float(hit[0]), float(hit[3]) - float(hit[1]))
+		box.add_child(b)
+		_ends[side] = b
 
 
 func title() -> String:
@@ -31,6 +51,13 @@ func title() -> String:
 
 func text_of() -> String:
 	return "顶端栏"     # 只要这一局在就显示
+
+
+## 两头接到所在屏（地图屏：左 = 暂停菜单，右 = 背包）
+func setup(p_run: RunState, p_screen: Control) -> void:
+	super(p_run, p_screen)
+	if p_screen != null and p_screen.has_method("hud_end") and not end_pressed.is_connected(p_screen.hud_end):
+		end_pressed.connect(p_screen.hud_end)
 
 
 func _sync_visible() -> void:
@@ -42,55 +69,97 @@ func _get_minimum_size() -> Vector2:
 	return Vector2.ZERO
 
 
-## 有没有槽图
-static func has_groove() -> bool:
-	return UiTheme.art_cached(GROOVE_ART) != null
+#region 皮
+## `topbar.json`（没有 = 空）
+static func skin() -> Dictionary:
+	return UiTheme.art_meta(SKIN + "topbar")
 
 
-## 槽身的竖向范围（栏的坐标，按栏高 / [param bar_h] 等比缩）；`groove.json` 没写 `band` 按整高
-static func band(bar_h: float) -> Vector2:
-	var b: Array = UiTheme.art_meta(GROOVE_ART).get("band", [0, GROOVE_H])
-	var k := bar_h / GROOVE_H if bar_h > 0.0 else 1.0
-	return Vector2(float(b[0]) * k, float(b[1]) * k)
+## 石刻皮的图在不在（平铺段与日晷底座）
+static func has_skin() -> bool:
+	return UiTheme.art_cached(SKIN + "bar_tile") != null and UiTheme.art_cached(SKIN + "dial_base") != null
 
 
-## 槽画在哪（栏的坐标）
-func groove_rect() -> Rect2:
-	return Rect2(GROOVE_SIDE, 0.0, maxf(0.0, size.x - GROOVE_SIDE * 2.0), size.y)
+## 石面多高（栏在布局里占的高；投影与日晷下凸不算）
+static func design_height() -> float:
+	return float(skin().get("design_height", 86))
 
 
-## 宿主排完给：铜点的中心
-func set_dots(points: Array[Vector2]) -> void:
-	_dots = points
-	queue_redraw()
+## 栏里的组左右各让多宽：石块外沿 + 间隙（左 88 + 12，右 104 − 16 + 12）
+static func side_inset() -> float:
+	var m := skin()
+	var ends: Dictionary = m.get("ends", {})
+	var w := float(ends.get("width", 104))
+	var gap := float(m.get("gap", 12))
+	var hl: Array = ends.get("hit_left", [8, 8, 88, 78])
+	var hr: Array = ends.get("hit_right", [16, 8, 96, 78])
+	return maxf(float(hl[2]) + gap, w - float(hr[0]) + gap)
 
 
-func dots() -> Array[Vector2]:
-	return _dots
+## 栏里的组竖向居中的那一段的上、下留白（石块的上下沿）
+static func band_margins() -> Vector2:
+	var hl: Array = (skin().get("ends", {}) as Dictionary).get("hit_left", [8, 8, 88, 78])
+	return Vector2(float(hl[1]), design_height() - float(hl[3]))
 
 
-func _groove() -> StyleBoxTexture:
-	var tex := UiTheme.art_cached(GROOVE_ART)
-	if tex == null:
-		return null
-	if _groove_box == null or _groove_box.texture != tex:
-		var m: Array = UiTheme.art_meta(GROOVE_ART).get("margin", [0, 0, 0, 0])
-		_groove_box = StyleBoxTexture.new()
-		_groove_box.texture = tex
-		_groove_box.texture_margin_left = float(m[0])
-		_groove_box.texture_margin_top = float(m[1])
-		_groove_box.texture_margin_right = float(m[2])
-		_groove_box.texture_margin_bottom = float(m[3])
-	return _groove_box
+## 日晷底座下凸的石面下沿（栏的坐标；下面还有一截投影）。告示卷排在它下面
+static func dial_bottom() -> float:
+	return float((skin().get("dial", {}) as Dictionary).get("bottom", 124))
 
 
-## 板（面板底）先画，槽与铜点画在板上、栏里的件下面
+## 日晷轴心（栏的坐标）
+func dial_pivot() -> Vector2:
+	var d: Dictionary = _meta.get("dial", {})
+	var p: Array = d.get("pivot", [151, 6])
+	return Vector2(roundf(size.x * 0.5) - float(d.get("center_x", 151)) + float(p[0]), float(p[1]))
+
+
+## 日晷的数（`topbar.json` 的 `dial`）
+func dial_meta() -> Dictionary:
+	return _meta.get("dial", {})
+#endregion
+
+
+## 那一头的按钮（测试与教程挖洞用）
+func end_button(side: StringName) -> IconButton:
+	return _ends.get(side, null)
+
+
+## 那一头能点的那块（屏幕坐标；教程挖洞）
+func end_rect(side: StringName) -> Rect2:
+	var b := end_button(side)
+	if b == null or not b.is_visible_in_tree():
+		return Rect2()
+	var r := b.get_global_rect()
+	return Rect2(r.position + b.hit_rect.position, b.hit_rect.size) if b.hit_rect.has_area() else r
+
+
+func _place_ends() -> void:
+	var w := size.x
+	for side in _ends:
+		var b := _ends[side] as IconButton
+		b.size = b.get_combined_minimum_size()
+		b.position = Vector2(0.0 if side == LEFT else w - b.size.x, 0.0)
+
+
+## 平铺段（从日晷两边往外、只铺在两头之间）→ 日晷底座；两头是子节点，画在上面
 func _draw() -> void:
-	var box := _groove()
-	if box != null:
-		draw_style_box(box, groove_rect())
-		var dot := UiTheme.art_cached(DOT_ART)
-		if dot != null:
-			for p in _dots:
-				draw_texture(dot, (p - dot.get_size() * 0.5).round())
+	var tile := UiTheme.art_cached(SKIN + "bar_tile")
+	var dial := UiTheme.art_cached(SKIN + "dial_base")
+	if tile != null and dial != null:
+		var ew := float((_meta.get("ends", {}) as Dictionary).get("width", 104))
+		var tw := tile.get_width()
+		var th := tile.get_height()
+		var dx := roundf(size.x * 0.5) - float(dial_meta().get("center_x", 151))
+		var x := dx + dial.get_width()
+		while x < size.x - ew:
+			var w := minf(tw, size.x - ew - x)
+			draw_texture_rect_region(tile, Rect2(x, 0, w, th), Rect2(0, 0, w, th))
+			x += tw
+		x = dx
+		while x > ew:
+			var w := minf(tw, x - ew)
+			draw_texture_rect_region(tile, Rect2(x - w, 0, w, th), Rect2(tw - w, 0, w, th))
+			x -= tw
+		draw_texture(dial, Vector2(dx, 0))
 	super()

@@ -183,6 +183,8 @@ const ART_SLAB_BODY := "slab_body"
 const ART_SLAB_EDGE := "slab_edge"
 ## 顶端栏专用的长条板边（贴屏幕顶、没有标题刻线、底下一道投影；`margin` 的上下就是栏里的组居中的那一块）
 const ART_SLAB_BAR := "slab_bar"
+## 235：石刻顶端栏的平铺段（在就是石刻皮，栏的底空着）
+const ART_TOPBAR_TILE := "hud/topbar/bar_tile"
 const ART_INSET := "inset"
 ## 石板顶边：标题条下沿到板边九宫格上边距之间留给刻线的那一段
 const TITLE_LINE_GAP := 6.0
@@ -1205,7 +1207,8 @@ static func _fill(t: Theme, bg: Color) -> void:
 	bar_box.set_border_width_all(0)
 	bar_box.border_width_bottom = 1
 	bar_box.set_corner_radius_all(0)
-	t.set_stylebox("panel", PANEL_HUD_BAR, bar_art if bar_art != null else bar_box)
+	# 235：石刻栏皮（`hud/topbar/`）由栏自己画（平铺段 + 日晷底座 + 两头），底空着
+	t.set_stylebox("panel", PANEL_HUD_BAR, StyleBoxEmpty.new() if art(ART_TOPBAR_TILE) != null else (bar_art if bar_art != null else bar_box))
 	_button_variation(t, BUTTON_ICON, UiPalette.Tier.MINOR)
 	var clear := StyleBoxEmpty.new()
 	clear.set_content_margin_all(4)

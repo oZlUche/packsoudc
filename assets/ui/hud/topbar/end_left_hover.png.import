@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d1vyu4g58lbhb"
-path="res://.godot/imported/groove.png-511656480414a6d71bd0477aef431b3a.ctex"
+uid="uid://bj14gxhnxg0q1"
+path="res://.godot/imported/end_left_hover.png-0f1fcb68735d8a38910aec65aa39a12b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/hud/groove.png"
-dest_files=["res://.godot/imported/groove.png-511656480414a6d71bd0477aef431b3a.ctex"]
+source_file="res://assets/ui/hud/topbar/end_left_hover.png"
+dest_files=["res://.godot/imported/end_left_hover.png-0f1fcb68735d8a38910aec65aa39a12b.ctex"]
 
 [params]
 
