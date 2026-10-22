@@ -32,7 +32,7 @@ func open(payload: Dictionary) -> void:
 		note.name = "RepairNote"
 		note.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		col.add_child(note)
-		note.add_child(_wrapped(repaired, 13, UiTheme.INK_WARN, 840))
+		note.add_child(_wrapped(repaired, 15, UiTheme.INK_WARN, 840))
 	for n in range(1, SaveSlots.COUNT + 1):
 		col.add_child(_row(n))
 	col.add_child(HSeparator.new())

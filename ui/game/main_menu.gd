@@ -28,7 +28,7 @@ const PRIMARY_TO_SECONDARY := 18
 const SECONDARY_TO_FOOT := 24
 ## 右下提示离屏边、字号
 const NOTICE_MARGIN := 48.0
-const NOTICE_SIZE := 13
+const NOTICE_SIZE := 15
 
 ## 菜单第一次打开（刚从启动屏过来）：第一张画从启动屏那档暗亮起来；之后回菜单直接开镜头
 static var _shown_once := false
@@ -129,9 +129,7 @@ func open(_payload: Dictionary) -> void:
 	_note_paper.add_child(_notices)
 	for text in [flow.backup_notice(), flow.repair_notice()]:
 		if text != "":
-			var l := _label(text, NOTICE_SIZE, UiTheme.INK_WARN)
-			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			_notices.add_child(l)
+			_notices.add_child(_label(text, NOTICE_SIZE, UiTheme.INK_WARN))     # 便条上左对齐（UI替换美术 v4.03 核对）
 	_note_paper.visible = _notices.get_child_count() > 0
 	if not resized.is_connected(_layout):
 		resized.connect(_layout)

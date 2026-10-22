@@ -103,7 +103,7 @@ static func frame_covered_rules(t: TestCase, root: Window) -> void:
 
 
 static func frame_out_of_run_screens(t: TestCase, root: Window) -> void:
-	t.begin("226 批四守门 · 局外：开局三页、基地家与五个页签、设置、百科、读档、主菜单（带备份告示）都没有裸字")
+	t.begin("226 批四守门 · 局外：开局三页、基地家与五个页签、设置、百科、读档、主菜单（带备份告示，便条字 15 号左对齐）都没有裸字")
 	DevGate.force_player = true
 	var bad: Array[String] = []
 	var game = Setup180._game(root, PREFIX)
@@ -126,6 +126,8 @@ static func frame_out_of_run_screens(t: TestCase, root: Window) -> void:
 	var menu := _open("main_menu", f, root)
 	var paper := menu.find_child("MenuNoticePaper", true, false) as Control
 	t.check(paper != null and paper.visible, "主菜单备份告示有纸条")
+	var note_line := menu.notices().get_child(0) as Label if menu.notices().get_child_count() > 0 else null
+	t.check(note_line != null and note_line.get_theme_font_size("font_size") == 15 and note_line.horizontal_alignment == HORIZONTAL_ALIGNMENT_LEFT, "便条字 15 号、左对齐")
 	bad.append_array(audit(menu, "主菜单"))
 	menu.free()
 	f.meta_backup = ""
@@ -149,7 +151,7 @@ static func frame_out_of_run_screens(t: TestCase, root: Window) -> void:
 
 
 static func frame_node_screens(t: TestCase, root: Window) -> void:
-	t.begin("226 批四守门 · 局内：地图（HUD）、事件书、商店、神坛、铸炉、搜刮、保险箱都没有裸字")
+	t.begin("226 批四守门 · 局内：地图（HUD）、事件书、商店、神坛、铸炉（台面便条）、搜刮、保险箱都没有裸字")
 	DevGate.force_player = true
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
@@ -179,6 +181,9 @@ static func frame_node_screens(t: TestCase, root: Window) -> void:
 	for row in cases:
 		var screen := _open("%s_screen" % row[0], f, root, row[1])
 		bad.append_array(audit(screen, String(row[0])))
+		if row[0] == "forge":
+			var note := screen.find_child("ForgeNote", true, false) as Control
+			t.check(note != null and note.theme_type_variation == UiTheme.PANEL_SUMMARY_NOTE, "铸炉「将铸出」几行写在台面便条上")
 		screen.free()
 	DevGate.force_player = false
 	Support.cleanup(PREFIX + "n")

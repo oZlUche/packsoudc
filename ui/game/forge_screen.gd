@@ -17,6 +17,10 @@ const SLATE_SIZE := 15
 ## 把手 / 路标悬停时提亮
 const HOVER_LIFT := 1.12
 const SLATE_INSET := Vector2(28, 36)
+## 「将铸出」便条上的字号
+const PREVIEW_SIZE := 15
+## 便条钉在哪（底图像素）：layout 的 text 区（工作台正面）让背包下的数值栏占了，便条挪到挂板与背包之间，同背包一样宽
+const NOTE_RECT := Rect2(1236, 392, 672, 120)
 
 var _node: MapNode = null
 ## 时机、效果、数值三个槽
@@ -38,6 +42,7 @@ var _bg: TextureRect
 var _spots: Dictionary = {}
 var _slate: Label
 var _text_box: VBoxContainer
+var _text_note: PanelContainer
 var _bag_host: Control
 ## 槽与出牌槽的宿主（视图在里面居中）
 var _slot_hosts: Array[Control] = []
@@ -90,11 +95,14 @@ func open(payload: Dictionary) -> void:
 	add_child(_slate)
 	_slate.set_meta(&"exempt_bare_text", "ForgeArt")     # 226 守门：字写在底图的挂板上
 	_spots[_slate] = _rect(_layout.get("slate", {}))
+	_text_note = UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_SUMMARY_NOTE)     # 226 批四：「将铸出」几行写在一张便条上（浅纸墨字）
+	_text_note.name = "ForgeNote"
+	add_child(_text_note)
+	_spots[_text_note] = NOTE_RECT
 	_text_box = _vbox(2)
-	add_child(_text_box)
-	_text_box.set_meta(&"exempt_bare_text", "ForgeArt")     # 226 守门：底图给「将铸出」留的台面
-	_spots[_text_box] = _rect(_layout.get("text", {}))
-	_preview = _label("", 13, UiPalette.STAMINA)
+	_text_note.add_child(_text_box)
+	_preview = _label("", PREVIEW_SIZE, UiTheme.INK)
+	_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # 便条定宽：长句折行
 	_text_box.add_child(_preview)
 
 	_forge_btn = _piece_button("handle", UiText.t("forge.forge_btn"), forge)
@@ -208,6 +216,8 @@ func _place() -> void:
 	_slate.position += SLATE_INSET * s     # 板面在框里面
 	_slate.custom_minimum_size.x = maxf(0.0, _slate.custom_minimum_size.x - SLATE_INSET.x * 2.0 * s)
 	_slate.size.x = _slate.custom_minimum_size.x
+	_preview.custom_minimum_size.x = maxf(0.0, _text_note.size.x - _text_note.get_theme_stylebox("panel").get_minimum_size().x)     # 便条定宽、按行数收高
+	_text_note.reset_size.call_deferred()
 	_place_piece(_forge_btn, "handle", s, offset)
 	_place_piece(_back_btn, "sign", s, offset)
 
@@ -354,6 +364,7 @@ func _refresh() -> void:
 	_forge_btn.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/handle_ready"))     # 221：把手与底图上的铭牌画着字，英文版另一套
 	_forge_btn.texture_disabled = UiTheme.art_cached(UiTheme.lang_art("forge/handle_%s" % ("idle" if open else "off")))
 	_bg.texture = UiTheme.art_cached(UiTheme.lang_art("forge/bg_%s" % ("lit" if open else "cold")))     # 铸过：炉熄
+	UiTheme.label(_preview, PREVIEW_SIZE, UiTheme.INK)
 	if not open:
 		_forge_btn.tooltip_text = UiText.t("forge.used")
 		_preview.text = UiText.t("forge.used") if _out.item_count() == 0 else UiText.t("forge.ready")
@@ -363,11 +374,13 @@ func _refresh() -> void:
 			if _slots[i].item_count() == 0:
 				missing.append(UiText.t("forge.slot_bracket") % Forge.slot_name(ForgeTable.SLOTS[i]))
 		_preview.text = UiText.t("forge.missing") % UiText.t("forge.missing_sep").join(missing)
+		UiTheme.label(_preview, PREVIEW_SIZE, UiTheme.INK_WARN)     # 还差：墨红
 		var guessed := guess_text()
 		_forge_btn.tooltip_text = _preview.text + ("\n" + guessed if guessed != "" else "")
 	else:
 		_preview.text = UiText.t("forge.preview") % [Forge.prefix(ench), Glossary.strip_bbcode(Forge.sentence(ench))]
 		_forge_btn.tooltip_text = UiText.t("forge.forge_btn")
+	_text_note.reset_size.call_deferred()     # 字换了行数，便条跟着收放
 
 
 ## 风箱把手现在是哪一张（ready / idle / off；测试看）
@@ -390,7 +403,7 @@ func spot_rect(which: String) -> Rect2:
 		"bag":
 			return _bag_host.get_rect()
 		"text":
-			return _text_box.get_rect()
+			return _text_note.get_rect()
 		"slate":
 			return _slate.get_rect()
 		"handle":
