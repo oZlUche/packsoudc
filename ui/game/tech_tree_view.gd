@@ -57,6 +57,8 @@ var _ring_box: StyleBoxTexture = null
 
 
 func _init() -> void:
+	# 237：呼吸动画只在看得见时跑（基地屏别的页开着时这块树藏着，以前照样每帧改三块 StyleBox）
+	visibility_changed.connect(func() -> void: set_process(is_visible_in_tree()))
 	var line: Dictionary = UiTheme.art_meta(PAPER_ART).get("line", {})
 	_line_ink = Color(String(line.get("ink", LINE_INK.to_html(false))))
 	_line_lit = Color(String(line.get("lit", LINE_LIT.to_html(false))))

@@ -772,7 +772,7 @@ static var _tone_themes := {}
 ## 一块底现在是深是浅：用着美术图就看图的 json，否则查 [constant PANEL_TONES]（没登记的按深）
 static func tone_of(variation: StringName) -> StringName:
 	var art_name := String(PANEL_ART.get(variation, ""))
-	if art_name != "" and art(art_name) != null:
+	if art_name != "" and has_art(art_name):
 		var t := StringName(String(art_meta(art_name).get("tone", "")))
 		if t == TONE_LIGHT or t == TONE_DARK:
 			return t
@@ -940,10 +940,15 @@ static func contrast(a: Color, b: Color) -> float:
 #region 美术贴图（157：有图用图、没图照旧）
 ## [member asset_root] 下的 `<name>.png`；没有这张图返回 null
 static func art(name: String) -> Texture2D:
-	var path := asset_root + name + ".png"
-	if not ResourceLoader.exists(path) and not FileAccess.file_exists(path):
+	if not has_art(name):
 		return null
-	return EventImage.load_texture(path)
+	return EventImage.load_texture(asset_root + name + ".png")
+
+
+## 237：有没有这张图（只查文件，不加载）—— 只想知道「有图没图」的地方用它，别用 [method art]（每次都真加载一遍）
+static func has_art(name: String) -> bool:
+	var path := asset_root + name + ".png"
+	return ResourceLoader.exists(path) or FileAccess.file_exists(path)
 
 
 ## 221：画着字的图按语言换 —— 非中文界面有 `<name>_en.png` 就用它（尺寸、原点、可点区域和中文版一样），没有就用原图
@@ -969,12 +974,21 @@ static var _art_cache: Dictionary = {}
 
 
 ## 贴图旁边的 `<name>.json`（九宫格边距 `margin: [左, 上, 右, 下]`、石板框的 `title_height`）；没有或读不成字典是空字典
+## 237：按路径记住读到的（没有的不记，美术后到也能读到）—— 地图屏、石碑叠层等在 `_draw` 里每次重绘都来读，以前每次开文件、解析
 static func art_meta(name: String) -> Dictionary:
 	var path := asset_root + name + ".json"
+	if _art_meta_cache.has(path):
+		return _art_meta_cache[path]
 	if not FileAccess.file_exists(path):
 		return {}
 	var d = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return d if d is Dictionary else {}
+	if d is Dictionary:
+		_art_meta_cache[path] = d
+		return d
+	return {}
+
+
+static var _art_meta_cache: Dictionary = {}
 
 
 ## 石板顶上标题条的高（`slab_edge.json` 的 `title_height`，刻线在它下面）；没有石板图 0 = 按字高
@@ -984,7 +998,7 @@ static func frame_title_height() -> int:
 
 ## 157 补充三：板身、板边两张图都在才画石板；缺一张就是原来的平面底
 static func has_slab() -> bool:
-	return art(ART_SLAB_BODY) != null and art(ART_SLAB_EDGE) != null
+	return has_art(ART_SLAB_BODY) and has_art(ART_SLAB_EDGE)
 
 
 ## 一整块石板的底（[SlabStyle]：板身平铺 + 板边九宫格）；没图 null。参数同 [method _art_box]（内边距按板边）；
@@ -1041,7 +1055,7 @@ static func art_box(name: String) -> StyleBoxTexture:
 ## [param title_strip] 真 = 石板框：顶边的内边距只留到标题条上沿（标题条 [OverlayFrame] 自己占住刻线上方那一条）；
 ## [param content] ≥ 0 = 内边距用它（换皮不改排版），否则跟图边一样
 static func _art_box(name: String, title_strip: bool = false, content: int = -1) -> StyleBoxTexture:
-	var tex := art(name)
+	var tex := art_cached(name)     # 237：StyleBox 反正会一直拿着这张图，留在缓存里不多占；以前每建一块面板都重新加载
 	if tex == null:
 		return null
 	var quarter := int(mini(tex.get_width(), tex.get_height()) / 4.0)

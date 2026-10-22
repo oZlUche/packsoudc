@@ -126,7 +126,6 @@ var _pop_tw: Tween = null
 func _ready() -> void:
 	custom_minimum_size = Vector2(320, 110 if bronze else 190)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	set_process(true)
 
 
 func _gui_input(event: InputEvent) -> void:
