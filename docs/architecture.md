@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.23 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.24 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -1636,7 +1636,7 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
   方案写的 `TracedRng`（包一层随机数生成器）改成了 `roll`：GDScript 覆盖不了原生类的非虚方法，包一层拦不住原生调用。
 - `BattleSim.run(…, trace)` 多一个可选参数；`NodeEvents._fight`（猎手也走它）在 `trace_info` 非空时建 trace，跑完由 `BattleTraceWriter` 写进 `user://battle_logs/`：`<时间>_<种子>_n<点>_<章节>_<对手>` 三份 —— `.jsonl`（首行文件头，程序读）、`.txt`（人读）、`.replay.json`（`BattleResult.to_dict` + 名字表 + 双方棋盘，`JSON.from_native` 保住 int 键与定点整数）。文件头写现实时间、种子、章节、点、敌人内容、道具名表、开战快照、时限。只留最近 200 场（`BattleArchive.prune`，242 起；原 50）。战斗沙盒同样写（章节记 `sandbox`），基准与校准不写。
 - 回放存档**不存双方编译结果**（作者定）；buff 只存 id，读回来按道具能施加的 buff + 系统衰竭查定义。
-- 开关：`GameSettings.battle_trace`，非导出包默认开、导出包默认关（`BattleArchive.default_on`）；`GameFlow.apply_battle_trace` 按它给这一局填 `NodeEvents.trace_info`。设置屏「开发」区（只在非导出包里画）一行开关 + 「打开日志文件夹」。测试入口开跑前 `BattleArchive.enabled = false`，几百场测试战斗不写文件。
+- 开关：`GameSettings.battle_trace`，默认开（`BattleArchive.default_on`；242 补充二起玩家包也记，开关仍只在开发区），生效看 `GameSettings.trace_on()`（玩家包恒开、旧设置里的「关」不算数）；`GameFlow.apply_battle_trace` 按它给这一局填 `NodeEvents.trace_info`。设置屏「开发」区（只在非导出包里画）一行开关 + 「打开日志文件夹」。测试入口开跑前 `BattleArchive.enabled = false`，几百场测试战斗不写文件。
 - 看：开发工具（启动选择器）的「战斗回放」（`ui/battle/replay_browser.tscn`）列存档、点一场交给 `BattleView` 重演；游戏里**没有入口**（作者定）。命令行 `tools/replay_log.gd -- <file.jsonl | --latest> [--summary]` 把日志排成人读格式打到标准输出（给无窗口环境的线程读），`--summary` 只打双方伤害、出手 / 跳过次数、暴击率、buff 层数。
 
 ---
@@ -4463,6 +4463,7 @@ res://
 | v4.21 | 2026-10-22 | **240 跳过序章改成开场一问**：主菜单「跳过序章」删掉；新存档序章一读完开场事件，`GameFlow.tutorial_ask` → `MapScreen.show_tutorial_ask()` 弹羊皮纸卡「要带你走一遍吗？」，【需要】立旗标 `tutorial_asked` 照走教程，【不需要】`decline_tutorial()` = `skip_prologue()` + 这一局悄悄收掉（删局内存档、不记场次）+ 落开局屏；一份存档只问一次 |
 | v4.22 | 2026-10-22 | **241 难度拆三级、每级一行**：进阶一（体力上限 −1）/ 二（+ 侵蚀）/ 三（+ 猎手），每个 json 带齐到本级的机制、`challenge` 只写本级一行；`DifficultyDef.grants_unlock`，`_settle_run` 撤离成功时发（Ⅰ → `ascension_2`、Ⅱ → `ascension_3`）；数值不变。顺带修 `tools/perf_probe.gd`：回放看完按真实时间等一秒（原先按调用次数数，帧率低时会超时报卡住）、开场一问自动选「需要」、事件跳过选不了的选项（序章一精英） |
 | v4.23 | 2026-10-22 | **242 平衡方法第一批**：流派木桩 `ArchetypeBuilder` / `tools/build_archetypes.gd`（五路 × 四段 × 三种子 → `data/authoring/calibration/archetypes.json`）；扫表 `BalanceMatrix` / `tools/bench_matrix.gd`（每格 300 场、四张表进 `docs/reports/balance/`）；`CalibrationRecorder.record_run` → `user://calibration/runs.jsonl`，快照带版本号；`config/version` 0.1.0；设置「导出平衡数据」（`DataExport`，zip 到桌面）；`BattleArchive.KEEP` 50 → 200；`EnemyPlacer.bag_fits` 改公开；`bench_hunters` 默认难度改Ⅲ（241 后猎手在Ⅲ）。首跑两张表与结论见报告 242 §九 |
+| v4.24 | 2026-10-22 | **242 补充二：玩家版也记战斗日志**：`BattleArchive.default_on()` 恒真；`GameSettings.trace_on()` = `battle_trace or not DevGate.on()`，`GameFlow.apply_battle_trace` 用它（旧版导出包存的「关」不算数）；开关与打开文件夹仍只在开发区，玩家经「导出平衡数据」带走 |
 | v3.88 | 2026-10-21 | **224 补充二 结算屏第二版**（作者 17:22–17:23 六条）：结算屏两页板边换 `slab_edge_plain`（`UiTheme.slab` / `GameScreen._slab_screen` 的 `edge_art` 参数）；第一页 ×1.2、图 2 倍分辨率按 1x 尺寸画（`LedgerView` `draw_texture_rect`、标题牌 `EXPAND_IGNORE_SIZE`）；账单击败的敌人 / 精英 / 首领分三行；撤离时保险箱在账单右边（皮带框 + 格缝），第二页只剩带回的棋盘（格子 72，`WarehousePanel.board_cell`）和贴右上的仓库（`WarehousePages.fit` 量石板内容区）；战败没有第二页，`MetaState.absorb` 战败时保险箱带出的直接进仓库（包进包架），放不下才进待置入棋盘；新套件 `test_result_v2_224` |
 | v3.87 | 2026-10-21 | **232 局内非矩形第一轮**（作者 19:23 选 1 / 2 / 6 / 10，待定按推荐）：事件窗是一本摊开的书（`OverlayFrame` `book` 皮、`EventScreen._book_page` 绝对摆位、标题进右页、`EventImage.area(…, light)`）；背包窗是一只背包（`BagWindow._back` 四件皮料随窗宽摆、翻盖即把手 `grip_rect`、`FloatingWindow.outset` 夹边）；腰带 1–6 格是整张弯皮带（`BeltSlots.belt_layouts / curved`，命中半径 36，7 格起退回直圆槽；`BeltWidget` 不进凹槽）；图例是双尾旗九宫格（`LegendWidget.pennant_box`，最窄 158）。缺图都退回原来的皮；新套件 `test_bag_window_232`、`test_event_book_232` |
 | v3.86 | 2026-10-21 | **230 悬浮窗道具按钮 + 锁定**（作者 19:01 选丙）：`ItemActions` 供给层（`Action` 数据、`lock` / `lock_same` / `sell` / `sell_same` / `anchor`、`rows()` 两两并排成对不拆）；`ContainerView.actions_for(uid)` 各屏登记；`TipButton` 平墨签按钮（危险两步「再点一次」）；`HoverTip` 脚注下画按钮行、右键 `pin_on` 立刻钉住、点了原地刷新；玩家锁 `ItemInstance.state["locked"]` 守出售 / 一键出售 / 出售区 / 祭品台 / 铸炉 / 丢地上，小锁角标 `ItemPainter.draw_lock`；信物右键切换改成「奉为主信仰」按钮；新帮助页 `item_actions`；新套件 `test_item_actions_230` |

@@ -159,8 +159,9 @@ static func run_writer_and_prune(t: TestCase) -> void:
 
 
 static func run_settings(t: TestCase) -> void:
-	t.begin("117 · 设置：战斗日志默认按包的类型（非导出包开），存档来回；正式一局按设置给 NodeEvents 填好 / 清掉")
-	t.eq(GameSettings.new().battle_trace, BattleArchive.default_on(), "默认值按包的类型")
+	t.begin("117 · 设置：战斗日志默认开（242 补充二：玩家包也记），存档来回；正式一局按设置给 NodeEvents 填好 / 清掉")
+	t.check(BattleArchive.default_on(), "默认开，不看包的类型")
+	t.eq(GameSettings.new().battle_trace, BattleArchive.default_on(), "设置的默认值就是它")
 	var s := GameSettings.new()
 	s.battle_trace = not BattleArchive.default_on()
 	t.eq(GameSettings.from_dict(s.to_dict()).battle_trace, s.battle_trace, "存档来回")

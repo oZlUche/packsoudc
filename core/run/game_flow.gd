@@ -1347,7 +1347,7 @@ func _drop_run(next: RunState) -> void:
 func apply_battle_trace() -> void:
 	if run == null or run.events == null:
 		return
-	var on := settings != null and settings.battle_trace
+	var on := settings != null and settings.trace_on()
 	run.events.trace_info = {"dir": BattleArchive.DIR, "run_seed": run.run_seed,
 		"chapter": String(run.chapter.id) if run.chapter != null else ""} if on else {}
 

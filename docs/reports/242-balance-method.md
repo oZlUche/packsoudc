@@ -168,3 +168,5 @@ status.md「占位数值清单」里，①② 管 `enemies` / `enemy_pools` / `i
 - 为什么：对局记录只有「这一局赢了几场」，看不出「段 2 的真玩家打档 2 的某个敌人赢没赢、几秒」——而这正是和 §九 的木桩表对表要用的那一格。战斗日志一场三份几十 KB，上限两百场不到十 MB；写在工作线程上（236），玩家感觉不到。
 - 不变：117 的「游戏里没有入口、不给玩家看」照旧——打开日志文件夹的按钮和开关仍只在开发区；玩家只通过「导出平衡数据」把它带走。
 - 派执行线：`default_on()` 返回 `true`（函数留着，开发区开关照旧能关）；`tests/battle` 里有断言默认关的那条改过来；README 行照旧。
+
+**落地（v4.24）**：`BattleArchive.default_on()` 恒为 `true`。另加 `GameSettings.trace_on()`（= `battle_trace or not DevGate.on()`），`GameFlow.apply_battle_trace` 改用它，因为旧版玩家包存下的设置文件里写着 `"battle_trace": false`（当时导出包默认关），玩家包又没有开关能改回来，不加这一条，老玩家升级后照样不记。开发包仍按开发区的开关。测试：`test_dev_gate_186`（玩家包默认开、存过的「关」不算数；开发包按开关）、`test_battle_trace` 的设置一项。
