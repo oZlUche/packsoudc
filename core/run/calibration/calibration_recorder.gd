@@ -3,17 +3,28 @@
 ## 作者：系统完整后多场测试，每局按 3～5 个时间段取玩家的装备配置，每个配置生成一个平均木桩。
 ## 这里只记，不算：一行一个 JSON（`snapshots.jsonl`，追加写），记步数、搜索次数、棋盘（layout：定义、落点、朝向）、基线、角色、难度、buff。
 ## 分段与平均是 [DummyBuilder] 的事 —— 记录是原始数据，怎么切段以后可以改。
+## 242：每份快照带游戏版本号（几版混着读也分得开）；一局结束另记一行对局结果到 `runs.jsonl`（[method record_run]），不受局外历史二十局的上限。
+## 玩家版照记（装配在 [GameDirector]，不走开发开关），设置里「导出平衡数据」把这个目录连同战斗日志打包到桌面
 class_name CalibrationRecorder
 extends RefCounted
 
+const DIR := "user://calibration"
 const DEFAULT_PATH := "user://calibration/snapshots.jsonl"
+const RUNS_PATH := "user://calibration/runs.jsonl"
 
 var path: String = DEFAULT_PATH
+var runs_path: String = RUNS_PATH
 var written: int = 0
 
 
-func _init(p_path: String = DEFAULT_PATH) -> void:
+func _init(p_path: String = DEFAULT_PATH, p_runs_path: String = RUNS_PATH) -> void:
 	path = p_path
+	runs_path = p_runs_path
+
+
+## 242：游戏版本号（project.godot 的 application/config/version）
+static func version() -> String:
+	return String(ProjectSettings.get_setting("application/config/version", ""))
 
 
 ## 这一刻的玩家配置
@@ -23,6 +34,7 @@ static func snapshot(run: RunState) -> Dictionary:
 		for key in run.player_baseline.base_stats:
 			stats[String(key)] = float(run.player_baseline.base_stats[key])
 	return {
+		"version": version(),
 		"seed": run.run_seed,
 		"chapter": String(run.chapter.id) if run.chapter != null else "",
 		"character": String(run.character_id),
@@ -40,18 +52,33 @@ static func snapshot(run: RunState) -> Dictionary:
 
 ## 记一行。写不了（目录没有、盘满）返回 false，不影响对局
 func record(run: RunState) -> bool:
-	if run == null or run.board == null:
+	if run == null or run.board == null or not _append(path, snapshot(run)):
 		return false
-	var dir := path.get_base_dir()
+	written += 1
+	return true
+
+
+## 242：一局结束记一行 —— 对局结果（[method RunResult.to_dict]）+ 版本号 + 角色 + 难度
+func record_run(result: RunResult, run: RunState, ver: String = version()) -> bool:
+	if result == null:
+		return false
+	var row := result.to_dict()
+	row["version"] = ver
+	row["character"] = String(run.character_id) if run != null else ""
+	row["difficulty"] = String(run.difficulty_id) if run != null else ""
+	return _append(runs_path, row)
+
+
+static func _append(file: String, row: Dictionary) -> bool:
+	var dir := file.get_base_dir()
 	if dir != "" and not DirAccess.dir_exists_absolute(dir):
 		DirAccess.make_dir_recursive_absolute(dir)
-	var f := FileAccess.open(path, FileAccess.READ_WRITE if FileAccess.file_exists(path) else FileAccess.WRITE)
+	var f := FileAccess.open(file, FileAccess.READ_WRITE if FileAccess.file_exists(file) else FileAccess.WRITE)
 	if f == null:
 		return false
 	f.seek_end()
-	f.store_line(JSON.stringify(snapshot(run)))
+	f.store_line(JSON.stringify(row))
 	f.close()
-	written += 1
 	return true
 
 

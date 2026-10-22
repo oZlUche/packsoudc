@@ -10,7 +10,7 @@ class_name BattleArchive
 extends RefCounted
 
 const DIR := "user://battle_logs"
-const KEEP := 50
+const KEEP := 200     # 242：50 → 200（三份一场约几十 KB，两百场不到十 MB）
 const REPLAY_EXT := ".replay.json"
 const TRACE_EXT := ".jsonl"
 const TEXT_EXT := ".txt"
