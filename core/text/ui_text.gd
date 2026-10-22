@@ -468,6 +468,7 @@ const TEXT := {
 	"result.none": {"zh": "没有可结算的一局", "en": "No run to show results for"},
 	"result.extracted": {"zh": "撤离成功", "en": "Extracted"},
 	"result.defeat": {"zh": "战败", "en": "Defeat"},
+	"result.store_title": {"zh": "置入仓库", "en": "Into the Warehouse"},     # 228：第二页标题木牌
 	# —— 224：结算第一页的账单 ——
 	"ledger.visited": {"zh": "走过的点", "en": "Nodes visited"},
 	"ledger.steps": {"zh": "走了多少步", "en": "Steps taken"},
