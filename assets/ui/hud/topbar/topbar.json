@@ -1,7 +1,7 @@
 {
  "tone": "light",
- "design_height": 86,
- "strip_height": 104,
+ "design_height": 100,
+ "strip_height": 118,
  "ends": {
   "width": 104,
   "hit_left": [
@@ -35,12 +35,12 @@
  "dial": {
   "file": "dial_base",
   "size": [
-   302,
+   274,
    140
   ],
-  "center_x": 151,
+  "center_x": 137,
   "pivot": [
-   151,
+   137,
    6
   ],
   "radius": 94,

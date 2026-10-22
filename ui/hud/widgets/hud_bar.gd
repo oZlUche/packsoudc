@@ -6,6 +6,8 @@
 ## 底座下凸压在地图上、不占布局高度）；两头最后盖上去。两头是真按钮（[IconButton] 三态，热区是那块凸起的石块）：
 ## 左 = 本局菜单（等同 Esc），右 = 背包（右槽的小背包钮并进来了）。按下发 [signal end_pressed]，接到所在屏的 `hud_end(side)`。
 ## 两头不进 150 的布局（不能拖、不能藏）。缺皮退回主题变体的底（`slab_bar` 石板），两头照样在、写字
+## 作者 10-22 13:31「两头的浮雕和下方边缘重合了，扩张顶端栏的下缘」：石面 86 → 100，回纹带挪到 y 87～95 整条贯通；
+## 两头石块与读数仍在 y 8～78（[method band_margins] 按石块上下沿算，不按石面居中）
 extends HudWidget
 
 ## 两头按下：[constant LEFT] / [constant RIGHT]
@@ -82,7 +84,7 @@ static func has_skin() -> bool:
 
 ## 石面多高（栏在布局里占的高；投影与日晷下凸不算）
 static func design_height() -> float:
-	return float(skin().get("design_height", 86))
+	return float(skin().get("design_height", 100))
 
 
 ## 栏里的组左右各让多宽：石块外沿 + 间隙（左 88 + 12，右 104 − 16 + 12）
