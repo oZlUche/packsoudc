@@ -49,3 +49,13 @@
 
 - **执行**：一单，排在 226 批二 + 224 补充二之后、227 之前（改动小）。
 - **美术设计**：斗兽场已作废（作者 22:23），不再有后续。
+
+## 五、落地（v3.91，执行）
+
+- `OverlayFrame._init(margin, p_skin)`：`SKIN_SLAB / SKIN_BRONZE / SKIN_BOOK / SKIN_TENT` 一个参数；缺图退回石板，`skin` 记实际用上的那张。`_centered_panel(min_size, margin, skin)`，事件屏传 `SKIN_BOOK`、`_bronze_panel` 传 `SKIN_BRONZE`、商店传 `SKIN_TENT`。
+- 帐篷皮：`StyleBoxTexture` 三组 margin 读 `assets/ui/shop/tent_front.json`（美术 `tent.json` 原样，没另起 `layout.json`）；`_draw` 画尖顶（窗 (W/2 − 210, −56)）和布牌（窗 (W/2 − 138, −4)），标题 `LABEL_TENT_SIGN`（`UiTheme` 注册，进浅底文字主题的配对表，不被墨字盖掉）。
+- 顶栏让位按推荐（§三.1）：没加 `top_outset` 参数，`_centered_panel` 见 `outset_top() > 0` 就在 `resized` / `minimum_size_changed` 时算 `center.offset_top = bar + 2·max(0, 56 − 现空隙)`（居中区往下让两倍 = 窗下移一倍），空隙够了不挪。
+- **截图后多做的两处**（执行判断，数都在 `OverlayFrame` 常量里，想改一行改）：
+  1. 布牌连流苏挂到窗顶下 70，标题条 14..50 下面就是内容 —— 店里第一行（货币那行）被流苏挡住。标题条加高到流苏下沿 + 6（`TENT_SIGN_CLEAR`），标题字那一行仍是 14..50（`TENT_TITLE_H` 36、贴顶），字心照旧对红布 y 32。
+  2. 垂布伸进窗 22、边距 24 —— 截图上货架和出售格贴着布边。内容左右各多垫 12（`TENT_SIDE_PAD`）。
+- 测试 `test_shop_tent_233`（2 用例 23 断言）；截图 `/mnt/project-files/art/ui/shop/shots233/shop_zh.png`、`shop_en.png`（1280 × 800，尖顶离顶栏够、地毯不出屏）。

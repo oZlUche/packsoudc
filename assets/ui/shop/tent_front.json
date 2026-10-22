@@ -1,0 +1,72 @@
+{
+ "tone": "light",
+ "front": {
+  "file": "tent_front.png",
+  "size": [
+   1476,
+   884
+  ],
+  "drawn_panel": [
+   1292,
+   814
+  ],
+  "texture_margin": [
+   126,
+   94,
+   126,
+   80
+  ],
+  "expand_margin": [
+   92,
+   30,
+   92,
+   40
+  ],
+  "content_margin": [
+   24,
+   14,
+   24,
+   30
+  ],
+  "stretch": "STRETCH"
+ },
+ "peak": {
+  "file": "tent_peak.png",
+  "size": [
+   420,
+   58
+  ],
+  "top_left_rel_panel": [
+   "W/2 - 210",
+   -56
+  ],
+  "note": "画在窗外面（窗顶往上 56），窗上面离顶栏要留够这么多"
+ },
+ "sign": {
+  "file": "tent_sign.png",
+  "size": [
+   276,
+   74
+  ],
+  "text_center_rel_panel": [
+   "W/2",
+   32
+  ],
+  "top_left_rel_panel": [
+   "W/2 - 138",
+   -4.0
+  ],
+  "field_in_sign": [
+   17,
+   19,
+   242,
+   34
+  ],
+  "text": {
+   "font": "serif_bold",
+   "size": 22,
+   "color": "#f2e7cb"
+  }
+ },
+ "note": "商店窗（ShopScreen 的 OverlayFrame）换掉石板：StyleBoxTexture，texture_margin / expand_margin / content_margin 都是左上右下。标题条照旧在内容区最上面一行（14..50），字居中、写在布牌红面上（浅色字），布牌中心在窗 (W/2, 32)；尖顶摆在窗顶正中往上。门帘里侧最多伸进窗 22，内容左右边距 24 不变。地毯和流苏挂在窗下面 40。"
+}

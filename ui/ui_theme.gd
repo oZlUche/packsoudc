@@ -40,6 +40,10 @@ const RICH_SMALL := &"RichTextSmall"
 ## 美术给了图就是石板（`slab_body` + `slab_edge`，157 补充三）/ 九宫格的纸（`tooltip_paper.png`），没给就是平面底
 const PANEL_OVERLAY := &"PanelOverlay"
 const LABEL_OVERLAY_TITLE := &"LabelOverlayTitle"
+## 233：商店帐篷布招牌上的标题（红布上的浅字，居中；思源宋体粗 22）
+const LABEL_TENT_SIGN := &"LabelTentSign"
+const TENT_SIGN_SIZE := 22
+const TENT_SIGN_INK := Color("f2e7cb")
 const PANEL_TOOLTIP := &"PanelTooltip"
 ## 157 补充二：名牌底（战前 / 回放两屏的名牌）
 const PANEL_NAMEPLATE := &"PanelNameplate"
@@ -115,7 +119,7 @@ const BUTTON_MENU_FOOT := &"ButtonMenuFoot"
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
-	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
+	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, LABEL_TENT_SIGN, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
@@ -689,7 +693,7 @@ static func text_theme(tone: StringName) -> Theme:
 		return _tone_themes[tone]
 	var t := Theme.new()
 	t.set_color("font_color", "Label", INK)
-	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_DISPLAY, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK], [LABEL_HUD_DOUBLE, INK]]:
+	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_DISPLAY, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK], [LABEL_HUD_DOUBLE, INK], [LABEL_TENT_SIGN, TENT_SIGN_INK]]:
 		t.set_type_variation(pair[0], "Label")
 		t.set_color("font_color", pair[0], pair[1])
 	t.set_type_variation(LABEL_SCREEN_TITLE, "Label")     # 写在浅色背景画上的大标题：墨字，不要阴影（深底那圈黑影在浅底上发糊）
@@ -1033,6 +1037,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_font_size("font_size", LABEL_OVERLAY_TITLE, OVERLAY_TITLE_SIZE)
 	t.set_font("font", LABEL_OVERLAY_TITLE, _font_title)
 	t.set_color("font_color", LABEL_OVERLAY_TITLE, UiPalette.FG)
+	t.set_type_variation(LABEL_TENT_SIGN, "Label")     # 233：布招牌是红布，不管窗是深是浅都写浅字
+	t.set_font_size("font_size", LABEL_TENT_SIGN, TENT_SIGN_SIZE)
+	t.set_font("font", LABEL_TENT_SIGN, UiPalette.cjk_font_bold())
+	t.set_color("font_color", LABEL_TENT_SIGN, TENT_SIGN_INK)
 	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
 	var paper: StyleBox = layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY)
 	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))

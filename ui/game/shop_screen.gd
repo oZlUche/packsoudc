@@ -22,7 +22,7 @@ var _inv: InventoryPanelScript
 func open(payload: Dictionary) -> void:
 	_session = payload.get("session", null)
 	var node: MapNode = payload.get("node", null)
-	var panel := _centered_panel(Vector2(0, 0))
+	var panel := _centered_panel(Vector2(0, 0), 16, OverlayFrame.SKIN_TENT)     # 233（作者 21:42 选乙）：集市帐篷
 	var row := _hbox(24)
 	panel.add_child(row)
 
