@@ -352,6 +352,10 @@ func _embed_in_pause(script: GDScript, screen_id: int, payload: Dictionary, on_c
 const REPLAY_LATER := {&"battle": "战斗", &"bag": "背包", &"prebattle": "战前"}
 
 
+## 226 批四：规则纸的内边距（左右让开纸的毛边）
+const RULES_PAPER_PAD := Vector2i(36, 22)
+
+
 ## 091：「本图规则」卡：章节写的 ≤ 3 条，一页；[param first] = 第一次进这一章弹的（关掉时记住看过了）
 func show_rules(first: bool = false) -> void:
 	if _rules != null or _run == null or _run.chapter == null or _run.chapter.rules.is_empty():
@@ -362,11 +366,19 @@ func show_rules(first: bool = false) -> void:
 	_rules.get_child(0).add_child(panel)
 	var col := _vbox(12)
 	panel.content.add_child(col)
+	# 226 批四：几条规矩写在一张羊皮纸上（浅底墨字），「知道了」在纸下面
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, RULES_PAPER_PAD.x, RULES_PAPER_PAD.y, RULES_PAPER_PAD.x, RULES_PAPER_PAD.y)
+	paper.name = "RulesPaper"
+	col.add_child(paper)
+	var lines := _vbox(12)
+	paper.add_child(lines)
 	var ctx := TextTemplate.context_for(_run)     # 112：规则卡也过占位符（{item:…} 按稀有度上色）
 	for i in _run.chapter.rules.size():
-		col.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, TextTemplate.render(_run.chapter.rules[i], ctx)]))
+		lines.add_child(UiTheme.rich_block(560, 15, "%d. %s" % [i + 1, TextTemplate.render(_run.chapter.rules[i], ctx)]))
 	# 226 批二：末尾那两句（「看不懂的词……百科」「暂停菜单里能再看」）删了
-	col.add_child(_button(UiText.t("map.rules_ok"), close_rules, 14, UiPalette.Tier.PRIMARY))
+	var ok := ScrollKey.primary(UiText.t("map.rules_ok"), close_rules)     # 乙 石刻：主键（纸卷 + 蜡封）
+	ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(ok)
 
 
 func close_rules() -> void:

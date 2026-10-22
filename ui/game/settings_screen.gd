@@ -17,7 +17,6 @@ var _bg_btns: Dictionary = {}
 ## 172：窗口模式的按钮（模式 → 按钮）、分辨率的按钮（档位 → 按钮）、全屏时那行注
 var _mode_btns: Dictionary = {}
 var _res_btns: Dictionary = {}
-var _res_note: Label = null
 ## 204：「声音」一节的音效音量（读数写在步进件的石牌上）
 var _sfx: StoneStepper = null
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
@@ -85,20 +84,23 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(_unlock_all_btn)
 	col.add_child(HSeparator.new())
 	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
-		col.add_child(_label("开发", 15, UiPalette.DIM))
-		col.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记。", 12, UiPalette.DIM, 500))
+		var dev := _vbox(8)     # 226 批四：开发区的说明字不算裸字，守门测试放过（只在开发包里有）
+		dev.set_meta(&"exempt_bare_text", "dev")
+		col.add_child(dev)
+		dev.add_child(_label("开发", 15, UiPalette.DIM))
+		dev.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记。", 12, UiPalette.DIM, 500))
 		_debug_btn = _toggle("调试模式", toggle_debug_mode)
-		col.add_child(_debug_btn)
-		col.add_child(_wrapped("节点浮窗按章节开放（第二章才开），这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
+		dev.add_child(_debug_btn)
+		dev.add_child(_wrapped("节点浮窗按章节开放（第二章才开），这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
 		_tooltip_btn = _toggle("节点浮窗预览", toggle_node_tooltips_preview)
-		col.add_child(_tooltip_btn)
-		col.add_child(_wrapped("战斗日志：每场战斗的内部日志（逐条、带时间）与回放存档写进 user://battle_logs，只留最近 %d 场。回放在开发工具的「战斗回放」里翻。" % BattleArchive.KEEP, 12, UiPalette.DIM, 500))
+		dev.add_child(_tooltip_btn)
+		dev.add_child(_wrapped("战斗日志：每场战斗的内部日志（逐条、带时间）与回放存档写进 user://battle_logs，只留最近 %d 场。回放在开发工具的「战斗回放」里翻。" % BattleArchive.KEEP, 12, UiPalette.DIM, 500))
 		var row := _hbox(8)
 		_trace_btn = _toggle("战斗日志", toggle_battle_trace)
 		row.add_child(_trace_btn)
 		row.add_child(_button("打开日志文件夹", open_log_folder, 13, UiPalette.Tier.MINOR))
-		col.add_child(row)
-		col.add_child(HSeparator.new())
+		dev.add_child(row)
+		dev.add_child(HSeparator.new())
 	var back_key := ScrollKey.make(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back)     # 乙 石刻
 	back_key.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(back_key)
@@ -117,23 +119,22 @@ func _build_display(col: VBoxContainer) -> void:
 		_mode_btns[mode] = b
 		mode_row.add_child(b)
 	col.add_child(mode_row)
-	var rows := {}     # 宽高比 → 那一行
+	var rows := {}     # 宽高比 → 那一行（226 批四：行头的「16:9」小字删了，宽高比进各档的悬浮窗）
 	var shown := WindowSetup.available(WindowSetup.screen_size(get_window() if is_inside_tree() else null))
 	for p in shown:
 		var aspect := WindowSetup.aspect_name(p)
 		if not rows.has(aspect):
 			var row := _hbox(8)
-			row.add_child(_label(aspect, 12, UiPalette.DIM))
 			rows[aspect] = row
 			col.add_child(row)
 		var size: Vector2i = p
 		var rb := StoneChip.make(WindowSetup.label(p), func(): set_resolution(size))
 		_res_btns[p] = rb
 		rows[aspect].add_child(rb)
-	if shown.is_empty():     # 屏幕比最小一档还小：窗口就是屏幕那么大
-		col.add_child(_label(UiText.t("settings.res_follow_screen"), 13, UiPalette.DIM))
-	_res_note = _label(UiText.t("settings.fullscreen_note"), 12, UiPalette.DIM)
-	col.add_child(_res_note)
+	if shown.is_empty():     # 屏幕比最小一档还小：窗口就是屏幕那么大 —— 一颗灰着的签（226 批四）
+		var follow := StoneChip.make(UiText.t("settings.res_follow_screen"), func(): pass)
+		follow.disabled = true
+		col.add_child(follow)
 
 
 ## 204：「声音」一节 —— 音效音量一行（− / + 一步 10%，按钮本身响 `ui.press`，当场听到新音量）。音乐那行等第一首曲子再露出来（待定 4.2）
@@ -187,8 +188,7 @@ func refresh_display() -> void:
 		var b := _res_btns[p] as Button
 		b.disabled = full
 		b.set_pressed_no_signal(not full and p == flow.settings.resolution)
-	if _res_note != null:
-		_res_note.visible = full
+		b.tooltip_text = UiText.t("settings.fullscreen_note") if full else WindowSetup.aspect_name(p)     # 226 批四：「全屏按桌面分辨率」进灰着的档的悬浮窗
 
 
 ## 一个开关行（这一屏的几个布尔项）：乙 石刻 —— 石签拉满整行、左头印表示开 / 关（[method StoneChip.toggle]）

@@ -7,6 +7,9 @@ extends GameScreen
 
 const TOC_WIDTH := 300.0
 const PAGE_WIDTH := 760.0
+## 226 批四：页纸的内边距（左右让开纸的毛边）
+const PAPER_PAD := 40
+const PAPER_PAD_Y := 26
 
 ## 嵌在暂停菜单里时的「返回」；空 = 独立的一屏，回主菜单
 var back: Callable = Callable()
@@ -21,6 +24,8 @@ var _search: LineEdit
 var _toc: VBoxContainer
 var _title: Label
 var _body: RichTextLabel
+## 226 批四：页底下垫的那张纸
+var _paper: PanelContainer = null
 var _prev_btn: Button
 
 
@@ -57,14 +62,20 @@ func open(payload: Dictionary) -> void:
 	_prev_btn = ScrollKey.short(UiText.t("codex.prev"), go_previous)
 	_prev_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(_prev_btn)
-	_title = _label("", 24, UiPalette.FG)
-	right.add_child(_title)
-	right.add_child(HSeparator.new())
+	# 226 批四：一页垫一张羊皮纸（标题在纸头、正文在纸上，浅底墨字）
+	_paper = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, PAPER_PAD, PAPER_PAD_Y, PAPER_PAD, PAPER_PAD_Y)
+	_paper.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(_paper)
+	var sheet := _vbox(10)
+	_paper.add_child(sheet)
+	_title = _label("", 24, UiTheme.INK)
+	sheet.add_child(_title)
+	sheet.add_child(HSeparator.new())
 	var page_scroll := ScrollContainer.new()
 	page_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	right.add_child(page_scroll)
-	_body = UiTheme.rich_block(PAGE_WIDTH - 20, UiTheme.RICH_BODY_SIZE)     # 121：正文档（现 20 号、行距 8）
+	sheet.add_child(page_scroll)
+	_body = UiTheme.rich_block(PAGE_WIDTH - 20 - 2 * PAPER_PAD, UiTheme.RICH_BODY_SIZE)     # 121：正文档（现 20 号、行距 8）
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.meta_clicked.connect(func(meta: Variant): open_page(String(meta)))
 	page_scroll.add_child(_body)

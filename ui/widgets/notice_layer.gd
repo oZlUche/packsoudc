@@ -40,7 +40,8 @@ static func post(from: Node, text: String, urgent: bool = false) -> void:
 	if layer == null:
 		layer = n.call("notice_layer") if n != null else null
 	if layer != null:
-		layer.push(text, urgent, int(n.call("notice_cap")) if n != null and n.has_method("notice_cap") else MAX_LINES)
+		layer.push(text, urgent, int(n.call("notice_cap")) if n != null and n.has_method("notice_cap") else MAX_LINES,
+			float(n.call("notice_beside")) if n != null and n.has_method("notice_beside") else 0.0)
 
 
 func _init() -> void:
@@ -64,10 +65,12 @@ func _exit_tree() -> void:
 		_current = null
 
 
-## 写一句（[param urgent] = 要紧：朱红卷、停得久）。[param cap] 是这一次最多留几卷（233 复测：帐篷屏只留一卷，第二卷会压住窗顶的布招牌）
-func push(text: String, urgent: bool = false, cap: int = MAX_LINES) -> void:
+## 写一句（[param urgent] = 要紧：朱红卷、停得久）。[param cap] 是这一次最多留几卷（233 复测：帐篷屏只留一卷，第二卷会压住窗顶的布招牌）；
+## [param beside] > 0 = 卷不居中、从屏中线往右这么远起排（神坛碑顶正对着卷的位置，v4.02 复测）
+func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: float = 0.0) -> void:
 	if text == "":
 		return
+	_place(beside)
 	for l in _lines:
 		if (l["scroll"] as NoticeScroll).text == text:
 			l["left"] = URGENT_SEC if urgent else SHOW_SEC
@@ -131,3 +134,10 @@ func _drop(i: int) -> void:
 			s.queue_free())
 	if not motion and is_instance_valid(s) and s.get_parent() == _col:
 		_col.remove_child(s)     # 关着动效：立刻离开排版（下一句马上顶上来）
+
+
+## 卷排在哪：[param beside] = 0 居中；> 0 从屏中线往右这么远起排
+func _place(beside: float) -> void:
+	_col.grow_horizontal = Control.GROW_DIRECTION_END if beside > 0.0 else Control.GROW_DIRECTION_BOTH
+	_col.offset_left = maxf(0.0, beside)
+	_col.offset_right = maxf(0.0, beside)

@@ -28,7 +28,11 @@ func open(payload: Dictionary) -> void:
 		say(UiText.t("slots.full"))
 	var repaired := flow.repair_notice()     # 173：读档修复报告（和 098 的备份提示同一处）
 	if repaired != "":
-		col.add_child(_wrapped(repaired, 13, UiPalette.STAMINA, 840))
+		var note := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_SUMMARY_NOTE)     # 226 批四：修复报告写在一张便条上
+		note.name = "RepairNote"
+		note.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		col.add_child(note)
+		note.add_child(_wrapped(repaired, 13, UiTheme.INK_WARN, 840))
 	for n in range(1, SaveSlots.COUNT + 1):
 		col.add_child(_row(n))
 	col.add_child(HSeparator.new())

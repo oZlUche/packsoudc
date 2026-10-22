@@ -339,3 +339,26 @@
 - **石祭台**：`altar/altar_table`（344 × 438 定尺寸）垫在祭品台框下面，框（227 plain，272 × 272）左上 = 图左上 + (36, 86)。
 - **核对修正**（UI替换美术）：碑面上灰着的石签、下拉字色改 #c8ced1（`StoneChip.set_state_ink`、`dress_chip_option` 的 `disabled_ink`；灰图中心透明，墨灰落在深碑面上看不见）；标题去掉重复的神名（`altar.head` 只填 `faith_power.line()`）；英文「Pray for a Blessing」缩短。
 - 测试 tests/ui/test_stone_chips.gd（`frame_altar_stele`）；截图 /mnt/project-files/art/ui/kit/shots_stele/。
+
+## 十九、补充五：批四的口径（2026-10-22，架构）
+
+执行问批四有没有新规格或排序，答：规格仍是 §1.4 + §六那行（事件 / 规则 / 百科 / 科技板 / 读档纸条 / 回放卷轴）+ §十五留下的两处（分辨率行头的「16:9」小字、开发区说明），只补三条口径，顺序不变（垫纸 → 守门测试）。
+
+1. **事件窗不另垫纸。** 232 之后事件窗是整张书皮，正文落在右页 `text_rect` 里 —— 书页本身就是纸，再铺 `PANEL_PARCHMENT` 是纸上叠纸。守门测试把书皮窗的 `text_rect` 下的 `RichTextLabel` 算在控件上（和叠层标题条一样白名单）。
+2. **科技说明板已经在纸上**（`tech_panel.gd` 用 `PANEL_PARCHMENT`），批四只核边距不动它；挑战卷轴同理。剩下真要垫的：章节规则卡、百科正文页、读档屏的修复报告、回放卷轴的字；标题刻在纸头（§1.4）。
+3. **守门测试白名单**（§六）：`PLATE_VARIANTS` 以外还算控件的 —— `Button` 的祖先链、`OverlayFrame` 标题条（石板皮已经坐在 `kit/band` 上，铜 / 书 / 帐篷 / 青石碑各有自己的标题图位，一律放行）、书皮窗 `text_rect`、`BoardFrame` 的名牌、`DevGate` 下的一切、`meta.exempt_bare_text` 标的退路字。先按现有屏跑一遍，报出来的清单贴进 §二十再删，不要为了过测试把字塞进不相干的控件。
+
+## 二十、批四落地（v4.03）：垫纸、开发说明、守门测试
+
+- **v4.02 复测修正**（游戏测试）：神坛告示卷轴不再压碑顶神徽 —— 石碑窗、帐篷窗告示只留一卷（`notice_cap()` = 1），石碑窗的卷轴挪到山墙右侧（`OverlayFrame.notice_beside()` = 山墙右沿 + 16，`NoticeLayer.push(..., beside)` 从这里往右排）；英文献祭单数「Offered 1 item」（`log.offered_one`，`UiText.tn`）。
+- **设置屏**：分辨率下面那行说明删了（全屏时的说明进悬浮窗）；分辨率行右边的「16:9」小字删了，比例进按钮悬浮窗；屏太小一档都没有时，换一枚灰着的石签「跟随屏幕」。开发区整块打 `exempt_bare_text`（只在开发包里有）。
+- **百科**：标题、分隔线、正文垫一张羊皮纸（`PANEL_PARCHMENT`，左右 40、上下 26），标题墨色。
+- **地图规则卡**：规则几行垫羊皮纸，「知道了」换纸卷主键（`ScrollKey.primary`）。
+- **主菜单**：备份 / 读档修复那几句写在右下角一张便条上（`PANEL_SUMMARY_NOTE`，墨红 `INK_WARN`），没有不占位。
+- **读档屏**：读档修复报告同样写在便条上，居中。
+- **结算标题**、**战斗飘字**、**回放浏览器播报 / 非铜面板战报**、**结算信仰节奏量尺（开发）**：分别是标题牌图上的字、画面效果、开发工具，打 `exempt_bare_text` 标记。
+- **铸炉**：挂板说明、三槽下的石带小字、台面上「将铸出」几行都写在底图画好的位置（196 §5 炉台版），打 `exempt_bare_text`（`ForgeArt`）。台面那几行要不要另垫便条，交 UI替换美术定。
+- **守门测试** `tests/ui/test_no_bare_text_226.gd`：headless 开开局三页、基地家与五个页签、设置、百科、读档、主菜单（带备份告示）、地图（HUD）、事件书、商店、神坛、铸炉、搜刮、保险箱，凡看得见有字的 `Label / RichTextLabel`，祖先链里得有：按钮；字件类（HeaderTag、TitlePlate、PriceTag、NoticeScroll、NoticeLayer、StatsStrip、HoverTip、ItemTooltip、CapTile、HudHost、DevDrawer、LedgerView）；`UiTheme.PLATE_VARIANTS` 里的底（名牌、羊皮纸、便条、纸签、提示框、铜牌、翻页计数器、深色内垫、凹槽板、背包皮、仓库框、家的粗布框、图标牌、HUD 板、引擎悬浮窗）；叠层窗标题条；书皮窗的书页；或 `exempt_bare_text` 标记。不然报「屏 · 字（节点名）」。
+- **守门第一遍报出来的**（按 §十九 第 3 条贴这里）：摸底工具逐屏报过设置（16:9、分辨率说明、开发说明）、百科正文、规则卡、结算标题、战斗飘字、回放播报、主菜单 / 读档告示、HUD（钱包、图例）、事件书页、技能页战绩框；测试本身第一遍只剩铸炉两行（台面「将铸出」、挂板说明）。前几样上面已垫纸或删掉；HUD、事件书页、家的粗布框按白名单放行；铸炉按底图字位豁免。
+- 另：227 守门里「别的叠层照旧两卷」那条从神坛换成搜刮（神坛现在是石碑，一卷）。
+- 截图 /mnt/project-files/art/ui/kit/shots_paper/（settings_zh、ency_zh、skills_zh、rules_crop、menu_note、slots_note）、shots_stele/notice_beside_en.png。

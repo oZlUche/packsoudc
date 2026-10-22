@@ -134,23 +134,24 @@ static func frame_setup_pages(t: TestCase, root: Window) -> void:
 
 
 static func frame_notice_cap_tent(t: TestCase, root: Window) -> void:
-	t.begin("233 复测：帐篷屏告示只留一卷（第二卷会压住窗顶布招牌），别的叠层照旧两卷")
+	t.begin("233 复测：帐篷屏、石碑屏（226 批四：神坛碑顶）告示只留一卷（第二卷会压住布招牌 / 碑顶），别的叠层照旧两卷")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var f := Support.flow(c, PREFIX + "n")
 	f.begin(c.chapter, kit, 1)
 	f.pick_spawn(f.run.map.entry_ids[0])
-	for row in [["shop", 1], ["altar", NoticeLayer.MAX_LINES]]:
+	var box := {"container": GridInventory.new(Vector2i(3, 3), 0, false)}
+	for row in [["shop", 1, {}], ["altar", 1, {}], ["container", NoticeLayer.MAX_LINES, box]]:
 		var screen = load("res://ui/game/%s_screen.gd" % row[0]).new()
 		screen.flow = f
 		screen.font = UiPalette.cjk_font()
 		root.add_child(screen)
-		screen.open({})
-		t.eq(screen.notice_cap(), int(row[1]), "%s：最多 %d 卷" % row)
+		screen.open(row[2])
+		t.eq(screen.notice_cap(), int(row[1]), "%s：最多 %d 卷" % [row[0], row[1]])
 		screen.say("一")
 		screen.warn("二")
 		NoticeLayer.post(screen.overlay_frame().content, "三")
-		t.eq(screen.notice_layer().lines().size(), int(row[1]), "%s：连说三句挂着 %d 卷" % row)
+		t.eq(screen.notice_layer().lines().size(), int(row[1]), "%s：连说三句挂着 %d 卷" % [row[0], row[1]])
 		t.eq(screen.notice_layer().current_text(), "三", "最新的在")
 		screen.free()
 	Support.cleanup(PREFIX + "n")

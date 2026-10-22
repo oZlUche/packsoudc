@@ -55,6 +55,8 @@ const STELE_GABLE := "altar/stele_gable"
 const STELE_BASE := "altar/stele_base"
 const STELE_BAND := "altar/stele_band"
 var stele := false
+## 告示卷离碑顶右沿多远
+const NOTICE_CLEAR := 16.0
 ## 碑顶石槽里的神徽（原尺寸画，不放大；空 = 空槽）
 var emblem: Texture2D = null:
 	set(v):
@@ -266,6 +268,13 @@ func outset_top() -> float:
 	if stele:
 		return -stele_gable_at().y
 	return -tent_peak_at().y if tent else 0.0
+
+
+## 告示卷从屏中线往右多远起排：碑顶伸到顶端栏下面、正挡着居中的卷 —— 卷挪到碑顶右边；别的皮 0（居中）
+func notice_beside() -> float:
+	if not stele:
+		return 0.0
+	return -float((UiTheme.art_meta(STELE_GABLE).get("at", [-186, -70]) as Array)[0]) + NOTICE_CLEAR
 
 
 ## 这张皮在窗底下还要占多高（碑的石基；别的皮 0）—— 居中时一并让出来
