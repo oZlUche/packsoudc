@@ -247,6 +247,7 @@
 | 232 | [局内非矩形界面第一轮：事件窗整张「摊开的书」图垫底、标题进右页（`OverlayFrame.whole` 皮）；背包窗四件皮料垫在画布下、翻盖当把手、`FloatingWindow.outset` 夹边；腰带按格数取整张弯皮带、圆心读表、超 6 格退回；图例换燕尾旗九宫格。作者 19:23「可以直接用的：1，2，6，10」，图在 art/ui/nonrect/](232-nonrect-ingame-round1.md) | 已落地 v3.87（待定按推荐；图：美术设计 art/ui/nonrect） | 作者 2026-10-21 19:23「可以直接用的：1，2，6，10」 |
 | 233 | [商店换成集市帐篷：`ShopScreen` 的 `OverlayFrame` 加 `tent` 皮（`skin` 参数替掉 bronze / book 两个 bool）—— 篷面九宫格靠 `expand_margin` 把门帘、油灯、地毯画在窗外，窗顶尖顶 + 布招牌，标题字落在布牌上；`_centered_panel` 加 `top_outset` 让尖顶不被顶栏盖住；内容区不动。图 art/ui/nonrect/tent](233-shop-tent.md) | 已落地 v3.91（待定按推荐；截图后加高标题条让开流苏、两侧多垫 12） | 作者 2026-10-21 21:42 在美术设计方向卡上选「乙 集市帐篷」 |
 | 234 | [游戏图标：字标里那只皮背包单独立起来，包盖缝出格子针脚；`assets/icon/icon.png`（256）+ `icon.ico`（16～256 七档，16 / 32 手调），`config/icon` 与 `windows_native_icon`、两个导出预设的 `application/icon`；删 `icon.svg`。图 art/ui/icon](234-game-icon.md) | 已落地 v4.08 | 作者 2026-10-22 09:31 在美术设计卡上选「缝格背包」 |
+| 237 | [卡死 / 卡顿 / 内存评估：三路静态审阅 + 云端 `tools/perf_probe.gd` 逐帧量测；头号问题是 `UiPalette` 取字体每次新建 `SystemFont`（Windows 每次重绘读整份微软雅黑），已改成只建一次；其余逐帧 / 泄漏 / 贴图 / 写盘按「不改行为 / 改行为」分列](237-perf-freeze-assessment.md) | 评估 + 字体缓存已落地 v4.10；第二批低风险优化由审阅线程合并，行为改动交架构设计 | 作者 2026-10-22 10:33「关于卡死问题，我认为和内存占用有关…让负责审阅代码的线程评估整个项目的代码和资源调用」 |
 
 ## 已归档（被覆盖或作废的方案，只留作历史）
 
