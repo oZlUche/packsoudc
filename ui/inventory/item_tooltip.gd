@@ -200,6 +200,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		lines.append(UiText.t("tip.effect") % (d if d != "" else _type_name(e)))
 	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
 		lines.append(wear_line(inst))
+	if inst.is_benched():     # 2026-10-22：标了不参战 —— 写清楚，不然读数掉下来不知道为什么
+		lines.append("[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("tip.benched")])
 	if def.growth != null:     # 207：生长 —— 现在第几阶、再几步、各阶加什么、扎根没有
 		var gst := faith_status()
 		lines.append_array(growth_lines(inst, board, not gst.is_empty() and not faith_lit(def, gst)))

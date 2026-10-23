@@ -801,9 +801,15 @@ func encyclopedia() -> Encyclopedia:
 	if _encyclopedia == null or _encyclopedia_lang != UiText.lang:     # 221 F4：标题、正文、链接都按语言，切了语言重造
 		_encyclopedia = Encyclopedia.build(help_pages, items, recipes)
 		_encyclopedia_lang = UiText.lang
-	_encyclopedia.lit = func(id: StringName) -> bool: return meta == null or meta.codex_lit(id)
-	_encyclopedia.reaction_lit = func(id: StringName) -> bool: return meta == null or meta.reaction_seen(id)     # 175
+	_encyclopedia.lit = func(id: StringName) -> bool: return names_revealed() or meta == null or meta.codex_lit(id)
+	_encyclopedia.reaction_lit = func(id: StringName) -> bool: return names_revealed() or meta == null or meta.reaction_seen(id)     # 175
 	return _encyclopedia
+
+
+## 2026-10-22（作者）：设置里「名字全显」开着吗 —— 开着时百科不再把没点亮的名字遮成「？」
+## （配方行、相关道具、反应表三处遮名都走上面那两个回调，所以只认这一个开关）
+func names_revealed() -> bool:
+	return settings != null and settings.reveal_names
 
 
 func save_settings() -> bool:
@@ -818,7 +824,7 @@ func save_settings() -> bool:
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int],
 		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0,
-		spawn_id: int = -1) -> RunState:
+		spawn_id: int = -1, carry_funds: int = 0) -> RunState:
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
@@ -838,7 +844,10 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	# 101：模块要的运行时输入（保险箱几格来自局外成长、带入价值来自这一次的选择）
 	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value},
 		BeltModule.ID: {"grants": meta.belt_grants.duplicate() if meta != null else {}}}     # 160 补一：科技发的随身技能
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs)
+	# 2026-10-22（作者定）：这一局带多少现金进来 —— 由开局屏选，从仓库账上扣，死在局内就没了。
+	# 夹在 0 和仓库余额之间：界面本来就按余额封顶，这里是兜底（存档改过、并发调用都不至于扣成负数）
+	var cash := clampi(carry_funds, 0, meta.funds if meta != null else 0)
+	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs, cash)
 	if state == null:
 		return null
 	# 182：开局第三页挑好了出生点 —— 直接站上去（和章节的 auto_spawn 同一条路），新的一局不再进挑出生点阶段
@@ -846,11 +855,13 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 		state.pick_spawn(spawn_id)
 	for inst in taken:
 		meta.warehouse.remove(inst.uid)
+	if cash > 0:
+		meta.spend_funds(cash)     # 撤离时 absorb() 会把局内余额 1:1 加回来；战败不加 = 这笔钱就丢在局里了
 	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的地上规则；不经开局屏的路一样）
 	var lost := meta.has_pending_board()
 	if meta.board != null:
 		meta.discard_board()     # 搬空了的空棋盘（一键置入后留着显示的）一并丢
-	if not taken.is_empty() or character != null or lost:
+	if not taken.is_empty() or character != null or lost or cash > 0:
 		save_meta()
 	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
@@ -1082,7 +1093,8 @@ func _settle_run() -> void:
 	result = RunResult.settle(run)
 	if not _settled:
 		_settled = true
-		last_absorbed = meta.absorb(result)
+		# 2026-10-22（作者定）：行囊给的「战败保住几成钱」由 absorb 在战败分支里兑现
+		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0)
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)

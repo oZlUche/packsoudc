@@ -144,8 +144,9 @@ static func run_run_reads_tech(t: TestCase) -> void:
 		return
 	var ctx := s.buff_context()
 	var pack: RunBuffDef = buffs[&"tech_pack_2"]
-	var funds_eff := pack.effects[0] as Effect
-	t.eq(ctx.starting_funds_mult, int(funds_eff.get("percent")), "开局钱的百分比读到了（行囊 2 级，149）")
+	var refund_eff := pack.effects[0] as Effect
+	# 2026-10-22（作者定）：行囊从「开局白送钱」改成「战败保住身上几成钱」，2 级 = 三成
+	t.eq(ctx.death_refund_percent, int(refund_eff.get("percent")), "战败保钱的百分比读到了（行囊 2 级）")
 	t.check(ctx.vitality_max_mult >= 1, "体力上限的百分比读到了（耐久 1 级，149）")
 
 

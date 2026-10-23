@@ -1,15 +1,14 @@
 [gd_resource type="Resource" script_class="RunBuffDef" format=3]
 
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="1_3a6qf"]
-[ext_resource type="Script" path="res://core/run/effects/starting_funds_bonus.gd" id="2_dsuqd"]
+[ext_resource type="Script" path="res://core/run/effects/keep_on_death.gd" id="2_dsuqd"]
 [ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_swvpg"]
 [ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_1415t"]
 [ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_4cvps"]
 
 [sub_resource type="Resource" id="Resource_myhhs"]
 script = ExtResource("2_dsuqd")
-amount = 0
-percent = 50
+percent = 30
 
 [resource]
 script = ExtResource("5_4cvps")
@@ -18,6 +17,6 @@ display_name = "行囊（科技）"
 display_names = {
 "en": "Travel Pack (Tech)"
 }
-description = "开局钱 {starting_funds_bonus_percent|signed}%"
+description = "战败时保住身上一部分钱"
 scope = 0
 effects = Array[ExtResource("1_3a6qf")]([SubResource("Resource_myhhs")])

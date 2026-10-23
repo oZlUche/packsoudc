@@ -214,12 +214,23 @@ static func frame_shop_buttons(t: TestCase, _root: Window) -> void:
 		Support.cleanup(PREFIX)
 		return
 	var acts: Array = screen._inv.board_actions(mine.uid)
-	t.eq(acts.map(func(a: ItemActions.Action) -> String: return String(a.id)), ["quick", "lock", "sell", "sell_same"], "放到地上、锁定、出售、出售同类")
-	t.eq((acts[0] as ItemActions.Action).label, UiText.t("act.drop"), "商店里双击棋盘 = 放到地上")
-	t.check((acts[0] as ItemActions.Action).danger and (acts[2] as ItemActions.Action).danger, "放到地上、出售都要两下")
+	# 2026-10-22：「不参战」排在锁定之后 —— 会参与战斗的那几件才有（信物与材料没有）
+	var want := ["quick", "lock"]
+	if mine.def.combat != null and not mine.def.is_anchor():
+		want.append("bench")
+	want.append_array(["sell", "sell_same"])
+	t.eq(acts.map(func(a: ItemActions.Action) -> String: return String(a.id)), want, "放到地上、锁定、（不参战）、出售、出售同类")
+	var by_id := {}
+	for a in acts:
+		by_id[String((a as ItemActions.Action).id)] = a
+	t.eq((by_id["quick"] as ItemActions.Action).label, UiText.t("act.drop"), "商店里双击棋盘 = 放到地上")
+	t.check((by_id["quick"] as ItemActions.Action).danger and (by_id["sell"] as ItemActions.Action).danger, "放到地上、出售都要两下")
 	mine.set_locked(true)
 	acts = screen._inv.board_actions(mine.uid)
-	t.check(not (acts[0] as ItemActions.Action).enabled and not (acts[2] as ItemActions.Action).enabled, "锁着：放到地上、出售都灰")
+	by_id = {}
+	for a in acts:
+		by_id[String((a as ItemActions.Action).id)] = a
+	t.check(not (by_id["quick"] as ItemActions.Action).enabled and not (by_id["sell"] as ItemActions.Action).enabled, "锁着：放到地上、出售都灰")
 	t.check(not screen._inv.quick_move(screen._inv.board_view, mine.uid), "锁着：双击不丢地上")
 	t.check(run.board.has_item(mine.uid), "还在棋盘上")
 	t.check(not screen._allow_drop(mine, session.sell_box), "锁着：不进出售区")

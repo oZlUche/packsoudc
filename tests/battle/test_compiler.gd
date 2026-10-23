@@ -500,3 +500,36 @@ static func run_linked_trigger(t: TestCase) -> void:
 	t.eq(1000 - int(result2.final["sides"][1]["resources"][&"hp"][0]), 18,
 		"ANY：两把枪都听，补两次")
 
+
+## 2026-10-22（作者）：「不参战」—— 东西还在棋盘上（占格、能拖、存档照存），但编译时不算它
+static func run_benched(t: TestCase) -> void:
+	t.begin("2026-10-22 · 标了「不参战」的道具还在棋盘上，但不进战斗单位：DPS 归零、件数减少；取消就回来；状态跟着存档走")
+	ItemInstance.reset_uid_counter()
+	var sword := _weapon("sword", ["1"], 10.0, 2.0, ["weapon"])
+	# 自由容器（requires_bag = false）：整片可用，直接摆 —— 不用先铺一个包
+	var board := GridInventory.new(Vector2i(6, 6), 1, false)
+	var a := ItemInstance.create(sword)
+	board.place(a, Vector2i(0, 0), 0)
+	var before := BattleCompiler.compile_board(board, CombatantBaseline.with_hp(25.0))
+	t.eq(_active(before), 1, "没标：参战一件")
+	t.check(before.rough_dps() > 0.0, "没标：有 DPS")
+
+	a.set_benched(true)
+	t.check(a.is_benched(), "标上了")
+	t.eq(board.item_count(), 1, "东西还在棋盘上（不是扔到地上）")
+	var after := BattleCompiler.compile_board(board, CombatantBaseline.with_hp(25.0))
+	t.eq(_active(after), 0, "标了：不参战")
+	t.eq(after.rough_dps(), 0.0, "标了：DPS 归零")
+
+	a.set_benched(false)
+	t.eq(_active(BattleCompiler.compile_board(board, CombatantBaseline.with_hp(25.0))), 1, "取消：又参战")
+	t.check(not a.state.has(ItemInstance.BENCHED_KEY), "取消后 state 里不留键（存档逐字节不变）")
+
+	# 状态跟着实例走 —— 存档读回来还在
+	a.set_benched(true)
+	var db := ItemDatabase.new()
+	db.register(sword)
+	t.check((ItemInstance.from_dict(a.to_dict(), db) as ItemInstance).is_benched(), "存进实例状态、读得回来")
+	a.set_benched(false)
+	t.check(not (ItemInstance.from_dict(a.to_dict(), db) as ItemInstance).is_benched(), "没标：读回来也是没标")
+

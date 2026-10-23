@@ -13,6 +13,7 @@ extends RefCounted
 const RUN_EFFECTS := {
 	&"vitality_max_bonus": "res://core/run/effects/vitality_max_bonus.gd",
 	&"starting_funds_bonus": "res://core/run/effects/starting_funds_bonus.gd",
+	&"keep_on_death": "res://core/run/effects/keep_on_death.gd",
 	&"extra_searches": "res://core/run/effects/extra_searches.gd",
 	&"shop_price_mult": "res://core/run/effects/shop_price_mult.gd",
 	&"luck_bonus": "res://core/run/effects/luck_bonus.gd",

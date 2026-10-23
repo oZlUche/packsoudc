@@ -352,6 +352,8 @@ func _draw() -> void:
 		var cells := item.cells()
 		var anchor := cell_origin_px(item.origin)
 		var dormant := show_adjacency and FaithState.is_dormant(item.def, active_faith)
+		# 2026-10-22（作者）：标了「不参战」的也压灰、写小字 —— 不然看不出这一场为什么没算它
+		var benched := item.is_benched()
 		var body := ItemPainter.body_color(item.def)
 		var edge := ItemPainter.rarity_color(item.def).lightened(0.2)
 		var text_color := ItemPainter.label_color(item.def)
@@ -360,21 +362,22 @@ func _draw() -> void:
 			body = COLOR_BAG_FILL
 			edge = COLOR_BAG_EDGE
 			text_color = Color("79839a")
-		if dormant:
+		if dormant or benched:
 			body = body.lerp(COLOR_BAG_FILL, 0.7)
 			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
 			text_color = COLOR_TEXT.darkened(0.35)
-		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠的压到 55 % 灰，仍写小字「休眠」
-		var tint := DORMANT_ART if dormant else Color.WHITE
+		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠 / 不参战的压到 55 % 灰，仍写一行小字说清楚是哪种
+		var tint := DORMANT_ART if (dormant or benched) else Color.WHITE
+		var note := UiText.t("inv.benched") if benched else (UiText.t("inv.dormant") if dormant else "")
 		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, tint, Transform2D.IDENTITY, ItemPainter.variant_of(item)):
-			if dormant and _label_visible(item):
-				ItemPainter.draw_label(self, cells, anchor, cell_px, UiText.t("inv.dormant"), font, 13, COLOR_TEXT)
+			if note != "" and _label_visible(item):
+				ItemPainter.draw_label(self, cells, anchor, cell_px, note, font, 13, COLOR_TEXT)
 		else:
 			ItemPainter.draw_item(self, cells, anchor, cell_px, body, edge)
 			if _label_visible(item):
 				ItemPainter.draw_label(
 					self, cells, anchor, cell_px, Names.of_item(item) + ("
-休眠" if dormant else ""), font, 13, text_color
+" + note if note != "" else ""), font, 13, text_color
 				)
 		ItemPainter.draw_charges(self, item, item.rotation, anchor, cell_px, tint)     # 208：耐久没满、又没这一档的图：左下角次数点
 		ItemPainter.draw_lock(self, item, item.rotation, anchor, cell_px, tint)     # 230：玩家锁住的：左上角小锁
