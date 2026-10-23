@@ -92,7 +92,7 @@ static func run_context_and_start(t: TestCase) -> void:
 	var buffed := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1", &"tech_luck_1"] as Array[StringName])
 	t.eq(buffed.vitality.maximum, ctx.vitality_max_of(Vitality.PLACEHOLDER_MAX) + c.chapter.vitality_bonus, "开局体力上限按 buff 的百分比放大（149）")
 	t.check(buffed.vitality.maximum > plain.vitality.maximum, "比没 buff 的多")
-	t.eq(buffed.wallet.balance, plain.wallet.balance + ctx.starting_funds_bonus, "开局钱按 buff（这两个不给钱就一样）")
+	t.eq(buffed.wallet.balance, plain.wallet.balance, "开局钱不再受 buff 影响（2026-10-22 起钱全由玩家自己带，两个都是 0）")
 	t.eq(buffed.meta_buffs.size(), 2, "局外 buff 记在这一局里")
 	var no_such := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"nope", &"marked"] as Array[StringName])
 	t.eq(no_such.meta_buffs.size(), 0, "不认识的、地图作用域的不算局外 buff")

@@ -153,12 +153,13 @@ var event_defs: Dictionary = {}:
 ## 从一章开一局。生成不出图返回 null。[param kit] 是开局带的道具 id（包放棋盘，其余先放包里、放不下到地上）。
 ## [param p_character] 给了就按角色来（棋盘尺寸、体力上限、基线、初始包）；[param p_layout] 是开局屏摆好的棋盘
 ## （[method layout_of] 的产物：哪件、放哪、什么朝向），先按它摆，再发 kit
+## [param p_carry_funds]：这一局开局带多少钱（2026-10-22 作者定：玩家自己从仓库带，不带就是 0）
 static func start(
 	p_chapter: ChapterDef, p_seed: int, p_items: ItemDatabase, p_enemies: EnemyDatabase,
 	p_sets: SetDatabase = null, kit: Array[StringName] = [] as Array[StringName],
 	p_buff_defs: Dictionary = {}, p_meta_buffs: Array[StringName] = [] as Array[StringName],
 	p_character: CharacterDef = null, p_layout: Array = [], p_difficulty: DifficultyDef = null, p_hunter_defs: Dictionary = {},
-	p_scale: StringName = &"", p_module_inputs: Dictionary = {}
+	p_scale: StringName = &"", p_module_inputs: Dictionary = {}, p_carry_funds: int = 0
 ) -> RunState:
 	if p_chapter == null or p_chapter.map_source == null:
 		return null
@@ -206,10 +207,10 @@ static func start(
 	var ctx := s.buff_context()     # 角色定了再算：技能的被动（体力上限、开局钱）也在里面（082）
 	# 149：体力上限、开局钱按角色的基数乘科技的百分比再加加算；章节的体力加成在最后加
 	s.vitality = Vitality.new(ctx.vitality_max_of(vitality_max) + p_chapter.vitality_bonus)
-	var funds := s.economy.starting_balance if s.economy != null else 0
-	if p_character != null and p_character.starting_funds >= 0:
-		funds = p_character.starting_funds
-	s.wallet = Wallet.new(ctx.starting_funds_of(funds))
+	# 2026-10-22（作者定）：开局的钱**全由玩家自己从仓库带**（[param p_carry_funds]），不再凭空发。
+	# 原来那条水源 —— `EconomyRules.starting_balance` / `CharacterDef.starting_funds` / 科技「行囊」的百分比 ——
+	# 三个字段先留着不删：之后要么改成「带入上限」，要么给别的用途
+	s.wallet = Wallet.new(maxi(0, p_carry_funds))
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()

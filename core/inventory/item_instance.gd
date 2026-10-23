@@ -70,6 +70,25 @@ func set_locked(on: bool) -> void:
 		state.erase(LOCKED_KEY)
 
 
+## 2026-10-22（作者）：**不参战** —— 东西还在棋盘上（照旧占格、能拖、存档照存），但战斗时不算它。
+## 给战前整备用：用不到的装备不必扔到地上散着，右键标一下就不参战，打完不用再捡。
+## 和锁定一样，没标不写键（存档逐字节不变）
+const BENCHED_KEY := "benched"
+
+
+## 标了「不参战」吗
+func is_benched() -> bool:
+	return bool(state.get(BENCHED_KEY, false))
+
+
+## 标 / 取消「不参战」
+func set_benched(on: bool) -> void:
+	if on:
+		state[BENCHED_KEY] = true
+	else:
+		state.erase(BENCHED_KEY)
+
+
 ## 148：还剩几次（[member ItemDef.wear]）。没有耐久的返回 -1；老档里没记的按满算
 func charges() -> int:
 	if def == null or def.wear == null:

@@ -20,6 +20,8 @@ static func active_tag(container: ItemContainer) -> StringName:
 		var inst := raw as ItemInstance
 		if inst == null or inst.def == null or not inst.def.is_anchor():     # 095：只有信物（faith_anchor）能激活；赐福的武器防具只跟着当前信仰生效或休眠
 			continue
+		if inst.is_benched():     # 2026-10-22：标了「不参战」的信物也不激活信仰（不然标了还在生效）
+			continue
 		if best == null or inst.placed_seq > best.placed_seq or (inst.placed_seq == best.placed_seq and inst.uid > best.uid):
 			best = inst
 	return best.def.faith_tag() if best != null else &""

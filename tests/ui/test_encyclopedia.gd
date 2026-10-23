@@ -187,3 +187,40 @@ static func run_no_markdown_bold(t: TestCase) -> void:
 	var defs := EventPlacer.load_all()
 	for id in defs:
 		t.check(not String((defs[id] as EventDef).text).contains("**"), "事件 %s 没有 **" % id)
+
+
+## 2026-10-22（作者）：设置里「名字全显」—— 默认关时百科照旧把没点亮的道具名遮成「？」，
+## 勾上之后一律真名。三个遮名点（配方行、相关道具、反应表）都走 [method GameFlow.names_revealed]，所以只验这一条链
+static func run_reveal_names_setting(t: TestCase) -> void:
+	t.begin("2026-10-22 · 设置「名字全显」：默认关 → 百科照旧遮名；勾上 → 配方行与说明都出真名；开关存得住")
+	var f := GameFlow.new()
+	var s := f.settings
+	t.check(s != null and not s.reveal_names, "默认关（照旧遮名）")
+	t.check(not f.names_revealed(), "开关关着：不显")
+
+	var db := ItemDatabase.new()
+	db.load_dir()
+	var recipes := RecipeDef.load_all()
+	var sample: RecipeDef = null
+	for r in recipes:
+		if (r as RecipeDef).note != "":
+			sample = r
+			break
+	t.check(sample != null, "有一条带 note 的配方当样本")
+	var book := Encyclopedia.build(GameFlow.load_help_pages(), db, recipes)
+	book.lit = func(_id: StringName) -> bool: return f.names_revealed()
+	var dark := book.render(Encyclopedia.RECIPE_PAGE)
+	t.check(dark.contains("？ + ？ → ？"), "关着：配方行遮名")
+	t.check(sample == null or not dark.contains(sample.note), "关着：不写 note（note 里有道具名）")
+
+	s.reveal_names = true
+	t.check(f.names_revealed(), "开关打开：显")
+	var lit := book.render(Encyclopedia.RECIPE_PAGE)
+	t.check(not lit.contains("？ + ？ → ？"), "打开：不再遮名")
+	if sample != null:
+		t.check(lit.contains(Names.of(db.get_def(sample.output))), "打开：产物显示真名")
+		t.check(lit.contains(sample.note), "打开：note 一起显示")
+
+	var back := GameSettings.from_dict(s.to_dict())
+	t.check(back.reveal_names, "开关进设置文件、读得回来")
+	t.check(not GameSettings.new().reveal_names, "新装的设置还是默认关")

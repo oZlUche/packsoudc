@@ -57,6 +57,15 @@ static func lock_same(inst: ItemInstance, container: ItemContainer, after: Calla
 		_touched(container, after), false, &"lock")
 
 
+## 2026-10-22（作者）：不参战 / 参战 —— 战前整备用：用不到的装备不必扔到地上散着，
+## 标一下就不参战（东西还在棋盘上，占格照占、能拖、存档照存）；再点一下回来
+static func bench(inst: ItemInstance, container: ItemContainer, after: Callable = Callable()) -> Action:
+	var on := inst.is_benched()
+	return make(&"bench", UiText.t("act.bench_on" if on else "act.bench"), func():
+		inst.set_benched(not on)
+		_touched(container, after))
+
+
 ## 出售 N 币（[param sell] = `func(uid) -> int` 卖一件，返回得了多少；没卖成 < 0）。锁着的灰
 static func sell(inst: ItemInstance, price: int, do_sell: Callable) -> Action:
 	var a := make(&"sell", UiText.t("act.sell") % price, func(): do_sell.call(inst.uid), true, &"sell")

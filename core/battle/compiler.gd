@@ -63,6 +63,9 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		var item := inst as ItemInstance
 		if item.def == null or board.acts_as_bag(item.def):
 			continue
+		# 2026-10-22（作者）：标了「不参战」的不进 fighters —— 东西还在棋盘上（占格、能拖），只是这一场不算它
+		if item.is_benched():
+			continue
 		if not inp.wild and FaithState.is_dormant(item.def, active_faith):
 			if not FaithState.keeps_combat_when_dormant(item.def):
 				continue

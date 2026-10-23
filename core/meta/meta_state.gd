@@ -216,7 +216,7 @@ func sell_bag(uid: int, ratio: float = 0.5) -> int:
 
 #region 一局结束
 ## 一局结束了进来。返回这次进了什么：{"items": 带回棋盘的件数, "value", "funds", "lit": 新点亮的图鉴条目数}
-func absorb(result: RunResult) -> Dictionary:
+func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
 	var got := {"items": 0, "value": 0, "funds": 0, "lit": 0, "safe": 0}
 	if result == null:
 		return got
@@ -263,6 +263,12 @@ func absorb(result: RunResult) -> Dictionary:
 		got["funds"] = result.balance
 	else:
 		deaths += 1
+		# 2026-10-22（作者定）：行囊 —— 战败时保住钱包里**剩的**那几成（撤离走的是上面那条 funds += balance）。
+		# 底是「战败那一刻剩下的钱」，不是带进来的原始金额：中途花掉的钱已经花掉了，按原始金额退等于凭空造钱
+		var refund := floori(float(maxi(0, result.balance)) * clampf(float(death_refund_percent), 0.0, 100.0) / 100.0)
+		if refund > 0:
+			funds += refund
+			got["funds"] = refund
 	# 092（作者定）：保险箱里的视为已带出 —— 战败也带得出。图鉴各计一次，进带回来的棋盘（没有就新开一块），放不下直接进仓库。
 	# 224 补充二（作者 17:23）：战败没有置入那一页 —— 反过来，直接进仓库（包进包架），放不下的才进待置入的棋盘（基地「仓库」页清）
 	if not result.safe_items.is_empty():
@@ -488,6 +494,18 @@ func sell_item(uid: int, ratio: float = 0.5) -> int:
 
 static func sell_price(def: ItemDef, ratio: float = 0.5) -> int:
 	return maxi(0, floori(float(ItemValue.of(def)) * ratio)) if def != null else 0
+
+
+## 2026-10-22（作者定）：花掉一笔钱（带钱入局就这一个入口）。不够就一分不动、返回 false ——
+## 和局内 [method Wallet.spend] 同一套语义，没有「透支一部分」这回事
+func spend_funds(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if amount > funds:
+		return false
+	funds -= amount
+	changed.emit()
+	return true
 
 
 ## 一键出售：稀有度 ≤ [param max_rarity] 的全卖（-1 = 全部）。返回 {"count", "funds"}
