@@ -31,9 +31,11 @@ const FIGHT_ART := "res://assets/ui/battle/"
 const FIGHT_HIT := Rect2(22, 10, 156, 108)
 var _why: Label
 var _slip_btn: Button = null
-## 248：「退回」（平的小石键，230 平签；图标等美术出样、作者定了再换）。退不了的场合不建
-var _retreat_btn: TipButton = null
-const RETREAT_W := 96.0
+## 248：「退回」（作者 2026-10-24 14:44 选丙「回头脚印」：平的白灰石键，左头两只脚印，四态 `battle/retreat_key*`）。
+## 图里不带字：字由代码写在 json 的 `text_rect` 里（中英文同一张图）。退不了的场合不建
+var _retreat_btn: IconButton = null
+const RETREAT_ART := "battle/retreat_key"
+const RETREAT_W := 112.0
 ## 147：腰带里能在这儿用的（烟雾弹）一件一个按钮
 var _belt_row: HBoxContainer = null
 var _inv: Control
@@ -136,9 +138,7 @@ func open(payload: Dictionary) -> void:
 	corner.alignment = BoxContainer.ALIGNMENT_END
 	corner.custom_minimum_size = Vector2(RETREAT_W, 0)
 	if flow.retreat_reason() == "":
-		_retreat_btn = TipButton.make(ItemActions.make(&"retreat", UiText.t("pre.retreat"), Callable()), RETREAT_W)
-		_retreat_btn.tooltip_text = UiText.t("pre.retreat_tip")
-		_retreat_btn.chosen.connect(func(_a): retreat())
+		_retreat_btn = _make_retreat_key()
 		corner.add_child(_retreat_btn)
 	foot.add_child(corner)
 	buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -224,8 +224,26 @@ func retreat() -> String:
 
 
 ## 248：这一屏有没有「退回」键
-func retreat_button() -> TipButton:
+func retreat_button() -> IconButton:
 	return _retreat_btn
+
+
+## 248：「退回」石键 —— 整图四态（[method IconButton.make_art]），字照 `retreat_key.json` 写（墨色、灰态色、按下下移 1）；缺图退回写字的按钮
+func _make_retreat_key() -> IconButton:
+	var b := IconButton.make_art(UiTheme.asset_root + RETREAT_ART.get_base_dir() + "/", RETREAT_ART.get_file(), UiText.t("pre.retreat"),
+		UiText.t("pre.retreat_tip"), func(): retreat())
+	var meta := UiTheme.art_meta(RETREAT_ART)
+	var r: Array = meta.get("text_rect", [36, 0, 108, 40])     # 左上、右下（图的像素）
+	b.art_label = UiText.t("pre.retreat")
+	b.art_label_rect = Rect2(Vector2(float(r[0]), float(r[1])), Vector2(float(r[2]) - float(r[0]), float(r[3]) - float(r[1])))
+	b.art_label_size = int(meta.get("font_size", 18))
+	var ink: Dictionary = meta.get("ink", {})
+	b.art_label_color = Color(String(ink.get("normal", "#2e2219")))
+	b.art_label_disabled_color = Color(String(ink.get("disabled", "#605a50")))
+	b.art_label_drop = 1.0
+	if not b.has_art():
+		b.custom_minimum_size = Vector2(RETREAT_W, 40)
+	return b
 
 
 ## 136：按「溜走」。返回空串 = 溜了
