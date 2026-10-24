@@ -11,6 +11,9 @@ extends Resource
 ## 可为空。非武器道具通常没有消耗，但检查环节一律保留 ——
 ## 后期必然出现「消耗 N 层某增益才能触发」的效果。
 @export var costs: Array[Cost] = []
+## 247：所属的件装载格上站着在供给的东西（[method CombatantRuntime.is_loaded]）时，消耗不收（条件照查）——
+## 「装着魔晶石的法杖出手不耗耐力」；空杖照旧付
+@export var free_when_loaded: bool = false
 ## 收窄为 CombatEffect：只有战斗效果依赖扳机，编辑器下拉也只会列出它们
 @export var effects: Array[CombatEffect] = []
 
@@ -47,6 +50,8 @@ func estimated_rate(ctx: PowerContext) -> float:
 func estimated_factor(ctx: PowerContext, rate: float, conditions: bool) -> float:
 	var f := 1.0
 	for c in effective_costs():
+		if not conditions and free_when_loaded and not (c as Cost).is_condition():
+			continue     # 247：估算按装满晶石算（法杖的战斗力本来就按装满估），消耗不打折
 		if (c as Cost).is_condition() == conditions:
 			f *= clampf((c as Cost).estimated_factor(ctx, rate), 0.0, 1.0)
 	return f

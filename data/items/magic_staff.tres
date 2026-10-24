@@ -41,6 +41,7 @@ script = ExtResource("2_yurkf")
 trigger = SubResource("Resource_cigsu")
 cadence = SubResource("Resource_oyegb")
 costs = Array[ExtResource("6_j4yg3")]([SubResource("Resource_u2wb6")])
+free_when_loaded = true
 effects = Array[ExtResource("8_xjyx8")]([SubResource("Resource_u6yyk")])
 
 [sub_resource type="Resource" id="Resource_b04a4"]
@@ -61,9 +62,9 @@ display_name = "魔法杖"
 display_names = {
 "en": "Magic Staff"
 }
-description = "不放晶石就是根木棍；杖头两侧的装载槽放魔晶石，按顺时针一颗一颗读，打出各自的元素伤害。颗与颗之间走单次冷却，一轮读完歇一个总冷却。"
+description = "不放晶石就是根木棍；杖头两侧的装载槽放魔晶石，按顺时针一颗一颗读，打出各自的元素伤害。颗与颗之间走单次冷却，一轮读完歇一个总冷却。装着魔晶石时出手不耗耐力。"
 descriptions = {
-"en": "Without a Crystal it's just a stick. Put Crystals in the loading slots on either side of its head; it reads them one at a time, clockwise, dealing each one's elemental damage. One single Cooldown between Crystals, one total Cooldown of rest after each full round."
+"en": "Without a Crystal it's just a stick. Put Crystals in the loading slots on either side of its head; it reads them one at a time, clockwise, dealing each one's elemental damage. One single Cooldown between Crystals, one total Cooldown of rest after each full round. While a Crystal is loaded, it costs no Stamina."
 }
 shape = SubResource("Resource_vikiy")
 rarity = 1

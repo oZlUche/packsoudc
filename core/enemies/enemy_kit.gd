@@ -47,6 +47,7 @@ static func board_of(content: Dictionary, items: ItemDatabase, find_room: bool =
 		var def: ItemDef = pair[0]
 		var entry: Dictionary = pair[1]
 		var inst := ItemInstance.create(def, int(entry.get("rot", 0)))
+		CrystalRoll.restore(inst, entry)     # 246 补充二：魔晶石剩几次跟着内容
 		if not entry.has("at"):
 			if not board.try_add(inst):
 				push_warning("敌人的道具摆不下：%s（棋盘 %s）" % [def.id, size])

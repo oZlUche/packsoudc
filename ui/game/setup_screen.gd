@@ -1069,8 +1069,8 @@ func item_actions(uid: int, view: ContainerView) -> Array:
 			ItemActions.disable(quick, UiText.t("setup.no_brought_back"))
 		out.append(ItemActions.lock(inst, from, save))
 		out.append(ItemActions.lock_same(inst, flow.meta.warehouse, save))
-		out.append(ItemActions.sell(inst, MetaState.sell_price(inst.def, flow.sell_ratio()), _sell_one))
-		out.append(ItemActions.sell_same(inst, flow.meta.warehouse, func(i: ItemInstance) -> int: return MetaState.sell_price(i.def, flow.sell_ratio()), _sell_one))
+		out.append(ItemActions.sell(inst, MetaState.sell_price_of(inst, flow.sell_ratio()), _sell_one))
+		out.append(ItemActions.sell_same(inst, flow.meta.warehouse, func(i: ItemInstance) -> int: return MetaState.sell_price_of(i, flow.sell_ratio()), _sell_one))
 	elif from == stash:
 		quick.label = UiText.t("act.to_board")
 		if board != null and not _allow_drop(inst, board):

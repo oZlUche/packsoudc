@@ -1634,9 +1634,9 @@ func _draw() -> void:
 			continue
 		var r := item_rect(inst.uid)
 		var cells := inst.def.cells_rotated(inst.rotation)
-		var edge := COLOR_HIGHLIGHT if highlights.has(inst.uid) else ItemPainter.rarity_color(inst.def)
-		var body := ItemPainter.body_color(inst.def)
-		var ink := ItemPainter.label_color(inst.def)
+		var edge := COLOR_HIGHLIGHT if highlights.has(inst.uid) else ItemPainter.rarity_color(inst.def, inst.rarity())
+		var body := ItemPainter.body_color(inst.def, inst.rarity())
+		var ink := ItemPainter.label_color(inst.def, inst.rarity())
 		var at := r.position
 		var landing := _landing.has(inst.uid)
 		var base := Transform2D.IDENTITY

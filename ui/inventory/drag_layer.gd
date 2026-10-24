@@ -1073,11 +1073,11 @@ func _draw() -> void:
 	var is_bag := not _payload.is_empty()
 
 	var body := (
-		InventoryView.COLOR_BAG_FILL if is_bag else ItemPainter.body_color(_inst.def)
+		InventoryView.COLOR_BAG_FILL if is_bag else ItemPainter.body_color(_inst.def, _inst.rarity())
 	)
 	body.a = 0.85
 	var edge := (
-		InventoryView.COLOR_BAG_EDGE if is_bag else ItemPainter.rarity_color(_inst.def)
+		InventoryView.COLOR_BAG_EDGE if is_bag else ItemPainter.rarity_color(_inst.def, _inst.rarity())
 	)
 	if not ItemPainter.draw_art(self, _inst.def, _rot, anchor, cell, Color(1, 1, 1, 0.85), Transform2D.IDENTITY, ItemPainter.variant_of(_inst)):     # 201：有图画图
 		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
@@ -1085,7 +1085,7 @@ func _draw() -> void:
 			self, cells, anchor, cell,
 			Names.of_item(_inst), font, 11 if is_bag else 13, Color("f2f4f8")
 		)
-	InventoryView.draw_footprint(self, _inst.def, cells, anchor, cell, is_bag or InventoryView.footprint_hollow(_inst.def))     # 239：手里那件也逐格描
+	InventoryView.draw_footprint(self, _inst.def, cells, anchor, cell, is_bag or InventoryView.footprint_hollow(_inst.def), _inst.rarity())     # 239：手里那件也逐格描
 	if not is_bag and not (view_at(mouse) is InventoryView):
 		_draw_held_markers(anchor, cell)
 	if craft_hint != "":     # 140：压在能合的那件上：残影下面一行小字
@@ -1106,18 +1106,18 @@ func _draw() -> void:
 			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * cell
 			var item_cells := item.def.cells_rotated(int(g["rot"]))
 			if ItemPainter.draw_art(self, item.def, int(g["rot"]), at, cell, Color(1, 1, 1, 0.9), Transform2D.IDENTITY, ItemPainter.variant_of(item)):
-				InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false)     # 239：袋里各件描自己的稀有度框
+				InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false, item.rarity())     # 239：袋里各件描自己的稀有度框
 				continue
-			var c_body := ItemPainter.body_color(item.def)
+			var c_body := ItemPainter.body_color(item.def, item.rarity())
 			c_body.a = 0.9
 			ItemPainter.draw_item(
-				self, item_cells, at, cell, c_body, ItemPainter.rarity_color(item.def)
+				self, item_cells, at, cell, c_body, ItemPainter.rarity_color(item.def, item.rarity())
 			)
 			ItemPainter.draw_label(
 				self, item_cells, at, cell,
 				Names.of_item(item), font, 12, Color("f2f4f8")
 			)
-			InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false)
+			InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false, item.rarity())
 		_draw_straddlers(font)
 
 
@@ -1152,7 +1152,7 @@ func _draw_straddlers(font: Font) -> void:
 		if ItemPainter.draw_art(self, item.def, int(s["rot"]), at, cell, Color(1, 1, 1, 0.45)):
 			ItemPainter.draw_item(self, item_cells, at, cell, Color(0, 0, 0, 0), InventoryView.COLOR_VICTIM)     # 201：图压暗，照旧描橙
 			continue
-		var c_body := ItemPainter.body_color(item.def)
+		var c_body := ItemPainter.body_color(item.def, item.rarity())
 		c_body.a = 0.45
 		ItemPainter.draw_item(
 			self, item_cells, at, cell, c_body, InventoryView.COLOR_VICTIM

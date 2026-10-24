@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_wn7y5"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_hxsei"]
+
+[sub_resource type="Resource" id="Resource_1jkbq"]
+script = ExtResource("1_wn7y5")
+id = &"fire_ice"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"fire_crystal", &"ice_crystal", &"strong_salve"])
+note = "法杖 + 两颗中品（火、冰）+ 一瓶浓缩伤药"
+
+[sub_resource type="Resource" id="Resource_q20k5"]
+script = ExtResource("1_wn7y5")
+id = &"fire_lightning"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"fire_crystal", &"lightning_crystal", &"strong_salve"])
+note = "法杖 + 两颗中品（火、雷）+ 一瓶浓缩伤药"
+
+[sub_resource type="Resource" id="Resource_sxn3q"]
+script = ExtResource("1_wn7y5")
+id = &"ice_lightning"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"ice_crystal", &"lightning_crystal", &"strong_salve"])
+note = "法杖 + 两颗中品（冰、雷）+ 一瓶浓缩伤药"
+
+[resource]
+script = ExtResource("2_hxsei")
+id = &"adept_mage"
+display_name = "熟练的魔法师"
+display_names = {
+"en": "Adept Mage"
+}
+strength = 3
+schools = Array[StringName]([&"magic"])
+base_stats = {
+"max_hp": 44
+}
+signature = Array[StringName]([&"magic_staff"])
+item_tags = Array[StringName]([&"magic", &"crystal", &"staff", &"remedy"])
+builds = Array[ExtResource("1_wn7y5")]([SubResource("Resource_1jkbq"), SubResource("Resource_q20k5"), SubResource("Resource_sxn3q")])

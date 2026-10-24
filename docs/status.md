@@ -90,6 +90,7 @@
 | `data/authoring/node_rules/standard.json` | 随机点权重、搜索（次数 / 遭遇曲线 / 件数 / 稀有度权重 / 深度与危险增益）、输了扣几点、休息回几点、事件结果权重、战斗时限 |
 | `data/authoring/economy_rules/standard.json` | 开局钱、奖励公式系数、商店格数 / 权重 / 价格倍数 / 刷新费、付费撤离点个数与费用（50） |
 | `data/authoring/items/` 金银六件（`gold_*`、`silver_nugget` / `silver_bar` / `silver_ingot_large`）与五块魔晶石、`economy_rules/*.json` 的 `bullion_*` | 244：贵重品的面值（80～800）与重量；魔晶石供给 +9、四场；金银上架概率 0.35、外环 / 内环两张权重表、手续费 1.1 |
+| `data/authoring/items/*crystal*.json`（三品九件 + 清明 / 琥珀）、`heart_of_guoguo.json`、`enemies/` 四阶法师 | 246 / 247：满九次、碎了按 0.16 卖、低两档；三品稀有度 2 / 3 / 4、面值 150 / 320 / 650、供给 +6 / +9 / +13；法师生命 32 / 44 / 56 / 72、池权重 2 / 1.5 / 1 / 0.6 |
 | `data/authoring/chapters/free_mode.json` | 地图配置（环、路线风格、规模模板、高危区、类型风险收益、覆盖……）、难度 |
 | `data/authoring/items/*.json` | 道具数值、稀有度、价值 |
 | `data/authoring/loadouts/*.json` | 三套开局装备的清单与说明；两套预设（`preset: true`，096：强攻 / 坚守）的清单 |

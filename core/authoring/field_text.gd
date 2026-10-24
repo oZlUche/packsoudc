@@ -22,8 +22,8 @@ const LABELS := {
 	# 道具
 	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "bag_mods": "包体加成",
 	"set_id": "套装", "effects": "效果", "price": "价格", "starting_belt": "开局发的随身技能", "belt_stock": "随身那一排", "belt_grants": "发的随身技能", "wear": "耐久", "when": "什么时候能用",
-	"max_charges": "满的时候几次", "prefixes": "前缀（剩 1 / 2 / 3 次）", "prefixes_by_lang": "别的语言的前缀", "broken_prefix": "破碎的前缀", "broken_prefixes": "别的语言的破碎前缀",
-	"broken_value_ratio": "破碎后卖价几成", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
+	"max_charges": "满的时候几次", "prefixes": "前缀（从剩 1 次起，一档一个）", "prefixes_by_lang": "别的语言的前缀", "broken_prefix": "破碎的前缀", "broken_prefixes": "别的语言的破碎前缀",
+	"broken_value_ratio": "破碎后卖价几成", "charge_band": "一档几次", "art_levels": "按次数换的图几张", "broken_rarity_drop": "破碎后稀有度低几档", "crystal_family": "魔晶石家族", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
 	"growth": "生长", "stages": "各阶", "stage0_name": "还没长时叫什么", "stage0_names": "别的语言的（还没长）", "reset_on_leave": "离开棋盘就清零",     # 207
 	"name": "名字", "names_by_lang": "别的语言的名字", "prefix": "前缀", "after": "再走几步", "lock": "锁什么", "bonus_pool": "额外效果池", "bonus_count": "抽几条",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",

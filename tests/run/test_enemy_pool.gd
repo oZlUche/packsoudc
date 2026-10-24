@@ -458,8 +458,10 @@ static func run_placement(t: TestCase) -> void:
 				var idef := items.get_def(iid)
 				t.not_null(idef, "点 %d 背的 '%s' 在道具库里" % [id, iid])
 				if idef != null and not idef.is_bag:
-					# 招牌不受稀有度上限（choose_items 先占位）
-					t.check(cap < 0 or idef.rarity <= cap or sig.has(iid), "点 %d：稀有度 %d 不超这一档的上限 %d" % [id, idef.rarity, cap])
+					# 招牌不受稀有度上限（choose_items 先占位）；211 套路是设计者写的，超了也照样带（导入器只警告）
+					var build := def.build_of(StringName(String(c.get("build", "")))) if c.has("build") else null
+					t.check(cap < 0 or idef.rarity <= cap or sig.has(iid) or (build != null and build.items.has(iid)),
+						"点 %d：%s 的 %s 稀有度 %d 不超这一档的上限 %d" % [id, def.id, iid, idef.rarity, cap])
 					if EnemyPlacer._shares_tag(idef.tags, def.schools):
 						school_n += 1
 			var available := EnemyPlacer.school_items(def.schools, items, cap)
