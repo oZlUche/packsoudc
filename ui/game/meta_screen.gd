@@ -920,6 +920,8 @@ func codex_tiles() -> Array[CodexTile]:
 func show_tab(name: String) -> void:
 	if not _pages.has(name):
 		name = "home"
+	if _tab != "" and name != _tab:
+		notice_layer().clear()     # 游戏测试 v4.34：上一页的告示（「买不了：钱不够」）不跟到下一页
 	_tab = name
 	for key in _pages:
 		(_pages[key] as Control).visible = key == name

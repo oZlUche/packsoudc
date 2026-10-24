@@ -48,6 +48,9 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	t.eq(f.meta.warehouse.item_count(), n + 1, "仓库多一件")
 	t.check(p.prices()[0].sold, "价签盖了已售")
 	t.eq(Bare.audit(s, "market251"), [] as Array[String], "没有裸字")
+	s.say("买不了：钱不够")
+	s.show_tab("smithy")
+	t.eq(s.notice_layer().lines(), [] as Array[String], "游戏测试 v4.34：换页签，上一页的告示收掉")
 	s.queue_free()
 	W178._cleanup()
 
@@ -75,6 +78,12 @@ static func frame_smithy_page(t: TestCase, root: Window) -> void:
 	t.eq(p.forge(&"smith_shortsword"), "", "打了")
 	t.check(f.meta.warehouse.items().any(func(i) -> bool: return (i as ItemInstance).def.id == &"shortsword"), "短剑进了仓库")
 	t.eq(f.meta.funds, 960, "扣了 40 币")
+	# 游戏测试 v4.34：铭牌浅底墨字；产物那一栏各行一样宽（铭牌左边对齐）
+	var rows: Array = p._list.get_children()
+	var plates := rows.map(func(r: Node) -> Control: return r.get_child(1) as Control)
+	t.check(plates.all(func(pl: Control) -> bool: return pl.theme_type_variation == UiTheme.PANEL_PARCHMENT and UiTheme.tone_of(pl.theme_type_variation) == UiTheme.TONE_LIGHT), "铭牌是浅底（羊皮纸）")
+	var widths := rows.map(func(r: Node) -> float: return (r.get_child(0) as Control).custom_minimum_size.x)
+	t.check(widths.all(func(x: float) -> bool: return is_equal_approx(x, widths[0]) and x > 0.0), "产物栏一样宽（%s）" % str(widths.slice(0, 3)))
 	var view: Button = p.forge_button(&"smith_longbow")
 	t.check(view != null and view.disabled, "2 级的长弓：灰着")
 	t.eq(Bare.audit(s, "smithy251"), [] as Array[String], "没有裸字")
