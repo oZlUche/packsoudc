@@ -97,6 +97,8 @@ var camp_rest: Dictionary = {}
 var _camp_choice: bool = false
 ## 196：营地选项的后果里另回的体力（扎营的 restore_vitality），并进 [member camp_rest]
 var _camp_extra: int = 0
+## 游戏测试 v4.31：刚选的那个选项 —— 结果页标题是它的文字，`{flee_chance}` 这类占位符要按它自己的参数填（和选项按钮同一套）
+var _chosen_option: EventOption = null
 
 
 func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets: SetDatabase = null, p_meta: MetaState = null) -> void:
@@ -1390,6 +1392,18 @@ func apply_battle_trace() -> void:
 		"assumptions": recorder.assumptions_path if recorder != null else ""} if on else {}
 
 
+## 游戏测试 v4.31：结果页标题 = 选项文字，占位符照选项按钮那样填（[method TextTemplate.option_context]）。
+## 选项文字没有占位符时原样返回
+func outcome_title(state: RunState, node: MapNode, outcome: StringName) -> String:
+	var text := String(outcome)
+	if not text.contains("{"):
+		return text
+	var ctx := TextTemplate.context_for(state, node)
+	if _chosen_option != null:
+		ctx = TextTemplate.option_context(ctx, _chosen_option)
+	return TextTemplate.plain(text, ctx)
+
+
 func _adopt(state: RunState) -> void:
 	_drop_run(state)
 	run = state
@@ -1470,6 +1484,7 @@ func _adopt(state: RunState) -> void:
 			_queue.insert(_queue.size() - 1, entry)
 		else:
 			_push(entry))
+	ev.option_chosen.connect(func(_n: MapNode, option: EventOption): _chosen_option = option)
 	ev.event_resolved.connect(func(node: MapNode, outcome: StringName, detail: Dictionary):
 		# 196：营地里只回了体力、扣了倒计时（扎营）不弹结果页 —— 营地里冒一行字说回了几点
 		if _camp_choice and detail.keys().all(func(k): return k in ["restored", "waited"]):
@@ -1477,7 +1492,7 @@ func _adopt(state: RunState) -> void:
 			return
 		# 结果页排在这一步别的事（回放、战利品）前面：先看「你翻出了什么」，再看接下来打的那一场。什么都没发生就不打扰
 		if not detail.is_empty():
-			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": outcome, "detail": detail}))
+			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": outcome_title(state, node, outcome), "detail": detail}))
 	ev.rested.connect(func(node: MapNode, restored: int):
 		# 196：不再跳「休息区」那一屏（rest_screen 删了）。营地里歇的由营地屏冒字；别处歇的（没配事件的休息点）只看顶上的体力
 		if _camp_choice:

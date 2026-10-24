@@ -205,6 +205,13 @@ static func run_flee_text(t: TestCase) -> void:
 	var ctx := TextTemplate.context_for(s, s.current_node())
 	t.eq(int(ctx["flee_chance"]), int(roundf(clampf(0.5 + s.hooks.run_context().flee_bonus, 0.0, 1.0) * 100.0)), "{flee_chance} = 规则 + 加成")
 	t.eq(TextTemplate.plain("逃跑（{flee_chance}%）", ctx), "逃跑（%d%%）" % int(ctx["flee_chance"]), "选项文字")
+	# 游戏测试 v4.31：结果页标题（选项文字）也填好，不露 {flee_chance}
+	var ev := _event(s, &"event_ambush")
+	var f := GameFlow.new()
+	f._chosen_option = ev.options[_option(ev, "逃跑")] as EventOption
+	var title := f.outcome_title(s, s.current_node(), StringName(f._chosen_option.label_for()))
+	t.eq(title, "逃跑（%d%%）" % int(ctx["flee_chance"]), "结果页标题填了百分数（%s）" % title)
+	t.eq(f.outcome_title(s, s.current_node(), &"绕开"), "绕开", "没有占位符的原样")
 
 
 static func run_flee_hunter(t: TestCase) -> void:
