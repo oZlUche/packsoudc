@@ -76,7 +76,7 @@ const LABELS := {
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
 	"mechanics": "机制", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
 	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
-	"funds": "钱", "rows": "行数", "pages": "页数", "effect": "效果",     # 110：局外科技
+	"group": "大类", "funds": "钱", "rows": "行数", "pages": "页数", "effect": "效果",     # 110：局外科技
 	"chest": "宝箱", "chest_skin": "宝箱皮肤", "map_skin": "地图底图", "rarity_by_tier": "各档位的宝箱稀有度权重", "danger_bonus": "高危区稀有度加几", "hold_seconds": "开锁要按几秒",
 	"release_decay": "松手回退倍速", "items_by_rarity": "各档出几件", "floor_by_rarity": "各档收获下限", "include_treasure": "能开出珍宝", "haul_board": "收获箱大小",
 	"background": "背景图", "ChestSkinDef.closed": "闭箱图（按稀有度）", "ChestSkinDef.open": "开箱图（按稀有度）", "lock_offset": "锁孔位置", "ring_radius": "进度环半径", "ring_width": "进度环粗细",
@@ -141,6 +141,7 @@ const ENUM_LABELS := {
 	"none": "不锁", "item": "锁这件", "bag": "连包一起锁",     # 207：生长每阶锁什么
 	"kind": "类别", "element": "属性", "source": "本源", "affiliation": "归属", "internal": "内部",     # 171 / 250：标签大类
 	"metal": "金属", "wood": "木", "leather": "皮革", "cloth": "织物", "bone": "骨", "stone": "石", "gem": "晶体", "clay": "陶", "flesh": "血肉", "herb": "草药",     # 250：材质
+	"blade": "刀剑", "hammer": "斧锤", "bow": "弓", "staff": "法杖", "shield": "盾", "armor": "护甲",     # 251 补充一：铁匠铺配方的大类
 }
 
 ## 类名 → 中文

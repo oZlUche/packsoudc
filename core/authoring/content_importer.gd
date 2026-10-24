@@ -918,7 +918,7 @@ static func import_recipe(data: Dictionary, ctx: Context, report: ImportReport) 
 	return def
 
 
-## 251：铁匠铺配方 —— 产物得是道具库里的武器 / 防具 / 盾 / 插件，素材都得在、件数至少 1，钱不为负，级 1 ～ 3
+## 251：铁匠铺配方 —— 产物得是道具库里的武器 / 防具 / 盾，素材都得在、件数至少 1，钱不为负，级 1 ～ 3；补充一：大类必填
 static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportReport) -> SmithRecipeDef:
 	var def := SmithRecipeDef.new()
 	_fill(def, data, "", ctx, report)
@@ -942,6 +942,8 @@ static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportRe
 		report.error("funds", "钱不能是负的")
 	if def.level < 1 or def.level > 3:
 		report.error("level", "铁匠铺只有 1 ～ 3 级")
+	if not SmithRecipeDef.GROUPS.has(def.group):     # 251 补充一：左列按它分组
+		report.error("group", "配方得写大类（%s）" % " / ".join(PackedStringArray(SmithRecipeDef.GROUPS)))
 	return def
 
 

@@ -111,11 +111,34 @@ static func run_import(t: TestCase) -> void:
 		[{"id": "c", "output": "shortsword", "inputs": {"no_such_251": 1}, "funds": 1}, "素材 id 不存在"],
 		[{"id": "d", "output": "shortsword", "inputs": {"iron_ore": 0}, "funds": 1}, "件数 0"],
 		[{"id": "e", "output": "shortsword", "inputs": {}, "funds": 1}, "没有素材"],
+		[{"id": "g", "output": "shortsword", "inputs": {"iron_ore": 2}, "funds": 40}, "补充一：没写大类"],
+		[{"id": "h", "output": "shortsword", "inputs": {"iron_ore": 2}, "funds": 40, "group": "spear"}, "补充一：大类不在六个里"],
 	]
 	for c in cases:
 		var rep := ImportReport.new()
 		ContentImporter.import_smith_recipe(c[0], ctx, rep)
 		t.check(not rep.ok(), "%s：报错" % c[1])
 	var good := ImportReport.new()
-	ContentImporter.import_smith_recipe({"id": "f", "output": "shortsword", "inputs": {"iron_ore": 2}, "funds": 40}, ctx, good)
+	ContentImporter.import_smith_recipe({"id": "f", "output": "shortsword", "inputs": {"iron_ore": 2}, "funds": 40, "group": "blade"}, ctx, good)
 	t.check(good.ok(), "正常的不报错")
+
+
+static func run_groups(t: TestCase) -> void:
+	t.begin("251 补充一 §10.2：配方分六个大类（刀剑 / 斧锤 / 弓 / 法杖 / 盾 / 护甲）—— 首批 14 张各归各的，法杖暂空")
+	var by := {}
+	for g in SmithRecipeDef.GROUPS:
+		by[g] = []
+	for r in SmithRecipeDef.load_all():
+		t.check(SmithRecipeDef.GROUPS.has(r.group), "%s 有大类（%s）" % [r.id, r.group])
+		if by.has(r.group):
+			(by[r.group] as Array).append(String(r.output))
+	for g in by:
+		(by[g] as Array).sort()
+	t.eq(by["blade"], ["bloodletter", "cleaver", "festering_blade", "longsword", "mithril_sword", "shortsword"], "刀剑六张")
+	t.eq(by["hammer"], ["pendulum_blade", "warhammer"], "斧锤两张")
+	t.eq(by["bow"], ["longbow", "shortbow"], "弓两张")
+	t.eq(by["staff"], [], "法杖暂无")
+	t.eq(by["shield"], ["round_shield"], "盾一张")
+	t.eq(by["armor"], ["gambeson", "leather_armor", "plate_cuirass"], "护甲三张")
+	for g in SmithRecipeDef.GROUPS:
+		t.check(UiText.t("smithy.group_" + g) != "smithy.group_" + g, "%s 有名字" % g)

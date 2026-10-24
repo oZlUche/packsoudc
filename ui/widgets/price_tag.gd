@@ -1,6 +1,7 @@
 ## 商店价签（226 §1.5，作者 17:25 定乙 铜挂牌 `notice/price_bronze`）：挂在货架格下面，挂绳朝上；
 ## 宽 = 字宽 + [constant LEFT] + [constant RIGHT]，高 40（上 12 是挂绳，字在下面 28 的签身里居中），深棕字由代码写。
-## 卖掉了照旧写价钱，再盖 `notice/stamp_sold`（英文 `_en`）：戳 56 × 56，中心对准价签右上角，往上压到商品格、不挡价钱。点不着
+## 卖掉了照旧写价钱，再盖 `notice/stamp_sold`（英文 `_en`）：戳 56 × 56，中心对准价签右上角，往上压到商品格、不挡价钱。点不着。
+## 251 补充一 §10.1：[member coin] ≥ 0 是金币式 —— 签身上画「金币 + 数字」（[CoinLabel] 那枚币），不写「币」字（基地集市用）
 class_name PriceTag
 extends Control
 
@@ -20,6 +21,12 @@ var text := "":
 		text = v
 		_fit()
 		queue_redraw()
+## 金币式的钱数；-1 = 写 [member text]
+var coin := -1:
+	set(v):
+		coin = v
+		_fit()
+		queue_redraw()
 ## 卖掉了：盖已售戳
 var sold := false:
 	set(v):
@@ -35,8 +42,22 @@ func _init(p_text: String = "") -> void:
 	text = p_text
 
 
+## 金币式：一张写着 [param amount] 的价签
+static func coins(amount: int) -> PriceTag:
+	var p := PriceTag.new()
+	p.coin = amount
+	return p
+
+
+func _coin_side() -> float:
+	return roundf(FONT_SIZE * CoinLabel.COIN_SCALE)
+
+
 func _fit() -> void:
-	var w := UiPalette.cjk_font_bold().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+	var f := UiPalette.cjk_font_bold()
+	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+	if coin >= 0:
+		w = _coin_side() + CoinLabel.GAP + f.get_string_size("%d" % coin, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
 	custom_minimum_size = Vector2(ceilf(w + LEFT + RIGHT), HEIGHT)
 	size = custom_minimum_size
 
@@ -57,7 +78,17 @@ func _draw() -> void:
 	var f := UiPalette.cjk_font_bold()
 	var mid := BODY_TOP + (size.y - BODY_TOP) * 0.5
 	var y := mid + (f.get_ascent(FONT_SIZE) - f.get_descent(FONT_SIZE)) * 0.5
-	draw_string(f, Vector2(LEFT, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)
+	if coin >= 0:
+		var side := _coin_side()
+		var tex := CoinLabel.coin_texture()
+		var r := Rect2(Vector2(LEFT, mid - side * 0.5), Vector2(side, side))
+		if tex != null:
+			draw_texture_rect(tex, r, false)
+		else:
+			draw_circle(r.get_center(), side * 0.45, CoinLabel.FALLBACK_FILL)
+		draw_string(f, Vector2(LEFT + side + CoinLabel.GAP, y), "%d" % coin, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)
+	else:
+		draw_string(f, Vector2(LEFT, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)
 	if sold:
 		var tex := UiTheme.art_cached(UiTheme.lang_art(STAMP_ART))
 		if tex != null:

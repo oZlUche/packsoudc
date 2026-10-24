@@ -11,3 +11,4 @@ inputs = {
 "iron_ore": 2
 }
 funds = 40
+group = "blade"

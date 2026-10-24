@@ -11,3 +11,4 @@ inputs = {
 "tanned_leather": 1
 }
 funds = 60
+group = "blade"

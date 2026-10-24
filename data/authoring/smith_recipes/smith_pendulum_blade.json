@@ -7,5 +7,6 @@
     "steel_ingot": 1
   },
   "funds": 100,
+  "group": "hammer",
   "level": 2
 }

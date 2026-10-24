@@ -18,6 +18,8 @@ class Action extends RefCounted:
 	## 成对的两颗（锁定 | 锁定同类、出售 | 出售同类）同一个键，排行时永远在同一行
 	var pair: StringName = &""
 	var run: Callable = Callable()
+	## 251 补充一 §10.1：≥ 0 时按钮右端画「金币 + 这个数」（买的价钱），[member label] 只写动作
+	var coin := -1
 
 
 ## 造一颗

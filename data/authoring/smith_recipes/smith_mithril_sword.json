@@ -7,6 +7,7 @@
     "steel_ingot": 1
   },
   "funds": 200,
+  "group": "blade",
   "level": 3,
   "note": "秘银没有对应素材，先用银锭 + 下品火晶石占位",
   "notes": {

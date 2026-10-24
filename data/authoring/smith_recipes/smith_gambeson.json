@@ -5,5 +5,6 @@
     "linen_bolt": 2,
     "wool_cloth": 1
   },
-  "funds": 30
+  "funds": 30,
+  "group": "armor"
 }
