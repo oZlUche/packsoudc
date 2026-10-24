@@ -89,6 +89,8 @@ const PARCHMENT_RED := Color("c81018")
 const PANEL_PACK_LEATHER := &"PanelPackLeather"
 const PANEL_STASH_FRAME := &"PanelStashFrame"
 const PANEL_SUMMARY_NOTE := &"PanelSummaryNote"
+## 10-24：便条（如开局「带入现金」）的抬头 —— 粗体；字号与墨色由造字的地方给
+const LABEL_NOTE_TITLE := &"LabelNoteTitle"
 ## 第三页的东西直接摆在地图纸上（没有板）：一块透明的底，只管内边距；纸是浅底
 const PANEL_BARE := &"PanelBare"
 ## 182：点节点时屏幕正中弹的提示窗（[NodeHintCard]）—— 浅底纸签
@@ -132,7 +134,7 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
 	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
-	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT]
+	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -1496,6 +1498,8 @@ static func _setup_art(t: Theme) -> void:
 		t.set_type_variation(spec[0], "PanelContainer")
 		var box: StyleBox = _art_box(spec[1])
 		t.set_stylebox("panel", spec[0], box if box != null else (_groove_box() if spec[0] != PANEL_SUMMARY_NOTE else StyleBoxEmpty.new()))
+	t.set_type_variation(LABEL_NOTE_TITLE, "Label")
+	t.set_font("font", LABEL_NOTE_TITLE, UiPalette.cjk_font_bold())
 	# 182：提示窗的纸签 —— 自己的图 → 摘要便条那张 → 平色纸
 	t.set_type_variation(PANEL_NODE_HINT, "PanelContainer")
 	var hint: StyleBox = _art_box(ART_NODE_HINT)

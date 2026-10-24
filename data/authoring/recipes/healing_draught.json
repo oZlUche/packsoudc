@@ -6,11 +6,11 @@
   },
   "inputs": [
     "strong_salve",
-    "quartz_cluster"
+    "crystal_shards"
   ],
   "output": "healing_draught",
-  "note": "把水晶簇拖到浓缩伤药上：装成治愈药剂。",
+  "note": "把碎晶拖到浓缩伤药上：装成治愈药剂。",
   "notes": {
-    "en": "Drag the Quartz Cluster onto the Strong Salve: it makes a Healing Draught."
+    "en": "Drag the Crystal Shards onto the Strong Salve: it makes a Healing Draught."
   }
 }

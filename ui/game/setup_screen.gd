@@ -44,8 +44,15 @@ var scale_id: StringName = &""
 var _scale_btns: Dictionary = {}
 ## 2026-10-22（作者定）：这一局带多少现金入局 —— 从仓库账上扣，死在局内就没了。默认 0（不带）
 var carry_funds: int = 0
-## 带入现金那一行的读数
-var _cash_label: Label = null
+## 带入现金那张便条：右上「仓库 N」、步进件（读数 = 带多少）、三枚石签
+var _cash_store: Label = null
+var _cash_step: StoneStepper = null
+var _cash_chips: Array[Button] = []
+const CASH_ROW_W := 264.0
+const CASH_CHIP_GAP := 8.0
+const CASH_PAD := 24
+const CASH_PAD_TOP := 22
+const CASH_PAD_BOTTOM := 18
 var run_seed: int = 1
 ## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
 var board: GridInventory = null
@@ -327,20 +334,36 @@ func _build_kit_page() -> Control:
 ## 2026-10-22（作者定）：带入现金 —— 这一局带多少钱由玩家定，上限是仓库余额，不带就是 0。
 ## 带进去的钱从仓库账上扣，死在局内就没了；撤离时 [method MetaState.absorb] 会把局内余额 1:1 加回来
 func _build_cash_box(parent: VBoxContainer) -> void:
-	var box := _groove(14, 10, 14, 10)
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	parent.add_child(box)
-	var col := _vbox(8)
-	box.add_child(col)
-	_cash_label = _label("", 14, UiPalette.FG)
-	col.add_child(_cash_label)
-	var row := _hbox(8)
+	var note := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, CASH_PAD, CASH_PAD_TOP, CASH_PAD, CASH_PAD_BOTTOM)
+	note.name = "CashNote"
+	note.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	parent.add_child(note)
+	var col := _vbox(10)
+	col.custom_minimum_size.x = CASH_ROW_W
+	note.add_child(col)
+	var head := _hbox(8)
+	col.add_child(head)
+	var title := _label(UiText.t("setup.cash_title"), 17, UiTheme.INK)
+	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(title)
+	_cash_store = _label("", 15, UiTheme.INK)
+	_cash_store.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	head.add_child(_cash_store)
+	_cash_step = StoneStepper.new(func() -> void: set_carry_funds(carry_funds - 10), func() -> void: set_carry_funds(carry_funds + 10))
+	_cash_step.plate.custom_minimum_size.x = CASH_ROW_W - 2.0 * StoneStepper.BUTTON - 8.0
+	_cash_step.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(_cash_step)
+	var row := _hbox(CASH_CHIP_GAP)
 	col.add_child(row)
-	row.add_child(_button(UiText.t("setup.cash_none"), func() -> void: set_carry_funds(0), 13))
-	row.add_child(_button(UiText.t("setup.cash_minus"), func() -> void: set_carry_funds(carry_funds - 10), 13))
-	row.add_child(_button(UiText.t("setup.cash_plus"), func() -> void: set_carry_funds(carry_funds + 10), 13))
-	row.add_child(_button(UiText.t("setup.cash_half"), func() -> void: set_carry_funds(int(floor(cash_cap() / 2.0))), 13))
-	row.add_child(_button(UiText.t("setup.cash_all"), func() -> void: set_carry_funds(cash_cap()), 13))
+	_cash_chips.clear()
+	for spec in [["setup.cash_none", func() -> void: set_carry_funds(0)],
+			["setup.cash_half", func() -> void: set_carry_funds(int(floor(cash_cap() / 2.0)))],
+			["setup.cash_all", func() -> void: set_carry_funds(cash_cap())]]:
+		var chip := StoneChip.make(UiText.t(spec[0]), spec[1])
+		chip.custom_minimum_size.x = (CASH_ROW_W - 2.0 * CASH_CHIP_GAP) / 3.0
+		row.add_child(chip)
+		_cash_chips.append(chip)
 	_refresh_cash()
 
 
@@ -356,10 +379,17 @@ func set_carry_funds(n: int) -> void:
 
 
 func _refresh_cash() -> void:
-	if _cash_label == null:
+	if _cash_step == null:
 		return
 	carry_funds = clampi(carry_funds, 0, cash_cap())     # 仓库钱变少了（卖 / 花）跟着收
-	_cash_label.text = UiText.t("setup.carry_funds") % [carry_funds, cash_cap()]
+	var cap := cash_cap()
+	_cash_store.text = UiText.t("setup.cash_store") % cap
+	_cash_step.set_text(str(carry_funds))
+	_cash_step.minus.disabled = carry_funds <= 0
+	_cash_step.plus.disabled = carry_funds >= cap
+	_cash_chips[0].disabled = carry_funds == 0
+	_cash_chips[1].disabled = carry_funds == int(floor(cap / 2.0))
+	_cash_chips[2].disabled = carry_funds == cap
 
 
 ## 180 补二：仓库框的大小 —— 宽 = 页签 + 格子 + 滚动条位；高 = 格子的高，但不超过这一页还剩的高（超出就滚）。
