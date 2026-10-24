@@ -1,45 +1,36 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_ink0l"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_56isx"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/start_battle.gd" id="3_wold3"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_npvsg"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/grant_map_buff.gd" id="5_hk5bv"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="6_8grfd"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_0cxap"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_850cw"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_ink0l"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/start_battle.gd" id="3_56isx"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_wold3"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/flee_encounter.gd" id="5_npvsg"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_hk5bv"]
 
-[sub_resource type="Resource" id="Resource_0s1a8"]
-script = ExtResource("3_wold3")
+[sub_resource type="Resource" id="Resource_8grfd"]
+script = ExtResource("3_56isx")
 
-[sub_resource type="Resource" id="Resource_r7e20"]
-script = ExtResource("1_ink0l")
+[sub_resource type="Resource" id="Resource_0cxap"]
+script = ExtResource("1_850cw")
 label = "上去看看"
 labels = {
 "en": "Go take a look"
 }
-outcomes = Array[ExtResource("2_56isx")]([SubResource("Resource_0s1a8")])
+outcomes = Array[ExtResource("2_ink0l")]([SubResource("Resource_8grfd")])
 
-[sub_resource type="Resource" id="Resource_xhop5"]
-script = ExtResource("5_hk5bv")
-buff = &"weakened"
+[sub_resource type="Resource" id="Resource_0s1a8"]
+script = ExtResource("5_npvsg")
 
-[sub_resource type="Resource" id="Resource_vm0j5"]
-script = ExtResource("6_8grfd")
-text = "你屏着气绕了过去，手还在抖。"
-texts = {
-"en": "You hold your breath and slip past. Your hands are still shaking."
-}
-
-[sub_resource type="Resource" id="Resource_rfd8m"]
-script = ExtResource("1_ink0l")
-label = "绕开"
+[sub_resource type="Resource" id="Resource_r7e20"]
+script = ExtResource("1_850cw")
+label = "逃跑（{flee_chance}%）"
 labels = {
-"en": "Go around"
+"en": "Flee ({flee_chance}%)"
 }
-outcomes = Array[ExtResource("2_56isx")]([SubResource("Resource_xhop5"), SubResource("Resource_vm0j5")])
+outcomes = Array[ExtResource("2_ink0l")]([SubResource("Resource_0s1a8")])
 
 [resource]
-script = ExtResource("7_0cxap")
+script = ExtResource("6_hk5bv")
 id = &"event_ambush"
 title = "动静"
 titles = {
@@ -49,4 +40,4 @@ text = "前面有动静。"
 texts = {
 "en": "Something's moving up ahead."
 }
-options = Array[ExtResource("1_ink0l")]([SubResource("Resource_r7e20"), SubResource("Resource_rfd8m")])
+options = Array[ExtResource("1_850cw")]([SubResource("Resource_0cxap"), SubResource("Resource_r7e20")])

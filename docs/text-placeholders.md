@@ -33,6 +33,7 @@
 | `{loss_cost}` | 输一场普通战斗扣几点体力 | 节点规则的 `loss_cost.battle`（112） |
 | `{rest_restore}` | 休息点照类型发生回几点体力 | 节点规则的 `rest_restore` + 局内效果的休息多回（193） |
 | `{rest_total}` | 这个选项一共回几点体力 | 只在事件选项文字里：`{rest_restore}` + 这个选项第一条「回体力」的量（193） |
+| `{flee_chance}` | 被缠上了逃跑的成功率（百分数，不带 %） | 节点规则的 `flee.chance` + 局内效果的逃跑加成；搜索遭遇、伏击的「逃跑（{flee_chance}%）」（248） |
 | `{faith_points}` / `{faith_tier}` | 激活信仰现在的信力 / 阶 | 没激活是 0（113） |
 | `{search_floor_count}` / `{search_floor_text}` | 搜索点每次保底几件 / 逐件下限的说明（「一件绿及以上、两件任意」） | 只在搜索点浮窗的保底那一行里（127） |
 

@@ -21,21 +21,13 @@
       ]
     },
     {
-      "label": "绕开",
+      "label": "逃跑（{flee_chance}%）",
       "labels": {
-        "en": "Go around"
+        "en": "Flee ({flee_chance}%)"
       },
       "outcomes": [
         {
-          "type": "grant_map_buff",
-          "buff": "weakened"
-        },
-        {
-          "type": "say",
-          "text": "你屏着气绕了过去，手还在抖。",
-          "texts": {
-            "en": "You hold your breath and slip past. Your hands are still shaking."
-          }
+          "type": "flee_encounter"
         }
       ]
     }

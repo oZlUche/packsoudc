@@ -577,6 +577,7 @@ func _adopt() -> void:
 		_note("　点 %d 变成了%s点" % [n.id, MapNodeStyle.of(type)["label"]])
 		_view.queue_redraw())
 	ev.battle_skipped.connect(func(n: MapNode): _note("　溜走了：点 %d 那一场没打" % n.id))     # 136：脱身
+	ev.battle_retreated.connect(func(n: MapNode): _note("　退回了：点 %d 那一场先不打，敌人还在" % n.id))     # 248
 	ev.battle_finished.connect(func(n: MapNode, result: BattleResult, won: bool):
 		var who := enemy_preview(n.id).get_slice("　", 0)
 		_note("　打 %s：%s，%.1f 秒" % [who if who != "" else "敌人", "赢了" if won else ("平局，按输算" if result.is_draw() else "输了"), result.duration_sec()]))

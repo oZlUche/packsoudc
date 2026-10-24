@@ -151,7 +151,7 @@ static func run_search_loop(t: TestCase) -> void:
 		# 遭遇那一次：没有搜索屏，直接「有人来了」→ 迎战 → 战前准备 → 回放 → 余波 → 战利品
 		t.eq(f.screen, GameFlow.Screen.EVENT, "遭遇：直接到事件屏")
 		var enc: EventDef = f.last_payload.get("def", null)
-		t.check(enc != null and enc.id == &"search_encounter" and _labels(enc) == ["迎战"], "「有人来了」只有迎战")
+		t.check(enc != null and enc.id == &"search_encounter" and _labels(enc) == ["迎战", "逃跑（{flee_chance}%）"], "「有人来了」：迎战 / 逃跑（248）")
 		t.check(run.events.current_search == session and not session.encounter.is_empty(), "会话还挂着，遭遇在里面")
 		var before := session.haul_box.item_count()
 		t.check(f.choose_event(0), "迎战")

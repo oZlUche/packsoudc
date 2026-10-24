@@ -88,6 +88,7 @@ const EVENT_OUTCOMES := {
 	&"say": "res://core/run/events/outcomes/say.gd",
 	&"hunter_fight": "res://core/run/events/outcomes/hunter_fight.gd",
 	&"hunter_flee": "res://core/run/events/outcomes/hunter_flee.gd",
+	&"flee_encounter": "res://core/run/events/outcomes/flee_encounter.gd",
 	&"teleport": "res://core/run/events/outcomes/teleport.gd",
 	&"change_node_type": "res://core/run/events/outcomes/change_node_type.gd",
 	&"proceed": "res://core/run/events/outcomes/proceed.gd",

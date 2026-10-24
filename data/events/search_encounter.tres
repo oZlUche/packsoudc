@@ -1,24 +1,36 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_kdcog"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_saroh"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/start_battle.gd" id="3_711kb"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_8xfb3"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_xvjdf"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_saroh"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_711kb"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/start_battle.gd" id="3_8xfb3"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_xvjdf"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/flee_encounter.gd" id="5_8w7yo"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_cc02l"]
 
-[sub_resource type="Resource" id="Resource_8w7yo"]
-script = ExtResource("3_711kb")
+[sub_resource type="Resource" id="Resource_ahd68"]
+script = ExtResource("3_8xfb3")
 
-[sub_resource type="Resource" id="Resource_cc02l"]
-script = ExtResource("1_kdcog")
+[sub_resource type="Resource" id="Resource_mop00"]
+script = ExtResource("1_saroh")
 label = "迎战"
 labels = {
 "en": "Fight"
 }
-outcomes = Array[ExtResource("2_saroh")]([SubResource("Resource_8w7yo")])
+outcomes = Array[ExtResource("2_711kb")]([SubResource("Resource_ahd68")])
+
+[sub_resource type="Resource" id="Resource_jjry1"]
+script = ExtResource("5_8w7yo")
+
+[sub_resource type="Resource" id="Resource_jejf3"]
+script = ExtResource("1_saroh")
+label = "逃跑（{flee_chance}%）"
+labels = {
+"en": "Flee ({flee_chance}%)"
+}
+outcomes = Array[ExtResource("2_711kb")]([SubResource("Resource_jjry1")])
 
 [resource]
-script = ExtResource("5_xvjdf")
+script = ExtResource("6_cc02l")
 id = &"search_encounter"
 title = "有人来了"
 titles = {
@@ -28,4 +40,4 @@ text = "翻动的声响惊动了附近的人。什么都没来得及拿，对方
 texts = {
 "en": "The noise woke someone nearby. Before you could grab anything, they were on you."
 }
-options = Array[ExtResource("1_kdcog")]([SubResource("Resource_cc02l")])
+options = Array[ExtResource("1_saroh")]([SubResource("Resource_mop00"), SubResource("Resource_jejf3")])

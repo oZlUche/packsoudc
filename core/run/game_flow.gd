@@ -1007,6 +1007,29 @@ func slip_battle() -> String:
 	return ""
 
 
+## 248：战前准备屏的「退回」能不能按：空串 = 能。序章（不走开局屏的章）的强制战斗不给，其余看 [method NodeEvents.retreat_reason]
+func retreat_reason() -> String:
+	if run == null:
+		return UiText.t("log.no_run")
+	if run.chapter != null and run.chapter.skip_setup:
+		return UiText.t("pre.no_retreat")
+	return run.events.retreat_reason()
+
+
+## 248：按「退回」：这一场先不打，人退回上一个点（照走一步），然后往下走（回地图，或退回去那一步引出的下一屏）。返回空串 = 退了
+func retreat_battle() -> String:
+	var why := retreat_reason()
+	if why != "":
+		return why
+	if not run.events.retreat_pending_battle():
+		return UiText.t("pre.no_retreat")
+	if recorder != null:
+		recorder.record(run)
+	save()     # 和走一步一样：人挪到了点上就存
+	_flush()
+	return ""
+
+
 ## 147：用腰带里的一个（地图屏 / 战前准备屏；160 补一：按随身技能的 id）。用了、而且等着开打的那一场因此没了（烟雾弹）就往下走。
 ## 返回空串 = 用了，否则是原因
 func use_belt(skill_id: StringName) -> String:

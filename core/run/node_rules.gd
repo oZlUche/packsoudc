@@ -47,6 +47,10 @@ const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
 ## 087（作者定）：击败核心点的 BOSS 之后，收完战利品就直接撤离结算（不用走到撤离点、不付费）
 @export var boss_extracts: bool = true
 
+## 248：被缠上了再跑（搜索遭遇、伏击；猎手用它自己定义里的成功率与体力）：`chance` 基础成功率（加 buff 的 flee_bonus，夹在 0～1）、
+## `fail_vitality` 失败扣几点体力、`fail_buff` 失败背的地图 buff（空 = 不背）。看见了再躲（战前屏「退回」）不收这份代价
+@export var flee: Dictionary = {"chance": 0.5, "fail_vitality": 1, "fail_buff": "weakened"}
+
 
 ## 随机点变成什么。权重全 0 或表空返回 battle —— 一个随机点总得是点什么
 func random_pick(rng: RandomNumberGenerator) -> StringName:
@@ -56,6 +60,19 @@ func random_pick(rng: RandomNumberGenerator) -> StringName:
 ## 常规事件的结果
 func event_pick(rng: RandomNumberGenerator) -> StringName:
 	return _weighted(event_weights, rng, &"story")
+
+
+## 248：逃跑的基础成功率（还没加 buff）
+func flee_chance() -> float:
+	return float(flee.get("chance", 0.5))
+
+
+func flee_fail_vitality() -> int:
+	return int(flee.get("fail_vitality", 1))
+
+
+func flee_fail_buff() -> StringName:
+	return StringName(String(flee.get("fail_buff", "")))
 
 
 func loss_cost_of(type: StringName) -> int:

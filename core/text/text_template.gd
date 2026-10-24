@@ -385,6 +385,8 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 		ctx["loss_cost"] = int(run.node_rules.loss_cost.get("battle", 1)) if run.node_rules != null else 1
 		# 193：休息点照类型发生回几点体力（节点规则的 rest_restore + 局内效果的 rest_bonus）；扎营这类选项的总数见 [method rest_total]
 		ctx["rest_restore"] = (run.node_rules.rest_restore + run.hooks.run_context().rest_bonus) if run.node_rules != null else 0
+		# 248：被缠上了逃跑的成功率（百分数，节点规则的 flee.chance + 逃跑加成）
+		ctx["flee_chance"] = int(roundf(run.events.flee_chance() * 100.0)) if run.events != null else 50
 	if node != null:
 		ctx["node_id"] = node.id
 		var type := NodeEvents.effective_type(node)

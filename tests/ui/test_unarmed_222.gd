@@ -60,6 +60,9 @@ static func frame_unarmed(t: TestCase, root: Window) -> void:
 		t.eq(pre.can_start(), "", "空手也能开战")
 		t.check(not pre._start_btn.disabled, "「开战」不灰")
 		t.eq(pre._why.text, UiText.t("pre.no_attacker"), "只提醒一句")
+		# 248：看得见的战斗 / 精英点，战前屏左下角一颗平的「退回」（文字占位，图标等作者定）
+		var rb: TipButton = pre.retreat_button()
+		t.check(rb != null and rb.text == UiText.t("pre.retreat") and rb.get_parent().get_index() == 0, "248：左下角有「退回」")
 		t.check(pre.start_battle(), "开战")
 		t.check(not bool(flow.last_payload.get("won", true)), "纯挨打：输了")
 		var result: BattleResult = flow.last_payload.get("result", null)
