@@ -214,3 +214,14 @@ armor 贴身甲、high_tier_armor 高级贴身甲、armor_plate 防弹装甲、b
 4. 日神 / 技巧之神 / 狩猎之神的献祭替换见 6.4，作者改表即可。
 
 交执行落地；美术：饰物 / 贵重品两枚新标签图标（193）按 2026-10-24 10:45 规矩先出样。
+
+## 七 落地（v4.38，PR #331，2026-10-24）
+
+执行按 §六 落地，偏差 / 补充：
+
+1. 晶石保留内部标签 `part`：三个敌人池的 `common_tags` 里有 part，删了敌人就不再随机带晶石；part 在内部轴、不显示，所以留着。
+2. 序章三的骨骰子 / 碎骨串加了 `beast_part`：蛮神献祭改成兽材 ×5 后，两件骨头不挂兽材就献不出信力、序章过不了一阶。`tut3_search_again_1` 的文案改成「骨头是兽材，兽材是蛮神最爱的」（占位符 `{faith_offer:brute:beast_part:multiplier}`）。
+3. `faith` / `faith_anchor` 原来给悬浮窗提供「信仰」「信物」两条词条，删了玩家就看不到信物是什么 —— 补了 `Glossary.FAITH_TERMS` + `faith_terms(def)`：归神的道具带「信仰」词条，是信物的再带「信物」（赐福版只有前者）。
+4. 退役标签的图标（blessed / bow / enchanted / faith / faith_anchor / gear / gear_plug / relic / sigil / tool / trophy）删了；十个材质图标留着（包的准入、铸炉行、献祭条件还按 id 找图）。兽材还没有图标，献祭栏蛮神那行暂退回文字 —— 美术补一枚 beast_part 图标。
+5. `MarketRules.excluded_tags` 默认值去掉 faith。`carry_rules/standard` 与 raider / ragpicker / apothecary 的 `item_tags` 仍写 material：晶石现在是 crystal 类别，这几处不再抽到晶石（以前靠 material 抽到）；要照旧带晶石就加一个 crystal，执行没动 —— 推荐**不加**（晶石归法杖敌人 247，杂兵不带）。
+6. 导入器的本源 / 类别规则都是 error（照 §6 推荐）。
