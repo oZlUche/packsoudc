@@ -161,3 +161,12 @@
 Market / Smithy 两个核心类、配方 json 的其他字段、上货时机、三成 / 五成。
 
 **10.1 补（第三版样稿，作者 15:57 在美术线改）**：集市只剩一张带透视的大平桌，货分前后两排。`layout.json` 的 `tables` 只有一项；每个 `spot` 带 `foot`（货底中点，底图像素）与 `scale`（后排小、前排大，货的格子按它缩），价签平放在货前面，「已售」章盖在价签上。铁匠铺背景改红砖墙 + 砖拱，六个大类键是平木牌（不是平石）。样稿 `market3.png` / `smithy3.png`。
+
+## 十一 补充一落地（v4.39，PR #332，2026-10-24）
+
+执行按 §十（含第三版格式）落地，偏差 / 细节：
+
+1. 集市 `layout.json`：`tables` 一项（back_y / back_x / front_y / front_x / band，只给占位画用）；每个 spot 是 `foot` + `scale`，另有顶层 `cell` 作基准格长（spot 实际格长 = cell × scale × 整棚缩放）；按级数取前 4 / 6 / 8 个、前后两排交错；价签放在 foot 下方，后排先画、前排后画压在上面。右半边照旧是仓库（样稿整页铺满，§十没要求去掉仓库，执行没动 —— 作者若要整页集市，另说一声）。
+2. 金币：新控件 `CoinLabel`；`PriceTag.coins` 金币式；右键菜单 `Action.coin` 字段，按钮右端画金币 + 数字，文字只写「买下」（新 key `act.buy_coin`）。
+3. 铁匠铺：大类键用 `StoneChip.entry`（选中按下），木牌皮归 UI替换美术；`RecipeScroll` 的纸身与两头的轴借告示卷轴的图；打造键 `IconButton.make_art("res://assets/ui/smithy/", "forge_key", …)`，四态 forge_key / _hover / _pressed / _disabled，图上不带字；没图时 `UiTheme.BUTTON_FORGE` 平键，颜色 `UiPalette.HOT_IRON`。删了用不到的 key：smithy.line / line_locked / need_item / need_funds。英文大类「斧锤」= Hammers（Axes & Hammers 放不进左列）。
+4. 顺带合进这一版：`TagRegistry.icon_path` 遇到 `faith:<神>` 返回 `assets/ui/faith/<神>.png`（UI替换美术要的信仰徽记）；饰物 / 贵重品两枚标签图标（250）。
