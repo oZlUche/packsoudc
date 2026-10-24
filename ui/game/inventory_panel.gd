@@ -35,6 +35,13 @@ var hint_sink: Callable = Callable()
 var quick_action: Callable = Callable()
 ## 230：这一屏另加的按钮（`func(inst) -> Array`，排在锁定后面）
 var extra_actions: Callable = Callable()
+## 249（作者 2026-10-24）：这一屏棋盘上的东西出不去（战前屏：开战前不丢东西）—— 非空就是那句原因：拖出棋盘弹回、右键「放到地上」灰着、
+## 双击不搬、顶替不往地上挤。地上的照样能拾进棋盘，地上拿起放回地上不拦；「不参战」照旧。[method setup] 前后设都行
+var ground_exit_notice: String = "":
+	set(v):
+		ground_exit_notice = v
+		_guard_ground_exit()
+var _exit_guarded := false
 
 
 ## [param drag] 给了就把两个视图登记到那一层（战利品屏要一层盖住三个容器）；不给就自己造一层盖在面板上
@@ -104,6 +111,23 @@ func _build() -> void:
 	strip.tip = tip
 	board_view.item_double_clicked.connect(quick_move)
 	board_view.actions_for = board_actions     # 230：右键 = 钉住悬浮窗（信物奉为主信仰改成按钮）
+	_guard_ground_exit()
+
+
+## 249：给拖拽层挂上「棋盘上的不许去地上」那一道门（包在这一屏原有的过滤器外面），松手被拦时说那一句
+func _guard_ground_exit() -> void:
+	if _drag == null or _run == null or ground_exit_notice == "" or _exit_guarded:
+		return
+	_exit_guarded = true
+	var prior := _drag.drop_filter
+	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
+		if ground_exit_notice != "" and target == _run.storage and _drag.source() == _run.board:
+			return false
+		return not prior.is_valid() or bool(prior.call(inst, target))
+	_drag.displace_to_stash = false
+	_drag.drop_refused.connect(func(_uid: int):
+		if ground_exit_notice != "":
+			_hint_text(ground_exit_notice))
 
 
 ## 216：容器屏把数值栏摘出去，自己摆到「全部拾取」那一行；面板里那格空位一起拿掉
@@ -150,7 +174,9 @@ func board_actions(uid: int) -> Array:
 	if first == null:
 		first = ItemActions.make(&"quick", UiText.t("act.into_box" if quick_target != null else "act.drop"),
 			func(): quick_move(board_view, uid), quick_target == null)
-	if inst.is_locked_by_player() and (quick_target == null or not _quick_allows(inst)):
+	if ground_exit_notice != "" and quick_target == null:
+		ItemActions.disable(first, ground_exit_notice)     # 249：开战前不丢东西
+	elif inst.is_locked_by_player() and (quick_target == null or not _quick_allows(inst)):
 		ItemActions.disable(first, UiText.t("act.locked"))
 	elif _run.board.is_locked(uid):
 		ItemActions.disable(first, UiText.t(DragLayer.ROOTED_NOTICE))
@@ -204,6 +230,9 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 			return true
 		if inst.is_locked_by_player():
 			_hint_text(UiText.t("item.locked_no") % Names.of(inst.def))
+			return false
+		if ground_exit_notice != "":
+			_hint_text(ground_exit_notice)     # 249：开战前不丢东西
 			return false
 		if InventoryService.transfer_auto(_run.board, uid, _run.storage):
 			if quick_target != null:

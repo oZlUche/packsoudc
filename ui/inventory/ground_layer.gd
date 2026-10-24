@@ -93,6 +93,16 @@ const BUMP_TILT_SNAP := 0.0087
 ## 摆正后往下贴回支撑最多挪多少像素（再远就当悬着，收尾时掉下去）
 const BUMP_SNAP_SEAT := 4.0
 const SUPPORT_TOUCH := 1.0
+## 249：用手甩到地上 —— 拖拽层记松手前多久的鼠标（秒）、最多几个样本；乘过密度因子后快过 THROW_MIN（屏高 / 秒）才算甩（慢的照旧竖直掉），
+## 封顶 THROW_VMAX；密度因子 = 1 / (1 + 密度 / THROW_DENSITY)。都是占位数，按手感调
+const THROW_WINDOW_SEC := 0.09
+const THROW_SAMPLES := 8
+const THROW_MIN := 0.15
+const THROW_VMAX := 1.6
+const THROW_DENSITY := 2.0
+
+## 249：甩出去的那件第一次撞上地面 / 墙 / 面板（过撞击线）—— 这一下响落地声
+signal thrown_landed(uid: int)
 
 ## 导演持有的那一层（没有 = null：测试、沙盒）。各屏开拖拽时拿它登记
 static var _current: GroundLayer = null
@@ -244,10 +254,14 @@ func _scan() -> void:
 			continue
 		var from: Variant = stash.landing_from.get(uid, null)
 		stash.landing_from.erase(uid)
+		var vel: Vector2 = stash.landing_vel.get(uid, Vector2.ZERO)
+		stash.landing_vel.erase(uid)
 		if from is bool and not from:
 			continue     # 本来就在（读档、回到存过东西的点）
 		var stagger := -LAND_STAGGER * mini(k, LAND_STAGGER_MAX)
-		if from is Vector2:
+		if from is Vector2 and vel.length() >= THROW_MIN * _screen_h():
+			_begin_throw(inst, (from as Vector2) - global_position, vel)     # 249：甩出去的，带着手上的速度飞
+		elif from is Vector2:
 			_begin_fall(inst, (from as Vector2) - global_position, stagger)
 		else:
 			# 就地落下（拖拽放手、单击一下又放回）画在落点上，照样接鼠标：否则单击后紧跟的那一下双击落空；
@@ -286,6 +300,32 @@ func _begin_fall(inst: ItemInstance, from_local: Vector2, stagger: float, carry:
 	stash.set_spot(inst.uid, to_spot(target))
 	if carry:
 		_drop_resting_on(inst.uid)     # 托在它上面的跟着再掉
+
+
+## 249：手甩出去的一件 —— 不走竖直掉，起手就是醒着的刚体：从松手时残影的位置 [param from_local]、带着速度 [param vel]（全局像素 / 秒，
+## 已乘密度因子，这里封顶 [constant THROW_VMAX] 屏高 / 秒）飞出去，不带角速度。重力、撞地 / 屏边 / 面板、砸醒别的、滑行翻倒都交给 198 的解算
+func _begin_throw(inst: ItemInstance, from_local: Vector2, vel: Vector2) -> void:
+	if inst.def == null or inst.def.shape == null:
+		return
+	stash.set_tilt(inst.uid, 0.0)
+	stash.set_spot(inst.uid, to_spot(from_local))     # 落点由解算收尾时改成真正停下的地方
+	_support.erase(inst.uid)
+	_rest_on.erase(inst.uid)
+	if _bodies.is_empty():
+		_bump_t = 0.0
+		_bump_acc = 0.0
+	_bump_start = _bump_t
+	var b := _new_body(inst, size.y * (1.0 - ItemStash.SPOT_MARGIN), reserved_rects(), true, from_local)
+	b["vel"] = vel.limit_length(THROW_VMAX * _screen_h())
+	b["thrown"] = true
+	_bodies[inst.uid] = b
+
+
+## 249：甩出去的速度乘多少 —— 越密越沉、手一样快也飞得近：1 / (1 + 密度 / [constant THROW_DENSITY])；密度 = 重 ÷ 格数（包重 0 → 1）
+static func throw_factor(def: ItemDef) -> float:
+	var cells := def.cell_count() if def != null else 0
+	var density := float(ItemWeight.of(def)) / cells if cells > 0 else 0.0
+	return 1.0 / (1.0 + density / THROW_DENSITY)
 
 
 ## 162 补充二：起点 [param from_local]（朝向 [param rot_from] 的包围盒左上角）正下方的落点：重心 x 不变（夹在屏内），
@@ -902,8 +942,11 @@ func wake_bumps(landed: Array = []) -> void:
 
 ## 一件成一个物体：{pos: 不斜时包围盒左上角, vel: 重心速度, ang: 斜度, w: 角速度, m: 质量, I: 转动惯量, com: 轮廓重心（从 pos 量）,
 ## sil: 这一向的轮廓, floor: 地面 y, last: 上次撞击时刻, skip: 起手就压着的面板, rest: 静了多久, asleep}
-func _new_body(it: ItemInstance, ground_y: float, walls: Array[Rect2], awake: bool) -> Dictionary:
+## 249：[param at] 给了（不是 NaN）就从这个左上角起（甩出去的从松手点起，不从落点）
+func _new_body(it: ItemInstance, ground_y: float, walls: Array[Rect2], awake: bool, at: Vector2 = Vector2(NAN, NAN)) -> Dictionary:
 	var r := item_rect(it.uid)
+	if not is_nan(at.x):
+		r.position = at
 	var sil := ItemSilhouette.of(it.def, it.rotation)
 	var ang := tilt_of(it.uid)
 	var parts: Array = ItemSilhouette.tilted(sil, ang)["parts"]
@@ -1001,7 +1044,8 @@ func _bump_step(h: float) -> bool:
 	var cap := BUMP_WALL_VCAP * LAND_VMAX * _screen_h()
 	for b in list:
 		_after_impact(b, cap)
-		b["vel"] = (b["vel"] as Vector2).limit_length(BUMP_SEP_VMAX)     # 夹在两件之间解不开时冲量会越攒越大：封顶
+		if not bool(b.get("thrown", false)):
+			b["vel"] = (b["vel"] as Vector2).limit_length(BUMP_SEP_VMAX)     # 夹在两件之间解不开时冲量会越攒越大：封顶（249：甩出去还没落地的不按它封）
 		b["w"] = clampf(float(b["w"]), -BUMP_W_MAX, BUMP_W_MAX)
 	for c in contacts:
 		if c["b"] != null and float(c["depth"]) > BUMP_SLOP:
@@ -1189,6 +1233,10 @@ func _prep(c: Dictionary, h: float, impact: float) -> void:
 		a["hit"] = int(a["hit"]) | (2 if b == null else 1)
 		if b != null:
 			b["hit"] = int(b["hit"]) | 1
+		elif bool(a.get("thrown", false)):
+			a["thrown"] = false     # 249：甩出去的第一次撞上地 / 墙 / 面板响一声落地，之后的小碰不响
+			AudioHub.play(landing_cue([a["uid"]]))
+			thrown_landed.emit(int(a["uid"]))
 	for p in (c["points"] as PackedVector2Array):
 		var ra := p - ((a["pos"] as Vector2) + (a["com"] as Vector2))
 		var rb := p - ((b["pos"] as Vector2) + (b["com"] as Vector2)) if b != null else Vector2.ZERO

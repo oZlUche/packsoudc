@@ -39,6 +39,9 @@ var avoid: Array[Rect2] = []
 ## [code]Vector2[/code] = 从这个全局像素（道具包围盒左上角）落过来；[code]true[/code] = 就地落下（只缩放 + 弹跳）；
 ## [code]false[/code] = 不播（读档、回到存过东西的点 —— 不是「掉」，是本来就在）。没写 = 从最近的面板边缘落出来
 var landing_from: Dictionary = {}
+## 249：用手甩到地上的那件松手时带着多快（全局像素 / 秒，已乘密度因子）。和 [member landing_from] 同一个生命周期：不存档，
+## 界面层写（拖拽放手），[GroundLayer] 读完即删；够快的不竖直掉，带着这股速度飞出去
+var landing_vel: Dictionary = {}
 
 
 func _init(p_id: int = 0, p_capacity: int = 0) -> void:
@@ -126,6 +129,7 @@ func remove(uid: int) -> ItemInstance:
 	spots.erase(uid)
 	tilts.erase(uid)
 	landing_from.erase(uid)
+	landing_vel.erase(uid)
 	inst.container_id = 0
 	_notify_changed()
 	return inst
@@ -140,6 +144,7 @@ func clear() -> void:
 	spots.clear()
 	tilts.clear()
 	landing_from.clear()
+	landing_vel.clear()
 	_notify_changed()
 #endregion
 

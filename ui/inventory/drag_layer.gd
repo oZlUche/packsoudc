@@ -30,6 +30,8 @@ signal items_displaced(instances: Array, grabbed: bool)
 signal items_shed(instances: Array)
 ## 207：按下去的这件扎了根（或它是被扎根钉住的包），没拿起来。宿主拿它给玩家一句（[constant ROOTED_NOTICE]）
 signal grab_refused(uid: int)
+## 249：在棋盘外（地上）松手，可这一屏不许往地上放（[member drop_filter] 拦了）—— 东西已经弹回原处。宿主拿它说一句为什么
+signal drop_refused(uid: int)
 
 const ROOTED_NOTICE := "notice.rooted"
 
@@ -46,6 +48,8 @@ var drop_filter: Callable = Callable()
 ## 地上不限大小，所以这一下总能成（被 drop_filter 拦的除外）。
 ## 一局里的整理面板开它；开局屏（仓库 ↔ 棋盘）不开，那儿放到外面还是退回
 var drop_outside_to_stash: bool = false
+## 249：顶替顶出两件以上时许不许把它们挤到地上（[member stash]）。战前屏关掉（开战前不丢东西）：这样的落点当放不下
+var displace_to_stash: bool = true
 ## 配方查询 `func(a: ItemInstance, b: ItemInstance) -> ItemDef`：拖起一件时，所有能和它合成的那几件亮一圈；
 ## 配了 [member craft_drop] 时也用它判「压上去是合成」（预览画绿的，不是顶替）
 var craft: Callable = Callable()
@@ -88,6 +92,8 @@ var _src_tilt: float = 0.0
 var _src_px: Variant = null
 ## 抓取点相对物品 origin 的格偏移，拖拽时用它反推落点
 var _grab_cell: Vector2i = Vector2i.ZERO
+## 249：拿着东西时鼠标最近的几个位置 `{t: 秒, p: 全局像素}`（最多 [constant GroundLayer.THROW_SAMPLES] 个），松手时算手上的速度
+var _motion: Array = []
 ## 139：起拖那块视图的格子边长（基地屏的仓库会放大）。跟手的残影、整块判定按它；吸附到某块视图上时按那块的
 var _cell: float = InventoryView.CELL
 var _rot: int = 0
@@ -240,6 +246,7 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseMotion:
+		record_motion(get_global_mouse_position())
 		update_preview(get_global_mouse_position())
 		queue_redraw()
 		return
@@ -392,11 +399,11 @@ func update_preview(global_pos: Vector2) -> void:
 		UiCursor.set_drag(true, drop_ok_at(global_pos))
 
 
-## 157：在这里松手算不算放下了（不是弹回原处）：棋盘外看会不会到地上，格子看预览是不是绿 / 黄的
+## 157：在这里松手算不算放下了（不是弹回原处）：棋盘外看会不会到地上（249：也看 [member drop_filter] 许不许），格子看预览是不是绿 / 黄的
 func drop_ok_at(global_pos: Vector2) -> bool:
 	var target := view_at(global_pos)
 	if target == null:
-		return _drops_outside_to_stash()
+		return _drops_outside_to_stash() and _drop_allowed(stash)
 	if target.container() == null or not _drop_allowed(target.container()):
 		return false
 	if target is InventoryView:
@@ -587,6 +594,32 @@ func _release_px(global_pos: Vector2) -> Vector2:
 	return global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * _cell
 
 
+## 249：记一个鼠标位置（拿着东西时每次移动；[param t_sec] 不给 = 现在）。只留最近的 [constant GroundLayer.THROW_SAMPLES] 个
+func record_motion(global_pos: Vector2, t_sec: float = -1.0) -> void:
+	var now := t_sec if t_sec >= 0.0 else Time.get_ticks_usec() / 1000000.0
+	_motion.append({"t": now, "p": global_pos})
+	while _motion.size() > GroundLayer.THROW_SAMPLES:
+		_motion.pop_front()
+
+
+## 249：松手那一刻手上的速度（全局像素 / 秒）：最近 [constant GroundLayer.THROW_WINDOW_SEC] 秒里最早那个样本到松手点的位移 ÷ 时间。
+## 窗口里没有样本（停住了才放手）= 零
+func release_velocity(global_pos: Vector2, t_sec: float = -1.0) -> Vector2:
+	var now := t_sec if t_sec >= 0.0 else Time.get_ticks_usec() / 1000000.0
+	for sample in _motion:
+		var dt := now - float(sample["t"])
+		if dt <= GroundLayer.THROW_WINDOW_SEC + 0.000001:
+			return (global_pos - (sample["p"] as Vector2)) / dt if dt >= 0.01 else Vector2.ZERO
+	return Vector2.ZERO
+
+
+## 249：甩到地上的这件带着多快落地（手上的速度 × 密度因子）写进 [param target] 的 [member ItemStash.landing_vel]；就地放回（单击）不写
+func _note_throw(target: ItemStash, inst: ItemInstance, global_pos: Vector2) -> void:
+	var vel := release_velocity(global_pos) * GroundLayer.throw_factor(inst.def)
+	if vel != Vector2.ZERO:
+		target.landing_vel[inst.uid] = vel
+
+
 ## 从地上拿起又放回差不多原处、没转（单击一下）：就地落下，不往下掉 —— 否则紧跟的双击落空
 func _put_back(spot: Vector2) -> bool:
 	if not (_source is ItemStash) or _rot != _src_rot or not ItemStash.has_spot_value(_src_spot) or not ItemStash.has_spot_value(spot):
@@ -630,6 +663,8 @@ func drop_at(global_pos: Vector2) -> bool:
 	var pending: Array = []
 	var home: ItemContainer = null
 
+	# 249：棋盘外（地上）松手、这一屏却不许往地上放 —— 弹回原处之后告诉宿主
+	var refused := target == null and _drops_outside_to_stash() and not _drop_allowed(stash)
 	if target != null and not _drop_allowed(target.container()):
 		target = null     # 那儿不许放：当没放，退回源容器
 	elif target == null and _drops_outside_to_stash() and _drop_allowed(stash) and _stash_accepts(stash, inst):
@@ -652,6 +687,8 @@ func drop_at(global_pos: Vector2) -> bool:
 			# 162 补充二（作者定）：从松手那一刻残影的位置竖直往下掉（地层改落点与朝向）；地上拿起又原样放回（单击）= 就地，不掉
 			inst.rotation = _rot
 			stash.landing_from[inst.uid] = true if _put_back(spot) else _release_px(global_pos)
+			if not _put_back(spot):
+				_note_throw(stash, inst, global_pos)     # 249：手上带着速度就甩出去
 		if _source == stash or dropped:
 			if not dropped:
 				AudioHub.play(&"bag.invalid")     # 206：落到地上那一声在落稳时（GroundLayer）
@@ -671,6 +708,8 @@ func drop_at(global_pos: Vector2) -> bool:
 			home = gl.stash
 			inst.rotation = _rot
 			gl.stash.landing_from[inst.uid] = true if _source == gl.stash and _put_back(at_spot) else _release_px(global_pos)     # 162 补充二：同上
+			if gl.stash.landing_from[inst.uid] is Vector2:
+				_note_throw(gl.stash, inst, global_pos)     # 249
 	elif target is BagRackView and (target as BagRackView).rack != null:
 		# 225：包架只收空包（带东西的包先把东西拿下来）；从包架拿起又放回 = 原样
 		var rack := (target as BagRackView).rack
@@ -732,6 +771,8 @@ func drop_at(global_pos: Vector2) -> bool:
 
 	_end_drag()
 	drag_finished.emit(inst.uid, dropped)
+	if refused and not dropped:
+		drop_refused.emit(inst.uid)
 
 	if not pending.is_empty():
 		_settle_displaced(pending, home, global_pos)
@@ -888,7 +929,7 @@ func _drop_displacing(inv: GridInventory, inst: ItemInstance, at: Vector2i) -> D
 
 	# 多于一件：全部到地上，进不去就整件事作废。
 	# 只塞进去一半、另一半留在手上，玩家根本追不过来。
-	if stash != null and _admit_all(stash, victims):
+	if stash != null and displace_to_stash and _admit_all(stash, victims):
 		return {"ok": true, "victims": victims}
 
 	inv.begin_batch()
@@ -938,7 +979,7 @@ func _displaceable(inv: GridInventory, origin: Vector2i) -> Array[int]:
 	if not inv.terrain_allows(_inst.def, origin, _rot):
 		return none
 	var victims := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
-	if victims.size() >= 2 and stash == null:
+	if victims.size() >= 2 and (stash == null or not displace_to_stash):
 		return none
 	if inv.any_locked(victims):
 		return none     # 207：扎了根的顶不动
@@ -1040,6 +1081,7 @@ func _end_drag() -> void:
 	for view in _views:
 		view.clear_preview()
 	_inst = null
+	_motion.clear()
 	_cell = InventoryView.CELL
 	craft_hint = ""
 	_highlight_partners()     # _inst 空了：全熄
