@@ -20,16 +20,16 @@ static func _with_charges(db: ItemDatabase, id: StringName, left: int) -> ItemIn
 
 
 static func run_variant_of(t: TestCase) -> void:
-	t.begin("208 · variant_of：满的空、没满按张数折算（246：满九次四张图 1～3 → c1、4～6 → c2、7～8 → c3）、碎了 c0；没耐久的空；生长到阶 s<阶>")
+	t.begin("208 · variant_of：满的空、没满按张数折算（246 乙：满 27 次四张图 1～9 → c1、10～18 → c2、19～26 → c3）、碎了 c0；没耐久的空；生长到阶 s<阶>")
 	var db := _db()
 	var fire := ItemInstance.create(db.get_def(&"fire_crystal"))
 	t.eq(ItemPainter.variant_of(fire), &"", "满的：本图")
 	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 2)), &"c1", "剩 2 次：c1")
-	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 3)), &"c1", "剩 3 次：c1")
-	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 4)), &"c2", "剩 4 次：c2")
-	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 6)), &"c2", "剩 6 次：c2")
-	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 7)), &"c3", "剩 7 次：c3")
-	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 8)), &"c3", "剩 8 次：c3")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 9)), &"c1", "剩 9 次：c1")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 10)), &"c2", "剩 10 次：c2")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 18)), &"c2", "剩 18 次：c2")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 19)), &"c3", "剩 19 次：c3")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 26)), &"c3", "剩 26 次：c3")
 	t.eq(ItemPainter.variant_of(_with_charges(db, &"ice_crystal", 1)), &"c1", "剩 1 次：c1")
 	t.eq(ItemPainter.variant_of(_with_charges(db, &"lightning_crystal", 0)), &"c0", "碎了：c0")
 	t.eq(ItemPainter.variant_of(ItemInstance.create(db.get_def(&"knife"))), &"", "没有耐久：空")
@@ -70,11 +70,11 @@ static func run_charge_dots(t: TestCase) -> void:
 	var cell := 60.0
 	t.eq(ItemPainter.charge_dots(ItemInstance.create(db.get_def(&"fire_crystal")), 0, Vector2.ZERO, cell).size(), 0, "满的：不画")
 	t.eq(ItemPainter.charge_dots(ItemInstance.create(db.get_def(&"knife")), 0, Vector2.ZERO, cell).size(), 0, "没耐久：不画")
-	var two := _with_charges(db, &"fire_crystal", 2)
-	var full := two.def.wear.max_charges
+	var two := _with_charges(db, &"fire_crystal", 4)
+	var full := two.def.wear.max_charges / two.def.wear.charge_band
 	var dots := ItemPainter.charge_dots(two, 0, Vector2(10, 20), cell)
-	t.eq(dots.size(), full, "%d 个点" % full)
-	t.eq(dots.filter(func(d): return bool(d["lit"])).size(), 2, "亮两个")
+	t.eq(dots.size(), full, "246 乙：一档一个点，%d 个点" % full)
+	t.eq(dots.filter(func(d): return bool(d["lit"])).size(), 2, "剩 4 次 = 第二档：亮两个")
 	# 1×2 横放（rot 0）：左下那一格 = (0, 0)；竖放（rot 1）：(0, 1)
 	var y0: float = (dots[0]["at"] as Vector2).y
 	t.check(y0 > 20 + cell * 0.5 and y0 < 20 + cell, "横放：点在第一行的下半")
@@ -84,8 +84,8 @@ static func run_charge_dots(t: TestCase) -> void:
 	var amber := ItemPainter.charge_dots(_with_charges(db, &"raw_amber", 3), 0, Vector2.ZERO, cell)
 	t.check(amber.all(func(d): return (d["at"] as Vector2).x < cell), "246：一格宽的件九个点折成几排，不出格")
 	ItemPainter.art_variants()[&"fire_crystal"] = {&"c1": true}
-	t.eq(ItemPainter.charge_dots(two, 0, Vector2.ZERO, cell).size(), 0, "有 c1 的图（剩 2 次）：不画角标")
-	t.eq(ItemPainter.charge_dots(_with_charges(db, &"fire_crystal", 5), 0, Vector2.ZERO, cell).size(), full, "c2 没图：照画")
+	t.eq(ItemPainter.charge_dots(two, 0, Vector2.ZERO, cell).size(), 0, "有 c1 的图（剩 4 次）：不画角标")
+	t.eq(ItemPainter.charge_dots(_with_charges(db, &"fire_crystal", 12), 0, Vector2.ZERO, cell).size(), full, "c2 没图：照画")
 	ItemPainter.clear_art_cache()
 
 

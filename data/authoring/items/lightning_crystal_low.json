@@ -63,7 +63,8 @@
     ]
   },
   "wear": {
-    "max_charges": 9,
+    "max_charges": 27,
+    "charge_band": 3,
     "prefixes": [
       "熄灭的",
       "黯淡的",

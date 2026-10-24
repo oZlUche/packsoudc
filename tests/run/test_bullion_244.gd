@@ -167,7 +167,7 @@ static func run_gems(t: TestCase) -> void:
 		t.check(d.tags.has(&"magic") and d.tags.has(&"crystal") and d.is_valuable() and not d.tags.has(&"nature"), "%s：魔法、晶石、贵重品，没有自然（%s）" % [id, d.tags])
 		t.eq(d.rarity, 3, "%s 史诗（246 补充二：中品 = 紫）" % id)
 		t.check(d.adjacency != null and d.adjacency.has_feed() and is_equal_approx((d.adjacency.feed_mods[0] as StatModifier).amount, 9.0), "%s 供给 +9" % id)
-		t.eq(d.wear.max_charges if d.wear != null else -1, 9, "%s 能供给九场（246）" % id)
+		t.eq(d.wear.max_charges if d.wear != null else -1, 27, "%s 能供给 27 场（246 乙：三场一级）" % id)
 	t.eq(ItemValue.of(items.get_def(&"quartz_cluster")), 320, "清明魔晶石 320")
 	t.eq(ItemValue.of(items.get_def(&"crystal_shards")), 30, "碎晶 30")
 	t.check(items.get_def(&"quartz_cluster").adjacency.feed_rules.is_empty(), "清明魔晶石不带属性")

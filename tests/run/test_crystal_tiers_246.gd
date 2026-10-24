@@ -29,32 +29,35 @@ static func _with(db: ItemDatabase, id: StringName, left: int) -> ItemInstance:
 
 
 static func run_names(t: TestCase) -> void:
-	t.begin("246 §一 / §二：十级词表（中英）、一档一次满九次；charge_band 3 时三次一档")
+	t.begin("246 §一 / §二 + 乙：十级词表（中英）、三次一档满 27 次（三场一级）")
 	var db := _db()
 	var w := db.get_def(&"fire_crystal").wear
-	t.eq(w.max_charges, 9, "满九次")
+	t.eq(w.max_charges, 27, "满 27 次")
+	t.eq(w.charge_band, 3, "三次一档")
 	var zh: Array[String] = []
 	var en: Array[String] = []
-	for n in [0, 1, 5, 9]:
+	for n in [0, 1, 13, 27]:
 		zh.append(w.prefix_for(n, "zh"))
 		en.append(w.prefix_for(n, "en"))
-	t.eq(zh, ["破碎的", "熄灭的", "显眼的", "完美的"] as Array[String], "中文 0 / 1 / 5 / 9")
+	t.eq(zh, ["破碎的", "熄灭的", "显眼的", "完美的"] as Array[String], "中文 0 / 1 / 13 / 27")
 	t.eq(en, ["Shattered ", "Extinguished ", "Vivid ", "Flawless "] as Array[String], "英文自带空格")
 	var all_zh: Array[String] = []
-	for n in range(0, 10):
+	for n in [0, 1, 4, 7, 10, 13, 16, 19, 22, 25]:
 		all_zh.append(w.prefix_for(n, "zh"))
-	t.eq(all_zh, ["破碎的", "熄灭的", "黯淡的", "闪烁的", "微光的", "显眼的", "明亮的", "光耀的", "夺目的", "完美的"] as Array[String], "十级全对")
-	t.eq(Names.of_item(_with(db, &"ice_crystal_high", 7), "zh"), "光耀的冰霜魔晶核", "名字只多一个形容词")
-	var band := w.duplicate(true) as WearProfile
-	band.charge_band = 3
-	band.max_charges = 27
-	t.check(band.prefix_for(1, "zh") == band.prefix_for(3, "zh") and band.prefix_for(1, "zh") == "熄灭的", "三次一档：1～3 同词")
-	t.eq(band.prefix_for(4, "zh"), "黯淡的", "第 4 次换词")
-	t.eq(band.prefix_for(27, "zh"), "完美的", "满 27：完美的")
+	t.eq(all_zh, ["破碎的", "熄灭的", "黯淡的", "闪烁的", "微光的", "显眼的", "明亮的", "光耀的", "夺目的", "完美的"] as Array[String], "十级全对（每档第一次）")
+	t.check(w.prefix_for(1, "zh") == w.prefix_for(3, "zh") and w.prefix_for(3, "zh") == "熄灭的", "1～3 同词：熄灭的")
+	t.eq(w.prefix_for(4, "zh"), "黯淡的", "第 4 次换词")
+	t.eq(w.prefix_for(24, "zh"), "夺目的", "24：还是夺目的")
+	t.eq(w.prefix_for(25, "zh"), "完美的", "25 起完美的")
+	t.eq(Names.of_item(_with(db, &"ice_crystal_high", 19), "zh"), "光耀的冰霜魔晶核", "名字只多一个形容词")
+	var one := w.duplicate(true) as WearProfile
+	one.charge_band = 1
+	one.max_charges = 9
+	t.eq(one.prefix_for(5, "zh"), "显眼的", "一档一次也照样能用（满九）")
 	var maxes := {}
 	for id in ALL_WORN:
 		maxes[db.get_def(id).wear.max_charges] = true
-	t.eq(maxes.keys(), [9], "十一件魔晶石次数都一样（和品质不挂钩）")
+	t.eq(maxes.keys(), [27], "十一件魔晶石次数都一样（和品质不挂钩）")
 	for c in "熄黯耀夺":
 		t.check(FileAccess.get_file_as_string("res://assets/fonts/charset.txt").contains(c), "字集有「%s」" % c)
 
@@ -64,12 +67,12 @@ static func run_art(t: TestCase) -> void:
 	var w := _db().get_def(&"fire_crystal").wear
 	t.eq(w.art_levels, 4, "默认四张")
 	var got: Array[int] = []
-	for n in range(0, 10):
+	for n in [0, 1, 9, 10, 18, 19, 26, 27]:
 		got.append(w.art_variant(n))
-	t.eq(got, [0, 1, 1, 1, 2, 2, 2, 3, 3, -1] as Array[int], "0～9 → c0 / c1×3 / c2×3 / c3×2 / 本图")
+	t.eq(got, [0, 1, 1, 2, 2, 3, 3, -1] as Array[int], "0 → c0、1～9 → c1、10～18 → c2、19～26 → c3、满 27 本图")
 	var more := w.duplicate(true) as WearProfile
 	more.art_levels = 10
-	t.eq(more.art_variant(5), 5, "补到十张：一次一张")
+	t.eq(more.art_variant(15), 5, "补到十张：三次一张")
 
 
 static func run_tiers(t: TestCase) -> void:
@@ -193,7 +196,7 @@ static func run_roll(t: TestCase) -> void:
 	t.check(seen.values().all(func(n: int) -> bool: return n > 120), "大致等概率：%s" % [seen])
 	var ks := charges.keys()
 	ks.sort()
-	t.eq(ks, [1, 2, 3, 4, 5, 6, 7, 8, 9], "次数 1～9 都出、没有 0")
+	t.eq(ks, range(1, 28), "次数 1～27 都出、没有 0")
 	t.eq(CrystalRoll.reroll_id(db.get_def(&"quartz_cluster"), db, rng), &"quartz_cluster", "清明不换品")
 	var ids: Array[StringName] = [&"knife", &"raw_amber"]
 	t.eq(CrystalRoll.reroll_ids(ids, db, rng), ids, "不是魔晶石 / 没家族：原样")

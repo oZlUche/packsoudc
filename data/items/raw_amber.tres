@@ -24,7 +24,8 @@ script = ExtResource("8_ihefq")
 
 [sub_resource type="Resource" id="Resource_8m3bb"]
 script = ExtResource("9_qfpw2")
-max_charges = 9
+max_charges = 27
+charge_band = 3
 prefixes = Array[String](["熄灭的", "黯淡的", "闪烁的", "微光的", "显眼的", "明亮的", "光耀的", "夺目的", "完美的"])
 prefixes_by_lang = {
 "en": ["Extinguished ", "Dim ", "Flickering ", "Glimmering ", "Vivid ", "Bright ", "Radiant ", "Dazzling ", "Flawless "]
