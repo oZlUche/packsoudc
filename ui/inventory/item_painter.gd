@@ -212,11 +212,15 @@ static func charge_dots(inst: ItemInstance, rot: int, anchor: Vector2, cell: flo
 			best = c
 	var r := cell * CHARGE_DOT * 0.5
 	var start := anchor + Vector2(best.x, best.y + 1) * cell + Vector2(cell * CHARGE_INSET + r, -cell * CHARGE_INSET - r)
-	# 246：满九次，一格宽的件一排放不下 —— 按件的宽度折成几排，往上叠
+	# 246 乙：一个点 = 一档（满 27、三次一档 → 九个点），档里还剩次数就亮
+	var band := maxi(1, inst.def.wear.charge_band)
+	var dots := ceili(float(full) / band)
+	var lit := ceili(float(left) / band)
+	# 246：九个点一格宽的件一排放不下 —— 按件的宽度折成几排，往上叠
 	var width := float(inst.def.shape.size_rotated(rot).x)
 	var per_row := maxi(1, 1 + floori((width - 2.0 * CHARGE_INSET - CHARGE_DOT) / CHARGE_GAP))
-	for i in full:
-		out.append({"at": start + Vector2((i % per_row) * cell * CHARGE_GAP, -(i / per_row) * cell * CHARGE_GAP), "lit": i < left})
+	for i in dots:
+		out.append({"at": start + Vector2((i % per_row) * cell * CHARGE_GAP, -(i / per_row) * cell * CHARGE_GAP), "lit": i < lit})
 	return out
 
 

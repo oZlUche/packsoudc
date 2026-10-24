@@ -139,11 +139,11 @@ static func run_wear(t: TestCase) -> void:
 	var names: Array[String] = []
 	var en: Array[String] = []
 	var probe := ItemInstance.create(c.items.get_def(&"fire_crystal"))
-	for left in [9, 6, 3, 2, 1, 0]:
+	for left in [27, 18, 9, 6, 3, 0]:
 		probe.state[WearProfile.CHARGES_KEY] = left
 		names.append(Names.of_item(probe, "zh"))
 		en.append(Names.of_item(probe, "en"))
-	# 246：作者的十级词表（一档一次，满九次）
+	# 246 乙：作者的十级词表（三次一档，满 27 次）
 	t.eq(names, ["完美的火焰魔晶石", "明亮的火焰魔晶石", "闪烁的火焰魔晶石", "黯淡的火焰魔晶石", "熄灭的火焰魔晶石", "破碎的火焰魔晶石"] as Array[String], "前缀按剩几次")
 	t.eq(en, ["Flawless Fire Crystal", "Bright Fire Crystal", "Flickering Fire Crystal", "Dim Fire Crystal", "Extinguished Fire Crystal", "Shattered Fire Crystal"] as Array[String], "英文前缀")
 	t.eq(Names.of_item(ItemInstance.create(c.items.get_def(&"knife")), "zh"), Names.of(c.items.get_def(&"knife"), "zh"), "没有耐久的：名字不变")
