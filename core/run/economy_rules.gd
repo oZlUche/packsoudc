@@ -38,6 +38,14 @@ extends Resource
 @export var shop_exclude_tags: Array[StringName] = [&"treasure"]
 ## 209：每次上货有多大概率把一格换成包（从章节的包池按权重 × 稀有度权重抽）；0 = 不卖包
 @export var shop_bag_slot_chance: float = 0.3
+## 244：每次上货有多大概率把一格换成金银（一次最多一格）；0 = 不卖
+@export var bullion_slot_chance: float = 0.35
+## 244：金银那一格从这几件里抽；最后一件是「大的」（金条），占比按深度见 [member bullion_bar_share_by_depth]，其余等分
+@export var bullion_items: Array[StringName] = [&"gold_nugget", &"gold_bar"]
+## 244：最外 / 最内抽到大的那件的概率，中间按深度线性插
+@export var bullion_bar_share_by_depth: Array[float] = [0.3, 0.7]
+## 244：金银的售价 = 面值 × 这个数（不乘 [member shop_price_mult]、不乘 buff 的倍数 —— 打折买金、基地全价回收就成了白来的钱）
+@export var bullion_premium: float = 1.1
 ## 刷新一次多少钱；每刷一次涨 shop_refresh_step
 @export var shop_refresh_cost: int = 10
 @export var shop_refresh_step: int = 5
@@ -68,3 +76,12 @@ func shop_rarity_weight(rarity: int, depth: float) -> float:
 ## 第 n 次刷新（0 起）要多少钱
 func refresh_cost_at(n: int) -> int:
 	return maxi(0, shop_refresh_cost + shop_refresh_step * maxi(0, n))
+
+
+## 244：这个深度抽金银抽到大的那件（[member bullion_items] 最后一件）的概率
+func bullion_bar_share(depth: float) -> float:
+	if bullion_bar_share_by_depth.is_empty():
+		return 0.0
+	var outer := bullion_bar_share_by_depth[0]
+	var inner := bullion_bar_share_by_depth[bullion_bar_share_by_depth.size() - 1]
+	return clampf(lerpf(outer, inner, clampf(depth, 0.0, 1.0)), 0.0, 1.0)

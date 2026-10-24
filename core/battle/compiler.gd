@@ -531,7 +531,8 @@ static func _lit_neighbors(
 		if other == GridInventory.EMPTY_UID or other == holder.uid or seen.has(other):
 			continue
 		var other_inst := board.get_item(other)
-		if other_inst == null or not AdjacencyProfile.accepts(filter, other_inst.def) or not AdjacencyProfile.accepts_all(filter_all, other_inst.def):
+		# 244：标了「不参战」= 不在场，既不给邻接也不受（休眠的照旧，见 087）
+		if other_inst == null or other_inst.is_benched() or not AdjacencyProfile.accepts(filter, other_inst.def) or not AdjacencyProfile.accepts_all(filter_all, other_inst.def):
 			continue
 		seen[other] = true
 		found.append(other)

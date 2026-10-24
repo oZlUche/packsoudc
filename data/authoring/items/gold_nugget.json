@@ -1,0 +1,20 @@
+{
+  "id": "gold_nugget",
+  "display_name": "金块",
+  "display_names": {
+    "en": "Gold Nugget"
+  },
+  "description": "一块沉手的生金，谁都认它的分量。",
+  "descriptions": {
+    "en": "A heavy lump of raw gold; its weight speaks for itself."
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "value": 60,
+  "weight": 3,
+  "tags": [
+    "bullion"
+  ]
+}

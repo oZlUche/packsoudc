@@ -73,14 +73,16 @@ static func settle(state: RunState) -> RunResult:
 		for inst in state.board.items():
 			var item := inst as ItemInstance
 			r.carried.append(item)
-			r.value += ItemValue.of_in(item, state.board)     # 209：百宝囊里的按倍率
+			if not item.def.is_bullion():     # 244：金银是花钱买的，不算搜刮成绩（钱照样回仓库）
+				r.value += ItemValue.of_in(item, state.board)     # 209：百宝囊里的按倍率
 	var safe := SafeModule.of(state)     # 101：保险箱的状态在模块里
 	if safe != null and safe.inventory != null:
 		r.safe_size = safe.inventory.size
 		for inst in safe.inventory.items():
 			var item := inst as ItemInstance
 			r.safe_items.append(item)
-			r.safe_value += ItemValue.of(item.def)
+			if not item.def.is_bullion():     # 244：同上
+				r.safe_value += ItemValue.of(item.def)
 			r.safe_layout.append({"def": item.def, "origin": item.origin, "rotation": item.rotation})
 	return r
 

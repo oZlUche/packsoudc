@@ -12,5 +12,13 @@
     "treasure",
     "supply"
   ],
+  "bullion_items": [
+    "gold_nugget",
+    "gold_bar"
+  ],
+  "bullion_bar_share_by_depth": [
+    0.3,
+    0.7
+  ],
   "paid_extracts": 0
 }

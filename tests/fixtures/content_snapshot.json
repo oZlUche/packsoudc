@@ -103,6 +103,8 @@
     "gilded_goblet_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "glazed_inkstone": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "glazed_vase": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
+    "gold_bar": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
+    "gold_nugget": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "granite_mortar": {"bag":false,"cells":4,"shape":[[0,0],[0,1],[1,0],[1,1]],"size":[2,2]},
     "gravestone_shard": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gravestone_shard_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -261,5 +263,5 @@
     "wool_cloth": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
     "wound_salt": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]}
   },
-  "tags": ["ammo","armor","barbarian","beast_part","bleed","blessed","bone","bow","burst","clay","clockwork","cloth","crafted","crystal","enchanted","faith","faith_anchor","fire","flesh","food","gear","gear_plug","gem","gun","heavy","herb","ice","imperial","keepsake","leather","lightning","magic","material","melee","metal","nature","node_tooltips","part","poison","ranged","rapid","reagent","relic","remedy","sealed","shield","sigil","staff","stone","supply","token","tool","treasure","trophy","weapon","wood"]
+  "tags": ["ammo","armor","barbarian","beast_part","bleed","blessed","bone","bow","bullion","burst","clay","clockwork","cloth","crafted","crystal","enchanted","faith","faith_anchor","fire","flesh","food","gear","gear_plug","gem","gun","heavy","herb","ice","imperial","keepsake","leather","lightning","magic","material","melee","metal","nature","node_tooltips","part","poison","ranged","rapid","reagent","relic","remedy","sealed","shield","sigil","staff","stone","supply","token","tool","treasure","trophy","weapon","wood"]
 }

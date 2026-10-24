@@ -591,8 +591,13 @@ func _write_trace(trace: BattleTrace, result: BattleResult, node: MapNode, conte
 		"enemy": String(content.get("enemy", "")), "enemy_content": content.duplicate(true), "rng_seed": rng_seed, "time_limit": limit,
 		"names": [_uid_names(me), _uid_names(enemy)],
 		"boards": [me.board.to_dict() if me.board != null else {}, enemy.board.to_dict() if enemy.board != null else {}],
+		# 245：系数假设那一行按这些筛（档位、步数、角色、难度），耐力回复抄我方基线
+		"tier": int(content.get("strength", 0)), "steps": travel.clock.total if travel != null and travel.clock != null else 0,
+		"character": String(trace_info.get("character", "")), "difficulty": String(trace_info.get("difficulty", "")),
+		"stamina_regen": AssumptionStats.regen_of(me),
 	}
-	BattleTraceWriter.write(trace, result, info, String(trace_info.get("dir", BattleArchive.DIR)))
+	BattleTraceWriter.write(trace, result, info, String(trace_info.get("dir", BattleArchive.DIR)), BattleArchive.KEEP,
+		AssumptionStats.recorder(String(trace_info.get("assumptions", ""))))
 
 
 ## uid → 显示名（日志与回放把「uid 3」写成「小刀#3」）

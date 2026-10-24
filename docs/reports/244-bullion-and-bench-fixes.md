@@ -68,3 +68,14 @@
 
 - 不做「钱直接进保险箱」——作者要的是道具形态，占格就是取舍。
 - 不改行囊科技与带钱入局（243 刚落地）。
+
+## 七 落地（v4.27）
+
+- 道具 `gold_nugget` / `gold_bar`（`data/authoring/items/`，只带 `bullion`）、标签 `bullion`「金银」（用途类，弹词条）；`ItemDef.BULLION` + `is_bullion()`。没有图：先走程序画的占位，美术图到了照 201 的 `sync_item_art.sh` 收。
+- 商店：`EconomyRules` 加 `bullion_slot_chance` 0.35、`bullion_items`、`bullion_bar_share_by_depth` [0.3, 0.7]、`bullion_premium` 1.1（两份经济规则的 JSON 写了两个数组，其余用默认）。`ShopSession._restock_bullion()` 另起一条随机数，掷中就把**第一格**换成金银（包槽在最后一格，两样不抢；货架没满就添一格）；「金条占比」= 抽到 `bullion_items` 最后一件的概率，其余等分。`candidates()` 排除金银。`price_of` 对金银 = 面值 × 1.1，不乘 `shop_price_mult` 与 buff 倍数；`sell_price_of`（局内回购）照常五成。
+- 基地：`MetaState.sell_price` 对金银返回面值（单卖、一键出售、预览都走它）。结算：`RunResult.settle` 的 `value` / `safe_value` 跳过金银，东西照样带回。
+- 「只有商店出」比报告写的多拦了四处「从全库里抽」的路：搜索候选（`SearchSession.candidates`，事件「给随机道具」也走它）、掉落的珍宝兜底（`DropResolver` 没有同稀有度珍宝时）、敌人装备池（`EnemyPlacer._item_pool`）、信仰赠礼（`GiftOnEnterPerk`）、携带规则候选。
+- 不参战：`Compiler._lit_neighbors` 跳过 `is_benched()` 的件（受益不算点亮、增益不给；悬浮窗与装载格同一个函数，说法一致）；`MetaState._adopt()` 摘掉标记。
+- 百科：没有单件道具的页，标签页「金银」自动生成、列出这两件（标签按登记顺序排在用途类里）。
+- 测试 `tests/run/test_bullion_244.gd`（34 项）；内容快照已重生成。
+

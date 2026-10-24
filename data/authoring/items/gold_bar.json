@@ -1,0 +1,20 @@
+{
+  "id": "gold_bar",
+  "display_name": "金条",
+  "display_names": {
+    "en": "Gold Bar"
+  },
+  "description": "打上印记的金条，带回去一分不少。",
+  "descriptions": {
+    "en": "A stamped bar of gold, worth every coin back home."
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 2,
+  "value": 150,
+  "weight": 7,
+  "tags": [
+    "bullion"
+  ]
+}

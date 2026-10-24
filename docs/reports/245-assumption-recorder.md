@@ -43,3 +43,18 @@
 ## 四 测试
 
 一场固定种子的 `BattleSim` 结果 → `AssumptionStats.of` 的时长、受击次数、暴击率、对手 DPS 和日志里数出来的一致；写一行、读回一行；报告工具对三行样本能出表。放 `tests/battle/test_balance_242.gd` 旁边。
+
+## 五 落地（v4.27）
+
+- `core/run/calibration/assumption_stats.gd`（`AssumptionStats`）：`of(result, head, ver)` 一场一行；`append` / `read_rows`；`table` / `bracket_table` / `markdown` 出表（`quantile` 线性插值）。量不出来的项不写键（没挨打没有暴击率、没上过可叠层 buff 没有平均层数……），汇总时跳过。
+- 几处量法按日志里实际有的事件定（报告 §一 的说法对上）：
+  - `neighbor_hz`：用回放日志的 `item_fired`（`RULE_FIRE` 只在内部日志里），我方 uid 非零的件各自「次数 ÷ 时长」取平均；
+  - `low_hp_share`：按我方 `resource_changed`（hp，带变化后的当前值与上限）重放血线，低于三成的时间 ÷ 时长；
+  - `assumed_stacks`：对手身上可叠层 buff 的「层数 × 秒 ÷ 在场秒」；`persist_share`：我方身上不可叠层 buff 平均在场时长 ÷ 时长；
+  - `status_applied_rate` / `status_removed_rate`：我方身上 `status_stacked`（层数增加）/ `status_unstacked`（层数减少）次数 ÷ 时长；
+  - `stamina_regen` 抄我方基线（日志头新带 `stamina_regen`），`stamina_max` 与 `assumed_hp` 读开场快照。
+- 挂法：`BattleTraceWriter.write` 加参数 `after`（回调；战斗层不许认识 `core/run` 的类，101 第 5 刀），工作线程写完三份文件后调它；回调由 `AssumptionStats.recorder(路径)` 造，量一行追加。路径由 `GameFlow.apply_battle_trace` 放进 `trace_info`：**只有装了校准记录器的真实对局**（`GameDirector`）才给（`CalibrationRecorder.assumptions_path`），测试里的对局不往玩家目录写。日志头新带 `tier`、`steps`、`character`、`difficulty`、`stamina_regen`。
+- 工具 `tools/assumptions_report.gd -- [jsonl] [输出 md]`，默认读 `user://calibration/assumptions.jsonl`、写 `docs/reports/balance/<日期>-assumptions.md`；段位按每行的难度查段位表。
+- `BalanceMatrix.cell` 每场也量一行（木桩带段号与流派），`bench_matrix` 的输出末尾多一节「假设实测（木桩）」。
+- 测试 `tests/battle/test_assumptions_245.gd`（45 项）。
+

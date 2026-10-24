@@ -28,7 +28,8 @@ static func brackets_of(difficulty_id: String) -> Array[int]:
 
 ## 一格：[param specs] 轮流上场，共 [param fights] 场。返回 {fights, wins, draws, rate, duration（秒，全部场次平均）, hp_left（赢的那些场的余血比例平均）}
 static func cell(specs: Array[CombatantSpec], pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, node: MapNode,
-		tier: int, fights: int, seed: int, time_limit: float = BattleSim.DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null) -> Dictionary:
+		tier: int, fights: int, seed: int, time_limit: float = BattleSim.DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null,
+		rows: Array = [], head: Dictionary = {}) -> Dictionary:
 	var wins := 0
 	var draws := 0
 	var built := 0
@@ -45,7 +46,13 @@ static func cell(specs: Array[CombatantSpec], pool: EnemyPool, enemies: EnemyDat
 		if enemy == null:
 			continue
 		built += 1
-		var result := BattleSim.run(specs[i % specs.size()], enemy, rng, time_limit, overtime)
+		var spec := specs[i % specs.size()]
+		var result := BattleSim.run(spec, enemy, rng, time_limit, overtime)
+		var h := head.duplicate()     # 245：木桩也量一行系数假设（[param rows]），和真人的放一张表上比
+		h["tier"] = tier
+		h["enemy"] = String(entry.enemy)
+		h["stamina_regen"] = AssumptionStats.regen_of(spec)
+		rows.append(AssumptionStats.of(result, h))
 		dur += result.duration_sec()
 		if result.winner == 0:
 			wins += 1
@@ -92,12 +99,14 @@ static func run(dummies: Dictionary, pool: EnemyPool, enemies: EnemyDatabase, it
 	node.type = &"battle"
 	var tiers := pool.strengths()
 	var cells := {}
+	var assumptions: Array = []
 	for g in groups:
 		var row := {}
+		var head := {"bracket": int(String(g).get_slice("/", 1)), "archetype": String(g).get_slice("/", 0)}
 		for tier in tiers:
-			row[tier] = cell(groups[g], pool, enemies, items, node, tier, fights, seed, time_limit, overtime)
+			row[tier] = cell(groups[g], pool, enemies, items, node, tier, fights, seed, time_limit, overtime, assumptions, head)
 		cells[g] = row
-	return {"archetypes": archetypes, "brackets": brackets, "tiers": tiers, "steps": steps, "cells": cells}
+	return {"archetypes": archetypes, "brackets": brackets, "tiers": tiers, "steps": steps, "cells": cells, "assumptions": assumptions}
 
 
 ## 四张表 + 单调性检查。[param header] 的每一项印成表头的一行（参数、git 短哈希）
@@ -114,6 +123,13 @@ static func markdown(result: Dictionary, title: String, header: Array[String]) -
 		return "%.0f%%" % (float(c["hp_left"]) * 100.0) if int(c["wins"]) > 0 else "—"))
 	lines.append_array(_spread(result))
 	lines.append_array(_monotony(result))
+	var rows: Array = result.get("assumptions", [])
+	if not rows.is_empty():     # 245：木桩量出来的系数假设，和真人的（tools/assumptions_report.gd）同一张表的样子
+		lines.append_array(["## 假设实测（木桩）", "", "每场一行，全部格子一起汇总；和真人对局的表（`tools/assumptions_report.gd`）对着看木桩差在哪。", ""])
+		lines.append_array(AssumptionStats.table(rows, PowerWeights.load_from()))
+		lines.append("")
+		lines.append_array(AssumptionStats.bracket_table(rows))
+		lines.append("")
 	return "\n".join(lines) + "\n"
 
 

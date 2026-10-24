@@ -80,6 +80,8 @@ func refresh_cost() -> int:
 
 
 func price_of(def: ItemDef) -> int:
+	if def != null and def.is_bullion():     # 244：面值加手续费，任何倍率都不吃
+		return maxi(1, roundi(float(ItemValue.of(def)) * (rules.bullion_premium if rules != null else 1.0)))
 	return maxi(1, roundi(float(ItemValue.of(def)) * (rules.shop_price_mult if rules != null else 1.0) * price_mult))
 
 
@@ -242,6 +244,7 @@ func _restock() -> void:
 		cands.remove_at(k)
 		weights.remove_at(k)
 	_restock_bag()
+	_restock_bullion()
 	_build_shelves()
 	_restock_belt()
 
@@ -276,6 +279,31 @@ func _restock_bag() -> void:
 		stock[stock.size() - 1] = entry
 	else:
 		stock.append(entry)
+
+
+## 244：按 [member EconomyRules.bullion_slot_chance] 把第一格换成一件金银（货架没满就添一格）：越深越容易是金条。
+## 随机数另起一条 —— 别的格子和没有金银时一模一样；包槽在最后一格，两样不抢
+func _restock_bullion() -> void:
+	if rules == null or rules.bullion_slot_chance <= 0.0 or rules.shop_slots <= 0:
+		return
+	var ids: Array[StringName] = []
+	for id in rules.bullion_items:
+		if items.get_def(id) != null:
+			ids.append(id)
+	if ids.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d:shop_bullion:%d" % [node.content_seed if node != null else 0, refreshes])
+	if rng.randf() >= rules.bullion_slot_chance:
+		return
+	var pick := ids[ids.size() - 1]
+	if ids.size() > 1 and rng.randf() >= rules.bullion_bar_share(depth):
+		pick = ids[rng.randi_range(0, ids.size() - 2)]
+	var entry := {"id": String(pick), "price": price_of(items.get_def(pick))}
+	if stock.size() >= rules.shop_slots:
+		stock[0] = entry
+	else:
+		stock.push_front(entry)
 
 
 ## 160 补一：第 refreshes 次的「随身」那一排：按权重不重复抽 1 ～ belt_picks 种
@@ -364,7 +392,7 @@ static func candidates(p_rules: EconomyRules, p_items: ItemDatabase) -> Array[St
 	var out: Array[StringName] = []
 	for id in p_items.ids():
 		var d := p_items.get_def(id)
-		if d == null or d.is_bag:
+		if d == null or d.is_bag or d.is_bullion():     # 244：金银另开一格（[method _restock_bullion]），不进权重池
 			continue
 		var excluded := false
 		for tag in d.tags:

@@ -48,6 +48,9 @@ const BLESSED := &"blessed"
 const ANCHOR := &"faith_anchor"
 ## 175 第三批：铸牌这类**内部道具** —— 不进图鉴、掉落、商店（[method ItemDatabase.ids] 拦），能带出、能存仓库
 const TOKEN := &"token"
+## 244：金银（金块 / 金条）—— 只有商店出（[ShopSession] 单开一格）、不参战不进配方、不算总分，基地按面值全额回收。
+## 搜索、掉落、敌人装备、头一回踩点白给这些「从全库里抽」的地方都跳过它（[method is_bullion]）
+const BULLION := &"bullion"
 
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
@@ -59,6 +62,11 @@ func is_sealed() -> bool:
 
 func is_keepsake() -> bool:
 	return tags.has(KEEPSAKE)
+
+
+## 244：金银（[constant BULLION]）
+func is_bullion() -> bool:
+	return tags.has(BULLION)
 
 
 ## 175：铸牌（[constant TOKEN]）
