@@ -38,6 +38,13 @@ extends Resource
 @export var shop_exclude_tags: Array[StringName] = [&"treasure"]
 ## 209：每次上货有多大概率把一格换成包（从章节的包池按权重 × 稀有度权重抽）；0 = 不卖包
 @export var shop_bag_slot_chance: float = 0.3
+## 244：每次上货有多大概率把一格换成金银（一次最多一格）；0 = 不卖
+@export var bullion_slot_chance: float = 0.35
+## 244 补充一：金银那一格从哪几件里抽 —— 最外（深度 0）的权重表 id → 权重，和最内（深度 1）的那张按深度线性混合：外环见银、内环见金
+@export var bullion_shallow: Dictionary = {"silver_nugget": 1.0, "silver_bar": 1.0, "silver_ingot_large": 1.0, "gold_nugget": 1.0}
+@export var bullion_deep: Dictionary = {"gold_nugget": 1.0, "gold_bar": 1.0, "gold_ingot": 1.0, "silver_ingot_large": 1.0}
+## 244：金银的售价 = 面值 × 这个数（不乘 [member shop_price_mult]、不乘 buff 的倍数 —— 打折买金、基地全价回收就成了白来的钱）
+@export var bullion_premium: float = 1.1
 ## 刷新一次多少钱；每刷一次涨 shop_refresh_step
 @export var shop_refresh_cost: int = 10
 @export var shop_refresh_step: int = 5
@@ -68,3 +75,21 @@ func shop_rarity_weight(rarity: int, depth: float) -> float:
 ## 第 n 次刷新（0 起）要多少钱
 func refresh_cost_at(n: int) -> int:
 	return maxi(0, shop_refresh_cost + shop_refresh_step * maxi(0, n))
+
+
+## 244 补充一：这个深度金银那一格的权重表（两张按深度线性混合；id 升序、权重为正的才在）
+func bullion_weights(depth: float) -> Dictionary:
+	var d := clampf(depth, 0.0, 1.0)
+	var ids: Array[String] = []
+	for k in bullion_shallow:
+		ids.append(String(k))
+	for k in bullion_deep:
+		if not ids.has(String(k)):
+			ids.append(String(k))
+	ids.sort()
+	var out := {}
+	for id in ids:
+		var w := float(bullion_shallow.get(id, 0.0)) * (1.0 - d) + float(bullion_deep.get(id, 0.0)) * d
+		if w > 0.0:
+			out[StringName(id)] = w
+	return out

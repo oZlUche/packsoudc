@@ -11,18 +11,20 @@
   "shape": [
     "11"
   ],
-  "rarity": 1,
+  "rarity": 2,
+  "value": 150,
   "tags": [
     "part",
     "material",
     "magic",
     "gem",
-    "crystal"
+    "crystal",
+    "valuable"
   ],
   "adjacency": {
     "feed_mods": [
       {
-        "amount": 6.0
+        "amount": 9.0
       }
     ],
     "feed_rules": [
@@ -61,6 +63,7 @@
     ]
   },
   "wear": {
+    "max_charges": 4,
     "prefixes": [
       "黯淡的",
       "闪烁的",

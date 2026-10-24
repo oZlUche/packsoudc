@@ -325,7 +325,7 @@ static func candidates(p_rules: SearchRules, p_items: ItemDatabase, rarity_cap: 
 	var out: Array[StringName] = []
 	for id in p_items.ids():
 		var d := p_items.get_def(id)
-		if d == null or (d.is_bag and not p_rules.include_bags):
+		if d == null or (d.is_bag and not p_rules.include_bags) or d.is_bullion():     # 244：金银只有商店出
 			continue
 		if rarity_cap >= 0 and d.rarity > rarity_cap:
 			continue

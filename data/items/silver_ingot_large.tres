@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_cn52q"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_mtts1"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_lfnw1"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_1aw3i"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_dje41"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_mfcvg"]
+
+[sub_resource type="Resource" id="Resource_0nbik"]
+script = ExtResource("6_mfcvg")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)])
+
+[resource]
+script = ExtResource("5_dje41")
+id = &"silver_ingot_large"
+display_name = "大银锭"
+display_names = {
+"en": "Large Silver Ingot"
+}
+description = "一根沉甸甸的银锭，商队拿它结账。"
+descriptions = {
+"en": "A weighty silver ingot; caravans settle their accounts with it."
+}
+shape = SubResource("Resource_0nbik")
+rarity = 2
+value = 320
+weight = 11
+tags = Array[StringName]([&"valuable", &"bullion"])

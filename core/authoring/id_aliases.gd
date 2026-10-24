@@ -27,6 +27,8 @@ const RETIRED_ITEMS := {
 	&"sniper": {"refund": true, "value": 300},     # 155：狙击枪删了
 	&"mana_crystal": {"refund": true, "value": 24},     # 148：换成三色魔晶石
 	&"mana_shard": {"refund": true, "value": 8},     # 同上
+	&"quartz_cluster_nature": {"replace": "quartz_cluster"},     # 244 补充一：两块宝石去了【自然】、并入魔晶石，自然之神的赐福版跟着没了，换回原件
+	&"raw_amber_nature": {"replace": "raw_amber"},     # 同上
 }
 
 ## 173：形状 / 尺寸 / 是否包变过的道具（id → 哪次、怎么变的）。只是登记：对账层照样把原位放不下的重摆，

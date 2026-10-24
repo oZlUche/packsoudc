@@ -311,6 +311,7 @@ func _adopt(inst: ItemInstance) -> bool:
 	if not keeps(inst.def) and not BagRack.holds(inst.def):
 		return false
 	GrowthProfile.on_leave(inst)     # 207：带回基地 = 离开了作战棋盘，长到哪一阶都清零（reset_on_leave）
+	inst.set_benched(false)     # 244：「不参战」是这一局的事，回了基地就摘掉
 	inst.uid = _next_uid
 	_next_uid += 1
 	return true
@@ -492,7 +493,10 @@ func sell_item(uid: int, ratio: float = 0.5) -> int:
 	return price
 
 
+## 244：金银按面值全额收（[param ratio] 对它不生效）；补充一：凡贵重品都是
 static func sell_price(def: ItemDef, ratio: float = 0.5) -> int:
+	if def != null and (def.is_valuable() or def.is_bullion()):
+		return ItemValue.of(def)
 	return maxi(0, floori(float(ItemValue.of(def)) * ratio)) if def != null else 0
 
 

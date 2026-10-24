@@ -212,7 +212,8 @@ static func run_forge_and_enchant(t: TestCase) -> void:
 	t.eq(tiers, {0: 1, 2: 2, 4: 3}, "一阶 1 层、二阶 2 层、三阶 3 层")
 	var ice := Forge.forge(db.get_def(&"knife"), db.get_def(&"ice_crystal"), db.get_def(&"knife"))
 	var ri := Forge.rule_of(ice)
-	t.check((ri.effects[ri.effects.size() - 1] as ApplyStatus).buff.id == &"chill", "冰晶石：施加寒冷")
+	# 244 补充一：晶石升到稀有，铸出来的效果行多一条（施加不一定排最后）—— 找施加的那条
+	t.check(ri.effects.any(func(eff) -> bool: return eff is ApplyStatus and (eff as ApplyStatus).buff != null and (eff as ApplyStatus).buff.id == &"chill"), "冰晶石：施加寒冷")
 	t.check(Forge.sentence(ench).contains("灼伤"), "附魔那一句写施加灼伤（%s）" % Forge.sentence(ench))
 	var bone := Forge.forge(db.get_def(&"knife"), db.get_def(&"antler"), db.get_def(&"knife"))
 	for eff in Forge.rule_of(bone).effects:

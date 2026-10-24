@@ -4,6 +4,7 @@
 ## 这里只记，不算：一行一个 JSON（`snapshots.jsonl`，追加写），记步数、搜索次数、棋盘（layout：定义、落点、朝向）、基线、角色、难度、buff。
 ## 分段与平均是 [DummyBuilder] 的事 —— 记录是原始数据，怎么切段以后可以改。
 ## 242：每份快照带游戏版本号（几版混着读也分得开）；一局结束另记一行对局结果到 `runs.jsonl`（[method record_run]），不受局外历史二十局的上限。
+## 245：每打完一场，[BattleTraceWriter] 再量一行系数假设到 `assumptions.jsonl`（[AssumptionStats]；路径 [member assumptions_path]）。
 ## 玩家版照记（装配在 [GameDirector]，不走开发开关），设置里「导出平衡数据」把这个目录连同战斗日志打包到桌面
 class_name CalibrationRecorder
 extends RefCounted
@@ -14,6 +15,8 @@ const RUNS_PATH := "user://calibration/runs.jsonl"
 
 var path: String = DEFAULT_PATH
 var runs_path: String = RUNS_PATH
+## 245：每打完一场量一行系数假设（[AssumptionStats]）写到这里；空 = 不量
+var assumptions_path: String = AssumptionStats.PATH
 var written: int = 0
 
 

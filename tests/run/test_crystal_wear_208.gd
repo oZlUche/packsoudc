@@ -94,7 +94,7 @@ static func run_shatter(t: TestCase) -> void:
 		return
 	t.eq(shards.cell_count(), 1, "碎晶 1 格")
 	t.check(shards.tags.has(&"magic") and shards.tags.has(&"gem") and shards.tags.has(&"material"), "碎晶：材料、魔法、宝石")
-	t.eq(shards.value, maxi(1, int(roundf(ItemValue.of(c.items.get_def(&"fire_crystal")) * 0.25))), "碎晶的价 = 晶石 × 0.25")
+	t.eq(shards.value, 30, "碎晶的价 30（244 补充一；晶石涨到 150 后不再按 × 0.25 跟着）")
 	for id in [&"fire_crystal", &"ice_crystal", &"lightning_crystal"]:
 		t.eq(c.items.get_def(id).wear.broken_into, &"crystal_shards", "%s 碎成碎晶" % id)
 	var b := C148._staff_board(c.items, &"fire_crystal", &"")

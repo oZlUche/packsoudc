@@ -1,0 +1,12 @@
+{
+  "id": "bullion",
+  "display_name": "金银",
+  "display_names": {
+    "en": "Bullion"
+  },
+  "description": "值钱、不参战，只在商店买得到；基地回收按面值全额收。",
+  "descriptions": {
+    "en": "Valuable and does not fight. Only sold in shops; the base buys it back at full face value."
+  },
+  "category": "purpose"
+}

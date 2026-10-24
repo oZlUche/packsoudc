@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_5vmtr"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_3th4i"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_4sy82"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_ptf06"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_58pxg"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_3ylgw"]
+
+[sub_resource type="Resource" id="Resource_tmvy8"]
+script = ExtResource("6_3ylgw")
+
+[resource]
+script = ExtResource("5_58pxg")
+id = &"gold_nugget"
+display_name = "金块"
+display_names = {
+"en": "Gold Nugget"
+}
+description = "一块沉手的生金，谁都认它的分量。"
+descriptions = {
+"en": "A heavy lump of raw gold; its weight speaks for itself."
+}
+shape = SubResource("Resource_tmvy8")
+rarity = 2
+value = 200
+weight = 3
+tags = Array[StringName]([&"valuable", &"bullion"])

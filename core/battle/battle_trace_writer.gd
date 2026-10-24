@@ -17,7 +17,9 @@ static var _task: int = -1
 
 ## 写三份文件，返回这场的文件主干的完整路径（不带扩展名）；写不了返回空。
 ## 文件头与文件名在调用的这一帧定好，文本与写盘交给工作线程 —— 要马上读文件的先 [method flush]
-static func write(trace: BattleTrace, result: BattleResult, info: Dictionary, dir: String = BattleArchive.DIR, keep: int = BattleArchive.KEEP) -> String:
+## 245：[param after] 有效 = 三份文件写完之后在工作线程上再调一次 `after.call(result, header)`（一局那一侧量系数假设用；战斗层不认识它）
+static func write(trace: BattleTrace, result: BattleResult, info: Dictionary, dir: String = BattleArchive.DIR, keep: int = BattleArchive.KEEP,
+		after: Callable = Callable()) -> String:
 	if trace == null or result == null:
 		return ""
 	flush()
@@ -34,7 +36,7 @@ static func write(trace: BattleTrace, result: BattleResult, info: Dictionary, di
 	trace.header = head
 	var base := dir.path_join(BattleArchive.new_stem(dir, info))
 	var copy := info.duplicate(true)
-	_task = WorkerThreadPool.add_task(_write_files.bind(trace, result, copy, when, base, dir, keep), false, "BattleTraceWriter")
+	_task = WorkerThreadPool.add_task(_write_files.bind(trace, result, copy, when, base, dir, keep, after), false, "BattleTraceWriter")
 	return base
 
 
@@ -46,7 +48,8 @@ static func flush() -> void:
 
 
 ## 工作线程上：开战之后 trace / result 不再被改，读它们是安全的
-static func _write_files(trace: BattleTrace, result: BattleResult, info: Dictionary, when: String, base: String, dir: String, keep: int) -> void:
+static func _write_files(trace: BattleTrace, result: BattleResult, info: Dictionary, when: String, base: String, dir: String, keep: int,
+		after: Callable = Callable()) -> void:
 	if not _store(base + BattleArchive.TRACE_EXT, trace.to_jsonl()):
 		return
 	_store(base + BattleArchive.TEXT_EXT, trace.to_text())
@@ -58,6 +61,8 @@ static func _write_files(trace: BattleTrace, result: BattleResult, info: Diction
 	}
 	_store(base + BattleArchive.REPLAY_EXT, JSON.stringify(replay))
 	BattleArchive.prune(dir, keep)
+	if after.is_valid():
+		after.call(result, trace.header)
 
 
 static func _store(path: String, text: String) -> bool:

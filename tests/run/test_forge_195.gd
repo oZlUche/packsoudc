@@ -27,7 +27,7 @@ static func run_material_tags(t: TestCase) -> void:
 	var db := _db()
 	var bad: Array[String] = []
 	for id in db.ids(true):
-		if id == &"douxing":
+		if id == &"douxing" or (db.get_def(id) as ItemDef).is_bullion():     # 244：金银不带材质（不进铸炉、不进配方）
 			continue
 		var n := 0
 		for tag in (db.get_def(id) as ItemDef).tags:

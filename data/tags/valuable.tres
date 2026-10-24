@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_sv34v"]
+
+[resource]
+script = ExtResource("1_sv34v")
+id = &"valuable"
+display_name = "贵重品"
+display_names = {
+"en": "Valuable"
+}
+description = "值钱是它的本分：基地回收按面值全额收。"
+descriptions = {
+"en": "Its worth is the point: the base buys it back at full face value."
+}
+category = "purpose"

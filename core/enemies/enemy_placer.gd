@@ -630,7 +630,7 @@ static func _item_pool(items: ItemDatabase, rarity_cap: int, who: EnemyDef, pred
 	var out: Array[StringName] = []
 	for id in items.ids():
 		var d := items.get_def(id)
-		if d == null or d.is_bag or (rarity_cap >= 0 and d.rarity > rarity_cap):
+		if d == null or d.is_bag or d.is_bullion() or (rarity_cap >= 0 and d.rarity > rarity_cap):     # 244：金银不进敌人的装备
 			continue
 		if who != null and not who.allows_item(d):
 			continue

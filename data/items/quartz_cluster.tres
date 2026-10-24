@@ -1,27 +1,53 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_6688t"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_a55ng"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_an2f0"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_jhwjg"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_odjej"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_158y0"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_jhwjg"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_odjej"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_158y0"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_hgj3o"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_afv6u"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_b2cr4"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_8od3x"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_tto8a"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="9_dbitx"]
 
-[sub_resource type="Resource" id="Resource_hgj3o"]
-script = ExtResource("6_158y0")
+[sub_resource type="Resource" id="Resource_kwr81"]
+script = ExtResource("1_jhwjg")
+amount = 9.0
+
+[sub_resource type="Resource" id="Resource_fxpx7"]
+script = ExtResource("3_158y0")
+feed_mods = Array[ExtResource("1_jhwjg")]([SubResource("Resource_kwr81")])
+feed_filter = Array[StringName]([&"staff"])
+
+[sub_resource type="Resource" id="Resource_4b56k"]
+script = ExtResource("8_tto8a")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
 
+[sub_resource type="Resource" id="Resource_450a8"]
+script = ExtResource("9_dbitx")
+max_charges = 4
+prefixes_by_lang = {
+"en": ["Dim ", "Flickering ", "Bright "]
+}
+broken_prefixes = {
+"en": "Shattered "
+}
+broken_into = &"crystal_shards"
+
 [resource]
-script = ExtResource("5_odjej")
+script = ExtResource("7_8od3x")
 id = &"quartz_cluster"
-display_name = "水晶簇"
+display_name = "清明魔晶石"
 display_names = {
-"en": "Quartz Cluster"
+"en": "Clarity Crystal"
 }
-description = "一丛透亮的石英。"
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，不带属性，哪把法杖都能装。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。"
 descriptions = {
-"en": "A cluster of clear quartz."
+"en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters into {item:crystal_shards}."
 }
-shape = SubResource("Resource_hgj3o")
-rarity = 1
-tags = Array[StringName]([&"material", &"nature", &"gem"])
+shape = SubResource("Resource_4b56k")
+rarity = 2
+value = 320
+tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal", &"valuable"])
+adjacency = SubResource("Resource_fxpx7")
+wear = SubResource("Resource_450a8")

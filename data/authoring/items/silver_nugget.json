@@ -1,0 +1,21 @@
+{
+  "id": "silver_nugget",
+  "display_name": "银块",
+  "display_names": {
+    "en": "Silver Nugget"
+  },
+  "description": "一块成色不错的银，换钱从不吃亏。",
+  "descriptions": {
+    "en": "A lump of good silver; never a loss when you cash it in."
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "value": 80,
+  "weight": 3,
+  "tags": [
+    "valuable",
+    "bullion"
+  ]
+}

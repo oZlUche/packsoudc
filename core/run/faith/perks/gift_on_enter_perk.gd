@@ -17,7 +17,7 @@ func on_node_entered(run: RunState, node: MapNode, first_visit: bool) -> String:
 	var cands: Array[StringName] = []
 	for id in run.items.ids():
 		var d := run.items.get_def(id)
-		if d == null or d.is_bag or (rarity_cap >= 0 and d.rarity > rarity_cap):
+		if d == null or d.is_bag or d.is_bullion() or (rarity_cap >= 0 and d.rarity > rarity_cap):     # 244：金银只有商店出
 			continue
 		var ok := wanted.is_empty()
 		for t in wanted:

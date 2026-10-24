@@ -153,7 +153,7 @@ static func rarity_guarantee(rarity: int, rule: DropRule, items: ItemDatabase, c
 		if cands.is_empty():
 			for id in items.ids():
 				var d := items.get_def(id)
-				if d != null and d.rarity == r and not d.is_bag and not carried.has(id):
+				if d != null and d.rarity == r and not d.is_bag and not d.is_bullion() and not carried.has(id):     # 244：金银只有商店出
 					cands.append(id)
 			Ids.sort(cands)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 		if not cands.is_empty():

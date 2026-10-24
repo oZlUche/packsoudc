@@ -43,7 +43,7 @@ func candidates(items: ItemDatabase, rarity_cap: int) -> Array[StringName]:
 	for raw in items.ids():
 		var id := StringName(raw)
 		var d := items.get_def(id)
-		if d == null or d.combat != null or d.is_bag or d.tags.has(TREASURE):
+		if d == null or d.combat != null or d.is_bag or d.tags.has(TREASURE) or d.is_bullion():
 			continue
 		if cap >= 0 and d.rarity > cap:
 			continue
