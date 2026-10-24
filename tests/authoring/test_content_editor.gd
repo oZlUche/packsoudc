@@ -264,7 +264,7 @@ static func frame_run_groups_and_search(t: TestCase, root: Window) -> void:
 	# --- 有效果从定义算 ---
 	for id in ["shortsword", "salve", "ration", "bag_leather", "gambeson", "arrows", "charm_sun", "spyglass"]:
 		t.check(ed._has_effect(id), "%s 有效果" % id)
-	for id in ["copper_ore", "steel_ingot", "heart_of_guoguo", "antler", "rope_coil"]:
+	for id in ["copper_ore", "steel_ingot", "antler", "rope_coil"]:
 		t.check(not ed._has_effect(id), "%s 没效果" % id)
 
 	# --- 切到「无效果」：全是没效果的，左列没有武器页，「全部」页的计数 = 本组件数 ---

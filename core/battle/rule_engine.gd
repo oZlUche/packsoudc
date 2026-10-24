@@ -86,6 +86,8 @@ static func evaluate(
 static func _settle(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime, rc: RuleContext, event: BattleEvent) -> bool:
 	var rule := rt.rule
 	var all_costs := rule.effective_costs()
+	if rule.free_when_loaded and owner.is_loaded(rt.source_uid):
+		all_costs = _conditions_only(all_costs)     # 247：装着晶石的法杖不耗耐力
 	for cost in all_costs:
 		(cost as Cost).on_attempt(rc)
 	for cost in all_costs:
@@ -111,6 +113,15 @@ static func _settle(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime
 	for effect in rule.effects:
 		(effect as Effect).apply(rc)
 	return true
+
+
+## 247：只留条件（[method Cost.is_condition]），真要付的都去掉
+static func _conditions_only(costs: Array[Cost]) -> Array[Cost]:
+	var out: Array[Cost] = []
+	for c in costs:
+		if (c as Cost).is_condition():
+			out.append(c)
+	return out
 
 
 ## 103 第 7 条：出手事件带上这条规则下一次就绪的时刻（定点），回放层据此画冷却遮罩；没有冷却的规则不带

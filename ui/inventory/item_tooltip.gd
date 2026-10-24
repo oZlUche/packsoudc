@@ -93,7 +93,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	if inst == null or inst.def == null:
 		return {"head": "", "body": "", "foot": "", "set": "", "text": "", "terms": {}}
 	var def := inst.def
-	var rarity_style := "@%s%d" % [TextTemplate.RARITY_STYLE, clampi(def.rarity, 0, RARITY_NAMES.size() - 1)]
+	var rarity := inst.rarity()     # 246 补充二：碎了的魔晶石低两档
+	var rarity_style := "@%s%d" % [TextTemplate.RARITY_STYLE, clampi(rarity, 0, RARITY_NAMES.size() - 1)]
 	# --- 头：名字（粗体 19、稀有度色）/ 副行（稀有度名 · 标签，按大类排，171）/ 说明（斜体）
 	# 170 定稿：只有名字和稀有度名描边；标签、说明、正文、脚注里带色的字都不描（作者对比过后定的）
 	var name_line := UiTheme.outline("[font_size=%d][b][color=%s]%s[/color][/b][/font_size]" % [NAME_SIZE, rarity_style, Names.of_item(inst)])
@@ -102,7 +103,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	for t in TagRegistry.sorted_by_category(shown_tags):     # 171：用途 → 属性 → 材料 → 归属；来源类不列
 		if TagRegistry.category_of(StringName(String(t))) != "source":
 			listed.append(t)
-	var sub := UiTheme.outline("[color=%s]%s[/color]" % [rarity_style, rarity_name(def.rarity)])
+	var sub := UiTheme.outline("[color=%s]%s[/color]" % [rarity_style, rarity_name(rarity)])
 	if inst != null and inst.is_locked_by_player():
 		sub += " · " + UiText.t("tip.locked")     # 230：副行末尾「· 已锁定」
 	var head_rest: Array[String] = ["[font_size=%d]%s[/font_size]" % [SUB_SIZE, sub]]
@@ -427,8 +428,12 @@ static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dict
 		# 作者 2026-10-16：几颗时每颗的效果各写一行（下面的装载行，顺时针），这句只写轮法与两种冷却
 		line = UiText.t("tip.cycle_many") % [loaded.size(), _num(p.x, 1), _num(p.y, 1)]
 	var st := _stamina_of(rule, stats)
-	if st > 0.0:
+	if rule.free_when_loaded and not loaded.is_empty():
+		line += UiText.t("tip.free_loaded")     # 247：装着晶石不耗耐力
+	elif st > 0.0:
 		line += UiText.t("tip.costs_stamina_each") % _num(st)
+		if rule.free_when_loaded:
+			line += UiText.t("tip.free_loaded_hint")
 	return line
 
 

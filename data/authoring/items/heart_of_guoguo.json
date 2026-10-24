@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Heart of Guoguo"
   },
-  "description": "献给至今没有非洲之心的群友，以及实装该道具后第一把就出了的制作者",
+  "description": "献给至今没有非洲之心的群友，以及实装该道具后第一把就出了的制作者。放进法杖：法杖伤害 +{amount}，不带属性，哪把法杖都能装，永不耗尽。",
   "descriptions": {
-    "en": "For the guild friends still waiting on their Heart of Africa, and for the maker who pulled it on the very first run after adding it."
+    "en": "For the guild friends still waiting on their Heart of Africa, and for the maker who pulled it on the very first run after adding it. Set in a staff: staff Damage +{amount}, no element, fits any staff, and never runs out."
   },
   "shape": [
     "1"
@@ -14,8 +14,21 @@
   "rarity": 5,
   "value": 100000,
   "tags": [
+    "magic",
     "gem",
+    "crystal",
+    "valuable",
     "treasure"
   ],
-  "dormant_keeps_combat": false
+  "dormant_keeps_combat": false,
+  "adjacency": {
+    "feed_mods": [
+      {
+        "amount": 9.0
+      }
+    ],
+    "feed_filter": [
+      "staff"
+    ]
+  }
 }

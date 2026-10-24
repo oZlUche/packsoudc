@@ -1,0 +1,98 @@
+{
+  "id": "lightning_crystal_low",
+  "display_name": "闪电晶石",
+  "display_names": {
+    "en": "Lesser Lightning Crystal"
+  },
+  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，打出闪电伤害，打中后给对手施加一层【麻痹】。能供给 {max_charges} 场，用完就碎，碎了只能卖钱。",
+  "descriptions": {
+    "en": "Set it in a staff's loading slot: staff Damage +{amount}, deals Lightning damage, and each hit gives the opponent one stack of Paralysis. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 2,
+  "value": 150,
+  "tags": [
+    "part",
+    "material",
+    "magic",
+    "gem",
+    "crystal",
+    "valuable"
+  ],
+  "adjacency": {
+    "feed_mods": [
+      {
+        "amount": 6.0
+      }
+    ],
+    "feed_rules": [
+      {
+        "trigger": {
+          "type": "on_before_damage",
+          "direction": "DEALT",
+          "own_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "convert_damage_type",
+            "to": "lightning"
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_damage",
+          "direction": "DEALT",
+          "own_only": true,
+          "landed_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": "numb"
+          }
+        ]
+      }
+    ],
+    "feed_filter": [
+      "staff"
+    ]
+  },
+  "wear": {
+    "max_charges": 9,
+    "prefixes": [
+      "熄灭的",
+      "黯淡的",
+      "闪烁的",
+      "微光的",
+      "显眼的",
+      "明亮的",
+      "光耀的",
+      "夺目的",
+      "完美的"
+    ],
+    "prefixes_by_lang": {
+      "en": [
+        "Extinguished ",
+        "Dim ",
+        "Flickering ",
+        "Glimmering ",
+        "Vivid ",
+        "Bright ",
+        "Radiant ",
+        "Dazzling ",
+        "Flawless "
+      ]
+    },
+    "broken_prefixes": {
+      "en": "Shattered "
+    },
+    "broken_value_ratio": 0.16,
+    "broken_rarity_drop": 2
+  },
+  "crystal_family": "lightning"
+}

@@ -8,22 +8,22 @@ script = ExtResource("1_thrvu")
 id = &"two_crystals"
 weight = 2.0
 strength = Vector2i(1, 3)
-items = Array[StringName]([&"fire_crystal", &"ice_crystal"])
-note = "法杖 + 两颗不同晶石，挨着装载格"
+items = Array[StringName]([&"fire_crystal_low", &"ice_crystal_low"])
+note = "法杖 + 两颗下品晶石（火、冰），挨着装载格"
 
 [sub_resource type="Resource" id="Resource_f5x6b"]
 script = ExtResource("1_thrvu")
 id = &"misplaced_crystals"
 strength = Vector2i(1, 2)
 quality = &"bad"
-items = Array[StringName]([&"fire_crystal", &"fire_crystal"])
+items = Array[StringName]([&"fire_crystal_low", &"ice_crystal_low"])
 loose = true
-note = "两颗火晶石不挨着法杖：摆成散件"
+note = "两颗下品晶石不挨着法杖：摆成散件"
 
 [resource]
 script = ExtResource("2_loi2t")
 id = &"apprentice_mage"
-display_name = "学徒法师"
+display_name = "魔法学徒"
 display_names = {
 "en": "Apprentice Mage"
 }

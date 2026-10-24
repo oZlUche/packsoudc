@@ -72,13 +72,13 @@ static func art_variants() -> Dictionary:
 	return _variants
 
 
-## 208：这一件现在该用哪张变体图 —— 耐久没满：`c<剩几次>`；207 生长到了第几阶：`s<阶>`；两样都有耐久优先；都没有空。
+## 208：这一件现在该用哪张变体图 —— 耐久没满：`c<档>`（246：[method WearProfile.art_variant]）；207 生长到了第几阶：`s<阶>`；两样都有耐久优先；都没有空。
 ## 变体图有没有画是 [method art_of] 的事，这里只按状态说名字
 static func variant_of(inst: ItemInstance) -> StringName:
 	if inst == null or inst.def == null:
 		return &""
 	if inst.def.wear != null and inst.charges() < inst.def.wear.max_charges:
-		return StringName("c%d" % inst.charges())
+		return StringName("c%d" % inst.def.wear.art_variant(inst.charges()))     # 246：次数多于图的张数时折算
 	var stage := GrowthProfile.stage_of(inst)
 	if stage > 0:
 		return StringName("s%d" % stage)
@@ -190,7 +190,7 @@ static func draw_charges(canvas: CanvasItem, inst: ItemInstance, rot: int, ancho
 	var dots := charge_dots(inst, rot, anchor, cell)
 	if dots.is_empty():
 		return false
-	var lit := rarity_color(inst.def) * modulate
+	var lit := rarity_color(inst.def, inst.rarity()) * modulate
 	var dim := CHARGE_DIM * modulate
 	for d in dots:
 		canvas.draw_circle(d["at"], cell * CHARGE_DOT * 0.5, lit if bool(d["lit"]) else dim)
@@ -212,8 +212,11 @@ static func charge_dots(inst: ItemInstance, rot: int, anchor: Vector2, cell: flo
 			best = c
 	var r := cell * CHARGE_DOT * 0.5
 	var start := anchor + Vector2(best.x, best.y + 1) * cell + Vector2(cell * CHARGE_INSET + r, -cell * CHARGE_INSET - r)
+	# 246：满九次，一格宽的件一排放不下 —— 按件的宽度折成几排，往上叠
+	var width := float(inst.def.shape.size_rotated(rot).x)
+	var per_row := maxi(1, 1 + floori((width - 2.0 * CHARGE_INSET - CHARGE_DOT) / CHARGE_GAP))
 	for i in full:
-		out.append({"at": start + Vector2(i * cell * CHARGE_GAP, 0.0), "lit": i < left})
+		out.append({"at": start + Vector2((i % per_row) * cell * CHARGE_GAP, -(i / per_row) * cell * CHARGE_GAP), "lit": i < left})
 	return out
 
 
@@ -255,23 +258,24 @@ static func clear_art_cache() -> void:
 	_manifest_read = false
 
 
-## 物品主色（087 作者定）：**整格的底色就是稀有度的颜色**，不靠边框。往面板色压一点，字才看得清；描边同色稍亮
-static func body_color(def: ItemDef) -> Color:
+## 物品主色（087 作者定）：**整格的底色就是稀有度的颜色**，不靠边框。往面板色压一点，字才看得清；描边同色稍亮。
+## 三个配色函数的 [param rarity]：-1 = 定义的稀有度；画一件实例时传 [method ItemInstance.rarity]（246：碎了的低两档）
+static func body_color(def: ItemDef, rarity: int = -1) -> Color:
 	if def == null:
 		return Color("555a63")
-	return rarity_color(def).lerp(Color("171a20"), 0.28)
+	return rarity_color(def, rarity).lerp(Color("171a20"), 0.28)
 
 
 ## 名字的颜色：底色亮（白 / 金）就用深字，别的用浅字
-static func label_color(def: ItemDef) -> Color:
-	var b := body_color(def)
+static func label_color(def: ItemDef, rarity: int = -1) -> Color:
+	var b := body_color(def, rarity)
 	return Color("14161b") if b.get_luminance() > 0.5 else Color("e6e9ef")
 
 
-static func rarity_color(def: ItemDef) -> Color:
+static func rarity_color(def: ItemDef, rarity: int = -1) -> Color:
 	if def == null:
 		return RARITY_COLORS[0]
-	return RARITY_COLORS[clampi(def.rarity, 0, RARITY_COLORS.size() - 1)]
+	return RARITY_COLORS[clampi(def.rarity if rarity < 0 else rarity, 0, RARITY_COLORS.size() - 1)]
 
 
 ## 画一件物品。

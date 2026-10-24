@@ -114,7 +114,7 @@ static func run_feed_battle(t: TestCase) -> void:
 
 
 static func run_wear(t: TestCase) -> void:
-	t.begin("148 · 耐久：新的一件满 3 次；打一场点亮过的 −1、没点亮的不动、秒杀不扣；前缀四态（中英）；破碎卖价打折；存档与带入往返保留次数，老档按满算")
+	t.begin("148 · 耐久：新的一件是满的（246：九次）；打一场点亮过的 −1、没点亮的不动、秒杀不扣；前缀四态（中英）；破碎卖价打折；存档与带入往返保留次数，老档按满算")
 	var c := CS._content()
 	var s := CS._start(c, null)
 	if s == null:
@@ -139,12 +139,13 @@ static func run_wear(t: TestCase) -> void:
 	var names: Array[String] = []
 	var en: Array[String] = []
 	var probe := ItemInstance.create(c.items.get_def(&"fire_crystal"))
-	for left in [3, 2, 1, 0]:
+	for left in [9, 6, 3, 2, 1, 0]:
 		probe.state[WearProfile.CHARGES_KEY] = left
 		names.append(Names.of_item(probe, "zh"))
 		en.append(Names.of_item(probe, "en"))
-	t.eq(names, ["明亮的火焰魔晶石", "闪烁的火焰魔晶石", "黯淡的火焰魔晶石", "破碎的火焰魔晶石"] as Array[String], "前缀按剩几次")
-	t.eq(en, ["Bright Fire Crystal", "Flickering Fire Crystal", "Dim Fire Crystal", "Shattered Fire Crystal"] as Array[String], "英文前缀")
+	# 246：作者的十级词表（一档一次，满九次）
+	t.eq(names, ["完美的火焰魔晶石", "明亮的火焰魔晶石", "闪烁的火焰魔晶石", "黯淡的火焰魔晶石", "熄灭的火焰魔晶石", "破碎的火焰魔晶石"] as Array[String], "前缀按剩几次")
+	t.eq(en, ["Flawless Fire Crystal", "Bright Fire Crystal", "Flickering Fire Crystal", "Dim Fire Crystal", "Extinguished Fire Crystal", "Shattered Fire Crystal"] as Array[String], "英文前缀")
 	t.eq(Names.of_item(ItemInstance.create(c.items.get_def(&"knife")), "zh"), Names.of(c.items.get_def(&"knife"), "zh"), "没有耐久的：名字不变")
 	var full := ItemValue.of(probe.def)
 	t.eq(ItemValue.of_instance(probe), maxi(1, int(roundf(full * probe.def.wear.broken_value_ratio))), "破碎：卖价 × %s" % probe.def.wear.broken_value_ratio)

@@ -1,0 +1,138 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_qshi6"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_a2qbi"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_54nv8"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_wx7d3"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_x6gmg"]
+[ext_resource type="Script" path="res://core/battle/effects/convert_damage_type.gd" id="6_rvfhr"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="7_b2ti2"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="8_td2ay"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_fxbf6"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_nbk48"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="11_r1nhi"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="12_x74rj"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="13_uahwi"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="14_kmfuj"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="15_ubcp6"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="16_iuv0e"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="17_nj7ag"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="18_u465g"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="19_k5tet"]
+
+[sub_resource type="Resource" id="Resource_q4rlk"]
+script = ExtResource("1_qshi6")
+amount = 13.0
+
+[sub_resource type="Resource" id="Resource_mrxrv"]
+script = ExtResource("3_54nv8")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_00jkq"]
+script = ExtResource("6_rvfhr")
+to = &"lightning"
+
+[sub_resource type="Resource" id="Resource_24flf"]
+script = ExtResource("7_b2ti2")
+direction = 1
+own_only = true
+
+[sub_resource type="Resource" id="Resource_vhkn7"]
+script = ExtResource("2_a2qbi")
+trigger = SubResource("Resource_24flf")
+cadence = SubResource("Resource_mrxrv")
+effects = Array[ExtResource("5_x6gmg")]([SubResource("Resource_00jkq")])
+
+[sub_resource type="Resource" id="Resource_8ksed"]
+script = ExtResource("3_54nv8")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_olu5x"]
+script = ExtResource("9_fxbf6")
+id = &"numb"
+display_name = "麻痹"
+display_names = {
+"en": "Paralysis"
+}
+is_debuff = true
+decay_halve_on = &"stamina_paid"
+element = &"lightning"
+per_stack_percent = 10.0
+
+[sub_resource type="Resource" id="Resource_7e1xc"]
+script = ExtResource("10_nbk48")
+buff = SubResource("Resource_olu5x")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_30uju"]
+script = ExtResource("11_r1nhi")
+direction = 1
+own_only = true
+landed_only = true
+
+[sub_resource type="Resource" id="Resource_hst8o"]
+script = ExtResource("2_a2qbi")
+trigger = SubResource("Resource_30uju")
+cadence = SubResource("Resource_8ksed")
+effects = Array[ExtResource("5_x6gmg")]([SubResource("Resource_7e1xc")])
+
+[sub_resource type="Resource" id="Resource_axyjh"]
+script = ExtResource("3_54nv8")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_hhcit"]
+script = ExtResource("10_nbk48")
+buff = SubResource("Resource_olu5x")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_8nymm"]
+script = ExtResource("12_x74rj")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_5ebq8"]
+script = ExtResource("2_a2qbi")
+trigger = SubResource("Resource_8nymm")
+cadence = SubResource("Resource_axyjh")
+effects = Array[ExtResource("5_x6gmg")]([SubResource("Resource_hhcit")])
+
+[sub_resource type="Resource" id="Resource_hc850"]
+script = ExtResource("13_uahwi")
+feed_mods = Array[ExtResource("1_qshi6")]([SubResource("Resource_q4rlk")])
+feed_rules = Array[ExtResource("2_a2qbi")]([SubResource("Resource_vhkn7"), SubResource("Resource_hst8o"), SubResource("Resource_5ebq8")])
+feed_filter = Array[StringName]([&"staff"])
+
+[sub_resource type="Resource" id="Resource_ch5ju"]
+script = ExtResource("18_u465g")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[sub_resource type="Resource" id="Resource_jth7q"]
+script = ExtResource("19_k5tet")
+max_charges = 9
+prefixes = Array[String](["熄灭的", "黯淡的", "闪烁的", "微光的", "显眼的", "明亮的", "光耀的", "夺目的", "完美的"])
+prefixes_by_lang = {
+"en": ["Extinguished ", "Dim ", "Flickering ", "Glimmering ", "Vivid ", "Bright ", "Radiant ", "Dazzling ", "Flawless "]
+}
+broken_prefixes = {
+"en": "Shattered "
+}
+broken_value_ratio = 0.16
+broken_rarity_drop = 2
+
+[resource]
+script = ExtResource("17_nj7ag")
+id = &"lightning_crystal_high"
+display_name = "闪电魔晶核"
+display_names = {
+"en": "Greater Lightning Crystal"
+}
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出闪电伤害，打中后给对手施加两层【麻痹】。先声：开战时先给对手两层【麻痹】。能供给 {max_charges} 场，用完就碎，碎了只能卖钱。"
+descriptions = {
+"en": "Set it in a staff's loading slot: staff Damage +{amount}, deals Lightning damage, and each hit gives the opponent two stacks of Paralysis. Herald: at battle start, gives the opponent two stacks of Paralysis. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
+}
+shape = SubResource("Resource_ch5ju")
+rarity = 4
+value = 650
+tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal", &"valuable"])
+adjacency = SubResource("Resource_hc850")
+wear = SubResource("Resource_jth7q")
+crystal_family = &"lightning"

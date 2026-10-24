@@ -1,6 +1,6 @@
 {
   "id": "apprentice_mage",
-  "display_name": "学徒法师",
+  "display_name": "魔法学徒",
   "display_names": {
     "en": "Apprentice Mage"
   },
@@ -29,10 +29,10 @@
         3
       ],
       "items": [
-        "fire_crystal",
-        "ice_crystal"
+        "fire_crystal_low",
+        "ice_crystal_low"
       ],
-      "note": "法杖 + 两颗不同晶石，挨着装载格"
+      "note": "法杖 + 两颗下品晶石（火、冰），挨着装载格"
     },
     {
       "id": "misplaced_crystals",
@@ -42,11 +42,11 @@
       ],
       "quality": "bad",
       "items": [
-        "fire_crystal",
-        "fire_crystal"
+        "fire_crystal_low",
+        "ice_crystal_low"
       ],
       "loose": true,
-      "note": "两颗火晶石不挨着法杖：摆成散件"
+      "note": "两颗下品晶石不挨着法杖：摆成散件"
     }
   ]
 }

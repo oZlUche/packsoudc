@@ -101,6 +101,16 @@ func is_broken() -> bool:
 	return charges() == 0
 
 
+## 246 补充二：这一件的稀有度 —— 一般就是定义的；碎了的按 [member WearProfile.broken_rarity_drop] 低几档（不低于 0）。
+## 框色、悬浮窗、卖价按它；剩几次不影响（只有碎裂影响）
+func rarity() -> int:
+	if def == null:
+		return 0
+	if is_broken():
+		return maxi(0, def.rarity - def.wear.broken_rarity_drop)
+	return def.rarity
+
+
 ## 148：扣 [param n] 次，不低于 0。返回扣完剩几次（没有耐久的不动，返回 -1）
 func spend_charge(n: int = 1) -> int:
 	var left := charges()

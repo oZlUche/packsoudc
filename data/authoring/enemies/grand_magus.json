@@ -1,0 +1,64 @@
+{
+  "id": "grand_magus",
+  "display_name": "大魔导师",
+  "display_names": {
+    "en": "Grand Magus"
+  },
+  "strength": 3,
+  "schools": [
+    "magic"
+  ],
+  "base_stats": {
+    "max_hp": 72
+  },
+  "signature": [
+    "magic_staff"
+  ],
+  "item_tags": [
+    "magic",
+    "crystal",
+    "staff",
+    "remedy"
+  ],
+  "builds": [
+    {
+      "id": "fire_ice",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "fire_crystal_high",
+        "ice_crystal_high",
+        "lightning_crystal"
+      ],
+      "note": "法杖 + 两颗上品（火、冰）+ 符文囊 + 一颗备用中品"
+    },
+    {
+      "id": "fire_lightning",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "fire_crystal_high",
+        "lightning_crystal_high",
+        "ice_crystal"
+      ],
+      "note": "法杖 + 两颗上品（火、雷）+ 符文囊 + 一颗备用中品"
+    },
+    {
+      "id": "ice_lightning",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "ice_crystal_high",
+        "lightning_crystal_high",
+        "fire_crystal"
+      ],
+      "note": "法杖 + 两颗上品（冰、雷）+ 符文囊 + 一颗备用中品"
+    }
+  ]
+}

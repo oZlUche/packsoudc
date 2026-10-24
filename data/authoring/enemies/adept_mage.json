@@ -1,0 +1,64 @@
+{
+  "id": "adept_mage",
+  "display_name": "熟练的魔法师",
+  "display_names": {
+    "en": "Adept Mage"
+  },
+  "strength": 3,
+  "schools": [
+    "magic"
+  ],
+  "base_stats": {
+    "max_hp": 44
+  },
+  "signature": [
+    "magic_staff"
+  ],
+  "item_tags": [
+    "magic",
+    "crystal",
+    "staff",
+    "remedy"
+  ],
+  "builds": [
+    {
+      "id": "fire_ice",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "fire_crystal",
+        "ice_crystal",
+        "strong_salve"
+      ],
+      "note": "法杖 + 两颗中品（火、冰）+ 一瓶浓缩伤药"
+    },
+    {
+      "id": "fire_lightning",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "fire_crystal",
+        "lightning_crystal",
+        "strong_salve"
+      ],
+      "note": "法杖 + 两颗中品（火、雷）+ 一瓶浓缩伤药"
+    },
+    {
+      "id": "ice_lightning",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "ice_crystal",
+        "lightning_crystal",
+        "strong_salve"
+      ],
+      "note": "法杖 + 两颗中品（冰、雷）+ 一瓶浓缩伤药"
+    }
+  ]
+}

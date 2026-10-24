@@ -1,0 +1,161 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_lr5ad"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_stcrg"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_0soqk"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_e0qhi"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_lbp5b"]
+[ext_resource type="Script" path="res://core/battle/effects/convert_damage_type.gd" id="6_62jhm"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="7_7yqhn"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="8_7f0ls"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="9_8jins"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="10_285op"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="11_rnchv"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="12_l3ca3"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="13_x5357"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="14_duuww"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="15_vxwu0"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="16_xs4iu"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="17_l7ksk"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="18_seu8j"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="19_r5qox"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="20_u1pje"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="21_rarvf"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="22_yayvq"]
+
+[sub_resource type="Resource" id="Resource_cpptw"]
+script = ExtResource("1_lr5ad")
+amount = 13.0
+
+[sub_resource type="Resource" id="Resource_l8me3"]
+script = ExtResource("3_0soqk")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_6ehcx"]
+script = ExtResource("6_62jhm")
+to = &"fire"
+
+[sub_resource type="Resource" id="Resource_msaki"]
+script = ExtResource("7_7yqhn")
+direction = 1
+own_only = true
+
+[sub_resource type="Resource" id="Resource_4wy6k"]
+script = ExtResource("2_stcrg")
+trigger = SubResource("Resource_msaki")
+cadence = SubResource("Resource_l8me3")
+effects = Array[ExtResource("5_lbp5b")]([SubResource("Resource_6ehcx")])
+
+[sub_resource type="Resource" id="Resource_cfrfv"]
+script = ExtResource("3_0soqk")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_gmvuk"]
+script = ExtResource("9_8jins")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_cgorq"]
+script = ExtResource("10_285op")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_o1704"]
+script = ExtResource("11_rnchv")
+
+[sub_resource type="Resource" id="Resource_m6he4"]
+script = ExtResource("2_stcrg")
+trigger = SubResource("Resource_o1704")
+cadence = SubResource("Resource_gmvuk")
+effects = Array[ExtResource("5_lbp5b")]([SubResource("Resource_cgorq")])
+
+[sub_resource type="Resource" id="Resource_ola2g"]
+script = ExtResource("12_l3ca3")
+id = &"scorch"
+display_name = "灼伤"
+display_names = {
+"en": "Burn"
+}
+is_debuff = true
+rules = Array[ExtResource("2_stcrg")]([SubResource("Resource_m6he4")])
+element = &"fire"
+
+[sub_resource type="Resource" id="Resource_mrvg3"]
+script = ExtResource("13_x5357")
+buff = SubResource("Resource_ola2g")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_14kp5"]
+script = ExtResource("14_duuww")
+direction = 1
+own_only = true
+landed_only = true
+
+[sub_resource type="Resource" id="Resource_lwsds"]
+script = ExtResource("2_stcrg")
+trigger = SubResource("Resource_14kp5")
+cadence = SubResource("Resource_cfrfv")
+effects = Array[ExtResource("5_lbp5b")]([SubResource("Resource_mrvg3")])
+
+[sub_resource type="Resource" id="Resource_j3on7"]
+script = ExtResource("3_0soqk")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_1ioam"]
+script = ExtResource("13_x5357")
+buff = SubResource("Resource_ola2g")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_63rwy"]
+script = ExtResource("15_vxwu0")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_mhx2e"]
+script = ExtResource("2_stcrg")
+trigger = SubResource("Resource_63rwy")
+cadence = SubResource("Resource_j3on7")
+effects = Array[ExtResource("5_lbp5b")]([SubResource("Resource_1ioam")])
+
+[sub_resource type="Resource" id="Resource_iavsm"]
+script = ExtResource("16_xs4iu")
+feed_mods = Array[ExtResource("1_lr5ad")]([SubResource("Resource_cpptw")])
+feed_rules = Array[ExtResource("2_stcrg")]([SubResource("Resource_4wy6k"), SubResource("Resource_lwsds"), SubResource("Resource_mhx2e")])
+feed_filter = Array[StringName]([&"staff"])
+
+[sub_resource type="Resource" id="Resource_wi3nx"]
+script = ExtResource("21_rarvf")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[sub_resource type="Resource" id="Resource_7gome"]
+script = ExtResource("22_yayvq")
+max_charges = 9
+prefixes = Array[String](["熄灭的", "黯淡的", "闪烁的", "微光的", "显眼的", "明亮的", "光耀的", "夺目的", "完美的"])
+prefixes_by_lang = {
+"en": ["Extinguished ", "Dim ", "Flickering ", "Glimmering ", "Vivid ", "Bright ", "Radiant ", "Dazzling ", "Flawless "]
+}
+broken_prefixes = {
+"en": "Shattered "
+}
+broken_value_ratio = 0.16
+broken_rarity_drop = 2
+
+[resource]
+script = ExtResource("20_u1pje")
+id = &"fire_crystal_high"
+display_name = "火焰魔晶核"
+display_names = {
+"en": "Greater Fire Crystal"
+}
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出火焰伤害，打中后给对手施加两层【灼伤】。余焰：开战时先给对手两层【灼伤】。能供给 {max_charges} 场，用完就碎，碎了只能卖钱。"
+descriptions = {
+"en": "Set it in a staff's loading slot: staff Damage +{amount}, deals Fire damage, and each hit gives the opponent two stacks of Burn. Embers: at battle start, gives the opponent two stacks of Burn. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
+}
+shape = SubResource("Resource_wi3nx")
+rarity = 4
+value = 650
+tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal", &"valuable"])
+adjacency = SubResource("Resource_iavsm")
+wear = SubResource("Resource_7gome")
+crystal_family = &"fire"

@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_hw14r"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_n085y"]
+
+[sub_resource type="Resource" id="Resource_d5uf7"]
+script = ExtResource("1_hw14r")
+id = &"fire_ice"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"fire_crystal_high", &"ice_crystal"])
+note = "法杖 + 一颗上品（火）+ 一颗中品（冰）"
+
+[sub_resource type="Resource" id="Resource_bkph0"]
+script = ExtResource("1_hw14r")
+id = &"fire_lightning"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"fire_crystal_high", &"lightning_crystal"])
+note = "法杖 + 一颗上品（火）+ 一颗中品（雷）"
+
+[sub_resource type="Resource" id="Resource_wx463"]
+script = ExtResource("1_hw14r")
+id = &"ice_fire"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"ice_crystal_high", &"fire_crystal"])
+note = "法杖 + 一颗上品（冰）+ 一颗中品（火）"
+
+[sub_resource type="Resource" id="Resource_4us5p"]
+script = ExtResource("1_hw14r")
+id = &"ice_lightning"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"ice_crystal_high", &"lightning_crystal"])
+note = "法杖 + 一颗上品（冰）+ 一颗中品（雷）"
+
+[sub_resource type="Resource" id="Resource_5lihp"]
+script = ExtResource("1_hw14r")
+id = &"lightning_fire"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"lightning_crystal_high", &"fire_crystal"])
+note = "法杖 + 一颗上品（雷）+ 一颗中品（火）"
+
+[sub_resource type="Resource" id="Resource_fpjed"]
+script = ExtResource("1_hw14r")
+id = &"lightning_ice"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"lightning_crystal_high", &"ice_crystal"])
+note = "法杖 + 一颗上品（雷）+ 一颗中品（冰）"
+
+[resource]
+script = ExtResource("2_n085y")
+id = &"magus"
+display_name = "魔导师"
+display_names = {
+"en": "Magus"
+}
+strength = 3
+schools = Array[StringName]([&"magic"])
+base_stats = {
+"max_hp": 56
+}
+signature = Array[StringName]([&"magic_staff"])
+item_tags = Array[StringName]([&"magic", &"crystal", &"staff", &"remedy"])
+builds = Array[ExtResource("1_hw14r")]([SubResource("Resource_d5uf7"), SubResource("Resource_bkph0"), SubResource("Resource_wx463"), SubResource("Resource_4us5p"), SubResource("Resource_5lihp"), SubResource("Resource_fpjed")])

@@ -106,15 +106,25 @@ func search() -> Dictionary:
 	var got: Array[StringName] = []
 	if met.is_empty():
 		got = _scripted_finds(k)
+		# 246 补充二：抽来的魔晶石换品、抽次数 —— 随机数另起一条（由主随机数派生、不消耗它），剧本给的不动
+		var crng: RandomNumberGenerator = null
 		if got.is_empty():
 			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng, -1, search_floor)
 			if substitute.is_valid():
 				got = substitute.call(got)
+			crng = RandomNumberGenerator.new()
+			crng.seed = hash([rng.state, searches_done, "crystal"])
+			got = CrystalRoll.reroll_ids(got, items, crng)
 		found.append_array(got)
+		var before := {}
+		for inst in haul_box.items():
+			before[(inst as ItemInstance).uid] = true
 		var packed := LootPacker.add(haul_box, got, items, _haul_size().y)
 		if packed["board"] != haul_box:
 			haul_box = packed["board"]
 			haul_changed.emit(haul_box)
+		if crng != null:
+			CrystalRoll.roll_charges_of(haul_box.items().filter(func(i: ItemInstance) -> bool: return not before.has(i.uid)), crng)
 	searches_done += 1
 	if node != null:
 		node.content["searches"] = searches_done

@@ -100,7 +100,7 @@ static func run_prices(t: TestCase) -> void:
 	t.eq(cheap.sell_price_of(nugget), 110, "局内回购照常五成")
 	t.eq(MetaState.sell_price(nugget, 0.5), 200, "基地回收：金块按面值")
 	t.eq(MetaState.sell_price(bar, 0.2), 480, "基地回收：金条按面值，比例不生效")
-	t.eq(MetaState.sell_price(items.get_def(&"fire_crystal"), 0.5), 150, "补充一：魔晶石也是贵重品，按面值")
+	t.eq(MetaState.sell_price(items.get_def(&"fire_crystal"), 0.5), 320, "补充一：魔晶石也是贵重品，按面值（246：中品 320）")
 	t.check(MetaState.sell_price(bar, 0.5) <= cheap.price_of(bar), "买价 ≥ 回收价：没有白来的钱")
 
 
@@ -160,14 +160,14 @@ static func run_bench(t: TestCase) -> void:
 
 
 static func run_gems(t: TestCase) -> void:
-	t.begin("244 补充一 · 宝石并入魔晶石：五件都是【魔法】不是【自然】、稀有、贵重品；供给 +9、能用四场；清明魔晶石 / 琥珀魔晶哪把法杖都吃")
+	t.begin("244 补充一 · 宝石并入魔晶石：五件都是【魔法】不是【自然】、贵重品（246：稀有度 3、九场）；供给 +9；清明魔晶石 / 琥珀魔晶哪把法杖都吃")
 	var items := Economy._items()
 	for id in GEMS:
 		var d := items.get_def(id)
 		t.check(d.tags.has(&"magic") and d.tags.has(&"crystal") and d.is_valuable() and not d.tags.has(&"nature"), "%s：魔法、晶石、贵重品，没有自然（%s）" % [id, d.tags])
-		t.eq(d.rarity, 2, "%s 稀有" % id)
+		t.eq(d.rarity, 3, "%s 史诗（246 补充二：中品 = 紫）" % id)
 		t.check(d.adjacency != null and d.adjacency.has_feed() and is_equal_approx((d.adjacency.feed_mods[0] as StatModifier).amount, 9.0), "%s 供给 +9" % id)
-		t.eq(d.wear.max_charges if d.wear != null else -1, 4, "%s 能供给四场" % id)
+		t.eq(d.wear.max_charges if d.wear != null else -1, 9, "%s 能供给九场（246）" % id)
 	t.eq(ItemValue.of(items.get_def(&"quartz_cluster")), 320, "清明魔晶石 320")
 	t.eq(ItemValue.of(items.get_def(&"crystal_shards")), 30, "碎晶 30")
 	t.check(items.get_def(&"quartz_cluster").adjacency.feed_rules.is_empty(), "清明魔晶石不带属性")

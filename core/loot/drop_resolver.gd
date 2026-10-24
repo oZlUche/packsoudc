@@ -252,12 +252,32 @@ static func corpse_of(content: Dictionary, rolled: Dictionary, items: ItemDataba
 	# 珍宝与原位被占的自动找位。209：第二段的包是敌人自己背着的那种就占它的原位，不是就找位。
 	# 没有包掉下来（或有东西摆不下）走老路：自由容器（包也当一件东西摆）
 	var packed := _corpse_on_bags(content, dropped, treasure, bags, size, items)
-	if packed != null:
-		return packed
-	var ids: Array[StringName] = dropped.duplicate()
-	ids.append_array(bags)
-	ids.append_array(treasure)
-	return LootPacker.board_of(ids, size, items)
+	if packed == null:
+		var ids: Array[StringName] = dropped.duplicate()
+		ids.append_array(bags)
+		ids.append_array(treasure)
+		packed = LootPacker.board_of(ids, size, items)
+	_restore_charges(packed, content)
+	return packed
+
+
+## 246 补充二：掉下来的魔晶石就是敌人身上那颗 —— 内容条目记的剩余次数按同 id 先后对上（两条路摆的实例都是新建的）
+static func _restore_charges(board: GridInventory, content: Dictionary) -> void:
+	var left := {}
+	for raw in content.get("items", []):
+		var e := raw as Dictionary
+		if e.has(CrystalRoll.CHARGES):
+			var id := String(e.get("id", ""))
+			if not left.has(id):
+				left[id] = []
+			(left[id] as Array).append(e)
+	if left.is_empty() or board == null:
+		return
+	for raw in board.items():
+		var inst := raw as ItemInstance
+		var queue: Array = left.get(String(inst.def.id), [])
+		if not queue.is_empty():
+			CrystalRoll.restore(inst, queue.pop_front())
 
 
 ## 209：第二段 —— 掉下来的东西（[param rolled] 的 dropped + treasure）要几个包装：要装的格数 = 东西的格数 / [member BagPool.fill_target]，

@@ -25,6 +25,8 @@ var item_links: Dictionary = {}
 var item_tags: Dictionary = {}
 ## 175：uid → 这把法杖顺时针装着的晶石（[member CompiledItem.loaded]），[FireLoaded] 按轮次取
 var item_loaded: Dictionary = {}
+## 247：装载格上站着还在供给的东西的件（uid → true；[member CombatantSpec.loads] 的宿主）—— [member AbilityRule.free_when_loaded] 查它
+var loaded_holders: Dictionary = {}
 
 ## 标准轴（4.3，103 4e）：axis → [内容层, 系统层]，带符号；结算在 [method _rebuild] 末尾
 var axes: Dictionary = {}
@@ -55,6 +57,8 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 
 	# 把各物品的属性并成一份单位级属性表。
 	# 物品级的乘区已在编译期结算完毕，这里只汇总终值，不再二次相乘。
+	for holder in spec.loads.values():
+		rt.loaded_holders[int(holder)] = true
 	for item in spec.items:
 		var it := item as CompiledItem
 		rt.item_base[it.source_uid] = it.stats
@@ -287,6 +291,11 @@ func tags_of(uid: int) -> Array[StringName]:
 ## 175：某把法杖装着的晶石（顺时针；没有 = 空 → 木棍）
 func loaded_of(uid: int) -> Array[Dictionary]:
 	return item_loaded.get(uid, [] as Array[Dictionary])
+
+
+## 247：[param uid] 的装载格上有没有在供给的东西（魔晶石；碎了的不算）
+func is_loaded(uid: int) -> bool:
+	return loaded_holders.has(uid)
 
 
 #region buff

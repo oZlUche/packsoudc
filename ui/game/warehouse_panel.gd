@@ -353,7 +353,7 @@ func warehouse_actions(uid: int, with_quick: bool) -> Array:
 	out.append(ItemActions.lock(inst, page if page != null and page.has_item(uid) else _meta.warehouse, _saved))
 	out.append(ItemActions.lock_same(inst, _meta.warehouse, _saved))
 	var seller := sell_one if sell_one.is_valid() else _sell
-	var price_of := func(i: ItemInstance) -> int: return MetaState.sell_price(i.def, _flow.sell_ratio())
+	var price_of := func(i: ItemInstance) -> int: return MetaState.sell_price_of(i, _flow.sell_ratio())
 	out.append(ItemActions.sell(inst, price_of.call(inst), seller))
 	out.append(ItemActions.sell_same(inst, _meta.warehouse, price_of, seller))
 	return out

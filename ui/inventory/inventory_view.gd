@@ -173,8 +173,8 @@ static func footprint_hollow(def: ItemDef) -> bool:
 
 
 ## 239：描一件的占格 —— 道具稀有度色细框 + 同色淡填；[param hollow] 为真（包）只描灰框
-static func draw_footprint(ci: CanvasItem, def: ItemDef, cells: Array[Vector2i], anchor: Vector2, px: float, hollow: bool) -> void:
-	var line := COLOR_BAG_EDGE if hollow else ItemPainter.rarity_color(def)
+static func draw_footprint(ci: CanvasItem, def: ItemDef, cells: Array[Vector2i], anchor: Vector2, px: float, hollow: bool, rarity: int = -1) -> void:
+	var line := COLOR_BAG_EDGE if hollow else ItemPainter.rarity_color(def, rarity)
 	for r in footprint_cells(cells, anchor, px):
 		if not hollow:
 			ci.draw_rect(r, Color(line, FOOTPRINT_FILL), true)
@@ -189,7 +189,7 @@ func _draw_footprints() -> void:
 		var item := inst as ItemInstance
 		if inventory.acts_as_bag(item.def):
 			continue
-		draw_footprint(self, item.def, item.cells(), cell_origin_px(item.origin), cell_px, footprint_hollow(item.def))
+		draw_footprint(self, item.def, item.cells(), cell_origin_px(item.origin), cell_px, footprint_hollow(item.def), item.rarity())
 #endregion
 
 
@@ -354,9 +354,9 @@ func _draw() -> void:
 		var dormant := show_adjacency and FaithState.is_dormant(item.def, active_faith)
 		# 2026-10-22（作者）：标了「不参战」的也压灰、写小字 —— 不然看不出这一场为什么没算它
 		var benched := item.is_benched()
-		var body := ItemPainter.body_color(item.def)
-		var edge := ItemPainter.rarity_color(item.def).lightened(0.2)
-		var text_color := ItemPainter.label_color(item.def)
+		var body := ItemPainter.body_color(item.def, item.rarity())
+		var edge := ItemPainter.rarity_color(item.def, item.rarity()).lightened(0.2)
+		var text_color := ItemPainter.label_color(item.def, item.rarity())
 		if item.def.is_bag and not item.def.has_faith():
 			# 自由容器里（战利品落成一堆东西、仓库）的包也是包：画成统一的包灰，不按稀有度上色（和棋盘上当底层的包一致）
 			body = COLOR_BAG_FILL

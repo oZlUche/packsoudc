@@ -1,0 +1,138 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_t4xee"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_y4gyj"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_xt30y"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_2eauw"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_ynyv8"]
+[ext_resource type="Script" path="res://core/battle/effects/convert_damage_type.gd" id="6_x0xuw"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="7_xohwb"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="8_6xvdh"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_13u3l"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_x3370"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="11_khvjy"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="12_a642q"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="13_xnv2h"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="14_do245"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="15_7dsqj"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="16_m5nbl"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="17_r4lre"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="18_2e8o2"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="19_4ml06"]
+
+[sub_resource type="Resource" id="Resource_fqybs"]
+script = ExtResource("1_t4xee")
+amount = 13.0
+
+[sub_resource type="Resource" id="Resource_8u2a0"]
+script = ExtResource("3_xt30y")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_as0yy"]
+script = ExtResource("6_x0xuw")
+to = &"ice"
+
+[sub_resource type="Resource" id="Resource_hnkki"]
+script = ExtResource("7_xohwb")
+direction = 1
+own_only = true
+
+[sub_resource type="Resource" id="Resource_2hxd3"]
+script = ExtResource("2_y4gyj")
+trigger = SubResource("Resource_hnkki")
+cadence = SubResource("Resource_8u2a0")
+effects = Array[ExtResource("5_ynyv8")]([SubResource("Resource_as0yy")])
+
+[sub_resource type="Resource" id="Resource_afgjs"]
+script = ExtResource("3_xt30y")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_sihn0"]
+script = ExtResource("9_13u3l")
+id = &"chill"
+display_name = "寒冷"
+display_names = {
+"en": "Chill"
+}
+is_debuff = true
+decay_halve_on = &"weapon_fired"
+element = &"ice"
+per_stack_percent = 10.0
+
+[sub_resource type="Resource" id="Resource_ma031"]
+script = ExtResource("10_x3370")
+buff = SubResource("Resource_sihn0")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_ph87i"]
+script = ExtResource("11_khvjy")
+direction = 1
+own_only = true
+landed_only = true
+
+[sub_resource type="Resource" id="Resource_00l6v"]
+script = ExtResource("2_y4gyj")
+trigger = SubResource("Resource_ph87i")
+cadence = SubResource("Resource_afgjs")
+effects = Array[ExtResource("5_ynyv8")]([SubResource("Resource_ma031")])
+
+[sub_resource type="Resource" id="Resource_dhcae"]
+script = ExtResource("3_xt30y")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_t5ncd"]
+script = ExtResource("10_x3370")
+buff = SubResource("Resource_sihn0")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_ec72s"]
+script = ExtResource("12_a642q")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_h4ylv"]
+script = ExtResource("2_y4gyj")
+trigger = SubResource("Resource_ec72s")
+cadence = SubResource("Resource_dhcae")
+effects = Array[ExtResource("5_ynyv8")]([SubResource("Resource_t5ncd")])
+
+[sub_resource type="Resource" id="Resource_hoygg"]
+script = ExtResource("13_xnv2h")
+feed_mods = Array[ExtResource("1_t4xee")]([SubResource("Resource_fqybs")])
+feed_rules = Array[ExtResource("2_y4gyj")]([SubResource("Resource_2hxd3"), SubResource("Resource_00l6v"), SubResource("Resource_h4ylv")])
+feed_filter = Array[StringName]([&"staff"])
+
+[sub_resource type="Resource" id="Resource_pca0j"]
+script = ExtResource("18_2e8o2")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[sub_resource type="Resource" id="Resource_h07p0"]
+script = ExtResource("19_4ml06")
+max_charges = 9
+prefixes = Array[String](["熄灭的", "黯淡的", "闪烁的", "微光的", "显眼的", "明亮的", "光耀的", "夺目的", "完美的"])
+prefixes_by_lang = {
+"en": ["Extinguished ", "Dim ", "Flickering ", "Glimmering ", "Vivid ", "Bright ", "Radiant ", "Dazzling ", "Flawless "]
+}
+broken_prefixes = {
+"en": "Shattered "
+}
+broken_value_ratio = 0.16
+broken_rarity_drop = 2
+
+[resource]
+script = ExtResource("17_r4lre")
+id = &"ice_crystal_high"
+display_name = "冰霜魔晶核"
+display_names = {
+"en": "Greater Ice Crystal"
+}
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，打出冰霜伤害，打中后给对手施加两层【寒冷】。凝霜：开战时先给对手两层【寒冷】。能供给 {max_charges} 场，用完就碎，碎了只能卖钱。"
+descriptions = {
+"en": "Set it in a staff's loading slot: staff Damage +{amount}, deals Ice damage, and each hit gives the opponent two stacks of Chill. Rime: at battle start, gives the opponent two stacks of Chill. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
+}
+shape = SubResource("Resource_pca0j")
+rarity = 4
+value = 650
+tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal", &"valuable"])
+adjacency = SubResource("Resource_hoygg")
+wear = SubResource("Resource_h07p0")
+crystal_family = &"frost"

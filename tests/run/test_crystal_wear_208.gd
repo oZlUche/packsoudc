@@ -1,5 +1,6 @@
 ## 208（架构线程夜间方案，待定按推荐）：魔晶石的消耗看得见 —— 实例变体图 `assets/items/<id>@<变体>.png`（耐久 `c<剩几次>`、
-## 207 生长 `s<阶>`），没有这一档的图就在左下角画剩余次数点；归零换成碎晶 `crystal_shards`，装载格空出来；老档里碎了的读档时换
+## 207 生长 `s<阶>`），没有这一档的图就在左下角画剩余次数点；归零换成碎晶 `crystal_shards`，装载格空出来；老档里碎了的读档时换。
+## 246 补充二：魔晶石不再写 `broken_into`（碎了留在原格、低两档），「换成别的件」这条路照旧在，下面拿临时改过的定义验
 extends RefCounted
 
 const CS := preload("res://tests/run/test_character_skills.gd")
@@ -19,11 +20,16 @@ static func _with_charges(db: ItemDatabase, id: StringName, left: int) -> ItemIn
 
 
 static func run_variant_of(t: TestCase) -> void:
-	t.begin("208 · variant_of：满的空、没满 c<剩几次>、碎了 c0；没耐久的空；生长到阶 s<阶>")
+	t.begin("208 · variant_of：满的空、没满按张数折算（246：满九次四张图 1～3 → c1、4～6 → c2、7～8 → c3）、碎了 c0；没耐久的空；生长到阶 s<阶>")
 	var db := _db()
 	var fire := ItemInstance.create(db.get_def(&"fire_crystal"))
 	t.eq(ItemPainter.variant_of(fire), &"", "满的：本图")
-	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 2)), &"c2", "剩 2 次：c2")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 2)), &"c1", "剩 2 次：c1")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 3)), &"c1", "剩 3 次：c1")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 4)), &"c2", "剩 4 次：c2")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 6)), &"c2", "剩 6 次：c2")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 7)), &"c3", "剩 7 次：c3")
+	t.eq(ItemPainter.variant_of(_with_charges(db, &"fire_crystal", 8)), &"c3", "剩 8 次：c3")
 	t.eq(ItemPainter.variant_of(_with_charges(db, &"ice_crystal", 1)), &"c1", "剩 1 次：c1")
 	t.eq(ItemPainter.variant_of(_with_charges(db, &"lightning_crystal", 0)), &"c0", "碎了：c0")
 	t.eq(ItemPainter.variant_of(ItemInstance.create(db.get_def(&"knife"))), &"", "没有耐久：空")
@@ -75,9 +81,11 @@ static func run_charge_dots(t: TestCase) -> void:
 	t.check((dots[0]["at"] as Vector2).x < 10 + cell * 0.5, "横放：从左边起")
 	var up := ItemPainter.charge_dots(two, 1, Vector2.ZERO, cell)
 	t.check((up[0]["at"] as Vector2).y > cell * 1.5, "竖放：点在下面那一格")
-	ItemPainter.art_variants()[&"fire_crystal"] = {&"c2": true}
-	t.eq(ItemPainter.charge_dots(two, 0, Vector2.ZERO, cell).size(), 0, "有 c2 的图：不画角标")
-	t.eq(ItemPainter.charge_dots(_with_charges(db, &"fire_crystal", 1), 0, Vector2.ZERO, cell).size(), full, "c1 没图：照画")
+	var amber := ItemPainter.charge_dots(_with_charges(db, &"raw_amber", 3), 0, Vector2.ZERO, cell)
+	t.check(amber.all(func(d): return (d["at"] as Vector2).x < cell), "246：一格宽的件九个点折成几排，不出格")
+	ItemPainter.art_variants()[&"fire_crystal"] = {&"c1": true}
+	t.eq(ItemPainter.charge_dots(two, 0, Vector2.ZERO, cell).size(), 0, "有 c1 的图（剩 2 次）：不画角标")
+	t.eq(ItemPainter.charge_dots(_with_charges(db, &"fire_crystal", 5), 0, Vector2.ZERO, cell).size(), full, "c2 没图：照画")
 	ItemPainter.clear_art_cache()
 
 
@@ -95,8 +103,10 @@ static func run_shatter(t: TestCase) -> void:
 	t.eq(shards.cell_count(), 1, "碎晶 1 格")
 	t.check(shards.tags.has(&"magic") and shards.tags.has(&"gem") and shards.tags.has(&"material"), "碎晶：材料、魔法、宝石")
 	t.eq(shards.value, 30, "碎晶的价 30（244 补充一；晶石涨到 150 后不再按 × 0.25 跟着）")
-	for id in [&"fire_crystal", &"ice_crystal", &"lightning_crystal"]:
-		t.eq(c.items.get_def(id).wear.broken_into, &"crystal_shards", "%s 碎成碎晶" % id)
+	for id in [&"fire_crystal", &"ice_crystal", &"lightning_crystal", &"quartz_cluster", &"raw_amber"]:
+		t.eq(c.items.get_def(id).wear.broken_into, &"", "246：%s 碎了不再变碎晶" % id)
+	var wear := c.items.get_def(&"fire_crystal").wear
+	wear.broken_into = &"crystal_shards"     # 换件这条路照旧在：临时写上验，末尾还原（定义是共享的）
 	var b := C148._staff_board(c.items, &"fire_crystal", &"")
 	var lit := b["left"] as ItemInstance
 	var at := lit.origin
@@ -118,6 +128,7 @@ static func run_shatter(t: TestCase) -> void:
 	var spec := s.compile_player()
 	t.eq(spec.fed_uids.size(), 0, "法杖的装载格空了：没有供给")
 	t.eq(spec.item_of((b["staff"] as ItemInstance).uid).loaded.size(), 0, "轮读表空了")
+	wear.broken_into = &""
 
 	# 没写换成什么：原件留着（148 的老样子）
 	var plain := (c.items.get_def(&"fire_crystal").duplicate(true)) as ItemDef
@@ -133,8 +144,14 @@ static func run_shatter(t: TestCase) -> void:
 
 
 static func run_reconcile(t: TestCase) -> void:
-	t.begin("208 · 读档：老档里 charges 0 的晶石换成碎晶（原点不动、朝向 0、状态清空），报告记一条；没碎的不动")
+	t.begin("208 · 读档：老档里 charges 0、定义写了 broken_into 的换成碎晶（原点不动、朝向 0、状态清空），报告记一条；没碎的不动；246：没写的留着")
 	var db := _db()
+	var stays := _with_charges(db, &"ice_crystal", 0)
+	var kept := {"board": {"items": [stays.to_dict()]}}
+	var quiet := SaveReport.new()
+	SaveReconcile.items(kept, db, quiet, [["board"]])
+	t.eq(String(kept["board"]["items"][0]["def"]), "ice_crystal", "246：没写 broken_into：碎了的留着原件")
+	db.get_def(&"ice_crystal").wear.broken_into = &"crystal_shards"     # 临时写上验换件那条路，末尾还原（定义是缓存共享的）
 	var broken := _with_charges(db, &"ice_crystal", 0)
 	broken.rotation = 1
 	broken.origin = Vector2i(2, 1)
@@ -152,19 +169,27 @@ static func run_reconcile(t: TestCase) -> void:
 	t.eq(int((b["state"] as Dictionary)[WearProfile.CHARGES_KEY]), 2, "次数照旧")
 	t.check(not report.is_empty(), "报告记了一条")
 	t.not_null(ItemInstance.from_dict(a, db), "换出来的读得回来")
+	db.get_def(&"ice_crystal").wear.broken_into = &""     # 定义是缓存共享的：还原
 
 
 static func run_text(t: TestCase) -> void:
-	t.begin("208 · 文字：悬浮窗耐久行写「用完碎成碎晶」；三颗晶石的说明写碎晶；导入器拦 broken_into 指向不存在或不是 1 格的")
+	t.begin("208 · 文字：悬浮窗耐久行写「用完就碎」（写了 broken_into 的写「用完碎成碎晶」）；246：晶石说明写碎了只能卖钱；导入器拦 broken_into 指向不存在或不是 1 格的")
 	var db := _db()
 	var fire := _with_charges(db, &"fire_crystal", 2)
 	var line := TextTemplate.strip_bbcode(ItemTooltip.wear_line(fire))
-	t.check(line.contains("用完碎成") and line.contains(Names.of(db.get_def(&"crystal_shards"))), "耐久行：%s" % line)
+	t.check(line.contains("用完就碎"), "耐久行：%s" % line)
 	var desc := TextTemplate.strip_bbcode(ItemTooltip.describe(fire, null))
-	t.check(desc.contains(Names.of(db.get_def(&"crystal_shards"))) and not desc.contains("{item:"), "说明写出碎晶的名字")
+	t.check(desc.contains("只能卖钱") and not desc.contains("{item:"), "说明写碎了只能卖钱")
+	var into := (db.get_def(&"fire_crystal").duplicate(true)) as ItemDef
+	into.wear.broken_into = &"crystal_shards"
+	var into_inst := ItemInstance.create(into)
+	into_inst.state[WearProfile.CHARGES_KEY] = 2
+	var into_line := TextTemplate.strip_bbcode(ItemTooltip.wear_line(into_inst))
+	t.check(into_line.contains("用完碎成") and into_line.contains(Names.of(db.get_def(&"crystal_shards"))), "写了换成什么：%s" % into_line)
 	var ctx := ContentImporter.Context.new()
 	for id in [&"fire_crystal", &"knife"]:
 		ctx.items[id] = db.get_def(id).duplicate(true)
+	(ctx.items[&"fire_crystal"] as ItemDef).wear.broken_into = &"crystal_shards"
 	var bad := ImportReport.new()
 	ContentImporter.validate_wear_targets(ctx, bad)
 	t.check(not bad.ok(), "找不到 crystal_shards：报错")
