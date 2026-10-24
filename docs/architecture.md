@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.32 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.33 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4472,6 +4472,7 @@ res://
 | v4.30 | 2026-10-24 | **246 补充三：魔晶石三场一级**：十一件带耐久的魔晶石 `max_charges` 9 → 27、`charge_band` 1 → 3（破碎 0、熄灭 1～3 … 完美 25～27），掉落次数 1～27；变体图照 `art_variant` 自动折（1～9 c1、10～18 c2、19～26 c3）；没有变体图的件剩余次数点改成一档一个点（九个，档里还有次数就亮），不画二十七个 |
 | v4.31 | 2026-10-24 | **248 不打不罚、跑才罚**：战前屏「退回」（`NodeEvents.retreat_reason` / `retreat_pending_battle`、`GameFlow.retreat_reason` / `retreat_battle`；战斗 / 精英点，退回上一个点照走一步，点不算用过、这一场留着；核心点、伏击、搜索遭遇、序章不给；`TipButton` 平签文字占位）；节点规则 `flee`、后果 `flee_encounter`、`NodeEvents.flee_chance` / `flee_roll`：搜索遭遇与伏击「逃跑（{flee_chance}%）」，猎手同一把（失败也背虚弱）；日志键 `flee.ok` / `flee.fail`；新套件 `test_retreat_flee_248` |
 | v4.32 | 2026-10-24 | **249 开战前不丢东西 + 丢到地上带初速度**：`InventoryPanel.ground_exit_notice`（战前屏设 `pre.no_drop`：拖出棋盘弹回并 `DragLayer.drop_refused`、右键第一项灰、双击不搬、`DragLayer.displace_to_stash` 关掉顶替往地上挤；`drop_ok_at` 棋盘外也过 `drop_filter`）；`DragLayer.record_motion / release_velocity`（90 ms、8 个样本）× `GroundLayer.throw_factor`（1 / (1 + 密度 / 2)）写 `ItemStash.landing_vel`；`GroundLayer._begin_throw`：够快（≥ `THROW_MIN` 0.15 屏高 / 秒，封顶 `THROW_VMAX` 1.6）的起手就是 198 解算里醒着的刚体，第一次撞地 / 墙响落地声（`thrown_landed`）；新套件 `test_prebattle_no_drop_249`、`test_ground_throw_249` |
+| v4.33 | 2026-10-24 | **游戏测试 v4.31 修**：事件结果页标题（选项文字）的占位符照选项按钮那样填 —— `GameFlow.outcome_title`（`option_chosen` 记下刚选的选项，`TextTemplate.option_context` 填 `{flee_chance}` 等），不再露出「逃跑（{flee_chance}%）」 |
 | v3.88 | 2026-10-21 | **224 补充二 结算屏第二版**（作者 17:22–17:23 六条）：结算屏两页板边换 `slab_edge_plain`（`UiTheme.slab` / `GameScreen._slab_screen` 的 `edge_art` 参数）；第一页 ×1.2、图 2 倍分辨率按 1x 尺寸画（`LedgerView` `draw_texture_rect`、标题牌 `EXPAND_IGNORE_SIZE`）；账单击败的敌人 / 精英 / 首领分三行；撤离时保险箱在账单右边（皮带框 + 格缝），第二页只剩带回的棋盘（格子 72，`WarehousePanel.board_cell`）和贴右上的仓库（`WarehousePages.fit` 量石板内容区）；战败没有第二页，`MetaState.absorb` 战败时保险箱带出的直接进仓库（包进包架），放不下才进待置入棋盘；新套件 `test_result_v2_224` |
 | v3.87 | 2026-10-21 | **232 局内非矩形第一轮**（作者 19:23 选 1 / 2 / 6 / 10，待定按推荐）：事件窗是一本摊开的书（`OverlayFrame` `book` 皮、`EventScreen._book_page` 绝对摆位、标题进右页、`EventImage.area(…, light)`）；背包窗是一只背包（`BagWindow._back` 四件皮料随窗宽摆、翻盖即把手 `grip_rect`、`FloatingWindow.outset` 夹边）；腰带 1–6 格是整张弯皮带（`BeltSlots.belt_layouts / curved`，命中半径 36，7 格起退回直圆槽；`BeltWidget` 不进凹槽）；图例是双尾旗九宫格（`LegendWidget.pennant_box`，最窄 158）。缺图都退回原来的皮；新套件 `test_bag_window_232`、`test_event_book_232` |
 | v3.86 | 2026-10-21 | **230 悬浮窗道具按钮 + 锁定**（作者 19:01 选丙）：`ItemActions` 供给层（`Action` 数据、`lock` / `lock_same` / `sell` / `sell_same` / `anchor`、`rows()` 两两并排成对不拆）；`ContainerView.actions_for(uid)` 各屏登记；`TipButton` 平墨签按钮（危险两步「再点一次」）；`HoverTip` 脚注下画按钮行、右键 `pin_on` 立刻钉住、点了原地刷新；玩家锁 `ItemInstance.state["locked"]` 守出售 / 一键出售 / 出售区 / 祭品台 / 铸炉 / 丢地上，小锁角标 `ItemPainter.draw_lock`；信物右键切换改成「奉为主信仰」按钮；新帮助页 `item_actions`；新套件 `test_item_actions_230` |
