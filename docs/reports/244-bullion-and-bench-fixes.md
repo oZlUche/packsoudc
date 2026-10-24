@@ -131,6 +131,7 @@
 - 「只有商店出」比 §2.4 多拦了几处「从全库里抽」的路：搜索候选（`SearchSession.candidates`，事件「给随机道具」也走它）、掉落的珍宝兜底（`DropResolver` 没有同稀有度珍宝时）、敌人装备池（`EnemyPlacer._item_pool`）、信仰赠礼（`GiftOnEnterPerk`）、携带规则候选。
 - **宝石并入魔晶石**：三块元素魔晶石稀有度 2、面值 150、供给 +6 → +9、耐用 3 → 4 场；`quartz_cluster` 改名**「清明魔晶石」**（「澄」不在字体子集里，换了一个字；英文 Clarity Crystal）2×2 稀有 320、`raw_amber`「琥珀魔晶」/ Amber Crystal 1 格 稀有 150：两件改成无属性供给（`feed_mods` +9、`feed_filter` staff，没有 `feed_rules`），带和元素石一样的耐用（四场、碎成碎晶）；`crystal_shards` 面值 30。五件标签 = `part` `material` `magic` `gem` `crystal` `valuable`（去了 `nature`）。去 `nature` 让自然之神的两件派生赐福版（`quartz_cluster_nature` / `raw_amber_nature`）没了，`IdAliases.RETIRED_ITEMS` 里写成换回原件。
 - **和报告不一样的一处**：配方 `healing_draught`（浓缩伤药 + 水晶簇 → 治愈药剂）用着 `quartz_cluster`，§7.2 说「没有配方用到这五件」不对。没动配方（删了就少一条配方），清明魔晶石还能这么合；要不要改由架构 / 作者定。
+- **v4.28 补**：架构定了把配方 `healing_draught` 的输入换成 `crystal_shards`（浓缩伤药 + 碎晶 → 治愈药剂），说明文字与 `test_upgrade_tiers` 跟着改；清明魔晶石不再进任何配方。
 - 耐用改成四场后，美术设计补了三块元素石的 `@c3` 变体图（比 c2 轻一档），已同步。碎晶面值 30 之后不再等于「晶石 × 0.25」（208 那条断言改成 30）。
 - 不参战 / 休眠：`Compiler._lit_neighbors` 跳过 `is_benched()` 的件，补充一再跳过 `FaithState.is_dormant()` 的件（只在碰到信仰道具时才查一次当前信仰）——不给邻接、不受邻接；留着通用效果的自己照打。悬浮窗与装载格用同一个函数，说法一致。`MetaState._adopt()` 摘掉不参战标记；局内挪动不清（加了断言）。
 - 百科：没有单件道具的页，标签页「金银」「贵重品」自动生成、列出带它的道具。

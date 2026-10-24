@@ -12,7 +12,7 @@ const LADDERS := [
 const RECIPES := {
 	&"salted_meat": [&"ration", &"raw_salt"], &"field_rations": [&"salted_meat", &"beeswax"],
 	&"bandage_roll": [&"bandage", &"linen_bolt"], &"styptic_dressing": [&"bandage_roll", &"dried_herbs"],
-	&"strong_salve": [&"salve", &"beeswax"], &"healing_draught": [&"strong_salve", &"quartz_cluster"],
+	&"strong_salve": [&"salve", &"beeswax"], &"healing_draught": [&"strong_salve", &"crystal_shards"],
 	&"antidote_satchel": [&"antidote_kit", &"dried_herbs"], &"panacea": [&"antidote_satchel", &"styptic_dressing"],
 }
 
