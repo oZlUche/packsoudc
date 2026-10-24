@@ -1387,6 +1387,7 @@ static func _home_buttons(t: Theme) -> void:
 		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 			t.set_color(state, name, INK)
 		t.set_color("font_disabled_color", name, INK_SOFT)
+		t.set_constant("h_separation", name, 6)     # 基地页签字左边的图标与字隔 6
 
 
 ## 197 补充一 / 三：游戏名与主菜单的几行字、小字链接

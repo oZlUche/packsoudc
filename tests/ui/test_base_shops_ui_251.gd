@@ -23,6 +23,14 @@ static func frame_tabs(t: TestCase, root: Window) -> void:
 	_levels(f, 1, 1)
 	s = W178._screen(f, root)
 	t.check((s._tab_btns["market"] as Button).visible and (s._tab_btns["smithy"] as Button).visible, "1 级：两个页签都露")
+	# UI替换美术（作者 14:49 选乙 平墨图标）：七个页签字左边各一枚图标，一样宽
+	var widths := {}
+	for key in s._tab_btns:
+		var tb := s._tab_btns[key] as Button
+		t.check(tb.icon != null and tb.icon_alignment == HORIZONTAL_ALIGNMENT_LEFT, "页签 %s 有图标、在字左边" % key)
+		widths[tb.custom_minimum_size.x] = true
+	t.eq(widths.size(), 1, "七个页签一样宽")
+	t.eq(s._tab_btns.size(), 7, "七个页签")
 	t.eq(f.meta.market_stock.size(), 4, "打开基地时补了一次货")
 	s.show_tab("market")
 	t.check(s._right.visible, "集市页右半边是仓库")

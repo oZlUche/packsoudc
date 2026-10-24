@@ -23,6 +23,8 @@ const COL_GAP := 24.0
 const SHELF_HEAD := 44.0
 ## 仓库分页签（挂牌）多高，同开局屏第二页
 const SHELF_TAB_H := 60.0
+## 基地页签字左边的图标（`home/tabs/tab_<页签名>`，36 × 36 墨色剪影；没图就只有字）
+const TAB_ICON_ART := "home/tabs/tab_"
 ## 左列五个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家。
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
 ## 251：集市、铁匠铺（科技点出来才露页签，[member FACILITY_TABS]）排在出售后面 —— 右半边都有仓库
@@ -96,8 +98,17 @@ func open(payload: Dictionary) -> void:
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		var icon := UiTheme.art_cached(TAB_ICON_ART + key)     # 作者 2026-10-24 选乙 平墨图标：字左边一枚墨色小图
+		if icon != null:
+			b.icon = icon
+			b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_tab_btns[key] = b
 		left.add_child(b)
+	var tab_w := LEFT_W * 0.8     # 英文「Achievements」加了图标放不下：七个页签一样宽，取最宽的那个
+	for key in _tab_btns:
+		tab_w = maxf(tab_w, (_tab_btns[key] as Button).get_combined_minimum_size().x)
+	for key in _tab_btns:
+		(_tab_btns[key] as Button).custom_minimum_size.x = tab_w
 	var tex := UiTheme.art(UiTheme.ART_TAB_MARK)
 	if tex != null:
 		_tab_mark = TextureRect.new()
