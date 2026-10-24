@@ -6,8 +6,8 @@ extends VBoxContainer
 
 signal changed()
 
-## 货位格子边长至少这么大（像素；面板太窄时）
-const CELL_MIN := 12.0
+## 货位格子边长至少这么大（像素；面板太窄时）—— 不小于框能套的最窄一格（[constant BoardFrame.MIN_SIDE]，再窄框会被裁）
+const CELL_MIN := BoardFrame.MIN_SIDE
 ## 价签离货底多远（平放在货前面）
 const TAG_GAP := 2.0
 

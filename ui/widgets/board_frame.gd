@@ -49,6 +49,16 @@ static func wrap(view: Control, p_kind: String = "", p_dark: bool = false) -> Bo
 	return f
 
 
+## 九宫格框套在太窄 / 太矮的棋盘上会被裁掉一边（游戏测试 v4.39：铁匠铺 1×4 的长剑，格子区 14 px 宽时右边框没了；实测 ≥ 18 px 才完整）
+const MIN_SIDE := 20.0
+
+
+## 小件按格子边长 [param cell] 画时，棋盘至少要几格才不裁框：宽 / 高不足 [constant MIN_SIDE] 的一边补空格
+static func padded_size(cells: Vector2i, cell: float) -> Vector2i:
+	var need := ceili(MIN_SIDE / maxf(cell, 1.0))
+	return Vector2i(maxi(cells.x, need), maxi(cells.y, need))
+
+
 ## 铜面板三屏的深色框（[method wrap] 的深色那一支；战前 / 战斗 / 战利品沿用这个名字）
 static func around(view: Control, p_kind: String) -> BoardFrame:
 	return BoardFrame.wrap(view, p_kind, true)     # 不写类名会叫成全局的 wrap(值, 下限, 上限)
