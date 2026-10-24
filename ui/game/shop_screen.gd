@@ -76,8 +76,7 @@ func open(payload: Dictionary) -> void:
 			_say(UiText.t("shop.bought") % [Names.of(def), price])
 			_refresh())
 		_session.sold_item.connect(func(def: ItemDef, gain: int):
-			_say(UiText.t("shop.sold") % [Names.of(def), gain])
-			_first_sale_hint()
+			_say(UiText.t("shop.sold") % [Names.of(def), gain] + _first_sale_hint())
 			_refresh())
 		flow.run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh())
 	_rebuild()
@@ -93,11 +92,12 @@ func sell_hint() -> String:
 const SELL_HINT_SEEN := "shop_sell_hint"
 
 
-func _first_sale_hint() -> void:
+## 接在「卖掉了」那句后面；说过了返回空串
+func _first_sale_hint() -> String:
 	if flow.meta == null or flow.meta.coach_seen.has(SELL_HINT_SEEN):
-		return
+		return ""
 	flow.meta.coach_seen.append(SELL_HINT_SEEN)
-	_say(sell_hint())
+	return "　" + sell_hint()
 
 
 #region 公开动作

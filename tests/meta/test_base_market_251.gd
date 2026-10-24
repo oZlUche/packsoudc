@@ -88,12 +88,16 @@ static func run_buy(t: TestCase) -> void:
 	t.eq(Market.can_buy(m, rules, db, 0), UiText.t("market.sold_out"), "卖掉的不能再买")
 	var bag := Market.buy(m, rules, db, 7)
 	t.check(bag != null and m.rack.get_item(bag.uid) != null, "空包进了包架")
-	# 仓库塞满
-	var filler := db.get_def(&"oak_log")
-	while true:
-		var inst := ItemInstance.create(filler, m.allocate_uid())
-		if not m.warehouse.try_add(inst, true):
+	# 仓库塞满：先大的、再拿 1×1 的把缝填上
+	var fillers: Array[ItemDef] = [db.get_def(&"oak_log")]
+	for id in db.ids():
+		var d := db.get_def(id)
+		if d.shape != null and d.shape.size_rotated(0) == Vector2i.ONE and MetaState.keeps(d):
+			fillers.append(d)
 			break
+	for filler in fillers:
+		while m.warehouse.try_add(ItemInstance.create(filler, m.allocate_uid()), true):
+			pass
 	var idx := -1
 	for i in m.market_stock.size():
 		if not Market.is_sold(m, i) and not Market.def_at(m, db, i).is_bag:

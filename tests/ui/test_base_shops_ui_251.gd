@@ -7,7 +7,7 @@ const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
 
 
 static func _levels(f: GameFlow, market: int, smithy: int) -> void:
-	f.meta.tech_levels = {"bargain": 1, "warehouse": 1, "market": market, "smithy": smithy}
+	f.meta.tech_levels = {"bargain": 1, "warehouse": 1, "safe_box": 1, "pack": 1, "market": market, "smithy": smithy}
 	f.derive_techs()
 	f.smith_recipes = SmithRecipeDef.load_all()
 

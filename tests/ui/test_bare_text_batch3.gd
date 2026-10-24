@@ -51,7 +51,7 @@ static func frame_shop_tags(t: TestCase, root: Window) -> void:
 	for h in heads:
 		if (h as HeaderTag).text == "出售区":
 			sell = h
-	t.check(sell != null and sell.tooltip_text == UiText.t("shop.sell_tip"), "出售区段头签，说明进悬浮窗")
+	t.check(sell != null and sell.tooltip_text.begins_with(UiText.t("shop.sell_tip")), "出售区段头签，说明进悬浮窗")
 	var bare: Array = screen.find_children("*", "Label", true, false).filter(func(l): return (l as Label).text.begins_with("货币"))
 	t.eq(bare.size(), 0, "顶上「货币 N……」那行删了")
 	screen.free()

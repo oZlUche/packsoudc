@@ -6,9 +6,8 @@
   },
   "order": 1,
   "requires": [
-    "warehouse"
+    "pack"
   ],
-  "column": 3,
   "description": "基地里开一间铁匠铺，按配方用仓库里的素材加钱打造武器、防具。级数越高，会打的档次越高。",
   "descriptions": {
     "en": "Opens a smithy at your base that forges weapons and armour from Warehouse materials plus coins, by recipe. Higher levels unlock better recipes."

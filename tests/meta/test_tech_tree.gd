@@ -186,7 +186,7 @@ static func run_first_tree(t: TestCase) -> void:
 	t.begin("118 · 首批树：三列十个节点（数值占位）；仓库扩建在第 0 列根上；侦察要幸运和讨价；每个 tech_run_buff 的 buff 都在且是局外的")
 	var defs := GameFlow.load_techs()
 	var buffs := RunBuffs.load_all()
-	t.eq(defs.size(), 11, "十一个节点（129 加了扛重）")
+	t.eq(defs.size(), 13, "十三个节点（129 加了扛重；251 加了集市、铁匠铺）")
 	var cols := {}
 	for def in defs:
 		cols[def.column] = true
@@ -203,6 +203,8 @@ static func run_first_tree(t: TestCase) -> void:
 	t.eq(TechService.find(defs, &"scouting").requires, [&"bargain"] as Array[StringName], "侦察只要讨价")
 	t.eq(TechService.find(defs, &"undaunted").requires, [&"sinew"] as Array[StringName], "不屈 ← 筋骨")
 	t.eq(lay[&"undaunted"], Vector2i(1, 2), "不屈：第 1 列深度 2")
+	t.eq(lay[&"market"], Vector2i(1, 3), "251：集市 ← 讨价，第 1 列深度 3（不和侦察并排，树不加宽）")
+	t.eq(lay[&"smithy"], Vector2i(0, 3), "251：铁匠铺 ← 行囊（← 保险箱 ← 仓库），第 0 列深度 3")
 	t.check(TechService.cycle_members(defs).is_empty(), "没有环")
 	# 229 补充一 守门：树要装进羊皮的双线框（792 宽）；以后加节点扇形过宽就红 —— 每列同深度最多并排两个，宽的扇形改成链
 	var view := TechTreeView.new()

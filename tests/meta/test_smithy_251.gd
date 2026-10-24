@@ -23,13 +23,13 @@ static func _recipe(out: StringName, inputs: Dictionary, funds: int, lv: int = 1
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("251 §三：内容 —— 科技「铁匠铺」三级、前置仓库；首批 14 张配方，产物都是装备、素材都在、级 1 ～ 3")
+	t.begin("251 §三：内容 —— 科技「铁匠铺」三级、前置行囊（← 保险箱 ← 仓库，树不加宽）；首批 14 张配方，产物都是装备、素材都在、级 1 ～ 3")
 	var def := load(ContentPaths.asset_file("techs", "smithy")) as TechDef
 	t.not_null(def, "科技资产在")
 	if def == null:
 		return
 	t.eq(def.max_level(), 3, "三级")
-	t.eq(def.requires, [&"warehouse"] as Array[StringName], "前置仓库")
+	t.eq(def.requires, [&"pack"] as Array[StringName], "前置行囊（一路往下是仓库）")
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
 	var all := SmithRecipeDef.load_all()
