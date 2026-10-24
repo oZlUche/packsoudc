@@ -99,13 +99,33 @@ kinds = Array[StringName]([&"ruins", &"depths", &"core_ring", &"inner", &"core"]
 [sub_resource type="Resource" id="Resource_j2dpq"]
 script = ExtResource("1_78rxq")
 enemy = &"apprentice_mage"
-kinds = Array[StringName]([&"depths", &"core_ring", &"inner", &"core"])
+weight = 2.0
+kinds = Array[StringName]([&"ruins", &"depths"])
 
 [sub_resource type="Resource" id="Resource_a1gkl"]
+script = ExtResource("1_78rxq")
+enemy = &"adept_mage"
+weight = 1.5
+kinds = Array[StringName]([&"depths", &"core_ring", &"inner"])
+
+[sub_resource type="Resource" id="Resource_kif4a"]
+script = ExtResource("1_78rxq")
+enemy = &"magus"
+kinds = Array[StringName]([&"depths", &"core_ring", &"inner"])
+node_types = Array[StringName]([&"elite"])
+
+[sub_resource type="Resource" id="Resource_ocont"]
+script = ExtResource("1_78rxq")
+enemy = &"grand_magus"
+weight = 0.6
+kinds = Array[StringName]([&"core_ring", &"inner"])
+node_types = Array[StringName]([&"elite", &"core"])
+
+[sub_resource type="Resource" id="Resource_hvcg6"]
 script = ExtResource("2_60qvx")
 common_tags = Array[StringName]([&"gear", &"remedy", &"food", &"part", &"tool"])
 
-[sub_resource type="Resource" id="Resource_kif4a"]
+[sub_resource type="Resource" id="Resource_rsrlk"]
 script = ExtResource("4_f422k")
 type_bonus = {
 "core": 1,
@@ -117,7 +137,7 @@ by_scale = {
 steps_per_tier = 12
 searches_per_tier = 4
 
-[sub_resource type="Resource" id="Resource_ocont"]
+[sub_resource type="Resource" id="Resource_r2v6f"]
 script = ExtResource("5_v0xwg")
 board = Vector2i(5, 3)
 stat_scale = {
@@ -125,7 +145,7 @@ stat_scale = {
 }
 rarity_cap = 1
 
-[sub_resource type="Resource" id="Resource_hvcg6"]
+[sub_resource type="Resource" id="Resource_tj0wd"]
 script = ExtResource("5_v0xwg")
 strength = 1
 item_count = Vector2i(3, 4)
@@ -136,7 +156,7 @@ stat_scale = {
 bag_count = Vector2i(2, 2)
 rarity_cap = 2
 
-[sub_resource type="Resource" id="Resource_rsrlk"]
+[sub_resource type="Resource" id="Resource_74hwf"]
 script = ExtResource("5_v0xwg")
 strength = 2
 item_count = Vector2i(4, 6)
@@ -147,7 +167,7 @@ stat_scale = {
 }
 bag_count = Vector2i(2, 3)
 
-[sub_resource type="Resource" id="Resource_r2v6f"]
+[sub_resource type="Resource" id="Resource_ecqng"]
 script = ExtResource("5_v0xwg")
 strength = 3
 item_count = Vector2i(6, 8)
@@ -162,7 +182,7 @@ bag_count = Vector2i(3, 4)
 script = ExtResource("3_sjn6r")
 id = &"standard_ruins"
 display_name = "标准废墟（占位）"
-entries = Array[ExtResource("1_78rxq")]([SubResource("Resource_vx45e"), SubResource("Resource_hbwg7"), SubResource("Resource_432bk"), SubResource("Resource_e4v6v"), SubResource("Resource_8jd65"), SubResource("Resource_ratu2"), SubResource("Resource_vnoua"), SubResource("Resource_gowdh"), SubResource("Resource_baqq6"), SubResource("Resource_kda3q"), SubResource("Resource_4ni8y"), SubResource("Resource_woeue"), SubResource("Resource_inwvc"), SubResource("Resource_5sm3v"), SubResource("Resource_h5gnx"), SubResource("Resource_6c3lu"), SubResource("Resource_srhy2"), SubResource("Resource_llhlc"), SubResource("Resource_j2dpq")])
-tiers = Array[ExtResource("5_v0xwg")]([SubResource("Resource_ocont"), SubResource("Resource_hvcg6"), SubResource("Resource_rsrlk"), SubResource("Resource_r2v6f")])
-strength_rule = SubResource("Resource_kif4a")
-loadout = SubResource("Resource_a1gkl")
+entries = Array[ExtResource("1_78rxq")]([SubResource("Resource_vx45e"), SubResource("Resource_hbwg7"), SubResource("Resource_432bk"), SubResource("Resource_e4v6v"), SubResource("Resource_8jd65"), SubResource("Resource_ratu2"), SubResource("Resource_vnoua"), SubResource("Resource_gowdh"), SubResource("Resource_baqq6"), SubResource("Resource_kda3q"), SubResource("Resource_4ni8y"), SubResource("Resource_woeue"), SubResource("Resource_inwvc"), SubResource("Resource_5sm3v"), SubResource("Resource_h5gnx"), SubResource("Resource_6c3lu"), SubResource("Resource_srhy2"), SubResource("Resource_llhlc"), SubResource("Resource_j2dpq"), SubResource("Resource_a1gkl"), SubResource("Resource_kif4a"), SubResource("Resource_ocont")])
+tiers = Array[ExtResource("5_v0xwg")]([SubResource("Resource_r2v6f"), SubResource("Resource_tj0wd"), SubResource("Resource_74hwf"), SubResource("Resource_ecqng")])
+strength_rule = SubResource("Resource_rsrlk")
+loadout = SubResource("Resource_hvcg6")

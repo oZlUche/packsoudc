@@ -1,28 +1,40 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_ahrcu"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_jop6i"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_4kdpf"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_2kv76"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_edscl"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_wico6"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_4kdpf"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_2kv76"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_edscl"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_wico6"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_s0747"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_7cx7r"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_mbd0o"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_l8diu"]
 
-[sub_resource type="Resource" id="Resource_s0747"]
-script = ExtResource("6_wico6")
+[sub_resource type="Resource" id="Resource_mi0n8"]
+script = ExtResource("1_4kdpf")
+amount = 9.0
+
+[sub_resource type="Resource" id="Resource_hyj0d"]
+script = ExtResource("3_edscl")
+feed_mods = Array[ExtResource("1_4kdpf")]([SubResource("Resource_mi0n8")])
+feed_filter = Array[StringName]([&"staff"])
+
+[sub_resource type="Resource" id="Resource_n8s88"]
+script = ExtResource("8_l8diu")
 
 [resource]
-script = ExtResource("5_edscl")
+script = ExtResource("7_mbd0o")
 id = &"heart_of_guoguo"
 display_name = "果果之心"
 display_names = {
 "en": "Heart of Guoguo"
 }
-description = "献给至今没有非洲之心的群友，以及实装该道具后第一把就出了的制作者"
+description = "献给至今没有非洲之心的群友，以及实装该道具后第一把就出了的制作者。放进法杖：法杖伤害 +{amount}，不带属性，哪把法杖都能装，永不耗尽。"
 descriptions = {
-"en": "For the guild friends still waiting on their Heart of Africa, and for the maker who pulled it on the very first run after adding it."
+"en": "For the guild friends still waiting on their Heart of Africa, and for the maker who pulled it on the very first run after adding it. Set in a staff: staff Damage +{amount}, no element, fits any staff, and never runs out."
 }
-shape = SubResource("Resource_s0747")
+shape = SubResource("Resource_n8s88")
 rarity = 5
 value = 100000
-tags = Array[StringName]([&"gem", &"treasure"])
+tags = Array[StringName]([&"magic", &"gem", &"crystal", &"valuable", &"treasure"])
 dormant_keeps_combat = false
+adjacency = SubResource("Resource_hyj0d")

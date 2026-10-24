@@ -466,7 +466,7 @@ func _build_sell(root: Control) -> Control:
 	BagRackView.view_in(_sell_rack).item_double_clicked.connect(func(_v: ContainerView, uid: int): sell_bag(uid))
 	BagRackView.view_in(_sell_rack).actions_for = func(uid: int) -> Array:     # 230：出售页的包架 = 出售 N 币
 		var inst := flow.meta.rack.get_item(uid)
-		return [ItemActions.sell(inst, MetaState.sell_price(inst.def, flow.sell_ratio()), sell_bag)] if inst != null else []
+		return [ItemActions.sell(inst, MetaState.sell_price_of(inst, flow.sell_ratio()), sell_bag)] if inst != null else []
 	flow.meta.warehouse.changed.connect(_on_sell_stock_changed)
 	_rebuild_sell_tags()
 	set_sell_filter(0)

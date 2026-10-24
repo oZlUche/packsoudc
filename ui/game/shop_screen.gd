@@ -224,8 +224,8 @@ func _buy_action(i: int) -> ItemActions.Action:
 func _sell_actions(inst: ItemInstance) -> Array:
 	if _session == null:
 		return []
-	var price_of := func(i: ItemInstance) -> int: return _session.sell_price_of(i.def)
-	var one := ItemActions.sell(inst, _session.sell_price_of(inst.def), sell_now)
+	var price_of := func(i: ItemInstance) -> int: return _session.sell_price_of(i.def, i)
+	var one := ItemActions.sell(inst, _session.sell_price_of(inst.def, inst), sell_now)
 	var why := _cant_sell(inst)
 	return [ItemActions.disable(one, why) if why != "" and one.enabled else one,
 		ItemActions.sell_same(inst, flow.run.board, price_of, sell_now)]

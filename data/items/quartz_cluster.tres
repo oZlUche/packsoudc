@@ -25,14 +25,16 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2
 
 [sub_resource type="Resource" id="Resource_450a8"]
 script = ExtResource("9_dbitx")
-max_charges = 4
+max_charges = 9
+prefixes = Array[String](["熄灭的", "黯淡的", "闪烁的", "微光的", "显眼的", "明亮的", "光耀的", "夺目的", "完美的"])
 prefixes_by_lang = {
-"en": ["Dim ", "Flickering ", "Bright "]
+"en": ["Extinguished ", "Dim ", "Flickering ", "Glimmering ", "Vivid ", "Bright ", "Radiant ", "Dazzling ", "Flawless "]
 }
 broken_prefixes = {
 "en": "Shattered "
 }
-broken_into = &"crystal_shards"
+broken_value_ratio = 0.16
+broken_rarity_drop = 2
 
 [resource]
 script = ExtResource("7_8od3x")
@@ -41,12 +43,12 @@ display_name = "清明魔晶石"
 display_names = {
 "en": "Clarity Crystal"
 }
-description = "放在法杖的装载槽上：法杖伤害 +{amount}，不带属性，哪把法杖都能装。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。"
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，不带属性，哪把法杖都能装。能供给 {max_charges} 场，用完就碎，碎了只能卖钱。"
 descriptions = {
-"en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters into {item:crystal_shards}."
+"en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
 }
 shape = SubResource("Resource_4b56k")
-rarity = 2
+rarity = 3
 value = 320
 tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal", &"valuable"])
 adjacency = SubResource("Resource_fxpx7")

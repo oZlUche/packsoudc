@@ -178,7 +178,7 @@ static func run_preset_and_naming(t: TestCase) -> void:
 	t.eq(Forge.prefix(Forge.enchant_of(inst)), "坚壁的", "195：效果槽放盾 = 守式前缀")
 	var crystal := _inst(db, &"fire_crystal")
 	crystal.state[Forge.KEY] = {"trigger": "metal", "effect": "bone", "magnitude": 1}
-	t.eq(Names.of_item(crystal), "明亮的嗜血的火焰魔晶石", "耐久前缀 + 附魔前缀 + 名字")
+	t.eq(Names.of_item(crystal), "完美的嗜血的火焰魔晶石", "耐久前缀 + 附魔前缀 + 名字")
 
 
 static func run_reconcile(t: TestCase) -> void:

@@ -115,10 +115,41 @@
     },
     {
       "enemy": "apprentice_mage",
+      "weight": 2.0,
+      "kinds": [
+        "ruins",
+        "depths"
+      ]
+    },
+    {
+      "enemy": "adept_mage",
+      "weight": 1.5,
       "kinds": [
         "depths",
         "core_ring",
-        "inner",
+        "inner"
+      ]
+    },
+    {
+      "enemy": "magus",
+      "kinds": [
+        "depths",
+        "core_ring",
+        "inner"
+      ],
+      "node_types": [
+        "elite"
+      ]
+    },
+    {
+      "enemy": "grand_magus",
+      "weight": 0.6,
+      "kinds": [
+        "core_ring",
+        "inner"
+      ],
+      "node_types": [
+        "elite",
         "core"
       ]
     }

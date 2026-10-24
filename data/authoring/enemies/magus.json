@@ -1,0 +1,97 @@
+{
+  "id": "magus",
+  "display_name": "魔导师",
+  "display_names": {
+    "en": "Magus"
+  },
+  "strength": 3,
+  "schools": [
+    "magic"
+  ],
+  "base_stats": {
+    "max_hp": 56
+  },
+  "signature": [
+    "magic_staff"
+  ],
+  "item_tags": [
+    "magic",
+    "crystal",
+    "staff",
+    "remedy"
+  ],
+  "builds": [
+    {
+      "id": "fire_ice",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "fire_crystal_high",
+        "ice_crystal"
+      ],
+      "note": "法杖 + 一颗上品（火）+ 一颗中品（冰）"
+    },
+    {
+      "id": "fire_lightning",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "fire_crystal_high",
+        "lightning_crystal"
+      ],
+      "note": "法杖 + 一颗上品（火）+ 一颗中品（雷）"
+    },
+    {
+      "id": "ice_fire",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "ice_crystal_high",
+        "fire_crystal"
+      ],
+      "note": "法杖 + 一颗上品（冰）+ 一颗中品（火）"
+    },
+    {
+      "id": "ice_lightning",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "ice_crystal_high",
+        "lightning_crystal"
+      ],
+      "note": "法杖 + 一颗上品（冰）+ 一颗中品（雷）"
+    },
+    {
+      "id": "lightning_fire",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "lightning_crystal_high",
+        "fire_crystal"
+      ],
+      "note": "法杖 + 一颗上品（雷）+ 一颗中品（火）"
+    },
+    {
+      "id": "lightning_ice",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "lightning_crystal_high",
+        "ice_crystal"
+      ],
+      "note": "法杖 + 一颗上品（雷）+ 一颗中品（冰）"
+    }
+  ]
+}

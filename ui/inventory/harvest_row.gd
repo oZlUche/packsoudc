@@ -107,5 +107,5 @@ func _draw() -> void:
 		var at := (pair[1] as Rect2).position
 		if ItemPainter.draw_art(self, inst.def, inst.rotation, at, CELL, Color.WHITE, Transform2D.IDENTITY, ItemPainter.variant_of(inst)):     # 201
 			continue
-		ItemPainter.draw_item(self, cells, at, CELL, ItemPainter.body_color(inst.def), ItemPainter.rarity_color(inst.def))
-		ItemPainter.draw_label(self, cells, at, CELL, Names.of_item(inst), font, 12, ItemPainter.label_color(inst.def))
+		ItemPainter.draw_item(self, cells, at, CELL, ItemPainter.body_color(inst.def, inst.rarity()), ItemPainter.rarity_color(inst.def, inst.rarity()))
+		ItemPainter.draw_label(self, cells, at, CELL, Names.of_item(inst), font, 12, ItemPainter.label_color(inst.def, inst.rarity()))

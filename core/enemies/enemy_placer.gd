@@ -261,6 +261,14 @@ static func build_content(
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
 			else:
 				carry_short += 1
+	# 246 补充二：身上的魔晶石换品、抽剩余次数（掉下来就是这一颗；随机数另起一条）。套路与招牌里写的不换品
+	# （247：法师的阶就是晶石的品），次数照抽
+	var xrng := RandomNumberGenerator.new()
+	xrng.seed = hash([rng.state, String(def.id), strength, "crystal"])
+	var fixed: Array[StringName] = sig.duplicate()
+	if build != null:
+		fixed.append_array(build.items)
+	roll_crystals(placed, items, xrng, fixed, cap)
 	ItemInstance._next_uid = uid_mark
 	var content := {
 		"enemy": String(def.id),
@@ -441,6 +449,22 @@ static func _place_random(board: GridInventory, idef: ItemDef, placed: Array, rn
 
 
 ## 内容里的一件：{id, at, rot}
+## 246 补充二：内容条目里的魔晶石 —— 不在 [param fixed] 里的在同家族三品里换一件（形状一样才换，位置不动；
+## 不超过档位的稀有度上限 [param rarity_cap]），每颗记下剩余次数 `charges`（1～满）。[method EnemyKit.board_of] 与 [method DropResolver.corpse_of] 照它恢复
+static func roll_crystals(placed: Array, items: ItemDatabase, rng: RandomNumberGenerator, fixed: Array[StringName] = [], rarity_cap: int = -1) -> void:
+	for raw in placed:
+		var e := raw as Dictionary
+		var d := items.get_def(StringName(String(e.get("id", ""))))
+		if not CrystalRoll.is_rolled(d):
+			continue
+		if not fixed.has(d.id):
+			var nd := items.get_def(CrystalRoll.reroll_id(d, items, rng, rarity_cap))
+			if nd != null and nd.shape.cells_rotated(0) == d.shape.cells_rotated(0):
+				e["id"] = String(nd.id)
+				d = nd
+		e[CrystalRoll.CHARGES] = CrystalRoll.roll_charges(d, rng)
+
+
 static func _entry(inst: ItemInstance) -> Dictionary:
 	return {"id": String(inst.def.id), "at": [inst.origin.x, inst.origin.y], "rot": inst.rotation}
 

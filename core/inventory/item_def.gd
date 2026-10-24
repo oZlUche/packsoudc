@@ -185,6 +185,9 @@ func faith_tag() -> StringName:
 @export_group("耐久")
 ## 148：耐久（次数制，魔晶石）。为空 = 不会用坏。剩几次记在实例上（[method ItemInstance.charges]）
 @export var wear: WearProfile
+## 246 补充二：魔晶石的元素家族（`fire` / `frost` / `lightning`）—— 掉落里滚到它就在同家族的三品里等概率换一件（[CrystalRoll]）。
+## 空 = 不换品（清明、琥珀这样的通用供给）
+@export var crystal_family: StringName = &""
 
 @export_group("生长")
 ## 207：自然系专属的生长（种子 → 茎叶 → 绽放）。为空 = 不会长。走到哪一阶记在实例上（[GrowthProfile]）

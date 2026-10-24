@@ -4,14 +4,14 @@
   "display_names": {
     "en": "Amber Crystal"
   },
-  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，不带属性，哪把法杖都能装。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。",
+  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，不带属性，哪把法杖都能装。能供给 {max_charges} 场，用完就碎，碎了只能卖钱。",
   "descriptions": {
-    "en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters into {item:crystal_shards}."
+    "en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
   },
   "shape": [
     "1"
   ],
-  "rarity": 2,
+  "rarity": 3,
   "value": 150,
   "tags": [
     "part",
@@ -32,22 +32,35 @@
     ]
   },
   "wear": {
-    "max_charges": 4,
+    "max_charges": 9,
     "prefixes": [
+      "熄灭的",
       "黯淡的",
       "闪烁的",
-      "明亮的"
+      "微光的",
+      "显眼的",
+      "明亮的",
+      "光耀的",
+      "夺目的",
+      "完美的"
     ],
     "prefixes_by_lang": {
       "en": [
+        "Extinguished ",
         "Dim ",
         "Flickering ",
-        "Bright "
+        "Glimmering ",
+        "Vivid ",
+        "Bright ",
+        "Radiant ",
+        "Dazzling ",
+        "Flawless "
       ]
     },
     "broken_prefixes": {
       "en": "Shattered "
     },
-    "broken_into": "crystal_shards"
+    "broken_value_ratio": 0.16,
+    "broken_rarity_drop": 2
   }
 }

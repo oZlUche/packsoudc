@@ -206,7 +206,7 @@ func sell_bag(uid: int, ratio: float = 0.5) -> int:
 	var inst := rack.get_item(uid)
 	if inst == null or inst.is_locked_by_player():
 		return -1
-	var price := sell_price(inst.def, ratio)
+	var price := sell_price_of(inst, ratio)
 	rack.remove(uid)
 	funds += price
 	changed.emit()
@@ -486,7 +486,7 @@ func sell_item(uid: int, ratio: float = 0.5) -> int:
 	var inst := warehouse.get_item(uid)
 	if inst == null or inst.is_locked_by_player():     # 230：锁住的不卖
 		return -1
-	var price := sell_price(inst.def, ratio)
+	var price := sell_price_of(inst, ratio)
 	warehouse.remove(uid)
 	funds += price
 	changed.emit()
@@ -498,6 +498,16 @@ static func sell_price(def: ItemDef, ratio: float = 0.5) -> int:
 	if def != null and (def.is_valuable() or def.is_bullion()):
 		return ItemValue.of(def)
 	return maxi(0, floori(float(ItemValue.of(def)) * ratio)) if def != null else 0
+
+
+## 246 补充二：一件实例的回收价 —— 和 [method sell_price] 同一套，价值按实例算（[method ItemValue.of_instance]：碎了的魔晶石按低两档）
+static func sell_price_of(inst: ItemInstance, ratio: float = 0.5) -> int:
+	if inst == null or inst.def == null:
+		return 0
+	var v := ItemValue.of_instance(inst)
+	if inst.def.is_valuable() or inst.def.is_bullion():
+		return v
+	return maxi(0, floori(float(v) * ratio))
 
 
 ## 2026-10-22（作者定）：花掉一笔钱（带钱入局就这一个入口）。不够就一分不动、返回 false ——
@@ -528,7 +538,7 @@ func locked_matching(max_rarity: int, tag: StringName = &"") -> int:
 	var n := 0
 	for inst in warehouse.items():
 		var it := inst as ItemInstance
-		if it.is_locked_by_player() and (max_rarity < 0 or it.def.rarity <= max_rarity) and (tag == &"" or it.def.tags.has(tag)):
+		if it.is_locked_by_player() and (max_rarity < 0 or it.rarity() <= max_rarity) and (tag == &"" or it.def.tags.has(tag)):
 			n += 1
 	return n
 
@@ -538,7 +548,7 @@ func sell_preview(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") ->
 	var out := {"count": 0, "funds": 0}
 	for it in _sellable(max_rarity, tag):
 		out["count"] = int(out["count"]) + 1
-		out["funds"] = int(out["funds"]) + sell_price(it.def, ratio)
+		out["funds"] = int(out["funds"]) + sell_price_of(it, ratio)
 	return out
 
 
@@ -548,7 +558,7 @@ func _sellable(max_rarity: int, tag: StringName = &"") -> Array[ItemInstance]:
 	var out: Array[ItemInstance] = []
 	for inst in warehouse.items():
 		var it := inst as ItemInstance
-		if max_rarity >= 0 and it.def.rarity > max_rarity:
+		if max_rarity >= 0 and it.rarity() > max_rarity:
 			continue
 		if tag != &"" and not it.def.tags.has(tag):
 			continue

@@ -85,11 +85,14 @@ func price_of(def: ItemDef) -> int:
 	return maxi(1, roundi(float(ItemValue.of(def)) * (rules.shop_price_mult if rules != null else 1.0) * price_mult))
 
 
-## 卖给店里得多少：定价 × 出售比例（作者定一半）
-func sell_price_of(def: ItemDef) -> int:
+## 卖给店里得多少：定价 × 出售比例（作者定一半）。246 补充二：给了 [param inst] 且它碎了，定价按 [member WearProfile.broken_value_ratio] 打折
+func sell_price_of(def: ItemDef, inst: ItemInstance = null) -> int:
 	if def == null:
 		return 0
-	return maxi(0, floori(float(price_of(def)) * (rules.shop_sell_ratio if rules != null else 0.5)))
+	var price := float(price_of(def))
+	if inst != null and inst.is_broken():
+		price = maxf(1.0, roundf(price * def.wear.broken_value_ratio))
+	return maxi(0, floori(price * (rules.shop_sell_ratio if rules != null else 0.5)))
 
 
 ## 这件实例摆在第几格；不是货架上的返回 -1
@@ -148,7 +151,7 @@ func sell(inst: ItemInstance) -> int:
 		return 0
 	if sell_box.has_item(inst.uid):
 		sell_box.remove(inst.uid)
-	var gain := sell_price_of(inst.def)
+	var gain := sell_price_of(inst.def, inst)
 	if gain > 0:
 		wallet.earn(gain, &"shop_sell")
 	sold_item.emit(inst.def, gain)
