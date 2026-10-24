@@ -302,7 +302,7 @@ static func run_encyclopedia_english(t: TestCase) -> void:
 	UiText.lang = "zh"
 	t.eq(titles, [] as Array[String], "英文下页标题没有汉字")
 	t.eq(bodies, [] as Array[String], "英文下机制页正文（连「相关」「相关道具」）没有汉字")
-	t.check(han.search(intro) == null and intro.begins_with("Fungal Blood: Toxin meets Blood."), "反应讲解是英文：%s" % intro)
+	t.check(han.search(intro) == null and intro.begins_with("[Element reaction] Fungal Blood: Toxin meets Blood."), "反应讲解是英文：%s" % intro)
 	t.eq(block_page, "term:格挡", "英文名「Block」连到格挡那一页")
 	t.eq(Glossary.term_text("Block"), Glossary.term_text("格挡"), "中文下按英文名也查得到同一条（取中文说明）")
 
