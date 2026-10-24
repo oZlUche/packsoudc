@@ -281,15 +281,18 @@ func _restock_bag() -> void:
 		stock.append(entry)
 
 
-## 244：按 [member EconomyRules.bullion_slot_chance] 把第一格换成一件金银（货架没满就添一格）：越深越容易是金条。
+## 244：按 [member EconomyRules.bullion_slot_chance] 把第一格换成一件金银（货架没满就添一格）：补充一，按深度混合的权重表抽（外环银、内环金）。
 ## 随机数另起一条 —— 别的格子和没有金银时一模一样；包槽在最后一格，两样不抢
 func _restock_bullion() -> void:
 	if rules == null or rules.bullion_slot_chance <= 0.0 or rules.shop_slots <= 0:
 		return
+	var weights := rules.bullion_weights(depth)
 	var ids: Array[StringName] = []
-	for id in rules.bullion_items:
+	var total := 0.0
+	for id in weights:
 		if items.get_def(id) != null:
 			ids.append(id)
+			total += float(weights[id])
 	if ids.is_empty():
 		return
 	var rng := RandomNumberGenerator.new()
@@ -297,8 +300,12 @@ func _restock_bullion() -> void:
 	if rng.randf() >= rules.bullion_slot_chance:
 		return
 	var pick := ids[ids.size() - 1]
-	if ids.size() > 1 and rng.randf() >= rules.bullion_bar_share(depth):
-		pick = ids[rng.randi_range(0, ids.size() - 2)]
+	var x := rng.randf() * total
+	for id in ids:
+		x -= float(weights[id])
+		if x <= 0.0:
+			pick = id
+			break
 	var entry := {"id": String(pick), "price": price_of(items.get_def(pick))}
 	if stock.size() >= rules.shop_slots:
 		stock[0] = entry

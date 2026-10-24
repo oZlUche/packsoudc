@@ -14,14 +14,18 @@
     "treasure",
     "supply"
   ],
-  "bullion_items": [
-    "gold_nugget",
-    "gold_bar"
-  ],
-  "bullion_bar_share_by_depth": [
-    0.3,
-    0.7
-  ],
+  "bullion_shallow": {
+    "silver_nugget": 1,
+    "silver_bar": 1,
+    "silver_ingot_large": 1,
+    "gold_nugget": 1
+  },
+  "bullion_deep": {
+    "gold_nugget": 1,
+    "gold_bar": 1,
+    "gold_ingot": 1,
+    "silver_ingot_large": 1
+  },
   "belt_stock": {
     "aid_pack": 1,
     "smoke_bomb": 1

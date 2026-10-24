@@ -66,6 +66,9 @@
     "gilded_goblet",
     "glazed_inkstone",
     "glazed_vase",
+    "gold_bar",
+    "gold_ingot",
+    "gold_nugget",
     "granite_mortar",
     "gravestone_shard",
     "hardwood_plank",
@@ -125,7 +128,10 @@
     "shortsword",
     "shotgun",
     "silk_bolt",
+    "silver_bar",
     "silver_ingot",
+    "silver_ingot_large",
+    "silver_nugget",
     "silver_ore",
     "smoked_fish",
     "spyglass",
@@ -155,10 +161,10 @@
     "wound_salt"
   ],
   "variants": {
-    "fire_crystal": ["c0", "c1", "c2"],
-    "ice_crystal": ["c0", "c1", "c2"],
+    "fire_crystal": ["c0", "c1", "c2", "c3"],
+    "ice_crystal": ["c0", "c1", "c2", "c3"],
     "ironwood_sapling": ["s1", "s2"],
-    "lightning_crystal": ["c0", "c1", "c2"],
+    "lightning_crystal": ["c0", "c1", "c2", "c3"],
     "moonherb_seed": ["s1", "s2"],
     "thorn_seed": ["s1", "s2"]
   }

@@ -64,8 +64,8 @@ static func run_feed_compile(t: TestCase) -> void:
 	t.eq(s2.item_of(two["staff"].uid).loaded.size(), 2, "轮读表两颗")
 
 	var broken := _staff_board(db, &"fire_crystal", &"")
-	(broken["left"] as ItemInstance).spend_charge(3)
-	t.check((broken["left"] as ItemInstance).is_broken(), "扣三次：碎了")
+	(broken["left"] as ItemInstance).spend_charge((broken["left"] as ItemInstance).def.wear.max_charges)
+	t.check((broken["left"] as ItemInstance).is_broken(), "扣满次数：碎了")
 	var sb := BattleCompiler.compile_board(broken["board"])
 	t.eq(_damage(sb, broken["staff"].uid), base, "破碎的不再供给")
 	t.eq(sb.item_of(broken["staff"].uid).loaded.size(), 0, "轮读表里没有它")

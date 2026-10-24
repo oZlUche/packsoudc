@@ -1,0 +1,21 @@
+{
+  "id": "silver_bar",
+  "display_name": "银条",
+  "display_names": {
+    "en": "Silver Bar"
+  },
+  "description": "打上印记的银条，基地照面值收。",
+  "descriptions": {
+    "en": "A stamped bar of silver; the base takes it at face value."
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 2,
+  "value": 190,
+  "weight": 7,
+  "tags": [
+    "valuable",
+    "bullion"
+  ]
+}

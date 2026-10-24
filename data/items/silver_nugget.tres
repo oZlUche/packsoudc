@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_aovgk"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_67ywf"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_ypp7p"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_yjivm"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_6qc7w"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_2h2bk"]
+
+[sub_resource type="Resource" id="Resource_5a00w"]
+script = ExtResource("6_2h2bk")
+
+[resource]
+script = ExtResource("5_6qc7w")
+id = &"silver_nugget"
+display_name = "银块"
+display_names = {
+"en": "Silver Nugget"
+}
+description = "一块成色不错的银，换钱从不吃亏。"
+descriptions = {
+"en": "A lump of good silver; never a loss when you cash it in."
+}
+shape = SubResource("Resource_5a00w")
+rarity = 1
+value = 80
+weight = 3
+tags = Array[StringName]([&"valuable", &"bullion"])

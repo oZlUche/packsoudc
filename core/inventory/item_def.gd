@@ -51,6 +51,8 @@ const TOKEN := &"token"
 ## 244：金银（金块 / 金条）—— 只有商店出（[ShopSession] 单开一格）、不参战不进配方、不算总分，基地按面值全额回收。
 ## 搜索、掉落、敌人装备、头一回踩点白给这些「从全库里抽」的地方都跳过它（[method is_bullion]）
 const BULLION := &"bullion"
+## 244 补充一：贵重品（金银、魔晶石……）—— 值钱是它的本分，基地回收按面值全额（[method is_valuable]）
+const VALUABLE := &"valuable"
 
 ## 准入标签。容器级与包体级的准入都拿它比对。
 @export var tags: Array[StringName] = []
@@ -67,6 +69,11 @@ func is_keepsake() -> bool:
 ## 244：金银（[constant BULLION]）
 func is_bullion() -> bool:
 	return tags.has(BULLION)
+
+
+## 244 补充一：贵重品（[constant VALUABLE]）
+func is_valuable() -> bool:
+	return tags.has(VALUABLE)
 
 
 ## 175：铸牌（[constant TOKEN]）

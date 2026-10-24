@@ -89,7 +89,7 @@
 | `data/authoring/drop_rules/standard.json` | 按稀有度的掉落率、难度 / 幸运每级加多少、珍宝概率与两档权重 |
 | `data/authoring/node_rules/standard.json` | 随机点权重、搜索（次数 / 遭遇曲线 / 件数 / 稀有度权重 / 深度与危险增益）、输了扣几点、休息回几点、事件结果权重、战斗时限 |
 | `data/authoring/economy_rules/standard.json` | 开局钱、奖励公式系数、商店格数 / 权重 / 价格倍数 / 刷新费、付费撤离点个数与费用（50） |
-| `data/authoring/items/gold_nugget.json`、`gold_bar.json`、`EconomyRules` 的 `bullion_*` | 244：金块 / 金条的面值（60 / 150）与重量；金银上架概率 0.35、金条占比 [0.3, 0.7]、手续费 1.1 |
+| `data/authoring/items/` 金银六件（`gold_*`、`silver_nugget` / `silver_bar` / `silver_ingot_large`）与五块魔晶石、`economy_rules/*.json` 的 `bullion_*` | 244：贵重品的面值（80～800）与重量；魔晶石供给 +9、四场；金银上架概率 0.35、外环 / 内环两张权重表、手续费 1.1 |
 | `data/authoring/chapters/free_mode.json` | 地图配置（环、路线风格、规模模板、高危区、类型风险收益、覆盖……）、难度 |
 | `data/authoring/items/*.json` | 道具数值、稀有度、价值 |
 | `data/authoring/loadouts/*.json` | 三套开局装备的清单与说明；两套预设（`preset: true`，096：强攻 / 坚守）的清单 |

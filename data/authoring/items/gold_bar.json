@@ -11,10 +11,11 @@
   "shape": [
     "11"
   ],
-  "rarity": 2,
-  "value": 150,
+  "rarity": 3,
+  "value": 480,
   "weight": 7,
   "tags": [
+    "valuable",
     "bullion"
   ]
 }

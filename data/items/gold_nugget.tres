@@ -22,7 +22,7 @@ descriptions = {
 "en": "A heavy lump of raw gold; its weight speaks for itself."
 }
 shape = SubResource("Resource_tmvy8")
-rarity = 1
-value = 60
+rarity = 2
+value = 200
 weight = 3
-tags = Array[StringName]([&"bullion"])
+tags = Array[StringName]([&"valuable", &"bullion"])

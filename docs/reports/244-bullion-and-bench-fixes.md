@@ -122,13 +122,16 @@
 
 并入 244 同一批给执行线：§7.1 两处、六件金银、`valuable` 标签、两张深度权重表、五件宝石的标签 / 稀有度 / 面值 / 名字 / 供给威力。测试加：休眠件旁的受益规则数为零；拿出包 / 放地上后标记仍在；浅层刷货只出银与金块、深层出金与银锭；魔晶石五件都带 `magic`、不带 `nature`；供给强度按新数。
 
-## 八 落地（v4.27）
+## 八 落地（v4.27，含补充一）
 
-- 道具 `gold_nugget` / `gold_bar`（`data/authoring/items/`，只带 `bullion`）、标签 `bullion`「金银」（用途类，弹词条）；`ItemDef.BULLION` + `is_bullion()`。没有图：先走程序画的占位，美术图到了照 201 的 `sync_item_art.sh` 收。
-- 商店：`EconomyRules` 加 `bullion_slot_chance` 0.35、`bullion_items`、`bullion_bar_share_by_depth` [0.3, 0.7]、`bullion_premium` 1.1（两份经济规则的 JSON 写了两个数组，其余用默认）。`ShopSession._restock_bullion()` 另起一条随机数，掷中就把**第一格**换成金银（包槽在最后一格，两样不抢；货架没满就添一格）；「金条占比」= 抽到 `bullion_items` 最后一件的概率，其余等分。`candidates()` 排除金银。`price_of` 对金银 = 面值 × 1.1，不乘 `shop_price_mult` 与 buff 倍数；`sell_price_of`（局内回购）照常五成。
-- 基地：`MetaState.sell_price` 对金银返回面值（单卖、一键出售、预览都走它）。结算：`RunResult.settle` 的 `value` / `safe_value` 跳过金银，东西照样带回。
-- 「只有商店出」比报告写的多拦了四处「从全库里抽」的路：搜索候选（`SearchSession.candidates`，事件「给随机道具」也走它）、掉落的珍宝兜底（`DropResolver` 没有同稀有度珍宝时）、敌人装备池（`EnemyPlacer._item_pool`）、信仰赠礼（`GiftOnEnterPerk`）、携带规则候选。
-- 不参战：`Compiler._lit_neighbors` 跳过 `is_benched()` 的件（受益不算点亮、增益不给；悬浮窗与装载格同一个函数，说法一致）；`MetaState._adopt()` 摘掉标记。
-- 百科：没有单件道具的页，标签页「金银」自动生成、列出这两件（标签按登记顺序排在用途类里）。
-- 测试 `tests/run/test_bullion_244.gd`（34 项）；内容快照已重生成。
-
+- **金银六件**（`data/authoring/items/`，只带 `valuable` + `bullion`）：金块 / 金条 / 金锭、银块 / 银条 / **大银锭**，形状、稀有度、面值、重量照 §7.2。**改了一处 id**：`silver_ingot` 早已是一件一格的材料（「银锭」，工艺金属，铸炉科技 `bargain` 与测试都在用），不能改形状重用；新的一乘三银锭叫 `silver_ingot_large`「大银锭」/ Large Silver Ingot。六张图来自美术设计（`drafts1/out`），大银锭那张拷成 `silver_ingot_large.png`。
+- 标签 `bullion`「金银」、`valuable`「贵重品」（都归用途类、弹词条）；`ItemDef.is_bullion()` / `is_valuable()`。
+- 商店：`EconomyRules` 加 `bullion_slot_chance` 0.35、`bullion_shallow` / `bullion_deep`（§7.2 两张表，`bullion_weights(深度)` 线性混合）、`bullion_premium` 1.1；两份经济规则的 JSON 写了两张表。`ShopSession._restock_bullion()` 另起一条随机数，掷中就把**第一格**换成金银（包槽在最后一格，两样不抢；货架没满就添一格）。`candidates()` 排除金银。`price_of` 对金银 = 面值 × 1.1，不乘 `shop_price_mult` 与 buff 倍数；`sell_price_of`（局内回购）照常五成。导入器查两张表的权重非负、id 在库里。
+- 基地：`MetaState.sell_price` 对贵重品（含金银、魔晶石）返回面值（单卖、一键出售、预览都走它）。结算：`RunResult.settle` 的 `value` / `safe_value` 只跳过金银（魔晶石照算总分）。
+- 「只有商店出」比 §2.4 多拦了几处「从全库里抽」的路：搜索候选（`SearchSession.candidates`，事件「给随机道具」也走它）、掉落的珍宝兜底（`DropResolver` 没有同稀有度珍宝时）、敌人装备池（`EnemyPlacer._item_pool`）、信仰赠礼（`GiftOnEnterPerk`）、携带规则候选。
+- **宝石并入魔晶石**：三块元素魔晶石稀有度 2、面值 150、供给 +6 → +9、耐用 3 → 4 场；`quartz_cluster` 改名**「清明魔晶石」**（「澄」不在字体子集里，换了一个字；英文 Clarity Crystal）2×2 稀有 320、`raw_amber`「琥珀魔晶」/ Amber Crystal 1 格 稀有 150：两件改成无属性供给（`feed_mods` +9、`feed_filter` staff，没有 `feed_rules`），带和元素石一样的耐用（四场、碎成碎晶）；`crystal_shards` 面值 30。五件标签 = `part` `material` `magic` `gem` `crystal` `valuable`（去了 `nature`）。去 `nature` 让自然之神的两件派生赐福版（`quartz_cluster_nature` / `raw_amber_nature`）没了，`IdAliases.RETIRED_ITEMS` 里写成换回原件。
+- **和报告不一样的一处**：配方 `healing_draught`（浓缩伤药 + 水晶簇 → 治愈药剂）用着 `quartz_cluster`，§7.2 说「没有配方用到这五件」不对。没动配方（删了就少一条配方），清明魔晶石还能这么合；要不要改由架构 / 作者定。
+- 耐用改成四场后，美术设计补了三块元素石的 `@c3` 变体图（比 c2 轻一档），已同步。碎晶面值 30 之后不再等于「晶石 × 0.25」（208 那条断言改成 30）。
+- 不参战 / 休眠：`Compiler._lit_neighbors` 跳过 `is_benched()` 的件，补充一再跳过 `FaithState.is_dormant()` 的件（只在碰到信仰道具时才查一次当前信仰）——不给邻接、不受邻接；留着通用效果的自己照打。悬浮窗与装载格用同一个函数，说法一致。`MetaState._adopt()` 摘掉不参战标记；局内挪动不清（加了断言）。
+- 百科：没有单件道具的页，标签页「金银」「贵重品」自动生成、列出带它的道具。
+- 测试 `tests/run/test_bullion_244.gd`（92 项）；`test_forge_195` 的「每件恰一个材质」对金银放行；内容快照已重生成。

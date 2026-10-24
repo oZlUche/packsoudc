@@ -1,21 +1,54 @@
 {
   "id": "quartz_cluster",
-  "display_name": "水晶簇",
+  "display_name": "清明魔晶石",
   "display_names": {
-    "en": "Quartz Cluster"
+    "en": "Clarity Crystal"
   },
-  "description": "一丛透亮的石英。",
+  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，不带属性，哪把法杖都能装。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。",
   "descriptions": {
-    "en": "A cluster of clear quartz."
+    "en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters into {item:crystal_shards}."
   },
   "shape": [
     "11",
     "11"
   ],
-  "rarity": 1,
+  "rarity": 2,
+  "value": 320,
   "tags": [
+    "part",
     "material",
-    "nature",
-    "gem"
-  ]
+    "magic",
+    "gem",
+    "crystal",
+    "valuable"
+  ],
+  "adjacency": {
+    "feed_mods": [
+      {
+        "amount": 9.0
+      }
+    ],
+    "feed_filter": [
+      "staff"
+    ]
+  },
+  "wear": {
+    "max_charges": 4,
+    "prefixes": [
+      "黯淡的",
+      "闪烁的",
+      "明亮的"
+    ],
+    "prefixes_by_lang": {
+      "en": [
+        "Dim ",
+        "Flickering ",
+        "Bright "
+      ]
+    },
+    "broken_prefixes": {
+      "en": "Shattered "
+    },
+    "broken_into": "crystal_shards"
+  }
 }

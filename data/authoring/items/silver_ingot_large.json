@@ -1,0 +1,21 @@
+{
+  "id": "silver_ingot_large",
+  "display_name": "大银锭",
+  "display_names": {
+    "en": "Large Silver Ingot"
+  },
+  "description": "一根沉甸甸的银锭，商队拿它结账。",
+  "descriptions": {
+    "en": "A weighty silver ingot; caravans settle their accounts with it."
+  },
+  "shape": [
+    "111"
+  ],
+  "rarity": 2,
+  "value": 320,
+  "weight": 11,
+  "tags": [
+    "valuable",
+    "bullion"
+  ]
+}

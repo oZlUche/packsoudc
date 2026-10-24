@@ -23,7 +23,7 @@ descriptions = {
 "en": "A stamped bar of gold, worth every coin back home."
 }
 shape = SubResource("Resource_ivmcs")
-rarity = 2
-value = 150
+rarity = 3
+value = 480
 weight = 7
-tags = Array[StringName]([&"bullion"])
+tags = Array[StringName]([&"valuable", &"bullion"])

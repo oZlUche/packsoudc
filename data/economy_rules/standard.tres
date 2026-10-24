@@ -8,6 +8,18 @@ id = &"standard"
 display_name = "标准经济（占位）"
 starting_balance = 20
 shop_exclude_tags = Array[StringName]([&"treasure", &"supply"])
+bullion_shallow = {
+"gold_nugget": 1,
+"silver_bar": 1,
+"silver_ingot_large": 1,
+"silver_nugget": 1
+}
+bullion_deep = {
+"gold_bar": 1,
+"gold_ingot": 1,
+"gold_nugget": 1,
+"silver_ingot_large": 1
+}
 belt_stock = {
 "aid_pack": 1,
 "smoke_bomb": 1

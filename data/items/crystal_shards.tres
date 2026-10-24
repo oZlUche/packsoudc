@@ -22,5 +22,5 @@ descriptions = {
 "en": "The little heap a spent Crystal shatters into. It no longer feeds a staff, but it's still worth a few coins."
 }
 shape = SubResource("Resource_ml0ed")
-value = 6
+value = 30
 tags = Array[StringName]([&"material", &"magic", &"gem"])

@@ -526,14 +526,21 @@ static func _lit_neighbors(
 		return found
 
 	var seen := {}
+	var active: StringName = &"?"     # 还没查过
 	for cell in holder.absolute_cells(marker_cells):
 		var other := board.cell_uid(cell)
 		if other == GridInventory.EMPTY_UID or other == holder.uid or seen.has(other):
 			continue
 		var other_inst := board.get_item(other)
-		# 244：标了「不参战」= 不在场，既不给邻接也不受（休眠的照旧，见 087）
+		# 244：标了「不参战」= 不在场，既不给邻接也不受；补充一（作者 08:15）：休眠的也视为不存在
+		#（留着通用效果的自己照打，对别人等于没有）。当前信仰只在碰到信仰道具时才查
 		if other_inst == null or other_inst.is_benched() or not AdjacencyProfile.accepts(filter, other_inst.def) or not AdjacencyProfile.accepts_all(filter_all, other_inst.def):
 			continue
+		if other_inst.def.has_faith():
+			if active == &"?":
+				active = FaithState.active_tag(board)
+			if FaithState.is_dormant(other_inst.def, active):
+				continue
 		seen[other] = true
 		found.append(other)
 	found.sort()

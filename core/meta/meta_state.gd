@@ -493,9 +493,9 @@ func sell_item(uid: int, ratio: float = 0.5) -> int:
 	return price
 
 
-## 244：金银按面值全额收（[param ratio] 对它不生效）
+## 244：金银按面值全额收（[param ratio] 对它不生效）；补充一：凡贵重品都是
 static func sell_price(def: ItemDef, ratio: float = 0.5) -> int:
-	if def != null and def.is_bullion():
+	if def != null and (def.is_valuable() or def.is_bullion()):
 		return ItemValue.of(def)
 	return maxi(0, floori(float(ItemValue.of(def)) * ratio)) if def != null else 0
 

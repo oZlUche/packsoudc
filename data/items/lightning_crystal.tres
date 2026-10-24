@@ -21,7 +21,7 @@
 
 [sub_resource type="Resource" id="Resource_7w6cy"]
 script = ExtResource("1_h2x6p")
-amount = 6.0
+amount = 9.0
 
 [sub_resource type="Resource" id="Resource_f4spd"]
 script = ExtResource("3_moof6")
@@ -86,6 +86,7 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
 
 [sub_resource type="Resource" id="Resource_r73ab"]
 script = ExtResource("18_qedcq")
+max_charges = 4
 prefixes_by_lang = {
 "en": ["Dim ", "Flickering ", "Bright "]
 }
@@ -106,7 +107,8 @@ descriptions = {
 "en": "Set it in a staff's loading slot: staff Damage +{amount}, deals Lightning damage, and each hit gives the opponent one stack of Paralysis. Lasts {max_charges} battles, then shatters into {item:crystal_shards}."
 }
 shape = SubResource("Resource_vc120")
-rarity = 1
-tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal"])
+rarity = 2
+value = 150
+tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal", &"valuable"])
 adjacency = SubResource("Resource_koati")
 wear = SubResource("Resource_r73ab")

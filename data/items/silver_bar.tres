@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_jyk1c"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_pq045"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_j23po"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_sl16a"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_imfyh"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_jwgnu"]
+
+[sub_resource type="Resource" id="Resource_k436c"]
+script = ExtResource("6_jwgnu")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[resource]
+script = ExtResource("5_imfyh")
+id = &"silver_bar"
+display_name = "银条"
+display_names = {
+"en": "Silver Bar"
+}
+description = "打上印记的银条，基地照面值收。"
+descriptions = {
+"en": "A stamped bar of silver; the base takes it at face value."
+}
+shape = SubResource("Resource_k436c")
+rarity = 2
+value = 190
+weight = 7
+tags = Array[StringName]([&"valuable", &"bullion"])

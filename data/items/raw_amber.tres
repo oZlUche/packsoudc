@@ -1,26 +1,52 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_av7l7"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_letn8"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_miieo"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_8csei"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_mcik5"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_8nq8a"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_8csei"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_mcik5"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_8nq8a"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_tl6u2"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_jcfye"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_53pmx"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_64uwk"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_ihefq"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="9_qfpw2"]
 
-[sub_resource type="Resource" id="Resource_tl6u2"]
-script = ExtResource("6_8nq8a")
+[sub_resource type="Resource" id="Resource_x720r"]
+script = ExtResource("1_8csei")
+amount = 9.0
+
+[sub_resource type="Resource" id="Resource_5xyen"]
+script = ExtResource("3_8nq8a")
+feed_mods = Array[ExtResource("1_8csei")]([SubResource("Resource_x720r")])
+feed_filter = Array[StringName]([&"staff"])
+
+[sub_resource type="Resource" id="Resource_bvf8x"]
+script = ExtResource("8_ihefq")
+
+[sub_resource type="Resource" id="Resource_8m3bb"]
+script = ExtResource("9_qfpw2")
+max_charges = 4
+prefixes_by_lang = {
+"en": ["Dim ", "Flickering ", "Bright "]
+}
+broken_prefixes = {
+"en": "Shattered "
+}
+broken_into = &"crystal_shards"
 
 [resource]
-script = ExtResource("5_mcik5")
+script = ExtResource("7_64uwk")
 id = &"raw_amber"
-display_name = "琥珀原石"
+display_name = "琥珀魔晶"
 display_names = {
-"en": "Raw Amber"
+"en": "Amber Crystal"
 }
-description = "封着一只远古小虫。"
+description = "放在法杖的装载槽上：法杖伤害 +{amount}，不带属性，哪把法杖都能装。能供给 {max_charges} 场，用完碎成{item:crystal_shards}。"
 descriptions = {
-"en": "A tiny ancient insect sealed inside."
+"en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters into {item:crystal_shards}."
 }
-shape = SubResource("Resource_tl6u2")
+shape = SubResource("Resource_bvf8x")
 rarity = 2
-tags = Array[StringName]([&"material", &"nature", &"gem"])
+value = 150
+tags = Array[StringName]([&"part", &"material", &"magic", &"gem", &"crystal", &"valuable"])
+adjacency = SubResource("Resource_5xyen")
+wear = SubResource("Resource_8m3bb")

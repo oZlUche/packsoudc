@@ -1132,6 +1132,13 @@ static func import_economy_rules(data: Dictionary, ctx: Context, report: ImportR
 		check_belt_ref(StringName(String(k)), "belt_stock", ctx, report)
 		if float(rules.belt_stock[k]) < 0.0:
 			report.error("belt_stock", "权重不能为负")
+	for field in ["bullion_shallow", "bullion_deep"]:     # 244 补充一：金银那一格的两张权重表
+		var table: Dictionary = rules.get(field)
+		for k in table:
+			if float(table[k]) < 0.0:
+				report.error(field, "%s 的权重不能为负" % k)
+			if not ctx.items.is_empty() and not ctx.items.has(StringName(String(k))):
+				report.error(field, "没有道具 '%s'" % k)
 	ctx.register_economy_rules(rules)
 	return rules
 
