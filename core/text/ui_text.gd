@@ -439,6 +439,7 @@ const TEXT := {
 	"pre.slip_btn": {"zh": "%s（%s）", "en": "%s (%s)"},
 	"pre.slip": {"zh": "溜走", "en": "Slip away"},
 	"pre.retreat": {"zh": "退回", "en": "Fall back"},
+	"pre.no_drop": {"zh": "开战前不丢东西", "en": "Nothing is thrown out before a fight"},
 	"pre.retreat_tip": {"zh": "这一场先不打：退回上一个点，再走一步；敌人留在原地，回来还是这一场", "en": "Skip this fight for now: fall back to the last spot, one more step; the enemy stays, and it is the same fight when you return"},
 	"pre.no_retreat": {"zh": "这一场退不了", "en": "You can't fall back from this fight"},
 	"pre.slip_blocked": {"zh": "溜走：%s", "en": "Slip away: %s"},

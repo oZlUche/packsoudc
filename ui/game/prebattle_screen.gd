@@ -1,7 +1,8 @@
 ## 战前准备屏（084，作者定）：踩上战斗点（或事件里选了开打、搜索遭遇了）先到这里，不是直接开打。
 ##
 ## 右边是对手（作者 2026-10-21 18:19：和回放统一，自己在左）：从节点内容重建的棋盘（[method EnemyKit.board_of]）与一排属性签（生命 / 耐力 / 耗气 / DPS / 特殊能力）—— 和真打出来的是同一份编译（4.2）；
-## 左边是自己的棋盘与地上（[InventoryPanel]），随便拖：拖出棋盘 = 放到地上（不参战，打完还在地上；走了留在这个点、回来能拿）。
+## 左边是自己的棋盘与地上（[InventoryPanel]），棋盘里随便挪；249（作者 2026-10-24）：开战前不丢东西 —— 棋盘上的出不去（拖出去弹回、
+## 右键「放到地上」灰着、双击不搬），不想让它打就右键「不参战」；地上的照样能拾进棋盘。
 ## 只有一个按钮「开战」：棋盘上一件会出手的东西都没有时灰掉（打不起来的仗不让开）。这一屏是**必须过的**：不能收起回地图，也走不了 ——
 ## 248：地图上看得见的战斗 / 精英点可以「退回」（退回上一个点、照走一步，这一场留着）
 extends GameScreen
@@ -91,6 +92,7 @@ func open(payload: Dictionary) -> void:
 	_right.add_child(_player_plate_node)
 	_inv = InventoryPanelScript.new()
 	_inv.setup(flow.run, font)
+	_inv.ground_exit_notice = UiText.t("pre.no_drop")     # 249：开战前不丢东西（「不参战」照旧）
 	_right.add_child(_inv)
 	BoardFrame.around(_inv.board_view, PLAYER_FRAME)
 	_right.add_child(_strip_gap())
