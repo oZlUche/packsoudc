@@ -125,6 +125,7 @@ const TYPE_LABELS := {
 	"belt_slots_bonus": "腰带扩格", "smoke_escape": "烟雾：这一场不打", "mend_vitality": "回体力（随身）",     # 147
 	"starting_belt": "开局发随身技能", "tech_belt_grant": "开局发随身技能（科技）", "grant_belt": "给随身技能",     # 160 补一
 	"tech_run_buff": "每级给一条局外 buff", "tech_safe_size": "保险箱扩格",     # 118
+	"tech_facility": "基地铺子（集市 / 铁匠铺）",     # 251
 }
 
 ## 枚举值 → 中文

@@ -1,0 +1,9 @@
+{
+  "id": "smith_shortsword",
+  "output": "shortsword",
+  "inputs": {
+    "hardwood_plank": 1,
+    "iron_ore": 2
+  },
+  "funds": 40
+}

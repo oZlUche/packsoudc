@@ -7,6 +7,7 @@ script = ExtResource("1_52qeb")
 id = &"standard"
 display_name = "标准经济（占位）"
 starting_balance = 20
+shop_sell_ratio = 0.3
 shop_exclude_tags = Array[StringName]([&"treasure", &"supply"])
 bullion_shallow = {
 "gold_nugget": 1,

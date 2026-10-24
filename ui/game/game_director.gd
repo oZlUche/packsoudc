@@ -94,6 +94,7 @@ func _ready() -> void:
 	flow.hunter_defs = HunterSystem.load_all()
 	flow.faith_defs = FaithDef.load_all()
 	flow.recipes = RecipeDef.load_all()
+	flow.smith_recipes = SmithRecipeDef.load_all()     # 251
 	flow.achievement_defs = GameFlow.load_achievements()     # 091
 	flow.tech_defs = techs     # 110
 	flow.help_pages = GameFlow.load_help_pages()     # 114：百科

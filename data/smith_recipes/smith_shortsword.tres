@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_mmuw5"]
+
+[resource]
+script = ExtResource("1_mmuw5")
+id = &"smith_shortsword"
+output = &"shortsword"
+inputs = {
+"hardwood_plank": 1,
+"iron_ore": 2
+}
+funds = 40

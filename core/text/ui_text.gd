@@ -817,7 +817,8 @@ const TEXT := {
 	"hunter.loss_vanish": {"zh": "输了它消失", "en": "it vanishes"},
 	# —— 221 F5a：shop ——
 	"shop.sell_tag": {"zh": "出售区", "en": "Sell box"},
-	"shop.sell_tip": {"zh": "拖进来就卖，回定价的一半", "en": "Drop things here to sell them for half the list price"},
+	"shop.sell_tip": {"zh": "拖进来就卖", "en": "Drop things here to sell them"},
+	"shop.sell_hint": {"zh": "这里只收%s；带回基地能卖%s", "en": "Only %s here; take it back to base to get %s"},
 	"shop.fold_tip": {"zh": "回地图，店还开着（Esc）", "en": "Back to the map; the shop stays open (Esc)"},
 	"shop.leave": {"zh": "离开", "en": "Leave"},
 	"shop.bought": {"zh": "买下了「%s」，花了 %d 币", "en": "Bought \"%s\" for %d coins"},
@@ -1157,6 +1158,36 @@ const TEXT := {
 	"meta.tab_warehouse": {"zh": "仓库", "en": "Warehouse"},     # also the shelf title before counts arrive
 	"meta.tab_sell": {"zh": "出售", "en": "Sell"},
 	"meta.tab_tech": {"zh": "科技", "en": "Tech"},
+	"meta.tab_market": {"zh": "集市", "en": "Market"},
+	"meta.tab_smithy": {"zh": "铁匠铺", "en": "Smithy"},
+	"market.title": {"zh": "集市", "en": "Market"},
+	"market.locked": {"zh": "集市（未开）", "en": "Market (not built)"},
+	"market.locked_tip": {"zh": "在科技页点出「集市」就有了", "en": "Unlock the Market on the Tech page"},
+	"market.restock_tip": {"zh": "每一局回来换一次货；双击或右键买下，买到的进右边仓库", "en": "New stock after every run. Double-click or right-click to buy; purchases go to the Warehouse on the right"},
+	"market.empty": {"zh": "今日没货", "en": "Nothing in stock"},
+	"market.sold_out": {"zh": "已经卖掉了", "en": "Already sold"},
+	"market.no_funds": {"zh": "钱不够", "en": "Not enough coins"},
+	"market.full": {"zh": "仓库放不下", "en": "No room in the Warehouse"},
+	"market.bought": {"zh": "买下「%s」，花 %d 币（剩 %d）", "en": "Bought \"%s\" for %d coins (%d left)"},
+	"market.level_line": {"zh": "集市 %d 格：素材到%s，药、食物、弹药到%s", "en": "Market: %d slots; materials up to %s, remedies, food and ammo up to %s"},
+	"market.level_bag": {"zh": "，另有一格空包", "en": ", plus one empty bag"},
+	"smithy.title": {"zh": "铁匠铺", "en": "Smithy"},
+	"smithy.locked": {"zh": "铁匠铺（未开）", "en": "Smithy (not built)"},
+	"smithy.locked_tip": {"zh": "在科技页点出「铁匠铺」就有了", "en": "Unlock the Smithy on the Tech page"},
+	"smithy.intro": {"zh": "按配方用右边仓库里的素材加钱打造，打好的进仓库；锁住的素材不算", "en": "Forge by recipe from Warehouse materials plus coins; the result goes to the Warehouse. Locked items don't count"},
+	"smithy.forge": {"zh": "打造", "en": "Forge"},
+	"smithy.need_item": {"zh": "%s %d/%d", "en": "%s %d/%d"},
+	"smithy.need_funds": {"zh": "%d 币", "en": "%d coins"},
+	"smithy.line": {"zh": "%s　%s", "en": "%s · %s"},
+	"smithy.line_locked": {"zh": "（铁匠铺 %d 级）", "en": " (Smithy level %d)"},
+	"smithy.need_level": {"zh": "铁匠铺要 %d 级", "en": "Needs Smithy level %d"},
+	"smithy.missing": {"zh": "素材不够", "en": "Not enough materials"},
+	"smithy.no_funds": {"zh": "钱不够", "en": "Not enough coins"},
+	"smithy.full": {"zh": "仓库放不下", "en": "No room in the Warehouse"},
+	"smithy.no_recipe": {"zh": "没有这张配方", "en": "No such recipe"},
+	"smithy.forged": {"zh": "打好了「%s」（剩 %d 币）", "en": "Forged \"%s\" (%d coins left)"},
+	"smithy.cant": {"zh": "「%s」打不了：%s", "en": "Can't forge \"%s\": %s"},
+	"smithy.level_line": {"zh": "能打%s及以下的配方", "en": "Forges recipes up to %s"},
 	"meta.tab_codex": {"zh": "图鉴", "en": "Collection"},
 	"meta.tab_achievements": {"zh": "成就", "en": "Achievements"},
 	"meta.new_run": {"zh": "再来一局", "en": "Another run"},
@@ -1329,6 +1360,14 @@ const TEXT := {
 	"unit.item": {"zh": "%d 件", "en": "%d items"},
 	"unit.item_one": {"zh": "%d 件", "en": "%d item"},
 }
+
+
+## 251：比例写成「几成」（112：说明里不写阿拉伯数字）—— 0.3 →「三成」；英文写百分数
+static func tenths(ratio: float) -> String:
+	if lang != "zh":
+		return "%d%%" % roundi(ratio * 100.0)
+	const DIGITS := ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+	return DIGITS[clampi(roundi(ratio * 10.0), 0, 10)] + "成"
 
 
 ## 取一句；没有的键原样返回

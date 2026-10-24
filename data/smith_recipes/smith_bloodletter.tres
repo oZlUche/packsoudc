@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_cjbqr"]
+
+[resource]
+script = ExtResource("1_cjbqr")
+id = &"smith_bloodletter"
+output = &"bloodletter"
+inputs = {
+"bone_charm_bits": 1,
+"steel_ingot": 1,
+"whetstone": 1
+}
+funds = 90
+level = 2

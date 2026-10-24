@@ -1,0 +1,11 @@
+{
+  "id": "smith_longbow",
+  "output": "longbow",
+  "inputs": {
+    "fine_fur": 1,
+    "ironwood_branch": 2,
+    "rope_coil": 1
+  },
+  "funds": 60,
+  "level": 2
+}

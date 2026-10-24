@@ -1,0 +1,39 @@
+{
+  "id": "market",
+  "display_name": "集市（占位）",
+  "slots_per_level": [
+    4,
+    6,
+    8
+  ],
+  "rarity_cap_per_level": [
+    0,
+    1,
+    2
+  ],
+  "consumable_rarity_cap_per_level": [
+    1,
+    2,
+    2
+  ],
+  "rarity_weights": [
+    40.0,
+    30.0,
+    20.0
+  ],
+  "allowed_tags": [
+    "remedy",
+    "food",
+    "ammo",
+    "material"
+  ],
+  "excluded_tags": [
+    "treasure",
+    "valuable",
+    "bullion",
+    "faith",
+    "keepsake",
+    "token",
+    "sealed"
+  ]
+}

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_qp183"]
+
+[resource]
+script = ExtResource("1_qp183")
+id = &"smith_festering_blade"
+output = &"festering_blade"
+inputs = {
+"steel_ingot": 1,
+"viper_gland": 1,
+"wound_salt": 1
+}
+funds = 150
+level = 3

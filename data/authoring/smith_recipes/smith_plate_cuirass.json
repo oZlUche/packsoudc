@@ -1,0 +1,11 @@
+{
+  "id": "smith_plate_cuirass",
+  "output": "plate_cuirass",
+  "inputs": {
+    "rivet_box": 1,
+    "steel_ingot": 2,
+    "tanned_leather": 1
+  },
+  "funds": 120,
+  "level": 2
+}

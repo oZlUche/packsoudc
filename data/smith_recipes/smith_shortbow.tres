@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_cnj7a"]
+
+[resource]
+script = ExtResource("1_cnj7a")
+id = &"smith_shortbow"
+output = &"shortbow"
+inputs = {
+"ironwood_branch": 1,
+"rope_coil": 1
+}
+funds = 30

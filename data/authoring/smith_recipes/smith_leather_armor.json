@@ -1,0 +1,9 @@
+{
+  "id": "smith_leather_armor",
+  "output": "leather_armor",
+  "inputs": {
+    "beast_hide": 1,
+    "tanned_leather": 2
+  },
+  "funds": 40
+}

@@ -1,0 +1,9 @@
+{
+  "id": "smith_longsword",
+  "output": "longsword",
+  "inputs": {
+    "steel_ingot": 1,
+    "tanned_leather": 1
+  },
+  "funds": 60
+}

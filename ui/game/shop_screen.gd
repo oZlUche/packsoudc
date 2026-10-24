@@ -39,7 +39,7 @@ func open(payload: Dictionary) -> void:
 	lower.add_child(sell_col)
 	var sell_tag := HeaderTag.new(UiText.t("shop.sell_tag"))     # 226 批三：出售区说明换段头签，「拖进来就卖……」进签的悬浮窗
 	sell_tag.mouse_filter = Control.MOUSE_FILTER_PASS
-	sell_tag.tooltip_text = UiText.t("shop.sell_tip")
+	sell_tag.tooltip_text = UiText.t("shop.sell_tip") + "\n" + sell_hint()     # 251：局内三成、基地五成
 	sell_col.add_child(sell_tag)
 	_sell_view = InventoryView.new()
 	_sell_view.label_font = font
@@ -76,10 +76,28 @@ func open(payload: Dictionary) -> void:
 			_say(UiText.t("shop.bought") % [Names.of(def), price])
 			_refresh())
 		_session.sold_item.connect(func(def: ItemDef, gain: int):
-			_say(UiText.t("shop.sold") % [Names.of(def), gain])
+			_say(UiText.t("shop.sold") % [Names.of(def), gain] + _first_sale_hint())
 			_refresh())
 		flow.run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh())
 	_rebuild()
+
+
+## 251：「这里只收三成；带回基地能卖五成」—— 两个数从规则读
+func sell_hint() -> String:
+	var here := _session.rules.shop_sell_ratio if _session != null and _session.rules != null else 0.5
+	return UiText.t("shop.sell_hint") % [UiText.tenths(here), UiText.tenths(flow.sell_ratio())]
+
+
+## 251：第一次在局内卖东西说一次（记在局外的 coach_seen，每个存档位一次）
+const SELL_HINT_SEEN := "shop_sell_hint"
+
+
+## 接在「卖掉了」那句后面；说过了返回空串
+func _first_sale_hint() -> String:
+	if flow.meta == null or flow.meta.coach_seen.has(SELL_HINT_SEEN):
+		return ""
+	flow.meta.coach_seen.append(SELL_HINT_SEEN)
+	return "　" + sell_hint()
 
 
 #region 公开动作

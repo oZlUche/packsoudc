@@ -1,0 +1,15 @@
+{
+  "id": "smith_mithril_sword",
+  "output": "mithril_sword",
+  "inputs": {
+    "fire_crystal_low": 1,
+    "silver_ingot": 2,
+    "steel_ingot": 1
+  },
+  "funds": 200,
+  "level": 3,
+  "note": "秘银没有对应素材，先用银锭 + 下品火晶石占位",
+  "notes": {
+    "en": "There is no mithril material yet; silver ingots and a low fire crystal stand in"
+  }
+}

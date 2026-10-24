@@ -248,6 +248,10 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_faith(data, ctx, report)
 		"recipes":
 			return import_recipe(data, ctx, report)
+		"smith_recipes":
+			return import_smith_recipe(data, ctx, report)
+		"base_rules":
+			return import_market_rules(data, ctx, report)
 		"events":
 			return import_event(data, ctx, report)
 		"chapters":
@@ -873,6 +877,58 @@ static func import_recipe(data: Dictionary, ctx: Context, report: ImportReport) 
 	if not ctx.items.is_empty() and def.output != &"" and not ctx.items.has(def.output):
 		report.error("output", "道具库里没有 %s" % def.output)
 	return def
+
+
+## 251：铁匠铺配方 —— 产物得是道具库里的武器 / 防具 / 盾 / 插件，素材都得在、件数至少 1，钱不为负，级 1 ～ 3
+static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportReport) -> SmithRecipeDef:
+	var def := SmithRecipeDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "铁匠铺配方", report)
+	if def.output == &"":
+		report.error("output", "配方得有产物")
+	elif not ctx.items.is_empty():
+		var out: ItemDef = ctx.items.get(def.output, null)
+		if out == null:
+			report.error("output", "道具库里没有 %s" % def.output)
+		elif not SMITH_OUTPUT_TAGS.any(func(t: StringName) -> bool: return out.tags.has(t)):
+			report.error("output", "铁匠铺只打武器 / 防具 / 盾 / 插件：%s 不是" % def.output)
+	if def.inputs.is_empty():
+		report.error("inputs", "配方至少要一样素材")
+	for key in def.inputs:
+		if int(def.inputs[key]) < 1:
+			report.error("inputs.%s" % key, "件数至少 1")
+		if not ctx.items.is_empty() and not ctx.items.has(StringName(String(key))):
+			report.error("inputs.%s" % key, "道具库里没有 %s" % key)
+	if def.funds < 0:
+		report.error("funds", "钱不能是负的")
+	if def.level < 1 or def.level > 3:
+		report.error("level", "铁匠铺只有 1 ～ 3 级")
+	return def
+
+
+## 251：铁匠铺能打的产物得带其中一个标签
+const SMITH_OUTPUT_TAGS: Array[StringName] = [&"weapon", &"armor", &"shield", &"gear_plug"]
+
+
+## 251：集市的规矩 —— 每级的表等长、格数至少 1、比例在 0 ～ 1、倍数为正
+static func import_market_rules(data: Dictionary, ctx: Context, report: ImportReport) -> MarketRules:
+	var rules := MarketRules.new()
+	_fill(rules, data, "", ctx, report)
+	_require_id(rules.id, "集市规矩", report)
+	var n := rules.slots_per_level.size()
+	if n == 0:
+		report.error("slots_per_level", "至少一级")
+	for field in ["rarity_cap_per_level", "consumable_rarity_cap_per_level"]:
+		if (rules.get(field) as Array).size() != n:
+			report.error(field, "和 slots_per_level 一样长（%d 级）" % n)
+	for i in n:
+		if rules.slots_per_level[i] < 1:
+			report.error("slots_per_level[%d]" % i, "至少 1 格")
+	if rules.material_share < 0.0 or rules.material_share > 1.0:
+		report.error("material_share", "在 0 ～ 1 之间")
+	if rules.price_mult <= 0.0:
+		report.error("price_mult", "得是正数")
+	return rules
 
 
 static func import_faith(data: Dictionary, ctx: Context, report: ImportReport) -> FaithDef:

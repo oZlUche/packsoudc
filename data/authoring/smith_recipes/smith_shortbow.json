@@ -1,0 +1,9 @@
+{
+  "id": "smith_shortbow",
+  "output": "shortbow",
+  "inputs": {
+    "ironwood_branch": 1,
+    "rope_coil": 1
+  },
+  "funds": 30
+}

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_4tgsr"]
+
+[resource]
+script = ExtResource("1_4tgsr")
+id = &"smith_plate_cuirass"
+output = &"plate_cuirass"
+inputs = {
+"rivet_box": 1,
+"steel_ingot": 2,
+"tanned_leather": 1
+}
+funds = 120
+level = 2

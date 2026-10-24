@@ -1,0 +1,9 @@
+{
+  "id": "smith_warhammer",
+  "output": "warhammer",
+  "inputs": {
+    "iron_ore": 2,
+    "oak_log": 1
+  },
+  "funds": 50
+}

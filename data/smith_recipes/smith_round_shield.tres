@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_jmuu8"]
+
+[resource]
+script = ExtResource("1_jmuu8")
+id = &"smith_round_shield"
+output = &"round_shield"
+inputs = {
+"copper_ingot": 1,
+"hardwood_plank": 1
+}
+funds = 40
