@@ -10,9 +10,10 @@
   "rarity": 4,
   "value": 800,
   "tags": [
-    "treasure",
-    "relic",
-    "metal"
+    "material",
+    "magic",
+    "treasure"
   ],
+  "material": "metal",
   "requires_unlock": "ach_boss"
 }

@@ -1,0 +1,12 @@
+{
+  "id": "trinket",
+  "display_name": "饰物",
+  "display_names": {
+    "en": "Trinket"
+  },
+  "description": "摆在包里就生效的小件：不出手、不穿、不吃，护符、符号、种子都是。",
+  "descriptions": {
+    "en": "A small piece that works just by sitting in your pack: not wielded, worn or eaten. Charms, sigils and seeds."
+  },
+  "category": "kind"
+}

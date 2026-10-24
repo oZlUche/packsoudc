@@ -10,12 +10,11 @@
   ],
   "rarity": 1,
   "tags": [
-    "gear",
     "armor",
     "barbarian",
-    "nature",
-    "leather"
+    "nature"
   ],
+  "material": "leather",
   "combat": {
     "base_stats": {
       "max_armor": 30

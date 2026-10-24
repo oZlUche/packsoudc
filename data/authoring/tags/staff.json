@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Staff: just a stick on its own; deals elemental damage once a crystal sits in its load slot."
   },
-  "category": "purpose"
+  "category": "internal",
+  "internal": true
 }

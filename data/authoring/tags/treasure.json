@@ -4,10 +4,11 @@
   "display_names": {
     "en": "Treasure"
   },
-  "description": "值钱、不参战的东西。",
+  "description": "（内部）不从搜索、商店、敌人背负里随机出的珍品：护符、工艺摆件、果果之心……只从掉落与宝箱来。",
   "descriptions": {
-    "en": "Valuable, does not fight."
+    "en": "(Internal) A rare find that never comes from searches, shops or what enemies carry: charms, ornaments, the Heart of Guoguo. Only from drops and chests."
   },
   "tip": false,
-  "category": "purpose"
+  "category": "internal",
+  "internal": true
 }

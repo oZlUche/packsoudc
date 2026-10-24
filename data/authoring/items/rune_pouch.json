@@ -14,9 +14,9 @@
   ],
   "rarity": 2,
   "tags": [
-    "cloth",
     "magic"
   ],
+  "material": "cloth",
   "is_bag": true,
   "bag_accept_tags": [
     "crystal",

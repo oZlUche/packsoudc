@@ -68,7 +68,7 @@ static func run_character_pipeline(t: TestCase) -> void:
 	t.eq(ctx.characters.has(&"probe"), true, "登记进了上下文")
 
 	t.check(not _import({"id": "x", "starting_bags": []}, ctx).ok(), "没有初始包报错")
-	t.check(not _import({"id": "x", "starting_bags": ["pistol"]}, ctx).ok(), "初始包不是包报错")
+	t.check(not _import({"id": "x", "starting_bags": ["knife"]}, ctx).ok(), "初始包不是包报错")
 	t.check(not _import({"id": "x", "starting_bags": ["no_such_bag"]}, ctx).ok(), "找不到的包报错")
 	t.check(_import({"id": "x", "starting_bags": ["no_such_bag"]}, ContentImporter.Context.new()).ok(), "单独导（上下文空）不对着道具查")
 	t.check(not _import({"id": "x", "starting_bags": ["bag_leather"], "board_size": [0, 3]}, ctx).ok(), "棋盘 0 宽报错")
@@ -78,13 +78,13 @@ static func run_character_pipeline(t: TestCase) -> void:
 
 	# 上限是字段，默认不限
 	var free := CharacterDef.new()
-	var three: Array = [c.items.get_def(&"medkit"), c.items.get_def(&"medkit"), c.items.get_def(&"rifle")]
+	var three: Array = [c.items.get_def(&"salve"), c.items.get_def(&"salve"), c.items.get_def(&"mithril_sword")]
 	t.eq(free.carry_problem(three), "", "默认不限：三件随便带")
 	t.ne(back.carry_problem(three), "", "最多 2 件：三件带不了")
-	var rare := c.items.get_def(&"rifle")
-	t.check(rare != null and rare.rarity > 1, "步枪的稀有度高于 1（数据）")
-	t.ne(back.carry_problem([rare]), "", "稀有度上限 1：步枪带不了")
-	t.eq(back.carry_problem([c.items.get_def(&"medkit")]), "", "医疗包（稀有度 %d）带得了" % c.items.get_def(&"medkit").rarity)
+	var rare := c.items.get_def(&"mithril_sword")
+	t.check(rare != null and rare.rarity > 1, "秘银剑的稀有度高于 1（数据；250：步枪删了）")
+	t.ne(back.carry_problem([rare]), "", "稀有度上限 1：秘银剑带不了")
+	t.eq(back.carry_problem([c.items.get_def(&"salve")]), "", "伤药（稀有度 %d）带得了" % c.items.get_def(&"salve").rarity)
 
 	# 作者文件是往返不动点、资产在、装得回来
 	var dir: String = ContentPaths.KINDS["characters"][0]
@@ -141,8 +141,8 @@ static func run_start_with_character(t: TestCase) -> void:
 	var staged := GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
 	for id in ch.starting_bags:
 		staged.try_add(ItemInstance.create(c.items.get_def(id), 0), true)
-	var medkit := ItemInstance.create(c.items.get_def(&"medkit"), 0)
-	t.check(staged.try_add(medkit, true), "医疗包放进了初始包")
+	var salve := ItemInstance.create(c.items.get_def(&"salve"), 0)
+	t.check(staged.try_add(salve, true), "伤药放进了初始包")
 	var layout := RunState.layout_of(staged)
 	t.eq(layout.size(), ch.starting_bags.size() + 1, "layout 一件一行")
 	t.eq(String(layout[0]["id"]), String(ch.starting_bags[0]), "包排在前面")
@@ -373,7 +373,7 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	for gch in flow.chapters:
 		if gch.grants_unlock != &"":
 			flow.meta.grant_unlock(gch.grants_unlock)
-	flow.meta.grant([flow.items.get_def(&"medkit")])
+	flow.meta.grant([flow.items.get_def(&"salve")])
 	var n: int = flow.meta.warehouse.item_count()
 	t.check(n >= 1, "仓库里有东西（%d 件）" % n)
 	var wh_uid: int = (flow.meta.warehouse.items()[0] as ItemInstance).uid
@@ -381,7 +381,7 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	var back := GridInventory.new(RunState.BOARD_SIZE, MetaState.BOARD_ID, false)
 	var uids: Array[int] = []
 	var origins: Dictionary = {}
-	for id in [&"medkit", &"medkit", &"rifle"]:
+	for id in [&"salve", &"salve", &"mithril_sword"]:
 		var inst := ItemInstance.create(flow.items.get_def(id), 0)
 		inst.uid = flow.meta.allocate_uid()
 		t.check(back.try_add(inst, true), "%s 摆上带回来的棋盘" % id)
@@ -455,7 +455,7 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 		t.eq(game.base().screen, GameFlow.Screen.MAP, "→ 地图")
 		var found := 0
 		for inst in flow.run.board.items():
-			if (inst as ItemInstance).def.id == &"medkit":
+			if (inst as ItemInstance).def.id == &"salve":
 				found += 1
 		t.check(found >= 1, "带上的那件进了一局")
 		t.check(flow.meta.board == null, "留在地上的没了：带回来的棋盘清了")

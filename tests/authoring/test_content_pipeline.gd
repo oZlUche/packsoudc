@@ -239,8 +239,7 @@ static func run_weapon_stamina_rules(t: TestCase) -> void:
 			for e in r.errors:
 				bad.append("%s %s" % [f, e["message"]])
 	t.check(bad.is_empty(), "data/authoring/items 全部满足武器 / 耐力规矩：%s" % ", ".join(bad))
-	var crowbar = JSON.parse_string(FileAccess.get_file_as_string("res://data/authoring/items/crowbar.json"))
-	t.check((crowbar["tags"] as Array).has("weapon"), "撬棍带武器标签（作者定）")
+	t.check(not FileAccess.file_exists("res://data/authoring/items/crowbar.json") and IdAliases.RETIRED_ITEMS.has(&"crowbar"), "撬棍随现代道具删了、进改名表折钱（250）")
 
 	var desc := Glossary.describe_buff(ContentImporter.import_buff({"id": "t_brief", "stackable": false, "duration_sec": 3.0}, _ctx(), _report()))
 	var plain := Glossary.strip_bbcode(desc)

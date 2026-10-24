@@ -14,7 +14,7 @@
   "rarity": 2,
   "tags": [
     "material",
-    "crafted",
-    "metal"
-  ]
+    "crafted"
+  ],
+  "material": "metal"
 }

@@ -15,9 +15,9 @@
   "tags": [
     "shield",
     "heavy",
-    "imperial",
-    "metal"
+    "imperial"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "block": 5

@@ -18,9 +18,9 @@
   "tags": [
     "weapon",
     "melee",
-    "bleed",
-    "metal"
+    "bleed"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "damage": 15

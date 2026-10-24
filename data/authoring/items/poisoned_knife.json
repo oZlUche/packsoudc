@@ -14,9 +14,9 @@
     "weapon",
     "melee",
     "rapid",
-    "poison",
-    "metal"
+    "poison"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "damage": 3

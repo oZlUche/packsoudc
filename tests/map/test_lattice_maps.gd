@@ -436,7 +436,7 @@ static func run_layout_and_play(t: TestCase) -> void:
 			ch.map_source.generator_config = tc
 		else:
 			ch.map_source.generator_config = HourglassMapConfig.sample()
-		var s := RunState.start(ch, 5, items, enemies, sets, [&"bag_leather", &"rifle"] as Array[StringName])
+		var s := RunState.start(ch, 5, items, enemies, sets, [&"bag_leather", &"shortsword"] as Array[StringName])
 		t.not_null(s, "%s：一局开得起来" % kind)
 		if s == null:
 			continue

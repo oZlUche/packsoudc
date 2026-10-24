@@ -154,7 +154,7 @@ func _seed_start() -> void:
 		return
 	_board.begin_batch()
 	_board.place(ItemInstance.create(leather), Vector2i(0, 0), 0)
-	for id in [&"pistol", &"mag"]:
+	for id in [&"shortbow", &"arrows"]:
 		var def := _db.get_def(id)
 		if def != null:
 			_board.try_add(ItemInstance.create(def))
@@ -197,7 +197,7 @@ func demo_fill() -> void:
 	var belt := _db.get_def(&"belt_potion")
 	if belt != null:
 		_board.place(ItemInstance.create(belt), Vector2i(2, 2), 0)
-	for id in [&"rifle", &"crowbar", &"battery", &"stim"]:
+	for id in [&"longbow", &"knife", &"copper_ingot", &"salve"]:
 		var def := _db.get_def(id)
 		if def != null:
 			_board.try_add(ItemInstance.create(def))

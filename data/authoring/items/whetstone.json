@@ -16,7 +16,7 @@
   "tags": [
     "material",
     "crafted",
-    "stone",
     "supply"
-  ]
+  ],
+  "material": "stone"
 }

@@ -22,4 +22,5 @@ descriptions = {
 "en": "Cool to chew. Wakes you up."
 }
 shape = SubResource("Resource_lq6ee")
-tags = Array[StringName]([&"material", &"nature", &"herb"])
+tags = Array[StringName]([&"material", &"nature"])
+material = "herb"

@@ -11,9 +11,9 @@ const DEFAULT := &"default"
 @export var display_name: String = ""
 @export var display_names: Dictionary = {}
 @export_multiline var description: String = ""
-## 按材质（171 的 material 类标签）
+## 按材质（250：[member ItemDef.material] 字段；表里的本源三行 crafted / nature / magic 仍认标签）
 @export var material: Array[ForgeEntry] = []
-## 按用途（purpose 类标签）
+## 按用途（类别标签）
 @export var purpose: Array[ForgeEntry] = []
 ## 按稀有度（key 写 "0".."4"）
 @export var rarity: Array[ForgeEntry] = []
@@ -44,6 +44,6 @@ static func find(rows: Array[ForgeEntry], key: StringName) -> ForgeEntry:
 static func _by_tags(rows: Array[ForgeEntry], def: ItemDef) -> ForgeEntry:
 	if def != null:
 		for e in rows:
-			if e != null and e.key != DEFAULT and def.tags.has(e.key):
+			if e != null and e.key != DEFAULT and def.has_tag(e.key):     # 250：材质行认 [member ItemDef.material]，本源 / 用途行认标签
 				return e
 	return find(rows, DEFAULT)

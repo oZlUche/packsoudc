@@ -17,7 +17,7 @@ amount = 5.0
 [sub_resource type="Resource" id="Resource_hojug"]
 script = ExtResource("3_sl3hj")
 grant_cells = Array[Vector2i]([Vector2i(0, -1)])
-grant_filter = Array[StringName]([&"gear"])
+grant_filter = Array[StringName]([&"armor", &"shield"])
 grant_mods = Array[ExtResource("1_8ki2x")]([SubResource("Resource_pmygl")])
 
 [sub_resource type="Resource" id="Resource_wt76x"]
@@ -26,11 +26,12 @@ script = ExtResource("8_cjqr8")
 [resource]
 script = ExtResource("7_5db6x")
 id = &"gambeson"
-display_name = "贴身内甲"
+display_name = "棉甲"
 display_names = {
 "en": "Gambeson"
 }
 shape = SubResource("Resource_wt76x")
 rarity = 1
-tags = Array[StringName]([&"gear_plug", &"cloth"])
+tags = Array[StringName]([&"armor"])
+material = "cloth"
 adjacency = SubResource("Resource_hojug")

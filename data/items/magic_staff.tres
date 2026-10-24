@@ -68,6 +68,7 @@ descriptions = {
 }
 shape = SubResource("Resource_vikiy")
 rarity = 1
-tags = Array[StringName]([&"weapon", &"melee", &"staff", &"magic", &"wood"])
+tags = Array[StringName]([&"weapon", &"melee", &"staff", &"magic"])
+material = "wood"
 combat = SubResource("Resource_b04a4")
 adjacency = SubResource("Resource_1ekhf")

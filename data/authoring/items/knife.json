@@ -11,9 +11,9 @@
   "tags": [
     "weapon",
     "melee",
-    "rapid",
-    "metal"
+    "rapid"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "damage": 3

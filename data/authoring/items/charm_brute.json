@@ -10,12 +10,11 @@
   "rarity": 3,
   "value": 200,
   "tags": [
+    "trinket",
     "treasure",
-    "faith",
-    "faith:brute",
-    "bone",
-    "faith_anchor"
+    "faith:brute"
   ],
+  "material": "bone",
   "faith_bonuses": [
     {
       "rules": [

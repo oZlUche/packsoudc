@@ -23,5 +23,5 @@ descriptions = {
 "en": "Rough but sturdy. Stuff anything in it."
 }
 shape = SubResource("Resource_ou2vr")
-tags = Array[StringName]([&"cloth"])
+material = "cloth"
 is_bag = true

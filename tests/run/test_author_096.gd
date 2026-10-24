@@ -13,24 +13,24 @@ const Support := preload("res://tests/run/flow_support.gd")
 static func run_tag_data(t: TestCase) -> void:
 	t.begin("096 · 标签是内容：data/tags 装回 TagRegistry；名字 / 说明按语言；没登记的原词；faith:<id> 写成「信仰：神名」；标签词条")
 	TagRegistry.reset()
-	t.check(TagRegistry.ids().size() >= 39, "装回了 %d 个标签" % TagRegistry.ids().size())
-	t.check(TagRegistry.get_def(&"weapon") != null and TagRegistry.get_def(&"metal") != null and TagRegistry.get_def(&"rapid") != null, "武器 / 金属 / 快攻都登记了")
+	t.check(TagRegistry.ids().size() >= 36, "装回了 %d 个标签" % TagRegistry.ids().size())
+	t.check(TagRegistry.get_def(&"weapon") != null and TagRegistry.get_def(&"crafted") != null and TagRegistry.get_def(&"rapid") != null, "武器 / 工艺 / 快攻都登记了")
 	t.eq(TagRegistry.name_of(&"weapon"), "武器", "中文名")
 	t.eq(TagRegistry.name_of(&"weapon", "en"), "Weapon", "英文名")
 	t.check(TagRegistry.describe(&"weapon") != "" and TagRegistry.describe(&"weapon", "en") != TagRegistry.describe(&"weapon"), "两种语言的说明")
 	t.eq(TagRegistry.name_of(&"zz_nobody"), "zz_nobody", "没登记的原词")
 	t.eq(TagRegistry.describe(&"zz_nobody"), "", "没登记的没说明")
-	t.eq(Glossary.tag_name(&"metal"), "金属", "Glossary.tag_name 走数据")
+	t.eq(Glossary.tag_name(&"crafted"), "工艺", "Glossary.tag_name 走数据")
 	t.check(Glossary.tag_name(&"faith:brute").begins_with("信仰：") and Glossary.tag_name(&"faith:brute").contains("蛮神"), "信仰对象标签：%s" % Glossary.tag_name(&"faith:brute"))
 	# 107（作者定）：武器、近战这类一看就懂的标签 tip 关了 —— 不出词条，但说明文字照在
-	var terms := Glossary.tag_terms([&"weapon", &"zz_nobody", &"metal"])
-	t.check(terms.has("金属") and not terms.has("武器") and terms.size() == 1, "只有 tip 开着的标签成词条：%s" % str(terms.keys()))
+	var terms := Glossary.tag_terms([&"weapon", &"zz_nobody", &"crafted"])
+	t.check(terms.has("工艺") and not terms.has("武器") and terms.size() == 1, "只有 tip 开着的标签成词条：%s" % str(terms.keys()))
 	t.check(TagRegistry.describe(&"weapon") != "" and not TagRegistry.tip_of(&"weapon"), "武器的说明文字保留，只是不弹")
-	t.check(TagRegistry.tip_of(&"metal"), "金属写了哪位神看重它，照弹")
+	t.check(TagRegistry.tip_of(&"crafted"), "工艺写了哪位神看重它，照弹")
 	t.check(not TagRegistry.tip_of(&"zz_nobody"), "没登记的标签没有词条")
 	var saved := UiText.lang
 	UiText.lang = "en"
-	t.eq(Glossary.tag_name(&"metal"), "Metal", "英文模式：Metal")
+	t.eq(Glossary.tag_name(&"crafted"), "Crafted", "英文模式：Crafted")
 	t.check(Glossary.tag_name(&"faith:brute").begins_with("Faith:"), "英文模式的信仰标签：%s" % Glossary.tag_name(&"faith:brute"))
 	t.eq(Glossary.stat_name(&"damage"), "Damage", "属性名也有英文")
 	t.eq(Glossary.stat_name(&"zz_stat"), "zz_stat", "没登记的属性原词")
@@ -71,19 +71,20 @@ static func run_import_tags_and_presets(t: TestCase) -> void:
 	t.begin("096 · 导入器：标签定义要 id 与名字（171：还要大类）；道具带没登记的标签报错（171，原来只警告）；伤害类型定义；预设套不用带包、非预设仍要")
 	var ctx := ContentImporter.Context.new()
 	var report := ImportReport.new()
-	var tag := ContentImporter.import_tag({"id": "weapon", "display_name": "武器", "display_names": {"en": "Weapon"}, "description": "x", "category": "purpose"}, ctx, report)
-	ContentImporter.import_tag({"id": "faith", "display_name": "信仰", "category": "origin"}, ctx, report)
+	var tag := ContentImporter.import_tag({"id": "weapon", "display_name": "武器", "display_names": {"en": "Weapon"}, "description": "x", "category": "kind"}, ctx, report)
+	ContentImporter.import_tag({"id": "imperial", "display_name": "帝国", "category": "affiliation"}, ctx, report)
+	ContentImporter.import_tag({"id": "melee", "display_name": "近战", "category": "internal"}, ctx, report)
 	t.check(report.ok() and tag.id == &"weapon" and ctx.tags.has(&"weapon"), "标签导入、登记进上下文")
 	var dumped := ContentExporter.export_tag(tag)
 	t.check(dumped.get("display_name") == "武器" and (dumped.get("display_names") as Dictionary).get("en") == "Weapon", "导出往返")
 	var bad := ImportReport.new()
-	ContentImporter.import_tag({"id": "", "display_name": "", "category": "purpose"}, ctx, bad)
+	ContentImporter.import_tag({"id": "", "display_name": "", "category": "kind"}, ctx, bad)
 	t.eq(bad.errors.size(), 2, "没 id、没名字各一条错误")
 	var bad2 := ImportReport.new()
 	ContentImporter.import_tag({"id": "faith:x", "display_name": "x"}, ctx, bad2)
 	t.check(not bad2.ok(), "带冒号的 id 拦住")
 	var r2 := ImportReport.new()
-	ContentImporter.import_item({"id": "probe", "display_name": "探", "shape": ["1"], "tags": ["weapon", "zz_unknown", "faith", "faith:brute"],
+	ContentImporter.import_item({"id": "probe", "display_name": "探", "shape": ["1"], "tags": ["weapon", "melee", "zz_unknown", "imperial", "faith:brute"],
 		"combat": {"rules": [{"trigger": {"type": "on_schedule"}, "cadence": {"type": "cooldown", "seconds": 1.0}, "effects": [{"type": "deal_damage"}]}]}}, ctx, r2)
 	t.eq(r2.errors.size(), 1, "171：没登记的标签是错误，只对 zz_unknown 一条（faith:<id> 不算）：%s" % r2.to_text())
 	var r3 := ImportReport.new()
@@ -107,19 +108,19 @@ static func run_import_tags_and_presets(t: TestCase) -> void:
 static func run_tooltip_tags(t: TestCase) -> void:
 	t.begin("096 · 道具悬浮窗：标签按名字写、标签的说明是词条；包的准入标签也按名字")
 	var c := NodeScreens._content()
-	var knife := ItemInstance.create(c.items.get_def(&"knife"))
-	var full := ItemTooltip.describe_full(knife)
+	var ingot := ItemInstance.create(c.items.get_def(&"copper_ingot"))
+	var full := ItemTooltip.describe_full(ingot)
 	var text := Glossary.strip_bbcode(String(full["text"]))
 	var head := String(full["head"])
-	var at := ["weapon", "melee", "metal"].map(func(id): return head.find("term:tag:%s]" % id))
-	t.check(at[0] >= 0 and at[0] < at[1] and at[1] < at[2] and not head.contains("rapid"), "副行照样列出标签（107：不弹词条不等于不显示；快攻是内部标签不列；171：按大类排；193 补充三起画成图标）：%s" % str(at))
+	var at := ["material", "crafted"].map(func(id): return head.find("term:tag:%s]" % id))
+	t.check(at[0] >= 0 and at[0] < at[1] and not head.contains("supply"), "副行照样列出标签（107：不弹词条不等于不显示；建材是内部标签不列；250：类别 → 本源；193 补充三起画成图标）：%s" % str(at))
 	var terms: Dictionary = full["terms"]
-	t.eq(String((terms.get("tag:weapon", {}) as Dictionary).get("name", "")), "武器", "图标的词条按数据里的名字")
+	t.eq(String((terms.get("tag:material", {}) as Dictionary).get("name", "")), "素材", "图标的词条按数据里的名字")
 	var with_text: Array[String] = []
 	for k in terms:
 		if String(k).begins_with("tag:") and String((terms[k] as Dictionary)["text"]) != "":
 			with_text.append(String((terms[k] as Dictionary)["name"]))
-	t.check(with_text.size() == 1 and with_text[0] == "金属", "107：只有 tip 开着的标签带说明：%s" % str(with_text))
+	t.check(with_text.size() == 1 and with_text[0] == "工艺", "107：只有 tip 开着的标签带说明：%s" % str(with_text))
 
 
 static func run_faith_bonus_lit(t: TestCase) -> void:
@@ -229,7 +230,7 @@ static func frame_property_form_pickers(t: TestCase, root: Window) -> void:
 	var saved := UiText.lang
 	UiText.lang = "zh"
 	var known := PropertyForm.known_tags()
-	t.check(known.has("weapon") and known.has("rapid") and known.has("gear_plug"), "已知标签 = 登记过的（%d 个）" % known.size())
+	t.check(known.has("weapon") and known.has("rapid") and known.has("trinket"), "已知标签 = 登记过的（%d 个）" % known.size())
 	t.eq(known.size(), TagRegistry.ids().size(), "171：不再扫内容里用过的（没登记的导入就报错）")
 	t.check(not known.any(func(k: String) -> bool: return k.begins_with("faith:")), "faith:<id> 不列")
 	t.eq(PropertyForm.tag_label("weapon"), "武器 (weapon)", "标签的显示文字")
@@ -254,8 +255,8 @@ static func frame_property_form_pickers(t: TestCase, root: Window) -> void:
 		var ob: OptionButton = picker.get_meta("tag_options")
 		var choices: Array = picker.get_meta("tag_choices")
 		t.eq(ob.item_count, known.size() + PropertyForm.tag_groups().size() + 1, "下拉 = 已知标签 + 每类一个分组标题 + 第一项提示")
-		ob.item_selected.emit(choices.find("metal"))
-		t.check(def.tags.has(&"metal") and def.tags.has(&"weapon"), "选一个就追加：%s" % str(def.tags))
+		ob.item_selected.emit(choices.find("fire"))
+		t.check(def.tags.has(&"fire") and def.tags.has(&"weapon"), "选一个就追加：%s" % str(def.tags))
 		ob.item_selected.emit(choices.find("weapon"))
 		t.eq(def.tags.size(), 2, "已有的不重复加")
 	form.queue_free()

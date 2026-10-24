@@ -8,10 +8,10 @@
     "1"
   ],
   "tags": [
-    "nature",
     "food",
-    "flesh"
+    "nature"
   ],
+  "material": "flesh",
   "combat": {
     "base_stats": {
       "max_stamina": 40,

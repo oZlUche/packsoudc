@@ -32,5 +32,6 @@ descriptions = {
 "en": "Smoked black. Salty and savory to bite."
 }
 shape = SubResource("Resource_jdc8n")
-tags = Array[StringName]([&"nature", &"food", &"flesh"])
+tags = Array[StringName]([&"food", &"nature"])
+material = "flesh"
 combat = SubResource("Resource_tkr1f")

@@ -14,12 +14,11 @@
   "rarity": 5,
   "value": 100000,
   "tags": [
-    "magic",
-    "gem",
     "crystal",
-    "valuable",
+    "magic",
     "treasure"
   ],
+  "material": "gem",
   "dormant_keeps_combat": false,
   "adjacency": {
     "feed_mods": [

@@ -10,12 +10,12 @@
   "rarity": 1,
   "value": 15,
   "tags": [
-    "reagent",
     "material",
+    "reagent",
     "crafted",
-    "poison",
-    "clay"
+    "poison"
   ],
+  "material": "clay",
   "combat": {
     "rules": [
       {

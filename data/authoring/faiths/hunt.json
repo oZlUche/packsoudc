@@ -28,7 +28,7 @@
     },
     {
       "type": "first_place",
-      "tag": "trophy",
+      "tag": "beast_part",
       "rarity_pow": true,
       "plus": 1
     }
@@ -36,20 +36,13 @@
   "offerings": [
     {
       "tags": [
-        "flesh",
-        "bone"
-      ],
-      "multiplier": 5.0
-    },
-    {
-      "tags": [
-        "trophy"
+        "beast_part"
       ],
       "multiplier": 10.0
     },
     {
       "tags": [
-        "leather"
+        "food"
       ],
       "multiplier": 5.0
     }

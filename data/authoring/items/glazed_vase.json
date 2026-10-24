@@ -15,7 +15,7 @@
   "rarity": 2,
   "tags": [
     "material",
-    "crafted",
-    "clay"
-  ]
+    "crafted"
+  ],
+  "material": "clay"
 }

@@ -27,23 +27,22 @@ static func run(t: TestCase) -> void:
 		t.check(def.shape != null and def.shape.cell_count() > 0, "定义 '%s' 应有非空形状" % id)
 		t.check(def.rarity >= 0, "定义 '%s' 稀有度应非负" % id)
 
-	# 抽查几个已知资产，防止生成脚本被改坏
-	var rifle := db.get_def(&"rifle")
-	t.not_null(rifle, "应存在 rifle")
-	t.eq(rifle.display_name, "步枪", "rifle 显示名")
-	t.eq(rifle.shape.cell_count(), 3, "步枪占 3 格")
-	t.eq(rifle.shape.size_rotated(0), Vector2i(1, 3), "步枪 rot0 为 1x3")
-	t.eq(rifle.shape.size_rotated(1), Vector2i(3, 1), "步枪 rot1 为 3x1")
-	t.check(rifle.tags.has(&"weapon"), "步枪应带 weapon 标签")
+	# 抽查几个已知资产，防止生成脚本被改坏（250：现代道具删了，换成剑与魔法的）
+	var sword := db.get_def(&"shortsword")
+	t.not_null(sword, "应存在 shortsword")
+	t.eq(sword.display_name, "制式短剑", "shortsword 显示名")
+	t.eq(sword.shape.cell_count(), 3, "短剑占 3 格")
+	t.eq(sword.shape.size_rotated(0), Vector2i(1, 3), "短剑 rot0 为 1x3")
+	t.eq(sword.shape.size_rotated(1), Vector2i(3, 1), "短剑 rot1 为 3x1")
+	t.check(sword.tags.has(&"weapon"), "短剑应带 weapon 标签")
 
-	var core := db.get_def(&"core")
-	t.not_null(core, "应存在 core")
-	t.eq(core.shape.cell_count(), 5, "能量核心为十字五格")
-	t.eq(core.shape.size_rotated(0), Vector2i(3, 3), "十字包围盒 3x3")
-	t.eq(core.shape.distinct_rotation_count(), 1, "十字四向对称，只有 1 种可辨朝向")
+	var dice := db.get_def(&"bone_dice")
+	t.not_null(dice, "应存在 bone_dice")
+	t.eq(dice.shape.cell_count(), 1, "骨骰子一格")
+	t.eq(dice.shape.distinct_rotation_count(), 1, "单格四向对称，只有 1 种可辨朝向")
 
-	var crowbar := db.get_def(&"crowbar")
-	t.eq(crowbar.shape.distinct_rotation_count(), 4, "L 形撬棍有 4 种可辨朝向")
+	var cleaver := db.get_def(&"cleaver")
+	t.eq(cleaver.shape.distinct_rotation_count(), 4, "L 形剁刀有 4 种可辨朝向")
 
 	# --- 包体资产 ---
 	var bag_count := 0
@@ -62,7 +61,7 @@ static func run(t: TestCase) -> void:
 	var belt := db.get_def(&"belt_potion")
 	t.check(belt.is_bag, "药水带应标记为包体")
 	t.eq(belt.bag_accept_tags, [&"remedy", &"food"] as Array[StringName], "药水带收药剂与食物（107 §2.6）")
-	t.check(not db.get_def(&"rifle").is_bag, "步枪不是包体")
+	t.check(not db.get_def(&"shortsword").is_bag, "短剑不是包体")
 
 	# --- 真实资产在棋盘上跑一遍完整流程 ---
 	var board := GridInventory.new(Vector2i(7, 9), 1, true)
@@ -70,15 +69,15 @@ static func run(t: TestCase) -> void:
 	t.check(board.try_add(ItemInstance.create(leather)), "皮革包可放上棋盘")
 	t.eq(board.usable_cell_count(), 9, "放包后有 9 格可用")
 
-	# 显式摆放，不靠遍历顺序 —— 自动装填是贪心的，先遇到 3x2 的防弹衣
+	# 显式摆放，不靠遍历顺序 —— 自动装填是贪心的，先遇到大件
 	# 就会占掉包的一大块，后面塞不进几件，那样测不出东西
-	t.check(board.try_add(ItemInstance.create(db.get_def(&"mag"))), "弹匣 1 格可入包")
-	t.check(board.try_add(ItemInstance.create(db.get_def(&"battery"))), "电池 1 格可入包")
-	t.check(board.try_add(ItemInstance.create(db.get_def(&"pistol"))), "手枪 2 格可入包")
+	t.check(board.try_add(ItemInstance.create(db.get_def(&"bone_dice"))), "骨骰子 1 格可入包")
+	t.check(board.try_add(ItemInstance.create(db.get_def(&"bone_charm_bits"))), "碎骨串 1 格可入包")
+	t.check(board.try_add(ItemInstance.create(db.get_def(&"knife"))), "匕首 2 格可入包")
 	t.eq(board.free_cell_count(), 5, "9 格用掉 4 格，剩 5 格")
 	t.check(
-		not board.try_add(ItemInstance.create(db.get_def(&"high_tier_armor"))),
-		"3x3 的高级贴身甲在只剩 5 格时放不进"
+		not board.try_add(ItemInstance.create(db.get_def(&"beast_hide"))),
+		"3x2 的生兽皮在只剩 5 格时放不进"
 	)
 
 	# --- 包体准入：药水带只收药剂与食物 ---
@@ -86,16 +85,16 @@ static func run(t: TestCase) -> void:
 	t.check(board.place(belt_inst, Vector2i(4, 0), 0), "药水带放在棋盘空处")
 	t.eq(board.usable_cell_count(), 12, "两个包共 12 格")
 	t.check(
-		not board.place(ItemInstance.create(db.get_def(&"mag")), Vector2i(4, 0), 0),
-		"弹匣不是药剂也不是食物，进不了药水带"
+		not board.place(ItemInstance.create(db.get_def(&"bone_dice")), Vector2i(4, 0), 0),
+		"骨骰子不是药剂也不是食物，进不了药水带"
 	)
 	t.check(
-		board.place(ItemInstance.create(db.get_def(&"stim")), Vector2i(4, 0), 0),
-		"兴奋剂是药剂，可进药水带"
+		board.place(ItemInstance.create(db.get_def(&"salve")), Vector2i(4, 0), 0),
+		"伤药是药剂，可进药水带"
 	)
 	t.check(
-		not board.place(ItemInstance.create(db.get_def(&"medkit")), Vector2i(4, 1), 0),
-		"医疗包 2x2 会伸出 1 格宽的药水带，应被拒绝"
+		not board.place(ItemInstance.create(db.get_def(&"sealed_wine_jar")), Vector2i(4, 1), 0),
+		"封泥酒坛 2x2 会伸出 1 格宽的药水带，应被拒绝"
 	)
 
 	# 装进去的内容能完整往返

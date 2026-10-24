@@ -661,7 +661,7 @@ func _on_refreshed() -> void:
 
 ## 截图工具的钩子：打开一件既有邻接标记又有战斗数据的道具
 func demo_fill() -> void:
-	if _ids.has("mag"):
-		_open("mag")
-		_select_in_list("mag")
+	if _ids.has("arrows"):
+		_open("arrows")
+		_select_in_list("arrows")
 		_set_layer(ShapeEditor.Layer.GRANT)

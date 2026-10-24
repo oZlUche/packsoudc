@@ -24,5 +24,5 @@ base_stats = {
 "max_hp": 46
 }
 signature = Array[StringName]([&"round_shield"])
-item_tags = Array[StringName]([&"imperial", &"shield", &"gear", &"remedy"])
+item_tags = Array[StringName]([&"imperial", &"shield", &"armor", &"remedy"])
 builds = Array[ExtResource("1_obb67")]([SubResource("Resource_rfka8")])

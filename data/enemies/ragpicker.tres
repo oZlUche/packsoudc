@@ -29,5 +29,5 @@ schools = Array[StringName]([&"bleed"])
 base_stats = {
 "max_hp": 24
 }
-item_tags = Array[StringName]([&"material", &"tool", &"remedy", &"food", &"melee"])
+item_tags = Array[StringName]([&"material", &"remedy", &"food", &"melee"])
 builds = Array[ExtResource("1_vssyw")]([SubResource("Resource_uy8wp"), SubResource("Resource_esn38")])

@@ -15,9 +15,8 @@
   "rarity": 1,
   "weight": 6,
   "tags": [
-    "material",
-    "crafted",
-    "clay",
-    "food"
-  ]
+    "food",
+    "crafted"
+  ],
+  "material": "clay"
 }

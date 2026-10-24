@@ -31,19 +31,13 @@
   "offerings": [
     {
       "tags": [
-        "bone"
+        "beast_part"
       ],
       "multiplier": 5.0
     },
     {
       "min_cells": 9,
       "multiplier": 10.0
-    },
-    {
-      "tags": [
-        "flesh"
-      ],
-      "multiplier": 5.0
     },
     {
       "tags": [

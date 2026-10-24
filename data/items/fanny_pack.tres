@@ -29,6 +29,6 @@ descriptions = {
 }
 shape = SubResource("Resource_3vdhp")
 rarity = 1
-tags = Array[StringName]([&"leather"])
+material = "leather"
 is_bag = true
 bag_mods = Array[ExtResource("2_4c7pf")]([SubResource("Resource_c5mbv")])

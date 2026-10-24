@@ -62,7 +62,7 @@ static func _event(id: StringName, options: Array) -> EventDef:
 ## 一套测试用的事件定义（互相引用，所以一起注入）
 static func _custom_defs() -> Dictionary:
 	var give := GiveItem.new()
-	give.item = &"medkit"
+	give.item = &"salve"
 	give.count = 2
 	var heal := RestoreVitality.new()
 	heal.amount = 1
@@ -116,7 +116,7 @@ static func run_pipeline(t: TestCase) -> void:
 	cond.amount = 5
 	opt.requires = [cond] as Array[EventCondition]
 	var give := GiveItem.new()
-	give.item = &"pistol"
+	give.item = &"knife"
 	var say := Say.new()
 	say.text = "好"
 	opt.outcomes = [give, say] as Array[EventOutcome]
@@ -130,7 +130,7 @@ static func run_pipeline(t: TestCase) -> void:
 	t.eq(back.options.size(), 2, "两个选项")
 	t.check(back.options[0].requires.size() == 1 and back.options[0].requires[0] is CanAfford, "条件按注册表造回来了")
 	t.check(back.options[0].outcomes.size() == 2 and back.options[0].outcomes[0] is GiveItem and back.options[0].outcomes[1] is Say, "后果按注册表造回来了")
-	t.eq((back.options[0].outcomes[0] as GiveItem).item, &"pistol", "字段原样")
+	t.eq((back.options[0].outcomes[0] as GiveItem).item, &"knife", "字段原样")
 	t.eq(ContentExporter.to_json(ContentExporter.export_event(back)), text, "再导出逐字节相同")
 
 	var c := _content()
@@ -282,9 +282,9 @@ static func run_two_phase(t: TestCase) -> void:
 	t.check(g.events.choose(0), "拿")
 	var medkits := 0
 	for inst in g.storage.items():
-		if (inst as ItemInstance).def.id == &"medkit":
+		if (inst as ItemInstance).def.id == &"salve":
 			medkits += 1
-	t.eq(medkits, 2, "给了两个医疗包，到了地上")
+	t.eq(medkits, 2, "给了两个伤药，到了地上")
 	t.eq(g.vitality.current, vit + 1, "体力 +1")
 	t.check(g.map.get_node(next).is_visited(), "点用过了")
 

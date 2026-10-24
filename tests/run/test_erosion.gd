@@ -23,7 +23,7 @@ static func _difficulty(first: int, interval: int, warn: int, effects: Array) ->
 	return d
 
 
-static func _start(c: TestSupport.Content, diff: DifficultyDef, kit: Array[StringName] = [&"bag_leather", &"rifle", &"pistol"] as Array[StringName]) -> RunState:
+static func _start(c: TestSupport.Content, diff: DifficultyDef, kit: Array[StringName] = [&"bag_leather", &"shortsword", &"knife"] as Array[StringName]) -> RunState:
 	for seed in range(1, 40):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit, {}, [] as Array[StringName], null, [], diff)
 		if s != null:

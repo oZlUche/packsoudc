@@ -24,4 +24,6 @@ descriptions = {
 shape = SubResource("Resource_mqm3k")
 rarity = 2
 weight = 2
-tags = Array[StringName]([&"keepsake", &"node_tooltips", &"metal"])
+tags = Array[StringName]([&"keepsake"])
+material = "metal"
+keepsake_abilities = Array[StringName]([&"node_tooltips"])

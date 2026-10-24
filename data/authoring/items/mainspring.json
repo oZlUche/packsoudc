@@ -15,10 +15,10 @@
   "tags": [
     "material",
     "crafted",
-    "metal",
     "part",
     "clockwork"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "max_stamina": 10

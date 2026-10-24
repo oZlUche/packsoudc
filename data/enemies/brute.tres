@@ -31,5 +31,5 @@ base_stats = {
 "block": 3,
 "max_hp": 50
 }
-item_tags = Array[StringName]([&"barbarian", &"bleed", &"burst", &"gear", &"remedy"])
+item_tags = Array[StringName]([&"barbarian", &"bleed", &"burst", &"armor", &"shield", &"remedy"])
 builds = Array[ExtResource("1_fu46k")]([SubResource("Resource_7xw1r"), SubResource("Resource_fv3vh")])

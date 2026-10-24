@@ -4,10 +4,10 @@
   "display_names": {
     "en": "Sealed"
   },
-  "description": "封存的现代道具：数据保留、不再出现。",
+  "description": "（内部）留作别的机制：带它的道具数据保留、不再出现。",
   "descriptions": {
-    "en": "Sealed modern item: kept in data, never appears."
+    "en": "(Internal) Reserved for other mechanics: the item stays in data but never appears."
   },
-  "category": "element",
+  "category": "internal",
   "internal": true
 }

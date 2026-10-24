@@ -9,9 +9,9 @@
   ],
   "tags": [
     "ammo",
-    "nature",
-    "wood"
+    "nature"
   ],
+  "material": "wood",
   "adjacency": {
     "grant_cells": [
       [

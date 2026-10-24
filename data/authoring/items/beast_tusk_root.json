@@ -17,10 +17,9 @@
   "tags": [
     "material",
     "nature",
-    "flesh",
-    "trophy",
     "beast_part"
   ],
+  "material": "flesh",
   "wild": {
     "base_stats": {
       "damage": 14

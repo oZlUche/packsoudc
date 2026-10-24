@@ -41,7 +41,7 @@ script = ExtResource("10_lqt1n")
 axis = &"attack_speed"
 stacks = 5
 
-[sub_resource type="Resource" id="Resource_ypuoo"]
+[sub_resource type="Resource" id="Resource_mlp7p"]
 script = ExtResource("11_fjm76")
 id = &"blood_rage"
 display_name = "血怒"
@@ -52,26 +52,26 @@ stackable = false
 duration_sec = 10.0
 axes = Array[ExtResource("10_lqt1n")]([SubResource("Resource_o4h3v"), SubResource("Resource_3dtjv")])
 
-[sub_resource type="Resource" id="Resource_dy4rd"]
+[sub_resource type="Resource" id="Resource_ypuoo"]
 script = ExtResource("12_jujtf")
 target = 1
-buff = SubResource("Resource_ypuoo")
+buff = SubResource("Resource_mlp7p")
 
-[sub_resource type="Resource" id="Resource_say7k"]
+[sub_resource type="Resource" id="Resource_dy4rd"]
 script = ExtResource("13_yyxba")
 metadata/part_ref = &"on_battle_start"
 
-[sub_resource type="Resource" id="Resource_285ec"]
+[sub_resource type="Resource" id="Resource_say7k"]
 script = ExtResource("2_2pqm3")
-trigger = SubResource("Resource_say7k")
+trigger = SubResource("Resource_dy4rd")
 cadence = SubResource("Resource_qcvhe")
-effects = Array[ExtResource("9_8cr3p")]([SubResource("Resource_dy4rd")])
+effects = Array[ExtResource("9_8cr3p")]([SubResource("Resource_ypuoo")])
+
+[sub_resource type="Resource" id="Resource_285ec"]
+script = ExtResource("6_0nr16")
+rules = Array[ExtResource("2_2pqm3")]([SubResource("Resource_say7k")])
 
 [sub_resource type="Resource" id="Resource_ofd6g"]
-script = ExtResource("6_0nr16")
-rules = Array[ExtResource("2_2pqm3")]([SubResource("Resource_285ec")])
-
-[sub_resource type="Resource" id="Resource_i0icd"]
 script = ExtResource("15_nxw8s")
 
 [resource]
@@ -81,9 +81,10 @@ display_name = "蛮神的护符"
 display_names = {
 "en": "Charm of the Brute"
 }
-shape = SubResource("Resource_i0icd")
+shape = SubResource("Resource_ofd6g")
 rarity = 3
 value = 200
-tags = Array[StringName]([&"treasure", &"faith", &"faith:brute", &"bone", &"faith_anchor"])
-faith_bonuses = Array[ExtResource("6_0nr16")]([SubResource("Resource_ofd6g")])
+tags = Array[StringName]([&"trinket", &"treasure", &"faith:brute"])
+material = "bone"
+faith_bonuses = Array[ExtResource("6_0nr16")]([SubResource("Resource_285ec")])
 adjacency = SubResource("Resource_fxv4y")

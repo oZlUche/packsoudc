@@ -12,7 +12,7 @@
   "tags": [
     "material",
     "crafted",
-    "supply",
-    "wood"
-  ]
+    "supply"
+  ],
+  "material": "wood"
 }

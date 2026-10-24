@@ -18,12 +18,12 @@ static func run_variants_and_modes(t: TestCase) -> void:
 	var sb := db.get_def(&"shortsword_brute")
 	t.check(sb != null, "短剑有蛮神赐福版（武器）")
 	if sb != null:
-		t.check(sb.display_name.begins_with("蛮神赐福的") and sb.has_faith() and sb.faith_tag() == &"faith:brute" and sb.is_blessed() and not sb.is_anchor(), "名字前缀、faith + faith:brute + blessed、不是信物")
+		t.check(sb.display_name.begins_with("蛮神赐福的") and sb.has_faith() and sb.faith_tag() == &"faith:brute" and sb.is_blessed() and not sb.is_anchor(), "名字前缀、faith:brute、赐福版、不是信物")
 		t.eq(sb.blessed_of, &"shortsword", "记着从哪件派生")
 		t.eq(sb.rarity, db.get_def(&"shortsword").rarity + 1, "稀有度 +1")
-		t.check(sb.tags.has(&"weapon") and sb.tags.has(&"metal") and sb.combat != null, "原来的标签与战斗定义都在")
+		t.check(sb.tags.has(&"weapon") and sb.material == "metal" and sb.combat != null, "原来的标签、材质与战斗定义都在")
 		t.eq(sb.faith_bonuses.size(), 2, "带着模板的两条功能")
-	t.check(db.get_def(&"shortsword_sun") != null, "短剑也有日神版（金属）")
+	t.check(db.get_def(&"shortsword_sun") != null, "短剑也有日神版（250：日神赐福模板 = 武器 / 防具 / 盾）")
 	t.check(db.get_def(&"plate_cuirass_earth") != null and db.get_def(&"plate_cuirass_nature") != null, "板甲：大地（≥ 5 格）与自然（防具）")
 	t.check(db.get_def(&"ration_brute") == null and db.get_def(&"charm_brute_sun") == null and db.get_def(&"bag_small_earth") == null, "口粮不是武器、护符本来就是信仰道具、包 —— 都不派生")
 	var in_pool := false
@@ -68,8 +68,8 @@ static func run_variants_and_modes(t: TestCase) -> void:
 	# 献祭双倍
 	var brute: FaithDef = faiths[&"brute"]
 	t.eq(brute.offering_value(sb), 2 * roundi(pow(2.0, float(sb.rarity)) * 2.0), "蛮神赐福的短剑献给蛮神：(2^2 × 2) × 2 = 16")
-	var sun: FaithDef = faiths[&"sun"]
-	t.eq(sun.offering_value(sb), roundi(pow(2.0, float(sb.rarity)) * 5.0), "献给日神照普通算（金属）：2^2 × 5 = 20")
+	var skill: FaithDef = faiths[&"skill"]
+	t.eq(skill.offering_value(sb), roundi(pow(2.0, float(sb.rarity)) * 5.0), "献给技巧之神照普通算（武器）：2^2 × 5 = 20")
 
 
 static func run_blessing_paths(t: TestCase) -> void:
@@ -86,8 +86,8 @@ static func run_blessing_paths(t: TestCase) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	# 替代：没激活
-	var idle := Blessings.substitute([&"shortsword", &"battery"] as Array[StringName], db, &"", run.faith_defs.keys(), 1.0, 1.0, rng)
-	t.check(String(idle[0]).begins_with("shortsword_") and db.get_def(idle[0]).is_blessed() and idle[1] == &"battery", "没激活、概率 1：短剑换成随机一位神的赐福版，封存的电池没人要")
+	var idle := Blessings.substitute([&"shortsword", &"bone_dice"] as Array[StringName], db, &"", run.faith_defs.keys(), 1.0, 1.0, rng)
+	t.check(String(idle[0]).begins_with("shortsword_") and db.get_def(idle[0]).is_blessed() and idle[1] == &"bone_dice", "没激活、概率 1：短剑换成随机一位神的赐福版，骨骰子（素材，没有赐福模板）不换")
 	var none := Blessings.substitute([&"shortsword"] as Array[StringName], db, &"", run.faith_defs.keys(), 0.0, 1.0, rng)
 	t.eq(none[0], &"shortsword", "概率 0：不换")
 	# 激活蛮神

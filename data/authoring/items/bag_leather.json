@@ -9,8 +9,6 @@
     "111",
     "111"
   ],
-  "tags": [
-    "leather"
-  ],
+  "material": "leather",
   "is_bag": true
 }

@@ -60,17 +60,16 @@
           "weapon"
         ],
         "elite": [
-          "gear",
           "armor",
           "shield"
         ],
         "event": [
-          "sigil",
-          "part"
+          "trinket",
+          "material"
         ],
         "extract": [],
         "core": [
-          "treasure"
+          "valuable"
         ]
       },
       "tier": 3
@@ -89,6 +88,9 @@
   ],
   "blessings": [
     {
+      "tags": [
+        "shield"
+      ],
       "min_cells": 5,
       "name_prefix": "大地之神赐福的",
       "name_prefix_en": "Earth-blessed ",
@@ -112,9 +114,6 @@
             }
           ]
         }
-      ],
-      "tags": [
-        "shield"
       ]
     },
     {

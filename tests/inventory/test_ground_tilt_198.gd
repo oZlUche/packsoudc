@@ -322,8 +322,8 @@ static func run_real_pile(t: TestCase) -> void:
 	t.begin("198 补充一 · 真道具图：20 件一起从空中落成一堆（3 个种子）—— 不会落了翻、翻了落个没完，停下后两两不相交、都在屏内")
 	var db := ItemDatabase.new()
 	db.load_dir()
-	var ids := [&"oak_log", &"armor", &"round_shield", &"rifle", &"warhammer", &"longsword", &"knife", &"bag_long", &"honey_jar", &"tower_shield",
-		&"shortbow", &"crowbar", &"plate_cuirass", &"cleaver", &"nail_keg", &"magic_staff", &"pistol", &"rope_coil", &"scimitar", &"medkit"]
+	var ids := [&"oak_log", &"leather_armor", &"round_shield", &"mithril_sword", &"warhammer", &"longsword", &"knife", &"bag_long", &"honey_jar", &"tower_shield",
+		&"shortbow", &"tibia_violence", &"plate_cuirass", &"cleaver", &"nail_keg", &"magic_staff", &"field_rations", &"rope_coil", &"scimitar", &"salve"]
 	var bad := []
 	for seed in 3:
 		ItemInstance.reset_uid_counter()

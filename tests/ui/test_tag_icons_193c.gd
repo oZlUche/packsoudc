@@ -12,21 +12,21 @@ static func _db() -> ItemDatabase:
 static func run_icon_row(t: TestCase) -> void:
 	t.begin("193 补充三 · 副行：有图的标签是 [url=term:tag:<id>][img] 图标，另起一行；没图的照写名字；词条 tag:<id> 带名字")
 	var db := _db()
-	var knife := ItemInstance.create(db.get_def(&"knife"))
-	var full := ItemTooltip.describe_full(knife)
+	var blade := ItemInstance.create(db.get_def(&"festering_blade"))     # 250：每轴只列一个 —— 武器 + 流血两枚图标
+	var full := ItemTooltip.describe_full(blade)
 	var head := String(full["head"])
 	var lines := head.split("\n")
 	t.check(lines.size() >= 3 and not lines[1].contains("[img=") and lines[2].contains("[img=%d]" % ItemTooltip.TAG_ICON_SIZE), "稀有度名一行、图标另起一行（待定 3.1 A）")
 	t.check(not head.contains(" · "), "不再用「 · 」隔开")
 	var terms: Dictionary = full["terms"]
-	t.check(terms.has("tag:weapon") and terms.has("tag:metal"), "图标各有一条词条")
+	t.check(terms.has("tag:weapon") and terms.has("tag:bleed"), "图标各有一条词条")
 	t.eq(String((terms["tag:weapon"] as Dictionary)["name"]), Glossary.tag_name(&"weapon"), "词条名字 = 标签显示名")
 	t.eq(ItemTooltip.TAG_ICON_SIZE, 32, "32 px，和献祭栏一样")
 	# 没图的标签：写字，不出图标、不出 tag: 词条
 	var fake := TagDef.new()
 	fake.id = &"zz_noicon_193c"
 	fake.display_name = "无图标签"
-	fake.category = "material"
+	fake.category = "element"
 	TagRegistry.register(fake)
 	var row := ItemTooltip.tag_icons([&"weapon", &"zz_noicon_193c"])
 	t.check(row.contains("weapon.png") and row.contains("[color=@tip_meta]无图标签[/color]"), "有图画图、没图写名字（%s）" % row)

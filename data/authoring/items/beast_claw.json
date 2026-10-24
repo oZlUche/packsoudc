@@ -16,10 +16,10 @@
   "tags": [
     "material",
     "nature",
-    "bone",
     "bleed",
     "beast_part"
   ],
+  "material": "bone",
   "adjacency": {
     "grant_cells": [
       [

@@ -10,10 +10,9 @@
   "rarity": 3,
   "value": 200,
   "tags": [
+    "trinket",
     "treasure",
-    "faith",
-    "faith:skill",
-    "faith_anchor",
-    "metal"
-  ]
+    "faith:skill"
+  ],
+  "material": "metal"
 }

@@ -15,10 +15,9 @@
   "tags": [
     "weapon",
     "melee",
-    "bone",
-    "faith",
     "faith:brute"
   ],
+  "material": "bone",
   "faith_bonuses": [
     {
       "mode": "active",

@@ -10,10 +10,9 @@
   "rarity": 3,
   "value": 200,
   "tags": [
+    "trinket",
     "treasure",
-    "faith",
-    "faith:hunt",
-    "faith_anchor",
-    "bone"
-  ]
+    "faith:hunt"
+  ],
+  "material": "bone"
 }

@@ -20,7 +20,7 @@ static func run(t: TestCase) -> void:
 		return
 	var here := s.travel.current_id
 	var before := s.storage.item_count()
-	s._offer_loot(_box(c, [&"ration", &"stim", &"medkit"] as Array[StringName]))
+	s._offer_loot(_box(c, [&"ration", &"bandage", &"salve"] as Array[StringName]))
 	var n := s.pending_loot.item_count()
 	t.eq(n, 3, "三件待拾取")
 	var target := -1
@@ -36,7 +36,7 @@ static func run(t: TestCase) -> void:
 
 	t.begin("159 · 包也落地（先倒内容、再放空包）；关会话之前记下的「没亮过」不落")
 	var s2 := RunStateTests._start(c, 7)
-	var loot := _box(c, [&"ration", &"stim"] as Array[StringName])
+	var loot := _box(c, [&"ration", &"bandage"] as Array[StringName])
 	s2._offer_loot(loot)
 	var skip := {}
 	var first := (s2.pending_loot.items()[0] as ItemInstance).uid
@@ -50,7 +50,7 @@ static func run(t: TestCase) -> void:
 	var s3 := RunStateTests._start(c, 11)
 	var session := SearchSession.new(null, s3.node_rules.search, c.items, RandomNumberGenerator.new())
 	session.haul_box.try_add(ItemInstance.create(c.items.get_def(&"ration"), 0), true)
-	session.haul_box.try_add(ItemInstance.create(c.items.get_def(&"stim"), 0), true)
+	session.haul_box.try_add(ItemInstance.create(c.items.get_def(&"bandage"), 0), true)
 	var seen_uid := (session.haul_box.items()[0] as ItemInstance).uid
 	var hidden_uid := (session.haul_box.items()[1] as ItemInstance).uid
 	s3.events.current_search = session

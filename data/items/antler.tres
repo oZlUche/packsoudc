@@ -63,5 +63,6 @@ descriptions = {
 shape = SubResource("Resource_urjuc")
 rarity = 1
 weight = 2
-tags = Array[StringName]([&"material", &"nature", &"bone", &"trophy", &"beast_part"])
+tags = Array[StringName]([&"material", &"nature", &"beast_part"])
+material = "bone"
 wild = SubResource("Resource_eefvl")

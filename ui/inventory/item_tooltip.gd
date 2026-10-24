@@ -98,11 +98,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	# --- 头：名字（粗体 19、稀有度色）/ 副行（稀有度名 · 标签，按大类排，171）/ 说明（斜体）
 	# 170 定稿：只有名字和稀有度名描边；标签、说明、正文、脚注里带色的字都不描（作者对比过后定的）
 	var name_line := UiTheme.outline("[font_size=%d][b][color=%s]%s[/color][/b][/font_size]" % [NAME_SIZE, rarity_style, Names.of_item(inst)])
-	var shown_tags := TagRegistry.shown(def.tags)     # 107 后续（作者定）：内部标签（快攻 / 重击 / 重型）不给玩家看
-	var listed: Array = []
-	for t in TagRegistry.sorted_by_category(shown_tags):     # 171：用途 → 属性 → 材料 → 归属；来源类不列
-		if TagRegistry.category_of(StringName(String(t))) != "source":
-			listed.append(t)
+	# 250（作者定）：类别 → 属性 → 本源 → 归属，每轴最多列一个（按道具里写的先后取第一个），内部标签不列（107 后续）
+	var listed: Array = TagRegistry.first_per_category(def.tags)
 	var sub := UiTheme.outline("[color=%s]%s[/color]" % [rarity_style, rarity_name(rarity)])
 	if inst != null and inst.is_locked_by_player():
 		sub += " · " + UiText.t("tip.locked")     # 230：副行末尾「· 已锁定」
@@ -240,6 +237,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var set_name := set_name_of(def.set_id)
 	# --- 词条：这件道具会施加的 buff（id → 按定义生成的说明）+ 固定词条 + 弹词条的标签
 	var extra := Glossary.tag_terms(text_tags)     # 096：登记了说明的标签也是词条（193 补充三：只剩没图、还写成字的那些）
+	extra.merge(Glossary.faith_terms(def))     # 250：信仰 / 信物的说明跟着归神的道具走（两个标签删了）
 	var item_buffs := Glossary.buffs_in_item(def)
 	item_buffs.merge(attached_buffs)     # 108：挂到我身上的规则施加的 buff（弓身上的【中毒】）也是词条
 	if compiled != null:

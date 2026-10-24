@@ -14,9 +14,9 @@
     "weapon",
     "melee",
     "rapid",
-    "imperial",
-    "metal"
+    "imperial"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "damage": 8

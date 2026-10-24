@@ -10,11 +10,10 @@
   "rarity": 3,
   "value": 200,
   "tags": [
+    "trinket",
     "treasure",
-    "faith",
     "faith:sun",
-    "fire",
-    "faith_anchor",
-    "gem"
-  ]
+    "fire"
+  ],
+  "material": "gem"
 }

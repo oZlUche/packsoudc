@@ -175,9 +175,9 @@ static func run_offering_words(t: TestCase) -> void:
 		if FaithTooltip.icon_paths(r).is_empty():
 			all_art = false
 	if all_art:
-		t.check(offer.contains("[img=%d]res://assets/ui/tags/bone.png" % FaithTooltip.ICON_SIZE), "图标都在：排一行图标")
+		t.check(offer.contains("[img=%d]res://assets/ui/tags/beast_part.png" % FaithTooltip.ICON_SIZE), "图标都在：排一行图标")
 		t.check(not Glossary.strip_bbcode(offer).contains("大型道具"), "193 §3：图标都在就不写名字")
 	else:
-		t.check(Glossary.strip_bbcode(offer).contains("骨制品") and not offer.contains("[img="), "还没有图标：文字")
+		t.check(Glossary.strip_bbcode(offer).contains("兽材") and not offer.contains("[img="), "还没有图标：文字（250：兽材还没有图标）")
 		t.check(Glossary.strip_bbcode(offer).contains("大型道具"), "蛮神的大块东西写「大型道具」")
 	t.eq(ItemVolume.size_label(3), "大型道具", "体积第三档 = 大型道具")

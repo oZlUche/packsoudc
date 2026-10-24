@@ -18,25 +18,23 @@ static func _ench(effect: String, stance_purpose: String, rate: int, element: St
 
 
 static func run_material_tags(t: TestCase) -> void:
-	t.begin("195 §2 · 材质类标签十种（新增织物 / 草药 / 陶瓷）；可生成的道具除「都行」外每件恰好一个材质标签")
-	var mats := TagRegistry.by_category("material")
+	t.begin("195 §2 / 250 · 材质十种（新增织物 / 草药 / 陶瓷）；可生成的道具除「都行」外每件都填了材质（250：材质是字段，不再是标签）")
+	var mats := ItemMaterials.IDS.duplicate()
 	mats.sort()
 	var want := MATERIALS.duplicate()
 	want.sort()
-	t.eq(mats, want, "材质类标签")
+	t.eq(mats, want, "材质十种")
+	t.eq(TagRegistry.by_category("material"), [], "标签表里没有材质类了")
 	var db := _db()
 	var bad: Array[String] = []
 	for id in db.ids(true):
 		if id == &"douxing" or (db.get_def(id) as ItemDef).is_bullion():     # 244：金银不带材质（不进铸炉、不进配方）
 			continue
-		var n := 0
-		for tag in (db.get_def(id) as ItemDef).tags:
-			if MATERIALS.has(tag):
-				n += 1
-		if n != 1:
-			bad.append("%s（%d 个）" % [id, n])
+		var def := db.get_def(id) as ItemDef
+		if not MATERIALS.has(StringName(def.material)):
+			bad.append("%s（%s）" % [id, def.material])
 	t.check(bad.is_empty(), "每件一个：%s" % "、".join(bad))
-	t.check(db.get_def(&"pale_shard").tags.has(&"metal") and not db.get_def(&"pale_shard").tags.has(&"gem"), "灰白色的金属碎片改挂金属")
+	t.eq(db.get_def(&"pale_shard").material, "metal", "灰白色的金属碎片是金属")
 	var e := Forge.table(&"effect")
 	for m in MATERIALS:
 		t.not_null(ForgeTable.find(e.material, m), "效果表有 %s 行" % m)

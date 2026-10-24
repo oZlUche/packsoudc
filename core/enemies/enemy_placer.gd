@@ -10,7 +10,7 @@
 ## 内容字典的形状（JSON 友好，跟着图存）：
 ## [codeblock]
 ## {"enemy": "raider", "strength": 1, "board": [4, 4],
-##  "items": [{"id": "pistol", "at": [0, 0], "rot": 0}, ...]}
+##  "items": [{"id": "shortsword", "at": [0, 0], "rot": 0}, ...]}
 ## [/codeblock]
 ## 「放不下」的道具直接跳过 —— 棋盘该比件数宽裕，跳过了 fill 的回报里能看见。
 ## 165：位置只有相邻组合是「定」的（整组摆、彼此挨着生效），其余散件随机落位；预设图没写位置的件开局由 [method arrange_map] 摆一次。
@@ -361,7 +361,7 @@ static func _bag_takes_any(bag: ItemDef, picks: Array[StringName], items: ItemDa
 		return bag != null
 	for id in picks:
 		var d := items.get_def(id)
-		if d != null and bag.bag_accept_tags.any(func(t): return d.tags.has(t)):
+		if d != null and bag.bag_accept_tags.any(func(t): return d.has_tag(t)):
 			return true
 	return false
 
@@ -375,7 +375,7 @@ static func _long_side(d: ItemDef) -> int:
 static func bag_fits(bag: ItemDef, d: ItemDef) -> bool:
 	if bag == null or bag.shape == null or d.shape == null:
 		return false
-	if not bag.bag_accept_tags.is_empty() and not bag.bag_accept_tags.any(func(t): return d.tags.has(t)):
+	if not bag.bag_accept_tags.is_empty() and not bag.bag_accept_tags.any(func(t): return d.has_tag(t)):
 		return false
 	var b := bag.shape.size_rotated(0)
 	var s := d.shape.size_rotated(0)

@@ -15,9 +15,9 @@
   "rarity": 2,
   "tags": [
     "remedy",
-    "nature",
-    "cloth"
+    "nature"
   ],
+  "material": "cloth",
   "combat": {
     "base_stats": {
       "max_hp": 10

@@ -15,7 +15,7 @@
   "rarity": 1,
   "tags": [
     "material",
-    "nature",
-    "metal"
-  ]
+    "nature"
+  ],
+  "material": "metal"
 }

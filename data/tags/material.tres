@@ -5,13 +5,13 @@
 [resource]
 script = ExtResource("1_4bwkt")
 id = &"material"
-display_name = "材料"
+display_name = "素材"
 display_names = {
 "en": "Material"
 }
-description = "材料。"
+description = "素材：零件、建材、试剂、兽材都归它；不出手、不穿、不吃，拿去造东西或卖钱。"
 descriptions = {
-"en": "A crafting material."
+"en": "Material: parts, building supplies, reagents and beast parts. Not wielded, worn or eaten; used for crafting or sold."
 }
 tip = false
-category = "purpose"
+category = "kind"

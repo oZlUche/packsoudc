@@ -1,7 +1,7 @@
 ## 一局的壳（M5，架构文档 7 节）：开局、走、战利品到地上、买东西、战败与撤离、存档往返、读档之后接着走一样。
 extends RefCounted
 
-const KIT: Array[StringName] = [&"bag_leather", &"bag_leather", &"rifle", &"pistol", &"armor", &"medkit"]
+const KIT: Array[StringName] = [&"bag_leather", &"bag_leather", &"shortsword", &"knife", &"round_shield", &"salve"]
 const SAVE_PATH := "user://test_run_state.json"
 
 
@@ -159,7 +159,7 @@ static func run_loot_and_shop(t: TestCase) -> void:
 	var box_a := GridInventory.new(Vector2i(4, 4), 0, false)
 	box_a.try_add(ItemInstance.create(c.items.get_def(&"ration"), 0), true)
 	var box_b := GridInventory.new(Vector2i(4, 4), 0, false)
-	box_b.try_add(ItemInstance.create(c.items.get_def(&"stim"), 0), true)
+	box_b.try_add(ItemInstance.create(c.items.get_def(&"bandage"), 0), true)
 	s._offer_loot(box_a)
 	s._offer_loot(box_b)
 	t.eq(s.pending_loot.item_count(), 2, "两份并成一份")

@@ -20,8 +20,8 @@ extends Resource
 @export var rarity_weights: Array[float] = [40.0, 30.0, 20.0]
 ## 卖哪几类：带其中一个标签才上架（`material` 是素材，其余算消耗品）
 @export var allowed_tags: Array[StringName] = [&"remedy", &"food", &"ammo", &"material"]
-## 带其中一个标签就不上架（珍宝、贵重品、金银、信仰物、特殊道具、铸牌、封存件）
-@export var excluded_tags: Array[StringName] = [&"treasure", &"valuable", &"bullion", &"faith", &"keepsake", &"token", &"sealed"]
+## 带其中一个标签就不上架（珍宝、贵重品、金银、特殊道具、铸牌、封存件）；250：信物（带 `faith:<神>`）在 [Market] 里按前缀拦
+@export var excluded_tags: Array[StringName] = [&"treasure", &"valuable", &"bullion", &"keepsake", &"token", &"sealed"]
 ## 第几级起最后一格换成一只空包（0 = 不卖包）
 @export var bag_slot_from_level: int = 3
 ## 空包从哪张包池抽

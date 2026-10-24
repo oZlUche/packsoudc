@@ -29,6 +29,37 @@ const RETIRED_ITEMS := {
 	&"mana_shard": {"refund": true, "value": 8},     # 同上
 	&"quartz_cluster_nature": {"replace": "quartz_cluster"},     # 244 补充一：两块宝石去了【自然】、并入魔晶石，自然之神的赐福版跟着没了，换回原件
 	&"raw_amber_nature": {"replace": "raw_amber"},     # 同上
+	# 250（作者定）：现代道具全删（原本封存，只有老存档里可能还有）
+	&"armor": {"refund": true, "value": 120},
+	&"high_tier_armor": {"refund": true, "value": 675},
+	&"armor_plate": {"refund": true, "value": 12},
+	&"battery": {"refund": true, "value": 5},
+	&"core": {"refund": true, "value": 375},
+	&"crowbar": {"refund": true, "value": 36},
+	&"drone": {"refund": true, "value": 120},
+	&"mag": {"refund": true, "value": 5},
+	&"medkit": {"refund": true, "value": 48},
+	&"pistol": {"refund": true, "value": 24},
+	&"rifle": {"refund": true, "value": 90},
+	&"shotgun": {"refund": true, "value": 90},
+	&"stim": {"refund": true, "value": 30},
+	# 250：日神赐福从「金属」改成「武器 / 防具 / 盾」，不再是装备的金属件没有日神赐福版了，换回原件
+	&"blight_censer_sun": {"replace": "blight_censer"},
+	&"brass_gear_sun": {"replace": "brass_gear"},
+	&"copper_ingot_sun": {"replace": "copper_ingot"},
+	&"copper_ore_sun": {"replace": "copper_ore"},
+	&"gear_arm_sun": {"replace": "gear_arm"},
+	&"gilded_goblet_sun": {"replace": "gilded_goblet"},
+	&"iron_ore_sun": {"replace": "iron_ore"},
+	&"mainspring_sun": {"replace": "mainspring"},
+	&"nail_keg_sun": {"replace": "nail_keg"},
+	&"oil_lamp_sun": {"replace": "oil_lamp"},
+	&"pale_shard_sun": {"replace": "pale_shard"},
+	&"rivet_box_sun": {"replace": "rivet_box"},
+	&"silver_ingot_sun": {"replace": "silver_ingot"},
+	&"silver_ore_sun": {"replace": "silver_ore"},
+	&"steam_vent_sun": {"replace": "steam_vent"},
+	&"steel_ingot_sun": {"replace": "steel_ingot"},
 }
 
 ## 173：形状 / 尺寸 / 是否包变过的道具（id → 哪次、怎么变的）。只是登记：对账层照样把原位放不下的重摆，
@@ -42,7 +73,9 @@ const STATE_KEYS := {}
 
 ## 173：标签 / 信仰 / 章节 / 敌人里删掉、没有接班的 id（种类 → id 列表）。内容快照测试要求消失的 id 要么在改名表、要么在这里
 const RETIRED := {
-	"tags": [],
+	# 250（作者定）：用途一类拆成类别轴后退掉的、十个材质（改成 ItemDef.material 字段）、借标签表的能力 id
+	"tags": [&"gear", &"gear_plug", &"tool", &"bow", &"gun", &"sigil", &"faith", &"faith_anchor", &"relic", &"trophy", &"blessed", &"enchanted",
+		&"node_tooltips", &"metal", &"wood", &"leather", &"cloth", &"bone", &"stone", &"gem", &"clay", &"flesh", &"herb"],
 	"faiths": [],
 	"chapters": [],
 	"enemies": [],

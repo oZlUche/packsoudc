@@ -20,5 +20,6 @@ display_names = {
 shape = SubResource("Resource_jo6fm")
 rarity = 4
 value = 800
-tags = Array[StringName]([&"treasure", &"relic", &"metal"])
+tags = Array[StringName]([&"material", &"magic", &"treasure"])
+material = "metal"
 requires_unlock = &"ach_boss"

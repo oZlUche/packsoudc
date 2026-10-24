@@ -13,11 +13,11 @@
   ],
   "rarity": 2,
   "tags": [
+    "trinket",
     "part",
-    "sigil",
-    "bleed",
-    "bone"
+    "bleed"
   ],
+  "material": "bone",
   "combat": {
     "rules": [
       {

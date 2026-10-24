@@ -29,7 +29,7 @@ descriptions = {
 }
 shape = SubResource("Resource_1bi33")
 rarity = 1
-tags = Array[StringName]([&"leather"])
+material = "leather"
 is_bag = true
-bag_accept_tags = Array[StringName]([&"ammo", &"bow", &"ranged"])
+bag_accept_tags = Array[StringName]([&"ammo", &"ranged"])
 bag_mods = Array[ExtResource("2_6bpqr")]([SubResource("Resource_wowuh")])

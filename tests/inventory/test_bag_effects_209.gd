@@ -28,7 +28,7 @@ static func run_catalog(t: TestCase) -> void:
 		if d != null:
 			t.eq(d.rarity, int(want[id]), "%s 稀有度 %d" % [id, want[id]])
 	t.eq(db.get_def(&"belt_potion").bag_mods.size(), 1, "药水带：里面的东西急速")
-	t.eq(db.get_def(&"quiver").bag_accept_tags, [&"ammo", &"bow", &"ranged"] as Array[StringName], "箭囊只收箭与弓")
+	t.eq(db.get_def(&"quiver").bag_accept_tags, [&"ammo", &"ranged"] as Array[StringName], "箭囊只收箭与远程武器（250：bow 标签删了）")
 	t.check(db.get_def(&"rune_pouch").bag_wear_free, "符文囊：不耗耐久")
 	t.eq([db.get_def(&"treasure_satchel").bag_value_mult, db.get_def(&"treasure_satchel").bag_weight_mult], [1.25, 0.5], "百宝囊：卖价 ×1.25、负重减半")
 	t.eq(db.get_def(&"war_pack").cell_count(), 12, "军用行囊十二格")

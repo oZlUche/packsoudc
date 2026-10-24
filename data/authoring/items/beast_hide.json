@@ -17,9 +17,9 @@
   "tags": [
     "material",
     "nature",
-    "leather",
     "beast_part"
   ],
+  "material": "leather",
   "wild": {
     "base_stats": {
       "max_hp": 15

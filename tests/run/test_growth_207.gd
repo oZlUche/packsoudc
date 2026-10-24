@@ -43,8 +43,8 @@ static func run_import_rules(t: TestCase) -> void:
 		t.eq(def.growth.stages.size(), 2, "两阶")
 		t.eq(ContentExporter.to_json(ContentExporter.export_item(def)), FileAccess.get_file_as_string("res://data/authoring/items/thorn_seed.json"), "导出往返逐字节一致")
 	var cases := {
-		"不是自然信仰": func(d: Dictionary): d["tags"] = ["nature", "herb"],
-		"别的神": func(d: Dictionary): d["tags"] = ["faith", "faith:sun", "nature"],
+		"不是自然信仰": func(d: Dictionary): d["tags"] = ["trinket", "nature"],
+		"别的神": func(d: Dictionary): d["tags"] = ["faith:sun", "nature"],
 		"0 步": func(d: Dictionary): d["growth"]["stages"][1]["after"] = 0,
 		"锁写错": func(d: Dictionary): d["growth"]["stages"][0]["lock"] = "pot",
 		"抽太多": func(d: Dictionary): d["growth"]["stages"][1]["bonus_count"] = 3,
@@ -159,16 +159,21 @@ static func run_dormant_and_bonus(t: TestCase) -> void:
 	t.check(g2.is_locked(sd2.uid), "茎叶：扎根")
 	var rules_lit := BattleCompiler.compile_board(g2).item_of(sd2.uid).rules.size()
 	t.check(rules_lit >= 1, "茎叶：有荆棘规则（%d 条）" % rules_lit)
-	g2.remove((f2["charm"] as ItemInstance).uid)     # 没有信物：自然不再激活，种子休眠
+	g2.remove((f2["charm"] as ItemInstance).uid)
+	# 250：种子自己带 faith:nature，也是信物 —— 光拿走护符它照样激活自然；最后置入日神护符，自然才休眠
+	var sun := ItemInstance.create(c.items.get_def(&"charm_sun"))
+	t.check(g2.place(sun, Vector2i(2, 0), 0), "放上日神护符（最后置入的信物）")
+	t.eq(FaithState.active_id(g2), &"sun", "日神激活，自然休眠")
 	s2.travel.clock.spend(10)
 	t.eq(GrowthProfile.stage_of(sd2), 1, "休眠：不长")
 	t.eq(GrowthProfile.ticks_of(sd2), 0, "休眠：不计步")
 	t.check(g2.is_locked(sd2.uid), "休眠：锁保留")
 	var dormant_spec := BattleCompiler.compile_board(g2)
 	t.check(dormant_spec.item_of(sd2.uid) == null or dormant_spec.item_of(sd2.uid).rules.is_empty(), "休眠：编译不带阶段加成")
+	g2.remove(sun.uid)
 	g2.place(ItemInstance.create(c.items.get_def(&"charm_nature")), Vector2i(2, 0), 0)
 	s2.travel.clock.spend(6)
-	t.eq(GrowthProfile.stage_of(sd2), 2, "放回信物：接着长到绽放")
+	t.eq(GrowthProfile.stage_of(sd2), 2, "拿走日神、放回自然信物：接着长到绽放")
 
 
 static func run_reset_and_save(t: TestCase) -> void:

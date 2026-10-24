@@ -46,7 +46,7 @@ static func run_weights(t: TestCase) -> void:
 	var anchors := {
 		&"knife": 6, &"shortsword": 9, &"longsword": 12, &"plate_cuirass": 40, &"tower_shield": 48, &"round_shield": 12,     # 143：异形之后格数变了；塔盾 3×4 = 12 格、圆盾 2×2 = 4 格
 		&"bag_leather": 0, &"bag_long": 0, &"bag_small": 0, &"ration": 1, &"iron_ore": 6, &"oak_log": 6, &"silk_bolt": 2,
-		&"warhammer": 12, &"nail_keg": 12, &"high_tier_armor": 18, &"charm_brute": 1, &"bone_dice": 1, &"crowbar": 9,
+		&"warhammer": 12, &"nail_keg": 12, &"charm_brute": 1, &"bone_dice": 1,     # 250：high_tier_armor / crowbar 随现代道具删了
 		&"fire_crystal": 4,
 	}
 	for id in anchors:
@@ -54,14 +54,16 @@ static func run_weights(t: TestCase) -> void:
 	var d := ItemDef.new()
 	d.shape = ItemShape.from_ascii(["11", "11"])
 	t.eq(ItemWeight.of(d), 4, "没标签：每格 1")
-	d.tags = [&"metal"] as Array[StringName]
+	d.material = "metal"     # 250：材质是字段
 	t.eq(ItemWeight.of(d), 12, "金属：每格 3")
-	d.tags = [&"heavy", &"metal"] as Array[StringName]
+	d.tags = [&"heavy"] as Array[StringName]
 	t.eq(ItemWeight.of(d), 16, "重：每格 4（先于金属）")
-	d.tags = [&"gem"] as Array[StringName]
+	d.tags = [] as Array[StringName]
+	d.material = "gem"
 	t.eq(ItemWeight.of(d), 8, "晶体：每格 2")
-	d.tags = [&"stone"] as Array[StringName]
+	d.material = "stone"
 	t.eq(ItemWeight.of(d), 8, "石材：每格 2")
+	d.material = ""
 	d.tags = [&"remedy"] as Array[StringName]
 	t.eq(ItemWeight.of(d), 2, "轻：半格一重")
 	d.weight = 9

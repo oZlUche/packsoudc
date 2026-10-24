@@ -9,5 +9,6 @@
     "en": "A close-quarters weapon."
   },
   "tip": false,
-  "category": "purpose"
+  "category": "internal",
+  "internal": true
 }

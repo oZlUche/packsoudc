@@ -23,6 +23,6 @@ base_stats = {
 "max_hp": 36
 }
 signature = Array[StringName]([&"knife"])
-item_tags = Array[StringName]([&"rapid", &"melee", &"tool", &"treasure"])
+item_tags = Array[StringName]([&"rapid", &"melee", &"treasure", &"remedy"])
 builds = Array[ExtResource("1_f1y25")]([SubResource("Resource_gg5ql")])
 carry_mult = 2.0

@@ -25,4 +25,5 @@ descriptions = {
 shape = SubResource("Resource_1jvxr")
 rarity = 1
 weight = 1
-tags = Array[StringName]([&"material", &"crafted", &"leather", &"supply"])
+tags = Array[StringName]([&"material", &"crafted", &"supply"])
+material = "leather"

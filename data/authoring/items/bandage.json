@@ -9,9 +9,9 @@
   ],
   "tags": [
     "remedy",
-    "nature",
-    "cloth"
+    "nature"
   ],
+  "material": "cloth",
   "combat": {
     "rules": [
       {

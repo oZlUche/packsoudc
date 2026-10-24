@@ -16,10 +16,10 @@
   "tags": [
     "material",
     "crafted",
-    "metal",
     "part",
     "clockwork"
   ],
+  "material": "metal",
   "adjacency": {
     "grant_cells": [
       [

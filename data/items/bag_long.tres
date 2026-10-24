@@ -19,5 +19,5 @@ display_names = {
 "en": "Long Bag"
 }
 shape = SubResource("Resource_vt84i")
-tags = Array[StringName]([&"cloth"])
+material = "cloth"
 is_bag = true

@@ -9,7 +9,9 @@
   ],
   "value": 20,
   "tags": [
-    "trophy",
-    "bone"
-  ]
+    "material",
+    "crafted",
+    "barbarian"
+  ],
+  "material": "bone"
 }

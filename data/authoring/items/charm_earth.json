@@ -10,11 +10,10 @@
   "rarity": 3,
   "value": 200,
   "tags": [
+    "trinket",
     "treasure",
-    "faith",
-    "faith:earth",
-    "faith_anchor",
-    "stone"
+    "faith:earth"
   ],
+  "material": "stone",
   "is_bag": true
 }

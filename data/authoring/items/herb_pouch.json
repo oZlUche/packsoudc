@@ -13,9 +13,7 @@
     "11"
   ],
   "rarity": 1,
-  "tags": [
-    "cloth"
-  ],
+  "material": "cloth",
   "is_bag": true,
   "bag_accept_tags": [
     "herb",

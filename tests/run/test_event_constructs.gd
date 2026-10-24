@@ -37,7 +37,7 @@ static func _event(id: StringName, options: Array) -> EventDef:
 ## 出生点旁边有某类型点的一局；把事件 [param eid] 放到那个点上。返回 {"run", "next"}
 static func _run_with(c: TestSupport.Content, defs: Dictionary, eid: StringName, type: StringName = &"event") -> Dictionary:
 	for seed in range(1, 80):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"rifle", &"knife"] as Array[StringName])
+		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"shortsword", &"knife"] as Array[StringName])
 		if s == null:
 			continue
 		for entry in s.map.entry_ids:
@@ -102,20 +102,20 @@ static func run_conditions(t: TestCase) -> void:
 	ctx.board = board
 	ctx.storage = stash
 	var hi := HasItem.new()
-	hi.item = &"medkit"
-	t.check(not hi.check(ctx), "两处都空：没有医疗包")
-	t.check(stash.admit(ItemInstance.create(items.get_def(&"medkit"), 0)), "地上放一个")
+	hi.item = &"salve"
+	t.check(not hi.check(ctx), "两处都空：没有伤药")
+	t.check(stash.admit(ItemInstance.create(items.get_def(&"salve"), 0)), "地上放一个")
 	t.check(hi.check(ctx), "地上有：两处任一算")
 	hi.where = HasItem.Where.BOARD
 	t.check(not hi.check(ctx), "只看棋盘：没有")
-	t.check(board.admit(ItemInstance.create(items.get_def(&"medkit"), 0)), "棋盘放一个")
+	t.check(board.admit(ItemInstance.create(items.get_def(&"salve"), 0)), "棋盘放一个")
 	t.check(hi.check(ctx), "棋盘上有了")
 	hi.count = 2
 	hi.where = HasItem.Where.BOTH
 	t.check(hi.check(ctx), "两处合计 2 件")
 	hi.count = 3
 	t.check(not hi.check(ctx), "合计 2 < 3")
-	t.eq(hi.describe(), "需要医疗包 ×3", "说明写道具名")
+	t.eq(hi.describe(), "需要伤药 ×3", "说明写道具名")
 	var any := HasItem.new()
 	t.check(any.check(ctx), "item 空 = 任何道具")
 	t.eq(ctx.count_item(&"", 2), 2, "数得出两处一共 2 件")
@@ -217,7 +217,7 @@ static func run_teleport_outcome(t: TestCase) -> void:
 	var s: RunState = found["run"]
 	var next := int(found["next"])
 	# 地上先放一件：离开发生过事的点会清
-	s.storage.admit(ItemInstance.create(c.items.get_def(&"medkit"), 0))
+	s.storage.admit(ItemInstance.create(c.items.get_def(&"salve"), 0))
 	var dropped: Array = []
 	NodeStorageModule.of(s).dropped.connect(func(_id: int, items: Array): dropped.append(items.size()))
 	var moved: Array = []
@@ -338,10 +338,10 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 	lose_top.where = LoseItem.Where.BOARD
 	var lose_id := LoseItem.new()
 	lose_id.pick = LoseItem.Pick.BY_ID
-	lose_id.item = &"medkit"
+	lose_id.item = &"salve"
 	lose_id.count = 2
 	var need := HasItem.new()
-	need.item = &"medkit"
+	need.item = &"salve"
 	need.count = 2
 	var defs := {
 		&"t_smash": _event(&"t_smash", [["砸", [to_battle, fight] as Array[EventOutcome]]]),
@@ -434,7 +434,7 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 		var resolved: Array = []
 		s.events.event_resolved.connect(func(_n: MapNode, _o: StringName, d: Dictionary): resolved.append(d))
 		s.step_to(n)
-		t.check(not bool(s.events.option_state(1)["ok"]), "没两个医疗包：「交两个」锁住")
+		t.check(not bool(s.events.option_state(1)["ok"]), "没两个伤药：「交两个」锁住")
 		s.events.choose(0)
 		t.eq(s.board.item_count(), count_before - 1, "棋盘少了一件")
 		if top != null:
@@ -445,7 +445,7 @@ static func run_type_proceed_wait_lose(t: TestCase) -> void:
 		s2.step_to(n2)
 		# 地上一移动就清（080），所以站到点上再放
 		for i in 3:
-			s2.storage.admit(ItemInstance.create(c.items.get_def(&"medkit"), 0))
+			s2.storage.admit(ItemInstance.create(c.items.get_def(&"salve"), 0))
 		t.check(bool(s2.events.option_state(1)["ok"]), "有三个：能交")
 		s2.events.choose(1)
 		t.eq(s2.storage.item_count(), 1, "交了两个，剩一个")

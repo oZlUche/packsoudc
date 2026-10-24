@@ -24,9 +24,10 @@ extends Resource
 ## 编辑器的词典、文档、将来的图鉴照用，标签行也照样列出名字。
 @export var tip: bool = true
 ## 171（作者定 2026-10-14）：大类 —— 标签不是道具随手写的，得先在标签制作器里建、归一类。
-## 用途 / 属性 / 材料 / 归属 / 来源（122 的工艺 · 自然 · 魔法，每件材料恰好一个）/ 内部。
-## 悬浮窗副行按 用途 → 属性 → 材料 → 归属 排；来源类不列。空 = 没归类（导入器报错）
-@export_enum("purpose", "element", "material", "origin", "source", "internal") var category: String = ""
+## 250（作者定 2026-10-24）：四个给玩家看的轴 + 内部轴 ——
+## 类别 kind（每件**恰好一个**，包免）/ 属性 element / 本源 source（工艺 · 自然 · 魔法）/ 归属 affiliation（`faith:<神>`、兽材、阵营）/ 内部 internal。
+## 悬浮窗标签行每轴**最多列一个**（按道具里写的先后取第一个），内部不列。材质不是标签（[member ItemDef.material]）。空 = 没归类（导入器报错）
+@export_enum("kind", "element", "source", "affiliation", "internal") var category: String = ""
 ## 107 后续（作者定 2026-10-03）：**内部标签** —— 只给内容逻辑用（敌人的流派 `schools`、身份标签 `item_tags` 按它圈武器），
 ## 玩家在哪儿都看不到：道具悬浮窗的标签行不列它、也不弹词条。快攻 / 重击 / 重型就是这种 ——
 ## 那是武器的特色，不该当标签给玩家看；但删了敌人就组不出装，所以留着、藏起来。编辑器照常显示

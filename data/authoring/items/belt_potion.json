@@ -10,9 +10,7 @@
     "1"
   ],
   "rarity": 1,
-  "tags": [
-    "leather"
-  ],
+  "material": "leather",
   "is_bag": true,
   "bag_accept_tags": [
     "remedy",

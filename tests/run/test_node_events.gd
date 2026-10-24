@@ -70,10 +70,10 @@ static func _world(seed_base: int = 100, vitality_max: int = 5, strong: bool = t
 	return w
 
 
-## 打得过任何占位敌人的玩家：一万血、两把枪
+## 打得过任何占位敌人的玩家：一万血、两把剑
 static func _strong(items: ItemDatabase) -> CombatantSpec:
 	var board := GridInventory.new(Vector2i(8, 4), 0, false)
-	for id in [&"rifle", &"pistol", &"armor"]:
+	for id in [&"longsword", &"shortsword", &"round_shield"]:
 		var d := items.get_def(id)
 		if d != null:
 			board.try_add(ItemInstance.create(d, 0), true)

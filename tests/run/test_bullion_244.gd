@@ -37,8 +37,8 @@ static func run_items(t: TestCase) -> void:
 		t.eq(d.cell_count(), row[3], "%s 格数" % row[0])
 		t.check(d.is_bullion() and d.is_valuable() and d.tags.size() == 2, "%s 只带贵重品与金银（%s）" % [row[0], d.tags])
 		t.check(d.combat == null and d.wear == null and d.adjacency == null, "%s 不参战、不磨损" % row[0])
-	for tag in [ItemDef.BULLION, ItemDef.VALUABLE]:
-		t.check(TagRegistry.get_def(tag) != null and TagRegistry.category_of(tag) == "purpose", "%s 标签登记过、归用途" % tag)
+	t.eq(TagRegistry.category_of(ItemDef.VALUABLE), TagRegistry.KIND, "贵重品是类别（250）")
+	t.check(TagRegistry.get_def(ItemDef.BULLION) != null and TagRegistry.is_internal(ItemDef.BULLION), "金银登记过、降成内部（250）")
 	t.eq(items.get_def(&"silver_ingot").cell_count(), 1, "老的银锭（一格材料）不动")
 
 
@@ -144,7 +144,9 @@ static func run_bench(t: TestCase) -> void:
 	b.set_benched(false)
 
 	# 补充一：休眠 = 不存在。邻居是信仰道具、棋盘上没有激活它的信物 → 休眠；留着通用效果的自己照打
-	var relic := Comp._weapon("t_relic", ["1"], 4.0, 2.0, ["faith", "faith:sun"])
+	# 250：带 faith:<神> 的就是信物（会激活自己）—— 用赐福版（归神、不是信物）
+	var relic := Comp._weapon("t_relic", ["1"], 4.0, 2.0, ["faith:sun"])
+	relic.blessed_of = &"t_relic_base"
 	var c := ItemInstance.create(relic)
 	board.remove(b.uid)
 	board.place(c, Vector2i(1, 0), 0)

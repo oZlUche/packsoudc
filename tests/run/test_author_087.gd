@@ -654,8 +654,10 @@ static func run_names_and_hunters_and_mana(t: TestCase) -> void:
 	var diffs := GameFlow.load_difficulties()
 	t.check(not diffs.is_empty() and diffs[0].id == &"normal", "难度列表第一个是普通（开局屏默认选它）")
 	# mana
-	var battery := c.items.get_def(&"battery")
-	t.check(battery.combat.base_stats.has("max_mana") and not battery.combat.base_stats.has("max_power"), "电池给 max_mana")
+	var power_left: Array = c.items.all_ids().filter(func(id) -> bool:
+		var d: ItemDef = c.items.get_def(id)
+		return d.combat != null and d.combat.base_stats.has("max_power"))
+	t.eq(power_left, [], "没有道具还给 max_power（250：电池随现代道具删了）")
 	t.check(c.items.get_def(&"fire_crystal").combat == null, "148：魔晶石不再给魔力")
 	t.check(not UiPalette.RESOURCE_COLORS.has("power"), "没有 power 资源的颜色了")
 
@@ -664,7 +666,7 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	t.begin("088 · 望远镜：序章二开局发的特殊道具 —— 不进背包、图鉴点亮、开节点浮窗（以后每一局都开）、不能生成；基地两个页签：仓库 / 图鉴")
 	var c := _content()
 	var spy := c.items.get_def(&"spyglass")
-	t.check(spy != null and spy.is_keepsake() and spy.tags.has(&"node_tooltips"), "望远镜是特殊道具、带 node_tooltips 标签")
+	t.check(spy != null and spy.is_keepsake() and spy.keepsake_abilities.has(&"node_tooltips"), "望远镜是特殊道具、能力写着 node_tooltips（250：不再是标签）")
 	t.check(not c.items.ids().has(&"spyglass") and c.items.keepsake_ids().has(&"spyglass"), "不在能生成的 id 里、在特殊道具里")
 	var econ: EconomyRules = load(ContentPaths.asset_file("economy_rules", "standard"))
 	t.check(not ShopSession.candidates(econ, c.items).has(&"spyglass"), "商店不卖")

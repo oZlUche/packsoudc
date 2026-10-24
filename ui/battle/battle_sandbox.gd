@@ -123,27 +123,27 @@ func _build_ui() -> void:
 
 #region 内容
 ## 开局摆一套能把各条机制都演出来的东西：
-## 枪（自发出手）、弹匣（邻接增益）、匕首（施加流血）、
-## 兴奋剂（开场 buff）、医疗包（跌破 40% 回一口）、口粮（耐力）。
+## 短弓（自发出手）、箭矢（邻接增益，250：现代道具删了，换成弓箭）、匕首、
+## 纱布 / 伤药（回血）、口粮（耐力）。
 ##
-## [b]位置是指定的，不是 try_add 摆出来的。[/b] 弹匣的增益格朝上，随便一摆就可能
+## [b]位置是指定的，不是 try_add 摆出来的。[/b] 箭矢的增益格朝上，随便一摆就可能
 ## 落在第一排 —— 标记指向棋盘外，既不点亮也画不出来，开局看到的就是一件
 ## 「好像没有效果」的配件。演示场景得让机制自己显形，不能指望玩家去试。
 const LAYOUT := [
-	[&"pistol", Vector2i(0, 0)],
-	[&"mag", Vector2i(0, 1)],      # 正在枪的下面：增益格 (0,-1) 刚好指着枪
-	[&"knife", Vector2i(1, 1)],
-	[&"medkit", Vector2i(2, 0)],
-	[&"stim", Vector2i(2, 2)],
-	[&"ration", Vector2i(3, 2)],
+	[&"shortbow", Vector2i(0, 0)],
+	[&"arrows", Vector2i(1, 1)],      # 嵌在弓的缺口里：增益格 (0,-1) 刚好指着弓
+	[&"knife", Vector2i(2, 0)],
+	[&"bandage", Vector2i(3, 0)],
+	[&"salve", Vector2i(3, 1)],
+	[&"ration", Vector2i(2, 2)],
 ]
 
 
 func _seed_board() -> void:
 	_board.begin_batch()
 	_board.clear()
-	# 两个 2x3 的包 = 12 格。医疗包占 2x2，格子不够它就默默不参战 ——
-	# 那会表现成「医疗包没救人」，而原因其实是没地方放，界面上看不出来。
+	# 两个 2x3 的包 = 12 格。格子不够的东西就默默不参战 ——
+	# 那会表现成「药没救人」，而原因其实是没地方放，界面上看不出来。
 	var bag := _db.get_def(&"bag_leather")
 	if bag != null:
 		_board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)

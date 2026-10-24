@@ -14,13 +14,11 @@
   "rarity": 2,
   "value": 150,
   "tags": [
-    "part",
-    "material",
-    "magic",
-    "gem",
     "crystal",
-    "valuable"
+    "magic",
+    "part"
   ],
+  "material": "gem",
   "adjacency": {
     "feed_mods": [
       {

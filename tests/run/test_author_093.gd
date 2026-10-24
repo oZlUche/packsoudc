@@ -38,7 +38,7 @@ static func run_faith_files(t: TestCase) -> void:
 		return
 	t.eq(brute.thresholds, [30, 100, 200, 400] as Array[int], "蛮神阈值 30 / 100 / 200 / 400（表）")
 	t.eq(brute.deeds.size(), 2, "两条增长方式")
-	t.eq(brute.offerings.size(), 4, "四条献祭规矩")
+	t.eq(brute.offerings.size(), 3, "三条献祭规矩（250：骨与血肉并成兽材）")
 	t.eq(brute.perks.size(), 5, "五条效果（含 4 级「不死 10 秒」与 1 级「祈求赐福」）")
 	var db := ItemDatabase.new()
 	db.load_dir()
@@ -46,17 +46,18 @@ static func run_faith_files(t: TestCase) -> void:
 	# 体积（档位 = 格子数查表，名字跟着序号）
 	t.eq(_grade(db.get_def(&"knife")), "小", "匕首 2 格：小")
 	t.eq(_grade(db.get_def(&"shortsword")), "小", "短剑 3 格：小")
-	t.eq(_grade(db.get_def(&"core")), "中", "能量核心 5 格：中")
+	t.eq(_grade(db.get_def(&"warhammer")), "中", "战锤 5 格：中")
 	t.eq(_grade(db.get_def(&"plate_cuirass")), "大", "板甲 9 格：大")
 	t.eq(ItemVolume.grade_name(ItemVolume.grade_of_cells(13)), "极大", "13 格：极大")
 	# 献祭规矩：一件满足几条算几次；2^稀有度 × 倍率（104：倍率照神明总表）
 	var sword := db.get_def(&"shortsword")     # 稀有度 1、武器、金属、2 格
 	t.eq(brute.offering_value(sword), 4, "蛮神：短剑只算「武器」一条 → 2 × 2 = 4")
 	t.check(not brute.accepts_offering(db.get_def(&"dried_herbs")), "干草药束（草药）不是蛮神的祭品")
-	t.check(brute.accepts_offering(db.get_def(&"ration")), "195：口粮归血肉，是蛮神的祭品")
+	t.check(not brute.accepts_offering(db.get_def(&"ration")) and brute.accepts_offering(db.get_def(&"antler")), "250：蛮神收兽材（鹿角）；口粮不是兽材，不收")
 	var sun: FaithDef = defs[&"sun"]
-	t.eq(sun.offering_value(sword), 10, "日神：短剑算「金属」→ 2 × 5 = 10（体积是小不是中）")
-	t.eq(sun.offering_value(db.get_def(&"core")), 40, "日神：能量核心稀有度 3、体积正好为中、不是金属 → 只算一条：2^3 × 5 = 40")
+	t.eq(sun.offering_value(sword), 0, "日神：短剑不是魔晶石、火、贵重品，体积是小不是中 → 不收（250：金属那条换掉了）")
+	t.eq(sun.offering_value(db.get_def(&"warhammer")), 10, "日神：战锤稀有度 1、体积正好为中 → 只算一条：2 × 5 = 10")
+	t.eq(sun.offering_value(db.get_def(&"fire_crystal")), 40, "日神：火晶石是魔晶石 → 2^3 × 5 = 40")
 	var earth: FaithDef = defs[&"earth"]
 	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 4 * 5 * 10, "大地：板甲稀有度 2 → 2^2 × 5 × 10 格 = 200（143：板甲 10 格）")
 	t.eq(earth.offering_value(sword), 0, "大地不收小东西")
@@ -211,13 +212,13 @@ static func run_faith_call(t: TestCase) -> void:
 	t.begin("093 · 触发信仰：四枚护符（1 格、珍宝 + 信仰标签 + 流派标签；大地的是 1 格的包、局外也留）；事件链「祭坛 → 靠近 → 随机一位神 → 拿 / 不拿」；成组限量：每张图恰好一个、偏前期")
 	var db := ItemDatabase.new()
 	db.load_dir()
-	var extra := {"brute": "bone", "sun": "fire", "nature": "nature", "earth": ""}
+	var extra := {"brute": "", "sun": "fire", "nature": "nature", "earth": ""}     # 250：材质不是标签了（蛮神护符的骨是 material 字段）
 	for fid in ["brute", "sun", "nature", "earth"]:
 		var d := db.get_def(StringName("charm_" + fid))
 		t.check(d != null, "有 charm_%s" % fid)
 		if d == null:
 			continue
-		t.check(ItemVolume.cells_of(d) == 1 and d.tags.has(&"treasure") and d.faith_tag() == StringName("faith:" + fid), "%s：1 格、珍宝、归 %s" % [d.display_name, fid])
+		t.check(ItemVolume.cells_of(d) == 1 and d.tags.has(&"trinket") and d.faith_tag() == StringName("faith:" + fid), "%s：1 格、饰物、归 %s" % [d.display_name, fid])
 		if String(extra[fid]) != "":
 			t.check(d.tags.has(StringName(extra[fid])), "带流派标签 %s" % extra[fid])
 		if fid == "brute":     # 142：力量的符号并进来了 —— 开战血怒 + 相邻武器的增益槽

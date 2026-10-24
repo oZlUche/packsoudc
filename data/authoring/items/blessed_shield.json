@@ -13,14 +13,10 @@
   "rarity": 3,
   "weight": 6,
   "tags": [
-    "faith",
-    "faith:skill",
-    "gear",
     "shield",
-    "blessed",
-    "faith_anchor",
-    "metal"
+    "faith:skill"
   ],
+  "material": "metal",
   "faith_bonuses": [
     {
       "mods": [

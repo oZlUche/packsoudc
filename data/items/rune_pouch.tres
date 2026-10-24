@@ -24,7 +24,8 @@ descriptions = {
 }
 shape = SubResource("Resource_5gowg")
 rarity = 2
-tags = Array[StringName]([&"cloth", &"magic"])
+tags = Array[StringName]([&"magic"])
+material = "cloth"
 is_bag = true
 bag_accept_tags = Array[StringName]([&"crystal", &"magic", &"staff"])
 bag_wear_free = true

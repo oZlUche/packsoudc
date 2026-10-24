@@ -25,4 +25,5 @@ descriptions = {
 shape = SubResource("Resource_c7hid")
 rarity = 2
 weight = 4
-tags = Array[StringName]([&"material", &"nature", &"wood"])
+tags = Array[StringName]([&"material", &"nature"])
+material = "wood"
