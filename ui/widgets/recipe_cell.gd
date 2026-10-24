@@ -39,14 +39,15 @@ func _init() -> void:
 
 func _build(def: ItemDef, name: String, font: Font) -> void:
 	var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
-	var grid := GridInventory.new(size, 0, false)
+	var cell := floorf(minf(CELL_MAX, minf(BOX / size.x, BOX / size.y)))
+	var grid := GridInventory.new(BoardFrame.padded_size(size, cell), 0, false)     # 太窄的（1×4 长剑）补一列空格，框才不被裁
 	if def != null:
 		grid.place(ItemInstance.create(def, 0), Vector2i.ZERO, 0)
 	view = InventoryView.new()
 	view.label_font = font
 	view.show_adjacency = false
 	view.inventory = grid
-	view.cell_px = floorf(minf(CELL_MAX, minf(BOX / size.x, BOX / size.y)))
+	view.cell_px = cell
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var slot := CenterContainer.new()
 	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE

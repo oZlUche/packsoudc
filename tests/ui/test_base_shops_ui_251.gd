@@ -137,6 +137,8 @@ static func frame_smithy_page(t: TestCase, root: Window) -> void:
 		s.queue_free()
 		return
 	t.check(BoardFrame.framed(cell.view), "产物格带框（227）")
+	var ls: RecipeCell = p.cell(&"smith_longsword")
+	t.check(ls != null and ls.view.inventory.size.x * ls.view.cell_px >= BoardFrame.MIN_SIDE, "游戏测试 v4.39：1×4 的长剑补了一列，框不被裁")
 	t.check(not cell.lit and cell.tooltip_text.contains(UiText.t("smithy.missing")), "缺素材：压灰、悬浮窗写原因")
 	t.check(not p.recipe_scroll().visible, "没点格子：卷轴收着")
 	var b: Button = p.forge_button(&"smith_shortsword")

@@ -86,14 +86,15 @@ func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: S
 	UiTheme.clear_children(_product)
 	var def := items.get_def(r.output)
 	var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
-	var grid := GridInventory.new(size, 0, false)
+	var cell := floorf(minf(32.0, minf(72.0 / size.x, 72.0 / size.y)))
+	var grid := GridInventory.new(BoardFrame.padded_size(size, cell), 0, false)
 	if def != null:
 		grid.place(ItemInstance.create(def, 0), Vector2i.ZERO, 0)
 	var view := InventoryView.new()
 	view.label_font = _font
 	view.show_adjacency = false
 	view.inventory = grid
-	view.cell_px = floorf(minf(32.0, minf(72.0 / size.x, 72.0 / size.y)))
+	view.cell_px = cell
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_product.add_child(view)
 	BoardFrame.wrap(view, "plain")

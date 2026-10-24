@@ -4,6 +4,8 @@ extends RefCounted
 
 const T110 := preload("res://tests/meta/test_tech.gd")
 const META := "user://test_251_market.json"
+## run_flow 的流程存盘写这里（升级会存盘）
+const FLOW_META := "user://test_251_flow_meta.json"
 
 
 static func _meta(lv: int) -> MetaState:
@@ -117,6 +119,7 @@ static func run_flow(t: TestCase) -> void:
 	t.begin("251 §二：一局结束回基地重新上货；升级集市那一刻也重新上货（多的格立刻有东西）；开发区改级数也补货")
 	var db := T110._db()
 	var f := GameFlow.new(db, null, null, T110._meta())
+	f.meta_path = FLOW_META     # 游戏测试 v4.39：升级会存盘，不设就写进默认的 user://meta.json（新开游戏会被搬进第 1 位）
 	f.tech_defs = GameFlow.load_techs()
 	f.meta.tech_levels["bargain"] = 1
 	f.meta.tech_levels["market"] = 1
@@ -137,6 +140,7 @@ static func run_flow(t: TestCase) -> void:
 	t.eq(f.meta.market_stock.size(), 8, "开发区改到 3 级：8 格")
 	f.dev_set_tech_level(&"market", 0)
 	t.check(f.meta.market_stock.is_empty(), "改回 0 级：没货")
+	MetaSave.remove(FLOW_META)
 
 
 static func run_save(t: TestCase) -> void:
