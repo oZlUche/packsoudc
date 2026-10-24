@@ -56,8 +56,17 @@ func rebuild() -> void:
 	if lv <= 0:
 		return
 	var split := Smithy.recipes_for(flow.meta, flow.sorted_smith_recipes())
+	var slots: Array[Control] = []
 	for r in (split["ready"] as Array) + (split["locked"] as Array):
-		_list.add_child(_row(r as SmithRecipeDef))
+		var row := _row(r as SmithRecipeDef)
+		_list.add_child(row)
+		slots.append(row.get_child(0) as Control)
+	# 游戏测试 v4.34：产物格那一栏一样宽（按最宽的那块框），右边的铭牌各行左边对齐
+	var w := 0.0
+	for s in slots:
+		w = maxf(w, s.get_combined_minimum_size().x)
+	for s in slots:
+		s.custom_minimum_size.x = w
 
 
 func _row(r: SmithRecipeDef) -> Control:
@@ -74,14 +83,18 @@ func _row(r: SmithRecipeDef) -> Control:
 	view.inventory = grid
 	view.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	view.item_double_clicked.connect(func(_v: ContainerView, _uid: int): forge(r.id))
-	row.add_child(view)
+	var slot := CenterContainer.new()     # 产物那一栏（宽度在 [method rebuild] 里对齐）
+	row.add_child(slot)
+	slot.add_child(view)
 	BoardFrame.wrap(view)     # 227：产物格也带框 + 格线
 	_tip.watch(view)
-	var plate := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_NAMEPLATE)     # 226：字落在铭牌上
+	# 226：字落在纸签上；游戏测试 v4.34：深色铭牌配墨字看不清 —— 换浅底羊皮纸、墨字（UI 明暗规则）
+	var plate := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 10, 6, 10, 6)
+	UiTheme.set_tone(plate, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
 	plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(plate)
-	plate.add_child(UiTheme.make_wrapped(line_of(r), UiTheme.FONT_SIZE, UiPalette.for_tone(UiPalette.FG, UiTheme.tone_of(UiTheme.PANEL_NAMEPLATE)), 260))
+	plate.add_child(UiTheme.make_wrapped(line_of(r), UiTheme.FONT_SIZE, UiPalette.for_tone(UiPalette.FG, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT)), 260))
 	var why := Smithy.can_forge(flow.meta, r, flow.items)
 	var b := UiTheme.make_home_button(UiText.t("smithy.forge"), func(): forge(r.id))
 	b.disabled = why != ""
