@@ -127,3 +127,90 @@
 ## 五 不改的
 
 标签的名字 / 说明 / 词条开关（107）、图标（193）、`faith:<神>` 动态标签、internal 旗子、材料恰好一个本源的规矩（122 / 195）、代码里按 id 判定的逻辑。
+
+## 六 补充一：作者定稿（2026-10-24 14:42）与落地清单
+
+作者原话：「首先，根据每种标签至多只显示一个，可能不显示。1. 用途：按你推荐的来。不过金银、珍宝统一属于贵重品，防具插件删掉（这是最初始的现代版本的遗留，完全可以连道具一起删除），武器统一只有武器，其余无效果道具统一为素材，信物本身不属于用途，遗物也改为素材 2. 属性保留，现代道具全部删除，封印标签保留留作其他机制用 3. 材质标签删除，相关神明信仰需要的标签也给我列个表，统一修改 4. sigil标签删除，信仰删除，只保留不同神的信仰，用于当信仰锚点 5. 不需要价值标签，尤其是不参战属于一个状态，跟标签无关 6. 状态也不属于标签。另外关于待定：前三条按你推荐来」。
+
+### 6.1 定稿：四个给玩家看的轴 + 一个内部轴
+
+| 轴 | 一件带几个 | 悬浮窗 | 标签 |
+|---|---|---|---|
+| **类别** kind | **恰好一个**（包按 is_bag 免） | 列一个 | weapon 武器 / armor 防具 / shield 盾 / ammo 弹药 / crystal 魔晶石 / remedy 药剂 / food 食物 / **material 素材**（原「材料」，零件 / 建材 / 试剂 / 兽材 / 遗物都归它）/ **valuable 贵重品**（珍宝 + 金银并入）/ **trinket 饰物（新）**/ keepsake 特殊道具 |
+| **属性** element | 任意 | **最多列一个**（按道具里写的先后取第一个；溃烂之刃 bleed + poison 只列流血） | fire / ice / lightning / poison / bleed |
+| **本源** source | 素材恰好一个，其余最多一个 | 最多列一个 | crafted 工艺 / nature 自然 / magic 魔法 |
+| **归属** affiliation | `faith:<神>` 最多一个（现有规矩），其余任意 | 最多列一个（有神先列神） | `faith:<神>` 六个（**就是信物标记**）、beast_part 兽材、barbarian 蛮族 / imperial 帝国 / clockwork 机关 |
+| **内部** internal | 任意 | 不列 | rapid / burst / heavy（打法）、melee / ranged / staff（武器配装）、part / supply / reagent（素材配装）、bullion（金银：面值回收 / 商店金银格 / 不计分）、token、sealed（留作别的机制） |
+
+「每种标签至多只显示一个，可能不显示」：悬浮窗标签行按 类别 → 属性 → 本源 → 归属 各取一个，没有的轴跳过。一把铁刀只写「武器」；一块铁矿写「素材 · 自然」；蛮神护符写「饰物 · 蛮神」。细类不再需要 `parent` 字段：全是内部标签，`TagDef.category` 枚举只剩 `kind / element / source / affiliation / internal`。
+
+### 6.2 五十七个标签各去哪
+
+| 动作 | 标签 | 处理 |
+|---|---|---|
+| 留（类别） | weapon, armor, shield, ammo, crystal, remedy, food, keepsake | category = kind |
+| 改名（类别） | material 材料 → **素材** | id 不动 |
+| 并入（类别） | treasure 珍宝、bullion 金银 → **valuable 贵重品** | 13 件 treasure：6 护符 → trinket（见下），5 工艺摆件 + 异化黑曜石 → valuable（去掉 material），灰白碎片 → material（作者：遗物改素材），果果之心 → crystal（类别恰好一个，不再带 valuable）。bullion 6 件：类别 valuable，`bullion` 降为内部标签（代码 `is_bullion` 照用） |
+| 新（类别） | **trinket 饰物** | 「摆在包里就生效、不出手不穿不吃」：6 护符、猎血者的符号、护身符（去掉错标的 part）、3 颗种子 |
+| 并入（类别） | part / supply / reagent / beast_part / relic / trophy → 类别都是 material | part / supply / reagent 降为内部标签（敌人配装、经济黑名单、事件照用）；beast_part 改到归属轴；relic 删（1 件）；trophy 删（见 6.4 狩猎之神） |
+| 删（类别） | gear 装备 | 6 件删标签；敌人 / 池 `gear` 改 armor + shield |
+| 删（类别） | gear_plug 防具插件 | armor_plate 随现代道具删；**gambeson 贴身内甲改成 armor 棉甲**（它在开局装备 `loadouts/standard.json` 与 251 的铁匠配方里，删了两处要补）—— 待定 1 |
+| 删（类别） | tool 工具 | 3 件药只留 remedy，撬棍随现代道具删，无人机删；6 个敌人 + 3 个池的 `tool` 改 remedy（药匠 / 巫医）或去掉 |
+| 删（类别） | bow, gun, sigil, faith_anchor, faith | bow 1 件删标签；gun 随枪删；sigil 2 件 → trinket，`enemies/shieldbearer` 与 `faiths/earth` 里的 sigil 改 trinket；**faith_anchor / faith 删：信物 = 带 `faith:<神>` 的那件**（`ItemDef.is_anchor() = faith_tag() != &""`，`has_faith()` 同义；休眠规矩不变，因为带 faith 的本来就恰好带一个神） |
+| 降内部 | melee, ranged, staff | 敌人配装靠它（melee 11 / ranged 2 / staff 4 个敌人）；武器恰好一个 melee / ranged（导入器查） |
+| 留（属性） | fire, ice, lightning, poison, bleed | 不动 |
+| 删（状态不是标签） | blessed, enchanted | blessed：`is_blessed()` 本就看 `blessed_of` 字段，标签多余；enchanted：秘银剑删标签，`enemies/core_guardian` 的 `enchanted` 改成按 id 配 mithril_sword |
+| 降内部 | sealed | 作者：留作其他机制用；现代道具删完后暂时没人带 |
+| **删（材质）** | metal, wood, leather, cloth, bone, stone, gem, clay, flesh, herb | 标签删，**材质改成 `ItemDef.material` 字段**（十选一的下拉，不显示、不进标签表）—— 重量（`ItemWeight`）、音效（`SfxMaterial`）、铸炉三张表的 `material` 行改读字段；素材类必填，其余可空（空 = 按「其余」算重量、皮革声）。`enemies/witch_doctor` 的 `herb` 改 remedy |
+| 留（本源） | crafted, nature, magic | 不动；category = source |
+| 留（归属） | barbarian, imperial, clockwork, `faith:<神>` | 不动 |
+| 改轴（归属） | beast_part | purpose → affiliation |
+| 留（内部） | rapid, burst, heavy, token | 不动 |
+| 挪走 | node_tooltips | → `ItemDef.keepsake_abilities`（§3.2） |
+
+### 6.3 现代道具全部删除（13 件）
+
+armor 贴身甲、high_tier_armor 高级贴身甲、armor_plate 防弹装甲、battery 电池、core 能量核心、crowbar 撬棍、drone 无人机、mag 弹匣、medkit 医疗包、pistol 手枪、rifle 步枪、shotgun 霰弹枪、stim 兴奋剂。都进 `IdAliases.RETIRED_ITEMS` + `bash tools/snapshot_content.sh`（173）。执行逐个查引用再删：`core` 这个 id 和「核心节点」`core` 同名，`armor` 和标签同名，grep 会撒网 —— 池 / 章节里的 `"core"` 多半是节点不是道具；`pistol` 在 `enemy_placer.gd` 的注释示例里；medkit / stim / pistol / rifle / crowbar / mag / battery 在十来个测试与沙盒里当夹具，换成现有道具（绷带 / 药膏 / 短剑 / 箭 / 铜锭）。tests/inventory/test_sealed_items.gd 整个随之改写或删除。
+
+### 6.4 神明信仰牵连的标签（作者要的表）
+
+献祭 / 功绩 / 赐福里按标签认东西的条目，凡用到要删的标签（材质十个、trophy、gear、sigil、part、treasure）都列在这儿；「改成」是推荐，作者改 `docs/gods.xlsx` 对应 sheet 后 `GodsTable` 重导即可。
+
+| 神 | 条目 | 现在 | 改成 | 为什么 |
+|---|---|---|---|---|
+| 蛮神 | 献祭 | bone ×5；flesh ×5；weapon ×2；≥9 格 ×10 | **beast_part ×5**；weapon ×2；≥9 格 ×10 | 骨与血肉几乎都是兽材（12 件 flesh 全带 beast_part） |
+| 蛮神 | 赐福模板 | weapon | 不动 | — |
+| 日神 | 献祭 | metal ×5；fire ×5；gem ×5；正好中体积 ×5 | fire ×5；**crystal ×5**；**valuable ×5**；正好中体积 ×5 | 宝石已并进魔晶石；金属没了，日神改爱金银 |
+| 日神 | 赐福模板 | metal | **weapon + armor + shield** | 金属件基本就是装备 |
+| 自然 | 献祭 | nature ×5；food ×5；gear / armor / shield ×5 | nature ×5；food ×5；armor / shield ×5 | 只去掉 gear |
+| 自然 | 功绩 | nature | 不动 | 本源留着 |
+| 自然 | 赐福模板 | shield；gear / armor / nature | shield；armor / nature | 去掉 gear |
+| 大地 | 献祭 | ≥9 格 ×5 每格 | 不动 | — |
+| 大地 | 其他（json 68–73 行有 sigil / part / treasure） | sigil、part、treasure | trinket、material、valuable | 执行看那段是什么条目再对应改 |
+| 技巧 | 献祭 | metal ×5；gear / armor / shield ×5；带暴击 ×8；crafted ×5 | **weapon ×5**；armor / shield ×5；带暴击 ×8；crafted ×5 | 金属 → 武器（技巧之神功绩本就认武器） |
+| 技巧 | 功绩 | metal；weapon | **crafted**；weapon | 金属 → 工艺 |
+| 狩猎 | 献祭 | flesh / bone ×5；trophy ×10；leather ×5 | **beast_part ×10**；**food ×5** | 三行材质 + 战利品都是「从兽身上取的」，合成一行高倍；猎人吃肉 |
+| 狩猎 | 功绩 | trophy | **beast_part** | trophy 删 |
+| 新教 church | — | 没有按标签的条目 | — | — |
+
+献祭的「人话」列（骨制品 / 金属 / 皮革 / 宝石）跟着改；帮助页 `help_pages/god_*.json` 里提到材质的句子一起改。
+
+### 6.5 代码改动
+
+- `TagDef.category` 枚举 → `kind / element / source / affiliation / internal`；`TagRegistry.CATEGORY_ORDER` 同步；不加 `parent`。
+- `ItemDef.material: StringName`（十选一；`ContentSchema` 下拉；导入器：素材类必填、其余可空、值必在十个里）。`ItemWeight.formula` / `SfxMaterial` / `ForgeTable.material` 行改读它（本源三行仍读标签）。
+- `ItemDef`：删 `FAITH` / `ANCHOR` / `BLESSED` 常量，`is_anchor() = faith_tag() != &""`，`has_faith()` 同义；`is_valuable()` 不变（现在是类别）；`is_bullion()` 读内部标签。treasure 的 8 处代码（经济黑名单、掉落、负重、整理、商店）改成 `valuable`。
+- 悬浮窗 `item_tooltip.gd` 101–103：按轴各取第一个（`TagRegistry.first_per_category`），内部不列。`GridTidy` 分组表改成新类别；`CategoryBias` 对照。
+- 导入器 `_validate_item_tags`：类别恰好一个（is_bag 免）；武器恰好一个 melee / ranged；素材恰好一个本源 + 必填材质字段；带 `faith:<神>` 最多一个（已有）。
+- 标签制作器（171）：大类下拉五项；道具编辑器多一个「材质」下拉。
+- 数据：57 份标签 json（删 20、改 category）、约 110 份道具 json（删材质标签 → 填字段、换类别）、7 份信仰 json 由 gods.xlsx 重导、11 个敌人 + 3 个池的 gear / tool / sigil / herb / trophy / enchanted、`loadouts/standard.json`、`smith_recipes/smith_gambeson.json`、`base_rules/market.json` 的黑名单（treasure / bullion → valuable；faith → 没了，`faith:*` 用前缀拦）、`economy_rules` 两份的 `shop_exclude_tags`、字体子集（新字「饰」「素」等）。
+- 测试：`test_tag_taxonomy_250.gd`（每件恰好一个类别、武器恰好一个射程、素材有本源与材质、删掉的 20 个 id 没人带、13 件现代道具不在库、悬浮窗每轴最多一个）；改写 test_sealed_items 等夹具。
+
+### 6.6 待定（默认取推荐）
+
+1. **gambeson 贴身内甲**：推荐**改成 armor「棉甲」**而不是删（它是开局装备、也是 251 的一张配方）。
+2. **四件带 `faith:<神>` 却不是信物的**（铁木苗 / 月草籽 / 荆棘籽 / 胫骨 tibia_violence）按作者的规矩**变成信物**：放进包就激活那位神。推荐照规矩来；若种子不该激活信仰，去掉它们的 `faith:nature`（改成只是自然之神风味的饰物）。
+3. **果果之心**不再带贵重品（类别恰好一个 = 魔晶石）：基地不再按面值收它。推荐接受 —— 它是拿来用的。
+4. 日神 / 技巧之神 / 狩猎之神的献祭替换见 6.4，作者改表即可。
+
+交执行落地；美术：饰物 / 贵重品两枚新标签图标（193）按 2026-10-24 10:45 规矩先出样。
