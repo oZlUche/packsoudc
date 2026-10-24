@@ -1,0 +1,115 @@
+# 251 基地集市、铁匠铺（都靠科技升级）与「局内卖得贱、带回基地卖得贵」
+
+作者 2026-10-24 11:46（架构设计线）：「添加基地商店机制，可以通过科技升级，出售直接用钱购买的道具和低稀有度素材(白到蓝)。添加铁匠铺机制，可以通过科技升级，有特定配方，可以通过素材和金钱合成武器、防具」；11:47：「调整局内外的出售价，局内出售价更低，鼓励玩家将东西带出局再卖」。三件都是明说的改法，一起写、一起派；配方表与库存表是占位数，作者随时改 json。
+
+## 〇 一句话
+
+基地多两间铺子，都从科技树上点出来、按级长大：**集市**卖「花钱就能买的」消耗品与白 / 绿 / 蓝三档素材，一局一换货；**铁匠铺**按配方吃仓库里的素材加钱，打出整件武器 / 防具。配着第三条：**局内商店只收三成，基地收五成**，素材与装备带出来才值钱 —— 集市卖素材、铁匠吃素材、局内卖素材亏，三件事互相咬合。
+
+## 一 现状
+
+| 事 | 现在 | 出处 |
+|---|---|---|
+| 基地 | 仓库（多页，163）、保险箱、科技树（118）、出售区（一键出售 + 筛稀有度 / 标签，177 补）、成就、开发区 | `ui/game/meta_screen.gd` |
+| 科技 | 11 条，三种效果构件：`tech_run_buff`（9 条）/ `tech_safe_size` / `warehouse_pages`；每级要钱 + 上交道具（`TechTier.funds / items`）；再加一种效果 = 一个 [TechEffect] 子类 + 登记一行（110）；派生值不存档，读档按级数重算（120） | `core/meta/techs/*.gd`、`data/authoring/techs/*.json` |
+| 局内商店 | 4 格货架按稀有度权重抽（`shop_rarity_weights` 40/30/20/8/2/0.5 × 深度），不上架 treasure / supply；买价 = 价值 × `shop_price_mult` 1.0；**卖给店里 = 价值 × `shop_sell_ratio` 0.5**；包格 / 金银格 / 随身排 | `core/run/shop_session.gd`、`data/authoring/economy_rules/standard.json` |
+| 基地出售 | **价值 × `MetaRules.sell_ratio` 0.5**；贵重品 / 金银按面值全收（244） | `core/meta/meta_state.gd` `sell_price_of` |
+| 局内合成 | 114：两件拖到一起立刻合（`RecipeDef.inputs` 两个 id → `output`），9 张配方，全是药 / 食 / 毒刃 | `core/run/modules/crafting_module.gd` |
+| 铸炉 | 175：三槽查表铸「铸牌」给武器附魔，不造整件 | `core/forge/forge.gd` |
+| 素材 | 71 件材料：白 13 / 绿 18 / 蓝 25 / 紫 12 / 金 3；建材 `supply` 10 件已是上交科技用的 | 数据统计 |
+| 装备 | 不封存的武器 16（白 1 / 绿 8 / 蓝 3 / 紫 4）、防具 / 盾 / 插件 7（绿 5 / 蓝 1 / 紫 1） | 同上 |
+
+稀有度：0 白 / 1 绿 / 2 蓝 / 3 紫 / 4 金（246 补充二已用蓝 / 紫 / 金）。「白到蓝」= 稀有度 ≤ 2。
+
+## 二 集市（基地商店）
+
+### 2.1 规矩
+
+- **科技「集市」**（`market`，三级；前置「讨价」`bargain` 1 级 —— 会讨价才有人来摆摊）。级数 = 铺子的大小：
+
+| 级 | 货格 | 素材上限 | 还卖什么 |
+|---|---|---|---|
+| 1 | 4 | 白 | 消耗品（药剂 remedy / 食物 food / 弹药 ammo，稀有度 ≤ 1） |
+| 2 | 6 | 绿 | 同上，稀有度 ≤ 2 |
+| 3 | 8 | 蓝 | 同上 + 空包（按章节包池，一格） |
+
+- **卖什么**：「花钱就能买的」= 消耗品 + 素材（`material`，稀有度 ≤ 该级上限）；**不卖**武器 / 防具 / 盾（那是铁匠铺的事）、珍宝 / 贵重品 / 金银（局内才有）、信仰物、特殊道具、铸牌、封存件。每次上货素材占一半以上的格（素材是铁匠的饭，集市的主业）。
+- **价钱**：买价 = 价值 × `price_mult` 1.0（和局内一样；不吃「讨价」的局内 buff —— 那是局内 buff，局外没有 RunState）。基地回收 0.5 → 买 1.0 卖 0.5，没有套利。
+- **一局一换货**：每次从一局回到基地（撤离或战败）重新上货；基地里**不能花钱刷新**（钱留给局内刷）。升级集市那一刻也重新上货（多出来的格立刻有东西）。
+- **买了去哪**：直接进仓库当前页有空处的位置（`Warehouse` 自动找位，163）；仓库满了不卖、说一句「仓库放不下」。钱从 `MetaState.funds` 走 `spend_funds`。
+- **库存存档**：`MetaState.market_stock: Array[Dictionary]`（`{"id", "sold"}`）与 `market_seed`；173 对账：id 退役的行直接去掉。级数本身是派生值（120），不存。
+
+### 2.2 做法
+
+- 新效果构件 `TechFacility`（`"type": "tech_facility"`, `facility: StringName`）：`derive` 把 `meta.facility_levels[facility] = level`（新字典，不存档）。集市与铁匠铺共用。
+- 新规则数据 `data/authoring/base_rules/market.json` → [MarketRules]：`slots_per_level [4,6,8]`、`rarity_cap_per_level [0,1,2]`、`consumable_rarity_cap_per_level [1,2,2]`、`price_mult 1.0`、`material_share 0.5`、`allowed_tags [remedy, food, ammo, material]`、`excluded_tags [treasure, valuable, bullion, faith, keepsake, token, sealed, supply?]`（建材 supply 要不要卖见 §五）、`bag_slot_from_level 3`。章节不分（基地只有一个）。
+- `core/meta/market.gd` [Market]：`restock(meta, rules, items, seed)`（候选 = 过滤标签 + 稀有度上限，按 `shop_rarity_weights` 截到上限抽；素材先抽满 `material_share`，剩下抽消耗品）、`price_of(def)`、`can_buy(i) -> String`（空 = 行；否则原因键：钱不够 / 仓库满 / 卖掉了）、`buy(i)`。`ShopSession.candidates` 的过滤逻辑抽成静态函数两边共用。
+- 触发：`GameFlow` 一局结束进基地（`MetaState.absorb` 之后）调 `Market.restock`；`TechService.upgrade` 升到 `market` 时也调。
+- 文案键 `market.*`（标题「集市」、空格「今日没货」、原因三句），英文 Market。
+
+## 三 铁匠铺
+
+### 3.1 规矩
+
+- **科技「铁匠铺」**（`smithy`，三级；前置「仓库」`warehouse` 1 级）。级数 = 能打哪一档：1 级绿、2 级蓝、3 级紫。
+- **配方是数据**：`data/authoring/smith_recipes/*.json` → [SmithRecipeDef]：`id`、`output`（道具 id）、`inputs {素材 id: 件数}`、`funds`、`level`（几级才会打）、`display_name(s)`、`note(s)`。和 114 的 [RecipeDef]（两件拖合、无钱无数量）是两回事，不往一张表里塞。
+- **吃什么**：只吃**仓库**里的（不碰保险箱、不碰下一局的棋盘）；锁住的（230）不吃；产物进仓库有空处的位置，放不下不打。
+- **定价尺度**（作者调表时的参考）：素材价值之和 + 钱 ≈ 产物价值的 0.8～1.0。比买现成的便宜一点、但得把对的素材背回来 —— 这就是「带出局」的理由；配上 §四，素材局内卖只回三成，背回来打一件回得更多。
+- **首批配方（占位，作者改 json 即可）**：
+
+| 级 | 产物 | 素材 | 钱 |
+|---|---|---|---|
+| 1 绿 | shortsword 短剑 | iron_ore ×2、hardwood_plank ×1 | 40 |
+| 1 绿 | cleaver 砍刀 | copper_ingot ×1、iron_ore ×1 | 30 |
+| 1 绿 | longsword 长剑 | steel_ingot ×1、tanned_leather ×1 | 60 |
+| 1 绿 | shortbow 短弓 | ironwood_branch ×1、rope_coil ×1 | 30 |
+| 1 绿 | gambeson 棉甲 | linen_bolt ×2、wool_cloth ×1 | 30 |
+| 1 绿 | leather_armor 皮甲 | tanned_leather ×2、beast_hide ×1 | 40 |
+| 1 绿 | round_shield 圆盾 | copper_ingot ×1、hardwood_plank ×1 | 40 |
+| 1 绿 | warhammer 战锤 | iron_ore ×2、oak_log ×1 | 50 |
+| 2 蓝 | longbow 长弓 | ironwood_branch ×2、rope_coil ×1、fine_fur ×1 | 60 |
+| 2 蓝 | plate_cuirass 板甲 | steel_ingot ×2、rivet_box ×1、tanned_leather ×1 | 120 |
+| 2 蓝 | pendulum_blade 摆锤刃 | steel_ingot ×1、brass_gear ×1、mainspring ×1 | 100 |
+| 2 蓝 | bloodletter 放血刀 | steel_ingot ×1、whetstone ×1、bone_charm_bits ×1 | 90 |
+| 3 紫 | festering_blade 溃烂之刃 | steel_ingot ×1、viper_gland ×1、wound_salt ×1 | 150 |
+| 3 紫 | mithril_sword 秘银附魔长剑 | silver_ingot ×2、steel_ingot ×1、fire_crystal_low ×1 | 200 |
+
+（秘银没有对应素材，先用银锭 + 下品魔晶石占位；作者若想加「秘银锭」素材另说。）
+
+### 3.2 做法
+
+- [SmithRecipeDef] 走内容管线（`data/smith_recipes/*.tres`），导入器查：output / inputs 的 id 存在、output 带 weapon / armor / shield / gear_plug 之一、level 1～3。
+- `core/meta/smithy.gd` [Smithy]：`recipes_for(meta) -> {ready, locked}`、`have(meta, recipe) -> Dictionary`（每种素材仓库里有几件，不算锁住的）、`can_forge(meta, recipe) -> String`（空 = 行；级不够 / 缺素材 / 钱不够 / 仓库满）、`forge(meta, recipe) -> ItemInstance`（扣素材按仓库顺序先扣最早放进去的、扣钱、产物 `grant`）。
+- 文案键 `smithy.*`（「铁匠铺」、「打造」、四句原因）；英文 Smithy / Forge。「铸」字已归铸炉，这里用「打造」。
+- 产物是新实例（`allocate_uid`），图鉴点亮走 `_record_codex` 同一条路。
+
+## 四 局内卖贱、基地卖贵
+
+- `EconomyRules.shop_sell_ratio` **0.5 → 0.3**（`data/authoring/economy_rules/standard.json` 写 `"shop_sell_ratio": 0.3`；注释改「作者 2026-10-24：三成，带回基地五成」）。`MetaRules.sell_ratio` 留 0.5。
+- 贵重品 / 金银不动：局内商店买金银是面值 × 1.1，卖回店里走比例（0.3 × 1.1 = 三成三，更不值），基地按面值全收 —— 已经是「带出来」的方向。
+- 文案：局内商店的出售框悬浮窗加一句「这里只收三成；带回基地能卖五成」（文案键 `shop.sell_hint`，比例从两处规则读出来、按 112 用「几成」写，不写阿拉伯数字）。基地 `meta.sell_intro` 已写比例，不动。
+- 教练（coach）要不要提一次：第一次在局内卖东西时说一句同样的话 —— 推荐**要**，走现有的 coach 条目格式，看过不再说。
+
+## 五 待定（默认取推荐）
+
+1. **集市卖不卖建材 `supply`**：推荐**卖**（建材本来就是给基地用的，让人能花钱补齐科技要交的那几件；局内商店仍不上架 supply）。备选：不卖，逼人在局里找。
+2. **集市卖不卖白 / 绿武器防具**：推荐**不卖**，整件装备归铁匠铺；否则铁匠铺 1 级没活干。
+3. **铁匠铺的交互**：推荐**点配方 → 看有无 → 按「打造」自动从仓库扣**（不用拖），拖素材进槽留给将来美术定了再说。
+4. **两间铺子在基地的位置**：推荐各一个页签（和仓库 / 科技 / 出售并列），不塞进出售区。
+5. **局内比例 0.3 还是 0.25**：推荐 0.3；再低玩家会觉得卖了白送。
+
+## 六 界面与美术
+
+- 两个新页面都是棋盘式货架 / 槽：**集市货架一块框 + 格线**（227 全棋盘带框）、铁匠铺的素材槽同样带框；文字都落在签 / 牌 / 卷轴上（226 不裸字）；按钮平的（230）。
+- 风格：基地是 235 的 Caesar III 白灰石 + 墨字；集市 = 石台上摆货（和局内 233 的市集帆布帐篷区分开：帐篷是野外临时摊，石台是城里的铺子）；铁匠铺 = 砧与炉台的近景（和 199 的铸炉近景区分：铸炉是野外一次性的炉，铁匠铺有砧、有挂架）。按 2026-10-21 18:42 的规矩至少出一张非矩形样稿（如拱门 / 山墙）。
+- 美术设计出样 → 作者看 → UI替换美术换上；执行先用现成 `OverlayFrame` / `BoardFrame` 占位落地。页签图标照 2026-10-24 10:45 的规矩：先给作者看再定。
+
+## 七 测试（执行写）
+
+- `test_base_market_251.gd`：(a) 级 0 没有集市；(b) 级 1 上货 4 格、全 ≤ 白素材或 ≤ 绿消耗品、素材 ≥ 2 格；(c) 级 3 可见蓝素材、有一格包；(d) 买一件：钱减、仓库多一件、格标 sold；(e) 钱不够 / 仓库满 → 原因键，钱与仓库不动；(f) 一局结束重新上货，升级也重新上货；(g) 存档读回库存一致、退役 id 行被去掉。
+- `test_smithy_251.gd`：(a) 级不够不打；(b) 缺一件素材不打；(c) 齐了：素材按数扣、钱扣、仓库多一件产物、图鉴点亮；(d) 锁住的素材不算有；(e) 仓库满不打、不扣；(f) 导入器拦 output 不是装备 / id 不存在的配方。
+- `test_sell_ratio_251.gd`：局内 `ShopSession.sell_price_of` = ⌊价值 × 0.3⌋，基地 `MetaState.sell_price_of` = ⌊价值 × 0.5⌋，金银两边各自不变；`shop.sell_hint` 两个数从规则读。
+
+## 八 不改的
+
+局内商店的货架 / 刷新 / 包格 / 金银格（209 / 244）、114 局内合成、175 铸炉、基地一键出售、贵重品面值回收、科技树现有 11 条的费用、「讨价」只管局内买价。
