@@ -4,13 +4,12 @@
   "display_names": {
     "en": "Travel Pack (Tech)"
   },
-  "description": "开局钱 {starting_funds_bonus_percent|signed}%",
+  "description": "战败时保住身上一部分钱",
   "scope": "META",
   "effects": [
     {
-      "type": "starting_funds_bonus",
-      "amount": 0,
-      "percent": 25
+      "type": "keep_on_death",
+      "percent": 20
     }
   ]
 }

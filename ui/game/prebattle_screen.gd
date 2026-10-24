@@ -77,6 +77,7 @@ func open(payload: Dictionary) -> void:
 
 	_lane = PrebattleLane.new()
 	_lane.center_on = _overlay_frame
+	_lane.pressed.connect(_on_lane_pressed)     # 2026-10-22：点正中那枚双剑铜章 = 按「开战」
 	row.add_child(_lane)
 
 	_right = _vbox(10)
@@ -164,6 +165,15 @@ func start_battle() -> bool:
 	return flow.start_battle()
 
 
+## 2026-10-22（作者）：战前屏正中那枚双剑铜章看着像能按，就让它真是按键 —— 点它等于按「开战」。
+## 走和「开战」战旗同一条路（[method start_battle]），声音也是那个按钮音（ui.press）
+func _on_lane_pressed() -> void:
+	if can_start() != "":
+		return
+	Audio.play(&"ui.press")
+	start_battle()
+
+
 ## 093：蛮神秒杀（按钮）。顶栏同样按住到回放看完（231 补充二）
 func smite(option: StringName) -> bool:
 	HudHost.hold_in(get_tree())
@@ -248,6 +258,8 @@ func _refresh() -> void:
 	_even_columns()
 	var why := can_start()
 	_start_btn.disabled = why != ""
+	if _lane != null:
+		_lane.set_enabled(why == "")     # 2026-10-22：铜章跟着「开战」一起灰、一起亮
 	(_start_btn as IconButton).sync_art()
 	_why.text = why if why != "" else (UiText.t("pre.no_attacker") if unarmed() else "")
 	_why.visible = _why.text != ""     # 空着不占一行

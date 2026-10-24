@@ -8,6 +8,8 @@ var _unlock_all_btn: Button = null
 var _plate: Control = null
 ## 「导出平衡数据」石签：导出的告示卷排在它右边（[method notice_spot]）
 var _export_btn: Control = null
+## 2026-10-22：名字全显（百科不遮没点亮的道具名）
+var _reveal_names_btn: Button = null
 ## 117：开发区的「战斗日志」开关（导出包里整块不画）
 var _trace_btn: Button = null
 ## 150 补 2：调试模式开关
@@ -97,6 +99,10 @@ func open(_payload: Dictionary) -> void:
 	export_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(export_btn)
 	_export_btn = export_btn
+	# 2026-10-22（作者）：百科遮名的总开关 —— 和老手开关同类，放同一节
+	_reveal_names_btn = _toggle(UiText.t("settings.reveal_names"), toggle_reveal_names)
+	_reveal_names_btn.tooltip_text = UiText.t("settings.reveal_names_desc")
+	col.add_child(_reveal_names_btn)
 	col.add_child(HSeparator.new())
 	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
 		var dev := _vbox(8)     # 226 批四：开发区的说明字不算裸字，守门测试放过（只在开发包里有）
@@ -336,6 +342,16 @@ func toggle_unlock_all() -> void:
 	_refresh()
 
 
+## 2026-10-22（作者）：名字全显 —— 勾上之后百科不再把图鉴没点亮的道具名遮成「？」。
+## 百科那三个遮名回调每次渲染现查这个开关，所以不用重建百科，下一次画就变
+func toggle_reveal_names() -> void:
+	if flow.settings == null:
+		return
+	flow.settings.reveal_names = not flow.settings.reveal_names
+	flow.save_settings()
+	_refresh()
+
+
 func _refresh() -> void:
 	refresh_display()
 	if _sfx != null:
@@ -363,6 +379,9 @@ func _refresh() -> void:
 	if _unlock_all_btn != null:
 		_unlock_all_btn.set_pressed_no_signal(flow.settings.unlock_all)
 		_unlock_all_btn.text = UiText.t("settings.unlock_all_state") % (UiText.t("settings.unlock_all_on") if flow.settings.unlock_all else UiText.t("settings.off"))
+	if _reveal_names_btn != null:
+		_reveal_names_btn.set_pressed_no_signal(flow.settings.reveal_names)
+		_reveal_names_btn.text = UiText.t("settings.reveal_names_state") % (UiText.t("settings.on") if flow.settings.reveal_names else UiText.t("settings.off"))
 
 
 ## 090：Esc = 返回上一级（同「返回 / 回主菜单」按钮）

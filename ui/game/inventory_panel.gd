@@ -158,9 +158,17 @@ func board_actions(uid: int) -> Array:
 	out.append(ItemActions.lock(inst, _run.board))
 	if inst.def.is_anchor():
 		out.append(ItemActions.anchor(inst, _run.board, reseat_anchor))
+	if can_bench(inst):
+		out.append(ItemActions.bench(inst, _run.board))     # 2026-10-22：不参战（战前整备用）
 	if extra_actions.is_valid():
 		out.append_array(extra_actions.call(inst))
 	return out
+
+
+## 2026-10-22（作者）：哪些能给「不参战」—— 会参与战斗的那几件（有战斗定义：武器、护甲、会出手的器官）。
+## 信物不算：标了它会把信仰一起熄掉，那是另一件事，不该藏在「不参战」这个按钮里
+static func can_bench(inst: ItemInstance) -> bool:
+	return inst != null and inst.def != null and inst.def.combat != null and not inst.def.is_anchor()
 
 
 ## 099（作者定）：信物奉为主信仰（230 起走悬浮窗按钮，右键改成钉住悬浮窗）。不是信物什么也不做。返回切没切

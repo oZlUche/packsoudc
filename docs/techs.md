@@ -7,7 +7,7 @@
 
 | id | 名称 | 英文名 | 列 | 排序 | 前置 | 说明 | 英文说明 | 效果构件 | 构件参数 | 每级说明模板 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| pack | 行囊 | Travel Pack | 0 | 0 | safe_box | 出发时多带一笔钱：按角色自己的开局钱加百分比。 | Set out with extra money: a percentage of the character's own starting money. | tech_run_buff | {"effect": "starting_funds_bonus"} | 开局钱 {starting_funds_bonus_percent\|signed}% |
+| pack | 行囊 | Travel Pack | 0 | 0 | safe_box | 死里逃生：战败时保住身上一部分钱，级数越高留得越多。 | Keep part of the coins you're carrying if you die; higher levels keep more. | tech_run_buff | {"effect": "keep_on_death"} | 战败时保住身上一部分钱 |
 | safe_box | 保险箱扩格 | Bigger Safe | 0 | 0 | warehouse | 局内的保险箱多出格子，撤不出来也能多保住几件。 | The safe in a run gets more cells, so more is kept even if you fail to extract. | tech_safe_size | {"rows": 1} |  |
 | warehouse | 仓库扩建 | Warehouse Expansion | 0 | 0 |  | 仓库多一页，放得下更多带回来的东西；各页独立，左边的页签切换。 | One more Warehouse page for what you bring back; each page is separate, switch with the tabs on the left. | warehouse_pages |  |  |
 | endurance | 耐久 | Endurance | 1 | 0 |  | 体力上限更高，在图上走得更远：按角色自己的体力上限加百分比。 | Higher max Vitality, so you travel further on the map: a percentage of the character's own max Vitality. | tech_run_buff | {"effect": "vitality_max_bonus"} | 体力上限 {vitality_max_bonus_percent\|signed}% |
@@ -23,9 +23,9 @@
 
 | 科技 id | 级 | 钱 | 材料 | 效果参数 |
 |---|---|---|---|---|
-| pack | 1 | 400 |  | {"percent": 25, "amount": 0} |
-| pack | 2 | 800 |  | {"percent": 50, "amount": 0} |
-| pack | 3 | 1200 | tanned_leather: 2；linen_bolt: 1 | {"percent": 100, "amount": 0} |
+| pack | 1 | 400 |  | {"percent": 20} |
+| pack | 2 | 800 |  | {"percent": 30} |
+| pack | 3 | 1200 | tanned_leather: 2；linen_bolt: 1 | {"percent": 50} |
 | safe_box | 1 | 300 |  |  |
 | safe_box | 2 | 600 | nail_keg: 1；steel_ingot: 1 |  |
 | warehouse | 1 | 100 |  |  |

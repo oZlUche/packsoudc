@@ -81,7 +81,18 @@ static func run_start(t: TestCase) -> void:
 			paid += 1
 	t.check(with_enemy > 0, "敌人放好了（%d 个）" % with_enemy)
 	t.eq(paid, s.economy.paid_extracts, "付费撤离点标好了")
-	t.eq(s.wallet.balance, s.economy.starting_balance, "开局的钱来自经济规则")
+	# 2026-10-22（作者定）：开局的钱全由玩家自己从仓库带，不再凭空发
+	t.eq(s.wallet.balance, 0, "不带钱：钱包是空的")
+	var carrying := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, KIT,
+		{}, [] as Array[StringName], null, [], null, {}, &"", {}, 120)
+	t.eq(carrying.wallet.balance, 120, "带了 120：开局钱包里就是 120")
+	# 局外钱包：带钱那一步从这里扣（不够就一分不动）
+	var wallet_meta := MetaState.new()
+	wallet_meta.funds = 100
+	t.check(wallet_meta.spend_funds(60), "扣 60：成")
+	t.eq(wallet_meta.funds, 40, "剩 40")
+	t.check(not wallet_meta.spend_funds(50), "不够扣：拒绝")
+	t.eq(wallet_meta.funds, 40, "拒绝时一分不动")
 	t.check(s.vitality.is_full(), "体力满的")
 	t.check(s.board.requires_bag, "作战棋盘是棋盘模式（只有包里的东西参战）")
 	var bags := 0

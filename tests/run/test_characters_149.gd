@@ -52,13 +52,13 @@ static func run_boards_and_panels(t: TestCase) -> void:
 		t.eq(_stat(s, &"regen_stamina"), row[3], "%s：耐力回复 %s" % [id, row[3]])
 		t.eq(s.vitality.maximum, int(row[4]) + c.chapter.vitality_bonus, "%s：体力 %d（+ 章节 %d）" % [id, row[4], c.chapter.vitality_bonus])
 		t.eq(s.carry_capacity(), row[5], "%s：负重 %d" % [id, row[5]])
-		t.eq(s.wallet.balance, row[6], "%s：开局钱 %d" % [id, row[6]])
+		t.eq(s.wallet.balance, 0, "%s：不带钱入局就是 0（2026-10-22 起钱全由玩家自己带）" % id)
 		t.check(s.buff_context().stat_bonus.is_empty(), "%s：没有技能往基线上加数（操练不再是 +1 耐力回复）" % id)
-	# 没写开局钱（-1）→ 经济规则的全局数
+	# 2026-10-22（作者定）：角色的 `starting_funds` 不再发钱 —— 开局的钱只看玩家带了多少
 	var plain := CS._character(c, &"marcus").duplicate(true) as CharacterDef
 	plain.starting_funds = -1
 	var sp := _start(c, plain)
-	t.eq(sp.wallet.balance, sp.economy.starting_balance if sp.economy != null else 0, "没写开局钱：用全局的")
+	t.eq(sp.wallet.balance, 0, "没写开局钱、也没带钱：0")
 	# 开局屏的初始包在最窄的棋盘上也摆得下
 	var narrow := GridInventory.new(TABLE[&"andreus"][0], RunState.BOARD_ID, true)
 	RunState.give_kit(narrow, CS._character(c, &"andreus").starting_bags, c.items, null)
@@ -82,7 +82,8 @@ static func run_percent_techs(t: TestCase) -> void:
 		t.eq(_stat(s, &"max_hp"), row[7], "%s 满级：生命 %s" % [id, row[7]])
 		t.eq(s.vitality.maximum, int(row[8]) + c.chapter.vitality_bonus, "%s 满级：体力 %d" % [id, row[8]])
 		t.eq(s.carry_capacity(), row[9], "%s 满级：负重 %d" % [id, row[9]])
-		t.eq(s.wallet.balance, row[10], "%s 满级：开局钱 %d" % [id, row[10]])
+		# 2026-10-22（作者定）：钱全由玩家自己带 —— 科技不再放大开局钱（表里 row[10] 那列退役）
+		t.eq(s.wallet.balance, 0, "%s 满级：开局钱仍是 0（玩家带多少就是多少）" % id)
 		t.eq(_stat(s, &"max_stamina"), row[2], "%s 满级：耐力不动" % id)
 		zero[id] = [row[1], row[4], row[5]]
 		full[id] = [row[7], row[8], row[9]]

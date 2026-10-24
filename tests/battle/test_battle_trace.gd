@@ -237,7 +237,14 @@ static func run_replay_log_tool(t: TestCase) -> void:
 	code = OS.execute(exe, ["--headless", "--path", root, "--script", "res://tools/replay_log.gd", "--", ProjectSettings.globalize_path(base + BattleArchive.TRACE_EXT), "--summary"], out, true)
 	text = "\n".join(out)
 	t.eq(code, 0, "--summary 退出码 0")
-	t.check(text.contains("S0　造成伤害") and text.contains("S1　造成伤害") and text.contains("出手"), "摘要有双方伤害与出手次数")
+	# 跨进程这侧只断言 ASCII：Windows 上 OS.execute 捕获管道按 ANSI 代码页解码，
+	# 而子进程写的是 UTF-8 —— 在 ACP 不是 65001 的机器上中文会变成乱码
+	# （936：`S0　造成伤害` → `S0銆€閫犳垚浼ゅ`），断言就与本机区域设置绑死。
+	t.check(text.contains("S0") and text.contains("S1"), "--summary 输出含双方标记")
+	# 摘要的语义（双方伤害 / 出手次数）在进程内验，不跨编码边界
+	var parsed := BattleTrace.parse_jsonl(FileAccess.get_file_as_string(base + BattleArchive.TRACE_EXT))
+	var joined := "\n".join(BattleTrace.summarize(parsed["header"], parsed["entries"]))
+	t.check(joined.contains("S0　造成伤害") and joined.contains("S1　造成伤害") and joined.contains("出手"), "摘要有双方伤害与出手次数")
 	out = []
 	code = OS.execute(exe, ["--headless", "--path", root, "--script", "res://tools/replay_log.gd", "--", "/no/such/file.jsonl"], out, true)
 	t.eq(code, 1, "没有文件：退出码 1")

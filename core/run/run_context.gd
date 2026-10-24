@@ -9,6 +9,9 @@ extends RefCounted
 var vitality_max_bonus: int = 0
 ## 开局钱加多少
 var starting_funds_bonus: int = 0
+## 2026-10-22（作者定）：战败时保住钱包里剩的钱的百分之几（行囊科技）——
+## 按战败那一刻 wallet 里**实际剩的**算，不是按带进来的原始金额（否则中途花掉的钱也会被退，等于凭空造钱）
+var death_refund_percent: int = 0
 ## 149：有基数的三样按百分比加（Σ百分数，相加不相乘）：终值 = roundi(基数 ×（1 + Σ%/100）) + Σ加算（133 的先乘后加）。
 ## 基数是角色的数（体力上限、负重、开局钱），见 [method scaled]
 var vitality_max_mult: int = 0

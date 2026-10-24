@@ -78,11 +78,12 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		t.check(not texts.has(Names.description_of(ch)), "%s：角色说明不放" % ch.id)
 		t.check(not texts.any(func(s: String) -> bool: return s.begins_with("背包：")), "%s：棋盘下面不列背包" % ch.id)
 		var tiles: Array = setup._cap_tiles
-		t.eq(tiles.size(), 3, "%s：三块图标牌" % ch.id)
+		# 2026-10-22（作者定）：开局金币那块撤掉了 —— 钱改成玩家自己从仓库带，角色身上这个数不再有作用
+		t.eq(tiles.size(), 2, "%s：两块图标牌（负重 / 棋盘）" % ch.id)
 		t.eq(tiles.map(func(c: CapTile) -> String: return c.value_label.text),
-			[str(ch.weight_capacity), "%d × %d" % [ch.board_size.x, ch.board_size.y], str(ch.starting_funds)], "%s：负重 / 棋盘 / 开局金币的数" % ch.id)
-		t.eq(tiles.map(func(c: CapTile) -> String: return c.caption_label.text), ["负重上限", "棋盘", "开局金币"], "说明")
-		t.check(tiles.all(func(c: CapTile) -> bool: return c.has_art() and ((c.icon as TextureRect).texture.resource_path.begins_with(CapTile.ICON_DIR))), "%s：三块牌都用美术定稿的图标" % ch.id)
+			[str(ch.weight_capacity), "%d × %d" % [ch.board_size.x, ch.board_size.y]], "%s：负重 / 棋盘的数" % ch.id)
+		t.eq(tiles.map(func(c: CapTile) -> String: return c.caption_label.text), ["负重上限", "棋盘"], "说明")
+		t.check(tiles.all(func(c: CapTile) -> bool: return c.has_art() and ((c.icon as TextureRect).texture.resource_path.begins_with(CapTile.ICON_DIR))), "%s：两块牌都用美术定稿的图标" % ch.id)
 		t.eq((tiles[0] as CapTile).icon.modulate, Color.WHITE, "彩色成品，不调色")
 		t.eq((tiles[0] as CapTile).value_label.get_theme_font_size("font_size"), 28, "数字 28")
 		var names: Array = setup._skill_names

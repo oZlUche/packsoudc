@@ -42,6 +42,10 @@ var _preset_box: BoxContainer = null
 ## 085：地图规模（随机一局可选）；空 = 章节默认
 var scale_id: StringName = &""
 var _scale_btns: Dictionary = {}
+## 2026-10-22（作者定）：这一局带多少现金入局 —— 从仓库账上扣，死在局内就没了。默认 0（不带）
+var carry_funds: int = 0
+## 带入现金那一行的读数
+var _cash_label: Label = null
 var run_seed: int = 1
 ## 这个角色的棋盘，初始包摆好；从仓库拖进来的东西就在上面。出发时整块记成 layout 交给 RunState
 var board: GridInventory = null
@@ -164,6 +168,7 @@ const PAGE_ART: Array[String] = [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG,
 func open(_payload: Dictionary) -> void:
 	_backdrop()
 	_reroll_seed()
+	carry_funds = 0     # 2026-10-22：每次进开局屏都是「不带钱」，由玩家自己加
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top"]:
@@ -280,6 +285,7 @@ func _build_kit_page() -> Control:
 	middle.add_child(_rack_box)
 	_stash_box = _vbox(6)
 	middle.add_child(_stash_box)
+	_build_cash_box(middle)     # 2026-10-22：把仓库里的钱带进这一局
 
 	var ware_panel := _framed(UiTheme.PANEL_STASH_FRAME, UiTheme.ART_STASH_FRAME, FRAME_INSET)     # 180 定稿：木框铁角的仓库框
 	ware_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -316,6 +322,44 @@ func _build_kit_page() -> Control:
 	_fit_warehouse()
 	_build_stash()
 	return play
+
+
+## 2026-10-22（作者定）：带入现金 —— 这一局带多少钱由玩家定，上限是仓库余额，不带就是 0。
+## 带进去的钱从仓库账上扣，死在局内就没了；撤离时 [method MetaState.absorb] 会把局内余额 1:1 加回来
+func _build_cash_box(parent: VBoxContainer) -> void:
+	var box := _groove(14, 10, 14, 10)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(box)
+	var col := _vbox(8)
+	box.add_child(col)
+	_cash_label = _label("", 14, UiPalette.FG)
+	col.add_child(_cash_label)
+	var row := _hbox(8)
+	col.add_child(row)
+	row.add_child(_button(UiText.t("setup.cash_none"), func() -> void: set_carry_funds(0), 13))
+	row.add_child(_button(UiText.t("setup.cash_minus"), func() -> void: set_carry_funds(carry_funds - 10), 13))
+	row.add_child(_button(UiText.t("setup.cash_plus"), func() -> void: set_carry_funds(carry_funds + 10), 13))
+	row.add_child(_button(UiText.t("setup.cash_half"), func() -> void: set_carry_funds(int(floor(cash_cap() / 2.0))), 13))
+	row.add_child(_button(UiText.t("setup.cash_all"), func() -> void: set_carry_funds(cash_cap()), 13))
+	_refresh_cash()
+
+
+## 这一局最多能带多少：仓库账上的钱（没有局外就是 0）
+func cash_cap() -> int:
+	return flow.meta.funds if flow != null and flow.meta != null else 0
+
+
+## 改带入的现金：夹在 0 和仓库余额之间，改完刷读数
+func set_carry_funds(n: int) -> void:
+	carry_funds = clampi(n, 0, cash_cap())
+	_refresh_cash()
+
+
+func _refresh_cash() -> void:
+	if _cash_label == null:
+		return
+	carry_funds = clampi(carry_funds, 0, cash_cap())     # 仓库钱变少了（卖 / 花）跟着收
+	_cash_label.text = UiText.t("setup.carry_funds") % [carry_funds, cash_cap()]
 
 
 ## 180 补二：仓库框的大小 —— 宽 = 页签 + 格子 + 滚动条位；高 = 格子的高，但不超过这一页还剩的高（超出就滚）。
@@ -1208,7 +1252,7 @@ func _go_now() -> bool:
 	var c := chapter()
 	var ch := character()
 	flow.map_reveal = reveal_payload()
-	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id)
+	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id, carry_funds)
 	flow.map_reveal = {}
 	if run == null:
 		warn(UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source")))
@@ -1511,13 +1555,12 @@ func _rebuild_card() -> void:
 
 
 ## 179：三块图标牌 [id, 数字, 说明]：负重上限（有才有）、棋盘、开局金币（有才有）
+## 2026-10-22（作者定）：**开局金币那块不再显示** —— 钱改成玩家自己从仓库带了，角色身上这个数不再有任何作用
 static func cap_tiles(ch: CharacterDef) -> Array:
 	var out: Array = []
 	if ch.weight_capacity > 0:
 		out.append([&"weight", str(ch.weight_capacity), UiText.t("setup.cap_load")])
 	out.append([&"board", "%d × %d" % [ch.board_size.x, ch.board_size.y], UiText.t("setup.cap_board")])
-	if ch.starting_funds >= 0:
-		out.append([&"coin", str(ch.starting_funds), UiText.t("setup.cap_coins")])
 	return out
 
 
@@ -1580,3 +1623,4 @@ func _refresh() -> void:
 	var why := can_depart()
 	var hint := UiText.t("setup.unarmed") if _page > 0 and unarmed() else ""
 	_set_status(why if why != "" and not carried().is_empty() else _note + hint)     # 225：「军需官发的」在前
+	_refresh_cash()     # 2026-10-22：仓库的钱可能刚变过（卖了东西 / 换了角色）
