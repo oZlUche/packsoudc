@@ -170,3 +170,7 @@ status.md「占位数值清单」里，①② 管 `enemies` / `enemy_pools` / `i
 - 派执行线：`default_on()` 返回 `true`（函数留着，开发区开关照旧能关）；`tests/battle` 里有断言默认关的那条改过来；README 行照旧。
 
 **落地（v4.24）**：`BattleArchive.default_on()` 恒为 `true`。另加 `GameSettings.trace_on()`（= `battle_trace or not DevGate.on()`），`GameFlow.apply_battle_trace` 改用它，因为旧版玩家包存下的设置文件里写着 `"battle_trace": false`（当时导出包默认关），玩家包又没有开关能改回来，不加这一条，老玩家升级后照样不记。开发包仍按开发区的开关。测试：`test_dev_gate_186`（玩家包默认开、存过的「关」不算数；开发包按开关）、`test_battle_trace` 的设置一项。
+
+## 十二 补充三：数值 json 逐项中文说明（作者 2026-10-24 07:54「json的写法对我而言不够直观，翻译一下各项」）
+
+写在 [`docs/balance-json-guide.md`](../balance-json-guide.md)：`power_weights.json` 三十项按用途分九组逐条翻译并标「调大会怎样」；第〇层表的列怎么读；三个离群件偏在哪、改哪一项（战锤 / 秘银剑是负重折扣，毒刀是 `fight_sec` 的叠层假设、真仗短得叠不起来）；`standard_ruins.json` 的 entries / tiers / strength_rule / loadout 每一项；道具 `combat` 的三个数。
