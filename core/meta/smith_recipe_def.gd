@@ -14,6 +14,8 @@ extends Resource
 @export var inputs: Dictionary = {}
 ## 要的钱
 @export var funds: int = 0
+## 251 补充一：铁匠铺左列的大类（刀剑 / 斧锤 / 弓 / 法杖 / 盾 / 护甲），导入器必填
+@export_enum("blade", "hammer", "bow", "staff", "shield", "armor") var group: String = ""
 ## 铁匠铺几级才会打（1 ～ 3）
 @export_range(1, 3) var level: int = 1
 ## 给界面看的一句
@@ -28,6 +30,10 @@ static func load_all() -> Array[SmithRecipeDef]:
 		if res is SmithRecipeDef:
 			out.append(res)
 	return out
+
+
+## 251 补充一：左列大类的先后（法杖暂无配方也列着）
+const GROUPS: Array[String] = ["blade", "hammer", "bow", "staff", "shield", "armor"]
 
 
 static func find(recipes: Array, p_id: StringName) -> SmithRecipeDef:

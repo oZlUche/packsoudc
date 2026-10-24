@@ -108,3 +108,13 @@ static func run_tooltip_one_per_axis(t: TestCase) -> void:
 	var text := ItemTooltip.describe(fest)
 	t.check(text.contains("tags/bleed.png") or text.contains("流血"), "溃烂之刃列流血")
 	t.check(not text.contains("tags/poison.png"), "毒不再列（属性轴只一个）")
+
+
+static func run_faith_icons(t: TestCase) -> void:
+	t.begin("UI替换美术（v4.38 之后）：悬浮窗里神的标签画那位神的徽记（assets/ui/faith/<神>.png），停上去子窗照旧写「信仰：蛮神」；没图照旧写字")
+	t.eq(TagRegistry.icon_path(&"faith:brute"), "res://assets/ui/faith/brute.png", "蛮神：徽记")
+	t.eq(TagRegistry.icon_path(&"faith:no_such_god"), "", "没图：空串（退回写字）")
+	var row := ItemTooltip.tag_icons([&"trinket", &"faith:brute"])
+	t.check(row.contains("faith/brute.png") and not row.contains(Glossary.tag_name(&"faith:brute")), "标签行画徽记、不写字")
+	var terms := ItemTooltip.tag_icon_terms([&"faith:brute"])
+	t.eq(String((terms.get("tag:faith:brute", {}) as Dictionary).get("name", "")), Glossary.tag_name(&"faith:brute"), "子窗写名字")

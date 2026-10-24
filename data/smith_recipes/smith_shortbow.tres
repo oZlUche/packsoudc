@@ -11,3 +11,4 @@ inputs = {
 "rope_coil": 1
 }
 funds = 30
+group = "bow"

@@ -125,6 +125,8 @@ const LABEL_HERO_TITLE := &"LabelHeroTitle"
 ## 197 补充三 §14：主菜单左下角那几行字（思源宋体 Bold 描边字，悬停 / 焦点行前一枚铜菱形）与最底下一行小字链接（语言、开发工具、退出）
 const BUTTON_MENU_LINE := &"ButtonMenuLine"
 const BUTTON_MENU_FOOT := &"ButtonMenuFoot"
+## 251 补充一：铁匠铺「打造」平键（烧亮的铁红，[constant UiPalette.HOT_IRON]）—— 四态图到之前用
+const BUTTON_FORGE := &"ButtonForge"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
@@ -134,7 +136,7 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
 	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
-	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE]
+	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE, BUTTON_FORGE]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -1227,6 +1229,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	parchment.set_border_width_all(0)
 	t.set_stylebox("panel", PANEL_PARCHMENT, parchment_art if parchment_art != null else parchment)
 	_difficulty_buttons(t)
+	_forge_button(t)
 	_home_buttons(t)
 	_menu_styles(t)
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
@@ -1449,6 +1452,19 @@ static func _button_box(bg: Color, edge: Color, pad: Vector2i) -> StyleBoxFlat:
 	s.content_margin_top = pad.y
 	s.content_margin_bottom = pad.y
 	return s
+
+
+## 251 补充一 §10.2：「打造」平键 —— 烧亮的铁红底、亮字，平的（230：小功能键不要斜面 / 渐变 / 投影）；灰态压成暗铁色
+static func _forge_button(t: Theme) -> void:
+	t.set_type_variation(BUTTON_FORGE, "Button")
+	var pad := Vector2i(24, 8)
+	for pair in [["normal", UiPalette.HOT_IRON], ["hover", UiPalette.HOT_IRON_HOVER], ["pressed", UiPalette.HOT_IRON_PRESSED],
+			["hover_pressed", UiPalette.HOT_IRON_PRESSED], ["disabled", UiPalette.HOT_IRON_OFF]]:
+		t.set_stylebox(pair[0], BUTTON_FORGE, _button_box(pair[1], pair[1], pad))
+	t.set_stylebox("focus", BUTTON_FORGE, StyleBoxEmpty.new())
+	t.set_font("font", BUTTON_FORGE, _font_bold)
+	t.set_font_size("font_size", BUTTON_FORGE, 20)
+	_button_ink(t, BUTTON_FORGE, UiPalette.HOT_IRON_TEXT)
 
 
 ## 180 补四：难度的加减键（次档的样子，到头的灰态单独做：底压到板色、字暗一半、悬停不亮）与〇级的「开启挑战」铜牌按钮；

@@ -5,5 +5,6 @@
     "iron_ore": 2,
     "oak_log": 1
   },
-  "funds": 50
+  "funds": 50,
+  "group": "hammer"
 }

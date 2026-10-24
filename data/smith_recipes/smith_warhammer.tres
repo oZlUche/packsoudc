@@ -11,3 +11,4 @@ inputs = {
 "oak_log": 1
 }
 funds = 50
+group = "hammer"

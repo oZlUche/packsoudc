@@ -35,6 +35,12 @@ static func make(a: ItemActions.Action, width: float) -> TipButton:
 	b.add_theme_font_override("font", UiPalette.cjk_font_bold())
 	b.add_theme_font_size_override("font_size", FONT_SIZE)
 	b._style(false)
+	if a.coin >= 0:     # 251 补充一：价钱 = 金币 + 数字，靠右摆在签上
+		var c := CoinLabel.make(a.coin, FONT_SIZE, INK["normal"] if a.enabled else INK["disabled"])
+		c.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 10)
+		c.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		b.add_child(c)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.pressed.connect(b._on_pressed)
 	return b
 

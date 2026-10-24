@@ -152,10 +152,16 @@ static func describe(id: StringName, lang: String = "") -> String:
 
 ## 193：标签图标在的目录（文件名 = [member TagDef.icon]，空 = id）
 const ICON_DIR := "res://assets/ui/tags/"
+## 神的标签（`faith:<神>`）的图标在这里（信仰徽记）
+const FAITH_ICON_DIR := "res://assets/ui/faith/"
 
 
 ## 193：这个标签的图标路径；没图返回空串。没登记的标签按 id 找（献祭条件里的标签也走这里）
 static func icon_path(id: StringName) -> String:
+	var god := String(id).trim_prefix(FaithTags.PREFIX) if String(id).begins_with(FaithTags.PREFIX) else ""
+	if god != "":     # UI替换美术（v4.38 之后）：神的标签用那位神的徽记（`assets/ui/faith/<神>.png`，和标签图标同一套色底圆章）；没图照旧写字
+		var path := FAITH_ICON_DIR + god + ".png"
+		return path if ResourceLoader.exists(path) or FileAccess.file_exists(path) else ""
 	var def := get_def(id)
 	return icon_path_of_file(def.icon if def != null and def.icon != "" else String(id))
 
