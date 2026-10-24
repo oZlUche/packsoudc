@@ -1,0 +1,38 @@
+{
+  "id": "market",
+  "display_name": "集市",
+  "display_names": {
+    "en": "Market"
+  },
+  "order": 2,
+  "requires": [
+    "bargain"
+  ],
+  "column": 3,
+  "description": "基地里开一间集市，卖药、食物、弹药与低档素材；每一局回来换一次货。级数越高，货格越多、素材档次越高。",
+  "descriptions": {
+    "en": "Opens a market at your base selling remedies, food, ammo and low-grade materials; new stock after every run. Higher levels mean more slots and better materials."
+  },
+  "effect": {
+    "type": "tech_facility",
+    "facility": "market"
+  },
+  "tiers": [
+    {
+      "funds": 600
+    },
+    {
+      "funds": 1200,
+      "items": {
+        "hardwood_plank": 2
+      }
+    },
+    {
+      "funds": 2000,
+      "items": {
+        "steel_ingot": 2,
+        "nail_keg": 1
+      }
+    }
+  ]
+}

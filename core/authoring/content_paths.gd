@@ -22,6 +22,9 @@ const AUTHORING_RULE_PARTS := AUTHORING + "/rule_parts"
 const AUTHORING_RUN_BUFFS := AUTHORING + "/run_buffs"
 const AUTHORING_FAITHS := AUTHORING + "/faiths"
 const AUTHORING_RECIPES := AUTHORING + "/recipes"
+## 251：铁匠铺配方、基地铺子的规矩（集市）
+const AUTHORING_SMITH_RECIPES := AUTHORING + "/smith_recipes"
+const AUTHORING_BASE_RULES := AUTHORING + "/base_rules"
 const AUTHORING_ENEMIES := AUTHORING + "/enemies"
 const AUTHORING_ENEMY_POOLS := AUTHORING + "/enemy_pools"
 const AUTHORING_HUNTERS := AUTHORING + "/hunters"
@@ -56,6 +59,8 @@ const RULE_PARTS := "res://data/rule_parts"
 const RUN_BUFFS := "res://data/run_buffs"
 const FAITHS := "res://data/faiths"
 const RECIPES := "res://data/recipes"
+const SMITH_RECIPES := "res://data/smith_recipes"
+const BASE_RULES := "res://data/base_rules"
 const ENEMIES := "res://data/enemies"
 const ENEMY_POOLS := "res://data/enemy_pools"
 const HUNTERS := "res://data/hunters"
@@ -90,6 +95,8 @@ const KINDS := {
 	"rule_parts": [AUTHORING_RULE_PARTS, RULE_PARTS],
 	"forge": [AUTHORING_FORGE, FORGE],
 	"recipes": [AUTHORING_RECIPES, RECIPES],
+	"smith_recipes": [AUTHORING_SMITH_RECIPES, SMITH_RECIPES],     # 251
+	"base_rules": [AUTHORING_BASE_RULES, BASE_RULES],     # 251
 	"items": [AUTHORING_ITEMS, ITEMS],
 	"loadouts": [AUTHORING_LOADOUTS, LOADOUTS],
 	"characters": [AUTHORING_CHARACTERS, CHARACTERS],
@@ -116,10 +123,11 @@ const KINDS := {
 ## 章节按 id 引用池与规则；成就（091）排最后（对象可能是道具 / 章节）
 ## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）；110：局外科技在道具之后（要交的材料对着道具查）；114：百科的机制页最后（相关道具对着道具查）
 ## 154：宝箱皮肤在章节之前（章节按 id 引用它）
+## 251：铁匠铺配方在道具之后（产物与素材对着道具查）；集市规矩在局外规则之后
 ## 146：buff → 规则构件 → 道具（构件里的施加状态可以按 id 引用 buff；buff 自己的规则不能引用构件，所以没有环）
 ## 175：元素反应在 buff 之后（效果里按 id 施加 buff）；铸炉映射表在构件之后、道具之前（表里引用 buff 与构件，道具的预置附魔查表）
 ## 160 补一：随身技能排在前面（局外 buff、角色、事件、经济规则、章节、科技按 id 引用它）
-const ORDER := ["tags", "damage_types", "belt_skills", "run_buffs", "faiths", "buffs", "reactions", "rule_parts", "forge", "items", "recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "bag_pools", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "chest_skins", "chapters", "achievements", "techs", "help_pages"]
+const ORDER := ["tags", "damage_types", "belt_skills", "run_buffs", "faiths", "buffs", "reactions", "rule_parts", "forge", "items", "recipes", "smith_recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "bag_pools", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "base_rules", "chest_skins", "chapters", "achievements", "techs", "help_pages"]
 
 
 ## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [constant KINDS]**（批量导入与一致性检查都不跑它们），

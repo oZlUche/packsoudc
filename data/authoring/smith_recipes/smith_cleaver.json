@@ -1,0 +1,9 @@
+{
+  "id": "smith_cleaver",
+  "output": "cleaver",
+  "inputs": {
+    "copper_ingot": 1,
+    "iron_ore": 1
+  },
+  "funds": 30
+}

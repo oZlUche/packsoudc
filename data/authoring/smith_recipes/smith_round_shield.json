@@ -1,0 +1,9 @@
+{
+  "id": "smith_round_shield",
+  "output": "round_shield",
+  "inputs": {
+    "copper_ingot": 1,
+    "hardwood_plank": 1
+  },
+  "funds": 40
+}

@@ -69,6 +69,11 @@ var tech_buffs: Array[StringName] = []
 var safe_bonus: Vector2i = Vector2i.ZERO
 ## 160 补一：科技每局开局往腰带里发的随身技能（id → 几个，[TechBeltGrant]），开局交给 [BeltModule]。由科技等级推算，不入档
 var belt_grants: Dictionary = {}
+## 251：基地铺子的级数（铺子 id → 级，[TechFacility]）。由科技等级推算，不入档
+var facility_levels: Dictionary = {}
+## 251：集市这一轮的货（每格 {"id": 道具 id 字符串, "sold": bool}，[Market]）与上货用过几次种子；跟局外存档
+var market_stock: Array[Dictionary] = []
+var market_seed: int = 0
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -87,6 +92,11 @@ func _init(p_rules: MetaRules = null) -> void:
 	warehouse = Warehouse.new(warehouse_size(), WAREHOUSE_ID)
 	warehouse.accept_filter = keeps
 	rack = BagRack.new(RACK_ID)
+
+
+## 251：这间铺子几级（没有 = 0）
+func facility_level(id: StringName) -> int:
+	return int(facility_levels.get(id, 0))
 
 
 ## 一页仓库多大（163：扩建加页，页的大小不变）
@@ -304,6 +314,13 @@ func _record_codex(inst: ItemInstance, got: Dictionary) -> void:
 	if int(codex.get(key, 0)) == 0:
 		got["lit"] = int(got["lit"]) + 1
 	codex[key] = int(codex.get(key, 0)) + 1
+
+
+## 251：铁匠铺打出来的一件也点亮图鉴（和带出来同一套计数）
+func light_codex(def: ItemDef) -> void:
+	if def == null or def.is_token():
+		return
+	codex[String(def.id)] = int(codex.get(String(def.id), 0)) + 1
 
 
 ## 一件东西要不要留进局外（[method keeps]；225：包架收的包也留）；留的换成局外号段的 uid。返回要不要留
@@ -684,6 +701,8 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"tech_levels": tech_levels.duplicate(),
 		"tech_deposits": tech_deposits.duplicate(true),
+		"market_stock": market_stock.duplicate(true),     # 251
+		"market_seed": market_seed,
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -794,5 +813,14 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))
+	# 251：集市的货 —— 173：改了名的按新名，退役的（道具库里没有了）那一格去掉
+	for row in d.get("market_stock", []):
+		if not (row is Dictionary):
+			continue
+		var id := IdAliases.item(StringName(String((row as Dictionary).get("id", ""))))
+		if items != null and items.get_def(id) == null:
+			continue
+		m.market_stock.append({"id": String(id), "sold": bool((row as Dictionary).get("sold", false))})
+	m.market_seed = int(d.get("market_seed", 0))
 	return m
 #endregion

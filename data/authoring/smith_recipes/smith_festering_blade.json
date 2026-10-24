@@ -1,0 +1,11 @@
+{
+  "id": "smith_festering_blade",
+  "output": "festering_blade",
+  "inputs": {
+    "steel_ingot": 1,
+    "viper_gland": 1,
+    "wound_salt": 1
+  },
+  "funds": 150,
+  "level": 3
+}

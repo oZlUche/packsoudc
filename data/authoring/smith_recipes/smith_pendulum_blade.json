@@ -1,0 +1,11 @@
+{
+  "id": "smith_pendulum_blade",
+  "output": "pendulum_blade",
+  "inputs": {
+    "brass_gear": 1,
+    "mainspring": 1,
+    "steel_ingot": 1
+  },
+  "funds": 100,
+  "level": 2
+}

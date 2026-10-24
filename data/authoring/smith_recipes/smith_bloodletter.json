@@ -1,0 +1,11 @@
+{
+  "id": "smith_bloodletter",
+  "output": "bloodletter",
+  "inputs": {
+    "bone_charm_bits": 1,
+    "steel_ingot": 1,
+    "whetstone": 1
+  },
+  "funds": 90,
+  "level": 2
+}

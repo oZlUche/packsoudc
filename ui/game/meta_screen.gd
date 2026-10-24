@@ -11,6 +11,8 @@ extends GameScreen
 
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 const TechPanelScript := preload("res://ui/game/tech_panel.gd")
+const MarketPanelScript := preload("res://ui/game/market_panel.gd")     # 251
+const SmithyPanelScript := preload("res://ui/game/smithy_panel.gd")     # 251
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -23,9 +25,12 @@ const SHELF_HEAD := 44.0
 const SHELF_TAB_H := 60.0
 ## 左列五个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家。
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
-const TABS := [["warehouse", "meta.tab_warehouse"], ["sell", "meta.tab_sell"], ["tech", "meta.tab_tech"], ["codex", "meta.tab_codex"], ["achievements", "meta.tab_achievements"]]
+## 251：集市、铁匠铺（科技点出来才露页签，[member FACILITY_TABS]）排在出售后面 —— 右半边都有仓库
+const TABS := [["warehouse", "meta.tab_warehouse"], ["sell", "meta.tab_sell"], ["market", "meta.tab_market"], ["smithy", "meta.tab_smithy"], ["tech", "meta.tab_tech"], ["codex", "meta.tab_codex"], ["achievements", "meta.tab_achievements"]]
 ## 178：这几页不显示右半边的仓库，中列吃满
 const NO_SHELF_TABS := ["codex", "achievements", "tech"]     # 229：科技页也收起右半边
+## 251：页签 → 哪一间铺子（0 级不露页签）
+const FACILITY_TABS := {"market": Market.ID, "smithy": Smithy.ID}
 
 var _wh = null
 var _new_run_btn: Button
@@ -68,6 +73,7 @@ var _shelf_title: HeaderTag = null
 
 func open(payload: Dictionary) -> void:
 	var m := flow.meta
+	flow.ensure_market()     # 251：有集市却没货（老档、开发区改了级数）先上一次
 	UiTheme.dress_home_backdrop(_backdrop())
 	_margin = MarginContainer.new()
 	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -183,7 +189,7 @@ func open(payload: Dictionary) -> void:
 
 	# 图鉴页、成就页（091）
 	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
-	for pair in [["codex", _build_codex], ["achievements", _build_achievements], ["sell", _build_sell], ["tech", _build_tech]]:
+	for pair in [["codex", _build_codex], ["achievements", _build_achievements], ["sell", _build_sell], ["market", _build_market], ["smithy", _build_smithy], ["tech", _build_tech]]:
 		var cloth := _cloth()
 		(pair[1] as Callable).call(cloth)     # 110：科技页（仓库扩建）与上交
 		_pages[pair[0]] = cloth
@@ -414,6 +420,48 @@ func _build_tech(root: Control) -> Control:
 ## 科技页（测试看）
 func tech_panel():
 	return _tech
+#endregion
+
+
+#region 集市、铁匠铺（251）
+var _market = null
+var _smithy = null
+
+
+func _build_market(root: Control) -> Control:
+	_market = MarketPanelScript.new()
+	_market.setup(flow, font, say)
+	_market.changed.connect(_refresh)
+	root.add_child(_market)
+	return _market
+
+
+func _build_smithy(root: Control) -> Control:
+	_smithy = SmithyPanelScript.new()
+	_smithy.setup(flow, font, say)
+	_smithy.changed.connect(_refresh)
+	root.add_child(_smithy)
+	return _smithy
+
+
+## 测试看
+func market_panel():
+	return _market
+
+
+func smithy_panel():
+	return _smithy
+
+
+## 铺子 0 级不露页签；正翻着的那间没了就回家
+func _sync_facility_tabs() -> void:
+	for key in FACILITY_TABS:
+		var b := _tab_btns.get(key, null) as Button
+		if b == null:
+			continue
+		b.visible = flow.meta.facility_level(FACILITY_TABS[key]) > 0
+		if not b.visible and _tab == key:
+			show_tab("home")
 #endregion
 
 
@@ -941,6 +989,7 @@ func toggle_unlock(id: StringName) -> bool:
 
 
 func _refresh() -> void:
+	_sync_facility_tabs()     # 251：科技页刚点出集市 / 铁匠铺
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
 	if _tab_btns.has("warehouse"):
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗

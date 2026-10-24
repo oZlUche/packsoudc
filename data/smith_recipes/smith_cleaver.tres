@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_jnoh3"]
+
+[resource]
+script = ExtResource("1_jnoh3")
+id = &"smith_cleaver"
+output = &"cleaver"
+inputs = {
+"copper_ingot": 1,
+"iron_ore": 1
+}
+funds = 30

@@ -18,6 +18,8 @@
 | scouting | 侦察 | Scouting | 2 | 0 | bargain | 隐形的猎手走近到一定距离就看得见。 | Hidden hunters become visible once they come close enough. | tech_run_buff | {"effect": "scout_range"} | 侦察距离 {scout_range_range} |
 | thorough_search | 细搜 | Thorough Search | 2 | 0 |  | 每个搜索点能多搜几次。 | Search each search spot a few more times. | tech_run_buff | {"effect": "extra_searches"} | 每个搜索点多搜 {extra_searches_amount} 次 |
 | bargain | 讨价 | Haggling | 2 | 1 | luck | 商店的东西更便宜。 | Shop prices are lower. | tech_run_buff | {"effect": "shop_price_mult"} | 商店售价 ×{shop_price_mult_factor} |
+| market | 集市 | Market | 3 | 2 | bargain | 基地里开一间集市，卖药、食物、弹药与低档素材；每一局回来换一次货。级数越高，货格越多、素材档次越高。 | Opens a market at your base selling remedies, food, ammo and low-grade materials; new stock after every run. Higher levels mean more slots and better materials. | tech_facility | {"facility": "market"} |  |
+| smithy | 铁匠铺 | Smithy | 3 | 1 | warehouse | 基地里开一间铁匠铺，按配方用仓库里的素材加钱打造武器、防具。级数越高，会打的档次越高。 | Opens a smithy at your base that forges weapons and armour from Warehouse materials plus coins, by recipe. Higher levels unlock better recipes. | tech_facility | {"facility": "smithy"} |  |
 
 ## 等级
 
@@ -52,3 +54,9 @@
 | thorough_search | 2 | 700 |  | {"amount": 2} |
 | bargain | 1 | 500 |  | {"factor": 0.95} |
 | bargain | 2 | 1000 | silver_ingot: 1 |  |
+| market | 1 | 600 |  |  |
+| market | 2 | 1200 | hardwood_plank: 2 |  |
+| market | 3 | 2000 | steel_ingot: 2；nail_keg: 1 |  |
+| smithy | 1 | 500 |  |  |
+| smithy | 2 | 1000 | steel_ingot: 2 |  |
+| smithy | 3 | 1800 | hardwood_plank: 2；rivet_box: 2 |  |

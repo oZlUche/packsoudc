@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_imu7h"]
+
+[resource]
+script = ExtResource("1_imu7h")
+id = &"smith_warhammer"
+output = &"warhammer"
+inputs = {
+"iron_ore": 2,
+"oak_log": 1
+}
+funds = 50

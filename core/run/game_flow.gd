@@ -55,6 +55,9 @@ var hunter_defs: Dictionary = {}
 var faith_defs: Dictionary = {}
 ## 合成配方（084）：开局给 RunState、读档后补上
 var recipes: Array[RecipeDef] = []
+## 251：集市的规矩（没给 = 资产里的，再没有用默认）与铁匠铺配方
+var market_rules: MarketRules = null
+var smith_recipes: Array[SmithRecipeDef] = []
 var save_path: String = RunSave.DEFAULT_PATH
 var meta_path: String = MetaSave.DEFAULT_PATH
 ## 098：最近一次「读不出来、已备份」的局外存档文件路径（空 = 没发生过）。读取存档屏与主菜单各显示一句
@@ -709,8 +712,68 @@ func submit_tech(id: StringName, uid: int) -> bool:
 func upgrade_tech(id: StringName) -> bool:
 	var ok := TechService.upgrade(meta, tech_of(id))
 	if ok:
+		_facility_changed(id)
 		save_meta()
 	return ok
+
+
+## 251：升的 / 改的是集市 —— 立刻重新上货（多出来的格马上有东西；改回 0 级就清空）
+func _facility_changed(id: StringName) -> void:
+	var def := tech_of(id)
+	if def != null and def.effect is TechFacility and (def.effect as TechFacility).facility == Market.ID:
+		restock_market()
+#endregion
+
+
+#region 基地铺子（251）
+func market() -> MarketRules:
+	if market_rules == null:
+		market_rules = Market.load_rules()
+	return market_rules
+
+
+func restock_market() -> void:
+	Market.restock(meta, market(), items, BagPool.standard())
+
+
+## 一局结束回到基地：有集市就换一次货
+func after_run_market() -> void:
+	if Market.level(meta) > 0:
+		restock_market()
+
+
+## 老档、开发区：有集市却没货就上一次
+func ensure_market() -> void:
+	if Market.ensure(meta, market(), items, BagPool.standard()):
+		save_meta()
+
+
+## 买集市第 i 格；返回空串 = 买了（存盘），否则是原因
+func buy_market(i: int) -> String:
+	var why := Market.can_buy(meta, market(), items, i)
+	if why == "" and Market.buy(meta, market(), items, i) == null:
+		why = UiText.t("market.full")
+	if why == "":
+		save_meta()
+	return why
+
+
+## 铁匠铺配方：按会打的级数、再按 id
+func sorted_smith_recipes() -> Array[SmithRecipeDef]:
+	var out := smith_recipes.duplicate()
+	out.sort_custom(func(a: SmithRecipeDef, b: SmithRecipeDef) -> bool: return a.level < b.level if a.level != b.level else String(a.id) < String(b.id))
+	return out
+
+
+## 打一张配方；返回空串 = 打了（存盘），否则是原因
+func forge(id: StringName) -> String:
+	var r := SmithRecipeDef.find(smith_recipes, id)
+	var why := Smithy.can_forge(meta, r, items)
+	if why == "" and Smithy.forge(meta, r, items) == null:
+		why = UiText.t("smithy.full")
+	if why == "":
+		save_meta()
+	return why
 #endregion
 
 
@@ -773,6 +836,7 @@ func dev_set_tech_level(id: StringName, level: int) -> int:
 		meta.tech_levels[String(id)] = lv
 	meta.tech_deposits.erase(String(id))
 	TechService.derive(meta, tech_defs)
+	_facility_changed(id)
 	meta.changed.emit()
 	save_meta()
 	return lv
@@ -1120,6 +1184,7 @@ func _settle_run() -> void:
 		_settled = true
 		# 2026-10-22（作者定）：行囊给的「战败保住几成钱」由 absorb 在战败分支里兑现
 		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0)
+		after_run_market()     # 251：一局一换货（撤离、战败都换）
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)
