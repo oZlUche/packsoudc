@@ -53,3 +53,12 @@
 ## 五 测试
 
 退回后 `pending_battle` 空、节点不算用过、`travel.clock` 多两步、再踩同一点是同一场；核心点与序章没有退回；三种遭遇的逃跑掷到成功 / 失败各一次的状态（体力、buff、是否开打）；猎手逃跑失败背虚弱；脱身仍必逃。
+
+## 六 落地（v4.31）
+
+- **退回**：`NodeEvents.retreat_reason()` / `retreat_pending_battle()`：只给 `kind` 为 `node`、点的实际类型是战斗 / 精英的那一场（核心点、事件点上开的伏击、搜索遭遇都不给）；清掉 `pending_battle`、点不标用过、发 `battle_retreated`，退回 `travel.history` 里的上一个点，走的是「走一步」那条路（`RunState.relocate`：计数、侵蚀、猎手的回合；来路不能从这头走时按传送算一步）。序章由 `GameFlow.retreat_reason()` 拦（章节 `skip_setup`）；`GameFlow.retreat_battle()` 退完照走一步那样存档、往下走。
+- **战前屏**：`PrebattleScreen` 的按钮那一排左下角一颗 `TipButton`（230 平签）写「退回」，悬浮提示一句；战旗居中（右边垫同宽空位）。作者 10:45：图标让美术先出两三个样、作者定了再换，现在是文字占位。退不了的场合不建这颗键。地图日志记一句「退回了」。
+- **逃跑**：节点规则新节 `flee`（`NodeRules.flee`：`chance` 0.5 / `fail_vitality` 1 / `fail_buff` weakened；standard 与 prologue 两份都写了）；新后果 `flee_encounter`（`FleeEncounter`）；`NodeEvents.flee_chance()`（规则 + `flee_bonus`，夹 0～1）与 `flee_roll()`（掷、记日志 `flee.ok` / `flee.fail`，原 `hunter.flee_ok / flee_fail` 挪成通用键；失败扣体力、背 `fail_buff`）。`choose()` 里：逃掉 = 搜索会话按 `slipped` 收、点用过、不发 `battle_skipped`；没逃掉 = 照 `start_battle` 开打。
+- **三处**：`search_encounter` 加「逃跑（{flee_chance}%）」；`event_ambush` 的「绕开」换成同一项（成功不再背虚弱）；`HunterSystem.flee` 改调 `flee_roll`（成功率、扣体力、歇几步仍按猎手定义，失败也背虚弱）。新占位符 `{flee_chance}`（`docs/text-placeholders.md`）。序章教程那场遭遇（`tut_search_2_encounter`）没动。
+- 测试 `tests/run/test_retreat_flee_248.gd`（退回的步数 / 点 / 同一场、哪些场合不给、三种逃跑成败、占位符）；`test_unarmed_222` 验战前屏左下角的「退回」；`test_node_screens` 的「有人来了」改成两项。
+

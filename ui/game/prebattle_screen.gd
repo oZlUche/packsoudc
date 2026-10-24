@@ -2,7 +2,8 @@
 ##
 ## 右边是对手（作者 2026-10-21 18:19：和回放统一，自己在左）：从节点内容重建的棋盘（[method EnemyKit.board_of]）与一排属性签（生命 / 耐力 / 耗气 / DPS / 特殊能力）—— 和真打出来的是同一份编译（4.2）；
 ## 左边是自己的棋盘与地上（[InventoryPanel]），随便拖：拖出棋盘 = 放到地上（不参战，打完还在地上；走了留在这个点、回来能拿）。
-## 只有一个按钮「开战」：棋盘上一件会出手的东西都没有时灰掉（打不起来的仗不让开）。这一屏是**必须过的**：不能收起回地图，也走不了。
+## 只有一个按钮「开战」：棋盘上一件会出手的东西都没有时灰掉（打不起来的仗不让开）。这一屏是**必须过的**：不能收起回地图，也走不了 ——
+## 248：地图上看得见的战斗 / 精英点可以「退回」（退回上一个点、照走一步，这一场留着）
 extends GameScreen
 
 var _node: MapNode = null
@@ -29,6 +30,9 @@ const FIGHT_ART := "res://assets/ui/battle/"
 const FIGHT_HIT := Rect2(22, 10, 156, 108)
 var _why: Label
 var _slip_btn: Button = null
+## 248：「退回」（平的小石键，230 平签；图标等美术出样、作者定了再换）。退不了的场合不建
+var _retreat_btn: TipButton = null
+const RETREAT_W := 96.0
 ## 147：腰带里能在这儿用的（烟雾弹）一件一个按钮
 var _belt_row: HBoxContainer = null
 var _inv: Control
@@ -124,7 +128,24 @@ func open(payload: Dictionary) -> void:
 		buttons.add_child(_slip_btn)
 	for c in buttons.get_children():
 		(c as Control).size_flags_vertical = Control.SIZE_SHRINK_CENTER     # 旗比按钮高：别的按钮不跟着拉长
-	col.add_child(buttons)
+	# 248：「退回」放在左下角（战旗居中，右边垫一块同宽的空位让它不偏）；地图上看得见的战斗 / 精英点才有
+	var foot := _hbox(0)
+	var corner := VBoxContainer.new()
+	corner.alignment = BoxContainer.ALIGNMENT_END
+	corner.custom_minimum_size = Vector2(RETREAT_W, 0)
+	if flow.retreat_reason() == "":
+		_retreat_btn = TipButton.make(ItemActions.make(&"retreat", UiText.t("pre.retreat"), Callable()), RETREAT_W)
+		_retreat_btn.tooltip_text = UiText.t("pre.retreat_tip")
+		_retreat_btn.chosen.connect(func(_a): retreat())
+		corner.add_child(_retreat_btn)
+	foot.add_child(corner)
+	buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.add_child(buttons)
+	var mirror := Control.new()
+	mirror.custom_minimum_size = Vector2(RETREAT_W, 0)
+	mirror.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	foot.add_child(mirror)
+	col.add_child(foot)
 	_why = _label("", 13, UiPalette.STAMINA)
 	_why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_why)
@@ -193,6 +214,16 @@ func can_start() -> String:
 ## 222：棋盘上一件会出手的东西都没有 —— 只提醒一句，不拦「开战」
 func unarmed() -> bool:
 	return flow.run != null and flow.run.compile_player().active_items().is_empty()
+
+
+## 248：按「退回」：这一场先不打、退回上一个点（照走一步）。返回空串 = 退了
+func retreat() -> String:
+	return flow.retreat_battle()
+
+
+## 248：这一屏有没有「退回」键
+func retreat_button() -> TipButton:
+	return _retreat_btn
 
 
 ## 136：按「溜走」。返回空串 = 溜了

@@ -110,6 +110,8 @@ var pending_battle: Dictionary = {}
 signal battle_pending(node: MapNode, type: StringName, content: Dictionary)
 ## 136：等着开打的那一场被「脱身」跳过了（点用过、没打）
 signal battle_skipped(node: MapNode)
+## 248：等着开打的那一场被「退回」推掉了（点没用过、敌人还在；人退回上一个点）
+signal battle_retreated(node: MapNode)
 
 var current_search: SearchSession = null
 ## 154：踩上去才揭出来的宝箱用哪套皮肤（章节的 [member ChapterDef.chest_skin]，持有方设）
@@ -351,6 +353,12 @@ func choose(i: int) -> bool:
 		if ctx.hunter_fight:
 			hooks.fight_hunter(node, hunter_uid, ctx)
 		return true
+	# 248：被缠上了逃跑（搜索遭遇、伏击）：先掷 —— 逃掉照「脱身」收（下面），没逃掉付了代价照样开打
+	var fled := false
+	if ctx.flee_encounter:
+		var fail := rules.flee_fail_vitality() if rules != null else 1
+		fled = flee_roll(flee_chance(), fail, _rng_for(node, "flee:%d:%d" % [ctx.steps, searches_total()]), ctx)
+		ctx.start_battle = not fled
 	# 8-3：改类型先落账，后面的「照常发生」「开战」都按新类型走（和随机点揭开是同一个记号）
 	if ctx.new_type != &"" and ctx.new_type != type:
 		node.content["resolved_type"] = String(ctx.new_type)
@@ -363,6 +371,12 @@ func choose(i: int) -> bool:
 		waited.emit(node, ctx.wait_actions)
 	if vitality != null and vitality.is_depleted():
 		_defeat(&"vitality_depleted")
+		_visited(node)
+		return true
+	# 248：逃掉了：和「脱身」同一条路 —— 点用过、没有战利品；搜索遭遇的会话按 slipped 收（收获照交，不弹「被赶跑」）
+	if fled:
+		if current_search != null:
+			_finish_search(node, current_search, &"slipped")
 		_visited(node)
 		return true
 	# 084：搜索循环里的「离开 / 搜完了」：没选再搜就是走，会话结束、收获交出去（_close_search 标用过）
@@ -581,6 +595,59 @@ func skip_pending_battle() -> bool:
 	_visited(node)
 	battle_skipped.emit(node)
 	return true
+
+
+## 248：战前屏「退回」现在能不能按：空串 = 能。只给地图上看得见的战斗 / 精英点 —— 核心点的首领不能退（和 136 一致），
+## 搜索遭遇、伏击、猎手那几场是被缠上的，走「逃跑」。序章的强制战斗由持有方另拦（[method GameFlow.retreat_reason]）
+func retreat_reason() -> String:
+	var node := pending_battle_node()
+	if node == null:
+		return UiText.t("pre.no_battle")
+	if String(pending_battle.get("kind", "node")) != "node" or not effective_type(node) in [&"battle", &"elite"]:
+		return UiText.t("pre.no_retreat")
+	if travel == null or travel.current_id != node.id or travel.history.size() < 2 or travel.history[travel.history.size() - 2] == node.id:
+		return UiText.t("pre.no_retreat")
+	return ""
+
+
+## 248：退回 —— 看见了再躲，不罚：等着的一场清掉，点**不**算用过（敌人留在原地、内容不变，回来再踩还是这一场），
+## 人退回上一个点。这一退照走一步（踩进来一步 + 退回一步，时间就是代价）：走一步的那条路（计数、侵蚀、猎手的回合）。返回退没退
+func retreat_pending_battle() -> bool:
+	if retreat_reason() != "":
+		return false
+	var node := pending_battle_node()
+	var back := travel.history[travel.history.size() - 2]
+	pending_battle = {}
+	var intent := MapNavigator.resolve_step(graph, node.id, back)
+	if intent == null:
+		intent = MoveIntent.teleport(node.id, back, 1)     # 来的那条路不能从这头走（单向边、传送进来的）：照样退、照算一步
+	battle_retreated.emit(node)
+	return hooks.relocate(intent) if hooks.has(&"relocate") else travel.apply(intent)
+
+
+## 248：被缠上了逃跑的成功率 —— 节点规则 `flee.chance` + buff 的逃跑加成，夹在 0～1
+func flee_chance() -> float:
+	var base := rules.flee_chance() if rules != null else 0.5
+	return clampf(base + hooks.run_context().flee_bonus, 0.0, 1.0)
+
+
+## 248：掷一把逃跑（搜索遭遇、伏击、猎手同一个）。逃掉返回 true；没逃掉扣 [param fail_vitality] 点体力
+## （给了 [param spend] 就交它扣 —— 猎手要自己报战败）、背节点规则的 `flee.fail_buff`。日志与代价记进 [param ctx]
+func flee_roll(chance: float, fail_vitality: int, rng: RandomNumberGenerator, ctx: EventContext, spend: Callable = Callable()) -> bool:
+	if rng.randf() < chance:
+		ctx.log.append(UiText.t("flee.ok"))
+		return true
+	ctx.log.append(UiText.t("flee.fail"))
+	if fail_vitality > 0:
+		if spend.is_valid():
+			spend.call(fail_vitality)
+		elif vitality != null:
+			vitality.spend(fail_vitality, &"flee")
+		ctx.spent += fail_vitality
+	var buff := rules.flee_fail_buff() if rules != null else &""
+	if buff != &"" and hooks.grant_map_buff(buff):
+		ctx.buffs_granted.append(String(buff))
+	return false
 
 
 ## 117：把这一场写进 user://battle_logs（内部日志 + 回放存档），名字表按道具库查

@@ -388,7 +388,7 @@ func fight(node: MapNode, uid: int, _ctx: EventContext) -> bool:
 	return won
 
 
-## 逃跑：掷成功率。逃掉它歇几步；没逃掉扣体力，调用方接着开打。返回逃没逃掉
+## 逃跑：掷成功率。逃掉它歇几步；没逃掉扣体力、背虚弱（248），调用方接着开打。返回逃没逃掉
 func flee(_node: MapNode, uid: int, ctx: EventContext) -> bool:
 	var h := by_uid(uid)
 	var def := def_of(h) if h != null else null
@@ -397,15 +397,10 @@ func flee(_node: MapNode, uid: int, ctx: EventContext) -> bool:
 	var chance := clampf(def.flee_chance + run.buff_context().flee_bonus, 0.0, 1.0)
 	if ctx != null and ctx.flee_skill != &"" and run.skills != null and run.skills.consume(ctx.flee_skill) == "":
 		chance = 1.0     # 136：脱身
-	var escaped := rng().randf() < chance
+	# 248：和搜索遭遇、伏击同一把（[method NodeEvents.flee_roll]）：成功率、失败扣的体力、歇几步按这只猎手的定义；失败也背虚弱
+	var escaped := run.events.flee_roll(chance, def.flee_fail_vitality, rng(), ctx, spend_vitality)
 	if escaped:
 		h.cooldown = maxi(0, def.flee_cooldown)
-		ctx.log.append(UiText.t("hunter.flee_ok"))
-	else:
-		ctx.log.append(UiText.t("hunter.flee_fail"))
-		if def.flee_fail_vitality > 0:
-			spend_vitality(def.flee_fail_vitality)
-			ctx.spent += def.flee_fail_vitality
 	changed.emit()
 	return escaped
 

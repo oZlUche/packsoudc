@@ -40,5 +40,10 @@
   },
   "event_weights": {
     "story": 1
+  },
+  "flee": {
+    "chance": 0.5,
+    "fail_vitality": 1,
+    "fail_buff": "weakened"
   }
 }

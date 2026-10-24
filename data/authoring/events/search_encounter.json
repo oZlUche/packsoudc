@@ -19,6 +19,17 @@
           "type": "start_battle"
         }
       ]
+    },
+    {
+      "label": "逃跑（{flee_chance}%）",
+      "labels": {
+        "en": "Flee ({flee_chance}%)"
+      },
+      "outcomes": [
+        {
+          "type": "flee_encounter"
+        }
+      ]
     }
   ]
 }

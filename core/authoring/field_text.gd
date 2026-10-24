@@ -66,7 +66,7 @@ const LABELS := {
 	# 规则表
 	"random_weights": "随机点权重", "event_weights": "事件权重", "events_by_type": "各类点的事件表", "event_restore": "事件回体力", "event_item_rarity_cap": "事件道具稀有度上限",
 	"loss_cost": "战败代价", "rest_restore": "休息回体力", "search": "搜索", "reveal_seconds": "揭示秒数", "items_per_search": "每次搜几件", "max_searches": "最多搜几次",
-	"boss_extracts": "打完核心直接撤离", "boss_rarity": "核心保底稀有度", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
+	"boss_extracts": "打完核心直接撤离", "fail_vitality": "失败扣体力", "fail_buff": "失败背的 buff", "boss_rarity": "核心保底稀有度", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
 	"bags_always_drop": "包必掉", "rarity_weights": "稀有度权重", "shop_slots": "商店栏位", "shop_sell_ratio": "出售折价", "shop_price_mult": "商店价格倍率",
 	"shop_refresh_cost": "刷新价", "extract_fee": "撤离费", "starting_balance": "开局钱", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
 	# 角色 / 敌人 / 猎手 / 信仰
@@ -108,7 +108,7 @@ const TYPE_LABELS := {
 	"bracket_within": "段位在区间", "erosion_depth_within": "侵蚀深度在区间", "has_item": "身上有道具", "node_type_is": "点的类型是", "has_flag": "有局外旗标",
 	"give_item": "给道具", "give_random_item": "给随机道具", "restore_vitality": "回体力", "spend_vitality": "扣体力", "change_money": "钱加减",
 	"grant_map_buff": "给地图增益", "remove_map_buff": "去掉地图增益", "start_battle": "开战", "open_search": "开搜索", "open_shop": "开商店", "next_event": "接下一个事件",
-	"say": "说一句", "hunter_fight": "迎战猎手", "hunter_flee": "逃离猎手", "teleport": "传送", "change_node_type": "改点的类型", "proceed": "照常发生", "extract": "撤离",
+	"say": "说一句", "hunter_fight": "迎战猎手", "hunter_flee": "逃离猎手", "flee_encounter": "逃跑（几成）", "teleport": "传送", "change_node_type": "改点的类型", "proceed": "照常发生", "extract": "撤离",
 	"pass_time": "原地耗时", "lose_item": "失去道具", "set_flag": "立局外旗标",
 	# 093 信仰流派
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",

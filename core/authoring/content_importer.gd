@@ -1754,6 +1754,10 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 			report.error("event_weights", "认不得的事件结果 '%s'（只能是 %s）" % [key, ", ".join(NodeRules.EVENT_OUTCOMES)])
 	if rules.rest_restore < 0 or rules.event_restore < 0:
 		report.error("rest_restore", "回的体力不能为负")
+	if rules.flee_chance() < 0.0 or rules.flee_chance() > 1.0:
+		report.error("flee.chance", "逃跑成功率应在 0～1 之间")
+	if rules.flee_fail_vitality() < 0:
+		report.error("flee.fail_vitality", "逃跑失败扣的体力不能为负")
 	if rules.chest != null:
 		_validate_chest_rules(rules.chest, report)
 	if rules.battle_time_limit <= 0.0:
