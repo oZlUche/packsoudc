@@ -14,7 +14,7 @@ var _seen_end := false
 var _won: bool = false
 ## 166 补充二：战斗教程（章节 `coaches` 的 `battle`），开着时回放停着
 var _coach: CoachOverlay = null
-## 220：这一场头一回打出的反应（流程给的）；回放放到第一次弹字时停下解释一句，解释过的划掉
+## 220：这一场头一回打出的反应（流程给的；作者 10-24：只有存档还没见过任何反应时才有）；回放放到第一次弹字时停下解释一句，之后整场不再停
 var _fresh_reactions: Array[StringName] = []
 ## 铜面板：斗技场图从面板内缩（40）处铺起；场地宽
 const PANEL_MARGIN := 40
@@ -377,7 +377,7 @@ func _on_reaction_shown(id: StringName, side: int) -> void:
 	var def := ReactionResolver.by_id(id)
 	if def == null:
 		return
-	_fresh_reactions.erase(id)
+	_fresh_reactions.clear()     # 作者 10-24：讲一次机制就够 —— 同一场打出的别种反应也不再停
 	_view.hold()
 	_coach = CoachOverlay.new()
 	_coach.font = font

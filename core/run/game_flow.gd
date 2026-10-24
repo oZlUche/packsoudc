@@ -1402,8 +1402,8 @@ func _adopt(state: RunState) -> void:
 	ev.battle_finished.connect(func(node: MapNode, r: BattleResult, won: bool):
 		var fresh: Array[StringName] = []     # 220：这一场头一回打出的反应 —— 回放到那一刻停下来解释（记是现在就记了，跳过也算见过）
 		if meta != null and r != null:
-			for id in ReactionResolver.reactions_in(r.log):
-				if not meta.reaction_seen(StringName(String(id))):
+			if meta.reactions_seen.is_empty():     # 作者 10-24：讲的是「有反应这回事」—— 整个存档只讲一次（菌血讲过，激荡不再停）
+				for id in ReactionResolver.reactions_in(r.log):
 					fresh.append(StringName(String(id)))
 			meta.note_reactions(ReactionResolver.reactions_in(r.log))     # 175：百科的反应页点亮
 		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won, "new_reactions": fresh,

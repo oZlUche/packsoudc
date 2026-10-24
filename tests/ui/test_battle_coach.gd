@@ -246,7 +246,8 @@ static func frame_reaction_pause(t: TestCase, root: Window) -> void:
 		var text := String(o.step()["text"])
 		var def := ReactionResolver.by_id(&"poison_bleed")
 		t.eq(text, Encyclopedia.reaction_intro(def), "文字由反应定义拼")
-		t.check(text.begins_with(Names.of(def) + "：毒碰上血。") and text.ends_with("百科里点亮了这一页。"), "「名字：甲碰上乙。说明　百科里点亮了这一页。」（%s）" % text)
+		t.check(text.begins_with("【元素反应】" + Names.of(def) + "：毒碰上血。") and text.ends_with("打出过的都会在百科里点亮。"), "「【元素反应】名字：甲碰上乙。说明　机制一句」（%s）" % text)
+		t.check(text.contains("两种不同的元素"), "讲的是机制：两种不同的元素碰上就起反应")
 		t.eq(String(o.step()["target"]), "buffs_enemy", "指着挨反应那一方（对手）的状态行")
 		t.check(o.hole().size.x > 0.0, "对手的状态行挖得到洞")
 		var cur := view._cursor
@@ -276,4 +277,49 @@ static func frame_reaction_pause(t: TestCase, root: Window) -> void:
 	seen.view()._process(1.5)
 	t.check(seen.coach() == null, "见过的反应（载荷里没有）：不停")
 	seen.queue_free()
+	Support.cleanup(PREFIX)
+
+
+## 作者 10-24：菌血讲过、后来打出激荡又停一次，试玩者以为同一张教学在重复 —— 元素反应整个存档只讲一次（讲的是机制）
+static func frame_reaction_pause_once(t: TestCase, root: Window) -> void:
+	t.begin("作者 10-24 · 元素反应的说明整个存档只停一次：同一场两种反应只停第一种；见过任何一种后，新的一种也不停")
+	var c := GF._content()
+	var f := Support.flow(c, PREFIX)
+	var make := func(at_sec: float, id: String, els: Array) -> BattleEvent:
+		return BattleEvent.make(BattleEvent.EFFECT_RESOLVED, int(at_sec * StatMath.ONE), 1,
+			{"effect": ReactionResolver.EFFECT, "reaction": id, "elements": els})
+	var r := BattleResult.new()
+	r.winner = 0
+	r.duration = 3 * StatMath.ONE
+	r.log.append(BattleEvent.make(BattleEvent.BATTLE_START, 0, -1))
+	r.log.append(make.call(1.0, "poison_bleed", ["poison", "bleed"]))
+	r.log.append(make.call(2.0, "lightning_bleed", ["lightning", "bleed"]))
+	var screen = load("res://ui/game/battle_screen.gd").new()
+	screen.screen = GameFlow.Screen.BATTLE
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	root.add_child(screen)
+	screen.open({"result": r, "won": true, "new_reactions": [&"poison_bleed", &"lightning_bleed"]})
+	var view: BattleView = screen.view()
+	_lay_out(screen)
+	view._process(1.1)
+	var o: CoachOverlay = screen.coach()
+	t.not_null(o, "第一种反应：停下讲一次")
+	if o != null:
+		o.next()
+	view._process(1.5)
+	t.is_null(screen.coach(), "同一场第二种反应：不再停")
+	screen.queue_free()
+	# 流程：存档见过一种反应了 —— 下一场打出别的反应，载荷里不再带「头一回」
+	var kit := GF._loadout(c, &"standard")
+	var found := GF._seed_with(c, &"battle", kit.items)
+	if not found.is_empty():
+		f.new_run()
+		f.meta.reactions_seen = [&"fire_ice"] as Array[StringName]
+		f.begin(c.chapter, kit, int(found["seed"]))
+		f.pick_spawn(int(found["entry"]))
+		f.step_to(int(found["next"]))
+		f.start_battle()
+		var fresh = f.last_payload.get("new_reactions", null)
+		t.check(fresh is Array and (fresh as Array).is_empty(), "见过一种反应的存档：这一场不再停（%s）" % [fresh])
 	Support.cleanup(PREFIX)

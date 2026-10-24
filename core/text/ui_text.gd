@@ -695,7 +695,7 @@ const TEXT := {
 	"craft.to_ground": {"zh": "背包里装不下它：放在了地上。走之前记得放回包里，地上的东西会留在这个点上。", "en": "It doesn't fit in your pack, so it's on the Ground. Put it back in a bag before you leave: anything on the Ground stays at this spot."},
 	# —— 221 F4：百科拼接句（core/text/encyclopedia.gd）——
 	"codex.effects": {"zh": "效果：%s", "en": "Effects: %s"},
-	"codex.reaction_intro": {"zh": "%s：%s碰上%s。%s　百科里点亮了这一页。", "en": "%s: %s meets %s. %s It now has a page in the Encyclopedia."},
+	"codex.reaction_intro": {"zh": "【元素反应】%s：%s碰上%s。%s　两种不同的元素叠在同一个人身上就会起反应，组合不止这一种；打出过的都会在百科里点亮。", "en": "[Element reaction] %s: %s meets %s. %s Two different elements on the same fighter set off a reaction, and there are more pairs than this one; each one you trigger lights up in the Encyclopedia."},
 	"codex.not_triggered": {"zh": "还没有引发过。", "en": "Not triggered yet."},
 	"codex.see_also": {"zh": "相关：%s", "en": "See also: %s"},
 	"codex.sep": {"zh": "　", "en": " · "},
