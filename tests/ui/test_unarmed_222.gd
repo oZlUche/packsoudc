@@ -60,9 +60,18 @@ static func frame_unarmed(t: TestCase, root: Window) -> void:
 		t.eq(pre.can_start(), "", "空手也能开战")
 		t.check(not pre._start_btn.disabled, "「开战」不灰")
 		t.eq(pre._why.text, UiText.t("pre.no_attacker"), "只提醒一句")
-		# 248：看得见的战斗 / 精英点，战前屏左下角一颗平的「退回」（文字占位，图标等作者定）
-		var rb: TipButton = pre.retreat_button()
-		t.check(rb != null and rb.text == UiText.t("pre.retreat") and rb.get_parent().get_index() == 0, "248：左下角有「退回」")
+		# 248：看得见的战斗 / 精英点，战前屏左下角一颗平的「退回」（作者 14:44 选丙「回头脚印」石键，字由代码写）
+		var rb: IconButton = pre.retreat_button()
+		t.check(rb != null and rb.art_label == UiText.t("pre.retreat") and rb.get_parent().get_index() == 0, "248：左下角有「退回」")
+		if rb != null:
+			t.check(rb.has_art() and rb.custom_minimum_size == Vector2(112, 40), "248：定稿石键图（112 × 40）")
+			t.eq(rb.tooltip_text, UiText.t("pre.retreat_tip"), "248：悬浮说明照旧")
+			t.eq(rb.art_label_rect, Rect2(36, 0, 72, 40), "248：字写在 json 的 text_rect 里")
+			t.eq(rb.art_label_font_size(), 18, "248：「退回」18 号放得下")
+			rb.art_label = "Fall back"
+			var fs := rb.art_label_font_size()
+			t.check(fs < 18 and UiPalette.cjk_font_bold().get_string_size("Fall back", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= 72.0, "248：英文放不下逐号缩（%d 号）" % fs)
+			rb.art_label = UiText.t("pre.retreat")
 		t.check(pre.start_battle(), "开战")
 		t.check(not bool(flow.last_payload.get("won", true)), "纯挨打：输了")
 		var result: BattleResult = flow.last_payload.get("result", null)

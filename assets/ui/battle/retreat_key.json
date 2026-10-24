@@ -1,0 +1,22 @@
+{
+ "size": [
+  112,
+  40
+ ],
+ "text_rect": [
+  36,
+  0,
+  108,
+  40
+ ],
+ "font_size": 18,
+ "font": "serif_bold",
+ "ink": {
+  "normal": "#2e2219",
+  "hover": "#2e2219",
+  "pressed": "#2e2219",
+  "disabled": "#605a50"
+ },
+ "tone": "light",
+ "note": "flat (230): no bevel / gradient / shadow; text centred in text_rect; pressed text +1px down"
+}

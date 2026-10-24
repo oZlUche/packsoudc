@@ -40,6 +40,12 @@ var art_label := ""
 var art_label_center := Vector2.ZERO
 var art_label_size := 16
 var art_label_color := Color.WHITE
+## 248：字摆进图里的一块（图的像素；有面积就居中在这块里、放不下逐号缩小，代替 [member art_label_center]）
+var art_label_rect := Rect2()
+## 按下时字往下挪几像素
+var art_label_drop := 2.0
+## 灰着时的字色（透明 = 跟平常一样）
+var art_label_disabled_color := Color.TRANSPARENT
 
 
 ## [param name] 写进悬浮窗第一行；[param hint] 是那一句说明
@@ -146,11 +152,14 @@ func _draw() -> void:
 	var col := get_theme_color("font_color")
 	if art_label != "" and _tex != null:
 		var lf := UiPalette.cjk_font_bold()
-		var ls := lf.get_string_size(art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, art_label_size)
-		var at := art_label_center * (size / _tex.get_size()) + Vector2(-ls.x * 0.5, lf.get_ascent(art_label_size) - ls.y * 0.5)
+		var fs := art_label_font_size()
+		var ls := lf.get_string_size(art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+		var center := art_label_rect.get_center() if art_label_rect.has_area() else art_label_center
+		var at := center * (size / _tex.get_size()) + Vector2(-ls.x * 0.5, lf.get_ascent(fs) - ls.y * 0.5)
 		if _down:
-			at.y += 2.0
-		draw_string(lf, at.floor(), art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, art_label_size, art_label_color)
+			at.y += art_label_drop
+		var lc := art_label_disabled_color if disabled and art_label_disabled_color.a > 0.0 else art_label_color
+		draw_string(lf, at.floor(), art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, lc)
 	if hotkey != "":
 		draw_string(font, Vector2(size.x - 12, HINT_SIZE + 1), hotkey, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_SIZE, Color(col, 0.75))
 	if badge >= 0:
@@ -159,3 +168,14 @@ func _draw() -> void:
 		var t := str(badge)
 		var w := font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_SIZE).x
 		draw_string(font, c + Vector2(-w * 0.5, HINT_SIZE * 0.4), t, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_SIZE, UiPalette.BTN_PRIMARY_TEXT)
+
+
+## 248：图上那行字实际用几号 —— 有 [member art_label_rect] 时放不下就逐号缩（英文长，最小 10）
+func art_label_font_size() -> int:
+	var fs := art_label_size
+	if not art_label_rect.has_area():
+		return fs
+	var lf := UiPalette.cjk_font_bold()
+	while fs > 10 and lf.get_string_size(art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > art_label_rect.size.x:
+		fs -= 1
+	return fs
