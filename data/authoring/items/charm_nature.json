@@ -10,11 +10,10 @@
   "rarity": 3,
   "value": 200,
   "tags": [
+    "trinket",
     "treasure",
-    "faith",
     "faith:nature",
-    "nature",
-    "faith_anchor",
-    "wood"
-  ]
+    "nature"
+  ],
+  "material": "wood"
 }

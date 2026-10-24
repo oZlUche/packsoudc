@@ -1,11 +1,12 @@
 ## 129：一件道具有多重（单位「重」）。137：按名称与标签重配，金属更重。
 ##
-## 写死的（[member ItemDef.weight] > 0）用写死的；否则 = 格数 × 每格重，每格重按材质类取（按标签，从上到下取第一个命中）：
+## 写死的（[member ItemDef.weight] > 0）用写死的；否则 = 格数 × 每格重，每格重按材质取（250：材质是 [member ItemDef.material] 字段，
+## heavy 与轻物仍是标签；[method ItemDef.has_tag] 两样都认，从上到下取第一个命中）：
 ## [codeblock]
 ## heavy                                              每格 4
 ## metal（武器、甲、盾、矿石、锭、枪）                每格 3
 ## gem / stone（宝石、晶体、石头、盐块）               每格 2
-## remedy / food / ammo / keepsake / sigil / treasure / relic   半格一重，向上取整
+## remedy / food / ammo / keepsake / trinket / valuable   半格一重，向上取整（250：饰物、贵重品顶替符号、珍宝、遗物）
 ## 其余（木、骨、皮、布、陶、皮包……）                每格 1
 ## [endcodeblock]
 ## 161（作者定）：**包不算重** —— 作为包的道具（`is_bag`）一律 0，写死值也不看。
@@ -15,9 +16,9 @@ extends RefCounted
 
 const HEAVY := &"heavy"
 const METAL := &"metal"
-## 137：石与晶这一档（宝石或新加的石材标签，任一命中）
+## 137：石与晶这一档（晶体或石材，任一命中）
 const STONE_TAGS: Array[StringName] = [&"gem", &"stone"]
-const LIGHT_TAGS: Array[StringName] = [&"remedy", &"food", &"ammo", &"keepsake", &"sigil", &"treasure", &"relic"]
+const LIGHT_TAGS: Array[StringName] = [&"remedy", &"food", &"ammo", &"keepsake", &"trinket", &"valuable"]
 const PER_CELL_HEAVY := 4
 const PER_CELL_METAL := 3
 const PER_CELL_STONE := 2
@@ -36,15 +37,15 @@ static func formula(def: ItemDef) -> int:
 	if def == null or def.is_bag:
 		return 0
 	var cells := def.cell_count()
-	if def.tags.has(HEAVY):
+	if def.has_tag(HEAVY):
 		return cells * PER_CELL_HEAVY
-	if def.tags.has(METAL):
+	if def.has_tag(METAL):
 		return cells * PER_CELL_METAL
 	for t in STONE_TAGS:
-		if def.tags.has(t):
+		if def.has_tag(t):
 			return cells * PER_CELL_STONE
 	for t in LIGHT_TAGS:
-		if def.tags.has(t):
+		if def.has_tag(t):
 			return maxi(1, ceili(cells / 2.0))
 	return maxi(1, cells)
 

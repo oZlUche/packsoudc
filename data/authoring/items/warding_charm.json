@@ -10,10 +10,10 @@
   "rarity": 2,
   "value": 40,
   "tags": [
-    "part",
-    "sigil",
-    "cloth"
+    "trinket",
+    "part"
   ],
+  "material": "cloth",
   "combat": {
     "rules": [
       {

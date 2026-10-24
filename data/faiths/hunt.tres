@@ -19,23 +19,18 @@ by_type = {
 
 [sub_resource type="Resource" id="Resource_0k2lu"]
 script = ExtResource("4_t2an8")
-tag = &"trophy"
+tag = &"beast_part"
 rarity_pow = true
 plus = 1
 
 [sub_resource type="Resource" id="Resource_xpuyb"]
 script = ExtResource("5_w22es")
-tags = Array[StringName]([&"flesh", &"bone"])
-multiplier = 5.0
+tags = Array[StringName]([&"beast_part"])
+multiplier = 10.0
 
 [sub_resource type="Resource" id="Resource_8obof"]
 script = ExtResource("5_w22es")
-tags = Array[StringName]([&"trophy"])
-multiplier = 10.0
-
-[sub_resource type="Resource" id="Resource_otlgf"]
-script = ExtResource("5_w22es")
-tags = Array[StringName]([&"leather"])
+tags = Array[StringName]([&"food"])
 multiplier = 5.0
 
 [resource]
@@ -55,4 +50,4 @@ descriptions = {
 }
 thresholds = Array[int]([25, 80])
 deeds = Array[ExtResource("2_mrnmw")]([SubResource("Resource_yrrbb"), SubResource("Resource_0k2lu")])
-offerings = Array[ExtResource("5_w22es")]([SubResource("Resource_xpuyb"), SubResource("Resource_8obof"), SubResource("Resource_otlgf")])
+offerings = Array[ExtResource("5_w22es")]([SubResource("Resource_xpuyb"), SubResource("Resource_8obof")])

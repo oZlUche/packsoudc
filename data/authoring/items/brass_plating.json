@@ -15,13 +15,12 @@
   "rarity": 1,
   "weight": 6,
   "tags": [
-    "gear",
     "shield",
     "heavy",
     "crafted",
-    "metal",
     "clockwork"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "block": 2

@@ -20,7 +20,7 @@ const LABELS := {
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
 	"include_bags": "包也算", "include_self": "含自己", "self_only": "只算自己", "invert": "反转", "enabled": "启用", "absolute": "绝对值", "only_total": "只算总量",
 	# 道具
-	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "bag_mods": "包体加成",
+	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "material": "材质", "keepsake_abilities": "代表的能力", "bag_mods": "包体加成",
 	"set_id": "套装", "effects": "效果", "price": "价格", "starting_belt": "开局发的随身技能", "belt_stock": "随身那一排", "belt_grants": "发的随身技能", "wear": "耐久", "when": "什么时候能用",
 	"max_charges": "满的时候几次", "prefixes": "前缀（从剩 1 次起，一档一个）", "prefixes_by_lang": "别的语言的前缀", "broken_prefix": "破碎的前缀", "broken_prefixes": "别的语言的破碎前缀",
 	"broken_value_ratio": "破碎后卖价几成", "charge_band": "一档几次", "art_levels": "按次数换的图几张", "broken_rarity_drop": "破碎后稀有度低几档", "crystal_family": "魔晶石家族", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
@@ -139,7 +139,8 @@ const ENUM_LABELS := {
 	"PREBATTLE": "战前准备屏",     # 147
 	"tier": "按阶", "active": "激活即", "scaled": "按信力",     # 111：信仰加成的生效方式（字符串枚举，值是小写原文）
 	"none": "不锁", "item": "锁这件", "bag": "连包一起锁",     # 207：生长每阶锁什么
-	"purpose": "用途", "element": "属性", "material": "材料", "origin": "归属", "source": "来源", "internal": "内部",     # 171：标签大类
+	"kind": "类别", "element": "属性", "source": "本源", "affiliation": "归属", "internal": "内部",     # 171 / 250：标签大类
+	"metal": "金属", "wood": "木", "leather": "皮革", "cloth": "织物", "bone": "骨", "stone": "石", "gem": "晶体", "clay": "陶", "flesh": "血肉", "herb": "草药",     # 250：材质
 }
 
 ## 类名 → 中文

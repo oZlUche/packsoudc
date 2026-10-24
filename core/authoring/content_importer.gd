@@ -783,7 +783,7 @@ static func _validate_power(def: ItemDef, ctx: Context, report: ImportReport) ->
 			def.rarity, est.rarity, est.power, est.ratio])
 
 
-## 122：材料的出身标签，三选一（作者补正：魔晶石等魔法类不算自然也不算工艺，归【魔法】）
+## 122：素材的本源标签，三选一（作者补正：魔晶石等魔法类不算自然也不算工艺，归【魔法】）
 const MATERIAL_ORIGINS: Array[StringName] = [&"crafted", &"nature", &"magic"]
 
 
@@ -797,14 +797,53 @@ static func _validate_item_tags(def: ItemDef, ctx: Context, report: ImportReport
 		if not ctx.tags.has(t):
 			# 171：标签先在标签制作器里建，道具只从下拉里挑 —— 没登记的是错，不再漏过
 			report.error("tags", "没有登记的标签 '%s'：先在标签制作器（data/authoring/tags）里建一份" % t)
-	# 122 / 171：材料按出身分【工艺】/【自然】/【魔法】（来源类）—— 必有一个、只能有一个（提醒，不拦）
+	var sources: Array[String] = []
+	for t in def.tags:
+		if _is_source(ctx, t):
+			sources.append(String(t))
+	# 250（作者定）：类别恰好一个（包、铸牌免）
+	var kinds = _kind_tags(def, ctx)
+	if kinds != null and not def.is_bag and not def.is_token() and kinds.size() != 1:
+		report.error("tags", "类别（%s）得恰好带一个，现在带了 %d 个%s" % [" / ".join(PackedStringArray(_category_tags(ctx, TagRegistry.KIND))),
+			kinds.size(), ("：" + " / ".join(PackedStringArray(kinds))) if not kinds.is_empty() else ""])
+	# 250：武器恰好一个射程（近战 / 远程，内部标签，敌人配装靠它）
+	if def.tags.has(&"weapon") and int(def.tags.has(&"melee")) + int(def.tags.has(&"ranged")) != 1:
+		report.error("tags", "武器得在 melee / ranged 里恰好带一个")
+	# 122 / 171 / 250：素材按本源分【工艺】/【自然】/【魔法】—— 恰好一个，材质字段必填；其余道具本源最多一个
 	if def.tags.has(&"material"):
-		var kinds: Array[String] = []
-		for t in def.tags:
-			if _is_source(ctx, t):
-				kinds.append(String(t))
-		if kinds.size() != 1:
-			report.warn("tags", "材料得在来源类（%s）里恰好带一个，现在带了 %d 个" % [" / ".join(PackedStringArray(_source_tags(ctx))), kinds.size()])
+		if sources.size() != 1:
+			report.error("tags", "素材得在本源（%s）里恰好带一个，现在带了 %d 个" % [" / ".join(PackedStringArray(_source_tags(ctx))), sources.size()])
+		if def.material == "":
+			report.error("material", "素材得填材质（%s）" % " / ".join(_string_choices(def, "material")))
+	elif sources.size() > 1:
+		report.error("tags", "本源（%s）最多带一个，现在带了 %d 个" % [" / ".join(PackedStringArray(_source_tags(ctx))), sources.size()])
+	if def.material != "" and not _string_choices(def, "material").has(def.material):
+		report.error("material", "认不得的材质 '%s'" % def.material)
+
+
+## 250：道具带的类别标签；上下文里的标签不是 [TagDef]（测试只登记了 id）时查不了，返回 null
+static func _kind_tags(def: ItemDef, ctx: Context):
+	var out: Array[String] = []
+	for t in def.tags:
+		var tag = ctx.tags.get(t, null)
+		if tag == null:
+			continue
+		if not (tag is TagDef):
+			return null
+		if (tag as TagDef).category == TagRegistry.KIND:
+			out.append(String(t))
+	return out
+
+
+## 250：某一类登记了的标签 id（报错时列出来）
+static func _category_tags(ctx: Context, cat: String) -> Array[String]:
+	var out: Array[String] = []
+	for id in ctx.tags:
+		var tag = ctx.tags[id]
+		if tag is TagDef and (tag as TagDef).category == cat:
+			out.append(String(id))
+	out.sort()
+	return out
 
 
 ## 171：来源类的标签（122 的工艺 / 自然 / 魔法）。上下文里登记的不是 [TagDef]（测试只登记了 id）就按 [constant MATERIAL_ORIGINS] 认
@@ -907,7 +946,7 @@ static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportRe
 
 
 ## 251：铁匠铺能打的产物得带其中一个标签
-const SMITH_OUTPUT_TAGS: Array[StringName] = [&"weapon", &"armor", &"shield", &"gear_plug"]
+const SMITH_OUTPUT_TAGS: Array[StringName] = [&"weapon", &"armor", &"shield"]
 
 
 ## 251：集市的规矩 —— 每级的表等长、格数至少 1、比例在 0 ～ 1、倍数为正
@@ -1000,10 +1039,8 @@ static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportRepor
 	for t in def.tags:
 		if String(t).begins_with(FaithTags.PREFIX):
 			objects.append(t)
-	if def.has_faith() and objects.size() != 1:
-		report.error("tags", "带 faith 的道具得恰好有一个信仰对象标签（%s<id>），现在有 %d 个" % [FaithTags.PREFIX, objects.size()])
-	elif not def.has_faith() and not objects.is_empty():
-		report.error("tags", "带了信仰对象标签 %s 却没有 faith 标签" % objects[0])
+	if objects.size() > 1:     # 250：带 `faith:<神>` 的就是信物（faith 标签删了），最多一位神
+		report.error("tags", "信仰对象标签（%s<id>）最多一个，现在有 %d 个" % [FaithTags.PREFIX, objects.size()])
 	if def.has_faith() and objects.size() == 1 and not ctx.faiths.is_empty():
 		var fid := FaithTags.id_of_tag(objects[0])
 		if not ctx.faiths.has(fid):

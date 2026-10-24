@@ -23,5 +23,5 @@ base_stats = {
 "max_hp": 80
 }
 signature = Array[StringName]([&"mithril_sword"])
-item_tags = Array[StringName]([&"enchanted", &"imperial", &"heavy", &"shield", &"part", &"remedy"])
+item_tags = Array[StringName]([&"imperial", &"heavy", &"shield", &"part", &"remedy"])
 builds = Array[ExtResource("1_4cw6i")]([SubResource("Resource_v083q")])

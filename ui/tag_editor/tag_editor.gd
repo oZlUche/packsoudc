@@ -211,7 +211,7 @@ func _new_def() -> Resource:
 	var def := TagDef.new()
 	def.id = &"new_tag"
 	def.display_name = "新标签"
-	def.category = "purpose"
+	def.category = "kind"
 	def.tip = false
 	return def
 

@@ -14,15 +14,13 @@
     "11"
   ],
   "rarity": 2,
-  "tags": [
-    "leather"
-  ],
+  "material": "leather",
   "is_bag": true,
   "bag_accept_tags": [
+    "beast_part",
     "flesh",
     "bone",
-    "leather",
-    "trophy"
+    "leather"
   ],
   "bag_mods": [
     {

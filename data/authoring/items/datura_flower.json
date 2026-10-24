@@ -13,10 +13,10 @@
   ],
   "rarity": 2,
   "tags": [
-    "reagent",
     "material",
+    "reagent",
     "nature",
-    "herb",
     "poison"
-  ]
+  ],
+  "material": "herb"
 }

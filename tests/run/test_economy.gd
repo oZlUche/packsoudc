@@ -357,7 +357,7 @@ static func run_events(t: TestCase) -> void:
 	events.economy = economy
 	events.difficulty = chapter.difficulty
 	var board := GridInventory.new(Vector2i(8, 4), 0, false)
-	for id in [&"rifle", &"pistol", &"armor"]:
+	for id in [&"longsword", &"shortsword", &"round_shield"]:
 		board.try_add(ItemInstance.create(items.get_def(id), 0), true)
 	var wealthy := CombatantBaseline.with_hp(10000.0)
 	wealthy.base_stats["regen_stamina"] = 100.0     # 只验进账：别让耐力耗尽把这一场拖成平局

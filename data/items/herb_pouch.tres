@@ -29,7 +29,7 @@ descriptions = {
 }
 shape = SubResource("Resource_ncp2w")
 rarity = 1
-tags = Array[StringName]([&"cloth"])
+material = "cloth"
 is_bag = true
 bag_accept_tags = Array[StringName]([&"herb", &"remedy", &"food"])
 bag_mods = Array[ExtResource("2_lnlwq")]([SubResource("Resource_bc41s")])

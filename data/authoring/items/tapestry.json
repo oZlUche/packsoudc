@@ -16,7 +16,7 @@
   "weight": 4,
   "tags": [
     "material",
-    "crafted",
-    "cloth"
-  ]
+    "crafted"
+  ],
+  "material": "cloth"
 }

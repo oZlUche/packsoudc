@@ -23,4 +23,5 @@ descriptions = {
 }
 shape = SubResource("Resource_ml0ed")
 value = 30
-tags = Array[StringName]([&"material", &"magic", &"gem"])
+tags = Array[StringName]([&"material", &"magic"])
+material = "gem"

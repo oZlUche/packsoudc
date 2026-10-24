@@ -49,14 +49,16 @@ static func is_internal(id: StringName) -> bool:
 	return def != null and (def.internal or def.category == "internal")
 
 
-## 171：大类的先后（悬浮窗副行、编辑器下拉分组都按这个排）。来源类排在材料后面，副行不列它
-const CATEGORY_ORDER: Array[String] = ["purpose", "element", "material", "origin", "source", "internal"]
+## 171 / 250：大类的先后（悬浮窗标签行、编辑器下拉分组都按这个排）：类别 → 属性 → 本源 → 归属 → 内部
+const CATEGORY_ORDER: Array[String] = ["kind", "element", "source", "affiliation", "internal"]
+## 250：类别轴（每件恰好一个）
+const KIND := "kind"
 
 
 ## 171：这个标签归哪类；没登记 / 没归类返回空串。`faith:<id>` 算归属类
 static func category_of(id: StringName) -> String:
 	if String(id).begins_with(FaithTags.PREFIX):
-		return "origin"
+		return "affiliation"
 	var def := get_def(id)
 	return def.category if def != null else ""
 
@@ -71,7 +73,7 @@ static func by_category(cat: String) -> Array:
 	return out
 
 
-## 171：把一串标签按大类排（用途 → 属性 → 材料 → 归属 → 来源 → 内部；没归类的在最后），同类内保持原顺序
+## 171：把一串标签按大类排（类别 → 属性 → 本源 → 归属 → 内部；没归类的在最后），同类内保持原顺序
 static func sorted_by_category(tags: Array) -> Array:
 	var rank := func(t) -> int:
 		var i := CATEGORY_ORDER.find(category_of(StringName(String(t))))
@@ -96,6 +98,26 @@ static func order_of(id: StringName) -> int:
 	return i if i >= 0 else _defs.size()
 
 
+## 250（作者定）：悬浮窗的标签行 —— 每个给玩家看的轴最多一个（按道具里写的先后取第一个），按 [constant CATEGORY_ORDER] 排；
+## 内部的、没归类的都不列。归属轴有神先列神（`faith:<神>`）
+static func first_per_category(tags: Array) -> Array:
+	var picked := {}
+	for t in tags:
+		var id := StringName(String(t))
+		if is_internal(id):
+			continue
+		var cat := category_of(id)
+		if cat == "" or cat == "internal":
+			continue
+		if not picked.has(cat) or (cat == "affiliation" and String(id).begins_with(FaithTags.PREFIX) and not String(picked[cat]).begins_with(FaithTags.PREFIX)):
+			picked[cat] = t
+	var out: Array = []
+	for cat in CATEGORY_ORDER:
+		if picked.has(cat):
+			out.append(picked[cat])
+	return out
+
+
 ## 107 后续：去掉内部标签，剩下给玩家看的
 static func shown(tags: Array) -> Array:
 	var out: Array = []
@@ -117,7 +139,7 @@ static func ids() -> Array:
 static func name_of(id: StringName, lang: String = "") -> String:
 	var def := get_def(id)
 	if def == null:
-		return String(id)
+		return ItemMaterials.name_of(id, lang) if ItemMaterials.is_material(id) else String(id)     # 250：包的准入里写的材质
 	var n := Names.of(def, lang)
 	return n if n != "" else String(id)
 

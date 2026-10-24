@@ -23,4 +23,5 @@ descriptions = {
 "en": "Five coarse clay bowls, one with a chipped rim."
 }
 shape = SubResource("Resource_k81bb")
-tags = Array[StringName]([&"material", &"crafted", &"clay", &"supply"])
+tags = Array[StringName]([&"material", &"crafted", &"supply"])
+material = "clay"

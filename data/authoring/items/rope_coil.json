@@ -13,7 +13,7 @@
   ],
   "tags": [
     "material",
-    "crafted",
-    "cloth"
-  ]
+    "crafted"
+  ],
+  "material": "cloth"
 }

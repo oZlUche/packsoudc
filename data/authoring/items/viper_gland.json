@@ -13,13 +13,13 @@
   ],
   "rarity": 3,
   "tags": [
-    "reagent",
     "material",
+    "reagent",
     "nature",
     "poison",
-    "flesh",
     "beast_part"
   ],
+  "material": "flesh",
   "combat": {
     "rules": [
       {

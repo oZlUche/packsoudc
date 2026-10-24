@@ -13,4 +13,5 @@ description = "法杖：自己只是根棍子，装载槽上放了魔晶石才�
 descriptions = {
 "en": "Staff: just a stick on its own; deals elemental damage once a crystal sits in its load slot."
 }
-category = "purpose"
+category = "internal"
+internal = true

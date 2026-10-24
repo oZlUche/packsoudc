@@ -22,4 +22,5 @@ descriptions = {
 "en": "Strike it once and it sparks."
 }
 shape = SubResource("Resource_osbdd")
-tags = Array[StringName]([&"material", &"nature", &"stone"])
+tags = Array[StringName]([&"material", &"nature"])
+material = "stone"

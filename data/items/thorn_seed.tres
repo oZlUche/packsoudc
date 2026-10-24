@@ -178,5 +178,6 @@ descriptions = {
 }
 shape = SubResource("Resource_pptqk")
 rarity = 1
-tags = Array[StringName]([&"faith", &"faith:nature", &"nature", &"herb"])
+tags = Array[StringName]([&"trinket", &"faith:nature", &"nature"])
+material = "herb"
 growth = SubResource("Resource_s4n6b")

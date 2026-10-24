@@ -13,12 +13,12 @@
   ],
   "rarity": 2,
   "tags": [
-    "reagent",
     "material",
+    "reagent",
     "nature",
-    "flesh",
     "beast_part"
   ],
+  "material": "flesh",
   "wild": {
     "base_stats": {
       "regen_hp": 1

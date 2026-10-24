@@ -23,4 +23,5 @@ descriptions = {
 }
 shape = SubResource("Resource_qqgfl")
 rarity = 1
-tags = Array[StringName]([&"material", &"nature", &"flesh"])
+tags = Array[StringName]([&"material", &"nature"])
+material = "flesh"

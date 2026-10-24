@@ -1,4 +1,4 @@
-## 206：拿起 / 放下的声音按道具的材质分三类（素材按材质做，不按件做）。按标签从上到下第一个命中；包按皮；其余都算布。
+## 206：拿起 / 放下的声音按道具的材质分三类（素材按材质做，不按件做）。按材质（250：[member ItemDef.material]）与 heavy 标签从上到下第一个命中；包按皮；其余都算布。
 ## 金属那一组和 [ItemWeight] 的重档同一批标签
 class_name SfxMaterial
 extends RefCounted
@@ -18,7 +18,7 @@ static func of(def: ItemDef) -> StringName:
 		return CLOTH
 	for g in GROUPS:
 		for tag in g[1]:
-			if def.tags.has(tag):
+			if def.has_tag(tag):     # 250：材质是字段，heavy 是标签，两样都认
 				return g[0]
 	return LEATHER if def.is_bag else CLOTH
 

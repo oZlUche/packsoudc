@@ -14,8 +14,10 @@
   "rarity": 2,
   "weight": 2,
   "tags": [
-    "keepsake",
-    "node_tooltips",
-    "metal"
+    "keepsake"
+  ],
+  "material": "metal",
+  "keepsake_abilities": [
+    "node_tooltips"
   ]
 }

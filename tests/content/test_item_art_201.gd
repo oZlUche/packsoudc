@@ -139,7 +139,7 @@ static func run_rotation(t: TestCase) -> void:
 	var cell := 60.0
 	var anchor := Vector2(7, 11)
 	var wrong: Array[String] = []
-	for id in [&"antler", &"longbow", &"scimitar", &"knife", &"armor_plate"]:
+	for id in [&"antler", &"longbow", &"scimitar", &"knife", &"festering_blade"]:
 		var def: ItemDef = c.items.get_def(id)
 		if def == null:
 			continue

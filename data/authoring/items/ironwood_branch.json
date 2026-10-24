@@ -16,7 +16,7 @@
   "weight": 4,
   "tags": [
     "material",
-    "nature",
-    "wood"
-  ]
+    "nature"
+  ],
+  "material": "wood"
 }

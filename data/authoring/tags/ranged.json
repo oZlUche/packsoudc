@@ -9,5 +9,6 @@
     "en": "A bow or other ranged weapon."
   },
   "tip": false,
-  "category": "purpose"
+  "category": "internal",
+  "internal": true
 }

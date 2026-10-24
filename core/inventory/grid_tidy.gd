@@ -12,14 +12,15 @@ extends RefCounted
 
 ## 110（作者定）：「同类」的顺序表 —— 取道具标签里**第一个命中**的那一类；都没命中算最后一类（珍宝 / 其他）。
 ## 只影响摆放顺序、不影响任何数值，所以是代码常量不是内容字段；想换顺序改这一张表
+## 250：按新的类别轴（每件恰好一个）排
 const KIND_ORDER: Array = [
 	[&"weapon"],                                       # 武器
-	[&"shield", &"armor", &"gear", &"gear_plug"],      # 盾 / 防具 / 插件
-	[&"faith", &"keepsake", &"sigil"],                 # 信仰
+	[&"shield", &"armor"],                             # 盾 / 防具
+	[&"trinket", &"keepsake"],                         # 饰物（信物多在这儿）/ 特殊道具
 	[&"remedy", &"food"],                              # 药剂 / 食物
-	[&"ammo", &"tool", &"reagent"],                    # 弹药 / 工具 / 试剂
-	[&"material", &"part", &"gem"],                    # 材料 / 零件 / 宝石
-	[&"treasure"],                                     # 珍宝 / 其他
+	[&"ammo", &"reagent"],                             # 弹药 / 试剂
+	[&"crystal", &"material", &"part"],                # 魔晶石 / 素材 / 零件
+	[&"valuable"],                                     # 贵重品 / 其他
 ]
 
 

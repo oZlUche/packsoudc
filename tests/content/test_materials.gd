@@ -33,8 +33,8 @@ static func run(t: TestCase) -> void:
 			t.check(Names.of(def, "en") != String(id), "%s：有英文名" % id)
 	t.eq(db.get_def(&"tapestry").rarity, 3, "挂毯稀有度 3")
 	t.eq(ItemValue.of(db.get_def(&"tapestry")), 450, "挂毯 6 格 × 75 = 450")
-	t.check(db.get_def(&"antler").tags.has(&"trophy"), "鹿角是战利品（狩猎之神 ×10）")
-	t.check(db.get_def(&"iron_ore").tags.has(&"metal"), "矿石带金属")
+	t.check(db.get_def(&"antler").tags.has(&"beast_part"), "鹿角是兽材（250：战利品并进兽材，狩猎之神 ×10）")
+	t.eq(db.get_def(&"iron_ore").material, "metal", "矿石的材质是金属（250：材质是字段）")
 
 	t.begin("122 · 每件材料都恰好带【工艺】/【自然】/【魔法】之一；硬木板算工艺，魔晶石算魔法（作者补正）")
 	var materials := 0
@@ -55,23 +55,23 @@ static func run(t: TestCase) -> void:
 	t.not_null(load(ContentPaths.asset_file("tags", "crafted")), "【工艺】标签登记了")
 	t.not_null(load(ContentPaths.asset_file("tags", "magic")), "【魔法】标签登记了")
 
-	t.begin("122 · 导入器：材料缺出身标签或两个都带 → 提醒（不拦）")
+	t.begin("122 / 250 · 导入器：素材缺本源或带两个 → 报错（250 起拦）")
 	var ctx := ContentImporter.Context.new()
 	for tag in [&"material", &"crafted", &"nature", &"magic"]:
 		ctx.tags[tag] = true
 	for pair in [[["material"], true], [["material", "crafted", "nature"], true], [["material", "crafted"], false], [["material", "magic"], false], [["material", "nature", "magic"], true]]:
 		var report := ImportReport.new()
-		ContentImporter.import_item({"id": "probe", "display_name": "探针", "shape": ["1"], "tags": pair[0]}, ctx, report)
-		t.check(report.ok(), "%s：不拦" % [pair[0]])
-		t.eq(report.to_text().contains("恰好带一个"), pair[1], "%s：%s" % [pair[0], "提醒" if pair[1] else "不提醒"])
+		ContentImporter.import_item({"id": "probe", "display_name": "探针", "shape": ["1"], "tags": pair[0], "material": "metal"}, ctx, report)
+		t.eq(report.ok(), not pair[1], "%s：%s" % [pair[0], "拦" if pair[1] else "不拦"])
+		t.eq(report.to_text().contains("恰好带一个"), pair[1], "%s：%s" % [pair[0], "报本源" if pair[1] else "不报"])
 
-	t.begin("122 · 技巧之神收【工艺】：铜锭 = 金属 ×5 + 工艺 ×5 = 10 × 2^稀有度；陶罐只有工艺那条")
+	t.begin("122 / 250 · 技巧之神收【工艺】：铜锭、陶罐只有工艺那条 = 5 × 2^稀有度；铜矿石是自然的、不收（250：金属那条换成防具 / 盾）")
 	var skill: FaithDef = load(ContentPaths.asset_file("faiths", "skill"))
 	var ingot := db.get_def(&"copper_ingot")
-	t.eq(skill.offering_value(ingot), int(10 * pow(2, ingot.rarity)), "铜锭：%d" % skill.offering_value(ingot))
+	t.eq(skill.offering_value(ingot), int(5 * pow(2, ingot.rarity)), "铜锭：%d" % skill.offering_value(ingot))
 	var pot := db.get_def(&"clay_pot")
 	t.eq(skill.offering_value(pot), int(5 * pow(2, pot.rarity)), "陶罐：%d" % skill.offering_value(pot))
-	t.eq(skill.offering_value(db.get_def(&"copper_ore")), int(5 * pow(2, 0)), "铜矿石：只有金属那条")
+	t.eq(skill.offering_value(db.get_def(&"copper_ore")), 0, "铜矿石：不收")
 
 	t.begin("122 · 科技材料接上：行囊 3 级要熟皮革与亚麻布，保险箱 2 级要铁钉桶；带 supply 的商店不卖")
 	var techs := GameFlow.load_techs()

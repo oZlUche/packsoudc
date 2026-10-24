@@ -169,6 +169,24 @@ static func mark_rich(text: String, terms: Array) -> String:
 
 
 const FAITH_WORD := {"zh": "信仰", "en": "Faith"}
+## 250：faith / faith_anchor 两个标签删了，它们的说明改成归神道具自带的两条词条（悬浮窗信物那行写着这两个词）
+const FAITH_TERMS := {
+	"faith": {"zh": {"name": "信仰", "text": "信仰道具：别的信仰激活时休眠。"}, "en": {"name": "Faith", "text": "A faith item: dormant while another faith is active."}},
+	"anchor": {"zh": {"name": "信物", "text": "只有信物能激活信仰：带着神的标记、又不是赐福版的那件。"}, "en": {"name": "Anchor", "text": "Only anchors activate a faith: items that carry a god's mark and are not blessed copies."}},
+}
+
+
+## 250：归神道具的词条（[method tag_terms] 的格式）—— 归神就有「信仰」，是信物再加「信物」
+static func faith_terms(def: ItemDef) -> Dictionary:
+	var out := {}
+	if def == null or not def.has_faith():
+		return out
+	for key in (["faith", "anchor"] if def.is_anchor() else ["faith"]):
+		var entry: Dictionary = FAITH_TERMS[key]
+		var tr: Dictionary = entry.get(UiText.lang, entry["zh"])
+		out[String(tr["name"])] = {"id": key, "text": String(tr["text"])}
+	return out
+
 
 ## 属性键 → 名字（096：中 / 英；按 [UiText.lang] 取，没有英文的回落中文 —— [method UiText.pick]）
 const STAT_NAMES := {

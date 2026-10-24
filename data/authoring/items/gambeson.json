@@ -1,6 +1,6 @@
 {
   "id": "gambeson",
-  "display_name": "贴身内甲",
+  "display_name": "棉甲",
   "display_names": {
     "en": "Gambeson"
   },
@@ -9,9 +9,9 @@
   ],
   "rarity": 1,
   "tags": [
-    "gear_plug",
-    "cloth"
+    "armor"
   ],
+  "material": "cloth",
   "adjacency": {
     "grant_cells": [
       [
@@ -20,7 +20,8 @@
       ]
     ],
     "grant_filter": [
-      "gear"
+      "armor",
+      "shield"
     ],
     "grant_mods": [
       {

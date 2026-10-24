@@ -13,11 +13,11 @@
   ],
   "rarity": 1,
   "tags": [
-    "faith",
+    "trinket",
     "faith:nature",
-    "nature",
-    "herb"
+    "nature"
   ],
+  "material": "herb",
   "growth": {
     "stages": [
       {

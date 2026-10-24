@@ -29,7 +29,7 @@ static func run_record_and_build(t: TestCase) -> void:
 	t.begin("校准 · 每步记一份快照，读回来一样；按段长分段，每段一个木桩 = 离平均最近的那份")
 	_cleanup()
 	var c := _content()
-	var kit: Array[StringName] = c.loadouts[0].items if not c.loadouts.is_empty() else [&"bag_leather", &"pistol"] as Array[StringName]
+	var kit: Array[StringName] = c.loadouts[0].items if not c.loadouts.is_empty() else [&"bag_leather", &"knife"] as Array[StringName]
 	var s := _start(c, kit)
 	t.not_null(s, "开局")
 	if s == null:

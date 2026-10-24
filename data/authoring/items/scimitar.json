@@ -14,9 +14,9 @@
     "weapon",
     "melee",
     "bleed",
-    "barbarian",
-    "metal"
+    "barbarian"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "damage": 9

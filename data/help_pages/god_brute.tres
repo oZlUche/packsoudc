@@ -11,11 +11,11 @@ display_names = {
 }
 category = &"faith"
 order = 5
-text = "{faith:brute}是暴力与杀戮本身，石头砸下来也是暴力，北境蛮族信祂。信力看的是打出去和挨到的伤害，每场有上限；失去体力也算，输了也不白输。献祭爱骨制品、血肉、武器和大块的东西，骨制品与血肉的倍率尤其高。蛮神赐福武器，赐福版激活即增伤，再按信力累计加攻击。
+text = "{faith:brute}是暴力与杀戮本身，石头砸下来也是暴力，北境蛮族信祂。信力看的是打出去和挨到的伤害，每场有上限；失去体力也算，输了也不白输。献祭爱兽材、武器和大块的东西，兽材的倍率尤其高。蛮神赐福武器，赐福版激活即增伤，再按信力累计加攻击。
 
 一阶起生命值低于 {faith_perk:brute:low_hp_empower:hp_percent}% 时造成伤害提高，信力越多提高越多；二阶可以在神坛上献祭生命上限，每次自己挑换信力，还是换这局的造成伤害与急速，能反复做，但生命上限有底；三阶在战前准备屏上花体力或信力立即击败非首领敌人；四阶在战斗中首次生命值归零后还会持续战斗几秒、期间耐力无限，信力越多坚持越久，到期血还是零才倒下，一场只一次。"
 texts = {
-"en": "{faith:brute} is violence and slaughter itself; even a falling stone is violence. The northern barbarians worship this god. Faith points come from the damage you deal and take, capped per battle; losing Vitality counts too, so even a defeat isn't for nothing. The Brute favors Offerings of bone items, flesh, weapons and large things, with bone and flesh earning especially high multipliers. The Brute blesses weapons: a Blessed version deals extra damage on activation and gains more attack as your Faith points build up.
+"en": "{faith:brute} is violence and slaughter itself; even a falling stone is violence. The northern barbarians worship this god. Faith points come from the damage you deal and take, capped per battle; losing Vitality counts too, so even a defeat isn't for nothing. The Brute favors Offerings of beast parts, weapons and large things, with beast parts earning especially high multipliers. The Brute blesses weapons: a Blessed version deals extra damage on activation and gains more attack as your Faith points build up.
 
 From Rank one, while your Health is below {faith_perk:brute:low_hp_empower:hp_percent}%, you deal more damage, and the more Faith points you have, the bigger the boost. At Rank two you can offer up max Health at an Altar, choosing each time whether to trade it for Faith points or for extra damage dealt and Haste for this run; you can repeat this, but max Health has a floor. At Rank three, on the Pre-battle screen you can spend Vitality or Faith points to defeat a non-boss enemy instantly. At Rank four, the first time your Health hits zero in a battle, you keep fighting for a few seconds with unlimited Stamina, lasting longer the more Faith points you have; if your Health is still zero when time runs out, you fall. This happens once per battle."
 }

@@ -53,7 +53,7 @@ script = ExtResource("7_bswie")
 
 [sub_resource type="Resource" id="Resource_ogl8n"]
 script = ExtResource("8_yf1t8")
-tags = Array[StringName]([&"bone"])
+tags = Array[StringName]([&"beast_part"])
 multiplier = 5.0
 
 [sub_resource type="Resource" id="Resource_47mtk"]
@@ -63,29 +63,24 @@ multiplier = 10.0
 
 [sub_resource type="Resource" id="Resource_d5och"]
 script = ExtResource("8_yf1t8")
-tags = Array[StringName]([&"flesh"])
-multiplier = 5.0
-
-[sub_resource type="Resource" id="Resource_ffrn5"]
-script = ExtResource("8_yf1t8")
 tags = Array[StringName]([&"weapon"])
 multiplier = 2.0
 
-[sub_resource type="Resource" id="Resource_erbkk"]
+[sub_resource type="Resource" id="Resource_ffrn5"]
 script = ExtResource("10_ymc0b")
 
-[sub_resource type="Resource" id="Resource_d7f50"]
+[sub_resource type="Resource" id="Resource_erbkk"]
 script = ExtResource("11_h1qlm")
 
-[sub_resource type="Resource" id="Resource_3cl5e"]
+[sub_resource type="Resource" id="Resource_d7f50"]
 script = ExtResource("12_nnwp2")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_4uynj"]
+[sub_resource type="Resource" id="Resource_3cl5e"]
 script = ExtResource("13_3qeta")
 tier = 3
 
-[sub_resource type="Resource" id="Resource_oph1j"]
+[sub_resource type="Resource" id="Resource_4uynj"]
 script = ExtResource("14_mkgi2")
 tier = 4
 
@@ -106,6 +101,6 @@ descriptions = {
 }
 thresholds = Array[int]([30, 100, 200, 400])
 deeds = Array[ExtResource("5_7cvah")]([SubResource("Resource_dyeg3"), SubResource("Resource_6l0tu")])
-offerings = Array[ExtResource("8_yf1t8")]([SubResource("Resource_ogl8n"), SubResource("Resource_47mtk"), SubResource("Resource_d5och"), SubResource("Resource_ffrn5")])
-perks = Array[ExtResource("9_c5kw4")]([SubResource("Resource_erbkk"), SubResource("Resource_d7f50"), SubResource("Resource_3cl5e"), SubResource("Resource_4uynj"), SubResource("Resource_oph1j")])
+offerings = Array[ExtResource("8_yf1t8")]([SubResource("Resource_ogl8n"), SubResource("Resource_47mtk"), SubResource("Resource_d5och")])
+perks = Array[ExtResource("9_c5kw4")]([SubResource("Resource_ffrn5"), SubResource("Resource_erbkk"), SubResource("Resource_d7f50"), SubResource("Resource_3cl5e"), SubResource("Resource_4uynj")])
 blessings = Array[ExtResource("1_gp63j")]([SubResource("Resource_dwbhk")])

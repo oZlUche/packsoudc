@@ -1,9 +1,10 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_tufdd"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_x8i1o"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_pnjtv"]
 
 [resource]
-script = ExtResource("1_tufdd")
+script = ExtResource("2_pnjtv")
 id = &"tinker_apprentice"
 display_name = "钟表匠学徒"
 display_names = {
@@ -15,4 +16,4 @@ base_stats = {
 "max_hp": 32
 }
 signature = Array[StringName]([&"knife"])
-item_tags = Array[StringName]([&"tool", &"part", &"rapid", &"remedy", &"clockwork"])
+item_tags = Array[StringName]([&"part", &"rapid", &"remedy", &"clockwork"])

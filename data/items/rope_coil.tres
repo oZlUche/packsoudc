@@ -22,4 +22,5 @@ descriptions = {
 "en": "Thick hemp rope, neatly coiled."
 }
 shape = SubResource("Resource_8msc6")
-tags = Array[StringName]([&"material", &"crafted", &"cloth"])
+tags = Array[StringName]([&"material", &"crafted"])
+material = "cloth"

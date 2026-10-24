@@ -14,7 +14,7 @@
   "rarity": 1,
   "tags": [
     "material",
-    "nature",
-    "flesh"
-  ]
+    "nature"
+  ],
+  "material": "flesh"
 }

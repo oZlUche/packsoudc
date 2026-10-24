@@ -15,7 +15,7 @@
   "tags": [
     "material",
     "crafted",
-    "supply",
-    "cloth"
-  ]
+    "supply"
+  ],
+  "material": "cloth"
 }

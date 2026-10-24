@@ -23,4 +23,5 @@ descriptions = {
 }
 shape = SubResource("Resource_e3svu")
 rarity = 2
-tags = Array[StringName]([&"material", &"crafted", &"metal"])
+tags = Array[StringName]([&"material", &"crafted"])
+material = "metal"

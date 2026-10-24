@@ -139,8 +139,9 @@ static func run_heart(t: TestCase) -> void:
 	t.begin("246 §6.2：果果之心 —— 魔法 + 魔晶石 + 贵重品，稀有度 5、面值十万；供给 +9 不带属性；没有耐久、名字无前缀、不滚品")
 	var db := _db()
 	var h := db.get_def(&"heart_of_guoguo")
-	for tag in [&"magic", &"crystal", &"valuable", &"gem", &"treasure"]:
+	for tag in [&"magic", &"crystal", &"treasure"]:     # 250：魔晶石本身就是一个类别（is_valuable 也认它），宝石是材质字段
 		t.check(h.tags.has(tag), "标签 %s" % tag)
+	t.check(h.is_valuable() and h.material == "gem", "算贵重、材质宝石")
 	t.check(h.rarity == 5 and ItemValue.of(h) == 100000, "稀有度 5、面值十万")
 	t.check(h.wear == null, "没有耐久：永不消耗")
 	t.eq(Names.of_item(ItemInstance.create(h), "zh"), "果果之心", "名字无前缀")

@@ -478,7 +478,7 @@ func tooltips_enabled() -> bool:
 	if settings != null and settings.node_tooltips_preview:
 		return true
 	if has_ability(&"node_tooltips"):
-		return true     # 088：拿到过望远镜（带 node_tooltips 标签的特殊道具）
+		return true     # 088：拿到过望远镜（能力 node_tooltips 的特殊道具）
 	return run.chapter != null and run.chapter.node_tooltips
 
 
@@ -488,7 +488,7 @@ func has_ability(tag: StringName) -> bool:
 		return false
 	for id in meta.keepsakes:
 		var def := items.get_def(id)
-		if def != null and def.tags.has(tag):
+		if def != null and def.keepsake_abilities.has(tag):     # 250：能力写在 keepsake_abilities，不再借标签
 			return true
 	return false
 
@@ -503,7 +503,7 @@ func _grant_keepsakes(chapter: ChapterDef) -> Array[ItemDef]:
 		if def == null or not meta.grant_keepsake(id):
 			continue
 		got.append(def)
-		_notes.append(UiText.t("log.keepsake") % [Names.of(def), UiText.t("log.keepsake_tooltips") if def.tags.has(&"node_tooltips") else ""])
+		_notes.append(UiText.t("log.keepsake") % [Names.of(def), UiText.t("log.keepsake_tooltips") if def.keepsake_abilities.has(&"node_tooltips") else ""])
 	if not got.is_empty():
 		save_meta()
 	return got

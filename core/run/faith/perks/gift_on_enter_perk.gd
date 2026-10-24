@@ -3,7 +3,7 @@ class_name GiftOnEnterPerk
 extends FaithPerk
 
 ## 点类型 → 任一标签命中即可（空数组 = 任何非包道具）
-@export var by_type: Dictionary = {"battle": ["weapon"], "elite": ["gear", "armor", "shield"], "event": ["sigil", "part"], "extract": [], "core": ["treasure"]}
+@export var by_type: Dictionary = {"battle": ["weapon"], "elite": ["armor", "shield"], "event": ["trinket", "material"], "extract": [], "core": ["valuable"]}
 @export var rarity_cap: int = -1
 
 

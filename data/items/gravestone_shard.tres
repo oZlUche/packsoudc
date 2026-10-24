@@ -23,4 +23,5 @@ descriptions = {
 }
 shape = SubResource("Resource_bglum")
 weight = 4
-tags = Array[StringName]([&"material", &"nature", &"stone"])
+tags = Array[StringName]([&"material", &"nature"])
+material = "stone"

@@ -15,9 +15,9 @@
     "weapon",
     "melee",
     "burst",
-    "enchanted",
-    "metal"
+    "imperial"
   ],
+  "material": "metal",
   "requires_unlock": "ach_extract_3",
   "combat": {
     "base_stats": {

@@ -18,9 +18,9 @@
     "weapon",
     "melee",
     "bleed",
-    "poison",
-    "metal"
+    "poison"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "damage": 12

@@ -14,11 +14,11 @@
   ],
   "rarity": 2,
   "tags": [
-    "faith",
+    "trinket",
     "faith:nature",
-    "nature",
-    "wood"
+    "nature"
   ],
+  "material": "wood",
   "growth": {
     "stages": [
       {

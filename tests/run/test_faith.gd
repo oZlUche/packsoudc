@@ -40,7 +40,7 @@ static func run_tags_and_defs(t: TestCase) -> void:
 				objects += 1
 		if d.has_faith():
 			faithful += 1
-			t.check(objects == 1 and defs.has(FaithTags.id_of_tag(d.faith_tag())), "%s：faith + 一个登记过的对象标签（%s）" % [id, d.faith_tag()])
+			t.check(objects == 1 and defs.has(FaithTags.id_of_tag(d.faith_tag())), "%s：恰好一个登记过的 faith:<神>（%s）" % [id, d.faith_tag()])
 		else:
 			t.eq(objects, 0, "%s 没有 faith 就没有对象标签" % id)
 	t.check(faithful >= 3, "第一批里有 %d 件信仰道具（赐福之物、符号）" % faithful)
@@ -56,10 +56,8 @@ static func run_tags_and_defs(t: TestCase) -> void:
 		ctx.register_faith(defs[id])
 	var base := {"id": "x", "display_name": "x", "shape": ["1"]}
 	var cases := {
-		"faith 没对象": {"tags": ["faith"]},
-		"对象没 faith": {"tags": ["faith:skill"]},
-		"两个对象": {"tags": ["faith", "faith:skill", "faith:brute"]},
-		"没登记的信仰": {"tags": ["faith", "faith:moon"]},
+		"两个对象": {"tags": ["faith:skill", "faith:brute"]},     # 250：faith 标签删了，faith:<神> 自己就是归属
+		"没登记的信仰": {"tags": ["faith:moon"]},
 	}
 	for name in cases:
 		var data := base.duplicate()
@@ -68,7 +66,7 @@ static func run_tags_and_defs(t: TestCase) -> void:
 		ContentImporter.import_item(data, ctx, rep)
 		t.check(not rep.ok(), "导入器拦「%s」：%s" % [name, rep.to_text().strip_edges().left(60)])
 	var good := base.duplicate()
-	good["tags"] = ["faith", "faith:skill"]
+	good["tags"] = ["faith:skill"]
 	var rep_ok := ImportReport.new()
 	ContentImporter.import_item(good, ctx, rep_ok)
 	t.check(rep_ok.ok(), "合法的过：%s" % rep_ok.to_text())

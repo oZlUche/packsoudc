@@ -7,8 +7,6 @@
   "shape": [
     "1111"
   ],
-  "tags": [
-    "cloth"
-  ],
+  "material": "cloth",
   "is_bag": true
 }

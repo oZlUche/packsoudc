@@ -34,7 +34,7 @@
   "offerings": [
     {
       "tags": [
-        "metal"
+        "crystal"
       ],
       "multiplier": 5.0
     },
@@ -46,7 +46,7 @@
     },
     {
       "tags": [
-        "gem"
+        "valuable"
       ],
       "multiplier": 5.0
     },
@@ -90,7 +90,9 @@
   "blessings": [
     {
       "tags": [
-        "metal"
+        "weapon",
+        "armor",
+        "shield"
       ],
       "name_prefix": "日神赐福的",
       "name_prefix_en": "Sun-blessed ",

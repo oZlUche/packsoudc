@@ -85,11 +85,11 @@
   },
   "loadout": {
     "common_tags": [
-      "gear",
+      "armor",
+      "shield",
       "remedy",
       "food",
-      "part",
-      "tool"
+      "part"
     ]
   },
   "combat_types": [

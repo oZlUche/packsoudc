@@ -24,7 +24,7 @@ descriptions = {
 }
 shape = SubResource("Resource_epkkn")
 rarity = 3
-tags = Array[StringName]([&"leather"])
+material = "leather"
 is_bag = true
 bag_value_mult = 1.25
 bag_weight_mult = 0.5

@@ -15,9 +15,9 @@
   "tags": [
     "ammo",
     "bleed",
-    "nature",
-    "wood"
+    "nature"
   ],
+  "material": "wood",
   "adjacency": {
     "grant_cells": [
       [

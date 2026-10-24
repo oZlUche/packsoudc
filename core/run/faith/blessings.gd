@@ -39,9 +39,8 @@ static func derive(faith: FaithDef, def: ItemDef, rule: Blessing) -> ItemDef:
 		names["en"] = rule.name_prefix_en + String(names["en"])
 	out.display_names = names
 	var tags: Array[StringName] = def.tags.duplicate()
-	for t in [ItemDef.FAITH, faith.tag(), ItemDef.BLESSED]:
-		if not tags.has(t):
-			tags.append(t)
+	if not tags.has(faith.tag()):     # 250：只挂神的标签（faith / blessed 删了；赐福与否看 blessed_of）
+		tags.append(faith.tag())
 	for t in rule.add_tags:
 		if not tags.has(t):
 			tags.append(t)

@@ -9,5 +9,6 @@
     "en": "An alchemical reagent."
   },
   "tip": false,
-  "category": "purpose"
+  "category": "internal",
+  "internal": true
 }

@@ -10,9 +10,9 @@
   "rarity": 3,
   "value": 300,
   "tags": [
+    "valuable",
     "treasure",
-    "material",
-    "nature",
-    "gem"
-  ]
+    "nature"
+  ],
+  "material": "gem"
 }

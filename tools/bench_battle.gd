@@ -10,7 +10,7 @@ extends CliTool
 
 const BATTLES := 2000
 ## 151：组合表按这些流派标签分组
-const SET_TAGS: Array[StringName] = [&"bleed", &"poison", &"gun", &"rapid", &"burst"]
+const SET_TAGS: Array[StringName] = [&"bleed", &"poison", &"rapid", &"burst"]
 
 
 func run() -> void:

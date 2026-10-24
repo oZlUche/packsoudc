@@ -13,7 +13,7 @@
   ],
   "tags": [
     "material",
-    "nature",
-    "metal"
-  ]
+    "nature"
+  ],
+  "material": "metal"
 }

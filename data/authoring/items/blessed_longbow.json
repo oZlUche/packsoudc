@@ -13,16 +13,12 @@
   ],
   "rarity": 3,
   "tags": [
-    "faith",
-    "faith:hunt",
     "weapon",
+    "faith:hunt",
     "ranged",
-    "rapid",
-    "blessed",
-    "faith_anchor",
-    "bow",
-    "wood"
+    "rapid"
   ],
+  "material": "wood",
   "faith_bonuses": [
     {
       "mods": [

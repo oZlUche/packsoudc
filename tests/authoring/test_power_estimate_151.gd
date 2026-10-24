@@ -323,7 +323,7 @@ static func run_155(t: TestCase) -> void:
 	t.check(db.get_def(&"smg") == null and db.get_def(&"sniper") == null, "冲锋枪、狙击枪删了（作者定：废弃道具）")
 	t.eq(db.get_def(&"poisoned_knife").rarity, 3, "涂毒匕首提到史诗（155 待定 3）")
 	var inv := GridInventory.new(Vector2i(4, 4))
-	inv.try_add(ItemInstance.create(db.get_def(&"rifle")), true)
+	inv.try_add(ItemInstance.create(db.get_def(&"shortsword")), true)
 	var saved := inv.to_dict()
 	var ghost := ((saved["items"] as Array)[0] as Dictionary).duplicate(true)
 	ghost["def"] = "sniper"

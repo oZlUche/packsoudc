@@ -15,9 +15,9 @@
   "tags": [
     "material",
     "nature",
-    "bone",
     "beast_part"
   ],
+  "material": "bone",
   "adjacency": {
     "grant_cells": [
       [

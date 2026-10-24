@@ -21,9 +21,9 @@
     "burst",
     "heavy",
     "crafted",
-    "metal",
     "clockwork"
   ],
+  "material": "metal",
   "combat": {
     "base_stats": {
       "damage": 30

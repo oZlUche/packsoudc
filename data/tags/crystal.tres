@@ -13,4 +13,4 @@ description = "魔晶石：放在法杖的装载槽上给它供给，用几场�
 descriptions = {
 "en": "Mana crystal: fuels a staff from its load slot and shatters after a few battles."
 }
-category = "purpose"
+category = "kind"

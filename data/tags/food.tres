@@ -14,4 +14,4 @@ descriptions = {
 "en": "Something to eat."
 }
 tip = false
-category = "purpose"
+category = "kind"

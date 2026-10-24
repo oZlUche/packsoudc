@@ -11,9 +11,9 @@ const QUIET_TERMS: Array[String] = ["自发", "开战时", "出手时", "受伤�
 ## 带规则、照弹的固定词条
 const LOUD_TERMS: Array[String] = ["急速", "格挡", "护甲", "直接伤害", "永续", "叠层", "合成", "增益槽", "受益槽", "中毒", "流血"]
 ## 作者点名不弹的标签
-const QUIET_TAGS: Array[StringName] = [&"melee", &"ranged", &"weapon", &"shield", &"armor", &"gear_plug", &"treasure", &"keepsake", &"fire", &"poison", &"bleed", &"remedy"]
+const QUIET_TAGS: Array[StringName] = [&"melee", &"ranged", &"weapon", &"shield", &"armor", &"treasure", &"keepsake", &"fire", &"poison", &"bleed", &"remedy"]
 ## 带规则（休眠 / 激活条件、献祭信息）、照弹的标签
-const LOUD_TAGS: Array[StringName] = [&"faith", &"faith_anchor", &"sealed", &"sigil", &"bone", &"metal", &"nature"]
+const LOUD_TAGS: Array[StringName] = [&"sealed", &"nature", &"crafted", &"magic"]     # 250：faith / faith_anchor / sigil / 材质标签删了（信仰、信物改成归神道具自带的词条）
 
 
 static func run_term_table(t: TestCase) -> void:
@@ -169,10 +169,10 @@ static func run_internal_style_tags(t: TestCase) -> void:
 	for id in [&"rapid", &"burst", &"heavy"]:
 		t.check(TagRegistry.is_internal(id), "%s 是内部标签" % id)
 		t.check(TagRegistry.get_def(id) != null, "%s 还登记着（没删）" % id)
-	for id in [&"weapon", &"melee", &"metal", &"remedy"]:
+	for id in [&"weapon", &"fire", &"crafted", &"remedy"]:     # 250：melee / ranged 降成内部
 		t.check(not TagRegistry.is_internal(id), "%s 照常给玩家看" % id)
 	t.check(not TagRegistry.is_internal(&"no_such_tag"), "没登记的标签不算内部（界面照原词显示）")
-	t.eq(TagRegistry.shown([&"weapon", &"rapid", &"metal"]), [&"weapon", &"metal"], "shown 去掉内部的、顺序不变")
+	t.eq(TagRegistry.shown([&"weapon", &"rapid", &"crafted"]), [&"weapon", &"crafted"], "shown 去掉内部的、顺序不变")
 	var c := NS._content()
 	var saved := ItemTooltip.faith_probe
 	ItemTooltip.faith_probe = Callable()

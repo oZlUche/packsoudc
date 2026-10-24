@@ -29,7 +29,7 @@ static func _difficulty(ids: Array[StringName], count: int = 1, min_dist: float 
 ## 开一局、挑出生点。[param defs] 是这一局的猎手定义表（可以是改过数的副本）
 static func _start(c: TestSupport.Content, defs: Dictionary, diff: DifficultyDef) -> RunState:
 	for seed in range(1, 40):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"rifle"] as Array[StringName],
+		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"shortsword"] as Array[StringName],
 			{}, [] as Array[StringName], null, [], diff, defs)
 		if s != null:
 			s.pick_spawn(s.map.entry_ids[0])
@@ -306,7 +306,7 @@ static func run_loss_outcomes_and_drop(t: TestCase) -> void:
 
 	# 掉落倍数
 	var rule: DropRule = s.drop_rule
-	var item := c.items.get_def(&"pistol")
+	var item := c.items.get_def(&"knife")
 	if rule != null and item != null:
 		var plain := LootContext.new()
 		var boosted := LootContext.new()

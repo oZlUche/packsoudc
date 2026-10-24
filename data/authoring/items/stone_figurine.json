@@ -13,9 +13,9 @@
   ],
   "rarity": 2,
   "tags": [
-    "material",
+    "valuable",
     "crafted",
-    "stone",
     "treasure"
-  ]
+  ],
+  "material": "stone"
 }

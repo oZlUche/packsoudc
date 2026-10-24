@@ -11,9 +11,9 @@ display_names = {
 }
 category = &"faith"
 order = 10
-text = "{faith:hunt}管比较、差异与拆解，帝国不祭祀祂，民间猎人信祂。信力看的是打完一场战斗，按点的类型给：普通、精英、猎手、核心一级比一级多；每局头一回把一种猎获品置入背包也给，越稀有给得越多。献祭爱血肉、骨制品、皮革，猎获品的倍率最高。"
+text = "{faith:hunt}管比较、差异与拆解，帝国不祭祀祂，民间猎人信祂。信力看的是打完一场战斗，按点的类型给：普通、精英、猎手、核心一级比一级多；每局头一回把一种兽材置入背包也给，越稀有给得越多。献祭爱兽材与食物，兽材的倍率最高。"
 texts = {
-"en": "{faith:hunt} governs comparison, difference and dissection. The Empire does not worship this god, but common hunters do. Faith points come from finishing battles, scaled by the spot's type: normal, elite, hunter and Core each give more than the last. The first time in a run that you place a kind of quarry into your pack also gives Faith points, more for rarer kinds. This god favors Offerings of flesh, bone items and leather, with quarry earning the highest multipliers."
+"en": "{faith:hunt} governs comparison, difference and dissection. The Empire does not worship this god, but common hunters do. Faith points come from finishing battles, scaled by the spot's type: normal, elite, hunter and Core each give more than the last. The first time in a run that you place a kind of beast part into your pack also gives Faith points, more for rarer kinds. This god favors Offerings of beast parts and food, with beast parts earning the highest multiplier."
 }
 related = Array[String](["faith_power_and_tiers", "altar_offering", "hunters"])
 see_items = Array[StringName]([&"charm_hunt"])

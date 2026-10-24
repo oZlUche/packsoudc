@@ -33,7 +33,7 @@ base_stats = {
 "max_stamina": 55
 }
 signature = Array[StringName]([&"scimitar"])
-item_tags = Array[StringName]([&"barbarian", &"burst", &"melee", &"gear", &"food"])
+item_tags = Array[StringName]([&"barbarian", &"burst", &"melee", &"armor", &"shield", &"food"])
 board = Vector2i(9, 5)
 bags = Array[StringName]([&"bag_leather", &"bag_leather", &"bag_leather", &"bag_small", &"bag_small"])
 builds = Array[ExtResource("1_xf1ry")]([SubResource("Resource_dl01v"), SubResource("Resource_vpyxj")])

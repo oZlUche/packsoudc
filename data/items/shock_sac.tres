@@ -120,7 +120,8 @@ descriptions = {
 }
 shape = SubResource("Resource_5l0xl")
 rarity = 2
-tags = Array[StringName]([&"reagent", &"material", &"nature", &"flesh", &"lightning", &"beast_part"])
+tags = Array[StringName]([&"material", &"reagent", &"nature", &"lightning", &"beast_part"])
+material = "flesh"
 adjacency = SubResource("Resource_upvsd")
 wild = SubResource("Resource_yy2ep")
 wild_applies = Array[ExtResource("11_th6ov")]([SubResource("Resource_i6dj7")])

@@ -12,9 +12,7 @@
     "11"
   ],
   "rarity": 1,
-  "tags": [
-    "leather"
-  ],
+  "material": "leather",
   "is_bag": true,
   "bag_mods": [
     {

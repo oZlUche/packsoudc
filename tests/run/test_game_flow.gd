@@ -689,7 +689,7 @@ static func frame_loot_view(t: TestCase, root: Window) -> void:
 	t.begin("渐进揭示 · 正在搜的锁住、别的没亮的能抓；按栏位顺序亮；快速搜索推到终点；见过的不再走时间线")
 
 	var c := _content()
-	var box := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), c.items)
+	var box := LootPacker.board_of([&"healing_draught", &"knife", &"round_shield"] as Array[StringName], Vector2i(6, 4), c.items)
 	t.eq(box.item_count(), 3, "三件摆进容器")
 	var view := LootView.new()
 	view.inventory = box
@@ -734,7 +734,7 @@ static func frame_loot_view(t: TestCase, root: Window) -> void:
 
 	# 见过的不再走时间线
 	var view2 := LootView.new()
-	var box2 := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), c.items)
+	var box2 := LootPacker.board_of([&"healing_draught", &"knife", &"round_shield"] as Array[StringName], Vector2i(6, 4), c.items)
 	view2.inventory = box2
 	root.add_child(view2)
 	var seen := (box2.items()[0] as ItemInstance).uid

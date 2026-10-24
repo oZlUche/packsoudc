@@ -19,7 +19,7 @@
   "deeds": [
     {
       "type": "item_acquired",
-      "tag": "metal",
+      "tag": "crafted",
       "per_cell": true,
       "amount": 3
     },
@@ -33,13 +33,12 @@
   "offerings": [
     {
       "tags": [
-        "metal"
+        "weapon"
       ],
       "multiplier": 5.0
     },
     {
       "tags": [
-        "gear",
         "armor",
         "shield"
       ],

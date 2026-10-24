@@ -14,10 +14,11 @@
   ],
   "rarity": 2,
   "tags": [
+    "trinket",
     "part",
-    "metal",
     "poison"
   ],
+  "material": "metal",
   "combat": {
     "rules": [
       {

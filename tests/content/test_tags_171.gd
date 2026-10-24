@@ -14,23 +14,29 @@ static func _item(tags: Array) -> Dictionary:
 	return {"id": "probe_171", "display_name": "探针", "shape": ["1"], "tags": tags}
 
 
+static func _material(tags: Array) -> Dictionary:
+	var d := _item(tags)
+	d["material"] = "metal"
+	return d
+
+
 static func run_categories(t: TestCase) -> void:
 	t.begin("171 · 标签大类：每条登记的标签都归了类；bow / wood 补登记；by_category / category_of；faith:<id> 算归属；按大类排序")
 	TagRegistry.reset()
 	for id in TagRegistry.ids():
 		var def := TagRegistry.get_def(id)
 		t.check(TagRegistry.CATEGORY_ORDER.has(def.category), "「%s」归了类（%s）" % [id, def.category])
-	t.eq(TagRegistry.category_of(&"bow"), "purpose", "弓：用途类（道具里在用，补登记）")
-	t.eq(TagRegistry.category_of(&"wood"), "material", "木制：材料类（新）")
+	t.eq(TagRegistry.category_of(&"weapon"), "kind", "武器：类别（250：用途改叫类别）")
+	t.eq(TagRegistry.category_of(&"wood"), "", "木制：250 起材质不是标签（ItemDef.material）")
 	t.eq(TagRegistry.category_of(&"fire"), "element", "火焰：属性类")
-	t.eq(TagRegistry.category_of(&"imperial"), "origin", "帝国：归属类")
-	t.eq(TagRegistry.category_of(&"faith:sun"), "origin", "faith:<id> 算归属")
-	t.eq(TagRegistry.by_category("source"), [&"crafted", &"magic", &"nature"], "来源类：工艺 / 魔法 / 自然（待定 1 A）")
+	t.eq(TagRegistry.category_of(&"imperial"), "affiliation", "帝国：归属类")
+	t.eq(TagRegistry.category_of(&"faith:sun"), "affiliation", "faith:<id> 算归属")
+	t.eq(TagRegistry.by_category("source"), [&"crafted", &"magic", &"nature"], "本源类：工艺 / 魔法 / 自然（待定 1 A）")
 	t.check(TagRegistry.by_category("internal").has(&"rapid"), "快攻在内部类")
-	t.check(TagRegistry.is_internal(&"node_tooltips"), "内部类的都是内部标签")
+	t.check(TagRegistry.by_category("internal").all(func(id): return TagRegistry.is_internal(id)), "内部类的都是内部标签")
 	t.eq(TagRegistry.category_of(&"zz_nobody"), "", "没登记的没有类")
-	var sorted := TagRegistry.sorted_by_category([&"metal", &"imperial", &"fire", &"weapon", &"crafted", &"melee"])
-	t.eq(sorted, [&"weapon", &"melee", &"fire", &"metal", &"imperial", &"crafted"], "用途 → 属性 → 材料 → 归属 → 来源，同类保持原顺序")
+	var sorted := TagRegistry.sorted_by_category([&"melee", &"imperial", &"fire", &"weapon", &"crafted", &"bleed"])
+	t.eq(sorted, [&"weapon", &"fire", &"bleed", &"crafted", &"imperial", &"melee"], "类别 → 属性 → 本源 → 归属 → 内部（250），同类保持原顺序")
 
 
 static func run_import_rules(t: TestCase) -> void:
@@ -39,7 +45,7 @@ static func run_import_rules(t: TestCase) -> void:
 	ContentImporter.import_tag({"id": "zz_new", "display_name": "新"}, ContentImporter.Context.new(), r0)
 	t.check(not r0.ok(), "没写 category：报错")
 	var r1 := ImportReport.new()
-	ContentImporter.import_tag({"id": "zz_new", "display_name": "新", "category": "purpose"}, ContentImporter.Context.new(), r1)
+	ContentImporter.import_tag({"id": "zz_new", "display_name": "新", "category": "kind"}, ContentImporter.Context.new(), r1)
 	t.check(r1.ok(), "写了 category：过")
 	var r2 := ImportReport.new()
 	ContentImporter.import_tag({"id": "zz_new", "display_name": "新", "category": "nope"}, ContentImporter.Context.new(), r2)
@@ -53,14 +59,14 @@ static func run_import_rules(t: TestCase) -> void:
 	ContentImporter.import_item(_item(["treasure", "faith:sun"]), ctx, faith)
 	t.check(not faith.to_text().contains("zz_") and not faith.to_text().contains("没有登记的标签"), "faith:<id> 不算没登记")
 	var none := ImportReport.new()
-	ContentImporter.import_item(_item(["material", "metal"]), ctx, none)
-	t.check(none.to_text().contains("来源类"), "材料没带来源：提醒")
+	ContentImporter.import_item(_material(["material"]), ctx, none)
+	t.check(none.to_text().contains("本源"), "素材没带本源：报错")
 	var two := ImportReport.new()
-	ContentImporter.import_item(_item(["material", "metal", "crafted", "nature"]), ctx, two)
-	t.check(two.to_text().contains("来源类"), "材料带了两个来源：提醒")
+	ContentImporter.import_item(_material(["material", "crafted", "nature"]), ctx, two)
+	t.check(two.to_text().contains("本源"), "素材带了两个本源：报错")
 	var one := ImportReport.new()
-	ContentImporter.import_item(_item(["material", "metal", "crafted"]), ctx, one)
-	t.check(not one.to_text().contains("来源类"), "恰好一个：不提醒")
+	ContentImporter.import_item(_material(["material", "crafted"]), ctx, one)
+	t.check(one.ok(), "恰好一个：过（%s）" % one.to_text())
 
 
 static func frame_tag_dropdown(t: TestCase, root: Window) -> void:
@@ -85,18 +91,18 @@ static func frame_tag_dropdown(t: TestCase, root: Window) -> void:
 			if ob.is_item_separator(i):
 				seps += 1
 		t.eq(seps, PropertyForm.tag_groups().size(), "每个大类一个分组标题（%d）" % seps)
-		t.check(ob.get_item_text(1) == "用途", "第一组是用途")
+		t.check(ob.get_item_text(1) == "类别", "第一组是类别")
 		t.check(not choices.has("zz_nobody"), "只列登记过的")
-		var at := choices.find("metal")
+		var at := choices.find("fire")
 		ob.item_selected.emit(at)
-		t.check(def.tags.has(&"metal") and def.tags.has(&"weapon"), "选一个就追加：%s" % str(def.tags))
+		t.check(def.tags.has(&"fire") and def.tags.has(&"weapon"), "选一个就追加：%s" % str(def.tags))
 		ob.item_selected.emit(choices.find("weapon"))
 		t.eq(def.tags.size(), 2, "已有的不重复加")
 		var chips: Control = row.get_meta("tag_chips")
 		var first := chips.get_child(0) as Button
 		t.check(first.text.ends_with("×"), "每块后面一个 ×（%s）" % first.text)
 		first.pressed.emit()
-		t.check(not def.tags.has(&"weapon") and def.tags.has(&"metal"), "点 × 删掉那一个")
+		t.check(not def.tags.has(&"weapon") and def.tags.has(&"fire"), "点 × 删掉那一个")
 	form.queue_free()
 	UiText.lang = saved
 
@@ -109,7 +115,7 @@ static func frame_tag_editor(t: TestCase, root: Window) -> void:
 	t.check(ed.def() is TagDef, "打开了一条标签")
 	t.eq(ed._ids.size(), TagRegistry.ids().size(), "列表 = 全部登记的标签（%d）" % ed._ids.size())
 	ed._new_tag()
-	t.eq(ed.def().category, "purpose", "新建的默认用途类")
+	t.eq(ed.def().category, "kind", "新建的默认类别（250）")
 	t.check(ed._validate().ok(), "新建的校验通过")
 	ed.def().category = ""
 	t.check(not ed._validate().ok(), "去掉类别：校验报错")

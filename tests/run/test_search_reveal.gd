@@ -84,7 +84,7 @@ static func run_rules(t: TestCase) -> void:
 static func frame_run_timeline(t: TestCase, root: Window) -> void:
 	t.begin("揭示 · 一件一件来：当前按稀有度计时，到点亮出来、换下一件；一次推进能跨好几件；快速搜索全亮")
 	var db := _items()
-	var box := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), db)
+	var box := LootPacker.board_of([&"healing_draught", &"knife", &"round_shield"] as Array[StringName], Vector2i(6, 4), db)
 	var view := _view(box, Vector2.ZERO)
 	root.add_child(view)
 	_set_seconds(view, [1.0, 2.0, 3.0, 4.0, 5.0] as Array[float])
@@ -118,7 +118,7 @@ static func frame_run_timeline(t: TestCase, root: Window) -> void:
 	t.eq(view.unrevealed_count(), 0, "没有没亮的")
 
 	# 快速搜索
-	var box2 := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), db)
+	var box2 := LootPacker.board_of([&"healing_draught", &"knife", &"round_shield"] as Array[StringName], Vector2i(6, 4), db)
 	var view2 := _view(box2, Vector2.ZERO)
 	root.add_child(view2)
 	var fin2: Array = []
@@ -165,7 +165,7 @@ static func frame_run_timeline(t: TestCase, root: Window) -> void:
 static func frame_run_move_changes_next(t: TestCase, root: Window) -> void:
 	t.begin("揭示 · 挪没亮的东西会换「下一件」；正在搜的不受影响")
 	var db := _items()
-	var box := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), db)
+	var box := LootPacker.board_of([&"healing_draught", &"knife", &"round_shield"] as Array[StringName], Vector2i(6, 4), db)
 	var view := _view(box, Vector2.ZERO)
 	root.add_child(view)
 	view.start_reveal()
@@ -194,7 +194,7 @@ static func frame_run_move_changes_next(t: TestCase, root: Window) -> void:
 static func frame_run_drop_filter(t: TestCase, root: Window) -> void:
 	t.begin("揭示 · 没亮的能抓、只能放回容器；亮了才能拖出去；拖拽层的第二道门")
 	var db := _items()
-	var box := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), db)
+	var box := LootPacker.board_of([&"healing_draught", &"knife", &"round_shield"] as Array[StringName], Vector2i(6, 4), db)
 	var board := GridInventory.new(Vector2i(6, 4), 77, false)
 	var view := _view(box, Vector2.ZERO)
 	var board_view := _plain_view(board, Vector2(600, 0))
@@ -271,13 +271,13 @@ static func frame_run_container_screen(t: TestCase, root: Window) -> void:
 	var run: RunState = null
 	var seed := 1
 	while run == null and seed < 30:
-		run = RunState.start(chapter, seed, db, enemies, sets, [&"bag_leather", &"pistol"] as Array[StringName])
+		run = RunState.start(chapter, seed, db, enemies, sets, [&"bag_leather", &"healing_draught"] as Array[StringName])
 		seed += 1
 	t.not_null(run, "开得了局")
 	if run == null:
 		return
 	f.run = run
-	var box := LootPacker.board_of([&"pistol", &"knife", &"armor"] as Array[StringName], Vector2i(6, 4), db)
+	var box := LootPacker.board_of([&"healing_draught", &"knife", &"round_shield"] as Array[StringName], Vector2i(6, 4), db)
 	var screen = load("res://ui/game/container_screen.gd").new()
 	screen.flow = f
 	screen.font = UiPalette.cjk_font()

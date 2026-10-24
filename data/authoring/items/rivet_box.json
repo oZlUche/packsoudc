@@ -11,7 +11,7 @@
   "tags": [
     "material",
     "crafted",
-    "metal",
     "supply"
-  ]
+  ],
+  "material": "metal"
 }

@@ -13,10 +13,11 @@
   ],
   "rarity": 2,
   "tags": [
+    "trinket",
     "part",
-    "leather",
     "poison"
   ],
+  "material": "leather",
   "adjacency": {
     "grant_cells": [
       [

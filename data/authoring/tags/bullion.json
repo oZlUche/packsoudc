@@ -8,5 +8,6 @@
   "descriptions": {
     "en": "Valuable and does not fight. Only sold in shops; the base buys it back at full face value."
   },
-  "category": "purpose"
+  "category": "internal",
+  "internal": true
 }

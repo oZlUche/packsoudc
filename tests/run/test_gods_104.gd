@@ -36,7 +36,7 @@ static func _gain(def: FaithDef, event: StringName, payload: Dictionary) -> int:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("104 · 内容：战争之神删了；技巧 / 狩猎有 1 格护符（信物、暂无效果）；胫骨大棒是蛮神道具；leather 标签；每位诸神至少一枚 1 格护符")
+	t.begin("104 · 内容：战争之神删了；技巧 / 狩猎有 1 格护符（信物、暂无效果）；胫骨大棒是蛮神道具；皮革材质；每位诸神至少一枚 1 格护符")
 	var defs := FaithDef.load_all()
 	t.check(not defs.has(&"war"), "没有战争之神")
 	t.eq(defs.size(), 7, "七份信仰（四位主神 + 技巧 + 狩猎 + 新教占位）")
@@ -50,7 +50,7 @@ static func run_content(t: TestCase) -> void:
 		t.eq(ItemVolume.cells_of(charm), 1, "1 格")
 		t.check(charm.faith_bonuses.is_empty() and charm.combat == null, "暂无效果")
 	t.check(db.get_def(&"tibia_violence").tags.has(&"faith:brute"), "胫骨大棒是蛮神的道具")
-	t.check(db.get_def(&"leather_armor").tags.has(&"leather") and db.get_def(&"bag_leather").tags.has(&"leather"), "皮甲、皮革包带 leather")
+	t.check(db.get_def(&"leather_armor").material == "leather" and db.get_def(&"bag_leather").material == "leather", "皮甲、皮革包的材质是皮革（250：材质是字段）")
 	# 导入器守 1 格护符
 	var ctx := ContentImporter.Context.new()
 	for id in defs:
@@ -67,12 +67,12 @@ static func run_content(t: TestCase) -> void:
 
 
 static func run_deeds(t: TestCase) -> void:
-	t.begin("104 · 四条新行为：获得金属道具按格 ×3、每种武器首次出手 +10 封顶 50、按节点类型给（输了也给）、每局首次置入一种战利品 2^稀有度 + 1")
+	t.begin("104 · 四条新行为：获得工艺道具按格 ×3（250）、每种武器首次出手 +10 封顶 50、按节点类型给（输了也给）、每局首次置入一种兽材 2^稀有度 + 1（250）")
 	var defs := FaithDef.load_all()
 	var skill: FaithDef = defs[&"skill"]
 	var hunt: FaithDef = defs[&"hunt"]
-	t.eq(_gain(skill, &"item_acquired", {"id": "x", "tags": ["metal", "weapon"], "cells": 4}), 12, "4 格金属 +12")
-	t.eq(_gain(skill, &"item_acquired", {"id": "x", "tags": ["weapon"], "cells": 4}), 0, "不是金属不给")
+	t.eq(_gain(skill, &"item_acquired", {"id": "x", "tags": ["crafted", "weapon"], "cells": 4}), 12, "4 格工艺 +12（250：金属换成工艺）")
+	t.eq(_gain(skill, &"item_acquired", {"id": "x", "tags": ["weapon"], "cells": 4}), 0, "不是工艺不给")
 	var two_same := {"fired_items": [{"id": "knife", "tags": ["weapon"], "count": 3}, {"id": "knife", "tags": ["weapon"], "count": 1},
 		{"id": "shortsword", "tags": ["weapon"], "count": 2}, {"id": "salve", "tags": ["remedy"], "count": 5}]}
 	t.eq(_gain(skill, &"battle", two_same), 20, "两把同名匕首 + 一把短剑出手 → +20（同名只算一次、不是武器不算）")
@@ -84,9 +84,9 @@ static func run_deeds(t: TestCase) -> void:
 	t.eq(_gain(hunt, &"battle", {"won": true, "node_type": "battle"}), 5, "普通 +5")
 	t.eq(_gain(hunt, &"battle", {"won": true, "node_type": "core"}), 50, "BOSS +50")
 	t.eq(_gain(hunt, &"battle", {"won": true, "node_type": "search"}), 0, "表里没有的类型不给")
-	t.eq(_gain(hunt, &"place_item", {"tags": ["trophy"], "rarity": 3, "first_in_run": true}), 9, "首次置入稀有度 3 的战利品 +9")
-	t.eq(_gain(hunt, &"place_item", {"tags": ["trophy"], "rarity": 3, "first_in_run": false}), 0, "再置入同种不给")
-	t.eq(_gain(hunt, &"place_item", {"tags": ["weapon"], "rarity": 3, "first_in_run": true}), 0, "不是战利品不给")
+	t.eq(_gain(hunt, &"place_item", {"tags": ["beast_part"], "rarity": 3, "first_in_run": true}), 9, "首次置入稀有度 3 的兽材 +9（250：战利品并进兽材）")
+	t.eq(_gain(hunt, &"place_item", {"tags": ["beast_part"], "rarity": 3, "first_in_run": false}), 0, "再置入同种不给")
+	t.eq(_gain(hunt, &"place_item", {"tags": ["weapon"], "rarity": 3, "first_in_run": true}), 0, "不是兽材不给")
 	# 往返
 	var text := ContentExporter.to_json(ContentExporter.export_faith(skill))
 	var back := ContentImporter.import_faith(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
@@ -109,17 +109,17 @@ static func run_acquired_wiring(t: TestCase) -> void:
 	var metal: ItemDef = null
 	for id in db.ids():
 		var d := db.get_def(id)
-		if d.tags.has(&"metal") and not d.has_faith() and not d.is_blessed():
+		if d.tags.has(&"crafted") and not d.has_faith() and not d.is_blessed():
 			metal = d
 			break
-	t.not_null(metal, "有一件金属道具")
+	t.not_null(metal, "有一件工艺道具")
 	if metal == null:
 		return
 	var before := s.faith_power.points_of(&"skill")
 	s.storage.admit(ItemInstance.create(metal, 0))
-	t.eq(s.reconcile_owned(), 2, "护符和金属道具两件新对上")
-	var want := 3 * ItemVolume.cells_of(metal) + _gain(defs[&"skill"], &"item_acquired", {"tags": charm.def.tags.map(func(x): return String(x)), "cells": 1})     # 195：护符也带材质标签（技巧之神的护符是金属）
-	t.eq(s.faith_power.points_of(&"skill") - before, want, "%s（%d 格金属）+%d" % [metal.id, ItemVolume.cells_of(metal), 3 * ItemVolume.cells_of(metal)])
+	t.eq(s.reconcile_owned(), 2, "护符和工艺道具两件新对上")
+	var want := 3 * ItemVolume.cells_of(metal) + _gain(defs[&"skill"], &"item_acquired", {"tags": charm.def.tags.map(func(x): return String(x)), "cells": 1})     # 护符若带工艺也算
+	t.eq(s.faith_power.points_of(&"skill") - before, want, "%s（%d 格工艺）+%d" % [metal.id, ItemVolume.cells_of(metal), 3 * ItemVolume.cells_of(metal)])
 	var mid := s.faith_power.points_of(&"skill")
 	t.eq(s.reconcile_owned(), 0, "再对一次：没有新的")
 	t.eq(s.faith_power.points_of(&"skill"), mid, "同一件不再给")
@@ -202,12 +202,12 @@ static func run_offerings(t: TestCase) -> void:
 	plain.combat.base_stats = {"damage": 5.0}
 	t.eq(skill.offering_value(crit_item), 4 * 8, "显式写了暴击率：2^2 × 8 = 32")
 	t.eq(skill.offering_value(plain), 0, "默认 10% 不算「带有」")
-	# 骨制武器献给蛮神 = 2^稀有度 × (5 + 2)
+	# 兽材武器献给蛮神 = 2^稀有度 × (5 + 2)（250：骨并进兽材）
 	var bone_weapon := ItemDef.new()
 	bone_weapon.id = &"probe_bone"
 	bone_weapon.rarity = 1
-	bone_weapon.tags = [&"bone", &"weapon"] as Array[StringName]
-	t.eq(brute.offering_value(bone_weapon), 2 * (5 + 2), "骨制武器献给蛮神：2^1 × (5 + 2) = 14")
+	bone_weapon.tags = [&"beast_part", &"weapon"] as Array[StringName]
+	t.eq(brute.offering_value(bone_weapon), 2 * (5 + 2), "兽材武器献给蛮神：2^1 × (5 + 2) = 14")
 	# has_stat 往返
 	var data := {"id": "probe", "display_name": "试", "offerings": [{"has_stat": "crit_chance", "multiplier": 8.0}]}
 	var def := ContentImporter.import_faith(data, ContentImporter.Context.new(), ImportReport.new())

@@ -9,8 +9,9 @@
   ],
   "rarity": 3,
   "tags": [
-    "bone",
     "material",
-    "crafted"
-  ]
+    "crafted",
+    "beast_part"
+  ],
+  "material": "bone"
 }

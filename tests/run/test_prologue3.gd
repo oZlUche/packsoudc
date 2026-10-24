@@ -63,7 +63,7 @@ static func run_data(t: TestCase) -> void:
 		t.eq(g.get_node(i).type, want[i], "第 %d 个点是 %s" % [i, want[i]])
 	for id in [&"bone_dice", &"bone_charm_bits"]:
 		var d := c.items.get_def(id)
-		t.check(d != null and d.tags.has(&"bone") and d.combat == null, "%s：骨头、没有战斗属性" % id)
+		t.check(d != null and d.material == "bone" and d.tags.has(&"beast_part") and d.combat == null, "%s：骨头（250：材质字段 + 兽材）、没有战斗属性" % id)
 	for id in ["tut3_intro", "tut3_faith_call", "tut3_battle_1", "tut3_search", "tut3_search_again_1", "tut3_search_again_2",
 			"tut3_search_done", "tut3_rest_1", "tut3_faith_call_sun", "tut3_battle_2", "tut3_rest_2", "tut3_extract"]:
 		var e := c.events.get(StringName(id), null) as EventDef
@@ -251,7 +251,7 @@ static func run_faith_placeholders(t: TestCase) -> void:
 	t.eq(TextTemplate.plain("{faith_deed:brute:damage:cap}", ctx), "30", "伤害行为的封顶")
 	t.eq(TextTemplate.plain("{faith_deed:brute:damage:multiplier}", ctx), "0.2", "伤害行为的倍数")
 	t.eq(TextTemplate.plain("{faith_deed:brute:vitality_lost:multiplier}", ctx), "50", "失去体力的倍数（默认值也读得到）")
-	t.eq(TextTemplate.plain("{faith_offer:brute:bone:multiplier}", ctx), "5", "骨制品的献祭倍数")
+	t.eq(TextTemplate.plain("{faith_offer:brute:beast_part:multiplier}", ctx), "5", "兽材的献祭倍数（250：骨并进兽材）")
 	t.eq(TextTemplate.plain("{faith_perk:brute:altar_bless:cost}", ctx), "40", "祈求赐福花的信力")
 	t.eq(TextTemplate.plain("{faith_threshold:brute:9}", ctx), "{faith_threshold:brute:9}", "没有这一阶：原样保留")
 	t.eq(TextTemplate.plain("{faith:nobody}", ctx), "{faith:nobody}", "没有这位神：原样保留")

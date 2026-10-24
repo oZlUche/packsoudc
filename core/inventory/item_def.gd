@@ -34,28 +34,30 @@ extends Resource
 ## 留给「看着小其实沉」「占地方其实轻」的特例。负重只算作战棋盘上的（含包本身）
 @export var weight: int = 0
 
-## 封存（第 8 阶段 8-4 起）：带这个标签的道具**数据保留、不再出现**。正式游戏的世界观是剑与魔法（docs/worldview.md），
-## 现代道具（枪械、弹匣、电池、无人机……）全部封存 —— 不进搜索、掉落、商店、敌人的装备、图鉴与编辑器的下拉，
-## 但按 id 仍取得到（旧存档、仓库里的还认）。[ItemDatabase.ids] 是唯一拦它的地方
+## 封存（第 8 阶段 8-4 起）：带这个标签的道具**数据保留、不再出现**（[ItemDatabase.ids] 是唯一拦它的地方）。
+## 250（作者定）：现代道具已全部删除，sealed 降为内部标签、暂时没人带 —— 留作别的机制
 const SEALED := &"sealed"
 ## 088（作者定）：**特殊道具** —— 不进背包、不能生成（搜索 / 掉落 / 商店 / 敌人都不出），拿到只是文本通知 + 图鉴点亮；
-## 它代表一种能力（望远镜 → 节点浮窗），能力由它别的标签说明（`node_tooltips`）
+## 它代表一种能力（望远镜 → 节点浮窗），能力写在 [member keepsake_abilities]（250：不再借标签表）
 const KEEPSAKE := &"keepsake"
-## 信仰（8-4，报告 081）：信仰道具带 `faith`，再带一个信仰对象标签 `faith:<id>`（[FaithTags.PREFIX]）。激活规则见 [FaithState]
-const FAITH := &"faith"
-## 095：赐福版（从普通道具派生的信仰道具）；信物（护符 / 符号 / 遗物）—— 只有信物能激活信仰
-const BLESSED := &"blessed"
-const ANCHOR := &"faith_anchor"
 ## 175 第三批：铸牌这类**内部道具** —— 不进图鉴、掉落、商店（[method ItemDatabase.ids] 拦），能带出、能存仓库
 const TOKEN := &"token"
 ## 244：金银（金块 / 金条）—— 只有商店出（[ShopSession] 单开一格）、不参战不进配方、不算总分，基地按面值全额回收。
-## 搜索、掉落、敌人装备、头一回踩点白给这些「从全库里抽」的地方都跳过它（[method is_bullion]）
+## 搜索、掉落、敌人装备、头一回踩点白给这些「从全库里抽」的地方都跳过它（[method is_bullion]）。250：降为内部标签，类别是贵重品
 const BULLION := &"bullion"
-## 244 补充一：贵重品（金银、魔晶石……）—— 值钱是它的本分，基地回收按面值全额（[method is_valuable]）
+## 244 补充一 / 250：贵重品（类别：金银、工艺摆件……）—— 值钱是它的本分，基地回收按面值全额（[method is_valuable]）
 const VALUABLE := &"valuable"
+## 250：魔晶石（类别）—— 244 起按面值回收，类别恰好一个后不再另带贵重品，[method is_valuable] 照算它
+const CRYSTAL := &"crystal"
 
 ## 准入标签。容器级与包体级的准入都拿它比对。
+## 250（作者定）：四个给玩家看的轴（类别恰好一个 / 属性 / 本源 / 归属）+ 内部轴，见 [TagDef.category]
 @export var tags: Array[StringName] = []
+## 250：材质 —— 不再是标签，十选一（[ItemMaterials.IDS]），不显示。重量（[ItemWeight]）、音效（[SfxMaterial]）、
+## 铸炉的材质行（[ForgeTable]）读它；素材类必填，其余可空（空 = 按「其余」算）
+@export_enum("metal", "wood", "leather", "cloth", "bone", "stone", "gem", "clay", "flesh", "herb") var material: String = ""
+## 250：特殊道具代表的能力 id（望远镜写 `node_tooltips`：地图上点的情报）
+@export var keepsake_abilities: Array[StringName] = []
 
 
 func is_sealed() -> bool:
@@ -66,14 +68,19 @@ func is_keepsake() -> bool:
 	return tags.has(KEEPSAKE)
 
 
+## 250：带这个标签，或材质就是它（包的准入、铸炉的材质行、敌人配包按它比：材质不再是标签，老的「只收草药」照样认）
+func has_tag(tag: StringName) -> bool:
+	return tags.has(tag) or (material != "" and StringName(material) == tag)
+
+
 ## 244：金银（[constant BULLION]）
 func is_bullion() -> bool:
 	return tags.has(BULLION)
 
 
-## 244 补充一：贵重品（[constant VALUABLE]）
+## 244 补充一：贵重品（[constant VALUABLE]）；250：魔晶石照旧算（类别恰好一个，不再另带 valuable）
 func is_valuable() -> bool:
-	return tags.has(VALUABLE)
+	return tags.has(VALUABLE) or tags.has(CRYSTAL)
 
 
 ## 175：铸牌（[constant TOKEN]）
@@ -81,8 +88,9 @@ func is_token() -> bool:
 	return tags.has(TOKEN)
 
 
+## 归某位神（带 `faith:<神>`）—— 信物、赐福版都算
 func has_faith() -> bool:
-	return tags.has(FAITH)
+	return faith_tag() != &""
 
 
 ## 095：是派生出来的赐福版（手写的「赐福的长弓」不算：它有自己的文件与功能）
@@ -90,13 +98,14 @@ func is_blessed() -> bool:
 	return blessed_of != &""
 
 
-## 能激活信仰的信物（095）：带 faith_anchor
+## 能激活信仰的信物：250（作者定）—— 带 `faith:<神>` 的那件就是信物（faith / faith_anchor 标签删了）。
+## 派生的赐福版（[method is_blessed]）不算：它们只跟着当前信仰生效或休眠（095）
 func is_anchor() -> bool:
-	return has_faith() and tags.has(ANCHOR)
+	return has_faith() and not is_blessed()
 
 
 ## 144：这件东西在局里「起作用」—— 有战斗属性或规则、增益格、跨域效果、包体加成、信力加成，是包，或是信物 / 特殊道具。
-## 其余（材料、珍宝、战利品……）只有价值和重量。从定义算，不是标签：作者给材料加了 combat，它自己就算有效果
+## 其余（素材、贵重品……）只有价值和重量。从定义算，不是标签：作者给材料加了 combat，它自己就算有效果
 func has_effect() -> bool:
 	if combat != null and (not combat.base_stats.is_empty() or not combat.rules.is_empty()):
 		return true
@@ -104,10 +113,10 @@ func has_effect() -> bool:
 		return true
 	if not effects.is_empty() or not bag_mods.is_empty() or not faith_bonuses.is_empty() or growth != null:
 		return true
-	return tags.has(ANCHOR) or is_keepsake()
+	return is_anchor() or is_keepsake()
 
 
-## 信仰对象标签（`faith:violence`）；没有返回空。带 `faith` 却没有对象标签也返回空 —— 导入器不许这种道具进来
+## 信仰对象标签（`faith:violence`）；没有返回空
 func faith_tag() -> StringName:
 	for t in tags:
 		if String(t).begins_with(FaithTags.PREFIX):

@@ -26,7 +26,7 @@ display_names = {
 }
 shape = SubResource("Resource_k8sxc")
 rarity = 1
-tags = Array[StringName]([&"leather"])
+material = "leather"
 is_bag = true
 bag_accept_tags = Array[StringName]([&"remedy", &"food"])
 bag_mods = Array[ExtResource("2_rru0s")]([SubResource("Resource_e0scv")])

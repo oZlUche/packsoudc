@@ -14,9 +14,9 @@
     "weapon",
     "ranged",
     "rapid",
-    "nature",
-    "wood"
+    "nature"
   ],
+  "material": "wood",
   "combat": {
     "base_stats": {
       "damage": 10

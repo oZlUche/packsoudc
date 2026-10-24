@@ -58,5 +58,6 @@ descriptions = {
 }
 shape = SubResource("Resource_bu3yf")
 rarity = 2
-tags = Array[StringName]([&"remedy", &"tool", &"herb"])
+tags = Array[StringName]([&"remedy"])
+material = "herb"
 combat = SubResource("Resource_lspcg")

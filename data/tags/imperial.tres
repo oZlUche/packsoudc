@@ -14,4 +14,4 @@ descriptions = {
 "en": "Imperial issue."
 }
 tip = false
-category = "origin"
+category = "affiliation"

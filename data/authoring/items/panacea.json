@@ -14,10 +14,9 @@
   ],
   "rarity": 3,
   "tags": [
-    "remedy",
-    "tool",
-    "herb"
+    "remedy"
   ],
+  "material": "herb",
   "combat": {
     "rules": [
       {

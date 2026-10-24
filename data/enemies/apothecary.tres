@@ -30,5 +30,5 @@ schools = Array[StringName]([&"rapid", &"poison"])
 base_stats = {
 "max_hp": 45
 }
-item_tags = Array[StringName]([&"remedy", &"tool", &"reagent", &"material", &"rapid", &"melee", &"poison"])
+item_tags = Array[StringName]([&"remedy", &"reagent", &"material", &"rapid", &"melee", &"poison"])
 builds = Array[ExtResource("1_4fen5")]([SubResource("Resource_3t31c"), SubResource("Resource_s5bb6")])

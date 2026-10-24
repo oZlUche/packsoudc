@@ -40,7 +40,7 @@ mods = Array[ExtResource("3_368f3")]([SubResource("Resource_gdva3")])
 
 [sub_resource type="Resource" id="Resource_72xeb"]
 script = ExtResource("1_umxob")
-tags = Array[StringName]([&"metal"])
+tags = Array[StringName]([&"weapon", &"armor", &"shield"])
 name_prefix = "日神赐福的"
 name_prefix_en = "Sun-blessed "
 faith_bonuses = Array[ExtResource("2_vxfes")]([SubResource("Resource_r2xcc"), SubResource("Resource_fmsvn")])
@@ -58,7 +58,7 @@ amount = 2
 
 [sub_resource type="Resource" id="Resource_vaeam"]
 script = ExtResource("8_sqqvu")
-tags = Array[StringName]([&"metal"])
+tags = Array[StringName]([&"crystal"])
 multiplier = 5.0
 
 [sub_resource type="Resource" id="Resource_65qkw"]
@@ -68,7 +68,7 @@ multiplier = 5.0
 
 [sub_resource type="Resource" id="Resource_kclds"]
 script = ExtResource("8_sqqvu")
-tags = Array[StringName]([&"gem"])
+tags = Array[StringName]([&"valuable"])
 multiplier = 5.0
 
 [sub_resource type="Resource" id="Resource_xrgrx"]

@@ -102,7 +102,7 @@ static func run_context_and_start(t: TestCase) -> void:
 	var lc_buffed: LootContext = buffed.hooks.loot_context()
 	t.eq(lc_buffed.luck, ctx.luck_bonus, "掉落上下文里的幸运 = buff 给的")
 	if buffed.drop_rule != null:
-		var some := c.items.get_def(&"pistol")
+		var some := c.items.get_def(&"knife")
 		var p0 := DropResolver.owned_chance(buffed.drop_rule, lc_plain, some)
 		var p1 := DropResolver.owned_chance(buffed.drop_rule, lc_buffed, some)
 		t.check(absf((p1 - p0) - float(ctx.luck_bonus) * buffed.drop_rule.luck_bonus) < 1e-6 or p1 >= 1.0,

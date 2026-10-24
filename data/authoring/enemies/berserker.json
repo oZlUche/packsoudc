@@ -19,7 +19,8 @@
     "barbarian",
     "burst",
     "melee",
-    "gear",
+    "armor",
+    "shield",
     "food"
   ],
   "board": [

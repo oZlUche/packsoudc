@@ -14,4 +14,4 @@ descriptions = {
 "en": "A shield."
 }
 tip = false
-category = "purpose"
+category = "kind"

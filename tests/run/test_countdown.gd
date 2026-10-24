@@ -152,7 +152,7 @@ static func run_carry_budget(t: TestCase) -> void:
 	f.settings_path = String(Support.paths("countdown")["settings"])
 	var defs_added: Array = []
 	var total := 0
-	for id in [&"plate_cuirass", &"longsword", &"rifle"]:
+	for id in [&"plate_cuirass", &"longsword", &"shortsword"]:
 		var d: ItemDef = c.items.get_def(id)
 		if d == null:
 			continue

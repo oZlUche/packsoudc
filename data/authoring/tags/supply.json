@@ -9,5 +9,6 @@
     "en": "Brought back to base to build with."
   },
   "tip": false,
-  "category": "purpose"
+  "category": "internal",
+  "internal": true
 }

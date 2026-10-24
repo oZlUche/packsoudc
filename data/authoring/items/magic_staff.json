@@ -18,9 +18,9 @@
     "weapon",
     "melee",
     "staff",
-    "magic",
-    "wood"
+    "magic"
   ],
+  "material": "wood",
   "combat": {
     "base_stats": {
       "damage": 6

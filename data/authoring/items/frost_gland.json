@@ -13,13 +13,13 @@
   ],
   "rarity": 2,
   "tags": [
-    "reagent",
     "material",
+    "reagent",
     "nature",
-    "flesh",
     "ice",
     "beast_part"
   ],
+  "material": "flesh",
   "adjacency": {
     "grant_cells": [
       [

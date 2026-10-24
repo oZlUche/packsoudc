@@ -13,12 +13,12 @@
   ],
   "rarity": 1,
   "tags": [
-    "reagent",
     "material",
+    "reagent",
     "crafted",
-    "bleed",
-    "stone"
+    "bleed"
   ],
+  "material": "stone",
   "combat": {
     "rules": [
       {

@@ -102,6 +102,7 @@ display_names = {
 }
 shape = SubResource("Resource_15un4")
 rarity = 3
-tags = Array[StringName]([&"faith", &"faith:hunt", &"weapon", &"ranged", &"rapid", &"blessed", &"faith_anchor", &"bow", &"wood"])
+tags = Array[StringName]([&"weapon", &"faith:hunt", &"ranged", &"rapid"])
+material = "wood"
 faith_bonuses = Array[ExtResource("15_jtqhf")]([SubResource("Resource_175lk"), SubResource("Resource_d4ojb")])
 combat = SubResource("Resource_qk25w")

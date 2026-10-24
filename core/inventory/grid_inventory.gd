@@ -154,8 +154,8 @@ func acts_as_bag(def: ItemDef) -> bool:
 func _bag_accepts(bag_def: ItemDef, def: ItemDef) -> bool:
 	if bag_def == null or bag_def.bag_accept_tags.is_empty():
 		return true
-	for tag in def.tags:
-		if bag_def.bag_accept_tags.has(tag):
+	for tag in bag_def.bag_accept_tags:
+		if def.has_tag(tag):     # 250：材质（草药、兽皮……）不再是标签，包照样认
 			return true
 	return false
 #endregion

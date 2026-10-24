@@ -12,7 +12,7 @@ static func _add(stat: StringName, amount: float) -> StatModifier:
 
 
 static func run_grant_sentence(t: TestCase) -> void:
-	t.begin("171 · 增益句：武器增伤 10%（单个条件）/ 弓、弩（OR）/ 帝国武器（AND）/ AND 在前接 OR / 都空写邻居；多条效果用、连")
+	t.begin("171 · 增益句：武器增伤 10%（单个条件）/ 防具、盾（OR）/ 帝国武器（AND）/ AND 在前接 OR / 都空写邻居；多条效果用、连")
 	var saved := UiText.lang
 	UiText.lang = "zh"
 	var adj := AdjacencyProfile.new()
@@ -20,14 +20,14 @@ static func run_grant_sentence(t: TestCase) -> void:
 	adj.grant_mods = [_mult(&"damage", 10.0)] as Array[StatModifier]
 	adj.grant_filter = [&"weapon"] as Array[StringName]
 	t.eq(AdjacencyText.grant(adj), "武器增伤 10%", "单个条件")
-	adj.grant_filter = [&"bow", &"gun"] as Array[StringName]
-	t.eq(AdjacencyText.grant(adj), "弓、枪械增伤 10%", "OR：XX、YY")
+	adj.grant_filter = [&"armor", &"shield"] as Array[StringName]
+	t.eq(AdjacencyText.grant(adj), "防具、盾增伤 10%", "OR：XX、YY")
 	adj.grant_filter = [] as Array[StringName]
 	adj.grant_filter_all = [&"imperial", &"weapon"] as Array[StringName]
 	t.eq(AdjacencyText.grant(adj), "帝国武器增伤 10%", "AND：XXYY 连写")
-	adj.grant_filter = [&"bow", &"gun"] as Array[StringName]
-	adj.grant_filter_all = [&"weapon"] as Array[StringName]
-	t.eq(AdjacencyText.grant(adj), "武器弓、枪械增伤 10%", "AND 组在前，接 OR 组")
+	adj.grant_filter = [&"armor", &"shield"] as Array[StringName]
+	adj.grant_filter_all = [&"imperial"] as Array[StringName]
+	t.eq(AdjacencyText.grant(adj), "帝国防具、盾增伤 10%", "AND 组在前，接 OR 组")
 	adj.grant_filter = [] as Array[StringName]
 	adj.grant_filter_all = [] as Array[StringName]
 	adj.grant_mods = [_mult(&"damage", 10.0), _mult(&"haste", 5.0), _add(&"max_armor", 5.0)] as Array[StatModifier]
