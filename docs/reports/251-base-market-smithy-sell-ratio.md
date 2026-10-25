@@ -200,4 +200,4 @@ Market / Smithy 两个核心类、配方 json 的其他字段、上货时机、�
 - 铁匠铺打造面板是一块铁砧：scroll 区 1228×348 在底图底部，九宫格横向可拉，四边留量见 layout 的 `plate_nine`。
 - 大类木牌键 212×56 一个，六个竖排在 `keys` 区（x 48、y 190、宽 212，间隔 6，正好占满 366），五态 `assets/ui/smithy/cat_{normal,hover,pressed,on,disabled}.png`，九宫格左 14 / 右 30 / 上 14 / 下 14，字由代码写（粗体 22，墨色 #2e2219，压灰 #7d7064），说明在 `/mnt/project-files/art/ui/smithy_cats/README.md`。
 - 集市效果图上「每局回来换一批货」那句在底图里没画：留这句就做成钉在左柱上的便条，皮用 `UiTheme.PANEL_SUMMARY_NOTE`。
-- 252 若加第七个大类「冶炼」，`keys` 区只容六个（366 高）：第七个要美术把 keys 区放高到 428 或执行先把冶炼配方并进「斧锤」一列，见 252 §3.5。
+- 252 的第七个大类「冶炼」：美术 10-25 14:48 已把 `keys` 区挪成 x 48、y 128、w 212、h 428（七块 56 高、间隔 6），layout.json 与 cut_final.py 同步改了；木牌皮通用，不用新图。
