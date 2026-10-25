@@ -39,7 +39,7 @@ static func run_items(t: TestCase) -> void:
 		t.check(d.combat == null and d.wear == null and d.adjacency == null, "%s 不参战、不磨损" % row[0])
 	t.eq(TagRegistry.category_of(ItemDef.VALUABLE), TagRegistry.KIND, "贵重品是类别（250）")
 	t.check(TagRegistry.get_def(ItemDef.BULLION) != null and TagRegistry.is_internal(ItemDef.BULLION), "金银登记过、降成内部（250）")
-	t.eq(items.get_def(&"silver_ingot").cell_count(), 1, "老的银锭（一格材料）不动")
+	t.eq(items.get_def(&"silver_ingot").cell_count(), 2, "老的银锭还是材料（252 补充一改成 1×2 横条）")
 
 
 static func run_sources(t: TestCase) -> void:
