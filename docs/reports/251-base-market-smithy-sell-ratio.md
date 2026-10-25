@@ -170,3 +170,24 @@ Market / Smithy 两个核心类、配方 json 的其他字段、上货时机、�
 2. 金币：新控件 `CoinLabel`；`PriceTag.coins` 金币式；右键菜单 `Action.coin` 字段，按钮右端画金币 + 数字，文字只写「买下」（新 key `act.buy_coin`）。
 3. 铁匠铺：大类键用 `StoneChip.entry`（选中按下），木牌皮归 UI替换美术；`RecipeScroll` 的纸身与两头的轴借告示卷轴的图；打造键 `IconButton.make_art("res://assets/ui/smithy/", "forge_key", …)`，四态 forge_key / _hover / _pressed / _disabled，图上不带字；没图时 `UiTheme.BUTTON_FORGE` 平键，颜色 `UiPalette.HOT_IRON`。删了用不到的 key：smithy.line / line_locked / need_item / need_funds。英文大类「斧锤」= Hammers（Axes & Hammers 放不进左列）。
 4. 顺带合进这一版：`TagRegistry.icon_path` 遇到 `faith:<神>` 返回 `assets/ui/faith/<神>.png`（UI替换美术要的信仰徽记）；饰物 / 贵重品两枚标签图标（250）。
+
+## 十二 补充二：两页整页、打造界面铁砧配色（作者 2026-10-25 14:20，美术设计线）
+
+作者原话（美术设计线，已核对）：14:20「集市里不需要显示仓库，铁匠铺里也不需要，重来」；14:21「另外铁匠铺的合成界面应该是铁砧配色的」。
+
+### 12.1 整页
+
+- `MetaScreen` 加 `FULL_TABS = ["market", "smithy"]`：切到这两页时右列（仓库木架 + 挂牌 + 页签）整列隐藏，中列吃满 —— `layout()` / `middle_width()` 已经有 `not _right.visible` 的分支（抽屉收起时用的），复用它；切回别的页再显示。隐藏不是销毁：仓库视图仍登记在拖拽层、`Market.buy` / `Smithy.forge` 照旧把东西放进仓库。
+- 看不见仓库了，反馈全靠告示与读数：买下 / 打好照说「买下「短剑」，进了仓库」「打好了「短剑」，进了仓库」（文案 `market.bought` / `smithy.forged` 补「进了仓库」四个字）；「仓库放不下」照旧；两页右上角的钱袋读数（`CoinLabel`）留着。
+- 美术的整页设计尺寸 **1600 × 1000**（横版）：`MarketStage` 把底图按中列的宽高「包含」缩放居中（和 199 铸炉一样），`layout.json` 的坐标全按这个设计尺寸重写（美术定稿后给坐标，执行只换 json）。集市：招牌、钱袋、一张大桌前后两排 8 个货位。铁匠铺：左列大类键约占宽的六分之一，右边格子区，底部约四分之一高留给弹出的打造界面；也从 layout.json 读（`keys` / `grid` / `scroll` / `funds` 四个矩形），没底图照旧用容器排。
+- 页签不变（七页）；0 级的两页照旧藏。
+
+### 12.2 打造界面铁砧配色
+
+- `RecipeScroll` 不再借告示卷轴的纸：改成**铁砧铁灰的深底板**（`skin = "anvil"`），按 2026-10-12 的明暗规矩声明 `tone: dark` → 浅字（`UiPalette` 加 `ANVIL_IRON` 底色、`ANVIL_INK` 字色占位；美术给 `assets/ui/smithy/anvil_plate.png` 九宫格后换图，形状由美术定，可以是砧面的梯形，非矩形规矩）。缺素材的那几行用深底上的暖红（现有 `SHORT` a8331a 在铁灰上看不清，换 `UiPalette.WARN_ON_DARK`）。
+- 打造键的烧红四态图不变；素材小图、金币读数的字色随 tone 取浅色。
+- 页面其余（大类木牌键、格子区）配色不动，只有弹出的打造界面是铁砧色。
+
+### 12.3 测试
+
+`test_meta_full_tabs_251.gd`：切到 market / smithy 时 `_right` 不可见、中列宽 = 屏宽 − 两边距 − 左列；切回 warehouse 恢复；买一件后仓库多一件且告示含「进了仓库」。`RecipeScroll` 的 tone 为 dark、字色为浅色。
