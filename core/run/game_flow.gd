@@ -761,8 +761,20 @@ func buy_market(i: int) -> String:
 ## 铁匠铺配方：按会打的级数、再按 id
 func sorted_smith_recipes() -> Array[SmithRecipeDef]:
 	var out := smith_recipes.duplicate()
-	out.sort_custom(func(a: SmithRecipeDef, b: SmithRecipeDef) -> bool: return a.level < b.level if a.level != b.level else String(a.id) < String(b.id))
+	out.sort_custom(func(a: SmithRecipeDef, b: SmithRecipeDef) -> bool:
+		if a.level != b.level:
+			return a.level < b.level
+		var ra := _output_rarity(a)
+		var rb := _output_rarity(b)
+		if ra != rb:     # 游戏测试 v4.45：同级里按产物档次（魔导杖在大魔导杖前），不按文件名
+			return ra < rb
+		return String(a.id) < String(b.id))
 	return out
+
+
+func _output_rarity(r: SmithRecipeDef) -> int:
+	var d: ItemDef = items.get_def(r.output) if items != null else null
+	return d.rarity if d != null else 0
 
 
 ## 打一张配方；返回空串 = 打了（存盘），否则是原因
