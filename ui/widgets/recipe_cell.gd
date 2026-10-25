@@ -6,10 +6,10 @@ extends VBoxContainer
 
 signal clicked(cell: RecipeCell)
 
-## 产物那块棋盘的格子区最大多大（像素）；格子边长按产物大小缩进去
-const BOX := 56.0
-const CELL_MAX := 28.0
-const NAME_SIZE := 13
+## 产物那块棋盘的格子区最大多大（像素，整页原尺寸时；补充二整页按 [param k] 缩）；格子边长按产物大小缩进去
+const BOX := 84.0
+const CELL_MAX := 36.0
+const NAME_SIZE := 15
 const DIM := Color(0.55, 0.55, 0.55, 0.7)
 
 var recipe_id: StringName = &""
@@ -24,10 +24,11 @@ var selected := false:
 		queue_redraw()
 
 
-static func make(p_id: StringName, def: ItemDef, name: String, font: Font) -> RecipeCell:
+## [param k]：铁匠铺整页的缩放（1 = 底图原尺寸）
+static func make(p_id: StringName, def: ItemDef, name: String, font: Font, k: float = 1.0) -> RecipeCell:
 	var c := RecipeCell.new()
 	c.recipe_id = p_id
-	c._build(def, name, font)
+	c._build(def, name, font, maxf(0.4, k))
 	return c
 
 
@@ -37,9 +38,10 @@ func _init() -> void:
 	add_theme_constant_override("separation", 2)
 
 
-func _build(def: ItemDef, name: String, font: Font) -> void:
+func _build(def: ItemDef, name: String, font: Font, k: float) -> void:
 	var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
-	var cell := floorf(minf(CELL_MAX, minf(BOX / size.x, BOX / size.y)))
+	var box := floorf(BOX * k)
+	var cell := floorf(minf(CELL_MAX * k, minf(box / size.x, box / size.y)))
 	var grid := GridInventory.new(BoardFrame.padded_size(size, cell), 0, false)     # 太窄的（1×4 长剑）补一列空格，框才不被裁
 	if def != null:
 		grid.place(ItemInstance.create(def, 0), Vector2i.ZERO, 0)
@@ -54,7 +56,7 @@ func _build(def: ItemDef, name: String, font: Font) -> void:
 	add_child(slot)
 	slot.add_child(view)
 	var frame := BoardFrame.wrap(view, "plain")
-	slot.custom_minimum_size = Vector2.ONE * (BOX + frame.inset() * 2.0)
+	slot.custom_minimum_size = Vector2.ONE * (box + frame.inset() * 2.0)
 	custom_minimum_size.x = slot.custom_minimum_size.x     # 一格一样宽：长名字省略（全名在悬浮窗）
 	var plate := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 4, 1, 4, 1)
 	UiTheme.set_tone(plate, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
@@ -64,9 +66,23 @@ func _build(def: ItemDef, name: String, font: Font) -> void:
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.clip_text = true
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	l.add_theme_font_size_override("font_size", NAME_SIZE)
+	l.add_theme_font_size_override("font_size", maxi(11, roundi(NAME_SIZE * k)))
 	plate.add_child(l)
 	add_child(plate)
+
+
+## 补充二：铁匠铺的格子区（素框 + 浅内垫，227 规矩；格子在里面一格格铺）
+static func shelf() -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", BoardFrame.box("plain", false))
+	UiTheme.set_tone(p, UiTheme.TONE_LIGHT)
+	return p
+
+
+## 格子区里格与格的空（整页缩放跟着变）
+static func space(flow: HFlowContainer, px: int) -> void:
+	flow.add_theme_constant_override("h_separation", px)
+	flow.add_theme_constant_override("v_separation", px)
 
 
 ## 打完：亮一下再回去

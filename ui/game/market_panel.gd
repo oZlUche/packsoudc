@@ -1,7 +1,8 @@
 ## 251：基地「集市」页（[Market]）。补充一 §10.1（作者 14:49；15:57 第三版）：木凉棚 —— 货散放在一张透视的大平桌上、前后两排（[MarketStage]：底图 + `market/layout.json`
 ## 的货位 foot / scale，按级数取前 4 / 6 / 8 个），每个货位是一块只有那件大小的小棋盘（带框，227），货前面平放一张金币价签（[PriceTag] 金币式），卖掉的盖「已售」；
 ## 钱袋读数是金币 + 数字（[CoinLabel]）。页面上不写等级（在科技页）；没点出集市只画空棚 + 一块签说去科技页点。
-## 买法不变：双击 / 右键「买下」（价钱是金币 + 数字）；买到的进右边仓库（包进包架），钱不够 / 仓库满说一句
+## 买法不变：双击 / 右键「买下」（价钱是金币 + 数字）；买到的进仓库（包进包架），钱不够 / 仓库满说一句。
+## 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库」）：整页，右列仓库收起（[constant MetaScreen.FULL_TABS]），告示说「进了仓库」；底图 1300×950 定稿
 extends VBoxContainer
 
 signal changed()
@@ -10,6 +11,11 @@ signal changed()
 const CELL_MIN := BoardFrame.MIN_SIDE
 ## 价签离货底多远（平放在货前面）
 const TAG_GAP := 2.0
+## 补充二（12.1 补二）：「每局回来换一批货」钉在左柱上的便条（底图里没画；设计像素、略斜），便条按整页缩放整块缩
+const RESTOCK_AT := Rect2(66, 297, 190, 78)
+const RESTOCK_TILT := -0.06
+## 钱牌上金币 + 数字的字号 = 钱牌高的这么多倍（整页跟着缩放）
+const FUNDS_FONT := 0.55
 
 var flow: GameFlow = null
 var font: Font = null
@@ -18,6 +24,7 @@ var say: Callable = Callable()
 var _stage: MarketStage = null
 var _funds: CoinLabel = null
 var _note: PanelContainer = null
+var _restock: PanelContainer = null
 var _views: Array[InventoryView] = []
 var _frames: Array[Control] = []
 var _prices: Array[PriceTag] = []
@@ -43,6 +50,16 @@ func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void
 	_tip = HoverTip.new()
 	_tip.top_level = true     # 不占排版
 	add_child(_tip)
+	_restock = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, 10, 6, 10, 6)
+	UiTheme.apply_tone(_restock, UiTheme.PANEL_SUMMARY_NOTE)
+	_restock.rotation = RESTOCK_TILT
+	var rl := Label.new()
+	rl.text = UiText.t("market.restock_note")
+	rl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_restock.add_child(rl)
+	_stage.add_child(_restock)
 	flow.meta.changed.connect(rebuild)
 	rebuild()
 
@@ -65,6 +82,7 @@ func rebuild() -> void:
 	_stage.tables = lv > 0
 	_stage.tooltip_text = UiText.t("market.restock_tip") if lv > 0 else ""
 	_funds.visible = lv > 0
+	_restock.visible = lv > 0
 	_funds.amount = flow.meta.funds
 	if lv <= 0:
 		_note = _make_note(UiText.t("market.locked_tip"))
@@ -125,6 +143,10 @@ func _place() -> void:
 	var fr := _stage.to_local_rect(layout.get("funds", {}))
 	_funds.size = fr.size
 	_funds.position = fr.position
+	_funds.font_size = maxi(14, roundi(fr.size.y * FUNDS_FONT))
+	_restock.position = _stage.at(RESTOCK_AT.position)
+	_restock.size = RESTOCK_AT.size
+	_restock.scale = Vector2.ONE * _stage.scale_factor()
 	if _note != null:
 		var ns := _note.get_combined_minimum_size()
 		_note.size = ns
