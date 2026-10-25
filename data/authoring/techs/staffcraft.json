@@ -1,0 +1,40 @@
+{
+  "id": "staffcraft",
+  "display_name": "法杖工艺",
+  "display_names": {
+    "en": "Staffcraft"
+  },
+  "requires": [
+    "smithy"
+  ],
+  "column": 1,
+  "description": "学会做法杖：级数越高，做得出的杖越好。",
+  "descriptions": {
+    "en": "Learn to make staves: higher levels make better staves."
+  },
+  "effect": {
+    "type": "tech_recipes",
+    "tech": "staffcraft"
+  },
+  "tiers": [
+    {
+      "funds": 600,
+      "items": {
+        "crystal_shards": 3
+      }
+    },
+    {
+      "funds": 1200,
+      "items": {
+        "fire_crystal_low": 1
+      }
+    },
+    {
+      "funds": 2000,
+      "items": {
+        "silver_ingot": 2,
+        "fire_crystal": 1
+      }
+    }
+  ]
+}

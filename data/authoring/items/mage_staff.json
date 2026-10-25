@@ -1,0 +1,59 @@
+{
+  "id": "mage_staff",
+  "display_name": "法师杖",
+  "display_names": {
+    "en": "Mage Staff"
+  },
+  "description": "熟练的魔法师用的杖，比魔法杖出手更快。杖头两侧的装载槽放魔晶石，按顺时针一颗一颗读，打出各自的元素伤害。颗与颗之间走单次冷却，一轮读完歇一个总冷却。装着魔晶石时出手不耗耐力。",
+  "descriptions": {
+    "en": "A practised mage's staff, quicker than a Magic Staff. Put Crystals in the loading slots on either side of its head; it reads them one at a time, clockwise, dealing each one's elemental damage. One single Cooldown between Crystals, one total Cooldown of rest after each full round. While a Crystal is loaded, it costs no Stamina."
+  },
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "staff",
+    "magic"
+  ],
+  "material": "wood",
+  "combat": {
+    "base_stats": {
+      "damage": 8
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.1
+        },
+        "costs": [
+          "@resource_5"
+        ],
+        "free_when_loaded": true,
+        "effects": [
+          {
+            "type": "fire_loaded"
+          }
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ]
+  }
+}

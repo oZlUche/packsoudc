@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_pgb38"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_jga3m"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_gavy3"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_xo2pa"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_g6v8v"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_pmkb6"]
+
+[sub_resource type="Resource" id="Resource_gcb3k"]
+script = ExtResource("6_pmkb6")
+
+[resource]
+script = ExtResource("5_g6v8v")
+id = &"mithril_ingot"
+display_name = "秘银锭"
+display_names = {
+"en": "Mithril Ingot"
+}
+description = "银在晶火里重炼过，轻得不像金属。只有铁匠铺炼得出来。"
+descriptions = {
+"en": "Silver reforged in crystal fire, lighter than any metal should be. Only a smithy can make it."
+}
+shape = SubResource("Resource_gcb3k")
+rarity = 3
+tags = Array[StringName]([&"material", &"crafted", &"supply"])
+material = "metal"

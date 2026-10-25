@@ -33,15 +33,16 @@ static func run_content(t: TestCase) -> void:
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
 	var all := SmithRecipeDef.load_all()
-	t.eq(all.size(), 14, "14 张配方")
+	t.eq(all.size(), 20, "14 张 + 252 的 6 张")
 	var ok := true
 	for r in all:
 		var o := db.get_def(r.output)
-		ok = ok and o != null and [&"weapon", &"armor", &"shield", &"gear_plug"].any(func(tag): return o.tags.has(tag))
+		var kinds := [&"material"] if r.group == SmithRecipeDef.SMELT else [&"weapon", &"armor", &"shield", &"gear_plug"]
+		ok = ok and o != null and kinds.any(func(tag): return o.tags.has(tag))
 		ok = ok and r.level >= 1 and r.level <= 3 and r.funds > 0 and not r.inputs.is_empty()
 		for k in r.inputs:
 			ok = ok and db.get_def(StringName(String(k))) != null and int(r.inputs[k]) >= 1
-	t.check(ok, "产物都是装备、素材都在、级 1 ～ 3")
+	t.check(ok, "产物都是装备（冶炼的是素材）、素材都在、级 1 ～ 3")
 
 
 static func run_forge(t: TestCase) -> void:
@@ -77,7 +78,7 @@ static func run_forge(t: TestCase) -> void:
 	T110._add(m, db, &"oak_log")
 	t.eq(Smithy.can_forge(m, hi, db), UiText.t("smithy.need_level") % 2, "1 级打不了 2 级的配方")
 	var split := Smithy.recipes_for(m, [r, hi])
-	t.check((split["ready"] as Array).has(r) and (split["locked"] as Array).has(hi), "分成会打的 / 还不会的")
+	t.check((split["ready"] as Array).has(r) and (split["level_locked"] as Array).has(hi), "分成会打的 / 还不会的")
 
 
 static func run_full(t: TestCase) -> void:
@@ -137,7 +138,8 @@ static func run_groups(t: TestCase) -> void:
 	t.eq(by["blade"], ["bloodletter", "cleaver", "festering_blade", "longsword", "mithril_sword", "shortsword"], "刀剑六张")
 	t.eq(by["hammer"], ["pendulum_blade", "warhammer"], "斧锤两张")
 	t.eq(by["bow"], ["longbow", "shortbow"], "弓两张")
-	t.eq(by["staff"], [], "法杖暂无")
+	t.eq(by["staff"], ["grand_magus_staff", "mage_staff", "magic_staff", "magus_staff"], "252：法杖四张")
+	t.eq(by["smelt"], ["mithril_ingot", "silver_ingot"], "252：冶炼两张")
 	t.eq(by["shield"], ["round_shield"], "盾一张")
 	t.eq(by["armor"], ["gambeson", "leather_armor", "plate_cuirass"], "护甲三张")
 	for g in SmithRecipeDef.GROUPS:

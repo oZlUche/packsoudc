@@ -6,3 +6,4 @@
 script = ExtResource("1_s6fo6")
 id = &"market"
 display_name = "集市（占位）"
+excluded_ids = Array[StringName]([&"mithril_ingot"])

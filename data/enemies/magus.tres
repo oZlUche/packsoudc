@@ -57,6 +57,6 @@ schools = Array[StringName]([&"magic"])
 base_stats = {
 "max_hp": 56
 }
-signature = Array[StringName]([&"magic_staff"])
+signature = Array[StringName]([&"magus_staff"])
 item_tags = Array[StringName]([&"magic", &"crystal", &"staff", &"remedy"])
 builds = Array[ExtResource("1_hw14r")]([SubResource("Resource_d5uf7"), SubResource("Resource_bkph0"), SubResource("Resource_wx463"), SubResource("Resource_4us5p"), SubResource("Resource_5lihp"), SubResource("Resource_fpjed")])

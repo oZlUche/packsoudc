@@ -47,6 +47,7 @@ func run() -> void:
 	ContentImporter.validate_help_pages(ctx, report)     # 114：百科页的「相关」指得到
 	report.source = "techs"
 	ContentImporter.validate_techs(ctx, report)     # 118：科技树的前置存在、不成环
+	ContentImporter.validate_smith_recipe_techs(ctx, report)     # 252：配方要的科技在、级数够
 
 	if not report.warnings.is_empty():
 		print(report.to_text())

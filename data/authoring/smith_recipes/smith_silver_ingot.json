@@ -1,0 +1,9 @@
+{
+  "id": "smith_silver_ingot",
+  "output": "silver_ingot",
+  "inputs": {
+    "silver_ore": 2
+  },
+  "funds": 20,
+  "group": "smelt"
+}

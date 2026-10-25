@@ -1,0 +1,11 @@
+{
+  "id": "smith_magic_staff",
+  "output": "magic_staff",
+  "inputs": {
+    "crystal_shards": 2,
+    "wooden_stick": 1
+  },
+  "funds": 30,
+  "group": "staff",
+  "tech": "staffcraft"
+}

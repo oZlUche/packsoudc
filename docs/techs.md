@@ -20,6 +20,8 @@
 | bargain | 讨价 | Haggling | 2 | 1 | luck | 商店的东西更便宜。 | Shop prices are lower. | tech_run_buff | {"effect": "shop_price_mult"} | 商店售价 ×{shop_price_mult_factor} |
 | market | 集市 | Market | 1 | 2 | bargain | 基地里开一间集市，卖药、食物、弹药与低档素材；每一局回来换一次货。级数越高，货格越多、素材档次越高。 | Opens a market at your base selling remedies, food, ammo and low-grade materials; new stock after every run. Higher levels mean more slots and better materials. | tech_facility | {"facility": "market"} |  |
 | smithy | 铁匠铺 | Smithy | 0 | 1 | pack | 基地里开一间铁匠铺，按配方用仓库里的素材加钱打造武器、防具。级数越高，会打的档次越高。 | Opens a smithy at your base that forges weapons and armour from Warehouse materials plus coins, by recipe. Higher levels unlock better recipes. | tech_facility | {"facility": "smithy"} |  |
+| mithril_smelting | 秘银冶炼 | Mithril Smelting | 0 | 0 | smithy | 学会炼秘银：银锭加钱炼成秘银锭，再用它打更好的刀剑。 | Learn to smelt mithril: turn Silver Ingots and coins into Mithril Ingots, then forge better blades with them. | tech_recipes | {"tech": "mithril_smelting"} |  |
+| staffcraft | 法杖工艺 | Staffcraft | 1 | 0 | smithy | 学会做法杖：级数越高，做得出的杖越好。 | Learn to make staves: higher levels make better staves. | tech_recipes | {"tech": "staffcraft"} |  |
 
 ## 等级
 
@@ -60,3 +62,7 @@
 | smithy | 1 | 500 |  |  |
 | smithy | 2 | 1000 | steel_ingot: 2 |  |
 | smithy | 3 | 1800 | hardwood_plank: 2；rivet_box: 2 |  |
+| mithril_smelting | 1 | 1500 | silver_ingot: 2；crystal_shards: 3 |  |
+| staffcraft | 1 | 600 | crystal_shards: 3 |  |
+| staffcraft | 2 | 1200 | fire_crystal_low: 1 |  |
+| staffcraft | 3 | 2000 | silver_ingot: 2；fire_crystal: 1 |  |

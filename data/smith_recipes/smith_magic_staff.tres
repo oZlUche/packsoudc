@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_skfjx"]
+
+[resource]
+script = ExtResource("1_skfjx")
+id = &"smith_magic_staff"
+output = &"magic_staff"
+inputs = {
+"crystal_shards": 2,
+"wooden_stick": 1
+}
+funds = 30
+group = "staff"
+tech = &"staffcraft"

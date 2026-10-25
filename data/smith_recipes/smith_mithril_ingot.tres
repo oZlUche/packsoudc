@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_gn008"]
+
+[resource]
+script = ExtResource("1_gn008")
+id = &"smith_mithril_ingot"
+output = &"mithril_ingot"
+inputs = {
+"silver_ingot": 3
+}
+funds = 150
+group = "smelt"
+level = 2
+tech = &"mithril_smelting"

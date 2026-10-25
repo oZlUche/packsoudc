@@ -1,0 +1,21 @@
+{
+  "id": "mithril_ingot",
+  "display_name": "秘银锭",
+  "display_names": {
+    "en": "Mithril Ingot"
+  },
+  "description": "银在晶火里重炼过，轻得不像金属。只有铁匠铺炼得出来。",
+  "descriptions": {
+    "en": "Silver reforged in crystal fire, lighter than any metal should be. Only a smithy can make it."
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "material",
+    "crafted",
+    "supply"
+  ],
+  "material": "metal"
+}

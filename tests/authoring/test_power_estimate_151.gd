@@ -6,7 +6,7 @@ extends RefCounted
 ## 可叠层 DoT 按一场的一半算）、删了冲锋枪与狙击枪、涂毒匕首提到史诗之后，原来的五件都回到一档以内；
 ## 155 补（作者定）把耐力折扣改成「耐力上限 + 一场的回复」之后，现有武器没有一件耗得完，剩下两件只是单看偏弱（估低两档）。
 ## 作者定了改数还是接受之后从这里删掉
-const KNOWN_OFF := ["festering_blade", "longbow", "mithril_sword"]     # 175：溃烂之刃的桥收进菌血，只剩出手盖血印，估出来低两档
+const KNOWN_OFF := ["festering_blade", "grand_magus_staff", "longbow", "mage_staff", "magus_staff", "mithril_sword"]     # 175：溃烂之刃的桥收进菌血，只剩出手盖血印，估出来低两档；252：三根新杖按装晶出手估不全，也低两档
 const ITEMS := "res://data/items"
 const TMP := "user://test_power_weights_151.json"
 

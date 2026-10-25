@@ -139,7 +139,7 @@ func _make_note(text: String) -> PanelContainer:
 
 
 ## 照棚子的摆法放货位、价签、钱袋读数（棚子大小变了也走这里）：货底中点落在货位的 `foot`、格子按 `scale` 缩（后排小、前排大），
-## 价签平放在货前面；后排先画、前排压在上面
+## 价签平放在货前面；后排先画、前排压在上面；价签一律压在所有货上面（前排大件不挡后排价签，UI替换美术 v4.44 验收）
 func _place() -> void:
 	if _stage == null or _stage.size.x <= 0.0:
 		return
@@ -170,6 +170,7 @@ func _place() -> void:
 	order.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
 	for o in order:
 		_stage.move_child(_frames[o[1]], -1)
+	for o in order:
 		_stage.move_child(_prices[o[1]], -1)
 
 

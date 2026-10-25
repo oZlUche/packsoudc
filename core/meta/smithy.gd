@@ -12,15 +12,36 @@ static func level(meta: MetaState) -> int:
 	return meta.facility_level(ID) if meta != null else 0
 
 
-## {"ready": 这一级会打的, "locked": 级数还不够的}，各自按配方的先后
+## {"ready": 会打的, "level_locked": 铺子级数还不够的, "tech_locked": 科技还没点到的（252，先于级数判）}，各自按配方的先后
 static func recipes_for(meta: MetaState, recipes: Array) -> Dictionary:
-	var out := {"ready": [] as Array[SmithRecipeDef], "locked": [] as Array[SmithRecipeDef]}
+	var out := {"ready": [] as Array[SmithRecipeDef], "level_locked": [] as Array[SmithRecipeDef], "tech_locked": [] as Array[SmithRecipeDef]}
 	var lv := level(meta)
 	for r in recipes:
 		var def := r as SmithRecipeDef
-		if def != null:
-			(out["ready" if def.level <= lv else "locked"] as Array).append(def)
+		if def == null:
+			continue
+		var key := "ready"
+		if not knows(meta, def):
+			key = "tech_locked"
+		elif def.level > lv:
+			key = "level_locked"
+		(out[key] as Array).append(def)
 	return out
+
+
+## 252：配方要的科技点到了没有（不要科技的总是会）
+static func knows(meta: MetaState, recipe: SmithRecipeDef) -> bool:
+	return recipe.tech == &"" or TechService.level(meta, recipe.tech) >= recipe.tech_level
+
+
+## 252：「要先点出「秘银冶炼」」—— 科技一级的不写级数
+static func need_tech_text(recipe: SmithRecipeDef) -> String:
+	var path := ContentPaths.asset_file("techs", String(recipe.tech))
+	var def := ResourceLoader.load(path) as TechDef if ResourceLoader.exists(path) else null
+	var name := Names.of(def) if def != null else String(recipe.tech)
+	if recipe.tech_level <= 1:
+		return UiText.t("smithy.need_tech") % name
+	return UiText.t("smithy.need_tech_level") % [name, recipe.tech_level]
 
 
 ## 仓库里每样素材有几件（锁住的不算）：道具 id 字符串 → 件数，只列配方要的
@@ -40,10 +61,12 @@ static func have(meta: MetaState, recipe: SmithRecipeDef) -> Dictionary:
 	return out
 
 
-## 能不能打：空串 = 行；否则是说给玩家听的那一句（级不够 / 缺素材 / 钱不够 / 仓库放不下）
+## 能不能打：空串 = 行；否则是说给玩家听的那一句（科技没点 / 级不够 / 缺素材 / 钱不够 / 仓库放不下）
 static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) -> String:
 	if meta == null or recipe == null or items == null or items.get_def(recipe.output) == null:
 		return UiText.t("smithy.no_recipe")
+	if not knows(meta, recipe):
+		return need_tech_text(recipe)
 	if recipe.level > level(meta):
 		return UiText.t("smithy.need_level") % recipe.level
 	var got := have(meta, recipe)
