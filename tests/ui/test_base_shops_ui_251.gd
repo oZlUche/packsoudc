@@ -97,6 +97,7 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	t.eq(p.buy(0), "", "买第一格")
 	t.eq(f.meta.warehouse.item_count(), n + 1, "仓库多一件")
 	t.check(p.prices()[0].sold, "价签盖了已售")
+	t.check(p.views()[0].inventory.items().size() == 1 and p.views()[0].modulate.is_equal_approx(p.SOLD_TINT), "补图 B：卖掉的货还摆着、压灰")
 	t.eq(p.funds_label().amount, 100000 - price, "钱袋读数跟着少")
 	t.check(p.note() == null, "开着、有货：没有那块签")
 	t.eq(Bare.audit(s, "market251"), [] as Array[String], "没有裸字")
@@ -143,9 +144,11 @@ static func frame_smithy_page(t: TestCase, root: Window) -> void:
 	if cell == null:
 		s.queue_free()
 		return
-	t.check(BoardFrame.framed(cell.view), "产物格带框（227）")
-	var ls: RecipeCell = p.cell(&"smith_longsword")
-	t.check(ls != null and ls.view.inventory.size.x * ls.view.cell_px >= BoardFrame.MIN_SIDE, "游戏测试 v4.39：1×4 的长剑补了一列，框不被裁")
+	var cells: Array = p._grid.get_children()
+	t.check(cells.size() >= 10 and cells.size() % 5 == 0 and p._grid.columns == 5, "格子区固定 5 列、至少 2 行（%d 格）" % cells.size())
+	t.check(cells.any(func(c) -> bool: return (c as RecipeCell).is_blank()), "不到 10 张：空位补了只有格线的空格")
+	t.check(cells.all(func(c) -> bool: return (c as Control).custom_minimum_size.is_equal_approx(cell.custom_minimum_size)), "每格一样大")
+	t.eq((p._shelf.get_theme_stylebox("panel") as StyleBoxTexture).texture, UiTheme.art_cached(RecipeCell.FRAME), "格子区套深铁框九宫格")
 	t.check(not cell.lit and cell.tooltip_text.contains(UiText.t("smithy.missing")), "缺素材：压灰、悬浮窗写原因")
 	t.check(not p.recipe_scroll().visible, "没点格子：卷轴收着")
 	var b: Button = p.forge_button(&"smith_shortsword")

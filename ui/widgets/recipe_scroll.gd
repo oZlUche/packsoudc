@@ -2,6 +2,7 @@
 ## 底是整块铁砧剪影 `smithy/anvil_plate.png`（深底 → 浅字 [constant UiPalette.ANVIL_INK]；缺图是铁灰平底 [constant UiPalette.ANVIL_IRON]），
 ## 内容摆在砧面上（`smithy/layout.json` 的 `face` 相对 `scroll` 的那块），整页缩放时 [method fit] 跟着缩；砧顶一个小尖 `anvil_pointer` 对准选中的格子（[member pointer_x]）。
 ## 一行：产物（带框小棋盘）｜产物名 +「需要材料」+ 每样素材「小图 + 有几 / 要几」（不够的暖红 [constant UiPalette.WARN_ON_DARK]）｜「工钱」金币 + 数字、
+## 补图（UI替换美术 10-25 15:14 C）：素材摆在一条深色凹槽里，每样一格（照格子区缩小：道具图 + 下面「有几 / 要几」数牌，格与格之间一道格线）；
 ## 「打造」键 —— 烧红四态图 `smithy/forge_key*.png`（[method IconButton.make_art]，字由代码写：`forge_key.json` 的键面里、粗体浅字深红描边），没图是平键 [constant UiTheme.BUTTON_FORGE]
 class_name RecipeScroll
 extends PanelContainer
@@ -12,7 +13,15 @@ const KEY_META := "smithy/forge_key"
 const LAYOUT := "smithy/layout"
 const PLATE := "smithy/anvil_plate"
 const POINTER := "smithy/anvil_pointer"
-const MAT_ICON := 30.0
+## 凹槽里一格素材多大（原尺寸）：格宽、图边长、数牌高
+const MAT_W := 76.0
+const MAT_ICON := 44.0
+const MAT_PLATE_H := 22.0
+const MAT_TEXT := 15
+const GROOVE := Color("1d1b19")
+const GROOVE_SHADE := Color("0e0d0c")
+const MAT_PLATE := Color("2c2926")
+const MAT_LINE := Color("4a4540")
 ## 原尺寸时各处字号（[method fit] 按整页缩放乘）
 const NAME_SIZE := 28
 const TEXT_SIZE := 18
@@ -33,7 +42,8 @@ var _product: CenterContainer = null
 var _name: Label = null
 var _need: Label = null
 var _wage_label: Label = null
-var _mats: HFlowContainer = null
+var _groove: PanelContainer = null
+var _mats: HBoxContainer = null
 var _wage: CoinLabel = null
 var _font: Font = null
 var _ink := UiPalette.ANVIL_INK
@@ -80,10 +90,12 @@ func _build(on_forge: Callable) -> void:
 	_need = Label.new()
 	_need.text = UiText.t("smithy.materials")
 	info.add_child(_need)
-	_mats = HFlowContainer.new()
-	_mats.add_theme_constant_override("h_separation", 14)
-	_mats.add_theme_constant_override("v_separation", 4)
-	info.add_child(_mats)
+	_groove = PanelContainer.new()
+	_groove.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	info.add_child(_groove)
+	_mats = HBoxContainer.new()
+	_mats.add_theme_constant_override("separation", 0)
+	_groove.add_child(_mats)
 	var side := UiTheme.vbox(6)
 	side.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_child(side)
@@ -146,6 +158,15 @@ func fit(k: float) -> void:
 		(l as Label).add_theme_font_size_override("font_size", ts)
 	_name.add_theme_font_size_override("font_size", maxi(14, roundi(NAME_SIZE * _k)))
 	_wage.font_size = ts
+	var g := StyleBoxFlat.new()     # 凹槽：深底、上沿和左沿压暗
+	g.bg_color = GROOVE
+	g.border_color = GROOVE_SHADE
+	g.border_width_top = maxi(1, roundi(3 * _k))
+	g.border_width_left = maxi(1, roundi(2 * _k))
+	g.border_width_right = 1
+	g.set_corner_radius_all(maxi(2, roundi(5 * _k)))
+	g.set_content_margin_all(maxf(3.0, 6.0 * _k))
+	_groove.add_theme_stylebox_override("panel", g)
 	if forge_key.has_meta(&"art_size"):
 		var a: Vector2 = forge_key.get_meta(&"art_size")
 		forge_key.custom_minimum_size = (a * _k).floor()
@@ -181,40 +202,26 @@ func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: S
 	for key in keys:
 		var d := items.get_def(StringName(String(key)))
 		_mats.add_child(_mat(d, int(got.get(String(key), 0)), int(r.inputs[key])))
+	var n := _mats.get_child_count()
+	for i in n:
+		(_mats.get_child(i) as MatSlot).line_right = i < n - 1
 	_wage.amount = r.funds
 	forge_key.disabled = why != ""
 	forge_key.tooltip_text = why
 	forge_key.sync_art()
 
 
-## 一样素材：小图 + 「有几 / 要几」（不够的暖红）
+## 一样素材：凹槽里一格（图 + 「有几 / 要几」数牌，不够的暖红）
 func _mat(d: ItemDef, have: int, need: int) -> Control:
-	var row := UiTheme.hbox(4)
-	row.tooltip_text = Names.of(d) if d != null else ""
-	row.mouse_filter = Control.MOUSE_FILTER_STOP
-	var px := roundf(MAT_ICON * _k)
-	var tex := ItemPainter.art_of(d) if d != null else null
-	if tex != null:
-		var icon := TextureRect.new()
-		icon.texture = tex
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.custom_minimum_size = Vector2(px, px)
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(icon)
-	else:
-		var swatch := ColorRect.new()
-		swatch.color = ItemPainter.body_color(d) if d != null else Color.GRAY
-		swatch.custom_minimum_size = Vector2(px, px) * 0.8
-		swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(swatch)
-	var l := Label.new()
-	l.text = "%d / %d" % [have, need]
-	l.add_theme_font_size_override("font_size", maxi(11, roundi(TEXT_SIZE * _k)))
-	l.add_theme_color_override("font_color", _ink if have >= need else _short)
-	row.add_child(l)
-	return row
+	var slot := MatSlot.new()
+	slot.def = d
+	slot.text = "%d / %d" % [have, need]
+	slot.color = _ink if have >= need else _short
+	slot.k = _k
+	slot.custom_minimum_size = Vector2(MAT_W, MAT_ICON + MAT_PLATE_H + 14.0) * _k
+	slot.tooltip_text = Names.of(d) if d != null else ""
+	slot.mouse_filter = Control.MOUSE_FILTER_STOP
+	return slot
 
 
 ## 砧顶的小尖：底边贴着砧顶、横向对准选中格（[member pointer_x]）
@@ -243,18 +250,51 @@ func title_label() -> Label:
 
 func material_lines() -> Array[String]:
 	var out: Array[String] = []
-	for row in _mats.get_children():
-		out.append((row.get_child(row.get_child_count() - 1) as Label).text)
+	for slot in _mats.get_children():
+		out.append((slot as MatSlot).text)
 	return out
 
 
 ## 素材那几行的字色（不够的暖红）
 func material_colors() -> Array[Color]:
 	var out: Array[Color] = []
-	for row in _mats.get_children():
-		out.append((row.get_child(row.get_child_count() - 1) as Label).get_theme_color("font_color"))
+	for slot in _mats.get_children():
+		out.append((slot as MatSlot).color)
 	return out
 
 
 func wage() -> int:
 	return _wage.amount
+
+
+## 凹槽里的一格素材：上面道具图（没图画本色块），下面一块深色数牌写「有几 / 要几」，右边一道格线（最后一格不画）
+class MatSlot extends Control:
+	var def: ItemDef = null
+	var text := ""
+	var color := Color.WHITE
+	var k := 1.0
+	var line_right := true
+
+	func _draw() -> void:
+		var pad := 5.0 * k
+		var plate_h := MAT_PLATE_H * k
+		var icon := MAT_ICON * k
+		if line_right:
+			draw_line(Vector2(size.x - 0.5, pad), Vector2(size.x - 0.5, size.y - pad), MAT_LINE, 1.0)
+		var ir := Rect2(Vector2((size.x - icon) * 0.5, pad), Vector2(icon, icon))
+		var tex := ItemPainter.art_of(def) if def != null else null
+		if tex != null:
+			var ts := tex.get_size()
+			var f := minf(ir.size.x / ts.x, ir.size.y / ts.y)
+			var r := Rect2(Vector2.ZERO, ts * f)
+			r.position = ir.get_center() - r.size * 0.5
+			draw_texture_rect(tex, r, false)
+		else:
+			draw_rect(ir.grow(-icon * 0.15), ItemPainter.body_color(def) if def != null else Color.GRAY)
+		var pr := Rect2(Vector2(pad, size.y - pad - plate_h), Vector2(size.x - pad * 2.0, plate_h))
+		draw_rect(pr, MAT_PLATE)
+		draw_rect(pr.grow(-0.5), MAT_LINE, false, 1.0)
+		var font := UiPalette.cjk_font_bold()
+		var fs := maxi(10, roundi(MAT_TEXT * k))
+		var y := pr.get_center().y + (font.get_ascent(fs) - font.get_descent(fs)) * 0.5
+		draw_string(font, Vector2(pr.position.x, y), text, HORIZONTAL_ALIGNMENT_CENTER, pr.size.x, fs, color)

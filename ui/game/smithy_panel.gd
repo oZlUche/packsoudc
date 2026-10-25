@@ -4,7 +4,8 @@
 ## 页面上不写等级（在科技页；级不够只是灰格 + 悬浮窗「铁匠铺要几级」）。打完那格闪一下、「有几」刷新，告示卷轴照说「打好了…进了仓库」。
 ## 补充二 §12（作者 10-25 14:20「铁匠铺里也不需要[仓库]，重来」；14:21「合成界面应该是铁砧配色的」）：整页（右列仓库收起），
 ## 砖墙底图 `smithy/bg` 按中列「包含」缩放居中（[MarketStage]），`smithy/layout.json` 的矩形摆各块：`keys` 大类木牌（[CatKey]）、`grid` 格子区（素框里铺格）、
-## `scroll` 铁砧打造界面（砧顶小尖对准选中格）、`funds` 钱牌（金币 + 数字）、`sign` 招牌上的字
+## `scroll` 铁砧打造界面（砧顶小尖对准选中格）、`funds` 钱牌（金币 + 数字）、`sign` 招牌上的字。
+## 补图（UI替换美术 10-25 15:14）：格子区是深铁框里固定 5 列 × 2 行铺满（[RecipeCell]，不到 10 张补空格），多于 10 张按整行竖着滚
 extends VBoxContainer
 
 signal changed()
@@ -15,8 +16,9 @@ const BG := "smithy/bg"
 const FUNDS_FONT := 0.62
 ## 大类木牌之间的空（原尺寸）
 const KEY_GAP := 6.0
-## 格子区里格与格的空（原尺寸）
-const CELL_GAP := 14.0
+## 格子区固定几列几行（多出来的行竖着滚）
+const COLS := 5
+const ROWS := 2
 
 var flow: GameFlow = null
 var font: Font = null
@@ -25,7 +27,8 @@ var _stage: MarketStage = null
 var _funds: CoinLabel = null
 var _keys: VBoxContainer = null
 var _shelf: PanelContainer = null
-var _grid: HFlowContainer = null
+var _grid: GridContainer = null
+var _pane: ScrollContainer = null
 var _empty: PanelContainer = null
 var _scroll: RecipeScroll = null
 ## 大类 → 左列那颗键
@@ -35,8 +38,9 @@ var _cells: Dictionary = {}
 var _group := ""
 ## 打造界面上的那张（空 = 收着）
 var _open: StringName = &""
-## 格子按哪个缩放搭的（整页缩放变了才重搭）
+## 格子按哪个缩放 / 多大搭的（变了才重搭）
 var _cell_k := 1.0
+var _cell_px := Vector2.ZERO
 
 
 func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void:
@@ -63,22 +67,19 @@ func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void
 		_group_keys[g] = key
 	_shelf = RecipeCell.shelf()     # 格子区：素框 + 浅内垫（227 规矩）
 	_stage.add_child(_shelf)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_shelf.add_child(scroll)
-	var pane := UiTheme.vbox(0)
-	pane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(pane)
-	_grid = HFlowContainer.new()
-	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	pane.add_child(_grid)
+	_pane = ScrollContainer.new()
+	_pane.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_shelf.add_child(_pane)
+	_grid = GridContainer.new()
+	_grid.columns = COLS
+	RecipeCell.space(_grid)
+	_pane.add_child(_grid)
 	_empty = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 12, 6, 12, 6)
 	UiTheme.set_tone(_empty, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
-	_empty.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	var l := Label.new()
 	l.text = UiText.t("smithy.group_empty")
 	_empty.add_child(l)
-	pane.add_child(_empty)
+	_stage.add_child(_empty)     # 这一类还没有配方：一块签压在空格子区正中
 	_scroll = RecipeScroll.make(font, func(): forge(_open))
 	_stage.add_child(_scroll)     # 后加 = 压在格子区上（砧顶小尖盖住格子区下沿）
 	_group = SmithRecipeDef.GROUPS[0]
@@ -122,10 +123,8 @@ func rebuild() -> void:
 	_cell_k = _stage.scale_factor()
 	var any := {}
 	var ready := {}
-	UiTheme.clear_children(_grid)
-	_cells.clear()
-	var shown := 0
-	var open_recipe_def: SmithRecipeDef = null
+	var mine: Array[SmithRecipeDef] = []
+	var whys := {}
 	for r in flow.sorted_smith_recipes():
 		var rd := r as SmithRecipeDef
 		if rd == null:
@@ -134,20 +133,36 @@ func rebuild() -> void:
 		any[rd.group] = true
 		if why == "":
 			ready[rd.group] = true
-		if rd.group != _group:
-			continue
-		var def := flow.items.get_def(rd.output)
-		var name := Names.pick(rd.display_names, rd.display_name) if rd.display_name != "" else (Names.of(def) if def != null else String(rd.output))
-		var cell := RecipeCell.make(rd.id, def, name, font, _cell_k)
-		cell.lit = why == ""
-		cell.tooltip_text = name + ("\n" + why if why != "" else "")
-		cell.selected = rd.id == _open
-		cell.clicked.connect(func(c: RecipeCell): open_recipe(c.recipe_id))
+		if rd.group == _group:
+			mine.append(rd)
+			whys[rd.id] = why
+	UiTheme.clear_children(_grid)
+	_cells.clear()
+	var shown := mine.size()
+	var slots := maxi(COLS * ROWS, ceili(shown / float(COLS)) * COLS)
+	var rows := slots / COLS
+	_cell_px = _cell_size(shown)
+	var open_recipe_def: SmithRecipeDef = null
+	for i in slots:
+		var cell: RecipeCell = null
+		if i < shown:
+			var rd := mine[i]
+			var why: String = whys[rd.id]
+			var def := flow.items.get_def(rd.output)
+			var name := Names.pick(rd.display_names, rd.display_name) if rd.display_name != "" else (Names.of(def) if def != null else String(rd.output))
+			cell = RecipeCell.make(rd.id, def, name, _cell_px, _cell_k)
+			cell.lit = why == ""
+			cell.tooltip_text = name + ("\n" + why if why != "" else "")
+			cell.selected = rd.id == _open
+			cell.clicked.connect(func(c: RecipeCell): open_recipe(c.recipe_id))
+			_cells[rd.id] = cell
+			if rd.id == _open:
+				open_recipe_def = rd
+		else:
+			cell = RecipeCell.blank(_cell_px)
+		cell.line_right = i % COLS != COLS - 1
+		cell.line_bottom = i / COLS != rows - 1
 		_grid.add_child(cell)
-		_cells[rd.id] = cell
-		shown += 1
-		if rd.id == _open:
-			open_recipe_def = rd
 	# 木牌：正在看的按下；一张配方都没有的类灰着点不了，有配方但一张都打不了的压灰（还能点开看要什么料）
 	for g in _group_keys:
 		var key := _group_keys[g] as Button
@@ -188,15 +203,25 @@ func _place() -> void:
 	var gr := _stage.to_local_rect(lay.get("grid", {}))
 	_shelf.position = gr.position
 	_shelf.size = gr.size
-	RecipeCell.space(_grid, maxi(4, roundi(CELL_GAP * k)))
+	_empty.reset_size()
+	_empty.position = (gr.get_center() - _empty.size * 0.5).floor()
 	var sr := _stage.to_local_rect(lay.get("scroll", {}))
 	_scroll.fit(k)
 	_scroll.position = sr.position
 	_scroll.size = sr.size
-	if absf(k - _cell_k) > 0.01:
+	if absf(k - _cell_k) > 0.01 or not _cell_size(_cells.size()).is_equal_approx(_cell_px):
 		rebuild()
 	else:
 		_aim_pointer.call_deferred()
+
+
+## 一格多大：格子区框里面按 5 × 2 平分（多于 10 张时让出竖滚动条的宽）
+func _cell_size(shown: int) -> Vector2:
+	var edge := RecipeCell.shelf_edge(_shelf)
+	var inner := _shelf.size - Vector2.ONE * edge * 2.0
+	if shown > COLS * ROWS:
+		inner.x -= _pane.get_v_scroll_bar().get_combined_minimum_size().x
+	return Vector2(maxf(48.0, floorf(inner.x / COLS)), maxf(48.0, floorf(inner.y / ROWS)))
 
 
 ## 砧顶小尖横向对准选中的那格

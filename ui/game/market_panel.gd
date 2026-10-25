@@ -11,6 +11,8 @@ signal changed()
 const CELL_MIN := BoardFrame.MIN_SIDE
 ## 价签离货底多远（平放在货前面）
 const TAG_GAP := 2.0
+## 卖掉的货压多灰（UI替换美术 10-25：货还在、压灰，章盖在价签上）
+const SOLD_TINT := Color(0.55, 0.55, 0.55, 0.75)
 ## 补充二（12.1 补二）：「每局回来换一批货」钉在左柱上的便条（底图里没画；设计像素、略斜），便条按整页缩放整块缩
 const RESTOCK_AT := Rect2(66, 297, 190, 78)
 const RESTOCK_TILT := -0.06
@@ -100,14 +102,16 @@ func _add_spot(i: int) -> void:
 	var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
 	var grid := GridInventory.new(size, 0, false)
 	var sold := Market.is_sold(flow.meta, i)
-	if def != null and not sold:
-		grid.place(ItemInstance.create(def, 0), Vector2i.ZERO, 0)
+	if def != null:
+		grid.place(ItemInstance.create(def, 0), Vector2i.ZERO, 0)     # 卖掉的也摆着（压灰），「已售」章盖在价签上
 	var view := InventoryView.new()
 	view.label_font = font
 	view.show_adjacency = false
 	view.inventory = grid
 	view.item_double_clicked.connect(func(_v: ContainerView, _uid: int): buy(i))
 	view.actions_for = func(_uid: int) -> Array: return [_buy_action(i)]
+	if sold:
+		view.modulate = SOLD_TINT
 	_stage.add_child(view)
 	var frame := BoardFrame.wrap(view, "plain")     # 227：每个货位一块小棋盘、带框
 	view.seams = BoardFrame.light_seams().merged({"edge": true})
