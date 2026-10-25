@@ -1,6 +1,6 @@
 ## 136（作者定，五项待定按推荐）：三个角色各一套 —— 初始面板 + 两个被动 + 一个主动 + 一条短板（修订：没有身份这一层，科技对谁都生效）。
 ## 安德烈乌斯：熟门熟路（每四步免一步）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（战前溜走，猎手面前必定逃掉）；
-## 布鲁图斯：野地里长大（休息多回、侵蚀少扣）/ 坚韧（低血一次性护甲）/ 咬牙（回体力）；
+## 布鲁图斯：野地里长大（休息多回；作者 10-25 去掉侵蚀少扣）/ 坚韧（低血一次性护甲）/ 咬牙（回体力）；
 ## 马库斯：军功（打赢的钱 ×1.25）/ 操练（149 起：耐力见底回一段，战斗规则；耐力回复 5 写进面板）/ 突击（不动）。期望从角色文件推：文件里写多少就断言多少。
 extends RefCounted
 
@@ -188,7 +188,7 @@ static func run_slip_vs_hunter(t: TestCase) -> void:
 
 
 static func run_brutus(t: TestCase) -> void:
-	t.begin("136 · 布鲁图斯：基线 60 / 60 / 6（被动不再加数）；休息多回、侵蚀少扣（最少扣零）；咬牙回体力（满了不让用）；坚韧低血一次性护甲")
+	t.begin("136 · 布鲁图斯：基线 60 / 60 / 6（被动不再加数）；休息多回（作者 10-25：侵蚀不再少扣）；咬牙回体力（满了不让用）；坚韧低血一次性护甲，说明写具体点数")
 	var c := CS._content()
 	var brutus := CS._character(c, &"brutus")
 	var s := CS._start(c, brutus)
@@ -199,8 +199,9 @@ static func run_brutus(t: TestCase) -> void:
 	t.eq(int(s.effective_baseline().value_of(&"max_stamina")), int(brutus.baseline().value_of(&"max_stamina")), "耐力没有被动加成")
 	var ctx := s.buff_context()
 	var rest := _effect_of(brutus, RestBonus) as RestBonus
-	var resist := _effect_of(brutus, ErosionResist) as ErosionResist
-	t.check(rest != null and resist != null, "被动：休息多回 + 侵蚀少扣")
+	t.not_null(rest, "被动：休息多回")
+	t.is_null(_effect_of(brutus, ErosionResist), "作者 10-25：没有侵蚀少扣")
+	t.eq(ctx.erosion_resist, 0, "上下文：侵蚀少扣 0")
 	t.eq(ctx.rest_bonus, rest.amount, "上下文：休息多回 %d" % rest.amount)
 	# 休息
 	var rnode: MapNode = null
@@ -215,7 +216,7 @@ static func run_brutus(t: TestCase) -> void:
 		s.events._proceed(rnode, &"rest")
 		t.eq(got, [s.node_rules.rest_restore + rest.amount], "休息回 规则 + %d" % rest.amount)
 	# 侵蚀
-	for pair in [[resist.amount + 1, 1], [resist.amount, 0]]:
+	for pair in [[2, 2], [1, 1]]:     # 照扣
 		var fx := ErodeSpendVitality.new()
 		fx.amount = int(pair[0])
 		var ec := ErosionContext.new()
@@ -234,6 +235,16 @@ static func run_brutus(t: TestCase) -> void:
 	t.eq(s.use_skill(sw.id), "", "用了")
 	t.eq(s.vitality.current, s.vitality.maximum - 2 + sw.amount, "回 %d 点" % sw.amount)
 	t.ne(s.use_skill(sw.id), "", "冷却 %d 步内不能再用" % sw.cooldown_steps)
+	# 说明文字：作者 10-25 —— 野地里长大不提侵蚀；坚韧写具体点数（从 hardy_guard 的护甲上限读），不写「一层」
+	for sk in brutus.skills:
+		var text := Names.description_of(sk)
+		if sk.id == &"wild_born":
+			t.check(not text.contains("侵蚀"), "野地里长大：不提侵蚀（%s）" % text)
+		if sk.id == &"hardy":
+			var guard := load("res://data/buffs/hardy_guard.tres") as BuffDef
+			var pts := int(guard.mods[0].amount)
+			t.check(text.contains("%d 点护甲" % pts) and not text.contains("一层"), "坚韧：获得 %d 点护甲（%s）" % [pts, text])
+			t.check(text.contains("30%"), "坚韧：生命低于 30%%（%s）" % text)
 	# 坚韧：编进玩家的单位规则；空手挨打，生命掉到三成以下时护甲出现一次
 	var me := s.compile_player()
 	var has_rule := false

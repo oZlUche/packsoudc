@@ -327,11 +327,11 @@ const TEXT := {
 	"strip.special_immune": {"zh": "免疫%s", "en": "Immune to %s"},
 	"strip.special_sep": {"zh": "：", "en": ": "},
 	"strip.load": {"zh": "负重", "en": "Load"},
+	"strip.load_not_counted": {"zh": "不计负重", "en": "Not counted"},
 	# ui/widgets/character_card.gd（223）
 	"card.max_hp": {"zh": "生命上限", "en": "Max health"},
 	"card.max_stamina": {"zh": "耐力上限", "en": "Max stamina"},
-	"card.regen": {"zh": "回气", "en": "Stamina regen"},
-	"card.per_sec": {"zh": "每秒", "en": "/s"},
+	"card.regen": {"zh": "耐力恢复/秒", "en": "Stamina regen/s"},
 	"card.up": {"zh": "▲%s", "en": "▲%s"},
 	"card.down": {"zh": "▼%s", "en": "▼%s"},
 	"card.tip_line": {"zh": "%s：%s", "en": "%s: %s"},
