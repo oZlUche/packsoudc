@@ -21,6 +21,8 @@ static func frame_card(t: TestCase, root: Window) -> void:
 	t.eq(String(card.row(0)["value"]), str(roundi(float(eff.base_stats.get(BattleStats.MAX_HP, 0.0)))), "生命上限 = 有效基线")
 	t.eq(String(card.row(1)["value"]), str(roundi(float(eff.base_stats.get(BattleStats.MAX_STAMINA, BattleStats.default_value(BattleStats.MAX_STAMINA))))), "耐力上限 = 有效基线")
 	t.eq(String(card.row(2)["value"]), "%.1f" % float(eff.base_stats.get(BattleStats.REGEN_STAMINA, BattleStats.default_value(BattleStats.REGEN_STAMINA))), "回气一位小数")
+	t.eq(String(card.row(2)["label"]), "耐力恢复/秒", "作者 10-25：第三行叫「耐力恢复/秒」")
+	t.eq(String(card.row(2)["unit"]), "", "「每秒」并进名字，不再另写小字")
 	for i in 3:
 		t.eq(float(card.row(i)["delta"]), 0.0, "第 %d 行没加成：不写 ▲▼" % i)
 	var skills := run.character.skill_entries()
