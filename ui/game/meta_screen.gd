@@ -31,6 +31,9 @@ const TAB_ICON_ART := "home/tabs/tab_"
 const TABS := [["warehouse", "meta.tab_warehouse"], ["sell", "meta.tab_sell"], ["market", "meta.tab_market"], ["smithy", "meta.tab_smithy"], ["tech", "meta.tab_tech"], ["codex", "meta.tab_codex"], ["achievements", "meta.tab_achievements"]]
 ## 178：这几页不显示右半边的仓库，中列吃满
 const NO_SHELF_TABS := ["codex", "achievements", "tech"]     # 229：科技页也收起右半边
+## 251 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要」）：整页的两页 —— 右列（仓库木架 + 挂牌）收起、中列吃满。
+## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
+const FULL_TABS := ["market", "smithy"]
 ## 251：页签 → 哪一间铺子（0 级不露页签）
 const FACILITY_TABS := {"market": Market.ID, "smithy": Smithy.ID}
 
@@ -937,7 +940,7 @@ func show_tab(name: String) -> void:
 	for key in _pages:
 		(_pages[key] as Control).visible = key == name
 	if _right != null:
-		_right.visible = not NO_SHELF_TABS.has(name)
+		_right.visible = not (NO_SHELF_TABS.has(name) or FULL_TABS.has(name))
 	for key in _tab_btns:
 		var b := _tab_btns[key] as Button
 		b.set_pressed_no_signal(key == name)

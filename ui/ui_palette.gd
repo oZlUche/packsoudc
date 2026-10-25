@@ -432,6 +432,11 @@ const HOT_IRON_HOVER := Color("ec6a2c")
 const HOT_IRON_PRESSED := Color("a8331a")
 const HOT_IRON_OFF := Color("6a4a3e")
 const HOT_IRON_TEXT := Color("fff1dc")
+## 251 补充二 §12.2（作者 10-25 14:21「铁匠铺的合成界面应该是铁砧配色的」）：打造界面的铁砧铁灰底（没有 `smithy/anvil_plate` 图时的平底）、
+## 上面的浅字（定稿 layout 的 `text_light`），深底上缺素材的暖红（`text_missing`；浅底的铁红 a8331a 在铁灰上看不清）
+const ANVIL_IRON := Color("3b3936")
+const ANVIL_INK := Color("f0e8d8")
+const WARN_ON_DARK := Color("ff8a6a")
 
 
 ## 这一档下、原字号 [param base] 该放大到多少

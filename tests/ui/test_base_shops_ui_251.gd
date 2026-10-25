@@ -13,7 +13,7 @@ static func _levels(f: GameFlow, market: int, smithy: int) -> void:
 
 
 static func frame_tabs(t: TestCase, root: Window) -> void:
-	t.begin("251 §六：没点出来不露页签；点出来了露「集市」「铁匠铺」，右半边是仓库")
+	t.begin("251 §六：没点出来不露页签；点出来了露「集市」「铁匠铺」（补充二：两页整页，右半边仓库收起）")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	_levels(f, 0, 0)
@@ -33,9 +33,9 @@ static func frame_tabs(t: TestCase, root: Window) -> void:
 	t.eq(s._tab_btns.size(), 7, "七个页签")
 	t.eq(f.meta.market_stock.size(), 4, "打开基地时补了一次货")
 	s.show_tab("market")
-	t.check(s._right.visible, "集市页右半边是仓库")
+	t.check(not s._right.visible, "集市页整页（右半边仓库收起）")
 	s.show_tab("smithy")
-	t.check(s._right.visible, "铁匠铺页右半边是仓库")
+	t.check(not s._right.visible, "铁匠铺页整页（右半边仓库收起）")
 	s.queue_free()
 	W178._cleanup()
 
@@ -44,11 +44,13 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	t.begin("251 补充一 §10.1：集市页 —— 货散放在一张透视大桌上、前后两排（每件一块只有那件大小、带框的小棋盘），台沿下挂金币价签；钱袋读数金币 + 数字；买一件：仓库多一件、价签盖「已售」；字都不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
-	_levels(f, 1, 0)
+	_levels(f, 3, 0)
 	f.meta.funds = 100000
+	f.ensure_market()
 	var s: Control = W178._screen(f, root)
 	s.show_tab("market")
 	var p = s.market_panel()
+	t.eq(p.views().size(), 8, "3 级：八个货位")
 	t.eq(p.views().size(), f.meta.market_stock.size(), "每格一块视图")
 	t.check(p.views().all(func(v: InventoryView) -> bool: return BoardFrame.framed(v)), "货位带框（227）")
 	var sizes_ok := true
@@ -56,21 +58,26 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 		var def := Market.def_at(f.meta, f.items, i)
 		sizes_ok = sizes_ok and def != null and (p.views()[i] as InventoryView).inventory.size == def.shape.size_rotated(0)
 	t.check(sizes_ok, "每块小棋盘就是那件的大小（不再补成 2×2）")
-	var bottoms := {}
+	p.stage().size = p.stage().design_size()     # 测试屏很小：撑到设计大小再看（大小一变就重摆）
+	var spots: Array = p.stage().spots()
+	var back := 0
+	var front := 0
+	for i in p.views().size():
+		if float(spots[i].get("scale", 1.0)) < float(spots[back].get("scale", 1.0)):
+			back = i
+		if float(spots[i].get("scale", 1.0)) > float(spots[front].get("scale", 1.0)):
+			front = i
+	var bottoms: Array = []
 	for v in p.views():
 		var fr := (v as Control).get_parent() as Control
-		bottoms[roundi(fr.position.y + fr.size.y)] = true
-	t.eq(bottoms.size(), 2, "四件分前后两排（%s）" % str(bottoms.keys()))
-	p.stage().size = Vector2(480, 960)     # 测试屏很小：撑到设计大小再看（大小一变就重摆）
-	var spots: Array = p.stage().spots()
-	var back := -1
-	var front := -1
-	for i in p.views().size():
-		if float(spots[i].get("scale", 1.0)) < 1.0 and back < 0:
-			back = i
-		elif float(spots[i].get("scale", 1.0)) >= 1.0 and front < 0:
-			front = i
-	t.check(back >= 0 and front >= 0 and p.views()[back].cell_px < p.views()[front].cell_px, "后排的格子小、前排大（scale；%s）" % str([back, front, p.views()[back].cell_px if back >= 0 else 0.0, p.views()[front].cell_px if front >= 0 else 0.0, p.stage().size]))
+		bottoms.append(fr.position.y + fr.size.y)
+	bottoms.sort()
+	var rows := 1
+	for i in range(1, bottoms.size()):
+		if bottoms[i] - bottoms[i - 1] > 40.0:
+			rows += 1
+	t.eq(rows, 2, "八件分前后两排（%s）" % str(bottoms))
+	t.check(p.views()[back].cell_px < p.views()[front].cell_px, "后排的格子小、前排大（scale；%s）" % str([back, front, p.views()[back].cell_px, p.views()[front].cell_px, p.stage().size]))
 	var foot: Vector2 = p.stage().foot_of(spots[0])
 	var fr0 := (p.views()[0] as Control).get_parent() as Control
 	t.check(absf(fr0.position.x + fr0.size.x * 0.5 - foot.x) < 1.0 and absf(fr0.position.y + fr0.size.y - foot.y) < 1.0, "货底中点落在 foot 上")

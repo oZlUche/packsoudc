@@ -46,6 +46,9 @@ var art_label_rect := Rect2()
 var art_label_drop := 2.0
 ## 灰着时的字色（透明 = 跟平常一样）
 var art_label_disabled_color := Color.TRANSPARENT
+## 251 补充二：字的描边色（铁匠铺打造键：热铁上深红描边；透明 = 不描）
+var art_label_outline := Color.TRANSPARENT
+const ART_LABEL_OUTLINE := 4
 
 
 ## [param name] 写进悬浮窗第一行；[param hint] 是那一句说明
@@ -159,6 +162,8 @@ func _draw() -> void:
 		if _down:
 			at.y += art_label_drop
 		var lc := art_label_disabled_color if disabled and art_label_disabled_color.a > 0.0 else art_label_color
+		if art_label_outline.a > 0.0 and not disabled:
+			draw_string_outline(lf, at.floor(), art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, ART_LABEL_OUTLINE, art_label_outline)
 		draw_string(lf, at.floor(), art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, lc)
 	if hotkey != "":
 		draw_string(font, Vector2(size.x - 12, HINT_SIZE + 1), hotkey, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_SIZE, Color(col, 0.75))

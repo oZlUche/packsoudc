@@ -1,17 +1,30 @@
-## 251：基地「铁匠铺」页（[Smithy]）。补充一 §10.2（作者 14:49）：左列大类（一排平的石键：刀剑 / 斧锤 / 弓 / 法杖 / 盾 / 护甲，[member SmithRecipeDef.group]，
-## 选中的按下），右边这一类的配方一格一格平铺（[RecipeCell]：产物在带框的小格里，能打的亮、不能打的压灰，悬浮窗写原因），按面板宽自动折行；
-## 点一格 → 下方展开卷轴（[RecipeScroll]：产物名、每样素材有几 / 要几、工钱金币 + 数字、烧亮铁红的「打造」键），点同一格收起、点别的换内容。
-## 页面上不写等级（在科技页；级不够只是灰格 + 悬浮窗「铁匠铺要几级」）。打完那格闪一下、卷轴的「有几」刷新，告示卷轴照说「打好了」
+## 251：基地「铁匠铺」页（[Smithy]）。补充一 §10.2（作者 14:49）：左列大类（刀剑 / 斧锤 / 弓 / 法杖 / 盾 / 护甲，[member SmithRecipeDef.group]，选中的按下），
+## 右边这一类的配方一格一格平铺（[RecipeCell]：产物在带框的小格里，能打的亮、不能打的压灰，悬浮窗写原因），按格子区宽自动折行；
+## 点一格 → 下方弹出打造界面（[RecipeScroll]：产物名、每样素材有几 / 要几、工钱金币 + 数字、烧红的「打造」键），点同一格收起、点别的换内容。
+## 页面上不写等级（在科技页；级不够只是灰格 + 悬浮窗「铁匠铺要几级」）。打完那格闪一下、「有几」刷新，告示卷轴照说「打好了…进了仓库」。
+## 补充二 §12（作者 10-25 14:20「铁匠铺里也不需要[仓库]，重来」；14:21「合成界面应该是铁砧配色的」）：整页（右列仓库收起），
+## 砖墙底图 `smithy/bg` 按中列「包含」缩放居中（[MarketStage]），`smithy/layout.json` 的矩形摆各块：`keys` 大类木牌（[CatKey]）、`grid` 格子区（素框里铺格）、
+## `scroll` 铁砧打造界面（砧顶小尖对准选中格）、`funds` 钱牌（金币 + 数字）、`sign` 招牌上的字
 extends VBoxContainer
 
 signal changed()
 
+const LAYOUT := "smithy/layout"
+const BG := "smithy/bg"
+## 钱牌上金币 + 数字的字号 = 钱牌高的这么多倍
+const FUNDS_FONT := 0.62
+## 大类木牌之间的空（原尺寸）
+const KEY_GAP := 6.0
+## 格子区里格与格的空（原尺寸）
+const CELL_GAP := 14.0
+
 var flow: GameFlow = null
 var font: Font = null
 var say: Callable = Callable()
-var _head: HeaderTag = null
+var _stage: MarketStage = null
 var _funds: CoinLabel = null
 var _keys: VBoxContainer = null
+var _shelf: PanelContainer = null
 var _grid: HFlowContainer = null
 var _empty: PanelContainer = null
 var _scroll: RecipeScroll = null
@@ -20,8 +33,10 @@ var _group_keys: Dictionary = {}
 ## 配方 id → 那一格
 var _cells: Dictionary = {}
 var _group := ""
-## 卷轴上展开的那张（空 = 收着）
+## 打造界面上的那张（空 = 收着）
 var _open: StringName = &""
+## 格子按哪个缩放搭的（整页缩放变了才重搭）
+var _cell_k := 1.0
 
 
 func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void:
@@ -29,39 +44,31 @@ func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void
 	font = p_font
 	say = p_say
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var head := UiTheme.hbox(8)
-	add_child(head)
-	_head = HeaderTag.new(UiText.t("smithy.title"))
-	_head.mouse_filter = Control.MOUSE_FILTER_PASS
-	_head.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	head.add_child(_head)
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(gap)
-	var plate := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 10, 4, 10, 4)     # 钱袋读数：纸牌上金币 + 数字
-	UiTheme.set_tone(plate, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
-	plate.tooltip_text = UiText.t("hud.wallet")
-	head.add_child(plate)
-	_funds = CoinLabel.make(flow.meta.funds, 18)
-	plate.add_child(_funds)
-	var body := UiTheme.hbox(10)
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(body)
-	_keys = UiTheme.vbox(6)
-	_keys.custom_minimum_size.x = 96
-	body.add_child(_keys)
+	_stage = MarketStage.new(LAYOUT, BG)
+	_stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_stage.custom_minimum_size = Vector2(320, 240)
+	_stage.resized.connect(_place)
+	add_child(_stage)
+	_funds = CoinLabel.make(flow.meta.funds, 18)     # 钱牌是浅色木牌：墨字
+	_funds.centered = true
+	_funds.mouse_filter = Control.MOUSE_FILTER_STOP
+	_funds.tooltip_text = UiText.t("hud.wallet")
+	_stage.add_child(_funds)
+	_keys = UiTheme.vbox(int(KEY_GAP))
+	_stage.add_child(_keys)
 	for g in SmithRecipeDef.GROUPS:
-		var key := StoneChip.entry(UiText.t("smithy.group_" + g), show_group.bind(g))
+		var key := CatKey.make(UiText.t("smithy.group_" + g), show_group.bind(g))
 		_keys.add_child(key)
 		_group_keys[g] = key
-	var right := ScrollContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(right)
+	_shelf = RecipeCell.shelf()     # 格子区：素框 + 浅内垫（227 规矩）
+	_stage.add_child(_shelf)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_shelf.add_child(scroll)
 	var pane := UiTheme.vbox(0)
 	pane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_child(pane)
+	scroll.add_child(pane)
 	_grid = HFlowContainer.new()
 	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pane.add_child(_grid)
@@ -73,14 +80,14 @@ func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void
 	_empty.add_child(l)
 	pane.add_child(_empty)
 	_scroll = RecipeScroll.make(font, func(): forge(_open))
-	add_child(_scroll)
+	_stage.add_child(_scroll)     # 后加 = 压在格子区上（砧顶小尖盖住格子区下沿）
 	_group = SmithRecipeDef.GROUPS[0]
 	flow.meta.changed.connect(rebuild)
 	flow.meta.warehouse.changed.connect(rebuild)
 	rebuild()
 
 
-## 翻到这一类（左列的键）；卷轴收起
+## 翻到这一类（左列的键）；打造界面收起
 func show_group(g: String) -> void:
 	if _group != g:
 		_open = &""
@@ -92,7 +99,7 @@ func selected_group() -> String:
 	return _group
 
 
-## 点一格：展开这张的卷轴；同一格再点收起
+## 点一格：弹出这张的打造界面；同一格再点收起
 func open_recipe(id: StringName) -> void:
 	var r := SmithRecipeDef.find(flow.smith_recipes, id)
 	if r != null and r.group != _group:
@@ -109,23 +116,29 @@ func rebuild() -> void:
 	if _grid == null:
 		return
 	var lv := Smithy.level(flow.meta)
-	_head.text = UiText.t("smithy.title") if lv > 0 else UiText.t("smithy.locked")
-	_head.tooltip_text = UiText.t("smithy.intro") if lv > 0 else UiText.t("smithy.locked_tip")
+	_stage.sign_text = UiText.t("smithy.title") if lv > 0 else UiText.t("smithy.locked")
+	_stage.tooltip_text = UiText.t("smithy.intro") if lv > 0 else UiText.t("smithy.locked_tip")
 	_funds.amount = flow.meta.funds
-	for g in _group_keys:
-		(_group_keys[g] as Button).set_pressed_no_signal(g == _group)
+	_cell_k = _stage.scale_factor()
+	var any := {}
+	var ready := {}
 	UiTheme.clear_children(_grid)
 	_cells.clear()
 	var shown := 0
 	var open_recipe_def: SmithRecipeDef = null
 	for r in flow.sorted_smith_recipes():
 		var rd := r as SmithRecipeDef
-		if rd == null or rd.group != _group:
+		if rd == null:
+			continue
+		var why := Smithy.can_forge(flow.meta, rd, flow.items)
+		any[rd.group] = true
+		if why == "":
+			ready[rd.group] = true
+		if rd.group != _group:
 			continue
 		var def := flow.items.get_def(rd.output)
 		var name := Names.pick(rd.display_names, rd.display_name) if rd.display_name != "" else (Names.of(def) if def != null else String(rd.output))
-		var cell := RecipeCell.make(rd.id, def, name, font)
-		var why := Smithy.can_forge(flow.meta, rd, flow.items)
+		var cell := RecipeCell.make(rd.id, def, name, font, _cell_k)
 		cell.lit = why == ""
 		cell.tooltip_text = name + ("\n" + why if why != "" else "")
 		cell.selected = rd.id == _open
@@ -135,12 +148,64 @@ func rebuild() -> void:
 		shown += 1
 		if rd.id == _open:
 			open_recipe_def = rd
+	# 木牌：正在看的按下；一张配方都没有的类灰着点不了，有配方但一张都打不了的压灰（还能点开看要什么料）
+	for g in _group_keys:
+		var key := _group_keys[g] as Button
+		key.set_pressed_no_signal(g == _group)
+		key.disabled = not any.has(g) and g != _group
+		if key is CatKey:
+			(key as CatKey).dim = not ready.has(g)
+		key.queue_redraw()
 	_empty.visible = shown == 0
 	if open_recipe_def == null:
 		_open = &""
 	_scroll.visible = open_recipe_def != null
 	if open_recipe_def != null:
 		_scroll.show_recipe(open_recipe_def, flow.items, Smithy.have(flow.meta, open_recipe_def), Smithy.can_forge(flow.meta, open_recipe_def, flow.items))
+	_aim_pointer.call_deferred()
+
+
+## 照底图的摆法放各块（整页大小变了也走这里）；缩放变了格子按新大小重搭
+func _place() -> void:
+	if _stage == null or _stage.size.x <= 0.0:
+		return
+	var lay := _stage.layout()
+	var k := _stage.scale_factor()
+	var fr := _stage.to_local_rect(lay.get("funds", {}))
+	_funds.position = fr.position
+	_funds.size = fr.size
+	_funds.font_size = maxi(12, roundi(fr.size.y * FUNDS_FONT))
+	var kr := _stage.to_local_rect(lay.get("keys", {}))
+	_keys.position = kr.position
+	_keys.size = Vector2(kr.size.x, 0)
+	CatKey.space(_keys, maxi(2, roundi(KEY_GAP * k)))
+	for g in _group_keys:
+		var key := _group_keys[g] as Button
+		if key is CatKey:
+			(key as CatKey).scale_k = k
+		else:
+			key.custom_minimum_size.x = kr.size.x
+	var gr := _stage.to_local_rect(lay.get("grid", {}))
+	_shelf.position = gr.position
+	_shelf.size = gr.size
+	RecipeCell.space(_grid, maxi(4, roundi(CELL_GAP * k)))
+	var sr := _stage.to_local_rect(lay.get("scroll", {}))
+	_scroll.fit(k)
+	_scroll.position = sr.position
+	_scroll.size = sr.size
+	if absf(k - _cell_k) > 0.01:
+		rebuild()
+	else:
+		_aim_pointer.call_deferred()
+
+
+## 砧顶小尖横向对准选中的那格
+func _aim_pointer() -> void:
+	var c := _cells.get(_open, null) as RecipeCell
+	if c == null or not _scroll.visible or not c.is_inside_tree():
+		_scroll.pointer_x = -1.0
+		return
+	_scroll.pointer_x = c.get_global_rect().get_center().x - _scroll.get_global_rect().position.x
 
 
 ## 打这一张；返回空串 = 打了，否则是原因（说一句）
@@ -159,7 +224,7 @@ func forge(id: StringName) -> String:
 	return why
 
 
-## 测试看：配方 id → 那一格、卷轴、大类键
+## 测试看：配方 id → 那一格、打造界面、大类键、整页
 func cell(id: StringName) -> RecipeCell:
 	return _cells.get(id, null)
 
@@ -172,7 +237,15 @@ func group_key(g: String) -> Button:
 	return _group_keys.get(g, null)
 
 
-## 测试看：这张的「打造」键（卷轴展开到这张）
+func stage() -> MarketStage:
+	return _stage
+
+
+func funds_label() -> CoinLabel:
+	return _funds
+
+
+## 测试看：这张的「打造」键（打造界面弹到这张）
 func forge_button(id: StringName) -> Button:
 	if _open != id:
 		open_recipe(id)

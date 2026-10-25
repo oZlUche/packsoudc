@@ -1,0 +1,83 @@
+## 251 补充二 §12（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要，重来」；14:21「铁匠铺的合成界面应该是铁砧配色的」）：
+## 集市 / 铁匠铺两页整页（右列仓库收起、中列吃满，切回别的页恢复；买下 / 打好照样进仓库，告示说「进了仓库」）；
+## 铁匠铺按定稿底图摆（木牌大类键、格子区、铁砧打造界面、钱牌），打造界面是深底浅字
+extends RefCounted
+
+const W178 := preload("res://tests/ui/test_base_warehouse_178.gd")
+const Shops := preload("res://tests/ui/test_base_shops_ui_251.gd")
+const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
+
+
+static func frame_full_tabs(t: TestCase, root: Window) -> void:
+	t.begin("251 补充二 §12.1：集市 / 铁匠铺整页 —— 右列仓库收起、中列 = 屏宽 − 两边距 − 左列；切回仓库恢复；买一件进仓库、告示说「进了仓库」")
+	ItemInstance.reset_uid_counter()
+	var f := W178._flow()
+	Shops._levels(f, 1, 1)
+	f.meta.funds = 100000
+	var s: Control = W178._screen(f, root)
+	t.eq(s.FULL_TABS, ["market", "smithy"], "整页的两页")
+	var scr := Vector2(1600, 1000)
+	for tab in ["market", "smithy"]:
+		s.show_tab(tab)
+		s.layout()
+		t.check(not s._right.visible, "%s：右列仓库收起" % tab)
+		t.eq(s._right.custom_minimum_size.x, 0.0, "%s：右列不占宽" % tab)
+		t.eq(s.middle_width(scr), scr.x - 2.0 * s.MARGIN - s.LEFT_W - s.COL_GAP - s.right_gutter(), "%s：中列吃满（只让出调试箭头那一条）" % tab)
+	s.show_tab("warehouse")
+	s.layout()
+	t.check(s._right.visible and s._right.custom_minimum_size.x > 0.0, "切回仓库：右列回来")
+	t.check(s.middle_width(scr) < scr.x - 2.0 * s.MARGIN - s.LEFT_W - s.COL_GAP - s.right_gutter(), "切回仓库：中列让出右半边")
+	s.show_tab("market")
+	var p = s.market_panel()
+	var n := f.meta.warehouse.item_count()
+	t.eq(p.buy(0), "", "买第一格")
+	t.eq(f.meta.warehouse.item_count(), n + 1, "看不见仓库也照样进仓库")
+	t.check(s.notice_layer().current_text().contains("进了仓库"), "告示说进了仓库（%s）" % s.notice_layer().current_text())
+	s.queue_free()
+	W178._cleanup()
+
+
+static func frame_smithy_stage(t: TestCase, root: Window) -> void:
+	t.begin("251 补充二 §12.1 / 12.2：铁匠铺整页按定稿摆 —— 砖墙底图、木牌大类键（没配方的灰着、打不了的压灰）、格子区、钱牌；打造界面铁砧深底浅字、砧顶小尖对准选中格；打好告示说「进了仓库」")
+	ItemInstance.reset_uid_counter()
+	var f := W178._flow()
+	Shops._levels(f, 0, 1)
+	f.meta.funds = 1000
+	var s: Control = W178._screen(f, root)
+	s.show_tab("smithy")
+	var p = s.smithy_panel()
+	var stage: MarketStage = p.stage()
+	stage.size = stage.design_size()     # 测试屏很小：撑到底图原尺寸（缩放 1）
+	t.eq(stage.design_size(), Vector2(1300, 950), "底图 1300×950")
+	t.check(is_equal_approx(stage.scale_factor(), 1.0), "原尺寸缩放 1")
+	var lay := stage.layout()
+	t.eq(String(lay.get("tone", "")), "dark", "铁匠铺底图声明深色")
+	var key: Button = p.group_key("blade")
+	t.check(key is CatKey, "大类键是木牌")
+	var kr := stage.to_local_rect(lay["keys"])
+	t.check(absf(key.get_parent().position.x - kr.position.x) < 1.0 and absf(key.get_parent().position.y - kr.position.y) < 1.0, "木牌摆在 layout 的 keys 区")
+	t.check(p.group_key("staff").disabled, "法杖一张配方都没有：灰着")
+	t.check(not p.group_key("blade").disabled and (p.group_key("blade") as CatKey).dim, "刀剑有配方但一张都打不了：压灰、还能点")
+	var fr := stage.to_local_rect(lay["funds"])
+	t.check(p.funds_label().position.is_equal_approx(fr.position), "钱牌读数摆在 layout 的 funds")
+	t.eq(p.funds_label().amount, 1000, "钱牌读数")
+	p.forge_button(&"smith_shortsword")
+	var sc: RecipeScroll = p.recipe_scroll()
+	var sr := stage.to_local_rect(lay["scroll"])
+	t.check(sc.visible and sc.position.is_equal_approx(sr.position), "打造界面摆在 layout 的 scroll")
+	t.eq(UiTheme.tone_at(sc), UiTheme.TONE_DARK, "打造界面声明深色（铁砧）")
+	var ink: Color = sc.title_label().get_theme_color("font_color")
+	t.check(ink.get_luminance() > 0.7, "铁砧上的字是浅色（%s）" % ink.to_html(false))
+	var cols: Array[Color] = sc.material_colors()
+	t.check(cols.size() == 2 and cols.all(func(c: Color) -> bool: return c.is_equal_approx(UiPalette.WARN_ON_DARK)), "缺的素材用深底暖红（%s）" % str(cols))
+	p._aim_pointer()
+	var cell: RecipeCell = p.cell(&"smith_shortsword")
+	t.check(absf(sc.pointer_x - (cell.get_global_rect().get_center().x - sc.get_global_rect().position.x)) < 1.0 and sc.pointer_x >= 0.0, "砧顶小尖对准选中格")
+	for id in [&"iron_ore", &"iron_ore", &"hardwood_plank"]:
+		f.meta.warehouse.try_add(ItemInstance.create(f.items.get_def(id), f.meta.allocate_uid()), true)
+	t.check(not (p.group_key("blade") as CatKey).dim, "齐了：刀剑木牌不再压灰")
+	t.eq(p.forge(&"smith_shortsword"), "", "打了")
+	t.check(s.notice_layer().current_text().contains("进了仓库"), "告示说进了仓库（%s）" % s.notice_layer().current_text())
+	t.eq(Bare.audit(s, "smithy251b"), [] as Array[String], "没有裸字")
+	s.queue_free()
+	W178._cleanup()

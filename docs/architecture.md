@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.41 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.42 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4477,6 +4477,7 @@ res://
 | v4.35 | 2026-10-24 | **游戏测试 v4.34 修**：铁匠铺每行的字签从深色铭牌换成浅底羊皮纸（`PANEL_PARCHMENT` + 墨字，UI 明暗规则）；产物那一栏各行一样宽（按最宽的框），铭牌左边对齐；基地换页签时收掉上一页的告示（`NoticeLayer.clear`） |
 | v4.36 | 2026-10-24 | **248「退回」定稿图**（作者 14:44 选丙「回头脚印」）：战前屏左下角的退回键从文字占位换成平的白灰石键四态图 `assets/ui/battle/retreat_key*`（112×40）；图里不带字，字按 `retreat_key.json` 的 `text_rect` 居中写（墨色、灰态色、按下下移 1），放不下逐号缩（英文 Fall back）—— `IconButton` 新增 `art_label_rect` / `art_label_drop` / `art_label_disabled_color` |
 | v4.37 | 2026-10-24 | **基地七个页签加平墨图标**（作者 14:49 选乙；UI替换美术切图）：仓库 / 出售 / 集市 / 铁匠铺 / 科技 / 图鉴 / 成就页签字左边各一枚 36×36 墨色剪影（`assets/ui/home/tabs/tab_<页签>.png`，没图只写字）；图字间隔 6 走 `_home_buttons` 主题变体；七个页签一样宽（取 176 与最宽者的较大值，英文约 190） |
+| v4.42 | 2026-10-25 | 251 补充二（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要，重来」、14:21「铁匠铺的合成界面应该是铁砧配色的」）：`MetaScreen.FULL_TABS = ["market", "smithy"]`，两页右列仓库收起、中列吃满（只藏不销毁，买下 / 打好照样进仓库，告示补「进了仓库」）；集市换定稿底图 `market/bg.png` 1300×950 + 新 layout（8 货位前 4 后排、后 4 前排），`MarketStage` 改「包含」缩放上下左右居中，并可带别的 layout / 底图（`MarketStage.new("smithy/layout", "smithy/bg")`）；铁匠铺整页按 `smithy/layout.json` 摆：砖墙底图、`CatKey` 木牌大类键（`smithy/cat_*` 五态，没配方的灰着、打不了的压灰仍能点）、素框格子区、钱牌；`RecipeScroll` 改铁砧（`smithy/anvil_plate.png` 等比缩放，内容在 `face` 区，`UiPalette.ANVIL_IRON / ANVIL_INK / WARN_ON_DARK`，深底浅字，砧顶小尖 `anvil_pointer` 对准选中格），打造键四态图 `forge_key*.png`（字代码写：键面 `key_rect`、浅字深红描边，`IconButton.art_label_outline`）；`RecipeCell` 随整页缩放；兽材标签图标 `assets/ui/tags/beast_part.png`。测试 `test_meta_full_tabs_251` |
 | v4.41 | 2026-10-25 | 250 标签图标：冰霜 / 雷电 / 机关（作者挑甲版：六角雪花、一道闪电、发条钥匙，`assets/ui/tags/ice|lightning|clockwork.png`，美术设计出图）；悬浮窗标签行这三枚由字改图。兽材还等作者挑 |
 | v4.40 | 2026-10-24 | 游戏测试复测 v4.39 两处：① `test_base_market_251.gd` 的 run_flow 升级时存盘写进了默认 `user://meta.json`（新开游戏会被 migrate_legacy 搬进第 1 位，带 99 万金币），改成自己的 `user://test_251_flow_meta.json` 并删掉；② 素框九宫格套在太窄的棋盘上会被裁（铁匠铺 1×4 长剑格子区 14 px），新增 `BoardFrame.MIN_SIDE` / `padded_size`：铁匠铺格子与卷轴的产物板太窄就补空格，集市货位格长下限 = MIN_SIDE |
 | v4.39 | 2026-10-24 | **251 补充一 界面定稿**（作者 14:49）：集市页改木凉棚（`MarketStage`：底图 `market/bg` + `assets/ui/market/layout.json`，缺图画占位凉棚；第三版 15:57 = 一张透视大平桌、货分前后两排：`spots` 每项 `foot` 货底中点 + `scale` 后小前大，`cell` 基准格长，按级数取前 4 / 6 / 8 个），每个货位是只有那件大小、带框的小棋盘，货前面平放金币式价签（`PriceTag.coins`）、卖掉盖「已售」；没点出集市只画空棚 + 一块签。钱一律金币 + 数字（新 `CoinLabel`；右键「买下」的价钱也是，`ItemActions.Action.coin`）。铁匠铺：配方加必填字段 `group`（刀剑 / 斧锤 / 弓 / 法杖 / 盾 / 护甲，法杖暂空），左列大类石键、右边 `RecipeCell` 平铺（能打亮、不能打灰 + 悬浮窗原因），点一格下方展开 `RecipeScroll`（告示卷轴的纸与轴：产物、素材有几 / 要几、工钱金币、「打造」键 —— 四态图 `assets/ui/smithy/forge_key*` 到之前是铁红平键 `UiTheme.BUTTON_FORGE` / `UiPalette.HOT_IRON`），点同一格收起，打完那格闪一下。两页都不写等级。另：饰物 / 贵重品标签图标；悬浮窗里神的标签 `faith:<神>` 画那位神的徽记（`TagRegistry.icon_path` → `assets/ui/faith/<神>.png`，没图照旧写字） |

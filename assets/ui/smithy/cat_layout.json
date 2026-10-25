@@ -1,0 +1,36 @@
+{
+ "size": [
+  212,
+  56
+ ],
+ "body": [
+  2,
+  2,
+  194,
+  54
+ ],
+ "nine_slice": {
+  "left": 14,
+  "right": 30,
+  "top": 14,
+  "bottom": 14
+ },
+ "content_margin": {
+  "left": 8,
+  "right": 24
+ },
+ "separation": 6,
+ "tone": "light",
+ "font": {
+  "size": 22,
+  "bold": true,
+  "colors": {
+   "normal": "#2e2219",
+   "hover": "#2e2219",
+   "pressed": "#2e2219",
+   "on": "#2e2219",
+   "disabled": "#7d7064"
+  }
+ },
+ "note": "七个键一列、一样宽（212），间隔 6；字在牌身里居中（右边让出小尖的 16）。选中 = on，右边小尖指向格子；压灰 = 这一类没有可打的配方"
+}
