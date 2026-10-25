@@ -144,3 +144,24 @@ static func run_groups(t: TestCase) -> void:
 	t.eq(by["armor"], ["gambeson", "leather_armor", "plate_cuirass"], "护甲三张")
 	for g in SmithRecipeDef.GROUPS:
 		t.check(UiText.t("smithy.group_" + g) != "smithy.group_" + g, "%s 有名字" % g)
+
+
+## 游戏测试 v4.45：铺子里法杖排成 魔法杖、法师杖、大魔导杖、魔导杖（同级按文件名）—— 同级按产物档次排
+static func run_sorted_by_tier(t: TestCase) -> void:
+	t.begin("游戏测试 v4.45 · 铁匠铺配方顺序：先按铺子级数，同级按产物稀有度（魔导杖在大魔导杖前），再按 id")
+	var f := GameFlow.new()
+	f.items = T110._db()
+	f.smith_recipes = SmithRecipeDef.load_all()
+	var staffs: Array[String] = []
+	for r in f.sorted_smith_recipes():
+		if r.group == "staff":
+			staffs.append(String(r.output))
+	t.eq(staffs, ["magic_staff", "mage_staff", "magus_staff", "grand_magus_staff"] as Array[String], "法杖：魔法杖 → 法师杖 → 魔导杖 → 大魔导杖")
+	var sorted := f.sorted_smith_recipes()
+	var ok := true
+	for i in range(1, sorted.size()):
+		var a := sorted[i - 1]
+		var b := sorted[i]
+		ok = ok and (a.level < b.level or (a.level == b.level and f.items.get_def(a.output).rarity <= f.items.get_def(b.output).rarity))
+	t.check(ok, "整张表：级数不降，同级稀有度不降")
+
