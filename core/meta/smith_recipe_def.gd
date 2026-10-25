@@ -14,10 +14,13 @@ extends Resource
 @export var inputs: Dictionary = {}
 ## 要的钱
 @export var funds: int = 0
-## 251 补充一：铁匠铺左列的大类（刀剑 / 斧锤 / 弓 / 法杖 / 盾 / 护甲），导入器必填
-@export_enum("blade", "hammer", "bow", "staff", "shield", "armor") var group: String = ""
+## 251 补充一：铁匠铺左列的大类（刀剑 / 斧锤 / 弓 / 法杖 / 盾 / 护甲），导入器必填；252：冶炼 `smelt`（产物是素材）
+@export_enum("blade", "hammer", "bow", "staff", "shield", "armor", "smelt") var group: String = ""
 ## 铁匠铺几级才会打（1 ～ 3）
 @export_range(1, 3) var level: int = 1
+## 252：要先点出哪项科技才会打（空 = 不要科技）；[member tech_level] = 那项科技要几级
+@export var tech: StringName = &""
+@export var tech_level: int = 1
 ## 给界面看的一句
 @export var note: String = ""
 @export var notes: Dictionary = {}
@@ -32,8 +35,10 @@ static func load_all() -> Array[SmithRecipeDef]:
 	return out
 
 
-## 251 补充一：左列大类的先后（法杖暂无配方也列着）
-const GROUPS: Array[String] = ["blade", "hammer", "bow", "staff", "shield", "armor"]
+## 251 补充一：左列大类的先后（法杖暂无配方也列着）；252 末尾加冶炼
+const GROUPS: Array[String] = ["blade", "hammer", "bow", "staff", "shield", "armor", "smelt"]
+## 252：冶炼这一类的产物是素材，不是武器 / 防具
+const SMELT := "smelt"
 
 
 static func find(recipes: Array, p_id: StringName) -> SmithRecipeDef:

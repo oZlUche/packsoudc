@@ -1,0 +1,27 @@
+{
+  "id": "mithril_smelting",
+  "display_name": "秘银冶炼",
+  "display_names": {
+    "en": "Mithril Smelting"
+  },
+  "requires": [
+    "smithy"
+  ],
+  "description": "学会炼秘银：银锭加钱炼成秘银锭，再用它打更好的刀剑。",
+  "descriptions": {
+    "en": "Learn to smelt mithril: turn Silver Ingots and coins into Mithril Ingots, then forge better blades with them."
+  },
+  "effect": {
+    "type": "tech_recipes",
+    "tech": "mithril_smelting"
+  },
+  "tiers": [
+    {
+      "funds": 1500,
+      "items": {
+        "silver_ingot": 2,
+        "crystal_shards": 3
+      }
+    }
+  ]
+}

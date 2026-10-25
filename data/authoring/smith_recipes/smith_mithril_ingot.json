@@ -1,0 +1,11 @@
+{
+  "id": "smith_mithril_ingot",
+  "output": "mithril_ingot",
+  "inputs": {
+    "silver_ingot": 3
+  },
+  "funds": 150,
+  "group": "smelt",
+  "level": 2,
+  "tech": "mithril_smelting"
+}

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_recipes.gd" id="1_iqkhi"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_jy34w"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_6l6en"]
+
+[sub_resource type="Resource" id="Resource_r78r0"]
+script = ExtResource("1_iqkhi")
+tech = &"mithril_smelting"
+
+[sub_resource type="Resource" id="Resource_odi0p"]
+script = ExtResource("3_6l6en")
+funds = 1500
+items = {
+"crystal_shards": 3,
+"silver_ingot": 2
+}
+
+[resource]
+script = ExtResource("2_jy34w")
+id = &"mithril_smelting"
+display_name = "秘银冶炼"
+display_names = {
+"en": "Mithril Smelting"
+}
+requires = Array[StringName]([&"smithy"])
+description = "学会炼秘银：银锭加钱炼成秘银锭，再用它打更好的刀剑。"
+descriptions = {
+"en": "Learn to smelt mithril: turn Silver Ingots and coins into Mithril Ingots, then forge better blades with them."
+}
+effect = SubResource("Resource_r78r0")
+tiers = Array[ExtResource("3_6l6en")]([SubResource("Resource_odi0p")])

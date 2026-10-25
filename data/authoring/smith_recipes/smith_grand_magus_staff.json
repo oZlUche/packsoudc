@@ -1,0 +1,14 @@
+{
+  "id": "smith_grand_magus_staff",
+  "output": "grand_magus_staff",
+  "inputs": {
+    "fire_crystal_high": 1,
+    "magus_staff": 1,
+    "mithril_ingot": 2
+  },
+  "funds": 400,
+  "group": "staff",
+  "level": 3,
+  "tech": "staffcraft",
+  "tech_level": 3
+}

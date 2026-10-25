@@ -1,0 +1,20 @@
+{
+  "id": "wooden_stick",
+  "display_name": "木棍",
+  "display_names": {
+    "en": "Wooden Stick"
+  },
+  "description": "随手捡的直木棍。",
+  "descriptions": {
+    "en": "A straight stick picked up along the way."
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "material",
+    "nature"
+  ],
+  "material": "wood"
+}

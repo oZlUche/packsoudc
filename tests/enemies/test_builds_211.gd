@@ -177,7 +177,7 @@ static func _crystal_loaded(content: Dictionary, c: TestSupport.Content) -> bool
 	var board := EnemyKit.board_of(content, c.items)
 	var staff: ItemInstance = null
 	for inst in board.items():
-		if (inst as ItemInstance).def.id == &"magic_staff":
+		if (inst as ItemInstance).def.tags.has(&"staff"):     # 252：四阶各拿各的杖
 			staff = inst
 	if staff == null:
 		return false

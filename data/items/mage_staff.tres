@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_bgxsx"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_4f60o"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_3jsha"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_qd0fc"]
+[ext_resource type="Script" path="res://core/battle/cadences/cycle_cadence.gd" id="5_alrgx"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_li52l"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="7_yxrb3"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="8_rh25j"]
+[ext_resource type="Script" path="res://core/battle/effects/fire_loaded.gd" id="9_ptlab"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="10_2xhcd"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="11_wr1ib"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="12_6gxdm"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="13_ymq8c"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="14_88ewg"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="15_lnkwh"]
+
+[sub_resource type="Resource" id="Resource_7ldww"]
+script = ExtResource("3_3jsha")
+load_cells = Array[Vector2i]([Vector2i(-1, 0), Vector2i(1, 0)])
+
+[sub_resource type="Resource" id="Resource_ap7wk"]
+script = ExtResource("5_alrgx")
+seconds = 1.1
+
+[sub_resource type="Resource" id="Resource_2nk7y"]
+script = ExtResource("7_yxrb3")
+amount = 5.0
+metadata/part_ref = &"resource_5"
+
+[sub_resource type="Resource" id="Resource_up3xl"]
+script = ExtResource("9_ptlab")
+
+[sub_resource type="Resource" id="Resource_gxddr"]
+script = ExtResource("10_2xhcd")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_0no5c"]
+script = ExtResource("2_4f60o")
+trigger = SubResource("Resource_gxddr")
+cadence = SubResource("Resource_ap7wk")
+costs = Array[ExtResource("6_li52l")]([SubResource("Resource_2nk7y")])
+free_when_loaded = true
+effects = Array[ExtResource("8_rh25j")]([SubResource("Resource_up3xl")])
+
+[sub_resource type="Resource" id="Resource_oead6"]
+script = ExtResource("11_wr1ib")
+base_stats = {
+"damage": 8
+}
+rules = Array[ExtResource("2_4f60o")]([SubResource("Resource_0no5c")])
+
+[sub_resource type="Resource" id="Resource_f7py5"]
+script = ExtResource("15_lnkwh")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+
+[resource]
+script = ExtResource("14_88ewg")
+id = &"mage_staff"
+display_name = "法师杖"
+display_names = {
+"en": "Mage Staff"
+}
+description = "熟练的魔法师用的杖，比魔法杖出手更快。杖头两侧的装载槽放魔晶石，按顺时针一颗一颗读，打出各自的元素伤害。颗与颗之间走单次冷却，一轮读完歇一个总冷却。装着魔晶石时出手不耗耐力。"
+descriptions = {
+"en": "A practised mage's staff, quicker than a Magic Staff. Put Crystals in the loading slots on either side of its head; it reads them one at a time, clockwise, dealing each one's elemental damage. One single Cooldown between Crystals, one total Cooldown of rest after each full round. While a Crystal is loaded, it costs no Stamina."
+}
+shape = SubResource("Resource_f7py5")
+rarity = 2
+tags = Array[StringName]([&"weapon", &"melee", &"staff", &"magic"])
+material = "wood"
+combat = SubResource("Resource_oead6")
+adjacency = SubResource("Resource_7ldww")

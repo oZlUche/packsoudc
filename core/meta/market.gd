@@ -33,7 +33,7 @@ static func candidates(rules: MarketRules, items: ItemDatabase, lv: int) -> Dict
 		var d := items.get_def(id)
 		if d == null or d.is_bag or d.is_bullion() or d.is_valuable() or d.is_token() or d.is_sealed() or d.has_faith():
 			continue
-		if d.tags.any(func(t: StringName) -> bool: return rules.excluded_tags.has(t)):
+		if d.tags.any(func(t: StringName) -> bool: return rules.excluded_tags.has(t)) or rules.excluded_ids.has(d.id):
 			continue
 		if not d.tags.any(func(t: StringName) -> bool: return rules.allowed_tags.has(t)):
 			continue

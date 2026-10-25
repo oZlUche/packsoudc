@@ -195,6 +195,7 @@ const TECH_EFFECTS := {
 	&"tech_safe_size": "res://core/meta/techs/tech_safe_size.gd",     # 118
 	&"tech_belt_grant": "res://core/meta/techs/tech_belt_grant.gd",     # 160 补一
 	&"tech_facility": "res://core/meta/techs/tech_facility.gd",     # 251
+	&"tech_recipes": "res://core/meta/techs/tech_recipes.gd",     # 252
 }
 
 

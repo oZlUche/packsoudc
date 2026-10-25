@@ -34,5 +34,8 @@
     "keepsake",
     "token",
     "sealed"
+  ],
+  "excluded_ids": [
+    "mithril_ingot"
   ]
 }

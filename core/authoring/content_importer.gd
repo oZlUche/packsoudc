@@ -169,6 +169,11 @@ class Context:
 
 	## id -> TechDef（118）。树（前置、成环、撞位）全部导完才查得全
 	var techs: Dictionary = {}
+	## id -> SmithRecipeDef（252：配方要的科技等科技导完才查）
+	var smith_recipes: Dictionary = {}
+
+	func register_smith_recipe(def: SmithRecipeDef) -> void:
+		_put(smith_recipes, def)
 
 	func register_tech(def: TechDef) -> void:
 		_put(techs, def)
@@ -918,7 +923,8 @@ static func import_recipe(data: Dictionary, ctx: Context, report: ImportReport) 
 	return def
 
 
-## 251：铁匠铺配方 —— 产物得是道具库里的武器 / 防具 / 盾，素材都得在、件数至少 1，钱不为负，级 1 ～ 3；补充一：大类必填
+## 251：铁匠铺配方 —— 产物得是道具库里的武器 / 防具 / 盾，素材都得在、件数至少 1，钱不为负，级 1 ～ 3；补充一：大类必填。
+## 252：冶炼类（`smelt`）的产物得是素材；写了科技的，科技在不在、级数够不够等全部导完再查（[method validate_smith_recipe_techs]）
 static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportReport) -> SmithRecipeDef:
 	var def := SmithRecipeDef.new()
 	_fill(def, data, "", ctx, report)
@@ -929,6 +935,9 @@ static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportRe
 		var out: ItemDef = ctx.items.get(def.output, null)
 		if out == null:
 			report.error("output", "道具库里没有 %s" % def.output)
+		elif def.group == SmithRecipeDef.SMELT:
+			if not out.tags.has(&"material"):
+				report.error("output", "冶炼的产物得是素材：%s 不是" % def.output)
 		elif not SMITH_OUTPUT_TAGS.any(func(t: StringName) -> bool: return out.tags.has(t)):
 			report.error("output", "铁匠铺只打武器 / 防具 / 盾 / 插件：%s 不是" % def.output)
 	if def.inputs.is_empty():
@@ -944,7 +953,29 @@ static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportRe
 		report.error("level", "铁匠铺只有 1 ～ 3 级")
 	if not SmithRecipeDef.GROUPS.has(def.group):     # 251 补充一：左列按它分组
 		report.error("group", "配方得写大类（%s）" % " / ".join(PackedStringArray(SmithRecipeDef.GROUPS)))
+	if def.tech_level < 1:
+		report.error("tech_level", "科技级数至少 1")
+	ctx.register_smith_recipe(def)
 	return def
+
+
+## 252：全部导完后查配方要的科技 —— 科技得在，级数不超过它的级数上限
+static func validate_smith_recipe_techs(ctx: Context, report: ImportReport) -> void:
+	var ids: Array = ctx.smith_recipes.keys()
+	ids.sort()
+	for id in ids:
+		var r := ctx.smith_recipes[id] as SmithRecipeDef
+		if r.tech == &"":
+			continue
+		var t := ctx.techs.get(r.tech, null) as TechDef
+		if t == null:
+			report.error("smith_recipes/%s.tech" % id, "科技 %s 不存在" % r.tech)
+		elif r.tech_level > t.tiers.size():
+			report.error("smith_recipes/%s.tech_level" % id, "科技 %s 只有 %d 级，写了 %d" % [r.tech, t.tiers.size(), r.tech_level])
+	for tid in ctx.techs:
+		var e := (ctx.techs[tid] as TechDef).effect as TechRecipes
+		if e != null and e.tech != tid:
+			report.error("techs/%s.effect.tech" % tid, "解锁配方的科技得写自己的 id（写了 %s）" % e.tech)
 
 
 ## 251：铁匠铺能打的产物得带其中一个标签

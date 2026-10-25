@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_1mi8u"]
+
+[resource]
+script = ExtResource("1_1mi8u")
+id = &"smith_magus_staff"
+output = &"magus_staff"
+inputs = {
+"fire_crystal": 1,
+"ironwood_branch": 1,
+"mithril_ingot": 1
+}
+funds = 200
+group = "staff"
+level = 3
+tech = &"staffcraft"
+tech_level = 3

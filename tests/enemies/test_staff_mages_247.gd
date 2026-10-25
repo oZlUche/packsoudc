@@ -13,6 +13,8 @@ static func _tier_of(id: StringName) -> String:
 	var s := String(id)
 	return "high" if s.ends_with("_high") else ("low" if s.ends_with("_low") else "mid")
 
+## 252：四阶各拿哪根杖
+const STAFF_OF := {&"apprentice_mage": &"magic_staff", &"adept_mage": &"mage_staff", &"magus": &"magus_staff", &"grand_magus": &"grand_magus_staff"}
 
 static func run_defs(t: TestCase) -> void:
 	t.begin("247 §一：四阶都在库里 —— 名字、本色档位、生命；法杖招牌、魔法流派、人形")
@@ -26,7 +28,8 @@ static func run_defs(t: TestCase) -> void:
 		t.eq(Names.of(d, "en"), row[2], "英文名")
 		t.eq(d.strength, row[3], "%s 本色档位 %d" % [row[1], row[3]])
 		t.eq(float(d.base_stats.get("max_hp", 0)), float(row[4]), "%s 生命 %d" % [row[1], row[4]])
-		t.check(d.signature.has(&"magic_staff") and d.schools.has(&"magic") and d.species == &"human", "%s：法杖、魔法、人形" % row[1])
+		var staff: StringName = STAFF_OF[row[0]]     # 252 待定 2：四阶各拿对应的杖
+		t.check(d.signature.has(staff) and d.schools.has(&"magic") and d.species == &"human", "%s：%s、魔法、人形" % [row[1], staff])
 
 
 static func run_builds(t: TestCase) -> void:
