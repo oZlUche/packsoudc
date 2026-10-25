@@ -99,6 +99,8 @@ var _cell: float = InventoryView.CELL
 var _rot: int = 0
 ## 162 补充二：从地上拿起，放回离原处这么近（像素）以内算「放回原处」（就地，不掉）
 const PUT_BACK_PX := 4.0
+## 253：光标出了棋盘多少格以内还算吸回棋盘（再远就是地上）
+const SNAP_BACK_CELLS := 0.5
 ## 非空表示正在拖一个带内容物的包，内容为 detach_bag 的载荷
 var _payload: Dictionary = {}
 
@@ -311,7 +313,9 @@ static func shown(view: Control) -> bool:
 
 ## 光标在格子视图外一点、但被拖的东西（按抓取点反推的整块）有一半以上压在视图里：算落在那个视图上（吸附范围）。
 ## 反馈（开局拖物品：整体对不准，背包在左上角时最明显）：抓着物品的某一格拖向左上角时，光标先出了棋盘边界，
-## 物品其实大半还在棋盘上，却被当成「棋盘外」退回去了
+## 物品其实大半还在棋盘上，却被当成「棋盘外」退回去了。
+## 253（作者 2026-10-25「道具拿出棋盘外时有时候会吸附在背包界面的边缘，尤其是上缘」）：光标还得离棋盘露出来的那块不超过
+## [constant SNAP_BACK_CELLS] 格 —— 抓着长条下端往上拖、光标早出了上沿，不再因为整块还压着一半就钉回第一行
 func _view_under_footprint(global_pos: Vector2) -> ContainerView:
 	if _inst == null or _inst.def == null:
 		return null
@@ -325,12 +329,20 @@ func _view_under_footprint(global_pos: Vector2) -> ContainerView:
 	for view in _views:
 		if not (view is InventoryView) or not shown(view) or (view as InventoryView).inventory == null:
 			continue
-		var hit := visible_rect(view).intersection(rect)
+		var vis := visible_rect(view)
+		if _outside_by(vis, global_pos) > SNAP_BACK_CELLS * (view as InventoryView).cell_px:
+			continue
+		var hit := vis.intersection(rect)
 		var area := hit.size.x * hit.size.y if hit.size.x > 0.0 and hit.size.y > 0.0 else 0.0
 		if area * 2.0 > rect.size.x * rect.size.y and area > best_area:
 			best = view
 			best_area = area
 	return best
+
+
+## 点 [param p] 在矩形 [param r] 外多远（在里面 = 0；按横、竖两向里远的那个）
+static func _outside_by(r: Rect2, p: Vector2) -> float:
+	return maxf(maxf(r.position.x - p.x, p.x - r.end.x), maxf(maxf(r.position.y - p.y, p.y - r.end.y), 0.0))
 
 
 static func _footprint_cells(cells: Array[Vector2i]) -> Vector2i:
