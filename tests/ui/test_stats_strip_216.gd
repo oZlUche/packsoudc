@@ -18,7 +18,7 @@ static func _flow(prefix: String) -> GameFlow:
 
 
 static func frame_refresh(t: TestCase, root: Window) -> void:
-	t.begin("216 · 数值栏：耐力档 / 耗 · 回、DPS 和战前屏同一个数、负重「当前 / 上限」与档名；三张总在（不算负重的章负重签照样在，小字空着）；字里没有「停上去」「按住」")
+	t.begin("216 · 数值栏：耐力档 / 耗 · 回、DPS 和战前屏同一个数、负重「当前 / 上限」与档名；三张总在（不算负重的章负重签照样在，小字写「不计负重」）；字里没有「停上去」「按住」")
 	var f := _flow("strip216a")
 	var run := f.run
 	var strip := StatsStrip.new()
@@ -45,12 +45,12 @@ static func frame_refresh(t: TestCase, root: Window) -> void:
 	t.eq(strip.shown(), StatsStrip.ORDER, "不算负重：负重签照样在")
 	var cap := run.carry_capacity()
 	var want_main := "%d / %d" % [run.carry_weight(), cap] if cap > 0 else str(run.carry_weight())
-	t.eq(strip.texts(StatsStrip.LOAD), [want_main, ""] as Array[String], "不算负重：大字「当前 / 上限」（没上限只写当前），小字空着")
+	t.eq(strip.texts(StatsStrip.LOAD), [want_main, "不计负重"] as Array[String], "不算负重：大字「当前 / 上限」（没上限只写当前）；作者 10-25：小字写状态「不计负重」")
 	t.check(strip.tip_text(StatsStrip.LOAD).contains("不算负重"), "悬浮窗说这一章不算负重")
 	var ch := run.character
 	run.character = null     # 没角色 = 没上限
 	strip.refresh(spec, run)
-	t.eq(strip.texts(StatsStrip.LOAD), [str(run.carry_weight()), ""] as Array[String], "没上限：只写当前重量")
+	t.eq(strip.texts(StatsStrip.LOAD), [str(run.carry_weight()), "不计负重"] as Array[String], "没上限：只写当前重量")
 	run.character = ch
 	strip.refresh(spec, null)
 	t.eq(strip.shown(), [StatsStrip.STAMINA, StatsStrip.DPS] as Array[StringName], "没有这一局（run 为 null）：只排两张")

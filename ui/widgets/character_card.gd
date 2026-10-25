@@ -1,6 +1,6 @@
 ## 223（作者 2026-10-21 16:07 选蜡板、甲 角色卡）：背包窗右栏名牌下面那张角色卡 ——「这个人是谁」，开包时随时可看，没有零行。
 ##
-## 身体三行（生命上限 / 耐力上限 / 回气 每秒）= [method RunState.effective_baseline]（局外加成、信仰、难度、角色被动乘完之后的数），
+## 身体三行（生命上限 / 耐力上限 / 耐力恢复/秒）= [method RunState.effective_baseline]（局外加成、信仰、难度、角色被动乘完之后的数），
 ## 比角色本身的基线多或少就在数后面写 ▲N / ▼N，停上去看是谁给的；下面两条被动（名字 + 现成的一句说明，写全文：英文按词折行，卡跟着长高）。
 ## 画法读 `assets/ui/stats_panel/`（`card_wax` 九宫底板、`layout.json` 的卡内坐标与字色，美术设计出）；行间刻线由代码画
 class_name CharacterCard
@@ -164,11 +164,11 @@ func _row(run: RunState, stat: StringName, value: float, own: float) -> Dictiona
 	var regen := stat == BattleStats.REGEN_STAMINA
 	var shown := snappedf(value, 0.1) if regen else float(roundi(value))
 	var delta := snappedf(value - own, 0.1) if regen else float(roundi(value) - roundi(own))
-	var lines: Array[String] = [UiText.t("card.tip_line") % [UiText.t(ROW_KEYS[stat]) + (" " + UiText.t("card.per_sec") if regen else ""), _num(shown, regen)],
+	var lines: Array[String] = [UiText.t("card.tip_line") % [UiText.t(ROW_KEYS[stat]), _num(shown, regen)],
 		UiText.t("card.tip_base") % _num(snappedf(own, 0.1) if regen else float(roundi(own)), regen)]
 	for s in sources(run, stat):
 		lines.append(UiText.t("card.tip_source") % [String(s["name"]), _signed(snappedf(float(s["delta"]), 0.1) if regen else float(roundi(float(s["delta"]))), regen)])
-	return {"label": UiText.t(ROW_KEYS[stat]), "unit": UiText.t("card.per_sec") if regen else "", "value": _num(shown, regen),
+	return {"label": UiText.t(ROW_KEYS[stat]), "unit": "", "value": _num(shown, regen),
 		"delta": delta, "regen": regen, "tip": "\n".join(lines)}
 
 

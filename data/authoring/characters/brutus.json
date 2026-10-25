@@ -32,16 +32,13 @@
       "display_names": {
         "en": "Raised in the Wild"
       },
-      "description": "休息时额外恢复 {rest_bonus_amount} 点体力；侵蚀扣除体力时减少 {erosion_resist_amount} 点。",
+      "description": "休息时额外恢复 {rest_bonus_amount} 点体力。",
       "descriptions": {
-        "en": "Restore {rest_bonus_amount} extra Vitality when resting; Erosion takes {erosion_resist_amount} less Vitality."
+        "en": "Restore {rest_bonus_amount} extra Vitality when resting."
       },
       "passive": [
         {
           "type": "rest_bonus"
-        },
-        {
-          "type": "erosion_resist"
         }
       ]
     },
@@ -52,9 +49,9 @@
       "display_names": {
         "en": "Tough"
       },
-      "description": "战斗中生命低于三成时，立即获得一层护甲（每场一次）。",
+      "description": "战斗中生命低于 {percent}% 时，立即获得 {apply_status_amount} 点护甲（每场一次）。",
       "descriptions": {
-        "en": "When your Health drops below three tenths in battle, gain a stack of Armor at once (once per battle)."
+        "en": "When your Health drops below {percent}% in battle, gain {apply_status_amount} Armor at once (once per battle)."
       },
       "rules": [
         {

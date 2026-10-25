@@ -348,8 +348,8 @@ func _load_block(run: RunState) -> Dictionary:
 	var cap := run.carry_capacity()
 	var main := "%d / %d" % [weight, cap] if cap > 0 else str(weight)
 	var line := run.encumbrance_line()
-	if line == "":     # 这一章不算负重：没有档（战前准备屏那排窄签副行写「负重」）
-		return {"main": main, "sub": UiText.t("strip.load") if _inlay == "narrow" else "", "main_color": _main_color(), "sub_color": _sub_color(), "sub_bold": false,
+	if line == "":     # 这一章不算负重：没有档（战前准备屏那排窄签副行写「负重」；作者 10-25：别的签副行也写状态「不计负重」，不空着）
+		return {"main": main, "sub": UiText.t("strip.load") if _inlay == "narrow" else UiText.t("strip.load_not_counted"), "main_color": _main_color(), "sub_color": _sub_color(), "sub_bold": false,
 			"tip": UiText.t("strip.load_off") % main}
 	var lv := run.encumbrance_level()
 	var level_name := run.encumbrance.name_of(lv)

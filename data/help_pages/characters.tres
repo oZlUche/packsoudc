@@ -14,7 +14,7 @@ text = "每个角色的不同只有两样：初始面板（棋盘大小、生命
 
 安德烈乌斯擅长逃跑。被动「熟门熟路」：每走几步，下一步不计入倒计时。被动「溜得掉」：猎手更难发现他，逃跑更容易，头一回输给节点敌人不扣体力。他带的钱最多；短板是棋盘最窄，生命和负重都最低。
 
-布鲁图斯擅长生存。被动「野地里长大」：休息多回体力，侵蚀扣体力时少扣。被动「坚韧」：战斗里生命掉到三成以下时得到一层护甲，每场一次。他的棋盘最宽，生命和体力上限最高；但耐力回得慢、带的钱少，也没有逃跑和爆发的手段。
+布鲁图斯擅长生存。被动「野地里长大」：休息多回体力。被动「坚韧」：战斗里生命掉到三成以下时立刻得到一笔护甲，每场一次。他的棋盘最宽，生命和体力上限最高；但耐力回得慢、带的钱少，也没有逃跑和爆发的手段。
 
 马库斯擅长战斗。被动「军功」：打赢的钱更多。被动「操练」：战斗里耐力快见底时立刻回一段，每场一次。他的耐力最高、耐力回得最快，但初始包的格子最少，地图上没有任何便利。"
 texts = {
@@ -22,7 +22,7 @@ texts = {
 
 Andreus excels at escaping. Passive \"Old Paths\": every few steps, the next step doesn't count against the Countdown. Passive \"Slippery\": hunters have a harder time spotting him, escaping is easier, and his first loss to a node enemy costs no Vitality. He carries the most coins; his weakness is the narrowest board and the lowest Health and Load.
 
-Brutus excels at survival. Passive \"Raised in the Wild\": resting restores more Vitality, and Erosion takes less Vitality. Passive \"Tough\": in battle, when his Health drops below thirty percent, he gains one stack of Armor, once per battle. He has the widest board and the highest max Health and Vitality, but his Stamina regenerates slowly, he carries few coins, and he has no way to escape or burst.
+Brutus excels at survival. Passive \"Raised in the Wild\": resting restores more Vitality. Passive \"Tough\": in battle, when his Health drops below thirty percent, he gains a burst of Armor at once, once per battle. He has the widest board and the highest max Health and Vitality, but his Stamina regenerates slowly, he carries few coins, and he has no way to escape or burst.
 
 Marcus excels at combat. Passive \"Spoils of War\": he earns more coins from victories. Passive \"Drill\": in battle, when his Stamina is nearly empty, he instantly regains a chunk of it, once per battle. He has the highest Stamina and the fastest Stamina regen, but his starting bags have the fewest cells, and he gets no help on the map."
 }
