@@ -191,3 +191,5 @@ Market / Smithy 两个核心类、配方 json 的其他字段、上货时机、�
 ### 12.3 测试
 
 `test_meta_full_tabs_251.gd`：切到 market / smithy 时 `_right` 不可见、中列宽 = 屏宽 − 两边距 − 左列；切回 warehouse 恢复；买一件后仓库多一件且告示含「进了仓库」。`RecipeScroll` 的 tone 为 dark、字色为浅色。
+
+**12.1 补（美术定稿 14:23）**：底图实际为 **1300 × 950**（另有 @2x 2600 × 1900）—— 是 1600 × 1000 整页里中列 + 右列那一块，左列按钮不在底图里；执行按「包含」缩放居中即可，layout 坐标按底图像素、`size` 写 `[1300, 950]`。集市 layout：sign / funds / tables（一张）/ cell / spots（8 个 foot + scale）。铁匠铺 layout：keys / grid / scroll / funds / sign，另有 `face`（原尺寸时砧面上放内容的区）、`plate_nine`（九宫格四边）、`pointer`、`text_light #f0e8d8`、`text_missing #ff8a6a`，`tone: dark`。`smithy/anvil_plate.png` 是整块非矩形的铁砧剪影（九宫格横拉不变形）、`anvil_pointer.png` 指向选中格的小尖、`forge_key*.png` 四态 250 × 100 不带字（键面见 `forge_key.json`）。文件在 `/mnt/project-files/art/ui/base251/final/`（README.md 有说明），经 UI替换美术 转执行。
