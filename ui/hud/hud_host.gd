@@ -94,8 +94,8 @@ func setup(run: RunState, screen: Control, p_layout: HudLayout) -> void:
 		w.resized.connect(_queue_arrange)
 		w.visibility_changed.connect(_queue_arrange)
 		var ground := GroundLayer.current()
-		if ground != null:
-			ground.reserve(w)
+		if ground != null and w.id == &"hud_bar":
+			ground.reserve(w)     # 253（作者 2026-10-25「碰撞要无视左下角和右下角的UI组件，直接掉落在前面」）：只有顶端栏占地，角落组件不是墙、不托东西
 	if widgets.has(&"hud_bar"):
 		move_child(widgets[&"hud_bar"], 0)     # 166：栏垫在别的组件下面（同一层里先画）
 	arrange()

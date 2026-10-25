@@ -219,7 +219,7 @@ static func run_click_then_double_click(t: TestCase) -> void:
 
 
 static func frame_fall_onto_panels(t: TestCase, root: Window) -> void:
-	t.begin("162 补充二 · 落在正下方第一个支撑上：面板上沿或屏幕底；面板关了托在上面的再掉一次；没起点的从落点上方竖直落下（不再从面板边斜飞）")
+	t.begin("162 补充二 → 253 · 竖直掉到屏幕底（或别的东西顶上）：登记面板不再是桌面，掉过窗面；落在贴地面板底下的往两边推开；面板关了不再掉一次；没起点的从落点上方竖直落下")
 	ItemInstance.reset_uid_counter()
 	var gun := G._def(&"t_gun", ["1"])
 	var stash := ItemStash.new(4, 0)
@@ -243,28 +243,36 @@ static func frame_fall_onto_panels(t: TestCase, root: Window) -> void:
 	ground._scan()
 	var target := ground.item_rect(a.uid).position
 	t.eq(ground.landing_pose(a.uid)["pos"], target - Vector2(0, GroundLayer.LAND_DROP), "没起点：从落点正上方 %.0f 像素落下" % GroundLayer.LAND_DROP)
-	# 起点在面板正上方：落在面板上沿
+	# 253：起点在面板正上方也竖直掉过窗面（面板不是桌面），落到屏幕底
 	var b := ItemInstance.create(gun)
 	stash.insert(b, -1, Vector2(0.1, 0.1))
 	stash.landing_from[b.uid] = Vector2(700, 100)
-	# 起点不在面板上方：落到屏幕底
 	var c := ItemInstance.create(gun)
 	stash.insert(c, -1, Vector2(0.1, 0.1))
 	stash.landing_from[c.uid] = Vector2(100, 100)
 	ground._scan()
 	var rb := ground.item_rect(b.uid)
-	t.check(absf(rb.position.x - 700.0) < 0.01 and absf(rb.end.y - 300.0) < 0.5, "面板正上方：落在面板上沿（%s）" % rb)
-	t.eq(ground.support_of(b.uid), panel, "记下托着它的面板")
+	t.check(absf(rb.position.x - 700.0) < 0.01 and absf(rb.end.y - floor_y) < 0.5, "253：面板正上方也掉过窗面、落到屏幕底（%s）" % rb)
 	var rc := ground.item_rect(c.uid)
 	t.check(absf(rc.position.x - 100.0) < 0.01 and absf(rc.end.y - floor_y) < 0.5, "旁边没面板：落到屏幕底（%s）" % rc)
-	t.is_null(ground.support_of(c.uid), "屏幕底不算面板")
 	ground.advance_landing(5.0)
-	# 面板关了：b 从面板上沿再掉到屏幕底，c 不动
+	ground.settle_bumps()
 	ground.unreserve(panel)
-	t.check(ground.is_landing(b.uid) and not ground.is_landing(c.uid), "面板关了：托在上面的再掉，别的不动")
-	t.check((ground.landing_pose(b.uid)["pos"] as Vector2).distance_to(rb.position) < 0.01, "从面板上沿起落（%s → %s）" % [rb.position, ground.landing_pose(b.uid)["pos"]])
-	t.check(absf(ground.item_rect(b.uid).end.y - floor_y) < 0.5, "掉到屏幕底")
-	t.is_null(ground.support_of(b.uid), "不再记面板")
+	t.check(not ground.is_landing(b.uid) and not ground.is_landing(c.uid), "253：面板关了没有东西再掉一次")
+	# 253：落点在一块贴地的面板底下 —— 落稳时往左右推到面板外，仍在地上
+	var low := Control.new()
+	low.position = Vector2(1200, floor_y - 200)
+	low.size = Vector2(300, 260)
+	host.add_child(low)
+	ground.reserve(low)
+	var d := ItemInstance.create(gun)
+	stash.insert(d, -1, Vector2(0.1, 0.1))
+	stash.landing_from[d.uid] = Vector2(1300, 100)
+	ground._scan()
+	ground.advance_landing(5.0)
+	ground.settle_bumps()
+	var rd := ground.item_rect(d.uid)
+	t.check(not rd.intersects(Rect2(low.position, low.size)) and absf(rd.end.y - floor_y) < 0.5, "253：落在窗底下的推到窗侧、仍在地上（%s）" % rd)
 	host.free()
 
 
