@@ -60,6 +60,11 @@ static func frame_unarmed(t: TestCase, root: Window) -> void:
 		t.eq(pre.can_start(), "", "空手也能开战")
 		t.check(not pre._start_btn.disabled, "「开战」不灰")
 		t.eq(pre._why.text, UiText.t("pre.no_attacker"), "只提醒一句")
+		# 256 补（架构 17:05）：那句不另起一行 —— 写在旗旁边的便条上，铜面板不超出顶端栏下面
+		t.check(pre._why_note.visible and pre._why_note.get_parent() == pre._start_btn.get_parent(), "提示在开战那一行、旗旁边的便条上")
+		var fit := 1000.0 - 16.0 - HudHost.bar_height_in(root.get_tree())
+		pre.overlay_frame().custom_minimum_size = Vector2.ZERO
+		t.check(pre.overlay_frame().get_combined_minimum_size().y <= fit, "战前面板高 %.0f ≤ %.0f" % [pre.overlay_frame().get_combined_minimum_size().y, fit])
 		# 248：看得见的战斗 / 精英点，战前屏左下角一颗平的「退回」（作者 14:44 选丙「回头脚印」石键，字由代码写）
 		var rb: IconButton = pre.retreat_button()
 		t.check(rb != null and rb.art_label == UiText.t("pre.retreat") and rb.get_parent().get_index() == 0, "248：左下角有「退回」")

@@ -59,13 +59,6 @@ static func _cost_factor(run: RunState, uid: int) -> float:
 	return StatMath.to_float(CombatantRuntime.from_spec(run.compile_player(), 0).item_cost_factor(uid))
 
 
-## 战前 / 回放两块铜面板一样大是靠一份静态的「见过的最大尺寸」（GameScreen._duel_min）：这里空棋盘的战前屏多一行提示，
-## 别让它的尺寸带进后面的套件（157 量的是自己那一屏）
-static func _forget_duel_size() -> void:
-	GameScreen._duel_view = Vector2.ZERO
-	GameScreen._duel_min = Vector2.ZERO
-
-
 ## 256 定稿（作者 15:48，报告 §8.13 / docs/characters.md）：id → [生命, 耐力, 耐力回复, 体力, 棋盘, 负重, 技能 id]
 const FINAL := {
 	&"marcus": [55.0, 65.0, 5.0, 5, Vector2i(8, 6), 48, [&"drill"]],
@@ -378,7 +371,6 @@ static func frame_prebattle_ambush(t: TestCase, root: Window) -> void:
 	t.eq(flow.screen, GameFlow.Screen.BATTLE, "按下直接开打")
 	t.eq(flow.run.skills.uses_of(&"ambush"), 2, "用掉一次（3 → 2）")
 	game.free()
-	_forget_duel_size()
 	Support.cleanup("256f")
 
 
@@ -442,7 +434,6 @@ static func frame_ransom_screen(t: TestCase, root: Window) -> void:
 	t.check(run.board.has_item(knife.uid) or run.storage.has_item(knife.uid), "不求饶：托盘上的刀回来了")
 	t.eq(run.vitality.current, v - 1, "扣了体力")
 	game.free()
-	_forget_duel_size()
 	Support.cleanup("256g")
 
 

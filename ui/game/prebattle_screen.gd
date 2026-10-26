@@ -30,6 +30,9 @@ var _col: VBoxContainer = null
 const FIGHT_ART := "res://assets/ui/battle/"
 const FIGHT_HIT := Rect2(22, 10, 156, 108)
 var _why: Label
+## 256 补（架构 2026-10-26 17:05）：「为什么开不了 / 空棋盘」那句写在旗旁边的一张便条上 —— 不另起一行（铜面板不超出顶端栏下面），226 落在纸上
+var _why_note: PanelContainer = null
+const WHY_W := 200.0
 var _slip_btn: Button = null
 ## 256：偷袭（安德烈乌斯）的平石键（作者 15:49 定稿：和「退回」同一种四态整图 `battle/ambush_key*`，字由代码写）
 var _ambush_btn: IconButton = null
@@ -57,7 +60,8 @@ func open(payload: Dictionary) -> void:
 	_type = StringName(String(payload.get("type", "battle")))
 	# 铜面板三屏（UI替换美术 bronze3，作者 2026-10-21 16:15）：铜面板、没有标题条和玩法说明；两列中间一条刻线中缝，正中一枚双剑铜章
 	var panel := _bronze_panel(Vector2(0, 0), PANEL_MARGIN)
-	var col := _vbox(14)
+	# 256 补（架构 17:05）：铜面板不超出顶端栏下面（1000 − 16 − 顶端栏 = 884）—— 对手六行的棋盘时两排之间只留 4（旗图上沿自带 10 的透明边，看着仍是 14）
+	var col := _vbox(4)
 	panel.add_child(col)
 	_col = col
 
@@ -108,7 +112,7 @@ func open(payload: Dictionary) -> void:
 	row.move_child(_right, 0)     # 自己那列放最左，中缝其次，对手那列在右
 	row.move_child(_lane, 1)
 
-	# 「开战」居中、主档；腰带件在左，信仰 / 技能给的动作在右，原因写在下面一行
+	# 「开战」居中、主档；腰带件在左，信仰 / 技能给的动作在右，开不了的原因写在旗右边的便条上
 	var buttons := _hbox(10)
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	_belt_row = _hbox(10)     # 147：腰带里能在战前用的（160：名字后面带数量）
@@ -117,6 +121,15 @@ func open(payload: Dictionary) -> void:
 	flag.hit_rect = FIGHT_HIT if flag.has_art() else Rect2()
 	_start_btn = flag
 	buttons.add_child(_start_btn)
+	_why_note = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, 12, 18, 12, 8)     # 上边给图钉留地方（同熔炉的便条）
+	UiTheme.apply_tone(_why_note, UiTheme.PANEL_SUMMARY_NOTE)
+	_why_note.name = "WhyNote"
+	_why_note.visible = false
+	_why = _wrapped("", 13, UiTheme.INK_WARN, WHY_W)
+	_why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_why.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_why_note.add_child(_why)
+	buttons.add_child(_why_note)
 	# 093（蛮神 3 级）：信仰级效果给的额外动作。188 补充一：一条效果可以给几个（耗体力 / 耗信力立即击败），不够的灰着、写原因
 	var altar := AltarModule.of(flow.run)     # 101：信仰级效果在神坛模块里取
 	for p in (altar.perks() if altar != null else []):
@@ -157,9 +170,6 @@ func open(payload: Dictionary) -> void:
 	mirror.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	foot.add_child(mirror)
 	col.add_child(foot)
-	_why = _label("", 13, UiPalette.STAMINA)
-	_why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(_why)
 	flow.run.board.changed.connect(_refresh)
 	var belt := BeltModule.of(flow.run)
 	if belt != null:
@@ -352,7 +362,7 @@ func _refresh() -> void:
 		_lane.set_enabled(why == "")     # 2026-10-22：铜章跟着「开战」一起灰、一起亮
 	(_start_btn as IconButton).sync_art()
 	_why.text = why if why != "" else (UiText.t("pre.no_attacker") if unarmed() else "")
-	_why.visible = _why.text != ""     # 空着不占一行
+	_why_note.visible = _why.text != ""     # 空着不占地方
 	if _slip_btn != null:
 		var slip := flow.slip_skill()
 		var left := flow.run.skills.uses_of(slip.id)
