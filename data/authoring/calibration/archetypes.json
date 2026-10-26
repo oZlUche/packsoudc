@@ -6085,5 +6085,5432 @@
       20,
       -1
     ]
+  },
+  "blade/0/0": {
+    "archetype": "blade",
+    "bracket": 0,
+    "seed": 0,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "shortsword",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bandage_roll",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "warhammer",
+      "shortsword",
+      "bandage_roll"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 31.5,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade/0/1": {
+    "archetype": "blade",
+    "bracket": 0,
+    "seed": 1,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "knife",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "tower_shield",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_long",
+      "bag_long",
+      "bag_long"
+    ],
+    "picked": [
+      "knife",
+      "tower_shield"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 5.25,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade/0/2": {
+    "archetype": "blade",
+    "bracket": 0,
+    "seed": 2,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "scimitar",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magic_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "brass_plating",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "scimitar",
+      "magic_staff",
+      "brass_plating"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 13.1249997913838,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade/1/0": {
+    "archetype": "blade",
+    "bracket": 1,
+    "seed": 0,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "brass_plating",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 1
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "bloodletter",
+      "mage_staff",
+      "brass_plating"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 21.9545452890317,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade/1/1": {
+    "archetype": "blade",
+    "bracket": 1,
+    "seed": 1,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "shortsword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "knife",
+        "origin": [
+          1,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mainspring",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "shortsword",
+      "knife",
+      "antidote_satchel",
+      "mainspring"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 15.75,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade/1/2": {
+    "archetype": "blade",
+    "bracket": 1,
+    "seed": 2,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "longsword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          0,
+          1
+        ],
+        "rot": 1
+      },
+      {
+        "id": "steam_vent",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
+        "origin": [
+          3,
+          1
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "longsword",
+      "mage_staff",
+      "steam_vent",
+      "strong_salve"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 18.1363634708499,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade/2/0": {
+    "archetype": "blade",
+    "bracket": 2,
+    "seed": 0,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "war_pack",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
+        "id": "cleaver",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "tower_shield",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "war_pack"
+    ],
+    "picked": [
+      "cleaver",
+      "magus_staff",
+      "tower_shield",
+      "antidote_satchel"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 18.9,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade/2/1": {
+    "archetype": "blade",
+    "bracket": 2,
+    "seed": 1,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_kit",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "bloodletter",
+      "warhammer",
+      "magus_staff",
+      "antidote_kit",
+      "strong_salve"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 45.8181818181818,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade/2/2": {
+    "archetype": "blade",
+    "bracket": 2,
+    "seed": 2,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "longsword",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "grand_magus_staff",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "styptic_dressing",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_kit",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "envenomed_gauntlet",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "bloodletter",
+      "longsword",
+      "grand_magus_staff",
+      "styptic_dressing",
+      "antidote_kit",
+      "envenomed_gauntlet"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 65.0,
+    "dps": 38.8181821890552,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade/3/0": {
+    "archetype": "blade",
+    "bracket": 3,
+    "seed": 0,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fanny_pack",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mithril_sword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 3
+      },
+      {
+        "id": "grand_magus_staff",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fire_crystal_low",
+        "origin": [
+          5,
+          1
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          2,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "mainspring",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "fanny_pack"
+    ],
+    "picked": [
+      "mithril_sword",
+      "bloodletter",
+      "grand_magus_staff",
+      "magus_staff",
+      "fire_crystal_low",
+      "ice_crystal",
+      "mainspring"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 62.8181821890552,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade/3/1": {
+    "archetype": "blade",
+    "bracket": 3,
+    "seed": 1,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mithril_sword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "cleaver",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "knife",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fire_crystal",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "lightning_crystal",
+        "origin": [
+          6,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "bitter_root",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warding_charm",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "mithril_sword",
+      "cleaver",
+      "mage_staff",
+      "knife",
+      "fire_crystal",
+      "lightning_crystal",
+      "bitter_root",
+      "warding_charm"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 45.2863634708499,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade/3/2": {
+    "archetype": "blade",
+    "bracket": 3,
+    "seed": 2,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "war_pack",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "festering_blade",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 3
+      },
+      {
+        "id": "scimitar",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "magic_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "plate_cuirass",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 1
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          5,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ice_crystal_high",
+        "origin": [
+          3,
+          3
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ration",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "war_pack"
+    ],
+    "picked": [
+      "warhammer",
+      "festering_blade",
+      "scimitar",
+      "magic_staff",
+      "plate_cuirass",
+      "ice_crystal",
+      "ice_crystal_high",
+      "ration"
+    ],
+    "left": [],
+    "group": "blade",
+    "hp": 55.0,
+    "dps": 43.1249997913838,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+drill/0/0": {
+    "archetype": "blade+drill",
+    "bracket": 0,
+    "seed": 0,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "shortsword",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bandage_roll",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "warhammer",
+      "shortsword",
+      "bandage_roll"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 31.5,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+drill/0/1": {
+    "archetype": "blade+drill",
+    "bracket": 0,
+    "seed": 1,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "knife",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "tower_shield",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_long",
+      "bag_long",
+      "bag_long"
+    ],
+    "picked": [
+      "knife",
+      "tower_shield"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 5.25,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+drill/0/2": {
+    "archetype": "blade+drill",
+    "bracket": 0,
+    "seed": 2,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "scimitar",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magic_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "brass_plating",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "scimitar",
+      "magic_staff",
+      "brass_plating"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 13.1249997913838,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+drill/1/0": {
+    "archetype": "blade+drill",
+    "bracket": 1,
+    "seed": 0,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "brass_plating",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 1
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "bloodletter",
+      "mage_staff",
+      "brass_plating"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 21.9545452890317,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+drill/1/1": {
+    "archetype": "blade+drill",
+    "bracket": 1,
+    "seed": 1,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "shortsword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "knife",
+        "origin": [
+          1,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mainspring",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "shortsword",
+      "knife",
+      "antidote_satchel",
+      "mainspring"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 15.75,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+drill/1/2": {
+    "archetype": "blade+drill",
+    "bracket": 1,
+    "seed": 2,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "longsword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          0,
+          1
+        ],
+        "rot": 1
+      },
+      {
+        "id": "steam_vent",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
+        "origin": [
+          3,
+          1
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "longsword",
+      "mage_staff",
+      "steam_vent",
+      "strong_salve"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 18.1363634708499,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+drill/2/0": {
+    "archetype": "blade+drill",
+    "bracket": 2,
+    "seed": 0,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "war_pack",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
+        "id": "cleaver",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "tower_shield",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "war_pack"
+    ],
+    "picked": [
+      "cleaver",
+      "magus_staff",
+      "tower_shield",
+      "antidote_satchel"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 18.9,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+drill/2/1": {
+    "archetype": "blade+drill",
+    "bracket": 2,
+    "seed": 1,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_kit",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "bloodletter",
+      "warhammer",
+      "magus_staff",
+      "antidote_kit",
+      "strong_salve"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 45.8181818181818,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+drill/2/2": {
+    "archetype": "blade+drill",
+    "bracket": 2,
+    "seed": 2,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "longsword",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "grand_magus_staff",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "styptic_dressing",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_kit",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "envenomed_gauntlet",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "bloodletter",
+      "longsword",
+      "grand_magus_staff",
+      "styptic_dressing",
+      "antidote_kit",
+      "envenomed_gauntlet"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 65.0,
+    "dps": 38.8181821890552,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+drill/3/0": {
+    "archetype": "blade+drill",
+    "bracket": 3,
+    "seed": 0,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fanny_pack",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mithril_sword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 3
+      },
+      {
+        "id": "grand_magus_staff",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fire_crystal_low",
+        "origin": [
+          5,
+          1
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          2,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "mainspring",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "fanny_pack"
+    ],
+    "picked": [
+      "mithril_sword",
+      "bloodletter",
+      "grand_magus_staff",
+      "magus_staff",
+      "fire_crystal_low",
+      "ice_crystal",
+      "mainspring"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 62.8181821890552,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+drill/3/1": {
+    "archetype": "blade+drill",
+    "bracket": 3,
+    "seed": 1,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mithril_sword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "cleaver",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "knife",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fire_crystal",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "lightning_crystal",
+        "origin": [
+          6,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "bitter_root",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warding_charm",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "mithril_sword",
+      "cleaver",
+      "mage_staff",
+      "knife",
+      "fire_crystal",
+      "lightning_crystal",
+      "bitter_root",
+      "warding_charm"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 45.2863634708499,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+drill/3/2": {
+    "archetype": "blade+drill",
+    "bracket": 3,
+    "seed": 2,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "war_pack",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "festering_blade",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 3
+      },
+      {
+        "id": "scimitar",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "magic_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "plate_cuirass",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 1
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          5,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ice_crystal_high",
+        "origin": [
+          3,
+          3
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ration",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "war_pack"
+    ],
+    "picked": [
+      "warhammer",
+      "festering_blade",
+      "scimitar",
+      "magic_staff",
+      "plate_cuirass",
+      "ice_crystal",
+      "ice_crystal_high",
+      "ration"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 43.1249997913838,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+drill+phalera/0/0": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 0,
+    "seed": 0,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          1,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "shortsword",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bandage_roll",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "warhammer",
+      "shortsword",
+      "bandage_roll"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 38.115,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+drill+phalera/0/1": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 0,
+    "seed": 1,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "knife",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "tower_shield",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_long",
+      "bag_long",
+      "bag_long"
+    ],
+    "picked": [
+      "knife",
+      "tower_shield"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 6.3525,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+drill+phalera/0/2": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 0,
+    "seed": 2,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "scimitar",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "magic_staff",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "brass_plating",
+        "origin": [
+          2,
+          2
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "scimitar",
+      "magic_staff",
+      "brass_plating"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 15.8812498106808,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+drill+phalera/1/0": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 1,
+    "seed": 0,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "brass_plating",
+        "origin": [
+          2,
+          2
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "bloodletter",
+      "mage_staff",
+      "brass_plating"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 26.565,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+drill+phalera/1/1": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 1,
+    "seed": 1,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "shortsword",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "knife",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mainspring",
+        "origin": [
+          1,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "shortsword",
+      "knife",
+      "antidote_satchel",
+      "mainspring"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 19.0575,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+drill+phalera/1/2": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 1,
+    "seed": 2,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "longsword",
+        "origin": [
+          0,
+          1
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "steam_vent",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
+        "origin": [
+          1,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "longsword",
+      "mage_staff",
+      "steam_vent",
+      "strong_salve"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 21.945,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+drill+phalera/2/0": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 2,
+    "seed": 0,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "cleaver",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "cleaver",
+      "magus_staff",
+      "tower_shield",
+      "antidote_satchel"
+    ],
+    "left": [
+      "tower_shield"
+    ],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 22.8690004543662,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+drill+phalera/2/1": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 2,
+    "seed": 1,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          2,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "antidote_kit",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "bloodletter",
+      "warhammer",
+      "magus_staff",
+      "antidote_kit",
+      "strong_salve"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 55.4400004543662,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+drill+phalera/2/2": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 2,
+    "seed": 2,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "longsword",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 1
+      },
+      {
+        "id": "grand_magus_staff",
+        "origin": [
+          4,
+          2
+        ],
+        "rot": 1
+      },
+      {
+        "id": "styptic_dressing",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "antidote_kit",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "envenomed_gauntlet",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "bloodletter",
+      "longsword",
+      "grand_magus_staff",
+      "styptic_dressing",
+      "antidote_kit",
+      "envenomed_gauntlet"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 65.0,
+    "dps": 46.9700013462704,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+drill+phalera/3/0": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 3,
+    "seed": 0,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 1
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "mithril_sword",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "grand_magus_staff",
+        "origin": [
+          2,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fire_crystal_low",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          6,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "mainspring",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "bag_long"
+    ],
+    "picked": [
+      "mithril_sword",
+      "bloodletter",
+      "grand_magus_staff",
+      "magus_staff",
+      "fire_crystal_low",
+      "ice_crystal",
+      "mainspring"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 73.8050013462704,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+drill+phalera/3/1": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 3,
+    "seed": 1,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "mithril_sword",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "cleaver",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          2,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "knife",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fire_crystal",
+        "origin": [
+          1,
+          0
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "lightning_crystal",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "bitter_root",
+        "origin": [
+          4,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warding_charm",
+        "origin": [
+          6,
+          2
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "mithril_sword",
+      "cleaver",
+      "mage_staff",
+      "knife",
+      "fire_crystal",
+      "lightning_crystal",
+      "bitter_root",
+      "warding_charm"
+    ],
+    "left": [],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 53.694,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+drill+phalera/3/2": {
+    "archetype": "blade+drill+phalera",
+    "bracket": 3,
+    "seed": 2,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 1
+      },
+      {
+        "id": "legion_phalera",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "pinned": true,
+          "pin_moves": true,
+          "honor": 8,
+          "growth_stage": 2
+        }
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          1,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "festering_blade",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "scimitar",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "magic_staff",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          6,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ice_crystal_high",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ration",
+        "origin": [
+          1,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "bag_long"
+    ],
+    "picked": [
+      "warhammer",
+      "festering_blade",
+      "scimitar",
+      "magic_staff",
+      "plate_cuirass",
+      "ice_crystal",
+      "ice_crystal_high",
+      "ration"
+    ],
+    "left": [
+      "plate_cuirass"
+    ],
+    "group": "blade",
+    "scoped": [
+      {
+        "tags": [
+          "weapon"
+        ],
+        "mods": [
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "hp": 55.0,
+    "dps": 49.4249997913838,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+sun/0/0": {
+    "archetype": "blade+sun",
+    "bracket": 0,
+    "seed": 0,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "shortsword",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bandage_roll",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "warhammer",
+      "shortsword",
+      "bandage_roll"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 31.5,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+sun/0/1": {
+    "archetype": "blade+sun",
+    "bracket": 0,
+    "seed": 1,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_long",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "knife",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "tower_shield",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_long",
+      "bag_long",
+      "bag_long"
+    ],
+    "picked": [
+      "knife",
+      "tower_shield"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 5.25,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+sun/0/2": {
+    "archetype": "blade+sun",
+    "bracket": 0,
+    "seed": 2,
+    "tier": 0,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "scimitar",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magic_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "brass_plating",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "scimitar",
+      "magic_staff",
+      "brass_plating"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 13.1249997913838,
+    "steps": [
+      0,
+      4
+    ]
+  },
+  "blade+sun/1/0": {
+    "archetype": "blade+sun",
+    "bracket": 1,
+    "seed": 0,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "brass_plating",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 1
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "bloodletter",
+      "mage_staff",
+      "brass_plating"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 21.9545452890317,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+sun/1/1": {
+    "archetype": "blade+sun",
+    "bracket": 1,
+    "seed": 1,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "shortsword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "knife",
+        "origin": [
+          1,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mainspring",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "shortsword",
+      "knife",
+      "antidote_satchel",
+      "mainspring"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 15.75,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+sun/1/2": {
+    "archetype": "blade+sun",
+    "bracket": 1,
+    "seed": 2,
+    "tier": 1,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "longsword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          0,
+          1
+        ],
+        "rot": 1
+      },
+      {
+        "id": "steam_vent",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
+        "origin": [
+          3,
+          1
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small"
+    ],
+    "picked": [
+      "longsword",
+      "mage_staff",
+      "steam_vent",
+      "strong_salve"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 18.1363634708499,
+    "steps": [
+      5,
+      9
+    ]
+  },
+  "blade+sun/2/0": {
+    "archetype": "blade+sun",
+    "bracket": 2,
+    "seed": 0,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "war_pack",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
+        "id": "cleaver",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "tower_shield",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "war_pack"
+    ],
+    "picked": [
+      "cleaver",
+      "magus_staff",
+      "tower_shield",
+      "antidote_satchel"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 18.9,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+sun/2/1": {
+    "archetype": "blade+sun",
+    "bracket": 2,
+    "seed": 1,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_kit",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "bloodletter",
+      "warhammer",
+      "magus_staff",
+      "antidote_kit",
+      "strong_salve"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 45.8181818181818,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+sun/2/2": {
+    "archetype": "blade+sun",
+    "bracket": 2,
+    "seed": 2,
+    "tier": 2,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "longsword",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "grand_magus_staff",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "styptic_dressing",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "antidote_kit",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "envenomed_gauntlet",
+        "origin": [
+          4,
+          1
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "bloodletter",
+      "longsword",
+      "grand_magus_staff",
+      "styptic_dressing",
+      "antidote_kit",
+      "envenomed_gauntlet"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 65.0,
+    "dps": 38.8181821890552,
+    "steps": [
+      10,
+      19
+    ]
+  },
+  "blade+sun/3/0": {
+    "archetype": "blade+sun",
+    "bracket": 3,
+    "seed": 0,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fanny_pack",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mithril_sword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bloodletter",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 3
+      },
+      {
+        "id": "grand_magus_staff",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "magus_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fire_crystal_low",
+        "origin": [
+          5,
+          1
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          2,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "mainspring",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "fanny_pack"
+    ],
+    "picked": [
+      "mithril_sword",
+      "bloodletter",
+      "grand_magus_staff",
+      "magus_staff",
+      "fire_crystal_low",
+      "ice_crystal",
+      "mainspring"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 62.8181821890552,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+sun/3/1": {
+    "archetype": "blade+sun",
+    "bracket": 3,
+    "seed": 1,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mithril_sword",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "cleaver",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "mage_staff",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "knife",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fire_crystal",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "lightning_crystal",
+        "origin": [
+          6,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "bitter_root",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warding_charm",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather"
+    ],
+    "picked": [
+      "mithril_sword",
+      "cleaver",
+      "mage_staff",
+      "knife",
+      "fire_crystal",
+      "lightning_crystal",
+      "bitter_root",
+      "warding_charm"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 45.2863634708499,
+    "steps": [
+      20,
+      -1
+    ]
+  },
+  "blade+sun/3/2": {
+    "archetype": "blade+sun",
+    "bracket": 3,
+    "seed": 2,
+    "tier": 3,
+    "samples": 1,
+    "board_size": [
+      8,
+      6
+    ],
+    "requires_bag": true,
+    "layout": [
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
+        "origin": [
+          3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "war_pack",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warhammer",
+        "origin": [
+          0,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "festering_blade",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 3
+      },
+      {
+        "id": "scimitar",
+        "origin": [
+          4,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "magic_staff",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "plate_cuirass",
+        "origin": [
+          0,
+          2
+        ],
+        "rot": 1
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          5,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ice_crystal_high",
+        "origin": [
+          3,
+          3
+        ],
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "ration",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      }
+    ],
+    "baseline": {
+      "max_hp": 55.0,
+      "max_stamina": 65.0,
+      "regen_stamina": 5.0
+    },
+    "bags": [
+      "bag_leather",
+      "bag_small",
+      "bag_leather",
+      "war_pack"
+    ],
+    "picked": [
+      "warhammer",
+      "festering_blade",
+      "scimitar",
+      "magic_staff",
+      "plate_cuirass",
+      "ice_crystal",
+      "ice_crystal_high",
+      "ration"
+    ],
+    "left": [],
+    "group": "blade",
+    "axes": {
+      "stamina_cost": 5
+    },
+    "hp": 55.0,
+    "dps": 43.1249997913838,
+    "steps": [
+      20,
+      -1
+    ]
   }
 }
