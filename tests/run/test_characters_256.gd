@@ -421,8 +421,18 @@ static func frame_ransom_screen(t: TestCase, root: Window) -> void:
 	locked.set_locked(true)
 	if locked.is_locked_by_player():
 		t.check(not scr.offer(locked.uid), "锁着的放不上")
+	var bal: BalanceScale = scr.scale_widget()
+	t.eq(bal.pile_count(), 0, "没放钱：左盘没有金币")
+	scr.set_coins(roundi(price / 2.0))
+	t.eq(bal.pile_count(), ceili(22.0 * scr.coins / price), "放一半：左盘堆 ceil(22 × 金币 ÷ 开价) 枚")
 	scr.set_coins(price)
 	t.eq(scr.coins, price, "金币 %d" % price)
+	t.eq(bal.pile_count(), 22, "刚好够：22 枚，和右盘那摞一样多")
+	var lowest := INF
+	for r in bal.coin_rects():
+		lowest = minf(lowest, (r as Rect2).position.y)
+	var tray_bottom: float = bal.tray_slot.position.y + bal.tray_slot.size.y - bal.pan_origins()[0].y
+	t.check(tray_bottom <= lowest + 0.01, "托盘底边在金币顶上面（%.1f ≤ %.1f）" % [tray_bottom, lowest])
 	t.check(not scr.pay_button().disabled, "够了：成交亮了")
 	t.eq(scr.scale_widget().plate_text(), "够了", "梁上写够了")
 	t.check(scr.scale_widget().tilt_degrees() > 0.0, "左重：左盘低")
@@ -435,6 +445,28 @@ static func frame_ransom_screen(t: TestCase, root: Window) -> void:
 	t.eq(run.vitality.current, v - 1, "扣了体力")
 	game.free()
 	Support.cleanup("256g")
+
+
+static func run_coin_pile(t: TestCase) -> void:
+	t.begin("256 · 天平左盘的金币（UI 替换美术 10-26）：画 ceil(22 × 金币 ÷ 开价) 枚，放了钱至少 1 枚、封顶 24；先垒中间两摞")
+	var bal := BalanceScale.new()
+	bal.right = 100
+	for row in [[0, 0], [1, 1], [50, 11], [100, 22], [101, 23], [1000, 24]]:
+		bal.coins = row[0]
+		t.eq(bal.pile_count(), row[1], "开价 100、金币 %d：%d 枚" % row)
+		t.eq(bal.coin_rects().size(), row[1], "金币 %d：画 %d 枚" % row)
+	bal.coins = 100
+	var cols := {}
+	for r in bal.coin_rects():
+		var x := roundi((r as Rect2).get_center().x)
+		cols[x] = int(cols.get(x, 0)) + 1
+	var keys := cols.keys()
+	keys.sort()
+	t.eq(keys.map(func(x: int) -> int: return cols[x]), [3, 4, 4, 4, 4, 3], "刚好够：3 / 4 / 4 / 4 / 4 / 3，和右盘那摞一样多")
+	bal.coins = 8
+	var mids := bal.coin_rects().map(func(r: Rect2) -> int: return roundi(r.get_center().x))
+	t.check(mids.all(func(x: int) -> bool: return x == 152 or x == 188), "两枚：先垒中间两摞 %s" % str(mids))
+	bal.free()
 
 
 static func run_ransom_flee(t: TestCase) -> void:
