@@ -18,6 +18,19 @@ const EXTRA_BAG := &"bag_leather"
 ## 拼大件用的长条包（1 × 4）
 const STRIP_BAG := &"bag_long"
 const CHARACTER := &"marcus"
+## 242 补（256 之后）：兵刃一路和它的三个变体 —— 量「写死耐力消耗吃打折」的偏移（五路木桩与敌人池都不带 stamina_cost 修饰）。
+## 四路同一份道具（都按 [constant BLADE] 流派、同一个种子抽，同样摆），只差一局的加成：
+## 兵刃（对照）、+ 操练（角色被动的按件修饰）、+ 操练 + 金阶军功牌（牌按 [constant PHALERA_AT] 钉、武器先往圈里摆）、+ 日神的「灵巧」轴（3 阶）。
+## 四路的 `group` 都是 [constant BLADE_GROUP]：扫表的极差表不算它们，另出一张变体对照表
+const BLADE := &"melee"
+const BLADE_GROUP := "blade"
+const VARIANTS: Array[String] = ["blade", "blade+drill", "blade+drill+phalera", "blade+sun"]
+const PHALERA := &"legion_phalera"
+const PHALERA_AT := Vector2i(3, 2)
+## 金阶 = 第 2 阶（军功攒到那一阶的门槛）
+const PHALERA_STAGE := 2
+const SUN := &"sun"
+const SUN_TIER := 3
 
 
 ## 全部木桩：{`流派/段号/种子` → 木桩}。[param brackets] 是段位表（第 k 段从第几步开始）
@@ -34,13 +47,60 @@ static func build(pool: EnemyPool, items: ItemDatabase, brackets: Array[int], ch
 	return out
 
 
+## 兵刃四路：{`变体/段号/种子` → 木桩}。[param faith] 是日神（取 [constant SUN_TIER] 阶以内的开战轴层数）
+static func build_variants(pool: EnemyPool, items: ItemDatabase, brackets: Array[int], character: CharacterDef,
+		faith: FaithDef, seeds: int = SEEDS) -> Dictionary:
+	var drill: Array = []
+	if character != null:
+		var ctx := RunContext.new()
+		for e in character.run_effects():
+			(e as RunEffect).modify(ctx)
+		drill = CalibrationRecorder.scoped_rows(ctx.scoped)
+	var sun := CompileInput.new()
+	if faith != null:
+		for p in faith.perks_at(SUN_TIER):
+			if p is AxisBoostPerk:
+				(p as AxisBoostPerk).compile_into(sun, null, null)
+	var axes := {}
+	for axis in sun.axes:
+		axes[String(axis)] = int(sun.axes[axis])
+	var out := {}
+	for v in VARIANTS:
+		var extras := {"archetype": v, "group": BLADE_GROUP}
+		if v.contains("drill"):
+			extras["scoped"] = drill.duplicate(true)
+		if v.contains("sun"):
+			extras["axes"] = axes.duplicate()
+		for k in brackets.size():
+			var hi := (brackets[k + 1] - 1) if k + 1 < brackets.size() else -1
+			for s in seeds:
+				var pin := _phalera(items) if v.contains("phalera") else null
+				var dummy := one(BLADE, k, s, pool, items, character, k >= brackets.size() - 2, pin, extras)
+				dummy["steps"] = [brackets[k], hi]
+				out[key_of(StringName(v), k, s)] = dummy
+	return out
+
+
+## 金阶军功牌：钉着、可以挪（和马库斯开局那块一样），军功攒到金阶的门槛
+static func _phalera(items: ItemDatabase) -> ItemInstance:
+	var def := items.get_def(PHALERA)
+	if def == null or def.growth == null:
+		return null
+	var inst := ItemInstance.create(def, 0)
+	inst.set_pinned(true, true)
+	GrowthProfile.add_honor(inst, def.growth.stages[PHALERA_STAGE - 1].after)
+	return inst
+
+
 static func key_of(archetype: StringName, bracket: int, seed: int) -> String:
 	return "%s/%d/%d" % [archetype, bracket, seed]
 
 
-## 一份：流派 [param archetype]、第 [param bracket] 段（对池的同号档）、第 [param seed] 个种子
+## 一份：流派 [param archetype]、第 [param bracket] 段（对池的同号档）、第 [param seed] 个种子。
+## [param pin] 是要钉上的随身之物（兵刃变体的军功牌）：包先盖住它的圈，牌钉在 [constant PHALERA_AT]，武器先往圈里摆。
+## [param extras] 并进木桩（变体的名字、按件修饰、轴），再量读数
 static func one(archetype: StringName, bracket: int, seed: int, pool: EnemyPool, items: ItemDatabase,
-		character: CharacterDef, extra_bag: bool) -> Dictionary:
+		character: CharacterDef, extra_bag: bool, pin: ItemInstance = null, extras: Dictionary = {}) -> Dictionary:
 	var strength := pool.clamp_strength(bracket)
 	var tier := pool.tier_of(strength)
 	var rng := RandomNumberGenerator.new()
@@ -71,12 +131,26 @@ static func one(archetype: StringName, bracket: int, seed: int, pool: EnemyPool,
 		var ca := items.get_def(a.bag).cell_count()
 		var cb := items.get_def(b.bag).cell_count()
 		return ca < cb if ca != cb else String(a.bag) < String(b.bag))
+	var ring: Array[Vector2i] = []
+	var under: Array[Vector2i] = []     # 包要盖住的：圈 + 牌自己那一格
+	if pin != null:
+		for c in GrowthProfile.adjacency_of(pin).grant_cells:
+			ring.append(PHALERA_AT + c)
+		under = ring.duplicate()
+		under.append(PHALERA_AT)
 	board.begin_batch()
 	for id in bags:
-		board.try_add(ItemInstance.create(items.get_def(id), 0), true)
+		var bag := ItemInstance.create(items.get_def(id), 0)
+		if ring.is_empty() or not _place_best(board, bag, under, true):
+			board.try_add(bag, true)
+	if pin != null and not board.place(pin, PHALERA_AT, 0):
+		push_warning("ArchetypeBuilder: %s 钉不上 %s" % [pin.def.id, PHALERA_AT])
 	for id in picks:
 		var def := items.get_def(id)
-		if board.try_add(ItemInstance.create(def, 0), true):
+		var inst := ItemInstance.create(def, 0)
+		if not ring.is_empty() and def.tags.has(rule.weapon_tag) and _place_best(board, inst, ring, false):
+			continue
+		if board.try_add(inst, true):
 			continue
 		var fitted := false
 		for e in spare:
@@ -96,14 +170,40 @@ static func one(archetype: StringName, bracket: int, seed: int, pool: EnemyPool,
 		stats[String(key)] = float(baseline.base_stats[key])
 	var dummy := {
 		"archetype": String(archetype), "bracket": bracket, "seed": seed, "tier": strength, "samples": 1,
-		"board_size": [size.x, size.y], "requires_bag": true, "layout": RunState.layout_of(board), "baseline": stats,
+		"board_size": [size.x, size.y], "requires_bag": true, "layout": CalibrationRecorder.layout_of(board), "baseline": stats,
 		"bags": bags.map(func(id: StringName) -> String: return String(id)),
 		"picked": picks.map(func(id: StringName) -> String: return String(id)), "left": left,
 	}
+	dummy.merge(extras, true)
 	var m := DummyBuilder.metrics(dummy, items)
 	dummy["hp"] = float(m["hp"])
 	dummy["dps"] = float(m["dps"])
 	return dummy
+
+
+## 摆在压住 [param cells] 最多的落点（包：盖住的格数；道具：占进去的格数，[param most] 为假时只要碰到一格、取扫到的第一个）。
+## 一格都压不到返回 false，什么也不放
+static func _place_best(board: GridInventory, inst: ItemInstance, cells: Array[Vector2i], most: bool) -> bool:
+	var best := 0
+	var best_at := Vector2i.ZERO
+	var best_rot := 0
+	for rot in [0, 1]:
+		for y in board.size.y:
+			for x in board.size.x:
+				var at := Vector2i(x, y)
+				if not board.can_place_item(inst, at, rot):
+					continue
+				var hit := 0
+				for c in inst.def.cells_rotated(rot):
+					if cells.has(at + c):
+						hit += 1
+				if hit > best:
+					best = hit
+					best_at = at
+					best_rot = rot
+					if not most:
+						return board.place(inst, best_at, best_rot)
+	return best > 0 and board.place(inst, best_at, best_rot)
 
 
 ## 流派池里一件武器都没有（盾、防具两路）：把最后一件非流派道具换成一件武器（同稀有度上限，随机）；全是流派道具就加一件
