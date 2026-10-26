@@ -104,7 +104,8 @@
 
 ### 3.3 棋盘形状 `board_mask`
 
-`CharacterDef.board_mask: Array[Vector2i]`（缺格坐标，默认空 = 整块矩形）。画法按 2.3 第一条：框沿轮廓走，缺格透空（`InventoryView` 不画这些格的底与缝；`BoardFrame.wrap` 按 `is_blocked` 算轮廓拼件）。`RunState.start` 建棋盘后 `set_blocked` 这些格（作战棋盘现在 `set_blocked` 只给自由容器用，要放开给 `requires_bag` 的板；逻辑本来就通用）。基地带回来的棋盘照原样带回（它就是这块板）。预览与第二页都用同一块 `GridInventory`，自然一致。导入器：缺格不得与 `fixed_items` 重叠、不得超界。
+`CharacterDef.board_mask: Array[Vector2i]`（缺格坐标，默认空 = 整块矩形）。画法按 2.3 第一条：框沿轮廓走，缺格透空（`InventoryView` 不画这些格的底与缝；`BoardFrame.wrap` 按 `is_blocked` 算轮廓拼件）。
+拼件（美术设计 2026-10-26 11:21 出样，在 /mnt/project-files/art/ui/board/out/mask/，规则见 `layout_mask.json`）：直边 `edge_t/r/b/l` 60 × 20、凸角 `outer_*` 20 × 20（带铜钉）、凹角 `inner_*` 20 × 20。摆法：可用格哪一边朝外（界外或缺格）就在那一边摆一块 edge；格角顶点周围只有一格可用摆 outer，三格可用摆 inner；绘制顺序 cells → edge → inner → outer。中间一个缺格 = 四面 edge + 四个 inner，洞里净空约 24。整块矩形的棋盘照旧用现有九宫格整框。导入器加一条：顶点周围只有两个对角格可用的形状拒掉（拼不出框）。`RunState.start` 建棋盘后 `set_blocked` 这些格（作战棋盘现在 `set_blocked` 只给自由容器用，要放开给 `requires_bag` 的板；逻辑本来就通用）。基地带回来的棋盘照原样带回（它就是这块板）。预览与第二页都用同一块 `GridInventory`，自然一致。导入器：缺格不得与 `fixed_items` 重叠、不得超界。
 
 ## 四、给美术设计的清单（样稿里的灰块将来是什么）
 
