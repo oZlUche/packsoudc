@@ -1326,6 +1326,7 @@ const TEXT := {
 	# —— 221 F5b：warehouse ——
 	"wh.expand_tech": {"zh": "仓库扩建", "en": "Warehouse expansion"},     # fallback when the tech is missing
 	"wh.tab_count": {"zh": "%d件", "en": "%d"},     # page tab, second line
+	"wh.ground_tab": {"zh": "地上", "en": "Ground"},     # 255 补充二：setup page 2, the extra page at the end of the warehouse tabs
 	"wh.tab_locked_tip": {"zh": "%s到第 %d 级解锁", "en": "Unlocks at %s level %d"},
 	"wh.tab_tip": {"zh": "第%s页　%d 件", "en": "Page %s · items: %d"},
 	"wh.store_all": {"zh": "一键置入", "en": "Put all away"},

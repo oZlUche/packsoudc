@@ -319,3 +319,44 @@ static func _sort(n: Node) -> void:
 		n.notification(Container.NOTIFICATION_SORT_CHILDREN)
 	for c in n.get_children():
 		_sort(c)
+
+
+## 补充二（架构设计 12:45）：开局第二页改两栏 —— 包架在棋盘板里棋盘正下方，带入现金钉在仓库框底部靠右，地上是仓库的一页；
+## 1600 × 1000 下右沿不出 1564，七格 / 九格换人两块板一个像素不动
+static func frame_kit_page(t: TestCase, root: Window) -> void:
+	t.begin("255 补充二：开局第二页两栏（棋盘板 + 仓库框），1600 × 1000 不出框，七格 / 九格换人两块板不动")
+	Support.cleanup("kit255")
+	var p := Support.paths("kit255")
+	var game = load(GAME).instantiate()
+	game.save_path = p["run"]
+	game.meta_path = p["meta"]
+	game.settings_path = p["settings"]
+	root.add_child(game)
+	game.size = Vector2(1600, 1000)
+	var flow: GameFlow = game.flow
+	for gch in flow.chapters:
+		if gch.grants_unlock != &"":
+			flow.meta.grant_unlock(gch.grants_unlock)
+	flow.new_run()
+	var setup = game.base()
+	var shots := {}
+	for id in [&"andreus", &"brutus"]:
+		for i in setup._characters.size():
+			if setup._characters[i].id == id:
+				setup.choose_character(i)
+		setup.show_page(1)
+		_lay_out(game)
+		var board_panel: Control = setup._rack_box.get_parent().get_parent()
+		var ware: Control = setup._warehouse_box
+		t.check(board_panel is PanelContainer and board_panel.is_ancestor_of(setup._board_host), "%s：包架和棋盘在同一块棋盘板里" % id)
+		t.check(setup._rack_box.global_position.y > setup._board_host.global_position.y + setup._board_host.size.y - 1.0, "%s：包架在棋盘正下方" % id)
+		t.eq(setup._rack_view.columns, 9, "包架横排九格一行")
+		t.check(ware.is_ancestor_of(setup.find_child("CashNote", true, false)), "%s：带入现金钉在仓库框里" % id)
+		var right_edge: float = ware.global_position.x + ware.size.x - game.global_position.x
+		t.check(right_edge <= 1564.0, "%s：仓库框右沿 %.0f ≤ 1564" % [id, right_edge])
+		var bottom: float = maxf(board_panel.get_global_rect().end.y, ware.get_global_rect().end.y) - game.global_position.y
+		t.check(bottom <= 1000.0, "%s：两块板底沿 %.0f 不出屏" % [id, bottom])
+		shots[id] = [board_panel.get_global_rect(), ware.get_global_rect()]
+	t.eq(shots[&"andreus"], shots[&"brutus"], "七格 / 九格换人：棋盘板、仓库框一个像素不动")
+	game.queue_free()
+	Support.cleanup("kit255")

@@ -40,6 +40,10 @@ var _per_level := 1
 var _tech_name := UiText.t("wh.expand_tech")
 var _hover_tab := -1
 var _hover_t := 0.0
+## 255 补充二：页签列末尾多出的一页（开局屏第二页的「地上」），按下时格子那块换成 [member extra]，大小和格子一样
+var extra: Control = null
+var _extra_tab: Button = null
+var _on_extra := false
 
 
 ## [param plan] 见 [method TechWarehousePages.plan_of]（空 = 只列已有的页）
@@ -128,6 +132,10 @@ func show_page(i: int) -> bool:
 	if i < 0 or is_locked(i):
 		return false
 	_current = i
+	_on_extra = false
+	view.visible = true
+	if extra != null:
+		extra.visible = false
 	view.inventory = warehouse.page(i)
 	_mark()
 	page_changed.emit(i)
@@ -137,15 +145,69 @@ func show_page(i: int) -> bool:
 ## 切到这件东西所在的页（双击置入落到哪页就看哪页）。不在仓库里返回 false
 func show_item(uid: int) -> bool:
 	var i := warehouse.page_of(uid) if warehouse != null else -1
-	return i >= 0 and (i == _current or show_page(i))
+	return i >= 0 and ((i == _current and not _on_extra) or show_page(i))
 
 
-## 第几个页签在这个全局坐标下（不在 -1）
+## 第几个页签在这个全局坐标下（不在 -1；多出的那页是 [method tab_count]）
 func tab_at(global_pos: Vector2) -> int:
 	for i in _tabs.size():
 		if _tabs[i].get_global_rect().has_point(global_pos):
 			return i
+	if _extra_tab != null and _extra_tab.visible and _extra_tab.get_global_rect().has_point(global_pos):
+		return _tabs.size()
 	return -1
+
+
+## 255 补充二：在页签列里加一页 [param c]（只在 [method set_extra_tab] 说有时出现），排在已有的页后面、没解锁的页前面
+## （排最末会被十个页签挤到滚动区外）。返回它的页签
+func add_extra(c: Control) -> Button:
+	extra = c
+	c.visible = false
+	c.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	c.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	add_child(c)
+	move_child(c, view.get_index() + 1)
+	_extra_tab = _make_tab()
+	_extra_tab.clip_text = true     # 页签列宽不随字变
+	_extra_tab.pressed.connect(show_extra)
+	_extra_tab.visible = false
+	tab_box.add_child(_extra_tab)
+	_place_extra_tab()
+	return _extra_tab
+
+
+func _place_extra_tab() -> void:
+	if _extra_tab != null and warehouse != null:
+		tab_box.move_child(_extra_tab, mini(warehouse.page_count(), tab_box.get_child_count() - 1))
+
+
+## 多出那页的页签：出不出、两行字、悬停说明；收起时正看着它就退回格子
+func set_extra_tab(shown: bool, text: String, tip: String) -> void:
+	if _extra_tab == null:
+		return
+	_extra_tab.visible = shown
+	_extra_tab.text = text
+	_extra_tab.tooltip_text = tip
+	if not shown and _on_extra:
+		show_page(_current)
+
+
+## 切到多出的那页：格子藏起，它顶上格子的位子、一样大
+func show_extra() -> bool:
+	if extra == null or _extra_tab == null or not _extra_tab.visible:
+		return false
+	extra.custom_minimum_size = view.get_combined_minimum_size()
+	view.visible = false
+	extra.visible = true
+	_on_extra = true
+	_mark()
+	page_changed.emit(-1)
+	return true
+
+
+## 正看着多出的那页
+func on_extra() -> bool:
+	return _on_extra
 
 
 ## 拖着东西停在页签上：光标下是第几个页签交给 [method hover_tab]。返回这一下切了没有
@@ -155,7 +217,8 @@ func drag_hover(global_pos: Vector2, delta: float) -> bool:
 
 ## 停在第 [param i] 个页签上（-1 = 不在页签上）：同一个页签累计 [param delta] 秒，够 [constant HOVER_SEC] 切过去；换了页签重新计时
 func hover_tab(i: int, delta: float) -> bool:
-	if i < 0 or i == _current or is_locked(i):
+	var to_extra := _extra_tab != null and i == _tabs.size()
+	if i < 0 or (to_extra and _on_extra) or (not to_extra and ((i == _current and not _on_extra) or is_locked(i))):
 		_hover_tab = -1
 		_hover_t = 0.0
 		return false
@@ -167,7 +230,7 @@ func hover_tab(i: int, delta: float) -> bool:
 		return false
 	_hover_tab = -1
 	_hover_t = 0.0
-	return show_page(i)
+	return show_extra() if to_extra else show_page(i)
 
 
 func _process(delta: float) -> void:
@@ -184,6 +247,7 @@ func _refresh() -> void:
 	var want := maxi(warehouse.page_count(), _max_pages)
 	if want != _tabs.size():
 		_rebuild_tabs(want)
+	_place_extra_tab()
 	for i in _tabs.size():
 		var b := _tabs[i]
 		var locked := is_locked(i)
@@ -203,24 +267,34 @@ func _rebuild_tabs(n: int) -> void:
 	_tabs.clear()
 	for i in n:
 		var idx := i
-		var b := Button.new()
+		var b := _make_tab()
 		b.text = numeral(i)
-		UiPalette.style_button(b, UiPalette.Tier.MINOR, 14)     # 窄页签：两行小字（页名、件数）
 		b.pressed.connect(func(): show_page(idx))
-		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(TAB_W, tab_height)
-		if tab_variation != &"":
-			b.theme_type_variation = tab_variation
 		b.draw.connect(_draw_lock.bind(b, idx))
 		tab_box.add_child(b)
 		_tabs.append(b)
 
 
+func _make_tab() -> Button:
+	var b := Button.new()
+	UiPalette.style_button(b, UiPalette.Tier.MINOR, 14)     # 窄页签：两行小字（页名、件数）
+	b.toggle_mode = true
+	b.custom_minimum_size = Vector2(TAB_W, tab_height)
+	if tab_variation != &"":
+		b.theme_type_variation = tab_variation
+	return b
+
+
 func _mark() -> void:
 	for i in _tabs.size():
-		_tabs[i].set_pressed_no_signal(i == _current)
+		var on := i == _current and not _on_extra
+		_tabs[i].set_pressed_no_signal(on)
 		if tab_variation == &"":
-			UiTheme.mark(_tabs[i], i == _current)
+			UiTheme.mark(_tabs[i], on)
+	if _extra_tab != null:
+		_extra_tab.set_pressed_no_signal(_on_extra)
+		if tab_variation == &"":
+			UiTheme.mark(_extra_tab, _on_extra)
 
 
 ## 没解锁的页签右下角画一把小锁

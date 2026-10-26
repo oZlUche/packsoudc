@@ -406,8 +406,13 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	t.eq(setup.stash.item_count(), 3, "三件都到了地上")
 	t.check(not flow.meta.has_pending_board(), "带回来的棋盘空了（东西挪到了地上）")
 	t.eq(flow.meta.warehouse.item_count(), n, "仓库没动")
-	t.check(setup._stash_box.visible, "地上那一栏显示着")
-	t.check(setup._stash_title.text.contains("3"), "标题写着件数：%s" % setup._stash_title.text)
+	# 255 补充二：地上是仓库页签列末尾的一页，有东西才出；刚进来先翻到它
+	t.check(setup._stash_tab.visible, "仓库页签列多出一页「地上」")
+	t.check(setup._stash_tab.text.contains("3"), "页签写着件数：%s" % setup._stash_tab.text)
+	t.eq(setup._stash_tab.get_index(), flow.meta.warehouse.page_count(), "排在已有的页后面、没解锁的页前面（不被挤出滚动区）")
+	t.check(setup.on_ground_page() and setup._stash_view.visible and not setup._warehouse_view.visible, "先翻到地上那页（格子那块换成地上）")
+	t.check(setup._warehouse_pages.show_page(0) and not setup.on_ground_page() and setup._warehouse_view.visible, "点页签「一」回到仓库格子")
+	t.check(setup._warehouse_pages.hover_tab(setup._warehouse_pages.tab_count(), WarehousePages.HOVER_SEC) and setup.on_ground_page(), "拖着东西停在「地上」页签上切回地上（163）")
 
 	# 落点规则：仓库的东西进不了地上（会丢）；地上的能回地上、能进仓库、能上棋盘
 	var filt: Callable = setup._drag.drop_filter
@@ -467,6 +472,7 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 		t.check(found >= 1, "带上的那件进了一局")
 		t.check(flow.meta.board == null, "留在地上的没了：带回来的棋盘清了")
 		t.eq(setup.stash.item_count(), 0, "地上清空")
+		t.check(not setup._stash_tab.visible and not setup.on_ground_page(), "地上空了：那页的页签收起、退回仓库格子")
 		t.eq(flow.meta.warehouse.item_count(), n + 1, "仓库没被动")
 		t.check(not MetaSave.read(flow.items, META, flow.meta_rules).has_pending_board(), "存盘里也清了")
 	game.queue_free()

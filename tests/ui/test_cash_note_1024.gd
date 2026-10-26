@@ -39,7 +39,8 @@ static func frame_cash_note(t: TestCase, root: Window) -> void:
 		game.queue_free()
 		Support.cleanup("char")
 		return
-	t.eq(note.size_flags_horizontal, Control.SIZE_SHRINK_CENTER, "水平居中，不拉满整栏")
+	t.eq(note.size_flags_horizontal, Control.SIZE_SHRINK_END, "255 补充二：钉在仓库框底部靠右，不拉满整栏")
+	t.check(note.get_parent() != null and note.get_parent().get_parent() == setup._warehouse_box, "便条在仓库木框里")
 	t.check(setup._cash_step is StoneStepper and setup._cash_chips.size() == 3, "一个步进件、三枚石签")
 	t.check(note.find_children("*", "Button", true, false).all(func(b: Button) -> bool: return b.text != "−10" and b.text != "+10"), "没有「−10」「+10」两颗旧键")
 	var w0: float = setup._cash_chips[0].custom_minimum_size.x
