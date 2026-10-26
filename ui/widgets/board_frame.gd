@@ -19,11 +19,12 @@ const FRAMED_META := &"board_framed_by"
 ## 实际用上的框（[member dark] 时是深色那套）
 var kind := ""
 var dark := false
-## 255：沿格子轮廓走的框（作战棋盘有缺格时）—— 不画九宫格图，自己画：能用的格垫浅灰底，贴着缺格 / 盘外的每条边画一道皮带；
-## 缺格什么都不画（透空见底板）。美术的直边 / 外角 / 内角拼件到之前用这个占位
+## 255：沿格子轮廓走的框（作战棋盘有缺格时）—— 不画九宫格图，按 [BoardContour] 的拼件规则拼：能用的格垫浅灰底，
+## 直边 → 凹角 → 凸角；缺格什么都不画（透空见底板）。拼件图在 `board/mask/<name>.png`（美术定稿后交来），没图画占位皮带
 var contour: GridInventory = null
-## 轮廓框那道皮带多宽、什么色
-const CONTOUR_BAND := 14.0
+## 拼件图的目录（[member UiTheme.asset_root] 下）
+const MASK_DIR := "board/mask/"
+## 没图时占位皮带的颜色
 const CONTOUR_FILL := Color("6b4a2e")
 const CONTOUR_EDGE := Color("2a1a0e")
 
@@ -63,47 +64,29 @@ static func wrap(view: Control, p_kind: String = "", p_dark: bool = false) -> Bo
 	return f
 
 
-## 255：轮廓框 —— 能用的格垫底（浅灰内垫色），每条挨着缺格 / 盘外的边往外画一道皮带，外角补一块；内角两道皮带自然拼上
+## 255：轮廓框 —— 能用的格垫底（浅灰内垫色），再按 [BoardContour.pieces] 摆拼件（按格边长缩放）
 func _draw() -> void:
 	if contour == null:
 		return
 	var view := get_child(0) as InventoryView if get_child_count() > 0 else null
 	var cell := view.cell_px if view != null else InventoryView.CELL
 	var o := Vector2.ONE * inset()
+	var k := cell / BoardContour.CELL
 	var pad := Color(String(light_seams().get("base", "#c9c7c2")))
-	var w := CONTOUR_BAND
-	var bands: Array[Rect2] = []
+	var usable := func(c: Vector2i) -> bool: return not contour.is_blocked(c)
 	for y in contour.size.y:
 		for x in contour.size.x:
-			var c := Vector2i(x, y)
-			if contour.is_blocked(c):
-				continue
-			var r := Rect2(o + Vector2(c) * cell, Vector2(cell, cell))
-			draw_rect(r, pad)
-			var up := contour.is_blocked(c + Vector2i.UP)
-			var down := contour.is_blocked(c + Vector2i.DOWN)
-			var left := contour.is_blocked(c + Vector2i.LEFT)
-			var right := contour.is_blocked(c + Vector2i.RIGHT)
-			if up:
-				bands.append(Rect2(r.position + Vector2(0, -w), Vector2(cell, w)))
-			if down:
-				bands.append(Rect2(r.position + Vector2(0, cell), Vector2(cell, w)))
-			if left:
-				bands.append(Rect2(r.position + Vector2(-w, 0), Vector2(w, cell)))
-			if right:
-				bands.append(Rect2(r.position + Vector2(cell, 0), Vector2(w, cell)))
-			if up and left:
-				bands.append(Rect2(r.position - Vector2(w, w), Vector2(w, w)))
-			if up and right:
-				bands.append(Rect2(r.position + Vector2(cell, -w), Vector2(w, w)))
-			if down and left:
-				bands.append(Rect2(r.position + Vector2(-w, cell), Vector2(w, w)))
-			if down and right:
-				bands.append(Rect2(r.position + Vector2(cell, cell), Vector2(w, w)))
-	for b in bands:
-		draw_rect(b.grow(1.0), CONTOUR_EDGE)
-	for b in bands:
-		draw_rect(b, CONTOUR_FILL)
+			if usable.call(Vector2i(x, y)):
+				draw_rect(Rect2(o + Vector2(x, y) * cell, Vector2(cell, cell)), pad)
+	for pc in BoardContour.pieces(contour.size, usable):
+		var r: Rect2 = pc["rect"]
+		r = Rect2(o + r.position * k, r.size * k)
+		var tex := UiTheme.art_cached(MASK_DIR + String(pc["name"]))
+		if tex != null:
+			draw_texture_rect(tex, r, false)
+		else:
+			draw_rect(r, CONTOUR_FILL)
+			draw_rect(r, CONTOUR_EDGE, false, 1.0)
 
 
 ## 九宫格框套在太窄 / 太矮的棋盘上会被裁掉一边（游戏测试 v4.39：铁匠铺 1×4 的长剑，格子区 14 px 宽时右边框没了；实测 ≥ 18 px 才完整）

@@ -158,6 +158,7 @@ static func run_importer(t: TestCase) -> void:
 		"缺格重复": {"board_mask": [[1, 1], [1, 1]]},
 		"随身之物找不到": {"fixed_items": [{"id": "no_such", "origin": [0, 1]}]},
 		"随身之物是包": {"fixed_items": [{"id": "bag_leather", "origin": [1, 1]}]},
+		"缺格对角相连": {"board_mask": [[1, 1], [2, 2]]},
 		"随身之物出界": {"fixed_items": [{"id": "wooden_stick", "origin": [6, 1], "rot": 1}]},
 		"随身之物压缺格": {"fixed_items": [{"id": "wooden_stick", "origin": [0, 0], "rot": 1}]},
 		"两件重叠": {"fixed_items": [{"id": "wooden_stick", "origin": [2, 1], "rot": 1}, {"id": "wooden_stick", "origin": [3, 1], "rot": 1}]},
@@ -176,6 +177,30 @@ static func run_importer(t: TestCase) -> void:
 
 static func _rect(c: Control) -> Rect2:
 	return c.get_global_rect()
+
+
+static func run_contour(t: TestCase) -> void:
+	t.begin("255 §3.3：缺格棋盘的框按拼件规则拼（美术 11:21）—— 直边 → 凹角 → 凸角，格 60、框厚 20")
+	var all := func(_c: Vector2i) -> bool: return true
+	var names := func(ps: Array[Dictionary]) -> Array: return ps.map(func(p: Dictionary) -> String: return String(p["name"]))
+	var plain: Array = names.call(BoardContour.pieces(Vector2i(2, 2), all))
+	t.eq(plain.filter(func(n: String) -> bool: return n.begins_with("edge")).size(), 8, "2 × 2 整块：八段直边")
+	t.eq(plain.filter(func(n: String) -> bool: return n.begins_with("outer")).size(), 4, "四个凸角")
+	t.check(not plain.any(func(n: String) -> bool: return n.begins_with("inner")), "没有凹角")
+	t.eq(BoardContour.pieces(Vector2i(2, 2), all).back()["rect"], Rect2(120, 120, 20, 20), "右下凸角贴在 (120, 120)")
+	var mask := {Vector2i(0, 0): true, Vector2i(6, 0): true, Vector2i(0, 6): true, Vector2i(6, 6): true, Vector2i(3, 3): true}
+	var usable := func(c: Vector2i) -> bool: return not mask.has(c)
+	var ps := BoardContour.pieces(Vector2i(7, 7), usable)
+	var probe: Array = names.call(ps)
+	t.eq(probe.filter(func(n: String) -> bool: return n.begins_with("inner")).size(), 8, "四角缺格各一个凹角、正中的洞四个")
+	t.check(probe.has("inner_tl") and probe.has("inner_br"), "凹角按缺格相对顶点的方向取名")
+	var order: Array = probe.map(func(n: String) -> int: return BoardContour.ORDER.find(n.get_slice("_", 0)))
+	var sorted := order.duplicate()
+	sorted.sort()
+	t.eq(order, sorted, "顺序：直边 → 凹角 → 凸角")
+	t.check(ps.any(func(p: Dictionary) -> bool: return p["name"] == "inner_tl" and p["rect"] == Rect2(40, 40, 20, 20)), "左上缺格的凹角在顶点 (60, 60) 的左上")
+	t.check(BoardContour.pinch_points(Vector2i(7, 7), usable).is_empty(), "探针形状拼得出")
+	t.eq(BoardContour.pinch_points(Vector2i(3, 3), func(c: Vector2i) -> bool: return c != Vector2i(1, 1) and c != Vector2i(2, 2)), [Vector2i(2, 2)] as Array[Vector2i], "对角相连的顶点挑出来")
 
 
 static func frame_select_screen(t: TestCase, root: Window) -> void:

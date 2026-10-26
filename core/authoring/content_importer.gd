@@ -1320,6 +1320,9 @@ static func _check_character_board(def: CharacterDef, ctx: Context, report: Impo
 		missing[c] = true
 	if missing.size() >= def.board_size.x * def.board_size.y:
 		report.error("board_mask", "缺格把整块棋盘都挖掉了")
+	if not missing.is_empty():     # 美术 11:21：只有两个对角格可用的顶点拼不出框
+		for v in BoardContour.pinch_points(def.board_size, func(c: Vector2i) -> bool: return not missing.has(c)):
+			report.error("board_mask", "缺格在 %s 两格只对角相连，框拼不出来" % v)
 	var taken := {}
 	for i in def.fixed_items.size():
 		var f: FixedItem = def.fixed_items[i]
