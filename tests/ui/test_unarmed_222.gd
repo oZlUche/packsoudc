@@ -77,7 +77,8 @@ static func frame_unarmed(t: TestCase, root: Window) -> void:
 		var result: BattleResult = flow.last_payload.get("result", null)
 		t.check(result != null and not result.is_draw(), "对手照常打到底，不是平局")
 		t.eq(int(run.tally["battles_lost"]), 1, "按打输结算：记一场败")
-		t.check(run.vitality.current < before or run.events.losses_forgiven > 0 or run.is_over(), "扣了体力（%d → %d），或用掉了一次免罚" % [before, run.vitality.current])
+		t.check(run.vitality.current < before or run.events.losses_forgiven > 0 or run.is_over() or not run.events.pending_ransom.is_empty(),
+			"扣了体力（%d → %d），或用掉了一次免罚，或等着求饶（256）" % [before, run.vitality.current])
 	flow.to_main_menu()
 	game.queue_free()
 	Support.cleanup(PREFIX)

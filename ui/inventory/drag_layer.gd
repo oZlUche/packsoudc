@@ -38,9 +38,19 @@ const ROOTED_NOTICE := "notice.rooted"
 const PINNED_NOTICE := "notice.pinned"
 
 
-## 这一件为什么拿不起来（[method GridInventory.is_locked] 真时）：随身之物一句、扎根一句
+## 256：可以挪的随身之物离不开棋盘时那一句（「军功牌不能离开棋盘」）
+const PIN_STAYS_NOTICE := "notice.pin_stays"
+## 256：包上压着随身之物，包拿不起来
+const PIN_BAG_NOTICE := "notice.pin_bag"
+
+
+## 这一件为什么拿不起来 / 放不出去（[method GridInventory.keeps] 真时）：随身之物一句、扎根一句
 static func refused_notice(inv: ItemContainer, uid: int) -> String:
 	var inst := inv.get_item(uid) if inv != null else null
+	if inst != null and inst.is_pinned() and not inst.is_anchored():
+		return UiText.t(PIN_STAYS_NOTICE) % Names.of(inst.def)
+	if inst != null and inv is GridInventory and (inv as GridInventory).acts_as_bag(inst.def) and (inv as GridInventory).holds_pinned(uid):
+		return UiText.t(PIN_BAG_NOTICE)
 	return UiText.t(PINNED_NOTICE if inst != null and inst.is_pinned() else ROOTED_NOTICE)
 
 @export var label_font: Font
@@ -506,6 +516,8 @@ func _update_preview(global_pos: Vector2) -> void:
 
 
 func _drop_allowed(target: ItemContainer) -> bool:
+	if _inst != null and _inst.is_pinned() and target != _source:
+		return false     # 256：可以挪的随身之物只在自己的棋盘上挪
 	return not drop_filter.is_valid() or _inst == null or bool(drop_filter.call(_inst, target))
 
 
@@ -677,6 +689,8 @@ func drop_at(global_pos: Vector2) -> bool:
 	var inst := _inst
 	var dropped := false
 	var target := view_at(global_pos)
+	# 256：可以挪的随身之物往棋盘外放 —— 弹回原处之后借 [signal grab_refused] 让宿主说一句「不能离开棋盘」
+	var pin_out := inst.is_pinned() and (target == null or target.container() != _source)
 
 	# 顶替留到本次拖拽收尾之后再处理：被顶出来的那一件要接着上手，
 	# 而上手的前提是当前这一次已经彻底结束
@@ -793,6 +807,8 @@ func drop_at(global_pos: Vector2) -> bool:
 	drag_finished.emit(inst.uid, dropped)
 	if refused and not dropped:
 		drop_refused.emit(inst.uid)
+	if pin_out and not dropped:
+		grab_refused.emit(inst.uid)
 
 	if not pending.is_empty():
 		_settle_displaced(pending, home, global_pos)
@@ -1003,6 +1019,10 @@ func _displaceable(inv: GridInventory, origin: Vector2i) -> Array[int]:
 		return none
 	if inv.any_locked(victims):
 		return none     # 207：扎了根的顶不动
+	for v in victims:
+		var vi := inv.get_item(v)
+		if vi != null and vi.is_pinned():
+			return none     # 256：随身之物不被顶（顶出来就可能落到地上）
 	return victims
 
 

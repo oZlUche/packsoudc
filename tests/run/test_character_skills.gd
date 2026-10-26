@@ -93,7 +93,7 @@ static func run_pipeline(t: TestCase) -> void:
 
 
 static func run_authored_characters(t: TestCase) -> void:
-	t.begin("技能 · 作者定的三个角色（136 改过）：安德烈乌斯（脱身、免罚一败）、布鲁图斯（咬牙；数值在基线里，不再做成被动）、马库斯（突击）；被动进上下文、基线加成盖到基线上")
+	t.begin("技能 · 作者定的三个角色（256 定稿）：安德烈乌斯（偷袭、求饶）、布鲁图斯（没有技能，全靠面板）、马库斯（操练：武器耐力消耗与重量 −20%；军功进了军功牌）；被动进上下文、基线加成盖到基线上")
 	var c := _content()
 	for id in [&"andreus", &"brutus", &"marcus"]:
 		t.not_null(_character(c, id), "有角色 %s" % id)
@@ -102,12 +102,18 @@ static func run_authored_characters(t: TestCase) -> void:
 	var marcus := _character(c, &"marcus")
 	if brutus == null or andreus == null or marcus == null:
 		return
-	t.check(_active(andreus).size() >= 1 and _active(andreus)[0] is SlipSkill, "安德烈乌斯有脱身（136：替换了躲避）")
-	t.check(_expected(andreus).free_losses >= 1, "安德烈乌斯免罚至少一败")
-	t.check(_active(marcus).size() >= 1 and _active(marcus)[0] is AssaultSkill, "马库斯有突击")
-	t.check(_active(brutus).size() == 1 and _active(brutus)[0] is SecondWindSkill, "布鲁图斯有咬牙（136）")
-	var want := _expected(brutus)
-	t.check(want.stat_bonus.is_empty() and want.vitality_max_bonus == 0, "136：布鲁图斯的被动里不再有生命 / 耐力 / 体力加成（都在基线里）")
+	t.check(_active(andreus).size() == 1 and _active(andreus)[0] is AssaultSkill and _active(andreus)[0].show_prebattle, "256：安德烈乌斯有偷袭（战前屏上的键），脱身删了")
+	t.eq(_expected(andreus).free_losses, 0, "256：溜得掉去掉了首败免扣")
+	t.check(_expected(andreus).ransom_mult > 0.0, "256：安德烈乌斯能求饶")
+	t.check(_active(marcus).is_empty(), "256：马库斯没有主动技能（突击删了）")
+	t.eq(_expected(marcus).battle_reward_mult, 1.0, "256：马库斯的军功被动并进了军功牌")
+	t.eq(andreus.skills.size(), 2, "256：安德烈乌斯只有偷袭、求饶（熟门熟路、溜得掉、脱身删了）")
+	t.check(brutus.skills.is_empty(), "256：布鲁图斯没有技能（野地里长大、坚韧、咬牙删了）")
+	var drill := _expected(marcus)
+	t.eq(drill.scoped.size(), 1, "256：操练喂一条按件修饰（武器）")
+	t.check(drill.scoped.size() == 1 and drill.scoped[0].tags == ([&"weapon"] as Array[StringName]) and drill.scoped[0].mods.size() == 1
+		and drill.scoped[0].mods[0].stat == BattleStats.STAMINA_COST and is_equal_approx(drill.scoped[0].mods[0].amount, -20.0), "武器耐力消耗 −20%")
+	t.eq(drill.weight_pct, [{"tags": [&"weapon"] as Array[StringName], "percent": -20}], "武器重量 −20%")
 	for raw in [andreus, brutus, marcus]:
 		var ch := raw as CharacterDef
 		var s := _start(c, ch)
@@ -137,10 +143,9 @@ static func _board_hp(spec: CombatantSpec) -> int:
 
 
 static func run_assault_and_free_loss(t: TestCase) -> void:
-	t.begin("技能 · 突击：用了立旗、下一场战斗对方先少三成血、旗子撤、次数与冷却记账；免罚的败仗只对节点敌人，配额用完照扣")
+	t.begin("技能 · 突击 / 偷袭：用了立旗、下一场战斗对方先少三成血、旗子撤、次数与冷却记账；免罚的败仗只对节点敌人，配额用完照扣")
 	var c := _content()
-	var marcus := _character(c, &"marcus")
-	var s := _start(c, marcus)
+	var s := _start(c, _assaulter(_character(c, &"marcus")))
 	if s == null:
 		t.check(false, "开不了局")
 		return
@@ -173,9 +178,8 @@ static func run_assault_and_free_loss(t: TestCase) -> void:
 	s.skills.uses_left[String(skill.id)] = 0
 	t.check(s.skills.can_use(skill.id).contains("用完"), "次数 0：用完了")
 
-	# 免罚的败仗：安德烈乌斯，玩家用一个打不赢的单位
-	var andreus := _character(c, &"andreus")
-	var s2 := _start(c, andreus)
+	# 免罚的败仗（构件；256 起没有角色带它）：玩家用一个打不赢的单位
+	var s2 := _start(c, _forgiver(_character(c, &"andreus")))
 	if s2 == null:
 		t.check(false, "开不了局")
 		return
@@ -196,6 +200,31 @@ static func run_assault_and_free_loss(t: TestCase) -> void:
 	t.eq(s2.events.losses_forgiven, quota, "免了 %d 次" % quota)
 	s2.events.fight_content(node2, &"battle", node2.content)
 	t.eq(s2.vitality.current, v0 - cost, "配额用完：照扣 %d" % cost)
+
+
+## 256：马库斯的突击删了 —— 测构件用一个只带突击的副本（有冷却，好测冷却的账）
+static func _assaulter(base: CharacterDef) -> CharacterDef:
+	var ch := base.duplicate(true) as CharacterDef
+	var a := AssaultSkill.new()
+	a.id = &"assault"
+	a.display_name = "突击"
+	a.uses = 3
+	a.cooldown_steps = 3
+	ch.skills = [a] as Array[RunSkill]
+	return ch
+
+
+## 256：首败免扣不再挂在安德烈乌斯身上（求饶顶了它）—— 测构件用一个只带免罚的副本
+static func _forgiver(base: CharacterDef) -> CharacterDef:
+	var ch := base.duplicate(true) as CharacterDef
+	var p := PassiveSkill.new()
+	p.id = &"forgive"
+	p.display_name = "免罚"
+	var fl := FreeLosses.new()
+	fl.amount = 1
+	p.passive = [fl] as Array[Effect]
+	ch.skills = [p] as Array[RunSkill]
+	return ch
 
 
 ## 136：躲避不再挂在安德烈乌斯身上 —— 测构件用一个只带躲避的副本
@@ -265,7 +294,7 @@ static func run_evade(t: TestCase) -> void:
 static func run_save_load(t: TestCase) -> void:
 	t.begin("技能 · 存档：次数、冷却、立的旗、躲避、免罚次数都跟着走；读档由持有方按 id 接回角色")
 	var c := _content()
-	var marcus := _character(c, &"marcus")
+	var marcus := _character(c, &"andreus")     # 256：主动技能在安德烈乌斯身上（偷袭）
 	Support.cleanup("skills")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
 	f.chapters = [c.chapter] as Array[ChapterDef]

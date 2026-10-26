@@ -4,87 +4,23 @@
   "display_names": {
     "en": "Brutus"
   },
-  "description": "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}、棋盘最宽，扛得住、缓得过来；只是耐力回得慢、带的钱少，也没有逃跑和爆发的手段。",
+  "description": "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}、棋盘最宽、背得最多，扛得住、缓得过来。",
   "descriptions": {
-    "en": "A slave explorer who is good at surviving. Health {max_hp}, Vitality {vitality_max} and the widest board: he takes a beating and recovers. But his Stamina regenerates slowly, he brings little money, and he has no way to flee or burst."
+    "en": "A slave explorer who is good at surviving. Health {max_hp}, Vitality {vitality_max}, the widest board and the heaviest load: he takes the hits and recovers."
   },
   "base_stats": {
-    "max_hp": 70,
-    "max_stamina": 55,
-    "regen_stamina": 3
+    "max_hp": 85,
+    "max_stamina": 65,
+    "regen_stamina": 4
   },
-  "vitality_max": 7,
+  "vitality_max": 8,
   "board_size": [
     9,
     6
   ],
-  "starting_funds": 80,
   "starting_bags": [
     "bag_leather",
     "bag_leather"
   ],
-  "weight_capacity": 56,
-  "skills": [
-    {
-      "type": "passive",
-      "id": "wild_born",
-      "display_name": "野地里长大",
-      "display_names": {
-        "en": "Raised in the Wild"
-      },
-      "description": "休息时额外恢复 {rest_bonus_amount} 点体力。",
-      "descriptions": {
-        "en": "Restore {rest_bonus_amount} extra Vitality when resting."
-      },
-      "passive": [
-        {
-          "type": "rest_bonus"
-        }
-      ]
-    },
-    {
-      "type": "passive",
-      "id": "hardy",
-      "display_name": "坚韧",
-      "display_names": {
-        "en": "Tough"
-      },
-      "description": "战斗中生命低于 {percent}% 时，立即获得 {apply_status_amount} 点护甲（每场一次）。",
-      "descriptions": {
-        "en": "When your Health drops below {percent}% in battle, gain {apply_status_amount} Armor at once (once per battle)."
-      },
-      "rules": [
-        {
-          "trigger": {
-            "type": "on_resource_below"
-          },
-          "cadence": "@always",
-          "costs": [
-            "@uses_1"
-          ],
-          "effects": [
-            {
-              "type": "apply_status",
-              "target": "SELF",
-              "buff": "hardy_guard"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "second_wind",
-      "id": "second_wind",
-      "display_name": "咬牙",
-      "display_names": {
-        "en": "Second Wind"
-      },
-      "description": "在地图上恢复 {amount} 点体力。",
-      "descriptions": {
-        "en": "Restore {amount} Vitality on the map."
-      },
-      "uses": 2,
-      "cooldown_steps": 6
-    }
-  ]
+  "weight_capacity": 64
 }

@@ -74,8 +74,8 @@ func growing() -> Array[ItemInstance]:
 	var dormant := FaithState.dormant_uids(_run.board)
 	for raw in _run.board.items():
 		var inst := raw as ItemInstance
-		if inst == null or inst.def == null or inst.def.growth == null:
-			continue
+		if inst == null or inst.def == null or inst.def.growth == null or inst.def.growth.runs_on_honor():
+			continue     # 256：靠军功长的不走步（[HonorModule]）
 		if dormant.has(inst.uid) or _run.board.bag_of(inst.uid) == GridInventory.EMPTY_UID:
 			continue
 		out.append(inst)

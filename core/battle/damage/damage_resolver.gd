@@ -137,7 +137,7 @@ static func _trace(ctx: BattleContext, packet: DamagePacket, raw_in: int, hp_bef
 ## 发出 damage 事件。
 ##
 ## [b]不招致反应的类型也照发。[/b] 过滤发生在扳机那一侧（[DamageTrigger] 默认只认
-## provokes 为真的类型），而不是这里不发 —— 不发的话「中毒时净化」「流失时回气」
+## provokes 为真的类型），而不是这里不发 —— 不发的话「中毒时净化」「流失时耐力回复」
 ## 这类联动就永远没有接入点，而那正是我们想留的口子。
 static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef) -> void:
 	var payload := {

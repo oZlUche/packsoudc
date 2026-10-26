@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b1h5j2xlv164m"
-path="res://.godot/imported/slippery.png-21fd6a2df8671881e3e75d4ef5bb7ab4.ctex"
+uid="uid://unsaxykfkbbi"
+path="res://.godot/imported/ambush_key_pressed.png-075c72d9de284c4b4f98095f6ce27c06.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/skills/slippery.png"
-dest_files=["res://.godot/imported/slippery.png-21fd6a2df8671881e3e75d4ef5bb7ab4.ctex"]
+source_file="res://assets/ui/battle/ambush_key_pressed.png"
+dest_files=["res://.godot/imported/ambush_key_pressed.png-075c72d9de284c4b4f98095f6ce27c06.ctex"]
 
 [params]
 

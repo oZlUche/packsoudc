@@ -29,7 +29,9 @@ static func run_sealed_listing(t: TestCase) -> void:
 	t.check(db.all_ids().has(def.id), "在 all_ids() 里")
 	var blessed: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_blessed())
 	var tokens: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_token())
-	t.eq(db.ids().size() + 1 + db.keepsake_ids().size() + blessed.size() + tokens.size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 + 铸牌 = 全部（088 / 095 / 175）")
+	var signature: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_signature())
+	t.check(signature.has(&"legion_phalera"), "256：军功牌是随身之物")
+	t.eq(db.ids().size() + 1 + db.keepsake_ids().size() + blessed.size() + tokens.size() + signature.size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 + 铸牌 + 随身之物 = 全部（088 / 095 / 175 / 256）")
 	t.eq(db.size(), db.all_ids().size(), "size() 数的是全部")
 
 	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))

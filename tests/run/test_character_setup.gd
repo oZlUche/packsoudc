@@ -16,7 +16,7 @@ static func _content() -> TestSupport.Content:
 
 static func _ctx(c: TestSupport.Content) -> ContentImporter.Context:
 	var ctx := ContentImporter.Context.new()
-	for id in c.items.ids():
+	for id in c.items.all_ids():     # 256：随身之物（军功牌）不在 ids() 里，角色文件要对着它查
 		ctx.register_item(c.items.get_def(id))
 	for l in c.loadouts:
 		ctx.register_loadout(l)

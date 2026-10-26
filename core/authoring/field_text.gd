@@ -43,7 +43,7 @@ const LABELS := {
 	"elements": "两种元素", "scaling": "随反应量变的数",     # 175
 	"is_debuff": "是减益", "refresh_on_restack": "再叠刷新时长", "on_apply": "施加时", "on_expire": "到期时", "mods": "属性加成", "consume": "消耗掉",
 	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "grant_rules": "给邻居挂的规则", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",
-	"uses": "次数", "max_uses": "最多次数", "hp_fraction": "生命比例", "direction": "方向", "source": "来源", "weapon_tag": "武器标签", "min_amount": "最少量",
+	"uses": "次数", "max_uses": "最多次数", "hp_fraction": "生命比例", "rest_recharge": "休息点补几次", "fuel": "靠什么长", "honor_by_type": "各类战斗记几点军功", "honor_default": "别的战斗记几点", "ransom": "求饶", "show_prebattle": "战前屏给键", "direction": "方向", "source": "来源", "weapon_tag": "武器标签", "min_amount": "最少量",
 	"speed": "速度", "cells": "格", "pieces": "件", "tiers": "档位", "count_mode": "计数方式", "common_tags": "通用标签",
 	# 事件
 	"options": "选项", "requires": "条件", "outcomes": "后果", "hide_when_locked": "条件不满足时隐藏", "event": "事件", "node_type": "点的类型", "node_types": "点的类型",
@@ -69,7 +69,7 @@ const LABELS := {
 	"loss_cost": "战败代价", "rest_restore": "休息回体力", "search": "搜索", "reveal_seconds": "揭示秒数", "items_per_search": "每次搜几件", "max_searches": "最多搜几次",
 	"boss_extracts": "打完核心直接撤离", "fail_vitality": "失败扣体力", "fail_buff": "失败背的 buff", "boss_rarity": "核心保底稀有度", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
 	"bags_always_drop": "包必掉", "rarity_weights": "稀有度权重", "shop_slots": "商店栏位", "shop_sell_ratio": "出售折价", "shop_price_mult": "商店价格倍率",
-	"shop_refresh_cost": "刷新价", "extract_fee": "撤离费", "starting_balance": "开局钱", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
+	"shop_refresh_cost": "刷新价", "extract_fee": "撤离费", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
 	# 角色 / 敌人 / 猎手 / 信仰
 	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能", "flaw": "短板", "fixed_items": "随身之物", "board_mask": "棋盘缺格", "FixedItem.origin": "摆在哪（左上角）", "FixedItem.rot": "朝向",
 	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "combos": "相邻组合", "builds": "套路", "carry_mult": "携带倍率", "build_chance": "套路概率", "bad_build_mult": "坏套路权重倍率", "quality": "好坏", "loose": "不成组", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
@@ -97,11 +97,12 @@ const TYPE_LABELS := {
 	"resource": "消耗资源", "status_stack": "消耗叠层", "charge": "充能", "uses": "限次", "chance": "概率",
 	"deal_damage": "造成伤害", "change_resource": "改资源", "apply_status": "施加状态", "remove_status": "移除状态", "modify_damage": "改伤害", "reflect_damage": "反弹伤害",
 	"extra_rolls": "额外掉落次数", "rarity_bias": "稀有度偏移", "category_bias": "类别偏移", "drop_owned_chance": "掉身上有的概率",
-	"vitality_max_bonus": "体力上限加成", "starting_funds_bonus": "开局钱加成", "keep_on_death": "战败保住钱", "extra_searches": "额外搜索次数", "shop_price_mult": "商店价格倍率",
+	"vitality_max_bonus": "体力上限加成", "keep_on_death": "战败保住钱", "extra_searches": "额外搜索次数", "shop_price_mult": "商店价格倍率",
 	"luck_bonus": "幸运加成", "scout_range": "侦察范围", "stealth": "潜行", "flee_bonus": "逃跑加成", "free_losses": "免扣体力次数", "loss_discount": "败仗少扣体力", "stat_bonus": "属性加成", "carry_capacity_bonus": "负重上限加成",
 	"passive": "被动", "assault": "突击", "evade": "躲避",
 	# 136：角色的套装
 	"slip": "脱身", "second_wind": "咬牙", "travel_discount": "熟门熟路（免费步）", "rest_bonus": "休息多回体力", "erosion_resist": "侵蚀少扣体力",
+	"ransom": "求饶（天平开价倍数）", "tag_mods": "按标签给道具挂修饰", "tag_weight_mult": "按标签打重量折扣",     # 256
 	"battle_reward_mult": "打赢的钱倍率", "every": "每几步", "factor": "倍数",
 	"skill_ready": "技能能用", "skill": "技能",
 	"place_item": "置入道具", "battle": "打仗", "travel": "走路", "earn_money": "进账", "spend_money": "花钱", "explore": "搜索", "event_choice": "事件里选特定选项",
@@ -118,7 +119,7 @@ const TYPE_LABELS := {
 	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_armor": "按食物给护甲", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "axis_boost": "开战带几层标准轴", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
-	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff", "belt": "腰带", "wear": "道具耐久", "growth": "生长",     # 101：一局的模块（本体功能与难度机制同一张表）
+	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff", "belt": "腰带", "wear": "道具耐久", "growth": "生长", "honor": "军功",     # 101：一局的模块（本体功能与难度机制同一张表）；256 军功
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
 	"damage_item": "损坏道具", "drain_money": "掉钱",

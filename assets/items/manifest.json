@@ -82,6 +82,7 @@
     "ironwood_sapling",
     "knife",
     "leather_armor",
+    "legion_phalera",
     "lightning_crystal",
     "lightning_crystal_high",
     "lightning_crystal_low",
@@ -162,6 +163,7 @@
     "fire_crystal": ["c0", "c1", "c2", "c3"],
     "ice_crystal": ["c0", "c1", "c2", "c3"],
     "ironwood_sapling": ["s1", "s2"],
+    "legion_phalera": ["s1", "s2", "s3", "s4"],
     "lightning_crystal": ["c0", "c1", "c2", "c3"],
     "moonherb_seed": ["s1", "s2"],
     "thorn_seed": ["s1", "s2"]

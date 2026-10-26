@@ -112,6 +112,15 @@ signal battle_pending(node: MapNode, type: StringName, content: Dictionary)
 signal battle_skipped(node: MapNode)
 ## 248：等着开打的那一场被「退回」推掉了（点没用过、敌人还在；人退回上一个点）
 signal battle_retreated(node: MapNode)
+## 256（安德烈乌斯「求饶」）：有人画天平才开价（[GameFlow] 开；直接驱动的测试与批量工具关，照旧扣体力）
+var offer_ransom: bool = false
+## 256：打输了、对方开了价、还没答复的那一场：{"node": id, "type": …, "content": 敌人内容, "cost": 原本要扣的体力, "price": 开价}。
+## 跟着存档走；读档回来还停在天平上
+var pending_ransom: Dictionary = {}
+## 256：打输了，对方开价（体力先不扣，等 [method pay_ransom] / [method refuse_ransom]）
+signal ransom_offered(node: MapNode, price: int)
+## 256：求饶有了结果（paid = 成交）
+signal ransom_settled(node: MapNode, paid: bool)
 
 var current_search: SearchSession = null
 ## 154：踩上去才揭出来的宝箱用哪套皮肤（章节的 [member ChapterDef.chest_skin]，持有方设）
@@ -357,7 +366,8 @@ func choose(i: int) -> bool:
 	var fled := false
 	if ctx.flee_encounter:
 		var fail := rules.flee_fail_vitality() if rules != null else 1
-		fled = flee_roll(flee_chance(), fail, _rng_for(node, "flee:%d:%d" % [ctx.steps, searches_total()]), ctx)
+		fled = flee_roll(flee_chance(), fail, _rng_for(node, "flee:%d:%d" % [ctx.steps, searches_total()]), ctx, Callable(),
+			node, _flee_foe(node, saved_encounter))
 		ctx.start_battle = not fled
 	# 8-3：改类型先落账，后面的「照常发生」「开战」都按新类型走（和随机点揭开是同一个记号）
 	if ctx.new_type != &"" and ctx.new_type != type:
@@ -633,13 +643,18 @@ func flee_chance() -> float:
 
 ## 248：掷一把逃跑（搜索遭遇、伏击、猎手同一个）。逃掉返回 true；没逃掉扣 [param fail_vitality] 点体力
 ## （给了 [param spend] 就交它扣 —— 猎手要自己报战败）、背节点规则的 `flee.fail_buff`。日志与代价记进 [param ctx]
-func flee_roll(chance: float, fail_vitality: int, rng: RandomNumberGenerator, ctx: EventContext, spend: Callable = Callable()) -> bool:
+## 256：[param node] / [param foe] 给了（逃的是谁：开价按它打赢的钱算）就先问求饶 —— 开得出价就不扣，等天平；
+## [param defeat] 是天平上不求饶、扣到底时报的战败原因（猎手报它自己的）
+func flee_roll(chance: float, fail_vitality: int, rng: RandomNumberGenerator, ctx: EventContext, spend: Callable = Callable(),
+		node: MapNode = null, foe: Dictionary = {}, defeat: StringName = &"vitality_depleted") -> bool:
 	if rng.randf() < chance:
 		ctx.log.append(UiText.t("flee.ok"))
 		return true
 	ctx.log.append(UiText.t("flee.fail"))
 	if fail_vitality > 0:
-		if spend.is_valid():
+		if node != null and _offer_ransom(node, FLEE, foe, fail_vitality, defeat):
+			pass     # 256：先不扣，等天平
+		elif spend.is_valid():
 			spend.call(fail_vitality)
 		elif vitality != null:
 			vitality.spend(fail_vitality, &"flee")
@@ -724,6 +739,8 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 		var cost := loss_cost_for(type, content, loss_cost)
 		if cost == LOSS_DEATH:
 			_defeat(&"boss_lost" if type == &"core" else &"fatal_loss")     # 必死：直接战败，连 spend 都不调（7.1）
+		elif cost > 0 and vitality != null and _offer_ransom(node, type, content, cost):
+			pass     # 256：先不扣，等天平
 		elif cost > 0 and vitality != null:
 			# 082：角色技能的免罚败仗 —— 只对节点敌人，配额在上下文里、已免几次在这里记。
 			# 088（作者定）：输给猎手也扣体力（默认按 loss_cost 里的 hunter，猎手定义可以自己写），猎手定义里的战败后果另算
@@ -736,6 +753,111 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 				_defeat(&"vitality_depleted")
 		# cost == 0：这一场写了无代价
 	return won
+
+
+#region 求饶（256）
+## 求饶时 [member pending_ransom] 的 `type`：逃跑失败（不是打输了：不求饶时照扣逃跑那几点，不吃「不屈」的少扣）
+const FLEE := &"flee"
+
+
+## 有对手的扣体力能不能求饶（作者 15:28「只要扣体力就能求饶」：打输了、逃跑失败；事件里自愿付的不算）：
+## 有 `ransom` 效果、不是核心点也不是搜索遭遇的败仗（那两个本来不扣 / 必死）、开得出价。开得出就记下等玩家，返回 true
+func _offer_ransom(node: MapNode, type: StringName, content: Dictionary, cost: int, defeat: StringName = &"vitality_depleted") -> bool:
+	var mult := hooks.run_context().ransom_mult
+	if not offer_ransom or mult <= 0.0 or type == &"core" or type == &"search" or wallet == null:
+		return false
+	var price := ransom_price(node, content, mult)
+	if price <= 0:
+		return false
+	if not pending_ransom.is_empty():
+		# 逃跑失败、接着那一场又输了（猎手）：一次天平算两笔 —— 开价相加，不求饶两笔照扣
+		var more: Array = pending_ransom.get("more", [])
+		more.append({"type": String(type), "cost": cost})
+		pending_ransom["more"] = more
+		pending_ransom["price"] = int(pending_ransom["price"]) + price
+		ransom_offered.emit(node, int(pending_ransom["price"]))
+		return true
+	pending_ransom = {"node": node.id, "type": String(type), "content": content.duplicate(true), "cost": cost, "price": price}
+	if defeat != &"vitality_depleted":
+		pending_ransom["defeat"] = String(defeat)
+	ransom_offered.emit(node, price)
+	return true
+
+
+## 248 / 256：被缠上的那一场的对手（开价按它算）：搜索里的遭遇、读档回来记在 pending 里的遭遇、点上的敌人；都没有按最低档
+func _flee_foe(node: MapNode, saved_encounter: Dictionary) -> Dictionary:
+	if current_search != null and not current_search.encounter.is_empty():
+		return current_search.encounter
+	if not saved_encounter.is_empty():
+		return saved_encounter
+	return node.content if EnemyKit.has_enemy(node.content) else {}
+
+
+## 开价 = 这一场打赢的钱（地图难度与敌人档位都在里面）× [param mult]
+func ransom_price(node: MapNode, content: Dictionary, mult: float) -> int:
+	if economy == null:
+		return 0
+	return roundi(float(economy.battle_reward(int(content.get("strength", 0)), _depth_of(node), difficulty)) * mult)
+
+
+func ransom_node() -> MapNode:
+	return graph.get_node(int(pending_ransom["node"])) if not pending_ransom.is_empty() and graph != null and graph.has_node(int(pending_ransom["node"])) else null
+
+
+## 道具在天平上有多重：局内出售价（碎了打折，和商店收购同一套）
+func ransom_value_of(inst: ItemInstance) -> int:
+	if inst == null:
+		return 0
+	return ShopSession.sell_price_for(inst.def, inst, economy, hooks.run_context().shop_price_mult)
+
+
+## 左盘一共多重：金币一枚 1，道具按 [method ransom_value_of]
+func ransom_weight(coins: int, given: Array) -> int:
+	var w := maxi(0, coins)
+	for inst in given:
+		w += ransom_value_of(inst as ItemInstance)
+	return w
+
+
+## 成交：从钱包拿 [param coins]，[param given] 里的道具归对方（调用方已经从包里拿出来放在托盘上，成交后丢掉），体力不扣。
+## 不够开价、钱不够、没有等着的：返回原因，什么都不动
+func pay_ransom(coins: int, given: Array = []) -> String:
+	if pending_ransom.is_empty():
+		return UiText.t("ransom.none")
+	coins = maxi(0, coins)
+	if wallet == null or not wallet.can_afford(coins):
+		return UiText.t("ransom.short")
+	if ransom_weight(coins, given) < int(pending_ransom.get("price", 0)):
+		return UiText.t("ransom.short")
+	var node := ransom_node()
+	if coins > 0:
+		wallet.spend(coins, &"ransom")
+	pending_ransom = {}
+	ransom_settled.emit(node, true)
+	return ""
+
+
+## 不求饶（关窗也是）：照原来那样扣体力，扣到底就战败。没有等着的返回 false
+func refuse_ransom() -> bool:
+	if pending_ransom.is_empty():
+		return false
+	var node := ransom_node()
+	var parts: Array = [{"type": pending_ransom.get("type", ""), "cost": pending_ransom.get("cost", 1)}]
+	parts.append_array(pending_ransom.get("more", []))
+	var defeat := StringName(String(pending_ransom.get("defeat", "vitality_depleted")))
+	pending_ransom = {}
+	if vitality != null:
+		for part in parts:
+			var cost := int((part as Dictionary).get("cost", 1))
+			if StringName(String((part as Dictionary).get("type", ""))) == FLEE:
+				vitality.spend(cost, &"flee")     # 逃跑失败那几点原样扣
+			else:
+				vitality.spend(maxi(1, cost - hooks.run_context().loss_discount), &"battle_lost")
+		if vitality.is_depleted():
+			_defeat(defeat)
+	ransom_settled.emit(node, false)
+	return true
+#endregion
 
 
 ## 打赢了之后（节点的一场、搜索遭遇、猎手、秒杀都走这里）：掉落 → 赐福替换 → 尸体容器交出去 → 进账 → 核心点的 BOSS 倒下。

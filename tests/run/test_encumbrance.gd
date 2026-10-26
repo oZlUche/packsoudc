@@ -79,18 +79,18 @@ static func run_weights(t: TestCase) -> void:
 
 
 static func run_capacities(t: TestCase) -> void:
-	t.begin("137 · 三人的负重上限：安德烈乌斯 40、马库斯 48、布鲁图斯 56")
-	t.eq(_character("andreus").weight_capacity, 40, "安德烈乌斯 40")
+	t.begin("137 / 256 · 三人的负重上限：安德烈乌斯 48、马库斯 48、布鲁图斯 64")
+	t.eq(_character("andreus").weight_capacity, 48, "安德烈乌斯 48")
 	t.eq(_character("marcus").weight_capacity, 48, "马库斯 48")
-	t.eq(_character("brutus").weight_capacity, 56, "布鲁图斯 56")
+	t.eq(_character("brutus").weight_capacity, 64, "布鲁图斯 64")
 	var c := _content()
 	var run := _run(c)
 	t.not_null(run.encumbrance, "自由模式开着负重")
-	t.eq(run.carry_capacity(), 40, "一局里的上限 = 角色的")
+	t.eq(run.carry_capacity(), _character("andreus").weight_capacity, "一局里的上限 = 角色的")
 	t.check(run.carry_weight() > 0, "开局的包与装备有重量（%d）" % run.carry_weight())
 	t.eq(run.encumbrance_level(), 0, "标准开局在安德烈乌斯身上是轻装")
 	var rules: EncumbranceRules = load(ContentPaths.asset_file("encumbrance_rules", "standard"))
-	for cap in [40, 48, 56]:
+	for cap in [48, 64]:
 		t.eq(rules.level_of(35, cap), 0, "负重 35、上限 %d：轻装" % cap)
 	t.eq(rules.level_of(48, 40), 0, "161：负重 48、安德烈乌斯（40）：1.2 倍还算轻装")
 	t.eq(rules.level_of(60, 40), 1, "1.5 倍：吃力")
@@ -100,7 +100,7 @@ static func run_capacities(t: TestCase) -> void:
 		var w := 0
 		for id in (l as LoadoutDef).items:
 			w += ItemWeight.of(c.items.get_def(id))
-		t.check(w <= 40, "预设 %s 的开局负重 %d ≤ 最小上限 40" % [(l as LoadoutDef).id, w])
+		t.check(w <= 48, "预设 %s 的开局负重 %d ≤ 最小上限 48" % [(l as LoadoutDef).id, w])
 	var prologue: ChapterDef = load(ContentPaths.asset_file("chapters", "prologue"))
 	t.eq(prologue.encumbrance_rules, &"", "序章不算负重")
 
@@ -130,9 +130,9 @@ static func run_tech_bonus(t: TestCase) -> void:
 	var run := _run(c)
 	var base_cap := run.carry_capacity()
 	var with1 := _run(c, -1, [&"tech_hauling_1"] as Array[StringName])
-	t.eq(with1.carry_capacity(), base_cap + 6, "扛重一级：上限 +6")
+	t.eq(with1.carry_capacity(), base_cap + roundi(base_cap * 0.15), "扛重一级：上限 +15%%（%d → %d）" % [base_cap, with1.carry_capacity()])
 	var with3 := _run(c, -1, [&"tech_hauling_3"] as Array[StringName])
-	t.eq(with3.carry_capacity(), base_cap + 20, "扛重三级：上限 +20")
+	t.eq(with3.carry_capacity(), roundi(base_cap * 1.5), "扛重三级：上限 +50%%（%d）" % with3.carry_capacity())
 	# 同样的负重，科技把级数压下来：上限改成刚好吃力
 	var w := run.carry_weight()
 	t.eq(with1.carry_weight(), w, "两边背的一样（%d）" % w)

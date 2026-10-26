@@ -60,6 +60,39 @@ static func total(c: ItemContainer) -> int:
 	return sum
 
 
+## 256（马库斯「操练」）：按标签打折之后的总重 —— [param rules] 是 [member RunContext.weight_pct]（`[{tags, percent}]`），
+## 一件命中几条就把那几条的百分数相加（133：乘算相加不相乘），按件乘完再求和、最后取整一次。空表 = [method total]
+static func total_scaled(c: ItemContainer, rules: Array) -> int:
+	if rules.is_empty():
+		return total(c)
+	var sum := 0.0
+	if c == null:
+		return 0
+	for inst in c.items():
+		sum += float(of_in(inst as ItemInstance, c)) * (100 + percent_of((inst as ItemInstance).def, rules)) / 100.0
+	return roundi(sum)
+
+
+## 256：这一件按标签打几折（Σ百分数；没命中 0）
+static func percent_of(def: ItemDef, rules: Array) -> int:
+	var pct := 0
+	if def == null:
+		return pct
+	for r in rules:
+		for tag in (r as Dictionary).get("tags", []):
+			if def.has_tag(StringName(tag)):
+				pct += int((r as Dictionary).get("percent", 0))
+				break
+	return pct
+
+
+## 256：悬浮窗脚注用的这一件的重量（打了折的四舍五入）
+static func of_in_scaled(inst: ItemInstance, c: ItemContainer, rules: Array) -> int:
+	var w := of_in(inst, c)
+	var pct := percent_of(inst.def, rules) if inst != null else 0
+	return w if pct == 0 else roundi(float(w) * (100 + pct) / 100.0)
+
+
 ## 209：放在 [param c] 上的这一件有多重 —— 整件在一个包里就乘包的 [member ItemDef.bag_weight_mult]（四舍五入），其余同 [method of]
 static func of_in(inst: ItemInstance, c: ItemContainer) -> int:
 	var w := of(inst.def)

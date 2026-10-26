@@ -28,6 +28,7 @@ const SCREEN_SCRIPTS := {
 	GameFlow.Screen.ENCYCLOPEDIA: "res://ui/game/encyclopedia_screen.gd",
 	GameFlow.Screen.CHEST: "res://ui/game/chest_screen.gd",     # 154：宝箱（叠层；不画地上 —— 开锁时只看箱子）
 	GameFlow.Screen.FORGE: "res://ui/game/forge_screen.gd",     # 175：铸炉（叠层）
+	GameFlow.Screen.RANSOM: "res://ui/game/ransom_screen.gd",     # 256：求饶的天平（叠层）
 }
 ## 196：`scene = rest_camp` 的事件（休息点）演成夜晚营地
 const CAMP_SCRIPT := "res://ui/game/rest_camp_screen.gd"
@@ -67,6 +68,7 @@ var notices: NoticeLayer = null
 const GROUND_SCREENS := [
 	GameFlow.Screen.MAP, GameFlow.Screen.LOOT, GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP, GameFlow.Screen.EVENT,
 	GameFlow.Screen.REST, GameFlow.Screen.PREBATTLE, GameFlow.Screen.SAFE, GameFlow.Screen.ALTAR, GameFlow.Screen.FORGE,
+	GameFlow.Screen.RANSOM,
 ]
 
 
@@ -220,6 +222,7 @@ func overlay() -> GameScreen:
 ## 101 第 5 刀：接线在这边 —— [GameFlow] 只发 [signal GameFlow.run_changed] 并提供 [method GameFlow.faith_status]，不认识 ui
 func _on_run_changed(state: RunState) -> void:
 	ItemTooltip.faith_probe = Callable() if state == null else flow.faith_status
+	ItemTooltip.weight_probe = Callable() if state == null else func() -> Array: return state.buff_context().weight_pct
 
 
 func _on_screen_changed(screen: int, payload: Dictionary) -> void:

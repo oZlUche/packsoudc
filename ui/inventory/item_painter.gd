@@ -282,6 +282,56 @@ static func draw_pin_badge(canvas: CanvasItem, r: Rect2, modulate: Color = Color
 	canvas.draw_circle(c + Vector2(-rad, -rad) * 0.25, rad * 0.3, Color("f3dc9a") * modulate)
 
 
+## 256：军功牌 —— 脚印最靠右下的那一格右下角挂一枚包架的数字牌（`notice/count_badge`）「军功 N」，放不下就只写数。
+## 不是靠军功长的不画；画了返回 true
+static func draw_honor(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+	if inst == null or inst.def == null or inst.def.shape == null or inst.def.growth == null or not inst.def.growth.runs_on_honor():
+		return false
+	var best := Vector2i(-1, -1)
+	for c in inst.def.shape.cells_rotated(rot):
+		if c.y > best.y or (c.y == best.y and c.x > best.x):
+			best = c
+	var k := cell / InventoryView.CELL
+	var slot := Rect2(anchor + Vector2(best) * cell, Vector2.ONE * cell)
+	var pts := GrowthProfile.honor_of(inst)
+	var text := UiText.t("badge.honor") % pts
+	if not draw_badge(canvas, text, slot, HONOR_TEXT * k, modulate, true):
+		draw_badge(canvas, str(pts), slot, HONOR_TEXT * k, modulate)
+	return true
+
+
+const HONOR_TEXT := 12
+
+
+## 包架的数字牌（浅石小牌，墨字）贴在 [param slot] 右下角。[param must_fit] 真且牌比格子宽：不画、返回 false
+static func draw_badge(canvas: CanvasItem, text: String, slot: Rect2, size: int = BagRackView.BADGE_TEXT, modulate: Color = Color.WHITE, must_fit: bool = false) -> bool:
+	var font := UiPalette.numeral_font() if text.is_valid_int() or text.begins_with("×") else UiPalette.cjk_font()
+	var k := float(size) / BagRackView.BADGE_TEXT
+	var h := BagRackView.BADGE_H * k
+	var inset := BagRackView.BADGE_INSET * k
+	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	var w := maxf(BagRackView.BADGE_MIN_W * k, ceilf(tw + 14.0 * k))
+	if must_fit and w + inset * 2.0 > slot.size.x:
+		return false
+	var r := Rect2(slot.end - Vector2(w, h) - Vector2.ONE * inset, Vector2(w, h))
+	var tex := UiTheme.art_cached(BagRackView.BADGE_ART)
+	if tex != null:
+		var m: Array = UiTheme.art_meta(BagRackView.BADGE_ART).get("margin", [7, 6, 7, 6])
+		var sbt := StyleBoxTexture.new()
+		sbt.texture = tex
+		sbt.modulate_color = modulate
+		sbt.texture_margin_left = float(m[0])
+		sbt.texture_margin_top = float(m[1])
+		sbt.texture_margin_right = float(m[2])
+		sbt.texture_margin_bottom = float(m[3])
+		canvas.draw_style_box(sbt, r)
+	else:
+		canvas.draw_rect(r, Color("e4ded2") * modulate)
+	var base := r.position.y + (h + font.get_ascent(size) - font.get_descent(size)) * 0.5
+	canvas.draw_string(font, Vector2(r.position.x + (w - tw) * 0.5, base), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, BagRackView.BADGE_INK * modulate)
+	return true
+
+
 ## 测试用：清掉缓存（换了 [constant ART_MANIFEST] 的内容之后）
 static func clear_art_cache() -> void:
 	_art.clear()

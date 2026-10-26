@@ -73,7 +73,7 @@ static func run_flaws(t: TestCase) -> void:
 	t.eq(String(probe.flaw_entry()["name"]), "探针短板", "卡上那一行写它的名")
 
 
-## 短板用过的三种打折还在构件里（以后给确实改变决策的角色用）：只截某类道具的治疗、护甲上限按比例、耐力低时回气减半
+## 短板用过的三种打折还在构件里（以后给确实改变决策的角色用）：只截某类道具的治疗、护甲上限按比例、耐力低时耐力回复减半
 static func run_flaw_mechanics(t: TestCase) -> void:
 	t.begin("255 §3.1：三种打折构件 —— 只截【药剂】的治疗（别的照常）、护甲上限乘 0.8、耐力低于两成时每秒回复减半")
 	var spec := CombatantSpec.new()
@@ -99,9 +99,9 @@ static func run_flaw_mechanics(t: TestCase) -> void:
 	rt.apply_buff(thin)
 	t.eq(rt.stat(&"max_armor"), StatMath.from_float(40.0), "护甲上限 50 × 0.8 = 40")
 	rt.apply_buff(wind)
-	t.eq(rt.regen_kept(&"stamina"), StatMath.ONE, "耐力满着：回气不打折")
+	t.eq(rt.regen_kept(&"stamina"), StatMath.ONE, "耐力满着：耐力回复不打折")
 	rt.resources.change(&"stamina", -StatMath.from_float(45.0), BattleEvent.REASON_COST)
-	t.eq(rt.regen_kept(&"stamina"), StatMath.from_float(0.5), "耐力 5 / 50（一成）：回气减半")
+	t.eq(rt.regen_kept(&"stamina"), StatMath.from_float(0.5), "耐力 5 / 50（一成）：耐力回复减半")
 	t.eq(rt.regen_kept(&"hp"), StatMath.ONE, "别的资源不打折")
 	t.check(Glossary.buff_effect_lines(unschooled).any(func(l: String) -> bool: return l.contains("药剂") and l.contains("50%")), "说明：%s" % [Glossary.buff_effect_lines(unschooled)])
 	t.check(Glossary.buff_effect_lines(wind).any(func(l: String) -> bool: return l.contains("耐力低于 20%")), "说明：%s" % [Glossary.buff_effect_lines(wind)])
@@ -224,6 +224,10 @@ static func run_contour(t: TestCase) -> void:
 	t.eq(BoardContour.pinch_points(Vector2i(3, 3), func(c: Vector2i) -> bool: return c != Vector2i(1, 1) and c != Vector2i(2, 2)), [Vector2i(2, 2)] as Array[Vector2i], "对角相连的顶点挑出来")
 
 
+## 还没出图标的技能（先画通用纹样占位）；256 的偷袭 / 求饶 15:49 定稿换上了
+const ART_PENDING := []
+
+
 ## 美术 2026-10-26 11:54 定稿换上：三人看得见的技能（主动的藏着）各有自己的图标、短板章是裂纹、随身钉、首次赠包签、缺格框十二块拼件都在
 static func run_art(t: TestCase) -> void:
 	t.begin("255 补充一：选角色屏换上美术定稿 —— 技能图标、短板裂纹章、随身钉（大小两版）、首次赠包签、缺格框十二块拼件")
@@ -231,7 +235,7 @@ static func run_art(t: TestCase) -> void:
 	for id in [&"marcus", &"andreus", &"brutus"]:
 		var ch := CS._character(c, id)
 		for sk in ch.skills:
-			if not (RunSkills.ACTIVE_HIDDEN and sk.is_active()):
+			if sk.shown_to_player() and not ART_PENDING.has(sk.id):
 				t.check(EntryIcon.has_own_art(sk), "%s 的技能 %s 有自己的图标" % [id, sk.id])
 	var flaw := EntryIcon.flaw()
 	t.not_null(flaw.texture, "短板章用裂纹图")
@@ -277,13 +281,20 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 		var left_pad: float = frame.global_position.x - col.global_position.x
 		var right_pad: float = col.global_position.x + col.size.x - (frame.global_position.x + frame.size.x)
 		t.check(absf(left_pad - right_pad) <= 1.0, "%s（%d 格）：棋盘在右栏里居中（左 %.0f / 右 %.0f）" % [ch.id, ch.board_size.x, left_pad, right_pad])
-		t.eq((setup._stat_plaques as Array).map(func(sp: StatPlaque) -> String: return sp.caption), ["生命", "耐力", "回气", "体力"], "%s：面板方块一行四块" % ch.id)
+		t.eq((setup._stat_plaques as Array).map(func(sp: StatPlaque) -> String: return sp.caption), ["生命", "耐力", "耐力回复", "体力"], "%s：面板方块一行四块" % ch.id)
 		var entries: Array = setup._entries
-		t.eq(entries.size(), ch.skill_entries().size(), "%s：技能 %d 条，没有短板那一行（补充三）" % [ch.id, ch.skill_entries().size()])
-		t.eq(((entries[0] as Control).get_meta(&"name_label") as Label).theme_type_variation, UiTheme.LABEL_SKILL_NAME, "技能名亮黄铜")
+		var pins := ch.fixed_items.size()     # 256：马库斯带军功牌
+		t.eq(entries.size(), ch.skill_entries().size() + pins, "%s：技能 %d 条 + 随身之物 %d 行，没有短板那一行（补充三）" % [ch.id, ch.skill_entries().size(), pins])
+		if not entries.is_empty():     # 256：布鲁图斯没有技能，卡上只有面板与首次赠包
+			t.eq(((entries[0] as Control).get_meta(&"name_label") as Label).theme_type_variation, UiTheme.LABEL_SKILL_NAME, "技能名亮黄铜")
 		t.check(entries.all(func(e: Control) -> bool: return e.get_child(0) is EntryIcon), "每行左端一个图标槽")
-		t.eq(setup._board_title.text, "棋盘 %d × %d 格" % [ch.board_size.x, ch.board_size.y], "%s：题字（没缺格没随身之物只写尺寸）" % ch.id)
-		t.eq(setup._legend.size(), 0, "%s：没有缺格 / 随身之物不出图例" % ch.id)
+		if pins == 0 and ch.board_mask.is_empty():
+			t.eq(setup._board_title.text, "棋盘 %d × %d 格" % [ch.board_size.x, ch.board_size.y], "%s：题字（没缺格没随身之物只写尺寸）" % ch.id)
+			t.eq(setup._legend.size(), 0, "%s：没有缺格 / 随身之物不出图例" % ch.id)
+		else:
+			var counts := ch.board_counts(flow.items)
+			t.eq(setup._board_title.text, "棋盘 %d × %d 格　可用 %d 格" % [ch.board_size.x, ch.board_size.y, int(counts["usable"])], "%s：题字带可用格数" % ch.id)
+			t.check(setup._legend.size() > 0, "%s：有随身之物出图例" % ch.id)
 	t.check(widths.size() >= 2, "比过不止一种宽的棋盘：%s" % [widths.keys()])
 	for i in range(1, rects.size()):
 		t.eq(rects[i], rects[0], "三栏的位置与宽度换角色一个像素不动（第 %d 个）" % (i + 1))

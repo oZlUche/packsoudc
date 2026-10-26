@@ -4,12 +4,20 @@
 ## （[member ItemInstance.state] 的 `growth_ticks` / `growth_stage` / `growth_bonus`，和魔晶石耐久同一条路，存档原样带走）。
 ## 什么时候长由 [GrowthModule] 管（全局倒计时每走一步长一步）；加成由编译器并进来（[BattleCompiler] 第 4b 步旁）；
 ## 锁由棋盘兑现（[method GridInventory.is_locked]）。只有带 `faith:nature` 的道具能长（导入器拦），自然之神不是当前信仰就休眠：不长、加成不算、锁保留
+##
+## 256（马库斯的军功牌）：[member fuel] = `honor` 的不走步、靠**打赢**长 —— [HonorModule] 每赢一场记军功点（`state.honor`），
+## 各阶的 `after` 是**累计**军功点（铜 0 / 银 3 / 金 8……），不限信仰。阶上写了 `grant_cells` / `grant_mods` 的，
+## 这件的邻接按当前阶那一份（[method adjacency_of]：牌越亮、圈越大）
 class_name GrowthProfile
 extends Resource
 
 const TICKS_KEY := "growth_ticks"
 const STAGE_KEY := "growth_stage"
 const BONUS_KEY := "growth_bonus"
+## 256：攒了几点军功（[member fuel] = honor）
+const HONOR_KEY := "honor"
+const FUEL_STEPS := "steps"
+const FUEL_HONOR := "honor"
 ## 只有这一位神的道具能长（导入器拦）
 const FAITH_TAG := &"faith:nature"
 
@@ -20,6 +28,21 @@ const FAITH_TAG := &"faith:nature"
 @export var stage0_names: Dictionary = {}
 ## 离开作战棋盘（进地上 / 容器 / 仓库）计数清零、阶段归零；假 = 带着阶段走（树苗挪盆）
 @export var reset_on_leave: bool = true
+## 256：拿什么长 —— steps 走全局倒计时（207）；honor 打赢一场记军功点，各阶的 after 读累计点数
+@export_enum("steps", "honor") var fuel: String = "steps"
+## 256：fuel = honor 时赢一场记几点：按这一场的类型查（elite / core……），没写的记 [member honor_default]。
+## 默认空（导出器把非空字典都当改过的写出来，默认写满会让每件生长道具的 JSON 都多一段）；军功牌在自己的 JSON 里写精英 3、核心 5
+@export var honor_by_type: Dictionary = {}
+@export var honor_default: int = 1
+
+
+func runs_on_honor() -> bool:
+	return fuel == FUEL_HONOR
+
+
+## 赢下 [param type] 这一场记几点
+func honor_for(type: StringName) -> int:
+	return maxi(0, int(honor_by_type.get(String(type), honor_default)))
 
 
 #region 读实例
@@ -76,6 +99,19 @@ static func bonuses_of(inst: ItemInstance) -> Array[GrowthBonus]:
 	return out
 
 
+## 256：攒了几点军功
+static func honor_of(inst: ItemInstance) -> int:
+	return maxi(0, int(inst.state.get(HONOR_KEY, 0))) if inst != null else 0
+
+
+## 256：这件现在的邻接 —— 当前阶写了增益格 / 增益的盖在定义那份上，没写（或还在第 0 阶）就是定义的
+static func adjacency_of(inst: ItemInstance) -> AdjacencyProfile:
+	if inst == null or inst.def == null:
+		return null
+	var st := current(inst) if inst.def.growth != null else null
+	return st.adjacency_over(inst.def.adjacency) if st != null else inst.def.adjacency
+
+
 ## 名字前缀（还是种子 = 空）
 static func prefix_of(inst: ItemInstance, lang: String = "") -> String:
 	var st := current(inst)
@@ -112,14 +148,32 @@ static func grow(inst: ItemInstance, delta: int, seed: int = 0) -> bool:
 	return true
 
 
+## 256：记 [param points] 点军功，按累计点数升阶（一次可以跨几阶）。升了阶返回 true
+static func add_honor(inst: ItemInstance, points: int) -> bool:
+	if inst == null or inst.def == null or inst.def.growth == null or points <= 0:
+		return false
+	var total := honor_of(inst) + points
+	inst.state[HONOR_KEY] = total
+	var stages := inst.def.growth.stages
+	var before := stage_of(inst)
+	var s := before
+	while s < stages.size() and total >= stages[s].after:
+		s += 1
+	if s == before:
+		return false
+	inst.state[STAGE_KEY] = s
+	return true
+
+
 ## 清零（离开棋盘）。有记录才动，返回动了没有
 static func reset(inst: ItemInstance) -> bool:
 	if inst == null:
 		return false
-	var had := inst.state.has(TICKS_KEY) or inst.state.has(STAGE_KEY) or inst.state.has(BONUS_KEY)
-	inst.state.erase(TICKS_KEY)
-	inst.state.erase(STAGE_KEY)
-	inst.state.erase(BONUS_KEY)
+	var had := false
+	for k in [TICKS_KEY, STAGE_KEY, BONUS_KEY, HONOR_KEY]:
+		if inst.state.has(k):
+			had = true
+			inst.state.erase(k)
 	return had
 
 
@@ -150,7 +204,7 @@ static func pick_bonuses(st: GrowthStage, seed: int, uid: int, stage: int) -> Ar
 
 ## 存档读回来是浮点（3.0）：存回去得还是整数（存档逐字节往返，同 148 的 charges）
 static func normalize_state(state: Dictionary) -> void:
-	for k in [TICKS_KEY, STAGE_KEY]:
+	for k in [TICKS_KEY, STAGE_KEY, HONOR_KEY]:
 		if state.has(k):
 			state[k] = int(state[k])
 	if state.has(BONUS_KEY):

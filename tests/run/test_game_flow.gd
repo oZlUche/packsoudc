@@ -570,6 +570,8 @@ static func _director_walk(game, run: RunState, target: int) -> void:
 					ov.to_map()     # 084：拿完不自动关，手动关
 				GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP:
 					ov.leave()
+				GameFlow.Screen.RANSOM:
+					ov.refuse()     # 256：安德烈乌斯打输了出天平 —— 不求饶，照扣
 				GameFlow.Screen.EVENT:
 					# 085：撤离点也有对话了，这里要验右栏的确认面板，选「再看看」
 					var def := run.events.pending_event()

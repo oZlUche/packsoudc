@@ -112,6 +112,8 @@ static func settle_one(f: GameFlow) -> void:
 			f.run.events.current_search.leave()
 		GameFlow.Screen.SHOP:
 			f.run.events.current_shop.leave()
+		GameFlow.Screen.RANSOM:
+			f.refuse_ransom()     # 256：天平上不答复就一直停着
 		GameFlow.Screen.EVENT:
 			if f.run.events.pending_event() != null:
 				f.choose_event(0)

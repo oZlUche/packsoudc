@@ -8,11 +8,11 @@ const CS := preload("res://tests/run/test_character_skills.gd")
 const MAX_TECHS: Array[StringName] = [&"tech_sinew_3", &"tech_endurance_3", &"tech_hauling_3", &"tech_pack_3"]
 
 ## 写死的对照表（数值来自三份角色 JSON 与 docs/techs.xlsx；改了数就改这里）：
-## id → [棋盘, 生命, 耐力, 耐力回复, 体力, 负重, 开局钱, 满级生命, 满级体力, 满级负重, 满级开局钱]
+## id → [棋盘, 生命, 耐力, 耐力回复, 体力, 负重, 满级生命, 满级体力, 满级负重]（256 定稿：开局钱那两列删了，钱全由玩家自己带）
 const TABLE := {
-	&"andreus": [Vector2i(7, 6), 45.0, 55.0, 4.0, 5, 40, 120, 58.5, 8, 60, 240],
-	&"marcus": [Vector2i(8, 6), 55.0, 65.0, 5.0, 5, 48, 100, 71.5, 8, 72, 200],
-	&"brutus": [Vector2i(9, 6), 70.0, 55.0, 3.0, 7, 56, 80, 91.0, 11, 84, 160],
+	&"andreus": [Vector2i(7, 6), 45.0, 55.0, 4.0, 3, 48, 58.5, 5, 72],
+	&"marcus": [Vector2i(8, 6), 55.0, 65.0, 5.0, 5, 48, 71.5, 8, 72],
+	&"brutus": [Vector2i(9, 6), 85.0, 65.0, 4.0, 8, 64, 110.5, 13, 96],
 }
 
 
@@ -34,7 +34,7 @@ static func _stat(s: RunState, key: StringName) -> float:
 
 
 static func run_boards_and_panels(t: TestCase) -> void:
-	t.begin("149 · 三个人：棋盘 7 / 8 / 9 × 6；面板各占一轴；开局钱按角色；没写开局钱的角色用经济规则的全局数")
+	t.begin("149 · 三个人：棋盘 7 / 8 / 9 × 6；面板各占一轴；开局不带钱就是 0")
 	var c := _content()
 	for id in TABLE:
 		var row: Array = TABLE[id]
@@ -54,19 +54,14 @@ static func run_boards_and_panels(t: TestCase) -> void:
 		t.eq(s.carry_capacity(), row[5], "%s：负重 %d" % [id, row[5]])
 		t.eq(s.wallet.balance, 0, "%s：不带钱入局就是 0（2026-10-22 起钱全由玩家自己带）" % id)
 		t.check(s.buff_context().stat_bonus.is_empty(), "%s：没有技能往基线上加数（操练不再是 +1 耐力回复）" % id)
-	# 2026-10-22（作者定）：角色的 `starting_funds` 不再发钱 —— 开局的钱只看玩家带了多少
-	var plain := CS._character(c, &"marcus").duplicate(true) as CharacterDef
-	plain.starting_funds = -1
-	var sp := _start(c, plain)
-	t.eq(sp.wallet.balance, 0, "没写开局钱、也没带钱：0")
 	# 开局屏的初始包在最窄的棋盘上也摆得下
 	var narrow := GridInventory.new(TABLE[&"andreus"][0], RunState.BOARD_ID, true)
 	RunState.give_kit(narrow, CS._character(c, &"andreus").starting_bags, c.items, null)
-	t.eq(narrow.item_count(), CS._character(c, &"andreus").starting_bags.size(), "7 × 6 上两个皮革包都摆得下")
+	t.eq(narrow.item_count(), CS._character(c, &"andreus").starting_bags.size(), "7 × 6 上初始包都摆得下")
 
 
 static func run_percent_techs(t: TestCase) -> void:
-	t.begin("149 · 科技改百分比：满级时三个人的生命 / 体力 / 负重 / 开局钱按各自的基数放大，差距比零级大；四舍五入；乘算相加不相乘；神坛加算在乘之后")
+	t.begin("149 · 科技改百分比：满级时三个人的生命 / 体力 / 负重按各自的基数放大，差距比零级大；四舍五入；乘算相加不相乘；神坛加算在乘之后")
 	var c := _content()
 	for id in MAX_TECHS:
 		t.check(c.buffs.has(id), "%s 在" % id)
@@ -79,14 +74,14 @@ static func run_percent_techs(t: TestCase) -> void:
 		if s == null:
 			t.check(false, "%s 开不了局" % id)
 			continue
-		t.eq(_stat(s, &"max_hp"), row[7], "%s 满级：生命 %s" % [id, row[7]])
-		t.eq(s.vitality.maximum, int(row[8]) + c.chapter.vitality_bonus, "%s 满级：体力 %d" % [id, row[8]])
-		t.eq(s.carry_capacity(), row[9], "%s 满级：负重 %d" % [id, row[9]])
-		# 2026-10-22（作者定）：钱全由玩家自己带 —— 科技不再放大开局钱（表里 row[10] 那列退役）
+		t.eq(_stat(s, &"max_hp"), row[6], "%s 满级：生命 %s" % [id, row[6]])
+		t.eq(s.vitality.maximum, int(row[7]) + c.chapter.vitality_bonus, "%s 满级：体力 %d" % [id, row[7]])
+		t.eq(s.carry_capacity(), row[8], "%s 满级：负重 %d" % [id, row[8]])
+		# 2026-10-22（作者定）：钱全由玩家自己带 —— 科技不再放大开局钱
 		t.eq(s.wallet.balance, 0, "%s 满级：开局钱仍是 0（玩家带多少就是多少）" % id)
 		t.eq(_stat(s, &"max_stamina"), row[2], "%s 满级：耐力不动" % id)
 		zero[id] = [row[1], row[4], row[5]]
-		full[id] = [row[7], row[8], row[9]]
+		full[id] = [row[6], row[7], row[8]]
 	for i in 3:
 		var z: Array = []
 		var f: Array = []
@@ -120,7 +115,8 @@ static func run_percent_techs(t: TestCase) -> void:
 	var altar := AltarModule.of(s2)
 	if altar != null:
 		altar.stat_bonus["max_hp"] = 5.0
-		t.eq(_stat(s2, &"max_hp"), 70.0 * 1.3 + 5.0, "神坛 +5 在 ×1.3 之后：96")
+		var hp0 := float(brutus.base_stats["max_hp"])
+		t.eq(_stat(s2, &"max_hp"), hp0 * 1.3 + 5.0, "神坛 +5 在 ×1.3 之后：%s" % (hp0 * 1.3 + 5.0))
 	# 战斗面板的「基础属性加成」一格写出了乘算
 	var mult_shown := false
 	for n in BattlePassives.of(s2):
@@ -139,7 +135,7 @@ static func sb_desc_mult() -> String:
 
 
 static func run_undaunted_and_rule(t: TestCase) -> void:
-	t.begin("149 · 不屈 = 败仗少扣一点（最少扣一）；安德烈乌斯独占免罚败仗；导入器拦角色被动和科技撞同一种效果；操练是战斗规则")
+	t.begin("149 · 不屈 = 败仗少扣一点（最少扣一）；导入器拦角色被动和科技撞同一种效果；操练是一局被动（256）")
 	var c := _content()
 	var undaunted: RunBuffDef = c.buffs.get(&"tech_undaunted_1", null)
 	t.not_null(undaunted, "不屈在")
@@ -179,11 +175,8 @@ static func run_undaunted_and_rule(t: TestCase) -> void:
 		var r := ImportReport.new()
 		ContentImporter.import_character(data, ctx, r)
 		t.check(r.ok(), "%s 导得进来：%s" % [ch.id, r.to_text().strip_edges().left(100)])
-	var neg := ImportReport.new()
-	ContentImporter.import_character({"id": "z", "starting_bags": ["bag_leather"], "starting_funds": -5}, ContentImporter.Context.new(), neg)
-	t.check(not neg.ok(), "开局钱 −5 报错")
 
-	# 操练：耐力掉到两成以下时回一段（一场一次）；说明里的数从规则来
+	# 256：操练改成一局被动（所有武器耐力消耗 −20%、重量 −20%），不再是战斗规则；细节见 test_characters_256
 	var drill: RunSkill = null
 	for sk in marcus.skills:
 		if (sk as RunSkill).id == &"drill":
@@ -191,9 +184,6 @@ static func run_undaunted_and_rule(t: TestCase) -> void:
 	t.not_null(drill, "马库斯有操练")
 	if drill == null:
 		return
-	t.eq(drill.passive.size(), 0, "不再是一局被动")
-	t.eq(drill.rules.size(), 1, "一条战斗规则")
-	t.check(marcus.combat_rules().has(drill.rules[0]), "编进玩家的战斗规则")
-	var text := Names.description_of(drill)
-	var amount := int((drill.rules[0].effects[0] as ChangeResource).amount)
-	t.check(not text.contains("{") and text.contains(str(amount)), "说明渲染了数（%s）：%s" % [amount, text])
+	t.eq(drill.rules.size(), 0, "256：不再是战斗规则")
+	t.eq(drill.passive.map(func(e: Effect) -> String: return e.get_script().get_global_name()), ["TagMods", "TagWeightMult"], "两条一局被动：按件修饰 + 按标签减重")
+	t.check(not Names.description_of(drill).contains("{"), "说明没有漏填的占位符")

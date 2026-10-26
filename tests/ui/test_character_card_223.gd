@@ -6,12 +6,12 @@ const Buffs := preload("res://tests/run/test_run_buffs.gd")
 
 static func _run(c: TestSupport.Content, buffs: Array[StringName]) -> RunState:
 	var run := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, Buffs._kit(c).items, c.buffs, buffs)
-	run.set_character(load("res://data/characters/brutus.tres") as CharacterDef)
+	run.set_character(load("res://data/characters/andreus.tres") as CharacterDef)     # 256：布鲁图斯没有技能了，用安德烈乌斯（求饶 + 偷袭两条）
 	return run
 
 
 static func frame_card(t: TestCase, root: Window) -> void:
-	t.begin("223 · 角色卡：身体三行 = effective_baseline（生命 / 耐力取整、回气一位小数），没加成不写 ▲▼；局外筋骨 +10% 生命后 ▲ 与来源；被动两条；英文无汉字")
+	t.begin("223 · 角色卡：身体三行 = effective_baseline（生命 / 耐力取整、耐力回复一位小数），没加成不写 ▲▼；局外筋骨 +10% 生命后 ▲ 与来源；被动两条；英文无汉字")
 	var c := Buffs._content()
 	var run := _run(c, [] as Array[StringName])
 	var card := CharacterCard.new()
@@ -20,7 +20,7 @@ static func frame_card(t: TestCase, root: Window) -> void:
 	var eff := run.effective_baseline()
 	t.eq(String(card.row(0)["value"]), str(roundi(float(eff.base_stats.get(BattleStats.MAX_HP, 0.0)))), "生命上限 = 有效基线")
 	t.eq(String(card.row(1)["value"]), str(roundi(float(eff.base_stats.get(BattleStats.MAX_STAMINA, BattleStats.default_value(BattleStats.MAX_STAMINA))))), "耐力上限 = 有效基线")
-	t.eq(String(card.row(2)["value"]), "%.1f" % float(eff.base_stats.get(BattleStats.REGEN_STAMINA, BattleStats.default_value(BattleStats.REGEN_STAMINA))), "回气一位小数")
+	t.eq(String(card.row(2)["value"]), "%.1f" % float(eff.base_stats.get(BattleStats.REGEN_STAMINA, BattleStats.default_value(BattleStats.REGEN_STAMINA))), "耐力回复一位小数")
 	t.eq(String(card.row(2)["label"]), "耐力恢复/秒", "作者 10-25：第三行叫「耐力恢复/秒」")
 	t.eq(String(card.row(2)["unit"]), "", "「每秒」并进名字，不再另写小字")
 	for i in 3:

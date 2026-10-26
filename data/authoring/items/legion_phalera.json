@@ -1,0 +1,302 @@
+{
+  "id": "legion_phalera",
+  "display_name": "军功牌",
+  "display_names": {
+    "en": "Phalera"
+  },
+  "description": "马库斯的随身之物：每打赢一场记 {honor_default} 点军功（精英 {elite}、核心 {core}），攒够了升阶 —— 牌边的武器越来越狠，圈也越来越大。",
+  "descriptions": {
+    "en": "Marcus's signature item: every won fight earns {honor_default} Honor (elites {elite}, the core {core}). Enough Honor raises its rank, and the weapons around it hit harder over a wider ring."
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "trinket",
+    "signature"
+  ],
+  "material": "metal",
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ]
+  },
+  "growth": {
+    "stages": [
+      {
+        "name": "银",
+        "names_by_lang": {
+          "en": "Silver"
+        },
+        "prefix": "银",
+        "prefixes_by_lang": {
+          "en": "Silver "
+        },
+        "after": 3,
+        "lock": "none",
+        "grant_mods": [
+          {
+            "mode": "MULT",
+            "amount": 5.0
+          },
+          {
+            "stat": "haste",
+            "mode": "MULT",
+            "amount": 5.0
+          },
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -5.0
+          }
+        ]
+      },
+      {
+        "name": "金",
+        "names_by_lang": {
+          "en": "Gold"
+        },
+        "prefix": "金",
+        "prefixes_by_lang": {
+          "en": "Gold "
+        },
+        "after": 8,
+        "lock": "none",
+        "grant_cells": [
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            -1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "grant_mods": [
+          {
+            "mode": "MULT",
+            "amount": 10.0
+          },
+          {
+            "stat": "haste",
+            "mode": "MULT",
+            "amount": 10.0
+          },
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -10.0
+          }
+        ]
+      },
+      {
+        "name": "鎏金",
+        "names_by_lang": {
+          "en": "Gilded"
+        },
+        "prefix": "鎏金",
+        "prefixes_by_lang": {
+          "en": "Gilded "
+        },
+        "after": 15,
+        "lock": "none",
+        "grant_cells": [
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            -1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            -2
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "grant_mods": [
+          {
+            "mode": "MULT",
+            "amount": 15.0
+          },
+          {
+            "stat": "haste",
+            "mode": "MULT",
+            "amount": 15.0
+          },
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -15.0
+          }
+        ]
+      },
+      {
+        "name": "桂冠",
+        "names_by_lang": {
+          "en": "Laurel"
+        },
+        "prefix": "桂冠",
+        "prefixes_by_lang": {
+          "en": "Laurel "
+        },
+        "after": 25,
+        "lock": "none",
+        "grant_cells": [
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            -1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            -2
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "grant_mods": [
+          {
+            "mode": "MULT",
+            "amount": 20.0
+          },
+          {
+            "stat": "haste",
+            "mode": "MULT",
+            "amount": 20.0
+          },
+          {
+            "stat": "stamina_cost",
+            "mode": "MULT",
+            "amount": -20.0
+          }
+        ]
+      }
+    ],
+    "stage0_name": "铜",
+    "stage0_names": {
+      "en": "Bronze"
+    },
+    "fuel": "honor",
+    "honor_by_type": {
+      "elite": 3,
+      "core": 5
+    }
+  }
+}

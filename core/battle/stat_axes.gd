@@ -48,7 +48,7 @@ const TABLE := {
 	DAMAGE_TAKEN: {"stat": &"", "mode": Mode.PERCENT, "step": 5.0, "pos": "易伤", "neg": "坚韧", "pos_en": "Vulnerable", "neg_en": "Hardy"},
 	REGEN_HP: {"stat": &"regen_hp", "mode": Mode.FLAT, "step": 1.0, "pos": "回春", "neg": "失血", "pos_en": "Renewal", "neg_en": "Bleeding Out"},
 	REGEN_HP_PCT: {"stat": &"", "mode": Mode.PERCENT, "step": 1.0, "pos": "再生", "neg": "腐蚀", "pos_en": "Regeneration", "neg_en": "Corrosion"},
-	REGEN_STAMINA: {"stat": &"regen_stamina", "mode": Mode.FLAT, "step": 1.0, "pos": "回气", "neg": "疲乏", "pos_en": "Second Wind", "neg_en": "Fatigue"},
+	REGEN_STAMINA: {"stat": &"regen_stamina", "mode": Mode.FLAT, "step": 1.0, "pos": "耐力回复", "neg": "疲乏", "pos_en": "Second Wind", "neg_en": "Fatigue"},
 	CRIT_CHANCE: {"stat": &"crit_chance", "mode": Mode.FLAT, "step": 0.01, "pos": "锐目", "neg": "失准", "pos_en": "Keen Eye", "neg_en": "Off Target", "items": true, "pct": true},
 	CRIT_DAMAGE: {"stat": &"crit_damage", "mode": Mode.FLAT, "step": 0.05, "pos": "致命", "neg": "钝击", "pos_en": "Lethal", "neg_en": "Blunted", "items": true, "pct": true},
 	FIRE_DAMAGE: {"stat": &"", "mode": Mode.PERCENT, "step": 3.0, "pos": "炽烈", "neg": "熄火", "pos_en": "Blaze", "neg_en": "Doused"},

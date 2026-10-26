@@ -1369,8 +1369,6 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 	_check_character_board(def, ctx, report)
 	if def.carry_max_items < -1 or def.carry_rarity_cap < -1:
 		report.error("carry_max_items", "上限只能是 -1（不限）或非负数")
-	if def.starting_funds < -1:
-		report.error("starting_funds", "开局钱只能是 -1（用全局的）或非负数")
 	if def.starting_bags.is_empty():
 		report.error("starting_bags", "至少一个初始包：棋盘上只有包里的东西参战（3.2），没有包一格都用不了")
 	for key in def.base_stats:
@@ -1397,6 +1395,10 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 			report.error(at + ".uses", "次数只能是 -1（不限）或非负数")
 		if sk.cooldown_steps < 0:
 			report.error(at + ".cooldown_steps", "冷却不能为负")
+		if sk.rest_recharge < 0:
+			report.error(at + ".rest_recharge", "休息点补的次数不能为负")
+		if sk.show_prebattle and not sk.is_active():
+			report.error(at + ".show_prebattle", "只有主动技能能在战前屏给键")
 		if sk is AssaultSkill and ((sk as AssaultSkill).hp_fraction <= 0.0 or (sk as AssaultSkill).hp_fraction > 1.0):
 			report.error(at + ".hp_fraction", "突击扣的比例应在 (0, 1]")
 		if sk is EvadeSkill and (sk as EvadeSkill).steps < 1:
@@ -1851,7 +1853,7 @@ static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportR
 ## 钱的数全得非负；商店至少一格、至少有一档稀有度能上架；刷新不能越刷越便宜
 static func _validate_economy_rules(rules: EconomyRules, report: ImportReport) -> void:
 	_require_id(rules.id, "经济规则", report)
-	for pair in [["starting_balance", rules.starting_balance], ["reward_base", rules.reward_base],
+	for pair in [["reward_base", rules.reward_base],
 			["reward_per_strength", rules.reward_per_strength], ["shop_refresh_cost", rules.shop_refresh_cost],
 			["shop_refresh_step", rules.shop_refresh_step], ["paid_extracts", rules.paid_extracts], ["extract_fee", rules.extract_fee]]:
 		if int(pair[1]) < 0:
@@ -2417,7 +2419,15 @@ static func _validate_growth(def: ItemDef, report: ImportReport) -> void:
 	var g := def.growth
 	if g == null:
 		return
-	if not def.has_faith() or def.faith_tag() != GrowthProfile.FAITH_TAG:
+	if g.runs_on_honor():
+		# 256：靠军功长的（军功牌）不限信仰；各阶的 after 是累计军功点，一阶比一阶多
+		for k in range(1, g.stages.size()):
+			if g.stages[k] != null and g.stages[k - 1] != null and g.stages[k].after <= g.stages[k - 1].after:
+				report.error("growth.stages[%d].after" % k, "军功是累计的：这一阶的点数得比上一阶多")
+		for k in g.honor_by_type:
+			if int(g.honor_by_type[k]) < 0:
+				report.error("growth.honor_by_type", "军功点不能是负数")
+	elif not def.has_faith() or def.faith_tag() != GrowthProfile.FAITH_TAG:
 		report.error("growth", "生长是自然之神的东西：只许写在带 faith 与 %s 标签的道具上" % GrowthProfile.FAITH_TAG)
 	if def.is_bag:
 		report.error("growth", "包不会长")

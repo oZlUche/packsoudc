@@ -162,7 +162,7 @@ static func run_food_double(t: TestCase) -> void:
 
 	var r0 := before.stats_of(ration_uid)
 	var r1 := after.stats_of(ration_uid)
-	t.eq(r1.ensure(BattleStats.REGEN_STAMINA).base, r0.ensure(BattleStats.REGEN_STAMINA).base * 2, "口粮回气的 base 翻倍")
+	t.eq(r1.ensure(BattleStats.REGEN_STAMINA).base, r0.ensure(BattleStats.REGEN_STAMINA).base * 2, "口粮耐力回复的 base 翻倍")
 	t.eq(r1.ensure(BattleStats.MAX_STAMINA).base, r0.ensure(BattleStats.MAX_STAMINA).base * 2, "耐力上限的 base 翻倍")
 	t.eq(r1.ensure(BattleStats.HASTE).base, r0.ensure(BattleStats.HASTE).base, "急速的 base 不动（每件都是 1.0，翻倍就成了二倍速）")
 	t.eq(r1.ensure(BattleStats.REGEN_STAMINA).flat, r0.ensure(BattleStats.REGEN_STAMINA).flat, "它的 flat 不动")

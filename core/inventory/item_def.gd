@@ -42,6 +42,8 @@ const SEALED := &"sealed"
 const KEEPSAKE := &"keepsake"
 ## 175 第三批：铸牌这类**内部道具** —— 不进图鉴、掉落、商店（[method ItemDatabase.ids] 拦），能带出、能存仓库
 const TOKEN := &"token"
+## 256：角色的随身之物专用（马库斯的军功牌）—— 只从 [member CharacterDef.fixed_items] 来：搜索、掉落、商店、敌人、图鉴都不出（[method ItemDatabase.ids] 拦）
+const SIGNATURE := &"signature"
 ## 244：金银（金块 / 金条）—— 只有商店出（[ShopSession] 单开一格）、不参战不进配方、不算总分，基地按面值全额回收。
 ## 搜索、掉落、敌人装备、头一回踩点白给这些「从全库里抽」的地方都跳过它（[method is_bullion]）。250：降为内部标签，类别是贵重品
 const BULLION := &"bullion"
@@ -81,6 +83,11 @@ func is_bullion() -> bool:
 ## 244 补充一：贵重品（[constant VALUABLE]）；250：魔晶石照旧算（类别恰好一个，不再另带 valuable）
 func is_valuable() -> bool:
 	return tags.has(VALUABLE) or tags.has(CRYSTAL)
+
+
+## 256：随身之物专用（[constant SIGNATURE]）
+func is_signature() -> bool:
+	return tags.has(SIGNATURE)
 
 
 ## 175：铸牌（[constant TOKEN]）

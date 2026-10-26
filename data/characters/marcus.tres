@@ -1,105 +1,67 @@
 [gd_resource type="Resource" script_class="CharacterDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_iqgrf"]
-[ext_resource type="Script" path="res://core/run/character_def.gd" id="2_oxqwc"]
-[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="3_g2ila"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_2w6jy"]
-[ext_resource type="Script" path="res://core/run/effects/battle_reward_mult.gd" id="5_dh4py"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="6_22n10"]
-[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="7_xwebo"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="8_a576r"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="9_6q5m6"]
-[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="10_eaxeu"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="11_8hk74"]
-[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="12_a6kav"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="13_kvgj3"]
-[ext_resource type="Script" path="res://core/run/skills/assault_skill.gd" id="14_f2n3j"]
+[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_1b8yu"]
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="2_iy1av"]
+[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="3_f7mof"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_1pf8y"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="5_khapf"]
+[ext_resource type="Script" path="res://core/run/effects/tag_mods.gd" id="6_iqgrf"]
+[ext_resource type="Script" path="res://core/run/effects/tag_weight_mult.gd" id="7_oxqwc"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="8_g2ila"]
+[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="9_2w6jy"]
 
-[sub_resource type="Resource" id="Resource_n0kc0"]
-script = ExtResource("5_dh4py")
+[sub_resource type="Resource" id="Resource_dh4py"]
+script = ExtResource("1_1b8yu")
+id = &"legion_phalera"
+origin = Vector2i(3, 2)
+movable = true
 
-[sub_resource type="Resource" id="Resource_e81ug"]
-script = ExtResource("7_xwebo")
-id = &"merit"
-display_name = "军功"
-display_names = {
-"en": "Spoils of War"
-}
-description = "战斗胜利所得金币增加四分之一。"
-descriptions = {
-"en": "Coins from winning battles are increased by a quarter."
-}
-passive = Array[ExtResource("4_2w6jy")]([SubResource("Resource_n0kc0")])
+[sub_resource type="Resource" id="Resource_22n10"]
+script = ExtResource("5_khapf")
+stat = &"stamina_cost"
+mode = 1
+amount = -20.0
 
-[sub_resource type="Resource" id="Resource_tkx2e"]
-script = ExtResource("8_a576r")
-metadata/part_ref = &"always"
+[sub_resource type="Resource" id="Resource_xwebo"]
+script = ExtResource("6_iqgrf")
+tags = Array[StringName]([&"weapon"])
+mods = Array[ExtResource("5_khapf")]([SubResource("Resource_22n10")])
 
-[sub_resource type="Resource" id="Resource_sskgt"]
-script = ExtResource("10_eaxeu")
-metadata/part_ref = &"uses_1"
+[sub_resource type="Resource" id="Resource_a576r"]
+script = ExtResource("7_oxqwc")
+tags = Array[StringName]([&"weapon"])
+percent = -20
 
-[sub_resource type="Resource" id="Resource_11484"]
-script = ExtResource("12_a6kav")
-resource_key = &"stamina"
-amount = 30.0
-
-[sub_resource type="Resource" id="Resource_i0bx0"]
-script = ExtResource("13_kvgj3")
-resource_key = &"stamina"
-percent = 20
-
-[sub_resource type="Resource" id="Resource_hplct"]
-script = ExtResource("6_22n10")
-trigger = SubResource("Resource_i0bx0")
-cadence = SubResource("Resource_tkx2e")
-costs = Array[ExtResource("9_6q5m6")]([SubResource("Resource_sskgt")])
-effects = Array[ExtResource("11_8hk74")]([SubResource("Resource_11484")])
-
-[sub_resource type="Resource" id="Resource_6mha3"]
-script = ExtResource("7_xwebo")
+[sub_resource type="Resource" id="Resource_6q5m6"]
+script = ExtResource("9_2w6jy")
 id = &"drill"
 display_name = "操练"
 display_names = {
 "en": "Drill"
 }
-description = "耐力低于两成时，立即恢复 {change_resource_amount} 点耐力（每场一次）。"
+description = "所有武器的耐力消耗和重量降低两成。"
 descriptions = {
-"en": "When your Stamina drops below a fifth, restore {change_resource_amount} Stamina at once (once per battle)."
+"en": "All weapons cost a fifth less Stamina and weigh a fifth less."
 }
-rules = Array[ExtResource("6_22n10")]([SubResource("Resource_hplct")])
-
-[sub_resource type="Resource" id="Resource_jx7yk"]
-script = ExtResource("14_f2n3j")
-id = &"assault"
-display_name = "突击"
-display_names = {
-"en": "Assault"
-}
-description = "下次战斗开始时，先扣除敌方三成生命。"
-descriptions = {
-"en": "At the start of your next battle, the enemy first loses three tenths of its Health."
-}
-uses = 3
-cooldown_steps = 3
+passive = Array[ExtResource("4_1pf8y")]([SubResource("Resource_xwebo"), SubResource("Resource_a576r")])
 
 [resource]
-script = ExtResource("2_oxqwc")
+script = ExtResource("2_iy1av")
 id = &"marcus"
 display_name = "马库斯"
 display_names = {
 "en": "Marcus"
 }
-description = "擅长战斗的军团士兵。一个皮革包、一个小包，生命 {max_hp}、耐力 {max_stamina}、耐力回得最快：打得狠、打得久、打赢了得的多。"
+description = "擅长战斗的军团士兵。胸前的军功牌记着每一场胜仗，牌边的武器越打越狠；耐力 {max_stamina}、耐力回复最快。"
 descriptions = {
-"en": "A legion soldier who is good at fighting. One leather bag and one small bag, Health {max_hp}, Stamina {max_stamina} and the fastest Stamina regeneration: hits hard, lasts long and earns more from wins."
+"en": "A legion soldier who is good at fighting. The phalera on his chest counts every win, and the weapons beside it hit harder and harder. Stamina {max_stamina} and the fastest Stamina Regen."
 }
 base_stats = {
 "max_hp": 55,
 "max_stamina": 65,
 "regen_stamina": 5
 }
-starting_funds = 100
 starting_bags = Array[StringName]([&"bag_leather", &"bag_small"])
 weight_capacity = 48
-skills = Array[ExtResource("3_g2ila")]([SubResource("Resource_e81ug"), SubResource("Resource_6mha3"), SubResource("Resource_jx7yk")])
+skills = Array[ExtResource("3_f7mof")]([SubResource("Resource_6q5m6")])
+fixed_items = Array[ExtResource("1_1b8yu")]([SubResource("Resource_dh4py")])

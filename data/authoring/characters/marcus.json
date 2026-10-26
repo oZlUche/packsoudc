@@ -4,16 +4,15 @@
   "display_names": {
     "en": "Marcus"
   },
-  "description": "擅长战斗的军团士兵。一个皮革包、一个小包，生命 {max_hp}、耐力 {max_stamina}、耐力回得最快：打得狠、打得久、打赢了得的多。",
+  "description": "擅长战斗的军团士兵。胸前的军功牌记着每一场胜仗，牌边的武器越打越狠；耐力 {max_stamina}、耐力回复最快。",
   "descriptions": {
-    "en": "A legion soldier who is good at fighting. One leather bag and one small bag, Health {max_hp}, Stamina {max_stamina} and the fastest Stamina regeneration: hits hard, lasts long and earns more from wins."
+    "en": "A legion soldier who is good at fighting. The phalera on his chest counts every win, and the weapons beside it hit harder and harder. Stamina {max_stamina} and the fastest Stamina Regen."
   },
   "base_stats": {
     "max_hp": 55,
     "max_stamina": 65,
     "regen_stamina": 5
   },
-  "starting_funds": 100,
   "starting_bags": [
     "bag_leather",
     "bag_small"
@@ -22,66 +21,47 @@
   "skills": [
     {
       "type": "passive",
-      "id": "merit",
-      "display_name": "军功",
-      "display_names": {
-        "en": "Spoils of War"
-      },
-      "description": "战斗胜利所得金币增加四分之一。",
-      "descriptions": {
-        "en": "Coins from winning battles are increased by a quarter."
-      },
-      "passive": [
-        {
-          "type": "battle_reward_mult"
-        }
-      ]
-    },
-    {
-      "type": "passive",
       "id": "drill",
       "display_name": "操练",
       "display_names": {
         "en": "Drill"
       },
-      "description": "耐力低于两成时，立即恢复 {change_resource_amount} 点耐力（每场一次）。",
+      "description": "所有武器的耐力消耗和重量降低两成。",
       "descriptions": {
-        "en": "When your Stamina drops below a fifth, restore {change_resource_amount} Stamina at once (once per battle)."
+        "en": "All weapons cost a fifth less Stamina and weigh a fifth less."
       },
-      "rules": [
+      "passive": [
         {
-          "trigger": {
-            "type": "on_resource_below",
-            "resource_key": "stamina",
-            "percent": 20
-          },
-          "cadence": "@always",
-          "costs": [
-            "@uses_1"
+          "type": "tag_mods",
+          "tags": [
+            "weapon"
           ],
-          "effects": [
+          "mods": [
             {
-              "type": "change_resource",
-              "resource_key": "stamina",
-              "amount": 30.0
+              "stat": "stamina_cost",
+              "mode": "MULT",
+              "amount": -20.0
             }
           ]
+        },
+        {
+          "type": "tag_weight_mult",
+          "tags": [
+            "weapon"
+          ],
+          "percent": -20
         }
       ]
-    },
+    }
+  ],
+  "fixed_items": [
     {
-      "type": "assault",
-      "id": "assault",
-      "display_name": "突击",
-      "display_names": {
-        "en": "Assault"
-      },
-      "description": "下次战斗开始时，先扣除敌方三成生命。",
-      "descriptions": {
-        "en": "At the start of your next battle, the enemy first loses three tenths of its Health."
-      },
-      "uses": 3,
-      "cooldown_steps": 3
+      "id": "legion_phalera",
+      "origin": [
+        3,
+        2
+      ],
+      "movable": true
     }
   ]
 }

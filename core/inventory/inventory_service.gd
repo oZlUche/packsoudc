@@ -18,6 +18,8 @@ static func move(
 	var inst := from.get_item(uid)
 	if inst == null or from.is_locked(uid):     # 207：扎了根的挪不动（包内换位置也不行）
 		return false
+	if to != from and from.keeps(uid):     # 256：可以挪的随身之物只在自己的棋盘上挪
+		return false
 	if from.is_bag_with_contents(uid):
 		return _move_bag(from, uid, to, origin, rot)
 
@@ -90,7 +92,7 @@ static func transfer_auto(from: ItemContainer, uid: int, to: ItemContainer) -> b
 	var inst := from.get_item(uid)
 	if inst == null or not to.can_admit(inst.def):
 		return false
-	if from is GridInventory and (from as GridInventory).is_locked(uid):     # 207：扎了根的搬不走（双击、全部拾取都走这里）
+	if from is GridInventory and from != to and (from as GridInventory).keeps(uid):     # 207：扎了根的搬不走（双击、全部拾取都走这里）；256：随身之物同理
 		return false
 	# 087：带东西的包（尸体容器里包当背景、上面摆着东西）：连内容物一起搬 —— 内容物先各自进目标，包最后
 	if from is GridInventory and (from as GridInventory).is_bag_with_contents(uid):

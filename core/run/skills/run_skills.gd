@@ -136,6 +136,21 @@ func on_step() -> void:
 		changed.emit()
 
 
+## 256：到了休息点 —— 带 [member RunSkill.rest_recharge] 的技能补次数，封顶定义的 [member RunSkill.uses]
+func on_rest() -> void:
+	var dirty := false
+	for d in defs:
+		if d == null or d.rest_recharge <= 0 or d.uses < 0:
+			continue
+		var now := uses_of(d.id)
+		var to := mini(d.uses, now + d.rest_recharge)
+		if to != now:
+			uses_left[String(d.id)] = to
+			dirty = true
+	if dirty:
+		changed.emit()
+
+
 ## 开打前：立了旗的技能依次改双方的战斗单位，旗子撤掉
 func prepare_battle(me: CombatantSpec, enemy: CombatantSpec) -> void:
 	if armed.is_empty():

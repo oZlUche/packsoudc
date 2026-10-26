@@ -1067,8 +1067,11 @@ func encumbrance_text() -> String:
 	for id in flow.meta_buffs():
 		if flow.buff_defs.has(id):
 			defs.append(flow.buff_defs[id])
-	var cap := RunBuffs.context(defs).carry_capacity_of(ch.weight_capacity)     # 149：科技按百分比
-	var w := ItemWeight.total(board)
+	var ctx := RunBuffs.context(defs)
+	for e in ch.run_effects():     # 256：角色被动也算（马库斯「操练」武器减重）
+		e.modify(ctx)
+	var cap := ctx.carry_capacity_of(ch.weight_capacity)     # 149：科技按百分比
+	var w := ItemWeight.total_scaled(board, ctx.weight_pct)
 	var lv := rules.level_of(w, cap)
 	return UiText.t("setup.load") % [w, cap, rules.name_of(lv), UiText.t("setup.sep") + rules.effect_text(lv) if lv > 0 else ""]
 
@@ -1544,7 +1547,7 @@ func _rebuild_board() -> void:
 	if flow.meta.grant_starting_bags(ch, flow.items) > 0:
 		_gifted[ch.id] = true     # 255：这一回是第一次选他 —— 右栏的「首次赠包」小签亮着
 	board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
-	ch.shape_board(board, flow.items, flow.meta.allocate_uid)     # 255：缺格挖掉、随身之物先钉上（包绕开它们）
+	ch.shape_board(board, flow.items, flow.meta.allocate_uid, false)     # 255：缺格挖掉、随身之物先钉上（包绕开它们）
 	board.begin_batch()
 	var rack := flow.meta.rack
 	for id in ch.starting_bags:
@@ -1597,7 +1600,7 @@ func ensure_bag() -> bool:
 
 
 ## 161：第一页的角色卡与棋盘预览（只看不拖）。
-## 255（作者 2026-10-26 定）：卡自上而下 —— 头像 160 + 名牌（名 24、「角色」、一句角色说明）→ 面板方块一行（生命 / 耐力 / 回气 / 体力必有，
+## 255（作者 2026-10-26 定）：卡自上而下 —— 头像 160 + 名牌（名 24、「角色」、一句角色说明）→ 面板方块一行（生命 / 耐力 / 耐力回复 / 体力必有，
 ## 别的面板项角色改过才出）→ 小牌一行（负重 / 棋盘（缺几格）/ 带入上限）→ 同一种条目行：技能两条 → 随身之物（有才出）→ 短板（有才出、最后；补充三起选填）。
 ## 右栏：只画形状的棋盘（缺格 + 随身之物，不画包）居中 → 题字「棋盘 N × M 格　可用 K 格」→ 图例（有才出）→ 首次赠包小签（第一次选他才出）
 func _rebuild_card() -> void:
@@ -1660,7 +1663,7 @@ func _rebuild_card() -> void:
 	for f in ch.fixed_items:
 		var def := flow.items.get_def(f.id) if f != null else null
 		if def != null:
-			rows.add_child(_entry_row(EntryIcon.pinned(def), Names.of(def), Names.description_of(def), UiText.t("setup.pinned_tail"), false))
+			rows.add_child(_entry_row(EntryIcon.pinned(def), Names.of(def), Names.description_of(def), UiText.t("setup.pin_moves_tail" if f.movable else "setup.pinned_tail"), false))
 	var flaw := ch.flaw_entry()
 	if not flaw.is_empty():
 		rows.add_child(_entry_row(EntryIcon.flaw(), String(flaw["name"]), String(flaw["text"]), "", true))
@@ -1692,7 +1695,7 @@ func _entry_row(icon: EntryIcon, title: String, text: String, tail: String, iron
 func _build_preview(ch: CharacterDef) -> void:
 	_grooves[2].custom_minimum_size.x = right_width()
 	_preview_board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
-	ch.shape_board(_preview_board, flow.items)
+	ch.shape_board(_preview_board, flow.items, Callable(), false)
 	_preview_view = InventoryView.new()
 	_preview_view.label_font = font
 	_preview_view.inventory = _preview_board
@@ -1755,7 +1758,7 @@ func first_gift_text(ch: CharacterDef) -> String:
 	return UiText.t("setup.first_gift") % UiText.t("setup.list_sep").join(parts) if not parts.is_empty() else ""
 
 
-## 255：面板方块 [名, 数, 悬停句]：生命 / 耐力 / 回气 / 体力必有；别的面板项角色在 base_stats 里改过才出
+## 255：面板方块 [名, 数, 悬停句]：生命 / 耐力 / 耐力回复 / 体力必有；别的面板项角色在 base_stats 里改过才出
 static func stat_plaques(ch: CharacterDef) -> Array:
 	var base := ch.baseline()
 	var out: Array = [

@@ -286,7 +286,7 @@ static func _apply_adjacency(
 ) -> Dictionary:
 	for uid in fighters:
 		var holder := board.get_item(uid)
-		var profile: AdjacencyProfile = holder.def.adjacency
+		var profile: AdjacencyProfile = GrowthProfile.adjacency_of(holder)     # 256：军功牌的增益圈跟着阶走
 		if profile == null:
 			continue
 

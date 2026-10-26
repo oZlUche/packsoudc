@@ -19,7 +19,6 @@ static func _chapter() -> ChapterDef:
 static func _rules() -> EconomyRules:
 	var r := EconomyRules.new()
 	r.id = &"t_econ"
-	r.starting_balance = 30
 	r.reward_base = 10
 	r.reward_per_strength = 5
 	r.reward_depth_gain = 1.0
@@ -346,7 +345,7 @@ static func run_events(t: TestCase) -> void:
 
 	var travel := MapTravel.new(g, ActionClock.new())
 	travel.start_at(0)
-	var wallet := Wallet.new(economy.starting_balance)
+	var wallet := Wallet.new(20)     # 256：经济规则不再有开局钱（钱全由玩家自己带）
 	var events := NodeEvents.new(g)
 	events.vitality = Vitality.new(5)
 	events.rules = node_rules

@@ -1,122 +1,26 @@
 [gd_resource type="Resource" script_class="CharacterDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_mx3k3"]
-[ext_resource type="Script" path="res://core/run/character_def.gd" id="2_oevla"]
-[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="3_nd1kg"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_hbv0f"]
-[ext_resource type="Script" path="res://core/run/effects/rest_bonus.gd" id="5_063lg"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="6_kraql"]
-[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="7_ipor7"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="8_5kvhg"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="9_3usi0"]
-[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="10_gxjex"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="11_utyi1"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="12_t86aj"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="13_eqvia"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="14_iqvcx"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="15_6h21u"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="16_ga23w"]
-[ext_resource type="Script" path="res://core/run/skills/second_wind_skill.gd" id="17_mv4vl"]
-
-[sub_resource type="Resource" id="Resource_x8pem"]
-script = ExtResource("5_063lg")
-
-[sub_resource type="Resource" id="Resource_056bq"]
-script = ExtResource("7_ipor7")
-id = &"wild_born"
-display_name = "野地里长大"
-display_names = {
-"en": "Raised in the Wild"
-}
-description = "休息时额外恢复 {rest_bonus_amount} 点体力。"
-descriptions = {
-"en": "Restore {rest_bonus_amount} extra Vitality when resting."
-}
-passive = Array[ExtResource("4_hbv0f")]([SubResource("Resource_x8pem")])
-
-[sub_resource type="Resource" id="Resource_878ss"]
-script = ExtResource("8_5kvhg")
-metadata/part_ref = &"always"
-
-[sub_resource type="Resource" id="Resource_vtu5o"]
-script = ExtResource("10_gxjex")
-metadata/part_ref = &"uses_1"
-
-[sub_resource type="Resource" id="Resource_66u2r"]
-script = ExtResource("13_eqvia")
-stat = &"max_armor"
-amount = 15.0
-
-[sub_resource type="Resource" id="Resource_acm6v"]
-script = ExtResource("14_iqvcx")
-id = &"hardy_guard"
-display_name = "坚韧"
-display_names = {
-"en": "Hardy"
-}
-mods = Array[ExtResource("13_eqvia")]([SubResource("Resource_66u2r")])
-
-[sub_resource type="Resource" id="Resource_47gdc"]
-script = ExtResource("15_6h21u")
-target = 1
-buff = SubResource("Resource_acm6v")
-
-[sub_resource type="Resource" id="Resource_2m2no"]
-script = ExtResource("16_ga23w")
-
-[sub_resource type="Resource" id="Resource_66poc"]
-script = ExtResource("6_kraql")
-trigger = SubResource("Resource_2m2no")
-cadence = SubResource("Resource_878ss")
-costs = Array[ExtResource("9_3usi0")]([SubResource("Resource_vtu5o")])
-effects = Array[ExtResource("11_utyi1")]([SubResource("Resource_47gdc")])
-
-[sub_resource type="Resource" id="Resource_obt75"]
-script = ExtResource("7_ipor7")
-id = &"hardy"
-display_name = "坚韧"
-display_names = {
-"en": "Tough"
-}
-description = "战斗中生命低于 {percent}% 时，立即获得 {apply_status_amount} 点护甲（每场一次）。"
-descriptions = {
-"en": "When your Health drops below {percent}% in battle, gain {apply_status_amount} Armor at once (once per battle)."
-}
-rules = Array[ExtResource("6_kraql")]([SubResource("Resource_66poc")])
-
-[sub_resource type="Resource" id="Resource_3htg3"]
-script = ExtResource("17_mv4vl")
-id = &"second_wind"
-display_name = "咬牙"
-display_names = {
-"en": "Second Wind"
-}
-description = "在地图上恢复 {amount} 点体力。"
-descriptions = {
-"en": "Restore {amount} Vitality on the map."
-}
-uses = 2
-cooldown_steps = 6
+[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_gybr5"]
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="2_2gtn0"]
+[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="3_uuxqt"]
 
 [resource]
-script = ExtResource("2_oevla")
+script = ExtResource("2_2gtn0")
 id = &"brutus"
 display_name = "布鲁图斯"
 display_names = {
 "en": "Brutus"
 }
-description = "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}、棋盘最宽，扛得住、缓得过来；只是耐力回得慢、带的钱少，也没有逃跑和爆发的手段。"
+description = "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}、棋盘最宽、背得最多，扛得住、缓得过来。"
 descriptions = {
-"en": "A slave explorer who is good at surviving. Health {max_hp}, Vitality {vitality_max} and the widest board: he takes a beating and recovers. But his Stamina regenerates slowly, he brings little money, and he has no way to flee or burst."
+"en": "A slave explorer who is good at surviving. Health {max_hp}, Vitality {vitality_max}, the widest board and the heaviest load: he takes the hits and recovers."
 }
 base_stats = {
-"max_hp": 70,
-"max_stamina": 55,
-"regen_stamina": 3
+"max_hp": 85,
+"max_stamina": 65,
+"regen_stamina": 4
 }
-vitality_max = 7
+vitality_max = 8
 board_size = Vector2i(9, 6)
-starting_funds = 80
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
-weight_capacity = 56
-skills = Array[ExtResource("3_nd1kg")]([SubResource("Resource_056bq"), SubResource("Resource_obt75"), SubResource("Resource_3htg3")])
+weight_capacity = 64

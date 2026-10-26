@@ -105,7 +105,7 @@
 | damage_taken | 易伤 Vulnerable | 坚韧 Hardy |
 | regen_hp | 回春 Renewal | 失血 Bleeding Out |
 | regen_hp_pct | 再生 Regeneration | 腐蚀 Corrosion |
-| regen_stamina | 回气 Second Wind | 疲乏 Fatigue |
+| regen_stamina | 耐力回复 Second Wind | 疲乏 Fatigue |
 | crit_chance | 锐目 Keen Eye | 失准 Off Target |
 | crit_damage | 致命 Lethal | 钝击 Blunted |
 | fire_damage | 炽烈 Blaze | 熄火 Doused |

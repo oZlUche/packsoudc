@@ -120,7 +120,7 @@ func duration_text() -> String:
 @export var heal_cut: int = 0
 ## 255：[member heal_cut] 只截这些标签的道具给的治疗（马库斯「不懂药」= `remedy`）；空 = 什么治疗都截（含每秒回血）
 @export var heal_cut_tags: Array[StringName] = []
-## 255：挂着它时，这些资源的**每秒回复**少几成（`{"stamina": 50}`，百分比；布鲁图斯「回气慢」）
+## 255：挂着它时，这些资源的**每秒回复**少几成（`{"stamina": 50}`，百分比；布鲁图斯「耐力回复慢」）
 @export var regen_cut: Dictionary = {}
 ## 255：[member regen_cut] 只在那种资源低于上限的百分之几时生效；0 = 一直生效
 @export var regen_cut_below: int = 0

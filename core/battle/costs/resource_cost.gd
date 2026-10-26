@@ -18,6 +18,8 @@ func _amount_fp(ctx: RuleContext) -> int:
 		var from_stats := ctx.item_stat(amount_stat, -1)
 		if from_stats >= 0:
 			v = from_stats
+	elif resource_key == BattleStats.RES_STAMINA:
+		v = StatMath.mul(v, ctx.owner.item_cost_factor(ctx.runtime.source_uid))     # 256：写死的耐力消耗也吃打折与灵巧轴
 	return _numbed(ctx, v)
 
 
@@ -64,4 +66,4 @@ func stamina_per_use(stats: StatSet) -> float:
 		return 0.0
 	if amount_stat != &"" and stats != null and stats.total_of(amount_stat, -1) >= 0:
 		return StatMath.to_float(stats.total_of(amount_stat))
-	return amount
+	return amount * StatMath.to_float(stats.percent_factor(BattleStats.STAMINA_COST)) if stats != null else amount

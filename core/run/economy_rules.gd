@@ -11,9 +11,6 @@ extends Resource
 @export var id: StringName = &""
 @export var display_name: String = ""
 
-## 开局带多少
-@export var starting_balance: int = 0
-
 @export_group("战斗奖励")
 ## 打赢一场 = (reward_base + reward_per_strength × 档位) × (1 + reward_depth_gain × 深度) × (1 + reward_difficulty_gain × 难度)，四舍五入
 @export var reward_base: int = 10

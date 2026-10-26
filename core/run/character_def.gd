@@ -22,8 +22,6 @@ extends Resource
 @export var vitality_max: int = 5
 ## 作战棋盘的尺寸（149：三个人各不相同，7 / 8 / 9 × 6）
 @export var board_size: Vector2i = Vector2i(8, 6)
-## 149：开局钱的基数（科技「行囊」按它乘百分比）。-1 = 用经济规则的全局 [member EconomyRules.starting_balance]
-@export var starting_funds: int = -1
 ## 初始包：道具 id，可重复。225 起只是「首次见面礼」—— 第一次选这个角色时送进包架（[method MetaState.grant_starting_bags]）；
 ## 255：选角色屏用一枚小签说一下，送过就不显示。没有开局屏摆盘（测试、直开）时照旧开局摆在棋盘上
 @export var starting_bags: Array[StringName] = []
@@ -97,7 +95,8 @@ func flaw_entry() -> Dictionary:
 
 ## 255：按这个角色把棋盘造型 —— 缺格挖掉、随身之物钉上去（[method ItemInstance.set_pinned]）。
 ## [param next_uid] 给了（`func() -> int`）就用它发号（开局屏走局外号段），不给用 [method ItemInstance.create] 自增的。返回钉上去的几件
-func shape_board(board: GridInventory, items: ItemDatabase, next_uid: Callable = Callable()) -> Array[ItemInstance]:
+## 256：[param allow_moves] = 假时可以挪的随身之物也钉死（开局屏：它的落点由角色定，摆盘绕开它）
+func shape_board(board: GridInventory, items: ItemDatabase, next_uid: Callable = Callable(), allow_moves: bool = true) -> Array[ItemInstance]:
 	var out: Array[ItemInstance] = []
 	if board == null:
 		return out
@@ -111,7 +110,7 @@ func shape_board(board: GridInventory, items: ItemDatabase, next_uid: Callable =
 		var inst := ItemInstance.create(def, f.rot)
 		if next_uid.is_valid():
 			inst.uid = int(next_uid.call())
-		inst.set_pinned(true)
+		inst.set_pinned(true, f.movable and allow_moves)
 		if board.place(inst, f.origin, f.rot):
 			out.append(inst)
 		else:
@@ -135,7 +134,7 @@ func board_counts(items: ItemDatabase) -> Dictionary:
 func skills_summary() -> String:
 	var parts: Array[String] = []
 	for s in skills:
-		if s != null and not (RunSkills.ACTIVE_HIDDEN and (s as RunSkill).is_active()):
+		if s != null and (s as RunSkill).shown_to_player():
 			parts.append((s as RunSkill).summary())
 	return UiText.t("log.skill_sep").join(parts)
 
@@ -144,10 +143,10 @@ func skills_summary() -> String:
 ## 166 补充一：主动技能藏着（[constant RunSkills.ACTIVE_HIDDEN]）时只有被动行
 func skill_lines() -> Array[String]:
 	var out: Array[String] = []
-	for active in ([false] if RunSkills.ACTIVE_HIDDEN else [false, true]):
+	for active in [false, true]:
 		for s in skills:
 			var sk := s as RunSkill
-			if sk != null and sk.is_active() == active:
+			if sk != null and sk.is_active() == active and sk.shown_to_player():
 				out.append(UiText.t("log.skill_line") % [UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), _skill_line(sk)])
 	return out
 
@@ -155,10 +154,10 @@ func skill_lines() -> Array[String]:
 ## 179：选角色屏一条技能拆成两行由界面排 ——「被动 / 主动」、名字、说明（主动的次数 / 冷却附在说明末尾）；顺序和 [method skill_lines] 一样
 func skill_entries() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	for active in ([false] if RunSkills.ACTIVE_HIDDEN else [false, true]):
+	for active in [false, true]:
 		for s in skills:
 			var sk := s as RunSkill
-			if sk != null and sk.is_active() == active:
+			if sk != null and sk.is_active() == active and sk.shown_to_player():
 				out.append({"kind": UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), "name": Names.of(sk), "text": _skill_text(sk), "skill": sk})
 	return out
 
@@ -172,7 +171,7 @@ static func _skill_text(sk: RunSkill) -> String:
 	var text := Names.description_of(sk) if sk.description != "" else sk.summary()
 	var bits: Array[String] = []
 	if sk.is_active():
-		if sk.uses >= 0:
+		if sk.uses >= 0 and not sk.description.contains("{uses}"):     # 256：说明里自己写了次数（偷袭）就不再补
 			bits.append(UiText.t("log.skill_uses") % sk.uses)
 		if sk.cooldown_steps > 0:
 			bits.append(UiText.t("log.skill_cooldown_steps") % sk.cooldown_steps)

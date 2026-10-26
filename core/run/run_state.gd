@@ -208,8 +208,7 @@ static func start(
 	# 149：体力上限、开局钱按角色的基数乘科技的百分比再加加算；章节的体力加成在最后加
 	s.vitality = Vitality.new(ctx.vitality_max_of(vitality_max) + p_chapter.vitality_bonus)
 	# 2026-10-22（作者定）：开局的钱**全由玩家自己从仓库带**（[param p_carry_funds]），不再凭空发。
-	# 原来那条水源 —— `EconomyRules.starting_balance` / `CharacterDef.starting_funds` / 科技「行囊」的百分比 ——
-	# 三个字段先留着不删：之后要么改成「带入上限」，要么给别的用途
+	# 原来那条水源（`EconomyRules.starting_balance` / `CharacterDef.starting_funds` / `starting_funds_bonus`）256 删了
 	s.wallet = Wallet.new(maxi(0, p_carry_funds))
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	if p_character != null:
@@ -241,7 +240,7 @@ func pick_spawn(id: int) -> bool:
 ## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；没拿的战利品、地上的东西都留在这个点上（3.4 / 084：离开就是清的时机）；
 ## 等着开打的一场没打不能走；不在图上走不了
 func step_to(id: int) -> bool:
-	if phase != Phase.ON_MAP or not events.pending_battle.is_empty():
+	if phase != Phase.ON_MAP or not events.pending_battle.is_empty() or not events.pending_ransom.is_empty():
 		return false
 	if not travel.available_moves().has(id):
 		return travel.step_to(id)     # 让旅程自己拒绝、发 refused；走不成就不该清东西
@@ -303,7 +302,7 @@ func has_pending_arrival() -> bool:
 func resume_arrival() -> bool:
 	if not has_pending_arrival() or is_over() or phase != Phase.ON_MAP:
 		return false
-	if events != null and (not events.pending.is_empty() or not events.pending_battle.is_empty()):
+	if events != null and (not events.pending.is_empty() or not events.pending_battle.is_empty() or not events.pending_ransom.is_empty()):
 		return false
 	var first := bool(travel.held.get("first", false))
 	if not travel.finish_arrival():
@@ -485,6 +484,7 @@ func fail(reason: StringName) -> bool:
 	if events != null:
 		events.pending_battle = {}
 		events.pending = {}
+		events.pending_ransom = {}
 	_set_phase(Phase.DEFEATED, reason)
 	return true
 
@@ -601,6 +601,7 @@ func compile_player() -> CombatantSpec:
 		input.baseline_mods.append_array(enc["baseline"])
 	# 105：按件随机挑选的种子。一局之内只随步数变，所以拖动预估挑的和真打挑的是同一批
 	input.seed = hash("%d:compile:%d" % [run_seed, travel.clock.total if travel != null and travel.clock != null else 0])
+	input.scoped.append_array(buff_context().scoped)     # 256：一局被动的按件修饰（操练：武器耐力消耗 −20%）
 	var altar := AltarModule.of(self)     # 093：信仰级效果往编译器的入参里放东西（顺序 = 文件里的顺序）
 	if altar != null:
 		var bonus := altar.axes()     # 祈祷攒的轴层数（105）
@@ -700,7 +701,7 @@ func set_character(ch: CharacterDef) -> void:
 #region 负重（129）
 ## 负重：作战棋盘上每件（含包本身）的重量之和。地上、保险箱、仓库不算。派生，不存档
 func carry_weight() -> int:
-	return ItemWeight.total(board)
+	return ItemWeight.total_scaled(board, buff_context().weight_pct)     # 256：操练的武器减重
 
 
 ## 负重上限 = 角色的 ×（1 + 科技的百分比）+ 加算（[method RunContext.carry_capacity_of]，149）。0 = 不算负重（没角色、角色没配）
@@ -1035,6 +1036,7 @@ func _wire_events() -> void:
 			hunters.on_player_step()
 		stepped.emit(travel.current_id, &"wait"))
 	events.battle_finished.connect(func(_n: MapNode, _r: BattleResult, won: bool): _tally_battle(won))
+	events.rested.connect(func(_n: MapNode, _got: int): skills.on_rest())     # 256：偷袭在休息点补一次
 	events.search_opened.connect(func(n: MapNode, _s: SearchSession): _tally_search(n))
 	events.loot_ready.connect(func(_n: MapNode, corpse: GridInventory): _offer_loot(corpse))
 	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): drop_seen_haul(haul))     # 作者 2026-10-16：不再弹战利品屏
@@ -1190,6 +1192,7 @@ func to_dict() -> Dictionary:
 		"rng": rng.to_dict(),
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
 			"pending_battle": events.pending_battle.duplicate(true),
+			"pending_ransom": events.pending_ransom.duplicate(true),     # 256：读档回来还在天平上
 			# 审查 B1：开着的搜索会话不进存档（存档那一刻视为离开），离开时收获本来就交到待拾取 —— 存档这里照做，搜到的不丢
 			"search_haul": events.current_search.haul().to_dict() if events.current_search != null and events.current_search.haul() != null and events.current_search.haul().item_count() > 0 else null},
 		"skills": skills.to_dict(),
@@ -1302,6 +1305,16 @@ static func from_dict(
 		s.events.pending_battle = {"node": int(pb["node"]), "type": String(pb.get("type", "battle")),
 			"content": (content as Dictionary).duplicate(true) if content is Dictionary else {}, "kind": String(pb.get("kind", "node")),
 			"loss_cost": int(pb.get("loss_cost", NodeEvents.LOSS_DEFAULT))}     # 审查 B1：搜索遇敌无代价（0）读档后不能变回默认
+	var pr = ev.get("pending_ransom", {})
+	if pr is Dictionary and not (pr as Dictionary).is_empty() and pr.has("node"):
+		var rc = pr.get("content", {})
+		s.events.pending_ransom = {"node": int(pr["node"]), "type": String(pr.get("type", "battle")),
+			"content": (rc as Dictionary).duplicate(true) if rc is Dictionary else {}, "cost": int(pr.get("cost", 1)), "price": int(pr.get("price", 0))}
+		if pr.has("defeat"):
+			s.events.pending_ransom["defeat"] = String(pr["defeat"])
+		var more = pr.get("more", [])
+		if more is Array and not (more as Array).is_empty():
+			s.events.pending_ransom["more"] = (more as Array).map(func(m) -> Dictionary: return {"type": String(m.get("type", "")), "cost": int(m.get("cost", 1))})
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	for id in d.get("searched_nodes", []):
