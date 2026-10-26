@@ -54,7 +54,7 @@ func page_of(uid: int) -> int:
 
 ## [param c] 是不是本仓库（或它的某一页）—— 界面拖拽 / 双击拿到的是页，比较「从仓库来的」用它
 func owns(c: ItemContainer) -> bool:
-	return c != null and (c == self or pages.has(c))
+	return c != null and (c == self or (c is GridInventory and pages.has(c)))     # 游戏测试 v4.50：地上的 ItemStash 问进来，typed 数组的 has 会报引擎错
 
 
 ## 页数变成 [param n]：多了在后面加空页；少了只删**末尾的空页**（碰到有东西的页停下并告警，和 120 的缩行一样）。返回变化后的页数
