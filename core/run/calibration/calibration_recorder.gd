@@ -47,7 +47,7 @@ static func snapshot(run: RunState) -> Dictionary:
 		"vitality": run.vitality.current if run.vitality != null else 0,
 		"board_size": [run.board.size.x, run.board.size.y],
 		"requires_bag": run.board.requires_bag,
-		"layout": RunState.layout_of(run.board),
+		"layout": layout_of(run.board),
 		"baseline": stats,
 		"buffs": run.meta_buff_ids(),
 	}
@@ -104,6 +104,54 @@ static func read_all(p_path: String = DEFAULT_PATH) -> Array[Dictionary]:
 	return out
 
 
+## 一块棋盘的记录：[method RunState.layout_of] 再加随身之物（带着钉的状态与军功，256）。
+## 开局时角色自己钉随身之物，所以 layout_of 不记它；快照与木桩要原样摆回，得记上。
+## 排在包后面、别的道具前面 —— 可以挪的军功牌可能压在包上，包又不能盖住已经钉上的东西
+static func layout_of(board: GridInventory) -> Array:
+	var rows := RunState.layout_of(board)
+	if board == null:
+		return rows
+	var bags := 0
+	var pinned: Array[ItemInstance] = []
+	for inst in board.items():
+		var it := inst as ItemInstance
+		if it.is_pinned():
+			pinned.append(it)
+		elif it.def.is_bag:
+			bags += 1
+	pinned.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool: return a.uid < b.uid)
+	for i in pinned.size():
+		var it := pinned[i]
+		rows.insert(bags + i, {"id": String(it.def.id), "origin": [it.origin.x, it.origin.y], "rot": it.rotation, "state": it.state.duplicate(true)})
+	return rows
+
+
+## 242 变体木桩：一局被动的按件修饰（操练）写成 `[{tags: [..], mods: [{stat, mode, amount}]}]`。只记标签与修饰（按件随机挑、规则不记）
+static func scoped_rows(scoped: Array[ScopedMod]) -> Array:
+	var out: Array = []
+	for sm in scoped:
+		var mods: Array = []
+		for m in sm.mods:
+			mods.append({"stat": String(m.stat), "mode": StatModifier.Mode.keys()[m.mode], "amount": m.amount})
+		out.append({"tags": sm.tags.map(func(t: StringName) -> String: return String(t)), "mods": mods})
+	return out
+
+
+## [method scoped_rows] 读回来
+static func scoped_of(snap: Dictionary) -> Array[ScopedMod]:
+	var out: Array[ScopedMod] = []
+	for row in snap.get("scoped", []):
+		var sm := ScopedMod.new()
+		for t in (row as Dictionary).get("tags", []):
+			sm.tags.append(StringName(String(t)))
+		for m in (row as Dictionary).get("mods", []):
+			var md := m as Dictionary
+			sm.mods.append(StatModifier.make(StringName(String(md.get("stat", ""))),
+				StatModifier.Mode.get(String(md.get("mode", "ADD")), StatModifier.Mode.ADD), float(md.get("amount", 0.0))))
+		out.append(sm)
+	return out
+
+
 ## 一份快照的棋盘：按 layout 原样摆回（和一局开局摆 layout 同一条路）
 static func board_of(snap: Dictionary, items: ItemDatabase) -> GridInventory:
 	var size_raw: Array = snap.get("board_size", [8, 6])
@@ -120,5 +168,11 @@ static func baseline_of(snap: Dictionary) -> CombatantBaseline:
 
 
 ## 一份快照编译成战斗单位（棋盘 + 基线；套装与 buff 的加成不记，木桩是「平均玩家」不是「这个玩家」）
+## 242 变体木桩多带两样（真实快照没有，照旧）：`scoped` 按件修饰（[method scoped_of]）、`axes` 开战带的轴层数 {轴 → 层}
 static func compile(snap: Dictionary, items: ItemDatabase) -> CombatantSpec:
-	return BattleCompiler.compile_board(board_of(snap, items), baseline_of(snap))
+	var input := CompileInput.of(baseline_of(snap))
+	input.scoped.append_array(scoped_of(snap))
+	var axes: Dictionary = snap.get("axes", {})
+	for axis in axes:
+		input.shift_axis(StringName(String(axis)), int(axes[axis]))
+	return BattleCompiler.compile(board_of(snap, items), input)

@@ -1,4 +1,5 @@
-## 扫表（242 §3.2 / §8.1 第 2 项）：木桩 × 敌人池每一档 → 每格 N 场，四张表（胜率、平均时长、赢时余血、同段五路极差）。
+## 扫表（242 §3.2 / §8.1 第 2 项）：木桩 × 敌人池每一档 → 每格 N 场，四张表（胜率、平均时长、赢时余血、同段五路极差）；
+## 有兵刃变体木桩（[method ArchetypeBuilder.build_variants]）时多一张表五：变体对兵刃的胜率差（极差表不算变体）。
 ##
 ## [HunterBench] 的推广：造敌同一条路（[method EnemyPlacer.pick] / [method EnemyPlacer.build_content] → [method EnemyKit.spec_of] → [method BattleSim.run]），
 ## 多记时长与余血。一格 = 同一路同一段的几份木桩（种子）对同一档，场数均摊；第 i 场的敌人与随机源只看（种子, 档, i），
@@ -80,9 +81,12 @@ static func run(dummies: Dictionary, pool: EnemyPool, enemies: EnemyDatabase, it
 	var archetypes: Array[String] = []
 	var brackets: Array[int] = []
 	var steps := {}
+	var families := {}     # 变体 → 它那一组（[member ArchetypeBuilder.BLADE_GROUP]）；五路流派没有
 	for key in dummies:
 		var d: Dictionary = dummies[key]
 		var a := String(d.get("archetype", REAL))
+		if String(d.get("group", "")) != "":
+			families[a] = String(d["group"])
 		var k := int(d.get("bracket", int(String(key))))
 		if not archetypes.has(a):
 			archetypes.append(a)
@@ -106,7 +110,8 @@ static func run(dummies: Dictionary, pool: EnemyPool, enemies: EnemyDatabase, it
 		for tier in tiers:
 			row[tier] = cell(groups[g], pool, enemies, items, node, tier, fights, seed, time_limit, overtime, assumptions, head)
 		cells[g] = row
-	return {"archetypes": archetypes, "brackets": brackets, "tiers": tiers, "steps": steps, "cells": cells, "assumptions": assumptions}
+	return {"archetypes": archetypes, "brackets": brackets, "tiers": tiers, "steps": steps, "cells": cells, "assumptions": assumptions,
+		"groups": families}
 
 
 ## 四张表 + 单调性检查。[param header] 的每一项印成表头的一行（参数、git 短哈希）
@@ -122,6 +127,7 @@ static func markdown(result: Dictionary, title: String, header: Array[String]) -
 	lines.append_array(_table(result, "三 赢时余血", "赢的那些场剩的生命比例。高 = 赢得轻松，低 = 险胜", func(c: Dictionary) -> String:
 		return "%.0f%%" % (float(c["hp_left"]) * 100.0) if int(c["wins"]) > 0 else "—"))
 	lines.append_array(_spread(result))
+	lines.append_array(_variants(result))
 	lines.append_array(_monotony(result))
 	var rows: Array = result.get("assumptions", [])
 	if not rows.is_empty():     # 245：木桩量出来的系数假设，和真人的（tools/assumptions_report.gd）同一张表的样子
@@ -185,7 +191,7 @@ static func _spread(result: Dictionary) -> Array[String]:
 			var lo_a := ""
 			for a in result["archetypes"]:
 				var r := _rate(result, a, k, t)
-				if r < 0.0:
+				if r < 0.0 or (result.get("groups", {}) as Dictionary).has(a):     # 兵刃变体不算（表五单看）
 					continue
 				if r > hi:
 					hi = r
@@ -200,6 +206,35 @@ static func _spread(result: Dictionary) -> Array[String]:
 			else:
 				line += " %.0f（%s %.0f%% / %s %.0f%%） |" % [(hi - lo) * 100.0, hi_a, hi * 100.0, lo_a, lo * 100.0]
 		out.append(line)
+	out.append("")
+	return out
+
+
+## 表五：兵刃变体对兵刃（同一份道具，只差一局的加成）的胜率差，百分点。没有变体木桩就不出这张表
+static func _variants(result: Dictionary) -> Array[String]:
+	var groups: Dictionary = result.get("groups", {})
+	if groups.is_empty():
+		return [] as Array[String]
+	var tiers: Array = result["tiers"]
+	var out: Array[String] = ["## 五 兵刃变体", "", "同一份道具、同样的摆法，只差一局的加成；每格是这一路减兵刃（对照）的胜率，百分点。量写死耐力消耗吃打折之后的偏移", ""]
+	var head := "| 段 | 变体 |"
+	var rule := "|---|---|"
+	for t in tiers:
+		head += " 档 %d |" % t
+		rule += "---|"
+	out.append(head)
+	out.append(rule)
+	for k in result["brackets"]:
+		for a in result["archetypes"]:
+			var base := String(groups.get(a, ""))
+			if base == "" or base == a:
+				continue
+			var line := "| %d（%s） | %s |" % [k, _steps_text(result, k), a]
+			for t in tiers:
+				var r := _rate(result, a, k, t)
+				var r0 := _rate(result, base, k, t)
+				line += " %+.0f |" % ((r - r0) * 100.0) if r >= 0.0 and r0 >= 0.0 else " — |"
+			out.append(line)
 	out.append("")
 	return out
 

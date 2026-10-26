@@ -1,4 +1,4 @@
-## 242 平衡方法第一批：流派木桩（五路 × 四段都摆得进开局棋盘、编得过、有武器）；扫表（一格 10 场跑通、四张表都在）；
+## 242 平衡方法第一批：流派木桩（五路 × 四段都摆得进开局棋盘、编得过、有武器；兵刃四路只差加成）；扫表（一格 10 场跑通、四张表都在）；
 ## 对局记录（一局一行、带版本号，快照也带）；导出 zip（两个目录都在）；战斗日志滚动删到 200
 extends RefCounted
 
@@ -77,6 +77,66 @@ static func run_archetypes(t: TestCase) -> void:
 	t.eq(DummyBuilder.save(dummies, SNAPS), OK, "存成木桩文件（073 格式）")
 	t.eq(DummyBuilder.load_file(SNAPS).size(), dummies.size(), "读回来份数一样")
 	_cleanup()
+
+
+## 一份木桩里每件武器（按定义 id）的耐力消耗倍数
+static func _weapon_costs(d: Dictionary, items: ItemDatabase) -> Array[float]:
+	var spec := DummyBuilder.compile(d, items)
+	var rt := CombatantRuntime.from_spec(spec, 0)
+	var out: Array[float] = []
+	for it in spec.items:
+		var ci := it as CompiledItem
+		if ci.tags.has(&"weapon"):
+			out.append(StatMath.to_float(rt.item_cost_factor(ci.source_uid)))
+	out.sort()
+	return out
+
+
+static func run_variants(t: TestCase) -> void:
+	t.begin("242 补：兵刃四路 —— 同一份道具同样摆，只差加成：操练武器耐力消耗 ×0.8、金阶军功牌钉在 (3, 2) 圈里的武器再 −10%、日神带 5 层灵巧；极差表不算它们，另出表五")
+	var items := _items()
+	var pool := _pool()
+	var brackets: Array[int] = [0, 5]
+	var sun := ContentPaths.load_asset("faiths", String(ArchetypeBuilder.SUN)) as FaithDef
+	var dummies := ArchetypeBuilder.build_variants(pool, items, brackets, _marcus(), sun, 1)
+	t.eq(dummies.size(), ArchetypeBuilder.VARIANTS.size() * brackets.size(), "四路 × 两段")
+	for k in brackets.size():
+		var base: Dictionary = dummies[ArchetypeBuilder.key_of(&"blade", k, 0)]
+		var drill: Dictionary = dummies[ArchetypeBuilder.key_of(&"blade+drill", k, 0)]
+		var ring: Dictionary = dummies[ArchetypeBuilder.key_of(&"blade+drill+phalera", k, 0)]
+		var faith: Dictionary = dummies[ArchetypeBuilder.key_of(&"blade+sun", k, 0)]
+		var tag := "段 %d" % k
+		t.eq(drill["layout"], base["layout"], tag + "：操练和兵刃同一块棋盘")
+		t.eq(faith["layout"], base["layout"], tag + "：日神和兵刃同一块棋盘")
+		t.eq(ring["picked"], base["picked"], tag + "：军功牌那路抽的是同一份道具")
+		for d in [base, drill, ring, faith]:
+			t.eq(String(d["group"]), ArchetypeBuilder.BLADE_GROUP, tag + "：%s 归兵刃一组" % d["archetype"])
+		var plain := _weapon_costs(base, items)
+		t.check(not plain.is_empty() and plain.all(func(f: float) -> bool: return is_equal_approx(f, 1.0)), tag + "：兵刃的武器耐力消耗不打折 %s" % str(plain))
+		t.check(_weapon_costs(drill, items).all(func(f: float) -> bool: return is_equal_approx(f, 0.8)), tag + "：操练的武器 ×0.8")
+		var b := CalibrationRecorder.board_of(ring, items)
+		var pin: ItemInstance = null
+		for inst in b.items():
+			if (inst as ItemInstance).is_pinned():
+				pin = inst
+		t.check(pin != null and pin.def.id == ArchetypeBuilder.PHALERA and pin.origin == ArchetypeBuilder.PHALERA_AT, tag + "：军功牌钉回 (3, 2)")
+		t.eq(GrowthProfile.stage_of(pin) if pin != null else -1, ArchetypeBuilder.PHALERA_STAGE, tag + "：金阶")
+		t.eq(b.item_count(), (ring["layout"] as Array).size(), tag + "：按记录原样摆得回去（牌也在）")
+		var costs := _weapon_costs(ring, items)
+		t.check(is_equal_approx(costs[0], 0.7), tag + "：圈里的武器 ×0.7（操练 −20%% + 牌边 −10%%）%s" % str(costs))
+		t.eq(int((DummyBuilder.compile(faith, items).axes as Dictionary).get(StatAxes.STAMINA_COST, 0)), 5, tag + "：日神开战带 5 层灵巧")
+		t.check(_weapon_costs(faith, items).all(func(f: float) -> bool: return f < 1.0), tag + "：灵巧让武器耐力消耗打折")
+	var enemies := EnemyDatabase.new()
+	enemies.load_all()
+	var two: Array[StringName] = [&"burst", &"shield"]
+	var mixed := ArchetypeBuilder.build(pool, items, brackets, _marcus(), 1, two)
+	mixed.merge(dummies)
+	var result := BalanceMatrix.run(mixed, pool, enemies, items, 4, 3)
+	t.eq((result["groups"] as Dictionary).size(), ArchetypeBuilder.VARIANTS.size(), "扫表记下四路是兵刃一组")
+	var md := BalanceMatrix.markdown(result, "测试", [] as Array[String])
+	t.check(md.contains("## 五 兵刃变体") and md.contains("| blade+drill+phalera |"), "有表五，变体一行一路")
+	var spread := md.get_slice("## 四", 1).get_slice("## 五", 0)
+	t.check(not spread.contains("blade"), "极差表只比五路流派，不算兵刃四路")
 
 
 static func run_matrix(t: TestCase) -> void:
