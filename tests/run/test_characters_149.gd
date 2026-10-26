@@ -172,7 +172,7 @@ static func run_undaunted_and_rule(t: TestCase) -> void:
 	t.check(not bad.ok() and bad.to_text().contains("tech_sinew"), "撞了筋骨：报错并指出科技 —— " + bad.to_text().strip_edges().left(100))
 	var old := ImportReport.new()
 	ContentImporter.import_character({"id": "y", "starting_bags": ["bag_leather"], "skills": [
-		{"type": "passive", "id": "p", "display_name": "p", "passive": [{"type": "free_losses"}]}]}, ctx, old)
+		{"type": "passive", "id": "p", "display_name": "p", "passive": [{"type": "free_losses"}]}], "flaw": {"type": "passive", "id": "f", "display_name": "f"}}, ctx, old)
 	t.check(old.ok(), "免罚败仗不再撞科技（不屈换成了少扣）")
 	for ch in c.characters:
 		var data := ContentExporter.export_character(ch)

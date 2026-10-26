@@ -118,6 +118,12 @@ func duration_text() -> String:
 @export var element: StringName = &""
 ## 175：挂着它时，目标**每次恢复生命**先被截走这么多（百分比，0..100）。燃血 100 = 治疗无效
 @export var heal_cut: int = 0
+## 255：[member heal_cut] 只截这些标签的道具给的治疗（马库斯「不懂药」= `remedy`）；空 = 什么治疗都截（含每秒回血）
+@export var heal_cut_tags: Array[StringName] = []
+## 255：挂着它时，这些资源的**每秒回复**少几成（`{"stamina": 50}`，百分比；布鲁图斯「回气慢」）
+@export var regen_cut: Dictionary = {}
+## 255：[member regen_cut] 只在那种资源低于上限的百分之几时生效；0 = 一直生效
+@export var regen_cut_below: int = 0
 ## 175 补充一：挂着它时，目标**每次恢复生命**后按实际恢复量叠这个状态（菌血 = `poison`：回了 7 点就加 7 层中毒，恢复照常）；空 = 不叠
 @export var heal_echo: StringName = &""
 ## 175 补充一：恢复一点叠几层 [member heal_echo]

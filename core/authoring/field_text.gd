@@ -36,6 +36,7 @@ const LABELS := {
 	"per_target_stack": "乘目标身上的层数", "percent_of_damage": "按这一下伤害的百分比", "all_debuffs": "清光全部减益", "all_buffs": "清光全部增益",     # 132
 	"axis": "标准轴", "axes": "每层带的标准轴", "BuffAxis.stacks": "每层带几层",     # 152
 	"element": "元素印", "heal_cut": "截走治疗（%）", "heal_echo": "恢复时叠的状态", "heal_echo_per_point": "每点叠几层",     # 175
+	"heal_cut_tags": "只截这些标签道具的治疗", "regen_cut": "每秒回复少几成（%）", "regen_cut_below": "低于上限百分之几才生效",     # 255
 	"seconds_per_stack": "每层持续几秒（按层计时）", "decay_halve_on": "层数减半的时机", "per_stack_percent": "每层百分之几", "damage_taken_by_type": "受到某类伤害每层加成（%）",
 	"pure": "真实伤害", "overflow_to": "满了溢出到", "guard": "保底层数",     # 175 补充四
 	"family": "伤害大类", "applies": "造成伤害后施加", "landed_only": "只认打中的", "applies_buff": "附带施加的状态", "applies_stacks": "施加几层",     # 175 补充五
@@ -70,7 +71,7 @@ const LABELS := {
 	"bags_always_drop": "包必掉", "rarity_weights": "稀有度权重", "shop_slots": "商店栏位", "shop_sell_ratio": "出售折价", "shop_price_mult": "商店价格倍率",
 	"shop_refresh_cost": "刷新价", "extract_fee": "撤离费", "starting_balance": "开局钱", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
 	# 角色 / 敌人 / 猎手 / 信仰
-	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能",
+	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能", "flaw": "短板", "fixed_items": "随身之物", "board_mask": "棋盘缺格", "FixedItem.origin": "摆在哪（左上角）", "FixedItem.rot": "朝向",
 	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "combos": "相邻组合", "builds": "套路", "carry_mult": "携带倍率", "build_chance": "套路概率", "bad_build_mult": "坏套路权重倍率", "quality": "好坏", "loose": "不成组", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
 	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_options": "战败结果档", "loss_pick": "选档方式", "HunterLossOption.weight": "权重", "LossPickFixed.index": "第几档（从 0 数）", "loss_type": "战败类型",
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
@@ -157,6 +158,7 @@ const CLASS_LABELS := {
 	"BeltUse": "随身用法", "BeltEffect": "随身效果", "WearProfile": "耐久", "GrowthProfile": "生长", "GrowthStage": "生长的一阶", "GrowthBonus": "额外效果",     # 147 / 148 / 207
 	"ChestRules": "宝箱规则", "ChestSkinDef": "宝箱皮肤",     # 154
 	"BeltSkillDef": "随身技能", "BeltStock": "随身那一排的一种",     # 160 补一
+	"FixedItem": "随身之物",     # 255
 }
 
 ## 脚本路径 → {字段名 → 说明}；"" 键 = 类的说明

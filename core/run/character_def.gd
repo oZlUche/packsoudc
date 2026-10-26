@@ -24,7 +24,8 @@ extends Resource
 @export var board_size: Vector2i = Vector2i(8, 6)
 ## 149：开局钱的基数（科技「行囊」按它乘百分比）。-1 = 用经济规则的全局 [member EconomyRules.starting_balance]
 @export var starting_funds: int = -1
-## 初始包：道具 id，可重复。开局摆在棋盘上；带入的东西只能放进它们
+## 初始包：道具 id，可重复。225 起只是「首次见面礼」—— 第一次选这个角色时送进包架（[method MetaState.grant_starting_bags]）；
+## 255：选角色屏用一枚小签说一下，送过就不显示。没有开局屏摆盘（测试、直开）时照旧开局摆在棋盘上
 @export var starting_bags: Array[StringName] = []
 ## 129：负重上限（单位「重」）。0 = 不算负重
 @export var weight_capacity: int = 0
@@ -34,6 +35,12 @@ extends Resource
 @export var carry_rarity_cap: int = -1
 ## 局内技能（082，作者定）：[RunSkill] 构件 —— 被动常驻（一局规则 / 掉落的效果，开局编进 RunContext）+ 可选的主动一击（地图屏上用，次数与冷却由 [RunSkills] 记账）
 @export var skills: Array[RunSkill] = []
+## 255：短板 —— 每个角色必有一条（136），和 [member skills] 里的被动同一套构件（一局规则 / 掉落 / 战斗规则），编译时一并算进去，界面上单列、永远排最后
+@export var flaw: RunSkill
+## 255：随身之物 —— 开局钉在棋盘上的道具（自带底板、拿不下、丢不掉、不进仓库），每局重发
+@export var fixed_items: Array[FixedItem] = []
+## 255：棋盘缺格（格坐标）；空 = 整块矩形。缺格不能放包、不能放东西，画成透空
+@export var board_mask: Array[Vector2i] = []
 
 
 ## 这个角色的战斗基线：默认值盖上覆盖项。编译器与战斗不认识角色，只认基线（4.2）
@@ -44,30 +51,81 @@ func baseline() -> CombatantBaseline:
 	return b
 
 
-## 全部技能的被动部分：一局规则的效果
-func run_effects() -> Array[RunEffect]:
-	var out: Array[RunEffect] = []
+## 技能与短板（255）—— 编译时一并算的那几条
+func traits() -> Array[RunSkill]:
+	var out: Array[RunSkill] = []
 	for s in skills:
 		if s != null:
-			out.append_array((s as RunSkill).run_effects())
+			out.append(s as RunSkill)
+	if flaw != null:
+		out.append(flaw)
+	return out
+
+
+## 全部技能（含短板）的被动部分：一局规则的效果
+func run_effects() -> Array[RunEffect]:
+	var out: Array[RunEffect] = []
+	for s in traits():
+		out.append_array(s.run_effects())
 	return out
 
 
 func loot_effects() -> Array[LootEffect]:
 	var out: Array[LootEffect] = []
-	for s in skills:
-		if s != null:
-			out.append_array((s as RunSkill).loot_effects())
+	for s in traits():
+		out.append_array(s.loot_effects())
 	return out
 
 
-## 136：全部技能的战斗规则（编译玩家时挂到单位上）
+## 136：全部技能（含短板）的战斗规则（编译玩家时挂到单位上）
 func combat_rules() -> Array[AbilityRule]:
 	var out: Array[AbilityRule] = []
-	for s in skills:
-		if s != null:
-			out.append_array((s as RunSkill).rules)
+	for s in traits():
+		out.append_array(s.rules)
 	return out
+
+
+## 255：短板那一条（选角色屏的最后一行）：名字、说明；没有短板 = 空
+func flaw_entry() -> Dictionary:
+	if flaw == null:
+		return {}
+	return {"name": Names.of(flaw), "text": _skill_text(flaw)}
+
+
+## 255：按这个角色把棋盘造型 —— 缺格挖掉、随身之物钉上去（[method ItemInstance.set_pinned]）。
+## [param next_uid] 给了（`func() -> int`）就用它发号（开局屏走局外号段），不给用 [method ItemInstance.create] 自增的。返回钉上去的几件
+func shape_board(board: GridInventory, items: ItemDatabase, next_uid: Callable = Callable()) -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	if board == null:
+		return out
+	board.begin_batch()
+	for c in board_mask:
+		board.set_blocked(c, true)
+	for f in fixed_items:
+		var def := items.get_def(f.id) if items != null and f != null else null
+		if def == null:
+			continue
+		var inst := ItemInstance.create(def, f.rot)
+		if next_uid.is_valid():
+			inst.uid = int(next_uid.call())
+		inst.set_pinned(true)
+		if board.place(inst, f.origin, f.rot):
+			out.append(inst)
+		else:
+			push_warning("CharacterDef.shape_board: %s 的随身之物 %s 摆不上 %s" % [id, f.id, f.origin])
+	board.end_batch()
+	return out
+
+
+## 255：棋盘总格、缺格、随身之物占格 —— 题字「棋盘 8 × 6 格　可用 46 格」用。{"total", "missing", "pinned", "usable"}
+func board_counts(items: ItemDatabase) -> Dictionary:
+	var total := board_size.x * board_size.y
+	var pinned := 0
+	for f in fixed_items:
+		var def := items.get_def(f.id) if items != null and f != null else null
+		if def != null:
+			pinned += def.cells_rotated(f.rot).size()
+	return {"total": total, "missing": board_mask.size(), "pinned": pinned, "usable": total - board_mask.size() - pinned}
 
 
 ## 技能的一句话：每个技能「名字（主动、被动各一句）」；166 补充一：主动技能藏着时只列被动
@@ -98,7 +156,7 @@ func skill_entries() -> Array[Dictionary]:
 		for s in skills:
 			var sk := s as RunSkill
 			if sk != null and sk.is_active() == active:
-				out.append({"kind": UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), "name": Names.of(sk), "text": _skill_text(sk)})
+				out.append({"kind": UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), "name": Names.of(sk), "text": _skill_text(sk), "skill": sk})
 	return out
 
 

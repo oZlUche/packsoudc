@@ -1,27 +1,75 @@
 [gd_resource type="Resource" script_class="CharacterDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/character_def.gd" id="1_rrx7e"]
-[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="2_mx3k3"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_oevla"]
-[ext_resource type="Script" path="res://core/run/effects/rest_bonus.gd" id="4_nd1kg"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="5_hbv0f"]
-[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="6_063lg"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="7_kraql"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="8_ipor7"]
-[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="9_5kvhg"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="10_3usi0"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="11_gxjex"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="12_utyi1"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="13_t86aj"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="14_eqvia"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="15_iqvcx"]
-[ext_resource type="Script" path="res://core/run/skills/second_wind_skill.gd" id="16_6h21u"]
+[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_oevla"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_nd1kg"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_hbv0f"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_063lg"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_kraql"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_ipor7"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="7_5kvhg"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="8_3usi0"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_gxjex"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_utyi1"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="11_t86aj"]
+[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="12_eqvia"]
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="13_iqvcx"]
+[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="14_6h21u"]
+[ext_resource type="Script" path="res://core/run/effects/rest_bonus.gd" id="15_ga23w"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="16_mv4vl"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="17_x8pem"]
+[ext_resource type="Script" path="res://core/run/skills/second_wind_skill.gd" id="18_056bq"]
 
-[sub_resource type="Resource" id="Resource_ga23w"]
-script = ExtResource("4_nd1kg")
+[sub_resource type="Resource" id="Resource_878ss"]
+script = ExtResource("4_063lg")
+metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_mv4vl"]
-script = ExtResource("6_063lg")
+[sub_resource type="Resource" id="Resource_vtu5o"]
+script = ExtResource("9_gxjex")
+id = &"short_wind"
+display_name = "回气慢"
+display_names = {
+"en": "Short of Breath"
+}
+is_debuff = true
+stackable = false
+regen_cut = {
+"stamina": 50
+}
+regen_cut_below = 20
+
+[sub_resource type="Resource" id="Resource_47gdc"]
+script = ExtResource("10_utyi1")
+target = 1
+buff = SubResource("Resource_vtu5o")
+
+[sub_resource type="Resource" id="Resource_2m2no"]
+script = ExtResource("11_t86aj")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_66poc"]
+script = ExtResource("3_hbv0f")
+trigger = SubResource("Resource_2m2no")
+cadence = SubResource("Resource_878ss")
+effects = Array[ExtResource("6_ipor7")]([SubResource("Resource_47gdc")])
+
+[sub_resource type="Resource" id="Resource_obt75"]
+script = ExtResource("12_eqvia")
+id = &"short_wind"
+display_name = "回气慢"
+display_names = {
+"en": "Short of Breath"
+}
+description = "战斗中，耐力低于两成时，每秒回复的耐力减半。"
+descriptions = {
+"en": "In battle, while your Stamina is below a fifth, its regeneration per second is halved."
+}
+rules = Array[ExtResource("3_hbv0f")]([SubResource("Resource_66poc")])
+
+[sub_resource type="Resource" id="Resource_3htg3"]
+script = ExtResource("15_ga23w")
+
+[sub_resource type="Resource" id="Resource_y0m8p"]
+script = ExtResource("12_eqvia")
 id = &"wild_born"
 display_name = "野地里长大"
 display_names = {
@@ -31,47 +79,47 @@ description = "休息时额外恢复 {rest_bonus_amount} 点体力。"
 descriptions = {
 "en": "Restore {rest_bonus_amount} extra Vitality when resting."
 }
-passive = Array[ExtResource("3_oevla")]([SubResource("Resource_ga23w")])
+passive = Array[ExtResource("2_nd1kg")]([SubResource("Resource_3htg3")])
 
-[sub_resource type="Resource" id="Resource_x8pem"]
-script = ExtResource("7_kraql")
+[sub_resource type="Resource" id="Resource_4qbaa"]
+script = ExtResource("4_063lg")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_056bq"]
-script = ExtResource("9_5kvhg")
+[sub_resource type="Resource" id="Resource_0txx1"]
+script = ExtResource("16_mv4vl")
 metadata/part_ref = &"uses_1"
 
 [sub_resource type="Resource" id="Resource_66u2r"]
-script = ExtResource("12_utyi1")
+script = ExtResource("8_3usi0")
 stat = &"max_armor"
 amount = 15.0
 
 [sub_resource type="Resource" id="Resource_acm6v"]
-script = ExtResource("13_t86aj")
+script = ExtResource("9_gxjex")
 id = &"hardy_guard"
 display_name = "坚韧"
 display_names = {
 "en": "Hardy"
 }
-mods = Array[ExtResource("12_utyi1")]([SubResource("Resource_66u2r")])
+mods = Array[ExtResource("8_3usi0")]([SubResource("Resource_66u2r")])
 
-[sub_resource type="Resource" id="Resource_878ss"]
-script = ExtResource("14_eqvia")
+[sub_resource type="Resource" id="Resource_icnbx"]
+script = ExtResource("10_utyi1")
 target = 1
 buff = SubResource("Resource_acm6v")
 
-[sub_resource type="Resource" id="Resource_vtu5o"]
-script = ExtResource("15_iqvcx")
+[sub_resource type="Resource" id="Resource_31dap"]
+script = ExtResource("17_x8pem")
 
-[sub_resource type="Resource" id="Resource_47gdc"]
-script = ExtResource("5_hbv0f")
-trigger = SubResource("Resource_vtu5o")
-cadence = SubResource("Resource_x8pem")
-costs = Array[ExtResource("8_ipor7")]([SubResource("Resource_056bq")])
-effects = Array[ExtResource("10_3usi0")]([SubResource("Resource_878ss")])
+[sub_resource type="Resource" id="Resource_potal"]
+script = ExtResource("3_hbv0f")
+trigger = SubResource("Resource_31dap")
+cadence = SubResource("Resource_4qbaa")
+costs = Array[ExtResource("5_kraql")]([SubResource("Resource_0txx1")])
+effects = Array[ExtResource("6_ipor7")]([SubResource("Resource_icnbx")])
 
-[sub_resource type="Resource" id="Resource_2m2no"]
-script = ExtResource("6_063lg")
+[sub_resource type="Resource" id="Resource_yfiod"]
+script = ExtResource("12_eqvia")
 id = &"hardy"
 display_name = "坚韧"
 display_names = {
@@ -81,10 +129,10 @@ description = "战斗中生命低于 {percent}% 时，立即获得 {apply_status
 descriptions = {
 "en": "When your Health drops below {percent}% in battle, gain {apply_status_amount} Armor at once (once per battle)."
 }
-rules = Array[ExtResource("5_hbv0f")]([SubResource("Resource_47gdc")])
+rules = Array[ExtResource("3_hbv0f")]([SubResource("Resource_potal")])
 
-[sub_resource type="Resource" id="Resource_66poc"]
-script = ExtResource("16_6h21u")
+[sub_resource type="Resource" id="Resource_hc1mr"]
+script = ExtResource("18_056bq")
 id = &"second_wind"
 display_name = "咬牙"
 display_names = {
@@ -98,7 +146,7 @@ uses = 2
 cooldown_steps = 6
 
 [resource]
-script = ExtResource("1_rrx7e")
+script = ExtResource("13_iqvcx")
 id = &"brutus"
 display_name = "布鲁图斯"
 display_names = {
@@ -118,4 +166,5 @@ board_size = Vector2i(9, 6)
 starting_funds = 80
 starting_bags = Array[StringName]([&"bag_leather", &"bag_leather"])
 weight_capacity = 56
-skills = Array[ExtResource("2_mx3k3")]([SubResource("Resource_mv4vl"), SubResource("Resource_2m2no"), SubResource("Resource_66poc")])
+skills = Array[ExtResource("14_6h21u")]([SubResource("Resource_y0m8p"), SubResource("Resource_yfiod"), SubResource("Resource_hc1mr")])
+flaw = SubResource("Resource_obt75")

@@ -23,9 +23,16 @@ static func _ctx(c: TestSupport.Content) -> ContentImporter.Context:
 	return ctx
 
 
+## 255：每个角色必有一条短板 —— 这里没写的补一条最小的（只测别的校验）
+const FLAW := {"type": "passive", "id": "probe_flaw", "display_name": "探针短板"}
+
+
 static func _import(data: Dictionary, ctx: ContentImporter.Context) -> ImportReport:
 	var r := ImportReport.new()
-	ContentImporter.import_character(data, ctx, r)
+	var d := data.duplicate(true)
+	if not d.has("flaw"):
+		d["flaw"] = FLAW.duplicate(true)
+	ContentImporter.import_character(d, ctx, r)
 	return r
 
 
@@ -54,7 +61,7 @@ static func run_character_pipeline(t: TestCase) -> void:
 	var c := _content()
 	var ctx := _ctx(c)
 	var sample := {"id": "probe", "display_name": "探针", "base_stats": {"max_hp": 42}, "vitality_max": 7,
-		"board_size": [5, 4], "starting_bags": ["bag_leather"], "carry_max_items": 2, "carry_rarity_cap": 1}
+		"board_size": [5, 4], "starting_bags": ["bag_leather"], "carry_max_items": 2, "carry_rarity_cap": 1, "flaw": FLAW.duplicate(true)}
 	var report := ImportReport.new()
 	var def := ContentImporter.import_character(sample, ctx, report)
 	t.check(report.ok(), "合法的角色导入没有错：%s" % report.to_text())

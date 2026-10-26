@@ -63,6 +63,8 @@ const PANEL_CAP_TILE := &"PanelCapTile"
 const LABEL_CAP_VALUE := &"LabelCapValue"
 const LABEL_SKILL_NAME := &"LabelSkillName"
 const LABEL_SKILL_TEXT := &"LabelSkillText"
+## 255：选角色屏短板那一行的名字 —— 和技能名同字号、同描边，铁灰色（技能、随身之物是亮黄铜）
+const LABEL_FLAW_NAME := &"LabelFlawName"
 const LABEL_SCREEN_TITLE := &"LabelScreenTitle"
 ## 180 补二：开局屏第三页的难度翻页计数器 —— 黑底白字的牌面、压深的黄铜外框（美术给了 `setup/flip_counter` 九宫格就用图）
 const PANEL_FLIP_COUNTER := &"PanelFlipCounter"
@@ -136,7 +138,7 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
 	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
-	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE, BUTTON_FORGE]
+	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE, BUTTON_FORGE, LABEL_FLAW_NAME]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
@@ -1628,6 +1630,8 @@ static func _setup_card(t: Theme) -> void:
 	t.set_color("font_color", LABEL_SKILL_NAME, UiPalette.BTN_PRIMARY_HOVER)
 	t.set_color("font_outline_color", LABEL_SKILL_NAME, Color.BLACK)
 	t.set_constant("outline_size", LABEL_SKILL_NAME, OUTLINE_SIZE * 2)     # 22 号字上 2 太细
+	t.set_type_variation(LABEL_FLAW_NAME, LABEL_SKILL_NAME)
+	t.set_color("font_color", LABEL_FLAW_NAME, UiPalette.FLAW_IRON)
 	t.set_type_variation(LABEL_SKILL_TEXT, "Label")
 	t.set_font_size("font_size", LABEL_SKILL_TEXT, SKILL_TEXT_SIZE)
 	t.set_color("font_color", LABEL_SKILL_TEXT, UiPalette.FG)

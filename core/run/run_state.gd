@@ -212,6 +212,8 @@ static func start(
 	# 三个字段先留着不删：之后要么改成「带入上限」，要么给别的用途
 	s.wallet = Wallet.new(maxi(0, p_carry_funds))
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
+	if p_character != null:
+		p_character.shape_board(s.board, p_items)     # 255：缺格与随身之物在开局屏的摆盘之前（它们不进 layout_of）
 	s.storage = ItemStash.new(STORAGE_ID, 0)
 	s._bind_tracker()
 	place_layout(s.board, p_layout, p_items, s.storage)
@@ -898,7 +900,8 @@ static func layout_of(board: GridInventory) -> Array:
 		return out
 	var rows: Array = []
 	for inst in board.items():
-		rows.append(inst)
+		if not (inst as ItemInstance).is_pinned():     # 255：随身之物由角色在开局时自己钉（[method CharacterDef.shape_board]）
+			rows.append(inst)
 	# 包先摆（普通物品要落在包里），其余按 uid 顺序，稳定
 	rows.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool:
 		if a.def.is_bag != b.def.is_bag:

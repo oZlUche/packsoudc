@@ -17,6 +17,8 @@ extends Resource
 @export_multiline var description: String = ""
 ## 221 F5: description in other languages, {"en": ...}
 @export var descriptions: Dictionary = {}
+## 255：选角色屏条目行左端的图标 —— `assets/ui/skills/` 下的文件名（不含扩展名）；空 = 用 id。文件不在就画通用纹样占位
+@export var icon: String = ""
 ## 常驻的效果：一局规则（体力上限、逃跑、属性加成……）或掉落
 @export var passive: Array[Effect] = []
 ## 136：战斗里常驻的规则（布鲁图斯「坚韧」：低血一次性护甲）。编译玩家时和套装 / buff 的规则一起挂到单位上

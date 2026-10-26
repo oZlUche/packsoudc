@@ -1,0 +1,13 @@
+{
+  "id": "unschooled",
+  "display_name": "不懂药",
+  "display_names": {
+    "en": "No Medic"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "heal_cut": 50,
+  "heal_cut_tags": [
+    "remedy"
+  ]
+}

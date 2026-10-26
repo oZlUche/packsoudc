@@ -1,0 +1,13 @@
+{
+  "id": "short_wind",
+  "display_name": "回气慢",
+  "display_names": {
+    "en": "Short of Breath"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "regen_cut": {
+    "stamina": 50
+  },
+  "regen_cut_below": 20
+}

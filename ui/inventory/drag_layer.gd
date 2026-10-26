@@ -34,6 +34,14 @@ signal grab_refused(uid: int)
 signal drop_refused(uid: int)
 
 const ROOTED_NOTICE := "notice.rooted"
+## 255：随身之物拿不下来时那一句
+const PINNED_NOTICE := "notice.pinned"
+
+
+## 这一件为什么拿不起来（[method GridInventory.is_locked] 真时）：随身之物一句、扎根一句
+static func refused_notice(inv: ItemContainer, uid: int) -> String:
+	var inst := inv.get_item(uid) if inv != null else null
+	return UiText.t(PINNED_NOTICE if inst != null and inst.is_pinned() else ROOTED_NOTICE)
 
 @export var label_font: Font
 

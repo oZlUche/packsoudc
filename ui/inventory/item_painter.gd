@@ -254,6 +254,34 @@ const LOCK_SIDE := 16.0
 const LOCK_INSET := 0.08
 
 
+## 255：随身之物 —— 当前朝向脚印最靠右上的那一格（y 最小、再 x 最大）右上角往里 8% 一枚小钉（`tip/pin_badge`，美术没出前代码画一颗铆钉），
+## 边长同小锁。不是随身之物不画；画了返回 true
+static func draw_pin(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+	if inst == null or inst.def == null or inst.def.shape == null or not inst.is_pinned():
+		return false
+	var best := Vector2i(-1, 1 << 20)
+	for c in inst.def.shape.cells_rotated(rot):
+		if c.y < best.y or (c.y == best.y and c.x > best.x):
+			best = c
+	var side := LOCK_SIDE * cell / InventoryView.CELL
+	var at := anchor + Vector2(best) * cell + Vector2(cell * (1.0 - LOCK_INSET) - side, cell * LOCK_INSET)
+	draw_pin_badge(canvas, Rect2(at, Vector2(side, side)), modulate)
+	return true
+
+
+## 255：一枚小钉画在 [param r] 里（有图用图，没图画铆钉：黄铜圆头 + 暗边 + 高光）
+static func draw_pin_badge(canvas: CanvasItem, r: Rect2, modulate: Color = Color.WHITE) -> void:
+	var tex := UiTheme.art_cached("tip/pin_badge")
+	if tex != null:
+		canvas.draw_texture_rect(tex, r, false, modulate)
+		return
+	var c := r.get_center()
+	var rad := minf(r.size.x, r.size.y) * 0.5
+	canvas.draw_circle(c, rad, Color("2a1d12") * modulate)
+	canvas.draw_circle(c, rad - 1.5, Color("c9a24e") * modulate)
+	canvas.draw_circle(c + Vector2(-rad, -rad) * 0.25, rad * 0.3, Color("f3dc9a") * modulate)
+
+
 ## 测试用：清掉缓存（换了 [constant ART_MANIFEST] 的内容之后）
 static func clear_art_cache() -> void:
 	_art.clear()

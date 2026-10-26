@@ -39,7 +39,8 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.check(setup._character_btns[setup.character_index].button_pressed, "选中的那条按下（压蜡封）")
 	t.check(setup._preset_btns.all(func(b: Button) -> bool: return b.theme_type_variation == UiTheme.BUTTON_MAP_ENTRY and b.custom_minimum_size.y == setup.PRESET_ENTRY_H), "不带 / 坚守 / 强攻也是纸条，高 52")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_GROOVE), UiTheme.TONE_DARK, "凹槽板深底（白字）")
-	t.eq(setup._grooves[1].size_flags_horizontal, Control.SIZE_EXPAND_FILL, "中栏撑满")
+	t.eq(setup._grooves[1].size_flags_horizontal, Control.SIZE_SHRINK_BEGIN, "255：中栏定宽，不再撑满")
+	t.eq(setup._grooves[1].custom_minimum_size.x, setup.mid_width(), "255：中栏宽 = 设计宽减页边、两栏与栏距")
 	t.eq(setup._grooves[2].size_flags_horizontal, Control.SIZE_SHRINK_END, "棋盘栏贴右")
 	t.eq((setup._grooves[0].get_parent() as HBoxContainer).get_theme_constant("separation"), 36, "三栏间距一律 36")
 	# 作者 2026-10-17：选人大厅白天版定稿 —— 浅底；直接写在背景上的标题墨字，凹槽板里照旧浅色字
@@ -71,11 +72,11 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	for i in flow.characters.size():
 		setup.choose_character(i)
 		var ch: CharacterDef = setup.character()
-		t.eq(setup._grooves[2].custom_minimum_size.x, ch.board_size.x * InventoryView.CELL + 2.0 * (setup.RIGHT_PAD + BoardFrame.box("player", false).content_margin_left), "%s：棋盘栏按棋盘宽（227：加皮带框两边的缩进）" % ch.id)
+		t.eq(setup._grooves[2].custom_minimum_size.x, 9 * InventoryView.CELL + 2.0 * (setup.RIGHT_PAD + BoardFrame.box("player", false).content_margin_left), "%s：255 棋盘栏按九格定宽（227：加皮带框两边的缩进）" % ch.id)
 		var texts: Array[String] = []
 		for l in _labels(setup._card) + _labels(setup._preview_host):
 			texts.append(l.text)
-		t.check(not texts.has(Names.description_of(ch)), "%s：角色说明不放" % ch.id)
+		t.check(texts.has(Names.description_of(ch)), "%s：255 角色说明放回名牌里" % ch.id)
 		t.check(not texts.any(func(s: String) -> bool: return s.begins_with("背包：")), "%s：棋盘下面不列背包" % ch.id)
 		var tiles: Array = setup._cap_tiles
 		# 2026-10-22（作者定）：开局金币那块撤掉了 —— 钱改成玩家自己从仓库带，角色身上这个数不再有作用

@@ -69,23 +69,15 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 	t.eq(setup._back_btn.text, "回主菜单", "第一页的返回 = 回主菜单")
 	t.check(not setup._warehouse_view.is_visible_in_tree(), "第一页看不到仓库")
 
-	# 角色卡：方块按这个角色的底子画
+	# 角色卡：255 起面板是一行蜡板方块（生命 / 耐力 / 回气 / 体力），按这个角色的底子写
 	var ch: CharacterDef = setup.character()
-	var blocks: Array = []
-	var stack: Array[Node] = [setup._card]
-	while not stack.is_empty():
-		var n: Node = stack.pop_back()
-		if n is StatBlocks:
-			blocks.append(n)
-		stack.append_array(n.get_children())
-	t.eq(blocks.size(), 3, "三排：生命、耐力、体力")
-	var by_kind := {}
-	for b in blocks:
-		by_kind[(b as StatBlocks).kind] = b
-	t.eq(int((by_kind[StatBlocks.HP] as StatBlocks).value), int(ch.baseline().value_of(&"max_hp")), "生命上限按角色")
-	t.eq(int((by_kind[StatBlocks.STAMINA] as StatBlocks).value), int(ch.baseline().value_of(&"max_stamina")), "耐力上限按角色")
-	t.eq(int((by_kind[StatBlocks.VITALITY] as StatBlocks).value), ch.vitality_max, "体力按角色")
-	t.check(setup._preview_view != null and setup._preview_view.inventory == setup.board, "右边是这个角色的棋盘预览")
+	var plaques: Array = setup._stat_plaques
+	t.eq(plaques.map(func(p: StatPlaque) -> String: return p.caption), ["生命", "耐力", "回气", "体力"], "四块：生命、耐力、回气、体力")
+	t.eq((plaques[0] as StatPlaque).value, str(int(ch.baseline().value_of(&"max_hp"))), "生命上限按角色")
+	t.eq((plaques[1] as StatPlaque).value, str(int(ch.baseline().value_of(&"max_stamina"))), "耐力上限按角色")
+	t.eq((plaques[3] as StatPlaque).value, str(ch.vitality_max), "体力按角色")
+	t.check(setup._preview_view != null and setup._preview_view.inventory.size == ch.board_size, "右边是这个角色的棋盘预览")
+	t.eq(setup._preview_view.inventory.bags().size(), 0, "255：预览只画形状，不画包")
 	t.check(not setup._drag._views.has(setup._preview_view), "预览只看不拖（不在拖拽层上）")
 	# 214：角色卡第一行 = 160 的大头像 + 铭牌，图 = 这个角色的肖像（没图是占位剪影）
 	var big: PortraitSlot = setup._portrait

@@ -381,6 +381,7 @@ func _draw() -> void:
 				)
 		ItemPainter.draw_charges(self, item, item.rotation, anchor, cell_px, tint)     # 208：耐久没满、又没这一档的图：左下角次数点
 		ItemPainter.draw_lock(self, item, item.rotation, anchor, cell_px, tint)     # 230：玩家锁住的：左上角小锁
+		ItemPainter.draw_pin(self, item, item.rotation, anchor, cell_px, tint)     # 255：随身之物：右上角小钉
 		if highlights.has(item.uid):
 			var hb := item.def.shape.size_rotated(item.rotation)
 			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))
@@ -445,7 +446,7 @@ func _draw_seams(grid_px: Vector2) -> void:
 	for y in inventory.size.y:
 		for x in inventory.size.x:
 			var c := Vector2i(x, y)
-			if inventory.is_blocked(c) or not inventory.is_covered(c):
+			if not inventory.is_blocked(c) and not inventory.is_covered(c):     # 255：缺格透空（不压暗），框沿轮廓收边
 				draw_rect(Rect2(cell_origin_px(c), Vector2(cell_px, cell_px)), Color(0, 0, 0, 0.16), true)
 	# 铜面板三屏（boards_dark）：深色半透明内垫上的格缝带透明度、两端缩 trim
 	var seam := Color(String(seams.get("seam", "#8e8b85")), float(seams.get("seam_alpha", 1.0)))
@@ -454,6 +455,9 @@ func _draw_seams(grid_px: Vector2) -> void:
 	var hi_w := float(seams.get("hi_w", 1.0))
 	var off := float(seams.get("hi_offset", 1.4))
 	var trim := float(seams.get("trim", 2.0))
+	if inventory.blocked_count() > 0:
+		_draw_seams_masked(seam, hi, seam_w, hi_w, off)     # 255：有缺格 —— 只画两边都是能用格的那几段缝
+		return
 	for x in range(1, inventory.size.x):
 		var fx := x * cell_px
 		draw_line(Vector2(fx, trim), Vector2(fx, grid_px.y - trim), seam, seam_w)
@@ -464,6 +468,22 @@ func _draw_seams(grid_px: Vector2) -> void:
 		draw_line(Vector2(trim, fy + off), Vector2(grid_px.x - trim, fy + off), hi, hi_w)
 	if bool(seams.get("edge", false)):     # 227：一块框里并排好几块（商店货架）—— 各自描一圈缝，分得清是哪一格
 		draw_rect(Rect2(Vector2.ZERO, grid_px).grow(-seam_w * 0.5), seam, false, seam_w)
+
+
+## 255：有缺格的棋盘逐格画缝：一条缝两边都不是缺格才画（缺格那边是框的轮廓）
+func _draw_seams_masked(seam: Color, hi: Color, seam_w: float, hi_w: float, off: float) -> void:
+	for y in inventory.size.y:
+		for x in inventory.size.x:
+			var c := Vector2i(x, y)
+			if inventory.is_blocked(c):
+				continue
+			var p := cell_origin_px(c)
+			if x > 0 and not inventory.is_blocked(c + Vector2i.LEFT):
+				draw_line(p, p + Vector2(0, cell_px), seam, seam_w)
+				draw_line(p + Vector2(off, 0), p + Vector2(off, cell_px), hi, hi_w)
+			if y > 0 and not inventory.is_blocked(c + Vector2i.UP):
+				draw_line(p, p + Vector2(cell_px, 0), seam, seam_w)
+				draw_line(p + Vector2(0, off), p + Vector2(cell_px, off), hi, hi_w)
 
 
 ## 224：[member ground] 的底 —— 外圈深色细边（圆角，画在格子外面）、底色、几层内格线（两端各留 trim，线在道具下面）

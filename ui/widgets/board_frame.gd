@@ -19,6 +19,13 @@ const FRAMED_META := &"board_framed_by"
 ## 实际用上的框（[member dark] 时是深色那套）
 var kind := ""
 var dark := false
+## 255：沿格子轮廓走的框（作战棋盘有缺格时）—— 不画九宫格图，自己画：能用的格垫浅灰底，贴着缺格 / 盘外的每条边画一道皮带；
+## 缺格什么都不画（透空见底板）。美术的直边 / 外角 / 内角拼件到之前用这个占位
+var contour: GridInventory = null
+## 轮廓框那道皮带多宽、什么色
+const CONTOUR_BAND := 14.0
+const CONTOUR_FILL := Color("6b4a2e")
+const CONTOUR_EDGE := Color("2a1a0e")
 
 
 ## 227：把 [param view] 套进外框 —— [param kind] 空 = 棋盘（`requires_bag`）用皮带 `player`、别的（槽、出售区、祭品台、保险箱……）用素框 `plain`；
@@ -35,7 +42,14 @@ static func wrap(view: Control, p_kind: String = "", p_dark: bool = false) -> Bo
 	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	f.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	f.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	f.add_theme_stylebox_override("panel", box(k, p_dark))
+	var inv0: GridInventory = (view as InventoryView).inventory if view is InventoryView else null
+	if inv0 != null and inv0.requires_bag and inv0.blocked_count() > 0:
+		f.contour = inv0     # 255：有缺格的作战棋盘 —— 框沿轮廓走（作者 11:10：边上的缺格收边、中间的缺格透空）
+		var empty := StyleBoxEmpty.new()
+		empty.set_content_margin_all(box(k, p_dark).content_margin_left)
+		f.add_theme_stylebox_override("panel", empty)
+	else:
+		f.add_theme_stylebox_override("panel", box(k, p_dark))
 	UiTheme.set_tone(f, UiTheme.TONE_DARK if p_dark else UiTheme.TONE_LIGHT)
 	var parent := view.get_parent()
 	if parent != null:
@@ -47,6 +61,49 @@ static func wrap(view: Control, p_kind: String = "", p_dark: bool = false) -> Bo
 	if view is InventoryView:     # 铜面板的深框内垫是深色半透明；board 那套（含 `plain_dark`）内垫是浅灰
 		(view as InventoryView).seams = dark_seams() if String(piece(k, p_dark).get("dir", "")) == DIR else light_seams()
 	return f
+
+
+## 255：轮廓框 —— 能用的格垫底（浅灰内垫色），每条挨着缺格 / 盘外的边往外画一道皮带，外角补一块；内角两道皮带自然拼上
+func _draw() -> void:
+	if contour == null:
+		return
+	var view := get_child(0) as InventoryView if get_child_count() > 0 else null
+	var cell := view.cell_px if view != null else InventoryView.CELL
+	var o := Vector2.ONE * inset()
+	var pad := Color(String(light_seams().get("base", "#c9c7c2")))
+	var w := CONTOUR_BAND
+	var bands: Array[Rect2] = []
+	for y in contour.size.y:
+		for x in contour.size.x:
+			var c := Vector2i(x, y)
+			if contour.is_blocked(c):
+				continue
+			var r := Rect2(o + Vector2(c) * cell, Vector2(cell, cell))
+			draw_rect(r, pad)
+			var up := contour.is_blocked(c + Vector2i.UP)
+			var down := contour.is_blocked(c + Vector2i.DOWN)
+			var left := contour.is_blocked(c + Vector2i.LEFT)
+			var right := contour.is_blocked(c + Vector2i.RIGHT)
+			if up:
+				bands.append(Rect2(r.position + Vector2(0, -w), Vector2(cell, w)))
+			if down:
+				bands.append(Rect2(r.position + Vector2(0, cell), Vector2(cell, w)))
+			if left:
+				bands.append(Rect2(r.position + Vector2(-w, 0), Vector2(w, cell)))
+			if right:
+				bands.append(Rect2(r.position + Vector2(cell, 0), Vector2(w, cell)))
+			if up and left:
+				bands.append(Rect2(r.position - Vector2(w, w), Vector2(w, w)))
+			if up and right:
+				bands.append(Rect2(r.position + Vector2(cell, -w), Vector2(w, w)))
+			if down and left:
+				bands.append(Rect2(r.position + Vector2(-w, cell), Vector2(w, w)))
+			if down and right:
+				bands.append(Rect2(r.position + Vector2(cell, cell), Vector2(w, w)))
+	for b in bands:
+		draw_rect(b.grow(1.0), CONTOUR_EDGE)
+	for b in bands:
+		draw_rect(b, CONTOUR_FILL)
 
 
 ## 九宫格框套在太窄 / 太矮的棋盘上会被裁掉一边（游戏测试 v4.39：铁匠铺 1×4 的长剑，格子区 14 px 宽时右边框没了；实测 ≥ 18 px 才完整）

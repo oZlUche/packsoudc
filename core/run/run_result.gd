@@ -72,6 +72,8 @@ static func settle(state: RunState) -> RunResult:
 		r.balance = state.wallet.balance if state.wallet != null else 0
 		for inst in state.board.items():
 			var item := inst as ItemInstance
+			if item.is_pinned():
+				continue     # 255：随身之物随角色回营 —— 不带回、不进仓库 / 包架 / 图鉴、不计价值，下一局开局再发
 			r.carried.append(item)
 			if not item.def.is_bullion():     # 244：金银是花钱买的，不算搜刮成绩（钱照样回仓库）
 				r.value += ItemValue.of_in(item, state.board)     # 209：百宝囊里的按倍率

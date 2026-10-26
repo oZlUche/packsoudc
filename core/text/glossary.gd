@@ -340,8 +340,17 @@ static func buff_effect_lines(def: BuffDef, stacks: int = 1) -> Array[String]:
 		var line := _self_damage_text(rule, n)
 		dmg.append(line if line != "" else rule_text(rule))
 	var heal: Array[String] = []
-	if def.heal_cut > 0:
+	if def.heal_cut > 0 and not def.heal_cut_tags.is_empty():     # 255：只截某几类道具的治疗
+		var tag_names: Array[String] = []
+		for t in def.heal_cut_tags:
+			tag_names.append(TagRegistry.name_of(t))
+		heal.append(UiText.t("gloss.heal_cut_tags") % [UiText.t("gloss.tag_or").join(tag_names), def.heal_cut])
+	elif def.heal_cut > 0:
 		heal.append(UiText.t("gloss.heal_half") if def.heal_cut == 50 else UiText.t("gloss.heal_zero") if def.heal_cut >= 100 else UiText.t("gloss.heal_cut") % def.heal_cut)
+	for k in def.regen_cut.keys():     # 255
+		var res := resource_name(StringName(String(k)))
+		var cut := int(def.regen_cut[k])
+		heal.append(UiText.t("gloss.regen_cut_below") % [res, def.regen_cut_below, res, cut] if def.regen_cut_below > 0 else UiText.t("gloss.regen_cut") % [res, cut])
 	if def.heal_echo != &"":
 		var per := def.heal_echo_per_point
 		heal.append(UiText.t("gloss.heal_echo") % status_name(def.heal_echo) if is_equal_approx(per, 1.0) else UiText.t("gloss.heal_echo_mult") % [TextTemplate.num(per), status_name(def.heal_echo)])

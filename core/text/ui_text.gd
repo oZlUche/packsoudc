@@ -40,6 +40,7 @@ const TEXT := {
 	"notice.not_adjacent": {"zh": "那里走不过去", "en": "You can't get there from here"},
 	"notice.cannot_move": {"zh": "现在走不了", "en": "You can't move right now"},
 	"notice.rooted": {"zh": "它已经扎根了，拔不出来", "en": "It has taken root and won't come loose"},     # 207：按住扎了根的道具 / 被钉住的包
+	"notice.pinned": {"zh": "它是你的随身之物，拿不下来", "en": "It's part of your kit and won't come off"},     # 255：按住随身之物
 	"notice.busy": {"zh": "先把眼前的事做完", "en": "Finish what's in front of you first"},
 	"notice.not_extract": {"zh": "这里不是撤离点", "en": "This isn't an extraction point"},
 	"notice.extract_closed": {"zh": "这个撤离点已经关闭了", "en": "This extraction point has closed"},
@@ -491,6 +492,20 @@ const TEXT := {
 	"setup.carry_max": {"zh": "最多带 %d 件", "en": "Carry up to %d items"},
 	"setup.carry_max_one": {"zh": "最多带 %d 件", "en": "Carry up to %d item"},
 	"setup.carry_rarity": {"zh": "稀有度不超过 %d", "en": "Rarity up to %d"},
+	# 255：选角色屏 —— 面板方块、小牌、条目行、右栏题字 / 图例 / 首次赠包小签、未解锁
+	"setup.stat_regen": {"zh": "回气", "en": "Regen"},
+	"setup.per_sec": {"zh": "%s/秒", "en": "%s/s"},
+	"setup.cap_board_missing": {"zh": "棋盘（缺 %d 格）", "en": "Board (%d missing)"},
+	"setup.cap_carry": {"zh": "最多带几件", "en": "Max items"},
+	"setup.cap_rarity": {"zh": "带入稀有度上限", "en": "Rarity cap"},
+	"setup.pinned_tail": {"zh": "随身：拿不下、丢不掉", "en": "Kit: can't be removed or dropped"},
+	"setup.board_title": {"zh": "棋盘 %d × %d 格", "en": "Board %d × %d"},
+	"setup.board_usable": {"zh": "棋盘 %d × %d 格　可用 %d 格", "en": "Board %d × %d · %d usable"},
+	"setup.legend_missing": {"zh": "不可用格", "en": "Unusable cell"},
+	"setup.legend_pinned": {"zh": "随身之物", "en": "Kit item"},
+	"setup.first_gift": {"zh": "首次选他：%s 进包架", "en": "First pick: %s to your bag rack"},
+	"setup.gift_item": {"zh": "%s ×%d", "en": "%s ×%d"},
+	"setup.locked_character": {"zh": "未解锁：%s", "en": "Locked: %s"},
 	"setup.ground_count": {"zh": "地上　%d 件", "en": "Ground · %d items"},
 	"setup.ground_count_one": {"zh": "地上　%d 件", "en": "Ground · %d item"},
 	# ui/game/result_screen.gd
@@ -772,6 +787,10 @@ const TEXT := {
 	"gloss.heal_half": {"zh": "恢复量减半", "en": "Healing halved"},
 	"gloss.heal_zero": {"zh": "恢复量归零", "en": "Healing does nothing"},
 	"gloss.heal_cut": {"zh": "恢复量少 %d%%", "en": "Healing −%d%%"},
+	"gloss.heal_cut_tags": {"zh": "%s给的恢复量少 %d%%", "en": "Healing from %s −%d%%"},     # 255
+	"gloss.tag_or": {"zh": "、", "en": " or "},
+	"gloss.regen_cut": {"zh": "每秒回复的%s少 %d%%", "en": "%s regeneration −%d%%"},
+	"gloss.regen_cut_below": {"zh": "%s低于 %d%% 时，每秒回复的%s少 %d%%", "en": "While %s is below %d%%, %s regeneration −%d%%"},
 	"gloss.heal_echo": {"zh": "每次恢复获得等量的%s", "en": "Each heal grants that much %s"},
 	"gloss.heal_echo_mult": {"zh": "每次恢复按 %s 倍获得%s", "en": "Each heal grants %s× as much %s"},
 	"gloss.clause_sep": {"zh": "，", "en": ", "},
@@ -1322,6 +1341,7 @@ const TEXT := {
 	"act.sell": {"zh": "出售 %d 币", "en": "Sell · %d"},
 	"act.sell_same": {"zh": "出售同类 ×%d 得 %d 币", "en": "Sell all ×%d · %d"},
 	"act.locked": {"zh": "已锁定", "en": "Locked"},
+	"act.pinned": {"zh": "随身之物", "en": "Part of your kit"},     # 255：随身之物的按钮全灰，理由
 	"act.confirm": {"zh": "再点一次", "en": "Click again"},
 	"act.drop": {"zh": "放到地上", "en": "Drop"},
 	"act.to_pack": {"zh": "放进背包", "en": "Into pack"},
@@ -1348,6 +1368,7 @@ const TEXT := {
 	"act.bag_full": {"zh": "包里还有东西", "en": "Empty the bag first"},
 	"item.locked_no": {"zh": "「%s」锁着，先解锁", "en": "\"%s\" is locked. Unlock it first"},
 	"tip.locked": {"zh": "已锁定", "en": "Locked"},
+	"tip.pinned": {"zh": "随身：拿不下、丢不掉", "en": "Kit: can't be removed or dropped"},     # 255：悬浮窗最后一行灰小字
 	"meta.sell_skipped": {"zh": "（跳过 %d 件锁定的）", "en": " (skipped %d locked)"},
 	"rack.has_contents": {"zh": "「%s」上还有东西，先拿下来再收进包架", "en": "Empty the %s before putting it on the Bag Rack"},
 	"wh.and_more": {"zh": "%s等", "en": "%s, etc."},

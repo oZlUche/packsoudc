@@ -166,8 +166,34 @@ var _grooves: Array[PanelContainer] = []
 ## 179：中栏的三块图标牌、技能名的标签（测试看）
 var _cap_tiles: Array[CapTile] = []
 var _skill_names: Array[Label] = []
-## 179：右栏的凹槽板内边距（右栏宽 = 这个角色的棋盘宽 + 两边内边距，贴右边；中栏吃掉剩下的）
+## 255：角色卡第二行的面板方块、技能 / 随身之物 / 短板那几行（[method _entry_row]）、右栏题字 / 图例 / 首次赠包小签
+var _stat_plaques: Array[StatPlaque] = []
+var _entries: Array[HBoxContainer] = []
+var _board_title: Label = null
+var _legend: Array[Control] = []
+var _gift_tag: PanelContainer = null
+## 255：预览那块只画形状（缺格 + 随身之物），不画包
+var _preview_board: GridInventory = null
+## 255：这一回进开局屏时，哪几个角色是第一次选（首次赠包刚送进包架）—— 小签只在这时显示
+var _gifted: Dictionary = {}
+## 179：右栏的凹槽板内边距
 const RIGHT_PAD := 10
+## 255（作者 2026-10-26 10:51）：三栏定宽，不随棋盘宽窄变 —— 左 260、右按最宽的九格棋盘、中栏是剩下的；不足九格的棋盘在右栏里居中
+const LEFT_W := 260
+const COL_GAP := 36
+const BOARD_MAX_W := 9
+## 255：角色卡里的几样尺寸 —— 面板方块间 10；小牌 ≤ 180 宽；条目行间 8
+const STAT_GAP := 10
+const TILE_MAX_W := 180.0
+const ENTRY_GAP := 6
+## 255：角色卡几行之间（原 14；卡多了两行，收一点才装得进三样全有的角色）
+const CARD_SEP := 10
+const ENTRY_TAIL_SIZE := 12
+## 255：名牌里名字 24；说明那句的折行宽要再让开名牌自己的内边距与徽记位
+const PLATE_NAME_SIZE := 24
+const PLATE_TEXT_PAD := 80
+## 255：没解锁的角色在左栏压到 60%
+const LOCKED_ALPHA := 0.6
 ## 三页各自的整屏画（作者 2026-10-17）：选角色 = 选人场地，带装备 = 木板拼接 / 仓库，选地图 = 桌上的军用地图
 const PAGE_ART: Array[String] = [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG]
 
@@ -227,6 +253,22 @@ static func _paper_art() -> bool:
 	return UiTheme.art(UiTheme.ART_SETUP_MAP_BG) != null
 
 
+## 255：右栏宽 = 九格棋盘 + 皮带框两边的缩进 + 凹槽内边距（作者 10:51：最宽九格定死，窄的棋盘居中）
+static func right_width() -> float:
+	return BOARD_MAX_W * InventoryView.CELL + 2.0 * (RIGHT_PAD + BoardFrame.box("player", false).content_margin_left)
+
+
+## 255：中栏宽 = 设计宽减去页边、左右两栏与两道栏距（定死，不撑不缩）
+static func mid_width() -> float:
+	var w := float(ProjectSettings.get_setting("display/window/size/viewport_width", 1600))
+	return w - 2.0 * PAGE_MARGIN - LEFT_W - right_width() - 2.0 * COL_GAP
+
+
+## 角色卡里面能用的宽（中栏减两边皮框）
+static func card_width() -> float:
+	return mid_width() - 2.0 * FRAME_INSET
+
+
 ## 161 第一页：角色列表 | 角色卡 | 棋盘预览（只看不拖）。
 ## 179：三栏各坐一块凹槽板、间距 36；中栏撑满左右两栏之间，右栏（棋盘）贴右边
 func _build_character_page() -> Control:
@@ -236,22 +278,24 @@ func _build_character_page() -> Control:
 	left_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(left_board)
 	var left := _vbox(8)
-	left.custom_minimum_size.x = 260 - 28
+	left.custom_minimum_size.x = LEFT_W - 28
 	left_board.add_child(left)
 	_char_box = _vbox(8)     # 226 批二：段头「角色」与缺数据那句删了
 	left.add_child(_char_box)
 	var mid_board := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)
-	mid_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mid_board.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN     # 255：定宽，不再撑满
 	mid_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	mid_board.custom_minimum_size.x = mid_width()
 	row.add_child(mid_board)
-	_card = _vbox(14)
+	_card = _vbox(CARD_SEP)
 	_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.add_child(_card)
 	var right_board := _groove(RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)
 	right_board.size_flags_horizontal = Control.SIZE_SHRINK_END
 	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	right_board.custom_minimum_size.x = right_width()     # 255：按九格定宽
 	row.add_child(right_board)
-	_preview_host = _vbox(6)
+	_preview_host = _vbox(8)
 	right_board.add_child(_preview_host)
 	_grooves.append_array([left_board, mid_board, right_board])
 	return row
@@ -304,6 +348,7 @@ func _build_kit_page() -> Control:
 
 	_drag = DragLayer.new()
 	_drag.label_font = font
+	_drag.grab_refused.connect(func(uid: int): warn(DragLayer.refused_notice(board, uid)))     # 255：随身之物拿不下来
 	# 163：仓库分页 —— 左边竖排页签，拖着东西停在页签上切页
 	_warehouse_scroll = ScrollContainer.new()
 	_warehouse_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -800,8 +845,19 @@ func _rebuild_characters() -> void:
 	UiTheme.clear_children(_char_box)
 	var names: Array[String] = []
 	for ch in _characters:
-		names.append(Names.of(ch) if ch.display_name != "" else String(ch.id))
+		var n := Names.of(ch) if ch.display_name != "" else String(ch.id)
+		var why := lock_reason(ch)
+		names.append(n + ("\n" + UiText.t("setup.locked_character") % why if why != "" else ""))
 	_character_btns = _choice_column(_char_box, names, choose_character, 16)
+	for i in _characters.size():     # 255：没解锁的压灰、点不了（解锁条件写在名字下面一行）
+		if lock_reason(_characters[i]) != "" and i < _character_btns.size():
+			_character_btns[i].modulate.a = LOCKED_ALPHA
+			_character_btns[i].disabled = true
+
+
+## 255：这个角色没解锁的原因（解锁条件那一行）；空 = 能选。角色解锁（254 成就解锁）来之前一律能选，这里只是留好的口子
+func lock_reason(_ch: CharacterDef) -> String:
+	return ""
 
 
 ## 096：预设套那一栏：「不带」+ 每套一个按钮（悬停看说明）
@@ -1165,7 +1221,7 @@ func carried() -> Array[ItemInstance]:
 	if board == null:
 		return out
 	for inst in board.items():
-		if MetaState.keeps((inst as ItemInstance).def) and not _preset_uids.has((inst as ItemInstance).uid):
+		if MetaState.keeps((inst as ItemInstance).def) and not _preset_uids.has((inst as ItemInstance).uid) and not (inst as ItemInstance).is_pinned():
 			out.append(inst)
 	return out
 
@@ -1468,8 +1524,10 @@ func _rebuild_board() -> void:
 	var ch := character()
 	if ch == null:     # 140：没有角色就没有棋盘（左栏那条红字说明了）
 		return
-	flow.meta.grant_starting_bags(ch, flow.items)
+	if flow.meta.grant_starting_bags(ch, flow.items) > 0:
+		_gifted[ch.id] = true     # 255：这一回是第一次选他 —— 右栏的「首次赠包」小签亮着
 	board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
+	ch.shape_board(board, flow.items, flow.meta.allocate_uid)     # 255：缺格挖掉、随身之物先钉上（包绕开它们）
 	board.begin_batch()
 	var rack := flow.meta.rack
 	for id in ch.starting_bags:
@@ -1487,9 +1545,12 @@ func _rebuild_board() -> void:
 	_board_view.show_adjacency = true
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_board_view)
-	BoardFrame.wrap(_board_view)     # 227：皮带框 + 格缝（同背包窗），外面那块皮面板照旧
+	var frame := BoardFrame.wrap(_board_view)     # 227：皮带框 + 格缝（同背包窗），外面那块皮面板照旧
+	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255（作者 10:51）：板按九格定宽，窄的棋盘居中
+	var room := BOARD_MAX_W * InventoryView.CELL + 2.0 * frame.inset()
+	_board_host.custom_minimum_size.x = room
 	_readout = _log_box(13)
-	_readout.custom_minimum_size = Vector2(ch.board_size.x * InventoryView.CELL, 48)     # 180：只两行
+	_readout.custom_minimum_size = Vector2(room, 48)     # 180：只两行
 	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_readout)
 	_drag.register_view(_board_view)
@@ -1518,99 +1579,196 @@ func ensure_bag() -> bool:
 	return true
 
 
-## 161：第一页的角色卡（名牌、生命 / 耐力方块、体力爱心、技能）与棋盘预览（只看不拖）
+## 161：第一页的角色卡与棋盘预览（只看不拖）。
+## 255（作者 2026-10-26 定）：卡自上而下 —— 头像 160 + 名牌（名 24、「角色」、一句角色说明）→ 面板方块一行（生命 / 耐力 / 回气 / 体力必有，
+## 别的面板项角色改过才出）→ 小牌一行（负重 / 棋盘（缺几格）/ 带入上限）→ 同一种条目行：技能两条 → 随身之物（有才出）→ 短板（必有、最后）。
+## 右栏：只画形状的棋盘（缺格 + 随身之物，不画包）居中 → 题字「棋盘 N × M 格　可用 K 格」→ 图例（有才出）→ 首次赠包小签（第一次选他才出）
 func _rebuild_card() -> void:
 	if _card == null:
 		return
 	UiTheme.clear_children(_card)
 	UiTheme.clear_children(_preview_host)
 	_preview_view = null
+	_preview_board = null
+	_board_title = null
+	_legend.clear()
+	_gift_tag = null
+	_stat_plaques.clear()
+	_entries.clear()
+	_cap_tiles.clear()
+	_skill_names.clear()
 	var ch := character()
 	if ch == null:
 		return
-	# 179：角色说明不放在这一屏（字段留着给图鉴 / 帮助）
-	# 214：开局是玩家唯一盯着角色看的地方 —— 一张大头像（同一张源图缩放），换角色跟着换。
-	# 放在铭牌左边同一行（放铭牌上方整张卡要高 170，1600×1000 下卡底压到「回主菜单」）
+	var inner := card_width()
+	# 214：开局是玩家唯一盯着角色看的地方 —— 一张大头像，放在名牌左边同一行；255：名牌里不再放小头像，放回角色说明那一句
 	var head := _hbox(16)
 	_card.add_child(head)
 	_portrait = PortraitSlot.new(CARD_PORTRAIT, Nameplate.character_face(ch.id), true)
 	head.add_child(_portrait)
-	var plate := Nameplate.new().setup(Names.of(ch), UiText.t("setup.character"), Nameplate.character_face(ch.id))
+	var plate := Nameplate.new().setup(Names.of(ch), UiText.t("setup.character"), null, 0)
+	plate.set_name_size(PLATE_NAME_SIZE)
+	plate.set_blurb(Names.description_of(ch), inner - CARD_PORTRAIT - 16 - PLATE_TEXT_PAD)
 	plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(plate)
-	var base := ch.baseline()
-	_card.add_child(_stat_row(UiText.t("setup.stat_hp"), StatBlocks.new().setup(StatBlocks.HP, base.value_of(&"max_hp"))))
-	var stamina := _stat_row(UiText.t("setup.stat_stamina"), StatBlocks.new().setup(StatBlocks.STAMINA, base.value_of(&"max_stamina")))
-	stamina.add_child(_label(UiText.t("setup.stamina_regen") % _num(base.value_of(&"regen_stamina")), 14, UiPalette.DIM))     # 161 待定 1：三人唯一不同的第三个数
-	_card.add_child(stamina)
-	_card.add_child(_stat_row(UiText.t("setup.stat_vitality"), StatBlocks.new().setup(StatBlocks.VITALITY, ch.vitality_max)))
-	_card.add_child(_label(UiText.t("setup.block_note"), 12, UiPalette.DIM))
-	# 179：负重上限 / 棋盘 / 开局金币换成三块图标牌；带入上限（有才有）仍是牌下一行字
-	_cap_tiles.clear()
-	var tiles := _hbox(14)
-	tiles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# 255：面板方块一行
+	var plaques := _hbox(STAT_GAP)
+	_card.add_child(plaques)
+	var specs := stat_plaques(ch)
+	var pw := minf(StatPlaque.MAX_W, floorf((inner - STAT_GAP * (specs.size() - 1)) / maxf(1.0, specs.size())))
+	for spec in specs:
+		var sp := StatPlaque.new().setup(String(spec[0]), String(spec[1]), String(spec[2]))
+		sp.custom_minimum_size = Vector2(pw, StatPlaque.HEIGHT)
+		plaques.add_child(sp)
+		_stat_plaques.append(sp)
+	# 179：图标牌；255：带入上限也并成牌，每块 ≤ 180
+	var tiles := _hbox(STAT_GAP)
 	_card.add_child(tiles)
-	for cap in cap_tiles(ch):
+	var caps := cap_tiles(ch)
+	var tw := minf(TILE_MAX_W, floorf((inner - STAT_GAP * (caps.size() - 1)) / maxf(1.0, caps.size())))
+	for cap in caps:
 		var tile := CapTile.new().setup(cap[0], cap[1], cap[2])
+		tile.size_flags_horizontal = Control.SIZE_FILL
+		tile.custom_minimum_size.x = tw
 		tiles.add_child(tile)
 		_cap_tiles.append(tile)
-	var extra := carry_caps_text(ch)
-	if extra != "":
-		_card.add_child(_label(extra, 13, UiPalette.DIM))
-	# 179：技能两行 —— 名字（22 粗体、亮黄铜、黑描边；不写「被动」）；说明 17 正文色
-	_skill_names.clear()
-	var skills := _vbox(12)
-	_card.add_child(skills)
+	# 255（作者 11:07 选甲）：技能 / 随身之物 / 短板同一种行；随身之物先写功效，「拿不下、丢不掉」只作末尾灰小字；短板永远最后
+	var rows := _vbox(ENTRY_GAP)
+	_card.add_child(rows)
 	for e in ch.skill_entries():
-		var one := _vbox(4)
-		skills.add_child(one)
-		var name := UiTheme.make_variant_label(String(e["name"]), UiTheme.LABEL_SKILL_NAME)
-		one.add_child(name)
-		_skill_names.append(name)
-		var text := _wrapped(String(e["text"]), UiTheme.SKILL_TEXT_SIZE, UiPalette.FG, 300)
-		text.theme_type_variation = UiTheme.LABEL_SKILL_TEXT
-		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		one.add_child(text)
-	if board == null:
-		return
+		var row := _entry_row(EntryIcon.skill(e.get("skill", null) as RunSkill), String(e["name"]), String(e["text"]), "", false)
+		rows.add_child(row)
+		_skill_names.append(row.get_meta(&"name_label"))
+	for f in ch.fixed_items:
+		var def := flow.items.get_def(f.id) if f != null else null
+		if def != null:
+			rows.add_child(_entry_row(EntryIcon.pinned(def), Names.of(def), Names.description_of(def), UiText.t("setup.pinned_tail"), false))
+	var flaw := ch.flaw_entry()
+	if not flaw.is_empty():
+		rows.add_child(_entry_row(EntryIcon.flaw(), String(flaw["name"]), String(flaw["text"]), "", true))
+	_build_preview(ch)
+
+
+## 255：条目行 —— 左端 52 图标槽，右边名字（22，技能 / 随身之物亮黄铜、短板 [param iron] 铁灰）+ 一句功能句（17）+ 末尾灰小字 [param tail]（有才出）
+func _entry_row(icon: EntryIcon, title: String, text: String, tail: String, iron: bool) -> HBoxContainer:
+	var row := _hbox(12)
+	row.add_child(icon)
+	var col := _vbox(2)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(col)
+	var name := UiTheme.make_variant_label(title, UiTheme.LABEL_FLAW_NAME if iron else UiTheme.LABEL_SKILL_NAME)
+	col.add_child(name)
+	row.set_meta(&"name_label", name)
+	if text != "":
+		var body := _wrapped(text, UiTheme.SKILL_TEXT_SIZE, UiPalette.FG, card_width() - EntryIcon.SIDE - 12)
+		body.theme_type_variation = UiTheme.LABEL_SKILL_TEXT
+		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_child(body)
+	if tail != "":
+		col.add_child(_label(tail, ENTRY_TAIL_SIZE, UiPalette.DIM))
+	_entries.append(row)
+	return row
+
+
+## 255：右栏 —— 只画形状的棋盘（缺格 + 随身之物，不画包），居中；下面题字、图例、首次赠包小签
+func _build_preview(ch: CharacterDef) -> void:
+	_grooves[2].custom_minimum_size.x = right_width()
+	_preview_board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
+	ch.shape_board(_preview_board, flow.items)
 	_preview_view = InventoryView.new()
 	_preview_view.label_font = font
-	_preview_view.inventory = board
+	_preview_view.inventory = _preview_board
 	_preview_view.show_adjacency = false
-	_preview_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_preview_host.add_child(_preview_view)     # 179：底下不再列有哪些背包
-	var frame := BoardFrame.wrap(_preview_view)     # 227：皮带框 + 格缝
-	_grooves[2].custom_minimum_size.x = ch.board_size.x * InventoryView.CELL + 2.0 * (RIGHT_PAD + frame.inset())
+	var frame := BoardFrame.wrap(_preview_view)     # 227：皮带框 + 格缝；255：有缺格时框沿轮廓走
+	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255：不足九格居中，差额是左右内距
+	var counts := ch.board_counts(flow.items)
+	var plain := int(counts["missing"]) == 0 and int(counts["pinned"]) == 0
+	_board_title = _label(UiText.t("setup.board_title") % [ch.board_size.x, ch.board_size.y] if plain
+		else UiText.t("setup.board_usable") % [ch.board_size.x, ch.board_size.y, int(counts["usable"])], 17, UiPalette.FG)
+	_board_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_preview_host.add_child(_board_title)
+	var legend := _hbox(10)
+	legend.alignment = BoxContainer.ALIGNMENT_CENTER
+	if int(counts["missing"]) > 0:
+		legend.add_child(_legend_tag(UiText.t("setup.legend_missing"), Color(0, 0, 0, 0)))
+	if int(counts["pinned"]) > 0:
+		legend.add_child(_legend_tag(UiText.t("setup.legend_pinned"), Color("c9a24e")))
+	if legend.get_child_count() > 0:
+		_preview_host.add_child(legend)
+	else:
+		legend.free()
+	var gift := first_gift_text(ch)
+	if gift != "" and _gifted.has(ch.id):
+		_gift_tag = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 16, 10, 16, 10)
+		_gift_tag.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_gift_tag.add_child(_label(gift, 15, UiTheme.INK))
+		_preview_host.add_child(_gift_tag)
 
 
-## 179：三块图标牌 [id, 数字, 说明]：负重上限（有才有）、棋盘、开局金币（有才有）
+## 255：图例一枚小签（色块 + 字），坐在小牌底上
+func _legend_tag(text: String, swatch: Color) -> PanelContainer:
+	var tag := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_CAP_TILE, 10, 4, 10, 4)
+	var row := _hbox(6)
+	tag.add_child(row)
+	var box := ColorRect.new()
+	box.color = swatch
+	box.custom_minimum_size = Vector2(14, 14)
+	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	box.draw.connect(func(): box.draw_rect(Rect2(Vector2.ZERO, box.size).grow(-0.5), UiPalette.DIM, false, 1.0))
+	row.add_child(box)
+	row.add_child(_label(text, 13, UiPalette.FG))
+	_legend.append(tag)
+	return tag
+
+
+## 255：首次赠包那一句（「首次选他：皮革包 ×1、小包 ×1 进包架」）；没有初始包空串
+func first_gift_text(ch: CharacterDef) -> String:
+	var counts := {}
+	var order: Array[StringName] = []
+	for id in ch.starting_bags:
+		if not counts.has(id):
+			order.append(id)
+		counts[id] = int(counts.get(id, 0)) + 1
+	var parts: Array[String] = []
+	for id in order:
+		var def := flow.items.get_def(id)
+		if def != null:
+			parts.append(UiText.t("setup.gift_item") % [Names.of(def), int(counts[id])])
+	return UiText.t("setup.first_gift") % UiText.t("gloss.tag_or").join(parts) if not parts.is_empty() else ""
+
+
+## 255：面板方块 [名, 数, 悬停句]：生命 / 耐力 / 回气 / 体力必有；别的面板项角色在 base_stats 里改过才出
+static func stat_plaques(ch: CharacterDef) -> Array:
+	var base := ch.baseline()
+	var out: Array = [
+		[UiText.t("setup.stat_hp"), _num(base.value_of(&"max_hp")), ""],
+		[UiText.t("setup.stat_stamina"), _num(base.value_of(&"max_stamina")), ""],
+		[UiText.t("setup.stat_regen"), UiText.t("setup.per_sec") % _num(base.value_of(&"regen_stamina")), ""],
+		[UiText.t("setup.stat_vitality"), str(ch.vitality_max), ""],
+	]
+	for key in ch.base_stats:
+		var k := StringName(String(key))
+		if k in [&"max_hp", &"max_stamina", &"regen_stamina"]:
+			continue
+		out.append([Glossary.stat_name(k), _num(base.value_of(k)), ""])
+	return out
+
+
+## 179：图标牌 [id, 数字, 说明]：负重上限（有才有）、棋盘；255：缺格写进棋盘那块的说明，带入件数 / 稀有度上限有才有
 ## 2026-10-22（作者定）：**开局金币那块不再显示** —— 钱改成玩家自己从仓库带了，角色身上这个数不再有任何作用
 static func cap_tiles(ch: CharacterDef) -> Array:
 	var out: Array = []
 	if ch.weight_capacity > 0:
 		out.append([&"weight", str(ch.weight_capacity), UiText.t("setup.cap_load")])
-	out.append([&"board", "%d × %d" % [ch.board_size.x, ch.board_size.y], UiText.t("setup.cap_board")])
-	return out
-
-
-## 179：图标牌之外的带入上限（最多带 N 件、稀有度不超过 N），有才写
-static func carry_caps_text(ch: CharacterDef) -> String:
-	var caps: Array[String] = []
+	out.append([&"board", "%d × %d" % [ch.board_size.x, ch.board_size.y],
+		UiText.t("setup.cap_board_missing") % ch.board_mask.size() if not ch.board_mask.is_empty() else UiText.t("setup.cap_board")])
 	if ch.carry_max_items >= 0:
-		caps.append(UiText.tn("setup.carry_max", ch.carry_max_items) % ch.carry_max_items)
+		out.append([&"carry", str(ch.carry_max_items), UiText.t("setup.cap_carry")])
 	if ch.carry_rarity_cap >= 0:
-		caps.append(UiText.t("setup.carry_rarity") % ch.carry_rarity_cap)
-	return UiText.t("setup.sep").join(caps)
-
-
-func _stat_row(title: String, blocks: StatBlocks) -> HBoxContainer:
-	var row := _hbox(10)
-	var l := _label(title, 17, UiPalette.FG)
-	l.custom_minimum_size.x = 48
-	row.add_child(l)
-	row.add_child(blocks)
-	return row
+		out.append([&"rarity", str(ch.carry_rarity_cap), UiText.t("setup.cap_rarity")])
+	return out
 
 
 static func _num(v: float) -> String:

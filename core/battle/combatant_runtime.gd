@@ -275,7 +275,7 @@ func settle_regen(now: int) -> void:
 			resources.settle_regen(key, StatMath.mul(rate, heal_kept()), now)
 			continue
 		if rate > 0:
-			resources.settle_regen(key, rate, now)
+			resources.settle_regen(key, StatMath.mul(rate, regen_kept(key)), now)
 
 
 ## 某件物品通过增益／受益格连结到的其他物品 uid
@@ -454,12 +454,15 @@ func taken_by_type_percent(type: StringName) -> float:
 ## 175：恢复生命**唯一的入口** —— 治疗效果、反转成治疗的伤害都走这里。先按身上的 [member BuffDef.heal_cut] 截走
 ## （逐个 buff、按登记顺序，每个截剩下的那部分），然后补血；补完按身上的 [member BuffDef.heal_echo] 叠状态
 ## （175 补充一，菌血：实际回了几点就叠几层中毒，施加方是对手）。返回实际回了多少（定点）。[param reason] 照旧写进 resource_changed
-func heal(ctx: BattleContext, amount: int, reason: StringName = BattleEvent.REASON_HEAL) -> int:
+## 255：[param source_tags] 是给这口治疗的道具的标签（[member BuffDef.heal_cut_tags] 按它挑截不截）
+func heal(ctx: BattleContext, amount: int, reason: StringName = BattleEvent.REASON_HEAL, source_tags: Array[StringName] = []) -> int:
 	if amount <= 0 or dead:
 		return 0
 	for b in buffs:
 		if b.def.heal_cut <= 0 or amount <= 0:
 			continue
+		if not b.def.heal_cut_tags.is_empty() and not b.def.heal_cut_tags.any(func(t: StringName) -> bool: return source_tags.has(t)):
+			continue     # 255：只截某几类道具的治疗
 		amount -= mini(amount, StatMath.mul(amount, StatMath.from_percent(clampi(b.def.heal_cut, 0, 100))))
 	var actual := resources.change(BattleStats.RES_HP, amount, reason) if amount > 0 else 0
 	if ctx != null and actual > 0:
@@ -479,8 +482,24 @@ func heal(ctx: BattleContext, amount: int, reason: StringName = BattleEvent.REAS
 func heal_kept() -> int:
 	var kept := StatMath.ONE
 	for b in buffs:
-		if b.def.heal_cut > 0:
+		if b.def.heal_cut > 0 and b.def.heal_cut_tags.is_empty():     # 255：只截某类道具治疗的不碰每秒回血
 			kept = StatMath.mul(kept, StatMath.ONE - StatMath.from_percent(clampi(b.def.heal_cut, 0, 100)))
+	return maxi(0, kept)
+
+
+## 255：[param key] 这种资源的每秒回复还剩几成（定点比例，0..1）—— 身上 [member BuffDef.regen_cut] 的 buff 逐个截；
+## 有 [member BuffDef.regen_cut_below] 的只在这种资源低于上限那个百分比时截
+func regen_kept(key: StringName) -> int:
+	var kept := StatMath.ONE
+	for b in buffs:
+		var cut := int(b.def.regen_cut.get(String(key), b.def.regen_cut.get(key, 0)))
+		if cut <= 0:
+			continue
+		if b.def.regen_cut_below > 0:
+			var cap := resources.maximum(key)
+			if cap <= 0 or resources.current(key) * 100 >= cap * b.def.regen_cut_below:
+				continue
+		kept = StatMath.mul(kept, StatMath.ONE - StatMath.from_percent(clampi(cut, 0, 100)))
 	return maxi(0, kept)
 
 
