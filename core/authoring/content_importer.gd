@@ -475,6 +475,15 @@ static func _validate_buff_decay(def: BuffDef, report: ImportReport) -> void:
 	for k in def.damage_taken_by_type.keys():
 		if not DamageTypes.has(StringName(String(k))):
 			report.error("damage_taken_by_type", "不认识的伤害类型 '%s'" % k)
+	# 255：回复打折 —— 键是资源（stamina / hp / mana …），值 0..100；门槛 0..100
+	for k in def.regen_cut.keys():
+		var v: Variant = def.regen_cut[k]
+		if not (v is int or v is float) or float(v) < 0.0 or float(v) > 100.0:
+			report.error("regen_cut", "'%s' 的值得是 0..100 的百分数" % k)
+	if def.regen_cut_below < 0 or def.regen_cut_below > 100:
+		report.error("regen_cut_below", "门槛得是 0..100 的百分数")
+	if (def.heal_cut_tags.size() > 0) and def.heal_cut <= 0:
+		report.error("heal_cut_tags", "写了只截哪类治疗，却没写截走几成（heal_cut）")
 
 
 ## 道具里内联的 buff（apply_status.buff）也按同一条规矩查
@@ -1295,6 +1304,58 @@ static func _check_not_in_techs(e: Effect, at: String, ctx: Context, report: Imp
 				return
 
 
+## 255：角色棋盘最宽几格 —— 选角色屏、开局屏、背包窗都按九格定宽，窄的居中加内距（作者 2026-10-26 10:51）
+const CHARACTER_BOARD_MAX_W := 9
+
+
+## 255：缺格与随身之物 —— 缺格在盘内、不重复；随身之物找得到、是普通道具（不是包）、整件在盘内、不压缺格、彼此不重叠
+static func _check_character_board(def: CharacterDef, ctx: Context, report: ImportReport) -> void:
+	var missing := {}
+	for i in def.board_mask.size():
+		var c: Vector2i = def.board_mask[i]
+		if c.x < 0 or c.y < 0 or c.x >= def.board_size.x or c.y >= def.board_size.y:
+			report.error("board_mask[%d]" % i, "缺格 %s 在棋盘 %s 外" % [c, def.board_size])
+		elif missing.has(c):
+			report.error("board_mask[%d]" % i, "缺格 %s 重复" % c)
+		missing[c] = true
+	if missing.size() >= def.board_size.x * def.board_size.y:
+		report.error("board_mask", "缺格把整块棋盘都挖掉了")
+	if not missing.is_empty():     # 美术 11:21：只有两个对角格可用的顶点拼不出框
+		for v in BoardContour.pinch_points(def.board_size, func(c: Vector2i) -> bool: return not missing.has(c)):
+			report.error("board_mask", "缺格在 %s 两格只对角相连，框拼不出来" % v)
+	var taken := {}
+	for i in def.fixed_items.size():
+		var f: FixedItem = def.fixed_items[i]
+		var at := "fixed_items[%d]" % i
+		if f == null:
+			report.error(at, "空的随身之物")
+			continue
+		if f.rot < 0 or f.rot > 3:
+			report.error(at + ".rot", "朝向只能是 0..3")
+		if ctx.items.is_empty():
+			continue
+		var item: ItemDef = ctx.items.get(f.id, null)
+		if item == null:
+			report.error(at + ".id", "找不到道具 '%s'" % f.id)
+			continue
+		if item.is_bag:
+			report.error(at + ".id", "'%s' 是包：随身之物自带底板，不能是包" % f.id)
+		if item.is_sealed():
+			report.error(at + ".id", "'%s' 已封存" % f.id)
+		for c in item.cells_rotated(posmod(f.rot, 4)):
+			var p: Vector2i = f.origin + c
+			if p.x < 0 or p.y < 0 or p.x >= def.board_size.x or p.y >= def.board_size.y:
+				report.error(at, "'%s' 摆在 %s 出了棋盘" % [f.id, f.origin])
+				break
+			if missing.has(p):
+				report.error(at, "'%s' 压到了缺格 %s" % [f.id, p])
+				break
+			if taken.has(p):
+				report.error(at, "'%s' 和别的随身之物重叠在 %s" % [f.id, p])
+				break
+			taken[p] = true
+
+
 static func import_character(data: Dictionary, ctx: Context, report: ImportReport) -> CharacterDef:
 	var def := CharacterDef.new()
 	_fill(def, data, "", ctx, report)
@@ -1303,6 +1364,11 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 		report.error("vitality_max", "体力上限至少 1")
 	if def.board_size.x < 1 or def.board_size.y < 1:
 		report.error("board_size", "棋盘至少 1×1")
+	if def.board_size.x > CHARACTER_BOARD_MAX_W:
+		report.error("board_size", "棋盘最宽 %d 格（255：选角色屏与各面板按九格定宽）" % CHARACTER_BOARD_MAX_W)
+	if def.flaw == null:
+		report.error("flaw", "每个角色必有一条短板（255 / 136）")
+	_check_character_board(def, ctx, report)
 	if def.carry_max_items < -1 or def.carry_rarity_cap < -1:
 		report.error("carry_max_items", "上限只能是 -1（不限）或非负数")
 	if def.starting_funds < -1:
@@ -1313,32 +1379,38 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 		if not (def.base_stats[key] is float or def.base_stats[key] is int):
 			report.error("base_stats", "'%s' 的值得是数" % key)
 	var seen_skills := {}
-	for i in def.skills.size():
-		var sk := def.skills[i] as RunSkill
+	var all_skills: Array = def.skills.duplicate()
+	if def.flaw != null:
+		all_skills.append(def.flaw)     # 255：短板和技能同一套构件、同样的校验（键名写 flaw）
+		if def.flaw.is_active():
+			report.error("flaw", "短板只能是被动（type passive）")
+	for i in all_skills.size():
+		var sk := all_skills[i] as RunSkill
+		var at := "skills[%d]" % i if i < def.skills.size() else "flaw"
 		if sk == null:
-			report.error("skills[%d]" % i, "空的技能")
+			report.error(at, "空的技能")
 			continue
 		if sk.id == &"":
-			report.error("skills[%d].id" % i, "技能必须有 id（记次数与冷却用）")
+			report.error(at + ".id", "技能必须有 id（记次数与冷却用）")
 		elif seen_skills.has(sk.id):
-			report.error("skills[%d].id" % i, "技能 id 重复：%s" % sk.id)
+			report.error(at + ".id", "技能 id 重复：%s" % sk.id)
 		seen_skills[sk.id] = true
 		if sk.uses < -1:
-			report.error("skills[%d].uses" % i, "次数只能是 -1（不限）或非负数")
+			report.error(at + ".uses", "次数只能是 -1（不限）或非负数")
 		if sk.cooldown_steps < 0:
-			report.error("skills[%d].cooldown_steps" % i, "冷却不能为负")
+			report.error(at + ".cooldown_steps", "冷却不能为负")
 		if sk is AssaultSkill and ((sk as AssaultSkill).hp_fraction <= 0.0 or (sk as AssaultSkill).hp_fraction > 1.0):
-			report.error("skills[%d].hp_fraction" % i, "突击扣的比例应在 (0, 1]")
+			report.error(at + ".hp_fraction", "突击扣的比例应在 (0, 1]")
 		if sk is EvadeSkill and (sk as EvadeSkill).steps < 1:
-			report.error("skills[%d].steps" % i, "躲避至少 1 步")
+			report.error(at + ".steps", "躲避至少 1 步")
 		for j in sk.passive.size():
 			var e := sk.passive[j] as Effect
 			if e == null:
-				report.error("skills[%d].passive[%d]" % [i, j], "空的效果")
+				report.error("%s.passive[%d]" % [at, j], "空的效果")
 			elif e.scope() != EffectScope.LOOT and e.scope() != EffectScope.RUN:
-				report.error("skills[%d].passive[%d]" % [i, j], "技能的被动只放掉落或一局规则的效果；战斗效果写进基线或道具")
+				report.error("%s.passive[%d]" % [at, j], "技能的被动只放掉落或一局规则的效果；战斗效果写进基线或道具")
 			else:
-				_check_not_in_techs(e, "skills[%d].passive[%d]" % [i, j], ctx, report)
+				_check_not_in_techs(e, "%s.passive[%d]" % [at, j], ctx, report)
 	if not ctx.items.is_empty():
 		for i in def.starting_bags.size():
 			var item: ItemDef = ctx.items.get(def.starting_bags[i], null)

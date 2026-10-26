@@ -1,0 +1,16 @@
+{
+  "id": "thin_build",
+  "display_name": "身子薄",
+  "display_names": {
+    "en": "Slight Build"
+  },
+  "is_debuff": true,
+  "stackable": false,
+  "mods": [
+    {
+      "stat": "max_armor",
+      "mode": "MULT",
+      "amount": -20.0
+    }
+  ]
+}

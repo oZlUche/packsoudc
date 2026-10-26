@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.47 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.48 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3492,6 +3492,7 @@ func player_spec() -> CombatantSpec …
 体力上限、棋盘尺寸、初始包、带入的件数 / 稀有度上限（-1 = 不限，作者：改成字段、默认不限）、**被动技能** `skills`（一局规则的效果构件，和局外 buff 同一套：
 侦察 / 潜行 / 逃跑三个构件往 `RunContext` 加数，猎手系统读；主动技能以后走事件层，报告 072）。**没有搜索速度**（作者：搜索在战斗外、不是实时的）。
 三个初始角色是作者定的安德烈乌斯 / 布鲁图斯 / 马库斯（7.3，082）；早期的占位 `default` / `scout` 已删。
+255（v4.48）再加三样：**短板** `flaw`（一条 `RunSkill`，必填、不能是主动，和被动技能同一套构件，`CharacterDef.traits()` = 技能 + 短板，一局规则 / 掉落 / 战斗规则都按它编；三人各一条：马库斯「不懂药」`unschooled` 只截【药剂】标签的治疗一半（`BuffDef.heal_cut_tags`，`heal(..., source_tags)`，不碰每秒回血）、安德烈乌斯「身子薄」`thin_build` 护甲上限 ×0.8、布鲁图斯「回气慢」`short_wind` 耐力低于两成时每秒回复减半（`BuffDef.regen_cut / regen_cut_below`，`CombatantRuntime.regen_kept`））；**随身之物** `fixed_items`（`FixedItem`：id、origin、rot）—— `CharacterDef.shape_board` 开局（`RunState.start`）与开局屏重摆时钉上去：`ItemInstance.is_pinned`，自带底板（`GridInventory.is_covered` 算覆盖、`requires_bag` 也不要包），`is_locked` 恒真，包压不上去，悬浮窗按钮全灰（`ItemActions.pinned_guard`），拖不动（`DragLayer.refused_notice`），不能标不参战，不进开局屏摆盘（`RunState.layout_of`）、不算带入、撤离不带回（`RunResult.settle`）；**棋盘缺格** `board_mask`（格坐标，`set_blocked`；缺格不放包不放东西，画成透空，`BoardFrame.wrap` 的框沿轮廓走 `contour`：`BoardContour.pieces` 按美术 11:21 的拼件规则排直边 `edge_*` → 凹角 `inner_*` → 凸角 `outer_*`（格 60、框厚 20，按格边长缩放），图在 `assets/ui/board/mask/<name>.png`，没图画占位皮带；整块矩形照旧九宫格）。导入器：棋盘最宽九格（`CHARACTER_BOARD_MAX_W`），缺格在盘内不重复、没有只对角相连的顶点（`BoardContour.pinch_points`，拼不出框），随身之物找得到 / 不是包 / 不是封印 / 在盘内 / 不压缺格 / 不互相重叠。
 
 **开局屏**（161 拆成三页，右下角大号「返回 / 继续」）：一、选角色（角色卡：`StatBlocks` 红方块生命、黄方块耐力、爱心体力，技能，初始包预览；179：三栏各坐一块凹槽板 `PANEL_GROOVE`、间距 36，中栏撑满、棋盘栏按这个角色的棋盘宽贴右，负重上限 / 棋盘 / 开局金币是三块 `CapTile` 图标牌，技能「被动」小字 + 名字 22 粗体亮黄铜描边、说明 17（`CharacterDef.skill_entries`），不放角色说明与背包行；三页不再坐石板，整屏是 `setup/bg_hall` 背景画，没图纯色，`GameScreen._painted_screen`）；二、配道具（预设、这个角色的棋盘 —— 初始包已经摆好、地上、右边分页仓库（163），同一层拖拽）；三、选地图、规模、难度、种子，出发摘要。
 **从仓库往包里拖，放得进的就是带的** —— 带入的真正限制是初始包的空间，没有第二套规则去数格子。拖上棋盘那一刻东西就离开了仓库；
@@ -4477,6 +4478,7 @@ res://
 | v4.35 | 2026-10-24 | **游戏测试 v4.34 修**：铁匠铺每行的字签从深色铭牌换成浅底羊皮纸（`PANEL_PARCHMENT` + 墨字，UI 明暗规则）；产物那一栏各行一样宽（按最宽的框），铭牌左边对齐；基地换页签时收掉上一页的告示（`NoticeLayer.clear`） |
 | v4.36 | 2026-10-24 | **248「退回」定稿图**（作者 14:44 选丙「回头脚印」）：战前屏左下角的退回键从文字占位换成平的白灰石键四态图 `assets/ui/battle/retreat_key*`（112×40）；图里不带字，字按 `retreat_key.json` 的 `text_rect` 居中写（墨色、灰态色、按下下移 1），放不下逐号缩（英文 Fall back）—— `IconButton` 新增 `art_label_rect` / `art_label_drop` / `art_label_disabled_color` |
 | v4.37 | 2026-10-24 | **基地七个页签加平墨图标**（作者 14:49 选乙；UI替换美术切图）：仓库 / 出售 / 集市 / 铁匠铺 / 科技 / 图鉴 / 成就页签字左边各一枚 36×36 墨色剪影（`assets/ui/home/tabs/tab_<页签>.png`，没图只写字）；图字间隔 6 走 `_home_buttons` 主题变体；七个页签一样宽（取 176 与最宽者的较大值，英文约 190） |
+| v4.48 | 2026-10-26 | **选角色屏排版 + 短板 / 随身之物 / 棋盘缺格**（报告 255，作者 11:07 定甲，11:10 补「缺格不涂黑」，待定全按推荐；改 7.3、8 开局屏）：`CharacterDef.flaw / fixed_items / board_mask`、`FixedItem`、`shape_board / board_counts / traits / flaw_entry`；三条短板与 buff `unschooled / thin_build / short_wind`（`BuffDef.heal_cut_tags / regen_cut / regen_cut_below`）；钉住的道具（`ItemInstance.PINNED_KEY`）与缺格的全部规矩见 7.3；选角色屏三栏定宽 260 / 588 / 608（作者：面板按九格定尺寸、窄棋盘居中留白；右栏按真实框边 24 算，比稿子的 612 / 584 差几像素），名牌带说明、`StatPlaque` 面板方块一行、图标牌（棋盘缺 N 格写在牌的说明里）、技能 → 随身之物 → 短板同一种条目行（`EntryIcon` 52 px 槽：技能图 `assets/ui/skills/<icon 或 id>.png` 没有就画月桂占位，随身之物画道具本体 + 钉，短板画裂纹占位；短板名 `LABEL_FLAW_NAME` 铁灰、永远最后；随身之物先写功效、末尾 12 px 灰字「随身：拿不下、丢不掉」），右栏棋盘预览只画形状不画包、题字「棋盘 W × H 格　可用 N 格」、图例、「首次赠包」小签只在第一次选时亮；锁定角色只留钩子（`SetupScreen.lock_reason`）。测试 `test_character_select_255` |
 | v4.47 | 2026-10-25 | 道具图定稿（作者 21:43）：252 的八件换掉占位图（法师杖 / 魔导杖 / 大魔导杖画成精致程度不同的木棍，木棍 1×2 竖放，秘银锭和银 / 钢 / 铜锭 1×2 横放），木棍进图清单；按作者 20:36 的新规矩「物品只画一面，不画顶面、侧面」重画 17 件（占格不变）。只同步这 25 件，美术目录里其余未改的图和 250 删掉的现代道具图都不收 |
 | v4.46 | 2026-10-25 | 252 补充一（作者 18:55「锭应该是1*2的长条形」）：秘银锭、银锭、钢锭、铜锭由 1 格改成 1×2 横条（`["11"]`），登记进 `IdAliases.RESHAPED`，快照已更新；图先把现图拉成 1×2 占位，美术定稿后替换；配方按件计，不用改；没有敌人预设或开局配置摆过这几样 |
 | v4.45 | 2026-10-25 | 252 配方科技（作者 14:43 定乙）：`SmithRecipeDef.tech / tech_level`，导入器全部导完后查（`validate_smith_recipe_techs`）；新科技构件 `TechRecipes`（`tech_recipes`，不派生，`describe_level` 写「会打：…」）；techs.xlsx 加秘银冶炼（列 0 深度 4）、法杖工艺（三级，列 1 深度 4，树宽守门）；新道具秘银锭、木棍、法师杖 / 魔导杖 / 大魔导杖（占位图）；配方七条（炼银锭、炼秘银锭、秘银剑换真配方、四根杖）；`Smithy.recipes_for` 分 `ready` / `level_locked` / `tech_locked`，`can_forge` 先说科技（`smithy.need_tech` / `need_tech_level`）；铁匠铺第七类「冶炼」`smelt`（产物得是素材）；`MarketRules.excluded_ids`（秘银锭）；247 四阶法师各拿对应的杖。测试 `test_recipe_techs_252` |

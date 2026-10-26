@@ -89,7 +89,7 @@ func _build() -> void:
 	_drag.drop_outside_to_stash = true     # 084 / 128：棋盘外的空间全都是地上
 	_attach_ground()
 	_drag.items_displaced.connect(_on_displaced)
-	_drag.grab_refused.connect(func(_uid: int): _hint_text(UiText.t(DragLayer.ROOTED_NOTICE)))     # 207
+	_drag.grab_refused.connect(func(uid: int): _hint_text(DragLayer.refused_notice(_run.board, uid)))     # 207 / 255
 	# 114 合成（作者定）：拖到上面立刻合 —— 拖起一件时能合的那几件高光；压到其中一件上放手，两件立刻变成产物
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
 	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef:
@@ -179,7 +179,7 @@ func board_actions(uid: int) -> Array:
 	elif inst.is_locked_by_player() and (quick_target == null or not _quick_allows(inst)):
 		ItemActions.disable(first, UiText.t("act.locked"))
 	elif _run.board.is_locked(uid):
-		ItemActions.disable(first, UiText.t(DragLayer.ROOTED_NOTICE))
+		ItemActions.disable(first, DragLayer.refused_notice(_run.board, uid))
 	out.append(first)
 	out.append(ItemActions.lock(inst, _run.board))
 	if inst.def.is_anchor():
@@ -194,7 +194,7 @@ func board_actions(uid: int) -> Array:
 ## 2026-10-22（作者）：哪些能给「不参战」—— 会参与战斗的那几件（有战斗定义：武器、护甲、会出手的器官）。
 ## 信物不算：标了它会把信仰一起熄掉，那是另一件事，不该藏在「不参战」这个按钮里
 static func can_bench(inst: ItemInstance) -> bool:
-	return inst != null and inst.def != null and inst.def.combat != null and not inst.def.is_anchor()
+	return inst != null and inst.def != null and inst.def.combat != null and not inst.def.is_anchor() and not inst.is_pinned()     # 255：随身之物不能标
 
 
 ## 099（作者定）：信物奉为主信仰（230 起走悬浮窗按钮，右键改成钉住悬浮窗）。不是信物什么也不做。返回切没切
@@ -221,7 +221,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		return false
 	if from == _run.board:
 		if _run.board.is_locked(uid):
-			_hint_text(UiText.t(DragLayer.ROOTED_NOTICE))     # 207：扎了根的双击也搬不走
+			_hint_text(DragLayer.refused_notice(_run.board, uid))     # 207：扎了根的双击也搬不走（255 随身之物同理）
 			return false
 		if inst.is_locked_by_player() and not _quick_allows(inst):
 			_hint_text(UiText.t("item.locked_no") % Names.of(inst.def))     # 230：锁住的不丢地上、不卖、不献

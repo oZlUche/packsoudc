@@ -89,6 +89,22 @@ func set_benched(on: bool) -> void:
 		state.erase(BENCHED_KEY)
 
 
+## 255：【随身之物】（[member CharacterDef.fixed_items]）—— 角色开局就带、钉在棋盘上：拿不下、丢不掉、不进仓库，自带底板（不要包）。
+## 存在 [member state] 里跟着这一局的存档走；没钉不写键
+const PINNED_KEY := "pinned"
+
+
+func is_pinned() -> bool:
+	return bool(state.get(PINNED_KEY, false))
+
+
+func set_pinned(on: bool) -> void:
+	if on:
+		state[PINNED_KEY] = true
+	else:
+		state.erase(PINNED_KEY)
+
+
 ## 148：还剩几次（[member ItemDef.wear]）。没有耐久的返回 -1；老档里没记的按满算
 func charges() -> int:
 	if def == null or def.wear == null:

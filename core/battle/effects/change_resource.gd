@@ -51,7 +51,7 @@ func apply(ctx: RuleContext) -> void:
 			continue
 		var actual := 0
 		if value > 0 and resource_key == BattleStats.RES_HP:
-			actual = who.heal(ctx.battle, value)     # 175：治疗走统一入口（燃血 / 菌血在那里截）
+			actual = who.heal(ctx.battle, value, BattleEvent.REASON_HEAL, ctx.owner.tags_of(ctx.source_uid()))     # 175：治疗走统一入口（燃血 / 菌血在那里截）；255：带上道具的标签
 		else:
 			actual = who.resources.change(
 				resource_key, value,

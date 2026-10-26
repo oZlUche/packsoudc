@@ -81,10 +81,19 @@ func is_covered(c: Vector2i) -> bool:
 		return false
 	if not requires_bag:
 		return true
-	return _bag_owner[_idx(c)] != EMPTY_UID
+	return _bag_owner[_idx(c)] != EMPTY_UID or _pinned_cell(_idx(c))
 
 
-## 标记某格为不可用，用于非矩形的自由容器。
+## 255：这一格压着一件随身之物（[method ItemInstance.is_pinned]）—— 它自带底板：格子算被覆盖，包不能压上来
+func _pinned_cell(i: int) -> bool:
+	var o := _occ[i]
+	if o == EMPTY_UID:
+		return false
+	var inst: ItemInstance = _items.get(o, null)
+	return inst != null and inst.is_pinned()
+
+
+## 标记某格为不可用：非矩形的自由容器；255 起也给作战棋盘的缺格（[member CharacterDef.board_mask]）。
 func set_blocked(c: Vector2i, blocked: bool) -> bool:
 	if not in_bounds(c):
 		return false
@@ -94,6 +103,23 @@ func set_blocked(c: Vector2i, blocked: bool) -> bool:
 	_blocked[i] = 1 if blocked else 0
 	_notify_changed()
 	return true
+
+
+## 255：有没有随身之物
+func has_pinned() -> bool:
+	for inst in _items.values():
+		if (inst as ItemInstance).is_pinned():
+			return true
+	return false
+
+
+## 255：缺格数（[method is_blocked] 的格）
+func blocked_count() -> int:
+	var n := 0
+	for b in _blocked:
+		if b != 0:
+			n += 1
+	return n
 
 
 ## 可摆放普通物品且当前为空的格数。
@@ -227,9 +253,12 @@ func can_place_bag(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = E
 	if not requires_bag or not _cells_in_board(cells, origin):
 		return false
 	for c in cells:
-		var owner := _bag_owner[_idx(origin + c)]
+		var i := _idx(origin + c)
+		var owner := _bag_owner[i]
 		if owner != EMPTY_UID and owner != ignore_uid:
 			return false
+		if _pinned_cell(i):
+			return false     # 255：包不能盖住随身之物（当障碍绕开）
 	return true
 
 
@@ -244,7 +273,19 @@ func can_place_def(def: ItemDef, origin: Vector2i, rot: int, ignore_uid: int = E
 func can_place_item(inst: ItemInstance, origin: Vector2i, rot: int) -> bool:
 	if inst == null or inst.def == null:
 		return false
+	if inst.is_pinned() and requires_bag:
+		return _pin_fits(inst.def.cells_rotated(rot), origin, inst.uid)
 	return can_place_def(inst.def, origin, rot, inst.uid)
+
+
+## 255：随身之物自带底板 —— 不要包，只要格子在盘内、不是缺格、没有包、没被别的东西占着
+func _pin_fits(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int) -> bool:
+	if not _cells_in_board(cells, origin) or not _cells_free(cells, origin, ignore_uid):
+		return false
+	for c in cells:
+		if _bag_owner[_idx(origin + c)] != EMPTY_UID:
+			return false
+	return true
 
 
 ## 这件定义在这个落点上，**地形**允不允许 —— 出界、禁用格、包覆盖、
@@ -428,10 +469,13 @@ func clear() -> void:
 #region 生长的扎根（207）
 ## 玩家动不了这一件：它自己扎了根（茎叶起），或者它是包、包里有一件连包扎了根（绽放）。
 ## 只有 [member growth_locks] 开着的棋盘才锁；核心层的 [method remove] 不看它（结算、存档、死亡清棋盘照旧）
+## 255：随身之物（[method ItemInstance.is_pinned]）不看开关，永远动不了
 func is_locked(uid: int) -> bool:
+	var inst: ItemInstance = _items.get(uid, null)
+	if inst != null and inst.is_pinned():
+		return true
 	if not growth_locks:
 		return false
-	var inst: ItemInstance = _items.get(uid, null)
 	if inst == null or inst.def == null:
 		return false
 	if acts_as_bag(inst.def):

@@ -103,6 +103,14 @@ static func is_main_anchor(inst: ItemInstance, board: ItemContainer) -> bool:
 	return best == inst
 
 
+## 255：随身之物的按钮全灰（不参战 / 锁定 / 出售 / 丢到地上 / 献祭 / 进铸炉），理由一句「随身之物」。悬浮窗拿按钮时过一道（[HoverTip]）
+static func pinned_guard(inst: ItemInstance, actions: Array) -> Array:
+	if inst != null and inst.is_pinned():
+		for a in actions:
+			disable(a as Action, UiText.t("act.pinned"))
+	return actions
+
+
 ## 同一个容器里和它同 id 的（含它自己）
 static func same_kind(inst: ItemInstance, container: ItemContainer) -> Array:
 	var out: Array = []

@@ -232,6 +232,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		# 099（作者定）：切信仰不进菜单 —— 右键一下，或者在棋盘里把它重新落下
 		var line := UiText.t("tip.anchor") % (UiText.t("tip.anchor_current") if faith_lit(def, status) else UiText.t("tip.anchor_hint"))
 		lines.append("[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if faith_lit(def, status) else DIM_HEX, line])
+	if inst.is_pinned():     # 255（作者 11:00）：先说功效，「拿不下、丢不掉」只作最后一行灰小字
+		lines.append("[font_size=%d][color=#%s]%s[/color][/font_size]" % [FOOT_SIZE, DIM_HEX, UiText.t("tip.pinned")])
 	# --- 脚注：金币、秤砣（170：不写格数），右边套装名
 	var foot := "[font_size=%d][color=@tip_meta]%s[/color][/font_size]" % [FOOT_SIZE, UiText.t("tip.foot") % [icon("coin"), ItemValue.of_in(inst, board), icon("weight"), ItemWeight.of_in(inst, board)]]     # 129：重
 	var set_name := set_name_of(def.set_id)

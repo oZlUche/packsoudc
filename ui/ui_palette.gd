@@ -418,6 +418,8 @@ enum Tier { PRIMARY, SECONDARY, MINOR }
 const TIER_SCALE := {Tier.PRIMARY: 3.0, Tier.SECONDARY: 2.0, Tier.MINOR: 1.5}
 const BTN_PRIMARY := Color("e6a83c")
 const BTN_PRIMARY_HOVER := Color("f5bd5a")
+## 255：短板名的铁灰（技能名是 [constant BTN_PRIMARY_HOVER] 亮黄铜）
+const FLAW_IRON := Color("a3a9ae")
 const BTN_PRIMARY_TEXT := Color("15171c")
 const BTN_SECONDARY := Color("2f3a4c")
 const BTN_SECONDARY_HOVER := Color("3d4a60")

@@ -522,7 +522,10 @@ func action_rows() -> Array:
 
 
 func _actions_of(view: ContainerView, uid: int) -> Array:
-	return view.actions_for.call(uid) if view != null and view.actions_for.is_valid() else []
+	var out: Array = view.actions_for.call(uid) if view != null and view.actions_for.is_valid() else []
+	var c := view.container() if view != null else null
+	var inst := c.get_item(uid) if c != null else null
+	return ItemActions.pinned_guard(inst, out)
 
 
 ## 点了一颗：做完。钉住的窗留着、内容刷新（那件还在的话）；没钉住的收起（东西多半已经不在原处）

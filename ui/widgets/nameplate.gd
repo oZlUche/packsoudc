@@ -22,6 +22,9 @@ var portrait_slot: PortraitSlot = null
 var badge_slot: PortraitSlot = null
 var name_label: Label
 var sub_label: Label
+## 255：名牌里的一句说明（[method set_blurb] 加上的；没加 null）
+var blurb_label: Label = null
+var _col: VBoxContainer = null
 var _row: HBoxContainer
 
 
@@ -34,13 +37,18 @@ func _init() -> void:
 	add_child(_row)
 
 
-## 填上名字、副行、肖像（[param face] 为 null = 占位剪影）；[param portrait_side] 肖像边长。重复调会换掉原来的
+## 填上名字、副行、肖像（[param face] 为 null = 占位剪影）；[param portrait_side] 肖像边长（255：0 = 不要肖像位 —— 选角色屏左边已经有 160 的大头像）。重复调会换掉原来的
 func setup(display_name: String, sub: String, face: Texture2D = null, portrait_side: int = PORTRAIT_SIZE) -> Nameplate:
 	UiTheme.clear_children(_row)
-	portrait_slot = PortraitSlot.new(portrait_side, face, true)
-	portrait = portrait_slot.picture
-	_row.add_child(portrait_slot)
+	portrait_slot = null
+	portrait = null
+	blurb_label = null
+	if portrait_side > 0:
+		portrait_slot = PortraitSlot.new(portrait_side, face, true)
+		portrait = portrait_slot.picture
+		_row.add_child(portrait_slot)
 	var col := UiTheme.vbox(2)
+	_col = col
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_row.add_child(col)
@@ -52,6 +60,21 @@ func setup(display_name: String, sub: String, face: Texture2D = null, portrait_s
 	badge_slot = PortraitSlot.new(BADGE_SIZE, null, false)
 	badge_slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_row.add_child(badge_slot)
+	return self
+
+
+## 255：名字放大到 [param font_size]（选角色屏 24）
+func set_name_size(font_size: int) -> Nameplate:
+	name_label.add_theme_font_size_override("font_size", font_size)
+	return self
+
+
+## 255：名字与副行下面加一句说明（13 号、折行，[param width] 是最小宽度）
+func set_blurb(text: String, width: float) -> Nameplate:
+	if text == "" or _col == null:
+		return self
+	blurb_label = UiTheme.make_wrapped(text, 13, UiPalette.FG, width)
+	_col.add_child(blurb_label)
 	return self
 
 

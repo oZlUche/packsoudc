@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_ht04j"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_eo5qc"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_mwvui"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_8uv17"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_6wx8d"]
+
+[resource]
+script = ExtResource("5_6wx8d")
+id = &"unschooled"
+display_name = "不懂药"
+display_names = {
+"en": "No Medic"
+}
+is_debuff = true
+stackable = false
+heal_cut = 50
+heal_cut_tags = Array[StringName]([&"remedy"])
