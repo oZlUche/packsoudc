@@ -1335,7 +1335,6 @@ const TEXT := {
 	"tech.next": {"zh": "下一级：%s", "en": "Next level: %s"},
 	"tech.maxed": {"zh": "已满级", "en": "Max level"},
 	"tech.needs_prereq": {"zh": "需要先点亮：%s", "en": "Light up first: %s"},
-	"tech.funds": {"zh": "钱", "en": "Coins"},
 	"tech.funds_tip": {"zh": "这一级要 %d 币，现在持有 %d 币；按升级时一次扣", "en": "This level costs %d coins; you have %d. They are taken when you press Upgrade"},
 	"tech.material_tip": {"zh": "%s：已交 %d / 需要 %d（上交即消耗，交了不能退）", "en": "%s: handed in %d / need %d (handed-in items are used up; no refunds)"},
 	"tech.material_done": {"zh": "　✓", "en": " ✓"},
