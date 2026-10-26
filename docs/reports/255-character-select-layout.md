@@ -5,7 +5,7 @@
 
 样稿（平板线框，1600 × 1000，三个角色可切，勾「显示尺寸」）：https://claude.ai/artifact/1c23ucqruL5MhXqB1wpfus
 
-本篇只排版、只定数据形状，不实装。排版规矩沿用 [179](179-setup-character-screen-and-step-vocabulary.md)（三栏、皮革板、黄铜技能名）、[214](214-portrait-sizes.md)（头像 160）、[226](226-no-bare-text.md)（没有裸字）、[227](227-all-boards-framed.md)（棋盘必带框与格线）。
+本篇只排版、只定数据形状，不实装。排版规矩沿用 [179](179-setup-character-screen-and-step-vocabulary.md)（三栏、皮革板、黄铜技能名）、[214](214-portraits-and-nameplate-size.md)（头像 160）、[226](226-no-bare-text-audit.md)（没有裸字）、[227](227-all-boards-framed-audit.md)（棋盘必带框与格线）。
 
 ## 〇、先答作者的两问
 
