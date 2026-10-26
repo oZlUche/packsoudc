@@ -243,8 +243,10 @@ func _refresh() -> void:
 		_cost.add_child(UiTheme.make_wrapped(UiText.t("tech.needs_prereq") % UiText.t("hud.buff_sep").join(names), LINE_SIZE, UiPalette.DIM, TEXT_WIDTH))
 	_cost.add_child(_rule())
 	var rich := _meta.funds >= tier.funds
-	_cost.add_child(_ledger_row(UiText.t("tech.funds"), str(tier.funds), UiText.t("tech.owned") % _meta.funds, rich,
-		UiText.t("tech.funds_tip") % [tier.funds, _meta.funds]))
+	var funds_row := _ledger_row("", str(tier.funds), UiText.t("tech.owned") % _meta.funds, rich,
+		UiText.t("tech.funds_tip") % [tier.funds, _meta.funds])
+	_coin_head(funds_row)
+	_cost.add_child(funds_row)
 	var keys: Array = tier.items.keys()
 	keys.sort()
 	var owned := _owned_counts()
@@ -295,6 +297,19 @@ func _ledger_row(label: String, number: String, own: String, done: bool, tip: St
 	row.add_child(o)
 	row.draw.connect(func(): row.draw_line(Vector2(0, row.size.y + 1), Vector2(row.size.x, row.size.y + 1), Color(UiTheme.INK, 0.25), 1.0))     # 行下一道淡墨线
 	return row
+
+
+## 钱那一行的名称格放一枚金币，不写「钱」字（作者 10-24：钱 = 金币图标 + 数字）
+func _coin_head(row: HBoxContainer) -> void:
+	var head := row.get_child(0) as Label
+	var coin := TextureRect.new()
+	coin.name = "Coin"
+	coin.texture = CoinLabel.coin_icon(roundi(BODY_SIZE * CoinLabel.COIN_SCALE))
+	coin.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	coin.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(coin)
+	coin.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
 
 
 ## 一道淡墨线（账目表头的上沿）

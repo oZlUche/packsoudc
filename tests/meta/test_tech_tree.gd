@@ -313,6 +313,9 @@ static func frame_owned_count_quick_submit(t: TestCase, root: Window) -> void:
 	# 作者 10-26：说明板字大一号、标题加粗
 	t.eq(panel._name.get_theme_font_size("font_size"), panel.NAME_SIZE, "名牌标题 %d 号" % panel.NAME_SIZE)
 	t.eq(panel._name.get_theme_font("font"), UiPalette.cjk_font_bold(), "名牌标题用粗体")
+	# 作者 10-24：钱用金币图标，不写「钱」字
+	t.check(not String(panel.panel_texts()["cost"]).contains("钱"), "账目里没有「钱」字：%s" % panel.panel_texts()["cost"])
+	t.not_null(panel._cost.find_child("Coin", true, false), "钱那一行有金币")
 	t.check(panel.NAME_SIZE > 20 and panel.BODY_SIZE > 15 and panel.SMALL_SIZE > 13, "比原来（20 / 15 / 13）都大")
 	t.is_null(panel.submit_button(&"steel_ingot"), "前置没点：没有【交】")
 	m.funds = 100000
