@@ -2,6 +2,7 @@
 ## 底座（立柱、标题牌、差额牌、下面的石台，`ransom/ransom_base` 1000 × 724，非矩形）、横梁（绕自己正中转，正中对齐底座的 pivot）、
 ## 左右两只盘（不转只平移，盘层的 hook 点挂在梁的钩上：钩 = pivot + rot(倾角)·(±arm, hook_dy)）。坐标与各控件的位置都在
 ## `ransom/ransom_layout.json`。左盘上方的托盘棋盘、右盘下的开价小牌跟着盘走：屏往 [member tray_slot] 里放托盘，开价由这里画（金币 + 数）。
+## 托盘坐在左盘的两根矮柱上，柱间是放上左盘的金币（[member coins]，按 `coin_pile` 一摞摞堆，刚好够开价时和右盘那摞一样多）。
 ## 差额牌上写「还差 N」/「够了」。字都落在石牌 / 石台上（226：不裸字）。没有图时（美术目录缺）按同一套坐标画占位
 class_name BalanceScale
 extends Control
@@ -11,6 +12,8 @@ const BASE_ART := "ransom/ransom_base"
 const BEAM_ART := "ransom/ransom_beam"
 const PAN_LEFT_ART := "ransom/ransom_pan_left"
 const PAN_RIGHT_ART := "ransom/ransom_pan_right"
+## 左盘上的一枚金币（36 × 9，一摞摞往上叠）
+const COIN_ART := "ransom/ransom_coin"
 const FONT_SIZE := 20
 const PLATE_FONT := 18
 const INK := Color("2e2219")
@@ -29,6 +32,11 @@ var right := 0:
 	set(v):
 		right = v
 		_relayout()
+## 左盘上的金币（只算钱，托盘上的东西另算）：盘里看得见这些钱（游戏测试 10-26）
+var coins := 0:
+	set(v):
+		coins = v
+		queue_redraw()
 
 ## 托盘棋盘的位置（左盘的 tray_rect，跟着盘走）：屏把托盘放进来，底边坐在盘沿上
 var tray_slot: VBoxContainer = null
@@ -52,7 +60,10 @@ static func layout() -> Dictionary:
 	if not d.is_empty():
 		return d
 	return {"base_size": [1000, 724], "pivot": [500, 110], "arm": 330, "hook_dy": 18, "max_tilt_deg": 8, "beam_size": [760, 64],
-		"pan_size": [340, 362], "hook_in_pan": [170, 8], "tray_rect": [20, 90, 320, 258], "price_rect": [112, 320, 228, 354],
+		"pan_size": [340, 362], "hook_in_pan": [170, 8], "tray_rect": [20, 52, 320, 220], "price_rect": [112, 320, 228, 354],
+		"coin_pile": {"cols": [80, 116, 152, 188, 224, 260], "base_y": 252, "step": 7.2, "full": [3, 4, 4, 4, 4, 3], "max": 4,
+			"order": [[2, 0], [3, 0], [2, 1], [3, 1], [2, 2], [3, 2], [2, 3], [3, 3], [1, 0], [4, 0], [1, 1], [4, 1], [1, 2], [4, 2], [1, 3], [4, 3],
+				[0, 0], [5, 0], [0, 1], [5, 1], [0, 2], [5, 2], [0, 3], [5, 3]]},
 		"controls": {"title": [404, 26, 596, 62], "status": [424, 200, 576, 236], "subtitle": [250, 576, 750, 604],
 			"stepper": [86, 620, 366, 686], "deal": [606, 626, 756, 678], "refuse": [780, 626, 930, 678], "hint": [300, 690, 700, 712]}}
 
@@ -91,6 +102,17 @@ func pan_origins() -> Array[Vector2]:
 	return [h[0] - hook_in, h[1] - hook_in] as Array[Vector2]
 
 
+## 左盘画几枚金币：ceil(刚好够时的枚数 × 金币 / 开价)，放了钱就至少 1 枚，封顶 order 的长度（每摞堆满）
+func pile_count() -> int:
+	var pile: Dictionary = _lay.get("coin_pile", {})
+	if coins <= 0 or pile.is_empty():
+		return 0
+	var full := 0
+	for h in pile["full"]:
+		full += int(h)
+	return clampi(ceili(float(full) * coins / float(maxi(1, right))), 1, (pile["order"] as Array).size())
+
+
 ## 右盘开价小牌（舞台坐标）
 func price_rect() -> Rect2:
 	var r := _rect(_lay["price_rect"])
@@ -116,6 +138,7 @@ func _draw() -> void:
 	var pan_size := _v(_lay["pan_size"])
 	_draw_layer(PAN_LEFT_ART, pans[0], pan_size)
 	_draw_layer(PAN_RIGHT_ART, pans[1], pan_size)
+	_draw_coin_pile(pans[0])
 	_draw_coin_amount(price_rect(), right)
 	_draw_centered(control_rect("status"), plate_text(), PLATE_FONT)
 
@@ -140,6 +163,33 @@ func _draw_layer(art: String, at: Vector2, size_px: Vector2) -> void:
 			var rim := at + Vector2(0, 250)
 			draw_rect(Rect2(rim, Vector2(size_px.x, 50)), BRONZE)
 			draw_rect(Rect2(at + _rect(_lay["price_rect"]).position, _rect(_lay["price_rect"]).size), PLATE)
+
+
+## 左盘柱间的金币：按 order 的先后落（同一摞总是先底下后上面），每枚坐在盘沿上方第几层
+func _draw_coin_pile(origin: Vector2) -> void:
+	var tex := UiTheme.art_cached(COIN_ART)
+	for r in coin_rects():
+		var at := Rect2(origin + (r as Rect2).position, (r as Rect2).size)
+		if tex != null:
+			draw_texture_rect(tex, at, false)
+		else:
+			draw_rect(at, CoinLabel.FALLBACK_FILL)
+
+
+## 现在画的每枚金币（盘层坐标，[method pile_count] 枚，按落下的先后）
+func coin_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var n := pile_count()
+	if n == 0:
+		return out
+	var pile: Dictionary = _lay["coin_pile"]
+	var step := float(pile["step"])
+	var tex := UiTheme.art_cached(COIN_ART)
+	var cs := tex.get_size() if tex != null else Vector2(36, 9)
+	for k in n:
+		var cell: Array = pile["order"][k]
+		out.append(Rect2(Vector2(float(pile["cols"][int(cell[0])]) - cs.x * 0.5, float(pile["base_y"]) - (int(cell[1]) + 1) * step - (cs.y - step) * 0.5), cs))
+	return out
 
 
 ## 小牌上的「金币 + 数」（钱 = 金币图标 + 数）
