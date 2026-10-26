@@ -102,6 +102,7 @@ const TYPE_LABELS := {
 	"passive": "被动", "assault": "突击", "evade": "躲避",
 	# 136：角色的套装
 	"slip": "脱身", "second_wind": "咬牙", "travel_discount": "熟门熟路（免费步）", "rest_bonus": "休息多回体力", "erosion_resist": "侵蚀少扣体力",
+	"ransom": "求饶（天平开价倍数）", "tag_mods": "按标签给道具挂修饰", "tag_weight_mult": "按标签打重量折扣",     # 256
 	"battle_reward_mult": "打赢的钱倍率", "every": "每几步", "factor": "倍数",
 	"skill_ready": "技能能用", "skill": "技能",
 	"place_item": "置入道具", "battle": "打仗", "travel": "走路", "earn_money": "进账", "spend_money": "花钱", "explore": "搜索", "event_choice": "事件里选特定选项",
@@ -118,7 +119,7 @@ const TYPE_LABELS := {
 	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_armor": "按食物给护甲", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "axis_boost": "开战带几层标准轴", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",
-	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff", "belt": "腰带", "wear": "道具耐久", "growth": "生长",     # 101：一局的模块（本体功能与难度机制同一张表）
+	"erosion": "侵蚀", "hunters": "猎手", "safe": "保险箱", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff", "belt": "腰带", "wear": "道具耐久", "growth": "生长", "honor": "军功",     # 101：一局的模块（本体功能与难度机制同一张表）；256 军功
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
 	"damage_item": "损坏道具", "drain_money": "掉钱",

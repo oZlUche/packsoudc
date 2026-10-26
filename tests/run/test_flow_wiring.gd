@@ -15,6 +15,8 @@ const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const NO_LISTENER_OK := {
 	&"shop_closed": "GameFlow 走会话自己的 closed 往下走（_adopt 里 session.closed.connect(_flush)）；这条留给测试与将来的界面",
 	&"grown": "207：升阶走 board.changed 刷新（前缀、扎根、悬浮窗都读实例）；这条留给测试与将来的升阶动画 / 音效",
+	&"ransom_settled": "256：天平了结走 GameFlow 的 pay_ransom / refuse_ransom 自己 save + _flush；这条留给测试与将来的音效",
+	&"ranked_up": "256：军功牌升阶走 board.changed 刷新（前缀、圈、角标都读实例）；这条留给测试与将来的升阶动画 / 音效",
 	&"worn": "148：棋盘上的耐久变化走 board.changed 刷新（晶石名字前缀、悬浮窗都读实例）；这条留给测试与将来的「碎了」提示",
 }
 
