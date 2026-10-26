@@ -60,8 +60,7 @@ static func run_pipeline(t: TestCase) -> void:
 	var sample := {"id": "probe", "starting_bags": ["bag_leather"], "skills": [
 		{"type": "passive", "id": "eyes", "display_name": "眼力", "passive": [{"type": "scout_range", "range": 3.0}, {"type": "stealth", "mult": 0.5}, {"type": "flee_bonus", "amount": 0.25}]},
 		{"type": "assault", "id": "assault", "display_name": "突击", "uses": 1, "cooldown_steps": 2, "hp_fraction": 0.3},
-		{"type": "evade", "id": "evade", "display_name": "躲避", "steps": 2, "passive": [{"type": "free_losses", "amount": 1}, {"type": "stat_bonus", "stat": "max_hp", "amount": 20.0}]}],
-		"flaw": {"type": "passive", "id": "probe_flaw", "display_name": "探针短板"}}     # 255：短板必填
+		{"type": "evade", "id": "evade", "display_name": "躲避", "steps": 2, "passive": [{"type": "free_losses", "amount": 1}, {"type": "stat_bonus", "stat": "max_hp", "amount": 20.0}]}]}
 	var report := ImportReport.new()
 	var def := ContentImporter.import_character(sample, ContentImporter.Context.new(), report)
 	t.check(report.ok(), "带技能的角色导入没有错：%s" % report.to_text())

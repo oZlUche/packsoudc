@@ -79,30 +79,5 @@
       "uses": 2,
       "cooldown_steps": 4
     }
-  ],
-  "flaw": {
-    "type": "passive",
-    "id": "thin_build",
-    "display_name": "身子薄",
-    "display_names": {
-      "en": "Slight Build"
-    },
-    "description": "战斗中，护甲上限降低两成。",
-    "descriptions": {
-      "en": "In battle, your maximum Armor is a fifth lower."
-    },
-    "rules": [
-      {
-        "trigger": "@on_battle_start",
-        "cadence": "@always",
-        "effects": [
-          {
-            "type": "apply_status",
-            "target": "SELF",
-            "buff": "thin_build"
-          }
-        ]
-      }
-    ]
-  }
+  ]
 }

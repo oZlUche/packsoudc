@@ -7,7 +7,7 @@ const Support := preload("res://tests/run/flow_support.gd")
 const GAME := "res://ui/game/game.tscn"
 
 
-## 一个带缺格与随身之物的探针角色（照着 [param base] 抄）：7 × 7，四角与正中缺格，木棍横钉在第一行
+## 一个带缺格、随身之物与短板的探针角色（照着 [param base] 抄）：7 × 7，四角与正中缺格，木棍横钉在第一行
 static func _probe(base: CharacterDef) -> CharacterDef:
 	var ch := base.duplicate(true) as CharacterDef
 	ch.id = &"probe_255"
@@ -18,6 +18,10 @@ static func _probe(base: CharacterDef) -> CharacterDef:
 	fi.origin = Vector2i(2, 0)
 	fi.rot = 1
 	ch.fixed_items = [fi] as Array[FixedItem]
+	var flaw := PassiveSkill.new()     # 补充三：短板选填，探针带一条看那一行
+	flaw.id = &"probe_flaw"
+	flaw.display_name = "探针短板"
+	ch.flaw = flaw
 	return ch
 
 
@@ -29,20 +33,16 @@ static func _pinned(board: GridInventory) -> Array[ItemInstance]:
 	return out
 
 
+## 补充三（作者 2026-10-26 13:59「我并不认为给每个角色设计短板是必须的……短板是用于改变游玩决策的设定，不要盲目的添加」）：
+## 三人的短板撤掉；短板选填，有的照旧编进规则、排在技能之后
 static func run_flaws(t: TestCase) -> void:
-	t.begin("255 §3.1：三人各一条短板（马库斯不懂药 / 安德烈乌斯身子薄 / 布鲁图斯回气慢），编进战斗规则、排在技能之后；开战时挂上对应的状态")
+	t.begin("255 补充三：初始三人没有短板（开局不挂任何短板状态）；短板选填，有的照旧编进战斗规则、排在最后")
 	var c := CS._content()
-	var want := {&"marcus": [&"unschooled", "不懂药"], &"andreus": [&"thin_build", "身子薄"], &"brutus": [&"short_wind", "回气慢"]}
-	for id in want:
+	for id in [&"marcus", &"andreus", &"brutus"]:
 		var ch := CS._character(c, id)
-		t.not_null(ch.flaw, "%s 有短板" % id)
-		if ch.flaw == null:
-			continue
-		t.eq(ch.flaw.id, want[id][0], "%s 的短板 id" % id)
-		t.eq(String(ch.flaw_entry()["name"]), want[id][1], "%s 的短板名" % id)
-		t.check(not ch.flaw.is_active(), "%s：短板是被动" % id)
-		t.check(ch.combat_rules().size() > 0 and ch.combat_rules().back() == ch.flaw.rules[0], "%s：短板的规则编进战斗规则、排在最后" % id)
-		t.check(not ch.skill_entries().any(func(e: Dictionary) -> bool: return String(e["name"]) == want[id][1]), "%s：技能那几条里不列短板" % id)
+		t.is_null(ch.flaw, "%s 没有短板" % id)
+		t.check(ch.flaw_entry().is_empty(), "%s：卡上没有短板那一行" % id)
+		t.eq(ch.traits().size(), ch.skills.size(), "%s：特性只有技能" % id)
 		var s := CS._start(c, ch)
 		var me := s.compile_player()
 		var node := CS._battle_node(s)
@@ -50,16 +50,32 @@ static func run_flaws(t: TestCase) -> void:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 5
 		var result := BattleSim.run(me, enemy, rng, 30.0)
-		var applied := 0
+		var gone := 0
 		for e in result.log:
 			var be := e as BattleEvent
-			if be.name == BattleEvent.STATUS_STACKED and be.side == 0 and String(be.payload.get("buff", "")) == String(want[id][0]):
-				applied += 1
-		t.eq(applied, 1, "%s：开战挂上「%s」一次" % [id, want[id][1]])
+			if be.name == BattleEvent.STATUS_STACKED and be.side == 0 and String(be.payload.get("buff", "")) in ["unschooled", "thin_build", "short_wind"]:
+				gone += 1
+		t.eq(gone, 0, "%s：开战不挂任何短板状态" % id)
+		var skill_rules := 0
+		for sk in ch.skills:
+			skill_rules += (sk as RunSkill).rules.size()
+		t.eq(ch.combat_rules().size(), skill_rules, "%s：战斗规则只来自技能" % id)
+	for gone in ["unschooled", "thin_build", "short_wind"]:
+		t.check(not ResourceLoader.exists("res://data/buffs/%s.tres" % gone), "撤掉的短板状态 %s 不在了" % gone)
+		t.check(not ResourceLoader.exists("res://assets/ui/effects/%s.png" % gone), "它的效果栏图标也撤了")
+	# 选填的短板：有就照旧排在技能之后、编进战斗规则
+	var probe := CS._character(c, &"andreus").duplicate(true) as CharacterDef
+	var flaw := PassiveSkill.new()
+	flaw.id = &"probe_flaw"
+	flaw.display_name = "探针短板"
+	probe.flaw = flaw
+	t.eq(probe.traits().back(), flaw, "有短板：特性里排最后")
+	t.eq(String(probe.flaw_entry()["name"]), "探针短板", "卡上那一行写它的名")
 
 
+## 短板用过的三种打折还在构件里（以后给确实改变决策的角色用）：只截某类道具的治疗、护甲上限按比例、耐力低时回气减半
 static func run_flaw_mechanics(t: TestCase) -> void:
-	t.begin("255 §3.1：三种打折 —— 只截【药剂】的治疗（别的照常）、护甲上限乘 0.8、耐力低于两成时每秒回复减半")
+	t.begin("255 §3.1：三种打折构件 —— 只截【药剂】的治疗（别的照常）、护甲上限乘 0.8、耐力低于两成时每秒回复减半")
 	var spec := CombatantSpec.new()
 	var base := StatSet.new()
 	base.ensure(&"max_stamina").base = StatMath.from_float(50.0)
@@ -69,9 +85,10 @@ static func run_flaw_mechanics(t: TestCase) -> void:
 	spec.max_hp = StatMath.from_float(100.0)
 	var rt := CombatantRuntime.from_spec(spec, 0)
 	rt.resources.change(&"hp", -StatMath.from_float(60.0), BattleEvent.REASON_COST)
-	var unschooled := load("res://data/buffs/unschooled.tres") as BuffDef
-	var thin := load("res://data/buffs/thin_build.tres") as BuffDef
-	var wind := load("res://data/buffs/short_wind.tres") as BuffDef
+	var ctx := ContentImporter.Context.new()
+	var unschooled := ContentImporter.import_buff({"id": "probe_heal_cut", "display_name": "截药", "is_debuff": true, "heal_cut": 50, "heal_cut_tags": ["remedy"]}, ctx, ImportReport.new())
+	var thin := ContentImporter.import_buff({"id": "probe_thin", "display_name": "薄甲", "is_debuff": true, "mods": [{"stat": "max_armor", "mode": "MULT", "amount": -20.0}]}, ctx, ImportReport.new())
+	var wind := ContentImporter.import_buff({"id": "probe_wind", "display_name": "喘", "is_debuff": true, "regen_cut": {"stamina": 50}, "regen_cut_below": 20}, ctx, ImportReport.new())
 	rt.apply_buff(unschooled)
 	var tags: Array[StringName] = [&"remedy"]
 	t.eq(rt.heal(null, StatMath.from_float(20.0), BattleEvent.REASON_HEAL, tags), StatMath.from_float(10.0), "【药剂】的 20 点只回 10")
@@ -80,7 +97,7 @@ static func run_flaw_mechanics(t: TestCase) -> void:
 	var before := rt.resources.maximum(&"armor")
 	t.eq(before, StatMath.from_float(50.0), "护甲上限 50")
 	rt.apply_buff(thin)
-	t.eq(rt.stat(&"max_armor"), StatMath.from_float(40.0), "身子薄：护甲上限 50 × 0.8 = 40")
+	t.eq(rt.stat(&"max_armor"), StatMath.from_float(40.0), "护甲上限 50 × 0.8 = 40")
 	rt.apply_buff(wind)
 	t.eq(rt.regen_kept(&"stamina"), StatMath.ONE, "耐力满着：回气不打折")
 	rt.resources.change(&"stamina", -StatMath.from_float(45.0), BattleEvent.REASON_COST)
@@ -134,7 +151,7 @@ static func run_fixed_items_and_mask(t: TestCase) -> void:
 
 
 static func run_importer(t: TestCase) -> void:
-	t.begin("255 §3：导入器 —— 短板必填、棋盘最宽九格、缺格在盘内不重复、随身之物找得到 / 不是包 / 在盘内 / 不压缺格 / 不重叠")
+	t.begin("255 §3：导入器 —— 短板选填（补充三）、棋盘最宽九格、缺格在盘内不重复、随身之物找得到 / 不是包 / 在盘内 / 不压缺格 / 不重叠")
 	var c := CS._content()
 	var ctx := ContentImporter.Context.new()
 	for id in c.items.ids():
@@ -145,6 +162,11 @@ static func run_importer(t: TestCase) -> void:
 	var r := ImportReport.new()
 	var def := ContentImporter.import_character(ok, ctx, r)
 	t.check(r.ok(), "合法：%s" % r.to_text())
+	var no_flaw := ok.duplicate(true)
+	no_flaw.erase("flaw")
+	var rn := ImportReport.new()
+	t.is_null(ContentImporter.import_character(no_flaw, ctx, rn).flaw, "没写短板 = 没有")
+	t.check(rn.ok(), "补充三：没短板也合法：%s" % rn.to_text())
 	t.eq(def.board_mask.size(), 2, "缺格读进来")
 	t.eq(def.fixed_items.size(), 1, "随身之物读进来")
 	t.eq(def.fixed_items[0].origin if not def.fixed_items.is_empty() else Vector2i.ZERO, Vector2i(2, 0), "原位")
@@ -152,7 +174,6 @@ static func run_importer(t: TestCase) -> void:
 	var again := ContentImporter.import_character(JSON.parse_string(text), ctx, ImportReport.new())
 	t.eq(ContentExporter.to_json(ContentExporter.export_character(again)), text, "导出 → 导入 → 再导出逐字节相同")
 	var bads := {
-		"没短板": {"flaw": null},
 		"棋盘十格宽": {"board_size": [10, 6]},
 		"缺格出界": {"board_mask": [[7, 0]]},
 		"缺格重复": {"board_mask": [[1, 1], [1, 1]]},
@@ -258,10 +279,7 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 		t.check(absf(left_pad - right_pad) <= 1.0, "%s（%d 格）：棋盘在右栏里居中（左 %.0f / 右 %.0f）" % [ch.id, ch.board_size.x, left_pad, right_pad])
 		t.eq((setup._stat_plaques as Array).map(func(sp: StatPlaque) -> String: return sp.caption), ["生命", "耐力", "回气", "体力"], "%s：面板方块一行四块" % ch.id)
 		var entries: Array = setup._entries
-		t.eq(entries.size(), ch.skill_entries().size() + 1, "%s：技能 %d 条 + 短板一条" % [ch.id, ch.skill_entries().size()])
-		var last: Label = (entries.back() as Control).get_meta(&"name_label")
-		t.eq(last.text, String(ch.flaw_entry()["name"]), "%s：短板永远最后" % ch.id)
-		t.eq(last.theme_type_variation, UiTheme.LABEL_FLAW_NAME, "短板名铁灰")
+		t.eq(entries.size(), ch.skill_entries().size(), "%s：技能 %d 条，没有短板那一行（补充三）" % [ch.id, ch.skill_entries().size()])
 		t.eq(((entries[0] as Control).get_meta(&"name_label") as Label).theme_type_variation, UiTheme.LABEL_SKILL_NAME, "技能名亮黄铜")
 		t.check(entries.all(func(e: Control) -> bool: return e.get_child(0) is EntryIcon), "每行左端一个图标槽")
 		t.eq(setup._board_title.text, "棋盘 %d × %d 格" % [ch.board_size.x, ch.board_size.y], "%s：题字（没缺格没随身之物只写尺寸）" % ch.id)
@@ -298,6 +316,9 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 	_lay_out(game)
 	var entries2: Array = setup._entries
 	t.eq(entries2.size(), probe.skill_entries().size() + 2, "技能 + 随身之物 + 短板")
+	var last: Label = (entries2.back() as Control).get_meta(&"name_label")
+	t.eq(last.text, "探针短板", "有短板的角色：短板永远最后")
+	t.eq(last.theme_type_variation, UiTheme.LABEL_FLAW_NAME, "短板名铁灰")
 	var pin_row: Control = entries2[entries2.size() - 2]
 	t.check((pin_row.get_child(0) as EntryIcon).kind == EntryIcon.ITEM, "随身之物那行的图标是道具本体")
 	var pin_texts: Array = pin_row.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)

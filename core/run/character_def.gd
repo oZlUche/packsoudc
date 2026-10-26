@@ -35,7 +35,7 @@ extends Resource
 @export var carry_rarity_cap: int = -1
 ## 局内技能（082，作者定）：[RunSkill] 构件 —— 被动常驻（一局规则 / 掉落的效果，开局编进 RunContext）+ 可选的主动一击（地图屏上用，次数与冷却由 [RunSkills] 记账）
 @export var skills: Array[RunSkill] = []
-## 255：短板 —— 每个角色必有一条（136），和 [member skills] 里的被动同一套构件（一局规则 / 掉落 / 战斗规则），编译时一并算进去，界面上单列、永远排最后
+## 255：短板（选填；补充三，作者 2026-10-26 13:59「短板是用于改变游玩决策的设定」：只给确实改变玩法决策的角色，没有就是 null）—— 和 [member skills] 里的被动同一套构件（一局规则 / 掉落 / 战斗规则），编译时一并算进去，界面上单列、永远排最后
 @export var flaw: RunSkill
 ## 255：随身之物 —— 开局钉在棋盘上的道具（自带底板、拿不下、丢不掉、不进仓库），每局重发
 @export var fixed_items: Array[FixedItem] = []

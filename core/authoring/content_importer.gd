@@ -1366,8 +1366,6 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 		report.error("board_size", "棋盘至少 1×1")
 	if def.board_size.x > CHARACTER_BOARD_MAX_W:
 		report.error("board_size", "棋盘最宽 %d 格（255：选角色屏与各面板按九格定宽）" % CHARACTER_BOARD_MAX_W)
-	if def.flaw == null:
-		report.error("flaw", "每个角色必有一条短板（255 / 136）")
 	_check_character_board(def, ctx, report)
 	if def.carry_max_items < -1 or def.carry_rarity_cap < -1:
 		report.error("carry_max_items", "上限只能是 -1（不限）或非负数")
@@ -1381,7 +1379,7 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 	var seen_skills := {}
 	var all_skills: Array = def.skills.duplicate()
 	if def.flaw != null:
-		all_skills.append(def.flaw)     # 255：短板和技能同一套构件、同样的校验（键名写 flaw）
+		all_skills.append(def.flaw)     # 255：短板和技能同一套构件、同样的校验（键名写 flaw）；补充三（作者 13:59）起选填，只给确实改变玩法决策的角色
 		if def.flaw.is_active():
 			report.error("flaw", "短板只能是被动（type passive）")
 	for i in all_skills.size():
