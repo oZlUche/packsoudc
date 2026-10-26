@@ -86,30 +86,5 @@
       "uses": 2,
       "cooldown_steps": 6
     }
-  ],
-  "flaw": {
-    "type": "passive",
-    "id": "short_wind",
-    "display_name": "回气慢",
-    "display_names": {
-      "en": "Short of Breath"
-    },
-    "description": "战斗中，耐力低于两成时，每秒回复的耐力减半。",
-    "descriptions": {
-      "en": "In battle, while your Stamina is below a fifth, its regeneration per second is halved."
-    },
-    "rules": [
-      {
-        "trigger": "@on_battle_start",
-        "cadence": "@always",
-        "effects": [
-          {
-            "type": "apply_status",
-            "target": "SELF",
-            "buff": "short_wind"
-          }
-        ]
-      }
-    ]
-  }
+  ]
 }

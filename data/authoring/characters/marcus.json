@@ -83,30 +83,5 @@
       "uses": 3,
       "cooldown_steps": 3
     }
-  ],
-  "flaw": {
-    "type": "passive",
-    "id": "unschooled",
-    "display_name": "不懂药",
-    "display_names": {
-      "en": "No Medic"
-    },
-    "description": "战斗中，【药剂】给的治疗减半。",
-    "descriptions": {
-      "en": "In battle, healing from Remedies is halved."
-    },
-    "rules": [
-      {
-        "trigger": "@on_battle_start",
-        "cadence": "@always",
-        "effects": [
-          {
-            "type": "apply_status",
-            "target": "SELF",
-            "buff": "unschooled"
-          }
-        ]
-      }
-    ]
-  }
+  ]
 }

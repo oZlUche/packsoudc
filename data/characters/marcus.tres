@@ -1,74 +1,25 @@
 [gd_resource type="Resource" script_class="CharacterDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_22n10"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="2_xwebo"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_a576r"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_6q5m6"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_eaxeu"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_8hk74"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="7_a6kav"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="8_kvgj3"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_f2n3j"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_n0kc0"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="11_e81ug"]
-[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="12_tkx2e"]
-[ext_resource type="Script" path="res://core/run/character_def.gd" id="13_sskgt"]
-[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="14_11484"]
-[ext_resource type="Script" path="res://core/run/effects/battle_reward_mult.gd" id="15_i0bx0"]
-[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="16_hplct"]
-[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="17_6mha3"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="18_jx7yk"]
-[ext_resource type="Script" path="res://core/run/skills/assault_skill.gd" id="19_415yw"]
+[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_iqgrf"]
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="2_oxqwc"]
+[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="3_g2ila"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_2w6jy"]
+[ext_resource type="Script" path="res://core/run/effects/battle_reward_mult.gd" id="5_dh4py"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="6_22n10"]
+[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="7_xwebo"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="8_a576r"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="9_6q5m6"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="10_eaxeu"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="11_8hk74"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="12_a6kav"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="13_kvgj3"]
+[ext_resource type="Script" path="res://core/run/skills/assault_skill.gd" id="14_f2n3j"]
 
-[sub_resource type="Resource" id="Resource_4l04a"]
-script = ExtResource("4_6q5m6")
-metadata/part_ref = &"always"
+[sub_resource type="Resource" id="Resource_n0kc0"]
+script = ExtResource("5_dh4py")
 
-[sub_resource type="Resource" id="Resource_4e4u7"]
-script = ExtResource("9_f2n3j")
-id = &"unschooled"
-display_name = "不懂药"
-display_names = {
-"en": "No Medic"
-}
-is_debuff = true
-stackable = false
-heal_cut = 50
-heal_cut_tags = Array[StringName]([&"remedy"])
-
-[sub_resource type="Resource" id="Resource_lf5ot"]
-script = ExtResource("10_n0kc0")
-target = 1
-buff = SubResource("Resource_4e4u7")
-
-[sub_resource type="Resource" id="Resource_rauxq"]
-script = ExtResource("11_e81ug")
-metadata/part_ref = &"on_battle_start"
-
-[sub_resource type="Resource" id="Resource_5raev"]
-script = ExtResource("3_a576r")
-trigger = SubResource("Resource_rauxq")
-cadence = SubResource("Resource_4l04a")
-effects = Array[ExtResource("6_8hk74")]([SubResource("Resource_lf5ot")])
-
-[sub_resource type="Resource" id="Resource_rrixn"]
-script = ExtResource("12_tkx2e")
-id = &"unschooled"
-display_name = "不懂药"
-display_names = {
-"en": "No Medic"
-}
-description = "战斗中，【药剂】给的治疗减半。"
-descriptions = {
-"en": "In battle, healing from Remedies is halved."
-}
-rules = Array[ExtResource("3_a576r")]([SubResource("Resource_5raev")])
-
-[sub_resource type="Resource" id="Resource_ugj8r"]
-script = ExtResource("15_i0bx0")
-
-[sub_resource type="Resource" id="Resource_gkems"]
-script = ExtResource("12_tkx2e")
+[sub_resource type="Resource" id="Resource_e81ug"]
+script = ExtResource("7_xwebo")
 id = &"merit"
 display_name = "军功"
 display_names = {
@@ -78,35 +29,35 @@ description = "战斗胜利所得金币增加四分之一。"
 descriptions = {
 "en": "Coins from winning battles are increased by a quarter."
 }
-passive = Array[ExtResource("2_xwebo")]([SubResource("Resource_ugj8r")])
+passive = Array[ExtResource("4_2w6jy")]([SubResource("Resource_n0kc0")])
 
-[sub_resource type="Resource" id="Resource_ic4pt"]
-script = ExtResource("4_6q5m6")
+[sub_resource type="Resource" id="Resource_tkx2e"]
+script = ExtResource("8_a576r")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_p6iw5"]
-script = ExtResource("16_hplct")
+[sub_resource type="Resource" id="Resource_sskgt"]
+script = ExtResource("10_eaxeu")
 metadata/part_ref = &"uses_1"
 
-[sub_resource type="Resource" id="Resource_d37k3"]
-script = ExtResource("17_6mha3")
+[sub_resource type="Resource" id="Resource_11484"]
+script = ExtResource("12_a6kav")
 resource_key = &"stamina"
 amount = 30.0
 
-[sub_resource type="Resource" id="Resource_qd5ia"]
-script = ExtResource("18_jx7yk")
+[sub_resource type="Resource" id="Resource_i0bx0"]
+script = ExtResource("13_kvgj3")
 resource_key = &"stamina"
 percent = 20
 
-[sub_resource type="Resource" id="Resource_ird7x"]
-script = ExtResource("3_a576r")
-trigger = SubResource("Resource_qd5ia")
-cadence = SubResource("Resource_ic4pt")
-costs = Array[ExtResource("5_eaxeu")]([SubResource("Resource_p6iw5")])
-effects = Array[ExtResource("6_8hk74")]([SubResource("Resource_d37k3")])
+[sub_resource type="Resource" id="Resource_hplct"]
+script = ExtResource("6_22n10")
+trigger = SubResource("Resource_i0bx0")
+cadence = SubResource("Resource_tkx2e")
+costs = Array[ExtResource("9_6q5m6")]([SubResource("Resource_sskgt")])
+effects = Array[ExtResource("11_8hk74")]([SubResource("Resource_11484")])
 
-[sub_resource type="Resource" id="Resource_ihl5o"]
-script = ExtResource("12_tkx2e")
+[sub_resource type="Resource" id="Resource_6mha3"]
+script = ExtResource("7_xwebo")
 id = &"drill"
 display_name = "操练"
 display_names = {
@@ -116,10 +67,10 @@ description = "耐力低于两成时，立即恢复 {change_resource_amount} 点
 descriptions = {
 "en": "When your Stamina drops below a fifth, restore {change_resource_amount} Stamina at once (once per battle)."
 }
-rules = Array[ExtResource("3_a576r")]([SubResource("Resource_ird7x")])
+rules = Array[ExtResource("6_22n10")]([SubResource("Resource_hplct")])
 
-[sub_resource type="Resource" id="Resource_7qbc5"]
-script = ExtResource("19_415yw")
+[sub_resource type="Resource" id="Resource_jx7yk"]
+script = ExtResource("14_f2n3j")
 id = &"assault"
 display_name = "突击"
 display_names = {
@@ -133,7 +84,7 @@ uses = 3
 cooldown_steps = 3
 
 [resource]
-script = ExtResource("13_sskgt")
+script = ExtResource("2_oxqwc")
 id = &"marcus"
 display_name = "马库斯"
 display_names = {
@@ -151,5 +102,4 @@ base_stats = {
 starting_funds = 100
 starting_bags = Array[StringName]([&"bag_leather", &"bag_small"])
 weight_capacity = 48
-skills = Array[ExtResource("14_11484")]([SubResource("Resource_gkems"), SubResource("Resource_ihl5o"), SubResource("Resource_7qbc5")])
-flaw = SubResource("Resource_rrixn")
+skills = Array[ExtResource("3_g2ila")]([SubResource("Resource_e81ug"), SubResource("Resource_6mha3"), SubResource("Resource_jx7yk")])
