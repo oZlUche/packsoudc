@@ -60,14 +60,14 @@ var board: GridInventory = null
 var stash: ItemStash = null
 ## 090：地上那些东西的来处：uid → {"origin", "rot"}（回主菜单按原位放回）
 var _pending: Dictionary = {}
-var _stash_box: VBoxContainer = null
 ## 225：中栏顶上的包架（挂牌 + 一列）与它的视图
 var _rack_box: Control = null
 var _rack_view: BagRackView = null
 ## 225：状态行没别的话说时写这一句（「军需官发的」）；换角色、重摆棋盘时清掉
 var _note := ""
 var _stash_view: GroundLayer = null
-var _stash_title: Label = null
+## 255 补充二：仓库页签列里「地上」那一页的页签
+var _stash_tab: Button = null
 
 ## 083：开局屏列的章节（按解锁过滤、按 order 排）与这一章能选的角色
 var _chapters: Array[ChapterDef] = []
@@ -182,8 +182,11 @@ const RIGHT_PAD := 10
 const LEFT_W := 312
 const COL_GAP := 36
 const BOARD_MAX_W := CharacterDef.BOARD_MAX_W
-## 255 补充一：中栏（角色卡）定高 —— 英文最长的那张（770）放得下、底边不过页边（内容更长才再长）
-const CARD_H := 800
+## 255 补充二：第二页棋盘下的包架横排几格（九种以内一行）
+const RACK_COLUMNS := 9
+## 255 补充一：中栏（角色卡）定高 —— 英文最长的那张（游戏测试 v4.49：安德烈乌斯 / 布鲁图斯 814）放得下、底边不过页边；
+## 内容再长栏会被顶高，`test_character_select_255` 中英文都比一遍会红
+const CARD_H := 840
 ## 255 补充一：右栏（棋盘预览）定高 —— 六行棋盘、题字、图例、首次赠包签都在时那么高（七行以上的棋盘才再长）
 const PREVIEW_H := 560
 ## 255：角色卡里的几样尺寸 —— 面板方块间 10；小牌 ≤ 180 宽；条目行间 8
@@ -310,7 +313,7 @@ func _build_character_page() -> Control:
 ## 180 补二（作者 10:09）：左 行囊板（预设、棋盘、两行读数）| 中 地上 | 右 仓库框。仓库框按自己的内容定大小、不和左边棋盘对齐，
 ## 包住页签、格子和右边预留的滚动条位（格子多到一屏放不下时竖着滚）；两块板各按内容高、顶边对齐
 func _build_kit_page() -> Control:
-	# 拖拽层盖在整行上（两块板和中间的地上）
+	# 拖拽层盖在整行上（两块板；255 补充二起地上是仓库的一页）
 	var play := MarginContainer.new()
 	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	play.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -329,18 +332,11 @@ func _build_kit_page() -> Control:
 		_rebuild_presets()
 	_board_host = _vbox(6)
 	left.add_child(_board_host)
-
-	# 090：中间是地上（有上一局带回来的东西才显示）；没有也占着中间，把仓库框推到右边。
-	# 225：中栏顶上是包架（一直在），地上在它下面
-	var middle := _vbox(16)
-	middle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(middle)
-	_rack_box = BagRackView.boxed(flow.meta.rack, font)
+	# 255 补充二：两栏 —— 中栏拆了。包架（225）挪进棋盘板、棋盘正下方横一行（九种以内一行），拖包上棋盘只隔一道缝
+	_rack_box = BagRackView.boxed(flow.meta.rack, font, RACK_COLUMNS)
+	_rack_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_rack_view = BagRackView.view_in(_rack_box)
-	middle.add_child(_rack_box)
-	_stash_box = _vbox(6)
-	middle.add_child(_stash_box)
-	_build_cash_box(middle)     # 2026-10-22：把仓库里的钱带进这一局
+	left.add_child(_rack_box)
 
 	var ware_panel := _framed(UiTheme.PANEL_STASH_FRAME, UiTheme.ART_STASH_FRAME, FRAME_INSET)     # 180 定稿：木框铁角的仓库框
 	ware_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -364,6 +360,7 @@ func _build_kit_page() -> Control:
 	_warehouse_scroll.add_child(_warehouse_pages)
 	_warehouse_pages.setup(w, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
 	_warehouse_view = _warehouse_pages.view
+	_build_cash_box(right)     # 2026-10-22：把仓库里的钱带进这一局；255 补充二：钱是仓库的，便条钉在仓库框底部靠右
 	play.add_child(_drag)     # 容器把它铺到和整行一样大，盖在两块板上
 	_drag.register_view(_warehouse_view)
 	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
@@ -385,7 +382,7 @@ func _build_kit_page() -> Control:
 func _build_cash_box(parent: VBoxContainer) -> void:
 	var note := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, CASH_PAD, CASH_PAD_TOP, CASH_PAD, CASH_PAD_BOTTOM)
 	note.name = "CashNote"
-	note.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	note.size_flags_horizontal = Control.SIZE_SHRINK_END
 	parent.add_child(note)
 	var col := _vbox(10)
 	col.custom_minimum_size.x = CASH_ROW_W
@@ -583,24 +580,38 @@ func _unhandled_key_input(event: InputEvent) -> void:
 #endregion
 
 
-## 090：地上那一栏。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（回主菜单原样放回）
+## 090：地上。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（回主菜单原样放回）。
+## 255 补充二：不再占一栏 —— 是仓库页签列末尾的一页「地上」，只在有东西时出现，大小 = 仓库格子那块；
+## 刚进来地上有东西就先翻到这页（不然玩家看不见）；拖着东西停在页签上切页（163）照样能拖回地上
 func _build_stash() -> void:
 	stash = ItemStash.new(STASH_ID, 0)
 	_pending = flow.meta.take_board_to_stash(stash)     # 101 第 4 刀：挪与记原位的账在 MetaState 里
-	_stash_title = _label("", 15, UiPalette.DIM)
-	_stash_box.add_child(_stash_title)
 	_stash_view = GroundLayer.new()     # 128：一块地，放手在哪就落在哪
 	_stash_view.label_font = font
-	_stash_view.custom_minimum_size = Vector2(240, 320)
 	_stash_view.stash = stash
-	_stash_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_stash_box.add_child(_stash_view)
+	_stash_tab = _warehouse_pages.add_extra(_stash_view)
 	_drag.register_view(_stash_view)
 	_stash_view.item_double_clicked.connect(quick_move)
 	_stash_view.actions_for = item_actions.bind(_stash_view)     # 230
 	_drag.drop_filter = _allow_drop
 	stash.changed.connect(_refresh)
-	_stash_box.visible = stash.item_count() > 0     # 225：只有包（进了包架）时地上那一栏不出来
+	_sync_stash_tab()
+	_warehouse_pages.show_extra()     # 225：只有包（进了包架）时地上那页不出来，这一下就是空操作
+
+
+## 「地上」页签：有东西才出，第二行写几件
+func _sync_stash_tab() -> void:
+	if _warehouse_pages == null or stash == null:
+		return
+	var n := stash.item_count()
+	_warehouse_pages.set_extra_tab(n > 0, "%s\n%s" % [UiText.t("wh.ground_tab"), UiText.t("wh.tab_count") % n], UiText.tn("setup.ground_count", n) % n)
+	if _stash_tab != null:
+		TextFit.shrink_button(_stash_tab, 9)     # 英文「Ground」在 52 宽的挂牌里
+
+
+## 正看着仓库页签列里的「地上」那页（测试看）
+func on_ground_page() -> bool:
+	return _warehouse_pages != null and _warehouse_pages.on_extra()
 
 
 ## 090：落点规则。仓库的东西进不了地上（进去就等于出发时丢掉）；地上的东西上棋盘要这一章允许带入
@@ -1807,8 +1818,7 @@ func _refresh() -> void:
 		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
 			lines.append(carry_text(c, scale_id, carry_value()))
 		_readout.append_text("\n".join(lines))
-	if _stash_title != null and stash != null:
-		_stash_title.text = UiText.tn("setup.ground_count", stash.item_count()) % stash.item_count()
+	_sync_stash_tab()
 	if _summary != null:
 		_summary.text = summary_text()
 	if _enter_btn != null:
