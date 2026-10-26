@@ -310,6 +310,10 @@ static func frame_owned_count_quick_submit(t: TestCase, root: Window) -> void:
 	# 不屈：前置筋骨没点 → 拥有照写，但不给按钮
 	t.check(panel.select(&"undaunted"), "选不屈")
 	t.check(String(panel.panel_texts()["cost"]).contains("拥有 5"), "锁着也写拥有：%s" % panel.panel_texts()["cost"])
+	# 作者 10-26：说明板字大一号、标题加粗
+	t.eq(panel._name.get_theme_font_size("font_size"), panel.NAME_SIZE, "名牌标题 %d 号" % panel.NAME_SIZE)
+	t.eq(panel._name.get_theme_font("font"), UiPalette.cjk_font_bold(), "名牌标题用粗体")
+	t.check(panel.NAME_SIZE > 20 and panel.BODY_SIZE > 15 and panel.SMALL_SIZE > 13, "比原来（20 / 15 / 13）都大")
 	t.is_null(panel.submit_button(&"steel_ingot"), "前置没点：没有【交】")
 	m.funds = 100000
 	t.check(TechService.upgrade(m, f.tech_of(&"endurance")) and TechService.upgrade(m, f.tech_of(&"sinew")), "点亮耐久、筋骨")

@@ -743,6 +743,17 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 			break
 	screen._on_tile_hovered(dark_tile)
 	t.check(screen._codex_tip.text().contains("未获得"), "停在灰的格子上：只写未获得")
+	# 作者 10-26：没点亮的名字遮成「？」—— 格子上、悬浮窗里都是；「名字全显」开着才写真名
+	t.eq(dark_tile.shown_name(), "？", "灰的格子：名字写「？」")
+	t.check(not screen._codex_tip.text().contains(Names.of(dark_tile.def)) and screen._codex_tip.text().contains("？"), "灰的格子的悬浮窗：名字也是「？」（%s）" % screen._codex_tip.text())
+	t.eq(knife_tile.shown_name(), Names.of(knife_tile.def), "亮的格子写真名")
+	if f2.settings == null:
+		f2.settings = GameSettings.new()
+	f2.settings.reveal_names = true
+	var revealed: CodexTile = screen._codex_tile_for(dark_tile.def)
+	t.check(not revealed.lit and revealed.shown_name() == Names.of(revealed.def), "名字全显开着：灰的也写真名")
+	revealed.free()
+	f2.settings.reveal_names = false
 	screen.show_tab("nope")
 	t.eq(screen.tab(), "home", "不认识的页签回家")
 	screen.free()

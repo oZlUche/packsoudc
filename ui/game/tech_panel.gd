@@ -18,6 +18,12 @@ const PANEL_WIDTH := 320.0
 const TEXT_WIDTH := PANEL_WIDTH - 48.0
 ## 账目行三栏的宽：数（右对齐）、拥有
 const NUM_W := 64.0
+## 作者 10-26：说明板的字整体大一号、标题加粗（名牌 24 粗体 / 正文 17 / 现在·下一级 16 / 小字 15 / 账目数 19）
+const NAME_SIZE := 24
+const BODY_SIZE := 17
+const LINE_SIZE := 16
+const SMALL_SIZE := 15
+const NUM_SIZE := 19
 const OWN_W := 72.0
 
 var _flow: GameFlow = null
@@ -76,9 +82,10 @@ func _build() -> void:
 	col.add_child(_plate)
 	var plate_col := UiTheme.vbox(2)
 	_plate.add_child(plate_col)
-	_name = UiTheme.make_label("", 20, UiPalette.FG)
+	_name = UiTheme.make_label("", NAME_SIZE, UiPalette.FG)
+	_name.theme_type_variation = UiTheme.LABEL_NOTE_TITLE     # 作者 10-26：标题加粗（只换粗体，字号颜色照旧）
 	plate_col.add_child(_name)
-	_level = UiTheme.make_label("", 13, UiPalette.DIM)
+	_level = UiTheme.make_label("", SMALL_SIZE, UiPalette.DIM)
 	plate_col.add_child(_level)
 	_effect = UiTheme.vbox(4)
 	col.add_child(_effect)
@@ -216,16 +223,16 @@ func _refresh() -> void:
 	# 效果：一句总述 + 现在 / 下一级
 	var desc := Names.description_of(def)
 	if desc.strip_edges() != "":
-		_effect.add_child(UiTheme.make_wrapped(TextTemplate.plain(desc, {}), 15, UiPalette.FG, TEXT_WIDTH))
+		_effect.add_child(UiTheme.make_wrapped(TextTemplate.plain(desc, {}), BODY_SIZE, UiPalette.FG, TEXT_WIDTH))
 	if def.effect != null:
 		if lv >= 1:
-			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.now") % def.effect.describe_level(lv, _flow.buff_defs), 14, UiPalette.HEAL, TEXT_WIDTH))
+			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.now") % def.effect.describe_level(lv, _flow.buff_defs), LINE_SIZE, UiPalette.HEAL, TEXT_WIDTH))
 		if tier != null:
-			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.next") % def.effect.describe_level(lv + 1, _flow.buff_defs), 14, UiPalette.FG, TEXT_WIDTH))
+			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.next") % def.effect.describe_level(lv + 1, _flow.buff_defs), LINE_SIZE, UiPalette.FG, TEXT_WIDTH))
 
 	# 费用：账目行
 	if tier == null:
-		_cost.add_child(UiTheme.make_label(UiText.t("tech.maxed"), 15, UiPalette.HEAL))
+		_cost.add_child(UiTheme.make_label(UiText.t("tech.maxed"), BODY_SIZE, UiPalette.HEAL))
 		_action.visible = false
 		return
 	var missing := TechService.missing_prereqs(_meta, def, _flow.tech_defs)
@@ -233,7 +240,7 @@ func _refresh() -> void:
 		var names: Array[String] = []
 		for m in missing:
 			names.append(Names.of(m))
-		_cost.add_child(UiTheme.make_wrapped(UiText.t("tech.needs_prereq") % UiText.t("hud.buff_sep").join(names), 14, UiPalette.DIM, TEXT_WIDTH))
+		_cost.add_child(UiTheme.make_wrapped(UiText.t("tech.needs_prereq") % UiText.t("hud.buff_sep").join(names), LINE_SIZE, UiPalette.DIM, TEXT_WIDTH))
 	_cost.add_child(_rule())
 	var rich := _meta.funds >= tier.funds
 	_cost.add_child(_ledger_row(UiText.t("tech.funds"), str(tier.funds), UiText.t("tech.owned") % _meta.funds, rich,
@@ -268,7 +275,7 @@ func _ledger_row(label: String, number: String, own: String, done: bool, tip: St
 	var row := UiTheme.hbox(8)
 	row.tooltip_text = tip
 	row.mouse_filter = Control.MOUSE_FILTER_PASS
-	var l := UiTheme.make_label(label, 15, UiPalette.FG)
+	var l := UiTheme.make_label(label, BODY_SIZE, UiPalette.FG)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.clip_text = true
 	row.add_child(l)
@@ -276,13 +283,13 @@ func _ledger_row(label: String, number: String, own: String, done: bool, tip: St
 	n.text = number
 	var ls := LabelSettings.new()     # 账单那套数字：Cinzel Bold（缺的字落到思源宋体 Bold）
 	ls.font = UiPalette.numeral_font()
-	ls.font_size = 17
+	ls.font_size = NUM_SIZE
 	ls.font_color = UiPalette.HEAL.darkened(0.35) if done else UiTheme.INK
 	n.label_settings = ls
 	n.custom_minimum_size.x = NUM_W
 	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(n)
-	var o := UiTheme.make_label(own, 13, UiPalette.DIM)
+	var o := UiTheme.make_label(own, SMALL_SIZE, UiPalette.DIM)
 	o.custom_minimum_size.x = OWN_W
 	o.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(o)

@@ -845,6 +845,7 @@ func _codex_tile_for(def: ItemDef) -> CodexTile:
 		tile.variant_counts.append(m.codex_count(v.id))
 	tile.variants = variants
 	tile.lit = any_lit
+	tile.mask_name = not flow.names_revealed()     # 作者 10-26：没点亮的写「？」，悬浮窗同样
 	_wire_tile(tile)
 	tile.pressed.connect(func(t: CodexTile): show_variants(t))
 	return tile
@@ -865,13 +866,14 @@ func show_variants(tile: CodexTile) -> void:
 	box.name = "VariantsPopup"
 	var col := _vbox(6)
 	box.add_child(col)
-	col.add_child(_label(UiText.t("meta.variants_title") % [Names.of(tile.def), tile.variants_lit(), tile.variants.size()], 14, UiPalette.FG))
+	col.add_child(_label(UiText.t("meta.variants_title") % [tile.shown_name(), tile.variants_lit(), tile.variants.size()], 14, UiPalette.FG))
 	var row := _hbox(8)
 	col.add_child(row)
 	_variant_tiles.clear()
 	for i in tile.variants.size():
 		var v: ItemDef = tile.variants[i]
 		var vt := CodexTile.new(v, tile.variant_lit[i] if i < tile.variant_lit.size() else false, tile.variant_counts[i] if i < tile.variant_counts.size() else 0, font)
+		vt.mask_name = tile.mask_name
 		_wire_tile(vt)
 		var cell := _vbox(2)
 		cell.add_child(_label(_variant_kind(v), 11, UiPalette.DIM))
@@ -915,14 +917,14 @@ func _on_tile_hovered(tile: CodexTile) -> void:
 	var at := tile.global_position + Vector2(tile.size.x, 0)
 	if tile.lit:
 		var full := ItemTooltip.describe_full(ItemInstance.create(tile.def, 0))
-		_codex_tip.show_item(full, at)
+		_codex_tip.show_item(full, at, tile.get_global_rect())     # 作者 10-26：贴着格子摆
 	elif tile.def.requires_unlock != &"" and not flow.unlocked(tile.def.requires_unlock):
 		# 091：锁着的写怎么解锁（哪一枚成就）
 		var ach := flow.achievement_granting(tile.def.requires_unlock)
 		var how := UiText.t("meta.codex_how_ach") % [Names.of(ach), Names.description_of(ach)] if ach != null else UiText.t("meta.unlock_id") % tile.def.requires_unlock
-		_codex_tip.show_text(UiText.t("meta.codex_locked_tip") % [Names.of(tile.def), how], at)
+		_codex_tip.show_text(UiText.t("meta.codex_locked_tip") % [tile.shown_name(), how], at)
 	else:
-		_codex_tip.show_text(UiText.t("meta.codex_unseen_tip") % Names.of(tile.def), at)
+		_codex_tip.show_text(UiText.t("meta.codex_unseen_tip") % tile.shown_name(), at)
 
 
 func codex_tiles() -> Array[CodexTile]:

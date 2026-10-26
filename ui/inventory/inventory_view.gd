@@ -204,6 +204,22 @@ func cell_at_global(p: Vector2) -> Vector2i:
 	return cell_at_local(p - global_position)
 
 
+## 作者 10-26：一件占的格子的外框（本控件内像素）—— 悬浮窗贴着它摆；不在这块棋盘上 = 空
+func item_rect(uid: int) -> Rect2:
+	var inst: ItemInstance = inventory.get_item(uid) if inventory != null else null
+	if inst == null:
+		return Rect2()
+	var cells := inst.cells()
+	if cells.is_empty():
+		return Rect2()
+	var lo: Vector2i = cells[0]
+	var hi: Vector2i = cells[0]
+	for c in cells:
+		lo = Vector2i(mini(lo.x, c.x), mini(lo.y, c.y))
+		hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
+	return Rect2(cell_origin_px(inst.origin + lo), Vector2(hi - lo + Vector2i.ONE) * cell_px)     # cells() 是相对落点的
+
+
 ## 格坐标 → 本控件内的像素坐标（该格左上角）。
 func cell_origin_px(c: Vector2i) -> Vector2:
 	return Vector2(c) * cell_px

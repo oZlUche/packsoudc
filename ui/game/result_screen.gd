@@ -226,17 +226,12 @@ func _build_summary() -> void:
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.set_meta(&"exempt_bare_text", "TitlePlate")     # 226 守门：字摆在同位置那块标题牌图上
 	page.add_child(_place(title, TITLE_PLATE_AT, TITLE_PLATE_SIZE))
-	# 104：信力节奏的量尺（数值都是占位，作者打几局对着这一行调表）；开发版可以导 CSV
+	# 104：信力节奏的量尺（数值都是占位，作者打几局对着这一行调表）
+	# 作者 10-26：单独的「导出信力 CSV」删了 —— 每局的信力记录随对局记录写进 calibration/runs_faith/，跟「导出平衡数据」一起打包
 	if r.faith_pace != "" and GameSettings.dev_build():     # 作者 2026-10-17：调表用的量尺只在开发环境
 		var pace_row := _hbox(12)
 		pace_row.set_meta(&"exempt_bare_text", "dev")     # 226 守门：开发量尺
 		pace_row.add_child(_label(r.faith_pace, 13, LedgerView.INK_DIM))
-		var pace_note := _label("", 12, LedgerView.INK_DIM)
-		var export_csv := func():
-			var path := r.export_faith_csv()
-			pace_note.text = ("已写到 " + ProjectSettings.globalize_path(path)) if path != "" else "没写成"
-		pace_row.add_child(_button("导出信力 CSV", export_csv, 12, UiPalette.Tier.MINOR))
-		pace_row.add_child(pace_note)
 		page.add_child(_place(pace_row, Vector2(80, 900), Vector2(1440, 40)))
 	_ledger = LedgerView.new()
 	_ledger.setup(r, int(flow.last_absorbed.get("lit", 0)))
