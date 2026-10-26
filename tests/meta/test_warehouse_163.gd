@@ -48,6 +48,7 @@ static func run_pages(t: TestCase) -> void:
 	w.page(2).try_add(ItemInstance.create(db.get_def(&"knife")))
 	t.check(fired[0] >= 1, "任一页变了仓库发 changed")
 	t.check(w.owns(w.page(1)) and w.owns(w) and not w.owns(GridInventory.new()), "owns 认得自己的页")
+	t.check(not w.owns(ItemStash.new()), "游戏测试 v4.50：地上的堆（不是格子容器）问进来：不是，也不报引擎错")
 	t.eq(w.set_page_count(1), 3, "第三页有东西：一页也删不掉（只删末尾的空页）")
 	w.page(2).clear()
 	t.eq(w.set_page_count(1), 1, "后两页空了：删到一页")
