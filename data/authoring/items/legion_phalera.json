@@ -293,6 +293,10 @@
     "stage0_names": {
       "en": "Bronze"
     },
-    "fuel": "honor"
+    "fuel": "honor",
+    "honor_by_type": {
+      "elite": 3,
+      "core": 5
+    }
   }
 }

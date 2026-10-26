@@ -30,8 +30,9 @@ const FAITH_TAG := &"faith:nature"
 @export var reset_on_leave: bool = true
 ## 256：拿什么长 —— steps 走全局倒计时（207）；honor 打赢一场记军功点，各阶的 after 读累计点数
 @export_enum("steps", "honor") var fuel: String = "steps"
-## 256：fuel = honor 时赢一场记几点：按这一场的类型查（elite / core……），没写的记 [member honor_default]
-@export var honor_by_type: Dictionary = {"elite": 3, "core": 5}
+## 256：fuel = honor 时赢一场记几点：按这一场的类型查（elite / core……），没写的记 [member honor_default]。
+## 默认空（导出器把非空字典都当改过的写出来，默认写满会让每件生长道具的 JSON 都多一段）；军功牌在自己的 JSON 里写精英 3、核心 5
+@export var honor_by_type: Dictionary = {}
 @export var honor_default: int = 1
 
 

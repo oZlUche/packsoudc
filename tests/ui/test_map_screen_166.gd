@@ -262,7 +262,7 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 
 
 static func frame_prebattle_no_slip(t: TestCase, root: Window) -> void:
-	t.begin("166 补充一 · 主动技能藏着：安德烈乌斯到了战前准备屏也没有「溜走」，脱身的记账照旧")
+	t.begin("166 补充一 · 安德烈乌斯到了战前准备屏没有「溜走」（256：脱身删了，战前屏只有偷袭）")
 	var c := CS._content()
 	var andreus := CS._character(c, &"andreus")
 	var kit := GF._loadout(TestSupport.load_content("free_mode", ["loadouts"]), &"standard")
@@ -286,9 +286,10 @@ static func frame_prebattle_no_slip(t: TestCase, root: Window) -> void:
 	map.step(int(found["next"]))
 	var pre = game.overlay()
 	t.check(pre != null and pre.screen == GameFlow.Screen.PREBATTLE, "到了战前准备屏")
-	t.not_null(flow.slip_skill(), "脱身还在角色身上（记账照旧）")
+	t.is_null(flow.slip_skill(), "256：脱身删了")
 	if pre != null:
-		t.eq(pre.get("_slip_btn") == null, RunSkills.ACTIVE_HIDDEN, "「溜走」按钮%s" % ["没建" if RunSkills.ACTIVE_HIDDEN else "在"])
+		t.is_null(pre.get("_slip_btn"), "「溜走」按钮没建")
+		t.not_null(pre.ambush_button(), "偷袭键在")
 	flow.to_main_menu()
 	game.queue_free()
 	Support.cleanup(PREFIX)

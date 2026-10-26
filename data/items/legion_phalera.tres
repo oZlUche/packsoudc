@@ -152,6 +152,10 @@ stage0_names = {
 "en": "Bronze"
 }
 fuel = "honor"
+honor_by_type = {
+"core": 5,
+"elite": 3
+}
 
 [sub_resource type="Resource" id="Resource_qj5yo"]
 script = ExtResource("11_1cbyb")

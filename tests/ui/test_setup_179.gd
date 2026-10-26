@@ -101,7 +101,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 
 
 static func run_skill_entries(t: TestCase) -> void:
-	t.begin("179 · 技能说明是书面功能句，界面按「名字 / 说明」两行排（「被动」不上屏）；熟门熟路不再说行动点")
+	t.begin("179 · 技能说明是书面功能句，界面按「名字 / 说明」两行排（「被动」不上屏）；没有一条说行动点（256：安德烈乌斯 = 求饶 + 偷袭）")
 	var chars := {}
 	for f in DirAccess.get_files_at("res://data/characters/"):
 		if f.ends_with(".tres"):
@@ -114,9 +114,9 @@ static func run_skill_entries(t: TestCase) -> void:
 		return
 	var e: Array[Dictionary] = an.skill_entries()
 	t.eq(String(e[0]["kind"]), "被动", "被动在前")
-	t.eq(String(e[0]["name"]), "熟门熟路", "名字单独一项")
-	t.check(String(e[0]["text"]).ends_with("步，下一步不计入倒计时。"), "说明：%s" % e[0]["text"])
-	t.check(String(e[1]["text"]).contains("首次战败于敌人时"), "书面用语：%s" % e[1]["text"])
+	t.eq(String(e[0]["name"]), "求饶", "名字单独一项")
+	t.check(String(e[0]["text"]).ends_with("核心点不能。"), "说明：%s" % e[0]["text"])
+	t.check(String(e[1]["text"]).ends_with("。") and not String(e[1]["text"]).contains("求饶"), "书面用语、说明里不重复名字：%s" % e[1]["text"])
 	t.eq(e.size(), an.skill_lines().size(), "条数和 skill_lines 一样")
 	for ch in chars.values():
 		for s in (ch as CharacterDef).skills:

@@ -194,7 +194,7 @@ static func run_skill_names_english(t: TestCase) -> void:
 			var en := String(sk.display_names.get("en", ""))
 			if en == "" or _han().search(en) != null:
 				bad.append(String(sk.id))
-	t.check(seen >= 9, "三个角色的技能都查了（%d）" % seen)
+	t.check(seen >= 3, "三个角色的技能都查了（%d；256 定稿：马库斯 1、布鲁图斯 0、安德烈乌斯 2）" % seen)
 	t.eq(bad, [] as Array[String], "每个技能都有英文名")
 
 
