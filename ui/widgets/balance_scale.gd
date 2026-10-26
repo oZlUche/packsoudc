@@ -1,91 +1,154 @@
-## 256（安德烈乌斯「求饶」）：天平 —— 底座 + 立柱 + 横梁 + 两只盘（整图非矩形；美术出图前由这里画占位）。
-## 左盘是玩家放上去的（金币一枚 1 + 道具的局内出售价），右盘是对方的开价；两盘上各印一枚金币 + 数（钱 = 金币图标 + 数）。
-## 横梁按两边的差倾斜：左轻 → 右盘低；齐平或左重 → 水平 / 左低。梁中间一块小牌写「还差 N」/「够了」。
-## 字都画在盘和牌上（226：不裸字）。点不着，托盘（棋盘）与金币步进件由屏摆在它上下
+## 256（安德烈乌斯「求饶」）：天平窗的整块舞台（作者 2026-10-26 15:49 定稿，青铜那一稿）—— 四层图：
+## 底座（立柱、标题牌、差额牌、下面的石台，`ransom/ransom_base` 1000 × 724，非矩形）、横梁（绕自己正中转，正中对齐底座的 pivot）、
+## 左右两只盘（不转只平移，盘层的 hook 点挂在梁的钩上：钩 = pivot + rot(倾角)·(±arm, hook_dy)）。坐标与各控件的位置都在
+## `ransom/ransom_layout.json`。左盘上方的托盘棋盘、右盘下的开价小牌跟着盘走：屏往 [member tray_slot] 里放托盘，开价由这里画（金币 + 数）。
+## 差额牌上写「还差 N」/「够了」。字都落在石牌 / 石台上（226：不裸字）。没有图时（美术目录缺）按同一套坐标画占位
 class_name BalanceScale
 extends Control
 
-const SIZE := Vector2(560, 210)
-## 横梁最多斜几度
-const MAX_TILT := 10.0
-const BEAM_HALF := 210.0
-const PIVOT_Y := 40.0
-const HANG := 70.0
-const PAN_W := 150.0
-const PAN_DEPTH := 26.0
-const FONT_SIZE := 18
-const PLATE_FONT := 15
-const BRONZE := Color("8a6a3a")
-const BRONZE_DARK := Color("4e3a1e")
-const BRONZE_LIGHT := Color("c9a462")
-const PLATE := Color("e4ded2")
+const LAYOUT := "ransom/ransom_layout"
+const BASE_ART := "ransom/ransom_base"
+const BEAM_ART := "ransom/ransom_beam"
+const PAN_LEFT_ART := "ransom/ransom_pan_left"
+const PAN_RIGHT_ART := "ransom/ransom_pan_right"
+const FONT_SIZE := 20
+const PLATE_FONT := 18
 const INK := Color("2e2219")
+## 石台底下那行小字（浅底：淡墨）
+const INK_SOFT := Color("605a50")
+## 缺图时的占位色
+const BRONZE := Color("8a6a3a")
+const PLATE := Color("e4ded2")
 
 ## 左盘的重量 / 右盘的开价
 var left := 0:
 	set(v):
 		left = v
-		queue_redraw()
+		_relayout()
 var right := 0:
 	set(v):
 		right = v
-		queue_redraw()
+		_relayout()
+
+## 托盘棋盘的位置（左盘的 tray_rect，跟着盘走）：屏把托盘放进来，底边坐在盘沿上
+var tray_slot: VBoxContainer = null
+var _lay: Dictionary = {}
 
 
 func _init() -> void:
-	custom_minimum_size = SIZE
+	_lay = layout()
+	custom_minimum_size = _v(_lay["base_size"])
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tray_slot = VBoxContainer.new()
+	tray_slot.alignment = BoxContainer.ALIGNMENT_END
+	tray_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(tray_slot)
+	_relayout()
 
 
-## 横梁斜几度（正 = 左低）：差额占开价的比例，夹在 ±[constant MAX_TILT]
+## 版式：美术的 json；没有就用同形状的一份（尺寸与美术稿一样，测试与占位都按它摆）
+static func layout() -> Dictionary:
+	var d := UiTheme.art_meta(LAYOUT)
+	if not d.is_empty():
+		return d
+	return {"base_size": [1000, 724], "pivot": [500, 110], "arm": 330, "hook_dy": 18, "max_tilt_deg": 8, "beam_size": [760, 64],
+		"pan_size": [340, 362], "hook_in_pan": [170, 8], "tray_rect": [20, 90, 320, 258], "price_rect": [112, 320, 228, 354],
+		"controls": {"title": [404, 26, 596, 62], "status": [424, 200, 576, 236], "subtitle": [250, 576, 750, 604],
+			"stepper": [86, 620, 366, 686], "deal": [606, 626, 756, 678], "refuse": [780, 626, 930, 678], "hint": [300, 690, 700, 712]}}
+
+
+## 底座上某个控件的框（`controls` 里的名字：title / status / subtitle / stepper / deal / refuse / hint）
+func control_rect(name: String) -> Rect2:
+	return _rect((_lay.get("controls", {}) as Dictionary).get(name, [0, 0, 0, 0]))
+
+
+## 横梁斜几度（正 = 左盘低）：差额占开价的比例，夹在 ±max_tilt_deg
 func tilt_degrees() -> float:
 	if left == right:
 		return 0.0
 	var k := float(left - right) / float(maxi(1, right))
-	return clampf(k, -1.0, 1.0) * MAX_TILT
+	return clampf(k, -1.0, 1.0) * float(_lay.get("max_tilt_deg", 8))
 
 
-## 梁中那块牌上的字
+## 差额牌上的字
 func plate_text() -> String:
 	return UiText.t("ransom.enough") if left >= right else UiText.t("ransom.short_by") % (right - left)
 
 
+## 两只钩（梁两端）在舞台上的位置：[左, 右]。美术的倾角正 = 右盘沉，所以这里取 tilt_degrees 的反号
+func hooks() -> Array[Vector2]:
+	var pivot := _v(_lay["pivot"])
+	var a := deg_to_rad(-tilt_degrees())
+	var arm := float(_lay["arm"])
+	var dy := float(_lay["hook_dy"])
+	return [pivot + Vector2(-arm, dy).rotated(a), pivot + Vector2(arm, dy).rotated(a)] as Array[Vector2]
+
+
+## 盘层左上角：[左, 右]
+func pan_origins() -> Array[Vector2]:
+	var h := hooks()
+	var hook_in := _v(_lay["hook_in_pan"])
+	return [h[0] - hook_in, h[1] - hook_in] as Array[Vector2]
+
+
+## 右盘开价小牌（舞台坐标）
+func price_rect() -> Rect2:
+	var r := _rect(_lay["price_rect"])
+	return Rect2(pan_origins()[1] + r.position, r.size)
+
+
+func _relayout() -> void:
+	if tray_slot != null and not _lay.is_empty():
+		var r := _rect(_lay["tray_rect"])
+		tray_slot.position = pan_origins()[0] + r.position
+		tray_slot.size = r.size
+	queue_redraw()
+
+
 func _draw() -> void:
-	var pivot := Vector2(size.x * 0.5, PIVOT_Y)
-	# 底座与立柱
-	var foot_y := size.y - 6.0
-	draw_colored_polygon(PackedVector2Array([Vector2(pivot.x - 70, foot_y), Vector2(pivot.x + 70, foot_y),
-		Vector2(pivot.x + 40, foot_y - 22), Vector2(pivot.x - 40, foot_y - 22)]), BRONZE_DARK)
-	draw_rect(Rect2(pivot.x - 7, pivot.y, 14, foot_y - 22 - pivot.y), BRONZE)
-	# 横梁（左低为正：左端往下）
-	var a := deg_to_rad(tilt_degrees())
-	var l_end := pivot + Vector2(-cos(a), sin(a)) * BEAM_HALF
-	var r_end := pivot + Vector2(cos(a), -sin(a)) * BEAM_HALF
-	draw_line(l_end, r_end, BRONZE_DARK, 9.0)
-	draw_line(l_end, r_end, BRONZE, 5.0)
-	draw_circle(pivot, 10.0, BRONZE_DARK)
-	draw_circle(pivot, 6.0, BRONZE_LIGHT)
-	_draw_pan(l_end, left)
-	_draw_pan(r_end, right)
-	_draw_plate(pivot + Vector2(0, 26))
+	var pans := pan_origins()
+	_draw_layer(BASE_ART, Vector2.ZERO, _v(_lay["base_size"]))
+	# 横梁：绕自己正中转，正中在 pivot
+	var beam_size := _v(_lay["beam_size"])
+	draw_set_transform(_v(_lay["pivot"]), deg_to_rad(-tilt_degrees()))
+	_draw_layer(BEAM_ART, -beam_size * 0.5, beam_size)
+	draw_set_transform(Vector2.ZERO)
+	var pan_size := _v(_lay["pan_size"])
+	_draw_layer(PAN_LEFT_ART, pans[0], pan_size)
+	_draw_layer(PAN_RIGHT_ART, pans[1], pan_size)
+	_draw_coin_amount(price_rect(), right)
+	_draw_centered(control_rect("status"), plate_text(), PLATE_FONT)
 
 
-## 一只盘：挂绳 + 盘身 + 盘上的金币与数
-func _draw_pan(hook: Vector2, amount: int) -> void:
-	var rim := hook + Vector2(0, HANG)
-	draw_line(hook, rim + Vector2(-PAN_W * 0.42, 0), BRONZE_DARK, 2.0)
-	draw_line(hook, rim + Vector2(PAN_W * 0.42, 0), BRONZE_DARK, 2.0)
-	var bowl := PackedVector2Array()
-	for i in 13:
-		var t := float(i) / 12.0
-		bowl.append(rim + Vector2((t - 0.5) * PAN_W, sin(t * PI) * PAN_DEPTH))
-	draw_colored_polygon(bowl, BRONZE)
-	draw_line(rim + Vector2(-PAN_W * 0.5, 0), rim + Vector2(PAN_W * 0.5, 0), BRONZE_LIGHT, 3.0)
+## 一层图；缺图画个占位（底座只画立柱和石台，梁一根线，盘一只碗）
+func _draw_layer(art: String, at: Vector2, size_px: Vector2) -> void:
+	var tex := UiTheme.art_cached(art)
+	if tex != null:
+		draw_texture_rect(tex, Rect2(at, size_px), false)
+		return
+	match art:
+		BASE_ART:
+			var pivot := _v(_lay["pivot"])
+			draw_rect(Rect2(pivot.x - 18, pivot.y, 36, 450), PLATE)
+			draw_rect(Rect2(40, 568, size_px.x - 80, 152), PLATE)
+			for k in ["title", "status"]:
+				draw_rect(control_rect(k), PLATE)
+				draw_rect(control_rect(k), INK, false, 2.0)
+		BEAM_ART:
+			draw_rect(Rect2(at + Vector2(0, size_px.y * 0.4), Vector2(size_px.x, size_px.y * 0.2)), BRONZE)
+		_:
+			var rim := at + Vector2(0, 250)
+			draw_rect(Rect2(rim, Vector2(size_px.x, 50)), BRONZE)
+			draw_rect(Rect2(at + _rect(_lay["price_rect"]).position, _rect(_lay["price_rect"]).size), PLATE)
+
+
+## 小牌上的「金币 + 数」（钱 = 金币图标 + 数）
+func _draw_coin_amount(r: Rect2, amount: int) -> void:
 	var f := UiPalette.cjk_font_bold()
 	var text := "%d" % amount
 	var side := roundf(FONT_SIZE * CoinLabel.COIN_SCALE)
 	var w := side + CoinLabel.GAP + f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
-	var mid := rim + Vector2(0, PAN_DEPTH * 0.45)
+	var mid := r.get_center()
 	var at := Vector2(mid.x - w * 0.5, mid.y - side * 0.5)
 	var tex := CoinLabel.coin_texture()
 	if tex != null:
@@ -93,16 +156,19 @@ func _draw_pan(hook: Vector2, amount: int) -> void:
 	else:
 		draw_circle(at + Vector2(side, side) * 0.5, side * 0.45, CoinLabel.FALLBACK_FILL)
 	draw_string(f, Vector2(at.x + side + CoinLabel.GAP, mid.y + (f.get_ascent(FONT_SIZE) - f.get_descent(FONT_SIZE)) * 0.5),
-		text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, PLATE)
+		text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)
 
 
-## 梁中的小石牌：「还差 N」/「够了」
-func _draw_plate(center: Vector2) -> void:
+func _draw_centered(r: Rect2, text: String, font_size: int) -> void:
 	var f := UiPalette.cjk_font_bold()
-	var text := plate_text()
-	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, PLATE_FONT).x + 20.0
-	var r := Rect2(center - Vector2(w * 0.5, 13), Vector2(w, 26))
-	draw_rect(r, PLATE)
-	draw_rect(r, BRONZE_DARK, false, 2.0)
-	draw_string(f, Vector2(r.position.x, center.y + (f.get_ascent(PLATE_FONT) - f.get_descent(PLATE_FONT)) * 0.5),
-		text, HORIZONTAL_ALIGNMENT_CENTER, w, PLATE_FONT, INK)
+	draw_string(f, Vector2(r.position.x, r.get_center().y + (f.get_ascent(font_size) - f.get_descent(font_size)) * 0.5),
+		text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, font_size, INK)
+
+
+static func _v(a) -> Vector2:
+	return Vector2(float(a[0]), float(a[1]))
+
+
+## json 里的框是 [左, 上, 右, 下]
+static func _rect(a) -> Rect2:
+	return Rect2(float(a[0]), float(a[1]), float(a[2]) - float(a[0]), float(a[3]) - float(a[1]))

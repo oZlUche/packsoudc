@@ -180,7 +180,7 @@ func board_actions(uid: int) -> Array:
 		ItemActions.disable(first, ground_exit_notice)     # 249：开战前不丢东西
 	elif inst.is_locked_by_player() and (quick_target == null or not _quick_allows(inst)):
 		ItemActions.disable(first, UiText.t("act.locked"))
-	elif _run.board.is_locked(uid):
+	elif _run.board.keeps(uid):
 		ItemActions.disable(first, DragLayer.refused_notice(_run.board, uid))
 	out.append(first)
 	out.append(ItemActions.lock(inst, _run.board))
@@ -222,7 +222,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		say_no_room(inst)
 		return false
 	if from == _run.board:
-		if _run.board.is_locked(uid):
+		if _run.board.keeps(uid):
 			_hint_text(DragLayer.refused_notice(_run.board, uid))     # 207：扎了根的双击也搬不走（255 随身之物同理）
 			return false
 		if inst.is_locked_by_player() and not _quick_allows(inst):

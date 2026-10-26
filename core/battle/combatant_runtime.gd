@@ -137,6 +137,17 @@ func item_stat(uid: int, key: StringName, fallback: int = 0) -> int:
 	return merged.total_of(key, fallback)
 
 
+## 256：写死在规则上的耐力消耗（[ResourceCost] 没有 amount_stat）的因子（定点）—— 这件的 `stamina_cost` 乘算（操练、军功牌、buff）
+## × 灵巧 / 笨拙轴。按属性取的那种已经在 [method item_stat] 里算过，不走这里
+func item_cost_factor(uid: int) -> int:
+	if _dirty:
+		_rebuild()
+	var merged: StatSet = _merged_items.get(uid, _merged)
+	var f := merged.percent_factor(BattleStats.STAMINA_COST)
+	var stacks := axis_total(StatAxes.STAMINA_COST)
+	return StatMath.mul(f, StatAxes.factor(StatAxes.STAMINA_COST, stacks)) if stacks != 0 else f
+
+
 func item_stat_int(uid: int, key: StringName, fallback: int = 0) -> int:
 	return StatMath.to_int(item_stat(uid, key, fallback))
 

@@ -50,6 +50,12 @@ func total_of(key: StringName, fallback: int = 0) -> int:
 	return identity if identity != 0 else fallback
 
 
+## 256：这一键的乘算因子（定点，1 + 乘算之和，不低于 0；没有这一键 = 1）—— 写死在规则上的耐力消耗靠它吃 `stamina_cost` 的打折
+func percent_factor(key: StringName) -> int:
+	var v: StatValue = _values.get(key, null)
+	return maxi(0, StatMath.ONE + v.percent) if v != null else StatMath.ONE
+
+
 func total_int_of(key: StringName, fallback: int = 0) -> int:
 	return StatMath.to_int(total_of(key, fallback))
 

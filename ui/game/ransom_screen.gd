@@ -1,12 +1,15 @@
-## 求饶（256，安德烈乌斯）：打输了、对方开了价，战斗回放之后弹这一屏 —— 中间一架天平（[BalanceScale]），
-## 左盘上方一块托盘（小棋盘，有框有格）：把包里的东西拖上来，每件按局内出售价算重量；左盘下一只金币步进件（±10）。
-## 右盘是开价（这一场打赢的钱 × 倍数）。左 ≥ 右「成交」才亮：钱从钱包出、托盘上的东西归对方、这一场不扣体力；
-## 「不求饶」= 照常扣体力（归零就战败）。关窗（Esc）也是不求饶，托盘上的东西先回包里。右边是自己的背包（和商店一样）
+## 求饶（256，安德烈乌斯）：打输了 / 逃跑失败、对方开了价，回放之后弹这一屏 —— 一整块天平舞台（[BalanceScale]，作者 15:49 定稿四层图）
+## 浮在压暗的底屏上：左盘上方一块托盘（小棋盘，有框有格），把包里的东西拖上来，每件按局内出售价算重量；石台左边一只金币步进件（±10）。
+## 右盘是开价（打赢对方的钱 × 倍数），梁上的差额牌写还差多少。左 ≥ 右「成交」才亮：钱从钱包出、托盘上的东西归对方、不扣体力；
+## 「不求饶」= 照常扣体力（归零就战败）。关窗（Esc）也是不求饶，托盘上的东西先回包里。舞台右边是自己的背包（和商店一样）
 extends GameScreen
 
 const TRAY_ID := 5
-const TRAY_SIZE := Vector2i(4, 3)
+## 6 × 3：美术稿托盘的格数（tray_rect 300 × 168）
+const TRAY_SIZE := Vector2i(6, 3)
 const COIN_STEP := 10
+## 比别的叠层压得暗一点（美术：「窗后面那层遮罩可以压暗一点，盘子之间是透明的」）
+const SHADE := 0.8
 
 var _price := 0
 var coins := 0
@@ -20,24 +23,23 @@ var _inv: InventoryPanelScript = null
 
 func open(payload: Dictionary) -> void:
 	_price = int(payload.get("price", flow.run.events.pending_ransom.get("price", 0)))
-	var panel := _centered_panel(Vector2(0, 0), 16)
-	_frame_title(UiText.t("ransom.title"))
+	_shade(SHADE)
+	var center := _full_center()
+	center.offset_top = HudHost.bar_height_in(get_tree()) if is_inside_tree() else 0.0     # 在顶端栏下面居中
+	add_child(center)
 	var row := _hbox(24)
-	panel.add_child(row)
+	center.add_child(row)
 
-	var left := _vbox(10)
-	row.add_child(left)
-	var intro := HeaderTag.new(UiText.t("ransom.intro"))     # 正面在前；限制写进悬浮窗（小字）
-	intro.mouse_filter = Control.MOUSE_FILTER_PASS
-	intro.tooltip_text = UiText.t("ransom.limits")
-	left.add_child(intro)
-	# 托盘在左盘正上方：天平宽的左半边居中
-	var top := _hbox(0)
-	left.add_child(top)
-	var tray_col := _vbox(4)
-	tray_col.custom_minimum_size.x = BalanceScale.SIZE.x * 0.5
-	tray_col.alignment = BoxContainer.ALIGNMENT_END
-	top.add_child(tray_col)
+	_scale = BalanceScale.new()
+	_scale.right = _price
+	row.add_child(_scale)
+	_reserve_ground(_scale)
+	# 底座上的字都落在石牌 / 石台上（226）
+	_place(_label(UiText.t("ransom.title"), 22, BalanceScale.INK), "title", true)
+	var intro := _label(UiText.t("ransom.intro"), 17, BalanceScale.INK)     # 正面在前；限制写在石台底下的小字（作者 10-26：短处后放、小字）
+	_place(intro, "subtitle", true)
+	_place(_label(UiText.t("ransom.limits"), 13, BalanceScale.INK_SOFT), "hint", true)
+	# 托盘：左盘上方，底边坐在盘沿上
 	_tray = GridInventory.new(TRAY_SIZE, TRAY_ID, false)
 	_tray_view = InventoryView.new()
 	_tray_view.label_font = font
@@ -45,32 +47,26 @@ func open(payload: Dictionary) -> void:
 	_tray_view.show_adjacency = false
 	_tray_view.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_tray_view.tooltip_text = UiText.t("ransom.tray_tip")
-	tray_col.add_child(_tray_view)
-	BoardFrame.wrap(_tray_view)     # 227：素框 + 格缝
-	_scale = BalanceScale.new()
-	_scale.right = _price
-	left.add_child(_scale)
-	# 金币步进件在左盘下面
-	var low := _hbox(0)
-	left.add_child(low)
-	var coin_col := _vbox(4)
-	coin_col.custom_minimum_size.x = BalanceScale.SIZE.x * 0.5
-	low.add_child(coin_col)
+	_scale.tray_slot.add_child(_tray_view)
+	var tray_frame := BoardFrame.wrap(_tray_view)     # 227：素框 + 格缝
+	tray_frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	# 格子按托盘那块地缩（美术稿 300 × 168 放 6 × 3 格连框），不按背包的大格
+	var sb := tray_frame.get_theme_stylebox("panel")
+	var room := _scale.tray_slot.size - Vector2(sb.content_margin_left + sb.content_margin_right, sb.content_margin_top + sb.content_margin_bottom)
+	_tray_view.cell_px = floorf(minf(room.x / TRAY_SIZE.x, room.y / TRAY_SIZE.y))
+	# 石台：金币步进件（左边那块凹槽里）、成交 / 不求饶两把平石键
 	_coins = StoneStepper.new(func() -> void: set_coins(coins - COIN_STEP), func() -> void: set_coins(coins + COIN_STEP))
-	_coins.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_coins.tooltip_text = UiText.t("ransom.coins_tip")
-	coin_col.add_child(_coins)
-	var keys := _hbox(12)
-	keys.alignment = BoxContainer.ALIGNMENT_CENTER
-	left.add_child(keys)
+	_place(_coins, "stepper", true)
 	_pay_btn = StoneChip.make(UiText.t("ransom.pay"), func(): pay())     # 平的石键（作者 10-21：小功能键不要立体）
 	_pay_btn.tooltip_text = UiText.t("ransom.price_tip") % String.num(flow.run.buff_context().ransom_mult, 2)
-	keys.add_child(_pay_btn)
+	_place(_pay_btn, "deal", false)
 	var no := StoneChip.make(UiText.t("ransom.refuse"), func(): refuse())
 	no.tooltip_text = UiText.t("ransom.refuse_tip")
-	keys.add_child(no)
+	_place(no, "refuse", false)
 
 	_inv = _mount_bag(row, _tray_view, Callable(), _tray)     # 棋盘上双击 → 托盘
+	_reserve_ground(_inv)
 	_tray_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
 	_tip_double(_tray_view, "act.take_back")
 	_drag.drop_outside_to_stash = false     # 放到外面 = 放回原处
@@ -84,6 +80,23 @@ func open(payload: Dictionary) -> void:
 	_tray.changed.connect(_refresh)
 	flow.run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh())
 	_refresh()
+
+
+## 把一个控件摆进底座上 [param slot] 那一格（`ransom_layout.json` 的 controls）：[param fill] 为真撑满那一格（字居中），否则居中放
+func _place(c: Control, slot: String, fill: bool) -> void:
+	var r := _scale.control_rect(slot)
+	var box := CenterContainer.new()
+	box.position = r.position
+	box.size = r.size
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scale.add_child(box)
+	if fill and c is Label:
+		(c as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		(c as Label).vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		c.custom_minimum_size = r.size
+	elif not (c is Label):
+		c.custom_minimum_size = Vector2(r.size.x, c.custom_minimum_size.y) if fill else c.custom_minimum_size
+	box.add_child(c)
 
 
 #region 公开动作

@@ -9,10 +9,9 @@
 class_name RunRegistry
 extends RefCounted
 
-## 一局的规则（059 的 buff 骨架）：体力上限、开局钱、多搜几次、商店价、幸运。**不依赖扳机，激活即生效。**
+## 一局的规则（059 的 buff 骨架）：体力上限、多搜几次、商店价、幸运。**不依赖扳机，激活即生效。**
 const RUN_EFFECTS := {
 	&"vitality_max_bonus": "res://core/run/effects/vitality_max_bonus.gd",
-	&"starting_funds_bonus": "res://core/run/effects/starting_funds_bonus.gd",
 	&"keep_on_death": "res://core/run/effects/keep_on_death.gd",
 	&"extra_searches": "res://core/run/effects/extra_searches.gd",
 	&"shop_price_mult": "res://core/run/effects/shop_price_mult.gd",
@@ -32,6 +31,8 @@ const RUN_EFFECTS := {
 	&"starting_belt": "res://core/run/effects/starting_belt.gd",     # 160 补一
 	&"loss_discount": "res://core/run/effects/loss_discount.gd",     # 149：科技「不屈」
 	&"ransom": "res://core/run/effects/ransom.gd",     # 256：安德烈乌斯「求饶」
+	&"tag_mods": "res://core/run/effects/tag_mods.gd",     # 256：马库斯「操练」（战斗侧）
+	&"tag_weight_mult": "res://core/run/effects/tag_weight_mult.gd",     # 256：马库斯「操练」（负重侧）
 }
 
 ## 147：随身技能点一下的效果（[BeltUse.effects]；160 补一：挂在 [BeltSkillDef] 上）

@@ -4,26 +4,25 @@
   "display_names": {
     "en": "Andreus"
   },
-  "description": "擅长避战的奴隶探索者。棋盘最大、背得最多、带的钱也最多：先手偷袭、输了就用钱买命。生命 {max_hp}、体力 {vitality_max} 都是最低的。",
+  "description": "擅长避战的奴隶探索者。先手偷袭，输了就用钱买命。生命 {max_hp}、体力 {vitality_max} 都是最低的。",
   "descriptions": {
-    "en": "A slave explorer who avoids fights. Biggest board, load and purse: he ambushes first and buys his life back. Lowest Health {max_hp} and Vitality {vitality_max}."
+    "en": "A slave explorer who avoids fights. He strikes first from hiding and buys his life back when he loses. Lowest Health {max_hp} and Vitality {vitality_max}."
   },
   "base_stats": {
     "max_hp": 45,
-    "max_stamina": 45,
+    "max_stamina": 55,
     "regen_stamina": 4
   },
   "vitality_max": 3,
   "board_size": [
-    9,
+    7,
     6
   ],
-  "starting_funds": 120,
   "starting_bags": [
     "bag_leather",
     "bag_leather"
   ],
-  "weight_capacity": 64,
+  "weight_capacity": 48,
   "skills": [
     {
       "type": "assault",
@@ -36,7 +35,7 @@
       "descriptions": {
         "en": "The enemy starts three tenths down on Health. {uses} uses, +{rest_recharge} per rest spot."
       },
-      "uses": 2,
+      "uses": 3,
       "rest_recharge": 1,
       "show_prebattle": true
     },
@@ -47,51 +46,13 @@
       "display_names": {
         "en": "Beg for Mercy"
       },
-      "description": "打输了可以用金币和道具抵掉体力损失。核心点与搜索遭遇不能。",
+      "description": "打输了或逃跑失败，可以用金币和道具抵掉体力损失。核心点不能。",
       "descriptions": {
-        "en": "Lost a fight? Pay coins and items instead of Vitality (not at the core or in searches)."
+        "en": "Lost a fight or failed to flee? Pay coins and items instead of Vitality (not at the core)."
       },
       "passive": [
         {
           "type": "ransom"
-        }
-      ]
-    },
-    {
-      "type": "passive",
-      "id": "familiar_paths",
-      "display_name": "熟门熟路",
-      "display_names": {
-        "en": "Old Paths"
-      },
-      "description": "每走 {travel_discount_every} 步，下一步不计入倒计时。",
-      "descriptions": {
-        "en": "Every {travel_discount_every} steps, one step skips the Countdown."
-      },
-      "passive": [
-        {
-          "type": "travel_discount"
-        }
-      ]
-    },
-    {
-      "type": "passive",
-      "id": "slippery",
-      "display_name": "溜得掉",
-      "display_names": {
-        "en": "Slippery"
-      },
-      "description": "猎手更难发现你，从猎手面前逃跑更容易。",
-      "descriptions": {
-        "en": "Hunters notice you less; fleeing is easier."
-      },
-      "passive": [
-        {
-          "type": "flee_bonus",
-          "amount": 0.25
-        },
-        {
-          "type": "stealth"
         }
       ]
     }

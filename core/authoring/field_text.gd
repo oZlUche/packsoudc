@@ -69,7 +69,7 @@ const LABELS := {
 	"loss_cost": "战败代价", "rest_restore": "休息回体力", "search": "搜索", "reveal_seconds": "揭示秒数", "items_per_search": "每次搜几件", "max_searches": "最多搜几次",
 	"boss_extracts": "打完核心直接撤离", "fail_vitality": "失败扣体力", "fail_buff": "失败背的 buff", "boss_rarity": "核心保底稀有度", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
 	"bags_always_drop": "包必掉", "rarity_weights": "稀有度权重", "shop_slots": "商店栏位", "shop_sell_ratio": "出售折价", "shop_price_mult": "商店价格倍率",
-	"shop_refresh_cost": "刷新价", "extract_fee": "撤离费", "starting_balance": "开局钱", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
+	"shop_refresh_cost": "刷新价", "extract_fee": "撤离费", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
 	# 角色 / 敌人 / 猎手 / 信仰
 	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能", "flaw": "短板", "fixed_items": "随身之物", "board_mask": "棋盘缺格", "FixedItem.origin": "摆在哪（左上角）", "FixedItem.rot": "朝向",
 	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "combos": "相邻组合", "builds": "套路", "carry_mult": "携带倍率", "build_chance": "套路概率", "bad_build_mult": "坏套路权重倍率", "quality": "好坏", "loose": "不成组", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
@@ -97,7 +97,7 @@ const TYPE_LABELS := {
 	"resource": "消耗资源", "status_stack": "消耗叠层", "charge": "充能", "uses": "限次", "chance": "概率",
 	"deal_damage": "造成伤害", "change_resource": "改资源", "apply_status": "施加状态", "remove_status": "移除状态", "modify_damage": "改伤害", "reflect_damage": "反弹伤害",
 	"extra_rolls": "额外掉落次数", "rarity_bias": "稀有度偏移", "category_bias": "类别偏移", "drop_owned_chance": "掉身上有的概率",
-	"vitality_max_bonus": "体力上限加成", "starting_funds_bonus": "开局钱加成", "keep_on_death": "战败保住钱", "extra_searches": "额外搜索次数", "shop_price_mult": "商店价格倍率",
+	"vitality_max_bonus": "体力上限加成", "keep_on_death": "战败保住钱", "extra_searches": "额外搜索次数", "shop_price_mult": "商店价格倍率",
 	"luck_bonus": "幸运加成", "scout_range": "侦察范围", "stealth": "潜行", "flee_bonus": "逃跑加成", "free_losses": "免扣体力次数", "loss_discount": "败仗少扣体力", "stat_bonus": "属性加成", "carry_capacity_bonus": "负重上限加成",
 	"passive": "被动", "assault": "突击", "evade": "躲避",
 	# 136：角色的套装

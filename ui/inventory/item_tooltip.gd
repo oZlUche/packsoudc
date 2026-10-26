@@ -27,6 +27,8 @@ const ICON_TERM_NAMES := {"增益槽": "tip.slot_grant", "受益槽": "tip.slot_
 ## 096（作者定）：信仰状态的探针 —— 局里由 [GameFlow] 接上，返回 `{"active": 激活的信仰 id, "tier": 阶, "points": 信力}`；
 ## 没接（基地、沙盒、测试）返回空字典。信仰加成的词条按它上色：**生效的白、没生效的灰**；没有探针一律按原色写
 static var faith_probe: Callable = Callable()
+## 256：这一局按标签打折的重量（[member RunContext.weight_pct]）；没接 = 不打折
+static var weight_probe: Callable = Callable()
 const DIM_HEX := "8b93a1"
 static var _sets: SetDatabase = null
 
@@ -235,9 +237,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var line := UiText.t("tip.anchor") % (UiText.t("tip.anchor_current") if faith_lit(def, status) else UiText.t("tip.anchor_hint"))
 		lines.append("[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if faith_lit(def, status) else DIM_HEX, line])
 	if inst.is_pinned():     # 255（作者 11:00）：先说功效，「拿不下、丢不掉」只作最后一行灰小字
-		lines.append("[font_size=%d][color=#%s]%s[/color][/font_size]" % [FOOT_SIZE, DIM_HEX, UiText.t("tip.pinned")])
+		lines.append("[font_size=%d][color=#%s]%s[/color][/font_size]" % [FOOT_SIZE, DIM_HEX, UiText.t("tip.pinned" if inst.is_anchored() else "tip.pin_moves")])     # 256：可以挪的写「能挪、丢不掉」
 	# --- 脚注：金币、秤砣（170：不写格数），右边套装名
-	var foot := "[font_size=%d][color=@tip_meta]%s[/color][/font_size]" % [FOOT_SIZE, UiText.t("tip.foot") % [icon("coin"), ItemValue.of_in(inst, board), icon("weight"), ItemWeight.of_in(inst, board)]]     # 129：重
+	var foot := "[font_size=%d][color=@tip_meta]%s[/color][/font_size]" % [FOOT_SIZE, UiText.t("tip.foot") % [icon("coin"), ItemValue.of_in(inst, board), icon("weight"), ItemWeight.of_in_scaled(inst, board, weight_probe.call() if weight_probe.is_valid() else [])]]     # 129：重（256：操练打折后）
 	var set_name := set_name_of(def.set_id)
 	# --- 词条：这件道具会施加的 buff（id → 按定义生成的说明）+ 固定词条 + 弹词条的标签
 	var extra := Glossary.tag_terms(text_tags)     # 096：登记了说明的标签也是词条（193 补充三：只剩没图、还写成字的那些）

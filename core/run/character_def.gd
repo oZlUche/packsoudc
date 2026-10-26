@@ -22,8 +22,6 @@ extends Resource
 @export var vitality_max: int = 5
 ## 作战棋盘的尺寸（149：三个人各不相同，7 / 8 / 9 × 6）
 @export var board_size: Vector2i = Vector2i(8, 6)
-## 149：开局钱的基数（科技「行囊」按它乘百分比）。-1 = 用经济规则的全局 [member EconomyRules.starting_balance]
-@export var starting_funds: int = -1
 ## 初始包：道具 id，可重复。225 起只是「首次见面礼」—— 第一次选这个角色时送进包架（[method MetaState.grant_starting_bags]）；
 ## 255：选角色屏用一枚小签说一下，送过就不显示。没有开局屏摆盘（测试、直开）时照旧开局摆在棋盘上
 @export var starting_bags: Array[StringName] = []
@@ -97,7 +95,8 @@ func flaw_entry() -> Dictionary:
 
 ## 255：按这个角色把棋盘造型 —— 缺格挖掉、随身之物钉上去（[method ItemInstance.set_pinned]）。
 ## [param next_uid] 给了（`func() -> int`）就用它发号（开局屏走局外号段），不给用 [method ItemInstance.create] 自增的。返回钉上去的几件
-func shape_board(board: GridInventory, items: ItemDatabase, next_uid: Callable = Callable()) -> Array[ItemInstance]:
+## 256：[param allow_moves] = 假时可以挪的随身之物也钉死（开局屏：它的落点由角色定，摆盘绕开它）
+func shape_board(board: GridInventory, items: ItemDatabase, next_uid: Callable = Callable(), allow_moves: bool = true) -> Array[ItemInstance]:
 	var out: Array[ItemInstance] = []
 	if board == null:
 		return out
@@ -111,7 +110,7 @@ func shape_board(board: GridInventory, items: ItemDatabase, next_uid: Callable =
 		var inst := ItemInstance.create(def, f.rot)
 		if next_uid.is_valid():
 			inst.uid = int(next_uid.call())
-		inst.set_pinned(true)
+		inst.set_pinned(true, f.movable and allow_moves)
 		if board.place(inst, f.origin, f.rot):
 			out.append(inst)
 		else:

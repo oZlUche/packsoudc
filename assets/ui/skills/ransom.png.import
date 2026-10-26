@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cs6q0nnspvlfj"
-path="res://.godot/imported/hardy.png-5a436bd1c204524ef72e02f520ff4cfd.ctex"
+uid="uid://8ttmqimacoj1"
+path="res://.godot/imported/ransom.png-cb99563ed7a3faef0ccaf2b20141fa23.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/skills/hardy.png"
-dest_files=["res://.godot/imported/hardy.png-5a436bd1c204524ef72e02f520ff4cfd.ctex"]
+source_file="res://assets/ui/skills/ransom.png"
+dest_files=["res://.godot/imported/ransom.png-cb99563ed7a3faef0ccaf2b20141fa23.ctex"]
 
 [params]
 

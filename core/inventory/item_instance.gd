@@ -94,15 +94,29 @@ func set_benched(on: bool) -> void:
 const PINNED_KEY := "pinned"
 
 
+## 256：可以挪的随身之物（[member FixedItem.movable]）多记这一键
+const PIN_MOVES_KEY := "pin_moves"
+
+
 func is_pinned() -> bool:
 	return bool(state.get(PINNED_KEY, false))
 
 
-func set_pinned(on: bool) -> void:
+## 256：钉死不动（随身之物且不许挪）。可以挪的随身之物不算 —— 它照样离不开棋盘（[method is_pinned]），只是能在棋盘上换位置
+func is_anchored() -> bool:
+	return is_pinned() and not bool(state.get(PIN_MOVES_KEY, false))
+
+
+func set_pinned(on: bool, movable: bool = false) -> void:
 	if on:
 		state[PINNED_KEY] = true
+		if movable:
+			state[PIN_MOVES_KEY] = true
+		else:
+			state.erase(PIN_MOVES_KEY)
 	else:
 		state.erase(PINNED_KEY)
+		state.erase(PIN_MOVES_KEY)
 
 
 ## 148：还剩几次（[member ItemDef.wear]）。没有耐久的返回 -1；老档里没记的按满算

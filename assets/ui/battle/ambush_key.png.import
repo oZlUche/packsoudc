@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dptslwftp1hiq"
-path="res://.godot/imported/wild_born.png-7cd5c5d48db783b4550ab138d40adab0.ctex"
+uid="uid://f360yl6ng5if"
+path="res://.godot/imported/ambush_key.png-38840d9a8998d322ab5d5e846735afcb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/skills/wild_born.png"
-dest_files=["res://.godot/imported/wild_born.png-7cd5c5d48db783b4550ab138d40adab0.ctex"]
+source_file="res://assets/ui/battle/ambush_key.png"
+dest_files=["res://.godot/imported/ambush_key.png-38840d9a8998d322ab5d5e846735afcb.ctex"]
 
 [params]
 

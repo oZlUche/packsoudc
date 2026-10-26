@@ -208,8 +208,7 @@ static func start(
 	# 149：体力上限、开局钱按角色的基数乘科技的百分比再加加算；章节的体力加成在最后加
 	s.vitality = Vitality.new(ctx.vitality_max_of(vitality_max) + p_chapter.vitality_bonus)
 	# 2026-10-22（作者定）：开局的钱**全由玩家自己从仓库带**（[param p_carry_funds]），不再凭空发。
-	# 原来那条水源 —— `EconomyRules.starting_balance` / `CharacterDef.starting_funds` / 科技「行囊」的百分比 ——
-	# 三个字段先留着不删：之后要么改成「带入上限」，要么给别的用途
+	# 原来那条水源（`EconomyRules.starting_balance` / `CharacterDef.starting_funds` / `starting_funds_bonus`）256 删了
 	s.wallet = Wallet.new(maxi(0, p_carry_funds))
 	s.board = GridInventory.new(board_size, BOARD_ID, true)
 	if p_character != null:
@@ -602,6 +601,7 @@ func compile_player() -> CombatantSpec:
 		input.baseline_mods.append_array(enc["baseline"])
 	# 105：按件随机挑选的种子。一局之内只随步数变，所以拖动预估挑的和真打挑的是同一批
 	input.seed = hash("%d:compile:%d" % [run_seed, travel.clock.total if travel != null and travel.clock != null else 0])
+	input.scoped.append_array(buff_context().scoped)     # 256：一局被动的按件修饰（操练：武器耐力消耗 −20%）
 	var altar := AltarModule.of(self)     # 093：信仰级效果往编译器的入参里放东西（顺序 = 文件里的顺序）
 	if altar != null:
 		var bonus := altar.axes()     # 祈祷攒的轴层数（105）
@@ -701,7 +701,7 @@ func set_character(ch: CharacterDef) -> void:
 #region 负重（129）
 ## 负重：作战棋盘上每件（含包本身）的重量之和。地上、保险箱、仓库不算。派生，不存档
 func carry_weight() -> int:
-	return ItemWeight.total(board)
+	return ItemWeight.total_scaled(board, buff_context().weight_pct)     # 256：操练的武器减重
 
 
 ## 负重上限 = 角色的 ×（1 + 科技的百分比）+ 加算（[method RunContext.carry_capacity_of]，149）。0 = 不算负重（没角色、角色没配）
@@ -1310,6 +1310,11 @@ static func from_dict(
 		var rc = pr.get("content", {})
 		s.events.pending_ransom = {"node": int(pr["node"]), "type": String(pr.get("type", "battle")),
 			"content": (rc as Dictionary).duplicate(true) if rc is Dictionary else {}, "cost": int(pr.get("cost", 1)), "price": int(pr.get("price", 0))}
+		if pr.has("defeat"):
+			s.events.pending_ransom["defeat"] = String(pr["defeat"])
+		var more = pr.get("more", [])
+		if more is Array and not (more as Array).is_empty():
+			s.events.pending_ransom["more"] = (more as Array).map(func(m) -> Dictionary: return {"type": String(m.get("type", "")), "cost": int(m.get("cost", 1))})
 	for key in d.get("tally", {}):
 		s.tally[String(key)] = int((d["tally"] as Dictionary)[key])
 	for id in d.get("searched_nodes", []):

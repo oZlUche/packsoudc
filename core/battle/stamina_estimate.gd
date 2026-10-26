@@ -51,10 +51,7 @@ static func _stamina_of(rule: AbilityRule, stats: StatSet) -> float:
 		var rc := c as ResourceCost
 		if rc == null or rc.resource_key != BattleStats.RES_STAMINA:
 			continue
-		if rc.amount_stat != &"" and stats != null:
-			total += StatMath.to_float(stats.total_of(rc.amount_stat))
-		else:
-			total += rc.amount
+		total += rc.stamina_per_use(stats)     # 256：写死的也吃 `stamina_cost` 的打折（和 [method ResourceCost.pay] 同一套）
 	return total
 
 

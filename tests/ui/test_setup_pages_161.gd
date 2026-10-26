@@ -69,10 +69,10 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 	t.eq(setup._back_btn.text, "回主菜单", "第一页的返回 = 回主菜单")
 	t.check(not setup._warehouse_view.is_visible_in_tree(), "第一页看不到仓库")
 
-	# 角色卡：255 起面板是一行蜡板方块（生命 / 耐力 / 回气 / 体力），按这个角色的底子写
+	# 角色卡：255 起面板是一行蜡板方块（生命 / 耐力 / 耐力回复 / 体力），按这个角色的底子写
 	var ch: CharacterDef = setup.character()
 	var plaques: Array = setup._stat_plaques
-	t.eq(plaques.map(func(p: StatPlaque) -> String: return p.caption), ["生命", "耐力", "回气", "体力"], "四块：生命、耐力、回气、体力")
+	t.eq(plaques.map(func(p: StatPlaque) -> String: return p.caption), ["生命", "耐力", "耐力回复", "体力"], "四块：生命、耐力、耐力回复、体力")
 	t.eq((plaques[0] as StatPlaque).value, str(int(ch.baseline().value_of(&"max_hp"))), "生命上限按角色")
 	t.eq((plaques[1] as StatPlaque).value, str(int(ch.baseline().value_of(&"max_stamina"))), "耐力上限按角色")
 	t.eq((plaques[3] as StatPlaque).value, str(ch.vitality_max), "体力按角色")

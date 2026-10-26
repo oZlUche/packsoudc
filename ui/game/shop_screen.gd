@@ -254,7 +254,7 @@ func _cant_sell(inst: ItemInstance) -> String:
 	var board := flow.run.board
 	if not board.has_item(inst.uid):
 		return ""
-	if board.is_locked(inst.uid):
+	if board.keeps(inst.uid):
 		return DragLayer.refused_notice(board, inst.uid)
 	if board.acts_as_bag(inst.def) and not board.contents_of(inst.uid).is_empty():
 		return UiText.t("act.bag_full")

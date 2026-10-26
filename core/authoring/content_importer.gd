@@ -1369,8 +1369,6 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 	_check_character_board(def, ctx, report)
 	if def.carry_max_items < -1 or def.carry_rarity_cap < -1:
 		report.error("carry_max_items", "上限只能是 -1（不限）或非负数")
-	if def.starting_funds < -1:
-		report.error("starting_funds", "开局钱只能是 -1（用全局的）或非负数")
 	if def.starting_bags.is_empty():
 		report.error("starting_bags", "至少一个初始包：棋盘上只有包里的东西参战（3.2），没有包一格都用不了")
 	for key in def.base_stats:
@@ -1855,7 +1853,7 @@ static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportR
 ## 钱的数全得非负；商店至少一格、至少有一档稀有度能上架；刷新不能越刷越便宜
 static func _validate_economy_rules(rules: EconomyRules, report: ImportReport) -> void:
 	_require_id(rules.id, "经济规则", report)
-	for pair in [["starting_balance", rules.starting_balance], ["reward_base", rules.reward_base],
+	for pair in [["reward_base", rules.reward_base],
 			["reward_per_strength", rules.reward_per_strength], ["shop_refresh_cost", rules.shop_refresh_cost],
 			["shop_refresh_step", rules.shop_refresh_step], ["paid_extracts", rules.paid_extracts], ["extract_fee", rules.extract_fee]]:
 		if int(pair[1]) < 0:

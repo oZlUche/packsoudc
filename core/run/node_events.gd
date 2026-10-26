@@ -366,7 +366,8 @@ func choose(i: int) -> bool:
 	var fled := false
 	if ctx.flee_encounter:
 		var fail := rules.flee_fail_vitality() if rules != null else 1
-		fled = flee_roll(flee_chance(), fail, _rng_for(node, "flee:%d:%d" % [ctx.steps, searches_total()]), ctx)
+		fled = flee_roll(flee_chance(), fail, _rng_for(node, "flee:%d:%d" % [ctx.steps, searches_total()]), ctx, Callable(),
+			node, _flee_foe(node, saved_encounter))
 		ctx.start_battle = not fled
 	# 8-3：改类型先落账，后面的「照常发生」「开战」都按新类型走（和随机点揭开是同一个记号）
 	if ctx.new_type != &"" and ctx.new_type != type:
@@ -642,13 +643,18 @@ func flee_chance() -> float:
 
 ## 248：掷一把逃跑（搜索遭遇、伏击、猎手同一个）。逃掉返回 true；没逃掉扣 [param fail_vitality] 点体力
 ## （给了 [param spend] 就交它扣 —— 猎手要自己报战败）、背节点规则的 `flee.fail_buff`。日志与代价记进 [param ctx]
-func flee_roll(chance: float, fail_vitality: int, rng: RandomNumberGenerator, ctx: EventContext, spend: Callable = Callable()) -> bool:
+## 256：[param node] / [param foe] 给了（逃的是谁：开价按它打赢的钱算）就先问求饶 —— 开得出价就不扣，等天平；
+## [param defeat] 是天平上不求饶、扣到底时报的战败原因（猎手报它自己的）
+func flee_roll(chance: float, fail_vitality: int, rng: RandomNumberGenerator, ctx: EventContext, spend: Callable = Callable(),
+		node: MapNode = null, foe: Dictionary = {}, defeat: StringName = &"vitality_depleted") -> bool:
 	if rng.randf() < chance:
 		ctx.log.append(UiText.t("flee.ok"))
 		return true
 	ctx.log.append(UiText.t("flee.fail"))
 	if fail_vitality > 0:
-		if spend.is_valid():
+		if node != null and _offer_ransom(node, FLEE, foe, fail_vitality, defeat):
+			pass     # 256：先不扣，等天平
+		elif spend.is_valid():
 			spend.call(fail_vitality)
 		elif vitality != null:
 			vitality.spend(fail_vitality, &"flee")
@@ -750,17 +756,41 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 
 
 #region 求饶（256）
-## 这一场输了能不能求饶：有 `ransom` 效果、不是核心点也不是搜索遭遇、开得出价。开得出就记下等玩家，返回 true
-func _offer_ransom(node: MapNode, type: StringName, content: Dictionary, cost: int) -> bool:
+## 求饶时 [member pending_ransom] 的 `type`：逃跑失败（不是打输了：不求饶时照扣逃跑那几点，不吃「不屈」的少扣）
+const FLEE := &"flee"
+
+
+## 有对手的扣体力能不能求饶（作者 15:28「只要扣体力就能求饶」：打输了、逃跑失败；事件里自愿付的不算）：
+## 有 `ransom` 效果、不是核心点也不是搜索遭遇的败仗（那两个本来不扣 / 必死）、开得出价。开得出就记下等玩家，返回 true
+func _offer_ransom(node: MapNode, type: StringName, content: Dictionary, cost: int, defeat: StringName = &"vitality_depleted") -> bool:
 	var mult := hooks.run_context().ransom_mult
 	if not offer_ransom or mult <= 0.0 or type == &"core" or type == &"search" or wallet == null:
 		return false
 	var price := ransom_price(node, content, mult)
 	if price <= 0:
 		return false
+	if not pending_ransom.is_empty():
+		# 逃跑失败、接着那一场又输了（猎手）：一次天平算两笔 —— 开价相加，不求饶两笔照扣
+		var more: Array = pending_ransom.get("more", [])
+		more.append({"type": String(type), "cost": cost})
+		pending_ransom["more"] = more
+		pending_ransom["price"] = int(pending_ransom["price"]) + price
+		ransom_offered.emit(node, int(pending_ransom["price"]))
+		return true
 	pending_ransom = {"node": node.id, "type": String(type), "content": content.duplicate(true), "cost": cost, "price": price}
+	if defeat != &"vitality_depleted":
+		pending_ransom["defeat"] = String(defeat)
 	ransom_offered.emit(node, price)
 	return true
+
+
+## 248 / 256：被缠上的那一场的对手（开价按它算）：搜索里的遭遇、读档回来记在 pending 里的遭遇、点上的敌人；都没有按最低档
+func _flee_foe(node: MapNode, saved_encounter: Dictionary) -> Dictionary:
+	if current_search != null and not current_search.encounter.is_empty():
+		return current_search.encounter
+	if not saved_encounter.is_empty():
+		return saved_encounter
+	return node.content if EnemyKit.has_enemy(node.content) else {}
 
 
 ## 开价 = 这一场打赢的钱（地图难度与敌人档位都在里面）× [param mult]
@@ -812,12 +842,19 @@ func refuse_ransom() -> bool:
 	if pending_ransom.is_empty():
 		return false
 	var node := ransom_node()
-	var cost := int(pending_ransom.get("cost", 1))
+	var parts: Array = [{"type": pending_ransom.get("type", ""), "cost": pending_ransom.get("cost", 1)}]
+	parts.append_array(pending_ransom.get("more", []))
+	var defeat := StringName(String(pending_ransom.get("defeat", "vitality_depleted")))
 	pending_ransom = {}
 	if vitality != null:
-		vitality.spend(maxi(1, cost - hooks.run_context().loss_discount), &"battle_lost")
+		for part in parts:
+			var cost := int((part as Dictionary).get("cost", 1))
+			if StringName(String((part as Dictionary).get("type", ""))) == FLEE:
+				vitality.spend(cost, &"flee")     # 逃跑失败那几点原样扣
+			else:
+				vitality.spend(maxi(1, cost - hooks.run_context().loss_discount), &"battle_lost")
 		if vitality.is_depleted():
-			_defeat(&"vitality_depleted")
+			_defeat(defeat)
 	ransom_settled.emit(node, false)
 	return true
 #endregion

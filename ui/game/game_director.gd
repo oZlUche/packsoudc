@@ -222,6 +222,7 @@ func overlay() -> GameScreen:
 ## 101 第 5 刀：接线在这边 —— [GameFlow] 只发 [signal GameFlow.run_changed] 并提供 [method GameFlow.faith_status]，不认识 ui
 func _on_run_changed(state: RunState) -> void:
 	ItemTooltip.faith_probe = Callable() if state == null else flow.faith_status
+	ItemTooltip.weight_probe = Callable() if state == null else func() -> Array: return state.buff_context().weight_pct
 
 
 func _on_screen_changed(screen: int, payload: Dictionary) -> void:

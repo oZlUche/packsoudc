@@ -10,20 +10,20 @@ display_names = {
 "en": "The Three Characters"
 }
 order = 7
-text = "每个角色的不同只有两样：初始面板（棋盘大小、生命、耐力、耐力回复、体力上限、初始包、负重上限、开局钱）和技能，有的角色还带一件钉在棋盘上的随身之物。技能一直生效。科技对每个角色都生效，和角色的技能叠加；生命、体力、负重、开局钱这几条科技按角色自己的数加百分比，所以底子不同的人差距会越拉越大。
+text = "每个角色的不同只有两样：初始面板（棋盘大小、生命、耐力、耐力回复、体力上限、初始包、负重上限）和技能，有的角色还带一件随身之物。开局带多少钱由你自己从仓库带，不分角色。技能一直生效。科技对每个角色都生效，和角色的技能叠加；生命、体力、负重这几条科技按角色自己的数加百分比，所以底子不同的人差距会越拉越大。
 
-安德烈乌斯擅长避战。他的棋盘最大、负重最高、带的钱最多。「偷袭」：战前准备屏上多一把键，按了直接开打，敌人开战就失去三成生命；次数有限，每到一个休息点补一次。「求饶」：会扣体力的一场打输了，对方开价，把金币和道具放上天平的左盘，够了就成交、这一场不扣体力；核心点与搜索遭遇不能求饶。「熟门熟路」：每走几步，下一步不计入倒计时。「溜得掉」：猎手更难发现他，逃跑更容易。他的生命和体力上限都是最低的。
+安德烈乌斯擅长避战。「偷袭」：战前准备屏上多一把键，按了直接开打，敌人开战就失去三成生命；次数有限，每到一个休息点补一次。「求饶」：打输了或逃跑失败、要扣体力的时候，对方开价，把金币和道具放上天平的左盘，够了就成交、这一回不扣体力；核心点不能求饶。他的生命和体力上限都是最低的。
 
-布鲁图斯擅长生存，犯了错也缓得过来。被动「野地里长大」：休息多回体力。被动「坚韧」：战斗里生命掉到三成以下时立刻得到一笔护甲，每场一次。他的棋盘是最宽的之一，生命和体力上限最高；但耐力回得慢、带的钱少。
+布鲁图斯擅长生存，没有技能，靠底子：生命、体力上限最高，棋盘最宽，背得最多，犯了错也缓得过来。
 
-马库斯擅长战斗。他随身一块军功牌，钉在棋盘中间：每打赢一场记军功，精英和核心记得更多；攒够了就升一阶，从铜到桂冠。牌边的武器伤害更高、出手更快、耗的耐力更少，阶越高圈越大。被动「操练」：战斗里耐力快见底时立刻回一段，每场一次。他的耐力最高、耐力回得最快。"
+马库斯擅长战斗。他胸前一块军功牌：每打赢一场记军功，精英和核心记得更多；攒够了就升一阶，从铜到桂冠。牌边的武器伤害更高、出手更快、耗的耐力更少，阶越高圈越大。军功牌能在自己的棋盘上挪，但丢不掉。被动「操练」：所有武器的耐力消耗和重量降低两成。他的耐力回得最快。"
 texts = {
-"en": "Characters differ in only two things: their starting stats (board size, Health, Stamina, Stamina regen, max Vitality, starting bags, Load limit and starting coins) and their skills; some also carry a signature item pinned to the board. Skills are always in effect. Tech applies to every character and stacks with their skills; the Health, Vitality, Load and starting-coin techs add a percentage of each character's own numbers, so characters with different bases pull further apart over time.
+"en": "Characters differ in only two things: their starting stats (board size, Health, Stamina, Stamina Regen, max Vitality, starting bags and Load limit) and their skills; some also carry a kit item. You bring your own coins from the warehouse, whoever you pick. Skills are always in effect. Tech applies to every character and stacks with their skills; the Health, Vitality and Load techs add a percentage of each character's own numbers, so characters with different bases pull further apart over time.
 
-Andreus excels at avoiding fights. He has the biggest board, the highest Load and the most coins. \"Ambush\": the pre-battle screen gets an extra key that starts the fight at once, and the enemy begins it three tenths down on Health; uses are limited, and each rest spot restores one. \"Beg for Mercy\": when he loses a fight that costs Vitality, the enemy names a price; put coins and items on the left pan of the scale, and once it is enough the deal is struck and the fight costs no Vitality. It doesn't work at the core or in search encounters. \"Old Paths\": every few steps, the next step doesn't count against the Countdown. \"Slippery\": hunters have a harder time spotting him, and escaping is easier. His Health and max Vitality are the lowest.
+Andreus excels at avoiding fights. \"Ambush\": the pre-battle screen gets an extra key that starts the fight at once, and the enemy begins it three tenths down on Health; uses are limited, and each rest spot restores one. \"Beg for Mercy\": when a lost fight or a failed escape would cost Vitality, the enemy names a price; put coins and items on the left pan of the scale, and once it is enough the deal is struck and no Vitality is lost. It doesn't work at the core. His Health and max Vitality are the lowest.
 
-Brutus excels at survival; his mistakes don't kill him. Passive \"Raised in the Wild\": resting restores more Vitality. Passive \"Tough\": in battle, when his Health drops below thirty percent, he gains a burst of Armor at once, once per battle. His board is one of the widest and his max Health and Vitality are the highest, but his Stamina regenerates slowly and he carries few coins.
+Brutus excels at survival. He has no skills and relies on his body: the highest Health and max Vitality, the widest board and the heaviest Load, so his mistakes don't kill him.
 
-Marcus excels at combat. He carries a phalera pinned to the middle of his board: every won fight earns Honor, more for elites and the core, and enough Honor raises its rank from Bronze to Laurel. The weapons around it hit harder, strike faster and use less Stamina, over a wider ring as the rank rises. Passive \"Drill\": in battle, when his Stamina is nearly empty, he instantly regains a chunk of it, once per battle. He has the highest Stamina and the fastest Stamina regen."
+Marcus excels at combat. He wears a phalera: every won fight earns Honor, more for elites and the core, and enough Honor raises its rank from Bronze to Laurel. The weapons around it hit harder, strike faster and use less Stamina, over a wider ring as the rank rises. He can move it around his board but never drop it. Passive \"Drill\": all weapons cost a fifth less Stamina and weigh a fifth less. He has the fastest Stamina Regen."
 }
 related = Array[String](["vitality", "battle_and_prebattle", "hunters", "rest_point"])

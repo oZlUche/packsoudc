@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2icld1d32mbv"
-path="res://.godot/imported/merit.png-1e24bf6daf2689cf96bf945c4866ea73.ctex"
+uid="uid://dy8cmgg7sr5iy"
+path="res://.godot/imported/ambush_key_disabled.png-22f83110565e2d41663c85fd5c5815e1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/skills/merit.png"
-dest_files=["res://.godot/imported/merit.png-1e24bf6daf2689cf96bf945c4866ea73.ctex"]
+source_file="res://assets/ui/battle/ambush_key_disabled.png"
+dest_files=["res://.godot/imported/ambush_key_disabled.png-22f83110565e2d41663c85fd5c5815e1.ctex"]
 
 [params]
 

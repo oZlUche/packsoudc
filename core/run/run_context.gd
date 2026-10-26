@@ -7,20 +7,21 @@ extends RefCounted
 
 ## 体力上限加多少（开局时并入 Vitality）
 var vitality_max_bonus: int = 0
-## 开局钱加多少
-var starting_funds_bonus: int = 0
 ## 2026-10-22（作者定）：战败时保住钱包里剩的钱的百分之几（行囊科技）——
 ## 按战败那一刻 wallet 里**实际剩的**算，不是按带进来的原始金额（否则中途花掉的钱也会被退，等于凭空造钱）
 var death_refund_percent: int = 0
 ## 149：有基数的三样按百分比加（Σ百分数，相加不相乘）：终值 = roundi(基数 ×（1 + Σ%/100）) + Σ加算（133 的先乘后加）。
-## 基数是角色的数（体力上限、负重、开局钱），见 [method scaled]
+## 基数是角色的数（体力上限、负重），见 [method scaled]
 var vitality_max_mult: int = 0
 var carry_capacity_mult: int = 0
-var starting_funds_mult: int = 0
 ## 每个搜索点多搜几次
 var extra_searches: int = 0
 ## 商店售价的倍数（1 = 原价；0.9 = 九折）
 var shop_price_mult: float = 1.0
+## 256（马库斯「操练」）：一局里按标签筛件的战斗修饰（105 的 [ScopedMod]，[method RunState.compile_player] 并进 `CompileInput.scoped`）
+var scoped: Array[ScopedMod] = []
+## 256：按标签打折的重量 `[{tags: [..], percent: −20}]`（[method ItemWeight.total_scaled]）
+var weight_pct: Array = []
 ## 幸运值加多少（掉落：每点加 DropRule.luck_bonus）
 var luck_bonus: int = 0
 ## 猎手相关（069 第六节的角色技能接口）：侦察距离（隐形的猎手在这么远以内可见，0 = 不侦察）、猎手感知距离的倍率、逃跑成功率加成
@@ -52,7 +53,6 @@ var belt_start: Dictionary = {}
 func snapshot() -> Dictionary:
 	return {
 		"vitality_max_bonus": vitality_max_bonus,
-		"starting_funds_bonus": starting_funds_bonus,
 		"extra_searches": extra_searches,
 		"shop_price_mult": shop_price_mult,
 		"luck_bonus": luck_bonus,
@@ -64,7 +64,6 @@ func snapshot() -> Dictionary:
 		"stat_mult": stat_mult.duplicate(),
 		"vitality_max_mult": vitality_max_mult,
 		"carry_capacity_mult": carry_capacity_mult,
-		"starting_funds_mult": starting_funds_mult,
 		"loss_discount": loss_discount,
 		"carry_capacity_bonus": carry_capacity_bonus,
 		"free_step_every": free_step_every,
@@ -74,6 +73,8 @@ func snapshot() -> Dictionary:
 		"ransom_mult": ransom_mult,
 		"belt_slots_bonus": belt_slots_bonus,
 		"belt_start": belt_start.duplicate(),
+		"scoped": scoped.size(),
+		"weight_pct": weight_pct.duplicate(true),
 	}
 
 
@@ -90,6 +91,3 @@ func vitality_max_of(base: int) -> int:
 func carry_capacity_of(base: int) -> int:
 	return scaled(base, carry_capacity_mult, carry_capacity_bonus)
 
-
-func starting_funds_of(base: int) -> int:
-	return scaled(base, starting_funds_mult, starting_funds_bonus)

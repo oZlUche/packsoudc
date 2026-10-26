@@ -93,7 +93,7 @@ static func run_pipeline(t: TestCase) -> void:
 
 
 static func run_authored_characters(t: TestCase) -> void:
-	t.begin("技能 · 作者定的三个角色（136 / 256 改过）：安德烈乌斯（偷袭、求饶）、布鲁图斯（咬牙；数值在基线里，不再做成被动）、马库斯（只留操练，军功进了军功牌）；被动进上下文、基线加成盖到基线上")
+	t.begin("技能 · 作者定的三个角色（256 定稿）：安德烈乌斯（偷袭、求饶）、布鲁图斯（没有技能，全靠面板）、马库斯（操练：武器耐力消耗与重量 −20%；军功进了军功牌）；被动进上下文、基线加成盖到基线上")
 	var c := _content()
 	for id in [&"andreus", &"brutus", &"marcus"]:
 		t.not_null(_character(c, id), "有角色 %s" % id)
@@ -107,9 +107,13 @@ static func run_authored_characters(t: TestCase) -> void:
 	t.check(_expected(andreus).ransom_mult > 0.0, "256：安德烈乌斯能求饶")
 	t.check(_active(marcus).is_empty(), "256：马库斯没有主动技能（突击删了）")
 	t.eq(_expected(marcus).battle_reward_mult, 1.0, "256：马库斯的军功被动并进了军功牌")
-	t.check(_active(brutus).size() == 1 and _active(brutus)[0] is SecondWindSkill, "布鲁图斯有咬牙（136）")
-	var want := _expected(brutus)
-	t.check(want.stat_bonus.is_empty() and want.vitality_max_bonus == 0, "136：布鲁图斯的被动里不再有生命 / 耐力 / 体力加成（都在基线里）")
+	t.eq(andreus.skills.size(), 2, "256：安德烈乌斯只有偷袭、求饶（熟门熟路、溜得掉、脱身删了）")
+	t.check(brutus.skills.is_empty(), "256：布鲁图斯没有技能（野地里长大、坚韧、咬牙删了）")
+	var drill := _expected(marcus)
+	t.eq(drill.scoped.size(), 1, "256：操练喂一条按件修饰（武器）")
+	t.check(drill.scoped.size() == 1 and drill.scoped[0].tags == ([&"weapon"] as Array[StringName]) and drill.scoped[0].mods.size() == 1
+		and drill.scoped[0].mods[0].stat == BattleStats.STAMINA_COST and is_equal_approx(drill.scoped[0].mods[0].amount, -20.0), "武器耐力消耗 −20%")
+	t.eq(drill.weight_pct, [{"tags": [&"weapon"] as Array[StringName], "percent": -20}], "武器重量 −20%")
 	for raw in [andreus, brutus, marcus]:
 		var ch := raw as CharacterDef
 		var s := _start(c, ch)

@@ -274,14 +274,17 @@ func can_place_item(inst: ItemInstance, origin: Vector2i, rot: int) -> bool:
 	if inst == null or inst.def == null:
 		return false
 	if inst.is_pinned() and requires_bag:
-		return _pin_fits(inst.def.cells_rotated(rot), origin, inst.uid)
+		return _pin_fits(inst.def.cells_rotated(rot), origin, inst.uid, not inst.is_anchored(), inst.def)
 	return can_place_def(inst.def, origin, rot, inst.uid)
 
 
-## 255：随身之物自带底板 —— 不要包，只要格子在盘内、不是缺格、没有包、没被别的东西占着
-func _pin_fits(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int) -> bool:
+## 255：随身之物自带底板 —— 不要包，只要格子在盘内、不是缺格、没有包、没被别的东西占着。
+## 256：可以挪的（[param on_bags]）也能压在包上（碰到的包都得收它），这时它就是那个包的内容物
+func _pin_fits(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int, on_bags: bool = false, def: ItemDef = null) -> bool:
 	if not _cells_in_board(cells, origin) or not _cells_free(cells, origin, ignore_uid):
 		return false
+	if on_bags:
+		return _touched_bags_accept(cells, origin, def)
 	for c in cells:
 		if _bag_owner[_idx(origin + c)] != EMPTY_UID:
 			return false
@@ -469,10 +472,13 @@ func clear() -> void:
 #region 生长的扎根（207）
 ## 玩家动不了这一件：它自己扎了根（茎叶起），或者它是包、包里有一件连包扎了根（绽放）。
 ## 只有 [member growth_locks] 开着的棋盘才锁；核心层的 [method remove] 不看它（结算、存档、死亡清棋盘照旧）
-## 255：随身之物（[method ItemInstance.is_pinned]）不看开关，永远动不了
+## 255：随身之物（[method ItemInstance.is_pinned]）不看开关，永远动不了。
+## 256：可以挪的随身之物（军功牌）不锁 —— 它离不开棋盘由 [method keeps] 管；压着它的包锁住（包一走它就跟着离开棋盘）
 func is_locked(uid: int) -> bool:
 	var inst: ItemInstance = _items.get(uid, null)
-	if inst != null and inst.is_pinned():
+	if inst != null and inst.is_anchored():
+		return true
+	if inst != null and requires_bag and acts_as_bag(inst.def) and holds_pinned(uid):
 		return true
 	if not growth_locks:
 		return false
@@ -481,6 +487,22 @@ func is_locked(uid: int) -> bool:
 	if acts_as_bag(inst.def):
 		return bag_locked(uid)
 	return inst.def.growth != null and GrowthProfile.locks_item(inst)
+
+
+## 256：这一件离不开这块棋盘 —— 锁着（[method is_locked]），或者它是随身之物（可以挪的也算）。
+## 「拿到别的容器去」（地上、卖、存、托盘、双击搬走）都问它；棋盘内挪位置只问 [method is_locked]
+func keeps(uid: int) -> bool:
+	var inst: ItemInstance = _items.get(uid, null)
+	return is_locked(uid) or (inst != null and inst.is_pinned())
+
+
+## 256：这个包上压着随身之物（可以挪的那种才压得上包）
+func holds_pinned(bag_uid: int) -> bool:
+	for uid in contents_of(bag_uid):
+		var inst: ItemInstance = _items.get(uid, null)
+		if inst != null and inst.is_pinned():
+			return true
+	return false
 
 
 ## 这个包被包里扎了根的东西钉住了（包里别的东西照旧能动）

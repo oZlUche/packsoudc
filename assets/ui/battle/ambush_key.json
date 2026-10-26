@@ -1,0 +1,22 @@
+{
+ "size": [
+  112,
+  40
+ ],
+ "text_rect": [
+  36,
+  0,
+  108,
+  40
+ ],
+ "font_size": 18,
+ "font": "serif_bold",
+ "ink": {
+  "normal": "#2e2219",
+  "hover": "#2e2219",
+  "pressed": "#2e2219",
+  "disabled": "#605a50"
+ },
+ "tone": "light",
+ "note": "256 偷袭键，同 248 退回键：平（230），字在 text_rect 里居中，按下字下移 1px；字「偷袭」由代码写（serif_bold 要补「袭」字）"
+}

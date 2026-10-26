@@ -1,6 +1,6 @@
-## 256（作者 2026-10-26 15:06 / 15:19）：布鲁图斯照旧（容错）；马库斯的军功牌（打赢记军功、五阶、牌边的武器加成、圈变大）；
-## 安德烈乌斯：体力 3、9 × 6、负重 64；偷袭（战前屏的键，敌人开战失去三成生命，休息点补一次）；求饶（会扣体力的一场打输了，
-## 天平上拿金币和道具抵，核心点与搜索遭遇不给，猎手给）。期望从内容推：角色与道具文件里写多少就断言多少。
+## 256 定稿（作者 2026-10-26 15:48，报告 §8.13）：马库斯 军功牌（可在棋盘上挪、丢不掉；打赢记军功、五阶、圈变大）+ 操练（武器耐力消耗与重量 −20%）；
+## 布鲁图斯没有技能；安德烈乌斯 体力 3、7 × 6、负重 48，偷袭（战前屏的键，三次，休息补一次）+ 求饶（有对手的扣体力：打输了、逃跑失败，
+## 天平上拿金币和道具抵；核心点与搜索遭遇不给）。期望从内容推：角色与道具文件里写多少就断言多少。
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
@@ -54,24 +54,37 @@ static func _stat_of(run: RunState, uid: int, key: StringName) -> float:
 	return -1.0
 
 
+## 写死在规则上的耐力消耗出手时乘的因子（这件的 `stamina_cost` 乘算 × 灵巧轴）
+static func _cost_factor(run: RunState, uid: int) -> float:
+	return StatMath.to_float(CombatantRuntime.from_spec(run.compile_player(), 0).item_cost_factor(uid))
+
+
+## 256 定稿（作者 15:48，报告 §8.13 / docs/characters.md）：id → [生命, 耐力, 耐力回复, 体力, 棋盘, 负重, 技能 id]
+const FINAL := {
+	&"marcus": [55.0, 65.0, 5.0, 5, Vector2i(8, 6), 48, [&"drill"]],
+	&"brutus": [85.0, 65.0, 4.0, 8, Vector2i(9, 6), 64, []],
+	&"andreus": [45.0, 55.0, 4.0, 3, Vector2i(7, 6), 48, [&"ambush", &"ransom"]],
+}
+
+
 static func run_panels(t: TestCase) -> void:
-	t.begin("256 · 面板：安德烈乌斯体力 3、耐力 45、9 × 6、负重 64（生命 45、回气 4、带钱 120 不动）；布鲁图斯、马库斯的面板不动")
+	t.begin("256 定稿 · 三人面板与技能（docs/characters.md）：马库斯 55/65/5、体力 5、8 × 6 / 48、操练；布鲁图斯 85/65/4、体力 8、9 × 6 / 64、没有技能；安德烈乌斯 45/55/4、体力 3、7 × 6 / 48、偷袭 + 求饶")
 	var c := _content()
-	var a := CS._character(c, &"andreus")
-	t.eq(a.vitality_max, 3, "安德烈乌斯体力 3")
-	t.eq(a.board_size, Vector2i(9, 6), "棋盘 9 × 6")
-	t.eq(a.weight_capacity, 64, "负重 64")
-	t.eq(a.baseline().value_of(&"max_stamina"), 45.0, "耐力 45")
-	t.eq(a.baseline().value_of(&"max_hp"), 45.0, "生命 45")
-	t.eq(a.starting_funds, 120, "带钱 120")
-	t.check(not a.skills.any(func(s: RunSkill) -> bool: return s is SlipSkill), "脱身删了")
-	var b := CS._character(c, &"brutus")
-	t.eq([b.vitality_max, b.board_size, b.weight_capacity], [7, Vector2i(9, 6), 56], "布鲁图斯不动")
-	t.check(Names.description_of(b).contains("棋盘最宽之一"), "布鲁图斯：「棋盘最宽之一」")
+	for id in FINAL:
+		var ch := CS._character(c, id)
+		var row: Array = FINAL[id]
+		var got := [ch.baseline().value_of(&"max_hp"), ch.baseline().value_of(&"max_stamina"), ch.baseline().value_of(&"regen_stamina"),
+			ch.vitality_max, ch.board_size, ch.weight_capacity, ch.skills.map(func(s: RunSkill) -> StringName: return s.id)]
+		t.eq(got, row, "%s：面板与技能" % id)
+		t.check(not ("starting_funds" in ch), "%s：没有开局钱字段（256 删）" % id)
+		t.check(not Names.description_of(ch).contains("{"), "%s：说明句的占位符都填上了" % id)
+	t.check(not ("starting_balance" in EconomyRules.new()), "经济规则没有开局钱")
+	t.check(not RunRegistry.RUN_EFFECTS.has(&"starting_funds_bonus"), "开局钱加成效果删了")
 	var m := CS._character(c, &"marcus")
-	t.eq(m.skills.map(func(s: RunSkill) -> StringName: return s.id), [&"drill"], "马库斯只留操练")
 	t.eq(m.fixed_items.size(), 1, "马库斯带一件随身之物")
-	t.eq([m.fixed_items[0].id, m.fixed_items[0].origin], [&"legion_phalera", Vector2i(3, 2)], "军功牌钉在 (3, 2)")
+	t.eq([m.fixed_items[0].id, m.fixed_items[0].origin, m.fixed_items[0].movable], [&"legion_phalera", Vector2i(3, 2), true], "军功牌开局在 (3, 2)，可以挪")
+	t.eq(String(StatAxes.TABLE[StatAxes.REGEN_STAMINA]["pos"]), "耐力回复", "术语：耐力回复（不叫回气）")
+	t.eq(UiText.t("setup.stat_regen"), "耐力回复", "选角色卡的蜡板写「耐力回复」")
 
 
 static func run_ambush(t: TestCase) -> void:
@@ -87,7 +100,7 @@ static func run_ambush(t: TestCase) -> void:
 	if amb == null:
 		return
 	t.check(amb.shown_to_player(), "藏着的主动（166）对它不生效")
-	t.eq([amb.uses, amb.cooldown_steps, amb.rest_recharge], [2, 0, 1], "次数 2、没有冷却、休息补 1")
+	t.eq([amb.uses, amb.cooldown_steps, amb.rest_recharge], [3, 0, 1], "次数 3、没有冷却、休息补 1")
 	var node := CS._battle_node(run)
 	var plain := EnemyKit.spec_of(node.content, c.enemies, run.pool, c.items)
 	t.eq(f.ambush_battle(), UiText.t("pre.no_battle"), "没有等着开打的一场：按不了")
@@ -95,24 +108,24 @@ static func run_ambush(t: TestCase) -> void:
 	t.eq(f.ambush_battle(), "", "偷袭开打")
 	var fought: CombatantSpec = run.events.last_battle["enemy"]
 	t.eq(fought.max_hp, maxi(1, int(roundf(float(plain.max_hp) * 0.7))), "敌人生命上限 = 七成")
-	t.eq(run.skills.uses_of(amb.id), 1, "次数 2 → 1")
+	t.eq(run.skills.uses_of(amb.id), 2, "次数 3 → 2")
 	t.eq(run.skills.cooldown_of(amb.id), 0, "没有冷却")
 	t.eq(f.screen, GameFlow.Screen.BATTLE, "→ 回放")
 	Support.settle(f)
 	run.events.rested.emit(node, 0)
-	t.eq(run.skills.uses_of(amb.id), 2, "休息点补一次")
+	t.eq(run.skills.uses_of(amb.id), 3, "休息点补一次")
 	run.events.rested.emit(node, 0)
-	t.eq(run.skills.uses_of(amb.id), 2, "补不过上限")
+	t.eq(run.skills.uses_of(amb.id), 3, "补不过上限")
 	if run.is_over():
 		return
 	_pend(run, node, "core")
 	t.eq(f.ambush_battle(), "", "核心点也能偷袭")
-	t.eq(run.skills.uses_of(amb.id), 1, "用掉一次")
+	t.eq(run.skills.uses_of(amb.id), 2, "用掉一次")
 	Support.cleanup(PREFIX)
 
 
 static func run_ransom(t: TestCase) -> void:
-	t.begin("256 · 求饶：普通 / 精英 / 猎手打输 → 开价 = 打赢的钱 × 倍数、不扣体力；成交扣钱与道具、体力不动；不求饶照扣、归零战败；核心点与搜索遭遇没有天平；别的角色没有")
+	t.begin("256 · 求饶（打输了）：普通 / 精英 / 猎手打输 → 开价 = 打赢的钱 × 倍数、不扣体力；成交扣钱与道具、体力不动；不求饶照扣、归零战败；核心点与搜索遭遇没有天平；别的角色没有")
 	var c := _content()
 	var f := _flow(c, &"andreus")
 	if f == null:
@@ -349,13 +362,14 @@ static func frame_prebattle_ambush(t: TestCase, root: Window) -> void:
 	if pre == null or pre.screen != GameFlow.Screen.PREBATTLE:
 		game.free()
 		return
-	var key: Button = pre.ambush_button()
-	t.not_null(key, "有偷袭键")
-	t.check(key != null and key.text.contains("偷袭") and key.text.contains("剩 2 次"), "键上写名字和剩几次：%s" % (key.text if key != null else ""))
+	var key := pre.ambush_button() as IconButton
+	t.not_null(key, "有偷袭键（四态整图的平石键）")
+	t.eq(key.art_label if key != null else "", "偷袭 ×3", "键上写名字和剩几次")
+	t.check(key != null and key.has_art(), "用的是美术定稿的图")
 	t.check(key != null and not key.disabled, "能按")
 	pre.ambush()
 	t.eq(flow.screen, GameFlow.Screen.BATTLE, "按下直接开打")
-	t.eq(flow.run.skills.uses_of(&"ambush"), 1, "用掉一次")
+	t.eq(flow.run.skills.uses_of(&"ambush"), 2, "用掉一次（3 → 2）")
 	game.free()
 	Support.cleanup("256f")
 
@@ -421,3 +435,164 @@ static func frame_ransom_screen(t: TestCase, root: Window) -> void:
 	t.eq(run.vitality.current, v - 1, "扣了体力")
 	game.free()
 	Support.cleanup("256g")
+
+
+static func run_ransom_flee(t: TestCase) -> void:
+	t.begin("256 · 求饶（逃跑失败，§8.13）：逃跑失败先不扣体力、开价 = 那一场打赢的钱 × 3；不求饶照扣逃跑那几点；逃跑失败又打输 = 一次天平两笔（价相加、不求饶两笔都扣）；没有求饶的角色照扣")
+	var c := _content()
+	var f := _flow(c, &"andreus")
+	if f == null:
+		t.check(false, "开不了局")
+		return
+	var run := f.run
+	_always_lose(run)
+	run.wallet.earn(2000)
+	var node := CS._battle_node(run)
+	var rng := RandomNumberGenerator.new()
+	var v0 := run.vitality.current
+	var ctx := EventContext.new()
+	t.check(not run.events.flee_roll(0.0, 1, rng, ctx, Callable(), node, node.content), "逃不掉")
+	t.eq(String(run.events.pending_ransom.get("type", "")), String(NodeEvents.FLEE), "开价的是逃跑失败")
+	t.eq(run.vitality.current, v0, "体力先不扣")
+	t.eq(int(run.events.pending_ransom.get("price", -1)), _price(run, node), "开价 = 打赢的钱 × 3（%d）" % _price(run, node))
+	t.check(f.refuse_ransom(), "不求饶")
+	t.eq(run.vitality.current, v0 - 1, "照扣逃跑那 1 点")
+	Support.settle(f)
+	# 逃跑失败 + 接着打输：一次天平两笔
+	run.vitality.restore(run.vitality.maximum, &"probe")
+	var v1 := run.vitality.current
+	run.events.flee_roll(0.0, 1, rng, EventContext.new(), Callable(), node, node.content)
+	var one := int(run.events.pending_ransom["price"])
+	_pend(run, node)
+	f.start_battle()
+	var more: Array = run.events.pending_ransom.get("more", [])
+	t.eq(more.size(), 1, "打输那一笔记在同一个天平上")
+	t.eq(int(run.events.pending_ransom["price"]), one + _price(run, node), "开价相加")
+	t.eq(run.vitality.current, v1, "两笔都还没扣")
+	var battle_cost := maxi(1, int((more[0] as Dictionary).get("cost", 1)) - run.buff_context().loss_discount) if not more.is_empty() else 1
+	t.check(f.refuse_ransom(), "不求饶")
+	t.eq(run.vitality.current, v1 - 1 - battle_cost, "两笔照扣（1 + %d）" % battle_cost)
+	Support.settle(f)
+	# 付钱了结逃跑失败
+	run.vitality.restore(run.vitality.maximum, &"probe")
+	run.events.flee_roll(0.0, 2, rng, EventContext.new(), Callable(), node, node.content)
+	t.eq(f.pay_ransom(int(run.events.pending_ransom["price"])), "", "成交")
+	t.eq(run.vitality.current, run.vitality.maximum, "体力不动")
+	# 别的角色：逃跑失败照扣
+	var g := _flow(c, &"marcus", "256e")
+	var gv := g.run.vitality.current
+	g.run.events.flee_roll(0.0, 1, rng, EventContext.new(), Callable(), CS._battle_node(g.run), CS._battle_node(g.run).content)
+	t.check(g.run.events.pending_ransom.is_empty(), "马库斯没有天平")
+	t.eq(g.run.vitality.current, gv - 1, "照扣")
+	Support.cleanup(PREFIX)
+	Support.cleanup("256e")
+
+
+static func run_phalera_moves(t: TestCase) -> void:
+	t.begin("256 · 军功牌能在棋盘上挪、丢不掉（§8.13）：挪了圈跟着走；能压在包上（包就锁住）；送不进仓库 / 卖不掉；选人页上钉死；存档带着")
+	var c := _content()
+	var f := _flow(c, &"marcus")
+	if f == null:
+		t.check(false, "开不了局")
+		return
+	var run := f.run
+	var pin := _phalera(run)
+	if pin == null:
+		t.check(false, "没有军功牌")
+		return
+	t.check(pin.is_pinned() and not pin.is_anchored(), "随身、不钉死")
+	t.check(not run.board.is_locked(pin.uid), "不算锁住")
+	t.check(run.board.keeps(pin.uid), "但离不开棋盘")
+	for inst in run.board.items().duplicate():
+		if not (inst as ItemInstance).is_pinned():
+			run.board.remove((inst as ItemInstance).uid)
+	t.check(InventoryService.move(run.board, pin.uid, run.board, Vector2i(0, 4)), "棋盘里挪到 (0, 4)")
+	t.eq(pin.origin, Vector2i(0, 4), "到了")
+	# 圈跟着走：升到银，紧挨新位置的刀加了伤害
+	GrowthProfile.add_honor(pin, 3)
+	var bag := ItemInstance.create(c.items.get_def(&"bag_small"))
+	t.check(run.board.place(bag, Vector2i(1, 4), 0), "小包放在牌右边")
+	var knife := ItemInstance.create(c.items.get_def(&"knife"))
+	t.check(run.board.place(knife, Vector2i(1, 4), 1), "刀横放在包里、贴着牌")
+	var probe := ItemInstance.create(c.items.get_def(&"knife"))
+	var g := _flow(c, &"marcus", "256h")
+	for inst in g.run.board.items().duplicate():
+		if not (inst as ItemInstance).is_pinned():
+			g.run.board.remove((inst as ItemInstance).uid)
+	g.run.board.place(ItemInstance.create(c.items.get_def(&"bag_small")), Vector2i(1, 4), 0)
+	g.run.board.place(probe, Vector2i(1, 4), 1)
+	var with_pin := _stat_of(run, knife.uid, BattleStats.DAMAGE)
+	var plain := _stat_of(g.run, probe.uid, BattleStats.DAMAGE)
+	t.check(absf(with_pin - plain * 1.05) < 0.02, "银：贴着新位置的刀 +5%%（%.2f / %.2f）" % [plain, with_pin])
+	# 压在包上：包锁住
+	run.board.remove(knife.uid)
+	t.check(InventoryService.move(run.board, pin.uid, run.board, Vector2i(1, 4)), "挪到包上")
+	t.check(run.board.holds_pinned(bag.uid) and run.board.is_locked(bag.uid), "包上压着军功牌：包锁住")
+	t.check(DragLayer.refused_notice(run.board, bag.uid).length() > 0 and DragLayer.refused_notice(run.board, bag.uid) == UiText.t(DragLayer.PIN_BAG_NOTICE), "提示：先把随身之物挪开")
+	t.check(InventoryService.move(run.board, pin.uid, run.board, Vector2i(0, 0)), "挪开")
+	t.check(not run.board.is_locked(bag.uid), "包解锁")
+	# 离不开棋盘
+	t.check(not InventoryService.transfer_auto(run.board, pin.uid, run.storage), "送不进仓库")
+	t.check(run.board.has_item(pin.uid), "还在棋盘上")
+	t.check(DragLayer.refused_notice(run.board, pin.uid).contains("不能离开棋盘"), "提示：%s" % DragLayer.refused_notice(run.board, pin.uid))
+	# 选人页：钉死在 (3, 2)
+	var shown := GridInventory.new(run.character.board_size)
+	run.character.shape_board(shown, c.items, Callable(), false)
+	var on_page: ItemInstance = null
+	for inst in shown.items():
+		if (inst as ItemInstance).def.id == &"legion_phalera":
+			on_page = inst
+	t.check(on_page != null and on_page.is_anchored() and on_page.origin == Vector2i(3, 2), "选人页上钉死在 (3, 2)")
+	# 存档带着
+	t.check(f.save(), "存档")
+	var f2 := Support.flow(c, PREFIX, 0.0, null, true)
+	t.check(f2.continue_run(), "读档")
+	var back := _phalera(f2.run)
+	t.check(back != null and back.is_pinned() and not back.is_anchored() and back.origin == Vector2i(0, 0), "读回来：还能挪、在 (0, 0)")
+	Support.cleanup(PREFIX)
+	Support.cleanup("256h")
+
+
+static func run_drill(t: TestCase) -> void:
+	t.begin("256 · 操练（马库斯）：所有武器耐力消耗 −20%、重量 −20%（一件命中就打八折，取整在求和之后）；别的角色没有")
+	var c := _content()
+	var f := _flow(c, &"marcus")
+	var g := _flow(c, &"brutus", "256i")
+	if f == null or g == null:
+		t.check(false, "开不了局")
+		return
+	for run in [f.run, g.run]:
+		for inst in (run as RunState).board.items().duplicate():
+			if not (inst as ItemInstance).is_pinned():
+				(run as RunState).board.remove((inst as ItemInstance).uid)
+	var k1 := ItemInstance.create(c.items.get_def(&"knife"))
+	var k2 := ItemInstance.create(c.items.get_def(&"knife"))
+	# 离军功牌远一点（牌边减耐力消耗，这里只看操练）
+	t.check(f.run.board.place(ItemInstance.create(c.items.get_def(&"bag_small")), Vector2i(6, 4), 0), "马库斯：小包")
+	t.check(f.run.board.place(k1, Vector2i(6, 4), 1), "马库斯：刀")
+	t.check(g.run.board.place(ItemInstance.create(c.items.get_def(&"bag_small")), Vector2i(6, 4), 0), "布鲁图斯：小包")
+	t.check(g.run.board.place(k2, Vector2i(6, 4), 1), "布鲁图斯：刀")
+	# 刀的耐力消耗写死在规则上（不按属性取）：出手时乘这件的 `stamina_cost` 因子
+	var drilled := _cost_factor(f.run, k1.uid)
+	var plain := _cost_factor(g.run, k2.uid)
+	t.eq(plain, 1.0, "布鲁图斯：刀照原价")
+	t.check(absf(drilled - 0.8) < 0.001, "马库斯：刀的耐力消耗 ×0.8（%.3f）" % drilled)
+	var rule: AbilityRule = k1.def.combat.rules[0]
+	var cost := rule.effective_costs()[0] as ResourceCost
+	var spec := f.run.compile_player()
+	for it in spec.items:
+		if (it as CompiledItem).source_uid == k1.uid:
+			t.check(absf(cost.stamina_per_use((it as CompiledItem).stats) - cost.amount * 0.8) < 0.001, "估算（战力 / 耐力够不够）也按八折")
+	var rules := f.run.buff_context().weight_pct
+	t.check(not rules.is_empty(), "马库斯有重量折扣")
+	t.check(g.run.buff_context().weight_pct.is_empty(), "布鲁图斯没有")
+	var want := 0.0
+	for inst in f.run.board.items():
+		var w := float(ItemWeight.of_in(inst as ItemInstance, f.run.board))
+		want += w * 0.8 if (inst as ItemInstance).def.has_tag(&"weapon") else w
+	t.eq(f.run.carry_weight(), roundi(want), "负重 = Σ（武器 ×0.8）后取整（%d）" % roundi(want))
+	t.eq(g.run.carry_weight(), ItemWeight.total(g.run.board), "布鲁图斯：原重")
+	var kw := ItemWeight.of_in(k1, f.run.board)
+	t.eq(ItemWeight.of_in_scaled(k1, f.run.board, rules), roundi(kw * 0.8), "悬浮窗写的刀重 = 八折")
+	Support.cleanup(PREFIX)
+	Support.cleanup("256i")
