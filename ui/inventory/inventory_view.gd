@@ -366,9 +366,9 @@ func _draw() -> void:
 			body = body.lerp(COLOR_BAG_FILL, 0.7)
 			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
 			text_color = COLOR_TEXT.darkened(0.35)
-		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠 / 不参战的压到 55 % 灰，仍写一行小字说清楚是哪种
+		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠 / 不参战的压到 55 % 灰；不参战再写一行小字（作者 10-26：休眠只压灰，不写「休眠」）
 		var tint := DORMANT_ART if (dormant or benched) else Color.WHITE
-		var note := UiText.t("inv.benched") if benched else (UiText.t("inv.dormant") if dormant else "")
+		var note := status_note(dormant, benched)
 		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, tint, Transform2D.IDENTITY, ItemPainter.variant_of(item)):
 			if note != "" and _label_visible(item):
 				ItemPainter.draw_label(self, cells, anchor, cell_px, note, font, 13, COLOR_TEXT)
@@ -659,3 +659,8 @@ func _cell_lit(self_uid: int, cell: Vector2i, filter: Array[StringName], filter_
 	var other_inst := inventory.get_item(other)
 	return other_inst != null and AdjacencyProfile.accepts(filter, other_inst.def) and AdjacencyProfile.accepts_all(filter_all, other_inst.def)
 #endregion
+
+
+## 道具上压的那行小字：不参战写「不参战」；作者 10-26：休眠的只压灰，不写字
+static func status_note(_dormant: bool, benched: bool) -> String:
+	return UiText.t("inv.benched") if benched else ""

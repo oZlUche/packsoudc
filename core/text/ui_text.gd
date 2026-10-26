@@ -1126,7 +1126,6 @@ const TEXT := {
 	"rule.no_effect": {"zh": "（没有效果）", "en": "(no effect)"},
 	# —— 221 F5a：item tooltip (hover_tip, inventory_view, belt_use, growth_stage, item_volume) ——
 	"tip.codex_link": {"zh": "百科 >", "en": "Encyclopedia >"},
-	"inv.dormant": {"zh": "休眠", "en": "Dormant"},     # label drawn on a dormant item
 	"inv.benched": {"zh": "不参战", "en": "Out"},     # 2026-10-22：标了不参战的道具画在棋盘上的小字
 	"item.belt_use_map": {"zh": "地图上用：%s", "en": "Use on the map: %s"},
 	"item.belt_use_prebattle": {"zh": "战前准备屏上用：%s", "en": "Use on the Pre-battle screen: %s"},
