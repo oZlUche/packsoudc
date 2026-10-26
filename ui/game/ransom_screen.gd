@@ -39,7 +39,7 @@ func open(payload: Dictionary) -> void:
 	var intro := _label(UiText.t("ransom.intro"), 17, BalanceScale.INK)     # 正面在前；限制写在石台底下的小字（作者 10-26：短处后放、小字）
 	_place(intro, "subtitle", true)
 	_place(_label(UiText.t("ransom.limits"), 13, BalanceScale.INK_SOFT), "hint", true)
-	# 托盘：左盘上方，底边坐在盘沿上
+	# 托盘：左盘上方，底边坐在盘里两根矮柱上（柱间堆放上来的金币）
 	_tray = GridInventory.new(TRAY_SIZE, TRAY_ID, false)
 	_tray_view = InventoryView.new()
 	_tray_view.label_font = font
@@ -187,6 +187,7 @@ func _refresh() -> void:
 	if _scale == null:
 		return
 	coins = clampi(coins, 0, flow.run.wallet.balance)
+	_scale.coins = coins
 	_scale.left = weight()
 	_coins.set_text(str(coins))
 	_coins.minus.disabled = coins <= 0
