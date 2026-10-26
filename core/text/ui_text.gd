@@ -300,6 +300,12 @@ const TEXT := {
 	"tip.growth": {"zh": "生长：%s", "en": "Growth: %s"},
 	"tip.growth_next": {"zh": "（再 %d 步%s）", "en": " (%d more steps to %s)"},
 	"tip.growth_done": {"zh": "（长成了）", "en": " (fully grown)"},
+	# 256：军功牌
+	"tip.honor": {"zh": "%s · 军功 %d", "en": "%s · Honor %d"},
+	"tip.honor_next": {"zh": " / %d", "en": " / %d"},
+	"tip.honor_done": {"zh": "（满阶）", "en": " (top rank)"},
+	"tip.honor_stage": {"zh": "%s（军功 %d，%d 格）：%s", "en": "%s (Honor %d, %d cells): %s"},
+	"badge.honor": {"zh": "军功 %d", "en": "Honor %d"},
 	"tip.rooted_bag": {"zh": "　连包扎根：它和它的包都动不了", "en": "   Rooted with its bag: neither can move"},
 	"tip.rooted": {"zh": "　已扎根：动不了", "en": "   Rooted: can't move"},
 	"tip.growth_dormant": {"zh": "　自然之神不是当前信仰：不长，加成不算", "en": "   God of Nature isn't your Faith: no growth, bonuses don't count"},
@@ -446,6 +452,24 @@ const TEXT := {
 	"pre.slip_blocked": {"zh": "溜走：%s", "en": "Slip away: %s"},
 	"pre.slip_unlimited": {"zh": "不限次", "en": "unlimited"},
 	"pre.slip_left": {"zh": "剩 %d 次", "en": "%d left"},
+	# 256：安德烈乌斯的偷袭（战前屏的键）与求饶（回放之后的天平窗）
+	"pre.ambush": {"zh": "偷袭", "en": "Ambush"},
+	"pre.ambush_btn": {"zh": "%s（%s）", "en": "%s (%s)"},
+	"ransom.title": {"zh": "求饶", "en": "Beg for Mercy"},
+	"ransom.intro": {"zh": "求饶：拿金币和道具抵掉这一场的体力损失", "en": "Beg for mercy: pay coins and items instead of losing Vitality for this fight"},
+	"ransom.limits": {"zh": "核心点与搜索遭遇不能求饶", "en": "Not at the core or in search encounters"},
+	"ransom.tray": {"zh": "左盘", "en": "Your pan"},
+	"ransom.tray_tip": {"zh": "把道具拖上来：每件按局内出售价算重量；锁住的放不上", "en": "Drag items here: each weighs its in-run sell price; locked items can't go on"},
+	"ransom.coins_tip": {"zh": "放上左盘的金币（一枚算 1）", "en": "Coins on your pan (each weighs 1)"},
+	"ransom.price_tip": {"zh": "对方开价：这一场打赢能得的钱 ×%s", "en": "Their price: this fight's win reward ×%s"},
+	"ransom.short_by": {"zh": "还差 %d", "en": "%d short"},
+	"ransom.enough": {"zh": "够了", "en": "Enough"},
+	"ransom.pay": {"zh": "成交", "en": "Deal"},
+	"ransom.refuse": {"zh": "不求饶", "en": "Refuse"},
+	"ransom.refuse_tip": {"zh": "照常扣体力；体力归零就战败。关窗也一样", "en": "Lose Vitality as usual; at zero the run is lost. Closing the window does the same"},
+	"ransom.none": {"zh": "没有等着答复的开价", "en": "No price is waiting"},
+	"ransom.short": {"zh": "左盘还不够开价", "en": "Your pan doesn't cover the price yet"},
+	"ransom.paid": {"zh": "成交：这一场不扣体力", "en": "Deal: this loss costs no Vitality"},
 	# —— 221 F1：screens ——
 	# ui/game/setup_screen.gd
 	"setup.page_1": {"zh": "选角色", "en": "Choose a Character"},
@@ -1145,6 +1169,7 @@ const TEXT := {
 	"bonus.erosion_resist": {"zh": "侵蚀扣体力少扣 %d 点", "en": "Erosion costs %d less Vitality"},
 	"bonus.extra_searches": {"zh": "每个搜索点多搜 %d 次", "en": "Extra searches per search spot: %d"},
 	"bonus.flee": {"zh": "逃跑 %+.0f%%", "en": "Flee %+.0f%%"},
+	"bonus.ransom": {"zh": "打输了可以用金币和道具抵掉体力损失（核心点与搜索遭遇不能）", "en": "After a loss, pay coins and items instead of Vitality (not at the core or in search encounters)"},
 	"bonus.free_losses": {"zh": "前 %d 次输给节点敌人不扣体力", "en": "First %d losses to node enemies cost no Vitality"},
 	"bonus.loss_discount": {"zh": "打输了少扣 %d 点体力（最少扣一点）", "en": "Losing costs %d less Vitality (at least one)"},
 	"bonus.luck": {"zh": "幸运 %+d", "en": "Luck %+d"},
@@ -1172,6 +1197,7 @@ const TEXT := {
 	"skill.evade": {"zh": "躲开猎手 %d 步", "en": "Evade hunters for %d steps"},
 	"skill.no_vitality": {"zh": "没有体力", "en": "No Vitality"},
 	"skill.second_wind": {"zh": "恢复 %d 点体力", "en": "Restore %d Vitality"},
+	"skill.ambush": {"zh": "开战时敌人先失去 %.0f%% 生命", "en": "The enemy starts the battle %.0f%% down on Health"},
 	"skill.assault": {"zh": "下次战斗先扣对方 %.0f%% 血", "en": "Next battle: the enemy starts %.0f%% down on Health"},
 	# —— 221 F5b：base screen ——
 	"meta.tab_warehouse": {"zh": "仓库", "en": "Warehouse"},     # also the shelf title before counts arrive

@@ -31,6 +31,8 @@ const FIGHT_ART := "res://assets/ui/battle/"
 const FIGHT_HIT := Rect2(22, 10, 156, 108)
 var _why: Label
 var _slip_btn: Button = null
+## 256：偷袭（安德烈乌斯）的平石键
+var _ambush_btn: Button = null
 ## 248：「退回」（作者 2026-10-24 14:44 选丙「回头脚印」：平的白灰石键，左头两只脚印，四态 `battle/retreat_key*`）。
 ## 图里不带字：字由代码写在 json 的 `text_rect` 里（中英文同一张图）。退不了的场合不建
 var _retreat_btn: IconButton = null
@@ -131,6 +133,12 @@ func open(payload: Dictionary) -> void:
 		_slip_btn = _button("", func(): slip_battle(), 14)
 		_slip_btn.tooltip_text = slip.describe()
 		buttons.add_child(_slip_btn)
+	# 256：偷袭 —— 战前屏的平石键（美术出键之前用石刻小签），按下 = 用掉一次 + 开战
+	var amb := flow.prebattle_skill()
+	if amb != null:
+		_ambush_btn = StoneChip.make(UiText.t("pre.ambush"), func(): ambush())
+		_ambush_btn.tooltip_text = amb.describe()
+		buttons.add_child(_ambush_btn)
 	for c in buttons.get_children():
 		(c as Control).size_flags_vertical = Control.SIZE_SHRINK_CENTER     # 旗比按钮高：别的按钮不跟着拉长
 	# 248：「退回」放在左下角（战旗居中，右边垫一块同宽的空位让它不偏）；地图上看得见的战斗 / 精英点才有
@@ -247,6 +255,32 @@ func _make_retreat_key() -> IconButton:
 	return b
 
 
+## 256：按「偷袭」：用掉一次，敌人开战就先失去几成生命。返回空串 = 打了
+func ambush() -> String:
+	var why := ambush_reason()
+	if why != "":
+		return why
+	HudHost.hold_in(get_tree())     # 同「开战」：顶栏等回放看完再变
+	why = flow.ambush_battle()
+	if why != "":
+		HudHost.release_in(get_tree(), false)
+	return why
+
+
+## 256：现在能不能偷袭：空串 = 能
+func ambush_reason() -> String:
+	var amb := flow.prebattle_skill()
+	if amb == null:
+		return UiText.t("log.no_skill")
+	var why := can_start()
+	return why if why != "" else flow.run.skills.can_use(amb.id)
+
+
+## 256：战前屏的「偷袭」键（测试看）
+func ambush_button() -> Button:
+	return _ambush_btn
+
+
 ## 136：按「溜走」。返回空串 = 溜了
 func slip_battle() -> String:
 	var why := slip_reason()
@@ -321,6 +355,12 @@ func _refresh() -> void:
 		var sw := slip_reason()
 		_slip_btn.text = UiText.t("pre.slip_btn") % [UiText.t("pre.slip") if sw == "" else (UiText.t("pre.slip_blocked") % sw), UiText.t("pre.slip_unlimited") if left < 0 else UiText.t("pre.slip_left") % left]
 		_slip_btn.disabled = sw != ""
+	if _ambush_btn != null:
+		var amb := flow.prebattle_skill()
+		var aw := ambush_reason()
+		_ambush_btn.text = UiText.t("pre.ambush_btn") % [UiText.t("pre.ambush"), UiText.t("pre.slip_left") % flow.run.skills.uses_of(amb.id)]
+		_ambush_btn.disabled = aw != ""
+		_ambush_btn.tooltip_text = amb.describe() if aw == "" else aw
 
 
 ## 两列一样宽（中缝和铜章都在面板正中）：各列按两列里较宽的那份内容撑

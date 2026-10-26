@@ -1,0 +1,175 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_tb00o"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_xpkjy"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_8vp4d"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_fji4q"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_m02rs"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_8t62h"]
+[ext_resource type="Script" path="res://core/inventory/growth_profile.gd" id="7_w3lnd"]
+[ext_resource type="Script" path="res://core/inventory/growth_stage.gd" id="8_40si8"]
+[ext_resource type="Script" path="res://core/inventory/growth_bonus.gd" id="9_435vu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="10_sp3ai"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="11_1cbyb"]
+
+[sub_resource type="Resource" id="Resource_04cuk"]
+script = ExtResource("3_8vp4d")
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)])
+grant_filter = Array[StringName]([&"weapon"])
+
+[sub_resource type="Resource" id="Resource_kkpf1"]
+script = ExtResource("1_tb00o")
+mode = 1
+amount = 5.0
+
+[sub_resource type="Resource" id="Resource_of2ea"]
+script = ExtResource("1_tb00o")
+stat = &"haste"
+mode = 1
+amount = 5.0
+
+[sub_resource type="Resource" id="Resource_u1adq"]
+script = ExtResource("1_tb00o")
+stat = &"stamina_cost"
+mode = 1
+amount = -5.0
+
+[sub_resource type="Resource" id="Resource_gk6be"]
+script = ExtResource("8_40si8")
+name = "银"
+names_by_lang = {
+"en": "Silver"
+}
+prefix = "银"
+prefixes_by_lang = {
+"en": "Silver "
+}
+after = 3
+lock = "none"
+grant_mods = Array[ExtResource("1_tb00o")]([SubResource("Resource_kkpf1"), SubResource("Resource_of2ea"), SubResource("Resource_u1adq")])
+
+[sub_resource type="Resource" id="Resource_c0k4r"]
+script = ExtResource("1_tb00o")
+mode = 1
+amount = 10.0
+
+[sub_resource type="Resource" id="Resource_j1ilq"]
+script = ExtResource("1_tb00o")
+stat = &"haste"
+mode = 1
+amount = 10.0
+
+[sub_resource type="Resource" id="Resource_y2qpi"]
+script = ExtResource("1_tb00o")
+stat = &"stamina_cost"
+mode = 1
+amount = -10.0
+
+[sub_resource type="Resource" id="Resource_qglrf"]
+script = ExtResource("8_40si8")
+name = "金"
+names_by_lang = {
+"en": "Gold"
+}
+prefix = "金"
+prefixes_by_lang = {
+"en": "Gold "
+}
+after = 8
+lock = "none"
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1)])
+grant_mods = Array[ExtResource("1_tb00o")]([SubResource("Resource_c0k4r"), SubResource("Resource_j1ilq"), SubResource("Resource_y2qpi")])
+
+[sub_resource type="Resource" id="Resource_uwoxs"]
+script = ExtResource("1_tb00o")
+mode = 1
+amount = 15.0
+
+[sub_resource type="Resource" id="Resource_mbdnq"]
+script = ExtResource("1_tb00o")
+stat = &"haste"
+mode = 1
+amount = 15.0
+
+[sub_resource type="Resource" id="Resource_ftopq"]
+script = ExtResource("1_tb00o")
+stat = &"stamina_cost"
+mode = 1
+amount = -15.0
+
+[sub_resource type="Resource" id="Resource_yg6n0"]
+script = ExtResource("8_40si8")
+name = "鎏金"
+names_by_lang = {
+"en": "Gilded"
+}
+prefix = "鎏金"
+prefixes_by_lang = {
+"en": "Gilded "
+}
+after = 15
+lock = "none"
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1), Vector2i(0, -2), Vector2i(0, 2), Vector2i(-2, 0), Vector2i(2, 0)])
+grant_mods = Array[ExtResource("1_tb00o")]([SubResource("Resource_uwoxs"), SubResource("Resource_mbdnq"), SubResource("Resource_ftopq")])
+
+[sub_resource type="Resource" id="Resource_3lbqe"]
+script = ExtResource("1_tb00o")
+mode = 1
+amount = 20.0
+
+[sub_resource type="Resource" id="Resource_ju0lu"]
+script = ExtResource("1_tb00o")
+stat = &"haste"
+mode = 1
+amount = 20.0
+
+[sub_resource type="Resource" id="Resource_k1ygr"]
+script = ExtResource("1_tb00o")
+stat = &"stamina_cost"
+mode = 1
+amount = -20.0
+
+[sub_resource type="Resource" id="Resource_rg88s"]
+script = ExtResource("8_40si8")
+name = "桂冠"
+names_by_lang = {
+"en": "Laurel"
+}
+prefix = "桂冠"
+prefixes_by_lang = {
+"en": "Laurel "
+}
+after = 25
+lock = "none"
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1), Vector2i(0, -2), Vector2i(0, 2), Vector2i(-2, 0), Vector2i(2, 0)])
+grant_mods = Array[ExtResource("1_tb00o")]([SubResource("Resource_3lbqe"), SubResource("Resource_ju0lu"), SubResource("Resource_k1ygr")])
+
+[sub_resource type="Resource" id="Resource_p62wh"]
+script = ExtResource("7_w3lnd")
+stages = Array[ExtResource("8_40si8")]([SubResource("Resource_gk6be"), SubResource("Resource_qglrf"), SubResource("Resource_yg6n0"), SubResource("Resource_rg88s")])
+stage0_name = "铜"
+stage0_names = {
+"en": "Bronze"
+}
+fuel = "honor"
+
+[sub_resource type="Resource" id="Resource_qj5yo"]
+script = ExtResource("11_1cbyb")
+
+[resource]
+script = ExtResource("10_sp3ai")
+id = &"legion_phalera"
+display_name = "军功牌"
+display_names = {
+"en": "Phalera"
+}
+description = "马库斯的随身之物：每打赢一场记 {honor_default} 点军功（精英 {elite}、核心 {core}），攒够了升阶 —— 牌边的武器越来越狠，圈也越来越大。"
+descriptions = {
+"en": "Marcus's signature item: every won fight earns {honor_default} Honor (elites {elite}, the core {core}). Enough Honor raises its rank, and the weapons around it hit harder over a wider ring."
+}
+shape = SubResource("Resource_qj5yo")
+rarity = 1
+tags = Array[StringName]([&"trinket", &"signature"])
+material = "metal"
+adjacency = SubResource("Resource_04cuk")
+growth = SubResource("Resource_p62wh")

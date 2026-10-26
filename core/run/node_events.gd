@@ -112,6 +112,15 @@ signal battle_pending(node: MapNode, type: StringName, content: Dictionary)
 signal battle_skipped(node: MapNode)
 ## 248：等着开打的那一场被「退回」推掉了（点没用过、敌人还在；人退回上一个点）
 signal battle_retreated(node: MapNode)
+## 256（安德烈乌斯「求饶」）：有人画天平才开价（[GameFlow] 开；直接驱动的测试与批量工具关，照旧扣体力）
+var offer_ransom: bool = false
+## 256：打输了、对方开了价、还没答复的那一场：{"node": id, "type": …, "content": 敌人内容, "cost": 原本要扣的体力, "price": 开价}。
+## 跟着存档走；读档回来还停在天平上
+var pending_ransom: Dictionary = {}
+## 256：打输了，对方开价（体力先不扣，等 [method pay_ransom] / [method refuse_ransom]）
+signal ransom_offered(node: MapNode, price: int)
+## 256：求饶有了结果（paid = 成交）
+signal ransom_settled(node: MapNode, paid: bool)
 
 var current_search: SearchSession = null
 ## 154：踩上去才揭出来的宝箱用哪套皮肤（章节的 [member ChapterDef.chest_skin]，持有方设）
@@ -724,6 +733,8 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 		var cost := loss_cost_for(type, content, loss_cost)
 		if cost == LOSS_DEATH:
 			_defeat(&"boss_lost" if type == &"core" else &"fatal_loss")     # 必死：直接战败，连 spend 都不调（7.1）
+		elif cost > 0 and vitality != null and _offer_ransom(node, type, content, cost):
+			pass     # 256：先不扣，等天平
 		elif cost > 0 and vitality != null:
 			# 082：角色技能的免罚败仗 —— 只对节点敌人，配额在上下文里、已免几次在这里记。
 			# 088（作者定）：输给猎手也扣体力（默认按 loss_cost 里的 hunter，猎手定义可以自己写），猎手定义里的战败后果另算
@@ -736,6 +747,80 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 				_defeat(&"vitality_depleted")
 		# cost == 0：这一场写了无代价
 	return won
+
+
+#region 求饶（256）
+## 这一场输了能不能求饶：有 `ransom` 效果、不是核心点也不是搜索遭遇、开得出价。开得出就记下等玩家，返回 true
+func _offer_ransom(node: MapNode, type: StringName, content: Dictionary, cost: int) -> bool:
+	var mult := hooks.run_context().ransom_mult
+	if not offer_ransom or mult <= 0.0 or type == &"core" or type == &"search" or wallet == null:
+		return false
+	var price := ransom_price(node, content, mult)
+	if price <= 0:
+		return false
+	pending_ransom = {"node": node.id, "type": String(type), "content": content.duplicate(true), "cost": cost, "price": price}
+	ransom_offered.emit(node, price)
+	return true
+
+
+## 开价 = 这一场打赢的钱（地图难度与敌人档位都在里面）× [param mult]
+func ransom_price(node: MapNode, content: Dictionary, mult: float) -> int:
+	if economy == null:
+		return 0
+	return roundi(float(economy.battle_reward(int(content.get("strength", 0)), _depth_of(node), difficulty)) * mult)
+
+
+func ransom_node() -> MapNode:
+	return graph.get_node(int(pending_ransom["node"])) if not pending_ransom.is_empty() and graph != null and graph.has_node(int(pending_ransom["node"])) else null
+
+
+## 道具在天平上有多重：局内出售价（碎了打折，和商店收购同一套）
+func ransom_value_of(inst: ItemInstance) -> int:
+	if inst == null:
+		return 0
+	return ShopSession.sell_price_for(inst.def, inst, economy, hooks.run_context().shop_price_mult)
+
+
+## 左盘一共多重：金币一枚 1，道具按 [method ransom_value_of]
+func ransom_weight(coins: int, given: Array) -> int:
+	var w := maxi(0, coins)
+	for inst in given:
+		w += ransom_value_of(inst as ItemInstance)
+	return w
+
+
+## 成交：从钱包拿 [param coins]，[param given] 里的道具归对方（调用方已经从包里拿出来放在托盘上，成交后丢掉），体力不扣。
+## 不够开价、钱不够、没有等着的：返回原因，什么都不动
+func pay_ransom(coins: int, given: Array = []) -> String:
+	if pending_ransom.is_empty():
+		return UiText.t("ransom.none")
+	coins = maxi(0, coins)
+	if wallet == null or not wallet.can_afford(coins):
+		return UiText.t("ransom.short")
+	if ransom_weight(coins, given) < int(pending_ransom.get("price", 0)):
+		return UiText.t("ransom.short")
+	var node := ransom_node()
+	if coins > 0:
+		wallet.spend(coins, &"ransom")
+	pending_ransom = {}
+	ransom_settled.emit(node, true)
+	return ""
+
+
+## 不求饶（关窗也是）：照原来那样扣体力，扣到底就战败。没有等着的返回 false
+func refuse_ransom() -> bool:
+	if pending_ransom.is_empty():
+		return false
+	var node := ransom_node()
+	var cost := int(pending_ransom.get("cost", 1))
+	pending_ransom = {}
+	if vitality != null:
+		vitality.spend(maxi(1, cost - hooks.run_context().loss_discount), &"battle_lost")
+		if vitality.is_depleted():
+			_defeat(&"vitality_depleted")
+	ransom_settled.emit(node, false)
+	return true
+#endregion
 
 
 ## 打赢了之后（节点的一场、搜索遭遇、猎手、秒杀都走这里）：掉落 → 赐福替换 → 尸体容器交出去 → 进账 → 核心点的 BOSS 倒下。

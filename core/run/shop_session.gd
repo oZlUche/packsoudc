@@ -80,19 +80,28 @@ func refresh_cost() -> int:
 
 
 func price_of(def: ItemDef) -> int:
+	return price_for(def, rules, price_mult)
+
+
+## 256：不开店也要估价（求饶的天平按局内出售价算道具）—— 和 [method price_of] / [method sell_price_of] 同一套
+static func price_for(def: ItemDef, p_rules: EconomyRules, p_mult: float = 1.0) -> int:
 	if def != null and def.is_bullion():     # 244：面值加手续费，任何倍率都不吃
-		return maxi(1, roundi(float(ItemValue.of(def)) * (rules.bullion_premium if rules != null else 1.0)))
-	return maxi(1, roundi(float(ItemValue.of(def)) * (rules.shop_price_mult if rules != null else 1.0) * price_mult))
+		return maxi(1, roundi(float(ItemValue.of(def)) * (p_rules.bullion_premium if p_rules != null else 1.0)))
+	return maxi(1, roundi(float(ItemValue.of(def)) * (p_rules.shop_price_mult if p_rules != null else 1.0) * p_mult))
 
 
 ## 卖给店里得多少：定价 × 出售比例（作者定一半）。246 补充二：给了 [param inst] 且它碎了，定价按 [member WearProfile.broken_value_ratio] 打折
 func sell_price_of(def: ItemDef, inst: ItemInstance = null) -> int:
+	return sell_price_for(def, inst, rules, price_mult)
+
+
+static func sell_price_for(def: ItemDef, inst: ItemInstance, p_rules: EconomyRules, p_mult: float = 1.0) -> int:
 	if def == null:
 		return 0
-	var price := float(price_of(def))
+	var price := float(price_for(def, p_rules, p_mult))
 	if inst != null and inst.is_broken():
 		price = maxf(1.0, roundf(price * def.wear.broken_value_ratio))
-	return maxi(0, floori(price * (rules.shop_sell_ratio if rules != null else 0.5)))
+	return maxi(0, floori(price * (p_rules.shop_sell_ratio if p_rules != null else 0.5)))
 
 
 ## 这件实例摆在第几格；不是货架上的返回 -1

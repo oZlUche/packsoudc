@@ -10,7 +10,7 @@ static func variant_id(base_id: StringName, faith_id: StringName) -> StringName:
 
 ## 这件能不能被赐福：不是包、本来不是信仰道具、不是封存 / 特殊、不是已经赐福的
 static func eligible(def: ItemDef) -> bool:
-	return def != null and not def.is_bag and not def.has_faith() and not def.is_sealed() and not def.is_keepsake() and not def.is_blessed()
+	return def != null and not def.is_bag and not def.has_faith() and not def.is_sealed() and not def.is_keepsake() and not def.is_blessed() and not def.is_signature()     # 256：随身之物不赐福
 
 
 ## 这位神对这件用哪条模板（写了 items 的优先）；没有 null

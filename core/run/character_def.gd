@@ -135,7 +135,7 @@ func board_counts(items: ItemDatabase) -> Dictionary:
 func skills_summary() -> String:
 	var parts: Array[String] = []
 	for s in skills:
-		if s != null and not (RunSkills.ACTIVE_HIDDEN and (s as RunSkill).is_active()):
+		if s != null and (s as RunSkill).shown_to_player():
 			parts.append((s as RunSkill).summary())
 	return UiText.t("log.skill_sep").join(parts)
 
@@ -144,10 +144,10 @@ func skills_summary() -> String:
 ## 166 补充一：主动技能藏着（[constant RunSkills.ACTIVE_HIDDEN]）时只有被动行
 func skill_lines() -> Array[String]:
 	var out: Array[String] = []
-	for active in ([false] if RunSkills.ACTIVE_HIDDEN else [false, true]):
+	for active in [false, true]:
 		for s in skills:
 			var sk := s as RunSkill
-			if sk != null and sk.is_active() == active:
+			if sk != null and sk.is_active() == active and sk.shown_to_player():
 				out.append(UiText.t("log.skill_line") % [UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), _skill_line(sk)])
 	return out
 
@@ -155,10 +155,10 @@ func skill_lines() -> Array[String]:
 ## 179：选角色屏一条技能拆成两行由界面排 ——「被动 / 主动」、名字、说明（主动的次数 / 冷却附在说明末尾）；顺序和 [method skill_lines] 一样
 func skill_entries() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	for active in ([false] if RunSkills.ACTIVE_HIDDEN else [false, true]):
+	for active in [false, true]:
 		for s in skills:
 			var sk := s as RunSkill
-			if sk != null and sk.is_active() == active:
+			if sk != null and sk.is_active() == active and sk.shown_to_player():
 				out.append({"kind": UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), "name": Names.of(sk), "text": _skill_text(sk), "skill": sk})
 	return out
 
@@ -172,7 +172,7 @@ static func _skill_text(sk: RunSkill) -> String:
 	var text := Names.description_of(sk) if sk.description != "" else sk.summary()
 	var bits: Array[String] = []
 	if sk.is_active():
-		if sk.uses >= 0:
+		if sk.uses >= 0 and not sk.description.contains("{uses}"):     # 256：说明里自己写了次数（偷袭）就不再补
 			bits.append(UiText.t("log.skill_uses") % sk.uses)
 		if sk.cooldown_steps > 0:
 			bits.append(UiText.t("log.skill_cooldown_steps") % sk.cooldown_steps)

@@ -29,6 +29,13 @@ const LOCK_BAG := "bag"
 @export var bonus_pool: Array[GrowthBonus] = []
 ## 抽几条（不超过池子大小）
 @export_range(0, 9) var bonus_count: int = 0
+## 256：到了这一阶，这件给邻居的增益格（终值，盖掉 [member AdjacencyProfile.grant_cells]）；空 = 照定义的
+@export var grant_cells: Array[Vector2i] = []
+## 256：到了这一阶，站在增益格上的邻居各得的那一份（终值，盖掉 [member AdjacencyProfile.grant_mods]）；空 = 照定义的
+@export var grant_mods: Array[StatModifier] = []
+
+var _adj: AdjacencyProfile = null
+var _adj_base: AdjacencyProfile = null
 
 
 func name_in(lang: String = "") -> String:
@@ -37,6 +44,24 @@ func name_in(lang: String = "") -> String:
 
 func prefix_in(lang: String = "") -> String:
 	return Names.pick(prefixes_by_lang, prefix, lang)
+
+
+func overrides_adjacency() -> bool:
+	return not grant_cells.is_empty() or not grant_mods.is_empty()
+
+
+## 256：定义的邻接 [param base] 盖上这一阶的增益格 / 增益（一阶一份，缓存着：编译与悬浮窗每次都要）
+func adjacency_over(base: AdjacencyProfile) -> AdjacencyProfile:
+	if not overrides_adjacency():
+		return base
+	if _adj == null or _adj_base != base:
+		_adj = base.duplicate() as AdjacencyProfile if base != null else AdjacencyProfile.new()
+		if not grant_cells.is_empty():
+			_adj.grant_cells = grant_cells.duplicate()
+		if not grant_mods.is_empty():
+			_adj.grant_mods = grant_mods.duplicate()
+		_adj_base = base
+	return _adj
 
 
 func locks_item() -> bool:

@@ -1,63 +1,50 @@
 [gd_resource type="Resource" script_class="CharacterDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_iqgrf"]
-[ext_resource type="Script" path="res://core/run/character_def.gd" id="2_oxqwc"]
-[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="3_g2ila"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_2w6jy"]
-[ext_resource type="Script" path="res://core/run/effects/battle_reward_mult.gd" id="5_dh4py"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="6_22n10"]
-[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="7_xwebo"]
-[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="8_a576r"]
-[ext_resource type="Script" path="res://core/battle/cost.gd" id="9_6q5m6"]
-[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="10_eaxeu"]
-[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="11_8hk74"]
-[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="12_a6kav"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="13_kvgj3"]
-[ext_resource type="Script" path="res://core/run/skills/assault_skill.gd" id="14_f2n3j"]
+[ext_resource type="Script" path="res://core/run/fixed_item.gd" id="1_1pf8y"]
+[ext_resource type="Script" path="res://core/run/character_def.gd" id="2_khapf"]
+[ext_resource type="Script" path="res://core/run/skills/run_skill.gd" id="3_iqgrf"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="4_oxqwc"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="5_g2ila"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="6_2w6jy"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="7_dh4py"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="8_22n10"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="9_xwebo"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="10_a576r"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="11_6q5m6"]
+[ext_resource type="Script" path="res://core/run/skills/passive_skill.gd" id="12_eaxeu"]
 
-[sub_resource type="Resource" id="Resource_n0kc0"]
-script = ExtResource("5_dh4py")
+[sub_resource type="Resource" id="Resource_8hk74"]
+script = ExtResource("1_1pf8y")
+id = &"legion_phalera"
+origin = Vector2i(3, 2)
 
-[sub_resource type="Resource" id="Resource_e81ug"]
-script = ExtResource("7_xwebo")
-id = &"merit"
-display_name = "军功"
-display_names = {
-"en": "Spoils of War"
-}
-description = "战斗胜利所得金币增加四分之一。"
-descriptions = {
-"en": "Coins from winning battles are increased by a quarter."
-}
-passive = Array[ExtResource("4_2w6jy")]([SubResource("Resource_n0kc0")])
-
-[sub_resource type="Resource" id="Resource_tkx2e"]
-script = ExtResource("8_a576r")
+[sub_resource type="Resource" id="Resource_a6kav"]
+script = ExtResource("6_2w6jy")
 metadata/part_ref = &"always"
 
-[sub_resource type="Resource" id="Resource_sskgt"]
-script = ExtResource("10_eaxeu")
+[sub_resource type="Resource" id="Resource_kvgj3"]
+script = ExtResource("8_22n10")
 metadata/part_ref = &"uses_1"
 
-[sub_resource type="Resource" id="Resource_11484"]
-script = ExtResource("12_a6kav")
+[sub_resource type="Resource" id="Resource_f2n3j"]
+script = ExtResource("10_a576r")
 resource_key = &"stamina"
 amount = 30.0
 
-[sub_resource type="Resource" id="Resource_i0bx0"]
-script = ExtResource("13_kvgj3")
+[sub_resource type="Resource" id="Resource_n0kc0"]
+script = ExtResource("11_6q5m6")
 resource_key = &"stamina"
 percent = 20
 
-[sub_resource type="Resource" id="Resource_hplct"]
-script = ExtResource("6_22n10")
-trigger = SubResource("Resource_i0bx0")
-cadence = SubResource("Resource_tkx2e")
-costs = Array[ExtResource("9_6q5m6")]([SubResource("Resource_sskgt")])
-effects = Array[ExtResource("11_8hk74")]([SubResource("Resource_11484")])
+[sub_resource type="Resource" id="Resource_e81ug"]
+script = ExtResource("5_g2ila")
+trigger = SubResource("Resource_n0kc0")
+cadence = SubResource("Resource_a6kav")
+costs = Array[ExtResource("7_dh4py")]([SubResource("Resource_kvgj3")])
+effects = Array[ExtResource("9_xwebo")]([SubResource("Resource_f2n3j")])
 
-[sub_resource type="Resource" id="Resource_6mha3"]
-script = ExtResource("7_xwebo")
+[sub_resource type="Resource" id="Resource_tkx2e"]
+script = ExtResource("12_eaxeu")
 id = &"drill"
 display_name = "操练"
 display_names = {
@@ -67,32 +54,18 @@ description = "耐力低于两成时，立即恢复 {change_resource_amount} 点
 descriptions = {
 "en": "When your Stamina drops below a fifth, restore {change_resource_amount} Stamina at once (once per battle)."
 }
-rules = Array[ExtResource("6_22n10")]([SubResource("Resource_hplct")])
-
-[sub_resource type="Resource" id="Resource_jx7yk"]
-script = ExtResource("14_f2n3j")
-id = &"assault"
-display_name = "突击"
-display_names = {
-"en": "Assault"
-}
-description = "下次战斗开始时，先扣除敌方三成生命。"
-descriptions = {
-"en": "At the start of your next battle, the enemy first loses three tenths of its Health."
-}
-uses = 3
-cooldown_steps = 3
+rules = Array[ExtResource("5_g2ila")]([SubResource("Resource_e81ug")])
 
 [resource]
-script = ExtResource("2_oxqwc")
+script = ExtResource("2_khapf")
 id = &"marcus"
 display_name = "马库斯"
 display_names = {
 "en": "Marcus"
 }
-description = "擅长战斗的军团士兵。一个皮革包、一个小包，生命 {max_hp}、耐力 {max_stamina}、耐力回得最快：打得狠、打得久、打赢了得的多。"
+description = "擅长战斗的军团士兵。随身一块军功牌：打赢一场记一笔，牌越亮、牌边的武器越狠。生命 {max_hp}、耐力 {max_stamina}、耐力回得最快。"
 descriptions = {
-"en": "A legion soldier who is good at fighting. One leather bag and one small bag, Health {max_hp}, Stamina {max_stamina} and the fastest Stamina regeneration: hits hard, lasts long and earns more from wins."
+"en": "A legion soldier who is good at fighting. He carries a phalera: every win earns Honor, and the brighter it gets, the harder the weapons around it hit. Health {max_hp}, Stamina {max_stamina} and the fastest Stamina regeneration."
 }
 base_stats = {
 "max_hp": 55,
@@ -102,4 +75,5 @@ base_stats = {
 starting_funds = 100
 starting_bags = Array[StringName]([&"bag_leather", &"bag_small"])
 weight_capacity = 48
-skills = Array[ExtResource("3_g2ila")]([SubResource("Resource_e81ug"), SubResource("Resource_6mha3"), SubResource("Resource_jx7yk")])
+skills = Array[ExtResource("3_iqgrf")]([SubResource("Resource_tkx2e")])
+fixed_items = Array[ExtResource("1_1pf8y")]([SubResource("Resource_8hk74")])

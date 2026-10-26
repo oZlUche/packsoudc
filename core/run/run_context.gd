@@ -41,6 +41,8 @@ var free_step_every: int = 0
 var rest_bonus: int = 0
 var erosion_resist: int = 0
 var battle_reward_mult: float = 1.0
+## 256（安德烈乌斯「求饶」）：打输了对方开价 = 打赢的钱 × 它；0 = 不能求饶
+var ransom_mult: float = 0.0
 ## 147：腰带多几格（默认格数在 [member BeltModule.slots]）
 var belt_slots_bonus: int = 0
 ## 160 补一：开局往腰带里发的随身技能（id → 几个；角色能力 / 局外 buff 的 [StartingBelt]）
@@ -69,6 +71,7 @@ func snapshot() -> Dictionary:
 		"rest_bonus": rest_bonus,
 		"erosion_resist": erosion_resist,
 		"battle_reward_mult": battle_reward_mult,
+		"ransom_mult": ransom_mult,
 		"belt_slots_bonus": belt_slots_bonus,
 		"belt_start": belt_start.duplicate(),
 	}

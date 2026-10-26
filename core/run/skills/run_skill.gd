@@ -27,11 +27,20 @@ extends Resource
 @export var uses: int = -1
 ## 用一次之后要走几步才能再用；0 = 没有冷却
 @export var cooldown_steps: int = 0
+## 256（安德烈乌斯的偷袭）：每到一个休息点补几次，补不过 [member uses]；0 = 不补
+@export var rest_recharge: int = 0
+## 256：战前屏上给它一把键（166 的 [constant RunSkills.ACTIVE_HIDDEN] 对它不生效：选角色卡与说明也列它）
+@export var show_prebattle: bool = false
 
 
 ## 有没有主动的一击（有 = 地图屏上有按钮）
 func is_active() -> bool:
 	return false
+
+
+## 玩家看不看得见它（选角色卡、说明句、战前屏）：被动都看得见；主动的在 166 藏着，除非 [member show_prebattle]
+func shown_to_player() -> bool:
+	return not is_active() or not RunSkills.ACTIVE_HIDDEN or show_prebattle
 
 
 ## 136：地图右栏的按钮能不能直接按（脱身只在战前准备屏 / 猎手事件屏上用：地图上按钮灰着）

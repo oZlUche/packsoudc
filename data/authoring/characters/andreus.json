@@ -4,17 +4,18 @@
   "display_names": {
     "en": "Andreus"
   },
-  "description": "擅长逃跑的奴隶探索者。生命最低（{max_hp}）、棋盘最窄、背得最少，但带的钱多、走得远、溜得掉。",
+  "description": "擅长避战的奴隶探索者。棋盘最大、背得最多、带的钱也最多：先手偷袭、输了就用钱买命。生命 {max_hp}、体力 {vitality_max} 都是最低的。",
   "descriptions": {
-    "en": "A slave explorer who is good at running. Lowest Health ({max_hp}), the narrowest board and the least he can carry, but he brings more money, travels far and slips away."
+    "en": "A slave explorer who avoids fights. Biggest board, load and purse: he ambushes first and buys his life back. Lowest Health {max_hp} and Vitality {vitality_max}."
   },
   "base_stats": {
     "max_hp": 45,
-    "max_stamina": 55,
+    "max_stamina": 45,
     "regen_stamina": 4
   },
+  "vitality_max": 3,
   "board_size": [
-    7,
+    9,
     6
   ],
   "starting_funds": 120,
@@ -22,8 +23,40 @@
     "bag_leather",
     "bag_leather"
   ],
-  "weight_capacity": 40,
+  "weight_capacity": 64,
   "skills": [
+    {
+      "type": "assault",
+      "id": "ambush",
+      "display_name": "偷袭",
+      "display_names": {
+        "en": "Ambush"
+      },
+      "description": "开战时敌人先失去三成生命。能用 {uses} 次，每到休息点补 {rest_recharge} 次。",
+      "descriptions": {
+        "en": "The enemy starts three tenths down on Health. {uses} uses, +{rest_recharge} per rest spot."
+      },
+      "uses": 2,
+      "rest_recharge": 1,
+      "show_prebattle": true
+    },
+    {
+      "type": "passive",
+      "id": "ransom",
+      "display_name": "求饶",
+      "display_names": {
+        "en": "Beg for Mercy"
+      },
+      "description": "打输了可以用金币和道具抵掉体力损失。核心点与搜索遭遇不能。",
+      "descriptions": {
+        "en": "Lost a fight? Pay coins and items instead of Vitality (not at the core or in searches)."
+      },
+      "passive": [
+        {
+          "type": "ransom"
+        }
+      ]
+    },
     {
       "type": "passive",
       "id": "familiar_paths",
@@ -33,7 +66,7 @@
       },
       "description": "每走 {travel_discount_every} 步，下一步不计入倒计时。",
       "descriptions": {
-        "en": "Every {travel_discount_every} steps, the next step doesn't count toward the Countdown."
+        "en": "Every {travel_discount_every} steps, one step skips the Countdown."
       },
       "passive": [
         {
@@ -48,9 +81,9 @@
       "display_names": {
         "en": "Slippery"
       },
-      "description": "猎手更难发现你，从猎手面前逃跑更容易；首次战败于敌人时不扣体力。",
+      "description": "猎手更难发现你，从猎手面前逃跑更容易。",
       "descriptions": {
-        "en": "Hunters have a harder time spotting you and fleeing from them is easier; the first time you lose to an enemy, you lose no Vitality."
+        "en": "Hunters notice you less; fleeing is easier."
       },
       "passive": [
         {
@@ -59,25 +92,8 @@
         },
         {
           "type": "stealth"
-        },
-        {
-          "type": "free_losses"
         }
       ]
-    },
-    {
-      "type": "slip",
-      "id": "slip",
-      "display_name": "脱身",
-      "display_names": {
-        "en": "Slip"
-      },
-      "description": "开战前脱离：不战斗、不扣体力、无战利品，该点视为已用（核心点不可用）；对猎手使用必定逃脱。",
-      "descriptions": {
-        "en": "Slip away before a battle: no fight, no Vitality lost, no loot, and the spot counts as used (not at the core). Always escapes when used on a hunter."
-      },
-      "uses": 2,
-      "cooldown_steps": 4
     }
   ]
 }

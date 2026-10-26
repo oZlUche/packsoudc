@@ -1,7 +1,6 @@
-## 136（作者定，五项待定按推荐）：三个角色各一套 —— 初始面板 + 两个被动 + 一个主动 + 一条短板（修订：没有身份这一层，科技对谁都生效）。
-## 安德烈乌斯：熟门熟路（每四步免一步）/ 溜得掉（逃跑、潜行、免一败）/ 脱身（战前溜走，猎手面前必定逃掉）；
-## 布鲁图斯：野地里长大（休息多回；作者 10-25 去掉侵蚀少扣）/ 坚韧（低血一次性护甲）/ 咬牙（回体力）；
-## 马库斯：军功（打赢的钱 ×1.25）/ 操练（149 起：耐力见底回一段，战斗规则；耐力回复 5 写进面板）/ 突击（不动）。期望从角色文件推：文件里写多少就断言多少。
+## 136（作者定，五项待定按推荐）：三个角色各一套 —— 初始面板 + 技能（修订：没有身份这一层，科技对谁都生效）。
+## 256 起：安德烈乌斯 = 偷袭 / 求饶 / 熟门熟路 / 溜得掉（脱身删了，构件用副本测）；布鲁图斯照旧（野地里长大 / 坚韧 / 咬牙）；
+## 马库斯 = 操练 + 军功牌（军功被动与突击删了，构件用副本测）。期望从角色文件推：文件里写多少就断言多少。
 extends RefCounted
 
 const CS := preload("res://tests/run/test_character_skills.gd")
@@ -19,6 +18,18 @@ static func _effect_of(ch: CharacterDef, script: Script) -> RunEffect:
 		if e.get_script() == script:
 			return e
 	return null
+
+
+## 256：脱身从安德烈乌斯身上删了（类留着，猎手事件屏那一项跟着）—— 测构件用一个只带脱身的副本
+static func _slipper(base: CharacterDef) -> CharacterDef:
+	var ch := base.duplicate(true) as CharacterDef
+	var sl := SlipSkill.new()
+	sl.id = &"slip"
+	sl.display_name = "脱身"
+	sl.uses = 2
+	sl.cooldown_steps = 4
+	ch.skills = [sl] as Array[RunSkill]
+	return ch
 
 
 ## 一个可以来回走的点：current 的某个邻居，那个邻居能走回来
@@ -77,12 +88,12 @@ static func run_travel_discount(t: TestCase) -> void:
 
 
 static func run_slip(t: TestCase) -> void:
-	t.begin("136 · 脱身：战前准备时用 —— 不打、点用过、没战利品、不扣体力、次数减一；地图上 / 核心点用不了；搜索遭遇按打输收会话但不弹「被赶跑」")
+	t.begin("136 · 脱身（构件，256 起没有角色带它）：战前准备时用 —— 不打、点用过、没战利品、不扣体力、次数减一；地图上 / 核心点用不了；搜索遭遇按打输收会话但不弹「被赶跑」")
 	var c := CS._content()
-	var andreus := CS._character(c, &"andreus")
+	var andreus := _slipper(CS._character(c, &"andreus"))
 	var s := CS._start(c, andreus)
 	var slip := _skill_of(andreus, SlipSkill)
-	t.not_null(slip, "安德烈乌斯有脱身")
+	t.not_null(slip, "副本有脱身")
 	if s == null or slip == null:
 		return
 	t.check(not slip.map_usable(), "地图右栏上按钮灰着")
@@ -132,9 +143,9 @@ static func run_slip(t: TestCase) -> void:
 
 
 static func run_slip_vs_hunter(t: TestCase) -> void:
-	t.begin("136 · 脱身对猎手：开打前的事件屏多一项「脱身（必定逃掉）」，成功率 0 也逃得掉、记一次技能的账；用不了时那一项锁着")
+	t.begin("136 · 脱身对猎手（构件）：开打前的事件屏多一项「脱身（必定逃掉）」，成功率 0 也逃得掉、记一次技能的账；用不了时那一项锁着")
 	var c := CS._content()
-	var andreus := CS._character(c, &"andreus")
+	var andreus := _slipper(CS._character(c, &"andreus"))
 	var hid: Array = c.hunter_defs.keys()
 	hid.sort()
 	if hid.is_empty():
@@ -270,15 +281,19 @@ static func run_brutus(t: TestCase) -> void:
 
 
 static func run_marcus(t: TestCase) -> void:
-	t.begin("136 · 马库斯：打赢的钱 ×军功（四舍五入）；耐力回复写在面板上（149）、三人最高；耐力 65 是三人唯一最高")
+	t.begin("136 · 打赢的钱 ×倍数（构件；256 起马库斯的军功并进军功牌）；耐力回复写在面板上（149）、三人最高；耐力 65 是三人唯一最高")
 	var c := CS._content()
 	var marcus := CS._character(c, &"marcus")
-	var s := CS._start(c, marcus)
+	var probe := marcus.duplicate(true) as CharacterDef
+	var merit := BattleRewardMult.new()
+	var pass_skill := PassiveSkill.new()
+	pass_skill.id = &"merit_probe"
+	pass_skill.passive = [merit] as Array[Effect]
+	probe.skills = [pass_skill] as Array[RunSkill]
+	var s := CS._start(c, probe)
 	if s == null:
 		t.check(false, "开不了局")
 		return
-	var merit := _effect_of(marcus, BattleRewardMult) as BattleRewardMult
-	t.not_null(merit, "被动：军功")
 	var node := CS._battle_node(s)
 	var base := s.economy.battle_reward(int(node.content.get("strength", 0)), float(s.events._depths.get(node.id, 0.0)), s.events.difficulty)
 	var m0 := s.wallet.balance
@@ -294,25 +309,30 @@ static func run_marcus(t: TestCase) -> void:
 	for id in [&"andreus", &"brutus", &"marcus"]:
 		stam[id] = CS._character(c, id).baseline().value_of(&"max_stamina")
 	t.check(stam[&"marcus"] > stam[&"andreus"] and stam[&"marcus"] > stam[&"brutus"], "耐力：%s" % [stam])
-	# 别的角色打赢的钱不乘
-	var s2 := CS._start(c, CS._character(c, &"brutus"))
-	t.eq(s2.buff_context().battle_reward_mult, 1.0, "布鲁图斯不乘")
+	# 三个角色打赢的钱都不乘（256：马库斯的军功被动删了）
+	for id in [&"andreus", &"brutus", &"marcus"]:
+		var s2 := CS._start(c, CS._character(c, id))
+		t.eq(s2.buff_context().battle_reward_mult, 1.0, "%s 不乘" % id)
 
 
 static func run_card_without_identity(t: TestCase) -> void:
-	t.begin("136 修订 · 没有身份这一层（作者定：角色 = 初始面板 + 技能）；开局屏按「被动 / 被动 / 主动」各一行")
+	t.begin("136 修订 · 没有身份这一层（作者定：角色 = 初始面板 + 技能）；开局屏被动在前、主动在后各一行（166：藏着的主动不列，256：战前屏有键的照列）")
 	var c := CS._content()
 	for id in [&"andreus", &"brutus", &"marcus"]:
 		var ch := CS._character(c, id)
 		t.check(not ("identity" in ch), "%s：角色上没有身份字段" % id)
 		var lines := ch.skill_lines()
-		# 166 补充一：主动技能藏着时开局屏只列两行被动
-		var want := 2 if RunSkills.ACTIVE_HIDDEN else 3
-		t.eq(lines.size(), want, "%s：%d 行" % [id, want])
-		if lines.size() == want:
-			t.check(lines[0].begins_with("被动：") and lines[1].begins_with("被动："), "%s：%s" % [id, " / ".join(lines)])
-			t.check(RunSkills.ACTIVE_HIDDEN or lines[2].begins_with("主动："), "%s：第三行是主动" % id)
-			t.check(not lines[0].contains("{"), "%s：占位符都填上了" % id)
+		var passives := 0
+		var shown_active := 0
+		for sk in ch.skills:
+			if not (sk as RunSkill).is_active():
+				passives += 1
+			elif (sk as RunSkill).shown_to_player():
+				shown_active += 1
+		t.eq(lines.size(), passives + shown_active, "%s：%d 行" % [id, passives + shown_active])
+		for i in lines.size():
+			t.check(lines[i].begins_with("被动：") if i < passives else lines[i].begins_with("主动："), "%s：%s" % [id, lines[i]])
+			t.check(not lines[i].contains("{"), "%s：占位符都填上了" % id)
 		for sk in ch.skills:
 			t.check(not ("slot" in sk), "%s：技能没有分组字段" % id)
 	t.check(not RunHooks.NAMES.has(&"identity"), "没有 identity 这个 hook")

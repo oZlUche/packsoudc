@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_eiblc"]
+
+[resource]
+script = ExtResource("1_eiblc")
+id = &"signature"
+display_name = "随身之物"
+display_names = {
+"en": "Signature item"
+}
+description = "角色开局钉在棋盘上的东西：搜索、掉落、商店、敌人都不出，不进图鉴。"
+descriptions = {
+"en": "Pinned to a character's board from the start: never found, dropped, sold or carried by enemies; not in the codex."
+}
+tip = false
+category = "internal"
+internal = true

@@ -206,26 +206,8 @@ func _draw_bag(inst: ItemInstance, slot: Rect2) -> void:
 	ItemPainter.draw_item(self, cells, at, cell, ItemPainter.body_color(inst.def), ItemPainter.rarity_color(inst.def))
 
 
-## 格右下角的「×n」（n ≤ 1 不画）：浅石小牌，墨字 Cinzel Bold 14
+## 格右下角的「×n」（n ≤ 1 不画）：浅石小牌，墨字 Cinzel Bold 14（256：画法搬进 [method ItemPainter.draw_badge]，军功牌也用）
 func _draw_badge(n: int, slot: Rect2) -> void:
 	if n <= 1:
 		return
-	var text := UiText.t("rack.count") % n
-	var font := UiPalette.numeral_font()
-	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, BADGE_TEXT).x
-	var w := maxf(BADGE_MIN_W, ceilf(tw + 14.0))
-	var r := Rect2(slot.end - Vector2(w, BADGE_H) - Vector2.ONE * BADGE_INSET, Vector2(w, BADGE_H))
-	var tex := UiTheme.art_cached(BADGE_ART)
-	if tex != null:
-		var m: Array = UiTheme.art_meta(BADGE_ART).get("margin", [7, 6, 7, 6])
-		var sbt := StyleBoxTexture.new()
-		sbt.texture = tex
-		sbt.texture_margin_left = float(m[0])
-		sbt.texture_margin_top = float(m[1])
-		sbt.texture_margin_right = float(m[2])
-		sbt.texture_margin_bottom = float(m[3])
-		draw_style_box(sbt, r)
-	else:
-		draw_rect(r, Color("e4ded2"))
-	var base := r.position.y + (BADGE_H + font.get_ascent(BADGE_TEXT) - font.get_descent(BADGE_TEXT)) * 0.5
-	draw_string(font, Vector2(r.position.x + (w - tw) * 0.5, base), text, HORIZONTAL_ALIGNMENT_LEFT, -1, BADGE_TEXT, BADGE_INK)
+	ItemPainter.draw_badge(self, UiText.t("rack.count") % n, slot)

@@ -43,7 +43,7 @@ const LABELS := {
 	"elements": "两种元素", "scaling": "随反应量变的数",     # 175
 	"is_debuff": "是减益", "refresh_on_restack": "再叠刷新时长", "on_apply": "施加时", "on_expire": "到期时", "mods": "属性加成", "consume": "消耗掉",
 	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "grant_rules": "给邻居挂的规则", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",
-	"uses": "次数", "max_uses": "最多次数", "hp_fraction": "生命比例", "direction": "方向", "source": "来源", "weapon_tag": "武器标签", "min_amount": "最少量",
+	"uses": "次数", "max_uses": "最多次数", "hp_fraction": "生命比例", "rest_recharge": "休息点补几次", "fuel": "靠什么长", "honor_by_type": "各类战斗记几点军功", "honor_default": "别的战斗记几点", "ransom": "求饶", "show_prebattle": "战前屏给键", "direction": "方向", "source": "来源", "weapon_tag": "武器标签", "min_amount": "最少量",
 	"speed": "速度", "cells": "格", "pieces": "件", "tiers": "档位", "count_mode": "计数方式", "common_tags": "通用标签",
 	# 事件
 	"options": "选项", "requires": "条件", "outcomes": "后果", "hide_when_locked": "条件不满足时隐藏", "event": "事件", "node_type": "点的类型", "node_types": "点的类型",

@@ -1397,6 +1397,10 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 			report.error(at + ".uses", "次数只能是 -1（不限）或非负数")
 		if sk.cooldown_steps < 0:
 			report.error(at + ".cooldown_steps", "冷却不能为负")
+		if sk.rest_recharge < 0:
+			report.error(at + ".rest_recharge", "休息点补的次数不能为负")
+		if sk.show_prebattle and not sk.is_active():
+			report.error(at + ".show_prebattle", "只有主动技能能在战前屏给键")
 		if sk is AssaultSkill and ((sk as AssaultSkill).hp_fraction <= 0.0 or (sk as AssaultSkill).hp_fraction > 1.0):
 			report.error(at + ".hp_fraction", "突击扣的比例应在 (0, 1]")
 		if sk is EvadeSkill and (sk as EvadeSkill).steps < 1:
@@ -2417,7 +2421,15 @@ static func _validate_growth(def: ItemDef, report: ImportReport) -> void:
 	var g := def.growth
 	if g == null:
 		return
-	if not def.has_faith() or def.faith_tag() != GrowthProfile.FAITH_TAG:
+	if g.runs_on_honor():
+		# 256：靠军功长的（军功牌）不限信仰；各阶的 after 是累计军功点，一阶比一阶多
+		for k in range(1, g.stages.size()):
+			if g.stages[k] != null and g.stages[k - 1] != null and g.stages[k].after <= g.stages[k - 1].after:
+				report.error("growth.stages[%d].after" % k, "军功是累计的：这一阶的点数得比上一阶多")
+		for k in g.honor_by_type:
+			if int(g.honor_by_type[k]) < 0:
+				report.error("growth.honor_by_type", "军功点不能是负数")
+	elif not def.has_faith() or def.faith_tag() != GrowthProfile.FAITH_TAG:
 		report.error("growth", "生长是自然之神的东西：只许写在带 faith 与 %s 标签的道具上" % GrowthProfile.FAITH_TAG)
 	if def.is_bag:
 		report.error("growth", "包不会长")

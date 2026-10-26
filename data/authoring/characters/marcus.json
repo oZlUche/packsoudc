@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Marcus"
   },
-  "description": "擅长战斗的军团士兵。一个皮革包、一个小包，生命 {max_hp}、耐力 {max_stamina}、耐力回得最快：打得狠、打得久、打赢了得的多。",
+  "description": "擅长战斗的军团士兵。随身一块军功牌：打赢一场记一笔，牌越亮、牌边的武器越狠。生命 {max_hp}、耐力 {max_stamina}、耐力回得最快。",
   "descriptions": {
-    "en": "A legion soldier who is good at fighting. One leather bag and one small bag, Health {max_hp}, Stamina {max_stamina} and the fastest Stamina regeneration: hits hard, lasts long and earns more from wins."
+    "en": "A legion soldier who is good at fighting. He carries a phalera: every win earns Honor, and the brighter it gets, the harder the weapons around it hit. Health {max_hp}, Stamina {max_stamina} and the fastest Stamina regeneration."
   },
   "base_stats": {
     "max_hp": 55,
@@ -20,23 +20,6 @@
   ],
   "weight_capacity": 48,
   "skills": [
-    {
-      "type": "passive",
-      "id": "merit",
-      "display_name": "军功",
-      "display_names": {
-        "en": "Spoils of War"
-      },
-      "description": "战斗胜利所得金币增加四分之一。",
-      "descriptions": {
-        "en": "Coins from winning battles are increased by a quarter."
-      },
-      "passive": [
-        {
-          "type": "battle_reward_mult"
-        }
-      ]
-    },
     {
       "type": "passive",
       "id": "drill",
@@ -68,20 +51,15 @@
           ]
         }
       ]
-    },
+    }
+  ],
+  "fixed_items": [
     {
-      "type": "assault",
-      "id": "assault",
-      "display_name": "突击",
-      "display_names": {
-        "en": "Assault"
-      },
-      "description": "下次战斗开始时，先扣除敌方三成生命。",
-      "descriptions": {
-        "en": "At the start of your next battle, the enemy first loses three tenths of its Health."
-      },
-      "uses": 3,
-      "cooldown_steps": 3
+      "id": "legion_phalera",
+      "origin": [
+        3,
+        2
+      ]
     }
   ]
 }

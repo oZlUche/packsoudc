@@ -382,6 +382,7 @@ func _draw() -> void:
 		ItemPainter.draw_charges(self, item, item.rotation, anchor, cell_px, tint)     # 208：耐久没满、又没这一档的图：左下角次数点
 		ItemPainter.draw_lock(self, item, item.rotation, anchor, cell_px, tint)     # 230：玩家锁住的：左上角小锁
 		ItemPainter.draw_pin(self, item, item.rotation, anchor, cell_px, tint)     # 255：随身之物：右上角小钉
+		ItemPainter.draw_honor(self, item, item.rotation, anchor, cell_px, tint)     # 256：军功牌：右下角「军功 N」
 		if highlights.has(item.uid):
 			var hb := item.def.shape.size_rotated(item.rotation)
 			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))
@@ -555,11 +556,11 @@ func _draw_adjacency() -> void:
 	var loads := {}     # 171：晶石 uid → 拿到它的法杖（被别的法杖抢走的那把，装载格按空画）
 	for inst in inventory.items():
 		var item := inst as ItemInstance
-		if item != focused or item.def == null or item.def.adjacency == null:
+		if item != focused or item.def == null:
 			continue
-		if inventory.acts_as_bag(item.def):
+		var profile := GrowthProfile.adjacency_of(item)     # 256：军功牌的增益圈跟着阶走
+		if profile == null or inventory.acts_as_bag(item.def):
 			continue
-		var profile := item.def.adjacency
 		if profile.has_grant():
 			_collect_markers(marks, item, profile.grant_cells, profile.grant_filter, profile.grant_filter_all, "grant", UiPalette.GRANT, MARK_INSET_GRANT)
 		if profile.has_receive():

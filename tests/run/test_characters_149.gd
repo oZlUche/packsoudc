@@ -10,7 +10,7 @@ const MAX_TECHS: Array[StringName] = [&"tech_sinew_3", &"tech_endurance_3", &"te
 ## 写死的对照表（数值来自三份角色 JSON 与 docs/techs.xlsx；改了数就改这里）：
 ## id → [棋盘, 生命, 耐力, 耐力回复, 体力, 负重, 开局钱, 满级生命, 满级体力, 满级负重, 满级开局钱]
 const TABLE := {
-	&"andreus": [Vector2i(7, 6), 45.0, 55.0, 4.0, 5, 40, 120, 58.5, 8, 60, 240],
+	&"andreus": [Vector2i(9, 6), 45.0, 45.0, 4.0, 3, 64, 120, 58.5, 5, 96, 240],     # 256：体力 3、耐力 45、9 × 6、负重 64
 	&"marcus": [Vector2i(8, 6), 55.0, 65.0, 5.0, 5, 48, 100, 71.5, 8, 72, 200],
 	&"brutus": [Vector2i(9, 6), 70.0, 55.0, 3.0, 7, 56, 80, 91.0, 11, 84, 160],
 }
@@ -34,7 +34,7 @@ static func _stat(s: RunState, key: StringName) -> float:
 
 
 static func run_boards_and_panels(t: TestCase) -> void:
-	t.begin("149 · 三个人：棋盘 7 / 8 / 9 × 6；面板各占一轴；开局钱按角色；没写开局钱的角色用经济规则的全局数")
+	t.begin("149 · 三个人：棋盘 8 / 9 × 6（256 起安德烈乌斯也是 9 × 6）；面板各占一轴；开局钱按角色；没写开局钱的角色用经济规则的全局数")
 	var c := _content()
 	for id in TABLE:
 		var row: Array = TABLE[id]
@@ -60,9 +60,9 @@ static func run_boards_and_panels(t: TestCase) -> void:
 	var sp := _start(c, plain)
 	t.eq(sp.wallet.balance, 0, "没写开局钱、也没带钱：0")
 	# 开局屏的初始包在最窄的棋盘上也摆得下
-	var narrow := GridInventory.new(TABLE[&"andreus"][0], RunState.BOARD_ID, true)
-	RunState.give_kit(narrow, CS._character(c, &"andreus").starting_bags, c.items, null)
-	t.eq(narrow.item_count(), CS._character(c, &"andreus").starting_bags.size(), "7 × 6 上两个皮革包都摆得下")
+	var narrow := GridInventory.new(TABLE[&"marcus"][0], RunState.BOARD_ID, true)
+	RunState.give_kit(narrow, CS._character(c, &"marcus").starting_bags, c.items, null)
+	t.eq(narrow.item_count(), CS._character(c, &"marcus").starting_bags.size(), "8 × 6 上初始包都摆得下")
 
 
 static func run_percent_techs(t: TestCase) -> void:

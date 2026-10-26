@@ -105,9 +105,9 @@ display_name = "布鲁图斯"
 display_names = {
 "en": "Brutus"
 }
-description = "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}、棋盘最宽，扛得住、缓得过来；只是耐力回得慢、带的钱少，也没有逃跑和爆发的手段。"
+description = "擅长生存的奴隶探索者。生命 {max_hp}、体力 {vitality_max}、棋盘最宽之一：打输了扛得住、走错了缓得过来，犯错也不死；只是耐力回得慢、带的钱少。"
 descriptions = {
-"en": "A slave explorer who is good at surviving. Health {max_hp}, Vitality {vitality_max} and the widest board: he takes a beating and recovers. But his Stamina regenerates slowly, he brings little money, and he has no way to flee or burst."
+"en": "A slave explorer who is good at surviving. Health {max_hp}, Vitality {vitality_max} and one of the widest boards: he takes a lost fight and a wrong turn and keeps going, mistakes don't kill him. But his Stamina regenerates slowly and he brings little money."
 }
 base_stats = {
 "max_hp": 70,

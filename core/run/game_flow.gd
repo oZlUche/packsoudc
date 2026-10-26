@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA, CHEST, FORGE }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA, CHEST, FORGE, RANSOM }
 
 signal screen_changed(screen: int, payload: Dictionary)
 ## 101 第 5 刀：当前的这一局换了（开局 / 读档 / 回主菜单时 `null`）。UI 据此把只属于一局的东西挂上 / 摘掉
@@ -112,7 +112,7 @@ func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets
 
 
 static func is_overlay(s: int) -> bool:
-	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR, Screen.CHEST, Screen.FORGE]
+	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR, Screen.CHEST, Screen.FORGE, Screen.RANSOM]
 
 
 #region 底屏之间
@@ -1043,6 +1043,30 @@ func close_altar() -> void:
 	_flush()
 
 
+#region 求饶（256）
+## 天平上成交：[param coins] 从钱包出，[param given] 是托盘上的道具（屏已经把它们从包里拿出来了，成交就丢掉）。
+## 返回空串 = 成交；否则是原因（什么都不动）
+func pay_ransom(coins: int, given: Array = []) -> String:
+	if run == null or run.is_over():
+		return UiText.t("ransom.none")
+	var why := run.events.pay_ransom(coins, given)
+	if why == "":
+		save()
+		_flush()
+	return why
+
+
+## 不求饶（关窗、按「不求饶」）：照原来扣体力，扣到底就战败
+func refuse_ransom() -> bool:
+	if run == null or not run.events.refuse_ransom():
+		return false
+	if not run.is_over():
+		save()
+	_flush()
+	return true
+#endregion
+
+
 ## 093：神坛上献祭 [param uids]（棋盘 / 地上 / 祭品台里的实例 uid）。返回 RunState.offer 的账；卖掉的实例从所在容器移除
 func offer(insts: Array, node: MapNode = null) -> Dictionary:
 	if run == null:
@@ -1071,6 +1095,29 @@ func slip_skill() -> RunSkill:
 		if d is SlipSkill:
 			return d
 	return null
+
+
+## 256：战前屏上有键的主动技能（安德烈乌斯的偷袭）；没有返回 null
+func prebattle_skill() -> RunSkill:
+	if run == null or run.skills == null:
+		return null
+	for d in run.skills.defs:
+		if d != null and d.is_active() and d.show_prebattle:
+			return d
+	return null
+
+
+## 256：战前屏上按「偷袭」：用掉一次（立旗：开打时敌人先失去几成生命），然后照「开战」那条路打。返回空串 = 打了
+func ambush_battle() -> String:
+	var d := prebattle_skill()
+	if d == null:
+		return UiText.t("log.no_skill")
+	if run.events.pending_battle.is_empty():
+		return UiText.t("pre.no_battle")
+	var why := run.use_skill(d.id)
+	if why != "":
+		return why
+	return "" if start_battle() else UiText.t("pre.no_battle")
 
 
 ## 136：战前准备屏上按「溜走」：这一场不打（点用过、没战利品、不扣体力），然后往下走（回地图或下一屏）。返回空串 = 溜了，否则是原因
@@ -1281,8 +1328,8 @@ func hide_overlay() -> bool:
 		run.fold_loot_into_search()     # 反馈：没拿的并进搜索的收获箱、包掉在地上 —— 不再和收获并成一份重新搜
 		_flush()     # 搜索遭遇打赢的战利品：没拿完也能关，往下走到「再搜 / 走」
 		return true
-	if run.events.pending_event() != null or not run.events.pending_battle.is_empty():
-		return false
+	if run.events.pending_event() != null or not run.events.pending_battle.is_empty() or not run.events.pending_ransom.is_empty():
+		return false     # 256：天平上收不起来（关窗 = 不求饶，[method refuse_ransom]）
 	if screen == Screen.LOOT and run.has_pending_arrival():
 		# 134：猎手战的战利品收起来了，这个点的事还挂着：接着进点（剩下的战利品留在这个点上），有事就看，没事回地图
 		run.poke_hunters()
@@ -1511,6 +1558,9 @@ func _adopt(state: RunState) -> void:
 		state.player_baseline = player_baseline
 	var ev := state.events
 	ev.pause_before_battle = true     # 084：正式游戏开打前先过战前准备屏
+	ev.offer_ransom = true     # 256：输了能求饶的，回放之后出天平
+	ev.ransom_offered.connect(func(node: MapNode, price: int):
+		_push({"screen": Screen.RANSOM, "node": node, "price": price}))     # 256：排在回放屏后面（battle_finished 先发）
 	ev.battle_pending.connect(func(node: MapNode, type: StringName, content: Dictionary):
 		_push({"screen": Screen.PREBATTLE, "node": node, "type": type, "content": content}))
 	ev.battle_finished.connect(func(node: MapNode, r: BattleResult, won: bool):
@@ -1603,6 +1653,10 @@ func _flush() -> void:
 	if run != null and run.is_over():
 		_show_result()
 		return
+	if run != null and not run.events.pending_ransom.is_empty():
+		# 256：天平上还没答复（读档回来的）：先答复，猎手和别的事都等着
+		_go(Screen.RANSOM, {"node": run.events.ransom_node(), "price": int(run.events.pending_ransom.get("price", 0))})
+		return
 	# 玩家空下来了：猎手够得着就排上开打前的事件屏（071）；134：猎手那一场了结了就接着进挂起的那个点 ——
 	# 那个点的事发生时排进队里的（休息结果、回放……）接着看
 	if run != null and run.poke_hunters() and not _queue.is_empty():
@@ -1651,6 +1705,8 @@ func _skippable(entry: Dictionary) -> bool:
 			return false
 		Screen.LOOT:
 			return run.pending_loot == null
+		Screen.RANSOM:
+			return run.events.pending_ransom.is_empty()
 		Screen.SEARCH:
 			var session: SearchSession = entry.get("session", null)
 			return run.events.current_search != session or session == null or not session.active

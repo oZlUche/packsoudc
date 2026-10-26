@@ -31,6 +31,7 @@ const RUN_EFFECTS := {
 	&"belt_slots_bonus": "res://core/run/effects/belt_slots_bonus.gd",     # 147
 	&"starting_belt": "res://core/run/effects/starting_belt.gd",     # 160 补一
 	&"loss_discount": "res://core/run/effects/loss_discount.gd",     # 149：科技「不屈」
+	&"ransom": "res://core/run/effects/ransom.gd",     # 256：安德烈乌斯「求饶」
 }
 
 ## 147：随身技能点一下的效果（[BeltUse.effects]；160 补一：挂在 [BeltSkillDef] 上）
@@ -53,6 +54,7 @@ const RUN_MODULES := {
 	&"belt": "res://core/run/modules/belt_module.gd",     # 147
 	&"wear": "res://core/run/modules/wear_module.gd",     # 148
 	&"growth": "res://core/run/modules/growth_module.gd",     # 207
+	&"honor": "res://core/run/modules/honor_module.gd",     # 256：军功牌
 }
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）

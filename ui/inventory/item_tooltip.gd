@@ -200,11 +200,13 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		lines.append(wear_line(inst))
 	if inst.is_benched():     # 2026-10-22：标了不参战 —— 写清楚，不然读数掉下来不知道为什么
 		lines.append("[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("tip.benched")])
-	if def.growth != null:     # 207：生长 —— 现在第几阶、再几步、各阶加什么、扎根没有
+	if def.growth != null and def.growth.runs_on_honor():     # 256：军功牌 —— 攒了几点、各阶的增益圈
+		lines.append_array(honor_lines(inst))
+	elif def.growth != null:     # 207：生长 —— 现在第几阶、再几步、各阶加什么、扎根没有
 		var gst := faith_status()
 		lines.append_array(growth_lines(inst, board, not gst.is_empty() and not faith_lit(def, gst)))
-	if def.adjacency != null and not wild:
-		var adj := def.adjacency
+	var adj := GrowthProfile.adjacency_of(inst)     # 256：军功牌的增益跟着阶走
+	if adj != null and not wild:
 		var g := AdjacencyText.grant(adj)
 		if g != "":
 			lines.append("%s[color=@grant]%s[/color]" % [icon("grant"), g])
@@ -556,6 +558,25 @@ static func growth_lines(inst: ItemInstance, board: GridInventory = null, dorman
 	for b in GrowthProfile.bonuses_of(inst):
 		var bl := UiText.t("tip.bonus_extra") % b.effect_text()
 		out.append("[color=#%s]%s[/color]" % [DIM_HEX, bl] if dormant else "[color=@grant]%s[/color]" % bl)
+	return out
+
+
+## 256：军功牌那几行 —— 「金 · 军功 9 / 15」，然后从铜起每阶一行（几点到、几格、牌边的武器得什么；到了的亮）
+static func honor_lines(inst: ItemInstance) -> Array[String]:
+	var out: Array[String] = []
+	var g := inst.def.growth
+	var stage := GrowthProfile.stage_of(inst)
+	var nxt := GrowthProfile.next_stage(inst)
+	var head := UiText.t("tip.honor") % [GrowthProfile.stage_name(inst), GrowthProfile.honor_of(inst)]
+	out.append(head + (UiText.t("tip.honor_next") % nxt.after if nxt != null else UiText.t("tip.honor_done")))
+	var base := inst.def.adjacency
+	for i in g.stages.size() + 1:
+		var adj := g.stages[i - 1].adjacency_over(base) if i > 0 else base
+		var what := AdjacencyText.grant(adj)
+		var name := g.stages[i - 1].name_in() if i > 0 else Names.pick(g.stage0_names, g.stage0_name)
+		var line := UiText.t("tip.honor_stage") % [name, g.stages[i - 1].after if i > 0 else 0,
+			adj.grant_cells.size() if adj != null else 0, what if what != "" else UiText.t("tip.none_paren")]
+		out.append("[color=@grant]%s[/color]" % line if i == stage else "[color=#%s]%s[/color]" % [DIM_HEX, line])
 	return out
 
 
