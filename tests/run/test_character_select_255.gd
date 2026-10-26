@@ -269,6 +269,15 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 	t.check(widths.size() >= 2, "比过不止一种宽的棋盘：%s" % [widths.keys()])
 	for i in range(1, rects.size()):
 		t.eq(rects[i], rects[0], "三栏的位置与宽度换角色一个像素不动（第 %d 个）" % (i + 1))
+	# 补充一（游戏测试 v4.49）：英文的名牌说明与技能句更长 —— 换成英文，三栏也一个像素不动
+	UiText.lang = "en"
+	for i in flow.characters.size():
+		setup.choose_character(i)
+		_lay_out(game)
+		t.eq(setup._grooves.map(func(g: Control) -> Rect2: return g.get_global_rect()), rects[0], "英文：%s 的三栏和中文一样大" % setup.character().id)
+	UiText.lang = "zh"
+	setup.choose_character(flow.characters.size() - 1)
+	_lay_out(game)
 	# 首次赠包：这一回第一次选的人亮着；换个存档再进来（已送过）就没有
 	t.not_null(setup._gift_tag, "首次赠包小签：第一次选他时亮着")
 	t.check(setup._gift_tag != null and (setup._gift_tag.get_child(0) as Label).text.begins_with("首次选他："), "写「首次选他：…进包架」")
