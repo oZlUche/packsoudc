@@ -1,5 +1,5 @@
-## 255：选角色屏条目行左端的 52 图标槽 —— 技能（`assets/ui/skills/<icon 或 id>.png`，没图画一枚通用的月桂纹样占位）、
-## 随身之物（道具本体缩进来 + 右上角小钉）、短板（裂纹纹样占位）。三类条目同一种行，靠它和名字颜色分（作者 2026-10-26 11:07 选甲）
+## 255：选角色屏条目行左端的 52 图标槽 —— 技能（`assets/ui/skills/<icon 或 id>.png`，没图用月桂环 `placeholder.png`）、
+## 随身之物（道具本体缩进来 + 右上角小钉）、短板（`setup/charsel/flaw_crack` 铁灰裂纹章）。三类条目同一种行，靠它和名字颜色分（作者 2026-10-26 11:07 选甲）
 class_name EntryIcon
 extends Control
 
@@ -8,6 +8,10 @@ const SKILL_DIR := "res://assets/ui/skills/"
 const SKILL := &"skill"
 const ITEM := &"item"
 const FLAW := &"flaw"
+## 没出图的技能用的月桂环
+const PLACEHOLDER := "placeholder"
+## 短板那一行的铁灰裂纹章（[member UiTheme.asset_root] 下）
+const FLAW_ART := "setup/charsel/flaw_crack"
 const SLOT := Color("1c1f27")
 const SLOT_EDGE := Color("2c3140")
 
@@ -30,7 +34,9 @@ static func pinned(def: ItemDef) -> EntryIcon:
 
 
 static func flaw() -> EntryIcon:
-	return EntryIcon._make(FLAW)
+	var e := EntryIcon._make(FLAW)
+	e.texture = UiTheme.art_cached(FLAW_ART)
+	return e
 
 
 static func _make(p_kind: StringName) -> EntryIcon:
@@ -42,10 +48,18 @@ static func _make(p_kind: StringName) -> EntryIcon:
 	return e
 
 
-## 技能图标的图（美术没出 = null，画占位）
+## 技能图标的图；这个技能没出图用通用的月桂环 `placeholder.png`（美术 11:54）
 static func texture_for(sk: RunSkill) -> Texture2D:
-	var path := SKILL_DIR + (sk.icon if sk.icon != "" else String(sk.id)) + ".png"
-	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+	for name in [sk.icon if sk.icon != "" else String(sk.id), PLACEHOLDER]:
+		var path := SKILL_DIR + String(name) + ".png"
+		if ResourceLoader.exists(path):
+			return load(path) as Texture2D
+	return null
+
+
+## 这个技能有没有自己的图（不算月桂环占位）
+static func has_own_art(sk: RunSkill) -> bool:
+	return ResourceLoader.exists(SKILL_DIR + (sk.icon if sk.icon != "" else String(sk.id)) + ".png")
 
 
 ## 有没有用上美术图（测试看）
@@ -70,15 +84,6 @@ func _draw_skill(r: Rect2) -> void:
 		return
 	draw_rect(r, SLOT)
 	draw_rect(r.grow(-0.5), SLOT_EDGE, false, 1.0)
-	var c := r.get_center()
-	var brass := UiPalette.BTN_PRIMARY_HOVER.darkened(0.25)
-	draw_arc(c, 16.0, deg_to_rad(110), deg_to_rad(250), 12, brass, 2.0)     # 月桂两枝
-	draw_arc(c, 16.0, deg_to_rad(-70), deg_to_rad(70), 12, brass, 2.0)
-	for i in 4:
-		var a := deg_to_rad(130 + i * 30)
-		draw_circle(c + Vector2(cos(a), sin(a)) * 16.0, 2.5, brass)
-		draw_circle(c + Vector2(-cos(a), sin(a)) * 16.0, 2.5, brass)
-	draw_circle(c, 5.0, brass)
 
 
 func _draw_item(r: Rect2) -> void:
@@ -94,10 +99,4 @@ func _draw_item(r: Rect2) -> void:
 
 
 func _draw_flaw(r: Rect2) -> void:
-	draw_rect(r, Color("15171b"))
-	draw_rect(r.grow(-0.5), Color("3a3e45"), false, 1.0)
-	var crack := Color("6b7178")
-	var pts := PackedVector2Array([Vector2(26, 4), Vector2(22, 16), Vector2(30, 24), Vector2(20, 34), Vector2(27, 48)])
-	draw_polyline(pts, crack, 2.0)
-	draw_line(Vector2(30, 24), Vector2(42, 30), crack, 1.5)
-	draw_line(Vector2(22, 16), Vector2(12, 12), crack, 1.5)
+	_draw_skill(r)     # 铁灰章 + 裂纹（美术 11:54 定稿）；没图只剩空槽

@@ -203,6 +203,30 @@ static func run_contour(t: TestCase) -> void:
 	t.eq(BoardContour.pinch_points(Vector2i(3, 3), func(c: Vector2i) -> bool: return c != Vector2i(1, 1) and c != Vector2i(2, 2)), [Vector2i(2, 2)] as Array[Vector2i], "对角相连的顶点挑出来")
 
 
+## 美术 2026-10-26 11:54 定稿换上：三人看得见的技能（主动的藏着）各有自己的图标、短板章是裂纹、随身钉、首次赠包签、缺格框十二块拼件都在
+static func run_art(t: TestCase) -> void:
+	t.begin("255 补充一：选角色屏换上美术定稿 —— 技能图标、短板裂纹章、随身钉（大小两版）、首次赠包签、缺格框十二块拼件")
+	var c := CS._content()
+	for id in [&"marcus", &"andreus", &"brutus"]:
+		var ch := CS._character(c, id)
+		for sk in ch.skills:
+			if not (RunSkills.ACTIVE_HIDDEN and sk.is_active()):
+				t.check(EntryIcon.has_own_art(sk), "%s 的技能 %s 有自己的图标" % [id, sk.id])
+	var flaw := EntryIcon.flaw()
+	t.not_null(flaw.texture, "短板章用裂纹图")
+	flaw.free()
+	for n in ["tip/pin_badge", "tip/pin_badge_2x"]:
+		t.not_null(UiTheme.art_cached(n), "随身钉 %s" % n)
+	var tag := GiftTag.make("首次选他：x")
+	t.check(tag.has_art(), "首次赠包签用定稿九宫格")
+	tag.free()
+	for k in ["t", "r", "b", "l"]:
+		t.not_null(UiTheme.art_cached(BoardFrame.MASK_DIR + "edge_" + k), "直边 edge_%s" % k)
+	for k in ["tl", "tr", "bl", "br"]:
+		t.not_null(UiTheme.art_cached(BoardFrame.MASK_DIR + "inner_" + k), "凹角 inner_%s" % k)
+		t.not_null(UiTheme.art_cached(BoardFrame.MASK_DIR + "outer_" + k), "凸角 outer_%s" % k)
+
+
 static func frame_select_screen(t: TestCase, root: Window) -> void:
 	t.begin("255 §2：选角色屏 —— 三栏定宽（换 7 / 8 / 9 格的角色一个像素不动）、棋盘居中；面板方块一行；技能 → 随身之物 → 短板同一种行；题字 / 图例 / 首次赠包小签；卡装得下")
 	Support.cleanup("setup255")

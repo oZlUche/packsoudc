@@ -1707,9 +1707,8 @@ func _build_preview(ch: CharacterDef) -> void:
 		legend.free()
 	var gift := first_gift_text(ch)
 	if gift != "" and _gifted.has(ch.id):
-		_gift_tag = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 16, 10, 16, 10)
+		_gift_tag = GiftTag.make(gift)
 		_gift_tag.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		_gift_tag.add_child(_label(gift, 15, UiTheme.INK))
 		_preview_host.add_child(_gift_tag)
 
 
