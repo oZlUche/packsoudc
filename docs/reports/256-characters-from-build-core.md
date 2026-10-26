@@ -209,10 +209,10 @@
 
 | 技能 | 类型 | 设计 | 实现 |
 |---|---|---|---|
-| **偷袭** | 主动，**战前屏可见** | 战前屏多一把键：按了直接开打，敌人开战就失去 **30%** 生命。**次数 2**（推荐；3 待定），**没有冷却**；每到一个休息点补 **1 次**，补不过上限 | 就是马库斯那条藏着的 `AssaultSkill`（`hp_fraction` 0.3，改的是对方 `max_hp`）搬过来：id `ambush`，`uses: 2`，`cooldown_steps: 0`，新字段 `RunSkill.rest_recharge: 1`、`RunSkill.show_prebattle: true`（166 的 `ACTIVE_HIDDEN` 对带这个旗的技能不生效，战前屏照 `_slip_btn` 那条路建键，按下 = `use` 立旗 + `start_battle`）。休息：`NodeEvents` 的 `rest` 分支发 `rested` 后 `RunState` 调 `skills.on_rest()`（`uses_left` +recharge，封顶定义的 `uses`）。马库斯的 `assault` 删掉（本来就藏着） |
-| **求饶** | 被动（新效果 `ransom`） | 会扣体力的一场打输了，结算前多一步：对方开价，出一架**天平**；把金币和道具放到左盘，左盘重量 ≥ 右盘开价就**成交**：不扣体力、放上去的东西归对方。不成交（按「不求饶」）就照旧扣体力。**核心点（BOSS）和搜索遭遇不给**；猎手给（待定，推荐给）。开价 = 这一场的战斗奖励（`EconomyRules.battle_reward(strength, depth, difficulty)`，已经含地图难度与敌人档位）× **3**（`ransom_mult`，待定） | `_fight` 里输了且 `cost > 0` 且 type ≠ core 且有 `ransom` 效果时**不立刻 spend**：记 `pending_ransom = {node, type, content, cost, price}`、发 `ransom_offered`，跟着存档（读档回来仍在天平上）。`GameFlow` 在回放屏之后排一屏 `RANSOM`；`pay_ransom()`（扣钱、从包里删道具、清 pending）/ `refuse_ransom()`（走原来的 `vitality.spend` + `is_depleted` → `_defeat`）。`_after_battle` 照常（点标用过） |
+| **偷袭** | 主动，**战前屏可见** | 战前屏多一把键：按了直接开打，敌人开战就失去 **30%** 生命。**次数 3**（作者定 15:28），**没有冷却**；每到一个休息点补 **1 次**，补不过上限 | 就是马库斯那条藏着的 `AssaultSkill`（`hp_fraction` 0.3，改的是对方 `max_hp`）搬过来：id `ambush`，`uses: 2`，`cooldown_steps: 0`，新字段 `RunSkill.rest_recharge: 1`、`RunSkill.show_prebattle: true`（166 的 `ACTIVE_HIDDEN` 对带这个旗的技能不生效，战前屏照 `_slip_btn` 那条路建键，按下 = `use` 立旗 + `start_battle`）。休息：`NodeEvents` 的 `rest` 分支发 `rested` 后 `RunState` 调 `skills.on_rest()`（`uses_left` +recharge，封顶定义的 `uses`）。马库斯的 `assault` 删掉（本来就藏着） |
+| **求饶** | 被动（新效果 `ransom`） | 会扣体力的一场打输了，结算前多一步：对方开价，出一架**天平**；把金币和道具放到左盘，左盘重量 ≥ 右盘开价就**成交**：不扣体力、放上去的东西归对方。不成交（按「不求饶」）就照旧扣体力。**只要会扣体力就能求饶**（作者定 15:28）：普通 / 精英 / 猎手打输、248 逃跑失败的那一点都算；核心点是必死不是扣体力、搜索遭遇不扣体力，所以自然没有。开价 = 这一场的战斗奖励（`EconomyRules.battle_reward(strength, depth, difficulty)`，已经含地图难度与敌人档位）× **3**（`ransom_mult`，作者定） | `_fight` 里输了且 `cost > 0` 且 type ≠ core 且有 `ransom` 效果时**不立刻 spend**：记 `pending_ransom = {node, type, content, cost, price}`、发 `ransom_offered`，跟着存档（读档回来仍在天平上）。`GameFlow` 在回放屏之后排一屏 `RANSOM`；`pay_ransom()`（扣钱、从包里删道具、清 pending）/ `refuse_ransom()`（走原来的 `vitality.spend` + `is_depleted` → `_defeat`）。`_after_battle` 照常（点标用过） |
 | 熟门熟路 | 被动 | 不动 | |
-| 溜得掉 | 被动 | 留 `stealth` + `flee_bonus`；**去掉 `free_losses`**（首次战败免扣和求饶重叠，体力 3 加免一次又太松） | 改 json |
+| 溜得掉 | 被动 | **整条删**（作者 15:28；原来留 stealth + flee_bonus 的方案不要） | 删 json |
 | 脱身 | 主动（藏） | **删**。战前屏的位置给偷袭；不想打有 248 的退回（免费） | 删 json，`SlipSkill` 类留着（猎手事件屏那一项跟着没了） |
 
 左盘的重量怎么算：金币 1 枚 = 1；道具 = **局内出售价**（`ShopSession.sell_price_of`：定价 × 0.3，碎了再打折），锁住的（255 随身之物 / 230 玩家锁）不能放。右盘 = 开价。成交只看 ≥，多给的不找零（作者原话「平衡或超过时成交」）。
@@ -229,10 +229,10 @@
 ### 8.4 角色卡与说明句
 
 - 说明句：「擅长避战的奴隶探索者。棋盘最大、背得最多、带的钱也最多：先手偷袭、输了就用钱买命。生命 {max_hp}、体力 {vitality_max} 都是最低的。」（正面在前，短处收尾）
-- 技能行（255 一行式）：偷袭「开战时敌人先失去三成生命。能用 {uses} 次，休息点补 1 次」；求饶「打输了可以用金币和道具抵掉体力损失。核心点与搜索遭遇不能」；熟门熟路、溜得掉照旧。
+- 技能行（255 一行式）：偷袭「开战时敌人先失去三成生命。能用 3 次，休息点补 1 次」；求饶「打输了可以用金币和道具抵掉体力损失。核心点与搜索遭遇不能」；熟门熟路照旧。
 - 没有短板（体力 3 本身就是）。
 
-### 8.5 待定（按推荐派）
+### 8.5 待定（作者 15:28 逐条定了，见 8.9）
 
 1. 偷袭次数 2（备选 3）；休息补 1、封顶初始次数。
 2. `ransom_mult` 3（备选 2 / 4）：一档敌人浅层开 60 左右，安德烈乌斯开局 120 现金能买两次。
@@ -254,3 +254,7 @@
 ### 8.8 术语（作者 2026-10-26 15:25）
 
 「以后不要用回气这个关键词了，就写耐力回复」。玩家看得见的字一律改：`UiText` `setup.stat_regen` 的中文（选角色卡蜡板「耐力回复」）、`StatAxes.REGEN_STAMINA` 的正向名「回气」→「耐力回复」（负向「疲乏」不动，英文 Second Wind / Regen 不动）、相关测试的期望字串、`docs/text-glossary-en.md` 与 `docs/architecture.md` 的词条、代码注释顺手改。本篇与 255 的旧文随之改。并进本批派执行。
+
+### 8.9 作者裁定（2026-10-26 15:28）
+
+1. 偷袭 **3 次**。2. 开价 ×3。3. **只要扣体力就能求饶**（猎手、逃跑失败都算；实现上在 `Vitality.spend` 前拦所有有对手的扣体力，事件选项里自愿付的体力不算）。4. 棋盘 9 × 6、负重 64。5. **溜得掉整条删**。6. 天平排在回放之后。三人面板与技能的清单另出一页 [docs/characters.md](../characters.md)。
