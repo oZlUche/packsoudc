@@ -93,6 +93,7 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	panel.hint_sink = hint_sink
 	panel.setup(run, font, drag)
 	BoardFrame.mark(panel.board_view, frame)     # 227：外框是上面那张 72 px 皮带框，格缝浅色
+	panel.hold_nine()     # 255 补充一：棋盘坐进九格宽的位子，窗不随棋盘宽窄变
 	_canvas.add_child(panel)
 
 	var ch := run.character
@@ -253,12 +254,18 @@ static func spec() -> Dictionary:
 	return out
 
 
-## 窗多大：精修稿是 8×6 棋盘的尺寸，棋盘大了多出的格子数 × 一格
+## 窗多大：精修稿是 8×6 棋盘的尺寸，按 [method board_slot] 比它多出的格子数 × 一格
 func window_size() -> Vector2:
 	var cell := float(_spec["cell"])
 	var drawn: Vector2 = _vec(_spec["board"]) * cell
-	var cells := Vector2(panel.board_view.inventory.size) * cell if panel != null else drawn
-	return _vec(_spec["window_size"]) + (cells - drawn)
+	return _vec(_spec["window_size"]) + (Vector2(board_slot()) * cell - drawn)
+
+
+## 255 补充一（作者 10:51）：棋盘那块位子按几格算 —— 宽永远九格（窄的棋盘居中），高照棋盘行数（神坛训练会加行）
+func board_slot() -> Vector2i:
+	var rows := panel.board_view.inventory.size.y if panel != null else int(_vec(_spec["board"]).y)
+	var cols := panel.board_view.inventory.size.x if panel != null else 0
+	return Vector2i(maxi(CharacterDef.BOARD_MAX_W, cols), rows)
 
 
 ## 棋盘格子左上（窗里的设计像素）
@@ -278,9 +285,10 @@ func _layout() -> void:
 	var cells := board_cells_at()
 	var cells_size := Vector2(panel.board_view.inventory.size) * float(_spec["cell"])
 	var off := float((_spec["board_frame"] as Dictionary).get("cells_offset", 24))
-	frame.position = cells - Vector2(off, off)
+	var shift := Vector2(BoardNine.offset_for(panel.board_view.inventory.size.x, float(_spec["cell"])), 0.0)     # 九格的位子里居中
+	frame.position = cells + shift - Vector2(off, off)
 	frame.size = cells_size + Vector2(off, off) * 2.0
-	panel.position = cells     # 棋盘在面板左上
+	panel.position = cells     # 棋盘的九格位子在面板左上
 	var grow := want - _vec(_spec["window_size"])     # 棋盘比精修稿大多出来的
 	var col: Dictionary = _spec["col"]
 	var col_x := float(col.get("x", 686)) + grow.x

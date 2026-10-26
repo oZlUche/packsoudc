@@ -42,6 +42,9 @@ extends Resource
 ## 255：棋盘缺格（格坐标）；空 = 整块矩形。缺格不能放包、不能放东西，画成透空
 @export var board_mask: Array[Vector2i] = []
 
+## 255：角色棋盘最宽几格 —— 导入器拦着；255 补充一（作者 10:51）：所有面板按这么宽定尺寸，窄的棋盘居中、差额是内距
+const BOARD_MAX_W := 9
+
 
 ## 这个角色的战斗基线：默认值盖上覆盖项。编译器与战斗不认识角色，只认基线（4.2）
 func baseline() -> CombatantBaseline:

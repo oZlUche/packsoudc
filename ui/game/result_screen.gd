@@ -277,7 +277,7 @@ func _fit_shelf(area: Control) -> void:
 		return
 	var used: float = _wh.rack_room()
 	if flow.meta.board != null:
-		used += BOARD_CELL * flow.meta.board.size.x + 2.0 * WarehousePanelScript.BOARD_FRAME_PAD + WarehousePanelScript.ROW_GAP
+		used += BOARD_CELL * maxi(CharacterDef.BOARD_MAX_W, flow.meta.board.size.x) + 2.0 * WarehousePanelScript.BOARD_FRAME_PAD + WarehousePanelScript.ROW_GAP     # 255 补充一：带回来的棋盘占九格宽的位子
 	used += WarehousePanelScript.ROW_GAP + 4.0     # 228：仓库右对齐那块空位两边各一道行距（原来少算一道，第二页铺满整屏后仓库顶出右沿）
 	used += WarehousePanelScript.RESULT_SHELF_RIGHT + WarehousePanelScript.ROW_GAP     # 木架框离右沿那块空，和它前面那道行距
 	var w := area.size.x - 2.0 * PAGE_MARGIN - used

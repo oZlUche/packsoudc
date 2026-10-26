@@ -92,11 +92,13 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 		var inv = map.bag_panel()
 		var cell := float(spec["cell"])
 		t.eq(inv.board_view.cell_px, cell, "一格 %d" % int(cell))
-		var extra := (Vector2(inv.board_view.inventory.size) - BagWindow._vec(spec["board"])) * cell
-		t.eq(win.window_size(), BagWindow._vec(spec["window_size"]) + extra, "窗按精修稿（棋盘 %s）" % str(inv.board_view.inventory.size))
+		var extra := (Vector2(win.board_slot()) - BagWindow._vec(spec["board"])) * cell     # 255 补充一：棋盘的位子永远九格宽
+		t.eq(win.board_slot().x, CharacterDef.BOARD_MAX_W, "棋盘位子九格宽（棋盘 %s 居中）" % str(inv.board_view.inventory.size))
+		t.eq(win.window_size(), BagWindow._vec(spec["window_size"]) + extra, "窗按精修稿 + 九格位子")
 		t.eq(inv.position, BagWindow._vec(spec["board_cells_topleft_rel_window"]), "棋盘格子左上在窗 (42,82)")
 		var off := float(spec["board_frame"]["cells_offset"])
-		t.eq(win.frame.position, inv.position - Vector2(off, off), "外框比格子外扩 %d" % int(off))
+		var shift := Vector2(BoardNine.offset_for(inv.board_view.inventory.size.x, cell), 0.0)
+		t.eq(win.frame.position, inv.position + shift - Vector2(off, off), "外框比格子外扩 %d（棋盘在九格位子里居中）" % int(off))
 		t.eq(win.frame.size, Vector2(inv.board_view.inventory.size) * cell + Vector2(off, off) * 2.0, "外框包住整块棋盘")
 		t.not_null(win.frame.texture, "外框切图在")
 		var mini: Array = (BagWindow.satchel().get("minimize", {}) as Dictionary).get("topleft_rel_window", spec["minimize"]["topleft_rel_window"]) if win.skinned() else spec["minimize"]["topleft_rel_window"]
@@ -117,11 +119,10 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 			var s := strips[0] as StatsStrip
 			var box := s.get_parent() as MarginContainer
 			var col := box.get_parent() as VBoxContainer if box != null else null
-			t.check(col != null and col == inv.board_view.get_parent() and box.get_index() == inv.board_view.get_index() + 1, "数值栏紧跟在棋盘下面")
+			t.check(col != null and col == inv.nine.get_parent() and box.get_index() == inv.nine.get_index() + 1, "数值栏紧跟在棋盘（九格位子）下面")
 			if col != null:
 				t.eq(box.get_theme_constant("margin_top") + col.get_theme_constant("separation"), int(InvPanel.STRIP_GAP), "上沿离棋盘下沿 %d" % int(InvPanel.STRIP_GAP))
-			var board_w: float = float(inv.board_view.inventory.size.x) * cell
-			t.eq(s.custom_minimum_size.x, board_w, "和棋盘一样宽，签在里面居中")
+			t.eq(s.custom_minimum_size.x, float(win.board_slot().x) * cell, "和九格位子一样宽，签在里面居中")
 		win.close_button.pressed.emit()
 		t.check(not map.bag_open(), "按圆钮：收起")
 	game.queue_free()
@@ -148,7 +149,9 @@ static func frame_container_screen(t: TestCase, root: Window) -> void:
 		t.check(absf(take_mid - strip_mid) <= 2.0, "和「全部拾取」同一行（%.0f / %.0f）" % [take_mid, strip_mid])
 		var board: Rect2 = screen._inv.board_view.get_global_rect()
 		t.check(strip.global_position.y >= board.end.y + CS.STRIP_GAP - 1.0, "上沿让开棋盘")
-		t.check(absf(strip.global_position.x - board.position.x) <= 1.0 and absf(strip.size.x - board.size.x) <= 1.0, "和玩家棋盘左对齐、一样宽")
+		var slot_x: float = board.position.x - BoardNine.offset_for(screen._inv.board_view.inventory.size.x, screen._inv.board_view.cell_px)
+		var slot_w: float = float(maxi(CharacterDef.BOARD_MAX_W, screen._inv.board_view.inventory.size.x)) * screen._inv.board_view.cell_px
+		t.check(absf(strip.global_position.x - slot_x) <= 1.0 and absf(strip.size.x - slot_w) <= 1.0, "255 补充一：和玩家棋盘的九格位子左对齐、一样宽")
 		var bottom: float = screen.overlay_frame().global_position.y + screen.panel_size().y
 		t.check(strip.get_global_rect().end.y <= bottom, "面板放得下（%.0f ≤ %.0f）" % [strip.get_global_rect().end.y, bottom])
 		var right: float = screen.overlay_frame().global_position.x + screen.panel_size().x - CS.EDGE

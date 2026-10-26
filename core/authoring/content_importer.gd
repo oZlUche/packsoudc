@@ -1305,7 +1305,7 @@ static func _check_not_in_techs(e: Effect, at: String, ctx: Context, report: Imp
 
 
 ## 255：角色棋盘最宽几格 —— 选角色屏、开局屏、背包窗都按九格定宽，窄的居中加内距（作者 2026-10-26 10:51）
-const CHARACTER_BOARD_MAX_W := 9
+const CHARACTER_BOARD_MAX_W := CharacterDef.BOARD_MAX_W
 
 
 ## 255：缺格与随身之物 —— 缺格在盘内、不重复；随身之物找得到、是普通道具（不是包）、整件在盘内、不压缺格、彼此不重叠

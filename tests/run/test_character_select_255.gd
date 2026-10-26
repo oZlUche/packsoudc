@@ -226,7 +226,7 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 		_lay_out(game)
 		var ch: CharacterDef = setup.character()
 		widths[ch.board_size.x] = true
-		rects.append(setup._grooves.map(func(g: Control) -> Rect2: return Rect2(g.global_position, Vector2(g.size.x, 0))))
+		rects.append(setup._grooves.map(func(g: Control) -> Rect2: return g.get_global_rect()))     # 补充一（游戏测试 v4.48）：高也算
 		var frame: Control = setup._preview_view.get_parent()
 		var col: Control = setup._grooves[2]
 		var left_pad: float = frame.global_position.x - col.global_position.x
@@ -248,6 +248,16 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 	# 首次赠包：这一回第一次选的人亮着；换个存档再进来（已送过）就没有
 	t.not_null(setup._gift_tag, "首次赠包小签：第一次选他时亮着")
 	t.check(setup._gift_tag != null and (setup._gift_tag.get_child(0) as Label).text.begins_with("首次选他："), "写「首次选他：…进包架」")
+	var two: CharacterDef = null
+	for gch in flow.characters:
+		if gch.starting_bags.size() >= 2 and gch.starting_bags[0] != gch.starting_bags[1]:
+			two = gch
+	if two != null:     # 补充一（游戏测试 v4.48）：几只包是「和」，不是「或」
+		t.check(setup.first_gift_text(two).contains("、"), "两种包用顿号连：%s" % setup.first_gift_text(two))
+		UiText.lang = "en"
+		var en: String = setup.first_gift_text(two)
+		UiText.lang = "zh"
+		t.check(not en.contains(" or ") and en.contains(", "), "英文用逗号连，不写 or：%s" % en)
 	# 带缺格与随身之物的探针
 	var probe := _probe(setup.character())
 	setup._characters.append(probe)

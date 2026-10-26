@@ -24,6 +24,8 @@ var tip: HoverTip
 ## 216：棋盘下的数值栏（容器屏把它摘出去摆到「全部拾取」那一行，[method detach_strip]）
 var strip: StatsStrip
 var _strip_box: MarginContainer
+## 255 补充一：棋盘坐的九格宽位子（[method hold_nine] 之后才有）
+var nine: BoardNine = null
 ## 数值栏上沿离棋盘格子下沿（让开棋盘外框，精修稿 22）
 const STRIP_GAP := 22.0
 ## 084：棋盘上双击的东西优先去这里（容器屏设成战利品 / 收获箱）；null = 放到地上
@@ -77,7 +79,7 @@ func _build() -> void:
 	_strip_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	left.add_child(_strip_box)
 	strip = StatsStrip.new()
-	strip.set_width(float(_run.board.size.x) * board_view.cell_px)
+	strip.set_width(strip_width())
 	_strip_box.add_child(strip)
 
 	if _drag == null:
@@ -269,9 +271,21 @@ func _hint_text(text: String) -> void:
 		NoticeLayer.post(self, text)     # 226 批一：默认走宿主屏的告示
 
 
+## 255 补充一（作者 10:51）：棋盘连框坐进九格宽的位子（[BoardFrame] 套好之后叫；自己摆框的屏也叫，没框 = 缩进 0），面板不随棋盘宽窄变
+func hold_nine() -> BoardNine:
+	var outer: Control = board_view.get_parent() if board_view.get_parent() is BoardFrame else board_view
+	nine = BoardNine.hold(outer, board_view, (outer as BoardFrame).inset() if outer is BoardFrame else 0.0)
+	return nine
+
+
+## 数值栏多宽：九格（棋盘比九格还宽按它自己的）
+func strip_width() -> float:
+	return maxi(CharacterDef.BOARD_MAX_W, _run.board.size.x) * board_view.cell_px
+
+
 func _refresh_readout() -> void:
 	if strip != null:
-		strip.set_width(float(_run.board.size.x) * board_view.cell_px)     # 包撑大了棋盘，签跟着宽
+		strip.set_width(strip_width())
 		strip.refresh(_run.compile_player(), _run)     # 129：超重那张的档名变色由数值栏管
 
 
