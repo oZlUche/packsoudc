@@ -271,7 +271,7 @@ static func draw_pin(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: V
 
 ## 255：一枚小钉画在 [param r] 里（有图用图，没图画铆钉：黄铜圆头 + 暗边 + 高光）
 static func draw_pin_badge(canvas: CanvasItem, r: Rect2, modulate: Color = Color.WHITE) -> void:
-	var tex := UiTheme.art_cached("tip/pin_badge")
+	var tex := UiTheme.art_cached("tip/pin_badge_2x" if r.size.x > 16.0 else "tip/pin_badge")     # 美术 11:54 定稿，摆法同 230 小锁
 	if tex != null:
 		canvas.draw_texture_rect(tex, r, false, modulate)
 		return

@@ -97,6 +97,7 @@ func open(payload: Dictionary) -> void:
 	_inv.ground_exit_notice = UiText.t("pre.no_drop")     # 249：开战前不丢东西（「不参战」照旧）
 	_right.add_child(_inv)
 	BoardFrame.around(_inv.board_view, PLAYER_FRAME)
+	_inv.hold_nine()     # 255 补充一：面板按九格定宽，窄的棋盘居中
 	_right.add_child(_strip_gap())
 	_player_strip = _inv.detach_strip()
 	_player_strip.use_inlay(true, StatsStrip.ORDER_PLAYER)

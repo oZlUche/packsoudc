@@ -187,6 +187,7 @@ func _rebuild_board_view() -> void:
 	BoardFrame.mark(_board_view, frame)     # 224 / 227：皮带框 + 浅色格缝（同背包窗）
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_box.add_child(frame)
+	BoardNine.hold(frame, _board_view, frame.get_theme_stylebox("panel").content_margin_left)     # 255 补充一：按九格定宽，窄的居中
 	_drag.register_view(_board_view)
 	_board_view.item_double_clicked.connect(quick_move)     # 视图每次新建，信号跟着重接
 	_board_view.actions_for = board_actions     # 230

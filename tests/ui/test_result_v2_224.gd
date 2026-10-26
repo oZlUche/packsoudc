@@ -97,7 +97,7 @@ static func frame_result_v2(t: TestCase, root: Window) -> void:
 	var last := row.get_child_count() - 2     # 228 补一：最后一件是离右沿 24 的空位
 	t.check(row.get_child(last) == shelf.get_parent() and row.get_child(last - 1).size_flags_horizontal == Control.SIZE_EXPAND_FILL and (row.get_child(last + 1) as Control).custom_minimum_size.x == preload("res://ui/game/warehouse_panel.gd").RESULT_SHELF_RIGHT, "仓库在那一行最右（前面一块撑开的空，后面空 24）")
 	var wide := Control.new()
-	wide.size = Vector2(1332, 700)
+	wide.size = Vector2(1500, 700)     # 255 补充一：带回来的棋盘占九格宽的位子，宽的那档给到石板内容区实际那么宽
 	screen._fit_shelf(wide)
 	var big: float = shelf.view.cell_px
 	wide.size = Vector2(700, 300)

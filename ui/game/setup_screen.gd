@@ -178,10 +178,14 @@ var _preview_board: GridInventory = null
 var _gifted: Dictionary = {}
 ## 179：右栏的凹槽板内边距
 const RIGHT_PAD := 10
-## 255（作者 2026-10-26 10:51）：三栏定宽，不随棋盘宽窄变 —— 左 260、右按最宽的九格棋盘、中栏是剩下的；不足九格的棋盘在右栏里居中
-const LEFT_W := 260
+## 255（作者 2026-10-26 10:51）：三栏定宽，不随棋盘宽窄变 —— 左按角色名纸条（连皮框 312；稿子的 260 放不下「安德烈乌斯」）、右按最宽的九格棋盘、中栏是剩下的；不足九格的棋盘在右栏里居中
+const LEFT_W := 312
 const COL_GAP := 36
-const BOARD_MAX_W := 9
+const BOARD_MAX_W := CharacterDef.BOARD_MAX_W
+## 255 补充一：中栏（角色卡）定高 —— 英文最长的那张（770）放得下、底边不过页边（内容更长才再长）
+const CARD_H := 800
+## 255 补充一：右栏（棋盘预览）定高 —— 六行棋盘、题字、图例、首次赠包签都在时那么高（七行以上的棋盘才再长）
+const PREVIEW_H := 560
 ## 255：角色卡里的几样尺寸 —— 面板方块间 10；小牌 ≤ 180 宽；条目行间 8
 const STAT_GAP := 10
 const TILE_MAX_W := 180.0
@@ -191,7 +195,7 @@ const CARD_SEP := 10
 const ENTRY_TAIL_SIZE := 12
 ## 255：名牌里名字 24；说明那句的折行宽要再让开名牌自己的内边距与徽记位
 const PLATE_NAME_SIZE := 24
-const PLATE_TEXT_PAD := 80
+const PLATE_TEXT_PAD := 88
 ## 255：没解锁的角色在左栏压到 60%
 const LOCKED_ALPHA := 0.6
 ## 三页各自的整屏画（作者 2026-10-17）：选角色 = 选人场地，带装备 = 木板拼接 / 仓库，选地图 = 桌上的军用地图
@@ -278,14 +282,14 @@ func _build_character_page() -> Control:
 	left_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(left_board)
 	var left := _vbox(8)
-	left.custom_minimum_size.x = LEFT_W - 28
+	left.custom_minimum_size.x = LEFT_W - 2 * FRAME_INSET     # 255 补充一：左栏连皮框共 260（原来里面就 232、整栏 320，三栏加起来顶出屏右沿）
 	left_board.add_child(left)
 	_char_box = _vbox(8)     # 226 批二：段头「角色」与缺数据那句删了
 	left.add_child(_char_box)
 	var mid_board := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)
 	mid_board.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN     # 255：定宽，不再撑满
 	mid_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	mid_board.custom_minimum_size.x = mid_width()
+	mid_board.custom_minimum_size = Vector2(mid_width(), CARD_H)     # 255 补充一（游戏测试 v4.48）：高也不随角色 / 语言变
 	row.add_child(mid_board)
 	_card = _vbox(CARD_SEP)
 	_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -293,7 +297,7 @@ func _build_character_page() -> Control:
 	var right_board := _groove(RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)
 	right_board.size_flags_horizontal = Control.SIZE_SHRINK_END
 	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	right_board.custom_minimum_size.x = right_width()     # 255：按九格定宽
+	right_board.custom_minimum_size = Vector2(right_width(), PREVIEW_H)     # 255：按九格定宽；补充一：高按六行棋盘 + 题字 + 图例 + 赠包签定死
 	row.add_child(right_board)
 	_preview_host = _vbox(8)
 	right_board.add_child(_preview_host)
@@ -543,6 +547,8 @@ func show_page(i: int) -> void:
 		_enter_btn.text = UiText.t("setup.depart") if _page == PAGE_TITLES.size() - 1 else UiText.t("menu.continue")
 	if _back_btn != null:
 		_back_btn.text = UiText.t("setup.main_menu") if _page == 0 else UiText.t("setup.back")
+	for b in [_enter_btn, _back_btn]:
+		TextFit.shrink_button(b)     # 255 补充一：右下两颗定宽（英文缩字），不往左伸到角色卡上
 	_sync_preview()
 	_refresh()
 	_fit_nav()
@@ -1701,9 +1707,8 @@ func _build_preview(ch: CharacterDef) -> void:
 		legend.free()
 	var gift := first_gift_text(ch)
 	if gift != "" and _gifted.has(ch.id):
-		_gift_tag = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 16, 10, 16, 10)
+		_gift_tag = GiftTag.make(gift)
 		_gift_tag.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		_gift_tag.add_child(_label(gift, 15, UiTheme.INK))
 		_preview_host.add_child(_gift_tag)
 
 
@@ -1736,7 +1741,7 @@ func first_gift_text(ch: CharacterDef) -> String:
 		var def := flow.items.get_def(id)
 		if def != null:
 			parts.append(UiText.t("setup.gift_item") % [Names.of(def), int(counts[id])])
-	return UiText.t("setup.first_gift") % UiText.t("gloss.tag_or").join(parts) if not parts.is_empty() else ""
+	return UiText.t("setup.first_gift") % UiText.t("setup.list_sep").join(parts) if not parts.is_empty() else ""
 
 
 ## 255：面板方块 [名, 数, 悬停句]：生命 / 耐力 / 回气 / 体力必有；别的面板项角色在 base_stats 里改过才出

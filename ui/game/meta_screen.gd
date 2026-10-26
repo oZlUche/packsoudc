@@ -248,7 +248,7 @@ func layout() -> void:
 	_margin.add_theme_constant_override("margin_right", int(MARGIN + right_gutter()))
 	var mid_w := middle_width(screen)
 	if _wh != null and flow.meta.board != null:
-		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0 - _wh.rack_room() - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(1, flow.meta.board.size.x))))))
+		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0 - _wh.rack_room() - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(CharacterDef.BOARD_MAX_W, flow.meta.board.size.x))))))
 
 
 ## 178：右半边收起时，右边空出调试台箭头那一条（箭头钉在屏幕右上，别压在中列上）
