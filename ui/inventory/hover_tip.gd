@@ -273,6 +273,10 @@ var _on_source := false
 var _leave_d := -1.0
 ## 最后一次摆放用的鼠标位置（全局）：排版完再量一次尺寸后照这个重摆
 var _last_at := Vector2.ZERO
+## 作者 10-26：道具窗贴着被指的那件的外框摆（全局坐标；空 = 没有物件可贴，照鼠标摆）
+var _anchor := Rect2()
+## 道具窗离被指那件的外框多远
+const ANCHOR_GAP := 6.0
 var _refit_queued := false
 
 
@@ -339,6 +343,7 @@ func show_text(bbcode: String, at: Vector2, extra: Control = null, terms = {}) -
 	if _panel.visible and _panel.pinned:
 		return     # 钉住的窗不被别的源换掉（离开它才收，[constant AWAY_SEC]）
 	_close_from(1)
+	_anchor = Rect2()
 	_panel.reset_state()
 	_panel.set_text(bbcode)
 	_panel.terms = _terms_dict(terms)
@@ -355,6 +360,7 @@ func show_status(parts: Dictionary, at: Vector2) -> void:
 	if _panel.visible and _panel.pinned:
 		return
 	_close_from(1)
+	_anchor = Rect2()
 	_panel.reset_state()
 	_drop_extra()
 	_panel.set_status(String(parts.get("head", "")), String(parts.get("body", "")))
@@ -376,6 +382,7 @@ func show_faith(full: Dictionary, at: Vector2) -> void:
 	if full.is_empty() or (_panel.visible and _panel.pinned):
 		return
 	_close_from(1)
+	_anchor = Rect2()
 	_panel.reset_state()
 	_drop_extra()
 	var sections: Array = full.get("sections", [])
@@ -473,8 +480,10 @@ func faith_bar() -> Control:
 
 
 ## 170：显示一件道具的分块说明（[method ItemTooltip.describe_full] 的结果）
-func show_item(full: Dictionary, at: Vector2) -> void:
+## [param anchor] = 被指的那件的外框（全局坐标）：窗贴着它的边摆（右、左、下、上，哪边放得下用哪边）；空 = 照 [param at] 摆
+func show_item(full: Dictionary, at: Vector2, anchor: Rect2 = Rect2()) -> void:
 	_close_from(1)
+	_anchor = anchor
 	_panel.reset_state()
 	_drop_extra()
 	_panel.set_item(full)
@@ -932,7 +941,9 @@ func _show_for(view: ContainerView, uid: int, inst: ItemInstance, local: Vector2
 	var board: GridInventory = null
 	if view is InventoryView:
 		board = (view as InventoryView).inventory
-	show_item(ItemTooltip.describe_full(inst, board), view.get_global_position() + local)
+	var r := view.item_rect(uid)
+	var anchor := view.get_global_transform() * r if r.has_area() else Rect2()
+	show_item(ItemTooltip.describe_full(inst, board), view.get_global_position() + local, anchor)
 	set_actions(_actions_of(view, uid))     # 230
 
 
@@ -985,6 +996,9 @@ func _place(global_at: Vector2) -> void:
 	var s := _panel.size
 	var lo := -global_position
 	var hi := lo + (get_viewport_rect().size if is_inside_tree() else size)
+	if _anchor.has_area():
+		_panel.position = beside_rect(Rect2(_anchor.position - global_position, _anchor.size), s, Rect2(lo, hi - lo))
+		return
 	var px := local.x + 16
 	if px + s.x > hi.x:
 		px = local.x - s.x - 8
@@ -994,6 +1008,33 @@ func _place(global_at: Vector2) -> void:
 		py = local.y - s.y - 8
 	py = clampf(py, lo.y, maxf(lo.y, hi.y - s.y))
 	_panel.position = Vector2(px, py)
+
+
+## 作者 10-26：窗贴着 [param item] 的外框摆，四个方向挨个试 —— 右（顶对齐）、左（顶对齐）、下（左对齐）、上（左对齐），
+## 先用整块放得下的那边；都放不下用露得最多的那边。最后夹回 [param bounds]（都在同一坐标系里）
+static func beside_rect(item: Rect2, s: Vector2, bounds: Rect2) -> Vector2:
+	var tries: Array[Vector2] = [
+		Vector2(item.end.x + ANCHOR_GAP, item.position.y),
+		Vector2(item.position.x - s.x - ANCHOR_GAP, item.position.y),
+		Vector2(item.position.x, item.end.y + ANCHOR_GAP),
+		Vector2(item.position.x, item.position.y - s.y - ANCHOR_GAP),
+	]
+	var best := tries[0]
+	var best_area := -1.0
+	for i in tries.size():
+		var p := tries[i]
+		if i < 2:
+			p.y = clampf(p.y, bounds.position.y, maxf(bounds.position.y, bounds.end.y - s.y))     # 左右两边：上下可以挪进屏
+		else:
+			p.x = clampf(p.x, bounds.position.x, maxf(bounds.position.x, bounds.end.x - s.x))     # 上下两边：左右可以挪进屏
+		var shown := Rect2(p, s).intersection(bounds).get_area()
+		if shown >= s.x * s.y - 0.5:
+			return p
+		if shown > best_area:
+			best_area = shown
+			best = p
+	return Vector2(clampf(best.x, bounds.position.x, maxf(bounds.position.x, bounds.end.x - s.x)),
+		clampf(best.y, bounds.position.y, maxf(bounds.position.y, bounds.end.y - s.y)))
 
 
 ## 子窗：父窗右边（顶对齐），放不下换父窗下面，再夹回屏幕里

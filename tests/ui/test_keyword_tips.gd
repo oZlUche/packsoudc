@@ -98,6 +98,8 @@ static func run_faith_state_is_color(t: TestCase) -> void:
 	t.check(not ItemTooltip.faith_lit(bow, ItemTooltip.faith_status()), "蛮神激活：狩猎的弓不亮")
 	t.check(dormant.contains(dim), "信仰行是灰的")
 	t.check(not Glossary.strip_bbcode(dormant).contains("休眠"), "休眠也只是灰，不写字")
+	t.eq(InventoryView.status_note(true, false), "", "作者 10-26：棋盘上休眠的护符也不写「休眠」，只压灰")
+	t.eq(InventoryView.status_note(true, true), UiText.t("inv.benched"), "不参战照写")
 	ItemTooltip.faith_probe = saved
 
 

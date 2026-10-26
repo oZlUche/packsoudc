@@ -40,6 +40,7 @@ static func _cleanup() -> void:
 			DirAccess.remove_absolute(p)
 	_wipe_dir(CAL_DIR)
 	_wipe_dir(LOG_DIR)
+	_wipe_dir(RUNS.get_basename() + "_faith")
 
 
 static func run_archetypes(t: TestCase) -> void:
@@ -202,6 +203,11 @@ static func run_runs_jsonl(t: TestCase) -> void:
 		t.eq(int(row["seed"]), run.run_seed, "种子")
 		t.eq(String(row["character"]), String(run.character_id), "角色")
 		t.eq(String(row["difficulty"]), String(run.difficulty_id), "难度")
+	# 作者 10-26：结算页单独的「导出信力 CSV」删了 —— 信力记录随对局记录写在旁边，跟校准目录一起进导出包
+	t.eq(f.recorder.faith_dir(), RUNS.get_basename() + "_faith", "信力记录目录在对局记录旁边")
+	t.eq(CalibrationRecorder.new().faith_dir(), CalibrationRecorder.DIR.path_join("runs_faith"), "正式的在校准目录里（导出平衡数据会打包）")
+	var csv := f.recorder.faith_dir().path_join("faith_history_%d.csv" % run.run_seed)
+	t.eq(FileAccess.file_exists(csv), not f.result.faith_history.is_empty(), "这一局有信力记录就写出 CSV（%s）" % csv)
 	Support.cleanup("t242")
 	_cleanup()
 

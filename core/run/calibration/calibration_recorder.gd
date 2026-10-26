@@ -69,7 +69,14 @@ func record_run(result: RunResult, run: RunState, ver: String = version()) -> bo
 	row["version"] = ver
 	row["character"] = String(run.character_id) if run != null else ""
 	row["difficulty"] = String(run.difficulty_id) if run != null else ""
+	DirAccess.make_dir_recursive_absolute(faith_dir())     # 作者 10-26：信力记录也进「导出平衡数据」的包（结算页单独的导出键删了）
+	result.export_faith_csv(faith_dir())
 	return _append(runs_path, row)
+
+
+## 每局的信力记录 CSV 放哪：对局记录旁边（正式 = user://calibration/runs_faith/，跟着校准目录进导出包）
+func faith_dir() -> String:
+	return runs_path.get_basename() + "_faith"
 
 
 static func _append(file: String, row: Dictionary) -> bool:

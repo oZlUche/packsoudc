@@ -38,6 +38,11 @@ func _attach_tooltip() -> void:
 @abstract func container() -> ItemContainer
 
 
+## 一件画在哪（本控件内像素的外框）；作者 10-26：悬浮窗贴着它摆。给不出 = 空（悬浮窗照鼠标摆）
+func item_rect(_uid: int) -> Rect2:
+	return Rect2()
+
+
 ## 擦掉落点预览。拖拽层会对**所有**已注册视图调用它，所以不能假设自己正在显示预览。
 func clear_preview() -> void:
 	pass

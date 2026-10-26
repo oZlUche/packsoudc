@@ -176,3 +176,56 @@ static func frame_pin(t: TestCase, root: Window) -> void:
 	tip.tick(0.2, outside)
 	t.check(not tip.is_showing(), "宽限过了还没进窗：收起")
 	host.queue_free()
+
+
+## 作者 10-26：道具悬浮窗贴着被指那件的外框摆，不贴鼠标；右边放不下换左边，再不行下、上 —— 四个方向都适配
+static func run_beside_rect(t: TestCase) -> void:
+	t.begin("作者 10-26 · 悬浮窗贴物品外框：右 → 左 → 下 → 上，先用整块放得下的那边，都在屏内")
+	var screen := Rect2(0, 0, 1600, 1000)
+	var s := Vector2(360, 300)
+	var item := Rect2(400, 300, 120, 60)
+	t.eq(HoverTip.beside_rect(item, s, screen), Vector2(item.end.x + HoverTip.ANCHOR_GAP, 300), "右边放得下：贴右沿，顶对齐")
+	var right := Rect2(1400, 300, 120, 60)
+	t.eq(HoverTip.beside_rect(right, s, screen), Vector2(1400 - 360 - HoverTip.ANCHOR_GAP, 300), "右边放不下：贴左沿，不压着物品")
+	var wide := Rect2(200, 100, 1200, 60)     # 左右都放不下
+	t.eq(HoverTip.beside_rect(wide, s, screen), Vector2(200, 160 + HoverTip.ANCHOR_GAP), "左右都放不下：贴下沿")
+	var low := Rect2(200, 900, 1200, 60)
+	t.eq(HoverTip.beside_rect(low, s, screen), Vector2(200, 900 - 300 - HoverTip.ANCHOR_GAP), "下面也放不下：贴上沿")
+	var bottom_right := Rect2(1400, 900, 120, 60)
+	var p := HoverTip.beside_rect(bottom_right, s, screen)
+	t.check(screen.encloses(Rect2(p, s)), "靠右下角的物品：窗夹回屏内（%s）" % p)
+	t.check(not Rect2(p, s).intersects(bottom_right), "也不压着物品")
+
+
+static func frame_anchor_item(t: TestCase, root: Window) -> void:
+	t.begin("作者 10-26 · 棋盘上停在道具上：窗贴着这件的外框，鼠标停在这件的哪一格都一样")
+	var db := _db()
+	var host := Control.new()
+	host.size = Vector2(1600, 900)
+	root.add_child(host)
+	var board := GridInventory.new(Vector2i(4, 3), 1)
+	var arrows := ItemInstance.create(db.get_def(&"poison_arrows"))
+	board.place(arrows, Vector2i(1, 0), 0)
+	var view := InventoryView.new()
+	view.inventory = board
+	view.position = Vector2(20, 20)
+	view.size = Vector2(board.size) * InventoryView.CELL
+	host.add_child(view)
+	var tip := HoverTip.new()
+	host.add_child(tip)
+	tip.watch(view)
+	var r := view.item_rect(arrows.uid)
+	t.eq(r.position, view.cell_origin_px(Vector2i(1, 0)), "外框从落点那格起")
+	var mm := InputEventMouseMotion.new()
+	mm.position = r.position + Vector2(4, 4)
+	view.gui_input.emit(mm)
+	t.check(tip.is_showing(), "出现")
+	tip._refit()
+	var at1 := tip._panel.global_position
+	t.eq(at1, Vector2(view.global_position.x + r.end.x + HoverTip.ANCHOR_GAP, view.global_position.y + r.position.y), "贴着这件的右沿、顶对齐（不是鼠标边上）")
+	tip.hide_tip()
+	mm.position = r.end - Vector2(4, 4)
+	view.gui_input.emit(mm)
+	tip._refit()
+	t.eq(tip._panel.global_position, at1, "鼠标换到这件的另一角：窗不动")
+	host.queue_free()

@@ -89,7 +89,7 @@ static func settle(state: RunState) -> RunResult:
 	return r
 
 
-## 104：开发模式把信力记录导成 CSV（`user://faith_history_<seed>.csv`）。返回写到的路径；没记录或写不了返回空
+## 104：把信力记录导成 CSV（`<dir>/faith_history_<seed>.csv`；作者 10-26 起每局结束由 [method CalibrationRecorder.record_run] 写进 calibration/runs_faith/）。返回写到的路径；没记录或写不了返回空
 func export_faith_csv(dir: String = "user://") -> String:
 	if faith_history.is_empty():
 		return ""
