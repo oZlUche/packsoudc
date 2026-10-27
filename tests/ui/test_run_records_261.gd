@@ -91,14 +91,16 @@ static func run_trim_and_pins(t: TestCase) -> void:
 
 
 static func frame_shelf(t: TestCase, root: Window) -> void:
-	t.begin("261 · 书架：两层三格在中列里，前四格各开一扇窗（1100 × 820），小牌写数；老名字 codex / achievements 也开书架上的窗")
+	t.begin("261 · 书架：两层三格在中列里（补充一：上 图鉴 / 对局记录 / 特殊道具，下 成就 / 科技 / 静物），前五格各开一扇窗（1100 × 820，科技 1320 × 900），小牌写数；老名字 codex / achievements / tech 也开书架上的窗")
 	var f := _flow()
 	_run(f.meta, 300)
 	var screen = _screen(f, root)
 	screen.show_tab("shelf")
 	t.eq(screen.tab(), "shelf", "书架页")
 	var btns: Dictionary = screen.shelf_buttons()
-	t.eq(btns.keys(), ["codex", "records", "keepsakes", "achievements"], "四格有小牌")
+	t.eq(screen.SHELF_CELLS, ["codex", "records", "keepsakes", "achievements", "tech", ""], "六格顺序")
+	t.eq(btns.keys(), ["codex", "records", "keepsakes", "achievements", "tech"], "五格有小牌")
+	t.eq((btns["tech"] as Button).text, UiText.t("shelf.tech") % [0, f.tech_defs.size()], "科技的小牌：点过的节点 / 全部")
 	var page: Control = screen._pages["shelf"]
 	var need: Vector2 = page.get_combined_minimum_size()
 	t.check(need.x <= MIDDLE.x and need.y <= MIDDLE.y, "书架 %s 放得进中列 %s" % [need, MIDDLE])
@@ -109,10 +111,18 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 		var win: Control = screen.shelf_window(key)
 		t.check(win != null and win.is_visible_in_tree(), "%s 窗看得见" % key)
 		var frame := win.find_children("*", "OverlayFrame", true, false)
-		t.check(not frame.is_empty() and (frame[0] as Control).custom_minimum_size == screen.SHELF_WIN, "%s 窗 1100 × 820" % key)
+		var want: Vector2 = screen.SHELF_WIN_WIDE if key == "tech" else screen.SHELF_WIN
+		t.check(not frame.is_empty() and (frame[0] as Control).custom_minimum_size == want, "%s 窗 %s" % [key, want])
+		if key == "tech" and not frame.is_empty():
+			var fr := frame[0] as Control
+			t.check(fr.get_combined_minimum_size().x <= want.x + 0.5 and fr.get_combined_minimum_size().y <= want.y + 0.5,
+				"科技窗 %s 装得下科技页（窗不被撑大）" % fr.get_combined_minimum_size())
+			t.check(screen.tech_panel() != null and screen.tech_panel().is_visible_in_tree(), "科技窗里就是科技页")
 	t.check(screen.escape() and screen.shelf_open() == "" and screen.tab() == "shelf", "Esc 先关窗")
 	screen.show_tab("achievements")
 	t.check(screen.tab() == "shelf" and screen.shelf_open() == "achievements", "老名字 achievements → 书架 + 成就窗")
+	screen.show_tab("tech")
+	t.check(screen.tab() == "shelf" and screen.shelf_open() == "tech", "老名字 tech → 书架 + 科技窗")
 	screen.show_tab("home")
 	t.eq(screen.shelf_open(), "", "换页签关窗")
 	screen.free()
@@ -153,3 +163,16 @@ static func frame_records_window(t: TestCase, root: Window) -> void:
 		f.settings.debug_mode = false
 	screen.free()
 	_cleanup()
+
+
+
+static func run_shelf_tiers(t: TestCase) -> void:
+	t.begin("261 补充一 · 书架物件五档：tier = clampi(floori(done × 5 / total), 0, 4)；total 0 → t0")
+	t.eq(ShelfCell.tier_of(0, 100), 0, "0 → t0")
+	t.eq(ShelfCell.tier_of(19, 100), 0, "19% → t0")
+	t.eq(ShelfCell.tier_of(20, 100), 1, "20% → t1")
+	t.eq(ShelfCell.tier_of(79, 100), 3, "79% → t3")
+	t.eq(ShelfCell.tier_of(80, 100), 4, "80% → t4")
+	t.eq(ShelfCell.tier_of(100, 100), 4, "100% → t4")
+	t.eq(ShelfCell.tier_of(3, 0), 0, "分母 0 → t0")
+	t.eq(ShelfCell.tier_of(20, 20), 4, "对局记录满 20 场 → t4")

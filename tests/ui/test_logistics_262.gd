@@ -1,5 +1,5 @@
 ## 262（作者 14:19）：集市、铁匠铺默认就有（1 级），和出售并成「后勤」一页；科技「集市」「铁匠铺」改义为「高级货物」「高级配方」（铺子再升一级）；
-## 左列四个页签，后勤选中时底下滑出三颗分页小键（待定 1 选 A）；老档 v3 的两项科技级数沿用、3 压 2
+## 左列三个页签（仓库 / 后勤 / 书架），后勤选中时底下滑出三颗分页小键（待定 1 选 A）；老档 v3 的两项科技级数沿用、3 压 2
 extends RefCounted
 
 const W178 := preload("res://tests/ui/test_base_warehouse_178.gd")
@@ -48,11 +48,11 @@ static func run_migrate_v3(t: TestCase) -> void:
 
 
 static func frame_logistics_tab(t: TestCase, root: Window) -> void:
-	t.begin("262 · 左列四个页签；「后勤」下三颗小键只在选中时露；第一次落集市、之后落上次的分页；出售露右列仓库、集市 / 铁匠铺收起；老名字是别名")
+	t.begin("262 · 左列三个页签；「后勤」下三颗小键只在选中时露；第一次落集市、之后落上次的分页；出售露右列仓库、集市 / 铁匠铺收起；老名字是别名")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	var s: Control = W178._screen(f, root)
-	t.eq(s._tab_btns.keys(), ["warehouse", "logistics", "tech", "shelf"], "仓库 / 后勤 / 科技 / 书架")
+	t.eq(s._tab_btns.keys(), ["warehouse", "logistics", "shelf"], "仓库 / 后勤 / 书架（262 §七：科技并进书架）")
 	t.eq((s._tab_btns["logistics"] as Button).text, UiText.t("meta.tab_logistics"), "页签写「后勤」")
 	var subs: Dictionary = s.sub_tab_buttons()
 	t.eq(subs.keys(), ["market", "smithy", "sell"], "三颗分页小键：集市 / 铁匠铺 / 出售")
