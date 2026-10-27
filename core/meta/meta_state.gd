@@ -861,6 +861,11 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))
+	# 261 前记的局没有「第几局」：新的在前、一局不漏，按总局数倒推（游戏测试 v4.63）
+	var total := int(d.get("runs", 0))
+	for i in m.history.size():
+		if not m.history[i].has("run_no"):
+			m.history[i]["run_no"] = maxi(total - i, 1)
 	# 251：集市的货 —— 173：改了名的按新名，退役的（道具库里没有了）那一格去掉
 	for row in d.get("market_stock", []):
 		if not (row is Dictionary):

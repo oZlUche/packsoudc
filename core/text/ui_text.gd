@@ -1289,7 +1289,7 @@ const TEXT := {
 	"records.detail_faith_v": {"zh": "%s · 信力 %d", "en": "%s · faith %d"},
 	"records.none": {"zh": "——", "en": "——"},
 	"records.seed": {"zh": "种子", "en": "Seed"},
-	"records.seed_v": {"zh": "%d · %s / %s", "en": "%d · %s / %s"},
+	"records.seed_v": {"zh": "%d · %s", "en": "%d · %s"},
 	"records.copy_seed": {"zh": "复制种子", "en": "Copy seed"},
 	"records.scale_small": {"zh": "小型", "en": "small"},
 	"records.scale_medium": {"zh": "中型", "en": "medium"},
@@ -1315,6 +1315,7 @@ const TEXT := {
 	"records.next_tier": {"zh": "下一阶 %s 还差 %d 次", "en": "Next: %s, %d to go"},
 	"records.top_tier": {"zh": "已到最高阶", "en": "Top tier reached"},
 	"records.ledger": {"zh": "%d 局 · 总分 %d · 图鉴 %d / %d · ", "en": "%d runs · score %d · collection %d / %d · "},
+	"records.ledger_one": {"zh": "%d 局 · 总分 %d · 图鉴 %d / %d · ", "en": "%d run · score %d · collection %d / %d · "},
 	"meta.shelf_title": {"zh": "仓库　%s　%s", "en": "Warehouse · %s · %s"},
 	"meta.pending": {"zh": "带回来的背包还有 %d 件没清空，去「仓库」页置入；不管的话，开局屏里它们会放到地上，出发就没了（包回包架）", "en": "Items still in the pack you brought back: %d. Put them away on the Warehouse tab; otherwise they go to the Ground at Setup and are lost when you set out (bags go back to the Bag Rack)"},
 	"meta.all": {"zh": "全部", "en": "All"},     # sell filter and achievement filter
