@@ -1255,7 +1255,7 @@ const TEXT := {
 	"meta.new_run": {"zh": "再来一局", "en": "Another run"},
 	"meta.tab_shelf": {"zh": "书架", "en": "Bookshelf"},
 	"shelf.codex": {"zh": "图鉴　%d / %d", "en": "Collection %d / %d"},
-	"shelf.records": {"zh": "对局记录　%d 场", "en": "Run records: %d"},
+	"shelf.records": {"zh": "对局记录　%d 场", "en": "Run records %d"},
 	"shelf.keepsakes": {"zh": "特殊道具　%d / %d", "en": "Keepsakes %d / %d"},
 	"shelf.achievements": {"zh": "成就　%d / %d", "en": "Achievements %d / %d"},
 	"shelf.title_codex": {"zh": "图鉴", "en": "Collection"},
