@@ -460,6 +460,18 @@ func _draw() -> void:
 ## 棋盘美术：格缝 = 深线 + 右 / 下错开一点的亮线，两端各留一点；外圈不画（内垫的缝线框就是边）。
 ## 被挡住的、没被包盖住的格压一层暗，落点照样看得准
 func _draw_seams(grid_px: Vector2) -> void:
+	if seams.has("pad"):     # 作者 10-27：局内玩家棋盘统一战斗那块棕底 —— 浅框里也铺不透明的棕内垫（[method BoardFrame.brown_seams]）
+		var pad := Color(String(seams["pad"]))
+		if inventory.blocked_count() > 0:
+			for y in inventory.size.y:
+				for x in inventory.size.x:
+					if not inventory.is_blocked(Vector2i(x, y)):
+						draw_rect(Rect2(cell_origin_px(Vector2i(x, y)), Vector2(cell_px, cell_px)), pad, true)
+		else:
+			var box := StyleBoxFlat.new()
+			box.bg_color = pad
+			box.set_corner_radius_all(int(seams.get("pad_radius", 6)))
+			draw_style_box(box, Rect2(Vector2.ZERO, grid_px).grow(float(seams.get("pad_margin", 0.0))))
 	for y in inventory.size.y:
 		for x in inventory.size.x:
 			var c := Vector2i(x, y)

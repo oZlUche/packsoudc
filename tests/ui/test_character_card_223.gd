@@ -59,6 +59,7 @@ static func frame_card(t: TestCase, root: Window) -> void:
 	var f := UiPalette.cjk_font()
 	t.eq(CharacterCard.wrap_lines("Erosion takes 1 less Vitality", f, 13, f.get_string_size("Erosion takes 1", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 2.0, 6),
 		["Erosion takes 1", "less Vitality"] as Array[String], "按词断，不拆 Erosion")
+	t.eq(CharacterCard.wrap_lines("一二三，四", f, 13, f.get_string_size("一二三", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 1.0, 6), ["一二", "三，四"] as Array[String], "避头：逗号不落行首，带上一个字下来（复测 10-27）")
 	t.eq(CharacterCard.wrap_lines("一二三四", f, 13, f.get_string_size("一二", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 1.0, 6), ["一二", "三四"] as Array[String], "汉字逐字断")
 	t.eq(CharacterCard.wrap_lines("一二三四五六", f, 13, f.get_string_size("一二", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 1.0, 2)[1].right(1), "…", "超行数：末行加省略号")
 	UiText.lang = "zh"

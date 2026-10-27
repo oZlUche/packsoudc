@@ -64,9 +64,10 @@ static func frame_name_only_child(t: TestCase, root: Window) -> void:
 	var mm := InputEventMouseMotion.new()
 	mm.position = Vector2(24, 24)
 	view.gui_input.emit(mm)
+	var src := view.get_global_position() + mm.position     # 作者 10-27：停在道具上才钉
+	tip.tick(0.3, src)
+	tip.tick(0.31 + HoverTip.PIN_DELAY_SEC + HoverTip.PIN_SEC, src)
 	var inside := tip._panel.global_position + tip._panel.size * 0.5
-	tip.tick(0.3, inside)
-	tip.tick(0.31 + HoverTip.PIN_DELAY_SEC + HoverTip.PIN_SEC, inside)
 	t.check(tip.is_pinned(), "钉住")
 	var terms: Dictionary = tip._panel.terms
 	t.check(terms.has("tag:weapon"), "主窗认得 tag:weapon")

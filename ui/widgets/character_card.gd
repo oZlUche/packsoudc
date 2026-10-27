@@ -236,6 +236,10 @@ func _rule(y: float) -> void:
 		draw_line(Vector2(RULE_X.x, yy), Vector2(RULE_X.y, yy), c, 1.0)
 
 
+## 不能落在行首的标点（避头）
+const NO_LINE_START := "，。、；：？！）」』”’…·%,.;:?!)"
+
+
 ## 按宽度折成最多 [param max_lines] 行：汉字逐字可断，拉丁字母成词不拆（游戏测试 10-21：英文被拆成「Er/osion」），
 ## 一个词比整行还宽才逐字断；超出的最后一行截断加「…」
 static func wrap_lines(text: String, f: Font, px: int, width: float, max_lines: int) -> Array[String]:
@@ -252,6 +256,9 @@ static func wrap_lines(text: String, f: Font, px: int, width: float, max_lines: 
 		elif tok == " ":
 			out.append(line)
 			line = ""
+		elif NO_LINE_START.contains(tok) and line.length() > 1:     # 避头：标点不落行首，把上一行最后一个字一起带下来（复测 10-27「偷袭」第二行以「，」开头）
+			out.append(line.left(line.length() - 1))
+			line = line.right(1) + tok
 		else:
 			if line != "":
 				out.append(line.strip_edges(false, true))
