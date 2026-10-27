@@ -42,7 +42,7 @@
 1. `core/run/run_result.gd`：`character_id / difficulty_id / ended_at` 三个字段进 `to_dict / from_dict`。`core/meta/meta_state.gd`：`best_run: Dictionary` + `absorb` 更新 + 存读；`SAVE_VERSION` 不升（缺省空字典）。
 2. 新部件 `ui/game/records_board.gd`（`RecordsBoard`）：吃 `MetaState` + `ItemDb` 总数，按 A 或 B 排；军功牌 `MedalPlate`（圆牌 + 数 + 名目 + 阶色，悬停浮窗「下一阶还差 N」）；分阶阈值在 `data/authoring/meta_rules/standard.json` 新键 `medal_tiers`。
 3. `meta_screen.gd` 家页：`meta.stats` 那一行删掉，换 `RecordsBoard`；`meta.just_run` 搬到蜡板。`UiText` 新键：`records.title / records.best / records.medal_extract / records.medal_core / records.medal_wins / records.medal_deaths / records.next_tier / records.runs / records.score / records.codex`，中英。
-4. 美术：A 的木架 / 青铜匾 / 五阶圆牌 / 蜡板，或 B 的碑身三件 + 圆牌；`layout.json` 写突出部分（B 的山墙 / 碑座）；没图前用 `PANEL_HOME_BOX` + 256 的 `legion_phalera@sN` 占位。
+4. 美术：四枚五阶圆牌归 美术设计（道具类）；木架 / 标题木牌 / 青铜匾 / 蜡板，或 B 的碑顶 / 碑身 / 碑座这些面板件归 UI替换美术（作者 13:00 起 UI 类活归它）；`layout.json` 写突出部分（B 的山墙 / 碑座）；没图前用 `PANEL_HOME_BOX` + 256 的 `legion_phalera@sN` 占位。
 5. 测试：`test_records_board_260`：空档（全 0）、满档（大数）两种都在 508 × 952 内；三档字号（258）都放得下，放不下的数字 `TextFit`；无裸字测试（226）过；`best_run` 存读往返；分阶阈值从数据读。
 
 ## 五、待定（默认按推荐）
