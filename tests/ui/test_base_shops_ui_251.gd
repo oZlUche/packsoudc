@@ -20,12 +20,11 @@ static func frame_tabs(t: TestCase, root: Window) -> void:
 	_levels(f, 0, 0)
 	var s: Control = W178._screen(f, root)
 	t.check((s.sub_tab_buttons() as Dictionary).has("market") and (s.sub_tab_buttons() as Dictionary).has("smithy"), "后勤下有集市、铁匠铺两颗小键")
-	# UI替换美术（作者 14:49 选乙 平墨图标）：页签字左边各一枚图标（后勤的图标没到前只有字），一样宽
+	# UI替换美术（作者 14:49 选乙 平墨图标）：页签字左边各一枚图标（262 后勤：作者 16:39 选 C 货车），一样宽
 	var widths := {}
 	for key in s._tab_btns:
 		var tb := s._tab_btns[key] as Button
-		if key != "logistics":
-			t.check(tb.icon != null and tb.icon_alignment == HORIZONTAL_ALIGNMENT_LEFT, "页签 %s 有图标、在字左边" % key)
+		t.check(tb.icon != null and tb.icon_alignment == HORIZONTAL_ALIGNMENT_LEFT, "页签 %s 有图标、在字左边" % key)
 		widths[tb.custom_minimum_size.x] = true
 	t.eq(widths.size(), 1, "页签一样宽")
 	t.eq(s._tab_btns.size(), 4, "四个页签（262：集市、铁匠铺、出售并成后勤）")
