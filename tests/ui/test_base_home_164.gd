@@ -43,8 +43,8 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 	var screen = _screen(f, root)
 	t.eq(screen.tab(), "home", "默认在家页")
 	var keys: Array = screen._tab_btns.keys()
-	t.eq(keys, ["warehouse", "sell", "market", "smithy", "tech", "codex", "achievements"], "178：页签：仓库、出售、（251 集市、铁匠铺，点出来才露）、科技、图鉴、成就")
-	var first: Button = screen._tab_btns["codex"]
+	t.eq(keys, ["warehouse", "sell", "market", "smithy", "tech", "shelf"], "178：页签：仓库、出售、（251 集市、铁匠铺，点出来才露）、科技、书架（261：图鉴、成就并进书架）")
+	var first: Button = screen._tab_btns["shelf"]
 	var col: Node = first.get_parent()
 	t.check(col is VBoxContainer, "页签竖排")
 	for k in keys:
@@ -53,10 +53,10 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 	t.eq(screen._new_run_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "再来一局是主档木牌")
 	t.eq(screen._new_run_btn.get_parent(), col, "再来一局在左列")
 	t.check(screen._new_run_btn.get_index() > first.get_index(), "在页签下面（左下角）")
-	screen.toggle_tab("codex")
-	t.eq(screen.tab(), "codex", "点图鉴：切过去")
-	t.check(first.button_pressed, "图鉴页签按下")
-	screen.toggle_tab("codex")
+	screen.toggle_tab("shelf")
+	t.eq(screen.tab(), "shelf", "点书架：切过去")
+	t.check(first.button_pressed, "书架页签按下")
+	screen.toggle_tab("shelf")
 	t.eq(screen.tab(), "home", "再点一次：回家")
 	t.check(not first.button_pressed, "页签抬起")
 	screen.show_tab("warehouse")
@@ -67,7 +67,7 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 	for k in ["home", "warehouse", "sell"]:
 		screen.show_tab(k)
 		t.check(shelf.is_visible_in_tree(), "%s 页时仓库照常显示" % k)
-	for k in ["codex", "achievements", "tech"]:
+	for k in ["shelf", "codex", "achievements", "tech"]:
 		screen.show_tab(k)
 		t.check(not shelf.is_visible_in_tree(), "178 / 229：%s 页收起仓库" % k)
 	screen.show_tab("sell")
