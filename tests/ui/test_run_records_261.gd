@@ -99,12 +99,16 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 	t.eq(screen.tab(), "shelf", "书架页")
 	var btns: Dictionary = screen.shelf_buttons()
 	t.eq(screen.SHELF_CELLS, ["codex", "records", "keepsakes", "achievements", "tech", ""], "六格顺序")
-	t.eq(btns.keys(), ["codex", "records", "keepsakes", "achievements", "tech"], "五格有小牌")
-	t.eq((btns["tech"] as Button).text, UiText.t("shelf.tech") % [0, f.tech_defs.size()], "科技的小牌：点过的节点 / 全部")
+	var view: ShelfView = screen.shelf_view()
+	t.eq(btns.keys(), ["codex", "records", "keepsakes", "achievements", "tech"], "前五格能点（第六格静物不可点）")
+	t.eq(view.tag_text("tech"), UiText.t("shelf.tech") % [0, f.tech_defs.size()], "科技的小牌：点过的节点 / 全部")
 	var page: Control = screen._pages["shelf"]
 	var need: Vector2 = page.get_combined_minimum_size()
 	t.check(need.x <= MIDDLE.x and need.y <= MIDDLE.y, "书架 %s 放得进中列 %s" % [need, MIDDLE])
-	t.eq((btns["records"] as Button).text, UiText.t("shelf.records") % 1, "对局记录的小牌写场数")
+	t.eq(view.tag_text("records"), UiText.t("shelf.records") % 1, "对局记录的小牌写场数")
+	t.eq(view.tag_text(""), "", "静物没有小牌")
+	for k in ["shelf.codex", "shelf.records", "shelf.keepsakes", "shelf.achievements", "shelf.tech"]:
+		t.check(not String(UiText.TEXT[k]["en"]).contains(":"), "英文书架小牌写法统一、不带冒号（%s）" % k)     # 复测：「Run records: 0」
 	for key in btns:
 		(btns[key] as Button).pressed.emit()
 		t.eq(screen.shelf_open(), key, "点 %s：开那扇窗" % key)
@@ -127,6 +131,94 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 	t.eq(screen.shelf_open(), "", "换页签关窗")
 	screen.free()
 	_cleanup()
+
+
+static func frame_shelf_art(t: TestCase, root: Window) -> void:
+	t.begin("261 补充二 · 石砌壁龛：件和摆位读 layout.json；图鉴 / 成就 / 科技按进度取档、悬停换提亮图，对局记录一张、第六格油灯；特殊道具每件一根柱，拿到过的摆道具图")
+	var f := _flow()
+	var screen = _screen(f, root)
+	screen.show_tab("shelf")
+	var view: ShelfView = screen.shelf_view()
+	t.eq(view.cell_keys(), screen.SHELF_CELLS, "layout 的六格和 SHELF_CELLS 同序")
+	t.eq(view.custom_minimum_size, Vector2(1308, 952), "整座 1308 × 952（shelf_body）")
+	t.check(screen._pages["shelf"].get_combined_minimum_size().x <= MIDDLE.x and screen._pages["shelf"].get_combined_minimum_size().y <= MIDDLE.y, "整座放得进中列")
+	t.check(not screen._pages["shelf"] is PanelContainer, "壁龛直接立在墙上，不垫粗布")
+	t.not_null(UiTheme.art_cached("home/shelf/shelf_body"), "壁龛底图在")
+	t.not_null(UiTheme.art_cached("home/tabs/tab_shelf"), "书架页签图标在")
+	t.eq(view.cell_rect("codex"), Rect2(30, 60, 400, 400), "图鉴格照 layout")
+	for key in ["codex", "records", "keepsakes", "achievements", "tech"]:
+		t.eq((view.buttons()[key] as Button).get_rect(), view.cell_rect(key), "%s 整格是按钮" % key)
+	t.eq(view.piece_name("codex"), "codex_t0", "图鉴没亮：t0")
+	t.eq(view.piece_name("codex", true), "codex_t0_hover", "悬停换提亮图")
+	t.eq(view.piece_name("records"), "records", "对局记录不分档：一张")
+	t.eq(view.piece_name(""), "lamp", "第六格油灯")
+	var ids := f.items.ids(true)
+	for i in ids.size() / 2:
+		f.meta.codex[String(ids[i])] = 1
+	f.meta.tech_levels[String(f.tech_defs[0].id)] = 1
+	screen._refresh()
+	t.eq(view.piece_name("codex"), "codex_t%d" % ShelfCell.tier_of(ids.size() / 2, ids.size()), "图鉴亮一半：t2")
+	t.eq(view.piece_name("codex"), "codex_t2", "一半 = t2")
+	t.eq(view.piece_name("tech"), "tech_t%d" % ShelfCell.tier_of(1, f.tech_defs.size()), "科技按点过的节点取档")
+	var keeps: Array = f.items.keepsake_ids()
+	t.check(keeps.size() >= 2, "特殊道具 %d 件" % keeps.size())
+	var cell := view.cell_rect("keepsakes")
+	var n := keeps.size()
+	var first: Rect2 = view.column_rect(cell, 0, n)[0]
+	if n == 2:
+		t.eq(Vector2(first.get_center().x, first.end.y), cell.position + Vector2(110, 397), "两件：第一根柱中线在格左 + 110、柱底在格上 + 397")
+		t.eq((view.column_rect(cell, 1, n)[0] as Rect2).get_center().x, cell.position.x + 290, "第二根在格左 + 290")
+	for k in n:
+		t.check(cell.encloses(view.column_rect(cell, k, n)[0]), "第 %d 根柱在格里" % k)
+	f.meta.grant_keepsake(StringName(String(keeps[0])))
+	screen._refresh()
+	t.eq(view._keepsakes.size(), n, "每件一根柱")
+	t.check(bool(view._keepsakes[0][1]) and not bool(view._keepsakes[1][1]), "拿到第一件：第一根有东西、第二根空")
+	t.eq(view.tag_text("keepsakes"), UiText.t("shelf.keepsakes") % [1, n], "小牌 1 / %d" % n)
+	var tex := ShelfView.item_art(view._keepsakes[0][0])
+	t.not_null(tex, "柱顶摆它自己的道具图")
+	if tex != null:
+		var spot: Array = view.column_rect(cell, 0, n)
+		var at := view.keepsake_item_rect(spot[0], spot[1], tex)
+		t.check(at.size.x <= ShelfView.ITEM_BOX + 0.5 and at.size.y <= ShelfView.ITEM_BOX + 0.5 and maxf(at.size.x, at.size.y) >= ShelfView.ITEM_BOX - 0.5, "等比缩进 128 见方（%s）" % at.size)
+		t.eq(at.end.y, (spot[0] as Rect2).end.y - ShelfView.COL_SEAT, "不透明部分的底边落在柱底往上 208")
+		t.check(absf(at.get_center().x - (spot[0] as Rect2).get_center().x) < 0.5, "水平居中")
+	var five: Array = view.column_rect(cell, 0, 5)
+	t.check(float(five[1]) < 1.0 and cell.encloses(view.column_rect(cell, 4, 5)[0]), "五件时柱子按柱距缩、还在格里")
+	for lang in ["zh", "en"]:
+		UiText.lang = lang
+		for tier in [&"small", &"medium", &"large"]:
+			UiTheme.with_text_size(tier, func():
+				screen._refresh()
+				var font := UiPalette.cjk_font_bold()
+				for key in ["codex", "records", "keepsakes", "achievements", "tech"]:
+					var w := font.get_string_size(view.tag_text(key), HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(ShelfView.TAG_SIZE)).x + ShelfView.TAG_PAD
+					t.check(w <= view.cell_rect(key).size.x, "%s %s：%s 的纸签 %.0f 宽不出格" % [lang, tier, key, w]))
+	UiText.lang = "zh"
+	screen._refresh()
+	screen.free()
+	for lang in ["zh", "en"]:
+		UiText.lang = lang
+		for tier in [&"small", &"medium", &"large"]:
+			UiTheme.with_text_size(tier, func():
+				var sc: Control = _screen(f, root)
+				sc.show_tab("shelf")
+				sc.size = Vector2(1600, 1000)
+				sc.layout()
+				_settle(sc)
+				var v: ShelfView = sc.shelf_view()
+				var r := v.get_global_rect()
+				t.check(r.end.x <= 1600.0 - sc.MARGIN + 0.5 and r.end.y <= 1000.0 - sc.MARGIN + 0.5 and r.position.x >= sc.LEFT_W + sc.MARGIN, "%s %s：整座书架在中列里（%s）" % [lang, tier, r])
+				t.check(v.scale.x > 0.85, "%s %s：缩得不多（%.2f）" % [lang, tier, v.scale.x])
+				sc.free())
+	UiText.lang = "zh"
+	_cleanup()
+
+
+static func _settle(c: Control) -> void:
+	for i in 3:
+		for n in c.find_children("*", "Container", true, false):
+			(n as Container).notification(Container.NOTIFICATION_SORT_CHILDREN)
 
 
 static func frame_records_window(t: TestCase, root: Window) -> void:
