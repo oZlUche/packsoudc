@@ -50,3 +50,12 @@ static func shrink_label_height(l: Label, height: float, floor_size: int) -> voi
 		px -= 1
 	if px != base:
 		l.add_theme_font_size_override("font_size", px)
+
+
+## 260 测试反馈：定高板上的折行字（铸炉说明板）—— 先回到 [param base] 号，几行加起来高过 [param height] 就一号一号缩，最小 [param floor_size]
+static func fit_wrapped_height(l: Label, height: float, base: int, floor_size: int) -> void:
+	if l == null:
+		return
+	l.add_theme_font_size_override("font_size", base)
+	while l.get_minimum_size().y > height and step_down(l, floor_size):
+		pass

@@ -326,6 +326,21 @@ static func frame_forge_screen(t: TestCase, root: Window) -> void:
 	var mask := btn.texture_click_mask
 	t.check(mask != null and mask.get_bitv(Vector2i(84, 78)) and not mask.get_bitv(Vector2i(1, 1)), "「铸牌」键只认盾牌：中心能点、角上的光不算")
 	t.eq(btn.name, "铸牌", "键名「铸牌」")
+	# 测试 v4.60：英文说明中号字最后一行压在便条下 —— 中英文、三档字号，说明板的字都在便条上沿之上
+	var slate: Label = screen._slate
+	var keep_lang := UiText.lang
+	var keep_size := UiTheme.text_size
+	for lang in ["zh", "en"]:
+		for tier in [&"small", &"medium", &"large"]:
+			UiText.lang = lang
+			UiTheme.set_text_size(tier)
+			slate.text = UiText.t("forge.description")
+			screen._place()
+			t.check(slate.get_minimum_size().y <= screen.slate_room() * s + 0.5, "%s %s：说明板 %.0f 高 ≤ 到便条的 %.0f（%d 号）" % [lang, tier, slate.get_minimum_size().y, screen.slate_room() * s, slate.get_theme_font_size("font_size")])
+	UiText.lang = keep_lang
+	UiTheme.set_text_size(keep_size)
+	slate.text = UiText.t("forge.description")
+	screen._place()
 	var bag: Rect2 = screen.spot_rect("bag")
 	t.check(Rect2(Vector2.ZERO, screen.size).encloses(bag) and bag.size.x > 0.0, "背包摆在工作台皮垫上、不出屏（%s）" % bag)
 	var baked := true

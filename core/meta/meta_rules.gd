@@ -18,3 +18,5 @@ const DEFAULT_SIZE := Vector2i(10, 8)
 @export var sell_ratio: float = 0.5
 ## 保险箱几格（092，作者定：初始 3×3；局外成长改它）
 @export var safe_size: Vector2i = Vector2i(3, 3)
+## 260：基地军功碑的军功牌分阶 —— MetaState 字段名 → 五档门槛（铜 / 银 / 金 / 鎏金 / 桂冠，升序）；战败不分阶
+@export var medal_tiers: Dictionary = {}
