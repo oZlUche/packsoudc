@@ -12,6 +12,10 @@ var reason: StringName = &""        # RunState.end_reason：extract / vitality_d
 var run_seed: int = 0
 var chapter_id: StringName = &""
 var chapter_name: String = ""
+## 260：哪个角色、哪档难度、几时结束（unix 秒）—— 基地军功碑的「最佳一局」要写
+var character_id: StringName = &""
+var difficulty_id: StringName = &""
+var ended_at: int = 0
 ## 行动点总数、踩过的点数、打赢 / 打输几场
 var steps: int = 0
 var visited: int = 0
@@ -53,6 +57,9 @@ static func settle(state: RunState) -> RunResult:
 	r.run_seed = state.run_seed
 	r.chapter_id = state.chapter.id if state.chapter != null else &""
 	r.chapter_name = Names.of(state.chapter) if state.chapter != null else ""
+	r.character_id = state.character_id
+	r.difficulty_id = state.difficulty_id
+	r.ended_at = int(Time.get_unix_time_from_system())
 	r.steps = state.travel.clock.total if state.travel != null and state.travel.clock != null else 0
 	for id in state.map.node_ids():
 		if state.map.get_node(id).is_visited():
@@ -116,4 +123,5 @@ func to_dict() -> Dictionary:
 		"steps": steps, "visited": visited, "battles_won": battles_won, "battles_lost": battles_lost,
 		"balance": balance, "value": value, "items": ids,
 		"safe": safe_items.size(), "safe_value": safe_value,
+		"character": String(character_id), "difficulty": String(difficulty_id), "ended_at": ended_at,
 	}

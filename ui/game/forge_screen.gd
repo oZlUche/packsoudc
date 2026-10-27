@@ -249,11 +249,19 @@ func _place() -> void:
 	_slate.position += SLATE_INSET * s     # 板面在框里面
 	_slate.custom_minimum_size.x = maxf(0.0, _slate.custom_minimum_size.x - SLATE_INSET.x * 2.0 * s)
 	_slate.size.x = _slate.custom_minimum_size.x
+	# 测试 v4.60：英文说明比中文长，中号字最后一行压到下面的便条 —— 板面到便条上沿放不下就缩字
+	TextFit.fit_wrapped_height(_slate, slate_room() * s, UiTheme.sz(SLATE_SIZE), SLATE_SIZE - 3)
 	_preview.custom_minimum_size.x = maxf(0.0, _text_note.size.x - _text_note.get_theme_stylebox("panel").get_minimum_size().x)     # 便条定宽、按行数收高
 	_text_note.reset_size.call_deferred()
 	_align_slot_notes.call_deferred()
 	_place_piece(_forge_btn, "forge_btn", s, offset)
 	_place_piece(_back_btn, "sign", s, offset)
+
+
+## 说明板的字能占多高（设计坐标）：板面上沿到便条上沿，留一点缝
+func slate_room() -> float:
+	var r := _rect(_layout.get("slate", {}))
+	return NOTE_RECT.position.y - r.position.y - SLATE_INSET.y - 4.0
 
 
 func _place_piece(b: TextureButton, which: String, s: float, offset: Vector2) -> void:
