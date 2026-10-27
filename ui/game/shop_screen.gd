@@ -53,8 +53,17 @@ func open(payload: Dictionary) -> void:
 	var side := _vbox(8)
 	side.size_flags_vertical = Control.SIZE_SHRINK_END     # 按钮落在出售区底边那一行
 	lower.add_child(side)
+	# 作者 10-27（选 B 钱袋，挪到左下角）：钱袋和「随身」那几颗并排、在【离开】正上方，底和随身最后一颗齐；
+	# 不放进下排按键那一行 —— 英文按键长，再加钱袋会把左栏撑宽，16:10 下帐篷出屏
+	var belt_line := _hbox(8)
+	side.add_child(belt_line)
 	_belt_row = _vbox(8)
-	side.add_child(_belt_row)
+	_belt_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_belt_row.size_flags_vertical = Control.SIZE_SHRINK_END
+	belt_line.add_child(_belt_row)
+	_pouch = CoinPouch.new()
+	_pouch.size_flags_vertical = Control.SIZE_SHRINK_END
+	belt_line.add_child(_pouch)
 	var buttons := _hbox(8)
 	_refresh_btn = ScrollKey.make(UiText.t("shop.refresh"), refresh_stock, true)     # 纸卷键：刷新带币座，价钱写在金币右边
 	buttons.add_child(_refresh_btn)
@@ -63,14 +72,6 @@ func open(payload: Dictionary) -> void:
 	buttons.add_child(back)
 	buttons.add_child(ScrollKey.make(UiText.t("shop.leave"), leave))
 	side.add_child(buttons)
-	# 作者 10-27（选 B 钱袋，挪到左下角）：下排按键右边空着的那块放钱袋，底和按键齐；字长把左栏撑宽也不压按键
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lower.add_child(gap)
-	_pouch = CoinPouch.new()
-	_pouch.size_flags_vertical = Control.SIZE_SHRINK_END
-	lower.add_child(_pouch)
 
 	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
 	_inv = _mount_bag(row, _sell_view, Callable())     # 226 批一：面板的回话走告示层

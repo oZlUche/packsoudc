@@ -38,13 +38,19 @@ static func frame_shop_tags(t: TestCase, root: Window) -> void:
 	var p0: PriceTag = tags[0]
 	t.eq(p0.coin, int(session.stock[0]["price"]), "牌上写价钱（金币式：金币 + 数，不写「币」）")
 	t.check(p0.suffix.contains("×"), "数后面接尺寸（%s）" % p0.suffix)
-	# 作者 10-27（选 B 钱袋，挪到左下角）：左栏下排按键右边一只钱袋写当前金币，不压按键
+	# 作者 10-27（选 B 钱袋，挪到左下角；UI替换美术 摆法 A）：随身那几颗右边、【离开】正上方一只钱袋写当前金币，不压按键
 	var pouch: CoinPouch = screen._pouch
 	t.check(pouch != null and pouch.amount == screen.flow.run.wallet.balance, "钱袋写当前金币")
 	if pouch != null:
+		_lay_out(screen)
+		_lay_out(screen)     # 两遍：外层排好了内层才拿到尺寸
 		var pr := pouch.get_global_rect()
 		var hit: Array = screen.find_children("*", "BaseButton", true, false).filter(func(b): return (b as Control).is_visible_in_tree() and pr.intersects((b as Control).get_global_rect()))
 		t.eq(hit.size(), 0, "钱袋不压按键")
+		var leave: Array = screen.find_children("*", "Button", true, false).filter(func(b): return (b as Button).text == UiText.t("shop.leave"))
+		if not leave.is_empty():
+			var lr := (leave[0] as Control).get_global_rect()
+			t.check(pr.end.y <= lr.position.y and pr.end.x > lr.position.x and pr.position.x < lr.end.x, "钱袋在【离开】正上方（%s / %s）" % [pr, lr])
 	t.check(not p0.sold, "没卖：不盖戳")
 	t.eq(p0.custom_minimum_size.y, PriceTag.HEIGHT, "高 40")
 	var uid: int = session.item_at(0).uid
@@ -65,3 +71,11 @@ static func frame_shop_tags(t: TestCase, root: Window) -> void:
 	t.eq(bare.size(), 0, "顶上「货币 N……」那行删了")
 	screen.free()
 	Support.cleanup(Keys.PREFIX)
+
+
+## 容器当场排一遍（不等下一帧）
+static func _lay_out(n: Node) -> void:
+	if n is Container:
+		n.notification(Container.NOTIFICATION_SORT_CHILDREN)
+	for c in n.get_children():
+		_lay_out(c)

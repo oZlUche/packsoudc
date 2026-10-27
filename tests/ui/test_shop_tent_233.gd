@@ -87,9 +87,10 @@ static func frame_tent_fallback(t: TestCase, root: Window) -> void:
 	Support.cleanup(PREFIX + "b")
 
 
-## 227 帐篷不出屏（UI替换美术 10-27 加钱袋后要求顺带核）：中英文商店开着货架与钱袋，整扇窗加两侧门帘 92 不超 1600 宽
+## 227 帐篷不出屏（UI替换美术 10-27 选 A：钱袋放在随身那几颗右边、【离开】正上方）：中英文商店开着货架与钱袋，
+## 窗身不超 1600 宽，钱袋不把帐篷撑宽（藏起钱袋量一次，宽度一样）
 static func frame_tent_on_screen(t: TestCase, root: Window) -> void:
-	t.begin("227 · 帐篷不出屏：中英文商店（货架、随身币座、钱袋都在）窗宽 + 两侧门帘 ≤ 1600")
+	t.begin("227 · 帐篷不出屏：中英文商店（货架、随身币座、钱袋都在）窗身 ≤ 1600，钱袋不撑宽帐篷")
 	var Keys := load("res://tests/ui/test_shop_keys.gd")
 	var saved := UiText.lang
 	for lang in ["zh", "en"]:
@@ -97,9 +98,14 @@ static func frame_tent_on_screen(t: TestCase, root: Window) -> void:
 		var opened: Dictionary = Keys._open(root)
 		var screen = opened["screen"]
 		var frame: OverlayFrame = screen.overlay_frame()
-		var box := frame.get_theme_stylebox("panel") as StyleBoxTexture
-		var outer := frame.get_combined_minimum_size().x + box.expand_margin_left + box.expand_margin_right
-		t.check(outer <= 1600.0, "%s：帐篷连门帘 %.0f ≤ 1600" % [lang, outer])
+		var with_pouch := frame.get_combined_minimum_size().x
+		t.check(with_pouch <= 1600.0, "%s：窗身 %.0f ≤ 1600" % [lang, with_pouch])
+		var pouch: Control = screen._pouch
+		t.not_null(pouch, "%s：有钱袋" % lang)
+		if pouch != null:
+			pouch.visible = false
+			t.eq(frame.get_combined_minimum_size().x, with_pouch, "%s：钱袋不把帐篷撑宽" % lang)
+			pouch.visible = true
 		screen.free()
 		Support.cleanup(Keys.PREFIX)
 	UiText.lang = saved
