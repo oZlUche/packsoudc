@@ -79,6 +79,15 @@ static func run_trim_and_pins(t: TestCase) -> void:
 	db.load_dir()
 	var back := MetaState.from_dict(p.to_dict(), db, GameFlow.load_meta_rules())
 	t.eq(back.history, p.history, "存读往返（收藏、第几局都在）")
+	# 游戏测试 v4.63：261 前记的局没有 run_no —— 按总局数倒推，不写「第 0 局」
+	var old := p.to_dict()
+	old["runs"] = 7
+	var rows: Array = old["history"]
+	old["history"] = rows.slice(0, 3)
+	for row in old["history"]:
+		(row as Dictionary).erase("run_no")
+	var back2 := MetaState.from_dict(old, db, GameFlow.load_meta_rules())
+	t.eq(back2.history.map(func(h): return int(h["run_no"])), [7, 6, 5], "老档：第 7 / 6 / 5 局")
 
 
 static func frame_shelf(t: TestCase, root: Window) -> void:
@@ -138,6 +147,9 @@ static func frame_records_window(t: TestCase, root: Window) -> void:
 		win.show_detail(0)
 		t.check(win.detail_text().contains(UiText.t("records.seed")) and win.detail_text().contains(str(1300)), "调试模式：写种子（%s）" % win.detail_text())
 		t.not_null(win._copy_btn, "旁边有复制键")
+		f.meta.history[0].erase("scale")
+		win.show_detail(0)
+		t.check(not win.detail_text().strip_edges().ends_with("/"), "老记录没规模：种子行不留半截「/」（%s）" % win.detail_text())
 		f.settings.debug_mode = false
 	screen.free()
 	_cleanup()

@@ -1,0 +1,146 @@
+{
+  "version": 3,
+  "warehouse": {
+    "pages": [
+      {
+        "id": 200,
+        "size": [
+          10,
+          8
+        ],
+        "requires_bag": false,
+        "blocked": [],
+        "items": [
+          {
+            "uid": 1,
+            "def": "knife",
+            "rot": 0,
+            "origin": [
+              0,
+              0
+            ],
+            "seq": 1,
+            "state": {}
+          },
+          {
+            "uid": 2,
+            "def": "longsword",
+            "rot": 0,
+            "origin": [
+              1,
+              0
+            ],
+            "seq": 2,
+            "state": {}
+          },
+          {
+            "uid": 3,
+            "def": "round_shield",
+            "rot": 0,
+            "origin": [
+              2,
+              0
+            ],
+            "seq": 3,
+            "state": {}
+          },
+          {
+            "uid": 50,
+            "def": "sniper",
+            "rot": 0,
+            "origin": [
+              6,
+              0
+            ],
+            "seq": 50,
+            "state": {}
+          },
+          {
+            "uid": 51,
+            "def": "mana_crystal",
+            "rot": 0,
+            "origin": [
+              6,
+              3
+            ],
+            "seq": 51,
+            "state": {}
+          },
+          {
+            "uid": 52,
+            "def": "ghost_item_removed",
+            "rot": 0,
+            "origin": [
+              8,
+              0
+            ],
+            "seq": 52,
+            "state": {}
+          },
+          {
+            "uid": 53,
+            "def": "strength_sigil",
+            "rot": 0,
+            "origin": [
+              8,
+              3
+            ],
+            "seq": 53,
+            "state": {}
+          },
+          {
+            "uid": 54,
+            "def": "knife",
+            "rot": 0,
+            "origin": [
+              9,
+              7
+            ],
+            "seq": 54,
+            "state": {}
+          },
+          {
+            "uid": 55,
+            "def": "longsword",
+            "rot": 0,
+            "origin": [
+              9,
+              7
+            ],
+            "seq": 55,
+            "state": {}
+          }
+        ],
+        "place_seq": 3
+      }
+    ]
+  },
+  "board": null,
+  "codex": {},
+  "active_buffs": [],
+  "unlocks": [],
+  "keepsakes": [],
+  "next_uid": 60,
+  "funds": 100,
+  "score": 0,
+  "runs": 0,
+  "extractions": 0,
+  "deaths": 0,
+  "best_value": 0,
+  "history": [],
+  "achievements": {},
+  "chapter_extractions": {},
+  "boss_kills": 0,
+  "battles_won": 0,
+  "seen_rules": [],
+  "coach_seen": [],
+  "flags": {},
+  "tech_levels": {
+    "bargain": 1,
+    "pack": 1,
+    "market": 3,
+    "smithy": 1
+  },
+  "tech_deposits": {},
+  "content_stamp": "synthetic"
+}

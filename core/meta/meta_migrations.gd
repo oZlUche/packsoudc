@@ -10,7 +10,7 @@ class_name MetaMigrations
 extends RefCounted
 
 ## 有哪几步：from_version → 方法名（只做文档与自检用，分派是下面的 match，不走反射）
-const STEPS := {1: "_v1_to_v2", 2: "_v2_to_v3"}
+const STEPS := {1: "_v1_to_v2", 2: "_v2_to_v3", 3: "_v3_to_v4"}
 
 
 ## 尽量升到 [constant MetaState.SAVE_VERSION]。不改入参（深拷一份）。
@@ -27,6 +27,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v1_to_v2(d)
 			2:
 				d = _v2_to_v3(d)
+			3:
+				d = _v3_to_v4(d)
 			_:
 				push_error("MetaMigrations: STEPS 里有 v%d 但 match 没接上" % v)
 				return d
@@ -48,3 +50,15 @@ static func _v2_to_v3(d: Dictionary) -> Dictionary:
 	if not (d.get("tech_deposits", null) is Dictionary):
 		d["tech_deposits"] = {}
 	return d
+
+
+## v3 → v4（262）：科技「集市」「铁匠铺」改义为「高级货物」「高级配方」（铺子默认 1 级，科技每级再升一级），最多两级 ——
+## 老档点过的级数照旧（铺子白得一级，不退钱不扣级），只把 3 压到 2
+static func _v3_to_v4(d: Dictionary) -> Dictionary:
+	var levels = d.get("tech_levels", null)
+	if levels is Dictionary:
+		for id in ["market", "smithy"]:
+			if (levels as Dictionary).has(id):
+				levels[id] = mini(int(levels[id]), 2)
+	return d
+

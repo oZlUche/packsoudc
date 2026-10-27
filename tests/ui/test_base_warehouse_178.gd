@@ -44,7 +44,7 @@ static func frame_warehouse_page(t: TestCase, root: Window) -> void:
 	var f := _flow()
 	_with_board(f)
 	var screen = _screen(f, root)
-	t.eq(screen._tab_btns.keys(), ["warehouse", "sell", "market", "smithy", "tech", "shelf"], "页签：仓库 / 出售 / 集市 / 铁匠铺（251，点出来才露）/ 科技 / 书架（261）")
+	t.eq(screen._tab_btns.keys(), ["warehouse", "logistics", "tech", "shelf"], "页签：仓库 / 后勤（262）/ 科技 / 书架（261）")
 	t.eq((screen._tab_btns["warehouse"] as Button).text, "仓库", "页签字")
 	var page: Control = screen._pages["warehouse"]
 	t.check(page.is_ancestor_of(screen._wh), "带回来的背包在「仓库」页")

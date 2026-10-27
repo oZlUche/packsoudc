@@ -10,16 +10,12 @@ facility = &"market"
 
 [sub_resource type="Resource" id="Resource_f80tu"]
 script = ExtResource("3_l1jbx")
-funds = 600
-
-[sub_resource type="Resource" id="Resource_3mobv"]
-script = ExtResource("3_l1jbx")
 funds = 1200
 items = {
 "hardwood_plank": 2
 }
 
-[sub_resource type="Resource" id="Resource_3q5oc"]
+[sub_resource type="Resource" id="Resource_3mobv"]
 script = ExtResource("3_l1jbx")
 funds = 2000
 items = {
@@ -30,16 +26,16 @@ items = {
 [resource]
 script = ExtResource("2_f76vl")
 id = &"market"
-display_name = "集市"
+display_name = "高级货物"
 display_names = {
-"en": "Market"
+"en": "Finer Goods"
 }
 order = 2
 requires = Array[StringName]([&"bargain"])
 column = 1
-description = "基地里开一间集市，卖药、食物、弹药与低档素材；每一局回来换一次货。级数越高，货格越多、素材档次越高。"
+description = "集市进更好的货：级数越高，货格越多、素材档次越高。"
 descriptions = {
-"en": "Opens a market at your base selling remedies, food, ammo and low-grade materials; new stock after every run. Higher levels mean more slots and better materials."
+"en": "The market stocks finer goods: higher levels mean more slots and better materials."
 }
 effect = SubResource("Resource_eelas")
-tiers = Array[ExtResource("3_l1jbx")]([SubResource("Resource_f80tu"), SubResource("Resource_3mobv"), SubResource("Resource_3q5oc")])
+tiers = Array[ExtResource("3_l1jbx")]([SubResource("Resource_f80tu"), SubResource("Resource_3mobv")])

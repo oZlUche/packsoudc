@@ -15,6 +15,8 @@ var _belt_row: VBoxContainer = null     # 227：随身那几颗竖着排（英�
 var _belt_btns: Array[Button] = []
 var _sell_view: InventoryView
 var _refresh_btn: Button
+## 作者 10-27：左下角的钱袋，写着当前金币
+var _pouch: CoinPouch = null
 var _inv: InventoryPanelScript
 
 
@@ -51,8 +53,17 @@ func open(payload: Dictionary) -> void:
 	var side := _vbox(8)
 	side.size_flags_vertical = Control.SIZE_SHRINK_END     # 按钮落在出售区底边那一行
 	lower.add_child(side)
+	# 作者 10-27（选 B 钱袋，挪到左下角）：钱袋和「随身」那几颗并排、在【离开】正上方，底和随身最后一颗齐；
+	# 不放进下排按键那一行 —— 英文按键长，再加钱袋会把左栏撑宽，16:10 下帐篷出屏
+	var belt_line := _hbox(8)
+	side.add_child(belt_line)
 	_belt_row = _vbox(8)
-	side.add_child(_belt_row)
+	_belt_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_belt_row.size_flags_vertical = Control.SIZE_SHRINK_END
+	belt_line.add_child(_belt_row)
+	_pouch = CoinPouch.new()
+	_pouch.size_flags_vertical = Control.SIZE_SHRINK_END
+	belt_line.add_child(_pouch)
 	var buttons := _hbox(8)
 	_refresh_btn = ScrollKey.make(UiText.t("shop.refresh"), refresh_stock, true)     # 纸卷键：刷新带币座，价钱写在金币右边
 	buttons.add_child(_refresh_btn)
@@ -291,7 +302,8 @@ func _rebuild() -> void:
 		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)
 		var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
-		var price := PriceTag.new(UiText.t("shop.price_tag") % [int(_session.stock[i]["price"]), size.x, size.y])     # 226 批三：铜挂牌，卖掉了盖戳
+		var price := PriceTag.coins(int(_session.stock[i]["price"]))     # 226 批三：铜挂牌，卖掉了盖戳；作者 10-24：钱 = 金币 + 数，不写「币」
+		price.suffix = UiText.t("shop.price_size") % [size.x, size.y]
 		price.sold = sold
 		price.name = "Price%d" % idx
 		col.add_child(price)
@@ -332,6 +344,8 @@ func _refresh() -> void:
 	if _session == null:
 		return
 	ScrollKey.show_price(_refresh_btn, UiText.t("shop.refresh"), _session.refresh_cost())
+	if _pouch != null:
+		_pouch.amount = flow.run.wallet.balance
 	_refresh_btn.disabled = not _session.can_refresh()
 	for i in _shelf_views.size():
 		var price := _shelf_row.get_child(i).get_node_or_null("Price%d" % i) as PriceTag

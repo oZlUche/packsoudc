@@ -1,14 +1,14 @@
-## 251（作者 2026-10-24）：基地铁匠铺 —— 科技「铁匠铺」三级（会打绿 / 蓝 / 紫的配方）；配方是数据（素材各几件 + 钱 → 一件武器 / 防具）；
+## 251（作者 2026-10-24）：基地铁匠铺 —— 默认 1 级（262），科技「高级配方」再升两级（会打绿 / 蓝 / 紫的配方）；配方是数据（素材各几件 + 钱 → 一件武器 / 防具）；
 ## 只吃仓库里没锁的，产物进仓库、图鉴点亮；级不够 / 缺素材 / 钱不够 / 仓库满都不打、什么也不动；导入器拦产物不是装备、id 不存在的配方
 extends RefCounted
 
 const T110 := preload("res://tests/meta/test_tech.gd")
 
 
+## 铁匠铺第 [param lv] 级（262：默认就是 1 级）
 static func _meta(lv: int) -> MetaState:
 	var m := T110._meta()
-	if lv > 0:
-		m.facility_levels[Smithy.ID] = lv
+	m.facility_levels[Smithy.ID] = lv
 	return m
 
 
@@ -23,12 +23,13 @@ static func _recipe(out: StringName, inputs: Dictionary, funds: int, lv: int = 1
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("251 §三：内容 —— 科技「铁匠铺」三级、前置行囊（← 保险箱 ← 仓库，树不加宽）；首批 14 张配方，产物都是装备、素材都在、级 1 ～ 3")
+	t.begin("251 §三 / 262：内容 —— 科技「高级配方」（id 还是 smithy）两级、前置行囊（← 保险箱 ← 仓库，树不加宽）；首批 14 张配方，产物都是装备、素材都在、级 1 ～ 3")
 	var def := load(ContentPaths.asset_file("techs", "smithy")) as TechDef
 	t.not_null(def, "科技资产在")
 	if def == null:
 		return
-	t.eq(def.max_level(), 3, "三级")
+	t.eq(def.max_level(), 2, "两级（262：铁匠铺默认就有）")
+	t.eq(Smithy.level(T110._meta()), 1, "262：没点科技，铁匠铺 1 级")
 	t.eq(def.requires, [&"pack"] as Array[StringName], "前置行囊（一路往下是仓库）")
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
@@ -50,9 +51,9 @@ static func run_forge(t: TestCase) -> void:
 	ItemInstance.reset_uid_counter()
 	var db := T110._db()
 	var r := _recipe(&"shortsword", {"iron_ore": 2, "hardwood_plank": 1}, 40)
-	var m := _meta(0)
+	var m := _meta(0)     # 0 级只有手改存档 / 开发区才有
 	m.funds = 100
-	t.eq(Smithy.can_forge(m, r, db), UiText.t("smithy.need_level") % 1, "没有铁匠铺：级不够")
+	t.eq(Smithy.can_forge(m, r, db), UiText.t("smithy.need_level") % 1, "0 级：级不够")
 	m.facility_levels[Smithy.ID] = 1
 	var ore1 := T110._add(m, db, &"iron_ore")
 	T110._add(m, db, &"hardwood_plank")

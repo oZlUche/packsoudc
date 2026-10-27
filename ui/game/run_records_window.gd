@@ -152,7 +152,7 @@ func show_detail(i: int) -> void:
 		add_child(dev)
 		var seed_rows := LedgerRows.new()
 		dev.add_child(seed_rows)
-		_add(seed_rows, "records.seed", UiText.t("records.seed_v") % [int(h.get("seed", 0)), String(h.get("chapter", "")), String(h.get("scale", ""))])
+		_add(seed_rows, "records.seed", UiText.t("records.seed_v") % [int(h.get("seed", 0)), " / ".join([String(h.get("chapter", "")), String(h.get("scale", ""))].filter(func(s: String) -> bool: return s != ""))])     # 261 前的局没记规模：不留半截「/」
 		_copy_btn = UiTheme.make_home_button(UiText.t("records.copy_seed"), func(): DisplayServer.clipboard_set(str(int(h.get("seed", 0)))), false, Vector2.ZERO, FONT_SIZE)
 		dev.add_child(_copy_btn)
 
