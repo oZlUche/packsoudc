@@ -113,5 +113,5 @@ static func frame_bright_text_and_width(t: TestCase, root: Window) -> void:
 	tip._refit()
 	tip._refit()
 	var w := tip._panel.body.custom_minimum_size.x
-	t.check(w > HoverTip.MAX_WIDTH - 24.0 and w <= HoverTip.MAX_WIDTH, "长的折行、宽到 360 这一档（%.0f）" % w)
+	t.check(w > HoverTip.scaled(HoverTip.MAX_WIDTH) - 24.0 and w <= HoverTip.scaled(HoverTip.MAX_WIDTH), "长的折行、宽到 360 这一档（258：随字号档；%.0f）" % w)
 	slab.queue_free()

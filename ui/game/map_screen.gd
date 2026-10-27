@@ -891,7 +891,7 @@ func _rebuild_routes() -> void:
 			"核心（打 BOSS）" if String(route.get("ends_at", "core")) == "core" else "撤离点（可以不打）",
 			float(route.get("risk_x100", 0)) / 100.0, float(route.get("reward_x100", 0)) / 100.0]
 		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		card.add_theme_font_size_override("font_size", 13)
+		card.add_theme_font_size_override("font_size", UiTheme.sz(13))
 		card.add_theme_color_override("font_color", MapNodeStyle.route_color(i))     # 121 特例：路线色和地图上画的那条线同色（画布色）
 		var idx := i
 		card.mouse_entered.connect(func(): if _run.phase == RunState.Phase.PICK_SPAWN: _view.bold_route = idx)

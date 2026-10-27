@@ -285,7 +285,7 @@ func _ledger_row(label: String, number: String, own: String, done: bool, tip: St
 	n.text = number
 	var ls := LabelSettings.new()     # 账单那套数字：Cinzel Bold（缺的字落到思源宋体 Bold）
 	ls.font = UiPalette.numeral_font()
-	ls.font_size = NUM_SIZE
+	ls.font_size = UiTheme.sz(NUM_SIZE)
 	ls.font_color = UiPalette.HEAL.darkened(0.35) if done else UiTheme.INK
 	n.label_settings = ls
 	n.custom_minimum_size.x = NUM_W

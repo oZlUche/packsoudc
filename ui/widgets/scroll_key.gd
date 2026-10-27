@@ -92,7 +92,7 @@ static func short(text: String, handler: Callable) -> Button:
 	var b := make(text, handler)
 	if b is ScrollKey:
 		b.custom_minimum_size.y = SHORT_H
-		b.add_theme_font_size_override("font_size", SHORT_FONT)
+		b.add_theme_font_size_override("font_size", UiTheme.sz(SHORT_FONT))
 	return b
 
 
@@ -138,7 +138,7 @@ func _dress(spec: Dictionary) -> void:
 	custom_minimum_size = Vector2(0.0 if coin else (132.0 if primary_key else 116.0), SUB_H if _two_line else h)
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	add_theme_font_override("font", UiPalette.cjk_font_bold())
-	add_theme_font_size_override("font_size", int(label.get("size", 22)))
+	add_theme_font_size_override("font_size", UiTheme.sz(int(label.get("size", 22))))     # 258：键宽随字
 	# 字：普通键在整颗里居中（两边各 26 → 宽 = 字宽 + 52）；币座键在左边那段里居中再右挪 2；主键在 [16, 宽] 里居中
 	_left = 26.0 + (2.0 if coin else 0.0) + (16.0 if primary_key else 0.0)
 	_right = 26.0 + coin_cap - (2.0 if coin else 0.0)

@@ -23,7 +23,7 @@ static func frame_settings_stone(t: TestCase, root: Window) -> void:
 	var on: StoneChip = screen._mode_btns["windowed"]
 	t.check(on.button_pressed and (on.get_theme_stylebox("pressed") as StyleBoxTexture).texture == UiTheme.art_cached("kit/chip_on"), "选中用 chip_on")
 	t.eq(on.get_combined_minimum_size().y, StoneChip.HEIGHT, "签高 40")
-	var bold_w := UiPalette.cjk_font_bold().get_string_size(on.text, HORIZONTAL_ALIGNMENT_LEFT, -1, StoneChip.FONT_SIZE).x
+	var bold_w := UiPalette.cjk_font_bold().get_string_size(on.text, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(StoneChip.FONT_SIZE)).x
 	t.check(absf(on.get_combined_minimum_size().x - (bold_w + 2.0 * StoneChip.PAD_X)) <= 1.0, "宽 = 粗体字宽 + 38")
 	var bg: StoneChip = screen._bg_btns.values()[0]
 	t.check(bg.swatch.a > 0.0, "底色签带色样")

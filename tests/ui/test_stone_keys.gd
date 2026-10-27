@@ -23,7 +23,7 @@ static func frame_primary_short_keys(t: TestCase, root: Window) -> void:
 	root.add_child(s)
 	t.check(s != null and not s.primary_key, "矮键是普通纸卷")
 	t.eq(s.get_combined_minimum_size().y, ScrollKey.SHORT_H, "矮键 44 高")
-	t.eq(s.get_theme_font_size("font_size"), ScrollKey.SHORT_FONT, "矮键字 18")
+	t.eq(s.get_theme_font_size("font_size"), UiTheme.sz(ScrollKey.SHORT_FONT), "矮键字 18（258：按字号档）")
 	var two := ScrollKey.primary("献祭", func(): pass, true) as ScrollKey
 	root.add_child(two)
 	t.eq(two.get_combined_minimum_size().y, ScrollKey.SUB_H, "带小字的主键 64 高")

@@ -80,7 +80,7 @@ static func frame_result_v2(t: TestCase, root: Window) -> void:
 	t.check(plate.texture != null and plate.texture.get_width() == 796, "标题牌是 2 倍图")
 	var cont: Button = screen.continue_button()
 	t.eq(cont.custom_minimum_size, Vector2(252, 77), "继续 252 × 77")
-	t.eq(cont.get_theme_font_size("font_size"), 34, "继续字 34")
+	t.eq(cont.get_theme_font_size("font_size"), UiTheme.sz(34), "继续字 34（258：按字号档）")
 	var safe := screen.find_child("SafeFrame", true, false) as PanelContainer
 	t.check(safe != null and is_equal_approx(safe.offset_left, 1280.0 - 800.0) and is_equal_approx(safe.offset_top, 160.0 - 500.0), "保险箱框摆在账单右边 1280, 160")
 	t.check(safe != null and safe.offset_left > ledger.offset_right, "不压账单")
@@ -115,7 +115,7 @@ static func frame_result_v2(t: TestCase, root: Window) -> void:
 	root.add_child(en)
 	UiText.lang = "en"
 	en.open({"result": r})
-	t.eq(en.continue_button().get_theme_font_size("font_size"), 28, "英文「Continue」小一号")
+	t.eq(en.continue_button().get_theme_font_size("font_size"), UiTheme.sz(28), "英文「Continue」小一号")
 	t.check(en.ledger().rows()[3]["label"] == "Elites defeated" and en.ledger().rows()[4]["label"] == "Bosses defeated", "英文精英 / 首领两行")
 	en.queue_free()
 	UiText.lang = "zh"

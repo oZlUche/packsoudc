@@ -171,6 +171,8 @@ var _grooves: Array[PanelContainer] = []
 ## 179：中栏的三块图标牌、技能名的标签（测试看）
 var _cap_tiles: Array[CapTile] = []
 var _skill_names: Array[Label] = []
+## 258：卡里放不下时可以往回缩的字 —— [标签, 小档字号]
+var _fit_labels: Array = []
 ## 255：角色卡第二行的面板方块、技能 / 随身之物 / 短板那几行（[method _entry_row]）、右栏题字 / 图例 / 首次赠包小签
 var _stat_plaques: Array[StatPlaque] = []
 var _entries: Array[HBoxContainer] = []
@@ -192,8 +194,8 @@ const RACK_COLUMNS := 9
 ## 255 补充一：中栏（角色卡）定高 —— 英文最长的那张（游戏测试 v4.49：安德烈乌斯 / 布鲁图斯 814）放得下、底边不过页边；
 ## 内容再长栏会被顶高，`test_character_select_255` 中英文都比一遍会红
 const CARD_H := 840
-## 255 补充一：右栏（棋盘预览）定高 —— 六行棋盘、题字、图例、首次赠包签都在时那么高（七行以上的棋盘才再长）
-const PREVIEW_H := 560
+## 255 补充一：右栏（棋盘预览）定高 —— 六行棋盘、题字、图例、首次赠包签都在时那么高（七行以上的棋盘才再长）；258：按大档字号算（原 560）
+const PREVIEW_H := 576
 ## 255：角色卡里的几样尺寸 —— 面板方块间 10；小牌 ≤ 180 宽；条目行间 8
 const STAT_GAP := 10
 const TILE_MAX_W := 180.0
@@ -1660,6 +1662,7 @@ func _rebuild_card() -> void:
 	_entries.clear()
 	_cap_tiles.clear()
 	_skill_names.clear()
+	_fit_labels.clear()
 	var ch := character()
 	if ch == null:
 		return
@@ -1672,6 +1675,8 @@ func _rebuild_card() -> void:
 	var plate := Nameplate.new().setup(Names.of(ch), UiText.t("setup.character"), null, 0)
 	plate.set_name_size(PLATE_NAME_SIZE)
 	plate.set_blurb(Names.description_of(ch), inner - CARD_PORTRAIT - 16 - PLATE_TEXT_PAD)
+	if plate.blurb_label != null:
+		_fit_labels.append([plate.blurb_label, Nameplate.BLURB_SIZE])
 	plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(plate)
@@ -1710,7 +1715,18 @@ func _rebuild_card() -> void:
 	var flaw := ch.flaw_entry()
 	if not flaw.is_empty():
 		rows.add_child(_entry_row(EntryIcon.flaw(), String(flaw["name"]), String(flaw["text"]), "", true))
+	_fit_card()
 	_build_preview(ch)
+
+
+## 258：字号放大后英文最长的卡（马库斯）顶过定高 —— 说明句、功能句、末尾小字一起一号一号缩，最小缩回小档；中文放得下不动
+func _fit_card() -> void:
+	var board: Control = _grooves[1]
+	var shrunk := true
+	while shrunk and board.get_minimum_size().y > CARD_H:
+		shrunk = false
+		for pair in _fit_labels:
+			shrunk = TextFit.step_down(pair[0], pair[1]) or shrunk
 
 
 ## 255：条目行 —— 左端 52 图标槽，右边名字（22，技能 / 随身之物亮黄铜、短板 [param iron] 铁灰）+ 一句功能句（17）+ 末尾灰小字 [param tail]（有才出）
@@ -1726,10 +1742,13 @@ func _entry_row(icon: EntryIcon, title: String, text: String, tail: String, iron
 	if text != "":
 		var body := _wrapped(text, UiTheme.SKILL_TEXT_SIZE, UiPalette.FG, card_width() - EntryIcon.SIDE - 12)
 		body.theme_type_variation = UiTheme.LABEL_SKILL_TEXT
+		_fit_labels.append([body, UiTheme.SKILL_TEXT_SIZE])
 		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col.add_child(body)
 	if tail != "":
-		col.add_child(_label(tail, ENTRY_TAIL_SIZE, UiPalette.DIM))
+		var tail_label := _label(tail, ENTRY_TAIL_SIZE, UiPalette.DIM)
+		col.add_child(tail_label)
+		_fit_labels.append([tail_label, ENTRY_TAIL_SIZE])
 	_entries.append(row)
 	return row
 
@@ -1764,7 +1783,7 @@ func _build_preview(ch: CharacterDef) -> void:
 		legend.free()
 	var gift := first_gift_text(ch)
 	if gift != "" and _gifted.has(ch.id):
-		_gift_tag = GiftTag.make(gift)
+		_gift_tag = GiftTag.make(gift, right_width() - 2.0 * RIGHT_PAD)
 		_gift_tag.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		_preview_host.add_child(_gift_tag)
 

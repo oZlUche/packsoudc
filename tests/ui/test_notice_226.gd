@@ -9,7 +9,7 @@ static func frame_scroll_geometry(t: TestCase, root: Window) -> void:
 	t.begin("226 批一 · 告示卷轴：纸宽 = 字宽 + 52、整卷宽 + 28、高 54；字在卷上居中；开卷从零展到全宽、轴贴着纸边；收卷完了回调")
 	var s := NoticeScroll.make("那里走不过去")
 	root.add_child(s)
-	var tw := UiPalette.cjk_font().get_string_size("那里走不过去", HORIZONTAL_ALIGNMENT_LEFT, -1, NoticeScroll.FONT_SIZE).x
+	var tw := UiPalette.cjk_font().get_string_size("那里走不过去", HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(NoticeScroll.FONT_SIZE)).x
 	t.eq(s.paper_rect().size.x, ceilf(tw) + 2.0 * NoticeScroll.PAD, "纸宽 = 字宽 + 2 × 26")
 	t.eq(s.custom_minimum_size, Vector2(s.paper_rect().size.x + 28.0, 54.0), "整卷宽 = 纸宽 + 28、高 54")
 	t.eq(s.paper_rect().position.y, 10.0, "纸在轴里垂直居中（上沿 10）")
