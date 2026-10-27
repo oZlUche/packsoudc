@@ -36,7 +36,21 @@ static func frame_shop_tags(t: TestCase, root: Window) -> void:
 		tags.append(screen._shelf_row.get_child(i).get_node_or_null("Price%d" % i))
 	t.check(not tags.is_empty() and tags.all(func(p): return p is PriceTag), "每格一块铜挂牌")
 	var p0: PriceTag = tags[0]
-	t.check(p0.text.begins_with(str(int(session.stock[0]["price"]))), "牌上写价钱")
+	t.eq(p0.coin, int(session.stock[0]["price"]), "牌上写价钱（金币式：金币 + 数，不写「币」）")
+	t.check(p0.suffix.contains("×"), "数后面接尺寸（%s）" % p0.suffix)
+	# 作者 10-27（选 B 钱袋，挪到左下角；UI替换美术 摆法 A）：随身那几颗右边、【离开】正上方一只钱袋写当前金币，不压按键
+	var pouch: CoinPouch = screen._pouch
+	t.check(pouch != null and pouch.amount == screen.flow.run.wallet.balance, "钱袋写当前金币")
+	if pouch != null:
+		_lay_out(screen)
+		_lay_out(screen)     # 两遍：外层排好了内层才拿到尺寸
+		var pr := pouch.get_global_rect()
+		var hit: Array = screen.find_children("*", "BaseButton", true, false).filter(func(b): return (b as Control).is_visible_in_tree() and pr.intersects((b as Control).get_global_rect()))
+		t.eq(hit.size(), 0, "钱袋不压按键")
+		var leave: Array = screen.find_children("*", "Button", true, false).filter(func(b): return (b as Button).text == UiText.t("shop.leave"))
+		if not leave.is_empty():
+			var lr := (leave[0] as Control).get_global_rect()
+			t.check(pr.end.y <= lr.position.y and pr.end.x > lr.position.x and pr.position.x < lr.end.x, "钱袋在【离开】正上方（%s / %s）" % [pr, lr])
 	t.check(not p0.sold, "没卖：不盖戳")
 	t.eq(p0.custom_minimum_size.y, PriceTag.HEIGHT, "高 40")
 	var uid: int = session.item_at(0).uid
@@ -44,7 +58,8 @@ static func frame_shop_tags(t: TestCase, root: Window) -> void:
 	var p1 := screen._shelf_row.get_child(0).get_node_or_null("Price0") as PriceTag
 	t.check(p1 != null and p1.sold, "卖掉了：盖戳")
 	if p1 != null:
-		t.check(p1.text.begins_with(str(int(session.stock[0]["price"]))), "价钱照写，不换成「已售」")
+		t.eq(p1.coin, int(session.stock[0]["price"]), "价钱照写，不换成「已售」")
+		t.eq(screen._pouch.amount, screen.flow.run.wallet.balance, "买了东西：钱袋跟着变")
 		t.eq(p1.stamp_rect().get_center(), Vector2(p1.size.x, 0.0), "戳中心对准价签右上角")
 	var heads: Array = screen.find_children("*", "HeaderTag", true, false)
 	var sell: HeaderTag = null
@@ -56,3 +71,11 @@ static func frame_shop_tags(t: TestCase, root: Window) -> void:
 	t.eq(bare.size(), 0, "顶上「货币 N……」那行删了")
 	screen.free()
 	Support.cleanup(Keys.PREFIX)
+
+
+## 容器当场排一遍（不等下一帧）
+static func _lay_out(n: Node) -> void:
+	if n is Container:
+		n.notification(Container.NOTIFICATION_SORT_CHILDREN)
+	for c in n.get_children():
+		_lay_out(c)

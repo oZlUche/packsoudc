@@ -69,7 +69,7 @@ func setup(flow: GameFlow) -> void:
 		var tier := tier_of(count, steps)
 		_rows.append({"kind": spec[0], "count": count, "tier": tier, "next": int(steps[tier]) if tier < steps.size() else -1,
 			"label": UiText.t(UiText.key_for(spec[2], count)) + ((" · " + tier_name(tier)) if tier > 0 else "")})
-	_ledger = UiText.t("records.ledger") % [m.runs, m.score, m.codex.size(), flow.items.ids(true).size()]
+	_ledger = UiText.t(UiText.key_for("records.ledger", m.runs)) % [m.runs, m.score, m.codex.size(), flow.items.ids(true).size()]
 	_best = CoinLabel.make(m.best_value, UiTheme.sz(BEST_SIZE), VERM)
 	_best.visible = _has_best
 	add_child(_best)

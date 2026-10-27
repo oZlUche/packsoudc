@@ -211,7 +211,7 @@ static func frame_sell_tab(t: TestCase, root: Window) -> void:
 	root.add_child(screen)
 	screen.open({})
 	screen.show_tab("sell")
-	t.eq(screen.tab(), "sell", "切到出售页")
+	t.check(screen.tab() == "logistics" and screen.sub_tab() == "sell", "切到出售页（262：后勤的分页）")
 	t.eq(screen.sell_filter_max(), 0, "默认筛「白色」")
 	t.check(screen.sell_preview_text().contains("1 件"), "预览行：会卖 1 件（%s）" % screen.sell_preview_text())
 	t.check(screen._sell_btn.text.ends_with("\n" + screen.sell_preview_text()), "226 批三：预览写在「一键出售」第二行")

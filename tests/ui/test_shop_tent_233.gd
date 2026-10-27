@@ -38,9 +38,10 @@ static func frame_tent(t: TestCase, root: Window) -> void:
 	t.eq(frame.title_label.theme_type_variation, UiTheme.LABEL_TENT_SIGN, "标题用布招牌的变体")
 	t.eq(frame.title_label.horizontal_alignment, HORIZONTAL_ALIGNMENT_CENTER, "字居中")
 	t.eq(frame.title_label.get_theme_color("font_color"), UiTheme.TENT_SIGN_INK, "浅色字（红布上），不被浅底的墨字主题盖掉")
-	frame.size = Vector2(1400, 800)     # 纸卷键比平板按钮宽，整扇最窄 1286
-	t.eq(frame.tent_peak_at(), Vector2(700 - 210, -56), "尖顶左上 = (W/2 − 210, −56)")
-	t.eq(frame.tent_sign_at(), Vector2(700 - 138, -4), "布牌左上 = (W/2 − 138, −4)")
+	frame.size = Vector2(1400, 800)     # 纸卷键比平板按钮宽，整扇最窄 1286；作者 10-27 左下加了钱袋，按内容还会更宽
+	var half := frame.size.x * 0.5
+	t.eq(frame.tent_peak_at(), Vector2(half - 210, -56), "尖顶左上 = (W/2 − 210, −56)")
+	t.eq(frame.tent_sign_at(), Vector2(half - 138, -4), "布牌左上 = (W/2 − 138, −4)")
 	t.eq(frame.outset_top(), 56.0, "窗顶上要让出 56")
 	var body_top: float = box.content_margin_top + frame.title_bar.get_combined_minimum_size().y + OverlayFrame.GAP
 	t.check(body_top >= 70.0 + OverlayFrame.TENT_SIGN_CLEAR - 0.01, "内容从布牌流苏下面开始（%.0f ≥ 76），第一行字不被流苏挡" % body_top)
@@ -84,3 +85,27 @@ static func frame_tent_fallback(t: TestCase, root: Window) -> void:
 	t.check(not slab.tent and slab.skin == OverlayFrame.SKIN_SLAB, "默认还是石板")
 	slab.free()
 	Support.cleanup(PREFIX + "b")
+
+
+## 227 帐篷不出屏（UI替换美术 10-27 选 A：钱袋放在随身那几颗右边、【离开】正上方）：中英文商店开着货架与钱袋，
+## 窗身不超 1600 宽，钱袋不把帐篷撑宽（藏起钱袋量一次，宽度一样）
+static func frame_tent_on_screen(t: TestCase, root: Window) -> void:
+	t.begin("227 · 帐篷不出屏：中英文商店（货架、随身币座、钱袋都在）窗身 ≤ 1600，钱袋不撑宽帐篷")
+	var Keys := load("res://tests/ui/test_shop_keys.gd")
+	var saved := UiText.lang
+	for lang in ["zh", "en"]:
+		UiText.lang = lang
+		var opened: Dictionary = Keys._open(root)
+		var screen = opened["screen"]
+		var frame: OverlayFrame = screen.overlay_frame()
+		var with_pouch := frame.get_combined_minimum_size().x
+		t.check(with_pouch <= 1600.0, "%s：窗身 %.0f ≤ 1600" % [lang, with_pouch])
+		var pouch: Control = screen._pouch
+		t.not_null(pouch, "%s：有钱袋" % lang)
+		if pouch != null:
+			pouch.visible = false
+			t.eq(frame.get_combined_minimum_size().x, with_pouch, "%s：钱袋不把帐篷撑宽" % lang)
+			pouch.visible = true
+		screen.free()
+		Support.cleanup(Keys.PREFIX)
+	UiText.lang = saved

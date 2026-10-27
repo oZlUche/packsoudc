@@ -15,7 +15,10 @@ class_name MetaState
 extends RefCounted
 
 ## 110：v3 多了局外科技的等级与上交记录（[member tech_levels] / [member tech_deposits]）
-const SAVE_VERSION := 3
+## 262：v4 科技「集市」「铁匠铺」改义为「高级货物」「高级配方」，最多两级（[MetaMigrations] 把 3 压到 2）
+const SAVE_VERSION := 4
+## 262（作者 14:19）：集市、铁匠铺默认就有 —— 没点科技也是 1 级，科技每点一级铺子再升一级
+const BASE_FACILITY_LEVEL := 1
 const WAREHOUSE_ID := 100
 const BOARD_ID := 101
 ## 225：包架的容器 id
@@ -98,9 +101,9 @@ func _init(p_rules: MetaRules = null) -> void:
 	rack = BagRack.new(RACK_ID)
 
 
-## 251：这间铺子几级（没有 = 0）
+## 251：这间铺子几级；262：没点科技也是 [constant BASE_FACILITY_LEVEL] 级（[TechFacility] 写进来的是铺子级数）
 func facility_level(id: StringName) -> int:
-	return int(facility_levels.get(id, 0))
+	return int(facility_levels.get(id, BASE_FACILITY_LEVEL))
 
 
 ## 一页仓库多大（163：扩建加页，页的大小不变）
@@ -858,6 +861,11 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))
+	# 261 前记的局没有「第几局」：新的在前、一局不漏，按总局数倒推（游戏测试 v4.63）
+	var total := int(d.get("runs", 0))
+	for i in m.history.size():
+		if not m.history[i].has("run_no"):
+			m.history[i]["run_no"] = maxi(total - i, 1)
 	# 251：集市的货 —— 173：改了名的按新名，退役的（道具库里没有了）那一格去掉
 	for row in d.get("market_stock", []):
 		if not (row is Dictionary):

@@ -736,10 +736,9 @@ func restock_market() -> void:
 	Market.restock(meta, market(), items, BagPool.standard())
 
 
-## 一局结束回到基地：有集市就换一次货
+## 一局结束回到基地：换一次货（262：集市默认就有）
 func after_run_market() -> void:
-	if Market.level(meta) > 0:
-		restock_market()
+	restock_market()     # 262：集市默认就有，每局回来都换
 
 
 ## 老档、开发区：有集市却没货就上一次

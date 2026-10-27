@@ -1,4 +1,4 @@
-## 251（作者 2026-10-24）：基地集市 —— 科技「集市」三级（4 / 6 / 8 格，素材白 / 绿 / 蓝，消耗品，三级一格空包）；一局一换货、升级也换；
+## 251（作者 2026-10-24）：基地集市 —— 默认 1 级（262），科技「高级货物」再升两级（4 / 6 / 8 格，素材白 / 绿 / 蓝，消耗品，三级一格空包）；一局一换货、升级也换；
 ## 买 = 扣钱、进仓库（包进包架）、格子标卖掉；钱不够 / 仓库满不卖；库存跟存档，退役的道具那一格读档时去掉
 extends RefCounted
 
@@ -8,35 +8,37 @@ const META := "user://test_251_market.json"
 const FLOW_META := "user://test_251_flow_meta.json"
 
 
+## 集市第 [param lv] 级（262：默认就是 1 级）
 static func _meta(lv: int) -> MetaState:
 	var m := T110._meta()
-	if lv > 0:
-		m.facility_levels[Market.ID] = lv
+	m.facility_levels[Market.ID] = lv
 	return m
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("251 §二：内容 —— 科技「集市」三级、前置讨价、效果 tech_facility(market)；集市规则从资产读")
+	t.begin("251 §二 / 262：内容 —— 科技「高级货物」（id 还是 market）两级、前置讨价、效果 tech_facility(market)；集市规则从资产读；没点科技也是 1 级")
 	var def := load(ContentPaths.asset_file("techs", "market")) as TechDef
 	t.not_null(def, "科技资产在")
 	if def == null:
 		return
-	t.eq(def.max_level(), 3, "三级")
+	t.eq(def.max_level(), 2, "两级（262：第一级砍掉，铺子默认就有）")
+	t.eq(Names.of(def), "高级货物", "262：改名「高级货物」")
 	t.eq(def.requires, [&"bargain"] as Array[StringName], "前置讨价")
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Market.ID, "tech_facility(market)")
 	var rules := Market.load_rules()
 	t.eq(rules.slots_per_level, [4, 6, 8] as Array[int], "4 / 6 / 8 格")
 	t.eq(rules.rarity_cap_per_level, [0, 1, 2] as Array[int], "素材白 / 绿 / 蓝")
 	var m := T110._meta()
+	t.eq(Market.level(m), 1, "262：没点科技，集市 1 级")
 	def.effect.derive(m, 2)
-	t.eq(Market.level(m), 2, "derive 记下级数")
+	t.eq(Market.level(m), 3, "科技 2 级 = 集市 3 级")
 	def.effect.derive(m, 0)
-	t.eq(Market.level(m), 0, "0 级 = 没有")
+	t.eq(Market.level(m), 1, "科技 0 级 = 集市 1 级")
 	t.check(not m.to_dict().has("facility_levels"), "级数不入档（120）")
 
 
 static func run_restock(t: TestCase) -> void:
-	t.begin("251 §二：上货 —— 0 级没货；1 级 4 格、素材 ≤ 白、消耗品 ≤ 绿、素材至少两格、不卖装备 / 珍宝 / 贵重品；3 级 8 格、见得到蓝素材、最后一格是包")
+	t.begin("251 §二：上货 —— 0 级（只有手改）没货；1 级 4 格、素材 ≤ 白、消耗品 ≤ 绿、素材至少两格、不卖装备 / 珍宝 / 贵重品；3 级 8 格、见得到蓝素材、最后一格是包")
 	var db := T110._db()
 	var rules := Market.load_rules()
 	var m0 := _meta(0)
@@ -122,10 +124,9 @@ static func run_flow(t: TestCase) -> void:
 	f.meta_path = FLOW_META     # 游戏测试 v4.39：升级会存盘，不设就写进默认的 user://meta.json（新开游戏会被搬进第 1 位）
 	f.tech_defs = GameFlow.load_techs()
 	f.meta.tech_levels["bargain"] = 1
-	f.meta.tech_levels["market"] = 1
 	f.derive_techs()
 	f.restock_market()
-	t.eq(f.meta.market_stock.size(), 4, "1 级 4 格")
+	t.eq(f.meta.market_stock.size(), 4, "262：没点科技，集市 1 级 4 格")
 	var seed0 := f.meta.market_seed
 	f.after_run_market()
 	t.eq(f.meta.market_seed, seed0 + 1, "回基地：换了一次货")
@@ -134,12 +135,12 @@ static func run_flow(t: TestCase) -> void:
 	for key in TechService.needed(f.meta, def):
 		for _i in int(TechService.needed(f.meta, def)[key]):
 			TechService.deposit(f.meta, def, db.get_def(StringName(key)))
-	t.check(f.upgrade_tech(&"market"), "升到 2 级")
-	t.eq(f.meta.market_stock.size(), 6, "升级后立刻 6 格")
-	f.dev_set_tech_level(&"market", 3)
-	t.eq(f.meta.market_stock.size(), 8, "开发区改到 3 级：8 格")
+	t.check(f.upgrade_tech(&"market"), "高级货物 1 级")
+	t.eq(f.meta.market_stock.size(), 6, "升级后立刻 6 格（集市 2 级）")
+	f.dev_set_tech_level(&"market", 2)
+	t.eq(f.meta.market_stock.size(), 8, "开发区改到 2 级：8 格（集市 3 级）")
 	f.dev_set_tech_level(&"market", 0)
-	t.check(f.meta.market_stock.is_empty(), "改回 0 级：没货")
+	t.eq(f.meta.market_stock.size(), 4, "改回 0 级：集市 1 级，4 格")
 	MetaSave.remove(FLOW_META)
 
 

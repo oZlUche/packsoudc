@@ -1,4 +1,4 @@
-## 251 §六：基地两个新页签 —— 集市 / 铁匠铺各一个（待定 4 推荐），科技点出来才露；货位与产物格带框（227）、字都在牌 / 签 / 键上（226）；
+## 251 §六：基地集市 / 铁匠铺两页（262：默认就有，并进「后勤」做分页）；货位与产物格带框（227）、字都在牌 / 签 / 键上（226）；
 ## 集市页买一件进右边仓库，铁匠铺页齐了才能按「打造」
 extends RefCounted
 
@@ -6,6 +6,7 @@ const W178 := preload("res://tests/ui/test_base_warehouse_178.gd")
 const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
 
 
+## [param market] / [param smithy] 是科技「高级货物」「高级配方」的级数（262：铺子级 = 1 + 科技级）
 static func _levels(f: GameFlow, market: int, smithy: int) -> void:
 	f.meta.tech_levels = {"bargain": 1, "warehouse": 1, "safe_box": 1, "pack": 1, "market": market, "smithy": smithy}
 	f.derive_techs()
@@ -13,24 +14,21 @@ static func _levels(f: GameFlow, market: int, smithy: int) -> void:
 
 
 static func frame_tabs(t: TestCase, root: Window) -> void:
-	t.begin("251 §六：没点出来不露页签；点出来了露「集市」「铁匠铺」（补充二：两页整页，右半边仓库收起）")
+	t.begin("251 §六 / 262：没点科技也有集市、铁匠铺（后勤的两个分页）；两页整页，右半边仓库收起")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	_levels(f, 0, 0)
 	var s: Control = W178._screen(f, root)
-	t.check(not (s._tab_btns["market"] as Button).visible and not (s._tab_btns["smithy"] as Button).visible, "0 级：两个页签都不露")
-	s.queue_free()
-	_levels(f, 1, 1)
-	s = W178._screen(f, root)
-	t.check((s._tab_btns["market"] as Button).visible and (s._tab_btns["smithy"] as Button).visible, "1 级：两个页签都露")
-	# UI替换美术（作者 14:49 选乙 平墨图标）：七个页签字左边各一枚图标，一样宽
+	t.check((s.sub_tab_buttons() as Dictionary).has("market") and (s.sub_tab_buttons() as Dictionary).has("smithy"), "后勤下有集市、铁匠铺两颗小键")
+	# UI替换美术（作者 14:49 选乙 平墨图标）：页签字左边各一枚图标（后勤的图标没到前只有字），一样宽
 	var widths := {}
 	for key in s._tab_btns:
 		var tb := s._tab_btns[key] as Button
-		t.check(tb.icon != null and tb.icon_alignment == HORIZONTAL_ALIGNMENT_LEFT, "页签 %s 有图标、在字左边" % key)
+		if key != "logistics":
+			t.check(tb.icon != null and tb.icon_alignment == HORIZONTAL_ALIGNMENT_LEFT, "页签 %s 有图标、在字左边" % key)
 		widths[tb.custom_minimum_size.x] = true
 	t.eq(widths.size(), 1, "页签一样宽")
-	t.eq(s._tab_btns.size(), 6, "六个页签（261：图鉴、成就并成书架）")
+	t.eq(s._tab_btns.size(), 4, "四个页签（262：集市、铁匠铺、出售并成后勤）")
 	t.eq(f.meta.market_stock.size(), 4, "打开基地时补了一次货")
 	s.show_tab("market")
 	t.check(not s._right.visible, "集市页整页（右半边仓库收起）")
@@ -44,13 +42,13 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	t.begin("251 补充一 §10.1：集市页 —— 货散放在一张透视大桌上、前后两排（每件一块只有那件大小、带框的小棋盘），台沿下挂金币价签；钱袋读数金币 + 数字；买一件：仓库多一件、价签盖「已售」；字都不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
-	_levels(f, 3, 0)
+	_levels(f, 2, 0)
 	f.meta.funds = 100000
 	f.ensure_market()
 	var s: Control = W178._screen(f, root)
 	s.show_tab("market")
 	var p = s.market_panel()
-	t.eq(p.views().size(), 8, "3 级：八个货位")
+	t.eq(p.views().size(), 8, "高级货物 2 级 = 集市 3 级：八个货位")
 	t.eq(p.views().size(), f.meta.market_stock.size(), "每格一块视图")
 	t.check(p.views().all(func(v: InventoryView) -> bool: return BoardFrame.framed(v)), "货位带框（227）")
 	var sizes_ok := true
@@ -109,15 +107,16 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	t.eq(s.notice_layer().lines(), [] as Array[String], "游戏测试 v4.34：换页签，上一页的告示收掉")
 	s.queue_free()
 	W178._cleanup()
-	t.begin("251 补充一 §10.1：没点出集市 —— 只画空棚（不画木台）+ 一块签说去科技页点；页面上不写等级")
+	t.begin("262：没点科技也有集市 —— 1 级 4 个货位、有木台、没有「去科技页点」的签；页面上不写等级")
 	f = W178._flow()
 	_levels(f, 0, 0)
 	s = W178._screen(f, root)
+	s.show_tab("market")
 	p = s.market_panel()
-	t.eq(p.views().size(), 0, "没有货位")
-	t.check(not p.stage().tables, "空棚")
-	t.check(p.note() != null and (p.note().get_child(0) as Label).text == UiText.t("market.locked_tip"), "签：去科技页点出集市")
-	t.eq(Bare.audit(p, "market251_locked"), [] as Array[String], "签上的字不裸")
+	t.eq(p.views().size(), 4, "四个货位")
+	t.check(p.stage().tables, "有木台")
+	t.check(p.note() == null, "没有签")
+	t.eq(Bare.audit(p, "market262_base"), [] as Array[String], "字不裸")
 	s.queue_free()
 	W178._cleanup()
 
@@ -134,7 +133,7 @@ static func frame_smithy_page(t: TestCase, root: Window) -> void:
 	t.begin("251 补充一 §10.2：铁匠铺页 —— 左列六个大类（选中的按下），右边这一类的配方一格一格（带框、能打亮 / 不能打灰）；点一格下方展开卷轴（素材有几 / 要几、工钱金币、铁红「打造」）")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
-	_levels(f, 0, 1)
+	_levels(f, 0, 0)     # 262：铁匠铺默认 1 级
 	f.meta.funds = 1000
 	var s: Control = W178._screen(f, root)
 	s.show_tab("smithy")

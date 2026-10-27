@@ -86,6 +86,12 @@ static func frame_stele(t: TestCase, root: Window) -> void:
 	en.setup(f)
 	t.eq(en.row(3)["label"], "defeat", "英文 1 次战败写单数")
 	t.eq(en.row(1)["label"], "cores defeated", "0 次写复数")
+	f.meta.runs = 1
+	var en1 := RecordsStele.new()
+	en1.setup(f)
+	t.check(en1.ledger().begins_with("1 run ·"), "英文 1 局写单数（%s）" % en1.ledger())
+	en1.free()
+	f.meta.runs = 4
 	en.free()
 	UiText.lang = "zh"
 	t.eq(stele.medal_texture(0), load("res://assets/items/legion_phalera@s1.png"), "银阶占位用银色那枚（@s1）")
