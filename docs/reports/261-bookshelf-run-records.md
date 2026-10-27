@@ -116,3 +116,7 @@
 `test_run_records_261` 加：六格顺序；`tier_of` 边界；科技窗 1320 × 900 内 `TechPanel` 最窄尺寸放得下；`show_tab("tech")` 别名打开科技窗；无裸字。
 
 **§9.2 补（2026-10-27 16:52 定稿，和 UI替换美术 对齐）**：分档就按 §9.2 的一条规则 `tier = clampi(floori(done * 5 / total), 0, 4)`（美术 16:51 已改用这条）；图名照 §9.2 `home/shelf/<格>_t<档>.png`，另有 `_hover` 版，静物油灯一张。物件尺寸与摆位**不写死**（美术画的是 360 × 320，摆在格里 (20, 74)、底边离格底 6，切件还会加一圈透明边给光影），执行一律从 `shelf/layout.json` 取。样图已贴作者（分档表 `/mnt/project-files/art/ui/shelf261/stages.png`、三种进度整页 `progress_B.png`）。
+
+## 十、补充一落地（2026-10-27，v4.66，PR #370）
+
+`ShelfCell.tier_of = clampi(floori(done * 5 / total), 0, 4)`（total 为 0 取 0），五个分子分母照 §9.1；科技成了书架第五格（下中），开 1320 × 900 宽窗，科技页签删掉，`show_tab("tech")` 留作别名；图名 `home/shelf/<格>_t<档>`，没有图退 t0，t0 也没有就用页签剪影。出入：物件尺寸暂按图本身（连透明边），摆位等美术 `layout.json` 到了再接；`_hover` 图和静物油灯等美术切件时一起接。书架样张 A/B/C 仍待作者挑。
