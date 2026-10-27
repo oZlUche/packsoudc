@@ -435,16 +435,21 @@ func focus(id: int) -> void:
 
 
 ## 按当前缩放把 [param id] 摆到安全区**正中**时的 pan（[method focus]、空格回正与跟镜头共用）。
-## 作者 10-27：棋子要在正中央 —— 不再按画布夹边（图边上的点也居中，露出纸外那一圈）；有底图纸时照 [method _clamp_pan] 的规矩夹在纸里
+## 作者 10-27：棋子要在正中央；有底图纸时纸始终盖满安全区（复测 #361：靠纸边的出生点不露出纸外桌面），这时棋子偏离正中
 func focus_pan(id: int) -> Vector2:
 	var pos := positions()
 	if not pos.has(id):
 		return pan
-	var c := safe_rect().get_center()
-	var p := c - (pos[id] as Vector2) * zoom
+	var sr := safe_rect()
+	var p := sr.get_center() - (pos[id] as Vector2) * zoom
 	if _paper.has_area():
-		p.x = clampf(p.x, c.x - _paper.end.x * zoom, c.x - _paper.position.x * zoom)
-		p.y = clampf(p.y, c.y - _paper.end.y * zoom, c.y - _paper.position.y * zoom)
+		# 复测 #361：棋子靠纸边时不硬居中 —— 纸要盖满安全区（顶栏下不露出纸外的桌面），纸比安全区小的那一向居中
+		for i in 2:
+			var pz := _paper.size[i] * zoom
+			if pz <= sr.size[i]:
+				p[i] = sr.position[i] + (sr.size[i] - pz) / 2.0 - _paper.position[i] * zoom
+			else:
+				p[i] = clampf(p[i], sr.end[i] - _paper.end[i] * zoom, sr.position[i] - _paper.position[i] * zoom)
 	return p
 
 
