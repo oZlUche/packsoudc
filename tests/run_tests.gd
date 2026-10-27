@@ -86,6 +86,11 @@ func _initialize() -> void:
 	GameSettings.redirect = "user://test_default_settings.json"
 	GameSettings.remove()
 	BattleArchive.enabled = false     # 117：几百场测试战斗不写战斗日志；测日志的套件自己开、自己关
+	var tier := OS.get_environment("PACKSDC_TEXT_SIZE")     # 258：按某一档字号跑一遍（默认中档）：PACKSDC_TEXT_SIZE=large bash tools/test.sh
+	if tier != "":
+		UiTheme.pinned_text_size = StringName(tier)
+		UiTheme.set_text_size(StringName(tier))
+		print("字号档：%s" % tier)
 	UiTheme.install()     # 121：和游戏一样装上界面主题（frame_ 用例进树的控件下一帧起都继承到）
 	GameDirector.fades_allowed = false     # 157：换屏不淡入，屏幕用例的时序和以前一样
 	_load_suites()

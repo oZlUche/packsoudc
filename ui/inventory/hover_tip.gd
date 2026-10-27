@@ -430,6 +430,21 @@ func show_faith(full: Dictionary, at: Vector2) -> void:
 		return
 	_close_from(1)
 	_anchor = Rect2()
+	_fill_faith(full)
+	# 258：大档下满阶、带道具段的窗会比屏高 —— 整窗的字退一档重排（窗宽不变），最多退到小档
+	var tier := UiTheme.text_size
+	while _panel.get_combined_minimum_size().y > faith_max_height() and tier != GameSettings.TEXT_SIZES[0]:
+		tier = GameSettings.TEXT_SIZES[GameSettings.TEXT_SIZES.find(tier) - 1]
+		UiTheme.with_text_size(tier, _fill_faith.bind(full))
+	_open_main(at)
+
+
+## 信仰窗最高多高：屏高减顶端栏
+static func faith_max_height() -> float:
+	return float(ProjectSettings.get_setting("display/window/size/viewport_height", 1000)) - maxf(HudHost.BAR_HEIGHT, HudHost.HudBarScript.design_height())
+
+
+func _fill_faith(full: Dictionary) -> void:
 	_panel.reset_state()
 	_drop_extra()
 	var sections: Array = full.get("sections", [])
@@ -448,7 +463,6 @@ func show_faith(full: Dictionary, at: Vector2) -> void:
 		var r := _panel._rich(_panel.full_width)
 		_insert_part(r, _panel.foot_sep.get_index())
 		UiTheme.set_rich(r, String(sections[i]))
-	_open_main(at)
 
 
 func _insert_part(c: Control, at: int) -> void:

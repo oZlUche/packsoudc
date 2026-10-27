@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgutq43pfdl7d"
-path="res://.godot/imported/handle_off.png-9de1bcac50e7134fd0577e4d8aee8424.ctex"
+uid="uid://bq2l7tl0ue4pn"
+path="res://.godot/imported/forge_btn_off.png-9328b1c415267f772b29aeb4b152799f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/forge/handle_off.png"
-dest_files=["res://.godot/imported/handle_off.png-9de1bcac50e7134fd0577e4d8aee8424.ctex"]
+source_file="res://assets/ui/forge/forge_btn_off.png"
+dest_files=["res://.godot/imported/forge_btn_off.png-9328b1c415267f772b29aeb4b152799f.ctex"]
 
 [params]
 

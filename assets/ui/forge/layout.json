@@ -60,7 +60,7 @@
    "h": 110
   }
  ],
- "captions_note": "194 §2 每槽三行小字，写在磨平的石带上（深底亮字）",
+ "captions_note": "194 §2 每槽三行小字。226 批四起每槽垫一张便条（setup/summary_note）：x 同槽、宽 288、上沿 y 980、高随行数，字 14，用浅色版样式（dim / val 取 light）；第一张别压到左下返回路标",
  "bag": {
   "x": 1236,
   "y": 552,
@@ -74,7 +74,7 @@
   "w": 672,
   "h": 120
  },
- "text_note": "将铸出 / 两槽试算 / 提示三行，工作台正面（深底亮字）",
+ "text_note": "将铸出 / 两槽试算 / 提示三行，工作台正面。226 批四起垫一张便条（setup/summary_note，同 PANEL_SUMMARY_NOTE），左对齐墨字，「还差」那行用 INK_WARN：台面是底图不是件，字不能直接写在上面。text 区被数值栏占着，便条改钉在挂板下沿：(1316, 330, 560, 高随行数)，画在挂板上面，上沿压住挂板下框约 16",
  "slate": {
   "x": 1316,
   "y": 96,
@@ -82,38 +82,8 @@
   "h": 250
  },
  "slate_note": "标题「铸炉」已刻在框上；板面写原来那段说明（深底亮字）",
- "labels_baked": "【时机】【效果】【数值】【出牌】「铸炉」都画在底图里，代码不再写这几个标签",
+ "labels_baked": "【时机】【效果】【数值】「铸炉」都画在底图里，代码不再写这几个标签（【出牌】铭牌 2026-10-27 拿掉，位置让给「铸牌」键）",
  "pieces": {
-  "handle_ready": {
-   "size": [
-    200,
-    128
-   ],
-   "origin": [
-    100,
-    64
-   ]
-  },
-  "handle_idle": {
-   "size": [
-    200,
-    128
-   ],
-   "origin": [
-    100,
-    64
-   ]
-  },
-  "handle_off": {
-   "size": [
-    200,
-    128
-   ],
-   "origin": [
-    100,
-    64
-   ]
-  },
   "sign_back": {
    "size": [
     130,
@@ -123,19 +93,37 @@
     82,
     130
    ]
-  }
- },
- "handle": {
-  "pos": [
-   150,
-   250
-  ],
-  "states": {
-   "ready": "三槽都满、可铸",
-   "idle": "没放满",
-   "off": "铸过了"
   },
-  "note": "「铸」按钮 = 风箱把手的牌子，点它就铸"
+  "forge_btn_ready": {
+   "size": [
+    168,
+    156
+   ],
+   "origin": [
+    84,
+    78
+   ]
+  },
+  "forge_btn_idle": {
+   "size": [
+    168,
+    156
+   ],
+   "origin": [
+    84,
+    78
+   ]
+  },
+  "forge_btn_off": {
+   "size": [
+    168,
+    156
+   ],
+   "origin": [
+    84,
+    78
+   ]
+  }
  },
  "sign": {
   "pos": [
@@ -143,5 +131,30 @@
    1196
   ],
   "note": "「返回」= 左下路标，和营地路标同款"
+ },
+ "en": {
+  "note": "UiText.lang == \"en\" 时换成 _en 文件；尺寸、原点、坐标、可点区域和中文版完全一样，代码只换文件名",
+  "backgrounds": {
+   "lit": "bg_lit_en.png",
+   "cold": "bg_cold_en.png"
+  },
+  "pieces": {
+   "forge_btn_ready": "forge_btn_ready_en.png",
+   "forge_btn_idle": "forge_btn_idle_en.png",
+   "forge_btn_off": "forge_btn_off_en.png",
+   "sign_back": "sign_back_en.png"
+  }
+ },
+ "forge_btn": {
+  "pos": [
+   1140,
+   606
+  ],
+  "states": {
+   "ready": "三槽都满、可铸（发亮 + 光晕）",
+   "idle": "没放满（暗铜）",
+   "off": "铸过了（灰）"
+  },
+  "note": "作者 2026-10-27：「铸牌」= 台面右端的铜盾牌键（B），点它就铸；可点区域 = 切图不透明处。风箱把手不再能点（杆头只是木握柄）。"
  }
 }

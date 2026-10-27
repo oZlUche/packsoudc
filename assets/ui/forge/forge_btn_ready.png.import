@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ox2s32sslsq4"
-path="res://.godot/imported/handle_idle_en.png-a350d9a796cf740e48b999285d49005d.ctex"
+uid="uid://c8s3khjlkqhds"
+path="res://.godot/imported/forge_btn_ready.png-2b3beaf00834aaea3ad5d060120ac8de.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/forge/handle_idle_en.png"
-dest_files=["res://.godot/imported/handle_idle_en.png-a350d9a796cf740e48b999285d49005d.ctex"]
+source_file="res://assets/ui/forge/forge_btn_ready.png"
+dest_files=["res://.godot/imported/forge_btn_ready.png-2b3beaf00834aaea3ad5d060120ac8de.ctex"]
 
 [params]
 

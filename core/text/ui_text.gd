@@ -887,7 +887,7 @@ const TEXT := {
 	"shop.refresh": {"zh": "刷新", "en": "Restock"},
 	# —— 221 F5a：forge ——
 	"forge.description": {"zh": "把三件道具分别放进【时机】【效果】【数值】三个槽：时机槽定什么时候、效果槽定做什么、数值槽定多大，各按道具的材质、用途、稀有度查表。三槽都放了才能铸；铸成一枚铸牌，拖到武器上就是附魔（永久，后来者覆盖前者）。铸炉用一次就熄。", "en": "Put one item in each of the Timing, Effect and Value slots: Timing decides when, Effect decides what, Value decides how much, each looked up by the item's material, use and rarity. Fill all three to forge a Forge Token; drag it onto a weapon to enchant it (permanent; a newer enchantment replaces the old one). The Forge goes out after one use."},
-	"forge.forge_btn": {"zh": "铸", "en": "Forge"},
+	"forge.forge_btn": {"zh": "铸牌", "en": "Forge"},
 	"forge.back_tip": {"zh": "离开铸炉；没铸过站在这个休息点上还能再开（Esc）", "en": "Leave the Forge; if you haven't forged yet, you can reopen it while you stand on this rest spot (Esc)"},
 	"forge.failed": {"zh": "铸不出来（铸炉映射表缺了）", "en": "Can't forge (the Forge tables are missing)"},
 	"forge.done": {"zh": "铸成：%s —— 拖到武器上就是附魔", "en": "Forged: %s. Drag it onto a weapon to enchant it"},
