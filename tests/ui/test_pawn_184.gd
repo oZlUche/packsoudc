@@ -113,7 +113,20 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 
 	# 作者 10-27：focus = 人在安全区正中；空格回正、按住锁住；走一步之后镜头不动（不再调 follow_current）
 	view.focus(here)
-	t.check(view.to_screen(view.positions()[here]).distance_to(view.safe_rect().get_center()) < 0.5, "回正：人在正中央")
+	var mid_ok := view.paper().grow(-maxf(view.safe_rect().size.x, view.safe_rect().size.y) / view.zoom).has_point(view.positions()[here])
+	t.check(not mid_ok or view.to_screen(view.positions()[here]).distance_to(view.safe_rect().get_center()) < 0.5, "回正：人在正中央（离纸边够远时）")
+	# 复测 #361：靠纸边的点回正时纸仍盖满安全区（顶栏下不露出纸外桌面）
+	var bare := []
+	var z_keep := view.zoom
+	view.zoom = view.zoom_min() * 1.1     # 纸只比安全区大一点：离中心稍远的点都会碰到纸边
+	for nid in view.positions():
+		view.focus(int(nid))
+		if view.paper().has_area() and not view.paper_on_screen().grow(0.5).encloses(view.safe_rect()):
+			bare.append(nid)
+	t.check(view.paper().has_area(), "地图有底图纸")
+	t.eq(bare, [], "每个点回正后纸都盖满安全区")
+	view.zoom = z_keep
+	view.focus(here)
 	view.pan += Vector2(300.0, 120.0)
 	var key := InputEventKey.new()
 	key.keycode = KEY_SPACE
