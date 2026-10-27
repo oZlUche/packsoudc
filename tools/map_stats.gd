@@ -4,7 +4,10 @@
 ##
 ## 重试次数一高，说明配置与校验在打架 —— 该改配置，不是调高上限。
 ## `failure_tally` 汇总会指出是哪条规则在咬。
+## 259：最后再拿魔法废墟（free_mode）三档各跑一遍，看「路旁一步」各类点、休息—休息边
 extends CliTool
+
+const SIDE_TYPES := ["battle", "elite", "search", "chest", "random", "event", "shop", "rest"]
 
 
 func run() -> void:
@@ -40,7 +43,62 @@ func run() -> void:
 		print("%4d | %d/%d | %8.2f | %4d | %8d | %s"
 			% [ring_count, made, seeds, float(total) / float(seeds), worst, zoned, str(tally)])
 		_route_table(cfg, graphs)
+	var ch: ChapterDef = RunSave.load_chapter(&"free_mode")
+	if ch != null and ch.map_source != null and ch.map_source.generator_config is RingMapConfig:
+		for pair in [[&"small", 4], [&"small", 5], [&"medium", 6]]:
+			var cfg: RingMapConfig = (ch.map_source.generator_config as RingMapConfig).duplicate(true)
+			cfg.apply_scale(pair[0], pair[1])
+			_side_table(cfg, seeds, "free_mode %s %d 环" % [pair[0], pair[1]])
 	finish(0)
+
+
+## 259：每种风格的路线「旁边一步」（不在任何路线上的邻点）各类点每条平均几个；全图休息个数、休息—休息边每张几条
+func _side_table(cfg: RingMapConfig, seeds: int, label: String) -> void:
+	var made := 0
+	var rest := 0
+	var rr := 0
+	var side := {}
+	var count := {}
+	for s in seeds:
+		var g := RingMapGenerator.new().generate(cfg, s)
+		if g == null:
+			continue
+		made += 1
+		for e in g.edges:
+			if g.get_node(e.from_id).type == &"rest" and g.get_node(e.to_id).type == &"rest":
+				rr += 1
+		var on_route := {}
+		for r in g.routes:
+			for id in (r["node_ids"] as Array):
+				on_route[int(id)] = true
+		for id in g.node_ids():
+			if g.get_node(id).type == &"rest":
+				rest += 1
+		for r in g.routes:
+			var st := String(r.get("style", "?"))
+			count[st] = int(count.get(st, 0)) + 1
+			if not side.has(st):
+				side[st] = {}
+			var seen := {}
+			for id in (r["node_ids"] as Array):
+				for nb in g.neighbors(int(id)):
+					if on_route.has(nb) or seen.has(nb):
+						continue
+					seen[nb] = true
+					var t := String(g.get_node(nb).type)
+					side[st][t] = int(side[st].get(t, 0)) + 1
+	if made == 0:
+		return
+	print("== %s：%d/%d 张；休息 %.1f/张，休息—休息边 %.2f/张" % [label, made, seeds, float(rest) / made, float(rr) / made])
+	var styles: Array = side.keys()
+	styles.sort()
+	for st in styles:
+		var parts: Array[String] = []
+		for t in SIDE_TYPES:
+			var v := float(side[st].get(t, 0)) / float(count[st])
+			if v >= 0.05:
+				parts.append("%s %.1f" % [t, v])
+		print("       %-8s 路旁一步每条：%s" % [st, ", ".join(parts)])
 
 
 ## 每种风格的路线：风险分、收益分、相对档位、性价比离散、类型构成；覆盖的最远步数。

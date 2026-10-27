@@ -406,3 +406,75 @@ static func run_band_extracts_and_step_havens(t: TestCase) -> void:
 				"%d 环：%d/%d 条路线上（或出口之后）有 %s" % [rings, got, routes_n, ty])
 			t.check(absf(avg - float(at[ty])) <= 0.2,
 				"%d 环：%s 平均在路线 %.2f 处，目标 %.2f（按步数，不看环）" % [rings, ty, avg, float(at[ty])])
+
+
+static func _free_mode_cfg(scale: StringName, rings: int) -> RingMapConfig:
+	var ch: ChapterDef = RunSave.load_chapter(&"free_mode")
+	var cfg: RingMapConfig = (ch.map_source.generator_config as RingMapConfig).duplicate(true)
+	cfg.apply_scale(scale, rings)
+	return cfg
+
+
+## 259（作者 13:11 选 A）：魔法废墟的图 —— 规矩照查（配额、禁止相邻里的休息—休息、高危区最少几个从配置读）；
+## 路线外的点跟最近路线走：战斗路线旁一步 战斗+精英 ≥ 搜索+宝箱，搜索路线旁 搜索 ≥ 战斗（趋势，48 种子累计）
+static func run_free_mode_side_259(t: TestCase) -> void:
+	t.begin("259 · 魔法废墟：路旁的点跟路线走、休息不挨休息、规矩照配置")
+	var fixed := _free_mode_cfg(&"small", 5)
+	t.check(MapNodeTypes.pair_forbidden(fixed.no_adjacent, &"rest", &"rest"), "配置里禁止休息挨休息")
+	for pair in [[&"small", 5], [&"medium", 6]]:
+		var cfg := _free_mode_cfg(pair[0], pair[1])
+		var tag := "%s %d 环" % [pair[0], pair[1]]
+		var bad: Array[String] = []
+		var side := {}
+		var near := 0
+		for s in SEEDS:
+			var g := RingMapGenerator.new().generate(cfg, s)
+			if g == null:
+				bad.append("种子 %d 没生成出来" % s)
+				continue
+			var why := _check_rules(g, cfg)
+			if why != "":
+				bad.append("种子 %d：%s" % [s, why])
+			for e in g.edges:
+				if MapNodeTypes.pair_forbidden(cfg.no_adjacent, g.get_node(e.from_id).type, g.get_node(e.to_id).type):
+					bad.append("种子 %d：%s—%s 相邻" % [s, g.get_node(e.from_id).type, g.get_node(e.to_id).type])
+			var on := {}
+			for r in g.routes:
+				for id in (r["node_ids"] as Array):
+					on[int(id)] = true
+			for id in g.node_ids():
+				if g.get_node(id).layout.has("near_style"):
+					near += 1
+					if on.has(id):
+						bad.append("种子 %d：路线上的点 %d 记了 near_style" % [s, id])
+			for r in g.routes:
+				var st := String(r["style"])
+				if not side.has(st):
+					side[st] = {}
+				var seen := {}
+				for id in (r["node_ids"] as Array):
+					for nb in g.neighbors(int(id)):
+						if on.has(nb) or seen.has(nb):
+							continue
+						seen[nb] = true
+						var ty := String(g.get_node(nb).type)
+						side[st][ty] = int(side[st].get(ty, 0)) + 1
+		t.check(bad.is_empty(), "%s：规矩全成立。不成立的：\n    %s" % [tag, "\n    ".join(bad.slice(0, 6))])
+		t.check(near > 0, "%s：路线外的点记下了最近路线的风格（%d 个）" % [tag, near])
+		var c: Dictionary = side.get("combat", {})
+		var fights := int(c.get("battle", 0)) + int(c.get("elite", 0))
+		var loot := int(c.get("search", 0)) + int(c.get("chest", 0))
+		t.check(fights >= loot, "%s：战斗路线旁一步 战斗+精英 %d ≥ 搜索+宝箱 %d" % [tag, fights, loot])
+		var sr: Dictionary = side.get("search", {})
+		t.check(int(sr.get("search", 0)) >= int(sr.get("battle", 0)), "%s：搜索路线旁一步 搜索 %d ≥ 战斗 %d" % [tag, int(sr.get("search", 0)), int(sr.get("battle", 0))])
+
+
+## 259：环权重与 mix 对半 —— mix 按环权重总量归一
+static func run_blend_mix_259(t: TestCase) -> void:
+	t.begin("259 · 路旁权重：环权重与路线 mix 各占一半")
+	var out := RingTypeAssigner._blend_mix({"battle": 4.0, "search": 2.0, "event": 2.0}, {"battle": 5.0, "elite": 1.0, "event": 2.0})
+	t.eq(out, {"battle": 2.0 + 2.5, "search": 1.0, "event": 1.0 + 1.0, "elite": 0.5}, "4/2/2 ⊕ 5/1/2 → 4.5 / 1 / 2 / 0.5")
+	var total := 0.0
+	for k in out:
+		total += float(out[k])
+	t.eq(total, 8.0, "总量还是环权重的 8")

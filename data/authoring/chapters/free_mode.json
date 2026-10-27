@@ -18,8 +18,8 @@
               1
             ],
             "rest": [
-              1,
-              2
+              0,
+              1
             ],
             "elite": [
               0,
@@ -27,8 +27,8 @@
             ]
           },
           "type_weights": {
-            "battle": 3,
-            "search": 3,
+            "battle": 4,
+            "search": 2,
             "event": 3,
             "random": 2,
             "elite": 1,
@@ -45,8 +45,8 @@
               1
             ],
             "rest": [
-              1,
-              2
+              0,
+              1
             ],
             "elite": [
               0,
@@ -54,8 +54,8 @@
             ]
           },
           "type_weights": {
-            "battle": 3,
-            "search": 3,
+            "battle": 4,
+            "search": 2,
             "event": 3,
             "random": 2,
             "elite": 1,
@@ -72,8 +72,8 @@
               1
             ],
             "rest": [
-              1,
-              2
+              0,
+              1
             ],
             "elite": [
               0,
@@ -81,8 +81,8 @@
             ]
           },
           "type_weights": {
-            "battle": 3,
-            "search": 3,
+            "battle": 4,
+            "search": 2,
             "event": 3,
             "random": 2,
             "elite": 1,
@@ -99,8 +99,8 @@
               1
             ],
             "rest": [
-              1,
-              2
+              0,
+              1
             ],
             "elite": [
               0,
@@ -108,8 +108,8 @@
             ]
           },
           "type_weights": {
-            "battle": 3,
-            "search": 3,
+            "battle": 4,
+            "search": 2,
             "event": 3,
             "random": 2,
             "elite": 1,
@@ -126,8 +126,8 @@
               1
             ],
             "rest": [
-              1,
-              2
+              0,
+              1
             ],
             "elite": [
               0,
@@ -135,8 +135,8 @@
             ]
           },
           "type_weights": {
-            "battle": 3,
-            "search": 3,
+            "battle": 4,
+            "search": 2,
             "event": 3,
             "random": 2,
             "elite": 1,
@@ -153,8 +153,8 @@
               1
             ],
             "rest": [
-              1,
-              2
+              0,
+              1
             ],
             "elite": [
               0,
@@ -162,8 +162,8 @@
             ]
           },
           "type_weights": {
-            "battle": 3,
-            "search": 3,
+            "battle": 4,
+            "search": 2,
             "event": 3,
             "random": 2,
             "elite": 1,
@@ -178,8 +178,8 @@
             1
           ],
           "rest": [
-            1,
-            2
+            0,
+            1
           ],
           "elite": [
             0,
@@ -187,8 +187,8 @@
           ]
         },
         "type_weights": {
-          "battle": 3,
-          "search": 3,
+          "battle": 4,
+          "search": 2,
           "event": 3,
           "random": 2,
           "elite": 1,
@@ -425,9 +425,15 @@
         [
           "shop",
           "shop"
+        ],
+        [
+          "rest",
+          "rest"
         ]
       ],
-      "zone_spec": {},
+      "zone_spec": {
+        "min_search": 1
+      },
       "zone_rules": {
         "max_gates_by_size": {
           "4": 2,

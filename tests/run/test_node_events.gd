@@ -458,3 +458,23 @@ static func run_without_content(t: TestCase) -> void:
 	w2.travel.step_to(n2.id)
 	t.eq(f2.size(), 0, "点里没敌人：不打")
 	t.check(n2.is_visited(), "点用过了")
+
+
+## 259：随机点旁边已有休息（图上 no_adjacent 禁休息挨休息）就不揭出休息；没这条规矩的图照旧
+static func run_random_no_rest_beside_rest_259(t: TestCase) -> void:
+	t.begin("259 · 随机点挨着休息点时不揭出休息")
+	var got: Array = []
+	for s in 16:
+		var w := _world(900 + s * 10)
+		w.rules = w.rules.duplicate()
+		w.rules.random_weights = {"rest": 10.0, "search": 1.0}
+		w.events.rules = w.rules
+		w.graph.layout_meta["type_rules"] = {"no_adjacent": [["rest", "rest"]]}
+		w.graph.connect_nodes(w.ids[&"random"], w.ids[&"rest"])
+		var node := w.graph.get_node(w.ids[&"random"])
+		t.eq(w.events._reveal_exclude(node), [&"rest"], "排除表 = [rest]")
+		got.append(w.events.reveal(node))
+	t.check(not got.has(&"rest"), "16 个种子都没揭成休息（权重 10 : 1）：%s" % str(got))
+	var w2 := _world(900)
+	w2.graph.connect_nodes(w2.ids[&"random"], w2.ids[&"rest"])
+	t.eq(w2.events._reveal_exclude(w2.graph.get_node(w2.ids[&"random"])), [], "图上没有 type_rules：不排除")
