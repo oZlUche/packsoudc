@@ -27,6 +27,12 @@ var coin := -1:
 		coin = v
 		_fit()
 		queue_redraw()
+## 金币式时接在数字后面的一段字（局内商店写尺寸「　1×1」）
+var suffix := "":
+	set(v):
+		suffix = v
+		_fit()
+		queue_redraw()
 ## 卖掉了：盖已售戳
 var sold := false:
 	set(v):
@@ -58,7 +64,7 @@ func _fit() -> void:
 	var f := UiPalette.cjk_font_bold()
 	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	if coin >= 0:
-		w = _coin_side() + CoinLabel.GAP + f.get_string_size("%d" % coin, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		w = _coin_side() + CoinLabel.GAP + f.get_string_size("%d" % coin + suffix, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	custom_minimum_size = Vector2(ceilf(w + LEFT + RIGHT), HEIGHT)
 	size = custom_minimum_size
 
@@ -88,7 +94,7 @@ func _draw() -> void:
 			draw_texture_rect(tex, r, false)
 		else:
 			draw_circle(r.get_center(), side * 0.45, CoinLabel.FALLBACK_FILL)
-		draw_string(f, Vector2(LEFT + side + CoinLabel.GAP, y), "%d" % coin, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
+		draw_string(f, Vector2(LEFT + side + CoinLabel.GAP, y), "%d" % coin + suffix, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 	else:
 		draw_string(f, Vector2(LEFT, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 	if sold:

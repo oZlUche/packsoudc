@@ -15,6 +15,8 @@ var _belt_row: VBoxContainer = null     # 227：随身那几颗竖着排（英�
 var _belt_btns: Array[Button] = []
 var _sell_view: InventoryView
 var _refresh_btn: Button
+## 作者 10-27：左下角的钱袋，写着当前金币
+var _pouch: CoinPouch = null
 var _inv: InventoryPanelScript
 
 
@@ -61,6 +63,14 @@ func open(payload: Dictionary) -> void:
 	buttons.add_child(back)
 	buttons.add_child(ScrollKey.make(UiText.t("shop.leave"), leave))
 	side.add_child(buttons)
+	# 作者 10-27（选 B 钱袋，挪到左下角）：下排按键右边空着的那块放钱袋，底和按键齐；字长把左栏撑宽也不压按键
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lower.add_child(gap)
+	_pouch = CoinPouch.new()
+	_pouch.size_flags_vertical = Control.SIZE_SHRINK_END
+	lower.add_child(_pouch)
 
 	# 右边：自己的背包（棋盘 + 地上），和店共用一层拖拽
 	_inv = _mount_bag(row, _sell_view, Callable())     # 226 批一：面板的回话走告示层
@@ -291,7 +301,8 @@ func _rebuild() -> void:
 		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)
 		var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
-		var price := PriceTag.new(UiText.t("shop.price_tag") % [int(_session.stock[i]["price"]), size.x, size.y])     # 226 批三：铜挂牌，卖掉了盖戳
+		var price := PriceTag.coins(int(_session.stock[i]["price"]))     # 226 批三：铜挂牌，卖掉了盖戳；作者 10-24：钱 = 金币 + 数，不写「币」
+		price.suffix = UiText.t("shop.price_size") % [size.x, size.y]
 		price.sold = sold
 		price.name = "Price%d" % idx
 		col.add_child(price)
@@ -332,6 +343,8 @@ func _refresh() -> void:
 	if _session == null:
 		return
 	ScrollKey.show_price(_refresh_btn, UiText.t("shop.refresh"), _session.refresh_cost())
+	if _pouch != null:
+		_pouch.amount = flow.run.wallet.balance
 	_refresh_btn.disabled = not _session.can_refresh()
 	for i in _shelf_views.size():
 		var price := _shelf_row.get_child(i).get_node_or_null("Price%d" % i) as PriceTag

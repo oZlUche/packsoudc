@@ -38,9 +38,10 @@ static func frame_tent(t: TestCase, root: Window) -> void:
 	t.eq(frame.title_label.theme_type_variation, UiTheme.LABEL_TENT_SIGN, "标题用布招牌的变体")
 	t.eq(frame.title_label.horizontal_alignment, HORIZONTAL_ALIGNMENT_CENTER, "字居中")
 	t.eq(frame.title_label.get_theme_color("font_color"), UiTheme.TENT_SIGN_INK, "浅色字（红布上），不被浅底的墨字主题盖掉")
-	frame.size = Vector2(1400, 800)     # 纸卷键比平板按钮宽，整扇最窄 1286
-	t.eq(frame.tent_peak_at(), Vector2(700 - 210, -56), "尖顶左上 = (W/2 − 210, −56)")
-	t.eq(frame.tent_sign_at(), Vector2(700 - 138, -4), "布牌左上 = (W/2 − 138, −4)")
+	frame.size = Vector2(1400, 800)     # 纸卷键比平板按钮宽，整扇最窄 1286；作者 10-27 左下加了钱袋，按内容还会更宽
+	var half := frame.size.x * 0.5
+	t.eq(frame.tent_peak_at(), Vector2(half - 210, -56), "尖顶左上 = (W/2 − 210, −56)")
+	t.eq(frame.tent_sign_at(), Vector2(half - 138, -4), "布牌左上 = (W/2 − 138, −4)")
 	t.eq(frame.outset_top(), 56.0, "窗顶上要让出 56")
 	var body_top: float = box.content_margin_top + frame.title_bar.get_combined_minimum_size().y + OverlayFrame.GAP
 	t.check(body_top >= 70.0 + OverlayFrame.TENT_SIGN_CLEAR - 0.01, "内容从布牌流苏下面开始（%.0f ≥ 76），第一行字不被流苏挡" % body_top)
@@ -84,3 +85,21 @@ static func frame_tent_fallback(t: TestCase, root: Window) -> void:
 	t.check(not slab.tent and slab.skin == OverlayFrame.SKIN_SLAB, "默认还是石板")
 	slab.free()
 	Support.cleanup(PREFIX + "b")
+
+
+## 227 帐篷不出屏（UI替换美术 10-27 加钱袋后要求顺带核）：中英文商店开着货架与钱袋，整扇窗加两侧门帘 92 不超 1600 宽
+static func frame_tent_on_screen(t: TestCase, root: Window) -> void:
+	t.begin("227 · 帐篷不出屏：中英文商店（货架、随身币座、钱袋都在）窗宽 + 两侧门帘 ≤ 1600")
+	var Keys := load("res://tests/ui/test_shop_keys.gd")
+	var saved := UiText.lang
+	for lang in ["zh", "en"]:
+		UiText.lang = lang
+		var opened: Dictionary = Keys._open(root)
+		var screen = opened["screen"]
+		var frame: OverlayFrame = screen.overlay_frame()
+		var box := frame.get_theme_stylebox("panel") as StyleBoxTexture
+		var outer := frame.get_combined_minimum_size().x + box.expand_margin_left + box.expand_margin_right
+		t.check(outer <= 1600.0, "%s：帐篷连门帘 %.0f ≤ 1600" % [lang, outer])
+		screen.free()
+		Support.cleanup(Keys.PREFIX)
+	UiText.lang = saved

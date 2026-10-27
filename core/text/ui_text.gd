@@ -876,7 +876,7 @@ const TEXT := {
 	"shop.short": {"zh": "金币不足：「%s」要 %d 币，你有 %d", "en": "Not enough coins: \"%s\" costs %d, you have %d"},
 	"shop.returned": {"zh": "金币不足，东西放回了栏位", "en": "Not enough coins; it went back on the shelf"},
 	"shop.sold_tag": {"zh": "已售", "en": "Sold"},
-	"shop.price_tag": {"zh": "%d 币　%d×%d", "en": "%d coins · %d×%d"},
+	"shop.price_size": {"zh": "　%d×%d", "en": " · %d×%d"},
 	"shop.belt_tip": {"zh": "%s\n%s\n买了直接进腰带（右下角）", "en": "%s\n%s\nGoes straight into your Belt (bottom right)"},
 	"shop.no_shop": {"zh": "没有店", "en": "No shop here"},
 	"shop.carried_tool": {"zh": "随身技能", "en": "Carried tool"},
