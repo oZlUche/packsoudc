@@ -262,12 +262,28 @@ func retype(node: MapNode, type: StringName) -> void:
 	type_changed.emit(node, type)
 
 
+## 259：图上禁止相邻的类型对（休息—休息等，[code]type_rules.no_adjacent[/code]）里，和邻点（随机点按揭开后的）撞的那些不揭
+func _reveal_exclude(node: MapNode) -> Array:
+	var out: Array = []
+	if graph == null or not graph.has_node(node.id):
+		return out
+	var pairs: Array = (graph.layout_meta.get("type_rules", {}) as Dictionary).get("no_adjacent", [])
+	if pairs.is_empty():
+		return out
+	for nb in graph.neighbors(node.id):
+		var t := effective_type(graph.get_node(nb))
+		for k in rules.random_weights:
+			if not out.has(StringName(k)) and MapNodeTypes.pair_forbidden(pairs, StringName(k), t):
+				out.append(StringName(k))
+	return out
+
+
 ## 随机点变成什么。记进内容里（`resolved_type`），是战斗就现造敌人
 func reveal(node: MapNode) -> StringName:
 	var already := String(node.content.get("resolved_type", ""))
 	if already != "":
 		return StringName(already)
-	var type := rules.random_pick(_rng_for(node, "reveal")) if rules != null else &"battle"
+	var type := rules.random_pick(_rng_for(node, "reveal"), _reveal_exclude(node)) if rules != null else &"battle"
 	node.content["resolved_type"] = String(type)
 	if type == &"battle" and not EnemyKit.has_enemy(node.content):
 		var built := _enemy_for(node, &"battle", _rng_for(node, "enemy"))

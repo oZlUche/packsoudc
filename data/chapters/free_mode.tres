@@ -14,16 +14,16 @@
 script = ExtResource("1_0rgu0")
 quota = {
 "elite": [0, 2],
-"rest": [1, 2],
+"rest": [0, 1],
 "shop": [0, 1]
 }
 type_weights = {
-"battle": 3,
+"battle": 4,
 "chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
-"search": 3
+"search": 2
 }
 
 [sub_resource type="Resource" id="Resource_5fvnt"]
@@ -33,16 +33,16 @@ slots = 19
 node_count = 11
 quota = {
 "elite": [0, 2],
-"rest": [1, 2],
+"rest": [0, 1],
 "shop": [0, 1]
 }
 type_weights = {
-"battle": 3,
+"battle": 4,
 "chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
-"search": 3
+"search": 2
 }
 
 [sub_resource type="Resource" id="Resource_sst5s"]
@@ -52,16 +52,16 @@ slots = 16
 node_count = 10
 quota = {
 "elite": [0, 2],
-"rest": [1, 2],
+"rest": [0, 1],
 "shop": [0, 1]
 }
 type_weights = {
-"battle": 3,
+"battle": 4,
 "chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
-"search": 3
+"search": 2
 }
 
 [sub_resource type="Resource" id="Resource_2bx78"]
@@ -71,16 +71,16 @@ slots = 16
 node_count = 10
 quota = {
 "elite": [0, 2],
-"rest": [1, 2],
+"rest": [0, 1],
 "shop": [0, 1]
 }
 type_weights = {
-"battle": 3,
+"battle": 4,
 "chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
-"search": 3
+"search": 2
 }
 
 [sub_resource type="Resource" id="Resource_kobgp"]
@@ -90,16 +90,16 @@ slots = 12
 node_count = 7
 quota = {
 "elite": [0, 2],
-"rest": [1, 2],
+"rest": [0, 1],
 "shop": [0, 1]
 }
 type_weights = {
-"battle": 3,
+"battle": 4,
 "chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
-"search": 3
+"search": 2
 }
 
 [sub_resource type="Resource" id="Resource_4nn0s"]
@@ -109,16 +109,16 @@ slots = 6
 node_count = 5
 quota = {
 "elite": [0, 2],
-"rest": [1, 2],
+"rest": [0, 1],
 "shop": [0, 1]
 }
 type_weights = {
-"battle": 3,
+"battle": 4,
 "chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
-"search": 3
+"search": 2
 }
 
 [sub_resource type="Resource" id="Resource_lq18u"]
@@ -128,16 +128,16 @@ slots = 6
 node_count = 5
 quota = {
 "elite": [0, 2],
-"rest": [1, 2],
+"rest": [0, 1],
 "shop": [0, 1]
 }
 type_weights = {
-"battle": 3,
+"battle": 4,
 "chest": 1,
 "elite": 1,
 "event": 3,
 "random": 2,
-"search": 3
+"search": 2
 }
 
 [sub_resource type="Resource" id="Resource_m5125"]
@@ -250,6 +250,7 @@ script = ExtResource("5_8lx42")
 
 [sub_resource type="Resource" id="Resource_csf5d"]
 script = ExtResource("6_befhx")
+min_search = 1
 
 [sub_resource type="Resource" id="Resource_vjf8n"]
 script = ExtResource("4_s363k")
@@ -286,7 +287,7 @@ coverage = {
 "rest": 3,
 "shop": 6
 }
-no_adjacent = [["elite", "elite"], ["shop", "shop"]]
+no_adjacent = [["elite", "elite"], ["shop", "shop"], ["rest", "rest"]]
 zone_spec = SubResource("Resource_csf5d")
 zone_rules = SubResource("Resource_40h42")
 
