@@ -142,3 +142,7 @@
 
 4. 执行：`ShelfCell.tier_of` 只对 codex / achievements / tech 调；records 固定一张；keepsakes 格新增拼图（按 `keepsake_columns` 的柱位，道具图用 `ItemPainter.art_of`，列数 = 特殊道具总数，多了按 layout 给的行列折）。效果图 `/mnt/project-files/art/ui/shelf261/progress_C.png`、`stages.png`，全文在 `shelf261/README.md` 补充二一节。17:27 派执行。
 
+## 十二、补充二落地（2026-10-27，v4.67，PR #372）
+
+执行按 §十一 落了：新控件 `ShelfView` 从 `layout.json` 读件与摆位；物件整张 400 × 400 贴格左上；图鉴 / 成就 / 科技三格按 `ShelfCell.tier_of` 分档，对局记录一张 `records.png`，第六格油灯；特殊道具按 `keepsake_ids` 每件一根柱，拿到过的摆 `ItemPainter.art_of` 的 @2x 图；代码不加影子。全套 34144 项通过，中英文、三档字号都测过。出入：① 柱位的几个数（中线公式、柱底 397、坐高 208、缩柱规则）在 layout.json 里是文字，代码抄成 `ShelfView` 常量，格位、纸签中心、壁龛尺寸从 json 读；② 中列窄于 1308 × 952 时（英文左列变宽、大字号）整座书架等比缩小居中；③ `ShelfCell.art_for` 删了；④ 书架页不再垫粗布。261 到此全部落地。
+
