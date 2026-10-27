@@ -18,6 +18,8 @@ extends RefCounted
 const MAX_CALIBRATION_ROUNDS := 40
 ## 撤离环间至少几个撤离点：一个付费、一个免费（倒计时过半还要关掉一个免费的）
 const MIN_EXTRACTS := 2
+## 259：路线外的点往外找最近路线的步数上限
+const NEAR_STEPS := 4
 
 var note: String = ""
 
@@ -247,6 +249,10 @@ func _assign_by_weights() -> void:
 	for id in _g.node_ids():
 		if _fixed.has(id) or _assigned.has(id):
 			continue
+		if not _routes_of.has(id) and _g.get_node(id).zone == 0:
+			var style := _nearest_style(id)
+			if style != null:
+				_g.get_node(id).layout["near_style"] = String(style.id)
 		var t := _pick_weighted(_weights_for(id))
 		if t != &"":
 			_put_type(id, t, false)
@@ -954,6 +960,12 @@ func _weights_for(id: int) -> Dictionary:
 	elif _cfg.ring_template != null and not _cfg.ring_template.type_weights.is_empty():
 		raw = _cfg.ring_template.type_weights
 	var n := _g.get_node(id)
+	# 259（作者 13:11 选 A）：不在路线上、也不在高危区里的点，环权重和最近那条路线的 mix 各占一半
+	# （mix 按环权重的总量归一）—— 战斗路线旁多战斗、搜索路线旁多搜索；夹在两种路线之间或 4 步内没路线就照旧
+	if not _routes_of.has(id) and n.zone == 0:
+		var style := _nearest_style(id)
+		if style != null and not style.mix.is_empty():
+			raw = _blend_mix(raw, style.mix)
 	var out := {}
 	for t in _sorted_keys(raw):
 		if n.danger > _cfg.no_haven_in_danger_above and _haven.has(t):
@@ -964,6 +976,50 @@ func _weights_for(id: int) -> Dictionary:
 			continue
 		out[t] = float(raw[t])
 	return out
+
+
+## 259：[param ring] 与 [param mix] 对半 —— mix 先按环权重的总量归一，两边各乘 0.5
+static func _blend_mix(ring: Dictionary, mix: Dictionary) -> Dictionary:
+	var ring_total := 0.0
+	for k in ring:
+		ring_total += float(ring[k])
+	var mix_total := 0.0
+	for k in mix:
+		mix_total += float(mix[k])
+	var out := {}
+	for k in ring:
+		out[String(k)] = 0.5 * float(ring[k])
+	if mix_total <= 0.0:
+		return out
+	for k in mix:
+		out[String(k)] = float(out.get(String(k), 0.0)) + 0.5 * float(mix[k]) / mix_total * ring_total
+	return out
+
+
+## 259：离 [param id] 最近的路线（沿边走，最多 [constant NEAR_STEPS] 步，第一次碰到路线点为止）；
+## 那一圈碰到的路线风格不止一种就返回 null
+func _nearest_style(id: int) -> RouteStyle:
+	var frontier: Array[int] = [id]
+	var seen := {id: true}
+	for _d in NEAR_STEPS:
+		var next: Array[int] = []
+		var found := {}
+		for cur in frontier:
+			for nb in _g.neighbors(cur):
+				if seen.has(nb):
+					continue
+				seen[nb] = true
+				if _routes_of.has(nb):
+					for ri in (_routes_of[nb] as Array):
+						found[String(_g.routes[int(ri)].get("style", ""))] = true
+				else:
+					next.append(nb)
+		if not found.is_empty():
+			if found.size() != 1:
+				return null
+			return _cfg.style_by_id(StringName(found.keys()[0]))
+		frontier = next
+	return null
 
 
 ## 按排好序的键扣减（140 M-25：抽法在 [method MapRng.pick_weighted]）

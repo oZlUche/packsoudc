@@ -53,8 +53,15 @@ const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
 
 
 ## 随机点变成什么。权重全 0 或表空返回 battle —— 一个随机点总得是点什么
-func random_pick(rng: RandomNumberGenerator) -> StringName:
-	return _weighted(random_weights, rng, &"battle")
+## 259：[param exclude] 里的类型按权重 0 算（随机点旁边已有休息，就不揭出休息）
+func random_pick(rng: RandomNumberGenerator, exclude: Array = []) -> StringName:
+	if exclude.is_empty():
+		return _weighted(random_weights, rng, &"battle")
+	var table := random_weights.duplicate()
+	for t in exclude:
+		table.erase(String(t))
+		table.erase(StringName(t))
+	return _weighted(table, rng, &"battle")
 
 
 ## 常规事件的结果

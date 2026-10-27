@@ -3,7 +3,7 @@
   "display_name": "标准节点规则（占位）",
   "random_weights": {
     "battle": 3,
-    "search": 3,
+    "search": 2,
     "event": 2,
     "shop": 1,
     "rest": 1,

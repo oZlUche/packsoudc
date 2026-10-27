@@ -446,6 +446,10 @@ static func run_placement(t: TestCase) -> void:
 					if bd != null and bd.is_bag:
 						t.check(tier.rarity_cap < 0 or bd.rarity <= tier.rarity_cap, "点 %d：包 %s 的稀有度不超档位上限" % [id, bd.id])
 			var most := maxi(tier.item_count.y, sig.size()) if def.is_wild() else tier.item_count.y     # 212：魔兽的招牌一件不少
+			# 211：套路是设计者写的，招牌 + 骨架超了档位件数也照样带（刺客「四把轻刀」在档位 0 就是 4 件；259 改图后种子 5 抽到它）
+			var built := def.build_of(StringName(String(c.get("build", "")))) if c.has("build") else null
+			if built != null:
+				most = maxi(most, sig.size() + built.items.size())
 			t.check(goods >= tier.item_count.x and goods <= most,
 				"点 %d：%d 件（不含包）在档位 %d 的 [%d, %d] 里" % [id, goods, s, tier.item_count.x, most])
 			var rebuilt := EnemyKit.board_of(c, items)
