@@ -843,6 +843,9 @@ static func run_save_slots(t: TestCase) -> void:
 	f.to_main_menu()
 	t.check(f.load_slot(1), "读第 1 位")
 	t.check(f.slot == 1 and f.meta.runs == 7, "回到第 1 位的局外")
+	f.to_main_menu()
+	t.check(f.continue_game() and f.screen == GameFlow.Screen.META and f.run == null, "089 补充二：继续（没有局、没有教程）→ 进基地，不开新局")
+	f.to_main_menu()
 	t.check(not f.load_slot(3), "空位读不了")
 	# 满了：新的游戏去读取存档屏
 	f.to_main_menu()

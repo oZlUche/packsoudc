@@ -87,14 +87,15 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	t.check(is_equal_approx(col.position.x + UiTheme.MENU_LINE_INDENT * c, 96.0 * c), "字的左沿 x = 96（菱形挂在左边的缩进里）")
 	t.check(is_equal_approx(col.position.y + col.size.y * c, menu.size.y - 72.0 * c), "最底下一行离屏底 72（从底往上堆）")
 	var lines: Array[Button] = menu.lines()
-	t.check(lines.size() >= 4, "几行字（%d）" % lines.size())
-	if lines.size() >= 4:
+	t.check(lines.size() >= 3, "几行字（%d）" % lines.size())
+	if lines.size() >= 3:
 		t.eq(lines[0].text, UiText.t("menu.new_run"), "没存档：第一行是「新的游戏」（不留「继续」的空行）")
 		t.eq(lines[0].get_theme_font_size("font_size"), 44, "主档 44 号")
 		t.eq(lines[1].get_theme_font_size("font_size"), 34, "次档 34 号")
 		t.check(lines.all(func(b): return b.theme_type_variation == UiTheme.BUTTON_MENU_LINE), "都是描边字，不是木牌")
 		var texts: Array = lines.map(func(b): return b.text)
-		t.eq(texts.slice(1), [UiText.t("menu.meta"), UiText.t("menu.encyclopedia"), UiText.t("menu.settings")], "240：「跳过序章」搬到开场一问；次档：仓库与战绩 / 百科 / 设置")
+		t.eq(texts.slice(1), [UiText.t("menu.encyclopedia"), UiText.t("menu.settings")], "240：「跳过序章」搬到开场一问；089 补充二：「仓库与战绩」去掉，次档：百科 / 设置")
+		t.check(not UiText.t("menu.continue") in texts, "089 补充二：没存档只有「新的游戏」，没有「继续」")
 		t.check(not UiTheme.menu_line_lit(lines[1]), "没焦点：不亮")
 		lines[1].grab_focus()
 		t.check(UiTheme.menu_line_lit(lines[1]), "键盘焦点：亮、画菱形")

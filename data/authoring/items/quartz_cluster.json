@@ -9,7 +9,6 @@
     "en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
   },
   "shape": [
-    "11",
     "11"
   ],
   "rarity": 3,
