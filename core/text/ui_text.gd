@@ -1126,7 +1126,6 @@ const TEXT := {
 	"rule.no_effect": {"zh": "（没有效果）", "en": "(no effect)"},
 	# —— 221 F5a：item tooltip (hover_tip, inventory_view, belt_use, growth_stage, item_volume) ——
 	"tip.codex_link": {"zh": "百科 >", "en": "Encyclopedia >"},
-	"inv.dormant": {"zh": "休眠", "en": "Dormant"},     # label drawn on a dormant item
 	"inv.benched": {"zh": "不参战", "en": "Out"},     # 2026-10-22：标了不参战的道具画在棋盘上的小字
 	"item.belt_use_map": {"zh": "地图上用：%s", "en": "Use on the map: %s"},
 	"item.belt_use_prebattle": {"zh": "战前准备屏上用：%s", "en": "Use on the Pre-battle screen: %s"},
@@ -1336,7 +1335,6 @@ const TEXT := {
 	"tech.next": {"zh": "下一级：%s", "en": "Next level: %s"},
 	"tech.maxed": {"zh": "已满级", "en": "Max level"},
 	"tech.needs_prereq": {"zh": "需要先点亮：%s", "en": "Light up first: %s"},
-	"tech.funds": {"zh": "钱", "en": "Coins"},
 	"tech.funds_tip": {"zh": "这一级要 %d 币，现在持有 %d 币；按升级时一次扣", "en": "This level costs %d coins; you have %d. They are taken when you press Upgrade"},
 	"tech.material_tip": {"zh": "%s：已交 %d / 需要 %d（上交即消耗，交了不能退）", "en": "%s: handed in %d / need %d (handed-in items are used up; no refunds)"},
 	"tech.material_done": {"zh": "　✓", "en": " ✓"},

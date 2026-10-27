@@ -204,6 +204,22 @@ func cell_at_global(p: Vector2) -> Vector2i:
 	return cell_at_local(p - global_position)
 
 
+## 作者 10-26：一件占的格子的外框（本控件内像素）—— 悬浮窗贴着它摆；不在这块棋盘上 = 空
+func item_rect(uid: int) -> Rect2:
+	var inst: ItemInstance = inventory.get_item(uid) if inventory != null else null
+	if inst == null:
+		return Rect2()
+	var cells := inst.cells()
+	if cells.is_empty():
+		return Rect2()
+	var lo: Vector2i = cells[0]
+	var hi: Vector2i = cells[0]
+	for c in cells:
+		lo = Vector2i(mini(lo.x, c.x), mini(lo.y, c.y))
+		hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
+	return Rect2(cell_origin_px(inst.origin + lo), Vector2(hi - lo + Vector2i.ONE) * cell_px)     # cells() 是相对落点的
+
+
 ## 格坐标 → 本控件内的像素坐标（该格左上角）。
 func cell_origin_px(c: Vector2i) -> Vector2:
 	return Vector2(c) * cell_px
@@ -366,9 +382,9 @@ func _draw() -> void:
 			body = body.lerp(COLOR_BAG_FILL, 0.7)
 			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
 			text_color = COLOR_TEXT.darkened(0.35)
-		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠 / 不参战的压到 55 % 灰，仍写一行小字说清楚是哪种
+		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠 / 不参战的压到 55 % 灰；不参战再写一行小字（作者 10-26：休眠只压灰，不写「休眠」）
 		var tint := DORMANT_ART if (dormant or benched) else Color.WHITE
-		var note := UiText.t("inv.benched") if benched else (UiText.t("inv.dormant") if dormant else "")
+		var note := status_note(dormant, benched)
 		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, tint, Transform2D.IDENTITY, ItemPainter.variant_of(item)):
 			if note != "" and _label_visible(item):
 				ItemPainter.draw_label(self, cells, anchor, cell_px, note, font, 13, COLOR_TEXT)
@@ -659,3 +675,8 @@ func _cell_lit(self_uid: int, cell: Vector2i, filter: Array[StringName], filter_
 	var other_inst := inventory.get_item(other)
 	return other_inst != null and AdjacencyProfile.accepts(filter, other_inst.def) and AdjacencyProfile.accepts_all(filter_all, other_inst.def)
 #endregion
+
+
+## 道具上压的那行小字：不参战写「不参战」；作者 10-26：休眠的只压灰，不写字
+static func status_note(_dormant: bool, benched: bool) -> String:
+	return UiText.t("inv.benched") if benched else ""

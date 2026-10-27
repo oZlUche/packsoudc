@@ -45,8 +45,15 @@ var variants: Array[ItemDef] = []
 var variant_lit: Array[bool] = []
 ## 各异体的累计件数
 var variant_counts: Array[int] = []
+## 作者 10-26：没点亮的名字遮成「？」（设置「名字全显」开着时为 false）
+var mask_name: bool = true
 ## 叠影每层的错位
 const STACK_OFFSET := Vector2(5, -5)
+
+
+## 格子上写的名字：点亮了（或「名字全显」）写真名，否则「？」
+func shown_name() -> String:
+	return Names.of(def) if lit or not mask_name else UiText.t("codex.unknown")
 
 
 func _init(p_def: ItemDef = null, p_lit: bool = false, p_count: int = 0, p_font: Font = null) -> void:
@@ -123,7 +130,7 @@ func _draw() -> void:
 	if not ItemPainter.draw_art(self, def, 0, anchor, cell, Color.WHITE if lit else ART_UNLIT):
 		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 	# 名字
-	var name := Names.of(def)
+	var name := shown_name()
 	if cell_box != null:
 		draw_string(font, Vector2(NAME_X, size.y - NAME_BASE), name, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - NAME_X * 2), 12, INK_LIT if lit else INK_UNLIT)
 	else:
