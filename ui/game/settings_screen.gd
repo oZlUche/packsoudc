@@ -23,6 +23,8 @@ var _bg_btns: Dictionary = {}
 ## 172：窗口模式的按钮（模式 → 按钮）、分辨率的按钮（档位 → 按钮）、全屏时那行注
 var _mode_btns: Dictionary = {}
 var _res_btns: Dictionary = {}
+## 258：字号三档的石签（档名 → 签）
+var _text_btns: Dictionary = {}
 ## 204：「声音」一节的音效音量（读数写在步进件的石牌上）
 var _sfx: StoneStepper = null
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
@@ -158,6 +160,15 @@ func _build_display(col: VBoxContainer) -> void:
 		var follow := StoneChip.make(UiText.t("settings.res_follow_screen"), func(): pass)
 		follow.disabled = true
 		col.add_child(follow)
+	# 258（作者 2026-10-27 定）：字号三档 小 / 中 / 大（主菜单不跟）；点了这一屏当场按新字号重建，别的屏下次进来生效
+	var size_row := _hbox(8)
+	size_row.add_child(HeaderTag.new(UiText.t("settings.text_size")))
+	for tier in GameSettings.TEXT_SIZES:
+		var id: StringName = tier
+		var tb := StoneChip.make(UiText.t("settings.text_" + String(id)), func(): set_text_size(id))
+		_text_btns[id] = tb
+		size_row.add_child(tb)
+	col.add_child(size_row)
 
 
 ## 204：「声音」一节 —— 音效音量一行（− / + 一步 10%，按钮本身响 `ui.press`，当场听到新音量）。音乐那行等第一首曲子再露出来（待定 4.2）
@@ -336,6 +347,34 @@ func set_bg_theme(id: String) -> void:
 	_refresh()
 
 
+## 258：换字号档 —— 存盘、主题按新倍率重填，这一屏整个重建（字号跟着变的是新造的控件）
+func set_text_size(id: StringName) -> void:
+	if not GameSettings.TEXT_SIZES.has(id) or flow.settings.text_size == id:
+		_refresh()
+		return
+	flow.settings.text_size = id
+	UiPalette.apply(flow.settings)
+	flow.save_settings()
+	_rebuild()
+
+
+func _rebuild() -> void:
+	for c in get_children():
+		remove_child(c)
+		c.queue_free()
+	for d in [_cursor_btns, _bg_btns, _mode_btns, _res_btns, _text_btns]:
+		(d as Dictionary).clear()
+	_auto_close_btn = null
+	_tooltip_btn = null
+	_unlock_all_btn = null
+	_reveal_names_btn = null
+	_trace_btn = null
+	_debug_btn = null
+	_fades_btn = null
+	_sfx = null
+	open({})
+
+
 ## 091：老手的「全部解锁」开关（成就不计）
 func toggle_unlock_all() -> void:
 	flow.toggle_unlock_all()
@@ -373,6 +412,8 @@ func _refresh() -> void:
 		_fades_btn.text = UiText.t("settings.fades_state") % (UiText.t("settings.on") if flow.settings.ui_fades else UiText.t("settings.off"))
 	for sid in _cursor_btns:
 		(_cursor_btns[sid] as Button).set_pressed_no_signal(String(sid) == (flow.settings.cursor_skin if UiCursor.SKINS.has(flow.settings.cursor_skin) else UiCursor.DEFAULT_SKIN))
+	for id in _text_btns:
+		(_text_btns[id] as Button).set_pressed_no_signal(id == flow.settings.text_size)
 	for tid in _bg_btns:
 		# 101 第 5 刀：设置里存的可能是空串或认不出来的 id，按生效的那一档打勾
 		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == UiPalette.bg_theme)

@@ -64,7 +64,7 @@ func _build() -> void:
 	_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_label.label_settings = LabelSettings.new()
 	_label.label_settings.font = UiPalette.cjk_font()
-	_label.label_settings.font_size = FONT_SIZE
+	_label.label_settings.font_size = UiTheme.sz(FONT_SIZE)
 	_label.label_settings.font_color = INK     # 纸是浅色（tone light）：墨字，深底上也是同一卷
 	_clip.add_child(_label)
 	_rollers = Control.new()
@@ -72,7 +72,7 @@ func _build() -> void:
 	_rollers.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_rollers.draw.connect(_draw_rollers)
 	add_child(_rollers)     # 轴压在纸和字上面
-	var tw := UiPalette.cjk_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+	var tw := UiPalette.cjk_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(FONT_SIZE)).x
 	_paper_w = ceilf(tw) + 2.0 * PAD
 	custom_minimum_size = Vector2(_paper_w + 2.0 * SIDE, ROLLER_H)
 	size = custom_minimum_size

@@ -194,10 +194,11 @@ func coin_rects() -> Array[Rect2]:
 
 ## 小牌上的「金币 + 数」（钱 = 金币图标 + 数）
 func _draw_coin_amount(r: Rect2, amount: int) -> void:
+	var fs := UiTheme.sz(FONT_SIZE)     # 258：按字号档
 	var f := UiPalette.cjk_font_bold()
 	var text := "%d" % amount
-	var side := roundf(FONT_SIZE * CoinLabel.COIN_SCALE)
-	var w := side + CoinLabel.GAP + f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+	var side := roundf(fs * CoinLabel.COIN_SCALE)
+	var w := side + CoinLabel.GAP + f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	var mid := r.get_center()
 	var at := Vector2(mid.x - w * 0.5, mid.y - side * 0.5)
 	var tex := CoinLabel.coin_texture()
@@ -205,8 +206,8 @@ func _draw_coin_amount(r: Rect2, amount: int) -> void:
 		draw_texture_rect(tex, Rect2(at, Vector2(side, side)), false)
 	else:
 		draw_circle(at + Vector2(side, side) * 0.5, side * 0.45, CoinLabel.FALLBACK_FILL)
-	draw_string(f, Vector2(at.x + side + CoinLabel.GAP, mid.y + (f.get_ascent(FONT_SIZE) - f.get_descent(FONT_SIZE)) * 0.5),
-		text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)
+	draw_string(f, Vector2(at.x + side + CoinLabel.GAP, mid.y + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5),
+		text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 
 
 func _draw_centered(r: Rect2, text: String, font_size: int) -> void:

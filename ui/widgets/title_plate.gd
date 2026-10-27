@@ -40,8 +40,13 @@ func _font() -> Font:
 	return UiPalette.title_font()
 
 
+## 258：画的字号按字号档放大（[member font_size] 记小档的）
+func _px() -> int:
+	return UiTheme.sz(font_size)
+
+
 func _fit() -> void:
-	var w := _font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var w := _font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _px()).x
 	custom_minimum_size = Vector2(maxf(MIN_W, ceilf(w + 2.0 * PAD)), HEIGHT)
 	size = custom_minimum_size
 
@@ -59,6 +64,7 @@ func _draw() -> void:
 	else:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("ece8e0"))
 	var font := _font()
-	var base := size.y * 0.5 + (font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5
-	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-	draw_string(font, Vector2((size.x - tw) * 0.5, base), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, INK)
+	var px := _px()
+	var base := size.y * 0.5 + (font.get_ascent(px) - font.get_descent(px)) * 0.5
+	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	draw_string(font, Vector2((size.x - tw) * 0.5, base), text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, INK)

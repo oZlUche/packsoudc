@@ -50,14 +50,15 @@ static func coins(amount: int) -> PriceTag:
 
 
 func _coin_side() -> float:
-	return roundf(FONT_SIZE * CoinLabel.COIN_SCALE)
+	return roundf(UiTheme.sz(FONT_SIZE) * CoinLabel.COIN_SCALE)
 
 
 func _fit() -> void:
+	var fs := UiTheme.sz(FONT_SIZE)     # 258：按字号档
 	var f := UiPalette.cjk_font_bold()
-	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	if coin >= 0:
-		w = _coin_side() + CoinLabel.GAP + f.get_string_size("%d" % coin, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+		w = _coin_side() + CoinLabel.GAP + f.get_string_size("%d" % coin, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	custom_minimum_size = Vector2(ceilf(w + LEFT + RIGHT), HEIGHT)
 	size = custom_minimum_size
 
@@ -68,6 +69,7 @@ func stamp_rect() -> Rect2:
 
 
 func _draw() -> void:
+	var fs := UiTheme.sz(FONT_SIZE)     # 258：按字号档
 	if _box == null:
 		_box = UiTheme.art_box(ART)
 	var box := _box
@@ -77,7 +79,7 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2(0.0, BODY_TOP), Vector2(size.x, size.y - BODY_TOP)), Color("b07a3a"))
 	var f := UiPalette.cjk_font_bold()
 	var mid := BODY_TOP + (size.y - BODY_TOP) * 0.5
-	var y := mid + (f.get_ascent(FONT_SIZE) - f.get_descent(FONT_SIZE)) * 0.5
+	var y := mid + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
 	if coin >= 0:
 		var side := _coin_side()
 		var tex := CoinLabel.coin_texture()
@@ -86,9 +88,9 @@ func _draw() -> void:
 			draw_texture_rect(tex, r, false)
 		else:
 			draw_circle(r.get_center(), side * 0.45, CoinLabel.FALLBACK_FILL)
-		draw_string(f, Vector2(LEFT + side + CoinLabel.GAP, y), "%d" % coin, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)
+		draw_string(f, Vector2(LEFT + side + CoinLabel.GAP, y), "%d" % coin, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 	else:
-		draw_string(f, Vector2(LEFT, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK)
+		draw_string(f, Vector2(LEFT, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 	if sold:
 		var tex := UiTheme.art_cached(UiTheme.lang_art(STAMP_ART))
 		if tex != null:

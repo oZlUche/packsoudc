@@ -31,10 +31,11 @@ class Plate extends Control:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func _get_minimum_size() -> Vector2:
-		var w := UiPalette.cjk_font_bold().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+		var w := UiPalette.cjk_font_bold().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(FONT_SIZE)).x
 		return Vector2(maxf(PLATE_MIN_W, ceilf(w + 2.0 * PLATE_PAD_X)), BUTTON)
 
 	func _draw() -> void:
+		var fs := UiTheme.sz(FONT_SIZE)     # 258：按字号档
 		if _box == null:
 			_box = UiTheme.art_box(PLATE_ART)
 			if _box != null:
@@ -43,8 +44,8 @@ class Plate extends Control:
 		if _box != null:
 			draw_style_box(_box, Rect2(Vector2.ZERO, size))
 		var f := UiPalette.cjk_font_bold()
-		var y := size.y * 0.5 + (f.get_ascent(FONT_SIZE) - f.get_descent(FONT_SIZE)) * 0.5
-		draw_string(f, Vector2(0.0, y), text, HORIZONTAL_ALIGNMENT_CENTER, size.x, FONT_SIZE, INK)
+		var y := size.y * 0.5 + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
+		draw_string(f, Vector2(0.0, y), text, HORIZONTAL_ALIGNMENT_CENTER, size.x, fs, INK)
 
 
 func _init(on_minus: Callable = Callable(), on_plus: Callable = Callable()) -> void:

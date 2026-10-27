@@ -38,8 +38,8 @@ func _draw() -> void:
 		draw_rect(r, Color("3a2a1c"))
 	var regular := UiPalette.cjk_font()
 	var bold := UiPalette.cjk_font_bold()
-	draw_string(regular, Vector2(0, 8.0 + regular.get_ascent(LABEL_SIZE)), caption, HORIZONTAL_ALIGNMENT_CENTER, size.x, LABEL_SIZE, LABEL_COLOR)
-	var fs := VALUE_SIZE
+	draw_string(regular, Vector2(0, 8.0 + regular.get_ascent(UiTheme.sz(LABEL_SIZE))), caption, HORIZONTAL_ALIGNMENT_CENTER, size.x, UiTheme.sz(LABEL_SIZE), LABEL_COLOR)
+	var fs := UiTheme.sz(VALUE_SIZE)
 	while fs > 12 and bold.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > size.x - 12.0:
 		fs -= 1     # 「5/秒」这类长一点的缩字，不出框
 	draw_string(bold, Vector2(0, size.y - 10.0 - bold.get_descent(fs)), value, HORIZONTAL_ALIGNMENT_CENTER, size.x, fs, VALUE_COLOR)
