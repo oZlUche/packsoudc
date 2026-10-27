@@ -40,7 +40,7 @@ const DEFAULTS := {
 const TAG_H := 46.0
 ## 签里的字离签右沿至少这么远；放不下就收字号，最小到这么大
 const TEXT_RIGHT_PAD := 8.0
-const MIN_TEXT_SIZE := 11
+const MIN_TEXT_SIZE := 10     # 10-27 正文换思源宋体 Medium 后字面变宽：英文「Stamina」11 号多出 1 px，再让一号
 const SEAL_COLORS := {HP: Color("b0303a"), VIGOR: Color("d49a2a"), STAMINA: Color("c8742a"), DPS: Color("a8322a"), LOAD: Color("5d6168"), SPECIAL: Color("5a3c8c")}
 ## 切图文件里负重那枚叫 load、DPS 那枚叫 dps
 const SEAL_ART := {HP: "seal_hp", VIGOR: "seal_vigor", STAMINA: "seal_stamina", DPS: "seal_dps", LOAD: "seal_load", SPECIAL: "seal_special"}
