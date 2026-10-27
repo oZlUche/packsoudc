@@ -102,8 +102,9 @@ static func run_search_loop(t: TestCase) -> void:
 	t.eq(f.screen, GameFlow.Screen.EVENT, "先到事件屏")
 	var def: EventDef = f.last_payload.get("def", null)
 	var labels: Array = _labels(def)
-	t.check(labels.has("搜索") and labels.has("离开"), "选项是搜索 / 离开（%s）" % str(labels))
-	t.check(f.choose_event(labels.find("搜索")), "选「搜索」")
+	var search_at := labels.find("搜索（倒计时 −{pass_time_actions}）")     # 作者 10-27：每次搜索扣一次倒计时
+	t.check(search_at >= 0 and labels.has("离开"), "选项是搜索 / 离开（%s）" % str(labels))
+	t.check(f.choose_event(search_at), "选「搜索」")
 	var session: SearchSession = run.events.current_search
 	t.not_null(session, "会话开着")
 	if session == null:
@@ -141,7 +142,7 @@ static func run_search_loop(t: TestCase) -> void:
 			t.check(run.map.get_node(next).is_visited(), "点用过了")
 			t.check(f.screen == GameFlow.Screen.MAP and run.pending_loot == null, "作者 2026-10-16：离开不再弹战利品屏，直接回地图")
 			break
-		t.check(again != null and again.id == &"search_again" and l2 == ["再搜一次", "离开"], "「翻过一遍」：再搜一次 / 离开（%s）" % str(l2))
+		t.check(again != null and again.id == &"search_again" and l2 == ["再搜一次（倒计时 −{pass_time_actions}）", "离开"], "「翻过一遍」：再搜一次 / 离开（%s）" % str(l2))
 		t.check(f.choose_event(0), "再搜一次")
 		rounds += 1
 		if rounds > 10:

@@ -93,9 +93,6 @@ func setup(run: RunState, screen: Control, p_layout: HudLayout) -> void:
 		w.set_editing(editing)
 		w.resized.connect(_queue_arrange)
 		w.visibility_changed.connect(_queue_arrange)
-		var ground := GroundLayer.current()
-		if ground != null and w.id == &"hud_bar":
-			ground.reserve(w)     # 253（作者 2026-10-25「碰撞要无视左下角和右下角的UI组件，直接掉落在前面」）：只有顶端栏占地，角落组件不是墙、不托东西
 	if widgets.has(&"hud_bar"):
 		move_child(widgets[&"hud_bar"], 0)     # 166：栏垫在别的组件下面（同一层里先画）
 	arrange()
@@ -336,9 +333,6 @@ func arrange() -> void:
 			if _floats(groups[key]):
 				frame.size.x = maxf(0.0, size.x - extra_right)     # 186：浮在地图上的（提示行）按整块宽对齐，跟顶端栏同一条中线
 			_place_group(groups[key], frame, HudLayout.ANCHORS.get(a, Vector2.ZERO))
-	var ground := GroundLayer.current()
-	if ground != null and ground.is_inside_tree():
-		ground.settle.call_deferred()
 	arranged.emit()
 
 

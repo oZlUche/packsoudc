@@ -6,8 +6,8 @@
 [ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_s0d6w"]
 [ext_resource type="Script" path="res://core/run/events/conditions/faith_active.gd" id="5_5ftcq"]
 [ext_resource type="Script" path="res://core/run/events/conditions/rest_part_unused.gd" id="6_o3vqt"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="7_dxrhu"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="8_tnewf"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="7_dxrhu"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="8_tnewf"]
 [ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="9_hf7fx"]
 [ext_resource type="Script" path="res://core/run/events/event_def.gd" id="10_d3j7t"]
 
@@ -35,42 +35,45 @@ outcomes = Array[ExtResource("2_qsesp")]([SubResource("Resource_re4b7")])
 script = ExtResource("7_dxrhu")
 
 [sub_resource type="Resource" id="Resource_5chax"]
-script = ExtResource("6_o3vqt")
+script = ExtResource("8_tnewf")
 
 [sub_resource type="Resource" id="Resource_mqwta"]
-script = ExtResource("1_n2o38")
-label = "回 {rest_restore} 点体力"
-labels = {
-"en": "Restore {rest_restore} Vitality"
-}
-hide_when_locked = true
-requires = Array[ExtResource("4_s0d6w")]([SubResource("Resource_5chax")])
-outcomes = Array[ExtResource("2_qsesp")]([SubResource("Resource_0gucn")])
+script = ExtResource("6_o3vqt")
 
 [sub_resource type="Resource" id="Resource_cgr1p"]
-script = ExtResource("8_tnewf")
-actions = 2
+script = ExtResource("1_n2o38")
+label = "倒计时 −{pass_time_actions}，回 {rest_restore} 点体力"
+labels = {
+"en": "Countdown −{pass_time_actions}, restore {rest_restore} Vitality"
+}
+hide_when_locked = true
+requires = Array[ExtResource("4_s0d6w")]([SubResource("Resource_mqwta")])
+outcomes = Array[ExtResource("2_qsesp")]([SubResource("Resource_0gucn"), SubResource("Resource_5chax")])
 
 [sub_resource type="Resource" id="Resource_lmpqh"]
 script = ExtResource("7_dxrhu")
+actions = 2
 
 [sub_resource type="Resource" id="Resource_7onnh"]
-script = ExtResource("9_hf7fx")
+script = ExtResource("8_tnewf")
 
 [sub_resource type="Resource" id="Resource_ct613"]
-script = ExtResource("6_o3vqt")
+script = ExtResource("9_hf7fx")
 
 [sub_resource type="Resource" id="Resource_0ngpq"]
+script = ExtResource("6_o3vqt")
+
+[sub_resource type="Resource" id="Resource_otod8"]
 script = ExtResource("1_n2o38")
 label = "倒计时 −{pass_time_actions}，回 {rest_total} 点体力"
 labels = {
 "en": "Countdown −{pass_time_actions}, restore {rest_total} Vitality"
 }
 hide_when_locked = true
-requires = Array[ExtResource("4_s0d6w")]([SubResource("Resource_ct613")])
-outcomes = Array[ExtResource("2_qsesp")]([SubResource("Resource_cgr1p"), SubResource("Resource_lmpqh"), SubResource("Resource_7onnh")])
+requires = Array[ExtResource("4_s0d6w")]([SubResource("Resource_0ngpq")])
+outcomes = Array[ExtResource("2_qsesp")]([SubResource("Resource_lmpqh"), SubResource("Resource_7onnh"), SubResource("Resource_ct613")])
 
-[sub_resource type="Resource" id="Resource_otod8"]
+[sub_resource type="Resource" id="Resource_sampu"]
 script = ExtResource("1_n2o38")
 label = "不算用掉"
 labels = {
@@ -96,5 +99,5 @@ Make an Offering now. Drag the {item:bone_dice} and the {item:bone_charm_bits} o
 
 Resting and the altar each count once."
 }
-options = Array[ExtResource("1_n2o38")]([SubResource("Resource_mer1k"), SubResource("Resource_mqwta"), SubResource("Resource_0ngpq"), SubResource("Resource_otod8")])
+options = Array[ExtResource("1_n2o38")]([SubResource("Resource_mer1k"), SubResource("Resource_cgr1p"), SubResource("Resource_otod8"), SubResource("Resource_sampu")])
 scene = &"rest_camp"

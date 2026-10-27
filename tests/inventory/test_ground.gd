@@ -239,8 +239,8 @@ static func run_spots_follow_nodes(t: TestCase) -> void:
 	t.check(_near(run.storage.spot_of(ration.uid), Vector2(0.3, 0.7)), "回来：还在原处（%s）" % str(run.storage.spot_of(ration.uid)))
 
 
-static func frame_push_out_of_panels(t: TestCase, root: Window) -> void:
-	t.begin("128 · 放到面板上也算地上，但落点推到面板外最近的空处；面板后开的，压着的东西让开")
+static func frame_panels_dont_push(t: TestCase, root: Window) -> void:
+	t.begin("作者 10-27「界面和道具彻底分离成两层，道具永远落在前面那一层」：放到面板上也算地上，落点就在松手处，不推到面板外")
 	ItemInstance.reset_uid_counter()
 	var gun := _def(&"t_gun", ["1"])
 	var stash := ItemStash.new(2, 0)
@@ -257,23 +257,11 @@ static func frame_push_out_of_panels(t: TestCase, root: Window) -> void:
 	panel.position = Vector2(600, 300)
 	panel.size = Vector2(400, 300)
 	host.add_child(panel)
-	ground.reserve(panel)
 	var a := ItemInstance.create(gun)
 	var spot := ground.spot_for_drop(Vector2(620, 420), a, 0)
 	var px := spot * SCREEN
-	t.check(not Rect2(panel.position, panel.size).intersects(Rect2(px, Vector2.ONE * InventoryView.CELL)), "落点推到面板外（%s）" % str(px))
-	t.check(absf(px.x - (600 - InventoryView.CELL - GroundLayer.PUSH_GAP)) < 1.0 and absf(px.y - 420) < 1.0, "推到最近的那一边（左边）")
-	# 先放在那儿，再开一块面板压上去：settle 推开
-	stash.insert(a, -1, Vector2(1220, 120) / SCREEN)
-	var panel2 := Control.new()
-	panel2.position = Vector2(1200, 100)
-	panel2.size = Vector2(200, 100)
-	host.add_child(panel2)
-	ground.reserve(panel2)
-	ground.settle()
-	t.check(not Rect2(panel2.position, panel2.size).intersects(ground.item_rect(a.uid)), "压着的东西让开了（%s）" % str(ground.item_rect(a.uid)))
-	panel2.free()
-	t.eq(ground.reserved_rects().size(), 1, "面板关了：自动撤销")
+	t.check(absf(px.x - 620) < 1.0 and absf(px.y - 420) < 1.0, "落点就在面板上松手处（%s）" % str(px))
+	t.eq(ground.has_method(&"reserve"), false, "地层没有登记面板的口子")
 	t.eq(ground.uid_at_local(Vector2(5, 5)), -1, "空地上点不到东西（点击穿给下面的屏）")
 	t.check(not ground._has_point(Vector2(5, 5)), "铺满屏的那层：空地不接鼠标")
 	host.free()

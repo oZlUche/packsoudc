@@ -27,7 +27,7 @@ const EVENT_OUTCOMES: Array[StringName] = [&"item", &"restore", &"story"]
 @export var loss_cost: Dictionary = {"battle": 1, "elite": 2, "hunter": 1}
 
 ## 休息区回多少体力。不写死 —— 不同章节可以不一样
-@export var rest_restore: int = 2
+@export var rest_restore: int = 1     # 作者 10-27：火堆回 1 点、耗 1 次倒计时；帐篷再耗 1 次、多回 1 点
 
 ## 常规事件（Q）的结果权重，占位：item / restore / story
 @export var event_weights: Dictionary = {"item": 1, "restore": 1, "story": 1}

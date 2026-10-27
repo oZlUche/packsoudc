@@ -82,7 +82,6 @@ func open(payload: Dictionary) -> void:
 		v.show_adjacency = false
 		host.add_child(v)
 		_slot_frame(v)
-		_reserve_ground(host)
 		_slot_hosts.append(host)
 		var note := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, NOTE_PAD, NOTE_PIN_ROOM, NOTE_PAD, 10)     # 226 批四：槽下小字写在便条上（石带在游戏里看不出来）
 		note.name = "SlotNote%d" % i
@@ -90,7 +89,6 @@ func open(payload: Dictionary) -> void:
 		add_child(note)
 		var cap := _rect(caption_rects[i] if i < caption_rects.size() else {})
 		_spots[note] = Rect2(cap.position.x, SLOT_NOTE_TOP, cap.size.x, 0.0)
-		_reserve_ground(note)     # 小字写长了会越过石带：地上的东西别压着它
 		var sum := UiTheme.rich_block(float(SLOT_SIZE.x * InventoryView.CELL), SUMMARY_SIZE)
 		note.add_child(sum)
 		_slot_notes.append(note)
@@ -105,7 +103,6 @@ func open(payload: Dictionary) -> void:
 	_out_view.show_adjacency = false
 	_out_host.add_child(_out_view)
 	_slot_frame(_out_view)
-	_reserve_ground(_out_host)
 
 	_slate = _wrapped(UiText.t("forge.description"), SLATE_SIZE, UiPalette.FG, 400)
 	add_child(_slate)
@@ -127,7 +124,6 @@ func open(payload: Dictionary) -> void:
 	_back_btn.tooltip_text = UiText.t("forge.back_tip")
 
 	_bag_host = _host(_rect(_layout.get("bag", {})))
-	_reserve_ground(_bag_host)
 	_inv = _mount_bag(_bag_host, _slot_views[0], Callable(), null, "player", true)     # 227：夜里的炉台用深色皮带框     # 棋盘上双击 → 第一个空槽（见 put_in）
 	move_child(_drag, -1)
 	move_child(_tip, -1)
