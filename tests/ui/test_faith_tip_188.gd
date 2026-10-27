@@ -33,7 +33,7 @@ static func run_faith_layout(t: TestCase) -> void:
 	t.check(lv2_dim and not lv1_dim, "Lv.2 整行暗、Lv.1 亮")
 	t.check(Glossary.strip_bbcode(String(sections[1])).begins_with("信力来源"), "第二段信力来源")
 	t.check(Glossary.strip_bbcode(String(sections[2])).begins_with("献祭"), "第三段献祭")
-	t.check(String(full["head"]).contains("[color=@faith]") and String(full["head"]).contains("[color=@val]45[/color]"), "神名信仰色、数值 val")
+	t.check(String(full["head"]).contains("[color=@faith]") and String(full["head"]).contains("[color=@faith]45[/color]") and String(full["head"]).contains("[color=@faith]Lv.1[/color]"), "神名、信力数与 Lv 都是信仰色（257）")
 	var hex := RegEx.create_from_string("\\[color=#")
 	var leaks: Array[String] = []
 	for id in defs:

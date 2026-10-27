@@ -263,10 +263,10 @@ const TEXT := {
 	"tip.effect": {"zh": "效果：%s", "en": "Effect: %s"},
 	"tip.broken_feed": {"zh": "（破碎：不再供给）", "en": " (broken: no longer feeds)"},
 	"tip.benched": {"zh": "不参战：这一场不算它（右键可改回）", "en": "Sitting this one out: not counted in this fight (right-click to undo)"},
-	"tip.faith_points": {"zh": "信力 ", "en": "Faith "},
-	"tip.anchor": {"zh": "信物：%s", "en": "Anchor: %s"},
 	"tip.anchor_current": {"zh": "当前信仰", "en": "your current Faith"},
-	"tip.anchor_hint": {"zh": "右键：奉为主信仰", "en": "right-click to make it your Faith"},
+	"tip.anchor_foot": {"zh": "%s · %s", "en": "%s · %s"},     # 257：信物降成赐福小节的脚注「信物 · 右键奉为主信仰」
+	"tip.anchor_word": {"zh": "信物", "en": "Anchor"},
+	"tip.anchor_right_click": {"zh": "右键奉为主信仰", "en": "right-click to make it your Faith"},
 	"tip.foot": {"zh": "%s%d　%s%d", "en": "%s%d   %s%d"},
 	"tip.set": {"zh": "　套装：%s", "en": "   Set: %s"},
 	"tip.weapon": {"zh": "每 [b]%s[/b] 秒造成 [b]%s[/b] 点%s", "en": "Every [b]%s[/b]s, deals [b]%s[/b] %s"},
@@ -382,6 +382,12 @@ const TEXT := {
 	"faith.gate": {"zh": "（%s）", "en": " (%s)"},
 	"faith.convert": {"zh": "每走一步，包里能被赐福的道具各有 %s%% 转化成赐福版", "en": "Each step, every item in your pack that can be blessed has a %s%% chance to turn blessed"},
 	"faith.offering": {"zh": "献祭", "en": "Offering"},
+	"faith.perks": {"zh": "神赐", "en": "Gifts"},     # 257：信仰窗四段的节名
+	"faith.items": {"zh": "赐福之物", "en": "Blessed items"},
+	"faith.offer_mult": {"zh": "×%s", "en": "×%s"},
+	"faith.share": {"zh": "，%s", "en": ", %s"},     # 257：赐福之物按信力算份数的那半句
+	"faith.convert_when": {"zh": "每走一步", "en": "Each step"},
+	"faith.convert_gain": {"zh": "包里的道具各 %s%% 转为赐福版", "en": "each item in your pack: %s%% to turn blessed"},
 	# core/battle/stat_axes.gd（轴名不在这里：TABLE 的 pos_en / neg_en）
 	"axis.per_stack": {"zh": "%s：每层 %s%s%s", "en": "%s: %s%s%s per stack"},
 	"axis.now": {"zh": "现在 %+d 层 → %s%s%s", "en": "Now %+d stacks → %s%s%s"},
@@ -965,6 +971,12 @@ const TEXT := {
 	"faith.perk_note": {"zh": "%s　%s", "en": "%s %s"},     # perk sentence + author note
 	# —— 221 F5a：faith_deeds ——
 	"deed.cap": {"zh": "（每场最多 %d）", "en": " (max %d per battle)"},
+	"deed.dmg_both_ev": {"zh": "造成和受到的%s", "en": "%s dealt and taken"},     # 257：信力来源两列的「事」
+	"deed.dmg_dealt_ev": {"zh": "造成的%s", "en": "%s dealt"},
+	"deed.dmg_taken_ev": {"zh": "受到的%s", "en": "%s taken"},
+	"deed.dmg_gain": {"zh": "+%s%%%s", "en": "+%s%%%s"},
+	"deed.enter_first": {"zh": "头一回踩上岔路", "en": "First step onto a fork"},
+	"deed.enter_again": {"zh": "再踩用过的点", "en": "Stepping on a used spot again"},
 	"deed.battle_won_by_type": {"zh": "打赢战斗：%s", "en": "Win a battle: %s"},
 	"deed.battle_by_type": {"zh": "进入战斗：%s", "en": "Enter a battle: %s"},
 	"deed.battle_won": {"zh": "打赢一场 +%d", "en": "Win a battle +%d"},

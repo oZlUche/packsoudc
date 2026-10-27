@@ -26,3 +26,27 @@ extends Resource
 
 func describe() -> String:
 	return ""
+
+
+## 257：信仰窗「信力来源」的两列 —— `[[事, 所得], …]`（一件事通常一行；所得空 = 只写事）。默认把 [method describe] 在第一个冒号、
+## 或第一个「 +N / ×N」前切开；句子不合这个样子的子类自己给（伤害按百分数写、岔路分两行）
+func parts() -> Array:
+	var text := describe()
+	return [split_text(text)] if text != "" else []
+
+
+static var _sign_re: RegEx = null
+
+
+static func split_text(text: String) -> Array[String]:
+	for colon in ["：", ": "]:
+		var at := text.find(colon)
+		if at > 0:
+			return [text.substr(0, at), text.substr(at + colon.length()).strip_edges()] as Array[String]
+	if _sign_re == null:
+		_sign_re = RegEx.create_from_string(" (?=[+×]\\s?\\d)")
+	var m := _sign_re.search(text)
+	if m != null and m.get_start() > 0:
+		return [text.substr(0, m.get_start()), text.substr(m.get_end())] as Array[String]
+	return [text, ""] as Array[String]
+
