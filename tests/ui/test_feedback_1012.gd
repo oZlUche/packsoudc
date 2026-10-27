@@ -124,7 +124,7 @@ static func frame_spawn_view(t: TestCase, root: Window) -> void:
 
 
 static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
-	t.begin("作者 2026-10-16 · 鼠标移开道具：往悬浮窗外走立刻收（宽限只留给往窗里去的）；停着不动等宽限过完")
+	t.begin("作者 2026-10-16 → 10-27 · 鼠标移开道具：没钉住当场收，宽限取消（往哪走都一样）")
 	var c := TestSupport.load_content()
 	var host := Control.new()
 	host.size = Vector2(800, 600)
@@ -144,19 +144,12 @@ static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
 	view.gui_input.emit(on)
 	t.check(tip.is_showing(), "停在刀上：显示")
 	view.mouse_exited.emit()
-	var away := view.global_position + Vector2(-30, -30)     # 往左上走：悬浮窗在右下
-	tip.tick(0.016, away)
-	t.check(tip.is_showing(), "第一拍记下离窗多远")
-	tip.tick(0.016, away + Vector2(-20, -20))
-	t.check(not tip.is_showing(), "再往外走：不等宽限，立刻收")
+	t.check(not tip.is_showing(), "出视图：当场收")
 	view.gui_input.emit(on)
-	view.mouse_exited.emit()
-	tip.tick(0.016, away)
-	tip.tick(0.016, away)
-	t.check(tip.is_showing(), "停着不动：还在宽限里")
-	tip.tick(HoverTip.GRACE_SEC, away)
-	t.check(not tip.is_showing(), "宽限过完收")
-	t.eq(HoverTip.rect_distance(Rect2(0, 0, 10, 10), Vector2(13, 14)), 5.0, "点到矩形的距离")
+	var empty := InputEventMouseMotion.new()
+	empty.position = Vector2(150, 100)
+	view.gui_input.emit(empty)
+	t.check(not tip.is_showing(), "移到空格：当场收")
 	host.queue_free()
 
 

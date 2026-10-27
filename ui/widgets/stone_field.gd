@@ -31,6 +31,7 @@ func _init(p_placeholder: String = "", search: bool = true) -> void:
 	add_theme_font_override("font", UiPalette.cjk_font())
 	add_theme_font_size_override("font_size", UiTheme.sz(FONT_SIZE))
 	add_theme_color_override("font_color", INK)
+	add_theme_color_override("font_uneditable_color", Color(INK, 0.45))     # 关着的框（带入现金：仓库 0）字压淡，不是引擎默认的浅色
 	add_theme_color_override("font_placeholder_color", PLACEHOLDER)
 	add_theme_color_override("caret_color", INK)
 	add_theme_color_override("selection_color", Color(0.75, 0.55, 0.30, 0.45))

@@ -142,6 +142,8 @@ func _mount_bag(row: Control, other: ContainerView, hint_sink: Callable, quick_t
 	inv.setup(flow.run, font, _drag)
 	if frame != "":
 		BoardFrame.wrap(inv.board_view, frame, dark)
+		if not dark:
+			BoardFrame.brown(inv.board_view)     # 作者 10-27：局内玩家棋盘统一棕底
 		inv.hold_nine()     # 255 补充一：面板按九格定宽（搜刮屏自己摆框、自己留位）
 	inv.quick_target = quick_target
 	inv.hint_sink = hint_sink

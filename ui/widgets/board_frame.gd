@@ -172,6 +172,25 @@ static func dark_seams() -> Dictionary:
 	return ((layout().get("boards_dark", {}) as Dictionary).get("cell_seams", {}) as Dictionary).duplicate()
 
 
+## 作者 10-27「战利品、背包、搜索容器、战斗中等等的玩家棋盘底色应该统一，全改成棕色（战斗同款）」：
+## 战斗那块棕 = 深色半透明内垫压在铜面板上（实测 #2f2014）；浅框里的玩家棋盘铺一块同色的不透明内垫、配深色格缝
+const BROWN_PAD := "#2f2014"
+
+
+static func brown_seams() -> Dictionary:
+	var d := dark_seams()
+	var pad: Dictionary = (layout().get("boards_dark", {}) as Dictionary).get("pad", {})
+	d["pad"] = BROWN_PAD
+	d["pad_margin"] = float(pad.get("margin", 10))
+	d["pad_radius"] = int(pad.get("radius", 6))
+	return d
+
+
+## 局内玩家棋盘铺棕底（[method brown_seams]）—— 已经是深色框（铜面板 / 夜里）的不动
+static func brown(view: InventoryView) -> void:
+	view.seams = brown_seams()
+
+
 ## 浅灰内垫上的格缝（深线 + 右 / 下错开 1.4 的亮线）
 static func light_seams() -> Dictionary:
 	return (light_layout().get("cell_seams", {}) as Dictionary).duplicate()

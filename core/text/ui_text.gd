@@ -1079,6 +1079,7 @@ const TEXT := {
 	"trig.res_above_self": {"zh": "你的%s不低于 %s 时", "en": "When your %s is at least %s"},
 	"trig.res_above_opp": {"zh": "对手的%s不低于 %s 时", "en": "When the opponent's %s is at least %s"},
 	"trig.self_driven": {"zh": "自发", "en": "On its own"},
+	"trig.any_status": {"zh": "状态", "en": "a status"},     # 空 buff 的 on_status_applied（铸炉时机：施加任意状态时）
 	"trig.you_apply_self": {"zh": "你给自己施加%s时", "en": "When you apply %s to yourself"},
 	"trig.you_apply_opp": {"zh": "你给对手施加%s时", "en": "When you apply %s"},
 	"trig.applied_self": {"zh": "你被施加%s时", "en": "When %s is applied to you"},

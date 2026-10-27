@@ -92,7 +92,7 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	panel.cell_px = float(_spec["cell"])
 	panel.hint_sink = hint_sink
 	panel.setup(run, font, drag)
-	BoardFrame.mark(panel.board_view, frame)     # 227：外框是上面那张 72 px 皮带框，格缝浅色
+	BoardFrame.mark(panel.board_view, frame, BoardFrame.brown_seams())     # 227：外框是上面那张 72 px 皮带框；作者 10-27：内垫统一战斗那块棕
 	panel.hold_nine()     # 255 补充一：棋盘坐进九格宽的位子，窗不随棋盘宽窄变
 	_canvas.add_child(panel)
 

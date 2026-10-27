@@ -46,10 +46,15 @@ var _scale_btns: Dictionary = {}
 var carry_funds: int = 0
 ## 带入现金那张便条：右上「仓库 N」、步进件（读数 = 带多少）、三枚石签
 var _cash_store: Label = null
-var _cash_step: StoneStepper = null
+## 作者 10-27：拖条按比例选（0 … 仓库余额）+ 能键盘输入的数字框（原来的 ±10 步进件换掉）
+var _cash_slider: StoneSlider = null
+var _cash_field: StoneField = null
+var _cash_typing := false
 var _cash_chips: Array[Button] = []
 const CASH_ROW_W := 264.0
 const CASH_CHIP_GAP := 8.0
+## 作者 10-27：带入现金的输入框宽（七位数放得下）
+const CASH_FIELD_W := 84.0
 const CASH_PAD := 24
 const CASH_PAD_TOP := 22
 const CASH_PAD_BOTTOM := 18
@@ -398,10 +403,29 @@ func _build_cash_box(parent: VBoxContainer) -> void:
 	_cash_store = _label("", 15, UiTheme.INK)
 	_cash_store.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	head.add_child(_cash_store)
-	_cash_step = StoneStepper.new(func() -> void: set_carry_funds(carry_funds - 10), func() -> void: set_carry_funds(carry_funds + 10))
-	_cash_step.plate.custom_minimum_size.x = CASH_ROW_W - 2.0 * StoneStepper.BUTTON - 8.0
-	_cash_step.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(_cash_step)
+	var slide_row := _hbox(6)
+	col.add_child(slide_row)
+	_cash_slider = StoneSlider.new()
+	_cash_slider.name = "CashSlider"
+	_cash_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cash_slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_cash_slider.value_changed.connect(func(v: float) -> void: set_carry_funds(roundi(v)))
+	slide_row.add_child(_cash_slider)
+	var coin := TextureRect.new()     # 作者 10-24：钱 = 金币 + 数字
+	coin.texture = CoinLabel.coin_icon(20)
+	coin.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	coin.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slide_row.add_child(coin)
+	_cash_field = StoneField.new("0", false)
+	_cash_field.name = "CashField"
+	_cash_field.custom_minimum_size.x = CASH_FIELD_W
+	_cash_field.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cash_field.max_length = 7
+	_cash_field.text_changed.connect(_on_cash_typed)
+	_cash_field.text_submitted.connect(func(_t: String) -> void: _cash_field.release_focus())
+	_cash_field.focus_exited.connect(_refresh_cash)
+	slide_row.add_child(_cash_field)
 	var row := _hbox(CASH_CHIP_GAP)
 	col.add_child(row)
 	_cash_chips.clear()
@@ -426,15 +450,34 @@ func set_carry_funds(n: int) -> void:
 	_refresh_cash()
 
 
+## 键盘输入：只留数字，超过仓库余额收到余额；打字时不回写框里的字（光标不跳）
+func _on_cash_typed(t: String) -> void:
+	var digits := ""
+	for ch in t:
+		if ch >= "0" and ch <= "9":
+			digits += ch
+	var n := mini(int(digits) if digits != "" else 0, cash_cap())
+	if digits != t or (digits != "" and n != int(digits)):
+		_cash_field.text = str(n) if digits != "" else ""
+		_cash_field.caret_column = _cash_field.text.length()
+	_cash_typing = true
+	set_carry_funds(n)
+	_cash_typing = false
+
+
 func _refresh_cash() -> void:
-	if _cash_step == null:
+	if _cash_slider == null:
 		return
 	carry_funds = clampi(carry_funds, 0, cash_cap())     # 仓库钱变少了（卖 / 花）跟着收
 	var cap := cash_cap()
 	_cash_store.text = UiText.t("setup.cash_store") % cap
-	_cash_step.set_text(str(carry_funds))
-	_cash_step.minus.disabled = carry_funds <= 0
-	_cash_step.plus.disabled = carry_funds >= cap
+	_cash_slider.max_value = cap
+	_cash_slider.set_value_no_signal(carry_funds)
+	_cash_slider.enabled = cap > 0
+	_cash_slider.queue_redraw()
+	_cash_field.editable = cap > 0
+	if not _cash_typing:
+		_cash_field.text = str(carry_funds)
 	_cash_chips[0].disabled = carry_funds == 0
 	_cash_chips[1].disabled = carry_funds == int(floor(cap / 2.0))
 	_cash_chips[2].disabled = carry_funds == cap

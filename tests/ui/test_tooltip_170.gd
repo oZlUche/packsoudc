@@ -86,7 +86,7 @@ static func run_ring(t: TestCase) -> void:
 
 
 static func frame_pin(t: TestCase, root: Window) -> void:
-	t.begin("170 · 固定式悬浮窗：离开道具有 0.15 秒宽限；停在窗里 0.6 秒钉住、中途移出归零；钉住后关键词停 0.25 秒开子窗（封顶 3 层）；Esc / 点外面 / 离开 0.4 秒收")
+	t.begin("170 · 固定式悬浮窗：离开道具当场收、移进窗也收（作者 10-27）；停在道具上 0.5 + 0.6 秒钉住、中途移开归零；钉住后关键词停 0.25 秒开子窗（封顶 3 层）；Esc / 点外面 / 离开 0.4 秒收")
 	var db := _db()
 	var host := Control.new()
 	host.size = Vector2(1600, 900)
@@ -108,22 +108,25 @@ static func frame_pin(t: TestCase, root: Window) -> void:
 	t.check(tip.is_showing(), "停在道具上：出现")
 	var inside := tip._panel.global_position + tip._panel.size * 0.5
 	var outside := Vector2(5, 880)
-	# 宽限：离开道具（移到空格）后 0.15 秒内进了窗就留下
+	var src := view.get_global_position() + mm.position
+	# 作者 10-27：没钉住时离开道具当场收（移到空格）
 	var empty := InputEventMouseMotion.new()
 	empty.position = Vector2(200, 160)
 	view.gui_input.emit(empty)
-	t.check(tip.is_showing(), "刚离开：还在（宽限）")
-	tip.tick(0.1, inside)
-	t.check(tip.is_showing(), "宽限内进了窗：留下")
-	# 钉住：中途移出归零
-	tip.tick(0.3, inside)
-	t.check(not tip.is_pinned(), "停了 0.4 秒：还没钉")
-	tip.tick(0.05, outside)
-	t.eq(tip._panel.dwell, 0.0, "中途移出：进度归零")
-	t.check(tip.is_showing(), "移出时没在离开道具（宽限已经结束）—— 还开着")
-	tip.tick(0.3, inside)
-	tip.tick(0.31 + HoverTip.PIN_DELAY_SEC, inside)
+	t.check(not tip.is_showing(), "离开道具：当场收")
+	# 移进悬浮窗也收（没钉住时窗不算源）
+	view.gui_input.emit(mm)
+	inside = tip._panel.global_position + tip._panel.size * 0.5
+	tip.tick(0.05, inside)
+	t.check(not tip.is_showing(), "移进没钉住的悬浮窗：照样收")
+	# 钉住：停在道具上，中途移开就收、重新来
+	view.gui_input.emit(mm)
+	tip.tick(0.4, src)
+	t.check(tip.is_showing() and not tip.is_pinned(), "停了 0.4 秒：还没钉")
+	tip.tick(0.3, src)
+	tip.tick(0.41 + HoverTip.PIN_DELAY_SEC, src)
 	t.check(tip.is_pinned(), "停满 0.5 + 0.6 秒：钉住（193 先等半秒）")
+	inside = tip._panel.global_position + tip._panel.size * 0.5
 	# 关键词开子窗
 	var terms: Dictionary = tip._panel.terms
 	t.check(not terms.is_empty(), "主窗有词条")
@@ -136,10 +139,9 @@ static func frame_pin(t: TestCase, root: Window) -> void:
 	var child: HoverTip.TipWindow = tip.windows()[1]
 	t.check(child.text().contains(String(terms[first]["name"])), "子窗写的是这个词条（%s）" % first)
 	t.check(child.position.x >= tip._panel.position.x + tip._panel.size.x - 0.5 or child.position.y >= tip._panel.position.y + tip._panel.size.y - 0.5, "子窗在主窗右边或下面")
-	# 子窗钉住、再开、封顶
-	var child_in := child.global_position + child.size * 0.5
-	tip.tick(0.61 + HoverTip.PIN_DELAY_SEC, child_in)
-	t.check(child.pinned, "子窗也能钉")
+	# 子窗钉住（停在开它的词上）、再开、封顶
+	tip.tick(0.61 + HoverTip.PIN_DELAY_SEC, inside)
+	t.check(child.pinned, "子窗也能钉（停在开它的词上）")
 	child.terms["probe"] = {"name": "探针", "text": "说明"}
 	var grand := tip.open_child(child, "term:probe")
 	t.not_null(grand, "子窗还能开子窗")
@@ -154,8 +156,8 @@ static func frame_pin(t: TestCase, root: Window) -> void:
 	t.check(not tip.is_showing(), "离开 0.4 秒：整串收掉")
 	# Esc
 	view.gui_input.emit(mm)
+	tip.tick(0.7 + HoverTip.PIN_DELAY_SEC, src)
 	inside = tip._panel.global_position + tip._panel.size * 0.5
-	tip.tick(0.7 + HoverTip.PIN_DELAY_SEC, inside)
 	t.check(tip.is_pinned(), "又钉住")
 	var esc := InputEventKey.new()
 	esc.keycode = KEY_ESCAPE
@@ -164,17 +166,16 @@ static func frame_pin(t: TestCase, root: Window) -> void:
 	t.check(not tip.is_showing(), "Esc 收掉")
 	# 点外面（开始拖拽也是先点下去）
 	view.gui_input.emit(mm)
+	tip.tick(0.7 + HoverTip.PIN_DELAY_SEC, src)
 	inside = tip._panel.global_position + tip._panel.size * 0.5
-	tip.tick(0.7 + HoverTip.PIN_DELAY_SEC, inside)
 	tip.click_at(inside)
 	t.check(tip.is_showing(), "点在窗里：不收")
 	tip.click_at(outside)
 	t.check(not tip.is_showing(), "点窗外：收掉")
-	# 宽限过了没进窗：收
+	# 出视图（鼠标事件）：没钉住当场收
 	view.gui_input.emit(mm)
-	view.gui_input.emit(empty)
-	tip.tick(0.2, outside)
-	t.check(not tip.is_showing(), "宽限过了还没进窗：收起")
+	view.mouse_exited.emit()
+	t.check(not tip.is_showing(), "出视图：当场收")
 	host.queue_free()
 
 
