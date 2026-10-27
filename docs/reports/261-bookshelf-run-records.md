@@ -115,5 +115,4 @@
 
 `test_run_records_261` 加：六格顺序；`tier_of` 边界；科技窗 1320 × 900 内 `TechPanel` 最窄尺寸放得下；`show_tab("tech")` 别名打开科技窗；无裸字。
 
-**§9.2 补（UI替换美术 16:49 的分档与切件，照它落，取代上面的五等分）**：档 = **0（一个没有）/ 4（全满）/ 中间 1 + floor(3n / 总数)，封顶 3**（总数同 9.1 表；科技 = 科技总条数，现在 15）。物件 **360 × 320**，摆在格里 (20, 74)，底边在格底往上 6。切件 `home/shelf/obj_<codex|records|keepsakes|achievements|tech>_<0–4>.png`（+ `_hover` 版），静物 `obj_lamp.png` 一张，摆位写进 `shelf/layout.json`。`ShelfCell.tier_of(done, total)` 按这条：0 → 0；done ≥ total → 4；否则 min(3, 1 + 3 × done / total)。样图已贴作者（分档表 `/mnt/project-files/art/ui/shelf261/stages.png`、三种进度整页 `progress_B.png`）。
-
+**§9.2 补（2026-10-27 16:52 定稿，和 UI替换美术 对齐）**：分档就按 §9.2 的一条规则 `tier = clampi(floori(done * 5 / total), 0, 4)`（美术 16:51 已改用这条）；图名照 §9.2 `home/shelf/<格>_t<档>.png`，另有 `_hover` 版，静物油灯一张。物件尺寸与摆位**不写死**（美术画的是 360 × 320，摆在格里 (20, 74)、底边离格底 6，切件还会加一圈透明边给光影），执行一律从 `shelf/layout.json` 取。样图已贴作者（分档表 `/mnt/project-files/art/ui/shelf261/stages.png`、三种进度整页 `progress_B.png`）。
