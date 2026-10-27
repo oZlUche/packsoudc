@@ -1,26 +1,23 @@
 {
   "id": "market",
-  "display_name": "集市",
+  "display_name": "高级货物",
   "display_names": {
-    "en": "Market"
+    "en": "Finer Goods"
   },
   "order": 2,
   "requires": [
     "bargain"
   ],
   "column": 1,
-  "description": "基地里开一间集市，卖药、食物、弹药与低档素材；每一局回来换一次货。级数越高，货格越多、素材档次越高。",
+  "description": "集市进更好的货：级数越高，货格越多、素材档次越高。",
   "descriptions": {
-    "en": "Opens a market at your base selling remedies, food, ammo and low-grade materials; new stock after every run. Higher levels mean more slots and better materials."
+    "en": "The market stocks finer goods: higher levels mean more slots and better materials."
   },
   "effect": {
     "type": "tech_facility",
     "facility": "market"
   },
   "tiers": [
-    {
-      "funds": 600
-    },
     {
       "funds": 1200,
       "items": {

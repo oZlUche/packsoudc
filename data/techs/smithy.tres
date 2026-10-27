@@ -10,16 +10,12 @@ facility = &"smithy"
 
 [sub_resource type="Resource" id="Resource_lt0dw"]
 script = ExtResource("3_spmt7")
-funds = 500
-
-[sub_resource type="Resource" id="Resource_cox8h"]
-script = ExtResource("3_spmt7")
 funds = 1000
 items = {
 "steel_ingot": 2
 }
 
-[sub_resource type="Resource" id="Resource_q020t"]
+[sub_resource type="Resource" id="Resource_cox8h"]
 script = ExtResource("3_spmt7")
 funds = 1800
 items = {
@@ -30,15 +26,15 @@ items = {
 [resource]
 script = ExtResource("2_0s05x")
 id = &"smithy"
-display_name = "铁匠铺"
+display_name = "高级配方"
 display_names = {
-"en": "Smithy"
+"en": "Advanced Recipes"
 }
 order = 1
 requires = Array[StringName]([&"pack"])
-description = "基地里开一间铁匠铺，按配方用仓库里的素材加钱打造武器、防具。级数越高，会打的档次越高。"
+description = "铁匠铺接更难的活：级数越高，打得出的配方档次越高。"
 descriptions = {
-"en": "Opens a smithy at your base that forges weapons and armour from Warehouse materials plus coins, by recipe. Higher levels unlock better recipes."
+"en": "The smithy takes on harder work: higher levels unlock better recipes."
 }
 effect = SubResource("Resource_6vd07")
-tiers = Array[ExtResource("3_spmt7")]([SubResource("Resource_lt0dw"), SubResource("Resource_cox8h"), SubResource("Resource_q020t")])
+tiers = Array[ExtResource("3_spmt7")]([SubResource("Resource_lt0dw"), SubResource("Resource_cox8h")])

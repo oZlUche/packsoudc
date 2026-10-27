@@ -15,7 +15,10 @@ class_name MetaState
 extends RefCounted
 
 ## 110：v3 多了局外科技的等级与上交记录（[member tech_levels] / [member tech_deposits]）
-const SAVE_VERSION := 3
+## 262：v4 科技「集市」「铁匠铺」改义为「高级货物」「高级配方」，最多两级（[MetaMigrations] 把 3 压到 2）
+const SAVE_VERSION := 4
+## 262（作者 14:19）：集市、铁匠铺默认就有 —— 没点科技也是 1 级，科技每点一级铺子再升一级
+const BASE_FACILITY_LEVEL := 1
 const WAREHOUSE_ID := 100
 const BOARD_ID := 101
 ## 225：包架的容器 id
@@ -98,9 +101,9 @@ func _init(p_rules: MetaRules = null) -> void:
 	rack = BagRack.new(RACK_ID)
 
 
-## 251：这间铺子几级（没有 = 0）
+## 251：这间铺子几级；262：没点科技也是 [constant BASE_FACILITY_LEVEL] 级（[TechFacility] 写进来的是铺子级数）
 func facility_level(id: StringName) -> int:
-	return int(facility_levels.get(id, 0))
+	return int(facility_levels.get(id, BASE_FACILITY_LEVEL))
 
 
 ## 一页仓库多大（163：扩建加页，页的大小不变）

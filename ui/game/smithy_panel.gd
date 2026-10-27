@@ -116,9 +116,8 @@ func opened() -> StringName:
 func rebuild() -> void:
 	if _grid == null:
 		return
-	var lv := Smithy.level(flow.meta)
-	_stage.sign_text = UiText.t("smithy.title") if lv > 0 else UiText.t("smithy.locked")
-	_stage.tooltip_text = UiText.t("smithy.intro") if lv > 0 else UiText.t("smithy.locked_tip")
+	_stage.sign_text = UiText.t("smithy.title")     # 262：铁匠铺默认就有，不再有「未开」招牌
+	_stage.tooltip_text = UiText.t("smithy.intro")
 	_funds.amount = flow.meta.funds
 	_cell_k = _stage.scale_factor()
 	var any := {}

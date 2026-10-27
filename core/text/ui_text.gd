@@ -1217,13 +1217,10 @@ const TEXT := {
 	"skill.assault": {"zh": "下次战斗先扣对方 %.0f%% 血", "en": "Next battle: the enemy starts %.0f%% down on Health"},
 	# —— 221 F5b：base screen ——
 	"meta.tab_warehouse": {"zh": "仓库", "en": "Warehouse"},     # also the shelf title before counts arrive
+	"meta.tab_logistics": {"zh": "后勤", "en": "Logistics"},
 	"meta.tab_sell": {"zh": "出售", "en": "Sell"},
 	"meta.tab_tech": {"zh": "科技", "en": "Tech"},
-	"meta.tab_market": {"zh": "集市", "en": "Market"},
-	"meta.tab_smithy": {"zh": "铁匠铺", "en": "Smithy"},
 	"market.title": {"zh": "集市", "en": "Market"},
-	"market.locked": {"zh": "集市（未开）", "en": "Market (not built)"},
-	"market.locked_tip": {"zh": "在科技页点出「集市」就有了", "en": "Unlock the Market on the Tech page"},
 	"market.restock_note": {"zh": "每局回来\n换一批货", "en": "New stock\nafter every run"},
 	"market.restock_tip": {"zh": "每一局回来换一次货；双击或右键买下，买到的进仓库", "en": "New stock after every run. Double-click or right-click to buy; purchases go to the Warehouse"},
 	"market.empty": {"zh": "今日没货", "en": "Nothing in stock"},
@@ -1234,8 +1231,6 @@ const TEXT := {
 	"market.level_line": {"zh": "集市 %d 格：素材到%s，药、食物、弹药到%s", "en": "Market: %d slots; materials up to %s, remedies, food and ammo up to %s"},
 	"market.level_bag": {"zh": "，另有一格空包", "en": ", plus one empty bag"},
 	"smithy.title": {"zh": "铁匠铺", "en": "Smithy"},
-	"smithy.locked": {"zh": "铁匠铺（未开）", "en": "Smithy (not built)"},
-	"smithy.locked_tip": {"zh": "在科技页点出「铁匠铺」就有了", "en": "Unlock the Smithy on the Tech page"},
 	"smithy.intro": {"zh": "按配方用仓库里的素材加钱打造，打好的进仓库；锁住的素材不算", "en": "Forge by recipe from Warehouse materials plus coins; the result goes to the Warehouse. Locked items don't count"},
 	"smithy.forge": {"zh": "打造", "en": "Forge"},
 	"smithy.need_level": {"zh": "铁匠铺要 %d 级", "en": "Needs Smithy level %d"},

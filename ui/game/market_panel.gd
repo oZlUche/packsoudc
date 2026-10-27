@@ -80,15 +80,10 @@ func rebuild() -> void:
 	_views.clear()
 	_frames.clear()
 	_prices.clear()
-	var lv := Market.level(flow.meta)
-	_stage.tables = lv > 0
-	_stage.tooltip_text = UiText.t("market.restock_tip") if lv > 0 else ""
-	_funds.visible = lv > 0
-	_restock.visible = lv > 0
+	_stage.tables = true     # 262：集市默认就有（1 级），不再有「未开」的空棚
+	_stage.tooltip_text = UiText.t("market.restock_tip")
 	_funds.amount = flow.meta.funds
-	if lv <= 0:
-		_note = _make_note(UiText.t("market.locked_tip"))
-	elif flow.meta.market_stock.is_empty():
+	if flow.meta.market_stock.is_empty():
 		_note = _make_note(UiText.t("market.empty"))
 	else:
 		var n := mini(flow.meta.market_stock.size(), _stage.spots().size())

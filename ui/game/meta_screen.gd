@@ -27,8 +27,13 @@ const SHELF_TAB_H := 60.0
 const TAB_ICON_ART := "home/tabs/tab_"
 ## 左列五个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家。
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
-## 251：集市、铁匠铺（科技点出来才露页签，[member FACILITY_TABS]）排在出售后面 —— 右半边都有仓库
-const TABS := [["warehouse", "meta.tab_warehouse"], ["sell", "meta.tab_sell"], ["market", "meta.tab_market"], ["smithy", "meta.tab_smithy"], ["tech", "meta.tab_tech"], ["shelf", "meta.tab_shelf"]]
+## 262（作者 14:19）：集市、铁匠铺默认就有，和出售并成「后勤」一页 —— 左列只剩 仓库 / 后勤 / 科技 / 书架
+const TABS := [["warehouse", "meta.tab_warehouse"], ["logistics", "meta.tab_logistics"], ["tech", "meta.tab_tech"], ["shelf", "meta.tab_shelf"]]
+## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出三颗缩进的小键（分页名、字）；三页本身一个像素不动
+const SUB_TABS := [["market", "market.title"], ["smithy", "smithy.title"], ["sell", "meta.tab_sell"]]
+const SUB_TAB_SIZE := Vector2(170, 44)
+const SUB_TAB_FONT := 17
+const SUB_TAB_INDENT := 28
 ## 178：这几页不显示右半边的仓库，中列吃满
 const NO_SHELF_TABS := ["shelf", "tech"]     # 229：科技页也收起右半边
 ## 261（作者 14:13）：「图鉴」页签改「书架」—— 两层三格，前四格点开各一扇窗（图鉴 / 对局记录 / 特殊道具 / 成就，成就页签并进来），后两格空着摆静物
@@ -42,8 +47,6 @@ const SHELF_ICON := 160.0
 ## 251 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要」）：整页的两页 —— 右列（仓库木架 + 挂牌）收起、中列吃满。
 ## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
 const FULL_TABS := ["market", "smithy"]
-## 251：页签 → 哪一间铺子（0 级不露页签）
-const FACILITY_TABS := {"market": Market.ID, "smithy": Smithy.ID}
 
 var _wh = null
 ## 260：家页的军功碑
@@ -57,6 +60,10 @@ var _tech_spins: Dictionary = {}
 var _pages: Dictionary = {}
 var _tab_btns: Dictionary = {}
 var _tab: String = ""
+## 262：「后勤」里翻着的分页（本次会话内记着，第一次是集市）；分页名 → 小键；三颗小键那一列
+var _sub: String = "market"
+var _sub_btns: Dictionary = {}
+var _sub_box: VBoxContainer = null
 ## 164：页签选中时左上角挂的小木牌（`home/tab_mark.png`；没图不挂）
 var _tab_mark: TextureRect = null
 ## 261：书架格 → 格上的小牌（按钮）；窗（压暗层）；开着的那扇
@@ -124,7 +131,9 @@ func open(payload: Dictionary) -> void:
 			b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_tab_btns[key] = b
 		left.add_child(b)
-	var tab_w := LEFT_W * 0.8     # 英文「Achievements」加了图标放不下：七个页签一样宽，取最宽的那个
+		if key == "logistics":
+			_build_sub_tabs(left)
+	var tab_w := LEFT_W * 0.8     # 英文页签加了图标放不下：几个页签一样宽，取最宽的那个
 	for key in _tab_btns:
 		tab_w = maxf(tab_w, (_tab_btns[key] as Button).get_combined_minimum_size().x)
 	for key in _tab_btns:
@@ -306,7 +315,7 @@ func _refresh_shelf_title() -> void:
 
 ## 双击右边仓库的一件：按当前页 —— 仓库 → 置入带回来的背包（178：原来在家页）；出售 → 卖；家 → 不做事（229：科技页收起了仓库，上交走材料行的【交 k】）
 func _on_shelf_double_clicked(view: ContainerView, uid: int) -> void:
-	match _tab:
+	match page():
 		"warehouse":
 			_wh.quick_move(view, uid)
 		"sell":
@@ -479,15 +488,29 @@ func smithy_panel():
 	return _smithy
 
 
-## 铺子 0 级不露页签；正翻着的那间没了就回家
-func _sync_facility_tabs() -> void:
-	for key in FACILITY_TABS:
-		var b := _tab_btns.get(key, null) as Button
-		if b == null:
-			continue
-		b.visible = flow.meta.facility_level(FACILITY_TABS[key]) > 0
-		if not b.visible and _tab == key:
-			show_tab("home")
+## 262：「后勤」底下三颗缩进的小键（木牌键皮小号字，选中的按下）；只在「后勤」选中时露出来
+func _build_sub_tabs(left: VBoxContainer) -> void:
+	var row := _hbox(0)
+	left.add_child(row)
+	var indent := Control.new()
+	indent.custom_minimum_size.x = SUB_TAB_INDENT
+	indent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(indent)
+	_sub_box = _vbox(6)
+	row.add_child(_sub_box)
+	for pair in SUB_TABS:
+		var key: String = pair[0]
+		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
+		b.toggle_mode = true
+		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		_sub_btns[key] = b
+		_sub_box.add_child(b)
+	row.visible = false
+
+
+## 测试看：后勤的分页小键
+func sub_tab_buttons() -> Dictionary:
+	return _sub_btns
 #endregion
 
 
@@ -1095,7 +1118,8 @@ func shelf_window(key: String) -> Control:
 #endregion
 
 
-## 切页："home"（家，默认）/ "warehouse" / "sell" / "tech" / "shelf"；261：老名字 "codex" / "achievements" = 书架 + 开那扇窗。
+## 切页："home"（家，默认）/ "warehouse" / "logistics" / "tech" / "shelf"；261：老名字 "codex" / "achievements" = 书架 + 开那扇窗。
+## 262：分页名 "market" / "smithy" / "sell" = 后勤 + 那个分页；"logistics" 落上次看的分页。
 ## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
 func show_tab(name: String) -> void:
 	if _shelf_windows.has(name):
@@ -1103,18 +1127,27 @@ func show_tab(name: String) -> void:
 		open_shelf(name)
 		return
 	close_shelf()
-	if not _pages.has(name):
+	var was := page()
+	if _sub_btns.has(name):
+		_sub = name
+		name = "logistics"
+	if not (_pages.has(name) or name == "logistics"):
 		name = "home"
-	if _tab != "" and name != _tab:
+	var shown := _sub if name == "logistics" else name
+	if _tab != "" and shown != was:
 		notice_layer().clear()     # 游戏测试 v4.34：上一页的告示（「买不了：钱不够」）不跟到下一页
 	_tab = name
 	for key in _pages:
-		(_pages[key] as Control).visible = key == name
+		(_pages[key] as Control).visible = key == shown
 	if _right != null:
-		_right.visible = not (NO_SHELF_TABS.has(name) or FULL_TABS.has(name))
+		_right.visible = not (NO_SHELF_TABS.has(shown) or FULL_TABS.has(shown))     # 262：后勤按分页算（出售露仓库，集市 / 铁匠铺收起）
 	for key in _tab_btns:
 		var b := _tab_btns[key] as Button
 		b.set_pressed_no_signal(key == name)
+	if _sub_box != null:
+		_sub_box.get_parent().visible = name == "logistics"
+		for key in _sub_btns:
+			(_sub_btns[key] as Button).set_pressed_no_signal(key == _sub)
 	layout.call_deferred()     # 中列换了页，最窄宽度可能变了
 	if _tab_mark != null:
 		if _tab_mark.get_parent() != null:
@@ -1130,6 +1163,16 @@ func toggle_tab(key: String) -> void:
 
 func tab() -> String:
 	return _tab
+
+
+## 262：后勤里翻着的分页（不在后勤 = 空串）
+func sub_tab() -> String:
+	return _sub if _tab == "logistics" else ""
+
+
+## 中列现在是哪一页（后勤 = 它的分页）
+func page() -> String:
+	return _sub if _tab == "logistics" else _tab
 
 
 ## 090：Esc = 返回上一级 —— 在别的页先回家，家里再回主菜单
@@ -1179,7 +1222,6 @@ func toggle_unlock(id: StringName) -> bool:
 
 
 func _refresh() -> void:
-	_sync_facility_tabs()     # 251：科技页刚点出集市 / 铁匠铺
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
 	if _tab_btns.has("warehouse"):
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗
