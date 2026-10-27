@@ -44,7 +44,7 @@ static func frame_warehouse_page(t: TestCase, root: Window) -> void:
 	var f := _flow()
 	_with_board(f)
 	var screen = _screen(f, root)
-	t.eq(screen._tab_btns.keys(), ["warehouse", "logistics", "tech", "shelf"], "页签：仓库 / 后勤（262）/ 科技 / 书架（261）")
+	t.eq(screen._tab_btns.keys(), ["warehouse", "logistics", "shelf"], "页签：仓库 / 后勤（262）/ 书架（261，科技并进来）")
 	t.eq((screen._tab_btns["warehouse"] as Button).text, "仓库", "页签字")
 	var page: Control = screen._pages["warehouse"]
 	t.check(page.is_ancestor_of(screen._wh), "带回来的背包在「仓库」页")
@@ -120,6 +120,6 @@ static func frame_initial_tab(t: TestCase, root: Window) -> void:
 	t.eq(s3.tab(), "home", "清空了再进：家")
 	s3.queue_free()
 	var s4 = _screen(f, root, {"result": result, "tab": "tech"})
-	t.eq(s4.tab(), "tech", "指定页签照旧优先")
+	t.check(s4.tab() == "shelf" and s4.shelf_open() == "tech", "指定页签照旧优先（tech = 书架 + 科技窗）")
 	s4.queue_free()
 	_cleanup()
