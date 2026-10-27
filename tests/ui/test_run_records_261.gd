@@ -107,6 +107,8 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 	t.check(need.x <= MIDDLE.x and need.y <= MIDDLE.y, "书架 %s 放得进中列 %s" % [need, MIDDLE])
 	t.eq(view.tag_text("records"), UiText.t("shelf.records") % 1, "对局记录的小牌写场数")
 	t.eq(view.tag_text(""), "", "静物没有小牌")
+	for k in ["shelf.codex", "shelf.records", "shelf.keepsakes", "shelf.achievements", "shelf.tech"]:
+		t.check(not String(UiText.TEXT[k]["en"]).contains(":"), "英文书架小牌写法统一、不带冒号（%s）" % k)     # 复测：「Run records: 0」
 	for key in btns:
 		(btns[key] as Button).pressed.emit()
 		t.eq(screen.shelf_open(), key, "点 %s：开那扇窗" % key)
