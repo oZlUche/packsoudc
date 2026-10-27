@@ -37,3 +37,11 @@ func describe() -> String:
 	var what := UiText.t("deed.dmg_both") if count_dealt and count_taken else (UiText.t("deed.dmg_dealt") if count_dealt else UiText.t("deed.dmg_taken"))
 	var kind := (UiText.t("deed.dmg_typed") % Glossary.damage_type_name(damage_type)) if damage_type != &"" else UiText.t("deed.dmg_any")
 	return what % [kind, TextTemplate.num(multiplier), (UiText.t("deed.cap") % cap) if cap > 0 else ""]
+
+
+## 257：事 = 造成 / 受到的哪种伤害；所得按百分数写（× 0.2 → +20%），不写算式
+func parts() -> Array:
+	var what := UiText.t("deed.dmg_both_ev") if count_dealt and count_taken else (UiText.t("deed.dmg_dealt_ev") if count_dealt else UiText.t("deed.dmg_taken_ev"))
+	var kind := (UiText.t("deed.dmg_typed") % Glossary.damage_type_name(damage_type)) if damage_type != &"" else UiText.t("deed.dmg_any")
+	return [[what % kind, UiText.t("deed.dmg_gain") % [TextTemplate.num(multiplier * 100.0), (UiText.t("deed.cap") % cap) if cap > 0 else ""]]]
+

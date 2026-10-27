@@ -30,6 +30,8 @@ static var faith_probe: Callable = Callable()
 ## 256：这一局按标签打折的重量（[member RunContext.weight_pct]）；没接 = 不打折
 static var weight_probe: Callable = Callable()
 const DIM_HEX := "8b93a1"
+## 257：信物那行脚注的字号
+const ANCHOR_FOOT_SIZE := 13
 static var _sets: SetDatabase = null
 
 
@@ -74,7 +76,7 @@ static func icon(id: String) -> String:
 
 
 ## 087 / 170：分块的文字 + 词条。返回
-## `{"head": 名字 / 副行 / 说明, "body": 正文, "foot": 脚注左边（金币、秤砣）, "set": 套装名, "text": 三块连起来, "terms": {id: {"name", "text"}}}`。
+## `{"head": 名字 / 副行 / 说明, "body": 正文, "faith_title" / "faith": 257 的赐福小节（神名、两列加成 + 信物脚注）, "foot": 脚注左边（金币、秤砣）, "set": 套装名, "text": 三块连起来, "terms": {id: {"name", "text"}}}`。
 ## 词条在文字里是 `[url=term:<id>]` 包着的下划线词（[method Glossary.mark]），悬浮窗钉住后停上去按 id 查 `terms` 开子窗。
 ## 词条 = 固定词条（[Glossary.TERMS]）+ 这件道具会施加的 buff（说明按定义生成）+ 弹词条的标签
 ## 209：包的三个局内字段写成句子（不耗耐久 / 卖价 / 负重）；不是包或没写返回空
@@ -223,19 +225,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 				lines.append("%s[color=@grant]%s[/color]" % [icon("load"), line])
 				lines.append(load_status_line(inst, board, spec))
 	var status := faith_status() if def.has_faith() else {}
-	for fb in ([] if wild else def.faith_bonuses):
-		var b := fb as FaithBonus
-		if b != null:
-			var line := UiText.t("tip.faith_points") + b.describe()
-			# 096（作者定）：局里按状态上色 —— 生效的白、没生效（没激活 / 阶不够 / 别的神）的灰；局外原色
-			if not status.is_empty():
-				line = "[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if bonus_lit(def, b, status) else DIM_HEX, line]
-			lines.append(line)
-	# 107（作者定）：**状态就是颜色**：这件道具的信仰激活着就亮色，休眠或还没激活就全灰
-	if def.is_anchor():
-		# 099（作者定）：切信仰不进菜单 —— 右键一下，或者在棋盘里把它重新落下
-		var line := UiText.t("tip.anchor") % (UiText.t("tip.anchor_current") if faith_lit(def, status) else UiText.t("tip.anchor_hint"))
-		lines.append("[color=#%s]%s[/color]" % [UiPalette.FG.to_html(false) if faith_lit(def, status) else DIM_HEX, line])
+	var faith := "" if wild else faith_section(def, status)     # 257：赐福加成与信物收成正文下面的一个小节（神名虚线分隔）
 	if inst.is_pinned():     # 255（作者 11:00）：先说功效，「拿不下、丢不掉」只作最后一行灰小字
 		lines.append("[font_size=%d][color=#%s]%s[/color][/font_size]" % [FOOT_SIZE, DIM_HEX, UiText.t("tip.pinned" if inst.is_anchored() else "tip.pin_moves")])     # 256：可以挪的写「能挪、丢不掉」
 	# --- 脚注：金币、秤砣（170：不写格数），右边套装名
@@ -258,7 +248,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var bd: BuffDef = item_buffs[id]
 		if Names.of(bd) != "":
 			extra[Names.of(bd)] = {"id": String(id), "text": Glossary.describe_buff(bd), "style": Glossary.status_style(bd)}
-	var rest := "\n".join(head_rest) + "\n" + "\n".join(lines)
+	var rest := "\n".join(head_rest) + "\n" + "\n".join(lines) + "\n" + faith
 	var found := Glossary.terms_in(rest, extra)
 	var terms := {}
 	for f in found:
@@ -270,8 +260,46 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var head := name_line + "\n" + Glossary.mark_rich("\n".join(head_rest), found)
 	# 193：没有正文（战利品只有价值与重量）就是空串 —— 悬浮窗藏掉分隔线与正文，纯文字也不拼空行
 	var body := "[font_size=%d][color=@tip_fg]%s[/color][/font_size]" % [BODY_SIZE, Glossary.mark_rich("\n".join(lines), found)] if not lines.is_empty() else ""
-	var text := head + "\n" + (body + "\n" if body != "" else "") + foot + (UiText.t("tip.set") % set_name if set_name != "" else "")
-	return {"head": head, "body": body, "foot": foot, "set": set_name, "text": text, "terms": terms}
+	var faith_title := "" if faith == "" else faith_title_of(def, status)
+	if faith != "":
+		faith = "[font_size=%d]%s[/font_size]" % [BODY_SIZE, Glossary.mark_rich(faith, found)]
+	var text := head + "\n" + (body + "\n" if body != "" else "") + (faith_title + "\n" + faith + "\n" if faith != "" else "") + foot + (UiText.t("tip.set") % set_name if set_name != "" else "")
+	return {"head": head, "body": body, "faith_title": faith_title, "faith": faith, "foot": foot, "set": set_name, "text": text, "terms": terms}
+
+
+## 257：赐福小节 —— 每条加成一行两列（左：生效条件 `@faith`；右：加成 `@val`），信物降成一行脚注「信物 · 右键奉为主信仰」（13 号 tip_meta，
+## 「信物」信力色）。096 / 107：局里没生效的（没激活 / 阶不够 / 别的神）整行灰、不分色；局外照分色写。不归神或什么都没有返回空
+static func faith_section(def: ItemDef, status: Dictionary) -> String:
+	if def == null or not def.has_faith():
+		return ""
+	var rows: Array = []
+	for fb in def.faith_bonuses:
+		var b := fb as FaithBonus
+		if b == null:
+			continue
+		if status.is_empty() or bonus_lit(def, b, status):
+			rows.append([Glossary.faith(b.gate_text()), Glossary.val(b.effect_text().strip_edges())])
+		else:
+			rows.append(["[color=#%s]%s[/color]" % [DIM_HEX, b.gate_text()], "[color=#%s]%s[/color]" % [DIM_HEX, b.effect_text().strip_edges()]])
+	var out: Array[String] = []
+	if not rows.is_empty():
+		out.append(Glossary.columns(rows, Glossary.two_widths(rows)))
+	if def.is_anchor():     # 099：切信仰不进菜单 —— 右键一下，或者在棋盘里把它重新落下
+		var lit := faith_lit(def, status)
+		var what := UiText.t("tip.anchor_current") if lit else UiText.t("tip.anchor_right_click")
+		var line := ""
+		if status.is_empty() or lit:
+			line = UiText.t("tip.anchor_foot") % [Glossary.faith(UiText.t("tip.anchor_word")), "[color=@tip_meta]%s[/color]" % what]
+		else:
+			line = "[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("tip.anchor_foot") % [UiText.t("tip.anchor_word"), what]]
+		out.append("[font_size=%d]%s[/font_size]" % [ANCHOR_FOOT_SIZE, line])
+	return "\n".join(out)
+
+
+## 257：赐福小节的标题 —— 神名（信力色；局里这件的神没激活就灰）
+static func faith_title_of(def: ItemDef, status: Dictionary) -> String:
+	var name := origin_name(def.faith_tag())
+	return Glossary.faith(name) if status.is_empty() or faith_lit(def, status) else "[color=#%s]%s[/color]" % [DIM_HEX, name]
 
 
 ## 170（作者定）：武器句「每 X 秒造成 Y 点伤害，消耗 Z 耐力」—— X = 编译后的实际周期，Y = 伤害面板，Z = 每次出手的耐力；

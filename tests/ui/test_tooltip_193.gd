@@ -163,15 +163,16 @@ static func frame_empty_body(t: TestCase, root: Window) -> void:
 
 
 static func run_offer_row(t: TestCase) -> void:
-	t.begin("193 §3.4 · 信仰窗献祭：一行图标、不写名字、不用表格；缺图退回文字")
+	t.begin("193 §3.4 · 信仰窗献祭：一行图标、不写名字；缺图退回文字（257：图标下一行写 ×N 倍率，信力色）")
 	var defs := FaithDef.load_all()
 	for id in defs:
 		var def: FaithDef = defs[id]
 		var sec := FaithTooltip._offer_section(def)
 		if sec == "" or not sec.contains("[img"):
 			continue
-		t.check(not sec.contains("[table"), "%s：不用表格" % id)
 		for r in def.offerings:
 			t.check(not sec.contains((r as OfferingRule).short_name()), "%s：不写「%s」" % [id, (r as OfferingRule).short_name()])
-		var groups := sec.split("[font_size=%d]　　[/font_size]" % FaithTooltip.OFFER_GAP_SIZE)
-		t.eq(groups.size(), def.offerings.size(), "%s：一条规矩一组图标" % id)
+		t.eq(sec.count("[cell][center][img"), def.offerings.size(), "%s：一条规矩一组图标" % id)
+		for r in def.offerings:
+			var mult := "[color=@faith]×%s[/color]" % TextTemplate.num((r as OfferingRule).multiplier)
+			t.check(sec.contains("[center]%s[/center]" % mult), "%s：图标下写 %s" % [id, mult])

@@ -9,6 +9,10 @@
 ##
 ## 193（作者「让所有已实装的能力标注」）：各级效果也列这位神的道具的按阶加成（[member ItemDef.faith_bonuses]：独有的道具写名字，
 ## 赐福版合成一行「赐福的道具」）；信力来源后面加一行包内转化。献祭图标一行排开、不写名字
+##
+## 257（作者 2026-10-27 定 甲 四段分立）：神赐（只有 perks，一阶一组、一条一行，阶号左列）/ 赐福之物（193 的道具加成按道具分组，名左阶右）/
+## 信力来源（两列：事 → 所得）/ 献祭（图标下写 ×倍率）。分色：信力本身（Lv、点数、所得、倍率、「N 信力」）`@faith`；
+## 加成的数 `@val`；条件里的数不上色（[method Glossary.bonus_numbers]）；没到的阶整组 `@dim`。一行最多两种颜色
 class_name FaithTooltip
 extends RefCounted
 
@@ -22,6 +26,9 @@ const ICON_SIZE := 32
 const OFFER_GAP_SIZE := 8
 ## 赐福版合成一行时写的名字
 const BLESSED_NAME := "赐福的道具"
+## 257：神赐的阶号列宽、赐福之物的右列（阶号）宽（[method Glossary.columns] 撑的宽；信力来源按字估，[method Glossary.two_widths]）
+const LV_COL := 44
+const ITEM_LV_COL := 44
 
 
 ## 221 F1：[constant BLESSED_NAME] 按当前语言
@@ -29,8 +36,8 @@ static func blessed_name() -> String:
 	return UiText.t("faith.blessed")
 
 
-## `{"head": 名字行 + 信力行, "sections": [各阶效果?, 信力来源, 献祭?]（各段 BBCode）, "bar": {"thresholds", "points"}（分段进度条）, "text": 连起来}`。
-## [param power] 可为 null（只写定义，按 0 点算）；[param board] 给了就数休眠的道具；[param items] 给了就把这位神的道具的按阶加成并进各级效果（193）。
+## `{"head": 名字行 + 信力行, "sections": [神赐?, 赐福之物?, 信力来源, 献祭?]（各段 BBCode）, "bar": {"thresholds", "points"}（分段进度条）, "text": 连起来}`。
+## [param power] 可为 null（只写定义，按 0 点算）；[param board] 给了就数休眠的道具；[param items] 给了就把这位神的道具的按阶加成单列一段「赐福之物」（193 / 257）。
 ## 没有信仰返回空字典（悬浮窗不开）
 static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemContainer = null, items: ItemDatabase = null) -> Dictionary:
 	if def == null:
@@ -40,18 +47,15 @@ static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemCo
 	var next := def.next_threshold(p)
 	var dormant := FaithState.dormant_uids(board).size() if board != null else 0
 	var sections: Array[String] = []
-	var perks := _perk_section(def, p, items)
+	var perks := _perk_section(def, p)
 	if perks != "":
 		sections.append(perks)
-	var deeds: Array[String] = []
-	for d in def.deeds:
-		if d != null and String(d.describe()) != "":
-			deeds.append(_fg(Glossary.val_numbers(String(d.describe()))))
-	var convert := convert_line(def, tier)
-	if convert != "":
-		deeds.append(_fg(Glossary.val_numbers(convert)))
-	if not deeds.is_empty():
-		sections.append(_section(UiText.t("faith.sources"), deeds))
+	var gifts := _item_section(def, tier, items)
+	if gifts != "":
+		sections.append(gifts)
+	var sources := _source_section(def, tier)
+	if sources != "":
+		sections.append(sources)
 	var offers := _offer_section(def)
 	if offers != "":
 		sections.append(offers)
@@ -75,15 +79,15 @@ static func _head(def: FaithDef, points: int, tier: int, next: int, dormant: int
 	var right := ""
 	if dormant > 0:
 		right += _meta("[color=%swarn]%s[/color]" % [TextTemplate.STYLE_PREFIX, UiText.t("faith.dormant") % dormant]) + "　"
-	right += _meta("Lv.%s" % Glossary.val(str(tier)))
+	right += _meta(Glossary.faith("Lv.%d" % tier))     # 257：Lv 与信力数都是信力色
 	var name := "[font_size=%d]%s[/font_size]" % [Glossary.NAME_SIZE, Glossary.NAME_OUTLINE % ("[b][color=%sfaith]%s[/color][/b]" % [TextTemplate.STYLE_PREFIX, Names.of(def)])]
-	var power := UiText.t("faith.points") % [Glossary.val(str(points)), (" / " + Glossary.val(str(next))) if next >= 0 else UiText.t("faith.max_rank")]
+	var power := UiText.t("faith.points") % [Glossary.faith(str(points)), (" / " + Glossary.faith(str(next))) if next >= 0 else UiText.t("faith.max_rank")]
 	return "%s　　%s\n[font_size=%d][color=%stip_meta]%s[/color][/font_size]" % [name, right, POWER_SIZE, TextTemplate.STYLE_PREFIX, power]
 
 
-## 各级效果：同一级合并成一行（「；」连），左列 Lv 号、右列句子（[code][table=2][/code]）。到了的亮字 + 数值色；没到的整行 `@dim`，
-## 随信力的数按 max(现在的信力, 那一级的阈值) 写。193：[param items] 给了，这位神的道具的按阶加成也归到各级（[method item_lines]）
-static func _perk_section(def: FaithDef, points: int, items: ItemDatabase = null) -> String:
+## 257 神赐：只有 perks，一阶一组、一条一行；左列阶号（到了 `@faith`，没到整组 `@dim`），右列句子（[method Glossary.bonus_numbers]：
+## 加成的数金、条件的数不染）。没到的阶照 188 补充一仍写句子，随信力的数按 max(现在的信力, 那一级的阈值) 写
+static func _perk_section(def: FaithDef, points: int) -> String:
 	var tier := def.tier_of(points)
 	var by_tier := {}
 	var order: Array[int] = []
@@ -99,21 +103,90 @@ static func _perk_section(def: FaithDef, points: int, items: ItemDatabase = null
 			by_tier[perk.tier] = []
 			order.append(perk.tier)
 		(by_tier[perk.tier] as Array).append(line)
-	var from_items := item_lines(def, items)
-	for lv in from_items:
-		if not by_tier.has(lv):
-			by_tier[lv] = []
-			order.append(lv)
-		(by_tier[lv] as Array).append_array(from_items[lv])
 	order.sort()
-	var cells: Array[String] = []
+	var rows: Array = []
 	for lv in order:
-		var text := UiText.t("faith.perk_sep").join(PackedStringArray(by_tier[lv]))
-		if tier >= lv:
-			cells.append("[cell]%s　[/cell][cell expand=1]%s[/cell]" % [_meta("Lv.%d" % lv), _fg(Glossary.val_numbers(text))])
-		else:
-			cells.append("[cell]%s　[/cell][cell expand=1]%s[/cell]" % [_dim("[font_size=%d]Lv.%d[/font_size]" % [META_SIZE, lv]), _dim(text)])
-	return "[table=2]%s[/table]" % "".join(cells) if not cells.is_empty() else ""
+		var lines: Array = by_tier[lv]
+		for i in lines.size():
+			var lv_cell := ""
+			if i == 0:
+				lv_cell = _lv_meta(lv, tier >= lv)
+			rows.append([lv_cell, _fg(Glossary.bonus_numbers(String(lines[i]))) if tier >= lv else _dim(String(lines[i]))])
+	if rows.is_empty():
+		return ""
+	return _meta(UiText.t("faith.perks")) + "\n" + Glossary.columns(rows, [LV_COL, Glossary.TIP_WIDTH - LV_COL - Glossary.COL_SLACK] as Array[int], false)
+
+
+## 257 赐福之物：193 的道具按阶加成单列一段，一件道具一组 —— 名字行（名左、生效阶右 `@faith`；各条阶不同就写在每条右边）+ 每条加成缩进一行；
+## 按信力算份数的接「每 N 信力一份」（N 信力 `@faith`）。阶没到的条（与名字）`@dim`。[param items] 为 null 或这位神没有归神道具返回空
+static func _item_section(def: FaithDef, tier: int, items: ItemDatabase) -> String:
+	var rows: Array = []
+	for g in item_groups(def, items):
+		var tiers: Array = g["tiers"]
+		var mixed := tiers.any(func(x) -> bool: return int(x) != int(tiers[0]))
+		var lit := tier >= int(g["tier"])
+		rows.append([_fg(String(g["name"])) if lit else _dim(String(g["name"])), "" if mixed else _lv_meta(int(g["tier"]), lit)])
+		var lines: Array = g["lines"]
+		for i in lines.size():
+			var line_lit := tier >= int(tiers[i])
+			rows.append(["[indent]%s[/indent]" % (_fg(Glossary.bonus_numbers(String(lines[i]))) if line_lit else _dim(String(lines[i]))), _lv_meta(int(tiers[i]), line_lit) if mixed else ""])
+	if rows.is_empty():
+		return ""
+	return _meta(UiText.t("faith.items")) + "\n" + Glossary.columns(rows, [Glossary.TIP_WIDTH - ITEM_LV_COL - Glossary.COL_SLACK, ITEM_LV_COL] as Array[int])
+
+
+## 神赐左列 / 赐福之物右列的「Lv.n」：到了信力色，没到灰
+static func _lv_meta(lv: int, lit: bool) -> String:
+	var text := "Lv.%d" % lv
+	return _meta(Glossary.faith(text)) if lit else _dim("[font_size=%d]%s[/font_size]" % [META_SIZE, text])
+
+
+## 257：[method _item_section] 的分组：`[{name, tier: 最低阶, lines: [效果（按信力的接条件）…], tiers: [各条的阶]}]`，
+## 一件道具一组（各条阶不同就每条右边写阶），组按最低阶、同阶按道具 id；赐福版合成「赐福的道具」一组，同一句只列一次
+static func item_groups(def: FaithDef, items: ItemDatabase) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if def == null or items == null:
+		return out
+	var ids := items.ids_where(func(d: ItemDef) -> bool: return d.faith_tag() == def.tag() and not d.faith_bonuses.is_empty())
+	Ids.sort(ids)
+	var at := {}     # 名字 → out 里第几组
+	for id in ids:
+		var item := items.get_def(id)
+		var name := blessed_name() if item.is_blessed() else Names.of(item)
+		for fb in item.faith_bonuses:
+			var b := fb as FaithBonus
+			if b == null:
+				continue
+			var line := b.effect_text().strip_edges()
+			if b.mode == "scaled":
+				var gate := b.gate_text()
+				line += UiText.t("faith.share") % (gate.left(1).to_lower() + gate.substr(1) if UiText.lang == "en" else gate)
+			if not at.has(name):
+				at[name] = out.size()
+				out.append({"name": name, "tier": b.list_tier(), "lines": [], "tiers": []})
+			var g: Dictionary = out[int(at[name])]
+			if not (g["lines"] as Array).has(line):
+				(g["lines"] as Array).append(line)
+				(g["tiers"] as Array).append(b.list_tier())
+				g["tier"] = mini(int(g["tier"]), b.list_tier())
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["tier"]) < int(b["tier"]))
+	return out
+
+
+## 257 信力来源：两列「事 → 所得」（[method FaithDeed.parts]；所得 `@faith`），段末接包内转化（[method convert_parts]）
+static func _source_section(def: FaithDef, tier: int) -> String:
+	var rows: Array = []
+	for d in def.deeds:
+		if d == null:
+			continue
+		for pair in (d as FaithDeed).parts():
+			rows.append([_fg(String(pair[0])), Glossary.faith(String(pair[1])) if String(pair[1]) != "" else ""])
+	var conv := convert_parts(def, tier)
+	if not conv.is_empty():
+		rows.append([_fg(conv[0]), Glossary.faith(conv[1])])
+	if rows.is_empty():
+		return ""
+	return _meta(UiText.t("faith.sources")) + "\n" + Glossary.columns(rows, Glossary.two_widths(rows))
 
 
 ## 193：这位神的道具（带 `faith:<id>` 标签、有 [member ItemDef.faith_bonuses]）的按阶加成，按 [method FaithBonus.list_tier] 归级：
@@ -148,15 +221,23 @@ static func item_lines(def: FaithDef, items: ItemDatabase) -> Dictionary:
 
 ## 193：信力来源段末的包内转化一句（按现在的阶算概率）；这位神没有赐福模板或概率为 0 返回空
 static func convert_line(def: FaithDef, tier: int) -> String:
+	var parts := convert_parts(def, tier)
+	return UiText.t("faith.convert") % parts[2] if not parts.is_empty() else ""
+
+
+## 257：转化一句拆成两列 [什么时候, 所得, 百分数]；没有返回空
+static func convert_parts(def: FaithDef, tier: int) -> Array[String]:
 	if def == null or def.blessings.is_empty():
-		return ""
+		return [] as Array[String]
 	var chance := def.convert_chance + def.convert_per_tier * float(maxi(0, tier))
 	if chance <= 0.0:
-		return ""
-	return UiText.t("faith.convert") % String.num(chance * 100.0, 1).trim_suffix(".0")
+		return [] as Array[String]
+	var pct := String.num(chance * 100.0, 1).trim_suffix(".0")
+	return [UiText.t("faith.convert_when"), UiText.t("faith.convert_gain") % pct, pct] as Array[String]
 
 
-## 献祭：每条规矩的图标都在 → 一行图标（193：不写名字；同一条规矩的图标间一个半角空格，规矩之间两个全角空格）；有一枚缺图就整段退回文字
+## 献祭：每条规矩的图标都在 → 一行图标（193：不写名字；同一条规矩的图标间一个半角空格，规矩之间两个全角空格），
+## 257 起排成两行的表、图标下写倍率；有一枚缺图就整段退回文字
 static func _offer_section(def: FaithDef) -> String:
 	var rules: Array[OfferingRule] = []
 	for r in def.offerings:
@@ -165,6 +246,7 @@ static func _offer_section(def: FaithDef) -> String:
 	if rules.is_empty():
 		return ""
 	var groups: Array[String] = []
+	var mults: Array[String] = []
 	var all_art := true
 	for r in rules:
 		var icons := icon_paths(r)
@@ -175,11 +257,19 @@ static func _offer_section(def: FaithDef) -> String:
 		for path in icons:
 			imgs.append("[img=%d]%s[/img]" % [ICON_SIZE, path])
 		groups.append(" ".join(imgs))
-	if all_art:
-		return _meta(UiText.t("faith.offering")) + "\n" + ("[font_size=%d]　　[/font_size]" % OFFER_GAP_SIZE).join(groups)
+		mults.append(Glossary.faith(UiText.t("faith.offer_mult") % TextTemplate.num(r.multiplier)))
+	if all_art:     # 257：一条规矩一列，图标下写倍率（信力色），列间仍隔两个全角空格
+		var gap := "[font_size=%d]　　[/font_size]" % OFFER_GAP_SIZE
+		var cells := ""
+		for row in [groups, mults]:
+			for i in row.size():
+				cells += "[cell][center]%s[/center][/cell]" % row[i]
+				if i < row.size() - 1:
+					cells += "[cell]%s[/cell]" % gap
+		return _meta(UiText.t("faith.offering")) + "\n" + "[table=%d]%s[/table]" % [groups.size() * 2 - 1, cells]
 	var lines: Array[String] = []
 	for r in rules:
-		lines.append(_fg(Glossary.val_numbers(r.describe())))
+		lines.append(_fg(Glossary.faith_numbers(r.describe())))
 	return _section(UiText.t("faith.offering"), lines)
 
 
