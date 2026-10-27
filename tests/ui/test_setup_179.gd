@@ -42,12 +42,12 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.eq(setup._grooves[1].size_flags_horizontal, Control.SIZE_SHRINK_BEGIN, "255：中栏定宽，不再撑满")
 	t.eq(setup._grooves[1].custom_minimum_size.x, setup.mid_width(), "255：中栏宽 = 设计宽减页边、两栏与栏距")
 	t.eq(setup._grooves[2].size_flags_horizontal, Control.SIZE_SHRINK_END, "棋盘栏贴右")
-	t.eq((setup._grooves[0].get_parent() as HBoxContainer).get_theme_constant("separation"), 36, "三栏间距一律 36")
+	t.eq((setup._grooves[0].get_parent() as HBoxContainer).get_theme_constant("separation"), setup.COL_GAP, "三栏间距一律 %d（10-27 左栏拓宽后 36 → 24）" % setup.COL_GAP)
 	# 作者 2026-10-17：选人大厅白天版定稿 —— 浅底；直接写在背景上的标题墨字，凹槽板里照旧浅色字
 	t.eq(setup.find_children("PaintedBackdrop", "TextureRect", true, false).size(), 1, "大厅背景画铺上了")
 	t.eq(UiTheme.art_tone(UiTheme.ART_SETUP_BG), UiTheme.TONE_LIGHT, "大厅背景标浅底")
 	t.eq(UiTheme.tone_at(setup._area), UiTheme.TONE_LIGHT, "内容区记着浅底")
-	t.check(setup._title is TitlePlate and setup._title.text == "选角色", "226 批二：页标题刻在标题牌上、页码去掉（%s）" % setup._title.text)
+	t.check(setup._title is TitlePlate and setup._title.text == "角色选择", "226 批二：页标题刻在标题牌上、页码去掉（%s）" % setup._title.text)
 	for g in setup._grooves:
 		t.eq(UiTheme.tone_at(g), UiTheme.TONE_DARK, "板里是深底")
 		t.check(not g.theme_type_variation.is_empty() and (g as Control).theme == null, "凹槽板没挂墨字主题")
