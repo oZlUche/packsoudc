@@ -187,7 +187,7 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	_frame_title(title)     # 157：标题在石板框的标题条上（横跨图与正文）
 	var heading := intro_heading()
 	if heading != "":
-		col.add_child(UiTheme.make_display(heading))     # 168：开场事件先写章节名（马善政大标题）
+		col.add_child(UiTheme.make_display(heading))     # 168：开场事件先写章节名（大标题字体）
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

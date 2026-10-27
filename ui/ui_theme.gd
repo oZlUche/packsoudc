@@ -120,7 +120,7 @@ const PANEL_HUD_BAR := &"PanelHudBar"
 const BUTTON_ICON := &"ButtonIcon"
 ## 167：整颗按钮就是一张图（三态图自己画悬停与按下，[method IconButton.make_art]）—— 各态都没有底
 const BUTTON_ART := &"ButtonArt"
-## 168：大标题（马善政，[method UiPalette.display_font]）—— 主菜单游戏名、开局屏与开场事件的章节名、宝箱屏的说明字
+## 168：大标题（寒蝉锦书宋 Heavy，子集改名 PackSDC Display；2026-10-27 起替换马善政，[method UiPalette.display_font]）—— 主菜单游戏名、开局屏与开场事件的章节名、宝箱屏的说明字
 const LABEL_DISPLAY := &"LabelDisplay"
 ## 197 补充一 §6：主菜单 / 启动屏的游戏名 —— 思源宋体 Bold、暖纸色、6 px 深褐描边、下投影、字距 +6（[method make_hero_title]）
 const LABEL_HERO_TITLE := &"LabelHeroTitle"
@@ -409,7 +409,7 @@ static func make_label(text: String, font_size: int = FONT_SIZE, color: Color = 
 	return label(l, font_size, color)
 
 
-## 168：大标题（马善政，[constant LABEL_DISPLAY]）；字号不是 [constant DISPLAY_SIZE] 才覆写
+## 168：大标题（寒蝉锦书宋 Heavy，[constant LABEL_DISPLAY]）；字号不是 [constant DISPLAY_SIZE] 才覆写
 static func make_display(text: String, font_size: int = DISPLAY_SIZE) -> Label:
 	var l := Label.new()
 	l.text = text
@@ -1154,7 +1154,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 		t.set_type_variation(pair[0], "Label")
 		t.set_color("font_color", pair[0], pair[1])
 	t.set_font_size("font_size", LABEL_TITLE, TITLE_SIZE)
-	# 168：标题（名牌也走 LabelTitle）与叠层标题条是朱雀仿宋；大标题是马善政
+	# 168：标题（名牌也走 LabelTitle）与叠层标题条是朱雀仿宋；大标题是寒蝉锦书宋 Heavy
 	t.set_font("font", LABEL_TITLE, _font_title)
 	t.set_type_variation(LABEL_DISPLAY, "Label")
 	t.set_font("font", LABEL_DISPLAY, _font_display)

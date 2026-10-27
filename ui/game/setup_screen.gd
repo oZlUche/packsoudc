@@ -179,8 +179,8 @@ var _gifted: Dictionary = {}
 ## 179：右栏的凹槽板内边距
 const RIGHT_PAD := 10
 ## 255（作者 2026-10-26 10:51）：三栏定宽，不随棋盘宽窄变 —— 左按角色名纸条（连皮框 312；稿子的 260 放不下「安德烈乌斯」）、右按最宽的九格棋盘、中栏是剩下的；不足九格的棋盘在右栏里居中
-const LEFT_W := 312
-const COL_GAP := 36
+const LEFT_W := 336
+const COL_GAP := 24     # 作者 10-27「太窄了，向右拓宽一些」：左栏 312 → 336，让出的 24 来自两道栏距（中栏宽不变，英文最长的卡照样装得下）
 const BOARD_MAX_W := CharacterDef.BOARD_MAX_W
 ## 255 补充二：第二页棋盘下的包架横排几格（九种以内一行）
 const RACK_COLUMNS := 9
@@ -279,7 +279,7 @@ static func card_width() -> float:
 ## 161 第一页：角色列表 | 角色卡 | 棋盘预览（只看不拖）。
 ## 179：三栏各坐一块凹槽板、间距 36；中栏撑满左右两栏之间，右栏（棋盘）贴右边
 func _build_character_page() -> Control:
-	var row := _hbox(36)
+	var row := _hbox(COL_GAP)
 	_grooves.clear()
 	var left_board := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)     # 乙 石刻：角色列表、角色卡垫第二页那块皮
 	left_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
