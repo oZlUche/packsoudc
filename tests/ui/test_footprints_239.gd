@@ -1,4 +1,4 @@
-## 239：拿起道具时，每块棋盘把每件道具的占格逐格描出来（稀有度色细框 + 淡填，包只描灰框）；
+## 239：拿起道具时，每块棋盘把每件道具的占格逐格铺出来（作者 10-27：不描框，整格一层淡的稀有度色，白档偏灰；包铺更淡的包灰）；
 ## 手里那件在残影上也逐格描；放下 / 取消就全部收起
 extends RefCounted
 
@@ -7,12 +7,12 @@ const CELL := InventoryView.CELL
 
 
 static func run_footprint_cells(t: TestCase) -> void:
-	t.begin("239 · 占格小方框：L 形三格各一个、向内缩 3 px；包只描不填")
+	t.begin("239 · 占格：L 形三格各一块、整格铺满（作者 10-27 不留缝）；白档偏灰；包铺更淡的包灰")
 	var ell := Drag._def("ell", ["10", "11"])
 	var rects := InventoryView.footprint_cells(ell.cells_rotated(0), Vector2(100, 50), CELL)
-	t.eq(rects.size(), 3, "L 形三格：三个小方框")
+	t.eq(rects.size(), 3, "L 形三格：三块")
 	var inset := InventoryView.FOOTPRINT_INSET
-	t.eq(rects[0], Rect2(Vector2(100, 50) + Vector2.ONE * inset, Vector2.ONE * (CELL - 2.0 * inset)), "左上那格：按锚点、向内缩")
+	t.eq(rects[0], Rect2(Vector2(100, 50) + Vector2.ONE * inset, Vector2.ONE * (CELL - 2.0 * inset)), "左上那格：按锚点、整格")
 	var corner := false
 	for r in rects:
 		corner = corner or r.position == Vector2(100, 50) + Vector2(CELL, CELL) + Vector2.ONE * inset
@@ -20,8 +20,11 @@ static func run_footprint_cells(t: TestCase) -> void:
 	t.eq(InventoryView.footprint_cells(ell.cells_rotated(1), Vector2.ZERO, 30.0).size(), 3, "转了照样三格，按格宽缩放")
 	var bag := Drag._def("pouch", ["11", "11"])
 	bag.is_bag = true
-	t.check(InventoryView.footprint_hollow(bag), "包：只描灰框不填（内容物压在上面要看得见）")
-	t.check(not InventoryView.footprint_hollow(ell), "道具：稀有度色框 + 淡填")
+	t.check(InventoryView.footprint_hollow(bag), "包：铺更淡的包灰（内容物压在上面要看得见）")
+	t.check(not InventoryView.footprint_hollow(ell), "道具：淡的稀有度色")
+	t.eq(InventoryView.FOOTPRINT_INSET, 0.0, "不留缝")
+	t.eq(InventoryView.footprint_color(ell, 0), InventoryView.FOOTPRINT_WHITE, "白档换成偏灰的白")
+	t.eq(InventoryView.footprint_color(ell, 3), ItemPainter.rarity_color(ell, 3), "别的档照稀有度色")
 
 
 static func frame_footprints_follow_drag(t: TestCase, root: Window) -> void:

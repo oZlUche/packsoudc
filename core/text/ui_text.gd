@@ -74,14 +74,12 @@ const TEXT := {
 	"repair.dropped_one": {"zh": "%d 件按版本说明移除", "en": "%d item was removed as the update notes say"},
 	"repair.unenchanted": {"zh": "%d 件的附魔已失效、被摘掉", "en": "%d enchantments no longer exist and were removed"},     # 175
 	"slots.newer_tag": {"zh": "　（更新版本的存档）", "en": " (saved by a newer version)"},
-	"menu.meta": {"zh": "仓库与战绩", "en": "Warehouse & records"},
 	"menu.settings": {"zh": "设置", "en": "Settings"},
 	"menu.encyclopedia": {"zh": "百科", "en": "Encyclopedia"},
 	"menu.dev_tools": {"zh": "开发工具（沙盒与编辑器）", "en": "Dev tools (sandboxes & editors)"},
 	"menu.quit": {"zh": "退出", "en": "Quit"},
 	"menu.language": {"zh": "语言：中文（点击切换 English）", "en": "Language: English (click for 中文)"},
 	"menu.lang_short": {"zh": "中 / EN", "en": "中 / EN"},     # 197 补充一：主菜单左下那一行的语言开关
-	"menu.stats": {"zh": "第 %d 局　撤离 %d 次　战败 %d 次　仓库 %d 件　累计总分 %d　钱 %d", "en": "Run %d · extracted %d · died %d · warehouse %d items · score %d · funds %d"},
 	# buff 制作器
 	"buff.title": {"zh": "Buff 制作器", "en": "Buff maker"},
 	"buff.list": {"zh": "Buff", "en": "Buffs"},

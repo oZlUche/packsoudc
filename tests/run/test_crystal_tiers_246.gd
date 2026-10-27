@@ -239,3 +239,25 @@ static func run_enemy_drop(t: TestCase) -> void:
 	var built := EnemyPlacer.build_content(mage, c.pool, c.items, 2, _rng(3))
 	var crystals := (built["content"]["items"] as Array).filter(func(e: Dictionary) -> bool: return CrystalRoll.is_rolled(c.items.get_def(StringName(String(e["id"])))))
 	t.check(not crystals.is_empty() and crystals.all(func(e: Dictionary) -> bool: return int(e.get("charges", 0)) >= 1), "学徒身上的晶石都记了次数（%d 颗）" % crystals.size())
+
+
+## 246 补充四（作者 2026-10-27 13:01）：魔晶石只有 1×1 和 1×2（横条），没有 2×2 —— 扫整个物品库，不写死名单；清明魔晶石 2×2 → 1×2 进 RESHAPED
+static func run_crystal_shapes(t: TestCase) -> void:
+	t.begin("246 补充四：带 crystal 标签的物品形状只有 1×1 或 1×2；清明魔晶石是 1×2 横条")
+	var db := _db()
+	var allowed := [[Vector2i(0, 0)], [Vector2i(0, 0), Vector2i(1, 0)]]
+	var bad: Array[String] = []
+	var seen := 0
+	for id in db.all_ids():
+		var d := db.get_def(id)
+		if d == null or not d.has_tag(&"crystal"):
+			continue
+		seen += 1
+		var cells := d.shape.cells_rotated(0)
+		cells.sort()
+		if not cells in allowed:
+			bad.append("%s %s" % [id, cells])
+	t.check(seen >= 10, "扫到了魔晶石（%d 件）" % seen)
+	t.check(bad.is_empty(), "形状都是 1×1 / 1×2：%s" % [bad])
+	t.eq(db.get_def(&"quartz_cluster").shape.size_rotated(0), Vector2i(2, 1), "清明魔晶石 1×2 横条")
+	t.check(IdAliases.RESHAPED.has(&"quartz_cluster"), "清明魔晶石的重塑登记在 RESHAPED")

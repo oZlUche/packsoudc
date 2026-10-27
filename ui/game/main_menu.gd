@@ -87,15 +87,17 @@ func open(_payload: Dictionary) -> void:
 	_primary = _vbox(PRIMARY_GAP)
 	_column.add_child(_primary)
 	_continue_btn = null
+	# 089 补充二（作者 2026-10-27）：「继续」和「新的游戏」二选一 —— 有档只给「继续」（没有局就进基地），没档只给「新的游戏」；
+	# 开第二份存档走「读取存档 → 在空位开新的游戏」
 	if flow.profile_exists():
 		_continue_btn = _line(_primary, UiText.t("menu.continue"), func(): flow.continue_game(), UiTheme.MENU_PRIMARY_SIZE)
-	_line(_primary, UiText.t("menu.new_run"), func(): flow.start_new_game(), UiTheme.MENU_PRIMARY_SIZE)
+	else:
+		_line(_primary, UiText.t("menu.new_run"), func(): flow.start_new_game(), UiTheme.MENU_PRIMARY_SIZE)
 	_column.add_child(_spacer(PRIMARY_TO_SECONDARY))
 	_secondary = _vbox(SECONDARY_GAP)
 	_column.add_child(_secondary)
 	if flow.slots != null and flow.slots.any():
 		_line(_secondary, UiText.t("menu.load"), flow.show_slots)
-	_line(_secondary, UiText.t("menu.meta"), flow.show_meta)
 	_line(_secondary, UiText.t("menu.encyclopedia"), func(): flow.show_encyclopedia())     # 114
 	_line(_secondary, UiText.t("menu.settings"), flow.show_settings)
 	_column.add_child(_spacer(SECONDARY_TO_FOOT))

@@ -36,10 +36,12 @@ const COLOR_BAD := Color(0.9, 0.3, 0.3, 0.35)
 const COLOR_DISPLACE := Color(0.95, 0.72, 0.25, 0.38)
 ## 即将被顶出来的那几件，描一圈边，让人看清代价
 const COLOR_VICTIM := Color(0.98, 0.62, 0.25)
-## 239：拿起时逐格描占格 —— 小方框向内缩多少、线多粗、淡填多浓
-const FOOTPRINT_INSET := 3.0
-const FOOTPRINT_LINE := 1.5
-const FOOTPRINT_FILL := 0.16
+## 239 → 作者 10-27：拿起时占格不描框，整格铺一层淡的稀有度色（格与格之间不留缝）；包只铺一层更淡的包灰
+const FOOTPRINT_INSET := 0.0
+const FOOTPRINT_FILL := 0.26
+const FOOTPRINT_BAG_FILL := 0.12
+## 白档（普通）的占格层用带点灰的白 —— 纯白铺在浅色棋盘上看不出来（作者 10-27）
+const FOOTPRINT_WHITE := Color("b3afa6")
 ## 所有棋盘视图都在这一组里（点中一件时整组重画）
 const GROUP := &"inventory_views"
 
@@ -167,18 +169,22 @@ static func footprint_cells(cells: Array[Vector2i], anchor: Vector2, px: float) 
 	return out
 
 
-## 239：包只描灰框不填（内容物压在上面要看得见）
+## 239：包铺更淡的包灰（作者 10-27，原来只描灰框；内容物压在上面要看得见）
 static func footprint_hollow(def: ItemDef) -> bool:
 	return def != null and def.is_bag and not def.has_faith()
 
 
-## 239：描一件的占格 —— 道具稀有度色细框 + 同色淡填；[param hollow] 为真（包）只描灰框
+## 占格层的颜色：稀有度色，白档换成偏灰的白
+static func footprint_color(def: ItemDef, rarity: int = -1) -> Color:
+	var c := ItemPainter.rarity_color(def, rarity)
+	return FOOTPRINT_WHITE if c == ItemPainter.RARITY_COLORS[0] else c
+
+
+## 239：铺一件的占格 —— 每格铺满一层淡的稀有度色，不描框；[param hollow] 为真（包）铺更淡的包灰
 static func draw_footprint(ci: CanvasItem, def: ItemDef, cells: Array[Vector2i], anchor: Vector2, px: float, hollow: bool, rarity: int = -1) -> void:
-	var line := COLOR_BAG_EDGE if hollow else ItemPainter.rarity_color(def, rarity)
+	var tone := Color(COLOR_BAG_EDGE, FOOTPRINT_BAG_FILL) if hollow else Color(footprint_color(def, rarity), FOOTPRINT_FILL)
 	for r in footprint_cells(cells, anchor, px):
-		if not hollow:
-			ci.draw_rect(r, Color(line, FOOTPRINT_FILL), true)
-		ci.draw_rect(r, line, false, FOOTPRINT_LINE)
+		ci.draw_rect(r, tone, true)
 
 
 func _draw_footprints() -> void:
