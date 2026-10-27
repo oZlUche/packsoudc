@@ -154,7 +154,7 @@ func profile_exists() -> bool:
 	return has_save() or continue_target() != null
 
 
-## 主菜单「继续」：读当前位接着玩 —— 有局内存档读档；教程打到中途开下一张；都没有就按这份存档开新的一局（教程从头 / 开局屏）
+## 主菜单「继续」：读当前位接着玩 —— 有局内存档读档；教程打到中途开下一张；都没有就进基地（089 补充二）
 func continue_game() -> bool:
 	if newer_slot > 0:
 		return false
@@ -162,7 +162,7 @@ func continue_game() -> bool:
 		return continue_run()
 	if not profile_exists():
 		return false
-	new_run()
+	show_meta()     # 089 补充二（作者 2026-10-27）：没有局、没有教程 → 进基地（仓库常驻右半边），不再直接开新局
 	return true
 
 
