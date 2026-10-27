@@ -105,7 +105,7 @@ static func resolve_styles(bbcode: String, tone: StringName = &"dark") -> String
 ## 169 统一入口：一段 BBCode 放到深 / 浅底上 —— 颜色名按模板取版；浅底时写死的十六进制再过一道 [method for_tone]
 ## （是模板里某个深版就换成它的浅版，别的按 [method UiTheme.ink_color] 压暗兜底）
 static func toned(bbcode: String, tone: StringName) -> String:
-	var out := resolve_styles(bbcode, tone)
+	var out := sized(resolve_styles(bbcode, tone))
 	if tone != UiTheme.TONE_LIGHT or not out.contains("[color="):
 		return out
 	if _hex_tag == null:
@@ -117,6 +117,20 @@ static func toned(bbcode: String, tone: StringName) -> String:
 		res += "[color=#%s]" % for_tone(Color(m.get_string(1)), tone).to_html(false)
 		at = m.get_end()
 	return res + out.substr(at)
+
+
+## 258：富文本里写死的 `[font_size=N]` 按字号档放大（[method UiTheme.sz]）；所有富文本都经 [method toned]，这一处就全覆盖
+static func sized(bbcode: String) -> String:
+	if UiTheme.text_scale == 1.0 or not bbcode.contains("[font_size="):
+		return bbcode
+	if _size_tag == null:
+		_size_tag = RegEx.create_from_string("\\[font_size=(\\d+)\\]")
+	var res := ""
+	var at := 0
+	for m in _size_tag.search_all(bbcode):
+		res += bbcode.substr(at, m.get_start() - at) + "[font_size=%d]" % UiTheme.sz(int(m.get_string(1)))
+		at = m.get_end()
+	return res + bbcode.substr(at)
 #endregion
 
 
@@ -146,6 +160,7 @@ static var _to_light: Dictionary = {}
 ## 浅版十六进制（已经是浅底用的，不再压）
 static var _light_set: Dictionary = {}
 static var _hex_tag: RegEx = null
+static var _size_tag: RegEx = null
 
 
 ## 模板（第一次用时读；[method load_text_colors] 重读）
@@ -452,7 +467,7 @@ static func button_font_size(base: int, tier: int) -> int:
 static func style_button(b: Button, tier: int, font_size: int) -> void:
 	b.theme_type_variation = button_variation(tier)
 	if font_size != button_font_size(UiTheme.FONT_SIZE, tier):
-		b.add_theme_font_size_override("font_size", font_size)
+		b.add_theme_font_size_override("font_size", UiTheme.sz(font_size))     # 258：按字号档放大
 
 
 ## 这一档对应的按钮变体名（[UiTheme]）

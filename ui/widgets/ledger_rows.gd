@@ -37,25 +37,27 @@ func clear() -> void:
 
 
 func _get_minimum_size() -> Vector2:
+	var fs := UiTheme.sz(FONT_SIZE)     # 258：按字号档
 	var w := 0.0
 	var f := UiPalette.cjk_font()
 	var fb := UiPalette.cjk_font_bold()
 	for r in _rows:
-		w = maxf(w, f.get_string_size(String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
-			+ fb.get_string_size(String(r["value"]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x + 32.0 + 2.0 * PAD_X)
+		w = maxf(w, f.get_string_size(String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			+ fb.get_string_size(String(r["value"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 32.0 + 2.0 * PAD_X)
 	return Vector2(w, ROW_H * _rows.size())
 
 
 func _draw() -> void:
+	var fs := UiTheme.sz(FONT_SIZE)     # 258：按字号档
 	var f := UiPalette.cjk_font()
 	var fb := UiPalette.cjk_font_bold()
-	var base := (f.get_ascent(FONT_SIZE) - f.get_descent(FONT_SIZE)) * 0.5
+	var base := (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
 	for i in _rows.size():
 		var r: Dictionary = _rows[i]
 		var mid := ROW_H * (i + 0.5)
 		var col: Color = r["color"]
-		draw_string(f, Vector2(PAD_X, mid + base), String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK_LABEL)
+		draw_string(f, Vector2(PAD_X, mid + base), String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK_LABEL)
 		var v := String(r["value"])
-		var vw := fb.get_string_size(v, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
-		draw_string(fb, Vector2(size.x - PAD_X - vw, mid + base), v, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, INK_NUM if col.a == 0.0 else col)
+		var vw := fb.get_string_size(v, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(fb, Vector2(size.x - PAD_X - vw, mid + base), v, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK_NUM if col.a == 0.0 else col)
 		draw_line(Vector2(0.0, ROW_H * (i + 1) - 1.0), Vector2(size.x, ROW_H * (i + 1) - 1.0), LINE, 1.0)

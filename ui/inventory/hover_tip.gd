@@ -327,11 +327,16 @@ const ANCHOR_GAP := 6.0
 var _refit_queued := false
 
 
+## 258：窗宽随字号档放大（360 → 405 / 450；词条小窗同理）—— [constant MAX_WIDTH] / [constant MIN_WIDTH] / [constant CHILD_WIDTH] 是小档的宽
+static func scaled(w: float) -> float:
+	return float(UiTheme.sz(int(w)))
+
+
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 60     # 128：画在地上（盖在各屏上面的那一层）的东西之上；相对自己那一屏（作者 2026-10-13：导演给叠层整屏抬高，地图的悬浮窗不再盖住叠层）
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_panel = _new_window(0, MAX_WIDTH)
+	_panel = _new_window(0, scaled(MAX_WIDTH))
 	_text = _panel.body
 	# 富文本换了字要等排版完才知道真高：最小尺寸一变就下一帧缩回去重摆，不留旧文字的高度
 	_panel.minimum_size_changed.connect(_queue_refit)
@@ -680,7 +685,7 @@ func _refit() -> void:
 func _shrink_to_text() -> void:
 	if _panel.item_mode or _extra != null or not _faith_parts.is_empty():
 		return
-	var w := clampf(ceilf(_panel.content_width()) + 1.0, MIN_WIDTH, _panel.full_width)
+	var w := clampf(ceilf(_panel.content_width()) + 1.0, scaled(MIN_WIDTH), _panel.full_width)
 	if absf(_panel.body.custom_minimum_size.x - w) > 0.5:
 		_panel.set_width(w)
 
@@ -871,7 +876,7 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 			w = c
 			break
 	if w == null:
-		w = _new_window(parent.depth + 1, CHILD_WIDTH)
+		w = _new_window(parent.depth + 1, scaled(CHILD_WIDTH))
 	_windows.erase(w)
 	_windows.insert(at + 1, w)
 	w.reset_state()
@@ -892,7 +897,7 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 	w.set_text(title if only_name else "%s\n[color=@tip_fg]%s[/color]" % [title, Glossary.mark_rich(String(entry["text"]), found)])     # 170 定稿：只有名字描边；175 补 5.4：伤害字带色
 	w.set_codex(codex_for(String(entry["name"])))     # 220 E
 	if only_name:     # 193 补充三：只有名字（标签图标的子窗）按名字宽收窄，不留大块空白
-		w.set_width(clampf(ceilf(w.content_width()) + 1.0, NAME_ONLY_MIN_WIDTH, CHILD_WIDTH))
+		w.set_width(clampf(ceilf(w.content_width()) + 1.0, NAME_ONLY_MIN_WIDTH, scaled(CHILD_WIDTH)))
 	w.visible = true
 	w.reset_size()
 	_place_child(w, parent)

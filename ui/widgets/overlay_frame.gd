@@ -127,7 +127,7 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 		var spec := UiTheme.art_meta(_band_art)
 		var lab: Dictionary = spec.get("label", {})
 		title_label.add_theme_font_override("font", UiPalette.cjk_font_bold())
-		title_label.add_theme_font_size_override("font_size", int(lab.get("size", 20)))
+		title_label.add_theme_font_size_override("font_size", UiTheme.sz(int(lab.get("size", 20))))
 		title_label.add_theme_color_override("font_color", Color(String(lab.get("color", "#2e2219"))))     # 槽是浅石：不管板深浅都写墨字
 		title_bar.custom_minimum_size.y = maxf(title_bar.custom_minimum_size.y, float(spec.get("height", 36)))
 	title_bar.add_child(title_label)
@@ -204,7 +204,7 @@ func _init_book() -> void:
 	title_bar.add_child(slots)
 	title_label = UiTheme.make_label("", BOOK_TITLE_SIZE)
 	title_label.theme_type_variation = UiTheme.LABEL_OVERLAY_TITLE
-	title_label.add_theme_font_size_override("font_size", BOOK_TITLE_SIZE)
+	title_label.add_theme_font_size_override("font_size", UiTheme.sz(BOOK_TITLE_SIZE))
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	content = MarginContainer.new()

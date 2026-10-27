@@ -6,6 +6,7 @@ var _tooltip_btn: Button = null
 var _unlock_all_btn: Button = null
 ## 标题牌：告示卷排在它下面（[method notice_top]）
 var _plate: Control = null
+var _scroll: ScrollContainer = null
 ## 「导出平衡数据」石签：导出的告示卷排在它右边（[method notice_spot]）
 var _export_btn: Control = null
 ## 2026-10-22：名字全显（百科不遮没点亮的道具名）
@@ -23,6 +24,8 @@ var _bg_btns: Dictionary = {}
 ## 172：窗口模式的按钮（模式 → 按钮）、分辨率的按钮（档位 → 按钮）、全屏时那行注
 var _mode_btns: Dictionary = {}
 var _res_btns: Dictionary = {}
+## 258：字号三档的石签（档名 → 签）
+var _text_btns: Dictionary = {}
 ## 204：「声音」一节的音效音量（读数写在步进件的石牌上）
 var _sfx: StoneStepper = null
 ## 090：从地图的暂停菜单嵌进来时的「返回」（回暂停菜单，一局还在）；空 = 独立的一屏，回主菜单
@@ -41,6 +44,7 @@ func open(_payload: Dictionary) -> void:
 	frame.add_child(plate)
 	_plate = plate
 	var scroll := ScrollContainer.new()
+	_scroll = scroll
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	frame.add_child(scroll)
@@ -158,6 +162,15 @@ func _build_display(col: VBoxContainer) -> void:
 		var follow := StoneChip.make(UiText.t("settings.res_follow_screen"), func(): pass)
 		follow.disabled = true
 		col.add_child(follow)
+	# 258（作者 2026-10-27 定）：字号三档 小 / 中 / 大（主菜单不跟）；点了这一屏当场按新字号重建，别的屏下次进来生效
+	var size_row := _hbox(8)
+	size_row.add_child(HeaderTag.new(UiText.t("settings.text_size")))
+	for tier in GameSettings.TEXT_SIZES:
+		var id: StringName = tier
+		var tb := StoneChip.make(UiText.t("settings.text_" + String(id)), func(): set_text_size(id))
+		_text_btns[id] = tb
+		size_row.add_child(tb)
+	col.add_child(size_row)
 
 
 ## 204：「声音」一节 —— 音效音量一行（− / + 一步 10%，按钮本身响 `ui.press`，当场听到新音量）。音乐那行等第一首曲子再露出来（待定 4.2）
@@ -307,6 +320,20 @@ func notice_top() -> float:
 
 ## 游戏测试 v4.26：标题牌下面紧挨着「显示」段头签，卷压住它的右半边 —— 卷排到刚点的那颗石签右边（那一行只有它，右边空着），
 ## 竖着对齐石签；石签不在 / 右边放不下（卷伸出板面）才照 [method notice_top] 排在标题牌下面。返回 [卷左沿离屏中线多远（负 = 中线左边）, 卷顶]
+## 258：字号放大后导出石签可能在滚动框底边只露一半 —— 先把它连同卷的高度滚进来，卷才不出板面
+func _reveal_export(text: String) -> void:
+	if _scroll == null or _export_btn == null or not is_instance_valid(_export_btn) or not _export_btn.is_inside_tree():
+		return
+	var probe := NoticeScroll.make(text)
+	var h := probe.custom_minimum_size.y
+	probe.free()
+	var btn := _export_btn.get_global_rect()
+	var over := btn.get_center().y + h / 2.0 - _scroll.get_global_rect().end.y
+	if over > 0.0:
+		_scroll.scroll_vertical += ceili(over)
+		_scroll.notification(Container.NOTIFICATION_SORT_CHILDREN)     # 立刻排到新位置，下面按石签量位置
+
+
 func notice_spot(text: String) -> Vector2:
 	var probe := NoticeScroll.make(text)
 	var sz := probe.custom_minimum_size
@@ -321,6 +348,7 @@ func notice_spot(text: String) -> Vector2:
 
 
 func _post(text: String, urgent: bool = false) -> void:
+	_reveal_export(text)
 	var spot := notice_spot(text)
 	notice_layer().push(text, urgent, notice_cap(), spot.x, spot.y)
 
@@ -334,6 +362,34 @@ func set_bg_theme(id: String) -> void:
 	flow.save_settings()
 	refresh_backdrop()
 	_refresh()
+
+
+## 258：换字号档 —— 存盘、主题按新倍率重填，这一屏整个重建（字号跟着变的是新造的控件）
+func set_text_size(id: StringName) -> void:
+	if not GameSettings.TEXT_SIZES.has(id) or flow.settings.text_size == id:
+		_refresh()
+		return
+	flow.settings.text_size = id
+	UiPalette.apply(flow.settings)
+	flow.save_settings()
+	_rebuild()
+
+
+func _rebuild() -> void:
+	for c in get_children():
+		remove_child(c)
+		c.queue_free()
+	for d in [_cursor_btns, _bg_btns, _mode_btns, _res_btns, _text_btns]:
+		(d as Dictionary).clear()
+	_auto_close_btn = null
+	_tooltip_btn = null
+	_unlock_all_btn = null
+	_reveal_names_btn = null
+	_trace_btn = null
+	_debug_btn = null
+	_fades_btn = null
+	_sfx = null
+	open({})
 
 
 ## 091：老手的「全部解锁」开关（成就不计）
@@ -373,6 +429,8 @@ func _refresh() -> void:
 		_fades_btn.text = UiText.t("settings.fades_state") % (UiText.t("settings.on") if flow.settings.ui_fades else UiText.t("settings.off"))
 	for sid in _cursor_btns:
 		(_cursor_btns[sid] as Button).set_pressed_no_signal(String(sid) == (flow.settings.cursor_skin if UiCursor.SKINS.has(flow.settings.cursor_skin) else UiCursor.DEFAULT_SKIN))
+	for id in _text_btns:
+		(_text_btns[id] as Button).set_pressed_no_signal(id == flow.settings.text_size)
 	for tid in _bg_btns:
 		# 101 第 5 刀：设置里存的可能是空串或认不出来的 id，按生效的那一档打勾
 		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == UiPalette.bg_theme)

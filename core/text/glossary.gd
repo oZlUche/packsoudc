@@ -307,6 +307,8 @@ static func faith(text: String) -> String:
 ## 末尾垫一行 1 像素高的透明图把各列撑到 [param widths]，最后一列 [param right] 为真时靠右（阶号、所得、加成贴着窗的右边）。
 ## [param rows] 每行是各列的 BBCode
 const TIP_WIDTH := 360     # = HoverTip.MAX_WIDTH（core 不引界面）
+## 258：界面的字号倍率（界面层 `UiTheme.set_text_size` 写进来；core 不引界面）。[method columns] 的撑宽行按它放大
+static var text_scale := 1.125
 ## 列之间的缝（富文本表格自带）：撑宽行少垫这么多，免得加起来比窗宽、右边被裁
 const COL_SLACK := 8
 const SPACER := "res://assets/ui/tip/blank.png"
@@ -321,8 +323,8 @@ static func columns(rows: Array, widths: Array[int], right: bool = true) -> Stri
 			if right and i == n - 1 and c != "":
 				c = "[right]%s[/right]" % c
 			cells += ("[cell expand=1]%s[/cell]" if i == n - 1 and n > 1 else "[cell]%s[/cell]") % c
-	for w in widths:     # 撑宽行
-		cells += "[cell][font_size=1][img=%dx1]%s[/img][/font_size][/cell]" % [maxi(1, w), SPACER]
+	for w in widths:     # 撑宽行（宽按 360 宽的窗给，258 起随字号档放大：窗宽同样放大）
+		cells += "[cell][font_size=1][img=%dx1]%s[/img][/font_size][/cell]" % [maxi(1, floori(w * text_scale)), SPACER]
 	return "[table=%d]%s[/table]" % [n, cells]
 
 

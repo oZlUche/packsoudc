@@ -54,6 +54,11 @@ var resolution: Vector2i = Vector2i.ZERO
 ## 204：音效 / 音乐音量（0～1，线性；0 = 静音）。界面层套到总线上（`Audio.apply`）；音乐那行等第一首曲子再在设置屏露出来
 var sfx_volume: float = 0.8
 var music_volume: float = 0.6
+## 258（作者 2026-10-27 定）：界面字号三档 small / medium / large（×1.0 / 1.125 / 1.25，主菜单不跟）；默认中，老设置文件没这项也按中。
+## 设置层只存认得的档名，倍率怎么套是界面的事（`UiTheme.set_text_size`）
+var text_size: StringName = &"medium"
+
+const TEXT_SIZES: Array[StringName] = [&"small", &"medium", &"large"]
 
 ## 172：认得的窗口模式；全屏 = 无边框铺满桌面（待定 4 A）
 const WINDOW_MODES: Array[String] = ["windowed", "fullscreen"]
@@ -96,6 +101,7 @@ func to_dict() -> Dictionary:
 		"resolution": [resolution.x, resolution.y],
 		"sfx_volume": sfx_volume,
 		"music_volume": music_volume,
+		"text_size": String(text_size),
 	}
 
 
@@ -125,6 +131,8 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	# 224 补充三：187 的「棋盘格线」设置删了（格线常开），旧存档里的 show_grid 键照旧忽略
 	s.sfx_volume = clampf(float(d.get("sfx_volume", 0.8)), 0.0, 1.0)
 	s.music_volume = clampf(float(d.get("music_volume", 0.6)), 0.0, 1.0)
+	var tier := StringName(String(d.get("text_size", "medium")))
+	s.text_size = tier if TEXT_SIZES.has(tier) else &"medium"
 	return s
 
 
