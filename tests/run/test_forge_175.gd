@@ -308,7 +308,7 @@ static func frame_forge_screen(t: TestCase, root: Window) -> void:
 	t.check(screen.preview_text().contains("还差"), "空槽：还差几个（%s）" % screen.preview_text())
 	# 196 §5（美术定稿）：整屏炉台近景，槽 / 出牌槽 / 背包按 layout.json 摆，跟底图同一个 cover 变换
 	t.eq(screen.backdrop_state(), "lit", "没铸过：炉火亮着")
-	t.eq(screen.handle_state(), "idle", "没放满：风箱把手是暗的那张")
+	t.eq(screen.forge_btn_state(), "idle", "没放满：「铸牌」键是暗的那张")
 	var lay: Dictionary = screen.layout()
 	var s: float = screen.size.x / 1920.0     # 按宽铺满、竖直居中
 	var off: Vector2 = (screen.size - Vector2(1920, 1200) * s) * 0.5
@@ -319,6 +319,13 @@ static func frame_forge_screen(t: TestCase, root: Window) -> void:
 		var v: InventoryView = screen.slot_view(i)
 		fits = fits and Rect2(Vector2.ZERO, screen.spot_rect("slot%d" % i).size).grow(0.5).encloses(v.get_rect())
 	t.check(fits, "4 × 4 的格子在槽口里")
+	# 作者 2026-10-27：「铸」从左上风箱把手挪到台面右端的铜盾「铸牌」键 —— 168 × 156、原点在中心、摆在底图 (1140, 606)；只认盾牌本身，外圈的光不算可点
+	var key: Rect2 = screen.spot_rect("forge_btn")
+	t.check(key.get_center().is_equal_approx(off + Vector2(1140, 606) * s) and key.size.is_equal_approx(Vector2(168, 156) * s), "「铸牌」键在台面右端（%s）" % key)
+	var btn: TextureButton = screen._forge_btn
+	var mask := btn.texture_click_mask
+	t.check(mask != null and mask.get_bitv(Vector2i(84, 78)) and not mask.get_bitv(Vector2i(1, 1)), "「铸牌」键只认盾牌：中心能点、角上的光不算")
+	t.eq(btn.name, "铸牌", "键名「铸牌」")
 	var bag: Rect2 = screen.spot_rect("bag")
 	t.check(Rect2(Vector2.ZERO, screen.size).encloses(bag) and bag.size.x > 0.0, "背包摆在工作台皮垫上、不出屏（%s）" % bag)
 	var baked := true
@@ -330,7 +337,7 @@ static func frame_forge_screen(t: TestCase, root: Window) -> void:
 	t.check(screen.forge() == null, "差一槽不能铸")
 	t.check(screen.put_in(2, uids[2]), "放进数值")
 	t.check(screen.preview_text().contains("将铸出：铸牌 · 嗜血的"), "预览（%s）" % screen.preview_text())
-	t.eq(screen.handle_state(), "ready", "三槽满：风箱把手发亮、能按")
+	t.eq(screen.forge_btn_state(), "ready", "三槽满：「铸牌」键发亮、能按")
 	var tok: ItemInstance = screen.forge()
 	t.not_null(tok, "铸成")
 	t.eq(screen.output().item_count(), 1, "出牌槽一枚")
@@ -338,7 +345,7 @@ static func frame_forge_screen(t: TestCase, root: Window) -> void:
 		t.eq(screen.slot(i).item_count(), 0, "槽 %d 空了" % i)
 	t.check(NodeEvents.forge_used(node), "铸炉熄了")
 	t.eq(screen.backdrop_state(), "cold", "铸过：换冷炉底")
-	t.eq(screen.handle_state(), "off", "铸过：风箱把手灰掉")
+	t.eq(screen.forge_btn_state(), "off", "铸过：「铸牌」键灰掉")
 	t.check(screen.to_map(), "返回")
 	t.check(flow.screen != GameFlow.Screen.FORGE, "离开了铸炉屏")
 	t.check(tok != null and flow.run.holder_of(tok.uid) != null, "铸牌回了背包（棋盘或地上）")

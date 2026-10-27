@@ -6,6 +6,8 @@ extends RefCounted
 static func run_tier_table(t: TestCase) -> void:
 	t.begin("258 · 三档各建一次主题：默认字号与几个变体照表 2.1；主菜单的字三档一样；富文本 [font_size=16] 大档 20")
 	var saved := UiTheme.text_size
+	var pinned := UiTheme.pinned_text_size     # 按某一档整套跑时先松开，量完钉回去
+	UiTheme.pinned_text_size = &""
 	var table := {
 		&"small": {"default": 14, "display": 40, "body": 20, "small": 13, "cap": 28, "rich16": 16},
 		&"medium": {"default": 16, "display": 45, "body": 23, "small": 15, "cap": 32, "rich16": 18},
@@ -35,6 +37,7 @@ static func run_tier_table(t: TestCase) -> void:
 	t.check(menu[&"small"] == menu[&"medium"] and menu[&"small"] == menu[&"large"] and menu[&"small"] == [UiTheme.MENU_PRIMARY_SIZE, UiTheme.MENU_FOOT_SIZE, UiTheme.HERO_TITLE_SIZE],
 		"主菜单的字三档相同：%s" % str(menu))
 	UiTheme.set_text_size(saved)
+	UiTheme.pinned_text_size = pinned
 
 
 static func run_settings_field(t: TestCase) -> void:
@@ -55,6 +58,8 @@ static func run_settings_field(t: TestCase) -> void:
 static func run_sz(t: TestCase) -> void:
 	t.begin("258 · UiTheme.sz：中档 13 → 15、14 → 16；大档 13 → 16、28 → 35；小档原样；8 号以下只乘倍率")
 	var saved := UiTheme.text_size
+	var pinned := UiTheme.pinned_text_size     # 按某一档整套跑时先松开，量完钉回去
+	UiTheme.pinned_text_size = &""
 	UiTheme.set_text_size(&"small")
 	t.eq([UiTheme.sz(13), UiTheme.sz(360)], [13, 360], "小档原样")
 	UiTheme.set_text_size(&"medium")
@@ -63,3 +68,24 @@ static func run_sz(t: TestCase) -> void:
 	t.eq([UiTheme.sz(13), UiTheme.sz(28), UiTheme.sz(360)], [16, 35, 450], "大档")
 	t.eq(Glossary.text_scale, 1.25, "core 那边的倍率跟着改")
 	UiTheme.set_text_size(saved)
+	UiTheme.pinned_text_size = pinned
+
+
+## 游戏测试 v4.58：中、大档两处出框 —— 选人页蜡板小字压到数字上；英文开局书页的章节名撑宽右页
+static func run_fixed_boxes(t: TestCase) -> void:
+	t.begin("258 · 三档下：蜡板小字与数字不叠；开局书页章节名（英文最长那句）不宽过右页")
+	var saved := UiTheme.text_size
+	var pinned := UiTheme.pinned_text_size
+	UiTheme.pinned_text_size = &""
+	var event_screen: GDScript = load("res://ui/game/event_screen.gd")
+	var page_w := float((OverlayFrame.book_meta().get("text_rect", [704, 44, 560, 672]) as Array)[2])
+	for tier in GameSettings.TEXT_SIZES:
+		UiTheme.set_text_size(tier)
+		UiTheme.refresh(GameSettings.new())
+		t.eq(StatPlaque.font_sizes(), [StatPlaque.LABEL_SIZE, StatPlaque.VALUE_SIZE] as Array[int], "%s：蜡板定高，小字与数字照小档（不叠）" % tier)
+		var h: Label = event_screen._heading_label("Prologue: Edge of the Ruins", page_w)
+		t.check(h.get_minimum_size().x <= page_w, "%s：章节名宽 %d ≤ 右页 %d" % [tier, int(h.get_minimum_size().x), int(page_w)])
+		h.free()
+	UiTheme.set_text_size(saved)
+	UiTheme.pinned_text_size = pinned
+	UiTheme.refresh(GameSettings.new())

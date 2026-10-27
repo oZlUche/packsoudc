@@ -187,7 +187,7 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	_frame_title(title)     # 157：标题在石板框的标题条上（横跨图与正文）
 	var heading := intro_heading()
 	if heading != "":
-		col.add_child(UiTheme.make_display(heading))     # 168：开场事件先写章节名（大标题字体）
+		col.add_child(_heading_label(heading, TEXT_WIDTH))     # 168：开场事件先写章节名（大标题字体）
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -232,7 +232,7 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	col.add_child(under)
 	var heading := intro_heading()
 	if heading != "":
-		col.add_child(UiTheme.make_display(heading))
+		col.add_child(_heading_label(heading, tr.size.x))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -245,6 +245,14 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	options.name = "Options"
 	col.add_child(options)
 	return options
+
+
+## 章节名一行：258 字号放大后英文（「Prologue: Edge of the Ruins」）比书页宽 —— 缩回小档为止，不撑宽右页
+static func _heading_label(text: String, width: float) -> Label:
+	var l := UiTheme.make_display(text)
+	l.name = "Heading"
+	TextFit.shrink_label(l, width, UiTheme.sz(UiTheme.DISPLAY_SIZE), UiTheme.DISPLAY_SIZE)
+	return l
 
 
 static func _rect(a: Array) -> Rect2:

@@ -4,7 +4,7 @@
 ## 「返回」= 接着看排着的、没有就回地图：槽里的东西先回背包，出牌槽里没拿走的铸牌也放回背包（放不下到地上）。没铸过还能再来
 ## 196 §5（美术定稿「乙 炉台版」，作者 2026-10-19）：不再是石板叠层，是「走到铁炉前」的整屏近景 —— 底图 cover 铺满（铸过换冷炉），
 ## 三槽、出牌槽、槽下小字、背包、「将铸出」几行、说明石板都按 `assets/ui/forge/layout.json` 摆（底图像素，跟底图同一个缩放与偏移）；
-## 【时机】【效果】【数值】【出牌】和「铸炉」画在底图里，代码不写。「铸」= 风箱把手上的牌子（可铸 / 没放满 / 铸过 三张图），「返回」= 左下路标
+## 【时机】【效果】【数值】和「铸炉」画在底图里，代码不写。「铸牌」= 台面右端的铜盾牌键（作者 2026-10-27，原来是左上风箱把手；可铸 / 没放满 / 铸过 三张图），「返回」= 左下路标
 extends GameScreen
 
 const SLOT_SIZE := Vector2i(4, 4)
@@ -14,7 +14,7 @@ const ART_DIR := "res://assets/ui/forge/"
 const LAYOUT_PATH := ART_DIR + "layout.json"
 ## 说明石板：字号、板面离石板外框的边（底图像素）
 const SLATE_SIZE := 15
-## 把手 / 路标悬停时提亮
+## 「铸牌」键 / 路标悬停时提亮
 const HOVER_LIFT := 1.12
 const SLATE_INSET := Vector2(28, 36)
 ## 「将铸出」便条上的字号
@@ -38,7 +38,7 @@ var _preview: Label
 var _summaries: Array[RichTextLabel] = []
 var _slot_notes: Array[PanelContainer] = []
 ## 194 §2：两槽满时按空槽 default 行试算的那一句
-## 风箱把手（三张图跟着状态换）
+## 「铸牌」键（三张图跟着状态换）
 var _forge_btn: TextureButton
 var _back_btn: TextureButton
 var _inv: InventoryPanelScript = null
@@ -118,7 +118,7 @@ func open(payload: Dictionary) -> void:
 	_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # 便条定宽：长句折行
 	_text_box.add_child(_preview)
 
-	_forge_btn = _piece_button("handle", UiText.t("forge.forge_btn"), forge)
+	_forge_btn = _piece_button("forge_btn", UiText.t("forge.forge_btn"), forge)     # 作者 2026-10-27：右下铜盾「铸牌」键（原左上风箱把手）
 	_forge_btn.disabled = true
 	_back_btn = _piece_button("sign", UiText.t("setup.back"), to_map)
 	_back_btn.tooltip_text = UiText.t("forge.back_tip")
@@ -205,7 +205,7 @@ func _host(r: Rect2) -> Control:
 	return c
 
 
-## 风箱把手 / 路标：切图按钮，原点对齐 layout 里那一点；[param text] 只给读屏和测试看
+## 「铸牌」键 / 路标：切图按钮，原点对齐 layout 里那一点；[param text] 只给读屏和测试看
 func _piece_button(which: String, text: String, handler: Callable) -> TextureButton:
 	var b := TextureButton.new()
 	b.name = text
@@ -252,13 +252,13 @@ func _place() -> void:
 	_preview.custom_minimum_size.x = maxf(0.0, _text_note.size.x - _text_note.get_theme_stylebox("panel").get_minimum_size().x)     # 便条定宽、按行数收高
 	_text_note.reset_size.call_deferred()
 	_align_slot_notes.call_deferred()
-	_place_piece(_forge_btn, "handle", s, offset)
+	_place_piece(_forge_btn, "forge_btn", s, offset)
 	_place_piece(_back_btn, "sign", s, offset)
 
 
 func _place_piece(b: TextureButton, which: String, s: float, offset: Vector2) -> void:
 	var at: Array = (_layout.get(which, {}) as Dictionary).get("pos", [0, 0])
-	var key := "sign_back" if which == "sign" else "handle_ready"
+	var key := "sign_back" if which == "sign" else "forge_btn_ready"
 	var meta: Dictionary = (_layout.get("pieces", {}) as Dictionary).get(key, {})
 	var sz: Array = meta.get("size", [0, 0])
 	var org: Array = meta.get("origin", [0, 0])
@@ -349,7 +349,7 @@ func summary_text(i: int) -> String:
 	return Glossary.strip_bbcode(_summaries[i].text) if i >= 0 and i < _summaries.size() else ""
 
 
-## 194 §2：两槽满时的试算句；别的时候空（226 批二：那一行删了，句子进风箱把手的悬浮窗）
+## 194 §2：两槽满时的试算句；别的时候空（226 批二：那一行删了，句子进「铸牌」键的悬浮窗）
 func guess_text() -> String:
 	var g := guess() if _forge_open() else {}
 	return "" if g.is_empty() else UiText.t("forge.guess") % [Forge.prefix(g), Glossary.strip_bbcode(Forge.sentence(g))]
@@ -397,8 +397,10 @@ func _refresh() -> void:
 	_align_slot_notes.call_deferred()     # 字换了行数，便条跟着收放
 	var ench := preview()
 	_forge_btn.disabled = ench.is_empty() or not open
-	_forge_btn.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/handle_ready"))     # 221：把手与底图上的铭牌画着字，英文版另一套
-	_forge_btn.texture_disabled = UiTheme.art_cached(UiTheme.lang_art("forge/handle_%s" % ("idle" if open else "off")))
+	_forge_btn.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/forge_btn_ready"))     # 221：键上画着字，英文版另一套
+	_forge_btn.texture_disabled = UiTheme.art_cached(UiTheme.lang_art("forge/forge_btn_%s" % ("idle" if open else "off")))
+	if _forge_btn.texture_click_mask == null:
+		_forge_btn.texture_click_mask = _click_mask(_forge_btn.texture_normal)
 	_bg.texture = UiTheme.art_cached(UiTheme.lang_art("forge/bg_%s" % ("lit" if open else "cold")))     # 铸过：炉熄
 	UiTheme.label(_preview, PREVIEW_SIZE, UiTheme.INK)
 	if not open:
@@ -419,13 +421,27 @@ func _refresh() -> void:
 	_text_note.reset_size.call_deferred()     # 字换了行数，便条跟着收放
 
 
-## 风箱把手现在是哪一张（ready / idle / off；测试看）
+## 「铸牌」键只认盾牌本身：亮的那张外圈的光是半透明的，不算可点（不透明度 > 0.5 才算）
+static func _click_mask(tex: Texture2D) -> BitMap:
+	if tex == null:
+		return null
+	var img := tex.get_image()
+	if img == null:
+		return null
+	if img.is_compressed():
+		img.decompress()
+	var mask := BitMap.new()
+	mask.create_from_image_alpha(img, 0.5)
+	return mask
+
+
+## 「铸牌」键现在是哪一张（ready / idle / off；测试看）
 ## 236 第五项：离开铸炉放掉整屏的炉台底图（亮 / 熄、中 / 英各一张，9 MB 一张）
 func _exit_tree() -> void:
 	UiTheme.release_art("forge/bg_")
 
 
-func handle_state() -> StringName:
+func forge_btn_state() -> StringName:
 	if not _forge_open():
 		return &"off"
 	return &"idle" if _forge_btn.disabled else &"ready"
@@ -436,7 +452,7 @@ func backdrop_state() -> StringName:
 	return &"lit" if _forge_open() else &"cold"
 
 
-## 摆在底图上的一块现在在屏上的矩形（测试看）：slot0..2 / output / bag / text / slate / handle / sign
+## 摆在底图上的一块现在在屏上的矩形（测试看）：slot0..2 / output / bag / text / slate / forge_btn / sign
 func spot_rect(which: String) -> Rect2:
 	match which:
 		"output":
@@ -447,7 +463,7 @@ func spot_rect(which: String) -> Rect2:
 			return _text_note.get_rect()
 		"slate":
 			return _slate.get_rect()
-		"handle":
+		"forge_btn":
 			return _forge_btn.get_rect()
 		"sign":
 			return _back_btn.get_rect()

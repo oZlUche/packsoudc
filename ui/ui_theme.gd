@@ -283,6 +283,8 @@ static var _font_hero: Font = null
 ## 258：现在的字号档与倍率（[method set_text_size] 改；[method sz] 按它算）
 static var text_size: StringName = &"medium"
 static var text_scale := 1.125
+## 258：测试按某一档整套跑时钉住（PACKSDC_TEXT_SIZE）；空 = 不钉，跟设置走
+static var pinned_text_size: StringName = &""
 ## [member _current] 是按哪档倍率填的
 static var _current_scale := 0.0
 ## 157：界面贴图的目录。测试指到 `res://tests/fixtures/ui/`（那里放一张小图），用完改回来
@@ -344,9 +346,24 @@ static func refresh(settings: GameSettings = null) -> void:
 
 ## 258：换字号档（认不出的档名按中）。只改倍率；主题要重填走 [method refresh]
 static func set_text_size(id: StringName) -> void:
+	if pinned_text_size != &"":
+		id = pinned_text_size
 	text_size = id if TEXT_SCALES.has(id) else &"medium"
 	text_scale = float(TEXT_SCALES[text_size])
 	Glossary.text_scale = text_scale
+
+
+## 258：在 [param id] 档下跑一段（造控件、填字），跑完回到原档；不管钉住的档、不重填主题（悬浮窗太高时整窗退一档重排用）
+static func with_text_size(id: StringName, fn: Callable) -> void:
+	var keep_size := text_size
+	var keep_scale := text_scale
+	text_size = id
+	text_scale = float(TEXT_SCALES[id])
+	Glossary.text_scale = text_scale
+	fn.call()
+	text_size = keep_size
+	text_scale = keep_scale
+	Glossary.text_scale = keep_scale
 
 
 ## 258：按现在的字号档放大一个字号 —— 乘倍率取整，8 号以上至少涨这一档的步数（中 +1、大 +2）。全游戏的界面字号都过这里（主菜单除外）
