@@ -72,7 +72,7 @@ static func frame_faith_window(t: TestCase, root: Window) -> void:
 		t.check(bar.get_index() == tip._panel.head.get_index() + 1, "在名字行下面")
 	t.eq(tip._faith_parts.size(), 1 + 2 * 2, "进度条 + 两段（各一条虚线）")
 	tip._refit()
-	t.eq(tip._panel.body.custom_minimum_size.x, HoverTip.MAX_WIDTH, "宽 360，不按内容收窄")
+	t.eq(tip._panel.body.custom_minimum_size.x, HoverTip.scaled(HoverTip.MAX_WIDTH), "宽 360（258：随字号档），不按内容收窄")
 	tip.show_faith(FaithTooltip.describe_full(brute, _power(&"brute", 999)), Vector2(100, 100))
 	var full_bar = tip.faith_bar()
 	t.check(full_bar != null and float(full_bar.fill_of(3)) == 1.0, "满阶：还挂着、全满")

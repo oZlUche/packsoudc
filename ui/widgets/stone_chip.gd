@@ -98,8 +98,9 @@ func set_state_ink(state: String, ink: Color) -> void:
 	queue_redraw()
 
 
+## 258：按字号档放大（签高不变，40 高放得下大档 23 号）
 func _font_size() -> int:
-	return ENTRY_FONT if is_entry else FONT_SIZE
+	return UiTheme.sz(ENTRY_FONT if is_entry else FONT_SIZE)
 
 
 func _dress() -> void:
@@ -183,13 +184,13 @@ func _draw() -> void:
 		draw_string(f, Vector2(left, y), text, HORIZONTAL_ALIGNMENT_LEFT, size.x - left - 8.0, fs, _colors[st])
 		return
 	if check:
-		draw_string(f, Vector2(left, y), text, HORIZONTAL_ALIGNMENT_LEFT, size.x - left - PAD_X, FONT_SIZE, _colors[st])
+		draw_string(f, Vector2(left, y), text, HORIZONTAL_ALIGNMENT_LEFT, size.x - left - PAD_X, fs, _colors[st])
 		var tex := UiTheme.art_cached(CHECK_ART + ("on" if button_pressed else "off"))
 		if tex != null:
 			draw_texture(tex, Vector2(CHECK_X - 6.0, (size.y - tex.get_size().y) * 0.5))
 		return
 	var w := size.x - left - PAD_X
-	draw_string(f, Vector2(left, y), text, HORIZONTAL_ALIGNMENT_CENTER, w, FONT_SIZE, _colors[st])
+	draw_string(f, Vector2(left, y), text, HORIZONTAL_ALIGNMENT_CENTER, w, fs, _colors[st])
 	if swatch.a > 0.0:
 		var r := Rect2(SWATCH_AT, Vector2(SWATCH, SWATCH))
 		draw_rect(r, swatch)

@@ -8,6 +8,7 @@
 class_name OnStatusApplied
 extends Trigger
 
+## 空 = 任意状态（铸炉时机槽木制 / 自然 / 布料「施加状态时」，195；作者 10-27 报文字里是「？」、也从不触发）
 @export var buff_id: StringName = &""
 ## 自己身上被施加（true）还是对手身上（false）
 @export var on_self: bool = false
@@ -20,7 +21,7 @@ func subscribed_events() -> Array[StringName]:
 
 
 func matches(ctx: RuleContext, event: BattleEvent) -> bool:
-	if buff_id == &"" or event.get_name(&"buff") != buff_id:
+	if buff_id != &"" and event.get_name(&"buff") != buff_id:
 		return false
 	if not ctx.event_on(event, on_self):
 		return false
@@ -31,7 +32,7 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 
 ## 142：「你给对手施加流血时」「你被施加中毒时」「对手被施加流血时」（不认施加者）
 func describe() -> String:
-	var s := Glossary.status_name(buff_id)
+	var s := Glossary.status_name(buff_id) if buff_id != &"" else UiText.t("trig.any_status")
 	if by_self:
 		return UiText.t("trig.you_apply_self" if on_self else "trig.you_apply_opp") % s
 	return UiText.t("trig.applied_self" if on_self else "trig.applied_opp") % s

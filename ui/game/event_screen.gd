@@ -266,7 +266,7 @@ func _option_button(text: String, handler: Callable) -> Button:
 	if b is ScrollKey:
 		(b as ScrollKey).indent(OPTION_INDENT)
 	else:
-		b.add_theme_font_size_override("font_size", UiPalette.button_font_size(17, UiPalette.Tier.SECONDARY))
+		b.add_theme_font_size_override("font_size", UiTheme.sz(UiPalette.button_font_size(17, UiPalette.Tier.SECONDARY)))
 		b.custom_minimum_size.y = 64
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return b

@@ -260,6 +260,13 @@ const GROOVE_EDGE := Color("5a4522")
 const HOME_BUTTON_SIZE := 20
 const HOME_PRIMARY_SIZE := 28
 const RICH_FONT_SIZES := ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]
+## 258（作者 2026-10-27 定）：设置里的字号三档 —— 倍率与每档至少涨几号（小字号乘 1.125 取整看不出差别）。档名同 [constant GameSettings.TEXT_SIZES]
+const TEXT_SCALES := {&"small": 1.0, &"medium": 1.125, &"large": 1.25}
+const TEXT_MIN_STEP := {&"small": 0, &"medium": 1, &"large": 2}
+## 至少涨几号只管这么大以上的字（撑行宽的 1 号空白、2～7 号的小角标照倍率走）
+const TEXT_STEP_FROM := 8
+## 258：主菜单不跟着字号档放大（作者 20:57「注意主菜单的字体不用改」）—— 这几个变体在主题里保持原字号
+const MENU_VARIATIONS: Array[StringName] = [LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT]
 
 ## 并进默认主题的那一份；[method refresh] 原地重填它
 static var _current: Theme = null
@@ -273,6 +280,11 @@ static var _font_bold_italic: Font = null
 static var _font_title: Font = null
 static var _font_display: Font = null
 static var _font_hero: Font = null
+## 258：现在的字号档与倍率（[method set_text_size] 改；[method sz] 按它算）
+static var text_size: StringName = &"medium"
+static var text_scale := 1.125
+## [member _current] 是按哪档倍率填的
+static var _current_scale := 0.0
 ## 157：界面贴图的目录。测试指到 `res://tests/fixtures/ui/`（那里放一张小图），用完改回来
 static var asset_root := "res://assets/ui/"
 
@@ -282,6 +294,7 @@ static func build(settings: GameSettings = null) -> Theme:
 	UiPalette.text_colors()     # 169：浅底的墨色读字色模板，先读
 	var t := Theme.new()
 	_fill(t, _bg_of(settings))
+	_scale_fonts(t)
 	return t
 
 
@@ -291,7 +304,9 @@ static func current() -> Theme:
 		UiPalette.text_colors()
 		_current = Theme.new()
 		_current_bg = UiPalette.bg()
+		_current_scale = text_scale
 		_fill(_current, _current_bg)
+		_scale_fonts(_current)
 	return _current
 
 
@@ -309,19 +324,47 @@ static func installed() -> bool:
 	return _installed
 
 
-## 设置里换了底色：原地重填当前那一份，挂着的控件跟着变（[method UiPalette.apply] 调）
+## 设置里换了底色（258 起也有字号档）：原地重填当前那一份，挂着的控件跟着变（[method UiPalette.apply] 调）
 static func refresh(settings: GameSettings = null) -> void:
+	if settings != null:
+		set_text_size(settings.text_size)
 	if _current == null:
 		return
 	var bg := _bg_of(settings)
-	if bg == _current_bg:
-		return     # 底色没变（各根场景读档时都会调一次）：不重填，免得全树重排字
+	if bg == _current_bg and text_scale == _current_scale:
+		return     # 底色、字号档都没变（各根场景读档时都会调一次）：不重填，免得全树重排字
 	_current_bg = bg
+	_current_scale = text_scale
 	var fresh := build(settings)
 	_current.clear()
 	_current.merge_with(fresh)
 	if _installed:
 		ThemeDB.get_default_theme().merge_with(_current)
+
+
+## 258：换字号档（认不出的档名按中）。只改倍率；主题要重填走 [method refresh]
+static func set_text_size(id: StringName) -> void:
+	text_size = id if TEXT_SCALES.has(id) else &"medium"
+	text_scale = float(TEXT_SCALES[text_size])
+	Glossary.text_scale = text_scale
+
+
+## 258：按现在的字号档放大一个字号 —— 乘倍率取整，8 号以上至少涨这一档的步数（中 +1、大 +2）。全游戏的界面字号都过这里（主菜单除外）
+static func sz(n: int) -> int:
+	if n <= 0 or text_scale == 1.0:
+		return n
+	var m := roundi(n * text_scale)
+	return maxi(m, n + int(TEXT_MIN_STEP[text_size])) if n >= TEXT_STEP_FROM else m
+
+
+## 258：主题里登记过的字号全按档放大（主菜单那几个变体不动）；默认字号同样
+static func _scale_fonts(t: Theme) -> void:
+	t.default_font_size = sz(FONT_SIZE)
+	for type in t.get_font_size_type_list():
+		if MENU_VARIATIONS.has(StringName(type)):
+			continue
+		for key in t.get_font_size_list(type):
+			t.set_font_size(key, type, sz(t.get_font_size(key, type)))
 
 
 ## 面板的底色：跟着设置里的底色走（默认的石墨底正好是原来的 [constant UiPalette.PANEL]）；最深的那档底往亮里提一点，不然面板看不出来
@@ -332,7 +375,8 @@ static func panel_color(bg: Color) -> Color:
 #region 小工具（屏幕脚本用它们，不直接 add_theme_*）
 ## 标签：按颜色选变体（前景色 = 默认、暗色 = [constant LABEL_DIM]、警示 = [constant LABEL_WARN]），
 ## 字号不是变体的默认值才覆写；别的颜色（生命红、治疗绿……是语义色）才覆写颜色
-static func label(l: Label, font_size: int = FONT_SIZE, color: Color = UiPalette.FG) -> Label:
+## 258：[param scaled] 假 = 不跟字号档（主菜单）
+static func label(l: Label, font_size: int = FONT_SIZE, color: Color = UiPalette.FG, scaled: bool = true) -> Label:
 	var variation := label_variation(color)
 	l.theme_type_variation = variation
 	if variation == &"" and color != UiPalette.FG:
@@ -341,8 +385,8 @@ static func label(l: Label, font_size: int = FONT_SIZE, color: Color = UiPalette
 		l.set_meta(&"dark_color", color)
 		if not l.tree_entered.is_connected(retone_label.bind(l)):
 			l.tree_entered.connect(retone_label.bind(l))
-	if font_size != (TITLE_SIZE if variation == LABEL_TITLE else FONT_SIZE):
-		l.add_theme_font_size_override("font_size", font_size)
+	if not scaled or font_size != (TITLE_SIZE if variation == LABEL_TITLE else FONT_SIZE):
+		l.add_theme_font_size_override("font_size", sz(font_size) if scaled else font_size)     # 258：传进来的是小档字号，按档放大
 	return l
 
 
@@ -391,7 +435,7 @@ static func rich(r: RichTextLabel, font_size: int = FONT_SIZE) -> RichTextLabel:
 			pass
 		_:
 			for k in RICH_FONT_SIZES:
-				r.add_theme_font_size_override(k, font_size)
+				r.add_theme_font_size_override(k, sz(font_size))
 	return r
 
 
@@ -403,10 +447,10 @@ static func mark(b: Control, on: bool) -> void:
 
 #region 造控件与场景前奏（屏、面板、沙盒、编辑器共用）
 ## 一个标签：字体在主题里，颜色先选变体（[method label]）
-static func make_label(text: String, font_size: int = FONT_SIZE, color: Color = UiPalette.FG) -> Label:
+static func make_label(text: String, font_size: int = FONT_SIZE, color: Color = UiPalette.FG, scaled: bool = true) -> Label:
 	var l := Label.new()
 	l.text = text
-	return label(l, font_size, color)
+	return label(l, font_size, color, scaled)
 
 
 ## 168：大标题（寒蝉锦书宋 Heavy，[constant LABEL_DISPLAY]）；字号不是 [constant DISPLAY_SIZE] 才覆写
@@ -415,7 +459,7 @@ static func make_display(text: String, font_size: int = DISPLAY_SIZE) -> Label:
 	l.text = text
 	l.theme_type_variation = LABEL_DISPLAY
 	if font_size != DISPLAY_SIZE:
-		l.add_theme_font_size_override("font_size", font_size)
+		l.add_theme_font_size_override("font_size", sz(font_size))
 	return l
 
 
@@ -494,7 +538,7 @@ static func make_button(text: String, handler: Callable, tier: int = UiPalette.T
 	b.text = text
 	if tier == TIER_PLAIN:
 		if font_size != FONT_SIZE:
-			b.add_theme_font_size_override("font_size", font_size)
+			b.add_theme_font_size_override("font_size", sz(font_size))
 	else:
 		UiPalette.style_button(b, tier, UiPalette.button_font_size(font_size, tier))
 	b.pressed.connect(handler)
@@ -512,7 +556,7 @@ static func make_home_button(text: String, handler: Callable, primary: bool = fa
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	if font_size > 0:
-		b.add_theme_font_size_override("font_size", font_size)
+		b.add_theme_font_size_override("font_size", sz(font_size))
 	b.pressed.connect(handler)
 	return b
 
@@ -561,7 +605,7 @@ static func dress_chip_option(ob: OptionButton, font_size: int = 16, disabled_in
 ## 下拉共用：左对齐墨字、石刻箭头、浅纸弹出单（悬停一条 `kit/popup_hover`）
 static func _dress_drop(ob: OptionButton, font_size: int, ink: Color) -> void:
 	ob.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	ob.add_theme_font_size_override("font_size", font_size)
+	ob.add_theme_font_size_override("font_size", sz(font_size))
 	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 		ob.add_theme_color_override(c, ink)
 	var arrow := art_cached("kit/drop_arrow")
@@ -586,7 +630,7 @@ static func _dress_drop(ob: OptionButton, font_size: int, ink: Color) -> void:
 		hb.texture_margin_bottom = 10.0
 		pop.add_theme_stylebox_override("hover", hb)
 	pop.add_theme_font_override("font", UiPalette.cjk_font())
-	pop.add_theme_font_size_override("font_size", font_size)
+	pop.add_theme_font_size_override("font_size", sz(font_size))
 	for c in ["font_color", "font_hover_color", "font_accelerator_color"]:
 		pop.add_theme_color_override(c, ink)
 	pop.add_theme_color_override("font_disabled_color", INK_SOFT)
@@ -605,7 +649,7 @@ static func make_art_text_button(text: String, handler: Callable, art: String, b
 	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	b.add_theme_font_override("font", UiPalette.cjk_font_bold())
-	b.add_theme_font_size_override("font_size", font_size)
+	b.add_theme_font_size_override("font_size", sz(font_size))
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var tex := art_cached(art + "_" + state)
 		var box := StyleBoxTexture.new()
@@ -635,7 +679,7 @@ static func make_title_label(text: String, font_size: int) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.theme_type_variation = LABEL_TITLE
-	l.add_theme_font_size_override("font_size", font_size)
+	l.add_theme_font_size_override("font_size", sz(font_size))
 	return l
 
 

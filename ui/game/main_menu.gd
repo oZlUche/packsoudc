@@ -123,7 +123,7 @@ func open(_payload: Dictionary) -> void:
 	_note_paper.add_child(_notices)
 	for text in [flow.backup_notice(), flow.repair_notice()]:
 		if text != "":
-			_notices.add_child(_label(text, NOTICE_SIZE, UiTheme.INK_WARN))     # 便条上左对齐（UI替换美术 v4.03 核对）
+			_notices.add_child(UiTheme.make_label(text, NOTICE_SIZE, UiTheme.INK_WARN, false))     # 便条上左对齐（UI替换美术 v4.03 核对）；258：主菜单不跟字号档
 	_note_paper.visible = _notices.get_child_count() > 0
 	if not resized.is_connected(_layout):
 		resized.connect(_layout)

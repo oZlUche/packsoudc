@@ -1079,6 +1079,7 @@ const TEXT := {
 	"trig.res_above_self": {"zh": "你的%s不低于 %s 时", "en": "When your %s is at least %s"},
 	"trig.res_above_opp": {"zh": "对手的%s不低于 %s 时", "en": "When the opponent's %s is at least %s"},
 	"trig.self_driven": {"zh": "自发", "en": "On its own"},
+	"trig.any_status": {"zh": "状态", "en": "a status"},     # 空 buff 的 on_status_applied（铸炉时机：施加任意状态时）
 	"trig.you_apply_self": {"zh": "你给自己施加%s时", "en": "When you apply %s to yourself"},
 	"trig.you_apply_opp": {"zh": "你给对手施加%s时", "en": "When you apply %s"},
 	"trig.applied_self": {"zh": "你被施加%s时", "en": "When %s is applied to you"},
@@ -1312,6 +1313,10 @@ const TEXT := {
 	"settings.fades": {"zh": "换屏淡入", "en": "Screen fades"},
 	"settings.fades_state": {"zh": "换屏淡入：%s", "en": "Screen fades: %s"},
 	"settings.cursor": {"zh": "光标", "en": "Cursor"},
+	"settings.text_size": {"zh": "字号", "en": "Text size"},
+	"settings.text_small": {"zh": "小", "en": "Small"},
+	"settings.text_medium": {"zh": "中", "en": "Medium"},
+	"settings.text_large": {"zh": "大", "en": "Large"},
 	"settings.veteran": {"zh": "老手", "en": "Veteran"},
 	"settings.unlock_all_desc": {"zh": "全部解锁：章节、难度、道具不看解锁，直接全开；代价是成就不计。", "en": "Unlock everything: chapters, difficulties and items are all open, unlocked or not. The cost: achievements don't count."},
 	"settings.unlock_all": {"zh": "全部解锁", "en": "Unlock everything"},

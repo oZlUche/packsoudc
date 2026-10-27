@@ -33,10 +33,10 @@ static func make(a: ItemActions.Action, width: float) -> TipButton:
 	b.custom_minimum_size = Vector2(width, HEIGHT)
 	b.focus_mode = Control.FOCUS_NONE
 	b.add_theme_font_override("font", UiPalette.cjk_font_bold())
-	b.add_theme_font_size_override("font_size", FONT_SIZE)
+	b.add_theme_font_size_override("font_size", UiTheme.sz(FONT_SIZE))
 	b._style(false)
 	if a.coin >= 0:     # 251 补充一：价钱 = 金币 + 数字，靠右摆在签上
-		var c := CoinLabel.make(a.coin, FONT_SIZE, INK["normal"] if a.enabled else INK["disabled"])
+		var c := CoinLabel.make(a.coin, UiTheme.sz(FONT_SIZE), INK["normal"] if a.enabled else INK["disabled"])
 		c.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 10)
 		c.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 		b.add_child(c)
@@ -47,7 +47,7 @@ static func make(a: ItemActions.Action, width: float) -> TipButton:
 
 ## 这段字放不放得下半宽
 static func fits_half(label: String) -> bool:
-	return UiPalette.cjk_font_bold().get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x + LABEL_PAD <= HALF
+	return UiPalette.cjk_font_bold().get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(FONT_SIZE)).x + LABEL_PAD <= HALF
 
 
 func _box(state: String) -> StyleBox:

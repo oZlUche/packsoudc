@@ -23,7 +23,7 @@ static func run(t: TestCase) -> void:
 	UiTheme.asset_root = "res://tests/fixtures/no_such_ui/"
 	var th := UiTheme.build(s)
 	t.not_null(th.default_font, "默认字体是 CJK 字体")
-	t.eq(th.default_font_size, UiTheme.FONT_SIZE, "默认字号 14")
+	t.eq(th.default_font_size, UiTheme.sz(UiTheme.FONT_SIZE), "默认字号 14（258：按档）")
 	for v in UiTheme.VARIATIONS:
 		t.check(th.is_type_variation(v, th.get_type_variation_base(v)) and th.get_type_variation_base(v) != &"", "变体 %s 在" % v)
 	t.eq(th.get_type_variation_base(UiTheme.BUTTON_PRIMARY), &"Button", "按钮变体基于 Button")
@@ -36,7 +36,7 @@ static func run(t: TestCase) -> void:
 	var bold := th.get_font("bold_font", "RichTextLabel")
 	t.check(bold is FontVariation and (bold as FontVariation).base_font == UiPalette.font_file(UiPalette.FONT_BOLD), "168：富文本粗体是另一份字体文件（思源宋体 Bold）")
 	t.check(bold != th.default_font, "粗体不是默认字体")
-	t.eq(th.get_font_size("normal_font_size", UiTheme.RICH_BODY), 20, "正文 20 号")
+	t.eq(th.get_font_size("normal_font_size", UiTheme.RICH_BODY), UiTheme.sz(20), "正文 20 号")
 	t.eq(th.get_constant("line_separation", UiTheme.RICH_BODY), 8, "正文行距 8")
 	s.bg_theme = "moss"
 	var moss := (UiTheme.build(s).get_stylebox("panel", UiTheme.PANEL_DARK) as StyleBoxFlat).bg_color

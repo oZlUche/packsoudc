@@ -50,8 +50,9 @@ func _right() -> float:
 	return HANG_RIGHT if hang else RIGHT
 
 
+## 258：按字号档放大（签宽随字，高不变）
 func _font_size() -> int:
-	return HANG_FONT_SIZE if hang else FONT_SIZE
+	return UiTheme.sz(HANG_FONT_SIZE if hang else FONT_SIZE)
 
 
 func _fit() -> void:

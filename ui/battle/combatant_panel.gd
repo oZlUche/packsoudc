@@ -461,7 +461,7 @@ func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false
 	var l := Label.new()
 	l.text = ("+%d" % amount) if heal else (("-%d!" if crit else "-%d") % amount)
 	# 104：暴击的飘字大一号、换色
-	l.add_theme_font_size_override("font_size", (28 if crit else 20) if amount >= 10 else (22 if crit else 16))
+	l.add_theme_font_size_override("font_size", UiTheme.sz((28 if crit else 20) if amount >= 10 else (22 if crit else 16)))
 	# 121 特例：飘字（字号按数大小、颜色按伤害类型 / 暴击 / 治疗），画布那一类，不进主题
 	l.add_theme_color_override("font_color", UiPalette.HEAL if heal else (UiPalette.CRIT if crit else UiPalette.damage_color(type)))
 	l.set_meta(&"exempt_bare_text", "effect")     # 226 守门：战斗飘字是画面效果，不是一行字
@@ -482,7 +482,7 @@ func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false
 func popup_text(text: String, color: Color, time_scale: float = 1.0) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", 26)
+	l.add_theme_font_size_override("font_size", UiTheme.sz(26))
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_color_override("font_outline_color", UiTheme.OUTLINE_COLOR)
 	l.add_theme_constant_override("outline_size", UiTheme.OUTLINE_SIZE * 3)

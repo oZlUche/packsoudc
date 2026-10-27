@@ -19,3 +19,23 @@ static func shrink_button(b: Button, floor_size: int = 14) -> void:
 	while px > floor_size and font != null and font.get_multiline_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > room:
 		px -= 1
 	b.add_theme_font_size_override("font_size", px)
+
+
+## 258：定宽美术字区里的一行字（纸卷上的挑战行）—— 从 [param base] 号缩到一行放得下 [param width]，最小 [param floor_size]（小档字号）
+static func shrink_label(l: Label, width: float, base: int, floor_size: int) -> void:
+	if l == null:
+		return
+	var font := l.get_theme_font("font") if l.is_inside_tree() else UiPalette.cjk_font()
+	var px := base
+	while px > floor_size and font != null and font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
+		px -= 1
+	l.add_theme_font_size_override("font_size", px)
+
+
+## 258：定高卡里放不下时一号一号往回缩 —— [param l] 比 [param floor_size]（小档字号）大就小一号，返回缩了没有
+static func step_down(l: Label, floor_size: int) -> bool:
+	if l == null or l.get_theme_font_size("font_size") <= floor_size:
+		return false
+	var px := l.get_theme_font_size("font_size")
+	l.add_theme_font_size_override("font_size", px - 1)
+	return true

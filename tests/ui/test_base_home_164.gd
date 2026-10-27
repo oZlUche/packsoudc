@@ -136,7 +136,7 @@ static func run_home_art(t: TestCase) -> void:
 	t.check(th.get_stylebox("normal", UiTheme.BUTTON_HOME) is StyleBoxTexture, "木牌按钮是九宫格")
 	t.check(th.get_stylebox("disabled", UiTheme.BUTTON_HOME) is StyleBoxTexture, "禁用态也有图")
 	t.eq(th.get_color("font_color", UiTheme.BUTTON_HOME), UiTheme.INK, "浅木墨字")
-	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_HOME_PRIMARY), UiTheme.HOME_PRIMARY_SIZE, "再来一局字号大一档")
+	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_HOME_PRIMARY), UiTheme.sz(UiTheme.HOME_PRIMARY_SIZE), "再来一局字号大一档")
 	var rect := ColorRect.new()
 	t.not_null(UiTheme.dress_home_backdrop(rect), "背景铺上了")
 	t.eq((rect.get_node(^"HomeBackdrop") as TextureRect).stretch_mode, TextureRect.STRETCH_KEEP_ASPECT_COVERED, "按比例铺满、多的裁掉")

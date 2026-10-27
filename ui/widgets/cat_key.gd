@@ -88,8 +88,12 @@ func _draw() -> void:
 	if box.texture != null:
 		draw_style_box(box, Rect2(Vector2.ZERO, size))
 	var f := UiPalette.cjk_font_bold()
-	var fs := maxi(12, roundi(FONT_SIZE * scale_k))
 	var left := _margin.x * scale_k
 	var w := size.x - left - _margin.y * scale_k
+	# 258：字号按档放大；键宽不变，放不下就缩回小档的字号
+	var fs := maxi(12, roundi(UiTheme.sz(FONT_SIZE) * scale_k))
+	var floor_fs := maxi(12, roundi(FONT_SIZE * scale_k))
+	while fs > floor_fs and f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > w:
+		fs -= 1
 	var y := size.y * 0.5 + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
 	draw_string(f, Vector2(left, y), text, HORIZONTAL_ALIGNMENT_CENTER, w, fs, _ink[st])

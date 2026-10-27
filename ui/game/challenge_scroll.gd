@@ -203,6 +203,7 @@ func _add_row(level: int, text: String, at: int) -> Dictionary:
 
 ## 量一行多高（进树之后字体才是正文字体，[method _relayout] 时重量）
 func _measure(row: Dictionary) -> void:
+	TextFit.shrink_label(row["body"], text_width(), UiTheme.sz(FONT_SIZE), FONT_SIZE)     # 258：纸宽是美术定的，放不下一行就缩回小档
 	var h := _row_height(row["body"])
 	row["h"] = h
 	(row["line"] as Control).size = Vector2(_paper_w - PAD_X * 2.0, h)

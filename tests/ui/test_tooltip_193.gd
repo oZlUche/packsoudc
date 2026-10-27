@@ -64,11 +64,17 @@ static func frame_pin_delay_window(t: TestCase, root: Window) -> void:
 	var child := tip.open_child(tip._panel, "term:probe")
 	t.not_null(child, "开了子窗")
 	if child != null:
-		var inside := child.global_position + child.size * 0.5
-		tip.tick(0.55, inside)
+		tip._panel.hover("term:probe")     # 作者 10-27：子窗只认停在开它的词上
+		tip.tick(0.55, far)
 		t.check(not child.pinned, "子窗 0.55 秒：没钉")
-		tip.tick(0.6, inside)
+		tip.tick(0.6, far)
 		t.check(child.pinned, "子窗 1.15 秒：钉住")
+	tip._panel.terms["probe2"] = {"name": "探针二", "text": "说明"}
+	var loose := tip.open_child(tip._panel, "term:probe2")
+	if loose != null:
+		tip._panel.hover("")
+		tip.tick(0.016, loose.global_position + loose.size * 0.5)
+		t.check(not tip.windows().has(loose), "没钉住的子窗：词上移开（移进子窗也算）当场收")
 	host.queue_free()
 
 
@@ -95,7 +101,7 @@ static func _board_tip(root: Window) -> Dictionary:
 
 
 static func frame_source_check(t: TestCase, root: Window) -> void:
-	t.begin("193 §3.2 · 源每帧核对：钉住的窗在视图藏起来后收；道具被拿走后收；鼠标挪到空格但没有鼠标事件，过了宽限也收")
+	t.begin("193 §3.2 · 源每帧核对：钉住的窗在视图藏起来后收；道具被拿走后收；鼠标挪到空格但没有鼠标事件也当场收")
 	var f := _board_tip(root)
 	var tip: HoverTip = f["tip"]
 	var view: InventoryView = f["view"]
@@ -121,9 +127,7 @@ static func frame_source_check(t: TestCase, root: Window) -> void:
 	var empty := view.global_position + Vector2(0.5, 3.5) * InventoryView.CELL     # 窗开在鼠标右下：左下角那格不在窗里
 	t.check(not tip._panel.global_rect().has_point(empty) and (f["board"] as GridInventory).cell_uid(Vector2i(0, 3)) == GridInventory.EMPTY_UID, "那一格空着、不在窗里")
 	tip.tick(0.05, empty)
-	t.check(tip.is_showing(), "刚挪开：宽限里还在")
-	tip.tick(0.2, empty)
-	t.check(not tip.is_showing(), "宽限过了：收")
+	t.check(not tip.is_showing(), "作者 10-27：挪开当场收（不再有宽限）")
 	(f["host"] as Control).queue_free()
 	# 宿主自己藏了：文字窗也收
 	var host := Control.new()

@@ -109,3 +109,18 @@ static func run_cadence_mult(t: TestCase) -> void:
 		t.check(cd != null and is_equal_approx(cd.seconds, float(c[1])), "%s：每 %s 秒（%s）" % [c[0], c[1], cd.seconds if cd != null else "?"])
 	var leather := Forge.forge(db.get_def(&"leather_armor") if db.has_def(&"leather_armor") else db.get_def(&"raw_hide"), db.get_def(&"antler"), db.get_def(&"knife"))
 	t.check(Forge.rule_of(leather).cadence is Always, "皮革（开战时）：固定一次，不乘")
+
+
+static func run_any_status_timing(t: TestCase) -> void:
+	t.begin("作者 10-27 · 时机槽木制 / 自然 / 布料 =「施加任意状态时」：文字不再是「？」，扳机不挑状态")
+	for key in ["wood", "nature", "cloth"]:
+		var ench := _ench("bone", "weapon", 2)
+		ench["trigger"] = key
+		var rule := Forge.rule_of(ench)
+		t.not_null(rule, "%s：拼得出规则" % key)
+		if rule == null:
+			continue
+		var trig := rule.trigger as OnStatusApplied
+		t.check(trig != null and trig.buff_id == &"", "%s：施加状态时、没指定哪种" % key)
+		var text := Glossary.trigger_text(rule.trigger)
+		t.check(not text.contains("?") and text.contains("状态"), "%s：%s" % [key, text])

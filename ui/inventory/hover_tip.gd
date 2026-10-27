@@ -1,7 +1,7 @@
 ## 悬浮窗（084）：跟着鼠标的一小块面板，写 BBCode。两处用：容器视图里停在一件道具上（[ItemTooltip]），地图上停在一个点上（[NodeTooltip]）。
 ##
 ## 170（作者定）：**十字军之王式的固定悬浮窗** —— 深底白字（[constant UiTheme.ART_TOOLTIP]），道具说明分块（头 / 分隔线 / 正文 / 虚线 / 脚注）。
-## - 跟随：停在道具上出现、跟着鼠标；鼠标离开道具后给 [constant GRACE_SEC] 秒宽限，这期间进了悬浮窗就留下（不换、不收）；往窗外走就不等（[constant AWAY_PX]）。
+## - 跟随：停在道具上出现、贴着道具；作者 10-27：没钉住时鼠标一离开道具 / 关键词就当场收（移进悬浮窗也收），不再有宽限。
 ## - 钉住：作者 2026-10-17 —— 悬浮窗出来后，鼠标还停在**叫出它的源**上（道具 / 关键词 / 地图点）或在窗里，先等 [constant PIN_DELAY_SEC] 秒（193），再满 [constant PIN_SEC] 秒就钉 ——
 ##   一道黄铜线从左上角沿外框**顺时针**走一圈，走完即钉；源和窗都离开了归零。钉住后右上角一颗钉子，窗不再动；源换了也不换窗。
 ## - 关键词：钉住的窗里带下划线的词（`[url=term:<id>]`，[method Glossary.mark]）停 [constant TERM_SEC] 秒开**子窗**（同样可钉、可再开），深度封顶 [constant MAX_DEPTH]。
@@ -20,15 +20,12 @@ const MIN_WIDTH := 220.0
 const CHILD_WIDTH := 260.0
 ## 193 补充三：只写一个名字的子窗最窄多宽
 const NAME_ONLY_MIN_WIDTH := 40.0
-## 170 §3：离开道具后的宽限、钉住要停多久、关键词开子窗要停多久、离开钉住的窗多久收、子窗最多几层（含主窗）
-const GRACE_SEC := 0.15
+## 170 §3：钉住要停多久、关键词开子窗要停多久、离开钉住的窗多久收、子窗最多几层（含主窗）
 const PIN_SEC := 0.6
 ## 193（作者「放在道具区域内 0.5 秒后再开始」）：钉住进度线先等这么久才起步；主窗子窗一样
 const PIN_DELAY_SEC := 0.5
 const TERM_SEC := 0.25
 const AWAY_SEC := 0.4
-## 作者 2026-10-16（移开道具后悬浮窗消失有延迟）：宽限只留给往悬浮窗去的鼠标 —— 宽限期里离窗比刚离开时远出这么多像素就立刻收 / 换
-const AWAY_PX := 2.0
 const MAX_DEPTH := 3
 ## 钉住进度线：2 px 黄铜色
 const RING_WIDTH := 2.0
@@ -63,7 +60,7 @@ class TipWindow extends PanelContainer:
 	var pinned := false
 	## 鼠标在窗里停了多久（钉住进度 = [method HoverTip.pin_progress]）
 	var dwell := 0.0
-	## 离开计时（主窗：离开道具后的宽限；子窗：离开它和开它的那个词）；< 0 = 没在离开
+	## 离开计时（作者 10-27 起离开即收，只留着复位用）；< 0 = 没在离开
 	var leave_t := -1.0
 	## 鼠标正停在哪个关键词上（`term:<id>`）、停了多久
 	var hover_term := ""
@@ -309,15 +306,13 @@ var _views: Array[ContainerView] = []
 var can_show: Callable = Callable()
 var _uid: int = -1
 var _for_view: ContainerView = null
-## 离开当前道具后、宽限期满时要看的那个位置（视图与视图里的坐标；视图为 null = 出了视图）
+## 离开当前道具时要看的那个位置（视图与视图里的坐标；视图为 null = 出了视图）
 var _pending_view: ContainerView = null
 var _pending_local := Vector2.ZERO
 ## 离开钉住的那一串窗多久了
 var _away := 0.0
 ## 鼠标还在叫出主窗的源上（作者 2026-10-17：停在源上也走钉住进度；钉住后在源上也不算离开）。源离开时调 [method release]
 var _on_source := false
-## 宽限开始时鼠标离主窗多远（-1 = 还没记）
-var _leave_d := -1.0
 ## 最后一次摆放用的鼠标位置（全局）：排版完再量一次尺寸后照这个重摆
 var _last_at := Vector2.ZERO
 ## 作者 10-26：道具窗贴着被指的那件的外框摆（全局坐标；空 = 没有物件可贴，照鼠标摆）
@@ -327,11 +322,16 @@ const ANCHOR_GAP := 6.0
 var _refit_queued := false
 
 
+## 258：窗宽随字号档放大（360 → 405 / 450；词条小窗同理）—— [constant MAX_WIDTH] / [constant MIN_WIDTH] / [constant CHILD_WIDTH] 是小档的宽
+static func scaled(w: float) -> float:
+	return float(UiTheme.sz(int(w)))
+
+
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 60     # 128：画在地上（盖在各屏上面的那一层）的东西之上；相对自己那一屏（作者 2026-10-13：导演给叠层整屏抬高，地图的悬浮窗不再盖住叠层）
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_panel = _new_window(0, MAX_WIDTH)
+	_panel = _new_window(0, scaled(MAX_WIDTH))
 	_text = _panel.body
 	# 富文本换了字要等排版完才知道真高：最小尺寸一变就下一帧缩回去重摆，不留旧文字的高度
 	_panel.minimum_size_changed.connect(_queue_refit)
@@ -381,7 +381,7 @@ func watch(view: ContainerView) -> void:
 			return
 		_on_source = false
 		if not _panel.pinned:
-			_begin_leave(null, Vector2.ZERO))     # 170：出视图（多半是往悬浮窗里去）先给宽限
+			_begin_leave(null, Vector2.ZERO))     # 出视图：没钉住当场收（作者 10-27）
 
 
 ## 直接显示一段文字（地图上的点）；[param extra] 是文字下面再放的一个控件（对手的棋盘），可为 null；
@@ -680,7 +680,7 @@ func _refit() -> void:
 func _shrink_to_text() -> void:
 	if _panel.item_mode or _extra != null or not _faith_parts.is_empty():
 		return
-	var w := clampf(ceilf(_panel.content_width()) + 1.0, MIN_WIDTH, _panel.full_width)
+	var w := clampf(ceilf(_panel.content_width()) + 1.0, scaled(MIN_WIDTH), _panel.full_width)
 	if absf(_panel.body.custom_minimum_size.x - w) > 0.5:
 		_panel.set_width(w)
 
@@ -753,32 +753,22 @@ func hold_alt(down: bool) -> void:
 		visible = not down
 
 
-## 170 §3 的全部计时：宽限、钉住进度、关键词停留、子窗的去留、离开收起。[param mouse] 是全局坐标
+## 170 §3 的全部计时：钉住进度、关键词停留、子窗的去留、离开收起。[param mouse] 是全局坐标
 func tick(delta: float, mouse: Vector2) -> void:
 	if not _panel.visible:
 		return
 	if not _source_alive(mouse):
 		hide_tip()
 		return
-	if not _panel.pinned:
-		var in_panel := _panel.global_rect().has_point(mouse)
-		if in_panel:
-			_panel.leave_t = -1.0
-		if in_panel or (_on_source and _panel.leave_t < 0.0):
+	if not _panel.visible:
+		return     # 源刚离开（[method _begin_leave]）：没钉住的当场收了
+	if not _panel.pinned:     # 作者 10-27：没钉住时只有停在源上才走钉住进度；鼠标在窗里不算
+		if _on_source:
 			_panel.dwell += delta
 			if _panel.dwell >= PIN_DELAY_SEC + PIN_SEC:
 				pin(_panel)
-		elif _panel.leave_t < 0.0:
+		else:
 			_panel.dwell = 0.0
-		else:     # 宽限里（往窗里去的路上）：进度停着不归零
-			if _panel.leave_t >= 0.0:
-				var d := rect_distance(_panel.global_rect(), mouse)
-				if _leave_d < 0.0:
-					_leave_d = d
-				_panel.leave_t += delta
-				if _panel.leave_t >= GRACE_SEC or d > _leave_d + AWAY_PX:
-					_panel.leave_t = -1.0
-					_resolve_pending()
 		_panel.queue_redraw()
 		return
 	var open := windows()
@@ -797,18 +787,15 @@ func tick(delta: float, mouse: Vector2) -> void:
 		var w := open[i]
 		if w.depth > 0 and not w.pinned:
 			var on_word := open[i - 1].hover_term == w.origin_term     # 还停在开它的那个词上（作者 2026-10-17：也走钉住进度）
-			if w.global_rect().has_point(mouse) or on_word:
+			if on_word:     # 作者 10-27：没钉住的子窗只认停在词上，移开（含移进子窗）当场收
 				w.leave_t = -1.0
 				w.dwell += delta
 				if w.dwell >= PIN_DELAY_SEC + PIN_SEC:
 					pin(w)
 					return
 			else:
-				w.dwell = 0.0
-				w.leave_t = maxf(w.leave_t, 0.0) + delta
-				if w.leave_t >= GRACE_SEC:
-					_close_from(i)
-					return
+				_close_from(i)
+				return
 			w.queue_redraw()
 		if w.pinned and w.hover_term != "":
 			w.hover_t += delta
@@ -825,7 +812,7 @@ static func pin_progress(dwell: float) -> float:
 
 ## 193 §3.2（作者：进新节点时鼠标正指着道具，窗就一直不收）：每帧核对叫出主窗的源，不只信鼠标事件翻的旗子。
 ## 道具窗：视图释放了 / 不在树里 / 藏了 / 停了，或那件道具不在了 → 假（整串收，钉住的也收）；否则按鼠标现在的位置重算在不在那一格上，
-## 不在了就开始宽限（和鼠标事件走的是同一条路）。文字窗：宿主自己藏了 → 假
+## 不在了就当场按离开办（和鼠标事件走的是同一条路）。文字窗：宿主自己藏了 → 假
 func _source_alive(mouse: Vector2) -> bool:
 	if _for_view == null:
 		return is_visible_in_tree()
@@ -871,7 +858,7 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 			w = c
 			break
 	if w == null:
-		w = _new_window(parent.depth + 1, CHILD_WIDTH)
+		w = _new_window(parent.depth + 1, scaled(CHILD_WIDTH))
 	_windows.erase(w)
 	_windows.insert(at + 1, w)
 	w.reset_state()
@@ -892,7 +879,7 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 	w.set_text(title if only_name else "%s\n[color=@tip_fg]%s[/color]" % [title, Glossary.mark_rich(String(entry["text"]), found)])     # 170 定稿：只有名字描边；175 补 5.4：伤害字带色
 	w.set_codex(codex_for(String(entry["name"])))     # 220 E
 	if only_name:     # 193 补充三：只有名字（标签图标的子窗）按名字宽收窄，不留大块空白
-		w.set_width(clampf(ceilf(w.content_width()) + 1.0, NAME_ONLY_MIN_WIDTH, CHILD_WIDTH))
+		w.set_width(clampf(ceilf(w.content_width()) + 1.0, NAME_ONLY_MIN_WIDTH, scaled(CHILD_WIDTH)))
 	w.visible = true
 	w.reset_size()
 	_place_child(w, parent)
@@ -969,7 +956,7 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 		_on_source = true
 		_place(view.get_global_position() + mm.position)
 		return
-	_begin_leave(view, mm.position)     # 170：离开这件（换到别的、空格）先给宽限 —— 这期间进了悬浮窗就留下
+	_begin_leave(view, mm.position)     # 离开这件（换到别的、空格）：没钉住当场换 / 收（作者 10-27）
 
 
 ## 视图里这个 uid 能不能显示（有东西、can_show 放行）；不能返回 null
@@ -994,16 +981,17 @@ func _show_for(view: ContainerView, uid: int, inst: ItemInstance, local: Vector2
 	set_actions(_actions_of(view, uid))     # 230
 
 
+## 作者 10-27：离开源（换到别的、空格、出视图）不再给宽限 —— 没钉住就当场照鼠标现在的位置办：底下有能显示的就换成它，没有就收（移进悬浮窗也收）
 func _begin_leave(view: ContainerView, local: Vector2) -> void:
 	_on_source = false
 	_pending_view = view
 	_pending_local = local
-	if _panel.leave_t < 0.0:
-		_panel.leave_t = 0.0
-		_leave_d = -1.0     # 下一拍 tick 记下离窗多远
+	if not _panel.pinned:
+		_panel.leave_t = -1.0
+		_resolve_pending()
 
 
-## 宽限期满、鼠标没进悬浮窗：照最后那个位置办 —— 底下有能显示的就换成它，没有就收
+## 离开源时照最后那个位置办 —— 底下有能显示的就换成它，没有就收
 func _resolve_pending() -> void:
 	var view := _pending_view
 	_pending_view = null
@@ -1016,11 +1004,6 @@ func _resolve_pending() -> void:
 		hide_tip()
 	elif view != _for_view or uid != _uid:
 		_show_for(view, uid, inst, _pending_local)
-
-
-## 点到矩形的距离（在里面是 0）
-static func rect_distance(r: Rect2, p: Vector2) -> float:
-	return p.distance_to(p.clamp(r.position, r.end))
 
 
 func _uid_under(view: ContainerView, local: Vector2) -> int:

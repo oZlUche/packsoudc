@@ -153,10 +153,10 @@ func fit(k: float) -> void:
 	box.content_margin_right = (sw - face.end.x) * _k
 	box.content_margin_bottom = (sh - face.end.y) * _k
 	add_theme_stylebox_override("panel", box)
-	var ts := maxi(11, roundi(TEXT_SIZE * _k))
+	var ts := maxi(11, roundi(UiTheme.sz(TEXT_SIZE) * _k))     # 258：按字号档
 	for l in [_need, _wage_label]:
 		(l as Label).add_theme_font_size_override("font_size", ts)
-	_name.add_theme_font_size_override("font_size", maxi(14, roundi(NAME_SIZE * _k)))
+	_name.add_theme_font_size_override("font_size", maxi(14, roundi(UiTheme.sz(NAME_SIZE) * _k)))
 	_wage.font_size = ts
 	var g := StyleBoxFlat.new()     # 凹槽：深底、上沿和左沿压暗
 	g.bg_color = GROOVE

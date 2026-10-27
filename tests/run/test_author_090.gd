@@ -27,9 +27,9 @@ static func frame_button_tiers(t: TestCase, root: Window) -> void:
 	var m := s._button("辅", func(): pass, 14, UiPalette.Tier.MINOR)
 	for b in [p, sec, m]:
 		s.add_child(b)
-	t.eq(p.get_theme_font_size("font_size"), 42, "主动作 300%（14 → 42）")
-	t.eq(sec.get_theme_font_size("font_size"), 28, "不写档 = 次要 200%（14 → 28）")
-	t.eq(m.get_theme_font_size("font_size"), 21, "辅助 150%（14 → 21）")
+	t.eq(p.get_theme_font_size("font_size"), UiTheme.sz(42), "主动作 300%（14 → 42）")
+	t.eq(sec.get_theme_font_size("font_size"), UiTheme.sz(28), "不写档 = 次要 200%（14 → 28）")
+	t.eq(m.get_theme_font_size("font_size"), UiTheme.sz(21), "辅助 150%（14 → 21）")
 	t.eq(UiPalette.button_font_size(13, UiPalette.Tier.PRIMARY), 39, "13 号的 300% 是 39")
 	t.eq(_bg(p), UiPalette.BTN_PRIMARY, "主动作是琥珀实底")
 	t.eq(p.get_theme_color("font_color"), UiPalette.BTN_PRIMARY_TEXT, "琥珀底配深字")
