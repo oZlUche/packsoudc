@@ -134,32 +134,37 @@ static func run_faith_bonus_lit(t: TestCase) -> void:
 	var saved := ItemTooltip.faith_probe
 	ItemTooltip.faith_probe = Callable()
 	var plain := ItemTooltip.describe(ItemInstance.create(bow))
-	t.check(plain.contains("信力") and not plain.contains("[color=#%s]信力" % ItemTooltip.DIM_HEX) and not plain.contains("现在"), "局外：原色，不写状态")
+	var dim := "[color=#%s]" % ItemTooltip.DIM_HEX
+	# 257：加成挪进神名小节（full["faith"]），两列：条件信力色、加成数值色
+	var plain_f := String(ItemTooltip.describe_full(ItemInstance.create(bow))["faith"])
+	t.check(plain_f.contains("[color=@faith]") and plain_f.contains("[color=@val]") and not plain_f.contains(dim) and not plain.contains("现在"), "局外：原色（条件信力色、加成数值色），不写状态")
 	t.check(not plain.contains("休眠"), "107：道具悬浮窗里不再出现「休眠」字样")
 	var b0 := bow.faith_bonuses[0] as FaithBonus
 	t.check(not ItemTooltip.bonus_lit(bow, b0, {}), "没状态 = 不亮")
 	t.check(not ItemTooltip.bonus_lit(bow, b0, {"active": &"brute", "tier": 5, "points": 999}), "别的神激活：不亮")
 	t.check(not ItemTooltip.bonus_lit(bow, b0, {"active": &"hunt", "tier": 0, "points": 0}), "自己的神但阶不够：不亮")
 	t.check(ItemTooltip.bonus_lit(bow, b0, {"active": &"hunt", "tier": b0.tier, "points": 0}), "自己的神、阶够：亮")
+	# 每条加成两段灰（条件、加成），信物脚注一段
+	var dims := bow.faith_bonuses.size() * 2 + (1 if bow.is_anchor() else 0)
 	ItemTooltip.faith_probe = func() -> Dictionary: return {"active": &"brute", "tier": 2, "points": 120}
-	var dim := "[color=#%s]" % ItemTooltip.DIM_HEX
-	var fg := "[color=#%s]" % UiPalette.FG.to_html(false)
 	var dormant := ItemTooltip.describe(ItemInstance.create(bow))
-	t.eq(dormant.count(dim), plain.count(dim) + bow.faith_bonuses.size(), "别的神激活：每条加成多一段灰")
+	var dormant_f := String(ItemTooltip.describe_full(ItemInstance.create(bow))["faith"])
+	t.check(dormant_f.count(dim) == dims and not dormant_f.contains("[color=@val]"), "别的神激活：整节灰、不分色（%d 段）" % dormant_f.count(dim))
 	# 107（作者定）：不再写「现在休眠」—— 状态就是颜色
 	t.check(not Glossary.strip_bbcode(dormant).contains("休眠"), "别的神激活：不写「休眠」两个字，灰色就是状态")
 	t.check(not ItemTooltip.faith_lit(bow, ItemTooltip.faith_status()), "狩猎的弓在蛮神激活时不亮")
-	var sig_text := ItemTooltip.describe(ItemInstance.create(sigil))
+	var sig_full := ItemTooltip.describe_full(ItemInstance.create(sigil))
+	var sig_text := String(sig_full["text"])
 	t.check(ItemTooltip.faith_lit(sigil, ItemTooltip.faith_status()), "蛮神的护符在蛮神激活时亮（107：不再写「已激活（Lv.2）」，亮色就是状态）")
 	t.check(not Glossary.strip_bbcode(sig_text).contains("已激活"), "状态尾巴去掉了")
 	var lit_n := 0
 	for fb in sigil.faith_bonuses:
 		if ItemTooltip.bonus_lit(sigil, fb, ItemTooltip.faith_status()):
 			lit_n += 1
-	t.check(lit_n > 0 and sig_text.count(fg) >= lit_n, "生效的加成是白的（%d 条）" % lit_n)
+	t.check(lit_n > 0 and String(sig_full["faith"]).count("[color=@val]") >= lit_n, "生效的加成上数值色（%d 条）" % lit_n)
 	ItemTooltip.faith_probe = func() -> Dictionary: return {"active": &"", "tier": -1, "points": 0}
-	var none := ItemTooltip.describe(ItemInstance.create(bow))
-	t.check(not Glossary.strip_bbcode(none).contains("还没激活") and none.count(dim) == plain.count(dim) + bow.faith_bonuses.size(), "107：没激活也只是灰，不写「还没激活」")
+	var none := ItemTooltip.describe_full(ItemInstance.create(bow))
+	t.check(not Glossary.strip_bbcode(String(none["text"])).contains("还没激活") and String(none["faith"]).count(dim) == dims, "107：没激活也只是灰，不写「还没激活」")
 	ItemTooltip.faith_probe = saved
 
 

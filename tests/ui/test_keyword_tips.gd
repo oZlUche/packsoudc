@@ -84,12 +84,11 @@ static func run_faith_state_is_color(t: TestCase) -> void:
 	var bow := c.items.get_def(&"blessed_longbow")
 	var saved := ItemTooltip.faith_probe
 	var dim := "[color=#%s]" % ItemTooltip.DIM_HEX
-	var fg := "[color=#%s]" % UiPalette.FG.to_html(false)
 
 	ItemTooltip.faith_probe = func() -> Dictionary: return {"active": &"hunt", "tier": 5, "points": 9999}
 	var lit := ItemTooltip.describe(ItemInstance.create(bow))
 	t.check(ItemTooltip.faith_lit(bow, ItemTooltip.faith_status()), "狩猎激活：这件亮")
-	t.check(lit.contains(fg), "有亮色的信仰行")
+	t.check(lit.contains("[color=@faith]") and not lit.contains(dim), "有亮色的信仰行（257：信力色 / 数值色）")
 	t.check(not Glossary.strip_bbcode(lit).contains("现在"), "没有状态尾巴")
 	t.check(not Glossary.strip_bbcode(lit).contains("休眠"), "不写休眠")
 

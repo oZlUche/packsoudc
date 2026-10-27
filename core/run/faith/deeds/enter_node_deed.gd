@@ -17,3 +17,9 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 func describe() -> String:
 	return UiText.t("deed.enter_node") % [first_amount, again_amount]
+
+
+## 257：两件事各一行
+func parts() -> Array:
+	return [[UiText.t("deed.enter_first"), "+%d" % first_amount], [UiText.t("deed.enter_again"), "+%d" % again_amount]]
+

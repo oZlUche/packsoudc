@@ -13,12 +13,17 @@ static func _power(points: int) -> FaithPower:
 	return p
 
 
-## 各级那一行：[{lv: 文字, text: 文字, raw: BBCode}]
+## 各级那一组：[{lv: 文字, text: 各条用换行连起来, raw: 第一条的 BBCode}]；257 起一条一行，阶号只在头一行
 static func _rows(def: FaithDef, points: int) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var sec := String(FaithTooltip.describe_full(def, _power(points))["sections"][0])
 	for m in RegEx.create_from_string(CELL).search_all(sec):
-		out.append({"lv": Glossary.strip_bbcode(m.get_string(1)).replace("　", "").strip_edges(), "text": Glossary.strip_bbcode(m.get_string(2)), "raw": m.get_string(2)})
+		var lv := Glossary.strip_bbcode(m.get_string(1)).replace("　", "").strip_edges()
+		var text := Glossary.strip_bbcode(m.get_string(2)).strip_edges()
+		if lv != "":
+			out.append({"lv": lv, "text": text, "raw": m.get_string(2)})
+		elif text != "" and not out.is_empty():
+			out[-1]["text"] = String(out[-1]["text"]) + "\n" + text
 	return out
 
 
@@ -29,11 +34,11 @@ static func run_perk_lines(t: TestCase) -> void:
 	if brute == null:
 		return
 	var rows := _rows(brute, 45)
-	t.eq(rows.size(), 4, "四行（Lv.1～Lv.4 各一行）")
+	t.eq(rows.size(), 4, "四组（Lv.1～Lv.4 各一组）")
 	if rows.size() != 4:
 		return
 	var lv1 := String(rows[0]["text"])
-	t.check(String(rows[0]["lv"]) == "Lv.1" and lv1.contains("可以在祭坛赐福武器") and lv1.contains("生命值低于 30% 时，造成伤害提高 10%") and lv1.contains("；"), "Lv.1 一行两句：%s" % lv1)
+	t.check(String(rows[0]["lv"]) == "Lv.1" and lv1.contains("可以在祭坛赐福武器") and lv1.contains("生命值低于 30% 时，造成伤害提高 10%") and lv1.split("\n").size() == 2, "Lv.1 一组两句、一条一行（257）：%s" % lv1)
 	t.check(not String(rows[0]["raw"]).begins_with("[color=@dim]"), "Lv.1 到了：不灰")
 	for i in range(1, 4):
 		t.check(String(rows[i]["raw"]).begins_with("[color=@dim]"), "Lv.%d 没到：整行灰" % (i + 1))

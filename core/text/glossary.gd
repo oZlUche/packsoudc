@@ -262,6 +262,7 @@ const NAME_OUTLINE := "[outline_size=2][outline_color=#000000bf]%s[/outline_colo
 const SYSTEM_NAME_COLOR := "#e0b45c"
 
 static var _num_re: RegEx = null
+static var _bonus_re: RegEx = null
 
 
 ## 一个数值上数值色
@@ -269,18 +270,118 @@ static func val(text: String) -> String:
 	return "[color=%sval]%s[/color]" % [TextTemplate.STYLE_PREFIX, text]
 
 
-## 一段字里的数字（连同正负号与 %）都上数值色；方括号标签里面不动
+## 一段字里的数字（连同正负号与 %）都上数值色；方括号标签里面不动。
+## 257：只给整句都是加成的地方用（状态说明、战斗栏）；信仰窗里条件和加成混在一句的走 [method bonus_numbers]
 static func val_numbers(text: String) -> String:
 	if _num_re == null:
 		_num_re = RegEx.create_from_string("[+\\-−]?\\d+(?:\\.\\d+)?%?")
+	return _paint_numbers(text, _num_re, func(m: RegExMatch) -> String: return val(m.get_string()))
+
+
+## 257：信力本身（点数、阈值、信力来源的所得、献祭倍率）—— 每个数都上信力色 `@faith`
+static func faith_numbers(text: String) -> String:
+	if _num_re == null:
+		val_numbers("")
+	return _paint_numbers(text, _num_re, func(m: RegExMatch) -> String: return faith(m.get_string()))
+
+
+## 257：条件与加成混在一句里（神赐、赐福道具的加成）：只有加成的数上 `@val` —— 带正负号或 × 的、「提高 / 降低 N」、「N 层」；
+## 「N 信力」上 `@faith`；别的数（生命低于 30%、花 1 体力、10 秒）是条件，不上色（257 §三）
+static func bonus_numbers(text: String) -> String:
+	if _bonus_re == null:
+		_bonus_re = RegEx.create_from_string(
+			"(?<faith>\\d+(?=\\s?(?:信力|Faith)))"
+			+ "|(?<![\\d.])(?:[+\\-−×]\\s?\\d+(?:\\.\\d+)?%?"
+			+ "|(?<=提高 |降低 |increased by |reduced by )\\d+(?:\\.\\d+)?%?"
+			+ "|\\d+(?:\\.\\d+)?(?=\\s?(?:层|stacks?\\b)))")
+	return _paint_numbers(text, _bonus_re, func(m: RegExMatch) -> String:
+		return faith(m.get_string()) if m.get_string("faith") != "" else val(m.get_string()))
+
+
+## 一个数上信力色
+static func faith(text: String) -> String:
+	return "[color=%sfaith]%s[/color]" % [TextTemplate.STYLE_PREFIX, text]
+
+
+## 257：悬浮窗里的两列（信仰窗的神赐 / 赐福之物 / 信力来源、道具窗的赐福小节）—— 富文本表格默认按内容收窄，
+## 末尾垫一行 1 像素高的透明图把各列撑到 [param widths]，最后一列 [param right] 为真时靠右（阶号、所得、加成贴着窗的右边）。
+## [param rows] 每行是各列的 BBCode
+const TIP_WIDTH := 360     # = HoverTip.MAX_WIDTH（core 不引界面）
+## 列之间的缝（富文本表格自带）：撑宽行少垫这么多，免得加起来比窗宽、右边被裁
+const COL_SLACK := 8
+const SPACER := "res://assets/ui/tip/blank.png"
+
+
+static func columns(rows: Array, widths: Array[int], right: bool = true) -> String:
+	var n := widths.size()
+	var cells := ""
+	for row in rows:
+		for i in n:
+			var c: String = String((row as Array)[i]) if i < (row as Array).size() else ""
+			if right and i == n - 1 and c != "":
+				c = "[right]%s[/right]" % c
+			cells += ("[cell expand=1]%s[/cell]" if i == n - 1 and n > 1 else "[cell]%s[/cell]") % c
+	for w in widths:     # 撑宽行
+		cells += "[cell][font_size=1][img=%dx1]%s[/img][/font_size][/cell]" % [maxi(1, w), SPACER]
+	return "[table=%d]%s[/table]" % [n, cells]
+
+
+## 257：两列各要多宽 —— 按字估（[method est_width]），两列都放得下就右列刚好、左列拿剩下的；放不下就在
+## 右列 25%～75% 之间挑一个让各行加起来行数最少的分法（一样少的取中间那个，两列匀一点）。[param size] 是正文字号
+static func two_widths(rows: Array, size: int = BODY_SIZE, avail: int = TIP_WIDTH - COL_SLACK) -> Array[int]:
+	var ests: Array[Vector2] = []
+	var a := 0.0
+	var b := 0.0
+	for row in rows:
+		var e := Vector2(est_width(String((row as Array)[0]), size), est_width(String((row as Array)[1]), size))
+		ests.append(e)
+		a = maxf(a, e.x)
+		b = maxf(b, e.y)
+	if a + b <= avail:
+		return [avail - ceili(b), ceili(b)] as Array[int]
+	var cands: Array[int] = []
+	var best_cost := 1 << 30
+	for right in range(int(avail * 0.25), int(avail * 0.75) + 1, 4):
+		var cost := 0
+		for e in ests:
+			cost += maxi(_wrap_lines(e.x, avail - right), _wrap_lines(e.y, right))
+		if cost < best_cost:
+			best_cost = cost
+			cands.clear()
+		if cost == best_cost:
+			cands.append(right)
+	var best: int = cands[cands.size() >> 1]
+	return [avail - best, best] as Array[int]
+
+
+## 估宽 [param w] 的字放进 [param col] 宽的格子折成几行（按词折行时行尾会空出一截，按 85% 算）
+static func _wrap_lines(w: float, col: int) -> int:
+	return 1 if w <= col else ceili(w / (col * 0.85))
+
+
+## 一段字大概多宽（去掉 BBCode；汉字与全角符号按一个字号，别的按 0.6 个）
+static func est_width(text: String, size: int = BODY_SIZE) -> float:
+	var plain := strip_bbcode(text)
+	var w := 4.0 if plain != "" else 0.0     # 留一点余量，估短了会折出单独一个字
+	for i in plain.length():
+		w += float(size) if plain.unicode_at(i) >= 0x2E80 else float(size) * 0.6
+	return w
+
+
+## 方括号标签外的每处 [param re] 命中换成 [param paint] 的结果（标签里面不动）
+static func _paint_numbers(text: String, re: RegEx, paint: Callable) -> String:
 	var out := ""
 	var at := 0
 	while at < text.length():
 		var open := text.find("[", at)
+		var plain := text.substr(at) if open < 0 else text.substr(at, open - at)
+		var last := 0
+		for m in re.search_all(plain):
+			out += plain.substr(last, m.get_start() - last) + String(paint.call(m))
+			last = m.get_end()
+		out += plain.substr(last)
 		if open < 0:
-			out += _val_plain(text.substr(at))
 			break
-		out += _val_plain(text.substr(at, open - at))
 		var close := text.find("]", open)
 		if close < 0:
 			out += text.substr(open)
@@ -288,15 +389,6 @@ static func val_numbers(text: String) -> String:
 		out += text.substr(open, close - open + 1)
 		at = close + 1
 	return out
-
-
-static func _val_plain(s: String) -> String:
-	var out := ""
-	var last := 0
-	for m in _num_re.search_all(s):
-		out += s.substr(last, m.get_start() - last) + val(m.get_string())
-		last = m.get_end()
-	return out + s.substr(last)
 
 
 ## 增益 / 减益 / 系统

@@ -47,6 +47,10 @@ class TipWindow extends PanelContainer:
 	var head: RichTextLabel
 	var sep: ColorRect
 	var body: RichTextLabel
+	## 257：道具窗的赐福小节 —— 居中神名的虚线（[method titled_dash]）+ 两列行；没有就藏
+	var faith_dash: HBoxContainer
+	var faith_title: RichTextLabel
+	var faith_body: RichTextLabel
 	var foot_sep: Control
 	var foot_row: HBoxContainer
 	var foot: RichTextLabel
@@ -92,6 +96,12 @@ class TipWindow extends PanelContainer:
 		col.add_child(sep)
 		body = _rich(width)
 		col.add_child(body)
+		faith_dash = titled_dash(width)
+		faith_title = faith_dash.get_child(1) as RichTextLabel
+		col.add_child(faith_dash)
+		faith_body = _rich(width)
+		col.add_child(faith_body)
+		_hide_faith()
 		foot_sep = dashed(width)
 		col.add_child(foot_sep)
 		foot_row = HBoxContainer.new()
@@ -120,6 +130,31 @@ class TipWindow extends PanelContainer:
 			c.draw_dashed_line(Vector2(0, 1), Vector2(c.size.x, 1), UiPalette.LINE.lightened(0.3), 1.0, 4.0))
 		return c
 
+	## 257：带字的虚线 —— 虚线 / 居中的字（富文本，小节名）/ 虚线；字用 [method set_rich] 填（这里只搭架子）
+	func titled_dash(width: float) -> HBoxContainer:
+		var row := HBoxContainer.new()
+		row.custom_minimum_size = Vector2(width, 0)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var left := dashed(0)
+		left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(left)
+		var title := UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)
+		title.autowrap_mode = TextServer.AUTOWRAP_OFF
+		title.fit_content = true
+		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(title)
+		var right := dashed(0)
+		right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		right.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(right)
+		return row
+
+	func _hide_faith() -> void:
+		faith_dash.visible = false
+		faith_body.visible = false
+
 	func _rich(width: float) -> RichTextLabel:
 		var r := UiTheme.rich_block(width, UiTheme.RICH_SMALL_SIZE + 1)     # 悬浮窗整体比小字大一号（作者 10-21）
 		r.mouse_filter = Control.MOUSE_FILTER_PASS     # 关键词要收得到鼠标（meta 悬停），点击照样往上传给窗
@@ -140,6 +175,8 @@ class TipWindow extends PanelContainer:
 	func set_width(w: float) -> void:
 		head.custom_minimum_size.x = w
 		body.custom_minimum_size.x = w
+		faith_dash.custom_minimum_size.x = w
+		faith_body.custom_minimum_size.x = w
 		sep.custom_minimum_size.x = w
 		foot_sep.custom_minimum_size.x = w
 
@@ -177,6 +214,7 @@ class TipWindow extends PanelContainer:
 		sep.visible = true
 		foot_sep.visible = false
 		foot_row.visible = false
+		_hide_faith()
 		UiTheme.set_rich(head, head_bb)
 		UiTheme.set_rich(body, body_bb)
 
@@ -189,6 +227,7 @@ class TipWindow extends PanelContainer:
 		sep.visible = false
 		foot_sep.visible = false
 		foot_row.visible = false
+		_hide_faith()
 		UiTheme.set_rich(body, bbcode)
 
 	## 170：道具说明分块
@@ -206,6 +245,11 @@ class TipWindow extends PanelContainer:
 		var has_body := not Glossary.strip_bbcode(String(full.get("body", ""))).strip_edges().is_empty()
 		sep.visible = has_body
 		body.visible = has_body
+		var faith := String(full.get("faith", ""))     # 257：赐福小节
+		faith_dash.visible = faith != ""
+		faith_body.visible = faith != ""
+		UiTheme.set_rich(faith_title, String(full.get("faith_title", "")))
+		UiTheme.set_rich(faith_body, faith)
 		set_label.text = String(full.get("set", ""))
 
 	## 230：按钮行清空藏起
@@ -221,6 +265,9 @@ class TipWindow extends PanelContainer:
 		var parts: Array[String] = [head.text]
 		if body.visible:
 			parts.append(body.text)
+		if faith_body.visible:
+			parts.append(faith_title.text)
+			parts.append(faith_body.text)
 		parts.append(foot.text + (UiText.t("tip.gap") + set_label.text if set_label.text != "" else ""))
 		return "\n".join(parts)
 
