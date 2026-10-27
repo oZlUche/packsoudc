@@ -354,7 +354,7 @@ static func two_widths(rows: Array, size: int = BODY_SIZE, avail: int = TIP_WIDT
 	return [avail - best, best] as Array[int]
 
 
-## 估宽 [param w] 的字放进 [param col] 宽的格子折成几行（按词折行会浪费行尾，按 85% 算）
+## 估宽 [param w] 的字放进 [param col] 宽的格子折成几行（按词折行时行尾会空出一截，按 85% 算）
 static func _wrap_lines(w: float, col: int) -> int:
 	return 1 if w <= col else ceili(w / (col * 0.85))
 

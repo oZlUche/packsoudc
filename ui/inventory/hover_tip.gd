@@ -134,7 +134,6 @@ class TipWindow extends PanelContainer:
 	func titled_dash(width: float) -> HBoxContainer:
 		var row := HBoxContainer.new()
 		row.custom_minimum_size = Vector2(width, 0)
-		row.add_theme_constant_override("separation", 8)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var left := dashed(0)
 		left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
