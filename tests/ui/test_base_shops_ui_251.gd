@@ -27,7 +27,7 @@ static func frame_tabs(t: TestCase, root: Window) -> void:
 		t.check(tb.icon != null and tb.icon_alignment == HORIZONTAL_ALIGNMENT_LEFT, "页签 %s 有图标、在字左边" % key)
 		widths[tb.custom_minimum_size.x] = true
 	t.eq(widths.size(), 1, "页签一样宽")
-	t.eq(s._tab_btns.size(), 4, "四个页签（262：集市、铁匠铺、出售并成后勤）")
+	t.eq(s._tab_btns.size(), 3, "三个页签（262：集市、铁匠铺、出售并成后勤；261 补充一：科技并进书架）")
 	t.eq(f.meta.market_stock.size(), 4, "打开基地时补了一次货")
 	s.show_tab("market")
 	t.check(not s._right.visible, "集市页整页（右半边仓库收起）")

@@ -215,7 +215,7 @@ static func run_first_tree(t: TestCase) -> void:
 	t.check(view.custom_minimum_size.y <= 556.0, "树高 %.0f ≤ 556" % view.custom_minimum_size.y)
 	var tags := view.find_children("*", "HeaderTag", true, false)
 	t.eq(tags.size(), 3, "三列各一枚列头签")
-	t.eq(tags.map(func(n): return (n as HeaderTag).text), ["后勤", "体魄", "探索"], "列头签：后勤 / 体魄 / 探索")
+	t.eq(tags.map(func(n): return (n as HeaderTag).text), ["营造", "体魄", "探索"], "列头签：营造（262 补充二：不和「后勤」页签同名）/ 体魄 / 探索")
 	t.eq(tags.map(func(n): return (n as HeaderTag).size.x).reduce(func(a, b): return a if a == b else -1.0), (tags[0] as HeaderTag).size.x if not tags.is_empty() else 0.0, "三枚列头签一样宽")
 	view.free()
 

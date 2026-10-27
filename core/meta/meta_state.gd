@@ -345,7 +345,18 @@ func pin_run(index: int, on: bool) -> bool:
 	return true
 
 
-## 260：军功碑碑额要的那一局：价值、章节、结局、角色、难度、第几局、几步、赢几场、几时结束
+## 260 补充一（作者 16:38）：仓库总价值 —— 仓库各页所有物件（锁住的也算）+ 包架上的包，按 [method ItemValue.of_instance]；不含钱
+func warehouse_value() -> int:
+	var total := 0
+	for inst in warehouse.items():
+		total += ItemValue.of_instance(inst as ItemInstance)
+	if rack != null:
+		for inst in rack.items():
+			total += ItemValue.of_instance(inst as ItemInstance)
+	return total
+
+
+## 260：对局记录 / 最佳一局要的那一局：价值、章节、结局、角色、难度、第几局、几步、赢几场、几时结束
 static func best_run_of(result: RunResult, run_no: int) -> Dictionary:
 	return {"value": result.value, "chapter": String(result.chapter_id), "outcome": String(result.outcome),
 		"character": String(result.character_id), "difficulty": String(result.difficulty_id), "run_no": run_no,
