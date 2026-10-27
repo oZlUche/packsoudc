@@ -1,0 +1,227 @@
+{
+ "version": "C 石砌壁龛（261 书架 + 补充一 / 二：图鉴、成就、科技五档；对局记录一张；特殊道具每件一根展示柱；作者 16:55 只画正面）",
+ "design": [
+  1600,
+  1000
+ ],
+ "tone": "light",
+ "origin": "坐标都相对书架左上；书架在页面设计坐标 (268, 24)，中列吃满时水平居中",
+ "shelf_body": {
+  "file": "shelf_body.png",
+  "size": [
+   1308,
+   952
+  ],
+  "use": "整座书架（框、六格壁龛、拱心石），定尺寸，不拉。透明处是墙"
+ },
+ "cells": [
+  {
+   "rect": [
+    30,
+    60,
+    400,
+    400
+   ],
+   "key": "codex",
+   "tiers": [
+    "codex_t0",
+    "codex_t1",
+    "codex_t2",
+    "codex_t3",
+    "codex_t4"
+   ],
+   "opens": "codex",
+   "tag_center": [
+    230.0,
+    472
+   ],
+   "tag_sample": "图鉴　40 / 153"
+  },
+  {
+   "rect": [
+    454,
+    60,
+    400,
+    400
+   ],
+   "key": "records",
+   "file": "records",
+   "note": "不分档（作者 17:09），一张",
+   "opens": "run_records",
+   "tag_center": [
+    654.0,
+    472
+   ],
+   "tag_sample": "对局记录　20 场"
+  },
+  {
+   "rect": [
+    878,
+    60,
+    400,
+    400
+   ],
+   "key": "keepsakes",
+   "compose": "keepsake_columns",
+   "opens": "keepsakes",
+   "tag_center": [
+    1078.0,
+    472
+   ],
+   "tag_sample": "特殊道具　1 / 2"
+  },
+  {
+   "rect": [
+    30,
+    484,
+    400,
+    400
+   ],
+   "key": "achievements",
+   "tiers": [
+    "achievements_t0",
+    "achievements_t1",
+    "achievements_t2",
+    "achievements_t3",
+    "achievements_t4"
+   ],
+   "opens": "achievements",
+   "tag_center": [
+    230.0,
+    913
+   ],
+   "tag_sample": "成就　3 / 7"
+  },
+  {
+   "rect": [
+    454,
+    484,
+    400,
+    400
+   ],
+   "key": "tech",
+   "tiers": [
+    "tech_t0",
+    "tech_t1",
+    "tech_t2",
+    "tech_t3",
+    "tech_t4"
+   ],
+   "opens": "tech",
+   "tag_center": [
+    654.0,
+    913
+   ],
+   "tag_sample": "科技　5 / 15"
+  },
+  {
+   "rect": [
+    878,
+    484,
+    400,
+    400
+   ],
+   "key": "",
+   "still_life": "lamp"
+  }
+ ],
+ "cell_button": "前五格整格是按钮（rect），点开各自的窗（科技窗 1320 × 900，其余 1100 × 820）；第六格静物不可点、不亮",
+ "objects": {
+  "size": [
+   400,
+   400
+  ],
+  "at": "格左上（rect 的 x, y），和格一样大，已裁在格口里，不出格",
+  "tier_rule": "tier = clampi(floori(done * 5 / total), 0, 4)；total 为 0 → t0；缺图退 t0（架构 261 §9.2）。只有图鉴、成就、科技三格分档",
+  "done_total": {
+   "codex": "已点亮 / 全部图鉴",
+   "achievements": "已达成 / 全部成就",
+   "tech": "至少 1 级的科技 / 全部科技"
+  }
+ },
+ "keepsake_columns": {
+  "rule": "作者 17:09：「只要显示现有的特殊道具就行」—— 每件特殊道具（flow.items.keepsake_ids() 的顺序）一根展示柱；有这件（meta.has_keepsake）就把它自己的道具图摆在柱顶红垫上，没有就只有空柱",
+  "column": {
+   "file": "keepsake_column.png",
+   "size": [
+    132,
+    218
+   ],
+   "anchor": "件的底边中点 = 柱底中点"
+  },
+  "centers_x": "n 件：格左 + 20.0 + 360 × (2k + 1) / (2n)，k = 0..n-1（n = 2 → 格左 + 110、格左 + 290）",
+  "bottom_y": "格上 + 397（物件框底边，同其他格）",
+  "item": {
+   "box": [
+    128,
+    128
+   ],
+   "seat": "道具图不透明部分的底边落在柱底往上 208.0（红垫中间）；用 Image.get_used_rect() 去掉图下面的透明边",
+   "fit": "道具图等比缩进 box，水平以柱中线居中；用道具自己的图（同图鉴格那张，有 @2x 用 @2x）"
+  },
+  "more": "n ≤ 2 照上；n ≥ 3 柱间距 360 / n 不够 136 时柱和道具一起按 (360 / n − 8) / 132 缩；超过 4 件再来找 UI 线程排两层",
+  "sample_n2": {
+   "spyglass": [
+    988.0,
+    457
+   ],
+   "douxing": [
+    1168.0,
+    457
+   ]
+  }
+ },
+ "hover": {
+  "object": "<文件>_hover.png 是同一张提亮的版本，悬停时换图；特殊道具格悬停时柱子换 keepsake_column_hover.png、道具图 modulate 1.15",
+  "glow": {
+   "file": "shelf_hover.png",
+   "size": [
+    400,
+    400
+   ],
+   "at": "格左上",
+   "z": "书架上、物件下",
+   "use": "悬停时格里一团暖光（已裁在格口里）"
+  }
+ },
+ "shelf_tag": {
+  "file": "shelf_tag.png",
+  "size": [
+   120,
+   34
+  ],
+  "margin": [
+   16,
+   8,
+   16,
+   8
+  ],
+  "use": "格下小牌：铜框纸签，横向九宫格拉宽，宽 = 字宽 + 36；以 tag_center 为中心"
+ },
+ "tab_icon": {
+  "file": "tab_shelf.png",
+  "size": [
+   36,
+   36
+  ],
+  "dest": "assets/ui/home/tabs/tab_shelf.png",
+  "use": "左列「书架」页签图标（同其他页签：36 画布、平墨）"
+ },
+ "text": {
+  "tag": {
+   "font": "serif_bold",
+   "size": 18,
+   "color": "#2e2219",
+   "baseline": "小牌中心 + 6.5，居中",
+   "format": "格名　n / m（对局记录写「n 场」；中间一个全角空格）",
+   "samples": [
+    "图鉴 40 / 153",
+    "对局记录 20 场",
+    "特殊道具 1 / 2",
+    "成就 3 / 7",
+    "科技 5 / 15"
+   ]
+  },
+  "note": "字全由代码写，图里没有字；浅底墨字"
+ }
+}
