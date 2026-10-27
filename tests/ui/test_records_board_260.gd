@@ -81,6 +81,15 @@ static func frame_stele(t: TestCase, root: Window) -> void:
 	t.eq(stele.row(2)["tier"], 1, "打赢 17 场 = 铜")
 	t.eq(stele.row(3)["label"], UiText.t("records.medal_deaths"), "战败不分阶")
 	t.eq(stele.row(3)["count"], 1, "战败 1 次")
+	UiText.lang = "en"
+	var en := RecordsStele.new()
+	en.setup(f)
+	t.eq(en.row(3)["label"], "defeat", "英文 1 次战败写单数")
+	t.eq(en.row(1)["label"], "cores defeated", "0 次写复数")
+	en.free()
+	UiText.lang = "zh"
+	t.eq(stele.medal_texture(0), load("res://assets/items/legion_phalera@s1.png"), "银阶占位用银色那枚（@s1）")
+	t.eq(stele.medal_texture(2), load("res://assets/items/legion_phalera.png"), "铜阶占位用本图（铜色）")
 	t.eq(stele._get_tooltip(stele.row_rect(0).get_center()), UiText.t("records.next_tier") % [UiText.t("records.tier_gold"), 9], "悬停撤离：下一阶金还差 9 次")
 	t.eq(stele._get_tooltip(stele.row_rect(3).get_center()), "", "战败那行不说下一阶")
 	for i in 4:
