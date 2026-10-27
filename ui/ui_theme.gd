@@ -712,6 +712,22 @@ static func hbox(separation: int = 8) -> HBoxContainer:
 	return h
 
 
+## 261：网格 / 折行排的格间距（布局常量，同 [method vbox]）
+static func grid(columns: int, gap: int) -> GridContainer:
+	var g := GridContainer.new()
+	g.columns = columns
+	g.add_theme_constant_override("h_separation", gap)
+	g.add_theme_constant_override("v_separation", gap)
+	return g
+
+
+static func hflow(gap: int) -> HFlowContainer:
+	var f := HFlowContainer.new()
+	f.add_theme_constant_override("h_separation", gap)
+	f.add_theme_constant_override("v_separation", gap)
+	return f
+
+
 ## 外边距容器的四边（布局常量，和 [method vbox] 的间距一样不算样式）
 static func margins(m: MarginContainer, left: int, top: int, right: int, bottom: int) -> MarginContainer:
 	m.add_theme_constant_override("margin_left", left)

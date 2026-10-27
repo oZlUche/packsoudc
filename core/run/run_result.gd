@@ -16,6 +16,9 @@ var chapter_name: String = ""
 var character_id: StringName = &""
 var difficulty_id: StringName = &""
 var ended_at: int = 0
+## 261：地图规模（对局记录的详情写）；信力最高的那位神与到达的信力 {id, power}（没信仰空）
+var scale_id: StringName = &""
+var faith_top: Dictionary = {}
 ## 行动点总数、踩过的点数、打赢 / 打输几场
 var steps: int = 0
 var visited: int = 0
@@ -72,7 +75,11 @@ static func settle(state: RunState) -> RunResult:
 	r.crafts = int(state.tally.get("crafts", 0))
 	r.board_size = state.board.size if state.board != null else Vector2i.ZERO
 	r.boss_cleared = state.boss_cleared
+	r.scale_id = state.scale_id()
 	if state.faith_power != null:
+		for id in state.faith_power.points:
+			if int(state.faith_power.points[id]) > int(r.faith_top.get("power", 0)):
+				r.faith_top = {"id": String(id), "power": int(state.faith_power.points[id])}
 		r.faith_history = state.faith_power.history_to_array()
 		r.faith_pace = FaithPower.pace_line(r.faith_history, state.faith_defs)
 	if r.outcome == &"extracted":
@@ -124,4 +131,6 @@ func to_dict() -> Dictionary:
 		"balance": balance, "value": value, "items": ids,
 		"safe": safe_items.size(), "safe_value": safe_value,
 		"character": String(character_id), "difficulty": String(difficulty_id), "ended_at": ended_at,
+		"elite_won": elite_won, "boss_won": boss_won, "searches": searches, "crafts": crafts, "scale": String(scale_id),
+		"faith": faith_top,
 	}

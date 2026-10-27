@@ -22,6 +22,8 @@ const BOARD_ID := 101
 const RACK_ID := 102
 ## 最近几局的账留几条
 const HISTORY_MAX := 20
+## 261：收藏最多几局 —— 永远留一个位置给最新一局
+const PIN_MAX := 19
 
 signal changed()
 
@@ -303,11 +305,41 @@ func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
 		board = back2 if back2.item_count() > 0 else null
 		score += result.safe_value
 		got["value"] = int(got["value"]) + result.safe_value
-	history.push_front(result.to_dict())
-	if history.size() > HISTORY_MAX:
-		history.resize(HISTORY_MAX)
+	var row := result.to_dict()
+	row["run_no"] = runs
+	row["pinned"] = false
+	history.push_front(row)
+	_trim_history()
 	changed.emit()
 	return got
+
+
+## 261：超过 [constant HISTORY_MAX] 条从尾部删最旧的未收藏那条（收藏的不删）
+func _trim_history() -> void:
+	var i := history.size() - 1
+	while history.size() > HISTORY_MAX and i >= 0:
+		if not bool(history[i].get("pinned", false)):
+			history.remove_at(i)
+		i -= 1
+
+
+func pinned_count() -> int:
+	var n := 0
+	for row in history:
+		if bool(row.get("pinned", false)):
+			n += 1
+	return n
+
+
+## 261：收藏 / 取消收藏第 [param index] 条（0 = 最新）；收藏已满（[constant PIN_MAX]）或下标不对返回 false
+func pin_run(index: int, on: bool) -> bool:
+	if index < 0 or index >= history.size():
+		return false
+	if on and not bool(history[index].get("pinned", false)) and pinned_count() >= PIN_MAX:
+		return false
+	history[index]["pinned"] = on
+	changed.emit()
+	return true
 
 
 ## 260：军功碑碑额要的那一局：价值、章节、结局、角色、难度、第几局、几步、赢几场、几时结束

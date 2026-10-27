@@ -68,7 +68,7 @@ func setup(flow: GameFlow) -> void:
 		var steps: Array = tiers.get(spec[1], [])
 		var tier := tier_of(count, steps)
 		_rows.append({"kind": spec[0], "count": count, "tier": tier, "next": int(steps[tier]) if tier < steps.size() else -1,
-			"label": UiText.t(spec[2]) + ((" · " + tier_name(tier)) if tier > 0 else "")})
+			"label": UiText.t(UiText.key_for(spec[2], count)) + ((" · " + tier_name(tier)) if tier > 0 else "")})
 	_ledger = UiText.t("records.ledger") % [m.runs, m.score, m.codex.size(), flow.items.ids(true).size()]
 	_best = CoinLabel.make(m.best_value, UiTheme.sz(BEST_SIZE), VERM)
 	_best.visible = _has_best
@@ -206,7 +206,7 @@ func medal_texture(i: int) -> Texture2D:
 	var t := _tex(name)
 	if t != null:
 		return t
-	var path := "res://assets/items/legion_phalera%s.png" % ("@s%d" % mini(tier, 4) if tier > 0 else "")
+	var path := "res://assets/items/legion_phalera%s.png" % ("@s%d" % mini(tier - 1, 4) if tier > 1 else "")     # 本图铜色，@s1 银、@s2 金
 	if not _placeholders.has(path):
 		_placeholders[path] = load(path) as Texture2D if ResourceLoader.exists(path) else null     # 在 _draw 里画，得留住引用（184）
 	return _placeholders[path]
@@ -233,7 +233,7 @@ func _draw() -> void:
 			if rule != null:
 				draw_texture(rule, o + RULE_AT + Vector2(0, ROW_STEP * i))
 			else:
-				draw_line(o + RULE_AT + Vector2(0, ROW_STEP * i + 2), o + RULE_AT + Vector2(258, ROW_STEP * i + 2), STONE_DARK, 1.0)
+				draw_rect(Rect2(o + RULE_AT + Vector2(0, ROW_STEP * i + 1), Vector2(258, 2)), STONE_DARK)     # 2 像素高：1600 逻辑缩到 1280 时 1 像素的线会被吞掉一道
 	_piece("stele_band", o + BAND.position, Rect2(o + BAND.position, BAND.size), true)
 	var gable := _tex("stele_gable")
 	if gable != null:

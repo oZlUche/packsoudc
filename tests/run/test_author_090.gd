@@ -162,7 +162,7 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	var meta = game.base()
 	# 091：成就页与筛选
 	meta.show_tab("achievements")
-	t.eq(meta.tab(), "achievements", "→ 成就页")
+	t.check(meta.tab() == "shelf" and meta.shelf_open() == "achievements", "→ 书架上成就那扇窗（261）")
 	var all_n: int = meta.achievement_rows().size()
 	t.check(all_n >= 5 and all_n == flow.achievement_defs.size(), "「全部」列出每一枚（%d）" % all_n)
 	meta.show_achievement_filter("done")
@@ -175,9 +175,10 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	meta.show_achievement_filter("todo")
 	t.eq(meta.achievement_rows().size(), all_n - 1, "「未解锁」少一枚")
 	meta.show_achievement_filter("all")
-	t.check(game.escape() and meta.tab() == "home", "成就页 Esc 回家页（164）")
+	t.check(game.escape() and meta.tab() == "shelf" and meta.shelf_open() == "", "成就窗 Esc 先关窗，留在书架（261）")
+	t.check(game.escape() and meta.tab() == "home", "书架 Esc 回家页（164）")
 	meta.show_tab("codex")
-	t.check(game.escape() and meta.tab() == "home" and flow.screen == GameFlow.Screen.META, "基地：图鉴页 Esc 先回家页（164）")
+	t.check(game.escape() and meta.shelf_open() == "" and game.escape() and meta.tab() == "home" and flow.screen == GameFlow.Screen.META, "基地：图鉴窗 Esc 关窗、再 Esc 回家页（164）")
 	t.check(game.escape() and flow.screen == GameFlow.Screen.MAIN_MENU, "仓库页再 Esc 回主菜单")
 
 	flow.begin(c.chapter, kit, int(found["seed"]))
