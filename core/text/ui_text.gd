@@ -846,7 +846,7 @@ const TEXT := {
 	"hud.faith_level": {"zh": "Lv.%d　%d%s", "en": "Lv.%d  %d%s"},     # faith widget: rank, points, " / next"
 	"hud.notice_extract_closed": {"zh": "有一个撤离点关闭了", "en": "An extraction point has closed"},     # countdown_module notice
 	# —— 221 F5a：encumbrance ——
-	"run.load_light": {"zh": "轻装", "en": "Unburdened"},     # load level 0
+	"run.load_light": {"zh": "轻装", "en": "Light"},     # load level 0
 	"run.load_step_cost": {"zh": "走一步" + Glossary.COUNTDOWN_WORD + " −%d", "en": "Countdown −%d per step"},
 	# —— 221 F5a：node events ——
 	"node.no_option": {"zh": "没有这个选项", "en": "No such option"},

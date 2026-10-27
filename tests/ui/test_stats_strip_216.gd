@@ -218,3 +218,16 @@ static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
 	for s in [wide, strip, es]:
 		(s as Node).queue_free()
 	Support.cleanup("stripbronze")
+
+
+static func run_squeeze(t: TestCase) -> void:
+	t.begin("216 · 签上的字收到最小号还放不下就横向压扁到签宽（英文副字不伸出签的右沿，游戏测试 10-27）；轻装英文是「Light」")
+	var font := UiPalette.cjk_font()
+	var w := font.get_string_size("Overloaded", HORIZONTAL_ALIGNMENT_LEFT, -1, StatsStrip.MIN_TEXT_SIZE).x
+	t.eq(StatsStrip.squeeze(font, "Overloaded", StatsStrip.MIN_TEXT_SIZE, w + 1.0), 1.0, "放得下不压")
+	var k := StatsStrip.squeeze(font, "Overloaded", StatsStrip.MIN_TEXT_SIZE, w - 10.0)
+	t.check(absf(k * w - (w - 10.0)) < 0.01, "放不下压到正好签宽：%.3f" % k)
+	var was := UiText.lang
+	UiText.lang = "en"
+	t.eq(UiText.t("run.load_light"), "Light", "轻装英文换短词")
+	UiText.lang = was

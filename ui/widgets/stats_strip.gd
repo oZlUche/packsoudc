@@ -297,10 +297,8 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 		center = _vec(seal_piece.get("center_in_tag", [20, 23]))
 	var room := tag.size.x - main_pos.x - TEXT_RIGHT_PAD     # 复测 v3.79：「37 / 40」「Very high」比签宽时收字号，不顶签的右沿
 	var sub_font := UiPalette.cjk_font_bold() if bool(b["sub_bold"]) else UiPalette.cjk_font()
-	tag.draw_string(UiPalette.cjk_font_bold(), main_pos, String(b["main"]),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size(UiPalette.cjk_font_bold(), String(b["main"]), main_size, room), b["main_color"])
-	tag.draw_string(sub_font, sub_pos, String(b["sub"]),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size(sub_font, String(b["sub"]), sub_size, tag.size.x - sub_pos.x - TEXT_RIGHT_PAD), b["sub_color"])
+	_draw_fit(tag, UiPalette.cjk_font_bold(), main_pos, String(b["main"]), main_size, room, b["main_color"])
+	_draw_fit(tag, sub_font, sub_pos, String(b["sub"]), sub_size, tag.size.x - sub_pos.x - TEXT_RIGHT_PAD, b["sub_color"])
 	var seal := UiTheme.art_cached(ART + String(SEAL_ART[kind]))
 	if seal != null:
 		var side := seal.get_size() * seal_scale
@@ -308,6 +306,22 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 	else:
 		tag.draw_circle(center, 15.0 * seal_scale, SEAL_COLORS[kind])
 		tag.draw_arc(center, 15.0 * seal_scale, 0.0, TAU, 32, Color(SEAL_COLORS[kind]).darkened(0.35), 2.0, true)
+
+
+## 收到最小字号还放不下的（英文「Overloaded」之类），横向压扁到正好 [param room] 宽 —— 不伸出签的右沿（游戏测试 10-27）
+static func squeeze(font: Font, text: String, size: int, room: float) -> float:
+	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	return 1.0 if w <= room or w <= 0.0 else room / w
+
+
+func _draw_fit(tag: Control, font: Font, pos: Vector2, text: String, size: int, room: float, color: Color) -> void:
+	var n := fit_size(font, text, size, room)
+	var k := squeeze(font, text, n, room)
+	if k < 1.0:
+		tag.draw_set_transform(Vector2(pos.x * (1.0 - k), 0.0), 0.0, Vector2(k, 1.0))
+	tag.draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, n, color)
+	if k < 1.0:
+		tag.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 ## 放得进 [param room] 宽的字号：从 [param size] 往下收，最小 [constant MIN_TEXT_SIZE]
