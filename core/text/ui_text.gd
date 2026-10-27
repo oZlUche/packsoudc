@@ -480,7 +480,7 @@ const TEXT := {
 	"ransom.paid": {"zh": "成交：这一回不扣体力", "en": "Deal: no Vitality lost"},
 	# —— 221 F1：screens ——
 	# ui/game/setup_screen.gd
-	"setup.page_1": {"zh": "选角色", "en": "Choose a Character"},
+	"setup.page_1": {"zh": "角色选择", "en": "Character Select"},
 	"setup.page_2": {"zh": "配道具", "en": "Pack Your Gear"},
 	"setup.page_3": {"zh": "选地图与难度", "en": "Map & Difficulty"},
 	"setup.depart": {"zh": "出发", "en": "Set out"},

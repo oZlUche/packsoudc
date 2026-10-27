@@ -65,7 +65,7 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
 	t.eq(setup.page(), 0, "第一页")
-	t.check(setup._title.text.contains("选角色"), "标题：%s" % setup._title.text)
+	t.check(setup._title.text.contains("角色选择"), "标题：%s" % setup._title.text)
 	t.eq(setup._back_btn.text, "回主菜单", "第一页的返回 = 回主菜单")
 	t.check(not setup._warehouse_view.is_visible_in_tree(), "第一页看不到仓库")
 
