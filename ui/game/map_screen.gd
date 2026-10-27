@@ -216,7 +216,6 @@ func toggle_bag() -> void:
 	_bag = _shade(0.7)
 	var win := BagWindow.new()
 	_bag.add_child(win)
-	_reserve_ground(win)     # 128：背包浮窗占着的地方，地上的东西让开
 	_bag_panel = win.setup_bag(_run, font, toggle_bag, null, say)     # 188：顶出来了、放不下、合成了 —— 走提示行
 	win.maybe_coach(flow, _bag)     # 218 补充一：序章一第一次开背包窗放教程
 
@@ -697,8 +696,7 @@ func _after_move() -> void:
 	_view.reach_cost = cost
 	_view.reach_teleport = teleport
 	_view.animate_moves = _animate_moves()
-	if not revealing():
-		_view.follow_current(_view.animate_moves)     # 184：人出了屏幕中央三分之一就把镜头带回来（缩放不动）
+	# 作者 10-27：点击移动之后镜头不动（184 的「出了中央三分之一就带回来」取消）；要回正按空格
 	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
@@ -1101,9 +1099,17 @@ func reset_hud_layout() -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
+	if key != null and key.keycode == KEY_SPACE and not key.pressed:
+		_view.lock_on_player = false     # 作者 10-27：松开空格就不锁
+		return
 	if key == null or not key.pressed or key.echo:
 		return
 	match key.keycode:
+		KEY_SPACE:     # 作者 10-27：空格 = 镜头回正到自己；按住 = 锁住跟着（战略游戏那样）
+			if _confirm != null or _pause != null or _rules != null or _ask != null or revealing():
+				return
+			_view.recenter_on_player()
+			_view.lock_on_player = true
 		KEY_B:
 			if _confirm == null and _pause == null and _rules == null and _ask == null:
 				toggle_bag()

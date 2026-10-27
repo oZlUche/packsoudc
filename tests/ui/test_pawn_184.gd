@@ -111,6 +111,22 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 	t.eq(view.zoom, z, "缩放不动")
 	t.check(not view.following(), "淡入关着：没有补间，一步到位")
 
+	# 作者 10-27：focus = 人在安全区正中；空格回正、按住锁住；走一步之后镜头不动（不再调 follow_current）
+	view.focus(here)
+	t.check(view.to_screen(view.positions()[here]).distance_to(view.safe_rect().get_center()) < 0.5, "回正：人在正中央")
+	view.pan += Vector2(300.0, 120.0)
+	var key := InputEventKey.new()
+	key.keycode = KEY_SPACE
+	key.pressed = true
+	map._unhandled_key_input(key)
+	t.check(view.pan.distance_to(view.focus_pan(here)) < 0.5 or view.following(), "空格：回正")
+	t.check(view.lock_on_player, "按住空格：锁住")
+	var up := InputEventKey.new()
+	up.keycode = KEY_SPACE
+	map._unhandled_key_input(up)
+	t.check(not view.lock_on_player, "松开空格：放开")
+	view.stop_follow()
+	view.pan = view.focus_pan(here)
 	var inset0 := view.content_inset
 	view.content_inset = Rect2(0.0, 40.0, 0.0, 400.0)     # 底下读数占得高：人落在安全区下边、屏幕上照样看得见
 	view.pan = Vector2(700.0, 700.0) - (view.positions()[here] as Vector2) * view.zoom

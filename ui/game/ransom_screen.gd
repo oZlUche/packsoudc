@@ -33,7 +33,6 @@ func open(payload: Dictionary) -> void:
 	_scale = BalanceScale.new()
 	_scale.right = _price
 	row.add_child(_scale)
-	_reserve_ground(_scale)
 	# 底座上的字都落在石牌 / 石台上（226）
 	_place(_label(UiText.t("ransom.title"), 22, BalanceScale.INK), "title", true)
 	var intro := _label(UiText.t("ransom.intro"), 17, BalanceScale.INK)     # 正面在前；限制写在石台底下的小字（作者 10-26：短处后放、小字）
@@ -66,7 +65,6 @@ func open(payload: Dictionary) -> void:
 	_place(no, "refuse", false)
 
 	_inv = _mount_bag(row, _tray_view, Callable(), _tray)     # 棋盘上双击 → 托盘
-	_reserve_ground(_inv)
 	_tray_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
 	_tip_double(_tray_view, "act.take_back")
 	_drag.drop_outside_to_stash = false     # 放到外面 = 放回原处

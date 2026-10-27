@@ -235,7 +235,6 @@ static func frame_fall_onto_panels(t: TestCase, root: Window) -> void:
 	panel.position = Vector2(600, 300)
 	panel.size = Vector2(400, 300)
 	host.add_child(panel)
-	ground.reserve(panel)
 	var floor_y := G.SCREEN.y * (1.0 - ItemStash.SPOT_MARGIN)
 	# 没起点：竖直落下
 	var a := ItemInstance.create(gun)
@@ -257,14 +256,13 @@ static func frame_fall_onto_panels(t: TestCase, root: Window) -> void:
 	t.check(absf(rc.position.x - 100.0) < 0.01 and absf(rc.end.y - floor_y) < 0.5, "旁边没面板：落到屏幕底（%s）" % rc)
 	ground.advance_landing(5.0)
 	ground.settle_bumps()
-	ground.unreserve(panel)
+	panel.free()
 	t.check(not ground.is_landing(b.uid) and not ground.is_landing(c.uid), "253：面板关了没有东西再掉一次")
-	# 253：落点在一块贴地的面板底下 —— 落稳时往左右推到面板外，仍在地上
+	# 作者 10-27 两层：落点在一块贴地的面板底下 —— 照样落在原处的地上，盖在面板前面，不推开
 	var low := Control.new()
 	low.position = Vector2(1200, floor_y - 200)
 	low.size = Vector2(300, 260)
 	host.add_child(low)
-	ground.reserve(low)
 	var d := ItemInstance.create(gun)
 	stash.insert(d, -1, Vector2(0.1, 0.1))
 	stash.landing_from[d.uid] = Vector2(1300, 100)
@@ -272,7 +270,7 @@ static func frame_fall_onto_panels(t: TestCase, root: Window) -> void:
 	ground.advance_landing(5.0)
 	ground.settle_bumps()
 	var rd := ground.item_rect(d.uid)
-	t.check(not rd.intersects(Rect2(low.position, low.size)) and absf(rd.end.y - floor_y) < 0.5, "253：落在窗底下的推到窗侧、仍在地上（%s）" % rd)
+	t.check(absf(rd.position.x - 1300.0) < 0.5 and absf(rd.end.y - floor_y) < 0.5, "落在窗底下的原地落地、不推到窗侧（%s）" % rd)
 	host.free()
 
 

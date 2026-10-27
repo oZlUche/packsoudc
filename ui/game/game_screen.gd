@@ -307,18 +307,11 @@ func screen_slab() -> PanelContainer:
 	return _screen_slab
 
 
-## 一块带边框的面板。128：它占着地上的地方 —— 地上的东西被它盖住就推到最近的空处
+## 一块带边框的面板。作者 2026-10-27：地上的道具在界面前面一层，和面板无关（不再给面板让地方）
 func _panel(margin: int = 16) -> PanelContainer:
-	var p := UiTheme.panel(PanelContainer.new(), margin)     # 121：主题的 PanelDark 变体
-	_reserve_ground(p)
-	return p
+	return UiTheme.panel(PanelContainer.new(), margin)     # 121：主题的 PanelDark 变体
 
 
-## 128：登记一块占着地上的面板（关了自动撤销）。没有地层（局外、测试）什么也不做
-func _reserve_ground(c: Control) -> void:
-	var g := GroundLayer.current()
-	if g != null:
-		g.reserve(c)
 
 
 ## 半透明遮罩（对话框 / 背包浮窗 / 暂停菜单的底）：压暗底下、挡住鼠标，关掉就 free 它。
@@ -336,12 +329,11 @@ func _shade(alpha: float = 0.7, centered: bool = false) -> ColorRect:
 func _modal_panel(title: String, margin: int = 16) -> OverlayFrame:
 	var frame := OverlayFrame.new(margin)
 	frame.set_title(title)
-	_reserve_ground(frame)
 	return frame
 
 
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，石板框放中间（157：[OverlayFrame]，标题写进 [method _frame_title]）。
-## 返回框的内容区，各屏往里加东西；128：框占着地上的地方
+## 返回框的内容区，各屏往里加东西
 ## [param skin]：[constant OverlayFrame.SKIN_SLAB] / 铜 / 书 / 帐篷（233）
 func _centered_panel(min_size: Vector2, margin: int = 16, skin: StringName = OverlayFrame.SKIN_SLAB) -> Container:
 	_shade(OVERLAY_SHADE)     # 157 补充三：地图压暗透出来，石板浮在上面
@@ -350,7 +342,6 @@ func _centered_panel(min_size: Vector2, margin: int = 16, skin: StringName = Ove
 	add_child(center)
 	_overlay_frame = OverlayFrame.new(margin, skin)
 	_overlay_frame.custom_minimum_size = min_size
-	_reserve_ground(_overlay_frame)
 	center.add_child(_overlay_frame)
 	center.offset_bottom = -_overlay_frame.outset_bottom()     # 神坛石碑：石基伸出窗底 56，居中时让出来
 	if _overlay_frame.outset_top() > 0.0:     # 233：帐篷尖顶伸出窗顶 56 —— 窗离顶端栏不够就整块往下挪，尖顶不被盖住

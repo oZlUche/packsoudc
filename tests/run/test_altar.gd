@@ -328,7 +328,7 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	for opt in (flow.last_payload.get("def", null) as EventDef).options:
 		if (opt as EventOption).locked_reason(ectx) == "":
 			open_labels.append((opt as EventOption).label)
-	t.check(open_labels.any(func(l): return l.begins_with("回 ")) and not open_labels.any(func(l): return l.begins_with("献祭")), "能歇、神坛藏起来了（%s）" % str(open_labels))
+	t.check(open_labels.any(func(l): return l.contains("{rest_restore} 点体力")) and not open_labels.any(func(l): return l.begins_with("献祭")), "能歇、神坛藏起来了（%s）" % str(open_labels))
 	flow.choose_event(0)
 	NodeScreens._settle(flow)
 	t.check(here.is_visited(), "休息和神坛都用了：这个休息点才算用完")

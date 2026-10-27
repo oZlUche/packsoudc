@@ -1,31 +1,35 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_qvr5w"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_s1mrf"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="3_xluuq"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_l80k2"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_u7esl"]
-
-[sub_resource type="Resource" id="Resource_e8l03"]
-script = ExtResource("3_xluuq")
-
-[sub_resource type="Resource" id="Resource_fvbb4"]
-script = ExtResource("1_qvr5w")
-label = "搜索"
-labels = {
-"en": "Search"
-}
-outcomes = Array[ExtResource("2_s1mrf")]([SubResource("Resource_e8l03")])
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_s1mrf"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_xluuq"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="3_l80k2"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_search.gd" id="4_u7esl"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="5_e8l03"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_fvbb4"]
 
 [sub_resource type="Resource" id="Resource_kaqpk"]
-script = ExtResource("1_qvr5w")
+script = ExtResource("3_l80k2")
+
+[sub_resource type="Resource" id="Resource_vi6lk"]
+script = ExtResource("4_u7esl")
+
+[sub_resource type="Resource" id="Resource_wlv07"]
+script = ExtResource("1_s1mrf")
+label = "搜索（倒计时 −{pass_time_actions}）"
+labels = {
+"en": "Search (Countdown −{pass_time_actions})"
+}
+outcomes = Array[ExtResource("2_xluuq")]([SubResource("Resource_kaqpk"), SubResource("Resource_vi6lk")])
+
+[sub_resource type="Resource" id="Resource_doxfx"]
+script = ExtResource("1_s1mrf")
 label = "离开"
 labels = {
 "en": "Leave"
 }
 
 [resource]
-script = ExtResource("5_u7esl")
+script = ExtResource("6_fvbb4")
 id = &"search_default"
 title = "搜索点"
 titles = {
@@ -35,4 +39,4 @@ text = "这里像是能翻出点什么。翻得越久，越可能惊动附近的
 texts = {
 "en": "Looks like there's something to dig up here. The longer you dig, the likelier you are to wake someone nearby."
 }
-options = Array[ExtResource("1_qvr5w")]([SubResource("Resource_fvbb4"), SubResource("Resource_kaqpk")])
+options = Array[ExtResource("1_s1mrf")]([SubResource("Resource_wlv07"), SubResource("Resource_doxfx")])

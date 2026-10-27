@@ -1617,6 +1617,9 @@ func _adopt(state: RunState) -> void:
 		if _camp_choice and detail.keys().all(func(k): return k in ["restored", "waited"]):
 			_camp_extra += int(detail.get("restored", 0))
 			return
+		# 作者 10-27「每次搜索也会增加倒计时」：搜一次只扣了倒计时，直接进容器屏，不先弹结果页
+		if detail.keys() == ["waited"] and _chosen_option != null and _chosen_option.outcomes.any(func(o): return o is OpenSearch):
+			return
 		# 结果页排在这一步别的事（回放、战利品）前面：先看「你翻出了什么」，再看接下来打的那一场。什么都没发生就不打扰
 		if not detail.is_empty():
 			_queue.push_front({"screen": Screen.EVENT, "node": node, "outcome": outcome_title(state, node, outcome), "detail": detail}))

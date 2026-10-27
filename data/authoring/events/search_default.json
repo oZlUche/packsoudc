@@ -10,11 +10,14 @@
   },
   "options": [
     {
-      "label": "搜索",
+      "label": "搜索（倒计时 −{pass_time_actions}）",
       "labels": {
-        "en": "Search"
+        "en": "Search (Countdown −{pass_time_actions})"
       },
       "outcomes": [
+        {
+          "type": "pass_time"
+        },
         {
           "type": "open_search"
         }

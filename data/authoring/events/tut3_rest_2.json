@@ -31,9 +31,9 @@
       ]
     },
     {
-      "label": "回 {rest_restore} 点体力",
+      "label": "倒计时 −{pass_time_actions}，回 {rest_restore} 点体力",
       "labels": {
-        "en": "Restore {rest_restore} Vitality"
+        "en": "Countdown −{pass_time_actions}, restore {rest_restore} Vitality"
       },
       "hide_when_locked": true,
       "requires": [
@@ -42,6 +42,9 @@
         }
       ],
       "outcomes": [
+        {
+          "type": "pass_time"
+        },
         {
           "type": "proceed"
         }

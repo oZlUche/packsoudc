@@ -150,7 +150,6 @@ func _attach_ground() -> void:
 	_drag.register_view(g)
 	g.attach(_drag)
 	g.item_double_clicked.connect(_on_ground_double)
-	g.reserve(self)
 	tree_exiting.connect(func():
 		if is_instance_valid(g):
 			g.detach(_drag)
