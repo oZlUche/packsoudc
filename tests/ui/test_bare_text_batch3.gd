@@ -13,7 +13,7 @@ static func frame_overlay_band(t: TestCase, root: Window) -> void:
 	f.set_title("保险箱")
 	f.size = Vector2(800, 400)
 	t.check(f.band, "石板皮铺了标题带")
-	t.eq(f.title_label.get_theme_font_size("font_size"), 20, "标题 20 号")
+	t.eq(f.title_label.get_theme_font_size("font_size"), UiTheme.sz(20), "标题 20 号（258：按字号档）")
 	t.eq(f.title_label.get_theme_color("font_color"), Color("2e2219"), "墨字（槽是浅石）")
 	var head := f.title_bar.get_parent() as MarginContainer
 	t.eq(head.get_theme_constant("margin_left"), 18, "字从槽左头 18 起")

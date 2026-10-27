@@ -12,6 +12,8 @@ const PORTRAIT_SIZE := 96
 const COMPACT_PORTRAIT := 72
 const BADGE_SIZE := 32
 const NAME_SIZE := 20
+## 说明那一句的字号（小档）
+const BLURB_SIZE := 13
 
 ## 肖像目录（测试指到别处）
 static var portrait_root := "res://assets/portraits/"
@@ -73,7 +75,7 @@ func set_name_size(font_size: int) -> Nameplate:
 func set_blurb(text: String, width: float) -> Nameplate:
 	if text == "" or _col == null:
 		return self
-	blurb_label = UiTheme.make_wrapped(text, 13, UiPalette.FG, width)
+	blurb_label = UiTheme.make_wrapped(text, BLURB_SIZE, UiPalette.FG, width)
 	_col.add_child(blurb_label)
 	return self
 

@@ -86,12 +86,12 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		t.eq(tiles.map(func(c: CapTile) -> String: return c.caption_label.text), ["负重上限", "棋盘"], "说明")
 		t.check(tiles.all(func(c: CapTile) -> bool: return c.has_art() and ((c.icon as TextureRect).texture.resource_path.begins_with(CapTile.ICON_DIR))), "%s：两块牌都用美术定稿的图标" % ch.id)
 		t.eq((tiles[0] as CapTile).icon.modulate, Color.WHITE, "彩色成品，不调色")
-		t.eq((tiles[0] as CapTile).value_label.get_theme_font_size("font_size"), 28, "数字 28")
+		t.eq((tiles[0] as CapTile).value_label.get_theme_font_size("font_size"), UiTheme.sz(28), "数字 28（258：按字号档）")
 		var names: Array = setup._skill_names
 		t.eq(names.size(), ch.skill_entries().size(), "%s：每条技能一个名字" % ch.id)
 		for n in names:
 			var l := n as Label
-			t.eq(l.get_theme_font_size("font_size"), 22, "%s 字号 22" % l.text)
+			t.eq(l.get_theme_font_size("font_size"), UiTheme.sz(22), "%s 字号 22" % l.text)
 			t.check(l.get_theme_constant("outline_size") > 0, "%s 带描边" % l.text)
 			t.eq(l.get_theme_color("font_color"), UiPalette.BTN_PRIMARY_HOVER, "%s 亮黄铜色" % l.text)
 		t.check(not texts.any(func(s: String) -> bool: return s.contains("行动点")), "%s：这一屏没有「行动点」" % ch.id)

@@ -6,6 +6,7 @@ var _tooltip_btn: Button = null
 var _unlock_all_btn: Button = null
 ## 标题牌：告示卷排在它下面（[method notice_top]）
 var _plate: Control = null
+var _scroll: ScrollContainer = null
 ## 「导出平衡数据」石签：导出的告示卷排在它右边（[method notice_spot]）
 var _export_btn: Control = null
 ## 2026-10-22：名字全显（百科不遮没点亮的道具名）
@@ -43,6 +44,7 @@ func open(_payload: Dictionary) -> void:
 	frame.add_child(plate)
 	_plate = plate
 	var scroll := ScrollContainer.new()
+	_scroll = scroll
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	frame.add_child(scroll)
@@ -318,6 +320,20 @@ func notice_top() -> float:
 
 ## 游戏测试 v4.26：标题牌下面紧挨着「显示」段头签，卷压住它的右半边 —— 卷排到刚点的那颗石签右边（那一行只有它，右边空着），
 ## 竖着对齐石签；石签不在 / 右边放不下（卷伸出板面）才照 [method notice_top] 排在标题牌下面。返回 [卷左沿离屏中线多远（负 = 中线左边）, 卷顶]
+## 258：字号放大后导出石签可能在滚动框底边只露一半 —— 先把它连同卷的高度滚进来，卷才不出板面
+func _reveal_export(text: String) -> void:
+	if _scroll == null or _export_btn == null or not is_instance_valid(_export_btn) or not _export_btn.is_inside_tree():
+		return
+	var probe := NoticeScroll.make(text)
+	var h := probe.custom_minimum_size.y
+	probe.free()
+	var btn := _export_btn.get_global_rect()
+	var over := btn.get_center().y + h / 2.0 - _scroll.get_global_rect().end.y
+	if over > 0.0:
+		_scroll.scroll_vertical += ceili(over)
+		_scroll.notification(Container.NOTIFICATION_SORT_CHILDREN)     # 立刻排到新位置，下面按石签量位置
+
+
 func notice_spot(text: String) -> Vector2:
 	var probe := NoticeScroll.make(text)
 	var sz := probe.custom_minimum_size
@@ -332,6 +348,7 @@ func notice_spot(text: String) -> Vector2:
 
 
 func _post(text: String, urgent: bool = false) -> void:
+	_reveal_export(text)
 	var spot := notice_spot(text)
 	notice_layer().push(text, urgent, notice_cap(), spot.x, spot.y)
 
