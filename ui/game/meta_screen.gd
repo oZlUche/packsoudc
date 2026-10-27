@@ -39,15 +39,9 @@ const NO_SHELF_TABS := ["shelf"]
 ## 261（作者 14:13）：「图鉴」页签改「书架」—— 两层三格，点开各一扇窗；补充一（作者 16:37）：上 图鉴 / 对局记录 / 特殊道具，
 ## 下 成就 / 科技（科技页签并进来）/ 油灯静物（墨水瓶去掉）
 const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "tech", ""]
-const SHELF_CELL := Vector2(400, 400)
-const SHELF_GAP := 24
 const SHELF_WIN := Vector2(1100, 820)
 ## 261 补充一：科技窗要宽一些 —— 科技页最窄约 1190 × 660（羊皮 MIN_SCALE 0.9 + 右边说明板），1100 × 820 装不下
 const SHELF_WIN_WIDE := Vector2(1320, 900)
-const SHELF_FALLBACK_ICON := {"codex": "codex", "records": "warehouse", "keepsakes": "sell", "achievements": "achievements", "tech": "tech"}
-## 书架格里画的东西（`home/shelf/<格>`，UI替换美术 出图前用页签剪影放大）
-const SHELF_ART := "home/shelf/"
-const SHELF_ICON := 160.0
 ## 251 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要」）：整页的两页 —— 右列（仓库木架 + 挂牌）收起、中列吃满。
 ## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
 const FULL_TABS := ["market", "smithy"]
@@ -71,7 +65,7 @@ var _sub_box: VBoxContainer = null
 ## 164：页签选中时左上角挂的小木牌（`home/tab_mark.png`；没图不挂）
 var _tab_mark: TextureRect = null
 ## 261：书架格 → 格上的小牌（按钮）；窗（压暗层）；开着的那扇
-var _shelf_btns: Dictionary = {}
+var _shelf_view: ShelfView = null
 var _shelf_windows: Dictionary = {}
 var _shelf_open: String = ""
 var _records: RunRecordsWindow = null
@@ -227,7 +221,8 @@ func open(payload: Dictionary) -> void:
 
 	# 图鉴页、成就页（091）
 	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
-	for pair in [["shelf", _build_shelf], ["sell", _build_sell], ["market", _build_market], ["smithy", _build_smithy]]:
+	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
+	for pair in [["sell", _build_sell], ["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
 		(pair[1] as Callable).call(cloth)
 		_pages[pair[0]] = cloth
@@ -976,55 +971,29 @@ func codex_tiles() -> Array[CodexTile]:
 
 
 #region 书架（261）
-## 书架页：两层三格；前五格各开一扇窗，最后一格是静物
+## 书架页：261 补充二 C 石砌壁龛整座（[ShelfView]，件和摆位读 layout.json）；前五格各开一扇窗，最后一格是静物油灯
 func _build_shelf(root: Control) -> Control:
-	var center := CenterContainer.new()
-	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(center)
-	var grid := UiTheme.grid(3, SHELF_GAP)
-	center.add_child(grid)
-	_shelf_btns.clear()
-	for key in SHELF_CELLS:
-		grid.add_child(_shelf_cell(key))
-	return center
+	var holder := Control.new()     # 1308 × 952 是 1600 宽时中列的整块；左列变宽（英文、大字号）中列窄了就整座等比缩，居中
+	holder.name = "ShelfHolder"
+	holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(holder)
+	_shelf_view = ShelfView.new()
+	_shelf_view.open_requested.connect(open_shelf)
+	holder.add_child(_shelf_view)
+	holder.resized.connect(_fit_shelf_view)
+	_refresh_shelf_labels()
+	return holder
 
 
-## 一格：木格（占位用仓库那块木架的皮）里一件东西（按进度五档，[ShelfCell]）+ 一块小木牌（格名与数）；整格能点
-func _shelf_cell(key: String) -> Control:
-	var cell := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_SHELF)
-	cell.custom_minimum_size = SHELF_CELL
-	cell.name = "Shelf_" + (key if key != "" else "empty")
-	if key == "":
-		return cell
-	cell.mouse_filter = Control.MOUSE_FILTER_STOP
-	cell.gui_input.connect(func(e: InputEvent):
-		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
-			open_shelf(key))
-	var col := _vbox(16)
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	cell.add_child(col)
-	var p := shelf_progress(key)
-	var art := ShelfCell.art_for(key, ShelfCell.tier_of(p[0], p[1]))
-	var piece := art != null
-	if art == null:
-		art = UiTheme.art_cached(SHELF_ART + key)
-	if art == null:
-		art = UiTheme.art_cached(TAB_ICON_ART + String(SHELF_FALLBACK_ICON.get(key, "codex")))
-	if art != null:
-		var pic := TextureRect.new()
-		pic.name = "Piece"
-		pic.texture = art
-		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		pic.custom_minimum_size = art.get_size() if piece else Vector2.ONE * SHELF_ICON     # 定稿的尺寸摆位不写死：先按图本身（连透明边），layout.json 到了再照它摆
-		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		col.add_child(pic)
-	var plate := UiTheme.make_home_button(shelf_label(key), open_shelf.bind(key))
-	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(plate)
-	_shelf_btns[key] = plate
-	return cell
+func _fit_shelf_view() -> void:
+	var holder := _shelf_view.get_parent() as Control
+	var body := _shelf_view.custom_minimum_size
+	var k := minf(1.0, minf(holder.size.x / body.x, holder.size.y / body.y))
+	_shelf_view.size = body
+	_shelf_view.scale = Vector2.ONE * k
+	_shelf_view.position = ((holder.size - body * k) * 0.5).floor()
 
 
 ## 格上小牌写什么：图鉴 40 / 153、对局记录 N 场、特殊道具 N / N、成就 N / N、科技 N / N
@@ -1065,14 +1034,23 @@ func shelf_progress(key: String) -> Array:
 	return [0, 0]
 
 
-## 格上小牌跟着进度改字（科技窗里刚点亮一个、对局记录收藏 …）
+## 格上纸签与物件档跟着进度改（科技窗里刚点亮一个、对局记录多一局 …）
 func _refresh_shelf_labels() -> void:
-	for key in _shelf_btns:
-		(_shelf_btns[key] as Button).text = shelf_label(key)
+	if _shelf_view == null:
+		return
+	for key in SHELF_CELLS:
+		if key != "":
+			_shelf_view.set_cell(key, shelf_progress(key), shelf_label(key))
+	_shelf_view.set_keepsakes(flow.items.keepsake_ids().map(func(id) -> Array: return [flow.items.get_def(StringName(String(id))), flow.meta.has_keepsake(id)]))
 
 
+## 书架前五格的按钮（透明，盖在格上）
 func shelf_buttons() -> Dictionary:
-	return _shelf_btns
+	return _shelf_view.buttons() if _shelf_view != null else {}
+
+
+func shelf_view() -> ShelfView:
+	return _shelf_view
 
 
 ## 五扇窗：压暗的底 + 居中一块石板（1100 × 820；科技 1320 × 900），标题 + 右上「关」；内容照原来那几页
