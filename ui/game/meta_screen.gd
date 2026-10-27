@@ -38,6 +38,8 @@ const FULL_TABS := ["market", "smithy"]
 const FACILITY_TABS := {"market": Market.ID, "smithy": Smithy.ID}
 
 var _wh = null
+## 260：家页的军功碑
+var _stele: RecordsStele = null
 var _new_run_btn: Button
 var _buff_btns: Dictionary = {}
 var _unlock_btns: Dictionary = {}
@@ -172,20 +174,14 @@ func open(payload: Dictionary) -> void:
 	home.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_middle.add_child(home)
 	_pages["home"] = home
-	var box := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)
-	box.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	home.add_child(box)
-	var info := _vbox(6)
-	box.add_child(info)
-	var tone := UiTheme.tone_of(UiTheme.PANEL_HOME_BOX)
-	var just: RunResult = payload.get("result", null)
-	if just != null:
-		var c := UiPalette.HEAL if just.is_extracted() else UiPalette.HP
-		info.add_child(_wrapped(UiText.t("meta.just_run") % (UiText.tn("meta.just_extracted", just.carried.size()) % [just.carried.size(), just.value, just.balance]
-			if just.is_extracted() else (UiText.t("meta.just_died_safe") % just.safe_items.size() if not just.safe_items.is_empty() else UiText.t("meta.just_died"))), 15,
-			UiPalette.for_tone(c, tone), 460))
-	info.add_child(_wrapped(UiText.t("meta.stats") % [
-		m.runs, m.extractions, m.deaths, m.score, m.best_value, m.funds, m.codex.size(), flow.items.ids(true).size()], 15, UiPalette.FG, 460))
+	# 260（作者 14:13 选 B 军功碑，「最后对局不再显示」）：家页只立一座碑；碑顶山墙上沿在设计坐标 y 52
+	var stele_gap := Control.new()
+	stele_gap.custom_minimum_size.y = 16.0     # 家页 vbox 间距 12：24 + 16 + 12 = 52
+	home.add_child(stele_gap)
+	_stele = RecordsStele.new()
+	_stele.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	home.add_child(_stele)
+	_stele.setup(flow)
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
 	var wh_page := _cloth()
 	_pages["warehouse"] = wh_page

@@ -82,6 +82,8 @@ var runs: int = 0
 var extractions: int = 0
 var deaths: int = 0
 var best_value: int = 0
+## 260：单局价值最高那一局的摘要（[method best_run_of]）；老存档没有 = 空，军功碑只写数
+var best_run: Dictionary = {}
 ## 最近几局的 [RunResult.to_dict]，新的在前
 var history: Array[Dictionary] = []
 var _next_uid: int = 1
@@ -268,6 +270,8 @@ func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
 		board = back if back.item_count() > 0 else null
 		funds += result.balance
 		score += result.value
+		if result.value > best_value or (best_run.is_empty() and result.value > 0 and result.value == best_value):
+			best_run = best_run_of(result, runs)
 		best_value = maxi(best_value, result.value)
 		got["value"] = result.value
 		got["funds"] = result.balance
@@ -304,6 +308,13 @@ func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
 		history.resize(HISTORY_MAX)
 	changed.emit()
 	return got
+
+
+## 260：军功碑碑额要的那一局：价值、章节、结局、角色、难度、第几局、几步、赢几场、几时结束
+static func best_run_of(result: RunResult, run_no: int) -> Dictionary:
+	return {"value": result.value, "chapter": String(result.chapter_id), "outcome": String(result.outcome),
+		"character": String(result.character_id), "difficulty": String(result.difficulty_id), "run_no": run_no,
+		"steps": result.steps, "battles_won": result.battles_won, "ended_at": result.ended_at}
 
 
 ## 图鉴登记一件：计数加一，第一次带出算点亮（记进 got["lit"]）
@@ -690,6 +701,7 @@ func to_dict() -> Dictionary:
 		"next_uid": _next_uid,
 		"funds": funds, "score": score, "runs": runs, "extractions": extractions, "deaths": deaths,
 		"best_value": best_value,
+		"best_run": best_run.duplicate(true),
 		"history": history.duplicate(true),
 		"achievements": achievements.duplicate(),
 		"chapter_extractions": chapter_extractions.duplicate(),
@@ -794,6 +806,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.extractions = int(d.get("extractions", 0))
 	m.deaths = int(d.get("deaths", 0))
 	m.best_value = int(d.get("best_value", 0))
+	m.best_run = MapGraph.normalize(d.get("best_run", {})) if d.get("best_run", {}) is Dictionary else {}
 	for key in d.get("achievements", {}):
 		m.achievements[String(key)] = int((d["achievements"] as Dictionary)[key])
 	for key in d.get("chapter_extractions", {}):
