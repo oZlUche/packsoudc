@@ -6,7 +6,7 @@ const CountdownWidget := preload("res://ui/hud/widgets/countdown_widget.gd")
 
 
 static func run_rest_labels(t: TestCase) -> void:
-	t.begin("193 §2 · 休息点：篝火写「回 N 点」、帐篷写「倒计时 −2，回 N+1 点」（196 起只写效果）；扎营真的回 N+1 点")
+	t.begin("193 §2 / 作者 10-27 · 休息点：篝火写「倒计时 −1，回 N 点」、帐篷写「倒计时 −2，回 N+1 点」（196 起只写效果）；扎营真的回 N+1 点")
 	var c := EC._content()
 	var rest: EventDef = c.events.get(&"rest_default", null)
 	t.not_null(rest, "有默认休息事件")
@@ -24,7 +24,7 @@ static func run_rest_labels(t: TestCase) -> void:
 	var labels: Array[String] = []
 	for opt in rest.options:
 		labels.append(TextTemplate.plain((opt as EventOption).label_for(), TextTemplate.option_context(ctx, opt)))
-	t.check(labels.has("回 %d 点体力" % restore), "篝火（%s）" % str(labels))
+	t.check(labels.has("倒计时 −1，回 %d 点体力" % restore), "篝火（%s）" % str(labels))
 	t.check(labels.has("倒计时 −2，回 %d 点体力" % (restore + 1)), "帐篷写总数")
 	t.check(not labels.any(func(l): return l.contains("多回")), "不再写「多回」")
 	s.vitality.spend(s.vitality.current - 1, &"test")

@@ -11,7 +11,7 @@ const CELL := InventoryView.CELL
 
 
 static func frame_hud_corners(t: TestCase, root: Window) -> void:
-	t.begin("253 §1.1：开一局的 HUD —— 只有顶端栏占地，左下 / 右下的组件不是墙、不托东西")
+	t.begin("253 §1.1 / 作者 10-27「界面和道具彻底分离成两层」：开一局的 HUD —— 没有一块组件占地（地层根本没有登记面板这回事）")
 	var keep := GroundLayer.current()
 	var ground := GroundLayer.new()
 	ground.size = G.SCREEN
@@ -27,15 +27,15 @@ static func frame_hud_corners(t: TestCase, root: Window) -> void:
 		return
 	var host: HudHost = got[0]
 	t.check(host.widgets.size() > 1, "场上不止顶端栏（%s）" % str(host.widgets.keys()))
-	t.eq(ground._reserved.size(), 1, "只登记了一块")
-	t.check(ground._reserved.size() == 1 and ground._reserved[0] == host.widget(&"hud_bar"), "那一块是顶端栏")
+	t.check(host.widget(&"hud_bar") != null, "顶端栏在场")
+	t.eq(ground.has_method(&"reserve"), false, "地层没有登记面板的口子：界面不占地")
 	host.free()
 	screen.free()
 	ground.free()
 
 
 static func frame_panel_not_a_shelf(t: TestCase, root: Window) -> void:
-	t.begin("253 §1.2：松手点在背包窗正上方 —— 掉过窗面落到屏幕底，不停在上沿；松手点压在窗上的先推到窗外再竖直掉")
+	t.begin("253 §1.2 / 作者 10-27 两层：松手点在背包窗正上方 —— 掉过窗面落到屏幕底，不停在上沿；松手点压在窗上的也原地竖直掉，不推开（盖在窗前面）")
 	ItemInstance.reset_uid_counter()
 	var stash := ItemStash.new(2, 0)
 	var ground := B._ground(stash)
@@ -47,7 +47,6 @@ static func frame_panel_not_a_shelf(t: TestCase, root: Window) -> void:
 	panel.position = Vector2(500, 300)
 	panel.size = Vector2(500, 300)
 	host.add_child(panel)
-	ground.reserve(panel)
 	var floor_y := G.SCREEN.y * (1.0 - ItemStash.SPOT_MARGIN)
 	var box := G._def(&"t_box253", ["11"])
 	var a := ItemInstance.create(box)
@@ -63,7 +62,7 @@ static func frame_panel_not_a_shelf(t: TestCase, root: Window) -> void:
 	t.check(absf(ra.end.y - floor_y) < 0.5 and absf(ra.position.x - 700.0) < 0.5, "掉过窗面落到屏幕底（%s）" % ra)
 	t.eq(ground.supports_of(a.uid).has("panel"), false, "托着谁里不再有面板")
 	var ro := ground.item_rect(on.uid)
-	t.check(absf(ro.end.y - floor_y) < 0.5 and not ro.intersects(Rect2(panel.position, panel.size)), "压在窗上松手：推到窗外再掉，落在地上、不压着窗（%s）" % ro)
+	t.check(absf(ro.end.y - floor_y) < 0.5 and absf(ro.position.x - 560.0) < 0.5, "压在窗上松手：原地竖直掉到地上，不往窗外推（%s）" % ro)
 	host.free()
 
 

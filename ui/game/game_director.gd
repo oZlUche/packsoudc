@@ -246,8 +246,6 @@ func _sync_ground() -> void:
 	if _overlay != null and _base != null:
 		for tip in _base.find_children("*", "HoverTip", true, false):
 			(tip as HoverTip).hide_tip()     # 底屏被盖住了：它的悬浮窗收起来
-	if ground.visible:
-		ground.settle.call_deferred()
 
 
 ## 134（作者定）：地上的一件被双击了。有面板接地上（容器屏、战前、开着的背包浮窗……）就是它的事；

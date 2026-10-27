@@ -188,3 +188,35 @@ static func frame_text_board(t: TestCase, root: Window) -> void:
 				t.check(not screen.board_shown() and screen.board_text() == "", "rest_default：没有字板")
 		game.queue_free()
 	Support.cleanup("camp196_board")
+
+
+static func run_rest_and_search_cost_1027(t: TestCase) -> void:
+	t.begin("作者 10-27 · 休息点：篝火耗 1 次倒计时回 1 点、帐篷耗 2 次回 2 点；每次搜索也耗 1 次倒计时")
+	t.eq(NodeRules.new().rest_restore, 1, "休息回体力默认 1")
+	var rest := load("res://data/events/rest_default.tres") as EventDef
+	var fire: EventOption = null
+	var tent: EventOption = null
+	for o in rest.options:
+		match Camp.piece_of(o):
+			&"fire": fire = o
+			&"tent": tent = o
+	t.check(fire != null and tent != null, "篝火、帐篷都在")
+	if fire != null and tent != null:
+		var waits := func(o: EventOption) -> int:
+			var n := 0
+			for oc in o.outcomes:
+				if oc is PassTime:
+					n += (oc as PassTime).actions
+			return n
+		t.eq(waits.call(fire), 1, "篝火耗 1 次倒计时")
+		t.check(not fire.outcomes.any(func(oc): return oc is RestoreVitality), "篝火只回休息那 1 点")
+		t.eq(waits.call(tent), 2, "帐篷耗 2 次倒计时")
+		var extra := tent.outcomes.filter(func(oc): return oc is RestoreVitality)
+		t.check(extra.size() == 1 and (extra[0] as RestoreVitality).amount == 1, "帐篷额外回 1 点（共 2 点）")
+	for id in ["search_default", "search_again"]:
+		var ev := load("res://data/events/%s.tres" % id) as EventDef
+		var ok := false
+		for o in ev.options:
+			if o.outcomes.any(func(oc): return oc is OpenSearch):
+				ok = o.outcomes.any(func(oc): return oc is PassTime and (oc as PassTime).actions == 1)
+		t.check(ok, "%s：搜一次耗 1 次倒计时" % id)

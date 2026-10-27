@@ -25,7 +25,7 @@ static func shrink_button(b: Button, floor_size: int = 14) -> void:
 static func shrink_label(l: Label, width: float, base: int, floor_size: int) -> void:
 	if l == null:
 		return
-	var font := l.get_theme_font("font") if l.is_inside_tree() else UiPalette.cjk_font()
+	var font := l.get_theme_font("font")
 	var px := base
 	while px > floor_size and font != null and font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
 		px -= 1
@@ -39,3 +39,14 @@ static func step_down(l: Label, floor_size: int) -> bool:
 	var px := l.get_theme_font_size("font_size")
 	l.add_theme_font_size_override("font_size", px - 1)
 	return true
+
+
+## 258：定高美术字区里的一行字（结算页标题木牌）—— 一行高过 [param height] 就小一号，最小 [param floor_size]（小档字号）
+static func shrink_label_height(l: Label, height: float, floor_size: int) -> void:
+	var font := l.get_theme_font("font")
+	var px := l.get_theme_font_size("font_size")
+	var base := px
+	while px > floor_size and font != null and font.get_height(px) > height:
+		px -= 1
+	if px != base:
+		l.add_theme_font_size_override("font_size", px)

@@ -263,6 +263,11 @@ func visible_rect() -> Rect2:
 
 
 func _process(delta: float) -> void:
+	if lock_on_player:     # 作者 10-27：按住空格 = 镜头锁在自己身上（战略游戏那样）；松开（或按键事件丢了）就放
+		if not Input.is_physical_key_pressed(KEY_SPACE) and not Input.is_key_pressed(KEY_SPACE):
+			lock_on_player = false
+		elif not following() and current_id >= 0:
+			pan = focus_pan(current_id)
 	_pulse = fmod(_pulse + delta * 2.0, TAU)
 	_march = fmod(_march + delta * MARCH_SPEED, PATH_DASH + PATH_GAP)
 	if not _hop.is_empty():
@@ -429,19 +434,17 @@ func focus(id: int) -> void:
 	queue_redraw()
 
 
-## 按当前缩放把 [param id] 摆到安全区中央时的 pan（[method focus] 与跟镜头共用）
+## 按当前缩放把 [param id] 摆到安全区**正中**时的 pan（[method focus]、空格回正与跟镜头共用）。
+## 作者 10-27：棋子要在正中央 —— 不再按画布夹边（图边上的点也居中，露出纸外那一圈）；有底图纸时照 [method _clamp_pan] 的规矩夹在纸里
 func focus_pan(id: int) -> Vector2:
 	var pos := positions()
 	if not pos.has(id):
 		return pan
-	var c := canvas_rect().size * zoom
-	var safe := safe_rect()
-	var p := safe.get_center() - (pos[id] as Vector2) * zoom
-	for i in 2:
-		if c[i] <= safe.size[i]:
-			p[i] = safe.position[i] + (safe.size[i] - c[i]) / 2.0
-		else:
-			p[i] = clampf(p[i], safe.end[i] - c[i], safe.position[i])
+	var c := safe_rect().get_center()
+	var p := c - (pos[id] as Vector2) * zoom
+	if _paper.has_area():
+		p.x = clampf(p.x, c.x - _paper.end.x * zoom, c.x - _paper.position.x * zoom)
+		p.y = clampf(p.y, c.y - _paper.end.y * zoom, c.y - _paper.position.y * zoom)
 	return p
 
 
@@ -916,6 +919,10 @@ func pawn_at() -> Dictionary:
 		return {"at": b, "alpha": clampf((t - TELEPORT_FADE) / TELEPORT_FADE, 0.0, 1.0)}
 	var k := clampf(t / HOP_SEC, 0.0, 1.0)
 	return {"at": a.lerp(b, k) + Vector2(0.0, -HOP_LIFT * 4.0 * k * (1.0 - k)), "alpha": 1.0}
+
+
+## 作者 10-27：按住空格时镜头锁在自己身上（[method _process] 每帧摆正；松开就放）
+var lock_on_player := false
 
 
 ## 走一步之后：人出了安全区中央那三分之一，镜头平移（缩放不动）把他带回中央；在里面不动。返回动没动

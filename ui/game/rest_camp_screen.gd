@@ -1,6 +1,6 @@
 ## 196（作者定稿「甲 · 夜晚营地」）：休息点整屏是一片营地。事件 [member EventDef.scene] 是 `rest_camp` 的用这一屏（[method GameDirector.script_for]）。
 ##
-## 选项不改数据结构：一个选项是哪件造物看它的后果（[method piece_of]）—— 只有 proceed = 篝火，pass_time + proceed = 帐篷，
+## 选项不改数据结构：一个选项是哪件造物看它的后果（[method piece_of]）—— proceed（不带额外回体力）= 篝火，proceed + restore_vitality = 帐篷（作者 10-27：两者都耗倒计时），
 ## open_altar = 祭坛，open_forge = 铁炉，没有后果 = 路标（继续赶路）。点造物 = 选那一项；对不上的选项退回屏下方一排按钮。
 ## 条件没过的造物**不藏**，换成用过的图、不能点（营地忽略 `hide_when_locked`）；悬停脚下亮铜圈、悬浮窗写名字与效果（锁住写原因）。
 ## 歇完不跳屏（[member GameFlow.camp_rest]）：营地重开，篝火熄、脚下冒一行「体力 +N」。摆位与切图在 `assets/ui/rest/`（layout.json）。
@@ -117,8 +117,8 @@ static func piece_of(opt: EventOption) -> StringName:
 		return &"altar"
 	if has.call(OpenForge):
 		return &"forge"
-	if has.call(Proceed):
-		return &"tent" if has.call(PassTime) else &"fire"
+	if has.call(Proceed):     # 作者 10-27：篝火也耗一次倒计时了 —— 帐篷认「额外回体力」
+		return &"tent" if has.call(RestoreVitality) else &"fire"
 	return &""
 
 

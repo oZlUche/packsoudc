@@ -181,6 +181,7 @@ func _title_plank(text: String) -> Control:
 	var title := UiTheme.make_title_label(text, PLANK_TITLE_SIZE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	TextFit.shrink_label_height(title, float(rect[3]), PLANK_TITLE_SIZE)     # 258：牌面高是图定的，字高过它就缩回小档
 	var text_w := title.get_minimum_size().x
 	var plank := Vector2(maxf(float(rect[2]), text_w + float(m[0]) + float(m[2])), float(rect[3]))
 	var img := Vector2(plank.x + 2.0 * float(rect[0]), plank.y + float(rect[1]) + 6.0)
