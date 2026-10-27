@@ -290,16 +290,17 @@ static func for_tone(c: Color, tone: StringName) -> Color:
 
 
 #region 字体（168）
-## 168（作者定）：游戏自带字体 —— 正文一套、标题朱雀仿宋、大标题马善政；170 定稿（作者 2026-10-14 挑 A）正文从霞鹜文楷换成思源宋体（Noto Serif CJK SC，
-## Regular 正文、Bold 粗体，裁字子集，见 assets/fonts/README.md）。子集只含文案里出现过的字（`tools/font_charset.py`），
-## 缺的字走后备：正文后备系统字体，标题后备思源宋体 Bold，大标题后备标题字体。
+## 168（作者定）：游戏自带字体 —— 正文一套、标题朱雀仿宋、大标题一套；170 定稿（作者 2026-10-14 挑 A）正文从霞鹜文楷换成思源宋体（Noto Serif CJK SC，
+## 裁字子集，见 assets/fonts/README.md）。2026-10-27 作者再定：正文 Medium、粗体 Black（文件名照旧 serif_regular / serif_bold），
+## 大标题从马善政换成寒蝉锦书宋 Heavy（授权保留名，子集改名 PackSDC Display）。子集只含文案里出现过的字（`tools/font_charset.py`），
+## 缺的字走后备：正文后备系统字体，标题后备思源宋体粗体，大标题后备标题字体。
 ## 文件不在（裁错、夹具）就退回系统字体，不崩
 const FONT_DIR := "res://assets/fonts/"
 ## 170 §5：正文 / 粗体按用途叫（原 FONT_REGULAR / FONT_MEDIUM）—— 换字体只换这两个文件名，调用点不动
 const FONT_BODY := "serif_regular.otf"
 const FONT_BOLD := "serif_bold.otf"
 const FONT_TITLE := "zhuque_fangsong.ttf"
-const FONT_DISPLAY := "mashanzheng.ttf"
+const FONT_DISPLAY := "display_heavy.otf"
 ## 224（作者定，按推荐）：数字字体 Cinzel Bold（罗马碑刻体，OFL）—— 只裁了数字、I V X 和 + − % / · — 空格；汉字缺字走思源宋体
 const FONT_NUMERAL := "cinzel_bold.ttf"
 static var _font_files: Dictionary = {}
@@ -352,22 +353,22 @@ static func _font_for(key: String, make: Callable) -> Font:
 	return _fonts[key]
 
 
-## 正文、读数、按钮：思源宋体 Regular
+## 正文、读数、按钮：思源宋体 Medium（文件 serif_regular）
 static func cjk_font() -> Font:
 	return _font_for("body", func() -> Font: return _wrap(FONT_BODY, system_font()))
 
 
-## 真粗体：富文本的 [b] 用它（思源宋体 Bold，不让引擎把常规体描粗 —— 描出来的发糊）
+## 真粗体：富文本的 [b] 用它（思源宋体 Black（文件 serif_bold），不让引擎把常规体描粗 —— 描出来的发糊）
 static func cjk_font_bold() -> Font:
 	return _font_for("bold", func() -> Font: return _wrap(FONT_BOLD, system_font(true)))
 
 
-## 标题、名牌：朱雀仿宋（技术预览版，缺字时混进思源宋体 Bold）
+## 标题、名牌：朱雀仿宋（技术预览版，缺字时混进思源宋体粗体）
 static func title_font() -> Font:
 	return _font_for("title", func() -> Font: return _wrap(FONT_TITLE, cjk_font_bold()))
 
 
-## 大标题（主菜单游戏名、章节名、宝箱屏说明）：马善政，缺字走标题字体
+## 大标题（主菜单游戏名、章节名、宝箱屏说明）：寒蝉锦书宋 Heavy（2026-10-27 替换马善政），缺字走标题字体
 static func display_font() -> Font:
 	return _font_for("display", func() -> Font: return _wrap(FONT_DISPLAY, title_font()))
 

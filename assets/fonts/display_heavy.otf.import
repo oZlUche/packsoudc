@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://b8ig1rlkk1xa2"
-path="res://.godot/imported/mashanzheng.ttf-d8b6861791aee96f28401b39226c5b17.fontdata"
+uid="uid://cq2lghwxpn8xn"
+path="res://.godot/imported/display_heavy.otf-9824d54fd8b08317bb4534c2f79ee05c.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/mashanzheng.ttf"
-dest_files=["res://.godot/imported/mashanzheng.ttf-d8b6861791aee96f28401b39226c5b17.fontdata"]
+source_file="res://assets/fonts/display_heavy.otf"
+dest_files=["res://.godot/imported/display_heavy.otf-9824d54fd8b08317bb4534c2f79ee05c.fontdata"]
 
 [params]
 
