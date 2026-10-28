@@ -27,13 +27,16 @@ const TEXT_X := 144.0
 const TEXT_RIGHT := 24.0
 const BAND_PAD := 12.0
 ## 260 补充一（UI替换美术 16:41 写法）：碑额一行 = 金币 + 6 + 罗马数字，朱红粗衬线最大 50 号，整行宽过 330 就缩；
-## 基线 = 碑额顶 + 75 + 字号 × 0.36；千位段上横线粗 字号 × 0.07、在基线上方 字号 × 0.78
+## 基线 = 碑额顶 + 75 + 字号 × 0.36。补充三（作者 10-28 10:15 选 B「只写到千」）：金币不跟字缩，固定 52、竖向中心在碑额顶 + 75；
+## 千位段上横线粗 max(2, 字号 × 0.06)，离字头（基线上方 字号 × 0.75）再留 max(3, 字号 × 0.1) 的缝，不贴字像删除线
 const WORTH_SIZE := 50
+const WORTH_COIN := 52
 const WORTH_ROOM := 330.0
 const WORTH_GAP := 6.0
 const WORTH_BASE := 75.0
-const OVERLINE_K := 0.07
-const OVERLINE_AT := 0.78
+const OVERLINE_K := 0.06
+const CAP_AT := 0.75
+const OVERLINE_GAP := 0.1
 const NUM_SIZE := 32
 const LABEL_SIZE := 18
 const LEDGER_SIZE := 15
@@ -94,12 +97,14 @@ static func roman(n: int) -> String:
 
 
 ## 碑额的数拆成 [千位组, 余下]：4000 以上千位组写罗马数字、由 [method _draw] 在它上面画横线（V̅ = 5000），
-## 5414 → ["V", "CDXIV"]；4000 以下整个写在第二格；0 写「—」
+## 5414 → ["V", "CDXIV"]；4000 以下整个写在第二格；0 写「—」。补充三：一万起只写到千，零头不写（38888 → X̅X̅X̅V̅I̅I̅I̅），悬停才写准数
 static func numeral_parts(v: int) -> Array:
 	if v <= 0:
 		return ["", "—"]
 	if v < 4000:
 		return ["", roman(v)]
+	if v >= 10000:
+		return [roman(v / 1000), ""]
 	return [roman(v / 1000), roman(v % 1000)]
 
 
@@ -281,12 +286,12 @@ func _draw_tablet(_f: Font, fb: Font) -> void:
 	var px := worth_size(fb)
 	var over := String(_numeral[0])
 	var whole := over + String(_numeral[1])
-	var coin := roundf(px * CoinLabel.COIN_SCALE * 0.8)
+	var coin := float(UiTheme.sz(WORTH_COIN))
 	var w := coin + WORTH_GAP + fb.get_string_size(whole, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 	var x := o.x + TABLET.position.x + (TABLET.size.x - w) * 0.5
 	var base_y := o.y + TABLET.position.y + WORTH_BASE + px * 0.36
 	var icon := CoinLabel.coin_icon(int(coin))
-	var coin_top := base_y - px * 0.36 - coin * 0.5
+	var coin_top := o.y + TABLET.position.y + WORTH_BASE - coin * 0.5
 	if icon != null:
 		draw_texture_rect(icon, Rect2(x, coin_top, coin, coin), false)
 	else:
@@ -296,7 +301,7 @@ func _draw_tablet(_f: Font, fb: Font) -> void:
 	if over != "":
 		var ow := fb.get_string_size(over, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 		var th := maxf(2.0, px * OVERLINE_K)
-		var y := base_y - px * OVERLINE_AT - th
+		var y := base_y - px * CAP_AT - maxf(3.0, px * OVERLINE_GAP) - th
 		draw_rect(Rect2(tx, y + 1.2, ow, th), LIT)
 		draw_rect(Rect2(tx, y, ow, th), VERM)
 
@@ -311,7 +316,7 @@ func worth_size(fb: Font) -> int:
 
 
 static func worth_width(fb: Font, whole: String, px: int) -> float:
-	return roundf(px * CoinLabel.COIN_SCALE * 0.8) + WORTH_GAP + fb.get_string_size(whole, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	return UiTheme.sz(WORTH_COIN) + WORTH_GAP + fb.get_string_size(whole, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 
 
 ## 一件碑的图；缺图在 [param fallback] 上画石色块（[param sunk] = 凹框：深一点的边）
