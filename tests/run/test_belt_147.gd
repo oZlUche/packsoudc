@@ -222,3 +222,17 @@ static func run_shop(t: TestCase) -> void:
 	if poor.belt_offers.size() > 1:
 		t.eq(poor.can_buy_belt(1), "钱不够", "没钱买不了")
 	t.check(ShopSession.new(node, economy, c.items, s.wallet).can_buy_belt(0) != "", "没接腰带的店：买不了")
+
+
+static func run_belt_icons(t: TestCase) -> void:
+	t.begin("随身技能图标定稿（作者 10-28 18:35「B+C」）：烟雾弹陶罐、急救包亚麻小包，60 × 60，按约定路径；图跟着 def 留一份，腰带每帧画不重读")
+	for id in [&"smoke_bomb", &"aid_pack"]:
+		var def := BeltSkillDef.find(id)
+		t.not_null(def, "%s 有定义" % id)
+		if def == null:
+			continue
+		var icon := def.icon()
+		t.not_null(icon, "%s 有图标" % id)
+		if icon != null:
+			t.eq(icon.get_size(), Vector2(60, 60), "%s 60 × 60" % id)
+			t.check(def.icon() == icon, "%s 第二次拿到同一张" % id)
