@@ -28,7 +28,9 @@ const TEXT_RIGHT := 24.0
 const BAND_PAD := 12.0
 ## 260 补充一（UI替换美术 16:41 写法）：碑额一行 = 金币 + 6 + 罗马数字，朱红粗衬线最大 50 号，整行宽过 330 就缩；
 ## 基线 = 碑额顶 + 75 + 字号 × 0.36。补充三（作者 10-28 10:15 选 B「只写到千」）：金币不跟字缩，固定 52、竖向中心在碑额顶 + 75；
-## 千位段上横线粗 max(2, 字号 × 0.06)，离字头（基线上方 字号 × 0.75）再留 max(3, 字号 × 0.1) 的缝，不贴字像删除线
+## 千位段上横线粗 max(2, 字号 × 0.06)，离字头（基线上方 字号 × 0.75）再留 max(3, 字号 × 0.1) 的缝，不贴字像删除线。
+## 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」）：只刻最高一段，每 ÷ 1000 加一道横线，
+## 往上每道再空 max(2, 字号 × 0.05)；字和横线整块在碑额里竖向居中，金币中心对准字身中线（基线 − 字号 × 0.375）
 const WORTH_SIZE := 50
 const WORTH_COIN := 52
 const WORTH_ROOM := 330.0
@@ -37,6 +39,7 @@ const WORTH_BASE := 75.0
 const OVERLINE_K := 0.06
 const CAP_AT := 0.75
 const OVERLINE_GAP := 0.1
+const OVERLINE_STEP := 0.05
 const NUM_SIZE := 32
 const LABEL_SIZE := 18
 const LEDGER_SIZE := 15
@@ -54,9 +57,9 @@ const ROWS := [["escape", "extractions", "records.medal_extract"], ["core", "bos
 const TIERS := ["bronze", "silver", "gold", "gilded", "laurel"]
 
 var _funds: CoinLabel
-## 碑额：仓库总价值（整数）与它的罗马数字 [千位组（画横线）, 余下]
+## 碑额：仓库总价值（整数）与它的罗马数字 [最高一段, 横线道数]
 var _worth := 0
-var _numeral := ["", ""]
+var _numeral := ["—", 0]
 ## 每行 {count, tier（0 = 还没到铜）, next（下一阶门槛，-1 = 到顶或不分阶）, kind, label}
 var _rows: Array[Dictionary] = []
 var _ledger := ""
@@ -96,24 +99,24 @@ static func roman(n: int) -> String:
 	return out
 
 
-## 碑额的数拆成 [千位组, 余下]：4000 以上千位组写罗马数字、由 [method _draw] 在它上面画横线（V̅ = 5000），
-## 5414 → ["V", "CDXIV"]；4000 以下整个写在第二格；0 写「—」。补充三：一万起只写到千，零头不写（38888 → X̅X̅X̅V̅I̅I̅I̅），悬停才写准数
+## 碑额的数拆成 [最高一段的罗马数字, 横线道数]（补充四）：每 ÷ 1000 加一道，向下取整，后面的段不写 ——
+## 742 → ["DCCXLII", 0]、5414 → ["V", 1]、3888888 → ["III", 2]、38 亿 → ["III", 3]；0 写「—」。准数在悬停里
 static func numeral_parts(v: int) -> Array:
 	if v <= 0:
-		return ["", "—"]
-	if v < 4000:
-		return ["", roman(v)]
-	if v >= 10000:
-		return [roman(v / 1000), ""]
-	return [roman(v / 1000), roman(v % 1000)]
+		return ["—", 0]
+	var k := 0
+	while v >= 1000:
+		v /= 1000
+		k += 1
+	return [roman(v), k]
 
 
-## 碑额刻的罗马数字（测试看；千位段每个字母后面跟组合上横线 U+0305，碑面上横线是画的）
+## 碑额刻的罗马数字（测试看；每个字母后面跟横线道数个组合上横线 U+0305，碑面上横线是画的）
 func worth_text() -> String:
-	var over := ""
+	var out := ""
 	for ch in String(_numeral[0]):
-		over += ch + "\u0305"
-	return over + String(_numeral[1])
+		out += ch + "\u0305".repeat(int(_numeral[1]))
+	return out
 
 
 func worth() -> int:
@@ -280,35 +283,43 @@ func _draw() -> void:
 	_carved(f, Vector2(x0, o.y + BAND.position.y + BAND.size.y * 0.5 + _ledger_size * 0.35), _ledger, _ledger_size, INK)
 
 
-## 碑额：金币 + 罗马数字一行（千位段上画横线），整行居中；放不下缩字
+## 碑额：金币 + 罗马数字一行（上面画 k 道横线），整行水平居中、字和横线整块竖向居中；放不下缩字
 func _draw_tablet(_f: Font, fb: Font) -> void:
 	var o := ORIGIN
 	var px := worth_size(fb)
-	var over := String(_numeral[0])
-	var whole := over + String(_numeral[1])
+	var whole := String(_numeral[0])
+	var k := int(_numeral[1])
 	var coin := float(UiTheme.sz(WORTH_COIN))
-	var w := coin + WORTH_GAP + fb.get_string_size(whole, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var x := o.x + TABLET.position.x + (TABLET.size.x - w) * 0.5
-	var base_y := o.y + TABLET.position.y + WORTH_BASE + px * 0.36
+	var tw := fb.get_string_size(whole, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var x := o.x + TABLET.position.x + (TABLET.size.x - coin - WORTH_GAP - tw) * 0.5
+	var th := maxf(2.0, px * OVERLINE_K)
+	var step := maxf(2.0, px * OVERLINE_STEP)
+	var base_y := o.y + TABLET.position.y + WORTH_BASE + (px * CAP_AT + overline_stack(px, k)) * 0.5
 	var icon := CoinLabel.coin_icon(int(coin))
-	var coin_top := o.y + TABLET.position.y + WORTH_BASE - coin * 0.5
+	var coin_top := base_y - px * CAP_AT * 0.5 - coin * 0.5
 	if icon != null:
 		draw_texture_rect(icon, Rect2(x, coin_top, coin, coin), false)
 	else:
 		draw_circle(Vector2(x + coin * 0.5, coin_top + coin * 0.5), coin * 0.5, CoinLabel.FALLBACK_FILL)
 	var tx := x + coin + WORTH_GAP
 	_carved(fb, Vector2(tx, base_y), whole, px, VERM)
-	if over != "":
-		var ow := fb.get_string_size(over, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		var th := maxf(2.0, px * OVERLINE_K)
-		var y := base_y - px * CAP_AT - maxf(3.0, px * OVERLINE_GAP) - th
-		draw_rect(Rect2(tx, y + 1.2, ow, th), LIT)
-		draw_rect(Rect2(tx, y, ow, th), VERM)
+	var y := base_y - px * CAP_AT - maxf(3.0, px * OVERLINE_GAP) - th
+	for i in k:
+		draw_rect(Rect2(tx, y + 1.2, tw, th), LIT)
+		draw_rect(Rect2(tx, y, tw, th), VERM)
+		y -= th + step
+
+
+## k 道横线（连第一道离字头的缝）一共多高；0 道 0
+static func overline_stack(px: int, k: int) -> float:
+	if k <= 0:
+		return 0.0
+	return maxf(3.0, px * OVERLINE_GAP) + k * maxf(2.0, px * OVERLINE_K) + (k - 1) * maxf(2.0, px * OVERLINE_STEP)
 
 
 ## 碑额罗马数字的字号：最大 [constant WORTH_SIZE]，金币 + 字整行超过 [constant WORTH_ROOM] 就缩
 func worth_size(fb: Font) -> int:
-	var whole := String(_numeral[0]) + String(_numeral[1])
+	var whole := String(_numeral[0])
 	var px := UiTheme.sz(WORTH_SIZE)
 	while px > MIN_SIZE and worth_width(fb, whole, px) > WORTH_ROOM:
 		px -= 1
