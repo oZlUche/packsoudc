@@ -126,7 +126,18 @@ static func run_roman(t: TestCase) -> void:
 	t.eq(RecordsStele.numeral_parts(3999), ["", "MMMCMXCIX"], "3999 没有横线")
 	t.eq(RecordsStele.numeral_parts(4000), ["IV", ""], "4000 = I̅V̅")
 	t.eq(RecordsStele.numeral_parts(5414), ["V", "CDXIV"], "5414 = V̅CDXIV")
-	t.eq(RecordsStele.numeral_parts(12480), ["XII", "CDLXXX"], "12480 = X̅I̅I̅CDLXXX")
+	t.eq(RecordsStele.numeral_parts(9999), ["IX", "CMXCIX"], "9999 照旧带零头")
+	t.eq(RecordsStele.numeral_parts(10000), ["X", ""], "补充三：一万起只写到千")
+	t.eq(RecordsStele.numeral_parts(12480), ["XII", ""], "12480 = X̅I̅I̅（零头不写）")
+	t.eq(RecordsStele.numeral_parts(38888), ["XXXVIII", ""], "38888 向下取整 = X̅X̅X̅V̅I̅I̅I̅")
+	t.eq(RecordsStele.numeral_parts(388888), ["CCCLXXXVIII", ""], "388888 = C̅C̅C̅L̅X̅X̅X̅V̅I̅I̅I̅")
+	var fb := UiPalette.cjk_font_bold()
+	t.eq(RecordsStele.worth_width(fb, "", 20), float(UiTheme.sz(RecordsStele.WORTH_COIN)) + RecordsStele.WORTH_GAP + fb.get_string_size("", HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x, "金币固定 52，不跟字缩")
+	var big := RecordsStele.new()
+	big._numeral = RecordsStele.numeral_parts(388888)
+	var px := big.worth_size(fb)
+	t.check(px >= 24, "388888 一行字号 %d 不缩成点" % px)
+	big.free()
 
 
 static func run_warehouse_value(t: TestCase) -> void:
