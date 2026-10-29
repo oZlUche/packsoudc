@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.78 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.79 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4496,6 +4496,7 @@ res://
 | v4.76 | 2026-10-29 | **267 材料定向**（作者 16:49 认可 266 推荐：B + C + A）：两个新标签【矿物】`mineral` /【草木】`plant`（affiliation，15 种材料）。`SearchSession.draw_items` 多三层参数：`produce`（环的产物表，命中的取最大不连乘）× `bias`（出征倾向 `bias_table`：选中一系 ×2.5、另两系 ×0.6，只碰材料类 `material/crystal/reagent/bullion`）、`only_tags` + `other_share`（材料节点：只出带任一标签的材料类，每件 0.25 从普通池抽；过滤空了退回全池）；搜索 / 宝箱 / 事件 / `GiveRandomItem` 都传（`EventContext.material_bias`）。B：`RingSpec.produce` 写进每个点的 `MapNode.produce`（有才存；老档空）；C：`RingSpec.material_nodes` + `NodeRules.search_kinds`（standard 四种 mine / grove / remains / runes，序章不配），`RingTypeAssigner._assign_material_kinds` 在所有改类型步骤**之后**从本环非固定的搜索点里挑、写 `content.search_kind`（随机数另派生一条：同种子的图与类型不变）；`RingMapConfig._build_rings` 换规模时按环种类带上这两项。A：`RunState.material_bias`（存读，setter 交给 `NodeEvents.material_bias`），出征页「倾向」木牌（560 × 90，四颗 120 × 56 木牌键单选，局外旗标 `last_bias`，`GameFlow.begin` 带进一局）。看得见：`MapNodeStyle.KINDS` / `kind_key`（图标 `assets/nodes/search_<种类>.png`、四色），图例材料节点各一行、「倾向：自然」一行、「产物」段（由外到内，倍率 ≥ 1.5 的标签名），悬浮句 `node.hint.search_*` 与产物句「这一带多翻出【…】」，搜索屏收获框左上段头签写种类。`tools/map_stats` 数材料节点（96 种子 small 5 环 5.1 个 / 张）。字体补「林」「骸」。顺手改 v4.75 复测的两处字：英文「keeps 1 favorite」单数（`meta.sell_skip_fav_one`）；收藏了的种类「出售同类」按钮直接写「出售同类 · 已收藏」（`act.sell_same_fav`），不写「×0 得 0 币」。偏差：金银块不贴【矿物】（244 补充一只许两枚标签，且金银本来就不从搜索出；矿脉的「金银」标签照留）；集市底图换 UI 线柱脚埋土版 |
 | v4.77 | 2026-10-29 | 267 补充（UI 线建议）：出征页「倾向」三系键字左边加现有标签小图 `assets/ui/tags/<系>.png`（缩到 22，随字号档），「无」不加；英文三键略宽，木牌跟着撑 |
 | v4.78 | 2026-10-29 | 267 复测两处：材料节点的悬浮句不再接环的产物句（外环矿脉原来读成「多半是矿石……这一带多翻出【草木】」）；英文图例产物段「Middle」改「Mid」（大号字顶到旗边）。倾向键按下样式对比度留给作者 |
+| v4.79 | 2026-10-29 | 复测 v4.78：图例双尾旗右边内边距 26 → 34（`legend_pennant.json` 的 content_margin 右），最宽那行字不再贴右边金线 |
 | v4.70 | 2026-10-29 | **260 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）**：碑额写 `RecordsStele.compact(v)` —— 1000 以下整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数整数算、向下截不进位（999999 → 999.99k），末尾 0 去掉（3100000000 → 3.1b）；0 写「—」，悬停照旧写准数。横线、`roman / numeral_parts / overline_stack` 删掉；基线 = 碑额顶 + 75 + 字号 × 0.375，金币固定 52、中心对准字身中线 |
 | v4.69 | 2026-10-28 | **260 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」，取代补充三）**：`RecordsStele.numeral_parts` 返回 [最高一段的罗马数字, 横线道数]，每 ÷ 1000 加一道、向下取整、后面的段不写（742 → DCCXLII，5414 → V̅，3888888 → 两道线的 III，38 亿 → 三道）；碑额画 k 道横线（线宽 = 字宽，往上每道再空 max(2, 字号 × 0.05)，`overline_stack`），字和横线整块在碑额里竖向居中、金币中心对准字身中线；顺带修掉 v4.68 一百万起千位段一长串 M。**随身技能图标定稿**（作者 18:35「B+C」）：`assets/belt_skills/smoke_bomb.png`（陶罐）、`aid_pack.png`（亚麻小包），60 × 60；`BeltSkillDef.icon()` 把图留在 def 上（腰带在 `_draw` 里每帧画，184） |
 | v4.68 | 2026-10-28 | **260 补充三（作者 10-28 10:15 选 B「只写到千」）**：碑额大数 —— `RecordsStele.numeral_parts` 一万起只写千位段（`[roman(v / 1000), ""]`，向下取整，38888 → X̅X̅X̅V̅I̅I̅I̅），4000～9999 照旧带零头，悬停照旧写准数；金币固定 `WORTH_COIN` 52（不跟字缩，竖向中心在碑额顶 + 75），`worth_width` 金币那项跟着换，字区实宽 330 − 52 − 6；千位段上横线粗 max(2, 字号 × 0.06)，在字头（基线上方字号 × 0.75）再往上留 max(3, 字号 × 0.1) 的缝，不再贴着字头像删除线 |

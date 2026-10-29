@@ -193,7 +193,7 @@ static func pennant_box() -> StyleBox:
 		return flat
 	var meta := UiTheme.art_meta(PENNANT)
 	var tm: Array = meta.get("texture_margin", [44, 52, 44, 58])
-	var cm: Array = meta.get("content_margin", [30, 54, 26, 50])
+	var cm: Array = meta.get("content_margin", [30, 54, 34, 50])
 	var box := StyleBoxTexture.new()
 	box.texture = tex
 	box.texture_margin_left = float(tm[0])
