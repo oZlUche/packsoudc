@@ -1304,6 +1304,7 @@ const TEXT := {
 	"records.medal_core_one": {"zh": "次击败核心", "en": "core defeated"},
 	"records.medal_wins_one": {"zh": "场打赢", "en": "battle won"},
 	"records.vault_worth": {"zh": "仓库总价值 %d", "en": "Warehouse worth %d"},
+	"records.numeral_toggle": {"zh": "点击切换罗马 / 阿拉伯数字", "en": "Click to switch Roman / Arabic numerals"},
 	"records.next_tier": {"zh": "下一阶还差 %d 次", "en": "Next tier: %d to go"},
 	"records.top_tier": {"zh": "已到最高阶", "en": "Top tier reached"},
 	"records.ledger": {"zh": "%d 局 · 总分 %d · 图鉴 %d / %d · ", "en": "%d runs · score %d · collection %d / %d · "},

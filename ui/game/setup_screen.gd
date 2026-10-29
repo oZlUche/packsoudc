@@ -6,16 +6,16 @@
 ## 180（作者 2026-10-17）：第三页改成 左 地图（一级）与规模（二级，选中的图下面展开）| 中 化开的地图预览（[MapPreview]）|
 ## 右 出发摘要 + 当前难度（〇级收成「开启挑战」铜牌；大字数字、加减两颗键、每升一级红字列出这一级的挑战）。序章不进列表（只出现一次），种子玩家看不见
 ## （进第三页随机取；调试台能指定下一局的，[member GameFlow.next_run_seed]）；上次挑的图、规模、难度记在局外旗标里，下次默认它们
-## 每页右下角两颗大按钮：继续 / 出发（Enter）、返回（Esc；第一页的返回 = 回主菜单）。[method page] / [method next_page] / [method prev_page]。
+## 每页右下角两颗大按钮：继续 / 出发（Enter）、返回（Esc；第一页的返回 = 回基地，264 §五）。[method page] / [method next_page] / [method prev_page]。
 ##
 ## 第二页：中间是这个角色的棋盘（初始包已经摆好），右边是仓库的格子：从仓库往包里拖，**放得进的就是带的** ——
 ## 带入的真正限制是初始包的空间；件数 / 稀有度上限是角色的字段（默认不限），出发时查。
 ## 包不能带入：仓库里本来没有包（局外只收非包，`MetaState.keeps`），仓库的格子也不收包（同一条规则接在 `accept_filter` 上）。
-## 拖上棋盘那一刻东西就离开了仓库；出发时存 meta，回主菜单就放回去。
+## 拖上棋盘那一刻东西就离开了仓库；出发时存 meta，返回基地就放回去。
 ## 所有动作都是公开方法（[method choose_chapter]、[method choose_character]、[method carry_in]、[method store]、[method depart]、[method cancel]），按钮只是调它们；测试直接调。
 ##
 ## **地上**（090，作者定）：上一局带回来、还没置入的东西（`MetaState.board`）进这一屏时挪进中间的地上（记住各自原位）。
-## 往包里拖 = 带上、往仓库拖 = 置入、留着的**出发就没了**；回主菜单则原样放回带回来的棋盘（视为没发生过移动）。
+## 往包里拖 = 带上、往仓库拖 = 置入、留着的**出发就没了**；返回基地则原样放回带回来的棋盘（视为没发生过移动）。
 ## 仓库的东西进不了地上（会丢）。
 ##
 ## 没有角色定义时和没有章节一样：一条红字，开不了（140：作者数据里有三个角色，「按第一套开局装备开」的老路只留在 core 给测试）。
@@ -63,7 +63,7 @@ var run_seed: int = 1
 var board: GridInventory = null
 ## 090：地上 —— 上一局带回来、还没置入的东西
 var stash: ItemStash = null
-## 090：地上那些东西的来处：uid → {"origin", "rot"}（回主菜单按原位放回）
+## 090：地上那些东西的来处：uid → {"origin", "rot"}（返回基地按原位放回）
 var _pending: Dictionary = {}
 ## 225：中栏顶上的包架（挂牌 + 一列）与它的视图
 var _rack_box: Control = null
@@ -588,7 +588,7 @@ func show_page(i: int) -> void:
 	if _enter_btn != null:
 		_enter_btn.text = UiText.t("setup.depart") if _page == PAGE_TITLES.size() - 1 else UiText.t("menu.continue")
 	if _back_btn != null:
-		_back_btn.text = UiText.t("setup.main_menu") if _page == 0 else UiText.t("setup.back")
+		_back_btn.text = UiText.t("setup.back")     # 264 §五（作者 10-29 16:20）：三页都写「返回」，第一页回基地
 	for b in [_enter_btn, _back_btn]:
 		TextFit.shrink_button(b)     # 255 补充一：右下两颗定宽（英文缩字），不往左伸到角色卡上
 	_sync_preview()
@@ -607,7 +607,7 @@ func next_page() -> bool:
 	return true
 
 
-## 返回（第一页 = 回主菜单）
+## 返回（第一页 = 回基地）
 func prev_page() -> void:
 	if _page == 0:
 		cancel()
@@ -625,7 +625,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 #endregion
 
 
-## 090：地上。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（回主菜单原样放回）。
+## 090：地上。上一局带回来、还没置入的东西从带回来的棋盘挪进来，记住各自原位（返回基地原样放回）。
 ## 255 补充二：不再占一栏 —— 是仓库页签列末尾的一页「地上」，只在有东西时出现，大小 = 仓库格子那块；
 ## 刚进来地上有东西就先翻到这页（不然玩家看不见）；拖着东西停在页签上切页（163）照样能拖回地上
 func _build_stash() -> void:
@@ -1525,13 +1525,14 @@ func _remember_last(c: ChapterDef) -> void:
 	flow.meta.set_flag(FLAG_LAST_DIFFICULTY, d.level if d != null else 0)
 
 
-## 不开了：带上的放回仓库，回主菜单。090：上一局带回来的原样放回带回来的棋盘（视为没发生过移动）
+## 不开了：带上的放回仓库，回基地（264 §五，作者 10-29 16:20「【返回】用于回到基地页面，而不是主菜单」；从主菜单进来的也回基地）。
+## 090：上一局带回来的原样放回带回来的棋盘（视为没发生过移动）
 func cancel() -> void:
 	_restore_pending()
-	flow.to_main_menu()
+	flow.show_meta()
 
 
-## 090：Esc = 回主菜单（同「回主菜单」按钮）。161：第二、三页的 Esc = 回上一页
+## 090：Esc = 第一页回基地（同「返回」按钮）。161：第二、三页的 Esc = 回上一页
 func escape() -> bool:
 	prev_page()
 	return true
@@ -1550,7 +1551,7 @@ func _return_carried() -> void:
 			push_warning("setup: %s 放不回仓库，丢弃" % inst.def.id)
 
 
-## 225：这块棋盘不要了（换角色、回主菜单）—— 带上的先下来（[method _return_carried]），预设套与发的袋子拿掉（重摆时再发），
+## 225：这块棋盘不要了（换角色、返回基地）—— 带上的先下来（[method _return_carried]），预设套与发的袋子拿掉（重摆时再发），
 ## 剩下的包都回包架（包里这时已经空了）
 func _return_bags() -> void:
 	_return_carried()
@@ -1564,7 +1565,7 @@ func _return_bags() -> void:
 			flow.meta.put_bag(it)
 
 
-## 090：回主菜单 —— 上一局带回来的（不管还在地上还是已经拖上了棋盘）按原位放回带回来的棋盘；
+## 090：返回基地 —— 上一局带回来的（不管还在地上还是已经拖上了棋盘）按原位放回带回来的棋盘；
 ## 原位放不下（不该发生）就找位置，再不行进仓库。玩家已经拖进仓库的留在仓库（那是他自己置入的）
 func _restore_pending() -> void:
 	_return_bags()
@@ -1627,7 +1628,7 @@ func _rebuild_board() -> void:
 
 
 ## 225（§9.4 第 2 条兜底）：棋盘上一只包都没有、包架也空、又没挑预设 → 发一只粗麻袋（最差那只），状态行说「军需官发的」。
-## 发了返回 true。这只袋子和预设套一样算「发的」：只在棋盘上挪、进不了包架（免得回主菜单再进来白拿一只去卖），出发了就跟着走
+## 发了返回 true。这只袋子和预设套一样算「发的」：只在棋盘上挪、进不了包架（免得返回基地再进来白拿一只去卖），出发了就跟着走
 func ensure_bag() -> bool:
 	if board == null or not board.bags().is_empty() or preset() != null or flow.meta.rack.item_count() > 0:
 		return false

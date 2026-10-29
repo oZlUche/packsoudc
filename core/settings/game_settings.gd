@@ -57,6 +57,8 @@ var music_volume: float = 0.6
 ## 258（作者 2026-10-27 定）：界面字号三档 small / medium / large（×1.0 / 1.125 / 1.25，主菜单不跟）；默认中，老设置文件没这项也按中。
 ## 设置层只存认得的档名，倍率怎么套是界面的事（`UiTheme.set_text_size`）
 var text_size: StringName = &"medium"
+## 260 补充六（作者 2026-10-29 16:11）：家页军功碑碑额的写法 —— true 罗马数字（默认）、false 阿拉伯数字带 K / M / B；点碑额切换
+var stele_roman: bool = true
 
 const TEXT_SIZES: Array[StringName] = [&"small", &"medium", &"large"]
 
@@ -102,6 +104,7 @@ func to_dict() -> Dictionary:
 		"sfx_volume": sfx_volume,
 		"music_volume": music_volume,
 		"text_size": String(text_size),
+		"stele_roman": stele_roman,
 	}
 
 
@@ -133,6 +136,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.music_volume = clampf(float(d.get("music_volume", 0.6)), 0.0, 1.0)
 	var tier := StringName(String(d.get("text_size", "medium")))
 	s.text_size = tier if TEXT_SIZES.has(tier) else &"medium"
+	s.stele_roman = bool(d.get("stele_roman", true))
 	return s
 
 
