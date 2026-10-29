@@ -59,12 +59,12 @@ static func default_for(cat: String) -> String:
 ## 渲染好的浮窗文字（BBCode）
 static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> String:
 	var template := template_for(chapter, node)
-	var kind_key := "node.hint.search_%s" % String(node.content.get("search_kind", "")) if node != null else ""
+	var kind_key := "node.hint.search_%s" % String(node.content.get("search_kind", "")) if node != null and node.type == &"search" else ""
 	if category_of(node) == "search" and UiText.TEXT.has(kind_key) and template == default_for("search"):
 		template = UiText.t(kind_key)     # 267 C：材料节点说它出什么（这个点 / 本章自己写了浮窗字就照写的）
 	var text := TextTemplate.render(template, TextTemplate.context_for(run, node))
 	var cat := category_of(node)
-	if cat == "search" or cat == "chest":
+	if (cat == "search" or cat == "chest") and not UiText.TEXT.has(kind_key):     # 复测 v4.77：材料节点自己说了出什么，不再接一句环的产物（外环矿脉会读成「多半是矿石…多翻出草木」）
 		var line := produce_line(node)
 		if line != "":
 			text += "\n" + line
