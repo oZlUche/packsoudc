@@ -105,5 +105,34 @@
         "faith_call": 1
       }
     }
+  },
+  "search_kinds": {
+    "mine": {
+      "tags": [
+        "mineral",
+        "bullion"
+      ],
+      "other_share": 0.25
+    },
+    "grove": {
+      "tags": [
+        "plant",
+        "beast_part"
+      ],
+      "other_share": 0.25
+    },
+    "remains": {
+      "tags": [
+        "crafted"
+      ],
+      "other_share": 0.25
+    },
+    "runes": {
+      "tags": [
+        "crystal",
+        "magic"
+      ],
+      "other_share": 0.25
+    }
   }
 }

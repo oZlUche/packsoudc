@@ -51,6 +51,11 @@ static func run_sell_skips_favorites(t: TestCase) -> void:
 	t.eq(m.favorite_matching(-1), 2, "跳过收藏 2 件")
 	var same := ItemActions.sell_same(swords[0], m.warehouse, func(i): return 1, func(uid): m.sell_item(uid))
 	t.check(not same.enabled and same.reason == UiText.t("act.fav_no_bulk"), "出售同类：灰着，写收藏的不成批出售")
+	t.eq(same.label, "出售同类 · 已收藏", "按钮上直接写原因（复测 v4.75：原来写「×0 得 0 币」）")
+	UiText.lang = "en"
+	t.eq(UiText.tn("meta.sell_skip_fav", 1) % 1, " (keeps 1 favorite)", "英文一件用单数")
+	t.eq(UiText.tn("meta.sell_skip_fav", 2) % 2, " (keeps 2 favorites)", "两件用复数")
+	UiText.lang = "zh"
 	var one := ItemActions.sell(swords[0], 1, func(uid): m.sell_item(uid))
 	t.check(one.enabled, "单件出售照常")
 	var got := m.sell_where(-1)

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_x7lac"]
+
+[resource]
+script = ExtResource("1_x7lac")
+id = &"plant"
+display_name = "草木"
+display_names = {
+"en": "Plant"
+}
+description = "林地里采来的木料、树脂、草药与蜂产。"
+descriptions = {
+"en": "Wood, resin, herbs and hive goods gathered in the woods."
+}
+tip = false
+category = "affiliation"

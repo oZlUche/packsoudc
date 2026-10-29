@@ -22,5 +22,5 @@ descriptions = {
 "en": "Herbs dried in the sun and tied in bundles."
 }
 shape = SubResource("Resource_2frbc")
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"plant"])
 material = "herb"

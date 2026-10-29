@@ -16,7 +16,8 @@
     "material",
     "reagent",
     "nature",
-    "poison"
+    "poison",
+    "plant"
   ],
   "material": "herb"
 }

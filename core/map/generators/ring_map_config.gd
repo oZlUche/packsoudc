@@ -232,6 +232,11 @@ func apply_scale(id: StringName, ring_count_: int) -> void:
 
 func _build_rings(ring_count_: int) -> void:
 	var kinds := [&"outskirts", &"ruins", &"depths", &"core_ring", &"inner"]
+	# 267：产物表与材料节点按环的种类走 —— 重建前记下每种环原来那份（同种取第一个），换了环数照样带上
+	var by_kind := {}
+	for old in rings:
+		if old != null and not by_kind.has(old.kind):
+			by_kind[old.kind] = old
 	rings = [] as Array[RingSpec]
 	for i in ring_count_:
 		var spec := RingSpec.new()
@@ -239,6 +244,10 @@ func _build_rings(ring_count_: int) -> void:
 		if ring_template != null:
 			spec.quota = ring_template.quota.duplicate(true)
 			spec.type_weights = ring_template.type_weights.duplicate(true)
+		var src: RingSpec = by_kind.get(spec.kind, null)
+		if src != null:
+			spec.produce = src.produce.duplicate()
+			spec.material_nodes = src.material_nodes.duplicate()
 		rings.append(spec)
 	# 槽位照半径算，不动 —— 环的长度是几何，不随节点数变。规模模板要的是【节点数】：
 	# 每环只填一部分槽位，空的连成空白弧。内环只有 min_slots 个槽位，填满也就那么几个，

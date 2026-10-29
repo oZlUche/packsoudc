@@ -23,5 +23,5 @@ descriptions = {
 }
 shape = SubResource("Resource_kxnct")
 rarity = 1
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"plant"])
 material = "flesh"

@@ -108,6 +108,9 @@ static func _weighted(table: Dictionary, rng: RandomNumberGenerator, fallback: S
 ## 093（作者定）：**成组限量**的事件 —— 生成时先于 events_by_type 铺：`{"组名": {"max_per_map": 1, "early": true, "chance": 1.0, "events": {"事件 id": 权重}}}`。
 ## 每张图最多放 max_per_map 个（在事件点里挑）；early = 偏前期（越浅的点权重越高）；chance = 这张图有没有它的概率。「触发信仰」用它：每张图最多一位神
 @export var event_groups: Dictionary = {}
+## 267 C：材料节点的种类 → `{"tags": [...], "other_share": 0.25}`：只出带任一标签的材料（[method SearchSession.in_kind]），每件有 other_share 的机会从普通池抽。
+## 生成时 [RingTypeAssigner] 按环的 `material_nodes` 给搜索点写 `content.search_kind`；本章没配（序章）= 没有材料节点
+@export var search_kinds: Dictionary = {}
 
 
 ## 这种类型的点该配哪个事件；没配返回空

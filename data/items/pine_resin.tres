@@ -22,5 +22,5 @@ descriptions = {
 "en": "Sticky. Good kindling."
 }
 shape = SubResource("Resource_tt0sq")
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"plant"])
 material = "wood"

@@ -58,7 +58,16 @@ static func default_for(cat: String) -> String:
 
 ## 渲染好的浮窗文字（BBCode）
 static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> String:
-	var text := TextTemplate.render(template_for(chapter, node), TextTemplate.context_for(run, node))
+	var template := template_for(chapter, node)
+	var kind_key := "node.hint.search_%s" % String(node.content.get("search_kind", "")) if node != null else ""
+	if category_of(node) == "search" and UiText.TEXT.has(kind_key) and template == default_for("search"):
+		template = UiText.t(kind_key)     # 267 C：材料节点说它出什么（这个点 / 本章自己写了浮窗字就照写的）
+	var text := TextTemplate.render(template, TextTemplate.context_for(run, node))
+	var cat := category_of(node)
+	if cat == "search" or cat == "chest":
+		var line := produce_line(node)
+		if line != "":
+			text += "\n" + line
 	# 127：没用过的搜索点 —— 进阶的第一行写明；有保底就加一行「每次至少几件，其中……」
 	if node != null and category_of(node) == "search":
 		if SearchSession.is_advanced(node):
@@ -67,6 +76,21 @@ static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> Strin
 		if not p_floor.is_empty():
 			text += "\n" + TextTemplate.render(UiText.t("node.search_floor_line"), {"search_floor_count": p_floor.size(), "search_floor_text": SearchSession.floor_text(p_floor)})
 	return _countdown_line(run, node, text)
+
+
+## 267 B：「这一带多翻出【草木】」—— 这个点的产物表里倍率最高的那个标签（倍率 > 1 才说）；没有是空
+static func produce_line(node: MapNode) -> String:
+	if node == null or node.produce.is_empty():
+		return ""
+	var best := ""
+	var best_mult := 1.0
+	var tags: Array = node.produce.keys()
+	tags.sort()
+	for t in tags:
+		if float(node.produce[t]) > best_mult:
+			best = String(t)
+			best_mult = float(node.produce[t])
+	return UiText.t("node.hint.produce") % TagRegistry.name_of(StringName(best)) if best != "" else ""
 
 
 static func _countdown_line(run: RunState, node: MapNode, text: String) -> String:

@@ -44,6 +44,15 @@ type_weights = {
 "random": 2,
 "search": 2
 }
+produce = {
+"beast_part": 1.5,
+"mineral": 1.2,
+"plant": 2
+}
+material_nodes = {
+"grove": 1,
+"mine": 1
+}
 
 [sub_resource type="Resource" id="Resource_sst5s"]
 script = ExtResource("1_0rgu0")
@@ -62,6 +71,14 @@ type_weights = {
 "event": 3,
 "random": 2,
 "search": 2
+}
+produce = {
+"crafted": 2,
+"mineral": 1.5
+}
+material_nodes = {
+"mine": 1,
+"remains": 1
 }
 
 [sub_resource type="Resource" id="Resource_2bx78"]
@@ -82,6 +99,14 @@ type_weights = {
 "random": 2,
 "search": 2
 }
+produce = {
+"crystal": 2,
+"magic": 2,
+"mineral": 1.2
+}
+material_nodes = {
+"runes": 1
+}
 
 [sub_resource type="Resource" id="Resource_kobgp"]
 script = ExtResource("1_0rgu0")
@@ -100,6 +125,14 @@ type_weights = {
 "event": 3,
 "random": 2,
 "search": 2
+}
+produce = {
+"crystal": 2,
+"magic": 2,
+"mineral": 1.2
+}
+material_nodes = {
+"runes": 1
 }
 
 [sub_resource type="Resource" id="Resource_4nn0s"]
@@ -120,6 +153,14 @@ type_weights = {
 "random": 2,
 "search": 2
 }
+produce = {
+"crystal": 2,
+"magic": 2,
+"mineral": 1.2
+}
+material_nodes = {
+"runes": 1
+}
 
 [sub_resource type="Resource" id="Resource_lq18u"]
 script = ExtResource("1_0rgu0")
@@ -138,6 +179,14 @@ type_weights = {
 "event": 3,
 "random": 2,
 "search": 2
+}
+produce = {
+"crystal": 2,
+"magic": 2,
+"mineral": 1.2
+}
+material_nodes = {
+"runes": 1
 }
 
 [sub_resource type="Resource" id="Resource_m5125"]

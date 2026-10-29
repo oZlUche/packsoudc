@@ -897,6 +897,15 @@ func save_settings() -> bool:
 	return settings != null and settings.save_to(settings_path) == OK
 
 
+## 267 A：出征页「倾向」存在局外旗标里：0 = 没选，1～3 = [constant SearchSession.BIAS_SOURCES] 的第几个
+const BIAS_FLAG := &"last_bias"
+
+
+static func bias_of(flag_value: int) -> StringName:
+	var i := flag_value - 1
+	return SearchSession.BIAS_SOURCES[i] if i >= 0 and i < SearchSession.BIAS_SOURCES.size() else &""
+
+
 ## 从一章、一个种子开一局。两条路：
 ## - 老路（测试、没有角色）：[param loadout] 的清单 + [param from_warehouse]（仓库里的 uid）当 kit；
 ## - 角色路（开局屏，067）：[param character] 定棋盘、体力、基线、初始包，[param layout] 是开局屏摆好的棋盘
@@ -931,6 +940,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs, cash)
 	if state == null:
 		return null
+	state.material_bias = bias_of(meta.flag(BIAS_FLAG)) if meta != null else &""     # 267 A：出征页选的倾向
 	# 182：开局第三页挑好了出生点 —— 直接站上去（和章节的 auto_spawn 同一条路），新的一局不再进挑出生点阶段
 	if spawn_id >= 0 and state.phase == RunState.Phase.PICK_SPAWN:
 		state.pick_spawn(spawn_id)

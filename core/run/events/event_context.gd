@@ -28,6 +28,8 @@ var erosion_depth: Callable = Callable()
 ## 一局的能力（101 第 3 刀）：地图 buff 的给 / 去 / 查、buff 标签、段位、信仰阶与 id、赐福。
 ## 条件与后果经它问一局；默认那一份全是「没人接」的默认值，所以不接也能跑
 var hooks: RunHooks = RunHooks.new()
+## 267 A：出征倾向的倍率表（随机给东西也照它加权）；没选 = 空
+var material_bias: Dictionary = {}
 
 ## 后果立的旗子，NodeEvents 看着走
 var open_search: bool = false

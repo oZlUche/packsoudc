@@ -22,6 +22,12 @@ extends Resource
 ## 类型 → 权重。[b]M3-3c 才用到。[/b]
 @export var type_weights: Dictionary = {}
 
+## 267 B：这一环的产物表（标签 → 倍率）：生成时写进每个点的 [member MapNode.produce]，掷道具时命中的取最大那一个
+@export var produce: Dictionary = {}
+
+## 267 C：这一环几个材料节点（种类 → 个数，种类见 `NodeRules.search_kinds`）：从本环的普通搜索点里挑，挑不够有几个算几个
+@export var material_nodes: Dictionary = {}
+
 
 ## 第 r 环的槽位数，从图上读（`layout_meta.ring_slots`）。键两种都认：生成期是整数，
 ## 过一遍 JSON 之后字典键会变成字符串（[method MapGraph.normalize] 的约定）。没记就是 [param default]

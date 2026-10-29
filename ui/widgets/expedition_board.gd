@@ -2,6 +2,7 @@
 ## 「军需」木牌（每局开局随身带的技能圆槽 + 数量角标、科技给的局外加成小牌；都没有写「尚无」）、右下【开始探索】主档木牌（原左下「再来一局」）。
 ## 木牌定稿（UI替换美术 plaque264）：大木牌 [constant UiTheme.PANEL_HOME_PLAQUE]，标题是挂牌 [method HeaderTag.hanging] 挂在木牌左上（x + 18、高出 34）；
 ## 局外加成与难度写在平的浅羊皮小签上（[constant UiTheme.PANEL_HOME_CHIP]）。不做「沿用上回直接出发」（待定 2）
+## 267 A：「军需」下面一块「倾向」木牌 —— 四颗木牌键 无 / 自然 / 工艺 / 魔法（单选，选中的按下），选的存局外旗标 `last_bias`，下一局开局带进去
 class_name ExpeditionBoard
 extends VBoxContainer
 
@@ -20,11 +21,17 @@ const INK_SLOT := Color("5a4433")
 const TAG_X := 18
 const TAG_RISE := 34.0
 const CHIP_FONT := 15
+const BIAS_H := 90.0
+const BIAS_KEY := Vector2(120, 56)
+const BIAS_FONT := 18
 
 var flow: GameFlow = null
 var start_btn: Button = null
 var last_plate: PanelContainer = null
 var supply_plate: PanelContainer = null
+var bias_plate: PanelContainer = null
+## 267：倾向四键（0 = 无，1～3 = [constant SearchSession.BIAS_SOURCES]）
+var bias_keys: Array[Button] = []
 ## 「上回出征」三行写的字（测试看）；没出征过是空
 var _last_lines: Array[String] = []
 ## 军需：[[随身技能 id, 个数], …] 与局外加成 id
@@ -42,6 +49,8 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
 	_fill_supplies(_col(supply_plate))
+	bias_plate = _plate(BIAS_H, "meta.bias")
+	_fill_bias(_col(bias_plate))
 	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true, START, START_FONT)
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -159,6 +168,41 @@ func _fill_supplies(col: VBoxContainer) -> void:
 			chip.tooltip_text = Names.description_of(def) if def != null else ""
 			chip.mouse_filter = Control.MOUSE_FILTER_PASS
 			flow_row.add_child(chip)
+
+
+## 267 A：倾向四键（单选；悬浮窗写倍率）
+func _fill_bias(col: VBoxContainer) -> void:
+	var row := UiTheme.hbox(10)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(row)
+	var group := ButtonGroup.new()
+	var picked := clampi(flow.meta.flag(GameFlow.BIAS_FLAG), 0, SearchSession.BIAS_SOURCES.size())
+	for i in SearchSession.BIAS_SOURCES.size() + 1:
+		var text := UiText.t("meta.bias_none") if i == 0 else TagRegistry.name_of(SearchSession.BIAS_SOURCES[i - 1])
+		var key := UiTheme.make_home_button(text, pick_bias.bind(i), false, BIAS_KEY, BIAS_FONT)
+		key.toggle_mode = true
+		key.button_group = group
+		key.button_pressed = i == picked
+		key.tooltip_text = UiText.t("meta.bias_none_tip") if i == 0 \
+			else UiText.t("meta.bias_tip") % [_mult(SearchSession.BIAS_UP), _mult(SearchSession.BIAS_DOWN)]
+		row.add_child(key)
+		bias_keys.append(key)
+
+
+static func _mult(x: float) -> String:
+	return String.num(x, 1).trim_suffix(".0")
+
+
+## 选倾向（0 = 无）：写进局外旗标，四键跟着
+func pick_bias(i: int) -> void:
+	flow.meta.set_flag(GameFlow.BIAS_FLAG, i)
+	for j in bias_keys.size():
+		bias_keys[j].set_pressed_no_signal(j == i)
+
+
+func bias_choice() -> int:
+	return flow.meta.flag(GameFlow.BIAS_FLAG)
 
 
 func _line(text: String) -> Label:
