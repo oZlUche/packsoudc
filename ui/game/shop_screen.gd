@@ -7,12 +7,16 @@
 ## 160 补一：货架下面一排「随身」—— 随身技能（不是道具，不能拖），按按钮买，直接进右下角的腰带
 extends GameScreen
 
+## 作者 2026-10-29（选 A 木货匣）：商店的三块棋盘（整排货架、出售区、随身格）不用石板素框，用 board 的 `shop` 框
+const SHOP_BOARD := "shop"
+
 var _session: ShopSession = null
 var _shelf_row: HBoxContainer
 var _shelf_views: Array[InventoryView] = []
-## 160 补一：「随身」那一排的按钮（第 i 个 = [member ShopSession.belt_offers] 第 i 格）
-var _belt_row: VBoxContainer = null     # 227：随身那几颗竖着排（英文按钮长，横排会把帐篷撑出屏）
-var _belt_btns: Array[Button] = []
+## 160 补一：「随身」那几格（第 i 个 = [member ShopSession.belt_offers] 第 i 格）
+## 作者 2026-10-27 17:13：随身技能也画图标、摆到货架下面 —— 货架下面一块小框，每种一格、格下挂价签（同货架）
+var _belt_row: HBoxContainer = null
+var _belt_btns: Array[Control] = []
 var _sell_view: InventoryView
 var _refresh_btn: Button
 ## 作者 10-27：左下角的钱袋，写着当前金币
@@ -33,7 +37,7 @@ func open(payload: Dictionary) -> void:
 	# 226 批三：「货币 N　商品按真实尺寸……」那行删 —— 钱数顶端栏一直写着，后半句删
 	_shelf_row = _hbox(10)
 	left.add_child(_shelf_row)
-	BoardFrame.wrap(_shelf_row, "plain")     # 227：整排货架一块素框（每个货位各套一块，帐篷就宽出屏了）
+	BoardFrame.wrap(_shelf_row, SHOP_BOARD)     # 227：整排货架一块框（每个货位各套一块，帐篷就宽出屏了）
 	# 227：货架和出售区都加了框，竖着放不下 —— 出售区和按钮并排（出售区左、随身与按钮右）
 	var lower := _hbox(16)
 	left.add_child(lower)
@@ -49,21 +53,33 @@ func open(payload: Dictionary) -> void:
 	_sell_view.inventory = _session.sell_box if _session != null else GridInventory.new(ShopSession.SLOT_MIN, 0, false)
 	_sell_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	sell_col.add_child(_sell_view)
-	BoardFrame.wrap(_sell_view)     # 227：素框 + 格缝
+	BoardFrame.wrap(_sell_view, SHOP_BOARD)     # 227：框 + 格缝
 	var side := _vbox(8)
-	side.size_flags_vertical = Control.SIZE_SHRINK_END     # 按钮落在出售区底边那一行
+	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL     # 吃满到货架右边，钱袋才能靠到货架右下
 	lower.add_child(side)
-	# 作者 10-27（选 B 钱袋，挪到左下角）：钱袋和「随身」那几颗并排、在【离开】正上方，底和随身最后一颗齐；
-	# 不放进下排按键那一行 —— 英文按键长，再加钱袋会把左栏撑宽，16:10 下帐篷出屏
-	var belt_line := _hbox(8)
+	# 作者 17:13：随身那几格（左），钱袋挪到货架右下角下面（店和背包中间那块空白，右）；按键照旧在底下一行
+	var belt_line := _hbox(16)
 	side.add_child(belt_line)
-	_belt_row = _vbox(8)
-	_belt_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_belt_row.size_flags_vertical = Control.SIZE_SHRINK_END
+	_belt_row = _hbox(10)
 	belt_line.add_child(_belt_row)
+	BoardFrame.wrap(_belt_row, SHOP_BOARD)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	belt_line.add_child(gap)
+	# 钱袋压在货架右边线上（红圈：店和背包中间）—— 四分之一袋宽伸进两栏之间的空当（再多金币签就碰到背包下面的体力牌）
+	var hold := Control.new()
+	hold.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	belt_line.add_child(hold)
 	_pouch = CoinPouch.new()
-	_pouch.size_flags_vertical = Control.SIZE_SHRINK_END
-	belt_line.add_child(_pouch)
+	hold.add_child(_pouch)
+	var seat := func():
+		var m := _pouch.get_combined_minimum_size()
+		hold.custom_minimum_size = Vector2(m.x * 0.75, m.y)
+	_pouch.minimum_size_changed.connect(seat)
+	seat.call()
+	var fill := Control.new()
+	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	side.add_child(fill)
 	var buttons := _hbox(8)
 	_refresh_btn = ScrollKey.make(UiText.t("shop.refresh"), refresh_stock, true)     # 纸卷键：刷新带币座，价钱写在金币右边
 	buttons.add_child(_refresh_btn)
@@ -297,7 +313,7 @@ func _rebuild() -> void:
 		view.item_double_clicked.connect(func(_v: ContainerView, uid: int): quick_buy(uid))
 		view.actions_for = func(_uid: int) -> Array: return [_buy_action(idx)]     # 230
 		col.add_child(view)
-		view.seams = BoardFrame.light_seams().merged({"edge": true})     # 227：框是整排那块，每个货位自己描一圈缝
+		view.seams = BoardFrame.seams_of(SHOP_BOARD).merged({"edge": true})     # 227：框是整排那块，每个货位自己描一圈缝
 		var inst := _session.item_at(i)     # 卖掉的格子是空的（价签只写「已售」，用不到尺寸）
 		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)
@@ -315,19 +331,72 @@ func _rebuild() -> void:
 	_refresh()
 
 
-## 160 补一：「随身」那一排：每种一个按钮（名字、价格），买了直接进腰带
+## 160 补一 / 作者 17:13：「随身」那几格：每种一格（图标，没图写名字头一个字），格下挂价签；双击买，买了直接进腰带
 func _rebuild_belt() -> void:
 	UiTheme.clear_children(_belt_row)
 	_belt_btns.clear()
+	var frame := _belt_row.get_parent() as Control
+	if frame != null:
+		frame.visible = not _session.belt_offers.is_empty()
 	if _session.belt_offers.is_empty():
 		return
 	for i in _session.belt_offers.size():
 		var idx := i
 		var def := BeltSkillDef.find(StringName(String(_session.belt_offers[i]["id"])))
-		var b := ScrollKey.make("", func(): buy_belt(idx), true)
-		b.tooltip_text = UiText.t("shop.belt_tip") % [Names.description_of(def), def.describe()] if def != null else ""
-		_belt_row.add_child(b)
-		_belt_btns.append(b)
+		var col := _vbox(4)
+		var view := InventoryView.new()
+		view.label_font = font
+		view.show_adjacency = false
+		view.inventory = GridInventory.new(Vector2i.ONE, 0, false)
+		view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		view.seams = BoardFrame.seams_of(SHOP_BOARD).merged({"edge": true})
+		col.add_child(view)
+		var tile := BeltTile.new()
+		tile.def = def
+		tile.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tile.tooltip_text = UiText.t("shop.belt_tip") % [Names.description_of(def), def.describe()] if def != null else ""
+		tile.bought.connect(func(): buy_belt(idx))
+		view.add_child(tile)
+		var price := PriceTag.coins(int(_session.belt_offers[i]["price"]))
+		price.name = "BeltPrice%d" % idx
+		col.add_child(price)
+		_belt_row.add_child(col)
+		_belt_btns.append(tile)
+
+
+## 随身格的一格：画随身技能的图标（没图写名字头一个字），双击买；卖掉了变灰
+class BeltTile extends Control:
+	signal bought
+	var def: BeltSkillDef = null:
+		set(v):
+			def = v
+			_icon = def.icon() if def != null else null     # 拿住贴图：_draw 里现读的图画完就被放掉，画出来是白块
+	var _icon: Texture2D = null
+	var sold := false:
+		set(v):
+			sold = v
+			queue_redraw()
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_STOP
+
+	func _gui_input(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed and e.double_click and e.button_index == MOUSE_BUTTON_LEFT and not sold:
+			bought.emit()
+			accept_event()
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var tint := Color(1, 1, 1, 0.35) if sold else Color.WHITE
+		if _icon != null:
+			var s := minf(size.x, size.y) - 8.0
+			draw_texture_rect(_icon, Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s)), false, tint)
+		else:
+			var f := UiPalette.cjk_font_bold()
+			var glyph := (Names.of(def) if def != null else "?").left(1)
+			var fs := 30
+			var w := f.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+			draw_string(f, c + Vector2(-w.x * 0.5, fs * 0.35), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color("2a1d0c") * tint)
 
 
 ## 160 补一：买「随身」那一排第 i 格。返回空串 = 买了，否则是原因（写在提示行）
@@ -347,13 +416,19 @@ func _refresh() -> void:
 	if _pouch != null:
 		_pouch.amount = flow.run.wallet.balance
 	_refresh_btn.disabled = not _session.can_refresh()
+	var cash := flow.run.wallet.balance
+	if _refresh_btn is ScrollKey:     # 作者 17:13：钱不够，价钱写红
+		(_refresh_btn as ScrollKey).poor = _session.refresh_cost() > cash
 	for i in _shelf_views.size():
 		var price := _shelf_row.get_child(i).get_node_or_null("Price%d" % i) as PriceTag
 		if price != null:
 			price.sold = _session.sold.has(i)
+			price.poor = not price.sold and int(_session.stock[i]["price"]) > cash
 	for i in _belt_btns.size():
 		var offer: Dictionary = _session.belt_offers[i]
-		var def := BeltSkillDef.find(StringName(String(offer["id"])))
 		var sold := _session.belt_sold.has(i)
-		ScrollKey.show_price(_belt_btns[i], Names.of(def) if def != null else String(offer["id"]), int(offer["price"]), sold)     # 卖掉了压已售戳
-		_belt_btns[i].disabled = sold
+		(_belt_btns[i] as BeltTile).sold = sold
+		var price := _belt_row.get_child(i).get_node_or_null("BeltPrice%d" % i) as PriceTag
+		if price != null:
+			price.sold = sold
+			price.poor = not sold and int(offer["price"]) > cash

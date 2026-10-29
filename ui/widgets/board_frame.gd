@@ -60,7 +60,7 @@ static func wrap(view: Control, p_kind: String = "", p_dark: bool = false) -> Bo
 		parent.move_child(f, at)
 	f.add_child(view)
 	if view is InventoryView:     # 铜面板的深框内垫是深色半透明；board 那套（含 `plain_dark`）内垫是浅灰
-		(view as InventoryView).seams = dark_seams() if String(piece(k, p_dark).get("dir", "")) == DIR else light_seams()
+		(view as InventoryView).seams = dark_seams() if String(piece(k, p_dark).get("dir", "")) == DIR else seams_of(k)
 	return f
 
 
@@ -194,3 +194,10 @@ static func brown(view: InventoryView) -> void:
 ## 浅灰内垫上的格缝（深线 + 右 / 下错开 1.4 的亮线）
 static func light_seams() -> Dictionary:
 	return (light_layout().get("cell_seams", {}) as Dictionary).duplicate()
+
+
+## 浅色框的格缝：[method light_seams] 再盖上这块切片自己的 `seams`（作者 2026-10-29：商店木货匣是松木内垫、木色缝）
+static func seams_of(p_kind: String) -> Dictionary:
+	var d := light_seams()
+	d.merge(piece(p_kind, false).get("seams", {}), true)
+	return d
