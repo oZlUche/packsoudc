@@ -51,4 +51,10 @@
 
 ## 六、落地记录
 
-待执行落地后在此记版本。
+**v4.71（PR #376，2026-10-29，执行）**：按 §三 落了，全套 34177 项通过；中英 + 缺钱截图 `/mnt/project-files/art/ui/shop_board/landed/v471/`（UI替换美术 核对无误）。
+
+- 三块棋盘走 board 的 `shop` 框（`frame_shop.png`，layout `pieces.shop` 带自己的 `seams`；`BoardFrame.seams_of(kind)` = 浅色缝盖上切片的 `seams`，`wrap` 浅色框都走它），背包棋盘不动。
+- 钱袋挪到货架右下角下面（`belt_line` 右端）。随身那几颗纸卷买钮换成货架下小框：每种一格（1 × 1 `InventoryView` + `ShopScreen.BeltTile` 画图标，双击买，卖空变灰）、格下挂 `PriceTag`（`BeltPrice<i>`）。
+- 缺钱标红：`PriceTag.poor`（只数字写 `POOR_INK` #b0261c，尺寸后缀照旧墨色）、`ScrollKey.poor`（刷新键币座价钱），`_refresh` 按当前金币统一设。
+- 与 `final/shop.diff` 不同的两处：`ScrollKey` 改用 `PriceTag.POOR_INK` 共用一个红；钱袋伸出货架右边线的部分比四分之一多约 5 px。
+- 测试：`test_shop_keys` 按随身格改、补「钱不够写红」；`test_bare_text_batch3` 跟着调。
