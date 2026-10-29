@@ -223,7 +223,7 @@ static func run_run_state_bias(t: TestCase) -> void:
 
 
 static func run_tooltip(t: TestCase) -> void:
-	t.begin("267 §三 · 悬浮句：材料节点说它出什么，搜索 / 宝箱点后面加一句「这一带多翻出【…】」（倍率最高的那个，> 1 才说）")
+	t.begin("267 §三 · 悬浮句：材料节点说它出什么（不再接环的产物句）；普通搜索 / 宝箱点后面加一句「这一带多翻出【…】」（倍率最高的那个，> 1 才说）")
 	var c := TestSupport.load_content("free_mode")
 	var s := RunState.start(c.chapter, 5, c.items, c.enemies, c.sets)
 	var seen := {}
@@ -235,7 +235,12 @@ static func run_tooltip(t: TestCase) -> void:
 		seen[kind] = true
 		var text := NodeTooltip.text_for(s, s.chapter, n)
 		t.check(text.contains(UiText.t("node.hint.search_" + kind)), "%s：说它出什么（%s）" % [kind, text])
-		t.check(text.contains(NodeTooltip.produce_line(n)) and NodeTooltip.produce_line(n) != "", "%s：带产物句" % kind)
+		t.check(NodeTooltip.produce_line(n) != "" and not text.contains(NodeTooltip.produce_line(n)), "%s：不再接环的产物句（复测 v4.77：前后矛盾）" % kind)
+	for id in s.map.node_ids():
+		var plain := s.map.get_node(id)
+		if plain.type == &"search" and not plain.content.has("search_kind") and NodeTooltip.produce_line(plain) != "" and not plain.is_visited():
+			t.check(NodeTooltip.text_for(s, s.chapter, plain).contains(NodeTooltip.produce_line(plain)), "普通搜索点：接环的产物句")
+			break
 	var n := MapNode.new()
 	n.produce = {"plant": 2.0, "beast_part": 1.5, "mineral": 1.2}
 	t.eq(NodeTooltip.produce_line(n), "这一带多翻出【草木】。", "取倍率最高的")
@@ -281,6 +286,7 @@ static func frame_expedition_bias(t: TestCase, root: Window) -> void:
 	t.eq(board.bias_keys.map(func(b): return (b as Button).text), ["无", "自然", "工艺", "魔法"], "四颗键")
 	t.check(board.bias_keys.all(func(b): return (b as Button).custom_minimum_size == Vector2(120, 56)), "每颗 120 × 56")
 	t.check(board.bias_keys[0].button_pressed and board.bias_choice() == 0, "默认「无」按着")
+	t.check(board.bias_keys[0].icon == null and board.bias_keys.slice(1).all(func(b): return (b as Button).icon != null and (b as Button).icon.get_width() == UiTheme.sz(22)), "三系键字左边有标签小图（22），「无」没有")
 	t.eq(board.bias_keys[2].tooltip_text, "这一系材料出得更多（×2.5），另两系少一些（×0.6）", "悬浮窗写倍率")
 	board.bias_keys[2].pressed.emit()
 	t.eq(f.meta.flag(GameFlow.BIAS_FLAG), 2, "选工艺：旗标 2")
