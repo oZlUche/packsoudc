@@ -64,7 +64,7 @@
 - `toggle_tab`：没有「家」了 —— 页签是单选，再点选中的不动；`escape()`：不在出征页回出征页，在出征页回主菜单。`show_tab("home")` 留作 `expedition` 的别名（测试与老调用）。
 - 左下 `_new_run_btn` 删，`meta.new_run` 文案改「开始探索 / Set out」，按钮搬进出征页；带回来的背包没清空仍灰（现有规则）。
 - `MetaState` 加 `last_character`（开局屏出发时写，和 `last_map` 一起）。
-- 页签图标 `home/tabs/tab_expedition`（鹰旗 / 军旗剪影 36 × 36，美术设计）；两块木牌与小牌（UI替换美术）。
+- 页签图标 `home/tabs/tab_expedition`（美术设计 A 鹰旗 / B 军旗 / C 行军靴 / D 号角，**作者 16:58 选 B 军旗**，定稿 `art/ui/expedition264/out/tab_expedition.png` 已交执行）；两块木牌与小牌（UI替换美术）。
 - 测试：`test_meta_screen` 页签四个、默认出征、按钮在页里、Esc 两段；`test_setup` 写 `last_character`。
 
 ## 三、第 3 条：集市 / 铁匠铺整屏换景（已派 UI替换美术 出样）
