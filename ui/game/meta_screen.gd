@@ -748,7 +748,7 @@ func sell_filtered() -> Dictionary:
 		text += UiText.t("meta.sell_skipped") % skipped     # 230
 	var kept := flow.meta.favorite_matching(sell_filter_max(), _sell_tag)
 	if kept > 0:
-		text += UiText.t("meta.sell_skip_fav") % kept     # 265
+		text += UiText.tn("meta.sell_skip_fav", kept) % kept     # 265
 	say(text)
 	return got
 
@@ -764,7 +764,7 @@ func _refresh_sell() -> void:
 	_sell_preview = UiText.t("meta.sell_preview") % [int(p["count"]), int(p["funds"])]
 	var kept := flow.meta.favorite_matching(sell_filter_max(), _sell_tag)
 	if kept > 0:
-		_sell_preview += UiText.t("meta.sell_skip_fav") % kept     # 265：预览写跳过几件收藏
+		_sell_preview += UiText.tn("meta.sell_skip_fav", kept) % kept     # 265：预览写跳过几件收藏
 	_sell_btn.text = UiText.t("meta.sell_all") + "\n" + _sell_preview
 #endregion
 

@@ -46,6 +46,9 @@ var state: int = State.UNVISITED
 ## 布局载荷。键由生成器与布局策略约定，数据层不解读。
 var layout: Dictionary = {}
 
+## 267 B：这一点所在环的产物表（标签 → 倍率），搜索 / 宝箱 / 事件掷道具时多乘一层。生成时由 [RingTypeAssigner] 写；手绘图、老存档没有 = 空 = 不加权
+var produce: Dictionary = {}
+
 
 func is_visited() -> bool:
 	return state == State.VISITED
@@ -63,7 +66,7 @@ func to_dict() -> Dictionary:
 		"content": content.duplicate(true),
 		"state": state,
 		"layout": layout.duplicate(true),
-	}
+	}.merged({"produce": produce.duplicate()} if not produce.is_empty() else {})
 
 
 static func from_dict(d: Dictionary) -> MapNode:
@@ -78,4 +81,8 @@ static func from_dict(d: Dictionary) -> MapNode:
 	n.content = MapGraph.normalize(d.get("content", {}))
 	n.state = int(d.get("state", State.UNVISITED))
 	n.layout = MapGraph.normalize(d.get("layout", {}))
+	var p = d.get("produce", {})
+	if p is Dictionary:
+		for k in p:
+			n.produce[String(k)] = float(p[k])
 	return n

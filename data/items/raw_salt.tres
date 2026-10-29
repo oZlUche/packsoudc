@@ -22,5 +22,5 @@ descriptions = {
 "en": "Salt still in the rock. Worth good money inland."
 }
 shape = SubResource("Resource_o3dqt")
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"mineral"])
 material = "stone"

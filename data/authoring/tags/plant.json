@@ -1,0 +1,13 @@
+{
+  "id": "plant",
+  "display_name": "草木",
+  "display_names": {
+    "en": "Plant"
+  },
+  "description": "林地里采来的木料、树脂、草药与蜂产。",
+  "descriptions": {
+    "en": "Wood, resin, herbs and hive goods gathered in the woods."
+  },
+  "tip": false,
+  "category": "affiliation"
+}

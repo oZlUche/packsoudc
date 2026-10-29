@@ -27,9 +27,19 @@ const LABELS := {
 
 const UNKNOWN := "未知"
 
+## 267 C：材料节点（类型仍是 search，`content.search_kind` 定种类）的名字，键是 `search_<种类>`（[method MapNodeStyle.key_of]）
+const KIND_LABELS := {
+	&"search_mine": "矿脉",
+	&"search_grove": "林地",
+	&"search_remains": "遗骸",
+	&"search_runes": "符文堆",
+}
+
 
 ## 这种点叫什么（按当前语言）；没登记的叫「未知」
 static func label_of(type: StringName) -> String:
+	if KIND_LABELS.has(type):
+		return UiText.pick(UiText.TEXT.get("node.label.%s" % type), String(KIND_LABELS[type]))
 	if not LABELS.has(type):
 		return UiText.pick(UiText.TEXT.get("node.label.unknown"), UNKNOWN)
 	return UiText.pick(UiText.TEXT.get("node.label.%s" % type), String(LABELS[type]))

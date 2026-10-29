@@ -5,6 +5,7 @@
 ## 重试次数一高，说明配置与校验在打架 —— 该改配置，不是调高上限。
 ## `failure_tally` 汇总会指出是哪条规则在咬。
 ## 259：最后再拿魔法废墟（free_mode）三档各跑一遍，看「路旁一步」各类点、休息—休息边
+## 267：同一遍再数材料节点 —— 每张图几个、按种类分
 extends CliTool
 
 const SIDE_TYPES := ["battle", "elite", "search", "chest", "random", "event", "shop", "rest"]
@@ -59,11 +60,19 @@ func _side_table(cfg: RingMapConfig, seeds: int, label: String) -> void:
 	var rr := 0
 	var side := {}
 	var count := {}
+	var kinds := {}
+	var search := 0
 	for s in seeds:
 		var g := RingMapGenerator.new().generate(cfg, s)
 		if g == null:
 			continue
 		made += 1
+		for id in g.node_ids():
+			var k := String(g.get_node(id).content.get("search_kind", ""))
+			if k != "":
+				kinds[k] = int(kinds.get(k, 0)) + 1
+			if g.get_node(id).type == &"search":
+				search += 1
 		for e in g.edges:
 			if g.get_node(e.from_id).type == &"rest" and g.get_node(e.to_id).type == &"rest":
 				rr += 1
@@ -90,6 +99,14 @@ func _side_table(cfg: RingMapConfig, seeds: int, label: String) -> void:
 	if made == 0:
 		return
 	print("== %s：%d/%d 张；休息 %.1f/张，休息—休息边 %.2f/张" % [label, made, seeds, float(rest) / made, float(rr) / made])
+	var kind_parts: Array[String] = []
+	var kind_total := 0
+	var kind_ids: Array = kinds.keys()
+	kind_ids.sort()
+	for k in kind_ids:
+		kind_total += int(kinds[k])
+		kind_parts.append("%s %.2f" % [k, float(kinds[k]) / made])
+	print("       材料节点 %.2f/张（搜索点 %.2f/张）：%s" % [float(kind_total) / made, float(search) / made, ", ".join(kind_parts)])
 	var styles: Array = side.keys()
 	styles.sort()
 	for st in styles:

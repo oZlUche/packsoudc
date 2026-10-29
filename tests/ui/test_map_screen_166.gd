@@ -41,17 +41,20 @@ static func run_legend(t: TestCase) -> void:
 	var types: Array = legend.call("types")
 	var have := {}
 	for id in run.map.node_ids():
-		have[NodeEvents.effective_type(run.map.get_node(id))] = true
+		have[MapNodeStyle.key_of(run.map.get_node(id))] = true     # 267：材料节点按种类
 	t.check(not types.is_empty(), "有东西：%s" % legend.text())
 	var last := -1
 	for ty in types:
 		t.check(have.has(ty), "%s 图上有" % ty)
 		t.check(MapNodeStyle.name_of(ty) != "", "%s 有短名「%s」" % [ty, MapNodeStyle.name_of(ty)])
+		if MapNodeStyle.KINDS.has(ty):     # 267：材料节点紧跟在「搜索」后面
+			t.check(last <= MapNodeStyle.STYLES.keys().find(&"search"), "%s 跟在搜索后面" % ty)
+			continue
 		var at := MapNodeStyle.STYLES.keys().find(ty)
 		t.check(at > last, "%s 按样式表的顺序" % ty)
 		last = at
 	for ty in have:
-		if MapNodeStyle.NAMES.has(ty):
+		if MapNodeStyle.NAMES.has(ty) or MapNodeStyle.KINDS.has(ty):
 			t.check(types.has(ty), "图上有的 %s 列进去了" % ty)
 	t.eq(legend.title(), "图例", "部件标题")
 	# 作者 2026-10-13：图例白字、有内边距；232：底是双尾旗九宫格（深底），最窄 158

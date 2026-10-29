@@ -23,5 +23,5 @@ descriptions = {
 }
 shape = SubResource("Resource_bipvb")
 rarity = 2
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"mineral"])
 material = "metal"

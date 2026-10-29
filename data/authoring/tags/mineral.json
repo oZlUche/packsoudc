@@ -1,0 +1,13 @@
+{
+  "id": "mineral",
+  "display_name": "矿物",
+  "display_names": {
+    "en": "Mineral"
+  },
+  "description": "从地里挖出来的矿石、石料与盐。",
+  "descriptions": {
+    "en": "Ore, stone and salt dug out of the ground."
+  },
+  "tip": false,
+  "category": "affiliation"
+}

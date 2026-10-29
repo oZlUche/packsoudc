@@ -813,7 +813,10 @@ func _draw_hunter(p: Vector2, label: String) -> void:
 
 
 func _draw_node(n: MapNode, p: Vector2) -> void:
-	var style := MapNodeStyle.of(n.type)
+	var key := MapNodeStyle.kind_key(n)     # 267：材料节点换图标与色
+	if key == &"":
+		key = n.type
+	var style := MapNodeStyle.of(key)
 	var color: Color = style["color"]
 	# 用过的点去饱和变灰 —— 但连线照旧、照样能点：走回头路是这一章的核心规则，
 	# 「用过」和「走不了」必须一眼分得开（5.9）。核心永远不灰，它是方向锚点。
@@ -833,7 +836,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	elif n.id == _hover_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.35), 1.0, true)
 	# 155：有图标画图标（白线稿按节点色着色，圆底是同色压暗的深色，图标不会融进去）；没图退回写字
-	var tex := MapNodeStyle.icon(n.type)
+	var tex := MapNodeStyle.icon(key)
 	if tex != null:
 		var side := NODE_RADIUS * ICON_SCALE
 		draw_texture_rect(tex, Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), false, color)

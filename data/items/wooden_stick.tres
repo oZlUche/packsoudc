@@ -23,5 +23,5 @@ descriptions = {
 "en": "A straight stick picked up along the way."
 }
 shape = SubResource("Resource_lt57i")
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"plant"])
 material = "wood"

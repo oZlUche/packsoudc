@@ -25,6 +25,18 @@ const STYLES := {
 
 const UNKNOWN := {"glyph": "?", "color": Color("8b93a1")}
 
+## 267 C：材料节点 —— 类型仍是 search，按 `content.search_kind` 换长相（搜索黄的四个变体）；键 `search_<种类>`，图标 `assets/nodes/search_<种类>.png`
+const KINDS := {
+	&"search_mine": {"glyph": "矿", "color": Color("c48a3a")},
+	&"search_grove": {"glyph": "林", "color": Color("9aa63c")},
+	&"search_remains": {"glyph": "遗", "color": Color("a8906a")},
+	&"search_runes": {"glyph": "符", "color": Color("b58ad0")},
+}
+## 图例短名（同 [constant NAMES]，界面按语言取 `node.short.<键>`）
+const KIND_NAMES := {
+	&"search_mine": "矿脉", &"search_grove": "林地", &"search_remains": "遗骸", &"search_runes": "符文堆",
+}
+
 ## 166（作者定）：左下角图例用的短名（地图上一眼看的那种；岔路口不列）。长名（事件文本、日志）照旧在 [NodeText]。
 ## 221 F1：值是中文原文，界面按语言取用 [method name_of]；表本身还管「图例列不列」
 const NAMES := {
@@ -46,7 +58,7 @@ const ROUTE_COLORS: Array[Color] = [
 
 ## 这种点画成什么样 + 它叫什么（`{glyph, color, label}`）。名字从 [NodeText] 取
 static func of(type: StringName) -> Dictionary:
-	var style: Dictionary = STYLES.get(type, UNKNOWN).duplicate()
+	var style: Dictionary = STYLES.get(type, KINDS.get(type, UNKNOWN)).duplicate()
 	style["label"] = NodeText.label_of(type)
 	return style
 
@@ -58,12 +70,28 @@ static func icon(type: StringName) -> Texture2D:
 	return _icons[type]
 
 
+## 267：这个点按什么画 —— 揭开了的随机点按揭开的类型；搜索点带材料种类（且有这种长相）就是 `search_<种类>`
+static func key_of(n: MapNode) -> StringName:
+	var key := kind_key(n)
+	return key if key != &"" else NodeEvents.effective_type(n)
+
+
+## 267：材料节点的长相键 `search_<种类>`；不是材料节点返回空
+static func kind_key(n: MapNode) -> StringName:
+	if n == null or n.type != &"search":
+		return &""
+	var key := StringName("search_" + String(n.content.get("search_kind", "")))
+	return key if KINDS.has(key) else &""
+
+
 static func route_color(index: int) -> Color:
 	return ROUTE_COLORS[posmod(index, ROUTE_COLORS.size())]
 
 
 ## 166：图例里的短名（221 F1：按当前语言，`UiText` 的 `node.short.<type>`）；表里没有的退回 [NodeText] 的长名
 static func name_of(type: StringName) -> String:
+	if KIND_NAMES.has(type):
+		return UiText.pick(UiText.TEXT.get("node.short.%s" % type), String(KIND_NAMES[type]))
 	if not NAMES.has(type):
 		return NodeText.label_of(type)
 	return UiText.pick(UiText.TEXT.get("node.short.%s" % type), String(NAMES[type]))
