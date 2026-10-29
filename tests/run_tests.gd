@@ -102,6 +102,7 @@ func _initialize() -> void:
 		for m in suite.get_script_method_list():
 			var n: String = m["name"]
 			if (n == "run" or n.begins_with("run_")) and m["args"].size() == 1:
+				ItemFavorites.attach(null)     # 265：收藏的来源是静态的，每个用例从「没有」开始（用 GameFlow 的会自己挂上）
 				suite.call(n, _case)
 
 	_phase1_ok = true
@@ -126,6 +127,7 @@ func _process(_delta: float) -> bool:
 		for m in suite.get_script_method_list():
 			var n: String = m["name"]
 			if n.begins_with("frame_") and m["args"].size() == 2:
+				ItemFavorites.attach(null)
 				suite.call(n, _case, root)
 
 	_report()

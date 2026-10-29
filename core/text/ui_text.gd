@@ -1444,6 +1444,7 @@ const TEXT := {
 	"act.sell": {"zh": "出售 %d 币", "en": "Sell · %d"},
 	"act.sell_same": {"zh": "出售同类 ×%d 得 %d 币", "en": "Sell all ×%d · %d"},
 	"act.locked": {"zh": "已锁定", "en": "Locked"},
+	"act.fav_no_bulk": {"zh": "收藏的不成批出售", "en": "Favorites aren't sold in bulk"},     # 265
 	"act.pinned": {"zh": "随身之物", "en": "Part of your kit"},     # 255：随身之物的按钮全灰，理由
 	"act.confirm": {"zh": "再点一次", "en": "Click again"},
 	"act.drop": {"zh": "放到地上", "en": "Drop"},
@@ -1474,6 +1475,9 @@ const TEXT := {
 	"tip.pinned": {"zh": "随身：拿不下、丢不掉", "en": "Kit: can't be removed or dropped"},     # 255：悬浮窗最后一行灰小字
 	"tip.pin_moves": {"zh": "随身：棋盘上能挪，丢不掉", "en": "Kit: moves around your board, can't be dropped"},     # 256：军功牌
 	"meta.sell_skipped": {"zh": "（跳过 %d 件锁定的）", "en": " (skipped %d locked)"},
+	"meta.sell_skip_fav": {"zh": "（跳过收藏 %d 件）", "en": " (keeps %d favorites)"},     # 265：一键出售的预览与结果
+	"meta.filter_fav": {"zh": "只看收藏", "en": "Favorites"},     # 265：仓库筛选牌
+	"meta.codex_fav": {"zh": "收藏", "en": "Favorites"},     # 265：图鉴筛选
 	"rack.has_contents": {"zh": "「%s」上还有东西，先拿下来再收进包架", "en": "Empty the %s before putting it on the Bag Rack"},
 	"wh.and_more": {"zh": "%s等", "en": "%s, etc."},
 	"wh.stuck": {"zh": "；仓库放不下 %d 件（%s）—— 挪一挪仓库，或者不要了", "en": "; no room in the Warehouse for %d (%s). Rearrange the Warehouse, or let them go"},

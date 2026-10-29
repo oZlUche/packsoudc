@@ -97,6 +97,9 @@ var _variant_tiles: Array[CodexTile] = []
 var _codex_tip: HoverTip = null
 ## 091：成就页的筛选（"all" / "done" / "todo"）、列表与现在列着的行
 var _ach_filter: String = "all"
+## 265：图鉴「全部 / 收藏」
+var _codex_filter: String = "all"
+var _codex_filter_btns: Dictionary = {}
 var _ach_filter_btns: Dictionary = {}
 var _ach_list: VBoxContainer = null
 var _ach_warn: HeaderTag = null
@@ -632,6 +635,7 @@ func _build_sell(root: Control) -> Control:
 		var inst := flow.meta.rack.get_item(uid)
 		return [ItemActions.sell(inst, MetaState.sell_price_of(inst, flow.sell_ratio()), sell_bag)] if inst != null else []
 	flow.meta.warehouse.changed.connect(_on_sell_stock_changed)
+	flow.meta.changed.connect(_refresh_sell)     # 265：收藏变了，预览里「跳过收藏」跟着变
 	_rebuild_sell_tags()
 	set_sell_filter(0)
 	return page
@@ -742,6 +746,9 @@ func sell_filtered() -> Dictionary:
 	var skipped := flow.meta.locked_matching(sell_filter_max(), _sell_tag)
 	if skipped > 0:
 		text += UiText.t("meta.sell_skipped") % skipped     # 230
+	var kept := flow.meta.favorite_matching(sell_filter_max(), _sell_tag)
+	if kept > 0:
+		text += UiText.t("meta.sell_skip_fav") % kept     # 265
 	say(text)
 	return got
 
@@ -755,6 +762,9 @@ func _refresh_sell() -> void:
 		return
 	var p := flow.meta.sell_preview(sell_filter_max(), flow.sell_ratio(), _sell_tag)
 	_sell_preview = UiText.t("meta.sell_preview") % [int(p["count"]), int(p["funds"])]
+	var kept := flow.meta.favorite_matching(sell_filter_max(), _sell_tag)
+	if kept > 0:
+		_sell_preview += UiText.t("meta.sell_skip_fav") % kept     # 265：预览写跳过几件收藏
 	_sell_btn.text = UiText.t("meta.sell_all") + "\n" + _sell_preview
 #endregion
 
@@ -875,6 +885,15 @@ func _build_codex(root: Control) -> Control:
 		return da.rarity < db.rarity if da.rarity != db.rarity else String(a) < String(b))
 	# 095（作者定）：派生的赐福版并进原件那一格（ids() 本来就不列赐福版），格子叠影 + 角标，点开弹异体列表
 	# 226 批二：说明行（「图鉴　带出过的点亮 N / N……」）删了
+	# 265：「全部 / 收藏」两块木牌（同成就页那一排）
+	var head := _hbox(8)
+	page.add_child(head)
+	for pair in [["all", "meta.all"], ["fav", "meta.codex_fav"]]:
+		var key: String = pair[0]
+		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_codex_filter(key), false, Vector2.ZERO, ACH_FILTER_FONT)
+		b.toggle_mode = true
+		_codex_filter_btns[key] = b
+		head.add_child(b)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED     # 139：按宽度定列数，不横向滚
@@ -896,9 +915,34 @@ func _build_codex(root: Control) -> Control:
 		_codex_tiles.append(tile)
 	_codex_tip = HoverTip.new()
 	add_child(_codex_tip)
+	show_codex_filter("all")
+	if not m.changed.is_connected(_refilter_codex):
+		m.changed.connect(_refilter_codex)     # 收藏变了：「收藏」档跟着增减
 	fit_codex_to_width(SHELF_WIN.x)     # 进树之前先给个列数，布局好了按真宽度重算
 	scroll.resized.connect(func(): fit_codex_to_width(scroll.size.x))
 	return page
+
+
+## 265：图鉴切「全部 / 收藏」（"all" / "fav"）：收藏档只露收藏了的种类（异体并在原件格里，任一收藏就露）
+func show_codex_filter(key: String) -> void:
+	if not _codex_filter_btns.has(key):
+		key = "all"
+	_codex_filter = key
+	for k in _codex_filter_btns:
+		(_codex_filter_btns[k] as Button).set_pressed_no_signal(k == key)
+	_refilter_codex()
+
+
+func codex_filter() -> String:
+	return _codex_filter
+
+
+func _refilter_codex() -> void:
+	if _codex_grids.is_empty():
+		return
+	for tile in (_codex_grids[0] as GridContainer).get_children():
+		var t := tile as CodexTile
+		t.visible = _codex_filter != "fav" or t.variants.any(func(v): return v != null and ItemFavorites.has((v as ItemDef).id)) or (t.def != null and ItemFavorites.has(t.def.id))
 
 
 ## 特殊道具（088）：不进背包、不能生成，拿到过的点亮。261：原来在图鉴页底下一段，搬进书架上自己那一格的窗
@@ -1023,8 +1067,7 @@ func _on_tile_hovered(tile: CodexTile) -> void:
 		return
 	var at := tile.global_position + Vector2(tile.size.x, 0)
 	if tile.lit:
-		var full := ItemTooltip.describe_full(ItemInstance.create(tile.def, 0))
-		_codex_tip.show_item(full, at, tile.get_global_rect())     # 作者 10-26：贴着格子摆
+		_codex_tip.show_kind(tile.def, at, tile.get_global_rect())     # 作者 10-26：贴着格子摆；265：右上角收藏丝带
 	elif tile.def.requires_unlock != &"" and not flow.unlocked(tile.def.requires_unlock):
 		# 091：锁着的写怎么解锁（哪一枚成就）
 		var ach := flow.achievement_granting(tile.def.requires_unlock)

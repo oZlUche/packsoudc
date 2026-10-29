@@ -124,6 +124,7 @@ static func set_focused(item: ItemInstance, tree: SceneTree) -> void:
 func _init() -> void:
 	UiTheme.warm_slot_icons()     # 170：格位图标先读好，别等到 _draw 里第一次读（兼容渲染器下会画成白块）
 	add_to_group(GROUP)
+	add_to_group(ItemFavorites.GROUP)     # 265：收藏一变就重画角标
 
 
 func container() -> ItemContainer:
@@ -408,6 +409,7 @@ func _draw() -> void:
 		ItemPainter.draw_charges(self, item, item.rotation, anchor, cell_px, tint)     # 208：耐久没满、又没这一档的图：左下角次数点
 		ItemPainter.draw_lock(self, item, item.rotation, anchor, cell_px, tint)     # 230：玩家锁住的：左上角小锁
 		ItemPainter.draw_pin(self, item, item.rotation, anchor, cell_px, tint)     # 255：随身之物：右上角小钉
+		ItemPainter.draw_favorite(self, item, item.rotation, anchor, cell_px, tint)     # 265：收藏：右上角星（有钉往左让）
 		ItemPainter.draw_honor(self, item, item.rotation, anchor, cell_px, tint)     # 256：军功牌：右下角「军功 N」
 		if highlights.has(item.uid):
 			var hb := item.def.shape.size_rotated(item.rotation)

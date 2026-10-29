@@ -259,14 +259,66 @@ const LOCK_INSET := 0.08
 static func draw_pin(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
 	if inst == null or inst.def == null or inst.def.shape == null or not inst.is_pinned():
 		return false
+	draw_pin_badge(canvas, top_right_badge(inst.def, rot, anchor, cell), modulate)
+	return true
+
+
+## 右上角那枚角标的框：当前朝向脚印最靠右上的那一格（y 最小、再 x 最大）右上角往里 8%，边长 16 × 格 / 60（小钉、收藏星同一处）
+static func top_right_badge(def: ItemDef, rot: int, anchor: Vector2, cell: float) -> Rect2:
 	var best := Vector2i(-1, 1 << 20)
-	for c in inst.def.shape.cells_rotated(rot):
+	for c in def.shape.cells_rotated(rot):
 		if c.y < best.y or (c.y == best.y and c.x > best.x):
 			best = c
 	var side := LOCK_SIDE * cell / InventoryView.CELL
-	var at := anchor + Vector2(best) * cell + Vector2(cell * (1.0 - LOCK_INSET) - side, cell * LOCK_INSET)
-	draw_pin_badge(canvas, Rect2(at, Vector2(side, side)), modulate)
+	return Rect2(anchor + Vector2(best) * cell + Vector2(cell * (1.0 - LOCK_INSET) - side, cell * LOCK_INSET), Vector2(side, side))
+
+
+## 265：收藏了的种类（[ItemFavorites]）—— 右上角一枚星（`tip/fav_badge`，大格 `_2x`，美术没出前画一颗金星）；
+## 这一件也是随身之物（小钉在同一角）就往左让一个角标宽 + 2（UI替换美术 16:57）。没收藏不画；画了返回 true
+static func draw_favorite(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+	if inst == null:
+		return false
+	return draw_favorite_def(canvas, inst.def, rot, anchor, cell, modulate, inst.is_pinned())
+
+
+static func draw_favorite_def(canvas: CanvasItem, def: ItemDef, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE, beside_pin: bool = false) -> bool:
+	var r := favorite_rect(def, rot, anchor, cell, beside_pin)
+	if r.size == Vector2.ZERO:
+		return false
+	draw_favorite_badge(canvas, r, modulate)
 	return true
+
+
+## 收藏星画在哪（没收藏 / 没形状给空矩形）
+static func favorite_rect(def: ItemDef, rot: int, anchor: Vector2, cell: float, beside_pin: bool = false) -> Rect2:
+	if def == null or def.shape == null or not ItemFavorites.has(def.id):
+		return Rect2()
+	var r := top_right_badge(def, rot, anchor, cell)
+	if beside_pin:
+		r.position.x -= r.size.x + 2.0
+	return r
+
+
+## 一枚收藏星画在 [param r] 里（有图用图，没图画深圆片 + 金星）
+static func draw_favorite_badge(canvas: CanvasItem, r: Rect2, modulate: Color = Color.WHITE) -> void:
+	var tex := UiTheme.art_cached("tip/fav_badge_2x" if r.size.x > 16.0 else "tip/fav_badge")
+	if tex != null:
+		canvas.draw_texture_rect(tex, r, false, modulate)
+		return
+	var c := r.get_center()
+	var rad := minf(r.size.x, r.size.y) * 0.5
+	canvas.draw_circle(c, rad, Color("2a1d12") * modulate)
+	canvas.draw_colored_polygon(star_points(c, rad * 0.8), Color("d4a84f") * modulate)
+
+
+## 五角星的十个顶点（尖朝上）
+static func star_points(c: Vector2, outer: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in 10:
+		var rad := outer if i % 2 == 0 else outer * 0.42
+		var a := -PI * 0.5 + PI * float(i) / 5.0
+		pts.append(c + Vector2(cos(a), sin(a)) * rad)
+	return pts
 
 
 ## 255：一枚小钉画在 [param r] 里（有图用图，没图画铆钉：黄铜圆头 + 暗边 + 高光）
