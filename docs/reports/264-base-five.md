@@ -143,3 +143,10 @@
 - 书架次级菜单：`SUB_TABS` 改按页签的字典，书架选中时滑出五颗小键（= `show_tab(格名)`，窗开着按下、关窗弹起，`_sync_shelf_sub`）。
 - 仓库页工具列：`WarehousePanel.add_rack_tools` 在包架下挂 `WarehouseTools`（筛选牌 → `WarehousePages.set_filter` → `InventoryView.dim_filter` 压灰、页签写匹配数；账牌 件数 / 总价值 / 空格）；没带回来的棋盘时粗布缩成 260 窄布（`_fit_wh_cloth`）。
 - 木牌、小牌、筛选牌、账牌先垫羊皮纸占位；美术批（plaque264 九宫格、换景、页签图标 B）与 260 补充七 下一单换上。截图 `/mnt/project-files/art/ui/base264/landed/`。
+
+## 十一、落地记录（第 3 条换景 + 美术批，v4.74 PR #379，2026-10-29，执行）
+
+- 集市 / 铁匠铺整屏换景（作者 17:01 选 营寨 + 砖拱）：翻到两页时整屏背景换 `market/scene` / `smithy/scene`，中列粗布去掉，凉棚与大桌留在 `market/bg` 透明抠图上（layout.json 不动），切换淡入淡出。
+- 出征页两块木牌、仓库页筛选牌与账牌换上 plaque264 定稿九宫格；页签图标 B 军旗。
+- 同一 PR：260 补充七（碑额罗马写法太长按千位分两行，§十六）。
+- **264 五条全部收口。**
