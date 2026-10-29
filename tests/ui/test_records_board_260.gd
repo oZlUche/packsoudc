@@ -48,7 +48,7 @@ static func _fill(m: MetaState, big: bool) -> void:
 
 
 static func frame_stele(t: TestCase, root: Window) -> void:
-	t.begin("260 · 家页只立一座军功碑：碑额金币 + 仓库总价值（补充一；补充五写 k / m / b）、军功牌按次数分阶（阈值从数据读，碑面不写阶名）、碑脚累计账")
+	t.begin("260 · 家页只立一座军功碑：碑额金币 + 仓库总价值（补充一；补充六默认罗马两段，点一下换 K / M / B）、军功牌按次数分阶（阈值从数据读，碑面不写阶名）、碑脚累计账")
 	var f := _flow()
 	_fill(f.meta, false)
 	for id in [&"knife", &"iron_ore", &"hardwood_plank"]:
@@ -65,8 +65,27 @@ static func frame_stele(t: TestCase, root: Window) -> void:
 	var worth := f.meta.warehouse_value()
 	t.check(worth > 0, "仓库有三件：总价值 %d" % worth)
 	t.eq(stele.worth(), worth, "碑额是仓库总价值")
-	t.eq(stele.worth_text(), RecordsStele.compact(worth), "碑额写 k / m / b 两位小数（补充五）")
-	t.eq(stele._get_tooltip(stele.tablet_rect().get_center()), UiText.t("records.vault_worth") % worth, "悬停碑额：阿拉伯数字")
+	t.check(stele.roman_on() and f.settings.stele_roman, "补充六：默认罗马写法")
+	t.eq(stele.parts(), RecordsStele.roman_parts(worth), "碑额写罗马两段")
+	t.eq(stele._get_tooltip(stele.tablet_rect().get_center()), UiText.t("records.vault_worth") % worth + "\n" + UiText.t("records.numeral_toggle"), "悬停碑额：准数 + 点击切换的提示")
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = stele.tablet_rect().get_center()
+	stele._gui_input(click)
+	t.check(not stele.roman_on() and not f.settings.stele_roman, "点碑额：换阿拉伯写法、记进设置")
+	t.eq(stele.worth_text(), RecordsStele.compact(worth), "阿拉伯写法写 K / M / B 两位小数")
+	t.check(not GameSettings.load_from(SETTINGS).stele_roman, "存盘了")
+	var reopened := RecordsStele.new()
+	reopened.setup(f)
+	t.check(not reopened.roman_on(), "再开家页照上次的写法")
+	reopened.free()
+	click.position = stele.row_rect(0).get_center()
+	stele._gui_input(click)
+	t.check(not stele.roman_on(), "点圆牌那几行不换")
+	click.position = stele.tablet_rect().get_center()
+	stele._gui_input(click)
+	t.check(stele.roman_on() and GameSettings.load_from(SETTINGS).stele_roman, "再点一下：回罗马")
 	t.eq(stele._funds.amount, 357, "碑脚金币")
 	t.eq(stele.ledger(), UiText.t("records.ledger") % [4, 5414, f.meta.codex.size(), f.items.ids(true).size()], "碑脚账：局数 · 总分 · 图鉴")
 	var tiers: Dictionary = f.meta.rules.medal_tiers
@@ -119,33 +138,74 @@ static func frame_stele(t: TestCase, root: Window) -> void:
 
 
 static func run_compact(t: TestCase) -> void:
-	t.begin("260 补充五 · 碑额写 k / m / b / t 带两位小数：向下截不进位、末尾 0 去掉；1000 以下整数；0 写「—」；金币固定 52")
+	t.begin("260 补充五 / 六 · 碑额阿拉伯写法 K / M / B / T（大写）带两位小数：向下截不进位、末尾 0 去掉；1000 以下整数；0 写「—」；金币固定 52")
 	t.eq(RecordsStele.compact(0), "—", "0 → —")
 	t.eq(RecordsStele.compact(742), "742", "742")
 	t.eq(RecordsStele.compact(999), "999", "999")
-	t.eq(RecordsStele.compact(1000), "1k", "1000 → 1k（末尾 0 去掉）")
-	t.eq(RecordsStele.compact(3000), "3k", "3000 → 3k")
-	t.eq(RecordsStele.compact(5414), "5.41k", "5414 → 5.41k")
-	t.eq(RecordsStele.compact(15439), "15.43k", "15439 → 15.43k（向下截）")
-	t.eq(RecordsStele.compact(10500), "10.5k", "10500 → 10.5k")
-	t.eq(RecordsStele.compact(388888), "388.88k", "388888 → 388.88k")
-	t.eq(RecordsStele.compact(999999), "999.99k", "999999 → 999.99k（不进位）")
-	t.eq(RecordsStele.compact(2345678), "2.34m", "2345678 → 2.34m")
-	t.eq(RecordsStele.compact(3100000000), "3.1b", "3100000000 → 3.1b")
-	t.eq(RecordsStele.compact(7250000000000), "7.25t", "万亿起 t")
-	t.eq(RecordsStele.compact(9223372036854775807), "9223372.03t", "int 上限不溢出")
+	t.eq(RecordsStele.compact(1000), "1K", "1000 → 1K（末尾 0 去掉）")
+	t.eq(RecordsStele.compact(3000), "3K", "3000 → 3K")
+	t.eq(RecordsStele.compact(5414), "5.41K", "5414 → 5.41K")
+	t.eq(RecordsStele.compact(15439), "15.43K", "15439 → 15.43K（向下截）")
+	t.eq(RecordsStele.compact(10500), "10.5K", "10500 → 10.5K")
+	t.eq(RecordsStele.compact(388888), "388.88K", "388888 → 388.88K")
+	t.eq(RecordsStele.compact(999999), "999.99K", "999999 → 999.99K（不进位）")
+	t.eq(RecordsStele.compact(2345678), "2.34M", "2345678 → 2.34M")
+	t.eq(RecordsStele.compact(3100000000), "3.1B", "3100000000 → 3.1B")
+	t.eq(RecordsStele.compact(7250000000000), "7.25T", "万亿起 T")
+	t.eq(RecordsStele.compact(9223372036854775807), "9223372.03T", "int 上限不溢出")
 	var st := RecordsStele.new()
-	st._numeral = RecordsStele.compact(2345678)
-	t.eq(st.worth_text(), "2.34m", "碑额写的就是这个字符串")
+	st._worth = 2345678
+	st._roman = false
+	t.eq(st.worth_text(), "2.34M", "阿拉伯写法：碑额写的就是这个字符串")
+	t.eq(st.parts(), [["2.34M", 0]], "一段、不画线")
 	st.free()
 	var fb := UiPalette.cjk_font_bold()
-	t.eq(RecordsStele.worth_width(fb, "", 20), float(UiTheme.sz(RecordsStele.WORTH_COIN)) + RecordsStele.WORTH_GAP + fb.get_string_size("", HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x, "金币固定 52，不跟字缩")
+	t.eq(RecordsStele.worth_width(fb, [["", 0]], 20), float(UiTheme.sz(RecordsStele.WORTH_COIN)) + RecordsStele.WORTH_GAP + fb.get_string_size("", HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x, "金币固定 52，不跟字缩")
 	for v in [388888, 3100000000, 999999]:
 		var big := RecordsStele.new()
-		big._numeral = RecordsStele.compact(v)
+		big._worth = v
+		big._roman = false
 		var px := big.worth_size(fb)
 		t.check(px >= 40, "%d 一行字号 %d" % [v, px])
 		big.free()
+
+
+static func run_roman_parts(t: TestCase) -> void:
+	t.begin("260 补充六 · 碑额罗马写法：千以下一段不画线；千起两段（最高一段 k 道横线、下一段前两位 k − 1 道），截完是 0 不写；段间空 0.12 字号")
+	t.eq(RecordsStele.roman_parts(0), [["—", 0]], "0 → —")
+	t.eq(RecordsStele.roman_parts(742), [["DCCXLII", 0]], "742 → DCCXLII，不画线")
+	t.eq(RecordsStele.roman_parts(3000), [["III", 1]], "3000 → III（1 道），第二段 0 不写")
+	t.eq(RecordsStele.roman_parts(5400), [["V", 1], ["CD", 0]], "5400 → V CD")
+	t.eq(RecordsStele.roman_parts(5414), [["V", 1], ["CDX", 0]], "5414 → V CDX（= 5.41K）")
+	t.eq(RecordsStele.roman_parts(15439), [["XV", 1], ["CDXXX", 0]], "15439 → XV CDXXX")
+	t.eq(RecordsStele.roman_parts(388888), [["CCCLXXXVIII", 1], ["DCCCLXXX", 0]], "388888 → CCCLXXXVIII DCCCLXXX")
+	t.eq(RecordsStele.roman_parts(999999), [["CMXCIX", 1], ["CMXC", 0]], "999999 → CMXCIX CMXC（990，向下截）")
+	t.eq(RecordsStele.roman_parts(1005), [["I", 1]], "1005 → I（5 截没了）")
+	t.eq(RecordsStele.roman_parts(2345678), [["II", 2], ["CCCXL", 1]], "2345678 → II（2 道）CCCXL（1 道）")
+	t.eq(RecordsStele.roman_parts(3100000000), [["III", 3], ["C", 2]], "3100000000 → III（3 道）C（2 道）")
+	t.eq(RecordsStele.roman_parts(7250000000000), [["VII", 4], ["CCL", 3]], "万亿 4 道")
+	t.eq(RecordsStele.roman_parts(9223372036854775807), [["IX", 6], ["CCXX", 5]], "int 上限不溢出")
+	var st := RecordsStele.new()
+	st._worth = 5414
+	t.check(st.roman_on(), "没设置也默认罗马")
+	t.eq(st.worth_text(), "V\u0305 CDX", "worth_text：横线道数个组合上横线，段间空格")
+	var fb := UiPalette.cjk_font_bold()
+	var segs := st.parts()
+	var w := float(UiTheme.sz(RecordsStele.WORTH_COIN)) + RecordsStele.WORTH_GAP + 40 * RecordsStele.PART_GAP
+	for seg in segs:
+		w += fb.get_string_size(String(seg[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 40).x
+	t.eq(RecordsStele.worth_width(fb, segs, 40), w, "整行宽 = 金币 + 空 + 两段 + 0.12 字号")
+	st._worth = 888888
+	var px := st.worth_size(fb)
+	t.check(px < RecordsStele.WORTH_SIZE and RecordsStele.worth_width(fb, st.parts(), px) <= RecordsStele.WORTH_ROOM, "最长的 888888（20 个字母）缩到 %d 号放得下" % px)
+	t.eq(RecordsStele.overline_stack(50, 0), 0.0, "不画线不占高")
+	t.eq(RecordsStele.overline_stack(50, 2), 5.0 + 2 * 3.0 + 2.5, "两道：缝 5 + 两道 3 粗 + 道间 2.5")
+	st.free()
+	var gs := GameSettings.new()
+	t.check(gs.stele_roman, "设置默认罗马")
+	gs.stele_roman = false
+	t.check(not GameSettings.from_dict(gs.to_dict()).stele_roman, "存读一致")
+	t.check(GameSettings.from_dict({"version": GameSettings.SAVE_VERSION}).stele_roman, "老设置文件没这项：罗马")
 
 
 static func run_warehouse_value(t: TestCase) -> void:
@@ -191,14 +251,15 @@ static func frame_empty_and_big(t: TestCase, root: Window) -> void:
 				var st := RecordsStele.new()
 				root.add_child(st)
 				st.setup(f)
-				st._numeral = RecordsStele.compact(888888)     # 最长的那种（888.88k）
+				st._worth = 888888     # 最长的那种（罗马 20 个字母；阿拉伯 888.88K）
 				var font := UiPalette.cjk_font()
 				var fb := UiPalette.cjk_font_bold()
 				t.check(st.ledger_width(font, st.ledger_size()) <= st.BAND.size.x - 2.0 * st.BAND_PAD + 0.5 or st.ledger_size() == st.MIN_SIZE,
 					"%s %s：碑脚一行放得进铭文带（%d 号）" % [lang, tier, st.ledger_size()])
-				var px: int = st.worth_size(fb)
-				var whole: String = st._numeral
-				t.check(RecordsStele.worth_width(fb, whole, px) <= st.WORTH_ROOM or px == st.MIN_SIZE, "%s %s：碑额一行（%d 号）放得进 330" % [lang, tier, px])
+				for roman in [true, false]:
+					st._roman = roman
+					var px: int = st.worth_size(fb)
+					t.check(RecordsStele.worth_width(fb, st.parts(), px) <= st.WORTH_ROOM or px == st.MIN_SIZE, "%s %s %s：碑额一行（%d 号）放得进 330" % [lang, tier, "罗马" if roman else "阿拉伯", px])
 				st.free())
 	UiText.lang = "zh"
 	_cleanup()
