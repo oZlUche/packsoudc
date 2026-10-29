@@ -337,7 +337,7 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 		t.check(found, "带的那件在一局的棋盘上、位置原样")
 		t.eq(MetaSave.read(flow.items, META, flow.meta_rules).warehouse.item_count(), n - 1, "meta 存了：仓库里没有它了")
 
-	# 取消：带上的放回仓库、回主菜单
+	# 取消：带上的放回仓库、回基地（264 §五）
 	flow.to_main_menu()
 	flow.new_run()
 	var setup2 = game.base()
@@ -348,7 +348,8 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 		t.check(setup2.carry_in(any.uid), "带上一件")
 		t.eq(flow.meta.warehouse.item_count(), m - 1, "仓库少一件")
 		setup2.cancel()
-		t.eq(game.base().screen, GameFlow.Screen.MAIN_MENU, "→ 主菜单")
+		t.eq(game.base().screen, GameFlow.Screen.META, "→ 基地（264 §五：不回主菜单）")
+		t.eq(flow.screen, GameFlow.Screen.META, "流程也在基地")
 		t.eq(flow.meta.warehouse.item_count(), m, "带上的放回了仓库")
 		t.eq(MetaSave.read(flow.items, META, flow.meta_rules).warehouse.item_count(), m, "meta 存的也是放回之后的")
 
@@ -357,7 +358,7 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 
 
 ## 090（作者定）：开局屏的地上 —— 上一局带回来、还没置入的东西进这一屏时挪到地上；拖上包 = 带上、拖进仓库 = 置入、
-## 换角色回地上；回主菜单原样放回带回来的棋盘（视为没发生过移动）；出发则留在地上的没了。仓库的东西进不了地上
+## 换角色回地上；返回（264 §五起回基地）原样放回带回来的棋盘（视为没发生过移动）；出发则留在地上的没了。仓库的东西进不了地上
 static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	t.begin("开局屏 · 地上（090）：带回来的到地上、带上 / 置入 / 留着、换角色回地上、回主菜单原样放回、出发就没了")
 	Support.cleanup("char")
@@ -429,9 +430,9 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	t.check(setup.carry_in(uids[0]), "再带上")
 	t.check(setup.carry_in(wh_uid), "仓库的也带上一件")
 
-	# 回主菜单：视为没发生过移动 —— 带回来的两件按原位回带回来的棋盘；仓库来的回仓库；已经收进仓库的留在仓库
+	# 返回（回基地）：视为没发生过移动 —— 带回来的两件按原位回带回来的棋盘；仓库来的回仓库；已经收进仓库的留在仓库
 	setup.cancel()
-	t.eq(game.base().screen, GameFlow.Screen.MAIN_MENU, "→ 主菜单")
+	t.eq(game.base().screen, GameFlow.Screen.META, "→ 基地（264 §五）")
 	t.check(flow.meta.has_pending_board() and flow.meta.board.item_count() == 2, "带回来的棋盘又是两件")
 	for uid in [uids[0], uids[2]]:
 		var it: ItemInstance = flow.meta.board.get_item(uid) if flow.meta.board != null else null
