@@ -103,6 +103,9 @@ var badges: Dictionary = {}
 ## 085：亮一圈的物品（uid → true）：拖着的那件能和它合成。拖拽层设
 var highlights: Dictionary = {}
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
+## 264 §六：筛选（`func(item: ItemInstance) -> bool`）—— 给了就把不匹配的压灰（不挪位）；不给 = 都不压。持有方设，改了 queue_redraw
+var dim_filter: Callable = Callable()
+const FILTERED_ART := Color(0.4, 0.4, 0.4, 0.55)
 
 
 ## 作者 10-21：只有最后点中的那件画增益槽 / 受益槽 / 装载槽（不点就都不画）；所有棋盘共用这一件
@@ -376,6 +379,7 @@ func _draw() -> void:
 		var dormant := show_adjacency and FaithState.is_dormant(item.def, active_faith)
 		# 2026-10-22（作者）：标了「不参战」的也压灰、写小字 —— 不然看不出这一场为什么没算它
 		var benched := item.is_benched()
+		var muted := dim_filter.is_valid() and not bool(dim_filter.call(item))
 		var body := ItemPainter.body_color(item.def, item.rarity())
 		var edge := ItemPainter.rarity_color(item.def, item.rarity()).lightened(0.2)
 		var text_color := ItemPainter.label_color(item.def, item.rarity())
@@ -384,12 +388,12 @@ func _draw() -> void:
 			body = COLOR_BAG_FILL
 			edge = COLOR_BAG_EDGE
 			text_color = Color("79839a")
-		if dormant or benched:
+		if dormant or benched or muted:
 			body = body.lerp(COLOR_BAG_FILL, 0.7)
 			edge = edge.lerp(COLOR_BAG_EDGE, 0.7)
 			text_color = COLOR_TEXT.darkened(0.35)
 		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠 / 不参战的压到 55 % 灰；不参战再写一行小字（作者 10-26：休眠只压灰，不写「休眠」）
-		var tint := DORMANT_ART if (dormant or benched) else Color.WHITE
+		var tint := FILTERED_ART if muted else (DORMANT_ART if (dormant or benched) else Color.WHITE)
 		var note := status_note(dormant, benched)
 		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, tint, Transform2D.IDENTITY, ItemPainter.variant_of(item)):
 			if note != "" and _label_visible(item):

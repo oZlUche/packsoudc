@@ -1515,6 +1515,8 @@ func _input(event: InputEvent) -> void:
 ## 180：记下这一局挑的图、规模、难度（下次进开局屏默认它们）
 func _remember_last(c: ChapterDef) -> void:
 	flow.meta.set_flag(FLAG_LAST_MAP, c.order + 1)
+	var ch := character()
+	flow.meta.last_character = ch.id if ch != null else &""     # 264：出征页「上回出征」写这一位
 	var opts := scale_options_of(c)
 	var at := -1
 	for i in opts.size():

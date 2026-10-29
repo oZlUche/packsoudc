@@ -28,14 +28,19 @@ const TAB_ICON_ART := "home/tabs/tab_"
 ## 左列五个页签（页签名、字）；「家」不在里面 —— 再点一次选中的页签回家。
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
 ## 262（作者 14:19）：集市、铁匠铺默认就有，和出售并成「后勤」一页；261 补充一（作者 16:37）：科技并进书架 —— 左列只剩 仓库 / 后勤 / 书架
-const TABS := [["warehouse", "meta.tab_warehouse"], ["logistics", "meta.tab_logistics"], ["shelf", "meta.tab_shelf"]]
-## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出三颗缩进的小键（分页名、字）；三页本身一个像素不动
-const SUB_TABS := [["market", "market.title"], ["smithy", "smithy.title"], ["sell", "meta.tab_sell"]]
+## 264（作者 16:43「按推荐来」）：加「出征」放第一、默认选中（军功碑 + 上回出征 + 军需 + 【开始探索】），「家」页没了 —— 页签单选
+const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_warehouse"], ["logistics", "meta.tab_logistics"], ["shelf", "meta.tab_shelf"]]
+## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出三颗缩进的小键（分页名、字）；三页本身一个像素不动。
+## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
+const SUB_TABS := {
+	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["sell", "meta.tab_sell"]],
+	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"], ["tech", "meta.sub_tech"]],
+}
 const SUB_TAB_SIZE := Vector2(170, 44)
 const SUB_TAB_FONT := 17
 const SUB_TAB_INDENT := 28
-## 178：这几页不显示右半边的仓库，中列吃满
-const NO_SHELF_TABS := ["shelf"]
+## 178：这几页不显示右半边的仓库，中列吃满。264：出征页也收起 —— 碑 + 560 宽的两块木牌要 1308 宽的中列（露着仓库中列只剩 508）
+const NO_SHELF_TABS := ["shelf", "expedition"]
 ## 261（作者 14:13）：「图鉴」页签改「书架」—— 两层三格，点开各一扇窗；补充一（作者 16:37）：上 图鉴 / 对局记录 / 特殊道具，
 ## 下 成就 / 科技（科技页签并进来）/ 油灯静物（墨水瓶去掉）
 const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "tech", ""]
@@ -47,9 +52,13 @@ const SHELF_WIN_WIDE := Vector2(1320, 900)
 const FULL_TABS := ["market", "smithy"]
 
 var _wh = null
-## 260：家页的军功碑
+## 260：出征页（264 前是家页）的军功碑；264：碑右边那一列（上回出征、军需、【开始探索】）
 var _stele: RecordsStele = null
+var _expedition: ExpeditionBoard = null
 var _new_run_btn: Button
+## 264 §六：仓库页包架下面的筛选牌与账牌
+var _wh_tools: WarehouseTools = null
+var _wh_page: PanelContainer = null
 var _buff_btns: Dictionary = {}
 var _unlock_btns: Dictionary = {}
 ## 119：开发区的科技等级数字框，科技 id → SpinBox（导出包里空）
@@ -62,6 +71,9 @@ var _tab: String = ""
 var _sub: String = "market"
 var _sub_btns: Dictionary = {}
 var _sub_box: VBoxContainer = null
+## 264 §四：书架底下五颗小键（格名 → 键）与那一列
+var _shelf_sub_btns: Dictionary = {}
+var _shelf_sub_box: VBoxContainer = null
 ## 164：页签选中时左上角挂的小木牌（`home/tab_mark.png`；没图不挂）
 var _tab_mark: TextureRect = null
 ## 261：书架格 → 格上的小牌（按钮）；窗（压暗层）；开着的那扇
@@ -129,8 +141,8 @@ func open(payload: Dictionary) -> void:
 			b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_tab_btns[key] = b
 		left.add_child(b)
-		if key == "logistics":
-			_build_sub_tabs(left)
+		if SUB_TABS.has(key):
+			_build_sub_tabs(left, key)
 	var tab_w := LEFT_W * 0.8     # 英文页签加了图标放不下：几个页签一样宽，取最宽的那个
 	for key in _tab_btns:
 		tab_w = maxf(tab_w, (_tab_btns[key] as Button).get_combined_minimum_size().x)
@@ -146,9 +158,7 @@ func open(payload: Dictionary) -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(spacer)
 	# 226 批二：左下「带回来的背包还有 N 件……」那句删了（[method pending_text] 留给「仓库」页签的悬浮窗）
-	_new_run_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true)
-	_new_run_btn.custom_minimum_size = Vector2(LEFT_W, 76)
-	left.add_child(_new_run_btn)
+	# 264：左下「再来一局」搬进出征页改叫【开始探索】，左下只剩「回主菜单」
 	var menu_btn := UiTheme.make_home_button(UiText.t("setup.main_menu"), flow.to_main_menu)
 	menu_btn.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 	menu_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -191,22 +201,33 @@ func open(payload: Dictionary) -> void:
 	_shelf.view.actions_for = func(uid: int) -> Array: return _wh.warehouse_actions(uid, _tab == "warehouse") if _wh != null else []     # 230
 	m.warehouse.changed.connect(_refresh_shelf_title)
 
-	# 家页：这一局、战绩（粗布框里）。178：带回来的背包搬到「仓库」页
-	var home := _vbox(12)
+	# 264：出征页（原「家」页）—— 左边军功碑（260 原样，碑顶山墙上沿在设计坐标 y 52），右边上回出征 / 军需两块木牌与【开始探索】
+	var home := _hbox(52)
+	home.name = "ExpeditionPage"
 	home.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_middle.add_child(home)
-	_pages["home"] = home
-	# 260（作者 14:13 选 B 军功碑，「最后对局不再显示」）：家页只立一座碑；碑顶山墙上沿在设计坐标 y 52
+	_pages["expedition"] = home
+	var stele_col := _vbox(0)
+	home.add_child(stele_col)
 	var stele_gap := Control.new()
-	stele_gap.custom_minimum_size.y = 16.0     # 家页 vbox 间距 12：24 + 16 + 12 = 52
-	home.add_child(stele_gap)
+	stele_gap.custom_minimum_size.y = 28.0     # 24 + 28 = 52
+	stele_col.add_child(stele_gap)
 	_stele = RecordsStele.new()
-	_stele.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	home.add_child(_stele)
+	stele_col.add_child(_stele)
 	_stele.setup(flow)
+	var board_col := _vbox(0)
+	home.add_child(board_col)
+	var board_gap := Control.new()
+	board_gap.custom_minimum_size.y = 36.0     # 木牌顶在 y 60
+	board_col.add_child(board_gap)
+	_expedition = ExpeditionBoard.new()
+	board_col.add_child(_expedition)
+	_expedition.setup(flow)
+	_new_run_btn = _expedition.start_btn
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
 	var wh_page := _cloth()
 	_pages["warehouse"] = wh_page
+	_wh_page = wh_page
 	var wh_col := _vbox(10)
 	wh_page.add_child(wh_col)
 	# 226 批二：空态「没有带回来的东西」删了
@@ -215,6 +236,10 @@ func open(payload: Dictionary) -> void:
 	_wh.setup(flow, font, _shelf, _drag)
 	_wh.changed.connect(_refresh)
 	wh_col.add_child(_wh)
+	_wh_tools = WarehouseTools.new()     # 264 §六：包架下面筛选牌 + 账牌
+	_wh.add_rack_tools(_wh_tools)
+	_wh_tools.setup(m, _shelf)
+	m.changed.connect(_fit_wh_cloth)
 
 	if _drawer != null:
 		_build_dev_drawer(m)
@@ -253,6 +278,26 @@ func _cloth() -> PanelContainer:
 
 
 
+## 264 §六：仓库页没有带回来的棋盘时，粗布缩成一根窄布（包架 + 筛选牌 + 账牌那一列），有了再铺满中列
+const WH_NARROW := 260.0
+
+
+func _fit_wh_cloth() -> void:
+	if _wh_page == null or _wh == null:
+		return
+	var wide: bool = _wh.has_board()
+	_wh_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL if wide else Control.SIZE_SHRINK_BEGIN
+	_wh_page.custom_minimum_size.x = 0.0 if wide else WH_NARROW
+
+
+func warehouse_tools() -> WarehouseTools:
+	return _wh_tools
+
+
+func expedition_board() -> ExpeditionBoard:
+	return _expedition
+
+
 ## 按屏幕大小排：右半边占屏宽一半，仓库格子按右半边的宽高取小（40 ～ 80）；带回来的背包与右边同一个格子大小（中列放不下再缩）
 func layout() -> void:
 	if _right == null:
@@ -287,7 +332,7 @@ func middle_width(screen: Vector2) -> float:
 
 ## 178（待定 2 选 A）：进基地落哪一页 —— 从结算屏回来、带回来的背包还没清空 → 「仓库」页；否则家
 func initial_tab(payload: Dictionary) -> String:
-	return "warehouse" if payload.has("result") and flow.meta.has_pending_board() else "home"
+	return "warehouse" if payload.has("result") and flow.meta.has_pending_board() else "expedition"
 
 
 ## 木架框的左右、上下内边距之和
@@ -487,29 +532,41 @@ func smithy_panel():
 	return _smithy
 
 
-## 262：「后勤」底下三颗缩进的小键（木牌键皮小号字，选中的按下）；只在「后勤」选中时露出来
-func _build_sub_tabs(left: VBoxContainer) -> void:
+## 262：「后勤」底下三颗缩进的小键（木牌键皮小号字，选中的按下）；只在「后勤」选中时露出来。
+## 264 §四：「书架」底下五颗（点 = [method show_tab] 那一格的别名：书架页 + 开窗）
+func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 	var row := _hbox(0)
 	left.add_child(row)
 	var indent := Control.new()
 	indent.custom_minimum_size.x = SUB_TAB_INDENT
 	indent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(indent)
-	_sub_box = _vbox(6)
-	row.add_child(_sub_box)
-	for pair in SUB_TABS:
+	var box := _vbox(6)
+	row.add_child(box)
+	var btns := _sub_btns if tab_key == "logistics" else _shelf_sub_btns
+	for pair in SUB_TABS[tab_key]:
 		var key: String = pair[0]
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
 		b.toggle_mode = true
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		_sub_btns[key] = b
-		_sub_box.add_child(b)
+		btns[key] = b
+		box.add_child(b)
 	row.visible = false
+	if tab_key == "logistics":
+		_sub_box = box
+	else:
+		_shelf_sub_box = box
 
 
-## 测试看：后勤的分页小键
-func sub_tab_buttons() -> Dictionary:
-	return _sub_btns
+## 测试看：后勤（264：或书架）的分页小键
+func sub_tab_buttons(tab_key: String = "logistics") -> Dictionary:
+	return _sub_btns if tab_key == "logistics" else _shelf_sub_btns
+
+
+## 264 §四：书架小键按下态跟着开着的窗
+func _sync_shelf_sub() -> void:
+	for key in _shelf_sub_btns:
+		(_shelf_sub_btns[key] as Button).set_pressed_no_signal(key == _shelf_open)
 #endregion
 
 
@@ -1109,6 +1166,7 @@ func open_shelf(key: String) -> void:
 	(_shelf_windows[key] as Control).visible = true
 	if key == "records" and _records != null:
 		_records.show_list()
+	_sync_shelf_sub()
 
 
 func close_shelf() -> void:
@@ -1118,6 +1176,7 @@ func close_shelf() -> void:
 	for k in _shelf_windows:
 		(_shelf_windows[k] as Control).visible = false
 	_shelf_open = ""
+	_sync_shelf_sub()
 
 
 func shelf_open() -> String:
@@ -1129,7 +1188,7 @@ func shelf_window(key: String) -> Control:
 #endregion
 
 
-## 切页："home"（家，默认）/ "warehouse" / "logistics" / "shelf"；261：老名字 "codex" / "achievements" / "tech" = 书架 + 开那扇窗。
+## 切页："expedition"（出征，默认；264 前叫家，"home" 留作别名）/ "warehouse" / "logistics" / "shelf"；261：老名字 "codex" / "achievements" / "tech" = 书架 + 开那扇窗。
 ## 262：分页名 "market" / "smithy" / "sell" = 后勤 + 那个分页；"logistics" 落上次看的分页。
 ## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
 func show_tab(name: String) -> void:
@@ -1143,7 +1202,7 @@ func show_tab(name: String) -> void:
 		_sub = name
 		name = "logistics"
 	if not (_pages.has(name) or name == "logistics"):
-		name = "home"
+		name = "expedition"
 	var shown := _sub if name == "logistics" else name
 	if _tab != "" and shown != was:
 		notice_layer().clear()     # 游戏测试 v4.34：上一页的告示（「买不了：钱不够」）不跟到下一页
@@ -1159,6 +1218,8 @@ func show_tab(name: String) -> void:
 		_sub_box.get_parent().visible = name == "logistics"
 		for key in _sub_btns:
 			(_sub_btns[key] as Button).set_pressed_no_signal(key == _sub)
+	if _shelf_sub_box != null:
+		_shelf_sub_box.get_parent().visible = name == "shelf"
 	layout.call_deferred()     # 中列换了页，最窄宽度可能变了
 	if _tab_mark != null:
 		if _tab_mark.get_parent() != null:
@@ -1167,9 +1228,12 @@ func show_tab(name: String) -> void:
 			(_tab_btns[name] as Button).add_child(_tab_mark)
 
 
-## 164：点左列一个页签 —— 已经选着它就回家，否则切过去
+## 164：点左列一个页签。264：页签单选 —— 再点选中的不动（没有「家」了），只把按下态补回来
 func toggle_tab(key: String) -> void:
-	show_tab("home" if _tab == key else key)
+	if _tab == key:
+		(_tab_btns[key] as Button).set_pressed_no_signal(true)
+		return
+	show_tab(key)
 
 
 func tab() -> String:
@@ -1186,13 +1250,13 @@ func page() -> String:
 	return _sub if _tab == "logistics" else _tab
 
 
-## 090：Esc = 返回上一级 —— 在别的页先回家，家里再回主菜单
+## 090：Esc = 返回上一级 —— 在别的页先回出征页（264 前是家），出征页再回主菜单
 func escape() -> bool:
 	if _shelf_open != "":
 		close_shelf()
 		return true
-	if _tab != "home":
-		show_tab("home")
+	if _tab != "expedition":
+		show_tab("expedition")
 		return true
 	flow.to_main_menu()
 	return true
@@ -1234,6 +1298,7 @@ func toggle_unlock(id: StringName) -> bool:
 
 func _refresh() -> void:
 	_refresh_shelf_labels()
+	_fit_wh_cloth()
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
 	if _tab_btns.has("warehouse"):
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗

@@ -66,7 +66,7 @@ static func frame_drawer(t: TestCase, root: Window) -> void:
 		t.check(spin != null and drawer.is_ancestor_of(spin), "数字框在抽屉里")
 		t.eq(screen.set_tech_level(tid, 1), 1, "抽屉收着也能改级数")
 		f.dev_set_tech_level(tid, 0)
-	var page: Control = screen._pages["home"]
+	var page: Control = screen._pages["expedition"]
 	t.check(not drawer.is_ancestor_of(page) and not page.is_ancestor_of(drawer), "家页不再有右列")
 	t.check(drawer.get_index() > screen._cols.get_parent().get_index(), "抽屉后加：盖在三列上")
 	t.eq(drawer.anchor_left, 1.0, "贴右缘")
