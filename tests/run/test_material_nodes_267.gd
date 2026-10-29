@@ -281,6 +281,7 @@ static func frame_expedition_bias(t: TestCase, root: Window) -> void:
 	t.eq(board.bias_keys.map(func(b): return (b as Button).text), ["无", "自然", "工艺", "魔法"], "四颗键")
 	t.check(board.bias_keys.all(func(b): return (b as Button).custom_minimum_size == Vector2(120, 56)), "每颗 120 × 56")
 	t.check(board.bias_keys[0].button_pressed and board.bias_choice() == 0, "默认「无」按着")
+	t.check(board.bias_keys[0].icon == null and board.bias_keys.slice(1).all(func(b): return (b as Button).icon != null and (b as Button).icon.get_width() == UiTheme.sz(22)), "三系键字左边有标签小图（22），「无」没有")
 	t.eq(board.bias_keys[2].tooltip_text, "这一系材料出得更多（×2.5），另两系少一些（×0.6）", "悬浮窗写倍率")
 	board.bias_keys[2].pressed.emit()
 	t.eq(f.meta.flag(GameFlow.BIAS_FLAG), 2, "选工艺：旗标 2")
