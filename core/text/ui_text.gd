@@ -1468,6 +1468,7 @@ const TEXT := {
 	"act.sell_same": {"zh": "出售同类 ×%d 得 %d 币", "en": "Sell all ×%d · %d"},
 	"act.locked": {"zh": "已锁定", "en": "Locked"},
 	"act.fav_no_bulk": {"zh": "收藏的不成批出售", "en": "Favorites aren't sold in bulk"},     # 265
+	"act.sell_same_fav": {"zh": "出售同类 · 已收藏", "en": "Sell all · Favorite"},     # 265 复测：收藏了的种类按钮上直接写原因，不写「×0 得 0 币」
 	"act.pinned": {"zh": "随身之物", "en": "Part of your kit"},     # 255：随身之物的按钮全灰，理由
 	"act.confirm": {"zh": "再点一次", "en": "Click again"},
 	"act.drop": {"zh": "放到地上", "en": "Drop"},
@@ -1499,6 +1500,7 @@ const TEXT := {
 	"tip.pin_moves": {"zh": "随身：棋盘上能挪，丢不掉", "en": "Kit: moves around your board, can't be dropped"},     # 256：军功牌
 	"meta.sell_skipped": {"zh": "（跳过 %d 件锁定的）", "en": " (skipped %d locked)"},
 	"meta.sell_skip_fav": {"zh": "（跳过收藏 %d 件）", "en": " (keeps %d favorites)"},     # 265：一键出售的预览与结果
+	"meta.sell_skip_fav_one": {"zh": "（跳过收藏 %d 件）", "en": " (keeps %d favorite)"},
 	"meta.filter_fav": {"zh": "只看收藏", "en": "Favorites"},     # 265：仓库筛选牌
 	"meta.codex_fav": {"zh": "收藏", "en": "Favorites"},     # 265：图鉴筛选
 	"rack.has_contents": {"zh": "「%s」上还有东西，先拿下来再收进包架", "en": "Empty the %s before putting it on the Bag Rack"},

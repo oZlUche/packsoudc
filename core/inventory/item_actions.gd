@@ -81,7 +81,7 @@ static func sell_same(inst: ItemInstance, container: ItemContainer, price_of: Ca
 	var total := 0
 	for i in same:
 		total += int(price_of.call(i))
-	var a := make(&"sell_same", UiText.t("act.sell_same") % [same.size(), total], func():
+	var a := make(&"sell_same", UiText.t("act.sell_same_fav") if fav else UiText.t("act.sell_same") % [same.size(), total], func():
 		for i in same:
 			do_sell.call((i as ItemInstance).uid), true, &"sell")
 	if fav:
