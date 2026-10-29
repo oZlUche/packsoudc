@@ -62,7 +62,7 @@ func setup(p_meta: MetaState, p_shelf: WarehousePages) -> WarehouseTools:
 	return self
 
 
-## 一块牌：羊皮纸底，字离纸边 [constant PAD]（纸边是撕口，贴着写像压在边上）；返回牌，[method _col] 取里面那一列
+## 一块牌：羊皮纸底，字离纸边 [constant PAD]（纸边不齐，贴着写像压在边上）；返回牌，[method _col] 取里面那一列
 const PAD := 14
 
 

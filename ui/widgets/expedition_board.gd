@@ -49,7 +49,7 @@ func _plate(h: float, title_key: String) -> PanelContainer:
 	var p := UiTheme.panel(PanelContainer.new(), 14, UiTheme.PANEL_PARCHMENT)
 	p.custom_minimum_size = Vector2(WIDTH, h)
 	add_child(p)
-	var pad := MarginContainer.new()     # 纸边是撕口：字离边 24
+	var pad := MarginContainer.new()     # 纸边不齐：字离边 24
 	for side in ["left", "right"]:
 		pad.add_theme_constant_override("margin_" + side, PAD)
 	p.add_child(pad)
