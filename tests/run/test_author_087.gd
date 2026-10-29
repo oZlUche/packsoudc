@@ -715,10 +715,10 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	screen.font = UiPalette.cjk_font()
 	screen.screen = GameFlow.Screen.META
 	screen.open({})
-	t.eq(screen.tab(), "home", "默认在家页（164）")
+	t.eq(screen.tab(), "expedition", "默认在出征页（164；264）")
 	screen.show_tab("codex")
 	t.eq(screen.tab(), "shelf", "切到书架（261：图鉴是书架上的一扇窗）")
-	t.check(screen.shelf_open() == "codex" and screen.shelf_window("codex").visible and not screen._pages["home"].visible, "开着图鉴窗")
+	t.check(screen.shelf_open() == "codex" and screen.shelf_window("codex").visible and not screen._pages["expedition"].visible, "开着图鉴窗")
 	var tiles: Array = screen.codex_tiles()
 	t.eq(tiles.size(), c.items.ids(true).size() + c.items.keepsake_ids().size(), "每件能获得的道具（含 091 锁着的）+ 特殊道具各一格缩略图（089）")
 	var lit_n := 0
@@ -755,7 +755,7 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	revealed.free()
 	f2.settings.reveal_names = false
 	screen.show_tab("nope")
-	t.eq(screen.tab(), "home", "不认识的页签回家")
+	t.eq(screen.tab(), "expedition", "不认识的页签回出征页（264）")
 	screen.free()
 	Support.cleanup("087")
 

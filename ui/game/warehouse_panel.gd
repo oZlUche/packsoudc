@@ -39,6 +39,8 @@ var _board_box: VBoxContainer
 ## 225：包架（挂牌 + 一列）与它的视图
 var _rack_box: Control = null
 var _rack_view: BagRackView = null
+## 264 §六：包架那一列（包架在上，基地「仓库」页再挂筛选牌、账牌，[method add_rack_tools]）
+var _rack_col: VBoxContainer = null
 var _board_view: InventoryView
 var _board_scroll: ScrollContainer = null
 ## 226 批一：最近一句回话（回话本身走告示卷轴；测试读 [method line_text]）
@@ -86,7 +88,9 @@ func _build() -> void:
 
 	_rack_box = BagRackView.boxed(_meta.rack, _font)
 	_rack_view = BagRackView.view_in(_rack_box)
-	row.add_child(_rack_box)
+	_rack_col = UiTheme.vbox(20)
+	row.add_child(_rack_col)
+	_rack_col.add_child(_rack_box)
 	_board_box = UiTheme.vbox(6)
 	row.add_child(_board_box)
 
@@ -238,7 +242,17 @@ func rack_view() -> BagRackView:
 
 ## 225：包架那一列连同和棋盘的间隔占多宽（基地按中列宽算带回来背包的格子时扣掉）
 func rack_room() -> float:
-	return (_rack_box.get_combined_minimum_size().x + ROW_GAP) if _rack_box != null else 0.0
+	return (_rack_col.get_combined_minimum_size().x + ROW_GAP) if _rack_col != null else 0.0
+
+
+## 264 §六：包架下面挂一块（基地「仓库」页的筛选牌、账牌）
+func add_rack_tools(c: Control) -> void:
+	_rack_col.add_child(c)
+
+
+## 264 §六：有没有带回来的棋盘（没有时基地「仓库」页的粗布缩成一根窄布）
+func has_board() -> bool:
+	return _meta.board != null
 
 
 ## 225：落点规则 —— 包架上的包只在包架里挪（不上带回来的棋盘）；进包架的只能是包（[BagRack] 自己也会拒）

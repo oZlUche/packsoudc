@@ -176,9 +176,9 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	t.eq(meta.achievement_rows().size(), all_n - 1, "「未解锁」少一枚")
 	meta.show_achievement_filter("all")
 	t.check(game.escape() and meta.tab() == "shelf" and meta.shelf_open() == "", "成就窗 Esc 先关窗，留在书架（261）")
-	t.check(game.escape() and meta.tab() == "home", "书架 Esc 回家页（164）")
+	t.check(game.escape() and meta.tab() == "expedition", "书架 Esc 回出征页（164；264 起家页改出征页）")
 	meta.show_tab("codex")
-	t.check(game.escape() and meta.shelf_open() == "" and game.escape() and meta.tab() == "home" and flow.screen == GameFlow.Screen.META, "基地：图鉴窗 Esc 关窗、再 Esc 回家页（164）")
+	t.check(game.escape() and meta.shelf_open() == "" and game.escape() and meta.tab() == "expedition" and flow.screen == GameFlow.Screen.META, "基地：图鉴窗 Esc 关窗、再 Esc 回出征页（164 / 264）")
 	t.check(game.escape() and flow.screen == GameFlow.Screen.MAIN_MENU, "仓库页再 Esc 回主菜单")
 
 	flow.begin(c.chapter, kit, int(found["seed"]))

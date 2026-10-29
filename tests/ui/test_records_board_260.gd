@@ -60,7 +60,7 @@ static func frame_stele(t: TestCase, root: Window) -> void:
 		screen.free()
 		_cleanup()
 		return
-	t.check((screen._pages["home"] as Control).is_ancestor_of(stele), "碑在家页里")
+	t.check((screen._pages["expedition"] as Control).is_ancestor_of(stele), "碑在出征页里（264，原家页）")
 	t.check(stele.custom_minimum_size.x <= MIDDLE.x and stele.custom_minimum_size.y <= MIDDLE.y, "碑 %s 放得进中列 %s" % [stele.custom_minimum_size, MIDDLE])
 	var worth := f.meta.warehouse_value()
 	t.check(worth > 0, "仓库有三件：总价值 %d" % worth)
@@ -131,8 +131,8 @@ static func frame_stele(t: TestCase, root: Window) -> void:
 		t.check(not label.contains("战败") and not label.contains("阶"), "碑面第 %d 行没有「战败」「阶」字样（%s）" % [i, label])
 	t.check(Rect2(stele.ORIGIN, stele.BODY).encloses(stele.tablet_rect()) and Rect2(stele.ORIGIN, stele.BODY).encloses(stele.band_rect()), "碑额、碑脚在碑身里")
 	var texts: Array[String] = []
-	_collect_text(screen._pages["home"], texts)
-	t.eq(texts, [] as Array[String], "家页没有 Label 散字（字刻在碑上）")
+	_collect_text(stele, texts)
+	t.eq(texts, [] as Array[String], "碑上没有 Label 散字（字刻在碑上）")
 	screen.free()
 	_cleanup()
 
