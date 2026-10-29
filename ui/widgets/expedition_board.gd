@@ -24,6 +24,8 @@ const CHIP_FONT := 15
 const BIAS_H := 90.0
 const BIAS_KEY := Vector2(120, 56)
 const BIAS_FONT := 18
+## 倾向键字左边那枚标签小图（UI 线建议：和道具悬浮窗里的材质标签对上；「无」不加）
+const BIAS_ICON := 22
 
 var flow: GameFlow = null
 var start_btn: Button = null
@@ -184,10 +186,24 @@ func _fill_bias(col: VBoxContainer) -> void:
 		key.toggle_mode = true
 		key.button_group = group
 		key.button_pressed = i == picked
+		if i > 0:
+			key.icon = _tag_icon(SearchSession.BIAS_SOURCES[i - 1])
 		key.tooltip_text = UiText.t("meta.bias_none_tip") if i == 0 \
 			else UiText.t("meta.bias_tip") % [_mult(SearchSession.BIAS_UP), _mult(SearchSession.BIAS_DOWN)]
 		row.add_child(key)
 		bias_keys.append(key)
+
+
+## 标签图标缩到 [constant BIAS_ICON]（随字号档）；没图 null
+static func _tag_icon(tag: StringName) -> Texture2D:
+	var path := TagRegistry.icon_path(tag)
+	var tex: Texture2D = load(path) if path != "" else null
+	if tex == null:
+		return null
+	var img := tex.get_image()
+	var side := UiTheme.sz(BIAS_ICON)
+	img.resize(side, side, Image.INTERPOLATE_LANCZOS)
+	return ImageTexture.create_from_image(img)
 
 
 static func _mult(x: float) -> String:
