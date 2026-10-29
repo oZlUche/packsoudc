@@ -21,6 +21,7 @@ const ICON_DIR := "res://assets/belt_skills/"
 @export var price: int = 20
 
 static var _cache: Dictionary = {}
+var _icon: Texture2D = null
 
 
 ## 按 id 找定义（`data/belt_skills/<id>.tres`，读过就记住）；没有返回 null
@@ -49,7 +50,9 @@ static func ids() -> Array[StringName]:
 	return out
 
 
-## 图标（约定路径有图才有）
+## 图标（约定路径有图才有）；def 本身在 [member _cache] 里常驻，图跟着留一份 —— 腰带在 `_draw` 里每帧画它，不留引用画完就被释放（184）
 func icon() -> Texture2D:
-	var path := ICON_DIR + String(id) + ".png"
-	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+	if _icon == null:
+		var path := ICON_DIR + String(id) + ".png"
+		_icon = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	return _icon
