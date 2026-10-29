@@ -132,7 +132,7 @@ static func run_home_art(t: TestCase) -> void:
 			n += 1
 			var tone := String(UiTheme.art_meta("home/" + f.get_basename()).get("tone", ""))
 			t.check(tone == "dark" or tone == "light", "%s 的 json 写了 tone（%s）" % [f, tone])
-	t.eq(n, 9, "九张图")
+	t.eq(n, 12, "十二张图（264 加三张木牌）")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_HOME_BOX), UiTheme.TONE_LIGHT, "粗布框：浅（墨字）")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_SHELF), UiTheme.TONE_DARK, "木架：深")
 	var th := UiTheme.current()

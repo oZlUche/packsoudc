@@ -50,6 +50,10 @@ const SHELF_WIN_WIDE := Vector2(1320, 900)
 ## 251 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要」）：整页的两页 —— 右列（仓库木架 + 挂牌）收起、中列吃满。
 ## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
 const FULL_TABS := ["market", "smithy"]
+## 264 §三（作者 17:01 选「营寨 + 砖拱」）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地木屋；换时淡入淡出 [constant SCENE_FADE] 秒。
+## 有场景图的这两页不垫粗布
+const SCENES := {"market": "market/scene", "smithy": "smithy/scene"}
+const SCENE_FADE := 0.25
 
 var _wh = null
 ## 260：出征页（264 前是家页）的军功碑；264：碑右边那一列（上回出征、军需、【开始探索】）
@@ -59,6 +63,10 @@ var _new_run_btn: Button
 ## 264 §六：仓库页包架下面的筛选牌与账牌
 var _wh_tools: WarehouseTools = null
 var _wh_page: PanelContainer = null
+## 264 §三：整屏背景那张图、现在铺的是哪张、淡入中的上层
+var _home_bg: TextureRect = null
+var _home_bg_name := ""
+var _bg_fade: TextureRect = null
 var _buff_btns: Dictionary = {}
 var _unlock_btns: Dictionary = {}
 ## 119：开发区的科技等级数字框，科技 id → SpinBox（导出包里空）
@@ -111,7 +119,8 @@ var _shelf_title: HeaderTag = null
 func open(payload: Dictionary) -> void:
 	var m := flow.meta
 	flow.ensure_market()     # 251：有集市却没货（老档、开发区改了级数）先上一次
-	UiTheme.dress_home_backdrop(_backdrop())
+	_home_bg = UiTheme.dress_home_backdrop(_backdrop())
+	_home_bg_name = UiTheme.ART_HOME_BG
 	_margin = MarginContainer.new()
 	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
@@ -249,6 +258,8 @@ func open(payload: Dictionary) -> void:
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
 	for pair in [["sell", _build_sell], ["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
+		if backdrop_of(pair[0]) != UiTheme.ART_HOME_BG:
+			cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
 		(pair[1] as Callable).call(cloth)
 		_pages[pair[0]] = cloth
 	# 139：抽屉盖在右半边上（后加 = 画在上面），贴右缘、标题行下面
@@ -1191,6 +1202,41 @@ func shelf_window(key: String) -> Control:
 ## 切页："expedition"（出征，默认；264 前叫家，"home" 留作别名）/ "warehouse" / "logistics" / "shelf"；261：老名字 "codex" / "achievements" / "tech" = 书架 + 开那扇窗。
 ## 262：分页名 "market" / "smithy" / "sell" = 后勤 + 那个分页；"logistics" 落上次看的分页。
 ## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
+## 264 §三：中列这一页该铺哪张整屏背景（集市 / 铁匠铺有场景图用场景图，否则基地木屋）
+static func backdrop_of(page_name: String) -> String:
+	if SCENES.has(page_name) and UiTheme.art(String(SCENES[page_name])) != null:
+		return String(SCENES[page_name])
+	return UiTheme.ART_HOME_BG
+
+
+## 整屏背景换成 [param art_name]：淡入淡出（上面叠一张新图从透明到不透明，满了换给底图）；不淡（测试）当场换
+func _swap_backdrop(art_name: String) -> void:
+	if _home_bg == null or _home_bg_name == art_name:
+		return
+	_home_bg_name = art_name
+	var tex := UiTheme.art(art_name)
+	if _bg_fade != null and is_instance_valid(_bg_fade):
+		_bg_fade.queue_free()
+	if not GameDirector.fades_allowed or not is_inside_tree():
+		_home_bg.texture = tex
+		return
+	var top := _home_bg.duplicate() as TextureRect
+	top.texture = tex
+	top.modulate.a = 0.0
+	_home_bg.get_parent().add_child(top)
+	_bg_fade = top
+	var tw := create_tween()
+	tw.tween_property(top, "modulate:a", 1.0, SCENE_FADE)
+	tw.tween_callback(func():
+		_home_bg.texture = tex
+		top.queue_free())
+
+
+## 现在铺的整屏背景（测试看）
+func backdrop_name() -> String:
+	return _home_bg_name
+
+
 func show_tab(name: String) -> void:
 	if _shelf_windows.has(name):
 		show_tab("shelf")
@@ -1207,6 +1253,7 @@ func show_tab(name: String) -> void:
 	if _tab != "" and shown != was:
 		notice_layer().clear()     # 游戏测试 v4.34：上一页的告示（「买不了：钱不够」）不跟到下一页
 	_tab = name
+	_swap_backdrop(backdrop_of(shown))
 	for key in _pages:
 		(_pages[key] as Control).visible = key == shown
 	if _right != null:
