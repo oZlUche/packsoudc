@@ -134,6 +134,7 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 		t.check(brief.choose(0), "知道了")
 	t.check(flow.meta.briefing_seen.has(&"briefing_legion"), "记看过")
 	t.eq(game.base().screen, GameFlow.Screen.MAP, "进了地图")
+	t.eq(flow.meta.last_character, ch2.id, "264：出发时记下上回出征的角色")
 	t.is_null(game.overlay(), "交代收掉了")
 	t.eq(flow.run.phase, RunState.Phase.ON_MAP, "182：直接站在挑的出生点上")
 	flow.to_main_menu()

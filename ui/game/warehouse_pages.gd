@@ -44,6 +44,9 @@ var _hover_t := 0.0
 var extra: Control = null
 var _extra_tab: Button = null
 var _on_extra := false
+## 264 §六：筛选 —— 标签（&"" = 不限）与稀有度上限（-1 = 全部）；有筛选时不匹配的格压灰、页签第二行写匹配件数
+var filter_tag: StringName = &""
+var filter_rarity := -1
 
 
 ## [param plan] 见 [method TechWarehousePages.plan_of]（空 = 只列已有的页）
@@ -241,6 +244,35 @@ func _process(delta: float) -> void:
 	drag_hover(get_global_mouse_position(), delta)
 
 
+## 264 §六：设筛选（[param tag] &"" = 不限，[param rarity_max] -1 = 全部）；两样都不限 = 不筛
+func set_filter(tag: StringName, rarity_max: int) -> void:
+	filter_tag = tag
+	filter_rarity = rarity_max
+	if view != null:
+		view.dim_filter = matches if filtering() else Callable()
+		view.queue_redraw()
+	_refresh()
+
+
+func filtering() -> bool:
+	return filter_tag != &"" or filter_rarity >= 0
+
+
+## 这一件合不合当前筛选（没筛选都合）
+func matches(item: ItemInstance) -> bool:
+	return item != null and (filter_rarity < 0 or item.rarity() <= filter_rarity) and (filter_tag == &"" or item.def.tags.has(filter_tag))
+
+
+## 第 [param i] 页合筛选的件数（没筛选 = 全部件数）
+func match_count(i: int) -> int:
+	if is_locked(i):
+		return 0
+	var page := warehouse.page(i)
+	if not filtering():
+		return page.item_count()
+	return page.items().filter(func(it) -> bool: return matches(it as ItemInstance)).size()
+
+
 func _refresh() -> void:
 	if warehouse == null:
 		return
@@ -252,7 +284,7 @@ func _refresh() -> void:
 		var b := _tabs[i]
 		var locked := is_locked(i)
 		b.disabled = locked
-		b.text = "%s\n%s" % [numeral(i), "　" if locked else UiText.t("wh.tab_count") % warehouse.page(i).item_count()]     # 锁着的第二行留空给锁
+		b.text = "%s\n%s" % [numeral(i), "　" if locked else UiText.t("wh.tab_count") % match_count(i)]     # 锁着的第二行留空给锁；264：筛选时写匹配数
 		b.tooltip_text = UiText.t("wh.tab_locked_tip") % [_tech_name, ceili(float(i) / float(_per_level))] if locked else UiText.t("wh.tab_tip") % [numeral(i), warehouse.page(i).item_count()]
 		b.queue_redraw()
 	if is_locked(_current) or view.inventory == null:

@@ -89,6 +89,8 @@ var deaths: int = 0
 var best_value: int = 0
 ## 260：单局价值最高那一局的摘要（[method best_run_of]）；老存档没有 = 空，军功碑只写数
 var best_run: Dictionary = {}
+## 264 §2.4：上回出征的角色（开局屏出发时和 last_map / last_scale / last_difficulty 旗标一起写）；没出发过 = 空。出征页「上回出征」木牌读它
+var last_character: StringName = &""
 ## 最近几局的 [RunResult.to_dict]，新的在前
 var history: Array[Dictionary] = []
 var _next_uid: int = 1
@@ -748,6 +750,7 @@ func to_dict() -> Dictionary:
 		"funds": funds, "score": score, "runs": runs, "extractions": extractions, "deaths": deaths,
 		"best_value": best_value,
 		"best_run": best_run.duplicate(true),
+		"last_character": String(last_character),
 		"history": history.duplicate(true),
 		"achievements": achievements.duplicate(),
 		"chapter_extractions": chapter_extractions.duplicate(),
@@ -853,6 +856,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.deaths = int(d.get("deaths", 0))
 	m.best_value = int(d.get("best_value", 0))
 	m.best_run = MapGraph.normalize(d.get("best_run", {})) if d.get("best_run", {}) is Dictionary else {}
+	m.last_character = StringName(String(d.get("last_character", "")))
 	for key in d.get("achievements", {}):
 		m.achievements[String(key)] = int((d["achievements"] as Dictionary)[key])
 	for key in d.get("chapter_extractions", {}):

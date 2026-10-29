@@ -127,7 +127,7 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 	t.check(screen.tab() == "shelf" and screen.shelf_open() == "achievements", "老名字 achievements → 书架 + 成就窗")
 	screen.show_tab("tech")
 	t.check(screen.tab() == "shelf" and screen.shelf_open() == "tech", "老名字 tech → 书架 + 科技窗")
-	screen.show_tab("home")
+	screen.show_tab("expedition")
 	t.eq(screen.shelf_open(), "", "换页签关窗")
 	screen.free()
 	_cleanup()
