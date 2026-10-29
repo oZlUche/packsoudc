@@ -36,6 +36,12 @@ var active: bool = true
 var substitute: Callable = Callable()
 ## 127：每次搜的逐件稀有度下限（[method floor_for]，开会话时由 NodeEvents 设）；空 = 不保底
 var search_floor: Array[int] = []
+## 267：掷物多乘的两层（开会话时由 NodeEvents 设）——这一点所在环的产物表（[member MapNode.produce]）与这一局的出征倾向（[method bias_table]）
+var produce: Dictionary = {}
+var bias: Dictionary = {}
+## 267：材料节点只出带这些标签的材料（`NodeRules.search_kinds`）；每件有 [member other_share] 的机会从普通池抽。空 = 普通搜索点
+var only_tags: Array = []
+var other_share: float = 0.0
 
 
 func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: RandomNumberGenerator, p_depth: float = 0.0) -> void:
@@ -109,7 +115,7 @@ func search() -> Dictionary:
 		# 246 补充二：抽来的魔晶石换品、抽次数 —— 随机数另起一条（由主随机数派生、不消耗它），剧本给的不动
 		var crng: RandomNumberGenerator = null
 		if got.is_empty():
-			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng, -1, search_floor)
+			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng, -1, search_floor, produce, bias, only_tags, other_share)
 			if substitute.is_valid():
 				got = substitute.call(got)
 			crng = RandomNumberGenerator.new()
@@ -262,7 +268,8 @@ static func floor_text(p_floor: Array[int]) -> String:
 ## （那一档以上没有就逐级往下放宽；先夹到 rarity_cap），其余照旧全池抽；有保底时打乱顺序再返回
 static func draw_items(
 	p_rules: SearchRules, p_items: ItemDatabase, p_depth: float, danger: int, p_rng: RandomNumberGenerator,
-	rarity_cap: int = -1, p_floor: Array[int] = []
+	rarity_cap: int = -1, p_floor: Array[int] = [], p_produce: Dictionary = {}, p_bias: Dictionary = {},
+	p_only: Array = [], p_other_share: float = 0.0
 ) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if p_rules == null or p_items == null:
@@ -273,29 +280,103 @@ static func draw_items(
 	var weights: Array[float] = []
 	var total := 0.0
 	for id in cands:
-		var w := p_rules.rarity_weight(p_items.get_def(id).rarity, p_depth, danger)
+		var d := p_items.get_def(id)
+		var w := p_rules.rarity_weight(d.rarity, p_depth, danger) * weight_mult(d, p_produce, p_bias)
 		weights.append(w)
 		total += w
+	# 267 C：材料节点的那一类（过滤后空了就当普通点，别让节点空手）
+	var kind_c: Array[StringName] = []
+	var kind_w: Array[float] = []
+	var kind_total := 0.0
+	if not p_only.is_empty():
+		for j in cands.size():
+			if in_kind(p_items.get_def(cands[j]), p_only):
+				kind_c.append(cands[j])
+				kind_w.append(weights[j])
+				kind_total += weights[j]
 	var n := p_rng.randi_range(p_rules.items_per_search.x, p_rules.items_per_search.y)
 	if not p_floor.is_empty():
 		n = maxi(n, p_floor.size())
 		for f in p_floor:
-			out.append(_draw_at_least(cands, weights, p_items, f if rarity_cap < 0 else mini(f, rarity_cap), p_rng))
+			var at := f if rarity_cap < 0 else mini(f, rarity_cap)
+			if _from_kind(kind_c, p_other_share, p_rng):
+				out.append(_draw_at_least(kind_c, kind_w, p_items, at, p_rng))
+			else:
+				out.append(_draw_at_least(cands, weights, p_items, at, p_rng))
 		n -= p_floor.size()
 	for i in maxi(0, n):
-		if total <= 0.0:
-			out.append(cands[p_rng.randi_range(0, cands.size() - 1)])
-			continue
-		var x := p_rng.randf() * total
-		var picked := cands[cands.size() - 1]
-		for j in cands.size():
-			x -= weights[j]
-			if x <= 0.0:
-				picked = cands[j]
-				break
-		out.append(picked)
+		if _from_kind(kind_c, p_other_share, p_rng):
+			out.append(_pick(kind_c, kind_w, kind_total, p_rng))
+		else:
+			out.append(_pick(cands, weights, total, p_rng))
 	if not p_floor.is_empty():
 		_shuffle(out, p_rng)     # 别让玩家从揭示顺序猜哪件是保底
+	return out
+
+
+static func _pick(cands: Array[StringName], weights: Array[float], total: float, p_rng: RandomNumberGenerator) -> StringName:
+	if total <= 0.0:
+		return cands[p_rng.randi_range(0, cands.size() - 1)]
+	var x := p_rng.randf() * total
+	for j in cands.size():
+		x -= weights[j]
+		if x <= 0.0:
+			return cands[j]
+	return cands[cands.size() - 1]
+
+
+## 267：这一件从材料节点那一类里抽，还是从普通池（[param share] 的机会）。不是材料节点不掷，随机数照旧
+static func _from_kind(kind_c: Array[StringName], share: float, p_rng: RandomNumberGenerator) -> bool:
+	if kind_c.is_empty():
+		return false
+	return share <= 0.0 or p_rng.randf() >= share
+
+
+## 267：材料类 —— 材料节点只出这些（武器防具带了「工艺」也不算）
+const MATERIAL_CLASS: Array[StringName] = [&"material", &"crystal", &"reagent", &"bullion"]
+## 267 A：出征倾向只碰这三系
+const BIAS_SOURCES: Array[StringName] = [&"nature", &"crafted", &"magic"]
+const BIAS_UP := 2.5
+const BIAS_DOWN := 0.6
+
+
+static func is_material(d: ItemDef) -> bool:
+	for t in MATERIAL_CLASS:
+		if d.tags.has(t):
+			return true
+	return false
+
+
+## 267 C：带 [param only] 里任一标签、又是材料类
+static func in_kind(d: ItemDef, only: Array) -> bool:
+	if d == null or not is_material(d):
+		return false
+	for t in only:
+		if d.has_tag(StringName(t)):
+			return true
+	return false
+
+
+## 267：权重多乘几 —— 产物表命中的取最大（不连乘）× 倾向命中的（只算材料类）；都没命中 = 1
+static func weight_mult(d: ItemDef, p_produce: Dictionary, p_bias: Dictionary) -> float:
+	return _best_hit(d, p_produce) * (_best_hit(d, p_bias) if is_material(d) else 1.0)
+
+
+static func _best_hit(d: ItemDef, table: Dictionary) -> float:
+	var best := -1.0
+	for t in table:
+		if d.has_tag(StringName(t)):
+			best = maxf(best, float(table[t]))
+	return best if best >= 0.0 else 1.0
+
+
+## 267 A：出征倾向 → 倍率表：选中的那一系 ×2.5，另两系 ×0.6；没选 = 空
+static func bias_table(source: StringName) -> Dictionary:
+	if not BIAS_SOURCES.has(source):
+		return {}
+	var out := {}
+	for t in BIAS_SOURCES:
+		out[String(t)] = BIAS_UP if t == source else BIAS_DOWN
 	return out
 
 

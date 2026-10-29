@@ -22,5 +22,5 @@ descriptions = {
 "en": "Ore streaked with green rust. Smelt it and you have copper."
 }
 shape = SubResource("Resource_6oun0")
-tags = Array[StringName]([&"material", &"nature"])
+tags = Array[StringName]([&"material", &"nature", &"mineral"])
 material = "metal"

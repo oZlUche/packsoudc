@@ -20,6 +20,8 @@ const BOARD_LAYOUT := BOARD_DIR + "layout.json"
 const BRONZE_DIR := "res://assets/ui/bronze/"
 ## 外框切图四周多留的透明边（描边与抖动），外框看得见的边 = 节点往里缩这么多
 const FRAME_BLEED := 8.0
+## 267：材料节点那枚段头签离收获框左沿多远
+const KIND_TAG_X := 24.0
 ## 定稿摆位（面板左上角为原点，设计像素）：外框到面板左右边、外框上沿到面板上沿、两块外框之间。
 ## 铜面板：边框 32 + 离内沿 16（作者 16:22「两边组件离边远一点」），没有标题条
 const EDGE := 48.0
@@ -57,6 +59,8 @@ var _loot_box: Control
 var _loot_frame: NinePatchRect
 var _player_frame: NinePatchRect
 var _extras: Array[TextureRect] = []
+## 267：材料节点的搜索屏，收获框左上角一枚段头签写节点种类（矿脉 / 林地 / 遗骸 / 符文堆）；普通搜索点没有
+var kind_tag: HeaderTag = null
 
 
 func open(payload: Dictionary) -> void:
@@ -304,6 +308,11 @@ func _place_extras(outer: Vector2, outer_size: Vector2) -> void:
 				var cx: float = outer.x + outer_size.x * fx
 				_extra(band, Vector2(cx - band.get_width() * 0.5, outer.y - 4.0))
 				_extra(band, Vector2(cx - band.get_width() * 0.5, outer.y + outer_size.y - band.get_height() + 4.0))
+	elif _kind == "search" and _session != null and MapNodeStyle.kind_key(_session.node) != &"":
+		if kind_tag == null:
+			kind_tag = HeaderTag.new(NodeText.label_of(MapNodeStyle.kind_key(_session.node)))
+			_stage.add_child(kind_tag)
+		kind_tag.position = outer + Vector2(KIND_TAG_X, -HeaderTag.HEIGHT * 0.5)
 	elif _kind == "boss":
 		var crest := EventImage.load_texture(BOARD_DIR + "boss_crest.png")
 		if crest != null:

@@ -57,3 +57,21 @@ event_groups = {
 "max_per_map": 1
 }
 }
+search_kinds = {
+"grove": {
+"other_share": 0.25,
+"tags": ["plant", "beast_part"]
+},
+"mine": {
+"other_share": 0.25,
+"tags": ["mineral", "bullion"]
+},
+"remains": {
+"other_share": 0.25,
+"tags": ["crafted"]
+},
+"runes": {
+"other_share": 0.25,
+"tags": ["crystal", "magic"]
+}
+}

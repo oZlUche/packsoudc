@@ -25,4 +25,4 @@ shape = SubResource("Resource_tmvy8")
 rarity = 2
 value = 200
 weight = 3
-tags = Array[StringName]([&"valuable", &"bullion"])
+tags = Array[StringName]([&"valuable", &"bullion", &"mineral"])

@@ -78,6 +78,7 @@ func assign(g: MapGraph, cfg: RingMapConfig, rng: RandomNumberGenerator) -> bool
 	_place_extracts()
 	_calibrate_routes()
 	_write_route_scores()
+	_assign_material_kinds()
 	g.layout_meta["type_rules"] = rules_from_config(cfg)
 	return true
 
@@ -242,6 +243,35 @@ func _assign_route_mix() -> void:
 		var order: Array = MapRng.shuffled(exclusive, _rng)
 		for j in order.size():
 			_put_type(int(order[j]), StringName(bag[j]), false)
+
+
+## 267：每个点记下所在环的产物表；每环再从**定稿的**普通搜索点（不是固定的）里挑 `material_nodes` 要的个数，写 `content.search_kind`。
+## 放在所有改类型的步骤之后：类型一个不动（259 的配额、相邻、路线校准都不受影响），只是搜的池不同。
+## 随机数另起一条（由主随机数派生、不消耗它）：同一种子的图形与类型和没有材料节点时一样
+func _assign_material_kinds() -> void:
+	var krng := RandomNumberGenerator.new()
+	krng.seed = hash([_rng.state, "material_kinds"])
+	for r in range(_cfg.ring_count(), 0, -1):
+		var spec := _cfg.spec_for_ring(r)
+		if spec == null:
+			continue
+		var pool: Array[int] = []
+		for id in _ring_ids(r):
+			var n := _g.get_node(id)
+			if not spec.produce.is_empty():
+				n.produce = spec.produce.duplicate()
+			if n.type == &"search" and not _fixed.has(id):
+				pool.append(id)
+		if spec.material_nodes.is_empty() or pool.is_empty():
+			continue
+		pool.assign(MapRng.shuffled(pool, krng))
+		var wanted: Array = []
+		for kind in _sorted_keys(spec.material_nodes):
+			for i in int(spec.material_nodes[kind]):
+				wanted.append(kind)
+		wanted = MapRng.shuffled(wanted, krng)     # 搜索点不够时，哪一种落空也随机，不总是排在后面的那种
+		for i in mini(wanted.size(), pool.size()):
+			_g.get_node(pool[i]).content["search_kind"] = wanted[i]
 
 
 ## 其余节点按所在环的权重抽。

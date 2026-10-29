@@ -135,6 +135,12 @@ var searched_nodes: Dictionary = {}
 ## 一局里的每条 {"id", "left"}（left = 还能走几步，-1 = 整局）
 var buff_defs: Dictionary = {}
 var meta_buffs: Array[StringName] = []
+## 267 A：出征倾向（`nature` / `crafted` / `magic`，空 = 没选）：开局时由出征页的选择写进来，存档；节点事件掷道具时照它加权
+var material_bias: StringName = &"":
+	set(v):
+		material_bias = v if SearchSession.BIAS_SOURCES.has(v) else &""
+		if events != null:
+			events.material_bias = material_bias
 ## 091：局外状态的引用（不存档；持有方 [GameFlow] 接上）—— 事件的条件 / 后果看、立局外旗标要用
 var meta: MetaState = null:
 	set(v):
@@ -1016,6 +1022,7 @@ func _wire_events() -> void:
 	events.difficulty = chapter.difficulty
 	events.scale_id = scale_id()
 	events.event_defs = event_defs
+	events.material_bias = material_bias     # 267
 	# 8-3：条件看容器，后果传送 / 耗时经这里走（清地上、猎手回合）
 	events.board = board
 	events.storage = storage
@@ -1206,6 +1213,7 @@ func to_dict() -> Dictionary:
 		"tally": tally.duplicate(),
 		"searched_nodes": searched_nodes.keys(),     # 224
 		"buffs": {"meta": meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
+		"material_bias": String(material_bias),     # 267
 		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
 	}
 
@@ -1235,6 +1243,11 @@ func _modules_to_dict() -> Dictionary:
 	for mid in modules:
 		out[String(mid)] = (modules[mid] as RunModule).to_dict()
 	return out
+
+
+## 267 A：出征倾向的倍率表（选中的一系 ×2.5、另两系 ×0.6；没选 = 空）
+func bias_table() -> Dictionary:
+	return SearchSession.bias_table(material_bias)
 
 
 ## 局外带进来的 buff id（字符串，存档与校准快照用）
@@ -1322,6 +1335,7 @@ static func from_dict(
 	var buffs: Dictionary = d.get("buffs", {})
 	for id in buffs.get("meta", []):
 		s.meta_buffs.append(StringName(String(id)))
+	s.material_bias = StringName(String(d.get("material_bias", "")))     # 267：老档没有 = 没选
 	var loot = d.get("pending_loot", null)
 	if loot is Dictionary:
 		var lost_loot: Array = []

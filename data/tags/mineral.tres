@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_wbwy8"]
+
+[resource]
+script = ExtResource("1_wbwy8")
+id = &"mineral"
+display_name = "矿物"
+display_names = {
+"en": "Mineral"
+}
+description = "从地里挖出来的矿石、石料与盐。"
+descriptions = {
+"en": "Ore, stone and salt dug out of the ground."
+}
+tip = false
+category = "affiliation"
