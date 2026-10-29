@@ -34,6 +34,7 @@ func setup(p_rack: BagRack, p_columns: int = 1, p_dark: bool = false) -> BagRack
 	columns = maxi(1, p_columns)
 	dark = p_dark
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	add_to_group(ItemFavorites.GROUP)     # 265：收藏一变重画星
 	if rack != null and not rack.changed.is_connected(_on_changed):
 		rack.changed.connect(_on_changed)
 	_on_changed()
@@ -200,10 +201,9 @@ func _draw_bag(inst: ItemInstance, slot: Rect2) -> void:
 	var room := SLOT - 2.0 * SLOT_PAD
 	var cell := room / maxf(1.0, maxf(box.x, box.y))
 	var at := slot.position + (Vector2.ONE * SLOT - box * cell) * 0.5
-	if ItemPainter.draw_art(self, inst.def, 0, at, cell, Color.WHITE, Transform2D.IDENTITY, ItemPainter.variant_of(inst)):
-		return
-	var cells := inst.def.cells_rotated(0)
-	ItemPainter.draw_item(self, cells, at, cell, ItemPainter.body_color(inst.def), ItemPainter.rarity_color(inst.def))
+	if not ItemPainter.draw_art(self, inst.def, 0, at, cell, Color.WHITE, Transform2D.IDENTITY, ItemPainter.variant_of(inst)):
+		ItemPainter.draw_item(self, inst.def.cells_rotated(0), at, cell, ItemPainter.body_color(inst.def), ItemPainter.rarity_color(inst.def))
+	ItemPainter.draw_favorite_def(self, inst.def, 0, at, cell)     # 265
 
 
 ## 格右下角的「×n」（n ≤ 1 不画）：浅石小牌，墨字 Cinzel Bold 14（256：画法搬进 [method ItemPainter.draw_badge]，军功牌也用）

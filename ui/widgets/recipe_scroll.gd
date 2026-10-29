@@ -219,8 +219,7 @@ func _mat(d: ItemDef, have: int, need: int) -> Control:
 	slot.color = _ink if have >= need else _short
 	slot.k = _k
 	slot.custom_minimum_size = Vector2(MAT_W, MAT_ICON + MAT_PLATE_H + 14.0) * _k
-	slot.tooltip_text = Names.of(d) if d != null else ""
-	slot.mouse_filter = Control.MOUSE_FILTER_STOP
+	slot.mouse_filter = Control.MOUSE_FILTER_STOP     # 265：停上去出这一种道具的悬浮窗（[method MatSlot.hover]），可收藏
 	return slot
 
 
@@ -267,7 +266,8 @@ func wage() -> int:
 	return _wage.amount
 
 
-## 凹槽里的一格素材：上面道具图（没图画本色块），下面一块深色数牌写「有几 / 要几」，右边一道格线（最后一格不画）
+## 凹槽里的一格素材：上面道具图（没图画本色块），下面一块深色数牌写「有几 / 要几」，右边一道格线（最后一格不画）。
+## 265（作者 16:43「在铁匠铺的材料栏里面，材料也要可以显示悬浮窗并被收藏」）：停上去出这一种的道具窗（[method HoverTip.show_kind]，右上角收藏丝带），收藏了图右上角一枚星
 class MatSlot extends Control:
 	var def: ItemDef = null
 	var text := ""
@@ -275,13 +275,33 @@ class MatSlot extends Control:
 	var k := 1.0
 	var line_right := true
 
+	func _ready() -> void:
+		add_to_group(ItemFavorites.GROUP)
+		mouse_entered.connect(hover)
+		mouse_exited.connect(unhover)
+
+	func hover() -> void:
+		var tip := HoverTip.host_for(self)
+		if tip != null and def != null:
+			tip.show_kind(def, global_position + Vector2(size.x, 0), get_global_rect())
+
+	func unhover() -> void:
+		var tip := HoverTip.host_for(self)
+		if tip != null:
+			tip.release()
+
+	## 道具图画在哪（格内坐标）
+	func icon_rect() -> Rect2:
+		var icon := MAT_ICON * k
+		return Rect2(Vector2((size.x - icon) * 0.5, 5.0 * k), Vector2(icon, icon))
+
 	func _draw() -> void:
 		var pad := 5.0 * k
 		var plate_h := MAT_PLATE_H * k
 		var icon := MAT_ICON * k
 		if line_right:
 			draw_line(Vector2(size.x - 0.5, pad), Vector2(size.x - 0.5, size.y - pad), MAT_LINE, 1.0)
-		var ir := Rect2(Vector2((size.x - icon) * 0.5, pad), Vector2(icon, icon))
+		var ir := icon_rect()
 		var tex := ItemPainter.art_of(def) if def != null else null
 		if tex != null:
 			var ts := tex.get_size()
@@ -291,6 +311,9 @@ class MatSlot extends Control:
 			draw_texture_rect(tex, r, false)
 		else:
 			draw_rect(ir.grow(-icon * 0.15), ItemPainter.body_color(def) if def != null else Color.GRAY)
+		if def != null and ItemFavorites.has(def.id):
+			var side := ItemPainter.LOCK_SIDE * k
+			ItemPainter.draw_favorite_badge(self, Rect2(Vector2(ir.end.x - side, ir.position.y), Vector2(side, side)))
 		var pr := Rect2(Vector2(pad, size.y - pad - plate_h), Vector2(size.x - pad * 2.0, plate_h))
 		draw_rect(pr, MAT_PLATE)
 		draw_rect(pr.grow(-0.5), MAT_LINE, false, 1.0)

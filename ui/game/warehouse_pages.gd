@@ -47,6 +47,8 @@ var _on_extra := false
 ## 264 §六：筛选 —— 标签（&"" = 不限）与稀有度上限（-1 = 全部）；有筛选时不匹配的格压灰、页签第二行写匹配件数
 var filter_tag: StringName = &""
 var filter_rarity := -1
+## 265：只看收藏
+var filter_fav := false
 
 
 ## [param plan] 见 [method TechWarehousePages.plan_of]（空 = 只列已有的页）
@@ -245,9 +247,10 @@ func _process(delta: float) -> void:
 
 
 ## 264 §六：设筛选（[param tag] &"" = 不限，[param rarity_max] -1 = 全部）；两样都不限 = 不筛
-func set_filter(tag: StringName, rarity_max: int) -> void:
+func set_filter(tag: StringName, rarity_max: int, fav_only: bool = filter_fav) -> void:
 	filter_tag = tag
 	filter_rarity = rarity_max
+	filter_fav = fav_only
 	if view != null:
 		view.dim_filter = matches if filtering() else Callable()
 		view.queue_redraw()
@@ -255,12 +258,13 @@ func set_filter(tag: StringName, rarity_max: int) -> void:
 
 
 func filtering() -> bool:
-	return filter_tag != &"" or filter_rarity >= 0
+	return filter_tag != &"" or filter_rarity >= 0 or filter_fav
 
 
 ## 这一件合不合当前筛选（没筛选都合）
 func matches(item: ItemInstance) -> bool:
-	return item != null and (filter_rarity < 0 or item.rarity() <= filter_rarity) and (filter_tag == &"" or item.def.tags.has(filter_tag))
+	return item != null and (filter_rarity < 0 or item.rarity() <= filter_rarity) and (filter_tag == &"" or item.def.tags.has(filter_tag)) \
+		and (not filter_fav or ItemFavorites.has(item.def.id))
 
 
 ## 第 [param i] 页合筛选的件数（没筛选 = 全部件数）
