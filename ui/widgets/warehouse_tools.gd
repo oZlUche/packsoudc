@@ -1,6 +1,6 @@
 ## 264 §六（作者 16:43「按推荐来」= A 工具列）：基地「仓库」页包架下面两块牌 —— 筛选牌（标签下拉 + 稀有度下拉 + 「清除」小键，
 ## 右边仓库不匹配的格压灰、页签计数改匹配数，[method WarehousePages.set_filter]）与账牌（件数 / 总价值（金币）/ 空格）。
-## 牌先垫羊皮纸占位（浅底墨字），木牌定稿 UI替换美术 出
+## 木牌定稿（UI替换美术 plaque264）：小木牌 [constant UiTheme.PANEL_HOME_PLAQUE_SMALL]（橡木框 + 羊皮面，浅底墨字）
 class_name WarehouseTools
 extends VBoxContainer
 
@@ -62,24 +62,17 @@ func setup(p_meta: MetaState, p_shelf: WarehousePages) -> WarehouseTools:
 	return self
 
 
-## 一块牌：羊皮纸底，字离纸边 [constant PAD]（纸边不齐，贴着写像压在边上）；返回牌，[method _col] 取里面那一列
-const PAD := 14
-
-
+## 一块小木牌（内边距是九宫格的框宽）；返回牌，[method _col] 取里面那一列
 func _plate(h: float) -> PanelContainer:
-	var p := UiTheme.panel(PanelContainer.new(), 12, UiTheme.PANEL_PARCHMENT)
+	var p := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_PLAQUE_SMALL)
 	p.custom_minimum_size = Vector2(WIDTH, h)
 	add_child(p)
-	var pad := MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		pad.add_theme_constant_override("margin_" + side, PAD if side in ["left", "right"] else 4)
-	p.add_child(pad)
-	pad.add_child(UiTheme.vbox(6))
+	p.add_child(UiTheme.vbox(6))
 	return p
 
 
 static func _col(p: PanelContainer) -> VBoxContainer:
-	return p.get_child(0).get_child(0)
+	return p.get_child(0)
 
 
 ## 设筛选（标签已经不在仓库里了就回「不限」）

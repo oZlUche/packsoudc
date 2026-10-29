@@ -337,33 +337,86 @@ func _draw() -> void:
 	_carved(f, Vector2(x0, o.y + BAND.position.y + BAND.size.y * 0.5 + _ledger_size * 0.35), _ledger, _ledger_size, INK)
 
 
-## 碑额：金币 + 数一行（罗马写法每段上面画自己的横线），整行水平居中、字和第一段的横线整块竖向居中；放不下缩字
-func _draw_tablet(_f: Font, fb: Font) -> void:
+## 补充七（作者 17:00「当罗马数字太长时，切换成显示两行（不同千位的正好分两行）」、17:14「罗马数字要中间对齐」）：罗马两段、一行要缩到
+## [constant TWO_ROW_BELOW] 号以下时分两行 —— 一段一行、同字号（各自放进字区宽 [constant TWO_ROW_ROOM] 取小，最大 [constant TWO_ROW_MAX]），
+## 两行各自在块宽（较长那行）里居中、横线跟着自己那行，行间空 字号 × [constant ROW_GAP]；整块在碑额里竖向居中（上下至少 [constant TABLET_PAD]），
+## 金币 + 6 + 块宽整体水平居中，金币对准整块中线。阿拉伯写法、只有一段的照旧一行
+const TWO_ROW_BELOW := 36
+const TWO_ROW_MAX := 44
+const TWO_ROW_ROOM := 272.0
+const ROW_GAP := 0.3
+const TABLET_PAD := 10.0
+
+
+## 碑额怎么排：{"px": 字号, "rows": [{"segs": [段…], "x": 第一段字的左沿, "base": 基线}…], "coin": 金币的框}（测试看）
+func tablet_layout(fb: Font) -> Dictionary:
 	var o := ORIGIN
 	var segs := parts()
 	var px := worth_size(fb)
 	var coin := float(UiTheme.sz(WORTH_COIN))
-	var x := o.x + TABLET.position.x + (TABLET.size.x - worth_width(fb, segs, px)) * 0.5
-	var base_y := o.y + TABLET.position.y + WORTH_BASE + (px * CAP_AT + overline_stack(px, int(segs[0][1]))) * 0.5
-	var icon := CoinLabel.coin_icon(int(coin))
-	var coin_top := base_y - px * CAP_AT * 0.5 - coin * 0.5
+	var top := o.y + TABLET.position.y
+	if not (_roman and segs.size() == 2 and px < UiTheme.sz(TWO_ROW_BELOW)):
+		var x := o.x + TABLET.position.x + (TABLET.size.x - worth_width(fb, segs, px)) * 0.5
+		var base_y := top + WORTH_BASE + (px * CAP_AT + overline_stack(px, int(segs[0][1]))) * 0.5
+		return {"px": px, "rows": [{"segs": segs, "x": x + coin + WORTH_GAP, "base": base_y}],
+			"coin": Rect2(x, base_y - px * CAP_AT * 0.5 - coin * 0.5, coin, coin)}
+	px = two_row_size(fb, segs)
+	var w0 := fb.get_string_size(String(segs[0][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var w1 := fb.get_string_size(String(segs[1][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var block := maxf(w0, w1)
+	var x := o.x + TABLET.position.x + (TABLET.size.x - coin - WORTH_GAP - block) * 0.5
+	var bx := x + coin + WORTH_GAP
+	var h := two_row_height(px, segs)
+	var y0 := top + (TABLET.size.y - h) * 0.5
+	var b0 := y0 + overline_stack(px, int(segs[0][1])) + px * CAP_AT
+	var b1 := b0 + px * ROW_GAP + overline_stack(px, int(segs[1][1])) + px * CAP_AT
+	return {"px": px, "rows": [{"segs": [segs[0]], "x": bx + (block - w0) * 0.5, "base": b0}, {"segs": [segs[1]], "x": bx + (block - w1) * 0.5, "base": b1}],
+		"coin": Rect2(x, y0 + h * 0.5 - coin * 0.5, coin, coin)}
+
+
+## 两行时的字号：两段各自放进 [constant TWO_ROW_ROOM]、整块高放进碑额（上下各留 [constant TABLET_PAD]），最大 [constant TWO_ROW_MAX]
+static func two_row_size(fb: Font, segs: Array) -> int:
+	var px := UiTheme.sz(TWO_ROW_MAX)
+	while px > MIN_SIZE:
+		var fits := two_row_height(px, segs) <= TABLET.size.y - TABLET_PAD * 2.0
+		for seg in segs:
+			fits = fits and fb.get_string_size(String(seg[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x <= TWO_ROW_ROOM
+		if fits:
+			break
+		px -= 1
+	return px
+
+
+## 两行整块多高：第一行横线 + 字 + 行距 + 第二行横线 + 字
+static func two_row_height(px: int, segs: Array) -> float:
+	return overline_stack(px, int(segs[0][1])) + px * CAP_AT + px * ROW_GAP + overline_stack(px, int(segs[1][1])) + px * CAP_AT
+
+
+## 碑额：金币 + 数（[method tablet_layout]：一行，或罗马太长分两行），罗马写法每段上面画自己的横线
+func _draw_tablet(_f: Font, fb: Font) -> void:
+	var lay := tablet_layout(fb)
+	var px := int(lay["px"])
+	var coin_r: Rect2 = lay["coin"]
+	var icon := CoinLabel.coin_icon(int(coin_r.size.x))
 	if icon != null:
-		draw_texture_rect(icon, Rect2(x, coin_top, coin, coin), false)
+		draw_texture_rect(icon, coin_r, false)
 	else:
-		draw_circle(Vector2(x + coin * 0.5, coin_top + coin * 0.5), coin * 0.5, CoinLabel.FALLBACK_FILL)
-	var tx := x + coin + WORTH_GAP
+		draw_circle(coin_r.get_center(), coin_r.size.x * 0.5, CoinLabel.FALLBACK_FILL)
 	var th := maxf(2.0, px * OVERLINE_K)
 	var step := maxf(2.0, px * OVERLINE_STEP)
-	for seg in segs:
-		var text := String(seg[0])
-		var tw := fb.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		_carved(fb, Vector2(tx, base_y), text, px, VERM)
-		var y := base_y - px * CAP_AT - maxf(3.0, px * OVERLINE_GAP) - th
-		for i in int(seg[1]):
-			draw_rect(Rect2(tx, y + 1.2, tw, th), LIT)
-			draw_rect(Rect2(tx, y, tw, th), VERM)
-			y -= th + step
-		tx += tw + px * PART_GAP
+	for row in lay["rows"]:
+		var tx := float(row["x"])
+		var base_y := float(row["base"])
+		for seg in row["segs"]:
+			var text := String(seg[0])
+			var tw := fb.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+			_carved(fb, Vector2(tx, base_y), text, px, VERM)
+			var y := base_y - px * CAP_AT - maxf(3.0, px * OVERLINE_GAP) - th
+			for i in int(seg[1]):
+				draw_rect(Rect2(tx, y + 1.2, tw, th), LIT)
+				draw_rect(Rect2(tx, y, tw, th), VERM)
+				y -= th + step
+			tx += tw + px * PART_GAP
 
 
 ## k 道横线（连第一道离字头的缝）一共多高；0 道 0

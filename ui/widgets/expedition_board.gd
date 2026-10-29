@@ -1,6 +1,7 @@
 ## 264 §二（作者 16:43「按推荐来」= 线框 1-A）：基地「出征」页碑右边那一列 —— 「上回出征」木牌（角色肖像小框 + 名、地图 · 规模、难度）、
 ## 「军需」木牌（每局开局随身带的技能圆槽 + 数量角标、科技给的局外加成小牌；都没有写「尚无」）、右下【开始探索】主档木牌（原左下「再来一局」）。
-## 木牌先垫羊皮纸占位（浅底墨字），定稿 UI替换美术 出；不做「沿用上回直接出发」（待定 2）
+## 木牌定稿（UI替换美术 plaque264）：大木牌 [constant UiTheme.PANEL_HOME_PLAQUE]，标题是挂牌 [method HeaderTag.hanging] 挂在木牌左上（x + 18、高出 34）；
+## 局外加成与难度写在平的浅羊皮小签上（[constant UiTheme.PANEL_HOME_CHIP]）。不做「沿用上回直接出发」（待定 2）
 class_name ExpeditionBoard
 extends VBoxContainer
 
@@ -15,7 +16,10 @@ const LINE_FONT := 17
 const SLOT := 56.0
 const BADGE_FONT := 14
 const INK_SLOT := Color("5a4433")
-const PAD := 24
+## 挂牌摆法：左边让多少、高出木牌上沿多少（挂牌 46 高，压进木牌 12）
+const TAG_X := 18
+const TAG_RISE := 34.0
+const CHIP_FONT := 15
 
 var flow: GameFlow = null
 var start_btn: Button = null
@@ -30,14 +34,14 @@ var _buffs: Array[StringName] = []
 
 func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	flow = p_flow
-	add_theme_constant_override("separation", 30)
+	add_theme_constant_override("separation", 18)
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	last_plate = _plate(LAST_H, "meta.last_expedition")
-	_fill_last(last_plate.get_child(0).get_child(0))
+	_fill_last(_col(last_plate))
 	supply_plate = _plate(SUPPLY_H, "meta.supplies")
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
-	_fill_supplies(supply_plate.get_child(0).get_child(0))
+	_fill_supplies(_col(supply_plate))
 	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true, START, START_FONT)
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -45,18 +49,33 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	return self
 
 
+## 一块大木牌连它的挂牌：挂牌在上（画在木牌上面），木牌往上收 12 压住挂牌下沿；返回木牌，[method _col] 取里面那一列
 func _plate(h: float, title_key: String) -> PanelContainer:
-	var p := UiTheme.panel(PanelContainer.new(), 14, UiTheme.PANEL_PARCHMENT)
+	var wrap := UiTheme.vbox(-int(HeaderTag.HANG_HEIGHT - TAG_RISE))
+	add_child(wrap)
+	var hold := MarginContainer.new()
+	hold.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hold.add_theme_constant_override("margin_left", TAG_X)
+	hold.z_index = 1     # 挂牌压在木牌框上
+	hold.add_child(HeaderTag.hanging(UiText.t(title_key)))
+	wrap.add_child(hold)
+	var p := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_PLAQUE)
 	p.custom_minimum_size = Vector2(WIDTH, h)
-	add_child(p)
-	var pad := MarginContainer.new()     # 纸边不齐：字离边 24
-	for side in ["left", "right"]:
-		pad.add_theme_constant_override("margin_" + side, PAD)
-	p.add_child(pad)
-	var col := UiTheme.vbox(10)
-	pad.add_child(col)
-	col.add_child(HeaderTag.new(UiText.t(title_key)))
+	wrap.add_child(p)
+	p.add_child(UiTheme.vbox(10))
 	return p
+
+
+static func _col(p: PanelContainer) -> VBoxContainer:
+	return p.get_child(0)
+
+
+## 平的浅羊皮小签：一行墨字
+func _chip(text: String) -> PanelContainer:
+	var chip := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_CHIP)
+	chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	chip.add_child(UiTheme.make_label(text, CHIP_FONT, UiTheme.INK))
+	return chip
 
 
 ## 上回出征：开局屏出发时记下的角色（[member MetaState.last_character]）与图 / 规模 / 难度旗标（开局屏照这些预选）
@@ -84,7 +103,7 @@ func _fill_last(col: VBoxContainer) -> void:
 	var diff := _last_difficulty()
 	if diff != null:
 		var text := Names.of(diff)     # 难度名自己带级（「进阶一」）
-		col.add_child(_line(text))
+		col.add_child(_chip(text))
 		_last_lines.append(text)
 
 
@@ -136,10 +155,10 @@ func _fill_supplies(col: VBoxContainer) -> void:
 		col.add_child(flow_row)
 		for id in _buffs:
 			var def: RunBuffDef = flow.buff_defs.get(id, null)
-			var tag := HeaderTag.new(Names.of(def) if def != null else String(id))
-			tag.tooltip_text = Names.description_of(def) if def != null else ""
-			tag.mouse_filter = Control.MOUSE_FILTER_PASS
-			flow_row.add_child(tag)
+			var chip := _chip(Names.of(def) if def != null else String(id))
+			chip.tooltip_text = Names.description_of(def) if def != null else ""
+			chip.mouse_filter = Control.MOUSE_FILTER_PASS
+			flow_row.add_child(chip)
 
 
 func _line(text: String) -> Label:
