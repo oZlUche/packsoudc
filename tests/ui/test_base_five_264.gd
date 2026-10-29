@@ -42,15 +42,15 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	var hangs: Array = board.find_children("*", "HeaderTag", true, false).filter(func(h): return (h as HeaderTag).hang)
 	t.eq(hangs.size(), 2, "标题是两枚挂牌")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_HOME_PLAQUE), UiTheme.TONE_LIGHT, "木牌浅底")
-	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回木屋；这两页不垫粗布
-	t.eq(screen.backdrop_name(), UiTheme.ART_HOME_BG, "出征页：基地木屋")
+	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回基地底图；这两页不垫粗布
+	t.eq(screen.backdrop_name(), UiTheme.ART_HOME_BG, "出征页：基地底图")
 	for pair in [["market", "market/scene"], ["smithy", "smithy/scene"], ["sell", UiTheme.ART_HOME_BG]]:
 		screen.show_tab(pair[0])
 		t.eq(screen.backdrop_name(), pair[1], "%s 页的背景" % pair[0])
 	t.check((screen._pages["market"] as Control).get_theme_stylebox("panel") is StyleBoxEmpty, "集市页不垫粗布")
 	t.check(not ((screen._pages["sell"] as Control).get_theme_stylebox("panel") is StyleBoxEmpty), "出售页照旧粗布")
 	screen.show_tab("warehouse")
-	t.eq(screen.backdrop_name(), UiTheme.ART_HOME_BG, "回仓库：木屋")
+	t.eq(screen.backdrop_name(), UiTheme.ART_HOME_BG, "回仓库：基地底图")
 	t.check(screen.escape() and screen.tab() == "expedition", "Esc：别页回出征页")
 	board.start_btn.pressed.emit()
 	t.check(f.screen in [GameFlow.Screen.SETUP, GameFlow.Screen.MAP], "按【开始探索】出发（开局屏；教程没通直接进图）")

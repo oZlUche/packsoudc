@@ -50,7 +50,7 @@ const SHELF_WIN_WIDE := Vector2(1320, 900)
 ## 251 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要」）：整页的两页 —— 右列（仓库木架 + 挂牌）收起、中列吃满。
 ## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
 const FULL_TABS := ["market", "smithy"]
-## 264 §三（作者 17:01 选「营寨 + 砖拱」）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地木屋；换时淡入淡出 [constant SCENE_FADE] 秒。
+## 264 §三（作者 17:01 定稿）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地底图；换时淡入淡出 [constant SCENE_FADE] 秒。
 ## 有场景图的这两页不垫粗布
 const SCENES := {"market": "market/scene", "smithy": "smithy/scene"}
 const SCENE_FADE := 0.25
@@ -1202,7 +1202,7 @@ func shelf_window(key: String) -> Control:
 ## 切页："expedition"（出征，默认；264 前叫家，"home" 留作别名）/ "warehouse" / "logistics" / "shelf"；261：老名字 "codex" / "achievements" / "tech" = 书架 + 开那扇窗。
 ## 262：分页名 "market" / "smithy" / "sell" = 后勤 + 那个分页；"logistics" 落上次看的分页。
 ## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
-## 264 §三：中列这一页该铺哪张整屏背景（集市 / 铁匠铺有场景图用场景图，否则基地木屋）
+## 264 §三：中列这一页该铺哪张整屏背景（集市 / 铁匠铺有场景图用场景图，否则基地底图）
 static func backdrop_of(page_name: String) -> String:
 	if SCENES.has(page_name) and UiTheme.art(String(SCENES[page_name])) != null:
 		return String(SCENES[page_name])
