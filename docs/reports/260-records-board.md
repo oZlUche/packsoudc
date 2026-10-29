@@ -120,4 +120,4 @@
 - **点一下切换**：左键点碑额（`tablet_rect()`）来回换、立刻重画；选哪种存设置（`GameSettings` 新一项，像 `map_zoom` 存 settings.json），默认罗马；悬浮窗照旧写准数，下面加一行「点击切换罗马 / 阿拉伯数字」/「Click to switch Roman / Arabic numerals」（字表里都有）。
 - 代码：v4.69（ab375b20）的 `roman()`、`overline_stack()` 与 `_draw_tablet` 画横线那段可拿回来改成两段。
 
-落地后在此记版本。
+**落地 v4.72（PR #377，2026-10-29，执行，与 264 §五 同一 PR）**：按 §十五 规格；全套 34215 项通过。
