@@ -32,6 +32,11 @@ var price := -1:
 	set(v):
 		price = v
 		queue_redraw()
+## 作者 2026-10-27 17:13：钱不够 —— 币座上的价钱写红
+var poor := false:
+	set(v):
+		poor = v
+		queue_redraw()
 ## 卖掉了：压已售戳（一般同时 disabled）
 var sold := false:
 	set(v):
@@ -227,7 +232,7 @@ func _draw() -> void:
 		var at := price_at() + Vector2(0.0, dy)
 		var asc := f.get_ascent(_price_size)
 		var desc := f.get_descent(_price_size)
-		draw_string(f, Vector2(at.x, at.y + (asc - desc) * 0.5), s, HORIZONTAL_ALIGNMENT_LEFT, -1, _price_size, _colors[st])
+		draw_string(f, Vector2(at.x, at.y + (asc - desc) * 0.5), s, HORIZONTAL_ALIGNMENT_LEFT, -1, _price_size, PriceTag.POOR_INK if poor else _colors[st])
 	if sold:
 		var tex := UiTheme.art_cached(UiTheme.lang_art(STAMP_ART))
 		if tex != null:
