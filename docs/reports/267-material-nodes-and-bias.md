@@ -78,7 +78,7 @@
 4. `RunState.material_bias` + 存读 + `bias_table()`；出征页「倾向」木牌（264 那单一起做）；`MetaState.flag last_bias`。
 5. `MapNodeStyle` kind 分支、`MapView`、`legend_widget`（kind 行 + 倾向行 + 产物段）、`NodeText` 四名、悬浮句五条中英、搜索屏副题。
 6. `tools/map_stats`：每图材料节点数、按 kind；96 种子跑一遍附在落地记录。
-7. 图标四枚 `assets/nodes/search_<kind>.png`（白线稿，同 155 规格）：美术设计 出 A / B 给作者挑，没到前画字。
+7. 图标四枚 `assets/nodes/search_<kind>.png`（白线稿，同 155 规格）：美术设计 A（题材两样东西）/ B（一枚一个场景），**作者 16:59 选 B**（矿洞口 / 两棵松 / 断柱 + 倒柱头 / 三块立石），定稿 `art/nodes/v267/out/`（64 + @2x 128）已交执行。
 
 ## 五、测试
 
