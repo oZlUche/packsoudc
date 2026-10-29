@@ -57,6 +57,7 @@ func shown_name() -> String:
 
 
 func _init(p_def: ItemDef = null, p_lit: bool = false, p_count: int = 0, p_font: Font = null) -> void:
+	add_to_group(ItemFavorites.GROUP)     # 265：收藏一变重画星
 	def = p_def
 	lit = p_lit
 	count = p_count
@@ -129,6 +130,7 @@ func _draw() -> void:
 	# 201：有图就画图；没点亮的压成暗影（还看得出形，看不出细节）。异体叠影照旧用色块（错位叠图会花）
 	if not ItemPainter.draw_art(self, def, 0, anchor, cell, Color.WHITE if lit else ART_UNLIT):
 		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
+	ItemPainter.draw_favorite_def(self, def, 0, anchor, cell)     # 265：收藏的种类右上角一枚星
 	# 名字
 	var name := shown_name()
 	if cell_box != null:

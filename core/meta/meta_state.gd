@@ -91,6 +91,8 @@ var best_value: int = 0
 var best_run: Dictionary = {}
 ## 264 §2.4：上回出征的角色（开局屏出发时和 last_map / last_scale / last_difficulty 旗标一起写）；没出发过 = 空。出征页「上回出征」木牌读它
 var last_character: StringName = &""
+## 265（作者 2026-10-29 16:43）：收藏的道具种类（id）。只做标记与筛选 —— 一键出售 / 出售同类跳过，仓库「只看收藏」、图鉴「收藏」档（[ItemFavorites]）
+var favorites: Array[StringName] = []
 ## 最近几局的 [RunResult.to_dict]，新的在前
 var history: Array[Dictionary] = []
 var _next_uid: int = 1
@@ -481,6 +483,15 @@ func _toggle(list: Array[StringName], id: StringName) -> bool:
 	return list.has(id)
 
 
+## 265：收藏 / 取消收藏一种道具；返回现在收藏着没有
+func toggle_favorite(id: StringName) -> bool:
+	return _toggle(favorites, id)
+
+
+func is_favorite(id: StringName) -> bool:
+	return favorites.has(id)
+
+
 ## 088：拿到一件特殊道具。已经有了返回 false
 func grant_keepsake(id: StringName) -> bool:
 	if id == &"" or keepsakes.has(id):
@@ -619,6 +630,16 @@ func locked_matching(max_rarity: int, tag: StringName = &"") -> int:
 	return n
 
 
+## 265：一键出售这一档里因为收藏被跳过的有几件（锁着的已经算在 [method locked_matching] 里，不重算）
+func favorite_matching(max_rarity: int, tag: StringName = &"") -> int:
+	var n := 0
+	for inst in warehouse.items():
+		var it := inst as ItemInstance
+		if not it.is_locked_by_player() and is_favorite(it.def.id) and (max_rarity < 0 or it.rarity() <= max_rarity) and (tag == &"" or it.def.tags.has(tag)):
+			n += 1
+	return n
+
+
 ## 一键出售会卖几件、得多少（不动仓库）
 func sell_preview(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") -> Dictionary:
 	var out := {"count": 0, "funds": 0}
@@ -640,6 +661,8 @@ func _sellable(max_rarity: int, tag: StringName = &"") -> Array[ItemInstance]:
 			continue
 		if it.is_locked_by_player():
 			continue     # 230：一键出售跳过锁住的
+		if is_favorite(it.def.id):
+			continue     # 265：收藏的种类也跳过
 		out.append(it)
 	return out
 
@@ -746,6 +769,7 @@ func to_dict() -> Dictionary:
 		"keepsakes": _names_of(keepsakes),
 		"bags": rack.to_save(),     # 225：包架只记包 id 与 uid
 		"bag_grants": _names_of(bag_grants),
+		"favorites": _names_of(favorites),     # 265
 		"next_uid": _next_uid,
 		"funds": funds, "score": score, "runs": runs, "extractions": extractions, "deaths": deaths,
 		"best_value": best_value,
@@ -844,6 +868,10 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		push_warning("MetaState.from_dict: 包架上的 %s 内容里已经没有，丢弃" % id)
 	for id in d.get("bag_grants", []):
 		m.bag_grants.append(StringName(String(id)))
+	for raw in d.get("favorites", []):     # 265：改了名的按新名（173），退役的丢掉
+		var fid := IdAliases.item(StringName(String(raw)))
+		if (items == null or items.get_def(fid) != null) and not m.favorites.has(fid):
+			m.favorites.append(fid)
 	m.funds = int(d.get("funds", 0))
 	for inst in lost:
 		var value := ItemValue.of_instance(inst as ItemInstance)

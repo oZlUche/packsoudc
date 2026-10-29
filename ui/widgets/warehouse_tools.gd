@@ -17,6 +17,8 @@ var shelf: WarehousePages = null
 var tag_pick: OptionButton = null
 var rarity_pick: OptionButton = null
 var clear_btn: Button = null
+## 265：「只看收藏」（按下 = 只看）
+var fav_btn: Button = null
 var filter_plate: PanelContainer = null
 var ledger_plate: PanelContainer = null
 var _items: Label = null
@@ -41,9 +43,15 @@ func setup(p_meta: MetaState, p_shelf: WarehousePages) -> WarehouseTools:
 	rarity_pick.item_selected.connect(func(i: int): set_filter(shelf.filter_tag, int(RARITIES[i][1])))
 	UiTheme.dress_wood_option(rarity_pick, FONT)
 	fcol.add_child(rarity_pick)
+	var keys := UiTheme.hbox(8)
+	fcol.add_child(keys)
+	fav_btn = UiTheme.make_home_button(UiText.t("meta.filter_fav"), func(): set_filter(shelf.filter_tag, shelf.filter_rarity, fav_btn.button_pressed), false, Vector2(0, CLEAR_SIZE.y), FONT)
+	fav_btn.toggle_mode = true
+	fav_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	keys.add_child(fav_btn)
 	clear_btn = UiTheme.make_home_button(UiText.t("meta.filter_clear"), clear, false, CLEAR_SIZE, FONT)
 	clear_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
-	fcol.add_child(clear_btn)
+	keys.add_child(clear_btn)
 	ledger_plate = _plate(LEDGER_H)
 	var lcol := _col(ledger_plate)
 	lcol.add_child(HeaderTag.new(UiText.t("meta.ledger")))
@@ -76,16 +84,16 @@ static func _col(p: PanelContainer) -> VBoxContainer:
 
 
 ## 设筛选（标签已经不在仓库里了就回「不限」）
-func set_filter(tag: StringName, rarity_max: int) -> void:
+func set_filter(tag: StringName, rarity_max: int, fav_only: bool = shelf.filter_fav if shelf != null else false) -> void:
 	if tag != &"" and not meta.sell_tags().has(tag):
 		tag = &""
-	shelf.set_filter(tag, rarity_max)
+	shelf.set_filter(tag, rarity_max, fav_only)
 	_sync_picks()
 	_refresh_clear()
 
 
 func clear() -> void:
-	set_filter(&"", -1)
+	set_filter(&"", -1, false)
 
 
 ## 仓库变了：标签下拉重建（按大类分组，组间一条分隔，同出售页）、账牌重算
@@ -95,6 +103,8 @@ func refresh() -> void:
 	var tags := meta.sell_tags()
 	if shelf.filter_tag != &"" and not tags.has(shelf.filter_tag):
 		shelf.set_filter(&"", shelf.filter_rarity)
+	elif shelf.filter_fav:
+		shelf.set_filter(shelf.filter_tag, shelf.filter_rarity, true)     # 265：收藏变了，页签上的匹配数重算
 	tag_pick.clear()
 	tag_pick.add_item(UiText.t("meta.sell_any_tag"))
 	tag_pick.set_item_metadata(0, "")
@@ -120,6 +130,7 @@ func _sync_picks() -> void:
 	for i in RARITIES.size():
 		if int(RARITIES[i][1]) == shelf.filter_rarity:
 			rarity_pick.select(i)
+	fav_btn.set_pressed_no_signal(shelf.filter_fav)
 
 
 func _refresh_clear() -> void:

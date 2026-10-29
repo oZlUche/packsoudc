@@ -22,7 +22,11 @@ signal tutorial_ask
 var items: ItemDatabase = null
 var enemies: EnemyDatabase = null
 var sets: SetDatabase = null
-var meta: MetaState = null
+## 265：换局外（读档、换位、删位）时把收藏的来源挂到 [ItemFavorites]（角标、悬浮窗丝带、出售跳过都从那里问）
+var meta: MetaState = null:
+	set(v):
+		meta = v
+		ItemFavorites.attach(v)
 var meta_rules: MetaRules = null
 ## 全部 buff 定义（id → RunBuffDef），开局给 RunState、读档后补上
 var buff_defs: Dictionary = {}

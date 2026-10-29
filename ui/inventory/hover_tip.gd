@@ -30,6 +30,24 @@ const MAX_DEPTH := 3
 ## 钉住进度线：2 px 黄铜色
 const RING_WIDTH := 2.0
 const RING_COLOR := Color("d4a84f")
+## 265 收藏丝带（UI替换美术 final2，作者 17:20 定稿；设计像素、窗坐标）：铜杆 44 × 10 在 (宽 − 58, −3)；丝带宽 30、中线 宽 − 36、从 y 2 往下；
+## 放下的长度：没收藏 15、停上去 19、收藏了 46（拉下时过头到 50 弹回）；金星 22，中心在丝带底往上 21；名字行右边让 48
+const FAV_ROD := Vector2(44, 10)
+const FAV_ROD_RIGHT := 58.0
+const FAV_ROD_Y := -3.0
+const FAV_W := 30.0
+const FAV_CX := 36.0
+const FAV_TOP := 2.0
+const FAV_RIBBON_LEN := 50.0
+const FAV_LEN_OFF := 15.0
+const FAV_LEN_HOVER := 19.0
+const FAV_LEN_ON := 46.0
+const FAV_LEN_OVER := 50.0
+const FAV_DIM := Color(0.62, 0.54, 0.5)
+const FAV_STAR := 22.0
+const FAV_STAR_UP := 21.0
+const FAV_MARGIN := 48.0
+const FAV_HIT_MIN_H := 24.0
 ## 220 E：词条子窗底部那一行（点了开百科的对应页）
 const CODEX_LINK := "百科 >"     # zh text; shown via UiText "tip.codex_link"
 const CODEX_META := "codex:"
@@ -68,16 +86,24 @@ class TipWindow extends PanelContainer:
 	## 子窗：是父窗的哪个关键词开的
 	var origin_term := ""
 	var item_mode := false
-	## 钉子图标在建窗时就读好 —— 兼容渲染器下第一次在 `_draw` 里才读的贴图会画成白块
-	var _pin_tex: Texture2D
+	## 265：右上角收藏丝带 —— -1 = 不画（不是道具窗 / 没有局外状态），0 = 没收藏，1 = 收藏了（[method set_fav]）
+	var fav := -1
+	## 丝带放下来多长（设计像素）、压暗几成（1 = 全暗）、金星几倍（0 = 不画）；切换时 Tween 改这三个
+	var fav_len := HoverTip.FAV_LEN_OFF
+	var fav_dim := 1.0
+	var fav_star_k := 0.0
+	var fav_hover := false
+	var _fav_tween: Tween = null
+	## 点了丝带（[HoverTip] 接：切收藏）
+	signal fav_clicked()
 
 	func _init(width: float) -> void:
 		UiTheme.panel(self, -1, UiTheme.PANEL_TOOLTIP)
 		# 185：皮革窗是深底，挂亮字 —— 嵌在浅石板（战斗屏）里也不继承墨字（名牌同款）
 		theme = UiTheme.bright_text_theme()
 		full_width = width
-		var pin_path := UiTheme.TIP_ICON_DIR + "pin.png"
-		_pin_tex = load(pin_path) as Texture2D if ResourceLoader.exists(pin_path) else null
+		for art in ["tip/fav_ribbon", "tip/fav_rod", "tip/fav_star"]:
+			UiTheme.art_cached(art)     # 先读好：兼容渲染器下第一次在 `_draw` 里才读的贴图会画成白块
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		visible = false
 		col = VBoxContainer.new()
@@ -170,7 +196,7 @@ class TipWindow extends PanelContainer:
 	var full_width := 0.0
 
 	func set_width(w: float) -> void:
-		head.custom_minimum_size.x = w
+		head.custom_minimum_size.x = w - (HoverTip.FAV_MARGIN if fav >= 0 else 0.0)     # 265：名字行右边给丝带让 48
 		body.custom_minimum_size.x = w
 		faith_dash.custom_minimum_size.x = w
 		faith_body.custom_minimum_size.x = w
@@ -205,6 +231,7 @@ class TipWindow extends PanelContainer:
 	## 185：状态说明 —— 名字行 / 分隔线 / 效果（[method Glossary.buff_tip_parts]）
 	func set_status(head_bb: String, body_bb: String) -> void:
 		item_mode = false
+		set_fav(-1)
 		clear_actions()
 		set_width(full_width)
 		head.visible = true
@@ -218,6 +245,7 @@ class TipWindow extends PanelContainer:
 	## 只写一段文字（地图上的点、子窗）
 	func set_text(bbcode: String) -> void:
 		item_mode = false
+		set_fav(-1)
 		clear_actions()
 		set_width(full_width)
 		head.visible = false
@@ -279,19 +307,105 @@ class TipWindow extends PanelContainer:
 	func global_rect() -> Rect2:
 		return Rect2(global_position, size)
 
-	## 钉住进度（顺时针沿外框）与钉子
+	## 265：设收藏丝带的状态。[param animate] 真 = 照 UI替换美术 定稿走一遍拉下 / 收回（0.2 秒，过头弹回，到底弹金星）；假 = 当场到位
+	func set_fav(state: int, animate: bool = false) -> void:
+		var was := fav
+		fav = state
+		if _fav_tween != null:
+			_fav_tween.kill()
+			_fav_tween = null
+		set_width(full_width)
+		if state < 0:
+			fav_hover = false
+			mouse_default_cursor_shape = Control.CURSOR_ARROW
+		if not animate or was < 0 or state < 0 or was == state or not is_inside_tree():
+			_fav_snap()
+			return
+		_fav_tween = create_tween()
+		if state == 1:
+			_fav_tween.tween_property(self, "fav_len", HoverTip.FAV_LEN_OVER, 0.14).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+			_fav_tween.parallel().tween_property(self, "fav_dim", 0.0, 0.2)
+			_fav_tween.tween_property(self, "fav_len", HoverTip.FAV_LEN_ON, 0.06)
+			fav_star_k = 0.0
+			_fav_tween.tween_property(self, "fav_star_k", 1.25, 0.06).from(0.45)
+			_fav_tween.tween_property(self, "fav_star_k", 1.0, 0.04)
+		else:
+			_fav_tween.tween_property(self, "fav_star_k", 0.0, 0.06)
+			_fav_tween.tween_property(self, "fav_len", HoverTip.FAV_LEN_OFF, 0.14).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+			_fav_tween.parallel().tween_property(self, "fav_dim", 1.0, 0.14)
+		_fav_tween.tween_callback(_fav_snap)
+
+	## 丝带到位：收藏了 46 原色带星；没收藏 15 压暗（停在上面 19、暗一半）
+	func _fav_snap() -> void:
+		_fav_tween = null
+		fav_len = HoverTip.FAV_LEN_ON if fav == 1 else (HoverTip.FAV_LEN_HOVER if fav_hover else HoverTip.FAV_LEN_OFF)
+		fav_dim = 0.0 if fav == 1 else (0.5 if fav_hover else 1.0)
+		fav_star_k = 1.0 if fav == 1 else 0.0
+		queue_redraw()
+
+	## 点得着丝带的地方（窗坐标）：杆下面 44 宽、丝带长 + 6 高，至少 24
+	func fav_rect() -> Rect2:
+		return Rect2(size.x - HoverTip.FAV_ROD_RIGHT, 0.0, HoverTip.FAV_ROD.x, maxf(fav_len + 6.0, HoverTip.FAV_HIT_MIN_H))
+
+	func _gui_input(event: InputEvent) -> void:
+		if fav < 0:
+			return
+		var mm := event as InputEventMouseMotion
+		if mm != null:
+			_fav_hover_at(fav_rect().has_point(mm.position))
+			return
+		var mb := event as InputEventMouseButton
+		if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT and fav_rect().has_point(mb.position):
+			fav_clicked.emit()
+			accept_event()
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_MOUSE_EXIT and fav >= 0:
+			_fav_hover_at(false)
+
+	func _fav_hover_at(on: bool) -> void:
+		if on == fav_hover:
+			return
+		fav_hover = on
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if on else Control.CURSOR_ARROW
+		if _fav_tween == null:
+			_fav_snap()
+
+	## 钉住进度（顺时针沿外框）与收藏丝带（作者 17:18：钉住后的小钉不是按钮，不画了）
 	func _draw() -> void:
 		var r := Rect2(Vector2.ONE, size - Vector2.ONE * 2.0)
-		if pinned:
-			if _pin_tex != null:
-				draw_texture_rect(_pin_tex, Rect2(Vector2(size.x - 20, 4), Vector2(16, 16)), false)
+		if not pinned:
+			var p := HoverTip.pin_progress(dwell)
+			if p > 0.0:
+				draw_polyline(HoverTip.ring_points(r, p), HoverTip.RING_COLOR, HoverTip.RING_WIDTH)
+		if fav >= 0:
+			_draw_fav()
+
+	## 265（UI替换美术 定稿 final2）：丝带只画贴图底部 L 长那一截（像从杆后面放下来），乘暗色；收藏了钉一颗金星；最后画压在上框上的铜杆
+	func _draw_fav() -> void:
+		var cx := size.x - HoverTip.FAV_CX
+		var tint := Color.WHITE.lerp(HoverTip.FAV_DIM, fav_dim)
+		var dest := Rect2(cx - HoverTip.FAV_W * 0.5, HoverTip.FAV_TOP, HoverTip.FAV_W, fav_len)
+		var ribbon := UiTheme.art_cached("tip/fav_ribbon")
+		if ribbon != null:
+			var k := float(ribbon.get_height()) / HoverTip.FAV_RIBBON_LEN
+			draw_texture_rect_region(ribbon, dest, Rect2(0, ribbon.get_height() - fav_len * k, ribbon.get_width(), fav_len * k), tint)
+		else:
+			draw_rect(dest, Color("a3301f") * tint)
+		if fav_star_k > 0.0:
+			var side := HoverTip.FAV_STAR * fav_star_k
+			var at := Vector2(cx, HoverTip.FAV_TOP + fav_len - HoverTip.FAV_STAR_UP)
+			var star := UiTheme.art_cached("tip/fav_star")
+			if star != null:
+				draw_texture_rect(star, Rect2(at - Vector2.ONE * side * 0.5, Vector2.ONE * side), false)
 			else:
-				draw_rect(Rect2(Vector2(size.x - 12, 6), Vector2(6, 6)), HoverTip.RING_COLOR)
-			return
-		var p := HoverTip.pin_progress(dwell)
-		if p <= 0.0:
-			return
-		draw_polyline(HoverTip.ring_points(r, p), HoverTip.RING_COLOR, HoverTip.RING_WIDTH)
+				draw_colored_polygon(ItemPainter.star_points(at, side * 0.5), HoverTip.RING_COLOR)
+		var rod_r := Rect2(Vector2(size.x - HoverTip.FAV_ROD_RIGHT, HoverTip.FAV_ROD_Y), HoverTip.FAV_ROD)
+		var rod := UiTheme.art_cached("tip/fav_rod")
+		if rod != null:
+			draw_texture_rect(rod, rod_r, false)
+		else:
+			draw_rect(rod_r, HoverTip.RING_COLOR)
 
 
 var _windows: Array[TipWindow] = []
@@ -306,6 +420,8 @@ var _views: Array[ContainerView] = []
 var can_show: Callable = Callable()
 var _uid: int = -1
 var _for_view: ContainerView = null
+## 265：主窗现在说的是哪一种道具（丝带切的就是它的收藏）；不是道具窗 = null
+var _fav_def: ItemDef = null
 ## 离开当前道具时要看的那个位置（视图与视图里的坐标；视图为 null = 出了视图）
 var _pending_view: ContainerView = null
 var _pending_local := Vector2.ZERO
@@ -332,6 +448,7 @@ func _init() -> void:
 	z_index = 60     # 128：画在地上（盖在各屏上面的那一层）的东西之上；相对自己那一屏（作者 2026-10-13：导演给叠层整屏抬高，地图的悬浮窗不再盖住叠层）
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_panel = _new_window(0, scaled(MAX_WIDTH))
+	_panel.fav_clicked.connect(_on_fav_clicked)
 	_text = _panel.body
 	# 富文本换了字要等排版完才知道真高：最小尺寸一变就下一帧缩回去重摆，不留旧文字的高度
 	_panel.minimum_size_changed.connect(_queue_refit)
@@ -349,15 +466,22 @@ func _new_window(depth: int, width: float) -> TipWindow:
 ## 087：给一个容器视图找它该用的悬浮窗并登记上去：沿祖先往上找，谁的直接子节点里有 HoverTip 就用它（屏 / 面板自己造的那个）；
 ## 一路没有就在最顶层的 Control 祖先下造一个。返回用的那个（视图不在树里返回 null）
 static func ensure_for(view: ContainerView) -> HoverTip:
-	if view == null or not view.is_inside_tree():
+	var tip := host_for(view)
+	if tip != null:
+		tip.watch(view)
+	return tip
+
+
+## 265：给任意一个控件找它该用的悬浮窗（同 [method ensure_for] 的找法，不登记）—— 铁匠铺材料格这类不是容器视图的源用
+static func host_for(c: Control) -> HoverTip:
+	if c == null or not c.is_inside_tree():
 		return null
-	var node: Node = view.get_parent()
+	var node: Node = c.get_parent()
 	var top: Control = null
 	while node != null:
-		for c in node.get_children():
-			if c is HoverTip:
-				(c as HoverTip).watch(view)
-				return c
+		for child in node.get_children():
+			if child is HoverTip:
+				return child
 		if node is Control:
 			top = node
 		node = node.get_parent()
@@ -365,7 +489,6 @@ static func ensure_for(view: ContainerView) -> HoverTip:
 		return null
 	var tip := HoverTip.new()
 	top.add_child(tip)
-	tip.watch(view)
 	return tip
 
 
@@ -430,7 +553,9 @@ func show_faith(full: Dictionary, at: Vector2) -> void:
 		return
 	_close_from(1)
 	_anchor = Rect2()
+	_fav_def = null
 	_fill_faith(full)
+	_panel.set_fav(-1)
 	# 258：大档下满阶、带道具段的窗会比屏高 —— 整窗的字退一档重排（窗宽不变），最多退到小档
 	var tier := UiTheme.text_size
 	while _panel.get_combined_minimum_size().y > faith_max_height() and tier != GameSettings.TEXT_SIZES[0]:
@@ -542,14 +667,53 @@ func faith_bar() -> Control:
 
 ## 170：显示一件道具的分块说明（[method ItemTooltip.describe_full] 的结果）
 ## [param anchor] = 被指的那件的外框（全局坐标）：窗贴着它的边摆（右、左、下、上，哪边放得下用哪边）；空 = 照 [param at] 摆
-func show_item(full: Dictionary, at: Vector2, anchor: Rect2 = Rect2()) -> void:
+## 265：[param def] = 这扇窗说的那一种道具 —— 给了且有局外状态（[ItemFavorites]）就在右上角画收藏丝带，点它切收藏
+func show_item(full: Dictionary, at: Vector2, anchor: Rect2 = Rect2(), def: ItemDef = null) -> void:
 	_close_from(1)
 	_anchor = anchor
 	_panel.reset_state()
 	_drop_extra()
 	_panel.set_item(full)
 	_panel.terms = _terms_dict(full.get("terms", {}))
+	_fav_def = def
+	_panel.set_fav(fav_state_of(def))
 	_open_main(at)
+
+
+## 265：一种道具（不是哪一件）的窗 —— 图鉴格、铁匠铺材料格：按种类组说明（没有充能 / 磨损那几行），只有收藏丝带、没有按钮
+func show_kind(def: ItemDef, at: Vector2, anchor: Rect2 = Rect2()) -> void:
+	if def == null or (_panel.visible and _panel.pinned):
+		return
+	_for_view = null
+	_uid = -1
+	show_item(ItemTooltip.describe_full(ItemInstance.create(def, 0)), at, anchor, def)
+	_panel.clear_actions()
+
+
+## 丝带该是什么样：-1 不画（不是道具 / 没有局外状态）、0 没收藏、1 收藏了
+static func fav_state_of(def: ItemDef) -> int:
+	if def == null or not ItemFavorites.available():
+		return -1
+	return 1 if ItemFavorites.has(def.id) else 0
+
+
+## 点了丝带：切这一种的收藏，丝带走一遍拉下 / 收回；画着角标的都重画（[method ItemFavorites.toggle]）
+func _on_fav_clicked() -> void:
+	if _fav_def == null:
+		return
+	var on := ItemFavorites.toggle(_fav_def.id)
+	_panel.set_fav(1 if on else 0, true)
+	if _for_view != null and is_instance_valid(_for_view) and _shown_item(_for_view, _uid) != null:
+		set_actions(_actions_of(_for_view, _uid))     # 「出售同类」跟着灰 / 亮
+
+
+## 测试看 / 点：主窗丝带的状态、点一下丝带
+func fav_state() -> int:
+	return _panel.fav
+
+
+func click_fav() -> void:
+	_on_fav_clicked()
 
 
 #region 230 道具操作按钮
@@ -617,6 +781,7 @@ func _refresh_item() -> void:
 	var full := ItemTooltip.describe_full(inst, board)
 	_panel.set_item(full)
 	_panel.terms = _terms_dict(full.get("terms", {}))
+	_panel.set_fav(fav_state_of(_fav_def))
 	set_actions(_actions_of(_for_view, _uid))
 	_queue_refit()
 
@@ -721,6 +886,7 @@ func hide_tip() -> void:
 	_panel.reset_state()
 	_uid = -1
 	_for_view = null
+	_fav_def = null
 	_pending_view = null
 	_away = 0.0
 	_on_source = false
@@ -991,7 +1157,7 @@ func _show_for(view: ContainerView, uid: int, inst: ItemInstance, local: Vector2
 		board = (view as InventoryView).inventory
 	var r := view.item_rect(uid)
 	var anchor := view.get_global_transform() * r if r.has_area() else Rect2()
-	show_item(ItemTooltip.describe_full(inst, board), view.get_global_position() + local, anchor)
+	show_item(ItemTooltip.describe_full(inst, board), view.get_global_position() + local, anchor, inst.def)
 	set_actions(_actions_of(view, uid))     # 230
 
 

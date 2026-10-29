@@ -165,6 +165,7 @@ func top_drag() -> DragLayer:
 func _init() -> void:
 	auto_tooltip = false     # 自己带一个悬浮窗（画在地上的东西上面）
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	add_to_group(ItemFavorites.GROUP)     # 265
 
 
 func _ready() -> void:
@@ -1547,6 +1548,7 @@ func _draw() -> void:
 			ItemPainter.draw_item(self, cells, at, InventoryView.CELL, body, edge)
 			ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of_item(inst), font, 13, ink)
 		ItemPainter.draw_lock(self, inst, rot, at, InventoryView.CELL, tint)     # 230
+		ItemPainter.draw_favorite(self, inst, rot, at, InventoryView.CELL, tint)     # 265
 		var sil := ItemSilhouette.of(inst.def, rot)
 		if sil["mask"] != null:     # 198：有道具图的描边 / 高亮沿轮廓走（没图的格子已经沿外形描过了）
 			for poly in (sil["outline"] as Array):
