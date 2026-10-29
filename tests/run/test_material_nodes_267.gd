@@ -20,6 +20,13 @@ static func _rules() -> NodeRules:
 	return load(ContentPaths.asset_file("node_rules", "standard"))
 
 
+static func _floats(d: Dictionary) -> Dictionary:
+	var out := {}
+	for k in d:
+		out[String(k)] = float(d[k])
+	return out
+
+
 static func _rng(s: int) -> RandomNumberGenerator:
 	var r := RandomNumberGenerator.new()
 	r.seed = s
@@ -27,9 +34,9 @@ static func _rng(s: int) -> RandomNumberGenerator:
 
 
 static func run_tags(t: TestCase) -> void:
-	t.begin("267 §一 · 两个新标签【矿物】【草木】：17 种材料贴上；四种材料节点的标签照配置")
+	t.begin("267 §一 · 两个新标签【矿物】【草木】：15 种材料贴上（金银块已是「金银」、搜索不出，244 补充一只许两枚标签，不贴）；四种材料节点的标签照配置")
 	var db := _db()
-	for id in [&"copper_ore", &"iron_ore", &"silver_ore", &"flint", &"raw_salt", &"gravestone_shard", &"gold_nugget", &"silver_nugget"]:
+	for id in [&"copper_ore", &"iron_ore", &"silver_ore", &"flint", &"raw_salt", &"gravestone_shard"]:
 		t.check(db.get_def(id).tags.has(&"mineral"), "%s 是矿物" % id)
 	for id in [&"oak_log", &"wooden_stick", &"ironwood_branch", &"pine_resin", &"beeswax", &"honey_jar", &"dried_herbs", &"mint_bundle", &"datura_flower"]:
 		t.check(db.get_def(id).tags.has(&"plant"), "%s 是草木" % id)
@@ -128,7 +135,7 @@ static func run_ring_assigner(t: TestCase) -> void:
 				if n.type != g0.get_node(id).type:
 					bad.append("种子 %d 点 %d：类型 %s ≠ %s" % [s, id, n.type, g0.get_node(id).type])
 				var spec := cfg.spec_for_ring(int(n.layout.get("ring", 0)))
-				if spec != null and n.produce != spec.produce:
+				if spec != null and n.produce != _floats(spec.produce):
 					bad.append("种子 %d 点 %d：产物表 %s" % [s, id, n.produce])
 				var k := String(n.content.get("search_kind", ""))
 				if k != "":

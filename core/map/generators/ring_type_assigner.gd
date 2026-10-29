@@ -258,8 +258,8 @@ func _assign_material_kinds() -> void:
 		var pool: Array[int] = []
 		for id in _ring_ids(r):
 			var n := _g.get_node(id)
-			if not spec.produce.is_empty():
-				n.produce = spec.produce.duplicate()
+			for t in spec.produce:     # 倍率一律存成小数：资产里的 2 是整数，存档往返会变成 2.0
+				n.produce[String(t)] = float(spec.produce[t])
 			if n.type == &"search" and not _fixed.has(id):
 				pool.append(id)
 		if spec.material_nodes.is_empty() or pool.is_empty():

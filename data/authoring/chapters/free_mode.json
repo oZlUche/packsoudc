@@ -35,7 +35,7 @@
             "chest": 1
           },
           "produce": {
-            "plant": 2.0,
+            "plant": 2,
             "beast_part": 1.5,
             "mineral": 1.2
           },
@@ -71,7 +71,7 @@
             "chest": 1
           },
           "produce": {
-            "crafted": 2.0,
+            "crafted": 2,
             "mineral": 1.5
           },
           "material_nodes": {
@@ -106,8 +106,8 @@
             "chest": 1
           },
           "produce": {
-            "crystal": 2.0,
-            "magic": 2.0,
+            "crystal": 2,
+            "magic": 2,
             "mineral": 1.2
           },
           "material_nodes": {
@@ -141,8 +141,8 @@
             "chest": 1
           },
           "produce": {
-            "crystal": 2.0,
-            "magic": 2.0,
+            "crystal": 2,
+            "magic": 2,
             "mineral": 1.2
           },
           "material_nodes": {
@@ -176,8 +176,8 @@
             "chest": 1
           },
           "produce": {
-            "crystal": 2.0,
-            "magic": 2.0,
+            "crystal": 2,
+            "magic": 2,
             "mineral": 1.2
           },
           "material_nodes": {
@@ -211,8 +211,8 @@
             "chest": 1
           },
           "produce": {
-            "crystal": 2.0,
-            "magic": 2.0,
+            "crystal": 2,
+            "magic": 2,
             "mineral": 1.2
           },
           "material_nodes": {
