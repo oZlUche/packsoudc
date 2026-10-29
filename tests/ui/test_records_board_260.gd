@@ -198,6 +198,28 @@ static func run_roman_parts(t: TestCase) -> void:
 	st._worth = 888888
 	var px := st.worth_size(fb)
 	t.check(px < RecordsStele.WORTH_SIZE and RecordsStele.worth_width(fb, st.parts(), px) <= RecordsStele.WORTH_ROOM, "最长的 888888（20 个字母）缩到 %d 号放得下" % px)
+	# 补充七（作者 17:00 / 17:14）：一行要缩到 36 号以下就分两行，同字号、两行居中、横线跟着各自那行，整块竖向居中
+	var lay: Dictionary = st.tablet_layout(fb)
+	var rows: Array = lay["rows"]
+	t.eq(rows.size(), 2, "888888：两行")
+	var p2 := int(lay["px"])
+	t.check(p2 > px and p2 <= UiTheme.sz(RecordsStele.TWO_ROW_MAX), "两行字号 %d 比一行（%d）大、不过 44" % [p2, px])
+	t.eq([rows[0]["segs"][0][1], rows[1]["segs"][0][1]], [1, 0], "第一行 1 道、第二行 0 道")
+	var c0: float = float(rows[0]["x"]) + fb.get_string_size(String(rows[0]["segs"][0][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, p2).x * 0.5
+	var c1: float = float(rows[1]["x"]) + fb.get_string_size(String(rows[1]["segs"][0][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, p2).x * 0.5
+	t.check(absf(c0 - c1) < 0.5, "两行居中对齐（%.1f / %.1f）" % [c0, c1])
+	var top := RecordsStele.ORIGIN.y + RecordsStele.TABLET.position.y
+	var block_top := float(rows[0]["base"]) - p2 * RecordsStele.CAP_AT - RecordsStele.overline_stack(p2, 1)
+	t.check(block_top >= top + RecordsStele.TABLET_PAD - 0.5 and float(rows[1]["base"]) <= top + RecordsStele.TABLET.size.y - RecordsStele.TABLET_PAD + 0.5, "整块在碑额里、上下留 10")
+	var coin: Rect2 = lay["coin"]
+	t.check(absf(coin.get_center().y - (block_top + float(rows[1]["base"])) * 0.5) < 0.5, "金币对准整块中线")
+	t.check(coin.end.x + RecordsStele.WORTH_GAP <= minf(float(rows[0]["x"]), float(rows[1]["x"])) + 0.5, "金币在两行左边")
+	for v in [15439, 2345678, 3100000000, 742]:
+		st._worth = v
+		t.eq((st.tablet_layout(fb)["rows"] as Array).size(), 1, "%d：照旧一行" % v)
+	st._worth = 888888
+	st._roman = false
+	t.eq((st.tablet_layout(fb)["rows"] as Array).size(), 1, "阿拉伯写法不分行")
 	t.eq(RecordsStele.overline_stack(50, 0), 0.0, "不画线不占高")
 	t.eq(RecordsStele.overline_stack(50, 2), 5.0 + 2 * 3.0 + 2.5, "两道：缝 5 + 两道 3 粗 + 道间 2.5")
 	st.free()

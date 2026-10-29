@@ -55,6 +55,11 @@ const PANEL_WINDOW := &"PanelWindow"
 const BUTTON_HOME := &"ButtonHome"
 const BUTTON_HOME_PRIMARY := &"ButtonHomePrimary"
 const PANEL_HOME_BOX := &"PanelHomeBox"
+## 264（UI替换美术 定稿 `plaque264`）：基地的木牌 —— 橡木框 + 羊皮面九宫格（浅底墨字）：大的（上回出征、军需）、小的（筛选牌、账牌）、
+## 平的浅羊皮小签（军需里的局外加成、上回出征的难度）；没图退回羊皮纸平色
+const PANEL_HOME_PLAQUE := &"PanelHomePlaque"
+const PANEL_HOME_PLAQUE_SMALL := &"PanelHomePlaqueSmall"
+const PANEL_HOME_CHIP := &"PanelHomeChip"
 const PANEL_SHELF := &"PanelShelf"
 ## 179：开局屏坐在场地背景上的凹槽板（比背景更暗的板身、细黄铜边、内阴影；深底白字）；美术给了 `setup/groove` 就用图
 const PANEL_GROOVE := &"PanelGroove"
@@ -100,6 +105,7 @@ const PANEL_NODE_HINT := &"PanelNodeHint"
 ## 226 批四守门（tests/ui/test_no_bare_text_226.gd）：算「控件」的底 —— 字的祖先里有这些变体之一就算坐在控件上（牌、纸、签、板、提示框）
 const PLATE_VARIANTS: Array[StringName] = [PANEL_NAMEPLATE, PANEL_PARCHMENT, PANEL_SUMMARY_NOTE, PANEL_NODE_HINT, PANEL_TOOLTIP,
 	PANEL_DIFF_TITLE, PANEL_FLIP_COUNTER, PANEL_DARK, PANEL_GROOVE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_HOME_BOX,
+	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
 	PANEL_CAP_TILE, PANEL_HUD, PANEL_HUD_WELL, &"TooltipPanel"]
 const BUTTON_SETUP_TAB := &"ButtonSetupTab"
 ## 开局挂牌页签锁着时的页名色
@@ -134,6 +140,7 @@ const BUTTON_FORGE := &"ButtonForge"
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, PANEL_HUD_WELL, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, LABEL_TENT_SIGN, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
+	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
@@ -208,6 +215,9 @@ const ART_HOME_BG := "home/bg_home"
 const ART_HOME_BTN := "home/btn_wood"
 const ART_HOME_BTN_PRIMARY := "home/btn_wood_primary"
 const ART_HOME_BOX := "home/panel_cloth"
+const ART_HOME_PLAQUE := "home/plaque"
+const ART_HOME_PLAQUE_SMALL := "home/plaque_small"
+const ART_HOME_CHIP := "home/plaque_chip"
 const ART_SHELF := "home/shelf"
 const ART_TAB_MARK := "home/tab_mark"
 ## 197 补充一 §5：主菜单轮换的三张整屏画（营地 → 军营 → 地图；2112 × 1320，四边留出血给镜头走）
@@ -829,6 +839,7 @@ const PANEL_TONES := {
 	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
 	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_LIGHT, PANEL_PACK_LEATHER: TONE_DARK, PANEL_STASH_FRAME: TONE_DARK,
 	PANEL_SUMMARY_NOTE: TONE_LIGHT, PANEL_BARE: TONE_LIGHT, PANEL_NODE_HINT: TONE_LIGHT, PANEL_HUD_WELL: TONE_LIGHT,
+	PANEL_HOME_PLAQUE: TONE_LIGHT, PANEL_HOME_PLAQUE_SMALL: TONE_LIGHT, PANEL_HOME_CHIP: TONE_LIGHT,
 }
 ## 面板变体用哪张美术图（有图时深浅读它的 json）
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
@@ -836,7 +847,8 @@ const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
 	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER,
 	PANEL_PARCHMENT: ART_PARCHMENT_STRIP, PANEL_DIFF_TITLE: ART_DIFF_TITLE, PANEL_PACK_LEATHER: ART_PACK_LEATHER,
-	PANEL_STASH_FRAME: ART_STASH_FRAME, PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE, PANEL_NODE_HINT: ART_NODE_HINT, PANEL_HUD_WELL: ART_HUD_WELL}
+	PANEL_STASH_FRAME: ART_STASH_FRAME, PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE, PANEL_NODE_HINT: ART_NODE_HINT, PANEL_HUD_WELL: ART_HUD_WELL,
+	PANEL_HOME_PLAQUE: ART_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL: ART_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP: ART_HOME_CHIP}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
 const INK_DEFAULT := Color("2e2219")
@@ -1279,6 +1291,12 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(PANEL_HOME_BOX, "PanelContainer")
 	var cloth: StyleBox = _art_box(ART_HOME_BOX)
 	t.set_stylebox("panel", PANEL_HOME_BOX, cloth if cloth != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_MARGIN))
+	for pair in [[PANEL_HOME_PLAQUE, ART_HOME_PLAQUE, 24], [PANEL_HOME_PLAQUE_SMALL, ART_HOME_PLAQUE_SMALL, 18], [PANEL_HOME_CHIP, ART_HOME_CHIP, 6]]:     # 264 木牌
+		t.set_type_variation(pair[0], "PanelContainer")
+		var plaque: StyleBox = _art_box(pair[1])
+		if plaque == null:
+			plaque = _box(PARCHMENT, SCROLL_ROD, int(pair[2]))
+		t.set_stylebox("panel", pair[0], plaque)
 	t.set_type_variation(PANEL_SHELF, "PanelContainer")
 	var shelf: StyleBox = _art_box(ART_SHELF)
 	t.set_stylebox("panel", PANEL_SHELF, shelf if shelf != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))

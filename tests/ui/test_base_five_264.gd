@@ -37,7 +37,20 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	t.eq(Bare.audit(page, "expedition"), [] as Array[String], "出征页没有裸字")
 	screen.toggle_tab("expedition")
 	t.eq(screen.tab(), "expedition", "再点选中的不动")
+	# 木牌定稿（plaque264）：大木牌 + 挂牌标题、浅羊皮小签；都是浅底
+	t.check(board.last_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE and board.supply_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE, "两块大木牌")
+	var hangs: Array = board.find_children("*", "HeaderTag", true, false).filter(func(h): return (h as HeaderTag).hang)
+	t.eq(hangs.size(), 2, "标题是两枚挂牌")
+	t.eq(UiTheme.tone_of(UiTheme.PANEL_HOME_PLAQUE), UiTheme.TONE_LIGHT, "木牌浅底")
+	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回基地底图；这两页不垫粗布
+	t.eq(screen.backdrop_name(), UiTheme.ART_HOME_BG, "出征页：基地底图")
+	for pair in [["market", "market/scene"], ["smithy", "smithy/scene"], ["sell", UiTheme.ART_HOME_BG]]:
+		screen.show_tab(pair[0])
+		t.eq(screen.backdrop_name(), pair[1], "%s 页的背景" % pair[0])
+	t.check((screen._pages["market"] as Control).get_theme_stylebox("panel") is StyleBoxEmpty, "集市页不垫粗布")
+	t.check(not ((screen._pages["sell"] as Control).get_theme_stylebox("panel") is StyleBoxEmpty), "出售页照旧粗布")
 	screen.show_tab("warehouse")
+	t.eq(screen.backdrop_name(), UiTheme.ART_HOME_BG, "回仓库：基地底图")
 	t.check(screen.escape() and screen.tab() == "expedition", "Esc：别页回出征页")
 	board.start_btn.pressed.emit()
 	t.check(f.screen in [GameFlow.Screen.SETUP, GameFlow.Screen.MAP], "按【开始探索】出发（开局屏；教程没通直接进图）")
@@ -90,7 +103,7 @@ static func frame_last_and_supplies(t: TestCase, root: Window) -> void:
 	t.check(slots.size() == 1 and (slots[0] as ExpeditionBoard.BeltSlot)._icon != null, "一枚圆槽，画定稿图标")
 	if buff != null:
 		t.check(board.buff_supplies().has(buff.id), "局外加成列出来")
-		var tags: Array = board.supply_plate.find_children("*", "HeaderTag", true, false).map(func(h): return (h as HeaderTag).text)
+		var tags: Array = board.supply_plate.find_children("*", "Label", true, false).map(func(h): return (h as Label).text)
 		t.check(tags.has(Names.of(buff)), "加成小牌写名字（%s）" % [tags])
 	t.eq(Bare.audit(screen._pages["expedition"], "expedition"), [] as Array[String], "没有裸字")
 	screen.free()
@@ -142,6 +155,7 @@ static func frame_warehouse_tools(t: TestCase, root: Window) -> void:
 	t.not_null(tools, "有工具列")
 	t.check(screen._wh._rack_col.is_ancestor_of(tools) and tools.get_index() > screen._wh._rack_box.get_index(), "在包架下面")
 	t.check(tools.filter_plate.custom_minimum_size == Vector2(228, 150) and tools.ledger_plate.custom_minimum_size == Vector2(228, 120), "筛选牌 228 × 150、账牌 228 × 120")
+	t.eq(tools.filter_plate.theme_type_variation, UiTheme.PANEL_HOME_PLAQUE_SMALL, "小木牌")
 	var shelf: WarehousePages = screen.shelf()
 	t.check(not shelf.filtering() and tools.clear_btn.disabled, "起手不筛，「清除」灰")
 	var ore_tag: StringName = &""
