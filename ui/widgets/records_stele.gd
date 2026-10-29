@@ -28,15 +28,22 @@ const TEXT_RIGHT := 24.0
 const BAND_PAD := 12.0
 ## 260 补充一（UI替换美术 16:41 写法）：碑额一行 = 金币 + 6 + 数，朱红粗衬线最大 50 号，整行宽过 330 就缩；金币不跟字缩，固定 52（补充三）。
 ## 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）：数写成 k / m / b / t 带两位小数，
-## 基线 = 碑额顶 + 75 + 字号 × 0.375，金币中心对准字身中线（基线 − 字号 × 0.375）
+## 基线 = 碑额顶 + 75 + 字号 × 0.375，金币中心对准字身中线（基线 − 字号 × 0.375）。
+## 补充六（作者 10-29 16:11「用罗马数字实现……点击数字可以切换显示……阿拉伯数字时的单位(K/M/B)要大写」）：默认罗马数字两段（[method roman_parts]），
+## 段间空 字号 × 0.12，每段上面画自己的横线（照补充四：第一道离字头 max(3, 字号 × 0.1)、粗 max(2, 字号 × 0.06)、往上每道再空 max(2, 字号 × 0.05)），
+## 字和第一段的横线整块竖向居中：基线 = 碑额顶 + 75 + (字号 × 0.75 + 第一段横线总高) / 2；点碑额换成阿拉伯写法（[method compact]，单位大写），记在设置里
 const WORTH_SIZE := 50
 const WORTH_COIN := 52
 const WORTH_ROOM := 330.0
 const WORTH_GAP := 6.0
 const WORTH_BASE := 75.0
 const CAP_AT := 0.75
-## 碑额数的单位：万亿 t、十亿 b、百万 m、千 k
-const UNITS := [[1000000000000, "t"], [1000000000, "b"], [1000000, "m"], [1000, "k"]]
+const OVERLINE_K := 0.06
+const OVERLINE_GAP := 0.1
+const OVERLINE_STEP := 0.05
+const PART_GAP := 0.12
+## 碑额数的单位：万亿 T、十亿 B、百万 M、千 K
+const UNITS := [[1000000000000, "T"], [1000000000, "B"], [1000000, "M"], [1000, "K"]]
 const NUM_SIZE := 32
 const LABEL_SIZE := 18
 const LEDGER_SIZE := 15
@@ -54,9 +61,10 @@ const ROWS := [["escape", "extractions", "records.medal_extract"], ["core", "bos
 const TIERS := ["bronze", "silver", "gold", "gilded", "laurel"]
 
 var _funds: CoinLabel
-## 碑额：仓库总价值（整数）与碑上写的数（[method compact]）
+## 碑额：仓库总价值（整数）；写法跟设置（[member GameSettings.stele_roman]），没设置时默认罗马
 var _worth := 0
-var _numeral := "—"
+var _roman := true
+var _flow: GameFlow = null
 ## 每行 {count, tier（0 = 还没到铜）, next（下一阶门槛，-1 = 到顶或不分阶）, kind, label}
 var _rows: Array[Dictionary] = []
 var _ledger := ""
@@ -69,7 +77,8 @@ func setup(flow: GameFlow) -> void:
 	custom_minimum_size = FOOTPRINT
 	mouse_filter = Control.MOUSE_FILTER_PASS     # 圆牌那几行悬停说下一阶还差几次
 	_worth = m.warehouse_value()
-	_numeral = compact(_worth)
+	_flow = flow
+	_roman = flow.settings.stele_roman if flow.settings != null else true
 	var tiers: Dictionary = m.rules.medal_tiers if m.rules != null else {}
 	_rows.clear()
 	for spec in ROWS:
@@ -86,8 +95,8 @@ func setup(flow: GameFlow) -> void:
 	_place()
 
 
-## 碑额写的数（补充五）：1000 以下写整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数用整数算、向下截（999999 → 999.99k，不进位），
-## 末尾的 0 去掉（3100000000 → 3.1b、3000 → 3k）；0 写「—」。准数在悬停里
+## 碑额的阿拉伯写法（补充五；补充六单位大写）：1000 以下写整数；千起 K、百万起 M、十亿起 B、万亿起 T，两位小数用整数算、向下截（999999 → 999.99K，不进位），
+## 末尾的 0 去掉（3100000000 → 3.1B、3000 → 3K）；0 写「—」。准数在悬停里
 static func compact(v: int) -> String:
 	if v <= 0:
 		return "—"
@@ -100,9 +109,68 @@ static func compact(v: int) -> String:
 	return str(v)
 
 
-## 碑额刻的数（测试看）
+## 罗马数字（I V X L C D M）；0 及以下空串
+static func roman(n: int) -> String:
+	var out := ""
+	for pair in [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]:
+		while n >= int(pair[0]):
+			out += String(pair[1])
+			n -= int(pair[0])
+	return out
+
+
+## 碑额的罗马写法（补充六）拆成段：[[罗马数字, 横线道数], …]。1000 以下一段不画线；千起两段 —— 最高一段（1–999）画 k 道（千 1、百万 2……），
+## 下一段取前两位（个位截成 0，向下截）画 k − 1 道，截完是 0 就不写。5414 → [["V", 1], ["CDX", 0]]、2345678 → [["II", 2], ["CCCXL", 1]]；0 写「—」
+static func roman_parts(v: int) -> Array:
+	if v <= 0:
+		return [["—", 0]]
+	var div := 1
+	var k := 0
+	while v / div >= 1000:     # 先除再比，int 上限也不溢出
+		div *= 1000
+		k += 1
+	var out := [[roman(v / div), k]]
+	if k > 0:
+		var next := v / (div / 1000) % 1000 / 10 * 10
+		if next > 0:
+			out.append([roman(next), k - 1])
+	return out
+
+
+## 碑额现在写的段：罗马两段，或阿拉伯一段（不画线）
+func parts() -> Array:
+	return roman_parts(_worth) if _roman else [[compact(_worth), 0]]
+
+
+func roman_on() -> bool:
+	return _roman
+
+
+## 点碑额：罗马 ↔ 阿拉伯，记进设置并存盘
+func toggle_numerals() -> void:
+	_roman = not _roman
+	if _flow != null and _flow.settings != null:
+		_flow.settings.stele_roman = _roman
+		_flow.save_settings()
+	queue_redraw()
+
+
+func _gui_input(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT and tablet_rect().has_point(mb.position):
+		toggle_numerals()
+		accept_event()
+
+
+## 碑额刻的数（测试看）：段间一个空格；罗马每个字母后面跟横线道数个组合上横线（碑面上横线是画的）
 func worth_text() -> String:
-	return _numeral
+	var out: PackedStringArray = []
+	for part in parts():
+		var seg := ""
+		for ch in String(part[0]):
+			seg += ch + "\u0305".repeat(int(part[1]))
+		out.append(seg)
+	return " ".join(out)
 
 
 func worth() -> int:
@@ -187,7 +255,7 @@ func band_rect() -> Rect2:
 
 func _get_tooltip(at: Vector2) -> String:
 	if tablet_rect().has_point(at):
-		return UiText.t("records.vault_worth") % _worth     # 悬浮写阿拉伯数字
+		return UiText.t("records.vault_worth") % _worth + "\n" + UiText.t("records.numeral_toggle")     # 悬浮写准数 + 点击换写法
 	for i in _rows.size():
 		if not row_rect(i).has_point(at):
 			continue
@@ -269,14 +337,14 @@ func _draw() -> void:
 	_carved(f, Vector2(x0, o.y + BAND.position.y + BAND.size.y * 0.5 + _ledger_size * 0.35), _ledger, _ledger_size, INK)
 
 
-## 碑额：金币 + 数一行，整行水平居中、字身竖向居中；放不下缩字
+## 碑额：金币 + 数一行（罗马写法每段上面画自己的横线），整行水平居中、字和第一段的横线整块竖向居中；放不下缩字
 func _draw_tablet(_f: Font, fb: Font) -> void:
 	var o := ORIGIN
+	var segs := parts()
 	var px := worth_size(fb)
 	var coin := float(UiTheme.sz(WORTH_COIN))
-	var tw := fb.get_string_size(_numeral, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var x := o.x + TABLET.position.x + (TABLET.size.x - coin - WORTH_GAP - tw) * 0.5
-	var base_y := o.y + TABLET.position.y + WORTH_BASE + px * CAP_AT * 0.5
+	var x := o.x + TABLET.position.x + (TABLET.size.x - worth_width(fb, segs, px)) * 0.5
+	var base_y := o.y + TABLET.position.y + WORTH_BASE + (px * CAP_AT + overline_stack(px, int(segs[0][1]))) * 0.5
 	var icon := CoinLabel.coin_icon(int(coin))
 	var coin_top := base_y - px * CAP_AT * 0.5 - coin * 0.5
 	if icon != null:
@@ -284,19 +352,42 @@ func _draw_tablet(_f: Font, fb: Font) -> void:
 	else:
 		draw_circle(Vector2(x + coin * 0.5, coin_top + coin * 0.5), coin * 0.5, CoinLabel.FALLBACK_FILL)
 	var tx := x + coin + WORTH_GAP
-	_carved(fb, Vector2(tx, base_y), _numeral, px, VERM)
+	var th := maxf(2.0, px * OVERLINE_K)
+	var step := maxf(2.0, px * OVERLINE_STEP)
+	for seg in segs:
+		var text := String(seg[0])
+		var tw := fb.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+		_carved(fb, Vector2(tx, base_y), text, px, VERM)
+		var y := base_y - px * CAP_AT - maxf(3.0, px * OVERLINE_GAP) - th
+		for i in int(seg[1]):
+			draw_rect(Rect2(tx, y + 1.2, tw, th), LIT)
+			draw_rect(Rect2(tx, y, tw, th), VERM)
+			y -= th + step
+		tx += tw + px * PART_GAP
 
 
-## 碑额数的字号：最大 [constant WORTH_SIZE]，金币 + 字整行超过 [constant WORTH_ROOM] 就缩
+## k 道横线（连第一道离字头的缝）一共多高；0 道 0
+static func overline_stack(px: int, k: int) -> float:
+	if k <= 0:
+		return 0.0
+	return maxf(3.0, px * OVERLINE_GAP) + k * maxf(2.0, px * OVERLINE_K) + (k - 1) * maxf(2.0, px * OVERLINE_STEP)
+
+
+## 碑额数的字号：最大 [constant WORTH_SIZE]，金币 + 各段 + 段间空整行超过 [constant WORTH_ROOM] 就缩
 func worth_size(fb: Font) -> int:
+	var segs := parts()
 	var px := UiTheme.sz(WORTH_SIZE)
-	while px > MIN_SIZE and worth_width(fb, _numeral, px) > WORTH_ROOM:
+	while px > MIN_SIZE and worth_width(fb, segs, px) > WORTH_ROOM:
 		px -= 1
 	return px
 
 
-static func worth_width(fb: Font, whole: String, px: int) -> float:
-	return UiTheme.sz(WORTH_COIN) + WORTH_GAP + fb.get_string_size(whole, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+## 金币 + 空 + 各段字宽 + 段间空（[param segs] 是 [method parts] 那样的段）
+static func worth_width(fb: Font, segs: Array, px: int) -> float:
+	var w := UiTheme.sz(WORTH_COIN) + WORTH_GAP + px * PART_GAP * maxi(segs.size() - 1, 0)
+	for seg in segs:
+		w += fb.get_string_size(String(seg[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	return w
 
 
 ## 一件碑的图；缺图在 [param fallback] 上画石色块（[param sunk] = 凹框：深一点的边）
