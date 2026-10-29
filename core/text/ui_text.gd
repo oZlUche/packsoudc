@@ -751,7 +751,7 @@ const TEXT := {
 	"hud.bias": {"zh": "倾向：%s", "en": "Focus: %s"},
 	"hud.produce": {"zh": "产物", "en": "Yields"},
 	"hud.produce_ring.outer": {"zh": "外", "en": "Outer"},
-	"hud.produce_ring.middle": {"zh": "中", "en": "Middle"},
+	"hud.produce_ring.middle": {"zh": "中", "en": "Mid"},     # 复测 v4.77：英文大号字「Middle: Crafted, Mineral」顶到旗边
 	"hud.produce_ring.inner": {"zh": "内", "en": "Inner"},
 	"hud.produce_line": {"zh": "%s：%s", "en": "%s: %s"},
 	"hud.vitality": {"zh": "体力 %d/%d", "en": "Vitality %d/%d"},

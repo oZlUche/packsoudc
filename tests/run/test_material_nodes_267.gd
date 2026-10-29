@@ -223,7 +223,7 @@ static func run_run_state_bias(t: TestCase) -> void:
 
 
 static func run_tooltip(t: TestCase) -> void:
-	t.begin("267 §三 · 悬浮句：材料节点说它出什么，搜索 / 宝箱点后面加一句「这一带多翻出【…】」（倍率最高的那个，> 1 才说）")
+	t.begin("267 §三 · 悬浮句：材料节点说它出什么（不再接环的产物句）；普通搜索 / 宝箱点后面加一句「这一带多翻出【…】」（倍率最高的那个，> 1 才说）")
 	var c := TestSupport.load_content("free_mode")
 	var s := RunState.start(c.chapter, 5, c.items, c.enemies, c.sets)
 	var seen := {}
@@ -235,7 +235,12 @@ static func run_tooltip(t: TestCase) -> void:
 		seen[kind] = true
 		var text := NodeTooltip.text_for(s, s.chapter, n)
 		t.check(text.contains(UiText.t("node.hint.search_" + kind)), "%s：说它出什么（%s）" % [kind, text])
-		t.check(text.contains(NodeTooltip.produce_line(n)) and NodeTooltip.produce_line(n) != "", "%s：带产物句" % kind)
+		t.check(NodeTooltip.produce_line(n) != "" and not text.contains(NodeTooltip.produce_line(n)), "%s：不再接环的产物句（复测 v4.77：前后矛盾）" % kind)
+	for id in s.map.node_ids():
+		var plain := s.map.get_node(id)
+		if plain.type == &"search" and not plain.content.has("search_kind") and NodeTooltip.produce_line(plain) != "" and not plain.is_visited():
+			t.check(NodeTooltip.text_for(s, s.chapter, plain).contains(NodeTooltip.produce_line(plain)), "普通搜索点：接环的产物句")
+			break
 	var n := MapNode.new()
 	n.produce = {"plant": 2.0, "beast_part": 1.5, "mineral": 1.2}
 	t.eq(NodeTooltip.produce_line(n), "这一带多翻出【草木】。", "取倍率最高的")
