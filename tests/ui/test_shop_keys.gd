@@ -1,5 +1,6 @@
 ## 商店按钮换纸卷（UI替换美术，作者 17:39 定丙）：收起、离开 = 普通纸卷键（宽按字撑，最窄 116）；
-## 刷新、随身买钮 = 币座纸卷键，字只写名字，价钱数字画在金币右边；卖掉的随身钮禁用并压已售戳；缺图退回平板按钮，价钱接在字后
+## 刷新 = 币座纸卷键，字只写名字，价钱数字画在金币右边；缺图退回平板按钮，价钱接在字后。
+## 作者 2026-10-27 17:13：随身改成货架下面一块小框（每种一格、带图标、挂价签），钱不够时价钱写红
 extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
@@ -27,8 +28,12 @@ static func _open(root: Window) -> Dictionary:
 	return {"screen": screen, "session": session}
 
 
+static func flow_wallet(screen) -> Wallet:
+	return screen.flow.run.wallet
+
+
 static func frame_scroll_keys(t: TestCase, root: Window) -> void:
-	t.begin("商店纸卷键：收起 / 离开普通键、刷新与随身币座键（字只写名字，数字在币座上），卖掉的随身钮禁用压戳")
+	t.begin("商店纸卷键：收起 / 离开普通键、刷新币座键（字只写名字，数字在币座上）；随身格带图标和价签，卖掉压戳；钱不够价钱写红")
 	var o := _open(root)
 	var screen = o["screen"]
 	var session: ShopSession = o["session"]
@@ -51,22 +56,39 @@ static func frame_scroll_keys(t: TestCase, root: Window) -> void:
 	t.eq(keys[1].text, "收起", "收起")
 	t.eq(keys[2].text, "离开", "离开")
 	var belt: Array = screen._belt_btns
-	t.check(belt.size() > 0, "有随身买钮")
+	t.check(belt.size() > 0, "有随身格")
 	if belt.is_empty():
 		screen.free()
 		Support.cleanup(PREFIX)
 		return
-	var b0: ScrollKey = belt[0]
+	var b0: Control = belt[0]
 	var def := BeltSkillDef.find(StringName(String(session.belt_offers[0]["id"])))
-	t.check(b0.coin, "随身买钮是币座键")
-	t.eq(b0.text, Names.of(def), "字只写技能名")
-	t.eq(b0.price, int(session.belt_offers[0]["price"]), "价钱画在币座上")
-	t.check(not b0.sold and not b0.disabled, "没卖：亮、不压戳")
+	t.check("sold" in b0 and "def" in b0, "随身格是 BeltTile（作者 17:13：货架下面一块小框，每种一格）")
+	t.eq(b0.def, def, "格里是这件随身技能")
+	t.not_null(b0._icon, "画定稿图标")
+	var tag := screen._belt_row.get_child(0).get_node_or_null("BeltPrice0") as PriceTag
+	t.not_null(tag, "格下挂价签")
+	if tag != null:
+		t.eq(tag.coin, int(session.belt_offers[0]["price"]), "价签写价钱")
+		t.check(not tag.sold and not tag.poor, "没卖、钱够：墨色、不压戳")
+	t.check(not b0.sold, "没卖：亮")
 	t.eq(screen.buy_belt(0), "", "买下")
-	b0 = screen._belt_btns[0]     # 买下会重摆一遍
-	t.check(b0.sold and b0.disabled, "卖掉了：禁用、压已售戳")
-	t.eq(b0.stamp_center(), Vector2(b0.size.x - 45.0, 28.0), "戳的中心对准币座中心")
-	t.eq(b0.text, Names.of(def), "名字还在")
+	b0 = screen._belt_btns[0]
+	tag = screen._belt_row.get_child(0).get_node_or_null("BeltPrice0") as PriceTag
+	t.check(b0.sold, "卖掉了：格变灰")
+	t.check(tag != null and tag.sold and not tag.poor, "卖掉了：价签压已售、不写红")
+	var cash := flow_wallet(screen)
+	cash.spend(cash.balance - 1, &"test")
+	screen._refresh()
+	if screen._belt_btns.size() > 1:
+		var tag1 := screen._belt_row.get_child(1).get_node_or_null("BeltPrice1") as PriceTag
+		t.check(tag1 != null and tag1.poor and not tag1.sold, "钱不够：随身价签写红（作者 17:14「红色」）")
+	var shelf_tag := screen._shelf_row.get_child(0).get_node_or_null("Price0") as PriceTag
+	t.check(shelf_tag != null and (shelf_tag.poor or shelf_tag.sold), "钱不够：货架价签写红")
+	t.check((refresh as ScrollKey).poor, "钱不够：刷新币座价钱写红")
+	cash.earn(1000, &"test")
+	screen._refresh()
+	t.check(not (refresh as ScrollKey).poor and (shelf_tag == null or not shelf_tag.poor), "钱又够了：回墨色")
 	UiText.lang = "en"
 	screen._refresh()
 	t.eq(refresh.text, "Restock", "英文：Restock")
@@ -76,7 +98,7 @@ static func frame_scroll_keys(t: TestCase, root: Window) -> void:
 
 
 static func frame_scroll_keys_fallback(t: TestCase, root: Window) -> void:
-	t.begin("商店纸卷键缺图：退回平板按钮，价钱接在字后，卖掉写「已售」")
+	t.begin("商店纸卷键缺图：退回平板按钮，价钱接在字后；随身格卖掉写「已售」")
 	var keep := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
 	var o := _open(root)
@@ -87,8 +109,8 @@ static func frame_scroll_keys_fallback(t: TestCase, root: Window) -> void:
 	t.eq(refresh.text, "刷新 %d" % session.refresh_cost(), "字后接价钱")
 	if not screen._belt_btns.is_empty():
 		screen.buy_belt(0)
-		var def := BeltSkillDef.find(StringName(String(session.belt_offers[0]["id"])))
-		t.eq(screen._belt_btns[0].text, "%s 已售" % Names.of(def), "卖掉：名字后写「已售」")
+		var tag := screen._belt_row.get_child(0).get_node_or_null("BeltPrice0") as PriceTag
+		t.check(screen._belt_btns[0].sold and tag != null and tag.sold, "随身格卖掉：格变灰、价签写「已售」")
 	screen.free()
 	UiTheme.asset_root = keep
 	Support.cleanup(PREFIX)

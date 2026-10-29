@@ -38,6 +38,12 @@ var sold := false:
 	set(v):
 		sold = v
 		queue_redraw()
+## 作者 2026-10-27 17:13：钱不够买 —— 价钱写红
+var poor := false:
+	set(v):
+		poor = v
+		queue_redraw()
+const POOR_INK := Color("b0261c")
 
 var _box: StyleBoxTexture = null
 
@@ -94,7 +100,10 @@ func _draw() -> void:
 			draw_texture_rect(tex, r, false)
 		else:
 			draw_circle(r.get_center(), side * 0.45, CoinLabel.FALLBACK_FILL)
-		draw_string(f, Vector2(LEFT + side + CoinLabel.GAP, y), "%d" % coin + suffix, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
+		var num := "%d" % coin
+		draw_string(f, Vector2(LEFT + side + CoinLabel.GAP, y), num, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, POOR_INK if poor else INK)
+		if suffix != "":
+			draw_string(f, Vector2(LEFT + side + CoinLabel.GAP + f.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x, y), suffix, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 	else:
 		draw_string(f, Vector2(LEFT, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 	if sold:

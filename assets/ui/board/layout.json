@@ -241,6 +241,20 @@
    "margin": 46,
    "cells_offset": 16,
    "note": "227 小件素框（出售区、祭品台、铸炉槽、上交区、地上、商店货位）。NinePatchRect：四边 margin 一样；axis_stretch = TILE（中段 120 px = 两格）。节点比棋盘四周各大 cells_offset；格缝照 cell_seams 由代码画。深青铜石边，tone dark 的屏用"
+  },
+  "shop": {
+   "file": "frame_shop.png",
+   "size": [
+    212,
+    212
+   ],
+   "margin": 46,
+   "cells_offset": 16,
+   "seams": {
+    "seam": "#8f6a44",
+    "hi": "#f4e2bf"
+   },
+   "note": "作者 2026-10-29 选 A 木货匣：商店三块棋盘（整排货架、出售区、随身格）。橡木框 + 铜包角，内垫浅松木；参数同 plain（NinePatchRect，四边 margin 46，axis_stretch = TILE，中段 120 = 两格）。seams = 盖在 cell_seams 上的格缝色"
   }
  }
 }

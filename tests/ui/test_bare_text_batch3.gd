@@ -38,7 +38,7 @@ static func frame_shop_tags(t: TestCase, root: Window) -> void:
 	var p0: PriceTag = tags[0]
 	t.eq(p0.coin, int(session.stock[0]["price"]), "牌上写价钱（金币式：金币 + 数，不写「币」）")
 	t.check(p0.suffix.contains("×"), "数后面接尺寸（%s）" % p0.suffix)
-	# 作者 10-27（选 B 钱袋，挪到左下角；UI替换美术 摆法 A）：随身那几颗右边、【离开】正上方一只钱袋写当前金币，不压按键
+	# 作者 10-27（选 B 钱袋）：一只钱袋写当前金币，不压按键
 	var pouch: CoinPouch = screen._pouch
 	t.check(pouch != null and pouch.amount == screen.flow.run.wallet.balance, "钱袋写当前金币")
 	if pouch != null:
@@ -47,10 +47,14 @@ static func frame_shop_tags(t: TestCase, root: Window) -> void:
 		var pr := pouch.get_global_rect()
 		var hit: Array = screen.find_children("*", "BaseButton", true, false).filter(func(b): return (b as Control).is_visible_in_tree() and pr.intersects((b as Control).get_global_rect()))
 		t.eq(hit.size(), 0, "钱袋不压按键")
+		# 作者 2026-10-27 17:13：钱袋挪到货架右下角下面（店和背包中间）—— 四分之三袋宽在货架右边线里、四分之一伸出去
+		var shelf_r := (screen._shelf_row.get_parent() as Control).get_global_rect()
+		var out := pr.end.x - shelf_r.end.x
+		t.check(out > 0.0 and out <= pr.size.x * 0.5, "钱袋压在货架右边线上，伸出去不到一半（伸出 %.0f / 袋宽 %.0f）" % [out, pr.size.x])
+		t.check(pr.position.y >= shelf_r.end.y - 0.5, "钱袋在货架下面（%s / %s）" % [pr, shelf_r])
 		var leave: Array = screen.find_children("*", "Button", true, false).filter(func(b): return (b as Button).text == UiText.t("shop.leave"))
 		if not leave.is_empty():
-			var lr := (leave[0] as Control).get_global_rect()
-			t.check(pr.end.y <= lr.position.y and pr.end.x > lr.position.x and pr.position.x < lr.end.x, "钱袋在【离开】正上方（%s / %s）" % [pr, lr])
+			t.check(pr.end.y <= (leave[0] as Control).get_global_rect().position.y, "钱袋在按键那行上面")
 	t.check(not p0.sold, "没卖：不盖戳")
 	t.eq(p0.custom_minimum_size.y, PriceTag.HEIGHT, "高 40")
 	var uid: int = session.item_at(0).uid
