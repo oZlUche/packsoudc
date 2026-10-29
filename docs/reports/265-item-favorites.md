@@ -25,7 +25,8 @@
 
 ### 2.3 道具显示不同
 
-- `ItemPainter.draw_favorite(canvas, def, rot, anchor, cell)`：道具图**右上角**一枚小角标（`item/fav_badge`，占格边 0.28，一个正面、无投影；没图画小星），所有走 `draw_item` 的地方都画（棋盘、仓库、货架、货位、图鉴格、书架图鉴窗、商店货位 / 随身格不画 —— 随身技能不是道具）；和锁角标（左上）、充能（左下）不撞。
+- `ItemPainter.draw_favorite(canvas, def, rot, anchor, cell)`：道具图**右上角**一枚小角标（`item/fav_badge`，占格边 0.28，一个正面、无投影；没图画小星），所有走 `draw_item` 的地方都画（棋盘、仓库、货架、货位、图鉴格、书架图鉴窗、商店货位 / 随身格不画 —— 随身技能不是道具）；和锁角标（左上）、充能（左下）不撞；**255 随身之物的小钉（`ItemPainter.draw_pin`）也在右上角** —— 两样都有时收藏角标往左让一个角标宽 + 2（UI替换美术 16:57 定）。
+- 图都放 `assets/ui/tip/`（锁、钉的角标已在那里）：`fav_on` / `fav_off`（16）、`fav_badge`（16）+ `fav_badge_2x`（32）；不用 `item/` 目录。样图 `/mnt/project-files/art/ui/fav265/fav_samples.png`（A 金星 / B 蜡封 / C 丝带，已发作者挑，推荐 A）。
 - 名字行不变色（六色稀有度那套不动）。
 
 ### 2.4 铁匠铺材料栏
@@ -51,7 +52,7 @@
 5. `recipe_scroll._mat` 挂 `HoverTip`（种类窗）。
 6. 出售三处跳过收藏；仓库筛选牌 / 图鉴筛选加「收藏」档（图鉴那档随 264 一起）。
 7. 文案：`act.favorite` / `act.unfavorite` / `tip.favorite_tip` / `meta.sell_skip_fav` 中英。
-8. 美术（UI替换美术）：`tip/fav_on`、`tip/fav_off` 16 × 16、`item/fav_badge`；没到之前代码画星。
+8. 美术（UI替换美术）：`tip/fav_on`、`tip/fav_off` 16 × 16、`tip/fav_badge`（+ `_2x`）；没到之前代码画星。
 
 ## 四、测试
 
