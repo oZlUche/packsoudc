@@ -135,3 +135,11 @@
 ## 九、测试
 
 见各节；全套 + 中英 + 三档字号各截一张出征页、仓库页、集市页交 游戏测试（新）。
+
+## 十、落地记录（第 1、2、4 条，v4.73 PR #378，2026-10-29，执行）
+
+- 出征页：「出征」页签放第一、默认选中；原「家」页改 `_pages["expedition"]`（`show_tab("home")` 留作别名）；碑在左，右边 `ExpeditionBoard` —— 「上回出征」560 × 200（`MetaState.last_character` 肖像 72 + 名、地图 · 规模、难度，开局屏出发时 `_remember_last` 写）、「军需」560 × 260（`belt_grants` 圆槽 + 数量签、`meta_buffs()` 小牌，都没有写「尚无」）、【开始探索】360 × 96（`meta.new_run` 改文案）；左下「再来一局」删。页签单选，Esc 别页回出征、出征回主菜单。
+- **与待定 3 不同**：出征页**收起**右半边仓库 —— 碑 + 560 宽木牌要 1308 宽的中列，露着仓库中列只剩 508（我线框里把右半边量窄了）。出发前配东西本来在开局屏第二页，接受这个偏差，不改。
+- 书架次级菜单：`SUB_TABS` 改按页签的字典，书架选中时滑出五颗小键（= `show_tab(格名)`，窗开着按下、关窗弹起，`_sync_shelf_sub`）。
+- 仓库页工具列：`WarehousePanel.add_rack_tools` 在包架下挂 `WarehouseTools`（筛选牌 → `WarehousePages.set_filter` → `InventoryView.dim_filter` 压灰、页签写匹配数；账牌 件数 / 总价值 / 空格）；没带回来的棋盘时粗布缩成 260 窄布（`_fit_wh_cloth`）。
+- 木牌、小牌、筛选牌、账牌先垫羊皮纸占位；美术批（plaque264 九宫格、换景、页签图标 B）与 260 补充七 下一单换上。截图 `/mnt/project-files/art/ui/base264/landed/`。
