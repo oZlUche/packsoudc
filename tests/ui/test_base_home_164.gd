@@ -67,13 +67,12 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 	var shelf: WarehousePages = screen.shelf()
 	t.not_null(shelf, "右半边有分页仓库")
 	t.check(screen._right.is_ancestor_of(shelf), "仓库在右列")
-	for k in ["warehouse", "sell"]:
-		screen.show_tab(k)
-		t.check(shelf.is_visible_in_tree(), "%s 页时仓库照常显示" % k)
+	screen.show_tab("warehouse")
+	t.check(shelf.is_visible_in_tree(), "仓库页时仓库照常显示")
 	for k in ["expedition", "shelf", "codex", "achievements", "tech"]:
 		screen.show_tab(k)
 		t.check(not shelf.is_visible_in_tree(), "178 / 229：%s 页收起仓库" % k)
-	screen.show_tab("sell")
+	screen.show_tab("warehouse")
 	screen.layout()
 	t.check(screen._right.custom_minimum_size.x >= root.get_visible_rect().size.x * 0.5 - screen.MARGIN - 1.0, "右列占半个屏宽")
 	t.eq(screen._shelf_frame.theme_type_variation, UiTheme.PANEL_SHELF, "仓库套木架框")
@@ -82,7 +81,7 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 
 
 static func frame_double_click(t: TestCase, root: Window) -> void:
-	t.begin("164 · 双击右边仓库一件按当前页：仓库（178，原来是家）→ 置入带回来的背包；出售 → 卖；家 / 图鉴 / 科技（229）→ 不做事；出售 / 科技页没有自己的仓库")
+	t.begin("164 · 双击右边仓库一件按当前页：仓库（178，原来是家）→ 置入带回来的背包；家 / 图鉴 / 科技（229）→ 不做事（268：出售页删了）")
 	ItemInstance.reset_uid_counter()
 	var f := _flow()
 	f.meta.tech_levels["warehouse"] = 3
@@ -102,12 +101,7 @@ static func frame_double_click(t: TestCase, root: Window) -> void:
 	screen.show_tab("warehouse")
 	screen._on_shelf_double_clicked(view, a.uid)
 	t.check(f.meta.board.has_item(a.uid), "178：仓库页：进了带回来的背包")
-	var b := _put(f, &"knife")
-	screen.show_tab("sell")
-	var funds := f.meta.funds
-	screen._on_shelf_double_clicked(view, b.uid)
-	t.check(not f.meta.warehouse.has_item(b.uid) and f.meta.funds > funds, "出售页：卖了（钱 %d → %d）" % [funds, f.meta.funds])
-	t.check(not ("_sell_view" in screen), "出售页不再自己画仓库")
+	t.check(not ("_sell_view" in screen) and not ("_sell_btn" in screen), "268：出售页删了")
 	var ingot := _put(f, &"steel_ingot")
 	screen.show_tab("tech")
 	var tech = screen.tech_panel()

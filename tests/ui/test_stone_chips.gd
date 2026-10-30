@@ -45,7 +45,7 @@ static func frame_settings_stone(t: TestCase, root: Window) -> void:
 
 
 static func frame_base_stone(t: TestCase, root: Window) -> void:
-	t.begin("乙 石刻：基地 —— 出售两个下拉是木牌框 + 箭头 + 浅纸弹出单、一键出售主档木牌、成就筛选木牌、科技节点木牌 + 选中圈、升级主档木牌、图鉴浅格")
+	t.begin("乙 石刻：基地 —— 筛选牌两个下拉是木牌框 + 箭头 + 浅纸弹出单、一键出售主档木牌、成就筛选木牌、科技节点木牌 + 选中圈、升级主档木牌、图鉴浅格")
 	var c = NodeScreens._content()
 	var f := Support.flow(c, PREFIX + "b", 10000.0)
 	var screen = load("res://ui/game/meta_screen.gd").new()
@@ -54,11 +54,12 @@ static func frame_base_stone(t: TestCase, root: Window) -> void:
 	screen.screen = GameFlow.Screen.META
 	root.add_child(screen)
 	screen.open({})
-	for ob: OptionButton in [screen._sell_pick, screen._sell_tag_pick]:
+	var tools: WarehouseTools = screen.warehouse_tools()     # 268：出售页删了，一键出售在仓库页工具列（两个下拉 = 筛选牌那对）
+	for ob: OptionButton in [tools.rarity_pick, tools.tag_pick]:
 		t.check(ob.theme_type_variation == UiTheme.BUTTON_HOME and ob.get_theme_icon("arrow") == UiTheme.art_cached("kit/drop_arrow"), "下拉：木牌框 + 石刻箭头")
 		var panel := ob.get_popup().get_theme_stylebox("panel") as StyleBoxTexture
 		t.check(panel != null and panel.texture == UiTheme.art_cached("kit/popup"), "弹出单是浅纸")
-	t.eq(screen._sell_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "一键出售 = 主档木牌")
+	t.eq(tools.quick_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "268：快速出售 = 主档木牌")
 	t.eq(screen._shelf.tab_variation, UiTheme.BUTTON_SETUP_TAB, "仓库分页签是开局那款挂牌木签")
 	t.eq(screen._shelf._tabs[0].custom_minimum_size.y, 60.0, "挂牌高 60")
 	t.eq(screen._shelf._tabs[0].get_theme_color("font_disabled_color"), UiTheme.SETUP_TAB_LOCKED_INK, "锁着的页名提亮")

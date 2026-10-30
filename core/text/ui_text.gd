@@ -1237,7 +1237,6 @@ const TEXT := {
 	# —— 221 F5b：base screen ——
 	"meta.tab_warehouse": {"zh": "仓库", "en": "Warehouse"},     # also the shelf title before counts arrive
 	"meta.tab_logistics": {"zh": "后勤", "en": "Logistics"},
-	"meta.tab_sell": {"zh": "出售", "en": "Sell"},
 	"market.title": {"zh": "集市", "en": "Market"},
 	"market.restock_note": {"zh": "每局回来\n换一批货", "en": "New stock\nafter every run"},
 	"market.restock_tip": {"zh": "每一局回来换一次货；双击或右键买下，买到的进仓库", "en": "New stock after every run. Double-click or right-click to buy; purchases go to the Warehouse"},
@@ -1356,7 +1355,7 @@ const TEXT := {
 	"meta.sell_blue": {"zh": "蓝色及以下", "en": "Blue and below"},
 	"meta.sell_purple": {"zh": "紫色及以下", "en": "Purple and below"},
 	"meta.sell_gold": {"zh": "金色及以下", "en": "Gold and below"},
-	"meta.sell_intro": {"zh": "出售　双击右边仓库里的一件（或包架上的一只包）卖掉；或选一档稀有度（再挑一个标签）一键卖，一键不卖包。回定价的 %d%%，钱进局外，可用于科技", "en": "Sell · Double-click an item in the Warehouse on the right (or a bag on the Bag Rack) to sell it, or pick a rarity (and a tag if you like) and sell them all at once; selling all never touches bags. You get %d%% of the price; the coins stay at your base for tech"},
+	"meta.sell_intro": {"zh": "卖掉筛选牌筛中的，跳过锁定和收藏的，不卖包。回定价的 %d%%，钱进局外，可用于科技", "en": "Sells everything the filter shows, except locked and favorite items; never bags. You get %d%% of the price; the coins stay at your base for tech"},     # 268：键挪到仓库页工具列
 	"meta.sell_all": {"zh": "一键出售", "en": "Sell all"},
 	"meta.sell_any_tag": {"zh": "不限标签", "en": "Any tag"},
 	"meta.sold_one": {"zh": "卖掉「%s」，得 %d 币；现在有 %d 币", "en": "Sold \"%s\" for %d coins; you now have %d coins"},
@@ -1454,6 +1453,18 @@ const TEXT := {
 	"wh.ground_tab": {"zh": "地上", "en": "Ground"},     # 255 补充二：setup page 2, the extra page at the end of the warehouse tabs
 	"wh.tab_locked_tip": {"zh": "%s到第 %d 级解锁", "en": "Unlocks at %s level %d"},
 	"wh.tab_tip": {"zh": "第%s页　%d 件", "en": "Page %s · items: %d"},
+	"wh.tab_picked": {"zh": "%d/%d", "en": "%d/%d"},     # 268：勾选模式，页签第二行 勾了 / 本页
+	"wh.tab_picked_tip": {"zh": "第%s页　勾了 %d 件 / 共 %d 件", "en": "Page %s · selected %d of %d"},
+	"wh.quick_sell": {"zh": "快速出售", "en": "Quick sell"},
+	"wh.quick_sell_tip": {"zh": "点右边仓库里的道具勾上要卖的，再按一次退出", "en": "Click items in the Warehouse to pick what to sell; press again to stop"},
+	"sell.sheet_title": {"zh": "出售单", "en": "Sell list"},
+	"sell.select_all": {"zh": "全选", "en": "Select all"},
+	"sell.select_none": {"zh": "全不选", "en": "Select none"},
+	"sell.picked": {"zh": "已选 %d 件 ·", "en": "Selected: %d ·"},
+	"sell.go": {"zh": "出售", "en": "Sell"},
+	"sell.cancel": {"zh": "取消", "en": "Cancel"},
+	"sell.no_locked": {"zh": "%s 锁着，不卖", "en": "%s is locked; it won't be sold"},
+	"sell.no_fav": {"zh": "%s 是收藏，不卖", "en": "%s is a favorite; it won't be sold"},
 	"wh.store_all": {"zh": "一键置入", "en": "Put all away"},
 	"wh.tidy": {"zh": "整理", "en": "Tidy"},
 	"wh.stored": {"zh": "放进 %d 件", "en": "Put away: %d"},

@@ -226,7 +226,7 @@ static func frame_drag_into_rack(t: TestCase, root: Window) -> void:
 
 
 static func frame_sell_bag(t: TestCase, root: Window) -> void:
-	t.begin("225 · 基地：仓库页最左一列是包架；出售页有包架，双击卖一只进钱")
+	t.begin("225 · 基地：仓库页最左一列是包架；268：包架悬浮窗「出售 N 币」卖一只进钱（双击仍是置入）")
 	ItemInstance.reset_uid_counter()
 	var f := _flow()
 	f.meta.grant_bags([f.items.get_def(&"sack"), f.items.get_def(&"sack"), f.items.get_def(&"bag_small")])
@@ -241,13 +241,17 @@ static func frame_sell_bag(t: TestCase, root: Window) -> void:
 	var wh = screen._wh
 	t.check(wh.rack_view() != null and wh.rack_view().container() == f.meta.rack, "仓库页有包架")
 	t.check(wh.rack_room() > 0.0, "包架占了宽度")
-	var view: BagRackView = screen.sell_rack_view()
-	t.check(view != null and view.container() == f.meta.rack, "出售页有包架")
+	var view: BagRackView = wh.rack_view()
 	t.eq(view.slot_count(), 2, "两种包两格")
 	var funds := f.meta.funds
 	var uid: int = view.uid_at_local(view.slot_rect(0).get_center())
 	t.check(uid >= 0, "第一格有包")
-	view.item_double_clicked.emit(view, uid)
+	var acts: Array = view.actions_for.call(uid)
+	t.eq(acts.size(), 1, "包架悬浮窗一颗键")
+	var act := acts[0] as ItemActions.Action
+	t.eq(act.id, &"sell", "是出售")
+	t.eq(act.label, UiText.t("act.sell") % MetaState.sell_price_of(f.meta.rack.get_item(uid), f.sell_ratio()), "写着卖价")
+	act.run.call()
 	t.check(f.meta.funds > funds, "卖了进钱（%d → %d）" % [funds, f.meta.funds])
 	t.eq(f.meta.rack.count_of(&"sack"), 1, "粗麻袋剩一只")
 	t.check(screen.notice_layer().current_text() != "", "出售行说了一句")
