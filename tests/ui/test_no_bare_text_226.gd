@@ -141,7 +141,7 @@ static func frame_out_of_run_screens(t: TestCase, root: Window) -> void:
 			mf.meta.warehouse.try_add(ItemInstance.create(def))
 	var base = Drawer139._screen(mf, root)
 	bad.append_array(audit(base, "基地家"))
-	for tab in ["warehouse", "sell", "tech", "codex", "achievements"]:
+	for tab in ["warehouse", "market", "smithy", "tech", "codex", "achievements"]:
 		base.show_tab(tab)
 		bad.append_array(audit(base, "基地 %s" % tab))
 	base.free()

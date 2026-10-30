@@ -161,13 +161,13 @@ static func frame_base_pages(t: TestCase, root: Window) -> void:
 	var base = Drawer139._screen(f, root)
 	var bad: Array[String] = audit(base, "基地家")
 	var seen := 0
-	for tab in ["warehouse", "sell"]:
+	for tab in ["warehouse"]:     # 268：出售页删了
 		base.show_tab(tab)
 		bad.append_array(audit(base, "基地 %s" % tab))
 		for c in base.find_children("*", "InventoryView", true, false):
 			if (c as InventoryView).is_visible_in_tree() and not (c as InventoryView).ground.is_empty():
 				seen += 1
-	t.check(seen > 0, "仓库页 / 出售页有棕底棋盘（%d）" % seen)
+	t.check(seen > 0, "仓库页有棕底棋盘（%d）" % seen)
 	t.eq(bad, [] as Array[String], "都有外框")
 	var bare := InventoryView.new()
 	bare.inventory = GridInventory.new(Vector2i(3, 3), 0, false)

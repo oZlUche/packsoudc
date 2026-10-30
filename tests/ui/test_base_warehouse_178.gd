@@ -69,16 +69,16 @@ static func frame_warehouse_page(t: TestCase, root: Window) -> void:
 
 
 static func frame_shelf_hidden(t: TestCase, root: Window) -> void:
-	t.begin("178 · 图鉴 / 成就页收起右半边，中列宽 = 全宽减左列；切回出售页右半边回来、翻到的那页不变；调试台箭头还在")
+	t.begin("178 · 图鉴 / 成就页收起右半边，中列宽 = 全宽减左列；切回仓库页右半边回来、翻到的那页不变；调试台箭头还在")
 	var f := _flow()
 	f.meta.tech_levels["warehouse"] = 3
 	f.derive_techs()
 	var screen = _screen(f, root)
 	var full: Vector2 = root.get_visible_rect().size
 	var shelf: WarehousePages = screen.shelf()
-	screen.show_tab("sell")
+	screen.show_tab("warehouse")
 	screen.layout()
-	t.check(screen._sell_pick.get_parent().get_combined_minimum_size().x <= screen.middle_width(full), "出售那一行不撑宽中列（%.0f ≤ %.0f；游戏测试 v3.84：右边仓库被挤出屏）" % [screen._sell_pick.get_parent().get_combined_minimum_size().x, screen.middle_width(full)])
+	t.check(screen._wh.get_combined_minimum_size().x <= screen.middle_width(full), "268：工具列加了一键出售也不撑宽中列（%.0f ≤ %.0f）" % [screen._wh.get_combined_minimum_size().x, screen.middle_width(full)])
 	t.check(shelf.tab_count() > 1, "有好几页（%d）" % shelf.tab_count())
 	shelf.show_page(1)
 	var shown_w: float = screen.middle_width(full)
@@ -94,9 +94,9 @@ static func frame_shelf_hidden(t: TestCase, root: Window) -> void:
 	var wide: int = screen.codex_columns()
 	screen.fit_codex_to_width(shown_w)
 	t.check(wide > screen.codex_columns(), "图鉴吃满宽多排几列（%d > %d）" % [wide, screen.codex_columns()])
-	screen.show_tab("sell")
+	screen.show_tab("warehouse")
 	screen.layout()
-	t.check(screen._right.visible and shelf.is_visible_in_tree(), "切回出售：右半边回来")
+	t.check(screen._right.visible and shelf.is_visible_in_tree(), "切回仓库：右半边回来")
 	t.eq(shelf.current(), 1, "翻到的那页不变")
 	t.eq(screen.middle_width(full), shown_w, "中列宽回原样")
 	screen.queue_free()

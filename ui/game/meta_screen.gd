@@ -30,10 +30,10 @@ const TAB_ICON_ART := "home/tabs/tab_"
 ## 262（作者 14:19）：集市、铁匠铺默认就有，和出售并成「后勤」一页；261 补充一（作者 16:37）：科技并进书架 —— 左列只剩 仓库 / 后勤 / 书架
 ## 264（作者 16:43「按推荐来」）：加「出征」放第一、默认选中（军功碑 + 上回出征 + 军需 + 【开始探索】），「家」页没了 —— 页签单选
 const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_warehouse"], ["logistics", "meta.tab_logistics"], ["shelf", "meta.tab_shelf"]]
-## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出三颗缩进的小键（分页名、字）；三页本身一个像素不动。
+## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
-	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["sell", "meta.tab_sell"]],
+	"logistics": [["market", "market.title"], ["smithy", "smithy.title"]],
 	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"], ["tech", "meta.sub_tech"]],
 }
 const SUB_TAB_SIZE := Vector2(170, 44)
@@ -62,6 +62,8 @@ var _expedition: ExpeditionBoard = null
 var _new_run_btn: Button
 ## 264 §六：仓库页包架下面的筛选牌与账牌
 var _wh_tools: WarehouseTools = null
+## 268 补充一：快速出售的出售单
+var _sell_sheet: SellSheet = null
 var _wh_page: PanelContainer = null
 ## 264 §三：整屏背景那张图、现在铺的是哪张、淡入中的上层
 var _home_bg: TextureRect = null
@@ -250,7 +252,14 @@ func open(payload: Dictionary) -> void:
 	wh_col.add_child(_wh)
 	_wh_tools = WarehouseTools.new()     # 264 §六：包架下面筛选牌 + 账牌
 	_wh.add_rack_tools(_wh_tools)
-	_wh_tools.setup(m, _shelf)
+	_wh_tools.setup(flow, _shelf)     # 268：两块牌中间加【快速出售】
+	_sell_sheet = SellSheet.new()     # 268 补充一：出售模式的出售单，挂在【快速出售】下面，模式里才露
+	_sell_sheet.setup(flow, _shelf, say)
+	_sell_sheet.visible = false
+	_wh_tools.set_sell_mode(false, _sell_sheet)
+	_wh_tools.sell_mode_toggled.connect(set_sell_mode)
+	_sell_sheet.cancelled.connect(func(): set_sell_mode(false))
+	_shelf.refused.connect(_on_pick_refused)
 	m.changed.connect(_fit_wh_cloth)
 
 	if _drawer != null:
@@ -259,7 +268,7 @@ func open(payload: Dictionary) -> void:
 	# 图鉴页、成就页（091）
 	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
-	for pair in [["sell", _build_sell], ["market", _build_market], ["smithy", _build_smithy]]:
+	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
 		if backdrop_of(pair[0]) != UiTheme.ART_HOME_BG:
 			cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
@@ -299,13 +308,43 @@ const WH_NARROW := 260.0
 func _fit_wh_cloth() -> void:
 	if _wh_page == null or _wh == null:
 		return
-	var wide: bool = _wh.has_board()
+	var wide: bool = _wh.has_board() or sell_mode()     # 268：出售单比窄布宽
 	_wh_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL if wide else Control.SIZE_SHRINK_BEGIN
 	_wh_page.custom_minimum_size.x = 0.0 if wide else WH_NARROW
 
 
 func warehouse_tools() -> WarehouseTools:
 	return _wh_tools
+
+
+#region 268 补充一：快速出售模式
+## 开 / 关：【快速出售】按下态、出售单露出（筛选牌收起、包架与带回来的背包板收起）、右边仓库进勾选模式；关了勾选全清、筛选牌的筛选还原
+func set_sell_mode(on: bool) -> void:
+	if _sell_sheet == null or on == sell_mode():
+		_wh_tools.set_sell_mode(sell_mode(), _sell_sheet)
+		return
+	if on:
+		_sell_sheet.open()
+	else:
+		_sell_sheet.close()
+	_wh.set_sell_mode(on)
+	_wh_tools.set_sell_mode(on, _sell_sheet)
+	_fit_wh_cloth()
+	layout.call_deferred()
+
+
+func sell_mode() -> bool:
+	return _shelf != null and _shelf.select_mode
+
+
+func sell_sheet() -> SellSheet:
+	return _sell_sheet
+
+
+## 点了一件勾不上的：告示说为什么
+func _on_pick_refused(item: ItemInstance) -> void:
+	say(UiText.t("sell.no_locked" if item.is_locked_by_player() else "sell.no_fav") % Names.of(item.def))
+#endregion
 
 
 func expedition_board() -> ExpeditionBoard:
@@ -326,6 +365,8 @@ func layout() -> void:
 	_right.custom_minimum_size.x = half
 	_margin.add_theme_constant_override("margin_right", int(MARGIN + right_gutter()))
 	var mid_w := middle_width(screen)
+	if _sell_sheet != null:
+		_sell_sheet.fit_width(mid_w - 50.0)     # 268：粗布内边距 + 余量
 	if _wh != null and flow.meta.board != null:
 		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0 - _wh.rack_room() - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(CharacterDef.BOARD_MAX_W, flow.meta.board.size.x))))))
 
@@ -371,13 +412,10 @@ func _refresh_shelf_title() -> void:
 		_shelf_title.tooltip_text = UiText.t("meta.shelf_title") % [UiText.count(flow.meta.warehouse.item_count(), "unit.item"), UiText.count(flow.meta.warehouse.page_count(), "unit.page")]
 
 
-## 双击右边仓库的一件：按当前页 —— 仓库 → 置入带回来的背包（178：原来在家页）；出售 → 卖；家 → 不做事（229：科技页收起了仓库，上交走材料行的【交 k】）
+## 双击右边仓库的一件：仓库页 → 置入带回来的背包（178：原来在家页）；别的页不做事（268：出售页删了，卖走悬浮窗或工具列一键出售）
 func _on_shelf_double_clicked(view: ContainerView, uid: int) -> void:
-	match page():
-		"warehouse":
-			_wh.quick_move(view, uid)
-		"sell":
-			sell(uid)
+	if page() == "warehouse":
+		_wh.quick_move(view, uid)
 #endregion
 
 
@@ -584,134 +622,9 @@ func _sync_shelf_sub() -> void:
 #endregion
 
 
-#region 出售（091，作者定：基地内商店）
-## 「白色 / 绿色及以下 / … / 全部」→ 稀有度上限（-1 = 全部）
-const SELL_FILTERS := [["meta.sell_white", 0], ["meta.sell_green", 1], ["meta.sell_blue", 2], ["meta.sell_purple", 3], ["meta.sell_gold", 4], ["meta.all", -1]]
-## 乙 石刻：「一键出售」主档木牌两行字、成就筛选木牌的字号
-const SELL_BTN_FONT := 20
+#region 出售（091；268：出售页删了，一键出售在仓库页工具列 [WarehouseTools]，卖包在包架悬浮窗 [method WarehousePanel.sell_bag]）
+## 成就筛选木牌的字号
 const ACH_FILTER_FONT := 16
-var _sell_filter: int = 0
-var _sell_pick: OptionButton = null
-## 177 补 1.2：标签下拉（单选，待定补 1 选 A；&"" = 不限标签）
-var _sell_tag: StringName = &""
-var _sell_tag_pick: OptionButton = null
-var _sell_btn: Button = null
-var _sell_preview := ""
-## 225：出售页的包架（双击卖一只）
-var _sell_rack: Control = null
-
-
-## 基地商店：卖掉仓库里的东西 —— 双击右边仓库的一件卖一件（164：这一页不再自己画仓库），或按稀有度一键卖。得的钱进局外的钱（作者：暂无出售效果，先攒着）
-func _build_sell(root: Control) -> Control:
-	var page := _vbox(8)
-	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(page)
-	var row := HFlowContainer.new()     # 游戏测试 v3.84：一行排不下时折行，不把中列撑宽、把右边仓库挤出屏
-	page.add_child(row)
-	_sell_pick = OptionButton.new()
-	for i in SELL_FILTERS.size():
-		_sell_pick.add_item(UiText.t(String(SELL_FILTERS[i][0])), i)
-	_sell_pick.item_selected.connect(set_sell_filter)
-	UiTheme.dress_wood_option(_sell_pick)     # 乙 石刻：木牌框 + 箭头 + 浅纸弹出单
-	row.add_child(_sell_pick)
-	_sell_tag_pick = OptionButton.new()
-	_sell_tag_pick.item_selected.connect(func(i: int): set_sell_tag(StringName(String(_sell_tag_pick.get_item_metadata(i)))))
-	UiTheme.dress_wood_option(_sell_tag_pick)
-	row.add_child(_sell_tag_pick)
-	# 美术设计 20:38：一行放不下（两个下拉 + 预览 + 大按钮把中列撑宽，右边仓库被挤出屏幕）—— 预览与按钮另起一行
-	var row2 := _hbox(10)
-	row2.alignment = BoxContainer.ALIGNMENT_END
-	page.add_child(row2)
-	var sell_btn := UiTheme.make_home_button(UiText.t("meta.sell_all"), func(): sell_filtered(), true, Vector2.ZERO, SELL_BTN_FONT)     # 乙 石刻：主档木牌
-	_sell_btn = sell_btn     # 226 批三：「会卖 N 件，得 N 币」写在按钮第二行
-	sell_btn.tooltip_text = UiText.t("meta.sell_intro") % int(round(flow.sell_ratio() * 100))     # 226 批二：说明那段与行首「一键出售」删了，卖价比例进按钮悬浮窗
-	row2.add_child(sell_btn)
-	# 225：包架也是货源 —— 双击一只卖掉（一键出售不碰包：包是装备不是战利品）
-	_sell_rack = BagRackView.boxed(flow.meta.rack, font)
-	_sell_rack.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	page.add_child(_sell_rack)
-	BagRackView.view_in(_sell_rack).item_double_clicked.connect(func(_v: ContainerView, uid: int): sell_bag(uid))
-	BagRackView.view_in(_sell_rack).actions_for = func(uid: int) -> Array:     # 230：出售页的包架 = 出售 N 币
-		var inst := flow.meta.rack.get_item(uid)
-		return [ItemActions.sell(inst, MetaState.sell_price_of(inst, flow.sell_ratio()), sell_bag)] if inst != null else []
-	flow.meta.warehouse.changed.connect(_on_sell_stock_changed)
-	flow.meta.changed.connect(_refresh_sell)     # 265：收藏变了，预览里「跳过收藏」跟着变
-	_rebuild_sell_tags()
-	set_sell_filter(0)
-	return page
-
-
-## 选一档（SELL_FILTERS 的下标）
-func set_sell_filter(i: int) -> void:
-	_sell_filter = clampi(i, 0, SELL_FILTERS.size() - 1)
-	if _sell_pick != null:
-		_sell_pick.select(_sell_filter)
-	_refresh_sell()
-
-
-func sell_filter_max() -> int:
-	return int(SELL_FILTERS[_sell_filter][1])
-
-
-## 177 补 1.2：选一个标签（&"" = 不限）；仓库里已经没有这个标签的道具就回「不限」
-func set_sell_tag(tag: StringName) -> void:
-	_sell_tag = tag if flow.meta.sell_tags().has(tag) else &""
-	_sync_sell_tag_pick()
-	_refresh_sell()
-
-
-func sell_filter_tag() -> StringName:
-	return _sell_tag
-
-
-## 标签下拉现在列的标签（不含「不限标签」，测试读）
-func sell_tag_options() -> Array:
-	var out: Array = []
-	if _sell_tag_pick == null:
-		return out
-	for i in _sell_tag_pick.item_count:
-		var tag := String(_sell_tag_pick.get_item_metadata(i)) if not _sell_tag_pick.is_item_separator(i) else ""
-		if tag != "":
-			out.append(StringName(tag))
-	return out
-
-
-## 仓库变了：标签下拉重建，预览重算
-func _on_sell_stock_changed() -> void:
-	_rebuild_sell_tags()
-	_refresh_sell()
-
-
-## 按仓库里现有的标签重建下拉（按大类分组，组间一条分隔）；选中的没了回「不限」
-func _rebuild_sell_tags() -> void:
-	if _sell_tag_pick == null:
-		return
-	var tags := flow.meta.sell_tags()
-	if not tags.has(_sell_tag):
-		_sell_tag = &""
-	_sell_tag_pick.clear()
-	_sell_tag_pick.add_item(UiText.t("meta.sell_any_tag"))
-	_sell_tag_pick.set_item_metadata(0, "")
-	var last_rank := -1
-	for t in tags:
-		var rank := TagRegistry.category_rank(t)
-		if last_rank >= 0 and rank != last_rank:
-			_sell_tag_pick.add_separator()
-		last_rank = rank
-		_sell_tag_pick.add_item(Glossary.tag_name(t))
-		_sell_tag_pick.set_item_metadata(_sell_tag_pick.item_count - 1, String(t))
-	_sync_sell_tag_pick()
-
-
-## 下拉上显示的跟着 [member _sell_tag]
-func _sync_sell_tag_pick() -> void:
-	if _sell_tag_pick == null:
-		return
-	for i in _sell_tag_pick.item_count:
-		if not _sell_tag_pick.is_item_separator(i) and String(_sell_tag_pick.get_item_metadata(i)) == String(_sell_tag):
-			if _sell_tag_pick.selected != i:
-				_sell_tag_pick.select(i)
-			return
 
 
 ## 卖掉仓库里的一件；返回得了多少（没这件 -1）
@@ -722,50 +635,6 @@ func sell(uid: int) -> int:
 	if got >= 0:
 		say(UiText.t("meta.sold_one") % [name, got, flow.meta.funds])     # 226 批一：卖出回话走告示卷轴
 	return got
-
-
-## 225：卖包架上的一只；返回得了多少（没这只 -1）
-func sell_bag(uid: int) -> int:
-	var inst := flow.meta.rack.get_item(uid)
-	var name := Names.of(inst.def) if inst != null else ""
-	var got := flow.sell_bag(uid)
-	if got >= 0:
-		say(UiText.t("meta.sold_one") % [name, got, flow.meta.funds])
-	return got
-
-
-## 225：出售页的包架视图（测试看）
-func sell_rack_view() -> BagRackView:
-	return BagRackView.view_in(_sell_rack) if _sell_rack != null else null
-
-
-## 按当前那一档一键卖；返回 {"count", "funds"}
-func sell_filtered() -> Dictionary:
-	var got := flow.sell_where(sell_filter_max(), _sell_tag)
-	var text := UiText.t("meta.sold_many") % [int(got["count"]), int(got["funds"]), flow.meta.funds] if int(got["count"]) > 0 else UiText.t("meta.nothing_to_sell")
-	var skipped := flow.meta.locked_matching(sell_filter_max(), _sell_tag)
-	if skipped > 0:
-		text += UiText.t("meta.sell_skipped") % skipped     # 230
-	var kept := flow.meta.favorite_matching(sell_filter_max(), _sell_tag)
-	if kept > 0:
-		text += UiText.tn("meta.sell_skip_fav", kept) % kept     # 265
-	say(text)
-	return got
-
-
-func sell_preview_text() -> String:
-	return _sell_preview
-
-
-func _refresh_sell() -> void:
-	if _sell_btn == null:
-		return
-	var p := flow.meta.sell_preview(sell_filter_max(), flow.sell_ratio(), _sell_tag)
-	_sell_preview = UiText.t("meta.sell_preview") % [int(p["count"]), int(p["funds"])]
-	var kept := flow.meta.favorite_matching(sell_filter_max(), _sell_tag)
-	if kept > 0:
-		_sell_preview += UiText.tn("meta.sell_skip_fav", kept) % kept     # 265：预览写跳过几件收藏
-	_sell_btn.text = UiText.t("meta.sell_all") + "\n" + _sell_preview
 #endregion
 
 
@@ -1243,7 +1112,7 @@ func shelf_window(key: String) -> Control:
 
 
 ## 切页："expedition"（出征，默认；264 前叫家，"home" 留作别名）/ "warehouse" / "logistics" / "shelf"；261：老名字 "codex" / "achievements" / "tech" = 书架 + 开那扇窗。
-## 262：分页名 "market" / "smithy" / "sell" = 后勤 + 那个分页；"logistics" 落上次看的分页。
+## 262：分页名 "market" / "smithy" = 后勤 + 那个分页；"logistics" 落上次看的分页。268："sell"（出售页删了）落仓库页。
 ## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
 ## 264 §三：中列这一页该铺哪张整屏背景（集市 / 铁匠铺有场景图用场景图，否则基地底图）
 static func backdrop_of(page_name: String) -> String:
@@ -1287,6 +1156,10 @@ func show_tab(name: String) -> void:
 		return
 	close_shelf()
 	var was := page()
+	if name == "sell":
+		name = "warehouse"
+	if name != "warehouse" and sell_mode():
+		set_sell_mode(false)     # 268：离开仓库页就退出售模式
 	if _sub_btns.has(name):
 		_sub = name
 		name = "logistics"
@@ -1300,7 +1173,7 @@ func show_tab(name: String) -> void:
 	for key in _pages:
 		(_pages[key] as Control).visible = key == shown
 	if _right != null:
-		_right.visible = not (NO_SHELF_TABS.has(shown) or FULL_TABS.has(shown))     # 262：后勤按分页算（出售露仓库，集市 / 铁匠铺收起）
+		_right.visible = not (NO_SHELF_TABS.has(shown) or FULL_TABS.has(shown))     # 262：后勤的集市 / 铁匠铺收起
 	for key in _tab_btns:
 		var b := _tab_btns[key] as Button
 		b.set_pressed_no_signal(key == name)
@@ -1342,6 +1215,9 @@ func page() -> String:
 
 ## 090：Esc = 返回上一级 —— 在别的页先回出征页（264 前是家），出征页再回主菜单
 func escape() -> bool:
+	if sell_mode():     # 268：先退出售模式
+		set_sell_mode(false)
+		return true
 	if _shelf_open != "":
 		close_shelf()
 		return true

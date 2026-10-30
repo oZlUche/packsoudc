@@ -63,6 +63,7 @@ var board_cell := 0.0
 var _buttons: HBoxContainer = null
 ## 230：悬浮窗「出售」怎么卖一件（`func(uid) -> int`）；基地屏换成自己的（写出售页那一行）。不给 = 直接卖、存档
 var sell_one: Callable = Callable()
+var _sell_mode := false
 
 
 ## [param shelf] / [param drag] 给了 = 基地「家」页（仓库在别处、拖拽层是整屏那一层）
@@ -136,6 +137,8 @@ func _build() -> void:
 		_drag.register_view(_shelf.view)
 		_shelf.view.item_double_clicked.connect(quick_move)
 		_shelf.view.actions_for = func(uid: int) -> Array: return warehouse_actions(uid, true)     # 230
+	else:
+		_rack_view.actions_for = rack_actions     # 268：基地「仓库」页的包架能卖包（出售页删了）；结算页不卖
 	_shelf.page_changed.connect(func(_i: int): _refresh())     # 「整理」只管当前页：翻页了按钮跟着亮灭
 	_rebuild_board_view()
 
@@ -174,7 +177,7 @@ func _rebuild_board_view() -> void:
 	if _meta.board == null:
 		_board_box.visible = false
 		return
-	_board_box.visible = true
+	_board_box.visible = not _sell_mode
 	_board_view = InventoryView.new()
 	_board_view.label_font = _font
 	_board_view.inventory = _meta.board
@@ -372,6 +375,30 @@ func warehouse_actions(uid: int, with_quick: bool) -> Array:
 	out.append(ItemActions.sell(inst, price_of.call(inst), seller))
 	out.append(ItemActions.sell_same(inst, _meta.warehouse, price_of, seller))
 	return out
+
+
+## 268 补充一：快速出售模式里包架与带回来的背包板收起（模式只管仓库），退出再露
+func set_sell_mode(on: bool) -> void:
+	_sell_mode = on
+	_rack_box.visible = not on
+	_board_box.visible = not on and _meta.board != null
+
+
+## 268：包架上一只：出售 N 币（双击仍是置入）
+func rack_actions(uid: int) -> Array:
+	var inst := _meta.rack.get_item(uid)
+	return [ItemActions.sell(inst, MetaState.sell_price_of(inst, _flow.sell_ratio()), sell_bag)] if inst != null else []
+
+
+## 225：卖包架上的一只；返回得了多少（没这只 -1）。268：从出售页搬来
+func sell_bag(uid: int) -> int:
+	var inst := _meta.rack.get_item(uid)
+	var name := Names.of(inst.def) if inst != null else ""
+	var got := _flow.sell_bag(uid)
+	if got >= 0:
+		_say(UiText.t("meta.sold_one") % [name, got, _meta.funds])
+		changed.emit()
+	return got
 
 
 func _sell(uid: int) -> int:
