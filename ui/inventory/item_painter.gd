@@ -273,6 +273,38 @@ static func top_right_badge(def: ItemDef, rot: int, anchor: Vector2, cell: float
 	return Rect2(anchor + Vector2(best) * cell + Vector2(cell * (1.0 - LOCK_INSET) - side, cell * LOCK_INSET), Vector2(side, side))
 
 
+## 268：快速出售里勾了的 —— 当前朝向脚印最靠左下的那一格（y 最大、再 x 最小）左下角往里 8% 一枚金勾（`tip/check_badge`，大格 `_2x`，
+## 美术没出前代码画：深圆片 + 金勾），边长同小锁。画了返回 true
+static func draw_check(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+	var r := check_rect(inst, rot, anchor, cell)
+	if r.size == Vector2.ZERO:
+		return false
+	var tex := UiTheme.art_cached("tip/check_badge_2x" if r.size.x > LOCK_SIDE else "tip/check_badge")
+	if tex != null:
+		canvas.draw_texture_rect(tex, r, false, modulate)
+		return true
+	var c := r.get_center()
+	var rad := r.size.x * 0.5
+	canvas.draw_circle(c, rad, Color("2a1d12") * modulate)
+	canvas.draw_polyline(PackedVector2Array([c + Vector2(-0.5, 0.0) * rad, c + Vector2(-0.12, 0.4) * rad, c + Vector2(0.55, -0.42) * rad]), Color("d4a84f") * modulate, maxf(1.5, rad * 0.32), true)
+	return true
+
+
+## 勾画在哪（没形状给空矩形）
+static func check_rect(inst: ItemInstance, rot: int, anchor: Vector2, cell: float) -> Rect2:
+	if inst == null or inst.def == null or inst.def.shape == null:
+		return Rect2()
+	var best := Vector2i(1 << 20, -1)
+	for c in inst.def.shape.cells_rotated(rot):
+		if c.y > best.y or (c.y == best.y and c.x < best.x):
+			best = c
+	var side := CHECK_SIDE * cell / InventoryView.CELL
+	return Rect2(anchor + Vector2(best.x, best.y + 1) * cell + Vector2(cell * LOCK_INSET, -cell * LOCK_INSET - side), Vector2(side, side))
+
+
+const CHECK_SIDE := 20.0
+
+
 ## 265：收藏了的种类（[ItemFavorites]）—— 右上角一枚星（`tip/fav_badge`，大格 `_2x`，美术没出前画一颗金星）；
 ## 这一件也是随身之物（小钉在同一角）就往左让一个角标宽 + 2（UI替换美术 16:57）。没收藏不画；画了返回 true
 static func draw_favorite(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:

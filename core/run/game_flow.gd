@@ -831,6 +831,14 @@ func sell_where(max_rarity: int, tag: StringName = &"") -> Dictionary:
 	return got
 
 
+## 268：快速出售勾了的那几件
+func sell_selected(uids: Array) -> Dictionary:
+	var got := meta.sell_selected(uids, sell_ratio())
+	if int(got["count"]) > 0:
+		save_meta()
+	return got
+
+
 ## 局外 buff 的开关（占位：将来由任务系统、局外科技决定）。改了就存
 func toggle_meta_buff(id: StringName) -> bool:
 	var on := meta.toggle_buff(id)

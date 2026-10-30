@@ -620,6 +620,26 @@ func sell_where(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") -> D
 	return out
 
 
+## 268：快速出售 —— 卖掉勾了的那几件（逐件 [method sell_item]）；锁着 / 收藏的跳过、记数。返回 {"count", "funds", "locked", "favorite"}
+func sell_selected(uids: Array, ratio: float = 0.5) -> Dictionary:
+	var out := {"count": 0, "funds": 0, "locked": 0, "favorite": 0}
+	for uid in uids:
+		var it := warehouse.get_item(int(uid))
+		if it == null:
+			continue
+		if it.is_locked_by_player():
+			out["locked"] = int(out["locked"]) + 1
+			continue
+		if is_favorite(it.def.id):
+			out["favorite"] = int(out["favorite"]) + 1
+			continue
+		var got := sell_item(it.uid, ratio)
+		if got >= 0:
+			out["count"] = int(out["count"]) + 1
+			out["funds"] = int(out["funds"]) + got
+	return out
+
+
 ## 230：一键出售这一档里锁着、被跳过的有几件
 func locked_matching(max_rarity: int, tag: StringName = &"") -> int:
 	var n := 0

@@ -334,7 +334,7 @@ static func frame_english_base_screens(t: TestCase, root: Window) -> void:
 			f.meta.warehouse.try_add(ItemInstance.create(def))
 	var base = Drawer139._screen(f, root)
 	_no_han(t, "base home", _texts(base))
-	for tab in ["warehouse", "sell", "tech", "codex", "achievements"]:
+	for tab in ["warehouse", "market", "smithy", "tech", "codex", "achievements"]:
 		base.show_tab(tab)
 		_no_han(t, "base %s" % tab, _texts(base))
 	base.queue_free()

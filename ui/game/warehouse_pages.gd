@@ -6,6 +6,10 @@ class_name WarehousePages
 extends HBoxContainer
 
 signal page_changed(index: int)
+## 268：快速出售的勾选变了
+signal selection_changed
+## 268：点了一件勾不上的（锁着 / 收藏）
+signal refused(item: ItemInstance)
 
 const TAB_W := 52.0
 const TAB_H := 52.0
@@ -49,6 +53,9 @@ var filter_tag: StringName = &""
 var filter_rarity := -1
 ## 265：只看收藏
 var filter_fav := false
+## 268：快速出售的勾选模式 —— 单击格子勾 / 取消（[member selected]，uid → true，跨页）；锁定 / 收藏的压灰、勾不上
+var select_mode := false
+var selected: Dictionary = {}
 
 
 ## [param plan] 见 [method TechWarehousePages.plan_of]（空 = 只列已有的页）
@@ -84,6 +91,9 @@ func setup(p_warehouse: Warehouse, font: Font, p_drag: DragLayer = null, plan: D
 
 
 func _finish_setup() -> void:
+	view.selected = selected
+	view.item_picked.connect(func(_v: InventoryView, uid: int): toggle_select(uid))
+	warehouse.changed.connect(_prune_selection)
 	warehouse.changed.connect(_refresh)
 	_refresh()
 
@@ -251,10 +261,15 @@ func set_filter(tag: StringName, rarity_max: int, fav_only: bool = filter_fav) -
 	filter_tag = tag
 	filter_rarity = rarity_max
 	filter_fav = fav_only
-	if view != null:
-		view.dim_filter = matches if filtering() else Callable()
-		view.queue_redraw()
+	_apply_dim()
 	_refresh()
+
+
+func _apply_dim() -> void:
+	if view == null:
+		return
+	view.dim_filter = (func(it: ItemInstance) -> bool: return matches(it) and can_select(it)) if select_mode else (matches if filtering() else Callable())
+	view.queue_redraw()
 
 
 func filtering() -> bool:
@@ -277,6 +292,120 @@ func match_count(i: int) -> int:
 	return page.items().filter(func(it) -> bool: return matches(it as ItemInstance)).size()
 
 
+#region 268 快速出售的勾选
+## 开 / 关勾选模式（关了勾选全清）
+func set_select_mode(on: bool) -> void:
+	select_mode = on
+	if not on:
+		selected.clear()
+	if view != null:
+		view.select_mode = on
+	_apply_dim()
+	_refresh()
+	selection_changed.emit()
+
+
+## 这件能不能勾：锁着的、收藏的不卖
+static func can_select(item: ItemInstance) -> bool:
+	return item != null and not item.is_locked_by_player() and not ItemFavorites.has(item.def.id)
+
+
+## 勾 / 取消一件；勾不上（不在仓库、锁着、收藏）返回 false（持有方说原因）
+func toggle_select(uid: int) -> bool:
+	var it := warehouse.get_item(uid) if warehouse != null else null
+	if not select_mode or it == null:
+		return false
+	if selected.has(uid):
+		selected.erase(uid)
+	elif can_select(it):
+		selected[uid] = true
+	else:
+		refused.emit(it)
+		return false
+	_changed_selection()
+	return true
+
+
+## 全选：所有页里合筛选、能勾的全勾上；返回勾了几件
+func select_matching() -> int:
+	selected.clear()
+	for it in warehouse.items():
+		if matches(it as ItemInstance) and can_select(it as ItemInstance):
+			selected[(it as ItemInstance).uid] = true
+	_changed_selection()
+	return selected.size()
+
+
+## 合筛选、能勾的是不是都勾了（有可勾的才算）
+func all_matching_selected() -> bool:
+	var any := false
+	for it in warehouse.items():
+		if matches(it as ItemInstance) and can_select(it as ItemInstance):
+			any = true
+			if not selected.has((it as ItemInstance).uid):
+				return false
+	return any
+
+
+func clear_selection() -> void:
+	selected.clear()
+	_changed_selection()
+
+
+## 勾了的卖多少钱
+func selected_value(ratio: float) -> int:
+	var n := 0
+	for uid in selected:
+		n += MetaState.sell_price_of(warehouse.get_item(int(uid)), ratio)
+	return n
+
+
+## 合筛选却勾不上的：[锁着的, 收藏的] 件数
+func skipped_matching() -> Array:
+	var locked := 0
+	var fav := 0
+	for it in warehouse.items():
+		var item := it as ItemInstance
+		if not matches(item):
+			continue
+		if item.is_locked_by_player():
+			locked += 1
+		elif ItemFavorites.has(item.def.id):
+			fav += 1
+	return [locked, fav]
+
+
+## 第 [param i] 页勾了几件
+func selected_on(i: int) -> int:
+	if is_locked(i):
+		return 0
+	var n := 0
+	for it in warehouse.page(i).items():
+		if selected.has((it as ItemInstance).uid):
+			n += 1
+	return n
+
+
+## 仓库变了：卖掉 / 挪走的、新锁上的从勾选里去掉
+func _prune_selection() -> void:
+	var gone := false
+	for uid in selected.keys():
+		var it := warehouse.get_item(int(uid))
+		if it == null or not can_select(it):
+			selected.erase(uid)
+			gone = true
+	if gone:
+		_changed_selection()
+
+
+func _changed_selection() -> void:
+	if view != null:
+		view.queue_redraw()
+	_refresh()
+	selection_changed.emit()
+#endregion
+
+
 func _refresh() -> void:
 	if warehouse == null:
 		return
@@ -288,8 +417,8 @@ func _refresh() -> void:
 		var b := _tabs[i]
 		var locked := is_locked(i)
 		b.disabled = locked
-		b.text = "%s\n%s" % [numeral(i), "　" if locked else UiText.t("wh.tab_count") % match_count(i)]     # 锁着的第二行留空给锁；264：筛选时写匹配数
-		b.tooltip_text = UiText.t("wh.tab_locked_tip") % [_tech_name, ceili(float(i) / float(_per_level))] if locked else UiText.t("wh.tab_tip") % [numeral(i), warehouse.page(i).item_count()]
+		b.text = "%s\n%s" % [numeral(i), "　" if locked else (UiText.t("wh.tab_picked") % [selected_on(i), warehouse.page(i).item_count()] if select_mode else UiText.t("wh.tab_count") % match_count(i))]     # 锁着的第二行留空给锁；264：筛选时写匹配数；268：勾选模式写 勾了 / 本页
+		b.tooltip_text = UiText.t("wh.tab_locked_tip") % [_tech_name, ceili(float(i) / float(_per_level))] if locked else (UiText.t("wh.tab_picked_tip") % [numeral(i), selected_on(i), warehouse.page(i).item_count()] if select_mode else UiText.t("wh.tab_tip") % [numeral(i), warehouse.page(i).item_count()])
 		b.queue_redraw()
 	if is_locked(_current) or view.inventory == null:
 		show_page(clampi(_current, 0, warehouse.page_count() - 1))

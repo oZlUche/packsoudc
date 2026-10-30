@@ -13,6 +13,8 @@ extends ContainerView
 
 ## 139：格子边长变了（基地屏按宽度放大仓库）
 signal cell_px_changed
+## 268：勾选模式里单击了一件（勾 / 取消由持有方定）
+signal item_picked(view: InventoryView, uid: int)
 
 ## 087（作者定）：格子放大
 const CELL := 60.0
@@ -105,6 +107,9 @@ var highlights: Dictionary = {}
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 ## 264 §六：筛选（`func(item: ItemInstance) -> bool`）—— 给了就把不匹配的压灰（不挪位）；不给 = 都不压。持有方设，改了 queue_redraw
 var dim_filter: Callable = Callable()
+## 268：快速出售的勾选模式 —— 左键单击发 [signal item_picked]、不抓（不拖）、双击不发；勾了的（[member selected]，uid → true）左下角画金勾
+var select_mode := false
+var selected: Dictionary = {}
 const FILTERED_ART := Color(0.4, 0.4, 0.4, 0.55)
 
 
@@ -325,6 +330,9 @@ func _gui_input(event: InputEvent) -> void:
 				# 拖拽中的右键是「取消」，那一下已经被 [DragLayer] 吃掉，走不到这里
 				if mb.button_index == MOUSE_BUTTON_RIGHT:
 					item_context.emit(self, uid)
+				elif select_mode:
+					if not mb.double_click:     # 双击的第二下不算（不然一勾一取消）
+						item_picked.emit(self, uid)
 				elif mb.double_click:
 					item_double_clicked.emit(self, uid)     # 084：双击 = 快速置入，不再抓
 				else:
@@ -406,11 +414,15 @@ func _draw() -> void:
 					self, cells, anchor, cell_px, Names.of_item(item) + ("
 " + note if note != "" else ""), font, 13, text_color
 				)
-		ItemPainter.draw_charges(self, item, item.rotation, anchor, cell_px, tint)     # 208：耐久没满、又没这一档的图：左下角次数点
+		var picked := select_mode and selected.has(item.uid)
+		if not picked:     # 268：勾了的左下角让给金勾（美术设计 15:57：和耐久点同一角）
+			ItemPainter.draw_charges(self, item, item.rotation, anchor, cell_px, tint)     # 208：耐久没满、又没这一档的图：左下角次数点
 		ItemPainter.draw_lock(self, item, item.rotation, anchor, cell_px, tint)     # 230：玩家锁住的：左上角小锁
 		ItemPainter.draw_pin(self, item, item.rotation, anchor, cell_px, tint)     # 255：随身之物：右上角小钉
 		ItemPainter.draw_favorite(self, item, item.rotation, anchor, cell_px, tint)     # 265：收藏：右上角星（有钉往左让）
 		ItemPainter.draw_honor(self, item, item.rotation, anchor, cell_px, tint)     # 256：军功牌：右下角「军功 N」
+		if picked:
+			ItemPainter.draw_check(self, item, item.rotation, anchor, cell_px)     # 268：勾了的
 		if highlights.has(item.uid):
 			var hb := item.def.shape.size_rotated(item.rotation)
 			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))
