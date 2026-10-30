@@ -109,3 +109,5 @@ A 的 `SellPlate` / `market/layout.json` `sell` 键不做。
 另两处细节：页签第二行写「n/m」（52 宽写不下「勾了 n / 本页 m」），悬停写全句；勾上的件不画耐久点，左下角让给金勾（美术设计提醒）。截图 `/mnt/project-files/art/ui/quick_sell268/shots/`（normal / mode / 全选 + 两步确认 / 英文）。勾角标 `tip/check_badge` 暂为代码画，美术设计出样后替换。
 
 **复测小修（v4.82，PR #387，main e6d5749）**：出售单【全选】/【全不选】只动筛中的件，筛选外已勾的保留；悬浮窗「出售 / 出售同类」按钮的价钱改成金币小图 + 数字（`act.sell` / `act.sell_same` 去掉「币」字，照作者的金币规则）。
+
+**勾角标定稿（美术设计，作者 2026-10-30 18:06 选 B 金币勾）**：金币面压一个深勾，定稿 `art/ui/quick_sell268/badge/final/tip/check_badge(_2x).png`，交执行放 `assets/ui/tip/`，替换代码画的那枚。
