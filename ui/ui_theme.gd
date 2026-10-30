@@ -596,6 +596,8 @@ static func dress_wood_option(ob: OptionButton, font_size: int = 16) -> void:
 		return
 	ob.theme_type_variation = BUTTON_HOME
 	_dress_drop(ob, font_size, WOOD_OPTION_INK)
+	for c in ["font_pressed_color", "font_hover_pressed_color"]:
+		ob.add_theme_color_override(c, HOME_PRESSED_INK)     # 弹出单开着 = 按下（深底）
 
 
 ## 乙 石刻：神坛二选一的下拉 —— 框用 `kit/chip_*`（同 [StoneChip] 的九宫格，高 40），箭头、弹出单同 [method dress_wood_option]；缺图不动
@@ -1463,6 +1465,10 @@ static func _button_variation(t: Theme, name: StringName, tier: int) -> void:
 
 
 ## 164：家的木牌按钮。有图：五态九宫格（常态 / 悬停 / 按下 / 禁用 + 主档一张），浅木墨字；没图：回落到次档 / 主档的样子
+## 家的木牌键按下（深色木平涂，UI替换美术 press_home A，作者 2026-10-30 18:07 定）时的浅字
+const HOME_PRESSED_INK := Color("f6ecd2")
+
+
 static func _home_buttons(t: Theme) -> void:
 	for pair in [[BUTTON_HOME, UiPalette.Tier.SECONDARY, HOME_BUTTON_SIZE], [BUTTON_HOME_PRIMARY, UiPalette.Tier.PRIMARY, HOME_PRIMARY_SIZE]]:
 		var name: StringName = pair[0]
@@ -1486,6 +1492,8 @@ static func _home_buttons(t: Theme) -> void:
 			t.set_stylebox(state, name, box)
 		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 			t.set_color(state, name, INK)
+		for state in ["font_pressed_color", "font_hover_pressed_color"]:
+			t.set_color(state, name, HOME_PRESSED_INK)     # 按下 A（作者 10-30 18:07）：深色木底，字改浅
 		t.set_color("font_disabled_color", name, INK_SOFT)
 		t.set_constant("h_separation", name, 6)     # 基地页签字左边的图标与字隔 6
 
