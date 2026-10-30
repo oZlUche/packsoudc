@@ -1475,8 +1475,8 @@ const TEXT := {
 	"act.unlock": {"zh": "解锁", "en": "Unlock"},
 	"act.lock_same": {"zh": "锁定同类 ×%d", "en": "Lock all ×%d"},
 	"act.unlock_same": {"zh": "解锁同类 ×%d", "en": "Unlock all ×%d"},
-	"act.sell": {"zh": "出售 %d 币", "en": "Sell · %d"},
-	"act.sell_same": {"zh": "出售同类 ×%d 得 %d 币", "en": "Sell all ×%d · %d"},
+	"act.sell": {"zh": "出售", "en": "Sell"},     # 268 复测：卖价是金币小图 + 数字（[member ItemActions.Action.coin]），不写「币」
+	"act.sell_same": {"zh": "出售同类 ×%d", "en": "Sell all ×%d"},
 	"act.locked": {"zh": "已锁定", "en": "Locked"},
 	"act.fav_no_bulk": {"zh": "收藏的不成批出售", "en": "Favorites aren't sold in bulk"},     # 265
 	"act.sell_same_fav": {"zh": "出售同类 · 已收藏", "en": "Sell all · Favorite"},     # 265 复测：收藏了的种类按钮上直接写原因，不写「×0 得 0 币」
