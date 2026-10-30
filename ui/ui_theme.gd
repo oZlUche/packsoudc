@@ -598,6 +598,11 @@ static func dress_wood_option(ob: OptionButton, font_size: int = 16) -> void:
 	_dress_drop(ob, font_size, WOOD_OPTION_INK)
 	for c in ["font_pressed_color", "font_hover_pressed_color"]:
 		ob.add_theme_color_override(c, HOME_PRESSED_INK)     # 弹出单开着 = 按下（深底）
+	var up := art_cached("kit/drop_arrow")
+	var down := art_cached("kit/drop_arrow_pressed")     # 同形浅色箭头：开着换上，合上换回（合上时一点不变）
+	if up != null and down != null:
+		ob.get_popup().about_to_popup.connect(func(): ob.add_theme_icon_override("arrow", down))
+		ob.get_popup().popup_hide.connect(func(): ob.add_theme_icon_override("arrow", up))
 
 
 ## 乙 石刻：神坛二选一的下拉 —— 框用 `kit/chip_*`（同 [StoneChip] 的九宫格，高 40），箭头、弹出单同 [method dress_wood_option]；缺图不动

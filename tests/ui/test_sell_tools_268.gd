@@ -216,3 +216,27 @@ static func frame_tools_fit(t: TestCase, root: Window) -> void:
 				sc.free())
 	UiText.lang = "zh"
 	W178._cleanup()
+
+
+static func frame_wood_drop_arrow(t: TestCase, root: Window) -> void:
+	t.begin("press_home A 补：木牌下拉开着底变深，箭头换浅色 `kit/drop_arrow_pressed`，合上换回 `kit/drop_arrow`；石刻下拉不动")
+	var up := UiTheme.art_cached("kit/drop_arrow")
+	var down := UiTheme.art_cached("kit/drop_arrow_pressed")
+	t.not_null(down, "有浅色箭头图")
+	var ob := OptionButton.new()
+	ob.add_item("A")
+	ob.add_item("B")
+	root.add_child(ob)
+	UiTheme.dress_wood_option(ob)
+	t.eq(ob.get_theme_icon("arrow"), up, "合上：原来的墨色箭头")
+	ob.get_popup().about_to_popup.emit()
+	t.eq(ob.get_theme_icon("arrow"), down, "开着：浅色箭头")
+	ob.get_popup().popup_hide.emit()
+	t.eq(ob.get_theme_icon("arrow"), up, "合上：换回墨色")
+	var chip := OptionButton.new()
+	root.add_child(chip)
+	UiTheme.dress_chip_option(chip)
+	chip.get_popup().about_to_popup.emit()
+	t.check(chip.get_theme_icon("arrow") != down, "石刻下拉开着也不换")
+	ob.free()
+	chip.free()
