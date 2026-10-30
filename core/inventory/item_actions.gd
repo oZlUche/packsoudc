@@ -68,22 +68,25 @@ static func bench(inst: ItemInstance, container: ItemContainer, after: Callable 
 		_touched(container, after))
 
 
-## 出售 N 币（[param sell] = `func(uid) -> int` 卖一件，返回得了多少；没卖成 < 0）。锁着的灰
+## 出售 + 金币 N（[param sell] = `func(uid) -> int` 卖一件，返回得了多少；没卖成 < 0）。锁着的灰。268 复测：价钱走 [member Action.coin]
 static func sell(inst: ItemInstance, price: int, do_sell: Callable) -> Action:
-	var a := make(&"sell", UiText.t("act.sell") % price, func(): do_sell.call(inst.uid), true, &"sell")
+	var a := make(&"sell", UiText.t("act.sell"), func(): do_sell.call(inst.uid), true, &"sell")
+	a.coin = price
 	return disable(a, UiText.t("act.locked")) if inst.is_locked_by_player() else a
 
 
-## 出售同类 ×n 得 M 币：[param container] 里同 id 没锁的那几件。265：收藏的种类不成批卖（灰着写「收藏的不成批出售」；单件照卖）
+## 出售同类 ×n + 金币 M：[param container] 里同 id 没锁的那几件。265：收藏的种类不成批卖（灰着写「收藏的不成批出售」；单件照卖）
 static func sell_same(inst: ItemInstance, container: ItemContainer, price_of: Callable, do_sell: Callable) -> Action:
 	var fav := ItemFavorites.has(inst.def.id)
 	var same := [] if fav else same_kind(inst, container).filter(func(i: ItemInstance) -> bool: return not i.is_locked_by_player())
 	var total := 0
 	for i in same:
 		total += int(price_of.call(i))
-	var a := make(&"sell_same", UiText.t("act.sell_same_fav") if fav else UiText.t("act.sell_same") % [same.size(), total], func():
+	var a := make(&"sell_same", UiText.t("act.sell_same_fav") if fav else UiText.t("act.sell_same") % same.size(), func():
 		for i in same:
 			do_sell.call((i as ItemInstance).uid), true, &"sell")
+	if not fav and not same.is_empty():
+		a.coin = total
 	if fav:
 		return disable(a, UiText.t("act.fav_no_bulk"))
 	return disable(a, UiText.t("act.locked")) if same.is_empty() else a

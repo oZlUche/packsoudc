@@ -250,7 +250,7 @@ static func frame_sell_bag(t: TestCase, root: Window) -> void:
 	t.eq(acts.size(), 1, "包架悬浮窗一颗键")
 	var act := acts[0] as ItemActions.Action
 	t.eq(act.id, &"sell", "是出售")
-	t.eq(act.label, UiText.t("act.sell") % MetaState.sell_price_of(f.meta.rack.get_item(uid), f.sell_ratio()), "写着卖价")
+	t.eq([act.label, act.coin], [UiText.t("act.sell"), MetaState.sell_price_of(f.meta.rack.get_item(uid), f.sell_ratio())], "写「出售」+ 金币卖价")
 	act.run.call()
 	t.check(f.meta.funds > funds, "卖了进钱（%d → %d）" % [funds, f.meta.funds])
 	t.eq(f.meta.rack.count_of(&"sack"), 1, "粗麻袋剩一只")
