@@ -326,9 +326,8 @@ func toggle_select(uid: int) -> bool:
 	return true
 
 
-## 全选：所有页里合筛选、能勾的全勾上；返回勾了几件
+## 全选：所有页里合筛选、能勾的全勾上（筛选外已勾的留着，测试 v4.81）；返回现在一共勾了几件
 func select_matching() -> int:
-	selected.clear()
 	for it in warehouse.items():
 		if matches(it as ItemInstance) and can_select(it as ItemInstance):
 			selected[(it as ItemInstance).uid] = true
@@ -345,6 +344,14 @@ func all_matching_selected() -> bool:
 			if not selected.has((it as ItemInstance).uid):
 				return false
 	return any
+
+
+## 全不选：只取消合筛选的那些（筛选外已勾的留着）
+func deselect_matching() -> void:
+	for it in warehouse.items():
+		if matches(it as ItemInstance):
+			selected.erase((it as ItemInstance).uid)
+	_changed_selection()
 
 
 func clear_selection() -> void:

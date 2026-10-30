@@ -73,7 +73,7 @@ static func run_lock_guards(t: TestCase) -> void:
 	var d := ItemInstance.create(def)
 	meta.warehouse.try_add(d, true)
 	var same := ItemActions.sell_same(b, meta.warehouse, func(_i: ItemInstance) -> int: return 5, do_sell)
-	t.check(same.enabled and same.label == UiText.t("act.sell_same") % [1, 5], "出售同类只算没锁的那 1 件（%s）" % same.label)
+	t.check(same.enabled and same.label == UiText.t("act.sell_same") % 1 and same.coin == 5, "出售同类只算没锁的那 1 件（%s，金币 %d）" % [same.label, same.coin])
 	same.run.call()
 	t.eq(sold, [d.uid], "点了只卖没锁的")
 	var ls := ItemActions.lock_same(b, meta.warehouse)
@@ -251,8 +251,8 @@ static func run_english(t: TestCase) -> void:
 	var was := UiText.lang
 	UiText.lang = "en"
 	t.eq(UiText.t("act.lock"), "Lock", "Lock")
-	t.eq(UiText.t("act.sell") % 12, "Sell · 12", "Sell · 12")
-	t.eq(UiText.t("act.sell_same") % [3, 30], "Sell all ×3 · 30", "Sell all")
+	t.eq(UiText.t("act.sell"), "Sell", "Sell（268 复测：价钱是金币小图 + 数字）")
+	t.eq(UiText.t("act.sell_same") % 3, "Sell all ×3", "Sell all")
 	t.eq(UiText.t("act.confirm"), "Click again", "Click again")
 	t.check(not UiText.t("item.locked_no").is_empty() and UiText.t("meta.sell_skipped") % 2 == " (skipped 2 locked)", "提示句")
 	UiText.lang = was
