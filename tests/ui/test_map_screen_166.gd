@@ -62,6 +62,7 @@ static func run_legend(t: TestCase) -> void:
 	t.check(box != null and box.texture != null, "双尾旗底")
 	t.check(box != null and box.content_margin_left >= 8 and box.content_margin_top >= 4, "有内边距，图标和字不压边框")
 	t.check(legend.custom_minimum_size.x >= 158.0, "最窄 158")
+	t.check(box != null and box.content_margin_right >= box.content_margin_left, "右边内边距不小于左边（复测 v4.78：最宽那行贴右边金线）")
 	t.eq(legend.get_meta(&"tone", &""), UiTheme.TONE_DARK, "深底（白字）")
 	t.eq(legend.theme.get_color("font_color", UiTheme.LABEL_HUD), Color.WHITE, "白字")
 	t.check(HudLayout.CORNER_OFFSET.x > 8 and HudLayout.CORNER_OFFSET.y < -8, "左下角离边远一点（往右上挪）")
