@@ -133,10 +133,10 @@ func set_filter(tag: StringName, rarity_max: int) -> void:
 	refresh()
 
 
-## 【全选】：合筛选、能卖的全勾；都勾了再点 = 全不选
+## 【全选】：合筛选、能卖的全勾；都勾了再点 = 全不选（都只动合筛选的，筛选外已勾的留着）
 func toggle_all() -> void:
 	if shelf.all_matching_selected():
-		shelf.clear_selection()
+		shelf.deselect_matching()
 	else:
 		shelf.select_matching()
 
