@@ -49,3 +49,19 @@
 1. 收货牌挂哪：**右柱钱牌下**（推荐）/ 左柱便条下。
 2. 卖包：**仓库页包架右键**（推荐）/ 以后不能卖包。
 3. 档下拉顺序：**沿用出售页**（白 → 金 → 全部）（推荐）/ 跟筛选牌（全部在前）。
+
+## 五、作者定 C（2026-10-30 15:23）：出售进仓库页
+
+作者：「虽然我看不到 B，但我想了想，还是将出售功能放在仓库里好了，不过记得仓库里的排版应该是仓库占面积最大吧？」
+
+**排版不变，仓库仍是最大的一块。** 仓库页今天三列：左边 228 宽的工具列（包架 / 筛选牌 / 账牌 / 整理），中列只在有带回来的背包时露出（没有就只剩壁炉布景），右半边是仓库 —— 右列占半屏（1600 宽的 936），格子 10 × 8 已经顶到上限 80 像素（`WarehousePages.CELL_MAX`），再宽也不会长。卖键塞进左边工具列，一格仓库都不动。
+
+### 5.1 改动清单（执行，替换 §三）
+
+1. **工具列加卖键**：`WarehouseTools` 在筛选牌和账牌之间加一颗主档木牌键（`UiTheme.make_home_button`，228 × 72，和「整理」同一家），第一行沿用 `meta.sell_all`「一键出售」，第二行预览沿用 `meta.sell_preview`「会卖 N 件，得 N 币」（+ 265「跳过收藏 N 件」）；筛选条件就是筛选牌当前的 标签 + 稀有度（+ 只看收藏时候选为空 → 键压灰）；筛中 0 件压灰；悬浮窗沿用 `meta.sell_intro`（卖价比例）。点下去 = 原 `sell_filtered()` 搬过来（跳过锁定 / 收藏、告示卷轴说「卖了 N 件，得 N 币」），账牌与页签计数跟着刷。
+2. **卖包**：仓库页包架 `actions_for` 加 `ItemActions.sell(inst, price, sell_bag)`（双击仍是置入）；`sell_bag` 从出售页搬到 `WarehousePanel`。
+3. **出售页删**：`SUB_TABS.logistics` 只剩 market / smithy；`_build_sell`、`SELL_FILTERS`、`_sell_*` 字段、`_on_shelf_double_clicked` 的 `"sell"` 分支、`meta.tab_sell` 删；`show_tab("sell")` 当别名落到 `"warehouse"`（旧测试 / 旧调用不炸）。档下拉顺序随筛选牌（全部在前），待定 3 就此作废。
+4. **测试**：`test_logistics_262`（小键 2 颗、`sub_tab_buttons` 没有 sell）、`test_base_warehouse_178` / `test_stone_chips` / `test_boards_framed_227` / `test_english_ui_221` / `test_no_bare_text_226` / `test_favorites_265` 里走出售页的改到仓库页工具列；新测：卖键按筛选卖、跳过锁定与收藏、0 件压灰、包架右键能卖、`show_tab("sell")` 落仓库页。
+5. **美术**：现成木牌键，不用新图。
+
+A 的 `SellPlate` / `market/layout.json` `sell` 键不做。
