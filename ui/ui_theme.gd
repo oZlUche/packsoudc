@@ -1465,7 +1465,7 @@ static func _button_variation(t: Theme, name: StringName, tier: int) -> void:
 
 
 ## 164：家的木牌按钮。有图：五态九宫格（常态 / 悬停 / 按下 / 禁用 + 主档一张），浅木墨字；没图：回落到次档 / 主档的样子
-## 家的木牌键按下（深胡桃木平涂，UI替换美术 press_home A，作者 2026-10-30 18:07 定）时的浅字
+## 家的木牌键按下（深色木平涂，UI替换美术 press_home A，作者 2026-10-30 18:07 定）时的浅字
 const HOME_PRESSED_INK := Color("f6ecd2")
 
 
@@ -1493,7 +1493,7 @@ static func _home_buttons(t: Theme) -> void:
 		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 			t.set_color(state, name, INK)
 		for state in ["font_pressed_color", "font_hover_pressed_color"]:
-			t.set_color(state, name, HOME_PRESSED_INK)     # 按下 A（作者 10-30 18:07）：深胡桃木底，字改浅
+			t.set_color(state, name, HOME_PRESSED_INK)     # 按下 A（作者 10-30 18:07）：深色木底，字改浅
 		t.set_color("font_disabled_color", name, INK_SOFT)
 		t.set_constant("h_separation", name, 6)     # 基地页签字左边的图标与字隔 6
 
