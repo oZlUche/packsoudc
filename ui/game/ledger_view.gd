@@ -27,6 +27,9 @@ const INK_NUM := Color("16110d")
 const INK_LABEL := Color("2e2219")
 const INK_DIM := Color("68655f")
 const INK_TOTAL := Color("8c2b22")
+## 269：总分的明细小字（思源宋体 14 灰墨），写在总分行里、离总分的数这么远
+const PARTS_PX := 14
+const PARTS_GAP := 24.0
 
 ## 每行 {"key", "label", "fmt", "values": Array[int], "text"（不滚的行直接写）, "color", "rarity": bool, "total": bool}
 var _rows: Array[Dictionary] = []
@@ -60,6 +63,8 @@ static func rows_for(r: RunResult, lit: int) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if r == null:
 		return out
+	if r.score_parts.is_empty():
+		r.compute_score(lit)     # 269：没经过 settle / absorb 的（测试、重看）补算一次
 	var extracted := r.is_extracted()
 	out.append(_num_row("visited", [r.visited]))
 	out.append(_num_row("steps", [r.steps]))
@@ -89,11 +94,22 @@ static func rows_for(r: RunResult, lit: int) -> Array[Dictionary]:
 		"color": UiPalette.rarity_color(best, UiTheme.TONE_LIGHT) if best >= 0 else INK_DIM}
 	out.append(rarity)
 	out.append(_num_row("coins", [r.balance]))
-	var total := _num_row("total", [r.value + r.safe_value])
+	var total := _num_row("total", [r.score])     # 269：总分 = （战利 + 战绩 + 探索）× 难度（[ScoreRules]）
 	total["total"] = true
 	total["color"] = INK_TOTAL
+	total["parts"] = score_parts_text(r)
 	out.append(total)
 	return out
+
+
+## 269：总分下面那行小字「战利 N · 战绩 N · 探索 N」（非普通难度再加「 · 难度 ×1.25」）
+static func score_parts_text(r: RunResult) -> String:
+	var p := r.score_parts
+	var text := UiText.t("ledger.score_parts") % [int(p.get("loot", 0)), int(p.get("battle", 0)), int(p.get("explore", 0))]
+	var mult := float(p.get("mult", 1.0))
+	if mult != 1.0:
+		text += UiText.t("ledger.score_mult") % String.num(mult, 2).rstrip("0").rstrip(".")
+	return text
 
 
 static func _num_row(key: String, values: Array, fmt_key: String = "") -> Dictionary:
@@ -119,6 +135,14 @@ func rows() -> Array[Dictionary]:
 	for i in _rows.size():
 		out.append({"key": _rows[i]["key"], "label": _rows[i]["label"], "text": text_at(_rows[i]), "shown": _shown(i)})
 	return out
+
+
+## 269：总分下面那行小字（测试看）
+func parts_text() -> String:
+	for row in _rows:
+		if row.has("parts"):
+			return String(row["parts"])
+	return ""
 
 
 ## 行名 → 到位的数（177 的 [method ResultScreen.numbers] 照旧读它）
@@ -190,3 +214,7 @@ func _draw() -> void:
 		var px := 38 if total else (22 if font == _bold_font else 24)
 		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 		draw_string(font, Vector2(NUMBER_RIGHT - w, y + (40 if total else (32 if font == _bold_font else 34))), text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, row["color"])
+		var parts := String(row.get("parts", ""))
+		if parts != "" and _progress(i) >= 1.0:     # 269：总分行里、数的左边一行小字（数滚到位才写；账单框下沿紧贴，放不下另起一行）
+			var pw := _body_font.get_string_size(parts, HORIZONTAL_ALIGNMENT_LEFT, -1, PARTS_PX).x
+			draw_string(_body_font, Vector2(NUMBER_RIGHT - w - PARTS_GAP - pw, y + 33), parts, HORIZONTAL_ALIGNMENT_LEFT, -1, PARTS_PX, INK_DIM)

@@ -48,6 +48,11 @@ var safe_layout: Array[Dictionary] = []
 var faith_history: Array = []
 ## 结算屏那一行（「信力节奏：日神 第 3 步到 1 阶……」）；没攒过信力为空
 var faith_pace: String = ""
+## 269：总分（[ScoreRules]）与它的三项 {"loot", "battle", "explore", "mult"}；图鉴新点亮那一笔要等 [method MetaState.absorb] 记完再补（[method compute_score]）
+var score: int = 0
+var score_parts: Dictionary = {}
+## 269：难度档（[member DifficultyDef.level]，普通 0）—— 难度系数按它
+var difficulty_level: int = 0
 
 
 ## 结束了的一局才算得出账；没结束返回 null
@@ -62,6 +67,7 @@ static func settle(state: RunState) -> RunResult:
 	r.chapter_name = Names.of(state.chapter) if state.chapter != null else ""
 	r.character_id = state.character_id
 	r.difficulty_id = state.difficulty_id
+	r.difficulty_level = state.difficulty.level if state.difficulty != null else 0
 	r.ended_at = int(Time.get_unix_time_from_system())
 	r.steps = state.travel.clock.total if state.travel != null and state.travel.clock != null else 0
 	for id in state.map.node_ids():
@@ -100,7 +106,26 @@ static func settle(state: RunState) -> RunResult:
 			if not item.def.is_bullion():     # 244：同上
 				r.safe_value += ItemValue.of(item.def)
 			r.safe_layout.append({"def": item.def, "origin": item.origin, "rotation": item.rotation})
+	r.compute_score()
 	return r
+
+
+## 269：按 [ScoreRules] 算总分与三项；[param lit] = 图鉴新点亮几件（[method MetaState.absorb] 记完再调一次，账单拿同一个数）
+func compute_score(lit: int = 0, rules: ScoreRules = null) -> int:
+	if rules == null:
+		rules = ScoreRules.load_rules()
+	var loot := 0
+	if rules.loot_counts:
+		loot = safe_value + (value if is_extracted() else 0)
+	var normal := maxi(0, battles_won - elite_won - boss_won)
+	var battle := normal * rules.kill_points("normal") + elite_won * rules.kill_points("elite") + boss_won * rules.kill_points("boss")
+	var explore := visited * rules.explore_points("visited") + searches * rules.explore_points("search") \
+		+ crafts * rules.explore_points("craft") + maxi(0, lit) * rules.explore_points("lit")
+	if is_extracted():
+		explore += rules.extract_bonus
+	score_parts = {"loot": loot, "battle": battle, "explore": explore, "mult": MapGraph.normalize(rules.mult(difficulty_level))}     # 1.0 存成 1：存读往返逐字节相同
+	score = rules.total(loot, battle, explore, difficulty_level)
+	return score
 
 
 ## 104：把信力记录导成 CSV（`<dir>/faith_history_<seed>.csv`；作者 10-26 起每局结束由 [method CalibrationRecorder.record_run] 写进 calibration/runs_faith/）。返回写到的路径；没记录或写不了返回空
@@ -132,5 +157,5 @@ func to_dict() -> Dictionary:
 		"safe": safe_items.size(), "safe_value": safe_value,
 		"character": String(character_id), "difficulty": String(difficulty_id), "ended_at": ended_at,
 		"elite_won": elite_won, "boss_won": boss_won, "searches": searches, "crafts": crafts, "scale": String(scale_id),
-		"faith": faith_top,
+		"faith": faith_top, "score": score, "score_parts": score_parts.duplicate(),
 	}

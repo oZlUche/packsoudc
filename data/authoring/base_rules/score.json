@@ -1,0 +1,16 @@
+{
+  "id": "score",
+  "display_name": "计分",
+  "kill": {
+    "normal": 10,
+    "elite": 40,
+    "boss": 200
+  },
+  "explore": {
+    "visited": 2,
+    "search": 5,
+    "craft": 5,
+    "lit": 25
+  },
+  "difficulty_step": 0.25
+}
