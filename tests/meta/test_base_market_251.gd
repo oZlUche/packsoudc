@@ -1,4 +1,4 @@
-## 251（作者 2026-10-24）：基地集市 —— 默认 1 级（262），科技「高级货物」再升两级（4 / 6 / 8 格，素材白 / 绿 / 蓝，消耗品，三级一格空包）；一局一换货、升级也换；
+## 251（作者 2026-10-24）：基地集市 —— 默认 1 级（262），科技「高级货物」再升两级（270 起散货摊 4 / 6 / 8 格，三级一格空包；固定摊见 test_market_stalls_270）；一局一换货、升级也换；
 ## 买 = 扣钱、进仓库（包进包架）、格子标卖掉；钱不够 / 仓库满不卖；库存跟存档，退役的道具那一格读档时去掉
 extends RefCounted
 
@@ -27,7 +27,7 @@ static func run_content(t: TestCase) -> void:
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Market.ID, "tech_facility(market)")
 	var rules := Market.load_rules()
 	t.eq(rules.slots_per_level, [4, 6, 8] as Array[int], "4 / 6 / 8 格")
-	t.eq(rules.rarity_cap_per_level, [0, 1, 2] as Array[int], "素材白 / 绿 / 蓝")
+	t.eq(rules.rarity_cap_per_level, [0, 1, 2] as Array[int], "固定摊白 / 绿 / 蓝")
 	var m := T110._meta()
 	t.eq(Market.level(m), 1, "262：没点科技，集市 1 级")
 	def.effect.derive(m, 2)
@@ -38,7 +38,7 @@ static func run_content(t: TestCase) -> void:
 
 
 static func run_restock(t: TestCase) -> void:
-	t.begin("251 §二：上货 —— 0 级（只有手改）没货；1 级 4 格、素材 ≤ 白、消耗品 ≤ 绿、素材至少两格、不卖装备 / 珍宝 / 贵重品；3 级 8 格、见得到蓝素材、最后一格是包")
+	t.begin("251 §二 / 270：散货摊上货 —— 0 级（只有手改）没货；1 级 4 格、只进战斗道具、绿起、不卖珍宝 / 贵重品 / 包；3 级 8 格、最后一格是包")
 	var db := T110._db()
 	var rules := Market.load_rules()
 	var m0 := _meta(0)
@@ -47,21 +47,12 @@ static func run_restock(t: TestCase) -> void:
 	var m1 := _meta(1)
 	Market.restock(m1, rules, db, BagPool.standard())
 	t.eq(m1.market_stock.size(), 4, "1 级：4 格")
-	var mats := 0
 	var ok := true
 	for i in m1.market_stock.size():
 		var d := Market.def_at(m1, db, i)
-		if d.tags.has(&"material"):
-			mats += 1
-			ok = ok and d.rarity <= 0
-		else:
-			ok = ok and d.rarity <= 1 and (d.tags.has(&"remedy") or d.tags.has(&"food") or d.tags.has(&"ammo"))
-		ok = ok and not d.is_valuable() and not d.is_bullion() and not d.tags.has(&"weapon") and not d.tags.has(&"treasure") and not d.is_bag
-	t.check(ok, "都在档内、没有装备 / 珍宝 / 贵重品 / 包")
-	t.check(mats >= 2, "素材至少两格（%d）" % mats)
-	var cands := Market.candidates(rules, db, 3)
-	t.check((cands["material"] as Array).any(func(id): return db.get_def(id).rarity == 2), "3 级候选里有蓝素材")
-	t.check((cands["material"] as Array).has(&"steel_ingot"), "建材也卖（待定 1 推荐）")
+		ok = ok and d.rarity >= 1 and d.tags.any(func(tg: StringName) -> bool: return rules.battle_tags.has(tg))
+		ok = ok and not d.is_valuable() and not d.is_bullion() and not d.tags.has(&"treasure") and not d.is_bag and not d.tags.has(&"material")
+	t.check(ok, "都是绿起的战斗道具、没有素材 / 珍宝 / 贵重品 / 包")
 	var m3 := _meta(3)
 	Market.restock(m3, rules, db, BagPool.standard())
 	t.eq(m3.market_stock.size(), 8, "3 级：8 格")
@@ -145,11 +136,12 @@ static func run_flow(t: TestCase) -> void:
 
 
 static func run_save(t: TestCase) -> void:
-	t.begin("251 §二：存档 —— 库存（id、卖没卖）与种子读回一致；道具库里没有了的那一格去掉（173）")
+	t.begin("251 §二：存档 —— 库存（id、卖没卖、270 锁没锁）与种子读回一致；道具库里没有了的那一格去掉（173）")
 	var db := T110._db()
 	var m := _meta(2)
 	Market.restock(m, Market.load_rules(), db, BagPool.standard())
 	m.market_stock[1]["sold"] = true
+	m.market_stock[2]["locked"] = true
 	var d := m.to_dict()
 	var back := MetaState.from_dict(JSON.parse_string(JSON.stringify(d)), db, m.rules)
 	t.eq(back.market_stock, m.market_stock, "库存一致")

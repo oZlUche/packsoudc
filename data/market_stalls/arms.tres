@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StallDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/stall_def.gd" id="1_eti6e"]
+
+[resource]
+script = ExtResource("1_eti6e")
+id = &"arms"
+display_name = "兵器铺"
+display_names = {
+"en": "Arms Dealer"
+}
+order = 2
+tags = Array[StringName]([&"weapon", &"ammo"])

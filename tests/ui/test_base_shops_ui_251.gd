@@ -47,6 +47,7 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	var s: Control = W178._screen(f, root)
 	s.show_tab("market")
 	var p = s.market_panel()
+	p.show_stall(Market.LOOSE)     # 270：木凉棚是散货摊
 	t.eq(p.views().size(), 8, "高级货物 2 级 = 集市 3 级：八个货位")
 	t.eq(p.views().size(), f.meta.market_stock.size(), "每格一块视图")
 	t.check(p.views().all(func(v: InventoryView) -> bool: return BoardFrame.framed(v)), "货位登记过（227 守门）")
@@ -122,6 +123,7 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	s = W178._screen(f, root)
 	s.show_tab("market")
 	p = s.market_panel()
+	p.show_stall(Market.LOOSE)
 	t.eq(p.views().size(), 4, "四个货位")
 	t.check(p.stage().tables, "有木台")
 	t.check(p.note() == null, "没有签")

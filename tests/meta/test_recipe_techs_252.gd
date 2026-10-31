@@ -153,9 +153,9 @@ static func run_market_and_mages(t: TestCase) -> void:
 	t.begin("252 §3.6 / 待定 2：集市不卖秘银锭、一级起有木棍；三阶法师各拿对应的杖")
 	var db := T110._db()
 	var rules := Market.load_rules()
-	var c3 := Market.candidates(rules, db, 3)
-	t.check(not (c3["material"] as Array).has(&"mithril_ingot"), "三级集市也没有秘银锭")
-	t.check((Market.candidates(rules, db, 1)["material"] as Array).has(&"wooden_stick"), "一级集市有木棍")
+	var goods := Market.stall(&"goods")     # 270：素材在杂货铺
+	t.check(not Market.catalogue(rules, db, goods, 3).has(&"mithril_ingot"), "三级集市也没有秘银锭")
+	t.check(Market.catalogue(rules, db, goods, 1).has(&"wooden_stick"), "一级集市有木棍")
 	for row in [["apprentice_mage", &"magic_staff"], ["adept_mage", &"mage_staff"], ["magus", &"magus_staff"], ["grand_magus", &"grand_magus_staff"]]:
 		var e := load(ContentPaths.asset_file("enemies", row[0])) as EnemyDef
 		t.check(e != null and e.signature.has(row[1]), "%s 拿 %s" % row)

@@ -1,0 +1,11 @@
+{
+  "id": "goods",
+  "display_name": "杂货铺",
+  "display_names": {
+    "en": "General Goods"
+  },
+  "order": 4,
+  "tags": [
+    "material"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "loose",
+  "display_name": "散货摊",
+  "display_names": {
+    "en": "Bazaar"
+  },
+  "order": 5,
+  "fixed": false
+}

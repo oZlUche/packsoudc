@@ -1,0 +1,12 @@
+{
+  "id": "arms",
+  "display_name": "兵器铺",
+  "display_names": {
+    "en": "Arms Dealer"
+  },
+  "order": 2,
+  "tags": [
+    "weapon",
+    "ammo"
+  ]
+}

@@ -43,6 +43,7 @@ const AUTHORING_CHEST_SKINS := AUTHORING + "/chest_skins"     # 154
 const AUTHORING_BELT_SKILLS := AUTHORING + "/belt_skills"     # 160 补一
 const AUTHORING_REACTIONS := AUTHORING + "/reactions"     # 175
 const AUTHORING_FORGE := AUTHORING + "/forge"     # 175 第三批：铸炉映射表
+const AUTHORING_MARKET_STALLS := AUTHORING + "/market_stalls"     # 270
 #endregion
 
 #region 引擎资产（导入器产出，游戏读这里）
@@ -79,6 +80,7 @@ const CHEST_SKINS := "res://data/chest_skins"
 const BELT_SKILLS := "res://data/belt_skills"
 const REACTIONS := "res://data/reactions"
 const FORGE := "res://data/forge"
+const MARKET_STALLS := "res://data/market_stalls"
 #endregion
 
 ## 种类 → [作者数据目录, 资产目录]。顺序即导入顺序：后者可以按 id 引用前者。
@@ -118,16 +120,17 @@ const KINDS := {
 	"help_pages": [AUTHORING_HELP_PAGES, HELP_PAGES],
 	"chest_skins": [AUTHORING_CHEST_SKINS, CHEST_SKINS],
 	"belt_skills": [AUTHORING_BELT_SKILLS, BELT_SKILLS],
+	"market_stalls": [AUTHORING_MARKET_STALLS, MARKET_STALLS],     # 270
 }
 ## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节按 id 引用池与规则；成就（091）排最后（对象可能是道具 / 章节）
 ## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）；110：局外科技在道具之后（要交的材料对着道具查）；114：百科的机制页最后（相关道具对着道具查）
 ## 154：宝箱皮肤在章节之前（章节按 id 引用它）
-## 251：铁匠铺配方在道具之后（产物与素材对着道具查）；集市规矩在局外规则之后
+## 251：铁匠铺配方在道具之后（产物与素材对着道具查）；集市规矩在局外规则之后；270：集市摊位紧跟集市规矩（点名排除的对着道具查）
 ## 146：buff → 规则构件 → 道具（构件里的施加状态可以按 id 引用 buff；buff 自己的规则不能引用构件，所以没有环）
 ## 175：元素反应在 buff 之后（效果里按 id 施加 buff）；铸炉映射表在构件之后、道具之前（表里引用 buff 与构件，道具的预置附魔查表）
 ## 160 补一：随身技能排在前面（局外 buff、角色、事件、经济规则、章节、科技按 id 引用它）
-const ORDER := ["tags", "damage_types", "belt_skills", "run_buffs", "faiths", "buffs", "reactions", "rule_parts", "forge", "items", "recipes", "smith_recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "bag_pools", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "base_rules", "chest_skins", "chapters", "achievements", "techs", "help_pages"]
+const ORDER := ["tags", "damage_types", "belt_skills", "run_buffs", "faiths", "buffs", "reactions", "rule_parts", "forge", "items", "recipes", "smith_recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "bag_pools", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "base_rules", "market_stalls", "chest_skins", "chapters", "achievements", "techs", "help_pages"]
 
 
 ## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [constant KINDS]**（批量导入与一致性检查都不跑它们），

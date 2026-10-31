@@ -1,0 +1,12 @@
+{
+  "id": "armor",
+  "display_name": "甲胄铺",
+  "display_names": {
+    "en": "Armourer"
+  },
+  "order": 3,
+  "tags": [
+    "armor",
+    "shield"
+  ]
+}
