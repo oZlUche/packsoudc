@@ -16,6 +16,8 @@ const CELL_MIN := BoardFrame.MIN_SIDE
 const CLEAR_SEAMS := {"seam_alpha": 0.0, "hi_alpha": 0.0, "empty_alpha": 0.0}
 ## 价签离货底多远（平放在货前面）
 const TAG_GAP := 2.0
+## 作者 10-31 14:56：武器横放后一件货最宽多少（设计像素，前排货位间距约 235–255），超了按比例缩格子
+const LIE_MAX_W := 240.0
 ## 卖掉的货压多灰（UI替换美术 10-25：货还在、压灰，章盖在价签上）
 const SOLD_TINT := Color(0.55, 0.55, 0.55, 0.75)
 ## 补充二（12.1 补二）：「每局回来换一批货」钉在左柱上的便条（底图里没画；设计像素、略斜），便条按整页缩放整块缩
@@ -157,7 +159,7 @@ func rebuild(keep_page: bool = true) -> void:
 		for id in Market.catalogue(flow.market(), flow.items, st, Market.level(flow.meta)):
 			defs.append(flow.items.get_def(id))
 		_stall.tooltip_text = UiText.t("market.stall_tip")
-		_stall.show_stall(Names.of(st), defs, func(d: ItemDef) -> int: return Market.price_of(flow.market(), d), flow.meta.funds, keep_page)
+		_stall.show_stall(defs, func(d: ItemDef) -> int: return Market.price_of(flow.market(), d), flow.meta.funds, keep_page)
 	for f in _frames:
 		f.queue_free()
 	for p in _prices:
@@ -185,13 +187,14 @@ func rebuild(keep_page: bool = true) -> void:
 
 func _add_spot(i: int) -> void:
 	var def := Market.def_at(flow.meta, flow.items, i)
-	var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
+	var rot := lie_flat_rot(def)
+	var size := def.shape.size_rotated(rot) if def != null and def.shape != null else Vector2i.ONE
 	var grid := GridInventory.new(size, 0, false)
 	var sold := Market.is_sold(flow.meta, i)
 	if def != null:
 		var shown := ItemInstance.create(def, 0)
 		shown.set_locked(Market.is_locked(flow.meta, i))     # 270：锁着的货左上画 230 那枚小锁
-		grid.place(shown, Vector2i.ZERO, 0)     # 卖掉的也摆着（压灰），「已售」章盖在价签上
+		grid.place(shown, Vector2i.ZERO, rot)     # 卖掉的也摆着（压灰），「已售」章盖在价签上
 	var view := InventoryView.new()
 	view.label_font = font
 	view.show_adjacency = false
@@ -211,6 +214,14 @@ func _add_spot(i: int) -> void:
 	_frames.append(frame)
 	_prices.append(price)
 	_tip.watch(view)
+
+
+## 作者 10-31 14:56：武器横放在桌上 —— 竖着长的（行比列多）转 90°，长边贴桌面；别的货不转
+static func lie_flat_rot(def: ItemDef) -> int:
+	if def == null or def.shape == null or not def.tags.has(&"weapon"):
+		return 0
+	var s := def.shape.size_rotated(0)
+	return 1 if s.y > s.x else 0
 
 
 ## 一块签（没点出集市 / 今日没货）：浅底纸牌、墨字，摆在头一张木台的位置
@@ -263,7 +274,12 @@ func _place() -> void:
 	for i in _views.size():
 		var spot: Dictionary = spots[i]
 		var foot := _stage.foot_of(spot)
-		_views[i].cell_px = maxf(CELL_MIN, floorf(_stage.cell_of(spot)))
+		var cell := maxf(CELL_MIN, floorf(_stage.cell_of(spot)))
+		var cols := maxi(1, _views[i].inventory.size.x)
+		var cap := LIE_MAX_W * _stage.scale_factor()
+		if cols * cell > cap:     # 横放的长家伙别压到隔壁货位
+			cell = maxf(CELL_MIN, floorf(cap / cols))
+		_views[i].cell_px = cell
 		var frame := _frames[i]
 		frame.size = frame.get_combined_minimum_size()
 		frame.position = Vector2(foot.x - frame.size.x * 0.5, foot.y - frame.size.y)

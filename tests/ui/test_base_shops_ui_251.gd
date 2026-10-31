@@ -56,7 +56,7 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	var sizes_ok := true
 	for i in p.views().size():
 		var def := Market.def_at(f.meta, f.items, i)
-		sizes_ok = sizes_ok and def != null and (p.views()[i] as InventoryView).inventory.size == def.shape.size_rotated(0)
+		sizes_ok = sizes_ok and def != null and (p.views()[i] as InventoryView).inventory.size == def.shape.size_rotated(p.lie_flat_rot(def))     # 270 补充：竖着长的武器横放
 	t.check(sizes_ok, "每块小棋盘就是那件的大小（不再补成 2×2）")
 	p.stage().size = p.stage().design_size()     # 测试屏很小：撑到设计大小再看（大小一变就重摆）
 	var spots: Array = p.stage().spots()
