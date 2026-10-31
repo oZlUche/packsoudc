@@ -69,20 +69,22 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 	t.eq(setup._back_btn.text, "返回", "264 §五：第一页也写「返回」（回基地）")
 	t.check(not setup._warehouse_view.is_visible_in_tree(), "第一页看不到仓库")
 
-	# 角色卡：255 起面板是一行蜡板方块（生命 / 耐力 / 耐力回复 / 体力），按这个角色的底子写
+	# 角色卡：选人页 B 起面板在铭牌里（生命 / 耐力 / 耐力回复 / 体力，各一枚火漆），按这个角色的底子写
 	var ch: CharacterDef = setup.character()
-	var plaques: Array = setup._stat_plaques
-	t.eq(plaques.map(func(p: StatPlaque) -> String: return p.caption), ["生命", "耐力", "耐力回复", "体力"], "四块：生命、耐力、耐力回复、体力")
-	t.eq((plaques[0] as StatPlaque).value, str(int(ch.baseline().value_of(&"max_hp"))), "生命上限按角色")
-	t.eq((plaques[1] as StatPlaque).value, str(int(ch.baseline().value_of(&"max_stamina"))), "耐力上限按角色")
-	t.eq((plaques[3] as StatPlaque).value, str(ch.vitality_max), "体力按角色")
+	var plate: StatSealPlate = setup._stat_plate
+	t.eq(plate.captions(), ["生命", "耐力", "耐力回复", "体力"], "四格：生命、耐力、耐力回复、体力")
+	t.eq(plate.values()[0], str(int(ch.baseline().value_of(&"max_hp"))), "生命上限按角色")
+	t.eq(plate.values()[1], str(int(ch.baseline().value_of(&"max_stamina"))), "耐力上限按角色")
+	t.eq(plate.values()[3], str(ch.vitality_max), "体力按角色")
+	t.eq(plate.name_label.text, Names.of(ch), "铭牌只写名字（「角色」与说明删了）")
+	t.eq(plate.find_children("*", "TextureRect", true, false).size(), 4, "四枚火漆")
 	t.check(setup._preview_view != null and setup._preview_view.inventory.size == ch.board_size, "右边是这个角色的棋盘预览")
 	t.eq(setup._preview_view.inventory.bags().size(), 0, "255：预览只画形状，不画包")
 	t.check(not setup._drag._views.has(setup._preview_view), "预览只看不拖（不在拖拽层上）")
 	# 214：角色卡第一行 = 160 的大头像 + 铭牌，图 = 这个角色的肖像（没图是占位剪影）
 	var big: PortraitSlot = setup._portrait
 	t.check(big != null and big.get_parent().get_parent() == setup._card and big.get_parent().get_index() == 0 and big.get_index() == 0, "角色卡第一行打头是大头像")
-	t.check(big != null and big.get_parent().get_child(1) is Nameplate, "铭牌在它右边")
+	t.check(big != null and big.get_parent().get_child(1) is StatSealPlate, "铭牌在它右边")
 	t.check(big != null and big.custom_minimum_size == Vector2(160, 160), "大头像 160×160")
 	t.check(big != null and (big.picture.texture if big.picture != null else null) == Nameplate.character_face(ch.id), "大头像 = 这个角色的肖像")
 

@@ -120,7 +120,7 @@ static func frame_records_score(t: TestCase, root: Window) -> void:
 	var win: RunRecordsWindow = screen.records_window()
 	t.eq(win.row_count(), 2, "两行")
 	t.eq(String(win.row_columns(0)[5]), UiText.t("records.col_score") % "173", "新局：分一栏写 173")
-	t.eq(String(win.row_columns(1)[5]), UiText.t("records.col_score") % UiText.t("records.no_score"), "老行：「—」")
+	t.eq(String(win.row_columns(1)[5]), UiText.t("records.no_score"), "老行只写「—」（游戏测试 v4.86：不写「— 分」）")
 	win.show_detail(0)
 	t.check(win.detail_text().contains(UiText.t("records.detail_score") + " " + UiText.t("records.detail_score_v") % [173, 0, 120, 53]), "详情写总分与三项（%s）" % win.detail_text())
 	win.show_detail(1)

@@ -18,6 +18,12 @@ const TEX_SCALE := 2.0
 ## 牌心垫的石色（结算屏石板的浅灰白）
 const BACKING := Color("e4e0d8")
 
+## 选人页 B（作者 2026-10-31 11:56「左上角跟着更新」）：底换基地木框羊皮纸（[constant UiTheme.PANEL_HOME_PLAQUE] 九宫格），字照旧。只开局屏开
+var wood := false:
+	set(v):
+		wood = v
+		queue_redraw()
+
 var text := "":
 	set(v):
 		text = v
@@ -54,7 +60,9 @@ func _fit() -> void:
 func _draw() -> void:
 	var tex := UiTheme.art_cached(ART)
 	var r := Rect2(Vector2(-BLEED, -BLEED), size + Vector2(BLEED, BLEED) * 2.0)
-	if tex != null:
+	if wood:
+		draw_style_box(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_HOME_PLAQUE), Rect2(Vector2.ZERO, size))
+	elif tex != null:
 		draw_rect(Rect2(Vector2(2, 2), size - Vector2(4, 4)), BACKING)     # 图的牌心是半透明的（结算屏是叠在石板上画的）：别的屏底下是画，先垫一层石色
 		var ts := tex.get_size()
 		var cap_t := CAP * TEX_SCALE

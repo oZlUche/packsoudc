@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cf7a0fjpyu0ln"
-path="res://.godot/imported/btn_go_normal.png-075cde1d22c594a37e84718182be825d.ctex"
+uid="uid://ccmk33x838bhn"
+path="res://.godot/imported/seal_vitality.png-190162f264cad42353528afea9a37a7c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/setup/btn_go_normal.png"
-dest_files=["res://.godot/imported/btn_go_normal.png-075cde1d22c594a37e84718182be825d.ctex"]
+source_file="res://assets/ui/stats_strip/seal_vitality.png"
+dest_files=["res://.godot/imported/seal_vitality.png-190162f264cad42353528afea9a37a7c.ctex"]
 
 [params]
 

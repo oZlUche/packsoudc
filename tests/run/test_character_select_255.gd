@@ -281,12 +281,13 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 		var left_pad: float = frame.global_position.x - col.global_position.x
 		var right_pad: float = col.global_position.x + col.size.x - (frame.global_position.x + frame.size.x)
 		t.check(absf(left_pad - right_pad) <= 1.0, "%s（%d 格）：棋盘在右栏里居中（左 %.0f / 右 %.0f）" % [ch.id, ch.board_size.x, left_pad, right_pad])
-		t.eq((setup._stat_plaques as Array).map(func(sp: StatPlaque) -> String: return sp.caption), ["生命", "耐力", "耐力回复", "体力"], "%s：面板方块一行四块" % ch.id)
+		t.eq((setup._stat_plate as StatSealPlate).captions(), ["生命", "耐力", "耐力回复", "体力"], "%s：铭牌里四格属性" % ch.id)
 		var entries: Array = setup._entries
 		var pins := ch.fixed_items.size()     # 256：马库斯带军功牌
 		t.eq(entries.size(), ch.skill_entries().size() + pins, "%s：技能 %d 条 + 随身之物 %d 行，没有短板那一行（补充三）" % [ch.id, ch.skill_entries().size(), pins])
 		if not entries.is_empty():     # 256：布鲁图斯没有技能，卡上只有面板与首次赠包
-			t.eq(((entries[0] as Control).get_meta(&"name_label") as Label).theme_type_variation, UiTheme.LABEL_SKILL_NAME, "技能名亮黄铜")
+			var skill_name := (entries[0] as Control).get_meta(&"name_label") as Label
+			t.eq(skill_name.get_theme_color("font_color"), UiTheme.SKILL_NAME_INK, "选人页 B：浅底上技能名朱褐")
 		t.check(entries.all(func(e: Control) -> bool: return e.get_child(0) is EntryIcon), "每行左端一个图标槽")
 		if pins == 0 and ch.board_mask.is_empty():
 			t.check(not "_board_title" in setup, "%s：作者 10-31 棋盘下面不写尺寸" % ch.id)
@@ -327,7 +328,7 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 	t.eq(entries2.size(), probe.skill_entries().size() + 2, "技能 + 随身之物 + 短板")
 	var last: Label = (entries2.back() as Control).get_meta(&"name_label")
 	t.eq(last.text, "探针短板", "有短板的角色：短板永远最后")
-	t.eq(last.theme_type_variation, UiTheme.LABEL_FLAW_NAME, "短板名铁灰")
+	t.eq(last.get_theme_color("font_color"), UiTheme.FLAW_NAME_INK, "短板名铁灰")
 	var pin_row: Control = entries2[entries2.size() - 2]
 	t.check((pin_row.get_child(0) as EntryIcon).kind == EntryIcon.ITEM, "随身之物那行的图标是道具本体")
 	var pin_texts: Array = pin_row.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
