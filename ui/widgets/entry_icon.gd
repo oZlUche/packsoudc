@@ -87,7 +87,8 @@ func _draw_skill(r: Rect2) -> void:
 
 
 func _draw_item(r: Rect2) -> void:
-	draw_rect(r, SLOT)
+	if UiTheme.tone_at(self) != UiTheme.TONE_LIGHT:     # 选人页 B：浅底（木框羊皮纸）上不垫深槽
+		draw_rect(r, SLOT)
 	if item != null and item.shape != null:
 		var n := item.shape.size_rotated(0)
 		var cell := minf((SIDE - 8.0) / n.x, (SIDE - 8.0) / n.y)

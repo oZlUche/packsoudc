@@ -112,12 +112,17 @@ const BUTTON_SETUP_TAB := &"ButtonSetupTab"
 const SETUP_TAB_LOCKED_INK := Color("b8a98c")
 const BUTTON_MAP_ENTRY := &"ButtonMapEntry"
 const BUTTON_MAP_SUB := &"ButtonMapSub"
+## 选人页 B（作者 10-31 11:56）：开局屏右下两颗 = 基地木键（返回浅木 30 号、继续 / 出发橙色主键 40 号）；名单木键 20 号
 const BUTTON_SETUP_BACK := &"ButtonSetupBack"
 const BUTTON_SETUP_GO := &"ButtonSetupGo"
+const BUTTON_SETUP_CHAR := &"ButtonSetupChar"
 const BUTTON_DIFF_MINUS := &"ButtonDiffMinus"
 const BUTTON_DIFF_PLUS := &"ButtonDiffPlus"
 const CAP_VALUE_SIZE := 28
 const SKILL_NAME_SIZE := 22
+## 选人页 B：浅底上的技能名朱褐、短板铁灰（不描边，[method text_theme]）
+const SKILL_NAME_INK := Color("8a3b12")
+const FLAW_NAME_INK := Color("4a4f57")
 const SKILL_TEXT_SIZE := 17
 const SCREEN_TITLE_SIZE := 26
 ## 166：地图屏的顶端栏（[code]hud_bar[/code] 部件的底：美术给 `hud/bar.png` 九宫格就贴，没给是读数那种半透明深底）、
@@ -144,7 +149,7 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
-	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
+	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_SETUP_CHAR, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
 	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE, BUTTON_FORGE, LABEL_FLAW_NAME]
 
 const TITLE_SIZE := 18
@@ -246,8 +251,6 @@ const ART_SETUP_TAB := "setup/tab"
 const ART_MAP_ENTRY := "setup/map_entry"
 const ART_MAP_SUB := "setup/map_sub"
 const ART_SUMMARY_NOTE := "setup/summary_note"
-const ART_SETUP_BACK := "setup/btn_back"
-const ART_SETUP_GO := "setup/btn_go"
 const ART_RINGS := "setup/rings"
 ## 182：第三页纸上的入口小旗（作者 15:32 定；`_normal` / `_hover` / `_sel` 三态，锚点在图中心），居中提示窗的纸签底与上沿正中的红蜡封（单独摆，不进九宫格）；
 ## 没图：小旗现画成纸底墨圈、纸签退回摘要便条
@@ -915,6 +918,11 @@ static func text_theme(tone: StringName) -> Theme:
 	for v in [RICH_BODY, RICH_SMALL]:
 		t.set_type_variation(v, "RichTextLabel")
 		t.set_color("default_color", v, INK)
+	# 选人页 B：技能名 / 短板名在浅底（木框羊皮纸）上朱褐 / 铁灰、不描边
+	for pair in [[LABEL_SKILL_NAME, SKILL_NAME_INK], [LABEL_FLAW_NAME, FLAW_NAME_INK]]:
+		t.set_type_variation(pair[0], "Label")
+		t.set_color("font_color", pair[0], pair[1])
+		t.set_constant("outline_size", pair[0], 0)
 	# 180 定稿：难度计数器的数字永远写在黑翻页卡上 —— 摆在浅色地图纸上也还是白字
 	t.set_type_variation(LABEL_FLIP_NUM, "Label")
 	t.set_color("font_color", LABEL_FLIP_NUM, Color.WHITE)
@@ -1671,13 +1679,10 @@ static func _setup_art(t: Theme) -> void:
 		var m: Array = art_meta(spec[1]).get("margin", [16, 8, 16, 8])
 		if _art_button(t, spec[0], spec[1], m, {"normal": "normal", "hover": "hover", "pressed": "on", "hover_pressed": "on", "disabled": "normal"}):
 			_button_ink(t, spec[0], INK)
-	# 按钮 A 套：「返回」深色铜铸牌（浅字），「出发 / 继续」亮黄铜（墨字）
-	var btn: Dictionary = art_meta("setup/btn")
-	for spec in [[BUTTON_SETUP_BACK, ART_SETUP_BACK, "back", BUTTON_SECONDARY, Color("f3e3c0")], [BUTTON_SETUP_GO, ART_SETUP_GO, "go", BUTTON_PRIMARY, INK]]:
-		t.set_type_variation(spec[0], spec[3])
-		var m: Array = (btn.get(spec[2], {}) as Dictionary).get("margin", [26, 22, 26, 26])
-		if _art_button(t, spec[0], spec[1], m):
-			_button_ink(t, spec[0], spec[4])
+	# 选人页 B：右下两颗、角色名单都是基地木键（[constant BUTTON_HOME] / [constant BUTTON_HOME_PRIMARY]），只换字号
+	for spec in [[BUTTON_SETUP_BACK, BUTTON_HOME, 30], [BUTTON_SETUP_GO, BUTTON_HOME_PRIMARY, 40], [BUTTON_SETUP_CHAR, BUTTON_HOME, 20]]:
+		t.set_type_variation(spec[0], spec[1])
+		t.set_font_size("font_size", spec[0], spec[2])
 
 
 ## 一套按钮状态图挂到变体上：[param states] 是 状态 → 文件后缀（`<base>_<后缀>.png`，缺的那张退回 normal）；
