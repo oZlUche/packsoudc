@@ -496,11 +496,12 @@ func _draw_seams(grid_px: Vector2) -> void:
 			box.bg_color = pad
 			box.set_corner_radius_all(int(seams.get("pad_radius", 6)))
 			draw_style_box(box, Rect2(Vector2.ZERO, grid_px).grow(float(seams.get("pad_margin", 0.0))))
+	var empty_a := float(seams.get("empty_alpha", 0.16))     # 作者 10-31：集市透明格连空格的压暗也不要
 	for y in inventory.size.y:
 		for x in inventory.size.x:
 			var c := Vector2i(x, y)
-			if not inventory.is_blocked(c) and not inventory.is_covered(c):     # 255：缺格透空（不压暗），框沿轮廓收边
-				draw_rect(Rect2(cell_origin_px(c), Vector2(cell_px, cell_px)), Color(0, 0, 0, 0.16), true)
+			if empty_a > 0.0 and not inventory.is_blocked(c) and not inventory.is_covered(c):     # 255：缺格透空（不压暗），框沿轮廓收边
+				draw_rect(Rect2(cell_origin_px(c), Vector2(cell_px, cell_px)), Color(0, 0, 0, empty_a), true)
 	# 铜面板三屏（boards_dark）：深色半透明内垫上的格缝带透明度、两端缩 trim
 	var seam := Color(String(seams.get("seam", "#8e8b85")), float(seams.get("seam_alpha", 1.0)))
 	var hi := Color(String(seams.get("hi", "#ebe9e4")), float(seams.get("hi_alpha", 1.0)))
