@@ -17,6 +17,8 @@ const ROLLER_OUT := 4.0
 const SIDE := 14.0
 const CLIP_IN := 6.0
 const FONT_SIZE := 18
+## 字和后面那枚红金币之间
+const COIN_GAP := 6.0
 const INK := Color("2e2219")
 const OPEN_SEC := 0.25
 const CLOSE_SEC := 0.22
@@ -34,6 +36,8 @@ var amount := 1.0:
 		_sync()
 
 var _label: Label
+## 原因里带「金币不够」记号（[CoinShort]）时，字后面跟一枚红色斜划的金币
+var _coin: CoinLabel = null
 var _clip: Control
 var _rollers: Control
 var _paper_w := 0.0
@@ -59,7 +63,7 @@ func _build() -> void:
 	_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_clip)
 	_label = Label.new()
-	_label.text = text
+	_label.text = CoinShort.strip(text) if CoinShort.has(text) else text
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_label.label_settings = LabelSettings.new()
@@ -67,12 +71,17 @@ func _build() -> void:
 	_label.label_settings.font_size = UiTheme.sz(FONT_SIZE)
 	_label.label_settings.font_color = INK     # 纸是浅色（tone light）：墨字，深底上也是同一卷
 	_clip.add_child(_label)
+	if CoinShort.has(text):
+		_coin = CoinLabel.make_short(CoinShort.amount(text), UiTheme.sz(FONT_SIZE))
+		_clip.add_child(_coin)
 	_rollers = Control.new()
 	_rollers.name = "Rollers"
 	_rollers.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_rollers.draw.connect(_draw_rollers)
 	add_child(_rollers)     # 轴压在纸和字上面
-	var tw := UiPalette.cjk_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(FONT_SIZE)).x
+	var tw := UiPalette.cjk_font().get_string_size(_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(FONT_SIZE)).x if _label.text != "" else 0.0
+	if _coin != null:
+		tw += _coin.custom_minimum_size.x + (COIN_GAP if _label.text != "" else 0.0)
 	_paper_w = ceilf(tw) + 2.0 * PAD
 	custom_minimum_size = Vector2(_paper_w + 2.0 * SIDE, ROLLER_H)
 	size = custom_minimum_size
@@ -83,6 +92,11 @@ func _build() -> void:
 ## 这一卷写的字（测试读）
 func label() -> Label:
 	return _label
+
+
+## 「金币不够」那枚红金币（没有 null）
+func coin() -> CoinLabel:
+	return _coin
 
 
 ## 纸此刻在本控件里的矩形
@@ -105,8 +119,16 @@ func _sync() -> void:
 	_clip.position = Vector2(r.position.x + inset, r.position.y)
 	_clip.size = Vector2(maxf(0.0, r.size.x - 2.0 * inset), r.size.y)
 	_label.reset_size()
-	# 字钉在整卷中心：裁切框挪，字反着挪
-	_label.position = Vector2((size.x - _label.size.x) * 0.5, (PAPER_H - _label.size.y) * 0.5) - Vector2(_clip.position.x, 0.0)
+	# 字钉在整卷中心：裁切框挪，字反着挪（有那枚红金币就字 + 金币一起居中）
+	var lw := _label.size.x if _label.text != "" else 0.0
+	var cw := 0.0
+	if _coin != null:
+		_coin.size = _coin.custom_minimum_size
+		cw = _coin.size.x + (COIN_GAP if lw > 0.0 else 0.0)
+	var x0 := (size.x - lw - cw) * 0.5 - _clip.position.x
+	_label.position = Vector2(x0, (PAPER_H - _label.size.y) * 0.5)
+	if _coin != null:
+		_coin.position = Vector2(x0 + lw + cw - _coin.size.x, (PAPER_H - _coin.size.y) * 0.5)
 	_rollers.size = size
 	queue_redraw()
 	_rollers.queue_redraw()
