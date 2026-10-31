@@ -49,7 +49,9 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	var p = s.market_panel()
 	t.eq(p.views().size(), 8, "高级货物 2 级 = 集市 3 级：八个货位")
 	t.eq(p.views().size(), f.meta.market_stock.size(), "每格一块视图")
-	t.check(p.views().all(func(v: InventoryView) -> bool: return BoardFrame.framed(v)), "货位带框（227）")
+	t.check(p.views().all(func(v: InventoryView) -> bool: return BoardFrame.framed(v)), "货位登记过（227 守门）")
+	t.check(p.views().all(func(v: InventoryView) -> bool: return not v.get_parent() is BoardFrame and float(v.seams.get("seam_alpha", 1.0)) == 0.0 and float(v.seams.get("empty_alpha", 1.0)) == 0.0),
+		"作者 10-31：集市格子透明 —— 不套框、不画格缝")
 	var sizes_ok := true
 	for i in p.views().size():
 		var def := Market.def_at(f.meta, f.items, i)
@@ -66,7 +68,7 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 			front = i
 	var bottoms: Array = []
 	for v in p.views():
-		var fr := (v as Control).get_parent() as Control
+		var fr := v as Control     # 作者 10-31：不套框，货位就是那块小棋盘
 		bottoms.append(fr.position.y + fr.size.y)
 	bottoms.sort()
 	var rows := 1
@@ -76,7 +78,7 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	t.eq(rows, 2, "八件分前后两排（%s）" % str(bottoms))
 	t.check(p.views()[back].cell_px < p.views()[front].cell_px, "后排的格子小、前排大（scale；%s）" % str([back, front, p.views()[back].cell_px, p.views()[front].cell_px, p.stage().size]))
 	var foot: Vector2 = p.stage().foot_of(spots[0])
-	var fr0 := (p.views()[0] as Control).get_parent() as Control
+	var fr0 := p.views()[0] as Control
 	t.check(absf(fr0.position.x + fr0.size.x * 0.5 - foot.x) < 1.0 and absf(fr0.position.y + fr0.size.y - foot.y) < 1.0, "货底中点落在 foot 上")
 	t.check(p.prices()[0].position.y >= foot.y, "价签平放在货前面")
 	var coins_ok := true

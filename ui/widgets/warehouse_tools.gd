@@ -1,7 +1,7 @@
 ## 264 §六（作者 16:43「按推荐来」= A 工具列）：基地「仓库」页包架下面两块牌 —— 筛选牌（标签下拉 + 稀有度下拉 + 「清除」小键，
-## 右边仓库不匹配的格压灰、页签计数改匹配数，[method WarehousePages.set_filter]）与账牌（件数 / 总价值（金币）/ 空格）。
+## 右边仓库不匹配的格压灰、页签计数改匹配数，[method WarehousePages.set_filter]）。作者 10-31：账牌不要了（「仓库不需要账目栏」）。
 ## 木牌定稿（UI替换美术 plaque264）：小木牌 [constant UiTheme.PANEL_HOME_PLAQUE_SMALL]（橡木框 + 羊皮面，浅底墨字）
-## 268（作者 10-30 15:23 定 C；补充一 15:27）：出售页删了 —— 两块牌中间一颗【快速出售】主档木牌键（按下态 = 出售模式开着：
+## 268（作者 10-30 15:23 定 C；补充一 15:27）：出售页删了 —— 筛选牌下面一颗【快速出售】主档木牌键（按下态 = 出售模式开着：
 ## 中列出「出售单」[SellSheet]、右边仓库单击勾选；开关由 [MetaScreen] 接 [signal sell_mode_toggled]）。模式里筛选牌让给出售单，压灰不能点
 class_name WarehouseTools
 extends VBoxContainer
@@ -11,7 +11,6 @@ signal sell_mode_toggled(on: bool)
 
 const WIDTH := 228.0
 const FILTER_H := 150.0
-const LEDGER_H := 120.0
 const FONT := 16
 const CLEAR_SIZE := Vector2(96, 36)
 ## 268：【快速出售】
@@ -29,12 +28,8 @@ var clear_btn: Button = null
 ## 265：「只看收藏」（按下 = 只看）
 var fav_btn: Button = null
 var filter_plate: PanelContainer = null
-var ledger_plate: PanelContainer = null
 ## 268：快速出售（按下态 = 出售模式开着）
 var quick_btn: Button = null
-var _items: Label = null
-var _worth: CoinLabel = null
-var _free: Label = null
 
 
 func setup(p_flow: GameFlow, p_shelf: WarehousePages) -> WarehouseTools:
@@ -68,19 +63,6 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages) -> WarehouseTools:
 	quick_btn.toggle_mode = true
 	quick_btn.tooltip_text = UiText.t("wh.quick_sell_tip")
 	add_child(quick_btn)
-	ledger_plate = _plate(LEDGER_H)
-	var lcol := _col(ledger_plate)
-	lcol.add_child(HeaderTag.new(UiText.t("meta.ledger")))
-	_items = UiTheme.make_label("", FONT, UiTheme.INK)
-	lcol.add_child(_items)
-	var worth_row := UiTheme.hbox(8)
-	lcol.add_child(worth_row)
-	worth_row.add_child(UiTheme.make_label(UiText.t("meta.ledger_worth"), FONT, UiTheme.INK))
-	_worth = CoinLabel.make(0, UiTheme.sz(FONT), UiTheme.INK)
-	worth_row.add_child(_worth)
-	_free = UiTheme.make_label("", FONT, UiTheme.INK)
-	lcol.add_child(_free)
-	ledger_plate.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN     # 268：出售单在这一列时（比牌宽）不跟着拉宽
 	meta.warehouse.changed.connect(refresh)
 	meta.changed.connect(refresh)
 	refresh()
@@ -113,7 +95,7 @@ func clear() -> void:
 	set_filter(&"", -1, false)
 
 
-## 仓库变了：标签下拉重建（按大类分组，组间一条分隔，同出售页）、账牌重算
+## 仓库变了：标签下拉重建（按大类分组，组间一条分隔，同出售页）
 func refresh() -> void:
 	if meta == null:
 		return
@@ -137,9 +119,6 @@ func refresh() -> void:
 		tag_pick.set_item_metadata(tag_pick.item_count - 1, String(t))
 	_sync_picks()
 	_refresh_clear()
-	_items.text = UiText.t("meta.ledger_items") % item_count()
-	_worth.amount = meta.warehouse_value()
-	_free.text = UiText.t("meta.ledger_free") % free_cells()
 
 
 func _sync_picks() -> void:
@@ -169,27 +148,6 @@ func set_sell_mode(on: bool, sheet: Control = null) -> void:
 		move_child(sheet, quick_btn.get_index() + 1)
 		sheet.visible = on
 	refresh()
-
-
-## 账牌三数：仓库件数、总价值（仓库 + 包架上的包，[method MetaState.warehouse_value]）、各页空格合计
-func item_count() -> int:
-	return meta.warehouse.item_count()
-
-
-func worth() -> int:
-	return meta.warehouse_value()
-
-
-func free_cells() -> int:
-	var n := 0
-	for i in meta.warehouse.page_count():
-		n += meta.warehouse.page(i).free_cell_count()
-	return n
-
-
-## 测试看：账牌上三行写的字（件数行、总价值的数、空格行）
-func ledger_lines() -> Array:
-	return [_items.text, _worth.amount, _free.text]
 
 
 ## 标签下拉现在列的标签（不含「不限标签」，测试读）

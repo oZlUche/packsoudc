@@ -219,7 +219,6 @@ const ART_HOME_PLAQUE := "home/plaque"
 const ART_HOME_PLAQUE_SMALL := "home/plaque_small"
 const ART_HOME_CHIP := "home/plaque_chip"
 const ART_SHELF := "home/shelf"
-const ART_TAB_MARK := "home/tab_mark"
 ## 197 补充一 §5：主菜单轮换的三张整屏画（营地 → 军营 → 地图；2112 × 1320，四边留出血给镜头走）
 const ART_MENU_BGS: Array[String] = ["menu/bg_camp", "menu/bg_legion", "menu/bg_map"]
 ## 179：开局三页的整屏背景「选人场地」（铺满裁边）与三栏的凹槽板；没图：纯色底、平面板

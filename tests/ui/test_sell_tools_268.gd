@@ -25,7 +25,7 @@ static func frame_quick_sell(t: TestCase, root: Window) -> void:
 	var shelf: WarehousePages = screen.shelf()
 	var key := tools.quick_btn
 	t.not_null(key, "工具列有【快速出售】")
-	t.check(tools.filter_plate.get_index() < key.get_index() and key.get_index() < tools.ledger_plate.get_index(), "在筛选牌和账牌中间")
+	t.check(tools.filter_plate.get_index() < key.get_index() and key == tools.get_child(tools.filter_plate.get_index() + 1), "在筛选牌正下面")
 	t.eq(key.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "主档木牌")
 	t.eq(key.custom_minimum_size, WarehouseTools.QUICK_SIZE, "228 × 56")
 	t.check(key.toggle_mode and not key.button_pressed, "可按下，起初抬着")
@@ -100,7 +100,6 @@ static func frame_quick_sell(t: TestCase, root: Window) -> void:
 	t.eq(screen.notice_layer().current_text(), UiText.t("meta.sold_many") % [2, int(got["funds"]), f.meta.funds], "告示：卖了几件得几币")
 	t.eq(shelf.selected.size(), 0, "勾选清空")
 	t.check(screen.sell_mode(), "留在出售模式")
-	t.check(String(tools.ledger_lines()[0]).contains("3"), "账牌跟着刷（%s）" % tools.ledger_lines()[0])
 	# 勾了的被右键卖掉：从勾选里去掉
 	shelf.view.item_picked.emit(shelf.view, k1.uid)
 	screen.sell(k1.uid)

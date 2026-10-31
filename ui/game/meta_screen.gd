@@ -84,8 +84,6 @@ var _sub_box: VBoxContainer = null
 ## 264 §四：书架底下五颗小键（格名 → 键）与那一列
 var _shelf_sub_btns: Dictionary = {}
 var _shelf_sub_box: VBoxContainer = null
-## 164：页签选中时左上角挂的小木牌（`home/tab_mark.png`；没图不挂）
-var _tab_mark: TextureRect = null
 ## 261：书架格 → 格上的小牌（按钮）；窗（压暗层）；开着的那扇
 var _shelf_view: ShelfView = null
 var _shelf_windows: Dictionary = {}
@@ -162,12 +160,7 @@ func open(payload: Dictionary) -> void:
 		tab_w = maxf(tab_w, (_tab_btns[key] as Button).get_combined_minimum_size().x)
 	for key in _tab_btns:
 		(_tab_btns[key] as Button).custom_minimum_size.x = tab_w
-	var tex := UiTheme.art(UiTheme.ART_TAB_MARK)
-	if tex != null:
-		_tab_mark = TextureRect.new()
-		_tab_mark.texture = tex
-		_tab_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_tab_mark.position = Vector2(-10, -14)
+	# 作者 10-31：选中页签左上角那枚五角小木牌（164 tab_mark）删了 —— 「很难看而且没有意义」，选中只看按下态
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(spacer)
@@ -1184,11 +1177,6 @@ func show_tab(name: String) -> void:
 	if _shelf_sub_box != null:
 		_shelf_sub_box.get_parent().visible = name == "shelf"
 	layout.call_deferred()     # 中列换了页，最窄宽度可能变了
-	if _tab_mark != null:
-		if _tab_mark.get_parent() != null:
-			_tab_mark.get_parent().remove_child(_tab_mark)
-		if _tab_btns.has(name):
-			(_tab_btns[name] as Button).add_child(_tab_mark)
 
 
 ## 164：点左列一个页签。264：页签单选 —— 再点选中的不动（没有「家」了），只把按下态补回来
