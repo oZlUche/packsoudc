@@ -11,7 +11,7 @@ const PREFIX := "bare226"
 
 ## 自己就是一块字件的类（字画在它的底上）
 const TEXT_WIDGETS := ["Button", "HeaderTag", "TitlePlate", "PriceTag", "NoticeScroll", "NoticeLayer", "StatsStrip",
-	"HoverTip", "ItemTooltip", "CapTile", "HudHost", "DevDrawer", "LedgerView"]
+	"HoverTip", "ItemTooltip", "CapTile", "GiftTag", "HudHost", "DevDrawer", "LedgerView"]
 
 
 static func _class_of(n: Node) -> String:
@@ -126,8 +126,8 @@ static func frame_out_of_run_screens(t: TestCase, root: Window) -> void:
 	var menu := _open("main_menu", f, root)
 	var paper := menu.find_child("MenuNoticePaper", true, false) as Control
 	t.check(paper != null and paper.visible, "主菜单备份告示有纸条")
-	var note_line := menu.notices().get_child(0) as Label if menu.notices().get_child_count() > 0 else null
-	t.check(note_line != null and note_line.get_theme_font_size("font_size") == 15 and note_line.horizontal_alignment == HORIZONTAL_ALIGNMENT_LEFT, "便条字 15 号、左对齐")
+	var note_line := menu.notices().get_child(0) as RichTextLabel if menu.notices().get_child_count() > 0 else null     # 10-31：富文本（退的钱画金币）
+	t.check(note_line != null and note_line.get_theme_font_size("normal_font_size") == 15 and note_line.horizontal_alignment == HORIZONTAL_ALIGNMENT_LEFT, "便条字 15 号、左对齐")
 	bad.append_array(audit(menu, "主菜单"))
 	menu.free()
 	f.meta_backup = ""
