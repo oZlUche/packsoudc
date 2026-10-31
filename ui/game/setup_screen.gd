@@ -184,12 +184,12 @@ var _gift_tag: PanelContainer = null
 var _preview_board: GridInventory = null
 ## 255：这一回进开局屏时，哪几个角色是第一次选（首次赠包刚送进包架）—— 小签只在这时显示
 var _gifted: Dictionary = {}
-## 179：右栏板的内边距（选人页 B：木框羊皮纸，棋盘离开木框）
-const RIGHT_PAD := 26
+## 179：右栏板的内边距（作者 10-31：不垫底）
+const RIGHT_PAD := 10
 ## 选人页 B（作者 10-31 11:56）：左、中两栏木框羊皮纸板（[constant UiTheme.PANEL_HOME_PLAQUE]）的内边距
 const HALL_INSET := 30
 ## 255（作者 2026-10-26 10:51）：三栏定宽，不随棋盘宽窄变 —— 左按角色名纸条（连皮框 312；稿子的 260 放不下「安德烈乌斯」）、右按最宽的九格棋盘、中栏是剩下的；不足九格的棋盘在右栏里居中
-const LEFT_W := 308     # 选人页 B：名单换木键、字小了，让给右栏加宽的内边距（中栏宽差不多不变）
+const LEFT_W := 308     # 选人页 B：名单换木键、字小了，让出的 28 给中栏
 const COL_GAP := 24     # 作者 10-27「太窄了，向右拓宽一些」：左栏 312 → 336，让出的 24 来自两道栏距（中栏宽不变，英文最长的卡照样装得下）
 const BOARD_MAX_W := CharacterDef.BOARD_MAX_W
 ## 255 补充二：第二页棋盘下的包架横排几格（九种以内一行）
@@ -199,9 +199,9 @@ const RACK_COLUMNS := 9
 const CARD_H := 760     # 选人页 B：铭牌并进属性、那排蜡板删了
 ## 255 补充一：右栏（棋盘预览）定高 —— 六行棋盘、题字、图例、首次赠包签都在时那么高（七行以上的棋盘才再长）；258：按大档字号算（原 560）
 const PREVIEW_H := 576
-## 255：角色卡里的几样尺寸 —— 小牌间 10；小牌 ≤ 206 宽（选人页 B 木牌底，原 180）；条目行间 8
+## 255：角色卡里的几样尺寸 —— 小牌间 10；小牌 ≤ 180 宽；条目行间 8
 const STAT_GAP := 10
-const TILE_MAX_W := 206.0
+const TILE_MAX_W := 180.0
 const ENTRY_GAP := 6
 ## 255：角色卡几行之间（原 14；卡多了两行，收一点才装得进三样全有的角色）
 const CARD_SEP := 10
@@ -314,7 +314,7 @@ func _build_character_page() -> Control:
 	_card = _vbox(CARD_SEP)
 	_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.add_child(_card)
-	var right_board := _hall_board(RIGHT_PAD)     # 作者 10-31：黑底去掉；选人页 B：和左中两栏同一种木框羊皮纸
+	var right_board := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_BARE, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)     # 作者 10-31：去掉黑底，棋盘直接立在底上（选人页 B 补充一：照旧）
 	right_board.size_flags_horizontal = Control.SIZE_SHRINK_END
 	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	right_board.custom_minimum_size = Vector2(right_width(), PREVIEW_H)     # 255：按九格定宽；补充一：高按六行棋盘 + 题字 + 图例 + 赠包签定死
@@ -1730,7 +1730,10 @@ func _rebuild_card() -> void:
 	var tw := minf(TILE_MAX_W, floorf((inner - STAT_GAP * (caps.size() - 1)) / maxf(1.0, caps.size())))
 	for cap in caps:
 		var tile := CapTile.new().setup(cap[0], cap[1], cap[2])
-		UiTheme.panel_margins(tile, UiTheme.PANEL_HOME_PLAQUE_SMALL, 16, 12, 16, 16)     # 选人页 B：小木牌底
+		UiTheme.panel_margins(tile, UiTheme.PANEL_HOME_PLAQUE_SMALL, 16, 12, 16, 16)     # 选人页 B：小木牌底；补充一：说明行不显示，放整块悬停
+		tile.caption_label.visible = false
+		tile.tooltip_text = String(cap[2])
+		tile.mouse_filter = Control.MOUSE_FILTER_STOP
 		tile.size_flags_horizontal = Control.SIZE_FILL
 		tile.custom_minimum_size.x = tw
 		tiles.add_child(tile)

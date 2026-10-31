@@ -2,9 +2,9 @@
   "id": "score",
   "display_name": "计分",
   "kill": {
-    "normal": 10,
-    "elite": 40,
-    "boss": 200
+    "normal": 25,
+    "elite": 100,
+    "boss": 500
   },
   "explore": {
     "visited": 2,

@@ -208,7 +208,7 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	t.eq(nums.get("带出的东西"), "2 件 · 保险箱 1 件", "带出的东西一行写件数")
 	t.eq(nums.get("最高稀有度"), ItemTooltip.rarity_name(gun.rarity), "最高稀有度写稀有度名")
 	t.eq(nums.get("带出金币"), "153", "带出金币")
-	t.eq(nums.get("总分"), "1302", "269：总分 = 战利 953 + 40 + 战绩 4×10 + 40 + 探索 12×2 + 4×5 + 2×5 + 7×25")
+	t.eq(nums.get("总分"), "1422", "269：总分 = 战利 953 + 40 + 战绩 4×25 + 100 + 探索 12×2 + 4×5 + 2×5 + 7×25")
 	t.check(not ledger.is_revealed() and not ledger.rows()[0]["shown"], "进屏时还没显出")
 	var plate := screen.find_child("TitlePlate", true, false) as TextureRect
 	t.check(plate != null and plate.texture != null, "224（作者 16:32）：标题刻在标题牌上")
