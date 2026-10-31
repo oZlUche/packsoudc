@@ -12,6 +12,7 @@
 ## 带回来的棋盘是一块不要求包的格子：包已经不在（只计图鉴），东西位置照旧 —— 作者说的「包统一替换成最大的默认背景包」。
 ## 225（作者 18:27 定包架）：包也带回来了、照旧铺着（这时棋盘要求包）；最左一列是**包架**（[BagRackView]），
 ## 「一键置入」货进仓库、包进包架；从棋盘拖空包只能落包架，包架上的包只在包架里挪。
+## 268 补充二（作者 10-31 11:25）：基地「仓库」页的包架不在这一列，[method rack_box] 交给 [MetaScreen] 贴在右边仓库棋盘左边；结算页照旧
 extends MarginContainer
 
 const ContainerScreenScript := preload("res://ui/game/container_screen.gd")
@@ -39,7 +40,7 @@ var _board_box: VBoxContainer
 ## 225：包架（挂牌 + 一列）与它的视图
 var _rack_box: Control = null
 var _rack_view: BagRackView = null
-## 264 §六：包架那一列（包架在上，基地「仓库」页再挂筛选牌、账牌，[method add_rack_tools]）
+## 264 §六：包架那一列（结算页是包架；基地「仓库」页只挂筛选牌那一列，[method add_rack_tools]）
 var _rack_col: VBoxContainer = null
 var _board_view: InventoryView
 var _board_scroll: ScrollContainer = null
@@ -63,7 +64,6 @@ var board_cell := 0.0
 var _buttons: HBoxContainer = null
 ## 230：悬浮窗「出售」怎么卖一件（`func(uid) -> int`）；基地屏换成自己的（写出售页那一行）。不给 = 直接卖、存档
 var sell_one: Callable = Callable()
-var _sell_mode := false
 
 
 ## [param shelf] / [param drag] 给了 = 基地「家」页（仓库在别处、拖拽层是整屏那一层）
@@ -91,7 +91,8 @@ func _build() -> void:
 	_rack_view = BagRackView.view_in(_rack_box)
 	_rack_col = UiTheme.vbox(20)
 	row.add_child(_rack_col)
-	_rack_col.add_child(_rack_box)
+	if _own_shelf:
+		_rack_col.add_child(_rack_box)
 	_board_box = UiTheme.vbox(6)
 	row.add_child(_board_box)
 
@@ -177,7 +178,7 @@ func _rebuild_board_view() -> void:
 	if _meta.board == null:
 		_board_box.visible = false
 		return
-	_board_box.visible = not _sell_mode
+	_board_box.visible = true
 	_board_view = InventoryView.new()
 	_board_view.label_font = _font
 	_board_view.inventory = _meta.board
@@ -243,12 +244,17 @@ func rack_view() -> BagRackView:
 	return _rack_view
 
 
-## 225：包架那一列连同和棋盘的间隔占多宽（基地按中列宽算带回来背包的格子时扣掉）
+## 268 补充二：包架（挂牌 + 一列）；基地「仓库」页没放进面板，由 [MetaScreen] 挂到右边
+func rack_box() -> Control:
+	return _rack_box
+
+
+## 225：包架那一列（基地是筛选牌那一列）连同和棋盘的间隔占多宽（基地按中列宽算带回来背包的格子时扣掉）
 func rack_room() -> float:
 	return (_rack_col.get_combined_minimum_size().x + ROW_GAP) if _rack_col != null else 0.0
 
 
-## 264 §六：包架下面挂一块（基地「仓库」页的筛选牌、账牌）
+## 264 §六：那一列挂一块（基地「仓库」页的筛选牌那一列）
 func add_rack_tools(c: Control) -> void:
 	_rack_col.add_child(c)
 
@@ -375,13 +381,6 @@ func warehouse_actions(uid: int, with_quick: bool) -> Array:
 	out.append(ItemActions.sell(inst, price_of.call(inst), seller))
 	out.append(ItemActions.sell_same(inst, _meta.warehouse, price_of, seller))
 	return out
-
-
-## 268 补充一：快速出售模式里包架与带回来的背包板收起（模式只管仓库），退出再露
-func set_sell_mode(on: bool) -> void:
-	_sell_mode = on
-	_rack_box.visible = not on
-	_board_box.visible = not on and _meta.board != null
 
 
 ## 268：包架上一只：出售 N 币（双击仍是置入）

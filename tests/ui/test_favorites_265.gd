@@ -177,7 +177,7 @@ static func frame_warehouse_and_codex(t: TestCase, root: Window) -> void:
 	tools.clear()
 	t.check(not shelf.filter_fav and not tools.fav_btn.button_pressed, "清除：一起清")
 	screen.set_sell_mode(true)
-	t.check(screen.sell_sheet().skipped_text().contains(UiText.t("meta.sell_skip_fav") % 1), "268：出售单写跳过收藏 1 件（%s）" % screen.sell_sheet().skipped_text())
+	t.check(screen.sell_strip().skipped_text().contains(UiText.t("meta.sell_skip_fav") % 1), "268：出售条写跳过收藏 1 件（%s）" % screen.sell_strip().skipped_text())
 	screen.set_sell_mode(false)
 	screen.show_tab("codex")
 	t.eq(screen.codex_filter(), "all", "图鉴默认全部")

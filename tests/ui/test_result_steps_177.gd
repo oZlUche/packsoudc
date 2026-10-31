@@ -123,9 +123,8 @@ static func frame_sell_by_tag(t: TestCase, root: Window) -> void:
 	t.eq(tools.tag_options(), tags, "下拉的选项 = 仓库里有的标签，按大类排")
 	tools.set_filter(tag, -1)
 	t.eq(screen.shelf().filter_tag, tag, "选中标签")
-	screen.set_sell_mode(true)     # 268 补充一：快速出售按标签全选、两下卖
-	var sheet: SellSheet = screen.sell_sheet()
-	sheet.set_filter(tag, -1)
+	screen.set_sell_mode(true)     # 268 补充二：快速出售沿用筛选牌的筛选，全选、两下卖
+	var sheet: SellStrip = screen.sell_strip()
 	sheet.toggle_all()
 	t.check(sheet.summary_text().contains("2 件"), "按标签全选：2 件（%s）" % sheet.summary_text())
 	sheet.press_sell()
