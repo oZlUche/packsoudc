@@ -1451,7 +1451,6 @@ const TEXT := {
 	"wh.tab_picked_tip": {"zh": "第%s页　勾了 %d 件 / 共 %d 件", "en": "Page %s · selected %d of %d"},
 	"wh.quick_sell": {"zh": "快速出售", "en": "Quick sell"},
 	"wh.quick_sell_tip": {"zh": "点右边仓库里的道具勾上要卖的，再按一次退出", "en": "Click items in the Warehouse to pick what to sell; press again to stop"},
-	"sell.sheet_title": {"zh": "出售单", "en": "Sell list"},
 	"sell.select_all": {"zh": "全选", "en": "Select all"},
 	"sell.select_none": {"zh": "全不选", "en": "Select none"},
 	"sell.picked": {"zh": "已选 %d 件 ·", "en": "Selected: %d ·"},

@@ -21,6 +21,10 @@ const MARGIN := 24.0
 const COL_GAP := 24.0
 ## 右半边标题行的高（「仓库　N 件」与调试台箭头）
 const SHELF_HEAD := 44.0
+## 268 补充二：包架窄架和仓库木架框之间的空隙
+const RACK_GAP := 14.0
+## 268 补充二：带回来的背包最小格（比仓库的 [constant WarehousePages.CELL_MIN] 小一点：1600 宽上筛选牌那一列 + 背包 + 包架 + 仓库要放得下）
+const BOARD_CELL_MIN := 34.0
 ## 仓库分页签（挂牌）多高，同开局屏第二页
 const SHELF_TAB_H := 60.0
 ## 基地页签字左边的图标（`home/tabs/tab_<页签名>`，36 × 36 墨色剪影；没图就只有字）
@@ -60,10 +64,10 @@ var _wh = null
 var _stele: RecordsStele = null
 var _expedition: ExpeditionBoard = null
 var _new_run_btn: Button
-## 264 §六：仓库页包架下面的筛选牌与账牌
+## 264 §六：仓库页的筛选牌那一列（268 补充二：筛选牌 /【快速出售】/ 出售条）
 var _wh_tools: WarehouseTools = null
-## 268 补充一：快速出售的出售单
-var _sell_sheet: SellSheet = null
+## 268 补充二：快速出售的出售条（【快速出售】下面，模式里才露）
+var _sell_strip: SellStrip = null
 var _wh_page: PanelContainer = null
 ## 264 §三：整屏背景那张图、现在铺的是哪张、淡入中的上层
 var _home_bg: TextureRect = null
@@ -113,6 +117,9 @@ var _cols: HBoxContainer = null
 var _margin: MarginContainer = null
 var _middle: VBoxContainer = null
 var _right: VBoxContainer = null
+## 268 补充二：右半边 = 包架窄架（[member _rack_col]，贴棋盘左边、与棋盘同顶）+ 仓库那一列
+var _rack_col: VBoxContainer = null
+var _rack_top: Control = null
 var _shelf: WarehousePages = null
 var _shelf_frame: PanelContainer = null
 var _shelf_title: HeaderTag = null
@@ -180,9 +187,17 @@ func open(payload: Dictionary) -> void:
 	# 右半边：仓库（先建 —— 家页的带回来背包、科技页的上交区都要和它同一层拖拽）
 	_right = _vbox(8)
 	_cols.add_child(_right)
+	var right_row := _hbox(int(RACK_GAP))
+	_right.add_child(right_row)
+	_rack_col = _vbox(0)
+	right_row.add_child(_rack_col)
+	_rack_top = Control.new()     # 包架的挂牌高出框，这一截让框顶和仓库木架框顶齐平（[method layout] 定高）
+	_rack_col.add_child(_rack_top)
+	var shelf_col := _vbox(8)
+	right_row.add_child(shelf_col)
 	var head := _hbox(8)
 	head.custom_minimum_size.y = SHELF_HEAD
-	_right.add_child(head)
+	shelf_col.add_child(head)
 	_shelf_title = HeaderTag.hanging(UiText.t("meta.tab_warehouse"))     # 226 批三：木架顶一块挂牌只写「仓库」，件数与页数进它的悬浮窗（每页件数页签上有）
 	_shelf_title.mouse_filter = Control.MOUSE_FILTER_PASS
 	head.add_child(_shelf_title)
@@ -197,7 +212,7 @@ func open(payload: Dictionary) -> void:
 		_drawer.arrow.offset_bottom = MARGIN + SHELF_HEAD
 	_shelf_frame = UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_SHELF)
 	_shelf_frame.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_right.add_child(_shelf_frame)
+	shelf_col.add_child(_shelf_frame)
 	_shelf = WarehousePages.new()
 	_shelf.tab_variation = UiTheme.BUTTON_SETUP_TAB     # 乙 石刻：分页签同开局、结算那款挂牌木签
 	_shelf.tab_height = SHELF_TAB_H
@@ -243,15 +258,16 @@ func open(payload: Dictionary) -> void:
 	_wh.setup(flow, font, _shelf, _drag)
 	_wh.changed.connect(_refresh)
 	wh_col.add_child(_wh)
-	_wh_tools = WarehouseTools.new()     # 264 §六：包架下面筛选牌 + 账牌
+	_rack_col.add_child(_wh.rack_box())     # 268 补充二：包架独立出来，贴右边仓库棋盘左边
+	_wh_tools = WarehouseTools.new()     # 264 §六：筛选牌那一列；268：下面【快速出售】
 	_wh.add_rack_tools(_wh_tools)
-	_wh_tools.setup(flow, _shelf)     # 268：两块牌中间加【快速出售】
-	_sell_sheet = SellSheet.new()     # 268 补充一：出售模式的出售单，挂在【快速出售】下面，模式里才露
-	_sell_sheet.setup(flow, _shelf, say)
-	_sell_sheet.visible = false
-	_wh_tools.set_sell_mode(false, _sell_sheet)
+	_wh_tools.setup(flow, _shelf)
+	_sell_strip = SellStrip.new()     # 268 补充二：出售条，挂在【快速出售】下面，模式里才露
+	_sell_strip.setup(flow, _shelf, say)
+	_sell_strip.visible = false
+	_wh_tools.set_sell_mode(false, _sell_strip)
 	_wh_tools.sell_mode_toggled.connect(set_sell_mode)
-	_sell_sheet.cancelled.connect(func(): set_sell_mode(false))
+	_sell_strip.cancelled.connect(func(): set_sell_mode(false))
 	_shelf.refused.connect(_on_pick_refused)
 	m.changed.connect(_fit_wh_cloth)
 
@@ -296,12 +312,16 @@ func _cloth() -> PanelContainer:
 
 ## 264 §六：仓库页没有带回来的棋盘时，粗布缩成一根窄布（包架 + 筛选牌 + 账牌那一列），有了再铺满中列
 const WH_NARROW := 260.0
+var _wh_wide := false
 
 
 func _fit_wh_cloth() -> void:
 	if _wh_page == null or _wh == null:
 		return
-	var wide: bool = _wh.has_board() or sell_mode()     # 268：出售单比窄布宽
+	var wide: bool = _wh.has_board()
+	if wide != _wh_wide:
+		_wh_wide = wide
+		layout.call_deferred()     # 带回来的背包来了 / 清了：中列要的宽变了
 	_wh_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL if wide else Control.SIZE_SHRINK_BEGIN
 	_wh_page.custom_minimum_size.x = 0.0 if wide else WH_NARROW
 
@@ -310,28 +330,23 @@ func warehouse_tools() -> WarehouseTools:
 	return _wh_tools
 
 
-#region 268 补充一：快速出售模式
-## 开 / 关：【快速出售】按下态、出售单露出（筛选牌收起、包架与带回来的背包板收起）、右边仓库进勾选模式；关了勾选全清、筛选牌的筛选还原
+#region 268 快速出售模式
+## 开 / 关：【快速出售】按下态、出售条露出、右边仓库进勾选模式；关了勾选全清。
+## 268 补充二：只改右边仓库的勾选状态 —— 筛选牌照常用、就是出售的筛选；包架、带回来的背包板都不收
 func set_sell_mode(on: bool) -> void:
-	if _sell_sheet == null or on == sell_mode():
-		_wh_tools.set_sell_mode(sell_mode(), _sell_sheet)
+	if _sell_strip == null or on == sell_mode():
+		_wh_tools.set_sell_mode(sell_mode(), _sell_strip)
 		return
-	if on:
-		_sell_sheet.open()
-	else:
-		_sell_sheet.close()
-	_wh.set_sell_mode(on)
-	_wh_tools.set_sell_mode(on, _sell_sheet)
-	_fit_wh_cloth()
-	layout.call_deferred()
+	_shelf.set_select_mode(on)
+	_wh_tools.set_sell_mode(on, _sell_strip)
 
 
 func sell_mode() -> bool:
 	return _shelf != null and _shelf.select_mode
 
 
-func sell_sheet() -> SellSheet:
-	return _sell_sheet
+func sell_strip() -> SellStrip:
+	return _sell_strip
 
 
 ## 点了一件勾不上的：告示说为什么
@@ -351,17 +366,33 @@ func layout() -> void:
 	var screen := size if size.x > 0.0 and size.y > 0.0 else (get_viewport_rect().size if is_inside_tree() else Vector2(1920, 1080))
 	# 229：科技页也收起右半边，中列的页都按中列宽自己排（图鉴按宽算列数），右半边只按半屏算
 	var half := maxf(0.0, minf(screen.x * 0.5 - MARGIN, screen.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP))
+	# 268 补充二：右半边另加包架那一截（格子不缩）；中列放不下窄布（有带回来的背包时：筛选牌那一列 + 最小格的背包）才从仓库那半边让
+	var rack := rack_room()
+	half = minf(half, screen.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP - middle_need() - rack)
 	var frame := _frame_margins()
 	var c := _shelf.fit(half - frame.x, screen.y - 2.0 * MARGIN - SHELF_HEAD - 8.0 - frame.y)     # 收起时也按半屏算，切回来格子不变
+	if _rack_top != null:
+		_rack_top.custom_minimum_size.y = maxf(0.0, SHELF_HEAD + 8.0 - _wh.rack_box().get_child(0).get_combined_minimum_size().y) if _wh != null else 0.0
+	half += rack
 	if not _right.visible:
 		half = 0.0     # 178：图鉴 / 成就页（229：科技页）收起右半边，中列吃满
 	_right.custom_minimum_size.x = half
 	_margin.add_theme_constant_override("margin_right", int(MARGIN + right_gutter()))
 	var mid_w := middle_width(screen)
-	if _sell_sheet != null:
-		_sell_sheet.fit_width(mid_w - 50.0)     # 268：粗布内边距 + 余量
 	if _wh != null and flow.meta.board != null:
-		_wh.set_board_cell(minf(c, maxf(WarehousePages.CELL_MIN, floorf((mid_w - 50.0 - _wh.rack_room() - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(CharacterDef.BOARD_MAX_W, flow.meta.board.size.x))))))
+		_wh.set_board_cell(minf(c, maxf(BOARD_CELL_MIN, floorf((mid_w - 50.0 - _wh.rack_room() - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(CharacterDef.BOARD_MAX_W, flow.meta.board.size.x))))))
+
+
+## 268 补充二：仓库页中列至少要多宽 —— 窄布；有带回来的背包时 = 筛选牌那一列 + 背包按最小格（不然右边仓库被挤出屏）
+func middle_need() -> float:
+	if _wh == null or flow.meta.board == null:
+		return WH_NARROW
+	return 50.0 + _wh.rack_room() + 2.0 * _wh.BOARD_FRAME_PAD + BOARD_CELL_MIN * float(maxi(CharacterDef.BOARD_MAX_W, flow.meta.board.size.x))
+
+
+## 268 补充二：包架窄架连同它和仓库之间的空隙占多宽
+func rack_room() -> float:
+	return (_rack_col.get_combined_minimum_size().x + RACK_GAP) if _rack_col != null else 0.0
 
 
 ## 178：右半边收起时，右边空出调试台箭头那一条（箭头钉在屏幕右上，别压在中列上）

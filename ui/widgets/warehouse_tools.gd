@@ -2,7 +2,8 @@
 ## 右边仓库不匹配的格压灰、页签计数改匹配数，[method WarehousePages.set_filter]）。作者 10-31：账牌不要了（「仓库不需要账目栏」）。
 ## 木牌定稿（UI替换美术 plaque264）：小木牌 [constant UiTheme.PANEL_HOME_PLAQUE_SMALL]（橡木框 + 羊皮面，浅底墨字）
 ## 268（作者 10-30 15:23 定 C；补充一 15:27）：出售页删了 —— 筛选牌下面一颗【快速出售】主档木牌键（按下态 = 出售模式开着：
-## 中列出「出售单」[SellSheet]、右边仓库单击勾选；开关由 [MetaScreen] 接 [signal sell_mode_toggled]）。模式里筛选牌让给出售单，压灰不能点
+## 键下面露出「出售条」[SellStrip]、右边仓库单击勾选；开关由 [MetaScreen] 接 [signal sell_mode_toggled]）。
+## 268 补充二（作者 10-31 11:25）：快速出售只改右边仓库的勾选状态 —— 模式里筛选牌照常可用，就是出售的筛选（压灰与【全选】的范围跟着它）
 class_name WarehouseTools
 extends VBoxContainer
 
@@ -100,9 +101,7 @@ func refresh() -> void:
 	if meta == null:
 		return
 	var tags := meta.sell_tags()
-	if shelf.select_mode:
-		pass     # 268：出售模式里筛选是出售单的，这块牌不动
-	elif shelf.filter_tag != &"" and not tags.has(shelf.filter_tag):
+	if shelf.filter_tag != &"" and not tags.has(shelf.filter_tag):
 		shelf.set_filter(&"", shelf.filter_rarity)
 	elif shelf.filter_fav:
 		shelf.set_filter(shelf.filter_tag, shelf.filter_rarity, true)     # 265：收藏变了，页签上的匹配数重算
@@ -122,8 +121,6 @@ func refresh() -> void:
 
 
 func _sync_picks() -> void:
-	if shelf.select_mode:
-		return
 	for i in tag_pick.item_count:
 		if not tag_pick.is_item_separator(i) and String(tag_pick.get_item_metadata(i)) == String(shelf.filter_tag):
 			tag_pick.select(i)
@@ -134,20 +131,17 @@ func _sync_picks() -> void:
 
 
 func _refresh_clear() -> void:
-	clear_btn.disabled = not shelf.filtering() or shelf.select_mode
+	clear_btn.disabled = not shelf.filtering()
 
 
-## 268：出售模式开 / 关 —— 键的按下态跟着；筛选牌收起（筛选让给出售单，中列竖着放不下两块）、出售单 [param sheet] 挂在键下面露出来；
-## 关了重读仓库的筛选
-func set_sell_mode(on: bool, sheet: Control = null) -> void:
+## 268：出售模式开 / 关 —— 键的按下态跟着、出售条 [param strip] 挂在键下面露出来；筛选牌不动（补充二）
+func set_sell_mode(on: bool, strip: Control = null) -> void:
 	quick_btn.set_pressed_no_signal(on)
-	filter_plate.visible = not on
-	if sheet != null:
-		if sheet.get_parent() != self:
-			add_child(sheet)
-		move_child(sheet, quick_btn.get_index() + 1)
-		sheet.visible = on
-	refresh()
+	if strip != null:
+		if strip.get_parent() != self:
+			add_child(strip)
+		move_child(strip, quick_btn.get_index() + 1)
+		strip.visible = on
 
 
 ## 标签下拉现在列的标签（不含「不限标签」，测试读）
