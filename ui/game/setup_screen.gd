@@ -1800,7 +1800,7 @@ func _build_preview(ch: CharacterDef) -> void:
 	var frame := BoardFrame.wrap(_preview_view)     # 227：皮带框 + 格缝；255：有缺格时框沿轮廓走
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255：不足九格居中，差额是左右内距
 	var counts := ch.board_counts(flow.items)
-	# 作者 10-31（奥卡姆剃刀）：棋盘画出来了，「棋盘 N × M 格」那行字删了
+	# 作者 10-31（能画出来的就不写字）：棋盘画出来了，「棋盘 N × M 格」那行字删了
 	var legend := _hbox(10)
 	legend.alignment = BoxContainer.ALIGNMENT_CENTER
 	if int(counts["missing"]) > 0:

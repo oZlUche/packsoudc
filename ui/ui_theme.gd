@@ -771,6 +771,23 @@ static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String 
 	return r
 
 
+## 一句富文本告示（读档修复那句等）：[param text] 里的 [constant SaveReport.COIN] 换成金币小图；[param width] > 0 按宽折行，否则一行；
+## [param scaled] = false 不跟字号档（258：主菜单）
+static func rich_line(text: String, font_size: int, color: Color, width: float = 0.0, scaled: bool = true) -> RichTextLabel:
+	var r := RichTextLabel.new()
+	r.bbcode_enabled = true
+	r.fit_content = true
+	r.scroll_active = false
+	r.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if width > 0.0 else TextServer.AUTOWRAP_OFF
+	if width > 0.0:
+		r.custom_minimum_size.x = width
+	var px := sz(font_size) if scaled else font_size
+	r.add_theme_font_size_override("normal_font_size", px)
+	r.add_theme_color_override("default_color", color)
+	r.text = text.replace(SaveReport.COIN, tip_icon("coin", "", px))
+	return r
+
+
 ## 170：斜切一份字体当斜体用（[constant ITALIC_SLANT]）
 static func slanted(base: Font) -> FontVariation:
 	var v := FontVariation.new()

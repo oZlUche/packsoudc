@@ -124,7 +124,11 @@ static func from_dict(d: Dictionary) -> SaveReport:
 	return r
 
 
-## 给玩家看的一句（空报告返回空串）
+## 退的钱前面那枚金币的占位（界面层换成金币小图；作者规矩：钱画金币，不写「钱」字）
+const COIN := "{coin}"
+
+
+## 给玩家看的一句（空报告返回空串）；退的钱前面是 [constant COIN]
 func summary() -> String:
 	if is_empty():
 		return ""
@@ -134,7 +138,7 @@ func summary() -> String:
 	if salvaged:
 		parts.append(UiText.t("repair.salvaged"))
 	if not refunded.is_empty():
-		parts.append(UiText.tn("repair.refunded", refunded.size()) % [refunded.size(), refund_total()])
+		parts.append(UiText.tn("repair.refunded", refunded.size()) % [refunded.size(), COIN, refund_total()])
 	if not replaced.is_empty():
 		parts.append(UiText.tn("repair.replaced", replaced.size()) % replaced.size())
 	if not rehomed.is_empty():
