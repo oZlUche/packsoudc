@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.84 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.85 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4502,6 +4502,7 @@ res://
 | v4.82 | 2026-10-30 | 268 测试 v4.81：出售单【全选 / 全不选】只动筛中的（`WarehousePages.select_matching` 不先清空、新 `deselect_matching`），筛选外已勾的留着；悬浮窗【出售】/【出售同类 ×n】的价钱改金币小图 + 数字（`Action.coin`，`act.sell` / `act.sell_same` 不再写「币」） |
 | v4.83 | 2026-10-30 | 家的木牌键按下换 UI替换美术 press_home A（作者 18:07）：`home/btn_wood_pressed` 深胡桃木平涂；`BUTTON_HOME` / `BUTTON_HOME_PRIMARY` 按下字色 `HOME_PRESSED_INK` #f6ecd2，木牌下拉开着时同（`dress_wood_option`）；【快速出售】按下不再发白；268 勾选角标定稿 B 金币勾（美术设计，作者 18:06）：`assets/ui/tip/check_badge(_2x).png`，代码画的占位勾只在图缺时用 |
 | v4.84 | 2026-10-30 | press_home A 补（UI替换美术核对 v4.83）：木牌下拉开着时箭头换同形浅色 `kit/drop_arrow_pressed`（#f6ecd2），合上换回 `kit/drop_arrow`（`dress_wood_option` 接弹出单 about_to_popup / popup_hide）；石刻下拉不动 |
+| v4.85 | 2026-10-31 | 268 补充二（作者 10-31 11:25）：包架独立成窄架（`MetaScreen._rack_col`，挂牌「包架」），贴右边仓库棋盘左边、框顶齐平，右半边加宽 `rack_room()`、仓库格子不缩（中列放不下时才让，`middle_need()`；带回来的背包最小格 `BOARD_CELL_MIN` 34）；中列窄布只剩 筛选牌 /【快速出售】/【整理】；出售单 `SellSheet` 删，换成键下面的出售条 `SellStrip`（228 宽，已选 N 件 · 金币 / 全选 / 两步出售 + 取消），筛选用筛选牌的（`WarehousePages.filter_changed`），模式里筛选牌照常可用、包架和带回来的背包都不收 |
 | v4.70 | 2026-10-29 | **260 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）**：碑额写 `RecordsStele.compact(v)` —— 1000 以下整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数整数算、向下截不进位（999999 → 999.99k），末尾 0 去掉（3100000000 → 3.1b）；0 写「—」，悬停照旧写准数。横线、`roman / numeral_parts / overline_stack` 删掉；基线 = 碑额顶 + 75 + 字号 × 0.375，金币固定 52、中心对准字身中线 |
 | v4.69 | 2026-10-28 | **260 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」，取代补充三）**：`RecordsStele.numeral_parts` 返回 [最高一段的罗马数字, 横线道数]，每 ÷ 1000 加一道、向下取整、后面的段不写（742 → DCCXLII，5414 → V̅，3888888 → 两道线的 III，38 亿 → 三道）；碑额画 k 道横线（线宽 = 字宽，往上每道再空 max(2, 字号 × 0.05)，`overline_stack`），字和横线整块在碑额里竖向居中、金币中心对准字身中线；顺带修掉 v4.68 一百万起千位段一长串 M。**随身技能图标定稿**（作者 18:35「B+C」）：`assets/belt_skills/smoke_bomb.png`（陶罐）、`aid_pack.png`（亚麻小包），60 × 60；`BeltSkillDef.icon()` 把图留在 def 上（腰带在 `_draw` 里每帧画，184） |
 | v4.68 | 2026-10-28 | **260 补充三（作者 10-28 10:15 选 B「只写到千」）**：碑额大数 —— `RecordsStele.numeral_parts` 一万起只写千位段（`[roman(v / 1000), ""]`，向下取整，38888 → X̅X̅X̅V̅I̅I̅I̅），4000～9999 照旧带零头，悬停照旧写准数；金币固定 `WORTH_COIN` 52（不跟字缩，竖向中心在碑额顶 + 75），`worth_width` 金币那项跟着换，字区实宽 330 − 52 − 6；千位段上横线粗 max(2, 字号 × 0.06)，在字头（基线上方字号 × 0.75）再往上留 max(3, 字号 × 0.1) 的缝，不再贴着字头像删除线 |

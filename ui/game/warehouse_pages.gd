@@ -10,6 +10,8 @@ signal page_changed(index: int)
 signal selection_changed
 ## 268：点了一件勾不上的（锁着 / 收藏）
 signal refused(item: ItemInstance)
+## 268 补充二：筛选变了（出售条跟着重算【全选】的范围）
+signal filter_changed
 
 const TAB_W := 52.0
 const TAB_H := 52.0
@@ -263,6 +265,7 @@ func set_filter(tag: StringName, rarity_max: int, fav_only: bool = filter_fav) -
 	filter_fav = fav_only
 	_apply_dim()
 	_refresh()
+	filter_changed.emit()
 
 
 func _apply_dim() -> void:
