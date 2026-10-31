@@ -93,6 +93,14 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	t.eq([act.label, act.coin], [UiText.t("act.buy_coin"), Market.price_of(f.market(), Market.def_at(f.meta, f.items, 0))], "右键「买下」+ 金币价钱")
 	var tip := TipButton.make(act, TipButton.FULL)
 	t.check(tip.get_children().any(func(c: Node) -> bool: return c is CoinLabel), "右键菜单的按钮上画金币")
+	var coin: CoinLabel = null
+	for ch in tip.get_children():
+		if ch is CoinLabel:
+			coin = ch
+	root.add_child(tip)
+	tip.size = Vector2(TipButton.HALF, TipButton.HEIGHT)
+	var inside := coin != null and Rect2(Vector2.ZERO, tip.size).grow(1.0).encloses(coin.get_rect())
+	t.check(inside, "游戏测试 v4.85：金币和价钱在按钮里，不掉到下沿外面（%s / %s）" % [coin.get_rect() if coin != null else null, tip.size])
 	tip.free()
 	var n := f.meta.warehouse.item_count()
 	var price := Market.price_of(f.market(), Market.def_at(f.meta, f.items, 0))

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ScoreRules" format=3]
+
+[ext_resource type="Script" path="res://core/run/score_rules.gd" id="1_ccavt"]
+
+[resource]
+script = ExtResource("1_ccavt")
+id = &"score"
+display_name = "计分"
+kill = {
+"boss": 200,
+"elite": 40,
+"normal": 10
+}
+explore = {
+"craft": 5,
+"lit": 25,
+"search": 5,
+"visited": 2
+}
+difficulty_step = 0.25

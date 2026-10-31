@@ -1,7 +1,10 @@
 ## 负重统计模拟（只读游戏代码，不改规则）：用真实的 GameFlow / RunState 跑自由模式多局，
 ## 一个「不看负重、只看价值」的机器人逐点搜刮，记下每局撤离前的负重 / 上限。
 ##
-##   godot --headless --path . --script res://tools/sim/encumbrance_sim.gd -- <每组局数> <输出 jsonl>
+##   godot --headless --path . --script res://tools/sim/encumbrance_sim.gd -- <每组局数> <输出 jsonl> [规模] [拿法] [难度] [血量]
+##
+## 269 校准：[难度] 写难度 id（用 , 分开，如 normal,ascension_1,ascension_3；空 = 不挑难度），[血量] 写 0 = 正常血量（会打输），
+## 默认 10000（必赢）。每局记下结算的 outcome / score / score_parts
 ##
 ## 机器人：
 ## - 路线：从出生点起，每次去最近的没去过的「有东西」的点（搜索 / 战斗 / 精英 / 宝箱 / 事件 / 随机），
@@ -22,6 +25,8 @@ var want_extract := false
 ## greedy = 放得下就拿；picky = 白色（稀有度 0）的不拿（包、防御道具除外）
 var policy := "greedy"
 var last_snap := {}
+var hp := 10000.0
+var difficulty: DifficultyDef = null
 
 
 func _init() -> void:
@@ -30,6 +35,8 @@ func _init() -> void:
 	var out_path := String(args[1]) if args.size() > 1 else "user://enc_sim.jsonl"
 	var scales: Array = (String(args[2]) if args.size() > 2 else "small,medium").split(",")
 	var policies: Array = (String(args[3]) if args.size() > 3 else "greedy,picky").split(",")
+	var diff_ids: Array = (String(args[4]) if args.size() > 4 and String(args[4]) != "" else "").split(",", false)
+	hp = float(args[5]) if args.size() > 5 else 10000.0
 	c = TestSupport.load_content("free_mode", ["buffs", "events", "faiths", "recipes", "loadouts", "characters",
 		"hunter_defs", "difficulties", "meta_rules"])
 	out_file = FileAccess.open(out_path, FileAccess.WRITE)
@@ -37,28 +44,40 @@ func _init() -> void:
 	for l in c.loadouts:
 		if l.id == &"standard":
 			loadout = l
-	for pol in policies:
-		policy = pol
-		for si in scales.size():
-			for ci in c.characters.size():
-				var ch: CharacterDef = c.characters[ci]
-				if not [&"andreus", &"marcus", &"brutus"].has(ch.id):
-					continue
-				for i in per_group:
-					var seed := 1000 + i * 7919 + si * 101 + ci * 13     # 两种拿法用同一组种子，好对照
-					rng.seed = seed * 31 + 7
-					var rec := _one_run(StringName(scales[si]), ch, loadout, seed)
-					rec["policy"] = policy
-					out_file.store_line(JSON.stringify(rec))
-					out_file.flush()
-					print("[sim] %s %s %s #%d -> %s/%s lv%d" % [policy, scales[si], ch.id, i, rec.get("weight"), rec.get("capacity"), rec.get("level")])
+	var diffs: Array = [null]
+	if not diff_ids.is_empty():
+		diffs = []
+		for id in diff_ids:
+			for d in c.difficulties:
+				if String(d.id) == String(id):
+					diffs.append(d)
+	for diff in diffs:
+		difficulty = diff
+		for pol in policies:
+			policy = pol
+			for si in scales.size():
+				for ci in c.characters.size():
+					var ch: CharacterDef = c.characters[ci]
+					if not [&"andreus", &"marcus", &"brutus"].has(ch.id):
+						continue
+					for i in per_group:
+						var seed := 1000 + i * 7919 + si * 101 + ci * 13     # 两种拿法用同一组种子，好对照
+						rng.seed = seed * 31 + 7
+						var rec := _one_run(StringName(scales[si]), ch, loadout, seed)
+						rec["policy"] = policy
+						rec["difficulty"] = String(diff.id) if diff != null else ""
+						out_file.store_line(JSON.stringify(rec))
+						out_file.flush()
+						print("[sim] %s %s %s #%d -> %s/%s lv%d %s %s" % [policy, scales[si], ch.id, i, rec.get("weight"), rec.get("capacity"), rec.get("level"), rec.get("outcome", ""), rec.get("score", "")])
 	out_file.close()
 	quit(0)
 
 
 func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, seed: int) -> Dictionary:
-	var f := FS.flow(c, "encsim", 10000.0)
-	var run := f.begin(c.chapter, loadout, seed, [] as Array[int], ch, [], null, scale)
+	var f := FS.flow(c, "encsim", hp)
+	if difficulty != null and difficulty.requires_unlock != &"":
+		f.meta.grant_unlock(difficulty.requires_unlock)
+	var run := f.begin(c.chapter, loadout, seed, [] as Array[int], ch, [], difficulty, scale)
 	if run == null:
 		return {"error": "no run", "scale": String(scale), "char": String(ch.id), "seed": seed}
 	if run.travel.current_id < 0:
@@ -134,6 +153,10 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, seed: in
 	snap["peak_ratio"] = peak
 	snap["level_steps"] = level_steps
 	snap["nodes"] = nodes_by_type
+	if f.result != null:     # 269：结算的分（absorb 里算过，含图鉴新点亮）
+		snap["outcome"] = String(f.result.outcome)
+		snap["score"] = f.result.score
+		snap["score_parts"] = f.result.score_parts
 	FS.cleanup("encsim")
 	return snap
 

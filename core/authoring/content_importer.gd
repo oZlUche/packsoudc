@@ -256,6 +256,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 		"smith_recipes":
 			return import_smith_recipe(data, ctx, report)
 		"base_rules":
+			if String(data.get("id", "")) == String(ScoreRules.ID):
+				return import_score_rules(data, ctx, report)     # 269
 			return import_market_rules(data, ctx, report)
 		"events":
 			return import_event(data, ctx, report)
@@ -1009,6 +1011,25 @@ static func import_market_rules(data: Dictionary, ctx: Context, report: ImportRe
 		report.error("material_share", "在 0 ～ 1 之间")
 	if rules.price_mult <= 0.0:
 		report.error("price_mult", "得是正数")
+	return rules
+
+
+## 269：计分规矩 —— 击败 / 探索的分不能是负数，难度每档加的不能是负数
+static func import_score_rules(data: Dictionary, ctx: Context, report: ImportReport) -> ScoreRules:
+	var rules := ScoreRules.new()
+	_fill(rules, data, "", ctx, report)
+	_require_id(rules.id, "计分规矩", report)
+	for field in ["kill", "explore"]:
+		var d: Dictionary = rules.get(field)
+		for key in d:
+			if typeof(d[key]) not in [TYPE_INT, TYPE_FLOAT] or float(d[key]) < 0.0:
+				report.error("%s.%s" % [field, key], "得是不小于 0 的数")
+			else:
+				d[key] = int(d[key])
+	if rules.difficulty_step < 0.0:
+		report.error("difficulty_step", "不能是负数")
+	if rules.extract_bonus < 0:
+		report.error("extract_bonus", "不能是负数")
 	return rules
 
 
