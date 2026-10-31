@@ -168,6 +168,26 @@ static func run_locks(t: TestCase) -> void:
 	t.check(not Market.is_sold(m, 1), "解了锁的格下回换货照换")
 
 
+static func run_lie_flat(t: TestCase) -> void:
+	t.begin("270 补充（作者 14:56）：散货摊上竖着长的武器转 90° 横放；药、盾、包和本来就横着的不转")
+	var db := T110._db()
+	var MP := load("res://ui/game/market_panel.gd")
+	var tall := 0
+	for id in db.ids():
+		var d := db.get_def(id)
+		if d.shape == null:
+			continue
+		var s := d.shape.size_rotated(0)
+		var want := 1 if d.tags.has(&"weapon") and s.y > s.x else 0
+		if MP.lie_flat_rot(d) != want:
+			t.check(false, "%s 转得不对" % id)
+			return
+		tall += want
+	t.check(tall > 0, "有 %d 件竖着长的武器要横放" % tall)
+	t.eq(MP.lie_flat_rot(db.get_def(&"bandage")), 0, "药不转")
+	t.eq(MP.lie_flat_rot(db.get_def(&"tower_shield")), 0, "盾不转")
+
+
 static func run_old_save(t: TestCase) -> void:
 	t.begin("270 §四.5：老档 —— 货格没有 locked 当没锁、没有换货次数当 0、没记摊当空；存了读回一致")
 	var db := T110._db()
@@ -212,7 +232,7 @@ static func frame_market_stalls(t: TestCase, root: Window) -> void:
 	for j in sv.prices().size():
 		coins_ok = coins_ok and sv.prices()[j].coin == Market.price_of(f.market(), f.items.get_def(cat[j]))
 	t.check(coins_ok, "价签金币式")
-	t.eq(sv.title.text, "药铺", "挂牌写摊名")
+	t.check(not sv.stage.get_children().any(func(c: Node) -> bool: return c is HeaderTag), "作者 14:56 选 A：柜顶不挂摊名（左边亮着的键就写着）")
 	sv.size = Vector2(1100, 760)
 	var box: Rect2 = sv.cell_rect(0)
 	var v0 := sv.views()[0] as Control
@@ -234,6 +254,15 @@ static func frame_market_stalls(t: TestCase, root: Window) -> void:
 	p.show_stall(Market.LOOSE)
 	t.check(p.stage().visible and not sv.visible, "散货摊：木凉棚")
 	t.eq(p.stage().sign_text, "散货摊", "招牌写散货摊")
+	t.eq(int((p.stage().layout()["sign"] as Dictionary)["w"]), 290, "作者 14:56：招牌加宽（155 → 290）")
+	var lie_ok := true
+	for i in p.views().size():
+		var d := Market.def_at(f.meta, f.items, i)
+		var v := p.views()[i] as InventoryView
+		if d.tags.has(&"weapon"):
+			lie_ok = lie_ok and v.inventory.size.x >= v.inventory.size.y
+		lie_ok = lie_ok and v.inventory.size.x * v.cell_px <= maxf(p.LIE_MAX_W * p.stage().scale_factor(), v.inventory.size.x * BoardFrame.MIN_SIDE) + 0.5
+	t.check(lie_ok, "作者 14:56：武器横放（长边贴桌面），一件不宽过 LIE_MAX_W")
 	var key: RefreshKey = p.refresh_key()
 	t.eq([key.price, key.poor], [40, false], "【换货】40")
 	var funds := f.meta.funds

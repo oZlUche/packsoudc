@@ -5,6 +5,8 @@ extends Button
 
 const ART := "market/refresh"
 const SIZE := Vector2(180, 52)
+## 「换货」字两边至少留这么多（原尺寸，UI替换美术 14:56：英文贴着钉子）
+const LABEL_PAD := 12.0
 
 ## 这次换货要多少
 var price := 0:
@@ -74,11 +76,11 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("8a5a32") if st != "disabled" else Color("6e655a"))
 	var dy := 1.0 if st == "pressed" else 0.0
 	var f := UiPalette.cjk_font_bold()
-	# 字框（原尺寸）× 缩放；字号按档放大，框里放不下就一号号缩
+	# 字框（原尺寸）× 缩放；字号按档放大，放不下（框宽 − LABEL_PAD，别贴左边的钉子）就一号号缩
 	var lb := _box("label", Rect2(12, 0, 90, 52))
 	var lfs := maxi(10, roundi(UiTheme.sz(int((_spec.get("font", {}) as Dictionary).get("size", 22))) * k))
 	var label := UiText.t("market.refresh")
-	while lfs > 10 and f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, lfs).x > lb.size.x * k:
+	while lfs > 10 and f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, lfs).x > (lb.size.x - LABEL_PAD) * k:
 		lfs -= 1
 	var ly := (lb.position.y + lb.size.y * 0.5) * k + (f.get_ascent(lfs) - f.get_descent(lfs)) * 0.5 + dy
 	draw_string(f, Vector2(lb.position.x * k, ly), label, HORIZONTAL_ALIGNMENT_CENTER, lb.size.x * k, lfs, _ink("font", st, Color("2e2219")))
