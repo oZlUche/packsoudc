@@ -31,14 +31,16 @@ static func make(a: ItemActions.Action, width: float) -> TipButton:
 	b.action = a
 	b.text = a.label
 	b.disabled = not a.enabled
-	b.tooltip_text = a.reason
+	var short := CoinShort.has(a.reason)     # 「金币不够」不写字：价钱那枚金币变红、斜划一道
+	b.tooltip_text = CoinShort.strip(a.reason) if short else a.reason
 	b.custom_minimum_size = Vector2(width, HEIGHT)
 	b.focus_mode = Control.FOCUS_NONE
 	b.add_theme_font_override("font", UiPalette.cjk_font_bold())
 	b.add_theme_font_size_override("font_size", UiTheme.sz(FONT_SIZE))
 	b._style(false)
-	if a.coin >= 0:     # 251 补充一：价钱 = 金币 + 数字，靠右摆在签上
+	if a.coin >= 0 or short:     # 251 补充一：价钱 = 金币 + 数字，靠右摆在签上
 		var c := CoinLabel.make(a.coin, UiTheme.sz(FONT_SIZE), INK["normal"] if a.enabled else INK["disabled"])
+		c.short = short
 		# 游戏测试 v4.85：按钮还没排版（尺寸 0）时按预设摆，金币和数字掉到按钮下沿外面 —— 改成竖着撑满、靠右留 COIN_RIGHT，字在自己的矩形里竖向居中
 		c.anchor_left = 1.0
 		c.anchor_right = 1.0

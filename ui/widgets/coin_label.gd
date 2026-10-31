@@ -10,6 +10,8 @@ const COIN_SCALE := 1.15
 const GAP := 4.0
 const FALLBACK_FILL := Color("e2b33c")
 const FALLBACK_EDGE := Color("7a5414")
+## 「不够」的红（同价签 [constant PriceTag.POOR_INK]）
+const SHORT_INK := Color("b0261c")
 
 var amount := 0:
 	set(v):
@@ -27,6 +29,12 @@ var ink := Color("2a1d0c"):
 		queue_redraw()
 ## 数字居中摆在自己的矩形里（false = 靠左）
 var centered := false
+## 「金币不够」（[CoinShort]）：金币上斜划一道红，数字写红；[member amount] < 0 只画那枚金币
+var short := false:
+	set(v):
+		short = v
+		_fit()
+		queue_redraw()
 
 static var _tex: Texture2D = null
 ## 按像素缓存的小金币（按钮的图标位用）
@@ -76,13 +84,20 @@ func coin_side() -> float:
 
 
 func _text() -> String:
-	return "%d" % amount
+	return "" if short and amount < 0 else "%d" % amount
+
+
+## 「金币不够」那一枚：红色、斜划一道（[param n] < 0 不带数）
+static func make_short(n: int, p_size: int = 18) -> CoinLabel:
+	var c := make(n, p_size)
+	c.short = true
+	return c
 
 
 func _fit() -> void:
 	var f := UiPalette.cjk_font_bold()
 	var w := f.get_string_size(_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-	custom_minimum_size = Vector2(ceilf(coin_side() + GAP + w), maxf(coin_side(), f.get_height(font_size)))
+	custom_minimum_size = Vector2(ceilf(coin_side() + (GAP + w if _text() != "" else 0.0)), maxf(coin_side(), f.get_height(font_size)))
 
 
 func _draw() -> void:
@@ -97,5 +112,11 @@ func _draw() -> void:
 	else:
 		draw_circle(rect.get_center(), side * 0.45, FALLBACK_FILL)
 		draw_arc(rect.get_center(), side * 0.45, 0.0, TAU, 24, FALLBACK_EDGE, 1.5)
+	if short:     # 斜划一道红（左下到右上），描一圈深边免得糊在金色上
+		var a := rect.position + Vector2(side * 0.12, side * 0.88)
+		var b := rect.position + Vector2(side * 0.88, side * 0.12)
+		var wd := maxf(2.0, side * 0.14)
+		draw_line(a, b, Color(0.18, 0.05, 0.03), wd + 2.0, true)
+		draw_line(a, b, SHORT_INK, wd, true)
 	var y := mid + (f.get_ascent(font_size) - f.get_descent(font_size)) * 0.5
-	draw_string(f, Vector2(x + side + GAP, y), _text(), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, ink)
+	draw_string(f, Vector2(x + side + GAP, y), _text(), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, SHORT_INK if short else ink)

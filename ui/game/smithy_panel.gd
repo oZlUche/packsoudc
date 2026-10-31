@@ -151,7 +151,8 @@ func rebuild() -> void:
 			var name := Names.pick(rd.display_names, rd.display_name) if rd.display_name != "" else (Names.of(def) if def != null else String(rd.output))
 			cell = RecipeCell.make(rd.id, def, name, _cell_px, _cell_k)
 			cell.lit = why == ""
-			cell.tooltip_text = name + ("\n" + why if why != "" else "")
+			var why_t := CoinShort.strip(why)     # 「金币不够」不写字（打开配方卷，工钱那枚金币是红的）
+			cell.tooltip_text = name + ("\n" + why_t if why_t != "" else "")
 			cell.selected = rd.id == _open
 			cell.clicked.connect(func(c: RecipeCell): open_recipe(c.recipe_id))
 			_cells[rd.id] = cell

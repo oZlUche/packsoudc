@@ -177,7 +177,7 @@ func rebuild(keep_page: bool = true) -> void:
 	_funds.amount = flow.meta.funds
 	_refresh.price = Market.refresh_cost(flow.meta, flow.market())
 	_refresh.poor = Market.can_refresh(flow.meta, flow.market()) != ""
-	_refresh.tooltip_text = UiText.t("market.refresh_poor") if _refresh.poor else UiText.t("market.locked")
+	_refresh.tooltip_text = UiText.t("market.locked")     # 钱不够：键压灰、价钱写红就是了，悬停照旧说换什么
 	if flow.meta.market_stock.is_empty():
 		_note = _make_note(UiText.t("market.empty"))
 	else:

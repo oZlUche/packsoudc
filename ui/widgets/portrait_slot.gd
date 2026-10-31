@@ -19,6 +19,9 @@ var _silhouette := false
 ## [param side] 边长；[param face] 这个位子的图（null = 占位）；[param silhouette] 真 = 肖像位（没图画剪影），假 = 徽记位（没图空着）
 func _init(side: int, face: Texture2D = null, silhouette: bool = true) -> void:
 	custom_minimum_size = Vector2(side, side)
+	# 作者 10-31 17:22「框和硬币为什么对不上」：位子在容器里被同排撑高 / 撑宽时，框（整张拉伸）成了椭圆、硬币（等比居中）还是正圆 —— 位子永远是正方，摆在格子正中
+	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS     # 子节点（图、占位、框）随它
 	if face != null:

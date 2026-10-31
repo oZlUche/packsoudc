@@ -1128,7 +1128,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _say(text: String) -> void:
-	_status.text = text     # 作者 2026-10-12：开发提示行在调试台里
+	_status.text = CoinShort.strip(text)     # 作者 2026-10-12：开发提示行在调试台里（「金币不够」记号去掉）
 
 
 ## 186：给玩家的一句 —— 226 批一起是告示卷轴（[method GameScreen.say]），调试台的提示行也记一份。组件（腰带）也走它
