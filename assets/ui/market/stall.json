@@ -1,0 +1,30 @@
+{
+ "note": "270 通用集市底图（B 版，UI替换美术）。坐标都是设计像素、按底图左上。货格：grid 框里 cols × rows，第 c 列 r 行那格 = (x + c·w/cols + (w/cols − cell)/2, y + r·h/rows + cell_top, cell, cell)，一格一件，货按原图比例缩进格里、底对齐；PriceTag（高 40）在格下 price_gap、对格中线居中。货多于 cols × rows 翻页，页签在底图外面（同仓库）。hang = 摊名挂牌 HeaderTag.hanging：牌中线 x = cx，牌顶 y（牌图上 22 px 是钉子和绳，牌身上沿正好压在横梁上）。funds = 钱牌上金币 + 数的框（牌子底图画好了），字 22 粗体墨色，同集市钱牌。",
+ "option": "B",
+ "tone": "light",
+ "size": [
+  1100,
+  760
+ ],
+ "grid": {
+  "x": 40,
+  "y": 160,
+  "w": 1020,
+  "h": 560,
+  "cols": 7,
+  "rows": 3,
+  "cell": 110,
+  "cell_top": 14
+ },
+ "price_gap": 4,
+ "hang": {
+  "cx": 550,
+  "y": 66
+ },
+ "funds": {
+  "x": 890,
+  "y": 78,
+  "w": 150,
+  "h": 40
+ }
+}

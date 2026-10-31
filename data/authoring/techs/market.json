@@ -9,9 +9,9 @@
     "bargain"
   ],
   "column": 1,
-  "description": "集市进更好的货：级数越高，货格越多、素材档次越高。",
+  "description": "集市进更好的货：固定摊位进绿色、蓝色货，散货摊货位更多。",
   "descriptions": {
-    "en": "The market stocks finer goods: higher levels mean more slots and better materials."
+    "en": "The market stocks finer goods: fixed stalls carry green and blue wares, and the Bazaar gets more slots."
   },
   "effect": {
     "type": "tech_facility",

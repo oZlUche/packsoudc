@@ -1,0 +1,10 @@
+{
+  "id": "remedy",
+  "display_name": "药铺",
+  "display_names": {
+    "en": "Apothecary"
+  },
+  "tags": [
+    "remedy"
+  ]
+}

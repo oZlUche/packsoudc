@@ -18,7 +18,7 @@
 | scouting | 侦察 | Scouting | 2 | 0 | bargain | 隐形的猎手走近到一定距离就看得见。 | Hidden hunters become visible once they come close enough. | tech_run_buff | {"effect": "scout_range"} | 侦察距离 {scout_range_range} |
 | thorough_search | 细搜 | Thorough Search | 2 | 0 |  | 每个搜索点能多搜几次。 | Search each search spot a few more times. | tech_run_buff | {"effect": "extra_searches"} | 每个搜索点多搜 {extra_searches_amount} 次 |
 | bargain | 讨价 | Haggling | 2 | 1 | luck | 商店的东西更便宜。 | Shop prices are lower. | tech_run_buff | {"effect": "shop_price_mult"} | 商店售价 ×{shop_price_mult_factor} |
-| market | 高级货物 | Finer Goods | 1 | 2 | bargain | 集市进更好的货：级数越高，货格越多、素材档次越高。 | The market stocks finer goods: higher levels mean more slots and better materials. | tech_facility | {"facility": "market"} |  |
+| market | 高级货物 | Finer Goods | 1 | 2 | bargain | 集市进更好的货：固定摊位进绿色、蓝色货，散货摊货位更多。 | The market stocks finer goods: fixed stalls carry green and blue wares, and the Bazaar gets more slots. | tech_facility | {"facility": "market"} |  |
 | smithy | 高级配方 | Advanced Recipes | 0 | 1 | pack | 铁匠铺接更难的活：级数越高，打得出的配方档次越高。 | The smithy takes on harder work: higher levels unlock better recipes. | tech_facility | {"facility": "smithy"} |  |
 | mithril_smelting | 秘银冶炼 | Mithril Smelting | 0 | 0 | smithy | 学会炼秘银：银锭加钱炼成秘银锭，再用它打更好的刀剑。 | Learn to smelt mithril: turn Silver Ingots and coins into Mithril Ingots, then forge better blades with them. | tech_recipes | {"tech": "mithril_smelting"} |  |
 | staffcraft | 法杖工艺 | Staffcraft | 1 | 0 | smithy | 学会做法杖：级数越高，做得出的杖越好。 | Learn to make staves: higher levels make better staves. | tech_recipes | {"tech": "staffcraft"} |  |

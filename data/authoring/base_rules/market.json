@@ -11,21 +11,20 @@
     1,
     2
   ],
-  "consumable_rarity_cap_per_level": [
-    1,
-    2,
-    2
-  ],
-  "rarity_weights": [
-    40.0,
-    30.0,
-    20.0
-  ],
-  "allowed_tags": [
-    "remedy",
-    "food",
+  "battle_tags": [
+    "weapon",
+    "armor",
+    "shield",
+    "trinket",
     "ammo",
-    "material"
+    "remedy"
+  ],
+  "loose_rarity_weights": [
+    50.0,
+    30.0,
+    14.0,
+    5.0,
+    1.0
   ],
   "excluded_tags": [
     "treasure",

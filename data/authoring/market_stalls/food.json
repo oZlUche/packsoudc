@@ -1,0 +1,12 @@
+{
+  "id": "food",
+  "display_name": "粮铺",
+  "display_names": {
+    "en": "Grocer"
+  },
+  "order": 1,
+  "tags": [
+    "food",
+    "supply"
+  ]
+}

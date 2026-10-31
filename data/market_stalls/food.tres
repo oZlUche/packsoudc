@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StallDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/stall_def.gd" id="1_repmo"]
+
+[resource]
+script = ExtResource("1_repmo")
+id = &"food"
+display_name = "粮铺"
+display_names = {
+"en": "Grocer"
+}
+order = 1
+tags = Array[StringName]([&"food", &"supply"])

@@ -1,0 +1,38 @@
+{
+ "note": "270【换货 ◎ N】木牌键四态（refresh / _hover / _pressed / _disabled），不带字。label 框里写「换货 / Restock」，price 框里写金币 + 价（CoinLabel，同 PriceTag 的金币大小）；钱不够 = disabled 图 + 价钱红字 #b0261c（同 PriceTag.POOR_INK）；按下态字浅色、下移 1 px。",
+ "size": [
+  180,
+  52
+ ],
+ "label": {
+  "x": 12,
+  "y": 0,
+  "w": 90,
+  "h": 52
+ },
+ "price": {
+  "x": 102,
+  "y": 9,
+  "w": 66,
+  "h": 34
+ },
+ "font": {
+  "size": 22,
+  "bold": true,
+  "colors": {
+   "normal": "#2e2219",
+   "hover": "#2e2219",
+   "pressed": "#f6ecd2",
+   "disabled": "#7d7064"
+  }
+ },
+ "price_font": {
+  "size": 20,
+  "bold": true,
+  "colors": {
+   "normal": "#2a1d0c",
+   "pressed": "#f6ecd2",
+   "poor": "#b0261c"
+  }
+ }
+}

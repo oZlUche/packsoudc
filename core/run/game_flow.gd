@@ -740,9 +740,38 @@ func restock_market() -> void:
 	Market.restock(meta, market(), items, BagPool.standard())
 
 
-## 一局结束回到基地：换一次货（262：集市默认就有）
+## 一局结束回到基地：散货摊免费换一次货（262：集市默认就有；270：锁着的不换，换货价从头算）
 func after_run_market() -> void:
-	restock_market()     # 262：集市默认就有，每局回来都换
+	meta.market_refreshes = 0
+	restock_market()
+
+
+## 270：散货摊花钱换货；返回空串 = 换了（存盘），否则是原因
+func refresh_market() -> String:
+	var why := Market.can_refresh(meta, market())
+	if why == "" and not Market.refresh(meta, market(), items, BagPool.standard()):
+		why = UiText.t("market.refresh_poor")
+	if why == "":
+		save_meta()
+	return why
+
+
+## 270：锁上 / 解开散货摊第 i 格（存盘）；返回现在锁没锁
+func toggle_market_lock(i: int) -> bool:
+	var on := Market.toggle_lock(meta, i)
+	save_meta()
+	return on
+
+
+## 270：买固定摊 [param stall] 的一件；返回空串 = 买了（存盘），否则是原因
+func buy_listed(stall: StringName, id: StringName) -> String:
+	var st := Market.stall(stall)
+	var why := Market.can_buy_listed(meta, market(), items, st, id)
+	if why == "" and Market.buy_listed(meta, market(), items, st, id) == null:
+		why = UiText.t("market.full")
+	if why == "":
+		save_meta()
+	return why
 
 
 ## 老档、开发区：有集市却没货就上一次
