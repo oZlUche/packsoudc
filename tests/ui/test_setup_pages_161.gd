@@ -72,7 +72,8 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 	# 角色卡：选人页 B 起面板在铭牌里（生命 / 耐力 / 耐力回复 / 体力，各一枚火漆），按这个角色的底子写
 	var ch: CharacterDef = setup.character()
 	var plate: StatSealPlate = setup._stat_plate
-	t.eq(plate.captions(), ["生命", "耐力", "耐力回复", "体力"], "四格：生命、耐力、耐力回复、体力")
+	t.eq(plate.captions(), ["生命", "耐力", "耐力回复", "体力"], "四格：生命、耐力、耐力回复、体力（选人页 B 补充一：项名只在悬停里）")
+	t.check(not plate.find_children("*", "Label", true, false).any(func(l: Label) -> bool: return l.text == "生命"), "格子里不写「生命」")
 	t.eq(plate.values()[0], str(int(ch.baseline().value_of(&"max_hp"))), "生命上限按角色")
 	t.eq(plate.values()[1], str(int(ch.baseline().value_of(&"max_stamina"))), "耐力上限按角色")
 	t.eq(plate.values()[3], str(ch.vitality_max), "体力按角色")

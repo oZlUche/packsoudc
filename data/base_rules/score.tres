@@ -7,9 +7,9 @@ script = ExtResource("1_ccavt")
 id = &"score"
 display_name = "计分"
 kill = {
-"boss": 200,
-"elite": 40,
-"normal": 10
+"boss": 500,
+"elite": 100,
+"normal": 25
 }
 explore = {
 "craft": 5,

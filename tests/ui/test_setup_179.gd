@@ -32,8 +32,8 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.is_null(setup.screen_slab(), "不再是整块石板")
 	t.not_null(setup.get_node_or_null(^"PaintedContent"), "内容区铺满全屏（大厅背景上）")
 	t.eq(setup._grooves.size(), 3, "三栏三块板")
-	for i in setup._grooves.size():     # 选人页 B（作者 10-31 11:56）：三栏都是基地木框羊皮纸
-		t.eq((setup._grooves[i] as PanelContainer).theme_type_variation, UiTheme.PANEL_HOME_PLAQUE, "第 %d 栏的板是木框羊皮纸" % (i + 1))
+	for i in setup._grooves.size():     # 选人页 B（作者 10-31 11:56）：左中两栏基地木框羊皮纸；补充一：棋盘栏照 #393 不垫底
+		t.eq((setup._grooves[i] as PanelContainer).theme_type_variation, UiTheme.PANEL_BARE if i == 2 else UiTheme.PANEL_HOME_PLAQUE, "第 %d 栏的板" % (i + 1))
 	t.check(not setup._character_btns.is_empty() and setup._character_btns.all(func(b: Button) -> bool:
 		return b.theme_type_variation == UiTheme.BUTTON_SETUP_CHAR and b.toggle_mode and b.custom_minimum_size.y == setup.CHAR_KEY_H), "选人页 B：角色名单是基地平头木键")
 	t.check(setup._character_btns[setup.character_index].button_pressed, "选中的那颗按下（深色木）")
@@ -48,7 +48,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.eq(UiTheme.art_tone(UiTheme.ART_SETUP_BG), UiTheme.TONE_LIGHT, "大厅背景标浅底")
 	t.eq(UiTheme.tone_at(setup._area), UiTheme.TONE_LIGHT, "内容区记着浅底")
 	t.check(setup._title is TitlePlate and setup._title.text == "角色选择", "226 批二：页标题刻在标题牌上、页码去掉（%s）" % setup._title.text)
-	for g in setup._grooves:     # 选人页 B：三栏都是浅底墨字
+	for g in setup._grooves:     # 选人页 B：三栏都是浅底墨字（棋盘栏直接在浅色大厅上）
 		t.eq(UiTheme.tone_at(g), UiTheme.TONE_LIGHT, "板里是浅底")
 	# 作者 2026-10-17 08:02：大厅只给第一页，第二页木板拼接 / 仓库，第三页桌上的军用地图 —— 翻页换画；没图纯色底、标题白字
 	t.eq(setup.PAGE_ART, [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG], "三页三幅画")
@@ -83,7 +83,8 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		t.eq(tiles.size(), 2, "%s：两块图标牌（负重 / 棋盘）" % ch.id)
 		t.eq(tiles.map(func(c: CapTile) -> String: return c.value_label.text),
 			[str(ch.weight_capacity), "%d × %d" % [ch.board_size.x, ch.board_size.y]], "%s：负重 / 棋盘的数" % ch.id)
-		t.eq(tiles.map(func(c: CapTile) -> String: return c.caption_label.text), ["负重上限", "棋盘"], "说明")
+		t.eq(tiles.map(func(c: CapTile) -> String: return c.tooltip_text), ["负重上限", "棋盘"], "选人页 B 补充一：说明只在悬停里")
+		t.check(tiles.all(func(c: CapTile) -> bool: return not c.caption_label.visible), "说明行不显示（图标 + 数字就够）")
 		t.check(tiles.all(func(c: CapTile) -> bool: return c.has_art() and ((c.icon as TextureRect).texture.resource_path.begins_with(CapTile.ICON_DIR))), "%s：两块牌都用美术定稿的图标" % ch.id)
 		t.eq((tiles[0] as CapTile).icon.modulate, Color.WHITE, "彩色成品，不调色")
 		t.eq((tiles[0] as CapTile).value_label.get_theme_font_size("font_size"), UiTheme.sz(28), "数字 28（258：按字号档）")
