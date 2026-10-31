@@ -83,3 +83,16 @@
 **美术样（UI替换美术，2026-10-31 13:11）**：样张三版已发作者（UI设计线程决策卡）：A 货架摊 / B 格子柜（推荐）/ C 帐篷摊，文件 `/mnt/project-files/art/ui/market270/`。与 §四.6 两处不同，收下：摊位键直接用铁匠铺那套大类木牌 `smithy/cat_*`（`CatKey` 212 × 56，选中亮木 + 红边 + 小尖），不另出 170 × 44 石键；货格坐标按 1020 × 560 / 7 × 3 / 格 110 + 价签写在 `gen.py`，挂牌钩位三版不同（A y76 / B y88 / C y114），定稿时一起写进 layout json 交执行。
 
 **美术定稿（UI替换美术，2026-10-31 13:21）**：按推荐 B 格子柜先交执行（作者决策卡未回，改选 A/C 只换底图 png 与 layout json 两个值），文件 `/mnt/project-files/art/ui/market270/final/`（`stall.png` + `stall.json` 坐标、【换货】键四态 + `refresh.json`）；摊位键用铁匠铺 `CatKey`，不出石键；底图不画挂牌钩（挂牌自带钉子）。
+
+## 七、落地记录（v4.89，PR #398，main d9b952d，2026-10-31 14:47）
+
+执行按 §四 + §五推荐实现，全套 34841 项断言绿。
+
+- **五个固定摊**：`StallDef`（新内容种类 `market_stalls`，`data/authoring/market_stalls/*.json`）按标签 ∩ 本级稀有度上限列货单；某摊不足 3 件时从高一档按价补齐（甲胄铺 1 级 = 三件绿）；买了不减。
+- **散货摊**：只进 `battle_tags`、绿起；先按 [50, 30, 14, 5, 1] 抽档，档内等概率；【换货】40 / 60 / 80 …，回一局归零；锁着的格在换货与回局免费换时都不动，买走即解锁。
+- **导航**：左列六颗 `CatKey`（铁匠铺同款），记住上回的摊；百科新增「集市」页（`help_pages/market.json`）。
+- **退役**：`allowed_tags` / `material_share` / `consumable_rarity_cap_per_level` / `rarity_weights` 不再使用。
+- **英文名**：Apothecary / Grocer / Arms Dealer / Armourer / General Goods / Bazaar（「Odds & Ends」招牌放不下，改 Bazaar）。
+- **美术**：底图 `assets/ui/market/stall.png` + `stall.json`、换货键四态 `refresh*.png` + `refresh.json`，按 B 格子柜；作者在 UI设计线程改选 A / C 只换底图与两个 json 值。
+
+截图 `/mnt/project-files/art/ui/market270/shots/`：`remedy_lv1`（药铺 1 级）、`goods_lv3_p2`（杂货铺 3 级翻页）、`loose_lv3`（散货摊锁货 + 换货）、`loose_lv1_en_poor`（英文、钱不够）。
