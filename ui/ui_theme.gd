@@ -223,6 +223,10 @@ const ART_HOME_BOX := "home/panel_cloth"
 const ART_HOME_PLAQUE := "home/plaque"
 const ART_HOME_PLAQUE_SMALL := "home/plaque_small"
 const ART_HOME_CHIP := "home/plaque_chip"
+## 悬停小提示 B（作者 10-31 16:05）：木框小牌的字号（过字号档）和字到框边的距离（设计像素，框边 10 在里面）
+const TIP_FONT_SIZE := 18
+const TIP_PAD_X := 18.0
+const TIP_PAD_Y := 9.0
 const ART_SHELF := "home/shelf"
 ## 197 补充一 §5：主菜单轮换的三张整屏画（营地 → 军营 → 地图；2112 × 1320，四边留出血给镜头走）
 const ART_MENU_BGS: Array[String] = ["menu/bg_camp", "menu/bg_legion", "menu/bg_map"]
@@ -926,9 +930,9 @@ static func text_theme(tone: StringName) -> Theme:
 	# 180 定稿：难度计数器的数字永远写在黑翻页卡上 —— 摆在浅色地图纸上也还是白字
 	t.set_type_variation(LABEL_FLIP_NUM, "Label")
 	t.set_color("font_color", LABEL_FLIP_NUM, Color.WHITE)
-	# 控件自带的悬浮窗是深皮底：挂在浅底上的控件也写浅字
+	# 悬停小提示 B（作者 10-31 16:05）：控件自带的悬浮窗是木框小牌（浅底）—— 挂在深底上的控件也写墨字
 	t.set_type_variation("TooltipLabel", "Label")
-	t.set_color("font_color", "TooltipLabel", UiPalette.FG)
+	t.set_color("font_color", "TooltipLabel", INK)
 	_tone_themes[tone] = t
 	return t
 
@@ -1306,13 +1310,19 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
 	var paper: StyleBox = layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY)
 	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
-	# 226 批三补：控件自带的 tooltip_text（挂牌、段头签、按钮）也用这块深皮浅字，不再是引擎的小黑框
-	var tip_box: StyleBox = paper.duplicate() if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN)
-	tip_box.set_content_margin_all(12.0)
+	# 悬停小提示 B（作者 10-31 16:05）：控件自带的 tooltip_text（火漆、负重小牌、钱牌、按钮）= 木框小牌（同图例小签 home/plaque_chip）、墨字 18 粗；
+	# 道具 / 节点悬浮窗（[constant PANEL_TOOLTIP]）还是上面那块深皮，不动。摆在哪见 [TipAnchor]
+	var tip_box: StyleBox = _art_box(ART_HOME_CHIP)
+	if tip_box == null:
+		tip_box = _box(PARCHMENT, SCROLL_ROD, 6)
+	tip_box.content_margin_left = TIP_PAD_X
+	tip_box.content_margin_right = TIP_PAD_X
+	tip_box.content_margin_top = TIP_PAD_Y
+	tip_box.content_margin_bottom = TIP_PAD_Y
 	t.set_stylebox("panel", "TooltipPanel", tip_box)
-	t.set_color("font_color", "TooltipLabel", UiPalette.FG)
-	t.set_font("font", "TooltipLabel", _font)
-	t.set_font_size("font_size", "TooltipLabel", 15)
+	t.set_color("font_color", "TooltipLabel", INK)
+	t.set_font("font", "TooltipLabel", _font_bold)
+	t.set_font_size("font_size", "TooltipLabel", TIP_FONT_SIZE)
 	# 157 补充二：名牌底 —— 有图是九宫格（内边距按图边），没图是深底细边。
 	# 作者 2026-10-17：改铜质名牌（士兵牌样式，深铜底亮字；铜板本身不透明，不再垫板身；左上的穿链孔在边距里，内容不压它）
 	t.set_type_variation(PANEL_NAMEPLATE, "PanelContainer")

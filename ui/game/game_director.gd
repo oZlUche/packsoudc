@@ -111,6 +111,7 @@ func _ready() -> void:
 	UiPalette.apply(flow.settings)     # 091：背景底色
 	InputKeys.apply(flow.settings)     # 154 补充一：改过的键盖到默认上
 	UiTheme.install()     # 121：界面主题挂在窗口上
+	TipAnchor.install(get_tree())     # 悬停小提示 B（10-31）：小牌摆到被悬停那块正上方
 	UiCursor.apply(flow.settings.cursor_skin)     # 157：美术给的光标（设置里选的那套材质；没图用系统的）
 	if WindowSetup.apply(flow.settings, get_window()):     # 172：窗口模式与分辨率；第一次启动按屏幕挑了档就存下
 		flow.save_settings()
