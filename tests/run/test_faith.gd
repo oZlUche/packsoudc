@@ -48,7 +48,7 @@ static func run_tags_and_defs(t: TestCase) -> void:
 	t.check((defs[&"hunt"] as FaithDef).matches(db.get_def(&"blessed_longbow")), "狩猎之神赐福的长弓归狩猎之神")
 	t.check((defs[&"brute"] as FaithDef).matches(db.get_def(&"charm_brute")), "蛮神的护符归暴力之神")
 	# 作者定：现实里也能存在的东西不归任何信仰
-	for id in [&"shortsword", &"longsword", &"scimitar", &"longbow", &"shortbow", &"arrows", &"round_shield", &"leather_armor", &"gambeson", &"knife", &"cleaver", &"salve", &"ration"]:
+	for id in [&"shortsword", &"longsword", &"scimitar", &"longbow", &"shortbow", &"arrows", &"round_shield", &"leather_armor", &"knife", &"cleaver", &"salve", &"ration"]:
 		t.check(not db.get_def(id).has_faith(), "%s 是凡物，不归信仰" % id)
 	# 导入器
 	var ctx := ContentImporter.Context.new()

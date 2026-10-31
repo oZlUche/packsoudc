@@ -6,4 +6,4 @@
 script = ExtResource("1_tmtgc")
 id = &"standard"
 display_name = "标准"
-items = Array[StringName]([&"bag_leather", &"bag_leather", &"shortsword", &"gambeson", &"salve", &"bandage", &"ration"])
+items = Array[StringName]([&"bag_leather", &"bag_leather", &"shortsword", &"salve", &"bandage", &"ration"])

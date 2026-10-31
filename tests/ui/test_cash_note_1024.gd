@@ -40,7 +40,7 @@ static func frame_cash_note(t: TestCase, root: Window) -> void:
 		Support.cleanup("char")
 		return
 	t.eq(note.size_flags_horizontal, Control.SIZE_SHRINK_END, "255 补充二：钉在仓库框底部靠右，不拉满整栏")
-	t.check(note.get_parent() != null and note.get_parent().get_parent() == setup._warehouse_box, "便条在仓库木框里")
+	t.check(note.get_parent() != null and setup._warehouse_box.is_ancestor_of(note), "便条在仓库那一栏里（整理键右边）")
 	t.check(setup._cash_slider is StoneSlider and setup._cash_field is StoneField and setup._cash_chips.size() == 3, "一条拖条、一个输入框、三枚石签")
 	t.is_null(note.find_children("*", "StoneStepper", true, false).front() if not note.find_children("*", "StoneStepper", true, false).is_empty() else null, "没有 ±10 步进件了")
 	t.check(note.find_children("*", "Button", true, false).all(func(b: Button) -> bool: return b.text != "−10" and b.text != "+10"), "没有「−10」「+10」两颗旧键")

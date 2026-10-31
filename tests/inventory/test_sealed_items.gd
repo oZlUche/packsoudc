@@ -55,7 +55,7 @@ static func run_sealed_listing(t: TestCase) -> void:
 static func run_content(t: TestCase) -> void:
 	t.begin("剑与魔法道具 · 走管线；开局装备、角色初始包、敌人招牌都在库里；导入器拦封存的")
 	var db := _db()
-	for id in [&"shortsword", &"longsword", &"scimitar", &"longbow", &"arrows", &"round_shield", &"leather_armor", &"gambeson",
+	for id in [&"shortsword", &"longsword", &"scimitar", &"longbow", &"arrows", &"round_shield", &"leather_armor",
 			&"mithril_sword", &"blessed_shield", &"blessed_longbow", &"salve", &"bandage", &"fire_crystal", &"magic_staff",
 			&"warped_obsidian", &"charm_brute", &"pale_shard", &"barbarian_necklace"]:
 		var d := db.get_def(id)

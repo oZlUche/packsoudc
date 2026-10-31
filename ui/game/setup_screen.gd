@@ -115,6 +115,9 @@ var _board_view: InventoryView = null
 var _warehouse_view: InventoryView = null
 ## 163：仓库分页（[member _warehouse_view] 是它当前页的视图）
 var _warehouse_pages: WarehousePages = null
+## 作者 10-31：仓库下面的【整理】
+var _tidy_btn: Button = null
+const TIDY_SIZE := Vector2(120, 52)
 var _readout: RichTextLabel = null
 ## 226 批一：「出发」上面那句常显的话（出发不了的原因、空手提示、军需官发的）—— 本地红字行删了：
 ## 变了才走一次告示卷轴，平时写在「出发」的悬浮窗里（[method status_text]）
@@ -176,7 +179,6 @@ var _fit_labels: Array = []
 ## 255：角色卡第二行的面板方块、技能 / 随身之物 / 短板那几行（[method _entry_row]）、右栏题字 / 图例 / 首次赠包小签
 var _stat_plaques: Array[StatPlaque] = []
 var _entries: Array[HBoxContainer] = []
-var _board_title: Label = null
 var _legend: Array[Control] = []
 var _gift_tag: PanelContainer = null
 ## 255：预览那块只画形状（缺格 + 随身之物），不画包
@@ -304,7 +306,7 @@ func _build_character_page() -> Control:
 	_card = _vbox(CARD_SEP)
 	_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.add_child(_card)
-	var right_board := _groove(RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)
+	var right_board := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_BARE, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)     # 作者 10-31：去掉黑底，棋盘直接立在大厅上
 	right_board.size_flags_horizontal = Control.SIZE_SHRINK_END
 	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	right_board.custom_minimum_size = Vector2(right_width(), PREVIEW_H)     # 255：按九格定宽；补充一：高按六行棋盘 + 题字 + 图例 + 赠包签定死
@@ -345,8 +347,11 @@ func _build_kit_page() -> Control:
 	_rack_view = BagRackView.view_in(_rack_box)
 	left.add_child(_rack_box)
 
-	var ware_panel := _framed(UiTheme.PANEL_STASH_FRAME, UiTheme.ART_STASH_FRAME, FRAME_INSET)     # 180 定稿：木框铁角的仓库框
+	# 作者 10-31「仓库的界面背景不该是纯黑色的，应该和基地里的仓库一样」：不再垫铁角黑框，格子套基地那副木架（PANEL_SHELF）、棕底；
+	# 「右边的仓库棋盘应该右对齐」：整块贴页面右边
+	var ware_panel := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_BARE)
 	ware_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	ware_panel.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_END
 	row.add_child(ware_panel)
 	_warehouse_box = ware_panel
 	var right := _vbox(6)
@@ -364,10 +369,20 @@ func _build_kit_page() -> Control:
 	if UiTheme.has_setup_art(UiTheme.ART_SETUP_TAB):     # 180 定稿：挂牌页签
 		_warehouse_pages.tab_variation = UiTheme.BUTTON_SETUP_TAB
 		_warehouse_pages.tab_height = TAB_TAG_H
+	_warehouse_pages.frame_variation = UiTheme.PANEL_SHELF
 	_warehouse_scroll.add_child(_warehouse_pages)
 	_warehouse_pages.setup(w, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
 	_warehouse_view = _warehouse_pages.view
-	_build_cash_box(right)     # 2026-10-22：把仓库里的钱带进这一局；255 补充二：钱是仓库的，便条钉在仓库框底部靠右
+	var tools := _hbox(12)
+	right.add_child(tools)
+	_tidy_btn = UiTheme.make_home_button(UiText.t("wh.tidy"), tidy_warehouse, false, TIDY_SIZE, 18)     # 作者 10-31「需要有整理按钮」：同基地仓库，只排当前页
+	_tidy_btn.name = "TidyButton"
+	_tidy_btn.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	tools.add_child(_tidy_btn)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tools.add_child(gap)
+	_build_cash_box(tools)     # 2026-10-22：把仓库里的钱带进这一局；255 补充二：钱是仓库的，便条钉在仓库框底部靠右
 	play.add_child(_drag)     # 容器把它铺到和整行一样大，盖在两块板上
 	_drag.register_view(_warehouse_view)
 	_warehouse_view.item_double_clicked.connect(quick_move)     # 109：双击 = 快速置入，和局内一样
@@ -378,15 +393,28 @@ func _build_kit_page() -> Control:
 	flow.meta.rack.changed.connect(_refresh)
 	w.changed.connect(_refresh)
 	_warehouse_pages.minimum_size_changed.connect(_fit_warehouse)
+	if _warehouse_pages.frame != null:
+		_warehouse_pages.frame.minimum_size_changed.connect(_fit_warehouse)     # 作者 10-31 木架：框的边距进了主题才算得出来
 	_area.resized.connect(_fit_warehouse)
 	_fit_warehouse()
 	_build_stash()
 	return play
 
 
+## 作者 10-31：整理仓库**当前页**（[GridTidy]，同基地仓库）；排不开就原样不动、说一句
+func tidy_warehouse() -> bool:
+	var page := _warehouse_pages.current_page() if _warehouse_pages != null else null
+	if page == null:
+		return false
+	var ok := GridTidy.tidy(page)
+	if page.item_count() > 1:
+		warn(UiText.t("wh.page_tidied") if ok else UiText.t("wh.tidy_failed"))
+	return ok
+
+
 ## 2026-10-22（作者定）：带入现金 —— 这一局带多少钱由玩家定，上限是仓库余额，不带就是 0。
 ## 带进去的钱从仓库账上扣，死在局内就没了；撤离时 [method MetaState.absorb] 会把局内余额 1:1 加回来
-func _build_cash_box(parent: VBoxContainer) -> void:
+func _build_cash_box(parent: Container) -> void:
 	var note := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, CASH_PAD, CASH_PAD_TOP, CASH_PAD, CASH_PAD_BOTTOM)
 	note.name = "CashNote"
 	note.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -580,6 +608,8 @@ func show_page(i: int) -> void:
 		close_hint()
 	for k in _pages.size():
 		_pages[k].visible = k == _page
+	if _page == 1:
+		_fit_warehouse()     # 作者 10-31 木架：框的边距要等进了树、主题生效才算得出来，翻到这页再量一次
 	var tone := _repaint(PAGE_ART[_page])
 	if _title_indent != null:
 		_title_indent.custom_minimum_size.x = PAPER_INSET if _page == PAGE_MAP and _paper_art() else 0.0
@@ -1614,6 +1644,7 @@ func _rebuild_board() -> void:
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_board_view)
 	var frame := BoardFrame.wrap(_board_view)     # 227：皮带框 + 格缝（同背包窗），外面那块皮面板照旧
+	BoardFrame.brown(_board_view)     # 作者 10-31：开局的棋盘底统一成局内背包那块棕
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255（作者 10:51）：板按九格定宽，窄的棋盘居中
 	var room := BOARD_MAX_W * InventoryView.CELL + 2.0 * frame.inset()
 	_board_host.custom_minimum_size.x = room
@@ -1658,7 +1689,6 @@ func _rebuild_card() -> void:
 	UiTheme.clear_children(_preview_host)
 	_preview_view = null
 	_preview_board = null
-	_board_title = null
 	_legend.clear()
 	_gift_tag = null
 	_stat_plaques.clear()
@@ -1769,11 +1799,7 @@ func _build_preview(ch: CharacterDef) -> void:
 	var frame := BoardFrame.wrap(_preview_view)     # 227：皮带框 + 格缝；255：有缺格时框沿轮廓走
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255：不足九格居中，差额是左右内距
 	var counts := ch.board_counts(flow.items)
-	var plain := int(counts["missing"]) == 0 and int(counts["pinned"]) == 0
-	_board_title = _label(UiText.t("setup.board_title") % [ch.board_size.x, ch.board_size.y] if plain
-		else UiText.t("setup.board_usable") % [ch.board_size.x, ch.board_size.y, int(counts["usable"])], 17, UiPalette.FG)
-	_board_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_preview_host.add_child(_board_title)
+	# 作者 10-31（奥卡姆剃刀）：棋盘画出来了，「棋盘 N × M 格」那行字删了
 	var legend := _hbox(10)
 	legend.alignment = BoxContainer.ALIGNMENT_CENTER
 	if int(counts["missing"]) > 0:

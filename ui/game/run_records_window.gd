@@ -98,10 +98,19 @@ func row_columns(i: int) -> Array:
 	return (_rows[i] as RecordRow).columns
 
 
-## 一行的几栏：第几局 · 时间 · 章节 · 规模 · 难度 · 角色 · 结局 · 值 / 带出 · 步数
+## 一行的几栏：第几局 · 时间 · 章节 · 规模 · 难度 · 角色 · 结局 · 分（269；老记录「—」）· 值 / 带出 · 步数
 func _columns(h: Dictionary) -> Array:
 	return [UiText.t("records.run_no") % int(h.get("run_no", 0)), _when(h), _where(h), _who(h), _outcome(h),
+		UiText.t("records.col_score") % (str(int(h["score"])) if h.has("score") else UiText.t("records.no_score")),
 		UiText.t("records.col_value") % [int(h.get("value", 0)), int(h.get("balance", 0))], UiText.count(int(h.get("steps", 0)), "records.col_steps")]
+
+
+## 269：详情「总分 N（战利 N · 战绩 N · 探索 N）」；269 前的局没记分写「—」
+func _score(h: Dictionary) -> String:
+	if not h.has("score"):
+		return UiText.t("records.no_score")
+	var p: Dictionary = h.get("score_parts", {}) if h.get("score_parts", {}) is Dictionary else {}
+	return UiText.t("records.detail_score_v") % [int(h["score"]), int(p.get("loot", 0)), int(p.get("battle", 0)), int(p.get("explore", 0))]
 
 
 func _outcome_color(h: Dictionary) -> Color:
@@ -135,6 +144,7 @@ func show_detail(i: int) -> void:
 	_add(right, "records.detail_safe", UiText.t("records.detail_safe_v") % [int(h.get("safe", 0)), int(h.get("safe_value", 0))])
 	_add(right, "records.detail_fights", UiText.t("records.detail_fights_v") % [int(h.get("battles_won", 0)), int(h.get("battles_lost", 0)), int(h.get("elite_won", 0)), int(h.get("boss_won", 0))])
 	_add(right, "records.detail_faith", _faith(h))
+	_add(right, "records.detail_score", _score(h))
 	if not items.is_empty():
 		var strip := UiTheme.hflow(6)
 		var scroll := ScrollContainer.new()

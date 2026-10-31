@@ -34,7 +34,7 @@ static func run_content(t: TestCase) -> void:
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
 	var all := SmithRecipeDef.load_all()
-	t.eq(all.size(), 20, "14 张 + 252 的 6 张")
+	t.eq(all.size(), 19, "14 张 + 252 的 6 张，10-31 棉甲那张删了")
 	var ok := true
 	for r in all:
 		var o := db.get_def(r.output)
@@ -142,7 +142,7 @@ static func run_groups(t: TestCase) -> void:
 	t.eq(by["staff"], ["grand_magus_staff", "mage_staff", "magic_staff", "magus_staff"], "252：法杖四张")
 	t.eq(by["smelt"], ["mithril_ingot", "silver_ingot"], "252：冶炼两张")
 	t.eq(by["shield"], ["round_shield"], "盾一张")
-	t.eq(by["armor"], ["gambeson", "leather_armor", "plate_cuirass"], "护甲三张")
+	t.eq(by["armor"], ["leather_armor", "plate_cuirass"], "护甲两张（10-31 棉甲删了）")
 	for g in SmithRecipeDef.GROUPS:
 		t.check(UiText.t("smithy.group_" + g) != "smithy.group_" + g, "%s 有名字" % g)
 

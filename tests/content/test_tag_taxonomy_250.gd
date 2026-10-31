@@ -59,8 +59,7 @@ static func run_modern_gone(t: TestCase) -> void:
 	for id in MODERN:
 		t.check(not db.all_ids().has(id), "%s 不在库" % id)
 		t.check(IdAliases.RETIRED_ITEMS.has(id), "%s 在 RETIRED_ITEMS" % id)
-	var gamb := db.get_def(&"gambeson")
-	t.check(gamb != null and gamb.tags.has(&"armor") and gamb.display_name == "棉甲", "gambeson 改成防具「棉甲」")
+	t.check(db.get_def(&"gambeson") == null and IdAliases.RETIRED_ITEMS.has(&"gambeson"), "作者 10-31：棉甲删了（1×1 的衣服还给盾加护甲，定位不对），旧档折钱")
 
 
 static func run_material_field(t: TestCase) -> void:

@@ -88,9 +88,6 @@
     "forge_token": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "frost_gland": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "frost_gland_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
-    "gambeson": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
-    "gambeson_nature": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
-    "gambeson_sun": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "gear_arm": {"bag":false,"cells":2,"shape":[[0,0],[0,1]],"size":[1,2]},
     "gilded_goblet": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
     "glazed_inkstone": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]},
@@ -261,5 +258,5 @@
     "wool_cloth": {"bag":false,"cells":2,"shape":[[0,0],[1,0]],"size":[2,1]},
     "wound_salt": {"bag":false,"cells":1,"shape":[[0,0]],"size":[1,1]}
   },
-  "tags": ["ammo","armor","barbarian","beast_part","bleed","bullion","burst","clockwork","crafted","crystal","fire","food","heavy","ice","imperial","keepsake","lightning","magic","material","melee","nature","part","poison","ranged","rapid","reagent","remedy","sealed","shield","signature","staff","supply","token","treasure","trinket","valuable","weapon"]
+  "tags": ["ammo","armor","barbarian","beast_part","bleed","bullion","burst","clockwork","crafted","crystal","fire","food","heavy","ice","imperial","keepsake","lightning","magic","material","melee","mineral","nature","part","plant","poison","ranged","rapid","reagent","remedy","sealed","shield","signature","staff","supply","token","treasure","trinket","valuable","weapon"]
 }
