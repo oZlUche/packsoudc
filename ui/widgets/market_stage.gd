@@ -165,5 +165,8 @@ func _draw_sign_text() -> void:
 	var f := UiPalette.cjk_font_bold()
 	var fs := maxi(12, roundi(SIGN_FONT * minf(1.0, scale_factor() * 1.4)))
 	var w := f.get_string_size(sign_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	if w > sign.size.x and w > 0.0:     # 270：字比招牌框宽就缩字，别压两侧天平
+		fs = maxi(10, floori(fs * sign.size.x / w))
+		w = f.get_string_size(sign_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	var y := sign.get_center().y + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
 	draw_string(f, Vector2(sign.get_center().x - w * 0.5, y), sign_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, SIGN_INK)
