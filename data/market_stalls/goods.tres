@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StallDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/stall_def.gd" id="1_3yspr"]
+
+[resource]
+script = ExtResource("1_3yspr")
+id = &"goods"
+display_name = "杂货铺"
+display_names = {
+"en": "General Goods"
+}
+order = 4
+tags = Array[StringName]([&"material"])

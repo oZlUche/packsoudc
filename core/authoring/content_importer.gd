@@ -271,6 +271,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_help_page(data, ctx, report)
 		"chest_skins":
 			return import_chest_skin(data, ctx, report)
+		"market_stalls":
+			return import_market_stall(data, ctx, report)     # 270
 		"belt_skills":
 			return import_belt_skill(data, ctx, report)
 		"items":
@@ -993,7 +995,7 @@ static func validate_smith_recipe_techs(ctx: Context, report: ImportReport) -> v
 const SMITH_OUTPUT_TAGS: Array[StringName] = [&"weapon", &"armor", &"shield"]
 
 
-## 251：集市的规矩 —— 每级的表等长、格数至少 1、比例在 0 ～ 1、倍数为正
+## 251：集市的规矩 —— 每级的表等长、格数至少 1、倍数为正。270：散货摊的权重不能是负数、至少一档为正，换货价不能是负数
 static func import_market_rules(data: Dictionary, ctx: Context, report: ImportReport) -> MarketRules:
 	var rules := MarketRules.new()
 	_fill(rules, data, "", ctx, report)
@@ -1001,17 +1003,36 @@ static func import_market_rules(data: Dictionary, ctx: Context, report: ImportRe
 	var n := rules.slots_per_level.size()
 	if n == 0:
 		report.error("slots_per_level", "至少一级")
-	for field in ["rarity_cap_per_level", "consumable_rarity_cap_per_level"]:
-		if (rules.get(field) as Array).size() != n:
-			report.error(field, "和 slots_per_level 一样长（%d 级）" % n)
+	if rules.rarity_cap_per_level.size() != n:
+		report.error("rarity_cap_per_level", "和 slots_per_level 一样长（%d 级）" % n)
 	for i in n:
 		if rules.slots_per_level[i] < 1:
 			report.error("slots_per_level[%d]" % i, "至少 1 格")
-	if rules.material_share < 0.0 or rules.material_share > 1.0:
-		report.error("material_share", "在 0 ～ 1 之间")
 	if rules.price_mult <= 0.0:
 		report.error("price_mult", "得是正数")
+	if rules.loose_rarity_weights.any(func(w: float) -> bool: return w < 0.0) or not rules.loose_rarity_weights.any(func(w: float) -> bool: return w > 0.0):
+		report.error("loose_rarity_weights", "不能是负数，至少一档大于 0")
+	if rules.refresh_cost < 0 or rules.refresh_step < 0:
+		report.error("refresh_cost", "换货价不能是负数")
+	if rules.battle_tags.is_empty():
+		report.error("battle_tags", "散货摊至少卖一类")
 	return rules
+
+
+## 270：集市的一个摊位 —— 固定摊得写标签；点名排除的得是真道具（道具都导完了才查）
+static func import_market_stall(data: Dictionary, ctx: Context, report: ImportReport) -> StallDef:
+	var def := StallDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "集市摊位", report)
+	if def.fixed and def.tags.is_empty():
+		report.error("tags", "固定摊至少一个标签")
+	for t in def.tags:
+		if not ctx.tags.is_empty() and not ctx.tags.has(t):
+			report.error("tags", "没有登记的标签 '%s'" % t)
+	for id in def.excluded_ids:
+		if not ctx.items.is_empty() and not ctx.items.has(id):
+			report.error("excluded_ids", "找不到道具 '%s'" % id)
+	return def
 
 
 ## 269：计分规矩 —— 击败 / 探索的分不能是负数，难度每档加的不能是负数

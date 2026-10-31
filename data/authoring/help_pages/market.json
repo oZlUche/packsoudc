@@ -1,0 +1,18 @@
+{
+  "id": "market",
+  "display_name": "集市",
+  "display_names": {
+    "en": "Market"
+  },
+  "category": "meta",
+  "order": 5,
+  "text": "「后勤」里的集市分摊位。药铺、粮铺、兵器铺、甲胄铺、杂货铺五个固定摊按分类卖货：货单固定，买了不少，开始只卖白色货，科技「高级货物」升级后进绿色、蓝色货；哪个摊的白货太少，先从高一档补上几件。\n\n散货摊是那座木凉棚，只进和战斗有关的道具，从绿色起，越稀有越难碰到。每局回来换一批；在家也能花金币【换货】，每换一次更贵，回一局再从头算。货的悬浮窗能锁定，锁着的换货时留着不动，买走就解锁。买到的东西进仓库，包进包架。",
+  "texts": {
+    "en": "The Market under Logistics is split into stalls. Five fixed stalls sell by kind: the Apothecary, Grocer, Arms Dealer, Armourer and General Goods. Their lists are fixed and never run out. At first they sell only white goods; levelling the Finer Goods tech brings in green and blue ones. When a stall has too few white goods, a few from the next tier up fill the gap.\n\nThe Bazaar is the wooden pergola. It only stocks combat items, green and up, and the rarer an item, the less often it shows. It restocks after every run, and at the base you can pay coins to Restock, which costs more each time and resets after a run. A ware's tooltip can lock it: locked wares stay put when you restock, and buying one unlocks the slot. Purchases go to the Warehouse, and bags go to the Bag Rack."
+  },
+  "related": [
+    "warehouse",
+    "tech_tree",
+    "shop"
+  ]
+}

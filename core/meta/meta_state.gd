@@ -76,9 +76,12 @@ var safe_bonus: Vector2i = Vector2i.ZERO
 var belt_grants: Dictionary = {}
 ## 251：基地铺子的级数（铺子 id → 级，[TechFacility]）。由科技等级推算，不入档
 var facility_levels: Dictionary = {}
-## 251：集市这一轮的货（每格 {"id": 道具 id 字符串, "sold": bool}，[Market]）与上货用过几次种子；跟局外存档
+## 251：集市（270：散货摊）这一轮的货（每格 {"id": 道具 id 字符串, "sold": bool, "locked": bool}，[Market]）与上货用过几次种子；跟局外存档
 var market_stock: Array[Dictionary] = []
 var market_seed: int = 0
+## 270：散货摊这次在家花钱换了几次货（换货价跟着涨，回一局归零）与集市页上次看的摊（[member StallDef.id]，空 = 第一个）
+var market_refreshes: int = 0
+var market_stall: StringName = &""
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -811,6 +814,8 @@ func to_dict() -> Dictionary:
 		"tech_deposits": tech_deposits.duplicate(true),
 		"market_stock": market_stock.duplicate(true),     # 251
 		"market_seed": market_seed,
+		"market_refreshes": market_refreshes,     # 270
+		"market_stall": String(market_stall),
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -939,7 +944,9 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		var id := IdAliases.item(StringName(String((row as Dictionary).get("id", ""))))
 		if items != null and items.get_def(id) == null:
 			continue
-		m.market_stock.append({"id": String(id), "sold": bool((row as Dictionary).get("sold", false))})
+		m.market_stock.append({"id": String(id), "sold": bool((row as Dictionary).get("sold", false)), "locked": bool((row as Dictionary).get("locked", false))})     # 270：老档没锁
 	m.market_seed = int(d.get("market_seed", 0))
+	m.market_refreshes = maxi(0, int(d.get("market_refreshes", 0)))
+	m.market_stall = StringName(String(d.get("market_stall", "")))
 	return m
 #endregion

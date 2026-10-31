@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StallDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/stall_def.gd" id="1_fl11r"]
+
+[resource]
+script = ExtResource("1_fl11r")
+id = &"loose"
+display_name = "散货摊"
+display_names = {
+"en": "Bazaar"
+}
+order = 5
+fixed = false

@@ -10,7 +10,7 @@ const EXPECTED := {
 	"faith": ["anchor_activation", "faith_power_and_tiers", "altar_offering", "special_rites", "switch_and_dormant",
 		"god_brute", "god_sun", "god_nature", "god_earth", "god_skill", "god_hunt"],
 	"map": ["node_types", "random_node", "shop", "rest_point", "safe_box", "countdown_and_closing", "hunters", "erosion", "teleport", "forge"],
-	"meta": ["warehouse", "tech_tree", "codex", "achievements", "save_slots"],
+	"meta": ["warehouse", "tech_tree", "codex", "achievements", "save_slots", "market"],
 }
 
 
@@ -23,7 +23,7 @@ static func run(t: TestCase) -> void:
 	for h in help:
 		by_id[String((h as HelpPageDef).id)] = h
 
-	t.begin("125 · 机制页齐全（230：五十五页），分类对得上")
+	t.begin("125 · 机制页齐全（270：五十六页），分类对得上")
 	var total := 0
 	for cat in EXPECTED:
 		total += (EXPECTED[cat] as Array).size()
@@ -31,8 +31,8 @@ static func run(t: TestCase) -> void:
 			t.check(by_id.has(id), "%s 在" % id)
 			if by_id.has(id):
 				t.eq(String((by_id[id] as HelpPageDef).category), cat, "%s 在 %s 分类" % [id, cat])
-	t.eq(total, 55, "清单五十五页（129 加了「负重」、136 加了「三个角色」、217 补了六页、230 加了「道具按钮与锁定」）")
-	t.eq(help.size(), 55, "库里五十五页")
+	t.eq(total, 56, "清单五十六页（129 加了「负重」、136 加了「三个角色」、217 补了六页、230 加了「道具按钮与锁定」、270 加了「集市」）")
+	t.eq(help.size(), 56, "库里五十六页")
 
 	t.begin("125 · 每个分类的 order 从零连续、不撞位，目录按 order 排")
 	var toc := book.toc()
