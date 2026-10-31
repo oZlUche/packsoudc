@@ -96,3 +96,5 @@
 - **美术**：底图 `assets/ui/market/stall.png` + `stall.json`、换货键四态 `refresh*.png` + `refresh.json`，按 B 格子柜；作者在 UI设计线程改选 A / C 只换底图与两个 json 值。
 
 截图 `/mnt/project-files/art/ui/market270/shots/`：`remedy_lv1`（药铺 1 级）、`goods_lv3_p2`（杂货铺 3 级翻页）、`loose_lv3`（散货摊锁货 + 换货）、`loose_lv1_en_poor`（英文、钱不够）。
+
+**补充一（v4.90，PR #399，2026-10-31 15:20，按作者 14:56 与 UI替换美术试装）**：固定摊不挂摊名；凉棚招牌加宽；散货摊武器横放。
