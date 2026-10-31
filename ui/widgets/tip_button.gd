@@ -14,6 +14,8 @@ const LABEL_PAD := 16.0
 const CONFIRM_SEC := 2.0
 ## 图四周留的投影边（layout.json `pad`）
 const BLEED := 6.0
+## 价钱（金币 + 数字）离右边
+const COIN_RIGHT := 10.0
 const INK := {"normal": Color("efe6d2"), "hover": Color("fff6e2"), "pressed": Color("ddd2bb"), "disabled": Color("7d786e"), "danger": Color("fff0e6")}
 
 ## 按下（危险的第二下）要做的事
@@ -37,8 +39,17 @@ static func make(a: ItemActions.Action, width: float) -> TipButton:
 	b._style(false)
 	if a.coin >= 0:     # 251 补充一：价钱 = 金币 + 数字，靠右摆在签上
 		var c := CoinLabel.make(a.coin, UiTheme.sz(FONT_SIZE), INK["normal"] if a.enabled else INK["disabled"])
-		c.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 10)
+		# 游戏测试 v4.85：按钮还没排版（尺寸 0）时按预设摆，金币和数字掉到按钮下沿外面 —— 改成竖着撑满、靠右留 COIN_RIGHT，字在自己的矩形里竖向居中
+		c.anchor_left = 1.0
+		c.anchor_right = 1.0
+		c.anchor_top = 0.0
+		c.anchor_bottom = 1.0
+		c.offset_right = -COIN_RIGHT
+		c.offset_left = -COIN_RIGHT - c.custom_minimum_size.x
+		c.offset_top = 0.0
+		c.offset_bottom = 0.0
 		c.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		c.grow_vertical = Control.GROW_DIRECTION_BOTH
 		b.add_child(c)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.pressed.connect(b._on_pressed)

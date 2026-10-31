@@ -87,7 +87,7 @@ var runs: int = 0
 var extractions: int = 0
 var deaths: int = 0
 var best_value: int = 0
-## 260：单局价值最高那一局的摘要（[method best_run_of]）；老存档没有 = 空，军功碑只写数
+## 260：最佳一局的摘要（[method best_run_of]）；老存档没有 = 空。269：按总分挑（之前按带出价值）
 var best_run: Dictionary = {}
 ## 264 §2.4：上回出征的角色（开局屏出发时和 last_map / last_scale / last_difficulty 旗标一起写）；没出发过 = 空。出征页「上回出征」木牌读它
 var last_character: StringName = &""
@@ -236,9 +236,9 @@ func sell_bag(uid: int, ratio: float = 0.5) -> int:
 
 
 #region 一局结束
-## 一局结束了进来。返回这次进了什么：{"items": 带回棋盘的件数, "value", "funds", "lit": 新点亮的图鉴条目数}
+## 一局结束了进来。返回这次进了什么：{"items": 带回棋盘的件数, "value", "funds", "lit": 新点亮的图鉴条目数, "score": 这一局的总分（269）}
 func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
-	var got := {"items": 0, "value": 0, "funds": 0, "lit": 0, "safe": 0}
+	var got := {"items": 0, "value": 0, "funds": 0, "lit": 0, "safe": 0, "score": 0}
 	if result == null:
 		return got
 	runs += 1
@@ -278,9 +278,6 @@ func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
 			InventoryService.transfer_all(board, back)
 		board = back if back.item_count() > 0 else null
 		funds += result.balance
-		score += result.value
-		if result.value > best_value or (best_run.is_empty() and result.value > 0 and result.value == best_value):
-			best_run = best_run_of(result, runs)
 		best_value = maxi(best_value, result.value)
 		got["value"] = result.value
 		got["funds"] = result.balance
@@ -310,8 +307,14 @@ func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
 			else:
 				push_warning("MetaState.absorb: 保险箱里的 %s 放不下，丢弃" % inst.def.id)
 		board = back2 if back2.item_count() > 0 else null
-		score += result.safe_value
 		got["value"] = int(got["value"]) + result.safe_value
+	# 269（作者 10-31 定 A）：总分 = （战利 + 战绩 + 探索）× 难度，图鉴新点亮这时才知道 —— 补算一次，撤离 / 战败各加一次；
+	# 「最佳一局」按总分挑（老的 best_run 没记分就按价值比，等新局超过）
+	result.compute_score(int(got["lit"]))
+	score += result.score
+	got["score"] = result.score
+	if result.score > 0 and result.score > int(best_run.get("score", best_run.get("value", 0))):
+		best_run = best_run_of(result, runs)
 	var row := result.to_dict()
 	row["run_no"] = runs
 	row["pinned"] = false
@@ -362,7 +365,7 @@ func warehouse_value() -> int:
 
 ## 260：对局记录 / 最佳一局要的那一局：价值、章节、结局、角色、难度、第几局、几步、赢几场、几时结束
 static func best_run_of(result: RunResult, run_no: int) -> Dictionary:
-	return {"value": result.value, "chapter": String(result.chapter_id), "outcome": String(result.outcome),
+	return {"value": result.value, "score": result.score, "chapter": String(result.chapter_id), "outcome": String(result.outcome),
 		"character": String(result.character_id), "difficulty": String(result.difficulty_id), "run_no": run_no,
 		"steps": result.steps, "battles_won": result.battles_won, "ended_at": result.ended_at}
 

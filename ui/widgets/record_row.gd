@@ -6,8 +6,8 @@ extends Button
 const FONT_SIZE := 15
 const MIN_SIZE := 10
 const PAD_X := 10.0
-## 各栏占的宽度比例（第几局 · 时间 · 章节 · 角色 · 结局 · 值 · 步数）
-const WEIGHTS := [0.09, 0.11, 0.24, 0.12, 0.17, 0.17, 0.10]
+## 各栏占的宽度比例（第几局 · 时间 · 章节 · 角色 · 结局 · 分（269）· 值 · 步数）
+const WEIGHTS := [0.08, 0.10, 0.22, 0.11, 0.15, 0.09, 0.16, 0.09]
 const OUTCOME_COL := 4
 const INK := Color("2e2219")
 const LINE := Color(0.18, 0.13, 0.10, 0.35)
