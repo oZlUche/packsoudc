@@ -129,7 +129,7 @@ static func run_reconcile_items(t: TestCase) -> void:
 	keyed["state"] = {"armor_left": 3, "other": 1}
 	SaveReconcile.item(keyed, db, null, "", IdAliases.RETIRED_ITEMS, {"armor_left": "block_left"})
 	t.eq(keyed["state"], {"block_left": 3, "other": 1}, "state 键改名，未知键原样留着")
-	t.check(report.summary().contains("折算为 300 钱"), "报告那一句：%s" % report.summary())
+	t.check(report.summary().contains("折算为 [img") and report.summary().contains("coin.png[/img]300") and not report.summary().contains("钱"), "报告那一句：金币小图 + 数，不写「钱」（%s）" % report.summary())
 
 
 static func run_meta_rehome(t: TestCase) -> void:

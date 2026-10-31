@@ -21,7 +21,7 @@ const ITEMS := {
 ## 三处（真名、[constant ITEMS]、这里）都查不到的默认也折钱（价值按 0）并写进报告。删道具时**在这里补一行**，
 ## 内容快照测试（`tests/content/test_content_snapshot.gd`）守着
 const RETIRED_ITEMS := {
-	# 作者 10-31「棉甲……一件衣服图案怎么可能才 1×1，而且也不该给护盾增加护甲，删除这种错误定位的道具」
+	# 作者 10-31「棉甲……一件甲的图怎么可能才 1×1，而且也不该给护盾增加护甲，删除这种错误定位的道具」
 	&"gambeson": {"refund": true, "value": 12},
 	&"gambeson_nature": {"refund": true, "value": 30},
 	&"gambeson_sun": {"refund": true, "value": 30},

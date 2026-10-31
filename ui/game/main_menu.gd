@@ -125,7 +125,15 @@ func open(_payload: Dictionary) -> void:
 	_note_paper.add_child(_notices)
 	for text in [flow.backup_notice(), flow.repair_notice()]:
 		if text != "":
-			_notices.add_child(UiTheme.make_label(text, NOTICE_SIZE, UiTheme.INK_WARN, false))     # 便条上左对齐（UI替换美术 v4.03 核对）；258：主菜单不跟字号档
+			var line := RichTextLabel.new()     # 便条上左对齐（UI替换美术 v4.03 核对）；258：主菜单不跟字号档；10-31：富文本，退的钱画金币
+			line.bbcode_enabled = true
+			line.fit_content = true
+			line.scroll_active = false
+			line.autowrap_mode = TextServer.AUTOWRAP_OFF
+			line.add_theme_font_size_override("normal_font_size", NOTICE_SIZE)
+			line.add_theme_color_override("default_color", UiTheme.INK_WARN)
+			line.text = text
+			_notices.add_child(line)
 	_note_paper.visible = _notices.get_child_count() > 0
 	if not resized.is_connected(_layout):
 		resized.connect(_layout)
