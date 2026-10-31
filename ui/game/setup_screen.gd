@@ -306,7 +306,7 @@ func _build_character_page() -> Control:
 	_card = _vbox(CARD_SEP)
 	_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.add_child(_card)
-	var right_board := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_BARE, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)     # 作者 10-31：去掉黑底，棋盘直接立在大厅上
+	var right_board := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_BARE, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)     # 作者 10-31：去掉黑底，棋盘直接立在底上
 	right_board.size_flags_horizontal = Control.SIZE_SHRINK_END
 	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	right_board.custom_minimum_size = Vector2(right_width(), PREVIEW_H)     # 255：按九格定宽；补充一：高按六行棋盘 + 题字 + 图例 + 赠包签定死
@@ -1799,7 +1799,7 @@ func _build_preview(ch: CharacterDef) -> void:
 	var frame := BoardFrame.wrap(_preview_view)     # 227：皮带框 + 格缝；255：有缺格时框沿轮廓走
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255：不足九格居中，差额是左右内距
 	var counts := ch.board_counts(flow.items)
-	# 作者 10-31（奥卡姆剃刀）：棋盘画出来了，「棋盘 N × M 格」那行字删了
+	# 作者 10-31（能画出来的就不写字）：棋盘画出来了，「棋盘 N × M 格」那行字删了
 	var legend := _hbox(10)
 	legend.alignment = BoxContainer.ALIGNMENT_CENTER
 	if int(counts["missing"]) > 0:
