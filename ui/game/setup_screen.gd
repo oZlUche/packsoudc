@@ -138,7 +138,6 @@ const DIFFICULTY_NUM_SIZE := UiTheme.FLIP_NUM_SIZE
 const SCALE_INDENT := 20
 ## 180 补二：仓库框给滚动条留多宽；底下「返回」的字号（按钮按档放大，仍比「出发」小）
 const SCROLL_GUTTER := 16
-const BACK_FONT := 28
 ## 整屏内容区的边距、底下留给两颗大按钮的高、标题与页之间的空
 const PAGE_MARGIN := 36
 const NAV_ROOM := 140
@@ -176,8 +175,8 @@ var _cap_tiles: Array[CapTile] = []
 var _skill_names: Array[Label] = []
 ## 258：卡里放不下时可以往回缩的字 —— [标签, 小档字号]
 var _fit_labels: Array = []
-## 255：角色卡第二行的面板方块、技能 / 随身之物 / 短板那几行（[method _entry_row]）、右栏题字 / 图例 / 首次赠包小签
-var _stat_plaques: Array[StatPlaque] = []
+## 选人页 B：头像右边的铭牌（名字 + 火漆属性）；255：技能 / 随身之物 / 短板那几行（[method _entry_row]）、右栏图例 / 首次赠包小签
+var _stat_plate: StatSealPlate = null
 var _entries: Array[HBoxContainer] = []
 var _legend: Array[Control] = []
 var _gift_tag: PanelContainer = null
@@ -185,29 +184,32 @@ var _gift_tag: PanelContainer = null
 var _preview_board: GridInventory = null
 ## 255：这一回进开局屏时，哪几个角色是第一次选（首次赠包刚送进包架）—— 小签只在这时显示
 var _gifted: Dictionary = {}
-## 179：右栏的凹槽板内边距
-const RIGHT_PAD := 10
+## 179：右栏板的内边距（选人页 B：木框羊皮纸，棋盘离开木框）
+const RIGHT_PAD := 26
+## 选人页 B（作者 10-31 11:56）：左、中两栏木框羊皮纸板（[constant UiTheme.PANEL_HOME_PLAQUE]）的内边距
+const HALL_INSET := 30
 ## 255（作者 2026-10-26 10:51）：三栏定宽，不随棋盘宽窄变 —— 左按角色名纸条（连皮框 312；稿子的 260 放不下「安德烈乌斯」）、右按最宽的九格棋盘、中栏是剩下的；不足九格的棋盘在右栏里居中
-const LEFT_W := 336
+const LEFT_W := 308     # 选人页 B：名单换木键、字小了，让给右栏加宽的内边距（中栏宽差不多不变）
 const COL_GAP := 24     # 作者 10-27「太窄了，向右拓宽一些」：左栏 312 → 336，让出的 24 来自两道栏距（中栏宽不变，英文最长的卡照样装得下）
 const BOARD_MAX_W := CharacterDef.BOARD_MAX_W
 ## 255 补充二：第二页棋盘下的包架横排几格（九种以内一行）
 const RACK_COLUMNS := 9
 ## 255 补充一：中栏（角色卡）定高 —— 英文最长的那张（游戏测试 v4.49：安德烈乌斯 / 布鲁图斯 814）放得下、底边不过页边；
 ## 内容再长栏会被顶高，`test_character_select_255` 中英文都比一遍会红
-const CARD_H := 840
+const CARD_H := 760     # 选人页 B：铭牌并进属性、那排蜡板删了
 ## 255 补充一：右栏（棋盘预览）定高 —— 六行棋盘、题字、图例、首次赠包签都在时那么高（七行以上的棋盘才再长）；258：按大档字号算（原 560）
 const PREVIEW_H := 576
-## 255：角色卡里的几样尺寸 —— 面板方块间 10；小牌 ≤ 180 宽；条目行间 8
+## 255：角色卡里的几样尺寸 —— 小牌间 10；小牌 ≤ 206 宽（选人页 B 木牌底，原 180）；条目行间 8
 const STAT_GAP := 10
-const TILE_MAX_W := 180.0
+const TILE_MAX_W := 206.0
 const ENTRY_GAP := 6
 ## 255：角色卡几行之间（原 14；卡多了两行，收一点才装得进三样全有的角色）
 const CARD_SEP := 10
 const ENTRY_TAIL_SIZE := 12
-## 255：名牌里名字 24；说明那句的折行宽要再让开名牌自己的内边距与徽记位
-const PLATE_NAME_SIZE := 24
-const PLATE_TEXT_PAD := 88
+## 选人页 B：名单木键高（字号在 [constant UiTheme.BUTTON_SETUP_CHAR]）
+const CHAR_KEY_H := 56.0
+## 选人页 B：生命 / 耐力 / 耐力回复 / 体力的火漆
+const STAT_SEALS: Array[String] = ["seal_hp", "seal_vigor", "seal_stamina", "seal_vitality"]
 ## 255：没解锁的角色在左栏压到 60%
 const LOCKED_ALPHA := 0.6
 ## 三页各自的整屏画（作者 2026-10-17）：选角色 = 选人场地，带装备 = 木板拼接 / 仓库，选地图 = 桌上的军用地图
@@ -228,6 +230,7 @@ func open(_payload: Dictionary) -> void:
 	var col := _vbox(PAGE_SEP)
 	margin.add_child(col)
 	_title = TitlePlate.new()     # 226 批二：页标题刻在标题牌上（页码去掉，翻页计数在右下角按钮上）
+	_title.wood = true     # 选人页 B（作者 11:56「左上角跟着更新」）：三页的标题牌都是木框羊皮纸
 	var title_row := _hbox(0)
 	_title_indent = Control.new()     # 180 定稿：第三页让开地图纸的毛边
 	title_row.add_child(_title_indent)
@@ -280,9 +283,14 @@ static func mid_width() -> float:
 	return w - 2.0 * PAGE_MARGIN - LEFT_W - right_width() - 2.0 * COL_GAP
 
 
-## 角色卡里面能用的宽（中栏减两边皮框）
+## 角色卡里面能用的宽（中栏减两边木框）
 static func card_width() -> float:
-	return mid_width() - 2.0 * FRAME_INSET
+	return mid_width() - 2.0 * HALL_INSET
+
+
+## 选人页 B：第一页三栏的木框羊皮纸板（浅底墨字）
+static func _hall_board(inset: int) -> PanelContainer:
+	return UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_PLAQUE, inset, inset, inset, inset)
 
 
 ## 161 第一页：角色列表 | 角色卡 | 棋盘预览（只看不拖）。
@@ -290,15 +298,15 @@ static func card_width() -> float:
 func _build_character_page() -> Control:
 	var row := _hbox(COL_GAP)
 	_grooves.clear()
-	var left_board := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)     # 乙 石刻：角色列表、角色卡垫第二页那块皮
+	var left_board := _hall_board(HALL_INSET)     # 选人页 B（作者 10-31 11:56）：三栏都是基地木框羊皮纸，不再垫皮
 	left_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(left_board)
 	var left := _vbox(8)
-	left.custom_minimum_size.x = LEFT_W - 2 * FRAME_INSET     # 255 补充一：左栏连皮框共 260（原来里面就 232、整栏 320，三栏加起来顶出屏右沿）
+	left.custom_minimum_size.x = LEFT_W - 2 * HALL_INSET     # 255 补充一：左栏连皮框共 260（原来里面就 232、整栏 320，三栏加起来顶出屏右沿）
 	left_board.add_child(left)
 	_char_box = _vbox(8)     # 226 批二：段头「角色」与缺数据那句删了
 	left.add_child(_char_box)
-	var mid_board := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)
+	var mid_board := _hall_board(HALL_INSET)
 	mid_board.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN     # 255：定宽，不再撑满
 	mid_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	mid_board.custom_minimum_size = Vector2(mid_width(), CARD_H)     # 255 补充一（游戏测试 v4.48）：高也不随角色 / 语言变
@@ -306,7 +314,7 @@ func _build_character_page() -> Control:
 	_card = _vbox(CARD_SEP)
 	_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_board.add_child(_card)
-	var right_board := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_BARE, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD, RIGHT_PAD)     # 作者 10-31：去掉黑底，棋盘直接立在大厅上
+	var right_board := _hall_board(RIGHT_PAD)     # 作者 10-31：黑底去掉；选人页 B：和左中两栏同一种木框羊皮纸
 	right_board.size_flags_horizontal = Control.SIZE_SHRINK_END
 	right_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	right_board.custom_minimum_size = Vector2(right_width(), PREVIEW_H)     # 255：按九格定宽；补充一：高按六行棋盘 + 题字 + 图例 + 赠包签定死
@@ -941,6 +949,12 @@ func _rebuild_characters() -> void:
 		var why := lock_reason(ch)
 		names.append(n + ("\n" + UiText.t("setup.locked_character") % why if why != "" else ""))
 	_character_btns = _choice_column(_char_box, names, choose_character, 16)
+	for b in _character_btns:     # 选人页 B：平头木键、字居中，选中 = 按下态（深色木），不压蜡封
+		b.theme_type_variation = UiTheme.BUTTON_SETUP_CHAR
+		b.remove_theme_font_size_override("font_size")     # 字号交给变体（20）
+		b.toggle_mode = true
+		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.custom_minimum_size.y = CHAR_KEY_H
 	for i in _characters.size():     # 255：没解锁的压灰、点不了（解锁条件写在名字下面一行）
 		if lock_reason(_characters[i]) != "" and i < _character_btns.size():
 			_character_btns[i].modulate.a = LOCKED_ALPHA
@@ -1354,18 +1368,17 @@ func _build_nav() -> void:
 	box.offset_bottom = -36
 	var row := _hbox(16)
 	row.alignment = BoxContainer.ALIGNMENT_END
-	_back_btn = _button(UiText.t("setup.back"), prev_page, BACK_FONT, UiPalette.Tier.MINOR)     # 180 补二：大两号，仍比「出发」小
+	_back_btn = UiTheme.make_button(UiText.t("setup.back"), prev_page, UiTheme.TIER_PLAIN)     # 选人页 B：字号在变体里（30，仍比「出发」小）
 	_back_btn.custom_minimum_size = Vector2(240, 76)
 	row.add_child(_back_btn)
-	_enter_btn = _button(UiText.t("menu.continue"), func(): next_page(), 24, UiPalette.Tier.PRIMARY)
+	_enter_btn = UiTheme.make_button(UiText.t("menu.continue"), func(): next_page(), UiTheme.TIER_PLAIN)
 	_enter_btn.custom_minimum_size = Vector2(280, 76)
 	row.add_child(_enter_btn)
-	# 180 定稿：按钮 A 套 ——「返回」深色铜铸牌、「继续 / 出发」亮黄铜（各四态图）
-	if UiTheme.has_setup_art(UiTheme.ART_SETUP_GO):
-		_back_btn.theme_type_variation = UiTheme.BUTTON_SETUP_BACK
-		_enter_btn.theme_type_variation = UiTheme.BUTTON_SETUP_GO
-		_back_btn.custom_minimum_size.y = NAV_BTN_H
-		_enter_btn.custom_minimum_size.y = NAV_BTN_H
+	# 选人页 B（作者 11:56「右下角跟着更新」）：三页都用基地木键 ——「返回」浅木、「继续 / 出发」橙色主键（同基地【开始探索】）
+	_back_btn.theme_type_variation = UiTheme.BUTTON_SETUP_BACK
+	_enter_btn.theme_type_variation = UiTheme.BUTTON_SETUP_GO
+	_back_btn.custom_minimum_size.y = NAV_BTN_H
+	_enter_btn.custom_minimum_size.y = NAV_BTN_H
 	box.add_child(row)
 	_area.add_child(box)
 	_nav_box = box
@@ -1691,7 +1704,7 @@ func _rebuild_card() -> void:
 	_preview_board = null
 	_legend.clear()
 	_gift_tag = null
-	_stat_plaques.clear()
+	_stat_plate = null
 	_entries.clear()
 	_cap_tiles.clear()
 	_skill_names.clear()
@@ -1705,24 +1718,11 @@ func _rebuild_card() -> void:
 	_card.add_child(head)
 	_portrait = PortraitSlot.new(CARD_PORTRAIT, Nameplate.character_face(ch.id), true)
 	head.add_child(_portrait)
-	var plate := Nameplate.new().setup(Names.of(ch), UiText.t("setup.character"), null, 0)
-	plate.set_name_size(PLATE_NAME_SIZE)
-	plate.set_blurb(Names.description_of(ch), inner - CARD_PORTRAIT - 16 - PLATE_TEXT_PAD)
-	if plate.blurb_label != null:
-		_fit_labels.append([plate.blurb_label, Nameplate.BLURB_SIZE])
-	plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	head.add_child(plate)
-	# 255：面板方块一行
-	var plaques := _hbox(STAT_GAP)
-	_card.add_child(plaques)
-	var specs := stat_plaques(ch)
-	var pw := minf(StatPlaque.MAX_W, floorf((inner - STAT_GAP * (specs.size() - 1)) / maxf(1.0, specs.size())))
-	for spec in specs:
-		var sp := StatPlaque.new().setup(String(spec[0]), String(spec[1]), String(spec[2]))
-		sp.custom_minimum_size = Vector2(pw, StatPlaque.HEIGHT)
-		plaques.add_child(sp)
-		_stat_plaques.append(sp)
+	# 选人页 B（作者 11:29）：铭牌只写名字 + 火漆属性（「角色」与角色说明删了，那排蜡板也并进来）
+	_stat_plate = StatSealPlate.new().setup(Names.of(ch), stat_plaques(ch))
+	_stat_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_stat_plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(_stat_plate)
 	# 179：图标牌；255：带入上限也并成牌，每块 ≤ 180
 	var tiles := _hbox(STAT_GAP)
 	_card.add_child(tiles)
@@ -1730,6 +1730,7 @@ func _rebuild_card() -> void:
 	var tw := minf(TILE_MAX_W, floorf((inner - STAT_GAP * (caps.size() - 1)) / maxf(1.0, caps.size())))
 	for cap in caps:
 		var tile := CapTile.new().setup(cap[0], cap[1], cap[2])
+		UiTheme.panel_margins(tile, UiTheme.PANEL_HOME_PLAQUE_SMALL, 16, 12, 16, 16)     # 选人页 B：小木牌底
 		tile.size_flags_horizontal = Control.SIZE_FILL
 		tile.custom_minimum_size.x = tw
 		tiles.add_child(tile)
@@ -1819,7 +1820,7 @@ func _build_preview(ch: CharacterDef) -> void:
 
 ## 255：图例一枚小签（色块 + 字），坐在小牌底上
 func _legend_tag(text: String, swatch: Color) -> PanelContainer:
-	var tag := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_CAP_TILE, 10, 4, 10, 4)
+	var tag := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_CHIP, 10, 4, 10, 4)
 	var row := _hbox(6)
 	tag.add_child(row)
 	var box := ColorRect.new()
@@ -1849,14 +1850,14 @@ func first_gift_text(ch: CharacterDef) -> String:
 	return UiText.t("setup.first_gift") % UiText.t("setup.list_sep").join(parts) if not parts.is_empty() else ""
 
 
-## 255：面板方块 [名, 数, 悬停句]：生命 / 耐力 / 耐力回复 / 体力必有；别的面板项角色在 base_stats 里改过才出
+## 255：面板项 [名, 数, 火漆图名]：生命 / 耐力 / 耐力回复 / 体力必有（各有火漆，[constant STAT_SEALS]）；别的面板项角色在 base_stats 里改过才出，没有专属火漆
 static func stat_plaques(ch: CharacterDef) -> Array:
 	var base := ch.baseline()
 	var out: Array = [
-		[UiText.t("setup.stat_hp"), _num(base.value_of(&"max_hp")), ""],
-		[UiText.t("setup.stat_stamina"), _num(base.value_of(&"max_stamina")), ""],
-		[UiText.t("setup.stat_regen"), UiText.t("setup.per_sec") % _num(base.value_of(&"regen_stamina")), ""],
-		[UiText.t("setup.stat_vitality"), str(ch.vitality_max), ""],
+		[UiText.t("setup.stat_hp"), _num(base.value_of(&"max_hp")), STAT_SEALS[0]],
+		[UiText.t("setup.stat_stamina"), _num(base.value_of(&"max_stamina")), STAT_SEALS[1]],
+		[UiText.t("setup.stat_regen"), UiText.t("setup.per_sec") % _num(base.value_of(&"regen_stamina")), STAT_SEALS[2]],
+		[UiText.t("setup.stat_vitality"), str(ch.vitality_max), STAT_SEALS[3]],
 	]
 	for key in ch.base_stats:
 		var k := StringName(String(key))

@@ -71,9 +71,9 @@ static func run_sz(t: TestCase) -> void:
 	UiTheme.pinned_text_size = pinned
 
 
-## 游戏测试 v4.58：中、大档两处出框 —— 选人页蜡板小字压到数字上；英文开局书页的章节名撑宽右页
+## 游戏测试 v4.58：中、大档出框 —— 英文开局书页的章节名撑宽右页
 static func run_fixed_boxes(t: TestCase) -> void:
-	t.begin("258 · 三档下：蜡板小字与数字不叠；开局书页章节名（英文最长那句）不宽过右页")
+	t.begin("258 · 三档下：开局书页章节名（英文最长那句）不宽过右页")
 	var saved := UiTheme.text_size
 	var pinned := UiTheme.pinned_text_size
 	UiTheme.pinned_text_size = &""
@@ -82,7 +82,6 @@ static func run_fixed_boxes(t: TestCase) -> void:
 	for tier in GameSettings.TEXT_SIZES:
 		UiTheme.set_text_size(tier)
 		UiTheme.refresh(GameSettings.new())
-		t.eq(StatPlaque.font_sizes(), [StatPlaque.LABEL_SIZE, StatPlaque.VALUE_SIZE] as Array[int], "%s：蜡板定高，小字与数字照小档（不叠）" % tier)
 		var h: Label = event_screen._heading_label("Prologue: Edge of the Ruins", page_w)
 		t.check(h.get_minimum_size().x <= page_w, "%s：章节名宽 %d ≤ 右页 %d" % [tier, int(h.get_minimum_size().x), int(page_w)])
 		h.free()

@@ -14,7 +14,7 @@ static func _labels(n: Node) -> Array[Label]:
 
 
 static func frame_character_page(t: TestCase, root: Window) -> void:
-	t.begin("179 · 选角色页：三栏凹槽板、中栏撑满、棋盘贴右；三块图标牌；技能名 22 粗体描边、说明 17；没有角色说明与「背包：」；不在石板上")
+	t.begin("179 · 选角色页：三栏木框羊皮纸（选人页 B）、中栏定宽、棋盘贴右；图标牌；技能名 22 朱褐不描边、说明 17；没有角色说明与「背包：」；不在石板上")
 	Support.cleanup("setup179")
 	var p := Support.paths("setup179")
 	var game = load(GAME).instantiate()
@@ -32,11 +32,11 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.is_null(setup.screen_slab(), "不再是整块石板")
 	t.not_null(setup.get_node_or_null(^"PaintedContent"), "内容区铺满全屏（大厅背景上）")
 	t.eq(setup._grooves.size(), 3, "三栏三块板")
-	for i in setup._grooves.size():     # 乙 石刻：角色列表、角色卡垫第二页那块皮，棋盘栏照旧凹槽
-		t.eq((setup._grooves[i] as PanelContainer).theme_type_variation, UiTheme.PANEL_BARE if i == 2 else UiTheme.PANEL_PACK_LEATHER, "第 %d 栏的板（作者 10-31：棋盘栏不垫黑底）" % (i + 1))
+	for i in setup._grooves.size():     # 选人页 B（作者 10-31 11:56）：三栏都是基地木框羊皮纸
+		t.eq((setup._grooves[i] as PanelContainer).theme_type_variation, UiTheme.PANEL_HOME_PLAQUE, "第 %d 栏的板是木框羊皮纸" % (i + 1))
 	t.check(not setup._character_btns.is_empty() and setup._character_btns.all(func(b: Button) -> bool:
-		return b.theme_type_variation == UiTheme.BUTTON_MAP_ENTRY and b.toggle_mode and b.custom_minimum_size.y == setup.MAP_ENTRY_H), "角色列表是选地图那种纸条")
-	t.check(setup._character_btns[setup.character_index].button_pressed, "选中的那条按下（压蜡封）")
+		return b.theme_type_variation == UiTheme.BUTTON_SETUP_CHAR and b.toggle_mode and b.custom_minimum_size.y == setup.CHAR_KEY_H), "选人页 B：角色名单是基地平头木键")
+	t.check(setup._character_btns[setup.character_index].button_pressed, "选中的那颗按下（深色木）")
 	t.check(setup._preset_btns.all(func(b: Button) -> bool: return b.theme_type_variation == UiTheme.BUTTON_MAP_ENTRY and b.custom_minimum_size.y == setup.PRESET_ENTRY_H), "不带 / 坚守 / 强攻也是纸条，高 52")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_GROOVE), UiTheme.TONE_DARK, "凹槽板深底（白字）")
 	t.eq(setup._grooves[1].size_flags_horizontal, Control.SIZE_SHRINK_BEGIN, "255：中栏定宽，不再撑满")
@@ -48,9 +48,8 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.eq(UiTheme.art_tone(UiTheme.ART_SETUP_BG), UiTheme.TONE_LIGHT, "大厅背景标浅底")
 	t.eq(UiTheme.tone_at(setup._area), UiTheme.TONE_LIGHT, "内容区记着浅底")
 	t.check(setup._title is TitlePlate and setup._title.text == "角色选择", "226 批二：页标题刻在标题牌上、页码去掉（%s）" % setup._title.text)
-	for g in setup._grooves.slice(0, 2):     # 作者 10-31：第三栏（棋盘）不垫底，立在浅色大厅上
-		t.eq(UiTheme.tone_at(g), UiTheme.TONE_DARK, "板里是深底")
-		t.check(not g.theme_type_variation.is_empty() and (g as Control).theme == null, "凹槽板没挂墨字主题")
+	for g in setup._grooves:     # 选人页 B：三栏都是浅底墨字
+		t.eq(UiTheme.tone_at(g), UiTheme.TONE_LIGHT, "板里是浅底")
 	# 作者 2026-10-17 08:02：大厅只给第一页，第二页木板拼接 / 仓库，第三页桌上的军用地图 —— 翻页换画；没图纯色底、标题白字
 	t.eq(setup.PAGE_ART, [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG], "三页三幅画")
 	for page in [1, 2, 0]:
@@ -66,7 +65,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		t.eq(setup._title.text, UiText.t(setup.PAGE_TITLES[page]), "第 %d 页标题牌跟着换字（石牌浅底墨字，不随画变）" % (page + 1))
 	var groove_label := UiTheme.make_label("x", 15, UiPalette.DIM)
 	setup._grooves[0].add_child(groove_label)
-	t.eq(groove_label.get_theme_color("font_color"), UiPalette.DIM, "凹槽板里的字照旧浅色")
+	t.check(groove_label.get_theme_color("font_color") != UiPalette.DIM, "选人页 B：木框羊皮纸里的字换墨色")
 	groove_label.free()
 
 	for i in flow.characters.size():
@@ -76,7 +75,8 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		var texts: Array[String] = []
 		for l in _labels(setup._card) + _labels(setup._preview_host):
 			texts.append(l.text)
-		t.check(texts.has(Names.description_of(ch)), "%s：255 角色说明放回名牌里" % ch.id)
+		t.check(not texts.has(Names.description_of(ch)), "%s：选人页 B（作者 11:29）角色说明删了" % ch.id)
+		t.check(not texts.has(UiText.t("setup.character")), "%s：铭牌不写「角色」" % ch.id)
 		t.check(not texts.any(func(s: String) -> bool: return s.begins_with("背包：")), "%s：棋盘下面不列背包" % ch.id)
 		var tiles: Array = setup._cap_tiles
 		# 2026-10-22（作者定）：开局金币那块撤掉了 —— 钱改成玩家自己从仓库带，角色身上这个数不再有作用
@@ -92,8 +92,8 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		for n in names:
 			var l := n as Label
 			t.eq(l.get_theme_font_size("font_size"), UiTheme.sz(22), "%s 字号 22" % l.text)
-			t.check(l.get_theme_constant("outline_size") > 0, "%s 带描边" % l.text)
-			t.eq(l.get_theme_color("font_color"), UiPalette.BTN_PRIMARY_HOVER, "%s 亮黄铜色" % l.text)
+			t.eq(l.get_theme_constant("outline_size"), 0, "%s 浅底不描边" % l.text)
+			t.eq(l.get_theme_color("font_color"), UiTheme.SKILL_NAME_INK, "%s 朱褐" % l.text)
 		t.check(not texts.any(func(s: String) -> bool: return s.contains("行动点")), "%s：这一屏没有「行动点」" % ch.id)
 		t.check(not texts.any(func(s: String) -> bool: return s.contains("被动")), "%s：技能行不写「被动」（作者 2026-10-17）" % ch.id)
 	game.queue_free()

@@ -101,7 +101,7 @@ func row_columns(i: int) -> Array:
 ## 一行的几栏：第几局 · 时间 · 章节 · 规模 · 难度 · 角色 · 结局 · 分（269；老记录「—」）· 值 / 带出 · 步数
 func _columns(h: Dictionary) -> Array:
 	return [UiText.t("records.run_no") % int(h.get("run_no", 0)), _when(h), _where(h), _who(h), _outcome(h),
-		UiText.t("records.col_score") % (str(int(h["score"])) if h.has("score") else UiText.t("records.no_score")),
+		UiText.t("records.col_score") % str(int(h["score"])) if h.has("score") else UiText.t("records.no_score"),     # 游戏测试 v4.86：老行只写「—」
 		UiText.t("records.col_value") % [int(h.get("value", 0)), int(h.get("balance", 0))], UiText.count(int(h.get("steps", 0)), "records.col_steps")]
 
 
