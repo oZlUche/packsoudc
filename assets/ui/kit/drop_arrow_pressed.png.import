@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cxx5v528lqx3q"
-path="res://.godot/imported/tab_mark.png-afd469f3b9304ab11fc7014ba502bf44.ctex"
+uid="uid://bhfnngv4uyhvm"
+path="res://.godot/imported/drop_arrow_pressed.png-84c803194828b8f744849fcef0cc0a56.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/home/tab_mark.png"
-dest_files=["res://.godot/imported/tab_mark.png-afd469f3b9304ab11fc7014ba502bf44.ctex"]
+source_file="res://assets/ui/kit/drop_arrow_pressed.png"
+dest_files=["res://.godot/imported/drop_arrow_pressed.png-84c803194828b8f744849fcef0cc0a56.ctex"]
 
 [params]
 

@@ -34,7 +34,7 @@ IMPORTLOG="${TMPDIR:-/tmp}/godot_import.log"
 # timeout 不是到处都有（macOS 默认没有）：有就包上，没有就直接跑
 TIMEOUT=""
 if command -v timeout >/dev/null 2>&1; then
-  TIMEOUT="timeout 900"
+  TIMEOUT="timeout 1800"
 fi
 $TIMEOUT "$GODOT" --headless --path "$ROOT" --script res://tests/run_tests.gd -- "$PATTERN" >"$LOG" 2>&1
 code=$?

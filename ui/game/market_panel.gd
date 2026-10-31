@@ -1,5 +1,5 @@
 ## 251：基地「集市」页（[Market]）。补充一 §10.1（作者 14:49；15:57 第三版）：木凉棚 —— 货散放在一张透视的大平桌上、前后两排（[MarketStage]：底图 + `market/layout.json`
-## 的货位 foot / scale，按级数取前 4 / 6 / 8 个），每个货位是一块只有那件大小的小棋盘（带框，227），货前面平放一张金币价签（[PriceTag] 金币式），卖掉的盖「已售」；
+## 的货位 foot / scale，按级数取前 4 / 6 / 8 个），每个货位是一块只有那件大小的小棋盘（作者 10-31「集市的物品格子要设计成透明的」：不套框、不铺内垫、不画格缝，货直接摆在桌上），货前面平放一张金币价签（[PriceTag] 金币式），卖掉的盖「已售」；
 ## 钱袋读数是金币 + 数字（[CoinLabel]）。页面上不写等级（在科技页）；没点出集市只画空棚 + 一块签说去科技页点。
 ## 买法不变：双击 / 右键「买下」（价钱是金币 + 数字）；买到的进仓库（包进包架），钱不够 / 仓库满说一句。
 ## 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库」）：整页，右列仓库收起（[constant MetaScreen.FULL_TABS]），告示说「进了仓库」；底图 1300×950 定稿
@@ -9,6 +9,8 @@ signal changed()
 
 ## 货位格子边长至少这么大（像素；面板太窄时）—— 不小于框能套的最窄一格（[constant BoardFrame.MIN_SIDE]，再窄框会被裁）
 const CELL_MIN := BoardFrame.MIN_SIDE
+## 作者 10-31：透明格 —— 格缝和亮线都不画（格子区本来就没底）
+const CLEAR_SEAMS := {"seam_alpha": 0.0, "hi_alpha": 0.0, "empty_alpha": 0.0}
 ## 价签离货底多远（平放在货前面）
 const TAG_GAP := 2.0
 ## 卖掉的货压多灰（UI替换美术 10-25：货还在、压灰，章盖在价签上）
@@ -108,8 +110,8 @@ func _add_spot(i: int) -> void:
 	if sold:
 		view.modulate = SOLD_TINT
 	_stage.add_child(view)
-	var frame := BoardFrame.wrap(view, "plain")     # 227：每个货位一块小棋盘、带框
-	view.seams = BoardFrame.light_seams().merged({"edge": true})
+	BoardFrame.mark(view, _stage, CLEAR_SEAMS)     # 作者 10-31：格子透明 —— 屏自己的桌面就是底（227 守门认它）
+	var frame: Control = view
 	var price := PriceTag.coins(Market.price_of(flow.market(), def))
 	price.sold = sold
 	_stage.add_child(price)
