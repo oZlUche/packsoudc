@@ -262,7 +262,7 @@ static func frame_run_groups_and_search(t: TestCase, root: Window) -> void:
 	const BAG := 3
 
 	# --- 有效果从定义算 ---
-	for id in ["shortsword", "salve", "ration", "bag_leather", "gambeson", "arrows", "charm_sun", "spyglass"]:
+	for id in ["shortsword", "salve", "ration", "bag_leather", "arrows", "charm_sun", "spyglass"]:
 		t.check(ed._has_effect(id), "%s 有效果" % id)
 	for id in ["copper_ore", "steel_ingot", "antler", "rope_coil"]:
 		t.check(not ed._has_effect(id), "%s 没效果" % id)

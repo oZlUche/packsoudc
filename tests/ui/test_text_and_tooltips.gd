@@ -101,7 +101,7 @@ static func run_item_tooltip(t: TestCase) -> void:
 	t.check(Glossary.strip_bbcode(text).contains("秒造成") and not text.contains("冷却") and not text.contains("DPS"), "武器：每 X 秒造成 Y 点伤害，不写冷却与 DPS（%s）" % text.replace("\n", " | "))
 	var compiled := ItemTooltip.compiled_for(knife, null)
 	t.check(compiled != null and compiled.estimated_dps() > 0.0, "单独编译得出 DPS")
-	var gamb := ItemInstance.create(c.items.get_def(&"gambeson"))
+	var gamb := ItemInstance.create(c.items.get_def(&"arrows"))
 	var gtext := ItemTooltip.describe(gamb)
 	t.check(not gtext.contains("DPS"), "非武器不写 DPS")
 	t.check(gtext.contains("term:增益槽") or gtext.contains("term:受益槽"), "有邻接标记的写槽的句子（行首格位图标，%s）" % gtext.replace("\n", " | "))

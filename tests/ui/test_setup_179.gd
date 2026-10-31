@@ -33,7 +33,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.not_null(setup.get_node_or_null(^"PaintedContent"), "内容区铺满全屏（大厅背景上）")
 	t.eq(setup._grooves.size(), 3, "三栏三块板")
 	for i in setup._grooves.size():     # 乙 石刻：角色列表、角色卡垫第二页那块皮，棋盘栏照旧凹槽
-		t.eq((setup._grooves[i] as PanelContainer).theme_type_variation, UiTheme.PANEL_GROOVE if i == 2 else UiTheme.PANEL_PACK_LEATHER, "第 %d 栏的板" % (i + 1))
+		t.eq((setup._grooves[i] as PanelContainer).theme_type_variation, UiTheme.PANEL_BARE if i == 2 else UiTheme.PANEL_PACK_LEATHER, "第 %d 栏的板（作者 10-31：棋盘栏不垫黑底）" % (i + 1))
 	t.check(not setup._character_btns.is_empty() and setup._character_btns.all(func(b: Button) -> bool:
 		return b.theme_type_variation == UiTheme.BUTTON_MAP_ENTRY and b.toggle_mode and b.custom_minimum_size.y == setup.MAP_ENTRY_H), "角色列表是选地图那种纸条")
 	t.check(setup._character_btns[setup.character_index].button_pressed, "选中的那条按下（压蜡封）")
@@ -48,7 +48,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	t.eq(UiTheme.art_tone(UiTheme.ART_SETUP_BG), UiTheme.TONE_LIGHT, "大厅背景标浅底")
 	t.eq(UiTheme.tone_at(setup._area), UiTheme.TONE_LIGHT, "内容区记着浅底")
 	t.check(setup._title is TitlePlate and setup._title.text == "角色选择", "226 批二：页标题刻在标题牌上、页码去掉（%s）" % setup._title.text)
-	for g in setup._grooves:
+	for g in setup._grooves.slice(0, 2):     # 作者 10-31：第三栏（棋盘）不垫底，立在浅色大厅上
 		t.eq(UiTheme.tone_at(g), UiTheme.TONE_DARK, "板里是深底")
 		t.check(not g.theme_type_variation.is_empty() and (g as Control).theme == null, "凹槽板没挂墨字主题")
 	# 作者 2026-10-17 08:02：大厅只给第一页，第二页木板拼接 / 仓库，第三页桌上的军用地图 —— 翻页换画；没图纯色底、标题白字

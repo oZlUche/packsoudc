@@ -289,11 +289,9 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 			t.eq(((entries[0] as Control).get_meta(&"name_label") as Label).theme_type_variation, UiTheme.LABEL_SKILL_NAME, "技能名亮黄铜")
 		t.check(entries.all(func(e: Control) -> bool: return e.get_child(0) is EntryIcon), "每行左端一个图标槽")
 		if pins == 0 and ch.board_mask.is_empty():
-			t.eq(setup._board_title.text, "棋盘 %d × %d 格" % [ch.board_size.x, ch.board_size.y], "%s：题字（没缺格没随身之物只写尺寸）" % ch.id)
+			t.check(not "_board_title" in setup, "%s：作者 10-31 棋盘下面不写尺寸" % ch.id)
 			t.eq(setup._legend.size(), 0, "%s：没有缺格 / 随身之物不出图例" % ch.id)
 		else:
-			var counts := ch.board_counts(flow.items)
-			t.eq(setup._board_title.text, "棋盘 %d × %d 格　可用 %d 格" % [ch.board_size.x, ch.board_size.y, int(counts["usable"])], "%s：题字带可用格数" % ch.id)
 			t.check(setup._legend.size() > 0, "%s：有随身之物出图例" % ch.id)
 	t.check(widths.size() >= 2, "比过不止一种宽的棋盘：%s" % [widths.keys()])
 	for i in range(1, rects.size()):
@@ -334,7 +332,6 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 	t.check((pin_row.get_child(0) as EntryIcon).kind == EntryIcon.ITEM, "随身之物那行的图标是道具本体")
 	var pin_texts: Array = pin_row.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
 	t.eq(pin_texts.back(), "随身：拿不下、丢不掉", "末尾灰小字（先功效后不可移动，作者 11:00）")
-	t.eq(setup._board_title.text, "棋盘 7 × 7 格　可用 %d 格" % (49 - 5 - 2), "题字带可用格数")
 	t.eq(setup._legend.size(), 2, "图例：不可用格、随身之物")
 	t.check(setup._preview_view.get_parent() is BoardFrame and (setup._preview_view.get_parent() as BoardFrame).contour != null, "有缺格：框沿轮廓走")
 	t.eq(setup._preview_view.inventory.bags().size(), 0, "预览只画形状不画包")

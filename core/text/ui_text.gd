@@ -543,8 +543,6 @@ const TEXT := {
 	"setup.cap_rarity": {"zh": "带入稀有度上限", "en": "Rarity cap"},
 	"setup.pinned_tail": {"zh": "随身：拿不下、丢不掉", "en": "Kit: can't be removed or dropped"},
 	"setup.pin_moves_tail": {"zh": "随身：棋盘上能挪，丢不掉", "en": "Kit: moves around your board, can't be dropped"},     # 256：军功牌
-	"setup.board_title": {"zh": "棋盘 %d × %d 格", "en": "Board %d × %d"},
-	"setup.board_usable": {"zh": "棋盘 %d × %d 格　可用 %d 格", "en": "Board %d × %d · %d usable"},
 	"setup.legend_missing": {"zh": "不可用格", "en": "Unusable cell"},
 	"setup.legend_pinned": {"zh": "随身之物", "en": "Kit item"},
 	"setup.first_gift": {"zh": "首次选他：%s 进包架", "en": "First pick: %s to your bag rack"},
