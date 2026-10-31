@@ -154,7 +154,7 @@ static func frame_warehouse_tools(t: TestCase, root: Window) -> void:
 	var tools: WarehouseTools = screen.warehouse_tools()
 	t.not_null(tools, "有工具列")
 	t.check(not "_tab_mark" in screen and not ResourceLoader.exists("res://assets/ui/home/tab_mark.png"), "作者 10-31：选中页签不挂五角小木牌")
-	t.check(screen._wh._rack_col.is_ancestor_of(tools) and tools.get_index() > screen._wh._rack_box.get_index(), "在包架下面")
+	t.check(screen._wh._rack_col.is_ancestor_of(tools) and not screen._wh._rack_col.is_ancestor_of(screen._wh.rack_box()), "268 补充二：筛选牌那一列在中列，包架挪去右边仓库旁")
 	t.eq(tools.filter_plate.custom_minimum_size, Vector2(228, 150), "筛选牌 228 × 150")
 	t.check(not tools.find_children("*", "HeaderTag", true, false).any(func(h): return h.text == "账目" or h.text == "Ledger"), "作者 10-31：没有账目栏")
 	t.eq(tools.filter_plate.theme_type_variation, UiTheme.PANEL_HOME_PLAQUE_SMALL, "小木牌")
