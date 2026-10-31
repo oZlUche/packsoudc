@@ -21,6 +21,7 @@ var cells: Array = []
 ## [param stats] = [[项名, 数, 火漆图名（空 = 没有）], …]
 func setup(title: String, stats: Array) -> StatSealPlate:
 	UiTheme.panel_margins(self, UiTheme.PANEL_HOME_PLAQUE_SMALL, 22, 16, 22, 18)
+	set_meta(TipAnchor.META, true)     # 游戏测试 v4.91：下排格的提示摆在整块铭牌上方，别盖住上排的数
 	var col := UiTheme.vbox(8)
 	add_child(col)
 	name_label = UiTheme.make_label(title, NAME_SIZE, UiTheme.INK)

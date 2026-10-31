@@ -23,6 +23,8 @@ const SOLD_TINT := Color(0.55, 0.55, 0.55, 0.75)
 ## 补充二（12.1 补二）：「每局回来换一批货」钉在左柱上的便条（底图里没画；设计像素、略斜），便条按整页缩放整块缩
 const RESTOCK_AT := Rect2(66, 297, 190, 78)
 const RESTOCK_TILT := -0.06
+## 便条最高挪到这（设计像素：凉棚横梁下沿）
+const RESTOCK_TOP := 180.0
 ## 钱牌上金币 + 数字的字号 = 钱牌高的这么多倍（整页跟着缩放）
 const FUNDS_FONT := 0.55
 ## 270：【换货】键的左上角（凉棚底图像素，钱牌正下方）
@@ -291,6 +293,26 @@ func _place() -> void:
 		_stage.move_child(_frames[o[1]], -1)
 	for o in order:
 		_stage.move_child(_prices[o[1]], -1)
+	_lift_note()
+
+
+## 游戏测试 v4.91（3）：「每局回来换一批货」便条别被后排的货（包位那只包）挡住 —— 挡着就往上挪（最高到横梁下 [constant RESTOCK_TOP]），
+## 再挡也压在货上面画
+func _lift_note() -> void:
+	var k := _stage.scale_factor()
+	var r := Rect2(_stage.at(RESTOCK_AT.position), RESTOCK_AT.size * k)
+	var y := r.position.y
+	for f in _frames:
+		var fr := Rect2(f.position, f.size)
+		if fr.position.x < r.end.x and fr.end.x > r.position.x and fr.end.y > r.position.y and fr.position.y < r.end.y:
+			y = minf(y, fr.position.y - r.size.y - TAG_GAP)
+	_restock.position.y = maxf(_stage.at(Vector2(0, RESTOCK_TOP)).y, y)
+	_stage.move_child(_restock, -1)
+
+
+## 测试看
+func restock_note() -> Control:
+	return _restock
 
 
 func _buy_action(i: int) -> ItemActions.Action:
@@ -374,6 +396,10 @@ func note() -> PanelContainer:
 
 func stage() -> MarketStage:
 	return _stage
+
+
+func frames() -> Array:
+	return _frames
 
 
 func stall_view() -> StallView:

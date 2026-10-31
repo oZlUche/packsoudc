@@ -263,6 +263,12 @@ static func frame_market_stalls(t: TestCase, root: Window) -> void:
 			lie_ok = lie_ok and v.inventory.size.x >= v.inventory.size.y
 		lie_ok = lie_ok and v.inventory.size.x * v.cell_px <= maxf(p.LIE_MAX_W * p.stage().scale_factor(), v.inventory.size.x * BoardFrame.MIN_SIDE) + 0.5
 	t.check(lie_ok, "作者 14:56：武器横放（长边贴桌面），一件不宽过 LIE_MAX_W")
+	p.stage().size = Vector2(1300, 950)     # 按底图原尺寸摆（测试窗太小，货都缩到最小格）
+	p._place()
+	var note: Control = p.restock_note()
+	var nr := Rect2(note.position, note.size * note.scale)
+	t.check(p.frames().all(func(fr: Control) -> bool: return not Rect2(fr.position, fr.size).intersects(nr)), "游戏测试 v4.91（3）：「每局回来换一批货」便条不被后排的货（包位）挡住")
+	t.eq(note.get_index(), p.stage().get_child_count() - 1, "便条画在最上层")
 	var key: RefreshKey = p.refresh_key()
 	t.eq([key.price, key.poor], [40, false], "【换货】40")
 	var funds := f.meta.funds

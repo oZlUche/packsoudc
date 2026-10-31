@@ -46,3 +46,43 @@ static func frame_install(t: TestCase, root: Window) -> void:
 	var want := TipAnchor.spot(TipAnchor.owner_rect(host), Vector2(w.size), host.get_viewport().get_visible_rect(), host.get_viewport().get_mouse_position())
 	t.eq(Vector2(w.position), want.round(), "挪到主人正上方（%s）" % want)
 	host.queue_free()
+
+
+static func frame_anchor_and_fold(t: TestCase, root: Window) -> void:
+	t.begin("游戏测试 v4.91（1）（2）：铭牌这种两行小格的提示摆在整块铭牌上方；一行宽过 520（按字号档）就折行")
+	TipAnchor.install(root.get_tree())
+	var plate := StatSealPlate.new().setup("马库斯", [["生命", "55", "seal_hp"], ["体力", "5", "seal_vitality"], ["耐力", "65", "seal_stamina"], ["耐力回复", "5/秒", "seal_vigor"]])
+	plate.position = Vector2(300, 300)
+	root.add_child(plate)
+	plate.size = plate.get_combined_minimum_size()
+	var cell := plate.cells[plate.cells.size() - 1][0] as Control
+	t.check(TipAnchor.anchor_of(cell) == plate, "铭牌里的格子：对着整块铭牌摆")
+	var lone := Control.new()
+	root.add_child(lone)
+	t.check(TipAnchor.anchor_of(lone) == lone, "别的控件：对着它自己")
+	var w := PopupPanel.new()
+	w.theme_type_variation = &"TooltipPanel"
+	var lab := Label.new()
+	lab.theme_type_variation = &"TooltipLabel"
+	lab.text = UiText.t("market.restock_tip") + UiText.t("market.restock_tip")
+	w.add_child(lab)
+	cell.add_child(w)
+	w.size = Vector2i(w.get_contents_minimum_size())
+	var one_line := w.size
+	w.popup(Rect2i(Vector2i(500, 500), w.size))
+	t.check(one_line.x > TipAnchor.max_w(), "这句一行宽 %d，过了 %d" % [one_line.x, TipAnchor.max_w()])
+	t.check(w.size.x <= TipAnchor.max_w() + 1 and w.size.y > one_line.y, "折了行：%s（原来 %s）" % [w.size, one_line])
+	t.check(lab.autowrap_mode != TextServer.AUTOWRAP_OFF, "按词折")
+	t.check(float(w.position.y) + w.size.y <= TipAnchor.owner_rect(plate).position.y + 0.5, "摆在整块铭牌上方，不盖上排的数")
+	var short := PopupPanel.new()
+	short.theme_type_variation = &"TooltipPanel"
+	var sl := Label.new()
+	sl.text = "体力"
+	short.add_child(sl)
+	lone.add_child(short)
+	short.size = Vector2i(short.get_contents_minimum_size())
+	var ss := short.size
+	short.popup(Rect2i(Vector2i(10, 10), short.size))
+	t.eq(short.size, ss, "短的不折")
+	plate.queue_free()
+	lone.queue_free()
