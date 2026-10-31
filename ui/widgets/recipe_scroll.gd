@@ -206,8 +206,9 @@ func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: S
 	for i in n:
 		(_mats.get_child(i) as MatSlot).line_right = i < n - 1
 	_wage.amount = r.funds
+	_wage.short = CoinShort.has(why)     # 「金币不够」：工钱那枚金币变红、斜划一道，不写字
 	forge_key.disabled = why != ""
-	forge_key.tooltip_text = why
+	forge_key.tooltip_text = CoinShort.strip(why)
 	forge_key.sync_art()
 
 
