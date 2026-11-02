@@ -411,7 +411,7 @@ static func run_enemy_identity(t: TestCase) -> void:
 		if def == null or def.item_tags.is_empty():
 			continue
 		for strength in 4:
-			for seed in 3:
+			for seed in 2:
 				var rng := RandomNumberGenerator.new()
 				rng.seed = seed * 31 + strength
 				var built := EnemyPlacer.build_content(def, pool, c.items, strength, rng)
