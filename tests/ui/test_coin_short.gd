@@ -41,6 +41,7 @@ static func frame_surfaces(t: TestCase, root: Window) -> void:
 			c = ch
 	t.check(c != null and c.short and c.amount == 40, "按钮：价钱那枚金币变红、斜划")
 	t.eq(b.tooltip_text, "", "按钮不挂「金币不够」的字")
+	t.check(CoinLabel.short_texture() != null, "美术设计 A 定稿（作者 11-02 15:07）：hud/coin_short 在")
 	t.check(CoinLabel.make_short(-1).custom_minimum_size.x <= CoinLabel.make_short(-1).coin_side() + 0.5, "不带数：只占一枚金币宽")
 	for n in [s, fee, plain, b]:
 		n.queue_free()
