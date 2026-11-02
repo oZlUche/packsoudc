@@ -1693,6 +1693,9 @@ static func _setup_art(t: Theme) -> void:
 	for spec in [[BUTTON_SETUP_BACK, BUTTON_HOME, 30], [BUTTON_SETUP_GO, BUTTON_HOME_PRIMARY, 40], [BUTTON_SETUP_CHAR, BUTTON_HOME, 20]]:
 		t.set_type_variation(spec[0], spec[1])
 		t.set_font_size("font_size", spec[0], spec[2])
+	# 作者 10-31 17:48：右下两颗（返回 / 继续 / 出发）的字换粗体
+	for v in [BUTTON_SETUP_BACK, BUTTON_SETUP_GO]:
+		t.set_font("font", v, _font_bold)
 
 
 ## 一套按钮状态图挂到变体上：[param states] 是 状态 → 文件后缀（`<base>_<后缀>.png`，缺的那张退回 normal）；
