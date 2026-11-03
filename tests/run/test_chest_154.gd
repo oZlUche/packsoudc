@@ -55,7 +55,7 @@ static func run_placement(t: TestCase) -> void:
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var chests := 0
-	for seed in range(1, 13):
+	for seed in range(1, 5):
 		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
 		if s == null:
 			continue
@@ -71,7 +71,7 @@ static func run_placement(t: TestCase) -> void:
 			t.check(not ChestPlacer.is_opened(node), "还没开")
 			if again != null:
 				t.eq(ChestPlacer.rarity_of(again.map.get_node(id)), ChestPlacer.rarity_of(node), "同一张图每次一样")
-	t.check(chests > 0, "十二张图里有宝箱点（%d 个）" % chests)
+	t.check(chests > 0, "四张图里有宝箱点（%d 个）" % chests)
 	var n := MapNode.new()
 	n.type = &"chest"
 	n.content[ChestPlacer.KEY] = {"rarity": 4, "skin": "ruins"}

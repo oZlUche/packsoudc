@@ -5,6 +5,8 @@ class_name CoinLabel
 extends Control
 
 const ART := "res://assets/ui/hud/coin.png"
+## 「金币不够」那一枚（美术设计 A，作者 11-02 15:07：原样金币 + 左下到右上一道红杠）；缺图退回金币 + 代码画的红杠
+const ART_SHORT := "res://assets/ui/hud/coin_short.png"
 ## 金币比字高大这么多（和顶端栏一样：币与数字同高）
 const COIN_SCALE := 1.15
 const GAP := 4.0
@@ -37,6 +39,7 @@ var short := false:
 		queue_redraw()
 
 static var _tex: Texture2D = null
+static var _tex_short: Texture2D = null
 ## 按像素缓存的小金币（按钮的图标位用）
 static var _icons: Dictionary = {}
 
@@ -59,6 +62,13 @@ static func coin_texture() -> Texture2D:
 	if _tex == null and ResourceLoader.exists(ART):
 		_tex = load(ART) as Texture2D
 	return _tex
+
+
+## 「金币不够」那张图（缺图 null）
+static func short_texture() -> Texture2D:
+	if _tex_short == null and ResourceLoader.exists(ART_SHORT):
+		_tex_short = load(ART_SHORT) as Texture2D
+	return _tex_short
 
 
 ## 缩到 [param px] 见方的金币（Button.icon 不会自己缩图）；缺图 null
@@ -106,13 +116,16 @@ func _draw() -> void:
 	var x := maxf(0.0, (size.x - custom_minimum_size.x) * 0.5) if centered else 0.0
 	var mid := size.y * 0.5
 	var rect := Rect2(Vector2(x, mid - side * 0.5), Vector2(side, side))
-	var tex := coin_texture()
+	var tex := short_texture() if short else null
+	var drawn_short := tex != null
+	if tex == null:
+		tex = coin_texture()
 	if tex != null:
 		draw_texture_rect(tex, rect, false)
 	else:
 		draw_circle(rect.get_center(), side * 0.45, FALLBACK_FILL)
 		draw_arc(rect.get_center(), side * 0.45, 0.0, TAU, 24, FALLBACK_EDGE, 1.5)
-	if short:     # 斜划一道红（左下到右上），描一圈深边免得糊在金色上
+	if short and not drawn_short:     # 缺定稿图的兜底：斜划一道红（左下到右上），描一圈深边免得糊在金色上
 		var a := rect.position + Vector2(side * 0.12, side * 0.88)
 		var b := rect.position + Vector2(side * 0.88, side * 0.12)
 		var wd := maxf(2.0, side * 0.14)
