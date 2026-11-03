@@ -55,8 +55,8 @@ const SHELF_WIN_WIDE := Vector2(1320, 900)
 ## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
 const FULL_TABS := ["market", "smithy"]
 ## 264 §三（作者 17:01 定稿）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地底图；换时淡入淡出 [constant SCENE_FADE] 秒。
-## 有场景图的这两页不垫粗布
-const SCENES := {"market": "market/scene", "smithy": "smithy/scene"}
+## 有场景图的页不垫粗布
+const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition"}     # 271：出征页也有自己的场景图（UI替换美术 出图；缺图回基地底图）
 const SCENE_FADE := 0.25
 
 var _wh = null
@@ -131,6 +131,10 @@ func open(payload: Dictionary) -> void:
 	flow.ensure_market()     # 251：有集市却没货（老档、开发区改了级数）先上一次
 	_home_bg = UiTheme.dress_home_backdrop(_backdrop())
 	_home_bg_name = UiTheme.ART_HOME_BG
+	var first := backdrop_of("expedition")     # 271：进基地第一眼就是出征页 —— 起始底图直接铺它，不要每次进来淡一次
+	if _home_bg != null and first != _home_bg_name:
+		_home_bg.texture = UiTheme.art(first)
+		_home_bg_name = first
 	_margin = MarginContainer.new()
 	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:

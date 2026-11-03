@@ -43,7 +43,8 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	t.eq(hangs.size(), 3, "标题是三枚挂牌（267 加了「倾向」）")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_HOME_PLAQUE), UiTheme.TONE_LIGHT, "木牌浅底")
 	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回基地底图；这两页不垫粗布
-	t.eq(screen.backdrop_name(), UiTheme.ART_HOME_BG, "出征页：基地底图")
+	var exp_bg := "home/scene_expedition" if UiTheme.art("home/scene_expedition") != null else UiTheme.ART_HOME_BG
+	t.eq(screen.backdrop_name(), exp_bg, "271：出征页铺自己的场景图（图在时；缺图回基地底图）：%s" % exp_bg)
 	for pair in [["market", "market/scene"], ["smithy", "smithy/scene"], ["warehouse", UiTheme.ART_HOME_BG]]:
 		screen.show_tab(pair[0])
 		t.eq(screen.backdrop_name(), pair[1], "%s 页的背景" % pair[0])

@@ -207,6 +207,15 @@ func _warm_step(step: int) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		BattleTraceWriter.flush()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_MOUSE_EXIT:
+		UiCursor.press(false)     # 271：按着拖出窗 / 切走了，回来别还是按下那帧
+
+
+## 271：鼠标任一键按下 / 松开 → 光标换「手指下压」那帧（这里比控件先看到，被按钮吃掉的也看得到；不吃事件）
+func _input(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if mb != null and mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, MOUSE_BUTTON_MIDDLE]:
+		UiCursor.press(Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE) or mb.pressed)
 
 
 ## 现在显示的底屏 / 叠层（测试看）
