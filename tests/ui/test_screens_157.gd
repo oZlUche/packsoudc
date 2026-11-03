@@ -48,10 +48,10 @@ static func run_theme_art(t: TestCase) -> void:
 		t.is_null(UiTheme.art(gone), "砖墙底 / 小石板退了：%s" % gone)
 	t.check(UiTheme.build().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is SlabStyle, "assets/ui 里美术交付的悬浮窗底：皮革板身 + 黄铜边框两层（170 定稿）")
 	for skin in UiCursor.SKINS:
-		for name in ["cursor_arrow", "cursor_drag", "cursor_can_drop", "cursor_forbidden"]:
+		for name in ["cursor_arrow", "cursor_drag", "cursor_can_drop", "cursor_forbidden", "cursor_arrow_pressed"]:
 			t.not_null(UiTheme.art("cursors/%s/%s" % [skin, name]), "光标图 %s/%s 在" % [skin, name])
-		t.eq(UiCursor.apply(String(skin)), 4, "%s：四种光标都换上了美术的图" % skin)
-	t.eq(UiCursor.apply("没有这套"), 4, "认不出的材质按默认（秘银）")
+		t.eq(UiCursor.apply(String(skin)), 5, "%s：四种光标 + 按钮上的小手（271：同箭头那张）都换上了美术的图" % skin)
+	t.eq(UiCursor.apply("没有这套"), 5, "认不出的材质按默认（秘银）")
 	t.eq(UiCursor.DEFAULT_SKIN, "mithril", "默认秘银")
 	UiTheme.asset_root = NOWHERE
 	t.eq(UiCursor.apply(), 0, "没图：全还原成系统光标")

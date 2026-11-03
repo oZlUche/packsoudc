@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v4.95 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v4.96 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4513,6 +4513,7 @@ res://
 | v4.93 | 2026-10-31 | **「金币不够」不写字**（协调方 17:27 转：钱用金币图标，不够就红 / 打叉）：六句原因（`market.no_funds` / `market.refresh_poor` / `smithy.no_funds` / `act.short` / `log.shop_no_coins`；`notice.extract_fee` 带数）中英都只是记号 `[coin_short]` / `[coin_short=N]`，新静态类 `CoinShort`（`has` / `amount` / `strip` / `tag`）；`CoinLabel.short`（`make_short`）= 金币上斜划一道红、数字写红（`SHORT_INK`，同价签），数 < 0 只画金币；`NoticeScroll` 遇记号在字后面跟这枚红金币；`TipButton` 价钱那枚变红、不挂悬停字；`RecipeScroll` 工钱变红；【换货】钱不够时悬停照旧说换什么；调试台提示行去掉记号。**头像框修正**（UI设计 17:26，作者 17:22「框和硬币为什么对不上」）：`PortraitSlot` 横竖都 `SIZE_SHRINK_CENTER`，被同排撑高时位子仍是正方、居中。测试 `test_coin_short` |
 | v4.94 | 2026-10-31 | **开局屏右下两颗键粗体**（作者 17:48「右下角的按钮文本改成粗体试试」，UI设计 补丁）：`BUTTON_SETUP_BACK` / `BUTTON_SETUP_GO` 的 font = `_font_bold`，字号不动；名单木键 `BUTTON_SETUP_CHAR` 不改 |
 | v4.95 | 2026-11-02 | **「金币不够」图标定稿 A**（作者 11-02 15:07，美术设计）：`assets/ui/hud/coin_short.png`（36×36，规格同 `hud/coin`：原样金币 + 左下到右上一道描深边的红杠）；`CoinLabel.short` 画这张（`ART_SHORT` / `short_texture()`），缺图才退回金币 + 代码画的红杠；数字照旧 `SHORT_INK` |
+| v4.96 | 2026-11-03 | **271 光标按下 + 出征页专属背景**（作者 11-03 11:10，架构设计 `271-cursor-press-and-expedition-scene.md` §三，待定全按推荐）：`UiCursor.SHAPES` 加 `pointing_hand`（`FILE_OF` → arrow 图，按钮上不再是系统小手）；`press(down)` + 静态 `pressed`：箭头 / 小手换 `cursors/<材质>/cursor_arrow_pressed`（热点仍 (2, 2)），拖拽三种不换；`apply` 时缓存两帧、还原 `pressed`。`GameDirector._input` 接左 / 右 / 中键 → `press`；`NOTIFICATION_APPLICATION_FOCUS_OUT` / `WM_MOUSE_EXIT` 还原。`MetaScreen.SCENES` 加 `expedition` → `home/scene_expedition`，建图时起始底图直接取 `backdrop_of("expedition")`（不淡）；缺图回基地底图。占位：三套按下帧 = 箭头下移 2 px（美术设计 定稿覆盖）；出征场景图未放（UI替换美术 交）。测试 `test_cursor_press_271` |
 | v4.70 | 2026-10-29 | **260 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）**：碑额写 `RecordsStele.compact(v)` —— 1000 以下整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数整数算、向下截不进位（999999 → 999.99k），末尾 0 去掉（3100000000 → 3.1b）；0 写「—」，悬停照旧写准数。横线、`roman / numeral_parts / overline_stack` 删掉；基线 = 碑额顶 + 75 + 字号 × 0.375，金币固定 52、中心对准字身中线 |
 | v4.69 | 2026-10-28 | **260 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」，取代补充三）**：`RecordsStele.numeral_parts` 返回 [最高一段的罗马数字, 横线道数]，每 ÷ 1000 加一道、向下取整、后面的段不写（742 → DCCXLII，5414 → V̅，3888888 → 两道线的 III，38 亿 → 三道）；碑额画 k 道横线（线宽 = 字宽，往上每道再空 max(2, 字号 × 0.05)，`overline_stack`），字和横线整块在碑额里竖向居中、金币中心对准字身中线；顺带修掉 v4.68 一百万起千位段一长串 M。**随身技能图标定稿**（作者 18:35「B+C」）：`assets/belt_skills/smoke_bomb.png`（陶罐）、`aid_pack.png`（亚麻小包），60 × 60；`BeltSkillDef.icon()` 把图留在 def 上（腰带在 `_draw` 里每帧画，184） |
 | v4.68 | 2026-10-28 | **260 补充三（作者 10-28 10:15 选 B「只写到千」）**：碑额大数 —— `RecordsStele.numeral_parts` 一万起只写千位段（`[roman(v / 1000), ""]`，向下取整，38888 → X̅X̅X̅V̅I̅I̅I̅），4000～9999 照旧带零头，悬停照旧写准数；金币固定 `WORTH_COIN` 52（不跟字缩，竖向中心在碑额顶 + 75），`worth_width` 金币那项跟着换，字区实宽 330 − 52 − 6；千位段上横线粗 max(2, 字号 × 0.06)，在字头（基线上方字号 × 0.75）再往上留 max(3, 字号 × 0.1) 的缝，不再贴着字头像删除线 |
