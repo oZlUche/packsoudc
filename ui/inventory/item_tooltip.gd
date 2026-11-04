@@ -147,7 +147,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 				continue
 			var sentence := ""
 			if weapon and rule.cadence is CycleCadence:
-				sentence = cycle_sentence(rule, use_stats, compiled.loaded if compiled != null else [] as Array[Dictionary])     # 175：法杖轮读
+				sentence = cycle_sentence(rule, use_stats, compiled.loaded if compiled != null else [] as Array[Dictionary], power_of(profile, compiled))     # 175：法杖轮读；273 乘威力系数
 			elif weapon:
 				sentence = weapon_sentence(rule, use_stats, [] as Array[String] if gives_used else own_gives)
 				if sentence != "" and not own_gives.is_empty():
@@ -427,7 +427,7 @@ static func load_lines(inst: ItemInstance, board: GridInventory, spec: Combatant
 	if numbered and compiled.loaded.size() > 1 and inst.def.combat != null:
 		for r in inst.def.combat.rules:
 			if r is AbilityRule and (r as AbilityRule).cadence is CycleCadence:
-				shots = cycle_shots(r, stats, compiled.loaded)
+				shots = cycle_shots(r, stats, compiled.loaded, StatMath.to_float(compiled.power_mult))
 				break
 	for i in uids.size():
 		var crystal := board.get_item(uids[i])
@@ -443,7 +443,8 @@ static func load_lines(inst: ItemInstance, board: GridInventory, spec: Combatant
 
 ## 175（作者定）：法杖的轮读句 —— 没放晶石「没放晶石：物理 Y，每 Z 秒」；一颗「装载一颗：火 Y，每 Z 秒」；
 ## 几颗「装载 N 颗，顺时针轮流：颗间 X 秒，一轮后歇 Z 秒」（作者 2026-10-16：每颗的「火 Y」各写一行装载行，[method cycle_shots]）。Y 含暴击期望、晶石加的伤害；X / Z 已除急速
-static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dictionary]) -> String:
+## 273：[param mult] = 杖的威力系数（一下整下乘它、向下取整）
+static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dictionary], mult: float = 1.0) -> String:
 	var cad := rule.cadence as CycleCadence
 	var p := cad.periods(stats)
 	var b := _cycle_base(rule, stats)
@@ -451,9 +452,9 @@ static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dict
 	var base_type: StringName = b[1]
 	var line := ""
 	if loaded.is_empty():
-		line = UiText.t("tip.cycle_empty") % [_num(p.y, 1), _num(base), _damage_words(base_type)]
+		line = UiText.t("tip.cycle_empty") % [_num(p.y, 1), _num(_powered(base, stats, 0.0, mult)), _damage_words(base_type)]
 	elif loaded.size() == 1:
-		line = UiText.t("tip.cycle_one") % [_num(p.y, 1), cycle_shots(rule, stats, loaded)[0]]
+		line = UiText.t("tip.cycle_one") % [_num(p.y, 1), cycle_shots(rule, stats, loaded, mult)[0]]
 	else:
 		# 作者 2026-10-16：几颗时每颗的效果各写一行（下面的装载行，顺时针），这句只写轮法与两种冷却
 		line = UiText.t("tip.cycle_many") % [loaded.size(), _num(p.x, 1), _num(p.y, 1)]
@@ -465,6 +466,25 @@ static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dict
 		if rule.free_when_loaded:
 			line += UiText.t("tip.free_loaded_hint")
 	return line
+
+
+## 273：一下的伤害 = floor((属性伤害 + [param extra]) × [param mult]) × 暴击期望（[param base] 是含暴击期望的属性伤害）
+static func _powered(base: float, stats: StatSet, extra: float, mult: float) -> float:
+	var raw := StatMath.to_float(stats.total_of(BattleStats.DAMAGE)) if stats != null else 0.0
+	var crit := base / raw if raw > 0.0 else 1.0
+	if raw <= 0.0:
+		return (base + extra) * mult
+	var hit := raw + extra
+	if mult != 1.0:
+		hit = floorf(hit * mult + 0.0001)
+	return hit * crit
+
+
+## 273：一件道具的威力系数（编译了取编译的，没编译取道具表的）
+static func power_of(profile: CombatProfile, compiled: CompiledItem) -> float:
+	if compiled != null:
+		return StatMath.to_float(compiled.power_mult)
+	return profile.power_mult if profile != null else 1.0
 
 
 ## 轮读规则的底子：[一下的伤害（含暴击期望）, 伤害类型]
@@ -480,14 +500,12 @@ static func _cycle_base(rule: AbilityRule, stats: StatSet) -> Array:
 
 ## 175 补 5.4（作者定）：轮读表里每颗晶石那一下 ——「Y 点火焰伤害，并施加 1 层灼伤」；不施加的（没有施加规则的晶石）只写伤害。
 ## Y 含暴击期望（晶石加的那部分一样吃）
-static func cycle_shots(rule: AbilityRule, stats: StatSet, loaded: Array[Dictionary]) -> Array[String]:
+static func cycle_shots(rule: AbilityRule, stats: StatSet, loaded: Array[Dictionary], mult: float = 1.0) -> Array[String]:
 	var b := _cycle_base(rule, stats)
 	var base := float(b[0])
-	var raw := StatMath.to_float(stats.total_of(BattleStats.DAMAGE)) if stats != null else 0.0
-	var crit := base / raw if raw > 0.0 else 1.0
 	var out: Array[String] = []
 	for e in loaded:
-		var dmg := base + StatMath.to_float(int(e.get("damage", 0))) * crit
+		var dmg := _powered(base, stats, StatMath.to_float(int(e.get("damage", 0))), mult)     # 273：整下乘威力系数
 		var shot := UiText.t("tip.shot") % [_num(dmg), _damage_words(StringName(e.get("type", b[1])))]
 		var give := _loaded_apply(e)
 		if give != "":

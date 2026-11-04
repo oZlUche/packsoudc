@@ -44,7 +44,14 @@ func apply(ctx: RuleContext) -> void:
 
 ## 175：真正打出去的那一下 —— [param type] 是这一包的类型，[param extra_raw] 并进从属性取的原值（法杖轮到的那颗晶石的伤害，[FireLoaded]）。
 ## 补充五：返回有没有一包打中（没被取消）—— 轮读法杖「打中了才施加这颗晶石的元素」读它
-func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> bool:
+## 273：定点值向下取整到整点（负数按 0）
+static func floor_points(v: int) -> int:
+	@warning_ignore("integer_division")
+	return maxi(0, v) / StatMath.ONE * StatMath.ONE
+
+
+## 273：[param mult] 是威力系数（定点）—— 属性伤害 + [param extra_raw] 整下乘它，向下取整到整点
+func deal(ctx: RuleContext, type: StringName, extra_raw: int, mult: int = StatMath.ONE) -> bool:
 	var raw := StatMath.from_float(amount)
 	var from_stat := false
 	if damage_stat != &"":
@@ -52,6 +59,8 @@ func deal(ctx: RuleContext, type: StringName, extra_raw: int) -> bool:
 		if from_stats >= 0:
 			raw = from_stats + extra_raw
 			from_stat = true
+			if mult != StatMath.ONE:
+				raw = floor_points(StatMath.mul(raw, mult))
 	if per_stack:
 		raw *= ctx.source_stacks()
 	var by_hp := percent_of != &"" and percent > 0

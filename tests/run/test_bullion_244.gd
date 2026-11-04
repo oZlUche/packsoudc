@@ -162,13 +162,14 @@ static func run_bench(t: TestCase) -> void:
 
 
 static func run_gems(t: TestCase) -> void:
-	t.begin("244 补充一 · 宝石并入魔晶石：五件都是【魔法】不是【自然】、贵重品（246：稀有度 3、九场）；供给 +9；清明魔晶石 / 琥珀魔晶哪把法杖都吃")
+	t.begin("244 补充一 · 宝石并入魔晶石：五件都是【魔法】不是【自然】、贵重品（246：稀有度 3、九场）；供给 +9（273：元素的 +10）；清明魔晶石 / 琥珀魔晶哪把法杖都吃")
 	var items := Economy._items()
 	for id in GEMS:
 		var d := items.get_def(id)
 		t.check(d.tags.has(&"magic") and d.tags.has(&"crystal") and d.is_valuable() and not d.tags.has(&"nature"), "%s：魔法、晶石、贵重品，没有自然（%s）" % [id, d.tags])
 		t.eq(d.rarity, 3, "%s 史诗（246 补充二：中品 = 紫）" % id)
-		t.check(d.adjacency != null and d.adjacency.has_feed() and is_equal_approx((d.adjacency.feed_mods[0] as StatModifier).amount, 9.0), "%s 供给 +9" % id)
+		var feed := 9.0 if d.crystal_family == &"" else 10.0     # 273：元素中品 9 → 10，清明 / 琥珀仍 9
+		t.check(d.adjacency != null and d.adjacency.has_feed() and is_equal_approx((d.adjacency.feed_mods[0] as StatModifier).amount, feed), "%s 供给 +%s" % [id, feed])
 		t.eq(d.wear.max_charges if d.wear != null else -1, 27, "%s 能供给 27 场（246 乙：三场一级）" % id)
 	t.eq(ItemValue.of(items.get_def(&"quartz_cluster")), 320, "清明魔晶石 320")
 	t.eq(ItemValue.of(items.get_def(&"crystal_shards")), 30, "碎晶 30")
