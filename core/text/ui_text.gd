@@ -284,6 +284,7 @@ const TEXT := {
 	"tip.damage": {"zh": "伤害", "en": "damage"},
 	"tip.damage_of": {"zh": "%s伤害", "en": "%s damage"},
 	"tip.and": {"zh": "，并%s", "en": ", and %s"},
+	"tip.opening": {"zh": "开战先出手 %d 下，不耗耐力", "en": "Strikes %d time(s) as the battle starts, free of stamina"},
 	"tip.sep": {"zh": "，", "en": ", "},
 	"tip.with": {"zh": "，附带%s", "en": ", with %s"},
 	"tip.bracket": {"zh": "【%s】", "en": "%s"},

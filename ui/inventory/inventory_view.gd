@@ -486,6 +486,7 @@ func _draw() -> void:
 		ItemPainter.draw_pin(self, item, item.rotation, anchor, cell_px, tint)     # 255：随身之物：右上角小钉
 		ItemPainter.draw_favorite(self, item, item.rotation, anchor, cell_px, tint)     # 265：收藏：右上角星（有钉往左让）
 		ItemPainter.draw_honor(self, item, item.rotation, anchor, cell_px, tint)     # 256：军功牌：右下角「军功 N」
+		ItemPainter.draw_quality(self, item, item.rotation, anchor, cell_px, tint)     # 279 补充二：品质：右下角小菱形
 		if picked:
 			ItemPainter.draw_check(self, item, item.rotation, anchor, cell_px)     # 268：勾了的
 		if highlights.has(item.uid):

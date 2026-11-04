@@ -121,9 +121,12 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) 
 	var out := ItemInstance.create(items.get_def(recipe.output), 0)
 	out.uid = meta.allocate_uid()
 	var picks := material_picks(meta, recipe)
+	var q := 0     # 279 补充二：材料比要求高几档，产物就几档品质；和吃掉的那把取较高，不累加
 	meta.warehouse.begin_batch()
 	for m in picks:
-		meta.warehouse.remove((picks[m] as ItemInstance).uid)
+		var used := picks[m] as ItemInstance
+		q = maxi(q, used.def.rarity - int(recipe.material_inputs[m]))
+		meta.warehouse.remove(used.uid)
 	var left := {}
 	for key in recipe.inputs:
 		left[String(key)] = int(recipe.inputs[key])
@@ -133,6 +136,8 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) 
 		if int(left.get(key, 0)) > 0 and not it.is_locked_by_player():
 			meta.warehouse.remove(it.uid)
 			left[key] = int(left[key]) - 1
+			q = maxi(q, it.quality())
+	out.set_quality(q)
 	var placed := meta.warehouse.try_add(out, true)
 	meta.warehouse.end_batch()
 	if not placed:

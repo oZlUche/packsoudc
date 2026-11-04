@@ -100,6 +100,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	# --- 头：名字（粗体 19、稀有度色）/ 副行（稀有度名 · 标签，按大类排，171）/ 说明（斜体）
 	# 170 定稿：只有名字和稀有度名描边；标签、说明、正文、脚注里带色的字都不描（作者对比过后定的）
 	var name_line := UiTheme.outline("[font_size=%d][b][color=%s]%s[/color][/b][/font_size]" % [NAME_SIZE, rarity_style, Names.of_item(inst)])
+	if inst.quality() > 0:     # 279 补充二：品质一档一个小菱形，不写字（样式等 UI替换美术）
+		name_line += " [font_size=%d][color=%s]%s[/color][/font_size]" % [SUB_SIZE, rarity_style, QUALITY_MARK.repeat(inst.quality())]
 	# 250（作者定）：类别 → 属性 → 本源 → 归属，每轴最多列一个（按道具里写的先后取第一个），内部标签不列（107 后续）
 	var listed: Array = TagRegistry.first_per_category(def.tags)
 	var sub := UiTheme.outline("[color=%s]%s[/color]" % [rarity_style, rarity_name(rarity)])
@@ -140,13 +142,21 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var gives_used := false
 	# 087（作者定）：没有「主武器」—— 包里每一件武器都各自出手，这里每件都按自己的规则写
 	if profile != null:
+		var own := StatSet.new()     # 279 补充二：自带属性按品质算完再写（品质 0 = 定义原值）
+		profile.seed_stats(own)
+		BattleCompiler.quality_stats(own, profile, inst.quality())
 		for key in profile.base_stats:
 			if weapon and String(key) == "damage":
 				continue     # 170：武器的伤害写在武器句里
-			lines.append("%s [b]%s[/b]" % [Glossary.stat_name(StringName(String(key))), base_stat_text(StringName(String(key)), float(profile.base_stats[key]))])
+			var v := StatMath.to_float(own.ensure(StringName(String(key))).base)
+			lines.append("%s [b]%s[/b]" % [Glossary.stat_name(StringName(String(key))), base_stat_text(StringName(String(key)), v)])
 		if not is_equal_approx(profile.power_mult, 1.0):
 			lines.append("%s [b]×%s[/b]" % [UiText.t("tip.power"), str(profile.power_mult)])     # 273：说明留给作者，威力系数写成生成行
-		for r in profile.rules:
+		# 279 补充二：有品质的件，句子读编译副本里改过数的那几条（编译时第 6 步按定义的先后放在最前面）
+		var own_rules: Array = profile.rules
+		if compiled != null and inst.quality() > 0 and compiled.rules.size() >= profile.rules.size():
+			own_rules = compiled.rules.slice(0, profile.rules.size())
+		for r in own_rules:
 			var rule := r as AbilityRule
 			if rule == null:
 				continue
@@ -161,6 +171,10 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 				lines.append(sentence)
 				if rule.cadence is CycleCadence and (compiled == null or compiled.loaded.is_empty()):
 					lines.append(cycle_slots(def, rule, use_stats))
+				continue
+			var opening := opening_strikes(rule)
+			if weapon and opening > 0:
+				lines.append(UiText.t("tip.opening") % opening)     # 279：开局免费出手
 				continue
 			var line := Glossary.rule_text(rule, true)     # 142：耐力下面单写
 			var st := _stamina_of(rule, use_stats)
@@ -316,11 +330,14 @@ static func weapon_sentence(rule: AbilityRule, stats: StatSet, more_gives: Array
 	if hz <= 0.0:
 		return ""
 	var dmg := 0.0
+	var pure := 0.0     # 279：写死的真实伤害点数（「其中 N 点真实伤害」）
 	var type := &""
 	var extras: Array[String] = []
 	for e in rule.effects:
 		if e is DealDamage:
 			dmg += (e as CombatEffect).estimated_damage(stats) if stats != null else (e as DealDamage).amount
+			if (e as DealDamage).pure and (e as DealDamage).damage_stat == &"":
+				pure += (e as DealDamage).amount
 			if (e as DealDamage).damage_type != DamageTypes.PHYSICAL:
 				type = (e as DealDamage).damage_type
 	if dmg <= 0.0:
@@ -328,9 +345,14 @@ static func weapon_sentence(rule: AbilityRule, stats: StatSet, more_gives: Array
 	var applied := {}
 	var gives: Array[String] = []
 	for e in rule.effects:
+		var phrase := ""
 		if e is ApplyStatus and (e as ApplyStatus).buff != null:
-			gives.append(apply_phrase(e as ApplyStatus))
+			phrase = apply_phrase(e as ApplyStatus)
 			applied[(e as ApplyStatus).buff.id] = true
+		elif e is ShiftAxis:
+			phrase = (e as ShiftAxis).describe()     # 279：命中减速 / 易伤这类轴
+		if phrase != "" and not gives.has(phrase):     # 279：双持一次两下，同一句只写一遍
+			gives.append(phrase)
 	var buffs := {}
 	Glossary.buffs_in_rules([rule], buffs)
 	for id in buffs:
@@ -338,6 +360,8 @@ static func weapon_sentence(rule: AbilityRule, stats: StatSet, more_gives: Array
 			extras.append((buffs[id] as BuffDef).sentence_text())
 	gives.append_array(more_gives)
 	var line := UiText.t("tip.weapon") % [_num(1.0 / hz, 1), _num(dmg), _damage_words(type) if type != &"" else UiText.t("tip.damage")]
+	if pure > 0.0:
+		line += UiText.t("tip.sep") + UiText.t("fx.deal_true") % _num(pure)
 	# 175 补充五 / 补 5.4（作者定）：【造成伤害】和【施加元素】是两段，写成一句「造成 X 点火焰伤害，并施加 N 层灼伤」，不合成「火焰攻击」
 	if not gives.is_empty():
 		line += UiText.t("tip.and") % UiText.t("tip.sep").join(gives)
@@ -347,6 +371,22 @@ static func weapon_sentence(rule: AbilityRule, stats: StatSet, more_gives: Array
 	if not extras.is_empty():
 		line += UiText.t("tip.with") % bracketed(extras)
 	return line
+
+
+## 279：开战时按武器自己的伤害出手几下（`@on_battle_start` 上只有按属性算的出手）；不是这种规则 = 0
+static func opening_strikes(rule: AbilityRule) -> int:
+	if rule == null or not (rule.trigger is OnBattleStart) or not rule.costs.is_empty():
+		return 0
+	var n := 0
+	for e in rule.effects:
+		if not (e is DealDamage) or (e as DealDamage).damage_stat == &"":
+			return 0
+		n += 1
+	return n
+
+
+## 279 补充二：品质标记（一档一个）
+const QUALITY_MARK := "◆"
 
 
 ## 221 F1：一串状态 / 反应名 —— 中文「【甲】【乙】」，英文「A, B」
@@ -711,6 +751,7 @@ static func spec_for(inst: ItemInstance, board: GridInventory) -> CombatantSpec:
 	var size := inst.def.shape.size_rotated(0) if inst.def.shape != null else Vector2i.ONE
 	var scratch := GridInventory.new(size, 0, false)
 	var copy := ItemInstance.create(inst.def, 0)
+	copy.set_quality(inst.quality())     # 279 补充二：副本带着品质，句子与伤害才是最终值
 	if not scratch.place(copy, Vector2i.ZERO, 0):
 		return null
 	return BattleCompiler.compile_board(scratch)
