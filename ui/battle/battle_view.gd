@@ -311,9 +311,46 @@ func set_log_open(v: bool, user: bool = false) -> void:
 		_log_box.visible = v
 	_apply_board_scale()
 	if _log_btn != null:
-		_log_btn.modulate = Color.WHITE if v else Color(1, 1, 1, 0.6)
+		_log_btn.set_art(_log_art(), UiText.t("battle.log"), UiText.t("battle.log_tip"))
 	if user:
 		log_toggled.emit(v)
+
+
+## 测试反馈（v5.00）：栏高不是行高的整数倍时，滚到底后最上面那行只露半截（中号、大号字）。
+## 战记的高按整行取：栏里放得下几整行就给几行高，竖直居中
+func _fit_ticker_rows() -> void:
+	if _ticker == null or _log_box == null:
+		return
+	var rows := ticker_rows()
+	if rows <= 0:
+		return
+	_ticker.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_ticker.custom_minimum_size.y = rows * _ticker_line_height() + _ticker_pad()
+
+
+## 战记栏放得下几整行
+func ticker_rows() -> int:
+	var lh := _ticker_line_height()
+	if lh <= 0.0 or _log_box == null:
+		return 0
+	var box_pad := _log_box.get_theme_stylebox("panel").get_minimum_size().y if _log_box.has_theme_stylebox("panel") else 0.0
+	return maxi(1, floori((_log_box.size.y - box_pad - _ticker_pad()) / lh))
+
+
+func _ticker_line_height() -> float:
+	var font := _ticker.get_theme_font("normal_font")
+	if font == null:
+		return 0.0
+	return font.get_height(_ticker.get_theme_font_size("normal_font_size")) + _ticker.get_theme_constant("line_separation")
+
+
+func _ticker_pad() -> float:
+	return _ticker.get_theme_stylebox("normal").get_minimum_size().y if _ticker.has_theme_stylebox("normal") else 0.0
+
+
+## 战记键的图：栏开着 log_open，收起 log_closed
+func _log_art() -> String:
+	return "log_open" if log_open else "log_closed"
 
 
 func toggle_log() -> void:
@@ -821,6 +858,7 @@ func _build() -> void:
 	_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	UiTheme.set_tone(_ticker, UiTheme.TONE_DARK)
 	_log_box.add_child(_ticker)
+	_log_box.resized.connect(_fit_ticker_rows)
 	if bronze:
 		var spacer := Control.new()     # 157 补充一：剩下的高让给棋盘，控制条压在底下
 		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -844,7 +882,7 @@ func _build() -> void:
 	bar.add_child(_speed_btn)
 	_skip_btn = IconButton.make_art(art_dir, "skip", UiText.t("battle.skip"), UiText.t("battle.skip_tip"), skip_to_end)
 	bar.add_child(_skip_btn)
-	_log_btn = IconButton.make_art(art_dir, "log", UiText.t("battle.log"), UiText.t("battle.log_tip"), toggle_log)     # 272：占位图，定稿由 UI替换美术 出
+	_log_btn = IconButton.make_art(art_dir, _log_art(), UiText.t("battle.log"), UiText.t("battle.log_tip"), toggle_log)     # 272：卷轴定稿（作者 11-04 选 A），开着是摊开的手卷、收起是扎好的一卷
 	bar.add_child(_log_btn)
 	set_log_open(log_open)
 	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)

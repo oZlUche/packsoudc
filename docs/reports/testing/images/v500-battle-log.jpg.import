@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c6i7y78bw26m3"
-path="res://.godot/imported/log_hover.png-2c24d6de9a3b02e1851b5302fa8f2d86.ctex"
+uid="uid://canfxvui4a67b"
+path="res://.godot/imported/v500-battle-log.jpg-c2fc53d95ac461b3423df686d9a40a17.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/replay/log_hover.png"
-dest_files=["res://.godot/imported/log_hover.png-2c24d6de9a3b02e1851b5302fa8f2d86.ctex"]
+source_file="res://docs/reports/testing/images/v500-battle-log.jpg"
+dest_files=["res://.godot/imported/v500-battle-log.jpg-c2fc53d95ac461b3423df686d9a40a17.ctex"]
 
 [params]
 

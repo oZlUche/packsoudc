@@ -216,6 +216,9 @@ var _dragging := false
 var _junction_cache: Dictionary = {}
 var _junction_version: int = -1
 var _junction_graph: MapGraph = null
+## 278：高危区的区块（屏幕像素）按 graph / version / 缩放 / 平移 / 画布缓存，合并多边形不进每帧
+var _zone_cache: Array[Dictionary] = []
+var _zone_key: Array = []
 
 
 func _ready() -> void:
@@ -632,12 +635,11 @@ func _draw() -> void:
 	var pos := _layout.positions(graph, rect)
 	var grow := _grow_map()
 
-	# 危险区域：节点底下垫一圈。高危红，中危橙
-	for id in graph.node_ids():
-		var n := graph.get_node(id)
-		if n.danger > 0 and pos.has(id):
-			draw_circle(pos[id], NODE_RADIUS + 9.0,
-				Color(UiPalette.HP if n.danger >= 2 else UiPalette.STAMINA, 0.18 * float(grow.get(id, 1.0))))
+	# 278：危险区域连成一片地画（A 红晕虚线），在路线和节点之下；按屏幕像素画
+	draw_set_transform(Vector2.ZERO)
+	for shape in _zones(pos, rect):
+		DangerZones.draw_shape(self, shape, _skin_light, _zone_fade(shape, grow))
+	draw_set_transform(pan, 0.0, Vector2(zoom, zoom))
 	# 路线经过的边：哪条边属于哪条路线
 	var route_of_edge := {}
 	for i in graph.routes.size() if show_routes else 0:
@@ -773,6 +775,29 @@ func level_count() -> int:
 	return _layout.layer_count(graph) if graph != null and _layout != null else 0
 
 
+## 278：高危区块（屏幕坐标），缓存键变了才重算
+func _zones(pos: Dictionary, rect: Rect2) -> Array[Dictionary]:
+	var key := [graph, graph.version, zoom, pan, rect, size]
+	if key != _zone_key:
+		var screen := {}
+		for id in pos:
+			screen[id] = to_screen(pos[id])
+		_zone_cache = DangerZones.shapes(graph, screen, NODE_RADIUS)     # 节点按固定屏幕大小画
+		_zone_key = key
+	return _zone_cache
+
+
+## 地图展开动画：区块跟着区里的点一起淡入（取平均）
+func _zone_fade(shape: Dictionary, grow: Dictionary) -> float:
+	var ids: Array = shape["ids"]
+	if grow.is_empty() or ids.is_empty():
+		return 1.0
+	var sum := 0.0
+	for id in ids:
+		sum += float(grow.get(id, 1.0))
+	return sum / ids.size()
+
+
 func _junctions() -> Dictionary:
 	if _junction_graph != graph or _junction_version != graph.version:
 		_junction_cache = MapJunctions.find(graph)
@@ -856,9 +881,6 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	if n.type == &"search" and not n.is_visited() and SearchSession.is_advanced(n):
 		var c := p + Vector2(-NODE_RADIUS + 2.0, NODE_RADIUS - 2.0)
 		draw_colored_polygon(PackedVector2Array([c + Vector2(-4, 4), c + Vector2(4, 4), c + Vector2(0, -4)]), UiPalette.STAMINA)
-	# 危险等级：右上角几个红点
-	for k in n.danger:
-		draw_circle(p + Vector2(NODE_RADIUS - 2.0 - 6.0 * k, -NODE_RADIUS + 1.0), 2.5, UiPalette.HP)
 	# 092：倒计时过半关闭的撤离点 —— 关了画红叉 + 「已关闭」，没关写着「倒计时剩 n 时关闭」（193 补充一：n 是关闭时倒计时的读数）
 	if not closing.is_empty() and int(closing.get("id", -1)) == n.id:
 		var closed := bool(closing.get("closed", false))

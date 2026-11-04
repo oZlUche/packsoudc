@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bew4wnm3a5brm"
-path="res://.godot/imported/log_pressed.png-297da4f607526899a3ce050312af5b00.ctex"
+uid="uid://d1xcj770mtee5"
+path="res://.godot/imported/v500-log-crops.jpg-29527876e1fe754343967f8ca0ceb289.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/replay/log_pressed.png"
-dest_files=["res://.godot/imported/log_pressed.png-297da4f607526899a3ce050312af5b00.ctex"]
+source_file="res://docs/reports/testing/images/v500-log-crops.jpg"
+dest_files=["res://.godot/imported/v500-log-crops.jpg-29527876e1fe754343967f8ca0ceb289.ctex"]
 
 [params]
 

@@ -155,3 +155,25 @@ static func frame_view(t: TestCase, root: Window) -> void:
 	view.seek(1.0)
 	t.eq(view.log_shown(), 3, "再拖回 1 秒：清空重写到那一刻")
 	view.queue_free()
+
+
+static func frame_followups(t: TestCase, root: Window) -> void:
+	t.begin("272 测试反馈：战报行不再在行首重复时刻；战记栏高 = 整行数（顶行不露半截）；战记键开 / 收两张卷轴图")
+	UiText.lang = "zh"
+	var ls := _lines(_result())
+	var last := BattleNarrator.plain(ls.back())
+	t.check(not last.begins_with("6.0s"), "战报行首没有时刻：%s" % last)
+	t.check(last.contains("6.0 秒"), "战报自己带秒数")
+	var view := BattleView.new()
+	view.bronze = true
+	root.add_child(view)
+	view.play(_result(), ["阿丽", "坑蝰"])
+	view._fit_ticker_rows()
+	var rows := view.ticker_rows()
+	t.check(rows >= 1, "放得下 %d 整行" % rows)
+	t.eq(view.ticker().custom_minimum_size.y, rows * view._ticker_line_height() + view._ticker_pad(), "栏高按整行取")
+	t.eq(view.log_button().icon_id, "log_open", "开着：摊开的手卷")
+	view.toggle_log()
+	t.eq(view.log_button().icon_id, "log_closed", "收起：扎好的一卷")
+	t.check(view.log_button().has_art(), "定稿图读得到")
+	view.queue_free()
