@@ -134,7 +134,7 @@ effects = Array[ExtResource("7_mcgy5")]([SubResource("Resource_7gqcd"), SubResou
 [sub_resource type="Resource" id="Resource_35c0m"]
 script = ExtResource("13_4rqtr")
 base_stats = {
-"damage": 8
+"damage": 5
 }
 rules = Array[ExtResource("3_o4odc")]([SubResource("Resource_75efw")])
 

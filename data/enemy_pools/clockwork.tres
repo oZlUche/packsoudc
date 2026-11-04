@@ -102,6 +102,7 @@ stat_scale = {
 "max_hp": 2.4
 }
 bag_count = Vector2i(3, 4)
+weapon_rarity_cap = 3
 
 [resource]
 script = ExtResource("3_pyyio")

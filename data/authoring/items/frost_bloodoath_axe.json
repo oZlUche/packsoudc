@@ -27,7 +27,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 28
+      "damage": 18
     },
     "rules": [
       {
@@ -48,10 +48,6 @@
             "type": "apply_status",
             "buff": "bleed",
             "stacks": 2
-          },
-          {
-            "type": "apply_status",
-            "buff": "chill"
           }
         ]
       },
@@ -73,6 +69,17 @@
             "type": "apply_status",
             "target": "SELF",
             "buff": "blood_rage"
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": "chill",
+            "stacks": 3
           }
         ]
       }

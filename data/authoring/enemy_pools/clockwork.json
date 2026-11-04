@@ -112,7 +112,8 @@
       "bag_count": [
         3,
         4
-      ]
+      ],
+      "weapon_rarity_cap": 3
     }
   ],
   "strength_rule": {

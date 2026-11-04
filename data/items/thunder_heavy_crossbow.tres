@@ -13,10 +13,10 @@
 [ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="11_aashd"]
 [ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="12_o7675"]
 [ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="13_h2x5l"]
-[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="14_t3myo"]
-[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="15_epvp0"]
-[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="16_ujtio"]
-[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="17_5v4ri"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="14_t3myo"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="15_epvp0"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="16_ujtio"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="17_5v4ri"]
 [ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="18_ff6og"]
 [ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="19_s120v"]
 [ext_resource type="Script" path="res://core/effects/effect.gd" id="20_xkl2k"]
@@ -68,8 +68,26 @@ target = 0
 axis = &"attack_speed"
 delta = -1
 
+[sub_resource type="Resource" id="Resource_sgx7q"]
+script = ExtResource("14_t3myo")
+self_only = true
+
+[sub_resource type="Resource" id="Resource_ux6ah"]
+script = ExtResource("2_atw8w")
+trigger = SubResource("Resource_sgx7q")
+cadence = SubResource("Resource_b67ff")
+effects = Array[ExtResource("8_cele8")]([SubResource("Resource_075mj"), SubResource("Resource_1tj1d")])
+
+[sub_resource type="Resource" id="Resource_qqvn3"]
+script = ExtResource("11_aashd")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_5vy38"]
+script = ExtResource("12_o7675")
+metadata/part_ref = &"deal_damage"
+
 [sub_resource type="Resource" id="Resource_olu5x"]
-script = ExtResource("15_epvp0")
+script = ExtResource("16_ujtio")
 id = &"numb"
 display_name = "麻痹"
 display_names = {
@@ -80,27 +98,10 @@ decay_halve_on = &"stamina_paid"
 element = &"lightning"
 per_stack_percent = 10.0
 
-[sub_resource type="Resource" id="Resource_sgx7q"]
-script = ExtResource("16_ujtio")
-buff = SubResource("Resource_olu5x")
-
-[sub_resource type="Resource" id="Resource_ux6ah"]
-script = ExtResource("17_5v4ri")
-self_only = true
-
-[sub_resource type="Resource" id="Resource_qqvn3"]
-script = ExtResource("2_atw8w")
-trigger = SubResource("Resource_ux6ah")
-cadence = SubResource("Resource_b67ff")
-effects = Array[ExtResource("8_cele8")]([SubResource("Resource_075mj"), SubResource("Resource_1tj1d"), SubResource("Resource_sgx7q")])
-
-[sub_resource type="Resource" id="Resource_5vy38"]
-script = ExtResource("11_aashd")
-metadata/part_ref = &"always"
-
 [sub_resource type="Resource" id="Resource_0y3qd"]
-script = ExtResource("12_o7675")
-metadata/part_ref = &"deal_damage"
+script = ExtResource("17_5v4ri")
+buff = SubResource("Resource_olu5x")
+stacks = 3
 
 [sub_resource type="Resource" id="Resource_o24sf"]
 script = ExtResource("18_ff6og")
@@ -109,15 +110,15 @@ metadata/part_ref = &"on_battle_start"
 [sub_resource type="Resource" id="Resource_jvibu"]
 script = ExtResource("2_atw8w")
 trigger = SubResource("Resource_o24sf")
-cadence = SubResource("Resource_5vy38")
-effects = Array[ExtResource("8_cele8")]([SubResource("Resource_0y3qd")])
+cadence = SubResource("Resource_qqvn3")
+effects = Array[ExtResource("8_cele8")]([SubResource("Resource_5vy38"), SubResource("Resource_0y3qd")])
 
 [sub_resource type="Resource" id="Resource_0iumm"]
 script = ExtResource("19_s120v")
 base_stats = {
 "damage": 22
 }
-rules = Array[ExtResource("2_atw8w")]([SubResource("Resource_8fp4k"), SubResource("Resource_qqvn3"), SubResource("Resource_jvibu")])
+rules = Array[ExtResource("2_atw8w")]([SubResource("Resource_8fp4k"), SubResource("Resource_ux6ah"), SubResource("Resource_jvibu")])
 
 [sub_resource type="Resource" id="Resource_4nkyc"]
 script = ExtResource("23_0vpu0")

@@ -26,7 +26,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 30
+      "damage": 24
     },
     "rules": [
       {
@@ -47,11 +47,6 @@
             "type": "apply_status",
             "buff": "bleed",
             "stacks": 2
-          },
-          {
-            "type": "shift_axis",
-            "target": "OPPONENT",
-            "axis": "damage_taken"
           }
         ]
       },
@@ -59,7 +54,13 @@
         "trigger": "@on_battle_start",
         "cadence": "@always",
         "effects": [
-          "@deal_damage"
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "damage_taken",
+            "delta": 2
+          }
         ]
       }
     ]

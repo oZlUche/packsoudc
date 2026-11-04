@@ -69,6 +69,29 @@ script = ExtResource("12_m7wkh")
 buff = SubResource("Resource_p7e7f")
 metadata/part_ref = &"apply_status_bleed"
 
+[sub_resource type="Resource" id="Resource_me0dq"]
+script = ExtResource("10_mlcy1")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_remlp"]
+script = ExtResource("3_4xfpu")
+trigger = SubResource("Resource_me0dq")
+cadence = SubResource("Resource_3sled")
+costs = Array[ExtResource("5_2f4kq")]([SubResource("Resource_b53ob")])
+effects = Array[ExtResource("7_4vp63")]([SubResource("Resource_6wjv7"), SubResource("Resource_30o6l")])
+
+[sub_resource type="Resource" id="Resource_mdnj5"]
+script = ExtResource("13_vewxr")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_1nquq"]
+script = ExtResource("8_vey5b")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_6w15q"]
+script = ExtResource("8_vey5b")
+metadata/part_ref = &"deal_damage"
+
 [sub_resource type="Resource" id="Resource_gmvuk"]
 script = ExtResource("4_ncvvm")
 seconds = 1.0
@@ -101,32 +124,10 @@ is_debuff = true
 rules = Array[ExtResource("3_4xfpu")]([SubResource("Resource_m6he4")])
 element = &"fire"
 
-[sub_resource type="Resource" id="Resource_me0dq"]
+[sub_resource type="Resource" id="Resource_o4tet"]
 script = ExtResource("12_m7wkh")
 buff = SubResource("Resource_ola2g")
-
-[sub_resource type="Resource" id="Resource_remlp"]
-script = ExtResource("10_mlcy1")
-metadata/part_ref = &"on_schedule"
-
-[sub_resource type="Resource" id="Resource_mdnj5"]
-script = ExtResource("3_4xfpu")
-trigger = SubResource("Resource_remlp")
-cadence = SubResource("Resource_3sled")
-costs = Array[ExtResource("5_2f4kq")]([SubResource("Resource_b53ob")])
-effects = Array[ExtResource("7_4vp63")]([SubResource("Resource_6wjv7"), SubResource("Resource_30o6l"), SubResource("Resource_me0dq")])
-
-[sub_resource type="Resource" id="Resource_1nquq"]
-script = ExtResource("13_vewxr")
-metadata/part_ref = &"always"
-
-[sub_resource type="Resource" id="Resource_6w15q"]
-script = ExtResource("8_vey5b")
-metadata/part_ref = &"deal_damage"
-
-[sub_resource type="Resource" id="Resource_o4tet"]
-script = ExtResource("8_vey5b")
-metadata/part_ref = &"deal_damage"
+stacks = 3
 
 [sub_resource type="Resource" id="Resource_j7cvv"]
 script = ExtResource("14_cjylm")
@@ -135,15 +136,15 @@ metadata/part_ref = &"on_battle_start"
 [sub_resource type="Resource" id="Resource_h8hf4"]
 script = ExtResource("3_4xfpu")
 trigger = SubResource("Resource_j7cvv")
-cadence = SubResource("Resource_1nquq")
-effects = Array[ExtResource("7_4vp63")]([SubResource("Resource_6w15q"), SubResource("Resource_o4tet")])
+cadence = SubResource("Resource_mdnj5")
+effects = Array[ExtResource("7_4vp63")]([SubResource("Resource_1nquq"), SubResource("Resource_6w15q"), SubResource("Resource_o4tet")])
 
 [sub_resource type="Resource" id="Resource_8pdhq"]
 script = ExtResource("15_okgp8")
 base_stats = {
-"damage": 39
+"damage": 33
 }
-rules = Array[ExtResource("3_4xfpu")]([SubResource("Resource_mdnj5"), SubResource("Resource_h8hf4")])
+rules = Array[ExtResource("3_4xfpu")]([SubResource("Resource_remlp"), SubResource("Resource_h8hf4")])
 
 [sub_resource type="Resource" id="Resource_2dtql"]
 script = ExtResource("19_as1bg")

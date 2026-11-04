@@ -56,10 +56,17 @@
         },
         "cadence": "@always",
         "effects": [
-          "@apply_status_bleed",
+          "@apply_status_bleed"
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
           {
             "type": "apply_status",
-            "buff": "scorch"
+            "buff": "scorch",
+            "stacks": 3
           }
         ]
       }
