@@ -52,9 +52,8 @@ display_name = "解毒药囊"
 display_names = {
 "en": "Antidote Satchel"
 }
-description = "几味解毒草装一囊。"
 descriptions = {
-"en": "A pouch stuffed with a few antidote herbs."
+"en": ""
 }
 shape = SubResource("Resource_bu3yf")
 rarity = 2

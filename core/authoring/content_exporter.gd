@@ -18,6 +18,24 @@ static func export_item(def: ItemDef) -> Dictionary:
 	return dump(def)
 
 
+## 作者 2026-11-04：道具说明一律留空给作者自己写 —— 空着也把 `description` / `descriptions` 两个键写出来（紧跟名字），作者打开 JSON 就看得到该填哪里
+static func _with_description_keys(raw: Dictionary) -> Dictionary:
+	if raw.has("description") and raw.has("descriptions"):
+		return raw
+	var out := {}
+	for k in raw:
+		if k == "description" or k == "descriptions":
+			continue
+		out[k] = raw[k]
+		if k == "display_names" or (k == "display_name" and not raw.has("display_names")):
+			out["description"] = raw.get("description", "")
+			out["descriptions"] = raw.get("descriptions", {"en": ""})
+	if not out.has("description"):
+		out["description"] = raw.get("description", "")
+		out["descriptions"] = raw.get("descriptions", {"en": ""})
+	return out
+
+
 static func export_buff(def: BuffDef) -> Dictionary:
 	return dump(def)
 
@@ -146,6 +164,8 @@ static func dump(obj: Object, with_type: bool = false) -> Dictionary:
 	_percent_out(obj, out)
 	if obj is ReactionDef:
 		_reaction_out(obj as ReactionDef, out)
+	if obj is ItemDef:
+		return _with_description_keys(out)
 	return out
 
 

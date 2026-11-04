@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Tower Shield"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "111",
     "111",

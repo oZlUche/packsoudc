@@ -58,6 +58,9 @@ display_name = "短弓"
 display_names = {
 "en": "Shortbow"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_27wqy")
 rarity = 1
 tags = Array[StringName]([&"weapon", &"ranged", &"rapid", &"nature"])

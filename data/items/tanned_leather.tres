@@ -18,9 +18,8 @@ display_name = "熟皮革"
 display_names = {
 "en": "Tanned Leather"
 }
-description = "鞣好的皮，能直接裁。"
 descriptions = {
-"en": "Tanned and ready to cut."
+"en": ""
 }
 shape = SubResource("Resource_1jvxr")
 rarity = 1

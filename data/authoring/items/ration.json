@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Ration"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1"
   ],

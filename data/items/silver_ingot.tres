@@ -18,9 +18,8 @@ display_name = "银锭"
 display_names = {
 "en": "Silver Ingot"
 }
-description = "打了印记的银。"
 descriptions = {
-"en": "Silver with a stamped mark."
+"en": ""
 }
 shape = SubResource("Resource_a5uob")
 rarity = 2

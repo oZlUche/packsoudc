@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Bone Dice"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1"
   ],

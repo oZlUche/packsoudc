@@ -17,6 +17,9 @@ display_name = "日神的护符"
 display_names = {
 "en": "Charm of the Sun"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_j24ma")
 rarity = 3
 value = 200

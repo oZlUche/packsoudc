@@ -17,9 +17,8 @@ display_name = "蜂蜜罐"
 display_names = {
 "en": "Honey Jar"
 }
-description = "蜂蜡挤出来的那点甜。"
 descriptions = {
-"en": "The little sweetness pressed out of the beeswax."
+"en": ""
 }
 shape = SubResource("Resource_qqgfl")
 rarity = 1

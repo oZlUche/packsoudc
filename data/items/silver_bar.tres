@@ -18,9 +18,8 @@ display_name = "银条"
 display_names = {
 "en": "Silver Bar"
 }
-description = "打上印记的银条，基地照面值收。"
 descriptions = {
-"en": "A stamped bar of silver; the base takes it at face value."
+"en": ""
 }
 shape = SubResource("Resource_k436c")
 rarity = 2

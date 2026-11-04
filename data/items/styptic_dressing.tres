@@ -56,9 +56,8 @@ display_name = "止血敷料"
 display_names = {
 "en": "Styptic Dressing"
 }
-description = "药粉和布一起压在伤口上。"
 descriptions = {
-"en": "Powder and cloth, pressed onto the wound together."
+"en": ""
 }
 shape = SubResource("Resource_tjhc2")
 rarity = 2

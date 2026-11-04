@@ -18,9 +18,8 @@ display_name = "挂毯"
 display_names = {
 "en": "Tapestry"
 }
-description = "织着狩猎图的整幅挂毯。"
 descriptions = {
-"en": "A full tapestry woven with a hunting scene."
+"en": ""
 }
 shape = SubResource("Resource_r6h7e")
 rarity = 3

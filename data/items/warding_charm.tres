@@ -64,6 +64,9 @@ display_name = "护身符"
 display_names = {
 "en": "Warding Charm"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_84r4v")
 rarity = 2
 value = 40

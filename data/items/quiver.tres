@@ -23,9 +23,8 @@ display_name = "箭囊"
 display_names = {
 "en": "Quiver"
 }
-description = "只装箭和远射的家伙，取箭更利落。"
 descriptions = {
-"en": "Arrows and ranged weapons only. Makes for a cleaner draw."
+"en": ""
 }
 shape = SubResource("Resource_1bi33")
 rarity = 1

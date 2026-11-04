@@ -44,9 +44,8 @@ display_name = "清明魔晶石"
 display_names = {
 "en": "Clarity Crystal"
 }
-description = "放在法杖的装载槽上：法杖伤害 +{amount}，不带属性，哪把法杖都能装。能供给 {max_charges} 场，用完就碎，碎了只能卖钱。"
 descriptions = {
-"en": "Set it in a staff's loading slot: staff Damage +{amount}, no element, fits any staff. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
+"en": ""
 }
 shape = SubResource("Resource_4b56k")
 rarity = 3

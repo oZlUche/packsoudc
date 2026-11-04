@@ -121,6 +121,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			lines.append(UiText.t("tip.bag_contents") % Glossary.mod_text(m))
 		for s in bag_field_lines(def):
 			lines.append(UiText.t("tip.gap") + s)
+	for ab in def.keepsake_abilities:     # 信物代表的能力（望远镜 → 节点浮窗）：说明留给作者，能力写成生成行
+		if UiText.TEXT.has("tip.ability_%s" % ab):
+			lines.append(UiText.t("tip.ability_%s" % ab))
 	# 212：魔兽 / 机关棋盘上的道具写它持有时的那一面（wild）：没有邻接、信仰、`applies`
 	var wild := is_wild_on(inst, board)
 	var profile := BattleCompiler.profile_of(def, wild)
@@ -141,6 +144,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			if weapon and String(key) == "damage":
 				continue     # 170：武器的伤害写在武器句里
 			lines.append("%s [b]%s[/b]" % [Glossary.stat_name(StringName(String(key))), str(profile.base_stats[key])])
+		if not is_equal_approx(profile.power_mult, 1.0):
+			lines.append("%s [b]×%s[/b]" % [UiText.t("tip.power"), str(profile.power_mult)])     # 273：说明留给作者，威力系数写成生成行
 		for r in profile.rules:
 			var rule := r as AbilityRule
 			if rule == null:
@@ -154,6 +159,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 					gives_used = true
 			if sentence != "":
 				lines.append(sentence)
+				if rule.cadence is CycleCadence and (compiled == null or compiled.loaded.is_empty()):
+					lines.append(cycle_slots(def, rule, use_stats))
 				continue
 			var line := Glossary.rule_text(rule, true)     # 142：耐力下面单写
 			var st := _stamina_of(rule, use_stats)
@@ -468,6 +475,13 @@ static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dict
 	return line
 
 
+## 没装晶石时多写一行：几个装载槽、装上后怎么轮（说明留给作者后，这些只在这里写）
+static func cycle_slots(def: ItemDef, rule: AbilityRule, stats: StatSet) -> String:
+	var p := (rule.cadence as CycleCadence).periods(stats)
+	var n := def.adjacency.load_cells.size() if def.adjacency != null else 0
+	return UiText.t("tip.cycle_slots") % [n, _num(p.x, 1), _num(p.y, 1)]
+
+
 ## 273：一下的伤害 = floor((属性伤害 + [param extra]) × [param mult]) × 暴击期望（[param base] 是含暴击期望的属性伤害）
 static func _powered(base: float, stats: StatSet, extra: float, mult: float) -> float:
 	var raw := StatMath.to_float(stats.total_of(BattleStats.DAMAGE)) if stats != null else 0.0
@@ -615,6 +629,7 @@ static func honor_lines(inst: ItemInstance) -> Array[String]:
 	var nxt := GrowthProfile.next_stage(inst)
 	var head := UiText.t("tip.honor") % [GrowthProfile.stage_name(inst), GrowthProfile.honor_of(inst)]
 	out.append(head + (UiText.t("tip.honor_next") % nxt.after if nxt != null else UiText.t("tip.honor_done")))
+	out.append(UiText.t("tip.honor_gain") % [g.honor_for(&""), g.honor_for(&"elite"), g.honor_for(&"core")])     # 说明留给作者：怎么攒军功写成生成行
 	var base := inst.def.adjacency
 	for i in g.stages.size() + 1:
 		var adj := g.stages[i - 1].adjacency_over(base) if i > 0 else base

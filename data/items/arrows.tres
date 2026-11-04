@@ -30,6 +30,9 @@ display_name = "箭矢"
 display_names = {
 "en": "Arrows"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_2h475")
 tags = Array[StringName]([&"ammo", &"nature"])
 material = "wood"

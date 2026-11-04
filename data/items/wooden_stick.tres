@@ -18,9 +18,8 @@ display_name = "木棍"
 display_names = {
 "en": "Wooden Stick"
 }
-description = "随手捡的直木棍。"
 descriptions = {
-"en": "A straight stick picked up along the way."
+"en": ""
 }
 shape = SubResource("Resource_lt57i")
 tags = Array[StringName]([&"material", &"nature", &"plant"])

@@ -18,6 +18,9 @@ display_name = "小背包"
 display_names = {
 "en": "Small Bag"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_1v6ba")
 material = "cloth"
 is_bag = true

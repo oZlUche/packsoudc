@@ -53,6 +53,9 @@ display_name = "伤药"
 display_names = {
 "en": "Salve"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_7rsxq")
 rarity = 1
 tags = Array[StringName]([&"remedy", &"nature"])

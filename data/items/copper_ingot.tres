@@ -18,9 +18,8 @@ display_name = "铜锭"
 display_names = {
 "en": "Copper Ingot"
 }
-description = "熔好的铜，匀净。"
 descriptions = {
-"en": "Smelted copper, clean and even."
+"en": ""
 }
 shape = SubResource("Resource_wfr2e")
 rarity = 1

@@ -26,7 +26,7 @@ static func _board(db: ItemDatabase, staff_id: StringName, crystal: StringName) 
 
 
 static func run_data(t: TestCase) -> void:
-	t.begin("273 · 数据：四把杖的威力系数、九颗晶石的加值、描述只在有系数的杖上写「威力 ×N」")
+	t.begin("273 · 数据：四把杖的威力系数、九颗晶石的加值、提示只在有系数的杖上写「威力 ×N」（说明留给作者）")
 	UiText.lang = "zh"
 	var db := _db()
 	for id in MULTS:
@@ -34,11 +34,11 @@ static func run_data(t: TestCase) -> void:
 		t.eq(def.combat.power_mult, float(MULTS[id]), "%s 威力 ×%s" % [id, MULTS[id]])
 		var spec := BattleCompiler.compile_board(_board(db, id, &"")["board"])
 		t.eq(spec.items[0].power_mult, StatMath.from_float(float(MULTS[id])), "%s 编译后带上系数" % id)
-		var desc := TextTemplate.render(Names.description_of(def))
-		var shown := desc.contains("威力 ×")
-		t.eq(shown, float(MULTS[id]) != 1.0, "%s 描述%s写威力" % [id, "" if shown else "不"])
+		var body := TextTemplate.plain(String(ItemTooltip.describe_full(ItemInstance.create(def))["body"]))
+		var shown := body.contains("威力 ×")
+		t.eq(shown, float(MULTS[id]) != 1.0, "%s 提示%s写威力" % [id, "" if shown else "不"])
 		if shown:
-			t.check(TextTemplate.plain(Names.description_of(def)).contains("威力 ×%s" % MULTS[id]), "%s 描述里的数：%s" % [id, desc])
+			t.check(body.contains("威力 ×%s" % MULTS[id]), "%s 提示里的数：%s" % [id, body])
 	for el in ["fire", "ice", "lightning"]:
 		for suffix in CRYSTALS:
 			var c := db.get_def(StringName("%s_crystal%s" % [el, suffix]))

@@ -26,6 +26,9 @@ display_name = "皮甲"
 display_names = {
 "en": "Leather Armor"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_t7mh0")
 rarity = 1
 tags = Array[StringName]([&"armor", &"barbarian", &"nature"])

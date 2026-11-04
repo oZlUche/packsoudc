@@ -71,6 +71,9 @@ display_name = "胫骨大棒"
 display_names = {
 "en": "Shinbone Club"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_wy5wa")
 rarity = 1
 weight = 6

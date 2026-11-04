@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Shortbow"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "11",
     "10",

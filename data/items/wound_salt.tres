@@ -53,9 +53,8 @@ display_name = "创口盐"
 display_names = {
 "en": "Wound Salt"
 }
-description = "往伤口上撒的那种。"
 descriptions = {
-"en": "The kind you rub into a wound."
+"en": ""
 }
 shape = SubResource("Resource_s60tv")
 rarity = 1
