@@ -43,7 +43,7 @@
         ]
       }
     ],
-    "power_mult": 1.6
+    "power_mult": 1.45
   },
   "adjacency": {
     "load_cells": [

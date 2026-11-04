@@ -50,7 +50,7 @@ base_stats = {
 "damage": 12
 }
 rules = Array[ExtResource("2_7tt7c")]([SubResource("Resource_jp5lk")])
-power_mult = 1.6
+power_mult = 1.45
 
 [sub_resource type="Resource" id="Resource_lrbwe"]
 script = ExtResource("15_wt6lv")
