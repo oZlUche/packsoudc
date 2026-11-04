@@ -80,6 +80,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		var profile := profile_of(board.get_item(uid).def, inp.wild)
 		if profile != null:
 			profile.seed_stats(set_)
+			quality_stats(set_, profile, board.get_item(uid).quality())     # 279 补充二
 		stats[uid] = set_
 
 	# --- 3. 包体效果施加给内容物 ---
@@ -160,7 +161,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		item.stats = set_
 		var profile := profile_of(def, inp.wild)
 		if profile != null:
-			item.rules = profile.rules.duplicate()
+			item.rules = quality_rules(profile.rules, board.get_item(uid).quality())     # 279 补充二：有品质的改副本
 			item.power_mult = StatMath.from_float(profile.power_mult)     # 273：法杖威力系数
 		if bonus_rules.has(uid):
 			item.rules.append_array(bonus_rules[uid])
@@ -198,6 +199,57 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	spec.max_hp = maxi(0, hp)
 	spec.board = board
 	return spec
+
+
+## 279 补充二：品质每档 +10% 的那几样（伤害、格挡、护甲），向下取整到定点
+const QUALITY_SCALED: Array[StringName] = [BattleStats.DAMAGE, BattleStats.BLOCK, BattleStats.MAX_ARMOR]
+const QUALITY_STEP := 0.1
+## 句子里的百分比每档 +5 个百分点（暴击率这类写在自带属性里的）
+const QUALITY_PERCENT_STEP := 0.05
+
+
+## 279 补充二：按品质改这一件的基础值 —— 伤害 / 格挡 / 护甲 ×(1 + 0.1 × 品质)；自带的暴击率每档 +5 点。品质 0 什么也不动
+static func quality_stats(into: StatSet, profile: CombatProfile, q: int) -> void:
+	if q <= 0:
+		return
+	for key in QUALITY_SCALED:
+		if profile.base_stats.has(String(key)):
+			into.set_base(key, int(floor(float(into.ensure(key).base) * (1.0 + QUALITY_STEP * q))))
+	if profile.base_stats.has(String(BattleStats.CRIT_CHANCE)):
+		var v := into.ensure(BattleStats.CRIT_CHANCE)
+		v.base += StatMath.from_float(QUALITY_PERCENT_STEP * q)
+
+
+## 279 补充二：按品质改规则里的个数 —— 施加的层数、轴的层数、写死的点数（真实伤害、追加伤害、下一下加伤）每档 +1。
+## 品质 0 = 原样（浅拷贝，和以前一样）；否则规则和它的每个效果各拷一份再改（效果引用的 buff 等仍是同一份），定义不碰。耐力价（costs）不动
+static func quality_rules(rules: Array[AbilityRule], q: int) -> Array[AbilityRule]:
+	if q <= 0:
+		return rules.duplicate()
+	var out: Array[AbilityRule] = []
+	for r in rules:
+		var copy := (r as AbilityRule).duplicate(false) as AbilityRule
+		var fx: Array[CombatEffect] = []
+		for e in (r as AbilityRule).effects:
+			var ec := (e as CombatEffect).duplicate(false) as CombatEffect
+			_quality_effect(ec, q)
+			fx.append(ec)
+		copy.effects = fx
+		out.append(copy)
+	return out
+
+
+static func _quality_effect(e: Resource, q: int) -> void:
+	if e is ApplyStatus:
+		(e as ApplyStatus).stacks += q
+	elif e is ShiftAxis:
+		var s := e as ShiftAxis
+		s.delta += q if s.delta >= 0 else -q
+	elif e is DealDamage:
+		var d := e as DealDamage
+		if d.damage_stat == &"" and d.amount > 0.0:
+			d.amount += q
+	elif e is PrimeNextHit:
+		(e as PrimeNextHit).amount += q
 
 
 ## 212：这件道具这一边用哪份战斗定义 —— 魔兽持有（[param wild]）且写了 `wild` 就用它，否则 `combat`

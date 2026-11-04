@@ -369,6 +369,26 @@ static func draw_pin_badge(canvas: CanvasItem, r: Rect2, modulate: Color = Color
 
 ## 256：军功牌 —— 脚印最靠右下的那一格右下角挂一枚包架的数字牌（`notice/count_badge`）「军功 N」，放不下就只写数。
 ## 不是靠军功长的不画；画了返回 true
+## 279 补充二：品质 —— 当前朝向脚印最靠右下的那一格右下角，一档一枚小菱形（占位：金菱 + 暗边，等 UI替换美术出样）。画了返回 true
+static func draw_quality(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+	if inst == null or inst.def == null or inst.def.shape == null or inst.quality() <= 0:
+		return false
+	var best := Vector2i(-1, -1)
+	for c in inst.def.shape.cells_rotated(rot):
+		if c.y > best.y or (c.y == best.y and c.x > best.x):
+			best = c
+	var side := LOCK_SIDE * cell / InventoryView.CELL * 0.75
+	var corner := anchor + Vector2(best + Vector2i.ONE) * cell - Vector2.ONE * cell * LOCK_INSET
+	for i in inst.quality():
+		var c := corner - Vector2(side * (0.5 + i * 1.05), side * 0.5)
+		var h := side * 0.5
+		var pts := PackedVector2Array([c + Vector2(0, -h), c + Vector2(h * 0.75, 0), c + Vector2(0, h), c + Vector2(-h * 0.75, 0)])
+		canvas.draw_colored_polygon(pts, Color("d4a84f") * modulate)
+		pts.append(pts[0])
+		canvas.draw_polyline(pts, Color("2a1d12") * modulate, maxf(1.0, side * 0.08), true)
+	return true
+
+
 static func draw_honor(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
 	if inst == null or inst.def == null or inst.def.shape == null or inst.def.growth == null or not inst.def.growth.runs_on_honor():
 		return false

@@ -54,6 +54,24 @@ static func reserve_uid_above(value: int) -> void:
 	_next_uid = maxi(_next_uid, value + 1)
 
 
+## 279 补充二：品质 —— 砧上用了比配方要求高的材料，高几档记几档（上限 [constant QUALITY_MAX]）；0 不写键（存档逐字节不变）。
+## 编译时按它改这一件的数（[method BattleCompiler.apply_quality]），定义不动
+const QUALITY_KEY := "quality"
+const QUALITY_MAX := 2
+
+
+func quality() -> int:
+	return clampi(int(state.get(QUALITY_KEY, 0)), 0, QUALITY_MAX)
+
+
+func set_quality(q: int) -> void:
+	q = clampi(q, 0, QUALITY_MAX)
+	if q > 0:
+		state[QUALITY_KEY] = q
+	else:
+		state.erase(QUALITY_KEY)
+
+
 ## 230：玩家锁定（防手滑：锁住的不卖、不丢到地上、不献祭、不进铸炉；可以拖、可以搬）。存在 [member state] 里，没锁不写键（存档逐字节不变）。
 ## 不是 207 的「扎根」（[method GridInventory.is_locked]）
 const LOCKED_KEY := "locked"
@@ -210,5 +228,7 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> ItemInstance:
 	if inst.state.has(WearProfile.CHARGES_KEY):     # 148：JSON 读回来是 3.0，存回去得还是 3（存档逐字节往返）
 		inst.state[WearProfile.CHARGES_KEY] = int(inst.state[WearProfile.CHARGES_KEY])
 	GrowthProfile.normalize_state(inst.state)     # 207：生长计数同理
+	if inst.state.has(QUALITY_KEY):     # 279：品质同理
+		inst.state[QUALITY_KEY] = int(inst.state[QUALITY_KEY])
 	reserve_uid_above(inst.uid)
 	return inst
