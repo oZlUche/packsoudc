@@ -279,6 +279,9 @@ func _input(event: InputEvent) -> void:
 		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			cancel()
 			get_viewport().set_input_as_handled()     # 099：取消就是取消，别再被容器视图读成「右键奉为主信仰」
+		elif mb.pressed and mb.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN] and not _over_scroller(get_global_mouse_position()):
+			rotate_dragged(1 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else -1)     # 277 第 5 条：拖着时滚轮转向，上滚顺时针、下滚逆时针
+			get_viewport().set_input_as_handled()
 		return
 
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -295,10 +298,10 @@ func _input(event: InputEvent) -> void:
 ##
 ## 包也能转。内容物不跟着转，仍按原偏移画在残影上 —— 落到新轮廓之外的那些
 ## 会在放手时脱落到地上，残影上先给它们打好标记，玩家放手前就看得见代价。
-func rotate_dragged() -> void:
+func rotate_dragged(step: int = 1) -> void:
 	if _inst == null or _inst.def == null:
 		return
-	_rot = posmod(_rot + 1, 4)
+	_rot = posmod(_rot + step, 4)
 	# 抓取点必须跟着落进新的包围盒，否则旋转后物品会离奇地跳开
 	var box := _inst.def.shape.size_rotated(_rot)
 	_grab_cell.x = clampi(_grab_cell.x, 0, maxi(0, box.x - 1))
@@ -308,6 +311,17 @@ func rotate_dragged() -> void:
 	if is_inside_tree():
 		update_preview(get_global_mouse_position())
 	queue_redraw()
+
+
+## 277 第 5 条：光标下的视图包在一个正露着竖滚动条的滚动区里（仓库长到要滚）—— 滚轮留给滚动，不转向
+func _over_scroller(global_pos: Vector2) -> bool:
+	var view := view_at(global_pos)
+	var n: Node = view
+	while n != null:
+		if n is ScrollContainer and (n as ScrollContainer).get_v_scroll_bar().visible:
+			return true
+		n = n.get_parent()
+	return false
 
 
 ## 指定全局坐标下的容器视图，没有则返回 null。

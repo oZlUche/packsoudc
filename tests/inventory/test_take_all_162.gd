@@ -168,3 +168,29 @@ static func frame_take_all_lands_from_cell(t: TestCase, root: Window) -> void:
 	t.eq(run.storage.landing_from.get(huge.uid, null), expect, "落地起点 = 它在战利品棋盘上的那格")
 	t.check(not run.storage.landing_from.has(small.uid), "进了背包的不留起点")
 	screen.queue_free()
+
+
+## 277 第 6 条：地上「全部拾取」—— 按值从高到低进棋盘，包不动，放不下的留在地上
+static func run_ground_pick_up_all_277(t: TestCase) -> void:
+	var db := _db()
+	var cheap: ItemDef = null
+	var dear: ItemDef = null
+	for id in db.ids(true):
+		var d := db.get_def(id)
+		if d == null or d.is_bag or d.shape == null or d.cells_rotated(0).size() != 1:
+			continue
+		if cheap == null or ItemValue.of(d) < ItemValue.of(cheap):
+			cheap = d
+		if dear == null or ItemValue.of(d) > ItemValue.of(dear):
+			dear = d
+	t.begin("277 · 地上全部拾取：一格的棋盘只进最贵的那件")
+	ItemInstance.reset_uid_counter()
+	var storage := ItemStash.new(3)
+	var a := ItemInstance.create(cheap)
+	var b := ItemInstance.create(dear)
+	var bag := ItemInstance.create(db.get_def(&"bag_leather"))
+	t.check(storage.admit(a) and storage.admit(b) and storage.admit(bag), "地上一便宜一贵一个包")
+	var board := GridInventory.new(Vector2i(1, 1), 2)
+	t.eq(InventoryService.pick_up_all(storage, board), 1, "进了一件")
+	t.check(board.has_item(b.uid), "进的是贵的")
+	t.check(storage.has_item(a.uid) and storage.has_item(bag.uid), "便宜的和包留在地上")

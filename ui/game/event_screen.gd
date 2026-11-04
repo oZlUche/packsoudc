@@ -378,8 +378,26 @@ func _rebuild() -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo or key.keycode != KEY_B or not is_options_page() or is_briefing():
+	if key == null or not key.pressed or key.echo:
+		return
+	if _bag == null and is_options_page() and key.keycode >= KEY_1 and key.keycode <= KEY_9:
+		var i := int(key.keycode - KEY_1)     # 277 第 1 条：数字键按选项序（同营地）；灰着的不选
+		if i < _option_btns.size() and is_instance_valid(_option_btns[i]) and not _option_btns[i].disabled:
+			_option_btns[i].pressed.emit()
+			get_viewport().set_input_as_handled()
+		return
+	if key.keycode != KEY_B or not is_options_page() or is_briefing():
 		return
 	toggle_bag()
 	get_viewport().set_input_as_handled()
+
+
+## 277 第 1 条：确认键只管结果页（= 继续）和开局交代（= 出发）；选项页要按数字选，免得一下按过头
+func confirm_key(_space: bool) -> bool:
+	if _bag != null:
+		return false
+	if not is_options_page() or is_briefing():
+		proceed()
+		return true
+	return false
 #endregion

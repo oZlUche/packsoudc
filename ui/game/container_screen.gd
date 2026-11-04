@@ -401,6 +401,18 @@ func escape() -> bool:
 	return to_map()
 
 
+## 277 第 1 条：确认键 = 「全部拾取」；拿空了再按 = 关（搜索屏回「再搜 / 走」，战利品收起回地图）。BOSS 的拿空不接（那儿收起 = 撤离）
+func confirm_key(_space: bool) -> bool:
+	if _container != null and _container.item_count() > 0:
+		if _take_btn == null or not _take_btn.is_visible_in_tree() or _take_btn.disabled:
+			return false
+		take_all()
+		return true
+	if _boss:
+		return false
+	return escape()
+
+
 func is_search() -> bool:
 	return _session != null
 #endregion

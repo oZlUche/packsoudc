@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Map and Steps"
   },
-  "text": "地图是一张点和路组成的图。每次只能走到相邻的一个点，路是双向的，走回头路没有限制；走一条路计它写着的步数，通常是一步。走过的点可以再经过、再停留，但那里的事不会再发生第二次。\n\n地图屏按 {key:B} 开背包，鼠标停在点上能看浮窗。踩上一个没用过的点，它的事立刻发生：战斗先进战前准备，搜索与商店开会话，事件给选项。有倒计时的图按走过的步数扣倒计时，猎手与侵蚀也按步推进。",
+  "text": "地图是一张点和路组成的图。每次只能走到相邻的一个点，路是双向的，走回头路没有限制；走一条路计它写着的步数，通常是一步。走过的点可以再经过、再停留，但那里的事不会再发生第二次。点一个不相邻的点，会沿走过的点一步一步走过去（终点可以是没去过的点），每一步照常计步，路上有事就停下；途中再点一下也停。\n\n地图屏按 {key:B} 开背包，鼠标停在点上能看浮窗。踩上一个没用过的点，它的事立刻发生：战斗先进战前准备，搜索与商店开会话，事件给选项。有倒计时的图按走过的步数扣倒计时，猎手与侵蚀也按步推进。",
   "texts": {
-    "en": "The map is a graph of nodes and paths. You move to one adjacent node at a time; paths go both ways, and you can backtrack freely. Each path costs the number of steps written on it, usually one. You can pass through or stop at a visited node again, but what happened there won't happen a second time.\n\nOn the map screen, press {key:B} to open your Pack, and hover over a node to see its tooltip. Step onto an unused node and its event happens at once: battles go to Pre-battle first, search spots and shops open a session, and events offer choices. On maps with a Countdown, each step you walk takes from the Countdown, and hunters and Erosion also advance step by step."
+    "en": "The map is a graph of nodes and paths. You move to one adjacent node at a time; paths go both ways, and you can backtrack freely. Each path costs the number of steps written on it, usually one. You can pass through or stop at a visited node again, but what happened there won't happen a second time. Click a node that isn't adjacent and you walk there step by step through nodes you've visited (the last one can be new); every step counts as usual, the walk stops as soon as something happens, and clicking again stops it too.\n\nOn the map screen, press {key:B} to open your Pack, and hover over a node to see its tooltip. Step onto an unused node and its event happens at once: battles go to Pre-battle first, search spots and shops open a session, and events offer choices. On maps with a Countdown, each step you walk takes from the Countdown, and hunters and Erosion also advance step by step."
   },
   "related": [
     "node_types",

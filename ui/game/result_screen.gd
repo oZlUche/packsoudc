@@ -98,6 +98,14 @@ func ledger() -> LedgerView:
 	return _ledger
 
 
+## 277 第 1 条：确认键 = 这一步的「继续」
+func confirm_key(_space: bool) -> bool:
+	if _continue == null or _continue.disabled or not _continue.is_visible_in_tree():
+		return false
+	_continue.pressed.emit()
+	return true
+
+
 ## 224：这一步离开 / 往下走的那颗「继续」
 func continue_button() -> Button:
 	return _continue

@@ -19,6 +19,8 @@ var _belt_row: HBoxContainer = null
 var _belt_btns: Array[Control] = []
 var _sell_view: InventoryView
 var _refresh_btn: Button
+## 277 第 4 条：【回购 ◎ N】—— 这次进店卖掉的、最近那件原价买回；没卖过不露
+var _buyback_btn: Button
 ## 作者 10-27：左下角的钱袋，写着当前金币
 var _pouch: CoinPouch = null
 var _inv: InventoryPanelScript
@@ -82,6 +84,9 @@ func open(payload: Dictionary) -> void:
 	var buttons := _hbox(8)
 	_refresh_btn = ScrollKey.make(UiText.t("shop.refresh"), refresh_stock, true)     # 纸卷键：刷新带币座，价钱写在金币右边
 	buttons.add_child(_refresh_btn)
+	_buyback_btn = ScrollKey.make(UiText.t("shop.buyback"), buy_back, true)
+	_buyback_btn.name = "BuybackKey"
+	buttons.add_child(_buyback_btn)
 	var back := ScrollKey.make(UiText.t("camp.fold"), to_map)
 	back.tooltip_text = UiText.t("shop.fold_tip")
 	buttons.add_child(back)
@@ -154,6 +159,18 @@ func sell_now(uid: int) -> int:
 	if inst == null or inst.is_locked_by_player() or _cant_sell(inst) != "" or from.remove(uid) == null:
 		return -1
 	return _session.sell(inst)
+
+
+## 277 第 4 条：买回最近卖掉的那件
+func buy_back() -> bool:
+	var inst := _session.buy_back() if _session != null else null
+	if inst == null:
+		return false
+	var run := flow.run
+	if not run.board.has_item(inst.uid) and not run.storage.has_item(inst.uid) and not run.board.try_add(inst, true):
+		run.storage.admit(inst)     # 一局的买下接线（RunState 接 bought）没接上的会话（测试直开的店）在这里兜底
+	_refresh()
+	return true
 
 
 func refresh_stock() -> bool:
@@ -416,6 +433,14 @@ func _refresh() -> void:
 	if _pouch != null:
 		_pouch.amount = flow.run.wallet.balance
 	_refresh_btn.disabled = not _session.can_refresh()
+	var last := _session.last_sold()
+	_buyback_btn.visible = not last.is_empty()
+	if not last.is_empty():
+		ScrollKey.show_price(_buyback_btn, UiText.t("shop.buyback"), int(last["price"]))
+		_buyback_btn.tooltip_text = Names.of((last["inst"] as ItemInstance).def)
+		_buyback_btn.disabled = not _session.can_buy_back()
+		if _buyback_btn is ScrollKey:
+			(_buyback_btn as ScrollKey).poor = int(last["price"]) > flow.run.wallet.balance
 	var cash := flow.run.wallet.balance
 	if _refresh_btn is ScrollKey:     # 作者 17:13：钱不够，价钱写红
 		(_refresh_btn as ScrollKey).poor = _session.refresh_cost() > cash
