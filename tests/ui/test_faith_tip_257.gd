@@ -73,7 +73,8 @@ static func frame_item_faith_divider(t: TestCase, root: Window) -> void:
 	var body := Glossary.strip_bbcode(String(full["body"]) if full.has("body") else "")
 	t.check(not body.contains("右键"), "正文里没有信物行")
 	var faith := String(full["faith"])
-	t.check(faith.contains("[font_size=%d]" % ItemTooltip.ANCHOR_FOOT_SIZE) and Glossary.strip_bbcode(faith).contains("信物 · 右键奉为主信仰"), "信物脚注一行")
+	var foot: String = faith.split("\n")[-1]
+	t.check(not foot.contains("[font_size") and Glossary.strip_bbcode(foot).contains("信物 · 右键奉为主信仰"), "信物脚注一行，和正文同号（作者 11-04：小字太小）：%s" % foot)
 	t.check(not Glossary.strip_bbcode(faith).contains("：右键"), "信物行不再两个冒号")
 	tip.show_text("别的", Vector2(100, 100))
 	t.check(not panel.faith_dash.visible and not panel.faith_body.visible, "换别的窗：小节藏起")

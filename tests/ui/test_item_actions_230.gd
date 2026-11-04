@@ -242,6 +242,12 @@ static func frame_shop_buttons(t: TestCase, _root: Window) -> void:
 	t.eq(screen.sell_now(mine.uid), price, "解锁：卖了")
 	t.eq(run.wallet.balance, before + price, "进了 %d 币" % price)
 	t.check(not run.board.has_item(mine.uid), "从棋盘上拿走")
+	var notes: Array = []
+	for line in screen.notice_layer()._lines:
+		notes.append((line["scroll"] as NoticeScroll).text)
+	var sold_tail := UiText.t("shop.sold") % Names.of(mine.def) + CoinShort.coin(price)
+	t.check(notes.size() == 1 and String(notes[0]).ends_with(sold_tail), "卖出告示：物品名紧挨句末金币（%s）" % [notes])
+	t.check(String(notes[0]).begins_with(UiText.t("shop.sell_hint") % [UiText.tenths(0.3), UiText.tenths(0.5)]), "第一次卖：比例提示在前，金币不排在提示后面")
 	screen.free()
 	Support.cleanup(PREFIX)
 
