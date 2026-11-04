@@ -1191,9 +1191,7 @@ func _uid_under(view: ContainerView, local: Vector2) -> int:
 		var iv := view as InventoryView
 		if iv.inventory == null:
 			return -1
-		var c := iv.cell_at_local(local)
-		var uid := iv.inventory.cell_uid(c)
-		return uid if uid != GridInventory.EMPTY_UID else iv.inventory.bag_at(c)
+		return iv.uid_at_cell(iv.cell_at_local(local), InventoryView.whole_bag_key())     # 274：按着 Ctrl = 包的说明
 	if view.has_method("uid_at_local"):
 		return view.uid_at_local(local)     # 128：地上；157：事件的收获行
 	return -1

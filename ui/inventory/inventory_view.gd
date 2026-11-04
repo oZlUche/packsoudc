@@ -109,6 +109,8 @@ const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 var dim_filter: Callable = Callable()
 ## 268：快速出售的勾选模式 —— 左键单击发 [signal item_picked]、不抓（不拖）、双击不发；勾了的（[member selected]，uid → true）左下角画金勾
 var select_mode := false
+var _hover_cell := Vector2i(-1, -1)     # 274：鼠标停的格（出了棋盘 = -1）
+const BAG_OUTLINE_WIDTH := 3.0
 var selected: Dictionary = {}
 const FILTERED_ART := Color(0.4, 0.4, 0.4, 0.55)
 
@@ -130,6 +132,14 @@ func _init() -> void:
 	UiTheme.warm_slot_icons()     # 170：格位图标先读好，别等到 _draw 里第一次读（兼容渲染器下会画成白块）
 	add_to_group(GROUP)
 	add_to_group(ItemFavorites.GROUP)     # 265：收藏一变就重画角标
+	mouse_exited.connect(_on_mouse_exited)
+
+
+func _on_mouse_exited() -> void:
+	var had := _hover_bag() != GridInventory.EMPTY_UID
+	_hover_cell = Vector2i(-1, -1)
+	if had:
+		queue_redraw()
 
 
 func container() -> ItemContainer:
@@ -312,17 +322,54 @@ func clear_preview() -> void:
 #endregion
 
 
+## 274：按住 Ctrl（mac 上 Cmd）点包里的道具 = 点这个包
+static func whole_bag_key() -> bool:
+	return Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_META)
+
+
+## 这一格点下去点的是哪件：先普通物品，包的空白处才是包本身；[param whole_bag] = 按着 Ctrl，包里的格一律算包。
+## 勾选模式不受 Ctrl 影响
+func uid_at_cell(c: Vector2i, whole_bag := false) -> int:
+	if inventory == null:
+		return GridInventory.EMPTY_UID
+	var bag := inventory.bag_at(c)
+	if whole_bag and not select_mode and bag != GridInventory.EMPTY_UID:
+		return bag
+	var uid := inventory.cell_uid(c)
+	return uid if uid != GridInventory.EMPTY_UID else bag
+
+
+## 274：鼠标停在哪个包上（按着 Ctrl 时描它的边）
+func _hover_bag() -> int:
+	if inventory == null or _hover_cell.x < 0 or select_mode or not whole_bag_key():
+		return GridInventory.EMPTY_UID
+	return inventory.bag_at(_hover_cell)
+
+
+func _input(event: InputEvent) -> void:
+	if _hover_cell.x < 0:
+		return
+	var k := event as InputEventKey
+	if k != null and not k.echo and k.keycode in [KEY_CTRL, KEY_META]:
+		queue_redraw()
+
+
 func _gui_input(event: InputEvent) -> void:
 	if inventory == null:
+		return
+	if event is InputEventMouseMotion:
+		var hc := cell_at_local((event as InputEventMouseMotion).position)
+		if hc != _hover_cell:
+			var before := _hover_bag()
+			_hover_cell = hc
+			if _hover_bag() != before:
+				queue_redraw()
 		return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 			var c := cell_at_local(mb.position)
-			# 先抓普通物品；点在包的空白处才抓包本身
-			var uid := inventory.cell_uid(c)
-			if uid == GridInventory.EMPTY_UID:
-				uid = inventory.bag_at(c)
+			var uid := uid_at_cell(c, mb.is_command_or_control_pressed())
 			if uid == GridInventory.EMPTY_UID and mb.button_index == MOUSE_BUTTON_LEFT:
 				set_focused(null, get_tree())     # 点空处：槽位都收起
 			if uid != GridInventory.EMPTY_UID:
@@ -479,6 +526,27 @@ func _draw() -> void:
 
 	if not framed and not grounded:
 		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
+	_draw_bag_outline(_hover_bag())
+
+
+## 274：按着 Ctrl 停在包上 = 沿包的外缘描一圈（按包的品质色）
+func _draw_bag_outline(bag: int) -> void:
+	var item := inventory.get_item(bag) if bag != GridInventory.EMPTY_UID else null
+	if item == null:
+		return
+	var col := ItemPainter.rarity_color(item.def, item.rarity()).lightened(0.2)
+	for y in inventory.size.y:
+		for x in inventory.size.x:
+			var c := Vector2i(x, y)
+			if inventory.bag_at(c) != bag:
+				continue
+			var o := cell_origin_px(c)
+			for d: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+				if inventory.bag_at(c + d) == bag:
+					continue
+				var a := o + Vector2(maxi(d.x, 0), maxi(d.y, 0)) * cell_px
+				var b := a + Vector2(absi(d.y), absi(d.x)) * cell_px
+				draw_line(a, b, col, BAG_OUTLINE_WIDTH)
 
 
 ## 棋盘美术：格缝 = 深线 + 右 / 下错开一点的亮线，两端各留一点；外圈不画（内垫的缝线框就是边）。
