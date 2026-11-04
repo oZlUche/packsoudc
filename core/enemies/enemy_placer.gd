@@ -149,8 +149,9 @@ static func build_content(
 		count = maxi(count, def.signature_at(strength).size())     # 212：魔兽的招牌是它的器官，一件不少；档位多出来的再补
 	var cap := rarity_cap_of(rule, tier)
 	var wcap := weapon_cap_of(rule, tier)
+	var no_true := tier != null and tier.weapon_no_true_damage
 	var build := pick_build(def, rule, strength, rng)
-	var picks := choose_items(def, rule, items, count, rng, cap, strength, build, wcap)
+	var picks := choose_items(def, rule, items, count, rng, cap, strength, build, wcap, no_true)
 	count = maxi(count, picks.size())     # 211：套路是设计者写的，比档位件数长也全带上
 	_sort_big_first(picks, items)
 	# 摆的是草稿实例（内容只记 id 与位置），uid 计数原样还回去 —— 摆几次、重来几次都不影响之后的编号
@@ -227,12 +228,12 @@ static func build_content(
 	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。流派道具不够先补流派的。
 	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘 / 包配小了
 	if placed.size() < count:
-		var school_pool := school_items(def.schools, items, cap, def, wcap)
+		var school_pool := school_items(def.schools, items, cap, def, wcap, no_true)
 		var refill: Array[StringName] = []
 		if _school_count(placed, items, def.schools) < rule.min_school:
 			refill.append_array(_small_first(school_pool, items, rng))
 		var general := school_pool.duplicate()
-		general.append_array(common_items(def.schools, rule, items, cap, def, wcap))
+		general.append_array(common_items(def.schools, rule, items, cap, def, wcap, no_true))
 		refill.append_array(_small_first(general, items, rng))
 		var tries := 0
 		for id in refill:
@@ -542,7 +543,7 @@ static func build_weight(b: EnemyBuild, rule: EnemyLoadout, strength: int) -> fl
 ## 087：两个池子都先过身份标签（[method EnemyDef.allows_item]）—— 神射手只在弓箭里抽
 static func choose_items(
 	def: EnemyDef, rule: EnemyLoadout, items: ItemDatabase, count: int, rng: RandomNumberGenerator,
-	rarity_cap: int = -1, strength: int = -1, build: EnemyBuild = null, weapon_cap: int = -1
+	rarity_cap: int = -1, strength: int = -1, build: EnemyBuild = null, weapon_cap: int = -1, no_true: bool = false
 ) -> Array[StringName]:
 	var picks: Array[StringName] = []
 	var sig := def.signature_at(strength if strength >= 0 else def.strength)     # 算一次，下面三处共用
@@ -554,8 +555,8 @@ static func choose_items(
 			if items.has_def(bid):
 				picks.append(bid)
 	var fixed := picks.size()     # 招牌 + 套路骨架：后面的信仰统一与保底武器都不动它们
-	var school_pool := school_items(def.schools, items, rarity_cap, def, weapon_cap)
-	var common_pool := common_items(def.schools, rule, items, rarity_cap, def, weapon_cap)
+	var school_pool := school_items(def.schools, items, rarity_cap, def, weapon_cap, no_true)
+	var common_pool := common_items(def.schools, rule, items, rarity_cap, def, weapon_cap, no_true)
 	var room := maxi(0, count - picks.size())
 	var n_school := 0
 	if not school_pool.is_empty():
@@ -647,20 +648,25 @@ static func _ensure_weapons(
 
 
 ## 带任一流派标签的道具（不含包），id 升序 —— 顺序稳定，抽出来的才可复现。[param who] 给了就再过它的身份标签（087）
-static func school_items(schools: Array[StringName], items: ItemDatabase, rarity_cap: int, who: EnemyDef = null, weapon_cap: int = -1) -> Array[StringName]:
-	return _item_pool(items, rarity_cap, who, func(d: ItemDef) -> bool: return _shares_tag(d.tags, schools), weapon_cap)
+static func school_items(
+	schools: Array[StringName], items: ItemDatabase, rarity_cap: int, who: EnemyDef = null, weapon_cap: int = -1, no_true: bool = false
+) -> Array[StringName]:
+	return _item_pool(items, rarity_cap, who, func(d: ItemDef) -> bool: return _shares_tag(d.tags, schools), weapon_cap, no_true)
 
 
 ## 带通用标签、且不带本敌人任一流派标签的道具（不含包），id 升序。[param who] 给了就再过它的身份标签（087）
 static func common_items(
-	schools: Array[StringName], rule: EnemyLoadout, items: ItemDatabase, rarity_cap: int = -1, who: EnemyDef = null, weapon_cap: int = -1
+	schools: Array[StringName], rule: EnemyLoadout, items: ItemDatabase, rarity_cap: int = -1, who: EnemyDef = null, weapon_cap: int = -1,
+	no_true: bool = false
 ) -> Array[StringName]:
 	return _item_pool(items, rarity_cap, who,
-		func(d: ItemDef) -> bool: return _shares_tag(d.tags, rule.common_tags) and not _shares_tag(d.tags, schools), weapon_cap)
+		func(d: ItemDef) -> bool: return _shares_tag(d.tags, rule.common_tags) and not _shares_tag(d.tags, schools), weapon_cap, no_true)
 
 
 ## 两个池子共用的筛选：能生成的道具里去掉包（160：随身技能不是道具，本来就不在库里）、过稀有度上限与身份标签（087），再过 [param pred]；id 按文本升序
-static func _item_pool(items: ItemDatabase, rarity_cap: int, who: EnemyDef, pred: Callable, weapon_cap: int = -1) -> Array[StringName]:
+static func _item_pool(
+	items: ItemDatabase, rarity_cap: int, who: EnemyDef, pred: Callable, weapon_cap: int = -1, no_true: bool = false
+) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for id in items.ids():
 		var d := items.get_def(id)
@@ -668,12 +674,25 @@ static func _item_pool(items: ItemDatabase, rarity_cap: int, who: EnemyDef, pred
 			continue
 		if weapon_cap >= 0 and d.rarity > weapon_cap and d.tags.has(&"weapon"):     # 279 台架定调：武器另压一档
 			continue
+		if no_true and d.tags.has(&"weapon") and deals_true_damage(d):     # 279 台架定调：低档敌人不背带真实伤害的武器
+			continue
 		if who != null and not who.allows_item(d):
 			continue
 		if pred.call(d):
 			out.append(id)
 	Ids.sort(out)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 	return out
+
+
+## 279 台架定调：这件的战斗规则里有没有真实伤害（[member DealDamage.pure]）—— 真实伤害绕过护甲与格挡，盾 / 护甲木桩吃得最多
+static func deals_true_damage(d: ItemDef) -> bool:
+	if d.combat == null:
+		return false
+	for r in d.combat.rules:
+		for e in (r as AbilityRule).effects:
+			if e is DealDamage and (e as DealDamage).pure:
+				return true
+	return false
 
 
 static func _shares_tag(tags: Array[StringName], wanted: Array[StringName]) -> bool:

@@ -416,7 +416,7 @@ func choose(i: int) -> bool:
 		_visited(node)
 		if hooks.request_extract():
 			return true
-		event_resolved.emit(node, StringName(UiText.t("node.short.extract")), {"log": [UiText.t("node.extract_unaffordable") % PaidExtracts.fee_of(node)]})
+		event_resolved.emit(node, StringName(UiText.t("node.short.extract")), {"log": [UiText.t("node.extract_unaffordable") % CoinShort.coin(PaidExtracts.fee_of(node))]})
 		return true
 	# 作者 2026-10-12：先回地图 —— 不标用过，记一笔，回到这个点时再弹同一个事件（[method RunState._arrived_again]）
 	if ctx.revisit:

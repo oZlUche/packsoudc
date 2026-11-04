@@ -548,8 +548,8 @@ static func cycle_slots(def: ItemDef, rule: AbilityRule, stats: StatSet) -> Stri
 	var p := (rule.cadence as CycleCadence).periods(stats)
 	var n := def.adjacency.load_cells.size() if def.adjacency != null else 0
 	if shoots_ammo(rule):
-		return UiText.t("tip.cycle_slots_ammo") % n
-	return UiText.t("tip.cycle_slots") % [n, _num(p.x, 1), _num(p.y, 1)]
+		return UiText.tn("tip.cycle_slots_ammo", n) % n
+	return UiText.tn("tip.cycle_slots", n) % [n, _num(p.x, 1), _num(p.y, 1)]
 
 
 ## 279 补充一：这条轮读规则射的是箭（弓弩）

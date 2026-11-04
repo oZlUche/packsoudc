@@ -31,3 +31,21 @@ static func run_tiers(t: TestCase) -> void:
 	t.check(tier2.has(&"bone_broadsword") and tier2.has(&"steel_greatsword") and not tier2.has(&"bonesteel_greatsword"), "档 2：蓝件进来，紫件没有")
 	var archer := EnemyPlacer.school_items(enemies.enemy(&"marksman").schools, items, cap1, enemies.enemy(&"marksman"), EnemyPlacer.weapon_cap_of(pool.loadout, pool.tiers[1]))
 	t.check(archer.has(&"crude_bow") and archer.has(&"light_crossbow") and not archer.has(&"broadsword"), "神射手只背弓弩：粗制弓 / 轻弩有，阔剑没有")
+
+
+static func run_true_damage(t: TestCase) -> void:
+	t.begin("279 台架定调 · 档 0–2 不背带真实伤害的武器，档 3 照背；三个池子一样")
+	var items := ItemDatabase.new()
+	items.load_dir()
+	var enemies := EnemyDatabase.new()
+	enemies.load_all()
+	for pid in ["standard_ruins", "clockwork", "hunters"]:
+		var p := ContentPaths.load_asset("enemy_pools", pid) as EnemyPool
+		t.eq([0, 1, 2, 3].map(func(k: int) -> bool: return p.tiers[k].weapon_no_true_damage), [true, true, true, false], "%s：档 0–2 开、档 3 关" % pid)
+	var steel := items.get_def(&"steel_broadsword")
+	t.check(steel != null and EnemyPlacer.deals_true_damage(steel) and not EnemyPlacer.deals_true_damage(items.get_def(&"broadsword")),
+		"钢阔剑带真实伤害，阔剑不带")
+	var brute := enemies.enemy(&"brute")
+	var on := EnemyPlacer.school_items(brute.schools, items, -1, brute, 2, true)
+	var off := EnemyPlacer.school_items(brute.schools, items, -1, brute, 2, false)
+	t.check(off.has(&"steel_broadsword") and not on.has(&"steel_broadsword") and on.has(&"bone_broadsword"), "开关打开：钢阔剑出池，兽骨阔剑还在")
