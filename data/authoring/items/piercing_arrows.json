@@ -1,0 +1,47 @@
+{
+  "id": "piercing_arrows",
+  "display_name": "破甲箭",
+  "display_names": {
+    "en": "Piercing Arrows"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "ammo"
+  ],
+  "material": "metal",
+  "adjacency": {
+    "feed_mods": [
+      {
+        "stat": "true_damage",
+        "amount": 10.0
+      }
+    ],
+    "feed_filter": [
+      "ranged"
+    ]
+  },
+  "wear": {
+    "max_charges": 15,
+    "charge_band": 5,
+    "prefixes": [
+      "将尽的",
+      "半捆",
+      "满捆"
+    ],
+    "prefixes_by_lang": {
+      "en": [
+        "Last of the ",
+        "Half ",
+        "Full "
+      ]
+    },
+    "vanish_when_empty": true
+  }
+}

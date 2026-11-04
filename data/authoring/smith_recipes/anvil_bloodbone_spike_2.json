@@ -1,0 +1,13 @@
+{
+  "id": "anvil_bloodbone_spike_2",
+  "output": "bloodbone_spike",
+  "inputs": {
+    "steel_stiletto": 1
+  },
+  "material_inputs": {
+    "bone": 2
+  },
+  "funds": 120,
+  "group": "blade",
+  "level": 2
+}

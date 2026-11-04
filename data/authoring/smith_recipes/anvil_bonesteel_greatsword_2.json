@@ -1,0 +1,13 @@
+{
+  "id": "anvil_bonesteel_greatsword_2",
+  "output": "bonesteel_greatsword",
+  "inputs": {
+    "steel_greatsword": 1
+  },
+  "material_inputs": {
+    "bone": 2
+  },
+  "funds": 120,
+  "group": "blade",
+  "level": 2
+}

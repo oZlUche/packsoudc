@@ -1,0 +1,63 @@
+{
+  "id": "dragoon_lance",
+  "display_name": "龙骑枪",
+  "display_names": {
+    "en": "Dragoon Lance"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "polearm"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 31
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 7.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "damage_taken",
+            "delta": 2
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage",
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

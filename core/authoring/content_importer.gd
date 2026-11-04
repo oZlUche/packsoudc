@@ -964,8 +964,8 @@ static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportRe
 			report.error("inputs.%s" % key, "道具库里没有 %s" % key)
 	for m in def.material_inputs:     # 279：按材质类认的素材
 		var r := int(def.material_inputs[m])
-		if not ItemMaterials.is_material(StringName(String(m))):
-			report.error("material_inputs.%s" % m, "没有这类材质（%s）" % " / ".join(PackedStringArray(ItemMaterials.IDS)))
+		if not ItemMaterials.is_material(StringName(String(m))) and not SmithRecipeDef.is_crystal_key(String(m)):
+			report.error("material_inputs.%s" % m, "没有这类材质（%s，或 crystal:元素家族）" % " / ".join(PackedStringArray(ItemMaterials.IDS)))
 		elif r < 0 or r > 5:
 			report.error("material_inputs.%s" % m, "最低稀有度 0 ～ 5")
 		elif not ctx.items.is_empty() and not ctx.items.values().any(func(d: ItemDef) -> bool: return def.material_fits(String(m), d)):

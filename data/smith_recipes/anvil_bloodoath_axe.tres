@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_x20ih"]
+
+[resource]
+script = ExtResource("1_x20ih")
+id = &"anvil_bloodoath_axe"
+output = &"bloodoath_axe"
+inputs = {
+"bone_battle_axe": 1
+}
+material_inputs = {
+"metal": 2
+}
+funds = 120
+group = "hammer"
+level = 2

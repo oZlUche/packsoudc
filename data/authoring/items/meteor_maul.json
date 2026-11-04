@@ -1,0 +1,60 @@
+{
+  "id": "meteor_maul",
+  "display_name": "陨铁大锤",
+  "display_names": {
+    "en": "Meteor Maul"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 72
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 15.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -3
+          }
+        ]
+      }
+    ]
+  }
+}

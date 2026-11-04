@@ -1,0 +1,59 @@
+{
+  "id": "bloodbone_spike",
+  "display_name": "噬血骨刺",
+  "display_names": {
+    "en": "Bloodbone Spike"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dagger",
+    "bleed"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 9,
+      "crit_chance": 15
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 4.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          }
+        ]
+      }
+    ]
+  }
+}

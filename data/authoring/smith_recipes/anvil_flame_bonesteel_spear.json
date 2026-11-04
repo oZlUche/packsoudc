@@ -1,0 +1,13 @@
+{
+  "id": "anvil_flame_bonesteel_spear",
+  "output": "flame_bonesteel_spear",
+  "inputs": {
+    "bonesteel_spear": 1
+  },
+  "material_inputs": {
+    "crystal:fire": 3
+  },
+  "funds": 200,
+  "group": "blade",
+  "level": 3
+}

@@ -1,0 +1,66 @@
+{
+  "id": "boneiron_club",
+  "display_name": "骨铁大棒",
+  "display_names": {
+    "en": "Boneiron Club"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy",
+    "bleed"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 47
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 11.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 6.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -1
+          },
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          }
+        ]
+      }
+    ]
+  }
+}

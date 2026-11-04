@@ -1,0 +1,68 @@
+{
+  "id": "thunder_bloodthirst_twin_blades",
+  "display_name": "雷纹噬血双刀",
+  "display_names": {
+    "en": "Thunderbrand Bloodthirst Twin Blades"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual",
+    "bleed",
+    "lightning",
+    "forged_only"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 12
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 2.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          "@apply_status_bleed",
+          {
+            "type": "apply_status",
+            "buff": "numb"
+          },
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 2.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          "@apply_status_bleed"
+        ]
+      }
+    ]
+  }
+}

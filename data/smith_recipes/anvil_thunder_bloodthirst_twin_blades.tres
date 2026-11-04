@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_ucyvu"]
+
+[resource]
+script = ExtResource("1_ucyvu")
+id = &"anvil_thunder_bloodthirst_twin_blades"
+output = &"thunder_bloodthirst_twin_blades"
+inputs = {
+"bloodthirst_twin_blades": 1
+}
+material_inputs = {
+"crystal:lightning": 3
+}
+funds = 200
+group = "blade"
+level = 3

@@ -15,10 +15,10 @@ static func _anvils() -> Array[SmithRecipeDef]:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("279 第二步 · 内容：30 张升蓝 —— 一件上一档武器 + 一类材料（绿起），产物比原件高一档，工钱 60，铺子 1 级")
+	t.begin("279 第二步 / 第二批 · 内容：一件上一档武器 + 一类材料，产物高一档 —— 升蓝 30 张（绿起、工钱 60、铺子 1 级）、升紫 32 张（蓝起、120、2 级）、升橙 16 张（魔晶紫起 / 灰白金属碎片，200、3 级，产物只能锻造）")
 	var db := T110._db()
 	var all := _anvils()
-	t.eq(all.size(), 30, "30 张")
+	var by_tier := {2: 0, 3: 0, 4: 0}
 	for r in all:
 		var out := db.get_def(r.output)
 		t.check(out != null and out.tags.has(&"weapon"), "%s：产物是武器" % r.id)
@@ -26,12 +26,20 @@ static func run_content(t: TestCase) -> void:
 		t.eq(r.material_inputs.size(), 1, "%s：一类材料" % r.id)
 		if out == null or r.inputs.size() != 1:
 			continue
+		by_tier[out.rarity] = int(by_tier.get(out.rarity, 0)) + 1
 		var src := db.get_def(StringName(String(r.inputs.keys()[0])))
 		t.check(src != null and src.tags.has(&"weapon") and src.rarity + 1 == out.rarity, "%s：%s → %s 升一档" % [r.id, r.inputs.keys()[0], r.output])
 		for m in r.material_inputs:
-			t.eq(int(r.material_inputs[m]), 1, "%s：材料要绿起" % r.id)
+			var lo := int(r.material_inputs[m])
+			if out.rarity == 4:
+				t.check((SmithRecipeDef.is_crystal_key(String(m)) and lo == 3) or (String(m) == "metal" and lo == 4), "%s：升橙要魔晶石（紫起）或灰白金属碎片" % r.id)
+			else:
+				t.check(not SmithRecipeDef.is_crystal_key(String(m)) and lo >= out.rarity - 1, "%s：材料要比产物低一档起" % r.id)
 			t.not_null(r.material_sample(String(m), db), "%s：道具库里有能顶的 %s" % [r.id, m])
-		t.check(r.funds == 60 and r.level == 1, "%s：工钱 60、铺子 1 级" % r.id)
+		var want := {2: [60, 1], 3: [120, 2], 4: [200, 3]}.get(out.rarity, [0, 0]) as Array
+		t.check(r.funds == int(want[0]) and r.level == int(want[1]), "%s：工钱 %d、铺子 %d 级" % [r.id, want[0], want[1]])
+		t.eq(out.is_forged_only(), out.rarity == 4, "%s：只有橙档只能锻造" % r.id)
+	t.eq(by_tier, {2: 30, 3: 32, 4: 16}, "升蓝 30、升紫 32、升橙 16")
 
 
 static func run_material_fits(t: TestCase) -> void:

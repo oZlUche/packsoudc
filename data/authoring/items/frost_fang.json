@@ -1,0 +1,65 @@
+{
+  "id": "frost_fang",
+  "display_name": "霜牙",
+  "display_names": {
+    "en": "Frost Fang"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dagger",
+    "bleed",
+    "ice",
+    "forged_only"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 14,
+      "crit_chance": 15
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 4.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          },
+          {
+            "type": "apply_status",
+            "buff": "chill"
+          }
+        ]
+      }
+    ]
+  }
+}

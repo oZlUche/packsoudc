@@ -1,0 +1,77 @@
+{
+  "id": "flame_executioner_axe",
+  "display_name": "焰纹刽子手巨斧",
+  "display_names": {
+    "en": "Flamebrand Executioner's Axe"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy",
+    "bleed",
+    "fire",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 68
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.2
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 11.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 3
+          },
+          {
+            "type": "apply_status",
+            "buff": "scorch"
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "costs": [
+          {
+            "type": "resource_condition",
+            "on_self": false,
+            "max_percent": 29
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

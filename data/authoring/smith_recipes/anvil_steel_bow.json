@@ -1,0 +1,13 @@
+{
+  "id": "anvil_steel_bow",
+  "output": "steel_bow",
+  "inputs": {
+    "longbow": 1
+  },
+  "material_inputs": {
+    "metal": 2
+  },
+  "funds": 120,
+  "group": "bow",
+  "level": 2
+}

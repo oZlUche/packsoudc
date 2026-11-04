@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_o665f"]
+
+[resource]
+script = ExtResource("1_o665f")
+id = &"anvil_bonesteel_broadsword_2"
+output = &"bonesteel_broadsword"
+inputs = {
+"steel_broadsword": 1
+}
+material_inputs = {
+"bone": 2
+}
+funds = 120
+group = "blade"
+level = 2

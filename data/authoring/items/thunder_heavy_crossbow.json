@@ -1,0 +1,94 @@
+{
+  "id": "thunder_heavy_crossbow",
+  "display_name": "雷纹重弩",
+  "display_names": {
+    "en": "Thunderbrand Heavy Crossbow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "ranged",
+    "burst",
+    "lightning",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 22
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "step_seconds": 2.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 8.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "deal_damage",
+            "amount": 5.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -1
+          },
+          {
+            "type": "apply_status",
+            "buff": "numb"
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}

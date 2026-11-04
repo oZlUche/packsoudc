@@ -1,0 +1,13 @@
+{
+  "id": "anvil_bloodoath_scimitar",
+  "output": "bloodoath_scimitar",
+  "inputs": {
+    "barbarian_scimitar": 1
+  },
+  "material_inputs": {
+    "bone": 2
+  },
+  "funds": 120,
+  "group": "blade",
+  "level": 2
+}

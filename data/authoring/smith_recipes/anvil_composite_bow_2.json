@@ -1,0 +1,13 @@
+{
+  "id": "anvil_composite_bow_2",
+  "output": "composite_bow",
+  "inputs": {
+    "horn_bow": 1
+  },
+  "material_inputs": {
+    "wood": 2
+  },
+  "funds": 120,
+  "group": "bow",
+  "level": 2
+}

@@ -6,8 +6,12 @@ extends RefCounted
 ## 可叠层 DoT 按一场的一半算）、删了冲锋枪与狙击枪、涂毒匕首提到史诗之后，原来的五件都回到一档以内；
 ## 155 补（作者定）把耐力折扣改成「耐力上限 + 一场的回复」之后，现有武器没有一件耗得完，剩下两件只是单看偏弱（估低两档）。
 ## 作者定了改数还是接受之后从这里删掉
-const KNOWN_OFF := ["battle_axe", "blessed_longbow", "bone_battle_axe", "bone_greatsword", "bone_twin_axes", "bonefang_dagger", "bonefang_twin_blades",
-	"festering_blade", "granite_maul", "hand_axe", "longbow", "mithril_sword", "spiked_club", "steel_crossbow", "steel_greatsword"]
+const KNOWN_OFF := ["battle_axe", "blessed_longbow", "bone_battle_axe", "bone_greatsword", "bone_twin_axes", "bonefang_dagger",
+	"bonefang_twin_blades", "boneiron_club", "bonesteel_greatsword", "composite_bow", "festering_blade", "flame_executioner_axe",
+	"flame_meteor_maul", "frost_bonesteel_greatsword", "granite_maul", "hand_axe", "heavy_crossbow", "imperial_sword", "longbow",
+	"meteor_maul", "mithril_sword", "spiked_club", "steel_bow", "steel_crossbow", "steel_greatsword", "thunder_boneiron_club",
+	"thunder_heavy_crossbow"]
+## 279 第二批同理：3×3 的双手按格数估低、弓弩不算箭；帝国佩剑与焰纹刽子手巨斧估高。调数等架构设计看台架报告
 ## 279 第一批：数值照方案 §三 / §六 的表（流血估高、大件按格数估低、弓弩不算箭），第 5 步台架实测后再定改数还是改表
 ## 175：溃烂之刃的桥收进菌血，只剩出手盖血印，估出来低两档；273：三根新杖乘上威力系数后回到一档内
 const ITEMS := "res://data/items"

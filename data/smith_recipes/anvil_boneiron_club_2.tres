@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_uyqwj"]
+
+[resource]
+script = ExtResource("1_uyqwj")
+id = &"anvil_boneiron_club_2"
+output = &"boneiron_club"
+inputs = {
+"spiked_club": 1
+}
+material_inputs = {
+"bone": 2
+}
+funds = 120
+group = "hammer"
+level = 2

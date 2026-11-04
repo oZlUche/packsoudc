@@ -1,0 +1,166 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_sjl2l"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_j3mmw"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_4xfpu"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_ncvvm"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_2f4kq"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_vbwfi"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_4vp63"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_vey5b"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="9_x20a0"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="10_mlcy1"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="11_gkio3"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="12_m7wkh"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="13_vewxr"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="14_cjylm"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="15_okgp8"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="16_18q1h"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="17_x2vli"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="18_cngc1"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="19_as1bg"]
+
+[sub_resource type="Resource" id="Resource_3sled"]
+script = ExtResource("4_ncvvm")
+seconds = 1.3
+
+[sub_resource type="Resource" id="Resource_b53ob"]
+script = ExtResource("6_vbwfi")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_6wjv7"]
+script = ExtResource("8_vey5b")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_a750a"]
+script = ExtResource("4_ncvvm")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_joskg"]
+script = ExtResource("8_vey5b")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_vstyu"]
+script = ExtResource("10_mlcy1")
+
+[sub_resource type="Resource" id="Resource_051ph"]
+script = ExtResource("3_4xfpu")
+trigger = SubResource("Resource_vstyu")
+cadence = SubResource("Resource_a750a")
+effects = Array[ExtResource("7_4vp63")]([SubResource("Resource_joskg")])
+
+[sub_resource type="Resource" id="Resource_p7e7f"]
+script = ExtResource("11_gkio3")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+decay_halve_on = &"tick"
+rules = Array[ExtResource("3_4xfpu")]([SubResource("Resource_051ph")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_30o6l"]
+script = ExtResource("12_m7wkh")
+buff = SubResource("Resource_p7e7f")
+metadata/part_ref = &"apply_status_bleed"
+
+[sub_resource type="Resource" id="Resource_gmvuk"]
+script = ExtResource("4_ncvvm")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_cgorq"]
+script = ExtResource("8_vey5b")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_o1704"]
+script = ExtResource("10_mlcy1")
+
+[sub_resource type="Resource" id="Resource_m6he4"]
+script = ExtResource("3_4xfpu")
+trigger = SubResource("Resource_o1704")
+cadence = SubResource("Resource_gmvuk")
+effects = Array[ExtResource("7_4vp63")]([SubResource("Resource_cgorq")])
+
+[sub_resource type="Resource" id="Resource_ola2g"]
+script = ExtResource("11_gkio3")
+id = &"scorch"
+display_name = "灼伤"
+display_names = {
+"en": "Burn"
+}
+is_debuff = true
+rules = Array[ExtResource("3_4xfpu")]([SubResource("Resource_m6he4")])
+element = &"fire"
+
+[sub_resource type="Resource" id="Resource_me0dq"]
+script = ExtResource("12_m7wkh")
+buff = SubResource("Resource_ola2g")
+
+[sub_resource type="Resource" id="Resource_remlp"]
+script = ExtResource("10_mlcy1")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_mdnj5"]
+script = ExtResource("3_4xfpu")
+trigger = SubResource("Resource_remlp")
+cadence = SubResource("Resource_3sled")
+costs = Array[ExtResource("5_2f4kq")]([SubResource("Resource_b53ob")])
+effects = Array[ExtResource("7_4vp63")]([SubResource("Resource_6wjv7"), SubResource("Resource_30o6l"), SubResource("Resource_me0dq")])
+
+[sub_resource type="Resource" id="Resource_1nquq"]
+script = ExtResource("13_vewxr")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_6w15q"]
+script = ExtResource("8_vey5b")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_o4tet"]
+script = ExtResource("8_vey5b")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_j7cvv"]
+script = ExtResource("14_cjylm")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_h8hf4"]
+script = ExtResource("3_4xfpu")
+trigger = SubResource("Resource_j7cvv")
+cadence = SubResource("Resource_1nquq")
+effects = Array[ExtResource("7_4vp63")]([SubResource("Resource_6w15q"), SubResource("Resource_o4tet")])
+
+[sub_resource type="Resource" id="Resource_8pdhq"]
+script = ExtResource("15_okgp8")
+base_stats = {
+"damage": 39
+}
+rules = Array[ExtResource("3_4xfpu")]([SubResource("Resource_mdnj5"), SubResource("Resource_h8hf4")])
+
+[sub_resource type="Resource" id="Resource_2dtql"]
+script = ExtResource("19_as1bg")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(0, 3), Vector2i(0, 4)])
+
+[resource]
+script = ExtResource("18_cngc1")
+id = &"flame_bonesteel_spear"
+display_name = "焰纹骨钢矛"
+display_names = {
+"en": "Flamebrand Bonesteel Spear"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_2dtql")
+rarity = 4
+tags = Array[StringName]([&"weapon", &"melee", &"burst", &"polearm", &"bleed", &"fire", &"forged_only"])
+material = "metal"
+combat = SubResource("Resource_8pdhq")

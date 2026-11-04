@@ -47,6 +47,8 @@ const SIGNATURE := &"signature"
 ## 244：金银（金块 / 金条）—— 只有商店出（[ShopSession] 单开一格）、不参战不进配方、不算总分，基地按面值全额回收。
 ## 搜索、掉落、敌人装备、头一回踩点白给这些「从全库里抽」的地方都跳过它（[method is_bullion]）。250：降为内部标签，类别是贵重品
 const BULLION := &"bullion"
+## 279：只在砧上升出来（橙档武器）—— 搜索、掉落、商店、敌人都不出（[method ItemDatabase.ids] 拦），图鉴照列
+const FORGED_ONLY := &"forged_only"
 ## 244 补充一 / 250：贵重品（类别：金银、工艺摆件……）—— 值钱是它的本分，基地回收按面值全额（[method is_valuable]）
 const VALUABLE := &"valuable"
 ## 250：魔晶石（类别）—— 244 起按面值回收，类别恰好一个后不再另带贵重品，[method is_valuable] 照算它
@@ -93,6 +95,10 @@ func is_signature() -> bool:
 ## 175：铸牌（[constant TOKEN]）
 func is_token() -> bool:
 	return tags.has(TOKEN)
+
+
+func is_forged_only() -> bool:
+	return tags.has(FORGED_ONLY)
 
 
 ## 归某位神（带 `faith:<神>`）—— 信物、赐福版都算

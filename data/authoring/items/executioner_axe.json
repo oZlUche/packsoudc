@@ -1,0 +1,71 @@
+{
+  "id": "executioner_axe",
+  "display_name": "刽子手巨斧",
+  "display_names": {
+    "en": "Executioner's Axe"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy",
+    "bleed"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 52
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.2
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 11.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 3
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "costs": [
+          {
+            "type": "resource_condition",
+            "on_self": false,
+            "max_percent": 29
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

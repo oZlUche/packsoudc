@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_csjk5"]
+
+[resource]
+script = ExtResource("1_csjk5")
+id = &"anvil_heavy_crossbow_2"
+output = &"heavy_crossbow"
+inputs = {
+"steel_crossbow": 1
+}
+material_inputs = {
+"bone": 2
+}
+funds = 120
+group = "bow"
+level = 2

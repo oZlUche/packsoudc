@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_l2wq5"]
+
+[resource]
+script = ExtResource("1_l2wq5")
+id = &"anvil_berserker_twin_axes_2"
+output = &"berserker_twin_axes"
+inputs = {
+"steel_twin_axes": 1
+}
+material_inputs = {
+"bone": 2
+}
+funds = 120
+group = "hammer"
+level = 2

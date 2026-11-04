@@ -1,0 +1,83 @@
+{
+  "id": "flame_composite_bow",
+  "display_name": "焰纹复合弓",
+  "display_names": {
+    "en": "Flamebrand Composite Bow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "10",
+    "10",
+    "11"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "ranged",
+    "rapid",
+    "bleed",
+    "fire",
+    "forged_only"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 13
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "step_seconds": 0.8,
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          "@apply_status_bleed",
+          {
+            "type": "apply_status",
+            "buff": "scorch"
+          }
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}

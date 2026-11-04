@@ -1,0 +1,13 @@
+{
+  "id": "anvil_thunder_boneiron_club",
+  "output": "thunder_boneiron_club",
+  "inputs": {
+    "boneiron_club": 1
+  },
+  "material_inputs": {
+    "crystal:lightning": 3
+  },
+  "funds": 200,
+  "group": "hammer",
+  "level": 3
+}
