@@ -15,6 +15,8 @@ extends ContainerView
 signal cell_px_changed
 ## 268：勾选模式里单击了一件（勾 / 取消由持有方定）
 signal item_picked(view: InventoryView, uid: int)
+## 279 拼接：点了接缝上的小锤（[member fusions] 里的一对）
+signal fuse_requested(view: InventoryView, a_uid: int, b_uid: int)
 
 ## 087（作者定）：格子放大
 const CELL := 60.0
@@ -113,6 +115,16 @@ var _hover_cell := Vector2i(-1, -1)     # 274：鼠标停的格（出了棋盘 =
 const BAG_OUTLINE_WIDTH := 3.0
 var selected: Dictionary = {}
 const FILTERED_ART := Color(0.4, 0.4, 0.4, 0.55)
+## 279 拼接：接缝上画小锤的那几对（[method Fusion.pairs] 的结果，持有方设；空 = 不画）。勾选模式下不画、不响应
+var fusions: Array[Dictionary] = []:
+	set(v):
+		fusions = v
+		queue_redraw()
+## 小锤徽的半径（格宽的比例）；定稿图到了换成图，点击范围照旧是这个圆
+const FUSE_BADGE_R := 0.24
+const FUSE_BADGE_FILL := Color("a8743a")     # 占位：铜
+const FUSE_BADGE_EDGE := Color("3a2614")
+const FUSE_BADGE_MARK := Color("f1e2c4")
 
 
 ## 作者 10-21：只有最后点中的那件画增益槽 / 受益槽 / 装载槽（不点就都不画）；所有棋盘共用这一件
@@ -367,6 +379,12 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT and not mb.double_click:
+			var f := fusion_at(mb.position)
+			if not f.is_empty():
+				fuse_requested.emit(self, int(f["a"]), int(f["b"]))
+				accept_event()
+				return
 		if mb.pressed and mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 			var c := cell_at_local(mb.position)
 			var uid := uid_at_cell(c, mb.is_command_or_control_pressed())
@@ -526,7 +544,35 @@ func _draw() -> void:
 
 	if not framed and not grounded:
 		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
+	_draw_fusions()
 	_draw_bag_outline(_hover_bag())
+
+
+## 279：[param p]（本地像素）落在哪一枚小锤上：那一对；没有 = 空
+func fusion_at(p: Vector2) -> Dictionary:
+	if select_mode:
+		return {}
+	var r := FUSE_BADGE_R * cell_px
+	for f in fusions:
+		if (Vector2(f["seam"]) * cell_px).distance_to(p) <= r:
+			return f
+	return {}
+
+
+## 279：接缝上的小锤（占位：铜圆片 + 一把锤子的剪影；UI设计定稿后换图）
+func _draw_fusions() -> void:
+	if select_mode:
+		return
+	var r := FUSE_BADGE_R * cell_px
+	for f in fusions:
+		var c := Vector2(f["seam"]) * cell_px
+		draw_circle(c, r, FUSE_BADGE_FILL)
+		draw_arc(c, r, 0.0, TAU, 24, FUSE_BADGE_EDGE, maxf(1.5, r * 0.12), true)
+		var u := r / 10.0
+		var head := PackedVector2Array([c + Vector2(-5, -6) * u, c + Vector2(3, -6) * u, c + Vector2(3, -2) * u, c + Vector2(-5, -2) * u])
+		var handle := PackedVector2Array([c + Vector2(-1.2, -2) * u, c + Vector2(1.2, -2) * u, c + Vector2(1.2, 6) * u, c + Vector2(-1.2, 6) * u])
+		draw_colored_polygon(head, FUSE_BADGE_MARK)
+		draw_colored_polygon(handle, FUSE_BADGE_MARK)
 
 
 ## 274：按着 Ctrl 停在包上 = 沿包的外缘描一圈（按包的品质色）
