@@ -1,0 +1,50 @@
+{
+  "id": "twin_axes",
+  "display_name": "双斧",
+  "display_names": {
+    "en": "Twin Axes"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual",
+    "bleed"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 5.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@apply_status_bleed",
+          "@deal_damage",
+          "@apply_status_bleed"
+        ]
+      }
+    ]
+  }
+}

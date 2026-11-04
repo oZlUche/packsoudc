@@ -227,7 +227,7 @@ static func run_items(t: TestCase) -> void:
 ## 一块不要求包的格子：锯齿箭挨着长弓，毒匠手套同时挨着小刀与长弓，另一枚锯齿箭只挨着小刀（压着的是近战）。
 ## 具体落点由棋盘自己找，不写死坐标
 static func run_attach(t: TestCase) -> void:
-	t.begin("130 · 锯齿箭只给远程、毒匠手套只给近战（108 的附加路径）")
+	t.begin("130 · 毒匠手套只给近战（108 的附加路径；279 起箭改成装填，不再走附加）")
 	var db := _items()
 	ItemInstance.reset_uid_counter()
 	# 位置自己找（形状随时会改）：只要求谁的增益格盖到谁
@@ -236,34 +236,22 @@ static func run_attach(t: TestCase) -> void:
 	t.not_null(bow, "长弓放下")
 	if bow == null:
 		return
-	var arrows := TestSupport.put_granting(g, db.get_def(&"serrated_arrows"), [bow])
-	t.not_null(arrows, "锯齿箭挨着弓")
-	if arrows == null:
-		return
 	var glove := TestSupport.put_granting(g, db.get_def(&"envenomed_gauntlet"), [bow])
 	t.not_null(glove, "手套挨着弓")
 	if glove == null:
 		return
 	var knife := TestSupport.put_where(g, db.get_def(&"knife"), func(inst: ItemInstance) -> bool:
-		return TestSupport.grants_to(glove, inst) and not TestSupport.touches(inst, bow) and not TestSupport.touches(inst, arrows))
-	t.not_null(knife, "小刀也挨着手套，但不碰弓和锯齿箭")
+		return TestSupport.grants_to(glove, inst) and not TestSupport.touches(inst, bow))
+	t.not_null(knife, "小刀也挨着手套，但不碰弓")
 	if knife == null:
-		return
-	var arrows2 := TestSupport.put_where(g, db.get_def(&"serrated_arrows"), func(inst: ItemInstance) -> bool:
-		return TestSupport.grants_to(inst, knife) and not TestSupport.touches(inst, bow))
-	t.not_null(arrows2, "另一枚锯齿箭只挨着小刀")
-	if arrows2 == null:
 		return
 
 	var spec := BattleCompiler.compile_board(g)
 	var bow_c := spec.item_of(bow.uid)
 	var knife_c := spec.item_of(knife.uid)
-	var bow_from: Array = bow_c.attached.map(func(a): return a["origin"])
 	var knife_from: Array = knife_c.attached.map(func(a): return a["origin"])
-	t.eq(bow_from, [&"serrated_arrows"], "弓只挂了锯齿箭的（手套不给远程）")
-	t.eq(knife_from, [&"envenomed_gauntlet"], "小刀只挂了手套的（锯齿箭不给近战）")
-	var bow_rule := bow_c.rules[int(bow_c.attached[0]["rule_index"])]
-	t.check((bow_rule.effects[0] as ApplyStatus).buff.id == &"bleed", "弓每箭附流血")
+	t.eq(bow_c.attached.size(), 0, "弓什么都没挂（手套不给远程）")
+	t.eq(knife_from, [&"envenomed_gauntlet"], "小刀挂了手套的")
 	var knife_rule := knife_c.rules[int(knife_c.attached[0]["rule_index"])]
 	t.check((knife_rule.effects[0] as ApplyStatus).buff.id == &"poison", "小刀每刀附中毒")
 

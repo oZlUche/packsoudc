@@ -70,5 +70,6 @@
 | 版本 | 内容 |
 |---|---|
 | v5.03 | 作者 2026-11-04 16:03 选 A。新静态 `DangerZones`（ui/map）：分组、三角取舍、零件、并、磨圆、抖边、画 A；`MapView._zones` 按 graph / version / 缩放 / 平移 / 画布缓存，展开动画时区块跟着区里的点淡入；右上角危险红点删掉。待定 2～4 按推荐。 |
+| v5.05 | UI设计验收时报：贴合缩放下有的区红底不画（抖边后相邻两点几乎重合，三角化失败）。`DangerZones.dedupe` 去掉与前一点相距 ≤0.05 像素的点（首尾也算），单测补「去重后能三角化」与「自由模式种子 7 贴合缩放每块都能三角化」。 |
 
 截图 `/mnt/project-files/art/ui/map278/landed/`：`free_mode_7_zh_v503.png`、`clockwork_hourglass_7_zh_v503.png`（和 `art/ui/map274/shots/` 的 A 样图同一张图、同一种子）。

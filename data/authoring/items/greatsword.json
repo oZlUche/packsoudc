@@ -1,0 +1,46 @@
+{
+  "id": "greatsword",
+  "display_name": "双手剑",
+  "display_names": {
+    "en": "Greatsword"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 24.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource"
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

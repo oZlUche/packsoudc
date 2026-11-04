@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_47hiq"]
+
+[resource]
+script = ExtResource("1_47hiq")
+id = &"dual"
+display_name = "双持"
+display_names = {
+"en": "Dual"
+}
+description = "一手一把，一次出手打两下。"
+descriptions = {
+"en": "One in each hand: every swing hits twice."
+}
+tip = false
+category = "internal"
+internal = true

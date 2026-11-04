@@ -15,7 +15,8 @@
   "tags": [
     "weapon",
     "melee",
-    "rapid"
+    "rapid",
+    "dagger"
   ],
   "material": "metal",
   "combat": {

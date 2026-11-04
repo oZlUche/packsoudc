@@ -1,39 +1,49 @@
 [gd_resource type="Resource" script_class="ItemDef" format=3]
 
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_oghoi"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_8aeci"]
-[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_hubvy"]
-[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_gdaal"]
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_nilw3"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_yvw15"]
-[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_rkc1q"]
-[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_lkhbv"]
-
-[sub_resource type="Resource" id="Resource_ybjv1"]
-script = ExtResource("1_oghoi")
-mode = 1
-amount = 20.0
-
-[sub_resource type="Resource" id="Resource_kg8eu"]
-script = ExtResource("3_hubvy")
-grant_cells = Array[Vector2i]([Vector2i(0, -1)])
-grant_filter = Array[StringName]([&"ranged"])
-grant_mods = Array[ExtResource("1_oghoi")]([SubResource("Resource_ybjv1")])
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_8aeci"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_hubvy"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_gdaal"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_nilw3"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_yvw15"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_rkc1q"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_lkhbv"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_ybjv1"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="9_kg8eu"]
 
 [sub_resource type="Resource" id="Resource_2h475"]
-script = ExtResource("8_lkhbv")
+script = ExtResource("1_8aeci")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_8d06k"]
+script = ExtResource("3_gdaal")
+feed_mods = Array[ExtResource("1_8aeci")]([SubResource("Resource_2h475")])
+feed_filter = Array[StringName]([&"ranged"])
+
+[sub_resource type="Resource" id="Resource_4to38"]
+script = ExtResource("8_ybjv1")
+
+[sub_resource type="Resource" id="Resource_juslg"]
+script = ExtResource("9_kg8eu")
+max_charges = 30
+charge_band = 10
+prefixes = Array[String](["将尽的", "半捆", "满捆"])
+prefixes_by_lang = {
+"en": ["Last of the ", "Half ", "Full "]
+}
+vanish_when_empty = true
 
 [resource]
-script = ExtResource("7_rkc1q")
+script = ExtResource("7_lkhbv")
 id = &"arrows"
-display_name = "箭矢"
+display_name = "木箭"
 display_names = {
-"en": "Arrows"
+"en": "Wooden Arrows"
 }
 descriptions = {
 "en": ""
 }
-shape = SubResource("Resource_2h475")
+shape = SubResource("Resource_4to38")
 tags = Array[StringName]([&"ammo", &"nature"])
 material = "wood"
-adjacency = SubResource("Resource_kg8eu")
+adjacency = SubResource("Resource_8d06k")
+wear = SubResource("Resource_juslg")

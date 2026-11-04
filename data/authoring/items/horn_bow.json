@@ -1,0 +1,72 @@
+{
+  "id": "horn_bow",
+  "display_name": "角弓",
+  "display_names": {
+    "en": "Horn Bow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "10",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "ranged",
+    "rapid",
+    "bleed"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 6.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 0.9,
+          "step_seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          "@apply_status_bleed"
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        1,
+        1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}

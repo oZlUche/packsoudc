@@ -85,3 +85,27 @@ static func frame_cache(t: TestCase, root: Window) -> void:
 	view.graph.version += 1
 	t.check(not is_same(view._zones(pos, rect), b), "图的版本变了：重算")
 	view.queue_free()
+
+
+static func run_dedupe(t: TestCase) -> void:
+	t.begin("278 补：外缘去掉挨得太近的点（含首尾），三角剖分不再失败")
+	var poly := PackedVector2Array([Vector2(0, 0), Vector2(0.01, 0), Vector2(100, 0), Vector2(100, 100), Vector2(0, 100), Vector2(0.02, 0.01)])
+	var out := DangerZones.dedupe(poly)
+	t.eq(out.size(), 4, "6 点去掉 2 个挨太近的：%s" % str(out))
+	t.check(not Geometry2D.triangulate_polygon(out).is_empty(), "剖分得出")
+
+
+static func frame_fit_free_mode(t: TestCase, root: Window) -> void:
+	t.begin("278 补（UI设计 v5.03 核对）：free_mode 种子 7 缩到整张图，每块高危区的外缘都剖分得出（红底画得出来）")
+	var ch := load(ContentPaths.asset_file("chapters", "free_mode")) as ChapterDef
+	var view := MapView.new()
+	root.add_child(view)
+	view.size = Vector2(1920, 1200)
+	view.graph = ch.map_source.resolve(7)
+	view.fit()
+	var pos := view.positions()
+	var shapes: Array[Dictionary] = view._zones(pos, Rect2(Vector2.ZERO, view.size))
+	t.check(not shapes.is_empty(), "有高危区（%d 块）" % shapes.size())
+	for s in shapes:
+		t.check(not Geometry2D.triangulate_polygon(s["poly"]).is_empty(), "外缘 %d 点剖分得出" % (s["poly"] as PackedVector2Array).size())
+	view.queue_free()

@@ -1,0 +1,52 @@
+{
+  "id": "club",
+  "display_name": "棍棒",
+  "display_names": {
+    "en": "Club"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy"
+  ],
+  "material": "wood",
+  "combat": {
+    "base_stats": {
+      "damage": 14.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.4
+        },
+        "costs": [
+          {
+            "type": "resource"
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -1
+          }
+        ]
+      }
+    ]
+  }
+}

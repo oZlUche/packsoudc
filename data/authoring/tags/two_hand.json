@@ -1,0 +1,14 @@
+{
+  "id": "two_hand",
+  "display_name": "双手",
+  "display_names": {
+    "en": "Two-handed"
+  },
+  "description": "双手抡的重兵器。",
+  "descriptions": {
+    "en": "Heavy weapons swung with both hands."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

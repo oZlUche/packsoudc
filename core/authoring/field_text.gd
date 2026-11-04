@@ -23,7 +23,7 @@ const LABELS := {
 	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "material": "材质", "keepsake_abilities": "代表的能力", "bag_mods": "包体加成",
 	"set_id": "套装", "effects": "效果", "price": "价格", "starting_belt": "开局发的随身技能", "belt_stock": "随身那一排", "belt_grants": "发的随身技能", "wear": "耐久", "when": "什么时候能用",
 	"max_charges": "满的时候几次", "prefixes": "前缀（从剩 1 次起，一档一个）", "prefixes_by_lang": "别的语言的前缀", "broken_prefix": "破碎的前缀", "broken_prefixes": "别的语言的破碎前缀",
-	"broken_value_ratio": "破碎后卖价几成", "charge_band": "一档几次", "art_levels": "按次数换的图几张", "broken_rarity_drop": "破碎后稀有度低几档", "crystal_family": "魔晶石家族", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁",
+	"broken_value_ratio": "破碎后卖价几成", "charge_band": "一档几次", "art_levels": "按次数换的图几张", "broken_rarity_drop": "破碎后稀有度低几档", "crystal_family": "魔晶石家族", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁", "vanish_when_empty": "用完就没了", "ammo": "射箭",
 	"growth": "生长", "stages": "各阶", "stage0_name": "还没长时叫什么", "stage0_names": "别的语言的（还没长）", "reset_on_leave": "离开棋盘就清零",     # 207
 	"name": "名字", "names_by_lang": "别的语言的名字", "prefix": "前缀", "after": "再走几步", "lock": "锁什么", "bonus_pool": "额外效果池", "bonus_count": "抽几条",
 	"combat": "战斗", "adjacency": "邻接", "base_stats": "基础属性", "rules": "规则", "trigger": "触发", "cadence": "节奏", "costs": "消耗",
@@ -115,7 +115,7 @@ const TYPE_LABELS := {
 	# 093 信仰流派
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",
 	"item_acquired": "获得道具", "distinct_items_fired": "不同名字的道具出手", "first_place": "每局首次置入一种道具",
-	"faith_active": "激活了信仰", "rest_part_unused": "休息点这一份没用过", "open_altar": "打开神坛", "open_forge": "打开铸炉", "forge_unused": "铸炉没用过", "next_event_random": "随机接一个事件", "revisit_later": "先回地图（回来再弹）", "low_hp_empower": "低血增伤", "fire_enchant": "火焰附魔",
+	"faith_active": "激活了信仰", "rest_part_unused": "休息点这一份没用过", "open_altar": "打开神坛", "open_forge": "打开铸炉", "forge_unused": "铸炉没用过", "next_event_random": "随机接一个事件", "revisit_later": "先回地图（回来再弹）", "low_hp_empower": "低血增伤", "prime_next_hit": "下一下加伤", "fire_enchant": "火焰附魔",
 	"stat_mod": "属性修饰（信仰级）", "enchant_weapons": "武器火焰附魔", "food_armor": "按食物给护甲", "food_double": "食物效果翻倍",
 	"altar_sacrifice_hp": "神坛：献祭生命上限", "altar_pray_fire": "神坛：祈祷火焰", "altar_food_vitality": "献祭食物回体力", "altar_train_board": "神坛：锻炼（棋盘 +1 行）",
 	"altar_reshape_node": "神坛：改造此点", "smite": "秒杀（耗体力）", "extra_drop_by_node": "按点类型必掉额外一件", "gift_on_enter": "踩上点给对应道具", "overtime_regen": "加时阶段回春", "on_axis_at_least": "标准轴到 N 层时", "shift_axis": "改标准轴层数", "axis_boost": "开战带几层标准轴", "undying": "血归零后坚持几秒", "altar_bless": "神坛：祈求赐福", "bless_item": "赐福一件",

@@ -61,7 +61,7 @@ descriptions = {
 }
 shape = SubResource("Resource_awi37")
 rarity = 3
-tags = Array[StringName]([&"weapon", &"melee", &"burst", &"imperial"])
+tags = Array[StringName]([&"weapon", &"melee", &"burst", &"imperial", &"one_hand"])
 material = "metal"
 requires_unlock = &"ach_extract_3"
 combat = SubResource("Resource_34jnh")

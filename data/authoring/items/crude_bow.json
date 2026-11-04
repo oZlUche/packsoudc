@@ -1,0 +1,61 @@
+{
+  "id": "crude_bow",
+  "display_name": "粗制弓",
+  "display_names": {
+    "en": "Crude Bow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "10",
+    "11"
+  ],
+  "tags": [
+    "weapon",
+    "ranged",
+    "rapid",
+    "nature"
+  ],
+  "material": "wood",
+  "combat": {
+    "base_stats": {
+      "damage": 3.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.0,
+          "step_seconds": 1.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        1,
+        1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}

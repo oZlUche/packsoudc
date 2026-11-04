@@ -23,19 +23,40 @@
   "material": "wood",
   "combat": {
     "base_stats": {
-      "damage": 10
+      "damage": 4.0
     },
     "rules": [
       {
         "trigger": "@on_schedule",
-        "cadence": "@cooldown_1s",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.0,
+          "step_seconds": 1.0
+        },
         "costs": [
-          "@resource_4"
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
         ],
         "effects": [
-          "@deal_damage"
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
         ]
       }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        1,
+        1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
     ]
   }
 }

@@ -1,0 +1,64 @@
+{
+  "id": "fire_arrows",
+  "display_name": "火箭",
+  "display_names": {
+    "en": "Fire Arrows"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "ammo",
+    "fire"
+  ],
+  "material": "wood",
+  "wear": {
+    "max_charges": 18,
+    "charge_band": 6,
+    "prefixes": [
+      "将尽的",
+      "半捆",
+      "满捆"
+    ],
+    "prefixes_by_lang": {
+      "en": [
+        "Last of the ",
+        "Half ",
+        "Full "
+      ]
+    },
+    "vanish_when_empty": true
+  },
+  "adjacency": {
+    "feed_mods": [
+      {
+        "amount": 8.0
+      }
+    ],
+    "feed_filter": [
+      "ranged"
+    ],
+    "feed_rules": [
+      {
+        "trigger": {
+          "type": "on_damage",
+          "direction": "DEALT",
+          "own_only": true,
+          "landed_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": "scorch"
+          }
+        ]
+      }
+    ]
+  }
+}

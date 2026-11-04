@@ -1,0 +1,132 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_ghkgl"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_4hygv"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_hky70"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_55e7t"]
+[ext_resource type="Script" path="res://core/battle/cadences/cycle_cadence.gd" id="5_dikot"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_jg2gx"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="7_ggfid"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="8_l3b8g"]
+[ext_resource type="Script" path="res://core/battle/effects/fire_loaded.gd" id="9_wxd7i"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="10_4mf41"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="11_l84aw"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="12_472ui"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="13_vsn6s"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="14_07esc"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="15_m1ev4"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="16_cdptl"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="17_kqrfv"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="18_0swig"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="19_hg82m"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="20_qu2cf"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="21_w4dom"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="22_gaobo"]
+
+[sub_resource type="Resource" id="Resource_drxyg"]
+script = ExtResource("3_hky70")
+load_cells = Array[Vector2i]([Vector2i(1, 1)])
+load_filter = Array[StringName]([&"ammo"])
+
+[sub_resource type="Resource" id="Resource_6sg3r"]
+script = ExtResource("5_dikot")
+step_seconds = 0.9
+seconds = 0.9
+
+[sub_resource type="Resource" id="Resource_ypq6q"]
+script = ExtResource("7_ggfid")
+amount = 5.0
+
+[sub_resource type="Resource" id="Resource_lyn26"]
+script = ExtResource("9_wxd7i")
+ammo = true
+
+[sub_resource type="Resource" id="Resource_bljpr"]
+script = ExtResource("10_4mf41")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_0wh18"]
+script = ExtResource("2_4hygv")
+trigger = SubResource("Resource_bljpr")
+cadence = SubResource("Resource_6sg3r")
+costs = Array[ExtResource("6_jg2gx")]([SubResource("Resource_ypq6q")])
+effects = Array[ExtResource("8_l3b8g")]([SubResource("Resource_lyn26")])
+
+[sub_resource type="Resource" id="Resource_egfht"]
+script = ExtResource("11_l84aw")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_g1xwn"]
+script = ExtResource("13_vsn6s")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_50oug"]
+script = ExtResource("14_07esc")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_e3360"]
+script = ExtResource("10_4mf41")
+
+[sub_resource type="Resource" id="Resource_vo874"]
+script = ExtResource("2_4hygv")
+trigger = SubResource("Resource_e3360")
+cadence = SubResource("Resource_g1xwn")
+effects = Array[ExtResource("8_l3b8g")]([SubResource("Resource_50oug")])
+
+[sub_resource type="Resource" id="Resource_1w6qh"]
+script = ExtResource("15_m1ev4")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+decay_halve_on = &"tick"
+rules = Array[ExtResource("2_4hygv")]([SubResource("Resource_vo874")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_wd4kn"]
+script = ExtResource("16_cdptl")
+buff = SubResource("Resource_1w6qh")
+metadata/part_ref = &"apply_status_bleed"
+
+[sub_resource type="Resource" id="Resource_hmctg"]
+script = ExtResource("17_kqrfv")
+self_only = true
+
+[sub_resource type="Resource" id="Resource_h0l1f"]
+script = ExtResource("2_4hygv")
+trigger = SubResource("Resource_hmctg")
+cadence = SubResource("Resource_egfht")
+effects = Array[ExtResource("8_l3b8g")]([SubResource("Resource_wd4kn")])
+
+[sub_resource type="Resource" id="Resource_edu80"]
+script = ExtResource("18_0swig")
+base_stats = {
+"damage": 6
+}
+rules = Array[ExtResource("2_4hygv")]([SubResource("Resource_0wh18"), SubResource("Resource_h0l1f")])
+
+[sub_resource type="Resource" id="Resource_us0c0"]
+script = ExtResource("22_gaobo")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(1, 2)])
+
+[resource]
+script = ExtResource("21_w4dom")
+id = &"horn_bow"
+display_name = "角弓"
+display_names = {
+"en": "Horn Bow"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_us0c0")
+rarity = 2
+tags = Array[StringName]([&"weapon", &"ranged", &"rapid", &"bleed"])
+material = "bone"
+combat = SubResource("Resource_edu80")
+adjacency = SubResource("Resource_drxyg")

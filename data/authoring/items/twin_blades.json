@@ -1,0 +1,47 @@
+{
+  "id": "twin_blades",
+  "display_name": "双刀",
+  "display_names": {
+    "en": "Twin Blades"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 5.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

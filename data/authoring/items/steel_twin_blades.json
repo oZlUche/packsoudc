@@ -1,0 +1,59 @@
+{
+  "id": "steel_twin_blades",
+  "display_name": "钢双刀",
+  "display_names": {
+    "en": "Steel Twin Blades"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 5.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 2.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 2.0,
+            "damage_stat": "",
+            "pure": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_axhhi"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_tcvqc"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_8ljrb"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_tsq0f"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_6e3q5"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_wbi4g"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_yvs3n"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_p7jn8"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_2kag3"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_83lwf"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_gjg4h"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_sewx4"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_ljyw2"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_h0ly1"]
+
+[sub_resource type="Resource" id="Resource_cqvvw"]
+script = ExtResource("4_tsq0f")
+
+[sub_resource type="Resource" id="Resource_b4xik"]
+script = ExtResource("6_wbi4g")
+
+[sub_resource type="Resource" id="Resource_k8g3n"]
+script = ExtResource("8_p7jn8")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_vjb8v"]
+script = ExtResource("9_2kag3")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_pirk5"]
+script = ExtResource("3_8ljrb")
+trigger = SubResource("Resource_vjb8v")
+cadence = SubResource("Resource_cqvvw")
+costs = Array[ExtResource("5_6e3q5")]([SubResource("Resource_b4xik")])
+effects = Array[ExtResource("7_yvs3n")]([SubResource("Resource_k8g3n")])
+
+[sub_resource type="Resource" id="Resource_3t0r6"]
+script = ExtResource("10_83lwf")
+base_stats = {
+"crit_chance": 0.18,
+"damage": 35
+}
+rules = Array[ExtResource("3_8ljrb")]([SubResource("Resource_pirk5")])
+
+[sub_resource type="Resource" id="Resource_rf3vs"]
+script = ExtResource("14_h0ly1")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(0, 2), Vector2i(1, 2)])
+
+[resource]
+script = ExtResource("13_ljyw2")
+id = &"bone_greatsword"
+display_name = "骨柄双手剑"
+display_names = {
+"en": "Bone-Hilt Greatsword"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_rf3vs")
+rarity = 2
+tags = Array[StringName]([&"weapon", &"melee", &"burst", &"two_hand", &"heavy"])
+material = "bone"
+combat = SubResource("Resource_3t0r6")

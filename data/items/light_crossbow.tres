@@ -1,0 +1,95 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_x55dp"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_w8pwc"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_pm7xk"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_u5k1v"]
+[ext_resource type="Script" path="res://core/battle/cadences/cycle_cadence.gd" id="5_2fxhb"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="6_wv87r"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="7_j8vba"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="8_hooo2"]
+[ext_resource type="Script" path="res://core/battle/effects/fire_loaded.gd" id="9_pbd5l"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="10_qswp5"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="11_sujfj"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="12_l0dxl"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="13_yy8k8"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="14_b1b7j"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="15_8no5n"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="16_vvn8m"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="17_23o5m"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="18_ur7cj"]
+
+[sub_resource type="Resource" id="Resource_ipgta"]
+script = ExtResource("3_pm7xk")
+load_cells = Array[Vector2i]([Vector2i(0, -1)])
+load_filter = Array[StringName]([&"ammo"])
+
+[sub_resource type="Resource" id="Resource_g3h7w"]
+script = ExtResource("5_2fxhb")
+step_seconds = 1.8
+seconds = 1.8
+
+[sub_resource type="Resource" id="Resource_w1n68"]
+script = ExtResource("7_j8vba")
+amount = 7.0
+
+[sub_resource type="Resource" id="Resource_kr8r7"]
+script = ExtResource("9_pbd5l")
+ammo = true
+
+[sub_resource type="Resource" id="Resource_2vg0p"]
+script = ExtResource("10_qswp5")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_vai3c"]
+script = ExtResource("2_w8pwc")
+trigger = SubResource("Resource_2vg0p")
+cadence = SubResource("Resource_g3h7w")
+costs = Array[ExtResource("6_wv87r")]([SubResource("Resource_w1n68")])
+effects = Array[ExtResource("8_hooo2")]([SubResource("Resource_kr8r7")])
+
+[sub_resource type="Resource" id="Resource_ed2xt"]
+script = ExtResource("11_sujfj")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_fantt"]
+script = ExtResource("12_l0dxl")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_weqby"]
+script = ExtResource("13_yy8k8")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_okowb"]
+script = ExtResource("2_w8pwc")
+trigger = SubResource("Resource_weqby")
+cadence = SubResource("Resource_ed2xt")
+effects = Array[ExtResource("8_hooo2")]([SubResource("Resource_fantt")])
+
+[sub_resource type="Resource" id="Resource_uo7vk"]
+script = ExtResource("14_b1b7j")
+base_stats = {
+"damage": 10
+}
+rules = Array[ExtResource("2_w8pwc")]([SubResource("Resource_vai3c"), SubResource("Resource_okowb")])
+
+[sub_resource type="Resource" id="Resource_ub5wm"]
+script = ExtResource("18_ur7cj")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("17_23o5m")
+id = &"light_crossbow"
+display_name = "轻弩"
+display_names = {
+"en": "Light Crossbow"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_ub5wm")
+rarity = 1
+tags = Array[StringName]([&"weapon", &"ranged", &"burst"])
+material = "wood"
+combat = SubResource("Resource_uo7vk")
+adjacency = SubResource("Resource_ipgta")

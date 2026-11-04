@@ -54,7 +54,11 @@ func _on_battle_finished(_node: MapNode, _result: BattleResult, _won: bool) -> v
 		return
 	for uid in left:
 		if int(left[uid]) == 0:
-			shatter(_run.board, _run.board.get_item(uid), _run.items, _run.storage)
+			var inst := _run.board.get_item(uid)
+			if inst != null and inst.def.wear.vanish_when_empty:
+				_run.board.remove(uid)     # 279：射空的箭捆没了
+			else:
+				shatter(_run.board, inst, _run.items, _run.storage)
 	_run.board.changed.emit()     # 名字前缀变了：棋盘重画
 	worn.emit(left)
 

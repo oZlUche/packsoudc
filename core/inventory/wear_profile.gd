@@ -21,6 +21,8 @@ const CHARGES_KEY := "charges"
 @export var broken_value_ratio: float = 0.25
 ## 208：归零就换成这件道具（碎晶 `crystal_shards`，占原点那一格）；空 = 破碎的原件留在格里
 @export var broken_into: StringName = &""
+## 279 补充一：归零就从格里拿掉（射空的箭捆不留东西）；勾了就不看 [member broken_into]
+@export var vanish_when_empty: bool = false
 ## 246 补充二：破碎的原件留在格里时稀有度低几档（[method ItemInstance.rarity]：框色、卖价都按它）
 @export var broken_rarity_drop: int = 0
 ## 246：按剩余次数换的变体图有几张（`@c0`～`@c<张数 − 1>`，c0 是碎的那张）—— 次数多于张数时折算（[method art_variant]）

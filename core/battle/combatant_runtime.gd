@@ -29,6 +29,8 @@ var item_loaded: Dictionary = {}
 var item_power: Dictionary = {}
 ## 247：装载格上站着还在供给的东西的件（uid → true；[member CombatantSpec.loads] 的宿主）—— [member AbilityRule.free_when_loaded] 查它
 var loaded_holders: Dictionary = {}
+## 279：uid → 这件攒着的「下一下 +N」（定点，[PrimeNextHit] 写、[DealDamage] 出手时取走；不叠，取较大的）
+var item_primed: Dictionary = {}
 
 ## 标准轴（4.3，103 4e）：axis → [内容层, 系统层]，带符号；结算在 [method _rebuild] 末尾
 var axes: Dictionary = {}
@@ -311,6 +313,19 @@ func power_of(uid: int) -> int:
 
 func loaded_of(uid: int) -> Array[Dictionary]:
 	return item_loaded.get(uid, [] as Array[Dictionary])
+
+
+## 279：给 [param uid] 攒「下一下 +[param amount]」（定点）。不叠：已有的更大就不动
+func prime(uid: int, amount: int) -> void:
+	if uid != 0 and amount > int(item_primed.get(uid, 0)):
+		item_primed[uid] = amount
+
+
+## 279：取走 [param uid] 攒着的加值（没有 = 0）
+func take_primed(uid: int) -> int:
+	var v := int(item_primed.get(uid, 0))
+	item_primed.erase(uid)
+	return v
 
 
 ## 247：[param uid] 的装载格上有没有在供给的东西（魔晶石；碎了的不算）

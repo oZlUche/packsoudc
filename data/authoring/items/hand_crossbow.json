@@ -1,0 +1,59 @@
+{
+  "id": "hand_crossbow",
+  "display_name": "手弩",
+  "display_names": {
+    "en": "Hand Crossbow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "weapon",
+    "ranged",
+    "burst"
+  ],
+  "material": "wood",
+  "combat": {
+    "base_stats": {
+      "damage": 6.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.8,
+          "step_seconds": 1.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 6.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}

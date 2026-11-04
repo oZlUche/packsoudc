@@ -143,7 +143,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		for key in profile.base_stats:
 			if weapon and String(key) == "damage":
 				continue     # 170：武器的伤害写在武器句里
-			lines.append("%s [b]%s[/b]" % [Glossary.stat_name(StringName(String(key))), str(profile.base_stats[key])])
+			lines.append("%s [b]%s[/b]" % [Glossary.stat_name(StringName(String(key))), base_stat_text(StringName(String(key)), float(profile.base_stats[key]))])
 		if not is_equal_approx(profile.power_mult, 1.0):
 			lines.append("%s [b]×%s[/b]" % [UiText.t("tip.power"), str(profile.power_mult)])     # 273：说明留给作者，威力系数写成生成行
 		for r in profile.rules:
@@ -350,6 +350,14 @@ static func weapon_sentence(rule: AbilityRule, stats: StatSet, more_gives: Array
 
 
 ## 221 F1：一串状态 / 反应名 —— 中文「【甲】【乙】」，英文「A, B」
+## 279：自带属性的数值；暴击这类按百分数显示的轴写成「15%」（存的是 0.15）
+static func base_stat_text(key: StringName, v: float) -> String:
+	var axis := StatAxes.axis_for_stat(key)
+	if axis != &"" and bool(StatAxes.info(axis).get("pct", false)):
+		return "%s%%" % StatAxes._num(v * 100.0)
+	return str(v)
+
+
 static func bracketed(names: Array[String]) -> String:
 	var out: Array[String] = []
 	for n in names:
@@ -458,10 +466,13 @@ static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dict
 	var base := float(b[0])
 	var base_type: StringName = b[1]
 	var line := ""
+	var sfx := "_ammo" if shoots_ammo(rule) else ""     # 279 补充一：弓弩装的是箭
 	if loaded.is_empty():
-		line = UiText.t("tip.cycle_empty") % [_num(p.y, 1), _num(_powered(base, stats, 0.0, mult)), _damage_words(base_type)]
+		line = UiText.t("tip.cycle_empty" + sfx) % [_num(p.y, 1), _num(_powered(base, stats, 0.0, mult)), _damage_words(base_type)]
 	elif loaded.size() == 1:
-		line = UiText.t("tip.cycle_one") % [_num(p.y, 1), cycle_shots(rule, stats, loaded, mult)[0]]
+		line = UiText.t("tip.cycle_one" + sfx) % [_num(p.y, 1), cycle_shots(rule, stats, loaded, mult)[0]]
+	elif sfx != "":
+		line = UiText.t("tip.cycle_many_ammo") % [loaded.size(), _num(p.y, 1)]
 	else:
 		# 作者 2026-10-16：几颗时每颗的效果各写一行（下面的装载行，顺时针），这句只写轮法与两种冷却
 		line = UiText.t("tip.cycle_many") % [loaded.size(), _num(p.x, 1), _num(p.y, 1)]
@@ -479,7 +490,17 @@ static func cycle_sentence(rule: AbilityRule, stats: StatSet, loaded: Array[Dict
 static func cycle_slots(def: ItemDef, rule: AbilityRule, stats: StatSet) -> String:
 	var p := (rule.cadence as CycleCadence).periods(stats)
 	var n := def.adjacency.load_cells.size() if def.adjacency != null else 0
+	if shoots_ammo(rule):
+		return UiText.t("tip.cycle_slots_ammo") % n
 	return UiText.t("tip.cycle_slots") % [n, _num(p.x, 1), _num(p.y, 1)]
+
+
+## 279 补充一：这条轮读规则射的是箭（弓弩）
+static func shoots_ammo(rule: AbilityRule) -> bool:
+	for e in rule.effects:
+		if e is FireLoaded and (e as FireLoaded).ammo:
+			return true
+	return false
 
 
 ## 273：一下的伤害 = floor((属性伤害 + [param extra]) × [param mult]) × 暴击期望（[param base] 是含暴击期望的属性伤害）
@@ -520,7 +541,10 @@ static func cycle_shots(rule: AbilityRule, stats: StatSet, loaded: Array[Diction
 	var out: Array[String] = []
 	for e in loaded:
 		var dmg := _powered(base, stats, StatMath.to_float(int(e.get("damage", 0))), mult)     # 273：整下乘威力系数
-		var shot := UiText.t("tip.shot") % [_num(dmg), _damage_words(StringName(e.get("type", b[1])))]
+		var pure := int(e.get("true", 0))     # 279：箭的真实伤害另算一下，句子写总数和其中几点
+		var shot := UiText.t("tip.shot") % [_num(dmg + StatMath.to_float(pure)), _damage_words(StringName(e.get("type", b[1])))]
+		if pure > 0:
+			shot += UiText.t("tip.sep") + UiText.t("fx.deal_true") % _num(StatMath.to_float(pure))
 		var give := _loaded_apply(e)
 		if give != "":
 			shot += UiText.t("tip.and") % give
@@ -550,7 +574,7 @@ static func load_status_line(inst: ItemInstance, board: GridInventory, spec: Com
 		var loads := spec.loads if spec != null else BattleCompiler.load_assignments(board)
 		host = int(loads.get(inst.uid, -1))
 	if host < 0:
-		return "[color=@dim]%s[/color]" % UiText.t("tip.idle")
+		return "[color=@dim]%s[/color]" % UiText.t("tip.idle_ammo" if inst.def.has_tag(&"ammo") else "tip.idle")     # 279 补充一：箭等弓弩
 	var staff := board.get_item(host)
 	var line := UiText.t("tip.socketed_in") % (Names.of_item(staff) if staff != null else "?")
 	if BattleCompiler.load_claimants(board, inst.uid).size() > 1:
@@ -582,7 +606,9 @@ static func wear_line(inst: ItemInstance) -> String:
 	if inst.is_broken():
 		return "[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("tip.wear_broken") % w.max_charges]
 	var end := UiText.t("tip.wear_end")
-	if w.broken_into != &"":
+	if w.vanish_when_empty:
+		end = UiText.t("tip.wear_end_vanish")     # 279 补充一：射空的箭捆没了
+	elif w.broken_into != &"":
 		end = UiText.t("tip.wear_end_into") % TextTemplate.render("{item:%s}" % w.broken_into)
 	return UiText.t("tip.wear") % [inst.charges(), w.max_charges, end]
 

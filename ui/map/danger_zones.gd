@@ -153,7 +153,7 @@ static func shapes(graph: MapGraph, screen: Dictionary, node_r: float) -> Array[
 	for lv in [1, 2]:
 		for shp in union(by_level[lv]):
 			n += 1
-			var poly := wobble(smooth(shp), WOBBLE, float(n) * 1.7)
+			var poly := dedupe(wobble(smooth(shp), WOBBLE, float(n) * 1.7))
 			var inner: Array[PackedVector2Array] = []
 			for ip in Geometry2D.offset_polygon(poly, -INNER_INSET, Geometry2D.JOIN_ROUND):
 				if not Geometry2D.is_polygon_clockwise(ip):
@@ -203,6 +203,21 @@ static func wobble(poly: PackedVector2Array, amp: float, phase: float) -> Packed
 			var s := total + seg_len * t
 			out.append(a.lerp(b, t) + nrm * amp * (0.6 * sin(s * 0.045 + phase) + 0.4 * sin(s * 0.13 + phase * 2.1)))
 		total += seg_len
+	return out
+
+
+## 去掉和上一个点挨得太近的点（首尾那对也算）—— 缩到整张图时磨圆抖过的外缘会有相邻的几乎重合的点，
+## 引擎的三角剖分就失败了、底色画不出来（UI设计 v5.03 核对：free_mode 种子 7 全图）
+const MIN_GAP := 0.05
+
+
+static func dedupe(poly: PackedVector2Array, gap: float = MIN_GAP) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for p in poly:
+		if out.is_empty() or out[out.size() - 1].distance_to(p) > gap:
+			out.append(p)
+	while out.size() > 3 and out[0].distance_to(out[out.size() - 1]) <= gap:
+		out.remove_at(out.size() - 1)
 	return out
 
 

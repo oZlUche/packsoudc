@@ -18,7 +18,8 @@
     "weapon",
     "melee",
     "bleed",
-    "poison"
+    "poison",
+    "one_hand"
   ],
   "material": "metal",
   "combat": {

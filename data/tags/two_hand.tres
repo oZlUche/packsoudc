@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_pks1d"]
+
+[resource]
+script = ExtResource("1_pks1d")
+id = &"two_hand"
+display_name = "双手"
+display_names = {
+"en": "Two-handed"
+}
+description = "双手抡的重兵器。"
+descriptions = {
+"en": "Heavy weapons swung with both hands."
+}
+tip = false
+category = "internal"
+internal = true

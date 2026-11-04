@@ -50,8 +50,8 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(_grade(db.get_def(&"plate_cuirass")), "大", "板甲 9 格：大")
 	t.eq(ItemVolume.grade_name(ItemVolume.grade_of_cells(13)), "极大", "13 格：极大")
 	# 献祭规矩：一件满足几条算几次；2^稀有度 × 倍率（104：倍率照神明总表）
-	var sword := db.get_def(&"shortsword")     # 稀有度 1、武器、金属、2 格
-	t.eq(brute.offering_value(sword), 4, "蛮神：短剑只算「武器」一条 → 2 × 2 = 4")
+	var sword := db.get_def(&"shortsword")     # 稀有度 0（279 待定 5）、武器、金属
+	t.eq(brute.offering_value(sword), 2, "蛮神：短剑只算「武器」一条 → 1 × 2 = 2")
 	t.check(not brute.accepts_offering(db.get_def(&"dried_herbs")), "干草药束（草药）不是蛮神的祭品")
 	t.check(not brute.accepts_offering(db.get_def(&"ration")) and brute.accepts_offering(db.get_def(&"antler")), "250：蛮神收兽材（鹿角）；口粮不是兽材，不收")
 	var sun: FaithDef = defs[&"sun"]

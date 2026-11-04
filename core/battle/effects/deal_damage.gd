@@ -34,12 +34,22 @@ extends CombatEffect
 @export var percent_of_target: Target = Target.OPPONENT
 ## 132：伤害乘以**目标身上**这个状态的层数（0 层 = 不打）；和 [member per_stack]（来源层数）可同时写
 @export var per_target_stack: StringName = &""
+## 279：真实伤害 —— 这一包跳过加成、护甲、受伤前、格挡与受到伤害轴（[member DamagePacket.pure]），原值落血。
+## 武器的「其中 N 点真实伤害」= 主伤害（属性）照常 + 一条 `amount = N、damage_stat 留空、pure` 的这个效果
+@export var pure: bool = false
 
 const PERCENT_OF := [&"max_hp", &"current_hp", &"missing_hp"]
 
 
 func apply(ctx: RuleContext) -> void:
-	deal(ctx, damage_type, 0)
+	deal(ctx, damage_type, primed(ctx))
+
+
+## 279：从属性取伤害的那一下吃掉这件攒着的「下一下 +N」（[PrimeNextHit]）；固定值 / 真实伤害那段不吃
+func primed(ctx: RuleContext) -> int:
+	if damage_stat == &"" or pure or ctx.owner == null:
+		return 0
+	return ctx.owner.take_primed(ctx.source_uid())
 
 
 ## 175：真正打出去的那一下 —— [param type] 是这一包的类型，[param extra_raw] 并进从属性取的原值（法杖轮到的那颗晶石的伤害，[FireLoaded]）。
@@ -84,10 +94,21 @@ func deal(ctx: RuleContext, type: StringName, extra_raw: int, mult: int = StatMa
 			continue
 		var packet := DamagePacket.create(type, dmg, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
 		packet.crit = crit
+		packet.pure = pure
 		DamageResolver.resolve(ctx.battle, packet)
 		if not packet.cancelled:
 			landed = true
 	return landed
+
+
+## 279：打一包 [param raw]（定点）真实伤害给对手 —— 箭的真实伤害那段用（不暴击、不吃加值）
+static func true_hit(ctx: RuleContext, raw: int) -> void:
+	var foe := ctx.opponent()
+	if foe == null or foe.dead or raw <= 0:
+		return
+	var packet := DamagePacket.create(DamageTypes.PHYSICAL, raw, foe, ctx.owner.side, ctx.source_uid(), direct_of(ctx))
+	packet.pure = true
+	DamageResolver.resolve(ctx.battle, packet)
 
 
 ## 132：按生命比例的那部分（定点）
@@ -160,6 +181,8 @@ func describe() -> String:
 	if pct:
 		var whose := {Target.OPPONENT: "fx.pct_opp", Target.SELF: "fx.pct_self", Target.BOTH: "fx.pct_target"}[percent_of_target] as String
 		parts.append(UiText.t(whose) % [percent, UiText.pick(PERCENT_OF_NAMES.get(String(percent_of), null), String(percent_of))])
+	if pure and fixed and not pct:
+		return UiText.t("fx.deal_true") % TextTemplate.num(amount)
 	var what := " + ".join(parts)
 	var type_name := Glossary.damage_type_name(damage_type)
 	var line := ""

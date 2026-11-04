@@ -1,0 +1,57 @@
+{
+  "id": "pole_axe",
+  "display_name": "长柄斧",
+  "display_names": {
+    "en": "Pole Axe"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "polearm",
+    "bleed"
+  ],
+  "material": "wood",
+  "combat": {
+    "base_stats": {
+      "damage": 15.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 7.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@apply_status_bleed"
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

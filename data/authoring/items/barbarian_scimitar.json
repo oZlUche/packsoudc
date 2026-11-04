@@ -1,0 +1,54 @@
+{
+  "id": "barbarian_scimitar",
+  "display_name": "蛮族大弯刀",
+  "display_names": {
+    "en": "Barbarian Greatscimitar"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "01",
+    "11",
+    "10"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "one_hand",
+    "bleed",
+    "barbarian"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 14.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.2
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 6.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "polearm",
+  "display_name": "长柄",
+  "display_names": {
+    "en": "Polearm"
+  },
+  "description": "长杆兵器，开局先刺。",
+  "descriptions": {
+    "en": "Long-hafted weapons that strike first."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

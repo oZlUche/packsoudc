@@ -62,6 +62,7 @@ const COMBAT_EFFECTS := {
 	# 只在受伤前阶段有效，见 DamageResolver
 	&"modify_damage": "res://core/battle/effects/modify_damage.gd",
 	&"low_hp_empower": "res://core/battle/effects/low_hp_empower.gd",
+	&"prime_next_hit": "res://core/battle/effects/prime_next_hit.gd",
 	&"fire_enchant": "res://core/battle/effects/fire_enchant.gd",
 	&"reflect_damage": "res://core/battle/effects/reflect_damage.gd",
 	# 132：只在受伤前阶段有效，把这一包换成另一种类型

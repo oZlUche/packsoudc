@@ -1,0 +1,126 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_pprdt"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_svfkx"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_c200w"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_q4h33"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_t4x44"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_lr3un"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_5oqgy"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_2xf45"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="9_8s8c6"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="10_m7smi"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="11_wlv12"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="12_70u23"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="13_x7o8b"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="14_jeflo"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="15_fxln6"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="16_xgk7v"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="17_mpr0q"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="18_pgayu"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="19_oa674"]
+
+[sub_resource type="Resource" id="Resource_6robs"]
+script = ExtResource("4_q4h33")
+seconds = 1.4
+
+[sub_resource type="Resource" id="Resource_yivfm"]
+script = ExtResource("6_lr3un")
+amount = 7.0
+
+[sub_resource type="Resource" id="Resource_mis18"]
+script = ExtResource("8_2xf45")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_0tp65"]
+script = ExtResource("4_q4h33")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_vfri3"]
+script = ExtResource("8_2xf45")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_fx8f8"]
+script = ExtResource("10_m7smi")
+
+[sub_resource type="Resource" id="Resource_jtpyq"]
+script = ExtResource("3_c200w")
+trigger = SubResource("Resource_fx8f8")
+cadence = SubResource("Resource_0tp65")
+effects = Array[ExtResource("7_5oqgy")]([SubResource("Resource_vfri3")])
+
+[sub_resource type="Resource" id="Resource_v8mtj"]
+script = ExtResource("11_wlv12")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+decay_halve_on = &"tick"
+rules = Array[ExtResource("3_c200w")]([SubResource("Resource_jtpyq")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_p5elr"]
+script = ExtResource("12_70u23")
+buff = SubResource("Resource_v8mtj")
+metadata/part_ref = &"apply_status_bleed"
+
+[sub_resource type="Resource" id="Resource_xcee4"]
+script = ExtResource("10_m7smi")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_xd1xm"]
+script = ExtResource("3_c200w")
+trigger = SubResource("Resource_xcee4")
+cadence = SubResource("Resource_6robs")
+costs = Array[ExtResource("5_t4x44")]([SubResource("Resource_yivfm")])
+effects = Array[ExtResource("7_5oqgy")]([SubResource("Resource_mis18"), SubResource("Resource_p5elr")])
+
+[sub_resource type="Resource" id="Resource_ftobs"]
+script = ExtResource("13_x7o8b")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_5d8gv"]
+script = ExtResource("8_2xf45")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_qnvig"]
+script = ExtResource("14_jeflo")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_3drwu"]
+script = ExtResource("3_c200w")
+trigger = SubResource("Resource_qnvig")
+cadence = SubResource("Resource_ftobs")
+effects = Array[ExtResource("7_5oqgy")]([SubResource("Resource_5d8gv")])
+
+[sub_resource type="Resource" id="Resource_j0tqd"]
+script = ExtResource("15_fxln6")
+base_stats = {
+"damage": 15
+}
+rules = Array[ExtResource("3_c200w")]([SubResource("Resource_xd1xm"), SubResource("Resource_3drwu")])
+
+[sub_resource type="Resource" id="Resource_2nxtu"]
+script = ExtResource("19_oa674")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(0, 3)])
+
+[resource]
+script = ExtResource("18_pgayu")
+id = &"pole_axe"
+display_name = "长柄斧"
+display_names = {
+"en": "Pole Axe"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_2nxtu")
+rarity = 1
+tags = Array[StringName]([&"weapon", &"melee", &"burst", &"polearm", &"bleed"])
+material = "wood"
+combat = SubResource("Resource_j0tqd")

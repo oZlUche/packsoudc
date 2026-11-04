@@ -1,0 +1,67 @@
+{
+  "id": "light_crossbow",
+  "display_name": "轻弩",
+  "display_names": {
+    "en": "Light Crossbow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "ranged",
+    "burst"
+  ],
+  "material": "wood",
+  "combat": {
+    "base_stats": {
+      "damage": 10.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.8,
+          "step_seconds": 1.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 7.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}

@@ -69,7 +69,7 @@ func loaded_damage() -> float:
 		return 0.0
 	var sum := 0
 	for e in loaded:
-		sum += int(e.get("damage", 0))
+		sum += int(e.get("damage", 0)) + int(e.get("true", 0))     # 279：箭的真实伤害那段也算
 	return StatMath.to_float(sum) / loaded.size()
 
 

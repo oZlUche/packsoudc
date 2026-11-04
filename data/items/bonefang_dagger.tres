@@ -1,0 +1,107 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_pn7nh"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_qdyf8"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_h5iet"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_e0vpx"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_r148s"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_f8aky"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_6gvj6"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_r87n4"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="9_es36p"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="10_yfuhd"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="11_5ctod"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="12_u53yc"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="13_cs52h"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="14_04k04"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="15_n1x4m"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="16_0qcga"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="17_gbond"]
+
+[sub_resource type="Resource" id="Resource_5dfqm"]
+script = ExtResource("4_e0vpx")
+seconds = 0.6
+
+[sub_resource type="Resource" id="Resource_ca6gf"]
+script = ExtResource("6_f8aky")
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_1fk80"]
+script = ExtResource("8_r87n4")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_ba020"]
+script = ExtResource("4_e0vpx")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_hq655"]
+script = ExtResource("8_r87n4")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_mr1wf"]
+script = ExtResource("10_yfuhd")
+
+[sub_resource type="Resource" id="Resource_jjj5e"]
+script = ExtResource("3_h5iet")
+trigger = SubResource("Resource_mr1wf")
+cadence = SubResource("Resource_ba020")
+effects = Array[ExtResource("7_6gvj6")]([SubResource("Resource_hq655")])
+
+[sub_resource type="Resource" id="Resource_xwlff"]
+script = ExtResource("11_5ctod")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+decay_halve_on = &"tick"
+rules = Array[ExtResource("3_h5iet")]([SubResource("Resource_jjj5e")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_mtwu8"]
+script = ExtResource("12_u53yc")
+buff = SubResource("Resource_xwlff")
+metadata/part_ref = &"apply_status_bleed"
+
+[sub_resource type="Resource" id="Resource_nuuvc"]
+script = ExtResource("10_yfuhd")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_eidoq"]
+script = ExtResource("3_h5iet")
+trigger = SubResource("Resource_nuuvc")
+cadence = SubResource("Resource_5dfqm")
+costs = Array[ExtResource("5_r148s")]([SubResource("Resource_ca6gf")])
+effects = Array[ExtResource("7_6gvj6")]([SubResource("Resource_1fk80"), SubResource("Resource_mtwu8")])
+
+[sub_resource type="Resource" id="Resource_kqqku"]
+script = ExtResource("13_cs52h")
+base_stats = {
+"crit_chance": 0.15,
+"damage": 9
+}
+rules = Array[ExtResource("3_h5iet")]([SubResource("Resource_eidoq")])
+
+[sub_resource type="Resource" id="Resource_myhpx"]
+script = ExtResource("17_gbond")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("16_0qcga")
+id = &"bonefang_dagger"
+display_name = "骨牙匕首"
+display_names = {
+"en": "Bonefang Dagger"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_myhpx")
+rarity = 2
+tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"dagger", &"bleed"])
+material = "bone"
+combat = SubResource("Resource_kqqku")
