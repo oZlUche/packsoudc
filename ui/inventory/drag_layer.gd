@@ -507,7 +507,10 @@ func _update_preview(global_pos: Vector2) -> void:
 	if inv.acts_as_bag(_inst.def):
 		# 087：空包压到另一个包上 = 替换它
 		var victim := _replaceable_bag(inv, origin)
-		grid_view.set_preview(cells, origin, victim != GridInventory.EMPTY_UID, [victim] if victim != GridInventory.EMPTY_UID else [], true)
+		var bag_victims: Array[int] = []     # 11-04：三元式出来的是无类型数组，传进 Array[int] 参数就报错（调试模式下拖包压包会断住）
+		if victim != GridInventory.EMPTY_UID:
+			bag_victims.append(victim)
+		grid_view.set_preview(cells, origin, victim != GridInventory.EMPTY_UID, bag_victims, true)
 		return
 
 	# 放不进空位，但地形允许 —— 那就是「压着别人」，可以顶替

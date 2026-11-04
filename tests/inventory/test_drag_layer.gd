@@ -280,6 +280,14 @@ static func run_bag_drag(t: TestCase) -> void:
 	t.eq(board_a.item_count(), 3, "取消后整体退回")
 	t.check(not view_b._preview_on, "结束拖拽清掉预览")
 
+	# --- 作者 11-04（调试模式报错）：拿着空包、底下没包可换 —— 预览照常出、红的、不点名谁（之前传了无类型数组，set_preview 直接报错）---
+	var empty_bag := ItemInstance.create(bag_def)
+	board_b.place(empty_bag, Vector2i(0, 0), 0)
+	view_b.grab_requested.emit(view_b, empty_bag.uid, _grab(Vector2i(0, 0)))
+	drag.update_preview(_center(view_a, Vector2i(4, 4)))
+	t.check(view_a._preview_on and not view_a._preview_valid and view_a._preview_victims.is_empty(), "空包压在放不下也没包可换的地方：红预览、没有受害者")
+	drag.cancel()
+
 	for v in [view_a, view_b]:
 		v.free()
 	drag.free()
