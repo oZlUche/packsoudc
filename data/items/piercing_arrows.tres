@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_v45n2"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_xj3hs"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_32hwx"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_y1yo4"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_5vg2v"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_tq2f4"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_py2up"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_wli7c"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="9_oijra"]
+
+[sub_resource type="Resource" id="Resource_1ye4c"]
+script = ExtResource("1_v45n2")
+stat = &"true_damage"
+amount = 10.0
+
+[sub_resource type="Resource" id="Resource_ydrj3"]
+script = ExtResource("3_32hwx")
+feed_mods = Array[ExtResource("1_v45n2")]([SubResource("Resource_1ye4c")])
+feed_filter = Array[StringName]([&"ranged"])
+
+[sub_resource type="Resource" id="Resource_jlf4v"]
+script = ExtResource("8_wli7c")
+
+[sub_resource type="Resource" id="Resource_85quo"]
+script = ExtResource("9_oijra")
+max_charges = 15
+charge_band = 5
+prefixes = Array[String](["将尽的", "半捆", "满捆"])
+prefixes_by_lang = {
+"en": ["Last of the ", "Half ", "Full "]
+}
+vanish_when_empty = true
+
+[resource]
+script = ExtResource("7_py2up")
+id = &"piercing_arrows"
+display_name = "破甲箭"
+display_names = {
+"en": "Piercing Arrows"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_jlf4v")
+rarity = 3
+tags = Array[StringName]([&"ammo"])
+material = "metal"
+adjacency = SubResource("Resource_ydrj3")
+wear = SubResource("Resource_85quo")

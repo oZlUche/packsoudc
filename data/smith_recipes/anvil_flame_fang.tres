@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_lrlev"]
+
+[resource]
+script = ExtResource("1_lrlev")
+id = &"anvil_flame_fang"
+output = &"flame_fang"
+inputs = {
+"bloodbone_spike": 1
+}
+material_inputs = {
+"crystal:fire": 3
+}
+funds = 200
+group = "blade"
+level = 3

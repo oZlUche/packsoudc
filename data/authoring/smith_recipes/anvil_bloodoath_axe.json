@@ -1,0 +1,13 @@
+{
+  "id": "anvil_bloodoath_axe",
+  "output": "bloodoath_axe",
+  "inputs": {
+    "bone_battle_axe": 1
+  },
+  "material_inputs": {
+    "metal": 2
+  },
+  "funds": 120,
+  "group": "hammer",
+  "level": 2
+}

@@ -1,0 +1,60 @@
+{
+  "id": "berserker_twin_axes",
+  "display_name": "狂战双斧",
+  "display_names": {
+    "en": "Berserker Twin Axes"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual",
+    "bleed"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 10
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 1.0,
+            "damage_stat": "",
+            "per_target_stack": "bleed"
+          },
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 1.0,
+            "damage_stat": "",
+            "per_target_stack": "bleed"
+          }
+        ]
+      }
+    ]
+  }
+}

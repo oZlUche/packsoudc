@@ -1,0 +1,75 @@
+{
+  "id": "bloodoath_axe",
+  "display_name": "血誓斧",
+  "display_names": {
+    "en": "Bloodoath Axe"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "one_hand",
+    "bleed"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 21
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "costs": [
+          {
+            "type": "status_condition",
+            "buff_id": "bleed",
+            "stacks": 6
+          }
+        ],
+        "effects": [
+          {
+            "type": "apply_status",
+            "target": "SELF",
+            "buff": "blood_rage"
+          }
+        ]
+      }
+    ]
+  }
+}

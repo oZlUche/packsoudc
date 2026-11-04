@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_ypipy"]
+
+[resource]
+script = ExtResource("1_ypipy")
+id = &"anvil_dragoon_lance"
+output = &"dragoon_lance"
+inputs = {
+"steel_spear": 1
+}
+material_inputs = {
+"wood": 2
+}
+funds = 120
+group = "blade"
+level = 2

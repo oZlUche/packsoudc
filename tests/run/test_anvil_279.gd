@@ -123,3 +123,21 @@ static func frame_camp_anvil(t: TestCase, root: Window) -> void:
 	t.check(flow.run.board.item_count() >= before, "背包没少东西")
 	game.queue_free()
 	Support.cleanup("anvil279_ui")
+
+
+static func run_orange(t: TestCase) -> void:
+	t.begin("279 第二批 · 升橙：魔晶石当材料（同一族、紫起），出件只能锻造 —— 生成池里没有、图鉴照列；便条写魔晶石的名字")
+	var c = NodeScreens._content()
+	var db: ItemDatabase = c.items
+	var pool := SmithRecipeDef.load_all()
+	var spike := _inst(db, &"bloodbone_spike")
+	var fang := Anvil.result(spike, _inst(db, &"fire_crystal"), pool, db)
+	t.check(fang != null and fang.def.id == &"flame_fang" and fang.quality() == 0, "噬血骨刺 + 火焰魔晶石：焰牙，0 档")
+	t.eq(Anvil.result(spike, _inst(db, &"fire_crystal_high"), pool, db).quality(), 1, "火焰魔晶核高一档：1 档")
+	t.check(Anvil.result(spike, _inst(db, &"fire_crystal_low"), pool, db) == null, "火焰晶石（蓝）不够档")
+	t.eq(Anvil.result(spike, _inst(db, &"ice_crystal"), pool, db).def.id, &"frost_fang", "冰晶：霜牙")
+	t.check(Anvil.result(spike, _inst(db, &"beast_claw"), pool, db) == null, "骨材升不了橙")
+	t.check(db.get_def(&"flame_fang").is_forged_only() and not db.ids().has(&"flame_fang") and db.ids(true).has(&"flame_fang"), "焰牙：生成池里没有，图鉴照列")
+	t.check(db.ids().has(&"bloodbone_spike"), "紫的照常能掉")
+	var r := Anvil.recipe_for(db.get_def(&"bloodbone_spike"), db.get_def(&"fire_crystal"), pool)
+	t.check(AnvilColumn.upgrade_line(r, db).contains(Names.of(db.get_def(&"fire_crystal"))), "便条：要一件火焰魔晶石（%s）" % AnvilColumn.upgrade_line(r, db))

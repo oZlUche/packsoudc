@@ -1,0 +1,65 @@
+{
+  "id": "ironwood_steel_sword",
+  "display_name": "铁木钢剑",
+  "display_names": {
+    "en": "Ironwood Steel Sword"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "one_hand"
+  ],
+  "material": "wood",
+  "combat": {
+    "base_stats": {
+      "damage": 16
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 5.0,
+            "damage_stat": "",
+            "pure": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired"
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "prime_next_hit"
+          }
+        ]
+      }
+    ]
+  }
+}

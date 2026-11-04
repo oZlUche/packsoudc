@@ -1,0 +1,62 @@
+{
+  "id": "imperial_sword",
+  "display_name": "帝国佩剑",
+  "display_names": {
+    "en": "Imperial Sword"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "010",
+    "010",
+    "111",
+    "010"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "one_hand",
+    "imperial",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 44
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 8.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "target": "SELF",
+            "buff": "hardy_guard",
+            "stacks": 2
+          }
+        ]
+      }
+    ]
+  }
+}

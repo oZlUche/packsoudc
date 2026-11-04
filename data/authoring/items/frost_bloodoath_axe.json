@@ -1,0 +1,81 @@
+{
+  "id": "frost_bloodoath_axe",
+  "display_name": "霜纹血誓斧",
+  "display_names": {
+    "en": "Frostbrand Bloodoath Axe"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "one_hand",
+    "bleed",
+    "ice",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 28
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          },
+          {
+            "type": "apply_status",
+            "buff": "chill"
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "costs": [
+          {
+            "type": "status_condition",
+            "buff_id": "bleed",
+            "stacks": 6
+          }
+        ],
+        "effects": [
+          {
+            "type": "apply_status",
+            "target": "SELF",
+            "buff": "blood_rage"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_4o0mx"]
+
+[resource]
+script = ExtResource("1_4o0mx")
+id = &"anvil_frost_bloodoath_axe"
+output = &"frost_bloodoath_axe"
+inputs = {
+"bloodoath_axe": 1
+}
+material_inputs = {
+"crystal:frost": 3
+}
+funds = 200
+group = "hammer"
+level = 3

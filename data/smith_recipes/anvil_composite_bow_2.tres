@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_jsahj"]
+
+[resource]
+script = ExtResource("1_jsahj")
+id = &"anvil_composite_bow_2"
+output = &"composite_bow"
+inputs = {
+"horn_bow": 1
+}
+material_inputs = {
+"wood": 2
+}
+funds = 120
+group = "bow"
+level = 2

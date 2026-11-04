@@ -1,0 +1,73 @@
+{
+  "id": "thunder_horse_halberd",
+  "display_name": "雷纹斩马戟",
+  "display_names": {
+    "en": "Thunderbrand Horse-Cleaver Halberd"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "polearm",
+    "bleed",
+    "lightning",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 41
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 7.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          },
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "damage_taken"
+          },
+          {
+            "type": "apply_status",
+            "buff": "numb"
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

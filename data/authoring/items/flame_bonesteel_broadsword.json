@@ -1,0 +1,72 @@
+{
+  "id": "flame_bonesteel_broadsword",
+  "display_name": "焰纹骨钢阔剑",
+  "display_names": {
+    "en": "Flamebrand Bonesteel Broadsword"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "one_hand",
+    "fire",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 25,
+      "crit_chance": 18
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 5.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "apply_status",
+            "buff": "scorch"
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired"
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "prime_next_hit"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -42,7 +42,7 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	UiTheme.set_tone(self, UiTheme.TONE_DARK)
 	weapon_slot = _grid(WEAPON_SLOT, func(d: ItemDef) -> bool: return d != null and d.tags.has(&"weapon"))
-	material_slot = _grid(MATERIAL_SLOT, func(d: ItemDef) -> bool: return d != null and d.tags.has(&"material"))
+	material_slot = _grid(MATERIAL_SLOT, func(d: ItemDef) -> bool: return d != null and (d.tags.has(&"material") or d.tags.has(&"crystal")))     # 第二批：魔晶石升橙
 	out = _grid(OUT_SLOT, Callable())
 	_ghost = _grid(OUT_SLOT, Callable())
 	var row_h := float(WEAPON_SLOT.y) * CELL
@@ -194,5 +194,5 @@ static func upgrade_line(r: SmithRecipeDef, items: ItemDatabase) -> String:
 		return ""
 	var mats: Array[String] = []
 	for m in r.material_inputs:
-		mats.append(UiText.t("anvil.needs") % [ItemMaterials.name_of(StringName(String(m))), ItemTooltip.rarity_name(int(r.material_inputs[m]))])
+		mats.append(UiText.t("anvil.needs") % [r.material_name(String(m), items), ItemTooltip.rarity_name(int(r.material_inputs[m]))])
 	return "[color=@rarity%d]%s[/color]　%s" % [d.rarity, Names.of(d), UiText.t("tip.sep").join(PackedStringArray(mats))]

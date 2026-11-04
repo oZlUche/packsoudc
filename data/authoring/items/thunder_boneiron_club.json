@@ -1,0 +1,72 @@
+{
+  "id": "thunder_boneiron_club",
+  "display_name": "雷纹骨铁大棒",
+  "display_names": {
+    "en": "Thunderbrand Boneiron Club"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy",
+    "bleed",
+    "lightning",
+    "forged_only"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 66
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 2.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 11.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 6.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -1
+          },
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          },
+          {
+            "type": "apply_status",
+            "buff": "numb"
+          }
+        ]
+      }
+    ]
+  }
+}

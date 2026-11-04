@@ -1,0 +1,80 @@
+{
+  "id": "steel_bow",
+  "display_name": "钢弓",
+  "display_names": {
+    "en": "Steel Bow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "10",
+    "10",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "ranged",
+    "rapid"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 10
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "step_seconds": 0.9,
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "damage_taken"
+          }
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}

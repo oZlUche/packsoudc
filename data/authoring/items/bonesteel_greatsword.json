@@ -1,0 +1,53 @@
+{
+  "id": "bonesteel_greatsword",
+  "display_name": "骨钢双手剑",
+  "display_names": {
+    "en": "Bonesteel Greatsword"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 44,
+      "crit_chance": 18
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource"
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 6.0,
+            "damage_stat": "",
+            "pure": true
+          }
+        ]
+      }
+    ]
+  }
+}

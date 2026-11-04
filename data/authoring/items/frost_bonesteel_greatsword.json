@@ -1,0 +1,59 @@
+{
+  "id": "frost_bonesteel_greatsword",
+  "display_name": "霜纹骨钢双手剑",
+  "display_names": {
+    "en": "Frostbrand Bonesteel Greatsword"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy",
+    "ice",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 60,
+      "crit_chance": 18
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource"
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 6.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "apply_status",
+            "buff": "chill"
+          }
+        ]
+      }
+    ]
+  }
+}

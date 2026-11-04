@@ -159,7 +159,9 @@ static func frame_smithy_page(t: TestCase, root: Window) -> void:
 		return
 	var cells: Array = p._grid.get_children()
 	t.check(cells.size() >= 10 and cells.size() % 5 == 0 and p._grid.columns == 5, "格子区固定 5 列、至少 2 行（%d 格）" % cells.size())
-	t.check(cells.any(func(c) -> bool: return (c as RecipeCell).is_blank()), "不到 10 张：空位补了只有格线的空格")
+	var blanks := cells.filter(func(c) -> bool: return (c as RecipeCell).is_blank()).size()
+	var real := cells.size() - blanks
+	t.eq(blanks, maxi(10, ceili(real / 5.0) * 5) - real, "空位补了只有格线的空格：补满一行、至少两行（%d 张配方）" % real)
 	t.check(cells.all(func(c) -> bool: return (c as Control).custom_minimum_size.is_equal_approx(cell.custom_minimum_size)), "每格一样大")
 	t.eq((p._shelf.get_theme_stylebox("panel") as StyleBoxTexture).texture, UiTheme.art_cached(RecipeCell.FRAME), "格子区套深铁框九宫格")
 	t.check(not cell.lit and cell.tooltip_text.contains(UiText.t("smithy.missing")), "缺素材：压灰、悬浮窗写原因")

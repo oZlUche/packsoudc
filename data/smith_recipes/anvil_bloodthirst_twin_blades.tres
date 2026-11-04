@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_hetlo"]
+
+[resource]
+script = ExtResource("1_hetlo")
+id = &"anvil_bloodthirst_twin_blades"
+output = &"bloodthirst_twin_blades"
+inputs = {
+"bonefang_twin_blades": 1
+}
+material_inputs = {
+"metal": 2
+}
+funds = 120
+group = "blade"
+level = 2

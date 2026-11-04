@@ -1,0 +1,13 @@
+{
+  "id": "anvil_frost_bonesteel_greatsword",
+  "output": "frost_bonesteel_greatsword",
+  "inputs": {
+    "bonesteel_greatsword": 1
+  },
+  "material_inputs": {
+    "crystal:frost": 3
+  },
+  "funds": 200,
+  "group": "blade",
+  "level": 3
+}

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_rk7jo"]
+
+[resource]
+script = ExtResource("1_rk7jo")
+id = &"anvil_executioner_axe"
+output = &"executioner_axe"
+inputs = {
+"bone_great_axe": 1
+}
+material_inputs = {
+"metal": 2
+}
+funds = 120
+group = "hammer"
+level = 2

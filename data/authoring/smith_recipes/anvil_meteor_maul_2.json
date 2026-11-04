@@ -1,0 +1,13 @@
+{
+  "id": "anvil_meteor_maul_2",
+  "output": "meteor_maul",
+  "inputs": {
+    "granite_maul": 1
+  },
+  "material_inputs": {
+    "metal": 2
+  },
+  "funds": 120,
+  "group": "hammer",
+  "level": 2
+}

@@ -1,0 +1,13 @@
+{
+  "id": "anvil_flame_berserker_twin_axes",
+  "output": "flame_berserker_twin_axes",
+  "inputs": {
+    "berserker_twin_axes": 1
+  },
+  "material_inputs": {
+    "crystal:fire": 3
+  },
+  "funds": 200,
+  "group": "hammer",
+  "level": 3
+}

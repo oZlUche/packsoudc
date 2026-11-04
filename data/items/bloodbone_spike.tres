@@ -1,0 +1,113 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_uy7dr"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_bssnt"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_78ewv"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_fwc2g"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_qh38q"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_j4lj3"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_dqt7v"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_3stlq"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="9_2jw7n"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="10_apf74"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="11_inn6f"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="12_jj4dr"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="13_0ckte"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="14_cysi0"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="15_50kfy"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="16_xq5f6"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="17_pxkq8"]
+
+[sub_resource type="Resource" id="Resource_wglt6"]
+script = ExtResource("4_fwc2g")
+seconds = 0.6
+
+[sub_resource type="Resource" id="Resource_jxgxr"]
+script = ExtResource("6_j4lj3")
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_745bm"]
+script = ExtResource("8_3stlq")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_kncbu"]
+script = ExtResource("8_3stlq")
+amount = 4.0
+damage_stat = &""
+pure = true
+
+[sub_resource type="Resource" id="Resource_imdws"]
+script = ExtResource("4_fwc2g")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_psjp1"]
+script = ExtResource("8_3stlq")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_iuh5t"]
+script = ExtResource("10_apf74")
+
+[sub_resource type="Resource" id="Resource_dohsk"]
+script = ExtResource("3_78ewv")
+trigger = SubResource("Resource_iuh5t")
+cadence = SubResource("Resource_imdws")
+effects = Array[ExtResource("7_dqt7v")]([SubResource("Resource_psjp1")])
+
+[sub_resource type="Resource" id="Resource_505co"]
+script = ExtResource("11_inn6f")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+decay_halve_on = &"tick"
+rules = Array[ExtResource("3_78ewv")]([SubResource("Resource_dohsk")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_llntx"]
+script = ExtResource("12_jj4dr")
+buff = SubResource("Resource_505co")
+stacks = 2
+
+[sub_resource type="Resource" id="Resource_0b5nb"]
+script = ExtResource("10_apf74")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_u74c6"]
+script = ExtResource("3_78ewv")
+trigger = SubResource("Resource_0b5nb")
+cadence = SubResource("Resource_wglt6")
+costs = Array[ExtResource("5_qh38q")]([SubResource("Resource_jxgxr")])
+effects = Array[ExtResource("7_dqt7v")]([SubResource("Resource_745bm"), SubResource("Resource_kncbu"), SubResource("Resource_llntx")])
+
+[sub_resource type="Resource" id="Resource_l6qox"]
+script = ExtResource("13_0ckte")
+base_stats = {
+"crit_chance": 0.15,
+"damage": 9
+}
+rules = Array[ExtResource("3_78ewv")]([SubResource("Resource_u74c6")])
+
+[sub_resource type="Resource" id="Resource_vbjj7"]
+script = ExtResource("17_pxkq8")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("16_xq5f6")
+id = &"bloodbone_spike"
+display_name = "噬血骨刺"
+display_names = {
+"en": "Bloodbone Spike"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_vbjj7")
+rarity = 3
+tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"dagger", &"bleed"])
+material = "bone"
+combat = SubResource("Resource_l6qox")

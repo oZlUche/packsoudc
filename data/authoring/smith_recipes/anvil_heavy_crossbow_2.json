@@ -1,0 +1,13 @@
+{
+  "id": "anvil_heavy_crossbow_2",
+  "output": "heavy_crossbow",
+  "inputs": {
+    "steel_crossbow": 1
+  },
+  "material_inputs": {
+    "bone": 2
+  },
+  "funds": 120,
+  "group": "bow",
+  "level": 2
+}

@@ -1,0 +1,13 @@
+{
+  "id": "anvil_imperial_sword",
+  "output": "imperial_sword",
+  "inputs": {
+    "mithril_sword": 1
+  },
+  "material_inputs": {
+    "metal": 4
+  },
+  "funds": 200,
+  "group": "blade",
+  "level": 3
+}

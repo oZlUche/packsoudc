@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_it2yl"]
+
+[resource]
+script = ExtResource("1_it2yl")
+id = &"forged_only"
+display_name = "只能锻造"
+display_names = {
+"en": "Forged only"
+}
+description = "只在砧上升出来，搜索、掉落、商店、敌人都不出；图鉴照列。"
+descriptions = {
+"en": "Only made on the anvil; never found, dropped, sold or carried by enemies. Listed in the codex."
+}
+tip = false
+category = "internal"
+internal = true

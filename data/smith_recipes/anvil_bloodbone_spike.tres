@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_dm2a3"]
+
+[resource]
+script = ExtResource("1_dm2a3")
+id = &"anvil_bloodbone_spike"
+output = &"bloodbone_spike"
+inputs = {
+"bonefang_dagger": 1
+}
+material_inputs = {
+"metal": 2
+}
+funds = 120
+group = "blade"
+level = 2

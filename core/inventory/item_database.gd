@@ -83,14 +83,14 @@ func has_def(id: StringName) -> bool:
 
 ## 能用的道具：**封存的不在里面**（[constant ItemDef.SEALED]）。搜索、掉落、商店、敌人装备、图鉴、编辑器都从这里拿候选 ——
 ## 封存只在这一处拦，别处不必各查一遍。要全部（导出、存档校对）用 [method all_ids]。
-## 091：锁着的（成就还没解锁）也不给；图鉴要连锁着的一起列，传 [param include_locked]
+## 091：锁着的（成就还没解锁）也不给；图鉴要连锁着的一起列，传 [param include_locked]（279：只能锻造的也一样）
 func ids(include_locked: bool = false) -> Array:
 	var out: Array = []
 	for id in _defs:
 		var d := _defs[id] as ItemDef
 		if d.is_sealed() or d.is_keepsake() or d.is_blessed() or d.is_token() or d.is_signature():     # 088：特殊道具也不能生成；095：赐福版只从赐福来；175：铸牌只从铸炉来；256：随身之物只从角色来
 			continue
-		if not include_locked and _locked.has(id):
+		if not include_locked and (_locked.has(id) or d.is_forged_only()):     # 279：橙档只从砧上来；图鉴（include_locked）照列
 			continue
 		out.append(id)
 	return out

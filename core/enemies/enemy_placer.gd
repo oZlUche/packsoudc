@@ -731,6 +731,10 @@ static func auto_groups(
 				cands.append(j)
 		if cands.is_empty():
 			continue
+		# 279：排在它前面的（招牌、骨架先排）有就只在它们里挑 —— 招牌的箭配招牌的弓，不被后抽来的弓弩分走
+		var earlier := cands.filter(func(x: int) -> bool: return x < i)
+		if not earlier.is_empty():
+			cands.assign(earlier)
 		var j := cands[rng.randi_range(0, cands.size() - 1)]
 		if not edges.has(i):
 			edges[i] = []
@@ -818,6 +822,7 @@ static func _arrange(
 	if not (best["left"] as Array).is_empty():
 		var plain := _attempt_first_fit(board, defs)
 		if (plain["left"] as Array).size() < (best["left"] as Array).size():
+			plain["ungrouped"] = groups.size()     # 279：老办法不成组 —— 每一组都算拆了（以前记 0，像是整组摆好了）
 			best = plain
 	# 选中的那一盘落到棋盘上（每一盘试完都撤干净了）
 	var placed: Array = []
