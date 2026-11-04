@@ -176,11 +176,20 @@ func open(payload: Dictionary) -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(spacer)
 	# 226 批二：左下「带回来的背包还有 N 件……」那句删了（[method pending_text] 留给「仓库」页签的悬浮窗）
-	# 264：左下「再来一局」搬进出征页改叫【开始探索】，左下只剩「回主菜单」
+	# 264：左下「再来一局」搬进出征页改叫【开始探索】
+	# 280 B：「回主菜单」钉在屏幕右下 —— 和开局屏「返回」、结算「继续」同一个角
 	var menu_btn := UiTheme.make_home_button(UiText.t("setup.main_menu"), flow.to_main_menu)
+	menu_btn.name = "MainMenuButton"
 	menu_btn.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
-	menu_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	left.add_child(menu_btn)
+	var menu_size := menu_btn.get_combined_minimum_size()
+	menu_btn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	menu_btn.offset_left = -MARGIN - menu_size.x
+	menu_btn.offset_right = -MARGIN
+	menu_btn.offset_top = -MARGIN - menu_size.y
+	menu_btn.offset_bottom = -MARGIN
+	menu_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	menu_btn.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	add_child(menu_btn)
 
 	# 中列：当前页
 	_middle = _vbox(10)

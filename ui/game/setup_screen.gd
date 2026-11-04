@@ -126,8 +126,6 @@ var _readout: RichTextLabel = null
 ## 226 批一：「出发」上面那句常显的话（出发不了的原因、空手提示、军需官发的）—— 本地红字行删了：
 ## 变了才走一次告示卷轴，平时写在「出发」的悬浮窗里（[method status_text]）
 var _status := ""
-## 右下那一组（状态字 + 两颗大按钮）；第三页按地图纸的右沿往左挪（180 定稿）
-var _nav_box: VBoxContainer = null
 ## 标题前面那段空（第三页 = [constant PAPER_INSET]，让开地图纸的毛边）
 var _title_indent: Control = null
 ## 161：右下角「继续 / 出发」与「返回」
@@ -148,7 +146,7 @@ const NAV_ROOM := 140
 const PAGE_SEP := 14
 ## 180 补三：羊皮纸下端离「出发」按钮上沿至少留多少
 const PAPER_CLEARANCE := 24.0
-## 180 定稿：第二页两块框的内边距、页签挂牌高、地图条目 / 规模条目高、右下两颗按钮高、第三页按钮组离地图纸右沿多远
+## 180 定稿：第二页两块框的内边距、页签挂牌高、地图条目 / 规模条目高、右下两颗按钮高（280 B：三页按钮组同一个位置，第三页不再跟纸沿左挪）
 const FRAME_INSET := 44
 const TAB_TAG_H := 60.0
 const MAP_ENTRY_H := 60.0
@@ -156,7 +154,6 @@ const MAP_ENTRY_H := 60.0
 const PRESET_ENTRY_H := 52.0
 const MAP_SUB_H := 44.0
 const NAV_BTN_H := 84.0
-const NAV_PAPER_GAP := 60.0
 ## 第三页的左右两列离屏边再让多少（地图纸的毛边）
 const PAPER_INSET := 36
 var _pages: Array[Control] = []
@@ -690,7 +687,6 @@ func show_page(i: int) -> void:
 		TextFit.shrink_button(b)     # 255 补充一：右下两颗定宽（英文缩字），不往左伸到角色卡上
 	_sync_preview()
 	_refresh()
-	_fit_nav()
 	_fit_challenge.call_deferred()     # 180 补三：排好版才知道纸能长多长
 
 
@@ -1442,24 +1438,6 @@ func _build_nav() -> void:
 	_enter_btn.custom_minimum_size.y = NAV_BTN_H
 	box.add_child(row)
 	_area.add_child(box)
-	_nav_box = box
-	_area.resized.connect(_fit_nav)
-
-
-## 180 定稿：右下那组在第三页离地图纸右沿往左挪 [constant NAV_PAPER_GAP]（纸的左右沿在 `bg_map.json` 的 `paper_x`，按铺满裁边换到屏上）；
-## 别的页（或没有那张图）离屏边 36
-func _fit_nav() -> void:
-	if _nav_box == null:
-		return
-	var right := 36.0
-	var meta := UiTheme.art_meta(UiTheme.ART_SETUP_MAP_BG)
-	var tex := UiTheme.art(UiTheme.ART_SETUP_MAP_BG)
-	if _page == PAGE_MAP and tex != null and meta.has("paper_x") and _area.size.x > 0.0:
-		var src := tex.get_size()
-		var k := maxf(_area.size.x / src.x, _area.size.y / src.y)     # 铺满裁边
-		var paper_right := (_area.size.x - src.x * k) * 0.5 + float(meta["paper_x"][1]) * k
-		right = maxf(36.0, _area.size.x - paper_right + NAV_PAPER_GAP)
-	_nav_box.offset_right = -right
 
 
 ## 222（作者定「出发前有提示，空手也可以进战斗」）：棋盘上一件会出手的东西都没有 —— 「出发」上面常显一句接应者的话，不拦
