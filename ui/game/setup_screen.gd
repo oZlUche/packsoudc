@@ -117,7 +117,11 @@ var _warehouse_view: InventoryView = null
 var _warehouse_pages: WarehousePages = null
 ## 作者 10-31：仓库下面的【整理】
 var _tidy_btn: Button = null
+## 277 第 2 条：仓库下面的【照上回带】
+var _repeat_btn: Button = null
 const TIDY_SIZE := Vector2(120, 52)
+## 277 第 2 条：【照上回带】宽（四个字）
+const REPEAT_W := 150.0
 var _readout: RichTextLabel = null
 ## 226 批一：「出发」上面那句常显的话（出发不了的原因、空手提示、军需官发的）—— 本地红字行删了：
 ## 变了才走一次告示卷轴，平时写在「出发」的悬浮窗里（[method status_text]）
@@ -387,6 +391,11 @@ func _build_kit_page() -> Control:
 	_tidy_btn.name = "TidyButton"
 	_tidy_btn.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	tools.add_child(_tidy_btn)
+	_repeat_btn = UiTheme.make_home_button(UiText.t("setup.repeat_last"), repeat_last, false, Vector2(REPEAT_W, TIDY_SIZE.y), 18)     # 277 第 2 条
+	_repeat_btn.name = "RepeatLastButton"
+	_repeat_btn.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_repeat_btn.disabled = flow.meta.last_carry.is_empty() and flow.meta.last_carry_funds <= 0
+	tools.add_child(_repeat_btn)
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tools.add_child(gap)
@@ -418,6 +427,56 @@ func tidy_warehouse() -> bool:
 	if page_.item_count() > 1:
 		warn(UiText.t("wh.page_tidied") if ok else UiText.t("wh.tidy_failed"))
 	return ok
+
+
+## 277 第 2 条：照上回带 —— 上回出发时从仓库带的道具，仓库里还有同名的就按原位摆回棋盘（原位放不下自动找位，再不行跳过），
+## 现金填上回的数（不超过仓库余额）。返回摆上了几件；没摆全说一句
+func repeat_last() -> int:
+	if board == null:
+		return 0
+	var used := {}
+	var placed := 0
+	var missed := 0
+	for e in flow.meta.last_carry:
+		var id := StringName(String(e["id"]))
+		var inst: ItemInstance = null
+		for it in flow.meta.warehouse.items():
+			if (it as ItemInstance).def.id == id and not used.has((it as ItemInstance).uid):
+				inst = it
+				break
+		if inst == null:
+			missed += 1
+			continue
+		used[inst.uid] = true
+		var at := Vector2i(int(e["origin"][0]), int(e["origin"][1]))
+		var rot := int(e["rot"])
+		if board.can_place_def(inst.def, at, rot):
+			var page := flow.meta.warehouse.page_of(inst.uid)
+			flow.meta.warehouse.remove(inst.uid)
+			if board.place(inst, at, rot):
+				placed += 1
+				continue
+			flow.meta.warehouse.place(inst, inst.origin, inst.rotation, maxi(0, page))
+		if carry_in(inst.uid):
+			placed += 1
+		else:
+			missed += 1
+	set_carry_funds(mini(flow.meta.last_carry_funds, cash_cap()))
+	_refresh()
+	if missed > 0:
+		warn(UiText.t("setup.repeat_missed") % missed)
+	return placed
+
+
+## 277 第 2 条：出发时记下这回从仓库带的（照上回带读）
+func _record_carry() -> void:
+	var out: Array = []
+	for inst in carried():
+		if _pending.has(inst.uid):
+			continue     # 上一局带回来、地上拖上去的不算「从仓库带的」
+		out.append({"id": String(inst.def.id), "origin": [inst.origin.x, inst.origin.y], "rot": inst.rotation})
+	flow.meta.last_carry = out
+	flow.meta.last_carry_funds = carry_funds
 
 
 ## 2026-10-22（作者定）：带入现金 —— 这一局带多少钱由玩家定，上限是仓库余额，不带就是 0。
@@ -1448,6 +1507,7 @@ func _go_now() -> bool:
 	var c := chapter()
 	var ch := character()
 	flow.map_reveal = reveal_payload()
+	_record_carry()
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id, carry_funds)
 	flow.map_reveal = {}
 	if run == null:

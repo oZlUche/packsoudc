@@ -47,7 +47,7 @@ static func frame_scroll_keys(t: TestCase, root: Window) -> void:
 		t.eq([box.texture_margin_left, box.texture_margin_right], [20.0, 96.0], "九宫格：右边币座 96 不拉")
 		t.eq(box.content_margin_right, 26.0 + 90.0 - 2.0, "字让开币座")
 	t.eq(refresh.price_at(), Vector2(refresh.size.x - 90.0 + 37.0, 28.0), "数字在币座左沿 + 37")
-	var keys: Array = refresh.get_parent().get_children()
+	var keys: Array = refresh.get_parent().get_children().filter(func(k: Control) -> bool: return k.visible)     # 277：没卖过时【回购】不露
 	t.eq(keys.size(), 3, "刷新、收起、离开一排")
 	for k: Button in keys.slice(1):
 		t.check(k is ScrollKey and not k.coin and k.art, "「%s」普通纸卷键" % k.text)
@@ -113,4 +113,38 @@ static func frame_scroll_keys_fallback(t: TestCase, root: Window) -> void:
 		t.check(screen._belt_btns[0].sold and tag != null and tag.sold, "随身格卖掉：格变灰、价签写「已售」")
 	screen.free()
 	UiTheme.asset_root = keep
+	Support.cleanup(PREFIX)
+
+
+## 277 第 4 条：【回购】—— 这次进店卖掉的、最近那件原价买回；离开商店就清掉
+static func frame_buyback(t: TestCase, root: Window) -> void:
+	t.begin("277 · 回购：卖了才露、写卖价；按一下原价买回最近那件（进包或地上）；离开清掉")
+	var o := _open(root)
+	var screen = o["screen"]
+	var session: ShopSession = o["session"]
+	var key: Button = screen._buyback_btn
+	t.check(key != null and not key.visible, "没卖过：不露")
+	var run: RunState = screen.flow.run
+	var inst: ItemInstance = null
+	for it in run.board.items():
+		if screen._cant_sell(it) == "" and not (it as ItemInstance).is_locked_by_player() and not (it as ItemInstance).def.is_bag:
+			inst = it
+			break
+	t.not_null(inst, "棋盘上有一件能卖的")
+	if inst == null:
+		screen.queue_free()
+		Support.cleanup(PREFIX)
+		return
+	var before := run.wallet.balance
+	var gain: int = screen.sell_now(inst.uid)
+	t.check(gain >= 0 and run.wallet.balance == before + gain, "卖掉进账")
+	t.check(key.visible and key.price == gain, "卖了：露出来，写卖价")
+	t.check(screen.buy_back(), "按回购")
+	t.eq(run.wallet.balance, before, "原价买回：钱回到卖之前")
+	t.check(run.board.has_item(inst.uid) or run.storage.has_item(inst.uid), "那件回来了（包里或地上）")
+	t.check(not key.visible, "回购栏空了：又藏起来")
+	screen.sell_now(inst.uid)
+	session.leave()
+	t.check(session.buyback.is_empty(), "离开商店：清掉")
+	screen.queue_free()
 	Support.cleanup(PREFIX)

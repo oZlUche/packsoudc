@@ -94,6 +94,9 @@ var best_value: int = 0
 var best_run: Dictionary = {}
 ## 264 §2.4：上回出征的角色（开局屏出发时和 last_map / last_scale / last_difficulty 旗标一起写）；没出发过 = 空。出征页「上回出征」木牌读它
 var last_character: StringName = &""
+## 277 第 2 条：上回出发时从仓库带进去的道具 [{id, origin: [x, y], rot}] 与带入的现金（开局屏「照上回带」读它）；没出发过 = 空 / 0
+var last_carry: Array = []
+var last_carry_funds: int = 0
 ## 265（作者 2026-10-29 16:43）：收藏的道具种类（id）。只做标记与筛选 —— 一键出售 / 出售同类跳过，仓库「只看收藏」、图鉴「收藏」档（[ItemFavorites]）
 var favorites: Array[StringName] = []
 ## 最近几局的 [RunResult.to_dict]，新的在前
@@ -804,6 +807,7 @@ func to_dict() -> Dictionary:
 		"best_value": best_value,
 		"best_run": best_run.duplicate(true),
 		"last_character": String(last_character),
+		"last_carry": last_carry.duplicate(true), "last_carry_funds": last_carry_funds,     # 277
 		"history": history.duplicate(true),
 		"achievements": achievements.duplicate(),
 		"chapter_extractions": chapter_extractions.duplicate(),
@@ -916,6 +920,11 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.best_value = int(d.get("best_value", 0))
 	m.best_run = MapGraph.normalize(d.get("best_run", {})) if d.get("best_run", {}) is Dictionary else {}
 	m.last_character = StringName(String(d.get("last_character", "")))
+	for e in d.get("last_carry", []):     # 277
+		if e is Dictionary and (e as Dictionary).has("id"):
+			var o: Array = (e as Dictionary).get("origin", [0, 0])
+			m.last_carry.append({"id": String(e["id"]), "origin": [int(o[0]), int(o[1])] if o.size() >= 2 else [0, 0], "rot": int((e as Dictionary).get("rot", 0))})
+	m.last_carry_funds = maxi(0, int(d.get("last_carry_funds", 0)))
 	for key in d.get("achievements", {}):
 		m.achievements[String(key)] = int((d["achievements"] as Dictionary)[key])
 	for key in d.get("chapter_extractions", {}):
