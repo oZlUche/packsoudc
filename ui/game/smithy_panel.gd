@@ -247,7 +247,7 @@ func forge(id: StringName) -> String:
 	var why := flow.forge(id)
 	if say.is_valid():
 		var name_ := Names.of(def) if def != null else String(id)
-		say.call(UiText.t("smithy.forged") % [name_, flow.meta.funds] if why == "" else UiText.t("smithy.cant") % [name_, why])
+		say.call(UiText.t("smithy.forged") % name_ if why == "" else UiText.t("smithy.cant") % [name_, why])
 	if why == "":
 		var cell_ := _cells.get(id, null) as RecipeCell
 		if cell_ != null:

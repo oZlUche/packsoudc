@@ -152,6 +152,8 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 		"crit": packet.crit,     # 104
 		"direct": packet.direct,     # 106：直接 / 非直接（格挡只减直接伤害）
 	}
+	if packet.pure:
+		payload["pure"] = true     # 279：真实伤害（战记写「真实」，不写伤害类型）
 	if packet.cancelled:
 		payload["cancelled"] = true     # 175 补充五：被取消的一下（「造成伤害后施加」不认它，[member DamageTrigger.landed_only]）
 	ctx.emit(BattleEvent.DAMAGE, packet.victim_side(), payload)

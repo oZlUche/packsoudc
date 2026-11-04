@@ -145,6 +145,7 @@ stat_scale = {
 }
 rarity_cap = 1
 weapon_rarity_cap = 0
+weapon_no_true_damage = true
 
 [sub_resource type="Resource" id="Resource_tj0wd"]
 script = ExtResource("5_v0xwg")
@@ -157,6 +158,7 @@ stat_scale = {
 bag_count = Vector2i(2, 2)
 rarity_cap = 2
 weapon_rarity_cap = 1
+weapon_no_true_damage = true
 
 [sub_resource type="Resource" id="Resource_74hwf"]
 script = ExtResource("5_v0xwg")
@@ -169,6 +171,7 @@ stat_scale = {
 }
 bag_count = Vector2i(2, 3)
 weapon_rarity_cap = 2
+weapon_no_true_damage = true
 
 [sub_resource type="Resource" id="Resource_ecqng"]
 script = ExtResource("5_v0xwg")

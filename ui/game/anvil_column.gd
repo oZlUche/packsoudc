@@ -15,6 +15,9 @@ const OUT_SLOT := Vector2i(4, 4)
 const GAP := 16.0
 const KEY_H := 44.0
 const NOTE_FONT := 14
+const NOTE_PAD := 20
+const NOTE_PAD_TOP := 26
+const NOTE_PAD_BOTTOM := 14
 const GHOST := Color(1, 1, 1, 0.45)
 
 var flow: GameFlow = null
@@ -59,16 +62,17 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 	_ghost_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ghost_view.modulate = GHOST
 	var note_top := out_at.y + float(OUT_SLOT.y) * CELL + GAP
-	var paper := UiTheme.panel(PanelContainer.new(), 8, UiTheme.PANEL_SUMMARY_NOTE)
+	# 便条是浅底；上边多留一点，不压名字
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, NOTE_PAD, NOTE_PAD_TOP, NOTE_PAD, NOTE_PAD_BOTTOM)
 	paper.name = "AnvilNote"
 	paper.position = Vector2(0, note_top)
 	paper.custom_minimum_size = Vector2(WIDTH, HEIGHT - note_top)
 	paper.size = paper.custom_minimum_size
 	add_child(paper)
-	_note = UiTheme.rich_block(WIDTH - 16.0, NOTE_FONT)
+	_note = UiTheme.rich_block(WIDTH - 2.0 * float(NOTE_PAD), NOTE_FONT)
 	_note.fit_content = false
 	_note.scroll_active = true
-	_note.custom_minimum_size.y = HEIGHT - note_top - 16.0
+	_note.custom_minimum_size.y = HEIGHT - note_top - float(NOTE_PAD_TOP + NOTE_PAD_BOTTOM)
 	paper.add_child(_note)
 	for v in [_weapon_view, _material_view, _out_view]:
 		if drag != null:
@@ -182,7 +186,7 @@ func _refresh() -> void:
 			lines.append(upgrade_line(r, flow.items))
 	if not open and out.item_count() == 0:
 		lines.append("[color=@dim]%s[/color]" % UiText.t("anvil.used"))
-	_note.text = UiPalette.resolve_styles("\n".join(PackedStringArray(lines)))
+	_note.text = UiPalette.toned("\n".join(PackedStringArray(lines)), UiTheme.TONE_LIGHT)     # 便条是浅底：字色取浅底版
 	_ghost_view.visible = out.item_count() == 0
 	strike_key.disabled = not open or made == null or out.item_count() > 0
 

@@ -72,6 +72,13 @@ static func short_texture() -> Texture2D:
 
 
 ## 缩到 [param px] 见方的金币（Button.icon 不会自己缩图）；缺图 null
+## 正文（RichTextLabel）里的 `[coin=N]`（[method CoinShort.coin]）换成一枚 [param px] 大的金币图 + 数 —— 事件结果页这类整段字的地方用
+static func inline_bbcode(text: String, px: int) -> String:
+	if not CoinShort.has_coin(text):
+		return text
+	return TextTemplate.cached_regex("\\[coin=(\\d+)\\]").sub(text, "[img=%dx%d]%s[/img]$1" % [px, px, ART], true)
+
+
 static func coin_icon(px: int) -> Texture2D:
 	if _icons.has(px):
 		return _icons[px]

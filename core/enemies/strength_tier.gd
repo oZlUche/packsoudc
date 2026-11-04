@@ -28,3 +28,5 @@ extends Resource
 ## 279 台架定调：武器另外的稀有度上限（只管带 weapon 标签的），-1 = 同 [member rarity_cap]；和它取小。
 ## 新武器多了以后敌人手里的武器压低一档，药膏、器官这些照旧按 [member rarity_cap]
 @export var weapon_rarity_cap: int = -1
+## 279 台架定调：这一档的敌人不背带真实伤害的武器（真实伤害绕过护甲与格挡）
+@export var weapon_no_true_damage: bool = false

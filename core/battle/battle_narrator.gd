@@ -165,7 +165,7 @@ class _Narration:
 		var uid := e.get_int(&"uid")
 		var type := e.get_name(&"type")
 		var tint := _dmg(type)
-		var type_word := _paint(DamageTypes.name_of(type), tint)
+		var type_word := _paint(UiText.t("log.true_word") if e.get_bool(&"pure") else DamageTypes.name_of(type), tint)
 		if uid == 0 and (src == e.side or src < 0):     # 持续伤害（身上状态自己跳的）、环境伤害
 			var n := _paint(str(StatMath.to_int(absi(amount))), tint)
 			_alone(i, e, UiText.t("log.dot") % [_who(e.side), _dot_name(e.side, type), n, type_word])

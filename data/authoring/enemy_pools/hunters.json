@@ -34,7 +34,8 @@
         3
       ],
       "rarity_cap": 1,
-      "weapon_rarity_cap": 0
+      "weapon_rarity_cap": 0,
+      "weapon_no_true_damage": true
     },
     {
       "strength": 1,
@@ -50,7 +51,8 @@
         "max_hp": 1.25
       },
       "rarity_cap": 2,
-      "weapon_rarity_cap": 1
+      "weapon_rarity_cap": 1,
+      "weapon_no_true_damage": true
     },
     {
       "strength": 2,
@@ -65,7 +67,8 @@
       "stat_scale": {
         "max_hp": 1.6
       },
-      "weapon_rarity_cap": 2
+      "weapon_rarity_cap": 2,
+      "weapon_no_true_damage": true
     },
     {
       "strength": 3,

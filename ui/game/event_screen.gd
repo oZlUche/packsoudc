@@ -77,7 +77,7 @@ func _open_result(payload: Dictionary) -> void:
 	var detail: Dictionary = payload.get("detail", {})
 	var lines: Array[String] = []
 	for text in detail.get("log", []):
-		lines.append(String(text))
+		lines.append(CoinLabel.inline_bbcode(String(text), UiTheme.sz(UiTheme.RICH_BODY_SIZE)))     # 钱画金币（撤离费付不起那句）
 	# 157：给的东西画成下面的「收获」行（还在地上的那几件，能直接拖进棋盘）；认不出是哪几件（老存档）才写成一行字
 	var harvest := _harvest_uids(detail)
 	var names: Array[String] = []
