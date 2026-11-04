@@ -108,16 +108,16 @@ static func run_enemy_bags(t: TestCase) -> void:
 	var pool := _pool()
 	for strength in 4:
 		var tier := c.pool.tier_of(strength)
-		for seed in 8:
+		for seed_ in 8:
 			var rng := RandomNumberGenerator.new()
-			rng.seed = 100 * strength + seed
+			rng.seed = 100 * strength + seed_
 			var built := EnemyPlacer.build_content(c.enemies.enemy(&"raider"), c.pool, c.items, strength, rng, null, pool)
 			var bags: Array = (built["content"]["items"] as Array).filter(func(e): return c.items.get_def(StringName(String(e["id"]))).is_bag)
-			t.check(bags.size() >= tier.bag_count.x, "%d 档种子 %d：至少 %d 个包（%d）" % [strength, seed, tier.bag_count.x, bags.size()])
+			t.check(bags.size() >= tier.bag_count.x, "%d 档种子 %d：至少 %d 个包（%d）" % [strength, seed_, tier.bag_count.x, bags.size()])
 			for e in bags:
 				var d := c.items.get_def(StringName(String(e["id"])))
 				t.check(tier.rarity_cap < 0 or d.rarity <= tier.rarity_cap, "%d 档：%s 稀有度不超上限" % [strength, d.id])
-			t.eq(int(built["dropped"]), 0, "%d 档种子 %d：件数凑够" % [strength, seed])
+			t.eq(int(built["dropped"]), 0, "%d 档种子 %d：件数凑够" % [strength, seed_])
 	var mk := c.enemies.enemy(&"marksman")
 	var rng2 := RandomNumberGenerator.new()
 	rng2.seed = 1

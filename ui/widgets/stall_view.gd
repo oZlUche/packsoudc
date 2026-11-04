@@ -138,6 +138,7 @@ func cell_rect(slot: int) -> Rect2:
 	var cw := float(g.get("w", 1020)) / cols
 	var rh := float(g.get("h", 560)) / rows
 	var c := slot % cols
+	@warning_ignore("integer_division")
 	var r := slot / cols
 	return Rect2(float(g.get("x", 40)) + c * cw + (cw - cell) * 0.5, float(g.get("y", 160)) + r * rh + float(g.get("cell_top", 14)), cell, cell)
 

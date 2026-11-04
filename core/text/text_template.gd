@@ -98,7 +98,9 @@ static func _expand(token: String, ctx: Dictionary) -> Variant:
 		if v == null:
 			return null
 		var shown: Variant = _format(v, filter)
-		return _paint(String(shown), String(TYPED_STYLES["item_stat"])) if shown != null else null
+		if shown == null:
+			return null
+		return _paint(String(shown), String(TYPED_STYLES["item_stat"]))
 	if filter == "":
 		var typed: Variant = _typed(token, ctx)
 		if typed != null:
@@ -140,10 +142,14 @@ static func _typed(token: String, ctx: Dictionary) -> Variant:
 			return _paint(arg, String(TYPED_STYLES["key"]))
 		"faith":
 			var f := _faiths_of(ctx).get(StringName(arg), null) as FaithDef
-			return _paint(Names.of(f), String(TYPED_STYLES["faith"])) if f != null else null
+			if f == null:
+				return null
+			return _paint(Names.of(f), String(TYPED_STYLES["faith"]))
 		"faith_threshold", "faith_deed", "faith_offer", "faith_perk":
 			var n: Variant = _faith_stat(kind, arg, ctx)
-			return _paint(String(_format(n, "")), String(TYPED_STYLES["item_stat"])) if n != null else null
+			if n == null:
+				return null
+			return _paint(String(_format(n, "")), String(TYPED_STYLES["item_stat"]))
 	return null
 
 
@@ -160,11 +166,15 @@ static func _faith_stat(kind: String, arg: String, ctx: Dictionary) -> Variant:
 			if parts.size() != 2 or not parts[1].is_valid_int():
 				return null
 			var n := int(parts[1])
-			return def.thresholds[n - 1] if n >= 1 and n <= def.thresholds.size() else null
+			if n >= 1 and n <= def.thresholds.size():
+				return def.thresholds[n - 1]
+			return null
 		"faith_deed", "faith_perk":
 			if parts.size() != 3:
 				return null
-			var pool: Array = def.deeds if kind == "faith_deed" else def.perks
+			var pool: Array = def.perks
+			if kind == "faith_deed":
+				pool = def.deeds
 			for part in pool:
 				if part != null and String(ContentSchema.registry_name_of(part)) == parts[1]:
 					return _find_field(part, parts[2], 0)
@@ -234,14 +244,17 @@ static func num(v: float) -> String:
 
 ## 值 → 文字：整数值的 float 写成整数；[param filter] 不认识返回 null（整个记号原样保留）
 static func _format(v: Variant, filter: String) -> Variant:
-	var num := v is int or v is float
-	if filter != "" and not num:
+	var num_ := v is int or v is float
+	if filter != "" and not num_:
 		return null
 	match filter:
 		"":
 			pass
 		"abs":
-			v = absf(v) if v is float else absi(v)
+			if v is float:
+				v = absf(v)
+			else:
+				v = absi(v)
 		"signed":
 			var t: Variant = _format(v, "")
 			return ("+" + String(t)) if float(v) > 0.0 else String(t)

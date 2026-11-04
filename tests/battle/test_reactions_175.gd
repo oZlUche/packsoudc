@@ -203,9 +203,9 @@ static func run_pure(t: TestCase) -> void:
 	t.check(before.pure and not before.armor_absorbable and not before.provokes, "流血：真实、不吃护甲、不招致反应")
 	var halve := ModifyDamage.new()
 	halve.percent = -50
-	var tr := OnBeforeDamage.new()
-	tr.direction = DamageTrigger.Direction.TAKEN
-	var vest := H._compiled(2, "vest", {"max_armor": 30, "block": 4}, [H._rule(tr, Always.new(), [halve])])
+	var tr_ := OnBeforeDamage.new()
+	tr_.direction = DamageTrigger.Direction.TAKEN
+	var vest := H._compiled(2, "vest", {"max_armor": 30, "block": 4}, [H._rule(tr_, Always.new(), [halve])])
 	var ctx := H._battle(H._spec(100.0, [H._compiled(1, "a", {}, [])]), H._spec(100.0, [vest]))
 	S._start(ctx)
 	var foe := ctx.sides[1]

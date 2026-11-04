@@ -123,8 +123,8 @@ static func piece_of(opt: EventOption) -> StringName:
 
 
 ## 按事件里能对上的造物挑摆位（新手教程三档；其余 `full`）
-static func variant_for(pieces: Array) -> StringName:
-	var sorted := pieces.map(func(p): return String(p))
+static func variant_for(p_pieces: Array) -> StringName:
+	var sorted := p_pieces.map(func(p): return String(p))
 	sorted.sort()
 	for row in VARIANTS:
 		var want: Array = (row[0] as Array).map(func(p): return String(p))
@@ -146,36 +146,36 @@ func _build_pieces() -> void:
 			by_piece[p] = i
 	if _done and not by_piece.has(&"sign"):
 		by_piece[&"sign"] = -1
-	var variant := variant_for(by_piece.keys())
-	var spots: Dictionary = ((_layout.get("variants", {}) as Dictionary).get(String(variant), {}) as Dictionary)
+	var variant_ := variant_for(by_piece.keys())
+	var spots: Dictionary = ((_layout.get("variants", {}) as Dictionary).get(String(variant_), {}) as Dictionary)
 	var ctx := TextTemplate.context_for(flow.run, _node, {})
 	var order: Array = by_piece.keys().filter(func(p): return spots.has(String(p)))
 	order.sort_custom(func(a, b): return float((spots[String(a)] as Array)[1]) < float((spots[String(b)] as Array)[1]))     # 远的先画、近的压上去
 	for p in order:
 		var i := int(by_piece[p])
-		var piece := CampPiece.new()
-		piece.id = p
-		piece.index = i
-		piece.spot = Vector2(float((spots[String(p)] as Array)[0]), float((spots[String(p)] as Array)[1]))
+		var piece_ := CampPiece.new()
+		piece_.id = p
+		piece_.index = i
+		piece_.spot = Vector2(float((spots[String(p)] as Array)[0]), float((spots[String(p)] as Array)[1]))
 		var names: Array = PIECES[p]
-		piece.tex_on = String(names[0])
-		piece.tex_off = String(names[1])
-		piece.display_name = UiText.t(String(names[2]))
+		piece_.tex_on = String(names[0])
+		piece_.tex_off = String(names[1])
+		piece_.display_name = UiText.t(String(names[2]))
 		var state := _state(i, p)
-		piece.enabled = bool(state["ok"])
+		piece_.enabled = bool(state["ok"])
 		var opt := _def.options[i] as EventOption if i >= 0 else null
-		piece.effect = TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)) if opt != null else UiText.t("camp.leave")
-		piece.why = String(state["why"])
-		piece.pieces = _layout.get("pieces", {})
+		piece_.effect = TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)) if opt != null else UiText.t("camp.leave")
+		piece_.why = String(state["why"])
+		piece_.pieces = _layout.get("pieces", {})
 		if p == &"altar" and flow.run != null and flow.run.active_faith_id() != &"":
-			piece.medal = "rest/medal/%s" % flow.run.active_faith_id()     # 当前神明的徽章；没信仰不画
-		piece.gui_input.connect(func(e: InputEvent):
+			piece_.medal = "rest/medal/%s" % flow.run.active_faith_id()     # 当前神明的徽章；没信仰不画
+		piece_.gui_input.connect(func(e: InputEvent):
 			if e is InputEventMouseMotion and _tip != null:
 				_tip.follow(get_global_mouse_position()))
-		piece.hovered_changed.connect(_on_piece_hovered.bind(piece))
-		piece.pressed.connect(func(): click(p))
-		_pieces[p] = piece
-		_scene.add_child(piece)
+		piece_.hovered_changed.connect(_on_piece_hovered.bind(piece_))
+		piece_.pressed.connect(func(): click(p))
+		_pieces[p] = piece_
+		_scene.add_child(piece_)
 	_scene.fire_lit = _pieces.has(&"fire") and (_pieces[&"fire"] as CampPiece).enabled
 	_scene.fire_spot = (_pieces[&"fire"] as CampPiece).spot if _pieces.has(&"fire") else Vector2.ZERO
 	_scene.pieces = _layout.get("pieces", {})
@@ -235,12 +235,12 @@ func _scene_size() -> Vector2:
 	return Vector2(float(wh[0]), float(wh[1]))
 
 
-func _on_piece_hovered(on: bool, piece: CampPiece) -> void:
+func _on_piece_hovered(on: bool, p_piece: CampPiece) -> void:
 	if not on:
 		_tip.release()
 		return
-	var second := piece.effect if piece.enabled else (piece.why if piece.why != "" else UiText.t("camp.unavailable"))
-	_tip.show_text("[b]%s[/b]\n%s" % [piece.display_name, second], get_global_mouse_position())
+	var second := p_piece.effect if p_piece.enabled else (p_piece.why if p_piece.why != "" else UiText.t("camp.unavailable"))
+	_tip.show_text("[b]%s[/b]\n%s" % [p_piece.display_name, second], get_global_mouse_position())
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -361,8 +361,8 @@ func rest_note() -> String:
 #region 公开动作
 ## 点一件造物。路标 = 继续赶路；两份用完的那一屏路标回地图、铁炉照开。点不动返回 false
 func click(p: StringName) -> bool:
-	var piece: CampPiece = _pieces.get(p, null)
-	if piece == null or not piece.enabled:
+	var piece_: CampPiece = _pieces.get(p, null)
+	if piece_ == null or not piece_.enabled:
 		return false
 	_tip.hide_tip()
 	if _done:
@@ -370,7 +370,7 @@ func click(p: StringName) -> bool:
 			return flow.open_forge(_node)
 		flow.resume()
 		return true
-	return choose(piece.index)
+	return choose(piece_.index)
 
 
 ## 通用的「往下走」（和事件屏一样）：有待选的营地选第一个能选的；两份用完的那一屏 = 点路标
@@ -528,33 +528,33 @@ class CampPiece extends Control:
 	func texture_name() -> String:
 		return tex_on if enabled else tex_off
 
-	func _meta(name: String) -> Dictionary:
-		return pieces.get(name, {})
+	func _meta(p_name: String) -> Dictionary:
+		return pieces.get(p_name, {})
 
-	func _origin(name: String) -> Vector2:
-		var o: Array = _meta(name).get("origin", [0, 0])
+	func _origin(p_name: String) -> Vector2:
+		var o: Array = _meta(p_name).get("origin", [0, 0])
 		return Vector2(float(o[0]), float(o[1]))
 
-	func _size_of(name: String) -> Vector2:
-		var o: Array = _meta(name).get("size", [0, 0])
+	func _size_of(p_name: String) -> Vector2:
+		var o: Array = _meta(p_name).get("size", [0, 0])
 		return Vector2(float(o[0]), float(o[1]))
 
 	## 按营地的缩放摆到屏上：控件盖住这张图（原点对齐落地中心）
 	func layout_at(s: float, offset: Vector2) -> void:
 		_scale = s
-		var name := texture_name()
-		position = offset + (spot - _origin(name)) * s
-		size = _size_of(name) * s
+		var name_ := texture_name()
+		position = offset + (spot - _origin(name_)) * s
+		size = _size_of(name_) * s
 		queue_redraw()
 
 	func _draw() -> void:
-		var name := texture_name()
-		var org := _origin(name) * _scale
+		var name_ := texture_name()
+		var org := _origin(name_) * _scale
 		if hovered and enabled:
 			var ring := UiTheme.art_cached("rest/hover_ring")
 			if ring != null:
 				draw_texture_rect(ring, Rect2(org - _origin("hover_ring") * _scale, _size_of("hover_ring") * _scale), false)
-		var tex := UiTheme.art_cached(UiTheme.lang_art("rest/" + name))     # 221：路标英文版 MOVE ON
+		var tex := UiTheme.art_cached(UiTheme.lang_art("rest/" + name_))     # 221：路标英文版 MOVE ON
 		if tex != null:
 			draw_texture_rect(tex, Rect2(Vector2.ZERO, size), false)
 		if medal != "":
@@ -579,11 +579,11 @@ class CampPiece extends Control:
 			return false
 		return mask.get_bitv(px)
 
-	static func _mask(name: String) -> BitMap:
-		name = UiTheme.lang_art("rest/" + name).trim_prefix("rest/")
-		if _masks.has(name):
-			return _masks[name]
-		var tex := UiTheme.art_cached("rest/" + name)
+	static func _mask(p_name: String) -> BitMap:
+		p_name = UiTheme.lang_art("rest/" + p_name).trim_prefix("rest/")
+		if _masks.has(p_name):
+			return _masks[p_name]
+		var tex := UiTheme.art_cached("rest/" + p_name)
 		var bm: BitMap = null
 		if tex != null:
 			var img := tex.get_image()
@@ -592,7 +592,7 @@ class CampPiece extends Control:
 					img.decompress()
 				bm = BitMap.new()
 				bm.create_from_image_alpha(img, 0.1)
-		_masks[name] = bm
+		_masks[p_name] = bm
 		return bm
 
 	func _gui_input(event: InputEvent) -> void:

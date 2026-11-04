@@ -139,9 +139,9 @@ static func sources(run: RunState, stat: StringName) -> Array[Dictionary]:
 	return out
 
 
-static func _add_source(out: Array[Dictionary], name: String, delta: float) -> void:
+static func _add_source(out: Array[Dictionary], p_name: String, delta: float) -> void:
 	if not is_zero_approx(delta):
-		out.append({"name": name, "delta": delta})
+		out.append({"name": p_name, "delta": delta})
 
 
 ## 一份 [RunContext] 给这项加了多少（倍率按角色基线算，再加平加）

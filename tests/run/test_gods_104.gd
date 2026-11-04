@@ -19,8 +19,8 @@ static func _start(items: ItemDatabase) -> RunState:
 	sets.load_dir()
 	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var chars := GameFlow.load_characters()
-	for seed in range(1, 60):
-		var s := RunState.start(chapter, seed, items, enemies, sets, [] as Array[StringName], {}, [] as Array[StringName], chars[0] if not chars.is_empty() else null)
+	for seed_ in range(1, 60):
+		var s := RunState.start(chapter, seed_, items, enemies, sets, [] as Array[StringName], {}, [] as Array[StringName], chars[0] if not chars.is_empty() else null)
 		if s != null:
 			s.faith_defs = FaithDef.load_all()
 			s.pick_spawn(s.map.entry_ids[0])
@@ -108,9 +108,9 @@ static func run_acquired_wiring(t: TestCase) -> void:
 	t.eq(s.active_faith_id(), &"skill", "激活技巧之神")
 	var metal: ItemDef = null
 	for id in db.ids():
-		var d := db.get_def(id)
-		if d.tags.has(&"crafted") and not d.has_faith() and not d.is_blessed():
-			metal = d
+		var d_ := db.get_def(id)
+		if d_.tags.has(&"crafted") and not d_.has_faith() and not d_.is_blessed():
+			metal = d_
 			break
 	t.not_null(metal, "有一件工艺道具")
 	if metal == null:

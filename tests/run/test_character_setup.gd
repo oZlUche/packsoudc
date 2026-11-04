@@ -123,10 +123,10 @@ static func run_start_with_character(t: TestCase) -> void:
 		return
 	var ch := c.characters[0]
 	var run: RunState = null
-	var seed := 1
-	while run == null and seed < 30:
-		run = RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch)
-		seed += 1
+	var seed_ := 1
+	while run == null and seed_ < 30:
+		run = RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch)
+		seed_ += 1
 	t.not_null(run, "开得了局")
 	if run == null:
 		return
@@ -146,7 +146,7 @@ static func run_start_with_character(t: TestCase) -> void:
 	var layout := RunState.layout_of(staged)
 	t.eq(layout.size(), ch.starting_bags.size() + 1, "layout 一件一行")
 	t.eq(String(layout[0]["id"]), String(ch.starting_bags[0]), "包排在前面")
-	var run2 := RunState.start(c.chapter, seed - 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch, layout)
+	var run2 := RunState.start(c.chapter, seed_ - 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch, layout)
 	t.not_null(run2, "带着 layout 开局")
 	if run2 != null:
 		t.eq(RunState.layout_of(run2.board), layout, "一局里的棋盘和开局屏摆的逐件相同（定义、落点、朝向）")
@@ -160,7 +160,7 @@ static func run_start_with_character(t: TestCase) -> void:
 		t.eq(back.board.size, ch.board_size, "棋盘尺寸跟着存档")
 
 	# 没给角色 = 老路：占位的尺寸与体力
-	var legacy := RunState.start(c.chapter, seed - 1, c.items, c.enemies, c.sets, c.loadouts[0].items)
+	var legacy := RunState.start(c.chapter, seed_ - 1, c.items, c.enemies, c.sets, c.loadouts[0].items)
 	t.eq(legacy.board.size, RunState.BOARD_SIZE, "老路棋盘是占位尺寸")
 	t.eq(legacy.vitality.maximum, Vitality.PLACEHOLDER_MAX, "老路体力是占位上限")
 	t.eq(legacy.character_id, &"", "老路没有角色")
@@ -207,10 +207,10 @@ static func run_first_kit_and_flow(t: TestCase) -> void:
 	t.check(InventoryService.transfer_auto(f.meta.warehouse, first.uid, staged), "从仓库挪到了棋盘（拖拽做的就是这个）")
 	t.eq(f.meta.warehouse.item_count(), kept.size() - 1, "仓库少了一件")
 	var run: RunState = null
-	var seed := 1
-	while run == null and seed < 30:
-		run = f.begin(c.chapter, null, seed, [] as Array[int], ch, RunState.layout_of(staged))
-		seed += 1
+	var seed_ := 1
+	while run == null and seed_ < 30:
+		run = f.begin(c.chapter, null, seed_, [] as Array[int], ch, RunState.layout_of(staged))
+		seed_ += 1
 	t.not_null(run, "出发")
 	if run == null:
 		return
@@ -318,9 +318,9 @@ static func frame_run_setup_screen(t: TestCase, root: Window) -> void:
 
 	# 出发：带的那件按原位进一局，仓库存了
 	var went := false
-	for seed in range(1, 30):
+	for seed_ in range(1, 30):
 		setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
-		setup.set_run_seed(seed)
+		setup.set_run_seed(seed_)
 		if Support.depart(setup):
 			went = true
 			break
@@ -450,9 +450,9 @@ static func frame_setup_stash(t: TestCase, root: Window) -> void:
 	t.eq(setup.stash.item_count(), 2, "又到了地上")
 	t.check(setup.carry_in(uids[0]), "带上一件")
 	var went := false
-	for seed in range(1, 30):
+	for seed_ in range(1, 30):
 		setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
-		setup.set_run_seed(seed)
+		setup.set_run_seed(seed_)
 		if Support.depart(setup):
 			went = true
 			break

@@ -320,7 +320,10 @@ static func run_best_run_round_trip(t: TestCase) -> void:
 	var old := MetaState.new(GameFlow.load_meta_rules()).to_dict()
 	old.erase("best_run")
 	var reread := MetaState.from_dict(old, db, GameFlow.load_meta_rules())
-	t.eq(reread.best_run if reread != null else null, {}, "老存档没有：空")
+	var best: Variant = null
+	if reread != null:
+		best = reread.best_run
+	t.eq(best, {}, "老存档没有：空")
 	t.eq(r.to_dict().get("character"), "marcus", "RunResult 字典里有角色（对局记录也用）")
 	t.eq(r.to_dict().get("ended_at"), 1700000000, "结束时间")
 

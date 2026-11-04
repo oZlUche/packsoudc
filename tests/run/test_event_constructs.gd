@@ -5,6 +5,7 @@ extends RefCounted
 
 
 class FakeErosion extends ErosionField:
+	@warning_ignore("shadowed_global_identifier")
 	var log: Array = []
 	var depths: Dictionary = {}
 	func on_action(clock: ActionClock, _graph: MapGraph) -> void:
@@ -36,8 +37,8 @@ static func _event(id: StringName, options: Array) -> EventDef:
 
 ## 出生点旁边有某类型点的一局；把事件 [param eid] 放到那个点上。返回 {"run", "next"}
 static func _run_with(c: TestSupport.Content, defs: Dictionary, eid: StringName, type: StringName = &"event") -> Dictionary:
-	for seed in range(1, 80):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"shortsword", &"knife"] as Array[StringName])
+	for seed_ in range(1, 80):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, [&"bag_leather", &"shortsword", &"knife"] as Array[StringName])
 		if s == null:
 			continue
 		for entry in s.map.entry_ids:

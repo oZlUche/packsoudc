@@ -14,9 +14,9 @@ static func _carried(content: Dictionary) -> Array[StringName]:
 	return out
 
 
-static func _build(c: TestSupport.Content, enemy: StringName, strength: int, seed: int, carry: CarryRule) -> Dictionary:
+static func _build(c: TestSupport.Content, enemy: StringName, strength: int, p_seed: int, carry: CarryRule) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed
+	rng.seed = p_seed
 	return EnemyPlacer.build_content(c.enemies.enemy(enemy), c.pool, c.items, strength, rng, carry)
 
 
@@ -55,10 +55,10 @@ static func run(t: TestCase) -> void:
 	var totals: Array[int] = [0, 0, 0, 0]
 	for strength in 4:
 		var span := c.carry.count_range(strength)
-		for seed in 60:
-			var built := _build(c, enemy, strength, 1000 + seed, c.carry)
-			var n := _carried(built["content"]).size()
-			t.check(n <= span.y, "档位 %d 种子 %d：%d 件 ≤ %d" % [strength, seed, n, span.y])
+		for seed_ in 60:
+			var built_ := _build(c, enemy, strength, 1000 + seed_, c.carry)
+			var n := _carried(built_["content"]).size()
+			t.check(n <= span.y, "档位 %d 种子 %d：%d 件 ≤ %d" % [strength, seed_, n, span.y])
 			totals[strength] += n
 	t.check(totals[3] > totals[0], "档位 3 合计 %d 件 > 档位 0 的 %d 件" % [totals[3], totals[0]])
 
@@ -93,8 +93,8 @@ static func run(t: TestCase) -> void:
 
 	t.begin("126 · 掉落：携带品必掉、不占保底名额；关掉 carried_always_drop 就和别的一样掷")
 	var content: Dictionary = {}
-	for seed in 200:
-		var b := _build(c, enemy, 3, 400 + seed, c.carry)
+	for seed_ in 200:
+		var b := _build(c, enemy, 3, 400 + seed_, c.carry)
 		if not _carried(b["content"]).is_empty():
 			content = b["content"]
 			break

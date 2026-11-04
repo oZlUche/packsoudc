@@ -9,8 +9,8 @@ static func _content() -> TestSupport.Content:
 	return TestSupport.load_content()
 
 
-static func _start(c: TestSupport.Content, seed: int, kit: Array[StringName] = KIT) -> RunState:
-	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
+static func _start(c: TestSupport.Content, p_seed: int, kit: Array[StringName] = KIT) -> RunState:
+	var s := RunState.start(c.chapter, p_seed, c.items, c.enemies, c.sets, kit)
 	if s != null:
 		s.player_baseline = CombatantBaseline.with_hp(10000.0)   # 测试里不想输的时候
 	return s
@@ -27,8 +27,8 @@ static func _neighbor_of_type(s: RunState, type: StringName) -> int:
 
 ## 找一个出生点旁边就有战斗点的种子并开局
 static func _start_with_battle_next(c: TestSupport.Content, kit: Array[StringName] = KIT) -> RunState:
-	for seed in range(1, 60):
-		var s := _start(c, seed, kit)
+	for seed_ in range(1, 60):
+		var s := _start(c, seed_, kit)
 		if s == null:
 			continue
 		for entry in s.map.entry_ids:

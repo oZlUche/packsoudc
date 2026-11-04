@@ -228,11 +228,11 @@ func _import(data: Dictionary, report: ImportReport) -> Resource:
 
 
 func _new_def() -> Resource:
-	var def := BuffDef.new()
-	def.id = &"new_buff"
-	def.display_name = "新 buff" if UiText.lang == "zh" else "New buff"
-	def.stackable = true     # 作者定：通常可叠层（137：可叠就是不限层），且可叠层的永续
-	return def
+	var def_ := BuffDef.new()
+	def_.id = &"new_buff"
+	def_.display_name = "新 buff" if UiText.lang == "zh" else "New buff"
+	def_.stackable = true     # 作者定：通常可叠层（137：可叠就是不限层），且可叠层的永续
+	return def_
 
 
 func _new_buff() -> void:

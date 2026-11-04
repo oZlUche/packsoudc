@@ -186,10 +186,10 @@ func _on_button(b: BaseButton) -> void:
 ## 空着的播放器；都在响就抢下一个（轮着来，抢到的是最早开始的）
 func _player() -> AudioStreamPlayer:
 	for k in POOL:
-		var p := _players[(_next + k) % POOL]
-		if not p.playing:
+		var p_ := _players[(_next + k) % POOL]
+		if not p_.playing:
 			_next = (_next + k + 1) % POOL
-			return p
+			return p_
 	var p := _players[_next]
 	_next = (_next + 1) % POOL
 	return p
@@ -201,17 +201,17 @@ func _stream(path: String) -> AudioStream:
 	return _streams[path]
 
 
-static func _bus(name: StringName) -> void:
-	if AudioServer.get_bus_index(name) >= 0:
+static func _bus(p_name: StringName) -> void:
+	if AudioServer.get_bus_index(p_name) >= 0:
 		return
 	AudioServer.add_bus()
 	var idx := AudioServer.bus_count - 1
-	AudioServer.set_bus_name(idx, name)
+	AudioServer.set_bus_name(idx, p_name)
 	AudioServer.set_bus_send(idx, &"Master")
 
 
-static func _volume(name: StringName, v: float) -> void:
-	var idx := AudioServer.get_bus_index(name)
+static func _volume(p_name: StringName, v: float) -> void:
+	var idx := AudioServer.get_bus_index(p_name)
 	if idx < 0:
 		return
 	var lin := clampf(v, 0.0, 1.0)

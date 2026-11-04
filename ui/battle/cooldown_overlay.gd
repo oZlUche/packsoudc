@@ -37,8 +37,8 @@ func reset(initial: Dictionary) -> void:
 	_flash.clear()
 	steps.clear()
 	for uid in initial:
-		var ready := float(initial[uid])
-		cycles[int(uid)] = [0.0, ready, ready]
+		var ready_ := float(initial[uid])
+		cycles[int(uid)] = [0.0, ready_, ready_]
 	queue_redraw()
 
 
@@ -106,7 +106,7 @@ func _draw() -> void:
 			var square := PackedVector2Array([at, at + Vector2(cell, 0), at + Vector2(cell, cell), at + Vector2(0, cell)])
 			for piece in Geometry2D.intersect_polygons(fan, square):
 				draw_colored_polygon(piece, MASK)
-	_draw_steps(cell)
+	_draw_steps(int(cell))
 
 
 ## 175：法杖第一格左上角的罗马数字（Ⅰ Ⅱ …，和倍速同一套字形）

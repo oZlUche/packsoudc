@@ -194,8 +194,8 @@ func _build_back() -> void:
 
 
 ## 一件九宫格皮料（[param stretch] 拉伸；否则平铺）
-func _patch(node_name: String, key: String, stretch: bool) -> NinePatchRect:
-	var d: Dictionary = _satchel[key]
+func _patch(node_name: String, p_key: String, stretch: bool) -> NinePatchRect:
+	var d: Dictionary = _satchel[p_key]
 	var n := NinePatchRect.new()
 	n.name = node_name
 	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -215,10 +215,10 @@ func _patch(node_name: String, key: String, stretch: bool) -> NinePatchRect:
 func _layout_back(want: Vector2) -> void:
 	if _back == null:
 		return
-	var body: Dictionary = _satchel["body"]
+	var body_: Dictionary = _satchel["body"]
 	var b := _back.get_node("Body") as Control
-	b.position = _vec(body["at"])
-	b.size = want + _vec(body["grow"])
+	b.position = _vec(body_["at"])
+	b.size = want + _vec(body_["grow"])
 	var flap: Dictionary = _satchel["flap"]
 	var f := _back.get_node("Flap") as Control
 	f.position = _vec(flap["at"])

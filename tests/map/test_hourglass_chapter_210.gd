@@ -48,9 +48,9 @@ static func run_generate(t: TestCase) -> void:
 	t.begin("210 · ② 生成：十层、对侧最后一层两个撤离点 + 正中核心、过校验；危险按 danger_by_row")
 	var c := _chapter()
 	var cfg := c.map_source.generator_config as HourglassMapConfig
-	for seed in [3, 11, 29]:
-		var g := c.map_source.resolve(seed)
-		t.not_null(g, "种子 %d 生成得出来" % seed)
+	for seed_ in [3, 11, 29]:
+		var g := c.map_source.resolve(seed_)
+		t.not_null(g, "种子 %d 生成得出来" % seed_)
 		if g == null:
 			continue
 		t.eq(g.layout_kind, &"hourglass", "横置沙漏")
@@ -66,17 +66,18 @@ static func run_generate(t: TestCase) -> void:
 			t.eq(_row(g, id), 9, "终点在最后一层")
 			if n.type == &"core":
 				cores += 1
+				@warning_ignore("integer_division")
 				t.eq(_col(g, id), (cfg.width - 1) / 2, "核心在正中")
 			elif n.type == &"extract":
 				exits += 1
-		t.eq([cores, exits], [1, 2], "一个核心、两个撤离点（种子 %d）" % seed)
+		t.eq([cores, exits], [1, 2], "一个核心、两个撤离点（种子 %d）" % seed_)
 		for id in g.node_ids():
 			var n := g.get_node(id)
 			if n.type != &"core" and n.type != &"extract" and n.type != &"spawn":
 				t.eq(n.danger, cfg.danger_by_row[_row(g, id)], "点 %d 的危险按层（第 %d 层）" % [id, _row(g, id)])
 		var v := MapValidation.new()
 		HourglassMapGenerator.new().validate(g, v)
-		t.check(v.ok(), "种子 %d 过校验：%s" % [seed, v.to_text()])
+		t.check(v.ok(), "种子 %d 过校验：%s" % [seed_, v.to_text()])
 
 
 static func run_pool(t: TestCase) -> void:
@@ -85,12 +86,12 @@ static func run_pool(t: TestCase) -> void:
 	t.not_null(c.pool, "池在")
 	var seen := {}
 	var depth_strength := {}
-	for seed in [3, 11, 29, 41]:
-		var g := c.chapter.map_source.resolve(seed)
+	for seed_ in [3, 11, 29, 41]:
+		var g := c.chapter.map_source.resolve(seed_)
 		if g == null:
 			continue
 		var done := EnemyPlacer.fill(g, c.pool, c.enemies, c.items, 0, &"")
-		t.check((done["skipped"] as Array).is_empty(), "种子 %d：每个战斗点都挑到了人（%s）" % [seed, done["skipped"]])
+		t.check((done["skipped"] as Array).is_empty(), "种子 %d：每个战斗点都挑到了人（%s）" % [seed_, done["skipped"]])
 		for id in g.node_ids():
 			var n := g.get_node(id)
 			if not EnemyKit.has_enemy(n.content):
@@ -138,8 +139,8 @@ static func frame_setup_and_depart(t: TestCase, root: Window) -> void:
 	# 213 起开局屏也画沙漏的入口：先在第三页挑一个，再出发
 	var went := false
 	var pick := -1
-	for seed in range(1, 20):
-		setup.set_run_seed(seed)
+	for seed_ in range(1, 20):
+		setup.set_run_seed(seed_)
 		var ids: Array[int] = setup.preview().entry_ids()
 		if ids.is_empty() or not setup.pick_spawn(ids[0]):
 			continue

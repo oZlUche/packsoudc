@@ -193,13 +193,13 @@ func _import(data: Dictionary, report: ImportReport) -> Resource:
 
 
 func _new_def() -> Resource:
-	var def := ItemSetDef.new()
-	def.id = &"new_set"
-	def.display_name = "新套装"
+	var def_ := ItemSetDef.new()
+	def_.id = &"new_set"
+	def_.display_name = "新套装"
 	var tier := SetTier.new()
 	tier.pieces = 2
-	def.tiers.append(tier)
-	return def
+	def_.tiers.append(tier)
+	return def_
 
 
 func _new_set() -> void:

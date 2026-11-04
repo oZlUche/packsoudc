@@ -79,9 +79,9 @@ func over_value() -> int:
 func closing_extract_id() -> int:
 	if _run == null or _run.map == null:
 		return -1
-	for id in _run.map.node_ids():
-		if PaidExtracts.closes_at(_run.map.get_node(id)) >= 0:
-			return id
+	for id_ in _run.map.node_ids():
+		if PaidExtracts.closes_at(_run.map.get_node(id_)) >= 0:
+			return id_
 	return -1
 
 

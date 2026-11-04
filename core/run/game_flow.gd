@@ -419,12 +419,12 @@ func tutorials_done() -> bool:
 
 
 ## 084：不经开局屏直接开一章：角色 = 这一章能选的第一个，种子随机；开了先过 intro 事件（配了的话）。开不了返回 null
-func begin_direct(chapter: ChapterDef, seed: int = -1) -> RunState:
+func begin_direct(chapter: ChapterDef, p_seed: int = -1) -> RunState:
 	if chapter == null:
 		return null
 	var chars := characters_for(chapter)
 	var ch: CharacterDef = chars[0] if not chars.is_empty() else null
-	var s := seed if seed >= 0 else (randi() % 1_000_000) + 1
+	var s := p_seed if p_seed >= 0 else (randi() % 1_000_000) + 1
 	var state := begin(chapter, null, s, [] as Array[int], ch, [])
 	if state == null:
 		return null
@@ -949,7 +949,7 @@ static func bias_of(flag_value: int) -> StringName:
 ##   （仓库里的东西拖上去那一刻已经离开仓库）。
 ## 两条路都在开局那一刻存 meta：带进去的从仓库拿走（一局里是新实例，3.1 存档只写 id），撤离了回来，死了就是真没了。
 ## 生成不出图返回 null，停在开局屏
-func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: Array[int] = [] as Array[int],
+func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse: Array[int] = [] as Array[int],
 		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0,
 		spawn_id: int = -1, carry_funds: int = 0) -> RunState:
 	var kit: Array[StringName] = []
@@ -974,7 +974,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, seed: int, from_warehouse: 
 	# 2026-10-22（作者定）：这一局带多少现金进来 —— 由开局屏选，从仓库账上扣，死在局内就没了。
 	# 夹在 0 和仓库余额之间：界面本来就按余额封顶，这里是兜底（存档改过、并发调用都不至于扣成负数）
 	var cash := clampi(carry_funds, 0, meta.funds if meta != null else 0)
-	var state := RunState.start(chapter, seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs, cash)
+	var state := RunState.start(chapter, p_seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs, cash)
 	if state == null:
 		return null
 	state.material_bias = bias_of(meta.flag(BIAS_FLAG)) if meta != null else &""     # 267 A：出征页选的倾向

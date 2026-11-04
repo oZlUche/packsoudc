@@ -158,8 +158,8 @@ func upgrade_button(id: StringName) -> Button:
 
 ## 右板三区的文字（测试看）：{name（名牌：名称　等级）, effect, cost（账目行一行一行，栏间全角空格）}
 func panel_texts() -> Dictionary:
-	var name := UiText.t("tech.name_level") % [_name.text, _level.text] if _name.text != "" else ""
-	return {"name": name, "effect": _texts_of(_effect), "cost": _texts_of(_cost)}
+	var name_ := UiText.t("tech.name_level") % [_name.text, _level.text] if _name.text != "" else ""
+	return {"name": name_, "effect": _texts_of(_effect), "cost": _texts_of(_cost)}
 
 
 func tree() -> TechTreeView:
@@ -256,10 +256,10 @@ func _refresh() -> void:
 		var need := int(tier.items[key])
 		var have := TechService.deposited(_meta, def.id, id)
 		var item_def := _flow.items.get_def(id) if _flow.items != null else null
-		var name := Names.of(item_def) if item_def != null else String(key)
+		var name_ := Names.of(item_def) if item_def != null else String(key)
 		var own := int(owned.get(String(key), 0))
-		var row := _ledger_row(name + (UiText.t("tech.material_done") if have >= need else ""), "%d / %d" % [have, need],
-			UiText.t("tech.owned") % own, have >= need, UiText.t("tech.material_tip") % [name, have, need])
+		var row := _ledger_row(name_ + (UiText.t("tech.material_done") if have >= need else ""), "%d / %d" % [have, need],
+			UiText.t("tech.owned") % own, have >= need, UiText.t("tech.material_tip") % [name_, have, need])
 		var k := mini(maxi(0, need - have), own)
 		if open and k > 0:
 			var btn := UiTheme.make_home_button(UiText.t("tech.submit_k") % k, submit_many.bind(id, k), false, Vector2.ZERO, 16)     # 乙 石刻：木牌

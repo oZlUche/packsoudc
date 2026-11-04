@@ -38,6 +38,7 @@ func _step_duration(ctx: RuleContext) -> int:
 	if not use_haste:
 		return period
 	var rate := maxi(1, ctx.item_stat(BattleStats.HASTE, StatMath.ONE))
+	@warning_ignore("integer_division")
 	return maxi(MIN_PERIOD, (period * StatMath.ONE) / rate)
 
 

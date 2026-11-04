@@ -62,29 +62,29 @@ static func run_travel_discount(t: TestCase) -> void:
 	t.eq(s.travel.free_step_every, fx.every, "旅程读到每 %d 步" % fx.every)
 	t.eq(CS._start(c, marcus).travel.free_step_every, 0, "马库斯没有")
 	# 只测旅程：节点的事与猎手闸门摘掉，来回走两点
-	var tr := s.travel
-	tr.on_node_event = Callable()
-	tr.arrival_gate = Callable()
-	tr.erosion = null
-	var a := tr.current_id
-	var b := _ping_pong(tr)
+	var tr_ := s.travel
+	tr_.on_node_event = Callable()
+	tr_.arrival_gate = Callable()
+	tr_.erosion = null
+	var a := tr_.current_id
+	var b := _ping_pong(tr_)
 	t.check(b >= 0, "有能来回走的一对点")
 	if b < 0:
 		return
 	var costs: Array[int] = []
 	var previews: Array[int] = []
 	for i in fx.every * 2 + 2:
-		var to := b if tr.current_id == a else a
-		var intent := MapNavigator.resolve_step(tr.graph, tr.current_id, to)
-		previews.append(tr.cost_of(intent))
-		var before := tr.clock.total
-		var ok := tr.step_to(to)
+		var to := b if tr_.current_id == a else a
+		var intent := MapNavigator.resolve_step(tr_.graph, tr_.current_id, to)
+		previews.append(tr_.cost_of(intent))
+		var before := tr_.clock.total
+		var ok := tr_.step_to(to)
 		if not ok:
 			t.check(false, "第 %d 步走不动" % (i + 1))
 			return
-		costs.append(tr.clock.total - before)
+		costs.append(tr_.clock.total - before)
 		if i == 1:
-			var back := MapTravel.from_dict(JSON.parse_string(JSON.stringify(tr.to_dict())), tr.graph)
+			var back := MapTravel.from_dict(JSON.parse_string(JSON.stringify(tr_.to_dict())), tr_.graph)
 			t.eq(back.paid_steps, 2, "读档：已经付过 2 步")
 	t.eq(previews, costs, "预览和真花的一样：%s" % [costs])
 	for i in costs.size():
@@ -93,7 +93,7 @@ static func run_travel_discount(t: TestCase) -> void:
 			t.eq(costs[i], 0, "第 %d 步免费" % (i + 1))
 		else:
 			t.check(costs[i] > 0, "第 %d 步照花（%d）" % [i + 1, costs[i]])
-	t.eq(tr.last_cost, costs[costs.size() - 1], "日志读 last_cost")
+	t.eq(tr_.last_cost, costs[costs.size() - 1], "日志读 last_cost")
 
 
 static func run_slip(t: TestCase) -> void:

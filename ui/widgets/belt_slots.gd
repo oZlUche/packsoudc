@@ -173,9 +173,9 @@ func _draw() -> void:
 			draw_texture_rect(icon, Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s)), false)
 		elif f != null:
 			var glyph := (def.display_name if def != null else String(sid)).left(1)
-			var size := 24
-			var w := f.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, size)
-			draw_string(f, c + Vector2(-w.x * 0.5, size * 0.35), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, size, INK if bent else UiPalette.FG)
+			var size_ := 24
+			var w := f.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, size_)
+			draw_string(f, c + Vector2(-w.x * 0.5, size_ * 0.35), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, size_, INK if bent else UiPalette.FG)
 		# 右下角的数量小圆标
 		var b := c + Vector2(r * 0.68, r * 0.68)
 		draw_circle(b, BADGE * 0.5, UiPalette.STAMINA)

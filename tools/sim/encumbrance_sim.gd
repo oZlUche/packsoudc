@@ -61,9 +61,9 @@ func _init() -> void:
 					if not [&"andreus", &"marcus", &"brutus"].has(ch.id):
 						continue
 					for i in per_group:
-						var seed := 1000 + i * 7919 + si * 101 + ci * 13     # 两种拿法用同一组种子，好对照
-						rng.seed = seed * 31 + 7
-						var rec := _one_run(StringName(scales[si]), ch, loadout, seed)
+						var seed_ := 1000 + i * 7919 + si * 101 + ci * 13     # 两种拿法用同一组种子，好对照
+						rng.seed = seed_ * 31 + 7
+						var rec := _one_run(StringName(scales[si]), ch, loadout, seed_)
 						rec["policy"] = policy
 						rec["difficulty"] = String(diff.id) if diff != null else ""
 						out_file.store_line(JSON.stringify(rec))
@@ -73,13 +73,13 @@ func _init() -> void:
 	quit(0)
 
 
-func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, seed: int) -> Dictionary:
+func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, p_seed: int) -> Dictionary:
 	var f := FS.flow(c, "encsim", hp)
 	if difficulty != null and difficulty.requires_unlock != &"":
 		f.meta.grant_unlock(difficulty.requires_unlock)
-	var run := f.begin(c.chapter, loadout, seed, [] as Array[int], ch, [], difficulty, scale)
+	var run := f.begin(c.chapter, loadout, p_seed, [] as Array[int], ch, [], difficulty, scale)
 	if run == null:
-		return {"error": "no run", "scale": String(scale), "char": String(ch.id), "seed": seed}
+		return {"error": "no run", "scale": String(scale), "char": String(ch.id), "seed": p_seed}
 	if run.travel.current_id < 0:
 		var entries: Array = run.map.entry_ids
 		f.pick_spawn(entries[rng.randi_range(0, entries.size() - 1)])
@@ -105,7 +105,6 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, seed: in
 		level_steps[lv] += 1
 		var cd := CountdownModule.of(run)
 		var left := cd.left() if cd != null else 999
-		var here := run.current_node()
 		var ext := _nearest_extract(run)
 		var mult := maxi(1, run.travel.action_cost_mult)
 		var ext_cost := int(ext["dist"]) * mult if not ext.is_empty() else 999
@@ -145,7 +144,7 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, seed: in
 		snap = last_snap if not last_snap.is_empty() else _snapshot(run)
 	snap["scale"] = String(scale)
 	snap["char"] = String(ch.id)
-	snap["seed"] = seed
+	snap["seed"] = p_seed
 	snap["steps"] = steps
 	snap["why"] = why if not run.is_over() else "over:%d" % run.phase
 	snap["left"] = CountdownModule.of(run).left() if CountdownModule.of(run) != null else -1
@@ -165,7 +164,6 @@ func _snapshot(run: RunState) -> Dictionary:
 	var weapons := 0
 	var defense := 0
 	var precious := 0
-	var precious_ids := []
 	var bags := 0
 	var by_tag := {}
 	var items := []

@@ -22,14 +22,14 @@ static func _loadout(c: TestSupport.Content, id: StringName) -> LoadoutDef:
 
 ## 找一个种子：某个出生点旁边就有某类型的点。返回 {seed, entry, next}，找不到空字典
 static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[StringName] = [] as Array[StringName]) -> Dictionary:
-	for seed in range(1, 80):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
+	for seed_ in range(1, 80):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit)
 		if s == null:
 			continue
 		for entry in s.map.entry_ids:
 			for nid in s.map.neighbors(entry):
 				if s.map.get_node(nid).type == type:
-					return {"seed": seed, "entry": entry, "next": nid}
+					return {"seed": seed_, "entry": entry, "next": nid}
 	return {}
 
 
@@ -373,8 +373,8 @@ static func run_flow_extract(t: TestCase) -> void:
 	var f := Support.flow(c, "flow")
 	var run: RunState = null
 	var target := -1
-	for seed in range(1, 40):
-		run = f.begin(c.chapter, kit, seed)
+	for seed_ in range(1, 40):
+		run = f.begin(c.chapter, kit, seed_)
 		if run == null:
 			continue
 		var entry: int = run.map.entry_ids[0]

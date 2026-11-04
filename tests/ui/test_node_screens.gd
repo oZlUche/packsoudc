@@ -24,14 +24,14 @@ static func _kit(c: TestSupport.Content) -> LoadoutDef:
 
 ## 出生点旁边就有某类型点的种子：{seed, entry, next}
 static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[StringName]) -> Dictionary:
-	for seed in range(1, 80):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
+	for seed_ in range(1, 80):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit)
 		if s == null:
 			continue
 		for entry in s.map.entry_ids:
 			for nid in s.map.neighbors(entry):
 				if s.map.get_node(nid).type == type:
-					return {"seed": seed, "entry": entry, "next": nid}
+					return {"seed": seed_, "entry": entry, "next": nid}
 	return {}
 
 
@@ -170,7 +170,7 @@ static func run_search_loop(t: TestCase) -> void:
 			t.eq(f.screen, GameFlow.Screen.LOOT, "回放之后先看战利品（096）")
 			f.take_all_loot()
 		var after: EventDef = f.last_payload.get("def", null)
-		t.check(f.screen == GameFlow.Screen.EVENT and after != null and (after.id == &"search_again" or after.id == &"search_done"), "回放之后回到「再搜 / 走」那一屏（%s）" % (after.id if after != null else "?"))
+		t.check(f.screen == GameFlow.Screen.EVENT and after != null and (after.id == &"search_again" or after.id == &"search_done"), "回放之后回到「再搜 / 走」那一屏（%s）" % (String(after.id) if after != null else "?"))
 		var leave_at := _labels(after).find("离开") if after != null else 0
 		t.check(f.choose_event(maxi(leave_at, 0)), "离开")
 		if run.pending_loot != null:
@@ -359,7 +359,6 @@ static func frame_minimize_and_window(t: TestCase, root: Window) -> void:
 	t.check(map.reopen(), "回到这个点")
 	t.check(game.overlay() == ov and ov.visible and game.minimized() == null, "恢复的是同一块")
 	t.check(ov.to_map(), "再收起")
-	ov.leave() if false else null
 	flow.run.events.current_search.leave()     # 会话结束：换屏，藏着的过期
 	var guard := 0
 	while game.overlay() != null and guard < 10:

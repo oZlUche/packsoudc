@@ -9,9 +9,11 @@ const ONE := StatMath.ONE
 static func run(t: TestCase) -> void:
 	t.begin("数值约定 · 定点数")
 
+	@warning_ignore("integer_division")
 	t.eq(StatMath.from_percent(25), ONE / 4, "25% 应为 0.25")
 	t.eq(StatMath.from_percent(100), ONE, "100% 应为 1.0")
 	t.eq(StatMath.from_percent(0), 0, "0% 应为 0")
+	@warning_ignore("integer_division")
 	t.eq(StatMath.from_percent(-50), -ONE / 2, "-50% 应为 -0.5")
 
 	t.eq(StatMath.mul(ONE, ONE), ONE, "1.0 × 1.0 = 1.0")
@@ -124,11 +126,11 @@ static func run_formula(t: TestCase) -> void:
 	t.eq(copy.total_int(), 20, "副本自身的加成生效")
 
 	# --- StatModifier：一条只做一件事 ---
-	var set := StatSet.new()
-	set.set_base(BattleStats.DAMAGE, StatMath.from_float(10.0))
-	StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 50.0).apply_to(set, 2)
-	StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.ADD, 3.0).apply_to(set, 1)
-	t.eq(set.ensure(BattleStats.DAMAGE).total_int(), 23, "两份 +50% 乘算 + 3 加算：10 × 2 + 3 = 23")
+	var set_ := StatSet.new()
+	set_.set_base(BattleStats.DAMAGE, StatMath.from_float(10.0))
+	StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 50.0).apply_to(set_, 2)
+	StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.ADD, 3.0).apply_to(set_, 1)
+	t.eq(set_.ensure(BattleStats.DAMAGE).total_int(), 23, "两份 +50% 乘算 + 3 加算：10 × 2 + 3 = 23")
 	t.check(StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 25.0).editor_hint().begins_with("乘算 · 扩大"), "提示：乘算 · 扩大")
 	t.check(StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, -10.0).editor_hint().contains("缩小"), "提示：缩小")
 	t.check(StatModifier.make(BattleStats.MAX_ARMOR, StatModifier.Mode.ADD, 8.0).editor_hint().contains("不吃百分比"), "提示：加算不吃百分比")

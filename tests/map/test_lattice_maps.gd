@@ -6,12 +6,12 @@ extends RefCounted
 const CHAPTER := "res://data/chapters/free_mode.tres"
 
 
-static func _hourglass(seed: int, cfg: HourglassMapConfig = null) -> MapGraph:
-	return HourglassMapGenerator.new().generate(cfg if cfg != null else HourglassMapConfig.sample(), seed)
+static func _hourglass(p_seed: int, cfg: HourglassMapConfig = null) -> MapGraph:
+	return HourglassMapGenerator.new().generate(cfg if cfg != null else HourglassMapConfig.sample(), p_seed)
 
 
-static func _tower(seed: int, cfg: TowerMapConfig = null) -> MapGraph:
-	return TowerMapGenerator.new().generate(cfg if cfg != null else TowerMapConfig.sample(), seed)
+static func _tower(p_seed: int, cfg: TowerMapConfig = null) -> MapGraph:
+	return TowerMapGenerator.new().generate(cfg if cfg != null else TowerMapConfig.sample(), p_seed)
 
 
 static func _row(g: MapGraph, id: int) -> int:
@@ -89,6 +89,7 @@ static func run_hourglass(t: TestCase) -> void:
 		for id in gc.goal_ids:
 			if gc.get_node(id).type == &"core":
 				core_id = id
+		@warning_ignore("integer_division")
 		t.check(core_id >= 0 and _col(gc, core_id) == (cfg_core.width - 1) / 2 and gc.goal_ids.size() == cfg_core.exit_count + 1, "要核心：对侧正中多一个核心，撤离点照旧")
 	# 咽喉：拿掉线段的点，左右两块就断开
 	var cut := MapGraph.from_dict(g.to_dict())
@@ -110,14 +111,14 @@ static func run_hourglass(t: TestCase) -> void:
 	var gen := HourglassMapGenerator.new()
 	var made := 0
 	var attempts := 0
-	for seed in range(1, 25):
-		var gg := gen.generate(cfg, seed)
+	for seed_ in range(1, 25):
+		var gg := gen.generate(cfg, seed_)
 		if gg != null:
 			made += 1
 			attempts += gen.attempts_used
 			var vv := MapValidation.new()
 			gen.validate(gg, vv)
-			t.check(vv.ok(), "种子 %d 过校验：%s" % [seed, vv.to_text()])
+			t.check(vv.ok(), "种子 %d 过校验：%s" % [seed_, vv.to_text()])
 	t.check(made >= 22, "24 个种子里生成出 %d 张" % made)
 	t.check(made == 0 or float(attempts) / float(made) < 3.0, "平均尝试次数 %.1f（配置与校验不打架）" % (float(attempts) / float(maxi(1, made))))
 	# 同种子同图；反向侵蚀；指定线段列
@@ -160,8 +161,8 @@ static func run_hourglass_taper(t: TestCase) -> void:
 	t.eq(zero.half_cols(zero.half_rows - 1).size(), zero.width, "taper 0：每层满宽（老样子）")
 	var gen := HourglassMapGenerator.new()
 	var made := 0
-	for seed in range(1, 17):
-		var g := gen.generate(cfg, seed)
+	for seed_ in range(1, 17):
+		var g := gen.generate(cfg, seed_)
 		if g == null:
 			continue
 		made += 1
@@ -169,14 +170,14 @@ static func run_hourglass_taper(t: TestCase) -> void:
 		var seq: Array[int] = []
 		for row in cells:
 			seq.append((row as Array).size())
-		t.eq(seq, [5, 4, 3, 3, 2, 2, 3, 3, 4, 5] as Array[int], "种子 %d 的格子表两半对称、往颈部收窄" % seed)
+		t.eq(seq, [5, 4, 3, 3, 2, 2, 3, 3, 4, 5] as Array[int], "种子 %d 的格子表两半对称、往颈部收窄" % seed_)
 		for id in g.node_ids():
 			t.check((cells[_row(g, id)] as Array).has(_col(g, id)), "点 %d 落在第 %d 层允许的列里" % [id, _row(g, id)])
 		for r in _neck_end_rows(cfg):
 			t.eq(_nodes_in_row(g, r).size(), (cells[r] as Array).size(), "颈部两头第 %d 层全填" % r)
 		var v := MapValidation.new()
 		gen.validate(g, v)
-		t.check(v.ok(), "种子 %d 过校验：%s" % [seed, v.to_text()])
+		t.check(v.ok(), "种子 %d 过校验：%s" % [seed_, v.to_text()])
 	t.check(made >= 14, "16 个种子里生成出 %d 张" % made)
 	var bad := HourglassMapConfig.sample()
 	bad.taper = 1
@@ -210,6 +211,7 @@ static func run_tower(t: TestCase) -> void:
 		t.check(ids.size() <= widths[r] and ids.size() >= 1, "第 %d 层 %d 个点，不超过宽度 %d" % [r, ids.size(), widths[r]])
 		for id in ids:
 			var c := _col(g, id)
+			@warning_ignore("integer_division")
 			var offset := (cfg.base_width - widths[r]) / 2
 			t.check(c >= offset and c < offset + widths[r], "第 %d 层的点都在居中的 %d 列里" % [r, widths[r]])
 	t.eq(_nodes_in_row(g, widths.size() - 1), g.goal_ids, "塔尖那一层只有终点")
@@ -314,13 +316,13 @@ static func run_tower(t: TestCase) -> void:
 	t.eq(tall.widths(), [9, 7, 5, 3, 1, 1] as Array[int], "指定 6 层：收到 1 列之后一直 1 列")
 	var gen := TowerMapGenerator.new()
 	var made := 0
-	for seed in range(1, 25):
-		var gg := gen.generate(tall, seed)
+	for seed_ in range(1, 25):
+		var gg := gen.generate(tall, seed_)
 		if gg != null:
 			made += 1
 			var vv := MapValidation.new()
 			gen.validate(gg, vv)
-			t.check(vv.ok(), "6 层塔种子 %d 过校验：%s" % [seed, vv.to_text()])
+			t.check(vv.ok(), "6 层塔种子 %d 过校验：%s" % [seed_, vv.to_text()])
 	t.check(made >= 22, "24 个种子里生成出 %d 张 6 层塔" % made)
 	var flat := TowerMapConfig.sample()
 	flat.shrink_per_row = 0
@@ -469,13 +471,13 @@ static func run_map_rng_pick_weighted(t: TestCase) -> void:
 	t.eq(MapRng.pick_weighted({}, rng, [], [], &"battle"), &"battle", "空表退回 fallback")
 	t.eq(MapRng.pick_weighted(w, rng, [], ["battle", "search"], &"x"), &"x", "全被排除（剩下的权重 0）退回 fallback")
 	t.eq(MapRng.pick_weighted(w, rng, [], ["battle"]), &"search", "排除 battle 只剩 search")
-	for seed in [1, 7, 20261007]:
+	for seed_ in [1, 7, 20261007]:
 		var a := RandomNumberGenerator.new()
-		a.seed = seed
+		a.seed = seed_
 		var b := RandomNumberGenerator.new()
-		b.seed = seed
+		b.seed = seed_
 		var got := MapRng.pick_weighted(w, a, ["search", "battle", "rest"])
 		var roll := b.randf() * 4.0
 		var want := &"search" if roll <= 1.0 else &"battle"
-		t.eq(got, want, "种子 %d：按 order 顺序扣减（先 search）" % seed)
-		t.eq(a.randf(), b.randf(), "种子 %d：只掷了一次" % seed)
+		t.eq(got, want, "种子 %d：按 order 顺序扣减（先 search）" % seed_)
+		t.eq(a.randf(), b.randf(), "种子 %d：只掷了一次" % seed_)

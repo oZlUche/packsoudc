@@ -298,9 +298,9 @@ static func foe_context(ctx: BattleContext, victim: CombatantRuntime) -> RuleCon
 
 #region 回放与记账
 ## 一场里引发过的反应 id（按第一次出现的顺序，不重复）。百科点亮、测试用
-static func reactions_in(log: Array) -> Array[StringName]:
+static func reactions_in(p_log: Array) -> Array[StringName]:
 	var out: Array[StringName] = []
-	for e in log:
+	for e in p_log:
 		var ev := e as BattleEvent
 		if ev != null and ev.name == BattleEvent.EFFECT_RESOLVED and String(ev.payload.get("effect", "")) == EFFECT:
 			var id := ev.get_name(&"reaction")

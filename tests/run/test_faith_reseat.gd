@@ -19,8 +19,8 @@ static func _start(items: ItemDatabase) -> RunState:
 	sets.load_dir()
 	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var chars := GameFlow.load_characters()
-	for seed in range(1, 60):
-		var s := RunState.start(chapter, seed, items, enemies, sets, [] as Array[StringName], {}, [] as Array[StringName], chars[0] if not chars.is_empty() else null)
+	for seed_ in range(1, 60):
+		var s := RunState.start(chapter, seed_, items, enemies, sets, [] as Array[StringName], {}, [] as Array[StringName], chars[0] if not chars.is_empty() else null)
 		if s != null:
 			s.faith_defs = FaithDef.load_all()
 			s.pick_spawn(s.map.entry_ids[0])
@@ -192,7 +192,7 @@ static func run_right_click(t: TestCase) -> void:
 
 static func _click(at: Vector2, button: int) -> InputEventMouseButton:
 	var ev := InputEventMouseButton.new()
-	ev.button_index = button
+	ev.button_index = button as MouseButton
 	ev.pressed = true
 	ev.position = at
 	return ev

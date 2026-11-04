@@ -42,8 +42,8 @@ func types() -> Array[StringName]:
 	if run == null or run.map == null:
 		return out
 	var have := {}
-	for id in run.map.node_ids():
-		var n := run.map.get_node(id)
+	for id_ in run.map.node_ids():
+		var n := run.map.get_node(id_)
 		have[MapNodeStyle.key_of(n)] = true     # 揭开了的随机点按揭开的算；267：材料节点按种类
 	for t in MapNodeStyle.STYLES:
 		if have.has(t) and MapNodeStyle.NAMES.has(t):
@@ -68,8 +68,8 @@ func produce_lines() -> Array[String]:
 	if run == null or run.map == null:
 		return out
 	var by_ring := {}
-	for id in run.map.node_ids():
-		var n := run.map.get_node(id)
+	for id_ in run.map.node_ids():
+		var n := run.map.get_node(id_)
 		var r := int(n.layout.get("ring", 0))
 		if not n.produce.is_empty() and not by_ring.has(r):
 			by_ring[r] = n.produce
@@ -84,9 +84,9 @@ func produce_lines() -> Array[String]:
 	var where: Array = ["outer", "middle", "inner"] if tables.size() == 3 else (["outer", "inner"] if tables.size() == 2 else [""])
 	for i in tables.size():
 		var names: Array[String] = tables[i]
-		var text := UiText.t("hud.buff_sep").join(names)
+		var text_ := UiText.t("hud.buff_sep").join(names)
 		var key: String = where[i] if i < where.size() else ""
-		out.append(UiText.t("hud.produce_line") % [UiText.t("hud.produce_ring." + key), text] if key != "" else text)
+		out.append(UiText.t("hud.produce_line") % [UiText.t("hud.produce_ring." + key), text_] if key != "" else text_)
 	return out
 
 
@@ -132,29 +132,29 @@ func refresh() -> void:
 
 
 ## 267：没有图标的一行字（倾向、产物段）
-func _add_text(text: String) -> void:
+func _add_text(p_text: String) -> void:
 	var row := UiTheme.hbox(0)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var name := Label.new()
-	name.theme_type_variation = UiTheme.LABEL_HUD
-	name.text = text
-	name.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(name)
+	var name_ := Label.new()
+	name_.theme_type_variation = UiTheme.LABEL_HUD
+	name_.text = p_text
+	name_.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(name_)
 	_rows.add_child(row)
 
 
-func _add_row(type: StringName, text: String, art_name: String) -> void:
+func _add_row(type: StringName, p_text: String, art_name: String) -> void:
 	var row := UiTheme.hbox(int(TEXT_GAP))
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var mark := _Mark.new()
 	mark.type = type
 	mark.art_name = art_name
 	row.add_child(mark)
-	var name := Label.new()
-	name.theme_type_variation = UiTheme.LABEL_HUD
-	name.text = text
-	name.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(name)
+	var name_ := Label.new()
+	name_.theme_type_variation = UiTheme.LABEL_HUD
+	name_.text = p_text
+	name_.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(name_)
 	_rows.add_child(row)
 
 

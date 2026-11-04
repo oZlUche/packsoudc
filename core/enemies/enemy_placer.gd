@@ -1019,9 +1019,9 @@ static func _place_rigid(
 					cands.append(spots)
 	if cands.is_empty():
 		return false
-	var pick := _pick(cands, rng)
+	var pick_ := _pick(cands, rng)
 	for k in g.size():
-		_put(board, defs[int(g[k])], pick[k], insts, int(g[k]))
+		_put(board, defs[int(g[k])], pick_[k], insts, int(g[k]))
 	return true
 
 

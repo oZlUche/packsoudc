@@ -22,8 +22,8 @@ static func _kit(c: TestSupport.Content) -> LoadoutDef:
 
 
 ## 带事件层的一局
-static func _start(c: TestSupport.Content, seed: int) -> RunState:
-	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, _kit(c).items, c.buffs, [] as Array[StringName])
+static func _start(c: TestSupport.Content, p_seed: int) -> RunState:
+	var s := RunState.start(c.chapter, p_seed, c.items, c.enemies, c.sets, _kit(c).items, c.buffs, [] as Array[StringName])
 	if s != null:
 		s.player_baseline = CombatantBaseline.with_hp(10000.0)
 		s.event_defs = c.events.duplicate()
@@ -32,14 +32,14 @@ static func _start(c: TestSupport.Content, seed: int) -> RunState:
 
 ## 出生点旁边就有某类型点的种子
 static func _seed_with(c: TestSupport.Content, type: StringName) -> Dictionary:
-	for seed in range(1, 80):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, _kit(c).items)
+	for seed_ in range(1, 80):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, _kit(c).items)
 		if s == null:
 			continue
 		for entry in s.map.entry_ids:
 			for nid in s.map.neighbors(entry):
 				if s.map.get_node(nid).type == type:
-					return {"seed": seed, "entry": entry, "next": nid}
+					return {"seed": seed_, "entry": entry, "next": nid}
 	return {}
 
 

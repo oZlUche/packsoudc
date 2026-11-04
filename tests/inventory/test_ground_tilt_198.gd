@@ -272,10 +272,10 @@ static func run_pile_no_overlap(t: TestCase) -> void:
 	t.begin("198 补充一 · 不重叠：随机 20 件从空中落成一堆（4 个种子）—— 都停下后两两不相交、都在屏内")
 	var shapes := [["1"], ["11"], ["111"], ["1111"], ["11", "11"], ["1.", "11"], ["111", ".1."], ["11", "1.", "1."], [".11", "11."]]
 	var bad := []
-	for seed in 4:
+	for seed_ in 4:
 		ItemInstance.reset_uid_counter()
 		var rng := RandomNumberGenerator.new()
-		rng.seed = 1980 + seed
+		rng.seed = 1980 + seed_
 		var stash := ItemStash.new(2, 0)
 		var ground := B._ground(stash)
 		for i in 20:
@@ -290,7 +290,7 @@ static func run_pile_no_overlap(t: TestCase) -> void:
 			var r := ground.item_bounds((inst as ItemInstance).uid)
 			inside = inside and r.position.x >= -0.5 and r.position.y >= -0.5 and r.end.x <= G.SCREEN.x + 0.5 and r.end.y <= G.SCREEN.y + 0.5
 		if not pairs.is_empty() or not inside or ground.is_bumping() or not ground.landing_uids().is_empty():
-			bad.append([seed, pairs, inside])
+			bad.append([seed_, pairs, inside])
 		ground.free()
 	t.eq(bad, [], "10 个种子都不相交、都在屏内、都停了")
 
@@ -325,10 +325,10 @@ static func run_real_pile(t: TestCase) -> void:
 	var ids := [&"oak_log", &"leather_armor", &"round_shield", &"mithril_sword", &"warhammer", &"longsword", &"knife", &"bag_long", &"honey_jar", &"tower_shield",
 		&"shortbow", &"tibia_violence", &"plate_cuirass", &"cleaver", &"nail_keg", &"magic_staff", &"field_rations", &"rope_coil", &"scimitar", &"salve"]
 	var bad := []
-	for seed in 2:
+	for seed_ in 2:
 		ItemInstance.reset_uid_counter()
 		var rng := RandomNumberGenerator.new()
-		rng.seed = 1990 + seed
+		rng.seed = 1990 + seed_
 		var stash := ItemStash.new(2, 0)
 		var ground := B._ground(stash, Vector2(1600, 1000))
 		for id in ids:
@@ -338,12 +338,11 @@ static func run_real_pile(t: TestCase) -> void:
 		var pairs := ground.overlapping_pairs()
 		var inside := true
 		for inst in stash.items():
-			var r := ground.item_bounds((inst as ItemInstance).uid)
 			var sb: Rect2 = ItemSilhouette.tilted(ItemSilhouette.of(inst.def, inst.rotation), ground.tilt_of(inst.uid))["bounds"]
 			var box := Rect2(ground.item_rect(inst.uid).position + sb.position, sb.size)
 			inside = inside and box.position.x >= -0.5 and box.position.y >= -0.5 and box.end.x <= 1600.5 and box.end.y <= 1000.5
 		if not pairs.is_empty() or not inside or sec >= 20.0:
-			bad.append([seed, pairs, inside, snappedf(sec, 0.1)])
+			bad.append([seed_, pairs, inside, snappedf(sec, 0.1)])
 		ground.free()
 	t.eq(bad, [], "2 个种子都在 20 秒内停稳、不相交、轮廓都在屏内")
 

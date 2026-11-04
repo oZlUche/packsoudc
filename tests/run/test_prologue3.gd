@@ -10,8 +10,8 @@ static func _content() -> TestSupport.Content:
 	return TestSupport.load_content("prologue_3", ["brutus", "events", "faiths"])
 
 
-static func _start(c: TestSupport.Content, seed: int = 7) -> RunState:
-	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
+static func _start(c: TestSupport.Content, p_seed: int = 7) -> RunState:
+	var s := RunState.start(c.chapter, p_seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	if s == null:
 		return null
 	s.event_defs = c.events

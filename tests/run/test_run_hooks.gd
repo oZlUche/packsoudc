@@ -70,8 +70,8 @@ static func run_wired_in_a_run(t: TestCase) -> void:
 	t.begin("能力表 · 一局里谁接了什么（101 第 3 刀）：骨架接自己的几条，模块与机制在 install 里接自己的；节点事件只认这张表")
 	var c := _content()
 	var run: RunState = null
-	for seed in range(1, 40):
-		run = RunState.start(c["chapter"], seed, c["items"], c["enemies"], c["sets"])
+	for seed_ in range(1, 40):
+		run = RunState.start(c["chapter"], seed_, c["items"], c["enemies"], c["sets"])
 		if run != null:
 			break
 	if run == null:

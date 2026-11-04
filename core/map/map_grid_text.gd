@@ -45,6 +45,7 @@ static func parse(text: String) -> MapGraph:
 
 	var g := MapGraph.new()
 	g.layout_kind = LAYOUT_KIND
+	@warning_ignore("integer_division")
 	var ring_rows := (rows.size() + 1) / 2
 	var widths: Array = []
 	for line in rows:
@@ -122,6 +123,7 @@ static func parse(text: String) -> MapGraph:
 				last_error = "第 %d 行第 %d 列的 | 有一头没接在点或弧上" % [y + 1, x + 1]
 				return null
 			var e := g.connect_nodes(a, b, &"radial")
+			@warning_ignore("integer_division")
 			var span := (bottom - y) / 2 + 1
 			if e != null and span > 1:
 				e.layout = {"span": span}

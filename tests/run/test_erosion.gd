@@ -24,8 +24,8 @@ static func _difficulty(first: int, interval: int, warn: int, effects: Array) ->
 
 
 static func _start(c: TestSupport.Content, diff: DifficultyDef, kit: Array[StringName] = [&"bag_leather", &"shortsword", &"knife"] as Array[StringName]) -> RunState:
-	for seed in range(1, 40):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit, {}, [] as Array[StringName], null, [], diff)
+	for seed_ in range(1, 40):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit, {}, [] as Array[StringName], null, [], diff)
 		if s != null:
 			s.pick_spawn(s.map.entry_ids[0])
 			return s
@@ -79,6 +79,7 @@ static func run_schedule(t: TestCase) -> void:
 	while not f.is_total() and guard < 60 and _step(s):
 		guard += 1
 		var total := s.travel.clock.total
+		@warning_ignore("integer_division")
 		var expected := -1 if total < 3 else (total - 3) / 2
 		expected = mini(expected, f.max_band)
 		t.eq(f.eroded_bands, expected, "第 %d 行动点：侵蚀了 %d 档" % [total, expected])
@@ -207,7 +208,7 @@ static func run_settle_save_and_pipeline(t: TestCase) -> void:
 	var v := s.vitality.current
 	# 走进的点要是事件、抽到「恢复」会补回体力 —— 那是事件的事，算账时扣掉
 	var restored := [0]
-	s.events.event_resolved.connect(func(_n: MapNode, _o: StringName, d: Dictionary): restored[0] += int(d.get("restored", 0)))
+	s.events.event_resolved.connect(func(_n: MapNode, _o: StringName, d_: Dictionary): restored[0] += int(d_.get("restored", 0)))
 	t.check(_step(s), "走一步")
 	t.eq(f.eroded_bands, 0, "这一步推进了（在惩罚之前）")
 	var here := s.current_node()

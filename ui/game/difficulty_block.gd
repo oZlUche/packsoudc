@@ -177,9 +177,9 @@ func _layout() -> void:
 	var face := face_rect()
 	open_btn.position = face.position
 	open_btn.size = face.size
-	var tr := title_rect()
-	title.position = tr.position
-	title.size = tr.size
+	var tr_ := title_rect()
+	title.position = tr_.position
+	title.size = tr_.size
 	var cm := counter.get_combined_minimum_size()
 	if _art:
 		cm = cm.max(COUNTER_SIZE)

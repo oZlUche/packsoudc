@@ -66,6 +66,7 @@ func half_cols(k: int) -> Array[int]:
 	var lanes := lane_cols()
 	var span: int = (int(lanes.max()) - int(lanes.min()) + 1) if not lanes.is_empty() else 1
 	var w := clampi(width - maxi(0, taper) * k, mini(span, width), width)
+	@warning_ignore("integer_division")
 	var offset := (width - w) / 2
 	var out: Array[int] = []
 	for x in w:
@@ -82,6 +83,7 @@ func exit_cols() -> Array[int]:
 func _spread(n: int, margin: int) -> Array[int]:
 	var out: Array[int] = []
 	if n == 1:
+		@warning_ignore("integer_division")
 		out.append((width - 1) / 2)
 		return out
 	var lo := margin

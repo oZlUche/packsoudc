@@ -66,13 +66,13 @@ var _buttons: HBoxContainer = null
 var sell_one: Callable = Callable()
 
 
-## [param shelf] / [param drag] 给了 = 基地「家」页（仓库在别处、拖拽层是整屏那一层）
-func setup(flow: GameFlow, font: Font, shelf: WarehousePages = null, drag: DragLayer = null) -> void:
+## [param p_shelf] / [param drag] 给了 = 基地「家」页（仓库在别处、拖拽层是整屏那一层）
+func setup(flow: GameFlow, font: Font, p_shelf: WarehousePages = null, drag: DragLayer = null) -> void:
 	_flow = flow
 	_meta = flow.meta
 	_font = font
-	_shelf = shelf
-	_own_shelf = shelf == null
+	_shelf = p_shelf
+	_own_shelf = p_shelf == null
 	_drag = drag
 	_build()
 	_meta.changed.connect(_refresh)
@@ -374,7 +374,10 @@ func warehouse_actions(uid: int, with_quick: bool) -> Array:
 	if with_quick and _meta.board != null:
 		out.append(ItemActions.make(&"quick", UiText.t("act.to_board"), func(): quick_move(_shelf.view, uid)))
 	var page := _shelf.current_page() if _shelf != null else null
-	out.append(ItemActions.lock(inst, page if page != null and page.has_item(uid) else _meta.warehouse, _saved))
+	var into: ItemContainer = _meta.warehouse
+	if page != null and page.has_item(uid):
+		into = page
+	out.append(ItemActions.lock(inst, into, _saved))
 	out.append(ItemActions.lock_same(inst, _meta.warehouse, _saved))
 	var seller := sell_one if sell_one.is_valid() else _sell
 	var price_of := func(i: ItemInstance) -> int: return MetaState.sell_price_of(i, _flow.sell_ratio())
@@ -392,10 +395,10 @@ func rack_actions(uid: int) -> Array:
 ## 225：卖包架上的一只；返回得了多少（没这只 -1）。268：从出售页搬来
 func sell_bag(uid: int) -> int:
 	var inst := _meta.rack.get_item(uid)
-	var name := Names.of(inst.def) if inst != null else ""
+	var name_ := Names.of(inst.def) if inst != null else ""
 	var got := _flow.sell_bag(uid)
 	if got >= 0:
-		_say(UiText.t("meta.sold_one") % name + CoinShort.coin(got))     # 11-04：钱画金币；手上多少钱看钱袋，不再写
+		_say(UiText.t("meta.sold_one") % name_ + CoinShort.coin(got))     # 11-04：钱画金币；手上多少钱看钱袋，不再写
 		changed.emit()
 	return got
 

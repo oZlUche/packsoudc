@@ -30,6 +30,7 @@ static func build_by_brackets(snapshots: Array[Dictionary], items: ItemDatabase,
 
 ## 按固定段长分段：段号 = steps ÷ bucket。返回 {段号(String) → 木桩}
 static func build(snapshots: Array[Dictionary], items: ItemDatabase, bucket: int = 5) -> Dictionary:
+	@warning_ignore("integer_division")
 	return _build(snapshots, items, func(snap: Dictionary) -> String:
 		return str(int(snap.get("steps", 0)) / maxi(1, bucket)), {}, bucket)
 

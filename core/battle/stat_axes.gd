@@ -165,7 +165,6 @@ static func effect_text(axis: StringName, stacks: int) -> String:
 
 ## 连乘轴的一句：每层乘一个因子，现在共乘了多少
 static func _describe_compound(axis: StringName, stacks: int, system_stacks: int) -> String:
-	var i := info(axis)
 	var per := step_of(axis)
 	var what := what_of(axis)
 	var lines: Array[String] = [UiText.t("axis.per_stack_mult") % [what, _num(per)]]

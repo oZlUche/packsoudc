@@ -151,11 +151,11 @@ func refresh(spec: CombatantSpec, run: RunState) -> void:
 	_blocks[SPECIAL] = {"main": str(specials.size()) if not specials.is_empty() else UiText.t("strip.special_none"), "sub": UiText.t("strip.special"),
 		"main_color": _main_color(), "sub_color": soft, "sub_bold": false,
 		"tip": (UiText.t("strip.special") + "\n" + "\n".join(specials)) if not specials.is_empty() else UiText.t("strip.special_empty")}
-	var shown: Array[StringName] = []
+	var shown_: Array[StringName] = []
 	for k in _kinds:
 		if k != LOAD or run != null:
-			shown.append(k)
-	_shown = shown
+			shown_.append(k)
+	_shown = shown_
 	if run != null:
 		_blocks[LOAD] = _load_block(run)
 	_relayout()
@@ -220,18 +220,18 @@ func _relayout() -> void:
 	var top := float(s.get("tag_top_in_strip", 6))
 	if _inlay == "narrow":
 		var widths: Dictionary = _row.get("tag_w", {})
-		var gap := float(_row.get("gap", 6))
-		var x := 0.0
+		var gap_ := float(_row.get("gap", 6))
+		var x_ := 0.0
 		for kind in ALL:
 			var tag := _tags[kind] as Control
 			tag.visible = _shown.has(kind)
 		for kind in _shown:
 			var tag := _tags[kind] as Control
-			var w := float(widths.get(String(kind), 88))
-			tag.position = Vector2(x, top)
-			tag.size = Vector2(w, float(_row.get("tag_h", TAG_H)))
-			x += w + gap
-		custom_minimum_size = Vector2(maxf(0.0, x - gap), strip_height())
+			var w_ := float(widths.get(String(kind), 88))
+			tag.position = Vector2(x_, top)
+			tag.size = Vector2(w_, float(_row.get("tag_h", TAG_H)))
+			x_ += w_ + gap_
+		custom_minimum_size = Vector2(maxf(0.0, x_ - gap_), strip_height())
 		size = custom_minimum_size
 		return
 	var w := float(s.get("tag_w", 152))
@@ -309,13 +309,13 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 
 
 ## 收到最小字号还放不下的（英文「Overloaded」之类），横向压扁到正好 [param room] 宽 —— 不伸出签的右沿（游戏测试 10-27）
-static func squeeze(font: Font, text: String, size: int, room: float) -> float:
-	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+static func squeeze(font: Font, text: String, p_size: int, room: float) -> float:
+	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, p_size).x
 	return 1.0 if w <= room or w <= 0.0 else room / w
 
 
-func _draw_fit(tag: Control, font: Font, pos: Vector2, text: String, size: int, room: float, color: Color) -> void:
-	var n := fit_size(font, text, size, room)
+func _draw_fit(tag: Control, font: Font, pos: Vector2, text: String, p_size: int, room: float, color: Color) -> void:
+	var n := fit_size(font, text, p_size, room)
 	var k := squeeze(font, text, n, room)
 	if k < 1.0:
 		tag.draw_set_transform(Vector2(pos.x * (1.0 - k), 0.0), 0.0, Vector2(k, 1.0))
@@ -324,9 +324,9 @@ func _draw_fit(tag: Control, font: Font, pos: Vector2, text: String, size: int, 
 		tag.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## 放得进 [param room] 宽的字号：从 [param size] 往下收，最小 [constant MIN_TEXT_SIZE]
-static func fit_size(font: Font, text: String, size: int, room: float) -> int:
-	var n := size
+## 放得进 [param room] 宽的字号：从 [param p_size] 往下收，最小 [constant MIN_TEXT_SIZE]
+static func fit_size(font: Font, text: String, p_size: int, room: float) -> int:
+	var n := p_size
 	while n > MIN_TEXT_SIZE and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, n).x > room:
 		n -= 1
 	return n

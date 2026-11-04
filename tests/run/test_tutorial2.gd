@@ -45,9 +45,9 @@ static func _fight(c: TestSupport.Content, ids: Array[StringName], content: Dict
 	var foe := EnemyKit.spec_of(content, c.enemies, null, c.items)
 	var wins := 0
 	var hp := 0.0
-	for seed in range(1, 6):
+	for seed_ in range(1, 6):
 		var rng := RandomNumberGenerator.new()
-		rng.seed = seed
+		rng.seed = seed_
 		var r := BattleSim.run(me, foe, rng, 60.0)
 		if r.winner == 0:
 			wins += 1
@@ -140,8 +140,8 @@ static func run_data(t: TestCase) -> void:
 			t.check(board.requires_bag and board.item_count() == (n.content["items"] as Array).size(), "点 %d 的敌人带包、都摆上了" % id)
 	# 搜索点 1：两件护具，加起来装不下布鲁图斯的两个包
 	var armors: Array[StringName] = []
-	for round in s1.content["search_finds"]:
-		for id in round:
+	for round_ in s1.content["search_finds"]:
+		for id in round_:
 			armors.append(StringName(String(id)))
 	t.eq(armors.size(), 2, "两件护具")
 	var cells := 0
@@ -157,8 +157,8 @@ static func run_data(t: TestCase) -> void:
 	t.check(cells > bag_cells, "两件护具 + 开局的东西 %d 格 > 两个包 %d 格：只能带一件" % [cells, bag_cells])
 	# 搜索点 2：毒药瓶、长剑、长条包；配方
 	var finds2: Array[StringName] = []
-	for round in s2.content["search_finds"]:
-		for id in round:
+	for round_ in s2.content["search_finds"]:
+		for id in round_:
 			finds2.append(StringName(String(id)))
 	t.check(finds2.has(&"poison_vial") and finds2.has(&"longsword") and finds2.has(&"bag_long"), "毒药瓶、长剑、长条包（%s）" % str(finds2))
 	var recipe := RecipeDef.find(c.recipes, &"knife", &"poison_vial")
@@ -386,8 +386,8 @@ static func run_random_mode(t: TestCase) -> void:
 		var sid: StringName = o["id"]
 		var prof = cfg.scale_by_id(sid)
 		var s: RunState = null
-		for seed in range(1, 30):
-			s = RunState.start(c.chapter1, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], null, {}, sid)
+		for seed_ in range(1, 30):
+			s = RunState.start(c.chapter1, seed_, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], null, {}, sid)
 			if s != null:
 				break
 		if s == null:

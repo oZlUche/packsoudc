@@ -69,8 +69,8 @@ static func layout() -> Dictionary:
 
 
 ## 底座上某个控件的框（`controls` 里的名字：title / status / subtitle / stepper / deal / refuse / hint）
-func control_rect(name: String) -> Rect2:
-	return _rect((_lay.get("controls", {}) as Dictionary).get(name, [0, 0, 0, 0]))
+func control_rect(p_name: String) -> Rect2:
+	return _rect((_lay.get("controls", {}) as Dictionary).get(p_name, [0, 0, 0, 0]))
 
 
 ## 横梁斜几度（正 = 左盘低）：差额占开价的比例，夹在 ±max_tilt_deg

@@ -335,8 +335,10 @@ static func _pull_reaction_scaling(data: Dictionary, out: Array, report: ImportR
 			out.append(row)
 			if key == "duration_sec":
 				(e as Dictionary).erase(key)
+			elif row["kind"] in [ReactionDef.KIND_N, ReactionDef.KIND_HALF]:
+				e[key] = 1
 			else:
-				e[key] = 1 if row["kind"] in [ReactionDef.KIND_N, ReactionDef.KIND_HALF] else 1.0
+				e[key] = 1.0
 	return copy
 
 
@@ -2791,7 +2793,9 @@ static func _coerce_scalar(builtin: int, value: Variant, path: String, report: I
 ## `[x, y]` → Vector2i（[param as_int]）/ Vector2；不是两个数的数组报错给 null
 static func _to_vec(value: Variant, path: String, report: ImportReport, as_int: bool) -> Variant:
 	if value is Array and (value as Array).size() == 2:
-		return Vector2i(int(value[0]), int(value[1])) if as_int else Vector2(float(value[0]), float(value[1]))
+		if as_int:
+			return Vector2i(int(value[0]), int(value[1]))
+		return Vector2(float(value[0]), float(value[1]))
 	report.error(path, "应为 [x, y]")
 	return null
 

@@ -169,9 +169,9 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 			regen_perk = p
 	t.check(regen_perk != null and regen_perk.stacks > 0, "5 级（103 改）：加时阶段回春，数值在 nature.json 里可调")
 	# 两边都不出手、我方先掉一半血，打到第 40 秒：没有自然 5 级就停在一半，有就在加时开始后回满
-	var hp_at_40 := func(blessed: bool) -> Array:
+	var hp_at_40 := func(blessed_: bool) -> Array:
 		var input_a := CompileInput.of(CombatantBaseline.with_hp(100.0))
-		if blessed:
+		if blessed_:
 			regen_perk.compile_into(input_a, null, run)
 		var a := BattleCompiler.compile(null, input_a)
 		var b := BattleCompiler.compile_board(null, CombatantBaseline.with_hp(100.0))

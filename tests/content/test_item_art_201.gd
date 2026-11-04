@@ -83,7 +83,7 @@ static func run_variants(t: TestCase) -> void:
 				var base := _image(ItemPainter.ART_DIR + String(pair[0]) + String(id) + ".png")
 				var img := _image(ItemPainter.ART_DIR + String(pair[0]) + "%s@%s.png" % [id, v])
 				if img == null or base == null or img.get_size() != base.get_size():
-					bad.append("%s%s@%s 尺寸 %s ≠ 本图" % [pair[0], id, v, img.get_size() if img != null else "无"])
+					bad.append("%s%s@%s 尺寸 %s ≠ 本图" % [pair[0], id, v, str(img.get_size()) if img != null else "无"])
 	t.check(bad.is_empty(), "变体图都对（%s）" % [bad])
 
 
@@ -106,7 +106,7 @@ static func run_canvas(t: TestCase) -> void:
 			var img := _image(ItemPainter.ART_DIR + String(pair[0]) + String(id) + ".png")
 			var px: int = pair[1]
 			if img == null or img.get_size() != box * px:
-				bad_size.append("%s%s %s ≠ %s" % [pair[0], id, img.get_size() if img != null else "无", box * px])
+				bad_size.append("%s%s %s ≠ %s" % [pair[0], id, str(img.get_size()) if img != null else "无", box * px])
 				continue
 			for y in box.y:
 				for x in box.x:

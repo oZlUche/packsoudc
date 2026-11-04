@@ -261,7 +261,9 @@ static func _int_array(raw: Variant) -> Array[int]:
 static func normalize(value: Variant) -> Variant:
 	if value is float:
 		var f: float = value
-		return int(f) if absf(f) < 9.0e15 and float(int(f)) == f else f
+		if absf(f) < 9.0e15 and float(int(f)) == f:
+			return int(f)
+		return f
 	if value is Dictionary:
 		var out := {}
 		for k in (value as Dictionary):

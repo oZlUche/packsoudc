@@ -72,12 +72,12 @@ func text_of() -> String:
 	if has_dial():
 		return UiText.t("hud.countdown")     # 只为显隐：栏上不写字
 	var left := cd.left()
-	var text := UiText.t("hud.countdown_line") % [left, cd.limit()]
+	var text_ := UiText.t("hud.countdown_line") % [left, cd.limit()]
 	var closing := cd.closing_extract_id()
 	if closing >= 0:
 		var node := run.map.get_node(closing)
-		text += UiText.t("hud.timed_extract") % [UiText.t("hud.timed_extract_closed") if cd.extract_closed(node) else (UiText.t("hud.timed_extract_closes") % PaidExtracts.closes_at(node))]     # 186：不写点号
-	return text
+		text_ += UiText.t("hud.timed_extract") % [UiText.t("hud.timed_extract_closed") if cd.extract_closed(node) else (UiText.t("hud.timed_extract_closes") % PaidExtracts.closes_at(node))]     # 186：不写点号
+	return text_
 
 
 ## 现在在哪一阶（没有倒计时按 calm）

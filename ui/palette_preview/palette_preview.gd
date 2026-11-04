@@ -53,8 +53,8 @@ func _column(tone: StringName) -> PanelContainer:
 	col.add_child(UiTheme.make_label("浅底（暗字）" if light else "深底（亮字）", 16))
 	var data := UiPalette.text_colors()
 	col.add_child(UiTheme.make_label("样式码 {c:名字}", 13))
-	for name in data["styles"]:
-		col.add_child(_row("[color=@%s]%s %s[/color]" % [name, name, SAMPLE], UiPalette.style_color(name, tone), bg))
+	for name_ in data["styles"]:
+		col.add_child(_row("[color=@%s]%s %s[/color]" % [name_, name_, SAMPLE], UiPalette.style_color(name_, tone), bg))
 	col.add_child(UiTheme.make_label("稀有度（{item:id} 的名字）", 13))
 	for r in (data["rarity"] as Array).size():
 		col.add_child(_row("[color=@%s%d]%s %s[/color]" % [TextTemplate.RARITY_STYLE, r, ItemTooltip.rarity_name(r), SAMPLE], UiPalette.rarity_color(r, tone), bg))

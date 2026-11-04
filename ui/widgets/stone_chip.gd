@@ -42,13 +42,13 @@ var _boxes := {}
 
 
 ## 选项签：[param p_swatch] 给了就是底色签
-static func make(text: String, handler: Callable, p_swatch: Color = Color(0, 0, 0, 0)) -> Button:
+static func make(p_text: String, handler: Callable, p_swatch: Color = Color(0, 0, 0, 0)) -> Button:
 	if UiTheme.art_cached(ART + "normal") == null:
-		var flat := UiTheme.make_button(text, handler, UiPalette.Tier.MINOR, 13)
-		flat.toggle_mode = true
-		return flat
+		var flat_ := UiTheme.make_button(p_text, handler, UiPalette.Tier.MINOR, 13)
+		flat_.toggle_mode = true
+		return flat_
 	var b := StoneChip.new()
-	b.text = text
+	b.text = p_text
 	b.toggle_mode = true
 	b._dress()
 	b.swatch = p_swatch
@@ -57,15 +57,15 @@ static func make(text: String, handler: Callable, p_swatch: Color = Color(0, 0, 
 
 
 ## 开关行：拉满整行，左头印表示开 / 关
-static func toggle(text: String, handler: Callable) -> Button:
+static func toggle(p_text: String, handler: Callable) -> Button:
 	if UiTheme.art_cached(ART + "normal") == null:
-		var flat := UiTheme.make_button(text, handler, UiPalette.Tier.MINOR, 14)
-		flat.toggle_mode = true
-		flat.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		return flat
+		var flat_ := UiTheme.make_button(p_text, handler, UiPalette.Tier.MINOR, 14)
+		flat_.toggle_mode = true
+		flat_.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		return flat_
 	var b := StoneChip.new()
 	b.check = true
-	b.text = text
+	b.text = p_text
 	b.toggle_mode = true
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b._dress()
@@ -74,16 +74,16 @@ static func toggle(text: String, handler: Callable) -> Button:
 
 
 ## 目录条：拉满一栏，正在看的那页按下（[method set_pressed_no_signal]）= 书签
-static func entry(text: String, handler: Callable) -> Button:
+static func entry(p_text: String, handler: Callable) -> Button:
 	if UiTheme.art_cached(ENTRY_ART + "normal") == null:
-		var flat := UiTheme.make_button(text, handler, UiPalette.Tier.MINOR, 13)
-		flat.toggle_mode = true
-		flat.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		flat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		return flat
+		var flat_ := UiTheme.make_button(p_text, handler, UiPalette.Tier.MINOR, 13)
+		flat_.toggle_mode = true
+		flat_.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		flat_.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		return flat_
 	var b := StoneChip.new()
 	b.is_entry = true
-	b.text = text
+	b.text = p_text
 	b.toggle_mode = true
 	b.clip_text = true     # 长标题不撑宽左栏
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -117,11 +117,11 @@ func _dress() -> void:
 	add_theme_font_override("font", UiPalette.cjk_font_bold())
 	add_theme_font_size_override("font_size", _font_size())
 	for state in STATES + ["on"]:
-		var name: String = state
+		var name_: String = state
 		if check and state == "on":
-			name = "normal"     # 开关行：开不开看印，底一直是平的
+			name_ = "normal"     # 开关行：开不开看印，底一直是平的
 		var box := StyleBoxTexture.new()
-		box.texture = UiTheme.art_cached(art_base + name)
+		box.texture = UiTheme.art_cached(art_base + name_)
 		if box.texture == null:
 			box.texture = UiTheme.art_cached(art_base + "normal")
 		box.texture_margin_left = float(m[0])

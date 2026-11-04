@@ -37,6 +37,7 @@ func prefix_for(charges: int, lang: String = "") -> String:
 		table = other
 	if table.is_empty():
 		return ""
+	@warning_ignore("integer_division")
 	return String(table[clampi((charges - 1) / maxi(1, charge_band), 0, table.size() - 1)])
 
 

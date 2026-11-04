@@ -13,11 +13,11 @@ func watch() -> Array[Signal]:
 
 func text_of() -> String:
 	var parts: Array[String] = []
-	for id in run.meta_buffs:
-		var def: RunBuffDef = run.buff_defs.get(id, null)
-		parts.append(Names.of(def) if def != null else String(id))
+	for id_ in run.meta_buffs:
+		var def: RunBuffDef = run.buff_defs.get(id_, null)
+		parts.append(Names.of(def) if def != null else String(id_))
 	for entry in BuffModule.entries_of(run):
 		var def: RunBuffDef = run.buff_defs.get(StringName(String(entry["id"])), null)
-		var name := Names.of(def) if def != null else String(entry["id"])
-		parts.append(name + (UiText.t("hud.buff_left") % int(entry["left"]) if int(entry["left"]) > 0 else ""))
+		var name_ := Names.of(def) if def != null else String(entry["id"])
+		parts.append(name_ + (UiText.t("hud.buff_left") % int(entry["left"]) if int(entry["left"]) > 0 else ""))
 	return UiText.t("hud.buffs") % UiText.t("hud.buff_sep").join(parts) if not parts.is_empty() else ""

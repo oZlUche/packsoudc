@@ -7,9 +7,9 @@ static func _content() -> TestSupport.Content:
 	return TestSupport.load_content("free_mode", ["carry"])
 
 
-static func _build(c: TestSupport.Content, enemy: StringName, strength: int, seed: int, carry: CarryRule = null) -> Dictionary:
+static func _build(c: TestSupport.Content, enemy: StringName, strength: int, p_seed: int, carry: CarryRule = null) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed
+	rng.seed = p_seed
 	return EnemyPlacer.build_content(c.enemies.enemy(enemy), c.pool, c.items, strength, rng, carry)
 
 
@@ -42,21 +42,21 @@ static func run_defs(t: TestCase) -> void:
 static func run_assembly(t: TestCase) -> void:
 	t.begin("212 · ⑥ 焰狼 1 档：棋盘不要包、身上没有包、招牌四件都在、不换成武器；2 档多出来的是带火的兽材")
 	var c := _content()
-	for seed in 6:
-		var built := _build(c, &"flame_wolf", 1, 40 + seed)
+	for seed_ in 6:
+		var built := _build(c, &"flame_wolf", 1, 40 + seed_)
 		var content: Dictionary = built["content"]
 		var ids := _ids(content)
-		t.check(bool(content.get("wild", false)), "内容记着是魔兽（种子 %d）" % seed)
+		t.check(bool(content.get("wild", false)), "内容记着是魔兽（种子 %d）" % seed_)
 		var bags := ids.filter(func(id): return c.items.get_def(id).is_bag)
-		t.eq(bags, [], "没有包（种子 %d）" % seed)
+		t.eq(bags, [], "没有包（种子 %d）" % seed_)
 		var board := EnemyKit.board_of(content, c.items)
-		t.check(not board.requires_bag and bool(board.get_meta(EnemyKit.WILD_META, false)), "棋盘不要求包、带魔兽标记（种子 %d）" % seed)
+		t.check(not board.requires_bag and bool(board.get_meta(EnemyKit.WILD_META, false)), "棋盘不要求包、带魔兽标记（种子 %d）" % seed_)
 		for sid in [&"beast_fang", &"fire_gland", &"beast_hide"]:
-			t.check(ids.has(sid), "招牌 %s 在（种子 %d：%s）" % [sid, seed, ids])
-		t.eq(ids.count(&"beast_fang"), 2, "两颗兽牙（种子 %d）" % seed)
+			t.check(ids.has(sid), "招牌 %s 在（种子 %d：%s）" % [sid, seed_, ids])
+		t.eq(ids.count(&"beast_fang"), 2, "两颗兽牙（种子 %d）" % seed_)
 	var extra := 0
-	for seed in 10:
-		var ids := _ids(_build(c, &"flame_wolf", 2, 90 + seed)["content"])
+	for seed_ in 10:
+		var ids := _ids(_build(c, &"flame_wolf", 2, 90 + seed_)["content"])
 		for id in ids:
 			var d := c.items.get_def(id)
 			t.check(d.tags.has(&"beast_part"), "2 档：%s 是兽材" % id)
@@ -73,9 +73,9 @@ static func run_no_carry(t: TestCase) -> void:
 		t.check(false, "自由模式没有携带规则")
 		return
 	var carried := 0
-	for seed in 30:
+	for seed_ in 30:
 		for id in BEASTS:
-			for raw in (_build(c, id, c.enemies.enemy(id).strength, 300 + seed, c.carry)["content"] as Dictionary)["items"]:
+			for raw in (_build(c, id, c.enemies.enemy(id).strength, 300 + seed_, c.carry)["content"] as Dictionary)["items"]:
 				if bool((raw as Dictionary).get("carried", false)):
 					carried += 1
 	t.eq(carried, 0, "五种魔兽 × 30 个种子：一件携带品都没有")

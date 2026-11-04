@@ -44,8 +44,8 @@ static func _forced(def: EnemyDef, pool: EnemyPool, build_id: StringName) -> Ene
 	return d
 
 
-static func _build(def: EnemyDef, c: TestSupport.Content, strength: int, seed: int, carry: CarryRule = null) -> Dictionary:
-	return EnemyPlacer.build_content(def, c.pool, c.items, strength, _rng(seed), carry)
+static func _build(def: EnemyDef, c: TestSupport.Content, strength: int, p_seed: int, carry: CarryRule = null) -> Dictionary:
+	return EnemyPlacer.build_content(def, c.pool, c.items, strength, _rng(p_seed), carry)
 
 
 static func _full_ctx(c: TestSupport.Content) -> ContentImporter.Context:
@@ -72,9 +72,9 @@ static func run_import(t: TestCase) -> void:
 	for cs in cases:
 		var data := base.duplicate()
 		data["builds"] = [cs[0]]
-		var r := ImportReport.new()
-		var def := ContentImporter.import_enemy(data, ctx, r)
-		t.eq(r.ok(), cs[1], "%s → %s" % [cs[2], "过" if cs[1] else "错"])
+		var r_ := ImportReport.new()
+		var def := ContentImporter.import_enemy(data, ctx, r_)
+		t.eq(r_.ok(), cs[1], "%s → %s" % [cs[2], "过" if cs[1] else "错"])
 		if cs[1]:
 			t.eq(def.builds.size(), 1, "读成一套")
 			t.check(def.builds[0].is_bad() and def.builds[0].strength == Vector2i(0, 1), "quality / strength 读对")

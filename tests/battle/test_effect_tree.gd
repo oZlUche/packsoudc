@@ -43,7 +43,7 @@ static func _flat_damage(amount: float, target: int = CombatEffect.Target.OPPONE
 	var e := DealDamage.new()
 	e.damage_stat = &""
 	e.amount = amount
-	e.target = target
+	e.target = target as CombatEffect.Target
 	return e
 
 

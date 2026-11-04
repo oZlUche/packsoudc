@@ -11,10 +11,10 @@ extends RunEffect
 func modify(ctx: RunContext) -> void:
 	if mods.is_empty():
 		return
-	var scope := ScopedMod.new()
-	scope.tags = tags.duplicate()
-	scope.mods = mods.duplicate()
-	ctx.scoped.append(scope)
+	var scope_ := ScopedMod.new()
+	scope_.tags = tags.duplicate()
+	scope_.mods = mods.duplicate()
+	ctx.scoped.append(scope_)
 
 
 func describe() -> String:

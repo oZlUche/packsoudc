@@ -143,6 +143,7 @@ func _place_nodes() -> bool:
 	row0.sort()
 	var k := _shape.entry_count
 	for i in k:
+		@warning_ignore("integer_division")
 		var idx := roundi(float(i) * float(row0.size() - 1) / float(maxi(1, k - 1))) if k > 1 else (row0.size() - 1) / 2
 		var id: int = _cells[0][row0[idx]]
 		if not _graph.entry_ids.has(id):

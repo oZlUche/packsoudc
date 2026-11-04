@@ -520,8 +520,8 @@ func _calibrate_routes() -> void:
 			var old := n.type
 			if not swappable.has(String(old)):
 				continue        # 上一轮换成了必须型，就不再动它
-			var ri: int = (_routes_of[id] as Array)[0]
-			var style := _cfg.style_by_id(StringName(_g.routes[ri].get("style", "")))
+			var ri_: int = (_routes_of[id] as Array)[0]
+			var style := _cfg.style_by_id(StringName(_g.routes[ri_].get("style", "")))
 			var old_score := node_score(_cfg, n)
 			for t in targets:
 				if StringName(t) == old or not _can_become(id, StringName(t)):
@@ -531,17 +531,17 @@ func _calibrate_routes() -> void:
 				n.type = StringName(t)
 				var new_score := node_score(_cfg, n)
 				n.type = old
-				var saved_sum: Dictionary = sums[ri]
-				var saved_comp: Dictionary = comps[ri]
-				sums[ri] = {"risk": saved_sum["risk"] - old_score["risk"] + new_score["risk"],
+				var saved_sum: Dictionary = sums[ri_]
+				var saved_comp: Dictionary = comps[ri_]
+				sums[ri_] = {"risk": saved_sum["risk"] - old_score["risk"] + new_score["risk"],
 					"reward": saved_sum["reward"] - old_score["reward"] + new_score["reward"]}
 				var comp := saved_comp.duplicate()
 				comp[String(old)] = int(comp.get(String(old), 0)) - 1
 				comp[t] = int(comp.get(t, 0)) + 1
-				comps[ri] = comp
+				comps[ri_] = comp
 				var score := _violation_of(sums, comps)
-				sums[ri] = saved_sum
-				comps[ri] = saved_comp
+				sums[ri_] = saved_sum
+				comps[ri_] = saved_comp
 				if score < best_score - 1e-6:
 					best_score = score
 					best_id = id
@@ -695,8 +695,8 @@ static func rules_from_config(cfg: RingMapConfig) -> Dictionary:
 		if spec != null and not spec.quota.is_empty():
 			var per := {}
 			for t in spec.quota:
-				var lim = spec.quota[t]
-				per[String(t)] = [int(lim[0]), int(lim[1])]
+				var lim_ = spec.quota[t]
+				per[String(t)] = [int(lim_[0]), int(lim_[1])]
 			quota[str(cfg.ring_count() - i)] = per
 	var mandatory: Array = []
 	for t in cfg.mandatory_types:
@@ -731,7 +731,6 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 	var rules: Dictionary = graph.layout_meta.get("type_rules", {})
 	if rules.is_empty():
 		return
-	var ring_count := int(graph.layout_meta.get("ring_count", 0))
 	var by_ring := {}
 	for id in graph.node_ids():
 		var r := int(graph.get_node(id).layout.get("ring", -1))

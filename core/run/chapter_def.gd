@@ -119,8 +119,8 @@ const COACH_KINDS: Array[StringName] = [&"map", &"battle", &"bag", &"prebattle"]
 
 
 ## 这个角色在这一章能不能选
-func allows_character(id: StringName) -> bool:
-	return characters.is_empty() or characters.has(id)
+func allows_character(p_id: StringName) -> bool:
+	return characters.is_empty() or characters.has(p_id)
 
 
 ## 218 补充一：[member coaches] 里这一屏的教程 id（[constant COACH_KINDS] 之一）；没有 = &""

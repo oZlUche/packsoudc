@@ -106,7 +106,7 @@ static func run_cadence_mult(t: TestCase) -> void:
 		var def := db.get_def(c[0])
 		var ench := Forge.forge(def, db.get_def(&"antler"), def)
 		var cd := Forge.rule_of(ench).cadence as CooldownCadence
-		t.check(cd != null and is_equal_approx(cd.seconds, float(c[1])), "%s：每 %s 秒（%s）" % [c[0], c[1], cd.seconds if cd != null else "?"])
+		t.check(cd != null and is_equal_approx(cd.seconds, float(c[1])), "%s：每 %s 秒（%s）" % [c[0], c[1], str(cd.seconds) if cd != null else "?"])
 	var leather := Forge.forge(db.get_def(&"leather_armor") if db.has_def(&"leather_armor") else db.get_def(&"raw_hide"), db.get_def(&"antler"), db.get_def(&"knife"))
 	t.check(Forge.rule_of(leather).cadence is Always, "皮革（开战时）：固定一次，不乘")
 

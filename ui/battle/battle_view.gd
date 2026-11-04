@@ -175,25 +175,25 @@ func buff_tip(id: String, side: int = 0) -> String:
 ## 185（作者 2026-10-17 定稿）：名字行 + 现在的合计（[method Glossary.buff_tip_parts]）；限时的写还剩几秒（作者 16:24）。
 ## 常驻格、标准轴格、鏖战、格挡套同一版式；机制说明（不可解除、系统层、叠层规则）不给玩家看
 func buff_tip_parts(id: String, side: int = 0) -> Dictionary:
-	var panel := _panels[clampi(side, 0, _panels.size() - 1)]
+	var panel_ := _panels[clampi(side, 0, _panels.size() - 1)]
 	if id == CombatantPanel.OVERTIME_CHIP:
-		var n := int(panel.stacks().get(id, 0))
+		var n := int(panel_.stacks().get(id, 0))
 		var sys := _system_of(side, StatAxes.DAMAGE_TAKEN)
 		return _parts(Glossary.tip_head(UiText.t("battle.overtime"), Glossary.SYSTEM_NAME_COLOR, "×%d" % n, UiText.t("battle.kind_system")), [StatAxes.effect_text(StatAxes.DAMAGE_TAKEN, sys)])
 	if id == CombatantPanel.BLOCK_CHIP:
-		return block_tip_parts(panel)
+		return block_tip_parts(panel_)
 	if id.begins_with(CombatantPanel.AXIS_PREFIX):
 		var a := CombatantPanel.axis_of(id)
-		var v := int(panel.stacks().get(id, 0))
-		var kind := UiText.t("battle.kind_debuff") if panel.is_bad_axis(id) else UiText.t("battle.kind_buff")
+		var v := int(panel_.stacks().get(id, 0))
+		var kind := UiText.t("battle.kind_debuff") if panel_.is_bad_axis(id) else UiText.t("battle.kind_buff")
 		return _parts(Glossary.tip_head(StatAxes.name_of(a, v), "@term", "×%d" % absi(v), kind), [StatAxes.effect_text(a, v + _system_of(side, a))])
-	var note := panel.passive_of(id)
+	var note := panel_.passive_of(id)
 	if note != null:
 		return _parts(Glossary.tip_head(note.name, "@term", "", UiText.t("battle.kind_passive")), [note.describe()])
-	var def: BuffDef = panel.buff_defs.get(StringName(id), null)
+	var def: BuffDef = panel_.buff_defs.get(StringName(id), null)
 	if def == null:
 		return _parts(Glossary.tip_head(id, "@term"), [UiText.t("battle.missing_paren")])
-	return Glossary.buff_tip_parts(def, int(panel.stacks().get(id, 0)), panel.time_left(id))
+	return Glossary.buff_tip_parts(def, int(panel_.stacks().get(id, 0)), panel_.time_left(id))
 
 
 static func _parts(head: String, lines: Array) -> Dictionary:
@@ -202,26 +202,26 @@ static func _parts(head: String, lines: Array) -> Dictionary:
 
 
 ## 153：「格挡 N」格的悬浮窗 —— 名字行写合计，下面是各层（生效的那层标出来、其余备用）与加固 / 破绽的来源
-static func block_tip(panel: CombatantPanel) -> String:
-	var parts := block_tip_parts(panel)
+static func block_tip(p_panel: CombatantPanel) -> String:
+	var parts := block_tip_parts(p_panel)
 	return String(parts["head"]) + "\n" + String(parts["body"])
 
 
-static func block_tip_parts(panel: CombatantPanel) -> Dictionary:
+static func block_tip_parts(p_panel: CombatantPanel) -> Dictionary:
 	var lines: Array[String] = []
-	for i in panel.block_layers.size():
-		var l: Dictionary = panel.block_layers[i]
-		var who := UiText.t("battle.innate") if String(l["id"]) == "innate" else String(panel.item_names.get(int(l["uid"]), l["id"]))
+	for i in p_panel.block_layers.size():
+		var l: Dictionary = p_panel.block_layers[i]
+		var who := UiText.t("battle.innate") if String(l["id"]) == "innate" else String(p_panel.item_names.get(int(l["uid"]), l["id"]))
 		lines.append("%s %d%s" % [who, int(l["value"]), UiText.t("battle.block_active") if i == 0 else UiText.t("battle.block_spare")])
-	if panel.axis_value(StatAxes.BLOCK) != 0:
-		var a := panel.axis_value(StatAxes.BLOCK)
+	if p_panel.axis_value(StatAxes.BLOCK) != 0:
+		var a := p_panel.axis_value(StatAxes.BLOCK)
 		lines.append("%s ×%d" % [StatAxes.name_of(StatAxes.BLOCK, a), absi(a)])
-	for id in panel.stacks():
-		var def: BuffDef = panel.buff_defs.get(StringName(id), null)
+	for id in p_panel.stacks():
+		var def: BuffDef = p_panel.buff_defs.get(StringName(id), null)
 		if def != null and def.axis_stacks_per(StatAxes.BLOCK) != 0:
-			var n := def.axis_stacks_per(StatAxes.BLOCK) * int(panel.stacks()[id])
+			var n := def.axis_stacks_per(StatAxes.BLOCK) * int(p_panel.stacks()[id])
 			lines.append(UiText.t("battle.block_source") % [StatAxes.name_of(StatAxes.BLOCK, n), absi(n), Names.of(def)])
-	return _parts(Glossary.tip_head(UiText.t("battle.block"), "@term", str(panel.block_value())), lines)
+	return _parts(Glossary.tip_head(UiText.t("battle.block"), "@term", str(p_panel.block_value())), lines)
 
 
 ## 回放到当前游标为止，某一方某条轴的系统层（从日志里最近一条 axis_shifted 读）
@@ -445,9 +445,9 @@ func _process(delta: float) -> void:
 
 
 func _drain_until(t: float) -> void:
-	var log := _result.log
-	while _cursor < log.size():
-		var e := log[_cursor] as BattleEvent
+	var log_ := _result.log
+	while _cursor < log_.size():
+		var e := log_[_cursor] as BattleEvent
 		if StatMath.to_float(e.time) > t:
 			break
 		_apply(e)
@@ -469,8 +469,8 @@ func _sync_overlays() -> void:
 func _refresh_tip_time() -> void:
 	if _tip == null or _tip_id == "" or not _tip.is_showing():
 		return
-	var panel := _panels[clampi(_tip_side, 0, _panels.size() - 1)]
-	var left := panel.time_left(_tip_id)
+	var panel_ := _panels[clampi(_tip_side, 0, _panels.size() - 1)]
+	var left := panel_.time_left(_tip_id)
 	if left < 0.0 or ceili(left) == _tip_secs:
 		return
 	_tip_secs = ceili(left)
@@ -872,9 +872,9 @@ func _sync_buttons() -> void:
 		return
 	var done := _result != null and _cursor >= _result.log.size()
 	var id := "replay" if done else ("pause" if _playing else "play")
-	var name: String = UiText.t("battle." + id)     # battle.replay / battle.pause / battle.play
+	var name_: String = UiText.t("battle." + id)     # battle.replay / battle.pause / battle.play
 	if _play_btn.icon_id != id:
-		_play_btn.set_art(id, name, name + "\n" + play_hint())
+		_play_btn.set_art(id, name_, name_ + "\n" + play_hint())
 	var x := int(SPEEDS[_speed_idx])
 	if _speed_btn.icon_id != "speed_%d" % x:
 		_speed_btn.set_art("speed_%d" % x, SPEED_NUMERALS[x], UiText.t("battle.speed_tip") % SPEED_NUMERALS[x])

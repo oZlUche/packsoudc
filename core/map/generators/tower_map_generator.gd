@@ -23,12 +23,14 @@ func shape(cfg: Resource) -> LatticeShape:
 	s.cols = c.base_width
 	for r in widths.size():
 		var w := widths[r]
+		@warning_ignore("integer_division")
 		var offset := (c.base_width - w) / 2
 		var cols: Array[int] = []
 		for x in w:
 			cols.append(offset + x)
 		s.add_row(cols, true, false, c.fill)
 	var top := widths[widths.size() - 1]
+	@warning_ignore("integer_division")
 	s.goals[(c.base_width - top) / 2 + (top - 1) / 2] = &"core"
 	s.entry_count = c.entry_count
 	s.forward_reach = c.forward_reach

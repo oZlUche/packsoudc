@@ -178,8 +178,8 @@ static func run_real_run_writes(t: TestCase) -> void:
 	sets.load_dir()
 	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var s: RunState = null
-	for seed in range(1, 60):
-		s = RunState.start(chapter, seed, db, enemies, sets)
+	for seed_ in range(1, 60):
+		s = RunState.start(chapter, seed_, db, enemies, sets)
 		if s != null:
 			s.pick_spawn(s.map.entry_ids[0])
 			break
