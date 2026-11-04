@@ -18,7 +18,7 @@
 | 包内邻接 | 只有包碰包（`bags_touching`）和增益格，没有「两件贴着合成」 | `core/inventory/grid_inventory.gd:551` |
 | 材料 | 58 件带 `material` 字段：金属 16 · 骨 6 · 木 5 · 石 6 · 宝石 1；28 条配方消化 | 275 |
 | 武器 | 19，白只有匕首；短剑 / 长剑 / 弯刀 / 剁刀 / 战锤 / 短弓都是绿 | 275 |
-| 可拼的构件 | `on_battle_start`、`shift_axis`（减速 / 易伤 / 锐目 / 加固 / 灵巧 / 坚韧）、`deal_damage.direct_override` 直伤、`apply_status`、`on_stacks_at_least`、双段出手 = 两条 `on_schedule` 错相 | `core/battle/effects/*.gd` |
+| 可拼的构件 | `on_battle_start`、`shift_axis`（减速 / 易伤 / 锐目 / 加固 / 灵巧 / 坚韧）、175 补充四的**真实伤害**类型（= 清单里的「直伤」：跳过护甲、格挡、受伤轴；`direct_override` 管的是吃不吃格挡，不是它）、`apply_status`、`on_stacks_at_least`、双段出手 = 两条 `on_schedule` 错相 | `core/battle/effects/*.gd` |
 
 ## 二、规则（只有四条）
 
