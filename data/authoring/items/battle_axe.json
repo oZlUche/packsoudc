@@ -24,7 +24,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 10.0
+      "damage": 8.0
     },
     "rules": [
       {

@@ -221,6 +221,7 @@ static func quality_stats(into: StatSet, profile: CombatProfile, q: int) -> void
 
 
 ## 279 补充二：按品质改规则里的个数 —— 施加的层数、轴的层数、写死的点数（真实伤害、追加伤害、下一下加伤）每档 +1。
+## 台架定调第二条：每下都触发的规则（出手、命中、别的件出手、施加时）里的施加层数和轴层数不加，只有一次性的（开战、加时）加 —— 叠层复利会把两档品质从 +20% 推到翻倍。
 ## 品质 0 = 原样（浅拷贝，和以前一样）；否则规则和它的每个效果各拷一份再改（效果引用的 buff 等仍是同一份），定义不碰。耐力价（costs）不动
 static func quality_rules(rules: Array[AbilityRule], q: int) -> Array[AbilityRule]:
 	if q <= 0:
@@ -228,22 +229,30 @@ static func quality_rules(rules: Array[AbilityRule], q: int) -> Array[AbilityRul
 	var out: Array[AbilityRule] = []
 	for r in rules:
 		var copy := (r as AbilityRule).duplicate(false) as AbilityRule
+		var repeats := _repeats_per_hit(copy)
 		var fx: Array[CombatEffect] = []
 		for e in (r as AbilityRule).effects:
 			var ec := (e as CombatEffect).duplicate(false) as CombatEffect
-			_quality_effect(ec, q)
+			_quality_effect(ec, q, repeats)
 			fx.append(ec)
 		copy.effects = fx
 		out.append(copy)
 	return out
 
 
-static func _quality_effect(e: Resource, q: int) -> void:
+## 台架定调第二条：这条规则是不是每下都触发（出手、受击 / 命中、别的件出手、施加时）
+static func _repeats_per_hit(r: AbilityRule) -> bool:
+	return r.trigger is OnSchedule or r.trigger is DamageTrigger or r.trigger is OnItemFired or r.trigger is OnStatusApplied
+
+
+static func _quality_effect(e: Resource, q: int, repeats: bool) -> void:
 	if e is ApplyStatus:
-		(e as ApplyStatus).stacks += q
+		if not repeats:
+			(e as ApplyStatus).stacks += q
 	elif e is ShiftAxis:
-		var s := e as ShiftAxis
-		s.delta += q if s.delta >= 0 else -q
+		if not repeats:
+			var s := e as ShiftAxis
+			s.delta += q if s.delta >= 0 else -q
 	elif e is DealDamage:
 		var d := e as DealDamage
 		if d.damage_stat == &"" and d.amount > 0.0:
