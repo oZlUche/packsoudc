@@ -24,7 +24,26 @@ static func amount(text: String) -> int:
 	return int(m.get_string(1)) if m != null and m.get_string(1) != "" else -1
 
 
+## 11-04（游戏测试转：买卖告示写「花了 5 币」）：告示里的钱也画金币 —— 句末放 `[coin=N]`，告示卷把它画成一枚金币跟着数（不是红的）
+const COIN_TAG := "[coin="
+const _COIN_RX := "\\[coin=(\\d+)\\]"
+
+
+static func coin(n: int) -> String:
+	return "[coin=%d]" % n
+
+
+static func has_coin(text: String) -> bool:
+	return text.contains(COIN_TAG)
+
+
+## `[coin=N]` 里的数（没有 = -1）
+static func coin_amount(text: String) -> int:
+	var m := TextTemplate.cached_regex(_COIN_RX).search(text)
+	return int(m.get_string(1)) if m != null else -1
+
+
 ## 去掉记号后剩下的字（连带它前面的「：」「:」和空白）
 static func strip(text: String) -> String:
-	return TextTemplate.cached_regex("[：:]?\\s*" + _RX).sub(text, "", true).strip_edges()
+	return TextTemplate.cached_regex("[：:]?\\s*(?:" + _RX + "|" + _COIN_RX + ")").sub(text, "", true).strip_edges()
 

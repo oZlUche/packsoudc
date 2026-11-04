@@ -100,10 +100,10 @@ func open(payload: Dictionary) -> void:
 	if _session != null:
 		_session.stock_changed.connect(_rebuild)
 		_session.bought.connect(func(def: ItemDef, price: int, _inst: ItemInstance):
-			_say(UiText.t("shop.bought") % [Names.of(def), price])
+			_say(UiText.t("shop.bought") % Names.of(def) + CoinShort.coin(price))     # 11-04：钱画金币（告示卷句末）
 			_refresh())
 		_session.sold_item.connect(func(def: ItemDef, gain: int):
-			_say(UiText.t("shop.sold") % [Names.of(def), gain] + _first_sale_hint())
+			_say(UiText.t("shop.sold") % Names.of(def) + _first_sale_hint() + CoinShort.coin(gain))
 			_refresh())
 		flow.run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh())
 	_rebuild()

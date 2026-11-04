@@ -193,6 +193,12 @@ static func frame_codex_variants(t: TestCase, root: Window) -> void:
 	t.eq(lit_ids, [&"shortsword_brute"], "只有蛮神版那一小格亮")
 	var pop := screen.find_child("VariantsPopup", true, false) as PanelContainer
 	t.check(pop != null and pop.theme_type_variation == UiTheme.PANEL_TOOLTIP, "作者 11-04：异体窗是悬浮窗实底，不是中间透明的凹槽底")
+	var vp: Vector2 = screen.get_viewport_rect().size
+	t.check(pop != null and Rect2(Vector2.ZERO, vp).encloses(Rect2(pop.position, pop.get_combined_minimum_size())), "异体窗整个在屏内")
+	var screen_sz := Vector2(1600, 1000)
+	var low: Vector2 = load("res://ui/game/meta_screen.gd").variants_spot(Rect2(100, 900, 80, 80), Vector2(420, 260), screen_sz)
+	t.eq(low, Vector2(100, 900 - 6 - 260), "下排格子：窗翻到格子上面")
+	t.eq(load("res://ui/game/meta_screen.gd").variants_spot(Rect2(1500, 100, 80, 80), Vector2(420, 260), screen_sz), Vector2(1180, 186), "上排靠右：放下面、左移到不出右边")
 	screen.close_variants()
 	t.check(not screen.variants_open(), "关掉了")
 	var plain: CodexTile = null
