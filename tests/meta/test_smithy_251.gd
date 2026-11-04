@@ -34,7 +34,7 @@ static func run_content(t: TestCase) -> void:
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
 	var all := SmithRecipeDef.load_all()
-	t.eq(all.size(), 19, "14 张 + 252 的 6 张，10-31 棉甲那张删了")
+	t.eq(all.size(), 49, "14 张 + 252 的 6 张，10-31 棉甲那张删了；279 加 30 张升蓝")
 	var ok := true
 	for r in all:
 		var o := db.get_def(r.output)
@@ -132,7 +132,7 @@ static func run_groups(t: TestCase) -> void:
 		by[g] = []
 	for r in SmithRecipeDef.load_all():
 		t.check(SmithRecipeDef.GROUPS.has(r.group), "%s 有大类（%s）" % [r.id, r.group])
-		if by.has(r.group):
+		if by.has(r.group) and not String(r.id).begins_with("anvil_"):     # 279 的升蓝另有测试
 			(by[r.group] as Array).append(String(r.output))
 	for g in by:
 		(by[g] as Array).sort()

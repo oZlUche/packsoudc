@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_lk0qp"]
+
+[resource]
+script = ExtResource("1_lk0qp")
+id = &"fuse_twin_axes"
+inputs = Array[StringName]([&"hand_axe", &"hand_axe"])
+output = &"twin_axes"
+adjacent = true

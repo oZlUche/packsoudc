@@ -1,0 +1,9 @@
+{
+  "id": "fuse_twin_blades",
+  "inputs": [
+    "knife",
+    "knife"
+  ],
+  "output": "twin_blades",
+  "adjacent": true
+}

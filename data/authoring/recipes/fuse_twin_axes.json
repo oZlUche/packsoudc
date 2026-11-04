@@ -1,0 +1,9 @@
+{
+  "id": "fuse_twin_axes",
+  "inputs": [
+    "hand_axe",
+    "hand_axe"
+  ],
+  "output": "twin_axes",
+  "adjacent": true
+}

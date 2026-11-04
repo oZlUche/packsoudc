@@ -1,0 +1,12 @@
+{
+  "id": "anvil_steel_stiletto",
+  "output": "steel_stiletto",
+  "inputs": {
+    "quenched_dagger": 1
+  },
+  "material_inputs": {
+    "metal": 1
+  },
+  "funds": 60,
+  "group": "blade"
+}

@@ -14,6 +14,8 @@ extends Resource
 @export var inputs: Array[StringName] = []
 ## 产物的道具 id
 @export var output: StringName = &""
+## 279 拼接：true = 两件在棋盘上**贴着**、点接缝上的小锤合（不是拖上去合）；拖上去合的配方查不到它，反过来也一样
+@export var adjacent: bool = false
 ## 给界面看的一句（悬浮窗 / 事件文本里引用）
 @export var note: String = ""
 ## 221 F5: note in other languages, {"en": ...}
@@ -36,10 +38,10 @@ static func load_all() -> Array[RecipeDef]:
 	return out
 
 
-## 在一组配方里找这两件能合成什么；没有返回 null
-static func find(recipes: Array, a: StringName, b: StringName) -> RecipeDef:
+## 在一组配方里找这两件能合成什么；没有返回 null。[param fuse]：找贴着拼接的（279），否则找拖上去合的
+static func find(recipes: Array, a: StringName, b: StringName, fuse: bool = false) -> RecipeDef:
 	for r in recipes:
 		var def := r as RecipeDef
-		if def != null and def.matches(a, b):
+		if def != null and def.adjacent == fuse and def.matches(a, b):
 			return def
 	return null

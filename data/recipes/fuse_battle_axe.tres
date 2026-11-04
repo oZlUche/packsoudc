@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_kuxwm"]
+
+[resource]
+script = ExtResource("1_kuxwm")
+id = &"fuse_battle_axe"
+inputs = Array[StringName]([&"hand_axe", &"whetstone"])
+output = &"battle_axe"
+adjacent = true

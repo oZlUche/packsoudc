@@ -1,0 +1,9 @@
+{
+  "id": "fuse_great_axe",
+  "inputs": [
+    "felling_axe",
+    "whetstone"
+  ],
+  "output": "great_axe",
+  "adjacent": true
+}

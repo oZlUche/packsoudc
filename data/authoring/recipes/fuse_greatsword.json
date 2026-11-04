@@ -1,0 +1,9 @@
+{
+  "id": "fuse_greatsword",
+  "inputs": [
+    "shortsword",
+    "shortsword"
+  ],
+  "output": "greatsword",
+  "adjacent": true
+}

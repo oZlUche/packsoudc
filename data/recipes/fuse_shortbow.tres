@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_766um"]
+
+[resource]
+script = ExtResource("1_766um")
+id = &"fuse_shortbow"
+inputs = Array[StringName]([&"crude_bow", &"tanned_leather"])
+output = &"shortbow"
+adjacent = true

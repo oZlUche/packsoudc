@@ -1,0 +1,9 @@
+{
+  "id": "fuse_great_club",
+  "inputs": [
+    "club",
+    "club"
+  ],
+  "output": "great_club",
+  "adjacent": true
+}

@@ -1,0 +1,9 @@
+{
+  "id": "fuse_shortbow",
+  "inputs": [
+    "crude_bow",
+    "tanned_leather"
+  ],
+  "output": "shortbow",
+  "adjacent": true
+}

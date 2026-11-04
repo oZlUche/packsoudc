@@ -44,13 +44,17 @@ static func need_tech_text(recipe: SmithRecipeDef) -> String:
 	return UiText.t("smithy.need_tech_level") % [name, recipe.tech_level]
 
 
-## 仓库里每样素材有几件（锁住的不算）：道具 id 字符串 → 件数，只列配方要的
+## 仓库里每样素材有几件（锁住的不算）：道具 id 字符串 → 件数，只列配方要的；
+## 279：按材质类认的那几格记在 `"material:<材质>"` 下（有没有能顶的一件：1 / 0）
 static func have(meta: MetaState, recipe: SmithRecipeDef) -> Dictionary:
 	var out := {}
 	if recipe == null:
 		return out
 	for key in recipe.inputs:
 		out[String(key)] = 0
+	var picks := material_picks(meta, recipe)
+	for m in recipe.material_inputs:
+		out[MATERIAL_KEY % m] = 1 if picks.get(String(m)) != null else 0
 	if meta == null:
 		return out
 	for inst in meta.warehouse.items():
@@ -58,6 +62,33 @@ static func have(meta: MetaState, recipe: SmithRecipeDef) -> Dictionary:
 		var key := String(it.def.id)
 		if out.has(key) and not it.is_locked_by_player():
 			out[key] = int(out[key]) + 1
+	return out
+
+
+const MATERIAL_KEY := "material:%s"
+
+
+## 279：每个材质类格会扣仓库里哪一件：材质 → ItemInstance（没有能顶的 = null）。
+## 稀有度最低的先用（好材料留着），同档按仓库顺序；不拿 [member SmithRecipeDef.inputs] 点名的那几样、不拿锁住的
+static func material_picks(meta: MetaState, recipe: SmithRecipeDef) -> Dictionary:
+	var out := {}
+	if recipe == null:
+		return out
+	var mats: Array = recipe.material_inputs.keys()
+	mats.sort()
+	var used := {}
+	for m in mats:
+		var best: ItemInstance = null
+		if meta != null:
+			for inst in meta.warehouse.items():
+				var it := inst as ItemInstance
+				if used.has(it.uid) or it.is_locked_by_player() or recipe.inputs.has(it.def.id) or recipe.inputs.has(String(it.def.id)):
+					continue
+				if recipe.material_fits(String(m), it.def) and (best == null or it.def.rarity < best.def.rarity):
+					best = it
+		if best != null:
+			used[best.uid] = true
+		out[String(m)] = best
 	return out
 
 
@@ -73,6 +104,9 @@ static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDataba
 	for key in recipe.inputs:
 		if int(got.get(String(key), 0)) < int(recipe.inputs[key]):
 			return UiText.t("smithy.missing")
+	for m in recipe.material_inputs:
+		if int(got.get(MATERIAL_KEY % m, 0)) < 1:
+			return UiText.t("smithy.missing")
 	if meta.funds < recipe.funds:
 		return UiText.t("smithy.no_funds")
 	if not meta.warehouse.can_admit(items.get_def(recipe.output)):
@@ -86,7 +120,10 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) 
 		return null
 	var out := ItemInstance.create(items.get_def(recipe.output), 0)
 	out.uid = meta.allocate_uid()
+	var picks := material_picks(meta, recipe)
 	meta.warehouse.begin_batch()
+	for m in picks:
+		meta.warehouse.remove((picks[m] as ItemInstance).uid)
 	var left := {}
 	for key in recipe.inputs:
 		left[String(key)] = int(recipe.inputs[key])

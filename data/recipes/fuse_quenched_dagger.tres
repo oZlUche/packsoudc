@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_2tpmv"]
+
+[resource]
+script = ExtResource("1_2tpmv")
+id = &"fuse_quenched_dagger"
+inputs = Array[StringName]([&"knife", &"whetstone"])
+output = &"quenched_dagger"
+adjacent = true

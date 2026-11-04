@@ -178,7 +178,12 @@ func rebuild() -> void:
 		_open = &""
 	_scroll.visible = open_recipe_def != null
 	if open_recipe_def != null:
-		_scroll.show_recipe(open_recipe_def, flow.items, Smithy.have(flow.meta, open_recipe_def), Smithy.can_forge(flow.meta, open_recipe_def, flow.items))
+		var mat_defs := {}     # 279：材质类格画仓库里会被扣的那件
+		var picks := Smithy.material_picks(flow.meta, open_recipe_def)
+		for m in picks:
+			if picks[m] != null:
+				mat_defs[m] = (picks[m] as ItemInstance).def
+		_scroll.show_recipe(open_recipe_def, flow.items, Smithy.have(flow.meta, open_recipe_def), Smithy.can_forge(flow.meta, open_recipe_def, flow.items), mat_defs)
 	_aim_pointer.call_deferred()
 
 

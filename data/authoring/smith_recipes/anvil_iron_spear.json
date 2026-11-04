@@ -1,0 +1,12 @@
+{
+  "id": "anvil_iron_spear",
+  "output": "iron_spear",
+  "inputs": {
+    "short_spear": 1
+  },
+  "material_inputs": {
+    "metal": 1
+  },
+  "funds": 60,
+  "group": "blade"
+}

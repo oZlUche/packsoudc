@@ -1,0 +1,12 @@
+{
+  "id": "anvil_granite_maul",
+  "output": "granite_maul",
+  "inputs": {
+    "stone_maul": 1
+  },
+  "material_inputs": {
+    "stone": 1
+  },
+  "funds": 60,
+  "group": "hammer"
+}

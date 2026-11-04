@@ -1,0 +1,9 @@
+{
+  "id": "fuse_broadsword",
+  "inputs": [
+    "shortsword",
+    "whetstone"
+  ],
+  "output": "broadsword",
+  "adjacent": true
+}

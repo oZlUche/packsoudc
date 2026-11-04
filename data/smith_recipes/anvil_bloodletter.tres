@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_h36bu"]
+
+[resource]
+script = ExtResource("1_h36bu")
+id = &"anvil_bloodletter"
+output = &"bloodletter"
+inputs = {
+"cleaver": 1
+}
+material_inputs = {
+"bone": 1
+}
+funds = 60
+group = "blade"
