@@ -1082,6 +1082,31 @@ func forge_token(node: MapNode, timing: ItemInstance, effect: ItemInstance, valu
 	return token
 
 
+## 279：休息点 [param node] 的砧还能不能锤（是休息点、这一局没完、这座砧没锤过）
+func anvil_open(node: MapNode) -> bool:
+	return run != null and not run.is_over() and node != null and NodeEvents.effective_type(node) == &"rest" and not Anvil.used(node)
+
+
+## 279：在休息点 [param node] 的砧上锤一下 —— [param weapon]（在 [param weapon_from] 里）+ [param material]（在 [param material_from] 里）
+## 配得上升级配方：两件消耗、这座砧用掉（免费一次），返回出件（带品质，放哪由调用方定）；配不上 / 砧用过 = null，什么也不动
+func anvil_strike(node: MapNode, weapon: ItemInstance, weapon_from: ItemContainer, material: ItemInstance, material_from: ItemContainer) -> ItemInstance:
+	if not anvil_open(node) or weapon == null or material == null or weapon.is_locked_by_player() or material.is_locked_by_player():
+		return null
+	var out := Anvil.result(weapon, material, smith_recipes, items)
+	if out == null:
+		return null
+	for pair in [[weapon, weapon_from], [material, material_from]]:
+		var c := pair[1] as ItemContainer
+		var inst := pair[0] as ItemInstance
+		if c != null and c.has_item(inst.uid):
+			c.remove(inst.uid)
+	Anvil.use(node)
+	if meta != null:
+		meta.light_codex(out.def)
+	save()
+	return out
+
+
 ## 093：关掉神坛屏（回地图；站着还能再开，除非用过特殊操作）
 func close_altar() -> void:
 	if run == null:

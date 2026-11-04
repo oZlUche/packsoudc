@@ -58,6 +58,11 @@ func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 	_refresh_fusions()
 
 
+## 这块面板用的拖拽层（279：砧的槽也登记到这一层）
+func drag_layer() -> DragLayer:
+	return _drag
+
+
 ## 279 拼接：贴着、配得上的两件接缝上画小锤（棋盘一变就重找）
 func _refresh_fusions() -> void:
 	var crafting := CraftingModule.of(_run)

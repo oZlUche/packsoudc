@@ -51,6 +51,9 @@ var _extra_btns: Array[Button] = []
 var _note: Control = null
 var _note_text := ""
 var _bag: Control = null
+var _anvil: AnvilColumn = null     # 279
+var _anvil_key: Button = null
+var _bag_win: BagWindow = null
 var _bag_panel: Control = null
 ## 196 补充一：正文字板与收起后的卷轴（没正文都是 null）
 var _board: Control = null
@@ -212,6 +215,11 @@ func _build_footer() -> void:
 	add_child(row)
 	if flow.run != null:
 		row.add_child(ScrollKey.short(UiText.t("event.sort_pack"), toggle_bag))     # 和事件屏一样能整理背包
+		if _node != null and NodeEvents.effective_type(_node) == &"rest":
+			var key := ScrollKey.short(UiText.t("camp.anvil"), toggle_anvil)     # 279：砧（占位键，等营地造物图）
+			key.disabled = not flow.anvil_open(_node)
+			row.add_child(key)
+			_anvil_key = key
 	for b in _extra_btns:
 		row.add_child(b)
 
@@ -410,8 +418,29 @@ func is_options_page() -> bool:
 	return true
 
 
+## 279：打开背包窗、右栏换成砧（再按一次 / 关窗 = 槽里的东西回背包）
+func toggle_anvil() -> void:
+	if _bag != null:
+		toggle_bag()
+		return
+	toggle_bag()
+	if _bag != null and is_instance_valid(_bag_win):
+		_anvil = _bag_win.open_anvil(flow, _node)
+
+
+func anvil_key() -> Button:
+	return _anvil_key
+
+
+func anvil() -> AnvilColumn:
+	return _anvil if _bag != null and is_instance_valid(_anvil) else null
+
+
 func toggle_bag() -> void:
 	if _bag != null:
+		if _anvil != null and is_instance_valid(_anvil):
+			_anvil.release()     # 279：砧槽里的东西回背包
+		_anvil = null
 		_bag.hide()
 		_bag.queue_free()
 		_bag = null
@@ -423,6 +452,7 @@ func toggle_bag() -> void:
 	_bag = _shade(0.7)
 	var win := BagWindow.new()
 	_bag.add_child(win)
+	_bag_win = win
 	_bag_panel = win.setup_bag(flow.run, font, toggle_bag)
 	win.maybe_coach(flow, _bag)     # 218 补充一
 

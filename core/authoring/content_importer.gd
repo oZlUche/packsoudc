@@ -938,10 +938,6 @@ static func import_recipe(data: Dictionary, ctx: Context, report: ImportReport) 
 	return def
 
 
-## 279：[member ItemDef.material] 的几种（材质类配方格认的）
-const MATERIAL_KINDS: Array[String] = ["metal", "wood", "leather", "cloth", "bone", "stone", "gem", "clay", "flesh", "herb"]
-
-
 ## 251：铁匠铺配方 —— 产物得是道具库里的武器 / 防具 / 盾，素材都得在、件数至少 1，钱不为负，级 1 ～ 3；补充一：大类必填。
 ## 252：冶炼类（`smelt`）的产物得是素材；写了科技的，科技在不在、级数够不够等全部导完再查（[method validate_smith_recipe_techs]）
 static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportReport) -> SmithRecipeDef:
@@ -968,8 +964,8 @@ static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportRe
 			report.error("inputs.%s" % key, "道具库里没有 %s" % key)
 	for m in def.material_inputs:     # 279：按材质类认的素材
 		var r := int(def.material_inputs[m])
-		if not MATERIAL_KINDS.has(String(m)):
-			report.error("material_inputs.%s" % m, "没有这类材质（%s）" % " / ".join(PackedStringArray(MATERIAL_KINDS)))
+		if not ItemMaterials.is_material(StringName(String(m))):
+			report.error("material_inputs.%s" % m, "没有这类材质（%s）" % " / ".join(PackedStringArray(ItemMaterials.IDS)))
 		elif r < 0 or r > 5:
 			report.error("material_inputs.%s" % m, "最低稀有度 0 ～ 5")
 		elif not ctx.items.is_empty() and not ctx.items.values().any(func(d: ItemDef) -> bool: return def.material_fits(String(m), d)):

@@ -219,6 +219,10 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	for e in def.effects:
 		var d: String = e.describe() if e != null and e.has_method("describe") else ""
 		lines.append(UiText.t("tip.effect") % (d if d != "" else _type_name(e)))
+	if def.tags.has(&"weapon") and not wild:     # 279 §四.3：能在砧上升成哪几把
+		var ups := upgrades_line(def)
+		if ups != "":
+			lines.append(ups)
 	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
 		lines.append(wear_line(inst))
 	if inst.is_benched():     # 2026-10-22：标了不参战 —— 写清楚，不然读数掉下来不知道为什么
@@ -383,6 +387,19 @@ static func opening_strikes(rule: AbilityRule) -> int:
 			return 0
 		n += 1
 	return n
+
+
+## 279：「可升为：甲 / 乙」（按稀有度上色）；升不了 = 空
+static func upgrades_line(def: ItemDef) -> String:
+	var names: Array[String] = []
+	for r in Anvil.upgrades_for(def, Anvil.recipes()):
+		var path := ContentPaths.asset_file("items", String(r.output))
+		var d := load(path) as ItemDef if ResourceLoader.exists(path) else null
+		if d != null:
+			names.append("[color=@rarity%d]%s[/color]" % [d.rarity, Names.of(d)])
+	if names.is_empty():
+		return ""
+	return "[color=@dim]%s[/color]" % (UiText.t("tip.upgrades_to") % " / ".join(PackedStringArray(names)))
 
 
 ## 279 补充二：品质标记（一档一个）
