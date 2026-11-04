@@ -102,7 +102,7 @@ static func frame_quick_sell(t: TestCase, root: Window) -> void:
 	t.eq(int(got["count"]), 2, "第二下：卖了勾的两件")
 	t.eq(f.meta.funds, funds + int(got["funds"]), "钱进局外")
 	t.check(not f.meta.warehouse.has_item(k2.uid) and not f.meta.warehouse.has_item(plank.uid) and f.meta.warehouse.has_item(k1.uid), "只卖勾了的")
-	t.eq(screen.notice_layer().current_text(), UiText.t("meta.sold_many") % [2, int(got["funds"]), f.meta.funds], "告示：卖了几件得几币")
+	t.eq(screen.notice_layer().current_text(), UiText.t("meta.sold_many") % 2 + CoinShort.coin(int(got["funds"])), "告示：卖了几件，得的钱是句末一枚金币")
 	t.eq(shelf.selected.size(), 0, "勾选清空")
 	t.check(screen.sell_mode(), "留在出售模式")
 	# 勾了的被右键卖掉：从勾选里去掉
