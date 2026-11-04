@@ -98,7 +98,7 @@ static func loose_candidates(rules: MarketRules, items: ItemDatabase) -> Array[S
 		var d := items.get_def(id)
 		if _sellable(rules, d) and rules.loose_weight(d.rarity) > 0.0 and d.tags.any(func(t: StringName) -> bool: return rules.battle_tags.has(t)):
 			out.append(id)
-	out.sort()
+	Ids.sort(out)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 	return out
 
 
