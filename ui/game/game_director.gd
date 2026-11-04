@@ -273,8 +273,22 @@ func ground_actions(uid: int) -> Array:
 	var inst := ground.stash.get_item(uid) if ground.stash != null else null
 	if inst == null:
 		return []
-	return [ItemActions.make(&"to_pack", UiText.t("act.to_pack"), func(): ground.item_double_clicked.emit(ground, uid)),
-		ItemActions.lock(inst, ground.stash)]
+	var out := [ItemActions.make(&"to_pack", UiText.t("act.to_pack"), func(): ground.item_double_clicked.emit(ground, uid))]
+	var loose := ground.stash.items().filter(func(i: ItemInstance) -> bool: return not i.def.is_bag).size()
+	if loose > 1 and flow.run != null and flow.run.storage == ground.stash:     # 277 第 6 条：地上不止一件时多一颗「全部拾取」
+		out.append(ItemActions.make(&"take_all", UiText.t("act.take_all") % loose, func(): pick_up_all(uid)))
+	out.append(ItemActions.lock(inst, ground.stash))
+	return out
+
+
+## 277 第 6 条：地上的道具按值从高到低能进棋盘的都进；点的那件没进去就照双击那条路走（提示放不下、地图上打开背包）
+func pick_up_all(uid: int) -> int:
+	if flow.run == null:
+		return 0
+	var moved := InventoryService.pick_up_all(flow.run.storage, flow.run.board)
+	if flow.run.storage.has_item(uid):
+		ground.item_double_clicked.emit(ground, uid)
+	return moved
 
 
 func _exit_tree() -> void:
@@ -436,6 +450,20 @@ func minimized() -> GameScreen:
 
 ## 090（作者定）：Esc 是通用「返回」—— 叠层在上面就问叠层（搜索 / 商店 / 战利品收起回地图，事件屏关背包……），
 ## 没叠层问底屏（地图关对话框 / 背包；开局、基地、设置、读取存档回主菜单）。谁都不接就不管（拖拽层自己先吃掉拖着时的 Esc）
+## 277 第 1 条：确认键给最上面那一屏的主按钮（[method GameScreen.confirm_key]）。走 shortcut 这一层：
+## 比各屏的 `_unhandled_key_input` 早（地图的空格不会抢走叠层的确认），比聚焦的输入框晚（打字不受影响）；
+## 按着鼠标（拖着东西）、百科开着时不接
+func _shortcut_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or not key.is_action_pressed(InputKeys.CONFIRM):
+		return
+	if _codex != null or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		return
+	var top := _overlay if _overlay != null else _base
+	if top != null and top.visible and top.confirm_key(key.keycode == KEY_SPACE):
+		get_viewport().set_input_as_handled()
+
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:

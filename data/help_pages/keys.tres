@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_42epd"]
+
+[resource]
+script = ExtResource("1_42epd")
+id = &"keys"
+display_name = "按键一览"
+display_names = {
+"en": "Keys"
+}
+order = 8
+text = "背包：拖着一件按 {key:R} 或滚轮上滚顺时针转，滚轮下滚逆时针转；右键或 {key:Esc} 放回原处。按住 {key:Alt} 暂时藏起说明窗。
+
+地图：{key:B} 开背包，{key:N} 回到这个点，{key:F} 看全图，{key:1} 原大，{key:空格} 镜头回到自己（按住跟着走），{key:Esc} 暂停菜单。
+
+确认键（{key:Enter} / {key:空格}）：战前 = 开战；回放里 {key:空格} 播 / 停，{key:Enter} 跳到结尾、再按继续；战利品 = 全部拾取，拿空了再按关掉；结算 = 继续。事件与营地按 {key:1}–{key:9} 选选项。
+
+{key:Esc} 返回或收起，{key:F11} 切全屏。"
+texts = {
+"en": "Pack: while dragging, press {key:R} or scroll up to rotate clockwise, scroll down to rotate counterclockwise; right-click or {key:Esc} puts it back. Hold {key:Alt} to hide tooltips for a moment.
+
+Map: {key:B} opens the Pack, {key:N} reopens this node, {key:F} fits the whole map, {key:1} zooms to actual size, {key:Space} centers on you (hold to follow), {key:Esc} opens the pause menu.
+
+Confirm ({key:Enter} / {key:Space}): before battle = Fight; in the replay {key:Space} plays / pauses and {key:Enter} jumps to the end, then continues; loot = Take all, then closes once empty; results = Continue. In events and camps, {key:1}–{key:9} pick an option.
+
+{key:Esc} goes back or minimizes, {key:F11} toggles fullscreen."
+}
+related = Array[String](["drag_and_rotate", "map_and_steps", "quick_place"])

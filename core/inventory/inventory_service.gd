@@ -171,6 +171,23 @@ static func transfer_all(from: ItemContainer, to: ItemContainer) -> int:
 	return moved
 
 
+## 277 第 6 条：地上「全部拾取」—— 地上的道具（不含包）按值从高到低逐件自动找位进 [param board]，放不下的留在地上。返回进了几件
+static func pick_up_all(ground: ItemContainer, board: ItemContainer) -> int:
+	if ground == null or board == null:
+		return 0
+	var order: Array = ground.items().filter(func(i: ItemInstance) -> bool: return not i.def.is_bag)
+	order.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool: return ItemValue.of_instance(a) > ItemValue.of_instance(b))
+	var moved := 0
+	ground.begin_batch()
+	board.begin_batch()
+	for inst in order:
+		if transfer_auto(ground, (inst as ItemInstance).uid, board):
+			moved += 1
+	board.end_batch()
+	ground.end_batch()
+	return moved
+
+
 ## 084 / 123：全拿走 —— 每件先试 first（棋盘，自动找位），放不下才进 fallback（地上）。返回 {board: n, storage: n}（按件数，包和包里的各算一件）
 ##
 ## 162（作者定）：**先包后件**。包按大小先塞（放不下的抛到 fallback）；带东西的包摘下来，包自己先去，

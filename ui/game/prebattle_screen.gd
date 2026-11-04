@@ -225,6 +225,13 @@ func smite(option: StringName) -> bool:
 	return ok
 
 
+## 277 第 1 条：确认键 = 「开战」（灰着不接）
+func confirm_key(_space: bool) -> bool:
+	if _start_btn == null or _start_btn.disabled or not _start_btn.is_visible_in_tree():
+		return false
+	return start_battle()
+
+
 ## 现在能不能开战：空串 = 能，否则是原因
 func can_start() -> String:
 	if flow.run == null or flow.run.events.pending_battle.is_empty():

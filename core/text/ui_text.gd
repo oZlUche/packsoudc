@@ -1519,6 +1519,7 @@ const TEXT := {
 	"act.drop": {"zh": "放到地上", "en": "Drop"},
 	"act.to_pack": {"zh": "放进背包", "en": "Into pack"},
 	"act.take": {"zh": "拾取", "en": "Take"},
+	"act.take_all": {"zh": "全部拾取 ×%d", "en": "Take all ×%d"},     # 277 第 6 条：地上一件的按钮
 	"act.buy": {"zh": "买下 %d 币", "en": "Buy · %d"},
 	"act.buy_coin": {"zh": "买下", "en": "Buy"},
 	"act.short": {"zh": "[coin_short]", "en": "[coin_short]"},

@@ -132,6 +132,19 @@ static func _continue_size(won: bool) -> Vector2:
 	return tex.get_size() if tex != null else SCROLL_SIZE
 
 
+## 277 第 1 条：空格 = 播 / 停；Enter = 没看完先跳到结尾，看完了（「继续」旗出来了）再按 = 继续。开战过场里吃掉不做事
+func confirm_key(space: bool) -> bool:
+	if intro_running() or _view == null or _view.is_held():
+		return true
+	if _next != null and _next.is_visible_in_tree() and not _next.disabled:
+		proceed()
+	elif space:
+		_view.toggle_play()
+	elif not _seen_end:
+		_view.skip_to_end()
+	return true
+
+
 ## 看完了（或不想看了）：回到流程
 func proceed() -> void:
 	HudHost.release_in(get_tree())     # 231 补充二：兜底（没看完就走了）
