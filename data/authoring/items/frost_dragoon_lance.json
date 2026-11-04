@@ -27,7 +27,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 42
+      "damage": 19
     },
     "rules": [
       {
@@ -49,10 +49,6 @@
             "target": "OPPONENT",
             "axis": "damage_taken",
             "delta": 2
-          },
-          {
-            "type": "apply_status",
-            "buff": "chill"
           }
         ]
       },
@@ -61,7 +57,12 @@
         "cadence": "@always",
         "effects": [
           "@deal_damage",
-          "@deal_damage"
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "chill",
+            "stacks": 3
+          }
         ]
       }
     ]

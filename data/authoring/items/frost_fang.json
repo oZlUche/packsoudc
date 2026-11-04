@@ -25,7 +25,7 @@
   "material": "bone",
   "combat": {
     "base_stats": {
-      "damage": 14,
+      "damage": 10,
       "crit_chance": 15
     },
     "rules": [
@@ -53,10 +53,17 @@
             "type": "apply_status",
             "buff": "bleed",
             "stacks": 2
-          },
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
           {
             "type": "apply_status",
-            "buff": "chill"
+            "buff": "chill",
+            "stacks": 3
           }
         ]
       }

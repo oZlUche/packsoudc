@@ -26,7 +26,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 25,
+      "damage": 20,
       "crit_chance": 18
     },
     "rules": [
@@ -49,10 +49,6 @@
             "amount": 5.0,
             "damage_stat": "",
             "pure": true
-          },
-          {
-            "type": "apply_status",
-            "buff": "scorch"
           }
         ]
       },
@@ -64,6 +60,17 @@
         "effects": [
           {
             "type": "prime_next_hit"
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": "scorch",
+            "stacks": 3
           }
         ]
       }

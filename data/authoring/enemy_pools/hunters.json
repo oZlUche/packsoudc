@@ -80,7 +80,8 @@
       "stat_scale": {
         "max_hp": 2,
         "block": 1.5
-      }
+      },
+      "weapon_rarity_cap": 3
     }
   ],
   "strength_rule": {

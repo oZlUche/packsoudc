@@ -64,10 +64,6 @@
             "target": "OPPONENT",
             "axis": "attack_speed",
             "delta": -1
-          },
-          {
-            "type": "apply_status",
-            "buff": "numb"
           }
         ]
       },
@@ -75,7 +71,12 @@
         "trigger": "@on_battle_start",
         "cadence": "@always",
         "effects": [
-          "@deal_damage"
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "numb",
+            "stacks": 3
+          }
         ]
       }
     ]

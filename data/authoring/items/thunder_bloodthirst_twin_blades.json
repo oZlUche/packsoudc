@@ -25,7 +25,7 @@
   "material": "bone",
   "combat": {
     "base_stats": {
-      "damage": 12
+      "damage": 8
     },
     "rules": [
       {
@@ -49,10 +49,6 @@
             "pure": true
           },
           "@apply_status_bleed",
-          {
-            "type": "apply_status",
-            "buff": "numb"
-          },
           "@deal_damage",
           {
             "type": "deal_damage",
@@ -61,6 +57,17 @@
             "pure": true
           },
           "@apply_status_bleed"
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": "numb",
+            "stacks": 3
+          }
         ]
       }
     ]

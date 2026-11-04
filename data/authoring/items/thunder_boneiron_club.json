@@ -60,10 +60,17 @@
             "type": "apply_status",
             "buff": "bleed",
             "stacks": 2
-          },
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
           {
             "type": "apply_status",
-            "buff": "numb"
+            "buff": "numb",
+            "stacks": 3
           }
         ]
       }

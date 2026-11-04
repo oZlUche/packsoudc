@@ -26,7 +26,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 90
+      "damage": 71
     },
     "rules": [
       {
@@ -42,12 +42,7 @@
           }
         ],
         "effects": [
-          "@deal_damage",
-          {
-            "type": "apply_status",
-            "buff": "scorch",
-            "stacks": 2
-          }
+          "@deal_damage"
         ]
       },
       {
@@ -59,6 +54,11 @@
             "target": "OPPONENT",
             "axis": "attack_speed",
             "delta": -3
+          },
+          {
+            "type": "apply_status",
+            "buff": "scorch",
+            "stacks": 6
           }
         ]
       }
