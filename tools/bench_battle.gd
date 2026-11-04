@@ -6,6 +6,8 @@
 ## 和同流派参考套组里每件的组合贡献。比值偏得多的那类效果去改 data/authoring/balance/power_weights.json
 ##
 ##     ... --script res://tools/bench_battle.gd -- power
+##
+## 279 补充二：`-- power 2` 每件按 2 档品质量（估算仍按定义），看稀有度阶梯有没有被品质打穿
 extends CliTool
 
 const BATTLES := 2000
@@ -74,6 +76,9 @@ func _power() -> void:
 		if def.tags.has(&"weapon") and def.combat != null and def.blessed_of == &"":
 			weapons.append(def)
 	var w := PowerWeights.load_from()
-	print(PowerBench.single_text(PowerBench.single_table(weapons, w, buffs)))
+	var args := OS.get_cmdline_user_args()
+	var at := args.find("power")
+	var quality := int(args[at + 1]) if at + 1 < args.size() else 0
+	print(PowerBench.single_text(PowerBench.single_table(weapons, w, buffs, 3, quality)))
 	print("")
 	print(PowerBench.set_text(PowerBench.set_table(weapons, SET_TAGS, w)))

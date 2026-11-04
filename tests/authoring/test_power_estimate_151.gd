@@ -207,6 +207,10 @@ static func run_bench_and_import(t: TestCase) -> void:
 	t.eq(rows.size(), 2, "单件表两行")
 	t.check(float((rows[0]["measured"] as Array)[1]) > 0.0, "实测打得出伤害（%.1f）" % (rows[0]["measured"] as Array)[1])
 	t.check(PowerBench.single_text(rows).contains("test_151_b"), "表里有字")
+	var q2 := PowerBench.single_table([a] as Array[ItemDef], w, {}, 1, 2)
+	t.check(float((q2[0]["measured"] as Array)[1]) > float((rows[0]["measured"] as Array)[1]), "279 补充二：2 档品质量得比 0 档高")
+	t.eq(float(q2[0]["power"]), float(rows[0]["power"]), "估算仍按定义")
+	t.eq((a.combat.base_stats as Dictionary).get("damage"), 10.0, "定义不碰")
 	var sets := PowerBench.set_table([a, b] as Array[ItemDef], [&"weapon"] as Array[StringName], w, 1)
 	t.eq(sets.size(), 2, "组合表：同一标签两件各一行")
 
