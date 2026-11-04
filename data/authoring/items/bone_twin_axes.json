@@ -23,7 +23,7 @@
   "material": "bone",
   "combat": {
     "base_stats": {
-      "damage": 7.0
+      "damage": 3.0
     },
     "rules": [
       {

@@ -25,3 +25,6 @@ extends Resource
 ## 这一档背的道具稀有度上限，-1 不限；与组装规则的上限取小。
 ## 外环的小兵不该背传说品 —— 这是掉落的来源（5.10），也是低档棋盘小、别让 3×3 的重甲把它塞满的原因
 @export var rarity_cap: int = -1
+## 279 台架定调：武器另外的稀有度上限（只管带 weapon 标签的），-1 = 同 [member rarity_cap]；和它取小。
+## 新武器多了以后敌人手里的武器压低一档，药膏、器官这些照旧按 [member rarity_cap]
+@export var weapon_rarity_cap: int = -1

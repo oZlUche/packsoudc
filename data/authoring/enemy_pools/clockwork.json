@@ -52,7 +52,8 @@
       "stat_scale": {
         "max_hp": 1.15
       },
-      "rarity_cap": 1
+      "rarity_cap": 1,
+      "weapon_rarity_cap": 0
     },
     {
       "strength": 1,
@@ -71,7 +72,8 @@
         2,
         2
       ],
-      "rarity_cap": 2
+      "rarity_cap": 2,
+      "weapon_rarity_cap": 1
     },
     {
       "strength": 2,
@@ -90,7 +92,8 @@
       "bag_count": [
         2,
         3
-      ]
+      ],
+      "weapon_rarity_cap": 2
     },
     {
       "strength": 3,

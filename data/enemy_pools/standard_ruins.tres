@@ -144,6 +144,7 @@ stat_scale = {
 "max_hp": 1.15
 }
 rarity_cap = 1
+weapon_rarity_cap = 0
 
 [sub_resource type="Resource" id="Resource_tj0wd"]
 script = ExtResource("5_v0xwg")
@@ -155,6 +156,7 @@ stat_scale = {
 }
 bag_count = Vector2i(2, 2)
 rarity_cap = 2
+weapon_rarity_cap = 1
 
 [sub_resource type="Resource" id="Resource_74hwf"]
 script = ExtResource("5_v0xwg")
@@ -166,6 +168,7 @@ stat_scale = {
 "max_hp": 1.9
 }
 bag_count = Vector2i(2, 3)
+weapon_rarity_cap = 2
 
 [sub_resource type="Resource" id="Resource_ecqng"]
 script = ExtResource("5_v0xwg")

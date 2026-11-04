@@ -20,7 +20,7 @@ const LABELS := {
 	"absent": "反过来（要求没有）", "add": "累加", "clear": "拔掉", "target": "对象", "where": "在哪", "pick": "挑法", "item": "道具", "items": "道具",
 	"include_bags": "包也算", "include_self": "含自己", "self_only": "只算自己", "invert": "反转", "enabled": "启用", "absolute": "绝对值", "only_total": "只算总量",
 	# 道具
-	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "material": "材质", "keepsake_abilities": "代表的能力", "bag_mods": "包体加成",
+	"shape": "形状", "rarity": "稀有度", "rarity_cap": "稀有度上限", "weapon_rarity_cap": "武器稀有度上限", "is_bag": "是包", "bag_accept_tags": "包只收的标签", "material": "材质", "keepsake_abilities": "代表的能力", "bag_mods": "包体加成",
 	"set_id": "套装", "effects": "效果", "price": "价格", "starting_belt": "开局发的随身技能", "belt_stock": "随身那一排", "belt_grants": "发的随身技能", "wear": "耐久", "when": "什么时候能用",
 	"max_charges": "满的时候几次", "prefixes": "前缀（从剩 1 次起，一档一个）", "prefixes_by_lang": "别的语言的前缀", "broken_prefix": "破碎的前缀", "broken_prefixes": "别的语言的破碎前缀",
 	"broken_value_ratio": "破碎后卖价几成", "charge_band": "一档几次", "art_levels": "按次数换的图几张", "broken_rarity_drop": "破碎后稀有度低几档", "crystal_family": "魔晶石家族", "own_only": "只认这件自己打出的", "feed_mods": "供给的加成", "feed_rules": "供给的规则", "feed_filter": "只供给", "faith_bonuses": "信仰加成", "dormant_keeps_combat": "休眠仍保留战斗效果", "requires_unlock": "需要的解锁", "vanish_when_empty": "用完就没了", "ammo": "射箭",
