@@ -99,6 +99,13 @@ static func resolve_styles(bbcode: String, tone: StringName = &"dark") -> String
 	for r in rarity.size():
 		out = out.replace("[color=%s%s%d]" % [TextTemplate.STYLE_PREFIX, TextTemplate.RARITY_STYLE, r],
 			"[color=#%s]" % (rarity[r][_side(tone)] as Color).to_html(false))
+	# 272：`[color=@dmg_<类型>]` 按伤害类型（战记的数字与属性词）
+	if out.contains("[color=%s%s" % [TextTemplate.STYLE_PREFIX, TextTemplate.DAMAGE_STYLE]):
+		var dmg: Dictionary = text_colors()["damage"]
+		for type in dmg:
+			out = out.replace("[color=%s%s%s]" % [TextTemplate.STYLE_PREFIX, TextTemplate.DAMAGE_STYLE, type],
+				"[color=#%s]" % (dmg[type][_side(tone)] as Color).to_html(false))
+		out = RegEx.create_from_string("\\[color=@dmg_[a-z_]+\\]").sub(out, "[color=#%s]" % style_color("fg", tone).to_html(false), true)
 	return out
 
 
@@ -147,7 +154,9 @@ static func damage_color(type: StringName, tone: StringName = &"dark") -> Color:
 const TEXT_COLORS_PATH := "res://data/authoring/ui/text_colors.json"
 const TEXT_COLORS_VERSION := 1
 ## 样式码之外模板里也要有的名字：术语链接、暴击飘字；170 定稿的悬浮窗三档字色（正文白、标签与脚注、说明）
-const EXTRA_STYLES := ["term", "crit", "tip_fg", "tip_meta", "tip_desc", "val"]
+const EXTRA_STYLES := ["term", "crit", "tip_fg", "tip_meta", "tip_desc", "val", "log_a", "log_b"]
+## 272：战记相邻两次出手交替的两种墨（深底上的深版；文件不在时的退路）
+const LOG_INKS := {"log_a": Color("e6e2da"), "log_b": Color("e0bc86")}
 ## 170 定稿（作者 2026-10-14）：悬浮窗正文白、标签与脚注比 dim 亮、斜体说明再暗一档 —— 只在深底悬浮窗上用
 const TIP_COLORS := {"tip_fg": Color("f2eee6"), "tip_meta": Color("d8d2c8"), "tip_desc": Color("c9c2b8")}
 ## 185：悬浮窗里的数值（+15%、5 点、×5 的 5）—— 金色，和铜框同族
@@ -250,6 +259,7 @@ static func default_text_colors() -> Dictionary:
 	dark["term"] = Glossary.TERM_COLOR
 	dark["crit"] = CRIT
 	dark["val"] = VAL
+	dark.merge(LOG_INKS)
 	dark.merge(TIP_COLORS)
 	for name in dark:
 		styles[name] = {"dark": dark[name], "light": UiTheme.ink_color(dark[name])}

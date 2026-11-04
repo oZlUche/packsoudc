@@ -67,6 +67,21 @@ static func item_names(spec: CombatantSpec, p_items: ItemDatabase) -> Dictionary
 	return out
 
 
+## 272：法杖轮读的晶石（法杖 uid → [晶石 uid…]，按轮读顺序）—— 战记把法杖那一下写成「法杖·晶石」
+static func loads_of(spec: CombatantSpec) -> Dictionary:
+	var out := {}
+	if spec == null:
+		return out
+	for item in spec.items:
+		if item.loaded.is_empty():
+			continue
+		var beads: Array = []
+		for e in item.loaded:
+			beads.append(int((e as Dictionary).get("uid", 0)))
+		out[item.source_uid] = beads
+	return out
+
+
 ## 有规则的物品
 func active_items() -> Array[CompiledItem]:
 	var out: Array[CompiledItem] = []

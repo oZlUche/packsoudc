@@ -29,7 +29,9 @@
     "tip_fg": {"dark": "#f2eee6", "light": "#2e2219"},
     "tip_meta": {"dark": "#d8d2c8", "light": "#4a3a2c"},
     "tip_desc": {"dark": "#c9c2b8", "light": "#5a4433"},
-    "val": {"dark": "#f3c969", "light": "#6b4e00"}
+    "val": {"dark": "#f3c969", "light": "#6b4e00"},
+    "log_a": {"dark": "#e6e2da", "light": "#2e2219"},
+    "log_b": {"dark": "#e0bc86", "light": "#6b3a1a"}
   },
   "rarity": [
     {"dark": "#d8dce3", "light": "#525862"},

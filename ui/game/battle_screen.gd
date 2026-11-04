@@ -66,6 +66,7 @@ func open(payload: Dictionary) -> void:
 
 	_view = BattleView.new()
 	_view.bronze = true
+	_view.log_open = flow.settings == null or flow.settings.battle_log_open     # 272：战记开合跨局继承
 	_view.label_font = font
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.custom_minimum_size = Vector2(VIEW_WIDTH, 0)
@@ -77,6 +78,7 @@ func open(payload: Dictionary) -> void:
 		_view.set_speed(flow.settings.battle_speed)
 	_view.speed_changed.connect(_on_speed_changed)
 	_view.reaction_shown.connect(_on_reaction_shown)
+	_view.log_toggled.connect(_on_log_toggled)
 
 	_next_slot = Control.new()
 	_next_slot.custom_minimum_size = Vector2(_continue_size(_won).x, minf(SLOT_HEIGHT, _continue_size(_won).y))     # 先按图留好位置，看完才放按钮（面板不跳）
@@ -94,12 +96,14 @@ func open(payload: Dictionary) -> void:
 		_medal.spread(false)
 
 	if result != null:
-		_view.play(result, [UiText.t("battle.me"), enemy_name])
+		_view.play(result, [_my_name(), enemy_name])     # 272：战记里我方写角色名
 		# 157：名牌和战前准备屏同一份控件、同一个位置（面板顶上）
 		_view.set_nameplate(0, _player_plate(Nameplate.COMPACT_PORTRAIT))
 		_view.set_nameplate(1, _enemy_plate(payload.get("enemy_content", {}), Nameplate.COMPACT_PORTRAIT))
 		_view.set_item_names(0, CombatantSpec.item_names(payload.get("player", null), flow.items))
 		_view.set_item_names(1, CombatantSpec.item_names(payload.get("enemy", null), flow.items))
+		for side in 2:
+			_view.set_loads(side, CombatantSpec.loads_of(payload.get("player" if side == 0 else "enemy", null)))
 		# 087 / 103：双方上过身的 buff（图标 + 悬浮说明）在 result.buffs 里，play 已经接上
 		# 103 第 7 条：双方棋盘 + 冷却遮罩（编译时的那张棋盘，uid 和日志一致）
 		for side in 2:
@@ -391,6 +395,21 @@ func _on_reaction_shown(id: StringName, side: int) -> void:
 func view() -> BattleView:
 	return _view
 #endregion
+
+
+## 272：我方在回放里叫什么 —— 这一局的角色名，没有角色写「我」
+func _my_name() -> String:
+	var ch := flow.run.character if flow.run != null else null
+	return Names.of(ch) if ch != null else UiText.t("battle.me")
+
+
+## 272：玩家收起 / 展开了战记 → 面板按新内容重排、记进设置
+func _on_log_toggled(is_open: bool) -> void:
+	_fit_duel_panel()
+	if flow.settings == null:
+		return
+	flow.settings.battle_log_open = is_open
+	flow.save_settings()
 
 
 ## 109：玩家在回放里切了倍速 → 记进设置并存盘（和「拿走最后一件自动关闭」同一个写法）
