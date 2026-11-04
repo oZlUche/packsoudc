@@ -103,7 +103,8 @@ func open(payload: Dictionary) -> void:
 			_say(UiText.t("shop.bought") % Names.of(def) + CoinShort.coin(price))     # 11-04：钱画金币（告示卷句末）
 			_refresh())
 		_session.sold_item.connect(func(def: ItemDef, gain: int):
-			_say(UiText.t("shop.sold") % Names.of(def) + _first_sale_hint() + CoinShort.coin(gain))
+			var hint := _first_sale_hint().strip_edges(true, false).trim_prefix("　")     # 游戏测试 11-04：提示放前面 —— 金币画在卷尾，提示在后就读成「能卖五成 7」
+			_say((hint + "　" if hint != "" else "") + UiText.t("shop.sold") % Names.of(def) + CoinShort.coin(gain))
 			_refresh())
 		flow.run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh())
 	_rebuild()

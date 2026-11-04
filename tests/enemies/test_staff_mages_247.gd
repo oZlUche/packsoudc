@@ -138,3 +138,8 @@ static func run_free_staff(t: TestCase) -> void:
 	var stats := BattleCompiler.compile_board(C148._staff_board(db, &"fire_crystal", &"")["board"])
 	var text := TextTemplate.strip_bbcode(ItemTooltip.describe(C148._staff_board(db, &"fire_crystal", &"")["staff"], C148._staff_board(db, &"fire_crystal", &"")["board"]))
 	t.check(stats != null and text.contains("不耗耐力"), "悬浮窗写装着晶石不耗耐力")
+	# 作者 11-04：背包的耐力估算也不该算装着晶石的法杖（战斗里本来就没扣）
+	var est_loaded := StaminaEstimate.of(BattleCompiler.compile_board(C148._staff_board(db, &"fire_crystal", &"")["board"]))
+	t.eq(float(est_loaded["cost"]), 0.0, "装着晶石：估算每秒耗耐力 0")
+	var est_empty := StaminaEstimate.of(BattleCompiler.compile_board(C148._staff_board(db, &"", &"")["board"]))
+	t.check(float(est_empty["cost"]) > 0.0, "空杖：估算照算（%.2f/秒）" % float(est_empty["cost"]))

@@ -23,6 +23,8 @@ static func of(spec: CombatantSpec) -> Dictionary:
 				var rule := r as AbilityRule
 				if rule == null or rule.cadence == null:
 					continue
+				if rule.free_when_loaded and rt.is_loaded(it.source_uid):
+					continue     # 作者 11-04：装着魔晶石的法杖出手不耗耐力（247），估算也不算 —— 和 [RuleEngine] 同一个判断
 				var hz := rule.cadence.estimated_hz(it.stats)
 				if hz <= 0.0:
 					continue

@@ -30,8 +30,6 @@ static var faith_probe: Callable = Callable()
 ## 256：这一局按标签打折的重量（[member RunContext.weight_pct]）；没接 = 不打折
 static var weight_probe: Callable = Callable()
 const DIM_HEX := "8b93a1"
-## 257：信物那行脚注的字号
-const ANCHOR_FOOT_SIZE := 13
 static var _sets: SetDatabase = null
 
 
@@ -267,7 +265,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	return {"head": head, "body": body, "faith_title": faith_title, "faith": faith, "foot": foot, "set": set_name, "text": text, "terms": terms}
 
 
-## 257：赐福小节 —— 每条加成一行两列（左：生效条件 `@faith`；右：加成 `@val`），信物降成一行脚注「信物 · 右键奉为主信仰」（13 号 tip_meta，
+## 257：赐福小节 —— 每条加成一行两列（左：生效条件 `@faith`；右：加成 `@val`），信物降成一行脚注「信物 · 右键奉为主信仰」（正文同号 tip_meta —— 作者 11-04，
 ## 「信物」信力色）。096 / 107：局里没生效的（没激活 / 阶不够 / 别的神）整行灰、不分色；局外照分色写。不归神或什么都没有返回空
 static func faith_section(def: ItemDef, status: Dictionary) -> String:
 	if def == null or not def.has_faith():
@@ -292,7 +290,7 @@ static func faith_section(def: ItemDef, status: Dictionary) -> String:
 			line = UiText.t("tip.anchor_foot") % [Glossary.faith(UiText.t("tip.anchor_word")), "[color=@tip_meta]%s[/color]" % what]
 		else:
 			line = "[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("tip.anchor_foot") % [UiText.t("tip.anchor_word"), what]]
-		out.append("[font_size=%d]%s[/font_size]" % [ANCHOR_FOOT_SIZE, line])
+		out.append(line)     # 作者 11-04：和别的正文同号（以前 13 号小字太小）
 	return "\n".join(out)
 
 
