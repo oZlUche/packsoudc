@@ -43,23 +43,57 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 18
+      "damage": 12.0
     },
     "rules": [
       {
         "trigger": "@on_schedule",
-        "cadence": "@cooldown_0_8s",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 0.8,
+          "step_seconds": 0.8
+        },
         "costs": [
-          "@resource_5"
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
         ],
         "effects": [
-          "@deal_damage",
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
           {
             "type": "apply_status",
             "buff": "marked"
           }
         ]
       }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "load_filter": [
+      "ammo"
     ]
   }
 }

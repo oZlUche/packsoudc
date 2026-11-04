@@ -211,7 +211,7 @@ static func build_content(
 				_try_place(b, bdef, p)
 		var n_bags := p.size()
 		# 165：相邻组合整组摆、散件随机摆（顺序仍是招牌 → 流派 → 其余：散件按这个先后挑位置）
-		var g := _arrange(b, defs, groups, rng)
+		var g := _arrange(b, defs, groups, rng, {}, signature.size() + skeleton.size())
 		var miss := _arrange_miss(g["left"], defs, sig)
 		if best_miss < 0 or miss < best_miss:
 			board = b
@@ -806,15 +806,15 @@ static func _loads_from(r: ItemDef, g: ItemDef) -> bool:
 ## 还差件就按老办法（按 defs 的先后逐件第一个放得下的格、不成组）摆一遍。取摆上件数最多、拆的组最少的 —— 件数不会比 165 之前少。
 ## 结果留在 [param board] 上。返回 {"placed": [{id, at, rot}]（按 defs 的先后）, "left": [没摆上的下标], "ungrouped": 拆散的组数}
 static func _arrange(
-	board: GridInventory, defs: Array[ItemDef], groups: Array, rng: RandomNumberGenerator, fixed: Dictionary = {}
+	board: GridInventory, defs: Array[ItemDef], groups: Array, rng: RandomNumberGenerator, fixed: Dictionary = {}, first: int = 0
 ) -> Dictionary:
 	var best := {}
 	for attempt in ARRANGE_TRIES:
-		best = _better(best, _attempt(board, defs, groups, rng, fixed))
+		best = _better(best, _attempt(board, defs, groups, rng, fixed, first))
 		if _perfect(best):
 			break
 	if not _perfect(best):
-		best = _better(best, _attempt(board, defs, groups, null, fixed))
+		best = _better(best, _attempt(board, defs, groups, null, fixed, first))
 	if not (best["left"] as Array).is_empty():
 		var plain := _attempt_first_fit(board, defs)
 		if (plain["left"] as Array).size() < (best["left"] as Array).size():
@@ -853,21 +853,56 @@ static func _pick(opts: Array, rng: RandomNumberGenerator) -> Array:
 
 
 ## 摆一盘：组先、散件后（[param rng] 为 null 时每件取第一个放得下的格）。摆完记下每件的落点，再从棋盘上撤掉
+## [param first]：defs 的前几件（招牌 + 套路骨架）—— 含这几件的组先摆，再摆这几件里不在组里的武器，最后摆别的组
+## （279：大件多了，抽来的组不能先把骨架的地方占了；一个人带两根法杖时，带晶石的那组也不能被另一根挤掉）
 static func _attempt(
-	board: GridInventory, defs: Array[ItemDef], groups: Array, rng: RandomNumberGenerator, fixed: Dictionary
+	board: GridInventory, defs: Array[ItemDef], groups: Array, rng: RandomNumberGenerator, fixed: Dictionary, first: int = 0
 ) -> Dictionary:
 	var insts := {}     # 下标 -> ItemInstance
 	var in_group := {}
 	var loose: Array[int] = []
 	var ungrouped := 0
+	var left: Array[int] = []
+	for g in groups:
+		for i in g:
+			in_group[int(i)] = true
 	var by_size: Array = groups.duplicate()
 	by_size.sort_custom(func(a: Array, b: Array) -> bool:
 		var ca := _cells_of(defs, a)
 		var cb := _cells_of(defs, b)
 		return ca > cb if ca != cb else int(a[0]) < int(b[0]))
+	# 先摆的单位：含招牌 / 骨架的组，和这几件里不在组里的武器（晶石、箭这类要找装载格的照旧后摆）；按占格从大到小
+	var lead: Array = []     # 每项 {"idx": 组的下标}，单件 {"idx": [i], "one": true}
+	var rest: Array = []
 	for g in by_size:
+		var leads := false
 		for i in g:
-			in_group[int(i)] = true
+			leads = leads or int(i) < first
+		if leads:
+			lead.append({"idx": g})
+		else:
+			rest.append(g)
+	for i in mini(first, defs.size()):
+		if not in_group.has(i) and defs[i] != null and defs[i].tags.has(&"weapon"):
+			in_group[i] = true     # 先摆了，下面的散件不再摆
+			lead.append({"idx": [i], "one": true})
+	lead.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:
+		var cx := _cells_of(defs, x["idx"])
+		var cy := _cells_of(defs, y["idx"])
+		return cx > cy if cx != cy else int(x["idx"][0]) < int(y["idx"][0]))
+	for unit in lead:
+		var g: Array = unit["idx"]
+		if unit.has("one"):
+			var early := _fits(board, defs[int(g[0])], false)
+			if early.is_empty():
+				left.append(int(g[0]))
+			else:
+				_put(board, defs[int(g[0])], _pick(early, rng), insts, int(g[0]))
+		elif not _place_group(board, defs, g, rng, fixed, insts):
+			ungrouped += 1
+			for i in g:
+				loose.append(int(i))
+	for g in rest:
 		if not _place_group(board, defs, g, rng, fixed, insts):
 			ungrouped += 1
 			for i in g:
@@ -876,7 +911,6 @@ static func _attempt(
 		if not in_group.has(i) and defs[i] != null:
 			loose.append(i)
 	loose.sort()
-	var left: Array[int] = []
 	for i in loose:
 		var fits := _fits(board, defs[i], false)
 		if fits.is_empty():

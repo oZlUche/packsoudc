@@ -196,7 +196,7 @@ const STAT_NAMES := {
 	"max_mana": {"zh": "法力上限", "en": "Max mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
 	"stamina_cost": {"zh": "耗耐力", "en": "Stamina cost"}, "mana_cost": {"zh": "耗法力", "en": "Mana cost"},
 	"crit_chance": {"zh": "暴击率", "en": "Crit chance"}, "crit_damage": {"zh": "暴击伤害", "en": "Crit damage"},
-	"step_cooldown": {"zh": "单次冷却", "en": "Step cooldown"}, "load_steps": {"zh": "一轮几颗", "en": "Loaded crystals"},     # 175
+	"true_damage": {"zh": "真实伤害", "en": "True damage"}, "step_cooldown": {"zh": "单次冷却", "en": "Step cooldown"}, "load_steps": {"zh": "一轮几颗", "en": "Loaded crystals"},     # 175
 }
 
 

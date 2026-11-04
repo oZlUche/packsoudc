@@ -25,6 +25,8 @@ var crit: bool = false
 ## buff 造成的（灼烧、中毒、到期爆发）是非直接，套装 / 单位级规则也算非直接。
 ## **格挡（加固 / 破绽）只对直接伤害生效**；造包的效果用 [method CombatEffect.direct_of] 填它
 var direct: bool = false
+## 279：这一包是真实伤害（[member DealDamage.pure]）—— 和真实伤害类型（流血）一样跳过加成、护甲、受伤前、格挡与受到伤害轴
+var pure: bool = false
 #endregion
 
 #region 管线中途写入

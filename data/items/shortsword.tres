@@ -17,8 +17,8 @@
 
 [sub_resource type="Resource" id="Resource_k67bb"]
 script = ExtResource("4_vaaw6")
-seconds = 0.8
-metadata/part_ref = &"cooldown_0_8s"
+seconds = 1.0
+metadata/part_ref = &"cooldown_1s"
 
 [sub_resource type="Resource" id="Resource_f8sqo"]
 script = ExtResource("6_eyy7r")
@@ -43,7 +43,7 @@ effects = Array[ExtResource("7_arlqb")]([SubResource("Resource_6atu8")])
 [sub_resource type="Resource" id="Resource_7ogsb"]
 script = ExtResource("10_4o06l")
 base_stats = {
-"damage": 8
+"damage": 7
 }
 rules = Array[ExtResource("3_rb48m")]([SubResource("Resource_5adj7")])
 
@@ -62,7 +62,6 @@ descriptions = {
 "en": ""
 }
 shape = SubResource("Resource_wnx4m")
-rarity = 1
-tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"imperial"])
+tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"imperial", &"one_hand"])
 material = "metal"
 combat = SubResource("Resource_7ogsb")

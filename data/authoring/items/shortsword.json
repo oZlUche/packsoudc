@@ -13,22 +13,22 @@
     "1",
     "1"
   ],
-  "rarity": 1,
   "tags": [
     "weapon",
     "melee",
     "rapid",
-    "imperial"
+    "imperial",
+    "one_hand"
   ],
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 8
+      "damage": 7.0
     },
     "rules": [
       {
         "trigger": "@on_schedule",
-        "cadence": "@cooldown_0_8s",
+        "cadence": "@cooldown_1s",
         "costs": [
           "@resource_4"
         ],

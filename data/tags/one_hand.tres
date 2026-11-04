@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_3sy8a"]
+
+[resource]
+script = ExtResource("1_3sy8a")
+id = &"one_hand"
+display_name = "单手"
+display_names = {
+"en": "One-handed"
+}
+description = "单手持的刀剑斧。"
+descriptions = {
+"en": "Swords, sabers and axes held in one hand."
+}
+tip = false
+category = "internal"
+internal = true

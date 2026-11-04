@@ -1,0 +1,82 @@
+{
+  "id": "steel_crossbow",
+  "display_name": "钢弩",
+  "display_names": {
+    "en": "Steel Crossbow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "ranged",
+    "burst"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 9.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.8,
+          "step_seconds": 1.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 7.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "deal_damage",
+            "amount": 5.0,
+            "damage_stat": "",
+            "pure": true
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}

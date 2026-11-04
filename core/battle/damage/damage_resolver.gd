@@ -35,7 +35,7 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 1b. 攻方的伤害类型加成（105）：火焰加成是一条标准轴，放在**防御之前**乘原值 ——
 	# 和「受到伤害」轴在第 4 步乘守方的最终伤害对称。于是附魔、灼烧、任何火焰来源都吃它
-	var pure := td.pure
+	var pure := td.pure or packet.pure     # 279：武器的「其中 N 点真实伤害」
 	if packet.raw > 0 and packet.type == DamageTypes.FIRE and not pure:
 		var attacker := _side_of(ctx, packet.source_side)
 		if not packet.direct and attacker == victim:

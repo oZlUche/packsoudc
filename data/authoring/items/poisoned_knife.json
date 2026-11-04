@@ -18,7 +18,8 @@
     "weapon",
     "melee",
     "rapid",
-    "poison"
+    "poison",
+    "dagger"
   ],
   "material": "metal",
   "combat": {

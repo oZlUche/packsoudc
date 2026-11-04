@@ -1,0 +1,57 @@
+{
+  "id": "bone_spear",
+  "display_name": "骨矛",
+  "display_names": {
+    "en": "Bone Spear"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "polearm",
+    "bleed"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 20.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.3
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 6.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@apply_status_bleed"
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

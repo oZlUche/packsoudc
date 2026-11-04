@@ -1,0 +1,58 @@
+{
+  "id": "broadsword",
+  "display_name": "阔剑",
+  "display_names": {
+    "en": "Broadsword"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "one_hand"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 11.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired"
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "prime_next_hit"
+          }
+        ]
+      }
+    ]
+  }
+}

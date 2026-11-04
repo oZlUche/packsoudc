@@ -1,8 +1,8 @@
 {
   "id": "arrows",
-  "display_name": "箭矢",
+  "display_name": "木箭",
   "display_names": {
-    "en": "Arrows"
+    "en": "Wooden Arrows"
   },
   "description": "",
   "descriptions": {
@@ -16,21 +16,31 @@
     "nature"
   ],
   "material": "wood",
-  "adjacency": {
-    "grant_cells": [
-      [
-        0,
-        -1
+  "wear": {
+    "max_charges": 30,
+    "charge_band": 10,
+    "prefixes": [
+      "将尽的",
+      "半捆",
+      "满捆"
+    ],
+    "prefixes_by_lang": {
+      "en": [
+        "Last of the ",
+        "Half ",
+        "Full "
       ]
-    ],
-    "grant_filter": [
-      "ranged"
-    ],
-    "grant_mods": [
+    },
+    "vanish_when_empty": true
+  },
+  "adjacency": {
+    "feed_mods": [
       {
-        "mode": "MULT",
-        "amount": 20.0
+        "amount": 6.0
       }
+    ],
+    "feed_filter": [
+      "ranged"
     ]
   }
 }

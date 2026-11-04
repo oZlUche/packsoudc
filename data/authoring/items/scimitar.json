@@ -18,7 +18,8 @@
     "weapon",
     "melee",
     "bleed",
-    "barbarian"
+    "barbarian",
+    "one_hand"
   ],
   "material": "metal",
   "combat": {

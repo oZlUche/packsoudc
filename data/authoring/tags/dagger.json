@@ -1,0 +1,14 @@
+{
+  "id": "dagger",
+  "display_name": "短兵",
+  "display_names": {
+    "en": "Dagger"
+  },
+  "description": "一两格长的小刀，出手最快。",
+  "descriptions": {
+    "en": "Small blades, the fastest hands."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

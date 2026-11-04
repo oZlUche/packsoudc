@@ -1,5 +1,5 @@
-## 108（作者定）：武器附加效果的统一接口 —— 邻居的增益规则（毒箭挨着弓）与日神附魔都走编译器的 `_attach`：
-## 规则挂到宿主身上、只听宿主出手、以宿主身份结算、记下来源给悬浮窗写「← 毒箭」。
+## 108（作者定）：武器附加效果的统一接口 —— 邻居的增益规则（毒匠手套挨着长剑；279 前是毒箭挨着弓，箭改成装填后换了这一对）与日神附魔都走编译器的 `_attach`：
+## 规则挂到宿主身上、只听宿主出手、以宿主身份结算、记下来源给悬浮窗写「← 毒匠手套」。
 extends RefCounted
 
 
@@ -9,59 +9,59 @@ static func _items() -> ItemDatabase:
 	return db
 
 
-## 一块不要求包的格子：一把长弓，[param arrows] 个毒箭摆在增益格盖得到弓的地方。
-## 落点由棋盘自己找 —— 弓和箭的形状作者随时会改，这里只关心「挨着」
+## 一块不要求包的格子：一把长剑，[param arrows] 副毒匠手套摆在增益格盖得到剑的地方。
+## 落点由棋盘自己找 —— 形状作者随时会改，这里只关心「挨着」
 static func _bow_board(db: ItemDatabase, arrows: int) -> Dictionary:
 	ItemInstance.reset_uid_counter()
 	var g := GridInventory.new(Vector2i(8, 6), 1, false)
-	var bow := TestSupport.put(g, db.get_def(&"longbow"))
+	var bow := TestSupport.put(g, db.get_def(&"longsword"))
 	var placed: Array[ItemInstance] = []
 	for i in arrows:
-		var a := TestSupport.put_granting(g, db.get_def(&"poison_arrows"), [bow])
+		var a := TestSupport.put_granting(g, db.get_def(&"envenomed_gauntlet"), [bow])
 		if a != null:
 			placed.append(a)
 	return {"board": g, "bow": bow, "arrows": placed}
 
 
 static func run_neighbor_attach(t: TestCase) -> void:
-	t.begin("108 · 毒箭贴着弓：弓身上多一条附加规则，只听弓出手、记着来源；不挨着 / 挨着近战就没有")
+	t.begin("108 · 毒匠手套贴着长剑：剑身上多一条附加规则，只听剑出手、记着来源；不挨着 / 挨着远程就没有")
 	var db := _items()
-	t.not_null(db.get_def(&"poison_arrows"), "有毒箭")
+	t.not_null(db.get_def(&"envenomed_gauntlet"), "有毒匠手套")
 	var one := _bow_board(db, 1)
 	var spec := BattleCompiler.compile_board(one["board"])
 	var bow := spec.item_of((one["bow"] as ItemInstance).uid)
 	t.eq(bow.attached.size(), 1, "弓挂了一条")
 	var idx := int(bow.attached[0]["rule_index"])
-	t.eq(bow.attached[0]["origin"], &"poison_arrows", "来源是毒箭")
+	t.eq(bow.attached[0]["origin"], &"envenomed_gauntlet", "来源是毒匠手套")
 	var rule := bow.rules[idx]
 	t.check(rule.trigger is OnItemFired, "触发器是出手时")
-	t.eq((rule.trigger as OnItemFired).source_uids, [bow.source_uid] as Array[int], "绑成只听弓自己")
+	t.eq((rule.trigger as OnItemFired).source_uids, [bow.source_uid] as Array[int], "绑成只听剑自己")
 	t.check((rule.trigger as OnItemFired).include_self, "自己出手算")
 	t.check(rule.effects[0] is ApplyStatus and (rule.effects[0] as ApplyStatus).buff.id == &"poison", "效果是施加中毒")
 	var arrow_item := spec.item_of((one["arrows"][0] as ItemInstance).uid)
-	t.check(arrow_item == null or arrow_item.attached.is_empty(), "毒箭自己身上不挂")
+	t.check(arrow_item == null or arrow_item.attached.is_empty(), "手套自己身上不挂")
 	var linked := bow.linked_uids
 	t.check(linked.has((one["arrows"][0] as ItemInstance).uid), "顺带连结（和 grant_mods 一样）")
 
 	var two := _bow_board(db, 2)
 	var bow2 := BattleCompiler.compile_board(two["board"]).item_of((two["bow"] as ItemInstance).uid)
-	t.eq(bow2.attached.size(), 2, "两件毒箭 → 挂两条（每个邻居各一份）")
+	t.eq(bow2.attached.size(), 2, "两副手套 → 挂两条（每个邻居各一份）")
 
 	var none := _bow_board(db, 0)
-	var lone := TestSupport.put_apart(none["board"], db.get_def(&"poison_arrows"), [none["bow"]])
-	t.not_null(lone, "毒箭放在碰不到弓的地方")
+	var lone := TestSupport.put_apart(none["board"], db.get_def(&"envenomed_gauntlet"), [none["bow"]])
+	t.not_null(lone, "手套放在碰不到剑的地方")
 	var bow0 := BattleCompiler.compile_board(none["board"]).item_of((none["bow"] as ItemInstance).uid)
 	t.eq(bow0.attached.size(), 0, "不挨着就没有")
 
 	ItemInstance.reset_uid_counter()
 	var g := GridInventory.new(Vector2i(3, 3), 1, false)
-	var knife := TestSupport.put(g, db.get_def(&"knife"))
-	t.not_null(TestSupport.put_granting(g, db.get_def(&"poison_arrows"), [knife]), "毒箭挨着小刀")
-	t.eq(BattleCompiler.compile_board(g).item_of(knife.uid).attached.size(), 0, "挨着近战武器不生效（只给远程）")
+	var knife := TestSupport.put(g, db.get_def(&"shortbow"))
+	t.not_null(TestSupport.put_granting(g, db.get_def(&"envenomed_gauntlet"), [knife]), "手套挨着短弓")
+	t.eq(BattleCompiler.compile_board(g).item_of(knife.uid).attached.size(), 0, "挨着远程武器不生效（只给近战）")
 
 
 static func run_attach_in_battle(t: TestCase) -> void:
-	t.begin("108 · 打起来：弓每次出手对手 +1 层中毒；拿掉毒箭就没有")
+	t.begin("108 · 打起来：剑每次出手对手 +1 层中毒；拿掉手套就没有")
 	var db := _items()
 	var foe_in := CompileInput.new()
 	foe_in.baseline = CombatantBaseline.with_hp(400.0)
@@ -81,10 +81,10 @@ static func run_attach_in_battle(t: TestCase) -> void:
 			if e.name == BattleEvent.STATUS_STACKED and e.side == 1 and String(e.payload.get("buff", "")) == "poison":
 				poisoned += int(e.payload.get("delta", 0))
 		if arrows == 1:
-			t.check(fired > 0, "弓出手了 %d 次" % fired)
+			t.check(fired > 0, "剑出手了 %d 次" % fired)
 			t.eq(poisoned, fired, "每次出手一层中毒（%d 层）" % poisoned)
 		else:
-			t.eq(poisoned, 0, "没有毒箭：对手不中毒")
+			t.eq(poisoned, 0, "没有手套：对手不中毒")
 
 
 static func run_faith_origin(t: TestCase) -> void:
@@ -111,27 +111,27 @@ static func run_faith_origin(t: TestCase) -> void:
 
 
 static func run_tooltips(t: TestCase) -> void:
-	t.begin("108 · 悬浮窗：弓写「附加：… ← 毒箭」、中毒是词条；毒箭自己写给邻居附加什么")
+	t.begin("108 · 悬浮窗：剑写「附加：… ← 毒匠手套」、中毒是词条；手套自己写给邻居附加什么")
 	var db := _items()
 	var saved := ItemTooltip.faith_probe
 	ItemTooltip.faith_probe = Callable()
 	var one := _bow_board(db, 1)
 	var full := ItemTooltip.describe_full(one["bow"], one["board"])
 	var text := String(full["text"])
-	t.check(text.contains("附加：") and text.contains("← 毒箭"), "弓：附加行带来源")
+	t.check(text.contains("附加：") and text.contains("← 毒匠手套"), "剑：附加行带来源：%s" % text)
 	t.check(text.contains("中毒"), "附加行写了中毒")
 	var names: Array = []
 	for term in (full["terms"] as Dictionary).values():
 		names.append(String((term as Dictionary)["name"]))
-	t.check(names.has("中毒"), "中毒进了弓的侧窗：%s" % str(names))
-	var alone := String(ItemTooltip.describe_full(ItemInstance.create(db.get_def(&"longbow")))["text"])
+	t.check(names.has("中毒"), "中毒进了剑的侧窗：%s" % str(names))
+	var alone := String(ItemTooltip.describe_full(ItemInstance.create(db.get_def(&"longsword")))["text"])
 	t.check(not alone.contains("附加："), "不在棋盘上（单独编）没有附加行")
-	var arrows := ItemTooltip.describe_full(ItemInstance.create(db.get_def(&"poison_arrows")))
-	t.check(String(arrows["text"]).contains("term:增益槽") and String(arrows["text"]).contains("附加："), "毒箭：增益行（行首增益图标）写附加")
+	var arrows := ItemTooltip.describe_full(ItemInstance.create(db.get_def(&"envenomed_gauntlet")))
+	t.check(String(arrows["text"]).contains("term:增益槽") and String(arrows["text"]).contains("附加："), "手套：增益行（行首增益图标）写附加")
 	var anames: Array = []
 	for term in (arrows["terms"] as Dictionary).values():
 		anames.append(String((term as Dictionary)["name"]))
-	t.check(anames.has("中毒"), "毒箭的侧窗也解释中毒")
+	t.check(anames.has("中毒"), "手套的侧窗也解释中毒")
 	ItemTooltip.faith_probe = saved
 
 

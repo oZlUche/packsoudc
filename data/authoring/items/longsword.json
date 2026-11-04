@@ -19,7 +19,8 @@
     "weapon",
     "melee",
     "burst",
-    "imperial"
+    "imperial",
+    "one_hand"
   ],
   "material": "metal",
   "combat": {

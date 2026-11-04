@@ -7,6 +7,9 @@
 class_name FireLoaded
 extends DealDamage
 
+## 279 补充一：弓弩射箭 —— 读法和法杖一样，只是装的是箭（说明换一句）
+@export var ammo: bool = false
+
 
 func apply(ctx: RuleContext) -> void:
 	var entry := current(ctx)
@@ -15,6 +18,8 @@ func apply(ctx: RuleContext) -> void:
 		deal(ctx, damage_type, 0, mult)
 		return
 	var landed := deal(ctx, StringName(entry.get("type", damage_type)), int(entry.get("damage", 0)), mult)
+	if int(entry.get("true", 0)) > 0:
+		DealDamage.true_hit(ctx, int(entry["true"]))     # 279 补充一：铁箭的「其中 N 点真实伤害」
 	# 175 补充五：这颗晶石的元素是**施加**的，不是伤害类型顺带的 —— 打中了才给对手叠它的那几层（[member CompiledItem.loaded] 的 applies）
 	var app: Dictionary = entry.get("applies", {})
 	var buff := ReactionResolver.mark_buff(StringName(String(app.get("buff", ""))))
@@ -34,4 +39,4 @@ static func current(ctx: RuleContext) -> Dictionary:
 
 
 func describe() -> String:
-	return UiText.t("fx.fire_loaded") % Glossary.damage_type_name(damage_type)
+	return UiText.t("fx.fire_ammo" if ammo else "fx.fire_loaded") % Glossary.damage_type_name(damage_type)

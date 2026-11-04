@@ -1,0 +1,50 @@
+{
+  "id": "bonefang_twin_blades",
+  "display_name": "骨牙双刀",
+  "display_names": {
+    "en": "Bonefang Twin Blades"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual",
+    "bleed"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 7.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@apply_status_bleed",
+          "@deal_damage",
+          "@apply_status_bleed"
+        ]
+      }
+    ]
+  }
+}

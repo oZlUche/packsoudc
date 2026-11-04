@@ -1,0 +1,14 @@
+{
+  "id": "dual",
+  "display_name": "双持",
+  "display_names": {
+    "en": "Dual"
+  },
+  "description": "一手一把，一次出手打两下。",
+  "descriptions": {
+    "en": "One in each hand: every swing hits twice."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

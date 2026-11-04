@@ -60,6 +60,6 @@ descriptions = {
 "en": ""
 }
 shape = SubResource("Resource_vqxmv")
-tags = Array[StringName]([&"weapon", &"melee", &"rapid"])
+tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"dagger"])
 material = "metal"
 combat = SubResource("Resource_qob2u")

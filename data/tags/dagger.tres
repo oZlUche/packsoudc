@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_wmtp8"]
+
+[resource]
+script = ExtResource("1_wmtp8")
+id = &"dagger"
+display_name = "短兵"
+display_names = {
+"en": "Dagger"
+}
+description = "一两格长的小刀，出手最快。"
+descriptions = {
+"en": "Small blades, the fastest hands."
+}
+tip = false
+category = "internal"
+internal = true

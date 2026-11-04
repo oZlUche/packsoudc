@@ -1,0 +1,48 @@
+{
+  "id": "hand_axe",
+  "display_name": "手斧",
+  "display_names": {
+    "en": "Hand Axe"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "one_hand",
+    "bleed"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 6.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@apply_status_bleed"
+        ]
+      }
+    ]
+  }
+}

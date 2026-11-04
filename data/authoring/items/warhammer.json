@@ -19,13 +19,15 @@
   "tags": [
     "weapon",
     "melee",
-    "burst"
+    "burst",
+    "two_hand",
+    "heavy"
   ],
   "material": "metal",
   "requires_unlock": "ach_first_extract",
   "combat": {
     "base_stats": {
-      "damage": 50
+      "damage": 36.0
     },
     "rules": [
       {
@@ -41,7 +43,13 @@
           }
         ],
         "effects": [
-          "@deal_damage"
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -1
+          }
         ]
       }
     ]

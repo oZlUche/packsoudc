@@ -1,0 +1,113 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_r2f3c"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_4dsip"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_fpai6"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_s0jb2"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_318b5"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="6_d30nv"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="7_6h50s"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_vfjkl"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_1j25f"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="10_01wlt"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="11_m4ud2"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="12_04jfs"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="13_ccaiq"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="14_k7xff"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="15_ojdb1"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="16_fies1"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="17_a6mhr"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="18_j71cm"]
+[ext_resource type="Script" path="res://core/inventory/wear_profile.gd" id="19_ocosw"]
+
+[sub_resource type="Resource" id="Resource_ydrtx"]
+script = ExtResource("1_r2f3c")
+amount = 8.0
+
+[sub_resource type="Resource" id="Resource_3l36x"]
+script = ExtResource("3_fpai6")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_gmvuk"]
+script = ExtResource("7_6h50s")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_cgorq"]
+script = ExtResource("8_vfjkl")
+target = 1
+damage_type = &"fire"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_o1704"]
+script = ExtResource("9_1j25f")
+
+[sub_resource type="Resource" id="Resource_m6he4"]
+script = ExtResource("2_4dsip")
+trigger = SubResource("Resource_o1704")
+cadence = SubResource("Resource_gmvuk")
+effects = Array[ExtResource("5_318b5")]([SubResource("Resource_cgorq")])
+
+[sub_resource type="Resource" id="Resource_ola2g"]
+script = ExtResource("10_01wlt")
+id = &"scorch"
+display_name = "灼伤"
+display_names = {
+"en": "Burn"
+}
+is_debuff = true
+rules = Array[ExtResource("2_4dsip")]([SubResource("Resource_m6he4")])
+element = &"fire"
+
+[sub_resource type="Resource" id="Resource_r2abp"]
+script = ExtResource("11_m4ud2")
+buff = SubResource("Resource_ola2g")
+
+[sub_resource type="Resource" id="Resource_knfho"]
+script = ExtResource("12_04jfs")
+direction = 1
+own_only = true
+landed_only = true
+
+[sub_resource type="Resource" id="Resource_6eaab"]
+script = ExtResource("2_4dsip")
+trigger = SubResource("Resource_knfho")
+cadence = SubResource("Resource_3l36x")
+effects = Array[ExtResource("5_318b5")]([SubResource("Resource_r2abp")])
+
+[sub_resource type="Resource" id="Resource_7vbcc"]
+script = ExtResource("13_ccaiq")
+feed_mods = Array[ExtResource("1_r2f3c")]([SubResource("Resource_ydrtx")])
+feed_rules = Array[ExtResource("2_4dsip")]([SubResource("Resource_6eaab")])
+feed_filter = Array[StringName]([&"ranged"])
+
+[sub_resource type="Resource" id="Resource_xbcxj"]
+script = ExtResource("18_j71cm")
+
+[sub_resource type="Resource" id="Resource_siu31"]
+script = ExtResource("19_ocosw")
+max_charges = 18
+charge_band = 6
+prefixes = Array[String](["将尽的", "半捆", "满捆"])
+prefixes_by_lang = {
+"en": ["Last of the ", "Half ", "Full "]
+}
+vanish_when_empty = true
+
+[resource]
+script = ExtResource("17_a6mhr")
+id = &"fire_arrows"
+display_name = "火箭"
+display_names = {
+"en": "Fire Arrows"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_xbcxj")
+rarity = 2
+tags = Array[StringName]([&"ammo", &"fire"])
+material = "wood"
+adjacency = SubResource("Resource_7vbcc")
+wear = SubResource("Resource_siu31")

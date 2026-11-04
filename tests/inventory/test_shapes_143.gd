@@ -11,6 +11,8 @@ const BEFORE := {
 ## 作者（2026-10-12）把这两件改成了笔直的长条（1×3、1×4）：仍守「每格强度不变」，但不再要求是异形
 const STRAIGHT := [&"shortsword", &"longsword"]
 const MAIN_STATS := [&"damage", &"max_armor", &"block"]
+## 279 重新定过数的（短剑降白 7、战锤 36、弓改装填后只打四成基础）：形状照查，数值不再按 143 的格数比
+const RETUNED := [&"shortsword", &"warhammer", &"shortbow", &"longbow", &"blessed_longbow"]
 
 
 static func run_scaled_by_cells(t: TestCase) -> void:
@@ -30,6 +32,8 @@ static func run_scaled_by_cells(t: TestCase) -> void:
 			if def.combat.base_stats.has(k):
 				stat = k
 				break
+		if RETUNED.has(id):
+			continue
 		var was: Array = BEFORE[id]
 		var want := floori(float(was[1]) * cells / float(was[0]) + 0.5)
 		t.eq(int(def.combat.base_stats[stat]), want, "%s 的%s：%d × %d / %d" % [Names.of(def), Glossary.stat_name(stat), was[1], cells, was[0]])

@@ -70,6 +70,8 @@ const CRIT_DAMAGE := &"crit_damage"
 const STEP_COOLDOWN := &"step_cooldown"
 const LOAD_STEPS := &"load_steps"
 ## 只属于单件、不并进单位级属性表的键（默认值为 0 的那些本来会被跨件相加）
+## 279 补充一：箭的供给里「其中 N 点真实伤害」那部分（只写在箭的 feed_mods 上，[method BattleCompiler._loaded_entry] 读）
+const TRUE_DAMAGE := &"true_damage"
 const ITEM_ONLY: Array[StringName] = [STEP_COOLDOWN, LOAD_STEPS]
 
 

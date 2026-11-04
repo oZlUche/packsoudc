@@ -1,0 +1,14 @@
+{
+  "id": "one_hand",
+  "display_name": "单手",
+  "display_names": {
+    "en": "One-handed"
+  },
+  "description": "单手持的刀剑斧。",
+  "descriptions": {
+    "en": "Swords, sabers and axes held in one hand."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

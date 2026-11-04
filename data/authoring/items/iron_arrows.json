@@ -1,0 +1,50 @@
+{
+  "id": "iron_arrows",
+  "display_name": "铁箭",
+  "display_names": {
+    "en": "Iron Arrows"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "ammo"
+  ],
+  "material": "metal",
+  "wear": {
+    "max_charges": 24,
+    "charge_band": 8,
+    "prefixes": [
+      "将尽的",
+      "半捆",
+      "满捆"
+    ],
+    "prefixes_by_lang": {
+      "en": [
+        "Last of the ",
+        "Half ",
+        "Full "
+      ]
+    },
+    "vanish_when_empty": true
+  },
+  "adjacency": {
+    "feed_mods": [
+      {
+        "amount": 5.0
+      },
+      {
+        "stat": "true_damage",
+        "amount": 3.0
+      }
+    ],
+    "feed_filter": [
+      "ranged"
+    ]
+  }
+}

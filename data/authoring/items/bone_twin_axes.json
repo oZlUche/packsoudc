@@ -1,0 +1,58 @@
+{
+  "id": "bone_twin_axes",
+  "display_name": "兽骨双斧",
+  "display_names": {
+    "en": "Bone Twin Axes"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual",
+    "bleed"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 7.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          },
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          }
+        ]
+      }
+    ]
+  }
+}

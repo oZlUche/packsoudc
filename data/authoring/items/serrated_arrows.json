@@ -18,22 +18,46 @@
     "nature"
   ],
   "material": "wood",
-  "adjacency": {
-    "grant_cells": [
-      [
-        0,
-        -1
-      ]
+  "wear": {
+    "max_charges": 20,
+    "charge_band": 7,
+    "prefixes": [
+      "将尽的",
+      "半捆",
+      "满捆"
     ],
-    "grant_filter": [
+    "prefixes_by_lang": {
+      "en": [
+        "Last of the ",
+        "Half ",
+        "Full "
+      ]
+    },
+    "vanish_when_empty": true
+  },
+  "adjacency": {
+    "feed_mods": [
+      {
+        "amount": 6.0
+      }
+    ],
+    "feed_filter": [
       "ranged"
     ],
-    "grant_rules": [
+    "feed_rules": [
       {
-        "trigger": "@on_item_fired",
+        "trigger": {
+          "type": "on_damage",
+          "direction": "DEALT",
+          "own_only": true,
+          "landed_only": true
+        },
         "cadence": "@always",
         "effects": [
-          "@apply_status_bleed"
+          {
+            "type": "apply_status",
+            "buff": "bleed"
+          }
         ]
       }
     ]

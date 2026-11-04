@@ -1,0 +1,52 @@
+{
+  "id": "steel_greatsword",
+  "display_name": "钢双手剑",
+  "display_names": {
+    "en": "Steel Greatsword"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 32.0
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource"
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 6.0,
+            "damage_stat": "",
+            "pure": true
+          }
+        ]
+      }
+    ]
+  }
+}

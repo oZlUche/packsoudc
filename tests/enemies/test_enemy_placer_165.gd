@@ -29,10 +29,10 @@ static func _find(board: GridInventory, id: StringName) -> ItemInstance:
 	return null
 
 
-## [param giver] 的增益格（按编译器的点亮规则）照得到哪几件
-static func _lit_by(board: GridInventory, giver: ItemInstance) -> Array[int]:
-	var p := giver.def.adjacency
-	return BattleCompiler._lit_neighbors(board, giver, p.grant_cells, p.grant_filter)
+## [param feeder]（箭）装在哪几件的装填格上（279 补充一：箭改成弓弩的装填，按编译器的装载归属）
+static func _lit_by(board: GridInventory, feeder: ItemInstance) -> Array[int]:
+	var holder := int(BattleCompiler.load_assignments(board).get(feeder.uid, -1))
+	return [holder] as Array[int] if holder >= 0 else [] as Array[int]
 
 
 static func run_auto_groups(t: TestCase) -> void:
@@ -144,21 +144,27 @@ static func run_build_content(t: TestCase) -> void:
 			var i := inst as ItemInstance
 			if i.def.tags.has(&"ranged"):
 				bows.append(i.uid)
-			elif i.def.adjacency != null and i.def.adjacency.grant_filter.has(&"ranged"):
+			elif i.def.tags.has(&"ammo"):
 				arrows.append(i)
 		if bows.is_empty() or arrows.is_empty() or int(built["ungrouped"]) > 0:     # 组拆了（包里实在挤不下）的不算
 			continue
 		together += 1
-		var all_lit := true
+		# 279 补充一：箭装在弓弩的装填格上 —— 装填格有限（长弓两格），装上的 = min(箭数, 装填格数)
+		var slots := 0
+		for uid in bows:
+			var bd := board.get_item(uid).def
+			slots += bd.adjacency.load_cells.size() if bd.adjacency != null else 0
+		var loaded := 0
 		for a in arrows:
-			var hit := false
 			for uid in _lit_by(board, a):
-				hit = hit or bows.has(uid)
-			all_lit = all_lit and hit
-		if all_lit:
+				if bows.has(uid):
+					loaded += 1
+		if loaded >= mini(arrows.size(), slots):
 			linked += 1
-	t.check(together >= 36, "四十个种子里组没拆的 %d 个" % together)
-	t.eq(linked, together, "弓箭同在的每一个，箭都照得到弓")
+	# 279 补充一：箭塞进弓的缺口里，长弓 + 两捆箭成了实心的 2×4 一块，比原来「弓 + 外面一格」难摆，成组的少了
+	t.check(together >= 25, "四十个种子里组没拆的 %d 个" % together)
+	# 抽来的第二把弓 / 第三捆箭不一定和招牌成组，偶尔有一捆散在装填格外
+	t.check(linked >= together - 2, "组没拆的 %d 个里 %d 个装填格都用上了（箭够的话）" % [together, linked])
 
 
 static func run_preset_arrange(t: TestCase) -> void:
@@ -166,7 +172,7 @@ static func run_preset_arrange(t: TestCase) -> void:
 	var c := _content()
 	var content := {"enemy": "marksman", "strength": 1, "board": [7, 5],
 		"items": [{"id": "bag_long"}, {"id": "bag_long"}, {"id": "bag_leather"}, {"id": "salve"}],
-		"groups": [[{"id": "longbow", "at": [0, 0]}, {"id": "arrows", "at": [0, 4]}]]}
+		"groups": [[{"id": "longbow", "at": [0, 0]}, {"id": "arrows", "at": [1, 1]}]]}
 	t.check(EnemyPlacer.needs_arrange(content), "要摆")
 	var pre := EnemyKit.board_of(content, c.items)
 	t.eq(pre.item_count(), 6, "还没摆的内容重建时也自己找空位（组里的件也算）")
@@ -184,7 +190,7 @@ static func run_preset_arrange(t: TestCase) -> void:
 	t.check(bow != null and arrows != null and _lit_by(board, arrows).has(bow.uid), "写死的组：箭照得到弓")
 	# 刚体能转：只有横着放得下的棋盘
 	var turned := {"enemy": "marksman", "strength": 1, "board": [5, 2],
-		"groups": [[{"id": "longbow", "at": [0, 0]}, {"id": "arrows", "at": [0, 4]}]]}
+		"groups": [[{"id": "longbow", "at": [0, 0]}, {"id": "arrows", "at": [1, 1]}]]}
 	EnemyPlacer.arrange(turned, c.items, _rng(2))
 	var tb := EnemyKit.board_of(turned, c.items, false)
 	var tbow := _find(tb, &"longbow")
