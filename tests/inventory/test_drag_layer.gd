@@ -118,6 +118,15 @@ static func run(t: TestCase) -> void:
 	t.check(drag.drop_at(_center(view_c, Vector2i(0, 0))), "旋转后放进 3x1 应成功")
 	t.eq(d.rotation, 1, "落地后朝向应为旋转后的值")
 	t.eq(narrow.item_count(), 1, "3x1 容器应收下这件")
+	# 277 第 5 条：滚轮下滚 = 逆时针一步
+	var narrow2 := GridInventory.new(Vector2i(3, 1), 3)
+	var view_c2 := _view(narrow2, Vector2(0, 600))
+	drag.register_view(view_c2)
+	view_c.grab_requested.emit(view_c, d.uid, Vector2(24, 24))
+	drag.rotate_dragged(-1)
+	drag.rotate_dragged(-1)
+	t.check(drag.drop_at(_center(view_c2, Vector2i(0, 0))), "逆时针转两步（1 → 0 → 3）还是横的")
+	t.eq(d.rotation, 3, "从朝向 1 逆两步 = 朝向 3")
 
 	# --- 标签过滤 ---
 	var slot := GridInventory.new(Vector2i(1, 1), 4)

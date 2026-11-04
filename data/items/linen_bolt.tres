@@ -18,9 +18,8 @@ display_name = "亚麻布卷"
 display_names = {
 "en": "Linen Bolt"
 }
-description = "一卷素色亚麻。"
 descriptions = {
-"en": "A bolt of plain linen."
+"en": ""
 }
 shape = SubResource("Resource_7ojrt")
 weight = 2

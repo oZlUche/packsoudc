@@ -96,6 +96,9 @@ display_name = "弯刀"
 display_names = {
 "en": "Scimitar"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_cqb8x")
 rarity = 1
 tags = Array[StringName]([&"weapon", &"melee", &"bleed", &"barbarian"])

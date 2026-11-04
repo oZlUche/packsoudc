@@ -17,6 +17,9 @@ display_name = "异化黑曜石"
 display_names = {
 "en": "Warped Obsidian"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_haq35")
 rarity = 3
 value = 300

@@ -18,9 +18,8 @@ display_name = "陶俑"
 display_names = {
 "en": "Clay Figure"
 }
-description = "随葬的小人，表情认真。"
 descriptions = {
-"en": "A little grave figure with a very serious face."
+"en": ""
 }
 shape = SubResource("Resource_qbbui")
 rarity = 2

@@ -56,6 +56,9 @@ display_name = "匕首"
 display_names = {
 "en": "Knife"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_vqxmv")
 tags = Array[StringName]([&"weapon", &"melee", &"rapid"])
 material = "metal"

@@ -17,6 +17,9 @@ display_name = "骨骰子"
 display_names = {
 "en": "Bone Dice"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_bwrvv")
 rarity = 3
 tags = Array[StringName]([&"material", &"crafted", &"beast_part"])

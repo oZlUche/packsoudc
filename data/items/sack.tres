@@ -18,9 +18,8 @@ display_name = "粗麻袋"
 display_names = {
 "en": "Burlap Sack"
 }
-description = "粗糙但结实，什么都能往里塞。"
 descriptions = {
-"en": "Rough but sturdy. Stuff anything in it."
+"en": ""
 }
 shape = SubResource("Resource_ou2vr")
 material = "cloth"

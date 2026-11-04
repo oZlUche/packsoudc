@@ -82,6 +82,9 @@ display_name = "毒药瓶"
 display_names = {
 "en": "Poison Vial"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_fmbl1")
 rarity = 1
 value = 15

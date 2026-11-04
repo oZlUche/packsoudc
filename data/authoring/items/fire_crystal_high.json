@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Greater Fire Crystal"
   },
-  "description": "放在法杖的装载槽上：法杖伤害 +{amount}，打出火焰伤害，打中后给对手施加两层【灼伤】。余焰：开战时先给对手两层【灼伤】。能供给 {max_charges} 场，用完就碎，碎了只能卖钱。",
+  "description": "",
   "descriptions": {
-    "en": "Set it in a staff's loading slot: staff Damage +{amount}, deals Fire damage, and each hit gives the opponent two stacks of Burn. Embers: at battle start, gives the opponent two stacks of Burn. Lasts {max_charges} battles, then shatters; a shattered one is only worth selling."
+    "en": ""
   },
   "shape": [
     "11"

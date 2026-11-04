@@ -96,6 +96,9 @@ display_name = "涂毒匕首"
 display_names = {
 "en": "Poisoned Knife"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_p0p81")
 rarity = 3
 value = 40

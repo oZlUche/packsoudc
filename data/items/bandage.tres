@@ -46,6 +46,9 @@ display_name = "纱布"
 display_names = {
 "en": "Bandage"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_kpxgu")
 tags = Array[StringName]([&"remedy", &"nature"])
 material = "cloth"

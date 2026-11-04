@@ -17,9 +17,8 @@ display_name = "金块"
 display_names = {
 "en": "Gold Nugget"
 }
-description = "一块沉手的生金，谁都认它的分量。"
 descriptions = {
-"en": "A heavy lump of raw gold; its weight speaks for itself."
+"en": ""
 }
 shape = SubResource("Resource_tmvy8")
 rarity = 2

@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Mithril Enchanted Sword"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "010",
     "010",

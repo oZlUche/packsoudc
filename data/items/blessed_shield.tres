@@ -122,6 +122,9 @@ display_name = "技巧之神赐福的盾牌"
 display_names = {
 "en": "Skill God's Blessed Shield"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_rh8uo")
 rarity = 3
 weight = 6

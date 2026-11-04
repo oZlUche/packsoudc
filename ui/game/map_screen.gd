@@ -71,6 +71,10 @@ var _reveal: Dictionary = {}
 var _reveal_tween: Tween = null
 ## 浮在地图上的读数与预览两行：转场最后才出来
 var _floating: Array[Control] = []
+## 277 第 3 条：连走还剩的点（第一个是下一步）；空 = 没在连走
+var _walk: Array[int] = []
+## 277 第 3 条：连走两步之间等多久（棋子跳完落地；动画关着不等）
+const WALK_GAP_SEC := MapView.HOP_SEC + MapView.LAND_SEC + 0.05
 
 
 func open(payload: Dictionary) -> void:
@@ -121,6 +125,78 @@ func step(to_id: int) -> bool:
 	if not ok and _run != null and (_run.phase != RunState.Phase.ON_MAP or not _run.events.pending_battle.is_empty()):
 		say(UiText.t("notice.busy"))     # 186：等着开打 / 不在图上（旅程不发 refused）
 	return ok
+
+
+## 277 第 3 条：去 [param to_id] 的连走路线（不含脚下，最后一个是终点）：中间只穿走过的点，终点可以是新点（作者选 B）；
+## 按每条路的行动点算最短。到不了 / 就在隔壁返回空（隔壁照常走一步）
+func walk_path(to_id: int) -> Array[int]:
+	var out: Array[int] = []
+	if _run == null or _run.phase != RunState.Phase.ON_MAP or not _run.map.has_node(to_id):
+		return out
+	var from := _run.travel.current_id
+	var cost := {from: 0}
+	var prev := {}
+	var frontier: Array[int] = [from]
+	while not frontier.is_empty():
+		var best := 0
+		for i in frontier.size():
+			if int(cost[frontier[i]]) < int(cost[frontier[best]]):
+				best = i
+		var at: int = frontier.pop_at(best)
+		if at == to_id:
+			break
+		if at != from and not _run.map.get_node(at).is_visited():
+			continue     # 新点只能当终点
+		for nb in MapNavigator.available_moves(_run.map, at):
+			var intent := MapNavigator.resolve_step(_run.map, at, nb)
+			if intent == null:
+				continue
+			var c := int(cost[at]) + maxi(1, intent.action_cost)
+			if not cost.has(nb) or c < int(cost[nb]):
+				cost[nb] = c
+				prev[nb] = at
+				if not frontier.has(nb):
+					frontier.append(nb)
+	if not prev.has(to_id):
+		return out
+	var back := to_id
+	while back != from:
+		out.push_front(back)
+		back = int(prev[back])
+	return out if out.size() > 1 else [] as Array[int]
+
+
+## 277 第 3 条：沿 [method walk_path] 一步一步走过去，每步照常走 [method step]（扣步数、推猎手 / 侵蚀、存档）；
+## 走完一步不在地图上了（有事弹出来）、走不动了就停。返回动没动身
+func walk_to(to_id: int) -> bool:
+	_walk = walk_path(to_id)
+	if _walk.is_empty():
+		return false
+	_walk_next()
+	return true
+
+
+func walking() -> bool:
+	return not _walk.is_empty()
+
+
+func _walk_next() -> void:
+	if _walk.is_empty() or _run == null or not is_inside_tree():
+		_walk.clear()
+		return
+	if flow.screen != GameFlow.Screen.MAP or _run.phase != RunState.Phase.ON_MAP or _bag != null or _confirm != null or _pause != null:
+		_walk.clear()
+		return
+	var to: int = _walk.pop_front()
+	if not step(to) or flow.screen != GameFlow.Screen.MAP:
+		_walk.clear()
+		return
+	if _walk.is_empty():
+		return
+	if _animate_moves():
+		get_tree().create_timer(WALK_GAP_SEC).timeout.connect(_walk_next)
+	else:
+		_walk_next()
 
 
 ## 在撤离点上按「撤离」：先确认 —— 付多少钱、地上有什么带不出去（3.4）。返回 false = 不在撤离点上
@@ -711,9 +787,12 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 		if not pick_spawn(id):
 			say(UiText.t("notice.pick_spawn"))
 	elif id == _view.current_id:
+		_walk.clear()
 		# 090（作者定）：点当前节点 = 打开被收起的界面（同「回到这个点」）
 		reopen()
-	else:
+	elif not _walk.is_empty():
+		_walk.clear()     # 277 第 3 条：连走途中再点 = 停下（这一下不另走）
+	elif _run.travel.available_moves().has(id) or not walk_to(id):
 		step(id)
 
 

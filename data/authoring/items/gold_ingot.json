@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Gold Ingot"
   },
-  "description": "铸得方方正正的金锭，一根抵得上一趟的收成。",
+  "description": "",
   "descriptions": {
-    "en": "A squared-off ingot of cast gold; one is worth a whole trip's haul."
+    "en": ""
   },
   "shape": [
     "111"

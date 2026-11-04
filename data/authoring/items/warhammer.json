@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Warhammer"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "111",
     "010",

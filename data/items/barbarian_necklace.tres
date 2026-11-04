@@ -17,6 +17,9 @@ display_name = "蛮族的项链"
 display_names = {
 "en": "Barbarian Necklace"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_8kcs5")
 value = 20
 tags = Array[StringName]([&"material", &"crafted", &"barbarian"])

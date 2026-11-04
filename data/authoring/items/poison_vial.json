@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Poison Vial"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1"
   ],

@@ -48,6 +48,8 @@ var active: bool = true
 ## 160 补一：「随身」那一排，每格 {"id": 随身技能 id, "price": int}；买走的下标在 [member belt_sold]
 var belt_offers: Array[Dictionary] = []
 var belt_sold: Array[int] = []
+## 277 第 4 条：这次进店卖掉的 [{inst, price}]（后卖的在后），原价买回；会话关了就没了（不进存档）
+var buyback: Array[Dictionary] = []
 ## 209：章节的包池（包槽从这里抽）；null = 不卖包
 var bag_pool: BagPool = null
 ## 160 补一：往腰带里放（`func(id, count) -> int`，[NodeEvents] 接 `belt_grant` hook）；没接 = 这一排买不了
@@ -163,8 +165,32 @@ func sell(inst: ItemInstance) -> int:
 	var gain := sell_price_of(inst.def, inst)
 	if gain > 0:
 		wallet.earn(gain, &"shop_sell")
+	buyback.append({"inst": inst, "price": gain})     # 277 第 4 条
 	sold_item.emit(inst.def, gain)
 	return gain
+
+
+## 277 第 4 条：最近卖掉的那件（回购键写它的价）；没有 = 空
+func last_sold() -> Dictionary:
+	return buyback.back() if not buyback.is_empty() else {}
+
+
+func can_buy_back() -> bool:
+	return active and wallet != null and not buyback.is_empty() and wallet.can_afford(int(buyback.back()["price"]))
+
+
+## 277 第 4 条：原价买回最近卖掉的那件（同买下：交给持有方先进包、放不下到地上）。买不了返回 null
+func buy_back() -> ItemInstance:
+	if not can_buy_back():
+		return null
+	var entry: Dictionary = buyback.back()
+	var price := int(entry["price"])
+	if price > 0 and not wallet.spend(price, &"shop"):
+		return null
+	buyback.pop_back()
+	var inst: ItemInstance = entry["inst"]
+	bought.emit(inst.def, price, inst)
+	return inst
 
 
 ## 还在架上的格子
@@ -220,6 +246,7 @@ func leave() -> void:
 	if not active:
 		return
 	active = false
+	buyback.clear()
 	closed.emit()
 
 

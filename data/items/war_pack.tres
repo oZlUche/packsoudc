@@ -22,9 +22,8 @@ display_name = "军用行囊"
 display_names = {
 "en": "War Pack"
 }
-description = "制式行军背囊，又大又结实。"
 descriptions = {
-"en": "A standard-issue marching pack. Big and sturdy."
+"en": ""
 }
 shape = SubResource("Resource_hmbq1")
 rarity = 4

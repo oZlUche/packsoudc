@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Rivet Box"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1"
   ],

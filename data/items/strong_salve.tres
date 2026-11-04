@@ -53,9 +53,8 @@ display_name = "浓缩伤药"
 display_names = {
 "en": "Strong Salve"
 }
-description = "熬得更稠，一抹见效。"
 descriptions = {
-"en": "Boiled down thicker. One dab and it works."
+"en": ""
 }
 shape = SubResource("Resource_gri0h")
 rarity = 2

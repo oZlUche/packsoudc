@@ -56,6 +56,9 @@ display_name = "战锤"
 display_names = {
 "en": "Warhammer"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_0lnr4")
 rarity = 1
 value = 30

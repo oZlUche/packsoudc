@@ -26,9 +26,8 @@ display_name = "生兽皮"
 display_names = {
 "en": "Raw Hide"
 }
-description = "刚剥下来的皮，还得鞣。"
 descriptions = {
-"en": "Freshly skinned. Still needs tanning."
+"en": ""
 }
 shape = SubResource("Resource_stc5n")
 rarity = 1

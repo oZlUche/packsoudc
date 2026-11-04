@@ -17,6 +17,9 @@ display_name = "技巧之神的护符"
 display_names = {
 "en": "Charm of Skill"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_mn40w")
 rarity = 3
 value = 200

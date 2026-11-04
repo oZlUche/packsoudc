@@ -107,6 +107,12 @@ func escape() -> bool:
 	return false
 
 
+## 277 第 1 条：确认键（`confirm`，默认 Enter / 空格，可改键）按这一屏的主按钮。[param space] = 按的是空格（回放拿它当播 / 停）。
+## 导演在 `_shortcut_input` 里只问最上面那一屏；返回接没接，默认不接（地图、开局屏各自的键照旧）
+func confirm_key(_space: bool) -> bool:
+	return false
+
+
 ## 134（作者定）：没有面板接的时候，地上的一件被双击了 —— 有背包按钮的屏「进包 + 打开背包」（放不下就只开背包）。
 ## 导演只在没有面板接地上（[method GroundLayer.top_drag] 为空）时转给最上面那一屏。返回接没接；默认不接（没有背包按钮的屏）
 func ground_double_clicked(_uid: int) -> bool:

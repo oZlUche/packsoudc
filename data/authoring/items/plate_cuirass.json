@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Plate Cuirass"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1111",
     "0110",
