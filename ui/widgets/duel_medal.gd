@@ -154,10 +154,10 @@ func react(color: Color) -> void:
 	create_tween().tween_method(_set_ring, 0.0, 1.0, REACT_SEC / maxf(rate, 1.0))
 
 
-## 分胜负：[param winner] 0 = 左（自己）赢、1 = 右赢、-1 = 平局（两把都垂下）。
+## 分胜负：[param p_winner] 0 = 左（自己）赢、1 = 右赢、-1 = 平局（两把都垂下）。
 ## [param animate] false = 不演，直接摆终态（跳过、拖到头、过场关着）
-func set_final(winner: int, animate: bool = true) -> Tween:
-	_winner = winner
+func set_final(p_winner: int, animate: bool = true) -> Tween:
+	_winner = p_winner
 	for s in 2:
 		if _tweens[s] != null:
 			(_tweens[s] as Tween).kill()
@@ -168,7 +168,7 @@ func set_final(winner: int, animate: bool = true) -> Tween:
 	var goals := []
 	for s in 2:
 		var dir := 1.0 if s == 0 else -1.0
-		if s == winner:
+		if s == p_winner:
 			goals.append([deg_to_rad(-RAISE_DEG) * dir, Vector2(0, -4), 0.0])
 		else:
 			goals.append([deg_to_rad(DROP_DEG) * dir, Vector2(0, DROP_FALL), 1.0])
@@ -184,8 +184,8 @@ func set_final(winner: int, animate: bool = true) -> Tween:
 		tw.tween_method(_set_rot.bind(s), _rot[s], goals[s][0], FINAL_SEC)
 		tw.tween_method(_set_off.bind(s), _off[s], goals[s][1], FINAL_SEC)
 		tw.tween_method(_set_grey.bind(s), _grey[s], goals[s][2], FINAL_SEC)
-	if winner >= 0:
-		_glint_side = winner
+	if p_winner >= 0:
+		_glint_side = p_winner
 		tw.chain().tween_method(_set_glint, 0.0, 1.0, GLINT_SEC)
 		tw.chain().tween_callback(_set_glint.bind(-1.0))
 	return tw

@@ -29,6 +29,7 @@ static func run_countdown(t: TestCase) -> void:
 	if closing >= 0:
 		var node := run.map.get_node(closing)
 		t.check(node.type == &"extract" and PaidExtracts.fee_of(node) == 0, "是免费撤离点")
+		@warning_ignore("integer_division")
 		t.eq(PaidExtracts.closes_at(node), limit / 2, "倒计时剩一半时关")
 		t.check(not cd.extract_closed(node), "开局没关")
 		# 离出生点最近：没有别的免费撤离点比它更近
@@ -49,8 +50,10 @@ static func run_countdown(t: TestCase) -> void:
 	t.eq(cd.left(), limit - run.travel.clock.total, "倒计时 = 上限 − 花掉的行动点")
 	t.check(cd.left() <= limit - 1, "走一步至少 -1")
 	if closing >= 0:
+		@warning_ignore("integer_division")
 		run.travel.clock.total = limit - limit / 2
 		t.check(cd.extract_closed(run.map.get_node(closing)), "剩一半：关了")
+		@warning_ignore("integer_division")
 		run.travel.clock.total = limit - limit / 2 - 1
 		t.check(not cd.extract_closed(run.map.get_node(closing)), "剩一半 + 1：还开着")
 	# 放一件进保险箱，再让倒计时归零

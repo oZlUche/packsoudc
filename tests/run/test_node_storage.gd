@@ -16,14 +16,14 @@ static func _content() -> TestSupport.Content:
 
 ## 出生点旁边就有某类型点的种子：{seed, entry, next}
 static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[StringName]) -> Dictionary:
-	for seed in range(1, 80):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
+	for seed_ in range(1, 80):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit)
 		if s == null:
 			continue
 		for entry in s.map.entry_ids:
 			for nid in s.map.neighbors(entry):
 				if s.map.get_node(nid).type == type:
-					return {"seed": seed, "entry": entry, "next": nid}
+					return {"seed": seed_, "entry": entry, "next": nid}
 	return {}
 
 

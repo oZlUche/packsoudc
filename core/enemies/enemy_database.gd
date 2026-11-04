@@ -43,14 +43,14 @@ func register_enemy(def: EnemyDef) -> bool:
 	return true
 
 
-func register_pool(pool: EnemyPool) -> bool:
-	if pool == null or pool.id == &"":
+func register_pool(p_pool: EnemyPool) -> bool:
+	if p_pool == null or p_pool.id == &"":
 		push_warning("EnemyDatabase: 拒绝没有 id 的敌人池")
 		return false
-	if _pools.has(pool.id):
-		push_warning("EnemyDatabase: 敌人池 id 重复 '%s'，保留先登记的那条" % pool.id)
+	if _pools.has(p_pool.id):
+		push_warning("EnemyDatabase: 敌人池 id 重复 '%s'，保留先登记的那条" % p_pool.id)
 		return false
-	_pools[pool.id] = pool
+	_pools[p_pool.id] = p_pool
 	return true
 
 

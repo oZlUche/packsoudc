@@ -28,11 +28,11 @@ var _margin := Vector2(8, 24)
 
 
 ## 有木牌图就是 [CatKey]，缺图退回目录条石签
-static func make(text: String, handler: Callable) -> Button:
+static func make(p_text: String, handler: Callable) -> Button:
 	if UiTheme.art_cached(ART + "normal") == null:
-		return StoneChip.entry(text, handler)
+		return StoneChip.entry(p_text, handler)
 	var b := CatKey.new()
-	b.text = text
+	b.text = p_text
 	b.pressed.connect(handler)
 	return b
 

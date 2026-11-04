@@ -3,9 +3,9 @@
 extends RefCounted
 
 
-static func _rng(seed: int) -> RandomNumberGenerator:
+static func _rng(p_seed: int) -> RandomNumberGenerator:
 	var r := RandomNumberGenerator.new()
-	r.seed = seed
+	r.seed = p_seed
 	return r
 
 

@@ -55,7 +55,6 @@ func open(payload: Dictionary) -> void:
 	var panel := _bronze_panel(Vector2(0, 0), PANEL_MARGIN)
 	var col := _vbox(8)
 	panel.add_child(col)
-	var node: MapNode = payload.get("node", null)
 	var result: BattleResult = payload.get("result", null)
 	_result = result
 	_motion = UiMotion.enabled(flow.settings)
@@ -117,10 +116,10 @@ func open(payload: Dictionary) -> void:
 ## 旗图还没到时用原来的纸卷 `continue`。英文有 `_en` 版就换
 static func continue_art(won: bool) -> String:
 	var flag := "continue_win" if won else "continue_lose"
-	var name := flag if ResourceLoader.exists(CONTINUE_ART + flag + ".png") else "continue"
-	if UiText.lang != "zh" and ResourceLoader.exists(CONTINUE_ART + name + "_en.png"):
-		name += "_en"
-	return name
+	var name_ := flag if ResourceLoader.exists(CONTINUE_ART + flag + ".png") else "continue"
+	if UiText.lang != "zh" and ResourceLoader.exists(CONTINUE_ART + name_ + "_en.png"):
+		name_ += "_en"
+	return name_
 
 
 static func _continue_size(won: bool) -> Vector2:
@@ -251,10 +250,10 @@ func intro_from(prev: Control) -> void:
 
 
 ## 本屏除了铜章的东西（压暗底、铜框）藏着 / 亮出来（铜章一直亮着：它就是战前中缝那一枚）
-func _hide_parts(hide: bool) -> void:
+func _hide_parts(p_hide: bool) -> void:
 	for c in get_children():
 		if c is CanvasItem and c != _medal:
-			(c as CanvasItem).modulate.a = 0.0 if hide else 1.0
+			(c as CanvasItem).modulate.a = 0.0 if p_hide else 1.0
 
 
 ## 0.2 s：战前屏藏掉、本屏亮出来；铜框从战前那块的大小缩到自己的（绕中心，[constant INTRO_FRAME] 秒）

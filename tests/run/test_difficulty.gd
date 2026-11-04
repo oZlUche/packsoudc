@@ -107,10 +107,10 @@ static func run_start_and_save(t: TestCase) -> void:
 		t.check(false, "没有进阶难度的内容")
 		return
 	var run: RunState = null
-	var seed := 1
-	while run == null and seed < 30:
-		run = RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], hard)
-		seed += 1
+	var seed_ := 1
+	while run == null and seed_ < 30:
+		run = RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], hard)
+		seed_ += 1
 	t.not_null(run, "开得了局")
 	if run == null:
 		return
@@ -129,7 +129,7 @@ static func run_start_and_save(t: TestCase) -> void:
 	back.install_modules()
 	t.check(back.mechanic_tags.has(&"erosion") or not _has_mechanic(hard, &"erosion"), "找回定义装上了；装两次幂等")
 
-	var plain := RunState.start(c.chapter, seed - 1, c.items, c.enemies, c.sets)
+	var plain := RunState.start(c.chapter, seed_ - 1, c.items, c.enemies, c.sets)
 	t.eq(plain.difficulty_id, &"", "没给难度：没有 id")
 	t.check(plain.mechanic_tags.is_empty(), "什么都不装")
 	t.eq(plain.vitality.maximum, Vitality.PLACEHOLDER_MAX, "体力上限照旧")
@@ -152,10 +152,10 @@ static func run_flow_unlock(t: TestCase) -> void:
 	t.check(f.available_difficulties().has(hard), "解锁了就能选")
 	t.check(MetaSave.read(c.items, META).has_unlock(hard.requires_unlock), "解锁跟着 meta 存了")
 	var run: RunState = null
-	var seed := 1
-	while run == null and seed < 30:
-		run = f.begin(c.chapter, null, seed, [] as Array[int], null, [], hard)
-		seed += 1
+	var seed_ := 1
+	while run == null and seed_ < 30:
+		run = f.begin(c.chapter, null, seed_, [] as Array[int], null, [], hard)
+		seed_ += 1
 	t.not_null(run, "按进阶开局")
 	if run == null:
 		return
@@ -225,9 +225,9 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 	t.check(hard.challenge != "" and setup._challenge.text().contains(hard.challenge), "羊皮纸列出这一级的挑战：%s" % setup._challenge.text())
 	t.check(setup._plus_btn.disabled and not setup._minus_btn.disabled, "到顶：加灰、减亮")
 	var went := false
-	for seed in range(1, 30):
+	for seed_ in range(1, 30):
 		setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）
-		setup.set_run_seed(seed)
+		setup.set_run_seed(seed_)
 		if Support.depart(setup):
 			went = true
 			break

@@ -181,10 +181,10 @@ func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: S
 	_last = [r, items, got, why]
 	UiTheme.clear_children(_product)
 	var def := items.get_def(r.output)
-	var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
+	var size_ := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
 	var box := PRODUCT_BOX * _k
-	var cell := floorf(minf(PRODUCT_CELL_MAX * _k, minf(box / size.x, box / size.y)))
-	var grid := GridInventory.new(BoardFrame.padded_size(size, cell), 0, false)
+	var cell := floorf(minf(PRODUCT_CELL_MAX * _k, minf(box / size_.x, box / size_.y)))
+	var grid := GridInventory.new(BoardFrame.padded_size(size_, cell), 0, false)
 	if def != null:
 		grid.place(ItemInstance.create(def, 0), Vector2i.ZERO, 0)
 	var view := InventoryView.new()

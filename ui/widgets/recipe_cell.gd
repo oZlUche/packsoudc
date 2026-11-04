@@ -46,11 +46,11 @@ var _glow := Color.WHITE
 
 
 ## [param size_px]：这一格多大；[param k]：整页缩放（1 = 底图原尺寸）
-static func make(p_id: StringName, p_def: ItemDef, name: String, size_px: Vector2, k: float = 1.0) -> RecipeCell:
+static func make(p_id: StringName, p_def: ItemDef, p_name: String, size_px: Vector2, k: float = 1.0) -> RecipeCell:
 	var c := RecipeCell.new()
 	c.recipe_id = p_id
 	c.def = p_def
-	c.title = name
+	c.title = p_name
 	c._k = maxf(0.4, k)
 	c.custom_minimum_size = size_px
 	c.mouse_filter = Control.MOUSE_FILTER_STOP

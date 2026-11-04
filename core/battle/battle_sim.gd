@@ -224,9 +224,9 @@ static func _winner(ctx: BattleContext, pre_hp: Array[int]) -> int:
 
 
 ## 双方这场造成的总伤害（定点）：受害方是对手的 damage 事件里实际扣下的量
-static func damage_dealt(log: Array[BattleEvent]) -> Array[int]:
+static func damage_dealt(p_log: Array[BattleEvent]) -> Array[int]:
 	var out: Array[int] = [0, 0]
-	for e in log:
+	for e in p_log:
 		if e.name != BattleEvent.DAMAGE or e.side < 0 or e.side > 1:
 			continue
 		var amount := e.get_int(&"amount")

@@ -33,16 +33,16 @@ var _suites: Array = []
 
 
 ## 扫出所有套件脚本（含子目录；路径排序 —— 要先后关系就按文件名排）
-static func discover(root: String = SUITE_ROOT) -> Array[String]:
+static func discover(p_root: String = SUITE_ROOT) -> Array[String]:
 	var out: Array[String] = []
-	var dir := DirAccess.open(root)
+	var dir := DirAccess.open(p_root)
 	if dir == null:
 		return out
 	for f in dir.get_files():
 		if f.begins_with("test_") and f.ends_with(".gd") and not NOT_SUITES.has(f):
-			out.append(root.path_join(f))
+			out.append(p_root.path_join(f))
 	for sub in dir.get_directories():
-		out.append_array(discover(root.path_join(sub)))
+		out.append_array(discover(p_root.path_join(sub)))
 	out.sort()
 	return out
 

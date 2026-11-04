@@ -158,9 +158,9 @@ func _import(data: Dictionary, report: ImportReport) -> Resource:
 
 
 func _new_def() -> Resource:
-	var def := ForgeTable.new()
-	def.id = &"timing"
-	return def
+	var def_ := ForgeTable.new()
+	def_.id = &"timing"
+	return def_
 
 
 func _on_bound() -> void:

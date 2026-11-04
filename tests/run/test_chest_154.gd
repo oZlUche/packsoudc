@@ -55,18 +55,18 @@ static func run_placement(t: TestCase) -> void:
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var chests := 0
-	for seed in range(1, 5):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+	for seed_ in range(1, 5):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit.items)
 		if s == null:
 			continue
-		var again := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+		var again := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit.items)
 		for id in s.map.node_ids():
 			var node := s.map.get_node(id)
 			if node.type != &"chest":
 				continue
 			chests += 1
 			var chest := ChestPlacer.chest_of(node)
-			t.check(chest.has("rarity") and int(chest["rarity"]) >= 0 and int(chest["rarity"]) <= 5, "种子 %d 点 %d：稀有度 %s" % [seed, id, str(chest.get("rarity"))])
+			t.check(chest.has("rarity") and int(chest["rarity"]) >= 0 and int(chest["rarity"]) <= 5, "种子 %d 点 %d：稀有度 %s" % [seed_, id, str(chest.get("rarity"))])
 			t.eq(ChestPlacer.skin_of(node), c.chapter.chest_skin, "皮肤跟章节")
 			t.check(not ChestPlacer.is_opened(node), "还没开")
 			if again != null:
@@ -121,8 +121,8 @@ static func run_lock_hold(t: TestCase) -> void:
 ## 出生点旁边就有宝箱点的种子；找不到就把出生点旁边的一个点改成宝箱（权重 1 的类型不一定挨着出生点）
 static func _chest_next_to_spawn(f: GameFlow, c, kit: LoadoutDef) -> MapNode:
 	var found: Dictionary = NodeScreens._seed_with(c, &"chest", kit.items)
-	var seed := int(found.get("seed", 1))
-	var run := f.begin(c.chapter, kit, seed)
+	var seed_ := int(found.get("seed", 1))
+	var run := f.begin(c.chapter, kit, seed_)
 	if run == null:
 		return null
 	var entry := int(found.get("entry", run.map.entry_ids[0]))

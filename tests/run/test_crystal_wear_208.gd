@@ -34,10 +34,10 @@ static func run_variant_of(t: TestCase) -> void:
 	t.eq(ItemPainter.variant_of(_with_charges(db, &"lightning_crystal", 0)), &"c0", "碎了：c0")
 	t.eq(ItemPainter.variant_of(ItemInstance.create(db.get_def(&"knife"))), &"", "没有耐久：空")
 	t.eq(ItemPainter.variant_of(null), &"", "空实例：空")
-	var seed := ItemInstance.create(db.get_def(&"thorn_seed"))
-	t.eq(ItemPainter.variant_of(seed), &"", "种子没长：空")
-	seed.state[GrowthProfile.STAGE_KEY] = 1
-	t.eq(ItemPainter.variant_of(seed), &"s1", "长到第 1 阶：s1")
+	var seed_ := ItemInstance.create(db.get_def(&"thorn_seed"))
+	t.eq(ItemPainter.variant_of(seed_), &"", "种子没长：空")
+	seed_.state[GrowthProfile.STAGE_KEY] = 1
+	t.eq(ItemPainter.variant_of(seed_), &"s1", "长到第 1 阶：s1")
 
 
 static func run_art_variant(t: TestCase) -> void:
@@ -71,6 +71,7 @@ static func run_charge_dots(t: TestCase) -> void:
 	t.eq(ItemPainter.charge_dots(ItemInstance.create(db.get_def(&"fire_crystal")), 0, Vector2.ZERO, cell).size(), 0, "满的：不画")
 	t.eq(ItemPainter.charge_dots(ItemInstance.create(db.get_def(&"knife")), 0, Vector2.ZERO, cell).size(), 0, "没耐久：不画")
 	var two := _with_charges(db, &"fire_crystal", 4)
+	@warning_ignore("integer_division")
 	var full := two.def.wear.max_charges / two.def.wear.charge_band
 	var dots := ItemPainter.charge_dots(two, 0, Vector2(10, 20), cell)
 	t.eq(dots.size(), full, "246 乙：一档一个点，%d 个点" % full)

@@ -42,13 +42,13 @@ static func _check_rules(g: MapGraph, cfg: RingMapConfig) -> String:
 	for i in cfg.rings.size():
 		var r := cfg.ring_count() - i
 		for type in cfg.rings[i].quota:
-			var lim: Array = cfg.rings[i].quota[type]
+			var lim_: Array = cfg.rings[i].quota[type]
 			var n := 0
 			for id in g.node_ids():
 				if _ring_of(g, id) == r and g.get_node(id).type == StringName(type):
 					n += 1
-			if n < int(lim[0]) or n > int(lim[1]):
-				return "第 %d 环 %s 有 %d 个，配额 %s" % [r, type, n, str(lim)]
+			if n < int(lim_[0]) or n > int(lim_[1]):
+				return "第 %d 环 %s 有 %d 个，配额 %s" % [r, type, n, str(lim_)]
 
 	# 覆盖：高危区外的每个点距最近的喘气处不超过 K；死胡同末端也算在内
 	for type in cfg.coverage:

@@ -13,6 +13,7 @@ var rng: RandomNumberGenerator = null
 var sides: Array[CombatantRuntime] = []
 
 ## 回放日志。内容与掩码无关。
+@warning_ignore("shadowed_global_identifier")
 var log: Array[BattleEvent] = []
 
 ## 117：内部日志（全量、带时间，写文件给作者查）。null = 关着 —— 每个记录点只多一行判断。

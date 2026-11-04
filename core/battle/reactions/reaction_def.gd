@@ -68,7 +68,10 @@ func effects_for(n: int) -> Array[CombatEffect]:
 				a.buff = a.buff.duplicate() as BuffDef     # 内容库里的 buff 是外部资源，深复制不会复制它：自己复制一份再改
 				a.buff.duration_sec = v
 		elif field in out[i]:
-			out[i].set(field, roundi(v) if out[i].get(field) is int else v)
+			if out[i].get(field) is int:
+				out[i].set(field, roundi(v))
+			else:
+				out[i].set(field, v)
 	return out
 
 
@@ -101,6 +104,7 @@ static func value_of(row: Dictionary, n: int) -> float:
 		KIND_N, KIND_SECONDS:
 			v = float(n)
 		KIND_HALF:
+			@warning_ignore("integer_division")
 			v = float(n / 2)
 	var cap := float(row.get("max", 0.0))
 	return minf(v, cap) if cap > 0.0 else v

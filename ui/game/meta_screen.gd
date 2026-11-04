@@ -367,14 +367,14 @@ func expedition_board() -> ExpeditionBoard:
 func layout() -> void:
 	if _right == null:
 		return
-	var screen := size if size.x > 0.0 and size.y > 0.0 else (get_viewport_rect().size if is_inside_tree() else Vector2(1920, 1080))
+	var screen_ := size if size.x > 0.0 and size.y > 0.0 else (get_viewport_rect().size if is_inside_tree() else Vector2(1920, 1080))
 	# 229：科技页也收起右半边，中列的页都按中列宽自己排（图鉴按宽算列数），右半边只按半屏算
-	var half := maxf(0.0, minf(screen.x * 0.5 - MARGIN, screen.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP))
+	var half := maxf(0.0, minf(screen_.x * 0.5 - MARGIN, screen_.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP))
 	# 268 补充二：右半边另加包架那一截（格子不缩）；中列放不下窄布（有带回来的背包时：筛选牌那一列 + 最小格的背包）才从仓库那半边让
 	var rack := rack_room()
-	half = minf(half, screen.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP - middle_need() - rack)
+	half = minf(half, screen_.x - 2.0 * MARGIN - LEFT_W - 2.0 * COL_GAP - middle_need() - rack)
 	var frame := _frame_margins()
-	var c := _shelf.fit(half - frame.x, screen.y - 2.0 * MARGIN - SHELF_HEAD - 8.0 - frame.y)     # 收起时也按半屏算，切回来格子不变
+	var c := _shelf.fit(half - frame.x, screen_.y - 2.0 * MARGIN - SHELF_HEAD - 8.0 - frame.y)     # 收起时也按半屏算，切回来格子不变
 	if _rack_top != null:
 		_rack_top.custom_minimum_size.y = maxf(0.0, SHELF_HEAD + 8.0 - _wh.rack_box().get_child(0).get_combined_minimum_size().y) if _wh != null else 0.0
 	half += rack
@@ -382,7 +382,7 @@ func layout() -> void:
 		half = 0.0     # 178：图鉴 / 成就页（229：科技页）收起右半边，中列吃满
 	_right.custom_minimum_size.x = half
 	_margin.add_theme_constant_override("margin_right", int(MARGIN + right_gutter()))
-	var mid_w := middle_width(screen)
+	var mid_w := middle_width(screen_)
 	if _wh != null and flow.meta.board != null:
 		_wh.set_board_cell(minf(c, maxf(BOARD_CELL_MIN, floorf((mid_w - 50.0 - _wh.rack_room() - 2.0 * _wh.BOARD_FRAME_PAD) / float(maxi(CharacterDef.BOARD_MAX_W, flow.meta.board.size.x))))))
 
@@ -407,10 +407,10 @@ func right_gutter() -> float:
 
 
 ## 178：中列的宽（右半边收起时 = 全宽减左列、减箭头那一条）
-func middle_width(screen: Vector2) -> float:
+func middle_width(p_screen: Vector2) -> float:
 	if not _right.visible:
-		return screen.x - 2.0 * MARGIN - LEFT_W - COL_GAP - right_gutter()
-	return screen.x - 2.0 * MARGIN - LEFT_W - _right.custom_minimum_size.x - 2.0 * COL_GAP
+		return p_screen.x - 2.0 * MARGIN - LEFT_W - COL_GAP - right_gutter()
+	return p_screen.x - 2.0 * MARGIN - LEFT_W - _right.custom_minimum_size.x - 2.0 * COL_GAP
 
 
 ## 178（待定 2 选 A）：进基地落哪一页 —— 从结算屏回来、带回来的背包还没清空 → 「仓库」页；否则家
@@ -527,17 +527,17 @@ func _build_dev_drawer(m: MetaState) -> void:
 			_tech_spins[tid] = spin
 			grid.add_child(spin)
 	right.add_child(_label("最近几局", 15, UiPalette.DIM))
-	var log := _log_box(13)
+	var log_ := _log_box(13)
 	for h in m.history:
 		var extracted := String(h.get("outcome", "")) == "extracted"
-		log.append_text("[color=#%s]%s[/color]　走了 %d 步　打赢 %d　%s\n" % [
+		log_.append_text("[color=#%s]%s[/color]　走了 %d 步　打赢 %d　%s\n" % [
 			(UiPalette.HEAL if extracted else UiPalette.HP).to_html(false), "撤离" if extracted else "战败",
 			int(h.get("steps", 0)), int(h.get("battles_won", 0)),
 			"%d 件、值 %d 币、带出 %d 币" % [(h.get("items", []) as Array).size(), int(h.get("value", 0)), int(h.get("balance", 0))] if extracted else ""])
 	if m.history.is_empty():
-		log.append_text("[color=#8b93a1]还没有打过[/color]")
-	log.fit_content = true     # 抽屉自己滚，日志按内容撑高
-	right.add_child(log)
+		log_.append_text("[color=#8b93a1]还没有打过[/color]")
+	log_.fit_content = true     # 抽屉自己滚，日志按内容撑高
+	right.add_child(log_)
 
 
 ## 150 补 2：调试模式开关（存盘）
@@ -658,10 +658,10 @@ const ACH_FILTER_FONT := 16
 ## 卖掉仓库里的一件；返回得了多少（没这件 -1）
 func sell(uid: int) -> int:
 	var inst := flow.meta.warehouse.get_item(uid)
-	var name := Names.of(inst.def) if inst != null else ""
+	var name_ := Names.of(inst.def) if inst != null else ""
 	var got := flow.sell_item(uid)
 	if got >= 0:
-		say(UiText.t("meta.sold_one") % [name, got, flow.meta.funds])     # 226 批一：卖出回话走告示卷轴
+		say(UiText.t("meta.sold_one") % [name_, got, flow.meta.funds])     # 226 批一：卖出回话走告示卷轴
 	return got
 #endregion
 
@@ -669,11 +669,11 @@ func sell(uid: int) -> int:
 #region 成就页（091，作者定）
 ## 成就页：每枚一行 —— 名字、解锁途径、进度、完成给什么；「全部 / 已解锁 / 未解锁」切
 func _build_achievements(root: Control) -> Control:
-	var page := _vbox(8)
-	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(page)
+	var page_ := _vbox(8)
+	page_.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(page_)
 	var head := _hbox(8)
-	page.add_child(head)
+	page_.add_child(head)
 	for pair in [["all", "meta.all"], ["done", "meta.ach_filter_done"], ["todo", "meta.ach_filter_todo"]]:
 		var key: String = pair[0]
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_achievement_filter(key), false, Vector2.ZERO, ACH_FILTER_FONT)     # 乙 石刻：木牌，选中 = 按下的那块
@@ -686,12 +686,12 @@ func _build_achievements(root: Control) -> Control:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.custom_minimum_size.y = 300
-	page.add_child(scroll)
+	page_.add_child(scroll)
 	_ach_list = _vbox(8)
 	_ach_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_ach_list)
 	show_achievement_filter("all")
-	return page
+	return page_
 
 
 ## 切「全部 / 已解锁 / 未解锁」（"all" / "done" / "todo"）并重列
@@ -772,9 +772,9 @@ func _achievement_row(def: AchievementDef, done: bool) -> Control:
 ## 带出过的亮着（右上角写累计件数），没获得的灰的；停在一格上开悬浮窗看属性。特殊道具另起一段
 func _build_codex(root: Control) -> Control:
 	var m := flow.meta
-	var page := _vbox(8)
-	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(page)
+	var page_ := _vbox(8)
+	page_.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(page_)
 	var ids: Array = flow.items.ids(true)     # 091：锁着的也列（灰的，写着怎么解锁）
 	ids.sort_custom(func(a: StringName, b: StringName) -> bool:
 		var da := flow.items.get_def(a)
@@ -784,7 +784,7 @@ func _build_codex(root: Control) -> Control:
 	# 226 批二：说明行（「图鉴　带出过的点亮 N / N……」）删了
 	# 265：「全部 / 收藏」两块木牌（同成就页那一排）
 	var head := _hbox(8)
-	page.add_child(head)
+	page_.add_child(head)
 	for pair in [["all", "meta.all"], ["fav", "meta.codex_fav"]]:
 		var key: String = pair[0]
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_codex_filter(key), false, Vector2.ZERO, ACH_FILTER_FONT)
@@ -795,7 +795,7 @@ func _build_codex(root: Control) -> Control:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED     # 139：按宽度定列数，不横向滚
 	scroll.custom_minimum_size.y = 300
-	page.add_child(scroll)
+	page_.add_child(scroll)
 	var inner := _vbox(10)
 	scroll.add_child(inner)
 	var grid := GridContainer.new()
@@ -817,7 +817,7 @@ func _build_codex(root: Control) -> Control:
 		m.changed.connect(_refilter_codex)     # 收藏变了：「收藏」档跟着增减
 	fit_codex_to_width(SHELF_WIN.x)     # 进树之前先给个列数，布局好了按真宽度重算
 	scroll.resized.connect(func(): fit_codex_to_width(scroll.size.x))
-	return page
+	return page_
 
 
 ## 265：图鉴切「全部 / 收藏」（"all" / "fav"）：收藏档只露收藏了的种类（异体并在原件格里，任一收藏就露）
@@ -845,13 +845,13 @@ func _refilter_codex() -> void:
 ## 特殊道具（088）：不进背包、不能生成，拿到过的点亮。261：原来在图鉴页底下一段，搬进书架上自己那一格的窗
 func _build_keepsakes(root: Control) -> Control:
 	var m := flow.meta
-	var page := _vbox(8)
-	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(page)
+	var page_ := _vbox(8)
+	page_.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(page_)
 	var keeps: Array = flow.items.keepsake_ids()
 	keeps.sort()
 	var kgrid := UiTheme.grid(codex_columns_for(SHELF_WIN.x), CODEX_GAP)
-	page.add_child(kgrid)
+	page_.add_child(kgrid)
 	_codex_grids.append(kgrid)
 	for id in keeps:
 		var def := flow.items.get_def(id)
@@ -859,7 +859,7 @@ func _build_keepsakes(root: Control) -> Control:
 		_wire_tile(tile)
 		kgrid.add_child(tile)
 		_codex_tiles.append(tile)
-	return page
+	return page_
 
 
 ## 139：图鉴一行放几个 —— 让缩略图占满 [param width]（扣掉竖滚动条），至少一个
@@ -1177,26 +1177,26 @@ func backdrop_name() -> String:
 	return _home_bg_name
 
 
-func show_tab(name: String) -> void:
-	if _shelf_windows.has(name):
+func show_tab(p_name: String) -> void:
+	if _shelf_windows.has(p_name):
 		show_tab("shelf")
-		open_shelf(name)
+		open_shelf(p_name)
 		return
 	close_shelf()
 	var was := page()
-	if name == "sell":
-		name = "warehouse"
-	if name != "warehouse" and sell_mode():
+	if p_name == "sell":
+		p_name = "warehouse"
+	if p_name != "warehouse" and sell_mode():
 		set_sell_mode(false)     # 268：离开仓库页就退出售模式
-	if _sub_btns.has(name):
-		_sub = name
-		name = "logistics"
-	if not (_pages.has(name) or name == "logistics"):
-		name = "expedition"
-	var shown := _sub if name == "logistics" else name
+	if _sub_btns.has(p_name):
+		_sub = p_name
+		p_name = "logistics"
+	if not (_pages.has(p_name) or p_name == "logistics"):
+		p_name = "expedition"
+	var shown := _sub if p_name == "logistics" else p_name
 	if _tab != "" and shown != was:
 		notice_layer().clear()     # 游戏测试 v4.34：上一页的告示（「买不了：钱不够」）不跟到下一页
-	_tab = name
+	_tab = p_name
 	_swap_backdrop(backdrop_of(shown))
 	for key in _pages:
 		(_pages[key] as Control).visible = key == shown
@@ -1204,13 +1204,13 @@ func show_tab(name: String) -> void:
 		_right.visible = not (NO_SHELF_TABS.has(shown) or FULL_TABS.has(shown))     # 262：后勤的集市 / 铁匠铺收起
 	for key in _tab_btns:
 		var b := _tab_btns[key] as Button
-		b.set_pressed_no_signal(key == name)
+		b.set_pressed_no_signal(key == p_name)
 	if _sub_box != null:
-		_sub_box.get_parent().visible = name == "logistics"
+		_sub_box.get_parent().visible = p_name == "logistics"
 		for key in _sub_btns:
 			(_sub_btns[key] as Button).set_pressed_no_signal(key == _sub)
 	if _shelf_sub_box != null:
-		_shelf_sub_box.get_parent().visible = name == "shelf"
+		_shelf_sub_box.get_parent().visible = p_name == "shelf"
 	layout.call_deferred()     # 中列换了页，最窄宽度可能变了
 
 

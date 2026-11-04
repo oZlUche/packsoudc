@@ -176,11 +176,11 @@ static func run_boss(t: TestCase) -> void:
 	t.check((normal["treasure"] as Array).is_empty(), "普通敌人：珍宝概率 0，没有")
 	rng.seed = 7
 	var boss := DropResolver.roll(content, rule, LootContext.new(), c.items, rng, true)
-	var tr: Array = boss["treasure"]
-	t.eq(tr.size(), 1, "BOSS：保底一件")
-	if not tr.is_empty():
-		var def := c.items.get_def(tr[0])
-		t.check(def != null and def.rarity == 4 and not def.is_bag, "是金色（稀有度 4）：%s" % String(tr[0]))
+	var tr_: Array = boss["treasure"]
+	t.eq(tr_.size(), 1, "BOSS：保底一件")
+	if not tr_.is_empty():
+		var def := c.items.get_def(tr_[0])
+		t.check(def != null and def.rarity == 4 and not def.is_bag, "是金色（稀有度 4）：%s" % String(tr_[0]))
 	var none := rule.duplicate() as DropRule
 	none.boss_rarity = -1
 	rng.seed = 7
@@ -411,9 +411,9 @@ static func run_enemy_identity(t: TestCase) -> void:
 		if def == null or def.item_tags.is_empty():
 			continue
 		for strength in 4:
-			for seed in 2:
+			for seed_ in 2:
 				var rng := RandomNumberGenerator.new()
-				rng.seed = seed * 31 + strength
+				rng.seed = seed_ * 31 + strength
 				var built := EnemyPlacer.build_content(def, pool, c.items, strength, rng)
 				var content: Dictionary = built["content"]
 				var armed := false

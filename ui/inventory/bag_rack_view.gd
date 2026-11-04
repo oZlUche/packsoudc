@@ -91,6 +91,7 @@ func slot_count() -> int:
 ## 第 i 格（画布坐标）
 func slot_rect(i: int) -> Rect2:
 	var c := i % columns
+	@warning_ignore("integer_division")
 	var r := i / columns
 	return Rect2(Vector2(_inset() + c * SLOT, _inset() + r * SLOT), Vector2(SLOT, SLOT))
 
@@ -109,6 +110,7 @@ func uid_at_local(p: Vector2) -> int:
 
 func _on_changed() -> void:
 	var n := slot_count()
+	@warning_ignore("integer_division")
 	var rows := (n + columns - 1) / columns
 	var cols := mini(columns, n)
 	custom_minimum_size = Vector2(cols * SLOT, rows * SLOT) + Vector2.ONE * 2.0 * _inset()
@@ -182,6 +184,7 @@ func _draw_seams() -> void:
 	var hi_w := float(seams.get("hi_w", 1.0))
 	var hi_off := float(seams.get("hi_offset", 1.4))
 	var n := slot_count()
+	@warning_ignore("integer_division")
 	var rows := (n + columns - 1) / columns
 	var cols := mini(columns, n)
 	var o := Vector2.ONE * _inset()

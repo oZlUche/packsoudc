@@ -204,8 +204,8 @@ static func frame_run_drop_filter(t: TestCase, root: Window) -> void:
 	root.add_child(drag)
 	drag.register_view(view)
 	drag.register_view(board_view)
-	drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
-		return view.is_revealed(inst.uid) or target == box
+	drag.drop_filter = func(inst_: ItemInstance, target_: ItemContainer) -> bool:
+		return view.is_revealed(inst_.uid) or target_ == box
 
 	view.start_reveal()
 	var order := view._unrevealed_in_slot_order()
@@ -269,10 +269,10 @@ static func frame_run_container_screen(t: TestCase, root: Window) -> void:
 	var f := GameFlow.new(db, enemies, sets, MetaState.new())
 	f.chapters = [chapter] as Array[ChapterDef]
 	var run: RunState = null
-	var seed := 1
-	while run == null and seed < 30:
-		run = RunState.start(chapter, seed, db, enemies, sets, [&"bag_leather", &"healing_draught"] as Array[StringName])
-		seed += 1
+	var seed_ := 1
+	while run == null and seed_ < 30:
+		run = RunState.start(chapter, seed_, db, enemies, sets, [&"bag_leather", &"healing_draught"] as Array[StringName])
+		seed_ += 1
 	t.not_null(run, "开得了局")
 	if run == null:
 		return

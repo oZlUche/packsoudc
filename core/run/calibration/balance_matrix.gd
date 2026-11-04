@@ -29,7 +29,7 @@ static func brackets_of(difficulty_id: String) -> Array[int]:
 
 ## 一格：[param specs] 轮流上场，共 [param fights] 场。返回 {fights, wins, draws, rate, duration（秒，全部场次平均）, hp_left（赢的那些场的余血比例平均）}
 static func cell(specs: Array[CombatantSpec], pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, node: MapNode,
-		tier: int, fights: int, seed: int, time_limit: float = BattleSim.DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null,
+		tier: int, fights: int, p_seed: int, time_limit: float = BattleSim.DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null,
 		rows: Array = [], head: Dictionary = {}) -> Dictionary:
 	var wins := 0
 	var draws := 0
@@ -38,7 +38,7 @@ static func cell(specs: Array[CombatantSpec], pool: EnemyPool, enemies: EnemyDat
 	var hp_left := 0.0
 	for i in maxi(1, fights):
 		var rng := RandomNumberGenerator.new()
-		rng.seed = hash("%d:%d:%d" % [seed, tier, i])
+		rng.seed = hash("%d:%d:%d" % [p_seed, tier, i])
 		var entry := EnemyPlacer.pick(pool, enemies, node, tier, rng)
 		if entry == null:
 			continue
@@ -75,7 +75,7 @@ static func hp_ratio(result: BattleResult, side: int) -> float:
 
 
 ## 全表。木桩按（流派, 段）分组。返回 {archetypes, brackets, tiers, steps: {段 → [起, 止]}, cells: {"流派/段" → {档 → 格}}}
-static func run(dummies: Dictionary, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, fights: int = 300, seed: int = 1,
+static func run(dummies: Dictionary, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, fights: int = 300, p_seed: int = 1,
 		time_limit: float = BattleSim.DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null) -> Dictionary:
 	var groups := {}
 	var archetypes: Array[String] = []
@@ -108,7 +108,7 @@ static func run(dummies: Dictionary, pool: EnemyPool, enemies: EnemyDatabase, it
 		var row := {}
 		var head := {"bracket": int(String(g).get_slice("/", 1)), "archetype": String(g).get_slice("/", 0)}
 		for tier in tiers:
-			row[tier] = cell(groups[g], pool, enemies, items, node, tier, fights, seed, time_limit, overtime, assumptions, head)
+			row[tier] = cell(groups[g], pool, enemies, items, node, tier, fights, p_seed, time_limit, overtime, assumptions, head)
 		cells[g] = row
 	return {"archetypes": archetypes, "brackets": brackets, "tiers": tiers, "steps": steps, "cells": cells, "assumptions": assumptions,
 		"groups": families}

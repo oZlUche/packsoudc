@@ -154,8 +154,8 @@ func _build_display(col: VBoxContainer) -> void:
 			var row := _hbox(8)
 			rows[aspect] = row
 			col.add_child(row)
-		var size: Vector2i = p
-		var rb := StoneChip.make(WindowSetup.label(p), func(): set_resolution(size))
+		var size_: Vector2i = p
+		var rb := StoneChip.make(WindowSetup.label(p), func(): set_resolution(size_))
 		_res_btns[p] = rb
 		rows[aspect].add_child(rb)
 	if shown.is_empty():     # 屏幕比最小一档还小：窗口就是屏幕那么大 —— 一颗灰着的签（226 批四）
@@ -201,10 +201,10 @@ func set_window_mode(mode: String) -> void:
 
 
 ## 172：换一档分辨率（当场套用、存盘）；全屏时不接
-func set_resolution(size: Vector2i) -> void:
-	if not WindowSetup.PRESETS.has(size) or flow.settings.window_mode == WindowSetup.FULLSCREEN:
+func set_resolution(p_size: Vector2i) -> void:
+	if not WindowSetup.PRESETS.has(p_size) or flow.settings.window_mode == WindowSetup.FULLSCREEN:
 		return
-	flow.settings.resolution = size
+	flow.settings.resolution = p_size
 	_apply_display()
 
 

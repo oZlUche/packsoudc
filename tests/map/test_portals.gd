@@ -4,6 +4,7 @@ extends RefCounted
 
 
 class FakeErosion extends ErosionField:
+	@warning_ignore("shadowed_global_identifier")
 	var log: Array
 	func _init(p_log: Array) -> void:
 		log = p_log
@@ -13,12 +14,12 @@ class FakeErosion extends ErosionField:
 		log.append("penalty")
 
 
-static func _map(seed: int, portals: int, min_steps: int = 4, cost: int = 2) -> MapGraph:
+static func _map(p_seed: int, portals: int, min_steps: int = 4, cost: int = 2) -> MapGraph:
 	var cfg := RingMapConfig.sample(5)
 	cfg.portal_count = portals
 	cfg.portal_min_steps = min_steps
 	cfg.portal_cost = cost
-	return RingMapGenerator.new().generate(cfg, seed)
+	return RingMapGenerator.new().generate(cfg, p_seed)
 
 
 static func _portals(g: MapGraph) -> Array:
@@ -58,15 +59,15 @@ static func run_intent_and_travel(t: TestCase) -> void:
 	var back := MoveIntent.from_dict(intent.to_dict())
 	t.eq([back.kind, back.from_id, back.to_id, back.action_cost], [MoveIntent.TELEPORT, a, b, 2], "意图存档往返")
 
-	var log := []
+	var log_ := []
 	var clock := ActionClock.new()
-	clock.advanced.connect(func(_total: int, delta: int): log.append("spend:%d" % delta))
+	clock.advanced.connect(func(_total: int, delta: int): log_.append("spend:%d" % delta))
 	var travel := MapTravel.new(g, clock)
-	travel.erosion = FakeErosion.new(log)
-	travel.on_node_event = func(node: MapNode): log.append("event:%d" % node.id)
+	travel.erosion = FakeErosion.new(log_)
+	travel.on_node_event = func(node: MapNode): log_.append("event:%d" % node.id)
 	t.check(travel.start_at(a), "站到出生点")
 	t.check(travel.step_to(b), "传送过去")
-	t.eq(log, ["spend:2", "erosion", "penalty", "event:%d" % b], "顺序不变：计数（花 2）→ 侵蚀 → 惩罚（只结算目的地）→ 事件")
+	t.eq(log_, ["spend:2", "erosion", "penalty", "event:%d" % b], "顺序不变：计数（花 2）→ 侵蚀 → 惩罚（只结算目的地）→ 事件")
 	t.eq(travel.current_id, b, "人到了")
 	t.eq(clock.total, 2, "行动点 = 传送的代价，不假定是 1")
 
@@ -96,28 +97,28 @@ static func run_generation(t: TestCase) -> void:
 	t.begin("传送点 · 生成器按配置连几条：两端隔得够远、不是结构点、每个点至多一条；校验剔掉它照过；0 条 = 和以前一样")
 	var made := 0
 	var checked := 0
-	for seed in range(1, 12):
-		var g := _map(seed, 2, 4, 1)
+	for seed_ in range(1, 12):
+		var g := _map(seed_, 2, 4, 1)
 		if g == null:
 			continue
 		checked += 1
 		var ps := _portals(g)
-		t.check(ps.size() <= 2, "种子 %d：至多 2 条（%d）" % [seed, ps.size()])
+		t.check(ps.size() <= 2, "种子 %d：至多 2 条（%d）" % [seed_, ps.size()])
 		made += ps.size()
 		var clean := RingMapGenerator.without_portals(g)
 		var endpoints := {}
 		for e in ps:
 			var pe := e as MapEdge
-			t.check(not endpoints.has(pe.from_id) and not endpoints.has(pe.to_id), "种子 %d：每个点至多一条传送点" % seed)
+			t.check(not endpoints.has(pe.from_id) and not endpoints.has(pe.to_id), "种子 %d：每个点至多一条传送点" % seed_)
 			endpoints[pe.from_id] = true
 			endpoints[pe.to_id] = true
-			t.check(not MapNodeTypes.STRUCTURAL.has(g.get_node(pe.from_id).type) and not MapNodeTypes.STRUCTURAL.has(g.get_node(pe.to_id).type), "种子 %d：两端都是普通点" % seed)
+			t.check(not MapNodeTypes.STRUCTURAL.has(g.get_node(pe.from_id).type) and not MapNodeTypes.STRUCTURAL.has(g.get_node(pe.to_id).type), "种子 %d：两端都是普通点" % seed_)
 			var d := MapNavigator.distance_map(clean, pe.from_id)
-			t.check(d.has(pe.to_id) and int(d[pe.to_id]) >= 4, "种子 %d：不走传送点两端隔 %s 步（≥ 4）" % [seed, str(d.get(pe.to_id, "∞"))])
+			t.check(d.has(pe.to_id) and int(d[pe.to_id]) >= 4, "种子 %d：不走传送点两端隔 %s 步（≥ 4）" % [seed_, str(d.get(pe.to_id, "∞"))])
 			t.eq(pe.action_cost, 1, "代价按配置")
 		var v := MapValidation.new()
 		RingMapGenerator.new().validate(g, v)
-		t.check(v.ok(), "种子 %d：带传送点的图照样通过生成规则校验：%s" % [seed, v.to_text()])
+		t.check(v.ok(), "种子 %d：带传送点的图照样通过生成规则校验：%s" % [seed_, v.to_text()])
 	t.check(checked > 0 and made > 0, "%d 张图里连了 %d 条" % [checked, made])
 	var g0 := _map(3, 0)
 	t.eq(_portals(g0).size(), 0, "配置 0 条 = 没有")

@@ -32,8 +32,8 @@ func side_of(on_self: bool) -> CombatantRuntime:
 
 
 ## 这条事件是不是发生在 on_self 指的那一方身上
-func event_on(event: BattleEvent, on_self: bool) -> bool:
-	return (event.side == owner.side) == on_self
+func event_on(p_event: BattleEvent, on_self: bool) -> bool:
+	return (p_event.side == owner.side) == on_self
 
 
 ## 取属性值。规则来自物品时按该物品的粒度取（伤害、冷却、消耗都属于单件物品）；

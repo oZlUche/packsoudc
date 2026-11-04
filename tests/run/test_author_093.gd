@@ -261,8 +261,8 @@ static func run_faith_call(t: TestCase) -> void:
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var depth_sum := 0.0
 	var maps := 0
-	for seed in range(1, 9):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+	for seed_ in range(1, 9):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit.items)
 		if s == null:
 			continue
 		var event_nodes := 0
@@ -276,7 +276,7 @@ static func run_faith_call(t: TestCase) -> void:
 		if event_nodes == 0:
 			continue
 		maps += 1
-		t.eq(calls.size(), 1, "种子 %d：恰好一个「触发信仰」" % seed)
+		t.eq(calls.size(), 1, "种子 %d：恰好一个「触发信仰」" % seed_)
 		if calls.size() == 1:
 			var n := s.map.get_node(calls[0])
 			t.check(n.type == &"event" and String(n.content.get("event_group", "")) == "faith_call", "落在事件点上、记着组名")
@@ -302,7 +302,7 @@ static func run_faith_call(t: TestCase) -> void:
 	t.check(run.events.pending_event() != null and run.events.pending_event().id == &"faith_call", "踩上：「触发信仰」")
 	t.check(f.choose_event(0), "靠近")
 	var god_ev := run.events.pending_event()
-	t.check(god_ev != null and String(god_ev.id).begins_with("faith_call_"), "→ 某位神的事件（%s）" % (god_ev.id if god_ev != null else "?"))
+	t.check(god_ev != null and String(god_ev.id).begins_with("faith_call_"), "→ 某位神的事件（%s）" % (String(god_ev.id) if god_ev != null else "?"))
 	if god_ev != null:
 		var fid := String(god_ev.id).trim_prefix("faith_call_")
 		var before := run.storage.item_count()

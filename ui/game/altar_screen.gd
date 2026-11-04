@@ -247,10 +247,10 @@ func _refresh() -> void:
 		return
 	_head.text = UiText.t("altar.head") % run.faith_power.line()     # line() 自己以神名开头
 	var p := preview()
-	var open := _altar_open()
-	_offer_btn.disabled = int(p["points"]) <= 0 or not open
+	var open_ := _altar_open()
+	_offer_btn.disabled = int(p["points"]) <= 0 or not open_
 	var line := ""
-	if not open:
+	if not open_:
 		_preview = UiText.t("altar.used")
 		line = UiText.t("altar.used_short")
 	elif int(p["count"]) == 0:
@@ -260,7 +260,7 @@ func _refresh() -> void:
 		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
 	ScrollKey.show_sub(_offer_btn, UiText.t("altar.offer"), line)
 	for b in _action_btns:
-		(b as Button).disabled = (b as Button).disabled or not open
+		(b as Button).disabled = (b as Button).disabled or not open_
 
 
 ## 101：神坛是一局的模块（没装 = 这一局没有神坛）

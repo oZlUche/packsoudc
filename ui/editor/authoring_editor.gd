@@ -37,8 +37,10 @@ var _def = null
 var _drafts: Dictionary = {}
 ## 列表键 → 盘上那份的规范化 JSON（读进来再导出一遍），判脏用：手改过格式的文件不会一打开就算改过
 var _baseline: Dictionary = {}
+@warning_ignore("unused_private_class_variable")     # 子类（各编辑器）用
 var _ctx: ContentImporter.Context = null
 ## 往表单里回填时为真：这时候的 changed 信号不算编辑
+@warning_ignore("unused_private_class_variable")
 var _syncing: bool = false
 
 var _list: ItemList

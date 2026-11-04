@@ -124,13 +124,13 @@ func _draw_placeholder(o: Vector2, d: Vector2, k: float) -> void:
 		var post := Rect2(o + Vector2(x, 86) * k, Vector2(24, d.y - 86) * k)
 		draw_rect(post, WOOD)
 		draw_rect(post, WOOD_DARK, false, line)
-	var sign := to_local_rect(_layout.get("sign", {}))
-	if sign.size.x > 0.0:
+	var sign_ := to_local_rect(_layout.get("sign", {}))
+	if sign_.size.x > 0.0:
 		for fx in [0.25, 0.75]:
-			var x := sign.position.x + sign.size.x * float(fx)
-			draw_line(Vector2(x, beam.end.y), Vector2(x, sign.position.y), WOOD_DARK, line)
-		draw_rect(sign, SIGN)
-		draw_rect(sign.grow(-3.0 * k), WOOD_TOP, false, line)
+			var x := sign_.position.x + sign_.size.x * float(fx)
+			draw_line(Vector2(x, beam.end.y), Vector2(x, sign_.position.y), WOOD_DARK, line)
+		draw_rect(sign_, SIGN)
+		draw_rect(sign_.grow(-3.0 * k), WOOD_TOP, false, line)
 	if not tables:
 		return
 	for t in _layout.get("tables", []):
@@ -159,14 +159,14 @@ func _draw_placeholder(o: Vector2, d: Vector2, k: float) -> void:
 
 
 func _draw_sign_text() -> void:
-	var sign := to_local_rect(_layout.get("sign", {}))
-	if sign_text == "" or sign.size.x <= 0.0:
+	var sign_ := to_local_rect(_layout.get("sign", {}))
+	if sign_text == "" or sign_.size.x <= 0.0:
 		return
 	var f := UiPalette.cjk_font_bold()
 	var fs := maxi(12, roundi(SIGN_FONT * minf(1.0, scale_factor() * 1.4)))
 	var w := f.get_string_size(sign_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	if w > sign.size.x and w > 0.0:     # 270：字比招牌框宽就缩字，别压两侧天平
-		fs = maxi(10, floori(fs * sign.size.x / w))
+	if w > sign_.size.x and w > 0.0:     # 270：字比招牌框宽就缩字，别压两侧天平
+		fs = maxi(10, floori(fs * sign_.size.x / w))
 		w = f.get_string_size(sign_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	var y := sign.get_center().y + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
-	draw_string(f, Vector2(sign.get_center().x - w * 0.5, y), sign_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, SIGN_INK)
+	var y := sign_.get_center().y + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
+	draw_string(f, Vector2(sign_.get_center().x - w * 0.5, y), sign_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, SIGN_INK)

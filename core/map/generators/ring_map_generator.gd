@@ -268,8 +268,8 @@ func _choose_filled_slots(slots: int, want: int, inner: Array[int], inner_slots:
 		var d := 0
 		# 先在半步之内找正对着内环点的槽位，找不到再放宽到一整步 —— 挪远一点总比没有向内的边好
 		while d <= floori(stride) and best < 0:
-			for sign in [1, -1]:
-				var s := posmod(base + sign * d, slots)
+			for sign_ in [1, -1]:
+				var s := posmod(base + sign_ * d, slots)
 				if picked.has(s) or not _anchored(s, anchors, reach, slots):
 					continue
 				best = s
@@ -403,8 +403,8 @@ func _lay_exit_arc(i: int, r: int, paths: Array) -> void:
 	var map: Dictionary = _ring_slots[r]
 	var best := {}
 	for dir in [1, -1]:
-		var free: Array[int] = []
-		var meets := -1
+		var free_: Array[int] = []
+		var meets_ := -1
 		var meets_route := -1
 		var slot := int(_graph.get_node(head).layout["order"])
 		for _k in map.size():
@@ -417,10 +417,10 @@ func _lay_exit_arc(i: int, r: int, paths: Array) -> void:
 			if _protected_nodes.has(id) or _graph.get_node(id).zone != 0:
 				meets_route = _other_route_of(id, paths, i)
 				if meets_route >= 0:
-					meets = id
+					meets_ = id
 				break
-			free.append(id)
-		var option := {"free": free, "meets": meets, "route": meets_route}
+			free_.append(id)
+		var option := {"free": free_, "meets": meets_, "route": meets_route}
 		if best.is_empty() or _better_exit(option, best):
 			best = option
 	var free: Array[int] = best["free"]
@@ -1245,7 +1245,6 @@ func _gate_spread(gate: int, kept: Array[int], inside: Dictionary) -> int:
 ## 「每个点都有向内的径向边」这条连通性的根基才重新成立。
 func _repair_inward() -> void:
 	for r in range(1, _cfg.ring_count() + 1):
-		var slots := maxi(1, _cfg.slots_for_ring(r))
 		var map: Dictionary = _ring_slots[r]
 		for slot in _sorted_keys(map):
 			var id := int(map[slot])

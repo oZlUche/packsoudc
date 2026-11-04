@@ -41,6 +41,7 @@ func shape(cfg: Resource) -> LatticeShape:
 	for x in c.exit_cols():
 		s.goals[x] = &"extract"
 	if c.with_core:
+		@warning_ignore("integer_division")
 		s.goals[(c.width - 1) / 2] = &"core"
 	s.entry_count = c.entry_count
 	s.forward_reach = c.forward_reach

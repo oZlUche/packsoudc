@@ -96,7 +96,7 @@ static func frame_accept(t: TestCase, root: Window) -> void:
 	Support.cleanup(PREFIX)
 
 
-static func _check_meta(t: TestCase, flow: GameFlow, m: MetaState, when: String) -> void:
+static func _check_meta(t: TestCase, _flow: GameFlow, m: MetaState, when: String) -> void:
 	for u in [&"prologue_done", &"prologue2_done", &"prologue3_done"]:
 		t.check(m.has_unlock(u), "%s：解锁 %s" % [when, u])
 	t.check(m.has_keepsake(&"spyglass"), "%s：望远镜" % when)

@@ -41,10 +41,10 @@ static func _tier(pieces: int, mods: Array = [], rules: Array = [], effects: Arr
 	for m in mods:
 		tm.append(m)
 	t.mods = tm
-	var tr: Array[AbilityRule] = []
+	var tr_: Array[AbilityRule] = []
 	for r in rules:
-		tr.append(r)
-	t.rules = tr
+		tr_.append(r)
+	t.rules = tr_
 	var te: Array[Effect] = []
 	for e in effects:
 		te.append(e)
@@ -56,7 +56,7 @@ static func _set_def(id: String, tiers: Array, mode: int = ItemSetDef.CountMode.
 	var s := ItemSetDef.new()
 	s.id = StringName(id)
 	s.display_name = id
-	s.count_mode = mode
+	s.count_mode = mode as ItemSetDef.CountMode
 	var typed: Array[SetTier] = []
 	for t in tiers:
 		typed.append(t)

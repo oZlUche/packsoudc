@@ -30,18 +30,18 @@ func kinds() -> Array[StringName]:
 	return out
 
 
-func count_of(id: StringName) -> int:
+func count_of(id_: StringName) -> int:
 	var n := 0
 	for inst in _list:
-		if inst.def.id == id:
+		if inst.def.id == id_:
 			n += 1
 	return n
 
 
 ## 这种包的第一只（拖、卖、自动摆上棋盘都拿它）；没有 null
-func first_of(id: StringName) -> ItemInstance:
+func first_of(id_: StringName) -> ItemInstance:
 	for inst in _list:
-		if inst.def.id == id:
+		if inst.def.id == id_:
 			return inst
 	return null
 
@@ -49,8 +49,8 @@ func first_of(id: StringName) -> ItemInstance:
 ## 各种包几只：包 id（字符串）→ 只数，按 [method kinds] 的顺序
 func counts() -> Dictionary:
 	var out := {}
-	for id in kinds():
-		out[String(id)] = count_of(id)
+	for id_ in kinds():
+		out[String(id_)] = count_of(id_)
 	return out
 
 

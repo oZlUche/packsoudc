@@ -120,7 +120,7 @@ static func run_blessing_paths(t: TestCase) -> void:
 	t.check(run.compile_player() != null, "编译照常")
 	# 神坛：祈求赐福
 	brute.convert_chance = 0.0
-	var ration := ItemInstance.create(db.get_def(&"leather_armor"))     # 自然的模板认防具，蛮神不认 → 用一把新短剑
+	var _ration := ItemInstance.create(db.get_def(&"leather_armor"))     # 自然的模板认防具，蛮神不认 → 用一把新短剑
 	var fresh := ItemInstance.create(db.get_def(&"shortsword"))
 	run.storage.admit(fresh)
 	run.faith_power.add_points(&"brute", 60)

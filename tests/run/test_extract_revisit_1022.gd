@@ -56,7 +56,6 @@ static func run_reopen_on_the_spot(t: TestCase) -> void:
 		return
 	s.events.pending = {}
 	var path := Prologue._path(s.map)
-	var extract := path[path.size() - 1]
 	for i in range(1, path.size() - 1):
 		s.travel.mark_visited(path[i].id)
 	for i in range(1, path.size()):

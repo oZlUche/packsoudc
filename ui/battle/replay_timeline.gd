@@ -67,11 +67,11 @@ func _load_art() -> void:
 		_groove = null
 
 
-static func _nine(name: String) -> StyleBoxTexture:
-	var tex := UiTheme.art(name)
+static func _nine(p_name: String) -> StyleBoxTexture:
+	var tex := UiTheme.art(p_name)
 	if tex == null:
 		return null
-	var m: Array = UiTheme.art_meta(name).get("margin", [0, 0, 0, 0])
+	var m: Array = UiTheme.art_meta(p_name).get("margin", [0, 0, 0, 0])
 	var s := StyleBoxTexture.new()
 	s.texture = tex
 	s.texture_margin_left = float(m[0])
@@ -156,8 +156,8 @@ func _draw() -> void:
 		var x := x_of(float(t[0]))
 		var up: bool = t[1]
 		var c: Color = SIDE_COLORS[int(t[2])]
-		var len := TICK * (1.5 if bool(t[3]) else 1.0)
-		draw_line(Vector2(x, mid), Vector2(x, mid - len if up else mid + len), Color(c, 0.85), 2.0 if bool(t[3]) else 1.0)
+		var len_ := TICK * (1.5 if bool(t[3]) else 1.0)
+		draw_line(Vector2(x, mid), Vector2(x, mid - len_ if up else mid + len_), Color(c, 0.85), 2.0 if bool(t[3]) else 1.0)
 	var cx := x_of(cursor)
 	draw_line(Vector2(cx, 2), Vector2(cx, size.y - 2), UiPalette.FG, 2.0)
 	draw_colored_polygon(PackedVector2Array([Vector2(cx - 5, 0), Vector2(cx + 5, 0), Vector2(cx, 6)]), UiPalette.FG)

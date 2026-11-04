@@ -59,6 +59,7 @@ static func frame_lattice_preview(t: TestCase, root: Window) -> void:
 	var len_of := func(r: int) -> float:
 		var seg: Array = lat.row_segment(g, pv.canvas, r)
 		return (seg[0] as Vector2).distance_to(seg[1]) if not seg.is_empty() else 0.0
+	@warning_ignore("integer_division")
 	var neck_side := pv.levels / 2 - 2
 	t.check(len_of.call(neck_side) < len_of.call(1) and len_of.call(1) < len_of.call(0), "左半往颈部一层比一层短（蝴蝶结）")
 	t.check(is_equal_approx(len_of.call(0), len_of.call(pv.levels - 1)) and is_equal_approx(len_of.call(1), len_of.call(pv.levels - 2)), "两半对称")

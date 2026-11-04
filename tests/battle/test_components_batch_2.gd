@@ -27,7 +27,7 @@ static func _apply(def: BuffDef, stacks: int = 1, target: int = CombatEffect.Tar
 	var e := ApplyStatus.new()
 	e.buff = def
 	e.stacks = stacks
-	e.target = target
+	e.target = target as CombatEffect.Target
 	return e
 
 
@@ -43,7 +43,7 @@ static func _flat(amount: float, target: int = CombatEffect.Target.OPPONENT) -> 
 	var e := DealDamage.new()
 	e.damage_stat = &""
 	e.amount = amount
-	e.target = target
+	e.target = target as CombatEffect.Target
 	return e
 
 
@@ -69,9 +69,9 @@ static func run_triggers(t: TestCase) -> void:
 	bow.tags = [&"weapon", &"ranged"] as Array[StringName]
 	var knife := H._compiled(2, "knife", {})
 	knife.tags = [&"weapon", &"melee"] as Array[StringName]
-	var tr := OnItemFired.new()
-	tr.source_tags = [&"ranged"] as Array[StringName]
-	var quiver := H._compiled(3, "quiver", {}, [H._rule(tr, Always.new(), [_mark()])])
+	var tr_ := OnItemFired.new()
+	tr_.source_tags = [&"ranged"] as Array[StringName]
+	var quiver := H._compiled(3, "quiver", {}, [H._rule(tr_, Always.new(), [_mark()])])
 	var ctx := H._battle(H._spec(100.0, [bow, knife, quiver]), H._spec(100.0, []))
 	ctx.emit(BattleEvent.ITEM_FIRED, 0, {"uid": 2})
 	ctx.drain()
@@ -207,9 +207,9 @@ static func run_conditions(t: TestCase) -> void:
 
 
 static func _listen_bleed() -> OnStatusApplied:
-	var tr := OnStatusApplied.new()
-	tr.buff_id = &"bleed"
-	return tr
+	var tr_ := OnStatusApplied.new()
+	tr_.buff_id = &"bleed"
+	return tr_
 
 
 static func run_effects(t: TestCase) -> void:

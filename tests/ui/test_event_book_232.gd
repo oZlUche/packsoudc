@@ -35,9 +35,9 @@ static func frame_book(t: TestCase, root: Window) -> void:
 	t.check(image != null and page != null, "左页插图、右页一列")
 	if image != null and page != null:
 		var ir: Array = meta["image_rect"]
-		var tr: Array = meta["text_rect"]
+		var tr_: Array = meta["text_rect"]
 		t.eq(Rect2(image.position, image.size), Rect2(ir[0], ir[1], ir[2], ir[3]), "插图在 image_rect")
-		t.eq(page.position, Vector2(tr[0], tr[1]), "右页在 text_rect")
+		t.eq(page.position, Vector2(tr_[0], tr_[1]), "右页在 text_rect")
 		t.check(frame.title_label.get_parent() == page and page.get_child(0) == frame.title_label, "标题在右页最上面")
 		t.check(frame.title() != "", "有标题")
 		var options := page.find_child("Options", false, false)

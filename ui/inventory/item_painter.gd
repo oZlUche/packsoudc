@@ -220,6 +220,7 @@ static func charge_dots(inst: ItemInstance, rot: int, anchor: Vector2, cell: flo
 	var width := float(inst.def.shape.size_rotated(rot).x)
 	var per_row := maxi(1, 1 + floori((width - 2.0 * CHARGE_INSET - CHARGE_DOT) / CHARGE_GAP))
 	for i in dots:
+		@warning_ignore("integer_division")
 		out.append({"at": start + Vector2((i % per_row) * cell * CHARGE_GAP, -(i / per_row) * cell * CHARGE_GAP), "lit": i < lit})
 	return out
 
@@ -379,8 +380,8 @@ static func draw_honor(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor:
 	var slot := Rect2(anchor + Vector2(best) * cell, Vector2.ONE * cell)
 	var pts := GrowthProfile.honor_of(inst)
 	var text := UiText.t("badge.honor") % pts
-	if not draw_badge(canvas, text, slot, HONOR_TEXT * k, modulate, true):
-		draw_badge(canvas, str(pts), slot, HONOR_TEXT * k, modulate)
+	if not draw_badge(canvas, text, slot, int(HONOR_TEXT * k), modulate, true):
+		draw_badge(canvas, str(pts), slot, int(HONOR_TEXT * k), modulate)
 	return true
 
 

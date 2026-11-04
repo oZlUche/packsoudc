@@ -179,8 +179,8 @@ static func run_runs_jsonl(t: TestCase) -> void:
 	var f := Support.flow(c, "t242")
 	f.recorder = CalibrationRecorder.new(SNAPS, RUNS)
 	var run: RunState = null
-	for seed in range(1, 20):
-		run = f.begin(c.chapter, c.loadouts[0], seed)
+	for seed_ in range(1, 20):
+		run = f.begin(c.chapter, c.loadouts[0], seed_)
 		if run != null:
 			break
 	t.not_null(run, "开局")

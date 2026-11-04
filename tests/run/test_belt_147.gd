@@ -155,8 +155,8 @@ static func run_sources(t: TestCase) -> void:
 	t.check(meta.belt_grants.is_empty(), "降到零级：不发")
 	tech.derive(meta, 1)
 	var s: RunState = null
-	for seed in range(1, 60):
-		s = RunState.start(ch, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], hero, [], null, {}, &"",
+	for seed_ in range(1, 60):
+		s = RunState.start(ch, seed_, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], hero, [], null, {}, &"",
 			{BeltModule.ID: {"grants": meta.belt_grants.duplicate()}})
 		if s != null:
 			break

@@ -21,8 +21,8 @@ static func _content() -> TestSupport.Content:
 
 
 static func _start(c: TestSupport.Content, ch: CharacterDef, techs: Array[StringName] = [] as Array[StringName]) -> RunState:
-	for seed in range(1, 60):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [] as Array[StringName], c.buffs, techs, ch)
+	for seed_ in range(1, 60):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, [] as Array[StringName], c.buffs, techs, ch)
 		if s != null:
 			s.pick_spawn(s.map.entry_ids[0])
 			return s

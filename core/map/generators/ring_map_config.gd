@@ -139,7 +139,9 @@ static func middle_rings(ring_count_: int) -> Array[int]:
 	if ring_count_ <= 0:
 		return [] as Array[int]
 	if ring_count_ % 2 == 1:
+		@warning_ignore("integer_division")
 		return [(ring_count_ + 1) / 2] as Array[int]
+	@warning_ignore("integer_division")
 	return [ring_count_ / 2, ring_count_ / 2 + 1] as Array[int]
 
 

@@ -9,13 +9,13 @@ extends RefCounted
 
 ## 一段木桩对一档：赢的比例
 static func win_rate(dummy: CombatantSpec, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, node: MapNode,
-		tier: int, fights: int, seed: int, time_limit: float = BattleSim.DEFAULT_TIME_LIMIT) -> Dictionary:
+		tier: int, fights: int, p_seed: int, time_limit: float = BattleSim.DEFAULT_TIME_LIMIT) -> Dictionary:
 	var wins := 0
 	var draws := 0
 	var built := 0
 	for i in maxi(1, fights):
 		var rng := RandomNumberGenerator.new()
-		rng.seed = hash("%d:%d:%d" % [seed, tier, i])
+		rng.seed = hash("%d:%d:%d" % [p_seed, tier, i])
 		var entry := EnemyPlacer.pick(pool, enemies, node, tier, rng)
 		if entry == null:
 			continue
@@ -34,7 +34,7 @@ static func win_rate(dummy: CombatantSpec, pool: EnemyPool, enemies: EnemyDataba
 
 ## 全表：{段号 → {steps, samples, wanted, best, rates: {档位 → 胜率}}}
 static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
-		fights: int = 200, seed: int = 1, difficulty: int = 0, scale_id: StringName = &"", searches_per_step: float = 0.0,
+		fights: int = 200, p_seed: int = 1, difficulty: int = 0, scale_id: StringName = &"", searches_per_step: float = 0.0,
 		brackets: Array[int] = [] as Array[int]) -> Dictionary:
 	var out := {}
 	var use_pool := pool
@@ -49,6 +49,7 @@ static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies
 		var spec := DummyBuilder.compile(dummy, items)
 		var steps_raw: Array = dummy.get("steps", [0, 0])
 		var hi := int(steps_raw[1]) if int(steps_raw[1]) >= 0 else int(steps_raw[0]) + 5
+		@warning_ignore("integer_division")
 		var mid := (int(steps_raw[0]) + hi) / 2
 		var exploration := {"steps": mid, "searches": int(round(mid * searches_per_step))}
 		# 段位表优先（作者：按段位定档）；没有段位表或猎手没配表才走强度规则
@@ -63,7 +64,7 @@ static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies
 		var best := -1
 		var best_gap := INF
 		for tier in use_pool.strengths():
-			var r := win_rate(spec, use_pool, enemies, items, node, tier, fights, seed)
+			var r := win_rate(spec, use_pool, enemies, items, node, tier, fights, p_seed)
 			rates[str(tier)] = r
 			var gap := absf(float(r["rate"]) - 0.5)
 			if gap < best_gap:

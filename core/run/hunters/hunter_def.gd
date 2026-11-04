@@ -59,10 +59,10 @@ func options() -> Array[HunterLossOption]:
 
 
 ## 按档名找；找不到（旧存档没有档名、档被删了）按第一档
-func option_by_id(id: StringName) -> HunterLossOption:
+func option_by_id(p_id: StringName) -> HunterLossOption:
 	var all := options()
 	for o in all:
-		if o != null and (o as HunterLossOption).id == id:
+		if o != null and (o as HunterLossOption).id == p_id:
 			return o
 	return all[0] if not all.is_empty() else null
 

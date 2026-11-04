@@ -551,8 +551,8 @@ func _adopt() -> void:
 				bits.append("体力 -%d" % int(detail["vitality"]))
 			if int(detail.get("money", 0)) > 0:
 				bits.append("钱 -%d" % int(detail["money"]))
-			for name in detail.get("items", []):
-				bits.append("「%s」烂掉了" % name)
+			for name_ in detail.get("items", []):
+				bits.append("「%s」烂掉了" % name_)
 			for line in detail.get("log", []):
 				bits.append(String(line))
 			_note("[color=#d9534f]　侵蚀区（点 %d，深 %d 层）：%s[/color]" % [node.id, int(detail.get("depth", 0)), "，".join(bits)]))
@@ -648,8 +648,8 @@ func _refresh_erosion_view() -> void:
 	if f == null:
 		_view.erosion = {}
 		return
-	var warn := f.next_band() if f.actions_left() >= 0 and f.actions_left() <= f.mechanic.warn_lead_actions else -1
-	_view.erosion = {"eroded": f.eroded_bands, "warn": warn}
+	var warn_ := f.next_band() if f.actions_left() >= 0 and f.actions_left() <= f.mechanic.warn_lead_actions else -1
+	_view.erosion = {"eroded": f.eroded_bands, "warn": warn_}
 
 
 ## 134：这个点上看得见的猎手各一行「名字：输了会怎样」—— 被它感知之后才写档（[HunterSystem.loss_hint]）
@@ -928,7 +928,6 @@ func _build() -> void:
 		if _drawer != null:
 			_drawer.dock(_hud_host.bar_height() + 8.0, DRAWER_MARGIN))
 	area.add_child(_hud_host)
-	var mid := lines
 	_floating = [lines, _hud_host]
 	_view.node_pressed.connect(_on_node_pressed)
 	_view.node_hovered.connect(_on_node_hovered)

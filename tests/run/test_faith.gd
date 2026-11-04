@@ -167,7 +167,7 @@ static func run_compile_and_sets(t: TestCase) -> void:
 	t.eq((spec2.items[0] as CompiledItem).source_uid, bow.uid, "是长弓")
 	t.check(spec2.rough_dps() > spec.rough_dps(), "长弓活了：吃到信力加成，输出比休眠时高")
 	# 凡物照常参战
-	var sword := _put(t, b, db, &"shortsword")
+	_put(t, b, db, &"shortsword")
 	var spec3 := BattleCompiler.compile_board(b)
 	t.eq(spec3.items.size(), 2, "凡物短剑也参战")
 	# 套装：休眠的不计数
@@ -227,7 +227,7 @@ static func run_run_and_save(t: TestCase) -> void:
 	var checked := 0
 	for eid in TestSupport.enemy_ids():
 		var def := enemies.enemy(eid)
-		for round in 6:
+		for round_ in 6:
 			var picks := EnemyPlacer.choose_items(def, rule, db, 6, rng, -1)
 			var faith := &""
 			var weapons := 0
@@ -242,9 +242,9 @@ static func run_run_and_save(t: TestCase) -> void:
 					elif d.faith_tag() != faith:
 						ok = false
 			checked += 1
-			t.check(ok, "%s 第 %d 次：只信一个神（%s）" % [eid, round, str(picks)])
+			t.check(ok, "%s 第 %d 次：只信一个神（%s）" % [eid, round_, str(picks)])
 			var need := (def.loadout if def.loadout != null else rule).min_weapons     # 212：魔兽自己的组装规则不要武器
-			t.check(weapons >= need, "%s 第 %d 次：至少 %d 件武器（%s）" % [eid, round, need, str(picks)])
+			t.check(weapons >= need, "%s 第 %d 次：至少 %d 件武器（%s）" % [eid, round_, need, str(picks)])
 	t.check(checked > 0, "检查了 %d 次组装" % checked)
 	var pool_items := EnemyPlacer.school_items([&"faith:brute"] as Array[StringName], db, -1)
 	for id in pool_items:

@@ -36,9 +36,9 @@ static func _enchanted(spec: CombatantSpec) -> Array[int]:
 
 
 ## 让这条 perk 自己往入参里放，再编译 —— 和开战时走的是同一条路
-static func _compile(board: GridInventory, perk: FaithPerk, seed: int) -> CombatantSpec:
+static func _compile(board: GridInventory, perk: FaithPerk, p_seed: int) -> CombatantSpec:
 	var input := CompileInput.new()
-	input.seed = seed
+	input.seed = p_seed
 	perk.compile_into(input, board, null)
 	return BattleCompiler.compile(board, input)
 

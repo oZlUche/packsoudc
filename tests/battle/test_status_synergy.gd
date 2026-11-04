@@ -33,7 +33,7 @@ static func _apply(def: BuffDef, stacks: int = 1, target: int = CombatEffect.Tar
 	var e := ApplyStatus.new()
 	e.buff = def
 	e.stacks = stacks
-	e.target = target
+	e.target = target as CombatEffect.Target
 	e.per_stack = per_stack
 	return e
 
@@ -43,10 +43,10 @@ static func _opener(effects: Array, costs: Array = []) -> AbilityRule:
 
 
 static func _listen(buff_id: String, effects: Array, costs: Array = [], by_self: bool = true) -> AbilityRule:
-	var tr := OnStatusApplied.new()
-	tr.buff_id = StringName(buff_id)
-	tr.by_self = by_self
-	return H._rule(tr, Always.new(), effects, costs)
+	var tr_ := OnStatusApplied.new()
+	tr_.buff_id = StringName(buff_id)
+	tr_.by_self = by_self
+	return H._rule(tr_, Always.new(), effects, costs)
 
 
 static func _ctx(side0: Array, side1: Array = []) -> BattleContext:
@@ -89,8 +89,8 @@ static func run_trigger(t: TestCase) -> void:
 	t.eq(ctx.sides[1].stacks_of(&"capped"), 1, "上限一层")
 	t.eq(ctx.sides[0].stacks_of(&"mark"), 1, "第二次只是刷新时长：不触发")
 
-	var tr := OnStatusApplied.new()
-	t.eq(tr.subscribed_events(), [BattleEvent.STATUS_APPLIED] as Array[StringName], "只订阅 status_applied")
+	var tr_ := OnStatusApplied.new()
+	t.eq(tr_.subscribed_events(), [BattleEvent.STATUS_APPLIED] as Array[StringName], "只订阅 status_applied")
 	t.check(not BattleEvent.is_view_event(BattleEvent.STATUS_APPLIED), "不进回放（同一刻已有 status_stacked）")
 
 

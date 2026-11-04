@@ -135,8 +135,8 @@ static func run_run_reads_tech(t: TestCase) -> void:
 	var sets := SetDatabase.new()
 	sets.load_dir()
 	var s: RunState = null
-	for seed in range(1, 40):
-		s = RunState.start(chapter, seed, f.items, enemies, sets, [] as Array[StringName], buffs, f.meta_buffs())
+	for seed_ in range(1, 40):
+		s = RunState.start(chapter, seed_, f.items, enemies, sets, [] as Array[StringName], buffs, f.meta_buffs())
 		if s != null:
 			break
 	t.not_null(s, "开得了局")

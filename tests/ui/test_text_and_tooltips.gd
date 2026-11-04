@@ -422,14 +422,14 @@ static func frame_loot_manual_close(t: TestCase, root: Window) -> void:
 		if l.id == &"standard":
 			kit = l
 	var found := {}
-	for seed in range(1, 80):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+	for seed_ in range(1, 80):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit.items)
 		if s == null:
 			continue
 		for entry in s.map.entry_ids:
 			for nid in s.map.neighbors(entry):
 				if s.map.get_node(nid).type == &"battle":
-					found = {"seed": seed, "entry": entry, "next": nid}
+					found = {"seed": seed_, "entry": entry, "next": nid}
 		if not found.is_empty():
 			break
 	if found.is_empty():

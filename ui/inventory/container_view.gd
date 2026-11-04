@@ -8,10 +8,13 @@ class_name ContainerView
 extends Control
 
 ## 某件物品被按下，请求开始拖拽。[param local_pos] 为本控件内的像素坐标。
+@warning_ignore("unused_signal")     # 子类发
 signal grab_requested(view: ContainerView, uid: int, local_pos: Vector2)
 ## 084：双击了一件（快速置入：棋盘 ⇄ 容器 / 地上，由持有这个视图的屏决定去哪）。双击时不发 grab_requested
+@warning_ignore("unused_signal")     # 子类与导演发
 signal item_double_clicked(view: ContainerView, uid: int)
 ## 099：右键按在一件上（没在拖的时候）。230：悬浮窗接它 —— 立刻钉住这件的窗、展开按钮（信物奉为主信仰改成按钮）
+@warning_ignore("unused_signal")     # 子类发
 signal item_context(view: ContainerView, uid: int)
 
 ## 230：这一屏在这块视图上给道具的操作按钮 `func(uid) -> Array[ItemActions.Action]`（[HoverTip] 画在脚注下面）；没设 = 没按钮

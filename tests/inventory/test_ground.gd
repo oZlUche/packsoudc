@@ -205,16 +205,14 @@ static func run_spots_follow_nodes(t: TestCase) -> void:
 	var kit: Array[StringName] = []
 	var run: RunState = null
 	var entry := -1
-	var next := -1
-	for seed in range(1, 60):
-		run = RunState.start(chapter, seed, items, enemies, sets, kit)
+	for seed_ in range(1, 60):
+		run = RunState.start(chapter, seed_, items, enemies, sets, kit)
 		if run == null:
 			continue
 		for e in run.map.entry_ids:
 			for nid in run.map.neighbors(e):
 				if run.map.get_node(nid).type in [&"rest", &"search", &"empty"]:
 					entry = e
-					next = nid
 		if entry >= 0:
 			break
 	if entry < 0:

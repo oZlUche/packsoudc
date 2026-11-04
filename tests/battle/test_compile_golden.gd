@@ -153,12 +153,12 @@ static func _shot(run: RunState) -> Dictionary:
 
 ## 一套属性：键 → {total, base, flat, percent}（133：乘区只剩一个，`mult: [四个乘区]` 换成一个 `percent`）。
 ## 只记终值不够 —— 食物翻倍动的是 `base`，乘算动的是 percent，分开记才看得出搬家有没有换落点
-static func _stats(set: StatSet) -> Dictionary:
+static func _stats(p_set: StatSet) -> Dictionary:
 	var out := {}
-	if set == null:
+	if p_set == null:
 		return out
-	for key in set.keys():
-		var v := set.ensure(StringName(String(key)))
+	for key in p_set.keys():
+		var v := p_set.ensure(StringName(String(key)))
 		out[String(key)] = {"total": v.total(), "base": v.base, "flat": v.flat, "percent": v.percent}
 	return out
 

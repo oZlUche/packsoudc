@@ -178,8 +178,8 @@ func icon_of(id: String) -> String:
 	if note != null:
 		return note.name.substr(0, 1)
 	var def: BuffDef = buff_defs.get(StringName(id), null)
-	var name := Names.of(def) if def != null and Names.of(def) != "" else id
-	return name.substr(0, 1)
+	var name_ := Names.of(def) if def != null and Names.of(def) != "" else id
+	return name_.substr(0, 1)
 
 
 func stacks() -> Dictionary:
@@ -293,15 +293,15 @@ func set_resource(key: String, current: int, maximum: int) -> void:
 	queue_redraw()
 
 
-func set_stacks(buff: String, stacks: int) -> void:
-	_set_chip(buff, stacks)
+func set_stacks(buff: String, p_stacks: int) -> void:
+	_set_chip(buff, p_stacks)
 	if buff != BLOCK_CHIP:
 		_refresh_block()     # buff 可能带格挡轴（弹开、标记）
 	queue_redraw()
 
 
-func _set_chip(id: String, stacks: int) -> void:
-	if stacks <= 0:
+func _set_chip(id: String, p_stacks: int) -> void:
+	if p_stacks <= 0:
 		_stacks.erase(id)
 		_arrival.erase(id)
 		guards.erase(id)
@@ -310,7 +310,7 @@ func _set_chip(id: String, stacks: int) -> void:
 		if not _stacks.has(id):
 			_arrivals += 1
 			_arrival[id] = _arrivals
-		_stacks[id] = stacks
+		_stacks[id] = p_stacks
 
 
 ## 185 补充一：一条 status_stacked（回放时刻 [param at]）带来的计时 —— 载荷的 `expires_at`（定点，-1 永续）与 `seconds_left`（按层计时）。
@@ -351,21 +351,21 @@ func set_now(t: float) -> void:
 
 
 ## 103：标准轴的内容层（带符号）。0 就收起这一格
-func set_axis(axis: String, stacks: int) -> void:
+func set_axis(axis: String, p_stacks: int) -> void:
 	if StringName(axis) == StatAxes.BLOCK:     # 153：并进格挡格
-		_block_axis = stacks
+		_block_axis = p_stacks
 		_refresh_block()
 		queue_redraw()
 		return
 	var id := AXIS_PREFIX + axis
-	if stacks == 0:
+	if p_stacks == 0:
 		_stacks.erase(id)
 		_arrival.erase(id)
 	else:
 		if not _stacks.has(id):
 			_arrivals += 1
 			_arrival[id] = _arrivals
-		_stacks[id] = stacks
+		_stacks[id] = p_stacks
 	queue_redraw()
 
 
@@ -402,8 +402,8 @@ func block_value() -> int:
 
 ## 有层或有修正就画「格挡 N」格（N 可以是 0 或负数：负是破绽）
 func _refresh_block() -> void:
-	var show := not block_layers.is_empty() or _block_axis != 0 or block_carried() != 0
-	if not show:
+	var show_ := not block_layers.is_empty() or _block_axis != 0 or block_carried() != 0
+	if not show_:
 		_stacks.erase(BLOCK_CHIP)
 		_arrival.erase(BLOCK_CHIP)
 		return
@@ -418,8 +418,8 @@ func mark_dead() -> void:
 	queue_redraw()
 
 
-func note_fired(_uid: int, now: float) -> void:
-	_fired_at = now
+func note_fired(_uid: int, p_now: float) -> void:
+	_fired_at = p_now
 	queue_redraw()
 
 
@@ -588,11 +588,11 @@ func _draw() -> void:
 
 ## 175 补 5.5：图标格 —— 单色图按 [method EffectIcons.tint_of] 着色（保底的彩色成品用白），层数描边画在右下角；悬停时垫一层淡底
 func _draw_icon_chip(id: String, def: BuffDef, group: int, tex: Texture2D, drawn: Rect2, k: float) -> void:
-	var stacks := int(_stacks.get(id, 0))
+	var stacks_ := int(_stacks.get(id, 0))
 	var tint := EffectIcons.tint_of(id, def, group)
 	if id == _hover_id:
 		draw_rect(drawn, Color(tint, 0.22))
-	var guard_art := EffectIcons.is_guard_art(id, stacks, int(guards.get(id, 0)))
+	var guard_art := EffectIcons.is_guard_art(id, stacks_, int(guards.get(id, 0)))
 	draw_texture_rect(tex, drawn, false, Color.WHITE if guard_art else tint)
 	var n := chip_count(id)
 	if n == "":
@@ -718,7 +718,7 @@ func _draw_art_bar(key: String, current: int, maximum: int, y: float) -> void:
 
 
 ## 横向三段切（左右各 [constant ART_SLICE]，中段拉）；比两头还窄时两头按比例缩。缺图画纯色
-func _hslice(tex: Texture2D, r: Rect2, fallback: Color, modulate: Color = Color.WHITE) -> void:
+func _hslice(tex: Texture2D, r: Rect2, fallback: Color, p_modulate: Color = Color.WHITE) -> void:
 	if r.size.x <= 0.0:
 		return
 	if tex == null:
@@ -726,10 +726,10 @@ func _hslice(tex: Texture2D, r: Rect2, fallback: Color, modulate: Color = Color.
 		return
 	var ts := tex.get_size()
 	var cap := minf(ART_SLICE, r.size.x * 0.5)
-	draw_texture_rect_region(tex, Rect2(r.position, Vector2(cap, r.size.y)), Rect2(0, 0, ART_SLICE, ts.y), modulate)
+	draw_texture_rect_region(tex, Rect2(r.position, Vector2(cap, r.size.y)), Rect2(0, 0, ART_SLICE, ts.y), p_modulate)
 	if r.size.x > cap * 2.0:
-		draw_texture_rect_region(tex, Rect2(r.position + Vector2(cap, 0), Vector2(r.size.x - cap * 2.0, r.size.y)), Rect2(ART_SLICE, 0, ts.x - ART_SLICE * 2.0, ts.y), modulate)
-	draw_texture_rect_region(tex, Rect2(r.end.x - cap, r.position.y, cap, r.size.y), Rect2(ts.x - ART_SLICE, 0, ART_SLICE, ts.y), modulate)
+		draw_texture_rect_region(tex, Rect2(r.position + Vector2(cap, 0), Vector2(r.size.x - cap * 2.0, r.size.y)), Rect2(ART_SLICE, 0, ts.x - ART_SLICE * 2.0, ts.y), p_modulate)
+	draw_texture_rect_region(tex, Rect2(r.end.x - cap, r.position.y, cap, r.size.y), Rect2(ts.x - ART_SLICE, 0, ART_SLICE, ts.y), p_modulate)
 
 
 ## 铜面板：状态小标底下那块小嵌槽（`tag_inlay` 看得见的那段，九宫缩到 [constant SLOT_SIZE]）

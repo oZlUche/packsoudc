@@ -19,6 +19,7 @@ signal changed
 
 const INDENT := 14
 ## 091：直接 preload 而不靠全局类名 —— 作者拉了新脚本没重新 --import 时，全局类缓存里没有 FieldText，靠名字引用会让整份表单解析失败、编辑器一片空白
+@warning_ignore("shadowed_global_identifier")
 const FieldText := preload("res://core/authoring/field_text.gd")
 
 var label_font: Font
@@ -82,9 +83,9 @@ func rebuild() -> void:
 	_rule_trees.clear()
 	if _target == null:
 		return
-	var hidden: Array = skip.get(String(ContentSchema.class_name_of(_target)), [])
+	var hidden_: Array = skip.get(String(ContentSchema.class_name_of(_target)), [])
 	for prop in ContentSchema.properties_of(_target):
-		if hidden.has(String(prop["name"])):
+		if hidden_.has(String(prop["name"])):
 			continue
 		if not only.is_empty() and not only.has(String(prop["name"])):
 			continue
@@ -156,85 +157,88 @@ func row_visible(key: String) -> bool:
 
 
 #region 每种类型一个控件
-func _row_for(owner: Object, prop: Dictionary) -> Control:
+func _row_for(p_owner: Object, prop: Dictionary) -> Control:
 	var key := String(prop["name"])
-	var value = owner.get(key)
+	var value = p_owner.get(key)
 	var type := int(prop["type"])
 
 	match type:
 		TYPE_BOOL:
 			var cb := CheckBox.new()
-			cb.text = FieldText.label(owner, key)
-			cb.tooltip_text = FieldText.tip(owner, key)
+			cb.text = FieldText.label(p_owner, key)
+			cb.tooltip_text = FieldText.tip(p_owner, key)
 			cb.button_pressed = value
 			_compact(cb)
 			cb.toggled.connect(func(on: bool):
-				owner.set(key, on)
+				p_owner.set(key, on)
 				_emit())
 			return cb
 
 		TYPE_INT:
-			var options := ContentSchema.enum_options(owner, prop)
+			var options := ContentSchema.enum_options(p_owner, prop)
 			if not options.is_empty():
-				return _labeled(owner, key, _enum_picker(owner, prop, options, int(value)))
-			return _labeled(owner, key, _number(value, 1.0, func(v: float): owner.set(key, int(v)), prop))
+				return _labeled(p_owner, key, _enum_picker(p_owner, prop, options, int(value)))
+			return _labeled(p_owner, key, _number(value, 1.0, func(v: float): p_owner.set(key, int(v)), prop))
 
 		TYPE_FLOAT:
-			if key == "amount" and _percent_mod(owner):
+			if key == "amount" and _percent_mod(p_owner):
 				# 作者反馈：暴击率 / 暴击伤害按百分数填（20 = 20%），存成小数
-				var pct := _number(BattleStats.to_percent(value), 1.0, func(v: float): owner.set(key, BattleStats.from_percent(v)), prop)
+				var pct := _number(BattleStats.to_percent(value), 1.0, func(v: float): p_owner.set(key, BattleStats.from_percent(v)), prop)
 				pct.suffix = "%"
-				return _labeled(owner, key, pct)
-			return _labeled(owner, key, _number(value, 0.1, func(v: float): owner.set(key, v), prop))
+				return _labeled(p_owner, key, pct)
+			return _labeled(p_owner, key, _number(value, 0.1, func(v: float): p_owner.set(key, v), prop))
 
 		TYPE_STRING, TYPE_STRING_NAME:
 			if int(prop["hint"]) == PROPERTY_HINT_ENUM:
 				# 111：字符串枚举（`@export_enum`）→ 下拉；值仍是字符串，显示名走 FieldText.enum_label
-				return _labeled(owner, key, _string_picker(owner, prop, ContentSchema.enum_options(owner, prop), String(value)))
+				return _labeled(p_owner, key, _string_picker(p_owner, prop, ContentSchema.enum_options(p_owner, prop), String(value)))
 			if type == TYPE_STRING_NAME and _is_stat_field(key):
 				# 091（作者定）：指向属性键的字段（修饰的 stat、效果的 damage_stat）下拉浏览已有属性，也能自定义
 				# 可以为空的（默认值是空串，如 amount_stat）第一项是「不用」，空值就停在它上，不再被显示成第一个属性
-				var allow_empty := _stat_field_nullable(owner, key)
+				var allow_empty := _stat_field_nullable(p_owner, key)
 				var picker := _stat_picker(String(value), func(k: String):
-					var was_pct := _percent_mod(owner)
-					owner.set(key, StringName(k))
-					if owner is StatModifier and was_pct != _percent_mod(owner):
+					var was_pct := _percent_mod(p_owner)
+					p_owner.set(key, StringName(k))
+					if p_owner is StatModifier and was_pct != _percent_mod(p_owner):
 						# 换到 / 换出百分比属性：填的数不变（20 还是 20），存的值跟着换算，数字框按新单位重画
-						var m := owner as StatModifier
+						var m := p_owner as StatModifier
 						m.amount = BattleStats.from_percent(m.amount) if not was_pct else BattleStats.to_percent(m.amount)
 						rebuild.call_deferred()
 					_emit(), [], allow_empty)
 				if allow_empty:
 					picker.tooltip_text = STAT_EMPTY_TIP
-				return _labeled(owner, key, picker)
+				return _labeled(p_owner, key, picker)
 			if type == TYPE_STRING_NAME and _is_damage_type_field(key):
 				# 096：伤害类型是数据（DamageTypes）：下拉列出登记过的，也能自定义
-				return _labeled(owner, key, _key_picker(_damage_type_keys(), Callable(PropertyForm, "damage_type_label"), String(value), func(k: String):
-					owner.set(key, StringName(k))
+				return _labeled(p_owner, key, _key_picker(_damage_type_keys(), Callable(PropertyForm, "damage_type_label"), String(value), func(k: String):
+					p_owner.set(key, StringName(k))
 					_emit()))
 			if type == TYPE_STRING_NAME and _is_axis_field(key):
 				# 152：指向一条标准轴的字段（buff 带的轴、改轴、扣轴、轴条件）：下拉列出轴表，显示正名 / 反名
-				return _labeled(owner, key, _key_picker(_axis_keys(), Callable(PropertyForm, "axis_label"), String(value), func(k: String):
-					owner.set(key, StringName(k))
+				return _labeled(p_owner, key, _key_picker(_axis_keys(), Callable(PropertyForm, "axis_label"), String(value), func(k: String):
+					p_owner.set(key, StringName(k))
 					_emit()))
-			if type == TYPE_STRING_NAME and _is_buff_id_field(owner, key):
+			if type == TYPE_STRING_NAME and _is_buff_id_field(p_owner, key):
 				# 146：指向一个 buff 的 id（移除 / 条件 / 扳机里的状态）：下拉列出库里的 buff，也能手填
-				return _labeled(owner, key, _key_picker(known_buff_ids(), Callable(PropertyForm, "buff_id_label"), String(value), func(k: String):
-					owner.set(key, StringName(k))
+				return _labeled(p_owner, key, _key_picker(known_buff_ids(), Callable(PropertyForm, "buff_id_label"), String(value), func(k: String):
+					p_owner.set(key, StringName(k))
 					_emit()))
 			if type == TYPE_STRING_NAME and _is_tag_field(key):
 				# 096：指向一个标签的字段（信仰的 item_tag、规则的 weapon_tag）：下拉列出登记过 / 用过的标签，也能自定义
-				return _labeled(owner, key, _key_picker(known_tags(), Callable(PropertyForm, "tag_label"), String(value), func(k: String):
-					owner.set(key, StringName(k))
+				return _labeled(p_owner, key, _key_picker(known_tags(), Callable(PropertyForm, "tag_label"), String(value), func(k: String):
+					p_owner.set(key, StringName(k))
 					_emit()))
 			var le := LineEdit.new()
 			le.text = String(value)
 			le.custom_minimum_size.x = 180
 			_compact(le)
 			le.text_changed.connect(func(t: String):
-				owner.set(key, StringName(t) if type == TYPE_STRING_NAME else t)
+				if type == TYPE_STRING_NAME:
+					p_owner.set(key, StringName(t))
+				else:
+					p_owner.set(key, t)
 				_emit())
-			return _labeled(owner, key, le)
+			return _labeled(p_owner, key, le)
 
 		TYPE_VECTOR2I, TYPE_VECTOR2:
 			# 范围 [min, max] 这类成对的数。两个数字框并排
@@ -243,24 +247,27 @@ func _row_for(owner: Object, prop: Dictionary) -> Control:
 			for axis in 2:
 				var ax := axis
 				pair.add_child(_number(float(value[ax]), 1.0 if whole else 0.1, func(v: float):
-					var cur = owner.get(key)
-					cur[ax] = int(v) if whole else v
-					owner.set(key, cur)))
-			return _labeled(owner, key, pair)
+					var cur = p_owner.get(key)
+					if whole:
+						cur[ax] = int(v)
+					else:
+						cur[ax] = v
+					p_owner.set(key, cur)))
+			return _labeled(p_owner, key, pair)
 
 		TYPE_DICTIONARY:
-			return _labeled(owner, key, _dict_editor(owner, key, value as Dictionary))
+			return _labeled(p_owner, key, _dict_editor(p_owner, key, value as Dictionary))
 
 		TYPE_ARRAY:
-			return _array_section(owner, key, value as Array)
+			return _array_section(p_owner, key, value as Array)
 
 		TYPE_OBJECT:
-			return _object_section(owner, prop, value as Object)
+			return _object_section(p_owner, prop, value as Object)
 
 	return null
 
 
-func _string_picker(owner: Object, prop: Dictionary, options: Array[String], current: String) -> OptionButton:
+func _string_picker(p_owner: Object, prop: Dictionary, options: Array[String], current: String) -> OptionButton:
 	var ob := OptionButton.new()
 	_compact(ob)
 	var string_name := int(prop["type"]) == TYPE_STRING_NAME
@@ -270,13 +277,16 @@ func _string_picker(owner: Object, prop: Dictionary, options: Array[String], cur
 		if options[i] == current:
 			ob.select(i)
 	ob.item_selected.connect(func(idx: int):
-		owner.set(prop["name"], StringName(options[idx]) if string_name else options[idx])
+		if string_name:
+			p_owner.set(prop["name"], StringName(options[idx]))
+		else:
+			p_owner.set(prop["name"], options[idx])
 		_emit())
 	return ob
 
 
 func _enum_picker(
-	owner: Object, prop: Dictionary, options: Array[String], current: int
+	p_owner: Object, prop: Dictionary, options: Array[String], current: int
 ) -> OptionButton:
 	var ob := OptionButton.new()
 	_compact(ob)
@@ -284,19 +294,19 @@ func _enum_picker(
 	for i in options.size():
 		ob.add_item(FieldText.enum_label(options[i]), i)
 		ob.set_item_tooltip(i, options[i])
-		var v = ContentSchema.enum_value(owner, prop, options[i])
+		var v = ContentSchema.enum_value(p_owner, prop, options[i])
 		values.append(int(v) if v != null else i)
 		if values[i] == current:
 			ob.select(i)
 	ob.item_selected.connect(func(idx: int):
-		owner.set(prop["name"], values[idx])
+		p_owner.set(prop["name"], values[idx])
 		_emit())
 	return ob
 
 
 ## 加算、指向百分比属性的修饰：amount 按百分数显示
-static func _percent_mod(owner: Object) -> bool:
-	return owner is StatModifier and not (owner as StatModifier).is_mult() and BattleStats.is_percent((owner as StatModifier).stat)
+static func _percent_mod(p_owner: Object) -> bool:
+	return p_owner is StatModifier and not (p_owner as StatModifier).is_mult() and BattleStats.is_percent((p_owner as StatModifier).stat)
 
 
 func _number(value: float, step: float, apply: Callable, prop: Dictionary = {}) -> SpinBox:
@@ -393,8 +403,8 @@ static func axis_label(key: String) -> String:
 
 
 ## 146：指向 buff id 的字段：`buff_id`（移除 / 条件 / 状态扳机 / 扣层），转化状态的 `from`
-static func _is_buff_id_field(owner: Object, key: String) -> bool:
-	return key == "buff_id" or (owner is ConvertStatus and key == "from")
+static func _is_buff_id_field(p_owner: Object, key: String) -> bool:
+	return key == "buff_id" or (p_owner is ConvertStatus and key == "from")
 
 
 ## 库里全部 buff 的 id
@@ -493,7 +503,7 @@ static func tag_groups() -> Array:
 
 ## 171：标签数组 —— 已选的标签一块一块（名字 + ×），后面一个按大类分组的「加标签…」下拉。
 ## 节点上挂 `tag_options`（下拉）、`tag_choices`（下拉每一项对应的 id，分组标题是空串）、`tag_chips`（已选那一排）给测试用
-func _tag_chips(owner: Object, key: String, arr: Array) -> Control:
+func _tag_chips(p_owner: Object, key: String, arr: Array) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var chips := HFlowContainer.new()
@@ -505,7 +515,7 @@ func _tag_chips(owner: Object, key: String, arr: Array) -> Control:
 		var typed := ContentSchema.empty_like(arr)
 		for v in out:
 			typed.append(StringName(String(v)))
-		owner.set(key, typed)
+		p_owner.set(key, typed)
 		_emit()
 		rebuild.call_deferred()
 	for t in arr:
@@ -515,7 +525,7 @@ func _tag_chips(owner: Object, key: String, arr: Array) -> Control:
 		b.tooltip_text = tag
 		_compact(b)
 		b.pressed.connect(func():
-			var cur: Array = (owner.get(key) as Array).duplicate()
+			var cur: Array = (p_owner.get(key) as Array).duplicate()
 			cur.erase(StringName(tag))
 			set_tags.call(cur))
 		chips.add_child(b)
@@ -534,7 +544,7 @@ func _tag_chips(owner: Object, key: String, arr: Array) -> Control:
 		ob.select(0)
 		if idx <= 0 or idx >= choices.size() or choices[idx] == "":
 			return
-		var cur: Array = (owner.get(key) as Array).duplicate()
+		var cur: Array = (p_owner.get(key) as Array).duplicate()
 		if cur.has(StringName(choices[idx])):
 			return
 		cur.append(StringName(choices[idx]))
@@ -556,8 +566,8 @@ static func stat_label(key: String) -> String:
 static func known_stat_keys() -> Array[String]:
 	var seen := {}
 	var consts: Dictionary = (BattleStats as Script).get_script_constant_map()
-	for name in consts:
-		var v = consts[name]
+	for name_ in consts:
+		var v = consts[name_]
 		if v is StringName and String(v) != "":
 			seen[String(v)] = true
 	for k in Glossary.STAT_NAMES:
@@ -616,8 +626,8 @@ const STAT_NONE_LABEL := "不用（用上面的数量）"
 
 ## 这个属性键字段能不能为空：脚本里它的默认值就是空串（amount_stat 这种「可选的取数来源」）；
 ## 必填的（stat、默认 damage 的 damage_stat）不给「不用」这一项
-static func _stat_field_nullable(owner: Object, key: String) -> bool:
-	var script := owner.get_script() as Script
+static func _stat_field_nullable(p_owner: Object, key: String) -> bool:
+	var script := p_owner.get_script() as Script
 	if script == null:
 		return false
 	var def = script.get_property_default_value(key)
@@ -705,7 +715,7 @@ static func _picked_stat(picker: Control) -> String:
 ## 字典（base_stats 这种「属性键 → 数值」）用一行一对的写法。
 ## 键是自由文本而不是下拉框 —— 属性键本来就是可扩展的，锁死列表反而挡住新资源。
 ## 091（作者反馈）：文字表的值直接编辑（不带 JSON 引号），加一项给空字符串与下一个语言码
-func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
+func _dict_editor(p_owner: Object, key: String, dict: Dictionary) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	var text_dict := _is_text_dict(key, dict)
@@ -727,20 +737,20 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 			_compact(se)
 			se.text_changed.connect(func(t: String):
 				dict[old_key] = t
-				owner.set(key, dict)
+				p_owner.set(key, dict)
 				_emit())
 			name_edit.text_submitted.connect(func(t: String):
 				var v = dict[old_key]
 				dict.erase(old_key)
 				dict[t] = v
-				owner.set(key, dict)
+				p_owner.set(key, dict)
 				_emit()
 				rebuild())
 			row.add_child(name_edit)
 			row.add_child(se)
 			row.add_child(_small_button("删", func():
 				dict.erase(old_key)
-				owner.set(key, dict)
+				p_owner.set(key, dict)
 				_emit()
 				rebuild()))
 			box.add_child(row)
@@ -755,13 +765,13 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 				var parsed = JSON.parse_string(s)
 				if parsed != null:
 					dict[old_key] = parsed
-					owner.set(key, dict)
+					p_owner.set(key, dict)
 					_emit())
 			row.add_child(name_edit)
 			row.add_child(te)
 			row.add_child(_small_button("删", func():
 				dict.erase(old_key)
-				owner.set(key, dict)
+				p_owner.set(key, dict)
 				_emit()
 				rebuild()))
 			box.add_child(row)
@@ -782,18 +792,18 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 			var v = dict[old_key]
 			dict.erase(old_key)
 			dict[t] = v
-			owner.set(key, dict)
+			p_owner.set(key, dict)
 			_emit()
 			rebuild())
 		val.value_changed.connect(func(v: float):
 			dict[old_key] = BattleStats.from_percent(v) if pct_key else v
-			owner.set(key, dict)
+			p_owner.set(key, dict)
 			_emit())
 		row.add_child(name_edit)
 		row.add_child(val)
 		row.add_child(_small_button("删", func():
 			dict.erase(old_key)
-			owner.set(key, dict)
+			p_owner.set(key, dict)
 			_emit()
 			rebuild()))
 		box.add_child(row)
@@ -812,7 +822,7 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 				k = "%s_%d" % [base, i]
 				i += 1
 			dict[k] = 0.0
-			owner.set(key, dict)
+			p_owner.set(key, dict)
 			_emit()
 			rebuild()))
 		box.add_child(row)
@@ -837,18 +847,18 @@ func _dict_editor(owner: Object, key: String, dict: Dictionary) -> Control:
 				n = "new_stat_%d" % i
 				i += 1
 			dict[n] = 0.0
-		owner.set(key, dict)
+		p_owner.set(key, dict)
 		_emit()
 		rebuild()))
 	return box
 
 
-func _array_section(owner: Object, key: String, arr: Array) -> Control:
+func _array_section(p_owner: Object, key: String, arr: Array) -> Control:
 	var builtin := arr.get_typed_builtin()
 
 	if builtin == TYPE_STRING_NAME and _is_tag_field(key):
 		# 171（作者定）：标签只能从登记过的里挑 —— 已选的一个一块、后面一个 ×；「加标签…」下拉按大类分组。不能手打
-		return _labeled(owner, key, _tag_chips(owner, key, arr))
+		return _labeled(p_owner, key, _tag_chips(p_owner, key, arr))
 
 	# 格子这类简单数组用一行文本，比每项一个控件好用得多
 	if builtin == TYPE_STRING_NAME or builtin == TYPE_STRING:
@@ -863,11 +873,15 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 			var out := ContentSchema.empty_like(arr)
 			for piece in t.split(",", false):
 				var s := (piece as String).strip_edges()
-				if s != "":
-					out.append(StringName(s) if builtin == TYPE_STRING_NAME else s)
-			owner.set(key, out)
+				if s == "":
+					continue
+				if builtin == TYPE_STRING_NAME:
+					out.append(StringName(s))
+				else:
+					out.append(s)
+			p_owner.set(key, out)
 			_emit())
-		return _labeled(owner, key, le)
+		return _labeled(p_owner, key, le)
 
 	if builtin == TYPE_VECTOR2I:
 		var le2 := LineEdit.new()
@@ -884,9 +898,9 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 				var xy := (piece as String).strip_edges().split(",")
 				if xy.size() == 2:
 					out.append(Vector2i(int(xy[0]), int(xy[1])))
-			owner.set(key, out)
+			p_owner.set(key, out)
 			_emit())
-		return _labeled(owner, key, le2)
+		return _labeled(p_owner, key, le2)
 
 	# 整数数组（哪几层放撤离点、每层的危险等级……）也用一行文本
 	if builtin == TYPE_INT:
@@ -904,22 +918,22 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 				var s := (piece as String).strip_edges()
 				if s.is_valid_int():
 					out.append(int(s))
-			owner.set(key, out)
+			p_owner.set(key, out)
 			_emit())
-		return _labeled(owner, key, le3)
+		return _labeled(p_owner, key, le3)
 
 	if builtin != TYPE_OBJECT:
-		return _labeled(owner, key, _muted("（暂不支持在界面里编辑）"))
+		return _labeled(p_owner, key, _muted("（暂不支持在界面里编辑）"))
 
 	# --- 对象数组：每项一个可折叠的子表单，带类型下拉 ---
 	var element_class := ContentSchema.array_element_class(arr)
 	# 145：规则表一条一行，双击弹窗改（四层嵌套的卡片看不清哪个效果是谁的）
 	if element_class == &"AbilityRule" and popup_layer != null:
-		return _rule_list(owner, key, arr)
+		return _rule_list(p_owner, key, arr)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
-	var heading := _heading("%s（%d）" % [FieldText.label(owner, key), arr.size()])
-	heading.tooltip_text = FieldText.tip(owner, key)
+	var heading := _heading("%s（%d）" % [FieldText.label(p_owner, key), arr.size()])
+	heading.tooltip_text = FieldText.tip(p_owner, key)
 	heading.mouse_filter = Control.MOUSE_FILTER_STOP
 	box.add_child(heading)
 
@@ -952,7 +966,7 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 				rebuild()))
 		head.add_child(_small_button("删", func():
 			arr.remove_at(idx)
-			owner.set(key, arr)
+			p_owner.set(key, arr)
 			_emit()
 			rebuild()))
 		body.add_child(head)
@@ -961,7 +975,7 @@ func _array_section(owner: Object, key: String, arr: Array) -> Control:
 
 	box.add_child(_adder(element_class, func(made: Object):
 		arr.append(made)
-		owner.set(key, arr)
+		p_owner.set(key, arr)
 		_emit()
 		rebuild()))
 	return box
@@ -978,11 +992,11 @@ func _library_buttons(head: HBoxContainer, obj: Object, ref: String) -> void:
 
 
 ## buff 字段：下拉「内联」+ 库里全部 buff。选库里的 = 引用（只读，旁边「去 buff 制作器」）；内联 = 照旧的子表单
-func _buff_section(owner: Object, key: String, value: Object) -> Control:
+func _buff_section(p_owner: Object, key: String, value: Object) -> Control:
 	var box := VBoxContainer.new()
 	var head := HBoxContainer.new()
-	var title := _heading(FieldText.label(owner, key))
-	title.tooltip_text = FieldText.tip(owner, key)
+	var title := _heading(FieldText.label(p_owner, key))
+	title.tooltip_text = FieldText.tip(p_owner, key)
 	title.mouse_filter = Control.MOUSE_FILTER_STOP
 	head.add_child(title)
 	var lib := ContentLibrary.buffs()
@@ -999,9 +1013,9 @@ func _buff_section(owner: Object, key: String, value: Object) -> Control:
 		if idx == 0:
 			# 改成内联：拿库里那份拷一份当起点（之后改了就是这一件自己的版本）
 			if value != null:
-				owner.set(key, (value as Resource).duplicate_deep(Resource.DEEP_DUPLICATE_ALL))
+				p_owner.set(key, (value as Resource).duplicate_deep(Resource.DEEP_DUPLICATE_ALL))
 		else:
-			owner.set(key, lib[ids[idx - 1]])
+			p_owner.set(key, lib[ids[idx - 1]])
 		_emit()
 		rebuild())
 	head.add_child(ob)
@@ -1014,13 +1028,13 @@ func _buff_section(owner: Object, key: String, value: Object) -> Control:
 		return box
 	if value == null:
 		head.add_child(_adder(&"BuffDef", func(made: Object):
-			owner.set(key, made)
+			p_owner.set(key, made)
 			_emit()
 			rebuild()))
 		box.add_child(head)
 		return box
 	head.add_child(_small_button("清除", func():
-		owner.set(key, null)
+		p_owner.set(key, null)
 		_emit()
 		rebuild()))
 	box.add_child(head)
@@ -1048,10 +1062,10 @@ func _goto_library(scene: String, id: String) -> void:
 
 #region 145：规则列表
 ## 规则表 = 一张四列的列表（#、时机、消耗、效果，文案走 [Glossary]）+ 一排按钮。双击 / 回车 / 「编辑」弹 [RuleWindow]
-func _rule_list(owner: Object, key: String, arr: Array) -> Control:
+func _rule_list(p_owner: Object, key: String, arr: Array) -> Control:
 	var box := VBoxContainer.new()
-	var heading := _heading("%s（%d）" % [FieldText.label(owner, key), arr.size()])
-	heading.tooltip_text = FieldText.tip(owner, key)
+	var heading := _heading("%s（%d）" % [FieldText.label(p_owner, key), arr.size()])
+	heading.tooltip_text = FieldText.tip(p_owner, key)
 	heading.mouse_filter = Control.MOUSE_FILTER_STOP
 	box.add_child(heading)
 
@@ -1078,32 +1092,32 @@ func _rule_list(owner: Object, key: String, arr: Array) -> Control:
 	var needs_pick: Array[Button] = []
 	row.add_child(_small_button("新建", func():
 		arr.append(ContentSchema.make(&"AbilityRule", &"AbilityRule"))
-		_rules_changed(owner, key, arr, arr.size() - 1)
-		_open_rule(owner, key, arr, arr.size() - 1)))
+		_rules_changed(p_owner, key, arr, arr.size() - 1)
+		_open_rule(p_owner, key, arr, arr.size() - 1)))
 	needs_pick.append(_small_button("复制", func():
 		var i := _picked_rule(tree)
 		arr.insert(i + 1, (arr[i] as Resource).duplicate_deep(Resource.DEEP_DUPLICATE_ALL))
-		_rules_changed(owner, key, arr, i + 1)))
+		_rules_changed(p_owner, key, arr, i + 1)))
 	needs_pick.append(_small_button("删除", func():
 		var i := _picked_rule(tree)
 		arr.remove_at(i)
-		_rules_changed(owner, key, arr, mini(i, arr.size() - 1))))
+		_rules_changed(p_owner, key, arr, mini(i, arr.size() - 1))))
 	needs_pick.append(_small_button("上移", func():
 		var i := _picked_rule(tree)
 		if i > 0:
 			var tmp = arr[i - 1]
 			arr[i - 1] = arr[i]
 			arr[i] = tmp
-			_rules_changed(owner, key, arr, i - 1)))
+			_rules_changed(p_owner, key, arr, i - 1)))
 	needs_pick.append(_small_button("下移", func():
 		var i := _picked_rule(tree)
 		if i < arr.size() - 1:
 			var tmp = arr[i + 1]
 			arr[i + 1] = arr[i]
 			arr[i] = tmp
-			_rules_changed(owner, key, arr, i + 1)))
+			_rules_changed(p_owner, key, arr, i + 1)))
 	needs_pick.append(_small_button("编辑", func():
-		_open_rule(owner, key, arr, _picked_rule(tree))))
+		_open_rule(p_owner, key, arr, _picked_rule(tree))))
 	for b in needs_pick:
 		b.disabled = true
 		row.add_child(b)
@@ -1116,7 +1130,7 @@ func _rule_list(owner: Object, key: String, arr: Array) -> Control:
 	tree.nothing_selected.connect(func():
 		tree.deselect_all()
 		set_picked.call(false))
-	tree.item_activated.connect(func(): _open_rule(owner, key, arr, _picked_rule(tree)))
+	tree.item_activated.connect(func(): _open_rule(p_owner, key, arr, _picked_rule(tree)))
 	return box
 
 
@@ -1149,8 +1163,8 @@ static func _fill_rule_rows(tree: Tree, arr: Array) -> void:
 
 
 ## 增删、换顺序之后：写回、通知、重画，选中 [param pick] 那一行
-func _rules_changed(owner: Object, key: String, arr: Array, pick: int) -> void:
-	owner.set(key, arr)
+func _rules_changed(p_owner: Object, key: String, arr: Array, pick: int) -> void:
+	p_owner.set(key, arr)
 	_emit()
 	rebuild()
 	var tree := _rule_trees.get(key) as Tree
@@ -1158,11 +1172,11 @@ func _rules_changed(owner: Object, key: String, arr: Array, pick: int) -> void:
 		tree.get_root().get_child(pick).select(0)
 
 
-func _open_rule(owner: Object, key: String, arr: Array, idx: int) -> void:
+func _open_rule(p_owner: Object, key: String, arr: Array, idx: int) -> void:
 	if idx < 0 or idx >= arr.size() or popup_layer == null:
 		return
 	var win = load(RULE_WINDOW).open_in(popup_layer)
-	win.show_rule(arr[idx], "规则 %d · %s" % [idx + 1, FieldText.label(owner, key)], label_font, parts_allowed, func():
+	win.show_rule(arr[idx], "规则 %d · %s" % [idx + 1, FieldText.label(p_owner, key)], label_font, parts_allowed, func():
 		_emit()
 		var tree := _rule_trees.get(key) as Tree
 		if tree != null and is_instance_valid(tree):
@@ -1175,7 +1189,7 @@ func rule_list(key: String) -> Tree:
 #endregion
 
 
-func _object_section(owner: Object, prop: Dictionary, value: Object) -> Control:
+func _object_section(p_owner: Object, prop: Dictionary, value: Object) -> Control:
 	var key := String(prop["name"])
 	var declared := StringName(prop["hint_string"])
 	# 贴图之类的引擎类型交给别处，表单不碰
@@ -1185,18 +1199,18 @@ func _object_section(owner: Object, prop: Dictionary, value: Object) -> Control:
 
 	# 146：buff 字段是「库里的 buff / 内联」二选一
 	if declared == &"BuffDef":
-		return _buff_section(owner, key, value)
+		return _buff_section(p_owner, key, value)
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	var head := HBoxContainer.new()
-	var title := _heading(FieldText.label(owner, key))
-	title.tooltip_text = FieldText.tip(owner, key)
+	var title := _heading(FieldText.label(p_owner, key))
+	title.tooltip_text = FieldText.tip(p_owner, key)
 	title.mouse_filter = Control.MOUSE_FILTER_STOP
 	head.add_child(title)
 	if value == null:
 		head.add_child(_adder(declared, func(made: Object):
-			owner.set(key, made)
+			p_owner.set(key, made)
 			_emit()
 			rebuild()))
 	else:
@@ -1208,7 +1222,7 @@ func _object_section(owner: Object, prop: Dictionary, value: Object) -> Control:
 		if ref != "":
 			_library_buttons(head, value, ref)
 		head.add_child(_small_button("清除", func():
-			owner.set(key, null)
+			p_owner.set(key, null)
 			_emit()
 			rebuild()))
 	box.add_child(head)
@@ -1248,9 +1262,9 @@ func _adder(declared: StringName, on_made: Callable) -> Control:
 		row.set_meta("library", lob)
 		return row
 	if types.size() <= 1:
-		var only := types[0] if types.size() == 1 else declared
+		var only_ := types[0] if types.size() == 1 else declared
 		row.add_child(_small_button("+ 添加", func():
-			var made := ContentSchema.make(declared, only)
+			var made := ContentSchema.make(declared, only_)
 			if made != null:
 				on_made.call(made)))
 		return row
@@ -1287,14 +1301,14 @@ func _compact(c: Control) -> void:
 
 
 ## 一行：左边标签（中文模式下是 [FieldText] 的中文，鼠标停上去看说明与字段名），右边控件（同一份说明）
-func _labeled(owner: Object, key: String, control: Control) -> Control:
+func _labeled(p_owner: Object, key: String, control: Control) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	var l := Label.new()
-	l.text = FieldText.label(owner, key)
+	l.text = FieldText.label(p_owner, key)
 	l.custom_minimum_size.x = 130
 	l.mouse_filter = Control.MOUSE_FILTER_STOP
-	var tip := FieldText.tip(owner, key)
+	var tip := FieldText.tip(p_owner, key)
 	l.tooltip_text = tip
 	if control.tooltip_text == "":
 		control.tooltip_text = tip
