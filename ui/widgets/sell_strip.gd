@@ -84,7 +84,7 @@ func press_sell() -> Dictionary:
 	var got := flow.sell_selected(shelf.selected.keys())
 	shelf.clear_selection()
 	if _say.is_valid():
-		_say.call(UiText.t("meta.sold_many") % [int(got["count"]), int(got["funds"]), flow.meta.funds])
+		_say.call(UiText.t("meta.sold_many") % int(got["count"]) + CoinShort.coin(int(got["funds"])))
 	return got
 
 

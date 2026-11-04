@@ -63,7 +63,7 @@ func _build() -> void:
 	_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_clip)
 	_label = Label.new()
-	_label.text = CoinShort.strip(text) if CoinShort.has(text) else text
+	_label.text = CoinShort.strip(text) if CoinShort.has(text) or CoinShort.has_coin(text) else text
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_label.label_settings = LabelSettings.new()
@@ -73,6 +73,9 @@ func _build() -> void:
 	_clip.add_child(_label)
 	if CoinShort.has(text):
 		_coin = CoinLabel.make_short(CoinShort.amount(text), UiTheme.sz(FONT_SIZE))
+		_clip.add_child(_coin)
+	elif CoinShort.has_coin(text):     # 11-04：买卖告示的钱 —— 一枚金币跟着数，墨色
+		_coin = CoinLabel.make(CoinShort.coin_amount(text), UiTheme.sz(FONT_SIZE), INK)
 		_clip.add_child(_coin)
 	_rollers = Control.new()
 	_rollers.name = "Rollers"

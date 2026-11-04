@@ -661,7 +661,7 @@ func sell(uid: int) -> int:
 	var name := Names.of(inst.def) if inst != null else ""
 	var got := flow.sell_item(uid)
 	if got >= 0:
-		say(UiText.t("meta.sold_one") % [name, got, flow.meta.funds])     # 226 批一：卖出回话走告示卷轴
+		say(UiText.t("meta.sold_one") % name + CoinShort.coin(got))     # 226 批一：卖出回话走告示卷轴
 	return got
 #endregion
 
@@ -930,8 +930,17 @@ func show_variants(tile: CodexTile) -> void:
 		_variant_tiles.append(vt)
 	col.add_child(_button(UiText.t("meta.close"), close_variants, 12, UiPalette.Tier.MINOR))
 	add_child(box)
-	box.position = (tile.global_position + Vector2(0, tile.size.y + 6)).clamp(Vector2.ZERO, get_viewport_rect().size - Vector2(400, 200))
+	box.position = variants_spot(tile.get_global_rect(), box.get_combined_minimum_size(), get_viewport_rect().size)
 	_variants_popup = box
+
+
+## 异体窗放哪：格子下面放得下就放下面，放不下翻到格子上面；左右夹在屏内（游戏测试 11-04：下排格子点开出屏、【关闭】只露一半 —— 以前按固定 400×200 夹）
+static func variants_spot(tile: Rect2, pop: Vector2, screen: Vector2) -> Vector2:
+	const GAP := 6.0
+	var y := tile.end.y + GAP
+	if y + pop.y > screen.y:
+		y = tile.position.y - GAP - pop.y
+	return Vector2(clampf(tile.position.x, 0.0, maxf(0.0, screen.x - pop.x)), clampf(y, 0.0, maxf(0.0, screen.y - pop.y)))
 
 
 func close_variants() -> void:

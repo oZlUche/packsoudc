@@ -395,7 +395,7 @@ func sell_bag(uid: int) -> int:
 	var name := Names.of(inst.def) if inst != null else ""
 	var got := _flow.sell_bag(uid)
 	if got >= 0:
-		_say(UiText.t("meta.sold_one") % [name, got, _meta.funds])
+		_say(UiText.t("meta.sold_one") % name + CoinShort.coin(got))     # 11-04：钱画金币；手上多少钱看钱袋，不再写
 		changed.emit()
 	return got
 
