@@ -910,7 +910,7 @@ func show_variants(tile: CodexTile) -> void:
 	close_variants()
 	if tile == null or tile.variant_count() == 0:
 		return
-	var box := _panel(10)
+	var box := UiTheme.panel(PanelContainer.new(), 10, UiTheme.PANEL_TOOLTIP)     # 作者 11-04：浮在书架上的窗要实底 —— 深色凹槽底（PanelDark）中间是透的，换悬浮窗底
 	box.name = "VariantsPopup"
 	var col := _vbox(6)
 	box.add_child(col)

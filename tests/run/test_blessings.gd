@@ -191,6 +191,8 @@ static func frame_codex_variants(t: TestCase, root: Window) -> void:
 		if vt.lit:
 			lit_ids.append(vt.def.id)
 	t.eq(lit_ids, [&"shortsword_brute"], "只有蛮神版那一小格亮")
+	var pop := screen.find_child("VariantsPopup", true, false) as PanelContainer
+	t.check(pop != null and pop.theme_type_variation == UiTheme.PANEL_TOOLTIP, "作者 11-04：异体窗是悬浮窗实底，不是中间透明的凹槽底")
 	screen.close_variants()
 	t.check(not screen.variants_open(), "关掉了")
 	var plain: CodexTile = null
