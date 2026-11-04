@@ -57,3 +57,5 @@
 - 出征场景（UI替换美术 12:17，UI设计线程决策卡，推荐 A）：A 营门 · 清晨（木门楼，木牌挂走道梁下）/ B 驿亭 · 午后（营外路口，木牌挂驿亭檐梁下）/ C 石门 · 黄昏（石砌门楼 + 火盆，深色调）；材料 `/mnt/project-files/art/ui/scene271/`，按 A 预备的定稿已在 `final/home/scene_expedition.png` + `.json`。
 
 **作者定稿（2026-11-03）**：光标按下帧 12:42 选 **B 整手压低**，三套材质定稿 `art/ui/cursors/press271/final/` 已交执行覆盖占位；出征场景 12:48 选 **A 营门 · 清晨**（tone light），定稿 `art/ui/scene271/final/home/scene_expedition.png` + `.json` 已交执行，代码不用动。
+
+**美术定稿落地**：光标按下帧 B 三套 v4.97 PR #407；出征场景 A 营门 · 清晨 v4.98 PR #408（家的套件图数 11 → 12）。271 收口。
