@@ -935,12 +935,12 @@ func show_variants(tile: CodexTile) -> void:
 
 
 ## 异体窗放哪：格子下面放得下就放下面，放不下翻到格子上面；左右夹在屏内（游戏测试 11-04：下排格子点开出屏、【关闭】只露一半 —— 以前按固定 400×200 夹）
-static func variants_spot(tile: Rect2, pop: Vector2, screen: Vector2) -> Vector2:
+static func variants_spot(tile: Rect2, pop: Vector2, p_screen: Vector2) -> Vector2:
 	const GAP := 6.0
 	var y := tile.end.y + GAP
-	if y + pop.y > screen.y:
+	if y + pop.y > p_screen.y:
 		y = tile.position.y - GAP - pop.y
-	return Vector2(clampf(tile.position.x, 0.0, maxf(0.0, screen.x - pop.x)), clampf(y, 0.0, maxf(0.0, screen.y - pop.y)))
+	return Vector2(clampf(tile.position.x, 0.0, maxf(0.0, p_screen.x - pop.x)), clampf(y, 0.0, maxf(0.0, p_screen.y - pop.y)))
 
 
 func close_variants() -> void:
