@@ -53,7 +53,16 @@ func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 	_drag = drag
 	_build()
 	_run.board.changed.connect(_refresh_readout)
+	_run.board.changed.connect(_refresh_fusions)
 	_refresh_readout()
+	_refresh_fusions()
+
+
+## 279 拼接：贴着、配得上的两件接缝上画小锤（棋盘一变就重找）
+func _refresh_fusions() -> void:
+	var crafting := CraftingModule.of(_run)
+	if board_view != null:
+		board_view.fusions = crafting.fusion_pairs() if crafting != null else ([] as Array[Dictionary])
 
 
 func _build() -> void:
@@ -103,6 +112,7 @@ func _build() -> void:
 		_drag.craft_note = func(a: ItemInstance, b: ItemInstance) -> String:     # 140：预览旁边那行小字
 			return crafting.note_of(a.def, b.def)
 		crafting.done.connect(_on_crafted)
+		board_view.fuse_requested.connect(func(_v: InventoryView, a: int, b: int) -> void: crafting.fuse(a, b))     # 279：点锤合
 	# 175 第三批：铸牌压到武器上放手 = 附魔（任何格子容器里都行；铸牌已经拿在手上）
 	_drag.enchant_drop = func(token: ItemInstance, grid: GridInventory, weapon_uid: int) -> bool:
 		return InventoryService.enchant(token, null, grid, weapon_uid)

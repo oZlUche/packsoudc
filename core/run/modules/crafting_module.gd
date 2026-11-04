@@ -96,6 +96,52 @@ func craft(a: ItemInstance, b_uid: int) -> Dictionary:
 	return detail
 
 
+## 279 拼接：棋盘上贴着、能拼的每一对（[method Fusion.pairs]）；没棋盘 / 没配方 = 空
+func fusion_pairs() -> Array[Dictionary]:
+	if _run == null or _run.board == null:
+		return [] as Array[Dictionary]
+	return Fusion.pairs(_run.board, recipes)
+
+
+## 279 拼接（待定 2：点锤合）：棋盘上贴着的 [param a_uid]、[param b_uid] 两件有拼接配方 —— 两件消失，产物落在两件原来的占格里；
+## 落不下在棋盘上找位，再不行到地上并提醒。不贴着、没配方、产物没地方去：棋盘原样不动。返回与 [method craft] 同样的字典，成了发一次 [signal done]
+func fuse(a_uid: int, b_uid: int) -> Dictionary:
+	var failed := {"ok": false, "output": "", "where": "", "log": []}
+	var board: GridInventory = _run.board if _run != null else null
+	if board == null:
+		return failed
+	var pair: Dictionary = {}
+	for p in Fusion.pairs(board, recipes):
+		if (int(p["a"]) == a_uid and int(p["b"]) == b_uid) or (int(p["a"]) == b_uid and int(p["b"]) == a_uid):
+			pair = p
+			break
+	if pair.is_empty():
+		return failed
+	var a := board.get_item(a_uid)
+	var b := board.get_item(b_uid)
+	var out_def := _run.items.get_def(StringName(pair["output"])) if _run.items != null else null
+	if out_def == null:
+		return failed
+	var names := [Names.of(a.def), Names.of(b.def), Names.of(out_def)]
+	var where := "board"
+	if Fusion.fuse(board, a_uid, b_uid, out_def) == null:
+		var out := ItemInstance.create(out_def, 0)
+		if _run.storage == null or not _run.storage.admit(out):
+			return failed
+		board.begin_batch()
+		board.remove(a_uid)
+		board.remove(b_uid)
+		board.end_batch()
+		where = "storage"
+	var lines: Array = [UiText.t("craft.done") % names]
+	if where == "storage":
+		lines.append(UiText.t("craft.to_ground"))
+	var detail := {"ok": true, "output": String(out_def.id), "where": where, "log": lines}
+	_run.tally["crafts"] = int(_run.tally.get("crafts", 0)) + 1     # 224：结算账单「合成」
+	done.emit(detail)
+	return detail
+
+
 ## 配方是内容、合成的结果在棋盘上，模块自己没有要存的状态
 func to_dict() -> Dictionary:
 	return {}
