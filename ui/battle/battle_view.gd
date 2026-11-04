@@ -23,6 +23,8 @@ signal speed_changed(speed: float)
 signal reaction_shown(id: StringName, side: int)
 ## 231：一条事件照常播到了画面上（跳转、跳过补的那些不发）—— 战斗屏的双剑铜章跟着它动
 signal event_applied(e: BattleEvent)
+## 272：玩家按「战记」键收起 / 展开了战记栏（战斗屏接它写回设置）
+signal log_toggled(open: bool)
 
 const SPEEDS := GameSettings.BATTLE_SPEEDS
 ## 167：倍速按钮上的罗马数字（缺图时写它，悬浮窗也写它；不写阿拉伯数字）
@@ -48,7 +50,12 @@ var _overlays: Array[CooldownOverlay] = []
 var _board_slots: Array[Control] = []
 ## 棋盘在回放里的缩放。157 补充一（作者定：去掉文字播报、放大棋盘）：0.5 → 1.0，格子和战前准备一样 60 像素
 const BOARD_SCALE := 1.0
+## 272（卡上推荐 B）：铜面板里战记栏开着时，棋盘缩到 2/3（格子 40 像素）腾出栏位；收起回 [constant BOARD_SCALE]
+const LOG_BOARD_SCALE := 2.0 / 3.0
+## 272：铜面板里战记栏的高（六行左右；面板仍放得进 1000 高）
+const LOG_HEIGHT := 106.0
 var _cursor: int = 0
+var _result_was: BattleResult = null
 var _now: float = 0.0
 var _playing: bool = false
 var _speed_idx: int = 0
@@ -62,10 +69,18 @@ var _clock: Label
 ## 计时 + 胜负那一行（作者 2026-10-17：游戏里的战斗屏不给玩家看，[method set_header_visible]；回放浏览器 / 沙盒照显示）
 var _header: HBoxContainer
 var _verdict: Label
-## 逐条的文字播报：157 补充一起正式游戏不显示（[member show_ticker] 假 = 不建），回放浏览器（开发工具）开着
+## 272 战记：逐条的人话记录（[BattleNarrator] 写的行），深底卷栏；[member log_open] 收合
 var _ticker: RichTextLabel = null
-## 进树之前设；真 = 建文字播报（回放浏览器）
-var show_ticker: bool = false
+var _log_box: PanelContainer = null
+var _log_btn: IconButton = null
+## 战记栏开着没有（进树之前设 = 开场的样子；之后改走 [method set_log_open]）
+var log_open: bool = true
+## 这一场的战记行（[method BattleNarrator.lines]，名字变了重算）与贴到了第几行
+var _lines: Array[Dictionary] = []
+var _lines_dirty := true
+var _line_next := 0
+## 两方法杖轮读的晶石（uid → [晶石 uid…]），战记把法杖写成「法杖·晶石」
+var _loads := [{}, {}]
 ## 铜面板三屏（UI替换美术 bronze3 `battle_arena`，作者 2026-10-21 16:15；进树之前设，战斗屏给）：斗技场图整张铺满（cover、顶对齐，看台在铭牌背后），
 ## 条与状态小标直接压在图上（[member CombatantPanel.bronze]），两块棋盘套深色外框（[BoardFrame]），时间轴贴着场地下沿
 var bronze: bool = false
@@ -131,6 +146,10 @@ func play(result: BattleResult, names: Array = []) -> void:
 			secs[uid] = StatMath.to_float(int(raw[uid]))
 		_overlays[i].reset(secs)
 		_overlays[i].now = 0.0
+	if _result_was != result:
+		_lines_dirty = true
+	_result_was = result
+	_line_next = 0
 	if _ticker != null:
 		_ticker.clear()
 	_verdict.text = ""
@@ -248,15 +267,70 @@ func set_board(side: int, board: GridInventory) -> void:
 		return
 	var view := _boards[side]
 	view.inventory = board
-	_board_slots[side].custom_minimum_size = view.custom_minimum_size * BOARD_SCALE
+	_board_slots[side].custom_minimum_size = view.custom_minimum_size * board_scale()
+	view.scale = Vector2.ONE * board_scale()
 	_board_slots[side].visible = true
 	if _board_slots[side].get_parent() is BoardFrame:
 		(_board_slots[side].get_parent() as Control).visible = true
 
 
-## 文字播报（没开 null）
+## 272 战记栏的字
 func ticker() -> RichTextLabel:
 	return _ticker
+
+
+## 272：战记栏（深底卷栏）
+func log_box() -> PanelContainer:
+	return _log_box
+
+
+func log_button() -> IconButton:
+	return _log_btn
+
+
+## 272：这一场的战记行（名字表变了才重算）
+func log_lines() -> Array[Dictionary]:
+	if _lines_dirty and _result != null:
+		var item_names: Array = []
+		for p in _panels:
+			item_names.append(p.item_names)
+		_lines = BattleNarrator.lines(_result, _names, item_names, _loads)
+		_lines_dirty = false
+	return _lines
+
+
+## 战记栏里现在贴了几行
+func log_shown() -> int:
+	return _line_next
+
+
+## 272：收起 / 展开战记栏（铜面板里棋盘跟着缩放）；[param user] 真 = 玩家按的键（发 [signal log_toggled]）
+func set_log_open(v: bool, user: bool = false) -> void:
+	log_open = v
+	if _log_box != null:
+		_log_box.visible = v
+	_apply_board_scale()
+	if _log_btn != null:
+		_log_btn.modulate = Color.WHITE if v else Color(1, 1, 1, 0.6)
+	if user:
+		log_toggled.emit(v)
+
+
+func toggle_log() -> void:
+	set_log_open(not log_open, true)
+
+
+## 棋盘现在的缩放（铜面板里战记开着就缩）
+func board_scale() -> float:
+	return LOG_BOARD_SCALE if bronze and log_open else BOARD_SCALE
+
+
+func _apply_board_scale() -> void:
+	var k := board_scale()
+	for i in _boards.size():
+		_boards[i].scale = Vector2.ONE * k
+		if _boards[i].inventory != null:
+			_board_slots[i].custom_minimum_size = _boards[i].custom_minimum_size * k
 
 
 func board_view(side: int) -> InventoryView:
@@ -272,6 +346,14 @@ func overlay(side: int) -> CooldownOverlay:
 func set_item_names(side: int, names: Dictionary) -> void:
 	if side >= 0 and side < _panels.size():
 		_panels[side].item_names = names
+		_lines_dirty = true
+
+
+## 272：一方法杖轮读的晶石（法杖 uid → [晶石 uid…]，[method CombatantSpec.loads_of]）
+func set_loads(side: int, loads: Dictionary) -> void:
+	if side >= 0 and side < _loads.size():
+		_loads[side] = loads
+		_lines_dirty = true
 
 
 ## 157：一方的名牌放在它的面板顶上（战斗屏给；沙盒、回放浏览器不给就没有）
@@ -454,6 +536,22 @@ func _drain_until(t: float) -> void:
 		_cursor += 1
 		if _held and not _suppress_popups:
 			break     # 220：这一条把回放停住了（反应解释）—— 后面的等放开再走，不在停着时偷跑
+	_flush_log(_cursor - 1)
+
+
+## 272：把引出事件已经放过（下标 ≤ [param upto]）的战记行贴上去
+func _flush_log(upto: int) -> void:
+	if _ticker == null or _result == null:
+		return
+	var all := log_lines()
+	var tone := UiTheme.tone_at(_ticker)
+	var added := false
+	while _line_next < all.size() and int(all[_line_next]["at"]) <= upto:
+		_ticker.append_text(UiTheme.ink_bbcode(String(all[_line_next]["text"]), tone) + "\n")
+		_line_next += 1
+		added = true
+	while added and _ticker.get_paragraph_count() > BattleNarrator.MAX_LINES + 1:
+		_ticker.remove_paragraph(0)
 
 
 ## 遮罩的进度是回放时刻的纯函数：倍速、跳转都只是 _now 变了
@@ -487,6 +585,7 @@ func _finish() -> void:
 	)
 	_timeline.cursor = _result.duration_sec()
 	_report.text = report_of(_result, _names)     # 157：收尾战报（跳过也出）
+	_flush_log(_result.log.size())     # 272：战记末行 = 战报
 	_report.visible = not _report_hidden
 	_sync_buttons()
 	if result_cue(_result) != &"":
@@ -494,17 +593,9 @@ func _finish() -> void:
 	finished.emit()
 
 
-## 157：收尾战报：几秒、双方各造成多少（日志里伤害的数逐条累加，治疗不算）、谁打倒了谁
+## 157：收尾战报：几秒、双方各造成多少、谁打倒了谁（272 起是战记的末行，[method BattleNarrator.report]）
 static func report_of(result: BattleResult, names: Array) -> String:
-	var dealt := [0, 0]     # 下标 = 打出的一方
-	for e in result.log:
-		var ev := e as BattleEvent
-		if ev.name == BattleEvent.DAMAGE and ev.side >= 0 and ev.side <= 1 and ev.get_int(&"amount") > 0:
-			dealt[1 - ev.side] += StatMath.to_int(ev.get_int(&"amount"))
-	var end := UiText.t("battle.draw")
-	if not result.is_draw():
-		end = UiText.t("battle.defeated") % [names[result.winner], names[1 - result.winner]]
-	return UiText.t("battle.report") % [result.duration_sec(), names[0], dealt[0], dealt[1], names[1], dealt[1], end]
+	return BattleNarrator.report(result, names)
 
 
 ## 157：倍速 ≥ 4 时三种反馈按倍速缩短（不叠加，新的一下打断上一下）
@@ -567,9 +658,6 @@ func _apply(e: BattleEvent) -> void:
 			if e.side >= 0 and e.side < _panels.size():
 				_panels[e.side].mark_dead()
 				_sfx(&"battle.fall")
-		BattleEvent.DISPATCH_OVERFLOW:
-			_log_line(e.time, "[color=#e0a030]派发超限，内容可能配出了死循环[/color]")
-	_log_event(e)
 	if not _suppress_popups:
 		event_applied.emit(e)
 
@@ -643,61 +731,6 @@ static func reaction_color(e: BattleEvent) -> Color:
 	return UiPalette.damage_color(StringName(String(els[0]))) if not els.is_empty() else UiPalette.CRIT
 
 
-## 事件条。回放时最有用的其实不是血条，而是「刚才到底发生了什么」——
-## 内容配错时这一栏比血条先告诉你。
-func _log_event(e: BattleEvent) -> void:
-	if _ticker == null:
-		return     # 237：正式游戏没有播报栏，每条事件的字都不必拼（_log_line 本来就会早退，拼字白拼）
-	match e.name:
-		BattleEvent.DAMAGE:
-			var amt := StatMath.to_int(absi(e.get_int(&"amount")))
-			if amt == 0 and e.get_int(&"absorbed") == 0:
-				return
-			var bits: Array[String] = []
-			if e.get_int(&"absorbed") > 0:
-				bits.append("甲挡 %d" % StatMath.to_int(e.get_int(&"absorbed")))
-			if e.get_int(&"block") > 0:
-				bits.append("格挡 %d" % StatMath.to_int(e.get_int(&"block")))
-			var tail := ("（%s）" % "、".join(bits)) if not bits.is_empty() else ""
-			var color := UiPalette.damage_color(e.get_name(&"type")).to_html(false)
-			_log_line(e.time, "[color=#%s]%s %s %d%s%s[/color]" % [
-				color, _side_name(e.side),
-				"回复" if e.get_int(&"amount") < 0 else "受到",
-				amt, "（暴击）" if e.get_bool(&"crit") else "", tail,
-			])
-		BattleEvent.STATUS_STACKED:
-			_log_line(e.time, "%s 叠加 %s → %d 层" % [
-				_side_name(e.side), e.get_name(&"buff"), e.get_int(&"stacks")])
-		BattleEvent.DIED:
-			_log_line(e.time, "[color=#d9534f]%s 倒下[/color]" % _side_name(e.side))
-		BattleEvent.EFFECT_RESOLVED:
-			if String(e.payload.get("effect", "")) == ReactionResolver.EFFECT:
-				_log_line(e.time, "[color=#%s]%s 身上引发【%s】[/color]" % [reaction_color(e).to_html(false), _side_name(e.side), reaction_label(e)])
-		BattleEvent.OVERTIME_STACKED:
-			if e.get_int(&"count") == 1:
-				_log_line(e.time, "[color=#e0b45c]鏖战开始：双方受到的最终伤害 +%d%%，隔一段再叠一次[/color]" % e.get_int(&"percent"))
-		BattleEvent.AXIS_SHIFTED:
-			if not e.get_bool(&"system"):
-				var a := e.get_name(&"axis")
-				_log_line(e.time, "%s %s %+d 层 → %d" % [_side_name(e.side), StatAxes.name_of(a, e.get_int(&"delta")), e.get_int(&"delta"), e.get_int(&"stacks")])
-		BattleEvent.DECAY_STARTED:
-			_log_line(e.time, "[color=#e0b45c]衰竭开始：双方的生命上限持续下降，直到一方倒下[/color]")
-
-
-## 时间戳取【事件自己的时刻】，不是播放光标 ——
-## 跳转时一次补上几十条，用光标的话它们会全挤成同一个时间。
-func _log_line(at: int, text: String) -> void:
-	if _ticker == null:
-		return     # 157 补充一：正式游戏不播报
-	_ticker.append_text(UiTheme.ink_bbcode(
-		"[color=#5d6470]%5.2f[/color]  %s\n" % [StatMath.to_float(at), text], UiTheme.tone_at(_ticker)
-	))
-	if _ticker.get_line_count() > 200:
-		_ticker.clear()
-
-
-func _side_name(side: int) -> String:
-	return _names[side] if side >= 0 and side < _names.size() else "全局"
 #endregion
 
 
@@ -770,21 +803,30 @@ func _build() -> void:
 		_boards.append(board)
 		_overlays.append(o)
 
-	if show_ticker:
-		_ticker = RichTextLabel.new()
-		_ticker.bbcode_enabled = true
-		_ticker.scroll_following = true
-		_ticker.custom_minimum_size = Vector2(0, 90)
-		_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
-		UiTheme.set_tone(_ticker, on_bg)
-		_ticker.set_meta(&"exempt_bare_text", "dev")     # 226 守门：播报只在开发工具的回放浏览器里有
-		root.add_child(_ticker)
+	# 272 战记：棋盘下方、控制条上方一栏深底卷栏（铜面板定高 [constant LOG_HEIGHT]；开发工具里撑满剩下的高）
+	_log_box = PanelContainer.new()
+	_log_box.theme_type_variation = UiTheme.PANEL_TOOLTIP     # 实底深色（和悬浮窗同一块底）：压在沙地上也读得清
+	UiTheme.apply_tone(_log_box, UiTheme.PANEL_TOOLTIP)
+	if bronze:
+		_log_box.custom_minimum_size = Vector2(0, LOG_HEIGHT)
 	else:
-		var spacer := Control.new()     # 157 补充一：播报那块空间让给棋盘，控制条压在底下
+		_log_box.custom_minimum_size = Vector2(0, 90)
+		_log_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(_log_box)
+	_ticker = RichTextLabel.new()
+	_ticker.bbcode_enabled = true
+	_ticker.scroll_following = true
+	_ticker.selection_enabled = false
+	_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
+	_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	UiTheme.set_tone(_ticker, UiTheme.TONE_DARK)
+	_log_box.add_child(_ticker)
+	if bronze:
+		var spacer := Control.new()     # 157 补充一：剩下的高让给棋盘，控制条压在底下
 		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		root.add_child(spacer)
+		root.move_child(spacer, _log_box.get_index())
 
 	# 157：播放键 · 时间轴（可拖）· 倍速与跳过在杆的右端；播完了在下面出战报。
 	# 167：三个键是符石图（[method IconButton.make_art]），缺图写字；原来那行说明挪进播放键的悬浮窗
@@ -802,6 +844,9 @@ func _build() -> void:
 	bar.add_child(_speed_btn)
 	_skip_btn = IconButton.make_art(art_dir, "skip", UiText.t("battle.skip"), UiText.t("battle.skip_tip"), skip_to_end)
 	bar.add_child(_skip_btn)
+	_log_btn = IconButton.make_art(art_dir, "log", UiText.t("battle.log"), UiText.t("battle.log_tip"), toggle_log)     # 272：占位图，定稿由 UI替换美术 出
+	bar.add_child(_log_btn)
+	set_log_open(log_open)
 	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)
 	_report.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_report.visible = false

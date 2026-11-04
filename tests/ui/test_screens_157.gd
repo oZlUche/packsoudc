@@ -183,9 +183,14 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	t.check(not view.panel(0).show_title and not view.panel(1).show_title, "作者 2026-10-13：有名牌就不在面板顶上再写名字那一行")
 	t.check(screen.overlay_frame().bronze and view.bronze and view.panel(0).bronze and view.panel(1).bronze, "铜面板三屏：回放是铜面板，条和状态小标压在斗技场图上")
 	t.eq(view.find_children("*", "BoardFrame", true, false).filter(func(n): return (n as Control).visible).size(), 2, "回放里两块棋盘也套外框")
-	t.eq(view.ticker(), null, "157 补充一：正式游戏的回放没有文字播报")
-	t.check(view.board_view(0) != null and view.board_view(0).scale == Vector2.ONE, "棋盘不缩（格子和战前一样大）")
-	t.check(not view.find_children("*", "RichTextLabel", true, false).any(func(r): return (r as RichTextLabel).scroll_following), "树里没有滚动的播报框")
+	t.check(view.ticker() != null and view.log_box().is_visible_in_tree(), "272：正式游戏的回放有战记栏（默认开）")
+	t.check(view.board_view(0) != null and is_equal_approx(view.board_view(0).scale.x, BattleView.LOG_BOARD_SCALE), "272 B：战记开着，棋盘缩到 2/3")
+	view.toggle_log()
+	t.check(not view.log_box().visible and view.board_view(0).scale == Vector2.ONE, "收起战记：棋盘回原大（格子和战前一样大）")
+	t.check(not flow.settings.battle_log_open, "收起记进设置")
+	t.check(screen.overlay_frame().get_combined_minimum_size().y <= FIT_HEIGHT - HudHost.bar_height_in(root.get_tree()), "收起后面板照样放得下")
+	view.toggle_log()
+	t.check(view.log_box().visible and flow.settings.battle_log_open, "再按：展开、记进设置")
 	var damage := 0
 	var deaths := 0
 	for e in result.log:
@@ -545,13 +550,12 @@ static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
 
 
 static func frame_replay_ticker_option(t: TestCase, root: Window) -> void:
-	t.begin("157 补充一 · 回放浏览器（开发工具）照旧有逐条播报：show_ticker 真才建")
+	t.begin("272 · 回放浏览器（开发工具）与正式游戏同一个战记栏：log_open 假 = 收着、真 = 开着")
 	var view := BattleView.new()
-	view.show_ticker = true
+	view.log_open = false
 	root.add_child(view)
-	t.check(view.ticker() != null and view.ticker().is_inside_tree(), "开了：播报在树里")
+	t.check(view.ticker() != null and not view.log_box().visible, "进树前收着：栏在、不显示")
+	view.set_log_open(true)
+	t.check(view.log_box().visible and view.ticker().is_inside_tree(), "开了：战记在树里")
+	t.eq(view.board_scale(), BattleView.BOARD_SCALE, "非铜面板（开发工具）棋盘不缩")
 	view.free()
-	var plain := BattleView.new()
-	root.add_child(plain)
-	t.eq(plain.ticker(), null, "默认：不建")
-	plain.free()

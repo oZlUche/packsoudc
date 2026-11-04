@@ -77,7 +77,7 @@ func _build() -> void:
 	_title = _label("左边挑一场", 16, UiPalette.FG)
 	right.add_child(_title)
 	view = BattleView.new()
-	view.show_ticker = true     # 157 补充一：开发工具保留逐条播报
+	view.log_open = true     # 272：开发工具也有战记（同一个 BattleNarrator）
 	view.label_font = _font
 	view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	view.size_flags_horizontal = Control.SIZE_EXPAND_FILL

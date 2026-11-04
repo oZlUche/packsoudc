@@ -21,6 +21,8 @@ const STYLE_NAMES := ["fg", "dim", "hp", "armor", "stamina", "mana", "heal", "gr
 const STYLE_PREFIX := "@"
 ## 112：道具名按稀有度上色用的颜色名前缀（`@rarity0`～`@rarity5`），界面按 [ItemPainter] 的稀有度色换
 const RARITY_STYLE := "rarity"
+## 272：`[color=@dmg_<伤害类型>]` 按伤害类型上色（字色模板的 damage 表）
+const DAMAGE_STYLE := "dmg_"
 
 ## 112（作者定）：**带类型的占位符，颜色跟着类型走** —— 作者只写一个记号，不用手工包 `{c:…}`。
 ## 前缀 → 颜色名（`item` 例外：按那件道具的稀有度）。全表见 docs/text-placeholders.md

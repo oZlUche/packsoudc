@@ -59,6 +59,8 @@ var music_volume: float = 0.6
 var text_size: StringName = &"medium"
 ## 260 补充六（作者 2026-10-29 16:11）：家页军功碑碑额的写法 —— true 罗马数字（默认）、false 阿拉伯数字带 K / M / B；点碑额切换
 var stele_roman: bool = true
+## 272（作者 2026-11-04）：战斗屏的战记栏开着没有（默认开；控制条上的「战记」键收合，下一场照这个）
+var battle_log_open: bool = true
 
 const TEXT_SIZES: Array[StringName] = [&"small", &"medium", &"large"]
 
@@ -105,6 +107,7 @@ func to_dict() -> Dictionary:
 		"music_volume": music_volume,
 		"text_size": String(text_size),
 		"stele_roman": stele_roman,
+		"battle_log_open": battle_log_open,
 	}
 
 
@@ -137,6 +140,7 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	var tier := StringName(String(d.get("text_size", "medium")))
 	s.text_size = tier if TEXT_SIZES.has(tier) else &"medium"
 	s.stele_roman = bool(d.get("stele_roman", true))
+	s.battle_log_open = bool(d.get("battle_log_open", true))
 	return s
 
 
