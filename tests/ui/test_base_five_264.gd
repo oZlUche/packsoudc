@@ -13,7 +13,7 @@ static func _flow() -> GameFlow:
 
 
 static func frame_expedition_page(t: TestCase, root: Window) -> void:
-	t.begin("264 §二 · 出征页：第一个页签、默认选中；碑在左、上回出征 / 军需两块木牌与【开始探索】在右；左下只剩回主菜单；单选；Esc 别页回出征、出征回主菜单")
+	t.begin("264 §二 · 出征页：第一个页签、默认选中；碑在左、上回出征 / 军需两块木牌与【开始探索】在右；回主菜单在右下（280）；单选；Esc 别页回出征、出征回主菜单")
 	var f := _flow()
 	var screen = Records._screen(f, root)
 	t.eq(screen._tab_btns.keys()[0], "expedition", "出征是第一个页签")
@@ -29,7 +29,10 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	t.check(board.last_plate.custom_minimum_size == Vector2(560, 200) and board.supply_plate.custom_minimum_size == Vector2(560, 260), "两块木牌 560 × 200、560 × 260")
 	var left: Control = (screen._tab_btns["expedition"] as Button).get_parent()
 	var keys: Array = left.find_children("*", "Button", true, false).filter(func(b): return (b as Button).is_visible_in_tree()).map(func(b): return (b as Button).text)
-	t.check(not keys.has("再来一局") and not keys.has("开始探索") and keys.has("回主菜单"), "左列：页签 + 回主菜单（%s）" % [keys])
+	t.check(not keys.has("再来一局") and not keys.has("开始探索") and not keys.has("回主菜单"), "左列只剩页签（%s）" % [keys])
+	var menu: Button = screen.get_node("MainMenuButton")
+	var corner: Vector2 = root.get_visible_rect().size - Vector2(screen.MARGIN, screen.MARGIN)
+	t.check(menu.text == "回主菜单" and menu.get_global_rect().end.distance_to(corner) < 2.0, "280 B：回主菜单钉在右下（%s）" % [menu.get_global_rect()])
 	t.check(not screen._right.visible, "出征页收起右半边（碑 + 木牌要整个中列）")
 	var full: Vector2 = root.get_visible_rect().size
 	t.check(page.get_combined_minimum_size().x <= screen.middle_width(full), "碑 + 木牌放得进中列（%.0f ≤ %.0f）" % [page.get_combined_minimum_size().x, screen.middle_width(full)])
