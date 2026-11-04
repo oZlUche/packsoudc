@@ -1,0 +1,9 @@
+{
+  "id": "fuse_pole_axe",
+  "inputs": [
+    "wooden_stick",
+    "hand_axe"
+  ],
+  "output": "pole_axe",
+  "adjacent": true
+}

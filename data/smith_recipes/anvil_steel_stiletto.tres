@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_pfxpw"]
+
+[resource]
+script = ExtResource("1_pfxpw")
+id = &"anvil_steel_stiletto"
+output = &"steel_stiletto"
+inputs = {
+"quenched_dagger": 1
+}
+material_inputs = {
+"metal": 1
+}
+funds = 60
+group = "blade"

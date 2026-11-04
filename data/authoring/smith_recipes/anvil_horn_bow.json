@@ -1,0 +1,12 @@
+{
+  "id": "anvil_horn_bow",
+  "output": "horn_bow",
+  "inputs": {
+    "shortbow": 1
+  },
+  "material_inputs": {
+    "bone": 1
+  },
+  "funds": 60,
+  "group": "bow"
+}

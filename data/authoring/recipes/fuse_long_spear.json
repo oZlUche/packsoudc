@@ -1,0 +1,9 @@
+{
+  "id": "fuse_long_spear",
+  "inputs": [
+    "wooden_stick",
+    "shortsword"
+  ],
+  "output": "long_spear",
+  "adjacent": true
+}

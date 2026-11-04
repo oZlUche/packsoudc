@@ -1,0 +1,12 @@
+{
+  "id": "anvil_halberd",
+  "output": "halberd",
+  "inputs": {
+    "pole_axe": 1
+  },
+  "material_inputs": {
+    "metal": 1
+  },
+  "funds": 60,
+  "group": "blade"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "anvil_steel_axe",
+  "output": "steel_axe",
+  "inputs": {
+    "battle_axe": 1
+  },
+  "material_inputs": {
+    "metal": 1
+  },
+  "funds": 60,
+  "group": "hammer"
+}

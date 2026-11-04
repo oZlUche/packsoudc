@@ -1,0 +1,12 @@
+{
+  "id": "anvil_bone_broadsword",
+  "output": "bone_broadsword",
+  "inputs": {
+    "broadsword": 1
+  },
+  "material_inputs": {
+    "bone": 1
+  },
+  "funds": 60,
+  "group": "blade"
+}

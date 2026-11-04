@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_y6255"]
+
+[resource]
+script = ExtResource("1_y6255")
+id = &"fuse_great_axe"
+inputs = Array[StringName]([&"felling_axe", &"whetstone"])
+output = &"great_axe"
+adjacent = true

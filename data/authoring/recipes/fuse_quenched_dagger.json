@@ -1,0 +1,9 @@
+{
+  "id": "fuse_quenched_dagger",
+  "inputs": [
+    "knife",
+    "whetstone"
+  ],
+  "output": "quenched_dagger",
+  "adjacent": true
+}

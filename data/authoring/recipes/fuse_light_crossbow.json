@@ -1,0 +1,9 @@
+{
+  "id": "fuse_light_crossbow",
+  "inputs": [
+    "hand_crossbow",
+    "wooden_stick"
+  ],
+  "output": "light_crossbow",
+  "adjacent": true
+}

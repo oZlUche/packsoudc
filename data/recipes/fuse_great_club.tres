@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_hnykw"]
+
+[resource]
+script = ExtResource("1_hnykw")
+id = &"fuse_great_club"
+inputs = Array[StringName]([&"club", &"club"])
+output = &"great_club"
+adjacent = true

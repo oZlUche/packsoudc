@@ -1,0 +1,12 @@
+{
+  "id": "anvil_barbarian_scimitar",
+  "output": "barbarian_scimitar",
+  "inputs": {
+    "scimitar": 1
+  },
+  "material_inputs": {
+    "bone": 1
+  },
+  "funds": 60,
+  "group": "blade"
+}

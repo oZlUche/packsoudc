@@ -1,0 +1,12 @@
+{
+  "id": "anvil_bloodletter",
+  "output": "bloodletter",
+  "inputs": {
+    "cleaver": 1
+  },
+  "material_inputs": {
+    "bone": 1
+  },
+  "funds": 60,
+  "group": "blade"
+}

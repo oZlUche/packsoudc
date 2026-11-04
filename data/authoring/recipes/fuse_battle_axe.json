@@ -1,0 +1,9 @@
+{
+  "id": "fuse_battle_axe",
+  "inputs": [
+    "hand_axe",
+    "whetstone"
+  ],
+  "output": "battle_axe",
+  "adjacent": true
+}

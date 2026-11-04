@@ -1,0 +1,9 @@
+{
+  "id": "fuse_stone_maul",
+  "inputs": [
+    "wooden_stick",
+    "flint"
+  ],
+  "output": "stone_maul",
+  "adjacent": true
+}

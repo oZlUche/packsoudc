@@ -1,0 +1,12 @@
+{
+  "id": "anvil_longbow",
+  "output": "longbow",
+  "inputs": {
+    "shortbow": 1
+  },
+  "material_inputs": {
+    "wood": 1
+  },
+  "funds": 60,
+  "group": "bow"
+}

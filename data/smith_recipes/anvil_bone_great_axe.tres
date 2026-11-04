@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_cwfit"]
+
+[resource]
+script = ExtResource("1_cwfit")
+id = &"anvil_bone_great_axe"
+output = &"bone_great_axe"
+inputs = {
+"great_axe": 1
+}
+material_inputs = {
+"bone": 1
+}
+funds = 60
+group = "hammer"

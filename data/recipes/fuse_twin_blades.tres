@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_ti3q4"]
+
+[resource]
+script = ExtResource("1_ti3q4")
+id = &"fuse_twin_blades"
+inputs = Array[StringName]([&"knife", &"knife"])
+output = &"twin_blades"
+adjacent = true
