@@ -76,7 +76,7 @@ static func run_art(t: TestCase) -> void:
 
 
 static func run_tiers(t: TestCase) -> void:
-	t.begin("246 §6.1 / §7.1：三品 = 蓝 / 紫 / 金，面值 150 / 320 / 650，供给 +6 / +9 / +13，每击一 / 一 / 两层；同元素同家族；清明、琥珀是通用中品")
+	t.begin("246 §6.1 / §7.1：三品 = 蓝 / 紫 / 金，面值 150 / 320 / 650，供给 +7 / +10 / +14（273），每击一 / 一 / 两层；同元素同家族；清明、琥珀是通用中品")
 	var db := _db()
 	var shape := {}
 	for e in ELEMS:
@@ -104,7 +104,7 @@ static func run_tiers(t: TestCase) -> void:
 			shape[d.shape.cells_rotated(0)] = true
 		t.eq(rar, [2, 3, 4] as Array[int], "%s：稀有度" % e)
 		t.eq(val, [150, 320, 650] as Array[int], "%s：面值" % e)
-		t.eq(feed, [6.0, 9.0, 13.0] as Array[float], "%s：供给" % e)
+		t.eq(feed, [7.0, 10.0, 14.0] as Array[float], "%s：供给" % e)
 		t.eq(stacks, [1, 1, 2] as Array[int], "%s：每击层数" % e)
 		t.eq(fam.size(), 1, "%s：三品一个家族" % e)
 		t.eq(shape.size(), 1, "三品一样的形状（敌人身上换品不挪位置）")

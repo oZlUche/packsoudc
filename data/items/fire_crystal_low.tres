@@ -24,7 +24,7 @@
 
 [sub_resource type="Resource" id="Resource_3xaj8"]
 script = ExtResource("1_dksiq")
-amount = 6.0
+amount = 7.0
 
 [sub_resource type="Resource" id="Resource_ekjx4"]
 script = ExtResource("3_hl4lq")

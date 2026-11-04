@@ -77,7 +77,10 @@ static func estimate(def: ItemDef, weights: PowerWeights = null, buffs: Dictiona
 		var hits := false
 		for e in r.effects:
 			if _is_base_effect(e):
-				out.base += hz * (e as DealDamage).estimated_damage(stats)
+				var per_hit := (e as DealDamage).estimated_damage(stats)
+				if e is FireLoaded and def.combat != null:
+					per_hit *= def.combat.power_mult     # 273：法杖的威力系数（木棍那一下也乘）
+				out.base += hz * per_hit
 				hits = true
 		if hits:
 			out.hz += hz
