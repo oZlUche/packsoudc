@@ -8,12 +8,12 @@ extends RefCounted
 
 ## 收信号用的小信箱。lambda 按值捕获局部变量，写不出去，所以用字典。
 static func _watch(v: Vitality) -> Dictionary:
-	var log := {"changed": []}
+	var log_ := {"changed": []}
 	v.changed.connect(
 		func(cur: int, mx: int, delta: int, reason: StringName) -> void:
-			(log["changed"] as Array).append([cur, mx, delta, String(reason)])
+			(log_["changed"] as Array).append([cur, mx, delta, String(reason)])
 	)
-	return log
+	return log_
 
 
 static func run(t: TestCase) -> void:
@@ -24,15 +24,15 @@ static func run(t: TestCase) -> void:
 	t.eq(v.maximum, 5, "上限就是传进来的那个")
 	t.check(v.is_full() and not v.is_depleted(), "满着，没空")
 
-	var log := _watch(v)
+	var log_ := _watch(v)
 
 	# --- 扣多少由调用方说了算，本类不认识任何一场战斗 ---
 	t.eq(v.spend(1, &"battle_lost"), 1, "扣 1 就是 1")
 	t.eq(v.current, 4, "剩 4")
 	t.eq(v.spend(2, &"elite_lost"), 2, "扣 2 就是 2")
 	t.eq(v.current, 2, "剩 2")
-	t.eq((log["changed"] as Array).size(), 2, "两次变动两条信号")
-	t.eq((log["changed"] as Array)[1], [2, 5, -2, "elite_lost"],
+	t.eq((log_["changed"] as Array).size(), 2, "两次变动两条信号")
+	t.eq((log_["changed"] as Array)[1], [2, 5, -2, "elite_lost"],
 		"信号带着当前值、上限、实际变化量与原因")
 
 	# --- 回多少同样由调用方说了算 ---
@@ -50,11 +50,11 @@ static func run_clamping(t: TestCase) -> void:
 	t.begin("体力 · 截断与实际变化量")
 
 	var v := Vitality.new(3)
-	var log := _watch(v)
+	var log_ := _watch(v)
 
 	# --- 回不过上限 ---
 	t.eq(v.restore(10, &"rest"), 0, "已经满了，实际回复 0")
-	t.eq((log["changed"] as Array).size(), 0, "**没变就不发信号** —— 界面不该为一次无事发生闪一下")
+	t.eq((log_["changed"] as Array).size(), 0, "**没变就不发信号** —— 界面不该为一次无事发生闪一下")
 
 	v.spend(1, &"x")
 	t.eq(v.restore(10, &"rest"), 1, "只差 1 格，实际只回 1 —— 请求量与实际量是两回事")
@@ -93,10 +93,10 @@ static func run_set_max(t: TestCase) -> void:
 	t.eq(v.current, 3, "当前值按新上限截断")
 
 	# --- 降到 0 也算归零 ---
-	var log := _watch(v)
+	var log_ := _watch(v)
 	v.set_max(0, &"cursed")
 	t.check(v.is_depleted(), "上限归零，人也就没了")
-	t.eq(((log["changed"] as Array).back() as Array)[3], "cursed", "变动的原因是调用方给的")
+	t.eq(((log_["changed"] as Array).back() as Array)[3], "cursed", "变动的原因是调用方给的")
 
 	# --- 没变就不动 ---
 	var still := Vitality.new(4)

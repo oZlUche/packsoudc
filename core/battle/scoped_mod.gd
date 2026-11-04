@@ -56,13 +56,13 @@ func matches(def: ItemDef, active: bool) -> bool:
 
 
 ## 从命中件里挑（[member pick] > 0 才挑）。[param uids] 要按 uid 升序传进来 ——
-## 挑的结果只由 [param seed] 与候选集决定，所以同一局拖动预估和真打挑的是同一批。
+## 挑的结果只由 [param p_seed] 与候选集决定，所以同一局拖动预估和真打挑的是同一批。
 ## Fisher-Yates 取前 pick 件（和搬家前 `enchant_weapons` 的抽法逐步相同）
-func choose(uids: Array[int], seed: int) -> Array[int]:
+func choose(uids: Array[int], p_seed: int) -> Array[int]:
 	if pick <= 0 or uids.size() <= pick:
 		return uids
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed
+	rng.seed = p_seed
 	var pool := uids.duplicate()
 	var out: Array[int] = []
 	for _i in pick:

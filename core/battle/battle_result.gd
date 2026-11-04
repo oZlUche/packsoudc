@@ -7,6 +7,7 @@ var winner: int = -1
 ## 战斗时长，定点秒
 var duration: int = 0
 ## 回放日志。[BattleView] 照它重演，「跳过」就是把游标推到末尾。
+@warning_ignore("shadowed_global_identifier")
 var log: Array[BattleEvent] = []
 
 ## 开战瞬间的状态快照。**回放的起点** ——

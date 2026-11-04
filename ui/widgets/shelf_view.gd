@@ -115,20 +115,20 @@ func piece_name(key: String, hover: bool = false) -> String:
 	for c in _cells:
 		if c["key"] != key:
 			continue
-		var name := ""
+		var name_ := ""
 		var tiers: Array = c["tiers"]
 		if not tiers.is_empty():
 			var p: Array = _progress.get(key, [0, 0])
-			name = String(tiers[mini(ShelfCell.tier_of(int(p[0]), int(p[1])), tiers.size() - 1)])
-			if UiTheme.art_cached(ART + name) == null:
-				name = String(tiers[0])     # 缺图退 t0
+			name_ = String(tiers[mini(ShelfCell.tier_of(int(p[0]), int(p[1])), tiers.size() - 1)])
+			if UiTheme.art_cached(ART + name_) == null:
+				name_ = String(tiers[0])     # 缺图退 t0
 		elif c["file"] != "":
-			name = c["file"]
+			name_ = c["file"]
 		elif c["still_life"] != "":
-			name = c["still_life"]
-		if name != "" and hover and UiTheme.art_cached(ART + name + "_hover") != null:
-			name += "_hover"
-		return name
+			name_ = c["still_life"]
+		if name_ != "" and hover and UiTheme.art_cached(ART + name_ + "_hover") != null:
+			name_ += "_hover"
+		return name_
 	return ""
 
 

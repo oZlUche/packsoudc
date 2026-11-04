@@ -31,11 +31,11 @@ static func _rules() -> EconomyRules:
 	return r
 
 
-static func _shop_node(seed: int = 5) -> MapNode:
+static func _shop_node(p_seed: int = 5) -> MapNode:
 	var n := MapNode.new()
 	n.id = 1
 	n.type = &"shop"
-	n.content_seed = seed
+	n.content_seed = p_seed
 	return n
 
 
@@ -43,8 +43,8 @@ static func run_wallet(t: TestCase) -> void:
 	t.begin("经济 · 钱包：进账、花钱、不够一分不动、存档往返")
 
 	var w := Wallet.new(10)
-	var log: Array = []
-	w.changed.connect(func(b: int, d: int, r: StringName): log.append([b, d, r]))
+	var log_: Array = []
+	w.changed.connect(func(b: int, d: int, r: StringName): log_.append([b, d, r]))
 	t.eq(w.earn(5, &"battle"), 5, "进账 5")
 	t.eq(w.balance, 15, "余额 15")
 	t.eq(w.earn(-3), 0, "负数按 0")
@@ -54,8 +54,8 @@ static func run_wallet(t: TestCase) -> void:
 	t.eq(w.balance, 0, "一分不动")
 	t.check(w.spend(0), "花 0 永远可以")
 	t.check(not w.spend(-1), "花负数不行")
-	t.eq(log.size(), 2, "只有真变了才发信号（进 5、花 15）")
-	t.eq(log[1], [0, -15, &"shop"], "信号带余额、实际变化量、原因")
+	t.eq(log_.size(), 2, "只有真变了才发信号（进 5、花 15）")
+	t.eq(log_[1], [0, -15, &"shop"], "信号带余额、实际变化量、原因")
 	t.eq(Wallet.from_dict(Wallet.new(42).to_dict()).balance, 42, "存档往返")
 	t.eq(Wallet.new(-5).balance, 0, "负的起始按 0")
 
@@ -185,7 +185,7 @@ static func run_shop(t: TestCase) -> void:
 	var sword := ItemInstance.create(items.get_def(&"longsword"))
 	t.check(s.sell_box.place(sword, Vector2i.ZERO, 0), "拖进出售区")
 	var sold_sig: Array = []
-	s.sold_item.connect(func(def: ItemDef, gain: int): sold_sig.append([def.id, gain]))
+	s.sold_item.connect(func(def: ItemDef, gain_: int): sold_sig.append([def.id, gain_]))
 	var before_sell := wallet.balance
 	var gain := s.sell(sword)
 	t.eq(gain, floori(float(s.price_of(sword.def)) * r.shop_sell_ratio), "得定价 × 出售比例")
@@ -230,13 +230,13 @@ static func run_shop(t: TestCase) -> void:
 	var sum_out := 0.0
 	var sum_in := 0.0
 	var n := 0
-	for seed in 300:
-		for slot in ShopSession.new(_shop_node(seed), r, items, Wallet.new(0), 0.0).stock:
+	for seed_ in 300:
+		for slot in ShopSession.new(_shop_node(seed_), r, items, Wallet.new(0), 0.0).stock:
 			sum_out += items.get_def(StringName(String(slot["id"]))).rarity
 			n += 1
 	var m := 0
-	for seed in 300:
-		for slot in ShopSession.new(_shop_node(seed), r, items, Wallet.new(0), 1.0).stock:
+	for seed_ in 300:
+		for slot in ShopSession.new(_shop_node(seed_), r, items, Wallet.new(0), 1.0).stock:
 			sum_in += items.get_def(StringName(String(slot["id"]))).rarity
 			m += 1
 	if r.shop_depth_gain > 0.0:
@@ -265,10 +265,10 @@ static func run_pipeline(t: TestCase) -> void:
 
 	var base := ContentExporter.export_economy_rules(r)
 	for bad in [["extract_fee", -1], ["shop_slots", 0], ["shop_price_mult", 0.0], ["reward_depth_gain", -0.5], ["paid_extracts", -1]]:
-		var d := base.duplicate(true)
-		d[bad[0]] = bad[1]
+		var d_ := base.duplicate(true)
+		d_[bad[0]] = bad[1]
 		rep = ImportReport.new()
-		ContentImporter.import_economy_rules(d, _ctx(), rep)
+		ContentImporter.import_economy_rules(d_, _ctx(), rep)
 		t.check(not rep.ok(), "%s = %s → 错" % [bad[0], bad[1]])
 	var noweight := base.duplicate(true)
 	noweight["shop_rarity_weights"] = [0, 0]

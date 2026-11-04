@@ -22,8 +22,8 @@ func gain(event: StringName, payload: Dictionary) -> int:
 
 func describe() -> String:
 	if not by_type.is_empty():
-		var parts: Array[String] = []
+		var parts_: Array[String] = []
 		for k in by_type:
-			parts.append("%s +%d" % [UiText.pick(TYPE_NAMES.get(String(k), null), String(k)), int(by_type[k])])
-		return (UiText.t("deed.battle_won_by_type") if won_only else UiText.t("deed.battle_by_type")) % UiText.t("hud.buff_sep").join(parts)
+			parts_.append("%s +%d" % [UiText.pick(TYPE_NAMES.get(String(k), null), String(k)), int(by_type[k])])
+		return (UiText.t("deed.battle_won_by_type") if won_only else UiText.t("deed.battle_by_type")) % UiText.t("hud.buff_sep").join(parts_)
 	return (UiText.t("deed.battle_won") if won_only else UiText.t("deed.battle_fought")) % amount

@@ -115,12 +115,12 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 				var buff := {"id": bid, "display_name": "%s（科技）" % t["name"], "description": t["template"], "scope": "META", "effects": [e]}
 				if t["en"] != "":
 					buff["display_names"] = {"en": "%s (Tech)" % t["en"]}
-				var report := ImportReport.new()
-				var def := ContentImporter.import_run_buff(buff, ctx, report)
-				if not report.ok():
-					problems.append("run_buffs/%s：按表生成的 JSON 导入不了：%s" % [bid, report.to_text()])
+				var report_ := ImportReport.new()
+				var def_ := ContentImporter.import_run_buff(buff, ctx, report_)
+				if not report_.ok():
+					problems.append("run_buffs/%s：按表生成的 JSON 导入不了：%s" % [bid, report_.to_text()])
 					continue
-				out[ContentPaths.authoring_file("run_buffs", bid)] = ContentExporter.export_run_buff(def)
+				out[ContentPaths.authoring_file("run_buffs", bid)] = ContentExporter.export_run_buff(def_)
 				buffs.append(bid)
 			effect["buffs"] = buffs
 		var tiers: Array = []

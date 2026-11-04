@@ -73,8 +73,8 @@ static func _path(g: MapGraph) -> Array[MapNode]:
 static func _finds_until(path: Array[MapNode], upto: int) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for i in mini(upto + 1, path.size()):
-		for round in path[i].content.get("search_finds", []):
-			for id in round:
+		for round_ in path[i].content.get("search_finds", []):
+			for id in round_:
 				out.append(StringName(String(id)))
 		for id in (path[i].content.get("encounter", {}) as Dictionary).get("guaranteed_drops", []):
 			out.append(StringName(String(id)))
@@ -147,8 +147,8 @@ static func run_data(t: TestCase) -> void:
 		if n.type == &"search" and n.content.has("encounter"):
 			_check_enemy_bags(t, c, n.content["encounter"], "点 %d 的遭遇" % n.id)
 		if n.type == &"search":
-			for round in n.content.get("search_finds", []):
-				for id in round:
+			for round_ in n.content.get("search_finds", []):
+				for id in round_:
 					t.not_null(c.items.get_def(StringName(String(id))), "固定收获 %s 存在" % id)
 	# 第一个搜索点：两次、必不遇敌；第二个：三次、至少三次、第三次必遇敌、遭遇写死
 	var s1 := path[1].content
@@ -187,9 +187,9 @@ static func run_data(t: TestCase) -> void:
 		var me := _player(c, _finds_until(path, int(f[1])))
 		var foe := EnemyKit.spec_of(f[0], c.enemies, null, c.items)
 		var wins := 0
-		for seed in range(1, 6):
+		for seed_ in range(1, 6):
 			var rng := RandomNumberGenerator.new()
-			rng.seed = seed
+			rng.seed = seed_
 			if BattleSim.run(me, foe, rng, 60.0).winner == 0:
 				wins += 1
 		t.eq(wins, 5, "带着到那时的收获能打赢 %s（五个种子全赢）" % f[0]["enemy"])
@@ -274,8 +274,8 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(s.events.choose(0), "再搜一次：第三次")
 	t.eq(session.encounter, path[3].content["encounter"], "第三次遭遇 = 写死的那个")
 	var expect_found := 0
-	for round in path[3].content["search_finds"]:
-		expect_found += (round as Array).size()
+	for round_ in path[3].content["search_finds"]:
+		expect_found += (round_ as Array).size()
 	t.eq(session.found.size(), expect_found, "遭遇那一次什么都没翻到（前两次共 %d 件）" % expect_found)
 	t.check(not session.active, "会话结束（遭遇）")
 	ev = s.events.pending_event()
@@ -286,7 +286,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.eq(s.phase, RunState.Phase.ON_MAP, "还在图上")
 	# 091（作者定）：打赢了会话接着开、还能再搜 —— 回到「再搜 / 走」那一屏（这里是教程的第二段 again 事件，搜满则是 done）
 	ev = s.events.pending_event()
-	t.check(ev != null and (ev.id == &"tut_search_2_again_2" or ev.id == &"search_done"), "打完回到「再搜 / 走」那一屏（%s）" % (ev.id if ev != null else "?"))
+	t.check(ev != null and (ev.id == &"tut_search_2_again_2" or ev.id == &"search_done"), "打完回到「再搜 / 走」那一屏（%s）" % (String(ev.id) if ev != null else "?"))
 	t.check(s.events.current_search == session and session.active and not path[3].is_visited(), "会话接着开、点还没用过（还能搜）")
 	var leave_at := 0
 	if ev != null:
@@ -306,7 +306,10 @@ static func run_walkthrough(t: TestCase) -> void:
 		s.take_all_loot()
 	for inst in s.storage.items().duplicate():
 		s.equip((inst as ItemInstance).uid)
-	t.eq(s.storage.item_count(), 0, "新搜到的都放进包里了（放不下的先不管）") if s.storage.item_count() == 0 else t.check(true, "（有放不下的，留在地上，走了就没）")
+	if s.storage.item_count() == 0:
+		t.eq(s.storage.item_count(), 0, "新搜到的都放进包里了（放不下的先不管）")
+	else:
+		t.check(true, "（有放不下的，留在地上，走了就没）")
 	# 精英（114）：先把毒药瓶拖到匕首上合成涂毒匕首，门才开
 	t.check(s.step_to(path[4].id), "走到精英")
 	ev = s.events.pending_event()
@@ -323,7 +326,10 @@ static func run_walkthrough(t: TestCase) -> void:
 	if not s.board.has_item(knife.uid):
 		s.equip(knife.uid)
 	var knife_home := knife.origin
-	(s.storage if s.storage.has_item(vial.uid) else s.board).remove(vial.uid)     # 拿在手上
+	if s.storage.has_item(vial.uid):     # 拿在手上
+		s.storage.remove(vial.uid)
+	else:
+		s.board.remove(vial.uid)
 	var made := CraftingModule.of(s).craft(vial, knife.uid)
 	t.check(bool(made["ok"]) and String(made["where"]) == "board", "拖到匕首上：立刻合成，落在棋盘上")
 	var pk := _find(s, &"poisoned_knife")

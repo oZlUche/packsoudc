@@ -65,10 +65,10 @@ static func run(t: TestCase) -> void:
 	var recipes := RecipeDef.load_all()
 	for out in RECIPES:
 		var pair: Array = RECIPES[out]
-		var r := RecipeDef.find(recipes, pair[0], pair[1])
-		t.not_null(r, "%s + %s 有配方" % pair)
-		if r != null:
-			t.eq(r.output, out, "→ %s" % out)
+		var r_ := RecipeDef.find(recipes, pair[0], pair[1])
+		t.not_null(r_, "%s + %s 有配方" % pair)
+		if r_ != null:
+			t.eq(r_.output, out, "→ %s" % out)
 		t.not_null(db.get_def(pair[1]), "%s 在库里" % pair[1])
 
 	t.begin("124 · 说明文字不写数字（TextLint）")
@@ -90,14 +90,14 @@ static func run(t: TestCase) -> void:
 	sets.load_dir()
 	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var kit: Array[StringName] = [&"bag_leather", &"bag_leather", &"ration"]
-	var run := RunState.start(chapter, 3, db, enemies, sets, kit)
-	var cm := CraftingModule.of(run)
+	var run_ := RunState.start(chapter, 3, db, enemies, sets, kit)
+	var cm := CraftingModule.of(run_)
 	t.not_null(cm, "有合成模块")
 	if cm == null:
 		return
 	cm.recipes = recipes
 	var ration: ItemInstance = null
-	for inst in run.board.items():
+	for inst in run_.board.items():
 		if (inst as ItemInstance).def.id == &"ration":
 			ration = inst
 	t.not_null(ration, "开局背包里有口粮")

@@ -15,7 +15,7 @@ func run() -> void:
 	var pool_id: String = args[1] if args.size() > 1 else "standard_ruins"
 	var difficulty_id: String = args[2] if args.size() > 2 else "ascension_3"
 	var fights := int(args[3]) if args.size() > 3 else 300
-	var seed := int(args[4]) if args.size() > 4 else 1
+	var seed_ := int(args[4]) if args.size() > 4 else 1
 	var date := Time.get_date_string_from_system()
 	var out_path: String = args[5] if args.size() > 5 else "%s/%s-%s.md" % [BalanceMatrix.OUT_DIR, date, pool_id]
 
@@ -36,13 +36,13 @@ func run() -> void:
 	var rules := ContentPaths.load_asset("node_rules", NODE_RULES) as NodeRules
 	var limit := rules.battle_time_limit if rules != null else BattleSim.DEFAULT_TIME_LIMIT
 	var started := Time.get_ticks_msec()
-	var result := BalanceMatrix.run(dummies, pool, enemies, items, fights, seed, limit, rules.overtime if rules != null else null)
+	var result := BalanceMatrix.run(dummies, pool, enemies, items, fights, seed_, limit, rules.overtime if rules != null else null)
 	var secs := (Time.get_ticks_msec() - started) / 1000.0
 	var header: Array[String] = [
 		"日期 %s，git %s" % [date, _git_hash()],
 		"木桩 `%s`（%d 份）" % [dummies_path, dummies.size()],
 		"敌人池 `%s`，难度 `%s`（段位表 %s），节点规则 `%s`（时限 %.0f 秒）" % [pool_id, difficulty_id, str(BalanceMatrix.brackets_of(difficulty_id)), NODE_RULES, limit],
-		"每格 %d 场，种子 %d，共用 %.0f 秒" % [fights, seed, secs],
+		"每格 %d 场，种子 %d，共用 %.0f 秒" % [fights, seed_, secs],
 	]
 	var md := BalanceMatrix.markdown(result, "扫表 %s · %s" % [date, pool_id], header)
 	DirAccess.make_dir_recursive_absolute(out_path.get_base_dir())

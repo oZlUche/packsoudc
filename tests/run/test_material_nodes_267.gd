@@ -94,14 +94,11 @@ static func run_draw_items(t: TestCase) -> void:
 	var floored := SearchSession.draw_items(sr, db, 0.5, 0, _rng(9), -1, [2, 2] as Array[int], {}, {}, KIND_TAGS["runes"], 0.0)
 	t.check(floored.size() >= 2 and floored.all(func(id): return SearchSession.in_kind(db.get_def(id), KIND_TAGS["runes"])), "有保底也从那一类里抽（%s）" % [floored])
 	var natural := 0
-	var magic := 0
 	for s in 200:
 		for id in SearchSession.draw_items(sr, db, 0.4, 0, _rng(900 + s), -1, [] as Array[int], {}, SearchSession.bias_table(&"nature")):
 			var d := db.get_def(id)
 			if SearchSession.is_material(d) and d.has_tag(&"nature"):
 				natural += 1
-			elif SearchSession.is_material(d) and d.has_tag(&"magic"):
-				magic += 1
 	var natural0 := 0
 	for s in 200:
 		for id in SearchSession.draw_items(sr, db, 0.4, 0, _rng(900 + s)):
@@ -228,14 +225,14 @@ static func run_tooltip(t: TestCase) -> void:
 	var s := RunState.start(c.chapter, 5, c.items, c.enemies, c.sets)
 	var seen := {}
 	for id in s.map.node_ids():
-		var n := s.map.get_node(id)
-		var kind := String(n.content.get("search_kind", "")) if n.type == &"search" else ""
+		var n_ := s.map.get_node(id)
+		var kind := String(n_.content.get("search_kind", "")) if n_.type == &"search" else ""
 		if kind == "" or seen.has(kind):
 			continue
 		seen[kind] = true
-		var text := NodeTooltip.text_for(s, s.chapter, n)
+		var text := NodeTooltip.text_for(s, s.chapter, n_)
 		t.check(text.contains(UiText.t("node.hint.search_" + kind)), "%s：说它出什么（%s）" % [kind, text])
-		t.check(NodeTooltip.produce_line(n) != "" and not text.contains(NodeTooltip.produce_line(n)), "%s：不再接环的产物句（复测 v4.77：前后矛盾）" % kind)
+		t.check(NodeTooltip.produce_line(n_) != "" and not text.contains(NodeTooltip.produce_line(n_)), "%s：不再接环的产物句（复测 v4.77：前后矛盾）" % kind)
 	for id in s.map.node_ids():
 		var plain := s.map.get_node(id)
 		if plain.type == &"search" and not plain.content.has("search_kind") and NodeTooltip.produce_line(plain) != "" and not plain.is_visited():

@@ -393,21 +393,21 @@ static func run_placement(t: TestCase) -> void:
 	var combat_seen := 0
 	var strengths_seen := {}
 	var enemies_seen := {}
-	for seed in seeds:
-		var g := chapter.map_source.resolve(seed)
+	for seed_ in seeds:
+		var g := chapter.map_source.resolve(seed_)
 		if g == null:
-			t.check(false, "种子 %d 生成不出图" % seed)
+			t.check(false, "种子 %d 生成不出图" % seed_)
 			continue
 		var depth := EnemyPlacer.depths_of(g)
 		var done := EnemyPlacer.fill(g, pool, enemies, items, chapter.difficulty, &"")
-		t.check((done["skipped"] as Array).is_empty(), "种子 %d：每个战斗点都挑到了人（没挑到：%s）" % [seed, str(done["skipped"])])
+		t.check((done["skipped"] as Array).is_empty(), "种子 %d：每个战斗点都挑到了人（没挑到：%s）" % [seed_, str(done["skipped"])])
 		t.eq(int(done["dropped"]), 0, "种子 %d：换着抽之后每个敌人都凑够了件数（档位表的棋盘够宽裕）差件的点：%s"
-			% [seed, str(done["short"])])
+			% [seed_, str(done["short"])])
 		for id in g.node_ids():
 			var n := g.get_node(id)
 			var c := n.content
 			if not pool.combat_types.has(n.type):
-				t.check(not EnemyKit.has_enemy(c), "种子 %d 点 %d（%s）不是战斗点，没有敌人" % [seed, id, n.type])
+				t.check(not EnemyKit.has_enemy(c), "种子 %d 点 %d（%s）不是战斗点，没有敌人" % [seed_, id, n.type])
 				continue
 			combat_seen += 1
 			if not EnemyKit.has_enemy(c):
@@ -484,13 +484,13 @@ static func run_placement(t: TestCase) -> void:
 			t.check(line.contains(def.display_name), "点 %d：摘要里有名字" % id)
 
 		# 同一个种子再来一遍，内容逐字相同
-		var g2 := chapter.map_source.resolve(seed)
+		var g2 := chapter.map_source.resolve(seed_)
 		EnemyPlacer.fill(g2, pool, enemies, items, chapter.difficulty, &"")
 		var same := true
 		for id in g.node_ids():
 			if JSON.stringify(g.get_node(id).content) != JSON.stringify(g2.get_node(id).content):
 				same = false
-		t.check(same, "种子 %d：再放一遍，每个点的敌人与棋盘逐字相同" % seed)
+		t.check(same, "种子 %d：再放一遍，每个点的敌人与棋盘逐字相同" % seed_)
 
 	t.check(combat_seen > 0, "看到了 %d 个战斗点" % combat_seen)
 	t.check(strengths_seen.size() >= 2, "五张图里出现了 %d 种档位（%s）—— 深浅有别" % [strengths_seen.size(), str(strengths_seen.keys())])
@@ -540,6 +540,6 @@ static func run_kit(t: TestCase) -> void:
 	t.check(a.max_hp_int() >= int(base.value_of(&"max_hp")), "编译出的生命至少是基线（道具只加不减）")
 
 	# 内容过一趟 JSON（跟着图存）再重建，一样
-	var round: Dictionary = MapGraph.normalize(JSON.parse_string(JSON.stringify(c)))
-	t.eq(EnemyKit.board_of(round, items).item_count(), EnemyKit.board_of(c, items).item_count(), "过一趟 JSON 重建件数不变")
-	t.eq(EnemyKit.spec_of(round, enemies, pool, items).rough_dps(), a.rough_dps(), "过一趟 JSON 编译结果不变")
+	var round_: Dictionary = MapGraph.normalize(JSON.parse_string(JSON.stringify(c)))
+	t.eq(EnemyKit.board_of(round_, items).item_count(), EnemyKit.board_of(c, items).item_count(), "过一趟 JSON 重建件数不变")
+	t.eq(EnemyKit.spec_of(round_, enemies, pool, items).rough_dps(), a.rough_dps(), "过一趟 JSON 编译结果不变")

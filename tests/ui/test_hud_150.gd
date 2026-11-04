@@ -319,8 +319,8 @@ static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow,
 	var drawer: DevDrawer = map.dev_drawer()
 	var status: Label = map.get("_status")
 	t.check(status.get_parent() == drawer.content and status.text != "", "提示行在调试台里、有字")
-	var log: RichTextLabel = map.get("_log")
-	t.check(log.get_parent() == drawer.content, "日志在调试台里")
+	var log_: RichTextLabel = map.get("_log")
+	t.check(log_.get_parent() == drawer.content, "日志在调试台里")
 	var ground: Label = map.get("_ground_line")
 	t.eq(ground.text, "地上 %d 件" % run.storage.item_count(), "地上件数在调试台里")
 	t.check(drawer.offset_top >= host.bar_height(), "调试台顶缘在顶端栏下面（%s）" % drawer.offset_top)
@@ -370,7 +370,7 @@ static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow,
 	t.check(host.widget(&"reopen_button") != null, "别的组件照旧")
 	flow.settings.debug_mode = true
 	map.apply_debug_mode()
-	var said := log.get_parsed_text()
+	var said := log_.get_parsed_text()
 	t.check(said.contains("关之前写的一行") and said.contains("关着时写的一行"), "开回来：之前写的都在")
 	t.check(map.dev_drawer().content.get_child(0).text.contains("调试模式：开"), "调试台头部写着调试模式")
 	# 166：暂停菜单只剩继续 / 设置 / 百科 /（规则）/ 回主菜单

@@ -51,13 +51,13 @@ var art_label_outline := Color.TRANSPARENT
 const ART_LABEL_OUTLINE := 4
 
 
-## [param name] 写进悬浮窗第一行；[param hint] 是那一句说明
-static func make(p_icon_id: String, p_fallback: String, name: String, hint: String, on_press: Callable, p_hotkey: String = "") -> IconButton:
+## [param p_name] 写进悬浮窗第一行；[param hint] 是那一句说明
+static func make(p_icon_id: String, p_fallback: String, p_name: String, hint: String, on_press: Callable, p_hotkey: String = "") -> IconButton:
 	var b := IconButton.new()
 	b.icon_id = p_icon_id
 	b.fallback = p_fallback
 	b.hotkey = p_hotkey
-	b.tooltip_text = name + (UiText.t("ui.hotkey") % p_hotkey if p_hotkey != "" else "") + ("\n" + hint if hint != "" else "")
+	b.tooltip_text = p_name + (UiText.t("ui.hotkey") % p_hotkey if p_hotkey != "" else "") + ("\n" + hint if hint != "" else "")
 	if on_press.is_valid():
 		b.pressed.connect(on_press)
 	b._load()

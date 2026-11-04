@@ -337,15 +337,15 @@ func frame_spawns(ids: Array) -> void:
 	for id in ids:
 		if not pos.has(id):
 			continue
-		var p: Vector2 = pos[id]
-		box = Rect2(p, Vector2.ZERO) if not any else box.expand(p)
+		var p_: Vector2 = pos[id]
+		box = Rect2(p_, Vector2.ZERO) if not any else box.expand(p_)
 		any = true
 	if not any or size.x <= 0.0 or size.y <= 0.0:
 		focus(current_id)
 		return
 	box = box.grow(SPAWN_MARGIN)
-	var fit := minf(size.x / maxf(box.size.x, 1.0), size.y / maxf(box.size.y, 1.0))
-	zoom = clampf(minf(zoom, fit), zoom_min(), ZOOM_MAX)
+	var fit_ := minf(size.x / maxf(box.size.x, 1.0), size.y / maxf(box.size.y, 1.0))
+	zoom = clampf(minf(zoom, fit_), zoom_min(), ZOOM_MAX)
 	var c := canvas_rect().size
 	var cover := _paper if _paper.has_area() else Rect2(Vector2.ZERO, c)     # 192：有底图夹的是纸，不是画布
 	var mid := box.get_center()
@@ -784,12 +784,12 @@ func _junctions() -> Dictionary:
 ## 一个路口：中心一个小点，向每个成员伸一条腿。
 ## 腿的颜色：这个成员在路口内部有路线经过的边，就用那条路线的颜色。
 func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, fade: float = 1.0) -> void:
-	var center := Vector2.ZERO
+	var center_ := Vector2.ZERO
 	for id in clique:
 		if not pos.has(int(id)):
 			return
-		center += pos[int(id)]
-	center /= float(clique.size())
+		center_ += pos[int(id)]
+	center_ /= float(clique.size())
 	for id in clique:
 		var route := -1
 		for other in clique:
@@ -797,12 +797,12 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, f
 			if other != id and route_of_edge.has(key):
 				route = int(route_of_edge[key])
 		if route >= 0:
-			draw_line(center, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85 * fade), 3.0, true)
+			draw_line(center_, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85 * fade), 3.0, true)
 		else:
 			var c := _ink(UiPalette.DIM).darkened(0.25)
-			draw_line(center, pos[int(id)], Color(c, c.a * fade), 1.5, true)
+			draw_line(center_, pos[int(id)], Color(c, c.a * fade), 1.5, true)
 	var dot := _ink(UiPalette.DIM)
-	draw_circle(center, 3.0, Color(dot, dot.a * fade))
+	draw_circle(center_, 3.0, Color(dot, dot.a * fade))
 
 
 ## 猎手：节点外一圈红环 + 名字（占位画法）
@@ -1014,7 +1014,6 @@ func _draw_player_layer(pos: Dictionary, grow: Dictionary, rect: Rect2) -> void:
 	var ink := _ink(UiPalette.FG)
 	if grow.is_empty() and _hop.is_empty():     # 跳的时候路先不画，落地那一帧和人一起出现
 		var tags: Array[Rect2] = []
-		var from_sp := to_screen(pos[current_id])
 		for id in reachable:
 			if not pos.has(id):
 				continue
@@ -1074,14 +1073,14 @@ func _draw_pawn(foot: Vector2, h: float, alpha: float, squash: float, art_name: 
 		draw_texture_rect(tex, pawn_rect(foot, h, squash, art_name), false, Color(1, 1, 1, alpha))
 		return
 	var ink := Color(_ink(UiPalette.FG), alpha)
-	var paper := Color(UiTheme.PAPER, alpha)
+	var paper_ := Color(UiTheme.PAPER, alpha)
 	var u := h / 10.0 * Vector2(1.0, squash)
 	var body := PackedVector2Array([foot + Vector2(-2.5, 0) * u, foot + Vector2(2.5, 0) * u, foot + Vector2(1.2, -5) * u, foot + Vector2(-1.2, -5) * u])
-	draw_colored_polygon(body, paper)
+	draw_colored_polygon(body, paper_)
 	body.append(body[0])
 	draw_polyline(body, ink, 1.5, true)
 	var head := foot + Vector2(0, -6.6) * u
-	draw_circle(head, 1.8 * u.x, paper)
+	draw_circle(head, 1.8 * u.x, paper_)
 	draw_arc(head, 1.8 * u.x, 0.0, TAU, 24, ink, 1.5, true)
 
 

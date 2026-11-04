@@ -9,6 +9,7 @@ extends RefCounted
 ## 假的侵蚀：只记谁在什么时候调了它，惩罚按配置给。
 ## 140 R-22：侵蚀是 [ErosionField]，假的就是它的子类 —— 只把推进与结算换成记次序
 class FakeErosion extends ErosionField:
+	@warning_ignore("shadowed_global_identifier")
 	var log: Array
 	var damage: int = 0
 	var vitality: Vitality = null
@@ -28,24 +29,24 @@ class FakeErosion extends ErosionField:
 			vitality.spend(damage, &"erosion")
 
 
-static func _map(seed: int = 3) -> MapGraph:
-	return RingMapGenerator.new().generate(RingMapConfig.sample(5), seed)
+static func _map(p_seed: int = 3) -> MapGraph:
+	return RingMapGenerator.new().generate(RingMapConfig.sample(5), p_seed)
 
 
 static func run_clock(t: TestCase) -> void:
 	t.begin("行动计数 · 只加不减，花多少由调用方说")
 
 	var clock := ActionClock.new()
-	var log := []
-	clock.advanced.connect(func(total: int, delta: int): log.append([total, delta]))
+	var log_ := []
+	clock.advanced.connect(func(total: int, delta: int): log_.append([total, delta]))
 	clock.spend(1)
 	clock.spend(3, &"rest")
 	t.eq(clock.total, 4, "1 + 3")
-	t.eq(log, [[1, 1], [4, 3]], "每花一次一条信号，带累计与这一次")
+	t.eq(log_, [[1, 1], [4, 3]], "每花一次一条信号，带累计与这一次")
 	clock.spend(0)
 	clock.spend(-5)
 	t.eq(clock.total, 4, "0 与负数不花")
-	t.eq(log.size(), 2, "也不发信号")
+	t.eq(log_.size(), 2, "也不发信号")
 	t.eq(String(clock.last_reason()), "rest", "上一次花的原因")
 	t.eq(ActionClock.from_dict(clock.to_dict()).total, 4, "存得下读得回")
 
@@ -97,21 +98,21 @@ static func run_settlement_order(t: TestCase) -> void:
 	t.begin("走一步 · 结算顺序：计数 → 侵蚀推进 → 目的地惩罚 → 节点事件")
 
 	var g := _map()
-	var log := []
+	var log_ := []
 	var clock := ActionClock.new()
-	clock.advanced.connect(func(_total: int, _delta: int): log.append("spend"))
-	var erosion := FakeErosion.new(log, 1)
+	clock.advanced.connect(func(_total: int, _delta: int): log_.append("spend"))
+	var erosion := FakeErosion.new(log_, 1)
 	var travel := MapTravel.new(g, clock)
 	erosion.vitality = Vitality.new(5)
 	travel.erosion = erosion
-	travel.on_node_event = func(node: MapNode): log.append("event:%d" % node.id)
+	travel.on_node_event = func(node: MapNode): log_.append("event:%d" % node.id)
 
 	var start: int = g.entry_ids[0]
 	t.check(travel.start_at(start), "站到出生点上")
 	t.check(g.get_node(start).is_visited(), "出生点开局就算踩过了")
 	var to: int = g.neighbors(start)[0]
 	t.check(travel.step_to(to), "走得过去")
-	t.eq(log, ["spend", "erosion", "penalty", "event:%d" % to],
+	t.eq(log_, ["spend", "erosion", "penalty", "event:%d" % to],
 		"**顺序不可调换**：先计数，再侵蚀推进，再结算目的地惩罚，最后触发事件")
 	t.eq(erosion.seen_totals, [1] as Array[int], "侵蚀看到的是花过这一步之后的累计")
 	t.eq(erosion.vitality.current, 4, "目的地由侵蚀自己结算（假侵蚀扣 1）")

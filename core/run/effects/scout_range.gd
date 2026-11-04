@@ -2,6 +2,7 @@
 class_name ScoutRange
 extends RunEffect
 
+@warning_ignore("shadowed_global_identifier")     # 内容字段名，改不得
 @export var range: float = 2.0
 
 

@@ -130,9 +130,9 @@ static func run_refresh(t: TestCase) -> void:
 	t.eq(costs, [40, 60, 80], "40 / 60 / 80")
 	t.eq(f.meta.funds, 0, "钱扣了 180")
 	t.eq(f.meta.market_refreshes, 3, "记了三次")
-	var seed := f.meta.market_seed
+	var seed_ := f.meta.market_seed
 	t.eq(f.refresh_market(), UiText.t("market.refresh_poor"), "钱不够：不换")
-	t.eq(f.meta.market_seed, seed, "货没动")
+	t.eq(f.meta.market_seed, seed_, "货没动")
 	f.after_run_market()
 	t.eq(f.meta.market_refreshes, 0, "回一局：换货价从头算")
 	t.eq(Market.refresh_cost(f.meta, f.market()), 40, "又是 40")

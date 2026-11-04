@@ -125,7 +125,7 @@ func _boot() -> void:
 #region 自动走
 ## 返回 true = 收工
 func _act(screen: int) -> bool:
-	var run: RunState = _flow.run
+	var run_: RunState = _flow.run
 	# 教程提示（地图屏 / 背包窗 / 战斗屏的 CoachOverlay）挡着就先按「下一步」—— 它 hold 着回放
 	var coaches := root.find_children("*", "CoachOverlay", true, false)
 	if not coaches.is_empty():
@@ -166,7 +166,7 @@ func _act(screen: int) -> bool:
 		GameFlow.Screen.BATTLE:
 			_act_battle()
 		GameFlow.Screen.MAP:
-			_act_map(run)
+			_act_map(run_)
 		GameFlow.Screen.RESULT:
 			_runs_done += 1
 			_timed("结算看完", func() -> void: _flow.finish_result())
@@ -175,8 +175,8 @@ func _act(screen: int) -> bool:
 		GameFlow.Screen.REST:
 			_timed("休息屏 resume", func() -> void: _flow.resume())
 		GameFlow.Screen.SHOP:
-			if run != null and run.events.current_shop != null:
-				run.events.current_shop.leave()
+			if run_ != null and run_.events.current_shop != null:
+				run_.events.current_shop.leave()
 		GameFlow.Screen.SAFE:
 			_flow.close_safe()
 		GameFlow.Screen.CHEST:
@@ -197,14 +197,14 @@ func _act_event() -> void:
 	if bool(_flow.last_payload.get("briefing", false)):
 		_timed("交代「知道了」", func() -> void: _flow.close_briefing())
 		return
-	var run: RunState = _flow.run
-	var ev: EventDef = run.events.pending_event() if run != null else null
+	var run_: RunState = _flow.run
+	var ev: EventDef = run_.events.pending_event() if run_ != null else null
 	if ev == null:
 		_timed("事件屏没有等着的事件：resume", func() -> void: _flow.resume())
 		return
 	var pick := -1
 	var label := ""
-	var ctx = run.events._event_ctx(run.events.pending_node())
+	var ctx = run_.events._event_ctx(run_.events.pending_node())
 	for i in ev.options.size():
 		if (ev.options[i] as EventOption).locked_reason(ctx) != "":
 			continue     # 选不了的跳过（序章一精英要先合出毒匕首，没有就走「就这么上」）
@@ -252,13 +252,13 @@ func _hook_view() -> void:
 
 ## bench：把这一场剩下的事件一条条 _apply，按事件名计时（弹字、抖动、音效、面板刷新都在里面）
 func _bench_apply(v: BattleView) -> void:
-	var log: Array = v._result.log
+	var log_: Array = v._result.log
 	var stats := {}
 	v._playing = false
 	var t_all := Time.get_ticks_usec()
 	var n := 0
-	while v._cursor < log.size():
-		var e: BattleEvent = log[v._cursor]
+	while v._cursor < log_.size():
+		var e: BattleEvent = log_[v._cursor]
 		var t0 := Time.get_ticks_usec()
 		v._apply(e)
 		var us := Time.get_ticks_usec() - t0
@@ -320,6 +320,7 @@ func _bench_frames(v: BattleView) -> void:
 	_bench_frame += 1
 	if _bench_frame > BENCH_FRAMES:
 		_bench_deltas.sort()
+		@warning_ignore("integer_division")
 		var med: float = _bench_deltas[_bench_deltas.size() / 2]
 		var p90: float = _bench_deltas[int(_bench_deltas.size() * 0.9)]
 		if _bench_step == 0:
@@ -380,22 +381,22 @@ func _act_battle() -> void:
 	_timed("回放看完「继续」", func() -> void: screen.proceed())
 
 
-func _act_map(run: RunState) -> void:
-	if run == null or run.is_over():
+func _act_map(p_run: RunState) -> void:
+	if p_run == null or p_run.is_over():
 		_timed("一局结束：resume", func() -> void: _flow.resume())
 		return
-	var cur := run.current_node()
+	var cur := p_run.current_node()
 	if cur != null and cur.type == &"extract":
 		_timed("撤离", func() -> void: _flow.extract())
 		return
-	var target := _next_node(run)
+	var target := _next_node(p_run)
 	if target < 0:
-		_report("图上没有下一个点可走（当前 %s）" % (cur.type if cur != null else "?"))
+		_report("图上没有下一个点可走（当前 %s）" % (String(cur.type) if cur != null else "?"))
 		finish(1)
 		return
-	var tn := run.map.get_node(target)
+	var tn := p_run.map.get_node(target)
 	if tn.type == &"battle" or tn.type == &"elite" or tn.type == &"core":
-		_equip_all(run)     # 教程的门：开战前东西要在包里
+		_equip_all(p_run)     # 教程的门：开战前东西要在包里
 	var t0 := Time.get_ticks_usec()
 	if not _flow.step_to(target):
 		_report("走不到 %d（%s）" % [target, tn.type])
@@ -405,11 +406,11 @@ func _act_map(run: RunState) -> void:
 
 
 ## 下一步：可走的点里按层（tier）最小、没去过的；都去过了就任意一个没去过的最近点
-func _next_node(run: RunState) -> int:
+func _next_node(p_run: RunState) -> int:
 	var best := -1
 	var best_tier := 1 << 30
-	for n in run.travel.available_moves():
-		var node := run.map.get_node(n)
+	for n in p_run.travel.available_moves():
+		var node := p_run.map.get_node(n)
 		if node == null or node.is_visited():
 			continue
 		if node.tier < best_tier:
@@ -417,17 +418,17 @@ func _next_node(run: RunState) -> int:
 			best = n
 	if best >= 0:
 		return best
-	for n in run.travel.available_moves():
-		var node := run.map.get_node(n)
+	for n in p_run.travel.available_moves():
+		var node := p_run.map.get_node(n)
 		if node != null and node.type == &"extract":
 			return n
-	var moves := run.travel.available_moves()
+	var moves := p_run.travel.available_moves()
 	return moves[0] if not moves.is_empty() else -1
 
 
-func _equip_all(run: RunState) -> void:
-	for inst in run.storage.items().duplicate():
-		run.equip((inst as ItemInstance).uid)
+func _equip_all(p_run: RunState) -> void:
+	for inst in p_run.storage.items().duplicate():
+		p_run.equip((inst as ItemInstance).uid)
 #endregion
 
 

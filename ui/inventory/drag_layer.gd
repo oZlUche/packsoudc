@@ -340,8 +340,8 @@ func _view_under_footprint(global_pos: Vector2) -> ContainerView:
 	var cells := _inst.def.cells_rotated(_rot)
 	if cells.is_empty():
 		return null
-	var size := _footprint_cells(cells)
-	var rect := Rect2(global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * _cell, Vector2(size) * _cell)
+	var size_ := _footprint_cells(cells)
+	var rect := Rect2(global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * _cell, Vector2(size_) * _cell)
 	var best: ContainerView = null
 	var best_area := 0.0
 	for view in _views:
@@ -551,14 +551,14 @@ func _replaceable_bag(inv: GridInventory, origin: Vector2i) -> int:
 		var p := origin + c
 		if not inv.in_bounds(p) or inv.is_blocked(p):
 			return GridInventory.EMPTY_UID
-		var owner := inv.bag_at(p)
-		if owner != GridInventory.EMPTY_UID and owner != _inst.uid:
+		var owner_ := inv.bag_at(p)
+		if owner_ != GridInventory.EMPTY_UID and owner_ != _inst.uid:
 			if victim == GridInventory.EMPTY_UID:
-				victim = owner
-			elif victim != owner:
+				victim = owner_
+			elif victim != owner_:
 				return GridInventory.EMPTY_UID     # 压着两个包：不替换
 		var item := inv.cell_uid(p)
-		if item != GridInventory.EMPTY_UID and item != owner and item != _inst.uid and not pressed.has(item):
+		if item != GridInventory.EMPTY_UID and item != owner_ and item != _inst.uid and not pressed.has(item):
 			pressed.append(item)
 	if victim == GridInventory.EMPTY_UID:
 		return GridInventory.EMPTY_UID
@@ -660,8 +660,8 @@ func _put_back(spot: Vector2) -> bool:
 	if not (_source is ItemStash) or _rot != _src_rot or not ItemStash.has_spot_value(_src_spot) or not ItemStash.has_spot_value(spot):
 		return false
 	var g := _ground_view()
-	var scale := g.size if g != null else Vector2.ONE * 1000.0
-	return ((spot - _src_spot) * scale).length() < PUT_BACK_PX
+	var scale_ := g.size if g != null else Vector2.ONE * 1000.0
+	return ((spot - _src_spot) * scale_).length() < PUT_BACK_PX
 
 
 ## 128：放手在 [param global_pos]，这件在地 [param ground] 上落在哪（没有地 = [constant ItemStash.NO_SPOT]）
@@ -723,7 +723,10 @@ func drop_at(global_pos: Vector2) -> bool:
 		if dropped:
 			# 162 补充二（作者定）：从松手那一刻残影的位置竖直往下掉（地层改落点与朝向）；地上拿起又原样放回（单击）= 就地，不掉
 			inst.rotation = _rot
-			stash.landing_from[inst.uid] = true if _put_back(spot) else _release_px(global_pos)
+			if _put_back(spot):
+				stash.landing_from[inst.uid] = true
+			else:
+				stash.landing_from[inst.uid] = _release_px(global_pos)
 			if not _put_back(spot):
 				_note_throw(stash, inst, global_pos)     # 249：手上带着速度就甩出去
 		if _source == stash or dropped:
@@ -744,7 +747,10 @@ func drop_at(global_pos: Vector2) -> bool:
 		if dropped:
 			home = gl.stash
 			inst.rotation = _rot
-			gl.stash.landing_from[inst.uid] = true if _source == gl.stash and _put_back(at_spot) else _release_px(global_pos)     # 162 补充二：同上
+			if _source == gl.stash and _put_back(at_spot):     # 162 补充二：同上
+				gl.stash.landing_from[inst.uid] = true
+			else:
+				gl.stash.landing_from[inst.uid] = _release_px(global_pos)
 			if gl.stash.landing_from[inst.uid] is Vector2:
 				_note_throw(gl.stash, inst, global_pos)     # 249
 	elif target is BagRackView and (target as BagRackView).rack != null:

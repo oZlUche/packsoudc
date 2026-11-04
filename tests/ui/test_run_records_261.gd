@@ -153,10 +153,12 @@ static func frame_shelf_art(t: TestCase, root: Window) -> void:
 	t.eq(view.piece_name("records"), "records", "对局记录不分档：一张")
 	t.eq(view.piece_name(""), "lamp", "第六格油灯")
 	var ids := f.items.ids(true)
+	@warning_ignore("integer_division")
 	for i in ids.size() / 2:
 		f.meta.codex[String(ids[i])] = 1
 	f.meta.tech_levels[String(f.tech_defs[0].id)] = 1
 	screen._refresh()
+	@warning_ignore("integer_division")
 	t.eq(view.piece_name("codex"), "codex_t%d" % ShelfCell.tier_of(ids.size() / 2, ids.size()), "图鉴亮一半：t2")
 	t.eq(view.piece_name("codex"), "codex_t2", "一半 = t2")
 	t.eq(view.piece_name("tech"), "tech_t%d" % ShelfCell.tier_of(1, f.tech_defs.size()), "科技按点过的节点取档")

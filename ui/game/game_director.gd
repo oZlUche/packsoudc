@@ -129,7 +129,7 @@ func _ready() -> void:
 	NoticeLayer.set_current(notices)
 	ground.item_double_clicked.connect(_on_ground_double)     # 134
 	ground.actions_for = ground_actions     # 230
-	HoverTip.codex_page = func(name: String) -> String: return flow.encyclopedia().page_for(name)     # 220 E
+	HoverTip.codex_page = func(name_: String) -> String: return flow.encyclopedia().page_for(name_)     # 220 E
 	HoverTip.open_codex = open_codex
 	# 089：存档位 —— 用默认路径（正式游戏）时按位存：老的单文件存档先搬进第 1 位，再切到设置里记的那一位。
 	# 测试 / 演示改了路径的走单文件模式
@@ -416,11 +416,11 @@ func _drop_overlay(silent: bool = false) -> void:
 func _sync_base() -> void:
 	if _base == null:
 		return
-	var hide := _overlay != null and _overlay.covers_base() and _overlay.modulate.a >= 1.0
-	if _base.visible == hide:
-		_base.visible = not hide
-		_base.process_mode = Node.PROCESS_MODE_DISABLED if hide else Node.PROCESS_MODE_INHERIT
-	_base.set_overlaid(_overlay != null and not hide)
+	var hide_ := _overlay != null and _overlay.covers_base() and _overlay.modulate.a >= 1.0
+	if _base.visible == hide_:
+		_base.visible = not hide_
+		_base.process_mode = Node.PROCESS_MODE_DISABLED if hide_ else Node.PROCESS_MODE_INHERIT
+	_base.set_overlaid(_overlay != null and not hide_)
 
 
 func _drop_minimized() -> void:

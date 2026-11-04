@@ -197,8 +197,8 @@ static func run_sessions(t: TestCase) -> void:
 
 	# 走进真的节点：NodeEvents 把上下文交给会话
 	var kit := _kit(c)
-	for seed in range(1, 60):
-		var run := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1"] as Array[StringName])
+	for seed_ in range(1, 60):
+		var run := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1"] as Array[StringName])
 		var found := -1
 		for entry in run.map.entry_ids:
 			for nid in run.map.neighbors(entry):

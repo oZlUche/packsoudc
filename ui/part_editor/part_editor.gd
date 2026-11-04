@@ -76,7 +76,7 @@ func _build_ui() -> void:
 	_search = LineEdit.new()
 	_search.placeholder_text = "搜索 id / 名字"
 	_search.clear_button_enabled = true
-	_search.text_changed.connect(func(_t: String) -> void: _repaint_list())
+	_search.text_changed.connect(func(_t_: String) -> void: _repaint_list())
 	left.add_child(_search)
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -169,13 +169,13 @@ func def() -> RulePartDef:
 
 
 ## 换类别：别的三个字段清掉（一份构件只装一样东西），表单只露这一类
-func set_slot(slot: String) -> void:
+func set_slot(p_slot: String) -> void:
 	if _def == null:
 		return
 	for key in RulePartDef.SLOTS:
-		if key != slot:
+		if key != p_slot:
 			_def.set(key, null)
-	_def.set_meta(&"slot", slot)
+	_def.set_meta(&"slot", p_slot)
 	_rebuild_form()
 	_refresh()
 
@@ -257,8 +257,8 @@ func _repaint_list() -> void:
 	for id in _ids:
 		if _matches(id, _group):
 			_shown.append(id)
-			var name := String(_name_of.get(id, ""))
-			_list.add_item(("● " if _drafts.has(id) else "") + id + ("　" + name if name != "" and name != id else ""))
+			var name_ := String(_name_of.get(id, ""))
+			_list.add_item(("● " if _drafts.has(id) else "") + id + ("　" + name_ if name_ != "" and name_ != id else ""))
 	if _shown.is_empty():
 		var row := _list.add_item("没有匹配的构件")
 		_list.set_item_selectable(row, false)
@@ -288,11 +288,11 @@ func _import(data: Dictionary, report: ImportReport) -> Resource:
 
 
 func _new_def() -> Resource:
-	var def := RulePartDef.new()
-	def.id = &"new_part"
-	def.display_name = "新构件"
-	def.set_meta(&"slot", "effect")
-	return def
+	var def_ := RulePartDef.new()
+	def_.id = &"new_part"
+	def_.display_name = "新构件"
+	def_.set_meta(&"slot", "effect")
+	return def_
 
 
 func _new_part() -> void:

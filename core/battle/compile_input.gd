@@ -38,22 +38,23 @@ var immune_buffs: Array[StringName] = []
 
 ## 按件随机挑选用。调用方算好（`hash(run_seed, "compile", clock.total)`），一局之内不变 ——
 ## 所以拖动预估挑的和真打挑的是同一批
+@warning_ignore("shadowed_global_identifier")
 var seed: int = 0
 
 
 ## 六个参数的老签名用的那条路（测试与只关心棋盘的调用方）
 static func of(
-	baseline: CombatantBaseline = null,
-	mods: Array[StatModifier] = [] as Array[StatModifier],
-	rules: Array[AbilityRule] = [] as Array[AbilityRule],
-	faith_tiers: Dictionary = {}, faith_points: Dictionary = {}
+	p_baseline: CombatantBaseline = null,
+	p_mods: Array[StatModifier] = [] as Array[StatModifier],
+	p_rules: Array[AbilityRule] = [] as Array[AbilityRule],
+	p_faith_tiers: Dictionary = {}, p_faith_points: Dictionary = {}
 ) -> CompileInput:
 	var input := CompileInput.new()
-	input.baseline = baseline
-	input.mods = mods
-	input.rules = rules
-	input.faith_tiers = faith_tiers
-	input.faith_points = faith_points
+	input.baseline = p_baseline
+	input.mods = p_mods
+	input.rules = p_rules
+	input.faith_tiers = p_faith_tiers
+	input.faith_points = p_faith_points
 	return input
 
 

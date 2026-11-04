@@ -12,7 +12,6 @@ const LOSS := UiPalette.HP
 var flow: GameFlow = null
 var font: Font = null
 var _head: HeaderTag = null
-var _body: VBoxContainer = null
 var _list: VBoxContainer = null
 var _stars: Array[Button] = []
 var _rows: Array[Button] = []
@@ -208,9 +207,9 @@ func _where(h: Dictionary) -> String:
 	var parts: Array[String] = []
 	var ch := flow.chapter_of(StringName(String(h.get("chapter", ""))))
 	parts.append(Names.of(ch) if ch != null else String(h.get("chapter", "")))
-	var scale := String(h.get("scale", ""))
-	if scale != "":
-		parts.append(UiText.t("records.scale_" + scale) if UiText.TEXT.has("records.scale_" + scale) else scale)
+	var scale_ := String(h.get("scale", ""))
+	if scale_ != "":
+		parts.append(UiText.t("records.scale_" + scale_) if UiText.TEXT.has("records.scale_" + scale_) else scale_)
 	var diff := flow.difficulty_of(StringName(String(h.get("difficulty", ""))))
 	if diff != null:
 		parts.append(Names.of(diff))

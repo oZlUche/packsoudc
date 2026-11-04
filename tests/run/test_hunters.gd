@@ -28,8 +28,8 @@ static func _difficulty(ids: Array[StringName], count: int = 1, min_dist: float 
 
 ## 开一局、挑出生点。[param defs] 是这一局的猎手定义表（可以是改过数的副本）
 static func _start(c: TestSupport.Content, defs: Dictionary, diff: DifficultyDef) -> RunState:
-	for seed in range(1, 40):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [&"bag_leather", &"shortsword"] as Array[StringName],
+	for seed_ in range(1, 40):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, [&"bag_leather", &"shortsword"] as Array[StringName],
 			{}, [] as Array[StringName], null, [], diff, defs)
 		if s != null:
 			s.pick_spawn(s.map.entry_ids[0])
@@ -363,8 +363,8 @@ static func run_save_and_flow(t: TestCase) -> void:
 	f.save_path = SAVE
 	f.meta_path = META
 	var run: RunState = null
-	for seed in range(1, 40):
-		run = f.begin(c.chapter, null, seed, [] as Array[int], null, [], diff)
+	for seed_ in range(1, 40):
+		run = f.begin(c.chapter, null, seed_, [] as Array[int], null, [], diff)
 		if run != null:
 			break
 	t.not_null(run, "按带猎手的难度开局")

@@ -29,24 +29,24 @@ static func art_of(faith_id: StringName) -> Texture2D:
 
 
 func text_of() -> String:
-	var id := run.active_faith_id()
-	if id == &"":
+	var id_ := run.active_faith_id()
+	if id_ == &"":
 		return ""     # 没信仰：空槽
 	var line := run.faith_power.line() if run.faith_power != null else ""
-	if art_of(id) == null:
+	if art_of(id_) == null:
 		return run.faith_line() + (UiText.t("tip.gap") + line if line != "" else "")
 	var def := run.active_faith()
 	if def == null or run.faith_power == null:
 		return ""
-	return text_at(run.faith_power.points_of(id))
+	return text_at(run.faith_power.points_of(id_))
 
 
 ## 231 补充二：信力滚数（有徽记那种写法才滚）
 func roll_value() -> int:
-	var id := run.active_faith_id()
-	if id == &"" or art_of(id) == null or run.active_faith() == null or run.faith_power == null:
+	var id_ := run.active_faith_id()
+	if id_ == &"" or art_of(id_) == null or run.active_faith() == null or run.faith_power == null:
 		return -1
-	return run.faith_power.points_of(id)
+	return run.faith_power.points_of(id_)
 
 
 func text_at(p: int) -> String:

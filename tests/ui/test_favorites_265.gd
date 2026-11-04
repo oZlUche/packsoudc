@@ -49,7 +49,7 @@ static func run_sell_skips_favorites(t: TestCase) -> void:
 	m.toggle_favorite(&"longsword")
 	t.eq(int(m.sell_preview(-1)["count"]), 1, "预览只卖木板")
 	t.eq(m.favorite_matching(-1), 2, "跳过收藏 2 件")
-	var same := ItemActions.sell_same(swords[0], m.warehouse, func(i): return 1, func(uid): m.sell_item(uid))
+	var same := ItemActions.sell_same(swords[0], m.warehouse, func(_i): return 1, func(uid): m.sell_item(uid))
 	t.check(not same.enabled and same.reason == UiText.t("act.fav_no_bulk"), "出售同类：灰着，写收藏的不成批出售")
 	t.eq(same.label, "出售同类 · 已收藏", "按钮上直接写原因（复测 v4.75：原来写「×0 得 0 币」）")
 	UiText.lang = "en"
@@ -89,7 +89,7 @@ static func frame_tip_ribbon(t: TestCase, root: Window) -> void:
 	ItemFavorites.attach(m)
 	view.actions_for = func(uid: int) -> Array:
 		var inst := board.get_item(uid)
-		return [ItemActions.lock(inst, board), ItemActions.sell_same(inst, board, func(i): return 1, func(_u): pass)]
+		return [ItemActions.lock(inst, board), ItemActions.sell_same(inst, board, func(_i): return 1, func(_u): pass)]
 	view.item_context.emit(view, sword.uid)
 	var w: HoverTip.TipWindow = tip._panel
 	t.eq(tip.fav_state(), 0, "没收藏")

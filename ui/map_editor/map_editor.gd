@@ -754,12 +754,12 @@ func _add_route_legend() -> void:
 	if _graph.routes.is_empty():
 		return
 	_props.add_child(HSeparator.new())
-	var show := CheckBox.new()
-	show.text = "描出生成路线（仅标注，不参与校验）"
-	show.button_pressed = _view.show_routes
-	_style(show)
-	show.toggled.connect(func(on: bool): _view.show_routes = on)
-	_props.add_child(show)
+	var show_ := CheckBox.new()
+	show_.text = "描出生成路线（仅标注，不参与校验）"
+	show_.button_pressed = _view.show_routes
+	_style(show_)
+	show_.toggled.connect(func(on: bool): _view.show_routes = on)
+	_props.add_child(show_)
 	for i in _graph.routes.size():
 		var route: Dictionary = _graph.routes[i]
 		var text := "━━  出生点 %d · %s → %s" % [route.get("entry_id", -1), route.get("style", "?"), route.get("ends_at", "?")]

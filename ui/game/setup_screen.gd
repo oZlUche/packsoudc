@@ -239,10 +239,10 @@ func open(_payload: Dictionary) -> void:
 	_chapters = map_chapters()
 	_pages.clear()
 	for build in [_build_character_page, _build_kit_page, _build_map_page]:
-		var page: Control = build.call()
-		page.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if page is PanelContainer else Control.SIZE_EXPAND_FILL     # 179：凹槽板按内容高，不压到右下角的按钮
-		col.add_child(page)
-		_pages.append(page)
+		var page_: Control = build.call()
+		page_.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if page_ is PanelContainer else Control.SIZE_EXPAND_FILL     # 179：凹槽板按内容高，不压到右下角的按钮
+		col.add_child(page_)
+		_pages.append(page_)
 	_build_nav()
 	_restore_last()
 	show_page(0)
@@ -411,11 +411,11 @@ func _build_kit_page() -> Control:
 
 ## 作者 10-31：整理仓库**当前页**（[GridTidy]，同基地仓库）；排不开就原样不动、说一句
 func tidy_warehouse() -> bool:
-	var page := _warehouse_pages.current_page() if _warehouse_pages != null else null
-	if page == null:
+	var page_ := _warehouse_pages.current_page() if _warehouse_pages != null else null
+	if page_ == null:
 		return false
-	var ok := GridTidy.tidy(page)
-	if page.item_count() > 1:
+	var ok := GridTidy.tidy(page_)
+	if page_.item_count() > 1:
 		warn(UiText.t("wh.page_tidied") if ok else UiText.t("wh.tidy_failed"))
 	return ok
 
@@ -462,7 +462,7 @@ func _build_cash_box(parent: Container) -> void:
 	_cash_field.text_submitted.connect(func(_t: String) -> void: _cash_field.release_focus())
 	_cash_field.focus_exited.connect(_refresh_cash)
 	slide_row.add_child(_cash_field)
-	var row := _hbox(CASH_CHIP_GAP)
+	var row := _hbox(int(CASH_CHIP_GAP))
 	col.add_child(row)
 	_cash_chips.clear()
 	for spec in [["setup.cash_none", func() -> void: set_carry_funds(0)],
@@ -618,9 +618,9 @@ func show_page(i: int) -> void:
 		_pages[k].visible = k == _page
 	if _page == 1:
 		_fit_warehouse()     # 作者 10-31 木架：框的边距要等进了树、主题生效才算得出来，翻到这页再量一次
-	var tone := _repaint(PAGE_ART[_page])
+	_repaint(PAGE_ART[_page])
 	if _title_indent != null:
-		_title_indent.custom_minimum_size.x = PAPER_INSET if _page == PAGE_MAP and _paper_art() else 0.0
+		_title_indent.custom_minimum_size.x = float(PAPER_INSET) if _page == PAGE_MAP and _paper_art() else 0.0
 	if _title != null:
 		_title.text = UiText.t(PAGE_TITLES[_page])
 	if _enter_btn != null:
@@ -715,11 +715,11 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 
 ## 一列单选按钮（章节 / 难度 / 角色 / 预设 / 规模各一列）：每个名字一个左对齐的按钮，按下调 `on_pick(序号)`；
 ## 选中的是哪个由 [method _mark_choice] 标。返回这一列的按钮，顺序同 [param names]
-func _choice_column(box: Control, names: Array[String], on_pick: Callable, size: int = 14, entry_h: float = MAP_ENTRY_H) -> Array[Button]:
+func _choice_column(box: Control, names: Array[String], on_pick: Callable, p_size: int = 14, entry_h: float = MAP_ENTRY_H) -> Array[Button]:
 	var btns: Array[Button] = []
 	for i in names.size():
 		var idx := i
-		var b := _button(names[i], func(): on_pick.call(idx), size)
+		var b := _button(names[i], func(): on_pick.call(idx), p_size)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, UiTheme.ART_MAP_ENTRY, entry_h)     # 乙 石刻：同第三页选地图的纸条，选中压蜡封
 		btns.append(b)
@@ -1173,7 +1173,9 @@ func character() -> CharacterDef:
 func carry_in(uid: int) -> bool:
 	if board == null:
 		return false
-	var from: ItemContainer = flow.meta.warehouse if flow.meta.warehouse.get_item(uid) != null else stash
+	var from: ItemContainer = stash
+	if flow.meta.warehouse.get_item(uid) != null:
+		from = flow.meta.warehouse
 	if from == null or from.get_item(uid) == null:
 		return false
 	var ok := InventoryService.transfer_auto(from, uid, board)
@@ -1758,9 +1760,9 @@ func _rebuild_card() -> void:
 
 ## 258：字号放大后英文最长的卡（马库斯）顶过定高 —— 说明句、功能句、末尾小字一起一号一号缩，最小缩回小档；中文放得下不动
 func _fit_card() -> void:
-	var board: Control = _grooves[1]
+	var board_: Control = _grooves[1]
 	var shrunk := true
-	while shrunk and board.get_minimum_size().y > CARD_H:
+	while shrunk and board_.get_minimum_size().y > CARD_H:
 		shrunk = false
 		for pair in _fit_labels:
 			shrunk = TextFit.step_down(pair[0], pair[1]) or shrunk
@@ -1773,9 +1775,9 @@ func _entry_row(icon: EntryIcon, title: String, text: String, tail: String, iron
 	var col := _vbox(2)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(col)
-	var name := UiTheme.make_variant_label(title, UiTheme.LABEL_FLAW_NAME if iron else UiTheme.LABEL_SKILL_NAME)
-	col.add_child(name)
-	row.set_meta(&"name_label", name)
+	var name_ := UiTheme.make_variant_label(title, UiTheme.LABEL_FLAW_NAME if iron else UiTheme.LABEL_SKILL_NAME)
+	col.add_child(name_)
+	row.set_meta(&"name_label", name_)
 	if text != "":
 		var body := _wrapped(text, UiTheme.SKILL_TEXT_SIZE, UiPalette.FG, card_width() - EntryIcon.SIDE - 12)
 		body.theme_type_variation = UiTheme.LABEL_SKILL_TEXT

@@ -106,10 +106,10 @@ static func run_retry_and_fallback(t: TestCase) -> void:
 	bar.shape = ItemShape.from_ascii(["11"])
 	var defs: Array[ItemDef] = [bar, bar]
 	for s in 30:
-		var board := GridInventory.new(Vector2i(4, 1))     # 4 × 1：第一根落在中间，第二根就没地方
-		var got := EnemyPlacer._arrange(board, defs, [], _rng(s))
-		t.eq((got["left"] as Array).size(), 0, "种子 %d：两根都摆上" % s)
-		t.eq(board.item_count(), 2, "结果留在棋盘上")
+		var board_ := GridInventory.new(Vector2i(4, 1))     # 4 × 1：第一根落在中间，第二根就没地方
+		var got_ := EnemyPlacer._arrange(board_, defs, [], _rng(s))
+		t.eq((got_["left"] as Array).size(), 0, "种子 %d：两根都摆上" % s)
+		t.eq(board_.item_count(), 2, "结果留在棋盘上")
 	# 组摆不开：拆成散件，件数照旧
 	var board := GridInventory.new(Vector2i(2, 4))     # 长弓缺口那两格禁用：长弓一放就满，箭没处挨着
 	board.set_blocked(Vector2i(1, 1), true)
@@ -247,11 +247,11 @@ static func run_combos_validation(t: TestCase) -> void:
 		[[["longbow", "bag_small"]], false, "包"],
 	]
 	for cs in cases:
-		var data := base.duplicate()
-		data["combos"] = cs[0]
-		var r := ImportReport.new()
-		var def := ContentImporter.import_enemy(data, ctx, r)
-		t.eq(r.ok(), cs[1], "%s → %s" % [cs[2], "过" if cs[1] else "错"])
+		var data_ := base.duplicate()
+		data_["combos"] = cs[0]
+		var r_ := ImportReport.new()
+		var def := ContentImporter.import_enemy(data_, ctx, r_)
+		t.eq(r_.ok(), cs[1], "%s → %s" % [cs[2], "过" if cs[1] else "错"])
 		if cs[1]:
 			t.eq(str(def.combo_list()), str([_ids(["longbow", "arrows"])]), "读成 id 列表")
 	var data := base.duplicate()

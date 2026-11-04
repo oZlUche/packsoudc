@@ -308,12 +308,12 @@ func _sync_fields() -> void:
 
 
 ## 091：切编辑的语言
-func set_lang(lang: String) -> void:
-	if not UiText.LANGS.has(lang):
-		lang = "zh"
-	_lang = lang
+func set_lang(p_lang: String) -> void:
+	if not UiText.LANGS.has(p_lang):
+		p_lang = "zh"
+	_lang = p_lang
 	if _lang_pick != null:
-		_lang_pick.select(UiText.LANGS.find(lang))
+		_lang_pick.select(UiText.LANGS.find(p_lang))
 	_sync_fields()
 
 
@@ -321,11 +321,11 @@ func lang() -> String:
 	return _lang
 
 
-static func _put_lang(table: Dictionary, lang: String, text: String) -> void:
+static func _put_lang(table: Dictionary, p_lang: String, text: String) -> void:
 	if text == "":
-		table.erase(lang)
+		table.erase(p_lang)
 	else:
-		table[lang] = text
+		table[p_lang] = text
 
 
 func _new_event() -> void:
@@ -495,7 +495,10 @@ func _attach(rules_id: String, type: String, weight: float) -> ImportReport:
 	var ebt: Dictionary = data.get("events_by_type", {}) if data.get("events_by_type", {}) is Dictionary else {}
 	var table: Dictionary = ebt.get(type, {}) if ebt.get(type, {}) is Dictionary else {}
 	if weight > 0.0:
-		table[id] = int(weight) if weight == floorf(weight) else weight
+		if weight == floorf(weight):
+			table[id] = int(weight)
+		else:
+			table[id] = weight
 		ebt[type] = table
 	else:
 		table.erase(id)

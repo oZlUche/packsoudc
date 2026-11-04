@@ -35,9 +35,9 @@ static func is_image_file(path: String) -> bool:
 ## [param light]（232 书页）：没图时不画深底黑块，画一块淡墨框、墨色字
 static func area(path: String, title: String, size: Vector2, big_size: int = 22, small_size: int = 12,
 		broken_hint: String = "", sep: int = 6, light: bool = false) -> Control:
-	var area := Control.new()
-	area.clip_contents = true
-	area.custom_minimum_size = size
+	var area_ := Control.new()
+	area_.clip_contents = true
+	area_.custom_minimum_size = size
 	var loaded := load_texture(path)
 	if loaded != null:
 		var tex := TextureRect.new()
@@ -45,15 +45,15 @@ static func area(path: String, title: String, size: Vector2, big_size: int = 22,
 		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		area.add_child(tex)
-		return area
+		area_.add_child(tex)
+		return area_
 	var bg := ColorRect.new()
 	bg.color = Color(UiTheme.INK_DEFAULT, 0.08) if light else Color("0d0f12")
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.add_child(bg)
+	area_.add_child(bg)
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	area.add_child(center)
+	area_.add_child(center)
 	var col := UiTheme.vbox(sep)
 	center.add_child(col)
 	if title != "":     # 226 批二：游戏里的事件屏不写占位标题（传空），编辑器预览照写
@@ -66,4 +66,4 @@ static func area(path: String, title: String, size: Vector2, big_size: int = 22,
 		var hint := UiTheme.make_label(missing, small_size, UiPalette.DIM.darkened(0.45))
 		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		col.add_child(hint)
-	return area
+	return area_

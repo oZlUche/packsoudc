@@ -39,13 +39,13 @@ static func give(ctx: RuleContext, who: CombatantRuntime, def: BuffDef, n: int) 
 			refreshed.merge(inst.timer_payload())
 			ctx.battle.emit(BattleEvent.STATUS_STACKED, who.side, refreshed)
 		return 0
-	var stacks := who.stacks_of(def.id)
-	var payload := {"buff": String(def.id), "delta": added, "stacks": stacks}
+	var stacks_ := who.stacks_of(def.id)
+	var payload := {"buff": String(def.id), "delta": added, "stacks": stacks_}
 	if inst != null:
 		payload.merge(inst.timer_payload())     # 185 补充一：回放的计时
 	ctx.battle.emit(BattleEvent.STATUS_STACKED, who.side, payload)
 	ctx.battle.emit(BattleEvent.STATUS_APPLIED, who.side, {
-		"buff": String(def.id), "delta": added, "stacks": stacks, "source_side": ctx.owner.side,
+		"buff": String(def.id), "delta": added, "stacks": stacks_, "source_side": ctx.owner.side,
 	})
 	for e in def.on_apply:
 		(e as CombatEffect).apply(ctx)

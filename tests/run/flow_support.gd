@@ -125,9 +125,9 @@ static func settle_one(f: GameFlow) -> void:
 
 ## 218 补充一：开局屏「出发」—— 第一次出发先弹「军团的交代」，这里替玩家点「知道了」接着出发。返回开没开成局（没弹交代就是 [method SetupScreen.depart] 的返回）
 static func depart(setup) -> bool:
-	var flow: GameFlow = setup.flow
+	var flow_: GameFlow = setup.flow
 	var went: bool = setup.depart()
-	if went and flow.screen == GameFlow.Screen.EVENT and bool(flow.last_payload.get("briefing", false)):
-		flow.close_briefing()
-		return flow.run != null
+	if went and flow_.screen == GameFlow.Screen.EVENT and bool(flow_.last_payload.get("briefing", false)):
+		flow_.close_briefing()
+		return flow_.run != null
 	return went

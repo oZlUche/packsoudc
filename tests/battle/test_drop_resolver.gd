@@ -160,8 +160,8 @@ static func run_treasure(t: TestCase) -> void:
 	var first := DropResolver.roll(content, rule, ctx, db, rng)
 	t.eq((first["treasure"] as Array).size(), 1, "珍宝概率 1、一次尝试：正好一件")
 	for i in 300:
-		var r := DropResolver.roll(content, rule, ctx, db, rng)
-		for id in r["treasure"]:
+		var r_ := DropResolver.roll(content, rule, ctx, db, rng)
+		for id in r_["treasure"]:
 			if seen.has(id):
 				continue
 			seen[id] = true
@@ -176,8 +176,8 @@ static func run_treasure(t: TestCase) -> void:
 	# 权重：金 3 红 1 → 红大约四分之一
 	var red := 0
 	for i in 1000:
-		var r := DropResolver.roll(content, rule, ctx, db, rng)
-		if (r["treasure"] as Array)[0] == &"red_a":
+		var r_ := DropResolver.roll(content, rule, ctx, db, rng)
+		if (r_["treasure"] as Array)[0] == &"red_a":
 			red += 1
 	t.check(red > 180 and red < 320, "金 3 : 红 1，一千次里红 %d 次" % red)
 

@@ -60,9 +60,9 @@ static func run_shelf(t: TestCase) -> void:
 	rules.bullion_slot_chance = 1.0
 	var exact := true
 	var seen := [{}, {}]
-	for seed in 80:
+	for seed_ in 80:
 		for k in 2:
-			var s := ShopSession.new(Economy._shop_node(seed), rules, items, Wallet.new(0), float(k))
+			var s := ShopSession.new(Economy._shop_node(seed_), rules, items, Wallet.new(0), float(k))
 			if _bullion_slots(s) != 1 or s.stock.size() != rules.shop_slots:
 				exact = false
 			seen[k][String(s.stock[0]["id"])] = true
@@ -80,8 +80,8 @@ static func run_shelf(t: TestCase) -> void:
 	t.eq(ShopSession.new(Economy._shop_node(7), rules, items, Wallet.new(0), 0.5).stock, again.stock, "同一家店同一次刷新摆的一样")
 	rules.bullion_slot_chance = 0.0
 	var none := true
-	for seed in 30:
-		if _bullion_slots(ShopSession.new(Economy._shop_node(seed), rules, items, Wallet.new(0), 0.5)) != 0:
+	for seed_ in 30:
+		if _bullion_slots(ShopSession.new(Economy._shop_node(seed_), rules, items, Wallet.new(0), 0.5)) != 0:
 			none = false
 	t.check(none, "概率 0：没有金银")
 

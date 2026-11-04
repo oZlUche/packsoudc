@@ -38,8 +38,8 @@ static func _expected(ch: CharacterDef) -> RunContext:
 
 
 static func _start(c: TestSupport.Content, ch: CharacterDef, diff: DifficultyDef = null, defs: Dictionary = {}) -> RunState:
-	for seed in range(1, 60):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch, [], diff, defs)
+	for seed_ in range(1, 60):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch, [], diff, defs)
 		if s != null:
 			s.pick_spawn(s.map.entry_ids[0])
 			return s
@@ -302,8 +302,8 @@ static func run_save_load(t: TestCase) -> void:
 	f.save_path = SAVE
 	f.meta_path = META
 	var run: RunState = null
-	for seed in range(1, 60):
-		run = f.begin(c.chapter, null, seed, [] as Array[int], marcus, [])
+	for seed_ in range(1, 60):
+		run = f.begin(c.chapter, null, seed_, [] as Array[int], marcus, [])
 		if run != null:
 			break
 	if run == null:

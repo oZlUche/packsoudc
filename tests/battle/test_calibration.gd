@@ -17,8 +17,8 @@ static func _cleanup() -> void:
 
 
 static func _start(c: TestSupport.Content, kit: Array[StringName]) -> RunState:
-	for seed in range(1, 40):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit)
+	for seed_ in range(1, 40):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit)
 		if s != null:
 			s.pick_spawn(s.map.entry_ids[0])
 			return s
@@ -65,6 +65,7 @@ static func run_record_and_build(t: TestCase) -> void:
 	var dummies := DummyBuilder.build(all, c.items, 2)
 	var expected_keys := {}
 	for snap2 in all:
+		@warning_ignore("integer_division")
 		expected_keys[str(int(snap2["steps"]) / 2)] = true
 	t.eq(dummies.size(), expected_keys.size(), "段数 = 出现过的段号数")
 	for k in dummies:
@@ -75,6 +76,7 @@ static func run_record_and_build(t: TestCase) -> void:
 		var best_d := INF
 		var picked_d := -1.0
 		for snap3 in all:
+			@warning_ignore("integer_division")
 			if str(int(snap3["steps"]) / 2) != k:
 				continue
 			var m := DummyBuilder.metrics(snap3, c.items)

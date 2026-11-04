@@ -71,6 +71,7 @@ var spent: int = 0
 var money: int = 0
 var buffs_granted: Array[String] = []
 var buffs_removed: Array[String] = []
+@warning_ignore("shadowed_global_identifier")
 var log: Array[String] = []
 
 

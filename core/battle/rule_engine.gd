@@ -29,6 +29,7 @@ static func fire_scheduled(ctx: BattleContext, owner: CombatantRuntime, rt: Rule
 	var fired := _settle(ctx, owner, rt, rc, null)
 	# 175 补充四：流血这类「每次结算后减半」的状态 —— 自己的周期规则跳完一次就减半（扣层那条不算）
 	if fired and rt.buff != null and rt.buff.def.decay_halve_on == BuffDef.HALVE_TICK and rt.rule != rt.buff.def.decay_rule():
+		@warning_ignore("integer_division")
 		owner.decay_buff(ctx, rt.buff, rt.buff.stacks / 2)
 	return fired
 
@@ -181,7 +182,7 @@ static func ready_at_of(rt: RuleRuntime, rc: RuleContext) -> int:
 ##
 ## 时刻必须严格大于当前时刻，否则同刻会被反复弹出，推进器再也走不动。
 static func _reschedule(
-	ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime, rc: RuleContext
+	ctx: BattleContext, _owner: CombatantRuntime, rt: RuleRuntime, rc: RuleContext
 ) -> void:
 	var t: int = rt.rule.cadence.next_time(rc, ctx.now)
 	if t == Cadence.NEVER:

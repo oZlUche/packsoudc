@@ -137,7 +137,9 @@ static func _value(kind: String, text: String, shared: Array[String]) -> Variant
 	match kind:
 		"s":
 			var i := int(text)
-			return shared[i] if i >= 0 and i < shared.size() else null
+			if i >= 0 and i < shared.size():
+				return shared[i]
+			return null
 		"inlineStr", "str":
 			return text
 		"b":

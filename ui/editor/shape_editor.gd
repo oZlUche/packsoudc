@@ -209,9 +209,9 @@ func _is_filled(o: Vector2i) -> bool:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		var g = _grid_at((event as InputEventMouseMotion).position)
-		if g != _hover:
-			_hover = g
+		var g_ = _grid_at((event as InputEventMouseMotion).position)
+		if g_ != _hover:
+			_hover = g_
 			queue_redraw()
 		return
 	if not (event is InputEventMouseButton) or not event.pressed:

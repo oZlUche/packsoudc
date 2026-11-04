@@ -14,8 +14,8 @@ static func run_safe_placement(t: TestCase) -> void:
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var seen := 0
-	for seed in range(1, 9):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+	for seed_ in range(1, 9):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit.items)
 		if s == null:
 			continue
 		seen += 1
@@ -23,7 +23,7 @@ static func run_safe_placement(t: TestCase) -> void:
 		for id in s.map.node_ids():
 			if s.map.get_node(id).type == &"safe":
 				safes.append(id)
-		t.eq(safes.size(), 1, "种子 %d：恰好一个保险箱" % seed)
+		t.eq(safes.size(), 1, "种子 %d：恰好一个保险箱" % seed_)
 		if safes.is_empty():
 			continue
 		var node := s.map.get_node(safes[0])
@@ -38,7 +38,7 @@ static func run_safe_placement(t: TestCase) -> void:
 		t.check(sm != null and sm.inventory != null, "装了保险箱模块")
 		t.eq(sm.inventory.size, Vector2i(3, 3), "容器 3×3")
 		t.check(MapNodeTypes.has(&"safe") and MapNodeStyle.of(&"safe")["label"] == "保险箱", "类型表与样式认得")
-		if seed == 1:
+		if seed_ == 1:
 			var def: ItemDef = null
 			for inst in s.board.items():
 				if not (inst as ItemInstance).def.is_bag:
@@ -79,18 +79,18 @@ static func frame_safe_screen(t: TestCase, root: Window) -> void:
 	flow.chapters = [c.chapter] as Array[ChapterDef]
 	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
 	var reached := false
-	for seed in range(1, 12):
-		var run := flow.begin(c.chapter, kit, seed)
-		if run == null:
+	for seed_ in range(1, 12):
+		var run_ := flow.begin(c.chapter, kit, seed_)
+		if run_ == null:
 			continue
-		var safe := Support.safe_node(run)
+		var safe := Support.safe_node(run_)
 		if safe == null:
 			flow.to_main_menu()
 			continue
 		# 出生点挑离保险箱最近的
-		var dist := MapNavigator.distance_map(run.map, safe.id)
-		var entry := run.map.entry_ids[0]
-		for e in run.map.entry_ids:
+		var dist := MapNavigator.distance_map(run_.map, safe.id)
+		var entry := run_.map.entry_ids[0]
+		for e in run_.map.entry_ids:
 			if dist.has(e) and (not dist.has(entry) or int(dist[e]) < int(dist[entry])):
 				entry = e
 		flow.pick_spawn(entry)

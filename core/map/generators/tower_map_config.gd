@@ -57,6 +57,7 @@ func row_count() -> int:
 
 ## 中途撤离点默认落在正中那一层
 func default_extract_rows() -> Array[int]:
+	@warning_ignore("integer_division")
 	return [row_count() / 2] as Array[int]
 
 

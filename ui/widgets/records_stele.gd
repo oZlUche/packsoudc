@@ -103,7 +103,9 @@ static func compact(v: int) -> String:
 	for unit in UNITS:
 		var div := int(unit[0])
 		if v >= div:
+			@warning_ignore("integer_division")
 			var hundredths := v / div * 100 + v % div * 100 / div     # 先除后乘，大数不溢出
+			@warning_ignore("integer_division")
 			var text := "%d.%02d" % [hundredths / 100, hundredths % 100]
 			return text.rstrip("0").rstrip(".") + String(unit[1])
 	return str(v)
@@ -126,11 +128,14 @@ static func roman_parts(v: int) -> Array:
 		return [["—", 0]]
 	var div := 1
 	var k := 0
+	@warning_ignore("integer_division")
 	while v / div >= 1000:     # 先除再比，int 上限也不溢出
 		div *= 1000
 		k += 1
+	@warning_ignore("integer_division")
 	var out := [[roman(v / div), k]]
 	if k > 0:
+		@warning_ignore("integer_division")
 		var next := v / (div / 1000) % 1000 / 10 * 10
 		if next > 0:
 			out.append([roman(next), k - 1])
@@ -266,8 +271,8 @@ func _get_tooltip(at: Vector2) -> String:
 	return ""
 
 
-func _tex(name: String) -> Texture2D:
-	return UiTheme.art_cached(ART + name)
+func _tex(p_name: String) -> Texture2D:
+	return UiTheme.art_cached(ART + p_name)
 
 
 ## 圆牌的图：美术设计的定稿（`records/record_<种>_<阶>`、没到第一阶 `_locked`）；没到用军团圆牌占位
@@ -275,8 +280,8 @@ func medal_texture(i: int) -> Texture2D:
 	var r: Dictionary = _rows[i]
 	var kind := String(r["kind"])
 	var tier := int(r["tier"])
-	var name := "record_%s_%s" % [kind, TIERS[tier - 1]] if tier > 0 else "record_%s_locked" % kind
-	var t := _tex(name)
+	var name_ := "record_%s_%s" % [kind, TIERS[tier - 1]] if tier > 0 else "record_%s_locked" % kind
+	var t := _tex(name_)
 	if t != null:
 		return t
 	var path := "res://assets/items/legion_phalera%s.png" % ("@s%d" % mini(tier - 1, 4) if tier > 1 else "")     # 本图铜色，@s1 银、@s2 金
@@ -356,10 +361,10 @@ func tablet_layout(fb: Font) -> Dictionary:
 	var coin := float(UiTheme.sz(WORTH_COIN))
 	var top := o.y + TABLET.position.y
 	if not (_roman and segs.size() == 2 and px < UiTheme.sz(TWO_ROW_BELOW)):
-		var x := o.x + TABLET.position.x + (TABLET.size.x - worth_width(fb, segs, px)) * 0.5
+		var x_ := o.x + TABLET.position.x + (TABLET.size.x - worth_width(fb, segs, px)) * 0.5
 		var base_y := top + WORTH_BASE + (px * CAP_AT + overline_stack(px, int(segs[0][1]))) * 0.5
-		return {"px": px, "rows": [{"segs": segs, "x": x + coin + WORTH_GAP, "base": base_y}],
-			"coin": Rect2(x, base_y - px * CAP_AT * 0.5 - coin * 0.5, coin, coin)}
+		return {"px": px, "rows": [{"segs": segs, "x": x_ + coin + WORTH_GAP, "base": base_y}],
+			"coin": Rect2(x_, base_y - px * CAP_AT * 0.5 - coin * 0.5, coin, coin)}
 	px = two_row_size(fb, segs)
 	var w0 := fb.get_string_size(String(segs[0][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 	var w1 := fb.get_string_size(String(segs[1][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
@@ -404,10 +409,10 @@ func _draw_tablet(_f: Font, fb: Font) -> void:
 		draw_circle(coin_r.get_center(), coin_r.size.x * 0.5, CoinLabel.FALLBACK_FILL)
 	var th := maxf(2.0, px * OVERLINE_K)
 	var step := maxf(2.0, px * OVERLINE_STEP)
-	for row in lay["rows"]:
-		var tx := float(row["x"])
-		var base_y := float(row["base"])
-		for seg in row["segs"]:
+	for row_ in lay["rows"]:
+		var tx := float(row_["x"])
+		var base_y := float(row_["base"])
+		for seg in row_["segs"]:
 			var text := String(seg[0])
 			var tw := fb.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 			_carved(fb, Vector2(tx, base_y), text, px, VERM)
@@ -444,8 +449,8 @@ static func worth_width(fb: Font, segs: Array, px: int) -> float:
 
 
 ## 一件碑的图；缺图在 [param fallback] 上画石色块（[param sunk] = 凹框：深一点的边）
-func _piece(name: String, at: Vector2, fallback: Rect2, sunk := false) -> void:
-	var t := _tex(name)
+func _piece(p_name: String, at: Vector2, fallback: Rect2, sunk := false) -> void:
+	var t := _tex(p_name)
 	if t != null:
 		draw_texture(t, at)
 		return

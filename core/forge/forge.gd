@@ -176,13 +176,13 @@ static func rule_of(ench: Dictionary) -> AbilityRule:
 	var e := table(&"effect")
 	var tm := ForgeTable.find(t.material, StringName(String(ench["trigger"])))
 	var tp := ForgeTable.find(t.purpose, StringName(String(ench.get("direction", ForgeTable.DEFAULT))))
-	var tr := t.by_rarity(int(ench.get("rate", 0)))
+	var tr_ := t.by_rarity(int(ench.get("rate", 0)))
 	var em := ForgeTable.find(e.material, StringName(String(ench["effect"])))
 	var ep := ForgeTable.find(e.purpose, StringName(String(ench.get("target", ForgeTable.DEFAULT))))
 	var er := e.by_rarity(int(ench.get("tier", 0)))
 	if tm.trigger == null or em.effect == null:
 		return null
-	var rule := _timing_rule(tm, tp, tr)
+	var rule := _timing_rule(tm, tp, tr_)
 	var tier := er.tier if er != null else 0
 	var guard := _guard(em, ep)
 	# 195：攻式 / 守式按用途选；升阶、附带是**追加**的句子（不再替换基础句）；数值只写进基础句（再乘稀有度的 main_mult）
@@ -205,14 +205,14 @@ static func rule_of(ench: Dictionary) -> AbilityRule:
 
 
 ## 时机槽三行拼成的半条规则（扳机 + 节奏，没有效果）：[method rule_of] 与 194 的逐槽显示共用
-static func _timing_rule(tm: ForgeEntry, tp: ForgeEntry, tr: ForgeEntry) -> AbilityRule:
+static func _timing_rule(tm: ForgeEntry, tp: ForgeEntry, p_tr: ForgeEntry) -> AbilityRule:
 	var rule := AbilityRule.new()
 	rule.trigger = tm.trigger.duplicate(true) as Trigger
 	if tp != null:
 		_set_props(rule.trigger, tp.trigger_props)
 	if rule.trigger is OnItemFired:     # 附魔的「出手时」= 这把武器自己出手（编译挂上时 108 入口也会再绑一次宿主）
 		(rule.trigger as OnItemFired).self_only = true
-	var cad: Cadence = tm.fixed_cadence if tm.fixed_cadence != null else (tr.cadence if tr != null else null)
+	var cad: Cadence = tm.fixed_cadence if tm.fixed_cadence != null else (p_tr.cadence if p_tr != null else null)
 	rule.cadence = (cad.duplicate(true) if cad != null else Always.new()) as Cadence
 	# 195：用途的节奏系数乘在冷却上（固定节奏、每次触发不乘），乘完不低于 MIN_COOLDOWN
 	if tm.fixed_cadence == null and tp != null and rule.cadence is CooldownCadence:
@@ -255,8 +255,11 @@ static func _shape_effect(eff: CombatEffect, em: ForgeEntry, ep: ForgeEntry, enc
 	var field := em.guard_amount_field if guard else em.amount_field
 	if field != &"" and field in eff:
 		var cur: Variant = eff.get(field)
-		var sign := -1 if (cur is float or cur is int) and cur < 0 else 1
-		eff.set(field, float(mag * sign) if cur is float else mag * sign)
+		var sign_ := -1 if (cur is float or cur is int) and cur < 0 else 1
+		if cur is float:
+			eff.set(field, float(mag * sign_))
+		else:
+			eff.set(field, mag * sign_)
 	if guard:
 		return
 	if not em.self_only and ep != null and ep.target >= 0 and "target" in eff:

@@ -13,9 +13,9 @@ var _locked: Dictionary = {}
 
 
 ## 091：设一批锁着的道具 id（[method ids] 不再给它们）
-func set_locked(ids: Array) -> void:
+func set_locked(p_ids: Array) -> void:
 	_locked.clear()
-	for id in ids:
+	for id in p_ids:
 		_locked[StringName(String(id))] = true
 
 

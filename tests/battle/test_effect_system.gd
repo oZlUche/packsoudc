@@ -114,22 +114,22 @@ static func run(t: TestCase) -> void:
 	t.eq(StatMath.to_int(pool.current(BattleStats.RES_HP)), 100, "超上限截断")
 
 	# --- 上限增加时当前值同量增加 ---
-	var log: Array = []
-	pool.changed.connect(func(k, d, r): log.append([String(k), StatMath.to_int(d), String(r)]))
+	var log_: Array = []
+	pool.changed.connect(func(k, d, r): log_.append([String(k), StatMath.to_int(d), String(r)]))
 
 	pool.change(BattleStats.RES_HP, StatMath.from_float(-40.0), BattleEvent.REASON_DAMAGE)
-	log.clear()
+	log_.clear()
 	pool.set_max(BattleStats.RES_HP, StatMath.from_float(130.0))
 	t.eq(StatMath.to_int(pool.maximum(BattleStats.RES_HP)), 130, "上限升到 130")
 	t.eq(StatMath.to_int(pool.current(BattleStats.RES_HP)), 90, "当前值 60 同量 +30 变成 90")
-	t.eq(log.size(), 1, "上限联动只发一条事件")
-	t.eq(log[0][2], String(BattleEvent.REASON_MAX_CHANGED), "原因是 max_changed 而非 heal")
+	t.eq(log_.size(), 1, "上限联动只发一条事件")
+	t.eq(log_[0][2], String(BattleEvent.REASON_MAX_CHANGED), "原因是 max_changed 而非 heal")
 
 	# --- 上限降低时截断 ---
-	log.clear()
+	log_.clear()
 	pool.set_max(BattleStats.RES_HP, StatMath.from_float(50.0))
 	t.eq(StatMath.to_int(pool.current(BattleStats.RES_HP)), 50, "上限降到 50，当前值被截断")
-	t.eq(log[0][2], String(BattleEvent.REASON_MAX_CHANGED), "同样记为 max_changed")
+	t.eq(log_[0][2], String(BattleEvent.REASON_MAX_CHANGED), "同样记为 max_changed")
 
 	t.check(pool.can_afford(BattleStats.RES_HP, StatMath.from_float(50.0)), "刚好付得起")
 	t.check(not pool.can_afford(BattleStats.RES_HP, StatMath.from_float(51.0)), "差一点付不起")

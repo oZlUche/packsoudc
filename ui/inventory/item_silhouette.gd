@@ -202,9 +202,9 @@ static func _trace_cells(cells: Array[Vector2i]) -> Array[PackedVector2Array]:
 				var best := -INF
 				for i in outs.size():
 					var d: Vector2i = (outs[i] as Vector2i) - at
-					var turn := float(dir.x * d.y - dir.y * d.x)     # 屏幕坐标里 > 0 = 右转：斜着相碰的两格各走各的圈
-					if turn > best:
-						best = turn
+					var turn_ := float(dir.x * d.y - dir.y * d.x)     # 屏幕坐标里 > 0 = 右转：斜着相碰的两格各走各的圈
+					if turn_ > best:
+						best = turn_
 						pick = i
 			var to: Vector2i = outs[pick]
 			outs.remove_at(pick)
@@ -313,15 +313,15 @@ static func separate(a_parts: Array, a_pos: Vector2, b_parts: Array, b_pos: Vect
 			rb.position += b_pos
 			if ra.position.x >= rb.end.x or rb.position.x >= ra.end.x or ra.position.y >= rb.end.y or rb.position.y >= ra.end.y:
 				continue     # 粗筛：包围盒都不相交
-			var hit := _sat(pa, a_pos, pb, b_pos)
-			if float(hit["depth"]) <= best_depth:
+			var hit_ := _sat(pa, a_pos, pb, b_pos)
+			if float(hit_["depth"]) <= best_depth:
 				continue
-			var n: Vector2 = hit["n"]
+			var n: Vector2 = hit_["n"]
 			if n.x < -0.000001 or (absf(n.x) <= 0.000001 and n.y < 0.0):
 				n = -n
 			var d := (rb.get_center() - ra.get_center()).dot(n)
 			n *= signf(d) if absf(d) > 0.01 else signf(tie)
-			best_depth = hit["depth"]
+			best_depth = hit_["depth"]
 			best_n = n
 	return {"n": best_n, "depth": best_depth}
 
@@ -436,9 +436,9 @@ static func contact(pa: PackedVector2Array, pb: PackedVector2Array, touch: float
 			if e.length_squared() < 0.000001:
 				continue
 			var axis := Vector2(-e.y, e.x).normalized()
-			var ia := _project(pa, Vector2.ZERO, axis)
-			var ib := _project(pb, Vector2.ZERO, axis)
-			var o := minf(ia.y, ib.y) - maxf(ia.x, ib.x)
+			var ia_ := _project(pa, Vector2.ZERO, axis)
+			var ib_ := _project(pb, Vector2.ZERO, axis)
+			var o := minf(ia_.y, ib_.y) - maxf(ia_.x, ib_.x)
 			if o <= -touch:
 				return {}
 			if o < depth - 0.0001 or (absf(o - depth) <= 0.0001 and absf(axis.x) > absf(n.x) + 0.0001):
@@ -452,28 +452,28 @@ static func contact(pa: PackedVector2Array, pb: PackedVector2Array, touch: float
 		n = -n
 		ia = Vector2(-ia.y, -ia.x)
 		ib = Vector2(-ib.y, -ib.x)
-	var tan := Vector2(-n.y, n.x)
-	var fa := _feature(pa, n, ia.y, tan)
-	var fb := _feature(pb, -n, -ib.x, tan)
+	var tan_ := Vector2(-n.y, n.x)
+	var fa := _feature(pa, n, ia.y, tan_)
+	var fb := _feature(pb, -n, -ib.x, tan_)
 	var lo := maxf(fa.x, fb.x)
 	var hi := minf(fa.y, fb.y)
 	var s := (ia.y + ib.x) * 0.5
 	var points := PackedVector2Array()
 	if hi - lo < 1.0:
-		points.append(n * s + tan * ((lo + hi) * 0.5))
+		points.append(n * s + tan_ * ((lo + hi) * 0.5))
 	else:
-		points.append(n * s + tan * lo)
-		points.append(n * s + tan * hi)
+		points.append(n * s + tan_ * lo)
+		points.append(n * s + tan_ * hi)
 	return {"n": n, "depth": depth, "points": points}
 
 
-## 一块沿 [param dir] 最远（离 [param far] 不到 [constant FEATURE_TOL]）的那几个顶点在切线 [param tan] 上占的区间
-static func _feature(poly: PackedVector2Array, dir: Vector2, far: float, tan: Vector2) -> Vector2:
+## 一块沿 [param dir] 最远（离 [param far] 不到 [constant FEATURE_TOL]）的那几个顶点在切线 [param p_tan] 上占的区间
+static func _feature(poly: PackedVector2Array, dir: Vector2, far: float, p_tan: Vector2) -> Vector2:
 	var lo := INF
 	var hi := -INF
 	for p in poly:
 		if p.dot(dir) >= far - FEATURE_TOL:
-			var t := p.dot(tan)
+			var t := p.dot(p_tan)
 			lo = minf(lo, t)
 			hi = maxf(hi, t)
 	return Vector2(lo, hi)

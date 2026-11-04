@@ -1021,7 +1021,7 @@ static func _plane_contact(verts: PackedVector2Array, n: Vector2, limit: float) 
 		deepest = maxf(deepest, v.dot(n) - limit)
 	if deepest <= -BUMP_TOUCH:
 		return {}
-	var tan := Vector2(-n.y, n.x)
+	var tan_ := Vector2(-n.y, n.x)
 	var lo := INF
 	var hi := -INF
 	var p_lo := Vector2.ZERO
@@ -1029,7 +1029,7 @@ static func _plane_contact(verts: PackedVector2Array, n: Vector2, limit: float) 
 	for v in verts:
 		if v.dot(n) - limit < deepest - ItemSilhouette.FEATURE_TOL:
 			continue
-		var t := v.dot(tan)
+		var t := v.dot(tan_)
 		if t < lo:
 			lo = t
 			p_lo = v

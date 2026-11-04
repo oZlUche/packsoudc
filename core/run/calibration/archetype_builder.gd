@@ -92,19 +92,19 @@ static func _phalera(items: ItemDatabase) -> ItemInstance:
 	return inst
 
 
-static func key_of(archetype: StringName, bracket: int, seed: int) -> String:
-	return "%s/%d/%d" % [archetype, bracket, seed]
+static func key_of(archetype: StringName, bracket: int, p_seed: int) -> String:
+	return "%s/%d/%d" % [archetype, bracket, p_seed]
 
 
-## 一份：流派 [param archetype]、第 [param bracket] 段（对池的同号档）、第 [param seed] 个种子。
+## 一份：流派 [param archetype]、第 [param bracket] 段（对池的同号档）、第 [param p_seed] 个种子。
 ## [param pin] 是要钉上的随身之物（兵刃变体的军功牌）：包先盖住它的圈，牌钉在 [constant PHALERA_AT]，武器先往圈里摆。
 ## [param extras] 并进木桩（变体的名字、按件修饰、轴），再量读数
-static func one(archetype: StringName, bracket: int, seed: int, pool: EnemyPool, items: ItemDatabase,
+static func one(archetype: StringName, bracket: int, p_seed: int, pool: EnemyPool, items: ItemDatabase,
 		character: CharacterDef, extra_bag: bool, pin: ItemInstance = null, extras: Dictionary = {}) -> Dictionary:
 	var strength := pool.clamp_strength(bracket)
 	var tier := pool.tier_of(strength)
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([String(archetype), bracket, seed, "archetype"])
+	rng.seed = hash([String(archetype), bracket, p_seed, "archetype"])
 	var count := rng.randi_range(tier.item_count.x, tier.item_count.y) if tier != null else 3
 	var rule := pool.loadout if pool.loadout != null else EnemyLoadout.new()
 	var who := EnemyDef.new()
@@ -169,7 +169,7 @@ static func one(archetype: StringName, bracket: int, seed: int, pool: EnemyPool,
 	for key in baseline.base_stats:
 		stats[String(key)] = float(baseline.base_stats[key])
 	var dummy := {
-		"archetype": String(archetype), "bracket": bracket, "seed": seed, "tier": strength, "samples": 1,
+		"archetype": String(archetype), "bracket": bracket, "seed": p_seed, "tier": strength, "samples": 1,
 		"board_size": [size.x, size.y], "requires_bag": true, "layout": CalibrationRecorder.layout_of(board), "baseline": stats,
 		"bags": bags.map(func(id: StringName) -> String: return String(id)),
 		"picked": picks.map(func(id: StringName) -> String: return String(id)), "left": left,

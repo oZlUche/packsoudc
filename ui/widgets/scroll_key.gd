@@ -64,15 +64,15 @@ var _pressed_dy := 1.0
 
 
 ## [param p_coin] = 币座键；[param p_price] 币座键上的数字（负数不写）
-static func make(text: String, handler: Callable, p_coin: bool = false, p_price: int = -1) -> Button:
+static func make(p_text: String, handler: Callable, p_coin: bool = false, p_price: int = -1) -> Button:
 	var spec := UiTheme.art_meta(LAYOUT)
 	if UiTheme.art_cached(ART_DIR + ("key_coin" if p_coin else "key") + "_normal") == null:
-		var flat := UiTheme.make_button("", handler, UiPalette.Tier.SECONDARY, 13)
-		show_price(flat, text, p_price)
-		return flat
+		var flat_ := UiTheme.make_button("", handler, UiPalette.Tier.SECONDARY, 13)
+		show_price(flat_, p_text, p_price)
+		return flat_
 	var b := ScrollKey.new()
 	b.coin = p_coin
-	b.text = text
+	b.text = p_text
 	b._dress(spec)
 	b.price = p_price
 	b.pressed.connect(handler)
@@ -80,21 +80,21 @@ static func make(text: String, handler: Callable, p_coin: bool = false, p_price:
 
 
 ## 主键：要动真格的那一下（神坛「献祭」、读档「读取」「在此开新档」）。[param two_line] = 底下留一行小字（[member sub]），整颗高 64
-static func primary(text: String, handler: Callable, two_line: bool = false) -> Button:
+static func primary(p_text: String, handler: Callable, two_line: bool = false) -> Button:
 	if UiTheme.art_cached(PRIMARY_ART + "normal") == null:
-		return make(text, handler)
+		return make(p_text, handler)
 	var b := ScrollKey.new()
 	b.primary_key = true
 	b._two_line = two_line
-	b.text = text
+	b.text = p_text
 	b._dress(UiTheme.art_meta(LAYOUT))
 	b.pressed.connect(handler)
 	return b
 
 
 ## 矮键：同纸卷压到 44 高、字 18（回地图、整理背包、上一页、删除）
-static func short(text: String, handler: Callable) -> Button:
-	var b := make(text, handler)
+static func short(p_text: String, handler: Callable) -> Button:
+	var b := make(p_text, handler)
 	if b is ScrollKey:
 		b.custom_minimum_size.y = SHORT_H
 		b.add_theme_font_size_override("font_size", UiTheme.sz(SHORT_FONT))

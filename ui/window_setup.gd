@@ -34,6 +34,7 @@ static func apply(settings: GameSettings, window: Window) -> bool:
 	# 存的那档比现在的屏幕大（换了显示器）：这次按屏幕挑，不改设置
 	var size := settings.resolution if fits(settings.resolution, screen) else pick_default(screen)
 	window.size = size
+	@warning_ignore("integer_division")
 	window.position = DisplayServer.screen_get_position(window.current_screen) + (screen - size) / 2
 	return filled
 

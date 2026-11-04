@@ -42,6 +42,7 @@ func summary_for(_def: FaithDef, _points: int) -> String:
 
 ## 188 补充一：随信力的数 = [param base] + （信力 / [param step] 取整） × [param per]，不超过 [param cap]（cap ≤ 0 不封顶）
 static func scaled(points: int, base: float, step: int, per: float, cap: float) -> float:
+	@warning_ignore("integer_division")
 	var v := base + float(maxi(0, points) / maxi(1, step)) * per
 	return minf(v, cap) if cap > 0.0 else v
 

@@ -180,9 +180,9 @@ func _align_slot_notes() -> void:
 		var r := frame.get_global_rect()
 		# 左下「返回」路标伸进了时机槽便条的左下角：便条照样贴齐槽框，字往右让开路标（v4.06 复测：英文第三、四行被盖住）
 		var left := float(NOTE_PAD)
-		var sign := _back_btn.get_global_rect() if _back_btn != null else Rect2()
-		if sign.has_area() and sign.position.x < r.position.x and sign.end.x > r.position.x and sign.position.y > r.end.y:
-			left = sign.end.x - r.position.x + NOTE_PAD * 0.5
+		var sign_ := _back_btn.get_global_rect() if _back_btn != null else Rect2()
+		if sign_.has_area() and sign_.position.x < r.position.x and sign_.end.x > r.position.x and sign_.position.y > r.end.y:
+			left = sign_.end.x - r.position.x + NOTE_PAD * 0.5
 		var box := note.get_theme_stylebox("panel")
 		if box != null:
 			box.content_margin_left = left
@@ -275,22 +275,22 @@ func _place_piece(b: TextureButton, which: String, s: float, offset: Vector2) ->
 
 
 #region 公开动作
-## 把棋盘 / 地上的一件放进第 [param slot] 个槽（0 时机、1 效果、2 数值）；槽里有东西、铸过了不收。测试直接调
-func put_in(slot: int, uid: int) -> bool:
+## 把棋盘 / 地上的一件放进第 [param p_slot] 个槽（0 时机、1 效果、2 数值）；槽里有东西、铸过了不收。测试直接调
+func put_in(p_slot: int, uid: int) -> bool:
 	var from := flow.run.holder_of(uid)
-	if from == null or slot < 0 or slot >= _slots.size() or not _forge_open() or _slots[slot].item_count() > 0:
+	if from == null or p_slot < 0 or p_slot >= _slots.size() or not _forge_open() or _slots[p_slot].item_count() > 0:
 		return false
 	var inst := from.get_item(uid)
 	if inst == null or Forge.is_token(inst) or inst.is_locked_by_player():
 		return false
-	return InventoryService.transfer_auto(from, uid, _slots[slot])
+	return InventoryService.transfer_auto(from, uid, _slots[p_slot])
 
 
 ## 槽里的东西回棋盘（放不下到地上）
-func take_back(slot: int, uid: int) -> bool:
-	if slot < 0 or slot >= _slots.size() or _slots[slot].get_item(uid) == null:
+func take_back(p_slot: int, uid: int) -> bool:
+	if p_slot < 0 or p_slot >= _slots.size() or _slots[p_slot].get_item(uid) == null:
 		return false
-	return _take_to_player(_slots[slot], uid) != ""
+	return _take_to_player(_slots[p_slot], uid) != ""
 
 
 ## 出牌槽里的铸牌拿回背包
@@ -390,13 +390,13 @@ func _forge_open() -> bool:
 
 
 func _refresh() -> void:
-	var open := _forge_open()
+	var open_ := _forge_open()
 	var empty: GridInventory = null     # 棋盘上双击 → 第一个空槽
 	for g in _slots:
 		if g.item_count() == 0 and empty == null:
 			empty = g
 	if _inv != null:
-		_inv.set("quick_target", empty if open else null)
+		_inv.set("quick_target", empty if open_ else null)
 	for i in _slots.size():
 		var inst: ItemInstance = _slots[i].items()[0] if _slots[i].item_count() == 1 else null
 		var lines := Forge.slot_summary(ForgeTable.SLOTS[i], inst.def) if inst != null else ([] as Array[String])
@@ -404,14 +404,14 @@ func _refresh() -> void:
 		_slot_notes[i].visible = not lines.is_empty()
 	_align_slot_notes.call_deferred()     # 字换了行数，便条跟着收放
 	var ench := preview()
-	_forge_btn.disabled = ench.is_empty() or not open
+	_forge_btn.disabled = ench.is_empty() or not open_
 	_forge_btn.texture_normal = UiTheme.art_cached(UiTheme.lang_art("forge/forge_btn_ready"))     # 221：键上画着字，英文版另一套
-	_forge_btn.texture_disabled = UiTheme.art_cached(UiTheme.lang_art("forge/forge_btn_%s" % ("idle" if open else "off")))
+	_forge_btn.texture_disabled = UiTheme.art_cached(UiTheme.lang_art("forge/forge_btn_%s" % ("idle" if open_ else "off")))
 	if _forge_btn.texture_click_mask == null:
 		_forge_btn.texture_click_mask = _click_mask(_forge_btn.texture_normal)
-	_bg.texture = UiTheme.art_cached(UiTheme.lang_art("forge/bg_%s" % ("lit" if open else "cold")))     # 铸过：炉熄
+	_bg.texture = UiTheme.art_cached(UiTheme.lang_art("forge/bg_%s" % ("lit" if open_ else "cold")))     # 铸过：炉熄
 	UiTheme.label(_preview, PREVIEW_SIZE, UiTheme.INK)
-	if not open:
+	if not open_:
 		_forge_btn.tooltip_text = UiText.t("forge.used")
 		_preview.text = UiText.t("forge.used") if _out.item_count() == 0 else UiText.t("forge.ready")
 	elif ench.is_empty():

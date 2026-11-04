@@ -785,10 +785,13 @@ func add_flag(id: StringName, delta: int) -> int:
 
 #region 存档
 func to_dict() -> Dictionary:
+	var board_dict: Variant = null     # 搬空了留着显示的空棋盘不存（读回来也是没有）
+	if has_pending_board():
+		board_dict = board.to_dict()
 	return {
 		"version": SAVE_VERSION,
 		"warehouse": warehouse.to_dict(),
-		"board": board.to_dict() if has_pending_board() else null,     # 搬空了留着显示的空棋盘不存（读回来也是没有）
+		"board": board_dict,
 		"codex": codex.duplicate(),
 		"active_buffs": _names_of(active_buffs),
 		"unlocks": _names_of(unlocks),

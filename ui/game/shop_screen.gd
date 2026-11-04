@@ -26,7 +26,6 @@ var _inv: InventoryPanelScript
 
 func open(payload: Dictionary) -> void:
 	_session = payload.get("session", null)
-	var node: MapNode = payload.get("node", null)
 	var panel := _centered_panel(Vector2(0, 0), 16, OverlayFrame.SKIN_TENT)     # 233（作者 21:42 选乙）：集市帐篷
 	var row := _hbox(24)
 	panel.add_child(row)
@@ -317,9 +316,9 @@ func _rebuild() -> void:
 		var inst := _session.item_at(i)     # 卖掉的格子是空的（价签只写「已售」，用不到尺寸）
 		var def := inst.def if inst != null else null
 		var sold := _session.sold.has(i)
-		var size := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
+		var size_ := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
 		var price := PriceTag.coins(int(_session.stock[i]["price"]))     # 226 批三：铜挂牌，卖掉了盖戳；作者 10-24：钱 = 金币 + 数，不写「币」
-		price.suffix = UiText.t("shop.price_size") % [size.x, size.y]
+		price.suffix = UiText.t("shop.price_size") % [size_.x, size_.y]
 		price.sold = sold
 		price.name = "Price%d" % idx
 		col.add_child(price)
@@ -403,8 +402,8 @@ class BeltTile extends Control:
 func buy_belt(i: int) -> String:
 	var why := _session.buy_belt(i) if _session != null else UiText.t("shop.no_shop")
 	var def := BeltSkillDef.find(StringName(String(_session.belt_offers[i]["id"]))) if _session != null and i >= 0 and i < _session.belt_offers.size() else null
-	var name := Names.of(def) if def != null else UiText.t("shop.carried_tool")
-	_say(UiText.t("shop.belt_bought") % name if why == "" else UiText.t("shop.cant_buy") % [name, why])
+	var name_ := Names.of(def) if def != null else UiText.t("shop.carried_tool")
+	_say(UiText.t("shop.belt_bought") % name_ if why == "" else UiText.t("shop.cant_buy") % [name_, why])
 	_refresh()
 	return why
 

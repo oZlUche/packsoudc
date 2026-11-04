@@ -23,9 +23,9 @@ static func _node(danger: int = 0) -> MapNode:
 	return n
 
 
-static func _rng(seed: int) -> RandomNumberGenerator:
+static func _rng(p_seed: int) -> RandomNumberGenerator:
 	var r := RandomNumberGenerator.new()
-	r.seed = seed
+	r.seed = p_seed
 	return r
 
 
@@ -204,7 +204,7 @@ static func run_haul_box(t: TestCase) -> void:
 	tiny.max_searches = 2
 	var s2 := SearchSession.new(_node(), tiny, items, _rng(5), 0.3)
 	var swaps: Array = []
-	s2.haul_changed.connect(func(box: GridInventory): swaps.append(box))
+	s2.haul_changed.connect(func(box_: GridInventory): swaps.append(box_))
 	s2.search()
 	t.check(s2.haul_box.size.y > 1, "换了更高的容器（%s）" % str(s2.haul_box.size))
 	t.check(s2.haul_box.size.y <= tiny.haul_board.y * 2, "至多加高到两倍")

@@ -11,10 +11,9 @@ var _view: InventoryView
 var _inv: InventoryPanelScript = null
 
 
-func open(payload: Dictionary) -> void:
+func open(_payload: Dictionary) -> void:
 	_module = SafeModule.of(flow.run)     # 101：保险箱是一局的模块
 	_safe = _module.inventory if _module != null else null
-	var node: MapNode = payload.get("node", null)
 	var panel := _centered_panel(Vector2(0, 0))
 	var row := _hbox(24)
 	panel.add_child(row)

@@ -87,7 +87,7 @@ static func run(t: TestCase) -> void:
 
 	# --- 准入回调 ---
 	var slot := GridInventory.new(Vector2i(1, 2), 4)
-	slot.accept_filter = func(d: ItemDef) -> bool: return d.tags.has(&"weapon")
+	slot.accept_filter = func(d_: ItemDef) -> bool: return d_.tags.has(&"weapon")
 	var w := ItemInstance.create(weapon)
 	var d := ItemInstance.create(single)
 	t.check(slot.accepts(weapon), "带 weapon 标签的定义应被接受")

@@ -53,7 +53,9 @@ func wanted(node: MapNode, depth: float, difficulty: int, scale_id: StringName, 
 func exploration_bonus(exploration: Dictionary) -> int:
 	var bonus := 0
 	if steps_per_tier > 0:
+		@warning_ignore("integer_division")
 		bonus += mini(steps_max_bonus, int(exploration.get("steps", 0)) / steps_per_tier)
 	if searches_per_tier > 0:
+		@warning_ignore("integer_division")
 		bonus += mini(searches_max_bonus, int(exploration.get("searches", 0)) / searches_per_tier)
 	return maxi(0, bonus)

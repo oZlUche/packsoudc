@@ -150,7 +150,7 @@ static func run_recommend(t: TestCase) -> void:
 static func run_weights(t: TestCase) -> void:
 	t.begin("151 · 系数表：仓库那份读得进；缺项用默认；认不出的键、形状不对的报；没有文件全默认")
 	var problems: Array[String] = []
-	var real := PowerWeights.load_from(PowerWeights.PATH, problems)
+	PowerWeights.load_from(PowerWeights.PATH, problems)
 	t.check(problems.is_empty(), "仓库里那份没问题（%s）" % ", ".join(problems))
 	t.check(FileAccess.file_exists(PowerWeights.PATH), "仓库里有 power_weights.json")
 	var f := FileAccess.open(TMP, FileAccess.WRITE)
@@ -274,8 +274,8 @@ static func run_gear(t: TestCase) -> void:
 	trinket.shape = ItemShape.from_bits("1")
 	trinket.combat = CombatProfile.new()
 	trinket.combat.base_stats = {"max_armor": 10.0}
-	var tr := PowerEstimate.estimate(trinket, w)
-	t.check(tr.defense > 0.0 and tr.rarity == -1 and tr.value == 0, "别的非武器：护甲照样算进分数，但不给推荐")
+	var tr_ := PowerEstimate.estimate(trinket, w)
+	t.check(tr_.defense > 0.0 and tr_.rarity == -1 and tr_.value == 0, "别的非武器：护甲照样算进分数，但不给推荐")
 	# 现有的皮甲、圆盾和实际差不超过一档（系数按它们定的；格挡方案 153 落地后再调）
 	for id in ["leather_armor", "round_shield"]:
 		var def := load("%s/%s.tres" % [ITEMS, id]) as ItemDef

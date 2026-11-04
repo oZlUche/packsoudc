@@ -130,7 +130,7 @@ static func run_fixed_items_and_mask(t: TestCase) -> void:
 	t.check(not (load("res://ui/game/inventory_panel.gd")).can_bench(stick), "不能标不参战")
 	var back := GridInventory.from_dict(board.to_dict(), c.items)
 	t.eq(_pinned(back).size(), 1, "存档读回来还钉着（自带底板，不要包）")
-	t.check(not RunState.layout_of(board).any(func(r: Dictionary) -> bool: return String(r["id"]) == "wooden_stick"), "开局屏摆盘不记它（角色开局自己钉）")
+	t.check(not RunState.layout_of(board).any(func(r_: Dictionary) -> bool: return String(r_["id"]) == "wooden_stick"), "开局屏摆盘不记它（角色开局自己钉）")
 	t.check(ItemTooltip.describe(stick, board).contains(UiText.t("tip.pinned")), "悬浮窗最后一行灰小字")
 	# 开局：钉在原位；撤离：不带回、不进仓库 / 图鉴
 	var s := CS._start(c, ch)
@@ -203,7 +203,7 @@ static func _rect(c: Control) -> Rect2:
 static func run_contour(t: TestCase) -> void:
 	t.begin("255 §3.3：缺格棋盘的框按拼件规则拼（美术 11:21）—— 直边 → 凹角 → 凸角，格 60、框厚 20")
 	var all := func(_c: Vector2i) -> bool: return true
-	var names := func(ps: Array[Dictionary]) -> Array: return ps.map(func(p: Dictionary) -> String: return String(p["name"]))
+	var names := func(ps_: Array[Dictionary]) -> Array: return ps_.map(func(p: Dictionary) -> String: return String(p["name"]))
 	var plain: Array = names.call(BoardContour.pieces(Vector2i(2, 2), all))
 	t.eq(plain.filter(func(n: String) -> bool: return n.begins_with("edge")).size(), 8, "2 × 2 整块：八段直边")
 	t.eq(plain.filter(func(n: String) -> bool: return n.begins_with("outer")).size(), 4, "四个凸角")

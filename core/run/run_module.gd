@@ -27,7 +27,7 @@ var _run: RunState = null
 
 ## 把自己接进一局。开局与读档各一次，**必须幂等**。
 ## 这时 `run` 的骨架（地图、旅程、棋盘、节点事件）都已经造好；要给别人调用的能力自己挂上去
-func install(_run: RunState) -> void:
+func install(_state: RunState) -> void:
 	pass
 
 

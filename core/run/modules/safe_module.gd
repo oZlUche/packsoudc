@@ -84,8 +84,11 @@ func item_count() -> int:
 
 
 func to_dict() -> Dictionary:
+	var inv: Variant = null
+	if inventory != null:
+		inv = inventory.to_dict()
 	return {
-		"inventory": inventory.to_dict() if inventory != null else null,
+		"inventory": inv,
 		"locked": locked,
 	}
 

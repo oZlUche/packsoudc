@@ -64,7 +64,7 @@ static func frame_rows_fit_one_line(t: TestCase, root: Window) -> void:
 	UiText.lang = was
 
 
-static func frame_extract_unlocks_next(t: TestCase, root: Window) -> void:
+static func frame_extract_unlocks_next(t: TestCase, _root: Window) -> void:
 	t.begin("241 · 在 Ⅰ 撤离 → 开 Ⅱ；在 Ⅱ 撤离 → 开 Ⅲ；死了不开")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)

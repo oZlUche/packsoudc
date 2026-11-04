@@ -423,11 +423,11 @@ func _hbox(separation: int = 8) -> HBoxContainer:
 
 
 func _log_box(font_size: int = 12) -> RichTextLabel:
-	var log := RichTextLabel.new()
-	log.bbcode_enabled = true
-	log.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	log.scroll_following = true
-	return UiTheme.rich(log, font_size)
+	var log_ := RichTextLabel.new()
+	log_.bbcode_enabled = true
+	log_.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	log_.scroll_following = true
+	return UiTheme.rich(log_, font_size)
 
 
 ## 原地重建这一屏：清空全部子节点，再按 [param payload] 重新 [method open]（切了语言、收起背包、删了存档之后重画）

@@ -19,8 +19,8 @@ static func _start(items: ItemDatabase) -> RunState:
 	sets.load_dir()
 	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
 	var chars := GameFlow.load_characters()
-	for seed in range(1, 60):
-		var s := RunState.start(chapter, seed, items, enemies, sets, [] as Array[StringName], {}, [] as Array[StringName], chars[0] if not chars.is_empty() else null)
+	for seed_ in range(1, 60):
+		var s := RunState.start(chapter, seed_, items, enemies, sets, [] as Array[StringName], {}, [] as Array[StringName], chars[0] if not chars.is_empty() else null)
 		if s != null:
 			s.faith_defs = FaithDef.load_all()
 			s.pick_spawn(s.map.entry_ids[0])
@@ -48,16 +48,16 @@ static func run_defs_and_tiers(t: TestCase) -> void:
 	t.begin("信力 · 信仰文件里有阈值与行为；阶从阈值推；导入器拦错的阈值 / 行为 / 加成")
 	var defs := FaithDef.load_all()
 	for id in defs:
-		var def := defs[id] as FaithDef
-		t.check(not def.deeds.is_empty(), "%s 列了攒信力的行为：%s" % [id, def.deeds_summary()])
-		for i in range(1, def.thresholds.size()):
-			t.check(def.thresholds[i] >= def.thresholds[i - 1], "%s 的阈值非递减" % id)
-		t.eq(def.tier_of(0), 0, "%s：0 点第 0 阶" % id)
-		if not def.thresholds.is_empty():
-			t.eq(def.tier_of(def.thresholds[0]), 1, "%s：到第一道阈值第 1 阶" % id)
-			t.eq(def.tier_of(def.thresholds[-1]), def.thresholds.size(), "%s：过了最后一道 = 阈值数" % id)
-			t.eq(def.next_threshold(0), def.thresholds[0], "%s：下一道 = 第一道" % id)
-			t.eq(def.next_threshold(def.thresholds[-1]), -1, "%s：都过了 = -1" % id)
+		var def_ := defs[id] as FaithDef
+		t.check(not def_.deeds.is_empty(), "%s 列了攒信力的行为：%s" % [id, def_.deeds_summary()])
+		for i in range(1, def_.thresholds.size()):
+			t.check(def_.thresholds[i] >= def_.thresholds[i - 1], "%s 的阈值非递减" % id)
+		t.eq(def_.tier_of(0), 0, "%s：0 点第 0 阶" % id)
+		if not def_.thresholds.is_empty():
+			t.eq(def_.tier_of(def_.thresholds[0]), 1, "%s：到第一道阈值第 1 阶" % id)
+			t.eq(def_.tier_of(def_.thresholds[-1]), def_.thresholds.size(), "%s：过了最后一道 = 阈值数" % id)
+			t.eq(def_.next_threshold(0), def_.thresholds[0], "%s：下一道 = 第一道" % id)
+			t.eq(def_.next_threshold(def_.thresholds[-1]), -1, "%s：都过了 = -1" % id)
 	# 往返
 	var sample := {"id": "probe", "display_name": "试", "thresholds": [2, 5], "deeds": [
 		{"type": "battle", "amount": 1, "won_only": true}, {"type": "travel", "amount": 2, "every_steps": 3}, {"type": "event_choice", "amount": 1, "tag": "x"}]}
@@ -179,9 +179,9 @@ static func run_compiler_tiers(t: TestCase) -> void:
 	var db := _db()
 	var with_bonus: ItemDef = null
 	for id in db.ids():
-		var d := db.get_def(id)
-		if d.has_faith() and not d.faith_bonuses.is_empty() and d.combat != null:
-			with_bonus = d
+		var d_ := db.get_def(id)
+		if d_.has_faith() and not d_.faith_bonuses.is_empty() and d_.combat != null:
+			with_bonus = d_
 			break
 	t.not_null(with_bonus, "作者数据里有带按阶功能的信仰道具")
 	if with_bonus == null:

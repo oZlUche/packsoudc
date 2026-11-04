@@ -901,12 +901,12 @@ func _offer_loot(container: GridInventory) -> void:
 
 
 ## 开局屏摆好的棋盘怎么记：一件一行（定义 id、落点、朝向）。不记实例：一局的 uid 从 1 重编，进来时重造
-static func layout_of(board: GridInventory) -> Array:
+static func layout_of(board_: GridInventory) -> Array:
 	var out: Array = []
-	if board == null:
+	if board_ == null:
 		return out
 	var rows: Array = []
-	for inst in board.items():
+	for inst in board_.items():
 		if not (inst as ItemInstance).is_pinned():     # 255：随身之物由角色在开局时自己钉（[method CharacterDef.shape_board]）
 			rows.append(inst)
 	# 包先摆（普通物品要落在包里），其余按 uid 顺序，稳定
@@ -925,14 +925,14 @@ static func layout_of(board: GridInventory) -> Array:
 
 ## 按 [method layout_of] 的记录摆上棋盘（开局与校准快照 [CalibrationRecorder] 同一条路）：摆不回去的（棋盘换了、定义没了）先自动找位，
 ## 还放不下的到 [param overflow]（开局是地上；null = 丢掉）
-static func place_layout(board: GridInventory, layout: Array, items: ItemDatabase, overflow: ItemContainer = null) -> void:
-	if items == null:
+static func place_layout(board_: GridInventory, layout: Array, items_: ItemDatabase, overflow: ItemContainer = null) -> void:
+	if items_ == null:
 		return
-	board.begin_batch()
+	board_.begin_batch()
 	for row in layout:
 		if not (row is Dictionary):
 			continue
-		var d := items.get_def(StringName(String(row.get("id", ""))))
+		var d := items_.get_def(StringName(String(row.get("id", ""))))
 		if d == null:
 			continue
 		var at: Array = row.get("origin", [0, 0])
@@ -940,34 +940,34 @@ static func place_layout(board: GridInventory, layout: Array, items: ItemDatabas
 		var saved_state: Variant = row.get("state", null)
 		if saved_state is Dictionary:
 			inst.state = (saved_state as Dictionary).duplicate(true)
-		if not board.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board.try_add(inst, true) and overflow != null:
+		if not board_.place(inst, Vector2i(int(at[0]), int(at[1])), int(row.get("rot", 0))) and not board_.try_add(inst, true) and overflow != null:
 			overflow.admit(inst)
-	board.end_batch()
+	board_.end_batch()
 
 
 ## 按清单发一套道具（开局的 kit 与校准的开局装备 [DummyBuilder] 同一条路）：包先上棋盘，其余按顺序自动找位、
 ## 放不下的到 [param overflow]（开局是地上；null = 丢掉）
-static func give_kit(board: GridInventory, kit: Array[StringName], items: ItemDatabase, overflow: ItemContainer = null) -> void:
-	if items == null:
+static func give_kit(board_: GridInventory, kit: Array[StringName], items_: ItemDatabase, overflow: ItemContainer = null) -> void:
+	if items_ == null:
 		return
 	var bags: Array[ItemDef] = []
 	var rest: Array[ItemDef] = []
 	for id in kit:
-		var d := items.get_def(id)
+		var d := items_.get_def(id)
 		if d == null:
 			continue
 		if d.is_bag:
 			bags.append(d)
 		else:
 			rest.append(d)
-	board.begin_batch()
+	board_.begin_batch()
 	for d in bags:
-		board.try_add(ItemInstance.create(d, 0), true)
+		board_.try_add(ItemInstance.create(d, 0), true)
 	for d in rest:
 		var inst := ItemInstance.create(d, 0)
-		if not board.try_add(inst, true) and overflow != null:
+		if not board_.try_add(inst, true) and overflow != null:
 			overflow.admit(inst)
-	board.end_batch()
+	board_.end_batch()
 #endregion
 
 
@@ -1179,6 +1179,13 @@ func _set_phase(p: int, reason: StringName) -> void:
 
 #region 存档
 func to_dict() -> Dictionary:
+	# 审查 B1：开着的搜索会话不进存档（存档那一刻视为离开），离开时收获本来就交到待拾取 —— 存档这里照做，搜到的不丢
+	var search_haul: Variant = null
+	if events.current_search != null and events.current_search.haul() != null and events.current_search.haul().item_count() > 0:
+		search_haul = events.current_search.haul().to_dict()
+	var loot_dict: Variant = null
+	if pending_loot != null:
+		loot_dict = pending_loot.to_dict()
 	return {
 		"version": SAVE_VERSION,
 		"seed": run_seed,
@@ -1200,15 +1207,14 @@ func to_dict() -> Dictionary:
 		"events": {"searches_closed": events.searches_closed, "last_handled": events.last_handled_id, "pending": events.pending.duplicate(), "losses_forgiven": events.losses_forgiven,
 			"pending_battle": events.pending_battle.duplicate(true),
 			"pending_ransom": events.pending_ransom.duplicate(true),     # 256：读档回来还在天平上
-			# 审查 B1：开着的搜索会话不进存档（存档那一刻视为离开），离开时收获本来就交到待拾取 —— 存档这里照做，搜到的不丢
-			"search_haul": events.current_search.haul().to_dict() if events.current_search != null and events.current_search.haul() != null and events.current_search.haul().item_count() > 0 else null},
+			"search_haul": search_haul},
 		"skills": skills.to_dict(),
 		"faith_power": faith_power.to_dict(),
 		"faith_history": faith_power.history_to_array(),     # 104
 		"owned_uids": owned_uids.keys(),
 		"acquired_ids": acquired_ids.keys(),
 		"placed_ids": placed_ids.keys(),
-		"pending_loot": pending_loot.to_dict() if pending_loot != null else null,
+		"pending_loot": loot_dict,
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
 		"searched_nodes": searched_nodes.keys(),     # 224

@@ -5,16 +5,16 @@ extends CliTool
 
 func run() -> void:
 	var args := OS.get_cmdline_user_args()
-	var root := String(args[0]) if not args.is_empty() else SaveSlots.DEFAULT_ROOT
+	var root_ := String(args[0]) if not args.is_empty() else SaveSlots.DEFAULT_ROOT
 	var items := ItemDatabase.new()
 	items.load_dir()
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()
 	var rules := GameFlow.load_meta_rules()
 	var techs := GameFlow.load_techs()
-	var slots := SaveSlots.new(root)
+	var slots := SaveSlots.new(root_)
 	var bad := 0
-	print("内容版本：%s　根目录：%s" % [ContentPaths.content_stamp(), root])
+	print("内容版本：%s　根目录：%s" % [ContentPaths.content_stamp(), root_])
 	for n in range(1, SaveSlots.COUNT + 1):
 		if not slots.exists(n):
 			continue

@@ -66,9 +66,9 @@ static func fits_half(label: String) -> bool:
 func _box(state: String) -> StyleBox:
 	var tex := UiTheme.art_cached("tip/tipbtn_" + state)
 	if tex == null:
-		var flat := StyleBoxFlat.new()
-		flat.bg_color = {"danger": Color("7a2a1e"), "disabled": Color("3a342c"), "hover": Color("5a4a38"), "pressed": Color("3e3226")}.get(state, Color("4a3c2e"))
-		return flat
+		var flat_ := StyleBoxFlat.new()
+		flat_.bg_color = {"danger": Color("7a2a1e"), "disabled": Color("3a342c"), "hover": Color("5a4a38"), "pressed": Color("3e3226")}.get(state, Color("4a3c2e"))
+		return flat_
 	var box := StyleBoxTexture.new()
 	box.texture = tex
 	box.set_texture_margin_all(12.0)
@@ -82,16 +82,16 @@ func _box(state: String) -> StyleBox:
 
 
 ## 平常 / 等第二下 两套样子
-func _style(confirming: bool) -> void:
+func _style(p_confirming: bool) -> void:
 	for state in ["normal", "hover", "pressed", "disabled"]:
-		var key: String = "danger" if confirming and state in ["normal", "hover"] else state
+		var key: String = "danger" if p_confirming and state in ["normal", "hover"] else state
 		add_theme_stylebox_override(state, _box(key))
 	add_theme_stylebox_override("hover_pressed", _box("pressed"))
 	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	var ink: Color = INK["danger"] if confirming else INK["normal"]
+	var ink: Color = INK["danger"] if p_confirming else INK["normal"]
 	add_theme_color_override("font_color", ink)
 	add_theme_color_override("font_focus_color", ink)
-	add_theme_color_override("font_hover_color", INK["danger"] if confirming else INK["hover"])
+	add_theme_color_override("font_hover_color", INK["danger"] if p_confirming else INK["hover"])
 	add_theme_color_override("font_pressed_color", INK["pressed"])
 	add_theme_color_override("font_hover_pressed_color", INK["pressed"])
 	add_theme_color_override("font_disabled_color", INK["disabled"])
