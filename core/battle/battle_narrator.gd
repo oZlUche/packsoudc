@@ -25,7 +25,7 @@ static func lines(result: BattleResult, names: Array, item_names: Array = [], lo
 	n.loads = loads
 	n.run()
 	out = n.out
-	out.append(n.line(result.log.size(), result.duration, -1, null, report(result, names)))
+	out.append(n.line(result.log.size(), result.duration, -1, null, report(result, names), false))     # 测试反馈：战报自己有秒数，行首不再写一遍
 	return out
 
 
@@ -295,9 +295,12 @@ class _Narration:
 		g["lines"] = int(g["lines"]) + 1
 		out.append(line(i, e.time, int(g["side"]), g, (UiText.t("log.indent") if more else "") + body))
 
-	func line(i: int, time: int, side: int, g, body: String) -> Dictionary:
+	## [param stamped] 假 = 不写行首的时刻（末行战报自己带秒数）
+	func line(i: int, time: int, side: int, g, body: String, stamped: bool = true) -> Dictionary:
 		var gid := int(g["id"]) if g is Dictionary else _groups
 		if not g is Dictionary:
 			_groups += 1
-		var stamp := _paint(UiText.t("log.time") % StatMath.to_float(time), "dim")
-		return {"time": time, "group": gid, "side": side, "at": i, "text": "%s  %s" % [stamp, _paint(body, "log_a" if gid % 2 == 0 else "log_b")]}
+		var text := _paint(body, "log_a" if gid % 2 == 0 else "log_b")
+		if stamped:
+			text = "%s  %s" % [_paint(UiText.t("log.time") % StatMath.to_float(time), "dim"), text]
+		return {"time": time, "group": gid, "side": side, "at": i, "text": text}
