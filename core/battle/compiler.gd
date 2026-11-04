@@ -161,6 +161,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		var profile := profile_of(def, inp.wild)
 		if profile != null:
 			item.rules = profile.rules.duplicate()
+			item.power_mult = StatMath.from_float(profile.power_mult)     # 273：法杖威力系数
 		if bonus_rules.has(uid):
 			item.rules.append_array(bonus_rules[uid])
 		for pair in attach_pending.get(uid, []):

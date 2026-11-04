@@ -10,10 +10,11 @@ extends DealDamage
 
 func apply(ctx: RuleContext) -> void:
 	var entry := current(ctx)
+	var mult := ctx.owner.power_of(ctx.source_uid())     # 273：杖的威力系数，整下乘
 	if entry.is_empty():
-		deal(ctx, damage_type, 0)
+		deal(ctx, damage_type, 0, mult)
 		return
-	var landed := deal(ctx, StringName(entry.get("type", damage_type)), int(entry.get("damage", 0)))
+	var landed := deal(ctx, StringName(entry.get("type", damage_type)), int(entry.get("damage", 0)), mult)
 	# 175 补充五：这颗晶石的元素是**施加**的，不是伤害类型顺带的 —— 打中了才给对手叠它的那几层（[member CompiledItem.loaded] 的 applies）
 	var app: Dictionary = entry.get("applies", {})
 	var buff := ReactionResolver.mark_buff(StringName(String(app.get("buff", ""))))

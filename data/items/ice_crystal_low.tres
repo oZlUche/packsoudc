@@ -21,7 +21,7 @@
 
 [sub_resource type="Resource" id="Resource_iewrx"]
 script = ExtResource("1_lxmv8")
-amount = 6.0
+amount = 7.0
 
 [sub_resource type="Resource" id="Resource_wdmce"]
 script = ExtResource("3_27l4c")

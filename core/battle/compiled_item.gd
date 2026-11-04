@@ -34,6 +34,9 @@ var attached: Array[Dictionary] = []
 ## 只有规则里有 [FireLoaded] 的宿主才这样装：晶石的伤害与换型不再常驻挂在法杖上，轮到它那一下才用；别的供给照旧常驻
 var loaded: Array[Dictionary] = []
 
+## 273：威力系数（定点；[member CombatProfile.power_mult]）。[FireLoaded] 的一下整下乘它、向下取整
+var power_mult: int = StatMath.ONE
+
 
 func is_active() -> bool:
 	return not rules.is_empty()
@@ -55,7 +58,7 @@ func estimated_dps(with_stats: StatSet = null) -> float:
 		for effect in r.effects:
 			var per_hit := (effect as CombatEffect).estimated_damage(use)
 			if effect is FireLoaded and per_hit > 0.0:
-				per_hit += loaded_damage()
+				per_hit = (per_hit + loaded_damage()) * StatMath.to_float(power_mult)     # 273
 			total += hz * per_hit
 	return total
 

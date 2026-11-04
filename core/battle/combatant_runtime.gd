@@ -25,6 +25,8 @@ var item_links: Dictionary = {}
 var item_tags: Dictionary = {}
 ## 175：uid → 这把法杖顺时针装着的晶石（[member CompiledItem.loaded]），[FireLoaded] 按轮次取
 var item_loaded: Dictionary = {}
+## 273：uid → 威力系数（定点，[member CompiledItem.power_mult]；只记不是 1 的）
+var item_power: Dictionary = {}
 ## 247：装载格上站着还在供给的东西的件（uid → true；[member CombatantSpec.loads] 的宿主）—— [member AbilityRule.free_when_loaded] 查它
 var loaded_holders: Dictionary = {}
 
@@ -68,6 +70,8 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 			rt.item_tags[it.source_uid] = it.tags
 		if not it.loaded.is_empty():
 			rt.item_loaded[it.source_uid] = it.loaded
+		if it.power_mult != StatMath.ONE:
+			rt.item_power[it.source_uid] = it.power_mult     # 273
 		var blk := it.stats.total_of(BattleStats.BLOCK)
 		if blk > 0:
 			rt.block_layers.append({"uid": it.source_uid, "id": it.def_id, "value": blk})
@@ -300,6 +304,11 @@ func tags_of(uid: int) -> Array[StringName]:
 
 
 ## 175：某把法杖装着的晶石（顺时针；没有 = 空 → 木棍）
+## 273：uid 这件的威力系数（定点；没写 = 1）
+func power_of(uid: int) -> int:
+	return int(item_power.get(uid, StatMath.ONE))
+
+
 func loaded_of(uid: int) -> Array[Dictionary]:
 	return item_loaded.get(uid, [] as Array[Dictionary])
 

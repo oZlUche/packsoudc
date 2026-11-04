@@ -13,6 +13,10 @@ extends Resource
 ## 时机 → 频率 → 消耗 → 内容。一件物品可以有多条。
 @export var rules: Array[AbilityRule] = []
 
+## 273（作者 2026-11-04）：法杖的威力系数 —— 轮读的一下（杖基础 + 这颗晶石的加值）整下乘它，向下取整；没装晶石的木棍一下 = 基础 × 它。
+## 白 1.0 / 绿 1.2 / 蓝 1.4 / 紫 1.6；不写 = 1（别的武器不用）
+@export var power_mult: float = 1.0
+
 
 ## 把基础值写进一份 StatSet
 func seed_stats(into: StatSet) -> void:
