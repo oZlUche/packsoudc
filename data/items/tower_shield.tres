@@ -26,6 +26,9 @@ display_name = "塔盾"
 display_names = {
 "en": "Tower Shield"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_6jm2p")
 rarity = 1
 value = 30

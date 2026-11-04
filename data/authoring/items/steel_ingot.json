@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Steel Ingot"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "11"
   ],

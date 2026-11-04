@@ -98,6 +98,9 @@ display_name = "剁刀"
 display_names = {
 "en": "Cleaver"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_qb5hn")
 rarity = 1
 tags = Array[StringName]([&"weapon", &"melee", &"bleed"])

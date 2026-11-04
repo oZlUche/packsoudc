@@ -18,6 +18,9 @@ display_name = "硬木板"
 display_names = {
 "en": "Hardwood Plank"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_g862a")
 rarity = 2
 weight = 4

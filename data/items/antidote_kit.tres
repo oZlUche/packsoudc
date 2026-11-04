@@ -46,6 +46,9 @@ display_name = "解毒包"
 display_names = {
 "en": "Antidote Kit"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_hjk3w")
 rarity = 1
 value = 20

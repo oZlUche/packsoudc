@@ -167,9 +167,8 @@ display_name = "军功牌"
 display_names = {
 "en": "Phalera"
 }
-description = "马库斯的随身之物：每打赢一场记 {honor_default} 点军功（精英 {elite}、核心 {core}），攒够了升阶 —— 牌边的武器越来越狠，圈也越来越大。"
 descriptions = {
-"en": "Marcus's signature item: every won fight earns {honor_default} Honor (elites {elite}, the core {core}). Enough Honor raises its rank, and the weapons around it hit harder over a wider ring."
+"en": ""
 }
 shape = SubResource("Resource_qj5yo")
 rarity = 1

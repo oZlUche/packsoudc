@@ -27,9 +27,8 @@ display_name = "熏鱼"
 display_names = {
 "en": "Smoked Fish"
 }
-description = "熏得发黑，咬着咸香。"
 descriptions = {
-"en": "Smoked black. Salty and savory to bite."
+"en": ""
 }
 shape = SubResource("Resource_jdc8n")
 tags = Array[StringName]([&"food", &"nature"])

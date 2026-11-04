@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Cleaver"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "11",
     "10"

@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Bone Trinket"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1"
   ],

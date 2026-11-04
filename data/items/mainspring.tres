@@ -31,9 +31,8 @@ display_name = "主发条"
 display_names = {
 "en": "Mainspring"
 }
-description = "卷得紧紧的发条，带在身上更有劲。"
 descriptions = {
-"en": "A tightly wound spring. Carry it and you've got more in the tank."
+"en": ""
 }
 shape = SubResource("Resource_g7axs")
 rarity = 2

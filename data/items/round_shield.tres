@@ -26,6 +26,9 @@ display_name = "圆盾"
 display_names = {
 "en": "Round Shield"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_l1l1n")
 rarity = 1
 tags = Array[StringName]([&"shield", &"imperial"])

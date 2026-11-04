@@ -18,9 +18,8 @@ display_name = "都行"
 display_names = {
 "en": "Whatever"
 }
-description = "神秘的都行"
 descriptions = {
-"en": "A mysterious Whatever."
+"en": ""
 }
 shape = SubResource("Resource_cwj1t")
 rarity = 5

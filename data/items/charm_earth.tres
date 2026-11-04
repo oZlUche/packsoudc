@@ -17,6 +17,9 @@ display_name = "大地之神的护符"
 display_names = {
 "en": "Charm of the Earth"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_1wv7q")
 rarity = 3
 value = 200

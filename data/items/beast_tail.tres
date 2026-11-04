@@ -56,9 +56,8 @@ display_name = "兽尾"
 display_names = {
 "en": "Beast Tail"
 }
-description = "粗壮的一截尾巴，能卖个好价钱。"
 descriptions = {
-"en": "A thick length of tail. It'll fetch a good price."
+"en": ""
 }
 shape = SubResource("Resource_e3tnh")
 rarity = 1

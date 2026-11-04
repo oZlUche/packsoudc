@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Antidote Kit"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1"
   ],

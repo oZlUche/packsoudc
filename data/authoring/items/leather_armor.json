@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Leather Armor"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1111",
     "0110"

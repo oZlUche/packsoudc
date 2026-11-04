@@ -86,6 +86,9 @@ display_name = "毒箭"
 display_names = {
 "en": "Poison Arrows"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_sk8uy")
 rarity = 1
 tags = Array[StringName]([&"ammo", &"poison", &"nature"])

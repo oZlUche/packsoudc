@@ -68,9 +68,8 @@ display_name = "齿轮臂"
 display_names = {
 "en": "Gear Arm"
 }
-description = "一节带齿轮的机械臂。挨着的武器出手更快。"
 descriptions = {
-"en": "A geared length of mechanical arm. Adjacent weapons activate faster."
+"en": ""
 }
 shape = SubResource("Resource_5vs8t")
 rarity = 1

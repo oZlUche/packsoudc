@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Poisoned Knife"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "1",
     "1"

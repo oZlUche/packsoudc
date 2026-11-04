@@ -17,6 +17,9 @@ display_name = "狩猎之神的护符"
 display_names = {
 "en": "Charm of the Hunt"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_i7xus")
 rarity = 3
 value = 200

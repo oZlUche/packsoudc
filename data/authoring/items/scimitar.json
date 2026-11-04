@@ -4,6 +4,10 @@
   "display_names": {
     "en": "Scimitar"
   },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
   "shape": [
     "01",
     "11",

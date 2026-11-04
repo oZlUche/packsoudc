@@ -17,6 +17,9 @@ display_name = "自然之神的护符"
 display_names = {
 "en": "Charm of Nature"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_hevi2")
 rarity = 3
 value = 200

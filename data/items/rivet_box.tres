@@ -17,6 +17,9 @@ display_name = "铆钉盒"
 display_names = {
 "en": "Rivet Box"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_d5fcu")
 rarity = 2
 tags = Array[StringName]([&"material", &"crafted", &"supply"])

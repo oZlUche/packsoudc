@@ -18,6 +18,9 @@ display_name = "皮革包"
 display_names = {
 "en": "Leather Bag"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_vmmms")
 material = "leather"
 is_bag = true

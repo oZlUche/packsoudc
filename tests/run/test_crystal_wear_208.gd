@@ -174,13 +174,12 @@ static func run_reconcile(t: TestCase) -> void:
 
 
 static func run_text(t: TestCase) -> void:
-	t.begin("208 · 文字：悬浮窗耐久行写「用完就碎」（写了 broken_into 的写「用完碎成碎晶」）；246：晶石说明写碎了只能卖钱；导入器拦 broken_into 指向不存在或不是 1 格的")
+	t.begin("208 · 文字：悬浮窗耐久行写「用完就碎」（写了 broken_into 的写「用完碎成碎晶」）；246：碎了只能卖钱（写在耐久行）；导入器拦 broken_into 指向不存在或不是 1 格的")
 	var db := _db()
 	var fire := _with_charges(db, &"fire_crystal", 2)
 	var line := TextTemplate.strip_bbcode(ItemTooltip.wear_line(fire))
 	t.check(line.contains("用完就碎"), "耐久行：%s" % line)
-	var desc := TextTemplate.strip_bbcode(ItemTooltip.describe(fire, null))
-	t.check(desc.contains("只能卖钱") and not desc.contains("{item:"), "说明写碎了只能卖钱")
+	t.check(line.contains("只能卖钱"), "耐久行写碎了只能卖钱（说明留给作者后挪到这里）")
 	var into := (db.get_def(&"fire_crystal").duplicate(true)) as ItemDef
 	into.wear.broken_into = &"crystal_shards"
 	var into_inst := ItemInstance.create(into)

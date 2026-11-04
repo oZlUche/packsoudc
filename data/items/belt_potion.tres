@@ -24,6 +24,9 @@ display_name = "药水带"
 display_names = {
 "en": "Potion Belt"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_k8sxc")
 rarity = 1
 material = "leather"

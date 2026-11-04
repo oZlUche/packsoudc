@@ -81,6 +81,9 @@ display_name = "蛮神的护符"
 display_names = {
 "en": "Charm of the Brute"
 }
+descriptions = {
+"en": ""
+}
 shape = SubResource("Resource_ofd6g")
 rarity = 3
 value = 200
