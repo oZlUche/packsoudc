@@ -76,11 +76,11 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	# --- 2. 基础值 ---
 	var stats: Dictionary = {}  # uid -> StatSet
 	for uid in fighters:
-		var set := StatSet.new()
+		var set_ := StatSet.new()
 		var profile := profile_of(board.get_item(uid).def, inp.wild)
 		if profile != null:
-			profile.seed_stats(set)
-		stats[uid] = set
+			profile.seed_stats(set_)
+		stats[uid] = set_
 
 	# --- 3. 包体效果施加给内容物 ---
 	_apply_bag_effects(board, fighters, stats)
@@ -151,13 +151,13 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 
 	# --- 6. 打包 ---
 	for uid in fighters:
-		var set: StatSet = stats[uid]
+		var set_: StatSet = stats[uid]
 		var def := board.get_item(uid).def
 		var item := CompiledItem.new()
 		item.source_uid = uid
 		item.def_id = def.id
 		item.tags = def.tags.duplicate()
-		item.stats = set
+		item.stats = set_
 		var profile := profile_of(def, inp.wild)
 		if profile != null:
 			item.rules = profile.rules.duplicate()
@@ -180,7 +180,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		item.linked_uids = linked
 		item.loaded = cycle_order(board, uid, spec.loads)
 		if not item.loaded.is_empty():
-			set.ensure(BattleStats.LOAD_STEPS).base = item.loaded.size() * StatMath.ONE     # 175：一轮几下，[CycleCadence] 读它
+			set_.ensure(BattleStats.LOAD_STEPS).base = item.loaded.size() * StatMath.ONE     # 175：一轮几下，[CycleCadence] 读它
 		spec.add(item)
 
 	# --- 7. 按件（105 3.2）---

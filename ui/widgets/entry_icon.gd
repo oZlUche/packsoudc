@@ -50,8 +50,8 @@ static func _make(p_kind: StringName) -> EntryIcon:
 
 ## 技能图标的图；这个技能没出图用通用的月桂环 `placeholder.png`（美术 11:54）
 static func texture_for(sk: RunSkill) -> Texture2D:
-	for name in [sk.icon if sk.icon != "" else String(sk.id), PLACEHOLDER]:
-		var path := SKILL_DIR + String(name) + ".png"
+	for name_ in [sk.icon if sk.icon != "" else String(sk.id), PLACEHOLDER]:
+		var path := SKILL_DIR + String(name_) + ".png"
 		if ResourceLoader.exists(path):
 			return load(path) as Texture2D
 	return null

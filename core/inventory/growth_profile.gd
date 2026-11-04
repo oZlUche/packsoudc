@@ -128,8 +128,8 @@ static func stage_name(inst: ItemInstance, lang: String = "") -> String:
 
 
 #region 改实例
-## 长 [param delta] 步。一次最多升一阶，剩下的不结转。升了阶返回 true（抽额外效果用 [param seed]）
-static func grow(inst: ItemInstance, delta: int, seed: int = 0) -> bool:
+## 长 [param delta] 步。一次最多升一阶，剩下的不结转。升了阶返回 true（抽额外效果用 [param p_seed]）
+static func grow(inst: ItemInstance, delta: int, p_seed: int = 0) -> bool:
 	var nxt := next_stage(inst)
 	if nxt == null or delta <= 0:
 		return false
@@ -142,7 +142,7 @@ static func grow(inst: ItemInstance, delta: int, seed: int = 0) -> bool:
 	inst.state[TICKS_KEY] = 0
 	inst.state.erase(BONUS_KEY)
 	var picks: Array = []
-	picks.append_array(pick_bonuses(nxt, seed, inst.uid, s))
+	picks.append_array(pick_bonuses(nxt, p_seed, inst.uid, s))
 	if not picks.is_empty():
 		inst.state[BONUS_KEY] = picks
 	return true
@@ -154,10 +154,10 @@ static func add_honor(inst: ItemInstance, points: int) -> bool:
 		return false
 	var total := honor_of(inst) + points
 	inst.state[HONOR_KEY] = total
-	var stages := inst.def.growth.stages
+	var stages_ := inst.def.growth.stages
 	var before := stage_of(inst)
 	var s := before
-	while s < stages.size() and total >= stages[s].after:
+	while s < stages_.size() and total >= stages_[s].after:
 		s += 1
 	if s == before:
 		return false
@@ -185,13 +185,13 @@ static func on_leave(inst: ItemInstance) -> bool:
 
 
 ## 到阶时抽哪几条（下标升序）：只看种子、uid、阶 —— 同一颗种子同一局重开抽到的一样
-static func pick_bonuses(st: GrowthStage, seed: int, uid: int, stage: int) -> Array[int]:
+static func pick_bonuses(st: GrowthStage, p_seed: int, uid: int, stage: int) -> Array[int]:
 	var out: Array[int] = []
 	var n := mini(st.bonus_count, st.bonus_pool.size())
 	if n <= 0:
 		return out
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([seed, uid, "growth", stage])
+	rng.seed = hash([p_seed, uid, "growth", stage])
 	var pool: Array[int] = []
 	for i in st.bonus_pool.size():
 		pool.append(i)

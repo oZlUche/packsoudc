@@ -69,6 +69,7 @@ static func run_low_hp_threshold(t: TestCase) -> void:
 		var me := CombatantRuntime.from_spec(b, 0)
 		var ctx := BattleContext.create(me, CombatantRuntime.from_spec(b, 1), rng)
 		var mx := me.resources.maximum(BattleStats.RES_HP)
+		@warning_ignore("integer_division")
 		me.resources.change(BattleStats.RES_HP, mx * int(case[0]) / 100 - me.resources.current(BattleStats.RES_HP), BattleEvent.REASON_DAMAGE)
 		var packet := DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(10.0), ctx.sides[1], 0, 0)
 		ctx._damage_stack.append(packet)

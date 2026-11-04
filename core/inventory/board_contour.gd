@@ -66,10 +66,10 @@ static func pinch_points(size: Vector2i, usable: Callable) -> Array[Vector2i]:
 		for vx in range(1, size.x):
 			var v := Vector2i(vx, vy)
 			var tl: bool = ok.call(v + Vector2i(-1, -1))
-			var tr: bool = ok.call(v + Vector2i(0, -1))
+			var tr_: bool = ok.call(v + Vector2i(0, -1))
 			var bl: bool = ok.call(v + Vector2i(-1, 0))
 			var br: bool = ok.call(v)
-			if tl == br and tr == bl and tl != tr:
+			if tl == br and tr_ == bl and tl != tr_:
 				out.append(v)
 	return out
 

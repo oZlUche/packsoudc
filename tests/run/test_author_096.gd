@@ -110,7 +110,6 @@ static func run_tooltip_tags(t: TestCase) -> void:
 	var c := NodeScreens._content()
 	var ingot := ItemInstance.create(c.items.get_def(&"copper_ingot"))
 	var full := ItemTooltip.describe_full(ingot)
-	var text := Glossary.strip_bbcode(String(full["text"]))
 	var head := String(full["head"])
 	var at := ["material", "crafted"].map(func(id): return head.find("term:tag:%s]" % id))
 	t.check(at[0] >= 0 and at[0] < at[1] and not head.contains("supply"), "副行照样列出标签（107：不弹词条不等于不显示；建材是内部标签不列；250：类别 → 本源；193 补充三起画成图标）：%s" % str(at))

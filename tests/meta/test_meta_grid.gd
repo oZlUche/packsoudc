@@ -20,8 +20,8 @@ static func _kit(c: TestSupport.Content) -> LoadoutDef:
 
 
 ## 一局直接算撤离
-static func _extracted(c: TestSupport.Content, seed: int, kit: LoadoutDef) -> RunState:
-	var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+static func _extracted(c: TestSupport.Content, p_seed: int, kit: LoadoutDef) -> RunState:
+	var s := RunState.start(c.chapter, p_seed, c.items, c.enemies, c.sets, kit.items)
 	s.pick_spawn(s.map.entry_ids[0])
 	s.phase = RunState.Phase.EXTRACTED
 	s.end_reason = &"extract"

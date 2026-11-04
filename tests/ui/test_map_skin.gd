@@ -7,7 +7,7 @@ static func run(t: TestCase) -> void:
 	var want := {"prologue": "ruins", "prologue_2": "north_woods", "prologue_3": "cursed_depths", "free_mode": "ruins"}
 	for cid in want:
 		var ch := ContentPaths.load_asset("chapters", cid) as ChapterDef
-		t.check(ch != null and String(ch.map_skin) == want[cid], "%s 配 %s（%s）" % [cid, want[cid], ch.map_skin if ch != null else "?"])
+		t.check(ch != null and String(ch.map_skin) == want[cid], "%s 配 %s（%s）" % [cid, want[cid], String(ch.map_skin) if ch != null else "?"])
 		t.not_null(MapSkin.texture(StringName(want[cid])), "%s 的图在" % want[cid])
 	t.eq(ChapterDef.new().map_skin, MapSkin.DEFAULT, "默认遗迹")
 	t.eq(MapSkin.tone(&"cursed_depths"), UiTheme.TONE_DARK, "诅咒之地：深")

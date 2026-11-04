@@ -54,8 +54,8 @@ static func _board(size: Vector2i = Vector2i(6, 6)) -> GridInventory:
 
 
 static func _dmg(spec: CombatantSpec, uid: int) -> int:
-	var set := spec.stats_of(uid)
-	return set.total_int_of(BattleStats.DAMAGE) if set != null else -1
+	var set_ := spec.stats_of(uid)
+	return set_.total_int_of(BattleStats.DAMAGE) if set_ != null else -1
 
 
 ## 主动物品数量
@@ -293,21 +293,21 @@ static func run_determinism(t: TestCase) -> void:
 	## 摆同一个局面，只改放置调用的先后
 	var build := func(order: Array) -> Array:
 		ItemInstance.reset_uid_counter()
-		var board := _board(Vector2i(6, 4))
-		board.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
+		var board_ := _board(Vector2i(6, 4))
+		board_.place(ItemInstance.create(bag), Vector2i(0, 0), 0)
 		for entry in order:
-			board.place(ItemInstance.create(entry[0]), entry[1], 0)
-		var spec := BattleCompiler.compile_board(board)
-		var rows: Array = []
+			board_.place(ItemInstance.create(entry[0]), entry[1], 0)
+		var spec := BattleCompiler.compile_board(board_)
+		var rows_: Array = []
 		for item in spec.active_items():
 			var it := item as CompiledItem
-			rows.append([
+			rows_.append([
 				String(it.def_id),
 				it.stats.total_of(BattleStats.DAMAGE),
 				it.stats.total_of(BattleStats.HASTE),
 			])
-		rows.sort_custom(func(a, b): return str(a) < str(b))
-		return [spec.max_hp, rows]
+		rows_.sort_custom(func(a_, b_): return str(a_) < str(b_))
+		return [spec.max_hp, rows_]
 
 	var forward: Array = build.call([
 		[sword, Vector2i(0, 0)], [stone, Vector2i(1, 0)], [axe, Vector2i(2, 0)]

@@ -59,8 +59,8 @@ static func run_install_and_save(t: TestCase) -> void:
 	var mods: Array[RunModule] = [fake, SafeModule.new()]
 	chapter.modules = mods
 	var run: RunState = null
-	for seed in range(1, 40):
-		run = RunState.start(chapter, seed, c["items"], c["enemies"], c["sets"], [] as Array[StringName], {},
+	for seed_ in range(1, 40):
+		run = RunState.start(chapter, seed_, c["items"], c["enemies"], c["sets"], [] as Array[StringName], {},
 			[] as Array[StringName], null, [], null, {}, &"", {&"fake_test": {"hello": 1}})
 		if run != null:
 			break
@@ -114,8 +114,8 @@ static func run_safe_module(t: TestCase) -> void:
 	t.begin("101 第 1 刀 · 保险箱搬成模块：RunState 不再认识它；走开就关上；存档在 modules.safe 下；没装 = 没有保险箱")
 	var c := _content()
 	var run: RunState = null
-	for seed in range(1, 40):
-		run = RunState.start(c["chapter"], seed, c["items"], c["enemies"], c["sets"])
+	for seed_ in range(1, 40):
+		run = RunState.start(c["chapter"], seed_, c["items"], c["enemies"], c["sets"])
 		if run != null:
 			break
 	if run == null:
@@ -149,8 +149,8 @@ static func run_safe_module(t: TestCase) -> void:
 	var only_fake: Array[RunModule] = [FakeModule.new()]
 	chapter2.modules = only_fake
 	var run2: RunState = null
-	for seed in range(1, 40):
-		run2 = RunState.start(chapter2, seed, c["items"], c["enemies"], c["sets"])
+	for seed_ in range(1, 40):
+		run2 = RunState.start(chapter2, seed_, c["items"], c["enemies"], c["sets"])
 		if run2 != null:
 			break
 	if run2 != null:
@@ -195,8 +195,8 @@ static func run_module_roster(t: TestCase) -> void:
 		BeltModule.ID, WearModule.ID, GrowthModule.ID, HonorModule.ID]     # 147 / 148 / 207 / 256
 	var c := _content()
 	var run: RunState = null
-	for seed in range(1, 40):
-		run = RunState.start(c["chapter"], seed, c["items"], c["enemies"], c["sets"])
+	for seed_ in range(1, 40):
+		run = RunState.start(c["chapter"], seed_, c["items"], c["enemies"], c["sets"])
 		if run != null:
 			break
 	if run == null:

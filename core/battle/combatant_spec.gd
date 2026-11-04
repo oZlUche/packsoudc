@@ -53,7 +53,7 @@ func item_of(uid: int) -> CompiledItem:
 
 
 ## uid → 显示名（回放把「uid 2 出手」写成「手枪 出手」）；[param spec] 为 null 返回空表。结算内核不读
-static func item_names(spec: CombatantSpec, items: ItemDatabase) -> Dictionary:
+static func item_names(spec: CombatantSpec, p_items: ItemDatabase) -> Dictionary:
 	var out := {}
 	if spec == null:
 		return out
@@ -62,7 +62,7 @@ static func item_names(spec: CombatantSpec, items: ItemDatabase) -> Dictionary:
 		if inst != null and inst.def != null and inst.def.id == item.def_id:
 			out[item.source_uid] = Names.of_item(inst)     # 148：棋盘上那一件的名字（魔晶石带前缀）
 			continue
-		var def := items.get_def(item.def_id)
+		var def := p_items.get_def(item.def_id)
 		out[item.source_uid] = Names.of(def) if def != null else String(item.def_id)
 	return out
 
@@ -127,20 +127,20 @@ func opening_axes() -> Dictionary:
 ## 一件道具算上开战 buff 之后的属性
 func stats_with_opening(it: CompiledItem) -> StatSet:
 	var mods := opening_mods()
-	var axes := opening_axes()
-	if (mods.is_empty() and axes.is_empty()) or it.stats == null:
+	var axes_ := opening_axes()
+	if (mods.is_empty() and axes_.is_empty()) or it.stats == null:
 		return it.stats
 	var copy := it.stats.clone()
 	for pair in mods:
 		(pair[0] as StatModifier).apply_to(copy, int(pair[1]))
-	for axis in axes:     # 152：和 [method CombatantRuntime._apply_axes] 同一种落法（只落属性轴）
+	for axis in axes_:     # 152：和 [method CombatantRuntime._apply_axes] 同一种落法（只落属性轴）
 		var key := StatAxes.stat_of(axis)
-		if key == &"" or int(axes[axis]) == 0:
+		if key == &"" or int(axes_[axis]) == 0:
 			continue
 		if StatAxes.is_factor(axis):
-			CombatantRuntime._scale_final(copy, key, StatAxes.factor(axis, int(axes[axis])))
+			CombatantRuntime._scale_final(copy, key, StatAxes.factor(axis, int(axes_[axis])))
 		elif StatAxes.on_items(axis):
-			copy.ensure(key).add_flat(StatMath.from_float(int(axes[axis]) * StatAxes.step_of(axis)))
+			copy.ensure(key).add_flat(StatMath.from_float(int(axes_[axis]) * StatAxes.step_of(axis)))
 	return copy
 
 

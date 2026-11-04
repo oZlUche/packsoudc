@@ -103,8 +103,8 @@ func fill(p_director: GameDirector, p_flow: GameFlow) -> void:
 		flow.meta = MetaState.new(flow.meta_rules)
 		var marcus := flow.character_of(&"marcus")
 		var srun: RunState = null
-		for seed in range(1, 60):
-			srun = flow.begin(flow.chapters[0], null, seed, [] as Array[int], marcus, [])
+		for seed_ in range(1, 60):
+			srun = flow.begin(flow.chapters[0], null, seed_, [] as Array[int], marcus, [])
 			if srun != null:
 				break
 		if srun == null:
@@ -120,14 +120,14 @@ func fill(p_director: GameDirector, p_flow: GameFlow) -> void:
 	flow.new_run()
 	var next_type: StringName = &"search" if want in ["search", "event"] else &"battle"
 	var found := {}
-	for seed in range(1, 60):
-		var state := RunState.start(flow.chapters[0], seed, flow.items, flow.enemies, flow.sets)
+	for seed_ in range(1, 60):
+		var state := RunState.start(flow.chapters[0], seed_, flow.items, flow.enemies, flow.sets)
 		if state == null:
 			continue
 		for entry in state.map.entry_ids:
 			for nid in state.map.neighbors(entry):
 				if state.map.get_node(nid).type == next_type:
-					found = {"seed": seed, "entry": entry, "next": nid}
+					found = {"seed": seed_, "entry": entry, "next": nid}
 					break
 			if not found.is_empty():
 				break

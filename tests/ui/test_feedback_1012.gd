@@ -165,6 +165,7 @@ static func run_window_and_nameplate_art(t: TestCase) -> void:
 	t.not_null(plate, "名牌：铜牌单层九宫格")
 	if plate != null:
 		var img := plate.texture.get_image()
+		@warning_ignore("integer_division")
 		t.eq(img.get_pixel(img.get_width() / 2, img.get_height() / 2).a, 1.0, "铜牌中间不透明")
 		t.eq([plate.content_margin_left, plate.content_margin_top], [22.0, 18.0], "内容从左上角穿链孔外面开始")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_NAMEPLATE), UiTheme.TONE_DARK, "深铜底：名字用亮色字")

@@ -1067,10 +1067,10 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 
 
 ## 220 E：词条名在百科里是哪一页（没挂钩子 / 查不到给空）
-static func codex_for(name: String) -> String:
-	if not codex_page.is_valid() or name == "":
+static func codex_for(p_name: String) -> String:
+	if not codex_page.is_valid() or p_name == "":
 		return ""
-	return String(codex_page.call(name))
+	return String(codex_page.call(p_name))
 
 
 ## 220 E：点了某扇窗底部的「百科 >」—— 整串收掉，开那一页

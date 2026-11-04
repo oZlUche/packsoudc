@@ -17,8 +17,8 @@ static func _content() -> TestSupport.Content:
 static func _flow(c: TestSupport.Content, id: StringName, prefix: String = PREFIX) -> GameFlow:
 	var f := Support.flow(c, prefix, 0.0)
 	var ch := CS._character(c, id)
-	for seed in range(1, 60):
-		if f.begin(c.chapter, null, seed, [] as Array[int], ch, []) != null:
+	for seed_ in range(1, 60):
+		if f.begin(c.chapter, null, seed_, [] as Array[int], ch, []) != null:
 			f.pick_spawn(f.run.map.entry_ids[0])
 			return f
 	return null
@@ -345,8 +345,8 @@ static func frame_prebattle_ambush(t: TestCase, root: Window) -> void:
 	flow.chapters = [ch] as Array[ChapterDef]
 	var andreus := CS._character(c, &"andreus")
 	var started := false
-	for seed in range(1, 60):
-		if flow.begin(ch, null, seed, [] as Array[int], andreus) != null:
+	for seed_ in range(1, 60):
+		if flow.begin(ch, null, seed_, [] as Array[int], andreus) != null:
 			started = true
 			break
 	if not started:
@@ -389,8 +389,8 @@ static func frame_ransom_screen(t: TestCase, root: Window) -> void:
 	ch.coaches = {}
 	flow.chapters = [ch] as Array[ChapterDef]
 	var andreus := CS._character(c, &"andreus")
-	for seed in range(1, 60):
-		if flow.begin(ch, null, seed, [] as Array[int], andreus) != null:
+	for seed_ in range(1, 60):
+		if flow.begin(ch, null, seed_, [] as Array[int], andreus) != null:
 			break
 	flow.pick_spawn(flow.run.map.entry_ids[0])
 	var run := flow.run

@@ -653,10 +653,10 @@ static func _dress_drop(ob: OptionButton, font_size: int, ink: Color) -> void:
 		ob.add_theme_icon_override("arrow", arrow)
 	ob.add_theme_constant_override("arrow_margin", 8)
 	var pop := ob.get_popup()
-	var panel := art_cached("kit/popup")
-	if panel != null:
+	var panel_ := art_cached("kit/popup")
+	if panel_ != null:
 		var box := StyleBoxTexture.new()
-		box.texture = panel
+		box.texture = panel_
 		box.set_texture_margin_all(16.0)
 		box.set_content_margin_all(12.0)
 		pop.add_theme_stylebox_override("panel", box)
@@ -679,9 +679,9 @@ static func _dress_drop(ob: OptionButton, font_size: int, ink: Color) -> void:
 ## 224：结算屏的图按钮 —— `<art>_normal / _hover / _pressed / _disabled.png` 四态（图四周各比按钮大 [param bleed]，留给阴影），
 ## 字不在图上、由这里写（serif_bold，[param center] 是字在按钮里的中心；按下往下挪 1 px）。缺图退回平板按钮
 const ART_BTN_INK := {"normal": Color("2e2219"), "hover": Color("16110d"), "pressed": Color("2e2219"), "disabled": Color("8d8a84")}
-static func make_art_text_button(text: String, handler: Callable, art: String, btn_size: Vector2, center: Vector2,
+static func make_art_text_button(text: String, handler: Callable, p_art: String, btn_size: Vector2, center: Vector2,
 		font_size: int, bleed: float = 6.0) -> Button:
-	if art_cached(art + "_normal") == null:
+	if art_cached(p_art + "_normal") == null:
 		return make_button(text, handler, UiPalette.Tier.PRIMARY, 16)
 	var b := Button.new()
 	b.text = text
@@ -691,9 +691,9 @@ static func make_art_text_button(text: String, handler: Callable, art: String, b
 	b.add_theme_font_override("font", UiPalette.cjk_font_bold())
 	b.add_theme_font_size_override("font_size", sz(font_size))
 	for state in ["normal", "hover", "pressed", "disabled"]:
-		var tex := art_cached(art + "_" + state)
+		var tex := art_cached(p_art + "_" + state)
 		var box := StyleBoxTexture.new()
-		box.texture = tex if tex != null else art_cached(art + "_normal")
+		box.texture = tex if tex != null else art_cached(p_art + "_normal")
 		box.set_expand_margin_all(bleed)
 		box.content_margin_left = maxf(0.0, center.x * 2.0 - btn_size.x)
 		box.content_margin_right = maxf(0.0, btn_size.x - center.x * 2.0)
@@ -1365,7 +1365,10 @@ static func _fill(t: Theme, bg: Color) -> void:
 		parchment_art.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE     # 竖着平铺，纸多长都不拉花
 	var parchment := _box(PARCHMENT, PARCHMENT, 0)
 	parchment.set_border_width_all(0)
-	t.set_stylebox("panel", PANEL_PARCHMENT, parchment_art if parchment_art != null else parchment)
+	var parchment_box: StyleBox = parchment
+	if parchment_art != null:
+		parchment_box = parchment_art
+	t.set_stylebox("panel", PANEL_PARCHMENT, parchment_box)
 	_difficulty_buttons(t)
 	_forge_button(t)
 	_home_buttons(t)
@@ -1658,7 +1661,12 @@ static func _setup_art(t: Theme) -> void:
 	for spec in [[PANEL_PACK_LEATHER, ART_PACK_LEATHER], [PANEL_STASH_FRAME, ART_STASH_FRAME], [PANEL_SUMMARY_NOTE, ART_SUMMARY_NOTE]]:
 		t.set_type_variation(spec[0], "PanelContainer")
 		var box: StyleBox = _art_box(spec[1])
-		t.set_stylebox("panel", spec[0], box if box != null else (_groove_box() if spec[0] != PANEL_SUMMARY_NOTE else StyleBoxEmpty.new()))
+		if box == null:
+			if spec[0] != PANEL_SUMMARY_NOTE:
+				box = _groove_box()
+			else:
+				box = StyleBoxEmpty.new()
+		t.set_stylebox("panel", spec[0], box)
 	t.set_type_variation(LABEL_NOTE_TITLE, "Label")
 	t.set_font("font", LABEL_NOTE_TITLE, UiPalette.cjk_font_bold())
 	# 182：提示窗的纸签 —— 自己的图 → 摘要便条那张 → 平色纸
@@ -1677,8 +1685,8 @@ static func _setup_art(t: Theme) -> void:
 	# 页签：52 × 60 的挂牌，字写在牌面（json 的 text_area），整张拉伸不切九宫格
 	var tab: Dictionary = art_meta(ART_SETUP_TAB)
 	var area: Array = tab.get("text_area", [6, 18, 40, 38])
-	var sz: Array = tab.get("size", [52, 60])
-	var content := [area[0], area[1], int(sz[0]) - int(area[0]) - int(area[2]), int(sz[1]) - int(area[1]) - int(area[3])]
+	var sz_: Array = tab.get("size", [52, 60])
+	var content := [area[0], area[1], int(sz_[0]) - int(area[0]) - int(area[2]), int(sz_[1]) - int(area[1]) - int(area[3])]
 	t.set_type_variation(BUTTON_SETUP_TAB, BUTTON_DIM)
 	if _art_button(t, BUTTON_SETUP_TAB, ART_SETUP_TAB, [0, 0, 0, 0], {"normal": "normal", "hover": "normal", "pressed": "on", "hover_pressed": "on", "disabled": "locked"}, content):
 		_button_ink(t, BUTTON_SETUP_TAB, INK)
@@ -1777,6 +1785,7 @@ static func _setup_card(t: Theme) -> void:
 	t.set_type_variation(LABEL_SKILL_TEXT, "Label")
 	t.set_font_size("font_size", LABEL_SKILL_TEXT, SKILL_TEXT_SIZE)
 	t.set_color("font_color", LABEL_SKILL_TEXT, UiPalette.FG)
+	@warning_ignore("integer_division")
 	t.set_constant("line_spacing", LABEL_SKILL_TEXT, SKILL_TEXT_SIZE / 2)
 	t.set_type_variation(LABEL_SCREEN_TITLE, "Label")
 	t.set_font_size("font_size", LABEL_SCREEN_TITLE, SCREEN_TITLE_SIZE)

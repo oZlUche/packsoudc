@@ -12,6 +12,7 @@ extends Cadence
 const READY_AT := &"cd_ready_at"
 
 ## 冷却下限，防止 period 被改到 0 造成同一时刻无限触发
+@warning_ignore("integer_division")
 const MIN_PERIOD := StatMath.ONE / 100  # 0.01 秒
 
 ## 基础冷却，秒
@@ -28,6 +29,7 @@ func _duration(ctx: RuleContext) -> int:
 	if not use_haste:
 		return period
 	var rate := maxi(1, ctx.item_stat(BattleStats.HASTE, StatMath.ONE))
+	@warning_ignore("integer_division")
 	return maxi(MIN_PERIOD, (period * StatMath.ONE) / rate)
 
 

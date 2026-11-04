@@ -136,7 +136,7 @@ func _build_ui() -> void:
 	_search = LineEdit.new()
 	_search.placeholder_text = "搜索 id / 名字 / 标签"
 	_search.clear_button_enabled = true
-	_search.text_changed.connect(func(_t: String) -> void: _repaint_list())
+	_search.text_changed.connect(func(_t_: String) -> void: _repaint_list())
 	_search.gui_input.connect(_on_search_input)
 	list_col.add_child(_search)
 	_list = ItemList.new()
@@ -214,9 +214,9 @@ func _build_ui() -> void:
 	var grid_row := HBoxContainer.new()
 	grid_row.add_child(UiTheme.make_label("画板", 12, UiPalette.DIM))
 	for wh in [Vector2i(2, 2), Vector2i(3, 3), Vector2i(4, 4), Vector2i(2, 4), Vector2i(4, 2)]:
-		var size := wh as Vector2i
+		var size_ := wh as Vector2i
 		grid_row.add_child(UiTheme.make_button(
-			"%dx%d" % [size.x, size.y], func(): _shape.grow_to(size.x, size.y), UiTheme.TIER_PLAIN, 13
+			"%dx%d" % [size_.x, size_.y], func(): _shape.grow_to(size_.x, size_.y), UiTheme.TIER_PLAIN, 13
 		))
 	side_col.add_child(grid_row)
 

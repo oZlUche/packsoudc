@@ -21,12 +21,12 @@ static func find(graph: MapGraph) -> Dictionary:
 	var ids := graph.node_ids()
 	var nbrs := {}
 	for id in ids:
-		var set := {}
+		var set_ := {}
 		for e in graph.edges_of(id):
 			if e.is_portal():
 				continue     # 传送点不算路口的腿
-			set[e.other(id)] = true     # 画图不分方向：单向路也是一条线
-		nbrs[id] = set
+			set_[e.other(id)] = true     # 画图不分方向：单向路也是一条线
+		nbrs[id] = set_
 
 	# 只沿邻居找，不是四重全图循环：每个点三五条边，这是 O(n · deg³)；
 	# 全图四重循环是 n⁴，45 个点一帧就要跑四百万次 —— 有呼吸动画之后每帧都画，那就卡死了

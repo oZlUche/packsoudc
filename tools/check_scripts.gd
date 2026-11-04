@@ -32,18 +32,18 @@ func run() -> void:
 	finish(0)
 
 
-func _all_scripts(root: String) -> Array[String]:
+func _all_scripts(p_root: String) -> Array[String]:
 	var out: Array[String] = []
-	var dir := DirAccess.open(root)
+	var dir := DirAccess.open(p_root)
 	if dir == null:
 		return out
 	for f in dir.get_files():
 		if f.ends_with(".gd"):
-			out.append(root.path_join(f))
+			out.append(p_root.path_join(f))
 	for sub in dir.get_directories():
 		# 隐藏目录（.godot / .git / .claude 的工作树……）与 Godot 自己也不扫的 .gdignore 目录都跳过：
 		# 工作树里是整个项目的副本，装进来就是每个 class_name 各两份
-		if sub.begins_with(".") or SKIP_DIRS.has(sub) or FileAccess.file_exists(root.path_join(sub).path_join(".gdignore")):
+		if sub.begins_with(".") or SKIP_DIRS.has(sub) or FileAccess.file_exists(p_root.path_join(sub).path_join(".gdignore")):
 			continue
-		out.append_array(_all_scripts(root.path_join(sub)))
+		out.append_array(_all_scripts(p_root.path_join(sub)))
 	return out

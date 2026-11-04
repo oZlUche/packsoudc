@@ -166,7 +166,7 @@ func set_lines(lines: Array, animate: bool = true) -> void:
 
 
 ## 一行「Ⅰ.　文字」：外层裁边（展开 / 收回靠它的高），里面 数字（固定宽、右对齐）| 点 | 正文（自动换行）
-func _add_row(level: int, text: String, at: int) -> Dictionary:
+func _add_row(level: int, p_text: String, at: int) -> Dictionary:
 	var box := Control.new()
 	box.clip_contents = true
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -184,12 +184,12 @@ func _add_row(level: int, text: String, at: int) -> Dictionary:
 	dot.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	dot.name = "Dot"
 	line.add_child(dot)
-	var body := UiTheme.make_label(text, FONT_SIZE, UiTheme.PARCHMENT_RED)
+	var body := UiTheme.make_label(p_text, FONT_SIZE, UiTheme.PARCHMENT_RED)
 	body.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	body.custom_minimum_size.x = text_width()
 	body.name = "Text"
 	line.add_child(body)
-	var row := {"level": level, "text": text, "box": box, "line": line, "body": body, "h": 0.0}
+	var row := {"level": level, "text": p_text, "box": box, "line": line, "body": body, "h": 0.0}
 	_list.add_child(box)
 	_measure(row)
 	if at >= 0:
@@ -311,10 +311,10 @@ func _sync_scroll() -> void:
 		_list.size.x = _paper_w - PAD_X * 2.0
 
 
-## 滚 [param rows] 行（正 = 往下看更早的级）
-func scroll_rows(rows: int) -> void:
+## 滚 [param p_rows] 行（正 = 往下看更早的级）
+func scroll_rows(p_rows: int) -> void:
 	var step := float(_rows[0]["h"]) + ROW_GAP if not _rows.is_empty() else 0.0
-	scroll_y = clampf(scroll_y + step * rows, 0.0, max_scroll())
+	scroll_y = clampf(scroll_y + step * p_rows, 0.0, max_scroll())
 	_sync_scroll()
 
 

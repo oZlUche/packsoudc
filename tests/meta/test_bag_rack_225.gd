@@ -188,7 +188,7 @@ static func frame_setup_rack(t: TestCase, root: Window) -> void:
 	Support.cleanup("rack225a")
 
 
-static func frame_drag_into_rack(t: TestCase, root: Window) -> void:
+static func frame_drag_into_rack(t: TestCase, _root: Window) -> void:
 	t.begin("225 · 拖拽：空包拖进包架收下、包架上的包拖回棋盘；装着东西的包拖不进")
 	var db := _db()
 	var rack := BagRack.new(MetaState.RACK_ID)

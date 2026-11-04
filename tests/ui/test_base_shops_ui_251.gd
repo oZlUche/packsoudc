@@ -86,7 +86,7 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	for i in p.prices().size():
 		coins_ok = coins_ok and (p.prices()[i] as PriceTag).coin == Market.price_of(f.market(), Market.def_at(f.meta, f.items, i))
 	t.check(coins_ok, "价签是金币式（金币 + 数字，不写「币」）")
-	var top_frame: int = p._frames.map(func(f: Control) -> int: return f.get_index()).max()
+	var top_frame: int = p._frames.map(func(f_: Control) -> int: return f_.get_index()).max()
 	var low_tag: int = p.prices().map(func(g: Control) -> int: return g.get_index()).min()
 	t.check(low_tag > top_frame, "价签都压在货框上面（前排大件不挡后排价签）")
 	t.eq(p.funds_label().amount, 100000, "钱袋读数")
@@ -101,7 +101,7 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	root.add_child(tip)
 	tip.size = Vector2(TipButton.HALF, TipButton.HEIGHT)
 	var inside := coin != null and Rect2(Vector2.ZERO, tip.size).grow(1.0).encloses(coin.get_rect())
-	t.check(inside, "游戏测试 v4.85：金币和价钱在按钮里，不掉到下沿外面（%s / %s）" % [coin.get_rect() if coin != null else null, tip.size])
+	t.check(inside, "游戏测试 v4.85：金币和价钱在按钮里，不掉到下沿外面（%s / %s）" % [str(coin.get_rect()) if coin != null else "<null>", tip.size])
 	tip.free()
 	var n := f.meta.warehouse.item_count()
 	var price := Market.price_of(f.market(), Market.def_at(f.meta, f.items, 0))

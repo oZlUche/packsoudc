@@ -139,10 +139,10 @@ static func frame_take_all_lands_from_cell(t: TestCase, root: Window) -> void:
 	var f := GameFlow.new(db, enemies, sets, MetaState.new())
 	f.chapters = [chapter] as Array[ChapterDef]
 	var run: RunState = null
-	var seed := 1
-	while run == null and seed < 30:
-		run = RunState.start(chapter, seed, db, enemies, sets, [&"bag_leather"] as Array[StringName])
-		seed += 1
+	var seed_ := 1
+	while run == null and seed_ < 30:
+		run = RunState.start(chapter, seed_, db, enemies, sets, [&"bag_leather"] as Array[StringName])
+		seed_ += 1
 	t.not_null(run, "开得了局")
 	if run == null:
 		return

@@ -23,7 +23,7 @@ static func run_press(t: TestCase) -> void:
 	t.check(not UiCursor.pressed, "换材质时还原")
 
 
-static func frame_director(t: TestCase, root: Window) -> void:
+static func frame_director(t: TestCase, _root: Window) -> void:
 	t.begin("271：导演接鼠标键（按下 / 松开）、失焦 / 离窗还原")
 	var d := GameDirector.new()
 	UiCursor.apply()

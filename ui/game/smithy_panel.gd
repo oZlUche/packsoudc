@@ -121,7 +121,7 @@ func rebuild() -> void:
 	_funds.amount = flow.meta.funds
 	_cell_k = _stage.scale_factor()
 	var any := {}
-	var ready := {}
+	var ready_ := {}
 	var mine: Array[SmithRecipeDef] = []
 	var whys := {}
 	for r in flow.sorted_smith_recipes():
@@ -131,7 +131,7 @@ func rebuild() -> void:
 		var why := Smithy.can_forge(flow.meta, rd, flow.items)
 		any[rd.group] = true
 		if why == "":
-			ready[rd.group] = true
+			ready_[rd.group] = true
 		if rd.group == _group:
 			mine.append(rd)
 			whys[rd.id] = why
@@ -139,37 +139,39 @@ func rebuild() -> void:
 	_cells.clear()
 	var shown := mine.size()
 	var slots := maxi(COLS * ROWS, ceili(shown / float(COLS)) * COLS)
+	@warning_ignore("integer_division")
 	var rows := slots / COLS
 	_cell_px = _cell_size(shown)
 	var open_recipe_def: SmithRecipeDef = null
 	for i in slots:
-		var cell: RecipeCell = null
+		var cell_: RecipeCell = null
 		if i < shown:
 			var rd := mine[i]
 			var why: String = whys[rd.id]
 			var def := flow.items.get_def(rd.output)
-			var name := Names.pick(rd.display_names, rd.display_name) if rd.display_name != "" else (Names.of(def) if def != null else String(rd.output))
-			cell = RecipeCell.make(rd.id, def, name, _cell_px, _cell_k)
-			cell.lit = why == ""
+			var name_ := Names.pick(rd.display_names, rd.display_name) if rd.display_name != "" else (Names.of(def) if def != null else String(rd.output))
+			cell_ = RecipeCell.make(rd.id, def, name_, _cell_px, _cell_k)
+			cell_.lit = why == ""
 			var why_t := CoinShort.strip(why)     # 「金币不够」不写字（打开配方卷，工钱那枚金币是红的）
-			cell.tooltip_text = name + ("\n" + why_t if why_t != "" else "")
-			cell.selected = rd.id == _open
-			cell.clicked.connect(func(c: RecipeCell): open_recipe(c.recipe_id))
-			_cells[rd.id] = cell
+			cell_.tooltip_text = name_ + ("\n" + why_t if why_t != "" else "")
+			cell_.selected = rd.id == _open
+			cell_.clicked.connect(func(c: RecipeCell): open_recipe(c.recipe_id))
+			_cells[rd.id] = cell_
 			if rd.id == _open:
 				open_recipe_def = rd
 		else:
-			cell = RecipeCell.blank(_cell_px)
-		cell.line_right = i % COLS != COLS - 1
-		cell.line_bottom = i / COLS != rows - 1
-		_grid.add_child(cell)
+			cell_ = RecipeCell.blank(_cell_px)
+		cell_.line_right = i % COLS != COLS - 1
+		@warning_ignore("integer_division")
+		cell_.line_bottom = i / COLS != rows - 1
+		_grid.add_child(cell_)
 	# 木牌：正在看的按下；一张配方都没有的类灰着点不了，有配方但一张都打不了的压灰（还能点开看要什么料）
 	for g in _group_keys:
 		var key := _group_keys[g] as Button
 		key.set_pressed_no_signal(g == _group)
 		key.disabled = not any.has(g) and g != _group
 		if key is CatKey:
-			(key as CatKey).dim = not ready.has(g)
+			(key as CatKey).dim = not ready_.has(g)
 		key.queue_redraw()
 	_empty.visible = shown == 0
 	if open_recipe_def == null:
@@ -239,12 +241,12 @@ func forge(id: StringName) -> String:
 	var def := flow.items.get_def(r.output) if r != null else null
 	var why := flow.forge(id)
 	if say.is_valid():
-		var name := Names.of(def) if def != null else String(id)
-		say.call(UiText.t("smithy.forged") % [name, flow.meta.funds] if why == "" else UiText.t("smithy.cant") % [name, why])
+		var name_ := Names.of(def) if def != null else String(id)
+		say.call(UiText.t("smithy.forged") % [name_, flow.meta.funds] if why == "" else UiText.t("smithy.cant") % [name_, why])
 	if why == "":
-		var cell := _cells.get(id, null) as RecipeCell
-		if cell != null:
-			cell.flash()
+		var cell_ := _cells.get(id, null) as RecipeCell
+		if cell_ != null:
+			cell_.flash()
 	changed.emit()
 	return why
 

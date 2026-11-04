@@ -70,7 +70,7 @@ static func frame_layer(t: TestCase, root: Window) -> void:
 	Support.cleanup("n226")
 
 
-static func frame_no_local_lines(t: TestCase, root: Window) -> void:
+static func frame_no_local_lines(t: TestCase, _root: Window) -> void:
 	t.begin("226 批一 · 十一处本地回话行删了：商店、神坛、保险箱、铸炉、仓库面板、科技、出售、开局、读档没有 _line / _status / _hint 那一行字")
 	for path in ["res://ui/game/shop_screen.gd", "res://ui/game/altar_screen.gd", "res://ui/game/safe_screen.gd", "res://ui/game/forge_screen.gd",
 			"res://ui/game/warehouse_panel.gd", "res://ui/game/tech_panel.gd", "res://ui/game/slots_screen.gd"]:

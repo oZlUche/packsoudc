@@ -33,6 +33,7 @@ static func to_float(v: int) -> float:
 
 ## 百分数转定点：from_percent(25) == 0.25
 static func from_percent(p: int) -> int:
+	@warning_ignore("integer_division")
 	return (ONE * p + (50 if p >= 0 else -50)) / 100
 
 
@@ -46,7 +47,9 @@ static func from_percent(p: int) -> int:
 static func mul(a: int, b: int) -> int:
 	var p := a * b
 	if p >= 0:
+		@warning_ignore("integer_division")
 		return (p + ONE / 2) / ONE
+	@warning_ignore("integer_division")
 	return -((-p + ONE / 2) / ONE)
 
 
@@ -58,6 +61,7 @@ static func div(a: int, b: int) -> int:
 	if b == 0:
 		return 0
 	var p := a * ONE
+	@warning_ignore("integer_division")
 	var q := (absi(p) + absi(b) / 2) / absi(b)
 	return -q if (p < 0) != (b < 0) else q
 
@@ -66,6 +70,8 @@ static func div(a: int, b: int) -> int:
 ## 中途反复取整会让「两个 +5%」不等于「一个 +10%」，玩家算得出来，会当成 bug。
 static func to_int(v: int) -> int:
 	if v >= 0:
+		@warning_ignore("integer_division")
 		return (v + ONE / 2) / ONE
+	@warning_ignore("integer_division")
 	return -((-v + ONE / 2) / ONE)
 #endregion

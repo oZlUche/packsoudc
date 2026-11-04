@@ -152,7 +152,7 @@ static func _row_text(e: Dictionary) -> String:
 
 
 ## 这一屏的标签都折行（列表里的一行可能很长）
-func _label(text: String, size: int, color: Color) -> Label:
-	var l := UiTheme.make_label(text, size, color)
+func _label(text: String, p_size: int, color: Color) -> Label:
+	var l := UiTheme.make_label(text, p_size, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return l

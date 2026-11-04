@@ -132,11 +132,11 @@ func _draw() -> void:
 		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 	ItemPainter.draw_favorite_def(self, def, 0, anchor, cell)     # 265：收藏的种类右上角一枚星
 	# 名字
-	var name := shown_name()
+	var name_ := shown_name()
 	if cell_box != null:
-		draw_string(font, Vector2(NAME_X, size.y - NAME_BASE), name, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - NAME_X * 2), 12, INK_LIT if lit else INK_UNLIT)
+		draw_string(font, Vector2(NAME_X, size.y - NAME_BASE), name_, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - NAME_X * 2), 12, INK_LIT if lit else INK_UNLIT)
 	else:
-		draw_string(font, Vector2(PAD, size.y - PAD), name, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - PAD * 2), 12, UiPalette.FG if lit else Color("4a515e"))
+		draw_string(font, Vector2(PAD, size.y - PAD), name_, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - PAD * 2), 12, UiPalette.FG if lit else Color("4a515e"))
 	# 095：异体角标「1/3」（点亮几个 / 共几个）
 	if variant_count() > 0:
 		_draw_tag("%d/%d" % [variants_lit(), variants.size()], font, false, BADGE_ART, BADGE_INK, Color("6f9fe0"))

@@ -247,10 +247,10 @@ func _apply_axes() -> void:
 
 
 ## 把一项属性的终值乘上 [param f]（定点）：差额补进固定值 —— 终值 = 原终值 × f
-static func _scale_final(set: StatSet, key: StringName, f: int) -> void:
-	if f == StatMath.ONE or (not set.has(key) and BattleStats.default_base(key) == 0):
+static func _scale_final(p_set: StatSet, key: StringName, f: int) -> void:
+	if f == StatMath.ONE or (not p_set.has(key) and BattleStats.default_base(key) == 0):
 		return
-	var v := set.ensure(key)
+	var v := p_set.ensure(key)
 	var before := v.total()
 	v.add_flat(StatMath.mul(before, f) - before)
 #endregion
@@ -425,6 +425,7 @@ func halve_on(ctx: BattleContext, when: StringName) -> void:
 		if b.def.decay_halve_on == when:
 			hit.append(b)
 	for b in hit:
+		@warning_ignore("integer_division")
 		decay_buff(ctx, b, b.stacks / 2)
 
 

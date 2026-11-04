@@ -41,14 +41,14 @@ func _track() -> Vector2:
 
 ## 槽上横坐标 [param x] 对应的值（夹在两端）
 func value_at(x: float) -> float:
-	var tr := _track()
-	var k := clampf((x - tr.x) / maxf(1.0, tr.y - tr.x), 0.0, 1.0)
+	var tr_ := _track()
+	var k := clampf((x - tr_.x) / maxf(1.0, tr_.y - tr_.x), 0.0, 1.0)
 	return min_value + k * (max_value - min_value)
 
 
 func _grab_x() -> float:
-	var tr := _track()
-	return tr.x if max_value <= min_value else lerpf(tr.x, tr.y, ratio)     # 没得选（仓库 0）时把手停在最左
+	var tr_ := _track()
+	return tr_.x if max_value <= min_value else lerpf(tr_.x, tr_.y, ratio)     # 没得选（仓库 0）时把手停在最左
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -69,10 +69,10 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 
 
-func _box(name: String, along: float) -> StyleBoxTexture:
-	if _boxes.has(name):
-		return _boxes[name]
-	var tex := UiTheme.art_cached(name)
+func _box(p_name: String, along: float) -> StyleBoxTexture:
+	if _boxes.has(p_name):
+		return _boxes[p_name]
+	var tex := UiTheme.art_cached(p_name)
 	var s: StyleBoxTexture = null
 	if tex != null:
 		s = StyleBoxTexture.new()
@@ -82,7 +82,7 @@ func _box(name: String, along: float) -> StyleBoxTexture:
 		s.texture_margin_top = 12.0
 		s.texture_margin_bottom = 12.0
 		s.set_expand_margin_all(6.0)
-	_boxes[name] = s
+	_boxes[p_name] = s
 	return s
 
 

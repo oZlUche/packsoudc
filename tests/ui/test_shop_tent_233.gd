@@ -65,7 +65,7 @@ static func frame_tent(t: TestCase, root: Window) -> void:
 	Support.cleanup(PREFIX)
 
 
-static func frame_tent_fallback(t: TestCase, root: Window) -> void:
+static func frame_tent_fallback(t: TestCase, _root: Window) -> void:
 	t.begin("233 · 帐篷缺图退回石板，标题照旧；别的叠层还是石板")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)

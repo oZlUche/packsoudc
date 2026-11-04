@@ -205,8 +205,8 @@ static func run_node(t: TestCase) -> void:
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var forges := 0
-	for seed in range(1, 9):
-		var s := RunState.start(c.chapter, seed, c.items, c.enemies, c.sets, kit.items)
+	for seed_ in range(1, 9):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit.items)
 		if s == null:
 			continue
 		for id in s.map.node_ids():
@@ -261,8 +261,8 @@ static func _first_of(map: MapGraph, type: StringName) -> MapNode:
 ## 出生点旁边一个休息点（种子里找得到就用，找不到把旁边一个点改成休息点）
 static func _rest_next_to_spawn(f: GameFlow, c, kit: LoadoutDef) -> MapNode:
 	var found: Dictionary = NodeScreens._seed_with(c, &"rest", kit.items)
-	var seed := int(found.get("seed", 1))
-	var run := f.begin(c.chapter, kit, seed)
+	var seed_ := int(found.get("seed", 1))
+	var run := f.begin(c.chapter, kit, seed_)
 	if run == null:
 		return null
 	var entry := int(found.get("entry", run.map.entry_ids[0]))

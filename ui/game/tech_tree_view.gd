@@ -132,19 +132,19 @@ func _wood() -> bool:
 
 ## 名字长（英文）放不下就把字号往下收，别被截掉（游戏测试 10-21：Warehouse Expansion 截成 Expansio）
 static func _fit_text(b: Button, room: float) -> void:
-	var font := b.get_theme_font("font")
-	if font == null:
+	var font_ := b.get_theme_font("font")
+	if font_ == null:
 		return
-	var size := b.get_theme_font_size("font_size")
-	while size > 10 and _widest(font, b.text, size) > room:
-		size -= 1
-	b.add_theme_font_size_override("font_size", size)
+	var size_ := b.get_theme_font_size("font_size")
+	while size_ > 10 and _widest(font_, b.text, size_) > room:
+		size_ -= 1
+	b.add_theme_font_size_override("font_size", size_)
 
 
-static func _widest(font: Font, text: String, size: int) -> float:
+static func _widest(font_: Font, text: String, p_size: int) -> float:
 	var w := 0.0
 	for line in text.split("\n"):
-		w = maxf(w, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
+		w = maxf(w, font_.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, p_size).x)
 	return w
 
 

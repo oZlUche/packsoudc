@@ -85,8 +85,8 @@ func bullion_weights(depth: float) -> Dictionary:
 			ids.append(String(k))
 	ids.sort()
 	var out := {}
-	for id in ids:
-		var w := float(bullion_shallow.get(id, 0.0)) * (1.0 - d) + float(bullion_deep.get(id, 0.0)) * d
+	for id_ in ids:
+		var w := float(bullion_shallow.get(id_, 0.0)) * (1.0 - d) + float(bullion_deep.get(id_, 0.0)) * d
 		if w > 0.0:
-			out[StringName(id)] = w
+			out[StringName(id_)] = w
 	return out

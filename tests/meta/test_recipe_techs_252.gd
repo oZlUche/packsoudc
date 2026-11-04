@@ -78,7 +78,7 @@ static func run_buckets(t: TestCase) -> void:
 	t.check(_ids(b["ready"]).has("smith_mithril_ingot") and _ids(b["ready"]).has("smith_mithril_sword"), "秘银冶炼一级：秘银锭、秘银剑会打")
 	m.tech_levels["staffcraft"] = 1
 	var staffs := func() -> Array[String]:
-		return _ids((Smithy.recipes_for(m, all)["ready"] as Array).filter(func(r) -> bool: return (r as SmithRecipeDef).group == "staff"))
+		return _ids((Smithy.recipes_for(m, all)["ready"] as Array).filter(func(r_) -> bool: return (r_ as SmithRecipeDef).group == "staff"))
 	t.eq(staffs.call(), ["smith_magic_staff"] as Array[String], "法杖工艺一级：只开魔法杖")
 	m.tech_levels["staffcraft"] = 3
 	t.eq(staffs.call(), ["smith_grand_magus_staff", "smith_mage_staff", "smith_magic_staff", "smith_magus_staff"] as Array[String], "三级：四根都开")

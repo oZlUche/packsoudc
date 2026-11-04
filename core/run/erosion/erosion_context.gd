@@ -14,6 +14,7 @@ var rng: RandomNumberGenerator = null
 var vitality_spent: int = 0
 var money_lost: int = 0
 var items_lost: Array[String] = []
+@warning_ignore("shadowed_global_identifier")
 var log: Array[String] = []
 
 

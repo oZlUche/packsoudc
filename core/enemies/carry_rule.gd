@@ -41,8 +41,8 @@ func candidates(items: ItemDatabase, rarity_cap: int) -> Array[StringName]:
 		return out
 	var cap := rarity_cap + rarity_cap_bonus if rarity_cap >= 0 else -1
 	for raw in items.ids():
-		var id := StringName(raw)
-		var d := items.get_def(id)
+		var id_ := StringName(raw)
+		var d := items.get_def(id_)
 		if d == null or d.combat != null or d.is_bag or d.tags.has(TREASURE) or d.is_bullion():
 			continue
 		if cap >= 0 and d.rarity > cap:
@@ -53,7 +53,7 @@ func candidates(items: ItemDatabase, rarity_cap: int) -> Array[StringName]:
 				hit = true
 				break
 		if hit:
-			out.append(id)
+			out.append(id_)
 	Ids.sort(out)
 	return out
 
@@ -75,14 +75,14 @@ func roll(items: ItemDatabase, strength: int, rarity_cap: int, rng: RandomNumber
 		if pool.is_empty():
 			break
 		var total := 0.0
-		for id in pool:
-			total += weight(items.get_def(id))
+		for id_ in pool:
+			total += weight(items.get_def(id_))
 		var r := rng.randf() * total
 		var pick := pool[pool.size() - 1]
-		for id in pool:
-			r -= weight(items.get_def(id))
+		for id_ in pool:
+			r -= weight(items.get_def(id_))
 			if r <= 0.0:
-				pick = id
+				pick = id_
 				break
 		out.append(pick)
 		if not allow_repeat:

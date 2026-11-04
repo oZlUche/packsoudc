@@ -190,8 +190,8 @@ func rebuild(keep_page: bool = true) -> void:
 func _add_spot(i: int) -> void:
 	var def := Market.def_at(flow.meta, flow.items, i)
 	var rot := lie_flat_rot(def)
-	var size := def.shape.size_rotated(rot) if def != null and def.shape != null else Vector2i.ONE
-	var grid := GridInventory.new(size, 0, false)
+	var size_ := def.shape.size_rotated(rot) if def != null and def.shape != null else Vector2i.ONE
+	var grid := GridInventory.new(size_, 0, false)
 	var sold := Market.is_sold(flow.meta, i)
 	if def != null:
 		var shown := ItemInstance.create(def, 0)
@@ -363,9 +363,9 @@ func buy_listed(id: StringName) -> String:
 
 
 func _say_bought(def: ItemDef, why: String) -> void:
-	var name := Names.of(def) if def != null else ""
+	var name_ := Names.of(def) if def != null else ""
 	if say.is_valid():
-		say.call(UiText.t("market.bought") % [name, Market.price_of(flow.market(), def), flow.meta.funds] if why == "" else UiText.t("shop.cant_buy") % [name, why])
+		say.call(UiText.t("market.bought") % [name_, Market.price_of(flow.market(), def), flow.meta.funds] if why == "" else UiText.t("shop.cant_buy") % [name_, why])
 
 
 ## 买散货摊第 i 格；返回空串 = 买了，否则是原因（说一句）

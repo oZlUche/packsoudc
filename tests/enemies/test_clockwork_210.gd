@@ -11,9 +11,9 @@ static func _content() -> TestSupport.Content:
 	return TestSupport.load_content("clockwork_hourglass", ["carry"])
 
 
-static func _build(c: TestSupport.Content, enemy: StringName, seed: int, carry: CarryRule = null) -> Dictionary:
+static func _build(c: TestSupport.Content, enemy: StringName, p_seed: int, carry: CarryRule = null) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed
+	rng.seed = p_seed
 	var def := c.enemies.enemy(enemy)
 	return EnemyPlacer.build_content(def, c.pool, c.items, def.strength, rng, carry)["content"]
 
@@ -119,18 +119,18 @@ static func run_parts(t: TestCase) -> void:
 static func run_loot(t: TestCase) -> void:
 	t.begin("210 · ⑧ 掉落：机关不揣携带品，改带 1～2 个齿轮（标 carried 必掉）；人照旧掷携带品")
 	var c := _content()
-	for seed in 12:
+	for seed_ in 12:
 		for id in CONSTRUCTS:
 			var gears := 0
 			var other_carried := 0
-			for raw in _build(c, id, 100 + seed, c.carry)["items"]:
+			for raw in _build(c, id, 100 + seed_, c.carry)["items"]:
 				if bool((raw as Dictionary).get("carried", false)):
 					if String(raw["id"]) == "brass_gear":
 						gears += 1
 					else:
 						other_carried += 1
-			t.check(gears >= 1 and gears <= 2, "%s（种子 %d）：带 %d 个齿轮" % [id, seed, gears])
-			t.eq(other_carried, 0, "%s（种子 %d）：没有别的携带品" % [id, seed])
+			t.check(gears >= 1 and gears <= 2, "%s（种子 %d）：带 %d 个齿轮" % [id, seed_, gears])
+			t.eq(other_carried, 0, "%s（种子 %d）：没有别的携带品" % [id, seed_])
 	var ok := ImportReport.new()
 	ContentImporter.import_enemy({"id": "t_filler_human", "strength": 0, "loot_filler": ["brass_gear"]}, ContentImporter.Context.new(), ok)
 	t.check(ok.to_text().contains("替身"), "人写替身：提醒（%s）" % ok.to_text())

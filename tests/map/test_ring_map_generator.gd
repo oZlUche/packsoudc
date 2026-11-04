@@ -340,9 +340,9 @@ static func run_zone_shape_rules(t: TestCase) -> void:
 	var rules := ZoneRules.new()
 	var prev := 0
 	for size in range(rules.min_size, rules.max_size + 1):
-		var cap := rules.max_gates_for(size)
-		t.check(cap >= 1 and cap >= prev, "%d 个点至多 %d 个出入口 —— 随规模只增不减" % [size, cap])
-		prev = cap
+		var cap_ := rules.max_gates_for(size)
+		t.check(cap_ >= 1 and cap_ >= prev, "%d 个点至多 %d 个出入口 —— 随规模只增不减" % [size, cap_])
+		prev = cap_
 	# 表上每一档的边界：键那么大用它的值，再大一个就不比它小
 	for k in rules.max_gates_by_size:
 		t.eq(rules.max_gates_for(int(k)), int(rules.max_gates_by_size[k]), "点数 = %s 用这一档" % k)
@@ -443,6 +443,7 @@ static func run_zone_gates_spread(t: TestCase) -> void:
 							adjacent_gates += 1
 	t.check(multi > 0, "48 个种子里出现过多出入口的高危区（%d 片）" % multi)
 	t.eq(bad, 0, "每个口都真的通向区外，口数在 1～上限之间")
+	@warning_ignore("integer_division")
 	t.check(adjacent_gates <= multi / 2, "多个口挤在一起的少（%d / %d）" % [adjacent_gates, multi])
 
 
@@ -455,12 +456,14 @@ static func run_entries(t: TestCase) -> void:
 	# 填满之后点数超出规模模板的范围，所以把模板拿掉
 	cfg.scales = [] as Array[MapScaleProfile]
 	cfg.rings[0].node_count = 0
+	@warning_ignore("integer_division")
 	cfg.entry_min_gap = slots / cfg.entry_count
 	var g := _gen().generate(cfg, 11)
 	t.not_null(g, "间隔拉到理论上限也放得下")
 	if g != null:
 		t.eq(_check_all(g, cfg), "", "而且不变式照样成立")
 
+	@warning_ignore("integer_division")
 	cfg.entry_min_gap = slots / cfg.entry_count + 1
 	var gen := _gen()
 	t.is_null(gen.generate(cfg, 11, 2), "再多一格就放不下了")
@@ -628,7 +631,6 @@ static func run_pivot_budget(t: TestCase) -> void:
 	for profile in MapScaleProfile.defaults():
 		var cfg := RingMapConfig.sample(profile.rings.y)
 		var pairs := 0
-		var made := 0
 		for s in 8:
 			var g := _gen().generate(cfg, s)
 			if g == null:
@@ -636,7 +638,6 @@ static func run_pivot_budget(t: TestCase) -> void:
 			var route_pairs := 1 if g.routes.size() == 2 else (g.routes.size() if g.routes.size() > 2 else 0)
 			var links: Array = g.layout_meta.get("pivot_links", [])
 			pairs += route_pairs
-			made += links.size()
 			t.check(links.size() <= route_pairs * profile.pivots.y,
 				"%s：相邻直连的换乘 %d 处，不超过 %d 对 × %d 次"
 				% [profile.id, links.size(), route_pairs, profile.pivots.y])
@@ -744,12 +745,13 @@ static func run_gaps(t: TestCase) -> void:
 		for i in filled.size():
 			var nxt: int = filled[(i + 1) % filled.size()]
 			worst = maxi(worst, posmod(nxt - filled[i], 18) - 1)
+		@warning_ignore("integer_division")
 		t.check(worst <= 18 / 6 * 2, "最长空段 %d 格，不该挤成一团（种子 %d）" % [worst, s])
 	t.check(made > 0, "至少跑成了一次")
 
 
 ## 路线在第 r 环上的（第一个）点；没经过这一环返回 -1。只有换乘那个用例问
-static func _node_on_ring(graph: MapGraph, route: Dictionary, r: int, ring_of: Dictionary) -> int:
+static func _node_on_ring(_graph: MapGraph, route: Dictionary, r: int, ring_of: Dictionary) -> int:
 	for id in (route["node_ids"] as Array):
 		if int(ring_of.get(int(id), -1)) == r:
 			return int(id)

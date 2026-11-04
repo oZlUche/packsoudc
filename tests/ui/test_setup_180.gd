@@ -58,7 +58,7 @@ static func frame_map_page(t: TestCase, root: Window) -> void:
 	var game = _game(root, "setup180b")
 	var flow: GameFlow = game.flow
 	var setup = game.base()
-	t.check(setup.map_chapters().all(func(c: ChapterDef) -> bool: return c.hidden_by_unlock == &""), "列表里没有教程章")
+	t.check(setup.map_chapters().all(func(c_: ChapterDef) -> bool: return c_.hidden_by_unlock == &""), "列表里没有教程章")
 	t.check(not setup.map_chapters().is_empty(), "至少有一张图")
 	for tut in flow.tutorial_chapters():
 		t.check(not setup.map_chapters().has(tut), "教程章 %s 永远不列（只出现一次）" % tut.id)

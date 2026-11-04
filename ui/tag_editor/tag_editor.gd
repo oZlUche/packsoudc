@@ -208,12 +208,12 @@ func _import(data: Dictionary, report: ImportReport) -> Resource:
 
 
 func _new_def() -> Resource:
-	var def := TagDef.new()
-	def.id = &"new_tag"
-	def.display_name = "新标签"
-	def.category = "kind"
-	def.tip = false
-	return def
+	var def_ := TagDef.new()
+	def_.id = &"new_tag"
+	def_.display_name = "新标签"
+	def_.category = "kind"
+	def_.tip = false
+	return def_
 
 
 func _new_tag() -> void:

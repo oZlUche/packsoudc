@@ -2,7 +2,7 @@
 ## 撤掉叠层时恢复。透出地图的叠层（铜面板、事件书、帐篷……）不停，只让地图隔帧重绘
 extends RefCounted
 
-const Forge := preload("res://tests/run/test_forge_175.gd")
+const ForgeTest := preload("res://tests/run/test_forge_175.gd")
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
 
@@ -12,7 +12,7 @@ static func frame_covers_base(t: TestCase, root: Window) -> void:
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	Support.cleanup("covers236")
-	var game = (load(Forge.GAME) as PackedScene).instantiate()
+	var game = (load(ForgeTest.GAME) as PackedScene).instantiate()
 	game.save_path = String(Support.paths("covers236")["run"])
 	game.meta_path = String(Support.paths("covers236")["meta"])
 	game.settings_path = String(Support.paths("covers236")["settings"])
@@ -20,7 +20,7 @@ static func frame_covers_base(t: TestCase, root: Window) -> void:
 	var flow: GameFlow = game.flow
 	flow.chapters = [c.chapter] as Array[ChapterDef]
 	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
-	var node := Forge._rest_next_to_spawn(flow, c, kit)
+	var node := ForgeTest._rest_next_to_spawn(flow, c, kit)
 	t.check(node != null and flow.step_to(node.id), "走上休息点")
 	var base: GameScreen = game.base()
 	t.check(base != null and base.screen == GameFlow.Screen.MAP, "底屏是地图")

@@ -385,11 +385,11 @@ func place_displacing(inst: ItemInstance, origin: Vector2i, rot: int = 0):
 
 
 ## 把一批实例放回各自的原位。这些格子刚刚才腾出来，正常必然放得回去。
-func _put_back(items: Array[ItemInstance], homes: Array[Vector2i], rots: Array[int]) -> void:
-	for i in items.size():
-		items[i].container_id = id     # 原样放回，不算重新置入
-		if not place(items[i], homes[i], rots[i]):
-			push_error("GridInventory: uid %d 放不回原位，物品已丢失" % items[i].uid)
+func _put_back(p_items: Array[ItemInstance], homes: Array[Vector2i], rots: Array[int]) -> void:
+	for i in p_items.size():
+		p_items[i].container_id = id     # 原样放回，不算重新置入
+		if not place(p_items[i], homes[i], rots[i]):
+			push_error("GridInventory: uid %d 放不回原位，物品已丢失" % p_items[i].uid)
 #endregion
 
 
@@ -764,7 +764,7 @@ func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dic
 	if not place(bag, origin, rot):
 		end_batch()
 		return {"ok": false, "fallen": []}
-	var placed: Array = []
+	var placed_: Array = []
 	var failed := false
 	for i in contents.size():
 		var inst: ItemInstance = contents[i]
@@ -772,7 +772,7 @@ func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dic
 		if not place(inst, g["origin"], int(g["rot"])):
 			failed = true
 			break
-		placed.append(inst)
+		placed_.append(inst)
 	if not failed:
 		for s in straddlers:
 			var inst: ItemInstance = s["inst"]
@@ -781,11 +781,11 @@ func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dic
 			if not place(inst, s["origin"], int(s["rot"])):
 				failed = true
 				break
-			placed.append(inst)
+			placed_.append(inst)
 	if failed:
 		# 报告刚验过，走到这里说明有别处改了容器状态。回滚干净。
 		push_error("GridInventory.attach_bag_shedding: 放置失败，回滚")
-		for p in placed:
+		for p in placed_:
 			remove((p as ItemInstance).uid)
 		remove(bag.uid)
 		end_batch()
@@ -1023,10 +1023,10 @@ func resize_cols(cols: int) -> int:
 	if keep == size.x:
 		return size.x
 	var occ := PackedInt32Array()
-	var bags := PackedInt32Array()
+	var bags_ := PackedInt32Array()
 	var blocked := PackedByteArray()
 	occ.resize(keep * size.y)
-	bags.resize(keep * size.y)
+	bags_.resize(keep * size.y)
 	blocked.resize(keep * size.y)
 	for y in size.y:
 		for x in keep:
@@ -1034,14 +1034,14 @@ func resize_cols(cols: int) -> int:
 			if x < size.x:
 				var i := y * size.x + x
 				occ[j] = _occ[i]
-				bags[j] = _bag_owner[i]
+				bags_[j] = _bag_owner[i]
 				blocked[j] = _blocked[i]
 			else:
 				occ[j] = EMPTY_UID
-				bags[j] = EMPTY_UID
+				bags_[j] = EMPTY_UID
 				blocked[j] = 0
 	_occ = occ
-	_bag_owner = bags
+	_bag_owner = bags_
 	_blocked = blocked
 	size = Vector2i(keep, size.y)
 	changed.emit()

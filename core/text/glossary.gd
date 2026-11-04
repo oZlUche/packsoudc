@@ -65,17 +65,17 @@ static func term_text(name: String) -> String:
 		return ""
 	if not (entry is Dictionary):
 		return String(entry)
-	var tr: Variant = (entry as Dictionary).get(UiText.lang, null)
-	if tr is Dictionary and String((tr as Dictionary).get("text", "")) != "":
-		return String(tr["text"])
+	var tr_: Variant = (entry as Dictionary).get(UiText.lang, null)
+	if tr_ is Dictionary and String((tr_ as Dictionary).get("text", "")) != "":
+		return String(tr_["text"])
 	return String((entry as Dictionary).get("text", ""))
 
 
 ## 221 F4：固定词条在当前语言下叫什么（[param key] 是 [constant TERMS] 的中文键；没写这种语言的名字照原词）
 static func term_name(key: String, lang: String = "") -> String:
 	var entry = TERMS.get(key, null)
-	var tr: Variant = (entry as Dictionary).get(lang if lang != "" else UiText.lang, null) if entry is Dictionary else null
-	return String((tr as Dictionary).get("name", key)) if tr is Dictionary else key
+	var tr_: Variant = (entry as Dictionary).get(lang if lang != "" else UiText.lang, null) if entry is Dictionary else null
+	return String((tr_ as Dictionary).get("name", key)) if tr_ is Dictionary else key
 
 
 ## 221 F4：一个词对应哪条固定词条（中文键本身，或某种语言下的名字）；不是词条给空
@@ -183,8 +183,8 @@ static func faith_terms(def: ItemDef) -> Dictionary:
 		return out
 	for key in (["faith", "anchor"] if def.is_anchor() else ["faith"]):
 		var entry: Dictionary = FAITH_TERMS[key]
-		var tr: Dictionary = entry.get(UiText.lang, entry["zh"])
-		out[String(tr["name"])] = {"id": key, "text": String(tr["text"])}
+		var tr_: Dictionary = entry.get(UiText.lang, entry["zh"])
+		out[String(tr_["name"])] = {"id": key, "text": String(tr_["text"])}
 	return out
 
 
@@ -807,9 +807,9 @@ static func mark(text: String, terms: Array) -> String:
 		return "[url=term:%s][color=%s%s][u]%s[/u][/color][/url]" % [ids[name], TextTemplate.STYLE_PREFIX, styles[name], name])
 
 
-## 把一串词在文字里各包一层（[param wrap]：词 → 包好的 BBCode）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开。
+## 把一串词在文字里各包一层（[param p_wrap]：词 → 包好的 BBCode）。长的词先替，替进去的先用占位符挡住，免得短词把长词切开。
 ## 170：BBCode 标签里面（`[url=term:增益槽]` 这种参数）不替。词条标色（[method mark]）与百科画链接（[method Encyclopedia.link_words]）同一套，只差包的是什么
-static func wrap_terms(text: String, names: Array[String], wrap: Callable) -> String:
+static func wrap_terms(text: String, names: Array[String], p_wrap: Callable) -> String:
 	var sorted: Array[String] = []
 	sorted.assign(names)
 	sorted.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
@@ -820,18 +820,18 @@ static func wrap_terms(text: String, names: Array[String], wrap: Callable) -> St
 	while at < text.length():
 		var open := text.find("[", at)
 		if open < 0:
-			out += _wrap_plain(text.substr(at), sorted, wrap)
+			out += _wrap_plain(text.substr(at), sorted, p_wrap)
 			break
 		var close := text.find("]", open)
 		if close < 0:
-			out += _wrap_plain(text.substr(at), sorted, wrap)
+			out += _wrap_plain(text.substr(at), sorted, p_wrap)
 			break
-		out += _wrap_plain(text.substr(at, open - at), sorted, wrap) + text.substr(open, close - open + 1)
+		out += _wrap_plain(text.substr(at, open - at), sorted, p_wrap) + text.substr(open, close - open + 1)
 		at = close + 1
 	return out
 
 
-static func _wrap_plain(text: String, sorted: Array[String], wrap: Callable) -> String:
+static func _wrap_plain(text: String, sorted: Array[String], p_wrap: Callable) -> String:
 	if text == "":
 		return text
 	var out := text
@@ -841,6 +841,6 @@ static func _wrap_plain(text: String, sorted: Array[String], wrap: Callable) -> 
 		holders.append(holder)
 		out = out.replace(sorted[i], holder)
 	for i in sorted.size():
-		out = out.replace(holders[i], String(wrap.call(sorted[i])))
+		out = out.replace(holders[i], String(p_wrap.call(sorted[i])))
 	return out
 #endregion

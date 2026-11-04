@@ -161,10 +161,10 @@ func _all_buffs() -> Dictionary:
 		return out
 	for bid in ContentLibrary.buffs():
 		out[bid] = {"def": ContentLibrary.buffs()[bid], "from": [] as Array[StringName]}
-	var ids: Array[StringName] = []
-	ids.assign(items.ids())
-	Ids.sort(ids)
-	for id in ids:
+	var ids_: Array[StringName] = []
+	ids_.assign(items.ids())
+	Ids.sort(ids_)
+	for id in ids_:
 		var found := Glossary.buffs_in_item(items.get_def(id))
 		for bid in found:
 			if not out.has(bid):
@@ -202,13 +202,13 @@ func toc() -> Array:
 		var groups: Array = []
 		var keys: Array = [""] if cat != TERMS_CATEGORY else GROUP_ORDER
 		for g in keys:
-			var ids: Array[String] = []
+			var ids_: Array[String] = []
 			for id in _order:
 				var p: Dictionary = _pages[id]
 				if String(p["category"]) == cat and String(p["group"]) == g:
-					ids.append(id)
-			if not ids.is_empty():
-				groups.append({"group": g, "name": group_name(g), "ids": ids})
+					ids_.append(id)
+			if not ids_.is_empty():
+				groups.append({"group": g, "name": group_name(g), "ids": ids_})
 		if not groups.is_empty():
 			out.append({"category": cat, "name": category_name(cat), "groups": groups})
 	return out
@@ -299,10 +299,10 @@ func recipe_lines() -> Array[String]:
 	for r in recipes:
 		if r.inputs.size() != 2:
 			continue
-		var ids: Array[StringName] = [r.inputs[0], r.inputs[1], r.output]
+		var ids_: Array[StringName] = [r.inputs[0], r.inputs[1], r.output]
 		var names: Array[String] = []
 		var all_lit := true
-		for item_id in ids:
+		for item_id in ids_:
 			names.append(_item_name(item_id))
 			all_lit = all_lit and not (lit.is_valid() and not bool(lit.call(item_id)))
 		var line := UiText.t("codex.recipe_line") % names

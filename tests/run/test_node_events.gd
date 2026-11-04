@@ -206,7 +206,7 @@ static func run_event(t: TestCase) -> void:
 		var w := _world(500 + s * 10)
 		w.vitality.spend(2, &"test")
 		var got: Array = []
-		w.events.event_resolved.connect(func(n: MapNode, outcome: StringName, detail: Dictionary): got.append([n.id, outcome, detail]))
+		w.events.event_resolved.connect(func(n: MapNode, outcome_: StringName, detail_: Dictionary): got.append([n.id, outcome_, detail_]))
 		var before := w.vitality.current
 		var node := _node(w, &"event")
 		w.travel.step_to(node.id)
@@ -241,7 +241,7 @@ static func run_random(t: TestCase) -> void:
 		if s == 0:
 			t.check(node.content.is_empty(), "随机点生成时内容是空的（5.10：唯一看不透的点）")
 		var revealed: Array = []
-		w.events.revealed.connect(func(n: MapNode, type: StringName): revealed.append([n.id, type]))
+		w.events.revealed.connect(func(n: MapNode, type_: StringName): revealed.append([n.id, type_]))
 		var fights: Array = []
 		w.events.battle_finished.connect(func(n: MapNode, _r: BattleResult, _won: bool): fights.append(n.id))
 		var searches: Array = []
@@ -285,9 +285,9 @@ static func run_search(t: TestCase) -> void:
 
 	var w := _world(900)
 	var opened: Array = []
-	w.events.search_opened.connect(func(n: MapNode, s: SearchSession): opened.append([n.id, s]))
+	w.events.search_opened.connect(func(n: MapNode, s_: SearchSession): opened.append([n.id, s_]))
 	var closed: Array = []
-	w.events.search_closed.connect(func(n: MapNode, haul: GridInventory, why: StringName): closed.append([n.id, haul, why]))
+	w.events.search_closed.connect(func(n: MapNode, haul_: GridInventory, why_: StringName): closed.append([n.id, haul_, why_]))
 	var fights: Array = []
 	w.events.battle_finished.connect(func(n: MapNode, _r: BattleResult, won: bool): fights.append([n.id, won]))
 	var node := _node(w, &"search")
@@ -326,7 +326,7 @@ static func run_search(t: TestCase) -> void:
 	# 随时走
 	var w2 := _world(950)
 	var c2: Array = []
-	w2.events.search_closed.connect(func(n: MapNode, _h: GridInventory, why2: StringName): c2.append(why2))
+	w2.events.search_closed.connect(func(_n: MapNode, _h: GridInventory, why2: StringName): c2.append(why2))
 	w2.travel.step_to(_node(w2, &"search").id)
 	w2.events.current_search.search()
 	w2.events.current_search.leave()

@@ -52,9 +52,9 @@ func signature_at(p_strength: int) -> Array[StringName]:
 			best = k
 	if best >= 0:
 		for raw in signature_by_strength[str(best)]:
-			var id := StringName(String(raw))
-			if not out.has(id):
-				out.append(id)
+			var id_ := StringName(String(raw))
+			if not out.has(id_):
+				out.append(id_)
 	return out
 
 
@@ -82,8 +82,8 @@ func combo_list() -> Array[Array]:
 		if not (raw is Array):
 			continue
 		var ids: Array[StringName] = []
-		for id in raw:
-			ids.append(StringName(String(id)))
+		for id_ in raw:
+			ids.append(StringName(String(id_)))
 		if ids.size() >= 2:
 			out.append(ids)
 	return out

@@ -160,7 +160,7 @@ func _fit_layers() -> void:
 
 
 func _tween() -> Tween:
-	_tweens = _tweens.filter(func(tw): return tw != null and tw.is_valid())
+	_tweens = _tweens.filter(func(tw_): return tw_ != null and tw_.is_valid())
 	var tw := create_tween()
 	_tweens.append(tw)
 	return tw

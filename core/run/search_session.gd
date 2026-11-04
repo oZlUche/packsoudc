@@ -208,22 +208,22 @@ func resume() -> void:
 
 
 ## 127：是不是进阶搜索点 —— 节点内容 `search_tier`（"advanced" / "normal"）优先，否则高危区里的（danger ≥ 1）
-static func is_advanced(node: MapNode) -> bool:
-	if node == null:
+static func is_advanced(node_: MapNode) -> bool:
+	if node_ == null:
 		return false
-	if node.content.has("search_tier"):
-		return String(node.content["search_tier"]) == "advanced"
-	return node.danger >= 1
+	if node_.content.has("search_tier"):
+		return String(node_.content["search_tier"]) == "advanced"
+	return node_.danger >= 1
 
 
 ## 127：这个点每次搜的逐件稀有度下限。优先级：节点内容 `search_floor` > 难度覆盖 > 阶梯表（常规用第 level 行、进阶用第 level + 1 行）
-static func floor_for(node: MapNode, p_rules: SearchRules, difficulty: DifficultyDef) -> Array[int]:
+static func floor_for(node_: MapNode, p_rules: SearchRules, difficulty: DifficultyDef) -> Array[int]:
 	var out: Array[int] = []
-	if node != null and node.content.has("search_floor"):
-		for v in node.content["search_floor"]:
+	if node_ != null and node_.content.has("search_floor"):
+		for v in node_.content["search_floor"]:
 			out.append(int(v))
 		return out
-	var adv := is_advanced(node)
+	var adv := is_advanced(node_)
 	var key := "advanced" if adv else "normal"
 	if difficulty != null and difficulty.search_floors.has(key):
 		for v in difficulty.search_floors[key]:

@@ -29,7 +29,7 @@ static func apply(settings: GameSettings) -> void:
 			if GameSettings.keycode_of(code) <= 0:
 				continue
 			var key := InputEventKey.new()
-			key.keycode = GameSettings.keycode_of(code)
+			key.keycode = GameSettings.keycode_of(code) as Key
 			events.append(key)
 		if events.is_empty():
 			continue

@@ -101,8 +101,8 @@ func _open_result(payload: Dictionary) -> void:
 	for got in detail.get("belt", []):
 		lines.append(UiText.t("event.belt_got") % String(got))     # 160 补一
 	var lost: Array[String] = []
-	for name in detail.get("items_lost", []):
-		lost.append(String(name))
+	for name_ in detail.get("items_lost", []):
+		lost.append(String(name_))
 	if not lost.is_empty():
 		lines.append(UiText.t("event.items_lost") % UiText.t("setup.list_sep").join(lost))
 	if int(detail.get("waited", 0)) > 0:
@@ -217,12 +217,12 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	image.position = ir.position
 	image.size = ir.size
 	page.add_child(image)
-	var tr := _rect(meta.get("text_rect", [704, 44, 560, 672]))
+	var tr_ := _rect(meta.get("text_rect", [704, 44, 560, 672]))
 	var col := _vbox(14)
 	col.name = "Page"
-	col.position = tr.position
-	col.size = tr.size
-	col.custom_minimum_size = tr.size
+	col.position = tr_.position
+	col.size = tr_.size
+	col.custom_minimum_size = tr_.size
 	page.add_child(col)
 	var head := _frame_title(title)
 	head.custom_minimum_size.y = float(meta.get("title_h", 52))
@@ -232,13 +232,13 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	col.add_child(under)
 	var heading := intro_heading()
 	if heading != "":
-		col.add_child(_heading_label(heading, tr.size.x))
+		col.add_child(_heading_label(heading, tr_.size.x))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	col.add_child(scroll)
 	if body != "":
-		var text := UiTheme.rich_block(tr.size.x, UiTheme.RICH_BODY_SIZE, body)
+		var text := UiTheme.rich_block(tr_.size.x, UiTheme.RICH_BODY_SIZE, body)
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		scroll.add_child(text)
 	var options := _vbox(8)

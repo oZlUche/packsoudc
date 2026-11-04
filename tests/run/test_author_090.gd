@@ -57,9 +57,9 @@ static func run_achievements(t: TestCase) -> void:
 				continue
 			files += 1
 			var raw := FileAccess.get_file_as_string(dir + "/" + f)
-			var r := ImportReport.new()
-			var res := ContentImporter.import_achievement(JSON.parse_string(raw), ContentImporter.Context.new(), r)
-			t.check(r.ok(), "%s 导入没有错：%s" % [f, r.to_text()])
+			var r_ := ImportReport.new()
+			var res := ContentImporter.import_achievement(JSON.parse_string(raw), ContentImporter.Context.new(), r_)
+			t.check(r_.ok(), "%s 导入没有错：%s" % [f, r_.to_text()])
 			t.eq(ContentExporter.to_json(ContentExporter.export_achievement(res)), raw, "%s 是往返不动点" % f)
 			t.check(ResourceLoader.exists(ContentPaths.asset_file("achievements", f.get_basename())), "%s 的资产在" % f)
 	t.check(files >= 5, "至少五枚成就（%d）" % files)
@@ -260,7 +260,8 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	# 会话结束了再点当前节点：没有可开的，只提示
 	flow.run.events.current_search.leave()
 	if game.overlay() != null:
-		game.overlay().proceed() if game.overlay().has_method("proceed") else null
+		if game.overlay().has_method("proceed"):
+			game.overlay().proceed()
 	flow.to_main_menu()
 	game.queue_free()
 	Support.cleanup("090")
@@ -338,8 +339,8 @@ static func run_event_flags_and_texts(t: TestCase) -> void:
 	flow.save_path = SAVE
 	flow.meta_path = META
 	var run: RunState = null
-	for seed in range(1, 30):
-		run = flow.begin(c.chapter, kit, seed)
+	for seed_ in range(1, 30):
+		run = flow.begin(c.chapter, kit, seed_)
 		if run != null:
 			break
 	t.check(run != null and run.meta == flow.meta and run.events.meta == flow.meta, "一局的事件层接着局外（旗标能看能立）")

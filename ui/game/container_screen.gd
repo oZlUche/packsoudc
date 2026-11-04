@@ -173,8 +173,8 @@ static func _v2(a) -> Vector2:
 
 
 ## 左边容器用哪种外框：搜索 藤编；宝箱开锁后那一次 稀有及以上金角、以下铁角；战利品 BOSS 黑铁，其余 生皮
-static func frame_kind_of(is_search: bool, chest: bool, chest_rarity: int, boss: bool) -> String:
-	if is_search:
+static func frame_kind_of(p_is_search: bool, chest: bool, chest_rarity: int, boss: bool) -> String:
+	if p_is_search:
 		if chest:
 			return "chest_gold" if chest_rarity >= 2 else "chest_iron"
 		return "search"

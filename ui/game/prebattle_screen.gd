@@ -212,7 +212,7 @@ func start_battle() -> bool:
 func _on_lane_pressed() -> void:
 	if can_start() != "":
 		return
-	Audio.play(&"ui.press")
+	AudioHub.play(&"ui.press")
 	start_battle()
 
 
@@ -343,9 +343,9 @@ func _refresh_belt() -> void:
 	var belt := BeltModule.of(flow.run)
 	for sid in belt_ids():
 		var def := BeltSkillDef.find(sid)
-		var name := "%s ×%d" % [Names.of(def), belt.count_of(sid)]
+		var name_ := "%s ×%d" % [Names.of(def), belt.count_of(sid)]
 		var why := belt.can_use(sid)
-		var b := _button((UiText.t("pre.use_belt") % name) if why == "" else (UiText.t("pre.belt_blocked") % [name, why]), func(): use_belt(sid), 14)
+		var b := _button((UiText.t("pre.use_belt") % name_) if why == "" else (UiText.t("pre.belt_blocked") % [name_, why]), func(): use_belt(sid), 14)
 		b.tooltip_text = def.describe()
 		b.disabled = why != ""
 		_belt_row.add_child(b)

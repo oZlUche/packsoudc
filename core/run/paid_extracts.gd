@@ -48,6 +48,7 @@ static func mark_closing(graph: MapGraph, step_limit: int) -> int:
 				best = id
 	if best < 0:
 		return -1
+	@warning_ignore("integer_division")
 	graph.get_node(best).content["closes_at"] = step_limit / 2
 	return best
 

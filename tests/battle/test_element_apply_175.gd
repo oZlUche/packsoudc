@@ -116,11 +116,11 @@ static func run_in_battle(t: TestCase) -> void:
 	S._start(ctx)
 	t.eq(ctx.sides[1].stacks_of(&"chill"), 3, "stacks = 3：一下三层寒冷")
 	# 被取消的一下不施加
-	var tr := OnBeforeDamage.new()
-	tr.direction = DamageTrigger.Direction.TAKEN
+	var tr_ := OnBeforeDamage.new()
+	tr_.direction = DamageTrigger.Direction.TAKEN
 	var md := ModifyDamage.new()
 	md.cancel = true
-	var wall := H._compiled(2, "wall", {}, [H._rule(tr, Always.new(), [md])])
+	var wall := H._compiled(2, "wall", {}, [H._rule(tr_, Always.new(), [md])])
 	ctx = H._battle(H._spec(100.0, [_with_applies(1, [S._opener([S._flat(3.0)])], [_ea("scorch")])]), H._spec(100.0, [wall]))
 	S._start(ctx)
 	t.eq([S._hp(ctx, 1), ctx.sides[1].stacks_of(&"scorch")], [100, 0], "被整个取消：不掉血、不施加")

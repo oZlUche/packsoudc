@@ -62,17 +62,17 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 
 ## 一块大木牌连它的挂牌：挂牌在上（画在木牌上面），木牌往上收 12 压住挂牌下沿；返回木牌，[method _col] 取里面那一列
 func _plate(h: float, title_key: String) -> PanelContainer:
-	var wrap := UiTheme.vbox(-int(HeaderTag.HANG_HEIGHT - TAG_RISE))
-	add_child(wrap)
+	var wrap_ := UiTheme.vbox(-int(HeaderTag.HANG_HEIGHT - TAG_RISE))
+	add_child(wrap_)
 	var hold := MarginContainer.new()
 	hold.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hold.add_theme_constant_override("margin_left", TAG_X)
 	hold.z_index = 1     # 挂牌压在木牌框上
 	hold.add_child(HeaderTag.hanging(UiText.t(title_key)))
-	wrap.add_child(hold)
+	wrap_.add_child(hold)
 	var p := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_PLAQUE)
 	p.custom_minimum_size = Vector2(WIDTH, h)
-	wrap.add_child(p)
+	wrap_.add_child(p)
 	p.add_child(UiTheme.vbox(10))
 	return p
 
@@ -101,14 +101,14 @@ func _fill_last(col: VBoxContainer) -> void:
 		var row := UiTheme.hbox(14)
 		col.add_child(row)
 		row.add_child(PortraitSlot.new(PORTRAIT, Nameplate.character_face(ch.id)))
-		var name := UiTheme.make_label(Names.of(ch), NAME_FONT, UiTheme.INK)
-		name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(name)
-		_last_lines.append(name.text)
+		var name_ := UiTheme.make_label(Names.of(ch), NAME_FONT, UiTheme.INK)
+		name_.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(name_)
+		_last_lines.append(name_.text)
 	if chapter != null:
 		var map := Names.of(chapter) if chapter.display_name != "" else String(chapter.id)
-		var scale := _last_scale(chapter)
-		var where := map + (UiText.t("setup.sep") + scale if scale != "" else "")
+		var scale_ := _last_scale(chapter)
+		var where := map + (UiText.t("setup.sep") + scale_ if scale_ != "" else "")
 		col.add_child(_line(where))
 		_last_lines.append(where)
 	var diff := _last_difficulty()

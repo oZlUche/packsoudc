@@ -217,10 +217,10 @@ static func run_conditional_mitigation(t: TestCase) -> void:
 	var block := BuffDef.new()
 	block.id = &"block"
 
-	var seed := ApplyStatus.new()
-	seed.target = CombatEffect.Target.SELF
-	seed.buff = block
-	seed.stacks = 2
+	var seed_ := ApplyStatus.new()
+	seed_.target = CombatEffect.Target.SELF
+	seed_.buff = block
+	seed_.stacks = 2
 
 	var cost := StatusStackCost.new()
 	cost.buff_id = &"block"
