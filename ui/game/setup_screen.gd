@@ -451,12 +451,12 @@ func repeat_last() -> int:
 		var at := Vector2i(int(e["origin"][0]), int(e["origin"][1]))
 		var rot := int(e["rot"])
 		if board.can_place_def(inst.def, at, rot):
-			var page := flow.meta.warehouse.page_of(inst.uid)
+			var page_at := flow.meta.warehouse.page_of(inst.uid)
 			flow.meta.warehouse.remove(inst.uid)
 			if board.place(inst, at, rot):
 				placed += 1
 				continue
-			flow.meta.warehouse.place(inst, inst.origin, inst.rotation, maxi(0, page))
+			flow.meta.warehouse.place(inst, inst.origin, inst.rotation, maxi(0, page_at))
 		if carry_in(inst.uid):
 			placed += 1
 		else:

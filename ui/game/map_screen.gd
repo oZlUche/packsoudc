@@ -136,13 +136,13 @@ func walk_path(to_id: int) -> Array[int]:
 	var from := _run.travel.current_id
 	var cost := {from: 0}
 	var prev := {}
-	var open: Array[int] = [from]
-	while not open.is_empty():
+	var frontier: Array[int] = [from]
+	while not frontier.is_empty():
 		var best := 0
-		for i in open.size():
-			if int(cost[open[i]]) < int(cost[open[best]]):
+		for i in frontier.size():
+			if int(cost[frontier[i]]) < int(cost[frontier[best]]):
 				best = i
-		var at: int = open.pop_at(best)
+		var at: int = frontier.pop_at(best)
 		if at == to_id:
 			break
 		if at != from and not _run.map.get_node(at).is_visited():
@@ -155,14 +155,14 @@ func walk_path(to_id: int) -> Array[int]:
 			if not cost.has(nb) or c < int(cost[nb]):
 				cost[nb] = c
 				prev[nb] = at
-				if not open.has(nb):
-					open.append(nb)
+				if not frontier.has(nb):
+					frontier.append(nb)
 	if not prev.has(to_id):
 		return out
-	var at := to_id
-	while at != from:
-		out.push_front(at)
-		at = int(prev[at])
+	var back := to_id
+	while back != from:
+		out.push_front(back)
+		back = int(prev[back])
 	return out if out.size() > 1 else [] as Array[int]
 
 
