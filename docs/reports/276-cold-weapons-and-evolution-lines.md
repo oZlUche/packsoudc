@@ -93,7 +93,7 @@ DPS 阶梯（伤害 ÷ 冷却）：白 5–8 · 绿 10–12 · 蓝 14–17 · �
 
 ## 三、改动清单（执行，作者确认清单后）
 
-1. 25 个道具 json（形状、稀有度、材质、标签 `weapon / melee / rapid|burst / 家族 tag`、`combat`、中英文名与说明）；战锤数值与识别句；剁刀线两条配方改改铸。
+1. 25 个道具 json（形状、稀有度、材质、标签 `weapon / melee / rapid|burst / 家族 tag`、`combat`、中英文名；**说明字段留空给作者**，作者 16:04「生成道具时，不要写说明，永远留空给我」）；战锤数值与识别句；剁刀线两条配方改改铸。
 2. 25 条 `smith_recipes/smith_<id>.json`：`inputs` 含上一层；二层 `level: 2`、三层 `level: 3`；秘银线 `tech: mithril_smelting`。
 3. 道具说明窗「可改铸为」一行（zh / en，UiText 键 `tip.reforge_into`）。
 4. 家族 tag：`polearm 长柄` / `axe 斧` / `mace 钝器`（`heavy` 已有）—— 内部标签，不出提示。
