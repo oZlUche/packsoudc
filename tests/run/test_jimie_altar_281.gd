@@ -87,6 +87,7 @@ static func run_flow(t: TestCase) -> void:
 	if god == null:
 		return
 	t.eq(god.text, "", "正文空着给作者")
+	t.check(god.image != "" and FileAccess.file_exists(god.image), "配图在（%s）" % god.image)
 	t.check(run.events.choose(0), "说完了")
 	t.check(run.is_over() and run.phase == RunState.Phase.EXTRACTED, "撤离结算")
 	t.eq(run.end_reason, JimiePath.REASON, "原因：寂灭")
