@@ -154,6 +154,11 @@ static func frame_pages(t: TestCase, root: Window) -> void:
 	s.show_tab("market")
 	var market = s.market_panel()
 	t.check(market.npc != null and market.npc.slot.picture != null, "集市：散货摊摊主")
+	if market.npc != null:
+		market.npc.talk()
+		var nr: Rect2 = market.npc.note.get_global_rect()
+		t.check(market.npc.note_above and nr.end.y <= market.npc.get_global_rect().position.y + 0.5, "散货摊的纸条贴在头像上方，不压柜台上的货（复测 v5.29）")
+		market.npc.close()
 	s.free()
 	W178._cleanup()
 	var opened := Shop._open(root)
