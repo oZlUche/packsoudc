@@ -78,3 +78,40 @@ static func run_import_warns(t: TestCase) -> void:
 	var r3 := ImportReport.new()
 	ContentImporter.import_chapter(pro, ContentImporter.Context.new(), r3)
 	t.check(not r3.to_text().contains("材料节点"), "序章（预设图）不查")
+
+
+static func run_ring(t: TestCase) -> void:
+	t.begin("283 §四 4（v5.31）· 魔法废墟：材料节点只落在路线外或搜索路线上，混合 / 战斗路线一个不动；放不下的溢到外环，种类不变；中档 6 环每张落满 8 个")
+	var ch: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
+	for pair in [[&"small", 4], [&"medium", 6]]:
+		var cfg := (ch.map_source.generator_config as RingMapConfig).duplicate(true) as RingMapConfig
+		cfg.apply_scale(pair[0], pair[1])
+		var kinds_want := {}
+		for r in range(1, cfg.ring_count() + 1):
+			var sp := cfg.spec_for_ring(r)
+			if sp != null:
+				for k in sp.material_nodes:
+					kinds_want[String(k)] = int(kinds_want.get(String(k), 0)) + int(sp.material_nodes[k])
+		for seed_ in [2, 7, 19]:
+			var g := RingMapGenerator.new().generate(cfg, seed_)
+			var tag := "%s %d 环 / 种子 %d" % [pair[0], pair[1], seed_]
+			t.not_null(g, "%s 生成得出来" % tag)
+			if g == null:
+				continue
+			var kinds := {}
+			var bad := []
+			for id in g.node_ids():
+				var n := g.get_node(id)
+				var k := String(n.content.get("search_kind", ""))
+				if k == "":
+					continue
+				kinds[k] = int(kinds.get(k, 0)) + 1
+				if n.type != &"search":
+					bad.append(id)
+				for r in g.routes:
+					if (r["node_ids"] as Array).has(id) and String(r.get("style", "")) != "search":
+						bad.append(id)
+			t.eq(bad, [], "%s：材料节点都是搜索点、不在混合 / 战斗路线上" % tag)
+			t.check(kinds.keys().all(func(k) -> bool: return int(kinds[k]) <= int(kinds_want.get(k, 0))), "%s：每种不超过配置（%s）" % [tag, kinds])
+			if pair[0] == &"medium":
+				t.eq(kinds, kinds_want, "%s：落满" % tag)

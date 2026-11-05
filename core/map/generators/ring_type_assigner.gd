@@ -76,9 +76,9 @@ func assign(g: MapGraph, cfg: RingMapConfig, rng: RandomNumberGenerator) -> bool
 	_enforce_coverage()
 	_enforce_adjacency()
 	_place_extracts()
+	_assign_material_kinds()     # 283 §四 4：配额补齐放在路线校准与打分之前，路线分看到的是最终类型
 	_calibrate_routes()
 	_write_route_scores()
-	_assign_material_kinds()
 	g.layout_meta["type_rules"] = rules_from_config(cfg)
 	return true
 
@@ -245,33 +245,86 @@ func _assign_route_mix() -> void:
 			_put_type(int(order[j]), StringName(bag[j]), false)
 
 
-## 267：每个点记下所在环的产物表；每环再从**定稿的**普通搜索点（不是固定的）里挑 `material_nodes` 要的个数，写 `content.search_kind`。
-## 放在所有改类型的步骤之后：类型一个不动（259 的配额、相邻、路线校准都不受影响），只是搜的池不同。
-## 随机数另起一条（由主随机数派生、不消耗它）：同一种子的图形与类型和没有材料节点时一样
+## 补材料节点时，战斗点之后还能改成搜索点的类型
+const TOP_UP_TYPES: Array[StringName] = [&"event", &"random", &"chest"]
+
+
+## 267：每个点记下所在环的产物表；每环再挑 `material_nodes` 要的个数，写 `content.search_kind`。
+## 283 §四 4（v5.31，架构设计 15:03）：配额照章节配置，落点只许「路线外的点」与「只在搜索路线上的点」，混合 / 战斗路线上的点、战斗路线的路旁一步永远不动。
+## 由内往外一环一环放：本环路线外 → 本环搜索路线 → 放不下的种类不变溢到外一环，照样先路线外再搜索路线；最外环还放不下就不落。
+## 同一档里先用现成的搜索点，再把战斗点、事件 / 随机 / 宝箱点改成搜索点（都要 `_can_become` 答应：配额、相邻、必须型、路线占比照守）。
+## 挑中的钉死；放在撤离点之后、259 路线校准与打分之前，路线分看到的是最终类型。产物表按实际落的那一环。
+## 随机数另起一条（由主随机数派生、不消耗它）
 func _assign_material_kinds() -> void:
 	var krng := RandomNumberGenerator.new()
 	krng.seed = hash([_rng.state, "material_kinds"])
-	for r in range(_cfg.ring_count(), 0, -1):
+	for r in range(1, _cfg.ring_count() + 1):
 		var spec := _cfg.spec_for_ring(r)
 		if spec == null:
 			continue
-		var pool: Array[int] = []
 		for id in _ring_ids(r):
-			var n := _g.get_node(id)
 			for t in spec.produce:     # 倍率一律存成小数：资产里的 2 是整数，存档往返会变成 2.0
-				n.produce[String(t)] = float(spec.produce[t])
-			if n.type == &"search" and not _fixed.has(id):
-				pool.append(id)
-		if spec.material_nodes.is_empty() or pool.is_empty():
+				_g.get_node(id).produce[String(t)] = float(spec.produce[t])
+	var carry: Array = []
+	for r in range(1, _cfg.ring_count() + 1):
+		var spec := _cfg.spec_for_ring(r)
+		var wanted: Array = carry.duplicate()
+		if spec != null:
+			for kind in _sorted_keys(spec.material_nodes):
+				for i in int(spec.material_nodes[kind]):
+					wanted.append(kind)
+		if wanted.is_empty():
 			continue
-		pool.assign(MapRng.shuffled(pool, krng))
-		var wanted: Array = []
-		for kind in _sorted_keys(spec.material_nodes):
-			for i in int(spec.material_nodes[kind]):
-				wanted.append(kind)
-		wanted = MapRng.shuffled(wanted, krng)     # 搜索点不够时，哪一种落空也随机，不总是排在后面的那种
-		for i in mini(wanted.size(), pool.size()):
-			_g.get_node(pool[i]).content["search_kind"] = wanted[i]
+		wanted = MapRng.shuffled(wanted, krng)     # 放不下时，哪一种溢出也随机，不总是排在后面的那种
+		var off_route: Array[int] = []
+		var on_search: Array[int] = []
+		for id in _ring_ids(r):
+			if _fixed.has(id):
+				continue
+			var cls := _material_spot(id)
+			if cls == 0:
+				off_route.append(id)
+			elif cls == 1:
+				on_search.append(id)
+		var placed := 0
+		for group in [off_route, on_search]:
+			for id in _search_first(MapRng.shuffled(group, krng)):
+				if placed >= wanted.size():
+					break
+				var n := _g.get_node(int(id))
+				if n.type != &"search":
+					if not (n.type == &"battle" or TOP_UP_TYPES.has(n.type)) or not _can_become(int(id), &"search"):
+						continue
+					_put_type(int(id), &"search", false)
+				n.content["search_kind"] = wanted[placed]
+				_fixed[int(id)] = true
+				placed += 1
+		carry = wanted.slice(placed)
+
+
+## 材料节点能不能落在这个点：0 = 路线外，1 = 只在搜索路线上，-1 = 不动（在混合 / 战斗路线上，
+## 或是挨着战斗路线的路旁一步：259 要战斗路线旁一步 战斗 + 精英 ≥ 搜索 + 宝箱）
+func _material_spot(id: int) -> int:
+	var cls := 0
+	for ri in _routes_of.get(id, []):
+		if String(_g.routes[int(ri)].get("style", "")) != "search":
+			return -1
+		cls = 1
+	if cls == 0:
+		for nb in _g.neighbors(id):
+			for ri in _routes_of.get(nb, []):
+				if String(_g.routes[int(ri)].get("style", "")) == "combat":
+					return -1
+	return cls
+
+
+## 现成的搜索点在前，战斗点其次，别的最后（同档保持洗牌后的次序）
+func _search_first(ids: Array) -> Array:
+	var buckets: Array = [[], [], []]
+	for id in ids:
+		var t := _g.get_node(int(id)).type
+		(buckets[0 if t == &"search" else (1 if t == &"battle" else 2)] as Array).append(id)
+	return buckets[0] + buckets[1] + buckets[2]
 
 
 ## 其余节点按所在环的权重抽。

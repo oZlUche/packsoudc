@@ -144,12 +144,14 @@ static func frame_safe_screen(t: TestCase, root: Window) -> void:
 		t.check(SafeModule.of(run).inventory.has_item(item.uid), "里面的东西留着（结算进局外）")
 	# 走开再回来：不开
 	var moves := run.travel.available_moves()
-	if not moves.is_empty() and flow.step_to(moves[0]):
+	# 走开：挑一个不收局的邻点（核心 / 撤离点一踩局就完了，保险箱里的东西会结算进局外）
+	var away := moves.filter(func(id: int) -> bool: return not [&"core", &"extract"].has(run.map.get_node(id).type))
+	if not away.is_empty() and flow.step_to(away[0]):
 		NodeScreens._settle(flow)
 		if not run.is_over() and run.travel.available_moves().has(safe_node.id) and flow.step_to(safe_node.id):
 			NodeScreens._settle(flow)
 			t.check(flow.screen != GameFlow.Screen.SAFE, "回头再踩：锁着的不开")
-	if item != null:
+	if item != null and not run.is_over():
 		t.check(SafeModule.of(run).inventory.has_item(item.uid), "里面的东西一直在")
 	game.queue_free()
 	Support.cleanup("safe")
