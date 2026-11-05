@@ -275,7 +275,7 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	def = flow.last_payload.get("def", null)
 	var at := -1
 	for i in def.options.size():
-		if (def.options[i] as EventOption).label.begins_with("献祭"):
+		if (def.options[i] as EventOption).outcomes.any(func(o): return o is OpenAltar):     # 281：寂灭的「献祭」也姓献祭，按后果认
 			at = i
 	t.check(at >= 0 and (def.options[at] as EventOption).locked_reason(run.events._event_ctx(run.current_node())) == "", "有信仰：神坛选项能选")
 	var vit0 := run.vitality.current

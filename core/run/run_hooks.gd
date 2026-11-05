@@ -23,6 +23,7 @@ const NAMES := {
 	&"has_map_buff": "BuffModule：有这个地图 buff 吗",
 	&"bracket": "HunterSystem / RunState：现在第几段位",
 	&"request_extract": "RunState：从这个撤离点撤离（付不起返回 false）",
+	&"jimie_ascend": "RunState：281 寂灭的献祭说完了，当场结算回基地",
 	&"relocate": "RunState：把人挪到别处（清地上、给猎手一个回合）",
 	&"safe_open": "SafeModule：保险箱还能开吗",
 	&"belt_use": "BeltModule：用腰带里的一个随身技能（147 / 160：空串 = 用了，否则是原因）",
@@ -96,6 +97,10 @@ func bracket() -> int:
 
 func request_extract() -> bool:
 	return bool(_at(&"request_extract").call()) if has(&"request_extract") else false
+
+
+func jimie_ascend() -> bool:
+	return bool(_at(&"jimie_ascend").call()) if has(&"jimie_ascend") else false
 
 
 func relocate(intent: MoveIntent) -> bool:
