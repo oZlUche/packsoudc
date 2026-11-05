@@ -1,0 +1,20 @@
+{
+  "id": "poxiao_token",
+  "display_name": "破晓的信物",
+  "display_names": {
+    "en": "Daybreak Token"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 5,
+  "tags": [
+    "valuable",
+    "unique"
+  ],
+  "material": "metal"
+}

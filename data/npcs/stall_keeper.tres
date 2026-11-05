@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="NpcDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/npcs/npc_line.gd" id="1_6qc6i"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="2_bnsme"]
+[ext_resource type="Script" path="res://core/meta/npcs/npc_def.gd" id="3_rnbg0"]
+[ext_resource type="Script" path="res://core/meta/npcs/npc_special.gd" id="4_2wuap"]
+
+[sub_resource type="Resource" id="Resource_umfwl"]
+script = ExtResource("1_6qc6i")
+id = &"lore_1"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_lha24"]
+script = ExtResource("1_6qc6i")
+id = &"lore_2"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_b7ym8"]
+script = ExtResource("1_6qc6i")
+id = &"lore_3"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_ueu67"]
+script = ExtResource("1_6qc6i")
+id = &"guide_1"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_wtfqr"]
+script = ExtResource("1_6qc6i")
+id = &"guide_2"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_ihgxu"]
+script = ExtResource("1_6qc6i")
+id = &"guide_3"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[resource]
+script = ExtResource("3_rnbg0")
+id = &"stall_keeper"
+display_names = {
+"en": ""
+}
+portrait = &"npc_stall_keeper"
+lines = Array[ExtResource("1_6qc6i")]([SubResource("Resource_umfwl"), SubResource("Resource_lha24"), SubResource("Resource_b7ym8"), SubResource("Resource_ueu67"), SubResource("Resource_wtfqr"), SubResource("Resource_ihgxu")])

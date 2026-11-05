@@ -1,5 +1,5 @@
 {
- "note": "251 定稿（作者 2026-10-25 14:23）整页铁匠铺，设计像素。bg = smithy/bg.png 1300×950：sign = 木招牌写字框，funds = 钱牌框。keys = 左列大类木牌区；grid = 道具格子区（含铁框）；scroll = 打造界面 smithy/anvil_plate.png 的位置（整块铁砧剪影，tone dark → 浅字 text_light，缺素材的数用暖红 text_missing）；plate_nine = anvil_plate 当九宫格拉伸时的四边（左边含砧角、右边含方砧尾和收腰，中间只有平直的砧面和砧脚，横拉不变形；竖拉只拉砧面中段）；face = 原尺寸时砧面上放内容的区（剑、名字、需要材料、工钱、打造键）；pointer = smithy/anvil_pointer.png，底边贴 anvil 顶、横向对准选中的格子中心（pointer_dy = 小尖相对 anvil 顶的上移）。大类木牌、道具格子由代码按 227 规矩画在 bg 上。",
+ "note": "251 定稿（作者 2026-10-25 14:23）整页铁匠铺，设计像素。bg = smithy/bg.png 1300×950：sign = 木招牌写字框，funds = 钱牌框。keys = 左列大类木牌区；grid = 道具格子区（含铁框）；scroll = 打造界面 smithy/anvil_plate.png 的位置（整块铁砧剪影，tone dark → 浅字 text_light，缺素材的数用暖红 text_missing）；plate_nine = anvil_plate 当九宫格拉伸时的四边（左边含砧角、右边含方砧尾和收腰，中间只有平直的砧面和砧脚，横拉不变形；竖拉只拉砧面中段）；face = 原尺寸时砧面上放内容的区（剑、名字、需要材料、工钱、打造键）；pointer = smithy/anvil_pointer.png，底边贴 anvil 顶、横向对准选中的格子中心（pointer_dy = 小尖相对 anvil 顶的上移）。大类木牌、道具格子由代码按 227 规矩画在 bg 上。 282：npc = NPC 头像（铁匠）站的框，左上角招牌左边的空墙。",
  "tone": "dark",
  "size": [
   1300,
@@ -53,5 +53,11 @@
   "h": 28,
   "dy": 24
  },
- "text_light": "#f0e8d8"
+ "text_light": "#f0e8d8",
+ "npc": {
+  "x": 140,
+  "y": 18,
+  "w": 104,
+  "h": 104
+ }
 }

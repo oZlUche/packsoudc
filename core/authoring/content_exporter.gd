@@ -166,6 +166,36 @@ static func dump(obj: Object, with_type: bool = false) -> Dictionary:
 		_reaction_out(obj as ReactionDef, out)
 	if obj is ItemDef:
 		return _with_description_keys(out)
+	if obj is NpcDef:
+		return _with_text_keys(out, "display_name", "display_names")     # 282：名字与台词留给作者，空着也写出来
+	if obj is NpcLine and not out.has("kind"):
+		var with_kind := {}
+		for k in out:
+			with_kind[k] = out[k]
+			if k == "id":
+				with_kind["kind"] = String((obj as NpcLine).kind)     # 种类也总写（作者一眼看出是闲话还是指引）
+		out = with_kind
+	if obj is NpcLine or obj is NpcSpecial:
+		return _with_text_keys(out, "text", "texts")
+	return out
+
+
+## 282：空着的文字键也写出来，按资产的字段顺序排（作者打开 JSON 就看得到该填哪里）
+static func _with_text_keys(raw: Dictionary, base: String, table: String) -> Dictionary:
+	if raw.has(base) and raw.has(table):
+		return raw
+	var out := {}
+	var placed := false
+	for k in raw:
+		if not placed and k != "id" and k != "kind" and k != "type":
+			out[base] = raw.get(base, "")
+			out[table] = raw.get(table, {"en": ""})
+			placed = true
+		if k != base and k != table:
+			out[k] = raw[k]
+	if not placed:
+		out[base] = raw.get(base, "")
+		out[table] = raw.get(table, {"en": ""})
 	return out
 
 

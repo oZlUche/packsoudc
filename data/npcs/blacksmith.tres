@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="NpcDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/npcs/npc_line.gd" id="1_80sgd"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="2_dlpcc"]
+[ext_resource type="Script" path="res://core/meta/npcs/npc_def.gd" id="3_ya0to"]
+[ext_resource type="Script" path="res://core/meta/npcs/npc_special.gd" id="4_wtxwx"]
+[ext_resource type="Script" path="res://core/run/events/conditions/facility_at_least.gd" id="5_pbxmb"]
+[ext_resource type="Script" path="res://core/run/events/conditions/owned_nowhere.gd" id="6_marry"]
+
+[sub_resource type="Resource" id="Resource_qoq68"]
+script = ExtResource("1_80sgd")
+id = &"lore_1"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_b3of4"]
+script = ExtResource("1_80sgd")
+id = &"lore_2"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_ngnbp"]
+script = ExtResource("1_80sgd")
+id = &"lore_3"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_ur10e"]
+script = ExtResource("1_80sgd")
+id = &"guide_1"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_rlcpc"]
+script = ExtResource("1_80sgd")
+id = &"guide_2"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_atoxq"]
+script = ExtResource("1_80sgd")
+id = &"guide_3"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_1inul"]
+script = ExtResource("5_pbxmb")
+facility = &"smithy"
+level = 3
+
+[sub_resource type="Resource" id="Resource_dquwv"]
+script = ExtResource("6_marry")
+ids = Array[StringName]([&"poxiao", &"poxiao_token"])
+
+[sub_resource type="Resource" id="Resource_h52c2"]
+script = ExtResource("4_wtxwx")
+id = &"poxiao_start"
+texts = {
+"en": ""
+}
+requires = Array[ExtResource("2_dlpcc")]([SubResource("Resource_1inul"), SubResource("Resource_dquwv")])
+give = &"poxiao_token"
+
+[resource]
+script = ExtResource("3_ya0to")
+id = &"blacksmith"
+display_names = {
+"en": ""
+}
+portrait = &"npc_blacksmith"
+lines = Array[ExtResource("1_80sgd")]([SubResource("Resource_qoq68"), SubResource("Resource_b3of4"), SubResource("Resource_ngnbp"), SubResource("Resource_ur10e"), SubResource("Resource_rlcpc"), SubResource("Resource_atoxq")])
+specials = Array[ExtResource("4_wtxwx")]([SubResource("Resource_h52c2")])

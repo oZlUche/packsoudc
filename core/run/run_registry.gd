@@ -74,6 +74,8 @@ const EVENT_CONDITIONS := {
 	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
 	&"forge_unused": "res://core/run/events/conditions/forge_unused.gd",     # 194
 	&"jimie_ready": "res://core/run/events/conditions/jimie_ready.gd",     # 281
+	&"facility_at_least": "res://core/run/events/conditions/facility_at_least.gd",     # 282
+	&"owned_nowhere": "res://core/run/events/conditions/owned_nowhere.gd",     # 282
 	&"skill_ready": "res://core/run/events/conditions/skill_ready.gd",     # 136
 }
 

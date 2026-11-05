@@ -38,6 +38,8 @@ const KEYS_TOP := 128.0
 const PERGOLA_H := 950.0
 
 var flow: GameFlow = null
+## 282：散货摊的摊主（固定摊不站人；跟着散货摊的台子一起显隐）
+var npc: NpcBadge = null
 var font: Font = null
 ## 说一句（基地的告示卷轴）
 var say: Callable = Callable()
@@ -118,6 +120,8 @@ func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void
 	rl.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_restock.add_child(rl)
 	_stage.add_child(_restock)
+	npc = NpcBadge.make(NpcDef.STALL_KEEPER, flow.meta, flow.items)
+	_stage.add_child(npc)
 	flow.meta.changed.connect(rebuild)
 	var last := flow.meta.market_stall
 	_stall_id = last if _stall_keys.has(last) else (Market.stalls()[0].id if not Market.stalls().is_empty() else Market.LOOSE)
@@ -155,6 +159,8 @@ func rebuild(keep_page: bool = true) -> void:
 	var loose := on_loose()
 	_stage.visible = loose
 	_stall.visible = not loose
+	if not loose and npc != null:
+		npc.close()
 	if not loose:
 		var st := Market.stall(_stall_id)
 		var defs: Array[ItemDef] = []
@@ -262,6 +268,8 @@ func _place() -> void:
 	_funds.size = fr.size
 	_funds.position = fr.position
 	_funds.font_size = maxi(14, roundi(fr.size.y * FUNDS_FONT))
+	if npc != null and layout.has("npc"):
+		npc.fit(_stage.to_local_rect(layout["npc"]))
 	_refresh.scale_k = _stage.scale_factor()
 	_refresh.position = _stage.at(REFRESH_AT)
 	_restock.position = _stage.at(RESTOCK_AT.position)

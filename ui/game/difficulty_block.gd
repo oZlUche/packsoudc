@@ -21,6 +21,8 @@ const WIDTH := 304.0
 const CLOSED_H := 104.0
 const FACE_SIZE := Vector2(304, 104)
 const FACE_SIZE_FLAT := Vector2(248, 76)
+## 铜牌两头是铜扣，字只能写在中间这么宽（占牌面宽的几成）
+const PLATE_TEXT_FRAC := 0.78
 ## 卷轴下移 / 上移多久、拉开 / 合上多久、收起后铜牌淡入多久
 const MOVE_SEC := 0.42
 const SPREAD_SEC := 0.3
@@ -177,6 +179,7 @@ func _layout() -> void:
 	var face := face_rect()
 	open_btn.position = face.position
 	open_btn.size = face.size
+	TextFit.shrink_button_to(open_btn, face.size.x * PLATE_TEXT_FRAC)     # 测试 v5.26：英文大号「Start challenge」比铜牌宽，两头被切
 	var tr_ := title_rect()
 	title.position = tr_.position
 	title.size = tr_.size
