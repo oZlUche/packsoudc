@@ -69,16 +69,20 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 
 
 ## 283（267 B / C）：每段的点记下产物表；每段再从定了型的普通搜索点（不是固定点）里挑 `material_nodes` 要的个数，写 `content.search_kind`。
-## 类型一个不动；随机数另起一条（由主随机数派生、不消耗它），同一种子的图形与类型和没有材料节点时一样；挑不够有几个算几个
+## 本段搜索点不够时（283 §四 4 = A），把本段普通战斗点（不是固定点）改成搜索点补足；战斗点也不够，再用别的自由类型（事件 / 随机 / 宝箱）补。
+## 有配额 / 覆盖的类型（商店 / 休息 / 精英）、出生点、终点、固定点都不动。随机数另起一条（由主随机数派生、不消耗它），同一种子的图形和其余类型与没有材料节点时一样
 func _assign_materials() -> void:
 	if _shape.segments.is_empty():
 		return
 	var krng := RandomNumberGenerator.new()
 	krng.seed = hash([_rng.state, "material_kinds"])
+	var free := _shape.rules.free_types()
 	for seg in _shape.segments:
 		var produce: Dictionary = seg.get("produce", {})
 		var wants: Dictionary = seg.get("material_nodes", {})
 		var pool: Array[int] = []
+		var spare: Array[int] = []
+		var other: Array[int] = []
 		for id in _graph.node_ids():
 			var n := _graph.get_node(id)
 			var r := int(n.layout.get("row", -1))
@@ -86,9 +90,15 @@ func _assign_materials() -> void:
 				continue
 			for t in produce:     # 倍率一律存成小数（存档往返）
 				n.produce[String(t)] = float(produce[t])
-			if n.type == &"search" and not n.layout.has("fixed"):
+			if n.layout.has("fixed"):
+				continue
+			if n.type == &"search":
 				pool.append(id)
-		if wants.is_empty() or pool.is_empty():
+			elif n.type == &"battle":
+				spare.append(id)
+			elif free.has(String(n.type)):
+				other.append(id)
+		if wants.is_empty():
 			continue
 		pool.assign(MapRng.shuffled(pool, krng))
 		var keys: Array = wants.keys()
@@ -98,6 +108,11 @@ func _assign_materials() -> void:
 			for i in int(wants[kind]):
 				wanted.append(String(kind))
 		wanted = MapRng.shuffled(wanted, krng)
+		for id in MapRng.shuffled(spare, krng) + MapRng.shuffled(other, krng):
+			if pool.size() >= wanted.size():
+				break
+			_graph.get_node(int(id)).type = &"search"
+			pool.append(int(id))
 		for i in mini(wanted.size(), pool.size()):
 			_graph.get_node(pool[i]).content["search_kind"] = wanted[i]
 

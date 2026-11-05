@@ -19,7 +19,7 @@ static func run_config(t: TestCase) -> void:
 
 
 static func run_generate(t: TestCase) -> void:
-	t.begin("283 · 生成：每段的点带这段的产物表；材料节点只落在普通搜索点上、种类对得上段；类型和不配材料时一模一样")
+	t.begin("283 · 生成：每段的点带这段的产物表；材料节点只落在普通搜索点上、种类对得上段；每段配额落满（搜索点不够时普通战斗点改搜索点，再不够用事件 / 随机 / 宝箱，v5.30），别的类型和不配材料时一模一样")
 	var c := _chapter()
 	for scale in [&"small", &"medium", &"large"]:
 		var cfg := (c.map_source.generator_config as HourglassMapConfig).duplicate(true) as HourglassMapConfig
@@ -38,7 +38,15 @@ static func run_generate(t: TestCase) -> void:
 			t.check(g != null and g0 != null, "%s 生成得出来" % tag)
 			if g == null or g0 == null:
 				continue
-			t.eq(g.node_ids().map(func(id: int) -> StringName: return g.get_node(id).type), g0.node_ids().map(func(id: int) -> StringName: return g0.get_node(id).type), "%s：类型一个不动" % tag)
+			t.check(g.node_ids().all(func(id: int) -> bool: return g.get_node(id).type == g0.get_node(id).type or (["battle", "event", "random", "chest"].has(String(g0.get_node(id).type)) and g.get_node(id).type == &"search" and g.get_node(id).content.has("search_kind"))), "%s：改了类型的只有战斗 / 事件 / 随机 / 宝箱点，改成材料节点" % tag)
+			for seg in cfg.segments():
+				var got := {}
+				for id in g.node_ids():
+					var r := int(g.get_node(id).layout.get("row", 0))
+					var k := String(g.get_node(id).content.get("search_kind", ""))
+					if k != "" and r >= int(seg["from"]) and r <= int(seg["to"]):
+						got[k] = int(got.get(k, 0)) + 1
+				t.eq(got, seg.get("material_nodes", {}), "%s：第 %d–%d 层配额落满" % [tag, int(seg["from"]), int(seg["to"])])
 			for id in g.node_ids():
 				var n := g.get_node(id)
 				var r := int(n.layout.get("row", 0))
