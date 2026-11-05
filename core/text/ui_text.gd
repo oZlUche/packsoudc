@@ -483,6 +483,7 @@ const TEXT := {
 	"log.cancelled": {"zh": "%s使用%s的一下被化解了", "en": "%s's %s was negated"},
 	"log.inverted": {"zh": "%s使用%s的一下反而治疗了 %s", "en": "%s's %s healed the target for %s instead"},
 	"log.dot": {"zh": "%s因【%s】受到 %s %s伤害", "en": "%s suffered from %s: %s %s damage"},
+	"log.dot_cancelled": {"zh": "%s身上【%s】的一下被化解了", "en": "%s's %s tick was negated"},
 	"log.dot_unknown": {"zh": "持续效果", "en": "a lingering effect"},
 	"log.heal": {"zh": "%s使用%s恢复了 %s 生命", "en": "%s's %s restored %s health"},
 	"log.heal_bare": {"zh": "%s恢复了 %s 生命", "en": "%s restored %s health"},

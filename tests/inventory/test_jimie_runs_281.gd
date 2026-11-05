@@ -49,7 +49,7 @@ static func run_flow(t: TestCase) -> void:
 
 
 static func run_tint(t: TestCase) -> void:
-	t.begin("281 · 法杖的图：10 次以内原色，之后越来越暗，50 次全黑")
+	t.begin("281 · 法杖的图：10 次以内原色，之后越来越暗（49 次约 0.35），第 50 次一下全黑")
 	var db := _db()
 	var staff := ItemInstance.create(db.get_def(&"magic_staff"))
 	t.eq(ItemPainter.runs_tint(staff), Color.WHITE, "0 次：原色")
@@ -60,6 +60,8 @@ static func run_tint(t: TestCase) -> void:
 	t.check(mid.r < 1.0 and mid.r > ItemPainter.RUNS_BLACK_TINT.r, "30 次：一半暗")
 	staff.state[ItemInstance.RUNS_KEY] = 80
 	t.check(ItemPainter.runs_tint(staff).is_equal_approx(ItemPainter.RUNS_BLACK_TINT), "50 次起：全黑")
+	staff.state[ItemInstance.RUNS_KEY] = 49
+	t.check(ItemPainter.runs_tint(staff).is_equal_approx(ItemPainter.RUNS_DIM_TINT) and ItemPainter.RUNS_DIM_TINT.r > ItemPainter.RUNS_BLACK_TINT.r + 0.2, "49 次：最暗也看得出不是全黑")
 	var sword := ItemInstance.create(db.get_def(&"longsword"))
 	sword.state[ItemInstance.RUNS_KEY] = 80
 	t.eq(ItemPainter.runs_tint(sword), Color.WHITE, "不是法杖：原色")

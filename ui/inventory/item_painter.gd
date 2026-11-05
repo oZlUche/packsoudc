@@ -177,13 +177,17 @@ static func draw_art(
 
 ## 281 寂灭：法杖进出 [constant ItemInstance.RUNS_TINT_FROM] 次起越来越暗，[constant ItemInstance.RUNS_BLACK] 次全黑（叠色，不另画图）
 const RUNS_BLACK_TINT := Color(0.07, 0.06, 0.09)
+## 10–49 次最暗到这里（49 次）；第 50 次才全黑
+const RUNS_DIM_TINT := Color(0.35, 0.34, 0.37)
 
 
 static func runs_tint(inst: ItemInstance) -> Color:
 	if inst == null or not ItemInstance.tracks_runs(inst.def) or inst.runs() <= ItemInstance.RUNS_TINT_FROM:
 		return Color.WHITE
-	var t := clampf(float(inst.runs() - ItemInstance.RUNS_TINT_FROM) / float(ItemInstance.RUNS_BLACK - ItemInstance.RUNS_TINT_FROM), 0.0, 1.0)
-	return Color.WHITE.lerp(RUNS_BLACK_TINT, t)
+	if inst.runs() >= ItemInstance.RUNS_BLACK:
+		return RUNS_BLACK_TINT     # 281（架构设计 12:24 定 B）：第 50 次一下全黑，看得出来
+	var t := clampf(float(inst.runs() - ItemInstance.RUNS_TINT_FROM) / float(ItemInstance.RUNS_BLACK - 1 - ItemInstance.RUNS_TINT_FROM), 0.0, 1.0)
+	return Color.WHITE.lerp(RUNS_DIM_TINT, t)
 
 
 ## 201：rot 0 的图（左上角在原点、一格 [param cell] 像素）→ 画布：转 k × 90° 顺时针，左上角挪到 anchor + 偏移

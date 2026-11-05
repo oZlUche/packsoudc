@@ -53,6 +53,8 @@ static func run_plant(t: TestCase) -> void:
 	var node := run.map.get_node(id)
 	t.eq(node.type, &"event", "是事件点")
 	t.eq(String(node.content["event"]), String(JimiePath.EVENT), "事件换成试炼")
+	var ev: EventDef = EventPlacer.load_all().get(JimiePath.EVENT, null)
+	t.check(ev != null and ev.title != "", "事件有标题（不显示 id）")
 	var tiers := run.pool.strengths()
 	t.eq(int(node.content.get("strength", -1)), tiers[tiers.size() - 1], "最高档")
 	t.eq(run.events.loss_cost_for(&"battle", node.content), 0, "输了不掉体力")
@@ -102,3 +104,18 @@ static func run_reward(t: TestCase) -> void:
 	var again := {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 	t.check(not JimiePath.reward(content, run, again), "已经有了：不给")
 	t.check(not JimiePath.reward({}, run, again), "不是试炼：不给")
+
+
+static func run_log(t: TestCase) -> void:
+	t.begin("281 · 战记：被化解的持续伤害一跳和直击同一个说法（「被化解」），不写 0 伤害")
+	const N := preload("res://tests/battle/test_battle_narrator_272.gd")
+	var r := BattleResult.new()
+	r.winner = 0
+	r.duration = StatMath.from_float(2.0)
+	r.log = [
+		N._ev(BattleEvent.BATTLE_START, 0.0, -1),
+		N._hit(1.0, 1, 1, 0, 3, 0, {"type": "bleed", "pure": true, "cancelled": true, "direct": false}),
+		N._ev(BattleEvent.BATTLE_END, 2.0, -1, {"winner": 0}),
+	]
+	var text := "\n".join(BattleNarrator.lines(r, ["A", "B"], [{}, {}], [{}, {}]).map(func(l): return BattleNarrator.plain(l)))
+	t.check(text.contains("化解") and not text.contains("受到 0"), "写化解（%s）" % text.replace("\n", " / "))
