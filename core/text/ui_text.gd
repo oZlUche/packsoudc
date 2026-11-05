@@ -1317,6 +1317,8 @@ const TEXT := {
 	"smithy.no_funds": {"zh": "[coin_short]", "en": "[coin_short]"},
 	"smithy.full": {"zh": "仓库放不下", "en": "No room in the Warehouse"},
 	"smithy.no_recipe": {"zh": "没有这张配方", "en": "No such recipe"},
+	"npc.more": {"zh": "……", "en": "…"},     # 282：纸条右下角「下一句」；台词空着时纸条上也只写它
+	"npc.given": {"zh": "「%s」进了仓库", "en": "\"%s\" is now in the warehouse"},
 	"smithy.forged": {"zh": "打好了「%s」，进了仓库", "en": "Forged \"%s\", now in the warehouse"},
 	"smithy.cant": {"zh": "「%s」打不了：%s", "en": "Can't forge \"%s\": %s"},
 	"smithy.level_line": {"zh": "能打%s及以下的配方", "en": "Forges recipes up to %s"},

@@ -1,0 +1,58 @@
+{
+  "id": "stall_keeper",
+  "display_name": "",
+  "display_names": {
+    "en": ""
+  },
+  "portrait": "npc_stall_keeper",
+  "lines": [
+    {
+      "id": "lore_1",
+      "kind": "lore",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "lore_2",
+      "kind": "lore",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "lore_3",
+      "kind": "lore",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "guide_1",
+      "kind": "guide",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "guide_2",
+      "kind": "guide",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "guide_3",
+      "kind": "guide",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    }
+  ]
+}

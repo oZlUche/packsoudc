@@ -108,7 +108,7 @@ const TYPE_LABELS := {
 	"skill_ready": "技能能用", "skill": "技能",
 	"place_item": "置入道具", "battle": "打仗", "travel": "走路", "earn_money": "进账", "spend_money": "花钱", "explore": "搜索", "event_choice": "事件里选特定选项",
 	"has_buff_tag": "有带标记的增益", "has_map_buff": "有某地图增益", "can_afford": "钱够", "vitality_at_least": "体力至少", "steps_within": "步数在区间",
-	"bracket_within": "段位在区间", "erosion_depth_within": "侵蚀深度在区间", "has_item": "身上有道具", "node_type_is": "点的类型是", "has_flag": "有局外旗标",
+	"bracket_within": "段位在区间", "erosion_depth_within": "侵蚀深度在区间", "has_item": "身上有道具", "node_type_is": "点的类型是", "has_flag": "有局外旗标", "facility_at_least": "设施到几级", "owned_nowhere": "这些独一道具哪儿都没有",
 	"give_item": "给道具", "give_random_item": "给随机道具", "restore_vitality": "回体力", "spend_vitality": "扣体力", "change_money": "钱加减",
 	"grant_map_buff": "给地图增益", "remove_map_buff": "去掉地图增益", "start_battle": "开战", "open_search": "开搜索", "open_shop": "开商店", "next_event": "接下一个事件",
 	"say": "说一句", "hunter_fight": "迎战猎手", "hunter_flee": "逃离猎手", "flee_encounter": "逃跑（几成）", "teleport": "传送", "change_node_type": "改点的类型", "proceed": "照常发生", "extract": "撤离",

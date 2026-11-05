@@ -1,0 +1,82 @@
+{
+  "id": "blacksmith",
+  "display_name": "",
+  "display_names": {
+    "en": ""
+  },
+  "portrait": "npc_blacksmith",
+  "lines": [
+    {
+      "id": "lore_1",
+      "kind": "lore",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "lore_2",
+      "kind": "lore",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "lore_3",
+      "kind": "lore",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "guide_1",
+      "kind": "guide",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "guide_2",
+      "kind": "guide",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    },
+    {
+      "id": "guide_3",
+      "kind": "guide",
+      "text": "",
+      "texts": {
+        "en": ""
+      }
+    }
+  ],
+  "specials": [
+    {
+      "id": "poxiao_start",
+      "text": "",
+      "texts": {
+        "en": ""
+      },
+      "requires": [
+        {
+          "type": "facility_at_least",
+          "facility": "smithy",
+          "level": 3
+        },
+        {
+          "type": "owned_nowhere",
+          "ids": [
+            "poxiao",
+            "poxiao_token"
+          ]
+        }
+      ],
+      "give": "poxiao_token"
+    }
+  ]
+}

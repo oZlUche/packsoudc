@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="NpcDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/npcs/npc_line.gd" id="1_a6um5"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="2_01xmg"]
+[ext_resource type="Script" path="res://core/meta/npcs/npc_def.gd" id="3_r0rl5"]
+[ext_resource type="Script" path="res://core/meta/npcs/npc_special.gd" id="4_1bm52"]
+
+[sub_resource type="Resource" id="Resource_ysiyo"]
+script = ExtResource("1_a6um5")
+id = &"lore_1"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_kxwx1"]
+script = ExtResource("1_a6um5")
+id = &"lore_2"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_y1t7s"]
+script = ExtResource("1_a6um5")
+id = &"lore_3"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_jwfa7"]
+script = ExtResource("1_a6um5")
+id = &"guide_1"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_5d60i"]
+script = ExtResource("1_a6um5")
+id = &"guide_2"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[sub_resource type="Resource" id="Resource_rpkwe"]
+script = ExtResource("1_a6um5")
+id = &"guide_3"
+kind = &"guide"
+texts = {
+"en": ""
+}
+
+[resource]
+script = ExtResource("3_r0rl5")
+id = &"shopkeeper"
+display_names = {
+"en": ""
+}
+portrait = &"npc_shopkeeper"
+lines = Array[ExtResource("1_a6um5")]([SubResource("Resource_ysiyo"), SubResource("Resource_kxwx1"), SubResource("Resource_y1t7s"), SubResource("Resource_jwfa7"), SubResource("Resource_5d60i"), SubResource("Resource_rpkwe")])

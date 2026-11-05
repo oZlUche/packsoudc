@@ -24,6 +24,8 @@ var _buyback_btn: Button
 ## 作者 10-27：左下角的钱袋，写着当前金币
 var _pouch: CoinPouch = null
 var _inv: InventoryPanelScript
+## 282：店主
+var npc: NpcBadge = null
 
 
 func open(payload: Dictionary) -> void:
@@ -64,9 +66,13 @@ func open(payload: Dictionary) -> void:
 	_belt_row = _hbox(10)
 	belt_line.add_child(_belt_row)
 	BoardFrame.wrap(_belt_row, SHOP_BOARD)
-	var gap := Control.new()
+	# 282：店主站在随身格和钱袋之间那块空白（点头像说一句）
+	var gap := CenterContainer.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	belt_line.add_child(gap)
+	if flow != null and flow.run != null:
+		npc = NpcBadge.make(NpcDef.SHOPKEEPER, flow.meta, flow.run.items, flow.run)
+		gap.add_child(npc)
 	# 钱袋压在货架右边线上（红圈：店和背包中间）—— 四分之一袋宽伸进两栏之间的空当（再多金币签就碰到背包下面的体力牌）
 	var hold := Control.new()
 	hold.size_flags_vertical = Control.SIZE_SHRINK_BEGIN

@@ -82,6 +82,9 @@ var market_seed: int = 0
 ## 270：散货摊这次在家花钱换了几次货（换货价跟着涨，回一局归零）与集市页上次看的摊（[member StallDef.id]，空 = 第一个）
 var market_refreshes: int = 0
 var market_stall: StringName = &""
+## 282：NPC 最近说过的句（NPC id → 句 id 队列，旧的在前，最多 [constant NpcChatter.RECENT] 句）与做过的专属对话（id → true）
+var npc_said: Dictionary = {}
+var npc_done: Dictionary = {}
 ## 撤离带出来的钱累计。局外货币怎么花（15 节第 4 项）还没定，先攒着
 var funds: int = 0
 ## 累计背出去的价值（6.4）
@@ -824,6 +827,8 @@ func to_dict() -> Dictionary:
 		"market_seed": market_seed,
 		"market_refreshes": market_refreshes,     # 270
 		"market_stall": String(market_stall),
+		"npc_said": npc_said.duplicate(true),     # 282
+		"npc_done": npc_done.duplicate(),
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -961,5 +966,15 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.market_seed = int(d.get("market_seed", 0))
 	m.market_refreshes = maxi(0, int(d.get("market_refreshes", 0)))
 	m.market_stall = StringName(String(d.get("market_stall", "")))
+	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
+	if said is Dictionary:
+		for k in said:
+			if said[k] is Array:
+				m.npc_said[String(k)] = (said[k] as Array).map(func(x) -> String: return String(x)).slice(-NpcChatter.RECENT)
+	var done_ = d.get("npc_done", {})
+	if done_ is Dictionary:
+		for k in done_:
+			if bool(done_[k]):
+				m.npc_done[String(k)] = true
 	return m
 #endregion

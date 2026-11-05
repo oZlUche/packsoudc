@@ -273,6 +273,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 			return import_chest_skin(data, ctx, report)
 		"market_stalls":
 			return import_market_stall(data, ctx, report)     # 270
+		"npcs":
+			return import_npc(data, ctx, report)     # 282
 		"belt_skills":
 			return import_belt_skill(data, ctx, report)
 		"items":
@@ -1042,6 +1044,38 @@ static func import_market_stall(data: Dictionary, ctx: Context, report: ImportRe
 	for id in def.excluded_ids:
 		if not ctx.items.is_empty() and not ctx.items.has(id):
 			report.error("excluded_ids", "找不到道具 '%s'" % id)
+	return def
+
+
+## 282：NPC —— 只认三个固定 id；句 id 不重复、种类只许 lore / guide；专属对话给的道具得在、得是独一道具。台词空着不报（留给作者）
+static func import_npc(data: Dictionary, ctx: Context, report: ImportReport) -> NpcDef:
+	var def := NpcDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "NPC", report)
+	if def.id != &"" and not NpcDef.IDS.has(def.id):
+		report.error("id", "认不得的 NPC '%s'（只认 %s）" % [def.id, ", ".join(NpcDef.IDS)])
+	var seen := {}
+	for i in def.lines.size():
+		var l := def.lines[i]
+		if l == null:
+			continue
+		if l.id == &"" or seen.has(l.id):
+			report.error("lines[%d].id" % i, "句得有 id、不能重复（'%s'）" % l.id)
+		seen[l.id] = true
+		if not NpcLine.KINDS.has(l.kind):
+			report.error("lines[%d].kind" % i, "种类只许 %s（给的是 '%s'）" % [", ".join(NpcLine.KINDS), l.kind])
+	for i in def.specials.size():
+		var sp := def.specials[i]
+		if sp == null:
+			continue
+		if sp.id == &"" or seen.has(sp.id):
+			report.error("specials[%d].id" % i, "专属对话得有 id、不能和别的句重复（'%s'）" % sp.id)
+		seen[sp.id] = true
+		if sp.give != &"" and not ctx.items.is_empty():
+			if not ctx.items.has(sp.give):
+				report.error("specials[%d].give" % i, "找不到道具 '%s'" % sp.give)
+			elif not (ctx.items[sp.give] as ItemDef).is_unique():
+				report.error("specials[%d].give" % i, "'%s' 不是独一道具（专属对话只给一辈子一件的东西）" % sp.give)
 	return def
 
 

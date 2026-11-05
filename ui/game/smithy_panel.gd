@@ -23,6 +23,8 @@ const ROWS := 2
 var flow: GameFlow = null
 var font: Font = null
 var say: Callable = Callable()
+## 282：铁匠（左上角空墙）
+var npc: NpcBadge = null
 var _stage: MarketStage = null
 var _funds: CoinLabel = null
 var _keys: VBoxContainer = null
@@ -82,10 +84,19 @@ func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void
 	_stage.add_child(_empty)     # 这一类还没有配方：一块签压在空格子区正中
 	_scroll = RecipeScroll.make(font, func(): forge(_open))
 	_stage.add_child(_scroll)     # 后加 = 压在格子区上（砧顶小尖盖住格子区下沿）
+	npc = NpcBadge.make(NpcDef.BLACKSMITH, flow.meta, flow.items)     # 282
+	npc.on_given = _say_given
+	_stage.add_child(npc)
 	_group = SmithRecipeDef.GROUPS[0]
 	flow.meta.changed.connect(rebuild)
 	flow.meta.warehouse.changed.connect(rebuild)
 	rebuild()
+
+
+## 282：铁匠给了东西（破晓的信物）
+func _say_given(id: StringName) -> void:
+	if say.is_valid():
+		say.call(UiText.t("npc.given") % Names.of(flow.items.get_def(id)))
 
 
 ## 翻到这一类（左列的键）；打造界面收起
@@ -197,6 +208,8 @@ func _place() -> void:
 	_funds.position = fr.position
 	_funds.size = fr.size
 	_funds.font_size = maxi(12, roundi(fr.size.y * FUNDS_FONT))
+	if npc != null and lay.has("npc"):
+		npc.fit(_stage.to_local_rect(lay["npc"]))
 	var kr := _stage.to_local_rect(lay.get("keys", {}))
 	_keys.position = kr.position
 	_keys.size = Vector2(kr.size.x, 0)

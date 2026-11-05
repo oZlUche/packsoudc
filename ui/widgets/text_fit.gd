@@ -10,11 +10,17 @@ const BASE_META := &"text_fit_base"
 static func shrink_button(b: Button, floor_size: int = 14) -> void:
 	if b == null or b.custom_minimum_size.x <= 0.0:
 		return
+	var box := b.get_theme_stylebox("normal")
+	shrink_button_to(b, b.custom_minimum_size.x - (box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT) if box != null else 0.0), floor_size)
+
+
+## 同上，但字区宽直接给（[param room]）：皮上两头有装饰、没留边距的美术按钮（难度铜牌）用
+static func shrink_button_to(b: Button, room: float, floor_size: int = 14) -> void:
+	if b == null or room <= 0.0:
+		return
 	var base: int = b.get_meta(BASE_META, b.get_theme_font_size("font_size"))
 	b.set_meta(BASE_META, base)
 	var font := b.get_theme_font("font")
-	var box := b.get_theme_stylebox("normal")
-	var room := b.custom_minimum_size.x - (box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT) if box != null else 0.0)
 	var px := base
 	while px > floor_size and font != null and font.get_multiline_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > room:
 		px -= 1
