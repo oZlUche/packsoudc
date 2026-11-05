@@ -1184,7 +1184,7 @@ func _draw() -> void:
 	var edge := (
 		InventoryView.COLOR_BAG_EDGE if is_bag else ItemPainter.rarity_color(_inst.def, _inst.rarity())
 	)
-	if not ItemPainter.draw_art(self, _inst.def, _rot, anchor, cell, Color(1, 1, 1, 0.85), Transform2D.IDENTITY, ItemPainter.variant_of(_inst)):     # 201：有图画图
+	if not ItemPainter.draw_art(self, _inst.def, _rot, anchor, cell, Color(1, 1, 1, 0.85) * ItemPainter.runs_tint(_inst), Transform2D.IDENTITY, ItemPainter.variant_of(_inst)):     # 201：有图画图
 		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 		ItemPainter.draw_label(
 			self, cells, anchor, cell,
@@ -1210,7 +1210,7 @@ func _draw() -> void:
 			var g := GridInventory.to_global(bag, locals[i], item, Vector2i.ZERO, _rot)
 			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * cell
 			var item_cells := item.def.cells_rotated(int(g["rot"]))
-			if ItemPainter.draw_art(self, item.def, int(g["rot"]), at, cell, Color(1, 1, 1, 0.9), Transform2D.IDENTITY, ItemPainter.variant_of(item)):
+			if ItemPainter.draw_art(self, item.def, int(g["rot"]), at, cell, Color(1, 1, 1, 0.9) * ItemPainter.runs_tint(item), Transform2D.IDENTITY, ItemPainter.variant_of(item)):
 				InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false, item.rarity())     # 239：袋里各件描自己的稀有度框
 				continue
 			var c_body := ItemPainter.body_color(item.def, item.rarity())

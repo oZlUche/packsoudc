@@ -72,6 +72,42 @@ func set_quality(q: int) -> void:
 		state.erase(QUALITY_KEY)
 
 
+## 281 寂灭（作者 10:47）：法杖记「完整进出局」次数 —— 开局带进去记 [constant RUN_IN_KEY]，回了基地（撤离，或战败时保险箱
+## 带回）有这个记号就 [constant RUNS_KEY] +1、记号摘掉。只有法杖记（[method tracks_runs]），任何品级都算；包里任何格子都算带着；
+## 0 不写键（存档逐字节不变）
+const RUNS_KEY := "runs"
+const RUN_IN_KEY := "run_in"
+## 起变色、全黑的次数
+const RUNS_TINT_FROM := 10
+const RUNS_BLACK := 50
+
+
+static func tracks_runs(d: ItemDef) -> bool:
+	return d != null and d.tags.has(&"staff") and not d.is_unique()
+
+
+func runs() -> int:
+	return maxi(0, int(state.get(RUNS_KEY, 0)))
+
+
+## 进出了 [constant RUNS_BLACK] 次的法杖（寂灭那条路要的「全黑法杖」）
+func is_black_staff() -> bool:
+	return tracks_runs(def) and runs() >= RUNS_BLACK
+
+
+## 开局：带进这一局了
+func mark_run_in() -> void:
+	if tracks_runs(def):
+		state[RUN_IN_KEY] = true
+
+
+## 回了基地：带进去过的算一次完整进出
+func close_run() -> void:
+	if state.has(RUN_IN_KEY):
+		state.erase(RUN_IN_KEY)
+		state[RUNS_KEY] = runs() + 1
+
+
 ## 230：玩家锁定（防手滑：锁住的不卖、不丢到地上、不献祭、不进铸炉；可以拖、可以搬）。存在 [member state] 里，没锁不写键（存档逐字节不变）。
 ## 不是 207 的「扎根」（[method GridInventory.is_locked]）
 const LOCKED_KEY := "locked"

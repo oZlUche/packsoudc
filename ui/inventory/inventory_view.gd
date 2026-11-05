@@ -469,7 +469,7 @@ func _draw() -> void:
 		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠 / 不参战的压到 55 % 灰；不参战再写一行小字（作者 10-26：休眠只压灰，不写「休眠」）
 		var tint := FILTERED_ART if muted else (DORMANT_ART if (dormant or benched) else Color.WHITE)
 		var note := status_note(dormant, benched)
-		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, tint, Transform2D.IDENTITY, ItemPainter.variant_of(item)):
+		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, tint * ItemPainter.runs_tint(item), Transform2D.IDENTITY, ItemPainter.variant_of(item)):
 			if note != "" and _label_visible(item):
 				ItemPainter.draw_label(self, cells, anchor, cell_px, note, font, 13, COLOR_TEXT)
 		else:
