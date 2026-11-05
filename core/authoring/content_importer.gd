@@ -2338,6 +2338,10 @@ static func legacy_coaches(data: Dictionary) -> Dictionary:
 
 
 ## 比引擎严格：地图来源得真的能拿出图来。生成器没登记、预设文件不在，都是内容错误。
+## 283：每章（随机图）的材料节点总数下限
+const MIN_MATERIAL_NODES := 2
+
+
 static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportReport) -> void:
 	_require_id(def.id, "章节", report)
 	for k in def.coaches:
@@ -2400,6 +2404,10 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 					report.error("map_source.generator_config", "生成器 '%s' 要的是 %s，给的是 %s"
 						% [src.generator_id, ContentSchema.class_name_of(probe),
 							ContentSchema.class_name_of(src.generator_config)])
+				# 283：地图就是倾向 —— 每章（随机图）都得写自己的材料节点，至少 MIN_MATERIAL_NODES 个
+				var mats := int(src.generator_config.call("material_node_count")) if src.generator_config.has_method("material_node_count") else 0
+				if mats < MIN_MATERIAL_NODES:
+					report.warn("map_source.generator_config", "材料节点一共 %d 个，每章至少 %d 个（283：地图自带材料，出征页不再选倾向）" % [mats, MIN_MATERIAL_NODES])
 
 
 ## 比引擎严格（10.3）：引擎能接受的半成品，这里一律拒绝。

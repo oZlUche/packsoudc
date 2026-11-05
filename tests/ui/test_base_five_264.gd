@@ -43,7 +43,7 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	# 木牌定稿（plaque264）：大木牌 + 挂牌标题、浅羊皮小签；都是浅底
 	t.check(board.last_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE and board.supply_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE, "两块大木牌")
 	var hangs: Array = board.find_children("*", "HeaderTag", true, false).filter(func(h): return (h as HeaderTag).hang)
-	t.eq(hangs.size(), 3, "标题是三枚挂牌（267 加了「倾向」）")
+	t.eq(hangs.size(), 2, "标题是两枚挂牌（283 删了 267 的「倾向」）")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_HOME_PLAQUE), UiTheme.TONE_LIGHT, "木牌浅底")
 	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回基地底图；这两页不垫粗布
 	var exp_bg := "home/scene_expedition" if UiTheme.art("home/scene_expedition") != null else UiTheme.ART_HOME_BG

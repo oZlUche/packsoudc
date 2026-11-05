@@ -48,6 +48,14 @@ const CLOCK_ROOM_EVENT := &"event_clock_room"
 @export var forward_break_chance: float = 0.3
 @export var lateral_break_chance: float = 0.35
 
+@export_group("材料")
+## 283（267 B / C 搬到沙漏）：两半各自的产物表（标签 → 倍率）与材料节点（种类 → 个数）。两半一样，左右对称
+@export var side_produce: Dictionary = {}
+@export var side_material_nodes: Dictionary = {}
+## 颈部的产物表与材料节点
+@export var neck_produce: Dictionary = {}
+@export var neck_material_nodes: Dictionary = {}
+
 @export_group("分档")
 ## 侵蚀从对侧开始（默认从出生那侧）
 @export var erosion_reversed: bool = false
@@ -61,6 +69,26 @@ const CLOCK_ROOM_EVENT := &"event_clock_room"
 
 func row_count() -> int:
 	return half_rows * 2 + neck_rows
+
+
+## 283：材料节点一共几个（两半各一份 + 颈部）
+func material_node_count() -> int:
+	var n := 0
+	for k in side_material_nodes:
+		n += 2 * int(side_material_nodes[k])
+	for k in neck_material_nodes:
+		n += int(neck_material_nodes[k])
+	return n
+
+
+## 283：三段（左半、颈部、右半）的层号范围与产物 / 材料节点，交给格阵形状
+func segments() -> Array[Dictionary]:
+	var last := row_count() - 1
+	return [
+		{"from": 0, "to": half_rows - 1, "produce": side_produce, "material_nodes": side_material_nodes},
+		{"from": half_rows, "to": half_rows + neck_rows - 1, "produce": neck_produce, "material_nodes": neck_material_nodes},
+		{"from": last - half_rows + 1, "to": last, "produce": side_produce, "material_nodes": side_material_nodes},
+	] as Array[Dictionary]
 
 
 ## 颈部正中那一层（中轴）

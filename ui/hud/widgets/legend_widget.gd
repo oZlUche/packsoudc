@@ -1,7 +1,7 @@
 ## 166（作者定）：左下角的节点图例 —— 一列「图标 + 名字」，只列**这张图上有的**节点类型（岔路口不列），顺序按 [constant MapNodeStyle.STYLES]。
 ## 图标就是地图上的那一枚（155：`assets/nodes/<type>.png`，按类型色着色；缺图画圆里一个字），名字是 [constant MapNodeStyle.NAMES] 的短名。
 ## 184：最上面一行「你」是玩家的小兵棋子，「出生」那一行是 182 的小旗（有图就用图，原色不着色）
-## 267：材料节点（矿脉 / 林地 / 遗骸 / 符文堆）各算一行（图上有才列，排在「搜索」后面）；选了出征倾向，「你」下面一行「倾向：自然」；
+## 267：材料节点（矿脉 / 林地 / 遗骸 / 符文堆）各算一行（图上有才列，排在「搜索」后面）；
 ## 最下面一段「产物」：由外到内每种环一行，写产物表里倍率 ≥ 1.5 的标签名
 extends HudWidget
 
@@ -53,13 +53,6 @@ func types() -> Array[StringName]:
 				if have.has(k):
 					out.append(k)
 	return out
-
-
-## 267 A：倾向那一行的字；没选是空
-func bias_line() -> String:
-	if run == null or run.material_bias == &"":
-		return ""
-	return UiText.t("hud.bias") % TagRegistry.name_of(run.material_bias)
 
 
 ## 267 B：产物段 —— 由外到内，每种不同的产物表一行「外：草木、兽材」（倍率 ≥ 1.5 的标签，按倍率从高到低）；图上没有产物表是空
@@ -119,9 +112,6 @@ func refresh() -> void:
 		return
 	if run.map != null and UiTheme.art_cached(UiTheme.ART_LEGEND_PAWN) != null:
 		_add_row(&"", UiText.t("hud.you"), UiTheme.ART_LEGEND_PAWN)
-	var bias := bias_line()
-	if bias != "":
-		_add_text(bias)
 	for t in types():
 		_add_row(t, MapNodeStyle.name_of(t), UiTheme.ART_LEGEND_FLAG if t == &"spawn" and UiTheme.art_cached(UiTheme.ART_LEGEND_FLAG) != null else "")
 	var produce := produce_lines()
@@ -131,7 +121,7 @@ func refresh() -> void:
 			_add_text(line)
 
 
-## 267：没有图标的一行字（倾向、产物段）
+## 267：没有图标的一行字（产物段）
 func _add_text(p_text: String) -> void:
 	var row := UiTheme.hbox(0)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE

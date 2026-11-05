@@ -800,7 +800,6 @@ const TEXT := {
 	"hud.buff_sep": {"zh": "、", "en": ", "},
 	"hud.belt_used": {"zh": "用了「%s」", "en": "Used %s"},
 	"hud.you": {"zh": "你", "en": "You"},
-	"hud.bias": {"zh": "倾向：%s", "en": "Focus: %s"},
 	"hud.produce": {"zh": "产物", "en": "Yields"},
 	"hud.produce_ring.outer": {"zh": "外", "en": "Outer"},
 	"hud.produce_ring.middle": {"zh": "中", "en": "Mid"},     # 复测 v4.77：英文大号字「Middle: Crafted, Mineral」顶到旗边
@@ -1337,10 +1336,6 @@ const TEXT := {
 	"meta.supplies": {"zh": "军需", "en": "Supplies"},
 	"meta.none_yet": {"zh": "尚无", "en": "None yet"},
 	"meta.supplies_tip": {"zh": "每局开局随身带的，与科技给的局外加成", "en": "Belt skills granted each run, and lasting bonuses from tech"},
-	"meta.bias": {"zh": "倾向", "en": "Focus"},
-	"meta.bias_none": {"zh": "无", "en": "None"},
-	"meta.bias_tip": {"zh": "这一系材料出得更多（×%s），另两系少一些（×%s）", "en": "More materials of this source (×%s), fewer of the other two (×%s)"},
-	"meta.bias_none_tip": {"zh": "不偏向哪一系，材料照常出", "en": "No focus: materials turn up as usual"},
 	"meta.sub_codex": {"zh": "图鉴", "en": "Collection"},
 	"meta.sub_records": {"zh": "对局记录", "en": "Run records"},
 	"meta.sub_keepsakes": {"zh": "特殊道具", "en": "Keepsakes"},
