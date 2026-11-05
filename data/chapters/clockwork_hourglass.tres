@@ -67,6 +67,20 @@ two_sided = true
 axis_core = true
 clock_room = true
 scales = Array[ExtResource("2_435f1")]([SubResource("Resource_miefy"), SubResource("Resource_6ilu0"), SubResource("Resource_1rfl7")])
+side_produce = {
+"crafted": 2,
+"mineral": 1.5
+}
+side_material_nodes = {
+"mine": 1,
+"remains": 1
+}
+neck_produce = {
+"crystal": 2
+}
+neck_material_nodes = {
+"runes": 1
+}
 danger_by_row = Array[int]([0, 0, 1, 1, 2, 2])
 rules = SubResource("Resource_es1ne")
 

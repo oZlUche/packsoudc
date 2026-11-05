@@ -112,6 +112,16 @@ func ring_count() -> int:
 	return rings.size()
 
 
+## 283：各环材料节点一共几个（导入时查每章至少两个）
+func material_node_count() -> int:
+	var n := 0
+	for spec in rings:
+		if spec != null:
+			for k in spec.material_nodes:
+				n += int(spec.material_nodes[k])
+	return n
+
+
 ## 第 r 环（1 = 最内环）的配置。越界返回 null。
 func spec_for_ring(r: int) -> RingSpec:
 	var i := ring_count() - r

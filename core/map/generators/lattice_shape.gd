@@ -45,6 +45,8 @@ var mirror_tier: bool = false
 ## 格阵之外另加的点（中轴的核心、钟房）：{"row", "col", "type", "links": [同层要连的列], "event": 事件 id（可空）, "danger": 危险（可空 = 按层）}。
 ## 不进 [member rows]，铺点、断边都不碰它们；只连 links 那几格
 var extras: Array[Dictionary] = []
+## 283：按层段的产物表与材料节点：{"from", "to"（层号，含两头）, "produce": {标签: 倍率}, "material_nodes": {种类: 个数}}
+var segments: Array[Dictionary] = []
 
 
 func add_row(p_cols: Array[int], lateral: bool = true, straight: bool = false, fill: float = 1.0) -> void:

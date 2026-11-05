@@ -74,5 +74,6 @@ func shape(cfg: Resource) -> LatticeShape:
 	s.lateral_break_chance = c.lateral_break_chance
 	s.erosion_reversed = c.erosion_reversed
 	s.danger_by_row = c.danger_by_row.duplicate()
+	s.segments = c.segments()
 	s.rules = c.rules
 	return s

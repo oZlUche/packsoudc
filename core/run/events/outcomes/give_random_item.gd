@@ -11,7 +11,7 @@ func apply(ctx: EventContext) -> void:
 	if ctx.rules == null or ctx.rules.search == null or ctx.items == null or ctx.rng == null:
 		return
 	var got := SearchSession.draw_items(ctx.rules.search, ctx.items, ctx.depth, ctx.node.danger if ctx.node != null else 0, ctx.rng, rarity_cap,
-		[] as Array[int], ctx.node.produce if ctx.node != null else {}, ctx.material_bias)     # 267
+		[] as Array[int], ctx.node.produce if ctx.node != null else {})     # 267 B
 	for i in mini(maxi(0, count), got.size()):
 		ctx.items_given.append(got[i])
 

@@ -136,8 +136,6 @@ var last_handled_id: int = -1
 var _depths: Dictionary = {}
 ## 已结束的搜索会话里一共搜了几次（正在搜的那个另算，见 searches_total）。跟着存档走
 var searches_closed: int = 0
-## 267 A：这一局的出征倾向（`nature` / `crafted` / `magic`，空 = 没选），[RunState] 开局与读档时设
-var material_bias: StringName = &""
 
 
 func _init(p_graph: MapGraph = null) -> void:
@@ -485,7 +483,6 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.board = board
 	ctx.storage = storage
 	ctx.meta = meta
-	ctx.material_bias = bias_table()     # 267
 	ctx.hooks = hooks
 	if travel != null and travel.erosion != null:
 		var field := travel.erosion
@@ -915,7 +912,6 @@ func _open_search(node: MapNode, auto: bool = false) -> void:
 		session.extra_searches = hooks.run_context().extra_searches
 		session.search_floor = SearchSession.floor_for(node, rules.search, difficulty_def)     # 127
 		session.produce = node.produce     # 267 B
-		session.bias = bias_table()     # 267 A
 		var kind := search_kind_of(node)     # 267 C
 		session.only_tags = kind.get("tags", [])
 		session.other_share = float(kind.get("other_share", 0.0))
@@ -1050,8 +1046,7 @@ func open_chest(node: MapNode) -> bool:
 		for i in n:
 			floor_row.append(f)
 	session.search_floor = floor_row
-	session.produce = node.produce     # 267：宝箱也按环的产物表与倾向加权，不按材料节点过滤
-	session.bias = bias_table()
+	session.produce = node.produce     # 267：宝箱也按环的产物表加权，不按材料节点过滤
 	var bless_rng := _rng_for(node, "bless_chest")
 	var base := rules.search
 	session.substitute = func(ids: Array[StringName]) -> Array[StringName]:
@@ -1140,15 +1135,10 @@ func _event(node: MapNode) -> void:
 			detail["restored"] = vitality.restore(rules.event_restore, &"event") if vitality != null else 0
 		&"item":
 			var got := SearchSession.draw_items(rules.search, items, _depth_of(node), node.danger,
-				_rng_for(node, "event_item"), rules.event_item_rarity_cap, [] as Array[int], node.produce, bias_table()) if rules.search != null else [] as Array[StringName]
+				_rng_for(node, "event_item"), rules.event_item_rarity_cap, [] as Array[int], node.produce) if rules.search != null else [] as Array[StringName]
 			detail["items"] = got.slice(0, 1)
 	node.content["outcome"] = String(outcome)
 	event_resolved.emit(node, outcome, detail)
-
-
-## 267 A：出征倾向的倍率表（[method SearchSession.bias_table]）
-func bias_table() -> Dictionary:
-	return SearchSession.bias_table(material_bias)
 
 
 ## 267 C：材料节点那一种的规则 `{tags, other_share}`（[member NodeRules.search_kinds]）；普通搜索点 / 本章没配 = 空

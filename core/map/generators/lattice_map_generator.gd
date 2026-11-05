@@ -64,7 +64,42 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	if not typer.assign(_graph, _shape.rules, _rng):
 		build_note = "类型分配失败：" + typer.note
 		return null
+	_assign_materials()
 	return _graph
+
+
+## 283（267 B / C）：每段的点记下产物表；每段再从定了型的普通搜索点（不是固定点）里挑 `material_nodes` 要的个数，写 `content.search_kind`。
+## 类型一个不动；随机数另起一条（由主随机数派生、不消耗它），同一种子的图形与类型和没有材料节点时一样；挑不够有几个算几个
+func _assign_materials() -> void:
+	if _shape.segments.is_empty():
+		return
+	var krng := RandomNumberGenerator.new()
+	krng.seed = hash([_rng.state, "material_kinds"])
+	for seg in _shape.segments:
+		var produce: Dictionary = seg.get("produce", {})
+		var wants: Dictionary = seg.get("material_nodes", {})
+		var pool: Array[int] = []
+		for id in _graph.node_ids():
+			var n := _graph.get_node(id)
+			var r := int(n.layout.get("row", -1))
+			if r < int(seg["from"]) or r > int(seg["to"]):
+				continue
+			for t in produce:     # 倍率一律存成小数（存档往返）
+				n.produce[String(t)] = float(produce[t])
+			if n.type == &"search" and not n.layout.has("fixed"):
+				pool.append(id)
+		if wants.is_empty() or pool.is_empty():
+			continue
+		pool.assign(MapRng.shuffled(pool, krng))
+		var keys: Array = wants.keys()
+		keys.sort()
+		var wanted: Array = []
+		for kind in keys:
+			for i in int(wants[kind]):
+				wanted.append(String(kind))
+		wanted = MapRng.shuffled(wanted, krng)
+		for i in mini(wanted.size(), pool.size()):
+			_graph.get_node(pool[i]).content["search_kind"] = wanted[i]
 
 
 #region 铺点

@@ -6,6 +6,7 @@
 ## `failure_tally` 汇总会指出是哪条规则在咬。
 ## 259：最后再拿魔法废墟（free_mode）三档各跑一遍，看「路旁一步」各类点、休息—休息边
 ## 267：同一遍再数材料节点 —— 每张图几个、按种类分
+## 283：机关沙漏三档也数材料节点（每段几个、按种类分）
 extends CliTool
 
 const SIDE_TYPES := ["battle", "elite", "search", "chest", "random", "event", "shop", "rest"]
@@ -50,7 +51,52 @@ func run() -> void:
 			var cfg: RingMapConfig = (ch.map_source.generator_config as RingMapConfig).duplicate(true)
 			cfg.apply_scale(pair[0], pair[1])
 			_side_table(cfg, seeds, "free_mode %s %d 环" % [pair[0], pair[1]])
+	var hg: ChapterDef = RunSave.load_chapter(&"clockwork_hourglass")
+	if hg != null and hg.map_source != null:
+		for sc in [&"small", &"medium", &"large"]:
+			_material_table(hg.map_source, sc, seeds, "clockwork_hourglass %s" % sc)
 	finish(0)
+
+
+## 283：沙漏的材料节点 —— 每张几个、按种类与段（左半 / 颈部 / 右半）分
+func _material_table(src: MapSource, scale: StringName, seeds: int, label: String) -> void:
+	var made := 0
+	var kinds := {}
+	var by_seg := {}
+	var search := 0
+	for s in seeds:
+		var g := src.resolve(s, scale)
+		if g == null:
+			continue
+		made += 1
+		var rows := int(g.layout_meta.get("rows", 1))
+		var cfg := (src.generator_config as HourglassMapConfig).duplicate(true) as HourglassMapConfig
+		cfg.apply_scale(scale)
+		for id in g.node_ids():
+			var n := g.get_node(id)
+			if n.type == &"search":
+				search += 1
+			var k := String(n.content.get("search_kind", ""))
+			if k == "":
+				continue
+			kinds[k] = int(kinds.get(k, 0)) + 1
+			var r := int(n.layout.get("row", 0))
+			var seg := "左半" if r < cfg.half_rows else ("右半" if r >= rows - cfg.half_rows else "颈部")
+			by_seg[seg] = int(by_seg.get(seg, 0)) + 1
+	if made == 0:
+		print("== %s：一张都没生成出来" % label)
+		return
+	var total := 0
+	var parts: Array[String] = []
+	var ids: Array = kinds.keys()
+	ids.sort()
+	for k in ids:
+		total += int(kinds[k])
+		parts.append("%s %.2f" % [k, float(kinds[k]) / made])
+	var seg_parts: Array[String] = []
+	for seg in ["左半", "颈部", "右半"]:
+		seg_parts.append("%s %.2f" % [seg, float(by_seg.get(seg, 0)) / made])
+	print("== %s：%d/%d 张；材料节点 %.2f/张（搜索点 %.2f/张）：%s；%s" % [label, made, seeds, float(total) / made, float(search) / made, ", ".join(parts), ", ".join(seg_parts)])
 
 
 ## 259：每种风格的路线「旁边一步」（不在任何路线上的邻点）各类点每条平均几个；全图休息个数、休息—休息边每张几条

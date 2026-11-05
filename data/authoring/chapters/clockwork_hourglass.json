@@ -15,6 +15,20 @@
       "two_sided": true,
       "axis_core": true,
       "clock_room": true,
+      "side_produce": {
+        "crafted": 2,
+        "mineral": 1.5
+      },
+      "side_material_nodes": {
+        "mine": 1,
+        "remains": 1
+      },
+      "neck_produce": {
+        "crystal": 2
+      },
+      "neck_material_nodes": {
+        "runes": 1
+      },
       "danger_by_row": [
         0,
         0,
