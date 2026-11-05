@@ -1,0 +1,88 @@
+{
+  "id": "jimie",
+  "display_name": "寂灭",
+  "display_names": {
+    "en": "Oblivion"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 5,
+  "tags": [
+    "weapon",
+    "melee",
+    "staff",
+    "magic",
+    "unique"
+  ],
+  "material": "wood",
+  "adjacency": {
+    "load_cells": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        -1
+      ]
+    ]
+  },
+  "combat": {
+    "base_stats": {
+      "damage": 50
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.0
+        },
+        "costs": [
+          {
+            "type": "resource"
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded"
+          }
+        ],
+        "free_when_loaded": true
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": "scorch",
+            "stacks": 2
+          },
+          {
+            "type": "apply_status",
+            "buff": "chill",
+            "stacks": 2
+          },
+          {
+            "type": "apply_status",
+            "buff": "numb",
+            "stacks": 2
+          }
+        ]
+      }
+    ],
+    "power_mult": 5.7
+  }
+}

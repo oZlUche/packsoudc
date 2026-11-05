@@ -1,0 +1,55 @@
+{
+  "id": "bengshan",
+  "display_name": "崩山",
+  "display_names": {
+    "en": "Mountainfall"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 5,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy",
+    "unique"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 1440
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 6.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 30.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -3
+          }
+        ]
+      }
+    ]
+  }
+}

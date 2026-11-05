@@ -72,6 +72,8 @@ static func bench(inst: ItemInstance, container: ItemContainer, after: Callable 
 static func sell(inst: ItemInstance, price: int, do_sell: Callable) -> Action:
 	var a := make(&"sell", UiText.t("act.sell"), func(): do_sell.call(inst.uid), true, &"sell")
 	a.coin = price
+	if inst.def != null and inst.def.is_unique():     # 281：独一的红武不可出售
+		return disable(a, UiText.t("act.unique"))
 	return disable(a, UiText.t("act.locked")) if inst.is_locked_by_player() else a
 
 

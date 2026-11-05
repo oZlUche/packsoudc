@@ -580,7 +580,7 @@ func mark_rules_seen(chapter_id: StringName) -> void:
 ## 091（作者定）：基地商店 —— 卖掉仓库里的一件，按定价的 [param ratio] 进钱（钱现在还没处花，先攒着）。返回得了多少；没这件 -1
 func sell_item(uid: int, ratio: float = 0.5) -> int:
 	var inst := warehouse.get_item(uid)
-	if inst == null or inst.is_locked_by_player():     # 230：锁住的不卖
+	if inst == null or inst.is_locked_by_player() or inst.def.is_unique():     # 230：锁住的不卖；281：独一的不卖
 		return -1
 	var price := sell_price_of(inst, ratio)
 	warehouse.remove(uid)
@@ -688,8 +688,8 @@ func _sellable(max_rarity: int, tag: StringName = &"") -> Array[ItemInstance]:
 			continue
 		if tag != &"" and not it.def.tags.has(tag):
 			continue
-		if it.is_locked_by_player():
-			continue     # 230：一键出售跳过锁住的
+		if it.is_locked_by_player() or it.def.is_unique():
+			continue     # 230：一键出售跳过锁住的；281：独一的也跳过
 		if is_favorite(it.def.id):
 			continue     # 265：收藏的种类也跳过
 		out.append(it)
