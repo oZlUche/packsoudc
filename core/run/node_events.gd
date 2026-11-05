@@ -411,6 +411,11 @@ func choose(i: int) -> bool:
 	if search_stage and not ctx.open_search and current_search != null and current_search.active:
 		current_search.leave()
 		return true
+	# 281：魔法之神的残余意识说完了：当场结算回基地
+	if ctx.jimie_ascend:
+		_visited(node)
+		hooks.jimie_ascend()
+		return true
 	# 085：对话里选了「撤离」：交给持有方撤（付费点付不起就说一声、留在原地）
 	if ctx.extract:
 		_visited(node)

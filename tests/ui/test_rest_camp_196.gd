@@ -25,7 +25,7 @@ static func run_mapping(t: TestCase) -> void:
 	if rest == null:
 		return
 	t.eq(rest.scene, EventDef.SCENE_REST_CAMP, "rest_default 演成营地")
-	t.eq(_pieces_of(rest), [&"fire", &"tent", &"altar", &"forge", &"sign"], "篝火 / 帐篷 / 祭坛 / 铁炉 / 路标")
+	t.eq(_pieces_of(rest), [&"fire", &"tent", &"altar", &"altar", &"forge", &"sign"], "篝火 / 帐篷 / 祭坛（信仰；281 没信仰时寂灭的献祭）/ 铁炉 / 路标")
 	t.eq(Camp.variant_for([&"fire", &"tent", &"altar", &"forge", &"sign"]), &"full", "四件全有：full")
 	for id in [&"tut3_rest_1", &"tut3_rest_2"]:
 		var tut: EventDef = c.events.get(id, null)

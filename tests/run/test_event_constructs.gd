@@ -459,7 +459,7 @@ static func run_pipeline(t: TestCase) -> void:
 		t.check(events.has(id), "装回了 %s" % id)
 	var rest: EventDef = events.get(&"rest_default", null)
 	if rest != null:
-		t.eq(rest.options.size(), 5, "休息点五个选项（093：多了「神坛」，没信仰时藏起来；194：多了「铸炉」）")
+		t.eq(rest.options.size(), 6, "休息点六个选项（093：多了「神坛」，没信仰时藏起来；194：多了「铸炉」；281：寂灭的「献祭」，备齐才有）")
 		t.check(rest.options[1].outcomes[0] is PassTime and (rest.options[1].outcomes[0] as PassTime).actions == 2, "扎营耗 2 点（读数据）")
 	var rift: EventDef = events.get(&"event_rift", null)
 	if rift != null:

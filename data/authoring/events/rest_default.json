@@ -71,6 +71,27 @@
       ]
     },
     {
+      "label": "献祭",
+      "labels": {
+        "en": "Sacrifice"
+      },
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "jimie_ready"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "jimie_sacrifice"
+        },
+        {
+          "type": "next_event",
+          "event": "event_jimie_god"
+        }
+      ]
+    },
+    {
       "label": "三件道具熔成一枚铸牌",
       "labels": {
         "en": "Melt three items into one Forge Token"

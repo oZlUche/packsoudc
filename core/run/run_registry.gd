@@ -73,6 +73,7 @@ const EVENT_CONDITIONS := {
 	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
 	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
 	&"forge_unused": "res://core/run/events/conditions/forge_unused.gd",     # 194
+	&"jimie_ready": "res://core/run/events/conditions/jimie_ready.gd",     # 281
 	&"skill_ready": "res://core/run/events/conditions/skill_ready.gd",     # 136
 }
 
@@ -104,6 +105,8 @@ const EVENT_OUTCOMES := {
 	&"next_event_random": "res://core/run/events/outcomes/next_event_random.gd",
 	&"revisit_later": "res://core/run/events/outcomes/revisit_later.gd",     # 作者 2026-10-12：门禁事件的退路
 	&"bless_item": "res://core/run/events/outcomes/bless_item.gd",
+	&"jimie_sacrifice": "res://core/run/events/outcomes/jimie_sacrifice.gd",     # 281
+	&"jimie_ascend": "res://core/run/events/outcomes/jimie_ascend.gd",     # 281
 }
 
 ## 局内技能（082）：被动常驻 + 可选的主动一击

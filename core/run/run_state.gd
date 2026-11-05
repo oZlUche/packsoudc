@@ -470,6 +470,15 @@ func extract_after_boss() -> bool:
 	return true
 
 
+## 281 寂灭的路（三）：神坛献祭、魔法之神的残余意识说完 —— 不看站在哪、不付费，当场撤离结算（结算屏第二页放黑洞）。已经结束返回 false
+func extract_by_jimie() -> bool:
+	if is_over():
+		return false
+	_abandon_sessions()
+	_set_phase(Phase.EXTRACTED, JimiePath.REASON)
+	return true
+
+
 ## **只给演示与测试用**（101 第 6 刀；原来是 `tools/demo_fill.gd` 的前身在导演里直接写 `phase` 与 `end_reason`）：
 ## 不看站在哪、不付费、不结算撤离点，直接把这一局记成撤离成功。正式游戏走 [method try_extract] / [method extract_after_boss]。
 ## 已经结束返回 false
@@ -1040,6 +1049,7 @@ func _wire_events() -> void:
 	hooks.register(&"bracket", func() -> int: return hunters.bracket() if hunters != null else -1)
 	hooks.register(&"relocate", relocate)
 	hooks.register(&"request_extract", try_extract)     # 085：撤离点的对话里选「撤离」
+	hooks.register(&"jimie_ascend", extract_by_jimie)     # 281
 	hooks.register(&"faith_tier", active_faith_tier)     # 093：事件条件 faith_active
 	hooks.register(&"active_faith_id", active_faith_id)
 	hooks.register(&"skill_ready", func(id: StringName) -> String: return skills.can_use(id) if skills != null else UiText.t("log.no_skill"))

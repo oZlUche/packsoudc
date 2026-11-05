@@ -259,6 +259,20 @@ func _build_summary() -> void:
 func _build_store(col: VBoxContainer, outer: VBoxContainer) -> void:
 	_add_warehouse(col)
 	_add_proceed(outer)
+	_black_hole()
+
+
+## 281 寂灭的路（三）：献祭回来的这一局，带回来的寂灭上放一次黑洞（代码占位）
+func _black_hole() -> void:
+	if _r == null or _r.reason != JimiePath.REASON or _wh == null or flow.meta.board == null:
+		return
+	if not UiMotion.enabled(flow.settings):
+		return
+	for v in flow.meta.board.items():
+		var inst := v as ItemInstance
+		if inst != null and inst.def.id == JimiePath.RED:
+			JimieBlackHole.cover(_wh.board_view(), inst.uid)
+			return
 
 
 ## 224：第 2 步的仓库面板 —— 石键小钮，「继续」放进同一行的右端（右沿对齐仓库区右沿）。

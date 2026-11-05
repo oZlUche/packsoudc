@@ -1,0 +1,20 @@
+{
+  "id": "event_jimie_god",
+  "title": "魔法之神的残余意识",
+  "titles": {
+    "en": "Lingering Mind of the God of Magic"
+  },
+  "options": [
+    {
+      "label": "……",
+      "labels": {
+        "en": "……"
+      },
+      "outcomes": [
+        {
+          "type": "jimie_ascend"
+        }
+      ]
+    }
+  ]
+}

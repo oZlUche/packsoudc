@@ -116,7 +116,7 @@ static func piece_of(opt: EventOption) -> StringName:
 	if opt.outcomes.is_empty():
 		return &"sign"
 	var has := func(cls) -> bool: return opt.outcomes.any(func(o): return is_instance_of(o, cls))
-	if has.call(OpenAltar):
+	if has.call(OpenAltar) or has.call(JimieSacrifice):     # 281：没信仰时神坛上是寂灭的「献祭」
 		return &"altar"
 	if has.call(OpenForge):
 		return &"forge"
@@ -142,10 +142,10 @@ func _build_pieces() -> void:
 	_extra_btns.clear()
 	if _def == null:
 		return
-	var by_piece := {}     # 造物 → 选项序号（同一件只认第一个）
+	var by_piece := {}     # 造物 → 选项序号（同一件认第一个；281：第一个锁着、后面有能选的，换成能选的那个）
 	for i in _def.options.size():
 		var p := piece_of(_def.options[i] as EventOption)
-		if p != &"" and not by_piece.has(p):
+		if p != &"" and (not by_piece.has(p) or (not bool(_state(int(by_piece[p]), p)["ok"]) and bool(_state(i, p)["ok"]))):
 			by_piece[p] = i
 	if _done and not by_piece.has(&"sign"):
 		by_piece[&"sign"] = -1
@@ -183,6 +183,8 @@ func _build_pieces() -> void:
 	_scene.fire_spot = (_pieces[&"fire"] as CampPiece).spot if _pieces.has(&"fire") else Vector2.ZERO
 	_scene.pieces = _layout.get("pieces", {})
 	for i in _def.options.size():
+		if _pieces.has(piece_of(_def.options[i] as EventOption)):
+			continue     # 281：同一件造物上没被选中的那个选项（神坛：信仰 / 献祭）不另出按钮
 		if not _pieces.values().any(func(pc): return (pc as CampPiece).index == i):
 			_extra_option(i, ctx)
 

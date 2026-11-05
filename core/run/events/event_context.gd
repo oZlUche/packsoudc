@@ -53,6 +53,8 @@ var open_altar: bool = false
 var open_forge: bool = false
 ## 085：从这个撤离点撤离（事件对话里的「撤离」选项）
 var extract: bool = false
+## 281：寂灭的献祭说完了 —— 当场结算回基地
+var jimie_ascend: bool = false
 ## 8-3：这个点从此算这种类型（空 = 不改）
 var new_type: StringName = &""
 ## 8-3：传送到哪个点（-1 = 不传）、花几点
