@@ -414,8 +414,9 @@ static func upgrades_line(def: ItemDef) -> String:
 	for r in Anvil.upgrades_for(def, Anvil.recipes()):
 		var path := ContentPaths.asset_file("items", String(r.output))
 		var d := load(path) as ItemDef if ResourceLoader.exists(path) else null
-		if d != null:
-			names.append("[color=@rarity%d]%s[/color]" % [d.rarity, Names.of(d)])
+		var entry := "[color=@rarity%d]%s[/color]" % [d.rarity, Names.of(d)] if d != null else ""
+		if entry != "" and not names.has(entry):     # 同一个产物有几张配方（不同材料）只写一遍
+			names.append(entry)
 	if names.is_empty():
 		return ""
 	return "[color=@dim]%s[/color]" % (UiText.t("tip.upgrades_to") % " / ".join(PackedStringArray(names)))

@@ -23,7 +23,7 @@
   "material": "wood",
   "combat": {
     "base_stats": {
-      "damage": 4.0
+      "damage": 5.0
     },
     "rules": [
       {

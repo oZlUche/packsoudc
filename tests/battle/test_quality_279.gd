@@ -106,3 +106,13 @@ static func run_tooltip_numbers(t: TestCase) -> void:
 	var text := Glossary.strip_bbcode(ItemTooltip.describe(ItemInstance.create(db.get_def(&"executioner_axe"), 0)))
 	var m := RegEx.create_from_string("29%，造成 ([0-9.]+) 点物理伤害").search(text)
 	t.check(m != null and float(m.get_string(1)) > 0.0, "斩杀句写了点数（%s）" % text.replace("\n", " | "))
+
+
+static func run_tooltip_crossbow_text(t: TestCase) -> void:
+	t.begin("279 测试 v5.15 · 钢弩：出手时那句单独写「造成 5 点真实伤害」；可升为同一产物只写一遍")
+	var db := _db()
+	var text := Glossary.strip_bbcode(ItemTooltip.describe(ItemInstance.create(db.get_def(&"steel_crossbow"), 0)))
+	t.check(text.contains("造成 5 点真实伤害") and not text.contains("其中 5 点"), "单独一段的真实伤害有主句（%s）" % text.replace("\n", " | "))
+	t.check(text.contains("可升为") and not text.contains("重弩 / 重弩"), "可升为不重复")
+	var sword := Glossary.strip_bbcode(ItemTooltip.describe(ItemInstance.create(db.get_def(&"steel_broadsword"), 0)))
+	t.check(sword.contains("其中") and sword.contains("点真实伤害"), "跟在主伤害后面的仍写「其中 N 点真实伤害」")

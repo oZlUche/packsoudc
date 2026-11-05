@@ -1172,6 +1172,7 @@ const TEXT := {
 	"fx.deal_type": {"zh": "造成%s伤害", "en": "deal %s damage"},
 	"fx.deal": {"zh": "造成 %s%s伤害", "en": "deal %s %s damage"},     # amount, type name
 	"fx.deal_true": {"zh": "其中 %s 点真实伤害", "en": "%s of it as true damage"},
+	"fx.deal_pure": {"zh": "造成 %s 点真实伤害", "en": "deal %s true damage"},
 	"fx.prime_next": {"zh": "这件的下一下伤害 +%s（不叠加）", "en": "this item's next hit deals +%s damage (does not stack)"},
 	"fx.fire_ammo": {"zh": "射出装填的箭，加上它的伤害、施加它的效果；两捆按顺时针轮流射；没箭时造成%s伤害", "en": "shoot the loaded Arrows, adding their damage and effect; two bundles take turns clockwise; with no Arrows, deal %s damage"},
 	"fx.deal_pct": {"zh": "造成 %s的%s伤害", "en": "deal %s as %s damage"},     # amount incl. a percent part, type name

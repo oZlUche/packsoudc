@@ -170,6 +170,11 @@ func estimated_value(ctx: PowerContext) -> float:
 	return dmg * side_sign(target)
 
 
+## 279：固定点数的真实伤害。跟在另一段伤害后面写「其中 N 点真实伤害」（Glossary.effects_text），单独一段写「造成 N 点真实伤害」
+func is_pure_part() -> bool:
+	return pure and damage_stat == &"" and amount > 0.0 and not (percent_of != &"" and percent > 0)
+
+
 ## 142：固定值、按层数、按比例都写出来（「对手每层流血造成 3 点物理伤害」「造成 4 点 + 对手 10% 最大生命的物理伤害」）；
 ## 只读属性表的（武器的普通攻击）照旧只写「造成物理伤害」—— 数值随加成变，看 DPS 那行
 func describe() -> String:
@@ -181,8 +186,8 @@ func describe() -> String:
 	if pct:
 		var whose := {Target.OPPONENT: "fx.pct_opp", Target.SELF: "fx.pct_self", Target.BOTH: "fx.pct_target"}[percent_of_target] as String
 		parts.append(UiText.t(whose) % [percent, UiText.pick(PERCENT_OF_NAMES.get(String(percent_of), null), String(percent_of))])
-	if pure and fixed and not pct:
-		return UiText.t("fx.deal_true") % TextTemplate.num(amount)
+	if is_pure_part():
+		return UiText.t("fx.deal_pure") % TextTemplate.num(amount)
 	var what := " + ".join(parts)
 	var type_name := Glossary.damage_type_name(damage_type)
 	var line := ""
