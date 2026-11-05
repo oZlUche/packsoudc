@@ -1151,6 +1151,7 @@ func _seed_owned() -> void:
 		if item != null and item.def != null:
 			owned_uids[item.uid] = true
 			acquired_ids[String(item.def.id)] = true
+			item.mark_run_in()     # 281：带进来的法杖记一笔，带回基地才算一次进出
 
 
 func _owned_now() -> Array:

@@ -175,6 +175,17 @@ static func draw_art(
 	return true
 
 
+## 281 寂灭：法杖进出 [constant ItemInstance.RUNS_TINT_FROM] 次起越来越暗，[constant ItemInstance.RUNS_BLACK] 次全黑（叠色，不另画图）
+const RUNS_BLACK_TINT := Color(0.07, 0.06, 0.09)
+
+
+static func runs_tint(inst: ItemInstance) -> Color:
+	if inst == null or not ItemInstance.tracks_runs(inst.def) or inst.runs() <= ItemInstance.RUNS_TINT_FROM:
+		return Color.WHITE
+	var t := clampf(float(inst.runs() - ItemInstance.RUNS_TINT_FROM) / float(ItemInstance.RUNS_BLACK - ItemInstance.RUNS_TINT_FROM), 0.0, 1.0)
+	return Color.WHITE.lerp(RUNS_BLACK_TINT, t)
+
+
 ## 201：rot 0 的图（左上角在原点、一格 [param cell] 像素）→ 画布：转 k × 90° 顺时针，左上角挪到 anchor + 偏移
 ## (0, 0) / (H, 0) / (W, H) / (0, W) 格（W、H = rot 0 的包围盒）
 static func art_transform(def: ItemDef, rot: int, anchor: Vector2, cell: float) -> Transform2D:
