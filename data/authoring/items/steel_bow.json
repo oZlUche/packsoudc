@@ -23,7 +23,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 10
+      "damage": 5
     },
     "rules": [
       {

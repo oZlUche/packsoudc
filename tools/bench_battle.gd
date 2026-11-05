@@ -7,7 +7,7 @@
 ##
 ##     ... --script res://tools/bench_battle.gd -- power
 ##
-## 279 补充二：`-- power 2` 每件按 2 档品质量（估算仍按定义），看稀有度阶梯有没有被品质打穿
+## 279 补充二：`-- power 2` 每件按 2 档品质量（估算仍按定义），看稀有度阶梯有没有被品质打穿；弓弩一律装一捆木箭量
 extends CliTool
 
 const BATTLES := 2000
@@ -79,6 +79,7 @@ func _power() -> void:
 	var args := OS.get_cmdline_user_args()
 	var at := args.find("power")
 	var quality := int(args[at + 1]) if at + 1 < args.size() else 0
-	print(PowerBench.single_text(PowerBench.single_table(weapons, w, buffs, 3, quality)))
+	# 279（架构设计 22:33）：弓弩的装填格放一捆木箭再量
+	print(PowerBench.single_text(PowerBench.single_table(weapons, w, buffs, 3, quality, items.get_def(&"arrows"))))
 	print("")
 	print(PowerBench.set_text(PowerBench.set_table(weapons, SET_TAGS, w)))
