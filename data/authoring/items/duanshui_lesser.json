@@ -1,0 +1,56 @@
+{
+  "id": "duanshui_lesser",
+  "display_name": "断水",
+  "display_names": {
+    "en": "Streamsever"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 5,
+  "value": 1600,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "one_hand",
+    "lesser"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 350
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.2
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 11.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 30.0,
+            "damage_stat": "",
+            "pure": true
+          }
+        ]
+      }
+    ]
+  }
+}

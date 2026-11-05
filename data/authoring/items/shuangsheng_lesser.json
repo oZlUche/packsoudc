@@ -1,0 +1,50 @@
+{
+  "id": "shuangsheng_lesser",
+  "display_name": "双生",
+  "display_names": {
+    "en": "Twinborn"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 5,
+  "value": 1600,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual",
+    "lesser"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 156,
+      "crit_chance": 15
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 9.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

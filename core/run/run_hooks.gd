@@ -34,6 +34,8 @@ const NAMES := {
 	&"fight_hunter": "HunterSystem：迎战追上来的猎手",
 	&"flee_hunter": "HunterSystem：从猎手那里逃跑",
 	&"skill_ready": "RunState：局内技能现在能不能用（136：空串 = 能，否则是原因）",
+	&"red_hold": "RunState：核心 BOSS 开战前掷红武劣化版持有（281，[RedSources]）",
+	&"red_drop": "RunState：打赢了掷持有的劣化版掉不掉（281）",
 }
 
 var _fns: Dictionary = {}
@@ -118,6 +120,18 @@ func skill_ready(id: StringName) -> String:
 func before_battle(me: CombatantSpec, enemy: CombatantSpec, type: StringName) -> void:
 	if has(&"before_battle"):
 		_at(&"before_battle").call(me, enemy, type)
+
+
+## 281：开战前（战前准备屏之前）掷红武劣化版持有，改的是 [param content] 本身。没人接 = 不掷
+func red_hold(node: MapNode, type: StringName, content: Dictionary) -> void:
+	if has(&"red_hold"):
+		_at(&"red_hold").call(node, type, content)
+
+
+## 281：打赢了掷持有的劣化版，掉了放进 [param rolled] 的 dropped。没人接 = 不掉
+func red_drop(node: MapNode, content: Dictionary, rolled: Dictionary) -> void:
+	if has(&"red_drop"):
+		_at(&"red_drop").call(node, content, rolled)
 #endregion
 
 

@@ -1,0 +1,14 @@
+{
+  "id": "lesser",
+  "display_name": "劣化",
+  "display_names": {
+    "en": "Lesser"
+  },
+  "description": "红武的劣化版：只从拿着它的 BOSS / 猎手身上掉，不进掉落表、商店与敌人池。",
+  "descriptions": {
+    "en": "A lesser red weapon: only dropped by the boss or hunter carrying it; never in drop tables, shops or enemy pools."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

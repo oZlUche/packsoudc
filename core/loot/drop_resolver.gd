@@ -94,7 +94,7 @@ static func roll(
 	for e in carried_entries(content):
 		var id: StringName = e["id"]
 		var def := items.get_def(id)
-		if def == null:
+		if def == null or def.is_unique() or def.is_lesser():     # 281：红武与劣化版只按 [RedSources] 的掉落率掉
 			continue
 		if rule.carried_always_drop and bool(e["carried"]):
 			(out["dropped"] as Array[StringName]).append(id)
@@ -110,7 +110,7 @@ static func roll(
 	# 084：节点内容 `guaranteed_drops` 一定掉（教程：遭遇的敌人必掉一个包）。**只能是它身上有的**（作者：敌人不能掉没有的东西）
 	for raw in content.get("guaranteed_drops", []):
 		var gid := StringName(String(raw))
-		if carried.has(gid) and items.get_def(gid) != null and not (out["dropped"] as Array[StringName]).has(gid):
+		if carried.has(gid) and items.get_def(gid) != null and not items.get_def(gid).is_unique() and not items.get_def(gid).is_lesser() and not (out["dropped"] as Array[StringName]).has(gid):
 			(out["dropped"] as Array[StringName]).append(gid)
 	# 084：至少掉 min_drops 件身上有的（包不算数）—— 掷完不够，从没掉的非包里随机补
 	var dropped_list: Array[StringName] = out["dropped"]
@@ -118,7 +118,7 @@ static func roll(
 		var left: Array[StringName] = []
 		for id in carried:
 			var d := items.get_def(id)
-			if d != null and not d.is_bag and not dropped_list.has(id):
+			if d != null and not d.is_bag and not d.is_unique() and not d.is_lesser() and not dropped_list.has(id):
 				left.append(id)
 		while _non_bag_count(dropped_list, items) - forced < rule.min_drops and not left.is_empty():
 			var k := rng.randi_range(0, left.size() - 1)

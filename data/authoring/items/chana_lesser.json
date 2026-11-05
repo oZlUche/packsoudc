@@ -1,0 +1,54 @@
+{
+  "id": "chana_lesser",
+  "display_name": "刹那",
+  "display_names": {
+    "en": "Instant"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 5,
+  "value": 800,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dagger",
+    "bleed",
+    "lesser"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 199
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.5
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 6.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "apply_status",
+            "buff": "bleed",
+            "stacks": 2
+          }
+        ]
+      }
+    ]
+  }
+}

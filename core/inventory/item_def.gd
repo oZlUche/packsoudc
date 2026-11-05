@@ -51,6 +51,9 @@ const BULLION := &"bullion"
 const FORGED_ONLY := &"forged_only"
 ## 281：独一的红武 —— 全局只存在一件（[UniqueItems]），搜索、掉落、商店、敌人都不出（[method ItemDatabase.ids] 拦），图鉴照列；不可出售
 const UNIQUE := &"unique"
+## 281（作者 10:47）：红武的劣化版 —— 只从拿着它的 BOSS / 猎手身上掉（[RedSources]），搜索、掉落、商店、敌人都不出，图鉴照列；
+## 不上砧、不附魔、不赐福
+const LESSER := &"lesser"
 ## 244 补充一 / 250：贵重品（类别：金银、工艺摆件……）—— 值钱是它的本分，基地回收按面值全额（[method is_valuable]）
 const VALUABLE := &"valuable"
 ## 250：魔晶石（类别）—— 244 起按面值回收，类别恰好一个后不再另带贵重品，[method is_valuable] 照算它
@@ -105,6 +108,10 @@ func is_forged_only() -> bool:
 
 func is_unique() -> bool:
 	return tags.has(UNIQUE)
+
+
+func is_lesser() -> bool:
+	return tags.has(LESSER)
 
 
 ## 归某位神（带 `faith:<神>`）—— 信物、赐福版都算
