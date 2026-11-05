@@ -993,6 +993,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 		save_meta()
 	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
+	JimiePath.plant(state)     # 281：局外状态接上了才看得见仓库里有没有那颗元素之核
 	_grant_keepsakes(chapter)
 	var reveal := map_reveal
 	map_reveal = {}

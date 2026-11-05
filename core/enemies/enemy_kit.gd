@@ -128,6 +128,7 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	var inp := CompileInput.of(baseline_of(def, tier, content))
 	inp.wild = def.is_wild()     # 212：魔兽 / 机关用道具的 wild 面
 	inp.immune_buffs = def.immune_buffs     # 210
+	inp.only_damage_type = StringName(String(content.get(JimiePath.ONLY_KEY, "")))     # 281：寂灭的试炼
 	return BattleCompiler.compile(board_of(content, items), inp)
 
 

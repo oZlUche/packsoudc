@@ -10,6 +10,8 @@ var max_hp: int = 0                  ## 定点
 var undying_sec: float = 0.0
 ## 210：免疫的状态 id —— [method CombatantRuntime.apply_buff] 直接不叠（机关不流血不中毒）
 var immune_buffs: Array[StringName] = []
+## 281：只受这一种伤害（[DamageResolver] 第 3 步之后判）；空 = 不限
+var only_damage_type: StringName = &""
 
 ## 105：开战时就带着的标准轴层数（4.3）：轴 → 层数。来源是编译期的单位级增益
 ## （祈祷攒的火焰加成、将来的局内 / 局外 / 套装 / 技能）。[CombatantRuntime] 把它种进**系统层** ——

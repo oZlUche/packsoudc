@@ -47,7 +47,9 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 2. 护甲吸收 ---
 	# 放在受伤前效果之前，是因为「这一下还剩多少要扛」本身就是减伤效果的判断依据。
-	if td.armor_absorbable and packet.raw > 0 and not pure:
+	# 281：只受一种伤害的（寂灭的试炼）：不对的这一下不扣护甲（第 3 步可能改类型，那一下照样不吃护甲）
+	var gated := victim.only_damage_type != &""
+	if td.armor_absorbable and packet.raw > 0 and not pure and not (gated and packet.type != victim.only_damage_type):
 		var pool := victim.resources
 		if pool.has(BattleStats.RES_ARMOR):
 			var take := mini(pool.current(BattleStats.RES_ARMOR), packet.raw)
@@ -59,6 +61,9 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	if not pure:
 		ctx.dispatch_before_damage(packet)
 	td = packet.def()     # 132：受伤前可能改了类型（convert_damage_type）；之后按新类型通知
+	# 281：类型（改过之后的）不对、或是真实伤害，减 100%
+	if gated and packet.raw > 0 and (pure or packet.type != victim.only_damage_type):
+		packet.cancelled = true
 
 	if packet.cancelled:
 		packet.final = 0

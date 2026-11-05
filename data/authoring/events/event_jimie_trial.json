@@ -1,0 +1,27 @@
+{
+  "id": "event_jimie_trial",
+  "options": [
+    {
+      "label": "迎战",
+      "labels": {
+        "en": "Fight"
+      },
+      "outcomes": [
+        {
+          "type": "start_battle"
+        }
+      ]
+    },
+    {
+      "label": "离开",
+      "labels": {
+        "en": "Leave"
+      },
+      "outcomes": [
+        {
+          "type": "revisit_later"
+        }
+      ]
+    }
+  ]
+}

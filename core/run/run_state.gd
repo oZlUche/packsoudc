@@ -1035,7 +1035,8 @@ func _wire_events() -> void:
 	hooks.register(&"red_hold", func(node: MapNode, _type: StringName, content: Dictionary) -> void:
 		RedSources.arm(content, self, events._rng_for(node, "red_hold")))
 	hooks.register(&"red_drop", func(node: MapNode, content: Dictionary, rolled: Dictionary) -> void:
-		RedSources.roll_drop(content, self, events._rng_for(node, "red_drop"), rolled))
+		RedSources.roll_drop(content, self, events._rng_for(node, "red_drop"), rolled)
+		JimiePath.reward(content, self, rolled))     # 281：寂灭的试炼打赢了给元素之核
 	hooks.register(&"bracket", func() -> int: return hunters.bracket() if hunters != null else -1)
 	hooks.register(&"relocate", relocate)
 	hooks.register(&"request_extract", try_extract)     # 085：撤离点的对话里选「撤离」
