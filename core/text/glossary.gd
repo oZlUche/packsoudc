@@ -646,6 +646,8 @@ static func effects_text(effects: Array) -> String:
 		if e == null:
 			continue
 		var d: String = e.describe() if e.has_method("describe") else ""
+		if prev is DealDamage and e is DealDamage and (e as DealDamage).is_pure_part():
+			d = UiText.t("fx.deal_true") % TextTemplate.num((e as DealDamage).amount)
 		if d == "":
 			d = String(ContentSchema.registry_name_of(e))
 		if out != "":
