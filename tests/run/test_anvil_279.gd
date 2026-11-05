@@ -111,7 +111,7 @@ static func frame_camp_anvil(t: TestCase, root: Window) -> void:
 	t.check(col.strike_key.disabled, "只有武器：锤键灰")
 	t.check(col.material_slot.try_add(_inst(flow.items, &"beast_claw"), true), "材料槽放兽爪")
 	t.check(col.preview() != null and col.preview().quality() == 1, "预览 1 档")
-	t.check(col.note_text().contains(ItemTooltip.QUALITY_MARK), "便条换成出件的说明（带菱形）")
+	t.check(col._note.text.contains(ItemTooltip.QUALITY_BADGE), "便条换成出件的说明（带金菱）")
 	t.check(not col.strike_key.disabled, "两件配上：锤键亮")
 	var made := col.strike()
 	t.check(made != null and col.out.has_item(made.uid), "锤：出件进出件槽")
