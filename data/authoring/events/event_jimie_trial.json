@@ -1,5 +1,9 @@
 {
   "id": "event_jimie_trial",
+  "title": "试炼",
+  "titles": {
+    "en": "Trial"
+  },
   "options": [
     {
       "label": "迎战",

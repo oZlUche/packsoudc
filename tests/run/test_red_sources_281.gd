@@ -86,6 +86,19 @@ static func run_hold(t: TestCase) -> void:
 	t.check(RedSources.arm(_content_with(3), pro, _rng(), 0.0) != &"", "有档位就看档位（序章也一样）")
 
 
+static func run_make_room(t: TestCase) -> void:
+	t.begin("281 · 劣化版摆不下：拿掉最不值钱的非包、非武器件再摆（最多三件）；身上必掉的携带品不拿；拿完还摆不下就不持有、内容原样")
+	var run := _run()
+	var c := {"enemy": "brute", "board": [1, 4], "items": [{"id": "shortsword", "at": [0, 0], "rot": 0}, {"id": "wolf_heart", "at": [0, 3], "rot": 0}]}
+	t.eq(RedSources.arm(c, run, _rng(), 0.0), &"duanshui_lesser", "短剑 1×3 换断水劣化版 1×4：腾地方后持有")
+	var ids: Array = (c["items"] as Array).map(func(e): return String((e as Dictionary)["id"]))
+	t.check(not ids.has("wolf_heart"), "拿掉了狼心")
+	t.check(EnemyKit.board_of(c, run.items, false).items().any(func(i: ItemInstance) -> bool: return i.def.id == &"duanshui_lesser"), "摆上了")
+	var kept := {"enemy": "brute", "board": [1, 4], "items": [{"id": "shortsword", "at": [0, 0], "rot": 0}, {"id": "wolf_heart", "at": [0, 3], "rot": 0, "carried": true}]}
+	t.eq(RedSources.arm(kept, run, _rng(), 0.0), &"", "狼心是必掉的携带品：不拿，不持有")
+	t.eq((kept["items"] as Array).size(), 2, "内容原样")
+
+
 static func _content_with(strength: int) -> Dictionary:
 	var c := _content()
 	c["strength"] = strength

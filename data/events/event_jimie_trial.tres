@@ -32,4 +32,8 @@ outcomes = Array[ExtResource("2_nyqx3")]([SubResource("Resource_1gd4e")])
 [resource]
 script = ExtResource("6_mfg1f")
 id = &"event_jimie_trial"
+title = "试炼"
+titles = {
+"en": "Trial"
+}
 options = Array[ExtResource("1_fpfsl")]([SubResource("Resource_vyf4o"), SubResource("Resource_80qop")])

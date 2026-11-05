@@ -14,6 +14,10 @@ const DROP_STEP := 0.1
 const CLASS_TAGS: Array[StringName] = [&"staff", &"dual", &"dagger", &"polearm", &"two_hand", &"one_hand"]
 
 
+## 劣化版摆不下时最多拿掉几件杂件腾地方
+const MAKE_ROOM := 3
+
+
 ## 红武来路要的点档位（架构设计 10:22：和紫武器上限同一档）
 const MIN_STRENGTH := 3
 
@@ -101,6 +105,11 @@ static func arm(content: Dictionary, run: RunState, rng: RandomNumberGenerator, 
 		swapped.erase("at")
 		swapped.erase("rot")
 		EnemyPlacer.arrange(content, run.items, rng)
+	# 架构设计 12:24：摆不下就拿掉最不值钱的非包、非武器件再摆，最多拿 [constant MAKE_ROOM] 件
+	for k in MAKE_ROOM:
+		if _held(content, red, run.items) or not _drop_cheapest(content, red, run.items):
+			break
+		EnemyPlacer.arrange(content, run.items, rng)
 	if not _held(content, red, run.items):
 		content["items"] = before
 		return &""
@@ -153,3 +162,27 @@ static func _held(content: Dictionary, red: StringName, items: ItemDatabase) -> 
 		if StringName(String(e.get("id", ""))) == red:
 			return e.has("at") and _fits(content, items)
 	return false
+
+
+## 拿掉一件最不值钱的非包、非武器件（劣化版本身不动），位置全清、等重摆。没得拿返回 false
+static func _drop_cheapest(content: Dictionary, red: StringName, items: ItemDatabase) -> bool:
+	var entries: Array = content.get("items", [])
+	var at := -1
+	var low := 1 << 30
+	for i in entries.size():
+		var e := entries[i] as Dictionary
+		var d := items.get_def(StringName(String(e.get("id", "")))) if e != null else null
+		if d == null or d.id == red or d.is_bag or d.tags.has(&"weapon") or bool(e.get("carried", false)):
+			continue     # 包、武器、身上必掉的携带品不拿
+		var v := ItemValue.of(d)
+		if v < low:
+			low = v
+			at = i
+	if at < 0:
+		return false
+	entries.remove_at(at)
+	for v in entries:
+		(v as Dictionary).erase("at")
+		(v as Dictionary).erase("rot")
+	content["items"] = entries
+	return true
