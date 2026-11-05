@@ -479,7 +479,12 @@ static func cycle_order(board: GridInventory, holder_uid: int, loads: Dictionary
 
 
 static func _loaded_entry(feeder: ItemInstance) -> Dictionary:
-	var fp: AdjacencyProfile = feeder.def.adjacency
+	return loaded_entry_of(feeder.def, feeder.uid)
+
+
+## 一颗晶石 / 一捆箭在轮读表里的那一条（按定义算；台架给弓弩装箭也用它）
+static func loaded_entry_of(def: ItemDef, uid: int) -> Dictionary:
+	var fp: AdjacencyProfile = def.adjacency
 	var dmg := StatSet.new()
 	for mod in fp.feed_mods:
 		if (mod as StatModifier).stat in [BattleStats.DAMAGE, BattleStats.TRUE_DAMAGE]:
@@ -493,7 +498,7 @@ static func _loaded_entry(feeder: ItemInstance) -> Dictionary:
 		var app := applies_of(r as AbilityRule)
 		if not app.is_empty():
 			applies = app
-	return {"uid": feeder.uid, "id": feeder.def.id, "type": type if type != &"" else DamageTypes.PHYSICAL, "damage": dmg.total_of(BattleStats.DAMAGE),
+	return {"uid": uid, "id": def.id, "type": type if type != &"" else DamageTypes.PHYSICAL, "damage": dmg.total_of(BattleStats.DAMAGE),
 		"applies": applies, "true": dmg.total_of(BattleStats.TRUE_DAMAGE)}
 
 

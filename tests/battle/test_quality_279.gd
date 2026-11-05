@@ -98,3 +98,11 @@ static func run_tooltip(t: TestCase) -> void:
 	var fang := ItemInstance.create(db.get_def(&"bonefang_dagger"), 0)
 	fang.set_quality(1)
 	t.check(Glossary.strip_bbcode(ItemTooltip.describe(fang)).contains("暴击率 20%"), "骨牙匕首 1 档：暴击率 20%")
+
+
+static func run_tooltip_numbers(t: TestCase) -> void:
+	t.begin("279 测试 v5.14 · 按武器伤害打的那一下也写算完的数（刽子手巨斧的斩杀句）")
+	var db := _db()
+	var text := Glossary.strip_bbcode(ItemTooltip.describe(ItemInstance.create(db.get_def(&"executioner_axe"), 0)))
+	var m := RegEx.create_from_string("29%，造成 ([0-9.]+) 点物理伤害").search(text)
+	t.check(m != null and float(m.get_string(1)) > 0.0, "斩杀句写了点数（%s）" % text.replace("\n", " | "))

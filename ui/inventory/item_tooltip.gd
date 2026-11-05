@@ -176,7 +176,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			if weapon and opening > 0:
 				lines.append(UiText.t("tip.opening") % opening)     # 279：开局免费出手
 				continue
-			var line := Glossary.rule_text(rule, true)     # 142：耐力下面单写
+			var line := Glossary.rule_text(with_damage_numbers(rule, use_stats), true)     # 142：耐力下面单写
 			var st := _stamina_of(rule, use_stats)
 			if st > 0.0:
 				line += UiText.t("tip.costs_stamina") % _num(st)
@@ -375,6 +375,25 @@ static func weapon_sentence(rule: AbilityRule, stats: StatSet, more_gives: Array
 	if not extras.is_empty():
 		line += UiText.t("tip.with") % bracketed(extras)
 	return line
+
+
+## 279（测试 v5.14）：按武器自己伤害打的那一下（`@deal_damage`）写出算完的数 ——「生命不高于 29% 时造成 N 点物理伤害」，不只写「造成物理伤害」。
+## 拷一份规则，把这类效果换成写死点数的副本（只给悬浮窗写字用，定义不碰）；没有这类效果或没属性 = 原样
+static func with_damage_numbers(rule: AbilityRule, stats: StatSet) -> AbilityRule:
+	if rule == null or stats == null or not rule.effects.any(func(e): return e is DealDamage and (e as DealDamage).damage_stat != &""):
+		return rule
+	var copy := rule.duplicate(false) as AbilityRule
+	var fx: Array[CombatEffect] = []
+	for e in rule.effects:
+		if e is DealDamage and not (e is FireLoaded) and (e as DealDamage).damage_stat != &"":
+			var d := (e as DealDamage).duplicate(false) as DealDamage
+			d.amount = float(_num((e as DealDamage).estimated_damage(stats)))     # 和武器句同一种取整
+			d.damage_stat = &""
+			fx.append(d)
+		else:
+			fx.append(e)
+	copy.effects = fx
+	return copy
 
 
 ## 279：开战时按武器自己的伤害出手几下（`@on_battle_start` 上只有按属性算的出手）；不是这种规则 = 0
