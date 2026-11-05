@@ -1,0 +1,72 @@
+{
+  "id": "execution_blade",
+  "display_name": "处刑巨刃",
+  "display_names": {
+    "en": "Execution Blade"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy",
+    "extreme"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 110
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 4.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 42.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 15.0,
+            "damage_stat": "",
+            "pure": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "costs": [
+          {
+            "type": "resource_condition",
+            "on_self": false,
+            "max_percent": 29
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

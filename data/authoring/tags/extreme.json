@@ -1,0 +1,14 @@
+{
+  "id": "extreme",
+  "display_name": "极端",
+  "display_names": {
+    "en": "Extreme"
+  },
+  "description": "一下打普通武器四五下的量、一下也吃掉大半管耐力；敌人不带。",
+  "descriptions": {
+    "en": "One hit worth four or five normal ones, and most of a stamina bar; enemies never carry it."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

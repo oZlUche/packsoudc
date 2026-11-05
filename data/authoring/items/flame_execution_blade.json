@@ -1,0 +1,79 @@
+{
+  "id": "flame_execution_blade",
+  "display_name": "焰纹处刑巨刃",
+  "display_names": {
+    "en": "Flame Execution Blade"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "111"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "two_hand",
+    "heavy",
+    "extreme",
+    "fire",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 250
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 4.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 50.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 15.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "apply_status",
+            "buff": "scorch",
+            "stacks": 3
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "costs": [
+          {
+            "type": "resource_condition",
+            "on_self": false,
+            "max_percent": 29
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

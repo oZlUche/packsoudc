@@ -15,7 +15,7 @@ static func _anvils() -> Array[SmithRecipeDef]:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("279 第二步 / 第二批 · 内容：一件上一档武器 + 一类材料，产物高一档 —— 升蓝 30 张（绿起、工钱 60、铺子 1 级）、升紫 32 张（蓝起、120、2 级）、升橙 16 张（魔晶紫起 / 灰白金属碎片，200、3 级，产物只能锻造）")
+	t.begin("279 第二步 / 第二批 · 内容：一件上一档武器 + 一类材料，产物高一档 —— 升蓝 30 张（绿起、工钱 60、铺子 1 级）、升紫 32 张（蓝起、120、2 级）、升橙 16 张（魔晶紫起 / 灰白金属碎片，200、3 级，产物只能锻造）；281 极端武器两条线各加一张升紫、一张升橙")
 	var db := T110._db()
 	var all := _anvils()
 	var by_tier := {2: 0, 3: 0, 4: 0}
@@ -39,7 +39,7 @@ static func run_content(t: TestCase) -> void:
 		var want := {2: [60, 1], 3: [120, 2], 4: [200, 3]}.get(out.rarity, [0, 0]) as Array
 		t.check(r.funds == int(want[0]) and r.level == int(want[1]), "%s：工钱 %d、铺子 %d 级" % [r.id, want[0], want[1]])
 		t.eq(out.is_forged_only(), out.rarity == 4, "%s：只有橙档只能锻造" % r.id)
-	t.eq(by_tier, {2: 30, 3: 32, 4: 16}, "升蓝 30、升紫 32、升橙 16")
+	t.eq(by_tier, {2: 30, 3: 34, 4: 18}, "升蓝 30、升紫 32 + 2、升橙 16 + 2（281 极端武器）")
 
 
 static func run_material_fits(t: TestCase) -> void:

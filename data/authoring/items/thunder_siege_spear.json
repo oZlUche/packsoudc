@@ -1,0 +1,75 @@
+{
+  "id": "thunder_siege_spear",
+  "display_name": "雷纹破城矛",
+  "display_names": {
+    "en": "Thunder Siege Spear"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 4,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "polearm",
+    "extreme",
+    "lightning",
+    "forged_only"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 240
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 4.6
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 50.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 12.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -3
+          },
+          {
+            "type": "apply_status",
+            "buff": "numb"
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}
