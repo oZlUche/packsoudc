@@ -68,13 +68,36 @@ static func cover(view: InventoryView, uid: int) -> JimieBlackHole:
 	hole._k = maxf(rect.size.x, rect.size.y) / REF_STAFF
 	var side := REF * hole._k
 	hole.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hole.position = rect.get_center() - Vector2(side, side) * 0.5
 	hole.size = Vector2(side, side)
-	view.add_child(hole)
+	# 游戏测试 11-05：寂灭贴着棋盘边时洞被面板裁掉一半 —— 挂到这一屏上（不在会裁的面板里），按棋盘的屏幕位置摆
+	_host(view).add_child(hole)
+	hole._place()
 	view.veiled[uid] = true
 	view.queue_redraw()
 	hole.play()
 	return hole
+
+
+## 挂在哪：棋盘所在的那一屏（找不到就挂棋盘自己）
+static func _host(view: InventoryView) -> Control:
+	var n: Node = view
+	while n != null:
+		if n is GameScreen:
+			return n
+		n = n.get_parent()
+	return view
+
+
+## 罩在那件上：洞心 = 那件的中心（换算到挂的地方）。每步都摆一次，排版晚到也跟得上
+func _place() -> void:
+	var host := get_parent() as CanvasItem
+	if host == null or _view == null or not is_instance_valid(_view):
+		return
+	var rect := _view.item_rect(_uid)
+	if rect.size == Vector2.ZERO:
+		return
+	var at := host.get_global_transform().affine_inverse() * _view.get_global_transform() * rect.get_center()
+	position = at - size * 0.5
 
 
 func _init() -> void:
@@ -118,6 +141,7 @@ func _unveil() -> void:
 
 
 func _refresh() -> void:
+	_place()
 	# 劈开后法杖整根露在外面，不再裁
 	_mask.clip_children = CanvasItem.CLIP_CHILDREN_DISABLED if t >= TEAR_AT else CanvasItem.CLIP_CHILDREN_ONLY
 	queue_redraw()
@@ -260,9 +284,12 @@ func _draw_staff() -> void:
 	if inst == null:
 		return
 	var dy := 0.0 if t >= TEAR_AT else (1.0 - rise()) * RISE_FROM * _k
-	var anchor := _view.cell_origin_px(inst.origin) - position + Vector2(0, dy)
+	# 棋盘坐标 → 本控件坐标（洞不挂在棋盘里），再往下错开 dy
+	var base := Transform2D(0.0, Vector2(0, dy)) * _staff.get_global_transform().affine_inverse() * _view.get_global_transform()
+	var anchor := _view.cell_origin_px(inst.origin)
 	var tint := ItemPainter.runs_tint(inst)
-	if not ItemPainter.draw_art(_staff, inst.def, inst.rotation, anchor, _view.cell_px, tint, Transform2D.IDENTITY, ItemPainter.variant_of(inst)):
+	_staff.draw_set_transform_matrix(base)
+	if not ItemPainter.draw_art(_staff, inst.def, inst.rotation, anchor, _view.cell_px, tint, base, ItemPainter.variant_of(inst)):
 		ItemPainter.draw_item(_staff, inst.cells(), anchor, _view.cell_px, ItemPainter.body_color(inst.def, inst.rarity()), ItemPainter.rarity_color(inst.def, inst.rarity()))
 
 
