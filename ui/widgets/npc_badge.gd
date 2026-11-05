@@ -1,5 +1,6 @@
 ## 282（作者 2026-11-05 12:42）：站在商店 / 集市散货摊 / 铁匠铺里的 NPC —— 一块头像（[PortraitSlot]，图在 `assets/portraits/npcs/`），
 ## 悬停微亮，点一下弹一张小纸条说一句（[NpcChatter.talk]）；纸条右下角「……」= 下一句，点别处收起。不打断买卖（纸条不挡拖拽）。
+## 纸条默认贴头像右边，[member note_above] 贴上方（散货摊，复测 v5.29：右边压到柜台上的货）
 ## 名字作者填了才写在纸条左上角；台词空着时纸条上只有「……」
 class_name NpcBadge
 extends Control
@@ -25,6 +26,8 @@ var _name_label: Label = null
 var _rng := RandomNumberGenerator.new()
 ## 最近一次说的（测试看）
 var last: Dictionary = {}
+## 纸条贴在头像上方（散货摊：头像右边是柜台上的货）；上方放不下照旧贴旁边
+var note_above := false
 
 
 static func make(p_npc: StringName, p_meta: MetaState, p_items: ItemDatabase, p_run: RunState = null, side: int = SIDE) -> NpcBadge:
@@ -138,6 +141,9 @@ func _seat_note() -> void:
 	var r := get_global_rect()
 	var sz := note.get_combined_minimum_size()
 	var view := get_viewport_rect().size if is_inside_tree() else Vector2(1e9, 1e9)
+	if note_above and r.position.y - 8.0 - sz.y >= 0.0:
+		note.global_position = Vector2(clampf(r.position.x, 0.0, maxf(0.0, view.x - sz.x)), r.position.y - 8.0 - sz.y)
+		return
 	var x := r.end.x + 8.0
 	if x + sz.x > view.x:
 		x = r.position.x - 8.0 - sz.x

@@ -121,6 +121,7 @@ func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void
 	_restock.add_child(rl)
 	_stage.add_child(_restock)
 	npc = NpcBadge.make(NpcDef.STALL_KEEPER, flow.meta, flow.items)
+	npc.note_above = true
 	_stage.add_child(npc)
 	flow.meta.changed.connect(rebuild)
 	var last := flow.meta.market_stall
