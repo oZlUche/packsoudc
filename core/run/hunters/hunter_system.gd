@@ -368,6 +368,7 @@ func fight(node: MapNode, uid: int, _ctx: EventContext) -> bool:
 	var content := build_content(h, node)
 	if content.is_empty():
 		return false
+	RedSources.arm(content, run, rng())     # 281：猎手也可能拿着红武劣化版
 	run.events.last_handled_id = node.id
 	var loot_ctx := run._loot_context()
 	loot_ctx.drop_mult *= def.drop_mult

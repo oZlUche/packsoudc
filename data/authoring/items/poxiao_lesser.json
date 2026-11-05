@@ -1,0 +1,77 @@
+{
+  "id": "poxiao_lesser",
+  "display_name": "破晓",
+  "display_names": {
+    "en": "Daybreak"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "rarity": 5,
+  "value": 2400,
+  "tags": [
+    "weapon",
+    "ranged",
+    "burst",
+    "lesser"
+  ],
+  "material": "metal",
+  "adjacency": {
+    "load_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  },
+  "combat": {
+    "base_stats": {
+      "damage": 564
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 3.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 14.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -2
+          }
+        ]
+      }
+    ]
+  }
+}

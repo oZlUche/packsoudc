@@ -511,6 +511,8 @@ static func effective_type(node: MapNode) -> StringName:
 #region 战前准备（084）
 ## 节点上的一场：开着 [member pause_before_battle] 就先停下等玩家，否则立刻打。打完（或根本没有敌人）按 [param kind] 收尾
 func _battle_at(node: MapNode, type: StringName, content: Dictionary, kind: String, loss_cost: int = LOSS_DEFAULT) -> void:
+	if type == &"core":
+		hooks.red_hold(node, type, content)     # 281：BOSS 可能拿着红武劣化版（记进点的内容，战前准备屏看得见）
 	if pause_before_battle and _can_fight(content):
 		pending_battle = {"node": node.id, "type": String(type), "content": content.duplicate(true), "kind": kind, "loss_cost": loss_cost}
 		battle_pending.emit(node, type, content)
@@ -886,6 +888,7 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	# 087：核心点的 BOSS 保底一件金色（DropRule.boss_rarity）
 	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
 		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
+	hooks.red_drop(node, content, rolled)     # 281
 	_bless_rolled(node, rolled)
 	# 209：第二段 —— 按包池掷「用哪些包装这些东西」（没有包的魔兽 / 机关不掉包；随机数另起一条）
 	rolled["bags"] = DropResolver.bags_for(rolled, content, enemies, pool, bag_pool, items, _rng_for(node, "loot_bags"), type == &"core")

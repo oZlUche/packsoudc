@@ -1,0 +1,82 @@
+{
+  "id": "zhuixing_lesser",
+  "display_name": "坠星",
+  "display_names": {
+    "en": "Starfall"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 5,
+  "value": 1600,
+  "tags": [
+    "weapon",
+    "ranged",
+    "rapid",
+    "lesser"
+  ],
+  "material": "wood",
+  "adjacency": {
+    "load_cells": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  },
+  "combat": {
+    "base_stats": {
+      "damage": 140
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 8.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "damage_taken",
+            "delta": 2
+          }
+        ]
+      }
+    ]
+  }
+}
