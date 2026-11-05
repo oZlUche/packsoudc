@@ -107,6 +107,8 @@ var badges: Dictionary = {}
 ## 085：亮一圈的物品（uid → true）：拖着的那件能和它合成。拖拽层设
 var highlights: Dictionary = {}
 const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
+## 281：先不画的物品（uid → true）—— 寂灭的黑洞动画自己画那件，演完再交回来。持有方设，改了 queue_redraw
+var veiled: Dictionary = {}
 ## 264 §六：筛选（`func(item: ItemInstance) -> bool`）—— 给了就把不匹配的压灰（不挪位）；不给 = 都不压。持有方设，改了 queue_redraw
 var dim_filter: Callable = Callable()
 ## 268：快速出售的勾选模式 —— 左键单击发 [signal item_picked]、不抓（不拖）、双击不发；勾了的（[member selected]，uid → true）左下角画金勾
@@ -446,7 +448,7 @@ func _draw() -> void:
 	var active_faith := FaithState.active_tag(inventory) if show_adjacency else &""
 	for inst in inventory.items():
 		var item := inst as ItemInstance
-		if inventory.acts_as_bag(item.def):
+		if inventory.acts_as_bag(item.def) or veiled.has(item.uid):
 			continue
 		var cells := item.cells()
 		var anchor := cell_origin_px(item.origin)

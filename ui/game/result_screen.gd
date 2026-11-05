@@ -262,7 +262,7 @@ func _build_store(col: VBoxContainer, outer: VBoxContainer) -> void:
 	_black_hole()
 
 
-## 281 寂灭的路（三）：献祭回来的这一局，带回来的寂灭上放一次黑洞（代码占位）
+## 281 寂灭的路（三）：献祭回来的这一局，带回来的寂灭上放一次黑洞（B 劈开，[JimieBlackHole]）
 func _black_hole() -> void:
 	if _r == null or _r.reason != JimiePath.REASON or _wh == null or flow.meta.board == null:
 		return
