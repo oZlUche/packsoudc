@@ -1,0 +1,14 @@
+{
+  "id": "unique",
+  "display_name": "独一",
+  "display_names": {
+    "en": "Unique"
+  },
+  "description": "全局只存在一件：仓库、本局任一处有了，就不会再出；不可出售。",
+  "descriptions": {
+    "en": "Only one can exist: if it is in the warehouse or anywhere in this run, no other appears. Cannot be sold."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

@@ -136,7 +136,8 @@ static func is_token(inst: ItemInstance) -> bool:
 
 ## 铸牌能附给它吗（待定 7 A：只武器）
 static func accepts(inst: ItemInstance) -> bool:
-	return inst != null and inst.def != null and inst.def.tags.has(&"weapon") and not is_token(inst)
+	return inst != null and inst.def != null and inst.def.tags.has(&"weapon") and not is_token(inst) \
+		and not inst.def.is_unique()     # 281：独一的不附魔
 #endregion
 
 

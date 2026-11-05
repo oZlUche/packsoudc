@@ -1058,7 +1058,7 @@ func _wire_events() -> void:
 		var uids: Array = []
 		for id in detail.get("items", []):
 			var d := items.get_def(StringName(String(id)))
-			if d != null:
+			if UniqueItems.can_give(d, meta, self):     # 281：独一的已经有了就不再给
 				var inst := ItemInstance.create(d, 0)
 				if storage.admit(inst):
 					uids.append(inst.uid)

@@ -1539,6 +1539,7 @@ const TEXT := {
 	"act.sell": {"zh": "出售", "en": "Sell"},     # 268 复测：卖价是金币小图 + 数字（[member ItemActions.Action.coin]），不写「币」
 	"act.sell_same": {"zh": "出售同类 ×%d", "en": "Sell all ×%d"},
 	"act.locked": {"zh": "已锁定", "en": "Locked"},
+	"act.unique": {"zh": "独一的不能出售", "en": "Unique items can't be sold"},
 	"act.fav_no_bulk": {"zh": "收藏的不成批出售", "en": "Favorites aren't sold in bulk"},     # 265
 	"act.sell_same_fav": {"zh": "出售同类 · 已收藏", "en": "Sell all · Favorite"},     # 265 复测：收藏了的种类按钮上直接写原因，不写「×0 得 0 币」
 	"act.pinned": {"zh": "随身之物", "en": "Part of your kit"},     # 255：随身之物的按钮全灰，理由
