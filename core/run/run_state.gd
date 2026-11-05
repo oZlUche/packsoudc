@@ -238,9 +238,24 @@ func pick_spawn(id: int) -> bool:
 	if phase != Phase.PICK_SPAWN or map == null or not map.entry_ids.has(id):
 		return false
 	map.demote_entries(id)     # 182：没挑的入口变普通搜索点、路线只留这一条
+	if bool(map.layout_meta.get("two_sided", false)):
+		_remark_extracts()     # 281 §六：同侧撤离点没了，付费点与倒计时关的那个点在对侧重标
 	travel.start_at(id)
 	_set_phase(Phase.ON_MAP, &"spawn")
 	return true
+
+
+## 281 §六：两头出生的图挑定出生点之后，对侧剩下的撤离点重新标付费与「倒计时过半关闭」
+func _remark_extracts() -> void:
+	for nid in map.node_ids():
+		var n := map.get_node(nid)
+		if n.type == &"extract":
+			n.content.erase("fee")
+			n.content.erase("closes_at")
+	PaidExtracts.mark(map, economy)
+	var cd := CountdownModule.of(self)
+	if cd != null and chapter != null and chapter.closing_extract:
+		PaidExtracts.mark_closing(map, cd.limit())
 
 
 ## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；没拿的战利品、地上的东西都留在这个点上（3.4 / 084：离开就是清的时机）；

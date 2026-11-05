@@ -1,0 +1,20 @@
+{
+  "id": "event_clock_room",
+  "title": "钟房",
+  "titles": {
+    "en": "Clock Room"
+  },
+  "options": [
+    {
+      "label": "离开",
+      "labels": {
+        "en": "Leave"
+      },
+      "outcomes": [
+        {
+          "type": "revisit_later"
+        }
+      ]
+    }
+  ]
+}

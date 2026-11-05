@@ -119,7 +119,29 @@ func demote_entries(keep_id: int) -> bool:
 		if int(route.get("entry_id", -1)) == keep_id:
 			kept.append(route)
 	routes = kept
+	_settle_two_sided(keep_id)
 	return true
+
+
+## 281 §六（作者 2026-11-05 12:36）：两头出生的格阵（`layout_meta.two_sided`）—— 挑定的出生点在哪一头，那一头的撤离点就变普通搜索点、
+## 不再是终点（撤离点只在对侧）；出生在最后一层就把侵蚀反过来（从这一头起）。不是两头出生的图什么都不改
+func _settle_two_sided(keep_id: int) -> void:
+	if not bool(layout_meta.get("two_sided", false)) or not nodes.has(keep_id):
+		return
+	var row := int((nodes[keep_id] as MapNode).layout.get("row", 0))
+	for id in nodes:
+		var n := nodes[id] as MapNode
+		if n.type == &"extract" and int(n.layout.get("row", -1)) == row:
+			n.type = &"search"
+			n.content.erase("fee")
+			n.content.erase("closes_at")
+			goal_ids.erase(id)
+	var last := int(layout_meta.get("rows", 1)) - 1
+	if row == last and row > 0:
+		layout_meta["erosion_reversed"] = not bool(layout_meta.get("erosion_reversed", false))
+		for id in nodes:
+			var n := nodes[id] as MapNode
+			n.erosion_band = last - int(n.layout.get("row", 0))
 
 
 ## 还没被用过的最小正整数 id。编辑器加点时用。

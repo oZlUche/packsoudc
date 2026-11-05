@@ -37,6 +37,12 @@ func assign(g: MapGraph, rules: LatticeTypeRules, rng: RandomNumberGenerator) ->
 		var n := g.get_node(id)
 		n.type = goal_types.get(int(n.layout.get("col", -1)), &"core")
 		_fixed[id] = true
+	# 281 §六：格阵外另加的点（中轴的核心、钟房）类型是钉死的
+	for id in g.node_ids():
+		var n := g.get_node(id)
+		if n.layout.has("fixed"):
+			n.type = StringName(String(n.layout["fixed"]))
+			_fixed[id] = true
 	if not _place_extracts():
 		return false
 	_assign_by_weights()

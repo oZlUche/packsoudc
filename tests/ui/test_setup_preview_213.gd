@@ -13,12 +13,13 @@ static func _hourglass(setup) -> ChapterDef:
 	for i in setup._chapters.size():
 		if (setup._chapters[i] as ChapterDef).id == &"clockwork_hourglass":
 			setup.choose_chapter(i)
+			setup.choose_scale(&"medium")     # 281 §六：三档里取中档（小档每半只两层，看不出逐层收窄）
 			return setup.chapter()
 	return null
 
 
 static func frame_lattice_preview(t: TestCase, root: Window) -> void:
-	t.begin("213 · 第三页切到机关沙漏：层数 = 行数、按大型化开；入口 = 图的入口（都在第 0 层、在墨化那片里）；没挑出生点不能出发；每层一段层线")
+	t.begin("213 · 第三页切到机关沙漏：层数 = 行数、按大型化开；入口 = 图的入口（281 §六：两头各一个、在墨化那片里）；没挑出生点不能出发；每层一段层线")
 	var game = Setup._game(root, "setup213a")
 	var setup = game.base()
 	var c := _hourglass(setup)
@@ -37,7 +38,10 @@ static func frame_lattice_preview(t: TestCase, root: Window) -> void:
 	t.check(pv.ring_gap() > 0.0, "有层距")
 	t.eq(pv.entry_ids(), g.entry_ids, "入口 = 图的入口（%d 个）" % g.entry_ids.size())
 	var rows := LatticeMapLayout.new().level_of(g)
-	t.check(g.entry_ids.all(func(id: int) -> bool: return int(rows[id]) == 0), "入口都在第 0 层")
+	var last := LatticeMapLayout.rows_of(g) - 1
+	var ends: Array = g.entry_ids.map(func(id: int) -> int: return int(rows[id]))
+	ends.sort()
+	t.eq(ends, [0, last], "入口一个在第 0 层、一个在最后一层（%s）" % [ends])
 	t.check(g.entry_ids.all(func(id: int) -> bool: return pv.mark_alpha(id) > 0.5), "入口印记都在墨化那片里")
 	var far := 0.0
 	for id in g.node_ids():
@@ -68,7 +72,7 @@ static func frame_lattice_preview(t: TestCase, root: Window) -> void:
 
 
 static func frame_lattice_paper_matches_reveal(t: TestCase, root: Window) -> void:
-	t.begin("213 · 沙漏的纸：第三页 = 入局第一帧（同一大小、同一位置）；挑了入口才带转场载荷，出发进图、站在挑的入口上、一层层长出来")
+	t.begin("213 · 沙漏的纸：第三页 = 入局第一帧（同一大小、同一位置）；挑了入口才带转场载荷，出发进图、站在挑的入口上、从挑的那一头一层层长出来")
 	var was := GameDirector.fades_allowed
 	GameDirector.fades_allowed = true
 	var game = Setup._game(root, "setup213b")
@@ -93,8 +97,14 @@ static func frame_lattice_paper_matches_reveal(t: TestCase, root: Window) -> voi
 		GameDirector.fades_allowed = was
 		game.queue_free()
 		return
-	var pick := ids[ids.size() - 1]
-	t.check(setup.pick_spawn(pick), "挑一个入口")
+	# 281 §六：挑最后一层（右边）那个，转场从右边长起
+	var pick := -1
+	var pg: MapGraph = setup.preview_graph(c, setup.scale_id)
+	var pg_rows := LatticeMapLayout.new().level_of(pg)
+	for id in ids:
+		if int(pg_rows[id]) == LatticeMapLayout.rows_of(pg) - 1:
+			pick = id
+	t.check(pick >= 0 and setup.pick_spawn(pick), "挑右边那个入口")
 	pv.finish()
 	setup.close_hint()
 	t.eq(setup.can_depart(), "", "挑了就能出发")
@@ -112,19 +122,19 @@ static func frame_lattice_paper_matches_reveal(t: TestCase, root: Window) -> voi
 	t.check(B192._near(from, to), "第一帧的纸和预览上的纸重合（%s / %s）" % [from, to])
 	# 转场中段：出生那一层先长全，最远那层还没出来
 	t.eq(view.level_count(), LatticeMapLayout.rows_of(run.map) - 1, "最远层号 = 行数 − 1")
-	t.eq(view.reveal_origin_ring(), 0, "从第 0 层（出生那一列）长起")
+	t.eq(view.reveal_origin_ring(), view.level_count(), "从最后一层（右边出生那一列）长起")
 	view.node_front = 1.0
 	var grow: Dictionary = view._grow_map()
 	var rows := LatticeMapLayout.new().level_of(run.map)
 	var first_full := true
 	var far_hidden := true
 	for id in grow:
-		if int(rows[id]) == 0 and float(grow[id]) < 1.0:
+		if int(rows[id]) == view.level_count() and float(grow[id]) < 1.0:
 			first_full = false
-		if int(rows[id]) == view.level_count() and float(grow[id]) > 0.0:
+		if int(rows[id]) == 0 and float(grow[id]) > 0.0:
 			far_hidden = false
 	t.check(first_full, "出生那层先长全")
-	t.check(far_hidden, "最远那层还没长")
+	t.check(far_hidden, "对侧第 0 层还没长")
 	GameDirector.fades_allowed = was
 	game.queue_free()
 	_cleanup("setup213b")

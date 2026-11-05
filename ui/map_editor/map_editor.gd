@@ -103,7 +103,7 @@ func _rebuild_form() -> void:
 ## 换规模 / 环数，并把出发点、高危区数量与规模夹进新规模允许的范围。
 ## 配置支持规模模板（有 apply_scale）才有用；不支持的生成器这里什么都不做。
 func choose_scale(id: StringName, ring_count: int) -> void:
-	if _cfg == null or not _cfg.has_method("apply_scale"):
+	if _cfg == null or not (_cfg is RingMapConfig):     # 281：沙漏也有规模，但这块面板按环形的规模模板画
 		return
 	_cfg.call("apply_scale", id, ring_count)
 	_rebuild_form()
@@ -113,7 +113,7 @@ func choose_scale(id: StringName, ring_count: int) -> void:
 ## 「从规模选起」的那几个旋钮。上限来自规模模板（[MapScaleProfile]），不是写在这里的。
 func _rebuild_scale_panel() -> void:
 	UiTheme.clear_children(_scale_host)
-	if _cfg == null or not _cfg.has_method("apply_scale"):
+	if _cfg == null or not (_cfg is RingMapConfig):     # 281：沙漏也有规模，但这块面板按环形的规模模板画
 		return
 	var profiles: Array = _cfg.get("scales")
 	var current: MapScaleProfile = _cfg.call("scale")
