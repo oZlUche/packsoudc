@@ -26,7 +26,7 @@
   "material": "bone",
   "combat": {
     "base_stats": {
-      "damage": 17
+      "damage": 19
     },
     "rules": [
       {
@@ -56,7 +56,11 @@
         },
         "cadence": "@always",
         "effects": [
-          "@apply_status_bleed"
+          "@apply_status_bleed",
+          {
+            "type": "apply_status",
+            "buff": "scorch"
+          }
         ]
       },
       {

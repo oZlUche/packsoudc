@@ -26,7 +26,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 49,
+      "damage": 90,
       "crit_chance": 18
     },
     "rules": [
@@ -47,6 +47,10 @@
             "amount": 6.0,
             "damage_stat": "",
             "pure": true
+          },
+          {
+            "type": "apply_status",
+            "buff": "chill"
           }
         ]
       },

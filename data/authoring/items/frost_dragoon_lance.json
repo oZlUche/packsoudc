@@ -27,7 +27,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 19
+      "damage": 34
     },
     "rules": [
       {
@@ -49,6 +49,10 @@
             "target": "OPPONENT",
             "axis": "damage_taken",
             "delta": 2
+          },
+          {
+            "type": "apply_status",
+            "buff": "chill"
           }
         ]
       },

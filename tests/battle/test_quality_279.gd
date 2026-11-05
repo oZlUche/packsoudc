@@ -37,7 +37,7 @@ static func run_state(t: TestCase) -> void:
 
 
 static func run_compile(t: TestCase) -> void:
-	t.begin("279 补充二 · 编译：伤害 ×1.1 每档（向下取整），写死的点数 +1 每档，暴击 +5 点每档；层数只有一次性的 +1（台架定调 ②：每下都触发的不加）；耐力价不动，定义不碰")
+	t.begin("279 补充二 · 编译：伤害 ×1.1 每档（向下取整），写死的点数 +1 每档，暴击 +5 点每档；层数每档 +1（281 照加：每下触发的和一次性的都加）；耐力价不动，定义不碰")
 	var db := _db()
 	var a := _compiled(db, &"steel_broadsword", 0)
 	var b := _compiled(db, &"steel_broadsword", 2)
@@ -51,15 +51,15 @@ static func run_compile(t: TestCase) -> void:
 	var def_rule := BattleCompiler.profile_of(db.get_def(&"steel_broadsword"), false).rules[0] as AbilityRule
 	t.eq((def_rule.effects[1] as DealDamage).amount, 5.0, "定义里还是 5")
 	var axe := _compiled(db, &"bone_battle_axe", 1)
-	t.eq((_fx(axe, 0, 1) as ApplyStatus).stacks, 2, "兽骨战斧每下流血还是 2（每下都触发的不加层）")
+	t.eq((_fx(axe, 0, 1) as ApplyStatus).stacks, 3, "兽骨战斧每下流血 2 → 3（281 照加）")
 	t.eq((_fx(axe, 1, 0) as DealDamage).amount, 5.0, "流血够层追加 4 → 5")
 	var club := _compiled(db, &"club", 2)
-	t.eq((_fx(club, 0, 1) as ShiftAxis).delta, -1, "棍棒每下减速还是 1 层")
+	t.eq((_fx(club, 0, 1) as ShiftAxis).delta, -3, "棍棒每下减速 1 → 3 层（281 照加）")
 	var fang := _compiled(db, &"bonefang_dagger", 2)
 	t.check(is_equal_approx(StatMath.to_float(fang.stats.total_of(BattleStats.CRIT_CHANCE)), 0.25), "骨牙匕首暴击 15% → 25%")
 	var bleed := _fx(fang, 0, 1) as ApplyStatus
 	var plain := _fx(_compiled(db, &"bonefang_dagger", 0), 0, 1) as ApplyStatus
-	t.check(bleed != plain and bleed.stacks == plain.stacks and bleed.buff == plain.buff, "规则件拷了一份，每下流血层数不变，还是同一个 buff")
+	t.check(bleed != plain and bleed.stacks == plain.stacks + 2 and bleed.buff == plain.buff, "规则件拷了一份，每下流血 +2 层，还是同一个 buff")
 	var maul := _compiled(db, &"meteor_maul", 2)
 	var maul0 := _compiled(db, &"meteor_maul", 0)
 	var once := _fx(maul, 1, 0) as ShiftAxis
