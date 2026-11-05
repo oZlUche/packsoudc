@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_hroj1"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_7pjnt"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_1lptx"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_pwnwu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_ms1ct"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_6nvbs"]
+
+[sub_resource type="Resource" id="Resource_nkavq"]
+script = ExtResource("6_6nvbs")
+
+[resource]
+script = ExtResource("5_ms1ct")
+id = &"jimie_core_lightning"
+display_name = "雷之核"
+display_names = {
+"en": "Core of Lightning"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_nkavq")
+rarity = 5
+tags = Array[StringName]([&"material", &"magic", &"unique"])
+material = "gem"

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_30bnk"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_u0v2k"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_bmdfh"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_hu0xn"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_7xnl6"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_6doqc"]
+
+[sub_resource type="Resource" id="Resource_8j1ep"]
+script = ExtResource("6_6doqc")
+
+[resource]
+script = ExtResource("5_7xnl6")
+id = &"jimie_core_poison"
+display_name = "毒之核"
+display_names = {
+"en": "Core of Poison"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_8j1ep")
+rarity = 5
+tags = Array[StringName]([&"material", &"magic", &"unique"])
+material = "gem"

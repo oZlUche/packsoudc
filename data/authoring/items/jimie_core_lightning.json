@@ -1,0 +1,21 @@
+{
+  "id": "jimie_core_lightning",
+  "display_name": "雷之核",
+  "display_names": {
+    "en": "Core of Lightning"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 5,
+  "tags": [
+    "material",
+    "magic",
+    "unique"
+  ],
+  "material": "gem"
+}

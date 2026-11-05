@@ -35,6 +35,8 @@ var undying_sec: float = 0.0
 var wild: bool = false
 ## 210：免疫的状态 id（机关不流血不中毒）—— 原样进 [member CombatantSpec.immune_buffs]
 var immune_buffs: Array[StringName] = []
+## 281（寂灭的试炼）：只受这一种伤害，其余（真实伤害也算）归零；空 = 不限 —— 原样进 [member CombatantSpec.only_damage_type]
+var only_damage_type: StringName = &""
 
 ## 按件随机挑选用。调用方算好（`hash(run_seed, "compile", clock.total)`），一局之内不变 ——
 ## 所以拖动预估挑的和真打挑的是同一批

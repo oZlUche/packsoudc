@@ -34,7 +34,7 @@ static func run_sealed_listing(t: TestCase) -> void:
 	var forged: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_forged_only() and not db.get_def(id).is_blessed())     # 赐福版上面数过了
 	t.check(not forged.is_empty() and forged.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "279：只能锻造的不在 ids()、图鉴（ids(true)）照列")
 	var unique: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_unique())     # 独一的不赐福，没有赐福版
-	t.check(unique.size() == 8 and unique.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "281：独一的不在 ids()、图鉴照列")
+	t.check(unique.size() == 12 and unique.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "281：独一的（红武八把 + 元素之核四颗）不在 ids()、图鉴照列")
 	var lesser: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_lesser())     # 劣化版也不赐福
 	t.check(lesser.size() == 8 and lesser.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "281：劣化版不在 ids()、图鉴照列")
 	t.eq(db.ids().size() + 1 + db.keepsake_ids().size() + blessed.size() + tokens.size() + signature.size() + forged.size() + unique.size() + lesser.size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 + 铸牌 + 随身之物 + 只能锻造的 + 独一的 + 劣化版 = 全部（088 / 095 / 175 / 256 / 279 / 281）")

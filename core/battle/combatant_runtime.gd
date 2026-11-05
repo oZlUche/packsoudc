@@ -41,6 +41,8 @@ var axes: Dictionary = {}
 var block_layers: Array[Dictionary] = []
 ## 210：免疫的状态 id（[member CombatantSpec.immune_buffs]）
 var immune_buffs: Array[StringName] = []
+## 281：只受这一种伤害（[member CombatantSpec.only_damage_type]）
+var only_damage_type: StringName = &""
 
 var _merged: StatSet = null
 var _merged_items: Dictionary = {}
@@ -96,6 +98,7 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 		return int(a["value"]) > int(b["value"]) or (int(a["value"]) == int(b["value"]) and int(a["uid"]) < int(b["uid"])))
 	rt.undying_sec = StatMath.from_float(spec.undying_sec)     # 093：蛮神 4 级
 	rt.immune_buffs = spec.immune_buffs.duplicate()     # 210
+	rt.only_damage_type = spec.only_damage_type     # 281
 	# 105：编译期带来的轴层数种进**系统层**（103 第 6 条：常驻加成不是 buff、不走净化）
 	for axis in spec.axes:
 		rt.shift_axis(axis, int(spec.axes[axis]), true)
