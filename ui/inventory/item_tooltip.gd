@@ -100,8 +100,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	# --- 头：名字（粗体 19、稀有度色）/ 副行（稀有度名 · 标签，按大类排，171）/ 说明（斜体）
 	# 170 定稿：只有名字和稀有度名描边；标签、说明、正文、脚注里带色的字都不描（作者对比过后定的）
 	var name_line := UiTheme.outline("[font_size=%d][b][color=%s]%s[/color][/b][/font_size]" % [NAME_SIZE, rarity_style, Names.of_item(inst)])
-	if inst.quality() > 0:     # 279 补充二：品质一档一个小菱形，不写字（样式等 UI替换美术）
-		name_line += " [font_size=%d][color=%s]%s[/color][/font_size]" % [SUB_SIZE, rarity_style, QUALITY_MARK.repeat(inst.quality())]
+	if inst.quality() > 0:     # 279 补充二：品质一档一枚金菱（作者 11-05 选 A），不写字
+		name_line += " " + quality_marks(inst.quality())
 	# 250（作者定）：类别 → 属性 → 本源 → 归属，每轴最多列一个（按道具里写的先后取第一个），内部标签不列（107 后续）
 	var listed: Array = TagRegistry.first_per_category(def.tags)
 	var sub := UiTheme.outline("[color=%s]%s[/color]" % [rarity_style, rarity_name(rarity)])
@@ -423,7 +423,13 @@ static func upgrades_line(def: ItemDef) -> String:
 
 
 ## 279 补充二：品质标记（一档一个）
-const QUALITY_MARK := "◆"
+const QUALITY_BADGE := "res://assets/ui/tip/quality_badge_2x.png"
+
+
+## 名字后的品质标记：一档一枚金菱贴图（18 像素，随字号档放大）
+static func quality_marks(n: int) -> String:
+	var px := UiTheme.sz(18)
+	return ("[img=%dx%d]%s[/img]" % [px, px, QUALITY_BADGE]).repeat(n)
 
 
 ## 221 F1：一串状态 / 反应名 —— 中文「【甲】【乙】」，英文「A, B」
