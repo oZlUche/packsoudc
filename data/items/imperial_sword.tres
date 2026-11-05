@@ -80,7 +80,7 @@ effects = Array[ExtResource("7_sv0ug")]([SubResource("Resource_27qt4")])
 [sub_resource type="Resource" id="Resource_oeei2"]
 script = ExtResource("15_wkom8")
 base_stats = {
-"damage": 44
+"damage": 74
 }
 rules = Array[ExtResource("3_vs1kl")]([SubResource("Resource_qtg6f"), SubResource("Resource_dr54h")])
 

@@ -28,7 +28,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 33
+      "damage": 55
     },
     "rules": [
       {
@@ -45,7 +45,11 @@
         ],
         "effects": [
           "@deal_damage",
-          "@apply_status_bleed"
+          "@apply_status_bleed",
+          {
+            "type": "apply_status",
+            "buff": "scorch"
+          }
         ]
       },
       {

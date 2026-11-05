@@ -27,7 +27,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 18
+      "damage": 21
     },
     "rules": [
       {
@@ -48,6 +48,10 @@
             "type": "apply_status",
             "buff": "bleed",
             "stacks": 2
+          },
+          {
+            "type": "apply_status",
+            "buff": "chill"
           }
         ]
       },

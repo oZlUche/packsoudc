@@ -27,7 +27,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 62
+      "damage": 110
     },
     "rules": [
       {
@@ -48,6 +48,10 @@
             "type": "apply_status",
             "buff": "bleed",
             "stacks": 3
+          },
+          {
+            "type": "apply_status",
+            "buff": "scorch"
           }
         ]
       },

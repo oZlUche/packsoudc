@@ -70,31 +70,6 @@ script = ExtResource("12_jbibu")
 buff = SubResource("Resource_505co")
 stacks = 2
 
-[sub_resource type="Resource" id="Resource_i8nv2"]
-script = ExtResource("10_k1lhu")
-metadata/part_ref = &"on_schedule"
-
-[sub_resource type="Resource" id="Resource_k0t7x"]
-script = ExtResource("3_4t2bf")
-trigger = SubResource("Resource_i8nv2")
-cadence = SubResource("Resource_ax5c5")
-costs = Array[ExtResource("5_pjn1t")]([SubResource("Resource_1x1af")])
-effects = Array[ExtResource("7_kj6xg")]([SubResource("Resource_ggjwl"), SubResource("Resource_2efwm")])
-
-[sub_resource type="Resource" id="Resource_ub8dg"]
-script = ExtResource("13_mempe")
-metadata/part_ref = &"always"
-
-[sub_resource type="Resource" id="Resource_qmxe0"]
-script = ExtResource("8_tqt4l")
-metadata/part_ref = &"deal_damage"
-
-[sub_resource type="Resource" id="Resource_dhj57"]
-script = ExtResource("14_tfuja")
-target = 0
-axis = &"damage_taken"
-delta = 2
-
 [sub_resource type="Resource" id="Resource_olu5x"]
 script = ExtResource("11_sh07n")
 id = &"numb"
@@ -107,29 +82,58 @@ decay_halve_on = &"stamina_paid"
 element = &"lightning"
 per_stack_percent = 10.0
 
+[sub_resource type="Resource" id="Resource_i8nv2"]
+script = ExtResource("12_jbibu")
+buff = SubResource("Resource_olu5x")
+
+[sub_resource type="Resource" id="Resource_k0t7x"]
+script = ExtResource("10_k1lhu")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_ub8dg"]
+script = ExtResource("3_4t2bf")
+trigger = SubResource("Resource_k0t7x")
+cadence = SubResource("Resource_ax5c5")
+costs = Array[ExtResource("5_pjn1t")]([SubResource("Resource_1x1af")])
+effects = Array[ExtResource("7_kj6xg")]([SubResource("Resource_ggjwl"), SubResource("Resource_2efwm"), SubResource("Resource_i8nv2")])
+
+[sub_resource type="Resource" id="Resource_qmxe0"]
+script = ExtResource("13_mempe")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_dhj57"]
+script = ExtResource("8_tqt4l")
+metadata/part_ref = &"deal_damage"
+
 [sub_resource type="Resource" id="Resource_lm63i"]
+script = ExtResource("14_tfuja")
+target = 0
+axis = &"damage_taken"
+delta = 2
+
+[sub_resource type="Resource" id="Resource_hrxmk"]
 script = ExtResource("12_jbibu")
 buff = SubResource("Resource_olu5x")
 stacks = 3
 
-[sub_resource type="Resource" id="Resource_hrxmk"]
+[sub_resource type="Resource" id="Resource_bvqa6"]
 script = ExtResource("15_yac6h")
 metadata/part_ref = &"on_battle_start"
 
-[sub_resource type="Resource" id="Resource_bvqa6"]
-script = ExtResource("3_4t2bf")
-trigger = SubResource("Resource_hrxmk")
-cadence = SubResource("Resource_ub8dg")
-effects = Array[ExtResource("7_kj6xg")]([SubResource("Resource_qmxe0"), SubResource("Resource_dhj57"), SubResource("Resource_lm63i")])
-
 [sub_resource type="Resource" id="Resource_q86hv"]
-script = ExtResource("16_mp30j")
-base_stats = {
-"damage": 33
-}
-rules = Array[ExtResource("3_4t2bf")]([SubResource("Resource_k0t7x"), SubResource("Resource_bvqa6")])
+script = ExtResource("3_4t2bf")
+trigger = SubResource("Resource_bvqa6")
+cadence = SubResource("Resource_qmxe0")
+effects = Array[ExtResource("7_kj6xg")]([SubResource("Resource_dhj57"), SubResource("Resource_lm63i"), SubResource("Resource_hrxmk")])
 
 [sub_resource type="Resource" id="Resource_okao4"]
+script = ExtResource("16_mp30j")
+base_stats = {
+"damage": 59
+}
+rules = Array[ExtResource("3_4t2bf")]([SubResource("Resource_ub8dg"), SubResource("Resource_q86hv")])
+
+[sub_resource type="Resource" id="Resource_t27tj"]
 script = ExtResource("20_4v3nk")
 cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(0, 3), Vector2i(0, 4)])
 
@@ -143,8 +147,8 @@ display_names = {
 descriptions = {
 "en": ""
 }
-shape = SubResource("Resource_okao4")
+shape = SubResource("Resource_t27tj")
 rarity = 4
 tags = Array[StringName]([&"weapon", &"melee", &"burst", &"polearm", &"bleed", &"lightning", &"forged_only"])
 material = "metal"
-combat = SubResource("Resource_q86hv")
+combat = SubResource("Resource_okao4")

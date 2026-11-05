@@ -25,7 +25,7 @@
   "material": "bone",
   "combat": {
     "base_stats": {
-      "damage": 10,
+      "damage": 8,
       "crit_chance": 15
     },
     "rules": [
@@ -53,6 +53,10 @@
             "type": "apply_status",
             "buff": "bleed",
             "stacks": 2
+          },
+          {
+            "type": "apply_status",
+            "buff": "scorch"
           }
         ]
       },
