@@ -98,15 +98,24 @@ static func frame_black_hole(t: TestCase, root: Window) -> void:
 	db.load_dir()
 	var board := GridInventory.new(Vector2i(3, 3))
 	var red := ItemInstance.create(db.get_def(JimiePath.RED))
-	board.place(red, Vector2i(1, 0), 0)
+	board.place(red, Vector2i(0, 0), 0)     # 游戏测试 11-05：贴着棋盘左上角，洞不该被面板裁掉
+	var screen := GameScreen.new()
+	root.add_child(screen)
+	var panel := Control.new()
+	panel.clip_contents = true
+	panel.position = Vector2(200, 150)
+	panel.size = Vector2(300, 300)
+	screen.add_child(panel)
 	var view := InventoryView.new()
 	view.inventory = board
-	root.add_child(view)
+	panel.add_child(view)
 	var hole := JimieBlackHole.cover(view, red.uid)
 	t.not_null(hole, "放了")
 	if hole != null:
-		var rect := view.item_rect(red.uid)
-		t.check(Rect2(hole.position, hole.size).encloses(rect), "罩住寂灭")
+		var rect := view.get_global_transform() * view.item_rect(red.uid)
+		t.check(hole.get_global_rect().encloses(rect), "罩住寂灭")
+		t.eq(hole.get_parent(), screen, "挂在这一屏上，不在会裁的面板里")
+		t.check(hole.get_global_rect().position.x < panel.get_global_rect().position.x, "洞左半边伸出面板外（不被裁）")
 	t.eq(JimieBlackHole.cover(view, 999), null, "找不到：不放")
 	if hole != null:
 		t.check(view.veiled.has(red.uid), "演着：棋盘上那件先不画（黑洞自己画）")
@@ -123,4 +132,4 @@ static func frame_black_hole(t: TestCase, root: Window) -> void:
 		var tw := hole.play()
 		tw.custom_step(JimieBlackHole.SEC + 0.1)
 		t.check(not view.veiled.has(red.uid) and hole.is_queued_for_deletion(), "演完：那件交回棋盘画，黑洞自己摘掉")
-	view.free()
+	screen.free()
