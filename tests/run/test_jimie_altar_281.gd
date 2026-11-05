@@ -92,8 +92,8 @@ static func run_flow(t: TestCase) -> void:
 	t.eq(run.end_reason, JimiePath.REASON, "原因：寂灭")
 
 
-static func run_black_hole(t: TestCase) -> void:
-	t.begin("281 · 黑洞占位：盖在寂灭那件上，比它大一圈；找不到那件就不放")
+static func frame_black_hole(t: TestCase, root: Window) -> void:
+	t.begin("281 · 黑洞（B 劈开）：盖在寂灭那件上，比它大一圈；找不到那件就不放；演完交回棋盘")
 	var db := ItemDatabase.new()
 	db.load_dir()
 	var board := GridInventory.new(Vector2i(3, 3))
@@ -101,10 +101,26 @@ static func run_black_hole(t: TestCase) -> void:
 	board.place(red, Vector2i(1, 0), 0)
 	var view := InventoryView.new()
 	view.inventory = board
+	root.add_child(view)
 	var hole := JimieBlackHole.cover(view, red.uid)
 	t.not_null(hole, "放了")
 	if hole != null:
 		var rect := view.item_rect(red.uid)
 		t.check(Rect2(hole.position, hole.size).encloses(rect), "罩住寂灭")
 	t.eq(JimieBlackHole.cover(view, 999), null, "找不到：不放")
+	if hole != null:
+		t.check(view.veiled.has(red.uid), "演着：棋盘上那件先不画（黑洞自己画）")
+		t.eq(hole.grow(), 0.0, "刚开始：洞还没张开")
+		hole.t = 0.45
+		t.check(hole.grow() == 1.0 and hole.rise() > 0.0 and hole.rise() < 1.0 and hole.tear() == 0.0, "0.45：洞张满、寂灭升到一半、还没劈")
+		t.eq(hole._mask.clip_children, CanvasItem.CLIP_CHILDREN_ONLY, "升起时法杖裁在洞里")
+		hole.t = 0.65
+		t.check(hole.crack() > 0.0 and hole.tear() == 0.0, "0.65：洞面裂纹")
+		hole.t = 0.85
+		t.check(hole.tear() > 0.0 and hole._mask.clip_children == CanvasItem.CLIP_CHILDREN_DISABLED, "0.85：劈开，法杖整根露出")
+		t.check(JimieBlackHole.SEC <= 2.0, "全程不超过 2 s")
+		hole.t = 0.0
+		var tw := hole.play()
+		tw.custom_step(JimieBlackHole.SEC + 0.1)
+		t.check(not view.veiled.has(red.uid) and hole.is_queued_for_deletion(), "演完：那件交回棋盘画，黑洞自己摘掉")
 	view.free()
