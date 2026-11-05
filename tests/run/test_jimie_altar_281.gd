@@ -81,6 +81,7 @@ static func run_flow(t: TestCase) -> void:
 	t.check(not bool(bare.events.option_state(at)["ok"]), "少一颗核：不能选")
 	t.check(run.events.choose(at), "选献祭")
 	t.eq(_count(run, JimiePath.RED), 1, "寂灭在背包里")
+	t.check(not run.storage.items().any(func(i: ItemInstance) -> bool: return i.def.id == JimiePath.RED), "地上没有多发一把")
 	var god := run.events.pending_event()
 	t.check(god != null and god.id == JimiePath.GOD_EVENT, "接着是魔法之神的残余意识")
 	if god == null:

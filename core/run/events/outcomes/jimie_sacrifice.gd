@@ -4,8 +4,8 @@ extends EventOutcome
 
 
 func apply(ctx: EventContext) -> void:
-	if ctx != null and JimiePath.sacrifice(ctx.board, ctx.storage, ctx.items):
-		ctx.items_given.append(JimiePath.RED)
+	if ctx != null:
+		JimiePath.sacrifice(ctx.board, ctx.storage, ctx.items)     # 自己摆好了：不进 items_given（那是「持有方发到地上」的单子，进了会多发一把）
 
 
 func describe() -> String:

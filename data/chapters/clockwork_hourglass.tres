@@ -1,13 +1,14 @@
 [gd_resource type="Resource" script_class="ChapterDef" format=3]
 
-[ext_resource type="Script" path="res://core/map/generators/lattice_type_rules.gd" id="1_wssfy"]
-[ext_resource type="Script" path="res://core/map/generators/hourglass_map_config.gd" id="2_8hby8"]
-[ext_resource type="Script" path="res://core/map/map_source.gd" id="3_435f1"]
-[ext_resource type="Script" path="res://core/run/run_module.gd" id="4_w3br4"]
-[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="5_v1jqg"]
+[ext_resource type="Script" path="res://core/map/generators/lattice_type_rules.gd" id="1_8hby8"]
+[ext_resource type="Script" path="res://core/map/generators/hourglass_scale.gd" id="2_435f1"]
+[ext_resource type="Script" path="res://core/map/generators/hourglass_map_config.gd" id="3_w3br4"]
+[ext_resource type="Script" path="res://core/map/map_source.gd" id="4_v1jqg"]
+[ext_resource type="Script" path="res://core/run/run_module.gd" id="5_owm41"]
+[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="6_q5eu5"]
 
-[sub_resource type="Resource" id="Resource_owm41"]
-script = ExtResource("1_wssfy")
+[sub_resource type="Resource" id="Resource_es1ne"]
+script = ExtResource("1_8hby8")
 type_weights = {
 "battle": 3,
 "chest": 1,
@@ -22,27 +23,66 @@ quota = {
 "shop": [0, 1]
 }
 
-[sub_resource type="Resource" id="Resource_q5eu5"]
-script = ExtResource("2_8hby8")
+[sub_resource type="Resource" id="Resource_miefy"]
+script = ExtResource("2_435f1")
+id = &"small"
+display_name = "小型"
+display_names = {
+"en": "Small"
+}
+half_rows = 2
+step_limit = 24
+
+[sub_resource type="Resource" id="Resource_6ilu0"]
+script = ExtResource("2_435f1")
+id = &"medium"
+display_name = "中型"
+display_names = {
+"en": "Medium"
+}
+step_limit = 40
+
+[sub_resource type="Resource" id="Resource_1rfl7"]
+script = ExtResource("2_435f1")
+id = &"large"
+display_name = "大型"
+display_names = {
+"en": "Large"
+}
+half_rows = 6
+width = 7
+coverage = {
+"rest": 5,
+"shop": 7
+}
+step_limit = 60
+
+[sub_resource type="Resource" id="Resource_qumny"]
+script = ExtResource("3_w3br4")
 half_rows = 4
+neck_rows = 3
 taper = 1
 with_core = true
-danger_by_row = Array[int]([0, 0, 1, 1, 2, 2, 1, 1, 1, 0])
-rules = SubResource("Resource_owm41")
+two_sided = true
+axis_core = true
+clock_room = true
+scales = Array[ExtResource("2_435f1")]([SubResource("Resource_miefy"), SubResource("Resource_6ilu0"), SubResource("Resource_1rfl7")])
+danger_by_row = Array[int]([0, 0, 1, 1, 2, 2])
+rules = SubResource("Resource_es1ne")
 
-[sub_resource type="Resource" id="Resource_es1ne"]
-script = ExtResource("3_435f1")
+[sub_resource type="Resource" id="Resource_c43tn"]
+script = ExtResource("4_v1jqg")
 generator_id = &"hourglass"
-generator_config = SubResource("Resource_q5eu5")
+generator_config = SubResource("Resource_qumny")
 
 [resource]
-script = ExtResource("5_v1jqg")
+script = ExtResource("6_q5eu5")
 id = &"clockwork_hourglass"
 display_name = "机关沙漏"
 display_names = {
 "en": "Clockwork Hourglass"
 }
-map_source = SubResource("Resource_es1ne")
+map_source = SubResource("Resource_c43tn")
 enemy_pool = &"clockwork"
 drop_rule = &"standard"
 carry_rule = &"standard"
@@ -51,7 +91,7 @@ node_rules = &"standard"
 economy_rules = &"standard"
 order = 4
 requires_unlock = &"prologue3_done"
-rules = Array[String](["那边是口横着的沙漏，从左边进，穿过中间两条窄道到对面。出口只在最右边一列，中途没有。", "里面的东西不是人，是机关。刀砍上去先被弹掉一截，毒和放血对它们没用，火、冰、雷照常。", "拆下来的零件带回来：齿轮臂、蒸汽阀、护板。护板拿在手里就是一面小盾。"])
+rules = Array[String](["那边是口横着的沙漏，从左边或右边进，穿过中间两条窄道到对面。出口只在对面那一列，中途没有。", "里面的东西不是人，是机关。刀砍上去先被弹掉一截，毒和放血对它们没用，火、冰、雷照常。", "拆下来的零件带回来：齿轮臂、蒸汽阀、护板。护板拿在手里就是一面小盾。"])
 departure_event = &"briefing_legion"
 step_limit = 40
 safes = 1

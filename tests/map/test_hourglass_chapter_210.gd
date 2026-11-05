@@ -17,7 +17,7 @@ static func _col(g: MapGraph, id: int) -> int:
 
 
 static func run_chapter(t: TestCase) -> void:
-	t.begin("210 · ① 章节：沙漏生成器 + 配置过校验；开局屏排在魔法废墟后面（第二张）、同一把锁；没有规模档；倒计时 40")
+	t.begin("210 · ① 章节：沙漏生成器 + 配置过校验；开局屏排在魔法废墟后面（第二张）、同一把锁；281 §六：三档规模，越大层越多、倒计时越长")
 	var c := _chapter()
 	t.not_null(c, "章节在")
 	if c == null:
@@ -26,10 +26,19 @@ static func run_chapter(t: TestCase) -> void:
 	t.check(c.map_source.generator_config is HourglassMapConfig, "配置是沙漏的")
 	t.eq(c.enemy_pool, &"clockwork", "机关池")
 	t.eq(c.requires_unlock, &"prologue3_done", "序章三通关解锁")
-	t.eq(c.step_limit, 40, "倒计时 40 步")
+	t.eq(c.step_limit, 40, "兜底倒计时 40 步")
 	t.eq(c.map_skin, &"clockwork", "底图 clockwork")
 	t.check(MapSkin.texture(c.map_skin) != null, "底图在")
-	t.check(Setup.scale_options_of(c).is_empty(), "没有规模档：开局屏不列规模")
+	var opts := Setup.scale_options_of(c)
+	var ids_s: Array = opts.map(func(o: Dictionary) -> StringName: return StringName(o["id"]))
+	t.eq(ids_s, [&"small", &"medium", &"large"], "三档：小 / 中 / 大")
+	t.eq(opts.map(func(o: Dictionary) -> int: return int(o["step_limit"])), [24, 40, 60], "倒计时 24 / 40 / 60")
+	var cfg := c.map_source.generator_config as HourglassMapConfig
+	var rows: Array[int] = []
+	for id in ids_s:
+		rows.append(LatticeMapLayout.rows_of(c.map_source.resolve(5, id)))
+	t.check(rows[0] < rows[1] and rows[1] < rows[2], "越大层越多（%s）" % [rows])
+	t.eq(rows[1], cfg.row_count(), "中档 = 配置本身")
 	var listed: Array[ChapterDef] = []
 	for ch in GameFlow.load_chapters():
 		if ch.hidden_by_unlock == &"":
@@ -45,39 +54,100 @@ static func run_chapter(t: TestCase) -> void:
 
 
 static func run_generate(t: TestCase) -> void:
-	t.begin("210 · ② 生成：十层、对侧最后一层两个撤离点 + 正中核心、过校验；危险按 danger_by_row")
+	t.begin("210 · ② 生成（281 §六）：两头各一个入口、各一排撤离点；核心在中轴正中，钟房在它下方、只连下面那条线段；危险两头浅中间深；三档都过校验")
 	var c := _chapter()
-	var cfg := c.map_source.generator_config as HourglassMapConfig
-	for seed_ in [3, 11, 29]:
-		var g := c.map_source.resolve(seed_)
-		t.not_null(g, "种子 %d 生成得出来" % seed_)
-		if g == null:
-			continue
-		t.eq(g.layout_kind, &"hourglass", "横置沙漏")
-		t.eq(int(g.layout_meta["rows"]), 10, "十层")
-		var widths: Array[int] = []
-		for row in g.layout_meta["cells"]:
-			widths.append((row as Array).size())
-		t.eq(widths, [5, 4, 3, 3, 2, 2, 3, 3, 4, 5] as Array[int], "215 · 中段逐层收窄（taper %d）" % cfg.taper)
-		var cores := 0
+	for scale in [&"small", &"medium", &"large"]:
+		var cfg := (c.map_source.generator_config as HourglassMapConfig).duplicate(true) as HourglassMapConfig
+		cfg.apply_scale(scale)
+		for seed_ in [3, 11, 29]:
+			var g := c.map_source.resolve(seed_, scale)
+			var tag := "%s / 种子 %d" % [scale, seed_]
+			t.not_null(g, "%s 生成得出来" % tag)
+			if g == null:
+				continue
+			t.eq(g.layout_kind, &"hourglass", "横置沙漏")
+			var last := cfg.row_count() - 1
+			t.eq(int(g.layout_meta["rows"]), last + 1, "%s：层数 = 两半 + 颈部" % tag)
+			var widths: Array[int] = []
+			for row in g.layout_meta["cells"]:
+				widths.append((row as Array).size())
+			var back := widths.duplicate()
+			back.reverse()
+			t.eq(widths, back, "%s：两半对称（%s）" % [tag, widths])
+			var entry_rows: Array = g.entry_ids.map(func(id: int) -> int: return _row(g, id))
+			entry_rows.sort()
+			t.eq(entry_rows, [0, last], "%s：入口一左一右" % tag)
+			var core := -1
+			var exits := {0: 0, last: 0}
+			for id in g.goal_ids:
+				var n := g.get_node(id)
+				if n.type == &"core":
+					core = id
+				elif n.type == &"extract":
+					exits[_row(g, id)] = int(exits.get(_row(g, id), 0)) + 1
+			t.eq(exits, {0: cfg.exit_count, last: cfg.exit_count}, "%s：两头各 %d 个撤离点" % [tag, cfg.exit_count])
+			t.check(core >= 0 and _row(g, core) == cfg.axis_row() and _col(g, core) == cfg.axis_col(), "%s：核心在中轴正中" % tag)
+			var room := -1
+			for id in g.node_ids():
+				if String(g.get_node(id).content.get("event", "")) == String(HourglassMapConfig.CLOCK_ROOM_EVENT):
+					room = id
+			t.check(room >= 0, "%s：有钟房" % tag)
+			if room >= 0 and core >= 0:
+				t.eq(g.get_node(room).type, &"event", "钟房是事件点")
+				t.eq(_row(g, room), cfg.axis_row(), "钟房在中轴")
+				t.check(_col(g, room) > _col(g, core), "在核心下方")
+				t.check(not g.neighbors(room).has(core), "和核心不相连")
+				var lanes := cfg.lane_cols()
+				t.eq(g.neighbors(room).map(func(id: int) -> int: return _col(g, id)), [lanes.max()], "只连下面那条线段")
+			for id in g.node_ids():
+				var n := g.get_node(id)
+				var tier := mini(_row(g, id), last - _row(g, id))
+				t.eq(n.tier, tier, "点 %d 的 tier = 离最近一头几层" % id)
+				if n.type != &"core" and n.type != &"extract" and n.type != &"spawn":
+					t.eq(n.danger, cfg.danger_by_row[mini(tier, cfg.danger_by_row.size() - 1)], "点 %d 的危险按 tier" % id)
+			var v := MapValidation.new()
+			HourglassMapGenerator.new().validate(g, v)
+			t.check(v.ok(), "%s 过校验：%s" % [tag, v.to_text()])
+
+
+static func run_pick_side(t: TestCase) -> void:
+	t.begin("210 · ⑤ 281 §六：挑了哪头出生，那头的撤离点变搜索点、撤离只在对侧；挑右边侵蚀从右边起；付费点在对侧重标")
+	var c := TestSupport.load_content("clockwork_hourglass")
+	for side in [0, 1]:
+		var run := RunState.start(c.chapter, 11, c.items, c.enemies, c.sets)
+		t.eq(run.phase, RunState.Phase.PICK_SPAWN, "两个入口：先挑")
+		var g := run.map
+		var last := int(g.layout_meta["rows"]) - 1
+		var want := 0 if side == 0 else last
+		var pick := -1
+		for id in g.entry_ids:
+			if _row(g, id) == want:
+				pick = id
+		t.check(pick >= 0 and run.pick_spawn(pick), "挑第 %d 层那个" % want)
+		var far := last - want
 		var exits := 0
-		for id in g.goal_ids:
-			var n := g.get_node(id)
-			t.eq(_row(g, id), 9, "终点在最后一层")
-			if n.type == &"core":
-				cores += 1
-				@warning_ignore("integer_division")
-				t.eq(_col(g, id), (cfg.width - 1) / 2, "核心在正中")
-			elif n.type == &"extract":
-				exits += 1
-		t.eq([cores, exits], [1, 2], "一个核心、两个撤离点（种子 %d）" % seed_)
 		for id in g.node_ids():
 			var n := g.get_node(id)
-			if n.type != &"core" and n.type != &"extract" and n.type != &"spawn":
-				t.eq(n.danger, cfg.danger_by_row[_row(g, id)], "点 %d 的危险按层（第 %d 层）" % [id, _row(g, id)])
-		var v := MapValidation.new()
-		HourglassMapGenerator.new().validate(g, v)
-		t.check(v.ok(), "种子 %d 过校验：%s" % [seed_, v.to_text()])
+			if _row(g, id) == want and n.type == &"extract":
+				t.check(false, "出生那头还有撤离点 %d" % id)
+			if n.type == &"extract":
+				exits += 1
+				t.eq(_row(g, id), far, "撤离点在对侧")
+				t.check(g.goal_ids.has(id), "对侧撤离点是终点")
+		t.eq(exits, 2, "对侧两个撤离点")
+		t.check(g.goal_ids.all(func(id: int) -> bool: return g.get_node(id).type in [&"extract", &"core"]), "终点只剩撤离点和核心")
+		t.check(g.node_ids().any(func(id: int) -> bool: return g.get_node(id).type == &"extract" and int(g.get_node(id).content.get("fee", 0)) > 0), "对侧有一个付费撤离点")
+		t.eq(g.get_node(pick).erosion_band, 0, "侵蚀从出生那头起")
+		t.eq(run.current_node().id, pick, "站在挑的那个入口")
+
+
+static func run_axis_guard(t: TestCase) -> void:
+	t.begin("210 · ⑥ 281 §六：中轴正中撞上线段（双数宽度）就不生成，说清原因")
+	var cfg := (_chapter().map_source.generator_config as HourglassMapConfig).duplicate(true) as HourglassMapConfig
+	cfg.width = 4
+	var gen := HourglassMapGenerator.new()
+	t.eq(gen.shape(cfg), null, "形状不成立")
+	t.check(gen.build_note.contains("中轴"), "原因说的是中轴（%s）" % gen.build_note)
 
 
 static func run_pool(t: TestCase) -> void:
@@ -102,10 +172,10 @@ static func run_pool(t: TestCase) -> void:
 				t.eq(e, &"great_clock", "核心是大钟")
 			elif n.type == &"elite":
 				t.check([&"pendulum_warden", &"steam_turret", &"clockwork_sentry", &"tinker_apprentice", &"gear_golem", &"clock_keeper"].has(e) and e != &"great_clock", "精英不是大钟（%s）" % e)
-			var row := _row(g, id)
+			var row := n.tier     # 281 §六：两头浅、中间深
 			depth_strength[row] = maxi(int(depth_strength.get(row, 0)), int(n.content["strength"]))
 	t.check(seen.has(&"clockwork_sentry") and seen.has(&"great_clock"), "哨兵与大钟都出现了（%s）" % [seen.keys()])
-	t.check(int(depth_strength.get(8, 0)) >= int(depth_strength.get(1, 0)), "深处档位不低于入口附近（%s）" % [depth_strength])
+	t.check(int(depth_strength.get(4, 0)) >= int(depth_strength.get(1, 0)), "深处档位不低于入口附近（%s）" % [depth_strength])
 
 
 const GAME := "res://ui/game/game.tscn"
@@ -113,7 +183,7 @@ const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func frame_setup_and_depart(t: TestCase, root: Window) -> void:
-	t.begin("210 · ④ 开局屏：选到机关沙漏，没有规模按钮；出发进得了沙漏图，站在左边的出生点")
+	t.begin("210 · ④ 开局屏：选到机关沙漏，三档规模按钮；出发进得了沙漏图，站在左边的出生点")
 	Support.cleanup("hg210")
 	var game = load(GAME).instantiate()
 	game.save_path = "user://test_hg210_run.json"
@@ -135,7 +205,7 @@ static func frame_setup_and_depart(t: TestCase, root: Window) -> void:
 		if not setup.next_page():
 			break
 	t.eq(setup.page(), Setup.PAGE_MAP, "到了选地图那一页")
-	t.eq(setup._scale_btns.size(), 0, "没有规模按钮")
+	t.eq(setup._scale_btns.size(), 3, "三档规模按钮")
 	# 213 起开局屏也画沙漏的入口：先在第三页挑一个，再出发
 	var went := false
 	var pick := -1

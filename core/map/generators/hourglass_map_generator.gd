@@ -40,7 +40,31 @@ func shape(cfg: Resource) -> LatticeShape:
 	s.orientation = LatticeShape.HORIZONTAL
 	for x in c.exit_cols():
 		s.goals[x] = &"extract"
-	if c.with_core:
+		if c.two_sided:
+			s.goals_first[x] = &"extract"     # 281 §六：两头各一排，挑了出生点留对侧那排
+	s.two_sided = c.two_sided
+	s.mirror_tier = c.two_sided
+	if c.with_core and c.axis_core:
+		# 281 §六：核心在颈部正中，挂在两条线段上；钟房在它下方，只挂下面那条线段
+		var ax := c.axis_col()
+		if lanes.has(ax):
+			build_note = "中轴的核心要一格空位：列 %d 已经是线段（宽度取单数，线段别落在正中）" % ax
+			return null
+		var up: Array[int] = []
+		var down: Array[int] = []
+		for x in lanes:
+			if x < ax:
+				up.append(x)
+			elif x > ax:
+				down.append(x)
+		var near: Array = [up.max()] if not up.is_empty() else []
+		if not down.is_empty():
+			near.append(down.min())
+		# 危险 0：和原来对侧的核心一样，池里只有大钟够得着它（危险 1 起的精英不进核心）
+		s.extras.append({"row": c.axis_row(), "col": ax, "type": "core", "links": near, "danger": 0})
+		if c.clock_room and not down.is_empty() and int(down.max()) + 1 < c.width:
+			s.extras.append({"row": c.axis_row(), "col": int(down.max()) + 1, "type": "event", "links": [down.max()], "event": String(HourglassMapConfig.CLOCK_ROOM_EVENT)})
+	elif c.with_core:
 		@warning_ignore("integer_division")
 		s.goals[(c.width - 1) / 2] = &"core"
 	s.entry_count = c.entry_count

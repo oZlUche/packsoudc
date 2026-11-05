@@ -44,17 +44,22 @@ func build(cfg: Resource, rng: RandomNumberGenerator) -> MapGraph:
 	var goals_meta: Array = []
 	for c in _shape.goal_cols():
 		goals_meta.append([c, String(_shape.goals[c])])
+	for c in _shape.goals_first:     # 两头出生：第 0 层那排终点（同列同类型，已在表里的不重记）
+		if not _shape.goals.has(c):
+			goals_meta.append([int(c), String(_shape.goals_first[c])])
 	_graph.layout_meta = {
 		"rows": _shape.row_count(), "cols": _shape.cols, "cells": cells_meta, "straight_rows": straight,
 		"orientation": String(_shape.orientation), "goals": goals_meta,
 		"forward_reach": _shape.forward_reach, "lateral_span": _shape.lateral_span,
 		"one_way": _shape.one_way, "one_way_from_row": _shape.one_way_from_row,
 		"erosion_reversed": _shape.erosion_reversed,
+		"two_sided": _shape.two_sided, "mirror_tier": _shape.mirror_tier,
 	}
 	if not _place_nodes():
 		return null
 	_link()
 	_thin()
+	_place_extras(cells_meta)
 	var typer := LatticeTypeAssigner.new()
 	if not typer.assign(_graph, _shape.rules, _rng):
 		build_note = "类型分配失败：" + typer.note
@@ -130,7 +135,7 @@ func _place_nodes() -> bool:
 			n.id = next_id
 			next_id += 1
 			n.type = &"battle"
-			n.tier = r
+			n.tier = _shape.tier_of(r)
 			n.erosion_band = (last - r) if _shape.erosion_reversed else r
 			n.danger = _shape.danger_of(r)
 			n.content_seed = _rng.randi()
@@ -142,6 +147,14 @@ func _place_nodes() -> bool:
 	var row0: Array = _cells[0].keys()
 	row0.sort()
 	var k := _shape.entry_count
+	if _shape.two_sided:
+		k = 0     # 两头出生：各一个，放在不是终点的格子里离正中最近的那格
+		for side in [[0, _shape.goals_first], [last, _shape.goals]]:
+			var col := _middle_free(_cells[int(side[0])].keys(), side[1] as Dictionary)
+			if col < 0:
+				build_note = "第 %d 层除了终点没地方放出生点" % int(side[0])
+				return false
+			_graph.entry_ids.append(int(_cells[int(side[0])][col]))
 	for i in k:
 		@warning_ignore("integer_division")
 		var idx := roundi(float(i) * float(row0.size() - 1) / float(maxi(1, k - 1))) if k > 1 else (row0.size() - 1) / 2
@@ -151,7 +164,60 @@ func _place_nodes() -> bool:
 	_graph.goal_ids = [] as Array[int]
 	for c in _shape.goal_cols():
 		_graph.goal_ids.append(int(_cells[last][c]))
+	var first: Array = _shape.goals_first.keys()
+	first.sort()
+	for c in first:
+		if _cells[0].has(int(c)):
+			_graph.goal_ids.append(int(_cells[0][int(c)]))
 	return true
+
+
+## 这层里不是终点、离正中最近的那格（并列取小的）；没有 -1
+func _middle_free(cols: Array, goal_cols: Dictionary) -> int:
+	var mid := float(_shape.cols - 1) * 0.5
+	var best := -1
+	var sorted := cols.duplicate()
+	sorted.sort()
+	for c in sorted:
+		if goal_cols.has(int(c)):
+			continue
+		if best < 0 or absf(float(c) - mid) < absf(float(best) - mid):
+			best = int(c)
+	return best
+
+
+## 281 §六：格阵之外另加的点（中轴的核心、钟房）。只连 links 那几格（同层），类型钉死（`layout.fixed`，类型分配不动）；
+## 格子记进 layout_meta.cells，校验按格子认；核心记成终点
+func _place_extras(cells_meta: Array) -> void:
+	var last := _shape.row_count() - 1
+	var next_id := 1
+	for id in _graph.node_ids():
+		next_id = maxi(next_id, id + 1)
+	for x in _shape.extras:
+		var r := int(x["row"])
+		var c := int(x["col"])
+		if _cells[r].has(c):
+			continue
+		var n := MapNode.new()
+		n.id = next_id
+		next_id += 1
+		n.type = StringName(String(x["type"]))
+		n.tier = _shape.tier_of(r)
+		n.erosion_band = (last - r) if _shape.erosion_reversed else r
+		n.danger = int(x["danger"]) if x.has("danger") else _shape.danger_of(r)
+		n.content_seed = _rng.randi()
+		n.layout = {"row": r, "col": c, "axis": true, "fixed": String(x["type"])}
+		if String(x.get("event", "")) != "":
+			n.content["event"] = String(x["event"])
+		_graph.add_node(n)
+		_cells[r][c] = n.id
+		if not (cells_meta[r] as Array).has(c):
+			(cells_meta[r] as Array).append(c)
+		for lc in x.get("links", []):
+			if _cells[r].has(int(lc)):
+				_graph.connect_nodes(int(_cells[r][int(lc)]), n.id, &"lateral")
+		if n.type == &"core":
+			_graph.goal_ids.append(n.id)
 
 
 ## 第 r 层与它下面那层之间，一条边最多斜几列：直上层两头一律 0，其余按形状的 forward_reach
@@ -261,6 +327,7 @@ func _validate_lattice(graph: MapGraph, v: MapValidation) -> void:
 	var reversed := bool(graph.layout_meta.get("erosion_reversed", false))
 	var one_way := bool(graph.layout_meta.get("one_way", false))
 	var from_row := int(graph.layout_meta.get("one_way_from_row", 0))
+	var mirror := bool(graph.layout_meta.get("mirror_tier", false))
 	var taken := {}
 	for id in graph.node_ids():
 		var n := graph.get_node(id)
@@ -275,8 +342,9 @@ func _validate_lattice(graph: MapGraph, v: MapValidation) -> void:
 		if taken.has(key):
 			v.fail(&"cell", "第 %d 层 %d 列上有两个点" % [r, c])
 		taken[key] = true
-		if n.tier != r:
-			v.fail(&"bands", "节点 %d 的 tier %d 不等于层号 %d" % [id, n.tier, r])
+		var want_tier := mini(r, rows - 1 - r) if mirror else r
+		if n.tier != want_tier:
+			v.fail(&"bands", "节点 %d 的 tier %d 不对（第 %d 层该是 %d）" % [id, n.tier, r, want_tier])
 		if n.erosion_band != ((rows - 1 - r) if reversed else r):
 			v.fail(&"bands", "节点 %d 的侵蚀分档对不上层号" % id)
 	for e in graph.edges:
@@ -285,8 +353,9 @@ func _validate_lattice(graph: MapGraph, v: MapValidation) -> void:
 		var ra := int(a.layout.get("row", -1))
 		var rb := int(b.layout.get("row", -1))
 		var dc := absi(int(a.layout.get("col", 0)) - int(b.layout.get("col", 0)))
+		var axis := bool(a.layout.get("axis", false)) or bool(b.layout.get("axis", false))     # 281：中轴另加的点挂在线段上
 		if ra == rb:
-			if straight.has(ra):
+			if straight.has(ra) and not axis:
 				v.fail(&"straight", "第 %d 层只许直上直下，%d ↔ %d 却横着连了" % [ra, e.from_id, e.to_id])
 			elif dc - 1 > span:
 				v.fail(&"edge_length", "%d ↔ %d 同层隔了 %d 列，最多隔 %d 个空格" % [e.from_id, e.to_id, dc, span])

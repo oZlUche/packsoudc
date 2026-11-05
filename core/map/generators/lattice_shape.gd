@@ -35,6 +35,16 @@ var erosion_reversed: bool = false
 ## 每层的危险等级（空 = 全 0；短了按最后一项）
 var danger_by_row: Array[int] = []
 var rules: LatticeTypeRules = null
+## 281 §六（作者 2026-11-05 12:36）：两头都能出生 —— 第 0 层与最后一层各一个出生点；两头各一排终点（[member goals_first] 与 [member goals]），
+## 挑了出生点之后同一头的那排变普通点（[method MapGraph.demote_entries]）
+var two_sided: bool = false
+## 第 0 层的终点：列 → 类型（[member two_sided] 用）
+var goals_first: Dictionary = {}
+## tier 与危险按离最近一头的层数算（两头浅、中间深）；危险表从外往里写
+var mirror_tier: bool = false
+## 格阵之外另加的点（中轴的核心、钟房）：{"row", "col", "type", "links": [同层要连的列], "event": 事件 id（可空）, "danger": 危险（可空 = 按层）}。
+## 不进 [member rows]，铺点、断边都不碰它们；只连 links 那几格
+var extras: Array[Dictionary] = []
 
 
 func add_row(p_cols: Array[int], lateral: bool = true, straight: bool = false, fill: float = 1.0) -> void:
@@ -56,7 +66,12 @@ func allows_lateral(r: int) -> bool:
 func danger_of(r: int) -> int:
 	if danger_by_row.is_empty():
 		return 0
-	return int(danger_by_row[mini(r, danger_by_row.size() - 1)])
+	return int(danger_by_row[mini(tier_of(r), danger_by_row.size() - 1)])
+
+
+## 这一层的 tier：一般就是层号；[member mirror_tier] 时是离最近一头几层
+func tier_of(r: int) -> int:
+	return mini(r, rows.size() - 1 - r) if mirror_tier else r
 
 
 ## 终点的列，升序
@@ -84,6 +99,15 @@ func problem() -> String:
 			return "终点的列 %d 不在最后一层的格子里" % int(c)
 		if not MapNodeTypes.has(StringName(String(goals[c]))):
 			return "终点的类型 '%s' 认不得" % goals[c]
+	for c in goals_first:
+		if not (rows[0]["cols"] as Array).has(int(c)):
+			return "第 0 层终点的列 %d 不在第 0 层的格子里" % int(c)
+	for x in extras:
+		var xr := int(x.get("row", -1))
+		if xr < 0 or xr >= rows.size() or not MapNodeTypes.has(StringName(String(x.get("type", "")))):
+			return "另加的点 %s 不对：层号越界或类型认不得" % str(x)
+	if two_sided and (rows[0]["cols"] as Array).size() <= goals_first.size():
+		return "两头出生：第 0 层除了终点没地方放出生点"
 	if entry_count < 1 or entry_count > (rows[0]["cols"] as Array).size():
 		return "出生点数 %d 放不进第 0 层的 %d 个格子" % [entry_count, (rows[0]["cols"] as Array).size()]
 	if forward_reach < 0 or lateral_span < 0:

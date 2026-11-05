@@ -61,7 +61,7 @@ func _resolve_random(run_seed: int, scale_id: StringName = &"") -> MapGraph:
 		var p = cfg.call("scale_by_id", scale_id)
 		if p != null:
 			cfg = cfg.duplicate(true)     # 别改章节资产本身
-			cfg.call("apply_scale", scale_id, int(p.rings.x))
+			cfg.call("apply_scale", scale_id, int(p.rings.x) if "rings" in p else 0)     # 281：沙漏的规模没有环数
 	var graph := gen.generate(cfg, run_seed)
 	if graph == null:
 		last_error = "生成器 '%s' 连试 %d 次都没生成出合法地图" % [generator_id, gen.attempts_used]

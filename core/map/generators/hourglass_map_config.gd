@@ -28,6 +28,18 @@ extends Resource
 ## 对侧正中放一个核心（BOSS）。不是必须的，默认没有；放了它会顶掉撞在正中的那个撤离点
 @export var with_core: bool = false
 
+## 281 §六（作者 2026-11-05 12:36）：一左一右各一个出生点（玩家挑），撤离点在所挑那一头的对侧；tier 与危险两头浅、中间深
+@export var two_sided: bool = false
+## 281 §六：核心放在颈部正中（中轴，挂在线段上），不在对侧
+@export var axis_core: bool = false
+## 281 §六：中轴上核心下方另加一个钟房（事件点，只从下面那条线段进，和核心不相连）
+@export var clock_room: bool = false
+const CLOCK_ROOM_EVENT := &"event_clock_room"
+
+@export_group("规模")
+## 281 §六：三档规模（小 / 中 / 大）。空 = 只有配置本身这一档
+@export var scales: Array[HourglassScale] = []
+
 @export_group("边")
 ## 层与层之间的路最多斜几格
 @export var forward_reach: int = 1
@@ -49,6 +61,38 @@ extends Resource
 
 func row_count() -> int:
 	return half_rows * 2 + neck_rows
+
+
+## 颈部正中那一层（中轴）
+func axis_row() -> int:
+	@warning_ignore("integer_division")
+	return half_rows + neck_rows / 2
+
+
+## 中轴的列：宽度正中
+func axis_col() -> int:
+	@warning_ignore("integer_division")
+	return (width - 1) / 2
+
+
+func scale_by_id(id: StringName) -> HourglassScale:
+	for p in scales:
+		if p != null and p.id == id:
+			return p
+	return null
+
+
+## 换一档规模：层数、宽度、覆盖要求按这一档（[param _rings] 是环形配置的参数，这里不用）
+func apply_scale(id: StringName, _rings: int = 0) -> void:
+	var p := scale_by_id(id)
+	if p == null:
+		return
+	half_rows = p.half_rows
+	width = p.width
+	if not p.coverage.is_empty() and rules != null:
+		rules = rules.duplicate(true)
+		for k in p.coverage:
+			rules.coverage[k] = p.coverage[k]
 
 
 ## 线段的格：给了就用给的，没给在宽度里匀着放
