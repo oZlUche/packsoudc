@@ -1,0 +1,69 @@
+{
+  "id": "dragonbone_siege_spear",
+  "display_name": "龙骨破城矛",
+  "display_names": {
+    "en": "Dragonbone Siege Spear"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "polearm",
+    "extreme"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 100
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 4.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 40.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 12.0,
+            "damage_stat": "",
+            "pure": true
+          },
+          {
+            "type": "shift_axis",
+            "target": "OPPONENT",
+            "axis": "attack_speed",
+            "delta": -3
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

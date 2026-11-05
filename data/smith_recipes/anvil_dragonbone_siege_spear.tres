@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_lmobe"]
+
+[resource]
+script = ExtResource("1_lmobe")
+id = &"anvil_dragonbone_siege_spear"
+output = &"dragonbone_siege_spear"
+inputs = {
+"siege_spear": 1
+}
+material_inputs = {
+"bone": 2
+}
+funds = 120
+group = "blade"
+level = 2

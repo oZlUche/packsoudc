@@ -79,7 +79,7 @@ func _power() -> void:
 	var args := OS.get_cmdline_user_args()
 	var at := args.find("power")
 	var quality := int(args[at + 1]) if at + 1 < args.size() else 0
-	# 279（架构设计 22:33）：弓弩的装填格放一捆木箭再量
-	print(PowerBench.single_text(PowerBench.single_table(weapons, w, buffs, 3, quality, items.get_def(&"arrows"))))
+	# 279（架构设计 22:33）：弓弩的装填格放一捆木箭再量；281：法杖装一颗火晶石（紫）
+	print(PowerBench.single_text(PowerBench.single_table(weapons, w, buffs, 3, quality, items.get_def(&"arrows"), items.get_def(&"fire_crystal"))))
 	print("")
 	print(PowerBench.set_text(PowerBench.set_table(weapons, SET_TAGS, w)))

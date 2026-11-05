@@ -7,11 +7,11 @@ extends RefCounted
 ## 155 补（作者定）把耐力折扣改成「耐力上限 + 一场的回复」之后，现有武器没有一件耗得完，剩下两件只是单看偏弱（估低两档）。
 ## 作者定了改数还是接受之后从这里删掉
 const KNOWN_OFF := ["blessed_longbow", "bone_battle_axe", "bone_greatsword", "bone_twin_axes", "bonefang_dagger",
-	"bonefang_twin_blades", "boneiron_club", "bonesteel_greatsword", "composite_bow", "dragoon_lance", "executioner_axe",
-	"festering_blade", "flame_meteor_maul", "frost_bonesteel_greatsword", "granite_maul", "heavy_crossbow", "longbow",
-	"meteor_maul", "mithril_sword", "spiked_club", "steel_bow", "steel_crossbow", "steel_greatsword",
-	"thunder_boneiron_club"]
-## 279 第二批同理：3×3 的双手按格数估低、弓弩不算箭；帝国佩剑与焰纹刽子手巨斧估高。v5.13 紫橙按台架实测压回带里后，龙骑枪 / 霜纹龙骑枪 / 刽子手巨斧也估低两档（实测在带里，估算器不认开战的叠层；焰纹复合弓 v5.16 抬数后回到一档内；281 橙抬到 48–56 后焰纹刽子手巨斧 / 霜纹龙骑枪 / 帝国佩剑 / 雷纹重弩也回到一档内）
+	"bonefang_twin_blades", "boneiron_club", "bonesteel_greatsword", "composite_bow", "decapitator_blade",
+	"dragoon_lance", "execution_blade", "executioner_axe", "festering_blade", "flame_meteor_maul",
+	"frost_bonesteel_greatsword", "granite_maul", "heavy_crossbow", "longbow", "meteor_maul", "mithril_sword",
+	"spiked_club", "steel_bow", "steel_crossbow", "steel_greatsword", "thunder_boneiron_club"]
+## 279 第二批同理：3×3 的双手按格数估低、弓弩不算箭；帝国佩剑与焰纹刽子手巨斧估高。v5.13 紫橙按台架实测压回带里后，龙骑枪 / 霜纹龙骑枪 / 刽子手巨斧也估低两档（实测在带里，估算器不认开战的叠层；焰纹复合弓 v5.16 抬数后回到一档内；281 橙抬到 48–56 后焰纹刽子手巨斧 / 霜纹龙骑枪 / 帝国佩剑 / 雷纹重弩也回到一档内；281 极端武器斩首巨刃 / 处刑巨刃：一下吃大半管耐力，基线下实测低于估算）
 ## 279 第一批：数值照方案 §三 / §六 的表（流血估高、大件按格数估低、弓弩不算箭），第 5 步台架实测后再定改数还是改表
 ## 175：溃烂之刃的桥收进菌血，只剩出手盖血印，估出来低两档；273：三根新杖乘上威力系数后回到一档内
 const ITEMS := "res://data/items"

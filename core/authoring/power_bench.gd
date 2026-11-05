@@ -11,14 +11,16 @@ const UNDYING_HP := 100000.0
 
 
 ## 这几件一起放在玩家那边（不摆棋盘：邻接、连结不算），对手按 [param opponent_dps] 回打，打 [param seconds] 秒，平均每秒打出多少；
-## [param quality] 是每件的品质（279 补充二，0 = 定义原样）；[param ammo] 给了就在弓弩的装填格放一捆它（279：架构设计 22:33，同 247 给法杖配晶石）
+## [param quality] 是每件的品质（279 补充二，0 = 定义原样）；[param ammo] 给了就在弓弩的装填格放一捆它（279：架构设计 22:33，同 247 给法杖配晶石）；
+## [param crystal] 给了就在法杖的装填格放一颗它（281）
 static func measure(
-	defs: Array[ItemDef], opponent_dps: float, seconds: float, seeds: int = 3, w: PowerWeights = null, quality: int = 0, ammo: ItemDef = null
+	defs: Array[ItemDef], opponent_dps: float, seconds: float, seeds: int = 3, w: PowerWeights = null, quality: int = 0, ammo: ItemDef = null,
+	crystal: ItemDef = null
 ) -> float:
 	var ww := w if w != null else PowerWeights.load_from()
 	var total := 0.0
 	for s in seeds:
-		var me := _spec(defs, quality, ammo)
+		var me := _spec(defs, quality, ammo, crystal)
 		var foe := _dummy(opponent_dps, ww.hit_rate)
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 151 + s
@@ -33,7 +35,8 @@ static func measure(
 
 ## 单件表：每件 {id, cells, rarity, power, ratio, measured: [三档], vs: 实测（中档）÷ 估算}；[param quality] 见 [method measure]（估算仍按定义）
 static func single_table(
-	defs: Array[ItemDef], w: PowerWeights = null, buffs: Dictionary = {}, seeds: int = 3, quality: int = 0, ammo: ItemDef = null
+	defs: Array[ItemDef], w: PowerWeights = null, buffs: Dictionary = {}, seeds: int = 3, quality: int = 0, ammo: ItemDef = null,
+	crystal: ItemDef = null
 ) -> Array[Dictionary]:
 	var ww := w if w != null else PowerWeights.load_from()
 	var rows: Array[Dictionary] = []
@@ -41,7 +44,7 @@ static func single_table(
 		var est := PowerEstimate.estimate(def, ww, buffs)
 		var measured: Array[float] = []
 		for k in OPPONENT_TIERS:
-			measured.append(measure([def] as Array[ItemDef], ww.opponent_dps * k, ww.horizon_sec, seeds, ww, quality, ammo))
+			measured.append(measure([def] as Array[ItemDef], ww.opponent_dps * k, ww.horizon_sec, seeds, ww, quality, ammo, crystal))
 		rows.append({"id": String(def.id), "cells": est.cells, "rarity": def.rarity, "suggest": est.rarity, "power": est.power,
 			"ratio": est.ratio, "measured": measured, "vs": measured[1] / est.power if est.power > 0.0 else 0.0})
 	return rows
@@ -83,7 +86,7 @@ static func set_text(rows: Array[Dictionary]) -> String:
 	return "\n".join(lines)
 
 
-static func _spec(defs: Array[ItemDef], quality: int = 0, ammo: ItemDef = null) -> CombatantSpec:
+static func _spec(defs: Array[ItemDef], quality: int = 0, ammo: ItemDef = null, crystal: ItemDef = null) -> CombatantSpec:
 	var spec := CombatantSpec.new()
 	spec.baseline = StatSet.new()
 	CombatantBaseline.with_hp(UNDYING_HP).seed_stats(spec.baseline)
@@ -100,8 +103,10 @@ static func _spec(defs: Array[ItemDef], quality: int = 0, ammo: ItemDef = null) 
 		def.combat.seed_stats(it.stats)
 		BattleCompiler.quality_stats(it.stats, def.combat, quality)
 		it.rules = BattleCompiler.quality_rules(def.combat.rules, quality) if quality > 0 else def.combat.rules
-		if ammo != null and shoots_ammo(def):
-			it.loaded = [BattleCompiler.loaded_entry_of(ammo, defs.size() + 1)] as Array[Dictionary]
+		it.power_mult = StatMath.from_float(def.combat.power_mult)     # 273：法杖威力系数（281 之前台架漏了它）
+		var feed := ammo if shoots_ammo(def) else crystal if loads_crystals(def) else null
+		if feed != null:
+			it.loaded = [BattleCompiler.loaded_entry_of(feed, defs.size() + 1)] as Array[Dictionary]
 			it.stats.ensure(BattleStats.LOAD_STEPS).base = StatMath.ONE
 		spec.add(it)
 	return spec
@@ -114,6 +119,17 @@ static func shoots_ammo(def: ItemDef) -> bool:
 	for r in def.combat.rules:
 		for e in (r as AbilityRule).effects:
 			if e is FireLoaded and (e as FireLoaded).ammo:
+				return true
+	return false
+
+
+## 281：规则里有不射箭的装填出手（[FireLoaded]，ammo 关）的 —— 法杖，装晶石
+static func loads_crystals(def: ItemDef) -> bool:
+	if def == null or def.combat == null:
+		return false
+	for r in def.combat.rules:
+		for e in (r as AbilityRule).effects:
+			if e is FireLoaded and not (e as FireLoaded).ammo:
 				return true
 	return false
 

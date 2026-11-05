@@ -1,0 +1,63 @@
+{
+  "id": "siege_spear",
+  "display_name": "破城矛",
+  "display_names": {
+    "en": "Siege Spear"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "weapon",
+    "melee",
+    "burst",
+    "polearm",
+    "extreme"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 70
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 4.4
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 33.0
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "deal_damage",
+            "amount": 12.0,
+            "damage_stat": "",
+            "pure": true
+          }
+        ]
+      },
+      {
+        "trigger": "@on_battle_start",
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

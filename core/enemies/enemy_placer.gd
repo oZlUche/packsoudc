@@ -664,6 +664,10 @@ static func common_items(
 
 
 ## 两个池子共用的筛选：能生成的道具里去掉包（160：随身技能不是道具，本来就不在库里）、过稀有度上限与身份标签（087），再过 [param pred]；id 按文本升序
+## 281：一下打普通武器四五下、一下吃掉大半管耐力的那两条线
+const EXTREME := &"extreme"
+
+
 static func _item_pool(
 	items: ItemDatabase, rarity_cap: int, who: EnemyDef, pred: Callable, weapon_cap: int = -1, no_true: bool = false
 ) -> Array[StringName]:
@@ -671,6 +675,8 @@ static func _item_pool(
 	for id in items.ids():
 		var d := items.get_def(id)
 		if d == null or d.is_bag or d.is_bullion() or (rarity_cap >= 0 and d.rarity > rarity_cap):     # 244：金银不进敌人的装备
+			continue
+		if d.tags.has(EXTREME):     # 281：极端武器敌人不带
 			continue
 		if weapon_cap >= 0 and d.rarity > weapon_cap and d.tags.has(&"weapon"):     # 279 台架定调：武器另压一档
 			continue
