@@ -5,14 +5,14 @@ extends RefCounted
 const CS := preload("res://tests/run/test_character_skills.gd")
 
 ## 满级的四条科技
-const MAX_TECHS: Array[StringName] = [&"tech_sinew_3", &"tech_endurance_3", &"tech_hauling_3", &"tech_pack_3"]
+const MAX_TECHS: Array[StringName] = [&"tech_sinew_3", &"tech_endurance_2", &"tech_hauling_3", &"tech_pack_3"]
 
 ## 写死的对照表（数值来自三份角色 JSON 与 docs/techs.xlsx；改了数就改这里）：
 ## id → [棋盘, 生命, 耐力, 耐力回复, 体力, 负重, 满级生命, 满级体力, 满级负重]（256 定稿：开局钱那两列删了，钱全由玩家自己带）
 const TABLE := {
 	&"andreus": [Vector2i(7, 6), 45.0, 55.0, 4.0, 3, 48, 58.5, 5, 72],
-	&"marcus": [Vector2i(8, 6), 55.0, 65.0, 5.0, 5, 48, 71.5, 8, 72],
-	&"brutus": [Vector2i(9, 6), 85.0, 65.0, 4.0, 8, 64, 110.5, 13, 96],
+	&"marcus": [Vector2i(8, 6), 55.0, 65.0, 5.0, 5, 48, 71.5, 7, 72],
+	&"brutus": [Vector2i(9, 6), 85.0, 65.0, 4.0, 8, 64, 110.5, 10, 96],
 }
 
 
@@ -61,7 +61,7 @@ static func run_boards_and_panels(t: TestCase) -> void:
 
 
 static func run_percent_techs(t: TestCase) -> void:
-	t.begin("149 · 科技改百分比：满级时三个人的生命 / 体力 / 负重按各自的基数放大，差距比零级大；四舍五入；乘算相加不相乘；神坛加算在乘之后")
+	t.begin("149 · 科技改百分比：满级时三个人的生命 / 负重按各自的基数放大，差距比零级大；四舍五入；乘算相加不相乘；神坛加算在乘之后")
 	var c := _content()
 	for id in MAX_TECHS:
 		t.check(c.buffs.has(id), "%s 在" % id)
@@ -82,7 +82,7 @@ static func run_percent_techs(t: TestCase) -> void:
 		t.eq(_stat(s, &"max_stamina"), row[2], "%s 满级：耐力不动" % id)
 		zero[id] = [row[1], row[4], row[5]]
 		full[id] = [row[6], row[7], row[8]]
-	for i in 3:
+	for i in [0, 2]:     # 作者 11-07：耐久改成体力上限直接 +1 / +2（两级），体力的差不再放大
 		var z: Array = []
 		var f: Array = []
 		for id in TABLE:

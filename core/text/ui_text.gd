@@ -329,11 +329,11 @@ const TEXT := {
 	"tip.idle": {"zh": "闲置：没放在法杖的装载槽上", "en": "Idle: not in a staff's socket"},
 	"tip.socketed_in": {"zh": "装在：%s", "en": "Socketed in: %s"},
 	"tip.contested": {"zh": "（另一把法杖的装载槽也压着它：后放的优先）", "en": " (another staff's socket covers it too: the one placed last wins)"},
-	"tip.wear_broken": {"zh": "耐久 0 / %d：破碎了，不再供给，只能卖钱", "en": "Durability 0 / %d: broken, no longer feeds, only worth selling"},
+	"tip.wear_broken": {"zh": "耐久 0 / %d\n破碎了，不再供给，只能卖钱", "en": "Durability 0 / %d\nBroken, no longer feeds, only worth selling"},
 	"tip.wear_end_vanish": {"zh": "用完就没了", "en": "gone when used up"},
 	"tip.wear_end": {"zh": "用完就碎，碎了只能卖钱", "en": "shatters when used up; a shattered one only sells"},
 	"tip.wear_end_into": {"zh": "用完碎成%s", "en": "breaks into %s when used up"},
-	"tip.wear": {"zh": "耐久 %d / %d：每供给一场少一次，%s", "en": "Durability %d / %d: loses one each battle it feeds; %s"},
+	"tip.wear": {"zh": "耐久 %d / %d\n每供给一场少一次，%s", "en": "Durability %d / %d\nLoses one each battle it feeds; %s"},
 	"tip.growth": {"zh": "生长：%s", "en": "Growth: %s"},
 	"tip.growth_next": {"zh": "（再 %d 步%s）", "en": " (%d more steps to %s)"},
 	"tip.growth_done": {"zh": "（长成了）", "en": " (fully grown)"},
@@ -914,6 +914,7 @@ const TEXT := {
 	"gloss.on_apply": {"zh": "上身时：%s", "en": "On apply: %s"},
 	"gloss.on_expire": {"zh": "到期时：%s", "en": "On expiry: %s"},
 	"gloss.self_damage_per_sec": {"zh": "每秒受到 {n} 点{t}伤害", "en": "Take {n} {t} damage every second"},     # String.format
+	"gloss.then_halve": {"zh": "，然后减半", "en": ", then halves"},
 	"gloss.self_damage_every": {"zh": "每 {s} 秒受到 {n} 点{t}伤害", "en": "Take {n} {t} damage every {s} seconds"},
 	"gloss.time_left": {"zh": "还剩 %d 秒", "en": "%ds left"},
 	"gloss.time_per_stack": {"zh": "每层 %d 秒", "en": "%ds per stack"},
@@ -1246,7 +1247,7 @@ const TEXT := {
 	"tip.adj_grant": {"zh": "%s%s", "en": "%s: %s"},     # condition + effects
 	"tip.adj_next_to": {"zh": "挨着%s时", "en": "Next to %s:"},
 	"tip.adj_per_next": {"zh": "每挨着一件%s", "en": "Per adjacent %s:"},
-	"tip.adj_feed": {"zh": "装进%s：%s", "en": "In %s: %s"},
+	"tip.adj_feed": {"zh": "装进%s：\n%s", "en": "In %s:\n%s"},
 	"tip.adj_host": {"zh": "宿主", "en": "its host"},
 	# —— 221 F5a：text template context (core/text/text_template.gd) ——
 	"tip.difficulty_default": {"zh": "普通", "en": "Normal"},

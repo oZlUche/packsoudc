@@ -84,13 +84,13 @@ static func run_context_and_start(t: TestCase) -> void:
 	var lucky: RunBuffDef = c.buffs[&"tech_luck_1"]
 	var weakened: RunBuffDef = c.buffs[&"weakened"]
 	var ctx := RunBuffs.context([hardy, lucky])
-	t.eq(ctx.vitality_max_mult, _run_amount(hardy, "vitality_max_mult"), "坚韧：体力上限的百分比从定义里来（149）")
+	t.eq(ctx.vitality_max_bonus, _run_amount(hardy, "vitality_max_bonus"), "耐久：体力上限的加成从定义里来（作者 11-07：直接 +1）")
 	t.eq(ctx.luck_bonus, _run_amount(lucky, "luck_bonus"), "幸运：幸运的加成从定义里来")
-	t.check(ctx.vitality_max_mult > 0 and ctx.luck_bonus > 0, "两个都是正的（作者文件写的）")
+	t.check(ctx.vitality_max_bonus > 0 and ctx.luck_bonus > 0, "两个都是正的（作者文件写的）")
 
 	var plain := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items)
 	var buffed := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1", &"tech_luck_1"] as Array[StringName])
-	t.eq(buffed.vitality.maximum, ctx.vitality_max_of(Vitality.PLACEHOLDER_MAX) + c.chapter.vitality_bonus, "开局体力上限按 buff 的百分比放大（149）")
+	t.eq(buffed.vitality.maximum, ctx.vitality_max_of(Vitality.PLACEHOLDER_MAX) + c.chapter.vitality_bonus, "开局体力上限按 buff 加上去")
 	t.check(buffed.vitality.maximum > plain.vitality.maximum, "比没 buff 的多")
 	t.eq(buffed.wallet.balance, plain.wallet.balance, "开局钱不再受 buff 影响（2026-10-22 起钱全由玩家自己带，两个都是 0）")
 	t.eq(buffed.meta_buffs.size(), 2, "局外 buff 记在这一局里")

@@ -50,7 +50,7 @@ var _overlays: Array[CooldownOverlay] = []
 var _board_slots: Array[Control] = []
 ## 棋盘在回放里的缩放。157 补充一（作者定：去掉文字播报、放大棋盘）：0.5 → 1.0，格子和战前准备一样 60 像素
 const BOARD_SCALE := 1.0
-## 272（卡上推荐 B）：铜面板里战记栏开着时，棋盘缩到 2/3（格子 40 像素）腾出栏位；收起回 [constant BOARD_SCALE]
+## 272（卡上推荐 B）：铜面板里棋盘缩到 2/3（格子 40 像素）给战记栏腾出栏位；作者 11-07：收起战记棋盘也不变
 const LOG_BOARD_SCALE := 2.0 / 3.0
 ## 272：铜面板里战记栏的高（六行左右；面板仍放得进 1000 高）
 const LOG_HEIGHT := 106.0
@@ -357,9 +357,9 @@ func toggle_log() -> void:
 	set_log_open(not log_open, true)
 
 
-## 棋盘现在的缩放（铜面板里战记开着就缩）
+## 棋盘现在的缩放（铜面板里一直缩，和战记开不开无关）
 func board_scale() -> float:
-	return LOG_BOARD_SCALE if bronze and log_open else BOARD_SCALE
+	return LOG_BOARD_SCALE if bronze else BOARD_SCALE     # 作者 11-07：战记开关不改棋盘大小 —— 铜面板里一直是 2/3
 
 
 func _apply_board_scale() -> void:

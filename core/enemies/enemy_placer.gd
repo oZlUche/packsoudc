@@ -225,6 +225,8 @@ static func build_content(
 		if best_miss == 0:
 			break
 	count += bag_count     # 包不计入件数：件数说的是包里的东西
+	if build == null or not build.loose:
+		_seat_loads(board, placed)
 	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。流派道具不够先补流派的。
 	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘 / 包配小了
 	if placed.size() < count:
@@ -448,6 +450,134 @@ static func _place_random(board: GridInventory, idef: ItemDef, placed: Array, rn
 		return false
 	placed.append(_entry(inst))
 	return true
+
+
+## 作者 11-07（法师的杖只打基础伤害）：组拆了（包里挤）晶石就成了散件，多半不在杖的装载格上 ——
+## 摆完再查一遍每把有装载格的件：收它的供给件（晶石）没压在任何装载格上的，先挪到它还空着的装载格上（包里放得下的第一个位置）；
+## 还有剩的，就把杖连同压着它的、没压着的晶石一起拿起来，换到装得上最多颗的位置（多过原来才换；晶石放不回去就整组还原）。
+## 不消耗随机数。[param placed] 里对应那条的位置跟着改
+static func _seat_loads(board: GridInventory, placed: Array) -> void:
+	var hosts: Array[ItemInstance] = []
+	var feeders: Array[ItemInstance] = []
+	for raw in board.items():
+		var it := raw as ItemInstance
+		var a := it.def.adjacency
+		if a == null or it.def.is_bag:
+			continue
+		if a.has_load():
+			hosts.append(it)
+		if a.has_feed():
+			feeders.append(it)
+	if hosts.is_empty() or feeders.is_empty():
+		return
+	var entry_of := {}     # uid -> placed 里的那条
+	var all_: Array[ItemInstance] = hosts + feeders
+	for it in all_:
+		for raw in placed:
+			var e := raw as Dictionary
+			if not entry_of.values().has(e) and String(e.get("id", "")) == String(it.def.id) \
+					and int(e["at"][0]) == it.origin.x and int(e["at"][1]) == it.origin.y and int(e.get("rot", 0)) == it.rotation:
+				entry_of[it.uid] = e
+				break
+	for h in hosts:
+		if not entry_of.has(h.uid):
+			continue
+		var one: Array[ItemInstance] = [h]
+		var loose: Array[ItemInstance] = []
+		var seated: Array[ItemInstance] = []
+		for f in feeders:
+			if f == h or not entry_of.has(f.uid) or not _loads_from(h.def, f.def):
+				continue
+			if _seated(f.def, f.origin, f.rotation, one):
+				seated.append(f)
+			elif not _seated(f.def, f.origin, f.rotation, hosts):
+				loose.append(f)
+		if loose.is_empty():
+			continue
+		for f in loose.duplicate():     # 先挪到空着的装载格上
+			if _reseat(board, f, one):
+				loose.erase(f)
+				seated.append(f)
+		if loose.is_empty():
+			continue
+		# 还有剩：整组拿起来，找装得上最多颗的位置
+		var group: Array[ItemInstance] = seated + loose
+		var everyone: Array[ItemInstance] = [h]
+		everyone.append_array(group)
+		var was := {}
+		for it in everyone:
+			was[it.uid] = [it.origin, it.rotation]
+			board.remove(it.uid)
+		var best: Array = []
+		var best_n := seated.size()
+		for opt in _fits(board, h.def, true):
+			board.place(h, opt[0], int(opt[1]))
+			var n := 0
+			var put: Array[ItemInstance] = []
+			for f in group:
+				if _reseat_free(board, f, one):
+					n += 1
+					put.append(f)
+			for f in put:
+				board.remove(f.uid)
+			board.remove(h.uid)
+			if n > best_n:
+				best_n = n
+				best = opt
+		var ok := not best.is_empty()
+		if ok:
+			board.place(h, best[0], int(best[1]))
+			var rest: Array[ItemInstance] = []
+			for f in group:
+				if not _reseat_free(board, f, one):
+					rest.append(f)
+			for f in rest:
+				var at: Array = was[f.uid]
+				var back := board.place(f, at[0], int(at[1]))
+				if not back:
+					var any := _fits(board, f.def, false)
+					back = not any.is_empty() and board.place(f, any[0][0], int(any[0][1]))
+				if not back:
+					ok = false
+					break
+		if not ok:     # 放不回去：整组还原
+			for it in everyone:
+				if board.get_item(it.uid) != null:
+					board.remove(it.uid)
+			for it in everyone:
+				var at: Array = was[it.uid]
+				board.place(it, at[0], int(at[1]))
+		for it in everyone:
+			var e: Dictionary = entry_of[it.uid]
+			e["at"] = [it.origin.x, it.origin.y]
+			e["rot"] = it.rotation
+
+
+## [param f] 已在棋盘上：拿起来放到 [param hosts] 某把的空装载格上；放不下原样放回，返回 false
+static func _reseat(board: GridInventory, f: ItemInstance, hosts: Array[ItemInstance]) -> bool:
+	var at := f.origin
+	var rot := f.rotation
+	board.remove(f.uid)
+	if _reseat_free(board, f, hosts):
+		return true
+	board.place(f, at, rot)
+	return false
+
+
+## [param f] 不在棋盘上：放到 [param hosts] 某把的装载格上能放的第一个位置
+static func _reseat_free(board: GridInventory, f: ItemInstance, hosts: Array[ItemInstance]) -> bool:
+	for opt in _fits(board, f.def, true):
+		if _seated(f.def, opt[0], int(opt[1]), hosts):
+			return board.place(f, opt[0], int(opt[1]))
+	return false
+
+
+## 摆在 (origin, rot) 的 [param d] 压在 [param hosts] 里某把的装载格上
+static func _seated(d: ItemDef, origin: Vector2i, rot: int, hosts: Array[ItemInstance]) -> bool:
+	for h in hosts:
+		if _gives_at(d, origin, rot, h.def, h.origin, h.rotation):
+			return true
+	return false
 
 
 ## 内容里的一件：{id, at, rot}

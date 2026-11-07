@@ -4,13 +4,11 @@
   "display_names": {
     "en": "Endurance (Tech)"
   },
-  "description": "体力上限 {vitality_max_bonus_percent|signed}%",
+  "description": "体力上限 {vitality_max_bonus_amount|signed}",
   "scope": "META",
   "effects": [
     {
-      "type": "vitality_max_bonus",
-      "amount": 0,
-      "percent": 20
+      "type": "vitality_max_bonus"
     }
   ]
 }

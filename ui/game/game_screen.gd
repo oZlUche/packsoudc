@@ -382,6 +382,8 @@ func _bronze_panel(min_size: Vector2, margin: int = -1) -> Container:
 
 ## 作者 2026-10-21：战前 / 战斗两块铜面板一样大 —— 两屏都撑到「见过的两边内容里大的那个」（窗口尺寸变了重新记）
 static var _duel_min := Vector2.ZERO
+## 两块铜面板离顶端栏、离屏底的空隙
+const DUEL_GAP := 8.0
 static var _duel_view := Vector2.ZERO
 
 
@@ -399,6 +401,23 @@ func _fit_duel_panel(other: Control = null) -> void:
 		_duel_min = _duel_min.max(other.get_combined_minimum_size())
 		other.custom_minimum_size = _duel_min
 	_overlay_frame.custom_minimum_size = _duel_min
+	_pin_duel_top()
+
+
+## 作者 11-07（战斗屏下缘出了屏幕）：两块铜面板不再在栏下面上下居中 —— 贴着顶端栏下沿往下排（左右照旧居中）；
+## 栏下面放不下就再往上挪，压一点栏也要让下缘留在屏里
+func _pin_duel_top() -> void:
+	var center := _overlay_frame.get_parent() as Control
+	if center == null:
+		return
+	var bar := HudHost.bar_height_in(get_tree()) if is_inside_tree() else 0.0
+	var high := size.y if size.y > 0.0 else get_viewport_rect().size.y if is_inside_tree() else 0.0
+	var top := bar + DUEL_GAP
+	if high > 0.0:
+		top = maxf(0.0, minf(top, high - DUEL_GAP - _duel_min.y))
+	center.anchor_bottom = 0.0
+	center.offset_top = top
+	center.offset_bottom = top + _duel_min.y
 
 
 ## 157：叠层的标题写进石板框的标题条（原来各屏自己在内容里摆的那一行）；返回那个标签，之后改字直接改它

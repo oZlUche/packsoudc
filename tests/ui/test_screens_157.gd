@@ -131,7 +131,8 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	t.eq(pre.find_children("*", "BoardFrame", true, false).size(), 2, "两块棋盘都套外框")
 	# 复测 v3.79：面板在顶端栏下面居中，高度放得进 1000 高的画面减去顶端栏（不压红心和金币）
 	var bar := HudHost.bar_height_in(root.get_tree())
-	t.check(bar > 0.0 and is_equal_approx((pre.overlay_frame().get_parent() as Control).offset_top, bar), "战前面板的居中区从顶端栏下沿算起（%.0f）" % bar)
+	var pre_top := (pre.overlay_frame().get_parent() as Control).offset_top
+	t.check(bar > 0.0 and pre_top >= bar, "战前面板从顶端栏下沿往下排（%.0f ≥ %.0f）" % [pre_top, bar])
 	t.check(pre.overlay_frame().get_combined_minimum_size().y <= FIT_HEIGHT - bar, "战前面板高 %.0f ≤ %.0f" % [pre.overlay_frame().get_combined_minimum_size().y, FIT_HEIGHT - bar])
 	var es: StatsStrip = pre.enemy_strip()
 	var ps: StatsStrip = pre.player_strip()
@@ -186,7 +187,10 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 	t.check(view.ticker() != null and view.log_box().is_visible_in_tree(), "272：正式游戏的回放有战记栏（默认开）")
 	t.check(view.board_view(0) != null and is_equal_approx(view.board_view(0).scale.x, BattleView.LOG_BOARD_SCALE), "272 B：战记开着，棋盘缩到 2/3")
 	view.toggle_log()
-	t.check(not view.log_box().visible and view.board_view(0).scale == Vector2.ONE, "收起战记：棋盘回原大（格子和战前一样大）")
+	t.check(not view.log_box().visible and is_equal_approx(view.board_view(0).scale.x, BattleView.LOG_BOARD_SCALE), "作者 11-07：收起战记棋盘大小不变")
+	t.eq((screen.overlay_frame().get_parent() as Control).offset_top, pre_top, "作者 11-07：收起战记面板顶不动（贴着顶端栏，不再上下居中）")
+	var cbox := screen.overlay_frame().get_parent() as Control
+	t.check(cbox.offset_bottom - cbox.offset_top >= screen.overlay_frame().get_combined_minimum_size().y - 0.5, "居中区正好包住面板（%.0f）" % (cbox.offset_bottom - cbox.offset_top))
 	t.check(not flow.settings.battle_log_open, "收起记进设置")
 	t.check(screen.overlay_frame().get_combined_minimum_size().y <= FIT_HEIGHT - HudHost.bar_height_in(root.get_tree()), "收起后面板照样放得下")
 	view.toggle_log()

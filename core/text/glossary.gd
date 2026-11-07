@@ -53,7 +53,7 @@ const TERMS := {
 	# 107（作者定）：这两条写的是**buff**（每层每秒掉血、无视格挡与护甲），不是武器的伤害类型 —— 同名的标签
 	# 「中毒」「流血」指类型，那边 tip 为 false。两边文字都保留
 	"中毒": {"text": "每层每秒造成毒伤，无视格挡与护甲，永续叠层。", "en": {"name": "Poison", "text": "Deals poison damage every second per stack, ignores Block and Armor, permanent, stacks."}},
-	"流血": {"text": "每层每秒造成流血伤害，无视格挡与护甲，永续叠层。", "en": {"name": "Bleed", "text": "Deals bleed damage every second per stack, ignores Block and Armor, permanent, stacks."}},
+	"流血": {"text": "每秒造成 N 点流血伤害（N = 层数），然后减半；无视格挡与护甲。", "en": {"name": "Bleed", "text": "Deals N bleed damage every second (N = stacks), then halves; ignores Block and Armor."}},
 }
 
 
@@ -433,6 +433,8 @@ static func buff_effect_lines(def: BuffDef, stacks: int = 1) -> Array[String]:
 			continue
 		var line := _self_damage_text(rule, n)
 		dmg.append(line if line != "" else rule_text(rule))
+	if def.decay_halve_on == BuffDef.HALVE_TICK and not dmg.is_empty():     # 作者 11-07：流血「每秒造成 N 点伤害，然后减半」
+		dmg[dmg.size() - 1] += UiText.t("gloss.then_halve")
 	var heal: Array[String] = []
 	if def.heal_cut > 0 and not def.heal_cut_tags.is_empty():     # 255：只截某几类道具的治疗
 		var tag_names: Array[String] = []
