@@ -9,9 +9,9 @@ display_name = "流失"
 display_names = {
 "en": "Drain"
 }
-description = "以血为代价时扣的血：不会触发受伤时的效果。"
+description = "以血为代价时扣的血：无视护甲，不会触发受伤时的效果。"
 descriptions = {
-"en": "Life paid as a cost: does not trigger on-damage effects."
+"en": "Life paid as a cost: ignores Armor and does not trigger on-damage effects."
 }
 armor_absorbable = false
 provokes = false

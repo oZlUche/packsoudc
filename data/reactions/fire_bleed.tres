@@ -12,11 +12,11 @@
 [ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_lav4a"]
 [ext_resource type="Script" path="res://core/battle/reactions/reaction_def.gd" id="11_nvo7f"]
 
-[sub_resource type="Resource" id="Resource_o7qgq"]
+[sub_resource type="Resource" id="Resource_0d28e"]
 script = ExtResource("5_4pyde")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_01y6v"]
+[sub_resource type="Resource" id="Resource_1tqh6"]
 script = ExtResource("7_vi37a")
 target = 1
 damage_type = &"fire"
@@ -24,14 +24,14 @@ amount = 1.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_mbwiu"]
+[sub_resource type="Resource" id="Resource_2gfi1"]
 script = ExtResource("8_b8obt")
 
-[sub_resource type="Resource" id="Resource_4wbuu"]
+[sub_resource type="Resource" id="Resource_guw7f"]
 script = ExtResource("4_2nxkh")
-trigger = SubResource("Resource_mbwiu")
-cadence = SubResource("Resource_o7qgq")
-effects = Array[ExtResource("1_krjo3")]([SubResource("Resource_01y6v")])
+trigger = SubResource("Resource_2gfi1")
+cadence = SubResource("Resource_0d28e")
+effects = Array[ExtResource("1_krjo3")]([SubResource("Resource_1tqh6")])
 
 [sub_resource type="Resource" id="Resource_8aasi"]
 script = ExtResource("9_61tbl")
@@ -42,7 +42,7 @@ display_names = {
 }
 is_debuff = true
 seconds_per_stack = 1
-rules = Array[ExtResource("4_2nxkh")]([SubResource("Resource_4wbuu")])
+rules = Array[ExtResource("4_2nxkh")]([SubResource("Resource_guw7f")])
 heal_cut = 100
 
 [sub_resource type="Resource" id="Resource_vkbic"]
@@ -56,9 +56,9 @@ display_name = "燃血"
 display_names = {
 "en": "Seared Blood"
 }
-description = "对手叠上反应层数那么多层【燃血】：治疗无效，每秒受到层数等量的火焰伤害，每层持续一秒，再反应就延长。"
+description = "对手叠上反应层数那么多层【燃血】：治疗无效，N 层就每秒受到 N 点火焰伤害、持续 N 秒（层数不掉），再反应就加层加秒。"
 descriptions = {
-"en": "The opponent gains Seared Blood equal to the reaction stacks: healing does nothing, and they take Fire damage each second equal to the stacks. Each stack lasts one second; reacting again extends it."
+"en": "The opponent gains Seared Blood equal to the reaction stacks: healing does nothing, and with N stacks they take N Fire damage each second for N seconds (stacks don't drop); reacting again adds stacks and seconds."
 }
 elements = Array[StringName]([&"fire", &"bleed"])
 effects = Array[ExtResource("1_krjo3")]([SubResource("Resource_vkbic")])

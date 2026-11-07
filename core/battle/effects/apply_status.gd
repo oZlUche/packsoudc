@@ -57,7 +57,8 @@ func describe() -> String:
 	if buff == null:
 		return UiText.t("fx.apply_unknown")
 	# 175 补 5.4（作者定）：「施加 N 层灼伤」—— 层数总写出来
-	return UiText.t("fx.apply" if target != Target.SELF else "fx.gain") % [maxi(1, stacks), Names.of(buff)]
+	var line := UiText.t("fx.apply" if target != Target.SELF else "fx.gain") % [maxi(1, stacks), Names.of(buff)]
+	return UiText.t("fx.per_stack") % line if per_stack else line     # 288
 
 
 ## 151：估值 —— 层数 × 一层在那一边身上总共值多少（[method BuffDef.stack_value]，从那一边的角度）；

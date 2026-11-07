@@ -118,6 +118,7 @@ display_name = "流血"
 display_names = {
 "en": "Bleed"
 }
+is_debuff = true
 decay_halve_on = &"tick"
 rules = Array[ExtResource("7_yvehp")]([SubResource("Resource_dohsk")])
 element = &"bleed"
@@ -270,7 +271,7 @@ prefixes = {
 "en": "Binding "
 }
 
-[sub_resource type="Resource" id="Resource_ovtd2"]
+[sub_resource type="Resource" id="Resource_olu5x"]
 script = ExtResource("8_4q2pq")
 id = &"numb"
 display_name = "麻痹"
@@ -282,20 +283,20 @@ decay_halve_on = &"stamina_paid"
 element = &"lightning"
 per_stack_percent = 10.0
 
-[sub_resource type="Resource" id="Resource_yus4x"]
+[sub_resource type="Resource" id="Resource_ovtd2"]
 script = ExtResource("9_gg7jr")
-buff = SubResource("Resource_ovtd2")
+buff = SubResource("Resource_olu5x")
 
-[sub_resource type="Resource" id="Resource_3e34a"]
+[sub_resource type="Resource" id="Resource_yus4x"]
 script = ExtResource("3_shedm")
 amount = 4.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_8mis3"]
+[sub_resource type="Resource" id="Resource_3e34a"]
 script = ExtResource("2_rnfoh")
 axis = &"block"
 
-[sub_resource type="Resource" id="Resource_3xi62"]
+[sub_resource type="Resource" id="Resource_8mis3"]
 script = ExtResource("9_gg7jr")
 target = 1
 buff = SubResource("Resource_osobw")
@@ -305,7 +306,7 @@ script = ExtResource("4_24osx")
 axis = &"block"
 stacks = 4
 
-[sub_resource type="Resource" id="Resource_o300j"]
+[sub_resource type="Resource" id="Resource_3xi62"]
 script = ExtResource("8_4q2pq")
 id = &"deflect_long"
 display_name = "久弹"
@@ -316,27 +317,27 @@ stackable = false
 duration_sec = 8.0
 axes = Array[ExtResource("4_24osx")]([SubResource("Resource_l284u")])
 
-[sub_resource type="Resource" id="Resource_1y807"]
+[sub_resource type="Resource" id="Resource_o300j"]
 script = ExtResource("9_gg7jr")
 target = 1
-buff = SubResource("Resource_o300j")
+buff = SubResource("Resource_3xi62")
 
-[sub_resource type="Resource" id="Resource_rf1ik"]
+[sub_resource type="Resource" id="Resource_1y807"]
 script = ExtResource("2_rnfoh")
 target = 0
 axis = &"attack_speed"
 delta = -1
 
-[sub_resource type="Resource" id="Resource_8ka2w"]
+[sub_resource type="Resource" id="Resource_rf1ik"]
 script = ExtResource("1_vwqfe")
 key = &"stone"
-effect = SubResource("Resource_3e34a")
-upgraded = SubResource("Resource_rf1ik")
-bonus = SubResource("Resource_yus4x")
+effect = SubResource("Resource_yus4x")
+upgraded = SubResource("Resource_1y807")
+bonus = SubResource("Resource_ovtd2")
 base = 4.0
-guard_effect = SubResource("Resource_3xi62")
-guard_upgraded = SubResource("Resource_1y807")
-guard_bonus = SubResource("Resource_8mis3")
+guard_effect = SubResource("Resource_8mis3")
+guard_upgraded = SubResource("Resource_o300j")
+guard_bonus = SubResource("Resource_3e34a")
 guard_amount_field = &""
 guard_prefix = "坚固的"
 guard_prefixes = {
@@ -347,42 +348,42 @@ prefixes = {
 "en": "Crushing "
 }
 
-[sub_resource type="Resource" id="Resource_wg5eo"]
+[sub_resource type="Resource" id="Resource_8ka2w"]
 script = ExtResource("2_rnfoh")
 axis = &"attack_speed"
 
-[sub_resource type="Resource" id="Resource_s072o"]
+[sub_resource type="Resource" id="Resource_wg5eo"]
 script = ExtResource("3_shedm")
 amount = 2.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_104hi"]
+[sub_resource type="Resource" id="Resource_s072o"]
 script = ExtResource("10_h6o10")
 resource_key = &"mana"
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_c83tf"]
+[sub_resource type="Resource" id="Resource_104hi"]
 script = ExtResource("10_h6o10")
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_hhl1p"]
+[sub_resource type="Resource" id="Resource_c83tf"]
 script = ExtResource("2_rnfoh")
 axis = &"regen_hp"
 
-[sub_resource type="Resource" id="Resource_6qfri"]
+[sub_resource type="Resource" id="Resource_hhl1p"]
 script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_505co")
 
-[sub_resource type="Resource" id="Resource_68q5f"]
+[sub_resource type="Resource" id="Resource_6qfri"]
 script = ExtResource("1_vwqfe")
 key = &"wood"
-effect = SubResource("Resource_s072o")
-upgraded = SubResource("Resource_6qfri")
-bonus = SubResource("Resource_wg5eo")
+effect = SubResource("Resource_wg5eo")
+upgraded = SubResource("Resource_hhl1p")
+bonus = SubResource("Resource_8ka2w")
 base = 2.0
-guard_effect = SubResource("Resource_c83tf")
-guard_upgraded = SubResource("Resource_hhl1p")
-guard_bonus = SubResource("Resource_104hi")
+guard_effect = SubResource("Resource_104hi")
+guard_upgraded = SubResource("Resource_c83tf")
+guard_bonus = SubResource("Resource_s072o")
 guard_base = 2.0
 guard_prefix = "回春的"
 guard_prefixes = {
@@ -393,12 +394,12 @@ prefixes = {
 "en": "Thorned "
 }
 
-[sub_resource type="Resource" id="Resource_pg2pd"]
+[sub_resource type="Resource" id="Resource_68q5f"]
 script = ExtResource("2_rnfoh")
 target = 0
 axis = &"damage_taken"
 
-[sub_resource type="Resource" id="Resource_71bn2"]
+[sub_resource type="Resource" id="Resource_pg2pd"]
 script = ExtResource("3_shedm")
 damage_type = &"fire"
 amount = 3.0
@@ -409,7 +410,7 @@ script = ExtResource("5_el8jf")
 stat = &"max_armor"
 amount = 8.0
 
-[sub_resource type="Resource" id="Resource_mj88a"]
+[sub_resource type="Resource" id="Resource_71bn2"]
 script = ExtResource("8_4q2pq")
 id = &"ward"
 display_name = "护符结界"
@@ -418,35 +419,35 @@ display_names = {
 }
 mods = Array[ExtResource("5_el8jf")]([SubResource("Resource_xeebe")])
 
-[sub_resource type="Resource" id="Resource_6uh6w"]
+[sub_resource type="Resource" id="Resource_mj88a"]
 script = ExtResource("9_gg7jr")
 target = 1
-buff = SubResource("Resource_mj88a")
+buff = SubResource("Resource_71bn2")
 
-[sub_resource type="Resource" id="Resource_bn78q"]
+[sub_resource type="Resource" id="Resource_6uh6w"]
 script = ExtResource("10_h6o10")
 resource_key = &"mana"
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_0ovim"]
+[sub_resource type="Resource" id="Resource_bn78q"]
 script = ExtResource("2_rnfoh")
 axis = &"crit_chance"
 
-[sub_resource type="Resource" id="Resource_agq1t"]
+[sub_resource type="Resource" id="Resource_0ovim"]
 script = ExtResource("3_shedm")
 amount = 3.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_0lbgw"]
+[sub_resource type="Resource" id="Resource_agq1t"]
 script = ExtResource("1_vwqfe")
 key = &"gem"
-effect = SubResource("Resource_71bn2")
-upgraded = SubResource("Resource_agq1t")
-bonus = SubResource("Resource_pg2pd")
+effect = SubResource("Resource_pg2pd")
+upgraded = SubResource("Resource_0ovim")
+bonus = SubResource("Resource_68q5f")
 base = 3.0
-guard_effect = SubResource("Resource_bn78q")
-guard_upgraded = SubResource("Resource_0ovim")
-guard_bonus = SubResource("Resource_6uh6w")
+guard_effect = SubResource("Resource_6uh6w")
+guard_upgraded = SubResource("Resource_bn78q")
+guard_bonus = SubResource("Resource_mj88a")
 guard_base = 2.0
 guard_prefix = "璨光的"
 guard_prefixes = {
@@ -501,7 +502,7 @@ seconds_per_stack = 1
 heal_cut = 50
 heal_echo = &"poison"
 
-[sub_resource type="Resource" id="Resource_801aa"]
+[sub_resource type="Resource" id="Resource_0lbgw"]
 script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_vlyke")
 
@@ -537,21 +538,21 @@ is_debuff = true
 rules = Array[ExtResource("7_yvehp")]([SubResource("Resource_56y6x")])
 element = &"poison"
 
-[sub_resource type="Resource" id="Resource_ea37y"]
+[sub_resource type="Resource" id="Resource_801aa"]
 script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_isath")
 stacks = 2
 
-[sub_resource type="Resource" id="Resource_3apn6"]
+[sub_resource type="Resource" id="Resource_ea37y"]
 script = ExtResource("9_gg7jr")
 target = 1
 buff = SubResource("Resource_acm6v")
 
-[sub_resource type="Resource" id="Resource_ojwvd"]
+[sub_resource type="Resource" id="Resource_3apn6"]
 script = ExtResource("10_h6o10")
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_oyloi"]
+[sub_resource type="Resource" id="Resource_ojwvd"]
 script = ExtResource("14_pel7x")
 buff_id = &"poison"
 stacks = 0
@@ -568,21 +569,21 @@ damage_taken_by_type = {
 "poison": 25
 }
 
-[sub_resource type="Resource" id="Resource_bdcps"]
+[sub_resource type="Resource" id="Resource_oyloi"]
 script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_85rp2")
 
-[sub_resource type="Resource" id="Resource_4j7hm"]
+[sub_resource type="Resource" id="Resource_bdcps"]
 script = ExtResource("1_vwqfe")
 key = &"flesh"
-effect = SubResource("Resource_ea37y")
-upgraded = SubResource("Resource_bdcps")
-bonus = SubResource("Resource_801aa")
+effect = SubResource("Resource_801aa")
+upgraded = SubResource("Resource_oyloi")
+bonus = SubResource("Resource_0lbgw")
 amount_field = &"stacks"
 base = 2.0
-guard_effect = SubResource("Resource_ojwvd")
-guard_upgraded = SubResource("Resource_oyloi")
-guard_bonus = SubResource("Resource_3apn6")
+guard_effect = SubResource("Resource_3apn6")
+guard_upgraded = SubResource("Resource_ojwvd")
+guard_bonus = SubResource("Resource_ea37y")
 guard_base = 2.0
 guard_prefix = "厚皮的"
 guard_prefixes = {
@@ -593,46 +594,46 @@ prefixes = {
 "en": "Venomous "
 }
 
-[sub_resource type="Resource" id="Resource_w31iu"]
+[sub_resource type="Resource" id="Resource_4j7hm"]
 script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_yeqor")
 
-[sub_resource type="Resource" id="Resource_81wba"]
+[sub_resource type="Resource" id="Resource_w31iu"]
 script = ExtResource("2_rnfoh")
 target = 0
 axis = &"stamina_cost"
 delta = -1
 
-[sub_resource type="Resource" id="Resource_c0a51"]
+[sub_resource type="Resource" id="Resource_81wba"]
 script = ExtResource("9_gg7jr")
 target = 1
 buff = SubResource("Resource_acm6v")
 
-[sub_resource type="Resource" id="Resource_hsdl7"]
+[sub_resource type="Resource" id="Resource_c0a51"]
 script = ExtResource("14_pel7x")
 buff_id = &"bleed"
 stacks = 2
 
-[sub_resource type="Resource" id="Resource_wf1r8"]
+[sub_resource type="Resource" id="Resource_hsdl7"]
 script = ExtResource("10_h6o10")
 resource_key = &"armor"
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_hli8r"]
+[sub_resource type="Resource" id="Resource_wf1r8"]
 script = ExtResource("14_pel7x")
 target = 0
 all_buffs = true
 
-[sub_resource type="Resource" id="Resource_y3q3e"]
+[sub_resource type="Resource" id="Resource_hli8r"]
 script = ExtResource("1_vwqfe")
 key = &"cloth"
-effect = SubResource("Resource_81wba")
-upgraded = SubResource("Resource_hli8r")
-bonus = SubResource("Resource_w31iu")
+effect = SubResource("Resource_w31iu")
+upgraded = SubResource("Resource_wf1r8")
+bonus = SubResource("Resource_4j7hm")
 amount_field = &"delta"
-guard_effect = SubResource("Resource_hsdl7")
-guard_upgraded = SubResource("Resource_wf1r8")
-guard_bonus = SubResource("Resource_c0a51")
+guard_effect = SubResource("Resource_c0a51")
+guard_upgraded = SubResource("Resource_hsdl7")
+guard_bonus = SubResource("Resource_81wba")
 guard_amount_field = &"stacks"
 guard_base = 2.0
 guard_prefix = "裹伤的"
@@ -644,46 +645,46 @@ prefixes = {
 "en": "Tangling "
 }
 
-[sub_resource type="Resource" id="Resource_7wilw"]
+[sub_resource type="Resource" id="Resource_y3q3e"]
 script = ExtResource("14_pel7x")
 target = 0
 all_buffs = true
 
-[sub_resource type="Resource" id="Resource_n6cc0"]
+[sub_resource type="Resource" id="Resource_7wilw"]
 script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_isath")
 stacks = 2
 
-[sub_resource type="Resource" id="Resource_nmno0"]
+[sub_resource type="Resource" id="Resource_n6cc0"]
 script = ExtResource("2_rnfoh")
 axis = &"regen_hp"
 
-[sub_resource type="Resource" id="Resource_gc6yj"]
+[sub_resource type="Resource" id="Resource_nmno0"]
 script = ExtResource("14_pel7x")
 stacks = 2
 all_debuffs = true
 
-[sub_resource type="Resource" id="Resource_wmnok"]
+[sub_resource type="Resource" id="Resource_gc6yj"]
 script = ExtResource("10_h6o10")
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_ilgi0"]
+[sub_resource type="Resource" id="Resource_wmnok"]
 script = ExtResource("2_rnfoh")
 target = 0
 axis = &"regen_hp_pct"
 delta = -1
 
-[sub_resource type="Resource" id="Resource_xqbji"]
+[sub_resource type="Resource" id="Resource_ilgi0"]
 script = ExtResource("1_vwqfe")
 key = &"herb"
-effect = SubResource("Resource_n6cc0")
-upgraded = SubResource("Resource_ilgi0")
-bonus = SubResource("Resource_7wilw")
+effect = SubResource("Resource_7wilw")
+upgraded = SubResource("Resource_wmnok")
+bonus = SubResource("Resource_y3q3e")
 amount_field = &"stacks"
 base = 2.0
-guard_effect = SubResource("Resource_gc6yj")
-guard_upgraded = SubResource("Resource_wmnok")
-guard_bonus = SubResource("Resource_nmno0")
+guard_effect = SubResource("Resource_nmno0")
+guard_upgraded = SubResource("Resource_gc6yj")
+guard_bonus = SubResource("Resource_n6cc0")
 guard_amount_field = &"stacks"
 guard_base = 2.0
 guard_prefix = "药香的"
@@ -695,45 +696,45 @@ prefixes = {
 "en": "Bitter "
 }
 
-[sub_resource type="Resource" id="Resource_7x46b"]
+[sub_resource type="Resource" id="Resource_xqbji"]
 script = ExtResource("2_rnfoh")
 target = 0
 axis = &"block"
 delta = -1
 
-[sub_resource type="Resource" id="Resource_p7hmw"]
+[sub_resource type="Resource" id="Resource_7x46b"]
 script = ExtResource("3_shedm")
 amount = 3.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_n6c0e"]
+[sub_resource type="Resource" id="Resource_p7hmw"]
 script = ExtResource("2_rnfoh")
 axis = &"max_hp"
 
-[sub_resource type="Resource" id="Resource_q4yiw"]
+[sub_resource type="Resource" id="Resource_n6c0e"]
 script = ExtResource("10_h6o10")
 resource_key = &"mana"
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_0s2l6"]
+[sub_resource type="Resource" id="Resource_q4yiw"]
 script = ExtResource("9_gg7jr")
 target = 1
-buff = SubResource("Resource_mj88a")
+buff = SubResource("Resource_71bn2")
 
-[sub_resource type="Resource" id="Resource_hchqr"]
+[sub_resource type="Resource" id="Resource_0s2l6"]
 script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_505co")
 
-[sub_resource type="Resource" id="Resource_a2b26"]
+[sub_resource type="Resource" id="Resource_hchqr"]
 script = ExtResource("1_vwqfe")
 key = &"clay"
-effect = SubResource("Resource_p7hmw")
-upgraded = SubResource("Resource_hchqr")
-bonus = SubResource("Resource_7x46b")
+effect = SubResource("Resource_7x46b")
+upgraded = SubResource("Resource_0s2l6")
+bonus = SubResource("Resource_xqbji")
 base = 3.0
-guard_effect = SubResource("Resource_q4yiw")
-guard_upgraded = SubResource("Resource_0s2l6")
-guard_bonus = SubResource("Resource_n6c0e")
+guard_effect = SubResource("Resource_n6c0e")
+guard_upgraded = SubResource("Resource_q4yiw")
+guard_bonus = SubResource("Resource_p7hmw")
 guard_base = 2.0
 guard_prefix = "釉彩的"
 guard_prefixes = {
@@ -744,42 +745,42 @@ prefixes = {
 "en": "Shattering "
 }
 
-[sub_resource type="Resource" id="Resource_l261m"]
+[sub_resource type="Resource" id="Resource_a2b26"]
 script = ExtResource("2_rnfoh")
 axis = &"attack_speed"
 
-[sub_resource type="Resource" id="Resource_pn814"]
+[sub_resource type="Resource" id="Resource_l261m"]
 script = ExtResource("3_shedm")
 amount = 2.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_4ji27"]
+[sub_resource type="Resource" id="Resource_pn814"]
 script = ExtResource("10_h6o10")
 resource_key = &"mana"
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_j8jy7"]
+[sub_resource type="Resource" id="Resource_4ji27"]
 script = ExtResource("10_h6o10")
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_oh00e"]
+[sub_resource type="Resource" id="Resource_j8jy7"]
 script = ExtResource("2_rnfoh")
 axis = &"regen_hp"
 
-[sub_resource type="Resource" id="Resource_aotdw"]
+[sub_resource type="Resource" id="Resource_oh00e"]
 script = ExtResource("9_gg7jr")
 buff = SubResource("Resource_505co")
 
-[sub_resource type="Resource" id="Resource_j1ibe"]
+[sub_resource type="Resource" id="Resource_aotdw"]
 script = ExtResource("1_vwqfe")
 key = &"nature"
-effect = SubResource("Resource_pn814")
-upgraded = SubResource("Resource_aotdw")
-bonus = SubResource("Resource_l261m")
+effect = SubResource("Resource_l261m")
+upgraded = SubResource("Resource_oh00e")
+bonus = SubResource("Resource_a2b26")
 base = 2.0
-guard_effect = SubResource("Resource_j8jy7")
-guard_upgraded = SubResource("Resource_oh00e")
-guard_bonus = SubResource("Resource_4ji27")
+guard_effect = SubResource("Resource_4ji27")
+guard_upgraded = SubResource("Resource_j8jy7")
+guard_bonus = SubResource("Resource_pn814")
 guard_base = 2.0
 guard_prefix = "回春的"
 guard_prefixes = {
@@ -790,47 +791,47 @@ prefixes = {
 "en": "Thorned "
 }
 
-[sub_resource type="Resource" id="Resource_pnaiy"]
+[sub_resource type="Resource" id="Resource_j1ibe"]
 script = ExtResource("2_rnfoh")
 target = 0
 axis = &"block"
 delta = -1
 
-[sub_resource type="Resource" id="Resource_tjydo"]
+[sub_resource type="Resource" id="Resource_pnaiy"]
 script = ExtResource("3_shedm")
 amount = 3.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_dx6xx"]
+[sub_resource type="Resource" id="Resource_tjydo"]
 script = ExtResource("9_gg7jr")
 target = 1
 buff = SubResource("Resource_osobw")
 
-[sub_resource type="Resource" id="Resource_102ri"]
+[sub_resource type="Resource" id="Resource_dx6xx"]
 script = ExtResource("10_h6o10")
 resource_key = &"armor"
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_upvnp"]
+[sub_resource type="Resource" id="Resource_102ri"]
 script = ExtResource("2_rnfoh")
 axis = &"block"
 
-[sub_resource type="Resource" id="Resource_18ene"]
+[sub_resource type="Resource" id="Resource_upvnp"]
 script = ExtResource("3_shedm")
 damage_type = &"bleed"
 amount = 3.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_i3l1i"]
+[sub_resource type="Resource" id="Resource_18ene"]
 script = ExtResource("1_vwqfe")
 key = &"crafted"
-effect = SubResource("Resource_tjydo")
-upgraded = SubResource("Resource_18ene")
-bonus = SubResource("Resource_pnaiy")
+effect = SubResource("Resource_pnaiy")
+upgraded = SubResource("Resource_upvnp")
+bonus = SubResource("Resource_j1ibe")
 base = 3.0
-guard_effect = SubResource("Resource_102ri")
-guard_upgraded = SubResource("Resource_upvnp")
-guard_bonus = SubResource("Resource_dx6xx")
+guard_effect = SubResource("Resource_dx6xx")
+guard_upgraded = SubResource("Resource_102ri")
+guard_bonus = SubResource("Resource_tjydo")
 guard_base = 2.0
 guard_prefix = "铁壁的"
 guard_prefixes = {
@@ -841,46 +842,46 @@ prefixes = {
 "en": "Keen "
 }
 
-[sub_resource type="Resource" id="Resource_nyyf4"]
+[sub_resource type="Resource" id="Resource_i3l1i"]
 script = ExtResource("2_rnfoh")
 target = 0
 axis = &"damage_taken"
 
-[sub_resource type="Resource" id="Resource_s1wnt"]
+[sub_resource type="Resource" id="Resource_nyyf4"]
 script = ExtResource("3_shedm")
 damage_type = &"fire"
 amount = 3.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_pxk0q"]
+[sub_resource type="Resource" id="Resource_s1wnt"]
 script = ExtResource("9_gg7jr")
 target = 1
-buff = SubResource("Resource_mj88a")
+buff = SubResource("Resource_71bn2")
 
-[sub_resource type="Resource" id="Resource_onoc1"]
+[sub_resource type="Resource" id="Resource_pxk0q"]
 script = ExtResource("10_h6o10")
 resource_key = &"mana"
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_irq6i"]
+[sub_resource type="Resource" id="Resource_onoc1"]
 script = ExtResource("2_rnfoh")
 axis = &"crit_chance"
 
-[sub_resource type="Resource" id="Resource_kiw4t"]
+[sub_resource type="Resource" id="Resource_irq6i"]
 script = ExtResource("3_shedm")
 amount = 3.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_lp6bk"]
+[sub_resource type="Resource" id="Resource_kiw4t"]
 script = ExtResource("1_vwqfe")
 key = &"magic"
-effect = SubResource("Resource_s1wnt")
-upgraded = SubResource("Resource_kiw4t")
-bonus = SubResource("Resource_nyyf4")
+effect = SubResource("Resource_nyyf4")
+upgraded = SubResource("Resource_irq6i")
+bonus = SubResource("Resource_i3l1i")
 base = 3.0
-guard_effect = SubResource("Resource_onoc1")
-guard_upgraded = SubResource("Resource_irq6i")
-guard_bonus = SubResource("Resource_pxk0q")
+guard_effect = SubResource("Resource_pxk0q")
+guard_upgraded = SubResource("Resource_onoc1")
+guard_bonus = SubResource("Resource_s1wnt")
 guard_base = 2.0
 guard_prefix = "璨光的"
 guard_prefixes = {
@@ -923,22 +924,22 @@ by_element = {
 }
 }
 
-[sub_resource type="Resource" id="Resource_k5e8s"]
+[sub_resource type="Resource" id="Resource_lp6bk"]
 script = ExtResource("3_shedm")
 amount = 2.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_dldrt"]
+[sub_resource type="Resource" id="Resource_k5e8s"]
 script = ExtResource("10_h6o10")
 resource_key = &"armor"
 amount = 2.0
 
-[sub_resource type="Resource" id="Resource_5wk6u"]
+[sub_resource type="Resource" id="Resource_dldrt"]
 script = ExtResource("1_vwqfe")
 key = &"default"
-effect = SubResource("Resource_k5e8s")
+effect = SubResource("Resource_lp6bk")
 base = 2.0
-guard_effect = SubResource("Resource_dldrt")
+guard_effect = SubResource("Resource_k5e8s")
 guard_base = 2.0
 guard_prefix = "护身的"
 guard_prefixes = {
@@ -949,57 +950,57 @@ prefixes = {
 "en": "Enchanted "
 }
 
-[sub_resource type="Resource" id="Resource_mb1sw"]
+[sub_resource type="Resource" id="Resource_5wk6u"]
 script = ExtResource("1_vwqfe")
 key = &"weapon"
 stance = &"attack"
 
-[sub_resource type="Resource" id="Resource_6b7nj"]
+[sub_resource type="Resource" id="Resource_mb1sw"]
 script = ExtResource("1_vwqfe")
 key = &"shield"
 stance = &"guard"
 
-[sub_resource type="Resource" id="Resource_yc1w8"]
+[sub_resource type="Resource" id="Resource_6b7nj"]
 script = ExtResource("1_vwqfe")
 key = &"armor"
 stance = &"guard"
 
-[sub_resource type="Resource" id="Resource_hnn45"]
+[sub_resource type="Resource" id="Resource_yc1w8"]
 script = ExtResource("1_vwqfe")
 key = &"default"
 stance = &"attack"
 
-[sub_resource type="Resource" id="Resource_coo8x"]
+[sub_resource type="Resource" id="Resource_hnn45"]
 script = ExtResource("1_vwqfe")
 key = &"0"
 
-[sub_resource type="Resource" id="Resource_ntehv"]
+[sub_resource type="Resource" id="Resource_coo8x"]
 script = ExtResource("1_vwqfe")
 key = &"1"
 
-[sub_resource type="Resource" id="Resource_wxpe8"]
+[sub_resource type="Resource" id="Resource_ntehv"]
 script = ExtResource("1_vwqfe")
 key = &"2"
 tier = 1
 
-[sub_resource type="Resource" id="Resource_shv1f"]
+[sub_resource type="Resource" id="Resource_wxpe8"]
 script = ExtResource("1_vwqfe")
 key = &"3"
 tier = 2
 
-[sub_resource type="Resource" id="Resource_jn5uv"]
+[sub_resource type="Resource" id="Resource_shv1f"]
 script = ExtResource("1_vwqfe")
 key = &"4"
 tier = 2
 main_mult = 1.5
 
-[sub_resource type="Resource" id="Resource_pg6q7"]
+[sub_resource type="Resource" id="Resource_jn5uv"]
 script = ExtResource("1_vwqfe")
 key = &"5"
 tier = 2
 main_mult = 2.0
 
-[sub_resource type="Resource" id="Resource_0qpun"]
+[sub_resource type="Resource" id="Resource_pg6q7"]
 script = ExtResource("1_vwqfe")
 key = &"default"
 
@@ -1011,6 +1012,6 @@ display_names = {
 "en": "Effect"
 }
 description = "效果槽：放进去的道具按材质定「做什么」（每种材质写攻式、守式两套，也给附魔前缀），按用途定攻守（盾、防具用守式，其它用攻式），按稀有度定几阶：升阶、附带都是在基础句后面追加一句。"
-material = Array[ExtResource("1_vwqfe")]([SubResource("Resource_md3qy"), SubResource("Resource_qjhcv"), SubResource("Resource_7upl7"), SubResource("Resource_8ka2w"), SubResource("Resource_68q5f"), SubResource("Resource_0lbgw"), SubResource("Resource_4j7hm"), SubResource("Resource_y3q3e"), SubResource("Resource_xqbji"), SubResource("Resource_a2b26"), SubResource("Resource_j1ibe"), SubResource("Resource_i3l1i"), SubResource("Resource_lp6bk"), SubResource("Resource_5wk6u")])
-purpose = Array[ExtResource("1_vwqfe")]([SubResource("Resource_mb1sw"), SubResource("Resource_6b7nj"), SubResource("Resource_yc1w8"), SubResource("Resource_hnn45")])
-rarity = Array[ExtResource("1_vwqfe")]([SubResource("Resource_coo8x"), SubResource("Resource_ntehv"), SubResource("Resource_wxpe8"), SubResource("Resource_shv1f"), SubResource("Resource_jn5uv"), SubResource("Resource_pg6q7"), SubResource("Resource_0qpun")])
+material = Array[ExtResource("1_vwqfe")]([SubResource("Resource_md3qy"), SubResource("Resource_qjhcv"), SubResource("Resource_7upl7"), SubResource("Resource_rf1ik"), SubResource("Resource_6qfri"), SubResource("Resource_agq1t"), SubResource("Resource_bdcps"), SubResource("Resource_hli8r"), SubResource("Resource_ilgi0"), SubResource("Resource_hchqr"), SubResource("Resource_aotdw"), SubResource("Resource_18ene"), SubResource("Resource_kiw4t"), SubResource("Resource_dldrt")])
+purpose = Array[ExtResource("1_vwqfe")]([SubResource("Resource_5wk6u"), SubResource("Resource_mb1sw"), SubResource("Resource_6b7nj"), SubResource("Resource_yc1w8")])
+rarity = Array[ExtResource("1_vwqfe")]([SubResource("Resource_hnn45"), SubResource("Resource_coo8x"), SubResource("Resource_ntehv"), SubResource("Resource_wxpe8"), SubResource("Resource_shv1f"), SubResource("Resource_jn5uv"), SubResource("Resource_pg6q7")])

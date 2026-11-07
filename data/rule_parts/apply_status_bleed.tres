@@ -12,11 +12,11 @@
 [ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_lfvqy"]
 [ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="11_xl17s"]
 
-[sub_resource type="Resource" id="Resource_fos0o"]
+[sub_resource type="Resource" id="Resource_imdws"]
 script = ExtResource("5_8k8t0")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_m2ceh"]
+[sub_resource type="Resource" id="Resource_psjp1"]
 script = ExtResource("7_ernqh")
 target = 1
 damage_type = &"bleed"
@@ -24,14 +24,14 @@ amount = 1.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_r2hia"]
+[sub_resource type="Resource" id="Resource_iuh5t"]
 script = ExtResource("8_vkx5y")
 
-[sub_resource type="Resource" id="Resource_e0tjf"]
+[sub_resource type="Resource" id="Resource_dohsk"]
 script = ExtResource("4_oeaqp")
-trigger = SubResource("Resource_r2hia")
-cadence = SubResource("Resource_fos0o")
-effects = Array[ExtResource("3_xuuak")]([SubResource("Resource_m2ceh")])
+trigger = SubResource("Resource_iuh5t")
+cadence = SubResource("Resource_imdws")
+effects = Array[ExtResource("3_xuuak")]([SubResource("Resource_psjp1")])
 
 [sub_resource type="Resource" id="Resource_505co"]
 script = ExtResource("9_nruqw")
@@ -40,8 +40,9 @@ display_name = "流血"
 display_names = {
 "en": "Bleed"
 }
+is_debuff = true
 decay_halve_on = &"tick"
-rules = Array[ExtResource("4_oeaqp")]([SubResource("Resource_e0tjf")])
+rules = Array[ExtResource("4_oeaqp")]([SubResource("Resource_dohsk")])
 element = &"bleed"
 
 [sub_resource type="Resource" id="Resource_blteg"]

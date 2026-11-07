@@ -147,6 +147,12 @@ static func _typed(token: String, ctx: Dictionary) -> Variant:
 			if f == null:
 				return null
 			return _paint(Names.of(f), String(TYPED_STYLES["faith"]))
+		"load":     # 288：`{load:1}`～`{load:3}` 负重第几级的倍数、`{load:step}` 最后一级走一步乘几（standard 负重规则）
+			var rules := EncumbranceRules.standard()
+			var n: Variant = rules.number_text(arg) if rules != null else null
+			if n == null:
+				return null
+			return _paint(String(n), String(TYPED_STYLES["item_stat"]))
 		"faith_threshold", "faith_deed", "faith_offer", "faith_perk":
 			var n: Variant = _faith_stat(kind, arg, ctx)
 			if n == null:

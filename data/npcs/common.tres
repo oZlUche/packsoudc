@@ -35,4 +35,7 @@ texts = {
 [resource]
 script = ExtResource("3_oh026")
 id = &"common"
+display_names = {
+"en": ""
+}
 lines = Array[ExtResource("1_lqpap")]([SubResource("Resource_kkhmo"), SubResource("Resource_x2snh"), SubResource("Resource_7pnqt")])
