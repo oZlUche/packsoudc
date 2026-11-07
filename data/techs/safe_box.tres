@@ -28,9 +28,9 @@ display_names = {
 "en": "Rescue Team's Pack"
 }
 requires = Array[StringName]([&"warehouse"])
-description = "接应的人多背一些：托付的格子多一行。"
+description = "接应的人多背一些：托付的格子每级多一列、一行。"
 descriptions = {
-"en": "The people waiting at the exit carry more: one more row of entrust cells."
+"en": "The people waiting at the exit carry more: each level adds a column and a row of entrust cells."
 }
 effect = SubResource("Resource_lrb05")
 tiers = Array[ExtResource("3_tmqee")]([SubResource("Resource_hvujc"), SubResource("Resource_0tawc")])
