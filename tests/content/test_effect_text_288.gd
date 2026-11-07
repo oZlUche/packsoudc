@@ -137,3 +137,20 @@ static func _collect_buffs(v: Variant, out: Array[BuffDef], seen: Dictionary) ->
 	for p in (v as Resource).get_property_list():
 		if int(p["usage"]) & PROPERTY_USAGE_STORAGE and (int(p["type"]) == TYPE_OBJECT or int(p["type"]) == TYPE_ARRAY or int(p["type"]) == TYPE_DICTIONARY):
 			_collect_buffs((v as Resource).get(p["name"]), out, seen)
+
+
+static func run_safe_tech_text(t: TestCase) -> void:
+	t.begin("288 补（测试 11-07）· 科技「接应队的背囊」：说明写的列 / 行 = 效果构件真加的；英文不写「+1 columns」")
+	var tech := load("res://data/techs/safe_box.tres") as TechDef
+	var fx: TechSafeSize = null
+	if tech != null:
+		fx = tech.effect as TechSafeSize
+	t.not_null(fx, "safe_box 的效果是扩格")
+	if fx == null:
+		return
+	t.eq(tech.description.contains("列"), fx.cols > 0, "说明写不写列 = 加不加列（%d）" % fx.cols)
+	t.eq(tech.description.contains("行"), fx.rows > 0, "说明写不写行 = 加不加行（%d）" % fx.rows)
+	var keep := UiText.lang
+	UiText.lang = "en"
+	t.check(not fx.describe_level(1).contains("+1 columns") and not fx.describe_level(1).contains("+1 rows"), "英文一级：%s" % fx.describe_level(1))
+	UiText.lang = keep

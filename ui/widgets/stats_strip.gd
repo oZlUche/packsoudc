@@ -137,7 +137,7 @@ func refresh(spec: CombatantSpec, run: RunState) -> void:
 	var soft := _sub_color()
 	_blocks[STAMINA] = {"main": UiText.t(RATING_KEYS[rating]) if RATING_KEYS.has(rating) else rating, "sub": UiText.t("strip.stamina_sub") % [e["cost"], e["regen"]],
 		"main_color": _rating_ink(rating), "sub_color": soft, "sub_bold": false,
-		"tip": StaminaEstimate.describe(spec)}
+		"tip": StaminaEstimate.describe(spec, CombatantSpec.item_names(spec, run.items) if run != null else {})}     # 289：两段来源用棋盘上的名字
 	var dps := spec.rough_dps()
 	_blocks[DPS] = {"main": "%.1f" % dps, "sub": "DPS", "main_color": _main_color(), "sub_color": soft, "sub_bold": false,
 		"tip": _dps_tip(spec, run)}

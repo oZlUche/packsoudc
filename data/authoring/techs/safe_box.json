@@ -7,9 +7,9 @@
   "requires": [
     "warehouse"
   ],
-  "description": "接应的人多背一些：托付的格子多一行。",
+  "description": "接应的人多背一些：托付的格子每级多一列、一行。",
   "descriptions": {
-    "en": "The people waiting at the exit carry more: one more row of entrust cells."
+    "en": "The people waiting at the exit carry more: each level adds a column and a row of entrust cells."
   },
   "effect": {
     "type": "tech_safe_size",
