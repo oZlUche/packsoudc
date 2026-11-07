@@ -25,6 +25,12 @@ static func frame_unarmed(t: TestCase, root: Window) -> void:
 			break
 	t.check(armed >= 0, "有一套预设带着武器")
 	t.eq(setup.status_text(), "", "放上武器：提示没了")
+	# 作者 11-07：两套带武器的预设之间换，中途拿掉旧的那一下不算空手 —— 不弹提示
+	setup.notice_layer().clear()
+	for i in flow.presets().size():
+		setup.choose_preset(i)
+		setup.choose_preset(armed)
+	t.check(not setup.notice_layer().lines().has(hint), "带武器的预设之间换来换去：不弹空手提示（%s）" % [setup.notice_layer().lines()])
 	setup.choose_preset(-1)
 	setup.show_page(2)
 	setup.set_run_seed(7)     # 固定一张图，测试不随种子变
