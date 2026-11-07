@@ -23,7 +23,7 @@ text = "「三趟都活着回来了。下一趟没有图，废墟每次都不一
 
 「越往里越值钱，也越要命。最里头坐着这片废墟的主人，放倒它就直接带着东西出来结算；不想碰，就从外面几环的出口走。」
 
-「路上有做买卖的、能歇脚的，还有我们埋的保险箱，鼠标停在点上就看得见。塞进保险箱的，就算你死在里头也会送回来。」
+「路上有做买卖的、能歇脚的，鼠标停在点上就看得见。免费出口有我们的人接应，拿不动的先托付给他们，就算你死在里头也会送回来。」
 
 {c:dim}看不懂的词，Esc 菜单里的{ui:百科}都有一页。{/c}"
 texts = {
@@ -31,7 +31,7 @@ texts = {
 
 \"The deeper you go, the more it's worth, and the more likely it kills you. At the very center sits the master of these ruins. Put it down and you walk straight out with your loot to Results. If you'd rather not, leave by an exit in the outer rings.\"
 
-\"Along the way there are traders, places to rest, and Safes we buried. Hover over a spot to see what it is. Whatever you stash in a Safe gets sent back, even if you die in there.\"
+\"Along the way there are traders and places to rest. Hover over a spot to see what it is. Our people wait at the free exits: hand them what you can't carry and it gets sent back, even if you die in there.\"
 
 {c:dim}Any word you don't know has a page in the {ui:百科}, under the Esc menu.{/c}"
 }

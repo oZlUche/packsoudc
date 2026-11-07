@@ -1,15 +1,15 @@
 {
   "id": "safe_box",
-  "display_name": "保险箱扩格",
+  "display_name": "接应队的背囊",
   "display_names": {
-    "en": "Bigger Safe"
+    "en": "Rescue Team's Pack"
   },
   "requires": [
     "warehouse"
   ],
-  "description": "局内的保险箱多出格子，撤不出来也能多保住几件。",
+  "description": "接应的人多背一些：托付的格子多一行。",
   "descriptions": {
-    "en": "The safe in a run gets more cells, so more is kept even if you fail to extract."
+    "en": "The people waiting at the exit carry more: one more row of entrust cells."
   },
   "effect": {
     "type": "tech_safe_size",

@@ -16,8 +16,6 @@ const SAVE_VERSION := 4
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
 const STORAGE_ID := 2
-## 092：新加 class_name 的脚本用 preload 引用，作者拉了没重新 --import 也能跑
-const SafePlacerScript := preload("res://core/run/safe_placer.gd")
 
 enum Phase { PICK_SPAWN, ON_MAP, DEFEATED, EXTRACTED }
 
@@ -176,7 +174,6 @@ static func start(
 	if s.map == null:
 		return null
 	ItemInstance.reset_uid_counter()
-	SafePlacerScript.mark(s.map, p_chapter.safes)     # 092：先换点，再放敌人（换掉的点不该带敌人）
 	if s.pool != null:
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule, s.bag_pool)
 	EnemyPlacer.arrange_map(s.map, p_items)     # 165：预设图里没写位置的敌人道具（与相邻组）在这里摆一次、记进内容

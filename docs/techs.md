@@ -8,7 +8,7 @@
 | id | 名称 | 英文名 | 列 | 排序 | 前置 | 说明 | 英文说明 | 效果构件 | 构件参数 | 每级说明模板 |
 |---|---|---|---|---|---|---|---|---|---|---|
 | pack | 行囊 | Travel Pack | 0 | 0 | safe_box | 死里逃生：战败时保住身上一部分钱，级数越高留得越多。 | Keep part of the coins you're carrying if you die; higher levels keep more. | tech_run_buff | {"effect": "keep_on_death"} | 战败时保住身上一部分钱 |
-| safe_box | 保险箱扩格 | Bigger Safe | 0 | 0 | warehouse | 局内的保险箱多出格子，撤不出来也能多保住几件。 | The safe in a run gets more cells, so more is kept even if you fail to extract. | tech_safe_size | {"rows": 1} |  |
+| safe_box | 接应队的背囊 | Rescue Team's Pack | 0 | 0 | warehouse | 接应的人多背一些：托付的格子多一行。 | The people waiting at the exit carry more: one more row of entrust cells. | tech_safe_size | {"rows": 1} |  |
 | warehouse | 仓库扩建 | Warehouse Expansion | 0 | 0 |  | 仓库多一页，放得下更多带回来的东西；各页独立，左边的页签切换。 | One more Warehouse page for what you bring back; each page is separate, switch with the tabs on the left. | warehouse_pages |  |  |
 | endurance | 耐久 | Endurance | 1 | 0 |  | 体力上限更高，在图上走得更远。 | Higher max Vitality, so you travel further on the map. | tech_run_buff | {"effect": "vitality_max_bonus"} | 体力上限 {vitality_max_bonus_amount\|signed} |
 | undaunted | 不屈 | Undaunted | 1 | 0 | sinew | 打输了少扣体力，最少还是扣一点。 | Lose less Vitality when you lose a battle, but always at least one point. | tech_run_buff | {"effect": "loss_discount"} | 打输了少扣 {loss_discount_amount} 点体力（最少扣一点） |

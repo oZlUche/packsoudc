@@ -3,6 +3,7 @@
 ## 放进保险箱的道具**视为已带出**：结算时不管撤离还是行动失败都进局外（结算屏单独一格看得见）。包放不进去（局外不留包）。
 ## 拖着放、双击放（棋盘双击 → 保险箱；保险箱双击 → 试着回棋盘，放不下到地上）。
 ## 作者定：**关上（里面有东西）就送回基地、不能再改动**，走开也算关上；空着关只是收起，还能再开。
+## 287：并进免费撤离点，叫「托付」（[method GameFlow.open_safe]）。关上 / 走开只把新放的几件交出去（[member SafeModule.sealed]，拿不回来），空格留着下回再放
 extends GameScreen
 
 var _safe: GridInventory = null
@@ -25,6 +26,7 @@ func open(_payload: Dictionary) -> void:
 	_view.label_font = font
 	_view.inventory = _safe
 	_view.show_adjacency = false
+	_view.dim_filter = func(it: ItemInstance) -> bool: return _module == null or not _module.is_sealed(it.uid)     # 287：交出去的压灰
 	_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_view)
 	BoardFrame.wrap(_view)     # 227：素框 + 格缝
@@ -41,6 +43,8 @@ func open(_payload: Dictionary) -> void:
 		return "" if MetaState.keeps(inst.def) else UiText.t("safe.no_bags"))
 	# 包不进保险箱（局外不留包，MetaState.keeps）
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
+		if _module != null and _module.is_sealed(inst.uid) and target != _safe:
+			return false     # 287：交出去的拿不回来（格子里挪位置可以）
 		return _is_open() and (target != _safe or MetaState.keeps(inst.def))
 	_safe.changed.connect(_refresh)
 	_refresh()
@@ -56,6 +60,9 @@ func _is_open() -> bool:
 func take_back(uid: int) -> bool:
 	var inst := _safe.get_item(uid)
 	if inst == null or not _is_open():
+		return false
+	if _module.is_sealed(uid):
+		say(UiText.t("safe.sealed") % Names.of(inst.def))
 		return false
 	var where := _take_to_player(_safe, uid)
 	if where == "storage":

@@ -1,5 +1,6 @@
-## 保险箱（092，作者定）：地图上的保险箱点，放进去的东西**视为已带出** —— 就算这一局行动失败也带得出。
-## 关上（或者走开）就送回基地，不能再改动；空着关不算关（还能再开）。
+## 保险箱（092，作者定）：放进去的东西**视为已带出** —— 就算这一局行动失败也带得出。
+## 287（作者 11-07 选 C）：图上不再单放保险箱点，并进**免费撤离点** ——「托付」给出口那儿接应的人（[method GameFlow.open_safe]）。
+## 一局一块格子、整局共用：关上（或者走开）时放进去的那几件交出去（[member sealed]），拿不回来；**空格照旧能放**，出口还开着就能回来再托。
 ##
 ## 101 第 0 / 1 刀的样板模块：状态（容器、锁没锁）、存档、接线全在这里，[RunState] 一行都不认识保险箱。
 ## 自己接两处：走开就锁上（`RunState.leaving`）、节点事件问「还能开吗」（`RunHooks` 的 `safe_open`）。
@@ -18,7 +19,10 @@ signal closed(count: int)
 @export var size: Vector2i = Vector2i(3, 3)
 
 var inventory: GridInventory = null
+## 092 时代整块锁上；287 起不再整块锁（老档读进来转成 [member sealed]）
 var locked: bool = false
+## 287：已经交出去的件（uid → true）：拿不回来、不能挪出格子
+var sealed: Dictionary = {}
 ## 读档拿到的那份，等 install 里有内容库了再还原
 var _saved: Dictionary = {}
 
@@ -33,7 +37,7 @@ func id() -> StringName:
 
 
 func describe() -> String:
-	return "保险箱：放进去的东西视为已带出（%d×%d）；关上或走开就送回基地" % [size.x, size.y]
+	return "托付：免费撤离点上交给接应的人，视为已带出（%d×%d）；关上或走开就交出去" % [size.x, size.y]
 
 
 func install(run: RunState) -> void:
@@ -54,6 +58,12 @@ func install(run: RunState) -> void:
 		else:
 			inventory = GridInventory.new(size, CONTAINER_ID, false)
 		locked = bool(_saved.get("locked", locked))
+		for u in _saved.get("sealed", []):
+			sealed[int(u)] = true
+		if locked:     # 287：老档整块锁着的 —— 里面的都算交出去了，格子还能用
+			for inst in inventory.items():
+				sealed[(inst as ItemInstance).uid] = true
+			locked = false
 	# 作者定：走开 = 关上（里面有东西才算关）。走一步、被事件挪走都在真正动之前发 leaving
 	if not run.leaving.is_connected(_on_leaving):
 		run.leaving.connect(_on_leaving)
@@ -65,16 +75,33 @@ func is_open() -> bool:
 	return inventory != null and not locked
 
 
-## 关上：里面的送回基地，不能再改。空着关不算关（还能再开）。返回这次锁没锁
+## 287：这一件已经交出去了（拿不回来）
+func is_sealed(uid: int) -> bool:
+	return sealed.has(uid)
+
+
+## 交出去了几件
+func sealed_count() -> int:
+	return sealed.size()
+
+
+## 关上：格子里还没交出去的几件交出去，不能再拿回；空格留着。没有新放的不算关。返回这次交没交
 func lock() -> bool:
-	if locked or inventory == null or inventory.item_count() == 0:
+	if locked or inventory == null:
 		return false
-	locked = true
+	var fresh := 0
+	for inst in inventory.items():
+		var uid := (inst as ItemInstance).uid
+		if not sealed.has(uid):
+			sealed[uid] = true
+			fresh += 1
+	if fresh == 0:
+		return false
 	if _run != null and _run.map != null and _run.travel != null:
 		for id_ in _run.map.node_ids():
 			if _run.map.get_node(id_).type == &"safe":
-				_run.travel.mark_visited(id_)     # 锁了就灰：再踩上不开
-	closed.emit(inventory.item_count())
+				_run.travel.mark_visited(id_)     # 老档的保险箱点：交过就灰
+	closed.emit(fresh)
 	return true
 
 
@@ -90,6 +117,7 @@ func to_dict() -> Dictionary:
 	return {
 		"inventory": inv,
 		"locked": locked,
+		"sealed": sealed.keys(),
 	}
 
 

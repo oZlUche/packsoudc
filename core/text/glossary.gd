@@ -33,7 +33,7 @@ const TERMS := {
 	"耗耐力": {"text": "这一下出手要花的耐力。", "tip": false, "en": {"name": "Stamina cost", "text": "How much Stamina this use costs."}},
 	"信力": {"text": "按信仰要求的行为攒的点数；过了阈值，这个信仰的道具解锁更多功能。", "tip": false, "en": {"name": "Faith", "text": "Points earned by doing what a Faith asks. Past each threshold, that Faith's items unlock more."}},
 	# 129：负重
-	"负重": {"text": "作战棋盘上所有东西（包本身也算）的重量之和；地上、保险箱、仓库里的不算。超过角色的负重上限就开始吃力。", "en": {"name": "Load", "text": "The total weight of everything on your battle Board, bags included. Things on the Ground, in Safes or in the Warehouse don't count. Go over your character's Load limit and you start to struggle."}},
+	"负重": {"text": "作战棋盘上所有东西（包本身也算）的重量之和；地上、托付出去的、仓库里的不算。超过角色的负重上限就开始吃力。", "en": {"name": "Load", "text": "The total weight of everything on your battle Board, bags included. Things on the Ground, entrusted or in the Warehouse don't count. Go over your character's Load limit and you start to struggle."}},
 	"吃力": {"text": "负重超过上限：急速 −10%、耐力回复 −10%。", "en": {"name": "Burdened", "text": "Load over the limit: Haste −10%, Stamina regen −10%."}},
 	"超重": {"text": "负重超过上限的 1.25 倍：急速 −25%、耐力回复 −25%、耐力上限 −20%。", "en": {"name": "Overloaded", "text": "Load over 1.25 times the limit: Haste −25%, Stamina regen −25%, Max stamina −20%."}},
 	"寸步难行": {"text": "负重超过上限的 1.5 倍：超重的减益照旧，地图上每走一步（传送也算）" + COUNTDOWN_WORD + " −2；原地等待不翻倍。", "en": {"name": "Immobile", "text": "Load over 1.5 times the limit: the Overloaded penalties still apply, and every step on the map (teleports too) costs Countdown −2. Waiting in place is not doubled."}},
