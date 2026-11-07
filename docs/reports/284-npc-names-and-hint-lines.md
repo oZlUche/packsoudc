@@ -1,19 +1,22 @@
 # 284 三位 NPC 的名字与提示台词（282 补充）
 
-> 作者 2026-11-07 10:01（架构设计线程）：「名字你负责就好，局内商店店主用中东风格名字，其他两位古代欧洲文明就好。台词现在只用加入小提示就好，比如局内商店店主：【精英敌人有概率掉落额外的好东西】；铁匠：【不同地区会产出不同材料】。写一份方案让我过目决定」。本篇是方案，**等作者过目**后再派执行。
+> 作者 2026-11-07 10:01（架构设计线程）：「名字你负责就好，局内商店店主用中东风格名字，其他两位古代欧洲文明就好。台词现在只用加入小提示就好，比如局内商店店主：【精英敌人有概率掉落额外的好东西】；铁匠：【不同地区会产出不同材料】。写一份方案让我过目决定」。
+>
+> 作者 14:43 看过第一版后：3.1 第三句改成【东西卖给我就好，我肯定出个公道价格，嘿嘿】（商人要奸诈一点，坦白自己给得少就和人设冲突）；第四句不要直接引用游戏术语，改成【待得越久，就越出不去】；第五句要先按世界观改【保险箱】的概念——魔法阵、撤离部队，或者并进免费撤离点，进入时选【撤离】或【托付道具】；第六句改成【别太贪心，拿的东西越多，就越走不动路】；**其余台词照这个逻辑全改**。本篇是第二版，**等作者过目**后再派执行。
 
 ## 〇 一句话
 
-三位 NPC 各给三个名字候选（A / B / C，带推荐），台词**全部改成提示句**：每人六句，每句一个真的、现在就在游戏里的规则，不写世界观、不写任务链线索；作者点头后执行把 `data/authoring/npcs/*.json` 填上，重跑字集裁字。
+三位 NPC 各给三个名字候选（A / B / C，带推荐）；台词全部是提示句，每人六句，**用人话、带人设、不说系统术语**，每句背后仍是一条真的、现在就在游戏里的规则；不写世界观、不写任务链线索。保险箱的概念另给 A / B / C（§四），店主第五句跟着它走。作者点头后执行填 `data/authoring/npcs/*.json`，重跑字集裁字。
 
 ## 一、规矩（写台词前先定）
 
-1. **只说真话**：每句对应一条代码里现有的规则（§三 每句后面标了出处），数值会变的不写数（「三成 / 五成」这类数据项不进台词）。
+1. **只说真话**：每句对应一条代码里现有的规则（§三 每句后面标了出处）；数值会变的不写数。
 2. **不碰任务链**：寂灭 / 刹那 / 断水 / 破晓一个字不提（作者 11-05 12:33：提示以后写进道具说明，不另加）。
-3. **一句一事、不超过一行**：纸条宽 300 像素（`NpcBadge.NOTE_W`），正文一行约 16–18 个汉字，超了自动换行也不要超过两行；不加「提示：」之类的前缀，纸条本身就是提示（奥卡姆）。
-4. **不重复界面上已有的字**：节点悬浮句已经写了矿脉出矿石、林地出草药（`node.hint.search_*`），铁匠不再逐个报；集市的「每局回来换一批货」招牌已有，摊主那句换个角度说锁格。
-5. **全部无条件开放**：六句都随时能说，不挂 `requires`（作者给的两句例子也没有条件；十句内不重复的队列对六句照样工作：说完一轮从最早的放开）。
-6. **种类**：六句全是 `guide`；原来的 `lore_1–3` 三个槽改 id 为 `guide_4–6`，`kind` 一律 `guide`（导入器只许 lore / guide，不用改校验）。
+3. **不说术语**（作者 14:43）：「倒计时」「撤离点」「保险箱」「科技」「配方」「稀有度」这些界面上的词都不进台词，换成这个人会说的话；玩家自己把话和界面对上号。
+4. **带人设**：店主是个嘴甜心黑的行商，话里带「嘿嘿」，永远不说自己给得少；摊主是个提果篓的胖子，热络、实在，爱拉生意；铁匠光头大胡子，话少、直、不客气。
+5. **一句一事、不超过两行**：纸条宽 300 像素（`NpcBadge.NOTE_W`），正文一行约 16–18 个汉字；不加「提示：」之类的前缀，纸条本身就是提示（奥卡姆）。
+6. **全部无条件开放**：六句都随时能说，不挂 `requires`；十句内不重复的队列对六句照样工作（说完一轮从最早的放开）。
+7. **种类**：六句全是 `guide`；原来的 `lore_1–3` 三个槽改 id 为 `guide_4–6`，`kind` 一律 `guide`。
 
 ## 二、名字（A / B / C，推荐加粗）
 
@@ -27,49 +30,62 @@
 
 三个推荐放在一起：哈基姆 / 德米特里 / 布伦努斯 —— 三种文明各一个，念起来不撞。
 
-## 三、台词（每人六句，全是提示）
+## 三、台词（第二版：每人六句，全是提示，不说术语）
 
-### 3.1 局内商店店主（局里说的话，围着「这一局怎么活着带东西出去」）
+### 3.1 局内商店店主（嘴甜心黑的行商；局里说的话，围着「这一局怎么活着带东西出去」）
 
-| id | 中文 | en | 出处 |
+| id | 中文 | en | 背后的规则 |
 |---|---|---|---|
 | guide_1 | 精英敌人有概率掉落额外的好东西 | Elite foes have a chance to drop something extra. | 作者原句；精英点的敌人高一档（`StrengthRule`），身上的货更好，另有珍宝掷 |
-| guide_2 | 越往里走，货架上越容易见到好东西 | The deeper you go, the better the goods on my shelves. | `EconomyRules.shop_depth_gain`：稀有度权重随深度放大 |
-| guide_3 | 东西卖给我，不如带回基地卖得贵 | You'll get more selling that back at base than to me. | 251：局内 `shop_sell_ratio` 低于基地 `MetaRules.sell_ratio` |
-| guide_4 | 倒计时过半，离出生点最近的免费撤离点就关了 | Past half the Countdown, the free exit nearest the spawn closes. | 092：`PaidExtracts`，`closes_at` |
-| guide_5 | 放进保险箱的，就算行动失败也带得出去 | Whatever's in the Safe comes home even if you fail. | `node.tip.safe`、`CountdownModule` |
-| guide_6 | 背得太重，走一步花的倒计时也更多 | Carry too much and every step costs more Countdown. | 129：负重第三级走一步行动点翻倍（`EncumbranceLevel`） |
+| guide_2 | 越往里走，我摆出来的货越好，嘿嘿 | The deeper you go, the finer the wares I lay out. Heh. | `EconomyRules.shop_depth_gain`：货架稀有度权重随深度放大 |
+| guide_3 | 东西卖给我就好，我肯定出个公道价格，嘿嘿 | Sell it to me, friend. I always give a fair price. Heh. | 作者原句；251：局内卖价低于基地（他当然不说） |
+| guide_4 | 待得越久，就越出不去 | The longer you linger, the harder it is to leave. | 作者原句；092：过半关掉离出生点最近的免费出口 |
+| guide_5 | 拿不动的先托付给出口那儿接应的人，他们比你先到家 | Hand what you can't carry to the crew waiting at the exit. They'll be home before you. | §四 推荐 C 的写法；A / B 的写法见 §四 |
+| guide_6 | 别太贪心，拿的东西越多，就越走不动路 | Don't be greedy. The more you carry, the slower you walk. | 作者原句；129：负重分级，第三级走一步行动点翻倍 |
 
-### 3.2 集市散货摊摊主（基地里说的话，围着「这摊子怎么用」）
+### 3.2 集市散货摊摊主（提果篓的胖子，热络实在；基地里说的话，围着「这摊子怎么用」）
 
-| id | 中文 | en | 出处 |
+| id | 中文 | en | 背后的规则 |
 |---|---|---|---|
-| guide_1 | 看上的货先锁住，换货时锁着的不动 | Lock what you like; a restock won't touch locked wares. | 270：`Market.toggle_lock`，`market.locked` |
-| guide_2 | 在家也能花钱换货，换得越多越贵 | You can pay to restock at home; each time costs more. | 270：`refresh_cost = 40 + 20 × 次数`（数不写进台词） |
-| guide_3 | 买走的货进仓库，仓库满了我可不卖 | Purchases go to the Warehouse; no room, no sale. | `Market.buy`，`market.full` |
-| guide_4 | 固定摊的货不断，只有我这儿看运气 | The fixed stalls never run dry; only my stall is luck. | 270：固定摊货单 `catalogue` 买了不减，散货摊按权重抽 |
-| guide_5 | 点出「高级货物」，摊子上的货就更好 | Research Fine Goods and the wares get better. | 251 / 262：集市级数 = 科技「高级货物」 |
-| guide_6 | 一键出售不卖锁住和收藏的，也不卖包 | Sell-all skips locked and favourited items, and bags. | 268：`meta.sell_intro`（出售走集市，265 收藏） |
+| guide_1 | 相中了又没钱？先给它拴上，下回来还在 | Fancy it but short on coin? Tie it down and it'll still be here next time. | 270：`Market.toggle_lock`，换货不动锁住的格 |
+| guide_2 | 嫌货不好？花点钱我给你换一批，不过越换越贵哦 | Don't like the lot? Pay a little and I'll bring out another. It gets dearer each time, mind. | 270：`refresh_cost = 40 + 20 × 次数`（数不写） |
+| guide_3 | 买归买，你家库房得放得下 | Buy all you like, so long as your storehouse has room. | `Market.buy`，仓库满了不卖（`market.full`） |
+| guide_4 | 隔壁几家翻来覆去就那几样，新鲜玩意儿只在我这儿 | The other stalls sell the same old things. The surprises are all here. | 270：固定摊货单不变、买了不减；散货摊按权重抽 |
+| guide_5 | 等你家底厚了，我的货色也跟着上档次 | Once your house is better off, my wares go up a notch too. | 251 / 262：集市级数 = 科技「高级货物」 |
+| guide_6 | 拴上的和打了星的我一件不收，袋子也不收 | I won't take anything tied down or starred, and no bags. | 268：一键出售跳过锁定和收藏（265 右上角星），不卖包 |
 
-### 3.3 铁匠（基地里说的话，围着「材料从哪来、怎么变好」）
+### 3.3 铁匠（光头大胡子，话少、直；基地里说的话，围着「料从哪来、怎么变好」）
 
-| id | 中文 | en | 出处 |
+| id | 中文 | en | 背后的规则 |
 |---|---|---|---|
 | guide_1 | 不同地区会产出不同材料 | Different lands yield different materials. | 作者原句；283：每章每环自带材料节点与产物表 |
-| guide_2 | 两件一样的东西贴在一起，接缝上的小锤能合成更好的 | Two of the same side by side: the little hammer at the seam fuses them into something better. | 279：`Fusion`，白 → 绿 |
-| guide_3 | 休息点的砧子，一把武器加一件对路的材料就能升一档 | At a rest-point anvil, one weapon plus the right material goes up a grade. | 279：`Anvil`，每处免费一次 |
-| guide_4 | 材料比配方要的好几档，打出来的品质就高几档 | Better material than the recipe asks for means a finer piece. | 279 补充二：`Anvil.quality_of` |
-| guide_5 | 矿石得先在我这儿炼成锭，再打东西 | Ore gets smelted into ingots here before it becomes anything. | `smith_silver_ingot` / `smith_mithril_ingot`，分组「冶炼」 |
-| guide_6 | 我只用仓库里的素材，锁住的不碰，打好的也放回仓库 | I only use Warehouse materials, never locked ones; the work goes back there too. | `Smithy`：只吃仓库、锁住的不算、产物进仓库 |
+| guide_2 | 两件一样的家伙挨着放，缝上会冒个小锤子，敲一下就成一件好的 | Lay two of the same side by side. A little hammer shows at the seam. Strike it and they become one better piece. | 279：`Fusion`，相邻 + `adjacent` 配方，白 → 绿 |
+| guide_3 | 歇脚的地方有砧子，一把家伙配一块对路的料，敲一下就上一档 | Where you rest there's an anvil. One weapon, one right piece of stock, one strike, one grade up. | 279：`Anvil`，每处休息点免费一次 |
+| guide_4 | 料越好，打出来的越好，别心疼好料 | Better stock, better work. Don't hoard the good stuff. | 279 补充二：材料比配方高几档，品质高几档 |
+| guide_5 | 矿石先炼成锭，再谈打东西 | Ore gets smelted into ingots first. Then we talk. | `smith_silver_ingot` / `smith_mithril_ingot`，分组「冶炼」 |
+| guide_6 | 我只动你库里的料，上了锁的不碰；打好的也放回库里 | I only use stock from your storehouse, never anything locked. The work goes back there too. | `Smithy`：只吃仓库、锁住的不算、产物进仓库 |
 
-## 四、改动清单（执行，作者点头后）
+## 四、「保险箱」改成什么（作者 14:43 问；A / B / C，推荐 C）
+
+现状（092）：地图中层一个 `safe` 点（`SafePlacer`，深度约 0.7，两章各 1 个），踩上开一块 3×3 的格子，放进去的东西「视为已带出」，走开就锁上送回基地；科技「保险箱」加行列；寂灭的法杖计数「撤离或经保险箱回家 +1」也认它。一个只有名字、没有来历的箱子，确实和世界观对不上。
+
+| 方案 | 做法 | 改动 | 利弊 |
+|---|---|---|---|
+| A 魔法阵 | 点原地不动，改名「传送阵」：放进阵里的东西先一步回家 | 只改名、改图标、改文案；科技改名「传送阵」 | 最省；魔法本来就有（魔晶、符文堆），说得通；但图上还是多一种点 |
+| B 撤离部队（原位） | 点原地不动，改成一支在图中接应的小队「接应队」：把东西托付给他们带回去 | 同 A，改名、改图标、改文案 | 和 C 用同一个世界观，但接应的人站在图中间说不通 —— 他们为什么不顺便带你走 |
+| **C 并入免费撤离点** | 不再单放 `safe` 点（两章 `safes` = 0，`SafePlacer` 退役）。踩上**免费撤离点**先问一句：【撤离】结束这一局 / 【托付】把东西交给出口接应的人、自己接着走；托付屏 = 现在的保险箱屏；付费出口不接托付（那边是花钱买路，不是自家人）。免费出口过半关门，托付也跟着关 —— 正好接「待得越久，就越出不去」 | 撤离点进入流程加一问；保险箱屏换个标题；科技「保险箱」改「接应队的背囊」；寂灭计数的「经保险箱回家」改「经托付回家」；图上少一种点、少一个图标、少一段节点悬浮句 | 少一个概念（奥卡姆）；来历说得通；**玩法变了一点**：原来中层就能把东西先存起来，以后要走回免费出口才能托付，而且出口关了就没得托 —— 逼人早点回头，和作者「别太贪心」一个方向。机关沙漏的出口在出生点对侧，托付就在终点那头，顺路 |
+
+推荐 **C**。店主第五句按 C 写（§3.1 guide_5）；若作者选 A，改成「拿不动的先放进阵里，它比你先到家，嘿嘿」；选 B，改成「图里有接应的人，拿不动的先托付给他们，嘿嘿」。
+
+## 五、改动清单（执行，作者点头后）
 
 1. 三份 `data/authoring/npcs/*.json`：`display_name` / `display_names.en` 填作者挑的名字；六句按 §三 填 `text` / `texts.en`，`lore_1–3` 改 `guide_4–6`、`kind` 全 `guide`；`specials` 不动。
-2. 字集：`python3 tools/font_charset.py` → `tools/subset_fonts.sh`，提交子集与 `charset.txt`（名字里的 哈基姆 / 德米特里 / 布伦努斯 等字多半不在现有字集里）。
+2. 字集：`python3 tools/font_charset.py` → `tools/subset_fonts.sh`，提交子集与 `charset.txt`（名字和台词里的新字）。
 3. 测试：282 的用例里「台词为空只显示……」那条改成有字；十句内不重复的用例六句照样过。
-4. README 282 行补「名字与台词见 284」。
+4. 保险箱按 §四 选定的方案另开一单（C 要动撤离流程、章节配置、科技文案、寂灭计数，**单独一版**，不和台词混在一起）；台词先落，第五句按选定方案的写法。
+5. README 282 行补「名字与台词见 284」。
 
-## 五、待定（没回音按推荐）
+## 六、待定（没回音按推荐）
 
 | # | 事 | 推荐 |
 |---|---|---|
@@ -78,9 +94,11 @@
 | 3 | 世界观句（lore）还留不留槽 | 不留，六句全提示；以后要加世界观再加槽 |
 | 4 | 要不要挂条件 | 全部无条件 |
 | 5 | 英文台词 | 照 §三 的 en 列，执行一并填 |
+| 6 | 保险箱改什么 | C 并入免费撤离点（§四），另开一单做 |
 
-## 六、落地记录
+## 七、落地记录
 
 | 时间 | 事 | 出处 |
 |---|---|---|
-| 2026-11-07 10:01 | 作者原话见顶部；写成本篇，等作者过目 | 架构设计线程 |
+| 2026-11-07 10:01 | 作者原话见顶部；写成本篇第一版（PR #499），等作者过目 | 架构设计线程 |
+| 2026-11-07 14:43 | 作者改 3.1 第三 / 四 / 六句（原话见顶部），第五句要先改保险箱的概念，其余台词照同一逻辑全改 → 第二版：§一 加「不说术语」「带人设」，§三 十八句重写，§四 保险箱 A / B / C（推荐 C），店主第五句按 C | 架构设计线程 |
