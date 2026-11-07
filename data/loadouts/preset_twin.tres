@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_6hlkb"]
+
+[resource]
+script = ExtResource("1_6hlkb")
+id = &"preset_twin"
+display_name = "双刃"
+display_names = {
+"en": "Twin"
+}
+descriptions = {
+"en": ""
+}
+preset = true
+items = Array[StringName]([&"twin_blades", &"quenched_dagger", &"salve", &"salve"])
+tier = &"paid"

@@ -74,6 +74,8 @@ var meta: MetaState = null
 var economy: EconomyRules = null
 var difficulty: int = 0
 var scale_id: StringName = &""
+## 285：这一章核心 BOSS 必掉的券（[member ChapterDef.boss_ticket]）；空 = 不掉
+var boss_ticket: StringName = &""
 ## 101 第 3 刀：一局的能力都走这张带类型的表（编译玩家、掉落上下文、地图 buff、撤离、传送、保险箱、赐福、猎手……）。
 ## 默认那一份全是「没人接」的默认值，所以沙盒与测试不接也能跑；正式一局由 [RunState] 换成它自己的那份
 var hooks: RunHooks = RunHooks.new()
@@ -891,6 +893,10 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
 		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 	hooks.red_drop(node, content, rolled)     # 281
+	if type == &"core" and boss_ticket != &"" and items != null and items.get_def(boss_ticket) != null:     # 285：核心 BOSS 必掉一张券
+		var dropped: Array = rolled.get("dropped", [])
+		dropped.append(boss_ticket)
+		rolled["dropped"] = dropped
 	_bless_rolled(node, rolled)
 	# 209：第二段 —— 按包池掷「用哪些包装这些东西」（没有包的魔兽 / 机关不掉包；随机数另起一条）
 	rolled["bags"] = DropResolver.bags_for(rolled, content, enemies, pool, bag_pool, items, _rng_for(node, "loot_bags"), type == &"core")

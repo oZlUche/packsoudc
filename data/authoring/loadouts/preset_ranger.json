@@ -1,0 +1,19 @@
+{
+  "id": "preset_ranger",
+  "display_name": "游猎",
+  "display_names": {
+    "en": "Ranger"
+  },
+  "descriptions": {
+    "en": ""
+  },
+  "preset": true,
+  "items": [
+    "shortbow",
+    "arrows",
+    "knife",
+    "salve",
+    "ration"
+  ],
+  "tier": "paid"
+}

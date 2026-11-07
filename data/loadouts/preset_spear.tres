@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_i6sra"]
+
+[resource]
+script = ExtResource("1_i6sra")
+id = &"preset_spear"
+display_name = "枪盾"
+display_names = {
+"en": "Pike"
+}
+descriptions = {
+"en": ""
+}
+preset = true
+items = Array[StringName]([&"long_spear", &"round_shield", &"leather_armor", &"bandage", &"salve"])
+tier = &"paid"

@@ -1918,6 +1918,18 @@ static func import_meta_rules(data: Dictionary, ctx: Context, report: ImportRepo
 ## 清单不能空；每件得存在；至少一个包 —— 棋盘上只有包里的东西参战（3.2），没有包一格都用不了
 static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportReport) -> void:
 	_require_id(def.id, "开局装备", report)
+	if not LoadoutDef.TIERS.has(def.tier):
+		report.error("tier", "只能是 free / paid / advanced（285）")
+	elif def.tier != LoadoutDef.TIER_FREE and not def.preset:
+		report.error("tier", "收费 / 高级只给预设套（preset=true）")
+	if def.is_advanced() and def.ticket == &"":
+		report.error("ticket", "高级预设得写要哪张券（285 第二版）")
+	elif not def.is_advanced() and def.ticket != &"":
+		report.error("ticket", "只有高级预设要券")
+	elif def.ticket != &"" and not ctx.items.is_empty():
+		var tk: ItemDef = ctx.items.get(def.ticket, null)
+		if tk == null or not tk.is_ticket():
+			report.error("ticket", "'%s' 不是券（得是带 ticket 标签的道具）" % def.ticket)
 	if def.items.is_empty():
 		report.error("items", "开局装备至少带一件")
 		return
@@ -2389,6 +2401,10 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
 	if def.bag_pool != &"" and not ctx.bag_pools.is_empty() and not ctx.bag_pools.has(def.bag_pool):
 		report.error("bag_pool", "找不到包池 '%s'（已知：%s）" % [def.bag_pool, ", ".join(ctx.bag_pools.keys())])     # 209
+	if def.boss_ticket != &"" and not ctx.items.is_empty():     # 285：核心 BOSS 必掉的券
+		var tk: ItemDef = ctx.items.get(def.boss_ticket, null)
+		if tk == null or not tk.is_ticket():
+			report.error("boss_ticket", "'%s' 不是券（得是带 ticket 标签的道具）" % def.boss_ticket)
 	if def.carry_rule != &"" and not ctx.carry_rules.is_empty() and not ctx.carry_rules.has(def.carry_rule):
 		report.error("carry_rule", "找不到携带规则 '%s'（已知：%s）" % [def.carry_rule, ", ".join(ctx.carry_rules.keys())])
 	if def.encumbrance_rules != &"" and not ctx.encumbrance_rules.is_empty() and not ctx.encumbrance_rules.has(def.encumbrance_rules):

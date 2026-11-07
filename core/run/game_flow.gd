@@ -942,7 +942,7 @@ func save_settings() -> bool:
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse: Array[int] = [] as Array[int],
 		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0,
-		spawn_id: int = -1, carry_funds: int = 0) -> RunState:
+		spawn_id: int = -1, carry_funds: int = 0, preset_cost: int = 0, preset_ticket: StringName = &"") -> RunState:
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
@@ -964,7 +964,21 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 		BeltModule.ID: {"grants": meta.belt_grants.duplicate() if meta != null else {}}}     # 160 补一：科技发的随身技能
 	# 2026-10-22（作者定）：这一局带多少现金进来 —— 由开局屏选，从仓库账上扣，死在局内就没了。
 	# 夹在 0 和仓库余额之间：界面本来就按余额封顶，这里是兜底（存档改过、并发调用都不至于扣成负数）
-	var cash := clampi(carry_funds, 0, meta.funds if meta != null else 0)
+	# 285：收费预设出发这一刻付钱（钱不够开不了，界面本来就灰着出发键，这里兜底）；带入现金在付完之后的余额里封顶
+	var cost := maxi(0, preset_cost)
+	if cost > 0 and (meta == null or meta.funds < cost):
+		return null
+	# 285 第二版：高级预设出发这一刻消耗一张券（没券开不了，界面本来就选不了，这里兜底）
+	var ticket_uid := -1
+	if preset_ticket != &"":
+		for inst in (meta.warehouse.items() if meta != null else []):
+			var it := inst as ItemInstance
+			if it.def != null and it.def.id == preset_ticket and not it.is_locked_by_player():
+				ticket_uid = it.uid
+				break
+		if ticket_uid < 0:
+			return null
+	var cash := clampi(carry_funds, 0, (meta.funds - cost) if meta != null else 0)
 	var state := RunState.start(chapter, p_seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs, cash)
 	if state == null:
 		return null
@@ -975,11 +989,15 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 		meta.warehouse.remove(inst.uid)
 	if cash > 0:
 		meta.spend_funds(cash)     # 撤离时 absorb() 会把局内余额 1:1 加回来；战败不加 = 这笔钱就丢在局里了
+	if cost > 0:
+		meta.spend_funds(cost)     # 285：收费预设的钱付给军需官，不进这一局
+	if ticket_uid >= 0:
+		meta.warehouse.remove(ticket_uid)     # 285：券交给军需官，不退
 	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的地上规则；不经开局屏的路一样）
 	var lost := meta.has_pending_board()
 	if meta.board != null:
 		meta.discard_board()     # 搬空了的空棋盘（一键置入后留着显示的）一并丢
-	if not taken.is_empty() or character != null or lost or cash > 0:
+	if not taken.is_empty() or character != null or lost or cash > 0 or cost > 0 or ticket_uid >= 0:
 		save_meta()
 	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
@@ -1811,13 +1829,56 @@ static func load_chapters() -> Array[ChapterDef]:
 	return out
 
 
-## 096：开局屏可选的预设套（`LoadoutDef.preset`），按装回的顺序
-func presets() -> Array[LoadoutDef]:
+## 096：开局屏可选的预设套（`LoadoutDef.preset`），按装回的顺序。
+## 285：给了章节且这一章不许从仓库带（序章）就只列免费的 —— 序章没有钱、也没有仓库可拉。
+## 排法：免费 → 收费 → 高级，同档按装回的顺序
+func presets(chapter: ChapterDef = null) -> Array[LoadoutDef]:
 	var out: Array[LoadoutDef] = []
-	for l in loadouts:
-		if l != null and l.preset:
-			out.append(l)
+	for tier in LoadoutDef.TIERS:
+		for l in loadouts:
+			if l != null and l.preset and l.tier == tier and (chapter == null or chapter.allow_carry_in or tier == LoadoutDef.TIER_FREE):
+				out.append(l)
 	return out
+
+
+## 285：收费预设的价钱 = 清单每件集市价之和（[method Market.price_of]：定价 × 集市倍数，和散货摊一个算法）；免费 / 高级 0
+func preset_price(def: LoadoutDef) -> int:
+	if def == null or not def.is_paid():
+		return 0
+	var sum := 0
+	for id in def.items:
+		var d := items.get_def(id) if items != null else null
+		if d != null:
+			sum += Market.price_of(market(), d)
+	return sum
+
+
+## 285：收费预设算进带入预算的那部分 = 清单定价之和（[method ItemValue.of]，同从仓库带的东西）；免费 / 高级 0（券换的和免费一样当底子）
+func preset_value(def: LoadoutDef) -> int:
+	if def == null or not def.is_paid():
+		return 0
+	var sum := 0
+	for id in def.items:
+		var d := items.get_def(id) if items != null else null
+		if d != null:
+			sum += ItemValue.of(d)
+	return sum
+
+
+## 285 第二版：高级预设出发时消耗的那张券在仓库里的 uid（锁住的不算）；没有 / 不是高级 -1
+func preset_ticket_uid(def: LoadoutDef) -> int:
+	if def == null or not def.is_advanced() or def.ticket == &"" or meta == null or meta.warehouse == null:
+		return -1
+	for inst in meta.warehouse.items():
+		var it := inst as ItemInstance
+		if it.def != null and it.def.id == def.ticket and not it.is_locked_by_player():
+			return it.uid
+	return -1
+
+
+## 285：这一套能不能选 —— 免费 / 收费都能（钱不够出发时再拦）；高级的得有券
+func preset_ticket_ok(def: LoadoutDef) -> bool:
+	return def == null or not def.is_advanced() or preset_ticket_uid(def) >= 0
 
 
 ## 老路（没有角色定义）与仓库空的第一套用的整套装备：第一套**非预设**的

@@ -74,6 +74,8 @@ static func sell(inst: ItemInstance, price: int, do_sell: Callable) -> Action:
 	a.coin = price
 	if inst.def != null and inst.def.is_unique():     # 281：独一的红武不可出售
 		return disable(a, UiText.t("act.unique"))
+	if inst.def != null and inst.def.is_ticket():     # 285：券不可出售
+		return disable(a, UiText.t("act.ticket"))
 	return disable(a, UiText.t("act.locked")) if inst.is_locked_by_player() else a
 
 

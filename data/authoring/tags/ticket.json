@@ -1,0 +1,13 @@
+{
+  "id": "ticket",
+  "display_name": "券",
+  "display_names": {
+    "en": "Voucher"
+  },
+  "description": "开局拿它换一套高级预设；不能卖。",
+  "descriptions": {
+    "en": "Trade it for an advanced preset at the start of a run. Cannot be sold."
+  },
+  "tip": false,
+  "category": "kind"
+}

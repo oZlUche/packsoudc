@@ -557,6 +557,11 @@ const TEXT := {
 	"setup.no_preset": {"zh": "不带预设", "en": "No preset"},
 	"setup.no_preset_tip": {"zh": "只带包架上的包，其余从仓库拖", "en": "Just the bags from your Bag Rack; drag the rest in from the warehouse"},
 	"setup.preset_missed": {"zh": "预设里放不下：%s（包太满；拿掉几件再选）", "en": "Didn't fit from the preset: %s (bags too full; take a few things out and pick again)"},
+	"setup.preset_ticket": {"zh": "×1", "en": "×1"},
+	"setup.preset_ticket_tip": {"zh": "要【%s】×1（核心 BOSS 掉）", "en": "Needs %s ×1 (dropped by core bosses)"},
+	"setup.preset_no_ticket": {"zh": "没有【%s】", "en": "No %s"},
+	"setup.preset_poor": {"zh": "[coin_short]", "en": "[coin_short]"},
+	"setup.summary_preset": {"zh": "预设：%s", "en": "Preset: %s"},
 	"setup.load": {"zh": "负重 %d / %d　%s%s", "en": "Load %d / %d · %s%s"},
 	"setup.no_brought_back": {"zh": "这一章不许把带回来的东西带进去", "en": "This chapter doesn't let you bring in what you carried back"},
 	"setup.no_room_bag": {"zh": "包里没有空间放「%s」", "en": "No room in your bags for \"%s\""},
@@ -1539,6 +1544,7 @@ const TEXT := {
 	"act.sell_same": {"zh": "出售同类 ×%d", "en": "Sell all ×%d"},
 	"act.locked": {"zh": "已锁定", "en": "Locked"},
 	"act.unique": {"zh": "独一的不能出售", "en": "Unique items can't be sold"},
+	"act.ticket": {"zh": "券不能出售", "en": "Vouchers can't be sold"},
 	"act.fav_no_bulk": {"zh": "收藏的不成批出售", "en": "Favorites aren't sold in bulk"},     # 265
 	"act.sell_same_fav": {"zh": "出售同类 · 已收藏", "en": "Sell all · Favorite"},     # 265 复测：收藏了的种类按钮上直接写原因，不写「×0 得 0 币」
 	"act.pinned": {"zh": "随身之物", "en": "Part of your kit"},     # 255：随身之物的按钮全灰，理由

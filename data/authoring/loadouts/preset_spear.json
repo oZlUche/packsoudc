@@ -1,0 +1,19 @@
+{
+  "id": "preset_spear",
+  "display_name": "枪盾",
+  "display_names": {
+    "en": "Pike"
+  },
+  "descriptions": {
+    "en": ""
+  },
+  "preset": true,
+  "items": [
+    "long_spear",
+    "round_shield",
+    "leather_armor",
+    "bandage",
+    "salve"
+  ],
+  "tier": "paid"
+}

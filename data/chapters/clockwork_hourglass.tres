@@ -105,6 +105,7 @@ node_rules = &"standard"
 economy_rules = &"standard"
 order = 4
 requires_unlock = &"prologue3_done"
+boss_ticket = &"ticket_elite"
 rules = Array[String](["那边是口横着的沙漏，从左边或右边进，穿过中间两条窄道到对面。出口只在对面那一列，中途没有。", "里面的东西不是人，是机关。刀砍上去先被弹掉一截，毒和放血对它们没用，火、冰、雷照常。", "拆下来的零件带回来：齿轮臂、蒸汽阀、护板。护板拿在手里就是一面小盾。"])
 departure_event = &"briefing_legion"
 step_limit = 40

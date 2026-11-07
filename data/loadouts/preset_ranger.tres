@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_6iwqr"]
+
+[resource]
+script = ExtResource("1_6iwqr")
+id = &"preset_ranger"
+display_name = "游猎"
+display_names = {
+"en": "Ranger"
+}
+descriptions = {
+"en": ""
+}
+preset = true
+items = Array[StringName]([&"shortbow", &"arrows", &"knife", &"salve", &"ration"])
+tier = &"paid"
