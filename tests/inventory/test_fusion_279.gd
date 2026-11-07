@@ -116,6 +116,10 @@ static func frame_badge(t: TestCase, root: Window) -> void:
 	mv.position = at
 	view._gui_input(mv)
 	t.eq(view._fuse_hover, 0, "停在锤上：记下悬停")
+	var tip := HoverTip.new()
+	t.eq(tip._uid_under(view, at), -1, "停在锤上：不弹道具窗（会盖住两件）")
+	t.eq(tip._uid_under(view, view.cell_origin_px(Vector2i(0, 1)) + Vector2.ONE * view.cell_px * 0.5), k1.uid, "停在匕首别处：照旧弹")
+	tip.free()
 	t.check(view._fusion_poly(view.fusions[0], InventoryView.FUSE_OUT).size() >= 3, "描边沿两件的并集走")
 	var ev := InputEventMouseButton.new()
 	ev.button_index = MOUSE_BUTTON_LEFT
