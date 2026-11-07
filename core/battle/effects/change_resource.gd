@@ -68,7 +68,18 @@ func apply(ctx: RuleContext) -> void:
 func describe() -> String:
 	# 作者 2026-10-17：资源写中文名（原来直接印英文键「获得 hp 25」）
 	var key := ("fx.restore" if resource_key == &"hp" else "fx.gain_res") if amount >= 0.0 else "fx.lose_res"
-	return UiText.t(key) % [absf(amount), Glossary.resource_name(resource_key)]
+	var line := UiText.t(key) % [absf(amount), Glossary.resource_name(resource_key)]
+	if amount_stat != &"" or percent_of_damage > 0:     # 288：量读属性 / 按这一下伤害时，把来源写出来（原来写成「回复 0 点」）
+		var qty: Array[String] = []
+		if amount_stat != &"":
+			qty.append(UiText.t("fx.res_stat") % Glossary.stat_name(amount_stat))
+		elif amount != 0.0:
+			qty.append(UiText.t("fx.res_points") % TextTemplate.num(absf(amount)))
+		if percent_of_damage > 0:
+			qty.append(UiText.t("fx.res_hit_pct") % clampi(percent_of_damage, 0, 100))
+		var verb := ("fx.res_verb_restore" if resource_key == &"hp" else "fx.res_verb_gain") if amount >= 0.0 else "fx.res_verb_lose"
+		line = UiText.t("fx.res_qty") % [UiText.t(verb), Glossary.resource_name(resource_key), " + ".join(qty)]
+	return UiText.t("fx.per_stack") % line if per_stack else line
 
 
 ## 151：估值 —— 生命 / 护甲：得到的乘治疗权重、失去的按伤害算；耐力 / 法力乘耐力权重；

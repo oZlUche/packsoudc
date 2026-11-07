@@ -55,6 +55,7 @@
 | `{faith_deed:<信仰>:<行为类型>:<字段>}` | 行为构件的数（`{faith_deed:brute:damage:cap}`） | `fg` + 粗体 |
 | `{faith_offer:<信仰>:<标签>:<字段>}` | 认这个标签的献祭规则的数（`{faith_offer:brute:bone:multiplier}`） | `fg` + 粗体 |
 | `{faith_perk:<信仰>:<效果类型>:<字段>}` | 信仰级效果的数（`{faith_perk:brute:altar_bless:cost}`） | `fg` + 粗体 |
+| `{load:<1～3 / step>}` | 288：负重第几级的倍数（standard 负重规则，「1.2」）；`step` = 最后一级走一步倒计时乘几。词条（`Glossary.TERMS`）里写同样的记号，出纯数字 | `fg` + 粗体 |
 
 `{item:}` `{enemy:}` `{item_stat:}` `{faith…:}` 的 id 导入时查：写错了导入失败（事件文本、章节规则卡）。标题与选项文字走纯文字（颜色剥掉、名字照换）。
 

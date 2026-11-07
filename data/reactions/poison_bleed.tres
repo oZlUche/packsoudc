@@ -31,9 +31,9 @@ display_name = "菌血"
 display_names = {
 "en": "Fungal Blood"
 }
-description = "对手叠上反应层数那么多层【菌血】：每次恢复生命减半，实际回了几点就叠几层【中毒】，每层持续一秒，再反应就延长。"
+description = "对手叠上反应层数那么多层【菌血】：每次恢复生命减半，实际回了几点就叠几层【中毒】；N 层持续 N 秒（层数不掉），再反应就加层加秒。"
 descriptions = {
-"en": "The opponent gains Fungal Blood equal to the reaction stacks: every heal is halved, and they gain one stack of Poison per point actually healed. Each stack lasts one second; reacting again extends it."
+"en": "The opponent gains Fungal Blood equal to the reaction stacks: every heal is halved, and they gain one stack of Poison per point actually healed. N stacks last N seconds (stacks don't drop); reacting again adds stacks and seconds."
 }
 elements = Array[StringName]([&"poison", &"bleed"])
 effects = Array[ExtResource("1_4wj52")]([SubResource("Resource_2yimr")])

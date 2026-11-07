@@ -882,7 +882,10 @@ const TEXT := {
 	"perk.food_armor": {"zh": "开战时每件食物给 %.0f 点护甲，越稀有越多（每档 +%.0f）", "en": "At battle start, each food gives %.0f Armor, more for rarer food (+%.0f per rarity)"},
 	"perk.food_double": {"zh": "食物给的所有效果 ×%.0f（含献祭食物回体力）", "en": "All food effects ×%.0f (including Vitality from offering food)"},
 	"perk.gift_done": {"zh": "大地之神赐下「%s」（到了地上）", "en": "The Earth God grants \"%s\" (it's on the Ground)"},
-	"perk.gift_summary": {"zh": "头一回踩上一个点就得一件对应类型的道具（战斗-武器 / 精英-防具 / 事件-饰品 / 撤离点-随机 / BOSS-珍宝）", "en": "The first time you step on a spot, get a matching item (battle: weapon / elite: armor / event: accessory / extraction point: random / boss: treasure)"},
+	"perk.gift_summary": {"zh": "头一回踩上一个点就得一件对应类型的道具（%s）", "en": "The first time you step on a spot, get a matching item (%s)"},
+	"perk.gift_pair": {"zh": "%s-%s", "en": "%s: %s"},
+	"perk.gift_or": {"zh": "或", "en": " or "},
+	"perk.gift_any": {"zh": "随机", "en": "random"},
 	"perk.low_hp": {"zh": "生命值低于 %d%% 时，造成伤害提高 %d%%", "en": "While Health is below %d%%, damage dealt is increased by %d%%"},
 	"perk.overtime_regen": {"zh": "加时开始后回春：每秒回血 +%d", "en": "Renewal once Overtime starts: +%d Health per second"},
 	"perk.smite_vitality": {"zh": "立即击败（耗 %d 体力）", "en": "Defeat now (costs %d Vitality)"},
@@ -912,7 +915,7 @@ const TEXT := {
 	"gloss.clause_sep": {"zh": "，", "en": ", "},
 	"gloss.and_then": {"zh": "，并", "en": ", and "},
 	"gloss.damage_taken": {"zh": "受到的%s伤害 +%s%%", "en": "%s damage taken +%s%%"},
-	"gloss.next_fire_cooldown": {"zh": "下一次出手的冷却 +%s%%", "en": "Next attack's cooldown +%s%%"},
+	"gloss.next_fire_cooldown": {"zh": "武器下一次出手的冷却 +%s%%", "en": "Weapon's next attack cooldown +%s%%"},
 	"gloss.next_stamina_cost": {"zh": "下一次付耐力多付 %s%%", "en": "Next Stamina payment costs %s%% more"},
 	"gloss.on_apply": {"zh": "上身时：%s", "en": "On apply: %s"},
 	"gloss.on_expire": {"zh": "到期时：%s", "en": "On expiry: %s"},
@@ -920,7 +923,7 @@ const TEXT := {
 	"gloss.then_halve": {"zh": "，然后减半", "en": ", then halves"},
 	"gloss.self_damage_every": {"zh": "每 {s} 秒受到 {n} 点{t}伤害", "en": "Take {n} {t} damage every {s} seconds"},
 	"gloss.time_left": {"zh": "还剩 %d 秒", "en": "%ds left"},
-	"gloss.time_per_stack": {"zh": "每层 %d 秒", "en": "%ds per stack"},
+	"gloss.time_per_stack": {"zh": "持续（层数 × %d）秒，层数不掉", "en": "Lasts (stacks × %d)s; stacks don't drop"},
 	"gloss.time_lasts": {"zh": "持续 %s 秒", "en": "Lasts %ss"},
 	"gloss.every_sec": {"zh": "每 %.1f 秒", "en": "Every %.1fs"},
 	"gloss.every_sec_max_once": {"zh": "每 %.1f 秒最多一次", "en": "at most once every %.1fs"},
@@ -931,7 +934,7 @@ const TEXT := {
 	"hud.notice_extract_closed": {"zh": "有一个撤离点关闭了", "en": "An extraction point has closed"},     # countdown_module notice
 	# —— 221 F5a：encumbrance ——
 	"run.load_light": {"zh": "轻装", "en": "Light"},     # load level 0
-	"run.load_step_cost": {"zh": "走一步" + Glossary.COUNTDOWN_WORD + " −%d", "en": "Countdown −%d per step"},
+	"run.load_step_cost": {"zh": "走一步" + Glossary.COUNTDOWN_WORD + " ×%d", "en": "Countdown ×%d per step"},
 	# —— 221 F5a：node events ——
 	"node.no_option": {"zh": "没有这个选项", "en": "No such option"},
 	"node.extract_unaffordable": {"zh": "付不起这个撤离点的费用（%s），先去挣点钱，或者找别的出口。", "en": "You can't afford this extraction point's fee (%s). Earn some first, or find another way out."},
@@ -1179,6 +1182,14 @@ const TEXT := {
 	"fx.restore": {"zh": "回复 %.0f 点%s", "en": "restore %.0f %s"},
 	"fx.gain_res": {"zh": "获得 %.0f 点%s", "en": "gain %.0f %s"},
 	"fx.lose_res": {"zh": "失去 %.0f 点%s", "en": "lose %.0f %s"},
+	# 288：量不是写死的数时（读属性 / 按这一下伤害的几成）—— 「回复生命：与护甲等量 + 这一下伤害的 25%」
+	"fx.res_verb_restore": {"zh": "回复", "en": "restore"},
+	"fx.res_verb_gain": {"zh": "获得", "en": "gain"},
+	"fx.res_verb_lose": {"zh": "失去", "en": "lose"},
+	"fx.res_qty": {"zh": "%s%s：%s", "en": "%s %s: %s"},
+	"fx.res_points": {"zh": "%s 点", "en": "%s"},
+	"fx.res_stat": {"zh": "与%s等量", "en": "equal to %s"},
+	"fx.res_hit_pct": {"zh": "这一下伤害的 %d%%", "en": "%d%% of the hit"},
 	"fx.convert_hit": {"zh": "这一下改为%s伤害", "en": "this hit becomes %s damage"},
 	"fx.convert_unknown": {"zh": "转化 ?", "en": "convert ?"},
 	"fx.convert": {"zh": "%s转为%s", "en": "turn %s into %s"},

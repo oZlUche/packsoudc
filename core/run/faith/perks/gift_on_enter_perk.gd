@@ -1,4 +1,4 @@
-## 大地 3 级（093）：头一回踩上一个点立刻得到一件对应类型的道具（战斗-武器 / 精英-防具 / 事件-饰品 / 撤离点-随机 / BOSS-珍宝），到地上
+## 大地 3 级（093）：头一回踩上一个点立刻得到一件对应类型的道具（说明按 [member by_type] 生成），到地上
 class_name GiftOnEnterPerk
 extends FaithPerk
 
@@ -34,5 +34,13 @@ func on_node_entered(run: RunState, node: MapNode, first_visit: bool) -> String:
 	return UiText.t("perk.gift_done") % Names.of(def)
 
 
+## 288：按 [member by_type] 拼（「战斗-武器 / 精英-防具或盾 / ……」），数据改了文字跟着改
 func _summary() -> String:
-	return UiText.t("perk.gift_summary")
+	var parts: Array[String] = []
+	for key in by_type:
+		var tags: Array[String] = []
+		for t in by_type[key]:
+			tags.append(Glossary.tag_name(StringName(String(t))))
+		var what := UiText.t("perk.gift_or").join(tags) if not tags.is_empty() else UiText.t("perk.gift_any")
+		parts.append(UiText.t("perk.gift_pair") % [NodeText.label_of(StringName(String(key))), what])
+	return UiText.t("perk.gift_summary") % " / ".join(parts)

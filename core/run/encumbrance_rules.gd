@@ -12,6 +12,47 @@ extends Resource
 ## 按 `over` 从小到大排；级数 = 命中的最后一行的下标 + 1，一行都没命中 = 0（轻装）
 @export var levels: Array[EncumbranceLevel] = []
 
+## 288：词条与帮助页里的阈值从这份读（两张图都用 standard）
+const STANDARD_PATH := "res://data/encumbrance_rules/standard.tres"
+static var _standard: EncumbranceRules = null
+
+
+static func standard() -> EncumbranceRules:
+	if _standard == null and ResourceLoader.exists(STANDARD_PATH):
+		_standard = load(STANDARD_PATH) as EncumbranceRules
+	return _standard
+
+
+## 288：文字里的数 —— `"1"`～`"3"` 第几级的倍数（「1.2」），`"step"` 最后一级走一步倒计时乘几；读不到 null
+func number_text(key: String) -> Variant:
+	if key == "step":
+		if levels.is_empty():
+			return null
+		return str(travel_mult_of(levels.size()))
+	if not key.is_valid_int():
+		return null
+	var r := row(int(key))
+	if r == null:
+		return null
+	return String.num(r.over, 2)
+
+
+## 288：把 [param text] 里的 `{load:1}` `{load:step}` 换成 standard 的数（词条用；帮助页走 [TextTemplate] 的同名记号）
+static func fill_numbers(text: String) -> String:
+	if not text.contains("{load:"):
+		return text
+	var rules := standard()
+	if rules == null:
+		return text
+	var rx := TextTemplate.cached_regex("\\{load:([a-z0-9]+)\\}")
+	var out := ""
+	var at := 0
+	for m in rx.search_all(text):
+		var v: Variant = rules.number_text(m.get_string(1))
+		out += text.substr(at, m.get_start() - at) + (String(v) if v != null else m.get_string())
+		at = m.get_end()
+	return out + text.substr(at)
+
 
 ## [param weight] 负重、[param capacity] 上限 → 第几级（0 = 轻装）。上限 ≤ 0 = 不算负重
 func level_of(weight: int, capacity: int) -> int:

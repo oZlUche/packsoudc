@@ -18,11 +18,11 @@ damage_type = &"fire"
 amount = 1.0
 damage_stat = &""
 
-[sub_resource type="Resource" id="Resource_7i0yh"]
+[sub_resource type="Resource" id="Resource_gmvuk"]
 script = ExtResource("6_0f8dv")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_lxdev"]
+[sub_resource type="Resource" id="Resource_cgorq"]
 script = ExtResource("2_upmr6")
 target = 1
 damage_type = &"fire"
@@ -30,14 +30,14 @@ amount = 1.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_3tp6u"]
+[sub_resource type="Resource" id="Resource_o1704"]
 script = ExtResource("8_m14b8")
 
-[sub_resource type="Resource" id="Resource_om0h4"]
+[sub_resource type="Resource" id="Resource_m6he4"]
 script = ExtResource("5_ydbic")
-trigger = SubResource("Resource_3tp6u")
-cadence = SubResource("Resource_7i0yh")
-effects = Array[ExtResource("1_hwp7r")]([SubResource("Resource_lxdev")])
+trigger = SubResource("Resource_o1704")
+cadence = SubResource("Resource_gmvuk")
+effects = Array[ExtResource("1_hwp7r")]([SubResource("Resource_cgorq")])
 
 [sub_resource type="Resource" id="Resource_ola2g"]
 script = ExtResource("9_a2xby")
@@ -47,7 +47,7 @@ display_names = {
 "en": "Burn"
 }
 is_debuff = true
-rules = Array[ExtResource("5_ydbic")]([SubResource("Resource_om0h4")])
+rules = Array[ExtResource("5_ydbic")]([SubResource("Resource_m6he4")])
 element = &"fire"
 
 [sub_resource type="Resource" id="Resource_4a6y3"]
@@ -61,9 +61,9 @@ display_name = "爆燃"
 display_names = {
 "en": "Combustion"
 }
-description = "按反应的层数造成一下火焰伤害，再叠一半层数的【灼伤】。"
+description = "按反应的层数造成一下火焰伤害，再叠一半层数（向下取整）的【灼伤】。"
 descriptions = {
-"en": "Deals one burst of Fire damage based on the reaction stacks, then applies half that many stacks of Burn."
+"en": "Deals one burst of Fire damage based on the reaction stacks, then applies half that many stacks of Burn (rounded down)."
 }
 elements = Array[StringName]([&"fire", &"poison"])
 effects = Array[ExtResource("1_hwp7r")]([SubResource("Resource_0ak11"), SubResource("Resource_4a6y3")])

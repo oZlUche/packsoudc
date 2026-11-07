@@ -29,14 +29,14 @@ const TERMS := {
 	"施加时": {"text": "某个状态被施加、层数增加的那一瞬触发；叠满后只刷新时长的那一下不算。默认只认自己施加的。", "tip": false, "en": {"name": "On apply", "text": "Triggers the moment a status is applied and its stacks go up. Refreshing the duration of a capped status doesn't count. By default only counts statuses you applied."}},
 	"资源低于时": {"text": "生命 / 耐力等降到阈值以下时触发。", "tip": false, "en": {"name": "Below threshold", "text": "Triggers when Health, Stamina or similar drops below the threshold."}},
 	"冷却": {"text": "两次出手之间的间隔（秒），急速会缩短它。", "tip": false, "en": {"name": "Cooldown", "text": "The time between two uses, in seconds. Haste shortens it."}},
-	"耐力": {"text": "出手要花的资源，每秒按回复速度补回；不够就出不了手，等回够再动。", "tip": false, "en": {"name": "Stamina", "text": "What using an item costs. It refills every second at your regen rate; if you don't have enough, the item waits until you do."}},
+	"耐力": {"text": "出手要花的资源，每秒按回复速度补回；冷却到点时不够就跳过这一次，冷却重走。", "tip": false, "en": {"name": "Stamina", "text": "What using an item costs. It refills every second at your regen rate. If you don't have enough when the cooldown ends, that use is skipped and the cooldown starts over."}},
 	"耗耐力": {"text": "这一下出手要花的耐力。", "tip": false, "en": {"name": "Stamina cost", "text": "How much Stamina this use costs."}},
 	"信力": {"text": "按信仰要求的行为攒的点数；过了阈值，这个信仰的道具解锁更多功能。", "tip": false, "en": {"name": "Faith", "text": "Points earned by doing what a Faith asks. Past each threshold, that Faith's items unlock more."}},
 	# 129：负重
-	"负重": {"text": "作战棋盘上所有东西（包本身也算）的重量之和；地上、托付出去的、仓库里的不算。超过角色的负重上限就开始吃力。", "en": {"name": "Load", "text": "The total weight of everything on your battle Board, bags included. Things on the Ground, entrusted or in the Warehouse don't count. Go over your character's Load limit and you start to struggle."}},
-	"吃力": {"text": "负重超过上限：急速 −10%、耐力回复 −10%。", "en": {"name": "Burdened", "text": "Load over the limit: Haste −10%, Stamina regen −10%."}},
-	"超重": {"text": "负重超过上限的 1.25 倍：急速 −25%、耐力回复 −25%、耐力上限 −20%。", "en": {"name": "Overloaded", "text": "Load over 1.25 times the limit: Haste −25%, Stamina regen −25%, Max stamina −20%."}},
-	"寸步难行": {"text": "负重超过上限的 1.5 倍：超重的减益照旧，地图上每走一步（传送也算）" + COUNTDOWN_WORD + " −2；原地等待不翻倍。", "en": {"name": "Immobile", "text": "Load over 1.5 times the limit: the Overloaded penalties still apply, and every step on the map (teleports too) costs Countdown −2. Waiting in place is not doubled."}},
+	"负重": {"text": "作战棋盘上所有东西的重量之和，包本身不算重；地上、托付出去的、仓库里的不算。超过角色负重上限的 {load:1} 倍就开始吃力。", "en": {"name": "Load", "text": "The total weight of everything on your battle Board; bags themselves weigh nothing. Things on the Ground, entrusted or in the Warehouse don't count. Go over {load:1} times your character's Load limit and you start to struggle."}},
+	"吃力": {"text": "负重超过上限的 {load:1} 倍：急速 −10%、耐力回复 −10%。", "en": {"name": "Burdened", "text": "Load over {load:1} times the limit: Haste −10%, Stamina regen −10%."}},
+	"超重": {"text": "负重超过上限的 {load:2} 倍：急速 −25%、耐力回复 −25%、耐力上限 −20%。", "en": {"name": "Overloaded", "text": "Load over {load:2} times the limit: Haste −25%, Stamina regen −25%, Max stamina −20%."}},
+	"寸步难行": {"text": "负重超过上限的 {load:3} 倍：超重的减益照旧，地图上每走一步（传送也算）" + COUNTDOWN_WORD + "扣 ×{load:step}；原地等待不翻倍。", "en": {"name": "Immobile", "text": "Load over {load:3} times the limit: the Overloaded penalties still apply, and every step on the map (teleports too) costs ×{load:step} Countdown. Waiting in place is not multiplied."}},
 	"地上": {"text": "棋盘之外的整块屏幕：拖出棋盘放哪就落在哪。不参战、不吃邻接、不算套装、撤离不带走；留在这个点上，回来还在原处。", "tip": false, "en": {"name": "Ground", "text": "The whole screen outside the Board: drop something off the Board and it lands where you let go. It doesn't fight, doesn't count for adjacency or sets, and isn't taken when you extract. It stays at this spot, right where you left it."}},
 	# 以下都带玩家猜不到的规则（换算、结算顺序、叠层方式），照弹
 	"急速": {"text": "出手速度的倍率，越高冷却越短。", "en": {"name": "Haste", "text": "A multiplier on attack speed. The higher it is, the shorter the cooldown."}},
@@ -67,8 +67,8 @@ static func term_text(name: String) -> String:
 		return String(entry)
 	var tr_: Variant = (entry as Dictionary).get(UiText.lang, null)
 	if tr_ is Dictionary and String((tr_ as Dictionary).get("text", "")) != "":
-		return String(tr_["text"])
-	return String((entry as Dictionary).get("text", ""))
+		return EncumbranceRules.fill_numbers(String(tr_["text"]))
+	return EncumbranceRules.fill_numbers(String((entry as Dictionary).get("text", "")))     # 288：负重阈值从数据读
 
 
 ## 221 F4：固定词条在当前语言下叫什么（[param key] 是 [constant TERMS] 的中文键；没写这种语言的名字照原词）

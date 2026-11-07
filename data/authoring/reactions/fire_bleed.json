@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Seared Blood"
   },
-  "description": "对手叠上反应层数那么多层【燃血】：治疗无效，每秒受到层数等量的火焰伤害，每层持续一秒，再反应就延长。",
+  "description": "对手叠上反应层数那么多层【燃血】：治疗无效，N 层就每秒受到 N 点火焰伤害、持续 N 秒（层数不掉），再反应就加层加秒。",
   "descriptions": {
-    "en": "The opponent gains Seared Blood equal to the reaction stacks: healing does nothing, and they take Fire damage each second equal to the stacks. Each stack lasts one second; reacting again extends it."
+    "en": "The opponent gains Seared Blood equal to the reaction stacks: healing does nothing, and with N stacks they take N Fire damage each second for N seconds (stacks don't drop); reacting again adds stacks and seconds."
   },
   "elements": [
     "fire",

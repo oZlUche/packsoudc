@@ -62,6 +62,7 @@ display_name = "流血"
 display_names = {
 "en": "Bleed"
 }
+is_debuff = true
 decay_halve_on = &"tick"
 rules = Array[ExtResource("3_kxc6a")]([SubResource("Resource_dohsk")])
 element = &"bleed"

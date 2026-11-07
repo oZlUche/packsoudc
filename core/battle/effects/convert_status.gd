@@ -30,7 +30,7 @@ func apply(ctx: RuleContext) -> void:
 func describe() -> String:
 	if to == null:
 		return UiText.t("fx.convert_unknown")
-	return UiText.t("fx.convert") % [DamageTypes.name_of(from), Names.of(to)]
+	return UiText.t("fx.convert") % [Glossary.status_name(from), Names.of(to)]     # 288：写状态名（「中毒」），不是伤害类型名
 
 
 ## 151：估值 —— 拿掉 [member from] 的那几层（勾了「复制」就不拿）+ 换上 [member to] × 比例；层数按估算上下文假定

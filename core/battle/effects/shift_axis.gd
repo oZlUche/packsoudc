@@ -66,7 +66,7 @@ func describe() -> String:
 	var head := UiText.t(key) % [StatAxes.name_of(axis, delta), absi(delta)]
 	if overflow_to != &"" and StatAxes.has(overflow_to):
 		head += UiText.t("fx.axis_overflow") % [StatAxes.what_of(axis), StatAxes.name_of(overflow_to, 1)]
-	return head
+	return UiText.t("fx.per_stack") % head if per_stack else head     # 288
 
 
 ## 151：估值 —— 层数 × 一层轴在那一边身上每秒值多少（[method PowerContext.axis_value]）× 平均待多久；给对手取反
