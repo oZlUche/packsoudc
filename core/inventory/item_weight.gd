@@ -18,7 +18,7 @@ const HEAVY := &"heavy"
 const METAL := &"metal"
 ## 137：石与晶这一档（晶体或石材，任一命中）
 const STONE_TAGS: Array[StringName] = [&"gem", &"stone"]
-const LIGHT_TAGS: Array[StringName] = [&"remedy", &"food", &"ammo", &"keepsake", &"trinket", &"valuable"]
+const LIGHT_TAGS: Array[StringName] = [&"remedy", &"food", &"ammo", &"keepsake", &"trinket", &"valuable", &"ticket"]
 const PER_CELL_HEAVY := 4
 const PER_CELL_METAL := 3
 const PER_CELL_STONE := 2

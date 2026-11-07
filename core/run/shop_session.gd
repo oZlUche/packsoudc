@@ -158,7 +158,7 @@ func pay_or_return(i: int, uid: int, from: Array) -> bool:
 
 ## 087：卖一件（它此刻在 [member sell_box] 里、或由调用方拿着）：拿走它、进账定价的一半。店关了返回 0
 func sell(inst: ItemInstance) -> int:
-	if not active or inst == null or inst.def == null or wallet == null or inst.def.is_unique():     # 281：独一的不收
+	if not active or inst == null or inst.def == null or wallet == null or inst.def.is_unique() or inst.def.is_ticket():     # 281：独一的不收
 		return 0
 	if sell_box.has_item(inst.uid):
 		sell_box.remove(inst.uid)

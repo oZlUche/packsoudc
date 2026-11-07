@@ -1,0 +1,20 @@
+{
+  "id": "ticket_standard",
+  "display_name": "制式券",
+  "display_names": {
+    "en": "Standard Voucher"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "ticket",
+    "crafted"
+  ],
+  "material": "cloth"
+}

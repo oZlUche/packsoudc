@@ -1034,6 +1034,7 @@ func _wire_events() -> void:
 	events.drop_rule = drop_rule
 	events.carry_rule = carry_rule
 	events.bag_pool = bag_pool
+	events.boss_ticket = chapter.boss_ticket if chapter != null else &""     # 285
 	events.difficulty_def = difficulty
 	events.wallet = wallet
 	events.economy = economy

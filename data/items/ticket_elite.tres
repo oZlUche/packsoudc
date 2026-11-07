@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_fuxnp"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ynep1"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_xwuob"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_55cwe"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_1chp0"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_y5wh7"]
+
+[sub_resource type="Resource" id="Resource_hm4uu"]
+script = ExtResource("6_y5wh7")
+
+[resource]
+script = ExtResource("5_1chp0")
+id = &"ticket_elite"
+display_name = "精锐券"
+display_names = {
+"en": "Elite Voucher"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_hm4uu")
+rarity = 3
+tags = Array[StringName]([&"ticket", &"crafted"])
+material = "cloth"

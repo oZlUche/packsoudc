@@ -237,7 +237,7 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 	if target == _session.sell_box and inst.is_locked_by_player():
 		_say(UiText.t("item.locked_no") % Names.of(inst.def))
 		return false
-	if target == _session.sell_box and inst.def.is_unique():     # 281：独一的红武不进出售区
+	if target == _session.sell_box and (inst.def.is_unique() or inst.def.is_ticket()):     # 281：独一的红武不进出售区；285：券也不
 		_say(UiText.t("act.unique"))
 		return false
 	return not _is_shelf(target)
@@ -309,6 +309,8 @@ func _cant_sell(inst: ItemInstance) -> String:
 		return ""
 	if inst.def.is_unique():     # 281：独一的红武不可出售
 		return UiText.t("act.unique")
+	if inst.def.is_ticket():     # 285：券也不
+		return UiText.t("act.ticket")
 	if board.keeps(inst.uid):
 		return DragLayer.refused_notice(board, inst.uid)
 	if board.acts_as_bag(inst.def) and not board.contents_of(inst.uid).is_empty():

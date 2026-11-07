@@ -1,0 +1,20 @@
+{
+  "id": "ticket_elite",
+  "display_name": "精锐券",
+  "display_names": {
+    "en": "Elite Voucher"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "ticket",
+    "crafted"
+  ],
+  "material": "cloth"
+}

@@ -1922,16 +1922,19 @@ static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportR
 		report.error("tier", "只能是 free / paid / advanced（285）")
 	elif def.tier != LoadoutDef.TIER_FREE and not def.preset:
 		report.error("tier", "收费 / 高级只给预设套（preset=true）")
+	if def.is_advanced() and def.ticket == &"":
+		report.error("ticket", "高级预设得写要哪张券（285 第二版）")
+	elif not def.is_advanced() and def.ticket != &"":
+		report.error("ticket", "只有高级预设要券")
+	elif def.ticket != &"" and not ctx.items.is_empty():
+		var tk: ItemDef = ctx.items.get(def.ticket, null)
+		if tk == null or not tk.is_ticket():
+			report.error("ticket", "'%s' 不是券（得是带 ticket 标签的道具）" % def.ticket)
 	if def.items.is_empty():
 		report.error("items", "开局装备至少带一件")
 		return
 	if ctx.items.is_empty():
 		return
-	if def.is_advanced():     # 285：高级预设从仓库拉，清单里得是集市买得到或打得出来的东西，不然这一套永远选不了
-		for i in def.items.size():
-			var it: ItemDef = ctx.items.get(def.items[i], null)
-			if it != null and (it.is_unique() or it.is_lesser() or it.is_bag or (it.rarity >= 4 and not it.is_forged_only())):
-				report.error("items[%d]" % i, "高级预设的 '%s' 攒不到（独一 / 劣化 / 包 / 不是锻造的橙红件）" % def.items[i])
 	var has_bag := false
 	for i in def.items.size():
 		var item: ItemDef = ctx.items.get(def.items[i], null)
@@ -2398,6 +2401,10 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.error("drop_rule", "找不到掉落规则 '%s'（已知：%s）" % [def.drop_rule, ", ".join(ctx.drop_rules.keys())])
 	if def.bag_pool != &"" and not ctx.bag_pools.is_empty() and not ctx.bag_pools.has(def.bag_pool):
 		report.error("bag_pool", "找不到包池 '%s'（已知：%s）" % [def.bag_pool, ", ".join(ctx.bag_pools.keys())])     # 209
+	if def.boss_ticket != &"" and not ctx.items.is_empty():     # 285：核心 BOSS 必掉的券
+		var tk: ItemDef = ctx.items.get(def.boss_ticket, null)
+		if tk == null or not tk.is_ticket():
+			report.error("boss_ticket", "'%s' 不是券（得是带 ticket 标签的道具）" % def.boss_ticket)
 	if def.carry_rule != &"" and not ctx.carry_rules.is_empty() and not ctx.carry_rules.has(def.carry_rule):
 		report.error("carry_rule", "找不到携带规则 '%s'（已知：%s）" % [def.carry_rule, ", ".join(ctx.carry_rules.keys())])
 	if def.encumbrance_rules != &"" and not ctx.encumbrance_rules.is_empty() and not ctx.encumbrance_rules.has(def.encumbrance_rules):

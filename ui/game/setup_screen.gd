@@ -41,8 +41,6 @@ var _preset_btns: Array[Button] = []
 var _preset_box: BoxContainer = null
 ## 285：挑着的那套（[member preset_index] 是它在这一章能列的那几套里的下标；换章节时按它重新找）
 var _preset_def: LoadoutDef = null
-## 285：高级预设从仓库拉上棋盘的那几件 uid → true（普通带入：算预算、能拖回仓库；换一套先放回仓库）
-var _advanced_uids: Dictionary = {}
 ## 285：中栏那一列挂牌（行囊板与仓库框之间，一屏 [constant PRESET_ROWS] 块，多了竖着滚）
 var _preset_scroll: ScrollContainer = null
 var _preset_sig := ""
@@ -164,6 +162,8 @@ const MAP_ENTRY_H := 60.0
 ## 285：中栏挂牌一屏放几块（不带 + 7 套）、块间距
 const PRESET_ROWS := 8
 const PRESET_TAG_GAP := 6
+## 285：第二页一行三块（行囊板 | 预设挂牌 | 仓库框）的间距（两块时是 36；中间多了一列挂牌，收窄免得仓库框出屏）
+const KIT_ROW_GAP := 20
 const MAP_SUB_H := 44.0
 const NAV_BTN_H := 84.0
 ## 第三页的左右两列离屏边再让多少（地图纸的毛边）
@@ -349,7 +349,7 @@ func _build_kit_page() -> Control:
 	var play := MarginContainer.new()
 	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	play.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var row := _hbox(36)
+	var row := _hbox(KIT_ROW_GAP)
 	play.add_child(row)
 
 	var board_panel := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)     # 180 定稿：背包皮框
@@ -1047,7 +1047,7 @@ func lock_reason(_ch: CharacterDef) -> String:
 	return ""
 
 
-## 096：预设套那一栏：「不带」+ 每套一块。285：中栏一列挂牌 —— 收费的写价钱，高级缺件的灰着加小锁「缺 n 件」，悬停 = 清单（缺的红字）
+## 096：预设套那一栏：「不带」+ 每套一块。285：中栏一列挂牌 —— 收费的写价钱，高级的写券（没券灰着加小锁）；悬停 = 清单（高级的多一行要哪张券）
 func _rebuild_presets() -> void:
 	_preset_btns.clear()
 	if _preset_box == null:
@@ -1064,8 +1064,12 @@ func _rebuild_presets() -> void:
 		for id in def.items:
 			var idef := flow.items.get_def(id)
 			lines.append(Names.of(idef) if idef != null else String(id))
-		var missing := preset_missing_of(def)
-		_preset_btns.append(PresetTag.make(Names.of(def), flow.preset_price(def), missing.size(), lines, _missing_flags(def, missing)))
+		var ticket := flow.items.get_def(def.ticket) if def.is_advanced() else null
+		if ticket != null:
+			lines.append(UiText.t("setup.preset_ticket_tip") % Names.of(ticket))
+		var tag := PresetTag.make(Names.of(def), flow.preset_price(def), ItemPainter.art_of(ticket), flow.preset_ticket_ok(def), def.is_advanced())
+		tag.tooltip_text = "\n".join(lines)
+		_preset_btns.append(tag)
 	for k in _preset_btns.size():
 		_preset_btns[k].pressed.connect(choose_preset.bind(k - 1))     # 第 0 个是「不带」
 		_preset_box.add_child(_preset_btns[k])
@@ -1085,49 +1089,21 @@ func _preset_list() -> Array[LoadoutDef]:
 	return flow.presets(chapter())
 
 
-## 285：高级预设缺哪几项 —— 这一套拉上棋盘的几件换套时会先放回仓库，也算有
-func preset_missing_of(def: LoadoutDef) -> Array[StringName]:
-	var also: Array = []
-	if board != null:
-		for uid in _advanced_uids:
-			var inst := board.get_item(int(uid))
-			if inst != null:
-				also.append(inst)
-	return flow.preset_missing(def, also)
-
-
-## 285：清单逐行是不是缺的（同一样东西有几件，前面的先算有）
-static func _missing_flags(def: LoadoutDef, missing: Array[StringName]) -> Array[bool]:
-	var short := {}
-	for id in missing:
-		short[id] = int(short.get(id, 0)) + 1
-	var left := {}
-	for id in def.items:
-		left[id] = int(left.get(id, 0)) + 1
-	for id in short:
-		left[id] = int(left.get(id, 0)) - int(short[id])
-	var out: Array[bool] = []
-	for id in def.items:
-		out.append(int(left[id]) <= 0)
-		left[id] = int(left[id]) - 1
-	return out
-
-
-## 285：挂牌列要不要重做（这一章列哪几套、每套缺几件）
+## 285：挂牌列要不要重做（这一章列哪几套、高级的有没有券）
 func _presets_signature(sets: Array[LoadoutDef]) -> String:
 	var parts: Array[String] = []
 	for def in sets:
-		parts.append("%s:%d" % [def.id, preset_missing_of(def).size()])
+		parts.append("%s:%d" % [def.id, int(flow.preset_ticket_ok(def))])
 	return ",".join(parts)
 
 
 ## 096：挑一套预设（-1 = 不带）：棋盘上原来那套拿掉，新的免费放进初始包（放不下的在状态栏说）。从仓库带上的不动。
-## 285：收费的照样新造（出发时才付钱）；高级的缺件选不了（返回 false），齐了就从仓库把那几件拉上棋盘
+## 285：收费的照样新造（出发时才付钱）；高级的没券选不了（返回 false），有券和免费的一样新造（出发时才扣券）
 func choose_preset(i: int) -> bool:
 	var sets := _preset_list()
 	var j := clampi(i, -1, sets.size() - 1)
 	var def: LoadoutDef = sets[j] if j >= 0 else null
-	if def != null and def.is_advanced() and not preset_missing_of(def).is_empty():
+	if def != null and not flow.preset_ticket_ok(def):
 		_color_presets()
 		return false
 	_hold_refresh += 1     # 作者 11-07：换预设时先拿掉旧的一套 —— 棋盘每变一下都 _refresh，中途空手就弹「一件能出手的都没有」
@@ -1175,38 +1151,25 @@ func _clear_preset() -> void:
 		for uid in _preset_uids:
 			if board.get_item(int(uid)) != null:
 				board.remove(int(uid))
-		for uid in _advanced_uids:     # 285：高级预设拉上来的放回仓库（拖回去过的已经在了）
-			if board.get_item(int(uid)) != null:
-				InventoryService.transfer_auto(board, int(uid), flow.meta.warehouse)
 	_preset_uids.clear()
-	_advanced_uids.clear()
 
 
-## 把预设套的道具放上棋盘（和拖进包里一样自动找位置）。放不下的记在状态栏。
-## 285：高级预设不新造 —— 从仓库把清单里那几件拉上来（同拖进包里）
+## 把预设套的道具放上棋盘（和拖进包里一样自动找位置）。放不下的记在状态栏。三档都新造（285）
 func _apply_preset() -> void:
 	var def := preset()
 	if def == null or board == null:
 		return
 	var missed: Array[String] = []
-	if def.is_advanced():
-		for uid in flow.preset_pull(def):
-			var have := flow.meta.warehouse.get_item(uid)
-			if InventoryService.transfer_auto(flow.meta.warehouse, uid, board):
-				_advanced_uids[uid] = true
-			elif have != null:
-				missed.append(Names.of(have.def))
-	else:
-		for id in def.items:
-			var idef := flow.items.get_def(id)
-			if idef == null:
-				continue
-			var inst := ItemInstance.create(idef, 0)
-			inst.uid = flow.meta.allocate_uid()
-			if board.try_add(inst, true):
-				_preset_uids[inst.uid] = true
-			else:
-				missed.append(Names.of(idef))
+	for id in def.items:
+		var idef := flow.items.get_def(id)
+		if idef == null:
+			continue
+		var inst := ItemInstance.create(idef, 0)
+		inst.uid = flow.meta.allocate_uid()
+		if board.try_add(inst, true):
+			_preset_uids[inst.uid] = true
+		else:
+			missed.append(Names.of(idef))
 	if not missed.is_empty():
 		warn(UiText.t("setup.preset_missed") % UiText.t("setup.list_sep").join(missed))
 
@@ -1535,6 +1498,8 @@ func can_depart() -> String:
 		return UiText.t("setup.no_character")
 	if preset_poor():
 		return UiText.t("setup.preset_poor")     # 285：收费预设出发这一刻付钱
+	if not flow.preset_ticket_ok(preset()):     # 285：高级预设出发这一刻扣券（选的时候有，之后没了也拦）
+		return UiText.t("setup.preset_no_ticket") % Names.of(flow.items.get_def(preset().ticket))
 	var defs: Array = []
 	for inst in carried():
 		defs.append(inst.def)
@@ -1616,7 +1581,7 @@ func _go_now() -> bool:
 	flow.map_reveal = reveal_payload()
 	_record_carry()
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id, carry_funds,
-			flow.preset_price(preset()))
+			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"")
 	flow.map_reveal = {}
 	if run == null:
 		warn(UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source")))
@@ -1802,7 +1767,6 @@ func _rebuild_board() -> void:
 	_readout = null
 	board = null
 	_preset_uids.clear()
-	_advanced_uids.clear()
 	var ch := character()
 	if ch == null:     # 140：没有角色就没有棋盘（左栏那条红字说明了）
 		return
@@ -2080,9 +2044,7 @@ func _sync_summary_preset() -> void:
 	var text := preset_summary()
 	_summary_preset.visible = text != ""
 	_summary_preset_label.text = text
-	var ink := _summary.get_theme_color("font_color")
-	_summary_preset_label.add_theme_color_override("font_color", ink)
-	_summary_coin.ink = ink
+	_summary_coin.ink = _summary_preset_label.get_theme_color("font_color")
 	var price := flow.preset_price(preset())
 	_summary_coin.visible = price > 0
 	_summary_coin.amount = price

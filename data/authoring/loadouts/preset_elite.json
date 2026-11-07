@@ -1,8 +1,8 @@
 {
-  "id": "preset_steel",
-  "display_name": "钢铁",
+  "id": "preset_elite",
+  "display_name": "精锐",
   "display_names": {
-    "en": "Steel"
+    "en": "Elite"
   },
   "descriptions": {
     "en": ""
@@ -10,10 +10,11 @@
   "preset": true,
   "items": [
     "steel_greatsword",
-    "plate_cuirass",
     "steel_stiletto",
+    "leather_armor",
     "salve",
     "salve"
   ],
-  "tier": "advanced"
+  "tier": "advanced",
+  "ticket": "ticket_elite"
 }

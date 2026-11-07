@@ -1,4 +1,4 @@
-## 285（作者 2026-11-07 14:46）：开局预设扩充 —— 中栏竖排挂牌；免费 / 收费（出发时付钱、算带入预算）/ 高级（清单每件都得在仓库，选了从仓库拉）
+## 285（作者 2026-11-07 14:46 / 14:56）：开局预设扩充 —— 中栏竖排挂牌；免费 / 收费（出发时付钱、算带入预算）/ 高级（一张券换一套，出发时扣券）
 extends RefCounted
 
 const Setup := preload("res://tests/ui/test_setup_180.gd")
@@ -8,7 +8,7 @@ const PREFIX := "presets_285"
 
 static func run_data(t: TestCase) -> void:
 	t.begin("285 · 数据：七套预设（免费 2 / 收费 3 / 高级 2），免费在前；导入校验 tier")
-	var flow := GameFlow.new()
+	var flow := GameFlow.new(TestSupport.load_content("free_mode").items)
 	flow.loadouts = GameFlow.load_loadouts()
 	flow.chapters = GameFlow.load_chapters()
 	var sets := flow.presets()
@@ -29,7 +29,17 @@ static func run_data(t: TestCase) -> void:
 	t.check(want > 0, "收费的有价钱")
 	t.eq(flow.preset_price(ranger), want, "价钱 = 清单集市价之和")
 	t.eq(flow.preset_price(_find(sets, &"preset_offense")), 0, "免费的 0")
-	t.eq(flow.preset_price(_find(sets, &"preset_steel")), 0, "高级的不付钱")
+	var standard := _find(sets, &"preset_standard")
+	t.eq(flow.preset_price(standard), 0, "高级的不付钱")
+	t.eq(flow.preset_value(standard), 0, "高级的不算预算")
+	t.eq(standard.ticket, &"ticket_standard", "制式要制式券")
+	t.eq(_find(sets, &"preset_elite").ticket, &"ticket_elite", "精锐要精锐券")
+	for tid in [&"ticket_standard", &"ticket_elite"]:
+		var tk := flow.items.get_def(tid)
+		t.check(tk != null and tk.is_ticket() and tk.shape.cells.size() == 1 and tk.description == "", "%s：券、1×1、说明空着" % tid)
+		t.check(not flow.items.ids().has(tid), "%s 不进掉落池与商店" % tid)
+		var inst := ItemInstance.create(tk, 0)
+		t.check(not ItemActions.sell(inst, 5, func(_u: int): pass).enabled, "%s 不能卖" % tid)
 	t.eq(flow.preset_value(_find(sets, &"preset_offense")), 0, "免费的不算预算")
 	var prologue: ChapterDef = null
 	for c in flow.chapters:
@@ -40,14 +50,25 @@ static func run_data(t: TestCase) -> void:
 	# 导入校验
 	t.check(_errors({"id": "x", "preset": true, "tier": "gold", "items": ["salve"]}, flow) != "", "tier 只许三个值")
 	t.check(_errors({"id": "x", "tier": "paid", "items": ["salve", "sack"]}, flow) != "", "收费 / 高级只给预设套")
-	t.check(_errors({"id": "x", "preset": true, "tier": "advanced", "items": ["poxiao_token"]}, flow).contains("poxiao_token"), "高级清单不许有独一件")
+	t.check(_errors({"id": "x", "preset": true, "tier": "advanced", "items": ["salve"]}, flow).contains("ticket"), "高级得写券")
+	t.check(_errors({"id": "x", "preset": true, "tier": "advanced", "ticket": "salve", "items": ["salve"]}, flow).contains("不是券"), "券得是带 ticket 标签的道具")
+	t.check(_errors({"id": "x", "preset": true, "tier": "paid", "ticket": "ticket_elite", "items": ["salve"]}, flow) != "", "收费的不写券")
+	t.eq(_errors({"id": "x", "preset": true, "tier": "advanced", "ticket": "ticket_elite", "items": ["salve"]}, flow), "", "高级 + 券过")
+	var by_id := {}
+	for c in flow.chapters:
+		by_id[c.id] = c
+	t.eq((by_id[&"free_mode"] as ChapterDef).boss_ticket, &"ticket_standard", "魔法废墟的核心 BOSS 掉制式券")
+	t.eq((by_id[&"clockwork_hourglass"] as ChapterDef).boss_ticket, &"ticket_elite", "机关沙漏掉精锐券")
+	for c in flow.chapters:
+		if not c.allow_carry_in:
+			t.eq(c.boss_ticket, &"", "%s 不掉券" % c.id)
 	t.eq(_errors({"id": "x", "preset": true, "tier": "paid", "items": ["salve"]}, flow), "", "收费的正常清单过")
 	t.eq(_errors({"id": "x", "preset": true, "items": ["salve"]}, flow), "", "不写 tier = 免费（老数据不改也对）")
 
 
 static func _errors(data: Dictionary, flow: GameFlow) -> String:
 	var ctx := ContentImporter.Context.new()
-	for id in data["items"]:
+	for id in data["items"] + ([data["ticket"]] if data.has("ticket") else []):
 		ctx.items[StringName(id)] = flow.items.get_def(StringName(id))
 	var report := ImportReport.new()
 	ContentImporter.import_loadout(data, ctx, report)
@@ -121,73 +142,101 @@ static func frame_paid(t: TestCase, root: Window) -> void:
 
 
 static func frame_advanced(t: TestCase, root: Window) -> void:
-	t.begin("285 · 高级预设：缺件灰锁选不了、悬停缺的红字；齐了从仓库拉；拖回去就是放回；换套放回仓库；序章不列")
+	t.begin("285 · 高级预设：没券灰锁选不了；有券点了新造进包、不算预算；出发扣一张券、券不退；序章不列")
 	var game = Setup._game(root, PREFIX + "_adv")
 	var flow: GameFlow = game.flow
 	var setup = game.base()
 	_free_mode(setup)
 	setup.show_page(1)
 	var sets: Array[LoadoutDef] = setup._preset_list()
-	var steel := _find(sets, &"preset_steel")
-	var si := sets.find(steel)
-	# 先清掉仓库里清单上的东西
-	for inst in flow.meta.warehouse.items():
-		if steel.items.has((inst as ItemInstance).def.id):
-			flow.meta.warehouse.remove((inst as ItemInstance).uid)
-	setup._rebuild_presets()
+	var standard := _find(sets, &"preset_standard")
+	var si := sets.find(standard)
 	var tag: PresetTag = setup._preset_btns[si + 1]
-	t.check(tag.disabled, "缺件：灰着")
-	t.check(tag.short_label != null and tag.short_label.text.contains(str(steel.items.size())), "「缺 %d 件」" % steel.items.size())
-	t.check(not setup.choose_preset(si), "缺件选不了")
+	t.check(tag.disabled and tag.lock != null, "没券：灰着加小锁")
+	t.check(tag.ticket_row != null and tag.coin == null, "下行是券、不是钱")
+	var tk_name := Names.of(flow.items.get_def(&"ticket_standard"))
+	t.check(tag.tooltip_text.contains(tk_name), "悬停写要哪张券")
+	t.eq(tag.tooltip_text.split("\n").size(), standard.items.size() + 1, "清单 + 一行券")
+	t.check(not setup.choose_preset(si), "没券选不了")
 	t.eq(setup.preset_index, -1, "还是不带")
-	# 只缺最后那件伤药
-	var uids: Array[int] = []
-	for k in steel.items.size() - 1:
-		var inst := ItemInstance.create(flow.items.get_def(steel.items[k]), 0)
-		inst.uid = flow.meta.allocate_uid()
-		t.check(flow.meta.warehouse.try_add(inst, true), "仓库放进 %s" % steel.items[k])
-		uids.append(inst.uid)
-	t.eq(setup.preset_missing_of(steel).size(), 1, "缺一件")
+	# 发两张券
+	for k in 2:
+		var tk := ItemInstance.create(flow.items.get_def(&"ticket_standard"), 0)
+		tk.uid = flow.meta.allocate_uid()
+		t.check(flow.meta.warehouse.try_add(tk, true), "仓库放进一张制式券")
 	setup._rebuild_presets()
 	tag = setup._preset_btns[si + 1]
-	var flags: Array[bool] = tag.missing_flags()
-	t.eq(flags.count(true), 1, "悬停只有一行红字")
-	t.check(flags[flags.size() - 1], "红的是最后那件伤药")
-	var tip: RichTextLabel = tag._make_custom_tooltip("")
-	t.check(tip != null and tip.text.contains("[color="), "悬停是富文本、缺的上色")
-	t.check(not setup.choose_preset(si), "缺一件也选不了")
-	var last := ItemInstance.create(flow.items.get_def(steel.items[steel.items.size() - 1]), 0)
-	last.uid = flow.meta.allocate_uid()
-	flow.meta.warehouse.try_add(last, true)
-	uids.append(last.uid)
-	t.eq(setup.preset_missing_of(steel).size(), 0, "齐了")
+	t.check(not tag.disabled and tag.lock == null, "有券：挂牌亮了")
 	var n: int = flow.meta.warehouse.item_count()
-	t.check(setup.choose_preset(si), "齐了能选")
-	var pulled: int = setup._advanced_uids.size()
-	t.check(pulled > 0, "从仓库拉了 %d 件（包里放不下的留在仓库、状态栏说）" % pulled)
-	t.eq(flow.meta.warehouse.item_count(), n - pulled, "仓库少了拉走的那几件")
-	t.eq(setup.preset_items().size(), 0, "高级的不是新造的")
-	t.eq(setup.carried().size(), pulled, "拉上来的就是普通带入")
-	var v := 0
-	for inst in setup.carried():
-		v += ItemValue.of((inst as ItemInstance).def)
-	t.eq(setup.carry_value(), v, "算带入预算（同手拖）")
-	t.eq(setup.preset_missing_of(steel).size(), 0, "选着的那套不算缺")
-	t.check(setup.carry_out(setup.carried()[0].uid), "拖回仓库 = 放回")
-	t.eq(flow.meta.warehouse.item_count(), n - pulled + 1, "回了一件")
+	t.check(setup.choose_preset(si), "有券能选")
+	t.eq(setup.preset_items().size(), standard.items.size(), "整套新造进包")
+	t.eq(flow.meta.warehouse.item_count(), n, "选的时候不扣券")
+	t.eq(setup.carry_value(), 0, "不算带入预算")
+	t.eq(setup.preset_summary(), UiText.t("setup.summary_preset") % Names.of(standard), "摘要多一行「预设：制式」")
+	t.check(not setup._summary_coin.visible, "高级的摘要不写钱")
 	setup.choose_preset(-1)
-	t.eq(flow.meta.warehouse.item_count(), n, "换回不带：拉上来的都放回仓库")
-	t.eq(setup.carried().size(), 0, "棋盘上没有了")
-	t.check(setup.choose_preset(si), "再选一次")
-	# 换到序章：高级的不列，自动换回不带、东西放回仓库
+	setup.choose_preset(si)
+	t.eq(flow.meta.warehouse.item_count(), n, "换套不扣券")
+	var funds: int = flow.meta.funds
+	setup.show_page(2)
+	setup.choose_scale(&"")
+	setup.set_run_seed(7)
+	var pv: MapPreview = setup.preview()
+	pv.size = Vector2(640, 600)
+	pv.finish()
+	var ids: Array[int] = pv.entry_ids()
+	if not ids.is_empty():
+		setup.pick_spawn(ids[0])
+		setup.close_hint()
+	t.check(Support.depart(setup), "出发（%s）" % setup.can_depart())
+	var left := 0
+	for inst in flow.meta.warehouse.items():
+		if (inst as ItemInstance).def.id == &"ticket_standard":
+			left += 1
+	t.eq(left, 1, "出发扣了一张券")
+	t.eq(flow.meta.funds, funds, "不扣钱")
+	t.check(flow.run.board.items().any(func(i) -> bool: return (i as ItemInstance).def.id == &"longsword"), "一局的棋盘上有制式那把长剑")
+	game.queue_free()
+
+
+static func frame_prologue(t: TestCase, root: Window) -> void:
+	t.begin("285 · 序章只列免费两套；挑着收费的换到序章 → 换回不带")
+	var game = Setup._game(root, PREFIX + "_pro")
+	var flow: GameFlow = game.flow
+	var setup = game.base()
+	_free_mode(setup)
+	setup.show_page(1)
+	var sets: Array[LoadoutDef] = setup._preset_list()
+	t.check(setup.choose_preset(sets.find(_find(sets, &"preset_ranger"))), "挑游猎")
 	for gi in setup._chapters.size():
 		if not setup._chapters[gi].allow_carry_in:
 			setup.choose_chapter(gi)
 			t.eq(setup._preset_list().size(), 2, "序章只列免费两套")
-			t.is_null(setup.preset(), "高级的换回不带")
-			t.eq(flow.meta.warehouse.item_count(), n, "东西都回了仓库")
+			t.eq(setup._preset_btns.size(), 3, "挂牌三块")
+			t.is_null(setup.preset(), "收费的换回不带")
+			t.eq(setup.preset_items().size(), 0, "棋盘上没有游猎的东西")
 			break
+	t.check(flow != null, "")
 	game.queue_free()
+
+
+static func run_boss_ticket(t: TestCase) -> void:
+	t.begin("285 · 核心 BOSS 打赢必掉一张这一章的券；别的点不掉")
+	var c := TestSupport.load_content("free_mode")
+	var events := NodeEvents.new(null)
+	events.items = c.items
+	events.boss_ticket = &"ticket_standard"
+	var got: Array = []
+	events.loot_ready.connect(func(_n: MapNode, corpse: GridInventory):
+		for inst in corpse.items():
+			got.append((inst as ItemInstance).def.id))
+	var node := MapNode.new()
+	node.id = 1
+	events._settle_won(node, &"core", {"items": []})
+	t.check(got.has(&"ticket_standard"), "核心：掉了制式券（%s）" % [got])
+	got.clear()
+	events._settle_won(node, &"battle", {"items": []})
+	t.check(not got.has(&"ticket_standard"), "普通战斗不掉")
 
 
 static func _free_mode(setup) -> void:
