@@ -117,6 +117,11 @@ static func run_safe_size_effect(t: TestCase) -> void:
 	t.eq(m.safe_bonus, Vector2i(eff.cols, eff.rows), "推算按级数重算")
 	var back := MetaState.from_dict(m.to_dict(), _db(), GameFlow.load_meta_rules(), defs)
 	t.eq(back.safe_bonus, m.safe_bonus, "120：safe_bonus 不入档，读档由进度表推算回来")
+	var old_save := m.to_dict()
+	(old_save["tech_levels"] as Dictionary)["endurance"] = 3     # 11-07 之前耐久有三级
+	var clamped := MetaState.from_dict(old_save, _db(), GameFlow.load_meta_rules(), defs)
+	t.eq(TechService.level(clamped, &"endurance"), 2, "老档耐久 3 级：压到新的满级 2")
+	t.check(clamped.tech_buffs.has(&"tech_endurance_2"), "给的是 2 级的 buff")
 	var bare := MetaState.from_dict(m.to_dict(), _db(), GameFlow.load_meta_rules())
 	t.check(bare != null and bare.safe_bonus == Vector2i.ZERO and bare.tech_buffs.is_empty(), "没给科技定义：派生值留给调用方推算（默认值）")
 
@@ -147,7 +152,8 @@ static func run_run_reads_tech(t: TestCase) -> void:
 	var refund_eff := pack.effects[0] as Effect
 	# 2026-10-22（作者定）：行囊从「开局白送钱」改成「战败保住身上几成钱」，2 级 = 三成
 	t.eq(ctx.death_refund_percent, int(refund_eff.get("percent")), "战败保钱的百分比读到了（行囊 2 级）")
-	t.check(ctx.vitality_max_mult >= 1, "体力上限的百分比读到了（耐久 1 级，149）")
+	t.eq(ctx.vitality_max_bonus, 1, "体力上限 +1 读到了（耐久 1 级；作者 11-07：直接加，最高两级）")
+	t.eq((load(ContentPaths.asset_file("techs", "endurance")) as TechDef).tiers.size(), 2, "耐久两级")
 
 
 static func run_import_checks(t: TestCase) -> void:

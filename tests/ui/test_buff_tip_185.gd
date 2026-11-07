@@ -22,6 +22,10 @@ static func run_effect_totals(t: TestCase) -> void:
 	t.check(_plain(lib[&"fungal_blood"], 4).contains("恢复量减半，每次恢复获得等量的中毒"), "菌血按作者原话")
 	t.check(_plain(lib[&"scorched_blood"], 3).contains("恢复量归零，每秒受到 3 点火焰伤害"), "燃血按作者原话")
 	t.check(_plain(lib[&"marked"]).contains("格挡 −3"), "标记：格挡 −3")
+	# 作者 11-07：流血说明按机制写 ——「每秒造成 N 点流血伤害，然后减半」（不是永续叠层）
+	var bleed: String = _plain(lib[&"bleed"], 4)
+	t.check(bleed.contains("每秒受到 4 点流血伤害，然后减半"), "流血写然后减半（%s）" % bleed)
+	t.check(Glossary.term_text("流血").contains("然后减半") and not Glossary.term_text("流血").contains("永续"), "流血词条：然后减半、不写永续")
 	t.check(Glossary.strip_bbcode(Glossary.buff_body(lib[&"poison"])).contains("每秒受到 1 点"), "图鉴 / 子窗按 1 层")
 	t.check(Glossary.buff_rule_lines(lib[&"scorched_blood"]).has("每层持续 1 秒"), "作者工具仍看得到按层计时")
 	t.check(Glossary.buff_rule_lines(lib[&"poison"]).has("毒元素印"), "作者工具写元素印（查询清单二.2）")

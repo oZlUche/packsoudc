@@ -180,6 +180,10 @@ static func run_text(t: TestCase) -> void:
 	var line := TextTemplate.strip_bbcode(ItemTooltip.wear_line(fire))
 	t.check(line.contains("用完就碎"), "耐久行：%s" % line)
 	t.check(line.contains("只能卖钱"), "耐久行写碎了只能卖钱（说明留给作者后挪到这里）")
+	# 作者 11-07：每行内容完整 —— 数字一行、说明一行；供给句「装进法杖：」一行、每条效果各一行
+	t.eq(line.split("\n")[0], "耐久 2 / %d" % fire.def.wear.max_charges, "耐久数字自成一行：%s" % line)
+	var feed := AdjacencyText.feed(fire.def.adjacency).split("\n")
+	t.check(feed.size() >= 2 and feed[0].ends_with("：") and not feed[1].contains("、"), "供给句头一行、效果一条一行：%s" % [feed])
 	var into := (db.get_def(&"fire_crystal").duplicate(true)) as ItemDef
 	into.wear.broken_into = &"crystal_shards"
 	var into_inst := ItemInstance.create(into)

@@ -38,11 +38,11 @@ static func run(t: TestCase) -> void:
 	var levels := 0
 	for id in f:
 		levels += (f[id]["tiers"] as Array).size()
-	t.eq(levels, 37, "三十七级（252 加四级；262 高级货物、高级配方各砍一级）")
+	t.eq(levels, 36, "三十六级（252 加四级；262 高级货物、高级配方各砍一级；11-07 耐久砍到两级）")
 	t.eq(f["scouting"]["requires"], ["bargain"], "侦察的前置：讨价（229 补充一收成链）")
 	t.eq(f["safe_box"]["tiers"][1]["items"], {"nail_keg": 1, "steel_ingot": 1}, "材料按「；」拆成道具 → 件数（122 改成铁钉桶）")
 	var out := TechsTable.build(_sheets(), problems)
-	t.eq(out.size(), 36, "生成 15 份科技 + 21 份 run_buff")
+	t.eq(out.size(), 35, "生成 15 份科技 + 20 份 run_buff")
 	var same := 0
 	for path in out:
 		var json := JSON.new()

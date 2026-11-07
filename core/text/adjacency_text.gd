@@ -19,8 +19,8 @@ static func condition(any: Array, all: Array = []) -> String:
 	return a + o if a == "" or o == "" else a + UiText.t("tip.adj_and_sep") + o
 
 
-## 效果那一段：修饰与规则，用「、」连
-static func effects(mods: Array, rules: Array) -> String:
+## 效果那一段：修饰与规则，用「、」连（[param p_sep] 给了就用它连，供给句一条一行）
+static func effects(mods: Array, rules: Array, p_sep: String = "") -> String:
 	var parts: Array[String] = []
 	for m in mods:
 		if m != null:
@@ -28,7 +28,7 @@ static func effects(mods: Array, rules: Array) -> String:
 	for r in rules:
 		if r != null:
 			parts.append(UiText.t("tip.adj_added") % rule_phrase(r as AbilityRule))
-	return UiText.t("tip.list_sep").join(parts)
+	return (p_sep if p_sep != "" else UiText.t("tip.list_sep")).join(parts)
 
 
 ## 一条附加规则的一句；提到的 buff 有专属解说就写解说（171 §1）
@@ -59,11 +59,11 @@ static func receive(adj: AdjacencyProfile) -> String:
 	return "%s %s" % [head, effects(adj.receive_mods, adj.receive_rules)]
 
 
-## 供给句（晶石自己的悬浮窗）：「装进法杖：伤害 +6、附加：…」
+## 供给句（晶石自己的悬浮窗）：「装进法杖：」一行，下面每条效果各占一行（作者 11-07：每行内容完整）
 static func feed(adj: AdjacencyProfile) -> String:
 	if adj == null or not adj.has_feed():
 		return ""
-	return UiText.t("tip.adj_feed") % [condition(adj.feed_filter) if not adj.feed_filter.is_empty() else UiText.t("tip.adj_host"), effects(adj.feed_mods, adj.feed_rules)]
+	return UiText.t("tip.adj_feed") % [condition(adj.feed_filter) if not adj.feed_filter.is_empty() else UiText.t("tip.adj_host"), effects(adj.feed_mods, adj.feed_rules, "\n")]
 
 
 ## 晶石供给里把伤害转成的类型（`convert_damage_type` 的 `to`）；没有返回空
