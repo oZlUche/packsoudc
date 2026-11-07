@@ -193,6 +193,8 @@ var _stat_plate: StatSealPlate = null
 var _entries: Array[HBoxContainer] = []
 var _legend: Array[Control] = []
 var _gift_tag: PanelContainer = null
+## >0：正在一批改棋盘（换预设 / 换角色），[method _refresh] 先不刷，做完再刷一次
+var _hold_refresh := 0
 ## 255：预览那块只画形状（缺格 + 随身之物），不画包
 var _preview_board: GridInventory = null
 ## 255：这一回进开局屏时，哪几个角色是第一次选（首次赠包刚送进包架）—— 小签只在这时显示
@@ -1128,11 +1130,13 @@ func choose_preset(i: int) -> bool:
 	if def != null and def.is_advanced() and not preset_missing_of(def).is_empty():
 		_color_presets()
 		return false
+	_hold_refresh += 1     # 作者 11-07：换预设时先拿掉旧的一套 —— 棋盘每变一下都 _refresh，中途空手就弹「一件能出手的都没有」
 	_clear_preset()
 	preset_index = j
 	_preset_def = def
 	_apply_preset()
 	ensure_bag()     # 225：换回「不带」时棋盘上可能一只包都没了
+	_hold_refresh -= 1
 	carry_funds = clampi(carry_funds, 0, cash_cap())     # 285：收费的那笔要留在账上
 	_color_presets()
 	_refresh()
@@ -1220,11 +1224,13 @@ func preset_items() -> Array[ItemInstance]:
 
 ## 换角色：带上的先放回仓库，按新角色的棋盘尺寸与初始包重摆
 func choose_character(i: int) -> void:
+	_hold_refresh += 1     # 同上：收包、重摆的中途不算
 	_return_bags()
 	if not _characters.is_empty():
 		character_index = clampi(i, 0, _characters.size() - 1)
 	_mark_choice(_character_btns, character_index)
 	_rebuild_board()
+	_hold_refresh -= 1
 	_rebuild_card()
 	_refresh()
 
@@ -2097,6 +2103,8 @@ func reseat_anchor(uid: int) -> bool:
 
 
 func _refresh() -> void:
+	if _hold_refresh > 0:
+		return     # 一批改动的中途（换预设 / 换角色），做完统一刷一次
 	var c := chapter()
 	var ch := character()
 	if _readout != null and board != null:
