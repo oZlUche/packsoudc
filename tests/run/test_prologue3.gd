@@ -290,7 +290,7 @@ static func run_departure_briefing_218(t: TestCase) -> void:
 	var shown := TextTemplate.plain(def.text_for(), TextTemplate.context_for(null))
 	t.check(shown != "" and not shown.contains("{") and not shown.contains("}"), "局还没开，占位符也换得掉")
 	t.eq(TextLint.scan({"text": def.text}).size(), 0, "不写数字")
-	for word in ["日晷", "免费出口", "保险箱", "主人", "百科"]:
+	for word in ["日晷", "免费出口", "托付", "主人", "百科"]:
 		t.check(shown.contains(word), "讲到「%s」" % word)
 	var went := [0]
 	f.show_briefing(def, func(): went[0] += 1)

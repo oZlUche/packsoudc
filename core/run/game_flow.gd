@@ -1024,7 +1024,26 @@ func save_and_quit() -> bool:
 	return ok
 
 
-## 092（作者定）：关上保险箱 —— 里面有东西就锁上送回基地（不能再改），屏关掉；空着就只是收起（还能再开）。返回锁没锁
+## 287：站在 [param node] 上能不能「托付」—— 人站在这儿、免费撤离点、出口没关、这一局装了托付（[SafeModule]）
+func entrust_open(node: MapNode) -> bool:
+	if run == null or run.is_over() or node == null or node != run.current_node() or NodeEvents.effective_type(node) != &"extract" or PaidExtracts.fee_of(node) > 0:
+		return false
+	var cd := CountdownModule.of(run)
+	if cd != null and cd.extract_closed(node):
+		return false
+	var safe := SafeModule.of(run)
+	return safe != null and safe.is_open()
+
+
+## 287：在免费撤离点 [param node] 上开托付屏（就是 092 的保险箱屏）。开不了返回 false
+func open_safe(node: MapNode) -> bool:
+	if not entrust_open(node):
+		return false
+	_go(Screen.SAFE, {"node": node})
+	return true
+
+
+## 092（作者定）：关上保险箱 —— 287 起叫托付：新放的几件交出去（拿不回来），屏关掉；没有新放的只是收起。返回交没交
 func close_safe() -> bool:
 	if run == null:
 		return false

@@ -271,8 +271,25 @@ func _open_confirm(node: MapNode) -> void:
 	if left > 0:
 		go.tooltip_text = UiText.t("map.extract_ground_tip")     # 地上的东西不带出 —— 原来那句的后半截
 	buttons.add_child(go)
+	if flow.entrust_open(node):     # 287：免费、没关的出口 —— 托付给接应的人（就是原来的保险箱）
+		var entrust := _vbox(2)
+		var entrust_key := _button(UiText.t("map.entrust"), entrust_here, 14)
+		entrust_key.size_flags_vertical = Control.SIZE_EXPAND_FILL     # 和旁边两枚一样高（小字压在下面）
+		entrust.add_child(entrust_key)
+		var held := SafeModule.of(_run).item_count()
+		if held > 0:
+			var note := _label(UiText.t("map.entrust_held") % held, 12, UiPalette.DIM)
+			note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			entrust.add_child(note)
+		buttons.add_child(entrust)
 	buttons.add_child(_button(UiText.t("map.extract_cancel"), cancel_extract, 14, UiPalette.Tier.MINOR))
 	col.add_child(buttons)
+
+
+## 287：撤离确认框上的【托付】—— 开托付屏（092 的保险箱屏）。开不了返回 false
+func entrust_here() -> bool:
+	cancel_extract()
+	return flow.open_safe(_run.current_node())
 
 
 ## 193 §3.2：叠层（背包、撤离确认、暂停、规则卡）一打开就收掉浮窗 —— 叠层盖住了源，不一定还有鼠标事件来收
@@ -663,7 +680,7 @@ func _adopt() -> void:
 		_hud_host.notice(UiText.t("notice.at_extract_paid") % fee if fee > 0 else UiText.t("notice.at_extract")))
 	_run.phase_changed.connect(func(_p: int, why: StringName):
 		if why == &"time_out":
-			_note("[color=#d9534f]　倒计时归零：行动失败。保险箱里的照样带出[/color]")
+			_note("[color=#d9534f]　倒计时归零：行动失败。托付出去的照样带出[/color]")
 		_view.spawn_mask = _run.phase == RunState.Phase.PICK_SPAWN     # 096：挑完出生点遮罩撤掉
 		_refresh_hud()
 		_refresh_skills())     # 挑完出生点技能才能用：按钮跟着阶段亮
@@ -674,7 +691,7 @@ func _adopt() -> void:
 	var safe := SafeModule.of(_run)     # 101：保险箱是一局的模块，信号在它身上
 	if safe != null:
 		safe.closed.connect(func(n: int):
-			_note("[color=#c8a2ff]　保险箱关上了：%d 件送回基地，不能再改[/color]" % n)
+			_note("[color=#c8a2ff]　托付出去 %d 件：交给接应的人，拿不回来了[/color]" % n)
 			_hud_host.notice(UiText.t("notice.safe_closed") % UiText.count(n, "unit.item")))
 	var altar := AltarModule.of(_run)     # 101：神坛是一局的模块，信号在它身上
 	if altar != null:

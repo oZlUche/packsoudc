@@ -131,7 +131,6 @@
   ],
   "departure_event": "briefing_legion",
   "step_limit": 40,
-  "safes": 1,
   "chest_skin": "clockwork",
   "map_skin": "clockwork"
 }

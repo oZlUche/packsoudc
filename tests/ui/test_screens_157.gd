@@ -254,7 +254,7 @@ static func frame_other_overlays(t: TestCase, root: Window) -> void:
 		["altar", {}, "神坛"],
 	]
 	if SafeModule.of(f.run) != null:
-		cases.append(["safe", {}, "保险箱"])
+		cases.append(["safe", {}, "托付"])     # 287：保险箱并入免费撤离点，屏叫托付
 	for row in cases:
 		var screen = load("res://ui/game/%s_screen.gd" % row[0]).new()
 		screen.flow = f

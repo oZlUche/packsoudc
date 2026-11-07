@@ -72,7 +72,7 @@ func set_quality(q: int) -> void:
 		state.erase(QUALITY_KEY)
 
 
-## 281 寂灭（作者 10:47）：法杖记「完整进出局」次数 —— 开局带进去记 [constant RUN_IN_KEY]，回了基地（撤离，或战败时保险箱
+## 281 寂灭（作者 10:47）：法杖记「完整进出局」次数 —— 开局带进去记 [constant RUN_IN_KEY]，回了基地（撤离，或战败时托付出去的
 ## 带回）有这个记号就 [constant RUNS_KEY] +1、记号摘掉。只有法杖记（[method tracks_runs]），任何品级都算；包里任何格子都算带着；
 ## 0 不写键（存档逐字节不变）
 const RUNS_KEY := "runs"

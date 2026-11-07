@@ -97,8 +97,6 @@ const COACH_KINDS: Array[StringName] = [&"map", &"battle", &"bag", &"prebattle"]
 @export var step_limit: int = 0
 ## 倒计时过半时关掉一个撤离点（离出生点最近的免费撤离点；地图上标着「倒计时剩 n 时关闭」）。要有 step_limit 才生效
 @export var closing_extract: bool = true
-## 这一章放几个保险箱点（生成之后挑靠近中央的战斗 / 事件点覆盖成保险箱，和高危区一样是生成后的一遍；预设图直接画 K）。放进去的视为已带出，战败也带得出；**关上就送回基地，不能再改**
-@export var safes: int = 0
 ## 154：宝箱屏的皮肤 id（`data/chest_skins/`）：背景、宝箱的纹路与材质跟着地图走
 @export var chest_skin: StringName = &"ruins"
 ## 作者定：地图屏的手绘底图 id（`assets/maps/<id>.png`，[MapSkin]）—— 每章一种风格；没这张图照旧石板底

@@ -1,14 +1,14 @@
 {
   "id": "safe_box",
-  "display_name": "保险箱",
+  "display_name": "托付",
   "display_names": {
-    "en": "Safes"
+    "en": "Entrusting"
   },
   "category": "map",
   "order": 4,
-  "text": "保险箱点上有一只小格子，放进去的东西视为已带出：不管这一局撤离还是失败，结算时都送回基地，结算屏单独一格画着它们。拖着放或棋盘上双击进箱，箱里双击回棋盘；包放不进去：包不进保险箱。\n\n关上保险箱或走开，里面有东西就锁上，送回基地、不能再改，这个点随之变灰；空着关不算关，回来还能开。箱子的大小由局外规则定，科技能扩格。保险箱点落在地图偏中央的位置，那里没有敌人。",
+  "text": "免费撤离点上有接应的人。踩上去按「撤离」，确认框里除了撤离还有【托付】：开一块小格子，放进去的东西交给他们，视为已带出 —— 不管这一局最后撤离还是失败，结算时都回仓库，结算屏单独一格画着它们。拖着放或棋盘上双击进格子，没交出去之前格子里双击回棋盘；包放不进去。\n\n关上格子或走开，新放的就交出去了，拿不回来；空格留着，出口还开着就能回来再托一次，一局共用这一块。付费出口不接托付；免费出口过半关门，托付也跟着关。格子的大小由局外规则定，科技能扩格。",
   "texts": {
-    "en": "A Safe node holds a small grid, and anything you put in counts as carried out: whether you extract or fail this run, it is sent back to base at Results, where it gets its own section on the Results screen. Drag items in or double-click them on the Board to put them in; double-click them in the Safe to bring them back to the Board. Bags don't fit: the Safe doesn't take bags.\n\nWhen you close the Safe or walk away with something inside, it locks: the contents are sent back to base and can no longer be changed, and the node turns gray. Closing it empty doesn't count, so you can come back and open it again. The Safe's size is set by out-of-run rules, and tech can add cells. Safe nodes sit near the middle of the map, where there are no enemies."
+    "en": "Free extraction points have people waiting for you. Step on one and press Extract: besides Extract, the confirm box offers Entrust. It opens a small grid, and whatever you put in is handed to them and counts as carried out: whether you extract or fail this run, it goes to the Warehouse at Results, where it gets its own section. Drag items in or double-click them on the Board; until they are handed over, double-click them in the grid to bring them back. Bags don't fit.\n\nClose the grid or walk away and what you just put in is handed over for good; empty cells stay, so while the exit is open you can come back and entrust more. One grid is shared for the whole run. Paid exits don't take entrusted items, and when the free exit closes halfway through, entrusting closes with it. The grid's size is set by out-of-run rules, and tech can add cells."
   },
   "related": [
     "extraction_and_defeat",
