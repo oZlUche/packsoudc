@@ -111,6 +111,12 @@ static func frame_badge(t: TestCase, root: Window) -> void:
 	var seam: Vector2 = view.fusions[0]["seam"] if not view.fusions.is_empty() else Vector2.ZERO
 	var at := seam * view.cell_px
 	t.eq(view.fusion_at(at).get("b", -1), k2.uid, "接缝上找得到这一对")
+	t.not_null(UiTheme.art_cached(InventoryView.FUSE_ART), "定稿 A：小锤徽有图")
+	var mv := InputEventMouseMotion.new()
+	mv.position = at
+	view._gui_input(mv)
+	t.eq(view._fuse_hover, 0, "停在锤上：记下悬停")
+	t.check(view._fusion_poly(view.fusions[0], InventoryView.FUSE_OUT).size() >= 3, "描边沿两件的并集走")
 	var ev := InputEventMouseButton.new()
 	ev.button_index = MOUSE_BUTTON_LEFT
 	ev.pressed = true

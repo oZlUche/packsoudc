@@ -31,6 +31,7 @@ const NOTE_PIN_ROOM := 18
 ## 286：砧那块的左上角（底图像素）与内边
 const ANVIL_AT := Vector2(48, 40)
 const ANVIL_PAD := 16
+const ANVIL_PLATE := "anvil/plate"
 
 var _node: MapNode = null
 ## 时机、效果、数值三个槽
@@ -159,6 +160,7 @@ func open(payload: Dictionary) -> void:
 		var g := _slots[i]
 		return g.item_count() == 0 or (g.item_count() == 1 and g.has_item(inst.uid))     # 一槽一件
 	_anvil_box = UiTheme.panel(PanelContainer.new(), ANVIL_PAD, UiTheme.PANEL_PACK_LEATHER)     # 和右边背包同一块深皮
+	UiTheme.art_panel(_anvil_box, ANVIL_PLATE, ANVIL_PAD)     # 279 定稿 A 铁砧：铁板九宫格（边 = 图边的四分之一 30）换掉深皮；没图照旧深皮
 	_anvil_box.name = "AnvilBox"
 	add_child(_anvil_box)
 	_anvil = AnvilColumn.new().setup(flow, _node, font, _drag, _tip)     # 包住上面的 drop_filter：砧的三个槽另外管

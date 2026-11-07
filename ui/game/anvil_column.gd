@@ -6,7 +6,7 @@
 class_name AnvilColumn
 extends Control
 
-const WIDTH := 780.0
+const WIDTH := 848.0
 const HEIGHT := 244.0
 const CELL := 32.0
 const WEAPON_SLOT := Vector2i(4, 4)
@@ -17,9 +17,14 @@ const GAP := 16.0
 const HEAD_H := 44.0
 ## 槽框往外伸的那一圈：槽往里让开
 const FRAME_IN := 12.0
-const KEY_H := 44.0
+## 279 定稿 A 铁砧：圆锤键（88，图 anvil/hammer_<off|ready|hover|pressed|used>，2 倍图），放在材料槽和出件槽中间
+const KEY_SIDE := 88.0
+const KEY_ART := "anvil/hammer_"
+## 空槽里淡刻的形（2 倍图）：武器槽一把剑 112、材料槽一块矿石 80
+const GLYPH_WEAPON := "anvil/glyph_weapon"
+const GLYPH_MATERIAL := "anvil/glyph_material"
 ## 三个槽那一排的宽；便条从这往右
-const ROW_W := 476.0
+const ROW_W := 544.0
 const TITLE_FONT := 18
 const STATUS_FONT := 14
 const NOTE_FONT := 14
@@ -40,7 +45,9 @@ var _weapon_view: InventoryView = null
 var _material_view: InventoryView = null
 var _out_view: InventoryView = null
 var _ghost_view: InventoryView = null
-var strike_key: Button = null
+var strike_key: BaseButton = null
+var _glyph_weapon: TextureRect = null
+var _glyph_material: TextureRect = null
 var _status: Label = null
 var _warn: ReferenceRect = null
 var _note: RichTextLabel = null
@@ -72,9 +79,12 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 	out = _grid(OUT_SLOT, Callable())
 	_ghost = _grid(OUT_SLOT, Callable())
 	var row_h := float(WEAPON_SLOT.y) * CELL
-	_weapon_view = _view(weapon_slot, Vector2(FRAME_IN, HEAD_H))
-	var mat_at := Vector2(FRAME_IN + float(WEAPON_SLOT.x) * CELL + GAP + FRAME_IN * 2.0, HEAD_H + (row_h - float(MATERIAL_SLOT.y) * CELL) * 0.5)
+	var row_y := HEAD_H + (HEIGHT - HEAD_H - row_h - FRAME_IN) * 0.5     # 一排槽在便条那么高的地方上下居中
+	_weapon_view = _view(weapon_slot, Vector2(FRAME_IN, row_y))
+	_glyph_weapon = _glyph(GLYPH_WEAPON, Rect2(Vector2(FRAME_IN, row_y), Vector2(WEAPON_SLOT) * CELL))
+	var mat_at := Vector2(FRAME_IN + float(WEAPON_SLOT.x) * CELL + GAP + FRAME_IN * 2.0, row_y + (row_h - float(MATERIAL_SLOT.y) * CELL) * 0.5)
 	_material_view = _view(material_slot, mat_at)
+	_glyph_material = _glyph(GLYPH_MATERIAL, Rect2(mat_at, Vector2(MATERIAL_SLOT) * CELL))
 	_warn = ReferenceRect.new()
 	_warn.name = "MaterialWarn"
 	_warn.editor_only = false
@@ -85,15 +95,16 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 	_warn.size = Vector2(MATERIAL_SLOT) * CELL + Vector2.ONE * 2.0 * (WARN_RING + 4.0)
 	_warn.visible = false
 	add_child(_warn)
-	var out_at := Vector2(ROW_W - FRAME_IN - float(OUT_SLOT.x) * CELL, HEAD_H)
+	var out_at := Vector2(ROW_W - FRAME_IN - float(OUT_SLOT.x) * CELL, row_y)
 	_out_view = _view(out, out_at)
 	_ghost_view = _view(_ghost, out_at)
 	_ghost_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ghost_view.modulate = GHOST
-	strike_key = ScrollKey.short(UiText.t("anvil.strike"), strike)
-	strike_key.position = Vector2(0, HEAD_H + row_h + FRAME_IN + GAP * 0.5)
-	strike_key.custom_minimum_size = Vector2(ROW_W, KEY_H)
-	strike_key.size = strike_key.custom_minimum_size
+	strike_key = _hammer_key()
+	strike_key.name = "StrikeKey"
+	var key_x := (mat_at.x + float(MATERIAL_SLOT.x) * CELL + FRAME_IN + out_at.x - FRAME_IN) * 0.5
+	strike_key.size = Vector2.ONE * KEY_SIDE
+	strike_key.position = Vector2(key_x, row_y + row_h * 0.5) - strike_key.size * 0.5
 	add_child(strike_key)
 	# 便条是浅底；上边多留一点，不压名字
 	var note_x := ROW_W + GAP
@@ -147,9 +158,39 @@ func _view(g: GridInventory, at: Vector2) -> InventoryView:
 	v.cell_px = CELL
 	v.show_adjacency = false
 	host.add_child(v)
-	var f := BoardFrame.wrap(v, "plain", true)
+	var f := BoardFrame.wrap(v, "anvil")
 	f.position = -Vector2.ONE * f.inset()
 	return v
+
+
+## 圆锤键：图齐了是 TextureButton（不写字），缺图退回写「锤打」的短纸卷键
+func _hammer_key() -> BaseButton:
+	var normal := UiTheme.art_cached(KEY_ART + "ready")
+	if normal == null:
+		return ScrollKey.short(UiText.t("anvil.strike"), strike)
+	var k := TextureButton.new()
+	k.ignore_texture_size = true
+	k.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	k.texture_normal = normal
+	k.texture_hover = UiTheme.art_cached(KEY_ART + "hover")
+	k.texture_pressed = UiTheme.art_cached(KEY_ART + "pressed")
+	k.texture_disabled = UiTheme.art_cached(KEY_ART + "off")
+	k.pressed.connect(strike)
+	return k
+
+
+## 空槽里淡刻的形：压在槽上、不吃鼠标，槽里有东西就藏起来
+func _glyph(art: String, slot: Rect2) -> TextureRect:
+	var t := TextureRect.new()
+	t.texture = UiTheme.art_cached(art)
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var side := t.texture.get_size() * 0.5 if t.texture != null else Vector2.ZERO
+	t.size = side
+	t.position = slot.get_center() - side * 0.5
+	add_child(t)
+	return t
 
 
 func weapon() -> ItemInstance:
@@ -237,6 +278,10 @@ func _refresh() -> void:
 	UiTheme.label(_status, STATUS_FONT, UiPalette.FG if open else UiPalette.DIM)     # 用过了：灰
 	_ghost_view.visible = out.item_count() == 0
 	strike_key.disabled = not open or made == null or out.item_count() > 0
+	if strike_key is TextureButton:
+		(strike_key as TextureButton).texture_disabled = UiTheme.art_cached(KEY_ART + ("off" if open else "used"))     # 用过了：冷
+	_glyph_weapon.visible = weapon_slot.item_count() == 0
+	_glyph_material.visible = material_slot.item_count() == 0
 
 
 ## 286：配不上时的那一句 ——「要【金属】≥ 绿」（这张配方头一类材料）

@@ -323,10 +323,13 @@ func _queue_sync() -> void:
 	if _sync_queued or _session == null:
 		return
 	_sync_queued = true
-	(func():
-		_sync_queued = false
-		if _session != null and _session.active:
-			_session.sync()).call_deferred()
+	_flush_sync.call_deferred()     # 方法 Callable：屏在这一帧里被释放了就不调（lambda 会撞上已释放的 self）
+
+
+func _flush_sync() -> void:
+	_sync_queued = false
+	if _session != null and _session.active:
+		_session.sync()
 
 
 func _double_merchant(uid: int) -> void:
