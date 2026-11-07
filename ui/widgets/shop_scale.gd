@@ -3,7 +3,7 @@
 ##
 ## 和 256 求饶的 [BalanceScale] 同一套拆法与版式键（底座 / 横梁绕 pivot 转 / 两只盘只平移、挂在梁的钩上 / 一枚金币按摞堆）：
 ## 版式 `shop/scale_layout.json`，图 `shop/scale_base`、`shop/scale_beam`、`shop/scale_pan_left`、`shop/scale_pan_right`、`shop/scale_coin`。
-## 美术定稿之前（UI设计 出了 A / B / C 三版，等作者挑）没有图：按同一套坐标画铜色占位
+## 美术：A 铜天平（作者 2026-11-07 18:37 挑定，art/ui/shop290/final）；缺图时按同一套坐标画铜色占位（底牌只在占位时画）
 class_name ShopScale
 extends Control
 
@@ -15,6 +15,7 @@ const INK := Color("2e2219")
 const BRONZE := Color("b08a3a")
 const BRONZE_DARK := Color("6b4f22")
 const PLATE := Color("efe3c6")
+const MIN_FONT := 11
 
 ## 两盘的总价（左：你拿的；右：你给的 + 你的钱）
 var left := 0:
@@ -132,10 +133,11 @@ func _draw() -> void:
 	if plate == "":
 		return
 	var status := control_rect("status")
-	draw_rect(status, PLATE)
-	draw_rect(status, BRONZE_DARK, false, 2.0)
+	if UiTheme.art_cached(ART + "base") == null:     # 底座图里已经有空牌：底牌只算占位
+		draw_rect(status, PLATE)
+		draw_rect(status, BRONZE_DARK, false, 2.0)
 	var amount := CoinShort.coin_amount(plate)
-	_draw_coin_text(status, CoinShort.strip(plate) if amount >= 0 else plate, amount, UiTheme.sz(PLATE_FONT))
+	_draw_coin_text(status, CoinShort.strip(plate) if amount >= 0 else plate, amount, UiTheme.sz(PLATE_FONT), status.size.x - 12.0)
 
 
 ## 一层图（有就画、返回 true）
@@ -189,15 +191,17 @@ func _draw_pile(origin: Vector2, n: int) -> void:
 
 ## 价牌：「金币 + 数」（钱 = 金币图标 + 数）
 func _draw_amount(r: Rect2, amount: int) -> void:
-	draw_rect(r, PLATE)
-	draw_rect(r, BRONZE_DARK, false, 1.5)
+	if UiTheme.art_cached(ART + "pan_left") == null:     # 有盘图：数直接写在铜盘上
+		draw_rect(r, PLATE)
+		draw_rect(r, BRONZE_DARK, false, 1.5)
 	_draw_coin_text(r, "", amount, UiTheme.sz(FONT_SIZE))
 
 
-## 一行居中：「字 + 金币 + 数」（amount < 0 只写字）
-func _draw_coin_text(r: Rect2, words: String, amount: int, fs: int) -> void:
+## 一行居中：「字 + 金币 + 数」（amount < 0 只写字）；给了 max_w 就一号一号往下缩到放得下，最小 MIN_FONT
+func _draw_coin_text(r: Rect2, words: String, amount: int, fs: int, max_w := -1.0) -> void:
 	var f := UiPalette.cjk_font_bold()
 	var num := "%d" % amount if amount >= 0 else ""
+	fs = fit_size(f, words, num, fs, max_w)
 	var side := roundf(fs * CoinLabel.COIN_SCALE) if amount >= 0 else 0.0
 	var gap := CoinLabel.GAP if words != "" and amount >= 0 else 0.0
 	var ww := f.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
@@ -217,3 +221,18 @@ func _draw_coin_text(r: Rect2, words: String, amount: int, fs: int) -> void:
 	else:
 		draw_circle(Vector2(x + side * 0.5, mid.y), side * 0.45, CoinLabel.FALLBACK_FILL)
 	draw_string(f, Vector2(x + side + CoinLabel.GAP, base_y), num, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
+
+
+## 一行「字 + 金币 + 数」放进 max_w 用的字号（max_w <= 0 不缩）
+static func fit_size(f: Font, words: String, num: String, fs: int, max_w: float) -> int:
+	while max_w > 0.0 and fs > MIN_FONT and coin_text_width(f, words, num, fs) > max_w:
+		fs -= 1
+	return fs
+
+
+static func coin_text_width(f: Font, words: String, num: String, fs: int) -> float:
+	var w := f.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	if num == "":
+		return w
+	var gap := CoinLabel.GAP if words != "" else 0.0
+	return w + gap + roundf(fs * CoinLabel.COIN_SCALE) + CoinLabel.GAP + f.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
