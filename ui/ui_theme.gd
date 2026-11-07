@@ -1201,6 +1201,13 @@ static func art_box(name: String) -> StyleBoxTexture:
 	return box
 
 
+## 279：面板换一张九宫格图当底（边距同 [method art_box]，内边距 [param content]）；没图不动
+static func art_panel(p: PanelContainer, name: String, content: int) -> void:
+	var box := _art_box(name, false, content)
+	if box != null:
+		p.add_theme_stylebox_override("panel", box)
+
+
 ## 九宫格底：图 + json 的边距（没写边距按图边长的四分之一）。没图 null。
 ## [param title_strip] 真 = 石板框：顶边的内边距只留到标题条上沿（标题条 [OverlayFrame] 自己占住刻线上方那一条）；
 ## [param content] ≥ 0 = 内边距用它（换皮不改排版），否则跟图边一样

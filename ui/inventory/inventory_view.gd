@@ -122,11 +122,27 @@ var fusions: Array[Dictionary] = []:
 	set(v):
 		fusions = v
 		queue_redraw()
-## 小锤徽的半径（格宽的比例）；定稿图到了换成图，点击范围照旧是这个圆
-const FUSE_BADGE_R := 0.24
+## 小锤徽缺图时的占位色
 const FUSE_BADGE_FILL := Color("a8743a")     # 占位：铜
 const FUSE_BADGE_EDGE := Color("3a2614")
 const FUSE_BADGE_MARK := Color("f1e2c4")
+## 279 小锤徽定稿（UI设计 A 铜徽）：图 bag/fuse_badge[_hover][_2x]（_pressed 留给「松开才合」，现在按下就合、不用）；边长 = 格宽 × 0.66（最小 32），悬停放大 1.12
+const FUSE_ART := "bag/fuse_badge"
+const FUSE_SIDE := 0.66
+const FUSE_MIN := 32.0
+const FUSE_HOVER_SCALE := 1.12
+## 两件并集脚印的描边：外扩 3、圆角；淡暖底 + 墨衬线（压在道具下面），金虚线（压在道具上面）
+const FUSE_OUT := 3.0
+const FUSE_GOLD := Color("f2c14e")
+const FUSE_GOLD_HOT := Color("ffd978")
+const FUSE_FILL := Color("e8bf62")
+const FUSE_FILL_A := 0.12
+const FUSE_FILL_HOT_A := 0.18
+const FUSE_INK := Color(0.18, 0.13, 0.1, 0.6)
+const FUSE_LINE := 2.5
+const FUSE_DASH := 11.0
+const FUSE_GAP := 4.0
+var _fuse_hover := -1
 
 
 ## 作者 10-21：只有最后点中的那件画增益槽 / 受益槽 / 装载槽（不点就都不画）；所有棋盘共用这一件
@@ -152,6 +168,7 @@ func _init() -> void:
 func _on_mouse_exited() -> void:
 	var had := _hover_bag() != GridInventory.EMPTY_UID
 	_hover_cell = Vector2i(-1, -1)
+	_fuse_hover = -1
 	if had:
 		queue_redraw()
 
@@ -372,6 +389,10 @@ func _gui_input(event: InputEvent) -> void:
 	if inventory == null:
 		return
 	if event is InputEventMouseMotion:
+		var fh := _fusion_index_at((event as InputEventMouseMotion).position)
+		if fh != _fuse_hover:
+			_fuse_hover = fh
+			queue_redraw()
 		var hc := cell_at_local((event as InputEventMouseMotion).position)
 		if hc != _hover_cell:
 			var before := _hover_bag()
@@ -444,6 +465,7 @@ func _draw() -> void:
 			self, bag_cells, bag_anchor, cell_px, Names.of(b.def), font, 11, Color("79839a")
 		)
 
+	_draw_fusion_fills()
 	# 物品。休眠的信仰道具（8-4：不是激活的那个信仰）画灰、标「休眠」
 	var active_faith := FaithState.active_tag(inventory) if show_adjacency else &""
 	for inst in inventory.items():
@@ -555,27 +577,99 @@ func _draw() -> void:
 func fusion_at(p: Vector2) -> Dictionary:
 	if select_mode:
 		return {}
-	var r := FUSE_BADGE_R * cell_px
-	for f in fusions:
-		if (Vector2(f["seam"]) * cell_px).distance_to(p) <= r:
-			return f
-	return {}
+	var i := _fusion_index_at(p)
+	return fusions[i] if i >= 0 else {}
 
 
-## 279：接缝上的小锤（占位：铜圆片 + 一把锤子的剪影；UI设计定稿后换图）
+func _fusion_index_at(p: Vector2) -> int:
+	if select_mode:
+		return -1
+	var r := _fuse_side() * 0.5
+	for i in fusions.size():
+		if (Vector2(fusions[i]["seam"]) * cell_px).distance_to(p) <= r:
+			return i
+	return -1
+
+
+func _fuse_side() -> float:
+	return maxf(FUSE_MIN, cell_px * FUSE_SIDE)
+
+
+## 两件占格的并集（本地像素），外扩 [param grow]（圆角）
+func _fusion_poly(f: Dictionary, grow: float) -> PackedVector2Array:
+	var poly := PackedVector2Array()
+	for uid in [int(f["a"]), int(f["b"])]:
+		var it := inventory.get_item(uid)
+		if it == null:
+			continue
+		for c in it.cells():
+			var o := cell_origin_px(it.origin + c)
+			var r := PackedVector2Array([o, o + Vector2(cell_px, 0), o + Vector2(cell_px, cell_px), o + Vector2(0, cell_px)])
+			poly = r if poly.is_empty() else _outer(Geometry2D.merge_polygons(poly, r))
+	if grow != 0.0 and not poly.is_empty():
+		poly = _outer(Geometry2D.offset_polygon(poly, grow, Geometry2D.JOIN_ROUND))
+	return poly
+
+
+static func _outer(polys: Array[PackedVector2Array]) -> PackedVector2Array:
+	var best := PackedVector2Array()
+	var best_area := -1.0
+	for p in polys:
+		if Geometry2D.is_polygon_clockwise(p):
+			continue
+		var a := 0.0
+		for i in p.size():
+			a += p[i].cross(p[(i + 1) % p.size()])
+		if absf(a) > best_area:
+			best_area = absf(a)
+			best = p
+	return best
+
+
+## 道具底下：淡暖底 + 墨衬线
+func _draw_fusion_fills() -> void:
+	if select_mode:
+		return
+	for i in fusions.size():
+		var hot := i == _fuse_hover
+		var poly := _fusion_poly(fusions[i], FUSE_OUT)
+		if poly.size() < 3:
+			continue
+		draw_colored_polygon(poly, Color(FUSE_FILL, FUSE_FILL_HOT_A if hot else FUSE_FILL_A))
+		var ink := _fusion_poly(fusions[i], 0.5)
+		if ink.size() >= 3:
+			ink.append(ink[0])
+			draw_polyline(ink, FUSE_INK, 2.0, true)
+
+
+## 279：道具上面：金虚线 + 小锤徽
 func _draw_fusions() -> void:
 	if select_mode:
 		return
-	var r := FUSE_BADGE_R * cell_px
-	for f in fusions:
+	for i in fusions.size():
+		var f := fusions[i]
+		var hot := i == _fuse_hover
+		var poly := _fusion_poly(f, FUSE_OUT)
+		if poly.size() >= 3:
+			DangerZones.dashed_loop(self, poly, FUSE_GOLD_HOT if hot else FUSE_GOLD, FUSE_LINE, FUSE_DASH, FUSE_GAP)
+		var side := _fuse_side() * (FUSE_HOVER_SCALE if hot else 1.0)
+		var tex := UiTheme.art_cached(FUSE_ART + ("_hover" if hot else "") + ("_2x" if side > 48.0 else ""))
 		var c := Vector2(f["seam"]) * cell_px
-		draw_circle(c, r, FUSE_BADGE_FILL)
-		draw_arc(c, r, 0.0, TAU, 24, FUSE_BADGE_EDGE, maxf(1.5, r * 0.12), true)
-		var u := r / 10.0
-		var head := PackedVector2Array([c + Vector2(-5, -6) * u, c + Vector2(3, -6) * u, c + Vector2(3, -2) * u, c + Vector2(-5, -2) * u])
-		var handle := PackedVector2Array([c + Vector2(-1.2, -2) * u, c + Vector2(1.2, -2) * u, c + Vector2(1.2, 6) * u, c + Vector2(-1.2, 6) * u])
-		draw_colored_polygon(head, FUSE_BADGE_MARK)
-		draw_colored_polygon(handle, FUSE_BADGE_MARK)
+		if tex != null:
+			draw_texture_rect(tex, Rect2(c - Vector2.ONE * side * 0.5, Vector2.ONE * side), false)
+		else:
+			_draw_fuse_placeholder(c, side * 0.5)
+
+
+## 缺图：铜圆片 + 一把锤子的剪影
+func _draw_fuse_placeholder(c: Vector2, r: float) -> void:
+	draw_circle(c, r, FUSE_BADGE_FILL)
+	draw_arc(c, r, 0.0, TAU, 24, FUSE_BADGE_EDGE, maxf(1.5, r * 0.12), true)
+	var u := r / 10.0
+	var head := PackedVector2Array([c + Vector2(-5, -6) * u, c + Vector2(3, -6) * u, c + Vector2(3, -2) * u, c + Vector2(-5, -2) * u])
+	var handle := PackedVector2Array([c + Vector2(-1.2, -2) * u, c + Vector2(1.2, -2) * u, c + Vector2(1.2, 6) * u, c + Vector2(-1.2, 6) * u])
+	draw_colored_polygon(head, FUSE_BADGE_MARK)
+	draw_colored_polygon(handle, FUSE_BADGE_MARK)
 
 
 ## 274：按着 Ctrl 停在包上 = 沿包的外缘描一圈（按包的品质色）

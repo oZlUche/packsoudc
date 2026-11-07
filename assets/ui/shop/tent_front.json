@@ -4,7 +4,7 @@
   "file": "tent_front.png",
   "size": [
    1476,
-   884
+   891
   ],
   "drawn_panel": [
    1292,
@@ -14,13 +14,13 @@
    126,
    94,
    126,
-   80
+   87
   ],
   "expand_margin": [
    92,
    30,
    92,
-   40
+   47
   ],
   "content_margin": [
    24,
@@ -68,5 +68,5 @@
    "color": "#f2e7cb"
   }
  },
- "note": "商店窗（ShopScreen 的 OverlayFrame）换掉石板：StyleBoxTexture，texture_margin / expand_margin / content_margin 都是左上右下。标题条照旧在内容区最上面一行（14..50），字居中、写在布牌红面上（浅色字），布牌中心在窗 (W/2, 32)；尖顶摆在窗顶正中往上。门帘里侧最多伸进窗 22，内容左右边距 24 不变。地毯和流苏挂在窗下面 40。"
+ "note": "商店窗（ShopScreen 的 OverlayFrame）换掉石板：StyleBoxTexture，texture_margin / expand_margin / content_margin 都是左上右下。标题条照旧在内容区最上面一行（14..50），字居中、写在布牌红面上（浅色字），布牌中心在窗 (W/2, 32)；尖顶摆在窗顶正中往上。门帘里侧最多伸进窗 22，内容左右边距 24 不变。窗下多出 47：帐壁接下去 27，再是 20 高的地毯，地毯上沿 = 地面线（屏幕底 98%），地毯底边 = 屏幕底（290 补，架构设计 2026-11-07 定 B）。"
 }

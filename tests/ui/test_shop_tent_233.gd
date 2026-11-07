@@ -30,8 +30,8 @@ static func frame_tent(t: TestCase, root: Window) -> void:
 	var box := frame.get_theme_stylebox("panel") as StyleBoxTexture
 	t.check(box != null and box.texture == UiTheme.art_cached("shop/tent_front"), "篷面是 tent_front 的九宫格")
 	if box != null:
-		t.eq([box.texture_margin_left, box.texture_margin_top, box.texture_margin_right, box.texture_margin_bottom], [126.0, 94.0, 126.0, 80.0], "texture_margin")
-		t.eq([box.expand_margin_left, box.expand_margin_top, box.expand_margin_right, box.expand_margin_bottom], [92.0, 30.0, 92.0, 40.0], "expand_margin（门帘、檐、地毯画在窗外）")
+		t.eq([box.texture_margin_left, box.texture_margin_top, box.texture_margin_right, box.texture_margin_bottom], [126.0, 94.0, 126.0, 87.0], "texture_margin（290 B：下边 87）")
+		t.eq([box.expand_margin_left, box.expand_margin_top, box.expand_margin_right, box.expand_margin_bottom], [92.0, 30.0, 92.0, 47.0], "expand_margin（门帘、檐、地毯画在窗外；290 B：下边 47）")
 		t.eq([box.content_margin_left, box.content_margin_top, box.content_margin_right, box.content_margin_bottom], [24.0, 14.0, 24.0, 30.0], "content_margin（内容不挪）")
 	t.eq(UiTheme.tone_at(frame), UiTheme.TONE_LIGHT, "浅底")
 	t.eq(frame.title(), "商店", "标题照旧")

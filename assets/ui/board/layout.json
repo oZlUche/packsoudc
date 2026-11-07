@@ -255,6 +255,20 @@
     "hi": "#f4e2bf"
    },
    "note": "作者 2026-10-29 选 A 木货匣：商店三块棋盘（整排货架、出售区、随身格）。橡木框 + 铜包角，内垫浅松木；参数同 plain（NinePatchRect，四边 margin 46，axis_stretch = TILE，中段 120 = 两格）。seams = 盖在 cell_seams 上的格缝色"
+  },
+  "anvil": {
+   "file": "frame_anvil.png",
+   "size": [
+    96,
+    96
+   ],
+   "margin": 24,
+   "cells_offset": 12,
+   "seams": {
+    "seam": "#0e0c0b",
+    "hi": "#34302c"
+   },
+   "note": "279/286 砧的三个槽（作者 2026-11-07 选 A 铁砧）：凹进去的深铁槽，上左一道暗、下右一道亮，内垫平的深底。NinePatchRect：四边 margin 24，axis_stretch = TILE；节点比棋盘四周各大 cells_offset 12（= AnvilColumn.FRAME_IN）。seams = 盖在 cell_seams 上的格缝色，tone dark"
   }
  }
 }
