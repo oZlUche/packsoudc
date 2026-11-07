@@ -300,7 +300,7 @@ static func frame_spawn_mask_and_presets(t: TestCase, root: Window) -> void:
 		game.queue_free()
 		return
 	var sets: Array[LoadoutDef] = flow.presets()
-	t.eq(sets.size(), 2, "两套预设")
+	t.eq(sets.filter(func(l: LoadoutDef) -> bool: return l.tier == LoadoutDef.TIER_FREE).size(), 2, "两套免费预设（285 起另有收费 / 高级的）")
 	t.check(flow.default_loadout() != null and not flow.default_loadout().preset, "老路 / 第一套用的是非预设")
 	var offense: LoadoutDef = null
 	var defense: LoadoutDef = null

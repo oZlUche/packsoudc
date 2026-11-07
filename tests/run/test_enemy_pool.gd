@@ -28,7 +28,7 @@ static func _chapter() -> ChapterDef:
 ## 上下文里装满真道具与真敌人，好让「对着别的东西查」的校验生效
 static func _full_ctx(items: ItemDatabase, enemies: EnemyDatabase) -> ContentImporter.Context:
 	var ctx := _ctx()
-	for id in items.ids():
+	for id in items.all_ids():     # 285：券不在 ids()（不进掉落池），章节的 boss_ticket 要对着它查
 		ctx.register_item(items.get_def(id))
 	for id in TestSupport.enemy_ids():
 		ctx.register_enemy(enemies.enemy(id))

@@ -16,7 +16,7 @@ extends RefCounted
 const KIND_ORDER: Array = [
 	[&"weapon"],                                       # 武器
 	[&"shield", &"armor"],                             # 盾 / 防具
-	[&"trinket", &"keepsake"],                         # 饰物（信物多在这儿）/ 特殊道具
+	[&"trinket", &"keepsake", &"ticket"],                         # 饰物（信物多在这儿）/ 特殊道具
 	[&"remedy", &"food"],                              # 药剂 / 食物
 	[&"ammo", &"reagent"],                             # 弹药 / 试剂
 	[&"crystal", &"material", &"part"],                # 魔晶石 / 素材 / 零件

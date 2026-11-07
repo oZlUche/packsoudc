@@ -108,6 +108,9 @@ const PLATE_VARIANTS: Array[StringName] = [PANEL_NAMEPLATE, PANEL_PARCHMENT, PAN
 	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
 	PANEL_CAP_TILE, PANEL_HUD, PANEL_HUD_WELL, &"TooltipPanel"]
 const BUTTON_SETUP_TAB := &"ButtonSetupTab"
+## 285：开局第二页中栏的预设挂牌 —— 同一副挂牌图，左右各留 [constant PRESET_TAG_EDGE] 像素不拉（横向三段拉宽，边框不变粗）
+const BUTTON_PRESET_TAG := &"ButtonPresetTag"
+const PRESET_TAG_EDGE := 8
 ## 开局挂牌页签锁着时的页名色
 const SETUP_TAB_LOCKED_INK := Color("b8a98c")
 const BUTTON_MAP_ENTRY := &"ButtonMapEntry"
@@ -148,7 +151,7 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
-	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB,
+	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB, BUTTON_PRESET_TAG,
 	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_SETUP_CHAR, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
 	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE, BUTTON_FORGE, LABEL_FLAW_NAME]
 
@@ -1691,6 +1694,11 @@ static func _setup_art(t: Theme) -> void:
 	if _art_button(t, BUTTON_SETUP_TAB, ART_SETUP_TAB, [0, 0, 0, 0], {"normal": "normal", "hover": "normal", "pressed": "on", "hover_pressed": "on", "disabled": "locked"}, content):
 		_button_ink(t, BUTTON_SETUP_TAB, INK)
 		t.set_color("font_disabled_color", BUTTON_SETUP_TAB, SETUP_TAB_LOCKED_INK)     # 锁着的深木牌上页名提亮（UI替换美术 10-22），锁照旧
+	t.set_type_variation(BUTTON_PRESET_TAG, BUTTON_DIM)
+	var edge := PRESET_TAG_EDGE
+	if _art_button(t, BUTTON_PRESET_TAG, ART_SETUP_TAB, [edge, 0, edge, 0], {"normal": "normal", "hover": "normal", "pressed": "on", "hover_pressed": "on", "disabled": "locked"}, [edge, content[1], edge, content[3]]):
+		_button_ink(t, BUTTON_PRESET_TAG, INK)
+		t.set_color("font_disabled_color", BUTTON_PRESET_TAG, SETUP_TAB_LOCKED_INK)
 	# 地图条目 / 规模：选中是 on 图（按钮按下态），墨字
 	for spec in [[BUTTON_MAP_ENTRY, ART_MAP_ENTRY], [BUTTON_MAP_SUB, ART_MAP_SUB]]:
 		t.set_type_variation(spec[0], BUTTON_DIM)

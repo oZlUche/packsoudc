@@ -39,6 +39,15 @@ var preset_index: int = -1
 var _preset_uids: Dictionary = {}
 var _preset_btns: Array[Button] = []
 var _preset_box: BoxContainer = null
+## 285：挑着的那套（[member preset_index] 是它在这一章能列的那几套里的下标；换章节时按它重新找）
+var _preset_def: LoadoutDef = null
+## 285：中栏那一列挂牌（行囊板与仓库框之间，一屏 [constant PRESET_ROWS] 块，多了竖着滚）
+var _preset_scroll: ScrollContainer = null
+var _preset_sig := ""
+## 285：第三页摘要便条里「预设：名字」那一行（收费的后面跟价钱）
+var _summary_preset: HBoxContainer = null
+var _summary_preset_label: Label = null
+var _summary_coin: CoinLabel = null
 ## 085：地图规模（随机一局可选）；空 = 章节默认
 var scale_id: StringName = &""
 var _scale_btns: Dictionary = {}
@@ -150,8 +159,11 @@ const PAPER_CLEARANCE := 24.0
 const FRAME_INSET := 44
 const TAB_TAG_H := 60.0
 const MAP_ENTRY_H := 60.0
-## 乙 石刻：第二页「不带 / 坚守 / 强攻」也是那种纸条，矮一点
-const PRESET_ENTRY_H := 52.0
+## 285：中栏挂牌一屏放几块（不带 + 7 套）、块间距
+const PRESET_ROWS := 8
+const PRESET_TAG_GAP := 6
+## 285：第二页一行三块（行囊板 | 预设挂牌 | 仓库框）的间距（两块时是 36；中间多了一列挂牌，收窄免得仓库框出屏）
+const KIT_ROW_GAP := 20
 const MAP_SUB_H := 44.0
 const NAV_BTN_H := 84.0
 ## 第三页的左右两列离屏边再让多少（地图纸的毛边）
@@ -337,7 +349,7 @@ func _build_kit_page() -> Control:
 	var play := MarginContainer.new()
 	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	play.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var row := _hbox(36)
+	var row := _hbox(KIT_ROW_GAP)
 	play.add_child(row)
 
 	var board_panel := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)     # 180 定稿：背包皮框
@@ -345,11 +357,15 @@ func _build_kit_page() -> Control:
 	row.add_child(board_panel)
 	var left := _vbox(12)
 	board_panel.add_child(left)
-	if not flow.presets().is_empty():
-		var presets := _hbox(8)     # 226 批二：段头「预设装备」删了
-		_preset_box = presets
-		left.add_child(presets)
-		_rebuild_presets()
+	# 285：预设从行囊板顶上那一排搬到中栏（行囊板与仓库框之间那块空木板），竖排一列挂牌，同仓库页签一副皮
+	_preset_scroll = ScrollContainer.new()
+	_preset_scroll.name = "PresetColumn"
+	_preset_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_preset_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(_preset_scroll)
+	_preset_box = _vbox(PRESET_TAG_GAP)
+	_preset_scroll.add_child(_preset_box)
+	_rebuild_presets()
 	_board_host = _vbox(6)
 	left.add_child(_board_host)
 	# 255 补充二：两栏 —— 中栏拆了。包架（225）挪进棋盘板、棋盘正下方横一行（九种以内一行），拖包上棋盘只隔一道缝
@@ -533,9 +549,11 @@ func _build_cash_box(parent: Container) -> void:
 	_refresh_cash()
 
 
-## 这一局最多能带多少：仓库账上的钱（没有局外就是 0）
+## 这一局最多能带多少：仓库账上的钱（没有局外就是 0）；285：挑着收费预设要先留出它的价钱
 func cash_cap() -> int:
-	return flow.meta.funds if flow != null and flow.meta != null else 0
+	if flow == null or flow.meta == null:
+		return 0
+	return maxi(0, flow.meta.funds - flow.preset_price(preset()))
 
 
 ## 改带入的现金：夹在 0 和仓库余额之间，改完刷读数
@@ -564,7 +582,7 @@ func _refresh_cash() -> void:
 		return
 	carry_funds = clampi(carry_funds, 0, cash_cap())     # 仓库钱变少了（卖 / 花）跟着收
 	var cap := cash_cap()
-	_cash_store.text = UiText.t("setup.cash_store") % cap
+	_cash_store.text = UiText.t("setup.cash_store") % flow.meta.funds     # 285：右上照写仓库账上的数，收费预设那笔只从可带的上限里留出来
 	_cash_slider.max_value = cap
 	_cash_slider.set_value_no_signal(carry_funds)
 	_cash_slider.enabled = cap > 0
@@ -638,10 +656,15 @@ func _build_map_page() -> Control:
 		note.custom_minimum_size.y = 88
 		_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		note.add_child(_summary)
+		var lines := _vbox(2)
+		lines.alignment = BoxContainer.ALIGNMENT_CENTER
+		lines.add_child(_summary)
+		lines.add_child(_build_summary_preset())
+		note.add_child(lines)
 		right.add_child(note)
 	else:
 		right.add_child(_summary)
+		right.add_child(_build_summary_preset())
 	# 180 补四 / 补五（作者 11:38 / 11:43 / 11:49）：〇级时整块（计数器、加减、羊皮纸）收成一颗居中写「开启挑战」的铜牌按钮，
 	# 背后两根卷好的卷轴；点它拨到 Ⅰ —— 卷轴下移再拉开，按钮换成「当前难度」铜牌、计数器与加减。一个难度都没解锁时压灰
 	_diff_block = DifficultyBlock.new()
@@ -800,6 +823,7 @@ func choose_chapter(i: int) -> void:
 	var keep := character()
 	_rebuild_characters()
 	_rebuild_scales()
+	_sync_presets()     # 285：序章只列免费的
 	if _warehouse_box != null:
 		_warehouse_box.visible = chapter().allow_carry_in
 	var at := _characters.find(keep) if keep != null else -1
@@ -1023,43 +1047,103 @@ func lock_reason(_ch: CharacterDef) -> String:
 	return ""
 
 
-## 096：预设套那一栏：「不带」+ 每套一个按钮（悬停看说明）
+## 096：预设套那一栏：「不带」+ 每套一块。285：中栏一列挂牌 —— 收费的写价钱，高级的写券（没券灰着加小锁）；悬停 = 清单（高级的多一行要哪张券）
 func _rebuild_presets() -> void:
 	_preset_btns.clear()
 	if _preset_box == null:
 		return
 	UiTheme.clear_children(_preset_box)
-	var names: Array[String] = [UiText.t("setup.no_preset")]
-	var tips: Array[String] = [UiText.t("setup.no_preset_tip")]
-	for def in flow.presets():
-		names.append(Names.of(def))
-		tips.append(Names.description_of(def))
-	_preset_btns = _choice_column(_preset_box, names, func(i: int): choose_preset(i - 1), 14, PRESET_ENTRY_H)     # 第 0 个是「不带」
-	for i in _preset_btns.size():
-		_preset_btns[i].tooltip_text = tips[i]
+	var sets := _preset_list()
+	_preset_sig = _presets_signature(sets)
+	_preset_scroll.visible = not sets.is_empty()
+	var none := PresetTag.make(UiText.t("setup.no_preset"))
+	none.tooltip_text = UiText.t("setup.no_preset_tip")
+	_preset_btns.append(none)
+	for def in sets:
+		var lines: Array[String] = []
+		for id in def.items:
+			var idef := flow.items.get_def(id)
+			lines.append(Names.of(idef) if idef != null else String(id))
+		var ticket := flow.items.get_def(def.ticket) if def.is_advanced() else null
+		if ticket != null:
+			lines.append(UiText.t("setup.preset_ticket_tip") % Names.of(ticket))
+		var tag := PresetTag.make(Names.of(def), flow.preset_price(def), ItemPainter.art_of(ticket), flow.preset_ticket_ok(def), def.is_advanced())
+		tag.tooltip_text = "\n".join(lines)
+		_preset_btns.append(tag)
+	for k in _preset_btns.size():
+		_preset_btns[k].pressed.connect(choose_preset.bind(k - 1))     # 第 0 个是「不带」
+		_preset_box.add_child(_preset_btns[k])
+	var rows := mini(_preset_btns.size(), PRESET_ROWS)
+	var bar := 12.0 if _preset_btns.size() > PRESET_ROWS else 0.0     # 多了竖着滚：给滚动条留位，不缩牌
+	_preset_scroll.custom_minimum_size = Vector2(PresetTag.W + bar, rows * PresetTag.H + (rows - 1) * PRESET_TAG_GAP)
 	_color_presets()
 
 
 func _color_presets() -> void:
-	_mark_choice(_preset_btns, preset_index + 1)     # 第 0 个是「不带」
+	for k in _preset_btns.size():
+		_preset_btns[k].set_pressed_no_signal(k == preset_index + 1)     # 第 0 个是「不带」
 
 
-## 096：挑一套预设（-1 = 不带）：棋盘上原来那套拿掉，新的免费放进初始包（放不下的在状态栏说）。从仓库带上的不动
-func choose_preset(i: int) -> void:
-	var sets := flow.presets()
-	preset_index = clampi(i, -1, sets.size() - 1)
+## 285：这一章能列的预设（序章只有免费的）
+func _preset_list() -> Array[LoadoutDef]:
+	return flow.presets(chapter())
+
+
+## 285：挂牌列要不要重做（这一章列哪几套、高级的有没有券）
+func _presets_signature(sets: Array[LoadoutDef]) -> String:
+	var parts: Array[String] = []
+	for def in sets:
+		parts.append("%s:%d" % [def.id, int(flow.preset_ticket_ok(def))])
+	return ",".join(parts)
+
+
+## 096：挑一套预设（-1 = 不带）：棋盘上原来那套拿掉，新的免费放进初始包（放不下的在状态栏说）。从仓库带上的不动。
+## 285：收费的照样新造（出发时才付钱）；高级的没券选不了（返回 false），有券和免费的一样新造（出发时才扣券）
+func choose_preset(i: int) -> bool:
+	var sets := _preset_list()
+	var j := clampi(i, -1, sets.size() - 1)
+	var def: LoadoutDef = sets[j] if j >= 0 else null
+	if def != null and not flow.preset_ticket_ok(def):
+		_color_presets()
+		return false
 	_hold_refresh += 1     # 作者 11-07：换预设时先拿掉旧的一套 —— 棋盘每变一下都 _refresh，中途空手就弹「一件能出手的都没有」
 	_clear_preset()
+	preset_index = j
+	_preset_def = def
 	_apply_preset()
 	ensure_bag()     # 225：换回「不带」时棋盘上可能一只包都没了
 	_hold_refresh -= 1
+	carry_funds = clampi(carry_funds, 0, cash_cap())     # 285：收费的那笔要留在账上
 	_color_presets()
 	_refresh()
+	return true
 
 
 func preset() -> LoadoutDef:
-	var sets := flow.presets()
-	return sets[preset_index] if preset_index >= 0 and preset_index < sets.size() else null
+	return _preset_def
+
+
+## 285：换章节 —— 这一章不列挑着的那套了（序章只有免费的）就换回「不带」；挂牌列跟着重做
+func _sync_presets() -> void:
+	var sets := _preset_list()
+	if _preset_def != null and not sets.has(_preset_def):
+		choose_preset(-1)
+	preset_index = sets.find(_preset_def) if _preset_def != null else -1
+	_rebuild_presets()
+
+
+## 285：挑着收费预设、仓库的钱不够付
+func preset_poor() -> bool:
+	var price := flow.preset_price(preset())
+	return price > 0 and flow.meta.funds < price
+
+
+## 285：第三页摘要便条的第二行「预设：名字」（收费 / 高级才有；收费的价钱另用金币显示）
+func preset_summary() -> String:
+	var def := preset()
+	if def == null or def.tier == LoadoutDef.TIER_FREE:
+		return ""
+	return UiText.t("setup.summary_preset") % Names.of(def)
 
 
 func _clear_preset() -> void:
@@ -1070,7 +1154,7 @@ func _clear_preset() -> void:
 	_preset_uids.clear()
 
 
-## 把预设套的道具放上棋盘（和拖进包里一样自动找位置）。放不下的记在状态栏
+## 把预设套的道具放上棋盘（和拖进包里一样自动找位置）。放不下的记在状态栏。三档都新造（285）
 func _apply_preset() -> void:
 	var def := preset()
 	if def == null or board == null:
@@ -1366,7 +1450,7 @@ func carry_out(uid: int) -> bool:
 
 ## 094：现在带上的东西的总价值（预算按它算）
 func carry_value() -> int:
-	var v := 0
+	var v := flow.preset_value(preset())     # 285：收费预设也是带进去的东西（免费的照旧不算）
 	for inst in carried():
 		v += ItemValue.of(inst.def)
 	return v
@@ -1412,6 +1496,10 @@ func can_depart() -> String:
 	var ch := character()
 	if ch == null:
 		return UiText.t("setup.no_character")
+	if preset_poor():
+		return UiText.t("setup.preset_poor")     # 285：收费预设出发这一刻付钱
+	if not flow.preset_ticket_ok(preset()):     # 285：高级预设出发这一刻扣券（选的时候有，之后没了也拦）
+		return UiText.t("setup.preset_no_ticket") % Names.of(flow.items.get_def(preset().ticket))
 	var defs: Array = []
 	for inst in carried():
 		defs.append(inst.def)
@@ -1492,7 +1580,8 @@ func _go_now() -> bool:
 	var ch := character()
 	flow.map_reveal = reveal_payload()
 	_record_carry()
-	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id, carry_funds)
+	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id, carry_funds,
+			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"")
 	flow.map_reveal = {}
 	if run == null:
 		warn(UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source")))
@@ -1935,6 +2024,32 @@ static func _num(v: float) -> String:
 	return str(int(v)) if is_equal_approx(v, roundf(v)) else "%.1f" % v
 
 
+## 285：摘要便条第二行 —— 「预设：名字」+ 收费的价钱（金币图标 + 数，[CoinLabel]）
+func _build_summary_preset() -> HBoxContainer:
+	_summary_preset = _hbox(8)
+	_summary_preset.alignment = BoxContainer.ALIGNMENT_CENTER
+	_summary_preset.visible = false
+	_summary_preset_label = _label("", 16, UiPalette.FG)
+	_summary_preset.add_child(_summary_preset_label)
+	_summary_coin = CoinLabel.new()
+	_summary_coin.font_size = 16
+	_summary_coin.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_summary_preset.add_child(_summary_coin)
+	return _summary_preset
+
+
+func _sync_summary_preset() -> void:
+	if _summary_preset == null:
+		return
+	var text := preset_summary()
+	_summary_preset.visible = text != ""
+	_summary_preset_label.text = text
+	_summary_coin.ink = _summary_preset_label.get_theme_color("font_color")
+	var price := flow.preset_price(preset())
+	_summary_coin.visible = price > 0
+	_summary_coin.amount = price
+
+
 ## 161：第三页右上那一块。180 补二（作者 10:09）：只写角色名
 func summary_text() -> String:
 	var ch := character()
@@ -1967,9 +2082,12 @@ func _refresh() -> void:
 	_sync_stash_tab()
 	if _summary != null:
 		_summary.text = summary_text()
+	_sync_summary_preset()
+	if _preset_box != null and _presets_signature(_preset_list()) != _preset_sig:
+		_rebuild_presets.call_deferred()     # 285：仓库变了，高级预设缺几件跟着变（挂牌可能正在发信号，晚一拍重做）
 	if _enter_btn != null:
-		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and needs_spawn())     # 182：没挑出生点「出发」灰着
+		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and (needs_spawn() or preset_poor()))     # 182：没挑出生点「出发」灰着；285：收费预设付不起
 	var why := can_depart()
 	var hint := UiText.t("setup.unarmed") if _page > 0 and unarmed() else ""
-	_set_status(why if why != "" and not carried().is_empty() else _note + hint)     # 225：「军需官发的」在前
+	_set_status(why if why != "" and (not carried().is_empty() or preset_poor()) else _note + hint)     # 225：「军需官发的」在前
 	_refresh_cash()     # 2026-10-22：仓库的钱可能刚变过（卖了东西 / 换了角色）

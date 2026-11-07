@@ -1,0 +1,20 @@
+{
+  "id": "preset_elite",
+  "display_name": "精锐",
+  "display_names": {
+    "en": "Elite"
+  },
+  "descriptions": {
+    "en": ""
+  },
+  "preset": true,
+  "items": [
+    "steel_greatsword",
+    "steel_stiletto",
+    "leather_armor",
+    "salve",
+    "salve"
+  ],
+  "tier": "advanced",
+  "ticket": "ticket_elite"
+}

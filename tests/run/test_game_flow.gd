@@ -67,7 +67,7 @@ static func run_loadout_pipeline(t: TestCase) -> void:
 
 	var c := _content()
 	var ctx := ContentImporter.Context.new()
-	for id in c.items.ids():
+	for id in c.items.all_ids():     # 285：券不在 ids()，高级预设的 ticket 要对着它查
 		ctx.register_item(c.items.get_def(id))
 
 	# 往返

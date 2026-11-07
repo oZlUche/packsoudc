@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_bopst"]
+
+[resource]
+script = ExtResource("1_bopst")
+id = &"preset_standard"
+display_name = "制式"
+display_names = {
+"en": "Standard"
+}
+descriptions = {
+"en": ""
+}
+preset = true
+items = Array[StringName]([&"longsword", &"round_shield", &"leather_armor", &"bandage", &"salve", &"ration"])
+tier = &"advanced"
+ticket = &"ticket_standard"

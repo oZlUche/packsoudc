@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_lcbf0"]
+
+[resource]
+script = ExtResource("1_lcbf0")
+id = &"preset_elite"
+display_name = "精锐"
+display_names = {
+"en": "Elite"
+}
+descriptions = {
+"en": ""
+}
+preset = true
+items = Array[StringName]([&"steel_greatsword", &"steel_stiletto", &"leather_armor", &"salve", &"salve"])
+tier = &"advanced"
+ticket = &"ticket_elite"

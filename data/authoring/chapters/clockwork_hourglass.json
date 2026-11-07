@@ -9,34 +9,12 @@
     "generator_config": {
       "type": "HourglassMapConfig",
       "half_rows": 4,
+      "neck_rows": 3,
       "taper": 1,
       "with_core": true,
-      "neck_rows": 3,
       "two_sided": true,
       "axis_core": true,
       "clock_room": true,
-      "side_produce": {
-        "crafted": 2,
-        "mineral": 1.5
-      },
-      "side_material_nodes": {
-        "mine": 1,
-        "remains": 1
-      },
-      "neck_produce": {
-        "crystal": 2
-      },
-      "neck_material_nodes": {
-        "runes": 1
-      },
-      "danger_by_row": [
-        0,
-        0,
-        1,
-        1,
-        2,
-        2
-      ],
       "scales": [
         {
           "id": "small",
@@ -63,12 +41,34 @@
           },
           "half_rows": 6,
           "width": 7,
-          "step_limit": 60,
           "coverage": {
             "rest": 5,
             "shop": 7
-          }
+          },
+          "step_limit": 60
         }
+      ],
+      "side_produce": {
+        "crafted": 2,
+        "mineral": 1.5
+      },
+      "side_material_nodes": {
+        "mine": 1,
+        "remains": 1
+      },
+      "neck_produce": {
+        "crystal": 2
+      },
+      "neck_material_nodes": {
+        "runes": 1
+      },
+      "danger_by_row": [
+        0,
+        0,
+        1,
+        1,
+        2,
+        2
       ],
       "rules": {
         "type_weights": {
@@ -123,6 +123,7 @@
   "economy_rules": "standard",
   "order": 4,
   "requires_unlock": "prologue3_done",
+  "boss_ticket": "ticket_elite",
   "rules": [
     "那边是口横着的沙漏，从左边或右边进，穿过中间两条窄道到对面。出口只在对面那一列，中途没有。",
     "里面的东西不是人，是机关。刀砍上去先被弹掉一截，毒和放血对它们没用，火、冰、雷照常。",

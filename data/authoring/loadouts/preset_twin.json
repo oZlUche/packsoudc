@@ -1,0 +1,18 @@
+{
+  "id": "preset_twin",
+  "display_name": "双刃",
+  "display_names": {
+    "en": "Twin"
+  },
+  "descriptions": {
+    "en": ""
+  },
+  "preset": true,
+  "items": [
+    "twin_blades",
+    "quenched_dagger",
+    "salve",
+    "salve"
+  ],
+  "tier": "paid"
+}

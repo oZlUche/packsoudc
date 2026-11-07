@@ -1,0 +1,21 @@
+{
+  "id": "preset_standard",
+  "display_name": "制式",
+  "display_names": {
+    "en": "Standard"
+  },
+  "descriptions": {
+    "en": ""
+  },
+  "preset": true,
+  "items": [
+    "longsword",
+    "round_shield",
+    "leather_armor",
+    "bandage",
+    "salve",
+    "ration"
+  ],
+  "tier": "advanced",
+  "ticket": "ticket_standard"
+}

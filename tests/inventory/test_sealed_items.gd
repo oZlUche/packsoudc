@@ -37,7 +37,9 @@ static func run_sealed_listing(t: TestCase) -> void:
 	t.check(unique.size() == 13 and unique.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "281 / 282：独一的（红武八把 + 元素之核四颗 + 破晓的信物）不在 ids()、图鉴照列")
 	var lesser: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_lesser())     # 劣化版也不赐福
 	t.check(lesser.size() == 8 and lesser.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "281：劣化版不在 ids()、图鉴照列")
-	t.eq(db.ids().size() + 1 + db.keepsake_ids().size() + blessed.size() + tokens.size() + signature.size() + forged.size() + unique.size() + lesser.size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 + 铸牌 + 随身之物 + 只能锻造的 + 独一的 + 劣化版 = 全部（088 / 095 / 175 / 256 / 279 / 281）")
+	var tickets: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_ticket())
+	t.check(tickets.size() == 2 and tickets.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "285：券（制式 / 精锐）不在 ids()、图鉴照列")
+	t.eq(db.ids().size() + 1 + db.keepsake_ids().size() + blessed.size() + tokens.size() + signature.size() + forged.size() + unique.size() + lesser.size() + tickets.size(), db.all_ids().size(), "能用的 + 封存的 + 特殊道具 + 赐福版 + 铸牌 + 随身之物 + 只能锻造的 + 独一的 + 劣化版 + 券 = 全部（088 / 095 / 175 / 256 / 279 / 281 / 285）")
 	t.eq(db.size(), db.all_ids().size(), "size() 数的是全部")
 
 	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))
