@@ -94,6 +94,17 @@ static func frame_pin_exception(t: TestCase, root: Window) -> void:
 	tip.tick(0.016, inside)
 	t.check(not tip.is_showing(), "挪进窗里：当场收（作者 10-27）")
 	(f["host"] as Control).queue_free()
+	# 286 测试 11-07：格子边到窗边有一条几像素的缝 —— 鼠标停在缝上不收
+	f = _board(root, &"bonefang_dagger")
+	tip = f["tip"]
+	var rr := tip._panel.global_rect()
+	var gap := Vector2(rr.position.x - 6.0, rr.end.y - 6.0)
+	if not (f["view"] as Control).get_global_rect().has_point(gap):
+		tip.tick(0.016, gap)
+		t.check(tip.is_showing(), "窗边外 6 像素（源和窗之间的缝）：不收")
+		tip.tick(0.016, gap - Vector2(HoverTip.RECIPE_BRIDGE_PX + 4.0, 0))
+		t.check(not tip.is_showing(), "再往外：收")
+	(f["host"] as Control).queue_free()
 	# 带配方词的窗：挪进窗里又挪出去（不回道具）→ 收
 	f = _board(root, &"bonefang_dagger")
 	tip = f["tip"]

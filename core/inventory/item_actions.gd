@@ -93,6 +93,9 @@ static func sell_same(inst: ItemInstance, container: ItemContainer, price_of: Ca
 		a.coin = total
 	if fav:
 		return disable(a, UiText.t("act.fav_no_bulk"))
+	if inst.def != null and (inst.def.is_ticket() or inst.def.is_unique()):     # 285 测试 11-07：券（和独一的）成批也卖不了 —— 键灰着，不挂价钱
+		a.coin = -1
+		return disable(a, UiText.t("act.ticket") if inst.def.is_ticket() else UiText.t("act.unique"))
 	return disable(a, UiText.t("act.locked")) if same.is_empty() else a
 
 

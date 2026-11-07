@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="NpcDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/npcs/npc_line.gd" id="1_lqpap"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="2_eb7xo"]
+[ext_resource type="Script" path="res://core/meta/npcs/npc_def.gd" id="3_oh026"]
+[ext_resource type="Script" path="res://core/meta/npcs/npc_special.gd" id="4_v4prc"]
+
+[sub_resource type="Resource" id="Resource_kkhmo"]
+script = ExtResource("1_lqpap")
+id = &"common_rotate"
+kind = &"guide"
+text = "拖着东西的时候按 [key=rotate_item]，能转个方向"
+texts = {
+"en": "Press [key=rotate_item] while dragging to turn it round."
+}
+
+[sub_resource type="Resource" id="Resource_x2snh"]
+script = ExtResource("1_lqpap")
+id = &"common_hide_tip"
+kind = &"guide"
+text = "按住 [key=hide_tip]，道具的说明先藏起来，松开又回来"
+texts = {
+"en": "Hold [key=hide_tip] to hide item descriptions; let go and they're back."
+}
+
+[sub_resource type="Resource" id="Resource_7pnqt"]
+script = ExtResource("1_lqpap")
+id = &"common_whole_bag"
+kind = &"guide"
+text = "按住 [key=whole_bag] 再拖，整个包连里面的东西一起走"
+texts = {
+"en": "Hold [key=whole_bag] and drag to move a whole bag with everything in it."
+}
+
+[resource]
+script = ExtResource("3_oh026")
+id = &"common"
+lines = Array[ExtResource("1_lqpap")]([SubResource("Resource_kkhmo"), SubResource("Resource_x2snh"), SubResource("Resource_7pnqt")])

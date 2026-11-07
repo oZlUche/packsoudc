@@ -1052,8 +1052,11 @@ static func import_npc(data: Dictionary, ctx: Context, report: ImportReport) -> 
 	var def := NpcDef.new()
 	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "NPC", report)
-	if def.id != &"" and not NpcDef.IDS.has(def.id):
-		report.error("id", "认不得的 NPC '%s'（只认 %s）" % [def.id, ", ".join(NpcDef.IDS)])
+	var common := def.id == NpcDef.COMMON     # 284 §3.4：通用句
+	if def.id != &"" and not NpcDef.IDS.has(def.id) and not common:
+		report.error("id", "认不得的 NPC '%s'（只认 %s，通用句是 %s）" % [def.id, ", ".join(NpcDef.IDS), NpcDef.COMMON])
+	if common and (def.portrait != &"" or not def.specials.is_empty() or def.display_name != ""):
+		report.error("id", "通用句只写 lines（不要名字、头像、专属对话）")
 	var seen := {}
 	for i in def.lines.size():
 		var l := def.lines[i]
@@ -1061,6 +1064,8 @@ static func import_npc(data: Dictionary, ctx: Context, report: ImportReport) -> 
 			continue
 		if l.id == &"" or seen.has(l.id):
 			report.error("lines[%d].id" % i, "句得有 id、不能重复（'%s'）" % l.id)
+		if String(l.id).begins_with(NpcDef.COMMON_PREFIX) != common:
+			report.error("lines[%d].id" % i, "通用句的 id 以 %s 开头，各人的句不许（'%s'）" % [NpcDef.COMMON_PREFIX, l.id])
 		seen[l.id] = true
 		if not NpcLine.KINDS.has(l.kind):
 			report.error("lines[%d].kind" % i, "种类只许 %s（给的是 '%s'）" % [", ".join(NpcLine.KINDS), l.kind])

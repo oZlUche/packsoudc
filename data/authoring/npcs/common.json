@@ -1,0 +1,33 @@
+{
+  "id": "common",
+  "display_name": "",
+  "display_names": {
+    "en": ""
+  },
+  "lines": [
+    {
+      "id": "common_rotate",
+      "kind": "guide",
+      "text": "拖着东西的时候按 [key=rotate_item]，能转个方向",
+      "texts": {
+        "en": "Press [key=rotate_item] while dragging to turn it round."
+      }
+    },
+    {
+      "id": "common_hide_tip",
+      "kind": "guide",
+      "text": "按住 [key=hide_tip]，道具的说明先藏起来，松开又回来",
+      "texts": {
+        "en": "Hold [key=hide_tip] to hide item descriptions; let go and they're back."
+      }
+    },
+    {
+      "id": "common_whole_bag",
+      "kind": "guide",
+      "text": "按住 [key=whole_bag] 再拖，整个包连里面的东西一起走",
+      "texts": {
+        "en": "Hold [key=whole_bag] and drag to move a whole bag with everything in it."
+      }
+    }
+  ]
+}

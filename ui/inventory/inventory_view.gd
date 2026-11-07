@@ -336,9 +336,9 @@ func clear_preview() -> void:
 #endregion
 
 
-## 274：按住 Ctrl（mac 上 Cmd）点包里的道具 = 点这个包
+## 274：按住 Ctrl（mac 上 Cmd）点包里的道具 = 点这个包。284 §3.5：键走动作 `whole_bag`
 static func whole_bag_key() -> bool:
-	return Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_META)
+	return InputKeys.held(InputKeys.WHOLE_BAG)
 
 
 ## 这一格点下去点的是哪件：先普通物品，包的空白处才是包本身；[param whole_bag] = 按着 Ctrl，包里的格一律算包。
@@ -364,7 +364,7 @@ func _input(event: InputEvent) -> void:
 	if _hover_cell.x < 0:
 		return
 	var k := event as InputEventKey
-	if k != null and not k.echo and k.keycode in [KEY_CTRL, KEY_META]:
+	if k != null and not k.echo and InputKeys.is_key_of(k, InputKeys.WHOLE_BAG):
 		queue_redraw()
 
 
@@ -389,7 +389,7 @@ func _gui_input(event: InputEvent) -> void:
 				return
 		if mb.pressed and mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 			var c := cell_at_local(mb.position)
-			var uid := uid_at_cell(c, mb.is_command_or_control_pressed())
+			var uid := uid_at_cell(c, InputKeys.held_with(mb, InputKeys.WHOLE_BAG))
 			if uid == GridInventory.EMPTY_UID and mb.button_index == MOUSE_BUTTON_LEFT:
 				set_focused(null, get_tree())     # 点空处：槽位都收起
 			if uid != GridInventory.EMPTY_UID:
