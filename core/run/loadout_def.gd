@@ -21,3 +21,19 @@ extends Resource
 @export var preset: bool = false
 ## 道具 id，可以重复（两个包就写两遍）
 @export var items: Array[StringName] = []
+## 285（作者 2026-11-07）：预设分三档 —— `free` 免费（新造、不付、不算带入预算，094 的底线）；
+## `paid` 收费（新造，出发时付清单定价之和 × 集市倍数，算带入预算）；`advanced` 高级（清单每件都得在仓库里，选了从仓库拉上棋盘）
+@export var tier: StringName = TIER_FREE
+
+const TIER_FREE := &"free"
+const TIER_PAID := &"paid"
+const TIER_ADVANCED := &"advanced"
+const TIERS: Array[StringName] = [TIER_FREE, TIER_PAID, TIER_ADVANCED]
+
+
+func is_paid() -> bool:
+	return tier == TIER_PAID
+
+
+func is_advanced() -> bool:
+	return tier == TIER_ADVANCED

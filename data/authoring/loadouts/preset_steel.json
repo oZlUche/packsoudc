@@ -1,0 +1,19 @@
+{
+  "id": "preset_steel",
+  "display_name": "钢铁",
+  "display_names": {
+    "en": "Steel"
+  },
+  "descriptions": {
+    "en": ""
+  },
+  "preset": true,
+  "items": [
+    "steel_greatsword",
+    "plate_cuirass",
+    "steel_stiletto",
+    "salve",
+    "salve"
+  ],
+  "tier": "advanced"
+}

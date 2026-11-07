@@ -1918,11 +1918,20 @@ static func import_meta_rules(data: Dictionary, ctx: Context, report: ImportRepo
 ## 清单不能空；每件得存在；至少一个包 —— 棋盘上只有包里的东西参战（3.2），没有包一格都用不了
 static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportReport) -> void:
 	_require_id(def.id, "开局装备", report)
+	if not LoadoutDef.TIERS.has(def.tier):
+		report.error("tier", "只能是 free / paid / advanced（285）")
+	elif def.tier != LoadoutDef.TIER_FREE and not def.preset:
+		report.error("tier", "收费 / 高级只给预设套（preset=true）")
 	if def.items.is_empty():
 		report.error("items", "开局装备至少带一件")
 		return
 	if ctx.items.is_empty():
 		return
+	if def.is_advanced():     # 285：高级预设从仓库拉，清单里得是集市买得到或打得出来的东西，不然这一套永远选不了
+		for i in def.items.size():
+			var it: ItemDef = ctx.items.get(def.items[i], null)
+			if it != null and (it.is_unique() or it.is_lesser() or it.is_bag or (it.rarity >= 4 and not it.is_forged_only())):
+				report.error("items[%d]" % i, "高级预设的 '%s' 攒不到（独一 / 劣化 / 包 / 不是锻造的橙红件）" % def.items[i])
 	var has_bag := false
 	for i in def.items.size():
 		var item: ItemDef = ctx.items.get(def.items[i], null)

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_v4t4y"]
+
+[resource]
+script = ExtResource("1_v4t4y")
+id = &"preset_hornbow"
+display_name = "角弓"
+display_names = {
+"en": "Hornbow"
+}
+descriptions = {
+"en": ""
+}
+preset = true
+items = Array[StringName]([&"horn_bow", &"serrated_arrows", &"fire_arrows", &"bonefang_dagger", &"salve"])
+tier = &"advanced"
