@@ -50,8 +50,6 @@ var _spec: Dictionary = {}
 ## 232：背包皮（包身 / 侧环 / 翻盖 / 提手徽，画在 [member _canvas] 底下）；没图 null
 var _back: Control = null
 var _satchel: Dictionary = {}
-## 279：营地的砧 —— 开着时右栏（名牌 + 角色卡）换成它
-var anvil: AnvilColumn = null
 
 
 ## 搭好整块窗并返回里面的面板。[param drag] 同 [method InventoryPanelScript.setup]；[param hint_sink] 是面板回话的去处
@@ -122,18 +120,6 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	resized.connect(_clamp)
 	_layout()
 	return panel
-
-
-## 279：右栏换成砧（[AnvilColumn]）：名牌与角色卡收起，砧的三个槽登记到这块棋盘的拖拽层
-func open_anvil(flow: GameFlow, node: MapNode) -> AnvilColumn:
-	if panel == null or anvil != null:
-		return anvil
-	nameplate.visible = false
-	card.visible = false
-	anvil = AnvilColumn.new().setup(flow, node, _font, panel.drag_layer(), panel.tip)
-	_canvas.add_child(anvil)
-	_layout()
-	return anvil
 
 
 ## 218 补充一：这一章写了背包窗教程（章节 `coaches` 的 `bag`）、这个存档还没看过就放 —— 窗摆稳了再放（等一帧），铺满 [param host]（压暗那一层）
@@ -315,8 +301,6 @@ func _layout() -> void:
 	nameplate.custom_minimum_size = Vector2(want_plate.x / k, 0.0)
 	nameplate.size = Vector2(want_plate.x / k, want_plate.y / k)
 	card.position = Vector2(col_x, float((col.get("card", {}) as Dictionary).get("y", 202)))
-	if anvil != null:
-		anvil.position = Vector2(col_x, float(plate.get("y", 78)))
 	var ms: Dictionary = _spec["minimize"]
 	var at: Array = (_satchel.get("minimize", {}) as Dictionary).get("topleft_rel_window", ms.get("topleft_rel_window", [918, 13]))
 	close_button.position = _vec(at) + Vector2(grow.x, 0.0)

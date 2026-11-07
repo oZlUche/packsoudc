@@ -86,6 +86,8 @@ class TipWindow extends PanelContainer:
 	## 子窗：是父窗的哪个关键词开的
 	var origin_term := ""
 	var item_mode := false
+	## 286：正文里有配方词（「可升为」那一行）—— 没钉住时鼠标从源挪进窗里不收、接着走钉住进度
+	var has_recipe := false
 	## 265：右上角收藏丝带 —— -1 = 不画（不是道具窗 / 没有局外状态），0 = 没收藏，1 = 收藏了（[method set_fav]）
 	var fav := -1
 	## 丝带放下来多长（设计像素）、压暗几成（1 = 全暗）、金星几倍（0 = 不画）；切换时 Tween 改这三个
@@ -189,7 +191,7 @@ class TipWindow extends PanelContainer:
 	## 鼠标停到 / 离开一个关键词（`term:<id>`；空 = 离开）
 	func hover(meta: String) -> void:
 		if meta != hover_term:
-			hover_term = meta if meta.begins_with("term:") else ""
+			hover_term = meta if meta.begins_with("term:") or meta.begins_with(ItemTooltip.RECIPE_META) else ""
 			hover_t = 0.0
 
 	## 185：排版宽（只写文字的主窗按内容收窄时改它）
@@ -245,6 +247,7 @@ class TipWindow extends PanelContainer:
 	## 只写一段文字（地图上的点、子窗）
 	func set_text(bbcode: String) -> void:
 		item_mode = false
+		has_recipe = false
 		set_fav(-1)
 		clear_actions()
 		set_width(full_width)
@@ -258,6 +261,7 @@ class TipWindow extends PanelContainer:
 	## 170：道具说明分块
 	func set_item(full: Dictionary) -> void:
 		item_mode = true
+		has_recipe = String(full.get("body", "")).contains("[url=" + ItemTooltip.RECIPE_META)
 		set_width(full_width)
 		head.visible = true
 		sep.visible = true
@@ -895,8 +899,13 @@ func hide_tip() -> void:
 ## 作者 2026-10-17：叫出悬浮窗的源（按钮、图鉴格、地图点、buff 图标）鼠标离开时调这个 —— 没钉住就收；钉住了留着，离开窗 [constant AWAY_SEC] 秒才收
 func release() -> void:
 	_on_source = false
-	if not _panel.pinned:
+	if not _panel.pinned and not _held_by_recipe(get_global_mouse_position()):
 		hide_tip()
+
+
+## 286（作者 11-07，钉住的例外）：主窗没钉住、正文里有配方词、鼠标在窗里 —— 这扇窗留着、接着走钉住进度；别的窗照作者 10-27 一离开源就收
+func _held_by_recipe(mouse: Vector2) -> bool:
+	return _panel.visible and not _panel.pinned and _panel.has_recipe and _panel.global_rect().has_point(mouse)
 
 
 func is_showing() -> bool:
@@ -943,10 +952,13 @@ func tick(delta: float, mouse: Vector2) -> void:
 	if not _panel.visible:
 		return     # 源刚离开（[method _begin_leave]）：没钉住的当场收了
 	if not _panel.pinned:     # 作者 10-27：没钉住时只有停在源上才走钉住进度；鼠标在窗里不算
-		if _on_source:
+		if _on_source or _held_by_recipe(mouse):     # 286：带配方词的窗，鼠标在窗里也走（不然点不到「可升为」的词）
 			_panel.dwell += delta
 			if _panel.dwell >= PIN_DELAY_SEC + PIN_SEC:
 				pin(_panel)
+		elif _panel.has_recipe:
+			hide_tip()     # 286：从窗里移出去了（没回源上）—— 照作者 10-27 收
+			return
 		else:
 			_panel.dwell = 0.0
 		_panel.queue_redraw()
@@ -1027,22 +1039,13 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 	var at := _windows.find(parent)
 	if at < 0 or not parent.pinned or parent.depth + 1 >= MAX_DEPTH:
 		return null
+	if meta.begins_with(ItemTooltip.RECIPE_META):
+		return _open_recipe(parent, at, meta)
 	var id := meta.trim_prefix("term:")
 	if not parent.terms.has(id):
 		return null
-	_close_from(at + 1)
+	var w := _child_slot(parent, at, meta)
 	var entry: Dictionary = parent.terms[id]
-	var w: TipWindow = null
-	for c in _windows:
-		if not c.visible and c.depth == parent.depth + 1:
-			w = c
-			break
-	if w == null:
-		w = _new_window(parent.depth + 1, scaled(CHILD_WIDTH))
-	_windows.erase(w)
-	_windows.insert(at + 1, w)
-	w.reset_state()
-	w.origin_term = meta
 	# 子窗里的说明也可能提到别的词条：父窗认得的 + 固定词条（不含自己）
 	var extra := {}
 	for k in parent.terms:
@@ -1060,6 +1063,41 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 	w.set_codex(codex_for(String(entry["name"])))     # 220 E
 	if only_name:     # 193 补充三：只有名字（标签图标的子窗）按名字宽收窄，不留大块空白
 		w.set_width(clampf(ceilf(w.content_width()) + 1.0, NAME_ONLY_MIN_WIDTH, scaled(CHILD_WIDTH)))
+	w.visible = true
+	w.reset_size()
+	_place_child(w, parent)
+	return w
+
+
+## 子窗的那一扇：同深度藏着的复用，没有就新开；排到父窗后面、清状态、记下是哪个词开的
+func _child_slot(parent: TipWindow, at: int, meta: String) -> TipWindow:
+	_close_from(at + 1)
+	var w: TipWindow = null
+	for c in _windows:
+		if not c.visible and c.depth == parent.depth + 1:
+			w = c
+			break
+	if w == null:
+		w = _new_window(parent.depth + 1, scaled(CHILD_WIDTH))
+	_windows.erase(w)
+	_windows.insert(at + 1, w)
+	w.reset_state()
+	w.origin_term = meta
+	w.full_width = scaled(CHILD_WIDTH)     # 286：配方子窗用道具窗的宽，复用回关键词子窗时改回来
+	return w
+
+
+## 286：配方词开的子窗 —— 出件那把的整段道具窗 + 要求 / 品质 / 在哪锤（[method ItemTooltip.recipe_full]）；查不到配方返回 null
+func _open_recipe(parent: TipWindow, at: int, meta: String) -> TipWindow:
+	var full := ItemTooltip.recipe_full(StringName(meta.trim_prefix(ItemTooltip.RECIPE_META)))
+	if full.is_empty():
+		return null
+	var w := _child_slot(parent, at, meta)
+	w.full_width = _panel.full_width     # 道具窗的宽（关键词子窗窄）
+	w.set_item(full)
+	w.terms = _terms_dict(full.get("terms", {}))
+	w.set_fav(-1)
+	w.clear_actions()
 	w.visible = true
 	w.reset_size()
 	_place_child(w, parent)
@@ -1166,6 +1204,9 @@ func _begin_leave(view: ContainerView, local: Vector2) -> void:
 	_on_source = false
 	_pending_view = view
 	_pending_local = local
+	if not _panel.pinned and view != null and _held_by_recipe(view.get_global_transform() * local):
+		_pending_view = null     # 286：挪进了带配方词的窗 —— 不收、不换，接着走钉住进度
+		return
 	if not _panel.pinned:
 		_panel.leave_t = -1.0
 		_resolve_pending()

@@ -1053,9 +1053,10 @@ func leave_chest() -> bool:
 	return hide_overlay()
 
 
-## 175 补充二：在休息点 [param node] 上打开铸炉。194 起玩家走休息点事件的「铸炉」选项（[OpenForge]），这里留给测试 / 调试台。不是休息点、铸过了返回 false
+## 175 补充二：在休息点 [param node] 上打开铸炉。194 起玩家走休息点事件的「铸炉」选项（[OpenForge]），这里留给测试 / 调试台。
+## 286 §2.2：铸炉屏是「铁炉」两栏（砧 | 铸炉），两栏都用过了才不开。不是休息点返回 false
 func open_forge(node: MapNode) -> bool:
-	if run == null or run.is_over() or node == null or NodeEvents.effective_type(node) != &"rest" or NodeEvents.forge_used(node):
+	if run == null or run.is_over() or node == null or NodeEvents.effective_type(node) != &"rest" or not NodeEvents.hearth_open(node):
 		return false
 	_go(Screen.FORGE, {"node": node})
 	return true
@@ -1477,8 +1478,8 @@ func _reopen_entry() -> Dictionary:
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过）
 	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"rest":
 		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 反馈：休息点还有没用的那一份
-	if here != null and NodeEvents.effective_type(here) == &"rest" and not NodeEvents.forge_used(here):
-		return {"screen": Screen.FORGE, "node": here}     # 175 补充二：休息点的铸炉没用过，站着随时能开
+	if here != null and NodeEvents.effective_type(here) == &"rest" and NodeEvents.hearth_open(here):
+		return {"screen": Screen.FORGE, "node": here}     # 175 补充二：休息点的铸炉没用过，站着随时能开（286：砧没锤过也算）
 	return {}
 
 
@@ -1804,7 +1805,7 @@ func _skippable(entry: Dictionary) -> bool:
 			return chest_node == null or chest_node.is_visited() or ChestPlacer.is_opened(chest_node)
 		Screen.FORGE:
 			var forge_node: MapNode = entry.get("node", null)
-			return forge_node == null or NodeEvents.forge_used(forge_node)
+			return forge_node == null or not NodeEvents.hearth_open(forge_node)
 		Screen.PREBATTLE:
 			var node: MapNode = entry.get("node", null)
 			return run.events.pending_battle.is_empty() or node == null or int(run.events.pending_battle["node"]) != node.id

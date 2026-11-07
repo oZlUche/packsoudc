@@ -51,8 +51,6 @@ var _extra_btns: Array[Button] = []
 var _note: Control = null
 var _note_text := ""
 var _bag: Control = null
-var _anvil: AnvilColumn = null     # 279
-var _anvil_key: Button = null
 var _bag_win: BagWindow = null
 var _bag_panel: Control = null
 ## 196 补充一：正文字板与收起后的卷轴（没正文都是 null）
@@ -194,7 +192,7 @@ func _state(i: int, p: StringName) -> Dictionary:
 	if _done:
 		if p == &"sign":
 			return {"ok": true, "why": ""}
-		if p == &"forge" and _node != null and not NodeEvents.forge_used(_node):
+		if p == &"forge" and NodeEvents.hearth_open(_node):     # 286：铁炉 = 砧 | 铸炉，有一栏没用过就能进
 			return {"ok": true, "why": ""}
 		return {"ok": false, "why": UiText.t("camp.used")}
 	return flow.run.events.option_state(i) if flow.run != null else {"ok": false, "why": ""}
@@ -216,12 +214,7 @@ func _build_footer() -> void:
 	row.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	add_child(row)
 	if flow.run != null:
-		row.add_child(ScrollKey.short(UiText.t("event.sort_pack"), toggle_bag))     # 和事件屏一样能整理背包
-		if _node != null and NodeEvents.effective_type(_node) == &"rest":
-			var key := ScrollKey.short(UiText.t("camp.anvil"), toggle_anvil)     # 279：砧（占位键，等营地造物图）
-			key.disabled = not flow.anvil_open(_node)
-			row.add_child(key)
-			_anvil_key = key
+		row.add_child(ScrollKey.short(UiText.t("event.sort_pack"), toggle_bag))     # 和事件屏一样能整理背包（286：砧挪进「铁炉」两栏屏，占位键删了）
 	for b in _extra_btns:
 		row.add_child(b)
 
@@ -420,29 +413,8 @@ func is_options_page() -> bool:
 	return true
 
 
-## 279：打开背包窗、右栏换成砧（再按一次 / 关窗 = 槽里的东西回背包）
-func toggle_anvil() -> void:
-	if _bag != null:
-		toggle_bag()
-		return
-	toggle_bag()
-	if _bag != null and is_instance_valid(_bag_win):
-		_anvil = _bag_win.open_anvil(flow, _node)
-
-
-func anvil_key() -> Button:
-	return _anvil_key
-
-
-func anvil() -> AnvilColumn:
-	return _anvil if _bag != null and is_instance_valid(_anvil) else null
-
-
 func toggle_bag() -> void:
 	if _bag != null:
-		if _anvil != null and is_instance_valid(_anvil):
-			_anvil.release()     # 279：砧槽里的东西回背包
-		_anvil = null
 		_bag.hide()
 		_bag.queue_free()
 		_bag = null
