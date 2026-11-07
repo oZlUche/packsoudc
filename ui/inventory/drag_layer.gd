@@ -286,7 +286,7 @@ func _input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).keycode
-		if key == KEY_R:
+		if InputKeys.is_key_of(event as InputEventKey, InputKeys.ROTATE_ITEM):     # 284 §3.5：键走动作（默认 R）
 			rotate_dragged()
 			get_viewport().set_input_as_handled()
 		elif key == KEY_ESCAPE:

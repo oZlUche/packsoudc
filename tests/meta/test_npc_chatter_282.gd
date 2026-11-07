@@ -138,7 +138,7 @@ static func run_save(t: TestCase) -> void:
 
 
 static func frame_pages(t: TestCase, root: Window) -> void:
-	t.begin("282 · 三页都站着人：铁匠铺、集市散货摊、局内商店；点头像弹纸条（台词空着写「……」），点外面收起")
+	t.begin("282 · 三页都站着人：铁匠铺、集市散货摊、局内商店；点头像弹纸条（台词空着写「……」，284 起可能是通用句），点外面收起")
 	var f := W178._flow()
 	var s: Control = W178._screen(f, root)
 	s.show_tab("smithy")
@@ -147,7 +147,9 @@ static func frame_pages(t: TestCase, root: Window) -> void:
 	t.check(b != null and b.slot.picture != null, "铁匠铺：铁匠头像")
 	if b != null:
 		b.talk()
-		t.check(b.is_open() and b.line_label.text == UiText.t("npc.more"), "点了：纸条，台词空着写「……」")
+		var said := String(b.last.get("text", ""))
+		var want := UiText.t("npc.more") if said == "" else KeyNames.expand(said)     # 284 §3.4：可能掷到通用句（键名已换上）
+		t.check(b.is_open() and b.line_label.text == want and not b.line_label.text.contains("[key="), "点了：纸条，台词空着写「……」，通用句写键名（%s）" % b.line_label.text)
 		t.check(b.note.theme_type_variation == UiTheme.PANEL_HOME_CHIP, "纸条是浅羊皮签")
 		b.close()
 		t.check(not b.is_open(), "收起")

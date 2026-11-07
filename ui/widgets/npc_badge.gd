@@ -108,7 +108,7 @@ func talk() -> void:
 	if last.is_empty():
 		close()
 		return
-	var text := String(last.get("text", ""))
+	var text := KeyNames.expand(String(last.get("text", "")))     # 284 §3.5：[key=动作] 换成现在绑的键名
 	line_label.text = text if text != "" else UiText.t("npc.more")
 	line_label.visible = text != ""
 	note.visible = true

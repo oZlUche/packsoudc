@@ -250,3 +250,18 @@ static func _find(sets: Array[LoadoutDef], id: StringName) -> LoadoutDef:
 		if s.id == id:
 			return s
 	return null
+
+
+static func run_ticket_bulk_sell(t: TestCase) -> void:
+	t.begin("285 测试 11-07 · 券的「出售同类 ×n」也灰着写「券不能出售」、不挂价钱")
+	var db := TestSupport.load_content("free_mode").items
+	var g := GridInventory.new(Vector2i(4, 4), 9, false)
+	var a := ItemInstance.create(db.get_def(&"ticket_standard"))
+	var b := ItemInstance.create(db.get_def(&"ticket_standard"))
+	t.check(g.try_add(a, true) and g.try_add(b, true), "两张制式券")
+	var sold := [0]
+	var act := ItemActions.sell_same(a, g, func(_i: ItemInstance) -> int: return 30, func(_u: int) -> int:
+		sold[0] += 1
+		return 30)
+	t.check(not act.enabled and act.reason == UiText.t("act.ticket"), "灰着：券不能出售（%s）" % act.reason)
+	t.eq(act.coin, -1, "不挂价钱")

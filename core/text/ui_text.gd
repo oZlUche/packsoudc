@@ -129,6 +129,7 @@ const TEXT := {
 	"map.extract_confirm": {"zh": "确定撤离", "en": "Extract"},
 	"map.extract_cancel": {"zh": "再想想", "en": "Not yet"},
 	"map.entrust": {"zh": "托付", "en": "Entrust"},
+	"key.unbound": {"zh": "未绑定", "en": "Unbound"},
 	"map.entrust_held": {"zh": "已托 %d 件", "en": "%d entrusted"},
 	"map.pause_title": {"zh": "暂停", "en": "Paused"},
 	"map.pause_resume": {"zh": "继续（Esc）", "en": "Resume (Esc)"},

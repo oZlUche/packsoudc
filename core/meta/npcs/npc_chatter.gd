@@ -57,13 +57,17 @@ static func done(meta: MetaState, special_id: StringName) -> bool:
 	return meta != null and bool(meta.npc_done.get(String(special_id), false))
 
 
-## 开放的闲话（条件都满足的）
+## 开放的闲话（条件都满足的）。284 §3.4：三位 NPC 的池子并进通用句（[constant NpcDef.COMMON]）
 static func open_lines(def: NpcDef, meta: MetaState, run: RunState = null, items: ItemDatabase = null) -> Array[NpcLine]:
 	var out: Array[NpcLine] = []
 	if def == null:
 		return out
 	var ctx := context(meta, run, items)
-	for l in def.lines:
+	var pool: Array[NpcLine] = def.lines.duplicate()
+	var common := get_def(NpcDef.COMMON)
+	if common != null and NpcDef.IDS.has(def.id):
+		pool.append_array(common.lines)
+	for l in pool:
 		if l != null and _open(l.requires, ctx):
 			out.append(l)
 	return out

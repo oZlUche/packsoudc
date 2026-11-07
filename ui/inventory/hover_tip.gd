@@ -25,6 +25,8 @@ const PIN_SEC := 0.6
 ## 193（作者「放在道具区域内 0.5 秒后再开始」）：钉住进度线先等这么久才起步；主窗子窗一样
 const PIN_DELAY_SEC := 0.5
 const TERM_SEC := 0.25
+## 286 测试 11-07：带配方词的窗没钉住时，鼠标从道具挪进窗里要过一条缝（格子边到窗边几像素）—— 窗四周这么宽也算「在窗里」
+const RECIPE_BRIDGE_PX := 16.0
 const AWAY_SEC := 0.4
 const MAX_DEPTH := 3
 ## 钉住进度线：2 px 黄铜色
@@ -905,7 +907,7 @@ func release() -> void:
 
 ## 286（作者 11-07，钉住的例外）：主窗没钉住、正文里有配方词、鼠标在窗里 —— 这扇窗留着、接着走钉住进度；别的窗照作者 10-27 一离开源就收
 func _held_by_recipe(mouse: Vector2) -> bool:
-	return _panel.visible and not _panel.pinned and _panel.has_recipe and _panel.global_rect().has_point(mouse)
+	return _panel.visible and not _panel.pinned and _panel.has_recipe and _panel.global_rect().grow(RECIPE_BRIDGE_PX).has_point(mouse)
 
 
 func is_showing() -> bool:
@@ -931,7 +933,7 @@ func windows() -> Array[TipWindow]:
 
 
 func _process(delta: float) -> void:
-	hold_alt(Input.is_key_pressed(KEY_ALT))
+	hold_alt(InputKeys.held(InputKeys.HIDE_TIP))     # 284 §3.5：键走动作（默认 Alt）
 	if _panel.visible:
 		tick(delta, get_global_mouse_position())
 
