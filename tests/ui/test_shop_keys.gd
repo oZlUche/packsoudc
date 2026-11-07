@@ -170,3 +170,40 @@ static func frame_badge_and_ground(t: TestCase, root: Window) -> void:
 	run.board = keep
 	screen.free()
 	Support.cleanup(PREFIX)
+
+
+## 290 天秤定稿 A 铜天平（作者 11-07 18:37 挑定）：版式读 json，有图不画底牌，差额牌的字缩到放得下；缺图退回占位版式
+static func frame_scale_art(t: TestCase, root: Window) -> void:
+	t.begin("290 · 天秤定稿：五张图和版式都在；差额牌的字中英文大号字都放得下")
+	var lay := ShopScale.layout()
+	t.eq(BalanceScale._v(lay["pivot"]), Vector2(210, 36), "版式读定稿 json")
+	for p in ["base", "beam", "pan_left", "pan_right", "coin"]:
+		t.not_null(UiTheme.art_cached(ShopScale.ART + p), "有图 scale_%s" % p)
+	var keep_lang := UiText.lang
+	var keep_size := UiTheme.text_size
+	var f := UiPalette.cjk_font_bold()
+	var status := BalanceScale._rect(lay["controls"]["status"])
+	var max_w := status.size.x - 12.0
+	for tier in [&"medium", &"large"]:
+		UiTheme.set_text_size(tier)
+		for lang in ["zh", "en"]:
+			UiText.lang = lang
+			for key in ["shop.gap_short", "shop.gap_even", "shop.gap_change", "shop.gap_cant_pay"]:
+				var words := UiText.t(key)
+				var num := "" if key == "shop.gap_even" else "1000"
+				var fs := ShopScale.fit_size(f, words, num, UiTheme.sz(ShopScale.PLATE_FONT), max_w)
+				t.check(fs >= ShopScale.MIN_FONT + 1 and ShopScale.coin_text_width(f, words, num, fs) <= max_w,
+					"%s / %s：「%s」%d 号放得下" % [tier, lang, words, fs])
+	UiText.lang = keep_lang
+	UiTheme.set_text_size(keep_size)
+	var o := _open(root)
+	var screen = o["screen"]
+	var scale: ShopScale = screen.scale_widget()
+	scale.size = scale.custom_minimum_size
+	t.eq(scale.custom_minimum_size, Vector2(420, 204), "天秤 420 × 204")
+	screen.free()
+	Support.cleanup(PREFIX)
+	var keep := UiTheme.asset_root
+	UiTheme.asset_root = NOWHERE
+	t.eq(BalanceScale._v(ShopScale.layout()["pivot"]), Vector2(210, 28), "缺图：退回占位版式")
+	UiTheme.asset_root = keep
