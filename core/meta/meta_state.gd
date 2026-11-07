@@ -863,6 +863,10 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m.tech_deposits[String(key)] = got
 	# 2. 派生值（仓库还空着，长缩都不用顾忌）
 	if not tech_defs.is_empty():
+		for t in tech_defs:     # 级数减了（耐久 3 → 2，11-07）：老档的等级压到新的满级
+			var td := t as TechDef
+			if td != null and m.tech_levels.has(String(td.id)):
+				m.tech_levels[String(td.id)] = mini(int(m.tech_levels[String(td.id)]), td.max_level())
 		TechService.derive(m, tech_defs)
 	# 3. 装东西
 	var lost: Array = []     # 173：哪儿都放不下的，最后折钱

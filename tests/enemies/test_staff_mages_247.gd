@@ -62,7 +62,7 @@ static func run_placed(t: TestCase) -> void:
 	var c := B211._content()
 	var loaded := 0
 	for s in 3:
-		for id in [&"apprentice_mage", &"grand_magus"]:
+		for id in [&"apprentice_mage", &"adept_mage", &"magus", &"grand_magus"]:
 			var mage := c.enemies.enemy(id)
 			var forced := B211._forced(mage, c.pool, mage.builds[0].id)
 			var built := B211._build(forced, c, 3, 470 + s)
@@ -76,7 +76,8 @@ static func run_placed(t: TestCase) -> void:
 					t.check(int(e.get("charges", 0)) >= 1, "%s：%s 记了次数" % [id, e["id"]])
 			if B211._crystal_loaded(content, c):
 				loaded += 1
-	t.check(loaded >= 3, "晶石在装载格上：%d / 6" % loaded)
+	# 作者 11-07（法师的杖只打基础伤害）：组拆了也要把晶石挪上杖 —— 好套路一把空杖都不许有
+	t.eq(loaded, 12, "晶石在装载格上：%d / 12" % loaded)
 
 
 static func run_pool(t: TestCase) -> void:
