@@ -78,8 +78,8 @@ func _build(title: String, price: int, ticket: Texture2D, has_ticket: bool, is_a
 
 
 ## 字写在木牌上，不跟页面的深浅走（浅底会把语义色压暗：UI设计 11-07 量到锁着的名字只剩 #716654）
-static func _plate_label(text: String, font_size: int, ink: Color) -> Label:
-	var l := UiTheme.make_label(text, font_size, ink)
+static func _plate_label(p_text: String, font_size: int, ink: Color) -> Label:
+	var l := UiTheme.make_label(p_text, font_size, ink)
 	l.remove_meta(&"dark_color")
 	return l
 

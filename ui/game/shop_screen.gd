@@ -22,6 +22,7 @@ var _belt_row: HBoxContainer = null
 var _belt_btns: Array[Control] = []
 var _scale: ShopScale = null
 var _deal_btn: Button = null
+var _leave_btn: Button = null
 ## 右下角自己的钱袋、左下角商人的钱袋
 var _pouch: CoinPouch = null
 var _his_pouch: CoinPouch = null
@@ -29,6 +30,8 @@ var _inv: InventoryPanelScript
 ## 282：店主
 var npc: NpcBadge = null
 var _sync_queued := false
+## 盖在地上那一层的待成交标记（地上那一层不归这一屏，走的时候摘掉）
+var _ground_marks: Control = null
 
 
 func open(payload: Dictionary) -> void:
@@ -47,6 +50,7 @@ func open(payload: Dictionary) -> void:
 	left.add_child(pcol)
 	if flow != null and flow.run != null:
 		npc = NpcBadge.make(NpcDef.SHOPKEEPER, flow.meta, flow.run.items, flow.run)
+		npc.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN     # UI设计 11-07：随身格比头像宽时别把头像拉成横椭圆
 		pcol.add_child(npc)
 	_belt_row = _hbox(10)
 	pcol.add_child(_belt_row)
@@ -69,6 +73,9 @@ func open(payload: Dictionary) -> void:
 	_inv.extra_actions = func(_inst: ItemInstance) -> Array: return []
 	_mark(_view)
 	_mark(_inv.board_view)
+	var ground := GroundLayer.current()
+	if ground != null:
+		_ground_marks = _mark(ground)     # UI设计 11-07：地上的待成交道具也描金
 
 	# 底：商人钱袋 | 天秤（站在「成交」上）| 离开 + 自己钱袋
 	var bottom := _hbox(14)
@@ -97,6 +104,7 @@ func open(payload: Dictionary) -> void:
 	var lv := ScrollKey.make(UiText.t("shop.leave"), leave)
 	lv.size_flags_vertical = Control.SIZE_SHRINK_END
 	rsec.add_child(lv)
+	_leave_btn = lv
 	_pouch = CoinPouch.new()
 	_pouch.clickable = true
 	_pouch.tooltip_text = UiText.t("shop.my_pouch_tip")
@@ -145,10 +153,25 @@ func take(uid: int) -> bool:
 		return false
 	if not InventoryService.transfer_auto(_session.board, uid, flow.run.board):
 		var inst := _session.board.remove(uid)
-		if inst == null or not flow.run.storage.admit(inst):
+		if inst == null or not flow.run.storage.insert(inst, -1, _ground_spot(inst)):
 			return false
 	_session.sync()
 	return true
+
+
+## 包里放不下、落到地上的那件放在自己这边（UI设计 11-07）：天秤右边、「离开」左边那条空地的底上，别压住天秤、离开键和钱袋
+func _ground_spot(inst: ItemInstance) -> Vector2:
+	var vp := get_viewport_rect().size if is_inside_tree() else Vector2.ZERO
+	if vp.x <= 0.0 or vp.y <= 0.0 or _scale == null or not _scale.is_inside_tree():
+		return ItemStash.NO_SPOT
+	var span := flow.run.storage.span_of(inst)
+	var w := maxf(span.x * vp.x, span.y * vp.y)     # 落地会翻到重心最低的朝向（长条躺平），按长边留位
+	var lo := _scale.get_global_rect().end.x + 16.0
+	var hi := lo + w
+	if _leave_btn != null and _leave_btn.is_inside_tree():
+		hi = _leave_btn.get_global_rect().position.x - 16.0
+	var x := (lo + hi - w) * 0.5 if hi - lo >= w else lo     # 空地够宽就放正中，不够就贴天秤右边
+	return Vector2(x / vp.x, 1.0 - ItemStash.SPOT_MARGIN - span.y)
 
 
 ## 把自己的一件放上他的棋盘（自动找位）。不让上桌的说一句原因、返回 false
@@ -187,7 +210,7 @@ func withdraw(uid: int) -> bool:
 	elif _session.given.has(uid):
 		if not InventoryService.transfer_auto(_session.board, uid, flow.run.board):
 			var inst := _session.board.remove(uid)
-			if inst == null or not flow.run.storage.admit(inst):
+			if inst == null or not flow.run.storage.insert(inst, -1, _ground_spot(inst)):
 				return false
 	else:
 		return false
@@ -358,27 +381,34 @@ func _say(text: String) -> void:
 	say(text)     # 226 批一：本地回话行删了，走告示卷轴
 
 
-## 待成交色：盖在一块棋盘视图上的一层（不接鼠标），标出这块视图里桌上的东西
-func _mark(view: InventoryView) -> void:
+## 待成交色：盖在一块视图上的一层（不接鼠标；棋盘或地上），标出这块视图里桌上的东西
+func _mark(view: ContainerView) -> Control:
 	var m := PendingMarks.new()
 	m.view = view
 	m.screen = self
 	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	m.set_anchors_preset(Control.PRESET_FULL_RECT)
 	view.add_child(m)
+	return m
+
+
+func _exit_tree() -> void:
+	if _ground_marks != null and is_instance_valid(_ground_marks):
+		_ground_marks.queue_free()
+	_ground_marks = null
 
 
 class PendingMarks extends Control:
-	var view: InventoryView = null
+	var view: ContainerView = null
 	var screen = null
 
 	func _process(_d: float) -> void:
 		queue_redraw()     # 拖拽时道具跟着挪，标记跟着画
 
 	func _draw() -> void:
-		if view == null or screen == null or view.inventory == null:
+		if view == null or screen == null or not is_instance_valid(screen) or view.container() == null:
 			return
-		for v in view.inventory.items():
+		for v in view.container().items():
 			var inst := v as ItemInstance
 			if not screen.pending(inst.uid):
 				continue
