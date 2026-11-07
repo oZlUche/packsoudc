@@ -144,3 +144,29 @@ static func frame_buyback(t: TestCase, root: Window) -> void:
 	t.check(session.resale.is_empty(), "离开商店：清掉")
 	screen.queue_free()
 	Support.cleanup(PREFIX)
+
+
+## UI设计 11-07 核 v5.39：头像不被随身格撑成横椭圆；包里放不下的货落在自己这边（天秤右边）
+static func frame_badge_and_ground(t: TestCase, root: Window) -> void:
+	t.begin("290 · 店主头像保持原宽；买下放不下的货落在天秤右边的地上")
+	var o := _open(root)
+	var screen = o["screen"]
+	var session: ShopSession = o["session"]
+	if screen.npc != null:
+		t.eq(screen.npc.size_flags_horizontal, Control.SIZE_SHRINK_BEGIN, "头像不横向撑满")
+	var run: RunState = screen.flow.run
+	var keep := run.board
+	var full := GridInventory.new(Vector2i(1, 1), 1, false)     # 包里一格都放不下
+	run.board = full
+	screen.size = Vector2(1920, 1200)
+	for _i in 3:
+		screen.notification(Container.NOTIFICATION_SORT_CHILDREN)
+	var ware := session.board.items()[0] as ItemInstance
+	var spot: Vector2 = screen._ground_spot(ware)
+	t.check(ItemStash.has_spot_value(spot), "算得出落点")
+	if ItemStash.has_spot_value(spot):
+		var vp: Vector2 = screen.get_viewport_rect().size
+		t.check(spot.x * vp.x >= screen.scale_widget().get_global_rect().end.x - 0.5, "落点在天秤右边（%.0f）" % (spot.x * vp.x))
+	run.board = keep
+	screen.free()
+	Support.cleanup(PREFIX)

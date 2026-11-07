@@ -125,8 +125,12 @@ func _draw() -> void:
 	_draw_pile(pans[0], pile_count(left_coins, left))
 	_draw_pile(pans[1], pile_count(right_coins, right))
 	var prices := price_rects()
-	_draw_amount(prices[0], left)
-	_draw_amount(prices[1], right)
+	if left > 0:     # UI设计 11-07（先少再多）：空盘不挂价牌、空桌不挂差额牌
+		_draw_amount(prices[0], left)
+	if right > 0:
+		_draw_amount(prices[1], right)
+	if plate == "":
+		return
 	var status := control_rect("status")
 	draw_rect(status, PLATE)
 	draw_rect(status, BRONZE_DARK, false, 2.0)
