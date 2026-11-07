@@ -188,12 +188,14 @@ static func run_sessions(t: TestCase) -> void:
 	shop_node.content_seed = 5
 	var full := ShopSession.new(shop_node, econ, c.items, Wallet.new(1000), 0.3)
 	var half := ShopSession.new(shop_node, econ, c.items, Wallet.new(1000), 0.3, 0.5)
-	t.eq(full.stock.size(), half.stock.size(), "同一个点货架一样长")
+	var fa := full.board.items()
+	var ha := half.board.items()
+	t.eq(fa.size(), ha.size(), "同一个点棋盘一样满")
 	var cheaper := 0
-	for i in full.stock.size():
-		if int(half.stock[i]["price"]) <= int(full.stock[i]["price"]) and String(half.stock[i]["id"]) == String(full.stock[i]["id"]):
+	for i in mini(fa.size(), ha.size()):
+		if half.tag_price(ha[i]) <= full.tag_price(fa[i]) and ha[i].def.id == fa[i].def.id:
 			cheaper += 1
-	t.eq(cheaper, full.stock.size(), "打五折之后每一格都更便宜、货不变")
+	t.eq(cheaper, fa.size(), "打五折之后每一件都更便宜、货不变")
 
 	# 走进真的节点：NodeEvents 把上下文交给会话
 	var kit := _kit(c)

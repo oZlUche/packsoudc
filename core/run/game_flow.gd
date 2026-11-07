@@ -1014,6 +1014,8 @@ func has_save() -> bool:
 
 
 func save() -> bool:
+	if run != null and run.events != null and run.events.current_shop != null:
+		run.events.current_shop.cancel_table()     # 290：桌上没成交的东西各回各家再存（不然拿着没付钱的货就存进档了）
 	return run != null and not run.is_over() and writable() and RunSave.write(run, save_path) == OK
 
 

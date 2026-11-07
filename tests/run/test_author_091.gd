@@ -60,9 +60,9 @@ static func run_encounter_lost(t: TestCase) -> void:
 	Support.cleanup("091")
 
 
-## 商店回头再逛：刷新次数 / 卖掉的记在节点里，回来价钱接着涨
+## 商店回头再逛：290 起棋盘整块与钱袋记在节点里，买掉的不回来
 static func run_shop_revisit(t: TestCase) -> void:
-	t.begin("091 · 商店可以回头再逛：离开再回来店重开、刷新次数与刷新价接着算（不重置）")
+	t.begin("091 · 商店可以回头再逛：离开再回来店重开，买掉的不回来、商人钱袋接着算（290）")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var found: Dictionary = NodeScreens._seed_with(c, &"shop", kit.items)
@@ -89,11 +89,17 @@ static func run_shop_revisit(t: TestCase) -> void:
 	if s1 == null:
 		Support.cleanup("091")
 		return
-	t.check(s1.refresh() and s1.refresh(), "刷了两次")
-	t.eq(s1.refreshes, 2, "计了两次")
-	var cost_after := s1.refresh_cost()
+	var ware := s1.board.items()[0] as ItemInstance
+	s1.board.remove(ware.uid)     # 拖进自己的包（拖拽层做的事）
+	if not run.board.try_add(ware, true):
+		run.storage.admit(ware)
+	s1.sync()
+	s1.toggle_my_coins()
+	t.check(s1.deal(), "买一件")
+	var left := s1.board.items().size()
+	var purse := s1.purse
 	var node := run.map.get_node(shop)
-	t.eq(int(node.content.get("shop", {}).get("refreshes", -1)), 2, "刷新次数记在节点里")
+	t.eq(int(node.content.get("shop", {}).get("purse", -1)), purse, "商人钱袋记在节点里")
 	s1.leave()
 	t.eq(f.screen, GameFlow.Screen.MAP, "离开回地图")
 	t.check(node.is_visited(), "点用过了")
@@ -103,8 +109,9 @@ static func run_shop_revisit(t: TestCase) -> void:
 	var s2: ShopSession = run.events.current_shop
 	t.check(s2 != null and s2 != s1, "是新一个会话")
 	if s2 != null:
-		t.eq(s2.refreshes, 2, "刷新次数接着算")
-		t.eq(s2.refresh_cost(), cost_after, "刷新价不重置")
+		t.eq(s2.board.items().size(), left, "买掉的不回来")
+		t.check(not s2.board.has_item(ware.uid), "那件不在他棋盘上")
+		t.eq(s2.purse, purse, "钱袋接着算")
 		s2.leave()
 	NodeScreens._settle(f)
 	Support.cleanup("091")

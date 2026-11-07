@@ -242,6 +242,8 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		if inst.is_locked_by_player() and not _quick_allows(inst):
 			_hint_text(UiText.t("item.locked_no") % Names.of(inst.def))     # 230：锁住的不丢地上、不卖、不献
 			return false
+		if quick_target != null and _drag != null and _drag.drop_filter.is_valid() and not bool(_drag.drop_filter.call(inst, quick_target)):
+			return false     # 290：这一屏不收这件（商店：独一的、券、装着东西的包）—— 原因由过滤器说，也不往地上丢
 		if quick_target != null and InventoryService.transfer_auto(_run.board, uid, quick_target):
 			return true
 		if inst.is_locked_by_player():

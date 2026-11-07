@@ -1953,12 +1953,12 @@ static func _validate_loadout_def(def: LoadoutDef, ctx: Context, report: ImportR
 		report.error("items", "开局至少带一个包：棋盘上只有包里的东西参战（3.2），没有包一格都用不了（预设套 preset=true 例外：角色的初始包装它）")
 
 
-## 钱的数全得非负；商店至少一格、至少有一档稀有度能上架；刷新不能越刷越便宜
+## 钱的数全得非负；商店至少一件、至少有一档稀有度能上架
 static func _validate_economy_rules(rules: EconomyRules, report: ImportReport) -> void:
 	_require_id(rules.id, "经济规则", report)
 	for pair in [["reward_base", rules.reward_base],
-			["reward_per_strength", rules.reward_per_strength], ["shop_refresh_cost", rules.shop_refresh_cost],
-			["shop_refresh_step", rules.shop_refresh_step], ["paid_extracts", rules.paid_extracts], ["extract_fee", rules.extract_fee]]:
+			["reward_per_strength", rules.reward_per_strength], ["shop_purse_base", rules.shop_purse_base],
+			["shop_purse_depth", rules.shop_purse_depth], ["paid_extracts", rules.paid_extracts], ["extract_fee", rules.extract_fee]]:
 		if int(pair[1]) < 0:
 			report.error(String(pair[0]), "不能为负")
 	for pair in [["reward_depth_gain", rules.reward_depth_gain], ["reward_difficulty_gain", rules.reward_difficulty_gain],
@@ -1967,8 +1967,8 @@ static func _validate_economy_rules(rules: EconomyRules, report: ImportReport) -
 			report.error(String(pair[0]), "不能为负 —— 越深越少、越难越少不是这个字段的意思")
 	if rules.shop_price_mult <= 0.0:
 		report.error("shop_price_mult", "售价倍数应为正")
-	if rules.shop_slots < 1:
-		report.error("shop_slots", "商店至少摆一件")
+	if rules.shop_stock < 1:
+		report.error("shop_stock", "商店至少摆一件")
 	var any_weight := false
 	for i in rules.shop_rarity_weights.size():
 		if rules.shop_rarity_weights[i] < 0.0:

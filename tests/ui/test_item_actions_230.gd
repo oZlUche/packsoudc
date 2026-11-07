@@ -160,7 +160,7 @@ static func frame_pin_and_lock(t: TestCase, root: Window) -> void:
 
 
 static func frame_shop_buttons(t: TestCase, _root: Window) -> void:
-	t.begin("230 · 商店：栏位商品「买下 N 币」钱不够灰；棋盘上的东西 放到地上 | 锁定、出售 | 出售同类；锁着的不卖、不进出售区、不丢地上")
+	t.begin("230 / 290 · 商店：他的货「拿上秤」画售价；棋盘上的东西 放上秤（画收购价）| 锁定；锁着的不上秤、不丢地上")
 	var c := A087._content()
 	var f := Support.flow(c, PREFIX)
 	var run := f.begin(c.chapter, A087._kit(c), 3)
@@ -191,17 +191,12 @@ static func frame_shop_buttons(t: TestCase, _root: Window) -> void:
 	screen.font = UiPalette.cjk_font()
 	screen.screen = GameFlow.Screen.SHOP
 	screen.open({"node": shop_node, "session": session})
-	var slot0 := session.item_at(0)
-	var shelf: InventoryView = screen.shelf_views()[0]
-	var buy: Array = shelf.actions_for.call(slot0.uid)
-	t.eq(buy.size(), 1, "栏位上一颗")
-	t.eq((buy[0] as ItemActions.Action).label, UiText.t("act.buy") % int(session.stock[0]["price"]), "买下 N 币")
-	t.check((buy[0] as ItemActions.Action).enabled, "钱够：亮")
-	var keep := run.wallet.balance
-	run.wallet.spend(keep, &"test")
-	var poor: ItemActions.Action = shelf.actions_for.call(slot0.uid)[0]
-	t.check(not poor.enabled and poor.reason == UiText.t("act.short"), "钱不够：灰、写钱不够")
-	run.wallet.earn(keep, &"test")
+	var ware := session.board.items()[0] as ItemInstance     # 290：商人一块大棋盘
+	var take: Array = screen.merchant_view().actions_for.call(ware.uid)
+	t.eq(take.size(), 1, "他的货上一颗")
+	t.eq(String((take[0] as ItemActions.Action).id), "take", "拿上秤")
+	t.eq((take[0] as ItemActions.Action).coin, session.tag_price(ware), "按钮上画售价（金币 + 数）")
+	t.check((take[0] as ItemActions.Action).enabled, "亮着（钱够不够天秤上看）")
 	var mine: ItemInstance = null
 	for i in run.board.items():
 		var it := i as ItemInstance
@@ -215,39 +210,39 @@ static func frame_shop_buttons(t: TestCase, _root: Window) -> void:
 		return
 	var acts: Array = screen._inv.board_actions(mine.uid)
 	# 2026-10-22：「不参战」排在锁定之后 —— 会参与战斗的那几件才有（信物与材料没有）
-	var want := ["quick", "lock"]
+	var want := ["offer", "lock"]
 	if mine.def.combat != null and not mine.def.is_anchor():
 		want.append("bench")
-	want.append_array(["sell", "sell_same"])
-	t.eq(acts.map(func(a: ItemActions.Action) -> String: return String(a.id)), want, "放到地上、锁定、（不参战）、出售、出售同类")
+	t.eq(acts.map(func(a: ItemActions.Action) -> String: return String(a.id)), want, "放上秤、锁定、（不参战）")
 	var by_id := {}
 	for a in acts:
 		by_id[String((a as ItemActions.Action).id)] = a
-	t.eq((by_id["quick"] as ItemActions.Action).label, UiText.t("act.drop"), "商店里双击棋盘 = 放到地上")
-	t.check((by_id["quick"] as ItemActions.Action).danger and (by_id["sell"] as ItemActions.Action).danger, "放到地上、出售都要两下")
+	t.eq((by_id["offer"] as ItemActions.Action).coin, session.sell_price_of(mine.def, mine), "放上秤：画收购价")
 	mine.set_locked(true)
 	acts = screen._inv.board_actions(mine.uid)
 	by_id = {}
 	for a in acts:
 		by_id[String((a as ItemActions.Action).id)] = a
-	t.check(not (by_id["quick"] as ItemActions.Action).enabled and not (by_id["sell"] as ItemActions.Action).enabled, "锁着：放到地上、出售都灰")
-	t.check(not screen._inv.quick_move(screen._inv.board_view, mine.uid), "锁着：双击不丢地上")
+	t.check(not (by_id["offer"] as ItemActions.Action).enabled, "锁着：放上秤灰")
+	t.check(not screen._inv.quick_move(screen._inv.board_view, mine.uid), "锁着：双击不上秤")
 	t.check(run.board.has_item(mine.uid), "还在棋盘上")
-	t.check(not screen._allow_drop(mine, session.sell_box), "锁着：不进出售区")
+	t.check(not screen._allow_drop(mine, session.board), "锁着：拖不上他的棋盘")
 	t.check(not screen.drag_layer()._stash_accepts(run.storage, mine), "锁着：拖不到地上")
-	t.eq(screen.sell_now(mine.uid), -1, "锁着：直接卖也不卖")
+	t.check(not screen.offer(mine.uid), "锁着：直接放也不放")
 	mine.set_locked(false)
 	var before := run.wallet.balance
-	var price := session.sell_price_of(mine.def)
-	t.eq(screen.sell_now(mine.uid), price, "解锁：卖了")
-	t.eq(run.wallet.balance, before + price, "进了 %d 币" % price)
+	var price := session.sell_price_of(mine.def, mine)
+	t.check(screen.offer(mine.uid), "解锁：放上秤")
+	t.eq(session.right_total(), price, "右盘 = 收购价")
+	t.eq(screen.ask_change(), price, "点商人钱袋：他找钱")
+	t.check(screen.deal(), "成交")
+	t.eq(run.wallet.balance, before + price, "进了 %d" % price)
 	t.check(not run.board.has_item(mine.uid), "从棋盘上拿走")
 	var notes: Array = []
 	for line in screen.notice_layer()._lines:
 		notes.append((line["scroll"] as NoticeScroll).text)
-	var sold_tail := UiText.t("shop.sold") % Names.of(mine.def) + CoinShort.coin(price)
-	t.check(notes.size() == 1 and String(notes[0]).ends_with(sold_tail), "卖出告示：物品名紧挨句末金币（%s）" % [notes])
-	t.check(String(notes[0]).begins_with(UiText.t("shop.sell_hint") % [UiText.tenths(0.3), UiText.tenths(0.5)]), "第一次卖：比例提示在前，金币不排在提示后面")
+	t.check(notes.size() == 1 and String(notes[0]).begins_with(UiText.t("shop.dealt") % Names.of(mine.def)), "成交告示写物品名（%s）" % [notes])
+	t.check(notes.size() == 1 and String(notes[0]).ends_with(UiText.t("shop.sell_hint") % [UiText.tenths(0.3), UiText.tenths(0.5)]), "第一次卖：比例提示接在后面")
 	screen.free()
 	Support.cleanup(PREFIX)
 

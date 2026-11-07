@@ -1,5 +1,5 @@
 ## 226 批三（读数归位）：叠层窗石板皮的标题条铺石刻标题带 band（铜 / 书 / 帐篷不铺），墨字 20 号从槽左头 18 起；
-## 商店：货架价签换铜挂牌 `PriceTag`（卖掉的盖已售戳、价钱照写），出售区说明换段头签（说明进悬浮窗），顶上「货币 N……」那行删
+## 商店：顶上「货币 N……」那行删；290 起货架价签、出售区都没了，钱写在两只钱袋上
 extends RefCounted
 
 const Keys := preload("res://tests/ui/test_shop_keys.gd")
@@ -27,50 +27,34 @@ static func frame_overlay_band(t: TestCase, root: Window) -> void:
 
 
 static func frame_shop_tags(t: TestCase, root: Window) -> void:
-	t.begin("226 批三 · 商店：价签是铜挂牌（卖掉的盖戳、价钱照写）；出售区是段头签、说明进悬浮窗；没有「货币 N」那行")
+	t.begin("226 批三 / 290 · 商店：两只钱袋在左下、右下角（不压按键），写各自的金币；放上秤的钱从钱袋里扣着写；没有出售区、没有「货币 N」那行")
 	var o := Keys._open(root)
 	var screen = o["screen"]
 	var session: ShopSession = o["session"]
-	var tags: Array = []
-	for i in screen._shelf_views.size():
-		tags.append(screen._shelf_row.get_child(i).get_node_or_null("Price%d" % i))
-	t.check(not tags.is_empty() and tags.all(func(p): return p is PriceTag), "每格一块铜挂牌")
-	var p0: PriceTag = tags[0]
-	t.eq(p0.coin, int(session.stock[0]["price"]), "牌上写价钱（金币式：金币 + 数，不写「币」）")
-	t.check(p0.suffix.contains("×"), "数后面接尺寸（%s）" % p0.suffix)
-	# 作者 10-27（选 B 钱袋）：一只钱袋写当前金币，不压按键
-	var pouch: CoinPouch = screen._pouch
-	t.check(pouch != null and pouch.amount == screen.flow.run.wallet.balance, "钱袋写当前金币")
-	if pouch != null:
-		_lay_out(screen)
-		_lay_out(screen)     # 两遍：外层排好了内层才拿到尺寸
-		var pr := pouch.get_global_rect()
-		var hit: Array = screen.find_children("*", "BaseButton", true, false).filter(func(b): return (b as Control).is_visible_in_tree() and pr.intersects((b as Control).get_global_rect()))
-		t.eq(hit.size(), 0, "钱袋不压按键")
-		# 作者 2026-10-27 17:13：钱袋挪到货架右下角下面（店和背包中间）—— 四分之三袋宽在货架右边线里、四分之一伸出去
-		var shelf_r := (screen._shelf_row.get_parent() as Control).get_global_rect()
-		var out := pr.end.x - shelf_r.end.x
-		t.check(out > 0.0 and out <= pr.size.x * 0.5, "钱袋压在货架右边线上，伸出去不到一半（伸出 %.0f / 袋宽 %.0f）" % [out, pr.size.x])
-		t.check(pr.position.y >= shelf_r.end.y - 0.5, "钱袋在货架下面（%s / %s）" % [pr, shelf_r])
-		var leave: Array = screen.find_children("*", "Button", true, false).filter(func(b): return (b as Button).text == UiText.t("shop.leave"))
-		if not leave.is_empty():
-			t.check(pr.end.y <= (leave[0] as Control).get_global_rect().position.y, "钱袋在按键那行上面")
-	t.check(not p0.sold, "没卖：不盖戳")
-	t.eq(p0.custom_minimum_size.y, PriceTag.HEIGHT, "高 40")
-	var uid: int = session.item_at(0).uid
-	t.check(screen.quick_buy(uid), "买下第一格")
-	var p1 := screen._shelf_row.get_child(0).get_node_or_null("Price0") as PriceTag
-	t.check(p1 != null and p1.sold, "卖掉了：盖戳")
-	if p1 != null:
-		t.eq(p1.coin, int(session.stock[0]["price"]), "价钱照写，不换成「已售」")
-		t.eq(screen._pouch.amount, screen.flow.run.wallet.balance, "买了东西：钱袋跟着变")
-		t.eq(p1.stamp_rect().get_center(), Vector2(p1.size.x, 0.0), "戳中心对准价签右上角")
-	var heads: Array = screen.find_children("*", "HeaderTag", true, false)
-	var sell: HeaderTag = null
-	for h in heads:
-		if (h as HeaderTag).text == "出售区":
-			sell = h
-	t.check(sell != null and sell.tooltip_text.begins_with(UiText.t("shop.sell_tip")), "出售区段头签，说明进悬浮窗")
+	var pouches: Array = screen.pouches()
+	var his: CoinPouch = pouches[0]
+	var mine: CoinPouch = pouches[1]
+	t.eq(mine.amount, screen.flow.run.wallet.balance, "自己的钱袋写当前金币")
+	t.eq(his.amount, session.purse, "商人的钱袋写他的钱")
+	_lay_out(screen)
+	_lay_out(screen)     # 两遍：外层排好了内层才拿到尺寸
+	var hr := his.get_global_rect()
+	var mr := mine.get_global_rect()
+	var hit: Array = screen.find_children("*", "BaseButton", true, false).filter(func(b): return (b as Control).is_visible_in_tree() and (mr.intersects((b as Control).get_global_rect()) or hr.intersects((b as Control).get_global_rect())))
+	t.eq(hit.size(), 0, "钱袋不压按键")
+	var sc: ShopScale = screen.scale_widget()
+	var sr := sc.get_global_rect()
+	t.check(hr.end.x <= sr.position.x + 0.5 and mr.position.x >= sr.end.x - 0.5, "商人钱袋在天秤左边、自己的在右边（%s | %s | %s）" % [hr, sr, mr])
+	var board_r: Rect2 = screen.merchant_view().get_global_rect()
+	t.check(hr.position.y >= board_r.end.y - 0.5 and mr.position.y >= board_r.end.y - 0.5, "两只钱袋都在棋盘下面")
+	var ware := session.board.items()[0] as ItemInstance
+	t.check(screen.take(ware.uid), "拿一件上秤")
+	var paid: int = screen.pay_gap()
+	t.eq(mine.amount, screen.flow.run.wallet.balance - paid, "放上秤的钱从钱袋里扣着写")
+	t.check(screen.deal(), "成交")
+	t.eq(mine.amount, screen.flow.run.wallet.balance, "成交了：钱袋跟着变")
+	var heads: Array = screen.find_children("*", "HeaderTag", true, false).filter(func(h): return (h as HeaderTag).text == "出售区")
+	t.eq(heads.size(), 0, "出售区删了")
 	var bare: Array = screen.find_children("*", "Label", true, false).filter(func(l): return (l as Label).text.begins_with("货币"))
 	t.eq(bare.size(), 0, "顶上「货币 N……」那行删了")
 	screen.free()

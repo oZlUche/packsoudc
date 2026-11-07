@@ -189,7 +189,7 @@ static func run_sources(t: TestCase) -> void:
 
 
 static func run_shop(t: TestCase) -> void:
-	t.begin("160 补一 · 商店「随身」一排：按权重抽、跟着货架刷新、同一次刷新可复现；买了直接进腰带不进棋盘；买过的那格「已售」存在点上")
+	t.begin("160 补一 · 商店「随身」一排：按权重抽、同一家店可复现；放上秤成交才进腰带、不进棋盘；买过的那格「已售」存在点上（290）")
 	var c := CS._content()
 	var s := CS._start(c, null)
 	if s == null:
@@ -205,23 +205,28 @@ static func run_shop(t: TestCase) -> void:
 	shop.belt_grant = s.hooks.belt_grant
 	t.check(shop.belt_offers.size() >= 1 and shop.belt_offers.size() <= economy.belt_picks, "抽了 1 ～ %d 种（%d）" % [economy.belt_picks, shop.belt_offers.size()])
 	var again := ShopSession.new(node, economy, c.items, s.wallet)
-	t.eq(again.belt_offers, shop.belt_offers, "同一家店同一次刷新：一样")
+	t.eq(again.belt_offers, shop.belt_offers, "同一家店：一样")
 	var sid := StringName(String(shop.belt_offers[0]["id"]))
 	var price := int(shop.belt_offers[0]["price"])
 	var money := s.wallet.balance
 	var board_n := s.board.item_count()
-	t.eq(shop.buy_belt(0), "", "买第一格")
+	t.eq(shop.toggle_belt(0), "", "放上秤")
+	t.eq(BeltModule.of(s).count_of(sid), 0, "没成交：还没进腰带")
+	shop.toggle_my_coins()
+	t.check(shop.deal(), "成交")
 	t.eq(BeltModule.of(s).count_of(sid), 1, "进了腰带")
 	t.eq(s.wallet.balance, money - price, "扣了 %d" % price)
 	t.eq(s.board.item_count(), board_n, "棋盘没变")
-	t.eq(shop.buy_belt(0), "没有这一格", "买过的不能再买")
+	t.eq(shop.toggle_belt(0), UiText.t("log.shop_no_slot"), "买过的不能再放")
 	var reopened := ShopSession.new(node, economy, c.items, s.wallet)
 	t.check(reopened.belt_sold.has(0), "回到这家店：那格还是已售")
 	var poor := ShopSession.new(node, economy, c.items, Wallet.new(0))
 	poor.belt_grant = s.hooks.belt_grant
 	if poor.belt_offers.size() > 1:
-		t.eq(poor.can_buy_belt(1), "钱不够", "没钱买不了")
-	t.check(ShopSession.new(node, economy, c.items, s.wallet).can_buy_belt(0) != "", "没接腰带的店：买不了")
+		poor.toggle_belt(1)
+		poor.toggle_my_coins()
+		t.check(not poor.can_deal() and not poor.deal(), "没钱：成交不了")
+	t.check(ShopSession.new(node, economy, c.items, s.wallet).toggle_belt(1) != "", "没接腰带的店：放不上")
 
 
 static func run_belt_icons(t: TestCase) -> void:

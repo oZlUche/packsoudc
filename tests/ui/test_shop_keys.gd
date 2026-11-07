@@ -1,6 +1,5 @@
-## 商店按钮换纸卷（UI替换美术，作者 17:39 定丙）：收起、离开 = 普通纸卷键（宽按字撑，最窄 116）；
-## 刷新 = 币座纸卷键，字只写名字，价钱数字画在金币右边；缺图退回平板按钮，价钱接在字后。
-## 作者 2026-10-27 17:13：随身改成货架下面一块小框（每种一格、带图标、挂价签），钱不够时价钱写红
+## 商店按钮换纸卷（UI替换美术，作者 17:39 定丙）：离开 = 普通纸卷键（宽按字撑，最窄 116）；290：刷新、收起、回购删了，「成交」站在天秤座上。
+## 作者 2026-10-27 17:13：随身是一块小框（每种一格、带图标、挂价签）；290 起点一格放上秤、成交才卖掉
 extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
@@ -33,28 +32,25 @@ static func flow_wallet(screen) -> Wallet:
 
 
 static func frame_scroll_keys(t: TestCase, root: Window) -> void:
-	t.begin("商店纸卷键：收起 / 离开普通键、刷新币座键（字只写名字，数字在币座上）；随身格带图标和价签，卖掉压戳；钱不够价钱写红")
+	t.begin("商店纸卷键（290）：成交站在秤座上、空桌灰；离开普通纸卷键；随身格带图标和价签，点了上秤描金、成交后压戳；两只钱袋点得着")
 	var o := _open(root)
 	var screen = o["screen"]
 	var session: ShopSession = o["session"]
-	var refresh: Button = screen._refresh_btn
-	t.check(refresh is ScrollKey and refresh.coin and refresh.art, "刷新是币座纸卷键")
-	t.eq(refresh.text, "刷新", "字只写「刷新」")
-	t.eq(refresh.price, session.refresh_cost(), "价钱 = 刷新费")
-	var box := refresh.get_theme_stylebox("normal") as StyleBoxTexture
-	t.check(box != null and box.texture == UiTheme.art_cached("shop/key_coin_normal"), "币座键的图")
-	if box != null:
-		t.eq([box.texture_margin_left, box.texture_margin_right], [20.0, 96.0], "九宫格：右边币座 96 不拉")
-		t.eq(box.content_margin_right, 26.0 + 90.0 - 2.0, "字让开币座")
-	t.eq(refresh.price_at(), Vector2(refresh.size.x - 90.0 + 37.0, 28.0), "数字在币座左沿 + 37")
-	var keys: Array = refresh.get_parent().get_children().filter(func(k: Control) -> bool: return k.visible)     # 277：没卖过时【回购】不露
-	t.eq(keys.size(), 3, "刷新、收起、离开一排")
-	for k: Button in keys.slice(1):
-		t.check(k is ScrollKey and not k.coin and k.art, "「%s」普通纸卷键" % k.text)
-		t.check(k.get_combined_minimum_size().x >= 116.0, "「%s」最窄 116" % k.text)
+	var deal: Button = screen.deal_key()
+	t.check(deal is ScrollKey and deal.art, "成交是纸卷键")
+	t.eq(deal.text, "成交", "字写「成交」")
+	t.check(deal.get_parent() == screen.scale_widget(), "站在天秤上")
+	t.check(deal.disabled, "空桌：成交灰")
+	var leave: Array = screen.find_children("*", "Button", true, false).filter(func(b): return (b as Button).text == UiText.t("shop.leave"))
+	t.eq(leave.size(), 1, "一枚离开键")
+	if not leave.is_empty():
+		var k: Button = leave[0]
+		t.check(k is ScrollKey and not k.coin and k.art, "离开是普通纸卷键")
+		t.check(k.get_combined_minimum_size().x >= 116.0, "最窄 116")
 		t.eq(k.get_combined_minimum_size().y, 56.0, "高 56")
-	t.eq(keys[1].text, "收起", "收起")
-	t.eq(keys[2].text, "离开", "离开")
+	t.check(screen.find_children("*", "Button", true, false).all(func(b): return (b as Button).text not in ["刷新", "收起", "回购"]), "刷新、收起、回购都没了")
+	for p: CoinPouch in screen.pouches():
+		t.check(p.clickable and p.mouse_filter == Control.MOUSE_FILTER_STOP and p.tooltip_text != "", "钱袋点得着、有说明")
 	var belt: Array = screen._belt_btns
 	t.check(belt.size() > 0, "有随身格")
 	if belt.is_empty():
@@ -63,52 +59,44 @@ static func frame_scroll_keys(t: TestCase, root: Window) -> void:
 		return
 	var b0: Control = belt[0]
 	var def := BeltSkillDef.find(StringName(String(session.belt_offers[0]["id"])))
-	t.check("sold" in b0 and "def" in b0, "随身格是 BeltTile（作者 17:13：货架下面一块小框，每种一格）")
+	t.check("sold" in b0 and "def" in b0, "随身格是 BeltTile")
 	t.eq(b0.def, def, "格里是这件随身技能")
 	t.not_null(b0._icon, "画定稿图标")
 	var tag := screen._belt_row.get_child(0).get_node_or_null("BeltPrice0") as PriceTag
 	t.not_null(tag, "格下挂价签")
 	if tag != null:
 		t.eq(tag.coin, int(session.belt_offers[0]["price"]), "价签写价钱")
-		t.check(not tag.sold and not tag.poor, "没卖、钱够：墨色、不压戳")
-	t.check(not b0.sold, "没卖：亮")
-	t.eq(screen.buy_belt(0), "", "买下")
+		t.check(not tag.sold, "没卖：不压戳")
+	t.eq(screen.toggle_belt(0), "", "点一下：上秤")
+	t.check(b0.on_table and not b0.sold, "上秤：描金")
+	t.eq(screen.scale_widget().left, int(session.belt_offers[0]["price"]), "左盘写它的价")
+	t.check(deal.disabled, "右盘轻：成交灰")
+	t.eq(screen.pay_gap(), int(session.belt_offers[0]["price"]), "点自己的钱袋：补上差价")
+	t.check(not deal.disabled, "够了：成交亮")
+	t.check(screen.deal(), "成交")
 	b0 = screen._belt_btns[0]
 	tag = screen._belt_row.get_child(0).get_node_or_null("BeltPrice0") as PriceTag
-	t.check(b0.sold, "卖掉了：格变灰")
-	t.check(tag != null and tag.sold and not tag.poor, "卖掉了：价签压已售、不写红")
-	var cash := flow_wallet(screen)
-	cash.spend(cash.balance - 1, &"test")
-	screen._refresh()
-	if screen._belt_btns.size() > 1:
-		var tag1 := screen._belt_row.get_child(1).get_node_or_null("BeltPrice1") as PriceTag
-		t.check(tag1 != null and tag1.poor and not tag1.sold, "钱不够：随身价签写红（作者 17:14「红色」）")
-	var shelf_tag := screen._shelf_row.get_child(0).get_node_or_null("Price0") as PriceTag
-	t.check(shelf_tag != null and (shelf_tag.poor or shelf_tag.sold), "钱不够：货架价签写红")
-	t.check((refresh as ScrollKey).poor, "钱不够：刷新币座价钱写红")
-	cash.earn(1000, &"test")
-	screen._refresh()
-	t.check(not (refresh as ScrollKey).poor and (shelf_tag == null or not shelf_tag.poor), "钱又够了：回墨色")
+	t.check(b0.sold and not b0.on_table, "卖掉了：格变灰")
+	t.check(tag != null and tag.sold, "卖掉了：价签压已售")
 	UiText.lang = "en"
-	screen._refresh()
-	t.eq(refresh.text, "Restock", "英文：Restock")
+	t.eq(UiText.t("shop.deal"), "Deal", "英文：Deal")
 	UiText.lang = "zh"
 	screen.free()
 	Support.cleanup(PREFIX)
 
 
 static func frame_scroll_keys_fallback(t: TestCase, root: Window) -> void:
-	t.begin("商店纸卷键缺图：退回平板按钮，价钱接在字后；随身格卖掉写「已售」")
+	t.begin("商店纸卷键缺图：退回平板按钮；天秤画铜色占位；随身格卖掉写「已售」")
 	var keep := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
 	var o := _open(root)
 	var screen = o["screen"]
-	var session: ShopSession = o["session"]
-	var refresh: Button = screen._refresh_btn
-	t.check(not (refresh is ScrollKey), "平板按钮")
-	t.eq(refresh.text, "刷新 %d" % session.refresh_cost(), "字后接价钱")
+	t.check(not (screen.deal_key() is ScrollKey), "成交是平板按钮")
+	t.not_null(screen.scale_widget(), "天秤照画（占位）")
 	if not screen._belt_btns.is_empty():
-		screen.buy_belt(0)
+		screen.toggle_belt(0)
+		screen.pay_gap()
+		screen.deal()
 		var tag := screen._belt_row.get_child(0).get_node_or_null("BeltPrice0") as PriceTag
 		t.check(screen._belt_btns[0].sold and tag != null and tag.sold, "随身格卖掉：格变灰、价签写「已售」")
 	screen.free()
@@ -116,19 +104,18 @@ static func frame_scroll_keys_fallback(t: TestCase, root: Window) -> void:
 	Support.cleanup(PREFIX)
 
 
-## 277 第 4 条：【回购】—— 这次进店卖掉的、最近那件原价买回；离开商店就清掉
+## 277 第 4 条「回购」290 起自然成立：这次卖给他的挂你拿到的价，拿回来原价；离开就按正常售价
 static func frame_buyback(t: TestCase, root: Window) -> void:
-	t.begin("277 · 回购：卖了才露、写卖价；按一下原价买回最近那件（进包或地上）；离开清掉")
+	t.begin("277 / 290 · 回购：卖给他的这次进店挂你拿到的价；拿回来钱回到卖之前；离开清掉")
 	var o := _open(root)
 	var screen = o["screen"]
 	var session: ShopSession = o["session"]
-	var key: Button = screen._buyback_btn
-	t.check(key != null and not key.visible, "没卖过：不露")
 	var run: RunState = screen.flow.run
 	var inst: ItemInstance = null
 	for it in run.board.items():
-		if screen._cant_sell(it) == "" and not (it as ItemInstance).is_locked_by_player() and not (it as ItemInstance).def.is_bag:
-			inst = it
+		var ii := it as ItemInstance
+		if session.refuse_reason(ii) == "" and not ii.def.is_bag:
+			inst = ii
 			break
 	t.not_null(inst, "棋盘上有一件能卖的")
 	if inst == null:
@@ -136,15 +123,24 @@ static func frame_buyback(t: TestCase, root: Window) -> void:
 		Support.cleanup(PREFIX)
 		return
 	var before := run.wallet.balance
-	var gain: int = screen.sell_now(inst.uid)
-	t.check(gain >= 0 and run.wallet.balance == before + gain, "卖掉进账")
-	t.check(key.visible and key.price == gain, "卖了：露出来，写卖价")
-	t.check(screen.buy_back(), "按回购")
+	t.check(screen.offer(inst.uid), "放上他的棋盘")
+	t.check(screen.pending(inst.uid), "染待成交色")
+	var gain := session.right_total()
+	t.check(gain > 0, "右盘写收购价")
+	screen.ask_change()
+	t.check(screen.deal(), "成交")
+	t.eq(run.wallet.balance, before + gain, "进账")
+	t.check(not screen.pending(inst.uid), "色褪了")
+	t.eq(session.tag_price(session.board.get_item(inst.uid)), gain, "挂你拿到的价")
+	t.check(screen.take(inst.uid), "拿回来")
+	t.eq(session.left_total(), gain, "左盘 = 原价")
+	screen.pay_gap()
+	t.check(screen.deal(), "成交")
 	t.eq(run.wallet.balance, before, "原价买回：钱回到卖之前")
 	t.check(run.board.has_item(inst.uid) or run.storage.has_item(inst.uid), "那件回来了（包里或地上）")
-	t.check(not key.visible, "回购栏空了：又藏起来")
-	screen.sell_now(inst.uid)
+	screen.offer(inst.uid)
+	screen.deal()
 	session.leave()
-	t.check(session.buyback.is_empty(), "离开商店：清掉")
+	t.check(session.resale.is_empty(), "离开商店：清掉")
 	screen.queue_free()
 	Support.cleanup(PREFIX)

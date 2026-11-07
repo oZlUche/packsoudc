@@ -160,6 +160,11 @@ func source() -> ItemContainer:
 	return _source if _inst != null else null
 
 
+## 290：正在拖的是一个装着东西的包（内容物跟着走）。商店屏靠它不让装着东西的包上桌
+func carrying_contents() -> bool:
+	return _inst != null and not _payload.is_empty()
+
+
 ## 审查 A2：这个拖拽层现在能不能接抓取 —— 在树里、看得见、没停掉。收起（最小化）的叠层藏起来并停用，
 ## 它的拖拽层不能再从地上抓东西（否则东西挂在藏起来的手里，那一屏一释放就没了）。不在树里（测试）算能
 static func is_live(drag: DragLayer) -> bool:

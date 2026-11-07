@@ -265,3 +265,13 @@ static func run_ticket_bulk_sell(t: TestCase) -> void:
 		return 30)
 	t.check(not act.enabled and act.reason == UiText.t("act.ticket"), "灰着：券不能出售（%s）" % act.reason)
 	t.eq(act.coin, -1, "不挂价钱")
+
+
+static func frame_locked_tag_ink(t: TestCase, root: Window) -> void:
+	t.begin("285 · 锁着的预设挂牌：名字与 ×1 按 SETUP_TAB_LOCKED_INK 原色写在木牌上，不跟页面深浅压暗（UI设计 11-07）")
+	var tag := PresetTag.make("精锐", 0, null, false, true)
+	root.add_child(tag)
+	t.check(tag.disabled, "没券：锁着")
+	t.eq(tag.name_label.get_theme_color("font_color"), UiTheme.SETUP_TAB_LOCKED_INK, "名字原色")
+	t.check(not tag.name_label.has_meta(&"dark_color"), "不挂语义色重算")
+	tag.free()

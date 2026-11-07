@@ -11,12 +11,12 @@ display_names = {
 }
 category = &"map"
 order = 2
-text = "商店的货架是一格格栏位，商品是真的道具，看得见尺寸。把商品拖进自己的包就是买，放手时收钱，钱不够弹回架上；双击也是买，自动找位。把自己的东西拖进出售区就是卖，回定价的三成（带回基地卖是五成）。卖错了按「回购」，原价买回最近卖掉的那件；离开商店就不能回购了。价格按道具的价值乘倍数，深处的店货更稀有。
+text = "商人有一整块棋盘，货进店时就全摆出来，卖掉就空着，不会刷新。中间下方是一座天秤：左盘是你拿的货的售价，右盘是你给的东西加上你放的钱，重的那边往下沉。把商人的货拖进自己的包就是放上秤，把自己的东西拖进商人的棋盘也是；双击自动找位，右键拿回来。你给的东西回定价的三成（带回基地卖是五成）。锁住的、独一的、随身之物不能上秤，装着东西的包先倒空。
 
-刷新花钱换一批，每刷一次更贵。商店可以回头再逛：走了再回来，货架、刷新次数和卖掉的格子都还记着，刷新价不重置。珍宝不上架，货架上有时会摆一个包。局外的加成能让商店便宜一点。"
+点自己的钱袋，把差的钱补上秤；右盘更重时点商人的钱袋让他找钱，不点就是白送。商人的钱有限，越深的店越有钱。秤平了或右盘更重，按天秤下的「成交」。离开时秤上的东西各回各家；刚卖给他的东西，这次进店还能按你拿到的价买回来。棋盘上有时会摆一个包，珍宝不上架。局外的加成能让商店便宜一点。"
 texts = {
-"en": "The Shop's shelves are grids of slots, and the wares are real items, so you can see their size. Dragging a ware into one of your bags buys it: you pay when you let go, and if you can't afford it, it snaps back to the shelf. Double-clicking also buys, finding a place for it automatically. Dragging your own things into the sell area sells them for three tenths of their price (half if you take them back to base). Sold the wrong thing? Press Buy back to get the most recent sale back at the price you got; once you leave the Shop, buy-back is gone. Prices are an item's Value times a multiplier, and shops deeper in stock rarer goods.
+"en": "The merchant has a whole board, and every ware is laid out when you walk in; what you buy stays gone, and nothing restocks. Below the middle stands a scale: the left pan holds the price of what you take, the right pan what you give plus any coins you put down, and the heavier side sinks. Drag a ware into your own bag to put it on the scale, or drag your own things onto the merchant's board; double-click finds a place automatically and right-click takes it back. What you give counts for three tenths of its price (half if you take it back to base). Locked, unique and keepsake items can't go on the scale, and a bag has to be emptied first.
 
-Refreshing costs coins and brings a new selection, and each refresh costs more than the last. You can come back to a shop: leave and return, and it still remembers its shelves, how many times you refreshed and which slots are sold out; the refresh price doesn't reset. Treasures are never for sale; sometimes a shelf holds a Bag. Bonuses from between runs can make shops a little cheaper."
+Click your pouch to put the missing coins on the scale; when the right pan is heavier, click the merchant's pouch to have him give change, or the extra is a gift. Merchants only carry so much, and deeper shops carry more. Once the pans are even or the right one is heavier, press Deal under the scale. Leaving sends everything on the scale back where it came from; something you just sold him can be bought back this visit for what you got. Sometimes a Bag lies on the board; treasures are never for sale. Bonuses from between runs can make shops a little cheaper."
 }
 related = Array[String](["quick_place", "node_types"])

@@ -164,7 +164,7 @@
 | `ItemDef` | `dormant_keeps_combat` | 信仰道具休眠时保不保留自己的战斗定义（通用效果：盾的减伤、武器的攻击力；默认 true）；没有 combat 的护符休眠即彻底失效（087） |
 | `DropRule` | `boss_rarity` | 击败核心点 BOSS 保底掉一件这个稀有度的（4 = 金；-1 不保底），不看它身上有没有（087） |
 | `NodeRules` | `boss_extracts` | BOSS 倒下、收完战利品直接撤离结算（087，默认开） |
-| `EconomyRules` | `shop_sell_ratio` | 卖给店里回定价的几成（087，一半）；`shop_slots` 个栏位每格一块 ≥ 3×4 的小棋盘 |
+| `EconomyRules` | `shop_sell_ratio` | 卖给店里回定价的几成（087，一半；290 起是天秤右盘的收购价）；`shop_stock` 件一次摆在商人 8 × 6 棋盘上，`shop_purse_base` + `shop_purse_depth` × 深度 = 商人钱袋 |
 | 稀有度 | 0 白 / 1 绿 / 2 蓝 / 3 紫 / 4 金 / 5 红 | 087 作者定；按稀有度下标的表（掉落率、商店权重、揭示耗时）都是六档，超出按最后一档 |
 | `ChapterDef` | `step_limit` `closing_extract` `safes` | 全局倒计时（行动点，0 = 没有；归零 = 行动失败 `time_out`）；过半关掉离出生点最近的免费撤离点（`node.content.closes_at`）；这一章几个保险箱点（092） |
 | `NodeRules` | `event_groups` | 成组限量的事件（093）：`{组: {max_per_map, early, chance, events: {id: 权重}}}`；「触发信仰」每图最多一位神、偏前期、必出现（chance 1.0） |

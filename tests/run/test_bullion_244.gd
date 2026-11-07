@@ -8,13 +8,18 @@ const Grid := preload("res://tests/meta/test_meta_grid.gd")
 const Comp := preload("res://tests/battle/test_compiler.gd")
 
 
-static func _bullion_slots(s: ShopSession) -> int:
-	var n := 0
-	for slot in s.stock:
-		var d := s.items.get_def(StringName(String(slot["id"])))
+## 290：商人棋盘上的金银（id 列表）
+static func _bullion_on(s: ShopSession) -> Array[String]:
+	var out: Array[String] = []
+	for v in s.board.items():
+		var d := (v as ItemInstance).def
 		if d != null and d.is_bullion():
-			n += 1
-	return n
+			out.append(String(d.id))
+	return out
+
+
+static func _board_ids(s: ShopSession) -> Array:
+	return s.board.items().map(func(v): return [String((v as ItemInstance).def.id), (v as ItemInstance).origin])
 
 
 const BULLION := [
@@ -54,7 +59,7 @@ static func run_sources(t: TestCase) -> void:
 
 
 static func run_shelf(t: TestCase) -> void:
-	t.begin("244 补充一 · 商店：概率 1 每次恰一格金银、概率 0 没有；外环只出银与金块、内环只出金与大银锭；同一家店刷出来的一样")
+	t.begin("244 补充一 · 商店：概率 1 每次恰一件金银、概率 0 没有；外环只出银与金块、内环只出金与大银锭；同一家店摆的一样")
 	var items := Economy._items()
 	var rules := Economy._rules()
 	rules.bullion_slot_chance = 1.0
@@ -63,10 +68,12 @@ static func run_shelf(t: TestCase) -> void:
 	for seed_ in 80:
 		for k in 2:
 			var s := ShopSession.new(Economy._shop_node(seed_), rules, items, Wallet.new(0), float(k))
-			if _bullion_slots(s) != 1 or s.stock.size() != rules.shop_slots:
+			var golds := _bullion_on(s)
+			if golds.size() != 1:
 				exact = false
-			seen[k][String(s.stock[0]["id"])] = true
-	t.check(exact, "概率 1：每次恰一格金银，货架格数不变")
+			else:
+				seen[k][golds[0]] = true
+	t.check(exact, "概率 1：每次恰一件金银")
 	var shallow: Array = seen[0].keys()
 	var deep: Array = seen[1].keys()
 	shallow.sort()
@@ -77,11 +84,11 @@ static func run_shelf(t: TestCase) -> void:
 	t.check(is_equal_approx(float(mid[&"gold_nugget"]), 1.0) and is_equal_approx(float(mid[&"silver_nugget"]), 0.5) and is_equal_approx(float(mid[&"gold_ingot"]), 0.5),
 		"中间按深度线性混合（%s）" % mid)
 	var again := ShopSession.new(Economy._shop_node(7), rules, items, Wallet.new(0), 0.5)
-	t.eq(ShopSession.new(Economy._shop_node(7), rules, items, Wallet.new(0), 0.5).stock, again.stock, "同一家店同一次刷新摆的一样")
+	t.eq(_board_ids(ShopSession.new(Economy._shop_node(7), rules, items, Wallet.new(0), 0.5)), _board_ids(again), "同一家店摆的一样")
 	rules.bullion_slot_chance = 0.0
 	var none := true
 	for seed_ in 30:
-		if _bullion_slots(ShopSession.new(Economy._shop_node(seed_), rules, items, Wallet.new(0), 0.5)) != 0:
+		if not _bullion_on(ShopSession.new(Economy._shop_node(seed_), rules, items, Wallet.new(0), 0.5)).is_empty():
 			none = false
 	t.check(none, "概率 0：没有金银")
 

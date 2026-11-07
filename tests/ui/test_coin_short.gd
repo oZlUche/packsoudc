@@ -31,11 +31,11 @@ static func frame_surfaces(t: TestCase, root: Window) -> void:
 	var plain := NoticeScroll.make("仓库放不下")
 	root.add_child(plain)
 	t.check(plain.coin() == null, "别的告示不带金币")
-	var bought := NoticeScroll.make(UiText.t("shop.bought") % "腰包" + CoinShort.coin(5))     # 11-04：买卖告示的钱画金币
+	var bought := NoticeScroll.make(UiText.t("shop.gap_short") + CoinShort.coin(5))     # 11-04：告示的钱画金币（290：「还差」）
 	root.add_child(bought)
-	t.check(bought.coin() != null and not bought.coin().short and bought.coin().amount == 5, "买下：句末一枚金币 + 5（不是红的）")
+	t.check(bought.coin() != null and not bought.coin().short and bought.coin().amount == 5, "还差：句末一枚金币 + 5（不是红的）")
 	t.check(not bought.label().text.contains("[coin") and not bought.label().text.contains("币") and not bought.label().text.contains("coin"), "字里不写「币」、没有记号：%s" % bought.label().text)
-	for key in ["shop.bought", "shop.sold", "meta.sold_one", "meta.sold_many"]:
+	for key in ["shop.dealt", "shop.gap_short", "shop.gap_change", "shop.gap_cant_pay", "meta.sold_one", "meta.sold_many"]:
 		for lang in ["zh", "en"]:
 			t.check(not String(UiText.TEXT[key][lang]).contains("币") and not String(UiText.TEXT[key][lang]).contains("coin"), "%s/%s 不写钱字" % [key, lang])
 	var a := ItemActions.make(&"buy", UiText.t("act.buy_coin"), Callable())

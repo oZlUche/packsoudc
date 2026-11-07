@@ -39,7 +39,7 @@ func _build(title: String, price: int, ticket: Texture2D, has_ticket: bool, is_a
 	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	col.offset_top = 14.0     # 挂绳那截不写字
 	add_child(col)
-	name_label = UiTheme.make_label(title, NAME_FONT, ink)
+	name_label = _plate_label(title, NAME_FONT, ink)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(name_label)
@@ -72,9 +72,16 @@ func _build(title: String, price: int, ticket: Texture2D, has_ticket: bool, is_a
 		pic.modulate = Color(1, 1, 1, 0.55) if disabled else Color.WHITE
 		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		ticket_row.add_child(pic)
-		var n := UiTheme.make_label(UiText.t("setup.preset_ticket"), SMALL_FONT, ink)
+		var n := _plate_label(UiText.t("setup.preset_ticket"), SMALL_FONT, ink)
 		n.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		ticket_row.add_child(n)
+
+
+## 字写在木牌上，不跟页面的深浅走（浅底会把语义色压暗：UI设计 11-07 量到锁着的名字只剩 #716654）
+static func _plate_label(text: String, font_size: int, ink: Color) -> Label:
+	var l := UiTheme.make_label(text, font_size, ink)
+	l.remove_meta(&"dark_color")
+	return l
 
 
 ## 小锁（同仓库页签锁着那把）

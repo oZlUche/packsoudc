@@ -1070,10 +1070,9 @@ func _wire_events() -> void:
 	events.search_closed.connect(func(_n: MapNode, haul: GridInventory, _why: StringName): drop_seen_haul(haul))     # 作者 2026-10-16：不再弹战利品屏
 	events.shop_opened.connect(func(_n: MapNode, session: ShopSession):
 		if session != null:
-			# 087：双击 / 按钮买的（inst 由会话交出来）先试着进包、放不下到地上；拖着买的已经在玩家手里了（inst 为 null）
-			session.bought.connect(func(_def: ItemDef, _price: int, inst: ItemInstance):
-				if inst != null and not board.try_add(inst, true):
-					storage.admit(inst)))
+			# 290：桌上退回的东西回自己的棋盘、放不下到地上
+			session.home_board = board
+			session.home_ground = storage)
 	events.event_resolved.connect(func(_n: MapNode, _outcome: StringName, detail: Dictionary):
 		# 157：收到地上的那几件 uid 记回 detail —— 事件结果页的「收获」行按它把这几件摆出来
 		var uids: Array = []
@@ -1283,6 +1282,18 @@ func meta_buff_ids() -> Array:
 ## 读回来。章节、内容库由调用方给（[RunSave] 按 id 取章节）。开着的商店 / 搜索会话不存：
 ## 存档那一刻视为离开了那个点（随时可以离开，5.4）
 ## 173：[param report] 给了就记下放不回原位、挪到地上（或折钱）的道具；模块读档时也用它（[member repair]）
+## 290：节点里存着的商人棋盘（[ShopSession] 的 v2 存档），把里面的 uid 都占上
+static func _reserve_shop_uids(p_map: MapGraph) -> void:
+	if p_map == null:
+		return
+	for k in p_map.nodes:
+		var node := p_map.nodes[k] as MapNode
+		var saved: Variant = node.content.get("shop", null) if node != null else null
+		if saved is Dictionary and (saved as Dictionary).get("board", null) is Dictionary:
+			for raw in (saved["board"] as Dictionary).get("items", []):
+				ItemInstance.reserve_uid_above(int((raw as Dictionary).get("uid", 0)))
+
+
 static func from_dict(
 	d: Dictionary, p_chapter: ChapterDef, p_items: ItemDatabase, p_enemies: EnemyDatabase, p_sets: SetDatabase = null,
 	report: SaveReport = null
@@ -1302,6 +1313,7 @@ static func from_dict(
 	s.sets = p_sets
 	s._resolve_rules()
 	s.map = MapGraph.from_dict(d.get("map", {}))
+	_reserve_shop_uids(s.map)     # 290：开过的店，棋盘上的道具存在节点里 —— 之后新建的 uid 别和它们撞号
 	s.travel = MapTravel.from_dict(d.get("travel", {}), s.map)
 	s.vitality = Vitality.from_dict(d.get("vitality", {}))
 	s.wallet = Wallet.from_dict(d.get("wallet", {}))

@@ -194,7 +194,13 @@ static func run_loot_and_shop(t: TestCase) -> void:
 		var session := s.events.current_shop
 		t.not_null(session, "店开了")
 		if session != null:
-			t.not_null(session.buy(session.available()[0]), "买一件")
+			var ware := session.board.items()[0] as ItemInstance     # 290：拖进自己的包（拖拽层做的事），补钱，成交
+			session.board.remove(ware.uid)
+			if not s.board.try_add(ware, true):
+				s.storage.admit(ware)
+			session.sync()
+			session.toggle_my_coins()
+			t.check(session.deal(), "买一件")
 			t.eq(s.storage.item_count() + s.board.item_count(), before + 1, "买的东西进了包（放不下到地上，087）")
 			s.close_sessions()
 			t.check(s.events.current_shop == null, "关门")

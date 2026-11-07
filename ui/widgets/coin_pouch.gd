@@ -1,8 +1,11 @@
 ## 商店：玩家当前金币（作者 10-27 选 B 钱袋，14:09 挪到左下角 —— 商店左栏下排按键右边、背包栏左边那块空地）。
 ## 立着的皮钱袋（`shop/coin_pouch`）+ 袋前一张小纸签（`shop/coin_slip`，九宫格横向拉），签上写「金币 + 数」（[CoinLabel]，墨字）。
-## 钱袋底压在纸签后面 [constant OVERLAP]。点不着；钱数就写在签上，不开悬浮窗
+## 钱袋底压在纸签后面 [constant OVERLAP]。钱数就写在签上，不开悬浮窗。
+## 290：商店里两只钱袋点得着（[member clickable]）—— 点自己的补差额、点商人的让他找钱（[signal pressed]）
 class_name CoinPouch
 extends Control
+
+signal pressed
 
 const POUCH_ART := "shop/coin_pouch"
 const SLIP_ART := "shop/coin_slip"
@@ -22,6 +25,13 @@ var amount := 0:
 		_label.amount = v
 		_fit()
 
+## 290：点得着（光标变手、左键发 [signal pressed]）
+var clickable := false:
+	set(v):
+		clickable = v
+		mouse_filter = Control.MOUSE_FILTER_STOP if v else Control.MOUSE_FILTER_IGNORE
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if v else Control.CURSOR_ARROW
+
 var _label: CoinLabel = null
 var _slip: StyleBoxTexture = null
 
@@ -33,6 +43,12 @@ func _init() -> void:
 	add_child(_label)
 	_slip = UiTheme.art_box(SLIP_ART)
 	_fit()
+
+
+func _gui_input(e: InputEvent) -> void:
+	if clickable and e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+		pressed.emit()
+		accept_event()
 
 
 func _pouch_size() -> Vector2:
