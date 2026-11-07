@@ -1,5 +1,5 @@
 ## 279 第五步：休息点的砧 —— 武器 + 一类材料配上升级配方就能锤；材料高几档出件就几档品质；每座砧免费一次；
-## 营地的砧 = 背包窗右栏换成砧（两个槽、锤键、出件槽、便条）；道具悬浮窗多一行「可升为」
+## 营地的砧（286 起）= 「铁炉」两栏屏的左栏（两个槽、锤键、出件槽、便条）；道具悬浮窗多一行「可升为」
 extends RefCounted
 
 const GAME := "res://ui/game/game.tscn"
@@ -74,7 +74,7 @@ static func run_tooltip(t: TestCase) -> void:
 
 
 static func frame_camp_anvil(t: TestCase, root: Window) -> void:
-	t.begin("279 第五步 · 营地的砧：底下多一个「砧」键，按下背包窗右栏换成砧；只放武器便条列升级，两件都放出淡影与说明；锤完键灰、关窗槽里的回背包")
+	t.begin("286 §2.2 · 营地的砧挪进「铁炉」：营地没有占位键「砧」；点铁炉进两栏屏，左栏是砧 —— 状态句、配不上红框一句、锤完灰；返回槽里的回背包；两栏都用过开不了")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	Support.cleanup("anvil279_ui")
@@ -87,42 +87,90 @@ static func frame_camp_anvil(t: TestCase, root: Window) -> void:
 	flow.chapters = [c.chapter] as Array[ChapterDef]
 	var node := F175._rest_next_to_spawn(flow, c, kit)
 	t.check(node != null and flow.step_to(node.id), "走上休息点")
+	t.eq(NodeEvents.effective_type(node), &"rest", "休息点的类型是 rest（resolved_type 不翻）")
+	var camp = game.overlay()
+	t.check(camp != null and camp.has_method("piece") and not camp.has_method("anvil_key"), "营地屏，没有占位键「砧」")
+	var keys := 0
+	if camp != null:
+		for b in (camp as Node).find_children("*", "Button", true, false):
+			keys += 1 if (b as Button).text == UiText.t("camp.anvil") else 0
+	t.eq(keys, 0, "屏上没有写着「砧」的键")
+	t.check(camp != null and camp.has_method("click") and camp.click(&"forge"), "点铁炉")
 	var screen = game.overlay()
-	if screen == null or not screen.has_method("anvil_key"):
-		t.check(false, "叠层是营地屏")
+	if screen == null or not screen.has_method("anvil"):
+		t.check(false, "进了铁炉两栏屏")
 		game.queue_free()
 		Support.cleanup("anvil279_ui")
 		return
-	var key: Button = screen.anvil_key()
-	t.check(key != null and not key.disabled, "有「砧」键、能按")
-	screen.toggle_anvil()
 	var col: AnvilColumn = screen.anvil()
-	t.check(col != null and col.is_visible_in_tree(), "背包窗右栏换成砧")
-	if col == null:
-		game.queue_free()
-		Support.cleanup("anvil279_ui")
-		return
+	t.check(col != null and col.is_visible_in_tree(), "左栏是砧")
+	t.check(col.get_global_rect().intersection(screen.spot_rect("bag")).get_area() == 0.0 and Rect2(Vector2.ZERO, screen.size).encloses(col.get_global_rect()), "砧不压背包、不出屏（%s）" % col.get_global_rect())
+	for i in 3:
+		t.check(col.get_global_rect().intersection(screen.slot_view(i).get_global_rect()).get_area() == 0.0, "砧不压铸炉的槽 %d" % i)
+	t.eq(col.status_text(), UiText.t("anvil.free"), "状态：免费一次")
 	var before := flow.run.board.item_count()
 	var sword := _inst(flow.items, &"broadsword")
 	t.check(col.weapon_slot.try_add(sword, true), "武器槽放阔剑")
 	t.check(not col.weapon_slot.accepts(flow.items.get_def(&"beast_claw")), "武器槽不收材料")
 	var note := col.note_text()
 	t.check(note.contains(Names.of(flow.items.get_def(&"bone_broadsword"))) and note.contains(ItemMaterials.name_of(&"bone")), "便条：列出骨柄阔剑、要骨（%s）" % note.replace("\n", " | "))
-	t.check(col.strike_key.disabled, "只有武器：锤键灰")
-	t.check(col.material_slot.try_add(_inst(flow.items, &"beast_claw"), true), "材料槽放兽爪")
+	t.check(col.strike_key.disabled and not col.material_warned(), "只有武器：锤键灰、不红")
+	var hide := _inst(flow.items, &"beast_hide")
+	t.check(col.material_slot.try_add(hide, true), "材料槽放兽皮（皮，配不上）")
+	t.check(col.material_warned(), "配不上：材料槽红框")
+	t.check(col.note_text().begins_with(Glossary.strip_bbcode(UiPalette.toned(AnvilColumn.need_line(Anvil.upgrades_for(sword.def, flow.smith_recipes)[0]), UiTheme.TONE_LIGHT))), "便条头一句：要【骨】≥ 绿（%s）" % col.note_text().get_slice("\n", 0))
+	t.check(col.strike_key.disabled, "配不上：锤键灰")
+	col.material_slot.remove(hide.uid)
+	t.check(col.material_slot.try_add(_inst(flow.items, &"beast_claw"), true), "换成兽爪")
+	t.check(not col.material_warned(), "配上了：红框收")
 	t.check(col.preview() != null and col.preview().quality() == 1, "预览 1 档")
 	t.check(col._note.text.contains(ItemTooltip.QUALITY_BADGE), "便条换成出件的说明（带金菱）")
 	t.check(not col.strike_key.disabled, "两件配上：锤键亮")
 	var made := col.strike()
 	t.check(made != null and col.out.has_item(made.uid), "锤：出件进出件槽")
 	t.check(col.weapon_slot.item_count() == 0 and col.material_slot.item_count() == 0, "两件消耗")
-	t.check(col.strike_key.disabled and col.note_text().contains(UiText.t("anvil.used")) == false, "出件槽有东西：锤键灰")
-	screen.toggle_anvil()
-	t.check(screen.anvil() == null, "再按：关窗")
+	t.check(col.strike_key.disabled, "出件槽有东西：锤键灰")
+	t.eq(col.status_text(), UiText.t("anvil.used"), "状态：这处的砧用过了")
+	t.check(col.weapon_slot.try_add(_inst(flow.items, &"broadsword"), true) and col.strike_key.disabled, "再放一把：锤键还是灰（这座砧用过了）")
+	t.check(screen.to_map(), "返回")
 	t.check(flow.run.board.has_item(made.uid) or flow.run.storage.has_item(made.uid), "出件回了背包（或地上）")
 	t.check(flow.run.board.item_count() >= before, "背包没少东西")
+	t.check(flow.open_forge(node), "铸炉没铸过：铁炉还能进")
+	var again = game.overlay()
+	t.check(again != null and again.has_method("anvil") and again.anvil().status_text() == UiText.t("anvil.used"), "砧那栏写着用过了")
+	if again != null and again.has_method("anvil"):
+		var stick := _inst(flow.items, &"salve")
+		t.check(not again.anvil().weapon_slot.accepts(stick.def), "伤药进不了武器槽")
+		again.to_map()
+	NodeEvents.use_forge(node)
+	t.check(not flow.open_forge(node), "两栏都用过：开不了")
 	game.queue_free()
 	Support.cleanup("anvil279_ui")
+
+
+static func run_no_upgrade(t: TestCase) -> void:
+	t.begin("286 §2.2 · 砧：没有升级配方的武器写「这把没有可升的」")
+	var c = NodeScreens._content()
+	var db: ItemDatabase = c.items
+	var pool := SmithRecipeDef.load_all()
+	var col := AnvilColumn.new()
+	var flow := GameFlow.new()
+	flow.smith_recipes = pool
+	flow.items = db
+	col.setup(flow, null, null, null, null)
+	var none: ItemDef = null
+	for id in db.ids():
+		var d := db.get_def(id)
+		if d != null and d.tags.has(&"weapon") and Anvil.upgrades_for(d, pool).is_empty() and col.weapon_slot.try_add(ItemInstance.create(d, 0), true):
+			none = d
+			break
+	t.not_null(none, "有一把没升级配方、放得进武器槽的武器")
+	if none == null:
+		col.free()
+		return
+	t.eq(col.note_text(), UiText.t("anvil.no_upgrade"), "便条：这把没有可升的")
+	t.eq(col.status_text(), UiText.t("anvil.used"), "没有休息点：当用过（灰）")
+	col.free()
 
 
 static func run_orange(t: TestCase) -> void:

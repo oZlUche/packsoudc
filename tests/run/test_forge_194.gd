@@ -59,7 +59,10 @@ static func run_entry(t: TestCase) -> void:
 	t.check(f.leave_forge(), "离开铸炉")
 	t.eq(f.screen, GameFlow.Screen.EVENT, "196：→ 回到营地（休息点的事件）")
 	var labels := _open_labels(f)
-	t.check(not labels.has("forge") and labels.has("fire"), "铸过：铸炉锁了、篝火还在（%s）" % str(labels))
+	t.check(labels.has("forge") and labels.has("fire"), "286：铸过、砧没锤过 —— 铁炉还开着（砧那一栏）、篝火还在（%s）" % str(labels))
+	Anvil.use(node)
+	labels = _open_labels(f)
+	t.check(not labels.has("forge") and labels.has("fire"), "铸过、砧也锤过：铁炉锁了、篝火还在（%s）" % str(labels))
 	Support.cleanup("forge194")
 
 
