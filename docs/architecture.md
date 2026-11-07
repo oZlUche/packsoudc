@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v5.38 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v5.39 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -3085,10 +3085,11 @@ class_name EconomyRules extends Resource
 @export var reward_per_strength: int
 @export var reward_depth_gain: float
 @export var reward_difficulty_gain: float
-@export var shop_slots: int                   # 货架几格
+@export var shop_stock: int                   # 290：开张一次摆几件（10，再按概率加一个包、一件金银）
+@export var shop_purse_base: int              # 290：商人钱袋 = base + depth × 深度（100 + 200 × 深度），一局不回填
+@export var shop_purse_depth: int
 @export var shop_rarity_weights: Array[float] # 上架的稀有度权重，× (1 + shop_depth_gain × 深度 × 稀有度)
 @export var shop_price_mult: float            # 售价 = 道具价值（6.4）× 倍数
-@export var shop_refresh_cost: int            # 刷新一次；每刷一次涨 shop_refresh_step
 @export var paid_extracts: int                # 几个中途撤离点收费（最深的那几个）
 @export var extract_fee: int                  # 收多少（50 占位）
 ```
@@ -3096,9 +3097,12 @@ class_name EconomyRules extends Resource
 - **`Wallet`**（`core/run/wallet.gd`）和 `Vitality` 一个做法：不知道任何数值，只管进账、花钱、够不够、发信号；不够就一分不动。
   它就是 7 节 `RunState` 里那个 `gold`。
 - **打赢进账**在 `NodeEvents._fight` 里：档位来自节点内容的 `strength`（6.0），深度按 tier 归一化，难度是章节的。输了、平了不给。
-- **商店**是 `ShopSession`：货架由节点 `content_seed` 与刷新次数决定（第 n 次刷新摆的永远是那几件），所以存档只记 **商店可以回头再逛**（091 作者定）：回到走过的商店点，`RunState.step_to` 调 `NodeEvents.reopen_shop` 重开会话，刷新次数 / 卖掉的从 `node.content["shop"]` 读回，刷新价接着涨不重置。
-  `content.shop = {refreshes, sold}`；候选不含包与珍宝，按稀有度权重抽、不重复；价 = `ItemValue.of` × 倍数；买了就没了；
-  刷新花钱且越刷越贵；走了才算用过。买到的东西交给谁装是 M5 的事，这里只发 `bought`。
+- **商店**是 `ShopSession`（290 重做，作者 11-07「类似博德之门3」）：商人一块 8 × 6 棋盘（`board`），开张按节点 `content_seed` 一次摆满（`shop_stock` 件不重复，候选不含包与珍宝，按稀有度 × 深度权重抽，再按概率加一个包、一件金银，大件先放、放不下的丢），**不刷新**，卖掉就空着。
+  棋盘整块、商人钱袋、卖掉的随身格存进 `content.shop = {v: 2, board, purse, belt_sold}`；老档（v1 只记刷新次数）读到就按种子重摆一次。商店可以回头再逛（091）：`NodeEvents.reopen_shop` 重开会话、读回同一块棋盘。
+  **桌上的买卖**：拖过去就是上桌 —— 他的货拖进自己的包 / 地上，自己的东西拖进他的棋盘，东西真的挪过去；`sync()` 按「谁原来是谁的（`_owned`）、现在在哪」算 `taken`（售价）/ `given`（收购价 = 售价 × `shop_sell_ratio`，碎了打折）。
+  天秤左盘 = Σ taken + 上桌的随身格 + 他放的钱，右盘 = Σ given + 你放的钱；`toggle_my_coins` 补差、`toggle_his_coins` 他找钱（不超过钱袋），**不自动找零**；右 ≥ 左 `deal()`：随身格先进腰带（满了那格退回、不收它的钱），钱换手，东西归新主人。
+  不能上桌：独一、券、锁住 / 随身之物、装着东西的包（`refuse_reason`）。`cancel_table` / `leave`：桌上的各回各家（你的先回、腾出他的原位）。回购 = 这次进店卖给他的挂你拿到的价（`resale`，不进存档）。
+  屏（`ui/game/shop_screen.gd`）：左头像 + 随身格 + 他的棋盘，右自己的背包，底部他的钱袋 | `ShopScale`（秤座就是「成交」）| 离开 + 自己的钱袋；待成交的东西描金（22% 金底 + `#e0b040` 虚线）。
 - **付费撤离点**由 `PaidExtracts.mark(graph, rules)` 在生成之后标（生成器不认识钱）：挑最深的 `paid_extracts` 个撤离点，
   费用记进 `content.fee` 跟着图存；核心不是中途撤离点，不收。`NodeEvents.extract_reached(node, fee)` 报费用，
   撤离动作（M6）先调 `pay_extract_fee(node)`：免费直接过，付不起 false、一分不动。
@@ -4556,6 +4560,7 @@ res://
 | v5.36 | 2026-11-07 | **284 §3.4 / 3.5 通用提示 + 按键引用**（PR #510）：`InputKeys` 多三个动作 `rotate_item`（R）/ `hide_tip`（Alt）/ `whole_bag`（Ctrl，mac 加 Cmd），默认键在代码里登记（`CODE_DEFAULTS`、`ensure`，`apply` 回默认后补上），能被 `GameSettings.key_bindings` 改；`keys_of` / `held` / `held_with`（点击自带的修饰键）/ `is_key_of`。`DragLayer` 转向、`HoverTip` 按住藏说明、`InventoryView` 整包点选改查动作。新 `KeyNames`（`ui/key_names.gd`）：`[key=动作]` → 现绑键名（`OS.get_keycode_string`；mac 整包写 Cmd；没绑「未绑定」`key.unbound`），`NpcBadge` 纸条先过它。`npcs/common.json`（`NpcDef.COMMON`）三句通用提示，`NpcChatter.open_lines` 并进三位 NPC 的池子；导入校验通用句只写 lines、id 以 `common_` 开头（各人的句不许）。顺手修测试 11-07 报的两处：券的「出售同类 ×n」也灰着写「券不能出售」、不挂价钱（`ItemActions.sell_same`，独一的同理）；带配方词的窗没钉住时，窗四周 16 像素也算在窗里（`HoverTip.RECIPE_BRIDGE_PX`），鼠标从格子挪进窗时经过那条几像素的缝不再收窗 |
 | v5.37 | 2026-11-07 | **288 效果说明文本普查落地**（PR #511）：负重三档的阈值、寸步难行走一步乘几改成从数据读 —— 词条（`Glossary.term_text` 过 `EncumbranceRules.fill_numbers`）与帮助页（`TextTemplate` 新记号 `{load:1～3}` / `{load:step}`）都读 standard 负重规则（`EncumbranceRules.standard()` / `number_text`），1.2 / 1.6 / 2.2 倍、倒计时 ×2（原写超过上限 / 1.25 / 1.5、−2）；HUD 句 `run.load_step_cost` 改「×%d」。流血补 `is_debuff`（定义与 47 件道具、反应、铸炉里的内嵌副本，清减益 / 清增益按它分）。文字：负重「包本身不算重」、耐力「不够就跳过这一次、冷却重走」、寒冷「武器下一次出手」、燃血 / 菌血「N 层持续 N 秒，层数不掉」、爆燃「向下取整」、流失「无视护甲」、商店帮助页卖价三成（基地五成）与「货架有时摆包」、体力页安德烈乌斯改求饶、直接伤害页「灼伤的火焰跳照样算受伤时」（待定 1 按推荐只改文字）、buff 页删掉没有内容的「中毒换剧毒」。生成句：赐物按 `by_type` 拼（`GiftOnEnterPerk._summary`），`ConvertStatus` 写状态名，`ChangeResource`（读属性 / 按这一下伤害的几成）、`ApplyStatus` / `ShiftAxis`（per_stack）的 `describe` 补全。新 `tests/content/test_effect_text_288.gd` |
 | v5.38 | 2026-11-07 | **289 耐力签悬浮窗列来源**（PR #512）：`StaminaEstimate.breakdown(spec)` 拆账 —— `costs` 每件会出手的道具一行（一件几条规则合一行、0 的不列、装着晶石的法杖不列，大到小、一样大按棋盘顺序），`regen_rows` 第一行基线（单位级回复减去各道具的那份，角色 / 局外 / 负重都折在里面）、之后每件带回复的道具；`of()` 改取它的总数，两边一个数。`describe(spec, names)` 头两行照旧，下面「消耗来源」「回复来源」两段（标题 `@dim`，`名字　N / 秒`，回复带 +；没有消耗写一行；消耗最多 8 行、回复最多 4 行，超出合成「其余 N 件」）；`StatsStrip` 传棋盘上的名字。顺手修测试 11-07 报的科技「接应队的背囊」说明：效果是每级 +1 列 +1 行（`cols` 默认 1），说明原写「多一行」，改成「每级多一列、一行」（`docs/techs.xlsx`），英文 `tech.safe_cols / rows` 改「columns +%d」不再出「+1 columns」。新 `tests/ui/test_stamina_sources_289.gd`，288 的对照测试加一条科技说明 = 效果 |
+| v5.39 | 2026-11-07 | **290 局内商店重做**（PR #PRNUM，作者 15:11「类似博德之门3」）：`ShopSession` 重写 —— 商人一块 8 × 6 棋盘，`EconomyRules.shop_stock` 10 件一次摆满（+ 包 / 金银照概率），不刷新；删 `shop_slots / shop_refresh_cost / shop_refresh_step`，加 `shop_purse_base` 100 + `shop_purse_depth` 200（`purse_at`）。拖过去 = 上桌，`sync()` 认账；天秤左盘售价、右盘收购价 + 钱，右 ≥ 左才成交；点自己钱袋补差、点他钱袋找钱（不自动找零，他付不起写「他只付得起」）；随身格点了上桌、成交进腰带（满了退回不收钱）；离开各回各家；回购 = 这次卖给他的挂原价。存档 v2 = 棋盘整块 + 钱袋（`RunState._reserve_shop_uids` 读档后让 uid 计数器越过店里的道具；`UniqueItems` 也扫存档里的店）。新 `ShopScale`（天秤，256 同一套拆法、`shop/scale_layout.json` + `shop/scale_*` 图，没图画铜色占位；差额牌和盘上价牌「字 + 金币 + 数」），`CoinPouch` 点得着（`pressed`）。屏删刷新 / 收起 / 出售区 / 回购，「成交」站在秤座上。帮助页「商店」改写。测试 11-07 报的体力帮助页英文末句没有角色时渲染成「You's Vitality」，改成「{char} can always check Vitality on the map screen.」（没有角色写 You can…，占位符和中文照样对得上）。UI设计 11-07 报的锁着的预设挂牌名字太暗（浅底页面把 `SETUP_TAB_LOCKED_INK` 当语义色重算压暗到 #706655）：`PresetTag` 的字写在木牌上，不挂 `dark_color`，按原色 #b8a98c 显示。新 `tests/run/test_shop_barter_290.gd`，改 12 个旧测试 |
 | v4.70 | 2026-10-29 | **260 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）**：碑额写 `RecordsStele.compact(v)` —— 1000 以下整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数整数算、向下截不进位（999999 → 999.99k），末尾 0 去掉（3100000000 → 3.1b）；0 写「—」，悬停照旧写准数。横线、`roman / numeral_parts / overline_stack` 删掉；基线 = 碑额顶 + 75 + 字号 × 0.375，金币固定 52、中心对准字身中线 |
 | v4.69 | 2026-10-28 | **260 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」，取代补充三）**：`RecordsStele.numeral_parts` 返回 [最高一段的罗马数字, 横线道数]，每 ÷ 1000 加一道、向下取整、后面的段不写（742 → DCCXLII，5414 → V̅，3888888 → 两道线的 III，38 亿 → 三道）；碑额画 k 道横线（线宽 = 字宽，往上每道再空 max(2, 字号 × 0.05)，`overline_stack`），字和横线整块在碑额里竖向居中、金币中心对准字身中线；顺带修掉 v4.68 一百万起千位段一长串 M。**随身技能图标定稿**（作者 18:35「B+C」）：`assets/belt_skills/smoke_bomb.png`（陶罐）、`aid_pack.png`（亚麻小包），60 × 60；`BeltSkillDef.icon()` 把图留在 def 上（腰带在 `_draw` 里每帧画，184） |
 | v4.68 | 2026-10-28 | **260 补充三（作者 10-28 10:15 选 B「只写到千」）**：碑额大数 —— `RecordsStele.numeral_parts` 一万起只写千位段（`[roman(v / 1000), ""]`，向下取整，38888 → X̅X̅X̅V̅I̅I̅I̅），4000～9999 照旧带零头，悬停照旧写准数；金币固定 `WORTH_COIN` 52（不跟字缩，竖向中心在碑额顶 + 75），`worth_width` 金币那项跟着换，字区实宽 330 − 52 − 6；千位段上横线粗 max(2, 字号 × 0.06)，在字头（基线上方字号 × 0.75）再往上留 max(3, 字号 × 0.1) 的缝，不再贴着字头像删除线 |

@@ -223,7 +223,7 @@ static func run_boss(t: TestCase) -> void:
 
 
 static func run_shop_logic(t: TestCase) -> void:
-	t.begin("087 · 商店屏的逻辑：栏位是小棋盘、商品只能进自己的容器且钱够、钱不够弹回并提示、双击买、拖进出售区就卖半价")
+	t.begin("087 / 290 · 商店屏的逻辑：商人一块大棋盘、拖过去就是上秤、成交才扣钱、钱不够成交灰并提示、双击拿上秤、放上他的棋盘就卖")
 	var c := _content()
 	var f := Support.flow(c, "087")
 	var run := f.begin(c.chapter, _kit(c), 3)
@@ -254,68 +254,62 @@ static func run_shop_logic(t: TestCase) -> void:
 	screen.font = UiPalette.cjk_font()
 	screen.screen = GameFlow.Screen.SHOP
 	screen.open({"node": shop_node, "session": session})
-	t.eq(screen.shelf_views().size(), session.shelves.size(), "每个栏位一块视图")
-	var slot0 := session.item_at(0)
-	t.not_null(slot0, "第 0 格有商品")
-	if slot0 == null:
+	t.eq(screen.merchant_view().inventory, session.board, "290：商人一块大棋盘")
+	var ware := session.board.items()[0] as ItemInstance
+	t.not_null(ware, "棋盘上有货")
+	if ware == null:
 		screen.free()
 		Support.cleanup("087")
 		return
-	# 落点过滤
-	t.check(screen._allow_drop(slot0, run.board), "钱够：商品能进棋盘")
-	t.check(not screen._allow_drop(slot0, session.sell_box), "商品不能进出售区")
-	var mine: ItemInstance = run.board.items()[0]
-	t.check(not screen._allow_drop(mine, session.shelves[0]), "自己的东西不能放到栏位上")
-	t.check(screen._allow_drop(mine, session.sell_box), "自己的东西能进出售区")
-	# 审查 A1：没付钱的商品不能拿去合成（会被合成消耗、结不了账 = 白拿）；自己的东西照常能合
-	t.check(not bool(screen.drag_layer().craft_filter.call(slot0)), "货架上的商品不许合成")
-	screen._dragged_uid = slot0.uid
-	screen._dragged_slot = 0
-	t.check(not bool(screen.drag_layer().craft_filter.call(slot0)), "拿在手上的商品也不许合成")
-	screen._dragged_uid = -1
-	screen._dragged_slot = -1
-	t.check(bool(screen.drag_layer().craft_filter.call(mine)), "自己的东西许合成")
-	# 拖着买：栏位 → 棋盘（模拟拖拽层做的事），放手后结账
-	var price0 := int(session.stock[0]["price"])
-	var before := run.wallet.balance
-	screen._dragged_uid = slot0.uid
-	screen._dragged_slot = 0
-	session.shelves[0].remove(slot0.uid)
-	t.check(run.board.try_add(slot0, true) or run.storage.admit(slot0), "商品进了玩家的容器")
-	screen._on_drag_finished(slot0.uid, true)
-	t.eq(run.wallet.balance, before - price0, "放手时扣钱")
-	t.check(session.sold.has(0), "第 0 格卖掉了")
-	t.check(screen.line_text().contains("买下了"), "提示买下了")
-	# 钱不够：过滤拦住、提示
-	var poor_slot := -1
-	for i in session.stock.size():
-		if not session.sold.has(i):
-			poor_slot = i
+	# 落点过滤（290：拖过去就是放上秤）
+	t.check(screen._allow_drop(ware, run.board), "他的货能拖进自己的棋盘（上秤）")
+	t.check(screen._allow_drop(ware, run.storage), "也能拖到地上")
+	t.check(screen._allow_drop(ware, session.board), "能拖回他的棋盘（撤下 / 挪位）")
+	var mine: ItemInstance = null
+	for v in run.board.items():
+		if session.refuse_reason(v) == "" and not run.board.acts_as_bag((v as ItemInstance).def):
+			mine = v
 			break
-	if poor_slot >= 0:
-		var inst := session.item_at(poor_slot)
+	if mine != null:
+		t.check(screen._allow_drop(mine, session.board), "自己的东西能拖进他的棋盘（上秤）")
+	# 审查 A1：没成交的货不能拿去合成（会被合成消耗、结不了账 = 白拿）；自己的东西照常能合
+	t.check(not bool(screen.drag_layer().craft_filter.call(ware)), "他的货不许合成")
+	if mine != null:
+		t.check(bool(screen.drag_layer().craft_filter.call(mine)), "自己的东西许合成")
+	# 拖着买：他的棋盘 → 自己的棋盘（模拟拖拽层做的事），补钱成交
+	var price := session.tag_price(ware)
+	var before := run.wallet.balance
+	session.board.remove(ware.uid)
+	t.check(run.board.try_add(ware, true) or run.storage.admit(ware), "货进了玩家的容器")
+	session.sync()
+	t.check(screen.pending(ware.uid), "染待成交色")
+	t.eq(run.wallet.balance, before, "放手不扣钱（成交才扣）")
+	screen.pay_gap()
+	t.check(screen.deal(), "成交")
+	t.eq(run.wallet.balance, before - price, "成交扣售价")
+	t.check(not screen.pending(ware.uid) and not session.is_merchants(ware.uid), "归你了")
+	t.check(screen.line_text().contains("成交了"), "提示成交了")
+	# 钱不够：补不齐，成交灰
+	var next := session.board.items()[0] as ItemInstance if not session.board.items().is_empty() else null
+	if next != null:
 		run.wallet.spend(run.wallet.balance, &"test")
-		t.check(not screen._allow_drop(inst, run.board), "钱不够：商品放不进棋盘（弹回栏位）")
-		t.check(screen.line_text().contains("金币不足"), "提示金币不足")
-		t.check(not screen.quick_buy(inst.uid), "双击也买不了")
-		t.check(session.item_at(poor_slot) == inst, "商品还在栏位上")
+		t.check(screen.take(next.uid), "双击：拿上秤（进包或地上）")
+		t.check(run.board.has_item(next.uid) or run.storage.has_item(next.uid), "东西进了包或地上")
+		screen.pay_gap()
+		t.check(screen.deal_key().disabled and not screen.deal(), "钱不够：成交灰")
+		t.check(screen.line_text().contains(UiText.t("shop.gap_short")), "提示还差")
+		t.check(screen.withdraw(next.uid), "拿回去")
+		t.check(session.board.has_item(next.uid), "回到他棋盘上")
 		run.wallet.earn(1000, &"test")
-		# 双击买：进包 / 地上
-		var b2 := run.wallet.balance
-		t.check(screen.quick_buy(inst.uid), "双击买")
-		t.eq(run.wallet.balance, b2 - int(session.stock[poor_slot]["price"]), "扣钱")
-		t.check(run.board.has_item(inst.uid) or run.storage.has_item(inst.uid), "东西进了包或地上")
-		t.check(session.item_at(poor_slot) == null, "栏位空了")
-	# 卖：把自己的东西拖进出售区
-	var sell_me := ItemInstance.create(c.items.get_def(&"longsword"))
+	# 卖：把自己的东西放上他的棋盘，点他钱袋找钱
+	var sell_me := ItemInstance.create(c.items.get_def(&"knife"))
 	run.storage.admit(sell_me)
-	run.storage.remove(sell_me.uid)
-	session.sell_box.place(sell_me, Vector2i.ZERO, 0)
 	var b3 := run.wallet.balance
-	screen._on_drag_finished(sell_me.uid, true)
-	t.eq(run.wallet.balance, b3 + session.sell_price_of(sell_me.def), "卖了：回定价的一半")
-	t.check(not session.sell_box.has_item(sell_me.uid), "出售区清了")
-	t.check(screen.line_text().contains("卖掉了"), "提示卖掉了")
+	t.check(screen.offer(sell_me.uid), "放上他的棋盘")
+	screen.ask_change()
+	t.check(screen.deal(), "成交")
+	t.eq(run.wallet.balance, b3 + session.sell_price_of(sell_me.def, sell_me), "卖了：回收购价")
+	t.check(session.is_merchants(sell_me.uid), "归他了")
 	screen.free()
 	Support.cleanup("087")
 

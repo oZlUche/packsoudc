@@ -22,8 +22,11 @@ extends Resource
 @export var reward_difficulty_gain: float = 0.25
 
 @export_group("商店")
-## 一次摆几件
-@export var shop_slots: int = 4
+## 290（作者 11-07）：商人的货一次摆满、不刷新 —— 开张抽几件（不重复；再按概率加一个包、一件金银），摆不下的丢掉
+@export var shop_stock: int = 10
+## 290：商人钱袋 = shop_purse_base + shop_purse_depth × 深度（深处的商人有钱）；你付的进袋、他找的出袋，一局不回填
+@export var shop_purse_base: int = 100
+@export var shop_purse_depth: int = 200
 ## 货架上道具的稀有度权重，下标即稀有度；× (1 + shop_depth_gain × 深度 × 稀有度)，越深越容易见到好东西
 @export var shop_rarity_weights: Array[float] = [40.0, 30.0, 20.0, 8.0, 2.0, 0.5]
 @export var shop_depth_gain: float = 1.0
@@ -42,10 +45,7 @@ extends Resource
 @export var bullion_deep: Dictionary = {"gold_nugget": 1.0, "gold_bar": 1.0, "gold_ingot": 1.0, "silver_ingot_large": 1.0}
 ## 244：金银的售价 = 面值 × 这个数（不乘 [member shop_price_mult]、不乘 buff 的倍数 —— 打折买金、基地全价回收就成了白来的钱）
 @export var bullion_premium: float = 1.1
-## 刷新一次多少钱；每刷一次涨 shop_refresh_step
-@export var shop_refresh_cost: int = 10
-@export var shop_refresh_step: int = 5
-## 160 补一：货架之外一排「随身」—— 候选的随身技能 id → 权重；每次刷新跟着货架一起抽 1 ～ [member belt_picks] 种，买了直接进腰带。空 = 没有这一排
+## 160 补一：货架之外一排「随身」—— 候选的随身技能 id → 权重；开张时抽 1 ～ [member belt_picks] 种，成交了直接进腰带。空 = 没有这一排
 @export var belt_stock: Dictionary = {}
 @export_range(1, 4) var belt_picks: int = 2
 
@@ -69,9 +69,9 @@ func shop_rarity_weight(rarity: int, depth: float) -> float:
 	return maxf(0.0, w * (1.0 + shop_depth_gain * clampf(depth, 0.0, 1.0) * float(maxi(0, rarity))))
 
 
-## 第 n 次刷新（0 起）要多少钱
-func refresh_cost_at(n: int) -> int:
-	return maxi(0, shop_refresh_cost + shop_refresh_step * maxi(0, n))
+## 290：这个深度的商人开张带多少钱
+func purse_at(depth: float) -> int:
+	return maxi(0, shop_purse_base + roundi(float(shop_purse_depth) * clampf(depth, 0.0, 1.0)))
 
 
 ## 244 补充一：这个深度金银那一格的权重表（两张按深度线性混合；id 升序、权重为正的才在）

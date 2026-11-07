@@ -40,6 +40,7 @@ static func owned_ids(meta: MetaState, run: RunState = null, items: ItemDatabase
 				var node := run.map.nodes[k] as MapNode
 				if node != null:
 					_add_content(out, node.content, items)
+					_add_shop_save(out, node.content, items)
 	return out
 
 
@@ -59,18 +60,18 @@ static func _add_insts(out: Dictionary, insts: Array) -> void:
 			out[inst.def.id] = true
 
 
-static func _add_shop(out: Dictionary, shop: ShopSession, items: ItemDatabase) -> void:
-	for box in shop.shelves:
-		if box != null:
-			_add_insts(out, box.items())
-	for e in shop.buyback:
-		_add_insts(out, [e.get("inst")])
-	if items != null:
-		for i in shop.stock.size():
-			if not shop.sold.has(i):
-				var d := items.get_def(StringName(String(shop.stock[i].get("id", ""))))
-				if d != null and d.is_unique():
-					out[d.id] = true
+## 290：商人棋盘上的（你拿走还没成交的在你那边，另算）
+static func _add_shop(out: Dictionary, shop: ShopSession, _items: ItemDatabase) -> void:
+	_add_insts(out, shop.board.items())
+
+
+## 290：存在节点里的商人棋盘（开过的店）
+static func _add_shop_save(out: Dictionary, content: Dictionary, items: ItemDatabase) -> void:
+	var saved: Variant = content.get("shop", null)
+	if not (saved is Dictionary) or not ((saved as Dictionary).get("board", null) is Dictionary) or items == null:
+		return
+	for raw in (saved["board"] as Dictionary).get("items", []):
+		_add_id(out, (raw as Dictionary).get("def", ""), items)
 
 
 static func _add_content(out: Dictionary, content: Variant, items: ItemDatabase) -> void:

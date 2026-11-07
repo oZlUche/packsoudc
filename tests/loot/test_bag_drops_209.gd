@@ -129,8 +129,13 @@ static func run_enemy_bags(t: TestCase) -> void:
 	t.eq(ids, want, "神射手：写死的包")
 
 
+## 290：商人棋盘上的包
+static func _bags(s: ShopSession) -> int:
+	return s.board.items().filter(func(v): return (v as ItemInstance).def.is_bag).size()
+
+
 static func run_shop(t: TestCase) -> void:
-	t.begin("209 · ⑩ 商店：包槽概率 1 → 必有一格是包；0 → 没有；没有包池 → 没有")
+	t.begin("209 · ⑩ 商店：包的概率 1 → 必有一个包；0 → 没有；没有包池 → 没有")
 	var c := _content()
 	var econ: EconomyRules = (load(ContentPaths.asset_file("economy_rules", "standard")) as EconomyRules).duplicate()
 	var node := MapNode.new()
@@ -138,14 +143,15 @@ static func run_shop(t: TestCase) -> void:
 	var w := Wallet.new()
 	econ.shop_bag_slot_chance = 1.0
 	var s1 := ShopSession.new(node, econ, c.items, w, 0.0, 1.0, _pool())
-	t.eq(s1.stock.filter(func(e): return c.items.get_def(StringName(String(e["id"]))).is_bag).size(), 1, "概率 1：一格是包")
-	t.eq(s1.stock.size(), econ.shop_slots, "格数不变")
+	t.eq(_bags(s1), 1, "概率 1：棋盘上有一个包")
 	econ.shop_bag_slot_chance = 0.0
+	node.content.clear()     # 290：店存进节点，换规则要另开一家
 	var s0 := ShopSession.new(node, econ, c.items, w, 0.0, 1.0, _pool())
-	t.eq(s0.stock.filter(func(e): return c.items.get_def(StringName(String(e["id"]))).is_bag).size(), 0, "概率 0：没有包")
+	t.eq(_bags(s0), 0, "概率 0：没有包")
 	econ.shop_bag_slot_chance = 1.0
+	node.content.clear()
 	var sn := ShopSession.new(node, econ, c.items, w)
-	t.eq(sn.stock.filter(func(e): return c.items.get_def(StringName(String(e["id"]))).is_bag).size(), 0, "没有包池：没有包")
+	t.eq(_bags(sn), 0, "没有包池：没有包")
 
 
 static func run_bagless(t: TestCase) -> void:

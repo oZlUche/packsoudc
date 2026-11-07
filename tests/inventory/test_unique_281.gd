@@ -44,7 +44,7 @@ static func run_unsellable(t: TestCase) -> void:
 	t.check(not act.enabled, "出售按钮灰掉")
 	var econ := load(ContentPaths.asset_file("economy_rules", "standard")) as EconomyRules
 	var shop := ShopSession.new(MapNode.new(), econ, items, Wallet.new())
-	t.eq(shop.sell(red), 0, "商店不收")
+	t.check(shop.refuse_reason(red) != "", "商店不收（290：上不了秤）")
 	t.check(not Forge.accepts(red), "铸牌拖上去无效（不附魔）")
 	t.check(Forge.accepts(ItemInstance.create(items.get_def(&"longsword"))), "常规武器照收铸牌")
 

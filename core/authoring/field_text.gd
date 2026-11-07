@@ -69,8 +69,8 @@ const LABELS := {
 	"random_weights": "随机点权重", "event_weights": "事件权重", "events_by_type": "各类点的事件表", "event_restore": "事件回体力", "event_item_rarity_cap": "事件道具稀有度上限",
 	"loss_cost": "战败代价", "rest_restore": "休息回体力", "search": "搜索", "reveal_seconds": "揭示秒数", "items_per_search": "每次搜几件", "max_searches": "最多搜几次",
 	"boss_extracts": "打完核心直接撤离", "fail_vitality": "失败扣体力", "fail_buff": "失败背的 buff", "boss_rarity": "核心保底稀有度", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
-	"bags_always_drop": "包必掉", "rarity_weights": "稀有度权重", "shop_slots": "商店栏位", "shop_sell_ratio": "出售折价", "shop_price_mult": "商店价格倍率",
-	"shop_refresh_cost": "刷新价", "extract_fee": "撤离费", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
+	"bags_always_drop": "包必掉", "rarity_weights": "稀有度权重", "shop_stock": "商店货量", "shop_purse_base": "商人钱袋", "shop_purse_depth": "商人钱袋随深度", "shop_sell_ratio": "出售折价", "shop_price_mult": "商店价格倍率",
+	"extract_fee": "撤离费", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
 	# 角色 / 敌人 / 猎手 / 信仰
 	"board_size": "棋盘尺寸", "starting_bags": "初始包", "vitality_max": "体力上限", "carry_max_items": "最多带几件", "carry_rarity_cap": "带入稀有度上限", "skills": "技能", "flaw": "短板", "fixed_items": "随身之物", "board_mask": "棋盘缺格", "FixedItem.origin": "摆在哪（左上角）", "FixedItem.rot": "朝向",
 	"bags": "包", "board": "棋盘", "signature": "招牌道具", "signature_by_strength": "按档位的招牌", "combos": "相邻组合", "builds": "套路", "carry_mult": "携带倍率", "build_chance": "套路概率", "bad_build_mult": "坏套路权重倍率", "quality": "好坏", "loose": "不成组", "schools": "流派", "item_tags": "道具标签", "item_count": "道具件数",
