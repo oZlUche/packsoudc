@@ -7,54 +7,64 @@
 
 [sub_resource type="Resource" id="Resource_ysiyo"]
 script = ExtResource("1_a6um5")
-id = &"lore_1"
+id = &"guide_1"
+kind = &"guide"
+text = "精英敌人有概率掉落额外的好东西"
 texts = {
-"en": ""
+"en": "Elite foes have a chance to drop something extra."
 }
 
 [sub_resource type="Resource" id="Resource_kxwx1"]
 script = ExtResource("1_a6um5")
-id = &"lore_2"
+id = &"guide_2"
+kind = &"guide"
+text = "越往里走，我摆出来的货越好，嘿嘿"
 texts = {
-"en": ""
+"en": "The deeper you go, the finer the wares I lay out. Heh."
 }
 
 [sub_resource type="Resource" id="Resource_y1t7s"]
 script = ExtResource("1_a6um5")
-id = &"lore_3"
+id = &"guide_3"
+kind = &"guide"
+text = "东西卖给我就好，我肯定出个公道价格，嘿嘿"
 texts = {
-"en": ""
+"en": "Sell it to me, friend. I always give a fair price. Heh."
 }
 
 [sub_resource type="Resource" id="Resource_jwfa7"]
 script = ExtResource("1_a6um5")
-id = &"guide_1"
+id = &"guide_4"
 kind = &"guide"
+text = "待得越久，就越出不去"
 texts = {
-"en": ""
+"en": "The longer you linger, the harder it is to leave."
 }
 
 [sub_resource type="Resource" id="Resource_5d60i"]
 script = ExtResource("1_a6um5")
-id = &"guide_2"
+id = &"guide_5"
 kind = &"guide"
+text = "拿不动的先托付给出口那儿接应的人，他们比你先到家"
 texts = {
-"en": ""
+"en": "Hand what you can't carry to the crew waiting at the exit. They'll be home before you."
 }
 
 [sub_resource type="Resource" id="Resource_rpkwe"]
 script = ExtResource("1_a6um5")
-id = &"guide_3"
+id = &"guide_6"
 kind = &"guide"
+text = "别太贪心，拿的东西越多，就越走不动路"
 texts = {
-"en": ""
+"en": "Don't be greedy. The more you carry, the slower you walk."
 }
 
 [resource]
 script = ExtResource("3_r0rl5")
 id = &"shopkeeper"
+display_name = "哈基姆"
 display_names = {
-"en": ""
+"en": "Hakim"
 }
 portrait = &"npc_shopkeeper"
 lines = Array[ExtResource("1_a6um5")]([SubResource("Resource_ysiyo"), SubResource("Resource_kxwx1"), SubResource("Resource_y1t7s"), SubResource("Resource_jwfa7"), SubResource("Resource_5d60i"), SubResource("Resource_rpkwe")])

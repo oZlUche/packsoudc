@@ -9,47 +9,56 @@
 
 [sub_resource type="Resource" id="Resource_qoq68"]
 script = ExtResource("1_80sgd")
-id = &"lore_1"
+id = &"guide_1"
+kind = &"guide"
+text = "不同地区会产出不同材料"
 texts = {
-"en": ""
+"en": "Different lands yield different materials."
 }
 
 [sub_resource type="Resource" id="Resource_b3of4"]
 script = ExtResource("1_80sgd")
-id = &"lore_2"
+id = &"guide_2"
+kind = &"guide"
+text = "两件一样的家伙挨着放，缝上会冒个小锤子，敲一下就成一件好的"
 texts = {
-"en": ""
+"en": "Lay two of the same side by side. A little hammer shows at the seam. Strike it and they become one better piece."
 }
 
 [sub_resource type="Resource" id="Resource_ngnbp"]
 script = ExtResource("1_80sgd")
-id = &"lore_3"
+id = &"guide_3"
+kind = &"guide"
+text = "歇脚的地方有砧子，一把家伙配一块对路的料，敲一下就上一档"
 texts = {
-"en": ""
+"en": "Where you rest there's an anvil. One weapon, one right piece of stock, one strike, one grade up."
 }
 
 [sub_resource type="Resource" id="Resource_ur10e"]
 script = ExtResource("1_80sgd")
-id = &"guide_1"
+id = &"guide_4"
 kind = &"guide"
+text = "料越好，打出来的越好，别心疼好料"
 texts = {
-"en": ""
+"en": "Better stock, better work. Don't hoard the good stuff."
 }
 
 [sub_resource type="Resource" id="Resource_rlcpc"]
 script = ExtResource("1_80sgd")
-id = &"guide_2"
+id = &"guide_5"
 kind = &"guide"
+text = "矿石先炼成锭，再谈打东西"
 texts = {
-"en": ""
+"en": "Ore gets smelted into ingots first. Then we talk."
 }
 
 [sub_resource type="Resource" id="Resource_atoxq"]
 script = ExtResource("1_80sgd")
-id = &"guide_3"
+id = &"guide_6"
 kind = &"guide"
+text = "我只动你库里的料，上了锁的不碰；打好的也放回库里"
 texts = {
-"en": ""
+"en": "I only use stock from your storehouse, never anything locked. The work goes back there too."
 }
 
 [sub_resource type="Resource" id="Resource_1inul"]
@@ -73,8 +82,9 @@ give = &"poxiao_token"
 [resource]
 script = ExtResource("3_ya0to")
 id = &"blacksmith"
+display_name = "布伦努斯"
 display_names = {
-"en": ""
+"en": "Brennus"
 }
 portrait = &"npc_blacksmith"
 lines = Array[ExtResource("1_80sgd")]([SubResource("Resource_qoq68"), SubResource("Resource_b3of4"), SubResource("Resource_ngnbp"), SubResource("Resource_ur10e"), SubResource("Resource_rlcpc"), SubResource("Resource_atoxq")])

@@ -28,8 +28,16 @@ static func _fake(n: int) -> NpcDef:
 	return def
 
 
+## 284：作者 11-09 09:30 点头的名字（中 / 英）
+const NAMES_284 := {
+	&"shopkeeper": ["哈基姆", "Hakim"],
+	&"stall_keeper": ["德米特里", "Demetrios"],
+	&"blacksmith": ["布伦努斯", "Brennus"],
+}
+
+
 static func run_content(t: TestCase) -> void:
-	t.begin("282 · 三个 NPC 都在、头像在；名字与台词全空（作者写）；铁匠的专属对话要铁匠铺 3 级、哪儿都没有破晓，给的是独一道具【破晓的信物】")
+	t.begin("282 / 284 · 三个 NPC 都在、头像在；名字与六句提示照 284 填好（作者 11-09 点头）；铁匠的专属对话要铁匠铺 3 级、哪儿都没有破晓，给的是独一道具【破晓的信物】")
 	var db := _db()
 	for id in NpcDef.IDS:
 		var def := NpcChatter.get_def(id)
@@ -37,8 +45,9 @@ static func run_content(t: TestCase) -> void:
 		if def == null:
 			continue
 		t.not_null(NpcBadge.face_of(def), "%s 有头像" % id)
-		t.eq(def.display_name, "", "%s 名字空着" % id)
-		t.check(not def.lines.is_empty() and def.lines.all(func(l: NpcLine) -> bool: return l.text == "" and String(l.texts.get("en", "")) == ""), "%s 台词全空（%d 句）" % [id, def.lines.size()])
+		t.eq([def.display_name, String(def.display_names.get("en", ""))], NAMES_284[id], "%s 名字（284）" % id)
+		t.eq(def.lines.map(func(l: NpcLine) -> String: return String(l.id)), ["guide_1", "guide_2", "guide_3", "guide_4", "guide_5", "guide_6"], "%s 六句提示" % id)
+		t.check(def.lines.all(func(l: NpcLine) -> bool: return l.kind == &"guide" and l.requires.is_empty() and l.text != "" and String(l.texts.get("en", "")) != "" and not l.text.contains("【")), "%s 每句中英都有字、全是提示、无条件、不带【】" % id)
 		t.check(def.lines.all(func(l: NpcLine) -> bool: return NpcLine.KINDS.has(l.kind)), "种类只有世界观 / 指引")
 	var smith := NpcChatter.get_def(NpcDef.BLACKSMITH)
 	t.eq(smith.specials.size(), 1, "铁匠一段专属对话")
@@ -84,6 +93,25 @@ static func run_recent_ten(t: TestCase) -> void:
 	one.id = &"one"
 	t.eq([String(NpcChatter.next_line(one, meta, rng).id), String(NpcChatter.next_line(one, meta, rng).id)], ["l0", "l0"], "只有 1 句：照说")
 	t.eq(NpcChatter.next_line(_fake(0), meta, rng), null, "一句都没有：null")
+
+
+## 284：真的池子（六句 + 通用三句）照样十句内不重复 —— 九句时每句和前八句都不同
+static func run_real_pool_284(t: TestCase) -> void:
+	t.begin("284 · 三位 NPC 的真池子：六句 + 通用三句 = 九句，掷 60 次每句都不在前 8 句里")
+	for id in NpcDef.IDS:
+		var def := NpcChatter.get_def(id)
+		var meta := MetaState.new()
+		var rng := _rng(7)
+		var pool := NpcChatter.open_lines(def, meta)
+		t.eq(pool.size(), 9, "%s：九句" % id)
+		var seq: Array[String] = []
+		for i in 60:
+			seq.append(String(NpcChatter.next_line(def, meta, rng).id))
+		var ok := true
+		for i in range(8, seq.size()):
+			if seq.slice(i - 8, i).has(seq[i]):
+				ok = false
+		t.check(ok, "%s：每句都和前 8 句不同" % id)
 
 
 static func run_requires(t: TestCase) -> void:
@@ -159,7 +187,9 @@ static func frame_pages(t: TestCase, root: Window) -> void:
 	if market.npc != null:
 		market.npc.talk()
 		var nr: Rect2 = market.npc.note.get_global_rect()
-		t.check(market.npc.note_above and nr.end.y <= market.npc.get_global_rect().position.y + 0.5, "散货摊的纸条贴在头像上方，不压柜台上的货（复测 v5.29）")
+		var top: float = market.npc.get_global_rect().position.y
+		var room := top - 8.0 - nr.size.y >= 0.0     # 284 起台词有字、纸条变高：测试窗里头像离顶不够高时退回旁边（真屏 1600 × 1000 头像在 y 408，放得下）
+		t.check(market.npc.note_above and (not room or nr.end.y <= top + 0.5), "散货摊的纸条贴在头像上方（上面放得下时），不压柜台上的货（复测 v5.29）")
 		market.npc.close()
 	s.free()
 	W178._cleanup()

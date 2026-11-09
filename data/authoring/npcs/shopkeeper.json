@@ -1,57 +1,57 @@
 {
   "id": "shopkeeper",
-  "display_name": "",
+  "display_name": "哈基姆",
   "display_names": {
-    "en": ""
+    "en": "Hakim"
   },
   "portrait": "npc_shopkeeper",
   "lines": [
     {
-      "id": "lore_1",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
-      "id": "lore_2",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
-      "id": "lore_3",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
       "id": "guide_1",
       "kind": "guide",
-      "text": "",
+      "text": "精英敌人有概率掉落额外的好东西",
       "texts": {
-        "en": ""
+        "en": "Elite foes have a chance to drop something extra."
       }
     },
     {
       "id": "guide_2",
       "kind": "guide",
-      "text": "",
+      "text": "越往里走，我摆出来的货越好，嘿嘿",
       "texts": {
-        "en": ""
+        "en": "The deeper you go, the finer the wares I lay out. Heh."
       }
     },
     {
       "id": "guide_3",
       "kind": "guide",
-      "text": "",
+      "text": "东西卖给我就好，我肯定出个公道价格，嘿嘿",
       "texts": {
-        "en": ""
+        "en": "Sell it to me, friend. I always give a fair price. Heh."
+      }
+    },
+    {
+      "id": "guide_4",
+      "kind": "guide",
+      "text": "待得越久，就越出不去",
+      "texts": {
+        "en": "The longer you linger, the harder it is to leave."
+      }
+    },
+    {
+      "id": "guide_5",
+      "kind": "guide",
+      "text": "拿不动的先托付给出口那儿接应的人，他们比你先到家",
+      "texts": {
+        "en": "Hand what you can't carry to the crew waiting at the exit. They'll be home before you."
+      }
+    },
+    {
+      "id": "guide_6",
+      "kind": "guide",
+      "text": "别太贪心，拿的东西越多，就越走不动路",
+      "texts": {
+        "en": "Don't be greedy. The more you carry, the slower you walk."
       }
     }
   ]
