@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v5.43 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v5.44 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4565,6 +4565,7 @@ res://
 | v5.41 | 2026-11-07 | **290 天秤换上定稿 A 铜天平**（作者 18:37 挑定；PR #515）：`assets/ui/shop/scale_base / beam / pan_left / pan_right / coin` + `scale_layout.json`（pivot [210,36]、arm 140、max_tilt 6、差额牌加宽到 [136,68,284,98]）。`ShopScale`：有底座图不画差额牌底牌、有盘图不画价牌底牌（底牌只算占位，同 `BalanceScale._draw_layer`）；差额牌的字 `fit_size` 一号一号缩到放得下（宽 − 12，最小 `MIN_FONT` 11）。英文 `shop.gap_cant_pay` 改为 "He only has" |
 | v5.42 | 2026-11-07 | **279 小锤徽和砧换上定稿**（作者 18:38 挑定，都是 A；PR #517）：`InventoryView` 小锤徽换图 `bag/fuse_badge[_hover][_2x]`（边长 `max(32, 格宽 × 0.66)`，> 48 用 2 倍图，点击半径 = 边长 / 2；悬停换图放大 1.12），两件占格并集（`merge_polygons` + `offset_polygon` +3 圆角）道具下画淡暖底 + 墨衬线、道具上画金虚线（`DangerZones.dashed_loop`）；缺图退回铜圆片占位。`ForgeScreen` 砧那块换铁板九宫格 `anvil/plate`（新 `UiTheme.art_panel`），`AnvilColumn` 槽框 `BoardFrame.wrap(v, "anvil")`（board/layout.json 加 `anvil`），锤键 `strike_key` 改 `BaseButton`：有图是 88 圆 `TextureButton`（`anvil/hammer_ready / hover / pressed / off`，用过了 disabled 换 `used`），缺图退回写「锤打」的纸卷键；排进那一排（武器 → 材料 → 锤 → 出件），`ROW_W` 544、`WIDTH` 848，一排槽上下居中；空槽淡刻 `anvil/glyph_weapon / glyph_material`，有东西就藏。同版 **290 花毯收到地面线以下**（架构设计定 B）：`shop/tent_front.png / .json` 重切（下边 expand 47、texture 87），地面物理不动；`ShopScreen._queue_sync` 延迟重算改成方法 Callable（屏释放后 lambda 会撞上已释放的 self） |
 | v5.43 | 2026-11-07 | **279 停在小锤徽上不弹道具窗**（测试 11-07：停久了弹出的匕首卡正好盖住铜徽和另一件；PR #518）：`HoverTip._uid_under` 在 `InventoryView.fusion_at` 命中时返回 −1；停在两件别处照旧弹 |
+| v5.44 | 2026-11-09 | **285 两张券换上终稿**（作者 09:29 选 A 盖印纸券，美术设计 `art/items/t285/out`；PR #520）：`assets/items/ticket_standard / ticket_elite`（60）与 `@2x`（160）换掉占位图，id、尺寸 1×1 不变，说明照旧空 |
 | v4.70 | 2026-10-29 | **260 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）**：碑额写 `RecordsStele.compact(v)` —— 1000 以下整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数整数算、向下截不进位（999999 → 999.99k），末尾 0 去掉（3100000000 → 3.1b）；0 写「—」，悬停照旧写准数。横线、`roman / numeral_parts / overline_stack` 删掉；基线 = 碑额顶 + 75 + 字号 × 0.375，金币固定 52、中心对准字身中线 |
 | v4.69 | 2026-10-28 | **260 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」，取代补充三）**：`RecordsStele.numeral_parts` 返回 [最高一段的罗马数字, 横线道数]，每 ÷ 1000 加一道、向下取整、后面的段不写（742 → DCCXLII，5414 → V̅，3888888 → 两道线的 III，38 亿 → 三道）；碑额画 k 道横线（线宽 = 字宽，往上每道再空 max(2, 字号 × 0.05)，`overline_stack`），字和横线整块在碑额里竖向居中、金币中心对准字身中线；顺带修掉 v4.68 一百万起千位段一长串 M。**随身技能图标定稿**（作者 18:35「B+C」）：`assets/belt_skills/smoke_bomb.png`（陶罐）、`aid_pack.png`（亚麻小包），60 × 60；`BeltSkillDef.icon()` 把图留在 def 上（腰带在 `_draw` 里每帧画，184） |
 | v4.68 | 2026-10-28 | **260 补充三（作者 10-28 10:15 选 B「只写到千」）**：碑额大数 —— `RecordsStele.numeral_parts` 一万起只写千位段（`[roman(v / 1000), ""]`，向下取整，38888 → X̅X̅X̅V̅I̅I̅I̅），4000～9999 照旧带零头，悬停照旧写准数；金币固定 `WORTH_COIN` 52（不跟字缩，竖向中心在碑额顶 + 75），`worth_width` 金币那项跟着换，字区实宽 330 − 52 − 6；千位段上横线粗 max(2, 字号 × 0.06)，在字头（基线上方字号 × 0.75）再往上留 max(3, 字号 × 0.1) 的缝，不再贴着字头像删除线 |
