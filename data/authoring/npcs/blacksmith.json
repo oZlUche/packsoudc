@@ -1,57 +1,57 @@
 {
   "id": "blacksmith",
-  "display_name": "",
+  "display_name": "布伦努斯",
   "display_names": {
-    "en": ""
+    "en": "Brennus"
   },
   "portrait": "npc_blacksmith",
   "lines": [
     {
-      "id": "lore_1",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
-      "id": "lore_2",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
-      "id": "lore_3",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
       "id": "guide_1",
       "kind": "guide",
-      "text": "",
+      "text": "不同地区会产出不同材料",
       "texts": {
-        "en": ""
+        "en": "Different lands yield different materials."
       }
     },
     {
       "id": "guide_2",
       "kind": "guide",
-      "text": "",
+      "text": "两件一样的家伙挨着放，缝上会冒个小锤子，敲一下就成一件好的",
       "texts": {
-        "en": ""
+        "en": "Lay two of the same side by side. A little hammer shows at the seam. Strike it and they become one better piece."
       }
     },
     {
       "id": "guide_3",
       "kind": "guide",
-      "text": "",
+      "text": "歇脚的地方有砧子，一把家伙配一块对路的料，敲一下就上一档",
       "texts": {
-        "en": ""
+        "en": "Where you rest there's an anvil. One weapon, one right piece of stock, one strike, one grade up."
+      }
+    },
+    {
+      "id": "guide_4",
+      "kind": "guide",
+      "text": "料越好，打出来的越好，别心疼好料",
+      "texts": {
+        "en": "Better stock, better work. Don't hoard the good stuff."
+      }
+    },
+    {
+      "id": "guide_5",
+      "kind": "guide",
+      "text": "矿石先炼成锭，再谈打东西",
+      "texts": {
+        "en": "Ore gets smelted into ingots first. Then we talk."
+      }
+    },
+    {
+      "id": "guide_6",
+      "kind": "guide",
+      "text": "我只动你库里的料，上了锁的不碰；打好的也放回库里",
+      "texts": {
+        "en": "I only use stock from your storehouse, never anything locked. The work goes back there too."
       }
     }
   ],

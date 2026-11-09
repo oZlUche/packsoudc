@@ -1,57 +1,57 @@
 {
   "id": "stall_keeper",
-  "display_name": "",
+  "display_name": "德米特里",
   "display_names": {
-    "en": ""
+    "en": "Demetrios"
   },
   "portrait": "npc_stall_keeper",
   "lines": [
     {
-      "id": "lore_1",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
-      "id": "lore_2",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
-      "id": "lore_3",
-      "kind": "lore",
-      "text": "",
-      "texts": {
-        "en": ""
-      }
-    },
-    {
       "id": "guide_1",
       "kind": "guide",
-      "text": "",
+      "text": "相中了又没钱？先给它拴上，下回来还在",
       "texts": {
-        "en": ""
+        "en": "Fancy it but short on coin? Tie it down and it'll still be here next time."
       }
     },
     {
       "id": "guide_2",
       "kind": "guide",
-      "text": "",
+      "text": "嫌货不好？花点钱我给你换一批，不过越换越贵哦",
       "texts": {
-        "en": ""
+        "en": "Don't like the lot? Pay a little and I'll bring out another. It gets dearer each time, mind."
       }
     },
     {
       "id": "guide_3",
       "kind": "guide",
-      "text": "",
+      "text": "买归买，你家库房得放得下",
       "texts": {
-        "en": ""
+        "en": "Buy all you like, so long as your storehouse has room."
+      }
+    },
+    {
+      "id": "guide_4",
+      "kind": "guide",
+      "text": "隔壁几家翻来覆去就那几样，新鲜玩意儿只在我这儿",
+      "texts": {
+        "en": "The other stalls sell the same old things. The surprises are all here."
+      }
+    },
+    {
+      "id": "guide_5",
+      "kind": "guide",
+      "text": "等你家底厚了，我的货色也跟着上档次",
+      "texts": {
+        "en": "Once your house is better off, my wares go up a notch too."
+      }
+    },
+    {
+      "id": "guide_6",
+      "kind": "guide",
+      "text": "拴上的和打了星的我一件不收，袋子也不收",
+      "texts": {
+        "en": "I won't take anything tied down or starred, and no bags."
       }
     }
   ]
