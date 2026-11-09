@@ -10,6 +10,8 @@ const NOTE_W := 300.0
 const NOTE_FONT := 17
 const NAME_FONT := 14
 const HOVER := Color(1.12, 1.12, 1.12)
+## 纸条比头像高出的 z（局内商店整页在 z 100 上，纸条要跟着抬上去）
+const NOTE_Z := 20
 
 var npc: StringName = &""
 var meta: MetaState = null
@@ -63,7 +65,7 @@ func _build(side: int) -> void:
 	UiTheme.set_tone(note, UiTheme.tone_of(UiTheme.PANEL_HOME_CHIP))
 	note.visible = false
 	note.top_level = true     # 不占页面的位，压在别的东西上面
-	note.z_index = 20
+	note.z_as_relative = false     # top_level 不跟父节点的 z 走：开纸条时按头像实际的 z 再加 NOTE_Z
 	note.mouse_filter = Control.MOUSE_FILTER_STOP
 	note.custom_minimum_size.x = NOTE_W
 	var col := UiTheme.vbox(4)
@@ -111,6 +113,7 @@ func talk() -> void:
 	var text := KeyNames.expand(String(last.get("text", "")))     # 284 §3.5：[key=动作] 换成现在绑的键名
 	line_label.text = text if text != "" else UiText.t("npc.more")
 	line_label.visible = text != ""
+	note.z_index = abs_z(self) + NOTE_Z
 	note.visible = true
 	note.reset_size()
 	_seat_note()
@@ -131,6 +134,19 @@ func fit(r: Rect2) -> void:
 func close() -> void:
 	if note != null:
 		note.visible = false
+
+
+## 画的时候真正用的 z：一路往上加，碰到不相对的或 top_level 的就停
+static func abs_z(ci: CanvasItem) -> int:
+	var z := 0
+	var n: Node = ci
+	while n is CanvasItem:
+		var c := n as CanvasItem
+		z += c.z_index
+		if not c.z_as_relative or c.top_level:
+			break
+		n = c.get_parent()
+	return z
 
 
 func is_open() -> bool:
