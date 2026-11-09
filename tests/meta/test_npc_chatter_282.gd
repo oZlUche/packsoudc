@@ -196,4 +196,10 @@ static func frame_pages(t: TestCase, root: Window) -> void:
 	var opened := Shop._open(root)
 	var screen = opened["screen"]
 	t.check(screen.npc != null and screen.npc.slot.picture != null, "局内商店：店主")
+	if screen.npc != null:
+		screen.z_index = 100     # 局内商店整页在 GameDirector.OVERLAY_Z 上
+		screen.npc.talk()
+		var nz: int = screen.npc.note.z_index
+		t.check(screen.npc.is_open() and not screen.npc.note.z_as_relative and nz == NpcBadge.abs_z(screen.npc) + NpcBadge.NOTE_Z and nz > 100, "局内商店：纸条的 z（%d）跟着整页抬到商人棋盘上面（测试报 v5.45：纸条压在棋盘下面）" % nz)
+		screen.npc.close()
 	screen.queue_free()
