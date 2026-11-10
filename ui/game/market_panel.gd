@@ -41,8 +41,6 @@ var flow: GameFlow = null
 ## 282：散货摊的摊主（固定摊不站人；跟着散货摊的台子一起显隐）
 var npc: NpcBadge = null
 var font: Font = null
-## 说一句（基地的告示卷轴）
-var say: Callable = Callable()
 var _stage: MarketStage = null
 var _funds: CoinLabel = null
 var _note: PanelContainer = null
@@ -61,10 +59,9 @@ var _body: Control = null
 var _stall_id: StringName = &""
 
 
-func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void:
+func setup(p_flow: GameFlow, p_font: Font) -> void:
 	flow = p_flow
 	font = p_font
-	say = p_say
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var row := UiTheme.hbox(KEYS_GAP)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -204,10 +201,7 @@ func _add_spot(i: int) -> void:
 		var shown := ItemInstance.create(def, 0)
 		shown.set_locked(Market.is_locked(flow.meta, i))     # 270：锁着的货左上画 230 那枚小锁
 		grid.place(shown, Vector2i.ZERO, rot)     # 卖掉的也摆着（压灰），「已售」章盖在价签上
-	var view := InventoryView.new()
-	view.label_font = font
-	view.show_adjacency = false
-	view.inventory = grid
+	var view := InventoryView.make(grid, font)
 	view.item_double_clicked.connect(func(_v: ContainerView, _uid: int): buy(i))
 	view.actions_for = func(_uid: int) -> Array: return [_buy_action(i), _lock_action(i)]
 	if sold:
@@ -348,8 +342,8 @@ func toggle_lock(i: int) -> bool:
 ## 270：花钱换货；返回空串 = 换了，否则是原因（说一句）
 func refresh() -> String:
 	var why := flow.refresh_market()
-	if why != "" and say.is_valid():
-		say.call(why)
+	if why != "":
+		NoticeLayer.post(self, why)     # 说一句（基地的告示卷轴）
 	changed.emit()
 	return why
 
@@ -373,8 +367,7 @@ func buy_listed(id: StringName) -> String:
 
 func _say_bought(def: ItemDef, why: String) -> void:
 	var name_ := Names.of(def) if def != null else ""
-	if say.is_valid():
-		say.call(UiText.t("market.bought") % [name_, Market.price_of(flow.market(), def), flow.meta.funds] if why == "" else UiText.t("shop.cant_buy") % [name_, why])
+	NoticeLayer.post(self, UiText.t("market.bought") % [name_, Market.price_of(flow.market(), def), flow.meta.funds] if why == "" else UiText.t("shop.cant_buy") % [name_, why])
 
 
 ## 买散货摊第 i 格；返回空串 = 买了，否则是原因（说一句）

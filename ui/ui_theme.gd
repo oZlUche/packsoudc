@@ -759,6 +759,39 @@ static func margins(m: MarginContainer, left: int, top: int, right: int, bottom:
 	return m
 
 
+## 一张只看不点的图：不管图自己多大，按 [param stretch] 铺进控件的大小
+static func picture(tex: Texture2D, stretch: TextureRect.StretchMode) -> TextureRect:
+	var pic := TextureRect.new()
+	pic.texture = tex
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = stretch
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return pic
+
+
+## 只竖着滚的滚动框（竖向撑满）
+static func vscroll() -> ScrollContainer:
+	var s := ScrollContainer.new()
+	s.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	s.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return s
+
+
+## 一张只看不点的九宫格图：[param edges] 是四边边距 —— 一个数（四边一样）或 `[左, 上, 右, 下]`；中段横竖都按 [param mode] 铺
+static func nine_rect(tex: Texture2D, edges: Variant, mode: NinePatchRect.AxisStretchMode = NinePatchRect.AXIS_STRETCH_MODE_STRETCH) -> NinePatchRect:
+	var m: Array = edges if edges is Array else [edges, edges, edges, edges]
+	var n := NinePatchRect.new()
+	n.texture = tex
+	n.patch_margin_left = int(m[0])
+	n.patch_margin_top = int(m[1])
+	n.patch_margin_right = int(m[2])
+	n.patch_margin_bottom = int(m[3])
+	n.axis_stretch_horizontal = mode
+	n.axis_stretch_vertical = mode
+	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return n
+
+
 ## 一段 BBCode 正文（169：颜色按所在的底取深版 / 浅版；之后换字走 [method set_rich]）：高度随内容、自己不滚（放进调用方的滚动区或面板里）、按 [param width] 折行；
 ## 字号走 [method rich]（17 / 13 号选变体，别的逐个给）
 static func rich_block(width: float, font_size: int = FONT_SIZE, bbcode: String = "") -> RichTextLabel:

@@ -101,10 +101,7 @@ func _labeled_grid(caption: String, inv: GridInventory, adjacency: bool = false)
 	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	box.add_child(UiTheme.make_label(caption, 13, UiPalette.DIM))
 
-	var view := InventoryView.new()
-	view.label_font = _font
-	view.inventory = inv
-	view.show_adjacency = adjacency
+	var view := InventoryView.make(inv, _font, adjacency)
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	box.add_child(view)
 	return box

@@ -63,9 +63,7 @@ func _build_ui() -> void:
 
 	left.add_child(UiTheme.make_label("作战棋盘　拖动即重新编译", 18, UiPalette.FG))
 
-	var view := InventoryView.new()
-	view.label_font = _font
-	view.inventory = _board
+	var view := InventoryView.make(_board, _font, true)
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(view)
 

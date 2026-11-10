@@ -33,7 +33,6 @@ const NOTICE_SIZE := 15
 ## 菜单第一次打开（刚从启动屏过来）：第一张画从启动屏那档暗亮起来；之后回菜单直接开镜头
 static var _shown_once := false
 
-var _continue_btn: Button = null
 var _scenery: MenuBackdrop = null
 ## 游戏名：字标图（[TextureRect]）或文字（[Label]）
 var _title: Control = null
@@ -65,12 +64,8 @@ func open(_payload: Dictionary) -> void:
 
 	var logo := UiTheme.art_cached(UiTheme.lang_art(ART_LOGO))     # 221：英文字标 Pack & Extract，画布比例一样
 	if logo != null:
-		var pic := TextureRect.new()
+		var pic := UiTheme.picture(logo, TextureRect.STRETCH_KEEP_ASPECT)
 		pic.name = "MenuLogo"
-		pic.texture = logo
-		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
-		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_title = pic
 		if brighten:     # 启动屏把字标压暗到 40 %：跟着画一起亮起来
 			pic.modulate = Color(MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM)
@@ -86,11 +81,10 @@ func open(_payload: Dictionary) -> void:
 	area.add_child(_column)
 	_primary = _vbox(PRIMARY_GAP)
 	_column.add_child(_primary)
-	_continue_btn = null
 	# 089 补充二（作者 2026-10-27）：「继续」和「新的游戏」二选一 —— 有档只给「继续」（没有局就进基地），没档只给「新的游戏」；
 	# 开第二份存档走「读取存档 → 在空位开新的游戏」
 	if flow.profile_exists():
-		_continue_btn = _line(_primary, UiText.t("menu.continue"), func(): flow.continue_game(), UiTheme.MENU_PRIMARY_SIZE)
+		_line(_primary, UiText.t("menu.continue"), func(): flow.continue_game(), UiTheme.MENU_PRIMARY_SIZE)
 	else:
 		_line(_primary, UiText.t("menu.new_run"), func(): flow.start_new_game(), UiTheme.MENU_PRIMARY_SIZE)
 	_column.add_child(_spacer(PRIMARY_TO_SECONDARY))

@@ -2,7 +2,6 @@
 ## 「载入」（切过去接着玩）、空位是「在这一位开新的游戏」、「删除」（点两次确认）。三位都满了从「新的游戏」进来时顶上一句提示。
 extends GameScreen
 
-var _rows: Dictionary = {}
 var _armed_delete: int = -1
 
 
@@ -64,7 +63,6 @@ func _row(n: int) -> Control:
 		row.add_child(del)
 	else:
 		row.add_child(ScrollKey.primary(UiText.t("slots.new_here"), func(): new_game_here(slot)))
-	_rows[n] = panel
 	return panel
 
 
@@ -84,7 +82,7 @@ func delete_slot(n: int) -> bool:
 		return false
 	_armed_delete = -1
 	flow.delete_slot(n)
-	_rebuild()
+	_reopen()
 	return true
 
 
@@ -96,8 +94,3 @@ func armed_delete() -> int:
 func escape() -> bool:
 	flow.to_main_menu()
 	return true
-
-
-func _rebuild() -> void:
-	_rows.clear()
-	_reopen()

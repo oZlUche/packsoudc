@@ -41,9 +41,7 @@ func show_list() -> void:
 	var m := flow.meta
 	_head = HeaderTag.new(UiText.t("records.count") % [m.history.size(), MetaState.HISTORY_MAX, m.pinned_count(), MetaState.PIN_MAX])
 	add_child(_head)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := UiTheme.vscroll()
 	add_child(scroll)
 	_list = UiTheme.vbox(4)
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -146,9 +144,7 @@ func show_detail(i: int) -> void:
 	_add(right, "records.detail_score", _score(h))
 	if not items.is_empty():
 		var strip := UiTheme.hflow(6)
-		var scroll := ScrollContainer.new()
-		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		var scroll := UiTheme.vscroll()
 		add_child(scroll)
 		strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		scroll.add_child(strip)

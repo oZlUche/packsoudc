@@ -71,12 +71,8 @@ func open(payload: Dictionary) -> void:
 	_backdrop(Color("0d0f12"))     # 叠层挡住底下的地图；有背景图就盖在上面
 	var bg_tex := EventImage.load_texture(skin.background)
 	if bg_tex != null:
-		var bg := TextureRect.new()
-		bg.texture = bg_tex
-		bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		var bg := UiTheme.picture(bg_tex, TextureRect.STRETCH_KEEP_ASPECT_COVERED)
 		bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(bg)
 		var meta := skin.background_meta()
 		var wh: Array = meta.get("size", [])

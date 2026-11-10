@@ -19,8 +19,6 @@ var _hints: Array[String] = []
 
 
 var _payload: Dictionary = {}
-var _bag: Control = null
-var _bag_panel: Control = null
 ## 157：结果页的「收获」行（这次给的、还在地上的那几件，能直接拖进棋盘）与它用的那层拖拽
 var _harvest: HarvestRow = null
 ## 157：结果页有收获时自动开过一次背包（关了背包重画这一页时不再自动开）
@@ -126,10 +124,7 @@ func _open_result(payload: Dictionary) -> void:
 		_harvest = HarvestRow.new()
 		_harvest.label_font = font
 		_harvest.setup(flow.run.storage, harvest)
-		_harvest.item_double_clicked.connect(func(_v: ContainerView, uid: int): _ground_to_bag(uid, func():
-			if _bag == null:
-				toggle_bag()
-			return bag_panel()))     # 双击 = 进包（背包开着也进）
+		_harvest.item_double_clicked.connect(func(_v: ContainerView, uid: int): _ground_to_bag(uid))     # 双击 = 进包（背包开着也进）
 		_tip_double(_harvest, "act.take")     # 230
 		col.add_child(_harvest)
 		_drag = DragLayer.new()
@@ -188,9 +183,7 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	var heading := intro_heading()
 	if heading != "":
 		col.add_child(_heading_label(heading, TEXT_WIDTH))     # 168：开场事件先写章节名（大标题字体）
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := UiTheme.vscroll()
 	col.add_child(scroll)
 	if body != "":
 		# RichTextLabel：正文里能变色、加粗（BBCode，TextTemplate 的样式码也翻成它）；121：17 号、行距 6
@@ -233,9 +226,7 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	var heading := intro_heading()
 	if heading != "":
 		col.add_child(_heading_label(heading, tr_.size.x))
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := UiTheme.vscroll()
 	col.add_child(scroll)
 	if body != "":
 		var text := UiTheme.rich_block(tr_.size.x, UiTheme.RICH_BODY_SIZE, body)
@@ -322,42 +313,23 @@ func is_briefing() -> bool:
 ## 背包整理面板叠在事件上；收起时重画选项（条件可能因为整理过了而满足）
 func toggle_bag() -> void:
 	if _bag != null:
-		_bag.hide()     # 134：先藏起来 —— 这一帧里它的拖拽层就不再算「接地上的面板」
-		_bag.queue_free()
-		_bag = null
+		_close_bag()
 		_rebuild()
 		return
 	if flow.run == null:
 		return
-	_bag = _shade(0.7)
-	# 084：背包是能拖着走的浮窗，不锁在一个地方；关掉再开还在上次放的位置
-	var win := BagWindow.new()
-	_bag.add_child(win)
 	# 157：结果页有收获行时和它共用一层拖拽（从收获行拖进棋盘）；拖拽层挪到最上面，残影画在背包浮窗之上
 	var shared := _drag if _harvest != null and is_instance_valid(_drag) else null
-	_bag_panel = win.setup_bag(flow.run, font, toggle_bag, shared)
-	win.maybe_coach(flow, _bag)     # 218 补充一：序章一第一次开背包窗放教程
+	_open_bag(flow.run, shared)
 	if shared != null:
 		move_child(shared, -1)
-
-
-func bag_open() -> bool:
-	return _bag != null
-
-
-## 134：开着的背包浮窗里那块面板（没开 null）
-func bag_panel() -> Control:
-	return _bag_panel if _bag != null and is_instance_valid(_bag_panel) else null
 
 
 ## 134（作者定）：地上双击 —— 背包开着就交给背包面板；没开就进包并打开背包（放不下只开背包、面板里提示）
 func ground_double_clicked(uid: int) -> bool:
 	if _bag != null:
 		return false
-	return _ground_to_bag(uid, func():
-		if _bag == null:
-			toggle_bag()
-		return bag_panel())
+	return _ground_to_bag(uid)
 
 
 ## 090：Esc —— 开着背包就关背包；结果页就「继续」；等着选的事件不接（必须选）

@@ -44,9 +44,7 @@ func open(payload: Dictionary) -> void:
 	_search = StoneField.new(UiText.t("codex.search"))     # 乙 石刻：刻槽输入框 + 放大镜
 	_search.text_changed.connect(set_query)
 	left.add_child(_search)
-	var toc_scroll := ScrollContainer.new()
-	toc_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	toc_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var toc_scroll := UiTheme.vscroll()
 	left.add_child(toc_scroll)
 	_toc = _vbox(2)
 	_toc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -71,9 +69,7 @@ func open(payload: Dictionary) -> void:
 	_title = _label("", 24, UiTheme.INK)
 	sheet.add_child(_title)
 	sheet.add_child(HSeparator.new())
-	var page_scroll := ScrollContainer.new()
-	page_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var page_scroll := UiTheme.vscroll()
 	sheet.add_child(page_scroll)
 	_body = UiTheme.rich_block(PAGE_WIDTH - 20 - 2 * PAPER_PAD, UiTheme.RICH_BODY_SIZE)     # 121：正文档（现 20 号、行距 8）
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL

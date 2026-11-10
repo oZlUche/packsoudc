@@ -22,10 +22,7 @@ func open(_payload: Dictionary) -> void:
 	var left := _vbox(8)
 	row.add_child(left)
 	_frame_title(UiText.t("safe.title") % [_safe.size.x, _safe.size.y])     # 157：标题在石板框的标题条上
-	_view = InventoryView.new()
-	_view.label_font = font
-	_view.inventory = _safe
-	_view.show_adjacency = false
+	_view = InventoryView.make(_safe, font)
 	_view.dim_filter = func(it: ItemInstance) -> bool: return _module == null or not _module.is_sealed(it.uid)     # 287：交出去的压灰
 	_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_view)
@@ -36,7 +33,7 @@ func open(_payload: Dictionary) -> void:
 	buttons.add_child(back)
 	left.add_child(buttons)
 
-	_inv = _mount_bag(row, _view, Callable(), _safe)     # 棋盘上双击 → 进保险箱；226 批一：回话走告示层
+	_inv = _mount_bag(row, _view, _safe)     # 棋盘上双击 → 进保险箱；226 批一：回话走告示层
 	_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
 	_tip_double(_view, "act.take_back")     # 230
 	_tip_quick(_inv, "act.to_safe", func(inst: ItemInstance) -> String:

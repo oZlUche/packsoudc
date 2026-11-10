@@ -7,7 +7,6 @@
 extends GameScreen
 
 const ART_DIR := "res://assets/ui/rest/"
-const LAYOUT_PATH := ART_DIR + "layout.json"
 ## 没配营地底图的章节用这一张（和宝箱皮肤的默认一样）
 const DEFAULT_BG := &"ruins"
 ## 「体力 +N」那一行多久淡掉（待定 4 A：3 秒）
@@ -50,9 +49,6 @@ var _pieces: Dictionary = {}
 var _extra_btns: Array[Button] = []
 var _note: Control = null
 var _note_text := ""
-var _bag: Control = null
-var _bag_win: BagWindow = null
-var _bag_panel: Control = null
 ## 196 补充一：正文字板与收起后的卷轴（没正文都是 null）
 var _board: Control = null
 var _board_text: RichTextLabel = null
@@ -72,12 +68,8 @@ func open(payload: Dictionary) -> void:
 	_def = def if def is EventDef else null
 	_layout = layout()
 	_backdrop(Color("07090d"))
-	var bg := TextureRect.new()
-	bg.texture = EventImage.load_texture(background_path(flow.run.chapter.chest_skin if flow.run != null and flow.run.chapter != null else DEFAULT_BG))
-	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	var bg := UiTheme.picture(EventImage.load_texture(background_path(flow.run.chapter.chest_skin if flow.run != null and flow.run.chapter != null else DEFAULT_BG)), TextureRect.STRETCH_KEEP_ASPECT_COVERED)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 	set_meta(&"tone", UiTheme.TONE_DARK)     # 夜晚底图：字一律浅色
 	_scene = CampScene.new()
@@ -97,8 +89,7 @@ func open(payload: Dictionary) -> void:
 
 ## layout.json（造物尺寸、原点、各档摆位）；读不出给空字典
 static func layout() -> Dictionary:
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT_PATH))
-	return parsed if parsed is Dictionary else {}
+	return UiTheme.art_meta("rest/layout")
 
 
 ## 这一章的营地底图：跟宝箱皮肤同名（`bg_<id>.png`），没有就用遗迹
@@ -411,37 +402,19 @@ func is_options_page() -> bool:
 
 func toggle_bag() -> void:
 	if _bag != null:
-		_bag.hide()
-		_bag.queue_free()
-		_bag = null
+		_close_bag()
 		_reopen(_payload)     # 收起时重画（条件可能因为整理过了而满足）
 		return
 	if flow.run == null:
 		return
 	_tip.hide_tip()
-	_bag = _shade(0.7)
-	var win := BagWindow.new()
-	_bag.add_child(win)
-	_bag_win = win
-	_bag_panel = win.setup_bag(flow.run, font, toggle_bag)
-	win.maybe_coach(flow, _bag)     # 218 补充一
-
-
-func bag_open() -> bool:
-	return _bag != null
-
-
-func bag_panel() -> Control:
-	return _bag_panel if _bag != null and is_instance_valid(_bag_panel) else null
+	_open_bag(flow.run)
 
 
 func ground_double_clicked(uid: int) -> bool:
 	if _bag != null:
 		return false
-	return _ground_to_bag(uid, func():
-		if _bag == null:
-			toggle_bag()
-		return bag_panel())
+	return _ground_to_bag(uid)
 
 
 ## Esc：开着背包就关背包，否则 = 点路标（继续赶路）

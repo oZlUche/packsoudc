@@ -14,7 +14,6 @@
 extends GameScreen
 
 const BOARD_DIR := "res://assets/ui/board/"
-const BOARD_LAYOUT := BOARD_DIR + "layout.json"
 ## 铜面板第三轮（UI替换美术 bronze3，作者 2026-10-21 16:15–16:22）：外框换 `frame_<kind>_dark`（同几何，内垫深色半透明）、
 ## 格缝按 `boards_dark.cell_seams`、「全部拾取」与右上圆钮换铜面板那套；切图与 `layout.json` 在这里
 const BRONZE_DIR := "res://assets/ui/bronze/"
@@ -37,7 +36,7 @@ const TAKE_VISIBLE := 85.0
 ## 右上角圆钮（铜面板 52 × 52）：钮心压在面板右上角的边框上（往里 29, 29）；两颗时最小化在关闭左边 58
 const CLOSE_AT := Vector2(-29.0, 29.0)
 const MINIMIZE_AT := Vector2(-87.0, 29.0)
-## 216：玩家棋盘下的数值栏，和「全部拾取」看得见的那块同一行（中线对齐）；上沿至少离棋盘格子下沿这么多（`layout.json` 的 `stats_strip.gap` 可改）
+## 216：玩家棋盘下的数值栏，和「全部拾取」看得见的那块同一行（中线对齐）；上沿至少离棋盘格子下沿这么多
 const STRIP_GAP := 22.0
 
 var _container: GridInventory = null
@@ -53,7 +52,6 @@ var _inv: InventoryPanelScript = null
 var _strip: StatsStrip = null
 ## 棋盘美术：左边容器的外框种类（`search` / `chest_iron` / `chest_gold` / `corpse` / `boss`）与摆位用的那几块
 var _kind := ""
-var _layout_data: Dictionary = {}
 var _stage: Control
 var _loot_box: Control
 var _loot_frame: NinePatchRect
@@ -71,7 +69,6 @@ func open(payload: Dictionary) -> void:
 		_container = payload.get("container", null)
 		if _container == null:
 			_container = flow.run.pending_loot
-	_layout_data = board_layout()
 	var panel := _bronze_panel(Vector2(0, 0))
 	_stage = Control.new()
 	_stage.name = "BoardStage"
@@ -114,7 +111,7 @@ func open(payload: Dictionary) -> void:
 		_minimize_btn = _corner("btn_minimize", "－", UiText.t("camp.fold") + "\n" + (UiText.t("loot.extract_results") if _boss else UiText.t("loot.leave_rest")), to_map)
 
 	BoardFrame.mark(_loot, _loot_frame, BoardFrame.dark_seams())     # 227：外框是上面那张铜面板深色框
-	_inv = _mount_bag(_stage, _loot, Callable(), _container, "")     # 084：棋盘上双击 → 放回容器；回话不显示（作者 21:16 删了那一行）
+	_inv = _mount_bag(_stage, _loot, _container, "")     # 084：棋盘上双击 → 放回容器；回话不显示（作者 21:16 删了那一行）
 	_strip = _inv.detach_strip()     # 216：数值栏摆到「全部拾取」那一行
 	_strip.use_inlay(false)     # 铜面板：152 宽嵌槽签、浅字
 	_stage.add_child(_strip)
@@ -160,14 +157,6 @@ func open(payload: Dictionary) -> void:
 
 
 #region 棋盘美术
-## 定稿的摆位与切图参数（`layout.json`）；读不出给空字典（外框退回不画，摆位照常）
-static func board_layout() -> Dictionary:
-	if not FileAccess.file_exists(BOARD_LAYOUT):
-		return {}
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(BOARD_LAYOUT))
-	return parsed if parsed is Dictionary else {}
-
-
 static func _v2(a) -> Vector2:
 	return Vector2(float(a[0]), float(a[1])) if a is Array and (a as Array).size() >= 2 else Vector2.ZERO
 
@@ -192,18 +181,9 @@ func frame_kind() -> String:
 
 
 func _nine(kind: String) -> NinePatchRect:
-	var n := NinePatchRect.new()
-	n.name = "Frame_" + kind
-	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var piece: Dictionary = (BoardFrame.layout().get("frames_dark", {}) as Dictionary).get(kind, {})
-	n.texture = EventImage.load_texture(BRONZE_DIR + String(piece.get("file", "frame_%s_dark.png" % kind)))
-	var m := int(piece.get("margin", 70))
-	n.patch_margin_left = m
-	n.patch_margin_top = m
-	n.patch_margin_right = m
-	n.patch_margin_bottom = m
-	n.axis_stretch_horizontal = NinePatchRect.AXIS_STRETCH_MODE_TILE
-	n.axis_stretch_vertical = NinePatchRect.AXIS_STRETCH_MODE_TILE
+	var n := UiTheme.nine_rect(EventImage.load_texture(BRONZE_DIR + String(piece.get("file", "frame_%s_dark.png" % kind))), int(piece.get("margin", 70)), NinePatchRect.AXIS_STRETCH_MODE_TILE)
+	n.name = "Frame_" + kind
 	return n
 
 
@@ -228,7 +208,7 @@ func panel_size() -> Vector2:
 		w += maxf(0.0, _strip.span_for(player.x - pp * 2.0) - (player.x - pp))
 	var h := maxf(TOP + loot.y + ABOVE_TAKE + TAKE_VISIBLE + EDGE + 6.0, TOP + player.y + BELOW_PLAYER)
 	if _strip != null and _inv != null:     # 216：数值栏放得下（中线对齐「全部拾取」，上沿让开棋盘）
-		h = maxf(h, TOP + player.y - pp + strip_gap() + _strip.strip_height() * 0.5 + take_mid())
+		h = maxf(h, TOP + player.y - pp + STRIP_GAP + _strip.strip_height() * 0.5 + take_mid())
 	return Vector2(w, ceilf(h))     # 「全部拾取」中线是半像素：面板高取整
 
 
@@ -241,10 +221,6 @@ func _player_slot() -> Vector2:
 ## 「全部拾取」看得见那块的中线离面板下沿多高
 static func take_mid() -> float:
 	return -(TAKE_AT.y + TAKE_INSET + TAKE_VISIBLE * 0.5)
-
-
-func strip_gap() -> float:
-	return float((_layout_data.get("stats_strip", {}) as Dictionary).get("gap", STRIP_GAP))
 
 
 ## 容器那块看得见的格子区（太高时是滚动窗口那么高）

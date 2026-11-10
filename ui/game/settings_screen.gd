@@ -43,10 +43,8 @@ func open(_payload: Dictionary) -> void:
 	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	frame.add_child(plate)
 	_plate = plate
-	var scroll := ScrollContainer.new()
+	var scroll := UiTheme.vscroll()
 	_scroll = scroll
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	frame.add_child(scroll)
 	var center := CenterContainer.new()
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -59,7 +57,7 @@ func open(_payload: Dictionary) -> void:
 	_build_sound(col)
 	col.add_child(HSeparator.new())
 	col.add_child(HeaderTag.new(UiText.t("settings.loot_section")))     # 226 批二：分区名上段头签
-	_auto_close_btn = _toggle(UiText.t("settings.loot_auto_close"), toggle_loot_auto_close)
+	_auto_close_btn = StoneChip.toggle(UiText.t("settings.loot_auto_close"), _flip.bind(&"loot_auto_close"))
 	col.add_child(_auto_close_btn)
 	col.add_child(HSeparator.new())
 	col.add_child(HeaderTag.new(UiText.t("settings.bg_section")))
@@ -82,7 +80,7 @@ func open(_payload: Dictionary) -> void:
 		_bg_btns[tid] = b
 		bg_row.add_child(b)
 	col.add_child(bg_row)
-	_fades_btn = _toggle(UiText.t("settings.fades"), toggle_ui_fades)     # 157
+	_fades_btn = StoneChip.toggle(UiText.t("settings.fades"), _flip.bind(&"ui_fades"))     # 157
 	col.add_child(_fades_btn)
 	var cursor_row := _hbox(8)
 	cursor_row.add_child(HeaderTag.new(UiText.t("settings.cursor")))     # 226：「光标」上段头签
@@ -94,7 +92,7 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(cursor_row)
 	col.add_child(HSeparator.new())
 	col.add_child(HeaderTag.new(UiText.t("settings.veteran")))
-	_unlock_all_btn = _toggle(UiText.t("settings.unlock_all"), toggle_unlock_all)
+	_unlock_all_btn = StoneChip.toggle(UiText.t("settings.unlock_all"), toggle_unlock_all)
 	_unlock_all_btn.tooltip_text = UiText.t("settings.unlock_all_desc")     # 226 批二：说明进开关的悬浮窗
 	col.add_child(_unlock_all_btn)
 	var export_btn := StoneChip.make(UiText.t("settings.export_data"), func(): export_balance_data())     # 242：玩家版也有；和同页选项同一张石签（UI替换美术），只是不切换
@@ -104,7 +102,7 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(export_btn)
 	_export_btn = export_btn
 	# 2026-10-22（作者）：百科遮名的总开关 —— 和老手开关同类，放同一节
-	_reveal_names_btn = _toggle(UiText.t("settings.reveal_names"), toggle_reveal_names)
+	_reveal_names_btn = StoneChip.toggle(UiText.t("settings.reveal_names"), _flip.bind(&"reveal_names"))
 	_reveal_names_btn.tooltip_text = UiText.t("settings.reveal_names_desc")
 	col.add_child(_reveal_names_btn)
 	col.add_child(HSeparator.new())
@@ -114,14 +112,14 @@ func open(_payload: Dictionary) -> void:
 		col.add_child(dev)
 		dev.add_child(_label("开发", 15, UiPalette.DIM))
 		dev.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记。", 12, UiPalette.DIM, 500))
-		_debug_btn = _toggle("调试模式", toggle_debug_mode)
+		_debug_btn = StoneChip.toggle("调试模式", _flip.bind(&"debug_mode"))
 		dev.add_child(_debug_btn)
 		dev.add_child(_wrapped("节点浮窗按章节开放（第二章才开），这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
-		_tooltip_btn = _toggle("节点浮窗预览", toggle_node_tooltips_preview)
+		_tooltip_btn = StoneChip.toggle("节点浮窗预览", _flip.bind(&"node_tooltips_preview"))
 		dev.add_child(_tooltip_btn)
 		dev.add_child(_wrapped("战斗日志：每场战斗的内部日志（逐条、带时间）与回放存档写进 user://battle_logs，只留最近 %d 场。回放在开发工具的「战斗回放」里翻。" % BattleArchive.KEEP, 12, UiPalette.DIM, 500))
 		var row := _hbox(8)
-		_trace_btn = _toggle("战斗日志", toggle_battle_trace)
+		_trace_btn = StoneChip.toggle("战斗日志", toggle_battle_trace)
 		row.add_child(_trace_btn)
 		var open_btn := StoneChip.make("打开日志文件夹", open_log_folder)     # UI替换美术：和整页同一张石签，不切换
 		open_btn.toggle_mode = false
@@ -227,11 +225,6 @@ func refresh_display() -> void:
 		b.tooltip_text = UiText.t("settings.fullscreen_note") if full else WindowSetup.aspect_name(p)     # 226 批四：「全屏按桌面分辨率」进灰着的档的悬浮窗
 
 
-## 一个开关行（这一屏的几个布尔项）：乙 石刻 —— 石签拉满整行、左头印表示开 / 关（[method StoneChip.toggle]）
-func _toggle(text: String, handler: Callable) -> Button:
-	return StoneChip.toggle(text, handler)
-
-
 ## 090：返回上一级 —— 嵌在暂停菜单里就回暂停菜单，独立的一屏就回主菜单
 func go_back() -> void:
 	if back.is_valid():
@@ -240,16 +233,11 @@ func go_back() -> void:
 		flow.to_main_menu()
 
 
-## 084：节点浮窗预览：不管章节开没开都显示
-func toggle_node_tooltips_preview() -> void:
-	flow.settings.node_tooltips_preview = not flow.settings.node_tooltips_preview
-	flow.save_settings()
-	_refresh()
-
-
-## 084：拿走最后一件后自动关闭战利品 / 容器屏（默认关：手动关）
-func toggle_loot_auto_close() -> void:
-	flow.settings.loot_auto_close = not flow.settings.loot_auto_close
+## 这一屏只存一个布尔值的开关行（[param field] 是 [GameSettings] 里那一项：拿走最后一件后自动关闭战利品 / 容器屏、换屏淡入、名字全显、调试模式、节点浮窗预览）：翻过来、存盘
+func _flip(field: StringName) -> void:
+	if flow.settings == null:
+		return
+	flow.settings.set(field, not flow.settings.get(field))
 	flow.save_settings()
 	_refresh()
 
@@ -262,13 +250,6 @@ func toggle_battle_trace() -> void:
 	_refresh()
 
 
-## 150 补 2：调试模式开关（存盘；地图屏从暂停菜单的设置回来时照新值重摆）
-func toggle_debug_mode() -> void:
-	flow.settings.debug_mode = not flow.settings.debug_mode
-	flow.save_settings()
-	_refresh()
-
-
 ## 157 补：换光标材质（当场换上、存盘）
 func set_cursor_skin(skin: String) -> void:
 	if not UiCursor.SKINS.has(skin):
@@ -276,13 +257,6 @@ func set_cursor_skin(skin: String) -> void:
 	flow.settings.cursor_skin = skin
 	flow.save_settings()
 	UiCursor.apply(skin)
-	_refresh()
-
-
-## 157：换屏淡入开关（下一次换屏生效）
-func toggle_ui_fades() -> void:
-	flow.settings.ui_fades = not flow.settings.ui_fades
-	flow.save_settings()
 	_refresh()
 
 
@@ -376,35 +350,17 @@ func set_text_size(id: StringName) -> void:
 
 
 func _rebuild() -> void:
-	for c in get_children():
-		remove_child(c)
-		c.queue_free()
 	for d in [_cursor_btns, _bg_btns, _mode_btns, _res_btns, _text_btns]:
 		(d as Dictionary).clear()
-	_auto_close_btn = null
-	_tooltip_btn = null
-	_unlock_all_btn = null
-	_reveal_names_btn = null
+	_tooltip_btn = null     # 开发区的三颗只在开发包里重造
 	_trace_btn = null
 	_debug_btn = null
-	_fades_btn = null
-	_sfx = null
-	open({})
+	_reopen()
 
 
 ## 091：老手的「全部解锁」开关（成就不计）
 func toggle_unlock_all() -> void:
 	flow.toggle_unlock_all()
-	_refresh()
-
-
-## 2026-10-22（作者）：名字全显 —— 勾上之后百科不再把图鉴没点亮的道具名遮成「？」。
-## 百科那三个遮名回调每次渲染现查这个开关，所以不用重建百科，下一次画就变
-func toggle_reveal_names() -> void:
-	if flow.settings == null:
-		return
-	flow.settings.reveal_names = not flow.settings.reveal_names
-	flow.save_settings()
 	_refresh()
 
 

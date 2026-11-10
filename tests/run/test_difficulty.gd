@@ -197,8 +197,8 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 	for gi in setup._chapters.size():
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
-	t.eq(setup._difficulty_num.text, "", "当前难度 0 级是空白卡（180 补四：全空）")
-	t.check(setup._plus_btn.disabled and setup._minus_btn.disabled, "只有普通一档：加减都灰")
+	t.eq(setup._diff_block.flipper.label.text, "", "当前难度 0 级是空白卡（180 补四：全空）")
+	t.check(setup._diff_block.plus_btn.disabled and setup._diff_block.minus_btn.disabled, "只有普通一档：加减都灰")
 	t.check(not flow.available_difficulties().has(hard), "新的局外：进阶没解锁，不列")
 	t.check(setup.difficulty() != null and setup.difficulty().requires_unlock == &"", "默认选的是普通")
 
@@ -213,14 +213,14 @@ static func frame_run_screens(t: TestCase, root: Window) -> void:
 	for gi2 in setup._chapters.size():
 		if setup._chapters[gi2].id == &"free_mode":
 			setup.choose_chapter(gi2)
-	t.check(not setup._plus_btn.disabled, "解锁后能往上加一档")
+	t.check(not setup._diff_block.plus_btn.disabled, "解锁后能往上加一档")
 	var idx := flow.available_difficulties().find(hard)
 	t.check(idx >= 0, "进阶在能选的里")
 	setup.choose_difficulty(idx)
 	t.eq(setup.difficulty(), hard, "挑了进阶")
-	t.eq(setup._difficulty_num.text, setup.difficulty_numeral(hard.level), "罗马数字跟着变")
-	t.check(hard.challenge != "" and setup._challenge.text().contains(hard.challenge), "羊皮纸列出这一级的挑战：%s" % setup._challenge.text())
-	t.check(setup._plus_btn.disabled and not setup._minus_btn.disabled, "到顶：加灰、减亮")
+	t.eq(setup._diff_block.flipper.label.text, setup.difficulty_numeral(hard.level), "罗马数字跟着变")
+	t.check(hard.challenge != "" and setup._diff_block.scroll.text().contains(hard.challenge), "羊皮纸列出这一级的挑战：%s" % setup._diff_block.scroll.text())
+	t.check(setup._diff_block.plus_btn.disabled and not setup._diff_block.minus_btn.disabled, "到顶：加灰、减亮")
 	var went := false
 	for seed_ in range(1, 30):
 		setup.choose_scale(&"")     # 180：种子是按章节默认配置找的（开局屏默认第一档规模）

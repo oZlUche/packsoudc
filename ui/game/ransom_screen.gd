@@ -40,10 +40,7 @@ func open(payload: Dictionary) -> void:
 	_place(_label(UiText.t("ransom.limits"), 13, BalanceScale.INK_SOFT), "hint", true)
 	# 托盘：左盘上方，底边坐在盘里两根矮柱上（柱间堆放上来的金币）
 	_tray = GridInventory.new(TRAY_SIZE, TRAY_ID, false)
-	_tray_view = InventoryView.new()
-	_tray_view.label_font = font
-	_tray_view.inventory = _tray
-	_tray_view.show_adjacency = false
+	_tray_view = InventoryView.make(_tray, font)
 	_tray_view.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_tray_view.tooltip_text = UiText.t("ransom.tray_tip")
 	_scale.tray_slot.add_child(_tray_view)
@@ -64,7 +61,7 @@ func open(payload: Dictionary) -> void:
 	no.tooltip_text = UiText.t("ransom.refuse_tip")
 	_place(no, "refuse", false)
 
-	_inv = _mount_bag(row, _tray_view, Callable(), _tray)     # 棋盘上双击 → 托盘
+	_inv = _mount_bag(row, _tray_view, _tray)     # 棋盘上双击 → 托盘
 	_tray_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
 	_tip_double(_tray_view, "act.take_back")
 	_drag.drop_outside_to_stash = false     # 放到外面 = 放回原处

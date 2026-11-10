@@ -107,12 +107,8 @@ func _get_minimum_size() -> Vector2:
 static func make_rod(art_name: String, thick: float = ROD_H) -> Control:
 	var tex := UiTheme.art(art_name)
 	if tex != null:
-		var pic := TextureRect.new()
-		pic.texture = tex
-		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pic.stretch_mode = TextureRect.STRETCH_SCALE
+		var pic := UiTheme.picture(tex, TextureRect.STRETCH_SCALE)
 		pic.custom_minimum_size.y = maxf(thick, tex.get_size().y)
-		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return pic
 	var flat := ColorRect.new()
 	flat.color = UiTheme.SCROLL_ROD

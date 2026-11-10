@@ -250,7 +250,7 @@ static func frame_tree_panel(t: TestCase, root: Window) -> void:
 	UiText.lang = "en"
 	tree.rebuild()
 	var wb := tree.node_button(&"warehouse")
-	t.check(TechTreeView._widest(wb.get_theme_font("font"), wb.text, wb.get_theme_font_size("font_size")) <= tree.node_rect(&"warehouse").size.x - 18.0, "英文长名字收字号放得下，不被截：%s" % wb.text)
+	t.check(wb.get_theme_font("font").get_multiline_string_size(wb.text, HORIZONTAL_ALIGNMENT_LEFT, -1, wb.get_theme_font_size("font_size")).x <= tree.node_rect(&"warehouse").size.x - 18.0, "英文长名字收字号放得下，不被截：%s" % wb.text)
 	UiText.lang = lang0
 	tree.rebuild()
 

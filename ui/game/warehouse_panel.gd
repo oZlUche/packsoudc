@@ -15,8 +15,6 @@
 ## 268 补充二（作者 10-31 11:25）：基地「仓库」页的包架不在这一列，[method rack_box] 交给 [MetaScreen] 贴在右边仓库棋盘左边；结算页照旧
 extends MarginContainer
 
-const ContainerScreenScript := preload("res://ui/game/container_screen.gd")
-
 signal changed()
 
 ## 两块格子之间的空隙
@@ -27,7 +25,6 @@ const BOARD_MIN_ROWS := 6
 const STUCK_SHOWN := 3
 ## 224（作者 15:19：所有棋盘都显示外框和格线）：带回来的背包套素皮带框（`board/frame_player`，和战利品屏右边同一张九宫格），格子离框外沿这么远
 const BOARD_FRAME_PAD := 24
-const BOARD_FRAME_ART := "res://assets/ui/board/frame_player.png"
 
 var _meta: MetaState = null
 var _flow: GameFlow = null
@@ -179,10 +176,7 @@ func _rebuild_board_view() -> void:
 		_board_box.visible = false
 		return
 	_board_box.visible = true
-	_board_view = InventoryView.new()
-	_board_view.label_font = _font
-	_board_view.inventory = _meta.board
-	_board_view.show_adjacency = false
+	_board_view = InventoryView.make(_meta.board, _font)
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	if board_cell > 0.0:
 		_board_view.cell_px = board_cell
@@ -201,31 +195,13 @@ func _rebuild_board_view() -> void:
 	_board_view.actions_for = board_actions     # 230
 
 
-## 把 [param child] 套进带回来的背包那款皮带框（[method board_frame_box]）。224 补充二：结算第一页的保险箱也用它
+## 把 [param child] 套进带回来的背包那款皮带框（224：素皮带框九宫格，四边 54、中段平铺；格子缩进 [constant BOARD_FRAME_PAD]）。224 补充二：结算第一页的保险箱也用它
 static func framed(child: Control, frame_name: String) -> PanelContainer:
 	var frame := PanelContainer.new()
 	frame.name = frame_name
-	frame.add_theme_stylebox_override("panel", board_frame_box())
+	frame.add_theme_stylebox_override("panel", BoardFrame.box("player", false))
 	frame.add_child(child)
 	return frame
-
-
-## 224：带回来的背包的外框（素皮带框九宫格，四边 54、中段平铺；格子缩进 [constant BOARD_FRAME_PAD]）。没图 = 空框只留边距
-static func board_frame_box() -> StyleBox:
-	var piece: Dictionary = (ContainerScreenScript.board_layout().get("pieces", {}) as Dictionary).get("player", {})
-	var tex := EventImage.load_texture(BOARD_FRAME_ART) if ResourceLoader.exists(BOARD_FRAME_ART) else null
-	var box: StyleBox
-	if tex != null:
-		var sbt := StyleBoxTexture.new()
-		sbt.texture = tex
-		sbt.set_texture_margin_all(float(piece.get("margin", 54)))
-		sbt.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
-		sbt.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
-		box = sbt
-	else:
-		box = StyleBoxEmpty.new()
-	box.set_content_margin_all(float(piece.get("cells_offset", BOARD_FRAME_PAD)))
-	return box
 
 
 ## 164：带回来的背包的格子边长（基地按中列宽和右边仓库一起算）

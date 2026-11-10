@@ -91,7 +91,8 @@ func rebuild() -> void:
 		var id := def.id
 		b.pressed.connect(func(): select(id))
 		add_child(b)
-		_fit_text(b, r.size.x - (2.0 * PEG_ROOM if _wood() else 18.0))     # 木牌：让开两头的钉子；平板：两边留白 6 + 选中描边 3
+		# 名字长（英文）放不下就把字号往下收，别被截掉（游戏测试 10-21：Warehouse Expansion 截成 Expansio）
+		TextFit.shrink_button_to(b, r.size.x - (2.0 * PEG_ROOM if _wood() else 18.0), 10)     # 木牌：让开两头的钉子；平板：两边留白 6 + 选中描边 3
 		_nodes[def.id] = b
 	var tags: Dictionary = {}
 	var widest := 0.0
@@ -128,24 +129,6 @@ func _draw_ring() -> void:
 
 func _wood() -> bool:
 	return UiTheme.art_cached(String(WOOD_ART[1])) != null
-
-
-## 名字长（英文）放不下就把字号往下收，别被截掉（游戏测试 10-21：Warehouse Expansion 截成 Expansio）
-static func _fit_text(b: Button, room: float) -> void:
-	var font_ := b.get_theme_font("font")
-	if font_ == null:
-		return
-	var size_ := b.get_theme_font_size("font_size")
-	while size_ > 10 and _widest(font_, b.text, size_) > room:
-		size_ -= 1
-	b.add_theme_font_size_override("font_size", size_)
-
-
-static func _widest(font_: Font, text: String, p_size: int) -> float:
-	var w := 0.0
-	for line in text.split("\n"):
-		w = maxf(w, font_.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, p_size).x)
-	return w
 
 
 ## 选中一个节点（发 [signal selected]）；没有这个 id 返回 false

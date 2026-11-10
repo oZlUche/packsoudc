@@ -22,7 +22,6 @@ const ROWS := 2
 
 var flow: GameFlow = null
 var font: Font = null
-var say: Callable = Callable()
 ## 282：铁匠（左上角空墙）
 var npc: NpcBadge = null
 var _stage: MarketStage = null
@@ -45,10 +44,9 @@ var _cell_k := 1.0
 var _cell_px := Vector2.ZERO
 
 
-func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void:
+func setup(p_flow: GameFlow, p_font: Font) -> void:
 	flow = p_flow
 	font = p_font
-	say = p_say
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_stage = MarketStage.new(LAYOUT, BG)
 	_stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -95,8 +93,7 @@ func setup(p_flow: GameFlow, p_font: Font, p_say: Callable = Callable()) -> void
 
 ## 282：铁匠给了东西（破晓的信物）
 func _say_given(id: StringName) -> void:
-	if say.is_valid():
-		say.call(UiText.t("npc.given") % Names.of(flow.items.get_def(id)))
+	NoticeLayer.post(self, UiText.t("npc.given") % Names.of(flow.items.get_def(id)))
 
 
 ## 翻到这一类（左列的键）；打造界面收起
@@ -258,9 +255,8 @@ func forge(id: StringName) -> String:
 	var r := SmithRecipeDef.find(flow.smith_recipes, id)
 	var def := flow.items.get_def(r.output) if r != null else null
 	var why := flow.forge(id)
-	if say.is_valid():
-		var name_ := Names.of(def) if def != null else String(id)
-		say.call(UiText.t("smithy.forged") % name_ if why == "" else UiText.t("smithy.cant") % [name_, why])
+	var name_ := Names.of(def) if def != null else String(id)
+	NoticeLayer.post(self, UiText.t("smithy.forged") % name_ if why == "" else UiText.t("smithy.cant") % [name_, why])
 	if why == "":
 		var cell_ := _cells.get(id, null) as RecipeCell
 		if cell_ != null:

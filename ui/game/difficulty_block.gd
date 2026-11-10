@@ -146,13 +146,9 @@ func title_rect() -> Rect2:
 	return Rect2(Vector2((WIDTH - sz.x) * 0.5, 0.0), sz)
 
 
-## 收起时两根卷轴顶在哪（上下边缘相接、在按钮面后面居中）、中间夹多高（0）
+## 收起时两根卷轴顶在哪（上下边缘相接、在按钮面后面居中；中间夹的高是 0）
 func closed_rods_y() -> float:
 	return (CLOSED_H - scroll.rods_h()) * 0.5
-
-
-func closed_hold() -> float:
-	return 0.0
 
 
 ## 展开时计数器、加减、卷轴顶在哪（有图：标题牌下沿压计数器上沿 4 像素）
@@ -251,7 +247,7 @@ func _play_open(numeral: String, lines: Array, dir: int) -> void:
 		flipper.set_value(numeral, dir, true)
 		scroll.set_lines(lines, false)     # 卷轴钉在 0 高：行已经在纸里，拉开就露出来
 		scroll.paper_alpha = 1.0)
-	_tween.chain().tween_method(func(h: float): scroll.hold_h = h, 0.0, _natural_paper(), SPREAD_SEC).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	_tween.chain().tween_method(func(h: float): scroll.hold_h = h, 0.0, scroll.paper_height(), SPREAD_SEC).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_tween.chain().tween_callback(_end_transition)
 
 
@@ -267,16 +263,11 @@ func _play_close(numeral: String, lines: Array, dir: int) -> void:
 		scroll.paper_alpha = 0.0)
 	_tween.set_parallel()
 	_tween.chain().tween_property(self, ^"rods_y", closed_rods_y(), MOVE_SEC).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
-	_tween.tween_property(scroll, ^"hold_h", closed_hold(), MOVE_SEC).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
+	_tween.tween_property(scroll, ^"hold_h", 0.0, MOVE_SEC).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
 	for c: Control in [title, counter, steps]:
 		_tween.tween_property(c, ^"modulate:a", 0.0, MOVE_SEC)
 	_tween.chain().tween_property(open_btn, ^"modulate:a", 1.0, PLATE_IN_SEC)     # 卷轴到位后铜牌再淡入
 	_tween.chain().tween_callback(_end_transition)
-
-
-## 纸放开以后按内容该多长
-func _natural_paper() -> float:
-	return scroll.paper_height()
 
 
 func _end_transition() -> void:
@@ -305,7 +296,7 @@ func _apply(open: bool) -> void:
 	for c: Control in [title, counter, steps]:
 		c.modulate.a = 1.0 if open else 0.0
 	scroll.paper_alpha = 1.0 if open else 0.0
-	scroll.hold_h = -1.0 if open else closed_hold()
+	scroll.hold_h = -1.0 if open else 0.0
 	rods_y = open_rods_y() if open else closed_rods_y()
 	_layout()
 

@@ -188,10 +188,7 @@ func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: S
 	var grid := GridInventory.new(BoardFrame.padded_size(size_, cell), 0, false)
 	if def != null:
 		grid.place(ItemInstance.create(def, 0), Vector2i.ZERO, 0)
-	var view := InventoryView.new()
-	view.label_font = _font
-	view.show_adjacency = false
-	view.inventory = grid
+	var view := InventoryView.make(grid, _font)
 	view.cell_px = cell
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_product.add_child(view)

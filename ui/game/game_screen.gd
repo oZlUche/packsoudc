@@ -28,6 +28,9 @@ var _painted: Control = null
 
 ## 226 批一：没有导演时这一屏自己挂的告示层（[method notice_layer]）
 var _own_notices: NoticeLayer = null
+## 背包浮窗的那层遮罩（没开 null）与窗里那块面板（[method _open_bag] 造；地图、事件、营地三屏有）
+var _bag: Control = null
+var _bag_panel: Control = null
 
 ## 157 补充三：底屏的大石板占屏幕多少（宽高各九成、居中，板外是纯色底）
 const SLAB_SHARE := 0.9
@@ -120,8 +123,8 @@ func ground_double_clicked(_uid: int) -> bool:
 
 
 ## 134：「进包 + 打开背包」的那一套，有背包浮窗的屏（地图、事件）共用：先试着进棋盘，**无论成败都打开背包**；
-## 放不下就让面板提示一句。[param open_bag] 打开背包并返回那块 [InventoryPanel]
-func _ground_to_bag(uid: int, open_bag: Callable) -> bool:
+## 放不下就让面板提示一句
+func _ground_to_bag(uid: int) -> bool:
 	var run := flow.run if flow != null else null
 	if run == null or run.storage == null or run.board == null:
 		return false
@@ -129,19 +132,51 @@ func _ground_to_bag(uid: int, open_bag: Callable) -> bool:
 	if inst == null:
 		return false
 	var moved := InventoryService.transfer_auto(run.storage, uid, run.board)
-	var panel = open_bag.call()
+	if _bag == null:
+		toggle_bag()
+	var panel = bag_panel()
 	if not moved and panel != null and panel.has_method("say_no_room"):
 		panel.say_no_room(inst)
 	return true
 
 
+## 背包整理面板叠在这一屏上，再按一次收起：有背包浮窗的屏各自写（开、收时各屏另有自己的事），开走 [method _open_bag]、收走 [method _close_bag]
+func toggle_bag() -> void:
+	pass
+
+
+## 打开背包浮窗（084：能拖着走的浮窗，关掉再开还在上次放的位置）：遮罩上放一个 [BagWindow]；[param drag] / [param hint_sink] 照传给 [method BagWindow.setup_bag]
+func _open_bag(run: RunState, drag: DragLayer = null, hint_sink: Callable = Callable()) -> void:
+	_bag = _shade(0.7)
+	var win := BagWindow.new()
+	_bag.add_child(win)
+	_bag_panel = win.setup_bag(run, font, toggle_bag, drag, hint_sink)
+	win.maybe_coach(flow, _bag)     # 218 补充一：序章一第一次开背包窗放教程
+
+
+## 收起背包浮窗
+func _close_bag() -> void:
+	_bag.hide()     # 134：先藏起来 —— 这一帧里它的拖拽层就不再算「接地上的面板」
+	_bag.queue_free()
+	_bag = null
+
+
+func bag_open() -> bool:
+	return _bag != null
+
+
+## 134：开着的背包浮窗里那块面板（没开 null）
+func bag_panel() -> Control:
+	return _bag_panel if _bag != null and is_instance_valid(_bag_panel) else null
+
+
 ## 节点屏（神坛 / 保险箱 / 容器 / 商店）右边的背包一次装好：面板（棋盘 + 地上）、盖住整屏的拖拽层、停在道具上的悬浮窗。
 ## [param other] 是左边对面的那块视图（祭品台 / 保险箱 / 容器 / 出售区）：登记到拖拽层、由悬浮窗盯着；
-## [param hint_sink] 接面板的提示（`func(text: String)`）；[param quick_target] 是棋盘上双击的去处（商店没有）。
+## [param quick_target] 是棋盘上双击的去处（商店没有）。
 ## 加进树的顺序就是 z 序：面板进 [param row] → 拖拽层 → 悬浮窗，拖拽层要在面板之后加才盖得住。
 ## 各屏自己的规矩（`drop_filter`、`can_show`……）回来之后接到 [member _drag] / [member _tip] 上。
 ## 227：棋盘套 [param frame] 外框（[method BoardFrame.wrap]，[param dark] 是铜面板 / 夜里那套深色框）；空串 = 屏自己摆框（搜刮屏）
-func _mount_bag(row: Control, other: ContainerView, hint_sink: Callable, quick_target: ItemContainer = null, frame: String = "player", dark: bool = false) -> InventoryPanelScript:
+func _mount_bag(row: Control, other: ContainerView, quick_target: ItemContainer = null, frame: String = "player", dark: bool = false) -> InventoryPanelScript:
 	var inv := InventoryPanelScript.new()
 	_drag = DragLayer.new()
 	_drag.label_font = font
@@ -152,7 +187,6 @@ func _mount_bag(row: Control, other: ContainerView, hint_sink: Callable, quick_t
 			BoardFrame.brown(inv.board_view)     # 作者 10-27：局内玩家棋盘统一棕底
 		inv.hold_nine()     # 255 补充一：面板按九格定宽（搜刮屏自己摆框、自己留位）
 	inv.quick_target = quick_target
-	inv.hint_sink = hint_sink
 	row.add_child(inv)
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_drag)
@@ -196,20 +230,20 @@ func _enemy_name(content: Dictionary) -> String:
 
 
 ## 157：对手的名牌（战前准备、战斗回放共用）：名字、肖像（有图才画）
-func _enemy_plate(content: Dictionary, portrait_side: int = Nameplate.PORTRAIT_SIZE) -> Nameplate:
+func _enemy_plate(content: Dictionary) -> Nameplate:
 	var id := StringName(String(content.get("enemy", ""))) if not content.is_empty() else &""
 	var def := flow.enemies.enemy(id) if id != &"" else null
 	if def == null:
-		return Nameplate.new().setup(UiText.t("screen.enemy"), "", null, portrait_side)
-	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id), portrait_side)
+		return Nameplate.new().setup(UiText.t("screen.enemy"), "", null, Nameplate.COMPACT_PORTRAIT)
+	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id), Nameplate.COMPACT_PORTRAIT)
 
 
 ## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）
-func _player_plate(portrait_side: int = Nameplate.PORTRAIT_SIZE) -> Nameplate:
+func _player_plate() -> Nameplate:
 	var ch := flow.run.character if flow.run != null else null
 	if ch == null:
-		return Nameplate.new().setup(UiText.t("battle.me"), "", null, portrait_side)
-	return Nameplate.new().setup(Names.of(ch), UiText.t("battle.side_mine"), Nameplate.character_face(ch.id), portrait_side)
+		return Nameplate.new().setup(UiText.t("battle.me"), "", null, Nameplate.COMPACT_PORTRAIT)
+	return Nameplate.new().setup(Names.of(ch), UiText.t("battle.side_mine"), Nameplate.character_face(ch.id), Nameplate.COMPACT_PORTRAIT)
 
 
 #region 控件（造控件的活在 [UiTheme] 里，这里只留给子类的短名字）
@@ -251,7 +285,7 @@ func refresh_backdrop() -> void:
 ## 157 补充三（作者定：每个界面在一块完整的石板上显示）：底屏的一整块大石板 —— 屏幕九成宽高、居中，板外是纯色底（[method _backdrop]）。
 ## 返回板里的内容区（一块铺满板内边距的空控件）：各屏照旧往里放铺满的居中 / 边距容器。
 ## [param edge_art] = 板边换一张（224 补充二：结算屏用没有标题刻线的 `slab_edge_plain`），内容区边距照旧按主题的石板
-func _slab_screen(min_size: Vector2 = Vector2.ZERO, edge_art: String = "") -> Control:
+func _slab_screen(edge_art: String = "") -> Control:
 	var slab := UiTheme.slab(PanelContainer.new(), edge_art)
 	slab.name = "ScreenSlab"
 	var side := (1.0 - SLAB_SHARE) * 0.5
@@ -259,7 +293,6 @@ func _slab_screen(min_size: Vector2 = Vector2.ZERO, edge_art: String = "") -> Co
 	slab.anchor_top = side
 	slab.anchor_right = 1.0 - side
 	slab.anchor_bottom = 1.0 - side
-	slab.custom_minimum_size = min_size
 	add_child(slab)
 	_screen_slab = slab
 	# 内容区和板同锚点、按板的内边距缩进；不放进板（容器）里 —— 那样要等下一帧排版才有大小，钉在角上的按钮第一帧会跑到屏外

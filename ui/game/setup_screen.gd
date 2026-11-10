@@ -94,20 +94,11 @@ var _character_btns: Array[Button] = []
 ## 180：第三页 —— 左列的地图 / 规模、中间的预览、右边的难度块
 var _map_list: VBoxContainer = null
 var _preview: MapPreview = null
-var _difficulty_num: Label = null
-## 180 补二：难度的翻页计数器牌面（黑底白字、深黄铜框）；补三：翻页有方向（[FlipCounter]）
-var _counter: PanelContainer = null
-var _flipper: FlipCounter = null
 ## 上一次加减的方向（翻页往哪翻）
 var _step_dir: int = 0
-## 180 补四 / 补五：难度块（〇级收成「开启挑战」按钮、≥ Ⅰ 展开，卷轴走位的动画在 [DifficultyBlock] 里）；
-## 下面几个是它里面的件（测试与旧代码直接看）
+## 180 补四 / 补五：难度块（〇级收成「开启挑战」按钮、≥ Ⅰ 展开，卷轴走位的动画在 [DifficultyBlock] 里）：
+## 翻页计数器牌面（180 补二 / 补三，[FlipCounter]）、加减两颗键、挑战说明的卷轴羊皮纸（180 补三，[ChallengeScroll]）都是它里面的件
 var _diff_block: DifficultyBlock = null
-var _diff_plate: Button = null
-var _minus_btn: Button = null
-var _plus_btn: Button = null
-## 180 补三：挑战说明 —— 卷轴羊皮纸（[ChallengeScroll]）
-var _challenge: ChallengeScroll = null
 ## 180：预览的图按「章 | 规模 | 种子」记，同一档不重复生成（182：整张图都留着，入口位置也从它算）
 var _graph_cache: Dictionary = {}
 ## 182（作者 2026-10-17 15:26）：第三页纸上挑的出生点（-1 = 还没挑，「出发」灰着）；预览现在铺的是哪一张（换了就清选择）
@@ -670,13 +661,6 @@ func _build_map_page() -> Control:
 	right.add_child(_diff_block)
 	_diff_block.step_pressed.connect(step_difficulty)
 	_diff_block.open_pressed.connect(_on_plate_pressed)
-	_diff_plate = _diff_block.open_btn
-	_counter = _diff_block.counter
-	_flipper = _diff_block.flipper
-	_difficulty_num = _flipper.label
-	_minus_btn = _diff_block.minus_btn
-	_plus_btn = _diff_block.plus_btn
-	_challenge = _diff_block.scroll
 	_area.resized.connect(_fit_challenge)
 	return row
 
@@ -1220,8 +1204,8 @@ func _sync_difficulty() -> void:
 	var d := difficulty()
 	if _diff_block == null:
 		return
-	_minus_btn.disabled = difficulty_index <= 0
-	_plus_btn.disabled = difficulty_index >= avail.size() - 1
+	_diff_block.minus_btn.disabled = difficulty_index <= 0
+	_diff_block.plus_btn.disabled = difficulty_index >= avail.size() - 1
 	_diff_block.set_locked(avail.size() <= 1)
 	# 只在玩家点了加减 / 按钮时播（读上次的难度直接是展开态）
 	var animate := _animations_on() and _step_dir != 0
@@ -1267,9 +1251,9 @@ func _fit_challenge() -> void:
 	if _diff_block == null or _enter_btn == null or not _diff_block.is_inside_tree() or not _diff_block.is_visible_in_tree():
 		return
 	var top := _diff_block.get_global_rect().position.y + _diff_block.open_paper_top()
-	var limit := _enter_btn.get_global_rect().position.y - PAPER_CLEARANCE - _challenge.bottom_rod.custom_minimum_size.y
+	var limit := _enter_btn.get_global_rect().position.y - PAPER_CLEARANCE - _diff_block.scroll.bottom_rod.custom_minimum_size.y
 	if limit > top:
-		_challenge.max_paper = limit - top
+		_diff_block.scroll.max_paper = limit - top
 
 
 func difficulty() -> DifficultyDef:
@@ -1779,10 +1763,7 @@ func _rebuild_board() -> void:
 			flow.meta.put_bag(inst)
 	board.end_batch()
 	_note = ""
-	_board_view = InventoryView.new()
-	_board_view.label_font = font
-	_board_view.inventory = board
-	_board_view.show_adjacency = true
+	_board_view = InventoryView.make(board, font, true)
 	_board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_board_host.add_child(_board_view)
 	var frame := BoardFrame.wrap(_board_view)     # 227：皮带框 + 格缝（同背包窗），外面那块皮面板照旧
@@ -1924,10 +1905,7 @@ func _build_preview(ch: CharacterDef) -> void:
 	_grooves[2].custom_minimum_size.x = right_width()
 	_preview_board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
 	ch.shape_board(_preview_board, flow.items, Callable(), false)
-	_preview_view = InventoryView.new()
-	_preview_view.label_font = font
-	_preview_view.inventory = _preview_board
-	_preview_view.show_adjacency = false
+	_preview_view = InventoryView.make(_preview_board, font)
 	_preview_host.add_child(_preview_view)     # 179：底下不再列有哪些背包
 	var frame := BoardFrame.wrap(_preview_view)     # 227：皮带框 + 格缝；255：有缺格时框沿轮廓走
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255：不足九格居中，差额是左右内距

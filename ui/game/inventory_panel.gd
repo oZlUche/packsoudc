@@ -80,11 +80,8 @@ func _build() -> void:
 	left.add_theme_constant_override("separation", 8)
 	row.add_child(left)
 	# 160：腰带不在背包里了（屏幕右下角 [BeltSlots]）。188：棋盘上面那行玩法说明也删了
-	board_view = InventoryView.new()
-	board_view.label_font = _font
-	board_view.inventory = _run.board
+	board_view = InventoryView.make(_run.board, _font, true)
 	board_view.cell_px = cell_px
-	board_view.show_adjacency = true
 	board_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(board_view)
 	# 216：耐力 / DPS / 负重三张火漆签（原耐力行、负重行）；各自停上去看细节

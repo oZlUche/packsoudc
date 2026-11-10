@@ -69,9 +69,7 @@ func setup(p_warehouse: Warehouse, font: Font, p_drag: DragLayer = null, plan: D
 	_tech_name = String(plan.get("name", _tech_name))
 	tab_box = UiTheme.vbox(4)
 	add_child(tab_box)
-	view = InventoryView.new()
-	view.label_font = font
-	view.show_adjacency = false
+	view = InventoryView.make(null, font)
 	view.ground = InventoryView.GROUND_WAREHOUSE     # 224：棕底、浅格线在道具下面、外圈深色细边（三处一样）
 	view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN

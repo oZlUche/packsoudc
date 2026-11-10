@@ -44,8 +44,6 @@ var _coach: CoachOverlay = null
 ## 150 补 1：这一屏交给读数层摆的部件（id → 控件）；没被组件领走的（调试模式关着时的日志）挂在藏着的架子上，照样在
 var _parts: Dictionary = {}
 var _shelf: Control = null
-var _bag: Control = null
-var _bag_panel: Control = null
 var _confirm: Control = null
 ## 090（作者定）：地图上按 Esc 呼出的暂停菜单（继续 / 设置 / 存档并回主菜单）；设置嵌在它里面，返回回暂停菜单、一局还在
 var _pause: Control = null
@@ -69,7 +67,7 @@ var _paper: Control = null
 ## 转场的起止：{zoom0, pan0, zoom1, pan1, r0, r1, levels}；空 = 没在转场
 var _reveal: Dictionary = {}
 var _reveal_tween: Tween = null
-## 浮在地图上的读数与预览两行：转场最后才出来
+## 浮在地图上的读数：转场最后才出来
 var _floating: Array[Control] = []
 ## 277 第 3 条：连走还剩的点（第一个是下一步）；空 = 没在连走
 var _walk: Array[int] = []
@@ -302,34 +300,16 @@ func _shade(alpha: float = 0.7, centered: bool = false) -> ColorRect:
 ## 背包整理面板叠在地图上，再按一次收起。084：是能拖着走的浮窗，关掉再开还在上次放的位置
 func toggle_bag() -> void:
 	if _bag != null:
-		_bag.hide()     # 134：先藏起来 —— 这一帧里它的拖拽层就不再算「接地上的面板」
-		_bag.queue_free()
-		_bag = null
+		_close_bag()
 		return
-	_bag = _shade(0.7)
-	var win := BagWindow.new()
-	_bag.add_child(win)
-	_bag_panel = win.setup_bag(_run, font, toggle_bag, null, say)     # 188：顶出来了、放不下、合成了 —— 走提示行
-	win.maybe_coach(flow, _bag)     # 218 补充一：序章一第一次开背包窗放教程
-
-
-func bag_open() -> bool:
-	return _bag != null
-
-
-## 134：开着的背包浮窗里那块面板（没开 null）
-func bag_panel() -> Control:
-	return _bag_panel if _bag != null and is_instance_valid(_bag_panel) else null
+	_open_bag(_run, null, say)     # 188：顶出来了、放不下、合成了 —— 走提示行
 
 
 ## 134（作者定）：地上双击 —— 背包开着就交给背包面板；没开就进包并打开背包（放不下只开背包、面板里提示）
 func ground_double_clicked(uid: int) -> bool:
 	if _bag != null or _confirm != null or _pause != null or _rules != null or _ask != null:
 		return false
-	return _ground_to_bag(uid, func():
-		if _bag == null:
-			toggle_bag()
-		return bag_panel())
+	return _ground_to_bag(uid)
 
 
 ## 084：还没走，重新打开这个点的最后一个界面（没拿完的战利品 / 还开着的搜索或商店 / 等着的事件或一场）。没有可开的返回 false
@@ -841,9 +821,7 @@ func _update_tooltip(id: int) -> void:
 		return
 	var extra: Control = null
 	if NodeTooltip.shows_board(node):
-		var v := InventoryView.new()
-		v.label_font = font
-		v.inventory = EnemyKit.board_of(node.content, flow.items)
+		var v := InventoryView.make(EnemyKit.board_of(node.content, flow.items), font, true)
 		v.cell_px = ENEMY_TIP_CELL
 		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		extra = BoardFrame.wrap(v, "corpse")     # 227：生皮框 + 格缝，格子小一档（纸签里放得下）
@@ -992,7 +970,7 @@ func _rebuild_routes() -> void:
 #region 界面
 func _build() -> void:
 	_backdrop()
-	# 166：整屏 = 铺满的地图 + 浮在上面的两行预览与读数层（顶端栏、左下、右下）；地图按读数层占着的边算「刚好放下」
+	# 166：整屏 = 铺满的地图 + 浮在上面的读数层（顶端栏、左下、右下）；地图按读数层占着的边算「刚好放下」
 	var area := Control.new()
 	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1000,15 +978,6 @@ func _build() -> void:
 	_view = MapView.new()
 	_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	area.add_child(_view)
-	# 两行预览浮在地图底边正中（左右让开左下图例与右下腰带）
-	var lines := _vbox(0)
-	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lines.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	lines.offset_left = PART_WIDTH + 24
-	lines.offset_right = -(PART_WIDTH + 24)
-	lines.offset_top = -(PREVIEW_LINES * 22.0 + 8.0)
-	lines.offset_bottom = -8
-	area.add_child(lines)
 	_hud_host = HudHost.new()
 	_hud_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_hud_host.arranged.connect(func():
@@ -1018,7 +987,7 @@ func _build() -> void:
 		if _drawer != null:
 			_drawer.dock(_hud_host.bar_height() + 8.0, DRAWER_MARGIN))
 	area.add_child(_hud_host)
-	_floating = [lines, _hud_host]
+	_floating = [_hud_host]
 	_view.node_pressed.connect(_on_node_pressed)
 	_view.node_hovered.connect(_on_node_hovered)
 	_view.zoom_changed.connect(_remember_zoom)
@@ -1442,11 +1411,6 @@ func replay_coach(kind: StringName) -> void:
 	flow.meta.coach_seen.erase(String(_run.chapter.coach_for(kind)))
 	flow.save_meta()
 	_say("下一次进%s会再放一次教程" % REPLAY_LATER.get(kind, ""))
-
-
-## 166 补充二：旧名（调试台、测试）
-func replay_battle_coach() -> void:
-	replay_coach(&"battle")
 #endregion
 
 

@@ -158,6 +158,15 @@ static func set_focused(item: ItemInstance, tree: SceneTree) -> void:
 		tree.call_group(GROUP, "queue_redraw")
 
 
+## 建一块 [param inv] 的视图：[param adjacency] = 画不画邻接标记格（战利品、商店货架这类地方不参战，默认不画）
+static func make(inv: GridInventory, font: Font, adjacency: bool = false) -> InventoryView:
+	var v := InventoryView.new()
+	v.label_font = font
+	v.inventory = inv
+	v.show_adjacency = adjacency
+	return v
+
+
 func _init() -> void:
 	UiTheme.warm_slot_icons()     # 170：格位图标先读好，别等到 _draw 里第一次读（兼容渲染器下会画成白块）
 	add_to_group(GROUP)

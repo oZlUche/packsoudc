@@ -42,10 +42,7 @@ func open(payload: Dictionary) -> void:
 	row.add_child(left)
 	left.add_child(HeaderTag.new(UiText.t("altar.table")))     # 226 批二：段头签
 	_table = GridInventory.new(Vector2i(4, 4), TABLE_ID, false)
-	_table_view = InventoryView.new()
-	_table_view.label_font = font
-	_table_view.inventory = _table
-	_table_view.show_adjacency = false
+	_table_view = InventoryView.make(_table, font)
 	_table_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_table_view)
 	var table_frame := BoardFrame.wrap(_table_view)     # 227：素框 + 格缝
@@ -64,7 +61,7 @@ func open(payload: Dictionary) -> void:
 	_actions_box = _vbox(6)
 	left.add_child(_actions_box)
 
-	_inv = _mount_bag(row, _table_view, Callable(), _table)     # 棋盘上双击 → 祭品台；226 批一：回话走告示层
+	_inv = _mount_bag(row, _table_view, _table)     # 棋盘上双击 → 祭品台；226 批一：回话走告示层
 	_table_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
 	_tip_double(_table_view, "act.take_back")     # 230
 	_tip_quick(_inv, "act.offer", func(inst: ItemInstance) -> String:
