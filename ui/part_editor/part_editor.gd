@@ -5,16 +5,9 @@
 ## 左边按类分页（144 的分组行做法）+ 搜索；列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。
 extends AuthoringEditor
 
-## 176：带整个库的导入上下文（不写 class_name，按路径取）
-const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
-
 const KIND := "rule_parts"
 ## 分组：标题、构件的字段（空 = 全部）
 const GROUPS := [["全部", ""], ["扳机", "trigger"], ["节奏", "cadence"], ["消耗与检查", "cost"], ["效果", "effect"]]
-const PART_TEXTS := {
-	"ok": "没有问题", "unreadable": "%s.json 读不到", "err_id": "先给一个 id", "err_save": "有错，没存",
-	"err_write": "写不进作者目录", "warn_asset": "JSON 存了，.tres 没写成", "err_json": "JSON 读不通",
-}
 
 ## 列表里实际显示的 id（按显示顺序；ItemList 的行号对它）
 var _shown: Array[String] = []
@@ -25,26 +18,14 @@ var _name_of: Dictionary = {}
 
 var _group_host: HBoxContainer
 var _search: LineEdit
-var _id_edit: LineEdit
-var _name_edit: LineEdit
 var _slot_pick: OptionButton
 var _preview: Label
-var _form_host: VBoxContainer
 var _users: Label
 
 
 func _init() -> void:
 	_kind = KIND
-
-
-func _ready() -> void:
-	_font = UiPalette.cjk_font()
-	var settings := GameSettings.load_from()
-	UiText.apply(settings)
-	UiPalette.apply(settings)
-	_ctx = AuthoringContext.context()     # 构件里的施加状态按 id 引用库里的 buff
-	_build_ui()
-	_start()
+	_texts = LIBRARY_TEXTS
 
 
 #region 界面
@@ -102,11 +83,7 @@ func _build_ui() -> void:
 	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
 	_id_edit = LineEdit.new()
 	_id_edit.custom_minimum_size.x = 180
-	_id_edit.text_changed.connect(func(text: String):
-		if _syncing or _def == null:
-			return
-		_def.id = StringName(text.strip_edges())
-		_refresh())
+	_id_edit.text_changed.connect(_on_id_edited)
 	id_row.add_child(_id_edit)
 	id_row.add_child(UiTheme.make_button("保存", _save, UiTheme.TIER_PLAIN, 13))
 	id_row.add_child(UiTheme.make_button("另存为新 id", _save_as, UiTheme.TIER_PLAIN, 13))
@@ -115,11 +92,7 @@ func _build_ui() -> void:
 	name_row.add_child(UiTheme.make_label("名字", 13, UiPalette.DIM))
 	_name_edit = LineEdit.new()
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_name_edit.text_changed.connect(func(text: String):
-		if _syncing or _def == null:
-			return
-		_def.display_name = text
-		_refresh())
+	_name_edit.text_changed.connect(_on_name_edited)
 	name_row.add_child(_name_edit)
 	mid.add_child(name_row)
 	var slot_row := UiTheme.hbox(6)
@@ -136,13 +109,7 @@ func _build_ui() -> void:
 	_preview = UiTheme.make_wrapped("", 14, UiPalette.FG, 420)
 	mid.add_child(_preview)
 	mid.add_child(HSeparator.new())
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	mid.add_child(scroll)
-	_form_host = UiTheme.vbox(8)
-	_form_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_form_host)
+	_form_host = _scroll_body(mid)
 
 	# 右：谁在用 / 校验 / JSON
 	var side := UiTheme.vbox(8)
@@ -300,16 +267,11 @@ func _new_part() -> void:
 	_select_in_list(_draft_key())
 
 
-func _on_bound() -> void:
-	_syncing = true
-	_id_edit.text = String(_def.id)
-	_name_edit.text = _def.display_name
+func _fill_fields() -> void:
 	var s := slot()
 	for i in _slot_pick.item_count:
 		if String(GROUPS[_slot_pick.get_item_id(i)][1]) == s:
 			_slot_pick.select(i)
-	_syncing = false
-	_rebuild_form()
 
 
 func _rebuild_form() -> void:
@@ -327,12 +289,4 @@ func _on_refreshed() -> void:
 	_preview.text = text if text != "" else "（还没填：在下面「添加」一个）"
 	var who := users()
 	_users.text = "\n".join(who) if not who.is_empty() else "（没有）"
-
-
-func _t(key: String) -> String:
-	return String(PART_TEXTS.get(key, key))
-
-
-func _saved_text(id: String) -> String:
-	return "已存：rule_parts/%s.json 与 .tres" % id
 #endregion

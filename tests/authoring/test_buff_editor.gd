@@ -56,7 +56,7 @@ static func frame_run_fields(t: TestCase, root: Window) -> void:
 	var before := UiText.lang
 	UiText.lang = "zh"
 	var ed := _make(root)
-	ed._new_buff()
+	ed._new_entry()
 	var d: BuffDef = ed.def()
 	t.check(d.stackable, "新建默认可叠层（不限层）")
 	t.check(d.is_stackable() and d.is_permanent(), "新建：可叠层 → 永续")
@@ -95,7 +95,7 @@ static func frame_run_save_roundtrip(t: TestCase, root: Window) -> void:
 	t.begin("Buff 制作器 · 保存往返与 JSON 编辑器")
 	_cleanup_probe()
 	var ed := _make(root)
-	ed._new_buff()
+	ed._new_entry()
 	var d: BuffDef = ed.def()
 	d.id = StringName(PROBE)
 	d.display_name = "探针"
@@ -126,7 +126,7 @@ static func frame_run_save_roundtrip(t: TestCase, root: Window) -> void:
 	t.check(not ed.def().stackable, "放弃改动回到盘上的样子")
 
 	# 空 id 不许存
-	ed._new_buff()
+	ed._new_entry()
 	ed.def().id = &""
 	ed._save()
 	t.check(not FileAccess.file_exists(ContentPaths.authoring_file("buffs", "")), "空 id 没写文件")
