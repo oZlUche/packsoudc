@@ -114,11 +114,6 @@ func _lock_controls() -> void:
 			n.disabled = true
 
 
-## 133：灰字提示的当前文字（没有 = 空；测试用）
-func hint_text() -> String:
-	return _hint.text if _hint != null else ""
-
-
 func _refresh_hint() -> void:
 	if _hint == null or _target == null or not _target.has_method("editor_hint"):
 		return
@@ -468,13 +463,6 @@ static func _damage_type_keys() -> Array[String]:
 	var out: Array[String] = []
 	for k in DamageTypes.ids():
 		out.append(String(k))
-	return out
-
-
-static func _strings(arr: Array) -> Array[String]:
-	var out: Array[String] = []
-	for v in arr:
-		out.append(String(v))
 	return out
 
 

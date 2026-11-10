@@ -207,12 +207,6 @@ static func put_apart(board: GridInventory, what, others: Array) -> ItemInstance
 		return true)
 
 
-## 放在 [param holder] 的增益格上（会吃到它的邻接加成）
-static func put_on_grant(board: GridInventory, what, holder: ItemInstance) -> ItemInstance:
-	return put_where(board, what, func(inst: ItemInstance) -> bool:
-		return grants_to(holder, inst))
-
-
 ## 放在增益格能盖到 [param targets] 每一件的地方（它给它们加成 / 挂规则）
 static func put_granting(board: GridInventory, what, targets: Array) -> ItemInstance:
 	return put_where(board, what, func(inst: ItemInstance) -> bool:

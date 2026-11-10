@@ -60,18 +60,6 @@ static func export_drop_rule(rule: DropRule) -> Dictionary:
 	return dump(rule)
 
 
-static func export_carry_rule(rule: CarryRule) -> Dictionary:
-	return dump(rule)
-
-
-static func export_bag_pool(pool: BagPool) -> Dictionary:
-	return dump(pool)
-
-
-static func export_encumbrance_rules(rules: EncumbranceRules) -> Dictionary:
-	return dump(rules)
-
-
 static func export_node_rules(rules: NodeRules) -> Dictionary:
 	return dump(rules)
 
@@ -108,23 +96,11 @@ static func export_tag(def: TagDef) -> Dictionary:
 	return dump(def)
 
 
-static func export_damage_type(def: DamageTypeDef) -> Dictionary:
-	return dump(def)
-
-
 static func export_achievement(def: AchievementDef) -> Dictionary:
 	return dump(def)
 
 
 static func export_tech(def: TechDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_help_page(def: HelpPageDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_recipe(def: RecipeDef) -> Dictionary:
 	return dump(def)
 
 

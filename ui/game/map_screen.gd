@@ -956,11 +956,6 @@ func use_skill(id: StringName) -> bool:
 	return true
 
 
-func _route_of_entry(id: int) -> Dictionary:
-	var i := _route_index_of_entry(id)
-	return _run.map.routes[i] if i >= 0 else {}
-
-
 func _route_index_of_entry(id: int) -> int:
 	for i in _run.map.routes.size():
 		if int(_run.map.routes[i].get("entry_id", -1)) == id:

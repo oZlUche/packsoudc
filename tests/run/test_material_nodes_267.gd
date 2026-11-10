@@ -4,7 +4,6 @@
 extends RefCounted
 
 const Records := preload("res://tests/ui/test_records_board_260.gd")
-const Rings := preload("res://tests/map/test_ring_type_assigner.gd")
 
 const SEEDS := 32
 const KIND_TAGS := {"mine": ["mineral", "bullion"], "grove": ["plant", "beast_part"], "remains": ["crafted"], "runes": ["crystal", "magic"]}

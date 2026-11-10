@@ -105,14 +105,6 @@ func set_blocked(c: Vector2i, blocked: bool) -> bool:
 	return true
 
 
-## 255：有没有随身之物
-func has_pinned() -> bool:
-	for inst in _items.values():
-		if (inst as ItemInstance).is_pinned():
-			return true
-	return false
-
-
 ## 255：缺格数（[method is_blocked] 的格）
 func blocked_count() -> int:
 	var n := 0
@@ -1010,50 +1002,6 @@ func resize_rows(rows: int) -> int:
 	elif rows < size.y:
 		shrink_rows(size.y - rows)
 	return size.y
-
-
-## 147（腰带扩格）：列数变成 [param cols]：多了在右边加空列；少了只删右边的**空列**（碰到有东西的就停）。东西原地不动。返回变化后的列数
-func resize_cols(cols: int) -> int:
-	var want := maxi(1, cols)
-	var keep := want
-	if want < size.x:
-		keep = size.x
-		while keep > want and _col_empty(keep - 1):
-			keep -= 1
-	if keep == size.x:
-		return size.x
-	var occ := PackedInt32Array()
-	var bags_ := PackedInt32Array()
-	var blocked := PackedByteArray()
-	occ.resize(keep * size.y)
-	bags_.resize(keep * size.y)
-	blocked.resize(keep * size.y)
-	for y in size.y:
-		for x in keep:
-			var j := y * keep + x
-			if x < size.x:
-				var i := y * size.x + x
-				occ[j] = _occ[i]
-				bags_[j] = _bag_owner[i]
-				blocked[j] = _blocked[i]
-			else:
-				occ[j] = EMPTY_UID
-				bags_[j] = EMPTY_UID
-				blocked[j] = 0
-	_occ = occ
-	_bag_owner = bags_
-	_blocked = blocked
-	size = Vector2i(keep, size.y)
-	changed.emit()
-	return size.x
-
-
-func _col_empty(x: int) -> bool:
-	for y in size.y:
-		var i := y * size.x + x
-		if _occ[i] != EMPTY_UID or _bag_owner[i] != EMPTY_UID:
-			return false
-	return true
 
 
 func _row_empty(y: int) -> bool:

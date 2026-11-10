@@ -39,9 +39,7 @@ var widgets: Dictionary = {}
 var editing: bool = false
 ## 150 补 2：调试模式（屏幕从 [member GameSettings.debug_mode] 拿来设）。关着时 `debug_only` 的不造、不占地上
 var debug: bool = true
-## 作者 2026-10-12：右边另外让出多宽（调试台抽屉开着时盖在右边：右边那一条整体往左挪这么多，地图跟着让）
-var extra_right: float = 0.0
-## 右边那一条此刻占多宽（[method arrange] 算，含 [member extra_right]）
+## 右边那一条此刻占多宽（[method arrange] 算）
 var _right: float = 0.0
 ## 166：顶端栏此刻多高（没有栏 0）
 var _bar_h: float = 0.0
@@ -214,7 +212,7 @@ func rect_of(id: StringName) -> Rect2:
 	return w.focus_rect()
 
 
-## 150 补 1：右边那一条占多宽（地图屏把地图往左让这么多）；调试台开着时连它让出的一起算
+## 150 补 1：右边那一条占多宽（地图屏把地图往左让这么多）
 func right_inset() -> float:
 	return _right
 
@@ -226,7 +224,7 @@ static func on_right(anchor: String) -> bool:
 
 ## 这个锚点对齐用的那块：在顶端栏下面；右边那一条按整块宽，其余按让出右边之后剩下的
 func _frame(anchor: String) -> Rect2:
-	var w := maxf(0.0, size.x - extra_right) if on_right(anchor) else maxf(0.0, size.x - _right)
+	var w := size.x if on_right(anchor) else maxf(0.0, size.x - _right)
 	return Rect2(0.0, _bar_h, w, maxf(0.0, size.y - _bar_h))
 
 
@@ -318,7 +316,7 @@ func arrange() -> void:
 			if HudLayout.in_bar(a):
 				_place_group(groups[key], _bar_frame(), HudLayout.BAR_ANCHORS[a])
 	# 再摆右边那一条，量出它占多宽；其余的在剩下那块里摆
-	_right = extra_right
+	_right = 0.0
 	for key in order:
 		var a := String(groups[key]["anchor"])
 		if on_right(a) and not HudLayout.in_bar(a):
@@ -331,7 +329,7 @@ func arrange() -> void:
 		if not on_right(a) and not HudLayout.in_bar(a):
 			var frame := _frame(a)
 			if _floats(groups[key]):
-				frame.size.x = maxf(0.0, size.x - extra_right)     # 186：浮在地图上的（提示行）按整块宽对齐，跟顶端栏同一条中线
+				frame.size.x = size.x     # 186：浮在地图上的（提示行）按整块宽对齐，跟顶端栏同一条中线
 			_place_group(groups[key], frame, HudLayout.ANCHORS.get(a, Vector2.ZERO))
 	arranged.emit()
 
@@ -453,14 +451,6 @@ func toggle_tier(w: HudWidget) -> void:
 	w.set_tier(HudLayout.TIERS[e["tier"]])
 	arrange()
 	layout_changed.emit()
-
-
-## 作者 2026-10-12：右边另外让出 [param w]（调试台开着时传它的宽，关上传 0）
-func set_extra_right(w: float) -> void:
-	if is_equal_approx(w, extra_right):
-		return
-	extra_right = w
-	arrange()
 
 
 ## 「保存布局」：写到 [method HudLayout.save_path]（或 [param path]）

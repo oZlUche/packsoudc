@@ -367,14 +367,6 @@ func _make_room_above(center: Control) -> void:
 	center.offset_top = bar + 2.0 * maxf(0.0, _overlay_frame.outset_top() - gap)
 
 
-## 233：窗顶离顶端栏底边多远（测试看；帐篷要 ≥ 尖顶高）
-func overlay_top_gap() -> float:
-	if _overlay_frame == null:
-		return 0.0
-	var bar := HudHost.bar_height_in(get_tree()) if is_inside_tree() else 0.0
-	return _overlay_frame.get_global_rect().position.y - get_global_rect().position.y - bar
-
-
 ## 铜面板三屏（战前准备 / 战斗 / 战利品，UI替换美术 甲 铜战板）：同 [method _centered_panel]，框换铜面板、没有标题条
 func _bronze_panel(min_size: Vector2, margin: int = -1) -> Container:
 	return _centered_panel(min_size, margin, OverlayFrame.SKIN_BRONZE)

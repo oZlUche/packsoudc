@@ -869,10 +869,6 @@ static func compiled_for(inst: ItemInstance, board: GridInventory) -> CompiledIt
 	return mine if mine != null else spec.items[0]
 
 
-static func _mods(mods: Array) -> String:
-	return Glossary.mods_text(mods) if not mods.is_empty() else UiText.t("tip.none")
-
-
 ## 096：标签给人看（数据里的名字，按当前语言）
 ## 193 补充三：标签图标的边长（和献祭栏一样，[constant FaithTooltip.ICON_SIZE]）
 const TAG_ICON_SIZE := FaithTooltip.ICON_SIZE

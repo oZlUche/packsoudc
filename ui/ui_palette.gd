@@ -401,12 +401,6 @@ static func display_font() -> Font:
 ## 224：结算账单的数字（Cinzel Bold）；一串里的汉字（「27 件 · 保险箱 2 件」）落到思源宋体
 static func numeral_font() -> Font:
 	return _font_for("numeral", func() -> Font: return _wrap(FONT_NUMERAL, cjk_font()))
-
-
-## 夹具换了字体目录 / 文件时清掉（正常游戏不用）
-static func clear_font_cache() -> void:
-	_fonts.clear()
-	_font_files.clear()
 #endregion
 
 

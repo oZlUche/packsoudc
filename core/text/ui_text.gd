@@ -26,7 +26,6 @@ const TEXT := {
 	"slots.load": {"zh": "载入", "en": "Load"},
 	"slots.new_here": {"zh": "在这一位开新的游戏", "en": "New game here"},
 	"slots.delete": {"zh": "删除", "en": "Delete"},
-	"slots.confirm_delete": {"zh": "再点一次确认删除", "en": "Click again to confirm"},
 	"slots.back": {"zh": "回主菜单", "en": "Back"},
 	# 098：读不出来的存档已备份（%s = 备份文件名）
 	"slots.backed_up": {"zh": "这个存档位的局外进度来自旧版本，读不回来，已备份成 %s，重新从零开始",
@@ -392,10 +391,6 @@ const TEXT := {
 	"belt.flash": {"zh": "%s：%s", "en": "%s: %s"},
 	"belt.empty_tip": {"zh": "腰带：空格", "en": "Belt: empty slot"},
 	"belt.tip": {"zh": "%s ×%d\n%s\n%s\n双击使用", "en": "%s ×%d\n%s\n%s\nDouble-click to use"},
-	# ui/widgets/stat_blocks.gd
-	"strip.vitality_blocks": {"zh": "体力 %d（一颗心一点）", "en": "Vitality %d (one heart each)"},
-	"strip.stamina_blocks": {"zh": "耐力上限 %d（一块 %d 点）", "en": "Max stamina %d (%d per block)"},
-	"strip.hp_blocks": {"zh": "生命上限 %d（一块 %d 点）", "en": "Max health %d (%d per block)"},
 	# ui/game/bag_window.gd
 	"bag.minimize": {"zh": "收起（B）", "en": "Close (B)"},
 	# ui/game/floating_window.gd
@@ -539,7 +534,6 @@ const TEXT := {
 	"ransom.title": {"zh": "求饶", "en": "Beg for Mercy"},
 	"ransom.intro": {"zh": "求饶：拿金币和道具抵掉这一回的体力损失", "en": "Beg for mercy: pay coins and items instead of losing Vitality"},
 	"ransom.limits": {"zh": "打输了、逃跑失败都能求饶；核心点不能", "en": "Works for lost fights and failed escapes; not at the core"},
-	"ransom.tray": {"zh": "左盘", "en": "Your pan"},
 	"ransom.tray_tip": {"zh": "把道具拖上来：每件按局内出售价算重量；锁住的放不上", "en": "Drag items here: each weighs its in-run sell price; locked items can't go on"},
 	"ransom.coins_tip": {"zh": "放上左盘的金币（一枚算 1）", "en": "Coins on your pan (each weighs 1)"},
 	"ransom.price_tip": {"zh": "对方开价：打赢对方能得的钱 ×%s", "en": "Their price: the win reward for this foe ×%s"},
@@ -588,20 +582,14 @@ const TEXT := {
 	"setup.character": {"zh": "角色", "en": "Character"},
 	"setup.stat_hp": {"zh": "生命", "en": "Health"},
 	"setup.stat_stamina": {"zh": "耐力", "en": "Stamina"},
-	"setup.stamina_regen": {"zh": "每秒回 %s", "en": "+%s per second"},
 	"setup.stat_vitality": {"zh": "体力", "en": "Vitality"},
-	"setup.block_note": {"zh": "一块 10 点；角色自己的底子，不含科技加成", "en": "Each block is ten points: the character's own base, before tech bonuses"},
 	"setup.cap_load": {"zh": "负重上限", "en": "Max load"},
 	"setup.cap_board": {"zh": "棋盘", "en": "Board"},
-	"setup.cap_coins": {"zh": "开局金币", "en": "Starting coins"},
 	"setup.cash_title": {"zh": "带入现金", "en": "Coins to carry"},
 	"setup.cash_store": {"zh": "仓库 %d", "en": "In store %d"},
 	"setup.cash_none": {"zh": "不带", "en": "None"},
 	"setup.cash_half": {"zh": "一半", "en": "Half"},
 	"setup.cash_all": {"zh": "全部", "en": "All"},
-	"setup.carry_max": {"zh": "最多带 %d 件", "en": "Carry up to %d items"},
-	"setup.carry_max_one": {"zh": "最多带 %d 件", "en": "Carry up to %d item"},
-	"setup.carry_rarity": {"zh": "稀有度不超过 %d", "en": "Rarity up to %d"},
 	# 255：选角色屏 —— 面板方块、小牌、条目行、右栏题字 / 图例 / 首次赠包小签、未解锁
 	"setup.stat_regen": {"zh": "耐力回复", "en": "Regen"},
 	"setup.per_sec": {"zh": "%s/秒", "en": "%s/s"},
@@ -751,7 +739,6 @@ const TEXT := {
 	# core/run/shop_session.gd
 	"log.shop_no_slot": {"zh": "没有这一格", "en": "Nothing in that slot"},
 	"log.shop_no_coins": {"zh": "[coin_short]", "en": "[coin_short]"},
-	"log.belt_full": {"zh": "腰带满了", "en": "Your Belt is full"},
 	# core/run/battle_passives.gd
 	"log.set_count": {"zh": "%s %d 件", "en": "%s (%d pieces)"},
 	"log.base_bonus": {"zh": "基础属性加成", "en": "Base stat bonus"},
@@ -974,7 +961,6 @@ const TEXT := {
 	"shop.sold_tag": {"zh": "已售", "en": "Sold"},
 	"shop.belt_tip": {"zh": "%s\n%s\n买了直接进腰带（右下角）", "en": "%s\n%s\nGoes straight into your Belt (bottom right)"},
 	"shop.no_shop": {"zh": "没有店", "en": "No shop here"},
-	"shop.carried_tool": {"zh": "随身技能", "en": "Carried tool"},
 	"shop.cant_buy": {"zh": "「%s」买不了：%s", "en": "Can't buy \"%s\": %s"},
 	# —— 221 F5a：forge ——
 	"forge.description": {"zh": "把三件道具分别放进【时机】【效果】【数值】三个槽：时机槽定什么时候、效果槽定做什么、数值槽定多大，各按道具的材质、用途、稀有度查表。三槽都放了才能铸；铸成一枚铸牌，拖到武器上就是附魔（永久，后来者覆盖前者）。铸炉用一次就熄。", "en": "Put one item in each of the Timing, Effect and Value slots: Timing decides when, Effect decides what, Value decides how much, each looked up by the item's material, use and rarity. Fill all three to forge a Forge Token; drag it onto a weapon to enchant it (permanent; a newer enchantment replaces the old one). The Forge goes out after one use."},
@@ -1312,7 +1298,6 @@ const TEXT := {
 	"bonus.smoke_core": {"zh": "核心的战斗躲不开", "en": "The core battle can't be avoided"},
 	"bonus.smoke": {"zh": "这一场不打：不扣体力、没有战利品（核心用不了）", "en": "Skip this battle: no Vitality lost, no Loot (not at the core)"},
 	"bonus.starting_belt": {"zh": "开局腰带里多 %d 个%s", "en": "Starting Belt: +%d %s"},
-	"bonus.start_funds": {"zh": "开局钱 %s", "en": "Starting coins %s"},
 	"bonus.keep_on_death": {"zh": "战败时保住身上 %d%% 的钱", "en": "Keep %d%% of your coins if you die"},
 	"bonus.stealth": {"zh": "潜行 ×%.2f", "en": "Stealth ×%.2f"},
 	"bonus.travel_discount": {"zh": "每走 %d 步，下一步不计入倒计时", "en": "Every %d steps, the next step doesn't count toward the Countdown"},
@@ -1452,13 +1437,9 @@ const TEXT := {
 	"meta.sell_blue": {"zh": "蓝色及以下", "en": "Blue and below"},
 	"meta.sell_purple": {"zh": "紫色及以下", "en": "Purple and below"},
 	"meta.sell_gold": {"zh": "金色及以下", "en": "Gold and below"},
-	"meta.sell_intro": {"zh": "卖掉筛选牌筛中的，跳过锁定和收藏的，不卖包。回定价的 %d%%，钱进局外，可用于科技", "en": "Sells everything the filter shows, except locked and favorite items; never bags. You get %d%% of the price; the coins stay at your base for tech"},     # 268：键挪到仓库页工具列
-	"meta.sell_all": {"zh": "一键出售", "en": "Sell all"},
 	"meta.sell_any_tag": {"zh": "不限标签", "en": "Any tag"},
 	"meta.sold_one": {"zh": "卖掉「%s」", "en": "Sold \"%s\""},
 	"meta.sold_many": {"zh": "卖掉 %d 件", "en": "Items sold: %d"},
-	"meta.nothing_to_sell": {"zh": "这一档没有可卖的", "en": "Nothing to sell at this rarity"},
-	"meta.sell_preview": {"zh": "会卖 %d 件，得 %d 币", "en": "Sells %d for %d coins"},
 	"meta.ach_filter_done": {"zh": "已解锁", "en": "Unlocked"},
 	"meta.ach_filter_todo": {"zh": "未解锁", "en": "Locked"},
 	"meta.ach_unlock_all_on": {"zh": "全部解锁开着：成就不计", "en": "Unlock everything is on: achievements don't count"},
@@ -1586,7 +1567,6 @@ const TEXT := {
 	"act.to_pack": {"zh": "放进背包", "en": "Into pack"},
 	"act.take": {"zh": "拾取", "en": "Take"},
 	"act.take_all": {"zh": "全部拾取 ×%d", "en": "Take all ×%d"},     # 277 第 6 条：地上一件的按钮
-	"act.buy": {"zh": "买下 %d 币", "en": "Buy · %d"},
 	"act.buy_coin": {"zh": "买下", "en": "Buy"},
 	"act.short": {"zh": "[coin_short]", "en": "[coin_short]"},
 	"act.take_back": {"zh": "取回", "en": "Take back"},
@@ -1602,8 +1582,6 @@ const TEXT := {
 	"act.store": {"zh": "置入仓库", "en": "Store"},
 	"act.to_warehouse": {"zh": "放回仓库", "en": "Back to storage"},
 	"act.to_board": {"zh": "摆上棋盘", "en": "Onto pack"},
-	"act.to_ground": {"zh": "放回地上", "en": "Back to ground"},
-	"act.hand_in": {"zh": "上交", "en": "Hand in"},
 	"act.into_box": {"zh": "放进去", "en": "Put in"},
 	"act.bag_full": {"zh": "包里还有东西", "en": "Empty the bag first"},
 	"item.locked_no": {"zh": "「%s」锁着，先解锁", "en": "\"%s\" is locked. Unlock it first"},

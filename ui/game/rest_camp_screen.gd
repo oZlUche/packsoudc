@@ -405,10 +405,6 @@ func variant() -> StringName:
 	return variant_for(_pieces.keys())
 
 
-func extra_buttons() -> Array[Button]:
-	return _extra_btns
-
-
 func is_options_page() -> bool:
 	return true
 

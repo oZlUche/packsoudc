@@ -870,11 +870,6 @@ func _shrink_to_text() -> void:
 		_panel.set_width(w)
 
 
-## 主窗的宽（测试看）
-func window_width() -> float:
-	return _panel.size.x
-
-
 func tone() -> StringName:
 	return UiTheme.tone_of(UiTheme.PANEL_TOOLTIP)
 
