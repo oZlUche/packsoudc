@@ -240,7 +240,7 @@ static func run_export_zip(t: TestCase) -> void:
 	zip.close()
 	t.eq(DataExport.file_name("2026-10-22"), "背包搜打撤-数据-2026-10-22.zip", "文件名带日期")
 	t.check(DataExport.target_dir() != "", "有地方放（桌面或 user://）")
-	t.eq(DataExport.DIRS, [CalibrationRecorder.DIR, BattleArchive.DIR] as Array[String], "默认打包校准记录与战斗日志两个目录")
+	t.eq(DataExport.DIRS, [CalibrationRecorder.DIR, BattleArchive.DIR, BattleDiagnostics.ROOT] as Array[String], "默认打包校准记录、战斗日志、诊断包三个目录")
 	_cleanup()
 
 

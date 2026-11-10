@@ -1625,7 +1625,7 @@ func apply_battle_trace() -> void:
 		return
 	var on := settings != null and settings.trace_on()
 	# 245：装了校准记录器（真实对局，[GameDirector]）才量系数假设 —— 测试里的对局不往玩家的校准目录里写
-	run.events.trace_info = {"dir": BattleArchive.DIR, "run_seed": run.run_seed,
+	run.events.trace_info = {"dir": BattleArchive.DIR, "run_seed": run.run_seed, "run_id": run.run_id,
 		"chapter": String(run.chapter.id) if run.chapter != null else "",
 		"character": String(run.character_id), "difficulty": String(run.difficulty_id),
 		"assumptions": recorder.assumptions_path if recorder != null else ""} if on else {}

@@ -20,7 +20,8 @@ const KEYS: Array[String] = [
 ## 量不出来的（「条件成立的比例」没有统一的量法），表里标出来
 const UNMEASURED: Array[String] = ["threshold_share", "condition_factor"]
 ## 每行带的筛选字段（日志头里的键）
-const META: Array[String] = ["seed", "run_seed", "enemy", "tier", "steps", "bracket", "archetype", "winner", "character", "difficulty"]
+const META: Array[String] = ["seed", "run_seed", "enemy", "tier", "steps", "bracket", "archetype", "winner", "character", "difficulty",
+	"schema", "source", "build", "run_id", "battle_id"]
 ## 按段位分的小表列哪几项（全列太宽）
 const BRACKET_KEYS: Array[String] = ["fight_sec", "hit_rate", "crit_rate", "opponent_dps", "neighbor_hz", "low_hp_share", "assumed_stacks"]
 

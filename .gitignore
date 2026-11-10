@@ -22,3 +22,6 @@ desktop.ini
 # 代理的 git 工作树（整个项目的副本）：不进仓库；.gdignore 让 Godot 扫项目时跳过它，免得每个 class_name 各两份
 .claude/worktrees/*
 !.claude/worktrees/.gdignore
+
+# 构建标识（tools/stamp_build.sh 生成，BuildInfo 读）
+/build_id.txt

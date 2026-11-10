@@ -29,6 +29,9 @@ signal loot_cleared()
 signal encumbrance_changed(level: int)
 
 var run_seed: int = 0
+## 平衡检测方案（2026-11-10）§4.1：这一局的标识，开局生成、跟着存档走（读档接着打还是同一个）；同种子新开一局是新的。
+## 只给记录关联用（快照、对局结果、每场战斗），不进任何随机数
+var run_id: String = ""
 var chapter: ChapterDef = null
 var items: ItemDatabase = null
 var enemies: EnemyDatabase = null
@@ -163,6 +166,7 @@ static func start(
 		return null
 	var s := RunState.new()
 	s.run_seed = p_seed
+	s.run_id = ExperimentManifest.new_id("run")
 	s.chapter = p_chapter
 	s.items = p_items
 	s.enemies = p_enemies
@@ -1210,6 +1214,7 @@ func to_dict() -> Dictionary:
 	return {
 		"version": SAVE_VERSION,
 		"seed": run_seed,
+		"run_id": run_id,
 		"chapter": String(chapter.id),
 		"character": String(character_id),
 		"map_scale": String(map_scale),
@@ -1302,6 +1307,9 @@ static func from_dict(
 		return null
 	var s := RunState.new()
 	s.run_seed = int(d.get("seed", 0))
+	s.run_id = String(d.get("run_id", ""))
+	if s.run_id == "":
+		s.run_id = ExperimentManifest.new_id("run")     # 老存档没有：读档这一刻起有，之前的记录照旧没有
 	s.chapter = p_chapter
 	s.character_id = StringName(String(d.get("character", "")))
 	s.map_scale = StringName(String(d.get("map_scale", "")))

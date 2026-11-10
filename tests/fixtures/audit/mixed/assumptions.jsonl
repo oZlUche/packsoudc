@@ -1,0 +1,2 @@
+{"schema": 2, "source": "human", "build": "git:aaa", "version": "0.1.0", "run_id": "run-1", "battle_id": "run-1:55", "seed": 55, "winner": 0, "fight_sec": 2.5, "opponent_dps": 10.0, "tier": 0, "steps": 2, "character": "wanderer"}
+{"version": "0.1.0", "seed": 56}
