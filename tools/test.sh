@@ -51,6 +51,18 @@ if grep -q 'SCRIPT ERROR' "$LOG"; then
   code=1
 fi
 
+# 测试报告 Q01（2026-11-10）：引擎的 ERROR 不让断言失败、也不是 SCRIPT ERROR，以前静默放过。
+# 负向用例故意造的错列在 tools/expected_errors.txt；除此以外日志里每一行 "ERROR:" 都判失败
+ALLOWED="${TMPDIR:-/tmp}/godot_expected_errors.txt"
+grep -vE '^[[:space:]]*(#|$)' "$ROOT/tools/expected_errors.txt" >"$ALLOWED"
+UNEXPECTED="$(grep -E '^(USER )?ERROR:' "$LOG" | grep -vEf "$ALLOWED")"
+if [ -n "$UNEXPECTED" ]; then
+  echo ""
+  echo "!! 日志中有意料之外的 ERROR（负向用例故意造的错要登记在 tools/expected_errors.txt），判为失败"
+  grep -nE '^(USER )?ERROR:' "$LOG" | grep -vEf "$ALLOWED" | head -10
+  code=1
+fi
+
 # 只跑了一部分套件时，后面那两步全项目检查照常跑（它们和过滤无关、也快）
 # 单元测试只加载 run_tests 够得着的脚本；ui/ 与 tools/ 下的东西改接口时最容易漏。
 # 这一步把全项目的 .gd 都 load 一遍，一次 Godot 启动搞定。

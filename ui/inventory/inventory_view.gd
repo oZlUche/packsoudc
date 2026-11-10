@@ -412,7 +412,7 @@ func _gui_input(event: InputEvent) -> void:
 			var c := cell_at_local(mb.position)
 			var uid := uid_at_cell(c, InputKeys.held_with(mb, InputKeys.WHOLE_BAG))
 			if uid == GridInventory.EMPTY_UID and mb.button_index == MOUSE_BUTTON_LEFT:
-				set_focused(null, get_tree())     # 点空处：槽位都收起
+				set_focused(null, get_tree() if is_inside_tree() else null)     # 点空处：槽位都收起
 			if uid != GridInventory.EMPTY_UID:
 				# 099：右键按在一件上 = 这一屏自己决定做什么（棋盘：信物奉为主信仰）。
 				# 拖拽中的右键是「取消」，那一下已经被 [DragLayer] 吃掉，走不到这里
@@ -424,7 +424,7 @@ func _gui_input(event: InputEvent) -> void:
 				elif mb.double_click:
 					item_double_clicked.emit(self, uid)     # 084：双击 = 快速置入，不再抓
 				else:
-					set_focused(inventory.get_item(uid), get_tree())
+					set_focused(inventory.get_item(uid), get_tree() if is_inside_tree() else null)
 					grab_requested.emit(self, uid, mb.position)
 				accept_event()
 

@@ -70,9 +70,7 @@ static func settle(state: RunState) -> RunResult:
 	r.difficulty_level = state.difficulty.level if state.difficulty != null else 0
 	r.ended_at = int(Time.get_unix_time_from_system())
 	r.steps = state.travel.clock.total if state.travel != null and state.travel.clock != null else 0
-	for id in state.map.node_ids():
-		if state.map.get_node(id).is_visited():
-			r.visited += 1
+	r.visited = arrived_count(state)
 	r.battles_won = int(state.tally.get("battles_won", 0))
 	r.battles_lost = int(state.tally.get("battles_lost", 0))
 	r.elite_won = int(state.tally.get("elite_won", 0))
@@ -159,3 +157,20 @@ func to_dict() -> Dictionary:
 		"elite_won": elite_won, "boss_won": boss_won, "searches": searches, "crafts": crafts, "scale": String(scale_id),
 		"faith": faith_top, "score": score, "score_parts": score_parts.duplicate(),
 	}
+
+
+## 「走过的点」= 这一局到过的不同点（出生点算），按 [member MapTravel.history] 数（测试报告 G02，2026-11-10）。
+## 以前数的是 [method MapNode.is_visited] —— 那是「内容用掉了」：没撤的付费出口、没歇的休息点都漏掉。
+## 没有走过的记录（老档 / 测试造的局）才退回数用掉的点
+static func arrived_count(state: RunState) -> int:
+	var seen := {}
+	if state.travel != null:
+		for id in state.travel.history:
+			seen[id] = true
+	if not seen.is_empty():
+		return seen.size()
+	var n := 0
+	for id in state.map.node_ids():
+		if state.map.get_node(id).is_visited():
+			n += 1
+	return n

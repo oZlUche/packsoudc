@@ -60,7 +60,7 @@ static func run_glossary(t: TestCase) -> void:
 	t.check(names.has("血怒"), "词条里有血怒：%s" % str(names))
 	blood = Glossary.strip_bbcode(blood)
 	t.check(blood.contains("造成的伤害 +15%") and blood.contains("攻速 +15%") and blood.contains("持续 10 秒"),
-		"血怒的词条写着合计（185：+15% / +15%）、持续 10 秒：%s" % blood)
+		"血怒的词条写着合计（185：+15%% / +15%%）、持续 10 秒：%s" % blood)
 	# 107（作者定）：「开战时」「信力」这类直白的词不再弹词条（说明文字仍在表里）
 	t.check(not names.has("开战时") and not names.has("信力"), "直白的固定词条不再进侧窗：%s" % str(names))
 	t.check(Glossary.term_text("开战时") != "" and not Glossary.term_tip("开战时"), "但说明文字一字不动，只是 tip 关了")
@@ -329,7 +329,7 @@ static func frame_buff_chips(t: TestCase, root: Window) -> void:
 	panel.set_stacks("poison", 3)
 	t.eq(panel.icon_of("poison"), "中", "图标是名字的第一个字")
 	t.eq(panel.icon_of("nope"), "n", "没有定义的用 id 的第一个字")
-	panel._draw()     # 直接画一遍，算出图标的矩形
+	panel.layout_chips()     # 不画，只排出图标的矩形（直接调 _draw 会报「只能在 _draw 里画」）
 	var chips: Array = panel._chips
 	t.eq(chips.size(), 1, "一个图标")
 	if chips.is_empty():

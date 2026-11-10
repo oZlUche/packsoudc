@@ -1,0 +1,17 @@
+# tools/test.sh：测试日志里允许出现的引擎 ERROR（扩展正则，一行一条；# 开头是注释）。
+# 测试报告 Q01（2026-11-10）：其余凡以 "ERROR:" 开头的行都判失败 —— 断言全过不等于跑的时候没出错。
+# 只收负向用例「故意造出来」的错，写到能对上那条用例的程度；新增负向用例时把它的错补在这里，并写明是哪个测试。
+
+# 地图生成的负向用例：故意给不可能的形状，生成器连试几次后返回 null
+^ERROR: MapGenerator: 种子 [0-9]+ 连试 [0-9]+ 次都没生成出合法地图，返回 null。$
+# 存档、设置、预设地图、作者 JSON 的坏文件用例（截断、乱码、错字面量）
+^ERROR: Parse JSON failed\. Error at line [0-9]+:
+# test_run_hooks：拼错的 hook 名字要报出来
+^ERROR: RunHooks：没有名叫 saef_open 的 hook
+# test_map_source：坏的预设地图、不存在的预设地图
+^ERROR: MapSource: 预设地图 user://test_map_preset\.json 没通过校验
+^ERROR: MapPreset: 找不到预设地图 user://definitely_not_here\.json
+
+# 退出时的泄漏统计（测试报告 Q02，单独治理；不是某条用例的错）
+^ERROR: [0-9]+ resources still in use at exit
+^ERROR: [0-9]+ RID allocations of type '.*' were leaked at exit\.$
