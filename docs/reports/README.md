@@ -310,6 +310,7 @@
 | 293 | [平衡检测方案 2026-11-10 批次 A：实验元数据与构建标识、记录行带来源 / 局 / 战斗标识、校准数据审计（`tools/audit_balance_data.gd`）、战斗诊断包与复现（`tools/reproduce_battle.gd`）](293-balance-diagnostics-batch-a.md) | 作者 2026-11-10 11:20「这次执行完后读取最新方案再执行」（方案 `docs/plans/2026-11-10-balance-diagnostics-and-statistics.md`） | v5.49 PR #528 落地；批次 B、C 另起报告 |
 | 294 | [平衡检测方案 2026-11-10 批次 B：逐场指标与统计库（Wilson、R-7 分位数、配对 / 按局聚类自助法）、扫表实验目录（覆盖 / 真实节点频率 / 假节点三种抽样，失败也记一行）、猎手同格式、参考配装检测（`tools/check_balance_scenarios.gd`）](294-balance-diagnostics-batch-b.md) | 作者 2026-11-10 11:20「这次执行完后读取最新方案再执行」（方案 `docs/plans/2026-11-10-balance-diagnostics-and-statistics.md`） | v5.50 PR #529 落地；批次 C 见 295 |
 | 295 | [平衡检测方案 2026-11-10 批次 C：观看时间线（模拟时长与实际观看时长分开，扣暂停 / 教程停住 / 失焦，记倍速、跳过、揭晓、离开、提示停留）、战斗体验报告五节（`tools/battle_experience_report.gd`，单因素配对与连带变化）、9 个人工验证场景与问题清单（`tools/make_feel_scenarios.gd`）](295-balance-diagnostics-batch-c.md) | 作者 2026-11-10 11:20「这次执行完后读取最新方案再执行」（方案 `docs/plans/2026-11-10-balance-diagnostics-and-statistics.md`） | v5.51 PR #531 落地；真人验证待作者 / 玩家按问题清单回答 |
+| 296 | [代码库体检与瘦身路线（小而美）：现状数字、七个区域通读结果、五个批次、四项要作者拍板的取舍、查过决定不动的、顺手发现的问题](296-codebase-slimming-audit.md) | 作者 2026-11-10 20:24「这份代码库现在归你管，按你的意愿优化它吧，我们追求小而美」 | 第一批 v5.52 PR #532 落地；第二批进行中；§五 四项待作者回字母 |
 
 ## 竞品与市场调查
 
