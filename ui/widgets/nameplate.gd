@@ -65,12 +65,6 @@ func setup(display_name: String, sub: String, face: Texture2D = null, portrait_s
 	return self
 
 
-## 255：名字放大到 [param font_size]（选角色屏 24）
-func set_name_size(font_size: int) -> Nameplate:
-	name_label.add_theme_font_size_override("font_size", UiTheme.sz(font_size))     # 258：按字号档
-	return self
-
-
 ## 255：名字与副行下面加一句说明（13 号、折行，[param width] 是最小宽度）
 func set_blurb(text: String, width: float) -> Nameplate:
 	if text == "" or _col == null:

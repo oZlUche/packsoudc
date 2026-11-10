@@ -212,14 +212,6 @@ func _nearest_target(run: RunState, visited: Dictionary) -> int:
 	return best
 
 
-func _nearest_target_cost(run: RunState, visited: Dictionary) -> int:
-	var t := _nearest_target(run, visited)
-	if t < 0:
-		return 999
-	var dist := MapNavigator.distance_map(run.map, run.travel.current_id)
-	return int(dist.get(t, 999)) * maxi(1, run.travel.action_cost_mult)
-
-
 func _nearest_extract(run: RunState) -> Dictionary:
 	var dist := MapNavigator.distance_map(run.map, run.travel.current_id)
 	var cd := CountdownModule.of(run)

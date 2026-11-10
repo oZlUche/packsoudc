@@ -66,20 +66,6 @@ static func feed(adj: AdjacencyProfile) -> String:
 	return UiText.t("tip.adj_feed") % [condition(adj.feed_filter) if not adj.feed_filter.is_empty() else UiText.t("tip.adj_host"), effects(adj.feed_mods, adj.feed_rules, "\n")]
 
 
-## 晶石供给里把伤害转成的类型（`convert_damage_type` 的 `to`）；没有返回空
-static func feed_damage_type(adj: AdjacencyProfile) -> StringName:
-	if adj == null:
-		return &""
-	for r in adj.feed_rules:
-		var rule := r as AbilityRule
-		if rule == null:
-			continue
-		for e in rule.effects:
-			if e is ConvertDamageType and (e as ConvertDamageType).to != &"":
-				return (e as ConvertDamageType).to
-	return &""
-
-
 static func _names(tags: Array) -> Array[String]:
 	var out: Array[String] = []
 	for t in tags:

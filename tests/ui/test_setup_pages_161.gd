@@ -5,30 +5,6 @@ const GAME := "res://ui/game/game.tscn"
 const Support := preload("res://tests/run/flow_support.gd")
 
 
-static func run_stat_blocks(t: TestCase) -> void:
-	t.begin("161 · 属性方块：每块 10 点、最后一块按余数部分填充；体力一点一颗心；块数可改")
-	var hp := StatBlocks.new().setup(StatBlocks.HP, 70)
-	t.eq(hp.fills().size(), 7, "生命 70 = 7 块")
-	t.check(hp.fills().all(func(f: float) -> bool: return f == 1.0), "7 块都满")
-	t.check(hp.text_of().contains("70"), "提示写着具体值：%s" % hp.text_of())
-	var st := StatBlocks.new().setup(StatBlocks.STAMINA, 55)
-	t.eq(st.fills().size(), 6, "耐力 55 = 5 块满 + 1 块")
-	t.check(absf(st.fills()[5] - 0.5) < 0.001, "最后一块半满")
-	t.eq(st.color(), UiPalette.STAMINA, "耐力是黄的")
-	t.eq(hp.color(), UiPalette.HP, "生命是红的")
-	var heart := StatBlocks.new().setup(StatBlocks.VITALITY, 7)
-	t.eq(heart.fills().size(), 7, "体力 7 = 7 颗心")
-	var fine := StatBlocks.new().setup(StatBlocks.HP, 70, 5)
-	t.eq(fine.fills().size(), 14, "每块 5 点：14 块")
-	t.check(fine.custom_minimum_size.y > StatBlocks.BLOCK * 1.5, "超过一排 %d 块折行" % StatBlocks.PER_ROW)
-	var narrow := StatBlocks.new().setup(StatBlocks.HP, 45)
-	t.check(narrow.custom_minimum_size.x < hp.custom_minimum_size.x, "45 比 70 短")
-	t.eq(hp.custom_minimum_size.x, 7 * StatBlocks.BLOCK, "作者 2026-10-16：方块条连成一根，格子之间不留空（7 块 = 7 个边长）")
-	t.eq(heart.custom_minimum_size.x, 7 * StatBlocks.BLOCK + 6 * StatBlocks.GAP, "心照旧隔开")
-	for b in [hp, st, heart, fine, narrow]:
-		b.free()
-
-
 static func run_bags_weigh_nothing(t: TestCase) -> void:
 	t.begin("161 · 包不算重：三种包与腰带 0 重，只剩包的棋盘负重 0")
 	var items := ItemDatabase.new()

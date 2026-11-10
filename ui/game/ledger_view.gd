@@ -137,14 +137,6 @@ func rows() -> Array[Dictionary]:
 	return out
 
 
-## 269：总分下面那行小字（测试看）
-func parts_text() -> String:
-	for row in _rows:
-		if row.has("parts"):
-			return String(row["parts"])
-	return ""
-
-
 ## 行名 → 到位的数（177 的 [method ResultScreen.numbers] 照旧读它）
 func numbers() -> Dictionary:
 	var out := {}

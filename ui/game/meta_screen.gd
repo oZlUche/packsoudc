@@ -157,8 +157,6 @@ func open(payload: Dictionary) -> void:
 		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		var icon := UiTheme.art_cached(TAB_ICON_ART + key)     # 作者 2026-10-24 选乙 平墨图标：字左边一枚墨色小图
-		if icon == null and key == "shelf":
-			icon = UiTheme.art_cached(TAB_ICON_ART + "codex")     # 261：书架剪影没到前先用图鉴那枚
 		if icon != null:
 			b.icon = icon
 			b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -711,10 +709,6 @@ func show_achievement_filter(key: String) -> void:
 	for k in _ach_filter_btns:
 		(_ach_filter_btns[k] as Button).set_pressed_no_signal(k == key)
 	_fill_achievements()
-
-
-func achievement_filter() -> String:
-	return _ach_filter
 
 
 ## 现在列着的：[{id, done}]（测试看）

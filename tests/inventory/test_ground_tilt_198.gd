@@ -47,16 +47,6 @@ static func _outline(def: ItemDef, rot: int, pos: Vector2, ang: float) -> Packed
 	return out
 
 
-## 画面上的外轮廓顶点（本控件内像素）
-static func _outline_world(ground: GroundLayer, uid: int) -> PackedVector2Array:
-	var inst := ground.stash.get_item(uid)
-	var sil := ItemSilhouette.tilted(ItemSilhouette.of(inst.def, inst.rotation), ground.tilt_of(uid))
-	var out := PackedVector2Array()
-	for poly in (sil["outline"] as Array):
-		out.append_array(ItemSilhouette.turn(poly, Vector2.ZERO, 0.0, ground.item_rect(uid).position))
-	return out
-
-
 static func _same_points(a: PackedVector2Array, b: PackedVector2Array, tol: float) -> bool:
 	if a.size() != b.size():
 		return false

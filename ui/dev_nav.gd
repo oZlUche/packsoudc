@@ -220,10 +220,6 @@ func _check_assets() -> void:
 	add_child(_asset_note)
 
 
-func importing_assets() -> bool:
-	return _asset_import_pid > 0
-
-
 func rebuilding() -> bool:
 	return _rebuild_cover != null
 

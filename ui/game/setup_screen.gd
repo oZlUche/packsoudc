@@ -144,8 +144,7 @@ var _back_btn: Button
 ## 221 F1：每页的标题（UiText 键，用时按当前语言取）
 const PAGE_TITLES: Array[String] = ["setup.page_1", "setup.page_2", "setup.page_3"]
 const PAGE_MAP := 2
-## 180：难度数字的字号、规模那一列缩进多少
-const DIFFICULTY_NUM_SIZE := UiTheme.FLIP_NUM_SIZE
+## 180：规模那一列缩进多少
 const SCALE_INDENT := 20
 ## 180 补二：仓库框给滚动条留多宽；底下「返回」的字号（按钮按档放大，仍比「出发」小）
 const SCROLL_GUTTER := 16
@@ -1261,11 +1260,6 @@ func challenge_lines() -> Array:
 		if c != "":
 			out.append([avail[i].level, c])
 	return out
-
-
-## 180：红字说明拼成一段（从低到高）
-func challenge_text() -> String:
-	return "\n".join(challenge_lines().map(func(l: Array) -> String: return String(l[1])))
 
 
 ## 180 补三：纸最长到「出发」按钮上沿再留 [constant PAPER_CLEARANCE]（排版好了才算得准，窗口变了重算；按展开时纸的位置算，收着也算得出）

@@ -124,10 +124,6 @@ func x_of(t: float) -> float:
 	return pad() + (clampf(t / duration, 0.0, 1.0) if duration > 0.0 else 0.0) * w
 
 
-func scrubbing() -> bool:
-	return _scrubbing
-
-
 func _gui_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if mb != null and mb.button_index == MOUSE_BUTTON_LEFT:

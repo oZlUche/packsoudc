@@ -111,13 +111,6 @@ static func properties_of(obj: Object) -> Array[Dictionary]:
 		if int(p["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE:
 			out.append(p)
 	return out
-
-
-static func property_names(obj: Object) -> Array[StringName]:
-	var out: Array[StringName] = []
-	for p in properties_of(obj):
-		out.append(StringName(p["name"]))
-	return out
 #endregion
 
 

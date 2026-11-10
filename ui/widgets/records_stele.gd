@@ -49,7 +49,6 @@ const LABEL_SIZE := 18
 const LEDGER_SIZE := 15
 const MIN_SIZE := 10
 const INK := Color("2e2219")
-const BROWN := Color("5a4433")
 const VERM := Color("a3301f")
 const LIT := Color("f1ece2")
 ## 缺图时的石色

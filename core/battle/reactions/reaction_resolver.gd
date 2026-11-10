@@ -134,14 +134,6 @@ static func mark_buff(id: StringName) -> BuffDef:
 	return ContentLibrary.buffs().get(id, null)
 
 
-## [param who] 身上有没有 [param e] 元素的印
-static func has_mark(who: CombatantRuntime, e: StringName) -> bool:
-	for b in who.buffs:
-		if b.def.element == e and b.stacks > 0:
-			return true
-	return false
-
-
 ## [param who] 身上 [param e] 元素的印共几层（这种元素的全部状态加起来，含保底的层数）
 static func mark_stacks(who: CombatantRuntime, e: StringName) -> int:
 	var n := 0

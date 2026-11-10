@@ -68,11 +68,6 @@ static func missing_hanzi(font: Font, used: Dictionary = {}) -> Array[String]:
 	return _missing(font, used, true)
 
 
-## 用到了、[param font] 没有的任何字（包括符号）
-static func missing_any(font: Font, used: Dictionary = {}) -> Array[String]:
-	return _missing(font, used, false)
-
-
 static func is_hanzi(c: int) -> bool:
 	return (c >= 0x4E00 and c <= 0x9FFF) or (c >= 0x3400 and c <= 0x4DBF)
 
