@@ -9,42 +9,13 @@ extends RefCounted
 #region 作者数据（人写的 JSON，进 git，MOD 作者改这里）
 const AUTHORING := "res://data/authoring"
 const AUTHORING_TAGS := AUTHORING + "/tags"
-const AUTHORING_DAMAGE_TYPES := AUTHORING + "/damage_types"
 const AUTHORING_ITEMS := AUTHORING + "/items"
-const AUTHORING_LOADOUTS := AUTHORING + "/loadouts"
-const AUTHORING_CHARACTERS := AUTHORING + "/characters"
-const AUTHORING_DIFFICULTIES := AUTHORING + "/difficulties"
 const AUTHORING_EVENTS := AUTHORING + "/events"
-const AUTHORING_BUFFS := AUTHORING + "/buffs"
 const AUTHORING_SETS := AUTHORING + "/sets"
-## 146：规则构件库（扳机 / 节奏 / 消耗与检查 / 效果）
-const AUTHORING_RULE_PARTS := AUTHORING + "/rule_parts"
-const AUTHORING_RUN_BUFFS := AUTHORING + "/run_buffs"
 const AUTHORING_FAITHS := AUTHORING + "/faiths"
-const AUTHORING_RECIPES := AUTHORING + "/recipes"
-## 251：铁匠铺配方、基地铺子的规矩（集市）
-const AUTHORING_SMITH_RECIPES := AUTHORING + "/smith_recipes"
-const AUTHORING_BASE_RULES := AUTHORING + "/base_rules"
 const AUTHORING_ENEMIES := AUTHORING + "/enemies"
-const AUTHORING_ENEMY_POOLS := AUTHORING + "/enemy_pools"
-const AUTHORING_HUNTERS := AUTHORING + "/hunters"
-const AUTHORING_DROP_RULES := AUTHORING + "/drop_rules"
-const AUTHORING_CARRY_RULES := AUTHORING + "/carry_rules"
-const AUTHORING_BAG_POOLS := AUTHORING + "/bag_pools"     # 209
-const AUTHORING_ENCUMBRANCE_RULES := AUTHORING + "/encumbrance_rules"     # 129
 const AUTHORING_NODE_RULES := AUTHORING + "/node_rules"
-const AUTHORING_ECONOMY_RULES := AUTHORING + "/economy_rules"
-const AUTHORING_META_RULES := AUTHORING + "/meta_rules"
 const AUTHORING_CHAPTERS := AUTHORING + "/chapters"
-const AUTHORING_ACHIEVEMENTS := AUTHORING + "/achievements"
-const AUTHORING_TECHS := AUTHORING + "/techs"
-const AUTHORING_HELP_PAGES := AUTHORING + "/help_pages"
-const AUTHORING_CHEST_SKINS := AUTHORING + "/chest_skins"     # 154
-const AUTHORING_BELT_SKILLS := AUTHORING + "/belt_skills"     # 160 补一
-const AUTHORING_REACTIONS := AUTHORING + "/reactions"     # 175
-const AUTHORING_FORGE := AUTHORING + "/forge"     # 175 第三批：铸炉映射表
-const AUTHORING_MARKET_STALLS := AUTHORING + "/market_stalls"     # 270
-const AUTHORING_NPCS := AUTHORING + "/npcs"     # 282
 #endregion
 
 #region 引擎资产（导入器产出，游戏读这里）
@@ -55,29 +26,16 @@ const LOADOUTS := "res://data/loadouts"
 const CHARACTERS := "res://data/characters"
 const DIFFICULTIES := "res://data/difficulties"
 const EVENTS := "res://data/events"
-const BUFFS := "res://data/buffs"
-const SETS := "res://data/sets"
-const RULE_PARTS := "res://data/rule_parts"
 const RUN_BUFFS := "res://data/run_buffs"
 const FAITHS := "res://data/faiths"
 const RECIPES := "res://data/recipes"
 const SMITH_RECIPES := "res://data/smith_recipes"
-const BASE_RULES := "res://data/base_rules"
 const ENEMIES := "res://data/enemies"
-const ENEMY_POOLS := "res://data/enemy_pools"
 const HUNTERS := "res://data/hunters"
-const DROP_RULES := "res://data/drop_rules"
-const CARRY_RULES := "res://data/carry_rules"
-const BAG_POOLS := "res://data/bag_pools"
-const ENCUMBRANCE_RULES := "res://data/encumbrance_rules"
-const NODE_RULES := "res://data/node_rules"
-const ECONOMY_RULES := "res://data/economy_rules"
-const META_RULES := "res://data/meta_rules"
 const CHAPTERS := "res://data/chapters"
 const ACHIEVEMENTS := "res://data/achievements"
 const TECHS := "res://data/techs"
 const HELP_PAGES := "res://data/help_pages"
-const CHEST_SKINS := "res://data/chest_skins"
 const BELT_SKILLS := "res://data/belt_skills"
 const REACTIONS := "res://data/reactions"
 const FORGE := "res://data/forge"
@@ -85,46 +43,6 @@ const MARKET_STALLS := "res://data/market_stalls"
 const NPCS := "res://data/npcs"     # 282
 #endregion
 
-## 种类 → [作者数据目录, 资产目录]。顺序即导入顺序：后者可以按 id 引用前者。
-##
-## 100（作者定）：**`sets` 不在这里**，在 [constant EDITOR_ONLY_KINDS] 里 —— 独立的套装文件一份都还没有。
-## 146：buff 有了独立文件（道具里按 id 引用），搬回来了；规则构件库 `rule_parts` 也在这里
-const KINDS := {
-	"tags": [AUTHORING_TAGS, TAGS],
-	"damage_types": [AUTHORING_DAMAGE_TYPES, DAMAGE_TYPES],
-	"run_buffs": [AUTHORING_RUN_BUFFS, RUN_BUFFS],
-	"faiths": [AUTHORING_FAITHS, FAITHS],
-	"buffs": [AUTHORING_BUFFS, BUFFS],
-	"reactions": [AUTHORING_REACTIONS, REACTIONS],
-	"rule_parts": [AUTHORING_RULE_PARTS, RULE_PARTS],
-	"forge": [AUTHORING_FORGE, FORGE],
-	"recipes": [AUTHORING_RECIPES, RECIPES],
-	"smith_recipes": [AUTHORING_SMITH_RECIPES, SMITH_RECIPES],     # 251
-	"base_rules": [AUTHORING_BASE_RULES, BASE_RULES],     # 251
-	"items": [AUTHORING_ITEMS, ITEMS],
-	"loadouts": [AUTHORING_LOADOUTS, LOADOUTS],
-	"characters": [AUTHORING_CHARACTERS, CHARACTERS],
-	"difficulties": [AUTHORING_DIFFICULTIES, DIFFICULTIES],
-	"events": [AUTHORING_EVENTS, EVENTS],
-	"enemies": [AUTHORING_ENEMIES, ENEMIES],
-	"enemy_pools": [AUTHORING_ENEMY_POOLS, ENEMY_POOLS],
-	"hunters": [AUTHORING_HUNTERS, HUNTERS],
-	"drop_rules": [AUTHORING_DROP_RULES, DROP_RULES],
-	"carry_rules": [AUTHORING_CARRY_RULES, CARRY_RULES],
-	"bag_pools": [AUTHORING_BAG_POOLS, BAG_POOLS],
-	"encumbrance_rules": [AUTHORING_ENCUMBRANCE_RULES, ENCUMBRANCE_RULES],
-	"node_rules": [AUTHORING_NODE_RULES, NODE_RULES],
-	"economy_rules": [AUTHORING_ECONOMY_RULES, ECONOMY_RULES],
-	"meta_rules": [AUTHORING_META_RULES, META_RULES],
-	"chapters": [AUTHORING_CHAPTERS, CHAPTERS],
-	"achievements": [AUTHORING_ACHIEVEMENTS, ACHIEVEMENTS],
-	"techs": [AUTHORING_TECHS, TECHS],
-	"help_pages": [AUTHORING_HELP_PAGES, HELP_PAGES],
-	"chest_skins": [AUTHORING_CHEST_SKINS, CHEST_SKINS],
-	"belt_skills": [AUTHORING_BELT_SKILLS, BELT_SKILLS],
-	"market_stalls": [AUTHORING_MARKET_STALLS, MARKET_STALLS],     # 270
-	"npcs": [AUTHORING_NPCS, NPCS],     # 282
-}
 ## 开局装备、角色（初始包对着道具查）与敌人都在道具之后（清单、招牌道具、流派标签要对着道具查），池在敌人之后，三种规则独立，
 ## 章节按 id 引用池与规则；成就（091）排最后（对象可能是道具 / 章节）
 ## 096：标签与伤害类型最先（道具的标签对着它提醒；没有它们也能导）；110：局外科技在道具之后（要交的材料对着道具查）；114：百科的机制页最后（相关道具对着道具查）
@@ -137,12 +55,24 @@ const KINDS := {
 const ORDER := ["tags", "damage_types", "belt_skills", "run_buffs", "faiths", "buffs", "reactions", "rule_parts", "forge", "items", "recipes", "smith_recipes", "loadouts", "characters", "difficulties", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "bag_pools", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "base_rules", "market_stalls", "chest_skins", "chapters", "achievements", "techs", "help_pages", "npcs"]
 
 
-## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [constant KINDS]**（批量导入与一致性检查都不跑它们），
+## 种类 → [作者数据目录, 资产目录]，种类与顺序都照 [constant ORDER]。
+##
+## 100（作者定）：**`sets` 不在这里**，在 [member EDITOR_ONLY_KINDS] 里 —— 独立的套装文件一份都还没有。
+## 146：buff 有了独立文件（道具里按 id 引用），搬回来了；规则构件库 `rule_parts` 也在这里
+static var KINDS: Dictionary = _pairs(ORDER)
+
+
+## 100（作者定）：有目录、但独立内容一份都还没有的种类 —— **不进 [member KINDS]**（批量导入与一致性检查都不跑它们），
 ## 只有各自的编辑器在用（buff 制作器、套装编辑器自己写 JSON + `.tres`）。
-## 真有了第一份独立内容，把这一行搬回 `KINDS` 并在 `ORDER` 里排在 `items` 之前，那份内容就自动进管线与检查
-const EDITOR_ONLY_KINDS := {
-	"sets": [AUTHORING_SETS, SETS],
-}
+## 真有了第一份独立内容，把它搬进 `ORDER`、排在 `items` 之前，那份内容就自动进管线与检查
+static var EDITOR_ONLY_KINDS: Dictionary = _pairs(["sets"])
+
+
+static func _pairs(kinds: Array) -> Dictionary:
+	var out := {}
+	for kind: String in kinds:
+		out[kind] = [AUTHORING + "/" + kind, "res://data/" + kind]
+	return out
 
 
 ## 这一种的两个目录（作者数据、资产）。不认识的种类返回空数组并报错 —— 路径还是只在这一处算

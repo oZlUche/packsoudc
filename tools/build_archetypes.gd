@@ -29,13 +29,10 @@ func run() -> void:
 	var dummies := {}
 	if only_variants:
 		var text := _splice(out_path, variants)
-		var f := FileAccess.open(out_path, FileAccess.WRITE) if text != "" else null
-		if f == null:
+		if text == "" or not store_text(out_path, text):
 			print("写不了 " + out_path)
 			finish(1)
 			return
-		f.store_string(text)
-		f.close()
 		dummies = variants
 	else:
 		dummies = ArchetypeBuilder.build(pool, items, brackets, character)

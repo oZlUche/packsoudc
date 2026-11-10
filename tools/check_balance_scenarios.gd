@@ -44,14 +44,8 @@ func run() -> void:
 	lines.append("合法 %d 份，有问题 %d 份（其中挡住的 %d 份）。" % [res["legal"], res["illegal"], hard])
 	var md := "\n".join(lines) + "\n"
 	print(md)
-	if opts.has("out"):
-		var f := FileAccess.open(String(opts["out"]), FileAccess.WRITE)
-		if f == null:
-			print("写不了 " + String(opts["out"]))
-			finish(1)
-			return
-		f.store_string(md)
-		f.close()
+	if opts.has("out") and not write_text(String(opts["out"]), md):
+		return
 	finish(2 if hard > 0 or not bool(same["ok"]) else 0)
 
 

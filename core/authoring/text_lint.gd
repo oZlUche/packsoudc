@@ -3,12 +3,9 @@
 ## 作者 JSON 里给人看的文字（`note`、`description`、事件 `text`、选项 `label`，及其多语言字典）剥掉 `{…}` 占位符与 BBCode 之后
 ## 还含阿拉伯数字 → 一条问题：要么写成 `{字段名}`（[TextParams]、[TextTemplate]），要么让 `describe()` 按字段生成。
 ## 汉字数（「三秒一下」）不算。导入器（`tools/import_content.gd`）与 `tools/check_content.gd` 都查；
-## 作者定先 warning 一轮，清零之后升为 error（2026-10-02 已升：[constant STRICT] = true，导入失败、check_content 退 1）
+## 作者定先 warning 一轮，清零之后升为 error（2026-10-02 已升：导入失败、check_content 退 1）
 class_name TextLint
 extends RefCounted
-
-## true = check_content 把裸数字当不一致（退 1）
-const STRICT := true
 
 ## 这些键的字符串值是给人看的文字；复数形式是 `{语言: 文字}` 字典
 const KEYS := ["note", "description", "label", "text"]
@@ -35,18 +32,10 @@ static func scan(data: Variant, path: String = "") -> Array[Dictionary]:
 static func scan_all() -> Array[String]:
 	var out: Array[String] = []
 	for kind in ContentPaths.ORDER:
-		var dir_path: String = ContentPaths.dirs_of(kind)[0]
-		var dir := DirAccess.open(dir_path)
-		if dir == null:
-			continue
-		var files := dir.get_files()
-		files.sort()
-		for file in files:
-			if not file.ends_with(".json"):
-				continue
-			var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(dir_path.path_join(file)))
+		for id in ContentPaths.ids_in(ContentPaths.dirs_of(kind)[0]):
+			var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(ContentPaths.authoring_file(kind, id)))
 			for hit in scan(parsed):
-				out.append(message("%s/%s" % [kind, file], hit))
+				out.append(message("%s/%s.json" % [kind, id], hit))
 	return out
 
 

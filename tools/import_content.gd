@@ -18,11 +18,9 @@ func run() -> void:
 	var built := {}  # 相对输出路径 -> Resource
 
 	for kind in ContentPaths.ORDER:
-		var dir: String = ContentPaths.KINDS[kind][0]
-		for file in _json_files(dir):
-			var id := file.get_file().get_basename()
+		for id in ContentPaths.ids_in(ContentPaths.KINDS[kind][0]):     # 按文件名排好的：顺序稳定，报错顺序才可复现
 			report.source = "%s/%s.json" % [kind, id]
-			var data := _read_json(file, report)
+			var data := _read_json(ContentPaths.authoring_file(kind, id), report)
 			if data.is_empty():
 				continue
 			# id 必须和文件名一致：不一致时产出的资产名对不上，
@@ -30,12 +28,8 @@ func run() -> void:
 			if String(data.get("id", "")) != id:
 				report.error("id", "id '%s' 与文件名 '%s' 不一致" % [data.get("id", ""), id])
 				continue
-			for hit in TextLint.scan(data):     # 104 第十节：说明文本里的数要读字段（TextLint.STRICT = error，否则 warning）
-				var msg := "说明文本里有写死的数字「%s」—— 写成 {字段名}（docs/text-placeholders.md）" % hit["text"]
-				if TextLint.STRICT:
-					report.error(String(hit["path"]), msg)
-				else:
-					report.warn(String(hit["path"]), msg)
+			for hit in TextLint.scan(data):     # 104 第十节：说明文本里的数要读字段
+				report.error(String(hit["path"]), "说明文本里有写死的数字「%s」—— 写成 {字段名}（docs/text-placeholders.md）" % hit["text"])
 			var res := ContentImporter.import_of(kind, data, ctx, report)
 			if res != null:
 				built[ContentPaths.asset_file(kind, id)] = res
@@ -67,18 +61,6 @@ func run() -> void:
 
 	print("导入成功：%d 份资产，%d 条警告" % [built.size(), report.warnings.size()])
 	finish(0)
-
-
-func _json_files(dir_path: String) -> Array[String]:
-	var out: Array[String] = []
-	var d := DirAccess.open(dir_path)
-	if d == null:
-		return out
-	for f in d.get_files():
-		if f.ends_with(".json"):
-			out.append(dir_path + "/" + f)
-	out.sort()  # 顺序稳定，报错顺序才可复现
-	return out
 
 
 func _read_json(path: String, report: ImportReport) -> Dictionary:

@@ -155,17 +155,9 @@ static func reachable_from(graph: MapGraph, from_ids: Array[int]) -> Dictionary:
 	var queue: Array[int] = []
 	for id in from_ids:
 		if graph.has_node(id) and not seen.has(id):
-			seen[id] = true
+			seen[id] = 0
 			queue.append(id)
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		for n in graph.neighbors(id):
-			if not seen.has(n):
-				seen[n] = true
-				queue.append(n)
-	return seen
+	return graph.spread(seen, queue)
 
 
 ## 传送点不是路（8-1）：按生成规则校验时先把 portal 边摘下来、跑 [param body]、再装回去。

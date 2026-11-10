@@ -46,14 +46,14 @@ static func run_tier_beyond_thresholds(t: TestCase) -> void:
 	t.check(ok_report.ok(), "原样的祝福长弓导得进来：%s" % ok_report.to_text())
 
 	var bad := data.duplicate(true)
-	(bad["faith_bonuses"] as Array).append({"tier": tiers + 1, "mods": [{"flat": 1.0}]})
+	(bad["faith_bonuses"] as Array).append({"tier": tiers + 1, "mods": [{"amount": 1.0}]})
 	var report := ImportReport.new()
 	ContentImporter.import_item(bad, ctx, report)
 	t.check(not report.ok(), "第 %d 阶（只有 %d 阶）报错" % [tiers + 1, tiers])
 	t.check(report.to_text().contains("永远达不到"), "报错说清楚：%s" % report.to_text())
 
 	var odd := data.duplicate(true)
-	(odd["faith_bonuses"] as Array).append({"mode": "sometimes", "mods": [{"flat": 1.0}]})
+	(odd["faith_bonuses"] as Array).append({"mode": "sometimes", "mods": [{"amount": 1.0}]})
 	var report2 := ImportReport.new()
 	ContentImporter.import_item(odd, ctx, report2)
 	t.check(not report2.ok(), "认不得的方式报错")

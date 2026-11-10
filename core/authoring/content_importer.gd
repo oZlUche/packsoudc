@@ -203,85 +203,31 @@ static func _require_id(id: StringName, what: String, report: ImportReport) -> b
 
 
 #region 顶层入口
-## 按种类分派到各导入函数。`tools/import_content.gd` 与 `tools/normalize_content.gd` 共用这一张表 ——
-## 加一种内容就在这儿接一臂（种类名与 [constant ContentPaths.KINDS] 一致）。不认识的种类报错并返回 null
+## 种类 → 导入函数。`tools/import_content.gd` 与 `tools/normalize_content.gd` 共用这一张表 ——
+## 加一种内容就在这儿接一臂（种类名与 [member ContentPaths.KINDS] 一致）
+static func _importers() -> Dictionary:
+	return {
+		"tags": import_tag, "damage_types": import_damage_type, "buffs": import_buff, "rule_parts": import_rule_part,
+		"reactions": import_reaction, "forge": import_forge_table, "sets": import_set, "enemies": import_enemy,
+		"enemy_pools": import_enemy_pool, "drop_rules": import_drop_rule, "carry_rules": import_carry_rule, "bag_pools": import_bag_pool,
+		"encumbrance_rules": import_encumbrance_rules, "node_rules": import_node_rules, "economy_rules": import_economy_rules,
+		"loadouts": import_loadout, "characters": import_character, "difficulties": import_difficulty, "hunters": import_hunter,
+		"meta_rules": import_meta_rules, "run_buffs": import_run_buff, "faiths": import_faith, "recipes": import_recipe,
+		"smith_recipes": import_smith_recipe, "base_rules": import_market_rules, "events": import_event, "chapters": import_chapter,
+		"achievements": import_achievement, "techs": import_tech, "help_pages": import_help_page, "chest_skins": import_chest_skin,
+		"market_stalls": import_market_stall, "npcs": import_npc, "belt_skills": import_belt_skill, "items": import_item,     # 270、282
+	}
+
+
+## 按种类分派到各导入函数。不认识的种类报错并返回 null
 static func import_of(kind: String, data: Dictionary, ctx: Context, report: ImportReport) -> Resource:
-	match kind:
-		"tags":
-			return import_tag(data, ctx, report)
-		"damage_types":
-			return import_damage_type(data, ctx, report)
-		"buffs":
-			return import_buff(data, ctx, report)
-		"rule_parts":
-			return import_rule_part(data, ctx, report)
-		"reactions":
-			return import_reaction(data, ctx, report)
-		"forge":
-			return import_forge_table(data, ctx, report)
-		"sets":
-			return import_set(data, ctx, report)
-		"enemies":
-			return import_enemy(data, ctx, report)
-		"enemy_pools":
-			return import_enemy_pool(data, ctx, report)
-		"drop_rules":
-			return import_drop_rule(data, ctx, report)
-		"carry_rules":
-			return import_carry_rule(data, ctx, report)
-		"bag_pools":
-			return import_bag_pool(data, ctx, report)
-		"encumbrance_rules":
-			return import_encumbrance_rules(data, ctx, report)
-		"node_rules":
-			return import_node_rules(data, ctx, report)
-		"economy_rules":
-			return import_economy_rules(data, ctx, report)
-		"loadouts":
-			return import_loadout(data, ctx, report)
-		"characters":
-			return import_character(data, ctx, report)
-		"difficulties":
-			return import_difficulty(data, ctx, report)
-		"hunters":
-			return import_hunter(data, ctx, report)
-		"meta_rules":
-			return import_meta_rules(data, ctx, report)
-		"run_buffs":
-			return import_run_buff(data, ctx, report)
-		"faiths":
-			return import_faith(data, ctx, report)
-		"recipes":
-			return import_recipe(data, ctx, report)
-		"smith_recipes":
-			return import_smith_recipe(data, ctx, report)
-		"base_rules":
-			if String(data.get("id", "")) == String(ScoreRules.ID):
-				return import_score_rules(data, ctx, report)     # 269
-			return import_market_rules(data, ctx, report)
-		"events":
-			return import_event(data, ctx, report)
-		"chapters":
-			return import_chapter(data, ctx, report)
-		"achievements":
-			return import_achievement(data, ctx, report)
-		"techs":
-			return import_tech(data, ctx, report)
-		"help_pages":
-			return import_help_page(data, ctx, report)
-		"chest_skins":
-			return import_chest_skin(data, ctx, report)
-		"market_stalls":
-			return import_market_stall(data, ctx, report)     # 270
-		"npcs":
-			return import_npc(data, ctx, report)     # 282
-		"belt_skills":
-			return import_belt_skill(data, ctx, report)
-		"items":
-			return import_item(data, ctx, report)
-		_:
-			report.error("", "不认识的内容种类 '%s'（登记在 ContentPaths.KINDS，并在 ContentImporter.import_of 接一臂）" % kind)
-			return null
+	if kind == "base_rules" and String(data.get("id", "")) == String(ScoreRules.ID):
+		return import_score_rules(data, ctx, report)     # 269
+	var importer: Callable = _importers().get(kind, Callable())
+	if not importer.is_valid():
+		report.error("", "不认识的内容种类 '%s'（登记在 ContentPaths.KINDS，并在 ContentImporter.import_of 接一臂）" % kind)
+		return null
+	return importer.call(data, ctx, report)
 
 
 static func import_buff(data: Dictionary, ctx: Context, report: ImportReport) -> BuffDef:
@@ -1202,7 +1148,7 @@ static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportRepor
 static func _string_choices(owner: Object, key: String) -> Array[String]:
 	for prop in owner.get_property_list():
 		if String(prop["name"]) == key:
-			return ContentSchema.enum_options(owner, prop)
+			return ContentSchema.enum_options(prop)
 	return [] as Array[String]
 
 
@@ -1737,13 +1683,7 @@ static func validate_help_pages(ctx: Context, report: ImportReport) -> void:
 ## 猎手（069 / 071）：数全得合理；行动逻辑可空（= 不动）；战败后果不能是空的；指定的敌人池得存在（批量导入时）
 static func import_hunter(data: Dictionary, ctx: Context, report: ImportReport) -> HunterDef:
 	var def := HunterDef.new()
-	# 140：134 之前的 loss_outcomes（只有一档）删了 —— 写了就报错，让作者挪进 loss_options 的某一档
-	var body := data
-	if data.has("loss_outcomes"):
-		report.error("loss_outcomes", "loss_outcomes 已删（140）：请改用 loss_options，把这几条后果放进某一档的 outcomes")
-		body = data.duplicate()
-		body.erase("loss_outcomes")
-	_fill(def, body, "", ctx, report)
+	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "猎手", report)
 	if def.level < 0:
 		report.error("level", "等级不能为负")
@@ -2366,26 +2306,11 @@ static func _warn_build_caps(def: EnemyDef, pool: EnemyPool, at: String, ctx: Co
 ## 这是「导入器不认识具体类型」的第一次真实检验。
 static func import_chapter(data: Dictionary, ctx: Context, report: ImportReport) -> ChapterDef:
 	var def := ChapterDef.new()
-	_fill(def, legacy_coaches(data), "", ctx, report)
+	_fill(def, data, "", ctx, report)
 	_validate_chapter(def, ctx, report)
 	for i in def.rules.size():     # 112：规则卡也认 {item:} {enemy:}
 		check_text_refs(def.rules[i], "rules[%d]" % i, ctx, report)
 	return def
-
-
-## 218 补充一：旧的 `coach` / `coach_battle` 两个字段收进 `coaches` 字典（`map` / `battle`），旧 json 不改也能导
-static func legacy_coaches(data: Dictionary) -> Dictionary:
-	if not data.has("coach") and not data.has("coach_battle"):
-		return data
-	var out := data.duplicate()
-	var coaches: Dictionary = (out.get("coaches", {}) as Dictionary).duplicate() if out.get("coaches", {}) is Dictionary else {}
-	for pair in [["coach", "map"], ["coach_battle", "battle"]]:
-		if out.has(pair[0]):
-			if String(out[pair[0]]) != "" and not coaches.has(pair[1]):
-				coaches[pair[1]] = String(out[pair[0]])
-			out.erase(pair[0])
-	out["coaches"] = coaches
-	return out
 
 
 ## 比引擎严格：地图来源得真的能拿出图来。生成器没登记、预设文件不在，都是内容错误。
@@ -2501,14 +2426,6 @@ static func _validate_item(def: ItemDef, report: ImportReport) -> void:
 
 	if def.adjacency != null:
 		var ap := def.adjacency
-		# 171 待定 4（A）：老内容 / 老存档里法杖的「受益格」其实是晶石座 —— 带 staff 标签、受益格自己不给东西的，迁成装载格
-		if def.tags.has(&"staff") and not ap.receive_cells.is_empty() and ap.receive_mods.is_empty() and ap.receive_rules.is_empty() and ap.load_cells.is_empty():
-			ap.load_cells = ap.receive_cells.duplicate()
-			if not ap.receive_filter.is_empty() and ap.receive_filter != AdjacencyProfile.DEFAULT_LOAD:
-				ap.load_filter = ap.receive_filter.duplicate()
-			ap.receive_cells = [] as Array[Vector2i]
-			ap.receive_filter = [] as Array[StringName]
-			report.warn("adjacency.receive_cells", "法杖的受益格迁成了装载格（171）：重存一次 JSON 就不再提醒")
 		if not ap.grant_cells.is_empty() and ap.grant_mods.is_empty() and ap.grant_rules.is_empty():
 			report.warn("adjacency.grant", "标了增益格却没有加成也没有附加规则，不会点亮任何东西")
 		if not ap.grant_rules.is_empty() and ap.grant_cells.is_empty():
@@ -2623,66 +2540,34 @@ static func _warn_overlapping_markers(def: ItemDef, report: ImportReport) -> voi
 
 
 #region 通用填充
+## 153 + 补充一：`armor` 这个键在两步改名前后意思不同（旧 = 固定减伤，新 = 防具给的那层资源），
+## 所以 `base_stats.armor` / `stat_scale.armor` **报错**，不猜是哪个；旧名 `max_shield` 和资源键 `shield` 也报错
+static func _reject_old_names(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
+	var out := data
+	for key in ["base_stats", "stat_scale"]:
+		var d = data.get(key, null)
+		if not d is Dictionary or not ((d as Dictionary).has("armor") or (d as Dictionary).has("max_shield")):
+			continue
+		var kept := (d as Dictionary).duplicate()     # 报了错的键不留在表里
+		if kept.erase("armor"):
+			report.error(_join(path, key + ".armor"), "armor 不能写在这里：原来的固定减伤改写 block（格挡，只给盾）；防具给的那层写 max_armor（护甲上限，153 补充一）")
+		if kept.erase("max_shield"):
+			report.error(_join(path, key + ".max_shield"), "max_shield 已改名 max_armor（护盾改叫护甲，153 补充一）")
+		out = out.duplicate()
+		out[key] = kept
+	for key in data:
+		var v = data[key]
+		if v is String and (v == "max_shield" or (v == "shield" and String(key) in ["resource_key", "resource", "res"])):
+			report.error(_join(path, String(key)), "%s 已改名 %s（护盾改叫护甲，153 补充一）" % [v, "max_armor" if v == "max_shield" else "armor"])
+		elif v is String and v == "armor" and String(key) == "stat":
+			report.error(_join(path, String(key)), "armor 不是属性：固定减伤写 block（格挡，只给盾），护甲上限写 max_armor（153 补充一）")
+	return out
+
+
 ## 按反射把 [param data] 的每个键写进 [param obj]。
 ##
 ## 未知键**报错而不是忽略** —— 打错一个字段名却静默生效为默认值，
 ## 是内容作者最难自查的一类问题，报出来才有得改。
-## 153 补充一：「护盾」改名「护甲」后的旧名 —— 认并提醒改名（一个版本后删）
-const LEGACY_NAMES := {"max_shield": "max_armor", "shield_absorbable": "armor_absorbable"}
-## 资源键：`resource_key` 之类写 `shield` 的，当 `armor`
-const LEGACY_RESOURCE_FIELDS := ["resource_key", "resource", "res"]
-## 旧构件类型名（`type` 字段）
-const LEGACY_TYPES := {"food_shield": "food_armor"}
-
-
-## 153 + 补充一：`armor` 这个键在两步改名前后意思不同（旧 = 固定减伤，新 = 防具给的那层资源），
-## 所以 `base_stats.armor` / `stat_scale.armor` **报错**，不猜是哪个；`max_shield` / `shield_absorbable`
-## 和资源键 `shield` 认作新名并提醒
-static func _migrate_legacy_names(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
-	var out := data
-	for key in data:
-		var k := String(key)
-		if LEGACY_NAMES.has(k):
-			if out == data:
-				out = data.duplicate()
-			out.erase(key)
-			out[LEGACY_NAMES[k]] = data[key]
-			report.warn(_join(path, k), "%s 已改名 %s（护盾改叫护甲，153 补充一）" % [k, LEGACY_NAMES[k]])
-	for key in ["base_stats", "stat_scale"]:
-		var d = out.get(key, null)
-		if not d is Dictionary:
-			continue
-		var dict := d as Dictionary
-		if dict.has("armor"):
-			report.error(_join(path, key + ".armor"), "armor 不能写在这里：原来的固定减伤改写 block（格挡，只给盾）；防具给的那层写 max_armor（护甲上限，153 补充一）")
-		if dict.has("armor") or dict.has("max_shield"):
-			if out == data:
-				out = data.duplicate()
-			var renamed := {}
-			for k in dict:
-				if String(k) == "armor":
-					continue
-				if String(k) == "max_shield":
-					report.warn(_join(path, key + ".max_shield"), "max_shield 已改名 max_armor（护盾改叫护甲，153 补充一）")
-					renamed["max_armor"] = dict[k]
-				else:
-					renamed[k] = dict[k]
-			out[key] = renamed
-	for key in data:
-		var v = data[key]
-		if not v is String:
-			continue
-		var k := String(key)
-		if v == "max_shield" or (v == "shield" and LEGACY_RESOURCE_FIELDS.has(k)):
-			if out == data:
-				out = data.duplicate()
-			out[key] = "max_armor" if v == "max_shield" else "armor"
-			report.warn(_join(path, k), "%s 已改名 %s（护盾改叫护甲，153 补充一）" % [v, out[key]])
-		elif v == "armor" and k == "stat":
-			report.error(_join(path, k), "armor 不是属性：固定减伤写 block（格挡，只给盾），护甲上限写 max_armor（153 补充一）")
-	return out
-
-
 static func _fill(
 	obj: Object, data: Dictionary, path: String, ctx: Context, report: ImportReport
 ) -> void:
@@ -2696,13 +2581,7 @@ static func _fill(
 		ctx.buff_depth += 1
 	if in_part:
 		ctx.part_depth += 1
-	data = _migrate_legacy_names(data, path, report)
-	if obj is StatModifier:
-		data = _migrate_stat_modifier(data, path, report)
-	elif obj is BuffDef:
-		data = _migrate_buff(data, path, report)
-	elif obj is FaithBonus:
-		data = _migrate_faith_bonus(data, path, report)
+	data = _reject_old_names(data, path, report)
 
 	for key in data:
 		var at := _join(path, String(key))
@@ -2712,7 +2591,7 @@ static func _fill(
 			report.error(at, "未知字段（可用：%s）" % ", ".join(props.keys()))
 			continue
 		var prop: Dictionary = props[String(key)]
-		var coerced = _coerce(obj, prop, obj.get(prop["name"]), data[key], at, ctx, report)
+		var coerced = _coerce(prop, obj.get(prop["name"]), data[key], at, ctx, report)
 		if coerced != null:
 			obj.set(prop["name"], coerced)
 	if in_buff:
@@ -2749,61 +2628,12 @@ static func _warn_tiny_percent(v: float, at: String, stat: StringName, report: I
 		report.warn(at, "%s 按百分数写（20 = 20%%）：%s 只有 %s%%，是不是写成了小数" % [stat, str(v), str(v)])
 
 
-## 133：旧格式的属性修饰（`mult_category` / `mult_percent` / `flat`）换成 `mode` + `amount`。
-## 乘区已经取消，写了 mult_category 只提醒、忽略；一条同时乘又加的拆不了，报错让作者拆成两条
-static func _migrate_stat_modifier(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
-	if not (data.has("mult_category") or data.has("mult_percent") or data.has("flat")):
-		return data
-	var out := data.duplicate()
-	var pct := float(out.get("mult_percent", 0))
-	var flat := float(out.get("flat", 0.0))
-	if out.has("mult_category"):
-		report.warn(_join(path, "mult_category"), "乘区已取消（133），忽略；乘算都在同一个区里相加")
-	out.erase("mult_category")
-	out.erase("mult_percent")
-	out.erase("flat")
-	if pct != 0.0 and flat != 0.0:
-		report.error(path, "一条属性修饰只能乘或加（133）：mult_percent 与 flat 都填了，拆成两条")
-		return out
-	if pct != 0.0:
-		out["mode"] = "MULT"
-		out["amount"] = pct
-	elif flat != 0.0:
-		out["mode"] = "ADD"
-		out["amount"] = flat
-	return out
-
-
-## 137：buff 的叠层上限取消 —— 老字段 `max_stacks` 换成 `stackable`（1 → 不可叠，其余 → 可叠），提醒一句
-static func _migrate_buff(data: Dictionary, path: String, report: ImportReport) -> Dictionary:
-	if not data.has("max_stacks"):
-		return data
-	var out := data.duplicate()
-	var cap := int(out["max_stacks"])
-	out.erase("max_stacks")
-	if not out.has("stackable"):
-		out["stackable"] = cap != 1
-	report.warn(_join(path, "max_stacks"), "max_stacks 已改成 stackable（137）：可叠层不再有上限%s" % ("（这里原来封顶 %d 层）" % cap if cap > 1 else ""))
-	return out
-
-
-## 137：信仰加成的「最多几份」从 `max_stacks` 改名 `max_shares`（和 buff 的旧字段分开）。旧键照收、不提醒
-static func _migrate_faith_bonus(data: Dictionary, _path: String, _report: ImportReport) -> Dictionary:
-	if not data.has("max_stacks"):
-		return data
-	var out := data.duplicate()
-	if not out.has("max_shares"):
-		out["max_shares"] = out["max_stacks"]
-	out.erase("max_stacks")
-	return out
-
-
 static func _join(path: String, key: String) -> String:
 	return key if path == "" else path + "." + key
 
 
 static func _coerce(
-	owner: Object, prop: Dictionary, current: Variant, value: Variant,
+	prop: Dictionary, current: Variant, value: Variant,
 	path: String, ctx: Context, report: ImportReport
 ) -> Variant:
 	var type := int(prop["type"])
@@ -2814,9 +2644,9 @@ static func _coerce(
 			report.error(path, "应为布尔值")
 		TYPE_INT:
 			if value is String:
-				var resolved = ContentSchema.enum_value(owner, prop, value)
+				var resolved = ContentSchema.enum_value(prop, value)
 				if resolved == null:
-					var opts := ContentSchema.enum_options(owner, prop)
+					var opts := ContentSchema.enum_options(prop)
 					report.error(path, "认不得的取值 '%s'%s" % [
 						value, ("（可用：%s）" % ", ".join(opts)) if not opts.is_empty() else ""
 					])
@@ -2971,9 +2801,6 @@ static func _from_registry(
 		report.error(path, "%s 必须写明 type" % class_id)
 		return null
 	var type_name := StringName(str(data["type"]))
-	if LEGACY_TYPES.has(String(type_name)):
-		report.warn(_join(path, "type"), "%s 已改名 %s（护盾改叫护甲，153 补充一）" % [type_name, LEGACY_TYPES[String(type_name)]])
-		type_name = StringName(LEGACY_TYPES[String(type_name)])
 	var tables: Array = ContentSchema.ABSTRACT_ROOTS[class_id]
 
 	for table in tables:

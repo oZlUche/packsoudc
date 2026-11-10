@@ -117,11 +117,8 @@ static func check(path: String = PATH) -> Array[String]:
 		return problems
 	var table := fields(sheets, problems)
 	var on_disk := {}
-	var dir := DirAccess.open(ContentPaths.dirs_of("faiths")[0])
-	if dir != null:
-		for file in dir.get_files():
-			if file.ends_with(".json"):
-				on_disk[file.get_basename()] = true
+	for id in ContentPaths.ids_in(ContentPaths.dirs_of("faiths")[0]):
+		on_disk[id] = true
 	for id in table:
 		if not on_disk.has(id):
 			problems.append("神明总表有 %s，faiths/%s.json 没有 —— 跑 tools/gods_xlsx_to_json.gd" % [id, id])

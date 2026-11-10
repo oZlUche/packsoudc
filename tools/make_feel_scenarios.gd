@@ -57,7 +57,7 @@ func run() -> void:
 	BattleTraceWriter.flush()
 	var doc := ExperimentManifest.stamp({"made": Time.get_datetime_string_from_system(true) + "Z", "limit": FeelScenarios.LIMIT, "scenarios": rows},
 		ExperimentManifest.SYNTHETIC)
-	var ok := _store(dir.path_join("scenarios.json"), JSON.stringify(doc, "  ", true) + "\n") and _store(dir.path_join("questions.md"), FeelScenarios.questions(rows))
+	var ok := store_text(dir.path_join("scenarios.json"), JSON.stringify(doc, "  ", true) + "\n") and store_text(dir.path_join("questions.md"), FeelScenarios.questions(rows))
 	if not ok:
 		print("写不了 scenarios.json / questions.md")
 		finish(1)
@@ -82,15 +82,6 @@ func _replay(sc: Dictionary, code: String, i: int, items: ItemDatabase) -> Strin
 	var info := {"chapter": "feel:%s" % code, "node": i, "enemy": String(sc.get("enemy", "")), "rng_seed": pack.rng_seed,
 		"time_limit": pack.time_limit, "names": [CombatantSpec.item_names(specs[0], items), CombatantSpec.item_names(specs[1], items)], "boards": boards}
 	return BattleTraceWriter.write(trace, result, ExperimentManifest.stamp(info, ExperimentManifest.SYNTHETIC)).get_file()
-
-
-static func _store(path: String, text: String) -> bool:
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f == null:
-		return false
-	f.store_string(text)
-	f.close()
-	return true
 
 
 static func _pct(v: Variant) -> String:

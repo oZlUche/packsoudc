@@ -627,7 +627,7 @@ UI 上用什么图形表示这两类，是表现层的事，数据层不关心�
 晶石写 `feed_mods / feed_rules / feed_filter` —— **晶石站在宿主的装载格上**、宿主命中 `feed_filter` 时，把这些交给宿主（一份，不按格数乘；规则走 `_attach`、以宿主身份跑，时机不限、不许 costs，同受益规则）。
 **一颗晶石只给一把**（171，作者定「后来者优先」）：压着几把法杖的装载格，`BattleCompiler.load_assignments` 只给 `placed_seq` 最大的那把（一样大按 uid），被抢走的那把装载格按空算；
 结果记进 `CombatantSpec.loads`（晶石 uid → 法杖 uid），悬浮窗与棋盘的装载格点亮都查它。编译器把真的供给了的晶石记进 `CombatantSpec.fed_uids`（耐久按它扣，7.4）；
-用坏了的（`ItemInstance.is_broken()`）不再供给。老内容里法杖的受益格（带 `staff` 标签、受益格不给东西）导入时迁成装载格（171 待定 4 A）。
+用坏了的（`ItemInstance.is_broken()`）不再供给。
 于是邻接三件事：我给邻居（grant，171 加 `grant_filter_all`：全部带上才算，句子里连写）、邻居给我（receive）、装上来的晶石给我（load / feed）。
 「只改这件自己打出的伤害」靠伤害扳机的 `own_only`（来源 uid = 规则主人），魔晶石的「改成火焰」用它。
 
@@ -739,8 +739,8 @@ const DEFAULT_STATS := {"max_hp": 25.0, "max_stamina": 50.0}
 后期想加强一件物品，加乘算比加固定值有效得多。
 
 > **133 取消了四个乘区**（`EMPOWER / SHARP / ELEMENT / HASTE`）。它们混了两件事：增益怎么生效（乘还是加）和增益是什么（锋利、元素、急速）。
-> 后者本该是独立的 `BuffDef` / 属性（「给护甲加急速乘区」根本不成立）。导入器把旧键 `mult_category / mult_percent / flat` 迁成 `mode + amount`：
-> `mult_category` 提醒并忽略，同一条又乘又加的报错要求拆成两条。
+> 后者本该是独立的 `BuffDef` / 属性（「给护甲加急速乘区」根本不成立）。属性修饰只写 `mode + amount`；
+> 旧键 `mult_category / mult_percent / flat` 导入器不再认（按未知字段报错）。
 
 #### 定点数与取整
 
@@ -1143,7 +1143,7 @@ func scope() -> StringName: return EffectScope.COMBAT
 **如无说明，buff 永续、可叠层**（103，作者定）：`BuffDef` 的默认值就是 `stackable = true`（可叠层，**没有层数上限**，137）、
 `duration_sec = 0`（永续）。不可叠或会过期是**例外**，必须在定义里显式写 `stackable: false`（固定一层，和可选的 `duration_sec`），
 导入器守着（085：可叠层的不许填时长）；词条里这两种用例外色标出来。设计数值时按「永续 + 叠层」来算。
-137（作者定）取消了叠层上限：可叠层就是不限层，旧字段 `max_stacks` 由导入器迁移（1 → 不可叠，其余 → 可叠，带提醒）。
+137（作者定）取消了叠层上限：可叠层就是不限层，旧字段 `max_stacks` 导入器不再认（按未知字段报错）。
 
 **buff 是内容**（146）：`data/authoring/buffs/<id>.json` 一份一个（`ContentPaths.KINDS` 里，`ORDER` 排在 `items` 前面），
 道具 / 角色 / 套装里写 `"buff": "bleed"` 按 id 引用；只被一处用到的仍可内联。buff 制作器存的就是它们，
@@ -3720,8 +3720,8 @@ func player_spec() -> CombatantSpec …
 `CoachOverlay`（`ui/widgets/`）：整屏一层阴影（吞掉所有点击），目标周围挖洞（包围盒外扩 `HOLE_PAD` 8，洞边一圈高光），一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右按方向转；缺图画折线）从洞外指过来，箭尾一块羊皮纸（`PanelTooltip`）写说明。点任意处 / 按任意键下一步，最后一步收掉、发 `finished`。
 
 - 步骤是数据：`data/authoring/coach/<id>.json` = `{"id", "steps": [{"target": 读数部件 id, "text"}]}`，`CoachOverlay.problems` 校验目标是登记过的部件、写了字。目标位置每一步现问（地图屏给 `HudHost.rect_of`），所以玩家挪了读数，教程跟着走。
-- 章节写 `coach`（`ChapterDef`），序章一 = `prologue_map`（体力、货币、背包、放大镜四步）。地图第一次露出来（没有事件 / 规则卡 / 暂停压着、屏在地图上）时放一次，放过记进 `MetaState.coach_seen`（跟着存档位）；调试台有「重放教程」。
-- 战斗屏（166 补充二）：章节写 `coach_battle`（序章一 = `prologue_battle`，时间轴 / 播放 / 倍速 / 跳过 / buff 行 / 继续六步），目标是 `BattleView.COACH_TARGETS`，位置走 `BattleView.control_rect`（「继续」由战斗屏 `add_coach_target` 登记）。要放时战斗屏一开就 `BattleView.hold()`，叠层淡入完了放，收掉 `release()` 按原状态接着放；同记 `coach_seen`，地图屏调试台「重放战斗教程」把那条删掉。`CoachOverlay.problems(steps, known_ids)` 按屏分开认目标。
+- 章节写 `coaches.map`（`ChapterDef`），序章一 = `prologue_map`（体力、货币、背包、放大镜四步）。地图第一次露出来（没有事件 / 规则卡 / 暂停压着、屏在地图上）时放一次，放过记进 `MetaState.coach_seen`（跟着存档位）；调试台有「重放教程」。
+- 战斗屏（166 补充二）：章节写 `coaches.battle`（序章一 = `prologue_battle`，时间轴 / 播放 / 倍速 / 跳过 / buff 行 / 继续六步），目标是 `BattleView.COACH_TARGETS`，位置走 `BattleView.control_rect`（「继续」由战斗屏 `add_coach_target` 登记）。要放时战斗屏一开就 `BattleView.hold()`，叠层淡入完了放，收掉 `release()` 按原状态接着放；同记 `coach_seen`，地图屏调试台「重放战斗教程」把那条删掉。`CoachOverlay.problems(steps, known_ids)` 按屏分开认目标。
 
 ### 8.10 字体（168）
 
@@ -3950,7 +3950,7 @@ JSON 有资产没有 = 没跑导入，资产有 JSON 没有 = 孤儿资产（游
 `sets` **暂时不在 `KINDS` 里**（100，作者定）：独立的套装文件一份都还没有，
 所以批量导入与这道检查都不跑它。它在 `ContentPaths.EDITOR_ONLY_KINDS` 里 —— 路径还是只在 `ContentPaths` 一处算
 （`dirs_of / authoring_file / asset_file` 两张表都查），套装编辑器照旧存得下；
-真有了第一份独立内容，把那一行搬回 `KINDS`、`ORDER` 里排在 `items` 之前，它就自动进管线与检查。
+真有了第一份独立内容，把它搬进 `ORDER`（`KINDS` 按 `ORDER` 生成）、排在 `items` 之前，它就自动进管线与检查。
 `buffs` 在 146 这么搬回去了，同时新增 `rule_parts`：顺序是 …信仰 → buff → 构件 → 道具…。编辑器单件导入用 `ContentLibrary.context()`
 （盘上的 buff 与构件已登记），引用才解析得到。
 
@@ -4243,7 +4243,7 @@ res://
     map_editor/     map_editor
   tools/            import_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
                     demo_fill        # 截图演示（101 第 6 刀；只在 DEMO_SCREEN 非空时被导演 load）
-                    gen_sample_chapter  bench_battle  capture_scene  cli_tool
+                    bench_battle  capture_scene  cli_tool
   tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录（2026-10-06：108 个套件）
     inventory/      test_*（12）   背包、格子、拖拽
     battle/         test_*（8）    编译、效果、伤害、数值

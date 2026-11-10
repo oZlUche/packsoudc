@@ -1224,16 +1224,7 @@ func _isolate_zones() -> void:
 func _gate_spread(gate: int, kept: Array[int], inside: Dictionary) -> int:
 	if kept.is_empty():
 		return 1 << 20
-	var dist := {gate: 0}
-	var queue: Array[int] = [gate]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		for n in _graph.neighbors(id):
-			if inside.has(n) and not dist.has(n):
-				dist[n] = int(dist[id]) + 1
-				queue.append(n)
+	var dist := _graph.spread({gate: 0}, [gate] as Array[int], inside)
 	var nearest := 1 << 20
 	for g in kept:
 		nearest = mini(nearest, int(dist.get(g, 1 << 20)))

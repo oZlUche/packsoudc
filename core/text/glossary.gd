@@ -63,8 +63,6 @@ static func term_text(name: String) -> String:
 	var entry = TERMS.get(term_key(name), null)
 	if entry == null:
 		return ""
-	if not (entry is Dictionary):
-		return String(entry)
 	var tr_: Variant = (entry as Dictionary).get(UiText.lang, null)
 	if tr_ is Dictionary and String((tr_ as Dictionary).get("text", "")) != "":
 		return EncumbranceRules.fill_numbers(String(tr_["text"]))
@@ -83,11 +81,10 @@ static func term_key(word: String) -> String:
 	if TERMS.has(word):
 		return word
 	for key in TERMS:
-		var entry = TERMS[key]
-		if entry is Dictionary:
-			for lang in entry:
-				if entry[lang] is Dictionary and String((entry[lang] as Dictionary).get("name", "")) == word:
-					return String(key)
+		var entry: Dictionary = TERMS[key]
+		for lang in entry:
+			if entry[lang] is Dictionary and String((entry[lang] as Dictionary).get("name", "")) == word:
+				return String(key)
 	return ""
 
 
@@ -96,7 +93,7 @@ static func term_tip(name: String) -> bool:
 	var entry = TERMS.get(term_key(name), null)
 	if entry == null:
 		return false
-	return bool((entry as Dictionary).get("tip", true)) if entry is Dictionary else true
+	return bool((entry as Dictionary).get("tip", true))
 
 
 ## 标签给人看（096：名字是数据 —— [TagRegistry]，按当前语言；`faith:<id>` 写成「信仰：神名」；没登记的原词）

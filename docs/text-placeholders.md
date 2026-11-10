@@ -70,7 +70,7 @@
 
 | 来源 | 键 | 例 |
 |---|---|---|
-| 数值字段（int / float） | 同名 | 成就 `{amount}`、局内 buff `{duration_steps}`、信仰道具按阶功能 `{per_points}` `{max_stacks}`、献祭 `{multiplier}` |
+| 数值字段（int / float） | 同名 | 成就 `{amount}`、局内 buff `{duration_steps}`、信仰道具按阶功能 `{per_points}` `{max_shares}`、献祭 `{multiplier}` |
 | 值是数的字典 | 字典的键 | 角色 `base_stats` → `{max_hp}` `{max_stamina}` |
 | 数组里注册表里有名字的构件（事件结果 / 条件、局内效果、侵蚀……） | `<类型>_<字段>`，同类型取第一个 | `{change_money_amount}` `{spend_vitality_amount}` `{restore_vitality_amount}` `{pass_time_actions}` `{steps_within_min_steps}` `{vitality_max_bonus_amount}` `{luck_bonus_amount}` |
 | 数组里其余对象（属性修饰 `mods`） | 第一个元素的字段，不加前缀 | `{amount}`（133 之前是 `{mult_percent}` / `{flat}`） |
@@ -81,13 +81,13 @@
 **过滤器**：`{键|abs}` 取绝对值（「给他 {change_money_amount|abs} 币」，字段是 -10）、`{键|signed}` 带正负号（「伤害 {amount|signed}%」→「伤害 -10%」）。不认识的过滤器整个记号原样保留。
 
 **别的道具的数**：`{item_stat:<道具 id>:<字段>}`（教程用：「塔盾每下减 {item_stat:tower_shield:armor}」）。从那件道具的定义里找，先 `combat` 再整份定义：
-`stat` 是这个名字的属性修饰取它的 `amount`（`{item_stat:warding_charm:max_shield}`），否则取同名的数值字段或字典键（`base_stats` 的 `{item_stat:leather_armor:max_shield}`、伤害修正的 `flat`）。找不到原样保留。
+`stat` 是这个名字的属性修饰取它的 `amount`（`{item_stat:warding_charm:max_armor}`），否则取同名的数值字段或字典键（`base_stats` 的 `{item_stat:leather_armor:max_armor}`、伤害修正的 `flat`）。找不到原样保留。
 
 **`note` 是补充，不覆盖**：信仰级效果、献祭、道具的按阶功能，界面上的主句一律由 `describe()` 按字段生成，`note` 接在后面，为空就没有。
 主句已经说清楚的就不要写 `note`。阶统一写 `Lv.n`。
 
 **检查**：上面这些文字（剥掉 `{…}` 与 BBCode 之后）还含阿拉伯数字的是 **error**：`tools/import_content.gd` 导入失败，`tools/check_content.gd`（`tools/test.sh` 每次跑）退 1。
-汉字数（「三秒一下」）不算。2026-10-02 作者定升为 error；开关是 `TextLint.STRICT`（`core/authoring/text_lint.gd`）。
+汉字数（「三秒一下」）不算。2026-10-02 作者定升为 error（`core/authoring/text_lint.gd`）。
 
 ## 2. 样式码
 
@@ -172,14 +172,14 @@
 | `MetaRules` | `safe_size` | 保险箱几格（092，初始 3×3；放进去的视为已带出，战败也带得出；**关上或走开就锁**，不能再改） |
 | `FaithDef` | `blessings[]` `convert_chance` `convert_per_tier` | 赐福模板（095：条件 / 前缀 / 稀有度 +1 / 价值 ×1.5 / 功能与生效方式）；包内每步转化概率 0.03 + 每级 0.01 |
 | `DropRule` / `SearchRules` | `bless_chance` `bless_chance_active` | 掉落 / 搜索的普通道具换成赐福版的概率（没激活 0.05 随机一位神 / 激活 0.2 只换那位） |
-| `FaithBonus` | `mode` `per_points` `max_stacks` | 信仰道具功能的生效方式：tier / active / scaled（每 N 信力一份，最多 M） |
+| `FaithBonus` | `mode` `per_points` `max_shares` | 信仰道具功能的生效方式：tier / active / scaled（每 N 信力一份，最多 M） |
 | `ChapterDef` / `MapScaleProfile` | `carry_budget` `carry_over_cost` | 带入预算（094）：从仓库带进一局的总价值预算（小 600 / 中 900 / 大 1200，章节兜底 600），每超 50 价值倒计时 −1 |
 | `MapScaleProfile` | `step_limit` | 这个规模档的全局倒计时（092：小 36 / 中 60 / 大 90；0 = 用章节的） |
 | 节点类型 | `safe`（符号 K） | 保险箱点：不算用过，每次踩上都开保险箱屏（092） |
 | `MetaRules` | `sell_ratio` | 基地「出售」页卖掉仓库道具回定价的几成（091，0.5；`ItemValue.of × 比例` 向下取整）；一键出售按稀有度档筛 |
 | `GameSettings` | `bg_theme` | 背景底色（091）：`UiPalette.BG_THEMES` 的 id（graphite 石墨默认 / dark / slate / dusk / moss / mist），设置屏挑，所有屏与编辑器跟着 |
 | `GameSettings` | `language` | 界面语言 `zh` / `en`（主菜单切）；界面文字走 `UiText.t(key)`，表在 `core/text/ui_text.gd`，现在覆盖主菜单与 buff 制作器 |
-| `BuffDef` | `max_stacks` `duration_sec` | `max_stacks 0 = 不限层`（通常如此）、`1 = 不可叠层`；可叠层的永续、不许填时长（导入器拦）。Buff 制作器 `ui/buff_editor` 按这套规矩联动 |
+| `BuffDef` | `stackable` `duration_sec` | `stackable` 默认开 = 可叠层、不限层（通常如此），关 = 不可叠层；可叠层的永续、不许填时长（导入器拦）。Buff 制作器 `ui/buff_editor` 按这套规矩联动 |
 | 档位表 `StrengthTier` / `EnemyDef` | `bags` | 这一档 / 这种敌人背的包，包不计入件数 |
 | `SearchRules` | `again_event` `done_event` `encounter_event` `destroyed_event` | 搜索循环的默认事件 |
 | `ChapterDef` | `auto_spawn` `skip_setup` `intro_event` | 开局站在出生点、不走开局屏、先过开场事件 |

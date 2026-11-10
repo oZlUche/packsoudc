@@ -205,6 +205,22 @@ func edge_between(a: int, b: int) -> MapEdge:
 	return null
 
 
+## 只读：从 [param queue] 里的点（步数已记在 [param dist] 里）一步步向外走，把走得到的点的最少步数补进 [param dist] 并返回它。
+## [param inside] 非空：只走这里面的点；[param limit]：走到这么多步为止
+func spread(dist: Dictionary, queue: Array[int], inside: Dictionary = {}, limit: int = 1 << 30) -> Dictionary:
+	var head := 0
+	while head < queue.size():
+		var id := queue[head]
+		head += 1
+		if int(dist[id]) >= limit:
+			continue
+		for n in neighbors(id):
+			if not dist.has(n) and (inside.is_empty() or inside.has(n)):
+				dist[n] = int(dist[id]) + 1
+				queue.append(n)
+	return dist
+
+
 func _ensure_index() -> void:
 	if _index_valid:
 		return

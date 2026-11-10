@@ -134,7 +134,7 @@ static func dump(obj: Object, with_type: bool = false) -> Dictionary:
 		# 与默认值相同就不写
 		if fresh != null and _same(value, fresh.get(key)):
 			continue
-		var encoded = _encode(obj, prop, value)
+		var encoded = _encode(prop, value)
 		if encoded != null:
 			out[key] = encoded
 	_percent_out(obj, out)
@@ -229,10 +229,10 @@ static func _same(a: Variant, b: Variant) -> bool:
 	return a == b
 
 
-static func _encode(owner: Object, prop: Dictionary, value: Variant) -> Variant:
+static func _encode(prop: Dictionary, value: Variant) -> Variant:
 	match int(prop["type"]):
 		TYPE_INT:
-			return ContentSchema.enum_name(owner, prop, int(value))
+			return ContentSchema.enum_name(prop, int(value))
 		TYPE_STRING_NAME:
 			return String(value)
 		TYPE_VECTOR2I:

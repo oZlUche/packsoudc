@@ -73,6 +73,25 @@ func write_json_if_changed(out: Dictionary) -> int:
 	return written
 
 
+## 把一段文字写进文件。写不了返回 false，什么都不打（怎么说、退几由调用方定）
+static func store_text(path: String, text: String) -> bool:
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		return false
+	f.store_string(text)
+	f.close()
+	return true
+
+
+## 同上，但写不了就打一句、[method finish](1)、返回 false —— 调用方见 false 直接 return
+func write_text(path: String, text: String) -> bool:
+	if store_text(path, text):
+		return true
+	print("写不了 " + path)
+	finish(1)
+	return false
+
+
 ## 兜底。[b]这两件事都是实测出来的，不要想当然：[/b]
 ##
 ## 1. GDScript 的运行时错误**只中断出错的那一层函数**，调用方会继续往下走。

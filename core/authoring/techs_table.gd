@@ -159,12 +159,9 @@ static func owned_files() -> Array[String]:
 	var out: Array[String] = []
 	for pair in [["techs", ""], ["run_buffs", BUFF_PREFIX]]:
 		var dir_path: String = ContentPaths.dirs_of(pair[0])[0]
-		var dir := DirAccess.open(dir_path)
-		if dir == null:
-			continue
-		for file in dir.get_files():
-			if file.ends_with(".json") and file.begins_with(pair[1]):
-				out.append("%s/%s" % [dir_path, file])
+		for id in ContentPaths.ids_in(dir_path):
+			if id.begins_with(pair[1]):
+				out.append("%s/%s.json" % [dir_path, id])
 	return out
 
 

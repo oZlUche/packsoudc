@@ -16,14 +16,7 @@ func run() -> void:
 	problems.append_array(TextColorCheck.problems())     # 169：字色模板读得到、两版都在、浅版在纸上够清楚
 	for w in TextColorCheck.warnings():
 		print("警告：%s" % w)
-	# 104 第十节：说明文本里写死的数字。TextLint.STRICT（2026-10-02 起为 true）= 算不一致；false 时只列出警告
-	var bare := TextLint.scan_all()
-	if TextLint.STRICT:
-		problems.append_array(bare)
-	elif not bare.is_empty():
-		print("警告：说明文本里有 %d 处写死的数字：" % bare.size())
-		for w in bare:
-			print("  ! %s" % w)
+	problems.append_array(TextLint.scan_all())     # 104 第十节：说明文本里写死的数字（2026-10-02 起算不一致）
 	if problems.is_empty():
 		print("内容一致：%d 种都对得上" % ContentPaths.ORDER.size())
 		finish(0)

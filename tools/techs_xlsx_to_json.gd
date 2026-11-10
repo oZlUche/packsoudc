@@ -37,13 +37,8 @@ func run() -> void:
 		print("删了 %s（表里没有）" % path)
 	var md := TechsTable.markdown(f)
 	if FileAccess.get_file_as_string(TechsTable.MIRROR) != md:
-		var file := FileAccess.open(TechsTable.MIRROR, FileAccess.WRITE)
-		if file == null:
-			print("写不了 " + TechsTable.MIRROR)
-			finish(1)
+		if not write_text(TechsTable.MIRROR, md):
 			return
-		file.store_string(md)
-		file.close()
 		print("写了 " + TechsTable.MIRROR)
 	print("科技表 → JSON：%d 个科技、%d 份文件，改了 %d 份、删了 %d 份。接着跑 tools/import_content.gd" % [f.size(), out.size(), written, removed])
 	finish(0)
