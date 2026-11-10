@@ -106,14 +106,46 @@ static func _settle(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime
 	# 108：**听自己出手的规则不算再出手一次** —— 附加规则（毒箭挂给弓的、日神附魔）以宿主身份跑、听的就是宿主的出手；
 	# 它要是再发一条宿主的 ITEM_FIRED，就会再触发自己，一直连锁到 max_chain 被截断（一击挂几十层毒 / 几十次附火）。
 	# 自发型（event 为 null）天然不是
-	var self_fired := event != null and event.name == BattleEvent.ITEM_FIRED and event.get_int(&"uid") == rt.source_uid
-	if rt.source_uid != 0 and not self_fired:
-		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, _fired_payload(rt, rc))
+	# 292：再推一步 —— 一次出手带起来的这一串里，每件最多出手一次；已经出过手的件再被这一串触发，效果照放、不再发出手。
+	# 两把阔剑互相「其他道具出手时」攒下一下：不拦就 A→B→A→B 直到 max_chain 截断，同一刻别的事件也一起被清掉
+	if rt.source_uid != 0:
+		var root := _claim(ctx, event, chain_key(owner.side, rt.source_uid))
+		if root != CLAIMED:
+			var payload := _fired_payload(rt, rc)
+			if root >= 0:
+				payload[CHAIN] = root
+			ctx.emit(BattleEvent.ITEM_FIRED, owner.side, payload)
 
 	# 内容。同一条规则的多个效果共用上面那一次消耗
 	for effect in rule.effects:
 		(effect as Effect).apply(rc)
 	return true
+
+
+## 292：连带出手事件带上这一串的根（最先那一下出手事件的 seq）；自发的那一下不带
+const CHAIN := &"chain"
+## [method _claim] 的返回：这件在这一串里已经出过手了
+const CLAIMED := -2
+
+
+## 292：一件道具在连带出手串里的记号。两边的 uid 各自从头编，得带上哪一方
+static func chain_key(side: int, uid: int) -> int:
+	return uid * 2 + side
+
+
+## 292：[param key] 这件要因 [param event] 出手。不是出手事件（不在哪一串里）→ -1；
+## 这一串里它已经出过手 → [constant CLAIMED]；否则记下它，返回这一串的根
+static func _claim(ctx: BattleContext, event: BattleEvent, key: int) -> int:
+	if event == null or event.name != BattleEvent.ITEM_FIRED:
+		return -1
+	var root := int(event.payload.get(CHAIN, event.seq))
+	if not ctx.cascade.has(root):
+		ctx.cascade[root] = {chain_key(event.side, event.get_int(&"uid")): true}
+	var fired: Dictionary = ctx.cascade[root]
+	if fired.has(key):
+		return CLAIMED
+	fired[key] = true
+	return root
 
 
 ## 247：只留条件（[method Cost.is_condition]），真要付的都去掉

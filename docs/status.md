@@ -95,7 +95,7 @@
 
 ## 当前待办
 
-代码入口的行号按 `b1c0f009`。2026-11-10 测试报告的 G01、G02、G03、Q01 已在 v5.47 修掉（[报告 291](reports/291-plan-1109-batch1-fixes.md)），不再列；G02 的计分口径和 G04 的开场白见下面「需要作者决定」A5、A14。
+代码入口的行号按 `b1c0f009`。2026-11-10 测试报告的 G01、G02、G03、Q01 已在 v5.47 修掉（[报告 291](reports/291-plan-1109-batch1-fixes.md)），不再列；G02 的计分口径作者 2026-11-10 09:08 定「保留」（数到过的点）；G04 的开场白分支 v5.48 已接上，第一句待作者定稿（A5）。
 
 ### 可直接执行
 
@@ -106,10 +106,7 @@
 | U3 | 长篇交代 / 事件正文溢出时给「下方还有内容」的视觉提示（渐隐或箭头，不加字） | 测试 2026-11-10 体验建议 3 | `ui/game/event_screen.gd` | 无 | 英文大字号首次自由模式交代：有溢出时显示、滚到底消失；`Got it` 照旧随时可点。理由：只加图形提示、不改流程，符合「图像能说明的不加文字」 |
 | U4 / D0 | 统一引擎版本与启动入口：`run_game.sh` 像 `test.sh` 一样先找 PATH，并检查引擎版本是 4.7.x | 测试 2026-11-10 体验建议 4；执行方案 §6 | `tools/run_game.sh:6`、`tools/test.sh:12-21` | 无 | Linux 上不设 `GODOT` 能启动；版本不符时明确报错。理由：工具脚本，不涉及玩法 |
 | U5 | 深面板上 `styles.hp` / `styles.danger` 对比度 4.40 → ≥ 4.50 | 测试 2026-11-10 体验建议 5 | `data/authoring/ui/text_colors.json`、`tools/text_color_check.gd` | 无 | `text_color_check` 过 4.50；色相不变、只调明度，前后色值与截图交 UI设计 过目。理由：工具目标明确、改动极小，可逆 |
-| C1 | 阶段 C：核对流派木桩与当前武器体系（品质、拼接、砧、红武是否被覆盖） | 执行方案 §5 步骤 1；242 §十 | `tools/build_archetypes.gd`、`core/run/calibration/archetype_builder.gd`、`data/authoring/calibration/archetypes.json` | 阶段 B 全量通过；Godot 串行 | 改木桩前保留旧输入；写清覆盖到 / 没覆盖到的流派与件 |
-| C2 | 阶段 C：武器估算 vs 实测对照 | 执行方案 §5 步骤 2；151、242 §九 | `tools/bench_battle.gd -- power`、`core/authoring/power_bench.gd`、`data/authoring/balance/power_weights.json` | C1 | 偏差表 + 原因分析；不改数 |
-| C3 | 阶段 C：固定输入、固定种子扫 `standard_ruins`、`clockwork`、猎手，初轮每格 100 场 | 执行方案 §5 步骤 3～4 | `tools/bench_matrix.gd`、`tools/bench_hunters.gd`、`core/run/calibration/balance_matrix.gd` | C1 | 报告记提交 / 引擎 / 输入 / 种子 / 场数 / 命令 / 耗时；分流派分档位（胜率、时长、余血、单调性）；新文件写进 `docs/reports/balance/`，不覆盖历史 |
-| C4 | 阶段 C：5～10 个最该处理的问题与具体调参建议（只交建议） | 执行方案 §5 步骤 5 | 同 C3 | C3；目标带见作者决定 A7 | 每条有复现条件、证据、可能原因、建议字段与影响面；未定案前不大面积调数 |
+| C1～C4 | 阶段 C 平衡基线：**v5.48 已交**（[报告 292](reports/292-plan-1109-stage-c-balance-baseline.md)：两池扫表、猎手、武器估算对实测、9 条建议，没改数；顺带修了连锁触发截断）。下一步等作者对报告 292 §八的建议表态，再按定下的改数 | 执行方案 §5 | `docs/reports/balance/2026-11-10-*.md` | 作者表态 | 改数前后用同一份输入 `docs/reports/balance/inputs/2026-11-10-archetypes.json` 对照 |
 | D2 | 阶段 D：构建可追溯标识（诊断包 / 对局记录 / 报告能对上具体构建），不改对外版本号 | 执行方案 §6 第 1 条 | `CalibrationRecorder`（快照已有 `version` 字段，242 §十）、`core/run/calibration/data_export.gd`、`project.godot:14` | 复用已有字段；新增字段要旧数据可读 | 新导出的诊断包能对上提交；旧 `runs.jsonl` / zip 照样能读 |
 | D3 | 阶段 D：玩家错误日志是否落盘、怎么找、是否随「导出平衡数据」带走 | 执行方案 §6 第 2 条 | `core/run/calibration/data_export.gd`、`core/battle/battle_archive.gd`、`project.godot`（日志设置） | 无 | 写清现状；缺的话复用现有导出补一项，不另起日志系统 |
 | E1 | 阶段 E：常规事件薄弱度 / 重复度盘点，挑 5～8 个候选（只列条件、后果、位置、数值影响，**不写正文**） | 执行方案 §7；238 | `data/authoring/events/`（非教程 24 个） | 阶段 B、C 结果 | 盘点表交作者；正文见 A10 |
@@ -124,7 +121,7 @@
 | A2 | 八把红武的独有机制（时间凝滞、断绝回复等八条）是否照 281 §四.2 落地 | 281 §四.2；v5.20 落地时「机制空，等作者点头」 | `data/authoring/items/{chana,duanshui,shuangsheng,guanri,bengshan,zhuixing,poxiao,jimie}.json`、`core/battle/effects/` | 无 | 作者对每条点头或改写 |
 | A3 | 破晓任务链（拿到信物之后）—— **报告里故意留白，不得自行补规则** | 281 §四.3 破晓行；282 §二.3；作者 2026-11-05 12:42；`/mnt/project-files/reference/待做-系统.md` 第 4～5 行（文件存在） | `data/authoring/npcs/blacksmith.json`、`data/authoring/items/poxiao_token.json` | 作者点名时出方案 | 作者给出后续流程 |
 | A4 | 新角色方向（12 个草案里挑哪几个） | 254（头脑风暴，待作者挑方向） | `core/run/character_def.gd`、`data/authoring/characters/` | 无 | 作者挑定后每个角色一篇方案 |
-| A5 | 跳过教程分支的开场文案（现在仍是「三趟都活着回来了」） | 测试 2026-11-10 G04（P3） | `data/authoring/events/briefing_legion.json:7`；跳过分支 `core/run/game_flow.gd`（`decline_tutorial`，第 248 行） | 文案由作者写（中英） | 空存档选「不需要」后首次出发不再出现「三趟」；代码按分支选文本 |
+| A5 | 跳过教程分支的开场白第一句：作者 2026-11-10 09:08 选「单独开头」，v5.48 已接上分支，第一句暂用草案「听说你在别处走过几趟。」/ "Word is you've made a few trips elsewhere." | 测试 2026-11-10 G04；报告 291 §四、292 §二 | `data/authoring/events/briefing_legion_skipped.json` | 文案由作者写（中英） | 作者定稿第一句 |
 | A6 | 教程遮罩加「点击任意处继续」、进度与跳过入口 | 测试 2026-11-10 体验建议 1 | `ui/widgets/coach_overlay.gd`、`data/authoring/coach/` | 提示文字由作者定；跳过会改教程流程 | 作者选做哪几样。理由：动教程流程与文字，不能直接做 |
 | A7 | 平衡目标带：普通敌人约七成、精英约五成只是**建议**（猎手五成是 073 作者定） | 242 §3.3；执行方案 §5 | `tools/bench_matrix.gd`（只打印不改数） | C3 结果 | 作者定每类对手的目标带，或说明按建议 |
 | A8 | 音乐风格 | `data/authoring/audio/music.json` = `{}`（已核）；238；执行方案 §7 | `ui/audio.gd`（`play_music`，曲表空） | E2 需求表 | 作者定风格与来源，素材见 M2 |
@@ -133,7 +130,6 @@
 | A11 | 对外版本 `0.1.0` / `0.1.0.0` 与开发号 v5.46 是否有意分离 | 执行方案 §6；242 §十 | `project.godot:14`、`export_presets.cfg:33,75` | 无 | 作者一句；在定之前不改对外版本 |
 | A12 | 额外战斗效果：无敌 / 吸血 / 荆棘（已定要做，动手前先出方案）；眩晕、命中等候选 | `/mnt/project-files/reference/待做-战斗效果.md`（文件存在）；执行方案 §7 | `core/battle/buff_def.gd`、`core/battle/effects/` | 先交架构设计出报告 | 作者对方案点头 |
 | A13 | 大型地图（9 环以上）的第二道撤离环间等规模参数仍是占位 | 053；`core/map/generators/map_scale_profile.gd:31,92` | `data/authoring/chapters/free_mode.json:367`（`placeholder: true`） | 无 | 作者给大型图规则 |
-| A14 | 结算「走过的点」口径：v5.47 已按默认改成数**到过的点**（和结算页名字一致，探索分随之涨，云端那条路线 423 → 427）；若本意是奖励「用掉的点」就回退并把名字改成「用过的点」 | 测试 2026-11-10 G02；报告 291 §四 | `core/run/run_result.gd`（`arrived_count`）、`core/text/ui_text.gd`（`ledger.visited`） | 无 | 作者一句：保留，或回退改名 |
 
 ### 缺素材或真人数据
 
