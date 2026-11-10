@@ -51,7 +51,7 @@ func run() -> void:
 		var wanted := {}
 		for k in dummies:
 			var d: Dictionary = dummies[k]
-			wanted[str(int(d.get("bracket", int(String(k)))))] = HunterBench.wanted_of(d, hunter, pool, node, chapter.difficulty if chapter != null else 0, &"", 0.0, brackets)
+			wanted[str(int(d.get("bracket", int(String(k)))))] = HunterBench.wanted_of(d, hunter, pool, node, chapter.difficulty if chapter != null else 0, brackets)
 		var ctx := {"pool": pool, "enemies": enemies, "items": items, "mode": BalanceExperiment.BARE_NODE, "fights": fights, "seed": 1,
 			"time_limit": BattleSim.DEFAULT_TIME_LIMIT}
 		var config := {"tool": "bench_hunters", "mode": BalanceExperiment.BARE_NODE, "hunter": String(hunter_id), "pool": String(pool_id),
@@ -65,6 +65,6 @@ func run() -> void:
 		print("请求 %d、有效 %d、失败 %d → %s" % [done["summary"]["total"]["requested"], done["summary"]["total"]["valid"], done["summary"]["total"]["failed"], done["dir"]])
 		finish(0)
 		return
-	var result := HunterBench.run(dummies, hunter, pool, enemies, items, fights, 1, chapter.difficulty if chapter != null else 0, &"", 0.0, brackets)
+	var result := HunterBench.run(dummies, hunter, pool, enemies, items, fights, 1, chapter.difficulty if chapter != null else 0, brackets)
 	print(HunterBench.report_text(result, hunter_id))
 	finish(0)

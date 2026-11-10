@@ -1801,9 +1801,7 @@ func _go(s: int, payload: Dictionary = {}) -> void:
 ## 猎手、信仰、配方、局外 buff、事件各自有 `load_all`（HunterSystem / FaithDef / RecipeDef / RunBuffs / EventPlacer），持有方直接调
 static func load_chapters() -> Array[ChapterDef]:
 	var out: Array[ChapterDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.CHAPTERS):
-		if res is ChapterDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.CHAPTERS, ChapterDef))
 	return out
 
 
@@ -1869,26 +1867,20 @@ func default_loadout() -> LoadoutDef:
 
 static func load_loadouts() -> Array[LoadoutDef]:
 	var out: Array[LoadoutDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.LOADOUTS):
-		if res is LoadoutDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.LOADOUTS, LoadoutDef))
 	return out
 
 
 static func load_characters() -> Array[CharacterDef]:
 	var out: Array[CharacterDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.CHARACTERS):
-		if res is CharacterDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.CHARACTERS, CharacterDef))
 	return out
 
 
 ## 按档位排：普通在前
 static func load_difficulties() -> Array[DifficultyDef]:
 	var out: Array[DifficultyDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.DIFFICULTIES):
-		if res is DifficultyDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.DIFFICULTIES, DifficultyDef))
 	out.sort_custom(func(a: DifficultyDef, b: DifficultyDef) -> bool:
 		return a.level < b.level if a.level != b.level else String(a.id) < String(b.id))
 	return out
@@ -1897,18 +1889,14 @@ static func load_difficulties() -> Array[DifficultyDef]:
 ## 114：百科的机制页
 static func load_help_pages() -> Array[HelpPageDef]:
 	var out: Array[HelpPageDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.HELP_PAGES):
-		if res is HelpPageDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.HELP_PAGES, HelpPageDef))
 	return out
 
 
 ## 110：局外科技，按 order 再按 id 排
 static func load_techs() -> Array[TechDef]:
 	var out: Array[TechDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.TECHS):
-		if res is TechDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.TECHS, TechDef))
 	out.sort_custom(_by_order)
 	return out
 
@@ -1916,9 +1904,7 @@ static func load_techs() -> Array[TechDef]:
 ## 091：成就，按 order 再按 id 排
 static func load_achievements() -> Array[AchievementDef]:
 	var out: Array[AchievementDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.ACHIEVEMENTS):
-		if res is AchievementDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.ACHIEVEMENTS, AchievementDef))
 	out.sort_custom(_by_order)
 	return out
 

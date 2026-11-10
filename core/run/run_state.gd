@@ -369,21 +369,23 @@ func _drop_pending_loot(skip: Dictionary = {}) -> void:
 	if pending_loot == null:
 		return
 	var loot := pending_loot
-	var bags: Array[ItemInstance] = []
-	for it in loot.items().duplicate():
-		var inst := it as ItemInstance
-		if inst.def != null and inst.def.is_bag:
-			bags.append(inst)
-			continue
+	for inst in _bags_last(loot):
 		loot.remove(inst.uid)
 		if not skip.has(inst.uid):
 			storage.admit(inst)
-	for bag in bags:
-		loot.remove(bag.uid)
-		if not skip.has(bag.uid):
-			storage.admit(bag)
 	pending_loot = null
 	loot_cleared.emit()
+
+
+## 容器里的道具，包排最后（先倒空、再放空包）
+static func _bags_last(src: ItemContainer) -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	var bags: Array[ItemInstance] = []
+	for it in src.items():
+		var inst := it as ItemInstance
+		(bags if inst.def != null and inst.def.is_bag else out).append(inst)
+	out.append_array(bags)
+	return out
 
 
 ## 走开、撤离、失败都先做这两件：开着的会话关掉、没拿的战利品落到地上（159：原来是丢掉）
@@ -399,21 +401,12 @@ func _abandon_sessions() -> void:
 func drop_seen_haul(haul: GridInventory) -> int:
 	if haul == null or storage == null:
 		return 0
-	var bags: Array[ItemInstance] = []
 	var n := 0
-	for it in haul.items().duplicate():
-		var inst := it as ItemInstance
+	for inst in _bags_last(haul):
 		if loot_seen.is_valid() and not bool(loot_seen.call(inst.uid)):
-			continue
-		if inst.def != null and inst.def.is_bag:
-			bags.append(inst)
 			continue
 		haul.remove(inst.uid)
 		storage.admit(inst)
-		n += 1
-	for bag in bags:
-		haul.remove(bag.uid)
-		storage.admit(bag)
 		n += 1
 	return n
 
@@ -827,18 +820,10 @@ func fold_loot_into_search() -> bool:
 	if pending_loot == null or session == null or not session.active:
 		return false
 	var loot := pending_loot
-	var bags: Array[ItemInstance] = []
-	for it in loot.items().duplicate():
-		var inst := it as ItemInstance
-		if inst.def != null and inst.def.is_bag:
-			bags.append(inst)
-			continue
+	for inst in _bags_last(loot):
 		loot.remove(inst.uid)
-		if not session.stow(inst):
+		if (inst.def != null and inst.def.is_bag) or not session.stow(inst):     # 包：内容物已经倒出去了，是空包
 			storage.admit(inst)
-	for bag in bags:
-		loot.remove(bag.uid)     # 内容物已经倒出去了，是空包
-		storage.admit(bag)
 	pending_loot = null
 	loot_cleared.emit()
 	return true

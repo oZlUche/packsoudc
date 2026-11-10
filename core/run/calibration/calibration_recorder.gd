@@ -73,7 +73,7 @@ static func snapshot(run: RunState) -> Dictionary:
 
 ## 记一行。写不了（目录没有、盘满）返回 false，不影响对局
 func record(run: RunState) -> bool:
-	if run == null or run.board == null or not _append(path, snapshot(run)):
+	if run == null or run.board == null or not append_row(path, snapshot(run)):
 		return false
 	written += 1
 	return true
@@ -91,7 +91,7 @@ func record_run(result: RunResult, run: RunState) -> bool:
 	ExperimentManifest.stamp(row, current_source())
 	DirAccess.make_dir_recursive_absolute(faith_dir())     # 作者 10-26：信力记录也进「导出平衡数据」的包（结算页单独的导出键删了）
 	result.export_faith_csv(faith_dir())
-	return _append(runs_path, row)
+	return append_row(runs_path, row)
 
 
 ## 每局的信力记录 CSV 放哪：对局记录旁边（正式 = user://calibration/runs_faith/，跟着校准目录进导出包）
@@ -99,7 +99,8 @@ func faith_dir() -> String:
 	return runs_path.get_basename() + "_faith"
 
 
-static func _append(file: String, row: Dictionary) -> bool:
+## 追加一行（目录没有就建）。写不了返回 false，不影响对局
+static func append_row(file: String, row: Dictionary) -> bool:
 	var dir := file.get_base_dir()
 	if dir != "" and not DirAccess.dir_exists_absolute(dir):
 		DirAccess.make_dir_recursive_absolute(dir)

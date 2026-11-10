@@ -28,9 +28,7 @@ static func load_rules() -> MarketRules:
 ## 270：全部摊位，按 [member StallDef.order]（左列从上到下）；没导入时只有一个散货摊
 static func stalls() -> Array[StallDef]:
 	if _stalls.is_empty():
-		for res in ContentPaths.load_resources(ContentPaths.MARKET_STALLS):
-			if res is StallDef:
-				_stalls.append(res)
+		_stalls.assign(ContentPaths.load_typed(ContentPaths.MARKET_STALLS, StallDef))
 		_stalls.sort_custom(func(a: StallDef, b: StallDef) -> bool: return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
 		if not _stalls.any(func(st: StallDef) -> bool: return not st.fixed):
 			var loose := StallDef.new()

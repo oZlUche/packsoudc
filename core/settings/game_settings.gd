@@ -62,6 +62,8 @@ var stele_roman: bool = true
 ## 272（作者 2026-11-04）：战斗屏的战记栏开着没有（默认开；控制条上的「战记」键收合，下一场照这个）
 var battle_log_open: bool = true
 
+## 读回来只转成布尔的开关（字段名 = 文件里的键；文件里没有 = 字段的默认值）
+const BOOLS: Array[String] = ["loot_auto_close", "node_tooltips_preview", "unlock_all", "reveal_names", "battle_trace", "debug_mode", "ui_fades", "stele_roman", "battle_log_open"]
 const TEXT_SIZES: Array[StringName] = [&"small", &"medium", &"large"]
 
 ## 172：认得的窗口模式；全屏 = 无边框铺满桌面（待定 4 A）
@@ -115,19 +117,14 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	var s := GameSettings.new()
 	if int(d.get("version", -1)) != SAVE_VERSION:
 		return s
-	s.loot_auto_close = bool(d.get("loot_auto_close", false))
-	s.node_tooltips_preview = bool(d.get("node_tooltips_preview", false))
+	for k in BOOLS:
+		s.set(k, bool(d.get(k, s.get(k))))
 	var lang := String(d.get("language", "zh"))
 	s.language = lang if UiText.LANGS.has(lang) else "zh"
 	s.save_slot = clampi(int(d.get("save_slot", 1)), 1, SaveSlots.COUNT)
-	s.unlock_all = bool(d.get("unlock_all", false))
-	s.reveal_names = bool(d.get("reveal_names", false))
 	s.bg_theme = String(d.get("bg_theme", ""))     # 认不认得由界面管（101 第 5 刀）
 	s.battle_speed = normalize_speed(float(d.get("battle_speed", 1.0)))
-	s.battle_trace = bool(d.get("battle_trace", BattleArchive.default_on()))
-	s.debug_mode = bool(d.get("debug_mode", DEBUG_MODE_DEFAULT))
 	s.key_bindings = read_bindings(d.get("key_bindings", {}))
-	s.ui_fades = bool(d.get("ui_fades", true))
 	var skin := String(d.get("cursor_skin", "mithril"))
 	s.cursor_skin = skin if skin != "" else "mithril"
 	s.map_zoom = normalize_zoom(float(d.get("map_zoom", 0.0)))
@@ -139,8 +136,6 @@ static func from_dict(d: Dictionary) -> GameSettings:
 	s.music_volume = clampf(float(d.get("music_volume", 0.6)), 0.0, 1.0)
 	var tier := StringName(String(d.get("text_size", "medium")))
 	s.text_size = tier if TEXT_SIZES.has(tier) else &"medium"
-	s.stele_roman = bool(d.get("stele_roman", true))
-	s.battle_log_open = bool(d.get("battle_log_open", true))
 	return s
 
 

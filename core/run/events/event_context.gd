@@ -75,28 +75,6 @@ var buffs_removed: Array[String] = []
 var log: Array[String] = []
 
 
-func tag_present(tag: StringName) -> bool:
-	return hooks.has_buff_tag(tag)
-
-
-func buff_present(id: StringName) -> bool:
-	return hooks.has_map_buff(id)
-
-
-func bracket_now() -> int:
-	return hooks.bracket()
-
-
-## 093：激活信仰现在第几阶（-1 = 没激活）
-func faith_tier_now() -> int:
-	return hooks.faith_tier()
-
-
-## 095：激活信仰的 id（空 = 没激活）
-func active_faith_id() -> StringName:
-	return hooks.active_faith_id()
-
-
 func depth_at(n: MapNode) -> int:
 	return int(erosion_depth.call(n)) if erosion_depth.is_valid() and n != null else -1
 

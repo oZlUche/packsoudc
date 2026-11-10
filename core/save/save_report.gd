@@ -4,6 +4,8 @@ class_name SaveReport
 extends RefCounted
 
 const FILE := "last_repair.json"
+## 逐件记录的几张表（字段名 = 文件里的键）
+const LISTS: Array[String] = ["refunded", "rehomed", "replaced", "dropped", "unenchanted", "retyped"]
 
 ## 折了钱的：`{id, value, from}`（查不到定义、退役、或哪儿都放不下）
 var refunded: Array = []
@@ -70,12 +72,8 @@ func is_empty() -> bool:
 
 ## 清掉逐件的记录（换用上一份存档时，主文件那一遍记下的作废）
 func clear_items() -> void:
-	refunded.clear()
-	rehomed.clear()
-	replaced.clear()
-	dropped.clear()
-	unenchanted.clear()
-	retyped.clear()
+	for key in LISTS:
+		(get(key) as Array).clear()
 	salvage.clear()
 	salvage_funds = 0
 
@@ -84,12 +82,8 @@ func clear_items() -> void:
 func merge(other: SaveReport) -> void:
 	if other == null:
 		return
-	refunded.append_array(other.refunded)
-	rehomed.append_array(other.rehomed)
-	replaced.append_array(other.replaced)
-	dropped.append_array(other.dropped)
-	unenchanted.append_array(other.unenchanted)
-	retyped.append_array(other.retyped)
+	for key in LISTS:
+		(get(key) as Array).append_array(other.get(key) as Array)
 	salvaged = salvaged or other.salvaged
 	prev_used = prev_used or other.prev_used
 	if other.backup != "":
@@ -108,7 +102,7 @@ func to_dict() -> Dictionary:
 
 static func from_dict(d: Dictionary) -> SaveReport:
 	var r := SaveReport.new()
-	for key in ["refunded", "rehomed", "replaced", "dropped", "unenchanted", "retyped"]:
+	for key in LISTS:
 		var raw: Variant = d.get(key, [])
 		if raw is Array:
 			for row in raw:

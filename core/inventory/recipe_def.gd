@@ -32,9 +32,7 @@ func matches(a: StringName, b: StringName) -> bool:
 ## 资产目录里的全部配方，按文件名排
 static func load_all() -> Array[RecipeDef]:
 	var out: Array[RecipeDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.RECIPES):
-		if res is RecipeDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.RECIPES, RecipeDef))
 	return out
 
 

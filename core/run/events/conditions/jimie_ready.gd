@@ -4,7 +4,7 @@ extends EventCondition
 
 
 func check(ctx: EventContext) -> bool:
-	return ctx != null and ctx.faith_tier_now() < 0 and JimiePath.sacrifice_ready(ctx.board, ctx.meta)
+	return ctx != null and ctx.hooks.faith_tier() < 0 and JimiePath.sacrifice_ready(ctx.board, ctx.meta)
 
 
 func describe() -> String:

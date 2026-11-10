@@ -3,7 +3,7 @@
 ##
 ## [method of] 是纯函数：一场的 [BattleResult] + 日志头（[BattleTraceWriter] 的 header：对手、档位、步数、角色、难度……）→ 一行。
 ## 量不出来的项（没挨过打、没上过可叠层的 buff）不写键，汇总时跳过。
-## 真实对局里每打完一场追加一行到 [constant PATH]（[method append]，挂在 [BattleTraceWriter] 写完之后；玩家版照记），
+## 真实对局里每打完一场追加一行到 [constant PATH]（[method CalibrationRecorder.append_row]，挂在 [BattleTraceWriter] 写完之后；玩家版照记），
 ## 「导出平衡数据」整个 `calibration/` 目录一起带走；`tools/assumptions_report.gd` 把许多行汇成一张表（[method markdown]）。
 ## **不改系数文件**：表里给中位数，改不改作者定
 class_name AssumptionStats
@@ -215,29 +215,7 @@ static func recorder(path: String) -> Callable:
 	if path == "":
 		return Callable()
 	var ver := CalibrationRecorder.version()
-	return func(result: BattleResult, head: Dictionary) -> void: append(path, of(result, head, ver))
-
-
-## 追加一行（目录没有就建）。写不了返回 false，不影响对局
-static func append(path: String, row: Dictionary) -> bool:
-	return CalibrationRecorder._append(path, row)
-
-
-## 读全部行；坏行跳过
-static func read_rows(path: String = PATH) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	var f := FileAccess.open(path, FileAccess.READ)
-	if f == null:
-		return out
-	while not f.eof_reached():
-		var line := f.get_line().strip_edges()
-		if line == "":
-			continue
-		var v: Variant = JSON.parse_string(line)
-		if v is Dictionary:
-			out.append(v as Dictionary)
-	f.close()
-	return out
+	return func(result: BattleResult, head: Dictionary) -> void: CalibrationRecorder.append_row(path, of(result, head, ver))
 
 
 #region 汇总
@@ -247,10 +225,7 @@ static func quantile(values: Array[float], q: float) -> float:
 		return NAN
 	var v := values.duplicate()
 	v.sort()
-	var pos := clampf(q, 0.0, 1.0) * float(v.size() - 1)
-	var lo := floori(pos)
-	var hi := mini(lo + 1, v.size() - 1)
-	return lerpf(v[lo], v[hi], pos - float(lo))
+	return float(BalanceStatistics.quantile_sorted(v, q))
 
 
 ## 这些行里 [param key] 量到了的值

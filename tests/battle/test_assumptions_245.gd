@@ -122,8 +122,8 @@ static func run_file_and_report(t: TestCase) -> void:
 		var row := AssumptionStats.of(_sample(), {"steps": [0, 6, 30][i]})
 		row["fight_sec"] = [8.0, 10.0, 15.0][i]
 		rows.append(row)
-		t.check(AssumptionStats.append(ROWS, row), "写第 %d 行" % (i + 1))
-	var back := AssumptionStats.read_rows(ROWS)
+		t.check(CalibrationRecorder.append_row(ROWS, row), "写第 %d 行" % (i + 1))
+	var back := CalibrationRecorder.read_all(ROWS)
 	t.eq(back.size(), 3, "读回三行")
 	t.check(not back.is_empty() and is_equal_approx(float(back[0]["hit_rate"]), 0.2), "数原样")
 	t.check(is_equal_approx(AssumptionStats.quantile(AssumptionStats.values_of(back, "fight_sec"), 0.5), 10.0), "时长中位数 10")
@@ -145,7 +145,7 @@ static func run_trace_writer(t: TestCase) -> void:
 	BattleTraceWriter.write(BattleTrace.new(), _sample(), {"run_seed": 1, "chapter": "t", "node": 0, "enemy": "rat", "tier": 3, "steps": 7}, LOG_DIR, 5,
 		AssumptionStats.recorder(ROWS))
 	BattleTraceWriter.flush()
-	var rows := AssumptionStats.read_rows(ROWS)
+	var rows := CalibrationRecorder.read_all(ROWS)
 	t.eq(rows.size(), 1, "给了路径：一行")
 	if rows.size() == 1:
 		t.eq(int(rows[0]["tier"]), 3, "日志头的档位进了这一行")

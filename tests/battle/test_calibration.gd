@@ -156,7 +156,7 @@ static func run_brackets(t: TestCase) -> void:
 		return
 	var hunter: HunterDef = c.hunter_defs[ids[0]]
 	var pool: EnemyPool = load(ContentPaths.asset_file("enemy_pools", String(hunter.enemy_pool if hunter.enemy_pool != &"" else c.chapter.enemy_pool)))
-	var result := HunterBench.run(dummies, hunter, pool, c.enemies, c.items, 6, 3, 0, &"", 0.0, thresholds)
+	var result := HunterBench.run(dummies, hunter, pool, c.enemies, c.items, 6, 3, 0, thresholds)
 	for k in result:
 		var want := pool.clamp_strength(hunter.strength_for_bracket(int(k))) if not hunter.strength_by_bracket.is_empty() else int((result[k] as Dictionary)["wanted"])
 		t.eq(int((result[k] as Dictionary)["wanted"]), want, "第 %s 段的 wanted = 猎手表里那一档" % k)
