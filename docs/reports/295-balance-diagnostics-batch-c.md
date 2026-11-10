@@ -1,7 +1,7 @@
 # 295 · 平衡检测方案 2026-11-10 批次 C：观看时间线、战斗体验报告与人工验证场景
 
 > 2026-11-10 ｜ 架构方案执行 ｜ 依据：[平衡检测、统计与胜负感知](../plans/2026-11-10-balance-diagnostics-and-statistics.md) §8（作者 2026-11-10 11:20「这次执行完后读取最新方案再执行」）
-> 落地：v5.51（PR #PRNUM）。批次 A、B 见 [报告 293](293-balance-diagnostics-batch-a.md)、[报告 294](294-balance-diagnostics-batch-b.md)。本批没有改任何战斗、经济或界面表现，只加记录和离线工具。
+> 落地：v5.51（PR #531）。批次 A、B 见 [报告 293](293-balance-diagnostics-batch-a.md)、[报告 294](294-balance-diagnostics-batch-b.md)。本批没有改任何战斗、经济或界面表现，只加记录和离线工具。
 >
 > **要当回答人的先别往下读 §三**：先按 [questions.md](balance/feel/2026-11-10/questions.md) 看回放、答完四问，再回来看。
 
