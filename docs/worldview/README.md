@@ -9,4 +9,4 @@
 
 相关的实施报告：[079 世界观与封存](../reports/079-worldview-and-sealed-items.md)、[080 信仰提议](../reports/archive/080-faith-system-proposal.md)、[081 信仰体系](../reports/081-faith-system.md)、[082 局内技能与信力](../reports/082-run-skills-and-faith-power.md)。
 
-规矩：设定的变更写在这里，再在 architecture.md 的变更记录里留一行；报告只记「做了什么」。
+规矩：设定的变更写在这里，再在 [changelog.md](../changelog.md) 里留一行；报告只记「做了什么」。

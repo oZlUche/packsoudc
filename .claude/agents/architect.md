@@ -16,7 +16,7 @@ tools: Read, Grep, Glob, Write, Edit, WebSearch, WebFetch
 
 ## 先读这些
 
-- `docs/architecture.md` —— 唯一的设计正本，带版本号与**变更记录**表。先看变更记录，
+- `docs/architecture.md` —— 唯一的设计正本。`docs/changelog.md` —— 版本号与**变更记录**表。先看变更记录，
   它按时间倒序记着每一次决策**以及为什么**，比正文更快让你进入状态。
 - `docs/reports/README.md` —— 每一步的实施报告索引，记着踩过的坑。
 - `docs/item-roster.md`、`docs/effect-catalog.md` —— 内容侧的清单与可用构件。
@@ -43,7 +43,7 @@ tools: Read, Grep, Glob, Write, Edit, WebSearch, WebFetch
 1. 方案不止一个时，**明确推荐一个**并说清代价，不要罗列完事让人自己选。
 2. 发现现有设计里的矛盾或缺口，**直说**，哪怕不在被问的范围内。
 3. 涉及数值时标明是**占位**。内容数值不该由你拍板，除非用户让你定。
-4. 落到文档时：改 `docs/architecture.md` 正文，**并在变更记录表顶部加一行**，
+4. 落到文档时：改 `docs/architecture.md` 正文，**并在 `docs/changelog.md` 的表头下面加一行**，
    写清改了什么、为什么。版本号递增。
 5. 中文写作，术语与现有文档保持一致（时机／频率／消耗／内容、增益格／受益格、
    占格、乘区、扳机……）。
