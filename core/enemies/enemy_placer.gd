@@ -116,15 +116,10 @@ static func pick(
 	var cands := candidates(pool, enemies, node, wanted)
 	if cands.is_empty():
 		return null
-	var total := 0.0
+	var weights: Array[float] = []
 	for e in cands:
-		total += e.weight
-	var r := rng.randf() * total
-	for e in cands:
-		r -= e.weight
-		if r <= 0.0:
-			return e
-	return cands[cands.size() - 1]
+		weights.append(e.weight)
+	return cands[MapRng.pick_index(weights, rng)]     # candidates 只留权重 > 0 的行：总有得抽，不会是 -1
 
 
 ## 放不下时最多再试几件来补（候选已按小到大排好；试了这么多件还塞不进，就是棋盘 / 包真的满了）
@@ -640,19 +635,10 @@ static func pick_build(def: EnemyDef, rule: EnemyLoadout, strength: int, rng: Ra
 	if brng.randf() >= rule.build_chance:
 		return null
 	var weights: Array[float] = []
-	var total := 0.0
 	for b in cands:
-		var w := build_weight(b, rule, strength)
-		weights.append(w)
-		total += w
-	if total <= 0.0:
-		return null
-	var r := brng.randf() * total
-	for i in cands.size():
-		r -= weights[i]
-		if r <= 0.0:
-			return cands[i]
-	return cands[cands.size() - 1]
+		weights.append(build_weight(b, rule, strength))
+	var i := MapRng.pick_index(weights, brng)
+	return cands[i] if i >= 0 else null
 
 
 ## 211：一套在这一档的抽取权重：坏套路乘 bad_build_mult，档位 ≥ 2 再乘一次

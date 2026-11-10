@@ -54,7 +54,6 @@ static func fill_groups(graph: MapGraph, rules: NodeRules) -> int:
 		for k in want:
 			if pool.is_empty():
 				break
-			var total := 0.0
 			var weights: Array[float] = []
 			for id in pool:
 				var w := 1.0
@@ -62,14 +61,7 @@ static func fill_groups(graph: MapGraph, rules: NodeRules) -> int:
 					var d := float(depths.get(id, 0.5))
 					w = (1.0 - d) * (1.0 - d) + 0.05
 				weights.append(w)
-				total += w
-			var roll := rng.randf() * total
-			var chosen := pool[-1]
-			for i in pool.size():
-				roll -= weights[i]
-				if roll <= 0.0:
-					chosen = pool[i]
-					break
+			var chosen := pool[MapRng.pick_index(weights, rng)]     # 权重都 ≥ 0.05：总有得抽，不会是 -1
 			pool.erase(chosen)
 			var eid := rules.group_pick(String(gname), rng)
 			if eid == &"":

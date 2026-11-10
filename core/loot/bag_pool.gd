@@ -49,14 +49,10 @@ static func pick(cands: Array[BagPoolEntry], rng: RandomNumberGenerator, boost: 
 	if cands.is_empty():
 		return &""
 	var weights: Array[float] = []
-	var total := 0.0
 	for e in cands:
-		var w := e.weight * (mult if boost.has(e.bag) else 1.0)
-		weights.append(w)
-		total += w
-	var x := rng.randf() * total
-	for i in cands.size():
-		x -= weights[i]
-		if x <= 0.0:
-			return cands[i].bag
-	return cands[cands.size() - 1].bag
+		weights.append(e.weight * (mult if boost.has(e.bag) else 1.0))
+	var i := MapRng.pick_index(weights, rng)
+	if i < 0:     # 倍率 0 把权重全乘没了：以前照样掷一次、落在第一个，随机数流不能变
+		rng.randf()
+		i = 0
+	return cands[i].bag

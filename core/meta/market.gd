@@ -153,17 +153,11 @@ static func _draw(from: Array, rules: MarketRules, items: ItemDatabase, rng: Ran
 		(tiers[r] as Array).append(j)
 	var keys := tiers.keys()
 	keys.sort()
-	var total := 0.0
+	var weights: Array[float] = []
 	for r in keys:
-		total += rules.loose_weight(r)
-	var tier: Array = tiers[keys[keys.size() - 1]]
-	if total > 0.0:
-		var x := rng.randf() * total
-		for r in keys:
-			x -= rules.loose_weight(r)
-			if x <= 0.0:
-				tier = tiers[r]
-				break
+		weights.append(rules.loose_weight(r))
+	var i := MapRng.pick_index(weights, rng)
+	var tier: Array = tiers[keys[i if i >= 0 else keys.size() - 1]]
 	var k: int = tier[rng.randi_range(0, tier.size() - 1)]
 	var id: StringName = from[k]
 	from.remove_at(k)
@@ -210,18 +204,7 @@ static func toggle_lock(meta: MetaState, i: int) -> bool:
 static func _draw_bag(rules: MarketRules, items: ItemDatabase, pool: BagPool, lv: int, rng: RandomNumberGenerator) -> StringName:
 	if pool == null or rules.bag_slot_from_level <= 0 or lv < rules.bag_slot_from_level:
 		return &""
-	var cands := pool.candidates(items, rules.rarity_cap_at(lv))
-	var total := 0.0
-	for e in cands:
-		total += e.weight
-	if total <= 0.0:
-		return &""
-	var x := rng.randf() * total
-	for e in cands:
-		x -= e.weight
-		if x <= 0.0:
-			return e.bag
-	return cands[cands.size() - 1].bag
+	return BagPool.pick(pool.candidates(items, rules.rarity_cap_at(lv)), rng)
 
 
 static func price_of(rules: MarketRules, def: ItemDef) -> int:

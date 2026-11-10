@@ -268,22 +268,17 @@ static func draw_items(
 	if cands.is_empty():
 		return out
 	var weights: Array[float] = []
-	var total := 0.0
 	for id in cands:
 		var d := p_items.get_def(id)
-		var w := p_rules.rarity_weight(d.rarity, p_depth, danger) * weight_mult(d, p_produce)
-		weights.append(w)
-		total += w
+		weights.append(p_rules.rarity_weight(d.rarity, p_depth, danger) * weight_mult(d, p_produce))
 	# 267 C：材料节点的那一类（过滤后空了就当普通点，别让节点空手）
 	var kind_c: Array[StringName] = []
 	var kind_w: Array[float] = []
-	var kind_total := 0.0
 	if not p_only.is_empty():
 		for j in cands.size():
 			if in_kind(p_items.get_def(cands[j]), p_only):
 				kind_c.append(cands[j])
 				kind_w.append(weights[j])
-				kind_total += weights[j]
 	var n := p_rng.randi_range(p_rules.items_per_search.x, p_rules.items_per_search.y)
 	if not p_floor.is_empty():
 		n = maxi(n, p_floor.size())
@@ -296,23 +291,18 @@ static func draw_items(
 		n -= p_floor.size()
 	for i in maxi(0, n):
 		if _from_kind(kind_c, p_other_share, p_rng):
-			out.append(_pick(kind_c, kind_w, kind_total, p_rng))
+			out.append(_pick(kind_c, kind_w, p_rng))
 		else:
-			out.append(_pick(cands, weights, total, p_rng))
+			out.append(_pick(cands, weights, p_rng))
 	if not p_floor.is_empty():
-		_shuffle(out, p_rng)     # 别让玩家从揭示顺序猜哪件是保底
+		out.assign(MapRng.shuffled(out, p_rng))     # 别让玩家从揭示顺序猜哪件是保底
 	return out
 
 
-static func _pick(cands: Array[StringName], weights: Array[float], total: float, p_rng: RandomNumberGenerator) -> StringName:
-	if total <= 0.0:
-		return cands[p_rng.randi_range(0, cands.size() - 1)]
-	var x := p_rng.randf() * total
-	for j in cands.size():
-		x -= weights[j]
-		if x <= 0.0:
-			return cands[j]
-	return cands[cands.size() - 1]
+## 按权重抽一件；总权重 ≤ 0 就等概率抽一件
+static func _pick(cands: Array[StringName], weights: Array[float], p_rng: RandomNumberGenerator) -> StringName:
+	var k := MapRng.pick_index(weights, p_rng)
+	return cands[k if k >= 0 else p_rng.randi_range(0, cands.size() - 1)]
 
 
 ## 267：这一件从材料节点那一类里抽，还是从普通池（[param share] 的机会）。不是材料节点不掷，随机数照旧
@@ -356,32 +346,15 @@ static func _best_hit(d: ItemDef, table: Dictionary) -> float:
 ## 127：在稀有度 ≥ [param at_least] 的候选里按原权重抽一件；那一档以上一件都没有就逐级往下放宽
 static func _draw_at_least(cands: Array[StringName], weights: Array[float], p_items: ItemDatabase, at_least: int, p_rng: RandomNumberGenerator) -> StringName:
 	for floor_r in range(maxi(0, at_least), -1, -1):
-		var idx: Array[int] = []
-		var total := 0.0
+		var above: Array[StringName] = []
+		var above_w: Array[float] = []
 		for j in cands.size():
 			if p_items.get_def(cands[j]).rarity >= floor_r:
-				idx.append(j)
-				total += weights[j]
-		if idx.is_empty():
-			continue
-		if total <= 0.0:
-			return cands[idx[p_rng.randi_range(0, idx.size() - 1)]]
-		var x := p_rng.randf() * total
-		for j in idx:
-			x -= weights[j]
-			if x <= 0.0:
-				return cands[j]
-		return cands[idx[idx.size() - 1]]
+				above.append(cands[j])
+				above_w.append(weights[j])
+		if not above.is_empty():
+			return _pick(above, above_w, p_rng)
 	return cands[p_rng.randi_range(0, cands.size() - 1)]
-
-
-## 用给定的随机数洗牌（Array.shuffle 用的是全局随机数，不可复现）
-static func _shuffle(arr: Array[StringName], p_rng: RandomNumberGenerator) -> void:
-	for i in range(arr.size() - 1, 0, -1):
-		var j := p_rng.randi_range(0, i)
-		var tmp := arr[i]
-		arr[i] = arr[j]
-		arr[j] = tmp
 
 
 ## 能搜出来的道具，id 升序

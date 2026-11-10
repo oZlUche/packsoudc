@@ -168,44 +168,26 @@ static func _pick_rarity(rule: DropRule, ctx: LootContext, rng: RandomNumberGene
 	if rarities.is_empty():
 		return -1
 	var weights: Array[float] = []
-	var total := 0.0
 	for r in rarities:
 		var w := rule.treasure_weight(r)
 		if ctx != null:
 			w += float(ctx.rarity_bias.get(r, 0))
-		w = maxf(0.0, w)
-		weights.append(w)
-		total += w
-	if total <= 0.0:
-		return rarities[rarities.size() - 1]
-	var x := rng.randf() * total
-	for i in rarities.size():
-		x -= weights[i]
-		if x <= 0.0:
-			return rarities[i]
-	return rarities[rarities.size() - 1]
+		weights.append(maxf(0.0, w))
+	var i := MapRng.pick_index(weights, rng)
+	return rarities[i if i >= 0 else rarities.size() - 1]
 
 
 ## 候选里抽一件：每件权重 1 + 它标签上的 category_bias 之和（百分比换成比例）
 static func _pick_weighted(cands: Array[StringName], ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator) -> StringName:
 	var weights: Array[float] = []
-	var total := 0.0
 	for id in cands:
 		var w := 1.0
 		if ctx != null:
 			for tag in items.get_def(id).tags:
 				w += float(ctx.category_bias.get(tag, 0)) / 100.0
-		w = maxf(0.0, w)
-		weights.append(w)
-		total += w
-	if total <= 0.0:
-		return cands[rng.randi_range(0, cands.size() - 1)]
-	var x := rng.randf() * total
-	for i in cands.size():
-		x -= weights[i]
-		if x <= 0.0:
-			return cands[i]
-	return cands[cands.size() - 1]
+		weights.append(maxf(0.0, w))
+	var i := MapRng.pick_index(weights, rng)
+	return cands[i if i >= 0 else rng.randi_range(0, cands.size() - 1)]
 
 
 ## 预估要掷几次（[method expected_count]）

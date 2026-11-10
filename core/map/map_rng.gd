@@ -1,5 +1,5 @@
 ## 地图生成共用的随机小工具：按权重抽类型（140 M-25）与 Fisher-Yates 洗牌（140 M-3），
-## 格阵与环形的生成器、类型分配器都从这里拿，各自不再抄一份。
+## 格阵与环形的生成器、类型分配器都从这里拿，各自不再抄一份。掉落、敌人、商店、搜索、集市、事件按权重抽也走 [method pick_index]。
 class_name MapRng
 extends RefCounted
 
@@ -10,20 +10,28 @@ extends RefCounted
 ## 表空或总权重 ≤ 0 时不掷骰，返回 [param fallback]；浮点误差扣不到 0 时返回最后一个参与的键。
 static func pick_weighted(weights: Dictionary, rng: RandomNumberGenerator, order: Array = [], exclude: Array = [], fallback: StringName = &"") -> StringName:
 	var keys: Array = []
+	var ws: Array[float] = []
 	for k in (order if not order.is_empty() else weights.keys()):
 		if not exclude.has(String(k)):
 			keys.append(k)
+			ws.append(float(weights[k]))
+	var i := pick_index(ws, rng)
+	return StringName(String(keys[i])) if i >= 0 else fallback
+
+
+## 按权重抽一个下标（[method pick_weighted] 的数组版，同一套掷法）：表空或总权重 ≤ 0 时不掷骰，返回 -1；浮点误差扣不到 0 时返回最后一个
+static func pick_index(weights: Array[float], rng: RandomNumberGenerator) -> int:
 	var total := 0.0
-	for k in keys:
-		total += float(weights[k])
+	for w in weights:
+		total += w
 	if total <= 0.0:
-		return fallback
+		return -1
 	var roll := rng.randf() * total
-	for k in keys:
-		roll -= float(weights[k])
+	for i in weights.size():
+		roll -= weights[i]
 		if roll <= 0.0:
-			return StringName(String(k))
-	return StringName(String(keys[-1]))
+			return i
+	return weights.size() - 1
 
 
 ## Fisher-Yates 洗牌，返回打乱过的副本（不动原数组）。要类型化数组的调用方 `assign()` 回去。

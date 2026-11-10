@@ -375,18 +375,10 @@ func _stock() -> void:
 		board.try_add(ItemInstance.create(picks[k], 0))
 
 
+## 按权重抽一个下标；总权重 ≤ 0 就等概率抽一个
 static func _weighted(rng: RandomNumberGenerator, weights: Array[float]) -> int:
-	var total := 0.0
-	for w in weights:
-		total += w
-	if total <= 0.0:
-		return rng.randi_range(0, weights.size() - 1)
-	var x := rng.randf() * total
-	for j in weights.size():
-		x -= weights[j]
-		if x <= 0.0:
-			return j
-	return weights.size() - 1
+	var k := MapRng.pick_index(weights, rng)
+	return k if k >= 0 else rng.randi_range(0, weights.size() - 1)
 
 
 ## 209：按 [member EconomyRules.shop_bag_slot_chance] 加一个包：包池权重 × 稀有度权重（随深度）。随机数另起一条
