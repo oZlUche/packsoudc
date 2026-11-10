@@ -8,12 +8,16 @@
 ## - 存盘 = 导出成 JSON、经导入器建资产（与命令行一致），有错不写；同时写 `.json` 与 `.tres`
 ##
 ## 子类要给：[member _kind]（`_init` 里填，[ContentPaths] 的种类）、[method _export]、[method _import]、[method _new_def]，
-## 界面那几样（[member _list]、[member _status]、[member _json]）在 `_build_ui` 里造；按需覆盖 [method _on_bound]、
-## [method _collect]、[method _on_refreshed]、[method _t]、[method _saved_text]。测试直接碰的私有名字（`_def`、`_ids`、`_drafts`……）都在这里
+## 界面那几样（[member _list]、[member _status]、[member _json]）在 `_build_ui` 里造（三栏、列表、id 行、校验、JSON 这几块用「开场与界面」里现成的）；
+## 按需覆盖 [method _before_build]、[method _on_bound]、[method _fill_fields]、[method _form_skip]、[method _collect]、
+## [method _on_refreshed]、[method _t]、[method _saved_text]。测试直接碰的私有名字（`_def`、`_ids`、`_drafts`……）都在这里
 class_name AuthoringEditor
 extends Control
 
-## 状态栏的默认提示语（道具 / 事件编辑器用的这一套）；子类 [method _t] 换自己的
+## 176：带整个库的导入上下文（不写 class_name，按路径取）
+const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
+
+## 状态栏的默认提示语（道具 / 事件编辑器用的这一套）；子类在 `_init` 里换 [member _texts]
 const TEXTS := {
 	"ok": "✓ 没有问题",
 	"unreadable": "读不出 %s.json",
@@ -22,10 +26,24 @@ const TEXTS := {
 	"err_write": "作者数据写入失败",
 	"warn_asset": "JSON 存了，但资产写入失败 —— 跑一次 import_content",
 	"err_json": "JSON 语法错误",
+	"saved": "已保存 {id}.json，并生成 {id}.tres",
+}
+## 标签 / 套装 / 铸炉 / 构件编辑器用的那一套
+const LIBRARY_TEXTS := {
+	"ok": "没有问题", "unreadable": "%s.json 读不到", "err_id": "先给一个 id", "err_save": "有错，没存",
+	"err_write": "写不进作者目录", "warn_asset": "JSON 存了，.tres 没写成", "err_json": "JSON 读不通",
+	"saved": "已存：{kind}/{id}.json 与 .tres",
+}
+## 界面上那几个固定的字（[member _texts] 里没有的键到这里找）
+const LABELS := {
+	"new": "新建", "rescan": "刷新列表", "discard": "放弃改动", "id": "id", "save": "保存", "save_as": "另存为新 id",
+	"name": "名字", "validation": "校验", "code": "JSON（可直接改）", "apply_code": "套用上面的 JSON",
 }
 
 ## [ContentPaths] 的种类（"items" / "events" / "buffs" / "sets"）
 var _kind: String = ""
+## 提示语用哪一套
+var _texts: Dictionary = TEXTS
 var _font: Font
 ## 列表里的 id：盘上的 + 没存过盘的草稿，按 id 排
 var _ids: Array[String] = []
@@ -44,6 +62,10 @@ var _ctx: ContentImporter.Context = null
 var _syncing: bool = false
 
 var _list: ItemList
+var _id_edit: LineEdit
+## 名字框（铸炉 / 道具 / 事件没有）
+var _name_edit: LineEdit
+var _form_host: VBoxContainer
 var _status: RichTextLabel
 ## JSON 预览（能直接改了套用）
 var _json: TextEdit
@@ -69,9 +91,30 @@ func _new_def() -> Resource:
 	return null
 
 
+## 上下文有了之后、造界面之前（标签 / 套装 / 铸炉在这儿读道具库）
+func _before_build() -> void:
+	pass
+
+
+## 造界面（现成的几块在「开场与界面」）
+func _build_ui() -> void:
+	pass
+
+
 ## 对象接上界面之后：回填字段、重建表单
 func _on_bound() -> void:
+	_sync_fields()
+	_rebuild_form()
+
+
+## 回填 id 与名字之外的字段（这时 [member _syncing] 为真）
+func _fill_fields() -> void:
 	pass
+
+
+## 表单里跳过的字段（类名 → 字段名）：上面有专门的控件，免得两处能改同一个值
+func _form_skip() -> Dictionary:
+	return {}
 
 
 ## 刷新之前：把界面上不走信号的东西（道具的形状画板）收回对象里
@@ -84,19 +127,166 @@ func _on_refreshed() -> void:
 	pass
 
 
-## 状态栏提示语
+## 状态栏提示语、界面上那几个固定的字
 func _t(key: String) -> String:
-	return String(TEXTS.get(key, key))
+	return String(_texts.get(key, LABELS.get(key, key)))
 
 
 ## 存好之后的那一句
 func _saved_text(id: String) -> String:
-	return "已保存 %s.json，并生成 %s.tres" % [id, id]
+	return _t("saved").format({"kind": _kind, "id": id})
 
 
 ## 171：存盘成功之后（标签制作器借它把新标签登记进注册表，别的编辑器的下拉马上看得到）
 func _after_save(_built: Resource) -> void:
 	pass
+#endregion
+
+
+#region 开场与界面
+## 标签 / 套装 / buff / 铸炉 / 构件编辑器的开场（道具与事件编辑器各有自己的 `_ready`）
+func _ready() -> void:
+	_font = UiPalette.cjk_font()
+	var settings := GameSettings.load_from()
+	UiText.apply(settings)
+	UiPalette.apply(settings)
+	_ctx = AuthoringContext.context()
+	_before_build()
+	_build_ui()
+	_start()
+
+
+## 三栏一栏一栏要，上一栏填完再要下一栏。左栏：铺满的外边距 + 分栏 + 左边那一列
+func _left_column(width: float) -> VBoxContainer:
+	var margin := UiTheme.margins(MarginContainer.new(), 14, 14, 14, 14)
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(margin)
+	var columns := HSplitContainer.new()
+	margin.add_child(columns)
+	var left := UiTheme.vbox(6)
+	left.custom_minimum_size.x = width
+	columns.add_child(left)
+	return left
+
+
+## 中栏：右边再分一次栏，中间那一列
+func _mid_column(left: VBoxContainer) -> VBoxContainer:
+	var right_split := HSplitContainer.new()
+	right_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.get_parent().add_child(right_split)
+	var mid := UiTheme.vbox(8)
+	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_split.add_child(mid)
+	return mid
+
+
+## 右栏
+func _side_column(mid: VBoxContainer, width: float) -> VBoxContainer:
+	var side := UiTheme.vbox(8)
+	side.custom_minimum_size.x = width
+	mid.get_parent().add_child(side)
+	return side
+
+
+## 左栏的标题、列表与列表下面那排按钮（[param can_create] 假 = 没有「新建」：铸炉的三张表是固定的）
+func _list_block(left: VBoxContainer, title: String, can_create: bool = true) -> void:
+	left.add_child(UiTheme.make_label(title, 16, UiPalette.FG))
+	_list = ItemList.new()
+	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_list.item_selected.connect(func(i: int): _open(_ids[i]))
+	left.add_child(_list)
+	var lb := HBoxContainer.new()
+	if can_create:
+		lb.add_child(UiTheme.make_button(_t("new"), _new_entry, UiTheme.TIER_PLAIN, 13))
+	lb.add_child(UiTheme.make_button(_t("rescan"), _on_rescan, UiTheme.TIER_PLAIN, 13))
+	lb.add_child(UiTheme.make_button(_t("discard"), _on_discard, UiTheme.TIER_PLAIN, 13))
+	left.add_child(lb)
+
+
+## id 行：id 框、保存、另存
+func _id_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_child(UiTheme.make_label(_t("id"), 13, UiPalette.DIM))
+	_id_edit = LineEdit.new()
+	_id_edit.custom_minimum_size.x = 180
+	_id_edit.text_changed.connect(_on_id_edited)
+	row.add_child(_id_edit)
+	row.add_child(UiTheme.make_button(_t("save"), _save, UiTheme.TIER_PLAIN, 13))
+	row.add_child(UiTheme.make_button(_t("save_as"), _save_as, UiTheme.TIER_PLAIN, 13))
+	return row
+
+
+func _name_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_child(UiTheme.make_label(_t("name"), 13, UiPalette.DIM))
+	_name_edit = LineEdit.new()
+	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_name_edit.text_changed.connect(_on_name_edited)
+	row.add_child(_name_edit)
+	return row
+
+
+## 中栏里能滚的那一块，返回里面那一列（[param gap] 是它的间距，负数 = 不设）
+func _scroll_body(mid: VBoxContainer, gap: int = 8) -> VBoxContainer:
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	mid.add_child(scroll)
+	var body: VBoxContainer = UiTheme.vbox(gap) if gap >= 0 else VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(body)
+	return body
+
+
+func _status_block(side: VBoxContainer, min_h: float = 90.0) -> void:
+	side.add_child(UiTheme.make_label(_t("validation"), 14, UiPalette.FG))
+	_status = RichTextLabel.new()
+	_status.bbcode_enabled = true
+	_status.custom_minimum_size.y = min_h
+	_status.add_theme_font_override("normal_font", _font)
+	_status.add_theme_font_size_override("normal_font_size", 12)
+	side.add_child(_status)
+
+
+func _json_block(side: VBoxContainer, min_h: float = 0.0) -> void:
+	side.add_child(UiTheme.make_label(_t("code"), 12, UiPalette.DIM))
+	_json = TextEdit.new()
+	_json.custom_minimum_size.y = min_h
+	_json.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_json.add_theme_font_size_override("font_size", 12)
+	side.add_child(_json)
+	side.add_child(UiTheme.make_button(_t("apply_code"), _apply_json, UiTheme.TIER_PLAIN, 13))
+
+
+func _on_id_edited(text: String) -> void:
+	if _syncing or _def == null:
+		return
+	_def.id = StringName(text.strip_edges())
+	_refresh()
+
+
+func _on_name_edited(text: String) -> void:
+	if _syncing or _def == null:
+		return
+	_def.display_name = text
+	_refresh()
+
+
+## 回填：id、名字（有名字框的），其余的走 [method _fill_fields]
+func _sync_fields() -> void:
+	_syncing = true
+	_id_edit.text = String(_def.id)
+	if _name_edit != null:
+		_name_edit.text = _def.display_name
+	_fill_fields()
+	_syncing = false
+
+
+func _rebuild_form() -> void:
+	UiTheme.clear_children(_form_host)
+	if _def == null:
+		return
+	_form_host.add_child(_form_for(_def, _form_skip()))
 #endregion
 
 

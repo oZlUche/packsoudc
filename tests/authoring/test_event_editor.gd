@@ -78,7 +78,7 @@ static func frame_run_smoke(t: TestCase, root: Window) -> void:
 			break
 
 	# 校验走导入器：没有选项就报错
-	ed._new_event()
+	ed._new_entry()
 	ed._def.options.clear()
 	ed._refresh()
 	t.check(not ed._validate().ok(), "没有选项的事件校验不过（导入器的规则）")
@@ -125,7 +125,7 @@ static func frame_run_drafts(t: TestCase, root: Window) -> void:
 	t.eq(ed._def.title, original, "并从盘上重读")
 	t.check(not ed.has_unsaved_changes(), "又干净了")
 
-	ed._new_event()
+	ed._new_entry()
 	t.check(ed._drafts.has("new_event"), "没存过的新事件也标成未保存")
 	ed.queue_free()
 
@@ -135,7 +135,7 @@ static func frame_run_save_roundtrip(t: TestCase, root: Window) -> void:
 	_cleanup_probe()
 	var ed := _make(root)
 
-	ed._new_event()
+	ed._new_entry()
 	ed._id_edit.text = PROBE
 	ed._on_id_changed(PROBE)
 	ed._on_title_changed("探针")
@@ -203,7 +203,7 @@ static func frame_run_image_import(t: TestCase, root: Window) -> void:
 	img.save_png(src)
 	var src_abs := ProjectSettings.globalize_path(src)
 
-	ed._new_event()
+	ed._new_entry()
 	ed._on_id_changed(PROBE)
 	var dest: String = ed._import_image(src_abs)
 	t.eq(dest, "res://assets/events/%s.png" % PROBE, "复制到 assets/events/<id>.<ext>")
@@ -313,7 +313,7 @@ static func frame_run_chain_and_lang(t: TestCase, root: Window) -> void:
 	t.check(texts.any(func(s: String) -> bool: return s.contains("节点规则 standard")), "被标准节点规则引用：%s" % str(texts))
 
 	# 链：新建一个事件，选项接 next_event → search_default → 递归列出 search_default 自己的 next_event（如果有）
-	ed._new_event()
+	ed._new_entry()
 	var def: EventDef = ed._def
 	var ne := NextEvent.new()
 	ne.event = &"search_default"

@@ -18,7 +18,7 @@ static func frame_set_editor(t: TestCase, root: Window) -> void:
 	var ed = (load(SCENE) as PackedScene).instantiate()
 	root.add_child(ed)
 	t.check(ed.def() != null, "打开就有一套在编（盘上有就是第一套，没有就是新建）")
-	ed._new_set()
+	ed._new_entry()
 	var def: ItemSetDef = ed.def()
 	t.check(def != null and String(def.id) == "new_set" and def.tiers.size() == 1, "新建：new_set、一档 2 件")
 	ed._id_edit.text = PROBE

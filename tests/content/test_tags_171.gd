@@ -117,7 +117,7 @@ static func frame_tag_editor(t: TestCase, root: Window) -> void:
 	root.add_child(ed)
 	t.check(ed.def() is TagDef, "打开了一条标签")
 	t.eq(ed._ids.size(), TagRegistry.ids().size(), "列表 = 全部登记的标签（%d）" % ed._ids.size())
-	ed._new_tag()
+	ed._new_entry()
 	t.eq(ed.def().category, "kind", "新建的默认类别（250）")
 	t.check(ed._validate().ok(), "新建的校验通过")
 	ed.def().category = ""

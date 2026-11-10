@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v5.54 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v5.55 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -4144,9 +4144,12 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 「断开」去掉链接变成内联可改，「去库里改」跳到构件编辑器 / buff 制作器并打开那一件（有没存的改动时不跳，状态栏提示）。
 **构件编辑器**（`ui/part_editor/`，启动器入口）列表按 全部 / 扳机 / 节奏 / 消耗与检查 / 效果 分组 + 搜索，右边是一句预览和「谁在用」。
 
-**列表 / 草稿 / 存盘只有一份**（141）：道具、事件、buff、套装、构件五个编辑器继承 `AuthoringEditor`（`ui/editor/authoring_editor.gd`），
+**列表 / 草稿 / 存盘只有一份**（141）：道具、事件、buff、套装、构件、标签、铸炉七个编辑器继承 `AuthoringEditor`（`ui/editor/authoring_editor.gd`），
 列表（盘上的 id + 没存过盘的草稿）、草稿与判脏（按打开时的 id 记，和盘上那份规范化 JSON 比）、打开、存盘（导出 → 导入器建资产 → 写 `.json` 与 `.tres`，有错不写）、
-另存、套用 JSON、放弃、重扫都在基类；子类只给种类、导出 / 导入那一对、新建的那一件、表单和提示语。改 id 时旧名字下的草稿撤掉、盘上也没有就从列表里消失，五个一样。
+另存、套用 JSON、放弃、重扫都在基类；子类只给种类、导出 / 导入那一对、新建的那一件、表单和提示语。改 id 时旧名字下的草稿撤掉、盘上也没有就从列表里消失，七个一样。
+**界面的外壳也只有一份**（精简第四批）：四边边距与三栏（`_left_column / _mid_column / _side_column`）、列表与它下面那排按钮（`_list_block`）、id 行与名字行（`_id_row / _name_row`）、
+中栏能滚的那块（`_scroll_body`）、校验框与 JSON 框（`_status_block / _json_block`）、回填与重建表单（`_sync_fields / _rebuild_form`，子类给 `_fill_fields / _form_skip`）都在基类，
+各编辑器只写自己多出来的控件；宽度、高度这些不一样的地方是参数。提示语两套（`TEXTS`、`LIBRARY_TEXTS`），固定的字一张表（`LABELS`）。
 
 **事件编辑器**（`ui/event_editor/event_editor.tscn`，报告 064）是同一套做法对着事件（6.5）的第二个入口：左边事件列表，中间 id、标题、多行正文、配图、选项表单，
 右边预览、校验、挂进节点规则、JSON。选项、条件、后果的表单由 `PropertyForm` 反射生成，「添加」下拉从注册表来，加一种构件编辑器不改；
@@ -4574,6 +4577,7 @@ res://
 | v5.52 | 2026-11-10 | **精简第一批：没人引用的东西**（作者 11-10 20:24「这份代码库现在归你管，按你的意愿优化它吧，我们追求小而美」，审阅线程；PR #532）：不改行为，43 个文件少 640 行、少 15 个文件。删 31 个没人调用的函数（`ContentExporter.export_bag_pool / export_carry_rule / export_damage_type / export_encumbrance_rules / export_help_page / export_recipe`、`GridInventory.has_pinned / resize_cols / _col_empty`、`HudHost.set_extra_right`、`UiPalette.clear_font_cache` 等，其中两个是测试辅助）；`HudHost.extra_right` 没人赋值了，折成 0；删 21 条没人读的 `UiText` 文案；删控件 `StatBlocks`（255 起选角色屏用 `StatSealPlate`）连同它的测试和三条文案；删 6 张没有页签在用的基地页签图标（achievements / market / sell / smithy / tech / codex）与书架图标的 codex 退路；删根目录孤儿 `_mk.gd.uid` 与三个没人读的常量。`tip.cycle_empty_ammo / tip.cycle_one_ammo` 是运行时拼出来的键、`FUEL_STEPS / LOCK_NONE` 是反射读的选项常量，都留着。全量测试 39605 项断言通过，静态警告仍为 0 |
 | v5.53 | 2026-11-10 | **扫表默认木桩表换新**（报告 297；PR #534；作者 21:38 选「换新」）：`data/authoring/calibration/archetypes.json` 换成按现在道具库重造的 108 份（9 路 × 4 段 × 3 份，与 `docs/reports/balance/inputs/2026-11-10-archetypes.json` 逐字一样）；v4.54 那份冻结为 `inputs/2026-10-26-archetypes-v454.json`。11-10 以前的扫表与新表不能逐格比；以后照旧只追加 |
 | v5.54 | 2026-11-10 | **精简第二批：退役功能的残留、只有测试在调的接口、一次性工具**（报告 296 §四，审阅线程；PR #535）：192 个文件净少 1,680 行（`core` −950、`tools` −402、`ui` −223）、少 9 个文件。**界面**：HUD 提示行的残留（`HudWidget.takes_space`、`HudHost._floats / _measure`）、`HoverTip` 的宽限期字段、战斗回放几个只有测试读的开关；手搭的容器换成 `UiTheme.vbox / hbox / margins / art_box`（`add_theme_` 棘轮 130 → 109）；主题变体 `LABEL_SCREEN_TITLE / PANEL_STASH_FRAME` 与图 `stash_frame` 没人用，删。**核心**：按稀有度 / 标签批量卖的那组接口（268 起卖东西走 `sell_selected`）、193 时代 `FaithTooltip` 的行接口、`GridInventory.shrink_rows / resize_rows / can_place`、规则卡 `describe()` 一条链、`CharacterDef.skill_lines`、`RunContext.snapshot`、`Screen.REST`，以及一批只有测试在调的小接口；测试改到现役接口上，没有现役对应的删掉。**内容管线**：导入器里给早已没人写的旧键留的迁移（`LEGACY_*`、乘区旧键、`max_stacks`、`coach / coach_battle`、法杖受益格、猎手 `loss_outcomes`）—— 旧键现在按未知字段报错，护甲改名那几条仍指向新名；`import_of` 改成一张「种类 → 导入函数」表；`ContentPaths.KINDS` 按 `ORDER` 生成，少 40 个常量；`ContentSchema.INT_ENUMS` 空表；`ContentExporter` 剩下 20 个只转一手的 `export_xxx`（调用处直接 `dump`）。**地图**：六处手写的广度优先收成 `MapGraph.spread`。**工具**：三个用完的一次性脚本（`extract_buffs / gen_sample_chapter / perf_fonts`）；六个 shell 脚本各自找 Godot 的那段收成 `tools/_godot.sh`；`CliTool.store_text / write_text`；`ContentPaths.ids_in` 七处。**两处不是纯删**：神明总表 `docs/gods.xlsx` 有三格还是旧写法（两处 `flat`、一处 `food_shield`，原来靠上面那些迁移才读得进），改成信仰 JSON 一直在用的写法，表里别的一个字节没动；事件后果 `grant_belt` 原来登记在侵蚀效果表里（事件 JSON 写不出来），搬到 `EVENT_OUTCOMES`，还没有内容用它。其余不改行为；「图还没到」的退路一族没动，等作者在 296 §五.2 的卡片上点。全量测试 39594 项断言通过，静态警告仍为 0 |
+| v5.55 | 2026-11-10 | **精简第四批：七个编辑器共用一份外壳**（报告 296 §四，审阅线程；PR #536）：14 个文件净少 364 行（`ui` −365）。道具、事件、buff、套装、构件、标签、铸炉七个编辑器原来各搭一遍同样的界面骨架，现在都在 `AuthoringEditor` 里：四边边距和三栏（`_left_column / _mid_column / _side_column`）、条目列表加「新建 / 复制 / 删除」（`_list_block`）、id 行与名字行（`_id_row / _name_row`）、带滚动的表单区（`_scroll_body`）、校验框和 JSON 框（`_status_block / _json_block`）、换条目时回填与重搭表单（`_sync_fields / _rebuild_form`，子类只给 `_fill_fields / _form_skip`）；`_ready` 也只剩基类一份（子类要先装数据的写 `_before_build`）。提示语两套（`TEXTS`、`LIBRARY_TEXTS`）加一张固定字的表（`LABELS`）。各编辑器自己的 `_new_tag / _new_set / _new_buff / _new_event` 并成基类的 `_new_entry`，测试跟着改名。`add_theme_` 棘轮 109 → 81。**不改行为也不改样子**：八个编辑器场景改前改后各截一张 1600×1000 的图，逐字节一致。全量测试 39594 项断言通过，静态警告仍为 0 |
 | v4.70 | 2026-10-29 | **260 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）**：碑额写 `RecordsStele.compact(v)` —— 1000 以下整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数整数算、向下截不进位（999999 → 999.99k），末尾 0 去掉（3100000000 → 3.1b）；0 写「—」，悬停照旧写准数。横线、`roman / numeral_parts / overline_stack` 删掉；基线 = 碑额顶 + 75 + 字号 × 0.375，金币固定 52、中心对准字身中线 |
 | v4.69 | 2026-10-28 | **260 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」，取代补充三）**：`RecordsStele.numeral_parts` 返回 [最高一段的罗马数字, 横线道数]，每 ÷ 1000 加一道、向下取整、后面的段不写（742 → DCCXLII，5414 → V̅，3888888 → 两道线的 III，38 亿 → 三道）；碑额画 k 道横线（线宽 = 字宽，往上每道再空 max(2, 字号 × 0.05)，`overline_stack`），字和横线整块在碑额里竖向居中、金币中心对准字身中线；顺带修掉 v4.68 一百万起千位段一长串 M。**随身技能图标定稿**（作者 18:35「B+C」）：`assets/belt_skills/smoke_bomb.png`（陶罐）、`aid_pack.png`（亚麻小包），60 × 60；`BeltSkillDef.icon()` 把图留在 def 上（腰带在 `_draw` 里每帧画，184） |
 | v4.68 | 2026-10-28 | **260 补充三（作者 10-28 10:15 选 B「只写到千」）**：碑额大数 —— `RecordsStele.numeral_parts` 一万起只写千位段（`[roman(v / 1000), ""]`，向下取整，38888 → X̅X̅X̅V̅I̅I̅I̅），4000～9999 照旧带零头，悬停照旧写准数；金币固定 `WORTH_COIN` 52（不跟字缩，竖向中心在碑额顶 + 75），`worth_width` 金币那项跟着换，字区实宽 330 − 52 − 6；千位段上横线粗 max(2, 字号 × 0.06)，在字头（基线上方字号 × 0.75）再往上留 max(3, 字号 × 0.1) 的缝，不再贴着字头像删除线 |

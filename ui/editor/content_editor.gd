@@ -24,9 +24,6 @@
 ## 「新建武器」：先画形状，第一次改形状时按格数预填一套能打的攻击力、冷却与耐力（默认战斗力），之后改哪个数战斗力跟着走
 extends AuthoringEditor
 
-## 176：带整个库的导入上下文（不写 class_name，按路径取）
-const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
-
 ## 作者数据目录。资产目录见 [ContentPaths]。
 const ITEM_DIR := ContentPaths.AUTHORING_ITEMS
 
@@ -63,9 +60,7 @@ var _tags_of: Dictionary = {}
 var _tab_host: VBoxContainer
 var _group_host: HBoxContainer
 var _search: LineEdit
-var _form_host: VBoxContainer
 var _shape: ShapeEditor
-var _id_edit: LineEdit
 ## JSON 预览（就是基类的 [member _json]，测试按这个名字读）
 var _preview: TextEdit
 ## 151：战斗力面板
@@ -90,20 +85,8 @@ func _ready() -> void:
 func _build_ui() -> void:
 	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 14)
-	add_child(margin)
-
-	var columns := HSplitContainer.new()
-	margin.add_child(columns)
-
 	# --- 左：分类页签 + 道具列表 ---
-	var left := VBoxContainer.new()
-	left.custom_minimum_size.x = 290
-	left.add_theme_constant_override("separation", 6)
-	columns.add_child(left)
+	var left := _left_column(290)
 	left.add_child(UiTheme.make_label("道具", 16, UiPalette.FG))
 
 	# 144：分组行横跨整个总览，标签页签在当前分组里长出来
@@ -154,15 +137,8 @@ func _build_ui() -> void:
 	list_buttons.add_child(UiTheme.make_button("放弃改动", _on_discard, UiTheme.TIER_PLAIN, 13))
 	left.add_child(list_buttons)
 
-	var right_split := HSplitContainer.new()
-	right_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.add_child(right_split)
-
 	# --- 中：表单 ---
-	var mid := VBoxContainer.new()
-	mid.add_theme_constant_override("separation", 8)
-	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_split.add_child(mid)
+	var mid := _mid_column(left)
 
 	var id_row := HBoxContainer.new()
 	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
@@ -174,19 +150,10 @@ func _build_ui() -> void:
 	id_row.add_child(UiTheme.make_button("另存为新 id", _save_as, UiTheme.TIER_PLAIN, 13))
 	mid.add_child(id_row)
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	mid.add_child(scroll)
-	_form_host = VBoxContainer.new()
-	_form_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_form_host)
+	_form_host = _scroll_body(mid, -1)
 
 	# --- 右：形状 / 校验 / 预览 ---
-	var side_col := VBoxContainer.new()
-	side_col.custom_minimum_size.x = 330
-	side_col.add_theme_constant_override("separation", 8)
-	right_split.add_child(side_col)
+	var side_col := _side_column(mid, 330)
 
 	side_col.add_child(UiTheme.make_label("形状与邻接标记", 14, UiPalette.FG))
 
@@ -224,21 +191,9 @@ func _build_ui() -> void:
 	_power.adopt_requested.connect(adopt_power)
 	side_col.add_child(_power)
 
-	side_col.add_child(UiTheme.make_label("校验", 14, UiPalette.FG))
-	_status = RichTextLabel.new()
-	_status.bbcode_enabled = true
-	_status.custom_minimum_size.y = 100
-	_status.add_theme_font_override("normal_font", _font)
-	_status.add_theme_font_size_override("normal_font_size", 12)
-	side_col.add_child(_status)
-
-	side_col.add_child(UiTheme.make_label("JSON（可直接改）", 12, UiPalette.DIM))
-	_preview = TextEdit.new()
-	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_preview.add_theme_font_size_override("font_size", 12)
-	side_col.add_child(_preview)
-	_json = _preview
-	side_col.add_child(UiTheme.make_button("套用上面的 JSON", _apply_json, UiTheme.TIER_PLAIN, 13))
+	_status_block(side_col, 100)
+	_json_block(side_col)
+	_preview = _json
 
 
 func _set_layer(which: int) -> void:
@@ -619,16 +574,13 @@ func _select_in_list(id: String) -> void:
 
 
 #region 刷新
-func _rebuild_form() -> void:
-	UiTheme.clear_children(_form_host)
-	if _def == null:
-		return
-	# id 在顶栏、形状有画板 —— 表单里跳过，免得两处能改同一个值
-	# 画板上能画的东西，表单里一律不给第二个入口
-	_form_host.add_child(_form_for(_def, {
+## id 在顶栏、形状有画板 —— 表单里跳过，免得两处能改同一个值
+## 画板上能画的东西，表单里一律不给第二个入口
+func _form_skip() -> Dictionary:
+	return {
 		"ItemDef": ["id", "shape"],
 		"AdjacencyProfile": ["grant_cells", "receive_cells"],
-	}))
+	}
 
 
 ## 把画板上的标记格写回 adjacency。

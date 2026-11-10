@@ -136,7 +136,7 @@ static func frame_editor(t: TestCase, root: Window) -> void:
 	UiText.lang = "zh"
 	var ed: Node = load(SCENE).instantiate()
 	root.add_child(ed)
-	ed._new_buff()
+	ed._new_entry()
 	var d: BuffDef = ed.def()
 	d.axes.append(BuffAxis.make(StatAxes.DAMAGE_DEALT, 1))
 	d.axes.append(BuffAxis.make(StatAxes.ATTACK_SPEED, 1))

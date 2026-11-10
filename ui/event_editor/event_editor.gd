@@ -16,23 +16,18 @@
 ## 真要单独发给作者，用导出预设把项目导出成 exe，启动选择器就是入口。列表 / 草稿 / 存盘在 [AuthoringEditor]（141）。
 extends AuthoringEditor
 
-## 176：带整个库的导入上下文（不写 class_name，按路径取）
-const AuthoringContext := preload("res://core/authoring/authoring_context.gd")
-
 const KIND := "events"
 const EVENT_DIR := ContentPaths.AUTHORING_EVENTS
 ## 配图落在这里；路径写进事件的 `image`
 const IMAGE_DIR := "res://assets/events"
 const RULES_KIND := "node_rules"
 
-var _id_edit: LineEdit
 var _title_edit: LineEdit
 var _text_edit: TextEdit
 var _image_edit: LineEdit
 ## 196：用哪一屏演（空 = 通用事件屏 / 营地）
 var _scene_pick: OptionButton
 var _thumb: TextureRect
-var _form_host: VBoxContainer
 var _preview_host: VBoxContainer
 var _rules_pick: OptionButton
 var _type_pick: OptionButton
@@ -77,40 +72,12 @@ static func _build_context() -> ContentImporter.Context:
 func _build_ui() -> void:
 	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 14)
-	add_child(margin)
-
-	var columns := HSplitContainer.new()
-	margin.add_child(columns)
-
 	# --- 左：事件列表 ---
-	var left := VBoxContainer.new()
-	left.custom_minimum_size.x = 240
-	left.add_theme_constant_override("separation", 6)
-	columns.add_child(left)
-	left.add_child(UiTheme.make_label("事件", 16, UiPalette.FG))
-	_list = ItemList.new()
-	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_list.item_selected.connect(func(i: int): _open(_ids[i]))
-	left.add_child(_list)
-	var list_buttons := HBoxContainer.new()
-	list_buttons.add_child(UiTheme.make_button("新建", _new_event, UiTheme.TIER_PLAIN, 13))
-	list_buttons.add_child(UiTheme.make_button("刷新列表", _on_rescan, UiTheme.TIER_PLAIN, 13))
-	list_buttons.add_child(UiTheme.make_button("放弃改动", _on_discard, UiTheme.TIER_PLAIN, 13))
-	left.add_child(list_buttons)
-
-	var right_split := HSplitContainer.new()
-	right_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.add_child(right_split)
+	var left := _left_column(240)
+	_list_block(left, "事件")
 
 	# --- 中：文字、配图、选项 ---
-	var mid := VBoxContainer.new()
-	mid.add_theme_constant_override("separation", 8)
-	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_split.add_child(mid)
+	var mid := _mid_column(left)
 
 	var id_row := HBoxContainer.new()
 	id_row.add_child(UiTheme.make_label("id", 13, UiPalette.DIM))
@@ -129,14 +96,7 @@ func _build_ui() -> void:
 	id_row.add_child(_lang_pick)
 	mid.add_child(id_row)
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	mid.add_child(scroll)
-	var body := VBoxContainer.new()
-	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 8)
-	scroll.add_child(body)
+	var body := _scroll_body(mid)
 
 	var title_row := HBoxContainer.new()
 	title_row.add_child(UiTheme.make_label("标题", 13, UiPalette.DIM))
@@ -192,10 +152,7 @@ func _build_ui() -> void:
 	add_child(_file_dialog)
 
 	# --- 右：预览 / 校验 / 挂进节点规则 / JSON ---
-	var side := VBoxContainer.new()
-	side.custom_minimum_size.x = 400
-	side.add_theme_constant_override("separation", 8)
-	right_split.add_child(side)
+	var side := _side_column(mid, 400)
 
 	side.add_child(UiTheme.make_label("预览（事件屏的样子）", 14, UiPalette.FG))
 	var preview_scroll := ScrollContainer.new()
@@ -216,13 +173,7 @@ func _build_ui() -> void:
 	_preview_host.add_theme_constant_override("separation", 8)
 	preview_panel.add_child(_preview_host)
 
-	side.add_child(UiTheme.make_label("校验", 14, UiPalette.FG))
-	_status = RichTextLabel.new()
-	_status.bbcode_enabled = true
-	_status.custom_minimum_size.y = 80
-	_status.add_theme_font_override("normal_font", _font)
-	_status.add_theme_font_size_override("normal_font_size", 12)
-	side.add_child(_status)
+	_status_block(side, 80)
 
 	# 091：事件链 —— 从这个事件出去的（选项 → next_event，递归）和引用它的（别的事件 / 节点规则 / 预设图 / 章节开场）；双击一行打开那个事件
 	side.add_child(UiTheme.make_label("事件链（双击跳过去）", 14, UiPalette.FG))
@@ -260,13 +211,7 @@ func _build_ui() -> void:
 	attach_row.add_child(UiTheme.make_button("摘下", _on_detach, UiTheme.TIER_PLAIN, 13))
 	side.add_child(attach_row)
 
-	side.add_child(UiTheme.make_label("JSON（可直接改）", 12, UiPalette.DIM))
-	_json = TextEdit.new()
-	_json.custom_minimum_size.y = 160
-	_json.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_json.add_theme_font_size_override("font_size", 12)
-	side.add_child(_json)
-	side.add_child(UiTheme.make_button("套用上面的 JSON", _apply_json, UiTheme.TIER_PLAIN, 13))
+	_json_block(side, 160)
 #endregion
 
 
@@ -326,10 +271,6 @@ static func _put_lang(table: Dictionary, p_lang: String, text: String) -> void:
 		table.erase(p_lang)
 	else:
 		table[p_lang] = text
-
-
-func _new_event() -> void:
-	_new_entry()
 
 
 func _new_def() -> Resource:
@@ -541,12 +482,9 @@ func _on_detach() -> void:
 
 
 #region 刷新
-func _rebuild_form() -> void:
-	UiTheme.clear_children(_form_host)
-	if _def == null:
-		return
-	# 标题、正文、配图在上面有专门的控件，表单里跳过，免得两处能改同一个值
-	_form_host.add_child(_form_for(_def, {"EventDef": ["id", "title", "titles", "text", "texts", "image"]}))
+## 标题、正文、配图在上面有专门的控件，表单里跳过，免得两处能改同一个值
+func _form_skip() -> Dictionary:
+	return {"EventDef": ["id", "title", "titles", "text", "texts", "image"]}
 
 
 ## 照着事件屏画（两栏：左边图，右边标题、正文、选项）；每个选项底下写条件与后果
