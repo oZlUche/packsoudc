@@ -66,7 +66,7 @@ static func run(dummies: Dictionary, ctx: Dictionary) -> Dictionary:
 					if not cache.has(key):     # 敌人只看（种子, 档, 敌人, i），各路木桩共用一份：造一次，连同造完时随机源的状态记下
 						var r0 := RandomNumberGenerator.new()
 						r0.seed = case_seed(p_seed, tier, i, target)
-						var built := _enemy(mode, pool, enemies, items, tier, target, bare, population, r0, ctx)
+						var built := _enemy(mode, pool, enemies, items, tier, target, bare, population, r0)
 						built["state"] = r0.state
 						cache[key] = built
 					var made: Dictionary = cache[key]
@@ -183,7 +183,7 @@ static func _head(n: int, cell: String, mode: String, member: Dictionary, bracke
 
 ## 造这一场的敌人：{spec, summary, node} 或 {error, …}
 static func _enemy(mode: String, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, tier: int, target: StringName,
-		bare: MapNode, population: Array, rng: RandomNumberGenerator, _ctx: Dictionary) -> Dictionary:
+		bare: MapNode, population: Array, rng: RandomNumberGenerator) -> Dictionary:
 	var content := {}
 	var node: Variant = null
 	match mode:

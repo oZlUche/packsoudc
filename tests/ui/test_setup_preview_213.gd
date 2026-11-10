@@ -164,10 +164,6 @@ static func frame_ring_unchanged(t: TestCase, root: Window) -> void:
 	for id in pv.entry_ids():
 		var want: Vector2 = pv.center() + ((pos[id] as Vector2) - area.get_center()) / RingLayoutBase.RING_STEP * pv.ring_gap()
 		t.check(pv.entry_base(id).distance_to(want) < 0.01, "入口 %d 的位置照旧" % id)
-	# 老入口 show_map 还在：按环数画同一张纸
-	var paper := pv.paper_on_screen()
-	pv.show_map(c.map_skin, pv.levels, setup.scale_id, false)
-	t.check(B192._near(pv.paper_on_screen(), paper, 0.01), "show_map 与 show_graph 画同一张纸")
 	game.queue_free()
 	_cleanup("setup213c")
 

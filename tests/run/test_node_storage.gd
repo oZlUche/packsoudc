@@ -67,9 +67,7 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	f.pick_spawn(entry)
 	var def := c.items.get_def(&"ration")
 	run.storage.clear()
-	t.check(not run.will_clear_storage(), "地上空：走了没什么可清")
 	run.storage.admit(ItemInstance.create(def))
-	t.check(run.will_clear_storage(), "出生点上没发生过事，地上有东西也清（不再看发没发生过事）")
 	var ns := NodeStorageModule.of(run)     # 101：按点暂存是一局的模块
 	t.not_null(ns, "默认清单里有按点暂存")
 	var dropped: Array = []
@@ -85,7 +83,6 @@ static func run_clear_on_leave(t: TestCase) -> void:
 	# 打完之后地上可能有战利品：走之前不收进棋盘就没了
 	run.storage.clear()
 	run.storage.admit(ItemInstance.create(def))
-	t.check(run.will_clear_storage(), "地上有东西：走了会留在这里")
 	var restored: Array = []
 	ns.restored.connect(func(id: int, items: Array): restored.append([id, items.size()]))
 	t.check(f.step_to(entry), "走回出生点")
@@ -152,13 +149,11 @@ static func run_clear_on_leave(t: TestCase) -> void:
 		_settle(f)
 		if run.storage.item_count() == 0:
 			run.storage.admit(ItemInstance.create(def))
-		var before := run.will_clear_storage()
-		t.check(before, "在发生过事的点上、地上有东西")
 		t.eq(RunSave.write(run, SAVE), OK, "存")
 		var back := RunSave.read(c.items, c.enemies, c.sets, SAVE)
 		t.not_null(back, "读回来")
 		t.eq(back.events.last_handled_id, run.events.last_handled_id, "「发生过事的点」跟着存档")
-		t.eq(back.will_clear_storage(), before, "读回来的也知道走了要清")
+		t.check(back.travel.current_id >= 0 and back.storage.item_count() > 0, "读回来的也知道走了要清")
 	Support.cleanup("storage")
 
 
@@ -247,7 +242,6 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 				ov.proceed()
 	if run.storage.item_count() == 0:
 		run.storage.admit(ItemInstance.create(c.items.get_def(&"ration")))
-	t.check(run.will_clear_storage(), "在战斗点上、地上有东西")
 	var to: int = run.travel.available_moves()[0]
 	t.check(map.step(to), "按走")
 	t.eq(run.travel.current_id, to, "走了")

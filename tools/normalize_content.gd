@@ -15,16 +15,8 @@ func run() -> void:
 	var rewritten := 0
 	var checked := 0
 	for kind in ContentPaths.ORDER:
-		var dir: String = ContentPaths.KINDS[kind][0]
-		var d := DirAccess.open(dir)
-		if d == null:
-			continue
-		var files: Array[String] = []
-		for f in d.get_files():
-			if f.ends_with(".json"):
-				files.append(dir + "/" + f)
-		files.sort()
-		for path in files:
+		for id in ContentPaths.ids_in(ContentPaths.KINDS[kind][0]):
+			var path := ContentPaths.authoring_file(kind, id)
 			report.source = path
 			var text := FileAccess.get_file_as_string(path)
 			var parsed = JSON.parse_string(text)

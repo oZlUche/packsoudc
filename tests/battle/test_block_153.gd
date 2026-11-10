@@ -140,7 +140,7 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 
 
 static func run_armor_rename(t: TestCase) -> void:
-	t.begin("153 补充一 · 防具给的那层「护盾」改名【护甲】：armor / max_armor；旧名 max_shield、shield_absorbable、food_shield 认并提醒")
+	t.begin("153 补充一 · 防具给的那层「护盾」改名【护甲】：armor / max_armor；旧名 max_shield、shield、shield_absorbable、food_shield 报错")
 	t.eq(BattleStats.RES_ARMOR, &"armor", "资源键 armor")
 	t.eq(BattleStats.MAX_ARMOR, &"max_armor", "上限属性 max_armor")
 	t.eq(BattleStats.resource_of_max(BattleStats.MAX_ARMOR), BattleStats.RES_ARMOR, "max_armor 派生出 armor 资源池")
@@ -150,15 +150,17 @@ static func run_armor_rename(t: TestCase) -> void:
 	t.eq(Glossary.term_text("护盾"), "", "词条「护盾」没了")
 
 	var r := ImportReport.new()
-	var vest := ContentImporter.import_item({"id": "t_vest", "shape": ["11"], "tags": ["armor"], "combat": {"base_stats": {"max_shield": 6}}}, ContentImporter.Context.new(), r)
-	t.check(r.ok() and r.to_text().contains("max_armor"), "旧键 max_shield：提醒改名（%s）" % r.to_text())
-	t.check(vest != null and vest.combat.base_stats.has("max_armor") and not vest.combat.base_stats.has("max_shield"), "读成了 max_armor")
+	ContentImporter.import_item({"id": "t_vest", "shape": ["11"], "tags": ["armor"], "combat": {"base_stats": {"max_shield": 6}}}, ContentImporter.Context.new(), r)
+	t.check(not r.ok() and r.to_text().contains("max_armor"), "旧键 max_shield：报错，指向 max_armor（%s）" % r.to_text())
 	var m := ImportReport.new()
-	var buff := ContentImporter.import_buff({"id": "t_guard", "mods": [{"stat": "max_shield", "amount": 5.0}]}, ContentImporter.Context.new(), m)
-	t.check(m.ok() and buff.mods.size() == 1 and buff.mods[0].stat == &"max_armor", "buff 修饰的 stat: max_shield → max_armor（%s）" % m.to_text())
+	ContentImporter.import_buff({"id": "t_guard", "mods": [{"stat": "max_shield", "amount": 5.0}]}, ContentImporter.Context.new(), m)
+	t.check(not m.ok() and m.to_text().contains("max_armor"), "buff 修饰的 stat 写 max_shield：报错，指向 max_armor（%s）" % m.to_text())
+	var res := ImportReport.new()
+	ContentImporter._fill(ChangeResource.new(), {"resource_key": "shield", "amount": 5.0}, "", ContentImporter.Context.new(), res)
+	t.check(not res.ok() and res.to_text().contains("shield 已改名 armor"), "资源键写 shield：报错，指向 armor（%s）" % res.to_text())
 	var dt := ImportReport.new()
-	var def := ContentImporter.import_damage_type({"id": "t_dt", "display_name": "测试", "shield_absorbable": false}, ContentImporter.Context.new(), dt)
-	t.check(dt.ok() and def != null and not def.armor_absorbable and dt.to_text().contains("armor_absorbable"), "shield_absorbable → armor_absorbable（%s）" % dt.to_text())
+	ContentImporter.import_damage_type({"id": "t_dt", "display_name": "测试", "shield_absorbable": false}, ContentImporter.Context.new(), dt)
+	t.check(not dt.ok() and dt.to_text().contains("armor_absorbable"), "旧键 shield_absorbable：报错，可用字段里有 armor_absorbable（%s）" % dt.to_text())
 
 	var nature: FaithDef = load(ContentPaths.asset_file("faiths", "nature"))
 	var has_food := false

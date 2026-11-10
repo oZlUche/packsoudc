@@ -52,8 +52,8 @@ func _init() -> void:
 
 
 func _load_art() -> void:
-	_groove = _nine(ART_GROOVE)
-	_fill = _nine(ART_FILL)
+	_groove = UiTheme.art_box(ART_GROOVE)
+	_fill = UiTheme.art_box(ART_FILL)
 	_cursor_tex = UiTheme.art(ART_CURSOR)
 	var pivot: Array = UiTheme.art_meta(ART_CURSOR).get("pivot", [])
 	if _cursor_tex != null:
@@ -65,20 +65,6 @@ func _load_art() -> void:
 			_tick_tex.append(tex)
 	if _groove == null or _fill == null or _cursor_tex == null or _tick_tex.size() != 2:
 		_groove = null
-
-
-static func _nine(p_name: String) -> StyleBoxTexture:
-	var tex := UiTheme.art(p_name)
-	if tex == null:
-		return null
-	var m: Array = UiTheme.art_meta(p_name).get("margin", [0, 0, 0, 0])
-	var s := StyleBoxTexture.new()
-	s.texture = tex
-	s.texture_margin_left = float(m[0])
-	s.texture_margin_top = float(m[1])
-	s.texture_margin_right = float(m[2])
-	s.texture_margin_bottom = float(m[3])
-	return s
 
 
 ## 有没有贴图（测试看两条路径）

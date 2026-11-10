@@ -7,7 +7,7 @@
 ## 原理：仓库里的 JSON 已经是导出器格式（`tools/normalize_content.gd` 导入 → 导出 → 写回），所以
 ## **`ContentExporter.dump(load(tres))` 的 JSON 文本 == 磁盘上的 JSON 文本** 就是「两份一致」。
 ## 不重跑导入：重跑会把「导入器变了」和「内容变了」混在一起，而导出器按反射工作，任何种类都现成 ——
-## 所以哪些种类过这道检查只看 [constant ContentPaths.KINDS]，不用另外登记。
+## 所以哪些种类过这道检查只看 [member ContentPaths.KINDS]，不用另外登记。
 ##
 ## 命令行是 `tools/check_content.gd`，测试是 `test_content_pipeline.run_assets_match_json`，两边调的都是这里。
 class_name ContentCheck
@@ -31,8 +31,8 @@ static func check_kind(kind: String) -> Array[String]:
 	var dirs := ContentPaths.dirs_of(kind)
 	var in_dir: String = dirs[0]
 	var out_dir: String = dirs[1]
-	var json_ids := _ids(in_dir, ".json")
-	var asset_ids := _ids(out_dir, ".tres")
+	var json_ids := ContentPaths.ids_in(in_dir)
+	var asset_ids := ContentPaths.resource_names(out_dir).map(func(f: String) -> String: return f.get_basename())
 
 	for id in json_ids:
 		if not asset_ids.has(id):
@@ -63,22 +63,6 @@ static func check_kind(kind: String) -> Array[String]:
 		if where != "":
 			problems.append("%s/%s：JSON 与资产不一致（%s）—— 跑一次 tools/import_content.gd" % [kind, id, where])
 	return problems
-
-
-## 一个目录下某后缀的 id（去掉 `.remap`，导出后 `.tres` 会被转成 `.res`，一并认）
-static func _ids(dir_path: String, suffix: String) -> Array[String]:
-	var out: Array[String] = []
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
-		return out
-	for f in dir.get_files():
-		var name := f.trim_suffix(".remap")
-		if suffix == ".tres" and name.ends_with(".res"):
-			name = name.trim_suffix(".res") + ".tres"
-		if name.ends_with(suffix):
-			out.append(name.trim_suffix(suffix))
-	out.sort()
-	return out
 
 
 ## 两个字典第一处不同的键路径（`combat.rules[1].effects[0].percent`）。a = 磁盘上的，b = 资产导出的

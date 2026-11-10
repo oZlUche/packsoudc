@@ -13,12 +13,7 @@ func run() -> void:
 		print("快照没更新：先补表")
 		finish(1)
 		return
-	var f := FileAccess.open(ContentSnapshot.PATH, FileAccess.WRITE)
-	if f == null:
-		print("写不了 %s" % ContentSnapshot.PATH)
-		finish(1)
+	if not write_text(ContentSnapshot.PATH, ContentSnapshot.to_text(now)):
 		return
-	f.store_string(ContentSnapshot.to_text(now))
-	f.close()
 	print("快照已更新：%d 件道具" % (now["items"] as Dictionary).size())
 	finish(0)

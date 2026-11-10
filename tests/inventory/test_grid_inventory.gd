@@ -95,16 +95,16 @@ static func run(t: TestCase) -> void:
 	t.check(slot.place(w, Vector2i(0, 0), 0), "武器可放入装备栏")
 	t.check(not slot.place(d, Vector2i(0, 0), 0), "非武器不可放入装备栏")
 
-	# --- can_place 的 ignore_uid ---
+	# --- can_place_def 的 ignore_uid ---
 	var inv4 := GridInventory.new(Vector2i(4, 4), 5)
 	var e := ItemInstance.create(bar)
 	inv4.place(e, Vector2i(0, 0), 0)
 	t.check(
-		not inv4.can_place(bar.cells_rotated(0), Vector2i(0, 0)),
+		not inv4.can_place_def(bar, Vector2i(0, 0), 0),
 		"不忽略自身时应判为冲突"
 	)
 	t.check(
-		inv4.can_place(bar.cells_rotated(0), Vector2i(0, 0), e.uid),
+		inv4.can_place_def(bar, Vector2i(0, 0), 0, e.uid),
 		"忽略自身 uid 时应判为可放"
 	)
 

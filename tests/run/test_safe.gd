@@ -72,7 +72,7 @@ static func run_seal_rules(t: TestCase) -> void:
 	var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 	var back_sm := SafeModule.of(back) if back != null else null
 	t.check(back_sm != null and back_sm.inventory.item_count() == 2 and back_sm.is_sealed(a.uid) and not back_sm.is_sealed(b.uid), "存档往返：交出去的、没交的都对")
-	t.check(sm.lock() and sm.is_sealed(b.uid) and sm.sealed_count() == 2, "第二回关上：也交出去了")
+	t.check(sm.lock() and sm.is_sealed(b.uid) and sm.sealed.size() == 2, "第二回关上：也交出去了")
 	var old := s.to_dict()
 	var mods: Dictionary = old.get("modules", {})
 	var saved: Dictionary = mods.get(SafeModule.ID, {})
@@ -188,7 +188,7 @@ static func frame_safe_screen(t: TestCase, root: Window) -> void:
 	if bag != null:
 		t.check(not screen.put_in(bag.uid) and not SafeModule.of(run).inventory.has_item(bag.uid), "包托付不了")
 	t.check(game.escape(), "Esc（空着）")
-	t.check(flow.screen == GameFlow.Screen.MAP and SafeModule.of(run).sealed_count() == 0, "→ 地图，什么也没交")
+	t.check(flow.screen == GameFlow.Screen.MAP and SafeModule.of(run).sealed.size() == 0, "→ 地图，什么也没交")
 	t.check(flow.open_safe(free), "再开")
 	screen = game.overlay()
 	t.check(screen.put_in(item.uid), "放进去")

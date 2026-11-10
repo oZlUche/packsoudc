@@ -50,10 +50,7 @@ func run() -> void:
 
 
 func _write(path: String, text: String) -> bool:
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f == null:
+	if not store_text(path, text):
 		printerr("写不了：", path)
 		return false
-	f.store_string(text)
-	f.close()
 	return true

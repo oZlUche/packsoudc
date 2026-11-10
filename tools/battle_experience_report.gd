@@ -38,13 +38,8 @@ func run() -> void:
 	for key in ["out", "json"]:
 		if not opts.has(key):
 			continue
-		var f := FileAccess.open(String(opts[key]), FileAccess.WRITE)
-		if f == null:
-			print("写不了 " + String(opts[key]))
-			finish(1)
+		if not write_text(String(opts[key]), md if key == "out" else JSON.stringify(r, "  ", true) + "\n"):
 			return
-		f.store_string(md if key == "out" else JSON.stringify(r, "  ", true) + "\n")
-		f.close()
 	finish(0)
 
 

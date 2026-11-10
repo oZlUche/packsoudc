@@ -22,11 +22,7 @@ extends RunMechanic
 
 ## 走了这么多步在第几段（0 起）
 func bracket_of(steps: int) -> int:
-	var k := 0
-	for i in bracket_steps.size():
-		if steps >= bracket_steps[i]:
-			k = i
-	return k
+	return bracket_of_steps(bracket_steps, steps)
 
 
 static func bracket_of_steps(thresholds: Array[int], steps: int) -> int:
@@ -42,7 +38,6 @@ func count_for(scale_id: StringName) -> int:
 
 
 func install(run: RunState) -> void:
-	run.mechanic_tags[&"hunters"] = true
 	if run.hunters != null:
 		run.hunters.defs = run.hunter_defs
 		run.hunters.setup(run, self, run.hunter_defs)
@@ -52,7 +47,3 @@ func install(run: RunState) -> void:
 	if not run.hunters_saved.is_empty():
 		sys.restore(run.hunters_saved)
 	run.hunters = sys
-
-
-func describe() -> String:
-	return "猎手 ×%d（%s）" % [default_count, "、".join(hunter_ids)] if not hunter_ids.is_empty() else "猎手（没配种类）"

@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v5.53 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v5.54 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -325,8 +325,8 @@ func begin_batch() / end_batch()                  # 变更合批
 | 情况 | 判据 | 表现 |
 |---|---|---|
 | 地形不允许 | 出界、禁用格、没被包覆盖、跨了两个包、标签不收 | 红，只能拒绝 |
-| 地形允许但压着别人 | `terrain_allows` 为真而 `can_place` 为假 | 黄，会顶掉 |
-| 干净落点 | `can_place` 为真 | 绿 |
+| 地形允许但压着别人 | `terrain_allows` 为真而 `can_place_def` 为假 | 黄，会顶掉 |
+| 干净落点 | `can_place_def` 为真 | 绿 |
 
 两条路径**共用同一套地形判断**（`_terrain_ok`）。各写一份的话，顶替迟早绕过某条校验，
 出现「直接拖进去不行、顶着别人反而进得去」这种玩家看不懂的事。
@@ -438,7 +438,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 2. **不要用 Godot 内置的 `_get_drag_data` / `_can_drop_data`** —— 拖拽过程中无法响应旋转键，也无法做多格高亮预览。自己实现拖拽状态机：
    - 按下：记录 `dragging_uid`，从源容器 `remove`，创建 ghost
-   - `_input`：更新 ghost 位置；R 键旋转；实时对目标容器 `can_place` 并高亮（合法绿 / 非法红）
+   - `_input`：更新 ghost 位置；R 键旋转；实时对目标容器 `can_place_def` 并高亮（合法绿 / 非法红）
    - 松开：调用 `InventoryService.move`，失败则放回原位
    - ghost 挂在独立 `CanvasLayer` 上，避免被父容器裁剪
 
@@ -468,7 +468,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - **休眠** = 有信仰、不是激活的那个：**通常情况下完全不起作用** —— `BattleCompiler.compile` 第一步跳过它（不参战、不给也不吃邻接），`SetTracker` 不计它；占格照占、价值照算。
 - **切换**（099，作者定）：**在背包里一下就切，不进菜单**，两条路都是明确规则，没有代价（将来可继承积攒的信力）：
   - 在棋盘里**把信物重新落下**（拖起来放回棋盘任意位置）→ `GridInventory.reseat(uid)`；
-  - **右键**棋盘上的信物（`InventoryView.item_context` → `GameFlow.reseat_anchor` / 开局屏的 `reseat_anchor`）。
+  - **右键**棋盘上的信物（`InventoryView.item_context` → `InventoryPanel.reseat_anchor` / 开局屏的 `reseat_anchor`）。
   `reseat` 只盖 `placed_seq`，**不发 `placed`** —— 切信仰不是「置入道具」，信力的 `place_item` 行为不记它（这就是 097 发现的「棋盘内来回拖刷信力」的根因）。
   取消拖拽（右键 / Esc）、放不回原位都**不切**：`DragLayer` 放回同一容器前先把 `inst.container_id` 设回该容器（和 `InventoryService.move` 同一行），所以不算 arrived；
   普通道具在棋盘内挪位置照旧不盖序号。挪到地上再挪回仍然算置入（从别的容器进来），信力照记。地上一移动就清（3.4）；开局屏的棋盘同一套。
@@ -627,7 +627,7 @@ UI 上用什么图形表示这两类，是表现层的事，数据层不关心�
 晶石写 `feed_mods / feed_rules / feed_filter` —— **晶石站在宿主的装载格上**、宿主命中 `feed_filter` 时，把这些交给宿主（一份，不按格数乘；规则走 `_attach`、以宿主身份跑，时机不限、不许 costs，同受益规则）。
 **一颗晶石只给一把**（171，作者定「后来者优先」）：压着几把法杖的装载格，`BattleCompiler.load_assignments` 只给 `placed_seq` 最大的那把（一样大按 uid），被抢走的那把装载格按空算；
 结果记进 `CombatantSpec.loads`（晶石 uid → 法杖 uid），悬浮窗与棋盘的装载格点亮都查它。编译器把真的供给了的晶石记进 `CombatantSpec.fed_uids`（耐久按它扣，7.4）；
-用坏了的（`ItemInstance.is_broken()`）不再供给。老内容里法杖的受益格（带 `staff` 标签、受益格不给东西）导入时迁成装载格（171 待定 4 A）。
+用坏了的（`ItemInstance.is_broken()`）不再供给。
 于是邻接三件事：我给邻居（grant，171 加 `grant_filter_all`：全部带上才算，句子里连写）、邻居给我（receive）、装上来的晶石给我（load / feed）。
 「只改这件自己打出的伤害」靠伤害扳机的 `own_only`（来源 uid = 规则主人），魔晶石的「改成火焰」用它。
 
@@ -739,8 +739,8 @@ const DEFAULT_STATS := {"max_hp": 25.0, "max_stamina": 50.0}
 后期想加强一件物品，加乘算比加固定值有效得多。
 
 > **133 取消了四个乘区**（`EMPOWER / SHARP / ELEMENT / HASTE`）。它们混了两件事：增益怎么生效（乘还是加）和增益是什么（锋利、元素、急速）。
-> 后者本该是独立的 `BuffDef` / 属性（「给护甲加急速乘区」根本不成立）。导入器把旧键 `mult_category / mult_percent / flat` 迁成 `mode + amount`：
-> `mult_category` 提醒并忽略，同一条又乘又加的报错要求拆成两条。
+> 后者本该是独立的 `BuffDef` / 属性（「给护甲加急速乘区」根本不成立）。属性修饰只写 `mode + amount`；
+> 旧键 `mult_category / mult_percent / flat` 导入器不再认（按未知字段报错）。
 
 #### 定点数与取整
 
@@ -1143,7 +1143,7 @@ func scope() -> StringName: return EffectScope.COMBAT
 **如无说明，buff 永续、可叠层**（103，作者定）：`BuffDef` 的默认值就是 `stackable = true`（可叠层，**没有层数上限**，137）、
 `duration_sec = 0`（永续）。不可叠或会过期是**例外**，必须在定义里显式写 `stackable: false`（固定一层，和可选的 `duration_sec`），
 导入器守着（085：可叠层的不许填时长）；词条里这两种用例外色标出来。设计数值时按「永续 + 叠层」来算。
-137（作者定）取消了叠层上限：可叠层就是不限层，旧字段 `max_stacks` 由导入器迁移（1 → 不可叠，其余 → 可叠，带提醒）。
+137（作者定）取消了叠层上限：可叠层就是不限层，旧字段 `max_stacks` 导入器不再认（按未知字段报错）。
 
 **buff 是内容**（146）：`data/authoring/buffs/<id>.json` 一份一个（`ContentPaths.KINDS` 里，`ORDER` 排在 `items` 前面），
 道具 / 角色 / 套装里写 `"buff": "bleed"` 按 id 引用；只被一处用到的仍可内联。buff 制作器存的就是它们，
@@ -3143,7 +3143,7 @@ var pending_loot: GridInventory             # 等着拾取的容器
 var tracker: SetTracker                     # 套装激活（9 节）
 # —— 角色与难度 ——
 var character: CharacterDef; var character_id; var player_baseline: CombatantBaseline; var map_scale
-var difficulty: DifficultyDef; var difficulty_id; var mechanic_tags: Dictionary   # 069 / 070
+var difficulty: DifficultyDef; var difficulty_id   # 069 / 070
 var carry_in_value: int                     # 带入预算（094）
 # —— 子系统 ——
 var events: NodeEvents                      # 踩到点发生什么（6.5）；靠注入的 Callable 回调本类
@@ -3162,7 +3162,7 @@ var meta: MetaState; var meta_buffs; var map_buffs             # 局外 buff 与
 店 / 搜索再走（随时可以离开），`try_extract` 在撤离点上付费撤离进 `EXTRACTED`，`defeated` 进 `DEFEATED`。
 
 **接线**：打赢的尸体容器、搜到的收获落到 `pending_loot`（还没处理又来一份就并进去，一件不丢）；买到的、事件给的直接到地上；
-`equip` / `unequip` 在地上与棋盘之间搬。玩家的战斗单位在开战那一刻从棋盘编译（`compile_player`，套装效果从 tracker 取）。
+`equip`：地上 → 棋盘（自动找位）。玩家的战斗单位在开战那一刻从棋盘编译（`compile_player`，套装效果从 tracker 取）。
 
 ### 7.1 体力与战败
 
@@ -3365,7 +3365,7 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 
 ```gdscript
 class_name GameFlow extends RefCounted
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }   # SLOTS 089、SAFE 092、ALTAR 093
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }   # SLOTS 089、SAFE 092、ALTAR 093
 signal screen_changed(screen, payload)
 signal run_changed(state)                    # 140：run_started / run_ended 没人接，删了
 func to_main_menu() / new_run() / show_meta()
@@ -3389,7 +3389,6 @@ func grant_first_kit()                               # 仓库空的第一局发�
 @abstract func id() -> StringName        # 存档里的键、run.module(id) 的 id；空 = 不进 modules 存档
 func install(run: RunState) -> void      # 开局 / 读档各一次，必须幂等：造自己的状态、订阅信号、挂自己要被调用的能力
 func to_dict() / restore(d)              # 自己的状态，进 run.to_dict()["modules"][id]
-func describe() -> String                # 开局屏的规则卡、编辑器
 ```
 
 - **生命周期的钩子不写在基类里**：写了就得在 `RunState` 里逐个调，那又回到「每加一个玩法都要改 `RunState`」。
@@ -3519,7 +3518,7 @@ func player_spec() -> CombatantSpec …
 
 - **仓库分页**（163，作者定）：`Warehouse`（`core/meta/warehouse.gd`，`ItemContainer`）是一串一样大的格子页（每页 `MetaRules.warehouse_size`，10 × 8，不要求包），各页独立不共享空间；自动放按页序，读取 / 移除跨页，`owns(container)` 认自己的页；页数由科技「仓库扩建」推算（每级一页，满级七页），只删末尾的空页。存档逐页，老的单块档按页切。界面是 `WarehousePages`（左边竖排页签「一」「二」……，锁着的灰着带锁，拖着东西停在页签上 0.4 秒切页），结算屏、开局屏第二页、基地右半边共用。
 - **撤离不直接进仓库。** 棋盘原样带回来（`MetaState.board`：一块和棋盘一样大、不要求包的格子，非包道具按原位置 —— 作者说的「包统一替换成最大的默认背景包」），
-  玩家在结算屏 / 局外屏拖或**一键置入**（按栏位顺序逐件放，放不下就停在那一件提示）。没清空**不再拦**开新局（090，原 058 第 7 条的门撤了）：进开局屏时带回来的东西挪进屏中间的**地上**（记原位），拖上包 = 带上、拖进仓库 = 置入、留着的**出发就没了**（`GameFlow.begin` 清掉带回来的棋盘，不经开局屏的路一样）、回主菜单原样放回（视为没发生过移动；玩家自己拖进仓库的留在仓库）；仓库的东西进不了地上。局外屏只提示（`GameFlow.pending_hint()`）。
+  玩家在结算屏 / 局外屏拖或**一键置入**（按栏位顺序逐件放，放不下就停在那一件提示）。没清空**不再拦**开新局（090，原 058 第 7 条的门撤了）：进开局屏时带回来的东西挪进屏中间的**地上**（记原位），拖上包 = 带上、拖进仓库 = 置入、留着的**出发就没了**（`GameFlow.begin` 清掉带回来的棋盘，不经开局屏的路一样）、回主菜单原样放回（视为没发生过移动；玩家自己拖进仓库的留在仓库）；仓库的东西进不了地上。局外屏只提示。
 - **图鉴**（`codex`）：道具 id → 累计带出件数，同一次带出多件各计一次，点亮 = 计数 > 0（本来就幂等）；不代表物品被储存，将来的制作系统读它。
 - **包只计图鉴**：什么能存进局外由 `MetaState.keeps(def)` 一处说了算（现在：不是包）。「包」只是当前的承载媒介，将来可能删掉，那时删这一个分支。
 - **包架**（225，v3.84；作者 18:27 定甲 包架列表）：包是装备不是货，不占仓库格，住在 `MetaState.rack`（`BagRack`，`core/inventory/bag_rack.gd`，一个只收包的 `ItemStash`，`BagRack.holds(def)` = 是包、又不是 `keeps` 的信仰护符）。撤离时包跟着带回的棋盘回来（这时棋盘 `requires_bag`，包先铺）；`store_all` 先搬货、再把空包收进包架，垫着搬不走的货的包留在棋盘上；`discard_board` 货丢包不丢；`take_board_to_stash` 包不倒地、直接进包架（`pending` 记 `"rack": true`），`return_stash` 先把包铺回原位。开局屏：第一次选某个角色把它的 `starting_bags` 发进包架（`grant_starting_bags`，记在 `bag_grants`，每个存档位每个角色一次），重摆棋盘时从包架把初始包摆上来，双击 / 拖回即收；棋盘没包、包架也空、又没挑预设时军需官发一只粗麻袋（`SetupScreen.ensure_bag`，算「发的」：进不了包架，免得白拿去卖）。基地仓库页最左一列、出售页（双击卖一只，`GameFlow.sell_bag`）都挂包架；一键出售不碰包。存档 `bags`：包 id → 这几只的 uid（读回来逐字节一样；写只数的旧样子也认，删了的包 id 记警告），`bag_grants`。视图 `BagRackView`（`ui/inventory/bag_rack_view.gd`）：227 素框 `board/frame_plain(_dark)` + 格缝，一种一格，×n 角标 `notice/count_badge`（Cinzel），挂牌 `HeaderTag.hanging`（`notice/header_stone_hang`）；`DragLayer` 认它为落点（只收空包）。
@@ -3550,7 +3549,7 @@ func player_spec() -> CombatantSpec …
 **科技树**（118，作者定，五项按推荐）：`TechDef` 加 `requires`（前置 id，**每项至少 1 级**才能点）、`column`（手写的列）、`description`（面板「效果」区的一句总述）。深度不写，按前置算（`TechService.depth_of`：根 0，其余 = 最深前置 + 1）；`TechService.prereqs_met / missing_prereqs / layout / cycle_members`，`ready` 多一个前置条件。导入器 `validate_techs`：前置不存在、成环报错；同列同深度撞位**只警告**（按 `order` 左右并排）。
 两种新构件：`tech_run_buff`（`buffs[k−1]` = 第 k 级给的 `RunBuffDef`，`scope = META`，替换上一级那条，记进 `MetaState.tech_buffs`；导入器查条数 = 级数、buff 存在且是局外的）与 `tech_safe_size`（每级 `cols / rows` 进 `MetaState.safe_bonus`，`GameFlow.safe_size()` 加上）。两个新字段有默认值，不升存档版本；`heal` 把 `tech_buffs` 修成只留当前级那条、清掉不属于任何科技的，`safe_bonus` 按级数重算。`TechEffect.describe_level(k, buff_defs)` 给面板「现在 / 下一级」两行（buff 型的就是那条 buff 的 `summary()`）。
 
-**科技派生值不入档**（120，作者定）：`tech_levels` 是唯一的进度事实，仓库行数、`safe_bonus`、`tech_buffs` 一律由它 + 科技定义推算（`TechEffect.derive(meta, level)` 幂等，`TechService.derive(meta, defs)`；升级、读档、新建空档、开发区改级数走同一条路），存档里去掉 `tech_buffs` / `safe_bonus`（不升版本）。读档顺序是**先读进度表、再算容量、最后装仓库**：`MetaState.from_dict(d, items, rules, tech_defs)` 在还空着的仓库上 derive，再 `GridInventory.from_dict(w, items, 算出的尺寸)` 放回物品 —— 原位越界 / 被占的先 `try_add` 找空位，还放不下就临时加行并告警，一件不丢；仓库缩行（`shrink_rows`）只删底下的空行。没传 `tech_defs` 时按存档里的尺寸建仓库（兜底）。
+**科技派生值不入档**（120，作者定）：`tech_levels` 是唯一的进度事实，仓库行数、`safe_bonus`、`tech_buffs` 一律由它 + 科技定义推算（`TechEffect.derive(meta, level)` 幂等，`TechService.derive(meta, defs)`；升级、读档、新建空档、开发区改级数走同一条路），存档里去掉 `tech_buffs` / `safe_bonus`（不升版本）。读档顺序是**先读进度表、再算容量、最后装仓库**：`MetaState.from_dict(d, items, rules, tech_defs)` 在还空着的仓库上 derive，再 `GridInventory.from_dict(w, items, 算出的尺寸)` 放回物品 —— 原位越界 / 被占的先 `try_add` 找空位，还放不下就临时加行并告警，一件不丢。没传 `tech_defs` 时按存档里的尺寸建仓库（兜底）。
 基地「科技」页（`ui/game/tech_panel.gd`）改成**左树右板**：左 `TechTreeView`（`ui/game/tech_tree_view.gd`，深度 0 在最下面往上长，按前置画线，两端都点亮是橙线；节点三种样子：已点亮橙底 / 可点亮亮边呼吸 / 锁住暗字，选中的加一圈前景色边；多级一个节点写 Lv n / m，单级写已点亮 / 未点亮）；右板从上到下 名称 → 效果（总述 + 现在 / 下一级）→ 费用（钱、材料已交 / 需要、锁住的写「需要先点亮：…」、满级写已满级）→【点亮】（单级）/【升级】（多级）。下面上交区 + 默认收起的仓库格子，**上交只给选中的节点**（110 的「谁要就给谁」去掉）。首批三列十个节点（后勤 / 体魄 / 探索，数值占位），科技给的十八条局外 buff 在基地右栏的开发开关里归「科技给的」分组。
 
 **229（v3.82）现状**：科技页收起基地右半边的仓库、上交区删掉，上交只走说明板材料行的【交 k】。左树区 `TreeArea`（`tech_panel.gd` 内类）：羊皮底纸 `tech/tech_tree_hide`（936 × 700，放不下等比缩到九成），树放在离图边 `content_inset` 的双线框里居中；每列顶上一枚段头签 `HeaderTag`（`tech.col_<列>`），连线墨 / 朱红圆头。右边 320 宽羊皮说明板：铜名牌（名称 + 等级）→ 效果 → 账目行（名称｜数｜拥有 n｜【交 k】）→【点亮 / 升级】。树要装进羊皮内框：每列同深度最多并排两个，`test_tech_tree` 守着树宽 ≤ 792。
@@ -3633,7 +3632,7 @@ func player_spec() -> CombatantSpec …
   - `dev_drawer`（调试台箭头）、`status`（提示行）、`bag_button`、`reopen_button`、`extract_button`、`skills`、`menu_button`、`routes`、`log`。
   - 它们都是 `HudPartWidget`：控件归屏幕，屏幕的 `hud_part(id)` 给出，组件只是挂着。
   - 组件被换掉前（`release`）把控件还给屏幕藏着的架子（`hud_shelve`），所以日志藏起来时照样在记。
-  - 列表空了、提示行没字，组件就藏起来；摆读数时组件上盖一层把手接鼠标，按钮不再吃点击。
+  - 列表空了，组件就藏起来；摆读数时组件上盖一层把手接鼠标，按钮不再吃点击。
 - `belt`：腰带组件（160 起是一排圆槽 `BeltSlots`，默认锚右下角 `HudLayout.BELT_OFFSET`，布局版本 3）。
   - 没有拖拽（随身技能不是道具）；双击一个圆用一个，走 `GameFlow.use_belt`。
   - 这一局没有腰带模块就空着。
@@ -3669,7 +3668,6 @@ func player_spec() -> CombatantSpec …
   - 地图屏的 `_status` / `_log` 照样造、照样记（不进树），开发提示行写原因。
 - 提示行 `notice`（`ui/hud/widgets/notice_widget.gd`）：锚 `top`、偏移 `HudLayout.NOTICE_OFFSET`，在顶端栏下面、和倒计时同一条中线；布局版本 7。
   - 没底板（`PanelBare`），字按地图纸的深浅取色、外加一圈纸色描边；来一句 3 秒 + 0.4 秒淡出，要紧的 5 秒、红字；最多两行，第三句挤掉最老的；同一句只重置时间。
-  - `HudWidget.takes_space()`：提示行为 false —— `top_inset()` 不算它，整组都不占边的按整块宽对齐（不让右边那一条）。
   - 入口：`HudHost.notice(text, urgent)`；地图屏 `say(text)` / `warn(text)`。拒绝原因（`MapTravel.refused(intent, why, code)` 按 `code` 选话）、撤离被拒、倒计时只剩几步、撤离点关闭、侵蚀、动静、保险箱、到了撤离点、负重变级走它，句子都在 `UiText` 的 `notice.*` 键里，不写点号与内部原因。
 
 ### 8.8 叠层的石板框、换屏、光标（157）
@@ -3722,8 +3720,8 @@ func player_spec() -> CombatantSpec …
 `CoachOverlay`（`ui/widgets/`）：整屏一层阴影（吞掉所有点击），目标周围挖洞（包围盒外扩 `HOLE_PAD` 8，洞边一圈高光），一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右按方向转；缺图画折线）从洞外指过来，箭尾一块羊皮纸（`PanelTooltip`）写说明。点任意处 / 按任意键下一步，最后一步收掉、发 `finished`。
 
 - 步骤是数据：`data/authoring/coach/<id>.json` = `{"id", "steps": [{"target": 读数部件 id, "text"}]}`，`CoachOverlay.problems` 校验目标是登记过的部件、写了字。目标位置每一步现问（地图屏给 `HudHost.rect_of`），所以玩家挪了读数，教程跟着走。
-- 章节写 `coach`（`ChapterDef`），序章一 = `prologue_map`（体力、货币、背包、放大镜四步）。地图第一次露出来（没有事件 / 规则卡 / 暂停压着、屏在地图上）时放一次，放过记进 `MetaState.coach_seen`（跟着存档位）；调试台有「重放教程」。
-- 战斗屏（166 补充二）：章节写 `coach_battle`（序章一 = `prologue_battle`，时间轴 / 播放 / 倍速 / 跳过 / buff 行 / 继续六步），目标是 `BattleView.COACH_TARGETS`，位置走 `BattleView.control_rect`（「继续」由战斗屏 `add_coach_target` 登记）。要放时战斗屏一开就 `BattleView.hold()`，叠层淡入完了放，收掉 `release()` 按原状态接着放；同记 `coach_seen`，地图屏调试台「重放战斗教程」把那条删掉。`CoachOverlay.problems(steps, known_ids)` 按屏分开认目标。
+- 章节写 `coaches.map`（`ChapterDef`），序章一 = `prologue_map`（体力、货币、背包、放大镜四步）。地图第一次露出来（没有事件 / 规则卡 / 暂停压着、屏在地图上）时放一次，放过记进 `MetaState.coach_seen`（跟着存档位）；调试台有「重放教程」。
+- 战斗屏（166 补充二）：章节写 `coaches.battle`（序章一 = `prologue_battle`，时间轴 / 播放 / 倍速 / 跳过 / buff 行 / 继续六步），目标是 `BattleView.COACH_TARGETS`，位置走 `BattleView.control_rect`（「继续」由战斗屏 `add_coach_target` 登记）。要放时战斗屏一开就 `BattleView.hold()`，叠层淡入完了放，收掉 `release()` 按原状态接着放；同记 `coach_seen`，地图屏调试台「重放战斗教程」把那条删掉。`CoachOverlay.problems(steps, known_ids)` 按屏分开认目标。
 
 ### 8.10 字体（168）
 
@@ -3952,7 +3950,7 @@ JSON 有资产没有 = 没跑导入，资产有 JSON 没有 = 孤儿资产（游
 `sets` **暂时不在 `KINDS` 里**（100，作者定）：独立的套装文件一份都还没有，
 所以批量导入与这道检查都不跑它。它在 `ContentPaths.EDITOR_ONLY_KINDS` 里 —— 路径还是只在 `ContentPaths` 一处算
 （`dirs_of / authoring_file / asset_file` 两张表都查），套装编辑器照旧存得下；
-真有了第一份独立内容，把那一行搬回 `KINDS`、`ORDER` 里排在 `items` 之前，它就自动进管线与检查。
+真有了第一份独立内容，把它搬进 `ORDER`（`KINDS` 按 `ORDER` 生成）、排在 `items` 之前，它就自动进管线与检查。
 `buffs` 在 146 这么搬回去了，同时新增 `rule_parts`：顺序是 …信仰 → buff → 构件 → 道具…。编辑器单件导入用 `ContentLibrary.context()`
 （盘上的 buff 与构件已登记），引用才解析得到。
 
@@ -4245,7 +4243,7 @@ res://
     map_editor/     map_editor
   tools/            import_content  normalize_content  check_scripts  check_content  map_stats  build_dummies  bench_hunters
                     demo_fill        # 截图演示（101 第 6 刀；只在 DEMO_SCREEN 非空时被导演 load）
-                    gen_sample_chapter  bench_battle  capture_scene  cli_tool
+                    bench_battle  capture_scene  cli_tool
   tests/            run_tests  test_case  support（公共装载）                      # 102：按层分目录（2026-10-06：108 个套件）
     inventory/      test_*（12）   背包、格子、拖拽
     battle/         test_*（8）    编译、效果、伤害、数值
@@ -4575,6 +4573,7 @@ res://
 | v5.51 | 2026-11-10 | **平衡检测方案 2026-11-10 批次 C**（报告 295；PR #531）：`ViewingSession`（回放的观看记录：模拟时长与实际观看时长分开，暂停 / 教程停住 / 失焦分开扣；倍速、拖动、跳过时刻、揭晓只记第一次、离开、提示停留；没揭晓时实际观看为 null）；`battle_screen.gd` 在诊断开着时记事件、离开时补战后状态写 `user://diagnostics/viewing/*.viewing.json`（`BattleDiagnostics.write_viewing` / `viewing_dir`，`list` / `prune` 按扩展名）；`BattleView` 加 `skipped` / `seeked` 信号与 `playback_time()`；`NodeEvents.battle_id_of` / `state_brief`，开战载荷带 `battle_id` 与战前状态；`BattleDiagPack.specs()`；`BattleFactor`（配对多种子、编译后拿掉一件带连带变化、两份棋盘的连带比较）；`BattleExperience` + `tools/battle_experience_report.gd`（原因可见性、准备有效性、过程节奏、后果差异、未知项五节）；`FeelScenarios` + `tools/make_feel_scenarios.gd`（9 个场景、代号命名的包、预期事实、回放存档、问题清单），一份生成结果在 `docs/reports/balance/feel/2026-11-10/` |
 | v5.52 | 2026-11-10 | **精简第一批：没人引用的东西**（作者 11-10 20:24「这份代码库现在归你管，按你的意愿优化它吧，我们追求小而美」，审阅线程；PR #532）：不改行为，43 个文件少 640 行、少 15 个文件。删 31 个没人调用的函数（`ContentExporter.export_bag_pool / export_carry_rule / export_damage_type / export_encumbrance_rules / export_help_page / export_recipe`、`GridInventory.has_pinned / resize_cols / _col_empty`、`HudHost.set_extra_right`、`UiPalette.clear_font_cache` 等，其中两个是测试辅助）；`HudHost.extra_right` 没人赋值了，折成 0；删 21 条没人读的 `UiText` 文案；删控件 `StatBlocks`（255 起选角色屏用 `StatSealPlate`）连同它的测试和三条文案；删 6 张没有页签在用的基地页签图标（achievements / market / sell / smithy / tech / codex）与书架图标的 codex 退路；删根目录孤儿 `_mk.gd.uid` 与三个没人读的常量。`tip.cycle_empty_ammo / tip.cycle_one_ammo` 是运行时拼出来的键、`FUEL_STEPS / LOCK_NONE` 是反射读的选项常量，都留着。全量测试 39605 项断言通过，静态警告仍为 0 |
 | v5.53 | 2026-11-10 | **扫表默认木桩表换新**（报告 297；PR #534；作者 21:38 选「换新」）：`data/authoring/calibration/archetypes.json` 换成按现在道具库重造的 108 份（9 路 × 4 段 × 3 份，与 `docs/reports/balance/inputs/2026-11-10-archetypes.json` 逐字一样）；v4.54 那份冻结为 `inputs/2026-10-26-archetypes-v454.json`。11-10 以前的扫表与新表不能逐格比；以后照旧只追加 |
+| v5.54 | 2026-11-10 | **精简第二批：退役功能的残留、只有测试在调的接口、一次性工具**（报告 296 §四，审阅线程；PR #535）：192 个文件净少 1,680 行（`core` −950、`tools` −402、`ui` −223）、少 9 个文件。**界面**：HUD 提示行的残留（`HudWidget.takes_space`、`HudHost._floats / _measure`）、`HoverTip` 的宽限期字段、战斗回放几个只有测试读的开关；手搭的容器换成 `UiTheme.vbox / hbox / margins / art_box`（`add_theme_` 棘轮 130 → 109）；主题变体 `LABEL_SCREEN_TITLE / PANEL_STASH_FRAME` 与图 `stash_frame` 没人用，删。**核心**：按稀有度 / 标签批量卖的那组接口（268 起卖东西走 `sell_selected`）、193 时代 `FaithTooltip` 的行接口、`GridInventory.shrink_rows / resize_rows / can_place`、规则卡 `describe()` 一条链、`CharacterDef.skill_lines`、`RunContext.snapshot`、`Screen.REST`，以及一批只有测试在调的小接口；测试改到现役接口上，没有现役对应的删掉。**内容管线**：导入器里给早已没人写的旧键留的迁移（`LEGACY_*`、乘区旧键、`max_stacks`、`coach / coach_battle`、法杖受益格、猎手 `loss_outcomes`）—— 旧键现在按未知字段报错，护甲改名那几条仍指向新名；`import_of` 改成一张「种类 → 导入函数」表；`ContentPaths.KINDS` 按 `ORDER` 生成，少 40 个常量；`ContentSchema.INT_ENUMS` 空表；`ContentExporter` 剩下 20 个只转一手的 `export_xxx`（调用处直接 `dump`）。**地图**：六处手写的广度优先收成 `MapGraph.spread`。**工具**：三个用完的一次性脚本（`extract_buffs / gen_sample_chapter / perf_fonts`）；六个 shell 脚本各自找 Godot 的那段收成 `tools/_godot.sh`；`CliTool.store_text / write_text`；`ContentPaths.ids_in` 七处。**两处不是纯删**：神明总表 `docs/gods.xlsx` 有三格还是旧写法（两处 `flat`、一处 `food_shield`，原来靠上面那些迁移才读得进），改成信仰 JSON 一直在用的写法，表里别的一个字节没动；事件后果 `grant_belt` 原来登记在侵蚀效果表里（事件 JSON 写不出来），搬到 `EVENT_OUTCOMES`，还没有内容用它。其余不改行为；「图还没到」的退路一族没动，等作者在 296 §五.2 的卡片上点。全量测试 39594 项断言通过，静态警告仍为 0 |
 | v4.70 | 2026-10-29 | **260 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）**：碑额写 `RecordsStele.compact(v)` —— 1000 以下整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数整数算、向下截不进位（999999 → 999.99k），末尾 0 去掉（3100000000 → 3.1b）；0 写「—」，悬停照旧写准数。横线、`roman / numeral_parts / overline_stack` 删掉；基线 = 碑额顶 + 75 + 字号 × 0.375，金币固定 52、中心对准字身中线 |
 | v4.69 | 2026-10-28 | **260 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」，取代补充三）**：`RecordsStele.numeral_parts` 返回 [最高一段的罗马数字, 横线道数]，每 ÷ 1000 加一道、向下取整、后面的段不写（742 → DCCXLII，5414 → V̅，3888888 → 两道线的 III，38 亿 → 三道）；碑额画 k 道横线（线宽 = 字宽，往上每道再空 max(2, 字号 × 0.05)，`overline_stack`），字和横线整块在碑额里竖向居中、金币中心对准字身中线；顺带修掉 v4.68 一百万起千位段一长串 M。**随身技能图标定稿**（作者 18:35「B+C」）：`assets/belt_skills/smoke_bomb.png`（陶罐）、`aid_pack.png`（亚麻小包），60 × 60；`BeltSkillDef.icon()` 把图留在 def 上（腰带在 `_draw` 里每帧画，184） |
 | v4.68 | 2026-10-28 | **260 补充三（作者 10-28 10:15 选 B「只写到千」）**：碑额大数 —— `RecordsStele.numeral_parts` 一万起只写千位段（`[roman(v / 1000), ""]`，向下取整，38888 → X̅X̅X̅V̅I̅I̅I̅），4000～9999 照旧带零头，悬停照旧写准数；金币固定 `WORTH_COIN` 52（不跟字缩，竖向中心在碑额顶 + 75），`worth_width` 金币那项跟着换，字区实宽 330 − 52 − 6；千位段上横线粗 max(2, 字号 × 0.06)，在字头（基线上方字号 × 0.75）再往上留 max(3, 字号 × 0.1) 的缝，不再贴着字头像删除线 |

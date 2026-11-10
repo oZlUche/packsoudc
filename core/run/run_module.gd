@@ -3,7 +3,7 @@
 ## **加一种玩法 = 一个子类 + 注册表一行 + 内容清单里一条，[RunState] 一行都不改。**
 ## 模块自带状态、自带存档、自己接线：`install` 里造自己的状态、订阅 [RunState] / [MapTravel] / [NodeEvents] 已有的信号
 ## （和侵蚀、猎手、信力一直以来的接法一样 —— 1.2 命令进信号出，逻辑层之间直接引用）。
-## 基类只保证四件事：**装、存、读、说一句**。生命周期的钩子刻意不写在基类里：写了就得在 [RunState] 里逐个调，
+## 基类只保证三件事：**装、存、读**。生命周期的钩子刻意不写在基类里：写了就得在 [RunState] 里逐个调，
 ## 那又回到了「每加一个玩法都要改 RunState」。
 ##
 ## 哪些模块装，三层叠加（[method RunState.install_modules]）：
@@ -21,7 +21,7 @@ extends Resource
 ## 装进的那一局（[method install] 里记下；236：[method dispose] 时放掉，不然模块与局互相抓着、一局放不掉）
 var _run: RunState = null
 
-## 存档里的键、`mechanic_tags` 的键、`run.module(id)` 的 id。返回空 = 不进 `modules` 存档（难度机制那种自己另有存档键的）
+## 存档里的键、`run.module(id)` 的 id。返回空 = 不进 `modules` 存档（难度机制那种自己另有存档键的）
 @abstract func id() -> StringName
 
 
@@ -39,11 +39,6 @@ func to_dict() -> Dictionary:
 ## 读档：`install` **之前**拿到自己上次存的那份。要内容库的还原留到 `install` 里做
 func restore(_d: Dictionary) -> void:
 	pass
-
-
-## 给开局屏的规则卡、编辑器看的一句话
-func describe() -> String:
-	return ""
 
 
 ## 236：这一局不要了（开了新局 / 读档盖掉，[method RunState.dispose]）—— 放掉对局的引用、断开自己接在局外的东西。

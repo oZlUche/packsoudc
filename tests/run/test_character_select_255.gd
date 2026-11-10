@@ -170,9 +170,9 @@ static func run_importer(t: TestCase) -> void:
 	t.eq(def.board_mask.size(), 2, "缺格读进来")
 	t.eq(def.fixed_items.size(), 1, "随身之物读进来")
 	t.eq(def.fixed_items[0].origin if not def.fixed_items.is_empty() else Vector2i.ZERO, Vector2i(2, 0), "原位")
-	var text := ContentExporter.to_json(ContentExporter.export_character(def))
+	var text := ContentExporter.to_json(ContentExporter.dump(def))
 	var again := ContentImporter.import_character(JSON.parse_string(text), ctx, ImportReport.new())
-	t.eq(ContentExporter.to_json(ContentExporter.export_character(again)), text, "导出 → 导入 → 再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(again)), text, "导出 → 导入 → 再导出逐字节相同")
 	var bads := {
 		"棋盘十格宽": {"board_size": [10, 6]},
 		"缺格出界": {"board_mask": [[7, 0]]},

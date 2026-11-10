@@ -298,7 +298,7 @@ static func run_search(t: TestCase) -> void:
 	var s: SearchSession = opened[0][1]
 	t.check(w.events.current_search == s, "当前会话就是它")
 	t.check(not node.is_visited(), "还在搜：点没用过")
-	t.eq(s.next_encounter_chance(), w.rules.search.encounter_chance(0), "遭遇概率按曲线第 0 档")
+	t.eq(s.encounter_chance_at(s.searches_done), w.rules.search.encounter_chance(0), "遭遇概率按曲线第 0 档")
 	while s.can_search():
 		s.search()
 	if s.active:

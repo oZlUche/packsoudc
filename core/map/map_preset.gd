@@ -15,15 +15,7 @@ static func path_for(preset_name: String) -> String:
 
 ## 目录里全部预设的名字（不带扩展名），升序。
 static func list() -> Array[String]:
-	var out: Array[String] = []
-	var dir := DirAccess.open(DIR)
-	if dir == null:
-		return out
-	for f in dir.get_files():
-		if f.ends_with(".json"):
-			out.append(f.get_basename())
-	out.sort()
-	return out
+	return ContentPaths.ids_in(DIR)
 
 
 static func save(graph: MapGraph, path: String) -> Error:

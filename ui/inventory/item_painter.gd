@@ -138,12 +138,18 @@ static func mark_of(faith_id: StringName, cell_px: float = ART_CELL) -> Texture2
 	return tex if tex != null else _cached(MARK_FALLBACK_DIR + name)
 
 
+## 当前朝向脚印角上的那一格：先比行（[param bottom] 真取 y 最大的，假取最小的），同一行再比列（[param right] 真取 x 最大的，假取最小的）
+static func corner_cell(shape: ItemShape, rot: int, right: bool, bottom: bool) -> Vector2i:
+	var best := Vector2i(-1 if right else 1 << 20, -1 if bottom else 1 << 20)
+	for c in shape.cells_rotated(rot):
+		if (c.y != best.y and (c.y > best.y) == bottom) or (c.y == best.y and (c.x > best.x) == right):
+			best = c
+	return best
+
+
 ## 205：印记落在哪 —— 当前朝向脚印里最靠右下的那一格（y 最大、再 x 最大）的右下角，内缩一点；不随朝向转
 static func mark_rect(def: ItemDef, rot: int, anchor: Vector2, cell: float) -> Rect2:
-	var best := Vector2i(-1, -1)
-	for c in def.shape.cells_rotated(rot):
-		if c.y > best.y or (c.y == best.y and c.x > best.x):
-			best = c
+	var best := corner_cell(def.shape, rot, true, true)
 	var side := cell * MARK_SIZE
 	var corner := anchor + Vector2(best + Vector2i.ONE) * cell - Vector2.ONE * cell * MARK_INSET
 	return Rect2(corner - Vector2(side, side), Vector2(side, side))
@@ -200,16 +206,15 @@ static func art_transform(def: ItemDef, rot: int, anchor: Vector2, cell: float) 
 
 
 ## 208：剩余次数角标 —— 耐久没满、又没有这一档的变体图时，在当前朝向脚印最靠左下的那一格（y 最大、再 x 最小）
-## 画 max 个小点，亮的 = 剩的（稀有度色），暗的 = 用掉的。和 205 的信仰印记（右下）错开。画了返回 true
-static func draw_charges(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+## 画 max 个小点，亮的 = 剩的（稀有度色），暗的 = 用掉的。和 205 的信仰印记（右下）错开
+static func draw_charges(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> void:
 	var dots := charge_dots(inst, rot, anchor, cell)
 	if dots.is_empty():
-		return false
+		return
 	var lit := rarity_color(inst.def, inst.rarity()) * modulate
 	var dim := CHARGE_DIM * modulate
 	for d in dots:
 		canvas.draw_circle(d["at"], cell * CHARGE_DOT * 0.5, lit if bool(d["lit"]) else dim)
-	return true
 
 
 ## 208：角标的那几个点 [{at: 圆心, lit: 亮不亮}]；不该画（没耐久、满的、有这一档的变体图）返回空
@@ -221,10 +226,7 @@ static func charge_dots(inst: ItemInstance, rot: int, anchor: Vector2, cell: flo
 	var left := inst.charges()
 	if left >= full or variant_file(inst.def, variant_of(inst)) != "":
 		return out
-	var best := Vector2i(1 << 20, -1)
-	for c in inst.def.shape.cells_rotated(rot):
-		if c.y > best.y or (c.y == best.y and c.x < best.x):
-			best = c
+	var best := corner_cell(inst.def.shape, rot, false, true)
 	var r := cell * CHARGE_DOT * 0.5
 	var start := anchor + Vector2(best.x, best.y + 1) * cell + Vector2(cell * CHARGE_INSET + r, -cell * CHARGE_INSET - r)
 	# 246 乙：一个点 = 一档（满 27、三次一档 → 九个点），档里还剩次数就亮
@@ -241,27 +243,23 @@ static func charge_dots(inst: ItemInstance, rot: int, anchor: Vector2, cell: flo
 
 
 ## 230：玩家锁住的道具 —— 当前朝向脚印最靠左上的那一格（y 最小、再 x 最小）左上角往里 8% 一枚小锁（`tip/lock_badge`），
-## 边长 16 × 格 / 60；格子比 60 大时用 2 倍图缩。没锁不画；画了返回 true
-static func draw_lock(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+## 边长 16 × 格 / 60；格子比 60 大时用 2 倍图缩。没锁不画
+static func draw_lock(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> void:
 	var r := lock_rect(inst, rot, anchor, cell)
 	if r.size == Vector2.ZERO:
-		return false
+		return
 	var tex := UiTheme.art_cached("tip/lock_badge_2x" if cell > InventoryView.CELL else "tip/lock_badge")
 	if tex == null:
 		canvas.draw_rect(r, Color("d4a84f") * modulate)
-		return true
+		return
 	canvas.draw_texture_rect(tex, r, false, modulate)
-	return true
 
 
 ## 小锁画在哪（没锁 / 没形状给空矩形）
 static func lock_rect(inst: ItemInstance, rot: int, anchor: Vector2, cell: float) -> Rect2:
 	if inst == null or inst.def == null or inst.def.shape == null or not inst.is_locked_by_player():
 		return Rect2()
-	var best := Vector2i(1 << 20, 1 << 20)
-	for c in inst.def.shape.cells_rotated(rot):
-		if c.y < best.y or (c.y == best.y and c.x < best.x):
-			best = c
+	var best := corner_cell(inst.def.shape, rot, false, false)
 	var side := LOCK_SIDE * cell / InventoryView.CELL
 	return Rect2(anchor + Vector2(best) * cell + Vector2.ONE * cell * LOCK_INSET, Vector2(side, side))
 
@@ -271,49 +269,41 @@ const LOCK_INSET := 0.08
 
 
 ## 255：随身之物 —— 当前朝向脚印最靠右上的那一格（y 最小、再 x 最大）右上角往里 8% 一枚小钉（`tip/pin_badge`，美术没出前代码画一颗铆钉），
-## 边长同小锁。不是随身之物不画；画了返回 true
-static func draw_pin(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+## 边长同小锁。不是随身之物不画
+static func draw_pin(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> void:
 	if inst == null or inst.def == null or inst.def.shape == null or not inst.is_pinned():
-		return false
+		return
 	draw_pin_badge(canvas, top_right_badge(inst.def, rot, anchor, cell), modulate)
-	return true
 
 
 ## 右上角那枚角标的框：当前朝向脚印最靠右上的那一格（y 最小、再 x 最大）右上角往里 8%，边长 16 × 格 / 60（小钉、收藏星同一处）
 static func top_right_badge(def: ItemDef, rot: int, anchor: Vector2, cell: float) -> Rect2:
-	var best := Vector2i(-1, 1 << 20)
-	for c in def.shape.cells_rotated(rot):
-		if c.y < best.y or (c.y == best.y and c.x > best.x):
-			best = c
+	var best := corner_cell(def.shape, rot, true, false)
 	var side := LOCK_SIDE * cell / InventoryView.CELL
 	return Rect2(anchor + Vector2(best) * cell + Vector2(cell * (1.0 - LOCK_INSET) - side, cell * LOCK_INSET), Vector2(side, side))
 
 
 ## 268：快速出售里勾了的 —— 当前朝向脚印最靠左下的那一格（y 最大、再 x 最小）左下角往里 8% 一枚金勾（`tip/check_badge`，大格 `_2x`，
-## 美术没出前代码画：深圆片 + 金勾），边长同小锁。画了返回 true
-static func draw_check(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+## 美术没出前代码画：深圆片 + 金勾），边长同小锁
+static func draw_check(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> void:
 	var r := check_rect(inst, rot, anchor, cell)
 	if r.size == Vector2.ZERO:
-		return false
+		return
 	var tex := UiTheme.art_cached("tip/check_badge_2x" if r.size.x > LOCK_SIDE else "tip/check_badge")
 	if tex != null:
 		canvas.draw_texture_rect(tex, r, false, modulate)
-		return true
+		return
 	var c := r.get_center()
 	var rad := r.size.x * 0.5
 	canvas.draw_circle(c, rad, Color("2a1d12") * modulate)
 	canvas.draw_polyline(PackedVector2Array([c + Vector2(-0.5, 0.0) * rad, c + Vector2(-0.12, 0.4) * rad, c + Vector2(0.55, -0.42) * rad]), Color("d4a84f") * modulate, maxf(1.5, rad * 0.32), true)
-	return true
 
 
 ## 勾画在哪（没形状给空矩形）
 static func check_rect(inst: ItemInstance, rot: int, anchor: Vector2, cell: float) -> Rect2:
 	if inst == null or inst.def == null or inst.def.shape == null:
 		return Rect2()
-	var best := Vector2i(1 << 20, -1)
-	for c in inst.def.shape.cells_rotated(rot):
-		if c.y > best.y or (c.y == best.y and c.x < best.x):
-			best = c
+	var best := corner_cell(inst.def.shape, rot, false, true)
 	var side := CHECK_SIDE * cell / InventoryView.CELL
 	return Rect2(anchor + Vector2(best.x, best.y + 1) * cell + Vector2(cell * LOCK_INSET, -cell * LOCK_INSET - side), Vector2(side, side))
 
@@ -322,19 +312,18 @@ const CHECK_SIDE := 20.0
 
 
 ## 265：收藏了的种类（[ItemFavorites]）—— 右上角一枚星（`tip/fav_badge`，大格 `_2x`，美术没出前画一颗金星）；
-## 这一件也是随身之物（小钉在同一角）就往左让一个角标宽 + 2（UI替换美术 16:57）。没收藏不画；画了返回 true
-static func draw_favorite(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+## 这一件也是随身之物（小钉在同一角）就往左让一个角标宽 + 2（UI替换美术 16:57）。没收藏不画
+static func draw_favorite(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> void:
 	if inst == null:
-		return false
-	return draw_favorite_def(canvas, inst.def, rot, anchor, cell, modulate, inst.is_pinned())
+		return
+	draw_favorite_def(canvas, inst.def, rot, anchor, cell, modulate, inst.is_pinned())
 
 
-static func draw_favorite_def(canvas: CanvasItem, def: ItemDef, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE, beside_pin: bool = false) -> bool:
+static func draw_favorite_def(canvas: CanvasItem, def: ItemDef, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE, beside_pin: bool = false) -> void:
 	var r := favorite_rect(def, rot, anchor, cell, beside_pin)
 	if r.size == Vector2.ZERO:
-		return false
+		return
 	draw_favorite_badge(canvas, r, modulate)
-	return true
 
 
 ## 收藏星画在哪（没收藏 / 没形状给空矩形）
@@ -383,16 +372,13 @@ static func draw_pin_badge(canvas: CanvasItem, r: Rect2, modulate: Color = Color
 
 
 ## 256：军功牌 —— 脚印最靠右下的那一格右下角挂一枚包架的数字牌（`notice/count_badge`）「军功 N」，放不下就只写数。
-## 不是靠军功长的不画；画了返回 true
+## 不是靠军功长的不画
 ## 279 补充二：品质 —— 当前朝向脚印最靠右下的那一格右下角，一档一枚金菱（`tip/quality_badge`，作者 11-05 选 A），
-## 和小锁一样大，从右往左排；格子比 60 大时用 2 倍图缩。画了返回 true
-static func draw_quality(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+## 和小锁一样大，从右往左排；格子比 60 大时用 2 倍图缩
+static func draw_quality(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> void:
 	if inst == null or inst.def == null or inst.def.shape == null or inst.quality() <= 0:
-		return false
-	var best := Vector2i(-1, -1)
-	for c in inst.def.shape.cells_rotated(rot):
-		if c.y > best.y or (c.y == best.y and c.x > best.x):
-			best = c
+		return
+	var best := corner_cell(inst.def.shape, rot, true, true)
 	var side := LOCK_SIDE * cell / InventoryView.CELL
 	var corner := anchor + Vector2(best + Vector2i.ONE) * cell - Vector2.ONE * cell * LOCK_INSET
 	var tex := UiTheme.art_cached("tip/quality_badge_2x" if side > LOCK_SIDE else "tip/quality_badge")
@@ -402,23 +388,18 @@ static func draw_quality(canvas: CanvasItem, inst: ItemInstance, rot: int, ancho
 			canvas.draw_rect(r, Color("d4a84f") * modulate)
 		else:
 			canvas.draw_texture_rect(tex, r, false, modulate)
-	return true
 
 
-static func draw_honor(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> bool:
+static func draw_honor(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> void:
 	if inst == null or inst.def == null or inst.def.shape == null or inst.def.growth == null or not inst.def.growth.runs_on_honor():
-		return false
-	var best := Vector2i(-1, -1)
-	for c in inst.def.shape.cells_rotated(rot):
-		if c.y > best.y or (c.y == best.y and c.x > best.x):
-			best = c
+		return
+	var best := corner_cell(inst.def.shape, rot, true, true)
 	var k := cell / InventoryView.CELL
 	var slot := Rect2(anchor + Vector2(best) * cell, Vector2.ONE * cell)
 	var pts := GrowthProfile.honor_of(inst)
 	var text := UiText.t("badge.honor") % pts
 	if not draw_badge(canvas, text, slot, int(HONOR_TEXT * k), modulate, true):
 		draw_badge(canvas, str(pts), slot, int(HONOR_TEXT * k), modulate)
-	return true
 
 
 const HONOR_TEXT := 12
@@ -435,16 +416,9 @@ static func draw_badge(canvas: CanvasItem, text: String, slot: Rect2, size: int 
 	if must_fit and w + inset * 2.0 > slot.size.x:
 		return false
 	var r := Rect2(slot.end - Vector2(w, h) - Vector2.ONE * inset, Vector2(w, h))
-	var tex := UiTheme.art_cached(BagRackView.BADGE_ART)
-	if tex != null:
-		var m: Array = UiTheme.art_meta(BagRackView.BADGE_ART).get("margin", [7, 6, 7, 6])
-		var sbt := StyleBoxTexture.new()
-		sbt.texture = tex
+	var sbt := UiTheme.art_box(BagRackView.BADGE_ART)
+	if sbt != null:
 		sbt.modulate_color = modulate
-		sbt.texture_margin_left = float(m[0])
-		sbt.texture_margin_top = float(m[1])
-		sbt.texture_margin_right = float(m[2])
-		sbt.texture_margin_bottom = float(m[3])
 		canvas.draw_style_box(sbt, r)
 	else:
 		canvas.draw_rect(r, Color("e4ded2") * modulate)

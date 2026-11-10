@@ -38,7 +38,7 @@ static func run_unsellable(t: TestCase) -> void:
 	var red := ItemInstance.create(items.get_def(&"chana"))
 	t.check(meta.warehouse.try_add(red, true), "刹那进仓库")
 	t.eq(meta.sell_item(red.uid), -1, "仓库单卖不了")
-	meta.sell_where(-1)
+	meta.sell_selected([red.uid])
 	t.check(meta.warehouse.has_item(red.uid), "一键出售跳过它")
 	var act := ItemActions.sell(red, 1, func(_uid): pass)
 	t.check(not act.enabled, "出售按钮灰掉")

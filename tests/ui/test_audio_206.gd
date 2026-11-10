@@ -65,12 +65,13 @@ static func run_table(t: TestCase) -> void:
 	t.eq(table.errors, [], "默认表没有问题")
 	var bad_files: Array[String] = []
 	for name in NEW_CUES:
-		var files := table.files_of(StringName(name))
+		var files: Array = table.cue(StringName(name)).get("files", [])
 		if files.is_empty():
 			bad_files.append(name)
 		for f in files:
-			if not f.ends_with(".ogg") or not ResourceLoader.exists(f):
-				bad_files.append(f)
+			var path := CueTable.ASSET_ROOT + String(f)
+			if not path.ends_with(".ogg") or not ResourceLoader.exists(path):
+				bad_files.append(path)
 	t.eq(bad_files, [], "38 个 cue 都有文件、都是 .ogg（%s）" % [bad_files])
 	t.eq(table.resolve(&"battle.hit.drain"), &"battle.hit.physical", "吸血 = 物理那一声")
 	t.eq(table.resolve(&"battle.reaction.ice_poison"), &"battle.reaction.3", "凝毒 = 第 3 声")

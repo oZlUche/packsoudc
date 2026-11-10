@@ -120,7 +120,7 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 				if not report_.ok():
 					problems.append("run_buffs/%s：按表生成的 JSON 导入不了：%s" % [bid, report_.to_text()])
 					continue
-				out[ContentPaths.authoring_file("run_buffs", bid)] = ContentExporter.export_run_buff(def_)
+				out[ContentPaths.authoring_file("run_buffs", bid)] = ContentExporter.dump(def_)
 				buffs.append(bid)
 			effect["buffs"] = buffs
 		var tiers: Array = []
@@ -140,7 +140,7 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 		if not report.ok():
 			problems.append("techs/%s：按表生成的 JSON 导入不了：%s" % [id, report.to_text()])
 			continue
-		out[ContentPaths.authoring_file("techs", id)] = ContentExporter.export_tech(def)
+		out[ContentPaths.authoring_file("techs", id)] = ContentExporter.dump(def)
 	return out
 
 
@@ -159,12 +159,9 @@ static func owned_files() -> Array[String]:
 	var out: Array[String] = []
 	for pair in [["techs", ""], ["run_buffs", BUFF_PREFIX]]:
 		var dir_path: String = ContentPaths.dirs_of(pair[0])[0]
-		var dir := DirAccess.open(dir_path)
-		if dir == null:
-			continue
-		for file in dir.get_files():
-			if file.ends_with(".json") and file.begins_with(pair[1]):
-				out.append("%s/%s" % [dir_path, file])
+		for id in ContentPaths.ids_in(dir_path):
+			if id.begins_with(pair[1]):
+				out.append("%s/%s.json" % [dir_path, id])
 	return out
 
 

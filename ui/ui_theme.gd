@@ -70,7 +70,6 @@ const LABEL_SKILL_NAME := &"LabelSkillName"
 const LABEL_SKILL_TEXT := &"LabelSkillText"
 ## 255：选角色屏短板那一行的名字 —— 和技能名同字号、同描边，铁灰色（技能、随身之物是亮黄铜）
 const LABEL_FLAW_NAME := &"LabelFlawName"
-const LABEL_SCREEN_TITLE := &"LabelScreenTitle"
 ## 180 补二：开局屏第三页的难度翻页计数器 —— 黑底白字的牌面、压深的黄铜外框（美术给了 `setup/flip_counter` 九宫格就用图）
 const PANEL_FLIP_COUNTER := &"PanelFlipCounter"
 const LABEL_FLIP_NUM := &"LabelFlipNum"
@@ -90,11 +89,10 @@ const SCROLL_ROD := Color("5a4632")
 ## 180 定稿：挑战句血红、不描边
 const PARCHMENT_RED := Color("c81018")
 ## 180 定稿美术（作者 2026-10-17 12:04「定稿」，`art/ui/setup/p180/`）：开局第二、三页的整套图。各变体没图时退回原来的平面样子
-## - 第二页：背包皮框、仓库框（都是深底九宫格）、仓库挂牌页签（普通 / 选中 / 没解锁三张：按钮的常态 / 按下 / 灰态）
+## - 第二页：背包皮框（深底九宫格）、仓库挂牌页签（普通 / 选中 / 没解锁三张：按钮的常态 / 按下 / 灰态）
 ## - 第三页：地图条目、规模子条目（选中是 on 图）、摘要便条（浅底）、右下「返回」深色铜 /「出发」亮黄铜（按钮 A 套）
 ## - 难度组：「−」「＋」各四态（字画在图上）
 const PANEL_PACK_LEATHER := &"PanelPackLeather"
-const PANEL_STASH_FRAME := &"PanelStashFrame"
 const PANEL_SUMMARY_NOTE := &"PanelSummaryNote"
 ## 10-24：便条（如开局「带入现金」）的抬头 —— 粗体；字号与墨色由造字的地方给
 const LABEL_NOTE_TITLE := &"LabelNoteTitle"
@@ -104,7 +102,7 @@ const PANEL_BARE := &"PanelBare"
 const PANEL_NODE_HINT := &"PanelNodeHint"
 ## 226 批四守门（tests/ui/test_no_bare_text_226.gd）：算「控件」的底 —— 字的祖先里有这些变体之一就算坐在控件上（牌、纸、签、板、提示框）
 const PLATE_VARIANTS: Array[StringName] = [PANEL_NAMEPLATE, PANEL_PARCHMENT, PANEL_SUMMARY_NOTE, PANEL_NODE_HINT, PANEL_TOOLTIP,
-	PANEL_DIFF_TITLE, PANEL_FLIP_COUNTER, PANEL_DARK, PANEL_GROOVE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_HOME_BOX,
+	PANEL_DIFF_TITLE, PANEL_FLIP_COUNTER, PANEL_DARK, PANEL_GROOVE, PANEL_PACK_LEATHER, PANEL_HOME_BOX,
 	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
 	PANEL_CAP_TILE, PANEL_HUD, PANEL_HUD_WELL, &"TooltipPanel"]
 const BUTTON_SETUP_TAB := &"ButtonSetupTab"
@@ -127,7 +125,6 @@ const SKILL_NAME_SIZE := 22
 const SKILL_NAME_INK := Color("8a3b12")
 const FLAW_NAME_INK := Color("4a4f57")
 const SKILL_TEXT_SIZE := 17
-const SCREEN_TITLE_SIZE := 26
 ## 166：地图屏的顶端栏（[code]hud_bar[/code] 部件的底：美术给 `hud/bar.png` 九宫格就贴，没给是读数那种半透明深底）、
 ## 栏里的图标按钮（[IconButton]：背包、放大镜、主动技能；按下态走这个变体）
 const PANEL_HUD_BAR := &"PanelHudBar"
@@ -150,8 +147,8 @@ const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, 
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, LABEL_TENT_SIGN, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
 	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
-	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, LABEL_SCREEN_TITLE, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
-	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_STASH_FRAME, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB, BUTTON_PRESET_TAG,
+	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
+	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB, BUTTON_PRESET_TAG,
 	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_SETUP_CHAR, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
 	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE, BUTTON_FORGE, LABEL_FLAW_NAME]
 
@@ -248,12 +245,11 @@ const ART_PARCHMENT_STRIP := "setup/diff_parch"
 const ART_SCROLL_ROD_TOP := "setup/diff_roller"
 const ART_SCROLL_ROD_BOTTOM := "setup/diff_roller"
 const ART_DIFFICULTY_PLATE := "setup/diff_open_plate"
-## 180 定稿：「当前难度」梯形标题牌、加减、第二页两块框与页签、第三页地图条目 / 规模 / 便条 / 按钮 A 套、预览圈的虚线参数
+## 180 定稿：「当前难度」梯形标题牌、加减、第二页背包皮框与页签、第三页地图条目 / 规模 / 便条 / 按钮 A 套、预览圈的虚线参数
 const ART_DIFF_TITLE := "setup/diff_title_tab"
 const ART_DIFF_MINUS := "setup/diff_minus"
 const ART_DIFF_PLUS := "setup/diff_plus"
 const ART_PACK_LEATHER := "setup/pack_leather"
-const ART_STASH_FRAME := "setup/stash_frame"
 const ART_SETUP_TAB := "setup/tab"
 const ART_MAP_ENTRY := "setup/map_entry"
 const ART_MAP_SUB := "setup/map_sub"
@@ -819,7 +815,7 @@ static func tip_icon(id: String, fallback: String, px: int = 16) -> String:
 	return "[img=%dx%d]%s[/img]" % [px, px, path]
 
 
-## 170：棋盘邻居格上的格位图标（`grant_on` / `receive_off` / `load_on` ……，32 px）；不在返回 null（画回半透明方框）
+## 170：棋盘邻居格上的格位图标（`grant_on` / `receive_off` / `load_on` ……，32 px）；不在返回 null
 static func slot_icon(kind: String, lit: bool) -> Texture2D:
 	var path := TIP_ICON_DIR + "%s_%s.png" % [kind, "on" if lit else "off"]
 	if not _slot_icons.has(path):
@@ -870,7 +866,7 @@ const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
 	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
-	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_LIGHT, PANEL_PACK_LEATHER: TONE_DARK, PANEL_STASH_FRAME: TONE_DARK,
+	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_LIGHT, PANEL_PACK_LEATHER: TONE_DARK,
 	PANEL_SUMMARY_NOTE: TONE_LIGHT, PANEL_BARE: TONE_LIGHT, PANEL_NODE_HINT: TONE_LIGHT, PANEL_HUD_WELL: TONE_LIGHT,
 	PANEL_HOME_PLAQUE: TONE_LIGHT, PANEL_HOME_PLAQUE_SMALL: TONE_LIGHT, PANEL_HOME_CHIP: TONE_LIGHT,
 }
@@ -880,7 +876,7 @@ const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
 	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER,
 	PANEL_PARCHMENT: ART_PARCHMENT_STRIP, PANEL_DIFF_TITLE: ART_DIFF_TITLE, PANEL_PACK_LEATHER: ART_PACK_LEATHER,
-	PANEL_STASH_FRAME: ART_STASH_FRAME, PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE, PANEL_NODE_HINT: ART_NODE_HINT, PANEL_HUD_WELL: ART_HUD_WELL,
+	PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE, PANEL_NODE_HINT: ART_NODE_HINT, PANEL_HUD_WELL: ART_HUD_WELL,
 	PANEL_HOME_PLAQUE: ART_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL: ART_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP: ART_HOME_CHIP}
 ## 浅底上的字色（美术规范的墨、褐墨，警示用压暗的铜褐）；浅底本身是亮纸。
 ## 169：读字色模板 `fg / dim / warn` 的浅版（[method text_colors_changed] 换），这几个常量是文件不在时的默认
@@ -918,9 +914,6 @@ static func text_theme(tone: StringName) -> Theme:
 	for pair in [[LABEL_TITLE, INK], [LABEL_DIM, INK_SOFT], [LABEL_WARN, INK_WARN], [LABEL_OVERLAY_TITLE, INK], [LABEL_DISPLAY, INK], [LABEL_HUD, INK], [LABEL_HUD_LARGE, INK], [LABEL_HUD_DOUBLE, INK], [LABEL_TENT_SIGN, TENT_SIGN_INK]]:
 		t.set_type_variation(pair[0], "Label")
 		t.set_color("font_color", pair[0], pair[1])
-	t.set_type_variation(LABEL_SCREEN_TITLE, "Label")     # 写在浅色背景画上的大标题：墨字，不要阴影（深底那圈黑影在浅底上发糊）
-	t.set_color("font_color", LABEL_SCREEN_TITLE, INK)
-	t.set_color("font_shadow_color", LABEL_SCREEN_TITLE, Color(PAPER, 0.0))
 	t.set_color("default_color", "RichTextLabel", INK)
 	for v in [RICH_BODY, RICH_SMALL]:
 		t.set_type_variation(v, "RichTextLabel")
@@ -1668,7 +1661,7 @@ static func _difficulty_buttons(t: Theme) -> void:
 static func _setup_art(t: Theme) -> void:
 	t.set_type_variation(PANEL_BARE, "PanelContainer")
 	t.set_stylebox("panel", PANEL_BARE, StyleBoxEmpty.new())
-	for spec in [[PANEL_PACK_LEATHER, ART_PACK_LEATHER], [PANEL_STASH_FRAME, ART_STASH_FRAME], [PANEL_SUMMARY_NOTE, ART_SUMMARY_NOTE]]:
+	for spec in [[PANEL_PACK_LEATHER, ART_PACK_LEATHER], [PANEL_SUMMARY_NOTE, ART_SUMMARY_NOTE]]:
 		t.set_type_variation(spec[0], "PanelContainer")
 		var box: StyleBox = _art_box(spec[1])
 		if box == null:
@@ -1802,13 +1795,6 @@ static func _setup_card(t: Theme) -> void:
 	t.set_color("font_color", LABEL_SKILL_TEXT, UiPalette.FG)
 	@warning_ignore("integer_division")
 	t.set_constant("line_spacing", LABEL_SKILL_TEXT, SKILL_TEXT_SIZE / 2)
-	t.set_type_variation(LABEL_SCREEN_TITLE, "Label")
-	t.set_font_size("font_size", LABEL_SCREEN_TITLE, SCREEN_TITLE_SIZE)
-	t.set_color("font_color", LABEL_SCREEN_TITLE, UiPalette.FG)
-	t.set_color("font_shadow_color", LABEL_SCREEN_TITLE, Color(0, 0, 0, 0.85))
-	t.set_constant("shadow_offset_x", LABEL_SCREEN_TITLE, 0)
-	t.set_constant("shadow_offset_y", LABEL_SCREEN_TITLE, 2)
-	t.set_constant("shadow_outline_size", LABEL_SCREEN_TITLE, 6)
 
 
 ## 只挂变体的标签（字号、颜色、字体都在变体里）

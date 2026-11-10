@@ -97,7 +97,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.eq(run.active_faith_tier(), 3, "Lv.3")
 	var smite := altar.perk(&"smite")
 	t.check(smite != null and smite.prebattle_actions(run, &"elite").size() == 2 and smite.prebattle_actions(run, &"battle").size() == 2 and smite.prebattle_actions(run, &"boss").is_empty(), "立即击败：普通与精英都能（耗体力 / 耗信力两个按钮），首领不能")
-	# 献祭（GameFlow.offer：从棋盘上拿走、换信力）
+	# 献祭（AltarModule.offer：换信力；祭品由献的那一方拿走）
 	var sword: ItemInstance = null
 	for inst in run.board.items():
 		if (inst as ItemInstance).def.tags.has(&"weapon"):
@@ -108,10 +108,10 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 		var val := run.active_faith().offering_value(sword.def)
 		altar.used.clear()
 		altar.node = run.travel.current_id
-		var res := f.offer([sword], run.current_node())
+		var res := altar.offer([sword], run.current_node())
+		run.board.remove(sword.uid)
 		t.eq(int(res["count"]), 1, "献祭了一件")
 		t.eq(run.faith_power.points_of(&"brute"), p0 + val, "信力 +%d（2^稀有度 × 3）" % val)
-		t.check(not run.board.has_item(sword.uid) and not run.storage.has_item(sword.uid), "祭品没了")
 		t.check(not altar.is_open() and altar.used.has(altar.node), "反馈：献祭和特殊操作二选一 —— 献了就关")
 	# 日神：附魔 + 祈祷
 	var defs := FaithDef.load_all()

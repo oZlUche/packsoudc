@@ -67,7 +67,7 @@ var notices: NoticeLayer = null
 ## 地上在这些屏里画（一局里、在某个点上的界面）；战斗回放、结算、局外都不画
 const GROUND_SCREENS := [
 	GameFlow.Screen.MAP, GameFlow.Screen.LOOT, GameFlow.Screen.SEARCH, GameFlow.Screen.SHOP, GameFlow.Screen.EVENT,
-	GameFlow.Screen.REST, GameFlow.Screen.PREBATTLE, GameFlow.Screen.SAFE, GameFlow.Screen.ALTAR, GameFlow.Screen.FORGE,
+	GameFlow.Screen.PREBATTLE, GameFlow.Screen.SAFE, GameFlow.Screen.ALTAR, GameFlow.Screen.FORGE,
 	GameFlow.Screen.RANSOM,
 ]
 

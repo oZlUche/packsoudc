@@ -272,7 +272,7 @@ func _build_ui() -> void:
 
 #region 列表与草稿（公共的在 AuthoringEditor）
 func _export(d) -> Dictionary:
-	return ContentExporter.export_event(d)
+	return ContentExporter.dump(d)
 
 
 func _import(data: Dictionary, report: ImportReport) -> Resource:
@@ -514,7 +514,7 @@ func _attach(rules_id: String, type: String, weight: float) -> ImportReport:
 	var built := ContentImporter.import_node_rules(data, _ctx, report)
 	if not report.ok():
 		return report
-	var out := ContentExporter.export_node_rules(built)
+	var out := ContentExporter.dump(built)
 	if ContentExporter.save(out, path) != OK:
 		report.error("", "写入失败")
 		return report

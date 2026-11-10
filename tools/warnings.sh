@@ -9,15 +9,7 @@
 set -u
 OUT="${1:-${TMPDIR:-/tmp}/godot_warnings.jsonl}"
 PORT="${WARN_PORT:-6009}"
-if [ -z "${GODOT:-}" ]; then
-  for candidate in godot godot4 Godot; do
-    if command -v "$candidate" >/dev/null 2>&1; then
-      GODOT="$(command -v "$candidate")"
-      break
-    fi
-  done
-fi
-GODOT="${GODOT:-/e/Godot/Godot_v4.7.1-stable_win64_console.exe}"
+. "$(dirname "${BASH_SOURCE[0]}")/_godot.sh"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ -e "$ROOT/override.cfg" ]; then
   echo "已有 override.cfg，不覆盖；先挪开再跑" >&2

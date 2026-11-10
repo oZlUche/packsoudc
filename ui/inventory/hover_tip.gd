@@ -80,8 +80,6 @@ class TipWindow extends PanelContainer:
 	var pinned := false
 	## 鼠标在窗里停了多久（钉住进度 = [method HoverTip.pin_progress]）
 	var dwell := 0.0
-	## 离开计时（作者 10-27 起离开即收，只留着复位用）；< 0 = 没在离开
-	var leave_t := -1.0
 	## 鼠标正停在哪个关键词上（`term:<id>`）、停了多久
 	var hover_term := ""
 	var hover_t := 0.0
@@ -110,8 +108,7 @@ class TipWindow extends PanelContainer:
 			UiTheme.art_cached(art)     # 先读好：兼容渲染器下第一次在 `_draw` 里才读的贴图会画成白块
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		visible = false
-		col = VBoxContainer.new()
-		col.add_theme_constant_override("separation", 6)
+		col = UiTheme.vbox(6)
 		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(col)
 		head = _rich(width)
@@ -305,7 +302,6 @@ class TipWindow extends PanelContainer:
 	func reset_state() -> void:
 		pinned = false
 		dwell = 0.0
-		leave_t = -1.0
 		hover_term = ""
 		hover_t = 0.0
 		queue_redraw()
@@ -428,9 +424,6 @@ var _uid: int = -1
 var _for_view: ContainerView = null
 ## 265：主窗现在说的是哪一种道具（丝带切的就是它的收藏）；不是道具窗 = null
 var _fav_def: ItemDef = null
-## 离开当前道具时要看的那个位置（视图与视图里的坐标；视图为 null = 出了视图）
-var _pending_view: ContainerView = null
-var _pending_local := Vector2.ZERO
 ## 离开钉住的那一串窗多久了
 var _away := 0.0
 ## 鼠标还在叫出主窗的源上（作者 2026-10-17：停在源上也走钉住进度；钉住后在源上也不算离开）。源离开时调 [method release]
@@ -514,15 +507,15 @@ func watch(view: ContainerView) -> void:
 
 
 ## 直接显示一段文字（地图上的点）；[param extra] 是文字下面再放的一个控件（对手的棋盘），可为 null；
-## [param terms] 是关键词的词条（`{id: {"name", "text"}}`，或老的 `[{name, text}]`），钉住后停在关键词上开子窗
-func show_text(bbcode: String, at: Vector2, extra: Control = null, terms = {}) -> void:
+## [param terms] 是关键词的词条（`{id: {"name", "text"}}`），钉住后停在关键词上开子窗
+func show_text(bbcode: String, at: Vector2, extra: Control = null, terms: Dictionary = {}) -> void:
 	if _panel.visible and _panel.pinned:
 		return     # 钉住的窗不被别的源换掉（离开它才收，[constant AWAY_SEC]）
 	_close_from(1)
 	_anchor = Rect2()
 	_panel.reset_state()
 	_panel.set_text(bbcode)
-	_panel.terms = _terms_dict(terms)
+	_panel.terms = terms
 	_drop_extra()
 	if extra != null:
 		_extra = extra
@@ -540,7 +533,7 @@ func show_status(parts: Dictionary, at: Vector2) -> void:
 	_panel.reset_state()
 	_drop_extra()
 	_panel.set_status(String(parts.get("head", "")), String(parts.get("body", "")))
-	_panel.terms = _terms_dict(parts.get("terms", {}))
+	_panel.terms = parts.get("terms", {})
 	_open_main(at)
 
 
@@ -680,7 +673,7 @@ func show_item(full: Dictionary, at: Vector2, anchor: Rect2 = Rect2(), def: Item
 	_panel.reset_state()
 	_drop_extra()
 	_panel.set_item(full)
-	_panel.terms = _terms_dict(full.get("terms", {}))
+	_panel.terms = full.get("terms", {})
 	_fav_def = def
 	_panel.set_fav(fav_state_of(def))
 	_open_main(at)
@@ -786,7 +779,7 @@ func _refresh_item() -> void:
 	var board: GridInventory = (_for_view as InventoryView).inventory if _for_view is InventoryView else null
 	var full := ItemTooltip.describe_full(inst, board)
 	_panel.set_item(full)
-	_panel.terms = _terms_dict(full.get("terms", {}))
+	_panel.terms = full.get("terms", {})
 	_panel.set_fav(fav_state_of(_fav_def))
 	set_actions(_actions_of(_for_view, _uid))
 	_queue_refit()
@@ -811,17 +804,6 @@ func _open_main(at: Vector2) -> void:
 	_panel.reset_size()
 	_place(at)
 	_queue_refit()
-
-
-static func _terms_dict(terms) -> Dictionary:
-	if terms is Dictionary:
-		return terms
-	var out := {}
-	if terms is Array:
-		for t in terms:
-			var d := t as Dictionary
-			out[String(d.get("id", d["name"]))] = {"name": d["name"], "text": d["text"]}
-	return out
 
 
 ## 旧的下挂控件先摘下来再 free：queue_free 到帧末才走，留在列里会把这一帧的 reset_size 撑高（悬浮窗下方大段空白）
@@ -888,7 +870,6 @@ func hide_tip() -> void:
 	_uid = -1
 	_for_view = null
 	_fav_def = null
-	_pending_view = null
 	_away = 0.0
 	_on_source = false
 
@@ -980,7 +961,6 @@ func tick(delta: float, mouse: Vector2) -> void:
 		if w.depth > 0 and not w.pinned:
 			var on_word := open[i - 1].hover_term == w.origin_term     # 还停在开它的那个词上（作者 2026-10-17：也走钉住进度）
 			if on_word:     # 作者 10-27：没钉住的子窗只认停在词上，移开（含移进子窗）当场收
-				w.leave_t = -1.0
 				w.dwell += delta
 				if w.dwell >= PIN_DELAY_SEC + PIN_SEC:
 					pin(w)
@@ -1018,7 +998,6 @@ func _source_alive(mouse: Vector2) -> bool:
 		_on_source = on
 	elif on:
 		_on_source = true
-		_panel.leave_t = -1.0
 	elif _on_source:
 		_begin_leave(_for_view, local)
 	return true
@@ -1028,7 +1007,6 @@ func _source_alive(mouse: Vector2) -> bool:
 func pin(w: TipWindow) -> void:
 	w.pinned = true
 	w.dwell = PIN_DELAY_SEC + PIN_SEC
-	w.leave_t = -1.0
 	_away = 0.0
 	w.queue_redraw()
 
@@ -1095,7 +1073,7 @@ func _open_recipe(parent: TipWindow, at: int, meta: String) -> TipWindow:
 	var w := _child_slot(parent, at, meta)
 	w.full_width = _panel.full_width     # 道具窗的宽（关键词子窗窄）
 	w.set_item(full)
-	w.terms = _terms_dict(full.get("terms", {}))
+	w.terms = full.get("terms", {})
 	w.set_fav(-1)
 	w.clear_actions()
 	w.visible = true
@@ -1170,7 +1148,6 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 			_show_for(view, uid, inst, mm.position)
 		return
 	if inst != null and view == _for_view and uid == _uid:
-		_panel.leave_t = -1.0
 		_on_source = true
 		_place(view.get_global_position() + mm.position)
 		return
@@ -1202,29 +1179,19 @@ func _show_for(view: ContainerView, uid: int, inst: ItemInstance, local: Vector2
 ## 作者 10-27：离开源（换到别的、空格、出视图）不再给宽限 —— 没钉住就当场照鼠标现在的位置办：底下有能显示的就换成它，没有就收（移进悬浮窗也收）
 func _begin_leave(view: ContainerView, local: Vector2) -> void:
 	_on_source = false
-	_pending_view = view
-	_pending_local = local
-	if not _panel.pinned and view != null and _held_by_recipe(view.get_global_transform() * local):
-		_pending_view = null     # 286：挪进了带配方词的窗 —— 不收、不换，接着走钉住进度
+	if _panel.pinned:
 		return
-	if not _panel.pinned:
-		_panel.leave_t = -1.0
-		_resolve_pending()
-
-
-## 离开源时照最后那个位置办 —— 底下有能显示的就换成它，没有就收
-func _resolve_pending() -> void:
-	var view := _pending_view
-	_pending_view = null
+	if view != null and _held_by_recipe(view.get_global_transform() * local):
+		return     # 286：挪进了带配方词的窗 —— 不收、不换，接着走钉住进度
 	if view == null or not is_instance_valid(view):
 		hide_tip()
 		return
-	var uid := _uid_under(view, _pending_local)
+	var uid := _uid_under(view, local)
 	var inst := _shown_item(view, uid)
 	if inst == null:
 		hide_tip()
 	elif view != _for_view or uid != _uid:
-		_show_for(view, uid, inst, _pending_local)
+		_show_for(view, uid, inst, local)
 
 
 func _uid_under(view: ContainerView, local: Vector2) -> int:

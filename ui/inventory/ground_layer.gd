@@ -557,11 +557,10 @@ func to_spot(local_px: Vector2) -> Vector2:
 
 ## 一件道具的包围盒尺寸（像素）
 static func span_px(inst: ItemInstance, rot: int) -> Vector2:
-	var hi := Vector2i.ZERO
-	if inst != null and inst.def != null:
-		for c in inst.def.cells_rotated(rot):
-			hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
-	return Vector2(hi + Vector2i.ONE) * InventoryView.CELL
+	var box := Vector2i.ONE
+	if inst != null and inst.def != null and inst.def.cell_count() > 0:
+		box = inst.def.shape.size_rotated(rot)
+	return Vector2(box) * InventoryView.CELL
 
 
 ## 一件画在哪（本控件内像素）：落点乘回尺寸，再整块夹进屏里 —— 换了窗口大小东西也还在屏内。

@@ -75,12 +75,12 @@ static func run_loadout_pipeline(t: TestCase) -> void:
 	sample.id = &"t_kit"
 	sample.display_name = "测试"
 	sample.items = [&"bag_leather", &"shortsword"] as Array[StringName]
-	var text := ContentExporter.to_json(ContentExporter.export_loadout(sample))
+	var text := ContentExporter.to_json(ContentExporter.dump(sample))
 	var report := ImportReport.new()
 	var back := ContentImporter.import_loadout(JSON.parse_string(text), ctx, report)
 	t.check(report.ok(), "导得回来：%s" % report.to_text())
 	t.eq(back.items, sample.items, "清单原样")
-	t.eq(ContentExporter.to_json(ContentExporter.export_loadout(back)), text, "再导出一次，文本逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "再导出一次，文本逐字节相同")
 
 	# 校验比引擎严格
 	var bad := ImportReport.new()
@@ -111,7 +111,7 @@ static func run_loadout_pipeline(t: TestCase) -> void:
 			var r := ImportReport.new()
 			var res := ContentImporter.import_loadout(JSON.parse_string(raw), ctx, r)
 			t.check(r.ok(), "%s 导得进：%s" % [f, r.to_text()])
-			t.eq(ContentExporter.to_json(ContentExporter.export_loadout(res)), raw, "%s 是往返不动点（tools/normalize_content.gd）" % f)
+			t.eq(ContentExporter.to_json(ContentExporter.dump(res)), raw, "%s 是往返不动点（tools/normalize_content.gd）" % f)
 			t.check(ResourceLoader.exists(ContentPaths.asset_file("loadouts", id)), "%s 的资产在" % id)
 	t.check(files >= 2, "至少两套开局装备可挑（实际 %d）" % files)
 	t.eq(c.loadouts.size(), files, "GameFlow.load_loadouts 装回全部 %d 份" % files)

@@ -18,8 +18,8 @@ const STATIC_EXEMPT := {
 }
 
 
-## 仓库（棕底）棋盘认的外框：基地 / 结算的木架、开局第二页的仓库框
-const GROUND_FRAMES: Array[StringName] = [UiTheme.PANEL_SHELF, UiTheme.PANEL_STASH_FRAME]
+## 仓库（棕底）棋盘认的外框：基地 / 结算的木架
+const GROUND_FRAMES: Array[StringName] = [UiTheme.PANEL_SHELF]
 
 
 ## 一个视图过不过：返回空串 = 过，否则是缺什么

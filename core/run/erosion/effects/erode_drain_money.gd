@@ -13,7 +13,3 @@ func apply(ctx: ErosionContext) -> void:
 	var lost := mini(n, ctx.run.wallet.balance)
 	if lost > 0 and ctx.run.wallet.spend(lost, &"erosion"):
 		ctx.money_lost += lost
-
-
-func describe() -> String:
-	return "丢钱 %d%s%s" % [amount, ("（每深一层 +%d）" % per_depth) if per_depth > 0 else "", gate_text()]

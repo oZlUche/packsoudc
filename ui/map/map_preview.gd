@@ -37,7 +37,7 @@ const RING_WIDTH_MIN := 1.0
 ## 现在铺的底图（[MapSkin] 的 id）与层数（同心环 = 环数，格阵 = 行数；别的布局 0：只铺底图）
 var skin: StringName = &""
 var levels: int = 0
-## 213：这张图的布局（同心环走 [method show_map] 时为空）、图、画布（布局坐标）
+## 213：这张图的布局、图、画布（布局坐标）
 var layout: MapLayout = null
 var graph: MapGraph = null
 var canvas: Rect2 = Rect2()
@@ -136,15 +136,6 @@ func show_graph(skin_id: StringName, p_graph: MapGraph, scale_id: StringName, an
 	else:
 		levels = 0
 	canvas = Rect2(Vector2.ZERO, layout.canvas_size(p_graph)) if levels > 0 else Rect2()
-	_open(skin_id, scale_id, animate)
-
-
-## 换一张同心环的图：[param skin_id] 底图、[param ring_levels] 环数、[param scale_id] 规模（定半径）。没有图在手时用（画布按环数算）
-func show_map(skin_id: StringName, ring_levels: int, scale_id: StringName, animate: bool = true) -> void:
-	graph = null
-	layout = null
-	levels = maxi(0, ring_levels)
-	canvas = Rect2(Vector2.ZERO, Vector2.ONE * RingLayoutBase.canvas_side(levels)) if levels > 0 else Rect2()
 	_open(skin_id, scale_id, animate)
 
 

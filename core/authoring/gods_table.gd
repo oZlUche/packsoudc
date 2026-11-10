@@ -105,7 +105,7 @@ static func normalized(json: Dictionary, problems: Array[String] = []) -> Dictio
 	if not report.ok():
 		problems.append("faiths/%s：按表生成的 JSON 导入不了：%s" % [json.get("id", "?"), report.to_text()])
 		return {}
-	return ContentExporter.export_faith(def)
+	return ContentExporter.dump(def)
 
 
 ## 对照：表里的每位神都得有 JSON、JSON 里的信仰都得在表里，按表生成的和磁盘上的一致。返回问题清单（空 = 一致）
@@ -117,11 +117,8 @@ static func check(path: String = PATH) -> Array[String]:
 		return problems
 	var table := fields(sheets, problems)
 	var on_disk := {}
-	var dir := DirAccess.open(ContentPaths.dirs_of("faiths")[0])
-	if dir != null:
-		for file in dir.get_files():
-			if file.ends_with(".json"):
-				on_disk[file.get_basename()] = true
+	for id in ContentPaths.ids_in(ContentPaths.dirs_of("faiths")[0]):
+		on_disk[id] = true
 	for id in table:
 		if not on_disk.has(id):
 			problems.append("神明总表有 %s，faiths/%s.json 没有 —— 跑 tools/gods_xlsx_to_json.gd" % [id, id])

@@ -81,7 +81,7 @@ const COACH_KINDS: Array[StringName] = [&"map", &"battle", &"bag", &"prebattle"]
 @export var rules: Array[String] = []
 ## 166（作者定）/ 218 补充一（217 批三）：这一章的界面教程，按屏放 —— `{"map": 地图, "battle": 战斗回放, "bag": 背包窗, "prebattle": 战前准备}` → `data/authoring/coach/<id>.json` 的步骤
 ## （阴影里挖洞指着那一屏的控件，点哪都下一步）。各在那一屏第一次露出来时放一次（[member MetaState.coach_seen] 按教程 id 记），调试台能重放。
-## 缺的键 = 那一屏不放；序章一四份都有，自由模式只有 `map`。导入器认旧字段 `coach` / `coach_battle`（写进 `map` / `battle`）
+## 缺的键 = 那一屏不放；序章一四份都有，自由模式只有 `map`
 @export var coaches: Dictionary = {}
 ## 218 补充一（作者定）：开局屏第一次按「出发」之前弹的一屏交代（`data/events/` 里的 id；[member MetaState.briefing_seen] 按事件 id 记一次）。空 = 不弹
 @export var departure_event: StringName = &""

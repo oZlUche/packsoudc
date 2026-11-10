@@ -51,14 +51,6 @@ else
   echo "✗ 没有 CREDITS.md：每个文件的来源、作者、许可要记下来"
 fi
 
-if [ -z "${GODOT:-}" ]; then
-  for candidate in godot godot4 Godot; do
-    if command -v "$candidate" >/dev/null 2>&1; then
-      GODOT="$(command -v "$candidate")"
-      break
-    fi
-  done
-fi
-GODOT="${GODOT:-/e/Godot/Godot_v4.7.1-stable_win64_console.exe}"
+. "$(dirname "${BASH_SOURCE[0]}")/_godot.sh"
 "$GODOT" --headless --path "$ROOT" --import >/dev/null 2>&1
 echo "已导入（.import 和别的素材一样提交）"

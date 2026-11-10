@@ -49,7 +49,7 @@ static func frame_set_editor(t: TestCase, root: Window) -> void:
 		var report := ImportReport.new()
 		var back := ContentImporter.import_set(parsed, ContentImporter.Context.new(), report)
 		t.check(report.ok() and back != null and String(back.id) == PROBE and back.tiers.size() == 2, "导回来是它")
-		t.eq(ContentExporter.to_json(ContentExporter.export_set(back)), ContentExporter.to_json(ContentExporter.export_set(ed.def())), "往返不动点（导回来再导出 = 编辑器里那份导出）")
+		t.eq(ContentExporter.to_json(ContentExporter.dump(back)), ContentExporter.to_json(ContentExporter.dump(ed.def())), "往返不动点（导回来再导出 = 编辑器里那份导出）")
 	var loaded = ResourceLoader.load(tres_path, "", ResourceLoader.CACHE_MODE_IGNORE)
 	t.check(loaded is ItemSetDef and String(loaded.id) == PROBE, ".tres 读回来是套装")
 	# 成员：随便找一件道具把 set_id 指过来（只在内存里）

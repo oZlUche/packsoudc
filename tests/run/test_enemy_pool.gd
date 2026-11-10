@@ -90,7 +90,7 @@ static func run_round_trip(t: TestCase) -> void:
 	enemy.signature = [&"knife"] as Array[StringName]
 	enemy.loadout = EnemyLoadout.new()
 	enemy.loadout.school_share = 0.8
-	var dumped := ContentExporter.export_enemy(enemy)
+	var dumped := ContentExporter.dump(enemy)
 	t.eq(String(dumped.get("id", "")), "t_low", "id 导出了")
 	t.check(not dumped.has("strength"), "默认值（档位 0）不写")
 	t.check(dumped.has("loadout") and (dumped["loadout"] as Dictionary).has("school_share"), "覆盖的组装规则导出了")
@@ -101,10 +101,10 @@ static func run_round_trip(t: TestCase) -> void:
 	t.eq(back.schools, enemy.schools, "流派是 StringName 数组")
 	t.eq(back.signature, enemy.signature, "招牌道具")
 	t.eq(back.loadout.school_share, 0.8, "覆盖的组装规则")
-	t.eq(ContentExporter.to_json(ContentExporter.export_enemy(back)), text, "敌人再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "敌人再导出逐字节相同")
 
 	var pool := _sample_pool()
-	var pd := ContentExporter.export_enemy_pool(pool)
+	var pd := ContentExporter.dump(pool)
 	var ptext := ContentExporter.to_json(pd)
 	r = ImportReport.new()
 	var pback := ContentImporter.import_enemy_pool(JSON.parse_string(ptext), _ctx(), r)
@@ -114,7 +114,7 @@ static func run_round_trip(t: TestCase) -> void:
 	t.eq(pback.tiers[1].stat_scale, {"max_hp": 1.5}, "字典里的浮点没变整数")
 	t.eq(pback.strength_rule.type_bonus, {"elite": 1, "core": 1}, "字典里的整数没变浮点")
 	t.eq(pback.entries[1].node_types, pool.entries[1].node_types, "条目的节点类型过滤")
-	t.eq(ContentExporter.to_json(ContentExporter.export_enemy_pool(pback)), ptext, "池再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(pback)), ptext, "池再导出逐字节相同")
 
 
 static func run_validation(t: TestCase) -> void:
@@ -124,37 +124,37 @@ static func run_validation(t: TestCase) -> void:
 	var enemies := _enemies()
 	var ctx := _full_ctx(items, enemies)
 
-	var e := ContentExporter.export_enemy(_sample_enemy(&"t_x", 0, [&"no_such_school"] as Array[StringName]))
+	var e := ContentExporter.dump(_sample_enemy(&"t_x", 0, [&"no_such_school"] as Array[StringName]))
 	var r := ImportReport.new()
 	ContentImporter.import_enemy(e, ctx, r)
 	t.check(not r.ok(), "流派没有任何道具带这个标签 → 错")
 	t.check(r.to_text().contains("no_such_school"), "报错说得出是哪个流派")
 
-	e = ContentExporter.export_enemy(_sample_enemy(&"t_x", 0, [&"rapid"] as Array[StringName]))
+	e = ContentExporter.dump(_sample_enemy(&"t_x", 0, [&"rapid"] as Array[StringName]))
 	e["signature"] = ["no_such_item"]
 	r = ImportReport.new()
 	ContentImporter.import_enemy(e, ctx, r)
 	t.check(not r.ok(), "招牌道具不存在 → 错")
 
-	e = ContentExporter.export_enemy(_sample_enemy(&"t_x", 0, [&"rapid"] as Array[StringName]))
+	e = ContentExporter.dump(_sample_enemy(&"t_x", 0, [&"rapid"] as Array[StringName]))
 	e["signature"] = ["bag_small"]
 	r = ImportReport.new()
 	ContentImporter.import_enemy(e, ctx, r)
 	t.check(not r.ok(), "招牌道具是个包 → 错")
 
-	e = ContentExporter.export_enemy(_sample_enemy(&"t_x", 0, [&"rapid"] as Array[StringName]))
+	e = ContentExporter.dump(_sample_enemy(&"t_x", 0, [&"rapid"] as Array[StringName]))
 	e["strenght"] = 2
 	r = ImportReport.new()
 	ContentImporter.import_enemy(e, ctx, r)
 	t.check(not r.ok(), "打错字段名 → 错")
 
 	# 上下文是空的（单独导一个敌人）：对着道具查的那几条跳过，其余照旧
-	e = ContentExporter.export_enemy(_sample_enemy(&"t_x", 0, [&"no_such_school"] as Array[StringName]))
+	e = ContentExporter.dump(_sample_enemy(&"t_x", 0, [&"no_such_school"] as Array[StringName]))
 	r = ImportReport.new()
 	ContentImporter.import_enemy(e, _ctx(), r)
 	t.check(r.ok(), "上下文里没有道具时不判流派 —— 单独导一个敌人也导得进")
 
-	var base := ContentExporter.export_enemy_pool(_sample_pool())
+	var base := ContentExporter.dump(_sample_pool())
 	r = ImportReport.new()
 	ContentImporter.import_enemy_pool(base, ctx, r)
 	t.check(not r.ok(), "池指向不存在的敌人（t_low 不在库里）→ 错")
@@ -184,7 +184,7 @@ static func run_validation(t: TestCase) -> void:
 	ContentImporter.import_enemy_pool(bad_type, ctx, r)
 	t.check(not r.ok(), "条目限定在池不放敌人的节点类型里 → 错（永远不会出现）")
 
-	var ch := ContentExporter.export_chapter(_chapter())
+	var ch := ContentExporter.dump(_chapter())
 	ch["enemy_pool"] = "no_such_pool"
 	r = ImportReport.new()
 	ContentImporter.import_chapter(ch, ctx, r)
@@ -220,18 +220,18 @@ static func run_authoring_files(t: TestCase) -> void:
 			var again := ""
 			if kind == "enemies":
 				res = ContentImporter.import_enemy(JSON.parse_string(text), ctx, r)
-				again = ContentExporter.to_json(ContentExporter.export_enemy(res))
+				again = ContentExporter.to_json(ContentExporter.dump(res))
 			else:
 				res = ContentImporter.import_enemy_pool(JSON.parse_string(text), ctx, r)
-				again = ContentExporter.to_json(ContentExporter.export_enemy_pool(res))
+				again = ContentExporter.to_json(ContentExporter.dump(res))
 			t.check(r.ok(), "%s/%s 导得进：%s" % [kind, id, r.to_text()])
 			t.eq(again, text, "%s/%s 作者数据就是导出器的格式（跑 tools/normalize_content.gd）" % [kind, id])
 			var asset := ContentPaths.asset_file(kind, id)
 			t.check(ResourceLoader.exists(asset), "有资产 %s" % asset)
 			if ResourceLoader.exists(asset):
 				var loaded: Resource = load(asset)
-				var lhs: Dictionary = ContentExporter.export_enemy(loaded) if kind == "enemies" else ContentExporter.export_enemy_pool(loaded)
-				var rhs: Dictionary = ContentExporter.export_enemy(res) if kind == "enemies" else ContentExporter.export_enemy_pool(res)
+				var lhs: Dictionary = ContentExporter.dump(loaded) if kind == "enemies" else ContentExporter.dump(loaded)
+				var rhs: Dictionary = ContentExporter.dump(res) if kind == "enemies" else ContentExporter.dump(res)
 				t.eq(lhs, rhs, "%s/%s 资产与作者数据一致 —— 改了 JSON 忘了导入，这条会红" % [kind, id])
 
 	var chapter := _chapter()

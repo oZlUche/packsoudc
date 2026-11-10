@@ -7,7 +7,6 @@
 class_name BagRackView
 extends ContainerView
 
-const BOARD_LAYOUT := "res://assets/ui/board/layout.json"
 const FRAME_DIR := "board/"
 ## 一格多大、包在格里留多宽的边
 const SLOT := 60.0
@@ -73,11 +72,7 @@ func container() -> ItemContainer:
 
 ## 素框（九宫，四边平铺；格子缩进 `cells_offset`）
 func _piece() -> Dictionary:
-	var layout: Dictionary = {}
-	if FileAccess.file_exists(BOARD_LAYOUT):
-		var parsed = JSON.parse_string(FileAccess.get_file_as_string(BOARD_LAYOUT))
-		layout = parsed if parsed is Dictionary else {}
-	return ((layout.get("pieces", {}) as Dictionary).get("plain_dark" if dark else "plain", {}) as Dictionary)
+	return ((BoardFrame.light_layout().get("pieces", {}) as Dictionary).get("plain_dark" if dark else "plain", {}) as Dictionary)
 
 
 func _inset() -> float:
@@ -173,11 +168,7 @@ func _draw_frame() -> void:
 
 ## 格与格之间的缝（227 `cell_seams`：深线 + 右 / 下错开一点的一条亮线，两端各留 2；外圈不画）
 func _draw_seams() -> void:
-	var layout: Dictionary = {}
-	if FileAccess.file_exists(BOARD_LAYOUT):
-		var parsed = JSON.parse_string(FileAccess.get_file_as_string(BOARD_LAYOUT))
-		layout = parsed if parsed is Dictionary else {}
-	var seams: Dictionary = layout.get("cell_seams", {})
+	var seams: Dictionary = BoardFrame.light_layout().get("cell_seams", {})
 	var dark_c := Color(String(seams.get("seam", "#8e8b85")))
 	var hi_c := Color(String(seams.get("hi", "#ebe9e4")))
 	var seam_w := float(seams.get("seam_w", 1.6))

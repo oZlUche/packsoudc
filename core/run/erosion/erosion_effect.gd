@@ -28,20 +28,3 @@ func applies(ctx: ErosionContext) -> bool:
 
 
 @abstract func apply(ctx: ErosionContext) -> void
-
-func describe() -> String:
-	return ""
-
-
-## 门的一句话，子类的 describe 拼在后面
-func gate_text() -> String:
-	var parts: Array[String] = []
-	if not enabled:
-		parts.append("关")
-	if from_depth > 0:
-		parts.append("第 %d 层起" % from_depth)
-	if only_total:
-		parts.append("仅终局")
-	if chance < 1.0:
-		parts.append("%.0f%%" % (chance * 100.0))
-	return "（" + "、".join(parts) + "）" if not parts.is_empty() else ""

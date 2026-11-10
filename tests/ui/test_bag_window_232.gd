@@ -60,7 +60,7 @@ static func frame_curved_belt(t: TestCase, root: Window) -> void:
 	slots.bind(belt)
 	for n in range(1, 7):
 		belt.slots = n
-		belt.sync_slots()
+		belt.changed.emit()
 		var lay: Dictionary = BeltSlots.belt_layouts().get(str(n), {})
 		t.check(slots.curved(), "%d 格：弯皮带" % n)
 		t.eq(slots.custom_minimum_size, Vector2(lay["size"][0], lay["size"][1]), "%d 格：大小是图的" % n)
@@ -69,7 +69,7 @@ static func frame_curved_belt(t: TestCase, root: Window) -> void:
 			t.eq(slots.slot_center(i), want, "%d 格第 %d 个圆心" % [n, i])
 			t.eq(slots.slot_at(want + Vector2(35, 0)), i, "%d 格第 %d 个：半径 36 内命中" % [n, i])
 	belt.slots = 7
-	belt.sync_slots()
+	belt.changed.emit()
 	t.check(not slots.curved(), "7 格：退回直圆槽")
 	t.eq(slots.slot_center(6), Vector2(BeltSlots.SLOT * 0.5 + 6 * (BeltSlots.SLOT + BeltSlots.GAP), BeltSlots.SLOT * 0.5), "7 格一排直的")
 	slots.free()

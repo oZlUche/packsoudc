@@ -131,15 +131,15 @@ static func run_pipeline(t: TestCase) -> void:
 	t.begin("经济 · 规则走管线：往返、校验、仓库文件、章节引用")
 
 	var r := _rules()
-	var text := ContentExporter.to_json(ContentExporter.export_economy_rules(r))
+	var text := ContentExporter.to_json(ContentExporter.dump(r))
 	var rep := ImportReport.new()
 	var back := ContentImporter.import_economy_rules(JSON.parse_string(text), _ctx(), rep)
 	t.check(rep.ok(), "导得回来：%s" % rep.to_text())
 	t.eq(back.extract_fee, 50, "费用")
 	t.eq(back.shop_rarity_weights, r.shop_rarity_weights, "权重表")
-	t.eq(ContentExporter.to_json(ContentExporter.export_economy_rules(back)), text, "再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "再导出逐字节相同")
 
-	var base := ContentExporter.export_economy_rules(r)
+	var base := ContentExporter.dump(r)
 	for bad in [["extract_fee", -1], ["shop_stock", 0], ["shop_purse_base", -1], ["shop_price_mult", 0.0], ["reward_depth_gain", -0.5], ["paid_extracts", -1]]:
 		var d_ := base.duplicate(true)
 		d_[bad[0]] = bad[1]
@@ -172,18 +172,18 @@ static func run_pipeline(t: TestCase) -> void:
 			rep = ImportReport.new()
 			var res := ContentImporter.import_economy_rules(JSON.parse_string(file_text), ctx, rep)
 			t.check(rep.ok(), "economy_rules/%s 导得进：%s" % [id, rep.to_text()])
-			t.eq(ContentExporter.to_json(ContentExporter.export_economy_rules(res)), file_text, "economy_rules/%s 是导出器的格式" % id)
+			t.eq(ContentExporter.to_json(ContentExporter.dump(res)), file_text, "economy_rules/%s 是导出器的格式" % id)
 			var asset := ContentPaths.asset_file("economy_rules", id)
 			t.check(ResourceLoader.exists(asset), "有资产 %s" % asset)
 			if ResourceLoader.exists(asset):
-				t.eq(ContentExporter.export_economy_rules(load(asset)), ContentExporter.export_economy_rules(res), "资产与作者数据一致")
+				t.eq(ContentExporter.dump(load(asset)), ContentExporter.dump(res), "资产与作者数据一致")
 	t.check(count >= 1, "至少一份经济规则")
 
 	var chapter := _chapter()
 	t.check(chapter != null and chapter.economy_rules != &"", "第一章有经济规则")
 	if chapter != null:
 		t.check(ctx.economy_rules.has(chapter.economy_rules), "第一章的规则 '%s' 在仓库里" % chapter.economy_rules)
-		var ch := ContentExporter.export_chapter(chapter)
+		var ch := ContentExporter.dump(chapter)
 		ch["economy_rules"] = "no_such"
 		rep = ImportReport.new()
 		ContentImporter.import_chapter(ch, ctx, rep)

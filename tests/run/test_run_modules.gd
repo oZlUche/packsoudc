@@ -19,9 +19,6 @@ class FakeModule:
 	func id() -> StringName:
 		return &"fake_test"
 
-	func describe() -> String:
-		return "测试用的假模块"
-
 	func install(run: RunState) -> void:
 		installs += 1
 		saw_map = run.map != null and run.travel != null and run.events != null
@@ -73,7 +70,6 @@ static func run_install_and_save(t: TestCase) -> void:
 	t.eq(fake.input_seen, {"hello": 1}, "拿到了外面给它的运行时输入（module_inputs）")
 	t.check(run.module(&"fake_test") == fake, "module(id) 取得到")
 	t.check(run.module(&"根本没装") == null, "没装的返回 null")
-	t.check(run.module_lines().has("测试用的假模块"), "describe() 进规则卡：%s" % str(run.module_lines()))
 	t.check(SafeModule.of(run) != null, "同一份清单里的保险箱也装上了")
 
 	# 生命周期：走一步 → leaving 发出来，模块自己记账
@@ -173,7 +169,7 @@ static func run_registry_and_content(t: TestCase) -> void:
 	var ctx := ContentImporter.Context.new()
 	var report := ImportReport.new()
 	# 拿真章节导出来的那份当底子（map_source 这种子对象的形状以导出器为准）
-	var data := ContentExporter.export_chapter(_content()["chapter"] as ChapterDef)
+	var data := ContentExporter.dump(_content()["chapter"] as ChapterDef)
 	data["id"] = "test_modules_chapter"
 	data["modules"] = [{"type": "safe", "size": [4, 4]}]
 	var ch := ContentImporter.import_chapter(data, ctx, report)
@@ -183,7 +179,7 @@ static func run_registry_and_content(t: TestCase) -> void:
 		t.check(sm != null and sm.size == Vector2i(4, 4), "参数（几格）按反射填进去了")
 	# 往返：导出再导入一致
 	if ch != null:
-		var dumped := ContentExporter.export_chapter(ch)
+		var dumped := ContentExporter.dump(ch)
 		t.check((dumped.get("modules", []) as Array).size() == 1, "导出带着 modules")
 		var again := ContentImporter.import_chapter(dumped, ContentImporter.Context.new(), ImportReport.new())
 		t.check(again != null and again.modules.size() == 1, "往返回来还在")
@@ -209,7 +205,6 @@ static func run_module_roster(t: TestCase) -> void:
 		t.check(RunRegistry.has_type(&"run_module", mid), "%s 登记在 run_module 表里" % mid)
 		t.check(FieldText.TYPE_LABELS.has(String(mid)), "%s 在编辑器里有中文名" % mid)
 		t.check(saved.has(String(mid)), "%s 在存档的 modules 下有自己那一份" % mid)
-	t.eq(run.module_lines().size(), ids.size(), "规则卡上每个模块一句")
 	# 顶层不再有任何一个子系统的键（都在 modules 下了）
 	var top: Dictionary = run.to_dict()
 	for key in ["safe", "safe_locked", "node_storages", "carry_in_value", "faith_rituals", "faith_stat_bonus", "altar_used"]:

@@ -28,11 +28,12 @@ static func run_cue_table(t: TestCase) -> void:
 	for name in [&"ui.press", &"ui.open", &"ui.close"]:
 		var c := table.cue(name)
 		t.check(not c.is_empty(), "%s 在表里" % name)
-		var files := table.files_of(name)
+		var files: Array = c.get("files", [])
 		t.check(not files.is_empty(), "%s 有素材" % name)
 		for f in files:
-			t.check(f.ends_with(".ogg") and ResourceLoader.exists(f), "%s 的 %s 在、是 .ogg" % [name, f])
-	t.check(table.files_of(&"ui.press").size() >= 2, "按钮音有几个变体")
+			var path := CueTable.ASSET_ROOT + String(f)
+			t.check(path.ends_with(".ogg") and ResourceLoader.exists(path), "%s 的 %s 在、是 .ogg" % [name, path])
+	t.check((table.cue(&"ui.press").get("files", []) as Array).size() >= 2, "按钮音有几个变体")
 	t.eq(table.music, {}, "配乐表先空着")
 	t.eq(table.cue(&"nope"), {}, "不在表里的是空")
 	var f := FileAccess.open(TMP_CUES, FileAccess.WRITE)

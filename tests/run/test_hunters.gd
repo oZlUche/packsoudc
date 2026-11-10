@@ -65,9 +65,9 @@ static func run_pipeline(t: TestCase) -> void:
 	var report := ImportReport.new()
 	var def := ContentImporter.import_hunter(sample, ContentImporter.Context.new(), report)
 	t.check(report.ok(), "合法的猎手导入没有错：%s" % report.to_text())
-	var text := ContentExporter.to_json(ContentExporter.export_hunter(def))
+	var text := ContentExporter.to_json(ContentExporter.dump(def))
 	var back := ContentImporter.import_hunter(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
-	t.eq(ContentExporter.to_json(ContentExporter.export_hunter(back)), text, "导出 → 导入 → 再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "导出 → 导入 → 再导出逐字节相同")
 	t.check(back.behavior is PatrolBehavior and (back.behavior as PatrolBehavior).every_steps == 3, "行动逻辑按注册表造、参数在")
 	var outs := back.loss_options[0].outcomes if not back.loss_options.is_empty() else []
 	t.eq(outs.size(), 2, "两条战败后果")
@@ -96,7 +96,7 @@ static func run_pipeline(t: TestCase) -> void:
 			var r := ImportReport.new()
 			var res := ContentImporter.import_hunter(JSON.parse_string(raw), ContentImporter.Context.new(), r)
 			t.check(r.ok(), "%s 导入没有错：%s" % [f, r.to_text()])
-			t.eq(ContentExporter.to_json(ContentExporter.export_hunter(res)), raw, "%s 是往返不动点" % f)
+			t.eq(ContentExporter.to_json(ContentExporter.dump(res)), raw, "%s 是往返不动点" % f)
 			t.check(ResourceLoader.exists(ContentPaths.asset_file("hunters", f.get_basename())), "%s 的资产在" % f)
 	t.check(files >= 1, "至少一份猎手文件")
 	t.eq(c.hunter_defs.size(), files, "HunterSystem.load_all 装回全部 %d 份" % files)
@@ -114,7 +114,6 @@ static func run_spawn_territory_turn(t: TestCase) -> void:
 	if s == null:
 		return
 	t.not_null(s.hunters, "猎手系统装上了")
-	t.check(s.mechanic_tags.has(&"hunters"), "留了记号")
 	t.check(not s.hunters.has_spawned, "挑完出生点还没出现（第 0 步）")
 	t.check(_step_once(s), "走一步")
 	t.check(s.hunters.has_spawned, "走了第一步出现")

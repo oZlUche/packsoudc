@@ -10,7 +10,7 @@
 class_name GameFlow
 extends RefCounted
 
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA, CHEST, FORGE, RANSOM }
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR, ENCYCLOPEDIA, CHEST, FORGE, RANSOM }
 
 signal screen_changed(screen: int, payload: Dictionary)
 ## 101 第 5 刀：当前的这一局换了（开局 / 读档 / 回主菜单时 `null`）。UI 据此把只属于一局的东西挂上 / 摘掉
@@ -116,7 +116,7 @@ func _init(p_items: ItemDatabase = null, p_enemies: EnemyDatabase = null, p_sets
 
 
 static func is_overlay(s: int) -> bool:
-	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.REST, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR, Screen.CHEST, Screen.FORGE, Screen.RANSOM]
+	return s in [Screen.BATTLE, Screen.LOOT, Screen.SEARCH, Screen.SHOP, Screen.EVENT, Screen.PREBATTLE, Screen.SAFE, Screen.ALTAR, Screen.CHEST, Screen.FORGE, Screen.RANSOM]
 
 
 #region 底屏之间
@@ -172,10 +172,6 @@ func continue_game() -> bool:
 
 ## 主菜单「新的游戏」：开一份新存档 —— 挑一个空位切过去再开局；三位都满了去读取存档屏（删一个再来）。单文件模式就是 new_run
 func start_new_game() -> bool:
-	return _start_new()
-
-
-func _start_new() -> bool:
 	if slots == null:
 		new_run()
 		return true
@@ -555,10 +551,6 @@ func check_achievements() -> Array[AchievementDef]:
 	return got
 
 
-func achievement_of(id: StringName) -> AchievementDef:
-	return _sync_achievements().of_id(id)
-
-
 ## 哪一枚成就给这个解锁 id；没有 null
 func achievement_granting(unlock_id: StringName) -> AchievementDef:
 	return _sync_achievements().granting(unlock_id)
@@ -672,14 +664,6 @@ func characters_for(chapter: ChapterDef) -> Array[CharacterDef]:
 		if chapter == null or chapter.allows_character(ch.id):
 			out.append(ch)
 	return out
-
-
-## 090（作者定）：带回来的背包没清空**不再拦着开新局**（原 058 第 7 条的门）—— 开局屏把它们收到地上：拖上包 = 带上、拖进仓库 = 置入、
-## 留着的出发就没了、回主菜单原样放回。局外屏只提示这一句；没有就空串
-func pending_hint() -> String:
-	if meta != null and meta.has_pending_board():
-		return UiText.t("log.pending_board") % meta.board.item_count()
-	return ""
 
 
 ## 098：读不出来、已经备份下来的那一句（没发生过返回空）。读取存档屏与主菜单各显示一次
@@ -858,13 +842,6 @@ func sell_item(uid: int) -> int:
 func sell_bag(uid: int) -> int:
 	var got := meta.sell_bag(uid, sell_ratio())
 	if got >= 0:
-		save_meta()
-	return got
-
-
-func sell_where(max_rarity: int, tag: StringName = &"") -> Dictionary:
-	var got := meta.sell_where(max_rarity, sell_ratio(), tag)
-	if int(got["count"]) > 0:
 		save_meta()
 	return got
 
@@ -1182,26 +1159,6 @@ func refuse_ransom() -> bool:
 #endregion
 
 
-## 093：神坛上献祭 [param uids]（棋盘 / 地上 / 祭品台里的实例 uid）。返回 RunState.offer 的账；卖掉的实例从所在容器移除
-func offer(insts: Array, node: MapNode = null) -> Dictionary:
-	if run == null:
-		return {"points": 0, "count": 0}
-	var altar := AltarModule.of(run)
-	if altar == null:
-		return {"points": 0, "count": 0}
-	var got := altar.offer(insts, node)
-	if int(got["count"]) > 0:
-		for inst in insts:
-			var it := inst as ItemInstance
-			if it == null:
-				continue
-			for c in [run.board, run.storage]:
-				if (c as ItemContainer).has_item(it.uid):
-					(c as ItemContainer).remove(it.uid)
-		save()
-	return got
-
-
 ## 136：角色带的「脱身」技能（没有 = null）
 func slip_skill() -> RunSkill:
 	if run == null or run.skills == null:
@@ -1375,17 +1332,6 @@ func _settle_run() -> void:
 
 
 #region 地图上的动作
-## 099（作者定）：把棋盘上的这件信物奉为主信仰（右键 / 在棋盘里重新落下都走这里）。
-## 不是信物、不在棋盘上、这一局没开始都返回 false
-func reseat_anchor(uid: int) -> bool:
-	if run == null or run.board == null:
-		return false
-	var inst := run.board.get_item(uid)
-	if inst == null or inst.def == null or not inst.def.is_anchor():
-		return false
-	return run.board.reseat(uid)
-
-
 func pick_spawn(id: int) -> bool:
 	return run != null and run.pick_spawn(id)
 

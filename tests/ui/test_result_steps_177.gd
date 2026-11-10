@@ -68,7 +68,7 @@ static func run_store_skips(t: TestCase) -> void:
 
 
 static func frame_sell_by_tag(t: TestCase, root: Window) -> void:
-	t.begin("177 补 1.2 · 一键出售按标签筛：和稀有度取交集；下拉只列仓库里有的、给玩家看的标签；那类卖光了回「不限」")
+	t.begin("177 补 1.2 · 一键出售按标签筛：下拉只列仓库里有的、给玩家看的标签；那类卖光了回「不限」")
 	var c = NodeScreens._content()
 	var f := Support.flow(c, "s177s", 10000.0)
 	# 挑一个给玩家看的标签 X：两件带它、一件不带
@@ -90,15 +90,6 @@ static func frame_sell_by_tag(t: TestCase, root: Window) -> void:
 		return
 	for d in [with_tag[0], with_tag[1], without]:
 		t.check(_place_any(f.meta.warehouse, d), "仓库里放进「%s」" % Names.of(d))
-	var ratio := f.sell_ratio()
-	t.eq(int(f.meta.sell_preview(-1, ratio, tag)["count"]), 2, "「全部」+ 标签：两件")
-	t.eq(int(f.meta.sell_preview(-1, ratio)["count"]), 3, "不限标签：三件")
-	for cap in range(0, 5):
-		var expect := 0
-		for d in with_tag:
-			if d.rarity <= cap:
-				expect += 1
-		t.eq(int(f.meta.sell_preview(cap, ratio, tag)["count"]), expect, "稀有度 ≤ %d 且带标签：%d 件（交集）" % [cap, expect])
 	var tags := f.meta.sell_tags()
 	t.check(tags.has(tag), "下拉列出了 %s" % tag)
 	var internal := false

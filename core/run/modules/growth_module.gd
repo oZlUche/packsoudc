@@ -30,10 +30,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return "生长：自然之神的种子在背包里随倒计时长大，长到一定阶段就扎根"
-
-
 func to_dict() -> Dictionary:
 	var out := {}
 	for uid in _seen:

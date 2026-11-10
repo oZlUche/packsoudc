@@ -134,9 +134,6 @@ static func run_coach_data(t: TestCase) -> void:
 		t.check((some as Array).all(func(s: Dictionary) -> bool: return TextLint.scan({"text": String(s["text"])}).is_empty()), "不写数字")
 	var p1 := load(ContentPaths.asset_file("chapters", "prologue")) as ChapterDef
 	t.eq(p1.coaches, {"map": "prologue_map", "battle": "prologue_battle", "bag": "prologue_bag", "prebattle": "prologue_prebattle"}, "序章一四份教程收在一个字典里")
-	# 旧 json 的 coach / coach_battle 导入时收进字典
-	var old_ch := ContentImporter.import_chapter({"id": "x", "coach": "a", "coach_battle": "b", "map_source": {"mode": "PRESET", "preset_path": "res://data/maps/prologue.json"}}, ContentImporter.Context.new(), ImportReport.new())
-	t.eq(old_ch.coaches, {"map": "a", "battle": "b"}, "旧字段 coach / coach_battle → coaches")
 	var bad_kind := ImportReport.new()
 	ContentImporter.import_chapter({"id": "x", "coaches": {"nope": "a"}}, ContentImporter.Context.new(), bad_kind)
 	t.check(bad_kind.to_text().contains("nope"), "认不得的屏报出来")

@@ -106,9 +106,9 @@ static func run_import_checks(t: TestCase) -> void:
 	t.check(report.ok(), "合法：%s" % report.to_text())
 	t.check(def.loss_pick is LossPickFixed and (def.loss_pick as LossPickFixed).index == 1, "选法按注册表造")
 	t.check(def.loss_options[1].outcomes[0] is LossExpel, "驱逐构件按注册表造")
-	var text := ContentExporter.to_json(ContentExporter.export_hunter(def))
+	var text := ContentExporter.to_json(ContentExporter.dump(def))
 	var back := ContentImporter.import_hunter(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
-	t.eq(ContentExporter.to_json(ContentExporter.export_hunter(back)), text, "导出 → 导入 → 再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "导出 → 导入 → 再导出逐字节相同")
 	t.check(def.summary().contains("击退") and def.summary().contains("驱逐"), "summary 列出两档：%s" % def.summary())
 	for bad in [
 			{"id": "x", "loss_options": [{"display_name": "没名字"}]},

@@ -55,13 +55,8 @@ func run() -> void:
 	]
 	var md := BalanceMatrix.markdown(result, "扫表 %s · %s" % [date, pool_id], header)
 	DirAccess.make_dir_recursive_absolute(out_path.get_base_dir())
-	var f := FileAccess.open(out_path, FileAccess.WRITE)
-	if f == null:
-		print("写不了 " + out_path)
-		finish(1)
+	if not write_text(out_path, md):
 		return
-	f.store_string(md)
-	f.close()
 	print(md)
 	print("写入 %s" % out_path)
 	finish(0)

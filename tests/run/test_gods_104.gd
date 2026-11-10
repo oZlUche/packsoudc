@@ -88,9 +88,9 @@ static func run_deeds(t: TestCase) -> void:
 	t.eq(_gain(hunt, &"place_item", {"tags": ["beast_part"], "rarity": 3, "first_in_run": false}), 0, "再置入同种不给")
 	t.eq(_gain(hunt, &"place_item", {"tags": ["weapon"], "rarity": 3, "first_in_run": true}), 0, "不是兽材不给")
 	# 往返
-	var text := ContentExporter.to_json(ContentExporter.export_faith(skill))
+	var text := ContentExporter.to_json(ContentExporter.dump(skill))
 	var back := ContentImporter.import_faith(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
-	t.eq(ContentExporter.to_json(ContentExporter.export_faith(back)), text, "技巧之神导出 → 导入 → 再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "技巧之神导出 → 导入 → 再导出逐字节相同")
 
 
 static func run_acquired_wiring(t: TestCase) -> void:
@@ -211,7 +211,7 @@ static func run_offerings(t: TestCase) -> void:
 	# has_stat 往返
 	var data := {"id": "probe", "display_name": "试", "offerings": [{"has_stat": "crit_chance", "multiplier": 8.0}]}
 	var def := ContentImporter.import_faith(data, ContentImporter.Context.new(), ImportReport.new())
-	var text := ContentExporter.to_json(ContentExporter.export_faith(def))
+	var text := ContentExporter.to_json(ContentExporter.dump(def))
 	t.check(text.contains("\"has_stat\": \"crit_chance\""), "has_stat 导出")
 	var back := ContentImporter.import_faith(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
 	t.eq((back.offerings[0] as OfferingRule).has_stat, &"crit_chance", "has_stat 导入回来")
@@ -310,13 +310,13 @@ static func run_crit(t: TestCase) -> void:
 		t.eq(Glossary.mod_text(fb_mods[0] as StatModifier), "暴击伤害 +20%", "说明写 +20%")
 		t.check(is_equal_approx(float(pct_item.combat.base_stats["crit_chance"]), 0.2), "基础属性里的暴击率 20 → 0.2")
 		t.check(is_equal_approx(float(pct_item.combat.base_stats["damage"]), 23.0), "别的属性不动（143：胫骨大棒伤害 23）")
-		var back := ContentExporter.export_item(pct_item)
+		var back := ContentExporter.dump(pct_item)
 		var back_mods: Array = back["faith_bonuses"][0]["mods"]
 		t.eq(float(back_mods[0]["amount"]), 20.0, "导出写回 20")
 		t.eq(float(back_mods[1]["amount"]), 10.0, "导出写回 10")
 		t.eq(float(back["combat"]["base_stats"]["crit_chance"]), 20.0, "基础属性导出写回 20")
 		var again := ContentImporter.import_item(back, ContentImporter.Context.new(), ImportReport.new())
-		t.eq(ContentExporter.to_json(ContentExporter.export_item(again)), ContentExporter.to_json(back), "导出 → 导入 → 再导出 逐字节不变")
+		t.eq(ContentExporter.to_json(ContentExporter.dump(again)), ContentExporter.to_json(back), "导出 → 导入 → 再导出 逐字节不变")
 	var tiny := ImportReport.new()
 	ContentImporter.import_buff({"id": "b", "display_name": "b", "mods": [{"stat": "crit_chance", "amount": 0.05}]}, ContentImporter.Context.new(), tiny)
 	t.check(tiny.to_text().contains("百分数"), "写成小数（0.05）会提醒：%s" % tiny.to_text().strip_edges().left(80))

@@ -289,7 +289,7 @@ static func run_card_without_identity(t: TestCase) -> void:
 	for id in [&"andreus", &"brutus", &"marcus"]:
 		var ch := CS._character(c, id)
 		t.check(not ("identity" in ch), "%s：角色上没有身份字段" % id)
-		var lines := ch.skill_lines()
+		var entries := ch.skill_entries()
 		var passives := 0
 		var shown_active := 0
 		for sk in ch.skills:
@@ -297,10 +297,10 @@ static func run_card_without_identity(t: TestCase) -> void:
 				passives += 1
 			elif (sk as RunSkill).shown_to_player():
 				shown_active += 1
-		t.eq(lines.size(), passives + shown_active, "%s：%d 行" % [id, passives + shown_active])
-		for i in lines.size():
-			t.check(lines[i].begins_with("被动：") if i < passives else lines[i].begins_with("主动："), "%s：%s" % [id, lines[i]])
-			t.check(not lines[i].contains("{"), "%s：占位符都填上了" % id)
+		t.eq(entries.size(), passives + shown_active, "%s：%d 行" % [id, passives + shown_active])
+		for i in entries.size():
+			t.eq(String(entries[i]["kind"]), "被动" if i < passives else "主动", "%s：%s" % [id, entries[i]["name"]])
+			t.check(not String(entries[i]["name"]).contains("{") and not String(entries[i]["text"]).contains("{"), "%s：占位符都填上了" % id)
 		for sk in ch.skills:
 			t.check(not ("slot" in sk), "%s：技能没有分组字段" % id)
 	t.check(not RunHooks.NAMES.has(&"identity"), "没有 identity 这个 hook")

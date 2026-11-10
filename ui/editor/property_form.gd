@@ -170,7 +170,7 @@ func _row_for(p_owner: Object, prop: Dictionary) -> Control:
 			return cb
 
 		TYPE_INT:
-			var options := ContentSchema.enum_options(p_owner, prop)
+			var options := ContentSchema.enum_options(prop)
 			if not options.is_empty():
 				return _labeled(p_owner, key, _enum_picker(p_owner, prop, options, int(value)))
 			return _labeled(p_owner, key, _number(value, 1.0, func(v: float): p_owner.set(key, int(v)), prop))
@@ -186,7 +186,7 @@ func _row_for(p_owner: Object, prop: Dictionary) -> Control:
 		TYPE_STRING, TYPE_STRING_NAME:
 			if int(prop["hint"]) == PROPERTY_HINT_ENUM:
 				# 111：字符串枚举（`@export_enum`）→ 下拉；值仍是字符串，显示名走 FieldText.enum_label
-				return _labeled(p_owner, key, _string_picker(p_owner, prop, ContentSchema.enum_options(p_owner, prop), String(value)))
+				return _labeled(p_owner, key, _string_picker(p_owner, prop, ContentSchema.enum_options(prop), String(value)))
 			if type == TYPE_STRING_NAME and _is_stat_field(key):
 				# 091（作者定）：指向属性键的字段（修饰的 stat、效果的 damage_stat）下拉浏览已有属性，也能自定义
 				# 可以为空的（默认值是空串，如 amount_stat）第一项是「不用」，空值就停在它上，不再被显示成第一个属性
@@ -289,7 +289,7 @@ func _enum_picker(
 	for i in options.size():
 		ob.add_item(FieldText.enum_label(options[i]), i)
 		ob.set_item_tooltip(i, options[i])
-		var v = ContentSchema.enum_value(p_owner, prop, options[i])
+		var v = ContentSchema.enum_value(prop, options[i])
 		values.append(int(v) if v != null else i)
 		if values[i] == current:
 			ob.select(i)

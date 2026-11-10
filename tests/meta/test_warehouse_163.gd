@@ -111,7 +111,7 @@ static func run_tech(t: TestCase) -> void:
 
 
 static func run_meta_across_pages(t: TestCase) -> void:
-	t.begin("163 · 局外跨页：发放、一键出售预览、一键置入都按全仓库算")
+	t.begin("163 · 局外跨页：发放、一键出售、一键置入都按全仓库算")
 	ItemInstance.reset_uid_counter()
 	var db := _db()
 	var m := MetaState.new(GameFlow.load_meta_rules())
@@ -119,8 +119,10 @@ static func run_meta_across_pages(t: TestCase) -> void:
 	var n := _fill_page(m.warehouse, db, 0, &"steel_ingot")
 	t.eq(m.grant([db.get_def(&"knife")]), 1, "第一页满了也发得进")
 	t.eq(m.warehouse.page(1).item_count(), 1, "落在第二页")
-	var p := m.sell_preview(-1, 0.5)
-	t.eq(int(p["count"]), n + 1, "一键出售预览跨页数件")
+	var uids: Array = []
+	for it in m.warehouse.items():
+		uids.append((it as ItemInstance).uid)
+	t.eq(int(m.sell_selected(uids, 0.5)["count"]), n + 1, "一键出售跨页数件")
 
 
 static func frame_widget(t: TestCase, root: Window) -> void:

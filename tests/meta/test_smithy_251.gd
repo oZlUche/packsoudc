@@ -78,8 +78,7 @@ static func run_forge(t: TestCase) -> void:
 	var hi := _recipe(&"longbow", {"oak_log": 1}, 1, 2)
 	T110._add(m, db, &"oak_log")
 	t.eq(Smithy.can_forge(m, hi, db), UiText.t("smithy.need_level") % 2, "1 级打不了 2 级的配方")
-	var split := Smithy.recipes_for(m, [r, hi])
-	t.check((split["ready"] as Array).has(r) and (split["level_locked"] as Array).has(hi), "分成会打的 / 还不会的")
+	t.check(Smithy.knows(m, r) and r.level <= Smithy.level(m) and Smithy.knows(m, hi) and hi.level > Smithy.level(m), "分成会打的 / 还不会的")
 
 
 static func run_full(t: TestCase) -> void:

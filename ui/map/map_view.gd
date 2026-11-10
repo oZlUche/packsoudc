@@ -1127,15 +1127,8 @@ func _draw_tag(text: String, at: Vector2, placed: Array[Rect2], ink: Color = UiT
 		box.position.y += TAG_NUDGE
 		guard += 1
 	placed.append(box)
-	var tex := UiTheme.art_cached(UiTheme.ART_MAP_TAG)
-	if tex != null:
-		var m: Array = UiTheme.art_meta(UiTheme.ART_MAP_TAG).get("margin", [6, 4, 6, 4])
-		var sb := StyleBoxTexture.new()
-		sb.texture = tex
-		sb.texture_margin_left = float(m[0])
-		sb.texture_margin_top = float(m[1])
-		sb.texture_margin_right = float(m[2])
-		sb.texture_margin_bottom = float(m[3])
+	var sb := UiTheme.art_box(UiTheme.ART_MAP_TAG)
+	if sb != null:
 		draw_style_box(sb, box)
 	else:
 		draw_rect(box, Color(UiTheme.PAPER, 0.9))

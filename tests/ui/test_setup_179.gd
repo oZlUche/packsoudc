@@ -118,7 +118,6 @@ static func run_skill_entries(t: TestCase) -> void:
 	t.eq(String(e[0]["name"]), "求饶", "名字单独一项")
 	t.check(String(e[0]["text"]).ends_with("核心点不能。"), "说明：%s" % e[0]["text"])
 	t.check(String(e[1]["text"]).ends_with("。") and not String(e[1]["text"]).contains("求饶"), "书面用语、说明里不重复名字：%s" % e[1]["text"])
-	t.eq(e.size(), an.skill_lines().size(), "条数和 skill_lines 一样")
 	for ch in chars.values():
 		for s in (ch as CharacterDef).skills:
 			var d := Names.description_of(s)

@@ -426,7 +426,7 @@ static func frame_tone_tooltip(t: TestCase, root: Window) -> void:
 	var tip := HoverTip.new()
 	root.add_child(tip)
 	var src := "[color=#%s]生命 10[/color]\n普通字 [url=term:灼烧][u]灼烧[/u][/url]" % UiPalette.HP.to_html(false)
-	tip.show_text(src, Vector2(40, 40), null, [{"name": "灼烧", "text": "每秒掉血"}])
+	tip.show_text(src, Vector2(40, 40), null, {"灼烧": {"name": "灼烧", "text": "每秒掉血"}})
 	t.eq(tip.tone(), UiTheme.TONE_DARK, "悬浮窗是深底")
 	t.check(tip.text().contains(UiPalette.HP.to_html(false)), "正文的红用深底版（原色）")
 	var rich := _first_rich(tip)

@@ -24,7 +24,7 @@ static func run_round_trip(t: TestCase) -> void:
 	t.begin("章节管线 · 导出再导入，逐字节一致")
 
 	var chapter := _sample()
-	var dumped := ContentExporter.export_chapter(chapter)
+	var dumped := ContentExporter.dump(chapter)
 	t.eq(String(dumped.get("id", "")), "t_chapter", "id 导出了")
 	var ms: Dictionary = dumped.get("map_source", {})
 	t.check(ms.has("generator_config"), "嵌套的 Resource 导出了")
@@ -55,7 +55,7 @@ static func run_round_trip(t: TestCase) -> void:
 		"字典里套数组的配额读回来一样（整数没变成浮点）")
 	t.eq(cfg.zone_spec != null, true, "高危区配置在")
 	t.eq(cfg.scales.size(), 3, "三档规模模板")
-	t.eq(ContentExporter.to_json(ContentExporter.export_chapter(back)), text,
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text,
 		"**再导出一次，文本逐字节相同**")
 
 
@@ -63,7 +63,7 @@ static func run_generates(t: TestCase) -> void:
 	t.begin("章节管线 · 导入的章节能直接生成同一张图")
 
 	var chapter := _sample()
-	var text := ContentExporter.to_json(ContentExporter.export_chapter(chapter))
+	var text := ContentExporter.to_json(ContentExporter.dump(chapter))
 	var report := ImportReport.new()
 	var back := ContentImporter.import_chapter(JSON.parse_string(text), _ctx(), report)
 	t.check(report.ok(), "导得回来")
@@ -80,7 +80,7 @@ static func run_generates(t: TestCase) -> void:
 static func run_validation(t: TestCase) -> void:
 	t.begin("章节管线 · 比引擎严格")
 
-	var base := ContentExporter.export_chapter(_sample())
+	var base := ContentExporter.dump(_sample())
 
 	var no_id := base.duplicate(true)
 	no_id.erase("id")
@@ -141,7 +141,7 @@ static func run_authoring_file(t: TestCase) -> void:
 	t.check(r.ok(), "导得进：%s" % r.to_text())
 	if chapter == null:
 		return
-	t.eq(ContentExporter.to_json(ContentExporter.export_chapter(chapter)), text,
+	t.eq(ContentExporter.to_json(ContentExporter.dump(chapter)), text,
 		"仓库里的作者数据就是导出器的格式，往返逐字节相同")
 
 	var asset := ContentPaths.asset_file("chapters", "free_mode")
@@ -151,7 +151,7 @@ static func run_authoring_file(t: TestCase) -> void:
 		t.check(loaded != null and loaded.map_source != null, "资产读得出来")
 		if loaded != null:
 			# .tres 存字典时会重排键的顺序，所以比的是导出的字典，不是文本
-			t.eq(ContentExporter.export_chapter(loaded), ContentExporter.export_chapter(chapter),
+			t.eq(ContentExporter.dump(loaded), ContentExporter.dump(chapter),
 				"资产与作者数据一致 —— 改了 JSON 忘了导入，这条会红")
 			var g := loaded.map_source.resolve(1)
 			t.not_null(g, "第一章生成得出图")

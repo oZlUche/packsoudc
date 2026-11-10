@@ -203,13 +203,9 @@ static func frame_sell_tab(t: TestCase, root: Window) -> void:
 		Support.cleanup("091")
 		return
 	t.check(f.sell_ratio() > 0.0 and f.sell_ratio() <= 1.0, "出售比例在 (0, 1]（%.2f）" % f.sell_ratio())
-	var pw := MetaState.sell_price(white, f.sell_ratio())
-	var ph := MetaState.sell_price(higher, f.sell_ratio())
+	var pw := MetaState.sell_price_of(a, f.sell_ratio())
+	var ph := MetaState.sell_price_of(b, f.sell_ratio())
 	t.eq(pw, floori(float(ItemValue.of(white)) * f.sell_ratio()), "卖价 = 定价 × 比例，向下取整")
-	var pre := f.meta.sell_preview(0, f.sell_ratio())
-	t.eq([int(pre["count"]), int(pre["funds"])], [1, pw], "预览「白色」：一件、它的钱")
-	t.eq(int(f.meta.sell_preview(-1, f.sell_ratio())["count"]), 2, "预览「全部」：两件")
-	t.eq(f.meta.warehouse.item_count(), 2, "预览不动仓库")
 
 	var screen = load("res://ui/game/meta_screen.gd").new()
 	screen.flow = f

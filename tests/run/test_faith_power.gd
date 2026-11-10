@@ -49,7 +49,7 @@ static func run_defs_and_tiers(t: TestCase) -> void:
 	var defs := FaithDef.load_all()
 	for id in defs:
 		var def_ := defs[id] as FaithDef
-		t.check(not def_.deeds.is_empty(), "%s 列了攒信力的行为：%s" % [id, def_.deeds_summary()])
+		t.check(not def_.deeds.is_empty(), "%s 列了攒信力的行为" % id)
 		for i in range(1, def_.thresholds.size()):
 			t.check(def_.thresholds[i] >= def_.thresholds[i - 1], "%s 的阈值非递减" % id)
 		t.eq(def_.tier_of(0), 0, "%s：0 点第 0 阶" % id)
@@ -64,9 +64,9 @@ static func run_defs_and_tiers(t: TestCase) -> void:
 	var report := ImportReport.new()
 	var def := ContentImporter.import_faith(sample, ContentImporter.Context.new(), report)
 	t.check(report.ok(), "导入没有错：%s" % report.to_text())
-	var text := ContentExporter.to_json(ContentExporter.export_faith(def))
+	var text := ContentExporter.to_json(ContentExporter.dump(def))
 	var back := ContentImporter.import_faith(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
-	t.eq(ContentExporter.to_json(ContentExporter.export_faith(back)), text, "导出 → 导入 → 再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "导出 → 导入 → 再导出逐字节相同")
 	t.eq(back.deeds.size(), 3, "三个行为")
 	t.eq(_expected_gain(back, &"travel", {"steps": 6}), 2, "走到第 6 步：每 3 步 +2")
 	t.eq(_expected_gain(back, &"travel", {"steps": 7}), 0, "第 7 步不给")
@@ -83,10 +83,10 @@ static func run_defs_and_tiers(t: TestCase) -> void:
 		ContentImporter.import_faith(bad["data"], ContentImporter.Context.new(), r)
 		t.check(not r.ok(), "拦下：%s" % bad["why"])
 	var r2 := ImportReport.new()
-	ContentImporter.import_item({"id": "p", "display_name": "p", "shape": ["1"], "tags": ["gear"], "faith_bonuses": [{"tier": 1, "mods": [{"stat": "armor", "flat": 1.0}]}]}, ContentImporter.Context.new(), r2)
+	ContentImporter.import_item({"id": "p", "display_name": "p", "shape": ["1"], "tags": ["gear"], "faith_bonuses": [{"tier": 1, "mods": [{"stat": "armor", "amount": 1.0}]}]}, ContentImporter.Context.new(), r2)
 	t.check(not r2.ok(), "拦下：无信仰之物不能有按信力解锁的功能")
 	var r3 := ImportReport.new()
-	ContentImporter.import_item({"id": "p", "display_name": "p", "shape": ["1"], "tags": ["faith", "faith:skill", "gear"], "faith_bonuses": [{"tier": 0, "mods": [{"stat": "armor", "flat": 1.0}]}]}, ContentImporter.Context.new(), r3)
+	ContentImporter.import_item({"id": "p", "display_name": "p", "shape": ["1"], "tags": ["faith", "faith:skill", "gear"], "faith_bonuses": [{"tier": 0, "mods": [{"stat": "armor", "amount": 1.0}]}]}, ContentImporter.Context.new(), r3)
 	t.check(not r3.ok(), "拦下：阶 0")
 
 

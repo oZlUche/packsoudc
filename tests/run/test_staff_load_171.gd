@@ -32,19 +32,12 @@ static func _two_staves(db: ItemDatabase) -> Dictionary:
 
 
 static func run_staff_data(t: TestCase) -> void:
-	t.begin("171 · 数据：魔法杖的晶石座是装载槽（没有受益槽）；默认只装魔晶石；老 JSON 里法杖的受益格导入时迁成装载格（待定 4 A）")
+	t.begin("171 · 数据：魔法杖的晶石座是装载槽（没有受益槽）；默认只装魔晶石")
 	var db := _db()
 	var staff := db.get_def(&"magic_staff")
 	t.eq(staff.adjacency.load_cells.size(), 2, "两个装载槽")
 	t.check(staff.adjacency.receive_cells.is_empty(), "没有受益槽")
 	t.eq(staff.adjacency.load_tags(), [&"crystal"] as Array[StringName], "默认只装魔晶石")
-	var old := {"id": "old_staff", "display_name": "旧杖", "shape": ["1", "1", "1"], "tags": ["weapon", "melee", "staff", "magic"],
-		"adjacency": {"receive_cells": [[-1, 0], [1, 0]], "receive_filter": ["crystal"]}}
-	var report := ImportReport.new()
-	var def := ContentImporter.import_item(old, ContentImporter.Context.new(), report)
-	t.eq(def.adjacency.load_cells, [Vector2i(-1, 0), Vector2i(1, 0)] as Array[Vector2i], "受益格迁成装载格")
-	t.check(def.adjacency.receive_cells.is_empty(), "受益格清空")
-	t.check(report.to_text().contains("迁成了装载格"), "提醒重存一次")
 
 
 static func run_one_staff_per_crystal(t: TestCase) -> void:

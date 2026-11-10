@@ -31,10 +31,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return "一局里能拿到 buff：事件给的，有的整局有效、有的几步就没"
-
-
 func install(run: RunState) -> void:
 	if run == null:
 		return

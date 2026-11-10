@@ -99,7 +99,7 @@ static func frame_run_editor_smoke(t: TestCase, root: Window) -> void:
 		t.check(report.ok(), "%s 在编辑器里校验通过：%s" % [id, report.to_text()])
 
 	# JSON 预览就是将要写盘的内容
-	t.eq(ed._preview.text, ContentExporter.to_json(ContentExporter.export_item(ed._def)),
+	t.eq(ed._preview.text, ContentExporter.to_json(ContentExporter.dump(ed._def)),
 		"JSON 预览与导出器一致")
 
 	ed.queue_free()

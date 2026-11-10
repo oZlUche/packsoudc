@@ -185,7 +185,7 @@ func add_tier(pieces: int) -> SetTier:
 
 #region 列表与草稿（公共的在 AuthoringEditor）
 func _export(d) -> Dictionary:
-	return ContentExporter.export_set(d)
+	return ContentExporter.dump(d)
 
 
 func _import(data: Dictionary, report: ImportReport) -> Resource:

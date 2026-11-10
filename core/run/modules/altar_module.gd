@@ -45,10 +45,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return UiText.t("log.altar_describe")
-
-
 func install(run: RunState) -> void:
 	if run == null:
 		return

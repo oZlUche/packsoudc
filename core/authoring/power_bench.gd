@@ -104,7 +104,7 @@ static func _spec(defs: Array[ItemDef], quality: int = 0, ammo: ItemDef = null, 
 		BattleCompiler.quality_stats(it.stats, def.combat, quality)
 		it.rules = BattleCompiler.quality_rules(def.combat.rules, quality) if quality > 0 else def.combat.rules
 		it.power_mult = StatMath.from_float(def.combat.power_mult)     # 273：法杖威力系数（281 之前台架漏了它）
-		var feed := ammo if shoots_ammo(def) else crystal if loads_crystals(def) else null
+		var feed := ammo if _fires_loaded(def, true) else crystal if _fires_loaded(def, false) else null
 		if feed != null:
 			it.loaded = [BattleCompiler.loaded_entry_of(feed, defs.size() + 1)] as Array[Dictionary]
 			it.stats.ensure(BattleStats.LOAD_STEPS).base = StatMath.ONE
@@ -112,24 +112,13 @@ static func _spec(defs: Array[ItemDef], quality: int = 0, ammo: ItemDef = null, 
 	return spec
 
 
-## 规则里有射箭（[member FireLoaded.ammo]）的 —— 弓弩
-static func shoots_ammo(def: ItemDef) -> bool:
+## 规则里有装填出手（[FireLoaded]）的：[param arrows] 开 = 射箭（[member FireLoaded.ammo]）的 —— 弓弩；关 = 不射箭的 —— 法杖，装晶石（281）
+static func _fires_loaded(def: ItemDef, arrows: bool) -> bool:
 	if def == null or def.combat == null:
 		return false
 	for r in def.combat.rules:
 		for e in (r as AbilityRule).effects:
-			if e is FireLoaded and (e as FireLoaded).ammo:
-				return true
-	return false
-
-
-## 281：规则里有不射箭的装填出手（[FireLoaded]，ammo 关）的 —— 法杖，装晶石
-static func loads_crystals(def: ItemDef) -> bool:
-	if def == null or def.combat == null:
-		return false
-	for r in def.combat.rules:
-		for e in (r as AbilityRule).effects:
-			if e is FireLoaded and not (e as FireLoaded).ammo:
+			if e is FireLoaded and (e as FireLoaded).ammo == arrows:
 				return true
 	return false
 

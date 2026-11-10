@@ -116,30 +116,20 @@ func refresh() -> void:
 		_add_row(t, MapNodeStyle.name_of(t), UiTheme.ART_LEGEND_FLAG if t == &"spawn" and UiTheme.art_cached(UiTheme.ART_LEGEND_FLAG) != null else "")
 	var produce := produce_lines()
 	if not produce.is_empty():
-		_add_text(UiText.t("hud.produce"))
+		_add_row(&"", UiText.t("hud.produce"), "", false)
 		for line in produce:
-			_add_text(line)
+			_add_row(&"", line, "", false)
 
 
-## 267：没有图标的一行字（产物段）
-func _add_text(p_text: String) -> void:
-	var row := UiTheme.hbox(0)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var name_ := Label.new()
-	name_.theme_type_variation = UiTheme.LABEL_HUD
-	name_.text = p_text
-	name_.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(name_)
-	_rows.add_child(row)
-
-
-func _add_row(type: StringName, p_text: String, art_name: String) -> void:
+## 267：[param with_mark] 假 = 没有图标的一行字（产物段）
+func _add_row(type: StringName, p_text: String, art_name: String, with_mark: bool = true) -> void:
 	var row := UiTheme.hbox(int(TEXT_GAP))
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var mark := _Mark.new()
-	mark.type = type
-	mark.art_name = art_name
-	row.add_child(mark)
+	if with_mark:
+		var mark := _Mark.new()
+		mark.type = type
+		mark.art_name = art_name
+		row.add_child(mark)
 	var name_ := Label.new()
 	name_.theme_type_variation = UiTheme.LABEL_HUD
 	name_.text = p_text

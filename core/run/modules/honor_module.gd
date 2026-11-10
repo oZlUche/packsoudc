@@ -20,10 +20,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return "军功：打赢一场，军功牌记点、攒够了升阶"
-
-
 func install(run: RunState) -> void:
 	if run == null or run.events == null:
 		return

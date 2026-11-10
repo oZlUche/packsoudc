@@ -258,7 +258,7 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 编辑器在每条修饰下画一行灰字说明它怎么生效。暴击率 / 暴击伤害只收加算（104）。
 
 > 133 之前有四个乘区（`EMPOWER / SHARP / ELEMENT / HASTE`），按枚举顺序连乘。已取消：锋利、元素、急速这类是独立的 buff / 属性，不是增益的生效方式。
-> 旧键 `mult_category / mult_percent / flat` 导入时自动迁移（`mult_category` 提醒忽略，又乘又加的报错要求拆成两条）。
+> 属性修饰只写 `mode + amount`；旧键 `mult_category / mult_percent / flat` 导入器不再认（按未知字段报错）。
 
 ---
 
@@ -267,8 +267,8 @@ on_stacks_at_least(蓄力, 3)          + always + status_stack(蓄力, 3) + deal
 | 字段 | 含义 |
 |---|---|
 | `id` / `display_name` / `is_debuff` | 标识与 UI |
-| `max_stacks` | 层数上限，0 = 不限 |
-| `duration_sec` | 作者定的规矩：**可叠层的 buff（`max_stacks != 1`）永续，不填时长（导入器拦）**—— 中毒 / 流血 / 结界叠上就一直在，直到被清除或战斗结束；**不可叠层的（`max_stacks == 1`，往往是「满足 X 条件时获得 ABC」那种复杂的）才可以过期**，0 = 也永续，秒数可任意小数 |
+| `stackable` | 可叠层（默认，层数不限）还是不可叠层（固定一层）；137 取消了层数上限，旧键 `max_stacks` 不再认 |
+| `duration_sec` | 作者定的规矩：**可叠层的 buff（`stackable: true`）永续，不填时长（导入器拦）**—— 中毒 / 流血 / 结界叠上就一直在，直到被清除或战斗结束；**不可叠层的（`stackable: false`，往往是「满足 X 条件时获得 ABC」那种复杂的）才可以过期**，0 = 也永续，秒数可任意小数 |
 | `refresh_on_restack` | 叠层时是否刷新时长 |
 | `mods` | 属性加成，**每层一份** |
 | `rules` | **buff 自己也能带规则** —— 复合效果靠它 |

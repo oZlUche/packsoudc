@@ -2,7 +2,7 @@
 ##
 ## 控件归屏幕：屏幕的 `hud_part(id)` 给出它（没有 = 这件空着），组件只是把它挂在自己身上；宿主换掉组件之前
 ## （[method release]）还给屏幕的 `hud_shelve(part)`，所以日志藏起来时照样在写，再摆出来能看到之前的。
-## 「有没有内容」：列表（容器）没有子节点、提示行没字 = 空着，平时藏起来；摆读数时空着的露个名字好拖。
+## 「有没有内容」：列表（容器）没有子节点 = 空着，平时藏起来；摆读数时空着的露个名字好拖。
 ## 摆读数时上面盖一层「把手」接鼠标（按钮自己不再吃点击），拖动 / 右键 / 滚轮转给组件
 class_name HudPartWidget
 extends HudWidget
@@ -31,7 +31,7 @@ func setup(p_run: RunState, p_screen: Control) -> void:
 		else:
 			add_child(part)
 		move_child(_grip, -1)
-		part.child_order_changed.connect(_poke)     # 列表重建了（路线、技能）：跟着显隐。提示行改字由屏幕叫 refresh
+		part.child_order_changed.connect(_poke)     # 列表重建了（路线、技能）：跟着显隐
 	super.setup(p_run, p_screen)
 
 
@@ -54,8 +54,6 @@ func title() -> String:
 func has_content() -> bool:
 	if part == null:
 		return false
-	if part is Label:
-		return (part as Label).text != ""
 	if part is Container:
 		return part.get_child_count() > 0
 	return true

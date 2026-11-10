@@ -44,20 +44,9 @@ static func resolve_step(graph: MapGraph, from_id: int, to_id: int) -> MoveInten
 ## 只读：从 [param from_id] 出发到每个点的最少步数（id → 步数）。到不了的不在结果里。
 ## 数的是**边数**，不是行动点 —— HUD 说的「还有几步」是这个。
 static func distance_map(graph: MapGraph, from_id: int) -> Dictionary:
-	var dist := {}
 	if graph == null or not graph.has_node(from_id):
-		return dist
-	dist[from_id] = 0
-	var queue: Array[int] = [from_id]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		for n in graph.neighbors(id):
-			if not dist.has(n):
-				dist[n] = int(dist[id]) + 1
-				queue.append(n)
-	return dist
+		return {}
+	return graph.spread({from_id: 0}, [from_id] as Array[int])
 
 
 ## 只读：离 [param from_id] 最近的某类型节点。返回 `{"id": int, "steps": int}`；没有则 id = -1。
@@ -83,32 +72,12 @@ static func distances_to_type(graph: MapGraph, type: StringName) -> Dictionary:
 		if graph.get_node(id).type == type:
 			dist[id] = 0
 			queue.append(id)
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		for n in graph.neighbors(id):
-			if not dist.has(n):
-				dist[n] = int(dist[id]) + 1
-				queue.append(n)
-	return dist
+	return graph.spread(dist, queue)
 
 
 ## 只读：从 [param from_id] 走 [param limit] 步之内到得了的点（id → 步数，含出发点自己）。
 static func within_steps(graph: MapGraph, from_id: int, limit: int) -> Dictionary:
-	var dist := {from_id: 0}
-	var queue: Array[int] = [from_id]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		if int(dist[id]) >= limit:
-			continue
-		for n in graph.neighbors(id):
-			if not dist.has(n):
-				dist[n] = int(dist[id]) + 1
-				queue.append(n)
-	return dist
+	return graph.spread({from_id: 0}, [from_id] as Array[int], {}, limit)
 
 
 ## 只读：这几个点只沿着彼此之间的路走，是不是连成一片（高危区内部不许断成几片）。
@@ -118,14 +87,4 @@ static func connected_within(graph: MapGraph, ids: Array) -> bool:
 	var inside := {}
 	for id in ids:
 		inside[int(id)] = true
-	var seen := {int(ids[0]): true}
-	var queue: Array[int] = [int(ids[0])]
-	var head := 0
-	while head < queue.size():
-		var id := queue[head]
-		head += 1
-		for n in graph.neighbors(id):
-			if inside.has(n) and not seen.has(n):
-				seen[n] = true
-				queue.append(n)
-	return seen.size() == ids.size()
+	return graph.spread({int(ids[0]): 0}, [int(ids[0])] as Array[int], inside).size() == ids.size()

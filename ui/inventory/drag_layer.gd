@@ -359,7 +359,7 @@ func _view_under_footprint(global_pos: Vector2) -> ContainerView:
 	var cells := _inst.def.cells_rotated(_rot)
 	if cells.is_empty():
 		return null
-	var size_ := _footprint_cells(cells)
+	var size_ := _inst.def.shape.size_rotated(_rot)
 	var rect := Rect2(global_pos - (Vector2(_grab_cell) + Vector2(0.5, 0.5)) * _cell, Vector2(size_) * _cell)
 	var best: ContainerView = null
 	var best_area := 0.0
@@ -382,13 +382,6 @@ static func _outside_by(r: Rect2, p: Vector2) -> float:
 	return maxf(maxf(r.position.x - p.x, p.x - r.end.x), maxf(maxf(r.position.y - p.y, p.y - r.end.y), 0.0))
 
 
-static func _footprint_cells(cells: Array[Vector2i]) -> Vector2i:
-	var hi := Vector2i.ZERO
-	for c in cells:
-		hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
-	return hi + Vector2i.ONE
-
-
 ## 视图现在露在外面的那块（全局坐标）：自身矩形与所有裁剪祖先（滚动容器）的交集
 static func visible_rect(view: Control) -> Rect2:
 	var r := view.get_global_rect()
@@ -409,7 +402,7 @@ func target_origin(view: InventoryView, global_pos: Vector2) -> Vector2i:
 	if inv != null and _inst != null and not visible_rect(view).has_point(global_pos) and _inst.def != null:
 		var cells := _inst.def.cells_rotated(_rot)
 		if not cells.is_empty():
-			var span := _footprint_cells(cells)
+			var span := _inst.def.shape.size_rotated(_rot)
 			if span.x <= inv.size.x and span.y <= inv.size.y:
 				origin = Vector2i(clampi(origin.x, 0, inv.size.x - span.x), clampi(origin.y, 0, inv.size.y - span.y))
 	return origin
@@ -1199,9 +1192,7 @@ func _draw() -> void:
 	if not is_bag and not (view_at(mouse) is InventoryView):
 		_draw_held_markers(anchor, cell)
 	if craft_hint != "":     # 140：压在能合的那件上：残影下面一行小字
-		var rows := 0
-		for c in cells:
-			rows = maxi(rows, (c as Vector2i).y + 1)
+		var rows := _inst.def.shape.size_rotated(_rot).y
 		_draw_hint_tag(anchor + Vector2(0.0, rows * cell + 4.0), font)
 
 	# 包里的东西要跟着残影一起画，否则玩家看不出自己正拖着什么。

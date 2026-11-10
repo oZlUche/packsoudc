@@ -80,11 +80,11 @@ func record(run: RunState) -> bool:
 
 
 ## 242：一局结束记一行 —— 对局结果（[method RunResult.to_dict]）+ 版本号 + 角色 + 难度
-func record_run(result: RunResult, run: RunState, ver: String = version()) -> bool:
+func record_run(result: RunResult, run: RunState) -> bool:
 	if result == null:
 		return false
 	var row := result.to_dict()
-	row["version"] = ver
+	row["version"] = version()
 	row["character"] = String(run.character_id) if run != null else ""
 	row["difficulty"] = String(run.difficulty_id) if run != null else ""
 	row[ExperimentManifest.K_RUN] = run.run_id if run != null else ""

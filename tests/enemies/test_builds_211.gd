@@ -88,7 +88,7 @@ static func run_import(t: TestCase) -> void:
 	e["item_tags"] = ["burst", "melee"]
 	var r := ImportReport.new()
 	ContentImporter.import_enemy(e, cap_ctx, r)
-	var pool_data := ContentExporter.export_enemy_pool(c.pool)
+	var pool_data := ContentExporter.dump(c.pool)
 	pool_data["entries"] = [{"enemy": "t_211_cap"}]
 	ContentImporter.import_enemy_pool(pool_data, cap_ctx, r)
 	t.check(r.ok(), "只是提醒，不报错")

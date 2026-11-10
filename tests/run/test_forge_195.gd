@@ -24,7 +24,7 @@ static func run_material_tags(t: TestCase) -> void:
 	var want := MATERIALS.duplicate()
 	want.sort()
 	t.eq(mats, want, "材质十种")
-	t.eq(TagRegistry.by_category("material"), [], "标签表里没有材质类了")
+	t.check(not TagRegistry.ids().any(func(id: StringName) -> bool: return TagRegistry.get_def(id).category == "material"), "标签表里没有材质类了")
 	var db := _db()
 	var bad: Array[String] = []
 	for id in db.ids(true):

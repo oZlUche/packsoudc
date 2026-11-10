@@ -38,14 +38,7 @@ const ABSTRACT_ROOTS := {
 	&"TechEffect": [&"tech_effect"],
 }
 
-## 声明成裸 int、但语义上是枚举的属性，键为 `类名.属性名`。
-##
-## 带类型的枚举（`@export var target: Target`）Godot 会自带 ENUM 提示，
-## 不需要登记；这张表只收那些**故意声明成 int** 的 ——
-const INT_ENUMS := {}
-
 static var _class_paths: Dictionary = {}
-static var _int_enum_values: Dictionary = {}
 
 
 ## 枚举名归一化：`Opponent` / `opponent` / `OPPONENT` 都算同一个。
@@ -141,57 +134,30 @@ static func default_of(owner: Object, key: String) -> Variant:
 
 
 #region 枚举
-## 把枚举名解析成整数。认得两种来源：
-## 属性自带的 ENUM 提示，以及 [constant INT_ENUMS] 里登记的裸 int 属性。
-static func enum_value(
-	owner: Object, prop: Dictionary, text: String
-) -> Variant:
-	# 1. 带类型的枚举：hint_string 形如 "OPPONENT:0,SELF:1,BOTH:2"
+## 把枚举名解析成整数：看属性自带的 ENUM 提示（带类型的枚举 `@export var target: Target` Godot 会自带），
+## hint_string 形如 "OPPONENT:0,SELF:1,BOTH:2"。不是枚举、或认不得这个名字返回 null
+static func enum_value(prop: Dictionary, text: String) -> Variant:
 	if int(prop["hint"]) == PROPERTY_HINT_ENUM:
 		var wanted := normalize_enum(text)
 		for pair in String(prop["hint_string"]).split(","):
 			var bits := pair.split(":")
 			if bits.size() == 2 and normalize_enum(bits[0]) == wanted:
 				return int(bits[1])
-		return null
-
-	# 2. 登记过的裸 int 属性
-	var key := "%s.%s" % [class_name_of(owner), prop["name"]]
-	var domain: String = INT_ENUMS.get(key, "")
-	if domain == "":
-		return null
-	var table := _int_enum_table(domain)
-	return table.get(normalize_enum(text), null)
-
-
-static func _int_enum_table(domain: String) -> Dictionary:
-	if _int_enum_values.has(domain):
-		return _int_enum_values[domain]
-	var table := {}     # 133：唯一的一项（乘区）取消了，表现在是空的；口子留着给下一个故意声明成 int 的枚举
-	_int_enum_values[domain] = table
-	return table
+	return null
 
 
 ## 反向：整数 → 枚举名，导出时用。认不出来就原样返回数字。
-static func enum_name(owner: Object, prop: Dictionary, value: int) -> Variant:
+static func enum_name(prop: Dictionary, value: int) -> Variant:
 	if int(prop["hint"]) == PROPERTY_HINT_ENUM:
 		for pair in String(prop["hint_string"]).split(","):
 			var bits := pair.split(":")
 			if bits.size() == 2 and int(bits[1]) == value:
 				return normalize_enum(bits[0])
-		return value
-	var key := "%s.%s" % [class_name_of(owner), prop["name"]]
-	var domain: String = INT_ENUMS.get(key, "")
-	if domain == "":
-		return value
-	for name in _int_enum_table(domain):
-		if int(_int_enum_table(domain)[name]) == value:
-			return name
 	return value
 
 
 ## 某个属性能接受哪些枚举名，供编辑器做下拉框。不是枚举则返回空。
-static func enum_options(owner: Object, prop: Dictionary) -> Array[String]:
+static func enum_options(prop: Dictionary) -> Array[String]:
 	var out: Array[String] = []
 	if int(prop["hint"]) == PROPERTY_HINT_ENUM and int(prop["type"]) in [TYPE_STRING, TYPE_STRING_NAME]:
 		# 111：字符串枚举（`@export_enum("tier", "active", "scaled") var mode: String`）—— 值就是这些字符串本身，原样返回
@@ -203,12 +169,6 @@ static func enum_options(owner: Object, prop: Dictionary) -> Array[String]:
 			var bits := pair.split(":")
 			if bits.size() == 2:
 				out.append(normalize_enum(bits[0]))
-		return out
-	var key := "%s.%s" % [class_name_of(owner), prop["name"]]
-	var domain: String = INT_ENUMS.get(key, "")
-	if domain != "":
-		for name in _int_enum_table(domain):
-			out.append(String(name))
 	return out
 #endregion
 

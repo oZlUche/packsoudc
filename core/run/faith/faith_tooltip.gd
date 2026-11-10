@@ -24,14 +24,12 @@ const OFFER_ICON_DIR := "res://assets/ui/offerings/"
 const ICON_SIZE := 32
 ## 193：献祭一行里规矩之间空多宽（两个全角空格，按这个字号算）
 const OFFER_GAP_SIZE := 8
-## 赐福版合成一行时写的名字
-const BLESSED_NAME := "赐福的道具"
 ## 257：神赐的阶号列宽、赐福之物的右列（阶号）宽（[method Glossary.columns] 撑的宽；信力来源按字估，[method Glossary.two_widths]）
 const LV_COL := 44
 const ITEM_LV_COL := 44
 
 
-## 221 F1：[constant BLESSED_NAME] 按当前语言
+## 221 F1：赐福版合成一行时写的名字，按当前语言
 static func blessed_name() -> String:
 	return UiText.t("faith.blessed")
 
@@ -68,11 +66,6 @@ static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemCo
 		"bar": {"thresholds": def.thresholds.duplicate(), "points": p},
 		"text": "\n".join([head] + sections),
 	}
-
-
-## 只要文字（连起来）；没有信仰空串
-static func describe(def: FaithDef, power: FaithPower = null, board: ItemContainer = null, items: ItemDatabase = null) -> String:
-	return String(describe_full(def, power, board, items).get("text", ""))
 
 
 static func _head(def: FaithDef, points: int, tier: int, next: int, dormant: int) -> String:
@@ -189,43 +182,7 @@ static func _source_section(def: FaithDef, tier: int) -> String:
 	return _meta(UiText.t("faith.sources")) + "\n" + Glossary.columns(rows, Glossary.two_widths(rows))
 
 
-## 193：这位神的道具（带 `faith:<id>` 标签、有 [member ItemDef.faith_bonuses]）的按阶加成，按 [method FaithBonus.list_tier] 归级：
-## `{级: [「道具名：效果」…]}`。独有的道具写自己的名字；赐福版（[method ItemDef.is_blessed]）同一句合成一行「赐福的道具：…」。
-## 按信力算份数的在句尾括号里写生效条件。[param items] 为 null 返回空
-static func item_lines(def: FaithDef, items: ItemDatabase) -> Dictionary:
-	var out := {}
-	if def == null or items == null:
-		return out
-	var ids := items.ids_where(func(d: ItemDef) -> bool: return d.faith_tag() == def.tag() and not d.faith_bonuses.is_empty())
-	Ids.sort(ids)
-	var seen := {}
-	for id in ids:
-		var item := items.get_def(id)
-		var name := blessed_name() if item.is_blessed() else Names.of(item)
-		for fb in item.faith_bonuses:
-			var b := fb as FaithBonus
-			if b == null:
-				continue
-			var line := UiText.t("faith.item_line") % [name, b.effect_text()]
-			if b.mode == "scaled":
-				line += UiText.t("faith.gate") % b.gate_text()
-			var lv := b.list_tier()
-			if seen.has(str(lv) + line):
-				continue
-			seen[str(lv) + line] = true
-			if not out.has(lv):
-				out[lv] = []
-			(out[lv] as Array).append(line)
-	return out
-
-
-## 193：信力来源段末的包内转化一句（按现在的阶算概率）；这位神没有赐福模板或概率为 0 返回空
-static func convert_line(def: FaithDef, tier: int) -> String:
-	var parts := convert_parts(def, tier)
-	return UiText.t("faith.convert") % parts[2] if not parts.is_empty() else ""
-
-
-## 257：转化一句拆成两列 [什么时候, 所得, 百分数]；没有返回空
+## 257：转化一句拆成两列 [什么时候, 所得]；没有返回空
 static func convert_parts(def: FaithDef, tier: int) -> Array[String]:
 	if def == null or def.blessings.is_empty():
 		return [] as Array[String]
@@ -233,7 +190,7 @@ static func convert_parts(def: FaithDef, tier: int) -> Array[String]:
 	if chance <= 0.0:
 		return [] as Array[String]
 	var pct := String.num(chance * 100.0, 1).trim_suffix(".0")
-	return [UiText.t("faith.convert_when"), UiText.t("faith.convert_gain") % pct, pct] as Array[String]
+	return [UiText.t("faith.convert_when"), UiText.t("faith.convert_gain") % pct] as Array[String]
 
 
 ## 献祭：每条规矩的图标都在 → 一行图标（193：不写名字；同一条规矩的图标间一个半角空格，规矩之间两个全角空格），

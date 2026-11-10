@@ -99,15 +99,6 @@ func offerings_summary() -> String:
 	return UiText.t("faith.perk_sep").join(parts)
 
 
-## 行为各一句
-func deeds_summary() -> String:
-	var parts: Array[String] = []
-	for d in deeds:
-		if d != null and String(d.describe()) != "":
-			parts.append(String(d.describe()))
-	return UiText.t("hud.buff_sep").join(parts)
-
-
 ## 装回全部定义：id → FaithDef，按 id 升序
 static func load_all() -> Dictionary:
 	var out := {}
