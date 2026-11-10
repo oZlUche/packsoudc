@@ -160,7 +160,7 @@ func top_inset() -> float:
 	for e in (layout.entries if layout != null else []):
 		var w: HudWidget = widgets.get(StringName(e["id"]), null)
 		var a := String(e["anchor"])
-		if w != null and w.visible and w.takes_space() and (a.begins_with("top") or HudLayout.in_bar(a)) and not on_right(a):
+		if w != null and w.visible and (a.begins_with("top") or HudLayout.in_bar(a)) and not on_right(a):
 			bottom = maxf(bottom, w.position.y + w.size.y)
 	return bottom
 
@@ -308,7 +308,7 @@ func arrange() -> void:
 		var m := _bar_margins()
 		for key in order:
 			if HudLayout.in_bar(String(groups[key]["anchor"])):
-				_bar_h = maxf(_bar_h, _measure(groups[key]).y + maxf(BAR_PAD, m.x) + maxf(BAR_PAD, m.y))
+				_bar_h = maxf(_bar_h, (_rows(groups[key])[1] as Vector2).y + maxf(BAR_PAD, m.x) + maxf(BAR_PAD, m.y))
 		bar.position = Vector2.ZERO
 		bar.size = Vector2(size.x, _bar_h)
 		for key in order:
@@ -327,10 +327,7 @@ func arrange() -> void:
 	for key in order:
 		var a := String(groups[key]["anchor"])
 		if not on_right(a) and not HudLayout.in_bar(a):
-			var frame := _frame(a)
-			if _floats(groups[key]):
-				frame.size.x = size.x     # 186：浮在地图上的（提示行）按整块宽对齐，跟顶端栏同一条中线
-			_place_group(groups[key], frame, HudLayout.ANCHORS.get(a, Vector2.ZERO))
+			_place_group(groups[key], _frame(a), HudLayout.ANCHORS.get(a, Vector2.ZERO))
 	arranged.emit()
 
 
@@ -353,19 +350,6 @@ func _rows(g: Dictionary) -> Array:
 		group_size.y += row_size.y
 	group_size.y += LINE_GAP * maxi(0, rows.size() - 1)
 	return [rows, group_size]
-
-
-## 186：整组都不占地图的边（[method HudWidget.takes_space] 为 false）—— 浮在上面，不用让右边那一条
-func _floats(g: Dictionary) -> bool:
-	for ln in g["lines"]:
-		for w in g["lines"][ln]:
-			if (w as HudWidget).takes_space():
-				return false
-	return true
-
-
-func _measure(g: Dictionary) -> Vector2:
-	return _rows(g)[1]
 
 
 ## 把一组按 [param pivot] 对齐摆进 [param frame]（锚点的那块，或者顶端栏的一个槽）

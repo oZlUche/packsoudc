@@ -109,7 +109,6 @@ const TIMER_RING_UNDER := Color(0, 0, 0, 0.45)
 var _arrival: Dictionary = {}
 var _arrivals: int = 0
 var _dead: bool = false
-var _fired_at: float = -99.0
 
 ## uid -> 显示名。日志里只有 uid，名字是表现层的事。
 var item_names: Dictionary = {}
@@ -294,14 +293,14 @@ func set_resource(key: String, current: int, maximum: int) -> void:
 
 
 func set_stacks(buff: String, p_stacks: int) -> void:
-	_set_chip(buff, p_stacks)
+	_set_chip(buff, p_stacks, p_stacks > 0)
 	if buff != BLOCK_CHIP:
 		_refresh_block()     # buff 可能带格挡轴（弹开、标记）
 	queue_redraw()
 
 
-func _set_chip(id: String, p_stacks: int) -> void:
-	if p_stacks <= 0:
+func _set_chip(id: String, p_stacks: int, present: bool) -> void:
+	if not present:
 		_stacks.erase(id)
 		_arrival.erase(id)
 		guards.erase(id)
@@ -357,15 +356,7 @@ func set_axis(axis: String, p_stacks: int) -> void:
 		_refresh_block()
 		queue_redraw()
 		return
-	var id := AXIS_PREFIX + axis
-	if p_stacks == 0:
-		_stacks.erase(id)
-		_arrival.erase(id)
-	else:
-		if not _stacks.has(id):
-			_arrivals += 1
-			_arrival[id] = _arrivals
-		_stacks[id] = p_stacks
+	_set_chip(AXIS_PREFIX + axis, p_stacks, p_stacks != 0)
 	queue_redraw()
 
 
@@ -402,24 +393,11 @@ func block_value() -> int:
 
 ## 有层或有修正就画「格挡 N」格（N 可以是 0 或负数：负是破绽）
 func _refresh_block() -> void:
-	var show_ := not block_layers.is_empty() or _block_axis != 0 or block_carried() != 0
-	if not show_:
-		_stacks.erase(BLOCK_CHIP)
-		_arrival.erase(BLOCK_CHIP)
-		return
-	if not _stacks.has(BLOCK_CHIP):
-		_arrivals += 1
-		_arrival[BLOCK_CHIP] = _arrivals
-	_stacks[BLOCK_CHIP] = block_value()
+	_set_chip(BLOCK_CHIP, block_value(), not block_layers.is_empty() or _block_axis != 0 or block_carried() != 0)
 
 
 func mark_dead() -> void:
 	_dead = true
-	queue_redraw()
-
-
-func note_fired(_uid: int, p_now: float) -> void:
-	_fired_at = p_now
 	queue_redraw()
 
 

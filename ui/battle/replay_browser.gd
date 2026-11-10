@@ -43,18 +43,14 @@ static func _known_buffs(db: ItemDatabase) -> Dictionary:
 func _build() -> void:
 	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
-	var margin := MarginContainer.new()
+	var margin := UiTheme.margins(MarginContainer.new(), 18, 18, 18, 18)
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 18)
 	add_child(margin)
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 16)
+	var columns := UiTheme.hbox(16)
 	margin.add_child(columns)
 
-	var left := VBoxContainer.new()
+	var left := UiTheme.vbox(8)
 	left.custom_minimum_size.x = 340
-	left.add_theme_constant_override("separation", 8)
 	columns.add_child(left)
 	left.add_child(_label("战斗回放", 22, UiPalette.FG))
 	left.add_child(_label("最近 %d 场（新的在上）" % BattleArchive.KEEP, 12, UiPalette.DIM))
@@ -63,16 +59,14 @@ func _build() -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	left.add_child(scroll)
-	_list = VBoxContainer.new()
+	_list = UiTheme.vbox(2)
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list.add_theme_constant_override("separation", 2)
 	scroll.add_child(_list)
 	left.add_child(UiTheme.make_button("打开日志文件夹", open_folder, UiTheme.TIER_PLAIN, 13))
 	left.add_child(UiTheme.make_button("打开这场的 .txt", open_text, UiTheme.TIER_PLAIN, 13))
 
-	var right := VBoxContainer.new()
+	var right := UiTheme.vbox(6)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_theme_constant_override("separation", 6)
 	columns.add_child(right)
 	_title = _label("左边挑一场", 16, UiPalette.FG)
 	right.add_child(_title)

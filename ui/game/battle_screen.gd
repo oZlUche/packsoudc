@@ -166,7 +166,7 @@ func proceed() -> void:
 ## 记一件观看的事（没开诊断时什么也不做）
 func _note(kind: String, data: Dictionary = {}) -> void:
 	if _viewing != null and _view != null:
-		_viewing.note(kind, _view.playback_time(), Time.get_ticks_msec(), data)
+		_viewing.note(kind, _view.now(), Time.get_ticks_msec(), data)
 
 
 ## 停没停、教程停住没有：回放自己切，这里每帧看一眼

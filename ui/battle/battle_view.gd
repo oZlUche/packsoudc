@@ -58,7 +58,6 @@ const LOG_BOARD_SCALE := 2.0 / 3.0
 ## 272：铜面板里战记栏的高（六行左右；面板仍放得进 1000 高）
 const LOG_HEIGHT := 106.0
 var _cursor: int = 0
-var _result_was: BattleResult = null
 var _now: float = 0.0
 var _playing: bool = false
 var _speed_idx: int = 0
@@ -100,7 +99,6 @@ var _timeline: ReplayTimeline
 var _report: RichTextLabel
 ## 铜面板：底栏（空 · 宿主的「继续」· 空）；战报不显示（作者 19:09）
 var _footer: HBoxContainer = null
-var _report_hidden := false
 var _plate_slots: Array[Control] = []
 ## 157：拖时间轴之前在不在放（松手按原状态接着放）
 var _resume_after_scrub := false
@@ -124,6 +122,8 @@ func _ready() -> void:
 #region 播放控制
 ## 载入一场战斗并从头播。[param names] 只影响标题。
 func play(result: BattleResult, names: Array = []) -> void:
+	if _result != result:
+		_lines_dirty = true
 	_result = result
 	if names.size() == 2:
 		_names = [str(names[0]), str(names[1])]
@@ -149,9 +149,6 @@ func play(result: BattleResult, names: Array = []) -> void:
 			secs[uid] = StatMath.to_float(int(raw[uid]))
 		_overlays[i].reset(secs)
 		_overlays[i].now = 0.0
-	if _result_was != result:
-		_lines_dirty = true
-	_result_was = result
 	_line_next = 0
 	if _ticker != null:
 		_ticker.clear()
@@ -553,11 +550,6 @@ func set_speed(v: float) -> void:
 
 func speed() -> float:
 	return SPEEDS[_speed_idx]
-
-
-## 回放走到的模拟秒数
-func playback_time() -> float:
-	return _now
 #endregion
 
 
@@ -631,18 +623,13 @@ func _finish() -> void:
 		UiText.t("battle.draw") if _result.is_draw() else UiText.t("battle.wins") % _names[_result.winner]
 	)
 	_timeline.cursor = _result.duration_sec()
-	_report.text = report_of(_result, _names)     # 157：收尾战报（跳过也出）
+	_report.text = BattleNarrator.report(_result, _names)     # 157：收尾战报（跳过也出）
 	_flush_log(_result.log.size())     # 272：战记末行 = 战报
-	_report.visible = not _report_hidden
+	_report.visible = not bronze
 	_sync_buttons()
 	if result_cue(_result) != &"":
 		_sfx(result_cue(_result))
 	finished.emit()
-
-
-## 157：收尾战报：几秒、双方各造成多少、谁打倒了谁（272 起是战记的末行，[method BattleNarrator.report]）
-static func report_of(result: BattleResult, names: Array) -> String:
-	return BattleNarrator.report(result, names)
 
 
 ## 157：倍速 ≥ 4 时三种反馈按倍速缩短（不叠加，新的一下打断上一下）
@@ -690,7 +677,7 @@ func _apply(e: BattleEvent) -> void:
 		BattleEvent.ITEM_FIRED, BattleEvent.ITEM_SKIPPED:
 			if e.side >= 0 and e.side < _panels.size():
 				if e.name == BattleEvent.ITEM_FIRED:
-					_panels[e.side].note_fired(e.get_int(&"uid"), _now)
+					_panels[e.side].queue_redraw()     # 出手那一方的面板重画一遍
 					_flash(e)
 				if e.payload.has("ready_at") and e.side < _overlays.size():
 					_overlays[e.side].note_cycle(e.get_int(&"uid"), StatMath.to_float(e.time), StatMath.to_float(e.get_int(&"ready_at")))
@@ -800,9 +787,8 @@ func _build() -> void:
 	add_child(root)
 	_root = root
 
-	var header := HBoxContainer.new()
+	var header := UiTheme.hbox(12)
 	_header = header
-	header.add_theme_constant_override("separation", 12)
 	UiTheme.set_tone(header, on_bg)
 	root.add_child(header)
 	_clock = UiTheme.make_label(UiText.t("battle.clock") % 0.0, 16, UiPalette.DIM)
@@ -810,13 +796,11 @@ func _build() -> void:
 	_verdict = UiTheme.make_label("", 16, UiPalette.FG)
 	header.add_child(_verdict)
 
-	var arena := HBoxContainer.new()
-	arena.add_theme_constant_override("separation", 16)
+	var arena := UiTheme.hbox(16)
 	root.add_child(arena)
 	for i in 2:
-		var col := VBoxContainer.new()
+		var col := UiTheme.vbox(6 if bronze else 8)
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_theme_constant_override("separation", 6 if bronze else 8)
 		arena.add_child(col)
 		var plate_slot := MarginContainer.new()     # 157：名牌（战斗屏给了才有）
 		plate_slot.visible = false
@@ -878,8 +862,7 @@ func _build() -> void:
 
 	# 157：播放键 · 时间轴（可拖）· 倍速与跳过在杆的右端；播完了在下面出战报。
 	# 167：三个键是符石图（[method IconButton.make_art]），缺图写字；原来那行说明挪进播放键的悬浮窗
-	var bar := HBoxContainer.new()
-	bar.add_theme_constant_override("separation", 8)
+	var bar := UiTheme.hbox(8)
 	root.add_child(bar)
 	_play_btn = IconButton.make_art(art_dir, "", "", "", toggle_play)     # 图与悬浮窗由 _sync_buttons 按状态给
 	bar.add_child(_play_btn)
@@ -941,7 +924,6 @@ func _build_footer() -> void:
 		half.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		half.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_footer.add_child(half)
-	_report_hidden = true
 	add_child(_report)     # 不进排版，一直藏着
 
 

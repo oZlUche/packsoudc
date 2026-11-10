@@ -49,19 +49,15 @@ func _ready() -> void:
 func _build_ui() -> void:
 	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走、装上界面主题
 
-	var margin := MarginContainer.new()
+	var margin := UiTheme.margins(MarginContainer.new(), 18, 18, 18, 18)
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 18)
 	add_child(margin)
 
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 20)
+	var columns := UiTheme.hbox(20)
 	margin.add_child(columns)
 
 	# --- 左：棋盘与读数 ---
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 10)
+	var left := UiTheme.vbox(10)
 	left.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	columns.add_child(left)
 
@@ -78,8 +74,7 @@ func _build_ui() -> void:
 	_set_label = UiTheme.make_label("", 13, UiPalette.DIM)
 	left.add_child(_set_label)
 
-	var controls := HBoxContainer.new()
-	controls.add_theme_constant_override("separation", 8)
+	var controls := UiTheme.hbox(8)
 	left.add_child(controls)
 	controls.add_child(UiTheme.make_button("开打", _on_fight, UiTheme.TIER_PLAIN))
 	controls.add_child(UiTheme.make_label("种子", 13, UiPalette.DIM))

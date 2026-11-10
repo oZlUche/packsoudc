@@ -47,34 +47,28 @@ func _ready() -> void:
 func _build_ui() -> void:
 	UiTheme.prepare_root(self)     # 091 / 121：底色跟设置走（和别的沙盒一致）、装上界面主题
 
-	var margin := MarginContainer.new()
+	var margin := UiTheme.margins(MarginContainer.new(), 20, 20, 20, 20)
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 20)
 	add_child(margin)
 
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 12)
+	var root := UiTheme.vbox(12)
 	margin.add_child(root)
 
 	root.add_child(UiTheme.make_label("背包整理沙盒", 22, UiPalette.FG))
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 24)
+	var row := UiTheme.hbox(24)
 	row.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	root.add_child(row)
 
 	row.add_child(_labeled_grid("作战棋盘 7x9　只有放进包里的才参战", _board, true))
 
-	var side := VBoxContainer.new()
-	side.add_theme_constant_override("separation", 16)
+	var side := UiTheme.vbox(16)
 	side.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(side)
 	side.add_child(_labeled_stash("地上　保留但不参战　一行一件，不占格子", _storage))
 	side.add_child(_labeled_grid("战利品", _loot))
 
-	var buttons := HBoxContainer.new()
-	buttons.add_theme_constant_override("separation", 10)
+	var buttons := UiTheme.hbox(10)
 	root.add_child(buttons)
 	buttons.add_child(UiTheme.make_button("全部拾取到地上", _on_take_all, UiTheme.TIER_PLAIN))
 	buttons.add_child(UiTheme.make_button("刷新战利品", _on_refill, UiTheme.TIER_PLAIN))
@@ -103,8 +97,7 @@ func _build_ui() -> void:
 ## [param adjacency] 只对棋盘开。地上与战利品里的东西不参战，
 ## 那里的邻接「点亮」什么也不代表 —— 画出来只会让人以为摆对了。
 func _labeled_grid(caption: String, inv: GridInventory, adjacency: bool = false) -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
+	var box := UiTheme.vbox(6)
 	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	box.add_child(UiTheme.make_label(caption, 13, UiPalette.DIM))
 
@@ -119,8 +112,7 @@ func _labeled_grid(caption: String, inv: GridInventory, adjacency: bool = false)
 
 ## 地上不是网格（128）：单独搭一块，放手在哪就落在哪。
 func _labeled_stash(caption: String, s: ItemStash) -> Control:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
+	var box := UiTheme.vbox(6)
 	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	box.add_child(UiTheme.make_label(caption, 13, UiPalette.DIM))
 

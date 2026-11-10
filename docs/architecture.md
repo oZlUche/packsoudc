@@ -3633,7 +3633,7 @@ func player_spec() -> CombatantSpec …
   - `dev_drawer`（调试台箭头）、`status`（提示行）、`bag_button`、`reopen_button`、`extract_button`、`skills`、`menu_button`、`routes`、`log`。
   - 它们都是 `HudPartWidget`：控件归屏幕，屏幕的 `hud_part(id)` 给出，组件只是挂着。
   - 组件被换掉前（`release`）把控件还给屏幕藏着的架子（`hud_shelve`），所以日志藏起来时照样在记。
-  - 列表空了、提示行没字，组件就藏起来；摆读数时组件上盖一层把手接鼠标，按钮不再吃点击。
+  - 列表空了，组件就藏起来；摆读数时组件上盖一层把手接鼠标，按钮不再吃点击。
 - `belt`：腰带组件（160 起是一排圆槽 `BeltSlots`，默认锚右下角 `HudLayout.BELT_OFFSET`，布局版本 3）。
   - 没有拖拽（随身技能不是道具）；双击一个圆用一个，走 `GameFlow.use_belt`。
   - 这一局没有腰带模块就空着。
@@ -3669,7 +3669,6 @@ func player_spec() -> CombatantSpec …
   - 地图屏的 `_status` / `_log` 照样造、照样记（不进树），开发提示行写原因。
 - 提示行 `notice`（`ui/hud/widgets/notice_widget.gd`）：锚 `top`、偏移 `HudLayout.NOTICE_OFFSET`，在顶端栏下面、和倒计时同一条中线；布局版本 7。
   - 没底板（`PanelBare`），字按地图纸的深浅取色、外加一圈纸色描边；来一句 3 秒 + 0.4 秒淡出，要紧的 5 秒、红字；最多两行，第三句挤掉最老的；同一句只重置时间。
-  - `HudWidget.takes_space()`：提示行为 false —— `top_inset()` 不算它，整组都不占边的按整块宽对齐（不让右边那一条）。
   - 入口：`HudHost.notice(text, urgent)`；地图屏 `say(text)` / `warn(text)`。拒绝原因（`MapTravel.refused(intent, why, code)` 按 `code` 选话）、撤离被拒、倒计时只剩几步、撤离点关闭、侵蚀、动静、保险箱、到了撤离点、负重变级走它，句子都在 `UiText` 的 `notice.*` 键里，不写点号与内部原因。
 
 ### 8.8 叠层的石板框、换屏、光标（157）
