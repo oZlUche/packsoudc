@@ -1,0 +1,1105 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: 注册表：未登记的 run_module 类型 'no_such_module'
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] instantiate (res://core/effects/registry_lookup.gd:15)
+         [1] instantiate (res://core/authoring/content_registries.gd:25)
+         [2] run_registries_split (res://tests/authoring/test_content_pipeline.gd:485)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: ItemInstance.from_dict: 未知的 def id 'sniper'，该物品被丢弃
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_dict (res://core/inventory/item_instance.gd:254)
+         [1] from_dict (res://core/inventory/grid_inventory.gd:920)
+         [2] run_155 (res://tests/authoring/test_power_estimate_151.gd:344)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: DamageTypes: 未登记的伤害类型 'typo_here'，按常规结算
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] get_def (res://core/battle/damage/damage_types.gd:122)
+         [1] run (res://tests/battle/test_damage_pipeline.gd:97)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleContext: 伤害结算嵌套超过 4 层，本层不再派发受伤前效果
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] dispatch_before_damage (res://core/battle/battle_context.gd:210)
+         [1] resolve (res://core/battle/damage/damage_resolver.gd:62)
+         [2] deal (res://core/battle/effects/deal_damage.gd:98)
+         [3] apply (res://core/battle/effects/deal_damage.gd:45)
+         [4] _settle (res://core/battle/rule_engine.gd:115)
+         [5] evaluate (res://core/battle/rule_engine.gd:82)
+         [6] dispatch (res://core/battle/rule_engine.gd:51)
+         [7] dispatch_before_damage (res://core/battle/battle_context.gd:224)
+         [8] resolve (res://core/battle/damage/damage_resolver.gd:62)
+         [9] deal (res://core/battle/effects/deal_damage.gd:98)
+         [10] apply (res://core/battle/effects/deal_damage.gd:45)
+         [11] _settle (res://core/battle/rule_engine.gd:115)
+         [12] evaluate (res://core/battle/rule_engine.gd:82)
+         [13] dispatch (res://core/battle/rule_engine.gd:51)
+         [14] dispatch_before_damage (res://core/battle/battle_context.gd:224)
+         [15] resolve (res://core/battle/damage/damage_resolver.gd:62)
+         [16] deal (res://core/battle/effects/deal_damage.gd:98)
+         [17] apply (res://core/battle/effects/deal_damage.gd:45)
+         [18] _settle (res://core/battle/rule_engine.gd:115)
+         [19] evaluate (res://core/battle/rule_engine.gd:82)
+         [20] dispatch (res://core/battle/rule_engine.gd:51)
+         [21] dispatch_before_damage (res://core/battle/battle_context.gd:224)
+         [22] resolve (res://core/battle/damage/damage_resolver.gd:62)
+         [23] deal (res://core/battle/effects/deal_damage.gd:98)
+         [24] apply (res://core/battle/effects/deal_damage.gd:45)
+         [25] _settle (res://core/battle/rule_engine.gd:115)
+         [26] evaluate (res://core/battle/rule_engine.gd:82)
+         [27] dispatch (res://core/battle/rule_engine.gd:51)
+         [28] dispatch_before_damage (res://core/battle/battle_context.gd:224)
+         [29] resolve (res://core/battle/damage/damage_resolver.gd:62)
+         [30] deal (res://core/battle/effects/deal_damage.gd:98)
+         [31] apply (res://core/battle/effects/deal_damage.gd:45)
+         [32] _settle (res://core/battle/rule_engine.gd:115)
+         [33] evaluate (res://core/battle/rule_engine.gd:82)
+         [34] dispatch (res://core/battle/rule_engine.gd:51)
+         [35] drain (res://core/battle/battle_context.gd:175)
+         [36] _start (res://tests/battle/test_damage_pipeline.gd:10)
+         [37] run_nesting_guard (res://tests/battle/test_damage_pipeline.gd:333)
+         [38] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleContext: 单帧连锁派发超过 32 条，已截断
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] drain (res://core/battle/battle_context.gd:172)
+         [1] run_chain_and_guard (res://tests/battle/test_effect_system.gd:466)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: SetDatabase: id 重复 'scavenger'，保留先登记的那条
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] register (res://core/sets/set_database.gd:24)
+         [1] run (res://tests/battle/test_sets.gd:77)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: GridInventory.remove: uid 2 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:446)
+         [1] run (res://tests/inventory/test_board_bags.gd:114)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: DragLayer: uid 1 无法放回原位，改为自动装填
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _restore (res://ui/inventory/drag_layer.gd:1139)
+         [1] cancel (res://ui/inventory/drag_layer.gd:1112)
+         [2] run_drag_no_stash (res://tests/inventory/test_displacement.gd:280)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: DragLayer: uid 4 无法放回原位，改为自动装填
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _restore (res://ui/inventory/drag_layer.gd:1139)
+         [1] cancel (res://ui/inventory/drag_layer.gd:1112)
+         [2] run_bag_drag (res://tests/inventory/test_drag_layer.gd:279)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: GridInventory.place: uid 2 已在本容器中，应先 remove
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] place (res://core/inventory/grid_inventory.gd:416)
+         [1] run (res://tests/inventory/test_grid_inventory.gd:56)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: ItemInstance.from_dict: 未知的 def id 'L'，该物品被丢弃
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_dict (res://core/inventory/item_instance.gd:254)
+         [1] from_dict (res://core/inventory/grid_inventory.gd:920)
+         [2] run_serialization (res://tests/inventory/test_grid_inventory.gd:208)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: ItemDatabase: id 重复 'bar'，保留先登记的那条
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] register (res://core/inventory/item_database.gd:60)
+         [1] run (res://tests/inventory/test_item_instance.gd:58)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: ItemDatabase: 拒绝无效定义 ''
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] register (res://core/inventory/item_database.gd:57)
+         [1] run (res://tests/inventory/test_item_instance.gd:59)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: ItemInstance.from_dict: 未知的 def id 'ghost'，该物品被丢弃
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_dict (res://core/inventory/item_instance.gd:254)
+         [1] run (res://tests/inventory/test_item_instance.gd:86)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: ItemStash.insert: uid 5 已在本容器中，应先 remove
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] insert (res://core/inventory/item_stash.gd:103)
+         [1] run (res://tests/inventory/test_item_stash.gd:69)
+         [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 2 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 2
+最后一次：
+✗ [build] 线段的列 9 超出宽度 5
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_hourglass (res://tests/map/test_lattice_maps.gd:144)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 2 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 2
+最后一次：
+✗ [build] 颈部线段落在收窄的层外：列 5 不在 [2, 3] 里
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_hourglass_taper (res://tests/map/test_lattice_maps.gd:195)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 2 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 2
+最后一次：
+✗ [build] 塔至少两层：底宽 7、每层收 0、层数 0 算出来只有 1 层
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_tower (res://tests/map/test_lattice_maps.gd:330)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 5 次都没生成出合法地图，返回 null。
+各条规则失败次数：entries × 5
+最后一次：
+✗ [entries] 没有出生点
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_retry (res://tests/map/test_map_generator.gd:174)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 3 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 3
+最后一次：
+✗ [build] 生成器没能造出图
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_retry (res://tests/map/test_map_generator.gd:181)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 12345 连试 6 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 6
+最后一次：
+✗ [build] 生成器没能造出图
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_determinism (res://tests/map/test_map_generator.gd:212)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MapGeneratorRegistry: 没有登记过的生成器 'nope'，已登记的是 [&"ring", &"tower", &"hourglass", &"grid_script"]
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] create (res://core/map/map_generator_registry.gd:46)
+         [1] run_registry (res://tests/map/test_map_generator.gd:248)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MapGraph.from_dict: 丢弃一条两端对不上的路 { "from": 1, "to": 404 }
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_dict (res://core/map/map_graph.gd:258)
+         [1] run_round_trip (res://tests/map/test_map_graph.gd:162)
+         [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 1 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 1
+最后一次：
+✗ [build] 读不到网格脚本：res://no/such/map.txt
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_bad_input (res://tests/map/test_map_grid_text.gd:148)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MapGeneratorRegistry: 没有登记过的生成器 'no_such_generator'，已登记的是 [&"ring", &"tower", &"hourglass", &"grid_script"]
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] create (res://core/map/map_generator_registry.gd:46)
+         [1] _resolve_random (res://core/map/map_source.gd:55)
+         [2] resolve (res://core/map/map_source.gd:39)
+         [3] run_random_mode (res://tests/map/test_map_source.gd:43)
+         [4] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapSource: 预设地图 user://test_map_preset.json 没通过校验：
+✗ [isolated] 节点 1 一条边都不挨着
+✗ [isolated] 节点 2 一条边都不挨着
+✗ [reachable] 1 个节点从任何出生点都走不到，例如 [1]
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _resolve_preset (res://core/map/map_source.gd:82)
+       [1] resolve (res://core/map/map_source.gd:37)
+       [2] run_preset_mode (res://tests/map/test_map_source.gd:81)
+       [3] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapPreset: 找不到预设地图 user://definitely_not_here.json
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_graph (res://core/map/map_preset.gd:44)
+       [1] _resolve_preset (res://core/map/map_source.gd:72)
+       [2] resolve (res://core/map/map_source.gd:37)
+       [3] run_preset_mode (res://tests/map/test_map_source.gd:85)
+       [4] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 4 次都没生成出合法地图，返回 null。
+各条规则失败次数：zone_missing × 4
+最后一次：
+✗ [zone_missing] 有 1 片必须有的高危区没长起来 —— 路线过半程之后旁边没有空地
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_scale_profiles (res://tests/map/test_ring_map_generator.gd:321)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 11 连试 2 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 2
+最后一次：
+✗ [build] 出生点放不下：3 个出生点 × 间隔 6 > 最外环 16 个槽位
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_entries (res://tests/map/test_ring_map_generator.gd:469)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 3 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 3
+最后一次：
+✗ [build] 生成器没能造出图
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_rejects_bad_config (res://tests/map/test_ring_map_generator.gd:815)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 3 次都没生成出合法地图，返回 null。
+各条规则失败次数：build × 3
+最后一次：
+✗ [build] 生成器没能造出图
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_rejects_bad_config (res://tests/map/test_ring_map_generator.gd:820)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: MapGenerator: 种子 1 连试 6 次都没生成出合法地图，返回 null。
+各条规则失败次数：coverage × 6
+最后一次：
+✗ [coverage] 31 个节点距最近的 rest 超过 4 步（最远 到不了）
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] generate (res://core/map/map_generator.gd:77)
+       [1] run_conflicting_config_fails (res://tests/map/test_ring_type_assigner.gd:261)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaMigrations: 没有 v0 → v1 的迁移，停在 v0
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] upgrade (res://core/meta/meta_migrations.gd:23)
+         [1] from_text (res://core/meta/meta_save.gd:54)
+         [2] run_absorb_board_codex (res://tests/meta/test_meta_grid.gd:168)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档版本 0.0 升不到 4 —— 调用方应先备份再从零开始
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:56)
+         [1] run_absorb_board_codex (res://tests/meta/test_meta_grid.gd:168)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: Warehouse.from_dict: uid 43 放不下，临时加了 1 页（东西不丢；之后空出来时科技重算会收回）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_dict (res://core/meta/warehouse.gd:213)
+         [1] from_dict (res://core/meta/meta_state.gd:875)
+         [2] run_derive_on_load (res://tests/meta/test_tech.gd:207)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: Warehouse.set_page_count: 第 2 页有东西，只缩到 2 页（要 1）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] set_page_count (res://core/meta/warehouse.gd:76)
+         [1] derive (res://core/meta/techs/warehouse_pages.gd:14)
+         [2] derive (res://core/meta/tech_service.gd:183)
+         [3] run_derive_on_load (res://tests/meta/test_tech.gd:210)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: GridInventory.shrink_rows: 第 3 行有东西，只缩了 2 / 5 行
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] shrink_rows (res://core/inventory/grid_inventory.gd:996)
+         [1] run_shrink_rows (res://tests/meta/test_tech.gd:240)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: Warehouse.set_page_count: 第 3 页有东西，只缩到 3 页（要 1）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] set_page_count (res://core/meta/warehouse.gd:76)
+         [1] run_pages (res://tests/meta/test_warehouse_163.gd:52)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: Warehouse.set_page_count: 第 7 页有东西，只缩到 7 页（要 2）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] set_page_count (res://core/meta/warehouse.gd:76)
+         [1] derive (res://core/meta/techs/warehouse_pages.gd:14)
+         [2] derive (res://core/meta/tech_service.gd:183)
+         [3] run_tech (res://tests/meta/test_warehouse_163.gd:109)
+         [4] _initialize (res://tests/run_tests.gd:106)
+ERROR: String formatting error: unsupported format character.
+   at: validated_evaluate (core/variant/variant_op.h:829)
+   GDScript backtrace (most recent call first):
+       [0] run_glossary (res://tests/run/test_author_087.gd:62)
+       [1] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] close_shelf (res://ui/game/meta_screen.gd:1144)
+       [2] show_tab (res://ui/game/meta_screen.gd:1203)
+       [3] open (res://ui/game/meta_screen.gd:309)
+       [4] run_spyglass_and_codex (res://tests/run/test_author_087.gd:711)
+       [5] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] close_shelf (res://ui/game/meta_screen.gd:1144)
+       [2] show_tab (res://ui/game/meta_screen.gd:1203)
+       [3] show_tab (res://ui/game/meta_screen.gd:1200)
+       [4] run_spyglass_and_codex (res://tests/run/test_author_087.gd:713)
+       [5] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] close_shelf (res://ui/game/meta_screen.gd:1144)
+       [2] open_shelf (res://ui/game/meta_screen.gd:1133)
+       [3] show_tab (res://ui/game/meta_screen.gd:1201)
+       [4] run_spyglass_and_codex (res://tests/run/test_author_087.gd:713)
+       [5] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] close_shelf (res://ui/game/meta_screen.gd:1144)
+       [2] show_tab (res://ui/game/meta_screen.gd:1203)
+       [3] run_spyglass_and_codex (res://tests/run/test_author_087.gd:751)
+       [4] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "data.tree" is null.
+   at: get_tree (scene/main/node.h:559)
+   GDScript backtrace (most recent call first):
+       [0] _gui_input (res://ui/inventory/inventory_view.gd:427)
+       [1] run_right_click (res://tests/run/test_faith_reseat.gd:189)
+       [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parse JSON failed. Error at line 0: Unexpected character
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] file_version (res://core/settings/save_slots.gd:89)
+       [1] newer_version (res://core/settings/save_slots.gd:97)
+       [2] open (res://core/settings/save_slots.gd:115)
+       [3] run_slot_open (res://tests/run/test_flow_wiring.gd:181)
+       [4] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parse JSON failed. Error at line 0: Unexpected character
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] from_text (res://core/meta/meta_save.gd:50)
+       [1] read (res://core/meta/meta_save.gd:35)
+       [2] open (res://core/settings/save_slots.gd:119)
+       [3] run_slot_open (res://tests/run/test_flow_wiring.gd:181)
+       [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档不是合法的 JSON 对象
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:52)
+         [1] read (res://core/meta/meta_save.gd:35)
+         [2] open (res://core/settings/save_slots.gd:119)
+         [3] run_slot_open (res://tests/run/test_flow_wiring.gd:181)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档版本 99.0 升不到 4 —— 调用方应先备份再从零开始
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:56)
+         [1] run_result_and_meta (res://tests/run/test_game_flow.gd:213)
+         [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parse JSON failed. Error at line 0: Expected 'true', 'false', or 'null', got 'nope'
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] from_text (res://core/meta/meta_save.gd:50)
+       [1] run_result_and_meta (res://tests/run/test_game_flow.gd:214)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档不是合法的 JSON 对象
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:52)
+         [1] run_result_and_meta (res://tests/run/test_game_flow.gd:214)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: 敌人 brute 的道具摆不下：[&"duanshui_lesser"]（棋盘 (1, 4)）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] arrange (res://core/enemies/enemy_placer.gd:1467)
+         [1] arm (res://core/run/red_sources.gd:107)
+         [2] run_make_room (res://tests/run/test_red_sources_281.gd:93)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: 敌人 brute 的道具摆不下：[&"duanshui_lesser"]（棋盘 (1, 4)）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] arrange (res://core/enemies/enemy_placer.gd:1467)
+         [1] arm (res://core/run/red_sources.gd:107)
+         [2] run_make_room (res://tests/run/test_red_sources_281.gd:98)
+         [3] _initialize (res://tests/run_tests.gd:106)
+ERROR: RunHooks：没有名叫 saef_open 的 hook（认得的见 RunHooks.NAMES）
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] register (res://core/run/run_hooks.gd:48)
+       [1] run_register (res://tests/run/test_run_hooks.gd:55)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunMigrations: 没有 v99.0 → v4 的迁移，这一局作废（局外进度不受影响）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] upgrade (res://core/run/run_migrations.gd:34)
+         [1] from_text (res://core/run/run_save.gd:57)
+         [2] run_save (res://tests/run/test_run_state.gd:314)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 存档版本 99.0 升不到 4 —— 这一局作废
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:60)
+         [1] run_save (res://tests/run/test_run_state.gd:314)
+         [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parse JSON failed. Error at line 0: Expected 'true', 'false', or 'null', got 'not'
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] from_text (res://core/run/run_save.gd:53)
+       [1] run_save (res://tests/run/test_run_state.gd:315)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 存档不是合法的 JSON 对象
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:55)
+         [1] run_save (res://tests/run/test_run_state.gd:315)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 找不到章节 'no_such'
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:66)
+         [1] run_save (res://tests/run/test_run_state.gd:317)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档版本 11.0 升不到 4 —— 调用方应先备份再从零开始
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:56)
+         [1] run_unknown_versions (res://tests/run/test_save_migration.gd:63)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaMigrations: 没有 v0 → v1 的迁移，停在 v0
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] upgrade (res://core/meta/meta_migrations.gd:23)
+         [1] run_unknown_versions (res://tests/run/test_save_migration.gd:65)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaMigrations: 没有 v0 → v1 的迁移，停在 v0
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] upgrade (res://core/meta/meta_migrations.gd:23)
+         [1] from_text (res://core/meta/meta_save.gd:54)
+         [2] run_unknown_versions (res://tests/run/test_save_migration.gd:66)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档版本 0.0 升不到 4 —— 调用方应先备份再从零开始
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:56)
+         [1] run_unknown_versions (res://tests/run/test_save_migration.gd:66)
+         [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parse JSON failed. Error at line 0: Unexpected character
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] from_text (res://core/meta/meta_save.gd:50)
+       [1] run_unknown_versions (res://tests/run/test_save_migration.gd:67)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档不是合法的 JSON 对象
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:52)
+         [1] run_unknown_versions (res://tests/run/test_save_migration.gd:67)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunMigrations: 没有 v0 → v4 的迁移，这一局作废（局外进度不受影响）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] upgrade (res://core/run/run_migrations.gd:34)
+         [1] run_run_chain (res://tests/run/test_save_migration.gd:82)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunMigrations: 没有 v0.0 → v4 的迁移，这一局作废（局外进度不受影响）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] upgrade (res://core/run/run_migrations.gd:34)
+         [1] from_text (res://core/run/run_save.gd:57)
+         [2] run_run_chain (res://tests/run/test_save_migration.gd:83)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 存档版本 0.0 升不到 4 —— 这一局作废
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:60)
+         [1] run_run_chain (res://tests/run/test_save_migration.gd:83)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunMigrations: 没有 v7.0 → v4 的迁移，这一局作废（局外进度不受影响）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] upgrade (res://core/run/run_migrations.gd:34)
+         [1] from_text (res://core/run/run_save.gd:57)
+         [2] run_run_chain (res://tests/run/test_save_migration.gd:85)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 存档版本 7.0 升不到 4 —— 这一局作废
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:60)
+         [1] run_run_chain (res://tests/run/test_save_migration.gd:85)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaMigrations: 没有 v0 → v1 的迁移，停在 v0
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] upgrade (res://core/meta/meta_migrations.gd:23)
+         [1] from_text (res://core/meta/meta_save.gd:54)
+         [2] read (res://core/meta/meta_save.gd:35)
+         [3] open (res://core/settings/save_slots.gd:119)
+         [4] use_slot (res://core/run/game_flow.gd:137)
+         [5] run_backup_instead_of_overwrite (res://tests/run/test_save_migration.gd:144)
+         [6] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档版本 0.0 升不到 4 —— 调用方应先备份再从零开始
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:56)
+         [1] read (res://core/meta/meta_save.gd:35)
+         [2] open (res://core/settings/save_slots.gd:119)
+         [3] use_slot (res://core/run/game_flow.gd:137)
+         [4] run_backup_instead_of_overwrite (res://tests/run/test_save_migration.gd:144)
+         [5] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档版本 5.0 升不到 4 —— 调用方应先备份再从零开始
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:56)
+         [1] read (res://core/meta/meta_save.gd:35)
+         [2] summary (res://core/settings/save_slots.gd:166)
+         [3] run_newer_save_is_read_only (res://tests/run/test_save_migration.gd:180)
+         [4] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parse JSON failed. Error at line 0: Expected value, got 'EOF'
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] from_text (res://core/meta/meta_save.gd:50)
+       [1] read (res://core/meta/meta_save.gd:35)
+       [2] run_prev_fallback (res://tests/run/test_save_reliability_173.gd:71)
+       [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: 存档不是合法的 JSON 对象
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/meta/meta_save.gd:52)
+         [1] read (res://core/meta/meta_save.gd:35)
+         [2] run_prev_fallback (res://tests/run/test_save_reliability_173.gd:71)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: MetaSave: user://test_173_meta.json 读不出来，用了上一份 user://test_173_meta.json.prev
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] read (res://core/meta/meta_save.gd:44)
+         [1] run_prev_fallback (res://tests/run/test_save_reliability_173.gd:71)
+         [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parse JSON failed. Error at line 0: Unexpected character
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] from_text (res://core/run/run_save.gd:53)
+       [1] read (res://core/run/run_save.gd:36)
+       [2] run_prev_fallback (res://tests/run/test_save_reliability_173.gd:87)
+       [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 存档不是合法的 JSON 对象
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:55)
+         [1] read (res://core/run/run_save.gd:36)
+         [2] run_prev_fallback (res://tests/run/test_save_reliability_173.gd:87)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: user://test_173_run.json 读不出来，用了上一份 user://test_173_run.json.prev
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] read (res://core/run/run_save.gd:47)
+         [1] run_prev_fallback (res://tests/run/test_save_reliability_173.gd:87)
+         [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parse JSON failed. Error at line 0: Expected '}'
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] load_from (res://core/settings/game_settings.gd:211)
+       [1] run_prev_fallback (res://tests/run/test_save_reliability_173.gd:100)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 找不到章节 'no_such_chapter'
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:66)
+         [1] run_salvage (res://tests/run/test_save_reliability_173.gd:202)
+         [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 找不到章节 'no_such_chapter'
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:66)
+         [1] read (res://core/run/run_save.gd:36)
+         [2] continue_run (res://core/run/game_flow.gd:343)
+         [3] run_salvage (res://tests/run/test_save_reliability_173.gd:206)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: RunSave: 找不到章节 'no_such_chapter'
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] from_text (res://core/run/run_save.gd:66)
+         [1] read (res://core/run/run_save.gd:36)
+         [2] continue_run (res://core/run/game_flow.gd:343)
+         [3] run_salvage (res://tests/run/test_save_reliability_173.gd:219)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:200)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:200)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:200)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:200)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:200)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:201)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:201)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:201)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:201)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: BattleSim: 打到安全上限 60 秒还没分出胜负，判平局（加时 / 衰竭配置有问题？）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] run_context (res://core/battle/battle_sim.gd:68)
+         [1] run (res://core/battle/battle_sim.gd:34)
+         [2] _fight (res://tests/run/test_tutorial2.gd:51)
+         [3] run_matchups (res://tests/run/test_tutorial2.gd:201)
+         [4] _initialize (res://tests/run_tests.gd:106)
+WARNING: DragLayer: uid 6 无法放回原位，改为自动装填
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _restore (res://ui/inventory/drag_layer.gd:1139)
+         [1] cancel (res://ui/inventory/drag_layer.gd:1112)
+         [2] run_crafting_drag (res://tests/run/test_tutorial2.gd:357)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: DragLayer: uid 8 无法放回原位，改为自动装填
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _restore (res://ui/inventory/drag_layer.gd:1139)
+         [1] cancel (res://ui/inventory/drag_layer.gd:1112)
+         [2] run_crafting_drag (res://tests/run/test_tutorial2.gd:372)
+         [3] _initialize (res://tests/run_tests.gd:106)
+ERROR: String formatting error: unsupported format character.
+   at: validated_evaluate (core/variant/variant_op.h:829)
+   GDScript backtrace (most recent call first):
+       [0] run_tooltip_uses_sentence (res://tests/ui/test_adjacency_sentence_171.gd:87)
+       [1] _initialize (res://tests/run_tests.gd:106)
+WARNING: 敌人的道具摆不下：shortsword @ [3, 2]（棋盘 (4, 3)）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] board_of (res://core/enemies/enemy_kit.gd:60)
+         [1] unplaced_items (res://core/enemies/enemy_kit.gd:82)
+         [2] run_enemy_stale_position (res://tests/ui/test_feedback_1012.gd:20)
+         [3] _initialize (res://tests/run_tests.gd:106)
+WARNING: 敌人的道具摆不下：shortsword @ [3, 2]（棋盘 (4, 3)）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] board_of (res://core/enemies/enemy_kit.gd:60)
+         [1] run_enemy_stale_position (res://tests/ui/test_feedback_1012.gd:21)
+         [2] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "data.tree" is null.
+   at: get_tree (scene/main/node.h:559)
+   GDScript backtrace (most recent call first):
+       [0] _gui_input (res://ui/inventory/inventory_view.gd:427)
+       [1] run_settings_and_double_click (res://tests/ui/test_text_and_tooltips.gd:398)
+       [2] _initialize (res://tests/run_tests.gd:106)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_market_stalls (res://tests/meta/test_market_stalls_270.gd:236)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_market_stalls (res://tests/meta/test_market_stalls_270.gd:266)
+         [1] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_set_transform (scene/main/canvas_item.cpp:1046)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:518)
+       [1] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:520)
+       [1] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:521)
+       [1] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:528)
+       [1] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:679)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:681)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:682)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:687)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_texture_rect (scene/main/canvas_item.cpp:1000)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:596)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string_outline (scene/main/canvas_item.cpp:1133)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:607)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:608)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_kit_page (res://tests/run/test_character_select_255.gd:374)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_chest_on_ground (res://tests/run/test_chest_154.gd:350)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_chest_on_ground (res://tests/run/test_chest_154.gd:350)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_chest_on_ground (res://tests/run/test_chest_154.gd:350)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_market_page (res://tests/ui/test_base_shops_ui_251.gd:61)
+         [1] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_set_transform (scene/main/canvas_item.cpp:1046)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:518)
+       [1] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:520)
+       [1] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:521)
+       [1] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:528)
+       [1] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:679)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:681)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:682)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:687)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_texture_rect (scene/main/canvas_item.cpp:1000)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:596)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string_outline (scene/main/canvas_item.cpp:1133)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:607)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:608)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_texture_rect (scene/main/canvas_item.cpp:1000)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:596)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string_outline (scene/main/canvas_item.cpp:1133)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:607)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:608)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_text_chip (res://ui/battle/combatant_panel.gd:632)
+       [1] _draw (res://ui/battle/combatant_panel.gd:583)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_text_chip (res://ui/battle/combatant_panel.gd:633)
+       [1] _draw (res://ui/battle/combatant_panel.gd:583)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw_text_chip (res://ui/battle/combatant_panel.gd:634)
+       [1] _draw (res://ui/battle/combatant_panel.gd:583)
+       [2] frame_icon_chips (res://tests/ui/test_effect_icons_175.gd:84)
+       [3] _process (res://tests/run_tests.gd:131)
+WARNING: EventScreen: option 0 of search_default refused (pending -)
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] choose (res://ui/game/event_screen.gd:293)
+         [1] frame_stale_event_moves_on (res://tests/ui/test_event_stale_1022.gd:30)
+         [2] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_backdrop_camera (res://tests/ui/test_main_menu_197.gd:122)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_warehouse (res://tests/ui/test_panels_nine_255.gd:187)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_warehouse (res://tests/ui/test_panels_nine_255.gd:187)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_pawn_and_paths (res://tests/ui/test_pawn_184.gd:33)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_follow_and_offscreen (res://tests/ui/test_pawn_184.gd:99)
+         [1] _process (res://tests/run_tests.gd:131)
+ERROR: Rect2 size is negative, this is not supported. Use Rect2.abs() to get a Rect2 with a positive size.
+   at: has_point (./core/math/rect2.h:185)
+   GDScript backtrace (most recent call first):
+       [0] frame_follow_and_offscreen (res://tests/ui/test_pawn_184.gd:116)
+       [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_rack_beside_board (res://tests/ui/test_sell_tools_268.gd:231)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_badge_and_ground (res://tests/ui/test_shop_keys.gd:161)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_tent (res://tests/ui/test_shop_tent_233.gd:53)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_tent (res://tests/ui/test_shop_tent_233.gd:61)
+         [1] _process (res://tests/run_tests.gd:131)
+
+======================================================
+通过  39269 项断言，294 个套件，耗时 956726 ms
+======================================================
+WARNING: 79 RIDs of type "CanvasItem" were leaked.
+   at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2735)
+WARNING: 1371626 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 3875 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 68 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.
+ERROR: 271 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 4 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.
+ERROR: 1 RID allocations of type 'PN18TextServerAdvanced27FontAdvancedLinkedVariationE' were leaked at exit.

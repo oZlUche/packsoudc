@@ -1,0 +1,325 @@
+{
+  "version": 4,
+  "warehouse": {
+    "pages": [
+      {
+        "id": 200,
+        "size": [
+          10,
+          8
+        ],
+        "requires_bag": false,
+        "blocked": [],
+        "items": [
+          {
+            "uid": 1,
+            "def": "shortsword",
+            "rot": 0,
+            "origin": [
+              0,
+              0
+            ],
+            "seq": 1,
+            "state": {}
+          },
+          {
+            "uid": 2,
+            "def": "salve",
+            "rot": 0,
+            "origin": [
+              1,
+              0
+            ],
+            "seq": 2,
+            "state": {}
+          },
+          {
+            "uid": 3,
+            "def": "bandage",
+            "rot": 0,
+            "origin": [
+              2,
+              0
+            ],
+            "seq": 3,
+            "state": {}
+          },
+          {
+            "uid": 4,
+            "def": "ration",
+            "rot": 0,
+            "origin": [
+              3,
+              0
+            ],
+            "seq": 4,
+            "state": {}
+          },
+          {
+            "uid": 11,
+            "def": "shortsword",
+            "rot": 0,
+            "origin": [
+              4,
+              0
+            ],
+            "seq": 5,
+            "state": {}
+          },
+          {
+            "uid": 12,
+            "def": "salve",
+            "rot": 0,
+            "origin": [
+              5,
+              0
+            ],
+            "seq": 6,
+            "state": {}
+          },
+          {
+            "uid": 13,
+            "def": "leather_armor",
+            "rot": 1,
+            "origin": [
+              5,
+              0
+            ],
+            "seq": 7,
+            "state": {}
+          },
+          {
+            "uid": 14,
+            "def": "scimitar",
+            "rot": 0,
+            "origin": [
+              8,
+              0
+            ],
+            "seq": 9,
+            "state": {}
+          },
+          {
+            "uid": 15,
+            "def": "bandage",
+            "rot": 0,
+            "origin": [
+              8,
+              0
+            ],
+            "seq": 10,
+            "state": {}
+          },
+          {
+            "uid": 16,
+            "def": "ration",
+            "rot": 0,
+            "origin": [
+              1,
+              1
+            ],
+            "seq": 11,
+            "state": {}
+          },
+          {
+            "uid": 17,
+            "def": "poisoned_knife",
+            "rot": 0,
+            "origin": [
+              7,
+              0
+            ],
+            "seq": 8,
+            "state": {}
+          },
+          {
+            "uid": 18,
+            "def": "cleaver_brute",
+            "rot": 2,
+            "origin": [
+              0,
+              2
+            ],
+            "seq": 13,
+            "state": {}
+          },
+          {
+            "uid": 19,
+            "def": "round_shield",
+            "rot": 0,
+            "origin": [
+              2,
+              1
+            ],
+            "seq": 12,
+            "state": {}
+          }
+        ],
+        "place_seq": 13
+      }
+    ]
+  },
+  "board": null,
+  "codex": {
+    "bag_leather": 4,
+    "bag_small": 2,
+    "shortsword": 1,
+    "salve": 1,
+    "leather_armor": 1,
+    "scimitar": 1,
+    "bandage": 1,
+    "ration": 1,
+    "poisoned_knife": 1,
+    "cleaver_brute": 1,
+    "round_shield": 1
+  },
+  "active_buffs": [],
+  "unlocks": [
+    "prologue_done",
+    "ach_first_extract",
+    "ascension_1"
+  ],
+  "keepsakes": [
+    "spyglass"
+  ],
+  "bags": {
+    "bag_leather": [
+      5,
+      6,
+      9,
+      10
+    ],
+    "bag_small": [
+      7,
+      8
+    ]
+  },
+  "bag_grants": [],
+  "favorites": [],
+  "next_uid": 20,
+  "funds": 66,
+  "score": 1007,
+  "runs": 1,
+  "extractions": 1,
+  "deaths": 0,
+  "best_value": 555,
+  "best_run": {
+    "value": 555,
+    "score": 1007,
+    "chapter": "prologue",
+    "outcome": "extracted",
+    "character": "brutus",
+    "difficulty": "",
+    "run_no": 1,
+    "steps": 5,
+    "battles_won": 3,
+    "ended_at": 1794265450
+  },
+  "last_character": "",
+  "last_carry": [],
+  "last_carry_funds": 0,
+  "history": [
+    {
+      "outcome": "extracted",
+      "reason": "extract",
+      "seed": 545472,
+      "chapter": "prologue",
+      "steps": 5,
+      "visited": 6,
+      "battles_won": 3,
+      "battles_lost": 0,
+      "balance": 66,
+      "value": 555,
+      "items": [
+        "bag_leather",
+        "bag_leather",
+        "bag_small",
+        "bag_small",
+        "bag_leather",
+        "bag_leather",
+        "shortsword",
+        "salve",
+        "leather_armor",
+        "scimitar",
+        "bandage",
+        "ration",
+        "poisoned_knife",
+        "cleaver_brute",
+        "round_shield"
+      ],
+      "safe": 0,
+      "safe_value": 0,
+      "character": "brutus",
+      "difficulty": "",
+      "ended_at": 1794265450,
+      "elite_won": 1,
+      "boss_won": 0,
+      "searches": 2,
+      "crafts": 1,
+      "scale": "",
+      "faith": {},
+      "score": 1007,
+      "score_parts": {
+        "loot": 555,
+        "battle": 150,
+        "explore": 302,
+        "mult": 1
+      },
+      "run_no": 1,
+      "pinned": false
+    }
+  ],
+  "achievements": {
+    "first_extract": 1794265450,
+    "big_haul": 1794265450,
+    "collector_10": 1794265450
+  },
+  "chapter_extractions": {
+    "prologue": 1
+  },
+  "boss_kills": 0,
+  "battles_won": 3,
+  "seen_rules": [],
+  "reactions_seen": [
+    "poison_bleed"
+  ],
+  "coach_seen": [
+    "prologue_map",
+    "prologue_prebattle",
+    "prologue_battle"
+  ],
+  "briefing_seen": [],
+  "flags": {
+    "tutorial_asked": 1
+  },
+  "tech_levels": {},
+  "tech_deposits": {},
+  "market_stock": [
+    {
+      "id": "cleaver",
+      "sold": false,
+      "locked": false
+    },
+    {
+      "id": "leather_armor",
+      "sold": false,
+      "locked": false
+    },
+    {
+      "id": "great_club",
+      "sold": false,
+      "locked": false
+    },
+    {
+      "id": "greatsword",
+      "sold": false,
+      "locked": false
+    }
+  ],
+  "market_seed": 1,
+  "market_refreshes": 0,
+  "market_stall": "",
+  "npc_said": {},
+  "npc_done": {},
+  "content_stamp": "1ce374f73cb2"
+}

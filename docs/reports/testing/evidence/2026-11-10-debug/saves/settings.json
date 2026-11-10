@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "loot_auto_close": false,
+  "node_tooltips_preview": false,
+  "language": "en",
+  "save_slot": 2,
+  "unlock_all": false,
+  "reveal_names": false,
+  "bg_theme": "",
+  "battle_speed": 1.0,
+  "battle_trace": true,
+  "debug_mode": true,
+  "key_bindings": {},
+  "ui_fades": true,
+  "cursor_skin": "mithril",
+  "map_zoom": 0.0,
+  "window_mode": "windowed",
+  "resolution": [
+    1280,
+    800
+  ],
+  "sfx_volume": 0.8,
+  "music_volume": 0.6,
+  "text_size": "large",
+  "stele_roman": true,
+  "battle_log_open": true
+}
