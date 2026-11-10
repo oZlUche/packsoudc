@@ -1,0 +1,11 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+   at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] _on_piece_hovered (res://ui/game/rest_camp_screen.gd:243)
+       [2] <anonymous lambda> (res://ui/game/rest_camp_screen.gd:530)

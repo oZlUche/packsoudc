@@ -1,0 +1,25 @@
+extends SceneTree
+
+func _initialize() -> void:
+	call_deferred("probe")
+
+func probe() -> void:
+	UiTheme.install()
+	UiText.lang = "en"
+	UiTheme.pinned_text_size = &"large"
+	UiTheme.set_text_size(&"large")
+	var host := Control.new()
+	root.add_child(host)
+	host.size = Vector2(1280, 800)
+	var layer := NoticeLayer.new()
+	host.add_child(layer)
+	layer.motion = false
+	layer.push(UiText.t("setup.unarmed"))
+	await process_frame
+	await process_frame
+	var scroll := layer.scrolls()[0]
+	var label := scroll.label()
+	var clip := label.get_parent() as Control
+	print(JSON.stringify({"amount": scroll.amount, "scroll": str(scroll.get_global_rect()), "label": str(label.get_global_rect()), "clip": str(clip.get_global_rect()), "fully_contains_text": clip.get_global_rect().encloses(label.get_global_rect())}))
+	host.free()
+	quit()

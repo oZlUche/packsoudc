@@ -1,0 +1,124 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+只跑含「author_087」的套件：1 个
+ERROR: String formatting error: unsupported format character.
+   at: validated_evaluate (core/variant/variant_op.h:829)
+   GDScript backtrace (most recent call first):
+       [0] run_glossary (res://tests/run/test_author_087.gd:62)
+       [1] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] close_shelf (res://ui/game/meta_screen.gd:1144)
+       [2] show_tab (res://ui/game/meta_screen.gd:1203)
+       [3] open (res://ui/game/meta_screen.gd:309)
+       [4] run_spyglass_and_codex (res://tests/run/test_author_087.gd:711)
+       [5] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] close_shelf (res://ui/game/meta_screen.gd:1144)
+       [2] show_tab (res://ui/game/meta_screen.gd:1203)
+       [3] show_tab (res://ui/game/meta_screen.gd:1200)
+       [4] run_spyglass_and_codex (res://tests/run/test_author_087.gd:713)
+       [5] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] close_shelf (res://ui/game/meta_screen.gd:1144)
+       [2] open_shelf (res://ui/game/meta_screen.gd:1133)
+       [3] show_tab (res://ui/game/meta_screen.gd:1201)
+       [4] run_spyglass_and_codex (res://tests/run/test_author_087.gd:713)
+       [5] _initialize (res://tests/run_tests.gd:106)
+ERROR: Parameter "get_viewport()" is null.
+   at: get_global_mouse_position (scene/main/canvas_item.cpp:1374)
+   GDScript backtrace (most recent call first):
+       [0] release (res://ui/inventory/hover_tip.gd:904)
+       [1] close_shelf (res://ui/game/meta_screen.gd:1144)
+       [2] show_tab (res://ui/game/meta_screen.gd:1203)
+       [3] run_spyglass_and_codex (res://tests/run/test_author_087.gd:751)
+       [4] _initialize (res://tests/run_tests.gd:106)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_set_transform (scene/main/canvas_item.cpp:1046)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:518)
+       [1] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:520)
+       [1] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:521)
+       [1] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw (res://ui/battle/combatant_panel.gd:528)
+       [1] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [2] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:679)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:681)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_rect (scene/main/canvas_item.cpp:919)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:682)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw_bar (res://ui/battle/combatant_panel.gd:687)
+       [1] _draw (res://ui/battle/combatant_panel.gd:547)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_texture_rect (scene/main/canvas_item.cpp:1000)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:596)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string_outline (scene/main/canvas_item.cpp:1133)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:607)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+ERROR: Drawing is only allowed inside this node's `_draw()`, functions connected to its `draw` signal, or when it receives NOTIFICATION_DRAW.
+   at: draw_string (scene/main/canvas_item.cpp:1117)
+   GDScript backtrace (most recent call first):
+       [0] _draw_icon_chip (res://ui/battle/combatant_panel.gd:608)
+       [1] _draw (res://ui/battle/combatant_panel.gd:581)
+       [2] frame_buff_chips (res://tests/run/test_author_087.gd:332)
+       [3] _process (res://tests/run_tests.gd:131)
+
+======================================================
+通过  2196 项断言，1 个套件，耗时 21391 ms
+======================================================
+WARNING: 16474 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 3295 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

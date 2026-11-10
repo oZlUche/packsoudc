@@ -1,0 +1,601 @@
+{
+  "version": 4,
+  "seed": 301376,
+  "chapter": "prologue_2",
+  "character": "brutus",
+  "map_scale": "",
+  "difficulty": "",
+  "hunters": {},
+  "erosion": {},
+  "phase": 1,
+  "end_reason": "",
+  "map": {
+    "version": 1,
+    "layout_kind": "line",
+    "layout_meta": {},
+    "nodes": [
+      {
+        "id": 0,
+        "type": "spawn",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 1908594115,
+        "content": {},
+        "state": 1,
+        "layout": {
+          "col": 0,
+          "row": 1
+        }
+      },
+      {
+        "id": 1,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 0,
+        "content_seed": 1908594116,
+        "content": {
+          "event": "tut2_search_1",
+          "search_max": 2,
+          "search_curve": [
+            0,
+            0
+          ],
+          "search_finds": [
+            [
+              "tower_shield"
+            ],
+            [
+              "plate_cuirass"
+            ]
+          ],
+          "search_again_events": [
+            "tut2_search_1_again"
+          ],
+          "search_done_event": "tut2_search_1_done"
+        },
+        "state": 0,
+        "layout": {
+          "col": 1,
+          "row": 1
+        }
+      },
+      {
+        "id": 2,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 0,
+        "content_seed": 1908594117,
+        "content": {
+          "enemy": "skirmisher",
+          "strength": 0,
+          "board": [
+            4,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                1,
+                2
+              ],
+              "rot": 1
+            },
+            {
+              "id": "knife",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 0
+            }
+          ],
+          "base_stats": {
+            "max_hp": 70,
+            "max_stamina": 60,
+            "regen_stamina": 8
+          },
+          "event": "tut2_battle_swarm",
+          "tooltip": "{battle_data}\n{c:dim}出手快、每一下都轻。{/c}"
+        },
+        "state": 0,
+        "layout": {
+          "col": 2,
+          "row": 0
+        }
+      },
+      {
+        "id": 3,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 0,
+        "content_seed": 1908594118,
+        "content": {
+          "enemy": "bruiser",
+          "strength": 0,
+          "board": [
+            4,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "warhammer",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 1
+            }
+          ],
+          "base_stats": {
+            "max_hp": 15,
+            "regen_stamina": 10
+          },
+          "event": "tut2_battle_heavy",
+          "tooltip": "{battle_data}\n{c:dim}出手慢、每一下都重。{/c}"
+        },
+        "state": 0,
+        "layout": {
+          "col": 2,
+          "row": 2
+        }
+      },
+      {
+        "id": 4,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 0,
+        "content_seed": 1908594119,
+        "content": {
+          "event": "tut2_search_2",
+          "search_max": 3,
+          "search_curve": [
+            0,
+            0,
+            0
+          ],
+          "search_finds": [
+            [
+              "poison_vial"
+            ],
+            [
+              "longsword"
+            ],
+            [
+              "bag_long"
+            ]
+          ],
+          "search_again_events": [
+            "tut2_search_2_again_1",
+            "tut2_search_2_again_2"
+          ],
+          "search_done_event": "tut2_search_2_done"
+        },
+        "state": 0,
+        "layout": {
+          "col": 3,
+          "row": 1
+        }
+      },
+      {
+        "id": 5,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 4,
+        "erosion_band": 0,
+        "content_seed": 1908594120,
+        "content": {
+          "enemy": "shieldbearer",
+          "strength": 0,
+          "board": [
+            4,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                0,
+                2
+              ],
+              "rot": 1
+            },
+            {
+              "id": "warding_charm",
+              "at": [
+                2,
+                0
+              ],
+              "rot": 0
+            }
+          ],
+          "base_stats": {
+            "max_hp": 40,
+            "block": 12
+          },
+          "event": "tut2_battle_ward",
+          "tooltip": "{battle_data}\n{c:dim}每秒叠一层护甲，没有上限。{/c}"
+        },
+        "state": 0,
+        "layout": {
+          "col": 4,
+          "row": 0
+        }
+      },
+      {
+        "id": 6,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 4,
+        "erosion_band": 0,
+        "content_seed": 1908594121,
+        "content": {
+          "enemy": "apothecary",
+          "strength": 0,
+          "board": [
+            4,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "shortsword",
+              "at": [
+                2,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "antidote_kit",
+              "at": [
+                1,
+                0
+              ],
+              "rot": 0
+            }
+          ],
+          "base_stats": {
+            "max_hp": 45,
+            "block": 3
+          },
+          "event": "tut2_battle_cure",
+          "tooltip": "{battle_data}\n{c:dim}随身带着解毒的东西。{/c}"
+        },
+        "state": 0,
+        "layout": {
+          "col": 4,
+          "row": 2
+        }
+      },
+      {
+        "id": 7,
+        "type": "event",
+        "danger": 0,
+        "zone": 0,
+        "tier": 5,
+        "erosion_band": 0,
+        "content_seed": 1908594122,
+        "content": {
+          "event": "tut2_lesson"
+        },
+        "state": 0,
+        "layout": {
+          "col": 5,
+          "row": 1
+        }
+      },
+      {
+        "id": 8,
+        "type": "extract",
+        "danger": 0,
+        "zone": 0,
+        "tier": 6,
+        "erosion_band": 0,
+        "content_seed": 1908594123,
+        "content": {
+          "event": "tut2_extract"
+        },
+        "state": 0,
+        "layout": {
+          "col": 6,
+          "row": 1
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": 0,
+        "to": 1,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 1,
+        "to": 3,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 2,
+        "to": 4,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 4,
+        "to": 6,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 5,
+        "to": 7,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      }
+    ],
+    "entry_ids": [
+      0
+    ],
+    "goal_ids": [
+      8
+    ],
+    "zones": [],
+    "routes": []
+  },
+  "travel": {
+    "current": 0,
+    "history": [
+      0
+    ],
+    "clock": {
+      "total": 0
+    }
+  },
+  "vitality": {
+    "current": 10,
+    "max": 10
+  },
+  "wallet": {
+    "balance": 0
+  },
+  "board": {
+    "id": 1,
+    "size": [
+      9,
+      6
+    ],
+    "requires_bag": true,
+    "blocked": [],
+    "items": [
+      {
+        "uid": 1,
+        "def": "bag_leather",
+        "rot": 0,
+        "origin": [
+          0,
+          0
+        ],
+        "seq": 1,
+        "state": {}
+      },
+      {
+        "uid": 2,
+        "def": "bag_leather",
+        "rot": 0,
+        "origin": [
+          3,
+          0
+        ],
+        "seq": 2,
+        "state": {}
+      },
+      {
+        "uid": 3,
+        "def": "knife",
+        "rot": 0,
+        "origin": [
+          0,
+          0
+        ],
+        "seq": 3,
+        "state": {}
+      }
+    ],
+    "place_seq": 3
+  },
+  "storage": {
+    "id": 2,
+    "capacity": 0,
+    "items": [],
+    "spots": []
+  },
+  "rng": {
+    "seed": 301376,
+    "counters": {}
+  },
+  "events": {
+    "searches_closed": 0,
+    "last_handled": -1,
+    "pending": {},
+    "losses_forgiven": 0,
+    "pending_battle": {},
+    "pending_ransom": {},
+    "search_haul": null
+  },
+  "skills": {
+    "uses": {},
+    "cooldowns": {},
+    "armed": [],
+    "evade_left": 0
+  },
+  "faith_power": {},
+  "faith_history": [],
+  "owned_uids": [
+    1,
+    2,
+    3
+  ],
+  "acquired_ids": [
+    "bag_leather",
+    "knife"
+  ],
+  "placed_ids": [],
+  "pending_loot": null,
+  "boss_cleared": false,
+  "tally": {
+    "battles_won": 0,
+    "battles_lost": 0,
+    "elite_won": 0,
+    "boss_won": 0,
+    "searches": 0,
+    "crafts": 0
+  },
+  "searched_nodes": [],
+  "buffs": {
+    "meta": []
+  },
+  "modules": {
+    "safe": {
+      "inventory": {
+        "id": 3,
+        "size": [
+          3,
+          3
+        ],
+        "requires_bag": false,
+        "blocked": [],
+        "items": [],
+        "place_seq": 0
+      },
+      "locked": false,
+      "sealed": []
+    },
+    "node_storage": {
+      "nodes": {},
+      "spots": {}
+    },
+    "crafting": {},
+    "buff": {
+      "map": []
+    },
+    "altar": {
+      "rituals": {},
+      "stat_bonus": {},
+      "axis_bonus": {},
+      "used": []
+    },
+    "countdown": {
+      "carry_value": 0
+    },
+    "belt": {
+      "stacks": {}
+    },
+    "wear": {},
+    "growth": {},
+    "honor": {}
+  },
+  "content_stamp": "1ce374f73cb2"
+}

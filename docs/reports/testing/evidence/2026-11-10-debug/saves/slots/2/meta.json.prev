@@ -1,0 +1,289 @@
+{
+  "version": 4,
+  "warehouse": {
+    "pages": [
+      {
+        "id": 200,
+        "size": [
+          10,
+          8
+        ],
+        "requires_bag": false,
+        "blocked": [],
+        "items": [
+          {
+            "uid": 1,
+            "def": "shortsword",
+            "rot": 0,
+            "origin": [
+              3,
+              2
+            ],
+            "seq": 1,
+            "state": {}
+          },
+          {
+            "uid": 2,
+            "def": "salve",
+            "rot": 0,
+            "origin": [
+              1,
+              0
+            ],
+            "seq": 2,
+            "state": {}
+          },
+          {
+            "uid": 3,
+            "def": "bandage",
+            "rot": 0,
+            "origin": [
+              2,
+              0
+            ],
+            "seq": 3,
+            "state": {}
+          },
+          {
+            "uid": 4,
+            "def": "ration",
+            "rot": 0,
+            "origin": [
+              3,
+              0
+            ],
+            "seq": 4,
+            "state": {}
+          },
+          {
+            "uid": 5,
+            "def": "charm_brute",
+            "rot": 0,
+            "origin": [
+              4,
+              0
+            ],
+            "seq": 5,
+            "state": {}
+          },
+          {
+            "uid": 6,
+            "def": "charm_sun",
+            "rot": 0,
+            "origin": [
+              5,
+              0
+            ],
+            "seq": 6,
+            "state": {}
+          },
+          {
+            "uid": 18,
+            "def": "round_shield",
+            "rot": 0,
+            "origin": [
+              6,
+              0
+            ],
+            "seq": 7,
+            "state": {}
+          },
+          {
+            "uid": 19,
+            "def": "leather_armor",
+            "rot": 3,
+            "origin": [
+              0,
+              0
+            ],
+            "seq": 8,
+            "state": {}
+          },
+          {
+            "uid": 20,
+            "def": "cleaver",
+            "rot": 0,
+            "origin": [
+              8,
+              0
+            ],
+            "seq": 9,
+            "state": {}
+          },
+          {
+            "uid": 21,
+            "def": "bandage",
+            "rot": 0,
+            "origin": [
+              2,
+              1
+            ],
+            "seq": 10,
+            "state": {}
+          },
+          {
+            "uid": 22,
+            "def": "salve",
+            "rot": 0,
+            "origin": [
+              3,
+              1
+            ],
+            "seq": 11,
+            "state": {}
+          }
+        ],
+        "place_seq": 11
+      }
+    ]
+  },
+  "board": null,
+  "codex": {
+    "bag_leather": 2,
+    "round_shield": 1,
+    "leather_armor": 1,
+    "cleaver": 1,
+    "bandage": 1,
+    "salve": 1
+  },
+  "active_buffs": [],
+  "unlocks": [
+    "prologue_done",
+    "prologue2_done",
+    "prologue3_done",
+    "ach_first_extract"
+  ],
+  "keepsakes": [
+    "spyglass"
+  ],
+  "bags": {
+    "bag_leather": [
+      9,
+      10,
+      16,
+      17
+    ]
+  },
+  "bag_grants": [
+    "andreus",
+    "brutus"
+  ],
+  "favorites": [],
+  "next_uid": 23,
+  "funds": 0,
+  "score": 423,
+  "runs": 1,
+  "extractions": 1,
+  "deaths": 0,
+  "best_value": 263,
+  "best_run": {
+    "value": 263,
+    "score": 423,
+    "chapter": "free_mode",
+    "outcome": "extracted",
+    "character": "brutus",
+    "difficulty": "normal",
+    "run_no": 1,
+    "steps": 6,
+    "battles_won": 0,
+    "ended_at": 1794266537
+  },
+  "last_character": "brutus",
+  "last_carry": [],
+  "last_carry_funds": 0,
+  "history": [
+    {
+      "outcome": "extracted",
+      "reason": "extract",
+      "seed": 236064,
+      "chapter": "free_mode",
+      "steps": 6,
+      "visited": 5,
+      "battles_won": 0,
+      "battles_lost": 0,
+      "balance": 0,
+      "value": 263,
+      "items": [
+        "bag_leather",
+        "bag_leather",
+        "round_shield",
+        "leather_armor",
+        "cleaver",
+        "bandage",
+        "salve"
+      ],
+      "safe": 0,
+      "safe_value": 0,
+      "character": "brutus",
+      "difficulty": "normal",
+      "ended_at": 1794266537,
+      "elite_won": 0,
+      "boss_won": 0,
+      "searches": 0,
+      "crafts": 0,
+      "scale": "small",
+      "faith": {},
+      "score": 423,
+      "score_parts": {
+        "loot": 263,
+        "battle": 0,
+        "explore": 160,
+        "mult": 1
+      },
+      "run_no": 1,
+      "pinned": false
+    }
+  ],
+  "achievements": {
+    "first_extract": 1794266537,
+    "spyglass_bearer": 1794266537
+  },
+  "chapter_extractions": {
+    "free_mode": 1
+  },
+  "boss_kills": 0,
+  "battles_won": 0,
+  "seen_rules": [],
+  "reactions_seen": [],
+  "coach_seen": [
+    "free_mode_map"
+  ],
+  "briefing_seen": [
+    "briefing_legion"
+  ],
+  "flags": {
+    "tutorial_asked": 1,
+    "last_map": 4,
+    "last_scale": 1
+  },
+  "tech_levels": {},
+  "tech_deposits": {},
+  "market_stock": [
+    {
+      "id": "cleaver",
+      "sold": false,
+      "locked": false
+    },
+    {
+      "id": "leather_armor",
+      "sold": false,
+      "locked": false
+    },
+    {
+      "id": "great_club",
+      "sold": false,
+      "locked": false
+    },
+    {
+      "id": "greatsword",
+      "sold": false,
+      "locked": false
+    }
+  ],
+  "market_seed": 1,
+  "market_refreshes": 0,
+  "market_stall": "",
+  "npc_said": {},
+  "npc_done": {},
+  "content_stamp": "1ce374f73cb2"
+}
