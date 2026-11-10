@@ -19,6 +19,12 @@ var runs_path: String = RUNS_PATH
 var assumptions_path: String = AssumptionStats.PATH
 var written: int = 0
 
+## 平衡检测方案（2026-11-10）§4.1：记录的来源（[constant ExperimentManifest.SOURCES]）。空 = 按 [method current_source] 找
+static var source_override: String = ""
+## 命令行 `-- --calib-source=auto` 或环境变量 `PACKSDC_CALIB_SOURCE`：自动走查、作者自己试玩时用
+const SOURCE_ARG := "--calib-source="
+const SOURCE_ENV := "PACKSDC_CALIB_SOURCE"
+
 
 func _init(p_path: String = DEFAULT_PATH, p_runs_path: String = RUNS_PATH) -> void:
 	path = p_path
@@ -30,14 +36,26 @@ static func version() -> String:
 	return String(ProjectSettings.get_setting("application/config/version", ""))
 
 
+## 这一行记录算谁的：先看 [member source_override]，再看命令行和环境变量，都没有就是真人
+static func current_source() -> String:
+	if source_override != "":
+		return source_override
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with(SOURCE_ARG):
+			return a.substr(SOURCE_ARG.length())
+	var env := OS.get_environment(SOURCE_ENV)
+	return env if env != "" else ExperimentManifest.HUMAN
+
+
 ## 这一刻的玩家配置
 static func snapshot(run: RunState) -> Dictionary:
 	var stats := {}
 	if run.player_baseline != null:
 		for key in run.player_baseline.base_stats:
 			stats[String(key)] = float(run.player_baseline.base_stats[key])
-	return {
+	return ExperimentManifest.stamp({
 		"version": version(),
+		"run_id": run.run_id,
 		"seed": run.run_seed,
 		"chapter": String(run.chapter.id) if run.chapter != null else "",
 		"character": String(run.character_id),
@@ -50,7 +68,7 @@ static func snapshot(run: RunState) -> Dictionary:
 		"layout": layout_of(run.board),
 		"baseline": stats,
 		"buffs": run.meta_buff_ids(),
-	}
+	}, current_source())
 
 
 ## 记一行。写不了（目录没有、盘满）返回 false，不影响对局
@@ -69,6 +87,8 @@ func record_run(result: RunResult, run: RunState, ver: String = version()) -> bo
 	row["version"] = ver
 	row["character"] = String(run.character_id) if run != null else ""
 	row["difficulty"] = String(run.difficulty_id) if run != null else ""
+	row[ExperimentManifest.K_RUN] = run.run_id if run != null else ""
+	ExperimentManifest.stamp(row, current_source())
 	DirAccess.make_dir_recursive_absolute(faith_dir())     # 作者 10-26：信力记录也进「导出平衡数据」的包（结算页单独的导出键删了）
 	result.export_faith_csv(faith_dir())
 	return _append(runs_path, row)

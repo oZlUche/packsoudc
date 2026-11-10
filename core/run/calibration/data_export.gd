@@ -1,11 +1,12 @@
 ## 242 §8.1 第 5 项：「导出平衡数据」—— 校准记录（快照、对局结果）与战斗日志打成一个 zip，玩家交给作者就能拿去做木桩、扫表。
 ##
-## zip 里按目录名放（`calibration/…`、`battle_logs/…`），目录没有或是空的也留一个目录项，打开就知道是哪两样。
+## zip 里按目录名放（`calibration/…`、`battle_logs/…`），目录没有或是空的也留一个目录项，打开就知道是哪几样。
 ## 放桌面（[constant OS.SYSTEM_DIR_DESKTOP]）；取不到桌面就放 user://（设置页那边接着打开那个文件夹）
 class_name DataExport
 extends RefCounted
 
-const DIRS: Array[String] = [CalibrationRecorder.DIR, BattleArchive.DIR]
+## 平衡检测方案（2026-11-10）§5.2：诊断包（`diagnostics/battles`、固定导出的 `diagnostics/pinned`）也带上
+const DIRS: Array[String] = [CalibrationRecorder.DIR, BattleArchive.DIR, BattleDiagnostics.ROOT]
 const NAME := "背包搜打撤-数据-%s.zip"
 
 

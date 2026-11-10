@@ -85,6 +85,7 @@ func _initialize() -> void:
 	# 复测 10-21 第 3 条：不读玩家真实的 user://settings.json（本机切了英文跑全套会红）—— 默认路径改到一份测试专用的、每次从默认值开始
 	GameSettings.redirect = "user://test_default_settings.json"
 	GameSettings.remove()
+	CalibrationRecorder.source_override = ExperimentManifest.TEST     # 平衡检测方案 §4.1：测试写进校准目录的行标成 test，审计时和真人分开
 	BattleArchive.enabled = false     # 117：几百场测试战斗不写战斗日志；测日志的套件自己开、自己关
 	var tier := OS.get_environment("PACKSDC_TEXT_SIZE")     # 258：按某一档字号跑一遍（默认中档）：PACKSDC_TEXT_SIZE=large bash tools/test.sh
 	if tier != "":

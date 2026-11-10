@@ -695,6 +695,18 @@ func flee_roll(chance: float, fail_vitality: int, rng: RandomNumberGenerator, ct
 	return false
 
 
+## 平衡检测方案 §5：开打前抓一份诊断包（双方完整编译结果 + 开打前的随机数状态），打完再补结果摘要
+func _diag_capture(me: CombatantSpec, enemy: CombatantSpec, rng: RandomNumberGenerator, limit: float, overtime: OvertimeRules,
+		node: MapNode, content: Dictionary, type: StringName) -> BattleDiagPack:
+	var run_id := String(trace_info.get("run_id", ""))
+	var info := ExperimentManifest.stamp({"engine": BuildInfo.engine(), "run_id": run_id,
+		"battle_id": "%s:%d" % [run_id, rng.seed] if run_id != "" else "", "rng_seed": rng.seed, "chapter": String(trace_info.get("chapter", "")),
+		"node": node.id, "node_type": String(type), "enemy": String(content.get("enemy", "")), "tier": int(content.get("strength", 0)),
+		"steps": travel.clock.total if travel != null and travel.clock != null else 0,
+		"when": Time.get_datetime_string_from_system(true) + "Z"}, CalibrationRecorder.current_source())
+	return BattleDiagPack.capture(me, enemy, rng, limit, overtime, info)
+
+
 ## 117：把这一场写进 user://battle_logs（内部日志 + 回放存档），名字表按道具库查
 func _write_trace(trace: BattleTrace, result: BattleResult, node: MapNode, content: Dictionary,
 		me: CombatantSpec, enemy: CombatantSpec, limit: float, rng_seed: int) -> void:
@@ -708,6 +720,12 @@ func _write_trace(trace: BattleTrace, result: BattleResult, node: MapNode, conte
 		"character": String(trace_info.get("character", "")), "difficulty": String(trace_info.get("difficulty", "")),
 		"stamina_regen": AssumptionStats.regen_of(me),
 	}
+	# 平衡检测方案 §4.1：这一场的标识 = 局标识 + 这一场的战斗种子（同一局里不重，重复导出也不变）
+	var run_id := String(trace_info.get("run_id", ""))
+	if run_id != "":
+		info[ExperimentManifest.K_RUN] = run_id
+		info[ExperimentManifest.K_BATTLE] = "%s:%d" % [run_id, rng_seed]
+	ExperimentManifest.stamp(info, CalibrationRecorder.current_source())
 	BattleTraceWriter.write(trace, result, info, String(trace_info.get("dir", BattleArchive.DIR)), BattleArchive.KEEP,
 		AssumptionStats.recorder(String(trace_info.get("assumptions", ""))))
 
@@ -757,9 +775,14 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	var rng := _rng_for(node, "battle")
 	var rng_seed := rng.seed
 	var trace: BattleTrace = BattleTrace.new() if not trace_info.is_empty() and BattleArchive.enabled else null
-	var result := BattleSim.run(me, enemy, rng, limit, rules.overtime if rules != null else null, trace)
+	var overtime := rules.overtime if rules != null else null
+	var diag: BattleDiagPack = _diag_capture(me, enemy, rng, limit, overtime, node, content, type) if BattleDiagnostics.on() else null
+	var result := BattleSim.run(me, enemy, rng, limit, overtime, trace)
 	if trace != null:
 		_write_trace(trace, result, node, content, me, enemy, limit, rng_seed)
+	if diag != null:
+		diag.expected = BattleDiagPack.summary(result)
+		BattleDiagnostics.write(diag, BattleDiagnostics.stem_of(diag.meta))
 	var won := result.winner == 0
 	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type)}
 	battle_finished.emit(node, result, won)
