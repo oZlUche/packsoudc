@@ -12,23 +12,6 @@ static func level(meta: MetaState) -> int:
 	return meta.facility_level(ID) if meta != null else 0
 
 
-## {"ready": 会打的, "level_locked": 铺子级数还不够的, "tech_locked": 科技还没点到的（252，先于级数判）}，各自按配方的先后
-static func recipes_for(meta: MetaState, recipes: Array) -> Dictionary:
-	var out := {"ready": [] as Array[SmithRecipeDef], "level_locked": [] as Array[SmithRecipeDef], "tech_locked": [] as Array[SmithRecipeDef]}
-	var lv := level(meta)
-	for r in recipes:
-		var def := r as SmithRecipeDef
-		if def == null:
-			continue
-		var key := "ready"
-		if not knows(meta, def):
-			key = "tech_locked"
-		elif def.level > lv:
-			key = "level_locked"
-		(out[key] as Array).append(def)
-	return out
-
-
 ## 252：配方要的科技点到了没有（不要科技的总是会）
 static func knows(meta: MetaState, recipe: SmithRecipeDef) -> bool:
 	return recipe.tech == &"" or TechService.level(meta, recipe.tech) >= recipe.tech_level

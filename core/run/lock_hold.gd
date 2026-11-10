@@ -70,10 +70,6 @@ func is_holding() -> bool:
 	return state == State.HOLDING
 
 
-func is_unlocked() -> bool:
-	return state == State.UNLOCKED
-
-
 ## 现在能不能离开（作者定：按住的时候不能走；回退中、没按都能走）
 func can_leave() -> bool:
 	return state == State.IDLE or state == State.RELEASING

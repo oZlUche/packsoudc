@@ -45,8 +45,6 @@ var wallet: Wallet = null
 var board: GridInventory = null
 ## 地上：一个列表，保留但不参战（3.4）
 var storage: ItemStash = null
-## 092（作者定）：保险箱 —— 放进去的道具视为已带出，战败也带得出；大小按局外规则（初始 3×3）
-## 092（作者定）：保险箱关上了 —— 里面的送回基地、不能再改；[param count] 是几件
 var rng: RunRNG = null
 var events: NodeEvents = null
 ## 101 第 3 刀：别人（节点事件、事件的条件与后果）要调一局的能力都经这张带类型的表。
@@ -64,8 +62,6 @@ var character: CharacterDef = null
 ## 这一局的进阶难度（069）：id 跟着存档，定义由持有方按 id 找回；null = 普通
 var difficulty_id: StringName = &""
 var difficulty: DifficultyDef = null
-## 机制在一局上留的记号（`mechanic_tags[&"erosion"] = true`……），机制装的时候写，别处只读
-var mechanic_tags: Dictionary = {}
 ## 101 第 0 刀：这一局装了哪些模块（id → [RunModule]）。**本类不认识任何具体模块** —— 加一种玩法不用改这里。
 ## 取一个用 [method module]（各模块通常还给一个带类型的 `of(run)`）
 var modules: Dictionary = {}
@@ -352,13 +348,6 @@ func pool_by_id(id: StringName) -> EnemyPool:
 	return _rule_asset("enemy_pools", id) as EnemyPool
 
 
-## 走出现在这个点会不会把地上留下（087：留在这个点、回来能拿；不再是「清掉」）。
-## 规则与状态都在 [NodeStorageModule] 里；没装那个模块 = 走开什么也不留
-func will_clear_storage() -> bool:
-	var ns := NodeStorageModule.of(self)
-	return ns != null and ns.will_drop()
-
-
 ## 离开了就不再算「发生过事的点」：回头再路过一次不会又清一遍
 func _forget_handled() -> void:
 	if events != null and travel != null and events.last_handled_id == travel.current_id:
@@ -584,16 +573,6 @@ func module(mid: StringName) -> RunModule:
 func module_input(mid: StringName) -> Dictionary:
 	var d: Variant = module_inputs.get(mid, null)
 	return d as Dictionary if d is Dictionary else {}
-
-
-## 装着的模块各说一句（开局屏的规则卡）
-func module_lines() -> Array[String]:
-	var out: Array[String] = []
-	for mid in modules:
-		var line := (modules[mid] as RunModule).describe()
-		if line != "":
-			out.append(line)
-	return out
 
 
 ## 激活的 buff 里有没有带这个标记的（事件选项的条件查它）
@@ -876,11 +855,6 @@ func discard_loot() -> void:
 ## 地上 → 棋盘（自动找位）
 func equip(uid: int) -> bool:
 	return InventoryService.transfer_auto(storage, uid, board)
-
-
-## 棋盘 → 地上
-func unequip(uid: int) -> bool:
-	return InventoryService.transfer_auto(board, uid, storage)
 
 
 ## 棋盘 / 地上哪个装着这一件：棋盘有就是棋盘，否则地上有就是地上，都没有 null（神坛 / 保险箱「从棋盘或地上拿一件」用）

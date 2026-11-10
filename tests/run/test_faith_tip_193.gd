@@ -6,7 +6,7 @@ const CS := preload("res://tests/run/test_character_skills.gd")
 
 
 static func _text(def: FaithDef, items: ItemDatabase) -> String:
-	return Glossary.strip_bbcode(FaithTooltip.describe(def, null, null, items))
+	return Glossary.strip_bbcode(String(FaithTooltip.describe_full(def, null, null, items).get("text", "")))
 
 
 static func run_item_tiers(t: TestCase) -> void:
@@ -17,9 +17,17 @@ static func run_item_tiers(t: TestCase) -> void:
 	t.not_null(hunt, "有狩猎之神")
 	if hunt == null:
 		return
-	var lines := FaithTooltip.item_lines(hunt, c.items)
-	t.check(lines.has(1) and (lines[1] as Array).any(func(l): return String(l).contains("长弓") and String(l).contains("+4")), "Lv.1：长弓 伤害 +4（%s）" % str(lines))
-	t.check(lines.has(2) and (lines[2] as Array).any(func(l): return String(l).contains("长弓")), "Lv.2：长弓那一条")
+	var groups := FaithTooltip.item_groups(hunt, c.items)
+	var lv1 := false
+	var lv2 := false
+	for g in groups:
+		if not String(g["name"]).contains("长弓"):
+			continue
+		for i in (g["lines"] as Array).size():
+			lv1 = lv1 or (int(g["tiers"][i]) == 1 and String(g["lines"][i]).contains("+4"))
+			lv2 = lv2 or int(g["tiers"][i]) == 2
+	t.check(lv1, "Lv.1：长弓 伤害 +4（%s）" % str(groups))
+	t.check(lv2, "Lv.2：长弓那一条")
 	var full := FaithTooltip.describe_full(hunt, null, null, c.items)
 	t.check(Glossary.strip_bbcode(String(full["sections"][0])).contains("长弓"), "狩猎之神没有 perk：第一段就是赐福之物（257），写着长弓")
 	t.check(not Glossary.strip_bbcode(String(FaithTooltip.describe_full(hunt)["sections"][0])).contains("长弓"), "不给道具库：照旧（没有这一段）")
@@ -33,14 +41,16 @@ static func run_item_tiers(t: TestCase) -> void:
 			var line := (pk as FaithPerk).summary_for(brute, 0)
 			if line != "":
 				t.check(text.contains(Glossary.strip_bbcode(line).substr(0, 6)), "perk 行还在：%s" % line.substr(0, 10))
-		t.check(text.contains("蛮神的护符") and text.contains(FaithTooltip.BLESSED_NAME), "多出护符与赐福版的行")
+		t.check(text.contains("蛮神的护符") and text.contains(FaithTooltip.blessed_name()), "多出护符与赐福版的行")
 		var blessed := 0
-		for lv in FaithTooltip.item_lines(brute, c.items):
-			for l in FaithTooltip.item_lines(brute, c.items)[lv]:
-				if String(l).begins_with(FaithTooltip.BLESSED_NAME + "：伤害 +10%"):
+		for g in FaithTooltip.item_groups(brute, c.items):
+			if String(g["name"]) != FaithTooltip.blessed_name():
+				continue
+			for l in g["lines"]:
+				if String(l).begins_with("伤害 +10%"):
 					blessed += 1
 		t.eq(blessed, 1, "十几件赐福版同一句只列一行")
 		t.check(text.contains("每走一步") and text.contains("包里的道具各 3% 转为赐福版"), "转化一句（0 阶 3%；257 起两列：事 / 所得）")
-		t.eq(FaithTooltip.convert_parts(brute, 0)[2], "3", "转化百分数 3")
-		t.eq(FaithTooltip.convert_line(brute, 2), "每走一步，包里能被赐福的道具各有 5% 转化成赐福版", "2 阶 5%")
-	t.eq(FaithTooltip.convert_line(hunt, 0), "", "狩猎之神没有赐福模板：不写转化")
+		t.eq(FaithTooltip.convert_parts(brute, 0)[1], "包里的道具各 3% 转为赐福版", "转化百分数 3")
+		t.eq(FaithTooltip.convert_parts(brute, 2)[1], "包里的道具各 5% 转为赐福版", "2 阶 5%")
+	t.check(FaithTooltip.convert_parts(hunt, 0).is_empty(), "狩猎之神没有赐福模板：不写转化")

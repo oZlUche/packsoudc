@@ -32,10 +32,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return "地上按点独立：走开时地上的东西留在那个点，回来还在原处"
-
-
 func install(run: RunState) -> void:
 	if run == null:
 		return
@@ -52,14 +48,6 @@ func install(run: RunState) -> void:
 ## 087：某个点上留着的东西（没有就空）
 func stored_at(node_id: int) -> Array:
 	return (nodes.get(node_id, []) as Array).duplicate()
-
-
-## 走出现在这个点会不会把地上留下：地上有东西就留。
-## 地上是节点内的临时区 —— 任何时候都能开背包往里挪（换信仰道具的置入顺序就靠它），但一旦移动就不在身上了
-func will_drop() -> bool:
-	if _run == null or _run.travel == null or _run.storage == null:
-		return false
-	return _run.travel.current_id >= 0 and _run.storage.item_count() > 0
 
 
 func to_dict() -> Dictionary:

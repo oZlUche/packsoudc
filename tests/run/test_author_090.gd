@@ -111,7 +111,7 @@ static func run_achievements(t: TestCase) -> void:
 	t.check(c.items.ids().has(&"warhammer") and not c.items.ids().has(&"mithril_sword"), "战锤开了、秘银剑还锁着")
 	t.check(flow.check_achievements().is_empty(), "不重复给")
 	t.check(not flow.take_notes().is_empty(), "攒了通知")
-	var ext3 := flow.achievement_of(&"extract_3")
+	var ext3 := flow.achievements.of_id(&"extract_3")
 	t.check(ext3 != null and ext3.progress(flow.meta) == 1 and ext3.goal() == 3 and ext3.progress_text(flow.meta) == "1 / 3", "进度 1 / 3")
 	t.check(flow.achievement_granting(&"ach_extract_3") == ext3, "秘银剑的解锁归「老手」")
 	t.check(not flow.unlock_names(&"ach_extract_3").is_empty(), "解锁的名字：%s" % str(flow.unlock_names(&"ach_extract_3")))

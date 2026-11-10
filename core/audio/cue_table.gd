@@ -72,14 +72,6 @@ func resolve(name: StringName) -> StringName:
 	return aliases.get(name, name)
 
 
-## 这个 cue 的文件（res:// 全路径）
-func files_of(name: StringName) -> Array[String]:
-	var out: Array[String] = []
-	for f in (cue(name).get("files", []) as Array):
-		out.append(ASSET_ROOT + String(f))
-	return out
-
-
 ## 这首曲子（没有 = 空字典）
 func track(name: StringName) -> Dictionary:
 	return music.get(name, {})

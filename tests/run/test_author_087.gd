@@ -550,7 +550,7 @@ static func run_faith_tooltip(t: TestCase) -> void:
 	t.not_null(skill, "技巧之神")
 	if skill == null:
 		return
-	var text := Glossary.strip_bbcode(FaithTooltip.describe(skill))
+	var text := Glossary.strip_bbcode(String(FaithTooltip.describe_full(skill).get("text", "")))
 	t.check(text.contains("技巧之神") and text.contains("信力来源"), "写了名字与信力来源（%s）" % text)
 	t.check(not text.contains("阈值") and not text.contains("这个信仰的道具"), "不写阈值串、不列道具")
 	t.check(FaithTooltip.describe_full(null).is_empty(), "没激活：不开窗")

@@ -36,10 +36,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return "托付：免费撤离点上交给接应的人，视为已带出（%d×%d）；关上或走开就交出去" % [size.x, size.y]
-
-
 func install(run: RunState) -> void:
 	if run == null:
 		return
@@ -78,11 +74,6 @@ func is_open() -> bool:
 ## 287：这一件已经交出去了（拿不回来）
 func is_sealed(uid: int) -> bool:
 	return sealed.has(uid)
-
-
-## 交出去了几件
-func sealed_count() -> int:
-	return sealed.size()
 
 
 ## 关上：格子里还没交出去的几件交出去，不能再拿回；空格留着。没有新放的不算关。返回这次交没交

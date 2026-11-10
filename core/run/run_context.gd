@@ -50,34 +50,6 @@ var belt_slots_bonus: int = 0
 var belt_start: Dictionary = {}
 
 
-func snapshot() -> Dictionary:
-	return {
-		"vitality_max_bonus": vitality_max_bonus,
-		"extra_searches": extra_searches,
-		"shop_price_mult": shop_price_mult,
-		"luck_bonus": luck_bonus,
-		"scout_range": scout_range,
-		"sense_mult": sense_mult,
-		"flee_bonus": flee_bonus,
-		"free_losses": free_losses,
-		"stat_bonus": stat_bonus.duplicate(),
-		"stat_mult": stat_mult.duplicate(),
-		"vitality_max_mult": vitality_max_mult,
-		"carry_capacity_mult": carry_capacity_mult,
-		"loss_discount": loss_discount,
-		"carry_capacity_bonus": carry_capacity_bonus,
-		"free_step_every": free_step_every,
-		"rest_bonus": rest_bonus,
-		"erosion_resist": erosion_resist,
-		"battle_reward_mult": battle_reward_mult,
-		"ransom_mult": ransom_mult,
-		"belt_slots_bonus": belt_slots_bonus,
-		"belt_start": belt_start.duplicate(),
-		"scoped": scoped.size(),
-		"weight_pct": weight_pct.duplicate(true),
-	}
-
-
 ## 149：基数按百分比放大再加固定值：roundi(基数 ×（100 + Σ%）/ 100) + Σ加算。整数算，避免 40 × 1.15 落成 45.999…
 static func scaled(base: int, percent: int, add: int) -> int:
 	return roundi(base * (100 + percent) / 100.0) + add

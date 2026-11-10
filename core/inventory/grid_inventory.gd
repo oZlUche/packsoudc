@@ -235,11 +235,6 @@ func _touched_bags_accept(cells: Array[Vector2i], origin: Vector2i, def: ItemDef
 	return true
 
 
-## 普通物品的落点判定：地形允许（棋盘模式下每格都被包覆盖），且没被别的物品占着。
-func can_place(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY_UID) -> bool:
-	return _terrain_ok(cells, origin) and _cells_free(cells, origin, ignore_uid)
-
-
 ## 包体的落点判定。包之间不能重叠，但包本身不需要被覆盖。
 func can_place_bag(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int = EMPTY_UID) -> bool:
 	if not requires_bag or not _cells_in_board(cells, origin):
@@ -272,7 +267,7 @@ func can_place_item(inst: ItemInstance, origin: Vector2i, rot: int) -> bool:
 
 ## 255：随身之物自带底板 —— 不要包，只要格子在盘内、不是缺格、没有包、没被别的东西占着。
 ## 256：可以挪的（[param on_bags]）也能压在包上（碰到的包都得收它），这时它就是那个包的内容物
-func _pin_fits(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int, on_bags: bool = false, def: ItemDef = null) -> bool:
+func _pin_fits(cells: Array[Vector2i], origin: Vector2i, ignore_uid: int, on_bags: bool, def: ItemDef) -> bool:
 	if not _cells_in_board(cells, origin) or not _cells_free(cells, origin, ignore_uid):
 		return false
 	if on_bags:
@@ -976,40 +971,6 @@ func grow_rows(n: int) -> void:
 		_bag_owner[i] = EMPTY_UID
 		_blocked[i] = 0
 	changed.emit()
-
-
-## 120：从底往上删掉至多 [param n] 行**空行**（没有物品、也没有包覆盖）；碰到有东西的那一行就停下并告警。返回实际删了几行
-func shrink_rows(n: int) -> int:
-	var removed := 0
-	while removed < n and size.y > 1 and _row_empty(size.y - 1):
-		size = Vector2i(size.x, size.y - 1)
-		removed += 1
-	if removed < n and size.y > 1:
-		push_warning("GridInventory.shrink_rows: 第 %d 行有东西，只缩了 %d / %d 行" % [size.y - 1, removed, n])
-	if removed > 0:
-		var total := maxi(0, size.x * size.y)
-		_occ.resize(total)
-		_bag_owner.resize(total)
-		_blocked.resize(total)
-		changed.emit()
-	return removed
-
-
-## 120：行数变成 [param rows]：多了就 [method grow_rows]，少了就 [method shrink_rows]（只删空行）。返回变化后的行数
-func resize_rows(rows: int) -> int:
-	if rows > size.y:
-		grow_rows(rows - size.y)
-	elif rows < size.y:
-		shrink_rows(size.y - rows)
-	return size.y
-
-
-func _row_empty(y: int) -> bool:
-	for x in size.x:
-		var i := y * size.x + x
-		if _occ[i] != EMPTY_UID or _bag_owner[i] != EMPTY_UID:
-			return false
-	return true
 
 
 func _reset_cells() -> void:

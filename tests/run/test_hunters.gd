@@ -114,7 +114,6 @@ static func run_spawn_territory_turn(t: TestCase) -> void:
 	if s == null:
 		return
 	t.not_null(s.hunters, "猎手系统装上了")
-	t.check(s.mechanic_tags.has(&"hunters"), "留了记号")
 	t.check(not s.hunters.has_spawned, "挑完出生点还没出现（第 0 步）")
 	t.check(_step_once(s), "走一步")
 	t.check(s.hunters.has_spawned, "走了第一步出现")

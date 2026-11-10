@@ -25,10 +25,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return "全局倒计时：走路、原地等待都扣它，归零就是行动失败"
-
-
 func install(run: RunState) -> void:
 	if run == null:
 		return

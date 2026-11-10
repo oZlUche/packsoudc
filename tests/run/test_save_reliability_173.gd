@@ -51,7 +51,7 @@ static func run_atomic_write(t: TestCase) -> void:
 	t.eq(FileAccess.get_file_as_string(AtomicFile.prev_path(path)), "A", "上一份留着")
 	t.check(not FileAccess.file_exists(AtomicFile.tmp_path(path)), "不留 .tmp")
 	_raw_write(AtomicFile.tmp_path(path), "{半截")     # 写完 .tmp 没来得及改名就断电
-	t.eq(AtomicFile.read_text(path), "B", "残留 .tmp：读的还是完整的那份")
+	t.eq(FileAccess.get_file_as_string(path), "B", "残留 .tmp：读的还是完整的那份")
 	AtomicFile.remove(path)
 	t.check(not AtomicFile.exists(path) and not FileAccess.file_exists(AtomicFile.tmp_path(path)), "删档连上一份和 .tmp 一起删")
 

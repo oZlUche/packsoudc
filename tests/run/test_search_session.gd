@@ -92,8 +92,8 @@ static func run_session(t: TestCase) -> void:
 	var node := _node()
 	var s := SearchSession.new(node, rules, items, _rng(3), 0.2)
 	t.check(s.can_search(), "一开始能搜")
-	t.eq(s.searches_left(), rules.max_searches, "还能搜 max_searches 次")
-	t.eq(s.next_encounter_chance(), rules.encounter_chance(0), "下一次的遭遇概率是曲线第 0 档")
+	t.eq(s.max_total() - s.searches_done, rules.max_searches, "还能搜 max_searches 次")
+	t.eq(s.encounter_chance_at(s.searches_done), rules.encounter_chance(0), "下一次的遭遇概率是曲线第 0 档")
 	var ends: Array[StringName] = []
 	s.ended.connect(func(why: StringName): ends.append(why))
 	var searched_log: Array = []   # 数组：lambda 捕获的是值，改不了外面的 int
@@ -120,8 +120,8 @@ static func run_session(t: TestCase) -> void:
 	var node2 := _node()
 	node2.content["searches"] = rules.max_searches - 1
 	var s2 := SearchSession.new(node2, rules, items, _rng(3))
-	t.eq(s2.searches_left(), 1, "读档回来只剩一次")
-	t.eq(s2.next_encounter_chance(), rules.encounter_chance(rules.max_searches - 1), "遭遇概率按第几次算")
+	t.eq(s2.max_total() - s2.searches_done, 1, "读档回来只剩一次")
+	t.eq(s2.encounter_chance_at(s2.searches_done), rules.encounter_chance(rules.max_searches - 1), "遭遇概率按第几次算")
 
 	# 随时走
 	var s3 := SearchSession.new(_node(), rules, items, _rng(4))

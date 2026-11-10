@@ -165,7 +165,7 @@ static func run_offering_words(t: TestCase) -> void:
 	var defs := FaithDef.load_all()
 	var leaks: Array[String] = []
 	for id in defs:
-		var text := Glossary.strip_bbcode(FaithTooltip.describe(defs[id], _power(0)))
+		var text := Glossary.strip_bbcode(String(FaithTooltip.describe_full(defs[id], _power(0)).get("text", "")))
 		for word in ["9 格", "体积及以上", "体积正好"]:
 			if text.contains(word):
 				leaks.append("%s：%s" % [id, word])

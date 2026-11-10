@@ -26,8 +26,7 @@ const K_BATTLE := "battle_id"
 
 ## 开一次实验：[param source] 是 [constant SOURCES] 之一；[param config] 原样存（命令行参数、场数、池子…）；
 ## [param content_dirs] 算内容摘要（影响实验的资源目录）；[param suite] 是场景 / 配装集合（算摘要，不整个存）
-static func make(source: String, config: Dictionary, content_dirs: Array[String] = [] as Array[String], suite: Variant = null,
-		seed_manifest: String = "seeds.json") -> Dictionary:
+static func make(source: String, config: Dictionary, content_dirs: Array[String] = [] as Array[String], suite: Variant = null) -> Dictionary:
 	return {
 		"schema_version": SCHEMA_VERSION,
 		"experiment_id": new_id("exp"),
@@ -36,7 +35,7 @@ static func make(source: String, config: Dictionary, content_dirs: Array[String]
 		"engine_version": BuildInfo.engine(),
 		"content_hash": content_hash(content_dirs),
 		"suite_hash": canonical_hash(suite) if suite != null else "",
-		"seed_manifest": seed_manifest,
+		"seed_manifest": "seeds.json",
 		"config": config.duplicate(true),
 		"started_at": Time.get_datetime_string_from_system(true) + "Z",
 	}

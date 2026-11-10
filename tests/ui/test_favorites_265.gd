@@ -35,7 +35,7 @@ static func run_save_round_trip(t: TestCase) -> void:
 
 
 static func run_sell_skips_favorites(t: TestCase) -> void:
-	t.begin("265 §2.5 · 一键出售跳过收藏、预览数对；出售同类对收藏的种类灰着；单件照卖")
+	t.begin("265 §2.5 · 一键出售跳过收藏、记数；出售同类对收藏的种类灰着；单件照卖")
 	var db := _db()
 	var m := MetaState.new(GameFlow.load_meta_rules())
 	ItemFavorites.attach(m)
@@ -47,8 +47,6 @@ static func run_sell_skips_favorites(t: TestCase) -> void:
 	var plank := ItemInstance.create(db.get_def(&"hardwood_plank"), m.allocate_uid())
 	m.warehouse.try_add(plank, true)
 	m.toggle_favorite(&"longsword")
-	t.eq(int(m.sell_preview(-1)["count"]), 1, "预览只卖木板")
-	t.eq(m.favorite_matching(-1), 2, "跳过收藏 2 件")
 	var same := ItemActions.sell_same(swords[0], m.warehouse, func(_i): return 1, func(uid): m.sell_item(uid))
 	t.check(not same.enabled and same.reason == UiText.t("act.fav_no_bulk"), "出售同类：灰着，写收藏的不成批出售")
 	t.eq(same.label, "出售同类 · 已收藏", "按钮上直接写原因（复测 v4.75：原来写「×0 得 0 币」）")
@@ -58,8 +56,9 @@ static func run_sell_skips_favorites(t: TestCase) -> void:
 	UiText.lang = "zh"
 	var one := ItemActions.sell(swords[0], 1, func(uid): m.sell_item(uid))
 	t.check(one.enabled, "单件出售照常")
-	var got := m.sell_where(-1)
-	t.eq(int(got["count"]), 1, "一键出售卖了一件")
+	var got := m.sell_selected([swords[0].uid, swords[1].uid, plank.uid])
+	t.eq(int(got["count"]), 1, "一键出售只卖木板")
+	t.eq(int(got["favorite"]), 2, "跳过收藏 2 件")
 	t.check(m.warehouse.has_item(swords[0].uid) and m.warehouse.has_item(swords[1].uid), "两把长剑都留着")
 	ItemFavorites.attach(null)
 

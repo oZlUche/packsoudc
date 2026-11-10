@@ -105,10 +105,10 @@ static func run_prices(t: TestCase) -> void:
 	t.eq(cheap.price_of(nugget), 220, "金块 200 × 1.1 = 220（打五折的 buff 不管用）")
 	t.eq(dear.price_of(bar), 528, "金条 480 × 1.1 = 528（涨价的 buff 也不管用）")
 	t.eq(cheap.sell_price_of(nugget), 110, "局内回购照常五成")
-	t.eq(MetaState.sell_price(nugget, 0.5), 200, "基地回收：金块按面值")
-	t.eq(MetaState.sell_price(bar, 0.2), 480, "基地回收：金条按面值，比例不生效")
-	t.eq(MetaState.sell_price(items.get_def(&"fire_crystal"), 0.5), 320, "补充一：魔晶石也是贵重品，按面值（246：中品 320）")
-	t.check(MetaState.sell_price(bar, 0.5) <= cheap.price_of(bar), "买价 ≥ 回收价：没有白来的钱")
+	t.eq(MetaState.sell_price_of(ItemInstance.create(nugget), 0.5), 200, "基地回收：金块按面值")
+	t.eq(MetaState.sell_price_of(ItemInstance.create(bar), 0.2), 480, "基地回收：金条按面值，比例不生效")
+	t.eq(MetaState.sell_price_of(ItemInstance.create(items.get_def(&"fire_crystal")), 0.5), 320, "补充一：魔晶石也是贵重品，按面值（246：中品 320）")
+	t.check(MetaState.sell_price_of(ItemInstance.create(bar), 0.5) <= cheap.price_of(bar), "买价 ≥ 回收价：没有白来的钱")
 
 
 static func run_score(t: TestCase) -> void:

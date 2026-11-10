@@ -229,21 +229,6 @@ static func run_derive_on_load(t: TestCase) -> void:
 	t.eq(fresh.safe_bonus, tm.safe_bonus, "保险箱加成 = 按级数算的")
 
 
-static func run_shrink_rows(t: TestCase) -> void:
-	t.begin("120 · shrink_rows：从底往上只删空行，碰到有东西的那一行停下")
-	ItemInstance.reset_uid_counter()
-	var db := _db()
-	var g := GridInventory.new(Vector2i(4, 6), 100, false)
-	var inst := ItemInstance.create(db.get_def(&"steel_ingot"), 1)
-	t.check(g.place(inst, Vector2i(0, 3), 0), "第 3 行放一块钢锭")
-	var bottom := 3 + inst.def.shape.size_rotated(0).y
-	var removed := g.shrink_rows(5)
-	t.eq(g.size.y, bottom, "缩到钢锭最底下那一行为止")
-	t.eq(removed, 6 - bottom, "只删了底下的空行")
-	t.check(g.has_item(inst.uid), "钢锭还在")
-	t.eq(g.resize_rows(bottom + 2), bottom + 2, "resize_rows 往大：长")
-
-
 static func run_tidy_by_kind(t: TestCase) -> void:
 	t.begin("110 · 整理：先同类（武器 → 防具 → 信仰 → 药剂 → 弹药 → 材料 → 珍宝 / 其他）再大小")
 	ItemInstance.reset_uid_counter()

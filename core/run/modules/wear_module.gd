@@ -22,10 +22,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return "道具耐久：魔晶石每供给一场少一次，用完就碎了"
-
-
 func install(run: RunState) -> void:
 	if run == null or run.events == null:
 		return

@@ -63,28 +63,6 @@ static func category_of(id: StringName) -> String:
 	return def.category if def != null else ""
 
 
-## 171：某一类的标签 id，按字典序
-static func by_category(cat: String) -> Array:
-	_ensure()
-	var out: Array = []
-	for id in ids():
-		if (_defs[id] as TagDef).category == cat:
-			out.append(id)
-	return out
-
-
-## 171：把一串标签按大类排（类别 → 属性 → 本源 → 归属 → 内部；没归类的在最后），同类内保持原顺序
-static func sorted_by_category(tags: Array) -> Array:
-	var rank := func(t) -> int:
-		var i := CATEGORY_ORDER.find(category_of(StringName(String(t))))
-		return i if i >= 0 else CATEGORY_ORDER.size()
-	var indexed: Array = []
-	for i in tags.size():
-		indexed.append([rank.call(tags[i]), i, tags[i]])
-	indexed.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
-	return indexed.map(func(e): return e[2])
-
-
 ## 177：大类的名次（[constant CATEGORY_ORDER] 里的下标；没归类的排最后）
 static func category_rank(id: StringName) -> int:
 	var i := CATEGORY_ORDER.find(category_of(id))

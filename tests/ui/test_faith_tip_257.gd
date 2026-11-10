@@ -25,9 +25,9 @@ static func run_four_sections(t: TestCase) -> void:
 		return
 	var perks := Glossary.strip_bbcode(String(sections[0]))
 	t.check(perks.begins_with("神赐"), "第一段神赐")
-	t.check(not perks.contains("蛮神的护符") and not perks.contains(FaithTooltip.BLESSED_NAME), "神赐段不含道具名")
+	t.check(not perks.contains("蛮神的护符") and not perks.contains(FaithTooltip.blessed_name()), "神赐段不含道具名")
 	var items := Glossary.strip_bbcode(String(sections[1]))
-	t.check(items.begins_with("赐福之物") and items.contains("蛮神的护符") and items.contains(FaithTooltip.BLESSED_NAME), "第二段赐福之物：%s" % items.substr(0, 40))
+	t.check(items.begins_with("赐福之物") and items.contains("蛮神的护符") and items.contains(FaithTooltip.blessed_name()), "第二段赐福之物：%s" % items.substr(0, 40))
 	t.check(Glossary.strip_bbcode(String(sections[2])).begins_with("信力来源"), "第三段信力来源")
 	t.check(Glossary.strip_bbcode(String(sections[3])).begins_with("献祭"), "第四段献祭")
 	# 信力来源：每一行的所得都是信力色（表里第二格）

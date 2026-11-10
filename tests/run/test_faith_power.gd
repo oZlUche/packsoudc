@@ -49,7 +49,7 @@ static func run_defs_and_tiers(t: TestCase) -> void:
 	var defs := FaithDef.load_all()
 	for id in defs:
 		var def_ := defs[id] as FaithDef
-		t.check(not def_.deeds.is_empty(), "%s 列了攒信力的行为：%s" % [id, def_.deeds_summary()])
+		t.check(not def_.deeds.is_empty(), "%s 列了攒信力的行为" % id)
 		for i in range(1, def_.thresholds.size()):
 			t.check(def_.thresholds[i] >= def_.thresholds[i - 1], "%s 的阈值非递减" % id)
 		t.eq(def_.tier_of(0), 0, "%s：0 点第 0 阶" % id)

@@ -31,10 +31,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return UiText.t("log.belt_describe") % slot_count()
-
-
 func install(run: RunState) -> void:
 	if run == null:
 		return
@@ -58,11 +54,6 @@ func install(run: RunState) -> void:
 func slot_count() -> int:
 	var bonus := _run.hooks.run_context().belt_slots_bonus if _run != null else 0
 	return maxi(1, slots + bonus)
-
-
-## 格数变了（科技 / buff）：界面跟上。变小也不丢已经有的
-func sync_slots() -> void:
-	changed.emit()
 
 
 ## 腰带里的种类，按格子顺序

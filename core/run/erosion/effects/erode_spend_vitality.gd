@@ -13,7 +13,3 @@ func apply(ctx: ErosionContext) -> void:
 	if n <= 0 or ctx.run.vitality == null:
 		return
 	ctx.vitality_spent += ctx.run.vitality.spend(n, &"erosion")
-
-
-func describe() -> String:
-	return "扣体力 %d%s%s" % [amount, ("（每深一层 +%d）" % per_depth) if per_depth > 0 else "", gate_text()]

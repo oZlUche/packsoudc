@@ -413,9 +413,6 @@ const TEXT := {
 	"faith.points": {"zh": "信力 %s%s", "en": "Faith %s%s"},
 	"faith.max_rank": {"zh": "（满阶）", "en": " (max Rank)"},
 	"faith.perk_sep": {"zh": "；", "en": "; "},
-	"faith.item_line": {"zh": "%s：%s", "en": "%s: %s"},
-	"faith.gate": {"zh": "（%s）", "en": " (%s)"},
-	"faith.convert": {"zh": "每走一步，包里能被赐福的道具各有 %s%% 转化成赐福版", "en": "Each step, every item in your pack that can be blessed has a %s%% chance to turn blessed"},
 	"faith.offering": {"zh": "献祭", "en": "Offering"},
 	"faith.perks": {"zh": "神赐", "en": "Gifts"},     # 257：信仰窗四段的节名
 	"faith.items": {"zh": "赐福之物", "en": "Blessed items"},
@@ -719,18 +716,15 @@ const TEXT := {
 	# core/run/game_flow.gd
 	"log.keepsake": {"zh": "获得特殊道具【%s】：不占背包，图鉴里点亮%s", "en": "Got a Keepsake, %s: it takes no pack space and is now lit in your Collection%s"},
 	"log.keepsake_tooltips": {"zh": "；从现在起把鼠标停在地图的点上能看到它的情报", "en": ". From now on, hover over a spot on the map to see what's there"},
-	"log.pending_board": {"zh": "上一局带回来的背包还有 %d 件没置入：可以现在置入或不要了；不管的话，开局屏里它们会放到地上，出发就没了（包回包架）", "en": "Items you brought back last run are still not stored (%d): store them in the Warehouse now or let them go. Leave them and they'll sit on the Ground in Setup, lost once you set out (bags go back to the Bag Rack)"},
 	"log.no_slip_skill": {"zh": "没有能溜走的技能", "en": "No skill to slip away with"},
 	"log.no_run": {"zh": "没有在跑的一局", "en": "No run in progress"},
 	"log.no_run_in_progress": {"zh": "没有进行中的一局", "en": "No run in progress"},
 	# core/run/modules/belt_module.gd
-	"log.belt_describe": {"zh": "腰带：%d 格，放随身技能（烟雾弹、急救包……），同种叠在一格，双击用一个", "en": "Belt: %d slots for carried tools (Smoke Bombs, Aid Packs...). The same kind stacks in one slot; double-click to use one"},
 	"log.belt_none_left": {"zh": "腰带里没有这个", "en": "That's not in your Belt"},
 	"log.run_over": {"zh": "这一局结束了", "en": "This run is over"},
 	"log.not_prebattle": {"zh": "开战前用不了", "en": "Can't use this right before a battle"},
 	"log.prebattle_only": {"zh": "只能在开战前用", "en": "Only usable right before a battle"},
 	# core/run/modules/altar_module.gd
-	"log.altar_describe": {"zh": "神坛：献祭换信力，或者做一次特殊操作（每个点一次机会）", "en": "Altar: make an Offering for Faith, or perform one special rite (one chance per altar)"},
 	"log.offered": {"zh": "献祭 %d 件，%s +%d 信力", "en": "Offered %d items, %s +%d Faith"},
 	"log.offered_one": {"zh": "献祭 %d 件，%s +%d 信力", "en": "Offered %d item, %s +%d Faith"},
 	"log.faith_tier_up": {"zh": "%s升到 Lv.%d", "en": "%s rose to Lv.%d"},
@@ -763,10 +757,8 @@ const TEXT := {
 	"log.offering_note": {"zh": "%s　%s", "en": "%s %s"},
 	# core/run/character_def.gd
 	"log.skill_sep": {"zh": "　", "en": " · "},
-	"log.skill_line": {"zh": "%s：%s", "en": "%s: %s"},
 	"log.skill_active": {"zh": "主动", "en": "Active"},
 	"log.skill_passive_kind": {"zh": "被动", "en": "Passive"},
-	"log.skill_name_text": {"zh": "%s　%s", "en": "%s · %s"},
 	"log.skill_uses": {"zh": "%d 次", "en": "uses: %d"},
 	"log.skill_cooldown_steps": {"zh": "冷却 %d 步", "en": "cooldown: %d steps"},
 	"log.skill_bits": {"zh": "（%s）", "en": " (%s)"},

@@ -122,7 +122,14 @@ static func run_authored_characters(t: TestCase) -> void:
 			continue
 		var w := _expected(ch)
 		var got := s.buff_context()
-		t.eq(got.snapshot(), w.snapshot(), "%s：一局的上下文 = 技能的被动" % ch.id)
+		for p in (got.get_script() as GDScript).get_script_property_list():
+			if (int(p["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE) == 0:
+				continue
+			var field := String(p["name"])
+			if field == "scoped":     # 按件修饰是对象：比个数
+				t.eq(got.scoped.size(), w.scoped.size(), "%s：一局的上下文 = 技能的被动（scoped）" % ch.id)
+			else:
+				t.eq(got.get(field), w.get(field), "%s：一局的上下文 = 技能的被动（%s）" % [ch.id, field])
 		t.eq(s.vitality.maximum, ch.vitality_max + w.vitality_max_bonus, "%s：体力上限 = 角色 + 被动" % ch.id)
 		var base := ch.baseline()
 		var eff := s.effective_baseline()

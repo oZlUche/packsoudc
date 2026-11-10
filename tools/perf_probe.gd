@@ -172,8 +172,6 @@ func _act(screen: int) -> bool:
 			_timed("结算看完", func() -> void: _flow.finish_result())
 		GameFlow.Screen.META:
 			_timed("回主菜单", func() -> void: _flow.to_main_menu())
-		GameFlow.Screen.REST:
-			_timed("休息屏 resume", func() -> void: _flow.resume())
 		GameFlow.Screen.SHOP:
 			if run_ != null and run_.events.current_shop != null:
 				run_.events.current_shop.leave()

@@ -60,8 +60,8 @@ static func run_lock_guards(t: TestCase) -> void:
 	b.set_locked(true)
 	t.eq(meta.sell_item(b.uid), -1, "锁着的单卖不了")
 	t.check(meta.warehouse.has_item(b.uid), "还在仓库")
-	t.eq(meta.locked_matching(-1), 1, "一键出售会跳过 1 件")
-	var got := meta.sell_where(-1)
+	var got := meta.sell_selected([b.uid, c.uid])
+	t.eq(int(got["locked"]), 1, "一键出售会跳过 1 件")
 	t.eq(int(got["count"]), 1, "一键出售只卖了没锁的那把")
 	t.check(meta.warehouse.has_item(b.uid) and not meta.warehouse.has_item(c.uid), "锁着的留下")
 	var sold := []
@@ -82,7 +82,7 @@ static func run_lock_guards(t: TestCase) -> void:
 	t.check(b.is_locked_by_player() and d.is_locked_by_player(), "同类都锁上")
 	t.eq(ItemActions.lock_same(b, meta.warehouse).label, UiText.t("act.unlock_same") % 2, "全锁着：变成解锁同类")
 	b.set_locked(false)
-	t.eq(meta.sell_item(b.uid), MetaState.sell_price(def), "解锁后照常卖")
+	t.eq(meta.sell_item(b.uid), floori(float(ItemValue.of(def)) * 0.5), "解锁后照常卖")
 
 
 static func run_tip_button(t: TestCase) -> void:

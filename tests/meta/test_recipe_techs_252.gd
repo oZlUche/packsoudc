@@ -65,26 +65,29 @@ static func run_content(t: TestCase) -> void:
 	t.check(sword != null and int(sword.inputs.get("mithril_ingot", 0)) == 2 and int(sword.inputs.get("longsword", 0)) == 1, "秘银剑换成真配方（长剑 + 秘银锭 ×2）")
 
 
+## 会打：科技点到了、铺子级数也够
+static func _open(m: MetaState, r: SmithRecipeDef) -> bool:
+	return Smithy.knows(m, r) and r.level <= Smithy.level(m)
+
+
 static func run_buckets(t: TestCase) -> void:
 	t.begin("252 §3.4：铁匠铺三级、科技都没点 —— 秘银锭、法杖在「科技没点」；秘银冶炼一级 → 秘银两张会打；法杖工艺一级只开魔法杖，三级再开两根")
 	var all := SmithRecipeDef.load_all()
 	var m := _meta(3)
-	var b := Smithy.recipes_for(m, all)
-	var tl := _ids(b["tech_locked"])
-	t.check(tl.has("smith_mithril_ingot") and tl.has("smith_magic_staff") and not tl.has("smith_silver_ingot"), "科技没点：秘银锭、魔法杖锁着，炼银锭不要科技（%s）" % str(tl))
-	t.eq((b["level_locked"] as Array).size(), 0, "铺子三级：没有级数锁")
+	var ingot := SmithRecipeDef.find(all, &"smith_mithril_ingot")
+	t.check(not Smithy.knows(m, ingot) and not Smithy.knows(m, SmithRecipeDef.find(all, &"smith_magic_staff")) and Smithy.knows(m, SmithRecipeDef.find(all, &"smith_silver_ingot")),
+		"科技没点：秘银锭、魔法杖锁着，炼银锭不要科技")
+	t.check(not all.any(func(r_) -> bool: return Smithy.knows(m, r_ as SmithRecipeDef) and (r_ as SmithRecipeDef).level > Smithy.level(m)), "铺子三级：没有级数锁")
 	m.tech_levels["mithril_smelting"] = 1
-	b = Smithy.recipes_for(m, all)
-	t.check(_ids(b["ready"]).has("smith_mithril_ingot") and _ids(b["ready"]).has("smith_mithril_sword"), "秘银冶炼一级：秘银锭、秘银剑会打")
+	t.check(_open(m, ingot) and _open(m, SmithRecipeDef.find(all, &"smith_mithril_sword")), "秘银冶炼一级：秘银锭、秘银剑会打")
 	m.tech_levels["staffcraft"] = 1
 	var staffs := func() -> Array[String]:
-		return _ids((Smithy.recipes_for(m, all)["ready"] as Array).filter(func(r_) -> bool: return (r_ as SmithRecipeDef).group == "staff"))
+		return _ids(all.filter(func(r_) -> bool: return _open(m, r_ as SmithRecipeDef) and (r_ as SmithRecipeDef).group == "staff"))
 	t.eq(staffs.call(), ["smith_magic_staff"] as Array[String], "法杖工艺一级：只开魔法杖")
 	m.tech_levels["staffcraft"] = 3
 	t.eq(staffs.call(), ["smith_grand_magus_staff", "smith_mage_staff", "smith_magic_staff", "smith_magus_staff"] as Array[String], "三级：四根都开")
 	var low := _meta(1, {"mithril_smelting": 1})
-	b = Smithy.recipes_for(low, all)
-	t.check(_ids(b["level_locked"]).has("smith_mithril_ingot") and not _ids(b["tech_locked"]).has("smith_mithril_ingot"), "科技点了、铺子一级：秘银锭在「级数不够」")
+	t.check(Smithy.knows(low, ingot) and ingot.level > Smithy.level(low), "科技点了、铺子一级：秘银锭在「级数不够」")
 	var none := _meta(3)
 	var r := SmithRecipeDef.find(all, &"smith_magus_staff")
 	t.eq(Smithy.can_forge(none, r, T110._db()), UiText.t("smithy.need_tech_level") % ["法杖工艺", 3], "科技没点：先说要点出哪项几级")

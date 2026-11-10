@@ -173,7 +173,7 @@ static func run_sessions(t: TestCase) -> void:
 	var s := SearchSession.new(node, rules, c.items, rng, 0.2)
 	s.extra_searches = 1
 	t.eq(s.max_total(), 2, "上限 1 + 多搜 1 = 2")
-	t.eq(s.searches_left(), 2, "还能搜 2 次")
+	t.eq(s.max_total() - s.searches_done, 2, "还能搜 2 次")
 	s.search()
 	t.check(s.active and s.can_search(), "搜了一次还能搜")
 	s.search()

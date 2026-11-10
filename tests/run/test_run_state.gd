@@ -211,7 +211,7 @@ static func run_loot_and_shop(t: TestCase) -> void:
 		var on_board := s.board.item_count()
 		if s.equip(uid):
 			t.eq(s.board.item_count(), on_board + 1, "地上 → 棋盘")
-			t.check(s.unequip(uid), "棋盘 → 地上")
+			t.check(InventoryService.transfer_auto(s.board, uid, s.storage), "棋盘 → 地上")
 			t.eq(s.board.item_count(), on_board, "回来了")
 
 

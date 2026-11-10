@@ -139,19 +139,8 @@ func skills_summary() -> String:
 	return UiText.t("log.skill_sep").join(parts)
 
 
-## 136：开局屏的分组行：被动在前、主动在后，各一行「被动：名字　说明」（作者定：角色 = 初始面板 + 技能，没有身份这一层）。
+## 179：选角色屏一条技能拆成两行由界面排 ——「被动 / 主动」、名字、说明（主动的次数 / 冷却附在说明末尾）；被动在前、主动在后。
 ## 166 补充一：主动技能藏着（[constant RunSkills.ACTIVE_HIDDEN]）时只有被动行
-func skill_lines() -> Array[String]:
-	var out: Array[String] = []
-	for active in [false, true]:
-		for s in skills:
-			var sk := s as RunSkill
-			if sk != null and sk.is_active() == active and sk.shown_to_player():
-				out.append(UiText.t("log.skill_line") % [UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), _skill_line(sk)])
-	return out
-
-
-## 179：选角色屏一条技能拆成两行由界面排 ——「被动 / 主动」、名字、说明（主动的次数 / 冷却附在说明末尾）；顺序和 [method skill_lines] 一样
 func skill_entries() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for active in [false, true]:
@@ -160,10 +149,6 @@ func skill_entries() -> Array[Dictionary]:
 			if sk != null and sk.is_active() == active and sk.shown_to_player():
 				out.append({"kind": UiText.t("log.skill_active") if active else UiText.t("log.skill_passive_kind"), "name": Names.of(sk), "text": _skill_text(sk), "skill": sk})
 	return out
-
-
-static func _skill_line(sk: RunSkill) -> String:
-	return UiText.t("log.skill_name_text") % [Names.of(sk), _skill_text(sk)]
 
 
 ## 技能的说明（主动的次数 / 冷却附在末尾）

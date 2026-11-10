@@ -25,10 +25,6 @@ func id() -> StringName:
 	return ID
 
 
-func describe() -> String:
-	return "拖到上面立刻合：把一件拖到棋盘上另一件上面，两件有配方就合成"
-
-
 func install(run: RunState) -> void:
 	if run == null:
 		return
@@ -140,9 +136,3 @@ func fuse(a_uid: int, b_uid: int) -> Dictionary:
 	_run.tally["crafts"] = int(_run.tally.get("crafts", 0)) + 1     # 224：结算账单「合成」
 	done.emit(detail)
 	return detail
-
-
-## 配方是内容、合成的结果在棋盘上，模块自己没有要存的状态
-func to_dict() -> Dictionary:
-	return {}
-

@@ -59,16 +59,3 @@ func hunter_bracket_steps() -> Array[int]:
 		if m is HunterMechanic:
 			return (m as HunterMechanic).bracket_steps.duplicate()
 	return out
-
-
-## 开局屏的一句话：机制与修饰各自的 describe 连起来
-func summary() -> String:
-	var parts: Array[String] = []
-	for m in mechanics:
-		var mech := m as RunMechanic
-		if mech != null and mech.describe() != "":
-			parts.append(mech.describe())
-	for e in effects:
-		if e != null and e.has_method("describe") and String(e.call("describe")) != "":
-			parts.append(String(e.call("describe")))
-	return "　".join(parts) if not parts.is_empty() else "没有额外机制"

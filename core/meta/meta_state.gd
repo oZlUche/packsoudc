@@ -593,14 +593,8 @@ func sell_item(uid: int, ratio: float = 0.5) -> int:
 	return price
 
 
+## 246 补充二：一件实例的回收价 —— 价值按实例算（[method ItemValue.of_instance]：碎了的魔晶石按低两档）。
 ## 244：金银按面值全额收（[param ratio] 对它不生效）；补充一：凡贵重品都是
-static func sell_price(def: ItemDef, ratio: float = 0.5) -> int:
-	if def != null and (def.is_valuable() or def.is_bullion()):
-		return ItemValue.of(def)
-	return maxi(0, floori(float(ItemValue.of(def)) * ratio)) if def != null else 0
-
-
-## 246 补充二：一件实例的回收价 —— 和 [method sell_price] 同一套，价值按实例算（[method ItemValue.of_instance]：碎了的魔晶石按低两档）
 static func sell_price_of(inst: ItemInstance, ratio: float = 0.5) -> int:
 	if inst == null or inst.def == null:
 		return 0
@@ -622,17 +616,6 @@ func spend_funds(amount: int) -> bool:
 	return true
 
 
-## 一键出售：稀有度 ≤ [param max_rarity] 的全卖（-1 = 全部）。返回 {"count", "funds"}
-func sell_where(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") -> Dictionary:
-	var out := {"count": 0, "funds": 0}
-	for it in _sellable(max_rarity, tag):
-		var got := sell_item(it.uid, ratio)
-		if got >= 0:
-			out["count"] = int(out["count"]) + 1
-			out["funds"] = int(out["funds"]) + got
-	return out
-
-
 ## 268：快速出售 —— 卖掉勾了的那几件（逐件 [method sell_item]）；锁着 / 收藏的跳过、记数。返回 {"count", "funds", "locked", "favorite"}
 func sell_selected(uids: Array, ratio: float = 0.5) -> Dictionary:
 	var out := {"count": 0, "funds": 0, "locked": 0, "favorite": 0}
@@ -650,53 +633,6 @@ func sell_selected(uids: Array, ratio: float = 0.5) -> Dictionary:
 		if got >= 0:
 			out["count"] = int(out["count"]) + 1
 			out["funds"] = int(out["funds"]) + got
-	return out
-
-
-## 230：一键出售这一档里锁着、被跳过的有几件
-func locked_matching(max_rarity: int, tag: StringName = &"") -> int:
-	var n := 0
-	for inst in warehouse.items():
-		var it := inst as ItemInstance
-		if it.is_locked_by_player() and (max_rarity < 0 or it.rarity() <= max_rarity) and (tag == &"" or it.def.tags.has(tag)):
-			n += 1
-	return n
-
-
-## 265：一键出售这一档里因为收藏被跳过的有几件（锁着的已经算在 [method locked_matching] 里，不重算）
-func favorite_matching(max_rarity: int, tag: StringName = &"") -> int:
-	var n := 0
-	for inst in warehouse.items():
-		var it := inst as ItemInstance
-		if not it.is_locked_by_player() and is_favorite(it.def.id) and (max_rarity < 0 or it.rarity() <= max_rarity) and (tag == &"" or it.def.tags.has(tag)):
-			n += 1
-	return n
-
-
-## 一键出售会卖几件、得多少（不动仓库）
-func sell_preview(max_rarity: int, ratio: float = 0.5, tag: StringName = &"") -> Dictionary:
-	var out := {"count": 0, "funds": 0}
-	for it in _sellable(max_rarity, tag):
-		out["count"] = int(out["count"]) + 1
-		out["funds"] = int(out["funds"]) + sell_price_of(it, ratio)
-	return out
-
-
-## 一键出售会碰的那些：仓库里稀有度 ≤ [param max_rarity] 的（-1 = 全部），按仓库的顺序。
-## 177 补 1.2：[param tag] 非空时还得带这个标签（和稀有度取交集）
-func _sellable(max_rarity: int, tag: StringName = &"") -> Array[ItemInstance]:
-	var out: Array[ItemInstance] = []
-	for inst in warehouse.items():
-		var it := inst as ItemInstance
-		if max_rarity >= 0 and it.rarity() > max_rarity:
-			continue
-		if tag != &"" and not it.def.tags.has(tag):
-			continue
-		if it.is_locked_by_player() or it.def.is_unique() or it.def.is_ticket():
-			continue     # 230：一键出售跳过锁住的；281：独一的也跳过
-		if is_favorite(it.def.id):
-			continue     # 265：收藏的种类也跳过
-		out.append(it)
 	return out
 
 

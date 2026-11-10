@@ -21,22 +21,25 @@ static func _material(tags: Array) -> Dictionary:
 
 
 static func run_categories(t: TestCase) -> void:
-	t.begin("171 · 标签大类：每条登记的标签都归了类；bow / wood 补登记；by_category / category_of；faith:<id> 算归属；按大类排序")
+	t.begin("171 · 标签大类：每条登记的标签都归了类；bow / wood 补登记；category_of；faith:<id> 算归属；按大类排序")
 	TagRegistry.reset()
+	var source: Array = []
 	for id in TagRegistry.ids():
 		var def := TagRegistry.get_def(id)
 		t.check(TagRegistry.CATEGORY_ORDER.has(def.category), "「%s」归了类（%s）" % [id, def.category])
+		if def.category == "source":
+			source.append(id)
+		t.check(def.category != "internal" or TagRegistry.is_internal(id), "内部类的都是内部标签（%s）" % id)
 	t.eq(TagRegistry.category_of(&"weapon"), "kind", "武器：类别（250：用途改叫类别）")
 	t.eq(TagRegistry.category_of(&"wood"), "", "木制：250 起材质不是标签（ItemDef.material）")
 	t.eq(TagRegistry.category_of(&"fire"), "element", "火焰：属性类")
 	t.eq(TagRegistry.category_of(&"imperial"), "affiliation", "帝国：归属类")
 	t.eq(TagRegistry.category_of(&"faith:sun"), "affiliation", "faith:<id> 算归属")
-	t.eq(TagRegistry.by_category("source"), [&"crafted", &"magic", &"nature"], "本源类：工艺 / 魔法 / 自然（待定 1 A）")
-	t.check(TagRegistry.by_category("internal").has(&"rapid"), "快攻在内部类")
-	t.check(TagRegistry.by_category("internal").all(func(id): return TagRegistry.is_internal(id)), "内部类的都是内部标签")
+	t.eq(source, [&"crafted", &"magic", &"nature"], "本源类：工艺 / 魔法 / 自然（待定 1 A）")
+	t.eq(TagRegistry.category_of(&"rapid"), "internal", "快攻在内部类")
 	t.eq(TagRegistry.category_of(&"zz_nobody"), "", "没登记的没有类")
-	var sorted := TagRegistry.sorted_by_category([&"melee", &"imperial", &"fire", &"weapon", &"crafted", &"bleed"])
-	t.eq(sorted, [&"weapon", &"fire", &"bleed", &"crafted", &"imperial", &"melee"], "类别 → 属性 → 本源 → 归属 → 内部（250），同类保持原顺序")
+	var ranks := [&"weapon", &"fire", &"bleed", &"crafted", &"imperial", &"melee"].map(func(id: StringName) -> int: return TagRegistry.category_rank(id))
+	t.eq(ranks, [0, 1, 1, 2, 3, 4], "类别 → 属性 → 本源 → 归属 → 内部（250）")
 
 
 static func run_import_rules(t: TestCase) -> void:

@@ -325,8 +325,8 @@ func begin_batch() / end_batch()                  # 变更合批
 | 情况 | 判据 | 表现 |
 |---|---|---|
 | 地形不允许 | 出界、禁用格、没被包覆盖、跨了两个包、标签不收 | 红，只能拒绝 |
-| 地形允许但压着别人 | `terrain_allows` 为真而 `can_place` 为假 | 黄，会顶掉 |
-| 干净落点 | `can_place` 为真 | 绿 |
+| 地形允许但压着别人 | `terrain_allows` 为真而 `can_place_def` 为假 | 黄，会顶掉 |
+| 干净落点 | `can_place_def` 为真 | 绿 |
 
 两条路径**共用同一套地形判断**（`_terrain_ok`）。各写一份的话，顶替迟早绕过某条校验，
 出现「直接拖进去不行、顶着别人反而进得去」这种玩家看不懂的事。
@@ -438,7 +438,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 2. **不要用 Godot 内置的 `_get_drag_data` / `_can_drop_data`** —— 拖拽过程中无法响应旋转键，也无法做多格高亮预览。自己实现拖拽状态机：
    - 按下：记录 `dragging_uid`，从源容器 `remove`，创建 ghost
-   - `_input`：更新 ghost 位置；R 键旋转；实时对目标容器 `can_place` 并高亮（合法绿 / 非法红）
+   - `_input`：更新 ghost 位置；R 键旋转；实时对目标容器 `can_place_def` 并高亮（合法绿 / 非法红）
    - 松开：调用 `InventoryService.move`，失败则放回原位
    - ghost 挂在独立 `CanvasLayer` 上，避免被父容器裁剪
 
@@ -468,7 +468,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - **休眠** = 有信仰、不是激活的那个：**通常情况下完全不起作用** —— `BattleCompiler.compile` 第一步跳过它（不参战、不给也不吃邻接），`SetTracker` 不计它；占格照占、价值照算。
 - **切换**（099，作者定）：**在背包里一下就切，不进菜单**，两条路都是明确规则，没有代价（将来可继承积攒的信力）：
   - 在棋盘里**把信物重新落下**（拖起来放回棋盘任意位置）→ `GridInventory.reseat(uid)`；
-  - **右键**棋盘上的信物（`InventoryView.item_context` → `GameFlow.reseat_anchor` / 开局屏的 `reseat_anchor`）。
+  - **右键**棋盘上的信物（`InventoryView.item_context` → `InventoryPanel.reseat_anchor` / 开局屏的 `reseat_anchor`）。
   `reseat` 只盖 `placed_seq`，**不发 `placed`** —— 切信仰不是「置入道具」，信力的 `place_item` 行为不记它（这就是 097 发现的「棋盘内来回拖刷信力」的根因）。
   取消拖拽（右键 / Esc）、放不回原位都**不切**：`DragLayer` 放回同一容器前先把 `inst.container_id` 设回该容器（和 `InventoryService.move` 同一行），所以不算 arrived；
   普通道具在棋盘内挪位置照旧不盖序号。挪到地上再挪回仍然算置入（从别的容器进来），信力照记。地上一移动就清（3.4）；开局屏的棋盘同一套。
@@ -3143,7 +3143,7 @@ var pending_loot: GridInventory             # 等着拾取的容器
 var tracker: SetTracker                     # 套装激活（9 节）
 # —— 角色与难度 ——
 var character: CharacterDef; var character_id; var player_baseline: CombatantBaseline; var map_scale
-var difficulty: DifficultyDef; var difficulty_id; var mechanic_tags: Dictionary   # 069 / 070
+var difficulty: DifficultyDef; var difficulty_id   # 069 / 070
 var carry_in_value: int                     # 带入预算（094）
 # —— 子系统 ——
 var events: NodeEvents                      # 踩到点发生什么（6.5）；靠注入的 Callable 回调本类
@@ -3162,7 +3162,7 @@ var meta: MetaState; var meta_buffs; var map_buffs             # 局外 buff 与
 店 / 搜索再走（随时可以离开），`try_extract` 在撤离点上付费撤离进 `EXTRACTED`，`defeated` 进 `DEFEATED`。
 
 **接线**：打赢的尸体容器、搜到的收获落到 `pending_loot`（还没处理又来一份就并进去，一件不丢）；买到的、事件给的直接到地上；
-`equip` / `unequip` 在地上与棋盘之间搬。玩家的战斗单位在开战那一刻从棋盘编译（`compile_player`，套装效果从 tracker 取）。
+`equip`：地上 → 棋盘（自动找位）。玩家的战斗单位在开战那一刻从棋盘编译（`compile_player`，套装效果从 tracker 取）。
 
 ### 7.1 体力与战败
 
@@ -3365,7 +3365,7 @@ flow 只说「现在该显示哪一屏、给它什么」（`screen_changed(scree
 
 ```gdscript
 class_name GameFlow extends RefCounted
-enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, REST, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }   # SLOTS 089、SAFE 092、ALTAR 093
+enum Screen { MAIN_MENU, SETUP, MAP, BATTLE, LOOT, SEARCH, SHOP, EVENT, RESULT, META, SETTINGS, PREBATTLE, SLOTS, SAFE, ALTAR }   # SLOTS 089、SAFE 092、ALTAR 093
 signal screen_changed(screen, payload)
 signal run_changed(state)                    # 140：run_started / run_ended 没人接，删了
 func to_main_menu() / new_run() / show_meta()
@@ -3389,7 +3389,6 @@ func grant_first_kit()                               # 仓库空的第一局发�
 @abstract func id() -> StringName        # 存档里的键、run.module(id) 的 id；空 = 不进 modules 存档
 func install(run: RunState) -> void      # 开局 / 读档各一次，必须幂等：造自己的状态、订阅信号、挂自己要被调用的能力
 func to_dict() / restore(d)              # 自己的状态，进 run.to_dict()["modules"][id]
-func describe() -> String                # 开局屏的规则卡、编辑器
 ```
 
 - **生命周期的钩子不写在基类里**：写了就得在 `RunState` 里逐个调，那又回到「每加一个玩法都要改 `RunState`」。
@@ -3519,7 +3518,7 @@ func player_spec() -> CombatantSpec …
 
 - **仓库分页**（163，作者定）：`Warehouse`（`core/meta/warehouse.gd`，`ItemContainer`）是一串一样大的格子页（每页 `MetaRules.warehouse_size`，10 × 8，不要求包），各页独立不共享空间；自动放按页序，读取 / 移除跨页，`owns(container)` 认自己的页；页数由科技「仓库扩建」推算（每级一页，满级七页），只删末尾的空页。存档逐页，老的单块档按页切。界面是 `WarehousePages`（左边竖排页签「一」「二」……，锁着的灰着带锁，拖着东西停在页签上 0.4 秒切页），结算屏、开局屏第二页、基地右半边共用。
 - **撤离不直接进仓库。** 棋盘原样带回来（`MetaState.board`：一块和棋盘一样大、不要求包的格子，非包道具按原位置 —— 作者说的「包统一替换成最大的默认背景包」），
-  玩家在结算屏 / 局外屏拖或**一键置入**（按栏位顺序逐件放，放不下就停在那一件提示）。没清空**不再拦**开新局（090，原 058 第 7 条的门撤了）：进开局屏时带回来的东西挪进屏中间的**地上**（记原位），拖上包 = 带上、拖进仓库 = 置入、留着的**出发就没了**（`GameFlow.begin` 清掉带回来的棋盘，不经开局屏的路一样）、回主菜单原样放回（视为没发生过移动；玩家自己拖进仓库的留在仓库）；仓库的东西进不了地上。局外屏只提示（`GameFlow.pending_hint()`）。
+  玩家在结算屏 / 局外屏拖或**一键置入**（按栏位顺序逐件放，放不下就停在那一件提示）。没清空**不再拦**开新局（090，原 058 第 7 条的门撤了）：进开局屏时带回来的东西挪进屏中间的**地上**（记原位），拖上包 = 带上、拖进仓库 = 置入、留着的**出发就没了**（`GameFlow.begin` 清掉带回来的棋盘，不经开局屏的路一样）、回主菜单原样放回（视为没发生过移动；玩家自己拖进仓库的留在仓库）；仓库的东西进不了地上。局外屏只提示。
 - **图鉴**（`codex`）：道具 id → 累计带出件数，同一次带出多件各计一次，点亮 = 计数 > 0（本来就幂等）；不代表物品被储存，将来的制作系统读它。
 - **包只计图鉴**：什么能存进局外由 `MetaState.keeps(def)` 一处说了算（现在：不是包）。「包」只是当前的承载媒介，将来可能删掉，那时删这一个分支。
 - **包架**（225，v3.84；作者 18:27 定甲 包架列表）：包是装备不是货，不占仓库格，住在 `MetaState.rack`（`BagRack`，`core/inventory/bag_rack.gd`，一个只收包的 `ItemStash`，`BagRack.holds(def)` = 是包、又不是 `keeps` 的信仰护符）。撤离时包跟着带回的棋盘回来（这时棋盘 `requires_bag`，包先铺）；`store_all` 先搬货、再把空包收进包架，垫着搬不走的货的包留在棋盘上；`discard_board` 货丢包不丢；`take_board_to_stash` 包不倒地、直接进包架（`pending` 记 `"rack": true`），`return_stash` 先把包铺回原位。开局屏：第一次选某个角色把它的 `starting_bags` 发进包架（`grant_starting_bags`，记在 `bag_grants`，每个存档位每个角色一次），重摆棋盘时从包架把初始包摆上来，双击 / 拖回即收；棋盘没包、包架也空、又没挑预设时军需官发一只粗麻袋（`SetupScreen.ensure_bag`，算「发的」：进不了包架，免得白拿去卖）。基地仓库页最左一列、出售页（双击卖一只，`GameFlow.sell_bag`）都挂包架；一键出售不碰包。存档 `bags`：包 id → 这几只的 uid（读回来逐字节一样；写只数的旧样子也认，删了的包 id 记警告），`bag_grants`。视图 `BagRackView`（`ui/inventory/bag_rack_view.gd`）：227 素框 `board/frame_plain(_dark)` + 格缝，一种一格，×n 角标 `notice/count_badge`（Cinzel），挂牌 `HeaderTag.hanging`（`notice/header_stone_hang`）；`DragLayer` 认它为落点（只收空包）。
@@ -3550,7 +3549,7 @@ func player_spec() -> CombatantSpec …
 **科技树**（118，作者定，五项按推荐）：`TechDef` 加 `requires`（前置 id，**每项至少 1 级**才能点）、`column`（手写的列）、`description`（面板「效果」区的一句总述）。深度不写，按前置算（`TechService.depth_of`：根 0，其余 = 最深前置 + 1）；`TechService.prereqs_met / missing_prereqs / layout / cycle_members`，`ready` 多一个前置条件。导入器 `validate_techs`：前置不存在、成环报错；同列同深度撞位**只警告**（按 `order` 左右并排）。
 两种新构件：`tech_run_buff`（`buffs[k−1]` = 第 k 级给的 `RunBuffDef`，`scope = META`，替换上一级那条，记进 `MetaState.tech_buffs`；导入器查条数 = 级数、buff 存在且是局外的）与 `tech_safe_size`（每级 `cols / rows` 进 `MetaState.safe_bonus`，`GameFlow.safe_size()` 加上）。两个新字段有默认值，不升存档版本；`heal` 把 `tech_buffs` 修成只留当前级那条、清掉不属于任何科技的，`safe_bonus` 按级数重算。`TechEffect.describe_level(k, buff_defs)` 给面板「现在 / 下一级」两行（buff 型的就是那条 buff 的 `summary()`）。
 
-**科技派生值不入档**（120，作者定）：`tech_levels` 是唯一的进度事实，仓库行数、`safe_bonus`、`tech_buffs` 一律由它 + 科技定义推算（`TechEffect.derive(meta, level)` 幂等，`TechService.derive(meta, defs)`；升级、读档、新建空档、开发区改级数走同一条路），存档里去掉 `tech_buffs` / `safe_bonus`（不升版本）。读档顺序是**先读进度表、再算容量、最后装仓库**：`MetaState.from_dict(d, items, rules, tech_defs)` 在还空着的仓库上 derive，再 `GridInventory.from_dict(w, items, 算出的尺寸)` 放回物品 —— 原位越界 / 被占的先 `try_add` 找空位，还放不下就临时加行并告警，一件不丢；仓库缩行（`shrink_rows`）只删底下的空行。没传 `tech_defs` 时按存档里的尺寸建仓库（兜底）。
+**科技派生值不入档**（120，作者定）：`tech_levels` 是唯一的进度事实，仓库行数、`safe_bonus`、`tech_buffs` 一律由它 + 科技定义推算（`TechEffect.derive(meta, level)` 幂等，`TechService.derive(meta, defs)`；升级、读档、新建空档、开发区改级数走同一条路），存档里去掉 `tech_buffs` / `safe_bonus`（不升版本）。读档顺序是**先读进度表、再算容量、最后装仓库**：`MetaState.from_dict(d, items, rules, tech_defs)` 在还空着的仓库上 derive，再 `GridInventory.from_dict(w, items, 算出的尺寸)` 放回物品 —— 原位越界 / 被占的先 `try_add` 找空位，还放不下就临时加行并告警，一件不丢。没传 `tech_defs` 时按存档里的尺寸建仓库（兜底）。
 基地「科技」页（`ui/game/tech_panel.gd`）改成**左树右板**：左 `TechTreeView`（`ui/game/tech_tree_view.gd`，深度 0 在最下面往上长，按前置画线，两端都点亮是橙线；节点三种样子：已点亮橙底 / 可点亮亮边呼吸 / 锁住暗字，选中的加一圈前景色边；多级一个节点写 Lv n / m，单级写已点亮 / 未点亮）；右板从上到下 名称 → 效果（总述 + 现在 / 下一级）→ 费用（钱、材料已交 / 需要、锁住的写「需要先点亮：…」、满级写已满级）→【点亮】（单级）/【升级】（多级）。下面上交区 + 默认收起的仓库格子，**上交只给选中的节点**（110 的「谁要就给谁」去掉）。首批三列十个节点（后勤 / 体魄 / 探索，数值占位），科技给的十八条局外 buff 在基地右栏的开发开关里归「科技给的」分组。
 
 **229（v3.82）现状**：科技页收起基地右半边的仓库、上交区删掉，上交只走说明板材料行的【交 k】。左树区 `TreeArea`（`tech_panel.gd` 内类）：羊皮底纸 `tech/tech_tree_hide`（936 × 700，放不下等比缩到九成），树放在离图边 `content_inset` 的双线框里居中；每列顶上一枚段头签 `HeaderTag`（`tech.col_<列>`），连线墨 / 朱红圆头。右边 320 宽羊皮说明板：铜名牌（名称 + 等级）→ 效果 → 账目行（名称｜数｜拥有 n｜【交 k】）→【点亮 / 升级】。树要装进羊皮内框：每列同深度最多并排两个，`test_tech_tree` 守着树宽 ≤ 792。

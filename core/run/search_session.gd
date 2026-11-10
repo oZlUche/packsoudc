@@ -89,15 +89,6 @@ func can_search() -> bool:
 	return active and rules != null and searches_done < max_total()
 
 
-## 下一次搜的遭遇概率（给界面看）
-func next_encounter_chance() -> float:
-	return encounter_chance_at(searches_done)
-
-
-func searches_left() -> int:
-	return maxi(0, max_total() - searches_done) if rules != null else 0
-
-
 ## 搜一次。返回 {"found": [...], "encounter": {}}；不能搜时返回空字典
 func search() -> Dictionary:
 	if not can_search():

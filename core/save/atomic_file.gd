@@ -43,11 +43,6 @@ static func exists(path: String) -> bool:
 	return FileAccess.file_exists(path) or FileAccess.file_exists(prev_path(path))
 
 
-## 文件内容；没有返回空串
-static func read_text(path: String) -> String:
-	return FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else ""
-
-
 ## 连同 `.prev`、残留的 `.tmp` 一起删
 static func remove(path: String) -> void:
 	for p in [path, prev_path(path), tmp_path(path)]:

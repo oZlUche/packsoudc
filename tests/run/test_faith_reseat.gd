@@ -154,7 +154,7 @@ static func run_drag_board_reseat(t: TestCase) -> void:
 
 
 static func run_right_click(t: TestCase) -> void:
-	t.begin("099 B · 右键信物 = 奉为主信仰（视图发 item_context、GameFlow.reseat_anchor 落实；凡物右键什么也不发生）")
+	t.begin("099 B · 右键信物 = 奉为主信仰（视图发 item_context、棋盘 reseat 落实）")
 	var db := _db()
 	var run := _start(db)
 	if run == null:
@@ -166,15 +166,10 @@ static func run_right_click(t: TestCase) -> void:
 	if skill_anchor == null or brute_anchor == null:
 		t.check(false, "棋盘上放不下两件信物")
 		return
-	var flow := GameFlow.new(db, run.enemies, run.sets)
-	flow.run = run
 	t.eq(FaithState.active_id(board), &"brute", "后放的是暴力之神的信物")
-	t.check(flow.reseat_anchor(skill_anchor.uid), "奉技巧之神的信物为主信仰")
+	t.check(board.reseat(skill_anchor.uid), "奉技巧之神的信物为主信仰")
 	t.eq(FaithState.active_id(board), &"skill", "切成技巧之神")
-	var sword := _add(board, db.get_def(&"shortsword"))
-	if sword != null:
-		t.check(not flow.reseat_anchor(sword.uid), "凡物不是信物：切不了")
-	t.check(not flow.reseat_anchor(9999), "棋盘上没有这个 uid：false")
+	t.check(not board.reseat(9999), "棋盘上没有这个 uid：false")
 
 	# 视图层：右键按在一件上发 item_context（左键照旧是抓取）
 	var view := _view(board)

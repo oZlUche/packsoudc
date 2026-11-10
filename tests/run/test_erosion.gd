@@ -66,7 +66,6 @@ static func run_schedule(t: TestCase) -> void:
 		return
 	var f := _field(s)
 	t.not_null(f, "难度装了侵蚀场到 travel.erosion")
-	t.check(s.mechanic_tags.has(&"erosion"), "留了记号")
 	t.eq(f.eroded_bands, -1, "还没开始")
 	t.check(not f.started() and not f.is_total(), "既没开始也没终局")
 	t.eq(f.max_band, _max_band(s), "最内一档 = 图上最大的 erosion_band（%d）" % f.max_band)
@@ -139,7 +138,6 @@ static func run_gates_and_effects(t: TestCase) -> void:
 		if e.applies(ctx):
 			hits += 1
 	t.check(hits > 120 and hits < 280, "概率 0.5：400 次里生效 %d 次" % hits)
-	t.check(e.gate_text().contains("50%") and e.gate_text().contains("第 2 层起"), "门写在 describe 里：%s" % e.describe())
 
 	# 三种效果对着一局做事
 	var s := _start(c, _difficulty(1, 1, 1, []))
@@ -256,7 +254,6 @@ static func run_settle_save_and_pipeline(t: TestCase) -> void:
 				any_gate = true
 		t.check(kinds.size() >= 2, "效果不止一种：%s" % str(kinds.keys()))
 		t.check(any_gate, "有效果配了门（开关 / 起始层 / 仅终局 / 概率），都在数据里")
-		t.check(em.describe().contains("侵蚀"), "describe：%s" % em.describe())
 	var bad := ImportReport.new()
 	ContentImporter.import_difficulty({"id": "x", "mechanics": [{"type": "erosion", "warn_lead_actions": 0}]}, ContentImporter.Context.new(), bad)
 	t.check(not bad.ok(), "不预警的侵蚀导不进（5.7 的硬约束）")

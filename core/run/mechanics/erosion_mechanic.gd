@@ -16,7 +16,6 @@ extends RunMechanic
 
 
 func install(run: RunState) -> void:
-	run.mechanic_tags[&"erosion"] = true
 	if run.travel == null:
 		return
 	if run.travel.erosion != null:
@@ -27,13 +26,3 @@ func install(run: RunState) -> void:
 	if not run.erosion_saved.is_empty():
 		field.restore(run.erosion_saved)
 	run.travel.erosion = field
-
-
-func describe() -> String:
-	var parts: Array[String] = []
-	parts.append("侵蚀：第 %d 步起、每 %d 步推进一层、提前 %d 步预警" % [first_at_action, interval_actions, warn_lead_actions])
-	for e in effects:
-		var effect := e as ErosionEffect
-		if effect != null and effect.describe() != "":
-			parts.append(effect.describe())
-	return "　".join(parts)
