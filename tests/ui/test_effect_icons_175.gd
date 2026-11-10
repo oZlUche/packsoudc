@@ -81,7 +81,7 @@ static func frame_icon_chips(t: TestCase, root: Window) -> void:
 	panel.set_stacks("poison", 4)
 	panel.guards["poison"] = 1
 	panel.set_stacks("scorch", 2)
-	panel._draw()     # 直接画一遍，算出图标的矩形
+	panel.layout_chips()     # 不画，只排出图标的矩形（直接调 _draw 会报「只能在 _draw 里画」）
 	var sizes := {}
 	for c in panel._chips:
 		sizes[String(c[1])] = (c[0] as Rect2).size

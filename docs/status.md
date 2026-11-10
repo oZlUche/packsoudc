@@ -1,151 +1,237 @@
 # 现状总览
 
-> 2026-10-06 ｜ `main`（M6 之后，058 / 059 已完成）｜ 架构文档 v2.48 ｜ 这是一份**活文档**：每完成一个里程碑更新一次，历史看 `docs/reports/`
+> 2026-11-10 ｜ 代码 v5.47（PR #525；修云端测试报告的 G01～G03、Q01，报告 291）｜ 架构文档 v5.47 ｜ 引擎 Godot 4.7.1 ｜ 这是一份**活文档**：设计以 [architecture.md](architecture.md) 正文为准，每一步的记录在 [reports/](reports/README.md)
+>
+> 本次（阶段 A，[执行方案](plans/2026-11-09-claude-next-execution.md) §3）按代码与 `architecture.md` §16 v5.00～v5.46 重写；2026-10-06 那一版（架构 v2.48）的全文见 `git show b1c0f009:docs/status.md`。
 
 ## 一句话
 
-背包、战斗、内容管线、地图、节点内容、一局的状态与存档都已落地并有测试；**正式游戏能从主菜单一条线玩到结算与仓库**
-（M6：开局挑装备、从仓库带 → 地图 → 战利品一件一件亮出来拖走 → 撤离确认 → 结算 → 仓库 → 再来一局，循环闭合）。
-**世界观**的设定集中在 `docs/worldview/`（神话与帝国、概念与神明的提议）。**三张序章教程图**（083、085、113）：序章一条路教基本流程（114 起也教合成）；序章二分岔教「看对手选路选装备」（节点浮窗、两件护具、四个针对性敌人、毒药瓶 + 匕首合成）；序章三「祭坛」教信仰全套（113），通关解锁自由模式（114：序章之后只有自由模式，没有第一章了）。**节点界面按作者试玩后的八条改过**（084），**第十一批**（087）：合成相邻自动、稀有度六色、商店左店右包拖着买 / 卖、战斗 buff 图标栏、词条侧窗、信仰道具休眠保留通用效果、BOSS 保底金色直接撤离；**第十二批**（088）：倒下是终局、敌人按身份配道具、包可到地上 / 容器 / 替换包、尸体照棋盘摆、地上按点保留、格子放大与容器屏布局、稀有度底色、道具视图自带悬浮窗、信仰悬浮说明、内容名字多语言（`Names.of` + `display_names`）、望远镜特殊道具开节点浮窗、基地仓库 / 图鉴两页签、输给猎手也扣体力、power 并进 mana；**三个存档位**（089：新的游戏 = 新存档、继续、读取存档）、图鉴缩略图网格；**开局屏地上**（090：带回来的没置入的到地上，出发就没了、回主菜单原样放回，没清空不再拦开新局）、**按钮三档放大改色 + Esc 通用返回（地图上呼出暂停菜单）+ 点当前节点恢复收起的界面**（090 七）、**成就系统 + 本图规则卡 + 全部解锁**（091 十一：成就走管线、完成给解锁开道具 / 地图 / 难度、成就页三档筛选写解锁途径）、**事件三块补齐**（091 十二：地图编辑器节点挑事件、事件链视图、事件文本多语言 + 局外旗标 has_flag / set_flag）、**编辑器字段本地化 + 悬浮说明**（091 十三：`FieldText`，说明读自源码注释）：搜索按事件屏 ⇄ 搜索屏循环、叠层收起是最小化（回到这个点再恢复）、棋盘外全是地上、地图上有位置标、开打前先过战前准备屏。还在做的是内容扩充（第 8 阶段）；局外成长有了第一批科技树（110 / 118，11 项），钱的其余花处还待定。
+单机 roguelite：异形格子背包 + 自动战斗 + 搜刮撤离。从主菜单到结算、仓库、再开局的循环早已闭合（M6，报告 055～057）；之后补齐了三张序章、两张正式地图（魔法废墟、机关沙漏）、信仰 / 技能 / 猎手 / 侵蚀、局外基地（仓库、科技、集市、铁匠铺）、英文界面、音效与大部分美术。2026-11 上旬完成的是**武器网状升级**（279 / 281：拼接、砧、品质、橙档只能升、八把红武的数据与独一闸）和**一批规则重做**（282～290：NPC、出征倾向删除、收费预设、配方悬浮窗、托付、文本普查、局内商店以物易物）。还没做的大头：**数值平衡**（工具和历史扫表都有，没有当前版本基线和真人数据）、**常规事件正文与配图**、**音乐**（`data/authoring/audio/music.json` 是 `{}`）、红武的独有机制与另三条来路。
 
-## 里程碑
+## 系统现状
 
-| 里程碑 | 状态 | 报告 | 一句话 |
+| 系统 | 现在是什么样 | 主要入口 | 来源 |
 |---|---|---|---|
-| M1 网格背包 | 完成 | 001～007、024、025、028 | 棋盘 + 包体、异形占格（0/1 矩阵）、地上是列表、顶替式放置、包可旋转 |
-| M2 自动战斗 | 完成 | 008～022 | 编译（背包 → 战斗单位）、效果树（时机 / 频率 / 消耗 / 效果四层）、事件驱动模拟、伤害管线、增益、战斗回放 |
-| 内容管线 | 完成 | 023、026、043 | JSON ⇄ .tres，导入器不认识具体效果（反射 + 注册表），校验比引擎严格，可视化编辑器 |
-| 套装与跨域效果 | 完成 | 019、020 | 激活在背包层，一棵效果树按作用域分支 |
-| M3 地图 | 完成 | 027（规划）、029～044、052、053 | 拓扑无关数据层、环形生成器（骨架先行、路线风格、高危区、换乘、撤离环间）、手绘网格脚本、类型分配、角度求解布局、地图编辑器、行动计数与单步移动 |
-| M4 节点内容 | 完成 | 045（规划）～050 | 敌人池（档位 / 流派 / 组装）、掉落（每件各掷 / 珍宝）、随机点与搜索点、节点事件接线、经济（进账 / 商店 / 付费撤离点）、探索度 |
-| M5 运行状态与存档 | 完成 | 051 | `RunState` 装壳、`RunRNG`、`RunSave`，读档之后接着走和没存过一样 |
-| M6 场景流 | 完成 | 055（规划 + M6-1）、056、057 | 纯逻辑状态机 `GameFlow` + 导演与十一屏（主场景换成正式游戏）；开局装备走管线；结算 `RunResult`、局外 `MetaState` / `MetaSave`；`LootView` 渐进揭示、亮出来的直接拖到棋盘、搜索点逐次装；仓库带进下一局（死了就没了）；撤离确认 |
-| 作者提议 058 / 059 | 完成 | 058、059（提议）、060～063、067、068 | 1 地上按点清空 ✅（060）→ 2 仓库格子化、结算置入、图鉴 ✅（061）→ 3 buff 骨架 ✅（062）→ 4 事件层与容器屏合一 ✅（063）→ 5 开局预选与角色 ✅（067）→ 6 搜索揭示 ✅（068）→ 7 外框（可选，作者说只是观感，没做） |
-| 节点界面八条 | 完成 | 084 | 搜索点按作者定的循环：事件屏选「搜索」自动搜一次 → 搜索屏 → 关闭回事件屏（再搜 / 离开）→ 搜满「翻遍了」；遭遇那一次直接「有人来了」→ 迎战 → 战前准备 → 回放 → 「余波」（不能再搜）→ 敌人战利品（规则四个事件 id + 节点内容覆盖 + `guaranteed_drops`）；序章全部强制搜、第二点第二次提示包装不下、遭遇敌人必掉小背包；序章不走开局屏（`skip_setup` + `tut_intro`）；敌人也背包（档位表 `bags`，道具全在包里）、只掉身上有的；节点浮窗（章节开关，第二章开）与道具悬浮窗；事件文本占位符与样式码（`docs/text-placeholders.md`）；双击快速置入、拿完不自动关（设置可开）、耐力消耗评估、至少掉一件（`min_drops`）、敌人数值上调（教程敌人用 `base_stats` 覆盖保住）、回放完才显示胜负；叠层「收起」= 最小化、地图上「回到这个点（N）」恢复同一块；没拿的战利品与地上都到走了才没；棋盘外 = 地上（不限大小）；地图上三角位置标、序章开局就站在出生点；战前准备屏（对手棋盘 + 我方背包，只有「开战」，等着的一场跟存档）；修容器屏的落点过滤（自己棋盘上的包在战利品 / 搜索屏里挪不动）；背包面板是能拖的浮窗 |
-| 序章二「岔路」 | 完成 | 085 | 分岔再归一的预设图（`line` 布局带 row）；节点浮窗在这一章开；搜索点两件护具（塔盾固定减伤 / 板甲一次性护盾，装不下两件）→ 岔路：游兵（板甲死）/ 重击手（塔盾重伤）→ 搜索点毒药瓶 + 长剑 + 长条包 → 岔路：持符者（叠盾，只有毒）/ 药师（清毒，只有长剑）→ 「对症」事件 → 撤离；**合成**（`recipes` 内容种类；拖到一起配对，走到下一个点才合、有提示、装不下到地上）；撤离点走对话（`extract` 后果）；序章撤离后直接进下一张（`next_chapter`）；序章通关后随机一局可选角色与地图规模（`map_scale`）；章节 `hidden_by_unlock`（教程通关收起、下一张顶上直接开）、`vitality_bonus` |
-| 删地图沙盒 | 完成 | 066 | 只剩生成就是地图编辑器的子集，「走」正式游戏已完整；两个沙盒、三个编辑器 |
-| 事件屏改版 | 完成 | 065 | 两栏大框，左边整块是图（参考杀戮尖塔），右边标题、正文、贴底的选项 |
-| 事件编辑器 | 完成 | 064 | 写文字、导入配图、拼选项（条件 / 后果下拉来自注册表）、预览照事件屏画、挂进节点规则；存盘 = JSON + .tres；按性价比做在项目里而不是独立 exe |
-| 069 进阶难度与猎手 | 完成 | 069（设想）、070～075 | 1 难度骨架 ✅（070）→ 2 猎手核心 ✅（071：`HunterDef` 一个等级一份、行动逻辑与战败后果构件、领地、开打前事件屏「迎战 / 逃跑」、探索度现造、掉落倍数、存档、地图标记）→ 3 角色技能接口 ✅（072：`CharacterDef.skills`，侦察 / 潜行 / 逃跑三个构件进 RunContext）→ 4 校准工具 ✅（073）→ 段位与专属池 ✅（074）→ 5 侵蚀本体 ✅（075：逐层向内、必须预警、效果构件四道门）|
-| 第 7 阶段 侵蚀 | 完成 | 075 | 某档难度开的机制：`ErosionField` 逐层向内、必须预警、绝不封路；效果是构件，开关 / 起始层 / 仅终局 / 概率都在数据里 |
-| 第 8 阶段 内容扩充 | **进行中** | 076、077、078、079、080、081 | 规划：8-1 传送点 ✅ → 8-3 事件构件 ✅（077：五种条件、五种后果含传送 / 耗时 / 改类型，休息 / 商店默认事件）→ 8-2 沙漏与塔两个格阵模板 ✅（078：编辑器可选；塔登上一层不能向下，沙漏横置、撤离点在对侧、核心不是必须）→ 8-4 道具与敌人：起步 ✅（079：世界观、封存现代道具、小说里的十九件）→ 信仰体系 ✅（081）→ 局内技能与信力 ✅（082：技能构件被动 + 主动、三个初始角色、信力的行为与阈值、信仰道具按阶解锁）→ 序章教程 ✅（083：一条路的预设图、章节的门、搜索覆盖）→ 8-5 局外成长：科技树 ✅（110 / 118 / 119：`docs/techs.xlsx` 生成科技 JSON）；作者定只做三张序章，之后只有自由模式（113 / 114） |
+| 背包 | 棋盘 + 包体拼可用区，异形占格，可旋转；格子外整屏是「地上」，按点保留；腰带槽；Ctrl（Mac Cmd）整包拿 | `GridInventory`、`InventoryView`、`DragLayer` | 007、128、147、274（v5.04） |
+| 战斗 | 编译背包 → 战斗单位，事件驱动模拟；标准轴、单一乘区、反应、加时与衰竭；战记（可读回放） | `BattleCompiler`（`core/battle/compiler.gd`）、`BattleSim`、`BattleNarrator` | 103～106、133、272（v5.00） |
+| 武器体系 | 五类 × 白→橙，另有弓弩与法杖；**拼接**：白 + 白贴着出小锤徽、点锤合成绿；**砧**：上一把 + 一类材料升蓝 / 紫，+ 魔晶石升橙（橙只能升，不掉落）；**品质** 0～2（伤害 / 格挡 / 护甲每档 ×1.1、暴击 +5 点、层数与个数 +1，每下叠层照加）；极端武器两条线 6 把；弓弩装箭 | `Fusion`（`core/inventory/fusion.gd`）、`Anvil`（`core/run/anvil.gd`）、`BattleCompiler.quality_stats / quality_rules` | 279（v5.05～v5.17、v5.42、v5.43）、281（v5.18、v5.19） |
+| 红武 | 刹那 / 断水 / 双生 / 贯日 / 崩山 / 坠星 / 破晓 / 寂灭 8 件：裸数据、定稿图、`unique`（不进随机池、不可卖、全局一件）；**独有机制未做**；BOSS / 猎手按概率持有并掉**劣化版** `<id>_lesser`；**寂灭**的来路已做完（法杖进出局计数 → 单元素试炼 → 神坛献祭）；破晓只有铁匠起点 | `RedSources`、`UniqueItems`、`JimiePath`（`core/run/`） | 281（v5.20～v5.27）、282（v5.29） |
+| 休息点 | 营地屏；「铁炉」= 两栏屏 **砧 \| 铸炉**，每个休息点砧免费一次；神坛 | `ui/game/rest_camp_screen.gd`、`ui/game/anvil_column.gd`、`NodeEvents.hearth_open` | 286（v5.34） |
+| 悬浮窗 | 道具说明 + 词条侧窗；「可升为」每个名字是配方词，停上去开配方子窗（出件整段、要哪类材料、在哪锤），可一路点到橙；耐力签列出消耗与回复来源；说明文字的数字读数据（288 普查 17 条已改） | `HoverTip`、`ItemTooltip`、`StaminaEstimate.breakdown`、`Glossary` | 286、288（v5.37）、289（v5.38） |
+| 局内商店 | 商人一块 8 × 6 棋盘，`shop_stock` 10 件（+ 包 / 金银按概率）一次摆满、**不刷新**；拖过去 = 上桌（染待成交色），天秤左盘你拿的货的售价、右盘你给的东西的收购价（定价 × 0.3）+ 钱，右 ≥ 左才能「成交」；点自己钱袋补差、点商人钱袋找钱（不自动找零），商人钱袋 100 + 200 × 深度、一局不回填；离开各回各家；回购 = 本次卖出的挂原价；店主纸条层级已修 | `ShopSession`（`core/run/shop_session.gd`）、`ui/game/shop_screen.gd`、`ShopScale` | 290（v5.39～v5.41）、v5.46 |
+| 撤离与托付 | 图上不再单放保险箱点；**免费、没关门**的撤离点确认框多一个【托付】（= 原保险箱屏，一局一块格子整局共用，交出的件拿不回，空格下回还能放）；付费出口不接，出口关了托付跟着关；老档 `safe` 点照旧能开 | `SafeModule`（`core/run/modules/safe_module.gd`）、`GameFlow.entrust_open` | 287（v5.35） |
+| 开局预设 | 第二页中栏竖排挂牌：免费（强攻 / 坚守）→ 收费（游猎 / 枪盾 / 双刃，出发时按清单定价之和付钱、算带入预算）→ 高级（制式 / 精锐，出发时消耗一张对应的券）；序章只列免费；核心 BOSS 打赢必掉一张券（魔法废墟制式、机关沙漏精锐） | `GameFlow.presets / preset_price / begin`、`LoadoutDef.tier` | 285（v5.33、v5.44） |
+| NPC | 局内商店店主（哈基姆）、散货摊主（德米特里）、铁匠（布伦努斯）；点头像出纸条，每人六句提示 + 通用三句（按键名走 `[key=…]` 引用）；铁匠铺 3 级后铁匠给【破晓的信物】，之后留白 | `NpcChatter`（`core/meta/npcs/npc_chatter.gd`）、`NpcBadge`、`InputKeys` | 282（v5.29、v5.32）、284（v5.36、v5.45） |
+| 地图 | 魔法废墟：环形生成，三档规模；机关沙漏：分层格阵，一左一右两个出生点、核心在中轴、钟房在其下；每章自带材料节点（出征「倾向」已删）；高危区画成一片 | `RingMapGenerator`、`LatticeMapGenerator`、`DangerZones` | 078、278（v5.03）、281 §六（v5.26）、283（v5.28～v5.31） |
+| 一局 | 体力、倒计时、负重、搜索揭示、猎手、侵蚀、信仰与信力、局内技能、事件层（条件 / 后果构件） | `RunState`、`GameFlow`、`NodeEvents`、`ErosionField`、`HunterDef` | 063、069～075、081、082、129 |
+| 局外 | 三个存档位、仓库格子、图鉴、科技树（15 项）、集市（五个固定摊 + 散货摊）、铁匠铺、成就 | `MetaState`、`TechService`、`Market`、`Smithy`、`Achievements` | 089、118、252、262、270 |
+| 平衡工具 | 流派木桩、扫表、单件台架、猎手胜率表、对局记录（玩家版也记）、导出平衡数据 zip | `tools/build_archetypes.gd`、`bench_matrix.gd`、`bench_battle.gd`、`bench_hunters.gd`、`build_dummies.gd`、`assumptions_report.gd` | 073、151、242（v4.23、v4.24）、279 台架 |
+| 语言与音频 | 中英界面与内容名字；字号三档；界面音效（cue 表）；**配乐没有**（`play_music` 有，曲表空） | `UiText`、`Names`、`ui/audio.gd`、`data/authoring/audio/` | 204、221、258 |
 
-## 代码地图（554 个脚本，不含 `addons/`；core 约 3.5 万行）
+道具说明、预设说明、NPC 与常规事件正文由作者写（v5.02 起道具 `description` 一律留空，267 件全空）。
 
-| 目录 | 管什么 | 入口类 |
+## 代码地图（`b1c0f009`，`git ls-files` 计）
+
+967 个 `.gd`（不含 `addons/`）：`core` 470 个 / 约 5.4 万行，`ui` 170 个 / 约 5.1 万行，`tests` 298 个 / 约 6.2 万行，`tools` 29 个。
+
+| 目录 | 管什么 | 入口类（举例） |
 |---|---|---|
-| `core/inventory` | 容器、形状、道具定义与实例、搬运 | `GridInventory`、`ItemStash`、`ItemDef`、`ItemInstance`、`InventoryService`、`ItemValue` |
-| `core/battle`（+ damage / triggers / cadences / costs / effects） | 编译、属性、规则、模拟、伤害、增益 | `BattleCompiler`、`BattleSim`、`EffectRegistry`、`CombatantBaseline` |
-| `core/effects`、`core/sets`、`core/loot/effects` | 效果树的根、套装、战利品效果 | `Effect`、`SetTracker`、`LootEffect` |
-| `core/authoring` | 内容管线 | `ContentImporter` / `ContentExporter` / `ContentSchema` / `ContentPaths` |
-| `core/map`（+ generators） | 数据层、生成器、校验、导航、文本往返、预设 | `MapGraph`、`MapGenerator`、`RingMapGenerator`、`RingTypeAssigner`、`MapNavigator`、`MapGridText` |
-| `core/enemies` | 敌人池、档位、组装、预览编译 | `EnemyPool`、`EnemyPlacer`、`EnemyKit` |
-| `core/loot` | 掉落规则与掷骰、修正来源接缝、装箱 | `DropRule`、`DropResolver`、`DropBonusSource`、`LootPacker` |
-| `core/run`（+ effects、events） | 一局：旅程、体力、钱、节点事件、搜索 / 商店会话、规则、状态与存档；场景流状态机、开局装备、角色、进阶难度（机制清单）、猎手（伪 PVP）、结算；buff（局外 / 一局）与一局规则的构件；事件层（事件、选项、条件与后果构件、铺放）；局内技能（082：构件 + 一局的账）；信仰与信力（081 / 082） | `RunState`、`RunSave`、`MapTravel`、`NodeEvents`、`Vitality`、`Wallet`、`GameFlow`（`new_run_target` / `continue_target`：新的一局 = 从头，继续 = 读档或下一张教程）、`LoadoutDef`、`CharacterDef`、`RunResult`、`RunBuffDef`、`RunBuffs`、`RunContext`、`EventDef`、`EventPlacer`、`RunSkill`、`RunSkills`、`FaithDef`、`FaithPower` |
-| `core/meta` | 跨局：仓库格子（大小是 `MetaRules`）、带回来的棋盘与一键置入、图鉴、钱、战绩、保留规则（`absorb()` 一处）、局外科技树（110 / 118：前置、列、每级效果 —— 仓库加行、给一局局外 buff、保险箱扩格）、存档 v3 | `MetaState`、`MetaSave`、`MetaRules`、`TechDef`、`TechService` |
-| `core/text` | 内容名字的多语言 `Names.of`（088）；文本占位符与样式码（084）：`{char_name}`、`{battle_data}`、`{c:hp}…{/c}`，全表见 `docs/text-placeholders.md`；界面语言表（085）：`UiText.t(key)`，zh / en；词条表（087）：固定词条 + 按 buff 定义生成的说明，悬浮窗侧边一个一个开小窗 | `TextTemplate`、`UiText`、`Glossary`、`Names` |
-| `core/settings` | 玩家设置（地上提醒档位、拿完自动关、浮窗预览、界面语言、当前存档位），`user://settings.json`；存档位（089）`user://slots/<n>/` | `GameSettings`（挑要提的在 `core/run/storage_warning.gd`）、`SaveSlots` |
-| `ui/game` | 正式游戏（主场景）：导演（叠层可最小化）+ 屏的底座 + 各屏（事件屏先过、战前准备屏、容器屏战利品 / 搜索合一）+ 背包整理面板（浮窗）+ 仓库面板 + 渐进揭示的战利品视图 | `GameDirector`、`GameScreen`、`LootView`、`FloatingWindow`、`map_screen`、`event_screen`、`prebattle_screen`、`container_screen`…… |
-| `ui/inventory`（084 新增） | 悬浮窗控件与道具说明；087：主文字 + 侧边词条小窗 | `HoverTip`、`ItemTooltip` |
-| `ui`（其余） | 两个沙盒、四个编辑器 + 启动选择器（开发期入口）；buff 制作器（085）界面文字走 `UiText` | `launcher`、`inventory_sandbox`、`battle_sandbox`、`content_editor`、`event_editor`、`map_editor`、`buff_editor` |
-| `tools` | 命令行：导入 / 导出 / 归一化内容、脚本检查、批量统计、样例生成、截图、校准（木桩、猎手胜率表） | `import_content`、`normalize_content`、`check_scripts`、`map_stats`、`build_dummies`、`bench_hunters` |
-| `tests` | 108 个套件，`tools/test.sh` 一键跑 | `run_tests` |
+| `core/inventory` | 容器、形状、道具定义与实例、拼接、耐久 / 品质 | `GridInventory`、`ItemDef`、`ItemInstance`、`ItemDatabase`、`Fusion`、`WearProfile` |
+| `core/battle`（+ damage / effects / reactions / cadences） | 编译、标准轴、模拟、伤害、反应、战记、耐力估算、战斗存档 | `BattleCompiler`、`BattleSim`、`StatAxes`、`BattleNarrator`、`StaminaEstimate`、`BattleArchive` |
+| `core/effects`、`core/sets`、`core/loot` | 效果树根、套装（暂无内容）、掉落 | `Effect`、`SetTracker`、`DropRule` |
+| `core/authoring` | 内容管线、一致性检查、台架 | `ContentImporter`、`ContentCheck`、`ContentPaths`、`PowerBench` |
+| `core/map`（+ generators） | 地图数据层、环形 / 格阵生成器、导航 | `MapGraph`、`RingMapGenerator`、`LatticeMapGenerator` |
+| `core/enemies` | 敌人池、档位、组装 | `EnemyPool`、`EnemyPlacer` |
+| `core/run`（+ modules / events / faith / hunters / erosion / calibration / skills …） | 一局的全部：场景流、旅程、商店、砧、托付、红武来路、猎手、侵蚀、信仰、校准记录 | `GameFlow`、`RunState`、`ShopSession`、`Anvil`、`SafeModule`、`JimiePath`、`RedSources`、`CalibrationRecorder`、`DataExport` |
+| `core/meta`（+ npcs / techs） | 局外：仓库、科技、集市、铁匠铺、成就、NPC 闲聊、存档迁移 | `MetaState`、`MetaMigrations`、`TechService`、`Market`、`Smithy`、`NpcChatter` |
+| `core/forge` | 铸炉（附魔） | `Forge` |
+| `core/save`、`core/settings` | 原子写与对账；设置、存档位 | `AtomicFile`、`SaveReconcile`、`GameSettings`、`SaveSlots` |
+| `core/text`、`core/audio` | 多语言、占位符、词条、百科；音效 cue 表 | `UiText`、`Names`、`TextTemplate`、`Glossary`、`Encyclopedia` |
+| `ui/game` | 正式游戏主场景（导演 + 各屏） | `GameDirector`、`shop_screen`、`rest_camp_screen`、`result_screen`、`event_screen`…… |
+| `ui/inventory`、`ui/widgets`、`ui/map`、`ui/battle`、`ui/hud` | 背包视图与悬浮窗、通用控件（天秤、钱袋、NPC 头像、教练遮罩）、地图画法、战斗视图、顶栏 | `HoverTip`、`ItemTooltip`、`ShopScale`、`NpcBadge`、`DangerZones` |
+| `ui`（其余） | 启动选择器与各编辑器（道具 / 事件 / 地图 / buff / 套装 / 标签 / 构件 / 铸炉）、`UiMotion`、`InputKeys` | `launcher`、`content_editor`…… |
+| `tools` | 测试、警告、存档检查、导入 / 归一化、平衡工具、截图、字体 | `test.sh`、`warnings.sh`、`check_saves.sh`、`bench_*`、`build_*` |
+| `tests` | 294 个套件，按层分目录（authoring / battle / content / enemies / inventory / loot / map / meta / run / settings / tools / ui） | `run_tests.gd`、`test_layering.gd` |
 
-## 数据与内容管线
+数据管线：`data/authoring/<种类>/*.json`（人写）→ `tools/import_content.gd` → `data/<种类>/*.tres`，两边都进 git；`ContentPaths.ORDER` 共 34 种（`core/authoring/content_paths.gd:137`），`sets` 只走编辑器（`EDITOR_ONLY_KINDS`）。`tools/test.sh` 每次跑 `check_content.gd` 守 JSON ⇄ `.tres` 一致。
 
-`data/authoring/<kind>/*.json`（人写，进 git）→ `tools/import_content.gd` → `data/<kind>/*.tres`（引擎读，也进 git）。
-种类与导入顺序（`ContentPaths.ORDER`）：`tags → damage_types → run_buffs → faiths → items → recipes → loadouts → characters → difficulties → events → enemies → enemy_pools → hunters → drop_rules → carry_rules → encumbrance_rules → node_rules → economy_rules → meta_rules → chapters → achievements → techs → help_pages`（后者按 id 引用前者）。`buffs` / `sets` 还没有独立内容，不进批量导入（`EDITOR_ONLY_KINDS`，只有 buff 制作器 / 套装编辑器自己写）；手绘地图 `data/authoring/maps/*.txt` 由章节引用、不走这条管线。标签与伤害类型是内容（096）：名字 / 说明中英（`display_names` / `descriptions`），道具带没登记的标签只警告。
-`tools/normalize_content.gd` 把作者数据重写成导出器的格式（仓库里的 JSON 是往返不动点，测试逐字节比）。
+## 内容统计
 
-现有内容：111 件道具（其中 15 件封存现代道具、9 件珍宝；流派标签 `burst` / `rapid` / `bleed` 各 6 / 9 / 8 件）、43 个标签、6 种伤害类型、9 条配方、5 套开局装备（标准 / 拾荒者 / 打手；标准也是仓库空的第一套；另两套预设：强攻 / 坚守）、3 个角色（作者定，082：安德烈乌斯 = 躲避 + 免罚一败；布鲁图斯 = 坚韧；马库斯 = 突击；数占位）、7 个信仰（各有攒信力的行为与阈值，表见 [gods.md](gods.md)）、2 档难度（普通、进阶 1 占位：侵蚀（按深度扣体力、损坏道具）+ 一个追猎者 + 体力上限 -1）、2 种猎手（追猎者、守路人，占位，指定专属池 `hunters`、按段位定档）、10 种敌人、2 个敌人池（`standard_ruins` 与猎手专属的 `hunters`）、
-掉落 / 携带 / 负重 / 局外规则各 1 份、节点与经济规则各 2 份（标准 + 序章）、23 个局内 buff（2 个测试用的：被盯上了 / 虚弱；21 个是科技按级给的）、57 个事件（三张序章的教程事件 11 / 14 / 12 个，其余 20 个：各类点的默认事件、搜索的几种收尾、祭坛与各神的召唤、伏击、陌生人等）、章节 4 份（序章：预设的一条路；序章二：分岔的预设图；序章三：祭坛（预设图），通关解锁自由模式；自由模式：环形图）、7 个成就、11 项科技、47 页百科、手绘地图 2 份。
-**数值全是占位**（见下）。
+**口径**：`b1c0f009` 下 `data/authoring/<种类>/*.json` 的**文件数**（python 直接数，没跑 Godot）。这是作者文件数，**不是玩家能拿到的内容数**；下表单列了封存 / 独一 / 只能锻造等不进随机池的件。
 
-## 沙盒与工具
+| 种类 | 文件数 | 说明 |
+|---|---|---|
+| 道具 `items` | 267 | 武器 120、包 15；独一 `unique` 13（8 把红武 + 4 颗元素之核 + 破晓的信物）、劣化版 `lesser` 8、只能锻造 `forged_only` 18（橙档）、极端 `extreme` 6、券 2、随身之物 `keepsake` 2、铸牌 `token` 1、招牌 `signature` 1、成就解锁 3；**封存 `sealed` 0 件**（旧版的 15 件现代道具已不在作者数据里）；赐福版运行时派生，不在作者文件里（`blessed_of` 0 份）。按 `ItemDatabase.ids()` 的排除规则估，能进随机候选的约 **219** 件（还要再过各池的标签与稀有度上限） |
+| 拼接 / 拖合配方 `recipes` | 23 | 另有铁匠铺 / 砧配方 `smith_recipes` 101 |
+| 敌人 `enemies` | 33 | 敌人池 3（standard_ruins / clockwork / hunters）、猎手 2 |
+| 事件 `events` | 61 | 序章教程 37（序章一 11、序章二 14、序章三 12）；其余 24（默认事件、搜索收尾、信仰召唤 5、寂灭 2、钟房、军团交代等）；**有配图的只有 2 个**（`briefing_legion`、`event_jimie_god`） |
+| 章节 `chapters` | 5 | 序章三张 + 魔法废墟（`free_mode`）+ 机关沙漏 |
+| 角色 `characters` | 3 | 安德烈乌斯 / 布鲁图斯 / 马库斯 |
+| 难度 `difficulties` | 4 | 普通 + 进阶 Ⅰ～Ⅲ |
+| NPC `npcs` | 4 | 三位 NPC + `common`（通用三句） |
+| 开局装备与预设 `loadouts` | 10 | 开局装备 3（标准 / 拾荒者 / 打手）+ 预设 7（免费 2、收费 3、高级 2） |
+| 其余 | — | 成就 7（1 个隐藏：`fallen_thrice`）、科技 15、百科 57、局内 buff 22、buff 14、标签 49、伤害类型 8、信仰 7（`church` 自述占位）、反应 10、集市摊位 6、构件 18、随身技能 2、铸炉 3、宝箱皮肤 5、教练 5、音频 2（`music.json` = `{}`）、手绘地图 1 份 `.txt` |
 
-**主场景是正式游戏** `ui/game/game.tscn`：主菜单（新的一局 / 继续上次 / 仓库与战绩 / 设置 / 开发工具）→ 开局（挑章、挑角色、从仓库往初始包里拖、种子）→ 地图（B 开背包、走出发生过事的点前提醒地上、撤离点上撤离、存档并回主菜单）
-⇄ 叠层（战斗回放、战利品、搜索、商店、事件、休息）→ 结算 → 仓库与战绩。F1 回启动选择器。
-启动选择器（开发期入口）：正式游戏、背包沙盒、战斗沙盒、道具编辑器、事件编辑器（写文字、导入配图、拼选项、挂进节点规则）、Buff 制作器、套装编辑器（091：id / 名字 / 计数方式 / 档位，成员按道具的 `set_id`）、地图编辑器（随机生成或手绘，改完存回章节）。
-**类缓存**（102）：`.godot/` 整个目录不进仓库（它是生成物）。编辑器打开项目时自己重建；不开编辑器也直接跑即可（158）：DevNav 发现缓存缺类就自己扫脚本头重写缓存（约 0.1 秒、不起编辑器），带原参数重开；有没导入的新素材才后台 `--import`（不挡游戏）；重开过还缺才红字提示。`tools/run_game.sh` / `.bat` 可选（就是直接启动）。命令行：`bash tools/test.sh`（全套测试，先 `--import` 重建类缓存；带一个词只跑相关套件，如 `bash tools/test.sh safe`）、`import_content`、`normalize_content`、`check_scripts`、`map_stats`、`replay_log`（117：读一场战斗的内部日志，`-- <file.jsonl | --latest> [--summary]`）、
-`capture_scene`（截图；`DEMO_SCREEN=setup / map / bag / prebattle / battle / loot / search / result / meta` 把正式游戏推到那一屏）。
+**测试 / 开发数据**：所有作者文件的文件名与 id 里没有 test / dev / debug / demo / sample / dummy / tmp；顶层没有 `hidden` / `dev` / `test` / `sealed` 开关，只有成就 `fallen_thrice` 是 `hidden: true`（隐藏成就，属正式内容）。旧版记作「测试用」的两个局内 buff（`marked` / `weakened`）现在被事件与节点规则引用（`node_rules.gd:52` 逃跑失败给 `weakened`），按正式内容计。
 
 ## 测试
 
-108 个套件、18273 项断言（2026-10-06 全量跑），机器空闲时 60～180 秒（开着别的 Godot 编辑器会到 4 分钟，超时放到 480 秒）。
-套件按层分目录：`tests/inventory` / `battle` / `map` / `run` / `meta` / `ui` / `authoring` / `content` / `enemies`，跑器自动发现（102；`tests/**/test_*.gd` 除 `test_case.gd` 都是套件）。
-`tests/test_layering.gd` 按源码守依赖方向（101 第 5 刀）：`core/` 里不许出现 `ui/` 的类名，`core/battle` / `inventory` / `sets` 里不许出现 `core/run` 的 —— 这类错编译不红。
+**本次全量结果**：39,276 项断言 / 294 个套件通过，401,292 ms（整个 test.sh 含导入与两项检查 438 s），EXIT=0；0 条 `SCRIPT ERROR`，0 条未登记的 `ERROR:` —— v5.47 改动之上、2026-11-10，Godot 4.7.1 无头（[报告 291](reports/291-plan-1109-batch1-fixes.md)，日志摘要 `reports/testing/evidence/2026-11-10-fixes/suite-summary.log`）
 
-`tests/battle/test_compile_golden.gd` 存着四位主神最高阶的**编译金样**（`tests/fixtures/compile_golden/*.json`：
-`max_hp`、`undying_sec`、每件道具的 base / flat / 各乘区与规则表）。动编译器或信仰效果之后它会逐件逐字段比；
-有意改数值时用 `RECORD_GOLDEN=1 bash tools/test.sh 金样` 重录（录完照样报红，免得开关留在 CI 里）。
-期望从数据推，不写死；统计类断言用千次抽样留容差；沙盒有帧测试。
+**最近一次有记录的全量（历史，不是本次运行）**：39,269 项断言 / 294 个套件通过，956,726 ms，EXIT=0；967 个脚本加载、34 种内容一致 —— 代码 `0a91d60d`（v5.46），2026-11-10 云端调试，Godot 4.7.1、软件渲染（[testing/2026-11-10-cloud-debug-0a91d60d.md](reports/testing/2026-11-10-cloud-debug-0a91d60d.md)，日志 `reports/testing/evidence/2026-11-10-debug/suite-summary.log:53`）。同一份报告指出：EXIT=0 不等于日志干净（见待办 Q01）。
 
-## 占位数值清单（作者定数时改这些文件）
-
-| 文件 | 占位的数 |
+| 命令 | 做什么 |
 |---|---|
-| `data/authoring/enemies/*.json` | 十种敌人的血、护甲、本色档位、招牌 |
-| `data/authoring/enemy_pools/standard_ruins.json` | 条目权重与出现条件、档位表（件数 / 棋盘 / 倍率 / 稀有度上限）、档位规则（深度 / 危险 / 类型 / 难度 / 规模 / 探索度）、组装规则 |
-| `data/authoring/drop_rules/standard.json` | 按稀有度的掉落率、难度 / 幸运每级加多少、珍宝概率与两档权重 |
-| `data/authoring/node_rules/standard.json` | 随机点权重、搜索（次数 / 遭遇曲线 / 件数 / 稀有度权重 / 深度与危险增益）、输了扣几点、休息回几点、事件结果权重、战斗时限 |
-| `data/authoring/economy_rules/standard.json` | 开局钱、奖励公式系数、商店格数 / 权重 / 价格倍数 / 刷新费、付费撤离点个数与费用（50） |
-| `data/authoring/items/` 金银六件（`gold_*`、`silver_nugget` / `silver_bar` / `silver_ingot_large`）与五块魔晶石、`economy_rules/*.json` 的 `bullion_*` | 244：贵重品的面值（80～800）与重量；魔晶石供给 +9、四场；金银上架概率 0.35、外环 / 内环两张权重表、手续费 1.1 |
-| `data/authoring/items/*crystal*.json`（三品九件 + 清明 / 琥珀）、`heart_of_guoguo.json`、`enemies/` 四阶法师 | 246 / 247：满 27 次、三次一档（补充三乙）、碎了按 0.16 卖、低两档；三品稀有度 2 / 3 / 4、面值 150 / 320 / 650、供给 +6 / +9 / +13；法师生命 32 / 44 / 56 / 72、池权重 2 / 1.5 / 1 / 0.6 |
-| `data/authoring/chapters/free_mode.json` | 地图配置（环、路线风格、规模模板、高危区、类型风险收益、覆盖……）、难度 |
-| `data/authoring/items/*.json` | 道具数值、稀有度、价值 |
-| `data/authoring/loadouts/*.json` | 三套开局装备的清单与说明；两套预设（`preset: true`，096：强攻 / 坚守）的清单 |
-| `data/authoring/tags/*.json`、`damage_types/*.json` | 43 个标签、6 种伤害类型的中 / 英名字与说明（096，占位尤其英文） |
-| `data/authoring/meta_rules/standard.json` | 现在只写了 `first_kit`；其余用 `MetaRules` 的默认值：仓库大小 10×8（局外成长改它）、`sell_ratio` 基地出售回定价的几成（0.5，091）、`safe_size` 保险箱 3×3（092） |
-| `data/authoring/chapters/free_mode.json` | `step_limit` 36 全局倒计时、`safes` 1 个保险箱、`closing_extract` 过半关一个撤离点（092） |
-| `data/authoring/run_buffs/*.json` | 测试用的 buff 的数（虚弱 5 步伤害 −10%；被盯上了只是标记）；科技各级给的 buff 的数 |
-| `data/authoring/events/*.json`、`node_rules/standard.json` 的 `events_by_type` | 非教程事件的文字、选项、数；哪种点配哪些事件、权重（用事件编辑器写，064）|
-| `core/meta/meta_state.gd` `absorb()` / `keeps()` | 撤离后的保留规则（棋盘带回、图鉴每件计一次、钱带出；战败全失）；什么能存进局外（现在：不是包） |
-| `data/authoring/characters/*.json`、`meta_rules/standard.json` 的 `first_kit` | 三个角色（082）：基线、体力、初始包、技能的次数 / 冷却 / 比例 / 加成；仓库空的第一局发「标准」。没有角色时的老路占位：生命 25 / 耐力 50、体力 5、8×6 |
-| `data/authoring/faiths/*.json`、信仰道具的 `faith_bonuses` | 信力（082）：行为各给几点、阈值、道具按阶多出的功能 |
-| `core/inventory/item_value.gd` | 稀有度每格价 |
+| `bash tools/test.sh` | 先 `--import` 重建类缓存 → 全部套件 → `check_scripts.gd` 全项目加载 → `check_content.gd` 内容一致；日志里有 `SCRIPT ERROR`、或有没登记在 `tools/expected_errors.txt` 的 `ERROR:` 都判失败（后者 v5.47 起）；末行 `EXIT=…` |
+| `bash tools/test.sh <词>` | 只跑路径或用例标题含这个词的套件（如 `safe`、`shop_barter`、`presets_285`） |
+| `bash tools/warnings.sh [out.jsonl]` | 收全项目 GDScript 静态警告 |
+| `bash tools/check_saves.sh [目录]` | 只读检查存档（读档 + 内容对账），不写文件 |
+| `RECORD_GOLDEN=1 bash tools/test.sh 金样` | 有意改数值后重录编译金样（`tests/fixtures/compile_golden/`），录完照样报红 |
 
-## 留给作者定的
+- 引擎：要 **4.7.1**；4.6.3 进地图会报类型错误（同上报告「环境与覆盖」）。`GODOT` 没设时 `test.sh` 先在 PATH 里找，最后才退到作者 Windows 路径。
+- 日志默认写 `${TMPDIR:-/tmp}/godot_tests.log` 等固定文件名：**两个 Godot 同时跑会互相覆盖**，要么串行，要么各设 `TMPDIR`（执行方案 §4）；手工 / 自动测试各用独立的 `XDG_DATA_HOME`，不碰真实存档。
+- 套件自动发现（`tests/**/test_*.gd`，除 `test_case.gd`）；`tests/test_layering.gd` 守依赖方向（`core/` 不许出现 `ui/` 的类名）。
+- 耗时：云端软件渲染约 16 分钟（956,726 ms，上面那次）；2026-10-06 版写的 60～180 秒是 108 个套件时的数，已不适用。
 
-来自各报告「没做的 / 留给作者」：
+## 当前待办
 
-- **地图**：053 的三 + 二做了（弧走内侧那环、朝空间大的那边、回头环路先不加）。大型图（9 环以上）的两道撤离环间没定；4 环图的搜索路线常落不进风险档，要不要调档位等作者看。
-- **节点内容**：~~珍宝道具本身~~ 已有 9 件带 `treasure` 标签（六枚神的护符 + 三件）；~~遭遇后打赢了能不能接着搜；商店能不能回头；卖东西给商店~~ 091 作者定并做了：打赢接着搜、打输不再搜且无代价（整场包在事件里）；商店可回头、刷新价不重置；基地「出售」页一键按稀有度档卖（钱只攒着，花处待定）；非教程事件的文字与图像是占位；`random` 节点符号 `P` / `X` 在表里的定名。
-- **作者五条提议**（[058](reports/archive/058-author-five-proposals.md)，已全部实施，只剩可选的外框）：节点外框；开局预选（角色占位 + 带入限制 3×3 / 3 件 / 稀有度上限，建议建 `CharacterDef`）；
-  地上在离开发生过事的点时清空 + 分层提示（15 节第 7 项作者已定案）；仓库格子化（随局外成长）+ 图鉴（累计件数）；结算屏保留棋盘 + 一键置入；带入的限制就是初始包的空间、包只出不进；搜索揭示按稀有度计时、未搜的只能在容器内挪位。第三轮又加了事件层与两种 buff（[059](reports/archive/059-event-layer-and-buffs-proposal.md)）；顺序：地上 → 仓库与结算与图鉴 → buff 骨架 → 事件层 → 开局预选 → 搜索揭示 → 外框，
-  058 与 059 的问题已全部有答案（战斗事件暂不绕开但结构开放、事件生成时定进节点但可被覆盖、局外选项先是开关列表、地图 buff 时限是字段），按 059 第四节的顺序**已做完**（060～063、067、068；外框可选，没做）。
-- **局外**（M6）：~~钱要不要带出去~~ 带（091 作者定）；局外货币怎么花（058 的图鉴 + 制作是一个答案）、卖掉仓库里的东西、局外成长（15 节第 4 项）；常规事件的内容与事件屏的文字（占位）；
-  每档稀有度的揭示秒数 [0.3, 0.5, 0.8, 1.2, 2.0] 是占位（`node_rules/standard.json` 的 `search.reveal_seconds`）；进度环与「下一件」小标是占位画法。
-- **倒计时与保险箱**（092）：倒计时按规模小 36 / 中 60 / 大 90、关的是离出生点最近的免费撤离点、保险箱 1 个 3×3（关上即锁）都是占位；难度机制里「倒计时缩短」没做；保险箱要不要收费、大小怎么随局外成长，等作者定。
-- **096**（做了）：`resist_<type>` 按类型的减伤属性（现在只有规则形式）、出生点自带一次搜索（替代还是并存预设套）等作者一句；标签 / 伤害类型的英文名与说明是占位。
-- **赐福**（095，做了）：各神模板的数、替代 / 转化概率是占位；赐福版没有独立配图；敌人身上不出赐福版。
-- **带入预算**（094，做了）：预算与每档扣步是占位；盯撤离率（预设 30～40%、满预算 50～60%）再调。
-- **信仰流派**（093，做了；104 落地神明总表：删战争之神、技巧 / 狩猎重定）：7 个信仰的增长 / 献祭 / 效果全在 `data/authoring/faiths/*.json`（源表 `docs/gods.xlsx`，镜像 [gods.md](gods.md)）；蛮神 / 日神 / 大地 5 级留空（蛮神 4 级「不死 10 秒」做了，自然 5 级是加时回血）；`bone` 标签有 5 件道具、`fire` 1 件（日神的护符），`flesh` 还一件都没有；倍率与阈值按校准写了占位（蛮神 0.2 / 每场 30），作者试玩后调。
-- **`DealDamage.amount` 与 `base_stats.damage`**（091 十四·6）：两者**不相加**，属性有值以属性为准、`amount` 只是不读属性时的备用固定值；武器数据里从没填过 `amount`。这边建议保留 `base_stats.damage`（buff / 套装 / 邻接的加成都落在它上面），编辑器里已把 `amount` 的说明写清；要不要在道具编辑器里把 `amount` 藏起来，等作者一句。
-- **架构文档 15 节**：侵蚀损失的形式、节点事件的额外行动消耗（现在一律只按边的 `action_cost`）、撤离后的保留规则（现在的假设见上）、棋盘尺寸与开局可用格、合成配方、地上清空时机、角色基线、元素性质。
+代码入口的行号按 `b1c0f009`。2026-11-10 测试报告的 G01、G02、G03、Q01 已在 v5.47 修掉（[报告 291](reports/291-plan-1109-batch1-fixes.md)），不再列；G02 的计分口径和 G04 的开场白见下面「需要作者决定」A5、A14。
 
-## 已实现、暂无内容 / 内容未用的字段（140 登记）
+### 可直接执行
 
-代码与测试都在，只是现在没有内容让它生效。不是死代码：等需要时写数据就行；真定了不要，再按这里列的范围一次清掉。
+| # | 事项 | 来源 | 代码入口 | 依赖 | 验收 |
+|---|---|---|---|---|---|
+| B1 | 阶段 B 近期功能回归矩阵（商店 290、托付 287、预设 285、配方与砧 286、NPC 与说明 284 / 288 / 289），含金钱 / 券 / 物品守恒，以及中英 × 默认 / 大字号、三张序章、两张正式地图的手工走查（v5.47 只跑了全量与定点测试，见报告 291 §六） | 执行方案 §4 | 方案 §4 回归矩阵列的测试与实现（`tests/run/test_shop_barter_290.gd`、`tests/run/test_safe.gd`、`tests/ui/test_presets_285.gd`、`tests/ui/test_recipe_tip_286.gd` 等） | 无 | 方案 §4 验收：全量通过、无 `SCRIPT ERROR`、警告无新增、记录命令 / 退出码 / 数量 / 耗时 |
+| Q02 | 退出时 ObjectDB / 资源 / RID 泄漏告警分类治理 | 测试 2026-11-10 Q02（P3） | `tests/run_tests.gd`、各套件清理；`tools/check_content.gd` 退出 | Q01 之后；不与别的 Godot 运行并发 | 把告警按「测试没清理 / 静态缓存 / 循环引用」分类计数，修掉测试那一类并给前后数；**不**据此宣称玩家每局泄漏。理由：纯工程，不涉及玩法与文字 |
+| U3 | 长篇交代 / 事件正文溢出时给「下方还有内容」的视觉提示（渐隐或箭头，不加字） | 测试 2026-11-10 体验建议 3 | `ui/game/event_screen.gd` | 无 | 英文大字号首次自由模式交代：有溢出时显示、滚到底消失；`Got it` 照旧随时可点。理由：只加图形提示、不改流程，符合「图像能说明的不加文字」 |
+| U4 / D0 | 统一引擎版本与启动入口：`run_game.sh` 像 `test.sh` 一样先找 PATH，并检查引擎版本是 4.7.x | 测试 2026-11-10 体验建议 4；执行方案 §6 | `tools/run_game.sh:6`、`tools/test.sh:12-21` | 无 | Linux 上不设 `GODOT` 能启动；版本不符时明确报错。理由：工具脚本，不涉及玩法 |
+| U5 | 深面板上 `styles.hp` / `styles.danger` 对比度 4.40 → ≥ 4.50 | 测试 2026-11-10 体验建议 5 | `data/authoring/ui/text_colors.json`、`tools/text_color_check.gd` | 无 | `text_color_check` 过 4.50；色相不变、只调明度，前后色值与截图交 UI设计 过目。理由：工具目标明确、改动极小，可逆 |
+| C1 | 阶段 C：核对流派木桩与当前武器体系（品质、拼接、砧、红武是否被覆盖） | 执行方案 §5 步骤 1；242 §十 | `tools/build_archetypes.gd`、`core/run/calibration/archetype_builder.gd`、`data/authoring/calibration/archetypes.json` | 阶段 B 全量通过；Godot 串行 | 改木桩前保留旧输入；写清覆盖到 / 没覆盖到的流派与件 |
+| C2 | 阶段 C：武器估算 vs 实测对照 | 执行方案 §5 步骤 2；151、242 §九 | `tools/bench_battle.gd -- power`、`core/authoring/power_bench.gd`、`data/authoring/balance/power_weights.json` | C1 | 偏差表 + 原因分析；不改数 |
+| C3 | 阶段 C：固定输入、固定种子扫 `standard_ruins`、`clockwork`、猎手，初轮每格 100 场 | 执行方案 §5 步骤 3～4 | `tools/bench_matrix.gd`、`tools/bench_hunters.gd`、`core/run/calibration/balance_matrix.gd` | C1 | 报告记提交 / 引擎 / 输入 / 种子 / 场数 / 命令 / 耗时；分流派分档位（胜率、时长、余血、单调性）；新文件写进 `docs/reports/balance/`，不覆盖历史 |
+| C4 | 阶段 C：5～10 个最该处理的问题与具体调参建议（只交建议） | 执行方案 §5 步骤 5 | 同 C3 | C3；目标带见作者决定 A7 | 每条有复现条件、证据、可能原因、建议字段与影响面；未定案前不大面积调数 |
+| D2 | 阶段 D：构建可追溯标识（诊断包 / 对局记录 / 报告能对上具体构建），不改对外版本号 | 执行方案 §6 第 1 条 | `CalibrationRecorder`（快照已有 `version` 字段，242 §十）、`core/run/calibration/data_export.gd`、`project.godot:14` | 复用已有字段；新增字段要旧数据可读 | 新导出的诊断包能对上提交；旧 `runs.jsonl` / zip 照样能读 |
+| D3 | 阶段 D：玩家错误日志是否落盘、怎么找、是否随「导出平衡数据」带走 | 执行方案 §6 第 2 条 | `core/run/calibration/data_export.gd`、`core/battle/battle_archive.gd`、`project.godot`（日志设置） | 无 | 写清现状；缺的话复用现有导出补一项，不另起日志系统 |
+| E1 | 阶段 E：常规事件薄弱度 / 重复度盘点，挑 5～8 个候选（只列条件、后果、位置、数值影响，**不写正文**） | 执行方案 §7；238 | `data/authoring/events/`（非教程 24 个） | 阶段 B、C 结果 | 盘点表交作者；正文见 A10 |
+| E2 | 阶段 E：音乐需求表（主菜单 / 地图 / 战斗 / 结算：循环、切换、授权来源栏） | 执行方案 §7 | `ui/audio.gd`（`play_music`）、`data/authoring/audio/music.json`（`{}`） | 无 | 需求表按实际场景列；风格与曲子见 A8 / M2 |
+| E3 | 阶段 E：事件配图盘点（可共用的场景图、尺寸、缺口） | 执行方案 §7 | `ui/game/event_image.gd`、`assets/events/`（只有 1 张）、`data/authoring/events/*.json` 的 `image` | 无 | 61 个事件里 2 个有图；列出缺口与可复用的现成图 |
 
-| 什么 | 现状 | 代价 / 清掉的范围 |
+### 需要作者决定
+
+| # | 事项 | 来源 | 代码入口 | 依赖 | 验收（作者给了什么才算定） |
+|---|---|---|---|---|---|
+| A1 | 刹那 / 断水来路：是否开做；§四.6 剩下的问题 —— 刹那的沙漏碎片是否必出、断水 50 次后打捞是否必触发、寂灭是否只算出过手的局（现在按「带进带出」算） | 281 §四.3、§四.6；作者 2026-11-05 11:37「先记录」、12:33 / 12:36 部分答复（提示不加、河边不标、清仓只清三碎片与沙子、钟房在中轴、机关沙漏三档已做 v5.26） | 参照 `core/run/jimie_path.gd`；`core/run/red_sources.gd`；`data/authoring/items/chana.json`、`duanshui.json`；`data/authoring/events/event_clock_room.json`（正文空） | 事件正文与动画由作者 / 美术给 | 作者说「开做」并答完上面三问 |
+| A2 | 八把红武的独有机制（时间凝滞、断绝回复等八条）是否照 281 §四.2 落地 | 281 §四.2；v5.20 落地时「机制空，等作者点头」 | `data/authoring/items/{chana,duanshui,shuangsheng,guanri,bengshan,zhuixing,poxiao,jimie}.json`、`core/battle/effects/` | 无 | 作者对每条点头或改写 |
+| A3 | 破晓任务链（拿到信物之后）—— **报告里故意留白，不得自行补规则** | 281 §四.3 破晓行；282 §二.3；作者 2026-11-05 12:42；`/mnt/project-files/reference/待做-系统.md` 第 4～5 行（文件存在） | `data/authoring/npcs/blacksmith.json`、`data/authoring/items/poxiao_token.json` | 作者点名时出方案 | 作者给出后续流程 |
+| A4 | 新角色方向（12 个草案里挑哪几个） | 254（头脑风暴，待作者挑方向） | `core/run/character_def.gd`、`data/authoring/characters/` | 无 | 作者挑定后每个角色一篇方案 |
+| A5 | 跳过教程分支的开场文案（现在仍是「三趟都活着回来了」） | 测试 2026-11-10 G04（P3） | `data/authoring/events/briefing_legion.json:7`；跳过分支 `core/run/game_flow.gd`（`decline_tutorial`，第 248 行） | 文案由作者写（中英） | 空存档选「不需要」后首次出发不再出现「三趟」；代码按分支选文本 |
+| A6 | 教程遮罩加「点击任意处继续」、进度与跳过入口 | 测试 2026-11-10 体验建议 1 | `ui/widgets/coach_overlay.gd`、`data/authoring/coach/` | 提示文字由作者定；跳过会改教程流程 | 作者选做哪几样。理由：动教程流程与文字，不能直接做 |
+| A7 | 平衡目标带：普通敌人约七成、精英约五成只是**建议**（猎手五成是 073 作者定） | 242 §3.3；执行方案 §5 | `tools/bench_matrix.gd`（只打印不改数） | C3 结果 | 作者定每类对手的目标带，或说明按建议 |
+| A8 | 音乐风格 | `data/authoring/audio/music.json` = `{}`（已核）；238；执行方案 §7 | `ui/audio.gd`（`play_music`，曲表空） | E2 需求表 | 作者定风格与来源，素材见 M2 |
+| A9 | 无配图事件的左页：补图，还是缺图时正文加宽 | 测试 2026-11-10 体验建议 2；065（作者定的两栏、左整块是图） | `ui/game/event_screen.gd`、`ui/game/event_image.gd` | 选「补图」则转 M3 | 作者二选一。理由：动的是作者定过的版式 |
+| A10 | 常规事件正文（中英）与选项 | 238（常规事件正文一句话）；执行方案 §7 | `data/authoring/events/` | E1 盘点 | 作者写或认可每条正文 |
+| A11 | 对外版本 `0.1.0` / `0.1.0.0` 与开发号 v5.46 是否有意分离 | 执行方案 §6；242 §十 | `project.godot:14`、`export_presets.cfg:33,75` | 无 | 作者一句；在定之前不改对外版本 |
+| A12 | 额外战斗效果：无敌 / 吸血 / 荆棘（已定要做，动手前先出方案）；眩晕、命中等候选 | `/mnt/project-files/reference/待做-战斗效果.md`（文件存在）；执行方案 §7 | `core/battle/buff_def.gd`、`core/battle/effects/` | 先交架构设计出报告 | 作者对方案点头 |
+| A13 | 大型地图（9 环以上）的第二道撤离环间等规模参数仍是占位 | 053；`core/map/generators/map_scale_profile.gd:31,92` | `data/authoring/chapters/free_mode.json:367`（`placeholder: true`） | 无 | 作者给大型图规则 |
+| A14 | 结算「走过的点」口径：v5.47 已按默认改成数**到过的点**（和结算页名字一致，探索分随之涨，云端那条路线 423 → 427）；若本意是奖励「用掉的点」就回退并把名字改成「用过的点」 | 测试 2026-11-10 G02；报告 291 §四 | `core/run/run_result.gd`（`arrived_count`）、`core/text/ui_text.gd`（`ledger.visited`） | 无 | 作者一句：保留，或回退改名 |
+
+### 缺素材或真人数据
+
+| # | 事项 | 来源 | 代码入口 | 缺什么 | 验收 |
+|---|---|---|---|---|---|
+| M1 | 真实木桩与按真人数据复测 | 242 §四、§九；执行方案 §5 | `tools/build_dummies.gd` → `data/authoring/calibration/dummies.json`（**不存在**）；快照在作者机器 `user://calibration/snapshots.jsonl` / `runs.jsonl` | 作者实玩的校准快照（`/mnt/project-files/calibration` 不存在） | 按构建版本筛选的快照生成木桩并复测；没有时只交采集清单与复测命令，不把脚本撤离率当真人撤离率 |
+| M2 | 配乐素材 | 同 A8 | `data/authoring/audio/music.json` | 曲子与授权 | 曲表填上、`play_music` 在各场景切换 |
+| M3 | 常规事件配图（22 个非教程事件无图） | E3；238 | `assets/events/`、`data/authoring/events/*.json` 的 `image` | 场景图 | 盘点表里的缺口逐项有图 |
+| M4 | 界面过渡第二、三批（叠层弹出、搜索格翻亮、墨迹换屏等） | 231 §三（第一批已落地，见下表） | `ui/ui_motion.gd`（`pop` 等已写好、没有调用方） | 界面动画线程的样稿与数值（231 §七） | 每处按样稿落地，`ui_fades` 关掉时不放 |
+| M5 | 玩家包冒烟（启动、存读档、一局结算） | 执行方案 §6 第 3 条 | `export_presets.cfg`、`tools/export.bat` | 导出模板与 Windows 环境（本环境未核实是否有） | 记录引擎 / 模板版本与实际结果；缺环境时记具体错误与未验证范围 |
+| M6 | 敌人棋盘外框 / 铭牌按种类与强度区分 | `/mnt/project-files/reference/待做-界面.md`（文件存在，2026-10-21） | `ui/game/battle_screen.gd`、`assets/ui/board/` | 美术 | 每类一套外框与铭牌 |
+
+### 核过、不列入待办
+
+| 事项 | 结论 | 证据 |
 |---|---|---|
-| 套装、道具跨域效果、包体加成、敌人 `loadout`（架构 9 节） | 已实现、暂无内容；第一份内容待流派 / 掉落设计需要时再写 | `core/sets`、`set_editor`、`test_sets`、`ItemDef.set_id / effects / bag_mods`、`LootRegistry` 四种效果、`EnemyDef.loadout`、`RunState.tracker` 接线、面板 / 悬浮窗套装行（约 1.2k 行） |
-| 非矩形自由容器 `GridInventory._blocked`（架构 14 节预留） | 生产里每个容器都是矩形，`set_blocked` 只有测试调；139 仓库放大格子之后仍是矩形 | `is_blocked / set_blocked`、三处放置判定、扩容 / 重置、存档键 `"blocked"`、`drag_layer` 与 `inventory_view` 各一处读（约 35 行） |
-| `HunterMechanic.count_by_scale` | `ascension_1.json` 没填：按规模配几个猎手用默认（`default_count`），「用默认」就是生效的规则 | 不往 JSON 里补占位值；要按规模调时直接填 |
-| `EnemyPoolEntry.min_danger` | 两份池子都没写，默认 0，条件永远成立 | 字段 + 一行判定 |
-| `DropRule.treasure_modified` | 没写，默认 true；珍宝概率是 0 时没有可观测效果 | 字段 + 一处分支 |
+| 279 定调 ②（品质对每下叠层加不加层） | **已定**：作者 2026-11-05 08:11 选「照加」，v5.12 的每下判别已去掉 | 281 §二；architecture v5.18（PR #465） |
+| 288 第 8 条（灼伤 / 燃血的火焰跳会点亮「受伤时」） | **已按推荐落地**：只改帮助页文字，代码行为不变；只有作者想让 buff 伤害一律不触发时才重开 | 288 §三 待定 1、§五 v5.37（PR #511） |
+| 284 NPC 名字与台词、285 券图、286、287、289、290 | 全部已落地 | v5.45（PR #521）、v5.44（PR #520）、v5.34、v5.35、v5.38、v5.39～v5.41 |
+| 旧版「下一步」（059 顺序、069 八步、第 8 阶段 8-1～8-4 起步） | 全部完成，挪进下面「历史」 | 060～068、070～075、076～082 |
 
-## 分支与工作目录
+### 索引里状态过期的行
 
-- `main`（远端同步）包含全部工作：M1～M6、探索度、作者七条与设想（052 / 053）。
-- `m6-scene-flow` 已并入 `main`，可以删；`m4-enemy-pool` 远端还在，但它的头不是 `main` 的祖先，删前先核对；`author-seven-map-rules` 远端已删。
-- `G:\oziuc\背包搜打撤-m4` 是一个 worktree（M4～M6 在这里做，与 `main` 同一提交），可以 `git worktree remove` 掉。
-- `G:\oziuc\背包搜打撤` 主目录：`git checkout main && git pull` 即可拿到全部。
+`docs/reports/README.md` 下列行的状态仍写「待执行 / 执行中」，实际已落地（本次不改索引，只登记）：
 
-## 下一步
+| 报告 | 索引写的 | 实际 | 证据 |
+|---|---|---|---|
+| 098 存档迁移链 | 待执行 | 已落地 | architecture v2.08；`core/meta/meta_migrations.gd`、`core/run/run_migrations.gd` |
+| 099 背包里切信仰 | 待执行 | 已落地 | architecture v2.08 |
+| 100 内容管线收口 | 待执行 | 已落地 | architecture v2.09；`core/authoring/content_check.gd`、`tools/check_content.gd`、`ContentPaths.EDITOR_ONLY_KINDS` |
+| 101 RunState / GameFlow 拆分 | 待执行 | 已落地 | architecture v2.15～v2.19；`core/run/run_hooks.gd`、`core/meta/achievements.gd`、`tests/test_layering.gd` |
+| 102 测试归位与 test.sh | 待执行 | 已落地 | architecture v2.14；`tests/` 分层目录、`tools/test.sh`、`tools/class_cache.gd` |
+| 103 战斗规则七条 | 待执行 | 已落地 | architecture v2.11（设计）、v2.22 / v2.73（轴表扩充）；`core/battle/stat_axes.gd`、`battle_sim.gd:33` 加时。另：architecture §4.3 小标题（第 768 行）仍写「待实现」，也过期 |
+| 104 神明总表落地 | 待执行 | 已落地 | architecture v2.12 |
+| 105 信仰效果进编译器 | 待执行 | 已落地 | architecture v2.20、v2.21；`core/battle/compile_input.gd` |
+| 106 标准轴补三条 + 护盾外框 | 待执行 | 已落地 | architecture v2.22 |
+| 108 武器附加效果统一接口 | 执行中 | 已落地 | architecture v2.26；`BattleCompiler._attach`（`core/battle/compiler.gd:299`） |
+| 109 第五条 FIRE → ELEMENT | 执行中 | 已落地，后又被 133 单一乘区整体取代 | architecture v2.26、v2.48 |
+| 231 界面过渡动画 | 已派执行（批一） | 第一批已落地；第二、三批未落地（转 M4） | PR #342（`git log`）：`ui/ui_motion.gd`、`ui/widgets/duel_medal.gd`、`tests/ui/test_ui_motion_231.gd`；补充二 v3.85；`UiMotion.pop` 无调用方 |
+| 246 补充三（三场一级、满 27 次） | 派执行中 | 已落地 | architecture v4.30 |
 
-作者已拍板，按 059 第四节的顺序做：~~地上（离开发生过事的点时清）~~ 完成（060）→ ~~仓库格子化、`MetaRules`、结算屏一键置入、图鉴~~ 完成（061）→ ~~buff 骨架~~ 完成（062）→ ~~事件层与容器屏合一~~ 完成（063）→ ~~开局预选与 `CharacterDef`~~ 完成（067）→ ~~搜索揭示~~ 完成（068）→ **节点外框（可选，作者说只是观感）**。
-作者的新设想（[069](reports/archive/069-difficulty-mechanics-and-hunters.md)，等拍板）：**进阶难度是机制清单不只是数值**（`DifficultyDef` + `RunMechanic` 构件），
-侵蚀改成高难度才开的机制、延后；**伪 PVP 猎手**：地图上移动的单位，行动逻辑是构件，强度按探索度开打那一刻现造，胜率对参考玩家调到 50%。
-八个问题作者已答（第七节），按第八节的顺序做：~~难度骨架~~ 完成（070）→ ~~猎手核心~~ 完成（071）→ ~~角色技能接口~~ 完成（072）→ ~~校准工具~~ 完成（073，数值等多场测试）→ ~~侵蚀本体~~ 完成（075）。**069 全部做完**。第 8 阶段按 076 的切法做：~~8-1 传送点~~ 完成 → ~~8-3 事件构件~~ 完成（077）→ ~~8-2 沙漏与塔~~ 完成（078，内容等作者）→ 8-4 道具与敌人：世界观已答一半（神话为重、帝国必要、身份多样、**信仰体系** = 道具一级分类与激活规则，提议见 080）→ 信仰体系 ✅（081：标签机制、最后置入决定激活、休眠、敌人只信一个神）→ 局内技能与信力 ✅（082）→ 序章教程 ✅（083）→ 各信仰的道具族、太阳与火之神的火焰道具、敌人改名换装、事件文字 道具与敌人 → 8-5 局外成长（含领地、感知提示、迎战 / 逃跑事件屏、六种战败后果）→ 角色技能接口 → 校准工具（木桩）→ 侵蚀本体。
-再之后是第 8 阶段内容扩充（道具、敌人、事件、新章节地图形态、扩展移动机制）。053 的三 + 二已做（2026-10-01）。
+## 占位数值核实
+
+按 [执行方案](plans/2026-11-09-claude-next-execution.md) §3 第 5 条。「仍是占位」= 作者没定、也没经过台架；「已校准但待真人验证」= 架构设计按台架定过数，没有真人数据；「已有定案」= 作者明确定的（或明确认可推荐）。
+
+| 数 | 现值 | 位置 | 分类 | 依据 |
+|---|---|---|---|---|
+| 目标胜率：普通 / 精英 | 约七成 / 约五成 | 242 §3.3 | 仍是占位（建议） | 242 §3.3「目标带的具体数留作者定」 |
+| 目标胜率：猎手 | 五成 | 242 §3.3 | 已有定案 | 073 作者定 |
+| 战斗力估算系数 | 全表 | `data/authoring/balance/power_weights.json` | 仍是占位 | 文件 `_说明`「全是占位」；242 §九 建议先改锤 / 秘银 / 毒刀 |
+| 武器伤害带（白 ≤ 8 / 绿 10～12 / 蓝 14～17 / 紫 20～24） | 按带落数 | `data/authoring/items/` | 已校准但待真人验证 | 279 §八 架构设计定调；v5.12～v5.16 台架（`reports/balance/2026-11-04-w279.md`） |
+| 橙带 | 48～56 | 同上 | 已校准但待真人验证 | 作者 08:11「大幅提升」；281 §三、v5.18 台架 |
+| 红武裸数 DPS | 180～220 | 8 件红武 | 已校准但待真人验证（机制未做） | 281 §八 09:05 架构设计定；v5.20 |
+| 品质每档（×1.1、暴击 +5 点、个数 +1、上限 2、取较高、卖价不涨） | 同左 | `BattleCompiler.quality_stats` | 已有定案 | 279 待定 12～16：作者 2026-11-04 17:00「可以」；每下叠层照加 = 作者 08:11 |
+| 法杖威力系数 | 1 / 1.15 / 1.3 / 1.45（大法师杖装晶后进橙带） | 法杖 `combat.power_mult` | 已校准但待真人验证 | 273；281 §八 09:05 |
+| 劣化版持有 / 掉落概率 | 持有 1% ×（1 + 进阶级），上限 5%；掉落 20% + 10% × 进阶级 | `core/run/red_sources.gd` | 仍是占位（按推荐落地） | 281 §七 待定 7（没回音按推荐）；作者只定了「极低概率」 |
+| 寂灭计数 | 10 次变色、50 次全黑 | `core/run/jimie_path.gd` | 已有定案 | 作者 2026-11-05 10:47 原文 |
+| 刹那 / 断水的次数（50 次经过、30 胜、三次抉择） | 未实装 | — | 已有定案（未实装） | 作者 11:37 原文 |
+| 收费预设价格 | 清单定价之和 × 集市倍数 | `GameFlow.preset_price`；倍数 `MarketRules.price_mult` 默认 1.0 | 规则已有定案；集市倍数仍是占位 | 285 待定 5（按推荐）；`data/authoring/base_rules/market.json` 名字自带「（占位）」 |
+| 局内商店：10 件、包 30%、金银 35%、商人钱袋 100 + 200 × 深度、收购价 × 0.3 | 同左 | `core/run/economy_rules.gd:26-42`、`economy_rules/standard.json` | 仍是占位（按推荐落地，未经平衡） | 290 待定 1～10 全按推荐；`economy_rules/standard.json` 名为「标准经济（占位）」 |
+| 付费撤离点费用 | 50 | `core/run/economy_rules.gd:56` | 仍是占位 | 同文件第 4、55 行注释「作者给的占位」 |
+| 托付格子 | 3 × 3（科技可扩） | `core/meta/meta_rules.gd:20` `safe_size` | 仍是占位 | 092；287 只改概念不改数 |
+| 全局倒计时 | 魔法废墟 36 / 60 / 90；机关沙漏 24 / 40 / 60 | `chapters/free_mode.json`、`clockwork_hourglass.json` | 仍是占位 | 092（占位）；281 §八 13:08 执行定的沙漏三档 |
+| 大型图规模参数 | `placeholder: true` | `chapters/free_mode.json:367`、`map_scale_profile.gd:31,92` | 仍是占位 | 053（作者「具体留空」） |
+| 稀有度每格价 | 表 | `core/inventory/item_value.gd:12` | 仍是占位 | 文件注释「占位数值」 |
+| 仓库大小 | 10 × 8（科技加行） | `core/meta/meta_rules.gd:12` | 仍是占位 | 文件注释 |
+| 基地出售回定价几成 | 0.5 | `core/meta/meta_rules.gd:18` | 已有定案 | 091 作者定 |
+| 魔晶石耐久 | 满 27 次、三场一级 | 魔晶石道具 `wear` | 已有定案 | 246 补充三，作者 10:37 选定；v4.30 |
+| 掉落 / 携带 / 节点规则 / 敌人池整份 | 全表 | `drop_rules/standard.json`、`carry_rules/standard.json`、`node_rules/standard.json`、`enemy_pools/standard_ruins.json`、`hunters.json` | 仍是占位（档位武器上限等少数字段经台架调过） | 各文件 `display_name` 自带「（占位）」；279 v5.12～v5.14 只动了 `weapon_rarity_cap` / `weapon_no_true_damage` |
+| 常规事件结果权重 | item / restore / story | `core/run/node_rules.gd:11,32` | 仍是占位 | 文件注释 |
+
+## 已实现、暂无内容的字段（140 登记，本次复核）
+
+| 什么 | 2026-11-10 复核 |
+|---|---|
+| 套装（`core/sets`、`set_editor`、`ItemDef.set_id`） | 仍无内容：`data/sets/` 为空，道具没有 `set_id` |
+| 道具跨域效果 `ItemDef.effects` | 仍无内容（道具 JSON 顶层没有 `effects` 键） |
+| 包体加成 `bag_mods` | **已有内容**：8 件道具在用 |
+| 敌人 `loadout` | **已有内容**：10 个敌人在用 |
+| 非矩形容器 `GridInventory.set_blocked` | **已在用**：`core/run/character_def.gd:105` |
+| `EnemyPoolEntry.min_danger` | **已在用**：`enemy_pools/clockwork.json` 3 处 |
+| `HunterMechanic.count_by_scale` | 仍没填（四份难度都没有） |
+| `DropRule.treasure_modified` | 仍没填（两份掉落规则都没有） |
+
+## 历史
+
+| 阶段 | 报告 | 架构版本 | 一句话 |
+|---|---|---|---|
+| M1～M6 | 001～057 | — | 背包、战斗、内容管线、地图、节点内容、存档、场景流；循环闭合 |
+| 作者提议 058 / 059 | 060～068 | — | 地上按点清、仓库格子化与图鉴、buff 骨架、事件层、开局预选、搜索揭示（外框可选，没做） |
+| 069 难度与猎手 / 第 7 阶段侵蚀 | 070～075 | — | 难度是机制清单、猎手、角色技能、校准工具、侵蚀 |
+| 第 8 阶段内容扩充（进行中） | 076～ | — | 传送点、事件构件、格阵模板、世界观与信仰体系、局内技能 |
+| 三张序章 | 083、085、113、114 | — | 序章之后只有自由模式（现为魔法废墟 / 机关沙漏） |
+| 架构体检 | 097～109 | v2.07～v2.26 | 存档迁移、内容管线收口、RunState 拆分、测试归位、战斗规则、信仰进编译器 |
+| 界面与美术大改 | 约 170～271 | v3.00～v4.98 | 悬浮窗定稿、开局 / 基地 / 结算重做、英文、音效、字号三档、集市、后勤 |
+| 平衡方法 | 151、242 | v4.23、v4.24 | 木桩 + 扫表 + 对局记录；首跑结论见 242 §九（历史结论，不代表当前版本） |
+| 武器网与红武 | 272～281 | v5.00～v5.27 | 战记、法杖系数、拼接 / 砧 / 品质、紫橙、极端武器、红武数据与寂灭来路 |
+| 近期规则重做 | 282～290 | v5.28～v5.46 | NPC、材料节点、收费预设、配方悬浮窗与营地砧、托付、文本普查、耐力来源、局内商店 |
+| 完成度评估 | 238 | v4.16 时 | 历史评估：机制 9.5、内容 5、数值 2……（数量已过时，不直接照搬） |
+
+旧版「留给作者定的」长清单与「分支与工作目录」（Windows 路径、`m4-enemy-pool` 等）已过时，见 `git show b1c0f009:docs/status.md`；仍未定的几条已并入上面「需要作者决定」。

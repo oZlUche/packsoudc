@@ -75,6 +75,44 @@ static func frame_storeroom_page(t: TestCase, root: Window) -> void:
 	Support.cleanup(PREFIX)
 
 
+## 测试报告 G03（2026-11-10）：英文大字号「Into the Warehouse」顶出木牌两头 —— 字进树换上主题字后变宽，牌面要跟着撑
+static func frame_storeroom_plank_en_large(t: TestCase, root: Window) -> void:
+	t.begin("G03 · 英文大字号：结算第二页标题木牌按进树后的字宽撑开，字不出牌面")
+	var keep_lang := UiText.lang
+	var keep_size := UiTheme.text_size
+	UiText.lang = "en"
+	UiTheme.set_text_size(&"large")
+	var c = NodeScreens._content()
+	var f := Support.flow(c, PREFIX, 10000.0)
+	var r := Steps177._extracted_result(Steps177._defs(c)[0])
+	f.last_absorbed = {"lit": 0}
+	var screen = load("res://ui/game/result_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	screen.screen = GameFlow.Screen.RESULT
+	screen.size = Vector2(1600, 1000)
+	root.add_child(screen)
+	screen.open({"result": r})
+	screen.ledger().reveal_all()
+	screen.to_step(2)
+	var plank: Control = screen.find_child("TitlePlank", true, false)
+	var title: Label = null
+	if plank != null:
+		var labels: Array = plank.find_children("*", "Label", true, false)
+		title = labels[0] if not labels.is_empty() else null
+	t.check(title != null and title.text == UiText.t("result.store_title"), "牌上是英文标题")
+	if title != null:
+		var need: float = screen.title_width(title)
+		var nine := plank.find_children("*", "NinePatchRect", true, false)
+		var face := (nine[0] as NinePatchRect).size.x if not nine.is_empty() else title.size.x
+		t.check(title.size.x >= need + 119.5, "字框（%.0f）= 字宽（%.0f）+ 两头 60" % [title.size.x, need])
+		t.check(face >= title.size.x + 11.5 and plank.custom_minimum_size.x >= face - 0.5, "九宫图（%.0f）和木牌（%.0f）跟着撑开" % [face, plank.custom_minimum_size.x])
+	screen.free()
+	Support.cleanup(PREFIX)
+	UiText.lang = keep_lang
+	UiTheme.set_text_size(keep_size)
+
+
 static func frame_base_warehouse_wood(t: TestCase, root: Window) -> void:
 	t.begin("228 · 基地「仓库」页的「一键置入」「整理」也是木牌（home 原尺寸），不再是平按钮")
 	var c = NodeScreens._content()

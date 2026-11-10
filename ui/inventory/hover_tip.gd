@@ -901,6 +901,9 @@ func hide_tip() -> void:
 ## 作者 2026-10-17：叫出悬浮窗的源（按钮、图鉴格、地图点、buff 图标）鼠标离开时调这个 —— 没钉住就收；钉住了留着，离开窗 [constant AWAY_SEC] 秒才收
 func release() -> void:
 	_on_source = false
+	if not is_inside_tree():     # 页面已经拆下（离开休息点时 mouse_exited 晚到）：直接收，不取鼠标位置
+		hide_tip()
+		return
 	if not _panel.pinned and not _held_by_recipe(get_global_mouse_position()):
 		hide_tip()
 

@@ -180,3 +180,19 @@ static func run_offer_row(t: TestCase) -> void:
 		for r in def.offerings:
 			var mult := "[color=@faith]×%s[/color]" % TextTemplate.num((r as OfferingRule).multiplier)
 			t.check(sec.contains("[center]%s[/center]" % mult), "%s：图标下写 %s" % [id, mult])
+
+
+## 测试报告 G01（2026-11-10）：离开休息点时页面先拆下，源的 mouse_exited 晚到 —— release() 不再向离树的窗取鼠标位置（以前报 get_viewport() is null）
+static func frame_release_off_tree(t: TestCase, root: Window) -> void:
+	t.begin("G01 · 页面拆下后再 release：直接收起，不取鼠标位置")
+	var host := Control.new()
+	host.size = Vector2(1600, 900)
+	root.add_child(host)
+	var tip := HoverTip.new()
+	host.add_child(tip)
+	tip.show_text("帐篷", Vector2(200, 200))
+	t.check(tip.is_showing(), "开着")
+	root.remove_child(host)
+	tip.release()
+	t.check(not tip.is_showing(), "离树后 release：收起")
+	host.free()

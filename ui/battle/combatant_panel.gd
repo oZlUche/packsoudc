@@ -549,41 +549,64 @@ func _draw() -> void:
 			_draw_armor_frame(y)
 		y += BAR_H + BAR_GAP
 
+	_layout_chips(y)
+	for chip in _chips:
+		var rect: Rect2 = chip[0]
+		var id: String = chip[1]
+		var def: BuffDef = buff_defs.get(StringName(id), null)
+		var tex := icon_texture(id)
+		var text := chip_text(id)
+		var drawn := rect
+		var k := 1.0
+		if id == _pop_id and _pop_t < 1.0:     # 157：刚上身的那一格从小弹到原大
+			k = lerpf(POP_FROM, 1.0, _pop_t)
+			drawn = Rect2(rect.get_center() - rect.size * k * 0.5, rect.size * k)
+		var group := _group_of(id)
+		if bronze:
+			_draw_slot(drawn)
+			if tex != null:
+				drawn = Rect2(drawn.position + Vector2(1, 1) * k, Vector2(EffectIcons.SIZE, EffectIcons.SIZE) * k * 0.9)
+		if tex != null:
+			_draw_icon_chip(id, def, group, tex, drawn, k)
+		else:
+			_draw_text_chip(id, group, text, drawn, k)
+		_draw_timer_ring(id, drawn, EffectIcons.tint_of(id, def, group))
+
+
+## 图标格的矩形（不画）：从 y 往下排，排满一行换行；[member _chips] = [rect, id]
+func _layout_chips(y: float) -> void:
 	_chips.clear()
 	_chip_y = y + 4
-	if not _stacks.is_empty() or not passives.is_empty():
-		y += 4
-		var left := ART_TROUGH_X if bronze else float(PAD)
-		var x := left
-		var row_h := SLOT_SIZE.y if bronze else float(CHIP_H)
-		for id in ordered_ids():
-			var def: BuffDef = buff_defs.get(StringName(String(id)), null)
-			var tex := icon_texture(String(id))
-			var text := chip_text(String(id))
-			var w := EffectIcons.SIZE if tex != null else label_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 14
-			if bronze:
-				w = maxf(w, SLOT_SIZE.x) if tex == null else SLOT_SIZE.x
-			if x + w > size.x - PAD:
-				x = left
-				y += row_h + 4
-			var rect := Rect2(x, y, w, row_h)
-			var drawn := rect
-			var k := 1.0
-			if String(id) == _pop_id and _pop_t < 1.0:     # 157：刚上身的那一格从小弹到原大
-				k = lerpf(POP_FROM, 1.0, _pop_t)
-				drawn = Rect2(rect.get_center() - rect.size * k * 0.5, rect.size * k)
-			var group := _group_of(String(id))
-			if bronze:
-				_draw_slot(drawn)
-				if tex != null:
-					drawn = Rect2(drawn.position + Vector2(1, 1) * k, Vector2(EffectIcons.SIZE, EffectIcons.SIZE) * k * 0.9)
-			if tex != null:
-				_draw_icon_chip(String(id), def, group, tex, drawn, k)
-			else:
-				_draw_text_chip(String(id), group, text, drawn, k)
-			_draw_timer_ring(String(id), drawn, EffectIcons.tint_of(String(id), def, group))
-			_chips.append([rect, String(id)])
-			x += w + 6
+	if _stacks.is_empty() and passives.is_empty():
+		return
+	y += 4
+	var left := ART_TROUGH_X if bronze else float(PAD)
+	var x := left
+	var row_h := SLOT_SIZE.y if bronze else float(CHIP_H)
+	for id in ordered_ids():
+		var tex := icon_texture(String(id))
+		var w := EffectIcons.SIZE if tex != null else label_font.get_string_size(chip_text(String(id)), HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 14
+		if bronze:
+			w = maxf(w, SLOT_SIZE.x) if tex == null else SLOT_SIZE.x
+		if x + w > size.x - PAD:
+			x = left
+			y += row_h + 4
+		_chips.append([Rect2(x, y, w, row_h), String(id)])
+		x += w + 6
+
+
+## 测试用：不画，只把图标格排出来（和 [method _draw] 同一套）
+func layout_chips() -> void:
+	if label_font == null:
+		return
+	var y := 0.0 if bronze else float(PAD)
+	if show_title:
+		y += 26
+	for key in _ordered_keys():
+		if key == ARMOR_KEY or int((_resources[key] as Array)[1]) <= 0:
+			continue
+		y += float(ART_BAR_H + ART_BAR_GAP) if bronze else float(BAR_H + BAR_GAP)
+	_layout_chips(y)
 
 
 ## 175 补 5.5：图标格 —— 单色图按 [method EffectIcons.tint_of] 着色（保底的彩色成品用白），层数描边画在右下角；悬停时垫一层淡底

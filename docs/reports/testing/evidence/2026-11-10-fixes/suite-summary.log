@@ -1,0 +1,63 @@
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] <anonymous lambda> (res://tests/ui/test_run_records_261.gd:208)
+         [1] with_text_size (res://ui/ui_theme.gd:382)
+         [2] frame_shelf_art (res://tests/ui/test_run_records_261.gd:205)
+         [3] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_rack_beside_board (res://tests/ui/test_sell_tools_268.gd:231)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_badge_and_ground (res://tests/ui/test_shop_keys.gd:161)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_tent (res://tests/ui/test_shop_tent_233.gd:53)
+         [1] _process (res://tests/run_tests.gd:131)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_tent (res://tests/ui/test_shop_tent_233.gd:61)
+         [1] _process (res://tests/run_tests.gd:131)
+======================================================
+通过  39276 项断言，294 个套件，耗时 401292 ms
+======================================================
+WARNING: 79 RIDs of type "CanvasItem" were leaked.
+   at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2735)
+WARNING: 1375870 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 3875 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+EXIT=0
+EXIT=0
+DONE

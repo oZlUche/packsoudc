@@ -190,25 +190,41 @@ func _title_plank(text: String) -> Control:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	TextFit.shrink_label_height(title, float(rect[3]), PLANK_TITLE_SIZE)     # 258：牌面高是图定的，字高过它就缩回小档
-	var text_w := title.get_minimum_size().x
-	var plank := Vector2(maxf(float(rect[2]), text_w + float(m[0]) + float(m[2])), float(rect[3]))
-	var img := Vector2(plank.x + 2.0 * float(rect[0]), plank.y + float(rect[1]) + 6.0)
-	box.custom_minimum_size = img
 	var tex := UiTheme.art_cached(PLANK_ART)
+	var n: NinePatchRect = null
 	if tex != null:
-		var n := NinePatchRect.new()
+		n = NinePatchRect.new()
 		n.texture = tex
 		n.patch_margin_left = int(m[0])
 		n.patch_margin_top = int(m[1])
 		n.patch_margin_right = int(m[2])
 		n.patch_margin_bottom = int(m[3])
 		n.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		n.size = Vector2(img.x, tex.get_size().y)
 		box.add_child(n)
 	title.position = Vector2(float(rect[0]), float(rect[1]))
-	title.size = plank
 	box.add_child(title)
+	_fit_plank(box, title, n, rect, m)
+	# 测试报告 G03（英文大字号）：没进树时量的是默认字体，进树换上主题字后字变宽 —— 主题一换（进树当场）、字宽一变都按新宽重排牌面
+	title.theme_changed.connect(_fit_plank.bind(box, title, n, rect, m))
+	title.minimum_size_changed.connect(_fit_plank.bind(box, title, n, rect, m))
 	return box
+
+
+## 标题一行字的宽（按字体量；标签的最小宽不是字宽）
+static func title_width(title: Label) -> float:
+	var f := title.get_theme_font("font")
+	return f.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x if f != null else title.get_minimum_size().x
+
+
+## 牌面宽 = max(图的牌宽, 字宽 + 左右边距)，九宫图与字框跟着
+static func _fit_plank(box: Control, title: Label, n: NinePatchRect, rect: Array, m: Array) -> void:
+	var text_w := title_width(title)
+	var plank := Vector2(maxf(float(rect[2]), text_w + float(m[0]) + float(m[2])), float(rect[3]))
+	var img := Vector2(plank.x + 2.0 * float(rect[0]), plank.y + float(rect[1]) + 6.0)
+	box.custom_minimum_size = img
+	if n != null:
+		n.size = Vector2(img.x, n.texture.get_size().y)
+	title.size = plank
 
 
 ## 177 第 1 步（撤离）/ 唯一一步（战败）：标题牌，下面账单（224），账单下居中「继续」（全显之前不可点）。

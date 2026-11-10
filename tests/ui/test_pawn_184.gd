@@ -113,7 +113,8 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 
 	# 作者 10-27：focus = 人在安全区正中；空格回正、按住锁住；走一步之后镜头不动（不再调 follow_current）
 	view.focus(here)
-	var mid_ok := view.paper().grow(-maxf(view.safe_rect().size.x, view.safe_rect().size.y) / view.zoom).has_point(view.positions()[here])
+	var inner := view.paper().grow(-maxf(view.safe_rect().size.x, view.safe_rect().size.y) / view.zoom)
+	var mid_ok := inner.size.x > 0.0 and inner.size.y > 0.0 and inner.has_point(view.positions()[here])     # 缩没了 = 没有离纸边够远的地方
 	t.check(not mid_ok or view.to_screen(view.positions()[here]).distance_to(view.safe_rect().get_center()) < 0.5, "回正：人在正中央（离纸边够远时）")
 	# 复测 #361：靠纸边的点回正时纸仍盖满安全区（顶栏下不露出纸外桌面）
 	var bare := []

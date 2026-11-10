@@ -84,7 +84,7 @@ static func run_tooltip_uses_sentence(t: TestCase) -> void:
 	db.load_dir()
 	var charm := ItemInstance.create(db.get_def(&"charm_brute"))
 	var text := Glossary.strip_bbcode(ItemTooltip.describe(charm))
-	t.check(text.contains("武器增伤 15%"), "写成「武器增伤 15%」：%s" % text)
+	t.check(text.contains("武器增伤 15%"), "写成「武器增伤 15%%」：%s" % text)
 	t.check(not text.contains("增益槽 ×") and not text.contains("给站在那儿的邻居"), "旧句子删了")
 	var full := ItemTooltip.describe_full(charm)
 	t.check(String(full["body"]).contains("term:增益槽"), "行首是增益图标（链到「增益槽」词条）")

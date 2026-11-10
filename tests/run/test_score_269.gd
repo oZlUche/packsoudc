@@ -127,3 +127,28 @@ static func frame_records_score(t: TestCase, root: Window) -> void:
 	t.check(win.detail_text().contains(UiText.t("records.detail_score") + " " + UiText.t("records.no_score")), "老行详情：「—」")
 	screen.queue_free()
 	Records._cleanup()
+
+
+## 测试报告 G02（2026-11-10）：「走过的点」数到过的点 —— 没撤的付费出口、没歇的休息点也算；同一个点来回只算一次
+static func run_visited_counts_arrivals(t: TestCase) -> void:
+	t.begin("G02 · 走过的点 = 到过的不同点（出生点算），不再只数内容用掉了的点")
+	var Grid := load("res://tests/meta/test_meta_grid.gd")
+	var c = Grid._content()
+	var s: RunState = Grid._extracted(c, 21, Grid._kit(c))
+	var spawn := s.travel.current_id
+	var others: Array[int] = []
+	for id in s.map.node_ids():
+		if id != spawn and not s.map.get_node(id).is_visited() and others.size() < 3:
+			others.append(id)
+	t.eq(others.size(), 3, "找得到三个没用过的点")
+	for id in others:
+		s.travel.history.append(id)
+	s.travel.history.append(others[0])     # 回头又到一次
+	var r := RunResult.settle(s)
+	t.eq(r.visited, 4, "出生点 + 三个到过但没用掉的点 = 4（来回只算一次）")
+	s.travel.history.clear()
+	var consumed := 0
+	for id in s.map.node_ids():
+		if s.map.get_node(id).is_visited():
+			consumed += 1
+	t.eq(RunResult.settle(s).visited, consumed, "没有走过的记录时退回数用掉的点")
