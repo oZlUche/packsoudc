@@ -114,9 +114,7 @@ static func _sheet_rows(buf: PackedByteArray, shared: Array[String]) -> Array:
 						if col >= 0:
 							var v: Variant = _value(kind, text, shared)
 							if v != null:
-								if not rows.has(row):
-									rows[row] = {}
-								rows[row][col] = v
+								(rows.get_or_add(row, {}) as Dictionary)[col] = v
 								max_row = maxi(max_row, row)
 						col = -1
 	var out: Array = []

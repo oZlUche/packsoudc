@@ -827,14 +827,15 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 				lost.append(inst)
 		if m.board.item_count() == 0:
 			m.board = null
-	for key in d.get("codex", {}):
-		m.codex[String(key)] = int((d["codex"] as Dictionary)[key])
-	for id in d.get("active_buffs", []):
-		m.active_buffs.append(StringName(String(id)))
-	for id in d.get("unlocks", []):
-		m.unlocks.append(StringName(String(id)))
-	for id in d.get("keepsakes", []):
-		m.keepsakes.append(StringName(String(id)))
+	# 原样读回的字段（存档的键 = 字段名）：id 列表、字符串 → 数的表、单个数
+	for key in ["active_buffs", "unlocks", "keepsakes", "bag_grants", "seen_rules", "briefing_seen", "reactions_seen"]:
+		for id in d.get(key, []):
+			(m.get(key) as Array).append(StringName(String(id)))
+	for key in ["codex", "achievements", "chapter_extractions", "flags"]:
+		for k in d.get(key, {}):
+			(m.get(key) as Dictionary)[String(k)] = int((d[key] as Dictionary)[k])
+	for key in ["score", "runs", "extractions", "deaths", "best_value", "boss_kills", "battles_won", "market_seed"]:
+		m.set(key, int(d.get(key, 0)))
 	m._next_uid = int(d.get("next_uid", 1))
 	for inst in m.warehouse.items():
 		m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)
@@ -847,8 +848,6 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)
 	for id in rack_lost:
 		push_warning("MetaState.from_dict: 包架上的 %s 内容里已经没有，丢弃" % id)
-	for id in d.get("bag_grants", []):
-		m.bag_grants.append(StringName(String(id)))
 	for raw in d.get("favorites", []):     # 265：改了名的按新名（173），退役的丢掉
 		var fid := IdAliases.item(StringName(String(raw)))
 		if (items == null or items.get_def(fid) != null) and not m.favorites.has(fid):
@@ -859,11 +858,6 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		m.funds += value
 		if report != null:
 			report.refund((inst as ItemInstance).def.id, value, "warehouse")
-	m.score = int(d.get("score", 0))
-	m.runs = int(d.get("runs", 0))
-	m.extractions = int(d.get("extractions", 0))
-	m.deaths = int(d.get("deaths", 0))
-	m.best_value = int(d.get("best_value", 0))
 	m.best_run = MapGraph.normalize(d.get("best_run", {})) if d.get("best_run", {}) is Dictionary else {}
 	m.last_character = StringName(String(d.get("last_character", "")))
 	for e in d.get("last_carry", []):     # 277
@@ -871,22 +865,8 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 			var o: Array = (e as Dictionary).get("origin", [0, 0])
 			m.last_carry.append({"id": String(e["id"]), "origin": [int(o[0]), int(o[1])] if o.size() >= 2 else [0, 0], "rot": int((e as Dictionary).get("rot", 0))})
 	m.last_carry_funds = maxi(0, int(d.get("last_carry_funds", 0)))
-	for key in d.get("achievements", {}):
-		m.achievements[String(key)] = int((d["achievements"] as Dictionary)[key])
-	for key in d.get("chapter_extractions", {}):
-		m.chapter_extractions[String(key)] = int((d["chapter_extractions"] as Dictionary)[key])
-	m.boss_kills = int(d.get("boss_kills", 0))
-	m.battles_won = int(d.get("battles_won", 0))
-	for id in d.get("seen_rules", []):
-		m.seen_rules.append(StringName(String(id)))
 	for id in d.get("coach_seen", []):
 		m.coach_seen.append(String(id))
-	for id in d.get("briefing_seen", []):
-		m.briefing_seen.append(StringName(String(id)))
-	for id in d.get("reactions_seen", []):
-		m.reactions_seen.append(StringName(String(id)))
-	for key in d.get("flags", {}):
-		m.flags[String(key)] = int((d["flags"] as Dictionary)[key])
 	for row in d.get("history", []):
 		if row is Dictionary:
 			m.history.append(MapGraph.normalize(row))
@@ -903,7 +883,6 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		if items != null and items.get_def(id) == null:
 			continue
 		m.market_stock.append({"id": String(id), "sold": bool((row as Dictionary).get("sold", false)), "locked": bool((row as Dictionary).get("locked", false))})     # 270：老档没锁
-	m.market_seed = int(d.get("market_seed", 0))
 	m.market_refreshes = maxi(0, int(d.get("market_refreshes", 0)))
 	m.market_stall = StringName(String(d.get("market_stall", "")))
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过

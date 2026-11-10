@@ -8,7 +8,7 @@ extends EventOutcome
 func apply(ctx: EventContext) -> void:
 	var fid := faith
 	if fid == &"":
-		fid = ctx.active_faith_id()
+		fid = ctx.hooks.active_faith_id()
 	if fid == &"" or ctx.items == null:
 		return
 	for c in [ctx.board, ctx.storage]:

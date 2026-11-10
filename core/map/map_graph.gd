@@ -227,9 +227,7 @@ func _ensure_index() -> void:
 	_incident = {}
 	for e in edges:
 		for end in [e.from_id, e.to_id]:
-			if not _incident.has(end):
-				_incident[end] = []
-			(_incident[end] as Array).append(e)
+			(_incident.get_or_add(end, []) as Array).append(e)
 	_index_valid = true
 #endregion
 

@@ -6,7 +6,7 @@ extends EventCondition
 
 
 func check(ctx: EventContext) -> bool:
-	return ctx.tag_present(tag)
+	return ctx.hooks.has_buff_tag(tag)
 
 
 func describe() -> String:

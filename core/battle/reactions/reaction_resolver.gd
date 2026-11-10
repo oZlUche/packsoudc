@@ -166,8 +166,7 @@ static func elements_of_rules(rules: Array) -> Array[StringName]:
 		if rule == null:
 			continue
 		for e in rule.effects:
-			for el in _elements_of_effect(e):
-				found[el] = true
+			found[_element_of_effect(e)] = true
 	var out: Array[StringName] = []
 	for el in ELEMENTS:
 		if found.has(el):
@@ -175,16 +174,12 @@ static func elements_of_rules(rules: Array) -> Array[StringName]:
 	return out
 
 
-static func _elements_of_effect(e) -> Array[StringName]:
-	var out: Array[StringName] = []
-	var el := &""
+static func _element_of_effect(e) -> StringName:
 	if e is ApplyStatus and (e as ApplyStatus).buff != null:
-		el = (e as ApplyStatus).buff.element
-	elif e is ConvertStatus and (e as ConvertStatus).to != null:
-		el = (e as ConvertStatus).to.element
-	if el != &"":
-		out.append(el)
-	return out
+		return (e as ApplyStatus).buff.element
+	if e is ConvertStatus and (e as ConvertStatus).to != null:
+		return (e as ConvertStatus).to.element
+	return &""
 
 
 ## 一件道具（编译后，含别人挂上来的规则）带的元素
@@ -227,23 +222,17 @@ static func reactions_between(mine: Array, others: Array) -> Array[ReactionDef]:
 static func before_status(ctx: BattleContext, victim: CombatantRuntime, def: BuffDef, n: int) -> int:
 	if ctx == null or victim == null or victim.dead or ctx.reacting > 0 or def == null or def.element == &"":
 		return n
-	return _react(ctx, victim, def, n, 0)
-
-
-## 伪代码：找层数最多的异色印，有就结算。返回新印还剩几层要叠（反应表里没有这一对 = 不反应，整份照常叠）
-static func _react(ctx: BattleContext, victim: CombatantRuntime, incoming: BuffDef, n: int, uid: int) -> int:
-	var present := strongest_other(victim, incoming.element)
+	var present := strongest_other(victim, def.element)
 	if present == &"":
 		return n
-	var def := find(present, incoming.element)
-	if def == null:
+	var reaction := find(present, def.element)
+	if reaction == null:
 		return n
-	return n - _resolve(ctx, victim, def, present, incoming.element, n, uid)
+	return n - _resolve(ctx, victim, reaction, present, def.element, n)
 
 
 ## 结算一次，返回 N。补充三（作者更正）：N = min(已有, 新来)，两边各扣 N
-static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: ReactionDef, present: StringName, incoming: StringName,
-		n: int, uid: int) -> int:
+static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: ReactionDef, present: StringName, incoming: StringName, n: int) -> int:
 	ctx.reacting += 1
 	var rc := foe_context(ctx, victim)
 	var stacks := mini(mark_stacks(victim, present), n)     # 伪代码的 maxStackReacted（作者更正为 min）
@@ -253,7 +242,7 @@ static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: Reaction
 		ctx.trace.record(ctx.now, victim.side, BattleTrace.EVENT, {"name": "reaction", "payload": {
 			"reaction": String(def.id), "present": String(present), "incoming": String(incoming), "stacks": stacks}})
 	ctx.emit(BattleEvent.EFFECT_RESOLVED, victim.side, {
-		"effect": EFFECT, "reaction": String(def.id), "uid": 0, "from_uid": uid, "source_side": rc.owner.side,
+		"effect": EFFECT, "reaction": String(def.id), "uid": 0, "from_uid": 0, "source_side": rc.owner.side,
 		"elements": [String(present), String(incoming)], "stacks": stacks,
 	})
 	for e in def.effects_for(stacks):
@@ -273,12 +262,9 @@ static func _consume(rc: RuleContext, who: CombatantRuntime, e: StringName, n: i
 	for b in marks:
 		if left <= 0:
 			break
-		var id := b.def.id
 		var counted := mini(left, b.stacks)     # 算 N 时算了这么多层（含保底）
-		var removed := who.remove_buff_stacks(id, counted)
+		RemoveStatus.take(rc, who, b.def.id, counted, REASON)
 		left -= counted
-		if removed > 0:
-			rc.battle.emit(BattleEvent.STATUS_UNSTACKED, who.side, {"buff": String(id), "delta": -removed, "stacks": who.stacks_of(id), "reason": REASON})
 
 
 ## 以 [param victim] 的对手为主人的一份上下文（反应效果、菌血叠毒的施加方都是它）

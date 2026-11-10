@@ -33,9 +33,7 @@ extends Resource
 ## 资产目录里的全部配方，按文件名排
 static func load_all() -> Array[SmithRecipeDef]:
 	var out: Array[SmithRecipeDef] = []
-	for res in ContentPaths.load_resources(ContentPaths.SMITH_RECIPES):
-		if res is SmithRecipeDef:
-			out.append(res)
+	out.assign(ContentPaths.load_typed(ContentPaths.SMITH_RECIPES, SmithRecipeDef))
 	return out
 
 

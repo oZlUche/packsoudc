@@ -40,9 +40,7 @@ static func _build(snapshots: Array[Dictionary], items: ItemDatabase, keyer: Cal
 	var by_bucket := {}
 	for snap in snapshots:
 		var k: String = keyer.call(snap)
-		if not by_bucket.has(k):
-			by_bucket[k] = []
-		(by_bucket[k] as Array).append(snap)
+		(by_bucket.get_or_add(k, []) as Array).append(snap)
 	var out := {}
 	var keys: Array = by_bucket.keys()
 	keys.sort_custom(func(a: String, b: String) -> bool: return int(a) < int(b))

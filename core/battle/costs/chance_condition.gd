@@ -5,7 +5,7 @@
 ## 掷骰在 can_pay 里发生，因此即便同一条规则的其他条件没过，随机流也已经推进了一格。
 ## 结果仍然确定，但 costs 列表里各条的顺序会影响随机序列，不要随意重排。
 class_name ChanceCondition
-extends Cost
+extends Condition
 
 ## 0..100
 @export var percent: int = 50
@@ -16,10 +16,6 @@ func can_pay(ctx: RuleContext) -> bool:
 	return ctx.roll("chance", 1, 100, need) <= need
 
 
-func pay(_ctx: RuleContext) -> void:
-	pass
-
-
 func describe() -> String:
 	return UiText.t("cost.chance") % percent
 
@@ -27,7 +23,3 @@ func describe() -> String:
 ## 151：几率本身
 func estimated_factor(_ctx: PowerContext, _rate: float) -> float:
 	return clampf(percent / 100.0, 0.0, 1.0)
-
-
-func is_condition() -> bool:
-	return true

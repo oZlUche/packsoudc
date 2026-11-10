@@ -166,7 +166,7 @@ static func run_weights(t: TestCase) -> void:
 	var bad: Array[String] = []
 	var w := PowerWeights.load_from(TMP, bad)
 	t.eq(w.per_cell_dps, 3.0, "写了的项生效")
-	t.eq(w.horizon_sec, float(PowerWeights.DEFAULTS["horizon_sec"]), "缺的项用默认")
+	t.eq(w.horizon_sec, PowerWeights.new().horizon_sec, "缺的项用默认")
 	t.eq(w.tiers.size(), 4, "形状不对的不用")
 	var text := "\n".join(bad)
 	for frag in ["没有这个系数 'nope'", "'tiers' 得是 4 个数", "'heal_weight' 得是数"]:

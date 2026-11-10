@@ -47,12 +47,7 @@ func matches(def: ItemDef, active: bool) -> bool:
 		return false
 	if require_active and not active:
 		return false
-	if tags.is_empty():
-		return true
-	for tag in tags:
-		if def.tags.has(tag):
-			return true
-	return false
+	return tags.is_empty() or def.has_any_tag(tags)
 
 
 ## 从命中件里挑（[member pick] > 0 才挑）。[param uids] 要按 uid 升序传进来 ——

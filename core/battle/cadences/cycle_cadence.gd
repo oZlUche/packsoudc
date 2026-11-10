@@ -30,25 +30,13 @@ func _steps(ctx: RuleContext) -> int:
 	return steps_of(ctx.item_stat(BattleStats.LOAD_STEPS, 0))
 
 
-## 单次冷却的实际时长：和总冷却同一套（属性优先、吃急速、下限 0.01 秒）
-func _step_duration(ctx: RuleContext) -> int:
-	var from_stats := ctx.item_stat(BattleStats.STEP_COOLDOWN, -1)
-	var period := from_stats if from_stats > 0 else StatMath.from_float(step_seconds)
-	period = maxi(MIN_PERIOD, period)
-	if not use_haste:
-		return period
-	var rate := maxi(1, ctx.item_stat(BattleStats.HASTE, StatMath.ONE))
-	@warning_ignore("integer_division")
-	return maxi(MIN_PERIOD, (period * StatMath.ONE) / rate)
-
-
 func commit(ctx: RuleContext, now: int) -> void:
 	var st := ctx.state()
 	var steps := _steps(ctx)
 	var i := int(st.get(INDEX, 0)) % steps
 	st[FIRED] = i
 	if i < steps - 1:
-		st[READY_AT] = now + chilled(ctx, _step_duration(ctx))     # 175 补充四：寒冷也拉长单次冷却
+		st[READY_AT] = now + chilled(ctx, _duration(ctx, BattleStats.STEP_COOLDOWN, step_seconds))     # 175 补充四：寒冷也拉长单次冷却
 		st[INDEX] = i + 1
 	else:
 		st[READY_AT] = now + chilled(ctx, _duration(ctx))     # 一轮读完（只有一颗 / 没有时每一下都是）：总冷却

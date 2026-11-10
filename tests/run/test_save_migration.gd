@@ -25,7 +25,7 @@ static func run_meta_chain(t: TestCase) -> void:
 	t.begin("098 · 局外存档迁移链：每一版有冻结样本，升到当前版本后读得回来、字段没走形")
 	# 链上每一级都得有一步迁移和一份样本 —— 这两条守着「升版忘了写迁移」
 	for v in range(1, MetaState.SAVE_VERSION):
-		t.check(MetaMigrations.STEPS.has(v), "有 v%d → v%d 的迁移" % [v, v + 1])
+		t.check(int(MetaMigrations.upgrade({"version": v})["version"]) > v, "有 v%d → v%d 的迁移" % [v, v + 1])
 		t.check(FileAccess.file_exists(_fixture(v)), "有 v%d 的冻结样本 %s" % [v, _fixture(v)])
 
 	var text := FileAccess.get_file_as_string(_fixture(1))
@@ -74,7 +74,7 @@ static func run_unknown_versions(t: TestCase) -> void:
 static func run_run_chain(t: TestCase) -> void:
 	t.begin("098 · 一局档走同一条链，允许作废：升不上去返回 null，局外不受影响")
 	for v in range(1, RunState.SAVE_VERSION):
-		t.check(RunMigrations.STEPS.has(v), "有 v%d → v%d 的迁移" % [v, v + 1])
+		t.check(int(RunMigrations.upgrade({"version": v})["version"]) > v, "有 v%d → v%d 的迁移" % [v, v + 1])
 	var db := _db()
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()

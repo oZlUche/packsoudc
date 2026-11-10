@@ -125,6 +125,11 @@ static func load_resources(dir_path: String) -> Array[Resource]:
 	return out
 
 
+## 同 [method load_resources]，只留 [param type] 这个类型的；调用方用 `assign` 装进自己的数组
+static func load_typed(dir_path: String, type: Script) -> Array:
+	return load_resources(dir_path).filter(func(res: Resource) -> bool: return is_instance_of(res, type))
+
+
 ## 173 §3.5：内容版本戳 —— 道具、标签、信仰、章节、敌人、事件的资产文件名排序后的哈希（前 12 位）。写进存档头，
 ## 读档时报告「这份档存于内容版本 X，现为 Y」，只作诊断、不参与判断。一次进程算一次
 static var _stamp: String = ""

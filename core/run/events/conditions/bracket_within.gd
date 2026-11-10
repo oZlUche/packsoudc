@@ -7,7 +7,7 @@ extends EventCondition
 
 
 func check(ctx: EventContext) -> bool:
-	var b := ctx.bracket_now()
+	var b := ctx.hooks.bracket()
 	return b >= 0 and b >= min_bracket and (max_bracket < 0 or b <= max_bracket)
 
 

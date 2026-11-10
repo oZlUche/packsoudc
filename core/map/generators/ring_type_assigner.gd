@@ -88,9 +88,7 @@ func _index_routes() -> void:
 	_routes_of = {}
 	for i in _g.routes.size():
 		for id in (_g.routes[i]["node_ids"] as Array):
-			if not _routes_of.has(int(id)):
-				_routes_of[int(id)] = [] as Array[int]
-			(_routes_of[int(id)] as Array[int]).append(i)
+			(_routes_of.get_or_add(int(id), [] as Array[int]) as Array[int]).append(i)
 
 
 ## 高危区里先凑够精英与搜索点。**被吸收进来的路线节点不许当必须型**（036）——
@@ -787,9 +785,7 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 	var by_ring := {}
 	for id in graph.node_ids():
 		var r := int(graph.get_node(id).layout.get("ring", -1))
-		if not by_ring.has(r):
-			by_ring[r] = [] as Array[int]
-		(by_ring[r] as Array[int]).append(id)
+		(by_ring.get_or_add(r, [] as Array[int]) as Array[int]).append(id)
 
 	# --- 环配额 ---
 	var quota: Dictionary = rules.get("quota", {})

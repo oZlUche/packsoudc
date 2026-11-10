@@ -115,9 +115,7 @@ func refresh_event_index() -> void:
 			if trigger == null:
 				continue
 			for n in trigger.subscribed_events():
-				if not _by_event.has(n):
-					_by_event[n] = [] as Array[RuleRuntime]
-				(_by_event[n] as Array[RuleRuntime]).append(rule_rt)
+				(_by_event.get_or_add(n, [] as Array[RuleRuntime]) as Array[RuleRuntime]).append(rule_rt)
 
 
 func is_listening(n: StringName) -> bool:

@@ -150,18 +150,11 @@ func _table_for(def: ItemDef) -> PackedInt32Array:
 func accepts(def: ItemDef) -> bool:
 	if def == null:
 		return false
-	if not only_tags.is_empty() and not _has_any_tag(def, only_tags):
+	if not only_tags.is_empty() and not def.has_any_tag(only_tags):
 		return false
-	if not reject_tags.is_empty() and _has_any_tag(def, reject_tags):
+	if not reject_tags.is_empty() and def.has_any_tag(reject_tags):
 		return false
 	return not accept_filter.is_valid() or bool(accept_filter.call(def))
-
-
-static func _has_any_tag(def: ItemDef, tags: Array[StringName]) -> bool:
-	for t in def.tags:
-		if tags.has(t):
-			return true
-	return false
 
 
 ## 该定义在本容器中是否作为「包」生效。

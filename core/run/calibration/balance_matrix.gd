@@ -57,21 +57,12 @@ static func cell(specs: Array[CombatantSpec], pool: EnemyPool, enemies: EnemyDat
 		dur += result.duration_sec()
 		if result.winner == 0:
 			wins += 1
-			hp_left += hp_ratio(result, 0)
+			var left: Variant = BattleMetrics.hp_ratio(result, 0)     # 终局快照里没有算 0
+			hp_left += float(left) if left != null else 0.0
 		elif result.is_draw():
 			draws += 1
 	return {"fights": built, "wins": wins, "draws": draws, "rate": float(wins) / built if built > 0 else 0.0,
 		"duration": dur / built if built > 0 else 0.0, "hp_left": hp_left / wins if wins > 0 else 0.0}
-
-
-## 打完时 [param side] 剩的生命比例（0～1）
-static func hp_ratio(result: BattleResult, side: int) -> float:
-	var sides: Array = result.final.get("sides", [])
-	if side >= sides.size():
-		return 0.0
-	var res: Dictionary = (sides[side] as Dictionary).get("resources", {})
-	var hp: Array = res.get(BattleStats.RES_HP, res.get("hp", [0, 0]))
-	return float(hp[0]) / float(hp[1]) if hp.size() >= 2 and float(hp[1]) > 0.0 else 0.0
 
 
 ## 全表。木桩按（流派, 段）分组。返回 {archetypes, brackets, tiers, steps: {段 → [起, 止]}, cells: {"流派/段" → {档 → 格}}}
@@ -94,9 +85,7 @@ static func run(dummies: Dictionary, pool: EnemyPool, enemies: EnemyDatabase, it
 			brackets.append(k)
 		steps[k] = d.get("steps", [0, -1])
 		var g := "%s/%d" % [a, k]
-		if not groups.has(g):
-			groups[g] = [] as Array[CombatantSpec]
-		(groups[g] as Array[CombatantSpec]).append(DummyBuilder.compile(d, items))
+		(groups.get_or_add(g, [] as Array[CombatantSpec]) as Array[CombatantSpec]).append(DummyBuilder.compile(d, items))
 	brackets.sort()
 	var node := MapNode.new()
 	node.id = 0
@@ -149,16 +138,18 @@ static func _rate(result: Dictionary, a: String, k: int, tier: int) -> float:
 	return float((row[tier] as Dictionary)["rate"]) if row.has(tier) else -1.0
 
 
-static func _table(result: Dictionary, name: String, note: String, fmt: Callable) -> Array[String]:
-	var tiers: Array = result["tiers"]
-	var out: Array[String] = ["## %s" % name, "", note, ""]
-	var head := "| 段 | 流派 |"
-	var rule := "|---|---|"
+## 表头两行：[param head] 与 [param rule] 是前几列，后面每档一列
+static func _tier_head(head: String, rule: String, tiers: Array) -> Array[String]:
 	for t in tiers:
 		head += " 档 %d |" % t
 		rule += "---|"
-	out.append(head)
-	out.append(rule)
+	return [head, rule] as Array[String]
+
+
+static func _table(result: Dictionary, name: String, note: String, fmt: Callable) -> Array[String]:
+	var tiers: Array = result["tiers"]
+	var out: Array[String] = ["## %s" % name, "", note, ""]
+	out.append_array(_tier_head("| 段 | 流派 |", "|---|---|", tiers))
 	for k in result["brackets"]:
 		for a in result["archetypes"]:
 			var row: Dictionary = (result["cells"] as Dictionary).get("%s/%d" % [a, k], {})
@@ -175,13 +166,7 @@ static func _table(result: Dictionary, name: String, note: String, fmt: Callable
 static func _spread(result: Dictionary) -> Array[String]:
 	var tiers: Array = result["tiers"]
 	var out: Array[String] = ["## 四 同段五路极差", "", "同一段同一档，各流派胜率最高减最低（百分点）。大 = 某一路的道具偏强或偏弱，回第〇层（151 表）找那一类", ""]
-	var head := "| 段 |"
-	var rule := "|---|"
-	for t in tiers:
-		head += " 档 %d |" % t
-		rule += "---|"
-	out.append(head)
-	out.append(rule)
+	out.append_array(_tier_head("| 段 |", "|---|", tiers))
 	for k in result["brackets"]:
 		var line := "| %d（%s） |" % [k, _steps_text(result, k)]
 		for t in tiers:
@@ -217,13 +202,7 @@ static func _variants(result: Dictionary) -> Array[String]:
 		return [] as Array[String]
 	var tiers: Array = result["tiers"]
 	var out: Array[String] = ["## 五 兵刃变体", "", "同一份道具、同样的摆法，只差一局的加成；每格是这一路减兵刃（对照）的胜率，百分点。量写死耐力消耗吃打折之后的偏移", ""]
-	var head := "| 段 | 变体 |"
-	var rule := "|---|---|"
-	for t in tiers:
-		head += " 档 %d |" % t
-		rule += "---|"
-	out.append(head)
-	out.append(rule)
+	out.append_array(_tier_head("| 段 | 变体 |", "|---|---|", tiers))
 	for k in result["brackets"]:
 		for a in result["archetypes"]:
 			var base := String(groups.get(a, ""))

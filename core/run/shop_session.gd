@@ -375,18 +375,10 @@ func _stock() -> void:
 		board.try_add(ItemInstance.create(picks[k], 0))
 
 
+## 按权重抽一个下标；总权重 ≤ 0 就等概率抽一个
 static func _weighted(rng: RandomNumberGenerator, weights: Array[float]) -> int:
-	var total := 0.0
-	for w in weights:
-		total += w
-	if total <= 0.0:
-		return rng.randi_range(0, weights.size() - 1)
-	var x := rng.randf() * total
-	for j in weights.size():
-		x -= weights[j]
-		if x <= 0.0:
-			return j
-	return weights.size() - 1
+	var k := MapRng.pick_index(weights, rng)
+	return k if k >= 0 else rng.randi_range(0, weights.size() - 1)
 
 
 ## 209：按 [member EconomyRules.shop_bag_slot_chance] 加一个包：包池权重 × 稀有度权重（随深度）。随机数另起一条
@@ -455,12 +447,7 @@ static func candidates(p_rules: EconomyRules, p_items: ItemDatabase) -> Array[St
 		var d := p_items.get_def(id)
 		if d == null or d.is_bag or d.is_bullion():     # 244：金银另抽（[method _roll_bullion]），不进权重池
 			continue
-		var excluded := false
-		for tag in d.tags:
-			if p_rules.shop_exclude_tags.has(tag):
-				excluded = true
-				break
-		if not excluded:
+		if not d.has_any_tag(p_rules.shop_exclude_tags):
 			out.append(id)
 	out.sort()
 	return out

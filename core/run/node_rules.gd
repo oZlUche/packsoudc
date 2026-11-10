@@ -89,17 +89,11 @@ func loss_cost_of(type: StringName) -> int:
 static func _weighted(table: Dictionary, rng: RandomNumberGenerator, fallback: StringName) -> StringName:
 	var keys: Array = table.keys()
 	keys.sort()   # 顺序稳定，同种子同结果
-	var total := 0.0
+	var weights: Array[float] = []
 	for k in keys:
-		total += maxf(0.0, float(table[k]))
-	if total <= 0.0:
-		return fallback
-	var x := rng.randf() * total
-	for k in keys:
-		x -= maxf(0.0, float(table[k]))
-		if x <= 0.0:
-			return StringName(String(k))
-	return StringName(String(keys[keys.size() - 1]))
+		weights.append(maxf(0.0, float(table[k])))
+	var i := MapRng.pick_index(weights, rng)
+	return StringName(String(keys[i])) if i >= 0 else fallback
 
 
 ## 事件层（063）：节点类型 → {事件 id: 权重}。生成地图时按它给每个点定一个事件（[EventPlacer]），踩上去先过事件屏。

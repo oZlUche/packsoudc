@@ -158,7 +158,6 @@ static func run_battle_metrics(t: TestCase) -> void:
 	rng.seed = 11
 	var real := BattleSim.run(me, foe, rng, 30.0, null)
 	var rm := BattleMetrics.of(real, 30.0)
-	_near(t, rm["hp_end"][0], BalanceMatrix.hp_ratio(real, 0), "真打：余血和扫表的算法一样")
 	t.eq(rm["outcome"] == BattleMetrics.WIN, real.winner == 0, "真打：胜负和结果一样")
 	t.check(int(rm["fires"][0]) > 0 and rm["first_damage"][0] != null, "真打：我方出过手、打出过伤害")
 

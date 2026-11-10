@@ -930,9 +930,7 @@ func _spawn_zone(r: int) -> bool:
 		"cap": clampi(_cfg.effective_zone_soft_cap(), _rules().min_size, _rules().max_size),
 		"anchor": int(pick[0]), "first": int(pick[1]), "members": [] as Array[int],
 	}
-	if not _zones_on_route.has(int(pick[2])):
-		_zones_on_route[int(pick[2])] = [] as Array[int]
-	(_zones_on_route[int(pick[2])] as Array[int]).append(int(head["id"]))
+	(_zones_on_route.get_or_add(int(pick[2]), [] as Array[int]) as Array[int]).append(int(head["id"]))
 	_zone_heads.append(head)
 	_claim(head, int(pick[1]))
 	_grow_zone_once(head)       # 视作新起点并立刻推算一次
@@ -1187,9 +1185,7 @@ func _isolate_zones() -> void:
 				# 后处理的那片会把先处理的那片算好的数目顶破
 				_graph.remove_edge(e)
 				continue
-			if not by_gate.has(gate):
-				by_gate[gate] = [] as Array[MapEdge]
-			(by_gate[gate] as Array[MapEdge]).append(e)
+			(by_gate.get_or_add(gate, [] as Array[MapEdge]) as Array[MapEdge]).append(e)
 			if _protected_edges.has(MapJunctions.edge_key(e.from_id, e.to_id)):
 				forced[gate] = true
 
@@ -1470,9 +1466,7 @@ static func bad_crossings(graph: MapGraph) -> Array:
 		if ra == rb or mini(ra, rb) == 0:
 			continue
 		var key := maxi(ra, rb)
-		if not buckets.has(key):
-			buckets[key] = [] as Array[MapEdge]
-		(buckets[key] as Array[MapEdge]).append(e)
+		(buckets.get_or_add(key, [] as Array[MapEdge]) as Array[MapEdge]).append(e)
 	var out: Array = []
 	var keys: Array = buckets.keys()
 	keys.sort()

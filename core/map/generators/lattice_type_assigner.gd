@@ -23,9 +23,7 @@ func assign(g: MapGraph, rules: LatticeTypeRules, rng: RandomNumberGenerator) ->
 	note = ""
 	for id in g.node_ids():
 		var r := int(g.get_node(id).layout.get("row", -1))
-		if not _by_row.has(r):
-			_by_row[r] = [] as Array[int]
-		(_by_row[r] as Array[int]).append(id)
+		(_by_row.get_or_add(r, [] as Array[int]) as Array[int]).append(id)
 	for id in g.entry_ids:
 		g.get_node(id).type = &"spawn"
 		_fixed[id] = true

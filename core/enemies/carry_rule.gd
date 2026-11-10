@@ -47,12 +47,7 @@ func candidates(items: ItemDatabase, rarity_cap: int) -> Array[StringName]:
 			continue
 		if cap >= 0 and d.rarity > cap:
 			continue
-		var hit := false
-		for t in tags:
-			if d.tags.has(t):
-				hit = true
-				break
-		if hit:
+		if d.has_any_tag(tags):
 			out.append(id_)
 	Ids.sort(out)
 	return out
@@ -74,16 +69,14 @@ func roll(items: ItemDatabase, strength: int, rarity_cap: int, rng: RandomNumber
 	for i in n:
 		if pool.is_empty():
 			break
-		var total := 0.0
+		var weights: Array[float] = []
 		for id_ in pool:
-			total += weight(items.get_def(id_))
-		var r := rng.randf() * total
-		var pick := pool[pool.size() - 1]
-		for id_ in pool:
-			r -= weight(items.get_def(id_))
-			if r <= 0.0:
-				pick = id_
-				break
+			weights.append(weight(items.get_def(id_)))
+		var k := MapRng.pick_index(weights, rng)
+		if k < 0:     # 权重全是 0（价值的幂大到溢出）：以前照样掷一次、落在第一件，随机数流不能变
+			rng.randf()
+			k = 0
+		var pick := pool[k]
 		out.append(pick)
 		if not allow_repeat:
 			pool.erase(pick)

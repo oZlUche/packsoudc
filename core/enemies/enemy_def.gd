@@ -60,14 +60,7 @@ func signature_at(p_strength: int) -> Array[StringName]:
 
 ## 这件道具这个身份能不能背（不看流派、稀有度）：没列身份标签 = 都能
 func allows_item(def: ItemDef) -> bool:
-	if item_tags.is_empty():
-		return true
-	if def == null:
-		return false
-	for t in def.tags:
-		if item_tags.has(t):
-			return true
-	return false
+	return item_tags.is_empty() or (def != null and def.has_any_tag(item_tags))
 
 ## 165（作者定）：**身份固定的相邻组合** —— 每组是几件道具 id（`[["longbow", "arrows"]]`）。挑出来的道具里这几件都在时一定摆成一组、
 ## 彼此挨着生效（谁给谁加成看道具自己的相邻标记），不参与自动配对、不被拆。没写就全靠 [method EnemyPlacer.auto_groups] 从道具定义里推。

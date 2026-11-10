@@ -102,9 +102,7 @@ static func _fingerprints(spec: CombatantSpec) -> Dictionary:
 	var out := {}
 	for it in spec.items:
 		var id := String(it.def_id)
-		if not out.has(id):
-			out[id] = []
-		(out[id] as Array).append(ExperimentManifest.canonical_hash([BattleInputCodec.stats_to(it.stats), it.rules.size(), it.power_mult]))
+		(out.get_or_add(id, []) as Array).append(ExperimentManifest.canonical_hash([BattleInputCodec.stats_to(it.stats), it.rules.size(), it.power_mult]))
 	for id in out:
 		(out[id] as Array).sort()
 	return out

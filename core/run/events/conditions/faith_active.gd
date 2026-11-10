@@ -11,9 +11,9 @@ extends EventCondition
 func check(ctx: EventContext) -> bool:
 	if ctx == null:
 		return false
-	if faith != &"" and ctx.active_faith_id() != faith:
+	if faith != &"" and ctx.hooks.active_faith_id() != faith:
 		return false
-	var tier := ctx.faith_tier_now()
+	var tier := ctx.hooks.faith_tier()
 	return tier >= 0 and tier >= min_tier
 
 

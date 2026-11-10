@@ -3,7 +3,7 @@
 ## 百分比按上限算（0..100），绝对值按点数；四个界哪个填了（≥ 0）就检查哪个，全部满足才过。
 ## 「生命高于 70% 时」「耐力不到一半时」用它。导入器要求至少填一个界
 class_name ResourceCondition
-extends Cost
+extends Condition
 
 @export var resource_key: StringName = &"hp"
 ## 看自己（true）还是对手（false）
@@ -43,10 +43,6 @@ func can_pay(ctx: RuleContext) -> bool:
 	return ok != negate
 
 
-func pay(_ctx: RuleContext) -> void:
-	pass
-
-
 ## 142：「若你的生命不低于 70%」「若对手的耐力不到 50%」；几个界都填了就用「、」连起来
 func describe() -> String:
 	var res := Glossary.resource_name(resource_key)
@@ -67,7 +63,3 @@ func describe() -> String:
 func estimated_factor(ctx: PowerContext, _rate: float) -> float:
 	var p := ctx.weights.condition_factor
 	return 1.0 - p if negate else p
-
-
-func is_condition() -> bool:
-	return true

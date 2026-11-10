@@ -11,7 +11,7 @@ func run() -> void:
 	var path: String = args[0] if args.size() > 0 else AssumptionStats.PATH
 	var date := Time.get_date_string_from_system()
 	var out_path: String = args[1] if args.size() > 1 else "%s/%s-assumptions.md" % [BalanceMatrix.OUT_DIR, date]
-	var rows := AssumptionStats.read_rows(path)
+	var rows := CalibrationRecorder.read_all(path)
 	if rows.is_empty():
 		print("没有数据（%s）：先在游戏里打几场，或把导出的 calibration/assumptions.jsonl 路径传进来" % path)
 		finish(1)

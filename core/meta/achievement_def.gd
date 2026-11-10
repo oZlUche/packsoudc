@@ -14,6 +14,8 @@ const KINDS: Array[StringName] = [&"extractions", &"runs", &"deaths", &"best_val
 const TARGETED: Array[StringName] = [&"codex_has", &"chapter_extractions", &"unlock", &"keepsake"]
 ## 只看有没有、不看次数的种类（进度 0 / 1）
 const BINARY: Array[StringName] = [&"codex_has", &"unlock", &"keepsake"]
+## 进度就是 [MetaState] 里同名那个数的种类
+const DIRECT: Array[StringName] = [&"extractions", &"runs", &"deaths", &"best_value", &"score", &"funds", &"boss_kills", &"battles_won"]
 
 @export var id: StringName = &""
 @export var display_name: String = ""
@@ -47,29 +49,15 @@ func goal() -> int:
 func progress(meta: MetaState) -> int:
 	if meta == null:
 		return 0
+	if DIRECT.has(kind):
+		return int(meta.get(kind))
 	match kind:
-		&"extractions":
-			return meta.extractions
-		&"runs":
-			return meta.runs
-		&"deaths":
-			return meta.deaths
-		&"best_value":
-			return meta.best_value
-		&"score":
-			return meta.score
-		&"funds":
-			return meta.funds
 		&"codex_count":
 			return meta.codex.size()
 		&"codex_has":
 			return 1 if meta.codex_lit(target) else 0
 		&"chapter_extractions":
 			return meta.chapter_extractions_of(target)
-		&"boss_kills":
-			return meta.boss_kills
-		&"battles_won":
-			return meta.battles_won
 		&"unlock":
 			return 1 if meta.has_unlock(target) else 0
 		&"keepsake":

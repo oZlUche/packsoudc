@@ -90,12 +90,12 @@ static func run_wired_in_a_run(t: TestCase) -> void:
 	t.check(run.hooks.safe_open(), "开局保险箱没锁：能开")
 	# 事件的条件与后果也只认这张表（EventContext.hooks）
 	var ctx := EventContext.new()
-	t.eq(ctx.bracket_now(), -1, "空上下文：段位 -1")
-	t.eq(ctx.faith_tier_now(), -1, "空上下文：没信仰")
-	t.eq(ctx.active_faith_id(), &"", "空上下文：没激活信仰")
-	t.check(not ctx.tag_present(&"marked") and not ctx.buff_present(&"hardy"), "空上下文：标签与 buff 都查不到")
+	t.eq(ctx.hooks.bracket(), -1, "空上下文：段位 -1")
+	t.eq(ctx.hooks.faith_tier(), -1, "空上下文：没信仰")
+	t.eq(ctx.hooks.active_faith_id(), &"", "空上下文：没激活信仰")
+	t.check(not ctx.hooks.has_buff_tag(&"marked") and not ctx.hooks.has_map_buff(&"hardy"), "空上下文：标签与 buff 都查不到")
 	ctx.hooks = run.hooks
-	t.eq(ctx.faith_tier_now(), run.active_faith_tier(), "接上一局的表：信仰阶和一局一致")
+	t.eq(ctx.hooks.faith_tier(), run.active_faith_tier(), "接上一局的表：信仰阶和一局一致")
 	# 裸 Callable 字段真的没了（防回头：加回一个字段，两边各接一份，就又分叉了）
 	var gone := [&"player_spec", &"loot_context", &"run_context", &"safe_open", &"faith_tier", &"active_faith_id",
 		&"bless_substitute", &"grant_map_buff", &"remove_map_buff", &"has_map_buff", &"has_buff_tag",

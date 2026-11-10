@@ -163,9 +163,7 @@ static func _groups(dummies: Dictionary, items: ItemDatabase) -> Dictionary:
 	for key in keys:
 		var d: Dictionary = dummies[key]
 		var g := "%s/%d" % [String(d.get("archetype", BalanceMatrix.REAL)), int(d.get("bracket", int(String(key))))]
-		if not groups.has(g):
-			groups[g] = []
-		(groups[g] as Array).append({"key": String(key), "dummy": d, "spec": DummyBuilder.compile(d, items), "budget": ScenarioCheck.budget_of(d, items)})
+		(groups.get_or_add(g, []) as Array).append({"key": String(key), "dummy": d, "spec": DummyBuilder.compile(d, items), "budget": ScenarioCheck.budget_of(d, items)})
 	return groups
 
 
@@ -233,9 +231,7 @@ static func summarize(run_out: Dictionary) -> Dictionary:
 	var by_cell := {}
 	for row in cases:
 		var c := String((row as Dictionary)["cell"])
-		if not by_cell.has(c):
-			by_cell[c] = []
-		(by_cell[c] as Array).append(row)
+		(by_cell.get_or_add(c, []) as Array).append(row)
 	var cells := {}
 	for c in by_cell:
 		cells[c] = BalanceStatistics.summarize(by_cell[c])

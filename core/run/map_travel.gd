@@ -87,9 +87,9 @@ func step_to(to_id: int) -> bool:
 ## 将来的传送、定点移动造好自己的意图之后也走这里 —— 顺序、计数、惩罚、事件一处都不用改。
 func apply(intent: MoveIntent) -> bool:
 	# 1. 校验合法
-	var why := _check(intent)
-	if why != "":
-		refused.emit(intent, why, _code_of(intent))
+	var refusal := _refusal(intent)
+	if not refusal.is_empty():
+		refused.emit(intent, refusal[0], refusal[1])
 		return false
 	var dest := graph.get_node(intent.to_id)
 	var first_visit := dest.state == MapNode.State.UNVISITED
@@ -186,34 +186,22 @@ const STALE := &"stale"
 const NO_NODE := &"no_node"
 
 
-## [method _check] 拒绝的是哪一种（和它同一套判断，顺序一样）
-func _code_of(intent: MoveIntent) -> StringName:
+## 这个意图走不了的话：[给开发看的原因, [signal refused] 的 code]；合法返回空
+func _refusal(intent: MoveIntent) -> Array:
 	if graph == null or intent == null:
-		return NO_NODE
-	if intent.kind != MoveIntent.STEP and intent.kind != MoveIntent.TELEPORT or intent.from_id != current_id:
-		return STALE
-	if not graph.has_node(intent.to_id) or intent.to_id == intent.from_id:
-		return NO_NODE
-	if intent.kind == MoveIntent.STEP and MapNavigator.edge_for_step(graph, intent.from_id, intent.to_id) == null:
-		return NOT_ADJACENT
-	return STALE
-
-
-func _check(intent: MoveIntent) -> String:
-	if graph == null or intent == null:
-		return "没有地图"
+		return ["没有地图", NO_NODE]
 	if intent.kind != MoveIntent.STEP and intent.kind != MoveIntent.TELEPORT:
-		return "还不认识 %s 这种移动方式 —— 底层现在实现 step 与 teleport（8-1）" % intent.kind
+		return ["还不认识 %s 这种移动方式 —— 底层现在实现 step 与 teleport（8-1）" % intent.kind, STALE]
 	if intent.from_id != current_id:
-		return "意图过期：它以为在 %d，人在 %d" % [intent.from_id, current_id]
+		return ["意图过期：它以为在 %d，人在 %d" % [intent.from_id, current_id], STALE]
 	if not graph.has_node(intent.to_id) or intent.to_id == intent.from_id:
-		return "没有点 %d 可去" % intent.to_id
+		return ["没有点 %d 可去" % intent.to_id, NO_NODE]
 	# 走一步得有那条路；传送信任解析方（传送点边、事件的后果）—— 它不需要边（8-3）
 	if intent.kind == MoveIntent.STEP and MapNavigator.edge_for_step(graph, intent.from_id, intent.to_id) == null:
-		return "从 %d 走不到 %d" % [intent.from_id, intent.to_id]
+		return ["从 %d 走不到 %d" % [intent.from_id, intent.to_id], NOT_ADJACENT]
 	if intent.action_cost < 0:
-		return "步数不能是负的"
-	return ""
+		return ["步数不能是负的", STALE]
+	return []
 
 
 ## 原地耗掉几个行动点（8-3：事件里扎营、等人）。不挪人，但时间照走：计数 → 侵蚀推进 → 站的这个点照结算。
