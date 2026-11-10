@@ -25,9 +25,7 @@ static func pairs(board: GridInventory, recipes: Array) -> Array[Dictionary]:
 				if o == GridInventory.EMPTY_UID or o <= it.uid:
 					continue
 				var key := Vector2i(it.uid, o)
-				if not edges.has(key):
-					edges[key] = []
-				(edges[key] as Array).append(Vector2(g) + Vector2.ONE * 0.5 + Vector2(d) * 0.5)
+				(edges.get_or_add(key, []) as Array).append(Vector2(g) + Vector2.ONE * 0.5 + Vector2(d) * 0.5)
 	var keys: Array = edges.keys()
 	keys.sort_custom(func(x: Vector2i, y: Vector2i) -> bool: return x.x < y.x or (x.x == y.x and x.y < y.y))
 	for key in keys:

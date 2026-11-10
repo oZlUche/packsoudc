@@ -353,9 +353,7 @@ static func _apply_adjacency(
 					(mod as StatModifier).apply_to(stats[other], 1)
 				for r in profile.grant_rules:     # 108：规则等第 6 步宿主打包好再挂（holder 按 uid 升序，挂的顺序稳定）
 					if r != null:
-						if not attach_pending.has(other):
-							attach_pending[other] = []
-						attach_pending[other].append([r, holder.def.id])
+						(attach_pending.get_or_add(other, []) as Array).append([r, holder.def.id])
 
 		# 受益：点亮几个格，本物品就得几份
 		if not profile.receive_cells.is_empty():
@@ -373,9 +371,7 @@ static func _apply_adjacency(
 					var giver := board.get_item(other)
 					for r in profile.receive_rules:
 						if r != null and giver != null:
-							if not attach_pending.has(uid):
-								attach_pending[uid] = []
-							attach_pending[uid].append([r, giver.def.id])
+							(attach_pending.get_or_add(uid, []) as Array).append([r, giver.def.id])
 	# 148 / 171 供给：装载格上的晶石把自己带的「给宿主的东西」交给宿主。一颗晶石只给一把（[method load_assignments]）；一把一颗一份；用坏了的不给
 	var social := {}
 	for uid in fighters:
@@ -398,9 +394,7 @@ static func _apply_adjacency(
 			if r != null:
 				if cycler and (convert_to(r) != &"" or not applies_of(r).is_empty()):
 					continue     # 175：换型也一样，轮到它那一下才换；补充五：施加元素也是，轮到它那一下才施加
-				if not attach_pending.has(uid):
-					attach_pending[uid] = []
-				attach_pending[uid].append([r, feeder.def.id])
+				(attach_pending.get_or_add(uid, []) as Array).append([r, feeder.def.id])
 	return loads
 
 
@@ -553,12 +547,8 @@ static func load_claimants(board: GridInventory, crystal_uid: int) -> Array[int]
 static func _link(links: Dictionary, a: int, b: int) -> void:
 	if a == b:
 		return
-	if not links.has(a):
-		links[a] = {}
-	if not links.has(b):
-		links[b] = {}
-	links[a][b] = true
-	links[b][a] = true
+	(links.get_or_add(a, {}) as Dictionary)[b] = true
+	(links.get_or_add(b, {}) as Dictionary)[a] = true
 
 
 ## 占住指定标记格的邻居，**去重**后按 uid 升序返回。

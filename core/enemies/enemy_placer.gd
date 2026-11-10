@@ -881,12 +881,8 @@ static func auto_groups(
 		if not earlier.is_empty():
 			cands.assign(earlier)
 		var j := cands[rng.randi_range(0, cands.size() - 1)]
-		if not edges.has(i):
-			edges[i] = []
-		if not edges.has(j):
-			edges[j] = []
-		(edges[i] as Array).append(j)
-		(edges[j] as Array).append(i)
+		(edges.get_or_add(i, []) as Array).append(j)
+		(edges.get_or_add(j, []) as Array).append(i)
 	var seen := {}
 	for i in defs.size():
 		if not edges.has(i) or seen.has(i):

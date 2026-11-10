@@ -250,9 +250,7 @@ static func _restore_charges(board: GridInventory, content: Dictionary) -> void:
 		var e := raw as Dictionary
 		if e.has(CrystalRoll.CHARGES):
 			var id := String(e.get("id", ""))
-			if not left.has(id):
-				left[id] = []
-			(left[id] as Array).append(e)
+			(left.get_or_add(id, []) as Array).append(e)
 	if left.is_empty() or board == null:
 		return
 	for raw in board.items():

@@ -59,9 +59,7 @@ func to_save() -> Dictionary:
 	var out := {}
 	for inst in _list:
 		var key := String(inst.def.id)
-		if not out.has(key):
-			out[key] = []
-		(out[key] as Array).append(inst.uid)
+		(out.get_or_add(key, []) as Array).append(inst.uid)
 	return out
 
 

@@ -85,9 +85,7 @@ static func run(dummies: Dictionary, pool: EnemyPool, enemies: EnemyDatabase, it
 			brackets.append(k)
 		steps[k] = d.get("steps", [0, -1])
 		var g := "%s/%d" % [a, k]
-		if not groups.has(g):
-			groups[g] = [] as Array[CombatantSpec]
-		(groups[g] as Array[CombatantSpec]).append(DummyBuilder.compile(d, items))
+		(groups.get_or_add(g, [] as Array[CombatantSpec]) as Array[CombatantSpec]).append(DummyBuilder.compile(d, items))
 	brackets.sort()
 	var node := MapNode.new()
 	node.id = 0

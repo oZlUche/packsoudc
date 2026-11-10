@@ -175,6 +175,4 @@ static func _condition(text: String, where: String, problems: Array[String]) -> 
 
 
 static func _push(f: Dictionary, key: String, entry: Dictionary) -> void:
-	if not f.has(key):
-		f[key] = []
-	(f[key] as Array).append(entry)
+	(f.get_or_add(key, []) as Array).append(entry)

@@ -58,9 +58,7 @@ static func validate(graph: MapGraph, v: MapValidation) -> void:
 	var by_row := {}
 	for id in graph.node_ids():
 		var r := int(graph.get_node(id).layout.get("row", -1))
-		if not by_row.has(r):
-			by_row[r] = [] as Array[int]
-		(by_row[r] as Array[int]).append(id)
+		(by_row.get_or_add(r, [] as Array[int]) as Array[int]).append(id)
 
 	# --- 每层配额 ---
 	var quota_rules: Dictionary = rules.get("quota", {})

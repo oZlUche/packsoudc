@@ -274,9 +274,7 @@ static func bracket_table(rows: Array) -> Array[String]:
 	var groups := {}
 	for r in rows:
 		var b := bracket_of(r as Dictionary, tables)
-		if not groups.has(b):
-			groups[b] = []
-		(groups[b] as Array).append(r)
+		(groups.get_or_add(b, []) as Array).append(r)
 	var keys: Array = groups.keys()
 	keys.sort()
 	var head := "| 系数 |"

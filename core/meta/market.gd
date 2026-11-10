@@ -148,9 +148,7 @@ static func _draw(from: Array, rules: MarketRules, items: ItemDatabase, rng: Ran
 	var tiers := {}
 	for j in from.size():
 		var r := items.get_def(from[j]).rarity
-		if not tiers.has(r):
-			tiers[r] = []
-		(tiers[r] as Array).append(j)
+		(tiers.get_or_add(r, []) as Array).append(j)
 	var keys := tiers.keys()
 	keys.sort()
 	var weights: Array[float] = []
