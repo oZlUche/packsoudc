@@ -43,6 +43,19 @@ func tick(_delta: float) -> bool:
 	return true
 
 
+## 命令行参数分两类：`--键=值`（`--键` 单独出现记为 "true"）进 opts，其余按顺序进 pos
+static func split_args(args: PackedStringArray) -> Dictionary:
+	var pos: Array[String] = []
+	var opts := {}
+	for a in args:
+		if a.begins_with("--"):
+			var kv := a.substr(2).split("=", true, 1)
+			opts[kv[0]] = kv[1] if kv.size() > 1 else "true"
+		else:
+			pos.append(a)
+	return {"pos": pos, "opts": opts}
+
+
 ## 一批作者 JSON（路径 → 字典）按导出器格式写盘：内容没变的跳过，写了的各打一行。返回写了几份；
 ## 有一份写不了就打一句、[method finish](1)、返回 -1 —— 调用方见负数直接 return（xlsx → JSON 的两个工具用）
 func write_json_if_changed(out: Dictionary) -> int:

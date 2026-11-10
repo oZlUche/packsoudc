@@ -166,12 +166,12 @@ static func _exclusion(row: Dictionary, kind: String, items: ItemDatabase) -> St
 	if not (s is float or s is int) or float(s) != floorf(float(s)):
 		return R_BAD_SEED
 	if kind == SNAPSHOTS and items != null:
-		return _layout_problem(row, items)
+		return layout_problem(row, items)
 	return ""
 
 
-## 棋盘：每件都认得（改过名的按 [IdAliases] 认），每件都能按记的落点、朝向摆回去
-static func _layout_problem(row: Dictionary, items: ItemDatabase) -> String:
+## 棋盘：每件都认得（改过名的按 [IdAliases] 认），每件都能按记的落点、朝向摆回去；摆得回去返回空串（[ScenarioCheck] 也用）
+static func layout_problem(row: Dictionary, items: ItemDatabase) -> String:
 	var layout: Variant = row.get("layout")
 	var size_raw: Variant = row.get("board_size")
 	if not (layout is Array) or not (size_raw is Array) or (size_raw as Array).size() < 2:

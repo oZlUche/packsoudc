@@ -1,0 +1,23 @@
+{
+  "build_id": "git:900f6bfc57e2+wip?",
+  "config": {
+    "chapter": "free_mode",
+    "difficulty": "ascension_3",
+    "dummies": "res://docs/reports/balance/inputs/2026-11-10-archetypes.json",
+    "fights": 100,
+    "hunter": "hunter_1",
+    "mode": "bare_node",
+    "pool": "hunters",
+    "seed": 1,
+    "time_limit": 600.0,
+    "tool": "bench_hunters"
+  },
+  "content_hash": "5c6c5a11a5e8c3c8",
+  "engine_version": "4.7.1-stable (official) a13da4feb",
+  "experiment_id": "exp-1a1c5497359-bd43ea61",
+  "schema_version": 1,
+  "seed_manifest": "seeds.json",
+  "source": "synthetic",
+  "started_at": "2026-11-10T11:48:07Z",
+  "suite_hash": "59a163e66c4cc832"
+}

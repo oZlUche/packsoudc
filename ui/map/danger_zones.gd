@@ -233,10 +233,17 @@ static func draw_shape(ci: CanvasItem, shape: Dictionary, light: bool, fade: flo
 	var poly: PackedVector2Array = shape["poly"]
 	if poly.size() < 3 or k <= 0.0:
 		return
-	ci.draw_colored_polygon(poly, Color(tint, FILL_ALPHA * k))
+	if fillable(poly):
+		ci.draw_colored_polygon(poly, Color(tint, FILL_ALPHA * k))
 	for ip in shape["inner"]:
-		ci.draw_colored_polygon(ip, Color(tint, INNER_ALPHA * k))
+		if fillable(ip):
+			ci.draw_colored_polygon(ip, Color(tint, INNER_ALPHA * k))
 	dashed_loop(ci, poly, Color(edge, EDGE_ALPHA * k), EDGE_WIDTH, DASH, GAP)
+
+
+## 剖得开才填：偶尔有自相交或退化的一块（测试 v5.49：引擎报 triangulation failed），那一块只画虚线边
+static func fillable(poly: PackedVector2Array) -> bool:
+	return poly.size() >= 3 and not Geometry2D.triangulate_polygon(poly).is_empty()
 
 
 ## 闭合虚线：实 [param dash] / 空 [param gap]，跨顶点连续计长

@@ -59,7 +59,7 @@ UNEXPECTED="$(grep -E '^(USER )?ERROR:' "$LOG" | grep -vEf "$ALLOWED")"
 if [ -n "$UNEXPECTED" ]; then
   echo ""
   echo "!! 日志中有意料之外的 ERROR（负向用例故意造的错要登记在 tools/expected_errors.txt），判为失败"
-  grep -nE '^(USER )?ERROR:' "$LOG" | grep -vEf "$ALLOWED" | head -10
+  printf '%s\n' "$UNEXPECTED" | head -10     # 先过滤再截：白名单锚在行首，加了行号就对不上
   code=1
 fi
 
