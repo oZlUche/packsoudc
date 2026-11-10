@@ -152,11 +152,8 @@ func _view(g: GridInventory, at: Vector2) -> InventoryView:
 	host.position = at
 	host.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(host)
-	var v := InventoryView.new()
-	v.label_font = _font
-	v.inventory = g
+	var v := InventoryView.make(g, _font)
 	v.cell_px = CELL
-	v.show_adjacency = false
 	host.add_child(v)
 	var f := BoardFrame.wrap(v, "anvil")
 	f.position = -Vector2.ONE * f.inset()
@@ -181,11 +178,7 @@ func _hammer_key() -> BaseButton:
 
 ## 空槽里淡刻的形：压在槽上、不吃鼠标，槽里有东西就藏起来
 func _glyph(art: String, slot: Rect2) -> TextureRect:
-	var t := TextureRect.new()
-	t.texture = UiTheme.art_cached(art)
-	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var t := UiTheme.picture(UiTheme.art_cached(art), TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
 	var side := t.texture.get_size() * 0.5 if t.texture != null else Vector2.ZERO
 	t.size = side
 	t.position = slot.get_center() - side * 0.5

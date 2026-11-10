@@ -71,12 +71,9 @@ func open(payload: Dictionary) -> void:
 	_left = _vbox(10)
 	_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_left)
-	_enemy_plate_node = _enemy_plate(_content, Nameplate.COMPACT_PORTRAIT)
+	_enemy_plate_node = _enemy_plate(_content)
 	_left.add_child(_enemy_plate_node)
-	_enemy_view = InventoryView.new()
-	_enemy_view.label_font = font
-	_enemy_view.show_adjacency = true
-	_enemy_view.inventory = flow.run.events.pending_battle_board() if not flow.run.events.pending_battle.is_empty() else EnemyKit.board_of(_content, flow.items)
+	_enemy_view = InventoryView.make(flow.run.events.pending_battle_board() if not flow.run.events.pending_battle.is_empty() else EnemyKit.board_of(_content, flow.items), font, true)
 	_enemy_view.mouse_filter = Control.MOUSE_FILTER_STOP     # 只看（没登记进拖拽层，点了没事），停上去有说明
 	_left.add_child(_enemy_view)
 	BoardFrame.around(_enemy_view, ENEMY_FRAME)
@@ -97,7 +94,7 @@ func open(payload: Dictionary) -> void:
 	_right = _vbox(10)
 	_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_right)
-	_player_plate_node = _player_plate(Nameplate.COMPACT_PORTRAIT)
+	_player_plate_node = _player_plate()
 	_right.add_child(_player_plate_node)
 	_inv = InventoryPanelScript.new()
 	_inv.setup(flow.run, font)
@@ -160,7 +157,7 @@ func open(payload: Dictionary) -> void:
 	corner.alignment = BoxContainer.ALIGNMENT_END
 	corner.custom_minimum_size = Vector2(RETREAT_W, 0)
 	if flow.retreat_reason() == "":
-		_retreat_btn = _make_retreat_key()
+		_retreat_btn = _make_art_key(RETREAT_ART, UiText.t("pre.retreat"), UiText.t("pre.retreat_tip"), func(): retreat())
 		corner.add_child(_retreat_btn)
 	foot.add_child(corner)
 	buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -252,11 +249,6 @@ func retreat() -> String:
 ## 248：这一屏有没有「退回」键
 func retreat_button() -> IconButton:
 	return _retreat_btn
-
-
-## 248：「退回」石键 —— 整图四态（[method IconButton.make_art]），字照 `retreat_key.json` 写（墨色、灰态色、按下下移 1）；缺图退回写字的按钮
-func _make_retreat_key() -> IconButton:
-	return _make_art_key(RETREAT_ART, UiText.t("pre.retreat"), UiText.t("pre.retreat_tip"), func(): retreat())
 
 
 ## 248 / 256：一颗四态整图的平石键（退回、偷袭），字照 `<art>.json` 的 `text_rect` 写

@@ -181,6 +181,8 @@ func _on_list_reloaded() -> void:
 	_slot_of.clear()
 	_name_of.clear()
 	for id in _ids:
+		if not FileAccess.file_exists(_file_of(id)):
+			continue     # 还没存过盘的新条目：盘上没有它的文件
 		var parsed = JSON.parse_string(FileAccess.get_file_as_string(_file_of(id)))
 		if parsed is Dictionary:
 			_name_of[id] = String(parsed.get("display_name", ""))

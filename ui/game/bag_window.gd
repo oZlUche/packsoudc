@@ -74,18 +74,9 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	_grip(grip)
 	_canvas.add_child(grip)
 
-	frame = NinePatchRect.new()
-	frame.name = "Frame_player"
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fs: Dictionary = _spec["board_frame"]
-	frame.texture = EventImage.load_texture(ART_DIR + String(fs.get("file", "frame_player_72.png")))
-	var m := int(fs.get("margin", 54))
-	frame.patch_margin_left = m
-	frame.patch_margin_top = m
-	frame.patch_margin_right = m
-	frame.patch_margin_bottom = m
-	frame.axis_stretch_horizontal = NinePatchRect.AXIS_STRETCH_MODE_TILE
-	frame.axis_stretch_vertical = NinePatchRect.AXIS_STRETCH_MODE_TILE
+	frame = UiTheme.nine_rect(EventImage.load_texture(ART_DIR + String(fs.get("file", "frame_player_72.png"))), int(fs.get("margin", 54)), NinePatchRect.AXIS_STRETCH_MODE_TILE)
+	frame.name = "Frame_player"
 	_canvas.add_child(frame)
 
 	panel = InventoryPanelScript.new()
@@ -196,18 +187,9 @@ func _build_back() -> void:
 ## 一件九宫格皮料（[param stretch] 拉伸；否则平铺）
 func _patch(node_name: String, p_key: String, stretch: bool) -> NinePatchRect:
 	var d: Dictionary = _satchel[p_key]
-	var n := NinePatchRect.new()
-	n.name = node_name
-	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	n.texture = UiTheme.art_cached(SATCHEL_DIR + String(d["file"]).get_basename())
-	var m: Array = d.get("patch_margin", [0, 0, 0, 0])
-	n.patch_margin_left = int(m[0])
-	n.patch_margin_top = int(m[1])
-	n.patch_margin_right = int(m[2])
-	n.patch_margin_bottom = int(m[3])
 	var mode := NinePatchRect.AXIS_STRETCH_MODE_STRETCH if stretch else NinePatchRect.AXIS_STRETCH_MODE_TILE_FIT
-	n.axis_stretch_horizontal = mode
-	n.axis_stretch_vertical = mode
+	var n := UiTheme.nine_rect(UiTheme.art_cached(SATCHEL_DIR + String(d["file"]).get_basename()), d.get("patch_margin", [0, 0, 0, 0]), mode)
+	n.name = node_name
 	return n
 
 

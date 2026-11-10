@@ -44,11 +44,8 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for i in 2:
-		var pic := TextureRect.new()
+		var pic := UiTheme.picture(null, TextureRect.STRETCH_KEEP_ASPECT_COVERED)
 		pic.name = "Layer%d" % i
-		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(pic)
 		_layers.append(pic)
 	resized.connect(_fit_layers)

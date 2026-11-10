@@ -618,20 +618,10 @@ static func dress_chip_option(ob: OptionButton, font_size: int = 16, disabled_in
 	var m: Array = spec.get("nine_slice_margin", [18, 18, 24, 18])
 	var ink := Color(String(spec.get("label", {}).get("colors", {}).get("normal", "#2e2219")))
 	for state in ["normal", "hover", "pressed", "disabled"]:
-		var box := StyleBoxTexture.new()
-		box.texture = art_cached(StoneChip.ART + state)
-		if box.texture == null:
-			box.texture = art_cached(StoneChip.ART + "normal")
-		box.texture_margin_left = float(m[0])
-		box.texture_margin_top = float(m[1])
-		box.texture_margin_right = float(m[2])
-		box.texture_margin_bottom = float(m[3])
-		box.set_expand_margin_all(6.0)
-		box.content_margin_left = StoneChip.PAD_X
-		box.content_margin_right = StoneChip.PAD_X
-		box.content_margin_top = 0.0
-		box.content_margin_bottom = 0.0
-		ob.add_theme_stylebox_override(state, box)
+		var tex := art_cached(StoneChip.ART + state)
+		if tex == null:
+			tex = art_cached(StoneChip.ART + "normal")
+		ob.add_theme_stylebox_override(state, nine_box(tex, m, [StoneChip.PAD_X, 0.0, StoneChip.PAD_X, 0.0], 6.0))
 	ob.add_theme_stylebox_override("hover_pressed", ob.get_theme_stylebox("pressed"))
 	ob.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	ob.add_theme_font_override("font", UiPalette.cjk_font())
@@ -654,20 +644,10 @@ static func _dress_drop(ob: OptionButton, font_size: int, ink: Color) -> void:
 	var pop := ob.get_popup()
 	var panel_ := art_cached("kit/popup")
 	if panel_ != null:
-		var box := StyleBoxTexture.new()
-		box.texture = panel_
-		box.set_texture_margin_all(16.0)
-		box.set_content_margin_all(12.0)
-		pop.add_theme_stylebox_override("panel", box)
+		pop.add_theme_stylebox_override("panel", nine_box(panel_, [16.0, 16.0, 16.0, 16.0], [12.0, 12.0, 12.0, 12.0]))
 	var hover_tex := art_cached("kit/popup_hover")
 	if hover_tex != null:
-		var hb := StyleBoxTexture.new()
-		hb.texture = hover_tex
-		hb.texture_margin_left = 12.0
-		hb.texture_margin_top = 10.0
-		hb.texture_margin_right = 10.0
-		hb.texture_margin_bottom = 10.0
-		pop.add_theme_stylebox_override("hover", hb)
+		pop.add_theme_stylebox_override("hover", nine_box(hover_tex, [12.0, 10.0, 10.0, 10.0]))
 	pop.add_theme_font_override("font", UiPalette.cjk_font())
 	pop.add_theme_font_size_override("font_size", sz(font_size))
 	for c in ["font_color", "font_hover_color", "font_accelerator_color"]:
@@ -757,6 +737,39 @@ static func margins(m: MarginContainer, left: int, top: int, right: int, bottom:
 	m.add_theme_constant_override("margin_right", right)
 	m.add_theme_constant_override("margin_bottom", bottom)
 	return m
+
+
+## 一张只看不点的图：不管图自己多大，按 [param stretch] 铺进控件的大小
+static func picture(tex: Texture2D, stretch: TextureRect.StretchMode) -> TextureRect:
+	var pic := TextureRect.new()
+	pic.texture = tex
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = stretch
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return pic
+
+
+## 只竖着滚的滚动框（竖向撑满）
+static func vscroll() -> ScrollContainer:
+	var s := ScrollContainer.new()
+	s.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	s.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return s
+
+
+## 一张只看不点的九宫格图：[param edges] 是四边边距 —— 一个数（四边一样）或 `[左, 上, 右, 下]`；中段横竖都按 [param mode] 铺
+static func nine_rect(tex: Texture2D, edges: Variant, mode: NinePatchRect.AxisStretchMode = NinePatchRect.AXIS_STRETCH_MODE_STRETCH) -> NinePatchRect:
+	var m: Array = edges if edges is Array else [edges, edges, edges, edges]
+	var n := NinePatchRect.new()
+	n.texture = tex
+	n.patch_margin_left = int(m[0])
+	n.patch_margin_top = int(m[1])
+	n.patch_margin_right = int(m[2])
+	n.patch_margin_bottom = int(m[3])
+	n.axis_stretch_horizontal = mode
+	n.axis_stretch_vertical = mode
+	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return n
 
 
 ## 一段 BBCode 正文（169：颜色按所在的底取深版 / 浅版；之后换字走 [method set_rich]）：高度随内容、自己不滚（放进调用方的滚动区或面板里）、按 [param width] 折行；
@@ -1194,6 +1207,23 @@ static func art_box(name: String) -> StyleBoxTexture:
 	return box
 
 
+## 一张图的九宫格底：边距 [param margin]、内边距 [param content] 都是 [左, 上, 右, 下]（内边距不给 = 不动），图四周多画 [param expand]
+static func nine_box(tex: Texture2D, margin: Array, content: Array = [], expand: float = 0.0) -> StyleBoxTexture:
+	var s := StyleBoxTexture.new()
+	s.texture = tex
+	s.texture_margin_left = float(margin[0])
+	s.texture_margin_top = float(margin[1])
+	s.texture_margin_right = float(margin[2])
+	s.texture_margin_bottom = float(margin[3])
+	if not content.is_empty():
+		s.content_margin_left = float(content[0])
+		s.content_margin_top = float(content[1])
+		s.content_margin_right = float(content[2])
+		s.content_margin_bottom = float(content[3])
+	s.set_expand_margin_all(expand)
+	return s
+
+
 ## 279：面板换一张九宫格图当底（边距同 [method art_box]，内边距 [param content]）；没图不动
 static func art_panel(p: PanelContainer, name: String, content: int) -> void:
 	var box := _art_box(name, false, content)
@@ -1212,17 +1242,9 @@ static func _art_box(name: String, title_strip: bool = false, content: int = -1)
 	var m: Array = art_meta(name).get("margin", [quarter, quarter, quarter, quarter])
 	if m.size() != 4:
 		m = [quarter, quarter, quarter, quarter]
-	var s := StyleBoxTexture.new()
-	s.texture = tex
-	s.texture_margin_left = float(m[0])
-	s.texture_margin_top = float(m[1])
-	s.texture_margin_right = float(m[2])
-	s.texture_margin_bottom = float(m[3])
-	s.content_margin_left = float(m[0])
 	# 石板框：标题字刻在板顶那道刻线上方 —— 标题条（高 `title_height`）的下沿离内容区上沿留 [constant TITLE_LINE_GAP]（刻线所在）
-	s.content_margin_top = maxf(0.0, float(m[1]) - float(art_meta(name).get("title_height", 0)) - TITLE_LINE_GAP) if title_strip else float(m[1])
-	s.content_margin_right = float(m[2])
-	s.content_margin_bottom = float(m[3])
+	var top := maxf(0.0, float(m[1]) - float(art_meta(name).get("title_height", 0)) - TITLE_LINE_GAP) if title_strip else float(m[1])
+	var s := nine_box(tex, m, [m[0], top, m[2], m[3]])
 	if content >= 0:
 		s.set_content_margin_all(float(content))
 	return s
@@ -1283,25 +1305,14 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_font_size("font_size", LABEL_TITLE, TITLE_SIZE)
 	# 168：标题（名牌也走 LabelTitle）与叠层标题条是朱雀仿宋；大标题是寒蝉锦书宋 Heavy
 	t.set_font("font", LABEL_TITLE, _font_title)
-	t.set_type_variation(LABEL_DISPLAY, "Label")
-	t.set_font("font", LABEL_DISPLAY, _font_display)
-	t.set_font_size("font_size", LABEL_DISPLAY, DISPLAY_SIZE)
-	t.set_color("font_color", LABEL_DISPLAY, UiPalette.FG)
+	_label_variation(t, LABEL_DISPLAY, DISPLAY_SIZE, UiPalette.FG, _font_display)
 	# 面板
 	# 157 补充三：板里的分区是刻进板里的凹槽（`inset.png` 九宫格，内边距照旧按变体的默认值，各屏排版不动），没图是原来的平面底
-	t.set_type_variation(PANEL_DARK, "PanelContainer")
-	var groove: StyleBox = _art_box(ART_INSET, false, PANEL_MARGIN)
-	t.set_stylebox("panel", PANEL_DARK, groove if groove != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
-	t.set_type_variation(PANEL_LINE, "PanelContainer")
-	var inset: StyleBox = _art_box(ART_INSET, false, PANEL_LINE_MARGIN)
-	t.set_stylebox("panel", PANEL_LINE, inset if inset != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_LINE_MARGIN))
+	_panel_variation(t, PANEL_DARK, _art_box(ART_INSET, false, PANEL_MARGIN), _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	_panel_variation(t, PANEL_LINE, _art_box(ART_INSET, false, PANEL_LINE_MARGIN), _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_LINE_MARGIN))
 	# 157：叠层的石板框、悬浮窗底 —— 补充三：框是一整块石板（[SlabStyle] 两层），没图和原来一样（框 = PanelDark 的底、悬浮窗 = PanelLine 的底）
-	t.set_type_variation(PANEL_OVERLAY, "PanelContainer")
-	var frame: StyleBox = slab_box(true)
-	t.set_stylebox("panel", PANEL_OVERLAY, frame if frame != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
-	t.set_type_variation(PANEL_WINDOW, "PanelContainer")
-	var window: StyleBox = slab_box(false, PANEL_MARGIN)
-	t.set_stylebox("panel", PANEL_WINDOW, window if window != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	_panel_variation(t, PANEL_OVERLAY, slab_box(true), _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	_panel_variation(t, PANEL_WINDOW, slab_box(false, PANEL_MARGIN), _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
 	t.set_type_variation(LABEL_OVERLAY_TITLE, "Label")
 	t.set_font_size("font_size", LABEL_OVERLAY_TITLE, OVERLAY_TITLE_SIZE)
 	t.set_font("font", LABEL_OVERLAY_TITLE, _font_title)
@@ -1310,9 +1321,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_font_size("font_size", LABEL_TENT_SIGN, TENT_SIGN_SIZE)
 	t.set_font("font", LABEL_TENT_SIGN, UiPalette.cjk_font_bold())
 	t.set_color("font_color", LABEL_TENT_SIGN, TENT_SIGN_INK)
-	t.set_type_variation(PANEL_TOOLTIP, "PanelContainer")
-	var paper: StyleBox = layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY)
-	t.set_stylebox("panel", PANEL_TOOLTIP, paper if paper != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
+	_panel_variation(t, PANEL_TOOLTIP, layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY), _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), TOOLTIP_MARGIN))
 	# 悬停小提示 B（作者 10-31 16:05）：控件自带的 tooltip_text（火漆、负重小牌、钱牌、按钮）= 木框小牌（同图例小签 home/plaque_chip）、墨字 18 粗；
 	# 道具 / 节点悬浮窗（[constant PANEL_TOOLTIP]）还是上面那块深皮，不动。摆在哪见 [TipAnchor]
 	var tip_box: StyleBox = _art_box(ART_HOME_CHIP)
@@ -1328,26 +1337,18 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_font_size("font_size", "TooltipLabel", TIP_FONT_SIZE)
 	# 157 补充二：名牌底 —— 有图是九宫格（内边距按图边），没图是深底细边。
 	# 作者 2026-10-17：改铜质名牌（士兵牌样式，深铜底亮字；铜板本身不透明，不再垫板身；左上的穿链孔在边距里，内容不压它）
-	t.set_type_variation(PANEL_NAMEPLATE, "PanelContainer")
-	var plate: StyleBox = _art_box(ART_NAMEPLATE)
-	t.set_stylebox("panel", PANEL_NAMEPLATE, plate if plate != null else _box(panel_bg.darkened(0.15), UiPalette.LINE.lightened(0.25), NAMEPLATE_MARGIN))
+	_panel_variation(t, PANEL_NAMEPLATE, _art_box(ART_NAMEPLATE), _box(panel_bg.darkened(0.15), UiPalette.LINE.lightened(0.25), NAMEPLATE_MARGIN))
 	# 164：家的粗布框（浅底墨字）、仓库木架（深底）；没图回落到面板的平面底
-	t.set_type_variation(PANEL_HOME_BOX, "PanelContainer")
-	var cloth: StyleBox = _art_box(ART_HOME_BOX)
-	t.set_stylebox("panel", PANEL_HOME_BOX, cloth if cloth != null else _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_MARGIN))
+	_panel_variation(t, PANEL_HOME_BOX, _art_box(ART_HOME_BOX), _box(Color(panel_bg, 0.96), UiPalette.LINE.lightened(0.15), PANEL_MARGIN))
 	for pair in [[PANEL_HOME_PLAQUE, ART_HOME_PLAQUE, 24], [PANEL_HOME_PLAQUE_SMALL, ART_HOME_PLAQUE_SMALL, 18], [PANEL_HOME_CHIP, ART_HOME_CHIP, 6]]:     # 264 木牌
 		t.set_type_variation(pair[0], "PanelContainer")
 		var plaque: StyleBox = _art_box(pair[1])
 		if plaque == null:
 			plaque = _box(PARCHMENT, SCROLL_ROD, int(pair[2]))
 		t.set_stylebox("panel", pair[0], plaque)
-	t.set_type_variation(PANEL_SHELF, "PanelContainer")
-	var shelf: StyleBox = _art_box(ART_SHELF)
-	t.set_stylebox("panel", PANEL_SHELF, shelf if shelf != null else _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
+	_panel_variation(t, PANEL_SHELF, _art_box(ART_SHELF), _box(panel_bg, UiPalette.LINE, PANEL_MARGIN))
 	# 179：开局屏的凹槽板
-	t.set_type_variation(PANEL_GROOVE, "PanelContainer")
-	var groove_box: StyleBox = _art_box(ART_GROOVE)
-	t.set_stylebox("panel", PANEL_GROOVE, groove_box if groove_box != null else _groove_box())
+	_panel_variation(t, PANEL_GROOVE, _art_box(ART_GROOVE), _groove_box())
 	_setup_card(t)
 	# 180 补二：难度翻页计数器（没图是平色黑牌 + 压深的黄铜边）
 	t.set_type_variation(PANEL_FLIP_COUNTER, "PanelContainer")
@@ -1358,9 +1359,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	flip.content_margin_left = 28
 	flip.content_margin_right = 28
 	t.set_stylebox("panel", PANEL_FLIP_COUNTER, flip_art if flip_art != null else flip)
-	t.set_type_variation(LABEL_FLIP_NUM, "Label")
-	t.set_font_size("font_size", LABEL_FLIP_NUM, FLIP_NUM_SIZE)
-	t.set_color("font_color", LABEL_FLIP_NUM, Color.WHITE)
+	_label_variation(t, LABEL_FLIP_NUM, FLIP_NUM_SIZE, Color.WHITE)
 	# 180 补三：羊皮纸（没图是平色纸、不描边）；定稿图 264 宽、纵向平铺，左右是毛边不切九宫格
 	t.set_type_variation(PANEL_PARCHMENT, "PanelContainer")
 	var parchment_art := _tex_box(ART_PARCHMENT_STRIP, [0, 0, 0, 0])
@@ -1382,9 +1381,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	var hud_box := _box(panel_bg, UiPalette.LINE, HUD_MARGIN)
 	hud_box.set_border_width_all(0)
 	t.set_stylebox("panel", PANEL_HUD, hud_art if hud_art != null else hud_box)
-	t.set_type_variation(PANEL_HUD_WELL, "PanelContainer")
-	var well_art: StyleBox = _art_box(ART_HUD_WELL, false, HUD_MARGIN)
-	t.set_stylebox("panel", PANEL_HUD_WELL, well_art if well_art != null else t.get_stylebox("panel", PANEL_HUD))
+	_panel_variation(t, PANEL_HUD_WELL, _art_box(ART_HUD_WELL, false, HUD_MARGIN), t.get_stylebox("panel", PANEL_HUD))
 	# 166：顶端栏（横贯顶部的一条，左右留 16）与栏里的图标按钮（平时透明，悬停 / 按下才露底）。
 	# 157 补充三：栏是一条独立的长石板（同一套板身 + 自己的长条板边 `slab_bar`），没图是半透明深底 + 下边一条线。
 	# 板边的上下内边距 = 栏里的组居中的那一块（[HudHost] 读），底下那道投影不算进去
@@ -1437,6 +1434,21 @@ static func _fill(t: Theme, bg: Color) -> void:
 	_kit_scrollbars(t)
 
 
+## 一个面板变体的底：美术给了图（[param skin]）就用图，没图用 [param fallback]
+static func _panel_variation(t: Theme, name: StringName, skin: StyleBox, fallback: StyleBox) -> void:
+	t.set_type_variation(name, "PanelContainer")
+	t.set_stylebox("panel", name, skin if skin != null else fallback)
+
+
+## 一个标签变体：字体（[param font] 给了才换）、字号、字色
+static func _label_variation(t: Theme, name: StringName, size: int, color: Color, font: Font = null) -> void:
+	t.set_type_variation(name, "Label")
+	if font != null:
+		t.set_font("font", name, font)
+	t.set_font_size("font_size", name, size)
+	t.set_color("font_color", name, color)
+
+
 ## 乙 石刻滚动条（kit `sb_groove(_h)` + `sb_grab_<态>(_h)`）：宽 14，图四周多 6；槽沿长向两头各 14 不拉、把手各 16。缺图用引擎默认
 static func _kit_scrollbars(t: Theme) -> void:
 	for horizontal in [false, true]:
@@ -1457,43 +1469,27 @@ static func _kit_bar_box(name: String, horizontal: bool, along: float) -> StyleB
 	var tex := art_cached(name)
 	if tex == null:
 		return null
-	var s := StyleBoxTexture.new()
-	s.texture = tex
 	var across := 12.0
-	s.texture_margin_left = along if horizontal else across
-	s.texture_margin_right = along if horizontal else across
-	s.texture_margin_top = across if horizontal else along
-	s.texture_margin_bottom = across if horizontal else along
-	s.set_expand_margin_all(6.0)
 	# 横着量宽 14（竖条左右各 7）；沿长向的内边距给把手留最短
-	s.content_margin_left = 10.0 if horizontal else 7.0
-	s.content_margin_right = 10.0 if horizontal else 7.0
-	s.content_margin_top = 7.0 if horizontal else 10.0
-	s.content_margin_bottom = 7.0 if horizontal else 10.0
-	return s
+	if horizontal:
+		return nine_box(tex, [along, across, along, across], [10.0, 7.0, 10.0, 7.0], 6.0)
+	return nine_box(tex, [across, along, across, along], [7.0, 10.0, 7.0, 10.0], 6.0)
+
+
+## 按钮三档各自的 底 / 悬停的底 / 边 / 字（没登记的档按次档）
+const TIER_COLORS := {
+	UiPalette.Tier.PRIMARY: [UiPalette.BTN_PRIMARY, UiPalette.BTN_PRIMARY_HOVER, UiPalette.BTN_PRIMARY_HOVER, UiPalette.BTN_PRIMARY_TEXT],
+	UiPalette.Tier.MINOR: [UiPalette.BTN_MINOR, UiPalette.BTN_MINOR_HOVER, UiPalette.BTN_MINOR_EDGE, UiPalette.FG],
+	UiPalette.Tier.SECONDARY: [UiPalette.BTN_SECONDARY, UiPalette.BTN_SECONDARY_HOVER, UiPalette.BTN_SECONDARY_EDGE, UiPalette.FG],
+}
 
 
 static func _button_variation(t: Theme, name: StringName, tier: int) -> void:
-	var bg: Color
-	var hover: Color
-	var edge: Color
-	var text: Color
-	match tier:
-		UiPalette.Tier.PRIMARY:
-			bg = UiPalette.BTN_PRIMARY
-			hover = UiPalette.BTN_PRIMARY_HOVER
-			edge = UiPalette.BTN_PRIMARY_HOVER
-			text = UiPalette.BTN_PRIMARY_TEXT
-		UiPalette.Tier.MINOR:
-			bg = UiPalette.BTN_MINOR
-			hover = UiPalette.BTN_MINOR_HOVER
-			edge = UiPalette.BTN_MINOR_EDGE
-			text = UiPalette.FG
-		_:
-			bg = UiPalette.BTN_SECONDARY
-			hover = UiPalette.BTN_SECONDARY_HOVER
-			edge = UiPalette.BTN_SECONDARY_EDGE
-			text = UiPalette.FG
+	var colors: Array = TIER_COLORS.get(tier, TIER_COLORS[UiPalette.Tier.SECONDARY])
+	var bg: Color = colors[0]
+	var hover: Color = colors[1]
+	var edge: Color = colors[2]
+	var text: Color = colors[3]
 	var size := UiPalette.button_font_size(FONT_SIZE, tier)
 	var pad := Vector2i(int(round(size * 0.6)), int(round(size * 0.3)))
 	t.set_type_variation(name, "Button")
@@ -1550,10 +1546,7 @@ static func _menu_styles(t: Theme) -> void:
 		hero.base_font = UiPalette.cjk_font_bold()
 		hero.spacing_glyph = HERO_SPACING
 		_font_hero = hero
-	t.set_type_variation(LABEL_HERO_TITLE, "Label")
-	t.set_font("font", LABEL_HERO_TITLE, _font_hero)
-	t.set_font_size("font_size", LABEL_HERO_TITLE, HERO_TITLE_SIZE)
-	t.set_color("font_color", LABEL_HERO_TITLE, HERO_TITLE_COLOR)
+	_label_variation(t, LABEL_HERO_TITLE, HERO_TITLE_SIZE, HERO_TITLE_COLOR, _font_hero)
 	t.set_color("font_outline_color", LABEL_HERO_TITLE, HERO_OUTLINE_COLOR)
 	t.set_constant("outline_size", LABEL_HERO_TITLE, HERO_OUTLINE)
 	t.set_color("font_shadow_color", LABEL_HERO_TITLE, HERO_SHADOW)
@@ -1646,12 +1639,9 @@ static func _difficulty_buttons(t: Theme) -> void:
 		t.set_font_size("font_size", BUTTON_DIFF_PLATE, 26)
 		_button_ink(t, BUTTON_DIFF_PLATE, Color("f3e3c0"))
 	t.set_color("font_disabled_color", BUTTON_DIFF_PLATE, Color(UiPalette.DIM, 0.5))
-	t.set_type_variation(PANEL_DIFF_TITLE, "PanelContainer")
 	var title_art: StyleBox = _art_box(ART_DIFF_TITLE)
-	t.set_stylebox("panel", PANEL_DIFF_TITLE, title_art if title_art != null else _button_box(FLIP_BRASS.darkened(0.25), FLIP_BRASS.lightened(0.25), Vector2i(22, 6)))
-	t.set_type_variation(LABEL_DIFF_TITLE, "Label")
-	t.set_font_size("font_size", LABEL_DIFF_TITLE, 20 if title_art != null else 26)
-	t.set_color("font_color", LABEL_DIFF_TITLE, INK if title_art != null else Color("f3e3c0"))
+	_panel_variation(t, PANEL_DIFF_TITLE, title_art, _button_box(FLIP_BRASS.darkened(0.25), FLIP_BRASS.lightened(0.25), Vector2i(22, 6)))
+	_label_variation(t, LABEL_DIFF_TITLE, 20 if title_art != null else 26, INK if title_art != null else Color("f3e3c0"))
 	if title_art != null:
 		t.set_font("font", LABEL_DIFF_TITLE, _font_bold)
 	_setup_art(t)
@@ -1734,18 +1724,7 @@ static func _tex_box(name: String, margin: Array, content: Array = []) -> StyleB
 	var tex := art(name)
 	if tex == null:
 		return null
-	var c := content if content.size() == 4 else margin
-	var s := StyleBoxTexture.new()
-	s.texture = tex
-	s.texture_margin_left = float(margin[0])
-	s.texture_margin_top = float(margin[1])
-	s.texture_margin_right = float(margin[2])
-	s.texture_margin_bottom = float(margin[3])
-	s.content_margin_left = float(c[0])
-	s.content_margin_top = float(c[1])
-	s.content_margin_right = float(c[2])
-	s.content_margin_bottom = float(c[3])
-	return s
+	return nine_box(tex, margin, content if content.size() == 4 else margin)
 
 
 ## 按钮各态的字色一样（灰态另给）
@@ -1778,21 +1757,13 @@ static func _setup_card(t: Theme) -> void:
 	tile.content_margin_left = 14
 	tile.content_margin_right = 14
 	t.set_stylebox("panel", PANEL_CAP_TILE, tile)
-	t.set_type_variation(LABEL_CAP_VALUE, "Label")
-	t.set_font("font", LABEL_CAP_VALUE, _font_bold)
-	t.set_font_size("font_size", LABEL_CAP_VALUE, CAP_VALUE_SIZE)
-	t.set_color("font_color", LABEL_CAP_VALUE, UiPalette.FG)
-	t.set_type_variation(LABEL_SKILL_NAME, "Label")
-	t.set_font("font", LABEL_SKILL_NAME, _font_bold)
-	t.set_font_size("font_size", LABEL_SKILL_NAME, SKILL_NAME_SIZE)
-	t.set_color("font_color", LABEL_SKILL_NAME, UiPalette.BTN_PRIMARY_HOVER)
+	_label_variation(t, LABEL_CAP_VALUE, CAP_VALUE_SIZE, UiPalette.FG, _font_bold)
+	_label_variation(t, LABEL_SKILL_NAME, SKILL_NAME_SIZE, UiPalette.BTN_PRIMARY_HOVER, _font_bold)
 	t.set_color("font_outline_color", LABEL_SKILL_NAME, Color.BLACK)
 	t.set_constant("outline_size", LABEL_SKILL_NAME, OUTLINE_SIZE * 2)     # 22 号字上 2 太细
 	t.set_type_variation(LABEL_FLAW_NAME, LABEL_SKILL_NAME)
 	t.set_color("font_color", LABEL_FLAW_NAME, UiPalette.FLAW_IRON)
-	t.set_type_variation(LABEL_SKILL_TEXT, "Label")
-	t.set_font_size("font_size", LABEL_SKILL_TEXT, SKILL_TEXT_SIZE)
-	t.set_color("font_color", LABEL_SKILL_TEXT, UiPalette.FG)
+	_label_variation(t, LABEL_SKILL_TEXT, SKILL_TEXT_SIZE, UiPalette.FG)
 	@warning_ignore("integer_division")
 	t.set_constant("line_spacing", LABEL_SKILL_TEXT, SKILL_TEXT_SIZE / 2)
 

@@ -180,7 +180,4 @@ func art_label_font_size() -> int:
 	var fs := art_label_size
 	if not art_label_rect.has_area():
 		return fs
-	var lf := UiPalette.cjk_font_bold()
-	while fs > 10 and lf.get_string_size(art_label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > art_label_rect.size.x:
-		fs -= 1
-	return fs
+	return TextFit.size_for(UiPalette.cjk_font_bold(), art_label, fs, art_label_rect.size.x, 10)

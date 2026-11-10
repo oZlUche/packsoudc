@@ -136,9 +136,7 @@ static func from_image(src: Image, rot: int, canvas: Vector2i = Vector2i.ZERO) -
 static func _cell_rects(cells: Array[Vector2i]) -> Array[Rect2i]:
 	var rows := {}
 	for c in cells:
-		if not rows.has(c.y):
-			rows[c.y] = []
-		(rows[c.y] as Array).append(c.x)
+		(rows.get_or_add(c.y, []) as Array).append(c.x)
 	var ys := rows.keys()
 	ys.sort()
 	var done: Array[Rect2i] = []
@@ -186,9 +184,7 @@ static func _trace_cells(cells: Array[Vector2i]) -> Array[PackedVector2Array]:
 			if occupied.has(c + (s[0] as Vector2i)):
 				continue
 			var a: Vector2i = c + (s[1] as Vector2i)
-			if not edges.has(a):
-				edges[a] = []
-			(edges[a] as Array).append(c + (s[2] as Vector2i))
+			(edges.get_or_add(a, []) as Array).append(c + (s[2] as Vector2i))
 	var loops: Array[PackedVector2Array] = []
 	while not edges.is_empty():
 		var first: Vector2i = edges.keys()[0]

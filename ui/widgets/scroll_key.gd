@@ -149,21 +149,12 @@ func _dress(spec: Dictionary) -> void:
 	_right = 26.0 + coin_cap - (2.0 if coin else 0.0)
 	var base := PRIMARY_ART if primary_key else ART_DIR + ("key_coin_" if coin else "key_")
 	for state in STATES:
-		var box := StyleBoxTexture.new()
-		box.texture = UiTheme.art_cached(base + state)
-		if box.texture == null:
-			box.texture = UiTheme.art_cached(base + "normal")
-		box.texture_margin_left = float(m[0])
-		box.texture_margin_top = float(m[1])
-		box.texture_margin_right = float(m[2])
-		box.texture_margin_bottom = float(m[3])
-		box.set_expand_margin_all(pad)
+		var tex := UiTheme.art_cached(base + state)
+		if tex == null:
+			tex = UiTheme.art_cached(base + "normal")
 		var dy := _pressed_dy if state == "pressed" else 0.0
-		box.content_margin_left = _left
-		box.content_margin_right = _right
-		box.content_margin_top = 2.0 * dy     # 按下：字往下挪 dy（内容区上边让 2 dy，字居中）
-		box.content_margin_bottom = 0.0
-		add_theme_stylebox_override(state, box)
+		# 按下：字往下挪 dy（内容区上边让 2 dy，字居中）
+		add_theme_stylebox_override(state, UiTheme.nine_box(tex, m, [_left, 2.0 * dy, _right, 0.0], pad))
 		add_theme_color_override("font_%s_color" % state if state != "normal" else "font_color", _colors[state])
 	add_theme_color_override("font_hover_pressed_color", _colors["pressed"])
 	add_theme_color_override("font_focus_color", _colors["normal"])
@@ -195,14 +186,7 @@ func _fit_sub() -> void:
 
 
 func _state() -> String:
-	if disabled:
-		return "disabled"
-	match get_draw_mode():
-		DRAW_PRESSED, DRAW_HOVER_PRESSED:
-			return "pressed"
-		DRAW_HOVER:
-			return "hover"
-	return "normal"
+	return UiDraw.button_state(self)
 
 
 ## 价钱数字的左端（按钮坐标）：币座左沿 + 37

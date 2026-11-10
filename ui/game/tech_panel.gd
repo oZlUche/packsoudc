@@ -366,11 +366,7 @@ class TreeArea:
 		custom_minimum_size = PAPER_SIZE * MIN_SCALE
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_inset = float(UiTheme.art_meta(PAPER).get("content_inset", INSET))
-		paper = TextureRect.new()
-		paper.texture = UiTheme.art(PAPER)
-		paper.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		paper.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		paper = UiTheme.picture(UiTheme.art(PAPER), TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
 		add_child(paper)
 		scroll = ScrollContainer.new()
 		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO

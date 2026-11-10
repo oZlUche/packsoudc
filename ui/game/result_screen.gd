@@ -120,13 +120,13 @@ func _build() -> void:
 	_continue = null
 	_backdrop()
 	if _r != null and not (_has_store_step() and _step == 2):
-		_slab_screen(Vector2.ZERO, SLAB_EDGE)     # 157 补充三：内容在一整块石板上
+		_slab_screen(SLAB_EDGE)     # 157 补充三：内容在一整块石板上
 		_build_summary()
 		return
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	UiTheme.margins(margin, PAGE_MARGIN, PAGE_MARGIN, PAGE_MARGIN, PAGE_MARGIN)
-	_area = _painted_screen(STOREROOM_ART) if _r != null else _slab_screen(Vector2.ZERO, SLAB_EDGE)     # 228：第二页是基地的木头库间
+	_area = _painted_screen(STOREROOM_ART) if _r != null else _slab_screen(SLAB_EDGE)     # 228：第二页是基地的木头库间
 	_area.add_child(margin)
 	# 反馈：仓库面板按自己的最小高度占满，把底部的继续按钮挤出窗口。内容放进竖向滚动，按钮钉在底下
 	var outer := _vbox(10)
@@ -134,9 +134,7 @@ func _build() -> void:
 	if _r != null:
 		_plank = _title_plank(UiText.t("result.store_title"))
 		outer.add_child(_plank)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var scroll := UiTheme.vscroll()
 	outer.add_child(scroll)
 	var col := _vbox(10)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -146,7 +144,10 @@ func _build() -> void:
 		col.add_child(_label(UiText.t("result.none"), 18, UiPalette.FG))
 		col.add_child(_button(UiText.t("setup.main_menu"), flow.to_main_menu, 14))
 		return
-	_build_store(col, outer)
+	# 177 第 2 步：带回来的棋盘（靠左）与仓库（贴右上角）；不写说明字。224 补充二：保险箱挪到第一页，中间那道分隔线删了
+	_add_warehouse(col)
+	_add_proceed(outer)
+	_black_hole()
 
 
 ## 有没有第 2 步（置入仓库）：撤离了才有。224 补充二（作者 17:23）：战败永远没有第二页 —— 保险箱带出的直接进了仓库
@@ -193,13 +194,7 @@ func _title_plank(text: String) -> Control:
 	var tex := UiTheme.art_cached(PLANK_ART)
 	var n: NinePatchRect = null
 	if tex != null:
-		n = NinePatchRect.new()
-		n.texture = tex
-		n.patch_margin_left = int(m[0])
-		n.patch_margin_top = int(m[1])
-		n.patch_margin_right = int(m[2])
-		n.patch_margin_bottom = int(m[3])
-		n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		n = UiTheme.nine_rect(tex, m)
 		box.add_child(n)
 	title.position = Vector2(float(rect[0]), float(rect[1]))
 	box.add_child(title)
@@ -239,12 +234,8 @@ func _build_summary() -> void:
 	add_child(page)
 	UiTheme.set_tone(page, UiTheme.TONE_LIGHT)     # 石板是浅底：标题墨字
 	# 作者 16:32「去掉所有界面里的裸露文字」：标题刻进标题牌（半透明，直接画在石板上），副标题（章节 · 结局）删掉
-	var plate := TextureRect.new()
+	var plate := UiTheme.picture(UiTheme.art_cached(TITLE_PLATE_ART), TextureRect.STRETCH_SCALE)     # 补充二：图是 2 倍分辨率，按牌的 1x 大小缩着画
 	plate.name = "TitlePlate"
-	plate.texture = UiTheme.art_cached(TITLE_PLATE_ART)
-	plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE     # 补充二：图是 2 倍分辨率，按牌的 1x 大小缩着画
-	plate.stretch_mode = TextureRect.STRETCH_SCALE
-	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	page.add_child(_place(plate, TITLE_PLATE_AT + TITLE_PLATE_ORIGIN, TITLE_PLATE_SIZE - TITLE_PLATE_ORIGIN * 2.0))
 	var title := UiTheme.make_title_label(UiText.t("result.extracted") if extracted else UiText.t("result.defeat"), TITLE_SIZE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -269,13 +260,6 @@ func _build_summary() -> void:
 	_ledger.revealed.connect(func():
 		if is_instance_valid(_continue):
 			_continue.disabled = false)
-
-
-## 177 第 2 步：带回来的棋盘（靠左）与仓库（贴右上角）；不写说明字。224 补充二：保险箱挪到第一页，中间那道分隔线删了
-func _build_store(col: VBoxContainer, outer: VBoxContainer) -> void:
-	_add_warehouse(col)
-	_add_proceed(outer)
-	_black_hole()
 
 
 ## 281 寂灭的路（三）：献祭回来的这一局，带回来的寂灭上放一次黑洞（B 劈开，[JimieBlackHole]）
@@ -326,10 +310,7 @@ func _add_safe(page: Control) -> void:
 	var r := _r
 	if r.safe_items.is_empty():
 		return
-	_safe_view = InventoryView.new()
-	_safe_view.label_font = font
-	_safe_view.inventory = _safe_display(r)
-	_safe_view.show_adjacency = false
+	_safe_view = InventoryView.make(_safe_display(r), font)
 	var pad := 2.0 * WarehousePanelScript.BOARD_FRAME_PAD
 	_safe_view.cell_px = minf(SAFE_CELL, floorf((SAFE_MAX_W - pad) / float(maxi(1, r.safe_size.x))))
 	var frame := WarehousePanelScript.framed(_safe_view, "SafeFrame")

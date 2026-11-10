@@ -167,9 +167,6 @@ static func _box(art: String, margin: float) -> StyleBoxTexture:
 	var tex := UiTheme.art_cached(art)
 	var box: StyleBoxTexture = null
 	if tex != null:
-		box = StyleBoxTexture.new()
-		box.texture = tex
-		box.set_texture_margin_all(margin)
-		box.set_expand_margin_all(6.0)
+		box = UiTheme.nine_box(tex, [margin, margin, margin, margin], [], 6.0)
 	_boxes[art] = box
 	return box

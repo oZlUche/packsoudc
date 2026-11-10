@@ -187,10 +187,7 @@ func _color(key: String, fallback: Color) -> Color:
 func _draw() -> void:
 	var bg := UiTheme.art_cached(ART + "card_" + STYLE)
 	if bg != null:
-		var sb := StyleBoxTexture.new()
-		sb.texture = bg
-		sb.set_texture_margin_all(16)
-		draw_style_box(sb, Rect2(Vector2.ZERO, size))
+		draw_style_box(UiTheme.nine_box(bg, [16, 16, 16, 16]), Rect2(Vector2.ZERO, size))
 	else:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("3a2a1c"))
 	var regular := UiPalette.cjk_font()

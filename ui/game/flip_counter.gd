@@ -51,15 +51,7 @@ static func _nine(art_name: String) -> NinePatchRect:
 	var tex := UiTheme.art(art_name)
 	if tex == null:
 		return null
-	var m: Array = UiTheme.art_meta("setup/diff_flip").get("margin", [16, 16, 16, 16])
-	var n := NinePatchRect.new()
-	n.texture = tex
-	n.patch_margin_left = int(m[0])
-	n.patch_margin_top = int(m[1])
-	n.patch_margin_right = int(m[2])
-	n.patch_margin_bottom = int(m[3])
-	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return n
+	return UiTheme.nine_rect(tex, UiTheme.art_meta("setup/diff_flip").get("margin", [16, 16, 16, 16]))
 
 
 ## 翻页卡（没图 null）

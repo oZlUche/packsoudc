@@ -14,7 +14,7 @@ const KINDS := ["search", "chest_iron", "chest_gold", "corpse", "boss", "player"
 
 static func run_assets(t: TestCase) -> void:
 	t.begin("棋盘美术 · 切图都在：六种外框（九宫格边距、比格子大多少）、宝箱铁条、BOSS 纹章、两颗圆钮与火漆签各三态；layout 浅底")
-	var lay := CS.board_layout()
+	var lay := BoardFrame.light_layout()
 	t.eq(String(lay.get("tone", "")), "light", "面板浅底（UI 深浅规则）")
 	var pieces: Dictionary = lay.get("pieces", {})
 	for k in KINDS:
@@ -88,7 +88,7 @@ static func frame_loot_screen(t: TestCase, root: Window) -> void:
 	var take_mid := -(CS.TAKE_AT.y + CS.TAKE_INSET + CS.TAKE_VISIBLE * 0.5)
 	var want := Vector2(CS.EDGE + loot.x + CS.MID + player.x + CS.EDGE,
 		ceilf(maxf(maxf(CS.TOP + loot.y + CS.ABOVE_TAKE + CS.TAKE_VISIBLE + CS.EDGE + 6.0, CS.TOP + player.y + CS.BELOW_PLAYER),
-			CS.TOP + player.y - pp + screen.strip_gap() + screen._strip.strip_height() * 0.5 + take_mid)))     # 216：数值栏中线对「全部拾取」
+			CS.TOP + player.y - pp + CS.STRIP_GAP + screen._strip.strip_height() * 0.5 + take_mid)))     # 216：数值栏中线对「全部拾取」
 	t.eq(screen.panel_size(), want, "面板宽高按格子算（%s）" % want)
 	if board.size == Vector2i(8, 6):
 		t.eq(want, Vector2(1292, 566), "255 补充一：背包位子九格 + 6 列容器 = 1292 × 566（七、八、九格的背包一样大）")

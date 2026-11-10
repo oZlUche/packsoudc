@@ -5,7 +5,7 @@
 ## 版式 `shop/scale_layout.json`，图 `shop/scale_base`、`shop/scale_beam`、`shop/scale_pan_left`、`shop/scale_pan_right`、`shop/scale_coin`。
 ## 美术：A 铜天平（作者 2026-11-07 18:37 挑定，art/ui/shop290/final）；缺图时按同一套坐标画铜色占位（底牌只在占位时画）
 class_name ShopScale
-extends Control
+extends PanScale
 
 const LAYOUT := "shop/scale_layout"
 const ART := "shop/scale_"
@@ -41,12 +41,10 @@ var plate := "":
 		plate = v
 		queue_redraw()
 
-var _lay: Dictionary = {}
-
 
 func _init() -> void:
 	_lay = layout()
-	custom_minimum_size = BalanceScale._v(_lay["base_size"])
+	custom_minimum_size = _v(_lay["base_size"])
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -62,10 +60,6 @@ static func layout() -> Dictionary:
 		"controls": {"status": [148, 88, 272, 116], "deal": [135, 150, 285, 202]}}
 
 
-func control_rect(p_name: String) -> Rect2:
-	return BalanceScale._rect((_lay.get("controls", {}) as Dictionary).get(p_name, [0, 0, 0, 0]))
-
-
 ## 横梁斜几度（正 = 左盘低）：差额占重的那边的比例，夹在 ±max_tilt_deg
 func tilt_degrees() -> float:
 	if left == right:
@@ -74,57 +68,30 @@ func tilt_degrees() -> float:
 	return clampf(k, -1.0, 1.0) * float(_lay.get("max_tilt_deg", 8))
 
 
-## 两只钩（梁两端）：[左, 右]
-func hooks() -> Array[Vector2]:
-	var pivot := BalanceScale._v(_lay["pivot"])
-	var a := deg_to_rad(-tilt_degrees())
-	var arm := float(_lay["arm"])
-	var dy := float(_lay["hook_dy"])
-	return [pivot + Vector2(-arm, dy).rotated(a), pivot + Vector2(arm, dy).rotated(a)] as Array[Vector2]
-
-
-## 盘层左上角：[左, 右]
-func pan_origins() -> Array[Vector2]:
-	var h := hooks()
-	var hook_in := BalanceScale._v(_lay["hook_in_pan"])
-	return [h[0] - hook_in, h[1] - hook_in] as Array[Vector2]
-
-
 ## 盘上那张价牌（舞台坐标）：[左, 右]
 func price_rects() -> Array[Rect2]:
-	var r := BalanceScale._rect(_lay["price_rect"])
+	var r := _rect(_lay["price_rect"])
 	var pans := pan_origins()
 	return [Rect2(pans[0] + r.position, r.size), Rect2(pans[1] + r.position, r.size)] as Array[Rect2]
 
 
-## 一只盘里画几枚金币：钱占这一盘总价的比例 × 一摞满的枚数，放了钱就至少 1 枚
-func pile_count(coins: int, total: int) -> int:
-	var pile: Dictionary = _lay.get("coin_pile", {})
-	if coins <= 0 or pile.is_empty():
-		return 0
-	var full := 0
-	for h in pile["full"]:
-		full += int(h)
-	return clampi(ceili(float(full) * coins / float(maxi(1, total))), 1, (pile["order"] as Array).size())
-
-
 func _draw() -> void:
 	var pans := pan_origins()
-	var base_size := BalanceScale._v(_lay["base_size"])
+	var base_size := _v(_lay["base_size"])
 	if not _layer("base", Vector2.ZERO, base_size):
 		_draw_post()
-	var beam_size := BalanceScale._v(_lay["beam_size"])
-	draw_set_transform(BalanceScale._v(_lay["pivot"]), deg_to_rad(-tilt_degrees()))
+	var beam_size := _v(_lay["beam_size"])
+	draw_set_transform(_v(_lay["pivot"]), deg_to_rad(-tilt_degrees()))
 	if not _layer("beam", -beam_size * 0.5, beam_size):
 		draw_rect(Rect2(-beam_size * 0.5, beam_size), BRONZE)
 		draw_rect(Rect2(-beam_size * 0.5, beam_size), BRONZE_DARK, false, 2.0)
 	draw_set_transform(Vector2.ZERO)
-	var pan_size := BalanceScale._v(_lay["pan_size"])
+	var pan_size := _v(_lay["pan_size"])
 	for i in 2:
 		if not _layer("pan_left" if i == 0 else "pan_right", pans[i], pan_size):
 			_draw_pan(pans[i], pan_size)
-	_draw_pile(pans[0], pile_count(left_coins, left))
-	_draw_pile(pans[1], pile_count(right_coins, right))
+	_draw_pile(pans[0], _pile(left_coins, left))
+	_draw_pile(pans[1], _pile(right_coins, right))
 	var prices := price_rects()
 	if left > 0:     # UI设计 11-07（先少再多）：空盘不挂价牌、空桌不挂差额牌
 		_draw_amount(prices[0], left)
@@ -151,7 +118,7 @@ func _layer(p_name: String, at: Vector2, size_px: Vector2) -> bool:
 
 ## 占位：立柱从梁心到秤座（「成交」键顶上），柱顶一枚圆钮
 func _draw_post() -> void:
-	var pivot := BalanceScale._v(_lay["pivot"])
+	var pivot := _v(_lay["pivot"])
 	var deal := control_rect("deal")
 	var foot := deal.position.y if deal.size.y > 0.0 else size.y
 	draw_rect(Rect2(pivot.x - 5.0, pivot.y, 10.0, foot - pivot.y), BRONZE)
@@ -162,7 +129,7 @@ func _draw_post() -> void:
 
 ## 占位：两根吊绳 + 一只浅碗
 func _draw_pan(at: Vector2, size_px: Vector2) -> void:
-	var hook := at + BalanceScale._v(_lay["hook_in_pan"])
+	var hook := at + _v(_lay["hook_in_pan"])
 	var rim_y := at.y + size_px.y * 0.68
 	draw_line(hook, Vector2(at.x + 6.0, rim_y), BRONZE_DARK, 1.5, true)
 	draw_line(hook, Vector2(at.x + size_px.x - 6.0, rim_y), BRONZE_DARK, 1.5, true)

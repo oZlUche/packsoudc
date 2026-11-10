@@ -174,17 +174,7 @@ static func pennant_box() -> StyleBox:
 	var meta := UiTheme.art_meta(PENNANT)
 	var tm: Array = meta.get("texture_margin", [44, 52, 44, 58])
 	var cm: Array = meta.get("content_margin", [34, 54, 34, 50])
-	var box := StyleBoxTexture.new()
-	box.texture = tex
-	box.texture_margin_left = float(tm[0])
-	box.texture_margin_top = float(tm[1])
-	box.texture_margin_right = float(tm[2])
-	box.texture_margin_bottom = float(tm[3])
-	box.content_margin_left = float(cm[0])
-	box.content_margin_top = float(cm[1])
-	box.content_margin_right = float(cm[2])
-	box.content_margin_bottom = float(cm[3])
-	return box
+	return UiTheme.nine_box(tex, tm, cm)
 
 
 ## 一枚图标：图（按类型色着色）或者圆里一个字

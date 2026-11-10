@@ -144,7 +144,7 @@ static func frame_battle_coach(t: TestCase, root: Window) -> void:
 	ch.coaches = {}
 	t.check(not screen.coach_due(), "没写战斗教程的章：不放")
 	ch.coaches = {"battle": "prologue_battle"}
-	map.replay_battle_coach()
+	map.replay_coach(&"battle")
 	t.check(not flow.meta.coach_seen.has("prologue_battle") and screen.coach_due(), "调试台「重放战斗教程」：下一场再放")
 	flow.to_main_menu()
 	game.queue_free()

@@ -72,14 +72,8 @@ static func shelf() -> PanelContainer:
 	var tex := UiTheme.art_cached(FRAME)
 	var box: StyleBox = null
 	if tex != null:
-		var t := StyleBoxTexture.new()
-		t.texture = tex
-		t.texture_margin_left = FRAME_EDGE
-		t.texture_margin_top = FRAME_EDGE
-		t.texture_margin_right = FRAME_EDGE
-		t.texture_margin_bottom = FRAME_EDGE
-		t.set_content_margin_all(FRAME_EDGE)
-		box = t
+		var edge := [FRAME_EDGE, FRAME_EDGE, FRAME_EDGE, FRAME_EDGE]
+		box = UiTheme.nine_box(tex, edge, edge)
 	else:
 		box = BoardFrame.box("plain", false)
 	p.add_theme_stylebox_override("panel", box)
@@ -160,10 +154,8 @@ func _draw() -> void:
 	draw_rect(pr, PLATE if lit else PLATE_OFF)
 	draw_rect(pr.grow(-0.5), INK, false, 1.0)
 	var f := UiPalette.cjk_font_bold()
-	var fs := maxi(11, roundi(NAME_SIZE * _k))
 	var room := pr.size.x - 8.0 * _k
-	while fs > 9 and f.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > room:
-		fs -= 1     # 长名字先缩字（英文名不截断）
+	var fs := TextFit.size_for(f, title, maxi(11, roundi(NAME_SIZE * _k)), room, 9)     # 长名字先缩字（英文名不截断）
 	var y := pr.get_center().y + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
 	draw_string(f, Vector2(pr.position.x + 4.0 * _k, y), title, HORIZONTAL_ALIGNMENT_CENTER, room, fs, INK if lit else INK_OFF)
 	if selected:

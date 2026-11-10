@@ -55,17 +55,14 @@ func open(payload: Dictionary) -> void:
 	_belt_row = _hbox(10)
 	pcol.add_child(_belt_row)
 	BoardFrame.wrap(_belt_row, SHOP_BOARD)     # UI设计 15:38：随身两格放头像下面，放棋盘下面整屏会高出帐篷
-	_view = InventoryView.new()
-	_view.label_font = font
-	_view.show_adjacency = false
-	_view.inventory = _session.board if _session != null else GridInventory.new(ShopSession.BOARD_SIZE, 0, false)
+	_view = InventoryView.make(_session.board if _session != null else GridInventory.new(ShopSession.BOARD_SIZE, 0, false), font)
 	_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): _double_merchant(uid))
 	_view.actions_for = _merchant_actions
 	left.add_child(_view)
 	BoardFrame.wrap(_view, SHOP_BOARD)
 	# 右：自己的背包（棋盘 + 地上），和商人的棋盘共用一层拖拽；双击自己的东西 = 放上他的棋盘
-	_inv = _mount_bag(row, _view, Callable(), _session.board if _session != null else null)
+	_inv = _mount_bag(row, _view, _session.board if _session != null else null)
 	_drag.drop_outside_to_stash = false     # 店里放到外面 = 放回原处
 	_drag.drop_filter = _allow_drop
 	_drag.craft_filter = _allow_craft     # 审查 A1：没成交的货不能拿去合成（会被消耗掉、结不了账）
@@ -184,10 +181,10 @@ func offer(uid: int) -> bool:
 		return false
 	var why := _session.refuse_reason(inst)
 	if why != "":
-		_say(why)
+		say(why)
 		return false
 	if not InventoryService.transfer_auto(from, uid, _session.board):
-		_say(UiText.t("shop.board_full"))
+		say(UiText.t("shop.board_full"))
 		return false
 	_session.sync()
 	return true
@@ -232,7 +229,7 @@ func ask_change() -> int:
 func toggle_belt(i: int) -> String:
 	var why := _session.toggle_belt(i) if _session != null else UiText.t("shop.no_shop")
 	if why != "":
-		_say(why)
+		say(why)
 	return why
 
 
@@ -243,7 +240,7 @@ func deal() -> bool:
 	if not _session.deal():
 		var st := _session.status()
 		if String(st["kind"]) == "short":
-			_say(UiText.t("shop.gap_short") + CoinShort.coin(int(st["n"])))
+			say(UiText.t("shop.gap_short") + CoinShort.coin(int(st["n"])))
 		return false
 	return true
 
@@ -303,11 +300,11 @@ func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 		if _session.is_merchants(inst.uid):
 			return true
 		if _drag != null and _drag.carrying_contents():
-			_say(UiText.t("act.bag_full"))
+			say(UiText.t("act.bag_full"))
 			return false
 		var why := _session.refuse_reason(inst)
 		if why != "":
-			_say(why)
+			say(why)
 			return false
 		return true
 	return target == flow.run.board or target == flow.run.storage
@@ -376,12 +373,8 @@ func _on_dealt(got: Array, gave: Array, _paid: int, _change: int) -> void:
 		names.append(Names.of((inst as ItemInstance).def))
 	var line := UiText.t("shop.dealt") % "、".join(names) if not names.is_empty() else UiText.t("shop.dealt_plain")
 	var hint := _first_sale_hint() if not gave.is_empty() else ""
-	_say(line + ("　" + hint if hint != "" else ""))
+	say(line + ("　" + hint if hint != "" else ""))
 	_rebuild_belt()
-
-
-func _say(text: String) -> void:
-	say(text)     # 226 批一：本地回话行删了，走告示卷轴
 
 
 ## 待成交色：盖在一块视图上的一层（不接鼠标；棋盘或地上），标出这块视图里桌上的东西
@@ -439,10 +432,7 @@ func _rebuild_belt() -> void:
 		var idx := i
 		var def := BeltSkillDef.find(StringName(String(offers[i]["id"])))
 		var cell := _vbox(4)
-		var view := InventoryView.new()
-		view.label_font = font
-		view.show_adjacency = false
-		view.inventory = GridInventory.new(Vector2i.ONE, 0, false)
+		var view := InventoryView.make(GridInventory.new(Vector2i.ONE, 0, false), font)
 		view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		view.seams = BoardFrame.seams_of(SHOP_BOARD).merged({"edge": true})
 		cell.add_child(view)

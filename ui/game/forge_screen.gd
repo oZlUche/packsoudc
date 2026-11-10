@@ -12,8 +12,6 @@ extends GameScreen
 const SLOT_SIZE := Vector2i(4, 4)
 ## 194 §2：槽下小字的字号
 const SUMMARY_SIZE := 14
-const ART_DIR := "res://assets/ui/forge/"
-const LAYOUT_PATH := ART_DIR + "layout.json"
 ## 说明石板：字号、板面离石板外框的边（底图像素）
 const SLATE_SIZE := 15
 ## 「铸牌」键 / 路标悬停时提亮
@@ -73,10 +71,7 @@ func open(payload: Dictionary) -> void:
 	_node = payload.get("node", null)
 	_layout = layout()
 	_backdrop(Color("07090d"))
-	_bg = TextureRect.new()
-	_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_bg.stretch_mode = TextureRect.STRETCH_SCALE     # 跟各块同一个变换（见 _place）
-	_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bg = UiTheme.picture(null, TextureRect.STRETCH_SCALE)     # 跟各块同一个变换（见 _place）
 	add_child(_bg)
 	set_meta(&"tone", UiTheme.TONE_DARK)     # 夜里的炉台：字一律浅色
 
@@ -85,10 +80,7 @@ func open(payload: Dictionary) -> void:
 	for i in ForgeTable.SLOTS.size():
 		var host := _host(_rect(slot_rects[i] if i < slot_rects.size() else {}))
 		var g := GridInventory.new(SLOT_SIZE, 0, false)
-		var v := InventoryView.new()
-		v.label_font = font
-		v.inventory = g
-		v.show_adjacency = false
+		var v := InventoryView.make(g, font)
 		host.add_child(v)
 		_slot_frame(v)
 		_slot_hosts.append(host)
@@ -106,10 +98,7 @@ func open(payload: Dictionary) -> void:
 		_slot_views.append(v)
 	_out_host = _host(_rect(_layout.get("output", {})))
 	_out = GridInventory.new(Vector2i(1, 1), 0, false)
-	_out_view = InventoryView.new()
-	_out_view.label_font = font
-	_out_view.inventory = _out
-	_out_view.show_adjacency = false
+	_out_view = InventoryView.make(_out, font)
 	_out_host.add_child(_out_view)
 	_slot_frame(_out_view)
 
@@ -133,7 +122,7 @@ func open(payload: Dictionary) -> void:
 	_back_btn.tooltip_text = UiText.t("forge.back_tip")
 
 	_bag_host = _host(_rect(_layout.get("bag", {})))
-	_inv = _mount_bag(_bag_host, _slot_views[0], Callable(), null, "player", true)     # 227：夜里的炉台用深色皮带框     # 棋盘上双击 → 第一个空槽（见 put_in）
+	_inv = _mount_bag(_bag_host, _slot_views[0], null, "player", true)     # 227：夜里的炉台用深色皮带框     # 棋盘上双击 → 第一个空槽（见 put_in）
 	move_child(_drag, -1)
 	move_child(_tip, -1)
 	for i in _slot_views.size():
@@ -178,8 +167,7 @@ func open(payload: Dictionary) -> void:
 
 ## layout.json（底图尺寸、各块的矩形、切图的尺寸与原点）；读不出给空字典
 static func layout() -> Dictionary:
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT_PATH))
-	return parsed if parsed is Dictionary else {}
+	return UiTheme.art_meta("forge/layout")
 
 
 static func _rect(d: Dictionary) -> Rect2:

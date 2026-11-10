@@ -19,14 +19,7 @@ func _init(p_placeholder: String = "", search: bool = true) -> void:
 		return
 	custom_minimum_size.y = HEIGHT
 	for pair in [["normal", "normal"], ["focus", "focus"], ["read_only", "normal"]]:
-		var box := StyleBoxTexture.new()
-		box.texture = UiTheme.art_cached(ART + String(pair[1]))
-		box.set_texture_margin_all(16.0)
-		box.set_expand_margin_all(6.0)
-		box.content_margin_left = TEXT_LEFT if search else 12.0
-		box.content_margin_right = 10.0
-		box.content_margin_top = 0.0
-		box.content_margin_bottom = 0.0
+		var box := UiTheme.nine_box(UiTheme.art_cached(ART + String(pair[1])), [16.0, 16.0, 16.0, 16.0], [TEXT_LEFT if search else 12.0, 0.0, 10.0, 0.0], 6.0)
 		add_theme_stylebox_override(String(pair[0]), box)
 	add_theme_font_override("font", UiPalette.cjk_font())
 	add_theme_font_size_override("font_size", UiTheme.sz(FONT_SIZE))

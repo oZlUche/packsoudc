@@ -221,8 +221,8 @@ func _on_list_reloaded() -> void:
 func _read_meta(id: String) -> void:
 	var tags: Array[String] = []
 	var names: Array[String] = []
-	var parsed = JSON.parse_string(
-		FileAccess.get_file_as_string(ITEM_DIR + "/" + id + ".json"))
+	var path := ITEM_DIR + "/" + id + ".json"
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null     # 还没存过盘的新条目：盘上没有它的文件
 	var effect := false
 	var bag := false
 	if parsed is Dictionary:

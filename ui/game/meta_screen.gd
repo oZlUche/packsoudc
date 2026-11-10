@@ -596,7 +596,7 @@ var _smithy = null
 
 func _build_market(root: Control) -> Control:
 	_market = MarketPanelScript.new()
-	_market.setup(flow, font, say)
+	_market.setup(flow, font)
 	_market.changed.connect(_refresh)
 	root.add_child(_market)
 	return _market
@@ -604,7 +604,7 @@ func _build_market(root: Control) -> Control:
 
 func _build_smithy(root: Control) -> Control:
 	_smithy = SmithyPanelScript.new()
-	_smithy.setup(flow, font, say)
+	_smithy.setup(flow, font)
 	_smithy.changed.connect(_refresh)
 	root.add_child(_smithy)
 	return _smithy
@@ -794,9 +794,7 @@ func _build_codex(root: Control) -> Control:
 		b.toggle_mode = true
 		_codex_filter_btns[key] = b
 		head.add_child(b)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED     # 139：按宽度定列数，不横向滚
+	var scroll := UiTheme.vscroll()     # 139：按宽度定列数，不横向滚
 	scroll.custom_minimum_size.y = 300
 	page_.add_child(scroll)
 	var inner := _vbox(10)

@@ -150,13 +150,7 @@ func _draw() -> void:
 		draw_rect(r, PAPER_FALLBACK)
 		return
 	var m: Array = UiTheme.art_meta(PAPER).get("margin", [10, 6, 10, 6])
-	var box := StyleBoxTexture.new()
-	box.texture = tex
-	box.texture_margin_left = minf(float(m[0]), r.size.x * 0.5)
-	box.texture_margin_right = minf(float(m[2]), r.size.x * 0.5)
-	box.texture_margin_top = float(m[1])
-	box.texture_margin_bottom = float(m[3])
-	draw_style_box(box, r)
+	draw_style_box(UiTheme.nine_box(tex, [minf(float(m[0]), r.size.x * 0.5), m[1], minf(float(m[2]), r.size.x * 0.5), m[3]]), r)
 
 
 func _draw_rollers() -> void:

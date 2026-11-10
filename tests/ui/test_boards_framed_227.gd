@@ -13,6 +13,7 @@ const PREFIX := "boards227"
 ## 造了 [InventoryView] 却不在本文件里套框的：面板由用它的屏套（[method GameScreen._mount_bag]、背包窗、战前）；沙盒是开发工具
 const STATIC_EXEMPT := {
 	"res://ui/game/inventory_panel.gd": "棋盘由 _mount_bag / 背包窗 / 战前各自套框",
+	"res://ui/inventory/inventory_view.gd": "造视图的工厂 make 本身，框由调用的那一屏套",
 	"res://ui/inventory/inventory_sandbox.gd": "开发沙盒",
 	"res://ui/battle/battle_sandbox.gd": "开发沙盒",
 }
@@ -233,7 +234,7 @@ static func frame_static_sources(t: TestCase, _root: Window) -> void:
 		if STATIC_EXEMPT.has(path):
 			continue
 		var src := FileAccess.get_file_as_string(path)
-		if not (src.contains("InventoryView.new()") or src.contains("LootView.new()")):
+		if not (src.contains("InventoryView.new()") or src.contains("InventoryView.make(") or src.contains("LootView.new()")):
 			continue
 		if not (src.contains("BoardFrame.") or src.contains(".ground = ")):
 			bad.append(path)

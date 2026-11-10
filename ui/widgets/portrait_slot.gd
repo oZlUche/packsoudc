@@ -37,14 +37,7 @@ func _init(side: int, face: Texture2D = null, silhouette: bool = true) -> void:
 		var meta := UiTheme.art_meta(UiTheme.ART_PORTRAIT_FRAME)
 		var m: Array = meta.get("margin", [4, 4, 4, 4])
 		var inset := float(meta.get("inset", 4))
-		frame = NinePatchRect.new()
-		frame.texture = tex
-		if m.size() == 4:
-			frame.patch_margin_left = int(m[0])
-			frame.patch_margin_top = int(m[1])
-			frame.patch_margin_right = int(m[2])
-			frame.patch_margin_bottom = int(m[3])
-		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		frame = UiTheme.nine_rect(tex, m if m.size() == 4 else [0, 0, 0, 0])
 		frame.set_anchors_preset(Control.PRESET_FULL_RECT)
 		frame.offset_left = -inset
 		frame.offset_top = -inset

@@ -108,10 +108,7 @@ func _build_page() -> void:
 		var def := _defs[j]
 		var grid := GridInventory.new(def.shape.size_rotated(0) if def.shape != null else Vector2i.ONE, 0, false)
 		grid.place(ItemInstance.create(def, 0), Vector2i.ZERO, 0)
-		var view := InventoryView.new()
-		view.label_font = font
-		view.show_adjacency = false
-		view.inventory = grid
+		var view := InventoryView.make(grid, font)
 		var id := def.id
 		view.item_double_clicked.connect(func(_v: ContainerView, _uid: int): if on_buy.is_valid(): on_buy.call(id))
 		view.actions_for = func(_uid: int) -> Array: return actions_for.call(id) if actions_for.is_valid() else []

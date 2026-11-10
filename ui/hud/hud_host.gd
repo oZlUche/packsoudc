@@ -298,9 +298,7 @@ func arrange() -> void:
 			order.append(key)
 		var lines: Dictionary = groups[key]["lines"]
 		var ln := int(e.get("line", 0))
-		if not lines.has(ln):
-			lines[ln] = []
-		(lines[ln] as Array).append(w)
+		(lines.get_or_add(ln, []) as Array).append(w)
 	# 166：先定顶端栏多高（里面最高的一组 + 上下留白），铺满顶部；栏里的槽在栏里摆
 	_bar_h = 0.0
 	if bar != null:
