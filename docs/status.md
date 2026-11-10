@@ -1,6 +1,6 @@
 # 现状总览
 
-> 2026-11-10 ｜ 代码 v5.47（PR #PRNUM；修云端测试报告的 G01～G03、Q01，报告 291）｜ 架构文档 v5.47 ｜ 引擎 Godot 4.7.1 ｜ 这是一份**活文档**：设计以 [architecture.md](architecture.md) 正文为准，每一步的记录在 [reports/](reports/README.md)
+> 2026-11-10 ｜ 代码 v5.47（PR #525；修云端测试报告的 G01～G03、Q01，报告 291）｜ 架构文档 v5.47 ｜ 引擎 Godot 4.7.1 ｜ 这是一份**活文档**：设计以 [architecture.md](architecture.md) 正文为准，每一步的记录在 [reports/](reports/README.md)
 >
 > 本次（阶段 A，[执行方案](plans/2026-11-09-claude-next-execution.md) §3）按代码与 `architecture.md` §16 v5.00～v5.46 重写；2026-10-06 那一版（架构 v2.48）的全文见 `git show b1c0f009:docs/status.md`。
 
