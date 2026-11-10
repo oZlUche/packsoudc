@@ -1,0 +1,731 @@
+{
+  "build": "git:428c0c3f201a+wip?",
+  "limit": 30.0,
+  "made": "2026-11-10T12:22:48Z",
+  "scenarios": [
+    {
+      "code": "S1",
+      "enemy": "raider",
+      "facts": {
+        "decisive_window": {
+          "end": 2.0,
+          "share": 0.56710775047259,
+          "shown": null,
+          "side": 1,
+          "start": 1.0,
+          "total": 52.9
+        },
+        "duration": 3.2,
+        "fires": [
+          5,
+          6
+        ],
+        "first_interaction": 0.6,
+        "hp_end": [
+          0.866666666666667,
+          0.0
+        ],
+        "outcome": "win",
+        "stamina_empty_at": [
+          null,
+          null
+        ],
+        "statuses_taken": [
+          {},
+          {}
+        ],
+        "top_damage": [
+          [
+            {
+              "amount": 31.9,
+              "item": "longsword",
+              "share": 0.603024574669187
+            },
+            {
+              "amount": 21.0,
+              "item": "shortsword",
+              "share": 0.396975425330813
+            }
+          ],
+          [
+            {
+              "amount": 16.5,
+              "item": "knife",
+              "share": 1.0
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "hp": 120.0,
+      "id": "crush_win",
+      "mine": [
+        "longsword",
+        "shortsword",
+        "salve"
+      ],
+      "note": "大胜：赢，余血八成以上，六秒内",
+      "pack_file": "S1.diag.tres",
+      "pool": "standard_ruins",
+      "seed": 993446930,
+      "tier": 0
+    },
+    {
+      "code": "S2",
+      "enemy": "gear_golem",
+      "facts": {
+        "decisive_window": {
+          "end": 6.0,
+          "share": 0.55,
+          "shown": null,
+          "side": 0,
+          "start": 2.0,
+          "total": 100.0
+        },
+        "duration": 10.0,
+        "fires": [
+          23,
+          10
+        ],
+        "first_interaction": 1.1,
+        "hp_end": [
+          0.0,
+          0.142857142857143
+        ],
+        "outcome": "loss",
+        "stamina_empty_at": [
+          null,
+          null
+        ],
+        "statuses_taken": [
+          {},
+          {}
+        ],
+        "top_damage": [
+          [
+            {
+              "amount": 88.0,
+              "item": "bloodletter",
+              "share": 0.972375690607735
+            },
+            {
+              "amount": 2.5,
+              "item": "poisoned_knife",
+              "share": 0.0276243093922652
+            }
+          ],
+          [
+            {
+              "amount": 55.0,
+              "item": "gear_arm",
+              "share": 0.55
+            },
+            {
+              "amount": 45.0,
+              "item": "gear_arm#2",
+              "share": 0.45
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "hp": 100.0,
+      "id": "counter_a",
+      "mine": [
+        "poisoned_knife",
+        "bloodletter"
+      ],
+      "note": "被针对：毒与流血的配装打免疫毒与流血的机关，输，对方一层毒、血都没上",
+      "pack_file": "S2.diag.tres",
+      "pool": "clockwork",
+      "seed": 3337209403,
+      "tier": 1
+    },
+    {
+      "code": "S3",
+      "enemy": "berserker",
+      "facts": {
+        "decisive_window": {
+          "end": 2.4,
+          "share": 0.555,
+          "shown": null,
+          "side": 0,
+          "start": 1.0,
+          "total": 100.0
+        },
+        "duration": 4.8,
+        "fires": [
+          7,
+          16
+        ],
+        "first_interaction": 1.0,
+        "hp_end": [
+          0.0,
+          0.0666666666666667
+        ],
+        "outcome": "loss",
+        "stamina_empty_at": [
+          null,
+          null
+        ],
+        "statuses_taken": [
+          {
+            "bleed": 3
+          },
+          {}
+        ],
+        "top_damage": [
+          [
+            {
+              "amount": 56.0,
+              "item": "longsword",
+              "share": 0.666666666666667
+            },
+            {
+              "amount": 28.0,
+              "item": "shortsword",
+              "share": 0.333333333333333
+            }
+          ],
+          [
+            {
+              "amount": 56.5,
+              "item": "broadsword",
+              "share": 0.582474226804124
+            },
+            {
+              "amount": 28.5,
+              "item": "scimitar",
+              "share": 0.293814432989691
+            },
+            {
+              "amount": 12.0,
+              "item": "hand_crossbow",
+              "share": 0.123711340206186
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "hp": 100.0,
+      "id": "swap_a",
+      "mine": [
+        "longsword",
+        "shortsword"
+      ],
+      "note": "换装前：两把剑，差一点输（对方余血四成以下）",
+      "pack_file": "S3.diag.tres",
+      "pool": "standard_ruins",
+      "seed": 3813961706,
+      "tier": 1
+    },
+    {
+      "code": "S4",
+      "enemy": "brute",
+      "facts": {
+        "decisive_window": {
+          "end": 2.2,
+          "share": 0.783333333333333,
+          "shown": null,
+          "side": 0,
+          "start": 1.4,
+          "total": 60.0
+        },
+        "duration": 2.2,
+        "fires": [
+          3,
+          3
+        ],
+        "first_interaction": 0.0,
+        "hp_end": [
+          0.0,
+          1.0
+        ],
+        "outcome": "loss",
+        "stamina_empty_at": [
+          null,
+          null
+        ],
+        "statuses_taken": [
+          {
+            "bleed": 1
+          },
+          {}
+        ],
+        "top_damage": [
+          [],
+          [
+            {
+              "amount": 32.5,
+              "item": "halberd",
+              "share": 0.541666666666667
+            },
+            {
+              "amount": 27.5,
+              "item": "bone_great_axe",
+              "share": 0.458333333333333
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "hp": 60.0,
+      "id": "clear_loss",
+      "mine": [
+        "knife"
+      ],
+      "note": "明显败：输，对方余血七成以上",
+      "pack_file": "S4.diag.tres",
+      "pool": "standard_ruins",
+      "seed": 2595529234,
+      "tier": 2
+    },
+    {
+      "code": "S5",
+      "enemy": "raider",
+      "facts": {
+        "decisive_window": {
+          "end": 4.0,
+          "share": 0.5234375,
+          "shown": null,
+          "side": 1,
+          "start": 3.0,
+          "total": 64.0
+        },
+        "duration": 4.8,
+        "fires": [
+          7,
+          20
+        ],
+        "first_interaction": 0.6,
+        "hp_end": [
+          0.11,
+          0.0
+        ],
+        "outcome": "win",
+        "stamina_empty_at": [
+          null,
+          null
+        ],
+        "statuses_taken": [
+          {
+            "bleed": 5
+          },
+          {}
+        ],
+        "top_damage": [
+          [
+            {
+              "amount": 32.5,
+              "item": "longsword",
+              "share": 0.5078125
+            },
+            {
+              "amount": 31.5,
+              "item": "shortsword",
+              "share": 0.4921875
+            }
+          ],
+          [
+            {
+              "amount": 40.0,
+              "item": "battle_axe",
+              "share": 0.479041916167665
+            },
+            {
+              "amount": 22.5,
+              "item": "knife",
+              "share": 0.269461077844311
+            },
+            {
+              "amount": 21.0,
+              "item": "knife#2",
+              "share": 0.251497005988024
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "hp": 100.0,
+      "id": "close_call",
+      "mine": [
+        "longsword",
+        "shortsword"
+      ],
+      "note": "险胜：赢，余血一成半以下",
+      "pack_file": "S5.diag.tres",
+      "pool": "standard_ruins",
+      "seed": 2412721972,
+      "tier": 1
+    },
+    {
+      "code": "S6",
+      "enemy": "tinker_apprentice",
+      "facts": {
+        "decisive_window": {
+          "end": 3.2,
+          "share": 0.556818181818182,
+          "shown": null,
+          "side": 1,
+          "start": 2.2,
+          "total": 88.0
+        },
+        "duration": 3.2,
+        "fires": [
+          7,
+          16
+        ],
+        "first_interaction": 0.6,
+        "hp_end": [
+          0.27,
+          0.0
+        ],
+        "outcome": "win",
+        "stamina_empty_at": [
+          null,
+          null
+        ],
+        "statuses_taken": [
+          {},
+          {
+            "fungal_blood": 2,
+            "poison": 45
+          }
+        ],
+        "top_damage": [
+          [
+            {
+              "amount": 30.0,
+              "item": "bloodletter",
+              "share": 0.666666666666667
+            },
+            {
+              "amount": 15.0,
+              "item": "poisoned_knife",
+              "share": 0.333333333333333
+            }
+          ],
+          [
+            {
+              "amount": 40.0,
+              "item": "twin_blades",
+              "share": 0.547945205479452
+            },
+            {
+              "amount": 16.5,
+              "item": "knife",
+              "share": 0.226027397260274
+            },
+            {
+              "amount": 16.5,
+              "item": "knife#2",
+              "share": 0.226027397260274
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "hp": 100.0,
+      "id": "counter_b",
+      "mine": [
+        "poisoned_knife",
+        "bloodletter"
+      ],
+      "note": "对照：同一份配装打不免疫的敌人，赢",
+      "pack_file": "S6.diag.tres",
+      "pool": "clockwork",
+      "seed": 3983770593,
+      "tier": 1
+    },
+    {
+      "code": "S7",
+      "enemy": "warden",
+      "facts": {
+        "decisive_window": {
+          "end": 8.1482,
+          "share": 0.502,
+          "shown": null,
+          "side": 0,
+          "start": 1.6,
+          "total": 250.0
+        },
+        "duration": 24.6489,
+        "fires": [
+          31,
+          45
+        ],
+        "first_interaction": 0.9,
+        "hp_end": [
+          0.0,
+          0.56701030927835
+        ],
+        "outcome": "loss",
+        "stamina_empty_at": [
+          9.9,
+          null
+        ],
+        "statuses_taken": [
+          {},
+          {
+            "bleed": 8
+          }
+        ],
+        "top_damage": [
+          [
+            {
+              "amount": 50.5,
+              "item": "shortsword",
+              "share": 0.372693726937269
+            },
+            {
+              "amount": 32.0,
+              "item": "battle_axe",
+              "share": 0.236162361623616
+            },
+            {
+              "amount": 31.0,
+              "item": "warhammer",
+              "share": 0.228782287822878
+            }
+          ],
+          [
+            {
+              "amount": 170.0,
+              "item": "shortsword",
+              "share": 0.68
+            },
+            {
+              "amount": 80.0,
+              "item": "longsword",
+              "share": 0.32
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "hp": 250.0,
+      "id": "stamina_short",
+      "mine": [
+        "battle_axe",
+        "warhammer",
+        "longsword",
+        "shortsword"
+      ],
+      "note": "耐力见底：我方耐力在前半场打空，场次超过五秒",
+      "pack_file": "S7.diag.tres",
+      "pool": "standard_ruins",
+      "seed": 3983046507,
+      "tier": 2
+    },
+    {
+      "code": "S8",
+      "collateral": [],
+      "enemy": "berserker",
+      "facts": {
+        "decisive_window": {
+          "end": 4.8,
+          "share": 0.511111111111111,
+          "shown": null,
+          "side": 1,
+          "start": 3.2,
+          "total": 90.0
+        },
+        "duration": 4.8,
+        "fires": [
+          8,
+          14
+        ],
+        "first_interaction": 0.9,
+        "hp_end": [
+          0.02,
+          0.0
+        ],
+        "outcome": "win",
+        "stamina_empty_at": [
+          null,
+          null
+        ],
+        "statuses_taken": [
+          {
+            "bleed": 3
+          },
+          {
+            "bleed": 5
+          }
+        ],
+        "top_damage": [
+          [
+            {
+              "amount": 44.0,
+              "item": "battle_axe",
+              "share": 0.523809523809524
+            },
+            {
+              "amount": 40.0,
+              "item": "longsword",
+              "share": 0.476190476190476
+            }
+          ],
+          [
+            {
+              "amount": 56.5,
+              "item": "broadsword",
+              "share": 0.591623036649215
+            },
+            {
+              "amount": 27.0,
+              "item": "scimitar",
+              "share": 0.282722513089005
+            },
+            {
+              "amount": 12.0,
+              "item": "hand_crossbow",
+              "share": 0.12565445026178
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "hp": 100.0,
+      "id": "swap_b",
+      "mine": [
+        "longsword",
+        "battle_axe"
+      ],
+      "note": "换装后：同一个敌人、同一个种子，只把短剑换一件",
+      "pack_file": "S8.diag.tres",
+      "paired": {
+        "hp_diff": {
+          "diff": 0.03975,
+          "hi": 0.04925625,
+          "iters": 2000,
+          "lo": 0.03074375,
+          "n": 40,
+          "seed": 20261110
+        },
+        "n": 40,
+        "win_after": {
+          "hi": 0.895000102745623,
+          "k": 32,
+          "lo": 0.652426936536005,
+          "n": 40,
+          "p": 0.8
+        },
+        "win_before": {
+          "hi": 0.128813689634741,
+          "k": 1,
+          "lo": 0.00442683150268141,
+          "n": 40,
+          "p": 0.025
+        },
+        "win_diff": {
+          "diff": 0.775,
+          "hi": 0.9,
+          "iters": 2000,
+          "lo": 0.65,
+          "n": 40,
+          "seed": 20261110
+        }
+      },
+      "pool": "standard_ruins",
+      "seed": 3813961706,
+      "swap": {
+        "in": "battle_axe",
+        "out": "shortsword"
+      },
+      "tier": 1
+    },
+    {
+      "code": "S9",
+      "enemy": "pit_viper",
+      "facts": {
+        "decisive_window": {
+          "end": 4.0,
+          "share": 0.5125,
+          "shown": null,
+          "side": 0,
+          "start": 3.0,
+          "total": 40.0
+        },
+        "duration": 4.8,
+        "fires": [
+          7,
+          9
+        ],
+        "first_interaction": 1.0,
+        "hp_end": [
+          0.0,
+          0.2
+        ],
+        "outcome": "loss",
+        "ransom_pending": false,
+        "run_after": {
+          "coins": 0,
+          "items": 6,
+          "steps": 0,
+          "vitality": 4
+        },
+        "run_before": {
+          "coins": 0,
+          "items": 6,
+          "steps": 0,
+          "vitality": 5
+        },
+        "run_delta": {
+          "coins": 0.0,
+          "items": 0.0,
+          "steps": 0.0,
+          "vitality": -1.0
+        },
+        "stamina_empty_at": [
+          null,
+          null
+        ],
+        "statuses_taken": [
+          {
+            "poison": 4
+          },
+          {}
+        ],
+        "top_damage": [
+          [
+            {
+              "amount": 28.0,
+              "item": "shortsword",
+              "share": 1.0
+            }
+          ],
+          [
+            {
+              "amount": 16.5,
+              "item": "beast_fang",
+              "share": 0.458333333333333
+            },
+            {
+              "amount": 12.0,
+              "item": "beast_fang#2",
+              "share": 0.333333333333333
+            },
+            {
+              "amount": 7.5,
+              "item": "viper_gland",
+              "share": 0.208333333333333
+            }
+          ]
+        ]
+      },
+      "found": true,
+      "id": "aftermath",
+      "node_id": 13,
+      "note": "战后得失：正式一局（标准开局装备）里打一场，看体力、钱、件数怎么变",
+      "pack_file": "S9.diag.tres",
+      "pool": "standard_ruins",
+      "run_seed": 1,
+      "seed": 45031334,
+      "tier": 0,
+      "won": false
+    }
+  ],
+  "schema": 2,
+  "source": "synthetic"
+}

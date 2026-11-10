@@ -32,6 +32,10 @@ var _motion := false
 var _intro_running := false
 ## 231：开战过场里还垫在底下的战前屏（演完释放）
 var _outgoing: Control = null
+## 平衡检测方案 §8.1：观看记录（诊断开着才有；记账在 core 的 [ViewingSession]，这里只把事报给它）
+var _viewing: ViewingSession = null
+var _was_playing := true
+var _was_held := false
 ## 231 §2.1 开战过场的分镜（秒，一倍速，从按下「开战」算）
 const INTRO_OUT := 0.2          # 战前屏：旗收、两列淡掉
 const INTRO_ARENA := 0.6        # 框里的斗技场淡进
@@ -111,6 +115,13 @@ func open(payload: Dictionary) -> void:
 			if spec != null and spec.board != null:
 				_view.set_board(side, spec.board)
 	_fit_duel_panel()     # 作者 10-21：和战前那块一样大
+	if result != null and BattleDiagnostics.on():
+		_viewing = ViewingSession.new()
+		_viewing.start(String(payload.get("battle_id", "")), result.duration_sec(), _view.speed(), Time.get_ticks_msec(), _view.is_playing(),
+			payload.get("before", {}))
+		_was_playing = _view.is_playing()
+		_view.skipped.connect(func() -> void: _note(ViewingSession.SKIP))
+		_view.seeked.connect(func(t: float) -> void: _note(ViewingSession.SEEK, {"to": t}))
 	if coach_due():
 		_view.hold()     # 166 补充二：教程要放 —— 一开场就停住，一帧都不偷跑
 		_maybe_coach.call_deferred()
@@ -148,10 +159,49 @@ func confirm_key(space: bool) -> bool:
 ## 看完了（或不想看了）：回到流程
 func proceed() -> void:
 	HudHost.release_in(get_tree())     # 231 补充二：兜底（没看完就走了）
+	_close_viewing()
 	flow.resume()
 
 
+## 记一件观看的事（没开诊断时什么也不做）
+func _note(kind: String, data: Dictionary = {}) -> void:
+	if _viewing != null and _view != null:
+		_viewing.note(kind, _view.playback_time(), Time.get_ticks_msec(), data)
+
+
+## 停没停、教程停住没有：回放自己切，这里每帧看一眼
+func _process(_delta: float) -> void:
+	if _viewing == null or _view == null:
+		return
+	if _view.is_held() != _was_held:
+		_was_held = _view.is_held()
+		_note(ViewingSession.HOLD if _was_held else ViewingSession.RELEASE)
+	if _view.is_playing() != _was_playing:
+		_was_playing = _view.is_playing()
+		_note(ViewingSession.PLAY if _was_playing else ViewingSession.PAUSE)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_note(ViewingSession.FOCUS_OUT)
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		_note(ViewingSession.FOCUS_IN)
+
+
+## 离开回放屏：记下战后的体力 / 钱 / 件数 / 步数，写盘（只写一次；掉落还没捡、求饶还没定）
+func _close_viewing() -> void:
+	if _viewing == null:
+		return
+	_note(ViewingSession.LEAVE)
+	if flow != null and flow.run != null and flow.run.events != null:
+		_viewing.after = flow.run.events.state_brief()
+	var rec := ExperimentManifest.stamp(_viewing.to_dict(), CalibrationRecorder.current_source())
+	BattleDiagnostics.write_viewing(rec, BattleDiagnostics.stem_of({"battle_id": _viewing.battle_id}))
+	_viewing = null
+
+
 func _on_finished() -> void:
+	_note(ViewingSession.REVEAL)
 	HudHost.release_in(get_tree())     # 231 补充二：回放看完（或跳到底）顶栏才变，和「继续」旗同一刻
 	if _next == null and _next_slot != null:
 		var art := continue_art(_won)
@@ -323,6 +373,7 @@ func _end_intro() -> void:
 
 
 func _exit_tree() -> void:
+	_close_viewing()     # 没按「继续」就被换走了（读档、退出）：也落一份
 	if _outgoing != null and is_instance_valid(_outgoing):
 		_outgoing.queue_free()     # 过场没演完就被换走了：垫着的战前屏也一起走
 	_outgoing = null
@@ -364,6 +415,7 @@ func show_coach() -> bool:
 		_view.release()
 		return false
 	_view.hold()
+	_note(ViewingSession.HINT, {"id": "coach:%s" % coach_id()})
 	_coach = CoachOverlay.new()
 	_coach.font = font
 	_coach.target_rect = _view.control_rect
@@ -374,6 +426,7 @@ func show_coach() -> bool:
 
 
 func _on_coach_finished() -> void:
+	_note(ViewingSession.HINT_END)
 	_coach = null
 	_view.release()
 	var id := String(coach_id())
@@ -395,11 +448,13 @@ func _on_reaction_shown(id: StringName, side: int) -> void:
 		return
 	_fresh_reactions.clear()     # 作者 10-24：讲一次机制就够 —— 同一场打出的别种反应也不再停
 	_view.hold()
+	_note(ViewingSession.HINT, {"id": "reaction:%s" % id})
 	_coach = CoachOverlay.new()
 	_coach.font = font
 	_coach.target_rect = _view.control_rect
 	add_child(_coach)
 	_coach.finished.connect(func():
+		_note(ViewingSession.HINT_END)
 		_coach = null
 		_view.release())
 	_coach.start([{"target": "buffs_mine" if side == 0 else "buffs_enemy", "text": Encyclopedia.reaction_intro(def)}])
@@ -427,6 +482,7 @@ func _on_log_toggled(is_open: bool) -> void:
 
 ## 109：玩家在回放里切了倍速 → 记进设置并存盘（和「拿走最后一件自动关闭」同一个写法）
 func _on_speed_changed(speed: float) -> void:
+	_note(ViewingSession.SPEED, {"speed": speed})
 	if _medal != null:
 		_medal.rate = speed     # 231：铜章的动作跟着倍速
 	if flow.settings == null:

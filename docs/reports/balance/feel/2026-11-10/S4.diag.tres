@@ -1,0 +1,403 @@
+[gd_resource type="Resource" script_class="BattleDiagPack" format=3]
+
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="1_tqp0b"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="2_n7aou"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="3_wu5ci"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="4_2cj26"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_i472j"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="6_fa4oa"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_rr2li"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="8_7gwqj"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="9_ye3t6"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="10_3k5o1"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="11_bru56"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="12_vrowb"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="13_b7ul8"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_battle_start.gd" id="14_dsf5b"]
+[ext_resource type="Script" path="res://core/battle/battle_diag_pack.gd" id="15_kjkty"]
+
+[sub_resource type="Resource" id="Resource_feqsq"]
+script = ExtResource("2_n7aou")
+seconds = 0.6
+
+[sub_resource type="Resource" id="Resource_nhw3h"]
+script = ExtResource("4_2cj26")
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_vocvu"]
+script = ExtResource("6_fa4oa")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_a5on6"]
+script = ExtResource("7_rr2li")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_0ojc8"]
+script = ExtResource("1_tqp0b")
+trigger = SubResource("Resource_a5on6")
+cadence = SubResource("Resource_feqsq")
+costs = Array[ExtResource("3_wu5ci")]([SubResource("Resource_nhw3h")])
+effects = Array[ExtResource("5_i472j")]([SubResource("Resource_vocvu")])
+
+[sub_resource type="Resource" id="Resource_o63dc"]
+script = ExtResource("2_n7aou")
+seconds = 2.5
+
+[sub_resource type="Resource" id="Resource_fyrii"]
+script = ExtResource("4_2cj26")
+amount = 12.0
+
+[sub_resource type="Resource" id="Resource_ytle5"]
+script = ExtResource("6_fa4oa")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_qtju5"]
+script = ExtResource("8_7gwqj")
+target = 0
+axis = &"attack_speed"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_a4fcr"]
+script = ExtResource("7_rr2li")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_o7pnv"]
+script = ExtResource("1_tqp0b")
+trigger = SubResource("Resource_a4fcr")
+cadence = SubResource("Resource_o63dc")
+costs = Array[ExtResource("3_wu5ci")]([SubResource("Resource_fyrii")])
+effects = Array[ExtResource("5_i472j")]([SubResource("Resource_ytle5"), SubResource("Resource_qtju5")])
+
+[sub_resource type="Resource" id="Resource_w7du4"]
+script = ExtResource("2_n7aou")
+seconds = 2.2
+
+[sub_resource type="Resource" id="Resource_4deg1"]
+script = ExtResource("4_2cj26")
+amount = 11.0
+
+[sub_resource type="Resource" id="Resource_4d2d0"]
+script = ExtResource("6_fa4oa")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_l123x"]
+script = ExtResource("2_n7aou")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_jjcct"]
+script = ExtResource("6_fa4oa")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_ii4t4"]
+script = ExtResource("7_rr2li")
+
+[sub_resource type="Resource" id="Resource_42tl5"]
+script = ExtResource("1_tqp0b")
+trigger = SubResource("Resource_ii4t4")
+cadence = SubResource("Resource_l123x")
+effects = Array[ExtResource("5_i472j")]([SubResource("Resource_jjcct")])
+
+[sub_resource type="Resource" id="Resource_pgm1g"]
+script = ExtResource("11_bru56")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+is_debuff = true
+decay_halve_on = &"tick"
+rules = Array[ExtResource("1_tqp0b")]([SubResource("Resource_42tl5")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_k6vng"]
+script = ExtResource("12_vrowb")
+buff = SubResource("Resource_pgm1g")
+stacks = 3
+
+[sub_resource type="Resource" id="Resource_aw06f"]
+script = ExtResource("7_rr2li")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_7nv5n"]
+script = ExtResource("1_tqp0b")
+trigger = SubResource("Resource_aw06f")
+cadence = SubResource("Resource_w7du4")
+costs = Array[ExtResource("3_wu5ci")]([SubResource("Resource_4deg1")])
+effects = Array[ExtResource("5_i472j")]([SubResource("Resource_4d2d0"), SubResource("Resource_k6vng")])
+
+[sub_resource type="Resource" id="Resource_hnbl4"]
+script = ExtResource("2_n7aou")
+seconds = 2.4
+
+[sub_resource type="Resource" id="Resource_6ghu3"]
+script = ExtResource("4_2cj26")
+
+[sub_resource type="Resource" id="Resource_4to2t"]
+script = ExtResource("6_fa4oa")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_35hye"]
+script = ExtResource("8_7gwqj")
+target = 0
+axis = &"attack_speed"
+delta = -1
+
+[sub_resource type="Resource" id="Resource_ycfy0"]
+script = ExtResource("7_rr2li")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_lgyln"]
+script = ExtResource("1_tqp0b")
+trigger = SubResource("Resource_ycfy0")
+cadence = SubResource("Resource_hnbl4")
+costs = Array[ExtResource("3_wu5ci")]([SubResource("Resource_6ghu3")])
+effects = Array[ExtResource("5_i472j")]([SubResource("Resource_4to2t"), SubResource("Resource_35hye")])
+
+[sub_resource type="Resource" id="Resource_mclu4"]
+script = ExtResource("2_n7aou")
+seconds = 1.4
+
+[sub_resource type="Resource" id="Resource_ohp1g"]
+script = ExtResource("4_2cj26")
+amount = 7.0
+
+[sub_resource type="Resource" id="Resource_8cm2w"]
+script = ExtResource("6_fa4oa")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_tkcpu"]
+script = ExtResource("2_n7aou")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_g5wof"]
+script = ExtResource("6_fa4oa")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_rsfhw"]
+script = ExtResource("7_rr2li")
+
+[sub_resource type="Resource" id="Resource_apnkr"]
+script = ExtResource("1_tqp0b")
+trigger = SubResource("Resource_rsfhw")
+cadence = SubResource("Resource_tkcpu")
+effects = Array[ExtResource("5_i472j")]([SubResource("Resource_g5wof")])
+
+[sub_resource type="Resource" id="Resource_sldxm"]
+script = ExtResource("11_bru56")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+is_debuff = true
+decay_halve_on = &"tick"
+rules = Array[ExtResource("1_tqp0b")]([SubResource("Resource_apnkr")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_lgvq3"]
+script = ExtResource("12_vrowb")
+buff = SubResource("Resource_sldxm")
+metadata/part_ref = &"apply_status_bleed"
+
+[sub_resource type="Resource" id="Resource_g4pby"]
+script = ExtResource("8_7gwqj")
+target = 0
+axis = &"damage_taken"
+
+[sub_resource type="Resource" id="Resource_fngv2"]
+script = ExtResource("7_rr2li")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_gastf"]
+script = ExtResource("1_tqp0b")
+trigger = SubResource("Resource_fngv2")
+cadence = SubResource("Resource_mclu4")
+costs = Array[ExtResource("3_wu5ci")]([SubResource("Resource_ohp1g")])
+effects = Array[ExtResource("5_i472j")]([SubResource("Resource_8cm2w"), SubResource("Resource_lgvq3"), SubResource("Resource_g4pby")])
+
+[sub_resource type="Resource" id="Resource_vhc47"]
+script = ExtResource("13_b7ul8")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_81kbw"]
+script = ExtResource("6_fa4oa")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_m2ngm"]
+script = ExtResource("14_dsf5b")
+metadata/part_ref = &"on_battle_start"
+
+[sub_resource type="Resource" id="Resource_hjhrg"]
+script = ExtResource("1_tqp0b")
+trigger = SubResource("Resource_m2ngm")
+cadence = SubResource("Resource_vhc47")
+effects = Array[ExtResource("5_i472j")]([SubResource("Resource_81kbw")])
+
+[resource]
+script = ExtResource("15_kjkty")
+meta = {
+"scenario": "clear_loss",
+"source": "synthetic"
+}
+sides = Array[Dictionary]([{
+"axes": {},
+"baseline": {
+&"max_hp": [600000, 0, 0],
+&"max_stamina": [500000, 0, 0],
+&"regen_stamina": [40000, 0, 0]
+},
+"fed_uids": Array[int]([]),
+"format": 1,
+"immune_buffs": Array[StringName]([]),
+"items": [{
+"attached": Array[Dictionary]([]),
+"def_id": &"knife",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([0]),
+"stats": {
+&"damage": [30000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"rapid", &"dagger"]),
+"uid": 7
+}],
+"loads": {},
+"max_hp": 600000,
+"only_damage_type": &"",
+"set_rules": Array[int]([]),
+"undying_sec": 0.0
+}, {
+"axes": {},
+"baseline": {
+&"block": [37500, 0, 0],
+&"max_hp": [950000, 0, 0],
+&"max_stamina": [500000, 0, 0],
+&"regen_stamina": [40000, 0, 0]
+},
+"fed_uids": Array[int]([]),
+"format": 1,
+"immune_buffs": Array[StringName]([]),
+"items": [{
+"attached": Array[Dictionary]([]),
+"def_id": &"warhammer",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([1]),
+"stats": {
+&"damage": [360000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"burst", &"two_hand", &"heavy"]),
+"uid": 12
+}, {
+"attached": Array[Dictionary]([]),
+"def_id": &"warhammer",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([1]),
+"stats": {
+&"damage": [360000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"burst", &"two_hand", &"heavy"]),
+"uid": 13
+}, {
+"attached": Array[Dictionary]([]),
+"def_id": &"bone_great_axe",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([2]),
+"stats": {
+&"damage": [360000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"burst", &"two_hand", &"heavy", &"bleed"]),
+"uid": 14
+}, {
+"attached": Array[Dictionary]([]),
+"def_id": &"club",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([3]),
+"stats": {
+&"damage": [140000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"burst", &"two_hand", &"heavy"]),
+"uid": 15
+}, {
+"attached": Array[Dictionary]([]),
+"def_id": &"halberd",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([4, 5]),
+"stats": {
+&"damage": [130000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"burst", &"polearm", &"bleed"]),
+"uid": 16
+}],
+"loads": {},
+"max_hp": 950000,
+"only_damage_type": &"",
+"set_rules": Array[int]([]),
+"undying_sec": 0.0
+}])
+rules = Array[ExtResource("1_tqp0b")]([SubResource("Resource_0ojc8"), SubResource("Resource_o7pnv"), SubResource("Resource_7nv5n"), SubResource("Resource_lgyln"), SubResource("Resource_gastf"), SubResource("Resource_hjhrg")])
+rng_seed = 2595529234
+rng_state = -8171942512916970308
+time_limit = 30.0
+expected = {
+"digest": "1017495894bbf2e1",
+"duration": 22000,
+"events": 31,
+"final": {
+"args": ["s:time", "i:22000", "s:sides", [{
+"args": ["s:side", "i:0", "s:resources", {
+"args": ["sn:stamina", ["i:47", "i:50"], "sn:hp", ["i:0", "i:60"]],
+"type": "Dictionary"
+}, "s:buffs", {
+"args": ["s:bleed", "i:1"],
+"type": "Dictionary"
+}, "s:axes", {
+"args": ["s:damage_taken", ["i:1", "i:0"]],
+"type": "Dictionary"
+}],
+"type": "Dictionary"
+}, {
+"args": ["s:side", "i:1", "s:resources", {
+"args": ["sn:stamina", ["i:35", "i:50"], "sn:hp", ["i:95", "i:95"]],
+"type": "Dictionary"
+}, "s:buffs", {
+"args": [],
+"type": "Dictionary"
+}, "s:axes", {
+"args": [],
+"type": "Dictionary"
+}, "s:block_layers", [{
+"args": ["s:uid", "i:0", "s:id", "s:innate", "s:value", "i:37500"],
+"type": "Dictionary"
+}]],
+"type": "Dictionary"
+}]],
+"type": "Dictionary"
+},
+"lines": Array[String](["0|-1|battle_start|{\"args\":[],\"type\":\"Dictionary\"}", "0|1|item_fired|{\"args\":[\"s:uid\",\"i:16\"],\"type\":\"Dictionary\"}", "0|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-130000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:470000\",\"s:max\",\"i:600000\"],\"type\":\"Dictionary\"}", "0|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:130000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:130000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:16\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "6000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-30000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:470000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "6000|0|item_fired|{\"args\":[\"s:uid\",\"i:7\",\"s:ready_at\",\"i:12000\"],\"type\":\"Dictionary\"}", "6000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:30000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:30000\",\"s:amount\",\"i:0\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:7\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "12000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:24000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:494000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "12000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-30000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:464000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "12000|0|item_fired|{\"args\":[\"s:uid\",\"i:7\",\"s:ready_at\",\"i:18000\"],\"type\":\"Dictionary\"}", "12000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:30000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:30000\",\"s:amount\",\"i:0\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:7\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "14000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:472000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "14000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-70000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:430000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "14000|1|item_fired|{\"args\":[\"s:uid\",\"i:16\",\"s:ready_at\",\"i:28000\"],\"type\":\"Dictionary\"}", "14000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-195000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:275000\",\"s:max\",\"i:600000\"],\"type\":\"Dictionary\"}", "14000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:195000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:195000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:16\",\"s:crit\",true,\"s:direct\",true],\"type\":\"Dictionary\"}", "14000|0|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:1\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "14000|0|axis_shifted|{\"args\":[\"s:axis\",\"s:damage_taken\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:1\",\"s:system_stacks\",\"i:0\",\"s:system\",false],\"type\":\"Dictionary\"}", "18000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:16000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:488000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "18000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:16000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:446000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "18000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-30000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:458000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "18000|0|item_fired|{\"args\":[\"s:uid\",\"i:7\",\"s:ready_at\",\"i:24000\"],\"type\":\"Dictionary\"}", "18000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:30000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:30000\",\"s:amount\",\"i:0\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:7\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "22000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:16000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:474000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "22000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:16000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:462000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "22000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-110000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:352000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "22000|1|item_fired|{\"args\":[\"s:uid\",\"i:14\",\"s:ready_at\",\"i:44000\"],\"type\":\"Dictionary\"}", "22000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-275000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:0\",\"s:max\",\"i:600000\"],\"type\":\"Dictionary\"}", "22000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:360000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:275000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:14\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "22000|0|died|{\"args\":[],\"type\":\"Dictionary\"}", "22000|-1|battle_end|{\"args\":[\"s:winner\",\"i:1\"],\"type\":\"Dictionary\"}"]),
+"winner": 1
+}

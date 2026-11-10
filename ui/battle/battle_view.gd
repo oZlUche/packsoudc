@@ -25,6 +25,9 @@ signal reaction_shown(id: StringName, side: int)
 signal event_applied(e: BattleEvent)
 ## 272：玩家按「战记」键收起 / 展开了战记栏（战斗屏接它写回设置）
 signal log_toggled(open: bool)
+## 平衡检测方案 §8.1：玩家跳到底 / 拖了时间轴（观看记录用；[method seek] 里重放那一遍不算播放）
+signal skipped
+signal seeked(t: float)
 
 const SPEEDS := GameSettings.BATTLE_SPEEDS
 ## 167：倍速按钮上的罗马数字（缺图时写它，悬浮窗也写它；不写阿拉伯数字）
@@ -428,6 +431,7 @@ func skip_to_end() -> void:
 	if _result == null:
 		return
 	_now = _result.duration_sec() + 0.001
+	skipped.emit()
 	ended_by_jump = true
 	_suppress_popups = true
 	_drain_until(_now)
@@ -446,6 +450,7 @@ func seek(t: float) -> void:
 	_playing = false
 	_suppress_popups = true
 	_now = maxf(0.0, t)
+	seeked.emit(_now)
 	_drain_until(_now)
 	_sync_overlays()
 	_suppress_popups = false
@@ -548,6 +553,11 @@ func set_speed(v: float) -> void:
 
 func speed() -> float:
 	return SPEEDS[_speed_idx]
+
+
+## 回放走到的模拟秒数
+func playback_time() -> float:
+	return _now
 #endregion
 
 

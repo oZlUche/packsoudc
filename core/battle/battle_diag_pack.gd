@@ -47,6 +47,11 @@ func rerun() -> BattleResult:
 	return BattleSim.run(BattleInputCodec.decode(sides[0], rules), BattleInputCodec.decode(sides[1], rules), rng, time_limit, overtime)
 
 
+## 解出双方的输入（每次新解一份，可以随便改）：[我方, 对方]
+func specs() -> Array[CombatantSpec]:
+	return [BattleInputCodec.decode(sides[0], rules), BattleInputCodec.decode(sides[1], rules)] as Array[CombatantSpec]
+
+
 ## 能不能重跑：格式认得、两方都在、规则表里没有读不出来的空位
 func problems() -> Array[String]:
 	var out: Array[String] = []
