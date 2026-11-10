@@ -52,9 +52,7 @@ func solve(levels: Dictionary, fractions: Dictionary, radial: Array) -> Dictiona
 	for id in levels:
 		var lv := int(levels[id])
 		top = maxi(top, lv)
-		if not by_level.has(lv):
-			by_level[lv] = [] as Array[int]
-		(by_level[lv] as Array[int]).append(int(id))
+		(by_level.get_or_add(lv, [] as Array[int]) as Array[int]).append(int(id))
 	for lv in by_level:
 		var ids: Array[int] = by_level[lv]
 		ids.sort_custom(func(a: int, b: int) -> bool:
@@ -71,12 +69,8 @@ func solve(levels: Dictionary, fractions: Dictionary, radial: Array) -> Dictiona
 			continue
 		if int(levels[a]) == 0 or int(levels[b]) == 0:
 			continue
-		if not nbrs.has(a):
-			nbrs[a] = [] as Array[int]
-		if not nbrs.has(b):
-			nbrs[b] = [] as Array[int]
-		(nbrs[a] as Array[int]).append(b)
-		(nbrs[b] as Array[int]).append(a)
+		(nbrs.get_or_add(a, [] as Array[int]) as Array[int]).append(b)
+		(nbrs.get_or_add(b, [] as Array[int]) as Array[int]).append(a)
 
 	# 起点：都按圈上的位置放
 	for id in levels:

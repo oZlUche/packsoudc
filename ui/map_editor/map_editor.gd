@@ -346,9 +346,7 @@ func _sync_zones() -> void:
 	for id in _graph.node_ids():
 		var z := _graph.get_node(id).zone
 		if z != 0:
-			if not members.has(z):
-				members[z] = [] as Array[int]
-			(members[z] as Array[int]).append(id)
+			(members.get_or_add(z, [] as Array[int]) as Array[int]).append(id)
 	var zones := {}
 	for z in members:
 		zones[z] = {"node_ids": members[z], "gate_ids": ZoneRules.gate_ids(_graph, members[z])}

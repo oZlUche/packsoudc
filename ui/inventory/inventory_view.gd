@@ -555,9 +555,7 @@ func _draw() -> void:
 		# 193 §4：手上这件的格位（含旋转），点亮照现在的邻居
 		var held := {}
 		for m in preview_markers():
-			if not held.has(m[0]):
-				held[m[0]] = []
-			(held[m[0]] as Array).append(m)
+			(held.get_or_add(m[0], []) as Array).append(m)
 		for cell in held:
 			var list: Array = held[cell]
 			for i in list.size():

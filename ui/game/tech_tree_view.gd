@@ -183,9 +183,7 @@ func _place() -> void:
 	var max_depth := 0
 	for def in defs:
 		var at: Vector2i = lay.get(def.id, Vector2i.ZERO)
-		if not slots.has(at):
-			slots[at] = []
-		(slots[at] as Array).append(def)
+		(slots.get_or_add(at, []) as Array).append(def)
 		max_col = maxi(max_col, at.x)
 		max_depth = maxi(max_depth, at.y)
 	var widths: Array[int] = []
