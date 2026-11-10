@@ -466,7 +466,7 @@ static func run_placement(t: TestCase) -> void:
 					var build := def.build_of(StringName(String(c.get("build", "")))) if c.has("build") else null
 					t.check(cap < 0 or idef.rarity <= cap or sig.has(iid) or (build != null and build.items.has(iid)),
 						"点 %d：%s 的 %s 稀有度 %d 不超这一档的上限 %d" % [id, def.id, iid, idef.rarity, cap])
-					if EnemyPlacer._shares_tag(idef.tags, def.schools):
+					if idef.has_any_tag(def.schools):
 						school_n += 1
 			var available := EnemyPlacer.school_items(def.schools, items, cap)
 			var want_school := mini(rule.min_school, placed.size()) if not available.is_empty() else 0

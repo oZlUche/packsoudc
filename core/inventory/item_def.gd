@@ -84,6 +84,14 @@ func has_tag(tag: StringName) -> bool:
 	return tags.has(tag) or (material != "" and StringName(material) == tag)
 
 
+## 带 [param wanted] 里任一标签（只看 [member tags]，不看材质）
+func has_any_tag(wanted: Array[StringName]) -> bool:
+	for t in tags:
+		if wanted.has(t):
+			return true
+	return false
+
+
 ## 244：金银（[constant BULLION]）
 func is_bullion() -> bool:
 	return tags.has(BULLION)

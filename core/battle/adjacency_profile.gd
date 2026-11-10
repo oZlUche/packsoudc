@@ -110,11 +110,4 @@ static func accepts_all(tags: Array[StringName], def: ItemDef) -> bool:
 
 ## 某个定义是否满足标记的过滤条件。
 static func accepts(filter: Array[StringName], def: ItemDef) -> bool:
-	if filter.is_empty():
-		return true
-	if def == null:
-		return false
-	for tag in def.tags:
-		if filter.has(tag):
-			return true
-	return false
+	return filter.is_empty() or (def != null and def.has_any_tag(filter))

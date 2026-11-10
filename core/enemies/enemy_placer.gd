@@ -187,7 +187,7 @@ static func build_content(
 		elif bone.has(item_id):
 			bone.erase(item_id)
 			skeleton.append(item_id)
-		elif _shares_tag(idef.tags, def.schools):
+		elif idef.has_any_tag(def.schools):
 			first.append(item_id)
 		else:
 			later.append(item_id)
@@ -410,7 +410,7 @@ static func _school_count(placed: Array, items: ItemDatabase, schools: Array[Str
 	var n := 0
 	for raw in placed:
 		var d := items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
-		if d != null and not d.is_bag and _shares_tag(d.tags, schools):
+		if d != null and not d.is_bag and d.has_any_tag(schools):
 			n += 1
 	return n
 
@@ -614,17 +614,16 @@ static func _sort_big_first(picks: Array[StringName], items: ItemDatabase) -> vo
 
 ## 实际生效的稀有度上限：组装规则与档位各给一个，取小；都不限就是 -1
 static func rarity_cap_of(rule: EnemyLoadout, tier: StrengthTier) -> int:
-	var a := rule.rarity_cap if rule != null else -1
-	var b := tier.rarity_cap if tier != null else -1
-	if a < 0:
-		return b
-	return a if b < 0 else mini(a, b)
+	return _min_cap(rule.rarity_cap if rule != null else -1, tier.rarity_cap if tier != null else -1)
 
 
 ## 279 台架定调：武器的稀有度上限 —— [method rarity_cap_of] 再和档位的 [member StrengthTier.weapon_rarity_cap] 取小；-1 不限
 static func weapon_cap_of(rule: EnemyLoadout, tier: StrengthTier) -> int:
-	var a := rarity_cap_of(rule, tier)
-	var b := tier.weapon_rarity_cap if tier != null else -1
+	return _min_cap(rarity_cap_of(rule, tier), tier.weapon_rarity_cap if tier != null else -1)
+
+
+## 两个上限取小；-1 不限
+static func _min_cap(a: int, b: int) -> int:
 	if a < 0:
 		return b
 	return a if b < 0 else mini(a, b)
@@ -781,7 +780,7 @@ static func _ensure_weapons(
 static func school_items(
 	schools: Array[StringName], items: ItemDatabase, rarity_cap: int, who: EnemyDef = null, weapon_cap: int = -1, no_true: bool = false
 ) -> Array[StringName]:
-	return _item_pool(items, rarity_cap, who, func(d: ItemDef) -> bool: return _shares_tag(d.tags, schools), weapon_cap, no_true)
+	return _item_pool(items, rarity_cap, who, func(d: ItemDef) -> bool: return d.has_any_tag(schools), weapon_cap, no_true)
 
 
 ## 带通用标签、且不带本敌人任一流派标签的道具（不含包），id 升序。[param who] 给了就再过它的身份标签（087）
@@ -790,7 +789,7 @@ static func common_items(
 	no_true: bool = false
 ) -> Array[StringName]:
 	return _item_pool(items, rarity_cap, who,
-		func(d: ItemDef) -> bool: return _shares_tag(d.tags, rule.common_tags) and not _shares_tag(d.tags, schools), weapon_cap, no_true)
+		func(d: ItemDef) -> bool: return d.has_any_tag(rule.common_tags) and not d.has_any_tag(schools), weapon_cap, no_true)
 
 
 ## 两个池子共用的筛选：能生成的道具里去掉包（160：随身技能不是道具，本来就不在库里）、过稀有度上限与身份标签（087），再过 [param pred]；id 按文本升序
@@ -828,13 +827,6 @@ static func deals_true_damage(d: ItemDef) -> bool:
 		for e in (r as AbilityRule).effects:
 			if e is DealDamage and (e as DealDamage).pure:
 				return true
-	return false
-
-
-static func _shares_tag(tags: Array[StringName], wanted: Array[StringName]) -> bool:
-	for t in tags:
-		if wanted.has(t):
-			return true
 	return false
 
 
@@ -1395,16 +1387,12 @@ static func arrange(content: Dictionary, items: ItemDatabase, rng: RandomNumberG
 					result.append(_unplaced(pair[1]))
 					(out["left"] as Array[StringName]).append(d.id)
 	# 道具：组 → 散件（散件大件先，同样大按原先后）
-	var free_rank := {}
-	for k in free.size():
-		free_rank[k] = [(free[k][0] as ItemDef).shape.cell_count(), k]
-	var free_order: Array = free_rank.keys()
+	var free_order: Array = range(free.size())
 	free_order.sort_custom(func(a: int, b: int) -> bool:
-		return free_rank[a][0] > free_rank[b][0] if free_rank[a][0] != free_rank[b][0] else a < b)
-	var free_sorted: Array = []
-	for k in free_order:
-		free_sorted.append(free[k])
-	free = free_sorted
+		var ca := (free[a][0] as ItemDef).shape.cell_count()
+		var cb := (free[b][0] as ItemDef).shape.cell_count()
+		return ca > cb if ca != cb else a < b)
+	free = free_order.map(func(k: int) -> Array: return free[k])
 	var defs: Array[ItemDef] = []
 	var entries: Array = []
 	var groups: Array = []
@@ -1444,22 +1432,14 @@ static func arrange(content: Dictionary, items: ItemDatabase, rng: RandomNumberG
 	var got := _arrange(board, defs, groups, rng, fixed)
 	ItemInstance._next_uid = uid_mark
 	# 写回：按 defs 的先后，摆上了的带位置，摆不下的不带
-	var by_index := {}
 	var k_placed := 0
-	var left_set := {}
-	for i in got["left"]:
-		left_set[int(i)] = true
 	for i in defs.size():
-		if left_set.has(i):
-			continue
-		by_index[i] = (got["placed"] as Array)[k_placed]
-		k_placed += 1
-	for i in defs.size():
-		if by_index.has(i):
-			result.append(_merge(entries[i], by_index[i]))
-		else:
+		if (got["left"] as Array).has(i):
 			result.append(_unplaced(entries[i]))
 			(out["left"] as Array[StringName]).append(defs[i].id)
+		else:
+			result.append(_merge(entries[i], (got["placed"] as Array)[k_placed]))
+			k_placed += 1
 	content["items"] = result
 	content.erase("groups")
 	out["ungrouped"] = int(got["ungrouped"])

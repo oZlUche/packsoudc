@@ -8,40 +8,6 @@ extends RefCounted
 
 const PATH := "res://data/authoring/balance/power_weights.json"
 
-## 每一项的默认值（键 = 文件里的键 = 成员名）。加一项 = 这里一行 + 一个同名成员
-const DEFAULTS := {
-	"horizon_sec": 30.0,
-	"persist_share": 0.3,
-	"per_cell_dps": 2.0,
-	"default_cooldown": 2.0,
-	"stamina_per_cell": 2.0,
-	"heal_weight": 0.5,
-	"stamina_weight": 0.25,
-	"assumed_hp": 100.0,
-	"opponent_dps": 10.0,
-	"hit_rate": 1.0,
-	"crit_rate": 0.05,
-	"neighbor_hz": 0.5,
-	"low_hp_share": 0.3,
-	"threshold_share": 0.5,
-	"status_applied_rate": 0.3,
-	"status_removed_rate": 0.2,
-	"stamina_regen": 4.0,
-	"stamina_max": 50.0,
-	"stack_cost_factor": 0.5,
-	"condition_factor": 0.6,
-	"assumed_stacks": 2.0,
-	"unknown_buff_value": 1.0,
-	"weight_base": 48.0,
-	"weight_floor": 0.6,
-	"tiers": [0.9, 1.35, 1.9, 2.8],
-	"value_band": [0.8, 0.4],
-	"armor_per_point": 0.5,
-	"block_per_point": 3.2,
-	"handle_cells": 1.0,
-	"fight_sec": 12.0,
-}
-
 ## 估算视野 H：一场打多久（秒）。持续类效果按 H 内能跑多久算
 var horizon_sec: float = 30.0
 ## 永续的东西（不可叠层的永续 buff、轴）平均还能起作用的时间占 H 的几成（中途上的，后半场才有）。
@@ -124,13 +90,14 @@ func apply(d: Dictionary, problems: Array[String] = []) -> void:
 		var k := String(key)
 		if k.begins_with("_"):     # 「_说明」这类注释键
 			continue
-		if not DEFAULTS.has(k):
+		var cur: Variant = get(k)
+		if not (cur is float or cur is Array):
 			problems.append("没有这个系数 '%s'" % k)
 			continue
 		var v: Variant = d[key]
-		if DEFAULTS[k] is Array:
-			if not (v is Array) or (v as Array).size() != (DEFAULTS[k] as Array).size():
-				problems.append("'%s' 得是 %d 个数" % [k, (DEFAULTS[k] as Array).size()])
+		if cur is Array:
+			if not (v is Array) or (v as Array).size() != (cur as Array).size():
+				problems.append("'%s' 得是 %d 个数" % [k, (cur as Array).size()])
 				continue
 			var arr: Array[float] = []
 			for x in v:
@@ -163,6 +130,7 @@ func default_power(cells: int, weapon: bool = true) -> float:
 
 func to_dict() -> Dictionary:
 	var out := {}
-	for k in DEFAULTS:
-		out[k] = get(k)
+	for p in get_property_list():
+		if int(p["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE:
+			out[p["name"]] = get(p["name"])
 	return out

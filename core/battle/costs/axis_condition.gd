@@ -2,7 +2,7 @@
 ##
 ## [member stacks] 可以为负：按绝对值比、同号 —— 3 = 「至少 3 层加速」，−2 = 「至少 2 层减速」。看的是合计层数（内容层 + 系统层）
 class_name AxisCondition
-extends Cost
+extends Condition
 
 @export var axis: StringName = &""
 ## 看自己（true）还是对手（false）
@@ -21,10 +21,6 @@ func can_pay(ctx: RuleContext) -> bool:
 	return ok != negate
 
 
-func pay(_ctx: RuleContext) -> void:
-	pass
-
-
 func describe() -> String:
 	var n := absi(stacks) if stacks != 0 else 1
 	var key := ("cost.axis_self_below" if negate else "cost.axis_self_min") if on_self else ("cost.axis_opp_below" if negate else "cost.axis_opp_min")
@@ -35,7 +31,3 @@ func describe() -> String:
 func estimated_factor(ctx: PowerContext, _rate: float) -> float:
 	var p := ctx.weights.condition_factor
 	return 1.0 - p if negate else p
-
-
-func is_condition() -> bool:
-	return true

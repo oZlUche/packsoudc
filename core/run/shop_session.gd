@@ -455,12 +455,7 @@ static func candidates(p_rules: EconomyRules, p_items: ItemDatabase) -> Array[St
 		var d := p_items.get_def(id)
 		if d == null or d.is_bag or d.is_bullion():     # 244：金银另抽（[method _roll_bullion]），不进权重池
 			continue
-		var excluded := false
-		for tag in d.tags:
-			if p_rules.shop_exclude_tags.has(tag):
-				excluded = true
-				break
-		if not excluded:
+		if not d.has_any_tag(p_rules.shop_exclude_tags):
 			out.append(id)
 	out.sort()
 	return out

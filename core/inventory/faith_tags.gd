@@ -26,14 +26,8 @@ static func id_of_tag(tag: StringName) -> StringName:
 static func item_matches(def: ItemDef, tags: Array[StringName], min_cells: int, exact_grade: int) -> bool:
 	if def == null:
 		return false
-	if not tags.is_empty():
-		var hit := false
-		for t in tags:
-			if def.tags.has(t):
-				hit = true
-				break
-		if not hit:
-			return false
+	if not tags.is_empty() and not def.has_any_tag(tags):
+		return false
 	var cells := ItemVolume.cells_of(def)
 	if min_cells > 0 and cells < min_cells:
 		return false

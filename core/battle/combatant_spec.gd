@@ -102,26 +102,26 @@ func max_hp_int() -> int:
 ## 否则护符的增伤在统计里看不见（作者问的：不是没生效，是统计没算）。buff 有时长也按全程算 —— 只是预估
 func opening_mods() -> Array:
 	var out: Array = []
-	var pool: Array = []
-	for it in items:
-		pool.append_array(it.rules)
-	pool.append_array(set_rules)
-	for r in pool:
-		var rule := r as AbilityRule
-		if rule == null or not (rule.trigger is OnBattleStart) or not (rule.cadence == null or rule.cadence is Always):
-			continue
-		for e in rule.effects:
-			var ap := e as ApplyStatus
-			if ap == null or ap.buff == null or ap.target != CombatEffect.Target.SELF:
-				continue
-			for m in ap.buff.mods:
-				out.append([m, maxi(1, ap.stacks)])
+	for pair in _opening_buffs():
+		for m in (pair[0] as BuffDef).mods:
+			out.append([m, pair[1]])
 	return out
 
 
 ## 152：同一批开战 buff 带的标准轴层数（axis → 层数）。预估照运行时那样把它们当公式的最后一步
 func opening_axes() -> Dictionary:
 	var out: Dictionary = {}
+	for pair in _opening_buffs():
+		for a in (pair[0] as BuffDef).axes:
+			if a != null:
+				var k := (a as BuffAxis).axis
+				out[k] = int(out.get(k, 0)) + (a as BuffAxis).stacks * int(pair[1])
+	return out
+
+
+## 开战即上身、作用于自己的 buff（开战时 + 必然 + apply_status 给自己）：[[BuffDef, 层数], …]，道具的规则在前、套装的在后
+func _opening_buffs() -> Array:
+	var out: Array = []
 	var pool: Array = []
 	for it in items:
 		pool.append_array(it.rules)
@@ -132,12 +132,8 @@ func opening_axes() -> Dictionary:
 			continue
 		for e in rule.effects:
 			var ap := e as ApplyStatus
-			if ap == null or ap.buff == null or ap.target != CombatEffect.Target.SELF:
-				continue
-			for a in ap.buff.axes:
-				if a != null:
-					var k := (a as BuffAxis).axis
-					out[k] = int(out.get(k, 0)) + (a as BuffAxis).stacks * maxi(1, ap.stacks)
+			if ap != null and ap.buff != null and ap.target == CombatEffect.Target.SELF:
+				out.append([ap.buff, maxi(1, ap.stacks)])
 	return out
 
 

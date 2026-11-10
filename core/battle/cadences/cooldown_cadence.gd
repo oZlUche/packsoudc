@@ -21,10 +21,10 @@ const MIN_PERIOD := StatMath.ONE / 100  # 0.01 秒
 @export var use_haste: bool = true
 
 
-## 本次冷却的实际时长：周期 ÷ 速率，按调用当刻的属性算
-func _duration(ctx: RuleContext) -> int:
-	var from_stats := ctx.item_stat(BattleStats.COOLDOWN, -1)
-	var period := from_stats if from_stats > 0 else StatMath.from_float(seconds)
+## 本次冷却的实际时长：周期 ÷ 速率，按调用当刻的属性算（属性 [param key] 有值就以属性为准，没有用 [param base] 秒；[CycleCadence] 的单次冷却也走这里）
+func _duration(ctx: RuleContext, key: StringName = BattleStats.COOLDOWN, base: float = seconds) -> int:
+	var from_stats := ctx.item_stat(key, -1)
+	var period := from_stats if from_stats > 0 else StatMath.from_float(base)
 	period = maxi(MIN_PERIOD, period)
 	if not use_haste:
 		return period

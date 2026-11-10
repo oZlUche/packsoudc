@@ -190,7 +190,8 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	_apply_scoped(spec, board, inp)
 
 	# --- 8. 整单位 ---
-	_apply_baseline_mods(spec, inp)
+	for mod in inp.baseline_mods:     # 基线修饰（食物护甲、`stat_mod(baseline)`）
+		(mod as StatModifier).apply_to(spec.baseline, 1)
 	spec.set_rules.append_array(inp.rules)
 
 	# --- 9. 生命上限。放在最后，所以第 8 步改基线生命的不用再手工补一遍 ---
@@ -310,12 +311,6 @@ static func _attach(item: CompiledItem, rule: AbilityRule, origin: StringName) -
 		item.attached.append({"rule_index": item.rules.size() - 1, "origin": origin})
 
 
-## 第 8 步：基线修饰（食物护甲、`stat_mod(baseline)`）
-static func _apply_baseline_mods(spec: CombatantSpec, inp: CompileInput) -> void:
-	for mod in inp.baseline_mods:
-		(mod as StatModifier).apply_to(spec.baseline, 1)
-
-
 ## 包只作用于自己**整件**装着的东西。横跨两个包的物品 bag_of() 为空，两边的加成都拿不到 ——
 ## 跨包是用空间换加成的取舍，不是双份加成的漏洞。按 bag_of() 查归属，这条规则
 ## （3.2）在这里直接兑现为「每件物品的归属包唯一」。
@@ -337,7 +332,7 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 ## 非对称会让内容作者踩坑：把配件贴在武器旁边，却只有一边听得见对方出手。
 static func _apply_adjacency(
 	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary,
-	attach_pending: Dictionary, fed: Dictionary = {}
+	attach_pending: Dictionary, fed: Dictionary
 ) -> Dictionary:
 	for uid in fighters:
 		var holder := board.get_item(uid)
@@ -467,12 +462,9 @@ static func cycle_order(board: GridInventory, holder_uid: int, loads: Dictionary
 		keyed.append([roundi(ang * 1000000.0), feeder.placed_seq, int(other)])
 	keyed.sort()
 	for k in keyed:
-		out.append(_loaded_entry(board.get_item(int(k[2]))))
+		var feeder := board.get_item(int(k[2]))
+		out.append(loaded_entry_of(feeder.def, feeder.uid))
 	return out
-
-
-static func _loaded_entry(feeder: ItemInstance) -> Dictionary:
-	return loaded_entry_of(feeder.def, feeder.uid)
 
 
 ## 一颗晶石 / 一捆箭在轮读表里的那一条（按定义算；台架给弓弩装箭也用它）
