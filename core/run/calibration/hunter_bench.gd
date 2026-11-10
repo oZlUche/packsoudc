@@ -38,7 +38,6 @@ static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies
 		brackets: Array[int] = [] as Array[int]) -> Dictionary:
 	var out := {}
 	var use_pool := pool
-	var rule: StrengthRule = hunter.strength_rule if hunter != null and hunter.strength_rule != null else (use_pool.strength_rule if use_pool != null else null)
 	var node := MapNode.new()
 	node.id = 0
 	node.type = &"battle"
@@ -48,18 +47,7 @@ static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies
 		var dummy: Dictionary = dummies[k]
 		var spec := DummyBuilder.compile(dummy, items)
 		var steps_raw: Array = dummy.get("steps", [0, 0])
-		var hi := int(steps_raw[1]) if int(steps_raw[1]) >= 0 else int(steps_raw[0]) + 5
-		@warning_ignore("integer_division")
-		var mid := (int(steps_raw[0]) + hi) / 2
-		var exploration := {"steps": mid, "searches": int(round(mid * searches_per_step))}
-		# 段位表优先（作者：按段位定档）；没有段位表或猎手没配表才走强度规则
-		var wanted := -1
-		if hunter != null and not brackets.is_empty():
-			wanted = hunter.strength_for_bracket(HunterMechanic.bracket_of_steps(brackets, mid))
-		if wanted < 0:
-			wanted = use_pool.clamp_strength(rule.wanted(node, 0.5, difficulty, scale_id, exploration)) if rule != null and use_pool != null else 0
-		elif use_pool != null:
-			wanted = use_pool.clamp_strength(wanted)
+		var wanted := wanted_of(dummy, hunter, use_pool, node, difficulty, scale_id, searches_per_step, brackets)
 		var rates := {}
 		var best := -1
 		var best_gap := INF
@@ -73,6 +61,42 @@ static func run(dummies: Dictionary, hunter: HunterDef, pool: EnemyPool, enemies
 		out[k] = {"steps": steps_raw, "samples": int(dummy.get("samples", 0)), "hp": float(dummy.get("hp", 0.0)), "dps": float(dummy.get("dps", 0.0)),
 			"wanted": wanted, "best": best, "rates": rates}
 	return out
+
+
+## 这一段木桩（取它步数区间的中点）照现在的规则会遇到猎手的第几档：段位表优先（作者：按段位定档），没有段位表或猎手没配表才走强度规则
+static func wanted_of(dummy: Dictionary, hunter: HunterDef, pool: EnemyPool, node: MapNode, difficulty: int = 0, scale_id: StringName = &"",
+		searches_per_step: float = 0.0, brackets: Array[int] = [] as Array[int]) -> int:
+	var rule: StrengthRule = hunter.strength_rule if hunter != null and hunter.strength_rule != null else (pool.strength_rule if pool != null else null)
+	var steps_raw: Array = dummy.get("steps", [0, 0])
+	var hi := int(steps_raw[1]) if int(steps_raw[1]) >= 0 else int(steps_raw[0]) + 5
+	@warning_ignore("integer_division")
+	var mid := (int(steps_raw[0]) + hi) / 2
+	var exploration := {"steps": mid, "searches": int(round(mid * searches_per_step))}
+	var wanted := -1
+	if hunter != null and not brackets.is_empty():
+		wanted = hunter.strength_for_bracket(HunterMechanic.bracket_of_steps(brackets, mid))
+	if wanted < 0:
+		return pool.clamp_strength(rule.wanted(node, 0.5, difficulty, scale_id, exploration)) if rule != null and pool != null else 0
+	return pool.clamp_strength(wanted) if pool != null else wanted
+
+
+## 实验目录（[BalanceExperiment]）的 summary 里加一节：每段 {wanted（规则给的档）, best（有效场里胜率离五成最近的档）, rate（那一档的 Wilson 区间）}
+static func decorate(summary: Dictionary, wanted: Dictionary) -> void:
+	var out := {}
+	var meta: Dictionary = summary.get("cell_meta", {})
+	for c in summary["cells"]:
+		var m: Dictionary = meta.get(c, {})
+		var k := str(m.get("bracket", ""))
+		var wr: Variant = (summary["cells"][c] as Dictionary)["win_rate"]
+		if not out.has(k):
+			out[k] = {"wanted": wanted.get(k, null), "best": null, "rate": null}
+		if wr == null:
+			continue
+		var cur: Variant = out[k]["rate"]
+		if cur == null or absf(float(wr["p"]) - 0.5) < absf(float(cur["p"]) - 0.5):
+			out[k]["best"] = m.get("tier")
+			out[k]["rate"] = wr
+	summary["hunter"] = out
 
 
 ## 给人看的表

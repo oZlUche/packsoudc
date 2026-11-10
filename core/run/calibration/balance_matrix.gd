@@ -53,7 +53,7 @@ static func cell(specs: Array[CombatantSpec], pool: EnemyPool, enemies: EnemyDat
 		h["tier"] = tier
 		h["enemy"] = String(entry.enemy)
 		h["stamina_regen"] = AssumptionStats.regen_of(spec)
-		rows.append(AssumptionStats.of(result, h))
+		rows.append(ExperimentManifest.stamp(AssumptionStats.of(result, h), ExperimentManifest.SYNTHETIC))     # 木桩的行一律标合成
 		dur += result.duration_sec()
 		if result.winner == 0:
 			wins += 1

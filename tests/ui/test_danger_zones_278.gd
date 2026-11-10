@@ -109,3 +109,10 @@ static func frame_fit_free_mode(t: TestCase, root: Window) -> void:
 	for s in shapes:
 		t.check(not Geometry2D.triangulate_polygon(s["poly"]).is_empty(), "外缘 %d 点剖分得出" % (s["poly"] as PackedVector2Array).size())
 	view.queue_free()
+
+
+static func run_degenerate_fill(t: TestCase) -> void:
+	t.begin("278 补（测试 v5.49）：剖不开的一块不填，只画边 —— 免得引擎报 triangulation failed")
+	t.check(DangerZones.fillable(PackedVector2Array([Vector2(0, 0), Vector2(10, 0), Vector2(10, 10), Vector2(0, 10)])), "正方形：填")
+	t.check(not DangerZones.fillable(PackedVector2Array([Vector2(0, 0), Vector2(10, 10), Vector2(10, 0), Vector2(0, 10)])), "自相交的蝴蝶结：不填")
+	t.check(not DangerZones.fillable(PackedVector2Array([Vector2(0, 0), Vector2(1, 1)])), "不到三个点：不填")
