@@ -303,5 +303,17 @@ static func run_departure_briefing_218(t: TestCase) -> void:
 	t.is_null(f.departure_briefing(free), "再出发：不弹")
 	t.is_null(f.departure_briefing(hour), "换机关沙漏出发：同一个事件，也不弹")
 	t.check(MetaState.from_dict(f.meta.to_dict(), c.items).briefing_seen.has(&"briefing_legion"), "跟存档")
+	# 测试报告 G04（作者 2026-11-10 选「单独开头」）：开场一问选了【不需要】的存档换跳过版，后文一样；看过跳过版 = 看过这条
+	f.meta.briefing_seen.clear()
+	f.meta.set_flag(GameFlow.PROLOGUE_SKIPPED)
+	var alt := f.departure_briefing(free)
+	t.check(alt != null and alt.id == &"briefing_legion_skipped", "跳过教程的存档：弹跳过版")
+	if alt != null:
+		t.check(not alt.text.begins_with(def.text.substr(0, 8)) and alt.text.substr(alt.text.find("下一趟")) == def.text.substr(def.text.find("下一趟")), "只换开头一句，后文一样")
+		t.check(not alt.text_for().is_empty() and alt.texts.has("en") and String(alt.texts["en"]).contains("The next one has no map"), "有英文")
+		f.show_briefing(alt, func(): pass)
+		f.close_briefing()
+		t.check(f.meta.briefing_seen.has(&"briefing_legion"), "看过跳过版：记成看过「军团的交代」")
+		t.is_null(f.departure_briefing(hour), "换机关沙漏出发：不再弹")
 	RunSave.remove(SAVE)
 	MetaSave.remove(META)

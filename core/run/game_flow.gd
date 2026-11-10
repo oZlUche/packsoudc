@@ -225,6 +225,9 @@ func skip_prologue() -> void:
 
 ## 240：问过要不要教程的局外旗标（一份存档只问一次）
 const TUTORIAL_ASKED := &"tutorial_asked"
+## 测试报告 G04（作者 2026-11-10 选「单独开头」）：开场一问选了【不需要】—— 出发交代换成 `<交代>_skipped` 那一版（有的话）
+const PROLOGUE_SKIPPED := &"prologue_skipped"
+const SKIPPED_SUFFIX := "_skipped"
 
 
 ## 240：这一章的开场事件选完了该不该问 —— 是第一张教程、这份存档还没问过
@@ -249,6 +252,7 @@ func decline_tutorial() -> void:
 	if meta == null:
 		return
 	meta.set_flag(TUTORIAL_ASKED)
+	meta.set_flag(PROLOGUE_SKIPPED)
 	skip_prologue()     # 内含存局外
 	if writable():
 		RunSave.remove(save_path)
@@ -438,6 +442,9 @@ func departure_briefing(chapter: ChapterDef) -> EventDef:
 		return null
 	if meta != null and meta.briefing_seen.has(chapter.departure_event):
 		return null
+	var alt := StringName(String(chapter.departure_event) + SKIPPED_SUFFIX)
+	if meta != null and meta.flag(PROLOGUE_SKIPPED) != 0 and event_defs.has(alt):
+		return event_defs[alt]
 	return event_defs.get(chapter.departure_event, null)
 
 
@@ -451,9 +458,11 @@ func show_briefing(def: EventDef, then: Callable) -> void:
 ## 218 补充一：交代屏上点了「知道了」—— 记看过、存局外，接着出发；出发没换屏（开不了局）就回到原来那一屏
 func close_briefing() -> void:
 	var def: EventDef = last_payload.get("def", null) if bool(last_payload.get("briefing", false)) else null
-	if def != null and meta != null and not meta.briefing_seen.has(def.id):
-		meta.briefing_seen.append(def.id)
-		save_meta()
+	if def != null and meta != null:
+		var seen := StringName(String(def.id).trim_suffix(SKIPPED_SUFFIX))     # 跳过版看过 = 这条交代看过
+		if not meta.briefing_seen.has(seen):
+			meta.briefing_seen.append(seen)
+			save_meta()
 	var then := _briefing_then
 	_briefing_then = Callable()
 	if then.is_valid():

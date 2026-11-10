@@ -57,6 +57,10 @@ var max_chain: int = 256
 var _queue: Array[BattleEvent] = []
 var _draining: bool = false
 
+## 292：连带出手串里已经出过手的件（根事件的 seq → {[method RuleEngine.chain_key]: true}），见 [method RuleEngine._claim]；
+## 一轮排空结束就清，一串连带出手总在同一轮里走完
+var cascade: Dictionary = {}
+
 ## 正在结算中的伤害包，栈顶是当前这一包。
 ##
 ## 是栈而不是单个字段：受伤前效果自己也可能造成伤害（荆棘反弹），
@@ -175,6 +179,7 @@ func drain() -> void:
 		RuleEngine.dispatch(self, e)
 		processed += 1
 	_draining = false
+	cascade.clear()
 
 
 func pending() -> int:

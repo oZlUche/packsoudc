@@ -1,6 +1,6 @@
 # 背包搜打撤 — 架构设计文档
 
-> 版本：v5.47 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
+> 版本：v5.48 ｜ 引擎：Godot 4.7 (Forward+ / Jolt) ｜ 状态：M1～M6、069 进阶难度与猎手、第 7 阶段侵蚀都已落地，第 8 阶段内容扩充进行中（现状见 [status.md](status.md)，变更记录见 16 节）
 
 ## 0. 游戏概述
 
@@ -614,7 +614,7 @@ UI 上用什么图形表示这两类，是表现层的事，数据层不关心�
 挂上去的规则是**附加规则** —— 编译器唯一的入口 `BattleCompiler._attach`：深拷贝、把 `OnItemFired` 绑成只听宿主、在
 `CompiledItem.attached` 记来源（道具 id 或 `faith:<id>`）。它以**宿主**身份跑（`item_stat` 读宿主、伤害来源是宿主 → 直接伤害），
 日神附魔（`ScopedMod.rules`，第 7 步）走的是同一个入口。附加规则只许 `on_item_fired`、不许 costs、不许直接打毒 / 流血（导入 error）；
-**它执行时不算宿主再出手一次**（`RuleEngine.evaluate` 听自己出手的规则不再发 `ITEM_FIRED`，否则会自己触发自己）。
+**它执行时不算宿主再出手一次**（`RuleEngine.evaluate` 听自己出手的规则不再发 `ITEM_FIRED`，否则会自己触发自己）。v5.48（报告 292）推广到多件：一次出手带起来的连带出手串里每件最多出手一次，已经出过手的件再被这一串触发只放效果、不再发 `ITEM_FIRED`（`RuleEngine._claim`）。
 「配件自己的反应」仍用 `OnItemFired.LINKED`（规则以配件身份跑）；「武器出手时附带 X」统一走附加。反向的 `receive_rules` 等内容需要再加。
 
 **附魔**（175 第三批，作者定：**所有附魔都视为铸牌附魔**）：道具的附魔是一份「三张铸炉映射表里各落到哪一行」的字典（`EnchantDef` 同构：`trigger / direction / rate / effect / target / tier / magnitude / element`），
@@ -4569,6 +4569,7 @@ res://
 | v5.45 | 2026-11-09 | **284 三位 NPC 的名字与台词**（作者 09:30 点头；PR #521）：`data/authoring/npcs/{shopkeeper,stall_keeper,blacksmith}.json` 填 `display_name` / `display_names.en`（哈基姆 Hakim / 德米特里 Demetrios / 布伦努斯 Brennus）与各六句 `guide_1–6`（中英，无条件，`lore_*` 槽删掉）；通用三句（v5.36）照旧并进池子，每人九句。字集 `charset.txt` 与四个字体子集重做 |
 | v5.46 | 2026-11-09 | **局内商店的店主纸条压在商人棋盘下面**（测试报 v5.45；PR #522）：`NpcBadge` 的纸条 `top_level` 后不跟父节点的 z，局内商店整页在 `GameDirector.OVERLAY_Z` 100 上，纸条只有 20。纸条改 `z_as_relative = false`，`talk()` 时取 `NpcBadge.abs_z(头像) + NOTE_Z`（20）；基地页照旧是 20 |
 | v5.47 | 2026-11-10 | **执行方案 2026-11-09 第一批 · 修云端调试报告的问题**（报告 291；PR #525）：G01 `HoverTip.release()` 离树时直接收起、不取鼠标位置；G02 结算「走过的点」改数 `MapTravel.history` 里到过的不同点（`RunResult.arrived_count`，没有走过记录的老档退回数用掉的点）；G03 结果页标题木牌按字体量的一行字宽撑开、主题一换就重排（`ResultScreen.title_width / _fit_plank`）；Q01 `tools/test.sh` 除 `SCRIPT ERROR` 外，日志里没登记在 `tools/expected_errors.txt` 的 `ERROR:` 也判失败，并修掉测试自己造的错（格式串 `%`、直接调 `_draw()` → `CombatantPanel.layout_chips()`、`InventoryView` 离树取 `get_tree()`、负尺寸矩形）；`docs/reports/testing/evidence/.gdignore`；`docs/status.md` 按 v5.46 重写（阶段 A） |
+| v5.48 | 2026-11-10 | **执行方案 2026-11-09 第一批阶段 C · 平衡基线**（报告 292；PR #527）：只交统计和建议，不改数（`docs/reports/balance/2026-11-10-*.md`，输入存 `docs/reports/balance/inputs/2026-11-10-archetypes.json`）。引擎：一次出手带起来的连带出手串里每件最多出手一次（`RuleEngine._claim`，出手事件带 `chain` = 根事件的 seq，`BattleContext.cascade` 一轮排空后清），两件以上互相「其他道具出手时」不再打转到 `max_chain` 截断；G04 跳过教程的存档记 `prologue_skipped`，首次出发读 `<交代>_skipped`（`briefing_legion_skipped`，只换第一句），读过记原 id |
 | v4.70 | 2026-10-29 | **260 补充五（作者 10-29 09:03「改成保留小数点后两位，比如15.43k，2.34m，3.1b」，取代补充三、四的罗马数字）**：碑额写 `RecordsStele.compact(v)` —— 1000 以下整数；千起 k、百万起 m、十亿起 b、万亿起 t，两位小数整数算、向下截不进位（999999 → 999.99k），末尾 0 去掉（3100000000 → 3.1b）；0 写「—」，悬停照旧写准数。横线、`roman / numeral_parts / overline_stack` 删掉；基线 = 碑额顶 + 75 + 字号 × 0.375，金币固定 52、中心对准字身中线 |
 | v4.69 | 2026-10-28 | **260 补充四（作者 10-28 18:35「类似现代计数……超过千用K，超过百万用M，超过十亿用B，通过不断增加上划线」，取代补充三）**：`RecordsStele.numeral_parts` 返回 [最高一段的罗马数字, 横线道数]，每 ÷ 1000 加一道、向下取整、后面的段不写（742 → DCCXLII，5414 → V̅，3888888 → 两道线的 III，38 亿 → 三道）；碑额画 k 道横线（线宽 = 字宽，往上每道再空 max(2, 字号 × 0.05)，`overline_stack`），字和横线整块在碑额里竖向居中、金币中心对准字身中线；顺带修掉 v4.68 一百万起千位段一长串 M。**随身技能图标定稿**（作者 18:35「B+C」）：`assets/belt_skills/smoke_bomb.png`（陶罐）、`aid_pack.png`（亚麻小包），60 × 60；`BeltSkillDef.icon()` 把图留在 def 上（腰带在 `_draw` 里每帧画，184） |
 | v4.68 | 2026-10-28 | **260 补充三（作者 10-28 10:15 选 B「只写到千」）**：碑额大数 —— `RecordsStele.numeral_parts` 一万起只写千位段（`[roman(v / 1000), ""]`，向下取整，38888 → X̅X̅X̅V̅I̅I̅I̅），4000～9999 照旧带零头，悬停照旧写准数；金币固定 `WORTH_COIN` 52（不跟字缩，竖向中心在碑额顶 + 75），`worth_width` 金币那项跟着换，字区实宽 330 − 52 − 6；千位段上横线粗 max(2, 字号 × 0.06)，在字头（基线上方字号 × 0.75）再往上留 max(3, 字号 × 0.1) 的缝，不再贴着字头像删除线 |
