@@ -10,7 +10,8 @@ extends RefCounted
 ## 157：悬浮窗的词条小窗改走主题变体 PanelTooltip（术语色边那处特例没了）—— 134 → 133
 ## 游戏测试 10-21：科技树节点长名字收字号（+1），节点字色三处并成一处（-4）—— 133 → 130
 ## 精简批次二：两个沙盒、回放浏览器、回放、悬浮窗里 18 处盒子间距与 3 处四边边距改走 UiTheme.vbox / hbox / margins —— 130 → 109
-const RATCHET := 109
+## 精简批次四：七个编辑器的外壳（边距、三栏、校验框、JSON 框）收进 AuthoringEditor，各写一份的覆写只剩一份 —— 109 → 81
+const RATCHET := 81
 const SCANNED := ["res://ui/game", "res://ui/inventory", "res://ui/battle", "res://ui/hud",
 	"res://ui/editor", "res://ui/event_editor", "res://ui/buff_editor", "res://ui/set_editor", "res://ui/map_editor", "res://ui/part_editor"]
 
