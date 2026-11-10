@@ -1,0 +1,411 @@
+[gd_resource type="Resource" script_class="BattleDiagPack" format=3]
+
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="1_qrhs0"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="2_nco2r"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="3_40y58"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="4_1wj7u"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_d5yyi"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="6_hsef8"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="7_s4d34"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="8_bxdws"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="9_iji0c"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="10_umgll"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="11_wntyy"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="12_5faho"]
+[ext_resource type="Script" path="res://core/battle/costs/status_condition.gd" id="13_twqbb"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="14_4ybk7"]
+[ext_resource type="Script" path="res://core/battle/effects/prime_next_hit.gd" id="15_ln3nd"]
+[ext_resource type="Script" path="res://core/battle/cadences/cycle_cadence.gd" id="16_jplcd"]
+[ext_resource type="Script" path="res://core/battle/effects/fire_loaded.gd" id="17_ibcxq"]
+[ext_resource type="Script" path="res://core/battle/battle_diag_pack.gd" id="18_4o1cg"]
+
+[sub_resource type="Resource" id="Resource_jd32l"]
+script = ExtResource("2_nco2r")
+seconds = 1.6
+
+[sub_resource type="Resource" id="Resource_1xk2p"]
+script = ExtResource("4_1wj7u")
+amount = 9.0
+
+[sub_resource type="Resource" id="Resource_0016n"]
+script = ExtResource("6_hsef8")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_w5umu"]
+script = ExtResource("7_s4d34")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_vmv01"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_w5umu")
+cadence = SubResource("Resource_jd32l")
+costs = Array[ExtResource("3_40y58")]([SubResource("Resource_1xk2p")])
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_0016n")])
+
+[sub_resource type="Resource" id="Resource_1bxi6"]
+script = ExtResource("2_nco2r")
+seconds = 0.9
+
+[sub_resource type="Resource" id="Resource_i13pq"]
+script = ExtResource("4_1wj7u")
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_0wir3"]
+script = ExtResource("6_hsef8")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_ip1iy"]
+script = ExtResource("2_nco2r")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_o3e5a"]
+script = ExtResource("6_hsef8")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_3lrkb"]
+script = ExtResource("7_s4d34")
+
+[sub_resource type="Resource" id="Resource_5a13g"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_3lrkb")
+cadence = SubResource("Resource_ip1iy")
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_o3e5a")])
+
+[sub_resource type="Resource" id="Resource_40qwr"]
+script = ExtResource("10_umgll")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+is_debuff = true
+decay_halve_on = &"tick"
+rules = Array[ExtResource("1_qrhs0")]([SubResource("Resource_5a13g")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_yot4r"]
+script = ExtResource("11_wntyy")
+buff = SubResource("Resource_40qwr")
+metadata/part_ref = &"apply_status_bleed"
+
+[sub_resource type="Resource" id="Resource_mbepm"]
+script = ExtResource("7_s4d34")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_kd5kd"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_mbepm")
+cadence = SubResource("Resource_1bxi6")
+costs = Array[ExtResource("3_40y58")]([SubResource("Resource_i13pq")])
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_0wir3"), SubResource("Resource_yot4r")])
+
+[sub_resource type="Resource" id="Resource_yimlm"]
+script = ExtResource("12_5faho")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_j52og"]
+script = ExtResource("13_twqbb")
+buff_id = &"bleed"
+stacks = 4
+
+[sub_resource type="Resource" id="Resource_o28qt"]
+script = ExtResource("6_hsef8")
+amount = 4.0
+damage_stat = &""
+
+[sub_resource type="Resource" id="Resource_qn1b0"]
+script = ExtResource("14_4ybk7")
+self_only = true
+
+[sub_resource type="Resource" id="Resource_c0h4f"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_qn1b0")
+cadence = SubResource("Resource_yimlm")
+costs = Array[ExtResource("3_40y58")]([SubResource("Resource_j52og")])
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_o28qt")])
+
+[sub_resource type="Resource" id="Resource_ecebs"]
+script = ExtResource("2_nco2r")
+seconds = 1.2
+
+[sub_resource type="Resource" id="Resource_4jn00"]
+script = ExtResource("4_1wj7u")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_i5h4l"]
+script = ExtResource("6_hsef8")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_2u3ab"]
+script = ExtResource("2_nco2r")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_ocxa5"]
+script = ExtResource("6_hsef8")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_rvpw5"]
+script = ExtResource("7_s4d34")
+
+[sub_resource type="Resource" id="Resource_4ej7o"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_rvpw5")
+cadence = SubResource("Resource_2u3ab")
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_ocxa5")])
+
+[sub_resource type="Resource" id="Resource_fwoen"]
+script = ExtResource("10_umgll")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+is_debuff = true
+decay_halve_on = &"tick"
+rules = Array[ExtResource("1_qrhs0")]([SubResource("Resource_4ej7o")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_panmr"]
+script = ExtResource("11_wntyy")
+buff = SubResource("Resource_fwoen")
+metadata/part_ref = &"apply_status_bleed"
+
+[sub_resource type="Resource" id="Resource_2qnqg"]
+script = ExtResource("7_s4d34")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_27jl3"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_2qnqg")
+cadence = SubResource("Resource_ecebs")
+costs = Array[ExtResource("3_40y58")]([SubResource("Resource_4jn00")])
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_i5h4l"), SubResource("Resource_panmr")])
+
+[sub_resource type="Resource" id="Resource_ia5kv"]
+script = ExtResource("2_nco2r")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_tknk8"]
+script = ExtResource("4_1wj7u")
+amount = 5.0
+
+[sub_resource type="Resource" id="Resource_betnx"]
+script = ExtResource("6_hsef8")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_6rqt7"]
+script = ExtResource("7_s4d34")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_uy7ey"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_6rqt7")
+cadence = SubResource("Resource_ia5kv")
+costs = Array[ExtResource("3_40y58")]([SubResource("Resource_tknk8")])
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_betnx")])
+
+[sub_resource type="Resource" id="Resource_jutag"]
+script = ExtResource("12_5faho")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_e00xv"]
+script = ExtResource("15_ln3nd")
+
+[sub_resource type="Resource" id="Resource_ej8ht"]
+script = ExtResource("14_4ybk7")
+
+[sub_resource type="Resource" id="Resource_qpamh"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_ej8ht")
+cadence = SubResource("Resource_jutag")
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_e00xv")])
+
+[sub_resource type="Resource" id="Resource_1dvj6"]
+script = ExtResource("16_jplcd")
+step_seconds = 1.8
+seconds = 1.8
+
+[sub_resource type="Resource" id="Resource_5ppg5"]
+script = ExtResource("4_1wj7u")
+amount = 6.0
+
+[sub_resource type="Resource" id="Resource_udpjr"]
+script = ExtResource("17_ibcxq")
+ammo = true
+
+[sub_resource type="Resource" id="Resource_cnfjn"]
+script = ExtResource("7_s4d34")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_1p4ep"]
+script = ExtResource("1_qrhs0")
+trigger = SubResource("Resource_cnfjn")
+cadence = SubResource("Resource_1dvj6")
+costs = Array[ExtResource("3_40y58")]([SubResource("Resource_5ppg5")])
+effects = Array[ExtResource("5_d5yyi")]([SubResource("Resource_udpjr")])
+
+[resource]
+script = ExtResource("18_4o1cg")
+meta = {
+"scenario": "swap_b",
+"source": "synthetic"
+}
+sides = Array[Dictionary]([{
+"axes": {},
+"baseline": {
+&"max_hp": [1000000, 0, 0],
+&"max_stamina": [500000, 0, 0],
+&"regen_stamina": [40000, 0, 0]
+},
+"fed_uids": Array[int]([]),
+"format": 1,
+"immune_buffs": Array[StringName]([]),
+"items": [{
+"attached": Array[Dictionary]([]),
+"def_id": &"longsword",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([0]),
+"stats": {
+&"damage": [160000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"burst", &"imperial", &"one_hand"]),
+"uid": 1654
+}, {
+"attached": Array[Dictionary]([]),
+"def_id": &"battle_axe",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([1, 2]),
+"stats": {
+&"damage": [80000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"rapid", &"one_hand", &"bleed"]),
+"uid": 1655
+}],
+"loads": {},
+"max_hp": 1000000,
+"only_damage_type": &"",
+"set_rules": Array[int]([]),
+"undying_sec": 0.0
+}, {
+"axes": {},
+"baseline": {
+&"max_hp": [900000, 0, 0],
+&"max_stamina": [550000, 0, 0],
+&"regen_stamina": [40000, 0, 0]
+},
+"fed_uids": Array[int]([]),
+"format": 1,
+"immune_buffs": Array[StringName]([]),
+"items": [{
+"attached": Array[Dictionary]([]),
+"def_id": &"scimitar",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([3]),
+"stats": {
+&"damage": [90000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"bleed", &"barbarian", &"one_hand"]),
+"uid": 1638
+}, {
+"attached": Array[Dictionary]([]),
+"def_id": &"broadsword",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([4, 5]),
+"stats": {
+&"damage": [110000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"melee", &"burst", &"one_hand"]),
+"uid": 1639
+}, {
+"attached": Array[Dictionary]([]),
+"def_id": &"hand_crossbow",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([6]),
+"stats": {
+&"damage": [60000, 0, 0],
+&"haste": [10000, 0, 0]
+},
+"tags": Array[StringName]([&"weapon", &"ranged", &"burst"]),
+"uid": 1640
+}, {
+"attached": Array[Dictionary]([]),
+"def_id": &"salted_meat",
+"linked": Array[int]([]),
+"loaded": Array[Dictionary]([]),
+"power_mult": 10000,
+"rules": Array[int]([]),
+"stats": {
+&"haste": [10000, 0, 0],
+&"max_stamina": [600000, 0, 0],
+&"regen_stamina": [30000, 0, 0]
+},
+"tags": Array[StringName]([&"food", &"nature"]),
+"uid": 1641
+}],
+"loads": {},
+"max_hp": 900000,
+"only_damage_type": &"",
+"set_rules": Array[int]([]),
+"undying_sec": 0.0
+}])
+rules = Array[ExtResource("1_qrhs0")]([SubResource("Resource_vmv01"), SubResource("Resource_kd5kd"), SubResource("Resource_c0h4f"), SubResource("Resource_27jl3"), SubResource("Resource_uy7ey"), SubResource("Resource_qpamh"), SubResource("Resource_1p4ep")])
+rng_seed = 3813961706
+rng_state = 1869652177049951156
+time_limit = 30.0
+expected = {
+"digest": "45e22ddb6364e4ea",
+"duration": 48000,
+"events": 141,
+"final": {
+"args": ["s:time", "i:48000", "s:sides", [{
+"args": ["s:side", "i:0", "s:resources", {
+"args": ["sn:stamina", ["i:19", "i:50"], "sn:hp", ["i:2", "i:100"]],
+"type": "Dictionary"
+}, "s:buffs", {
+"args": [],
+"type": "Dictionary"
+}, "s:axes", {
+"args": [],
+"type": "Dictionary"
+}],
+"type": "Dictionary"
+}, {
+"args": ["s:side", "i:1", "s:resources", {
+"args": ["sn:stamina", ["i:92", "i:115"], "sn:hp", ["i:0", "i:90"]],
+"type": "Dictionary"
+}, "s:buffs", {
+"args": ["s:bleed", "i:2"],
+"type": "Dictionary"
+}, "s:axes", {
+"args": [],
+"type": "Dictionary"
+}],
+"type": "Dictionary"
+}]],
+"type": "Dictionary"
+},
+"lines": Array[String](["0|-1|battle_start|{\"args\":[],\"type\":\"Dictionary\"}", "9000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-40000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:460000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "9000|0|item_fired|{\"args\":[\"s:uid\",\"i:1655\",\"s:ready_at\",\"i:18000\"],\"type\":\"Dictionary\"}", "9000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-80000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:820000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "9000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:80000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:80000\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:1655\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "9000|1|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:1\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "10000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:4000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:464000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "10000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-50000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:1100000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "10000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"s:ready_at\",\"i:20000\"],\"type\":\"Dictionary\"}", "10000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-110000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:890000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "10000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:110000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:110000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1639\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "12000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:472000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "12000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1114000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "12000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-60000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:1054000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "12000|1|item_fired|{\"args\":[\"s:uid\",\"i:1638\",\"s:ready_at\",\"i:24000\"],\"type\":\"Dictionary\"}", "12000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-90000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:800000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "12000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:90000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:90000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1638\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "12000|0|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:1\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "12000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"sn:chain\",\"i:17\"],\"type\":\"Dictionary\"}", "16000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:16000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:488000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "16000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:28000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1082000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "16000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-90000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:398000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "16000|0|item_fired|{\"args\":[\"s:uid\",\"i:1654\",\"s:ready_at\",\"i:32000\"],\"type\":\"Dictionary\"}", "16000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-160000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:660000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "16000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:160000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:160000\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:1654\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "18000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:406000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "18000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1096000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "18000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-40000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:366000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "18000|0|item_fired|{\"args\":[\"s:uid\",\"i:1655\",\"s:ready_at\",\"i:27000\"],\"type\":\"Dictionary\"}", "18000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-80000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:580000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "18000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:80000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:80000\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:1655\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "18000|1|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:2\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "18000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-60000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:1036000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "18000|1|item_fired|{\"args\":[\"s:uid\",\"i:1640\",\"s:ready_at\",\"i:36000\"],\"type\":\"Dictionary\"}", "18000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-60000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:740000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "18000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:60000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:60000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1640\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "18000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"sn:chain\",\"i:41\"],\"type\":\"Dictionary\"}", "19000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:4000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:370000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "19000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:7000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1043000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "19000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-20000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:560000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "19000|1|damage|{\"args\":[\"s:type\",\"s:bleed\",\"s:raw\",\"i:20000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:20000\",\"s:provokes\",false,\"s:source_side\",\"i:1\",\"s:uid\",\"i:0\",\"s:crit\",false,\"s:direct\",false],\"type\":\"Dictionary\"}", "19000|1|status_unstacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:-1\",\"s:stacks\",\"i:1\",\"s:reason\",\"s:decay\"],\"type\":\"Dictionary\"}", "20000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:4000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:374000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "20000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:7000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1050000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "20000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-50000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:1000000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "20000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"s:ready_at\",\"i:30000\"],\"type\":\"Dictionary\"}", "20000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-195000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:545000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "20000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:195000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:195000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1639\",\"s:crit\",true,\"s:direct\",true],\"type\":\"Dictionary\"}", "22000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:382000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "22000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1014000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "22000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-10000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:535000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "22000|0|damage|{\"args\":[\"s:type\",\"s:bleed\",\"s:raw\",\"i:10000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:10000\",\"s:provokes\",false,\"s:source_side\",\"i:0\",\"s:uid\",\"i:0\",\"s:crit\",false,\"s:direct\",false],\"type\":\"Dictionary\"}", "22000|0|status_unstacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:-1\",\"s:stacks\",\"i:0\",\"s:reason\",\"s:decay\"],\"type\":\"Dictionary\"}", "24000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:390000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "24000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1028000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "24000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-60000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:968000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "24000|1|item_fired|{\"args\":[\"s:uid\",\"i:1638\",\"s:ready_at\",\"i:36000\"],\"type\":\"Dictionary\"}", "24000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-90000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:445000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "24000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:90000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:90000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1638\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "24000|0|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:1\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "24000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"sn:chain\",\"i:66\"],\"type\":\"Dictionary\"}", "27000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:12000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:402000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "27000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:21000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:989000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "27000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-40000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:362000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "27000|0|item_fired|{\"args\":[\"s:uid\",\"i:1655\",\"s:ready_at\",\"i:36000\"],\"type\":\"Dictionary\"}", "27000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-80000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:480000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "27000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:80000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:80000\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:1655\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "27000|1|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:2\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "29000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:370000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "29000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1003000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "29000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-20000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:460000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "29000|1|damage|{\"args\":[\"s:type\",\"s:bleed\",\"s:raw\",\"i:20000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:20000\",\"s:provokes\",false,\"s:source_side\",\"i:1\",\"s:uid\",\"i:0\",\"s:crit\",false,\"s:direct\",false],\"type\":\"Dictionary\"}", "29000|1|status_unstacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:-1\",\"s:stacks\",\"i:1\",\"s:reason\",\"s:decay\"],\"type\":\"Dictionary\"}", "30000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:4000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:374000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "30000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:7000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1010000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "30000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-50000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:960000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "30000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"s:ready_at\",\"i:40000\"],\"type\":\"Dictionary\"}", "30000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-130000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:315000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "30000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:130000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:130000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1639\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "32000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:382000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "32000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:974000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "32000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-90000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:292000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "32000|0|item_fired|{\"args\":[\"s:uid\",\"i:1654\",\"s:ready_at\",\"i:48000\"],\"type\":\"Dictionary\"}", "32000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-160000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:300000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "32000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:160000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:160000\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:1654\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "34000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:300000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "34000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:988000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "34000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-10000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:305000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "34000|0|damage|{\"args\":[\"s:type\",\"s:bleed\",\"s:raw\",\"i:10000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:10000\",\"s:provokes\",false,\"s:source_side\",\"i:0\",\"s:uid\",\"i:0\",\"s:crit\",false,\"s:direct\",false],\"type\":\"Dictionary\"}", "34000|0|status_unstacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:-1\",\"s:stacks\",\"i:0\",\"s:reason\",\"s:decay\"],\"type\":\"Dictionary\"}", "36000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:308000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "36000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:1002000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "36000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-40000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:268000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "36000|0|item_fired|{\"args\":[\"s:uid\",\"i:1655\",\"s:ready_at\",\"i:45000\"],\"type\":\"Dictionary\"}", "36000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-80000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:220000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "36000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:80000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:80000\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:1655\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "36000|1|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:2\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "36000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-60000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:942000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "36000|1|item_fired|{\"args\":[\"s:uid\",\"i:1638\",\"s:ready_at\",\"i:48000\"],\"type\":\"Dictionary\"}", "36000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-90000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:215000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "36000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:90000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:90000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1638\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "36000|0|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:1\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "36000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"sn:chain\",\"i:116\"],\"type\":\"Dictionary\"}", "36000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-60000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:882000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "36000|1|item_fired|{\"args\":[\"s:uid\",\"i:1640\",\"s:ready_at\",\"i:54000\"],\"type\":\"Dictionary\"}", "36000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-60000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:155000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "36000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:60000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:60000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1640\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "36000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"sn:chain\",\"i:124\"],\"type\":\"Dictionary\"}", "39000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:12000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:280000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "39000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:21000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:903000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "39000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-20000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:200000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "39000|1|damage|{\"args\":[\"s:type\",\"s:bleed\",\"s:raw\",\"i:20000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:20000\",\"s:provokes\",false,\"s:source_side\",\"i:1\",\"s:uid\",\"i:0\",\"s:crit\",false,\"s:direct\",false],\"type\":\"Dictionary\"}", "39000|1|status_unstacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:-1\",\"s:stacks\",\"i:1\",\"s:reason\",\"s:decay\"],\"type\":\"Dictionary\"}", "40000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:4000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:284000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "40000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:7000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:910000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "40000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-50000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:860000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "40000|1|item_fired|{\"args\":[\"s:uid\",\"i:1639\",\"s:ready_at\",\"i:50000\"],\"type\":\"Dictionary\"}", "40000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-130000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:25000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "40000|0|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:130000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:130000\",\"s:provokes\",true,\"s:source_side\",\"i:1\",\"s:uid\",\"i:1639\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "44000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:16000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:300000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "44000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:28000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:888000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "45000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:4000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:304000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "45000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:7000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:895000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "45000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-40000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:264000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "45000|0|item_fired|{\"args\":[\"s:uid\",\"i:1655\",\"s:ready_at\",\"i:54000\"],\"type\":\"Dictionary\"}", "45000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-120000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:80000\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "45000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:120000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:120000\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:1655\",\"s:crit\",true,\"s:direct\",true],\"type\":\"Dictionary\"}", "45000|1|status_stacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:1\",\"s:stacks\",\"i:2\",\"s:expires_at\",\"i:-1\",\"s:seconds_left\",\"i:0\"],\"type\":\"Dictionary\"}", "46000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:4000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:268000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "46000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:7000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:902000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "46000|0|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-10000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:15000\",\"s:max\",\"i:1000000\"],\"type\":\"Dictionary\"}", "46000|0|damage|{\"args\":[\"s:type\",\"s:bleed\",\"s:raw\",\"i:10000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:10000\",\"s:provokes\",false,\"s:source_side\",\"i:0\",\"s:uid\",\"i:0\",\"s:crit\",false,\"s:direct\",false],\"type\":\"Dictionary\"}", "46000|0|status_unstacked|{\"args\":[\"s:buff\",\"s:bleed\",\"s:delta\",\"i:-1\",\"s:stacks\",\"i:0\",\"s:reason\",\"s:decay\"],\"type\":\"Dictionary\"}", "48000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:8000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:276000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "48000|1|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:14000\",\"s:reason\",\"s:regen\",\"s:current\",\"i:916000\",\"s:max\",\"i:1150000\"],\"type\":\"Dictionary\"}", "48000|0|resource_changed|{\"args\":[\"s:key\",\"s:stamina\",\"s:delta\",\"i:-90000\",\"s:reason\",\"s:cost\",\"s:current\",\"i:186000\",\"s:max\",\"i:500000\"],\"type\":\"Dictionary\"}", "48000|0|item_fired|{\"args\":[\"s:uid\",\"i:1654\",\"s:ready_at\",\"i:64000\"],\"type\":\"Dictionary\"}", "48000|1|resource_changed|{\"args\":[\"s:key\",\"s:hp\",\"s:delta\",\"i:-80000\",\"s:reason\",\"s:damage\",\"s:current\",\"i:0\",\"s:max\",\"i:900000\"],\"type\":\"Dictionary\"}", "48000|1|damage|{\"args\":[\"s:type\",\"s:physical\",\"s:raw\",\"i:160000\",\"s:absorbed\",\"i:0\",\"s:block\",\"i:0\",\"s:amount\",\"i:80000\",\"s:provokes\",true,\"s:source_side\",\"i:0\",\"s:uid\",\"i:1654\",\"s:crit\",false,\"s:direct\",true],\"type\":\"Dictionary\"}", "48000|1|died|{\"args\":[],\"type\":\"Dictionary\"}", "48000|-1|battle_end|{\"args\":[\"s:winner\",\"i:0\"],\"type\":\"Dictionary\"}"]),
+"winner": 0
+}

@@ -695,6 +695,26 @@ func flee_roll(chance: float, fail_vitality: int, rng: RandomNumberGenerator, ct
 	return false
 
 
+## 平衡检测方案 §4.1：这一场的标识 = 局标识 + 战斗种子；没有局标识（测试里的裸节点事件）返回空
+func battle_id_of(rng_seed: int) -> String:
+	var run_id := String(trace_info.get("run_id", ""))
+	return "%s:%d" % [run_id, rng_seed] if run_id != "" else ""
+
+
+## 平衡检测方案 §8.2：此刻的体力、钱、包里件数、走了几步（战前一份、离开回放屏一份，对着看这一场的得失）；没有的项是 null
+func state_brief() -> Dictionary:
+	var out := {"vitality": null, "coins": null, "items": null, "steps": null}
+	if vitality != null:
+		out["vitality"] = vitality.current
+	if wallet != null:
+		out["coins"] = wallet.balance
+	if board != null:
+		out["items"] = board.items().size()
+	if travel != null and travel.clock != null:
+		out["steps"] = travel.clock.total
+	return out
+
+
 ## 平衡检测方案 §5：开打前抓一份诊断包（双方完整编译结果 + 开打前的随机数状态），打完再补结果摘要
 func _diag_capture(me: CombatantSpec, enemy: CombatantSpec, rng: RandomNumberGenerator, limit: float, overtime: OvertimeRules,
 		node: MapNode, content: Dictionary, type: StringName) -> BattleDiagPack:
@@ -774,6 +794,7 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 	var limit := rules.battle_time_limit if rules != null else BattleSim.DEFAULT_TIME_LIMIT
 	var rng := _rng_for(node, "battle")
 	var rng_seed := rng.seed
+	var before := state_brief()     # 平衡检测方案 §8.2：战前的体力、钱、件数、步数（回放屏离开时再记一份战后的）
 	var trace: BattleTrace = BattleTrace.new() if not trace_info.is_empty() and BattleArchive.enabled else null
 	var overtime := rules.overtime if rules != null else null
 	var diag: BattleDiagPack = _diag_capture(me, enemy, rng, limit, overtime, node, content, type) if BattleDiagnostics.on() else null
@@ -784,7 +805,8 @@ func _fight(node: MapNode, type: StringName, content: Dictionary, loot_ctx: Loot
 		diag.expected = BattleDiagPack.summary(result)
 		BattleDiagnostics.write(diag, BattleDiagnostics.stem_of(diag.meta))
 	var won := result.winner == 0
-	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type)}
+	last_battle = {"player": me, "enemy": enemy, "node": node.id, "content": content, "type": String(type),
+		"battle_id": battle_id_of(rng_seed), "before": before}
 	battle_finished.emit(node, result, won)
 	if won:
 		_settle_won(node, type, content, loot_ctx)

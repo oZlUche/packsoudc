@@ -1687,7 +1687,8 @@ func _adopt(state: RunState) -> void:
 			meta.note_reactions(ReactionResolver.reactions_in(r.log))     # 175：百科的反应页点亮
 		_push({"screen": Screen.BATTLE, "node": node, "result": r, "won": won, "new_reactions": fresh,
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
-			"enemy_content": ev.last_battle.get("content", {})}))
+			"enemy_content": ev.last_battle.get("content", {}), "battle_id": ev.last_battle.get("battle_id", ""),
+			"before": ev.last_battle.get("before", {})}))
 	# 114：合成是拖到上面立刻发生的（整理面板里），提示就在面板上，不再排结果屏
 	state.loot_pending.connect(func(container: GridInventory):
 		# 一步之内可能来两份（打赢的尸体 + 搜索收获），RunState 已经并成一份，队里留一个就够

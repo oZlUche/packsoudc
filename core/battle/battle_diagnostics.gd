@@ -9,6 +9,9 @@ extends RefCounted
 const ROOT := "user://diagnostics"
 const DIR := ROOT + "/battles"
 const PINNED := ROOT + "/pinned"
+## §8.1：回放的观看记录（[ViewingSession]，`.viewing.json`），和诊断包同一个开关、按同一个战斗标识起名
+const VIEWING := ROOT + "/viewing"
+const VIEWING_EXT := ".viewing.json"
 const KEEP := 200
 const ARG := "--diag-capture"
 const ENV := "PACKSDC_DIAG"
@@ -17,6 +20,7 @@ const ENV := "PACKSDC_DIAG"
 static var enabled: Variant = null
 ## 落在哪（测试改到自己的目录）
 static var target_dir: String = DIR
+static var viewing_dir: String = VIEWING
 static var written: int = 0
 static var failures: int = 0
 ## 最近一次写盘花的毫秒、写出的字节（测开销用）
@@ -52,6 +56,26 @@ static func write(pack: BattleDiagPack, stem: String, p_dir: String = "", keep: 
 	return path
 
 
+## 写一份观看记录（已经是普通字典）到 [param p_dir]（空 = [member viewing_dir]）；同样只留最近 [param keep] 份。返回路径，写不了返回空
+static func write_viewing(record: Dictionary, stem: String, p_dir: String = "", keep: int = KEEP) -> String:
+	var dir := p_dir if p_dir != "" else viewing_dir
+	if DirAccess.make_dir_recursive_absolute(dir) != OK and not DirAccess.dir_exists_absolute(dir):
+		failures += 1
+		push_warning("BattleDiagnostics: 建不了 %s" % dir)
+		return ""
+	var path := dir.path_join(_safe(stem) + VIEWING_EXT)
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		failures += 1
+		push_warning("BattleDiagnostics: 写不了 %s" % path)
+		return ""
+	f.store_string(JSON.stringify(record, "  ", true) + "\n")
+	f.close()
+	written += 1
+	prune(dir, keep, VIEWING_EXT)
+	return path
+
+
 ## 读一份；读不出来（坏文件、缺资源、不是诊断包）返回 null
 static func load_pack(path: String) -> BattleDiagPack:
 	if not FileAccess.file_exists(path):
@@ -60,22 +84,22 @@ static func load_pack(path: String) -> BattleDiagPack:
 
 
 ## 只留最近 [param keep] 份（按文件名 = 时间排）。返回删了几份
-static func prune(dir: String = DIR, keep: int = KEEP) -> int:
-	var files := list(dir)
+static func prune(dir: String = DIR, keep: int = KEEP, ext: String = BattleDiagPack.EXT) -> int:
+	var files := list(dir, ext)
 	var drop := files.size() - keep
 	for i in maxi(0, drop):
 		DirAccess.remove_absolute(dir.path_join(files[i]))
 	return maxi(0, drop)
 
 
-## 目录里的诊断包文件名，升序
-static func list(dir: String = DIR) -> Array[String]:
+## 目录里的诊断包（或 [param ext] 那种）文件名，升序
+static func list(dir: String = DIR, ext: String = BattleDiagPack.EXT) -> Array[String]:
 	var out: Array[String] = []
 	var d := DirAccess.open(dir)
 	if d == null:
 		return out
 	for f in d.get_files():
-		if f.ends_with(BattleDiagPack.EXT):
+		if f.ends_with(ext):
 			out.append(f)
 	out.sort()
 	return out
