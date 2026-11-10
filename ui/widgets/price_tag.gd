@@ -94,12 +94,7 @@ func _draw() -> void:
 	var y := mid + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
 	if coin >= 0:
 		var side := _coin_side()
-		var tex := CoinLabel.coin_texture()
-		var r := Rect2(Vector2(LEFT, mid - side * 0.5), Vector2(side, side))
-		if tex != null:
-			draw_texture_rect(tex, r, false)
-		else:
-			draw_circle(r.get_center(), side * 0.45, CoinLabel.FALLBACK_FILL)
+		CoinLabel.draw_coin(self, Rect2(Vector2(LEFT, mid - side * 0.5), Vector2(side, side)))
 		var num := "%d" % coin
 		draw_string(f, Vector2(LEFT + side + CoinLabel.GAP, y), num, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, POOR_INK if poor else INK)
 		if suffix != "":

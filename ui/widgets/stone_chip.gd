@@ -120,20 +120,10 @@ func _dress() -> void:
 		var name_: String = state
 		if check and state == "on":
 			name_ = "normal"     # 开关行：开不开看印，底一直是平的
-		var box := StyleBoxTexture.new()
-		box.texture = UiTheme.art_cached(art_base + name_)
-		if box.texture == null:
-			box.texture = UiTheme.art_cached(art_base + "normal")
-		box.texture_margin_left = float(m[0])
-		box.texture_margin_top = float(m[1])
-		box.texture_margin_right = float(m[2])
-		box.texture_margin_bottom = float(m[3])
-		box.set_expand_margin_all(6.0)
-		box.content_margin_left = PAD_X
-		box.content_margin_right = PAD_X
-		box.content_margin_top = 0.0     # 高由 [constant HEIGHT] 定，不按图边撑
-		box.content_margin_bottom = 0.0
-		_boxes[state] = box
+		var tex := UiTheme.art_cached(art_base + name_)
+		if tex == null:
+			tex = UiTheme.art_cached(art_base + "normal")
+		_boxes[state] = UiTheme.nine_box(tex, m, [PAD_X, 0.0, PAD_X, 0.0], 6.0)     # 高由 [constant HEIGHT] 定，不按图边撑
 	add_theme_stylebox_override("normal", _boxes["normal"])
 	add_theme_stylebox_override("hover", _boxes["hover"])
 	add_theme_stylebox_override("pressed", _boxes["on"])
@@ -163,11 +153,7 @@ func _state() -> String:
 		return "disabled"
 	if button_pressed and toggle_mode and not check:
 		return "on"
-	if get_draw_mode() == DRAW_PRESSED or get_draw_mode() == DRAW_HOVER_PRESSED:
-		return "pressed"
-	if get_draw_mode() == DRAW_HOVER:
-		return "hover"
-	return "normal"
+	return UiDraw.button_state(self)
 
 
 func _draw() -> void:

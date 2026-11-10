@@ -176,9 +176,9 @@ static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
 	t.eq(wide.span_for(100.0), 152.0 * 3 + 12.0 * 2, "复测 v3.79：棋盘比三张签窄，整条按签宽")
 	t.eq(wide.span_for(600.0), 600.0, "棋盘更宽：跟棋盘一样宽")
 	var bold := UiPalette.cjk_font_bold()
-	t.check(StatsStrip.fit_size(bold, "37 / 40", 17, 40.0) < 17, "放不下：收字号")
-	t.eq(StatsStrip.fit_size(bold, "37 / 40", 17, 400.0), 17, "放得下：原字号")
-	t.eq(StatsStrip.fit_size(bold, "37 / 40", 17, 1.0), StatsStrip.MIN_TEXT_SIZE, "最小收到 MIN_TEXT_SIZE")
+	t.check(TextFit.size_for(bold, "37 / 40", 17, 40.0, StatsStrip.MIN_TEXT_SIZE) < 17, "放不下：收字号")
+	t.eq(TextFit.size_for(bold, "37 / 40", 17, 400.0, StatsStrip.MIN_TEXT_SIZE), 17, "放得下：原字号")
+	t.eq(TextFit.size_for(bold, "37 / 40", 17, 1.0, StatsStrip.MIN_TEXT_SIZE), StatsStrip.MIN_TEXT_SIZE, "最小收到 MIN_TEXT_SIZE")
 	var strip := StatsStrip.new()
 	root.add_child(strip)
 	strip.use_inlay(true, StatsStrip.ORDER_PLAYER)
@@ -212,7 +212,7 @@ static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
 		for k in (pair[1] as Array):
 			var s := String((pair[0] as StatsStrip).texts(k)[1])
 			var room := (pair[0] as StatsStrip).tag_rect(k).size.x - sub_x - StatsStrip.TEXT_RIGHT_PAD
-			var w := regular.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, StatsStrip.fit_size(regular, s, int(sub.get("size", 11)), room)).x
+			var w := regular.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, TextFit.size_for(regular, s, int(sub.get("size", 11)), room, StatsStrip.MIN_TEXT_SIZE)).x
 			t.check(w <= room + 0.5, "游戏测试 v3.81：英文小字「%s」不伸出签（%.0f ≤ %.0f）" % [s, w, room])
 	UiText.lang = "zh"
 	for s in [wide, strip, es]:

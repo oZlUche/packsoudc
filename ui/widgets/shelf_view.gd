@@ -1,4 +1,4 @@
-## 261 补充二（作者 17:14 选 C 石砌壁龛）：书架页整座画出来 —— 壁龛底图；图鉴 / 成就 / 科技按进度五档（[ShelfCell]），对局记录一张（作者 17:09「没有变化的必要」），
+## 261 补充二（作者 17:14 选 C 石砌壁龛）：书架页整座画出来 —— 壁龛底图；图鉴 / 成就 / 科技按进度五档（[method tier_of]），对局记录一张（作者 17:09「没有变化的必要」），
 ## 特殊道具每件一根展示柱（拿到过的摆它自己的道具图，没拿到空柱），第六格静物油灯；悬停换提亮图 + 格里一团暖光；格下铜框纸签写格名与数。
 ## 件和摆位从 UI替换美术 的 `home/shelf/layout.json` 读（相对书架左上，物件整张 400 × 400 贴格左上）；前五格各盖一颗透明按钮（点开窗、悬停）。
 ## 字全由代码写，浅底墨字；物件只画一面，代码不加影子
@@ -27,6 +27,8 @@ const COL_SHRINK_PAD := 8.0
 const ITEM_BOX := 128.0
 ## 道具图取 @2x 那张（160 px / 格）
 const ITEM_PX := 160.0
+## 261 补充一（作者 16:37）：一格里的物件按进度分五档，越往后越满 —— 一条规则管所有分档的格
+const TIERS := 5
 
 ## 每格 {key, rect, tag_center, tiers（分档的图名，五张）, file（一张）, compose, still_life}
 var _cells: Array[Dictionary] = []
@@ -110,7 +112,14 @@ func hot(key: String) -> bool:
 	return _btns.has(key) and (_btns[key] as Button).is_hovered()
 
 
-## 这一格现在画哪张图（不带 `home/shelf/`）：分档的按 [ShelfCell] 取档，悬停取 `_hover`；拼的（特殊道具）空串
+## 进度 → 档：clampi(floori(done × 5 / total), 0, 4)；total 为 0 时 t0
+static func tier_of(done: int, total: int) -> int:
+	if total <= 0:
+		return 0
+	return clampi(floori(float(done) * TIERS / float(total)), 0, TIERS - 1)
+
+
+## 这一格现在画哪张图（不带 `home/shelf/`）：分档的按 [method tier_of] 取档，悬停取 `_hover`；拼的（特殊道具）空串
 func piece_name(key: String, hover: bool = false) -> String:
 	for c in _cells:
 		if c["key"] != key:
@@ -119,7 +128,7 @@ func piece_name(key: String, hover: bool = false) -> String:
 		var tiers: Array = c["tiers"]
 		if not tiers.is_empty():
 			var p: Array = _progress.get(key, [0, 0])
-			name_ = String(tiers[mini(ShelfCell.tier_of(int(p[0]), int(p[1])), tiers.size() - 1)])
+			name_ = String(tiers[mini(tier_of(int(p[0]), int(p[1])), tiers.size() - 1)])
 			if UiTheme.art_cached(ART + name_) == null:
 				name_ = String(tiers[0])     # 缺图退 t0
 		elif c["file"] != "":

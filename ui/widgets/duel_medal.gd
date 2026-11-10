@@ -89,14 +89,14 @@ func strike(side: int) -> void:
 	var down := deg_to_rad(STRIKE_DEG) * dir
 	var tw := _fresh(side)
 	tw.set_parallel()
-	tw.tween_method(_set_rot.bind(side), _rot[side], up, WINDUP_SEC / rate)
-	tw.tween_method(_set_off.bind(side), _off[side], lift, WINDUP_SEC / rate)
+	tw.tween_method(_set_side.bind(_rot, side), _rot[side], up, WINDUP_SEC / rate)
+	tw.tween_method(_set_side.bind(_off, side), _off[side], lift, WINDUP_SEC / rate)
 	tw.chain().set_parallel()
-	tw.tween_method(_set_rot.bind(side), up, down, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
-	tw.tween_method(_set_off.bind(side), lift, STRIKE_PUSH * mirror, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
+	tw.tween_method(_set_side.bind(_rot, side), up, down, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
+	tw.tween_method(_set_side.bind(_off, side), lift, STRIKE_PUSH * mirror, CHOP_SEC / rate).set_ease(Tween.EASE_IN)
 	tw.chain().set_parallel()
-	tw.tween_method(_set_rot.bind(side), down, rest, RECOVER_SEC / rate)
-	tw.tween_method(_set_off.bind(side), STRIKE_PUSH * mirror, home, RECOVER_SEC / rate)
+	tw.tween_method(_set_side.bind(_rot, side), down, rest, RECOVER_SEC / rate)
+	tw.tween_method(_set_side.bind(_off, side), STRIKE_PUSH * mirror, home, RECOVER_SEC / rate)
 
 
 ## 回放开始：两把剑从交叉的样子拉开到守姿（彼此不碰）。[param animate] false = 直接摆好
@@ -110,8 +110,8 @@ func spread(animate: bool = true) -> void:
 			_off[s] = _rest_off(s)
 			continue
 		var tw := _fresh(s).set_parallel()
-		tw.tween_method(_set_rot.bind(s), _rot[s], _rest_rot(s), SPREAD_SEC)
-		tw.tween_method(_set_off.bind(s), _off[s], _rest_off(s), SPREAD_SEC)
+		tw.tween_method(_set_side.bind(_rot, s), _rot[s], _rest_rot(s), SPREAD_SEC)
+		tw.tween_method(_set_side.bind(_off, s), _off[s], _rest_off(s), SPREAD_SEC)
 	queue_redraw()
 
 
@@ -135,12 +135,12 @@ func hit(side: int, big: bool = false) -> void:
 	_flash[side] = 1.0
 	var sec := RECOIL_SEC / maxf(rate, 1.0)
 	var tw := _fresh(side)
-	tw.tween_method(_set_flash.bind(side), 1.0, 0.0, sec)
+	tw.tween_method(_set_side.bind(_flash, side), 1.0, 0.0, sec)
 	if rate < 4.0:
 		var back := _rest_rot(side) + deg_to_rad(-RECOIL_DEG) * (1.0 if side == 0 else -1.0)
-		tw.parallel().tween_method(_set_rot.bind(side), _rot[side], back, sec * 0.4)
-		tw.tween_method(_set_rot.bind(side), back, _rest_rot(side), sec * 0.6)
-		_set_off(_rest_off(side), side)
+		tw.parallel().tween_method(_set_side.bind(_rot, side), _rot[side], back, sec * 0.4)
+		tw.tween_method(_set_side.bind(_rot, side), back, _rest_rot(side), sec * 0.6)
+		_set_side(_rest_off(side), _off, side)
 	if big:
 		_spark_seed += 1
 		create_tween().tween_method(_set_spark, 0.0, 1.0, SPARK_SEC / maxf(rate, 1.0))
@@ -181,9 +181,9 @@ func set_final(p_winner: int, animate: bool = true) -> Tween:
 		return null
 	var tw := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT).set_parallel()
 	for s in 2:
-		tw.tween_method(_set_rot.bind(s), _rot[s], goals[s][0], FINAL_SEC)
-		tw.tween_method(_set_off.bind(s), _off[s], goals[s][1], FINAL_SEC)
-		tw.tween_method(_set_grey.bind(s), _grey[s], goals[s][2], FINAL_SEC)
+		tw.tween_method(_set_side.bind(_rot, s), _rot[s], goals[s][0], FINAL_SEC)
+		tw.tween_method(_set_side.bind(_off, s), _off[s], goals[s][1], FINAL_SEC)
+		tw.tween_method(_set_side.bind(_grey, s), _grey[s], goals[s][2], FINAL_SEC)
 	if p_winner >= 0:
 		_glint_side = p_winner
 		tw.chain().tween_method(_set_glint, 0.0, 1.0, GLINT_SEC)
@@ -215,23 +215,9 @@ func _fresh(side: int) -> Tween:
 	return tw
 
 
-func _set_rot(v: float, side: int) -> void:
-	_rot[side] = v
-	queue_redraw()
-
-
-func _set_off(v: Vector2, side: int) -> void:
-	_off[side] = v
-	queue_redraw()
-
-
-func _set_flash(v: float, side: int) -> void:
-	_flash[side] = v
-	queue_redraw()
-
-
-func _set_grey(v: float, side: int) -> void:
-	_grey[side] = v
+## 补间一步：[param arr]（转角 / 位移 / 白闪 / 褪灰那四张表之一）里 [param side] 那把剑的值换成 [param v]
+func _set_side(v: Variant, arr: Array, side: int) -> void:
+	arr[side] = v
 	queue_redraw()
 
 

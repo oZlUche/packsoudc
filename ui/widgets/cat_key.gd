@@ -54,13 +54,7 @@ func _init() -> void:
 	var cols: Dictionary = (spec.get("font", {}) as Dictionary).get("colors", {})
 	for st in ["normal", "hover", "pressed", "on", "disabled"]:
 		_ink[st] = Color(String(cols.get(st, "#7d7064" if st == "disabled" else "#2e2219")))
-		var box := StyleBoxTexture.new()
-		box.texture = UiTheme.art_cached(ART + st)
-		box.texture_margin_left = float(nine.get("left", 14))
-		box.texture_margin_right = float(nine.get("right", 30))
-		box.texture_margin_top = float(nine.get("top", 14))
-		box.texture_margin_bottom = float(nine.get("bottom", 14))
-		_boxes[st] = box
+		_boxes[st] = UiTheme.nine_box(UiTheme.art_cached(ART + st), [nine.get("left", 14), nine.get("top", 14), nine.get("right", 30), nine.get("bottom", 14)])
 	var none := StyleBoxEmpty.new()
 	for s in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
 		add_theme_stylebox_override(s, none)     # 底由 _draw 按态贴
@@ -72,14 +66,7 @@ func _init() -> void:
 func state() -> String:
 	if button_pressed:
 		return "on"
-	if disabled or dim:
-		return "disabled"
-	match get_draw_mode():
-		DRAW_PRESSED, DRAW_HOVER_PRESSED:
-			return "pressed"
-		DRAW_HOVER:
-			return "hover"
-	return "normal"
+	return "disabled" if dim else UiDraw.button_state(self)
 
 
 func _draw() -> void:
@@ -91,9 +78,6 @@ func _draw() -> void:
 	var left := _margin.x * scale_k
 	var w := size.x - left - _margin.y * scale_k
 	# 258：字号按档放大；键宽不变，放不下就缩回小档的字号
-	var fs := maxi(12, roundi(UiTheme.sz(FONT_SIZE) * scale_k))
-	var floor_fs := maxi(12, roundi(FONT_SIZE * scale_k))
-	while fs > floor_fs and f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > w:
-		fs -= 1
+	var fs := TextFit.size_for(f, text, maxi(12, roundi(UiTheme.sz(FONT_SIZE) * scale_k)), w, maxi(12, roundi(FONT_SIZE * scale_k)))
 	var y := size.y * 0.5 + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
 	draw_string(f, Vector2(left, y), text, HORIZONTAL_ALIGNMENT_CENTER, w, fs, _ink[st])

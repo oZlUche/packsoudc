@@ -43,9 +43,7 @@ func _ready() -> void:
 	_build()
 	var first := MapGeneratorRegistry.default_id()
 	if first != &"":
-		for i in _gen_pick.item_count:
-			if _gen_pick.get_item_text(i) == String(first):
-				_gen_pick.select(i)
+		_pick_generator(first)
 		use_generator(first)
 		generate()
 
@@ -56,9 +54,7 @@ func demo_fill() -> void:
 	var want := StringName(OS.get_environment("DEMO_GENERATOR"))
 	if want == &"" or not MapGeneratorRegistry.has(want):
 		return
-	for i in _gen_pick.item_count:
-		if _gen_pick.get_item_text(i) == String(want):
-			_gen_pick.select(i)
+	_pick_generator(want)
 	use_generator(want)
 	# DEMO_CONFIG = "one_way=true;base_width=9"：截图前改几个配置字段
 	for pair in OS.get_environment("DEMO_CONFIG").split(";", false):
@@ -86,6 +82,13 @@ func selected_id() -> int:
 
 
 #region 生成
+## 「生成器」下拉停到这一个（只换下拉里选中的那一项）
+func _pick_generator(id: StringName) -> void:
+	for i in _gen_pick.item_count:
+		if _gen_pick.get_item_text(i) == String(id):
+			_gen_pick.select(i)
+
+
 func use_generator(id: StringName) -> void:
 	_gen_id = id
 	_gen = MapGeneratorRegistry.create(id)
@@ -201,17 +204,7 @@ func set_node_type(id: int, type: StringName) -> void:
 
 ## 091（作者定：事件独立存在、节点只存 id）：给这个点指定事件；空 = 不指定、生成 / 揭开时按节点规则抽
 func set_node_event(id: int, event_id: String) -> void:
-	var n := _node(id)
-	if n == null:
-		return
-	var clean := event_id.strip_edges()
-	if String(n.content.get("event", "")) == clean:
-		return
-	if clean == "":
-		n.content.erase("event")
-	else:
-		n.content["event"] = clean
-	_touch()
+	_set_content(id, "event", event_id.strip_edges())
 
 
 ## 作者目录里的事件 id（下拉框用）
@@ -227,13 +220,18 @@ const SEARCH_TIER_LABELS := ["跟高危区", "进阶", "常规"]
 
 
 func set_node_search_tier(id: int, tier: String) -> void:
+	_set_content(id, "search_tier", tier)
+
+
+## 节点内容里的一项（事件、搜索点的档）：空 = 不指定，去掉这一项；和原来一样就不动
+func _set_content(id: int, key: String, value: String) -> void:
 	var n := _node(id)
-	if n == null or String(n.content.get("search_tier", "")) == tier:
+	if n == null or String(n.content.get(key, "")) == value:
 		return
-	if tier == "":
-		n.content.erase("search_tier")
+	if value == "":
+		n.content.erase(key)
 	else:
-		n.content["search_tier"] = tier
+		n.content[key] = value
 	_touch()
 
 
@@ -470,9 +468,7 @@ func load_chapter(chapter_id: String) -> bool:
 	_cfg = src.generator_config
 	_rebuild_form()
 	_rebuild_scale_panel()
-	for i in _gen_pick.item_count:
-		if _gen_pick.get_item_text(i) == String(src.generator_id):
-			_gen_pick.select(i)
+	_pick_generator(src.generator_id)
 	_say("已载入章节 %s" % chapter_id, false)
 	return generate()
 
@@ -604,10 +600,7 @@ func _build_side() -> Control:
 	_preset_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style(_preset_pick)
 	save_row.add_child(_preset_pick)
-	var load_picked := func():
-		if _preset_pick.selected >= 0:
-			load_preset(_preset_pick.get_item_text(_preset_pick.selected))
-	save_row.add_child(UiTheme.make_button("载入", load_picked, UiTheme.TIER_PLAIN, 13))
+	save_row.add_child(UiTheme.make_button("载入", _call_picked.bind(_preset_pick, load_preset), UiTheme.TIER_PLAIN, 13))
 	col.add_child(save_row)
 	_refresh_presets()
 	col.add_child(HSeparator.new())
@@ -619,14 +612,8 @@ func _build_side() -> Control:
 	_chapter_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style(_chapter_pick)
 	ch_row.add_child(_chapter_pick)
-	var load_chapter_picked := func():
-		if _chapter_pick.selected >= 0:
-			load_chapter(_chapter_pick.get_item_text(_chapter_pick.selected))
-	var save_chapter_picked := func():
-		if _chapter_pick.selected >= 0:
-			save_chapter(_chapter_pick.get_item_text(_chapter_pick.selected))
-	ch_row.add_child(UiTheme.make_button("载入", load_chapter_picked, UiTheme.TIER_PLAIN, 13))
-	ch_row.add_child(UiTheme.make_button("存回", save_chapter_picked, UiTheme.TIER_PLAIN, 13))
+	ch_row.add_child(UiTheme.make_button("载入", _call_picked.bind(_chapter_pick, load_chapter), UiTheme.TIER_PLAIN, 13))
+	ch_row.add_child(UiTheme.make_button("存回", _call_picked.bind(_chapter_pick, save_chapter), UiTheme.TIER_PLAIN, 13))
 	col.add_child(ch_row)
 	_refresh_chapters()
 	col.add_child(HSeparator.new())
@@ -683,12 +670,7 @@ func _rebuild_props() -> void:
 		_props.add_child(UiTheme.make_label("%d 个点　%d 条路　%d 个出生点　%d 片高危区"
 			% [_graph.node_count(), _graph.edges.size(), _graph.entry_ids.size(), _graph.zones.size()],
 			12, UiPalette.DIM))
-		var merge := CheckBox.new()
-		merge.text = "三点 / 四点互连画成岔路口"
-		merge.button_pressed = _view.merge_junctions
-		_style(merge)
-		merge.toggled.connect(func(on: bool): _view.merge_junctions = on)
-		_props.add_child(merge)
+		_props.add_child(_check("三点 / 四点互连画成岔路口", _view.merge_junctions, func(on: bool): _view.merge_junctions = on))
 		_add_route_legend()
 		return
 
@@ -731,16 +713,8 @@ func _rebuild_props() -> void:
 		_props.add_child(_pair("搜索点", tier_pick))
 	_props.add_child(_pair("高危区编号", _spin(n.zone, 0, 99, func(v: int): set_node_zone(id, v))))
 
-	var entry := CheckBox.new()
-	entry.text = "出生点"
-	entry.button_pressed = _graph.entry_ids.has(id)
-	_style(entry)
-	entry.toggled.connect(func(_on: bool): toggle_entry(id))
-	var goal := CheckBox.new()
-	goal.text = "终点"
-	goal.button_pressed = _graph.goal_ids.has(id)
-	_style(goal)
-	goal.toggled.connect(func(_on: bool): toggle_goal(id))
+	var entry := _check("出生点", _graph.entry_ids.has(id), func(_on: bool): toggle_entry(id))
+	var goal := _check("终点", _graph.goal_ids.has(id), func(_on: bool): toggle_goal(id))
 	var flags := HBoxContainer.new()
 	flags.add_child(entry)
 	flags.add_child(goal)
@@ -754,12 +728,7 @@ func _add_route_legend() -> void:
 	if _graph.routes.is_empty():
 		return
 	_props.add_child(HSeparator.new())
-	var show_ := CheckBox.new()
-	show_.text = "描出生成路线（仅标注，不参与校验）"
-	show_.button_pressed = _view.show_routes
-	_style(show_)
-	show_.toggled.connect(func(on: bool): _view.show_routes = on)
-	_props.add_child(show_)
+	_props.add_child(_check("描出生成路线（仅标注，不参与校验）", _view.show_routes, func(on: bool): _view.show_routes = on))
 	for i in _graph.routes.size():
 		var route: Dictionary = _graph.routes[i]
 		var text := "━━  出生点 %d · %s → %s" % [route.get("entry_id", -1), route.get("style", "?"), route.get("ends_at", "?")]
@@ -820,6 +789,22 @@ func _panel(width: int) -> PanelContainer:
 ## 编辑器的输入框 / 下拉 / 按钮用 13 号（字体在主题里）
 func _style(c: Control) -> void:
 	c.add_theme_font_size_override("font_size", 13)
+
+
+## 一个勾选框：字、现在勾没勾、勾 / 取消时调 [param handler]
+func _check(text: String, on: bool, handler: Callable) -> CheckBox:
+	var cb := CheckBox.new()
+	cb.text = text
+	cb.button_pressed = on
+	_style(cb)
+	cb.toggled.connect(handler)
+	return cb
+
+
+## 下拉里选中了哪一项，就拿那一项的字调 [param fn]；没选中不调
+func _call_picked(ob: OptionButton, fn: Callable) -> void:
+	if ob.selected >= 0:
+		fn.call(ob.get_item_text(ob.selected))
 
 
 func _pair(text: String, control: Control) -> Control:

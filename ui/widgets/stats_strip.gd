@@ -254,35 +254,22 @@ func _relayout() -> void:
 func _draw_tag(tag: Control, kind: StringName) -> void:
 	var b: Dictionary = _blocks[kind]
 	var pieces: Dictionary = _layout.get("pieces", {})
-	var main_pos := Vector2(50, 23)
-	var sub_pos := Vector2(50, 38)
-	var main_size := 19
-	var sub_size := 12
-	var seal_scale := 1.0
-	var center := Vector2(20, 23)
-	var text: Dictionary = _layout.get("text", {})
-	if _inlay == "narrow":
-		var rt: Dictionary = _row.get("text", {})
-		main_pos = _vec((rt.get("main", {}) as Dictionary).get("pos_in_tag", [36, 22]))
-		sub_pos = _vec((rt.get("sub", {}) as Dictionary).get("pos_in_tag", [36, 37]))
-		main_size = int((rt.get("main", {}) as Dictionary).get("size", 17))
-		sub_size = int((rt.get("sub", {}) as Dictionary).get("size", 11))
-		seal_scale = 0.8
-		center = Vector2(16, 23)
+	# 字的位置与字号：窄嵌槽读这一行的版式（[member _row]），宽嵌槽与纸签读整套版式
+	var narrow := _inlay == "narrow"
+	var text: Dictionary = (_row if narrow else _layout).get("text", {})
+	var main: Dictionary = text.get("main", {})
+	var sub: Dictionary = text.get("sub", {})
+	var main_pos := _vec(main.get("pos_in_tag", [36, 22] if narrow else [50, 23]))
+	var sub_pos := _vec(sub.get("pos_in_tag", [36, 37] if narrow else [50, 38]))
+	var main_size := int(main.get("size", 17 if narrow else 19))
+	var sub_size := int(sub.get("size", 11 if narrow else 12))
+	var seal_scale := 0.8 if narrow else 1.0
+	var center := Vector2(16, 23) if narrow else Vector2(20, 23)
+	if narrow:
 		_draw_inlay(tag, UiTheme.art_cached(BRONZE + "tag_inlay"), true)
 	elif _inlay == "wide":
-		main_pos = _vec((text.get("main", {}) as Dictionary).get("pos_in_tag", [50, 23]))
-		sub_pos = _vec((text.get("sub", {}) as Dictionary).get("pos_in_tag", [50, 38]))
-		main_size = int((text.get("main", {}) as Dictionary).get("size", 19))
-		sub_size = int((text.get("sub", {}) as Dictionary).get("size", 12))
 		_draw_inlay(tag, UiTheme.art_cached(BRONZE + "tag_inlay_wide"), false)
 	else:
-		var main: Dictionary = text.get("main", {})
-		var sub: Dictionary = text.get("sub", {})
-		main_pos = _vec(main.get("pos_in_tag", [50, 23]))
-		sub_pos = _vec(sub.get("pos_in_tag", [50, 38]))
-		main_size = int(main.get("size", 19))
-		sub_size = int(sub.get("size", 12))
 		var bg := UiTheme.art_cached(ART + "tag")
 		if bg != null:
 			tag.draw_texture(bg, _vec((pieces.get("tag", {}) as Dictionary).get("origin_in_tag", [16, -6])))
@@ -315,21 +302,13 @@ static func squeeze(font: Font, text: String, p_size: int, room: float) -> float
 
 
 func _draw_fit(tag: Control, font: Font, pos: Vector2, text: String, p_size: int, room: float, color: Color) -> void:
-	var n := fit_size(font, text, p_size, room)
+	var n := TextFit.size_for(font, text, p_size, room, MIN_TEXT_SIZE)
 	var k := squeeze(font, text, n, room)
 	if k < 1.0:
 		tag.draw_set_transform(Vector2(pos.x * (1.0 - k), 0.0), 0.0, Vector2(k, 1.0))
 	tag.draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, n, color)
 	if k < 1.0:
 		tag.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-
-## 放得进 [param room] 宽的字号：从 [param p_size] 往下收，最小 [constant MIN_TEXT_SIZE]
-static func fit_size(font: Font, text: String, p_size: int, room: float) -> int:
-	var n := p_size
-	while n > MIN_TEXT_SIZE and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, n).x > room:
-		n -= 1
-	return n
 
 
 ## 嵌槽签底：从火漆下面（x = [constant INLAY_TAG_X]）铺到签右沿；[param sliced] 三段切拉到签宽，否则原大

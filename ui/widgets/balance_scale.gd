@@ -5,7 +5,7 @@
 ## 托盘坐在左盘的两根矮柱上，柱间是放上左盘的金币（[member coins]，按 `coin_pile` 一摞摞堆，刚好够开价时和右盘那摞一样多）。
 ## 差额牌上写「还差 N」/「够了」。字都落在石牌 / 石台上（226：不裸字）。没有图时（美术目录缺）按同一套坐标画占位
 class_name BalanceScale
-extends Control
+extends PanScale
 
 const LAYOUT := "ransom/ransom_layout"
 const BASE_ART := "ransom/ransom_base"
@@ -40,7 +40,6 @@ var coins := 0:
 
 ## 托盘棋盘的位置（左盘的 tray_rect，跟着盘走）：屏把托盘放进来，底边坐在盘沿上
 var tray_slot: VBoxContainer = null
-var _lay: Dictionary = {}
 
 
 func _init() -> void:
@@ -68,11 +67,6 @@ static func layout() -> Dictionary:
 			"stepper": [86, 620, 366, 686], "deal": [606, 626, 756, 678], "refuse": [780, 626, 930, 678], "hint": [300, 690, 700, 712]}}
 
 
-## 底座上某个控件的框（`controls` 里的名字：title / status / subtitle / stepper / deal / refuse / hint）
-func control_rect(p_name: String) -> Rect2:
-	return _rect((_lay.get("controls", {}) as Dictionary).get(p_name, [0, 0, 0, 0]))
-
-
 ## 横梁斜几度（正 = 左盘低）：差额占开价的比例，夹在 ±max_tilt_deg
 func tilt_degrees() -> float:
 	if left == right:
@@ -86,31 +80,9 @@ func plate_text() -> String:
 	return UiText.t("ransom.enough") if left >= right else UiText.t("ransom.short_by") % (right - left)
 
 
-## 两只钩（梁两端）在舞台上的位置：[左, 右]。美术的倾角正 = 右盘沉，所以这里取 tilt_degrees 的反号
-func hooks() -> Array[Vector2]:
-	var pivot := _v(_lay["pivot"])
-	var a := deg_to_rad(-tilt_degrees())
-	var arm := float(_lay["arm"])
-	var dy := float(_lay["hook_dy"])
-	return [pivot + Vector2(-arm, dy).rotated(a), pivot + Vector2(arm, dy).rotated(a)] as Array[Vector2]
-
-
-## 盘层左上角：[左, 右]
-func pan_origins() -> Array[Vector2]:
-	var h := hooks()
-	var hook_in := _v(_lay["hook_in_pan"])
-	return [h[0] - hook_in, h[1] - hook_in] as Array[Vector2]
-
-
 ## 左盘画几枚金币：ceil(刚好够时的枚数 × 金币 / 开价)，放了钱就至少 1 枚，封顶 order 的长度（每摞堆满）
 func pile_count() -> int:
-	var pile: Dictionary = _lay.get("coin_pile", {})
-	if coins <= 0 or pile.is_empty():
-		return 0
-	var full := 0
-	for h in pile["full"]:
-		full += int(h)
-	return clampi(ceili(float(full) * coins / float(maxi(1, right))), 1, (pile["order"] as Array).size())
+	return _pile(coins, right)
 
 
 ## 右盘开价小牌（舞台坐标）
@@ -201,11 +173,7 @@ func _draw_coin_amount(r: Rect2, amount: int) -> void:
 	var w := side + CoinLabel.GAP + f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	var mid := r.get_center()
 	var at := Vector2(mid.x - w * 0.5, mid.y - side * 0.5)
-	var tex := CoinLabel.coin_texture()
-	if tex != null:
-		draw_texture_rect(tex, Rect2(at, Vector2(side, side)), false)
-	else:
-		draw_circle(at + Vector2(side, side) * 0.5, side * 0.45, CoinLabel.FALLBACK_FILL)
+	CoinLabel.draw_coin(self, Rect2(at, Vector2(side, side)))
 	draw_string(f, Vector2(at.x + side + CoinLabel.GAP, mid.y + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5),
 		text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 
@@ -214,12 +182,3 @@ func _draw_centered(r: Rect2, text: String, font_size: int) -> void:
 	var f := UiPalette.cjk_font_bold()
 	draw_string(f, Vector2(r.position.x, r.get_center().y + (f.get_ascent(font_size) - f.get_descent(font_size)) * 0.5),
 		text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, font_size, INK)
-
-
-static func _v(a) -> Vector2:
-	return Vector2(float(a[0]), float(a[1]))
-
-
-## json 里的框是 [左, 上, 右, 下]
-static func _rect(a) -> Rect2:
-	return Rect2(float(a[0]), float(a[1]), float(a[2]) - float(a[0]), float(a[3]) - float(a[1]))

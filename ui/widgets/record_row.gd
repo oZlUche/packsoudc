@@ -39,7 +39,7 @@ func column_rect(i: int) -> Rect2:
 
 ## 第 [param i] 栏的字用几号（放不下就缩）
 func column_size(i: int) -> int:
-	return RecordsStele.fit_size(UiPalette.cjk_font(), String(columns[i]), UiTheme.sz(FONT_SIZE), column_rect(i).size.x - 2.0 * PAD_X)
+	return TextFit.size_for(UiPalette.cjk_font(), String(columns[i]), UiTheme.sz(FONT_SIZE), column_rect(i).size.x - 2.0 * PAD_X, MIN_SIZE)
 
 
 func _draw() -> void:

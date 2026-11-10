@@ -10,3 +10,15 @@ static func ring(canvas: CanvasItem, center: Vector2, radius: float, progress: f
 	canvas.draw_arc(center, radius, 0.0, TAU, points, back_color, back_width if back_width >= 0.0 else width)
 	if progress > 0.0:
 		canvas.draw_arc(center, radius, -PI * 0.5, -PI * 0.5 + TAU * clampf(progress, 0.0, 1.0), points, fore_color, width)
+
+
+## 自己画底的按钮现在贴哪一态：disabled / pressed / hover / normal（选中、压灰这些各家自己先判）
+static func button_state(b: BaseButton) -> String:
+	if b.disabled:
+		return "disabled"
+	match b.get_draw_mode():
+		BaseButton.DRAW_PRESSED, BaseButton.DRAW_HOVER_PRESSED:
+			return "pressed"
+		BaseButton.DRAW_HOVER:
+			return "hover"
+	return "normal"

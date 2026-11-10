@@ -120,9 +120,7 @@ func _draw_ring() -> void:
 	if _selected == &"" or not _rects.has(_selected) or not _wood():
 		return
 	if _ring_box == null:
-		_ring_box = StyleBoxTexture.new()
-		_ring_box.texture = UiTheme.art_cached(SEL_ART)
-		_ring_box.set_texture_margin_all(20.0)
+		_ring_box = UiTheme.nine_box(UiTheme.art_cached(SEL_ART), [20.0, 20.0, 20.0, 20.0])
 	if _ring_box.texture != null:
 		_ring.draw_style_box(_ring_box, (_rects[_selected] as Rect2).grow(SEL_OUTSET + 6.0))     # 图四周多 6
 

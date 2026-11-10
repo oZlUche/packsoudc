@@ -44,14 +44,7 @@ func _init() -> void:
 
 ## 现在贴哪一态
 func state() -> String:
-	if disabled:
-		return "disabled"
-	match get_draw_mode():
-		DRAW_PRESSED, DRAW_HOVER_PRESSED:
-			return "pressed"
-		DRAW_HOVER:
-			return "hover"
-	return "normal"
+	return UiDraw.button_state(self)
 
 
 func _box(key: String, fallback: Rect2) -> Rect2:
@@ -78,10 +71,8 @@ func _draw() -> void:
 	var f := UiPalette.cjk_font_bold()
 	# 字框（原尺寸）× 缩放；字号按档放大，放不下（框宽 − LABEL_PAD，别贴左边的钉子）就一号号缩
 	var lb := _box("label", Rect2(12, 0, 90, 52))
-	var lfs := maxi(10, roundi(UiTheme.sz(int((_spec.get("font", {}) as Dictionary).get("size", 22))) * k))
 	var label := UiText.t("market.refresh")
-	while lfs > 10 and f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, lfs).x > (lb.size.x - LABEL_PAD) * k:
-		lfs -= 1
+	var lfs := TextFit.size_for(f, label, maxi(10, roundi(UiTheme.sz(int((_spec.get("font", {}) as Dictionary).get("size", 22))) * k)), (lb.size.x - LABEL_PAD) * k, 10)
 	var ly := (lb.position.y + lb.size.y * 0.5) * k + (f.get_ascent(lfs) - f.get_descent(lfs)) * 0.5 + dy
 	draw_string(f, Vector2(lb.position.x * k, ly), label, HORIZONTAL_ALIGNMENT_CENTER, lb.size.x * k, lfs, _ink("font", st, Color("2e2219")))
 	var pb := _box("price", Rect2(102, 9, 66, 34))
@@ -94,11 +85,6 @@ func _draw() -> void:
 	var w := side + CoinLabel.GAP + f.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, pfs).x
 	var x := pb.position.x * k + maxf(0.0, (pb.size.x * k - w) * 0.5)
 	var mid := (pb.position.y + pb.size.y * 0.5) * k + dy
-	var coin := CoinLabel.coin_texture()
-	var cr := Rect2(Vector2(x, mid - side * 0.5), Vector2(side, side))
-	if coin != null:
-		draw_texture_rect(coin, cr, false)
-	else:
-		draw_circle(cr.get_center(), side * 0.45, CoinLabel.FALLBACK_FILL)
+	CoinLabel.draw_coin(self, Rect2(Vector2(x, mid - side * 0.5), Vector2(side, side)))
 	var pink := _ink("price_font", "poor" if poor else ("pressed" if st == "pressed" else "normal"), Color("2a1d0c"))
 	draw_string(f, Vector2(x + side + CoinLabel.GAP, mid + (f.get_ascent(pfs) - f.get_descent(pfs)) * 0.5), num, HORIZONTAL_ALIGNMENT_LEFT, -1, pfs, pink)

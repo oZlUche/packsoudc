@@ -203,24 +203,9 @@ func _row_for(p_owner: Object, prop: Dictionary) -> Control:
 				if allow_empty:
 					picker.tooltip_text = STAT_EMPTY_TIP
 				return _labeled(p_owner, key, picker)
-			if type == TYPE_STRING_NAME and _is_damage_type_field(key):
-				# 096：伤害类型是数据（DamageTypes）：下拉列出登记过的，也能自定义
-				return _labeled(p_owner, key, _key_picker(_damage_type_keys(), Callable(PropertyForm, "damage_type_label"), String(value), func(k: String):
-					p_owner.set(key, StringName(k))
-					_emit()))
-			if type == TYPE_STRING_NAME and _is_axis_field(key):
-				# 152：指向一条标准轴的字段（buff 带的轴、改轴、扣轴、轴条件）：下拉列出轴表，显示正名 / 反名
-				return _labeled(p_owner, key, _key_picker(_axis_keys(), Callable(PropertyForm, "axis_label"), String(value), func(k: String):
-					p_owner.set(key, StringName(k))
-					_emit()))
-			if type == TYPE_STRING_NAME and _is_buff_id_field(p_owner, key):
-				# 146：指向一个 buff 的 id（移除 / 条件 / 扳机里的状态）：下拉列出库里的 buff，也能手填
-				return _labeled(p_owner, key, _key_picker(known_buff_ids(), Callable(PropertyForm, "buff_id_label"), String(value), func(k: String):
-					p_owner.set(key, StringName(k))
-					_emit()))
-			if type == TYPE_STRING_NAME and _is_tag_field(key):
-				# 096：指向一个标签的字段（信仰的 item_tag、规则的 weapon_tag）：下拉列出登记过 / 用过的标签，也能自定义
-				return _labeled(p_owner, key, _key_picker(known_tags(), Callable(PropertyForm, "tag_label"), String(value), func(k: String):
+			var source := _picker_source(p_owner, key) if type == TYPE_STRING_NAME else []
+			if not source.is_empty():
+				return _labeled(p_owner, key, _key_picker(source[0], source[1], String(value), func(k: String):
 					p_owner.set(key, StringName(k))
 					_emit()))
 			var le := LineEdit.new()
@@ -374,20 +359,28 @@ static func _is_tag_field(key: String) -> bool:
 	return key == "tags" or key.ends_with("_tags") or key.ends_with("_filter") or key == "tag" or key.ends_with("_tag")
 
 
-## 096：伤害类型字段
-static func _is_damage_type_field(key: String) -> bool:
-	return key == "damage_type"
+## 指向一张已知的键的字段：返回 [已知的键, 键变成显示文字的函数]（下拉列出，也能自定义）；别的字段返回空
+static func _picker_source(p_owner: Object, key: String) -> Array:
+	if key == "damage_type":
+		# 096：伤害类型是数据（DamageTypes）：下拉列出登记过的，也能自定义
+		return [_strs(DamageTypes.ids()), Callable(PropertyForm, "damage_type_label")]
+	if key == "axis":
+		# 152：指向一条标准轴的字段（buff 带的轴、改轴、扣轴、轴条件）：下拉列出轴表，显示正名 / 反名
+		return [_strs(StatAxes.ORDER), Callable(PropertyForm, "axis_label")]
+	if _is_buff_id_field(p_owner, key):
+		# 146：指向一个 buff 的 id（移除 / 条件 / 扳机里的状态）：下拉列出库里的 buff，也能手填
+		return [known_buff_ids(), Callable(PropertyForm, "buff_id_label")]
+	if _is_tag_field(key):
+		# 096：指向一个标签的字段（信仰的 item_tag、规则的 weapon_tag）：下拉列出登记过 / 用过的标签，也能自定义
+		return [known_tags(), Callable(PropertyForm, "tag_label")]
+	return []
 
 
-## 152：指向标准轴的字段
-static func _is_axis_field(key: String) -> bool:
-	return key == "axis"
-
-
-static func _axis_keys() -> Array[String]:
+## 一串键换成字符串（顺序不变）
+static func _strs(keys: Array) -> Array[String]:
 	var out: Array[String] = []
-	for a in StatAxes.ORDER:
-		out.append(String(a))
+	for k in keys:
+		out.append(String(k))
 	return out
 
 
@@ -404,9 +397,7 @@ static func _is_buff_id_field(p_owner: Object, key: String) -> bool:
 
 ## 库里全部 buff 的 id
 static func known_buff_ids() -> Array[String]:
-	var out: Array[String] = []
-	for id in ContentLibrary.buffs():
-		out.append(String(id))
+	var out := _strs(ContentLibrary.buffs().keys())
 	out.sort()
 	return out
 
@@ -459,19 +450,9 @@ static func damage_type_label(key: String) -> String:
 	return "%s (%s)" % [n, key] if n != key else key
 
 
-static func _damage_type_keys() -> Array[String]:
-	var out: Array[String] = []
-	for k in DamageTypes.ids():
-		out.append(String(k))
-	return out
-
-
 ## 096 / 171：已知的标签 = 登记过的（[TagRegistry]），升序。没登记的道具导入就报错，所以不再扫内容里用过的
 static func known_tags() -> Array[String]:
-	var out: Array[String] = []
-	for k in TagRegistry.ids():
-		out.append(String(k))
-	return out
+	return _strs(TagRegistry.ids())
 
 
 ## 171：「加标签…」下拉的选项，按大类分组：`[[大类, [id…]], …]`（大类按 [constant TagRegistry.CATEGORY_ORDER]，没归类的放最后一组）
@@ -716,6 +697,7 @@ func _dict_editor(p_owner: Object, key: String, dict: Dictionary) -> Control:
 		_compact(name_edit)
 		var old_key := String(k)
 		var raw = dict[k]
+		var editor: Control
 		if raw is String:
 			# 文字：直接改，不走 JSON
 			var se := LineEdit.new()
@@ -727,23 +709,8 @@ func _dict_editor(p_owner: Object, key: String, dict: Dictionary) -> Control:
 				dict[old_key] = t
 				p_owner.set(key, dict)
 				_emit())
-			name_edit.text_submitted.connect(func(t: String):
-				var v = dict[old_key]
-				dict.erase(old_key)
-				dict[t] = v
-				p_owner.set(key, dict)
-				_emit()
-				rebuild())
-			row.add_child(name_edit)
-			row.add_child(se)
-			row.add_child(_small_button("删", func():
-				dict.erase(old_key)
-				p_owner.set(key, dict)
-				_emit()
-				rebuild()))
-			box.add_child(row)
-			continue
-		if not (raw is float or raw is int):
+			editor = se
+		elif not (raw is float or raw is int):
 			# 值不是数（配额的 [min, max]、禁止相邻的类型对……）：按 JSON 文本编辑
 			var te := LineEdit.new()
 			te.text = JSON.stringify(raw)
@@ -755,40 +722,27 @@ func _dict_editor(p_owner: Object, key: String, dict: Dictionary) -> Control:
 					dict[old_key] = parsed
 					p_owner.set(key, dict)
 					_emit())
-			row.add_child(name_edit)
-			row.add_child(te)
-			row.add_child(_small_button("删", func():
+			editor = te
+		else:
+			var pct_key := key == "base_stats" and BattleStats.is_percent(StringName(old_key))
+			var val := _number(BattleStats.to_percent(float(raw)) if pct_key else float(raw), 0.1, func(v: float):
+				dict[old_key] = BattleStats.from_percent(v) if pct_key else v
+				p_owner.set(key, dict))
+			if pct_key:
+				val.suffix = "%"
+			if stat_dict:
+				name_edit.tooltip_text = "%s\n（改名直接敲，回车生效）" % stat_label(old_key)
+			editor = val
+		if raw is String or raw is float or raw is int:     # 按 JSON 文本编辑的那种，键不能改名
+			name_edit.text_submitted.connect(func(t: String):
+				var v = dict[old_key]
 				dict.erase(old_key)
+				dict[t] = v
 				p_owner.set(key, dict)
 				_emit()
-				rebuild()))
-			box.add_child(row)
-			continue
-		var val := SpinBox.new()
-		val.min_value = -99999
-		val.max_value = 99999
-		val.step = 0.1
-		val.allow_greater = true
-		val.allow_lesser = true
-		var pct_key := key == "base_stats" and BattleStats.is_percent(StringName(old_key))
-		val.value = BattleStats.to_percent(float(raw)) if pct_key else float(raw)
-		if pct_key:
-			val.suffix = "%"
-		if stat_dict:
-			name_edit.tooltip_text = "%s\n（改名直接敲，回车生效）" % stat_label(old_key)
-		name_edit.text_submitted.connect(func(t: String):
-			var v = dict[old_key]
-			dict.erase(old_key)
-			dict[t] = v
-			p_owner.set(key, dict)
-			_emit()
-			rebuild())
-		val.value_changed.connect(func(v: float):
-			dict[old_key] = BattleStats.from_percent(v) if pct_key else v
-			p_owner.set(key, dict)
-			_emit())
+				rebuild())
 		row.add_child(name_edit)
-		row.add_child(val)
+		row.add_child(editor)
 		row.add_child(_small_button("删", func():
 			dict.erase(old_key)
 			p_owner.set(key, dict)
@@ -802,14 +756,7 @@ func _dict_editor(p_owner: Object, key: String, dict: Dictionary) -> Control:
 		row.add_child(picker)
 		row.add_child(_small_button("+ 加一项", func():
 			var k := _picked_stat(picker)
-			if k == "":
-				k = "new_stat"
-			var i := 1
-			var base := k
-			while dict.has(k):
-				k = "%s_%d" % [base, i]
-				i += 1
-			dict[k] = 0.0
+			dict[_free_key(dict, k if k != "" else "new_stat")] = 0.0
 			p_owner.set(key, dict)
 			_emit()
 			rebuild()))
@@ -829,16 +776,21 @@ func _dict_editor(p_owner: Object, key: String, dict: Dictionary) -> Control:
 				j += 1
 			dict[lang] = ""
 		else:
-			var n := "new_stat"
-			var i := 1
-			while dict.has(n):
-				n = "new_stat_%d" % i
-				i += 1
-			dict[n] = 0.0
+			dict[_free_key(dict, "new_stat")] = 0.0
 		p_owner.set(key, dict)
 		_emit()
 		rebuild()))
 	return box
+
+
+## 字典里还没用过的键：[param base]，占了就 base_1、base_2…
+static func _free_key(dict: Dictionary, base: String) -> String:
+	var k := base
+	var i := 1
+	while dict.has(k):
+		k = "%s_%d" % [base, i]
+		i += 1
+	return k
 
 
 func _array_section(p_owner: Object, key: String, arr: Array) -> Control:
@@ -848,67 +800,9 @@ func _array_section(p_owner: Object, key: String, arr: Array) -> Control:
 		# 171（作者定）：标签只能从登记过的里挑 —— 已选的一个一块、后面一个 ×；「加标签…」下拉按大类分组。不能手打
 		return _labeled(p_owner, key, _tag_chips(p_owner, key, arr))
 
-	# 格子这类简单数组用一行文本，比每项一个控件好用得多
-	if builtin == TYPE_STRING_NAME or builtin == TYPE_STRING:
-		var le := LineEdit.new()
-		var parts: Array[String] = []
-		for v in arr:
-			parts.append(String(v))
-		le.text = ", ".join(parts)
-		le.custom_minimum_size.x = 220
-		_compact(le)
-		le.text_changed.connect(func(t: String):
-			var out := ContentSchema.empty_like(arr)
-			for piece in t.split(",", false):
-				var s := (piece as String).strip_edges()
-				if s == "":
-					continue
-				if builtin == TYPE_STRING_NAME:
-					out.append(StringName(s))
-				else:
-					out.append(s)
-			p_owner.set(key, out)
-			_emit())
-		return _labeled(p_owner, key, le)
-
-	if builtin == TYPE_VECTOR2I:
-		var le2 := LineEdit.new()
-		var parts2: Array[String] = []
-		for v in arr:
-			parts2.append("%d,%d" % [(v as Vector2i).x, (v as Vector2i).y])
-		le2.text = "; ".join(parts2)
-		le2.custom_minimum_size.x = 220
-		le2.placeholder_text = "x,y; x,y"
-		_compact(le2)
-		le2.text_changed.connect(func(t: String):
-			var out := ContentSchema.empty_like(arr)
-			for piece in t.split(";", false):
-				var xy := (piece as String).strip_edges().split(",")
-				if xy.size() == 2:
-					out.append(Vector2i(int(xy[0]), int(xy[1])))
-			p_owner.set(key, out)
-			_emit())
-		return _labeled(p_owner, key, le2)
-
-	# 整数数组（哪几层放撤离点、每层的危险等级……）也用一行文本
-	if builtin == TYPE_INT:
-		var le3 := LineEdit.new()
-		var parts3: Array[String] = []
-		for v in arr:
-			parts3.append(str(int(v)))
-		le3.text = ", ".join(parts3)
-		le3.custom_minimum_size.x = 220
-		le3.placeholder_text = "1, 2, 3"
-		_compact(le3)
-		le3.text_changed.connect(func(t: String):
-			var out := ContentSchema.empty_like(arr)
-			for piece in t.split(",", false):
-				var s := (piece as String).strip_edges()
-				if s.is_valid_int():
-					out.append(int(s))
-			p_owner.set(key, out)
-			_emit())
-		return _labeled(p_owner, key, le3)
+	# 格子这类简单数组用一行文本，比每项一个控件好用得多；整数数组（哪几层放撤离点、每层的危险等级……）也用一行文本
+	if builtin in [TYPE_STRING_NAME, TYPE_STRING, TYPE_VECTOR2I, TYPE_INT]:
+		return _labeled(p_owner, key, _list_line(p_owner, key, arr, builtin))
 
 	if builtin != TYPE_OBJECT:
 		return _labeled(p_owner, key, _muted("（暂不支持在界面里编辑）"))
@@ -967,6 +861,43 @@ func _array_section(p_owner: Object, key: String, arr: Array) -> Control:
 		_emit()
 		rebuild()))
 	return box
+
+
+## 简单数组（字符串 / 格子 / 整数）用的那一行文本：每改一下，整行重新拆开写回
+func _list_line(p_owner: Object, key: String, arr: Array, builtin: int) -> LineEdit:
+	var cells := builtin == TYPE_VECTOR2I
+	var le := LineEdit.new()
+	var parts: Array[String] = []
+	for v in arr:
+		if cells:
+			parts.append("%d,%d" % [(v as Vector2i).x, (v as Vector2i).y])
+		else:
+			parts.append(str(int(v)) if builtin == TYPE_INT else String(v))
+	le.text = ("; " if cells else ", ").join(parts)
+	le.custom_minimum_size.x = 220
+	if cells or builtin == TYPE_INT:
+		le.placeholder_text = "x,y; x,y" if cells else "1, 2, 3"
+	_compact(le)
+	le.text_changed.connect(func(t: String):
+		var out := ContentSchema.empty_like(arr)
+		for piece in t.split(";" if cells else ",", false):
+			var s := (piece as String).strip_edges()
+			if cells:
+				var xy := s.split(",")
+				if xy.size() == 2:
+					out.append(Vector2i(int(xy[0]), int(xy[1])))
+			elif builtin == TYPE_INT:
+				if s.is_valid_int():
+					out.append(int(s))
+			elif s == "":
+				continue
+			elif builtin == TYPE_STRING_NAME:
+				out.append(StringName(s))
+			else:
+				out.append(s)
+		p_owner.set(key, out)
+		_emit())
+	return le
 
 
 #region 146：库
@@ -1230,43 +1161,29 @@ func _adder(declared: StringName, on_made: Callable) -> Control:
 	var lib: Array[RulePartDef] = []
 	if parts_allowed and RulePartDef.SLOTS.values().has(declared):
 		lib = ContentLibrary.parts_for(declared)
-	if not lib.is_empty():
-		var lob := OptionButton.new()
-		_compact(lob)
+	var from_lib := not lib.is_empty()
+	var ob: OptionButton = null     # 只有一种类型、库里也没有现成的：不要下拉
+	if from_lib or types.size() > 1:
+		ob = OptionButton.new()
+		_compact(ob)
 		for i in types.size():
-			lob.add_item("新建：" + FieldText.type_label(types[i]), i)
-			lob.set_item_tooltip(i, String(types[i]))
-		lob.add_separator("库")
-		for j in lib.size():
-			lob.add_item("库：" + part_label(lib[j]), LIB_ID0 + j)
-			lob.set_item_tooltip(lob.item_count - 1, "@%s　%s" % [lib[j].id, lib[j].preview()])
-		row.add_child(lob)
-		row.add_child(_small_button("+ 添加", func():
-			var sel := lob.get_selected_id()
-			var made: Object = ContentLibrary.instance_of(lib[sel - LIB_ID0]) if sel >= LIB_ID0 \
-				else ContentSchema.make(declared, types[sel])
-			if made != null:
-				on_made.call(made)))
-		row.set_meta("library", lob)
-		return row
-	if types.size() <= 1:
-		var only_ := types[0] if types.size() == 1 else declared
-		row.add_child(_small_button("+ 添加", func():
-			var made := ContentSchema.make(declared, only_)
-			if made != null:
-				on_made.call(made)))
-		return row
-
-	var ob := OptionButton.new()
-	_compact(ob)
-	for i in types.size():
-		ob.add_item(FieldText.type_label(types[i]), i)
-		ob.set_item_tooltip(i, String(types[i]))
-	row.add_child(ob)
+			ob.add_item(("新建：" if from_lib else "") + FieldText.type_label(types[i]), i)
+			ob.set_item_tooltip(i, String(types[i]))
+		if from_lib:
+			ob.add_separator("库")
+			for j in lib.size():
+				ob.add_item("库：" + part_label(lib[j]), LIB_ID0 + j)
+				ob.set_item_tooltip(ob.item_count - 1, "@%s　%s" % [lib[j].id, lib[j].preview()])
+		row.add_child(ob)
+	var only_ := types[0] if types.size() == 1 else declared
 	row.add_child(_small_button("+ 添加", func():
-		var made := ContentSchema.make(declared, types[ob.get_selected_id()])
+		var sel := ob.get_selected_id() if ob != null else -1
+		var made: Object = ContentLibrary.instance_of(lib[sel - LIB_ID0]) if from_lib and sel >= LIB_ID0 \
+			else ContentSchema.make(declared, types[sel] if ob != null else only_)
 		if made != null:
 			on_made.call(made)))
+	if from_lib:
+		row.set_meta("library", ob)
 	return row
 
 

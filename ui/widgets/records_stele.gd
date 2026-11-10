@@ -223,14 +223,6 @@ func ledger_width(f: Font, px: int) -> float:
 	return w
 
 
-## 一行字放不下 [param width] 就缩字号，最小 [constant MIN_SIZE]
-static func fit_size(f: Font, text: String, base: int, width: float) -> int:
-	var px := base
-	while px > MIN_SIZE and f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
-		px -= 1
-	return px
-
-
 func _place() -> void:
 	var o := ORIGIN
 	var f := UiPalette.cjk_font()
@@ -335,7 +327,7 @@ func _draw() -> void:
 		var nw := fb.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, ns).x
 		var room := BODY.x - TEXT_RIGHT - TEXT_X - nw - 10.0
 		var label := String(_rows[i]["label"])
-		_carved(f, Vector2(o.x + TEXT_X + nw + 10, top + 54), label, fit_size(f, label, UiTheme.sz(LABEL_SIZE), room), INK)
+		_carved(f, Vector2(o.x + TEXT_X + nw + 10, top + 54), label, TextFit.size_for(f, label, UiTheme.sz(LABEL_SIZE), room, MIN_SIZE), INK)
 	var total := f.get_string_size(_ledger, HORIZONTAL_ALIGNMENT_LEFT, -1, _ledger_size).x + _funds.size.x
 	var x0 := o.x + BAND.position.x + (BAND.size.x - total) * 0.5
 	_carved(f, Vector2(x0, o.y + BAND.position.y + BAND.size.y * 0.5 + _ledger_size * 0.35), _ledger, _ledger_size, INK)

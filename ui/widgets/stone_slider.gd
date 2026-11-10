@@ -75,13 +75,7 @@ func _box(p_name: String, along: float) -> StyleBoxTexture:
 	var tex := UiTheme.art_cached(p_name)
 	var s: StyleBoxTexture = null
 	if tex != null:
-		s = StyleBoxTexture.new()
-		s.texture = tex
-		s.texture_margin_left = along
-		s.texture_margin_right = along
-		s.texture_margin_top = 12.0
-		s.texture_margin_bottom = 12.0
-		s.set_expand_margin_all(6.0)
+		s = UiTheme.nine_box(tex, [along, 12.0, along, 12.0], [], 6.0)
 	_boxes[p_name] = s
 	return s
 

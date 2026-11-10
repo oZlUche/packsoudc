@@ -31,11 +31,15 @@ static func shrink_button_to(b: Button, room: float, floor_size: int = 14) -> vo
 static func shrink_label(l: Label, width: float, base: int, floor_size: int) -> void:
 	if l == null:
 		return
-	var font := l.get_theme_font("font")
+	l.add_theme_font_size_override("font_size", size_for(l.get_theme_font("font"), l.text, base, width, floor_size))
+
+
+## 一行字放不下 [param width] 就缩字号：从 [param base] 号一号一号往回缩，最小 [param floor_size]（字由自己画的控件也用）
+static func size_for(font: Font, text: String, base: int, width: float, floor_size: int) -> int:
 	var px := base
-	while px > floor_size and font != null and font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
+	while px > floor_size and font != null and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
 		px -= 1
-	l.add_theme_font_size_override("font_size", px)
+	return px
 
 
 ## 258：定高卡里放不下时一号一号往回缩 —— [param l] 比 [param floor_size]（小档字号）大就小一号，返回缩了没有

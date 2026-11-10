@@ -96,6 +96,15 @@ static func coin_icon(px: int) -> Texture2D:
 	return t
 
 
+## 把金币画进 [param rect]（在 [param ci] 的 `_draw` 里调）：有图贴图，缺图画一个金圆
+static func draw_coin(ci: CanvasItem, rect: Rect2) -> void:
+	var tex := coin_texture()
+	if tex != null:
+		ci.draw_texture_rect(tex, rect, false)
+	else:
+		ci.draw_circle(rect.get_center(), rect.size.x * 0.45, FALLBACK_FILL)
+
+
 func coin_side() -> float:
 	return roundf(font_size * COIN_SCALE)
 

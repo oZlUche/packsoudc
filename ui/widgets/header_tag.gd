@@ -74,13 +74,7 @@ func _draw() -> void:
 	var tex := UiTheme.art_cached(art)
 	if tex != null:
 		var m: Array = UiTheme.art_meta(art).get("margin", [24, 22, 24, 8] if hang else [22, 8, 12, 8])
-		var box := StyleBoxTexture.new()
-		box.texture = tex
-		box.texture_margin_left = float(m[0])
-		box.texture_margin_top = float(m[1])
-		box.texture_margin_right = float(m[2])
-		box.texture_margin_bottom = float(m[3])
-		draw_style_box(box, r)
+		draw_style_box(UiTheme.nine_box(tex, m), r)
 	else:
 		var flat := StyleBoxFlat.new()
 		flat.bg_color = Color("e4ded2")
