@@ -41,7 +41,7 @@ static func run_import_rules(t: TestCase) -> void:
 	t.not_null(def.growth if def != null else null, "带着生长")
 	if def != null:
 		t.eq(def.growth.stages.size(), 2, "两阶")
-		t.eq(ContentExporter.to_json(ContentExporter.export_item(def)), FileAccess.get_file_as_string("res://data/authoring/items/thorn_seed.json"), "导出往返逐字节一致")
+		t.eq(ContentExporter.to_json(ContentExporter.dump(def)), FileAccess.get_file_as_string("res://data/authoring/items/thorn_seed.json"), "导出往返逐字节一致")
 	var cases := {
 		"不是自然信仰": func(d: Dictionary): d["tags"] = ["trinket", "nature"],
 		"别的神": func(d: Dictionary): d["tags"] = ["faith:sun", "nature"],

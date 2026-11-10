@@ -120,7 +120,7 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 				if not report_.ok():
 					problems.append("run_buffs/%s：按表生成的 JSON 导入不了：%s" % [bid, report_.to_text()])
 					continue
-				out[ContentPaths.authoring_file("run_buffs", bid)] = ContentExporter.export_run_buff(def_)
+				out[ContentPaths.authoring_file("run_buffs", bid)] = ContentExporter.dump(def_)
 				buffs.append(bid)
 			effect["buffs"] = buffs
 		var tiers: Array = []
@@ -140,7 +140,7 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 		if not report.ok():
 			problems.append("techs/%s：按表生成的 JSON 导入不了：%s" % [id, report.to_text()])
 			continue
-		out[ContentPaths.authoring_file("techs", id)] = ContentExporter.export_tech(def)
+		out[ContentPaths.authoring_file("techs", id)] = ContentExporter.dump(def)
 	return out
 
 

@@ -60,7 +60,7 @@ static func run_achievements(t: TestCase) -> void:
 			var r_ := ImportReport.new()
 			var res := ContentImporter.import_achievement(JSON.parse_string(raw), ContentImporter.Context.new(), r_)
 			t.check(r_.ok(), "%s 导入没有错：%s" % [f, r_.to_text()])
-			t.eq(ContentExporter.to_json(ContentExporter.export_achievement(res)), raw, "%s 是往返不动点" % f)
+			t.eq(ContentExporter.to_json(ContentExporter.dump(res)), raw, "%s 是往返不动点" % f)
 			t.check(ResourceLoader.exists(ContentPaths.asset_file("achievements", f.get_basename())), "%s 的资产在" % f)
 	t.check(files >= 5, "至少五枚成就（%d）" % files)
 	var bad := ImportReport.new()
@@ -320,9 +320,9 @@ static func run_event_flags_and_texts(t: TestCase) -> void:
 	var opt := def.options[0] as EventOption
 	t.check(opt.requires[0] is HasFlag and (opt.requires[0] as HasFlag).flag == &"a", "条件是 HasFlag")
 	t.check(opt.outcomes[0] is SetFlag and (opt.outcomes[0] as SetFlag).value == 2 and (opt.outcomes[1] as SetFlag).clear, "后果是 SetFlag")
-	var json := ContentExporter.to_json(ContentExporter.export_event(def))
+	var json := ContentExporter.to_json(ContentExporter.dump(def))
 	var again := ContentImporter.import_event(JSON.parse_string(json), ContentImporter.Context.new(), ImportReport.new())
-	t.eq(ContentExporter.to_json(ContentExporter.export_event(again)), json, "导出 → 导入 → 再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(again)), json, "导出 → 导入 → 再导出逐字节相同")
 	# 多语言取值
 	t.eq(def.title_for("en"), "Flag", "英文标题")
 	t.eq(def.title_for("zh"), "旗", "中文标题 = 原文")

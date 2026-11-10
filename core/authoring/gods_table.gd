@@ -105,7 +105,7 @@ static func normalized(json: Dictionary, problems: Array[String] = []) -> Dictio
 	if not report.ok():
 		problems.append("faiths/%s：按表生成的 JSON 导入不了：%s" % [json.get("id", "?"), report.to_text()])
 		return {}
-	return ContentExporter.export_faith(def)
+	return ContentExporter.dump(def)
 
 
 ## 对照：表里的每位神都得有 JSON、JSON 里的信仰都得在表里，按表生成的和磁盘上的一致。返回问题清单（空 = 一致）

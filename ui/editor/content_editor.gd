@@ -518,7 +518,7 @@ func _on_id_changed(text: String) -> void:
 
 
 func _export(d) -> Dictionary:
-	return ContentExporter.export_item(d)
+	return ContentExporter.dump(d)
 
 
 ## 道具每次都用一份新的上下文（不对着别的内容查）

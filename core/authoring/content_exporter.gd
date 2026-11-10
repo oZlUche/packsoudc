@@ -14,10 +14,6 @@ class_name ContentExporter
 extends RefCounted
 
 
-static func export_item(def: ItemDef) -> Dictionary:
-	return dump(def)
-
-
 ## 作者 2026-11-04：道具说明一律留空给作者自己写 —— 空着也把 `description` / `descriptions` 两个键写出来（紧跟名字），作者打开 JSON 就看得到该填哪里
 static func _with_description_keys(raw: Dictionary) -> Dictionary:
 	if raw.has("description") and raw.has("descriptions"):
@@ -36,84 +32,7 @@ static func _with_description_keys(raw: Dictionary) -> Dictionary:
 	return out
 
 
-static func export_buff(def: BuffDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_set(def: ItemSetDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_chapter(def: ChapterDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_enemy(def: EnemyDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_enemy_pool(pool: EnemyPool) -> Dictionary:
-	return dump(pool)
-
-
-static func export_drop_rule(rule: DropRule) -> Dictionary:
-	return dump(rule)
-
-
-static func export_node_rules(rules: NodeRules) -> Dictionary:
-	return dump(rules)
-
-
-static func export_economy_rules(rules: EconomyRules) -> Dictionary:
-	return dump(rules)
-
-
-static func export_loadout(def: LoadoutDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_character(def: CharacterDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_difficulty(def: DifficultyDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_hunter(def: HunterDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_meta_rules(rules: MetaRules) -> Dictionary:
-	return dump(rules)
-
-
-static func export_faith(def: FaithDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_tag(def: TagDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_achievement(def: AchievementDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_tech(def: TechDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_run_buff(def: RunBuffDef) -> Dictionary:
-	return dump(def)
-
-
-static func export_event(def: EventDef) -> Dictionary:
-	return dump(def)
-
-
-## 资源 → 字典。按反射工作、不认识具体类型，所以按种类分派的地方（[ContentCheck]、`tools/normalize_content.gd`）
-## 直接用它，上面那排 `export_xxx` 只是带类型的入口。`with_type` 给抽象基类的子对象带上 `type`
+## 资源 → 字典。按反射工作、不认识具体类型，哪一种内容都走这一个入口。`with_type` 给抽象基类的子对象带上 `type`
 static func dump(obj: Object, with_type: bool = false) -> Dictionary:
 	var out := {}
 	if obj == null:

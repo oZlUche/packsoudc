@@ -498,7 +498,7 @@ func save_chapter(chapter_id: String) -> Error:
 	chapter.map_source.mode = MapSource.Mode.RANDOM
 	chapter.map_source.generator_id = _gen_id
 	chapter.map_source.generator_config = _cfg
-	var data := ContentExporter.export_chapter(chapter)
+	var data := ContentExporter.dump(chapter)
 	# 存之前再导一遍：和命令行导入器同一套校验，界面说没问题，命令行就一定过得去
 	var report := ImportReport.new()
 	var built := ContentImporter.import_chapter(data, ContentImporter.Context.new(), report)

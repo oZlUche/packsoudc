@@ -359,7 +359,7 @@ static func run_round_trip(t: TestCase) -> void:
 	var def: ItemDef = first[0]
 	t.check((first[1] as ImportReport).ok(), "导入成功：" + (first[1] as ImportReport).to_text())
 
-	var dumped := ContentExporter.export_item(def)
+	var dumped := ContentExporter.dump(def)
 	var second := _import_item(dumped)
 	var def2: ItemDef = second[0]
 	t.check((second[1] as ImportReport).ok(),
@@ -402,7 +402,7 @@ static func run_round_trip(t: TestCase) -> void:
 		"子对象同样只写非默认值")
 
 	# 再导出一次必须逐字节相同 —— 否则 git diff 会无限抖动
-	t.eq(ContentExporter.to_json(ContentExporter.export_item(def2)),
+	t.eq(ContentExporter.to_json(ContentExporter.dump(def2)),
 		ContentExporter.to_json(dumped),
 		"二次导出与一次导出逐字节相同，git diff 不会抖")
 
@@ -424,7 +424,7 @@ static func run_existing_assets(t: TestCase) -> void:
 		var def := db.get_def(id)
 		if def == null:
 			continue
-		var dumped := ContentExporter.export_item(def)
+		var dumped := ContentExporter.dump(def)
 		var report := _report()
 		report.source = String(id)
 		var back := ContentImporter.import_item(dumped, ctx, report)
@@ -490,11 +490,11 @@ static func run_stack_cap_migration(t: TestCase) -> void:
 	var r1 := _report()
 	var b1 := ContentImporter.import_buff({"id": "t_cap6", "stackable": true}, _ctx(), r1)
 	t.check(r1.ok() and b1.stackable, "stackable true → 可叠层（%s）" % r1.to_text())
-	t.check(not ContentExporter.export_buff(b1).has("max_stacks") and not ContentExporter.export_buff(b1).has("stackable"), "导出：可叠层是默认，不写；也没有 max_stacks")
+	t.check(not ContentExporter.dump(b1).has("max_stacks") and not ContentExporter.dump(b1).has("stackable"), "导出：可叠层是默认，不写；也没有 max_stacks")
 	var r2 := _report()
 	var b2 := ContentImporter.import_buff({"id": "t_one", "stackable": false, "duration_sec": 2.0}, _ctx(), r2)
 	t.check(r2.ok() and not b2.stackable and not b2.is_permanent(), "stackable false → 不可叠层，可以过期")
-	t.eq(ContentExporter.export_buff(b2).get("stackable", null), false, "导出写 stackable: false")
+	t.eq(ContentExporter.dump(b2).get("stackable", null), false, "导出写 stackable: false")
 	var stale: Array[String] = []
 	for dir in ["items", "faiths", "run_buffs", "buffs", "characters"]:
 		if not DirAccess.dir_exists_absolute("res://data/authoring/" + dir):
@@ -509,7 +509,7 @@ static func run_stack_cap_migration(t: TestCase) -> void:
 static func run_stat_modifier_migration(t: TestCase) -> void:
 	t.begin("133 · 属性修饰只剩 mode + amount：导出只写新键、作者数据里不剩旧键")
 	var b4 := ContentImporter.import_buff({"id": "t_new", "mods": [{"stat": "max_armor", "mode": "MULT", "amount": 10}]}, _ctx(), _report())
-	var mod: Dictionary = (ContentExporter.export_buff(b4)["mods"] as Array)[0]
+	var mod: Dictionary = (ContentExporter.dump(b4)["mods"] as Array)[0]
 	t.eq(mod, {"stat": "max_armor", "mode": "MULT", "amount": 10.0}, "导出只写新键")
 	var stale: Array[String] = []
 	for dir in ["items", "faiths", "run_buffs", "encumbrance_rules"]:

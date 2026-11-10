@@ -170,6 +170,7 @@ static func run_sources(t: TestCase) -> void:
 	t.eq(s.storage.item_count(), 0, "地上也没有")
 	t.check(gift.describe().contains("急救包"), "说明写着名字：%s" % gift.describe())
 	# 事件：grant_belt
+	t.check(RunRegistry.EVENT_OUTCOMES.has(&"grant_belt") and not RunRegistry.EROSION_EFFECTS.has(&"grant_belt"), "grant_belt 登记在事件后果里（事件 JSON 写得出来），不在侵蚀效果里")
 	var outcome := GrantBelt.new()
 	outcome.skill = &"aid_pack"
 	outcome.count = 1

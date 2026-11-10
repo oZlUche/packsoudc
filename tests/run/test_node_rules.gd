@@ -25,7 +25,7 @@ static func run_round_trip(t: TestCase) -> void:
 	t.begin("节点规则 · 走管线，导出再导入逐字节一致")
 
 	var rules := _rules()
-	var dumped := ContentExporter.export_node_rules(rules)
+	var dumped := ContentExporter.dump(rules)
 	t.check(dumped.has("search") and (dumped["search"] as Dictionary).has("encounter_curve"), "嵌套的搜索规则导出了")
 	var text := ContentExporter.to_json(dumped)
 	var r := ImportReport.new()
@@ -35,13 +35,13 @@ static func run_round_trip(t: TestCase) -> void:
 	t.eq(back.search.encounter_curve, rules.search.encounter_curve, "遭遇曲线")
 	t.eq(back.search.items_per_search, Vector2i(1, 3), "Vector2i")
 	t.eq(back.loss_cost, rules.loss_cost, "扣体力表")
-	t.eq(ContentExporter.to_json(ContentExporter.export_node_rules(back)), text, "再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "再导出逐字节相同")
 
 
 static func run_validation(t: TestCase) -> void:
 	t.begin("节点规则 · 校验比引擎严格")
 
-	var base := ContentExporter.export_node_rules(_rules())
+	var base := ContentExporter.dump(_rules())
 
 	var elite := base.duplicate(true)
 	elite["random_weights"] = {"battle": 1, "elite": 1}
@@ -114,18 +114,18 @@ static func run_authoring_file(t: TestCase) -> void:
 			var r := ImportReport.new()
 			var res := ContentImporter.import_node_rules(JSON.parse_string(text), ctx, r)
 			t.check(r.ok(), "node_rules/%s 导得进：%s" % [id, r.to_text()])
-			t.eq(ContentExporter.to_json(ContentExporter.export_node_rules(res)), text, "node_rules/%s 是导出器的格式" % id)
+			t.eq(ContentExporter.to_json(ContentExporter.dump(res)), text, "node_rules/%s 是导出器的格式" % id)
 			var asset := ContentPaths.asset_file("node_rules", id)
 			t.check(ResourceLoader.exists(asset), "有资产 %s" % asset)
 			if ResourceLoader.exists(asset):
-				t.eq(ContentExporter.export_node_rules(load(asset)), ContentExporter.export_node_rules(res), "资产与作者数据一致")
+				t.eq(ContentExporter.dump(load(asset)), ContentExporter.dump(res), "资产与作者数据一致")
 	t.check(count >= 1, "至少一份节点规则")
 
 	var chapter := _chapter()
 	t.check(chapter != null and chapter.node_rules != &"", "第一章有节点规则")
 	if chapter != null:
 		t.check(ctx.node_rules.has(chapter.node_rules), "第一章的规则 '%s' 在仓库里" % chapter.node_rules)
-		var ch := ContentExporter.export_chapter(chapter)
+		var ch := ContentExporter.dump(chapter)
 		ch["node_rules"] = "no_such"
 		var r := ImportReport.new()
 		ContentImporter.import_chapter(ch, ctx, r)

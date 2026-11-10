@@ -123,7 +123,7 @@ static func run_pipeline(t: TestCase) -> void:
 	var opt2 := EventOption.new()
 	opt2.label = "走"
 	def.options = [opt, opt2] as Array[EventOption]
-	var text := ContentExporter.to_json(ContentExporter.export_event(def))
+	var text := ContentExporter.to_json(ContentExporter.dump(def))
 	var report := ImportReport.new()
 	var back := ContentImporter.import_event(JSON.parse_string(text), ContentImporter.Context.new(), report)
 	t.check(report.ok(), "导得回来：%s" % report.to_text())
@@ -131,7 +131,7 @@ static func run_pipeline(t: TestCase) -> void:
 	t.check(back.options[0].requires.size() == 1 and back.options[0].requires[0] is CanAfford, "条件按注册表造回来了")
 	t.check(back.options[0].outcomes.size() == 2 and back.options[0].outcomes[0] is GiveItem and back.options[0].outcomes[1] is Say, "后果按注册表造回来了")
 	t.eq((back.options[0].outcomes[0] as GiveItem).item, &"knife", "字段原样")
-	t.eq(ContentExporter.to_json(ContentExporter.export_event(back)), text, "再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "再导出逐字节相同")
 
 	var c := _content()
 	var ctx := ContentImporter.Context.new()
@@ -171,7 +171,7 @@ static func run_pipeline(t: TestCase) -> void:
 			var rep := ImportReport.new()
 			var res := ContentImporter.import_event(JSON.parse_string(raw), ctx, rep)
 			t.check(rep.ok(), "%s 导得进：%s" % [f, rep.to_text()])
-			t.eq(ContentExporter.to_json(ContentExporter.export_event(res)), raw, "%s 是往返不动点" % f)
+			t.eq(ContentExporter.to_json(ContentExporter.dump(res)), raw, "%s 是往返不动点" % f)
 			t.check(ResourceLoader.exists(ContentPaths.asset_file("events", f.get_basename())), "%s 的资产在" % f)
 	t.check(files >= 5, "至少五个事件（实际 %d）" % files)
 	t.eq(c.events.size(), files, "load_all 装回全部")

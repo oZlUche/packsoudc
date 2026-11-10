@@ -35,13 +35,13 @@ static func run_pipeline(t: TestCase) -> void:
 	var eff := VitalityMaxBonus.new()
 	eff.amount = 2
 	def.effects = [eff] as Array[Effect]
-	var text := ContentExporter.to_json(ContentExporter.export_run_buff(def))
+	var text := ContentExporter.to_json(ContentExporter.dump(def))
 	var report := ImportReport.new()
 	var back := ContentImporter.import_run_buff(JSON.parse_string(text), ContentImporter.Context.new(), report)
 	t.check(report.ok(), "导得回来：%s" % report.to_text())
 	t.check(back.is_map() and back.duration_steps == 3 and back.tags == def.tags, "作用域、时限、标记原样")
 	t.check(back.effects.size() == 1 and back.effects[0] is VitalityMaxBonus and (back.effects[0] as VitalityMaxBonus).amount == 2, "RunEffect 按注册表造回来了")
-	t.eq(ContentExporter.to_json(ContentExporter.export_run_buff(back)), text, "再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "再导出逐字节相同")
 
 	var bad := ImportReport.new()
 	ContentImporter.import_run_buff({"id": "x", "scope": "META", "effects": [{"type": "deal_damage", "amount": 3}]}, ContentImporter.Context.new(), bad)
@@ -66,7 +66,7 @@ static func run_pipeline(t: TestCase) -> void:
 			var rep := ImportReport.new()
 			var res := ContentImporter.import_run_buff(JSON.parse_string(raw), ContentImporter.Context.new(), rep)
 			t.check(rep.ok(), "%s 导得进：%s" % [f, rep.to_text()])
-			t.eq(ContentExporter.to_json(ContentExporter.export_run_buff(res)), raw, "%s 是往返不动点" % f)
+			t.eq(ContentExporter.to_json(ContentExporter.dump(res)), raw, "%s 是往返不动点" % f)
 			t.check(ResourceLoader.exists(ContentPaths.asset_file("run_buffs", f.get_basename())), "%s 的资产在" % f)
 	t.check(files >= 4, "至少四个测试用的 buff（实际 %d）" % files)
 	var c := _content()

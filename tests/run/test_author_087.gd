@@ -439,7 +439,7 @@ static func run_enemy_identity(t: TestCase) -> void:
 	t.eq(marks.signature_at(3), [&"blessed_longbow"] as Array[StringName], "3 档：取 ≤ 档位的最高一档 → 赐福的长弓")
 	t.check(not marks.allows_item(c.items.get_def(&"knife")) and marks.allows_item(c.items.get_def(&"arrows")), "神射手不背匕首、背箭矢")
 	# 导入器
-	var data := ContentExporter.export_enemy(marks)
+	var data := ContentExporter.dump(marks)
 	var ctx := ContentImporter.Context.new()
 	for id in c.items.ids():
 		ctx.items[id] = c.items.get_def(id)
@@ -450,7 +450,7 @@ static func run_enemy_identity(t: TestCase) -> void:
 	var bad := ImportReport.new()
 	ContentImporter.import_enemy(data, ctx, bad)
 	t.check(not bad.ok(), "招牌不在身份圈里：拦")
-	var back := ContentImporter.import_enemy(ContentExporter.export_enemy(marks), ctx, ImportReport.new())
+	var back := ContentImporter.import_enemy(ContentExporter.dump(marks), ctx, ImportReport.new())
 	t.eq(back.item_tags, marks.item_tags, "item_tags 往返")
 	t.eq(back.signature_at(2), marks.signature_at(2), "signature_by_strength 往返")
 
@@ -633,7 +633,7 @@ static func run_names_and_hunters_and_mana(t: TestCase) -> void:
 	t.check(plain_en.contains("Poisoned Knife") and plain_en.contains("1 Poison"), "悬浮窗按当前语言写名字：%s" % plain_en.replace("\n", " / "))
 	UiText.lang = before
 	# 往返
-	var back := ContentImporter.import_item(ContentExporter.export_item(knife), ContentImporter.Context.new(), ImportReport.new())
+	var back := ContentImporter.import_item(ContentExporter.dump(knife), ContentImporter.Context.new(), ImportReport.new())
 	t.eq(back.display_names, knife.display_names, "display_names 走管线往返")
 	# 猎手
 	var rules: NodeRules = load(ContentPaths.asset_file("node_rules", "standard"))

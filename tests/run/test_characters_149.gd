@@ -171,7 +171,7 @@ static func run_undaunted_and_rule(t: TestCase) -> void:
 		{"type": "passive", "id": "p", "display_name": "p", "passive": [{"type": "free_losses"}]}]}, ctx, old)
 	t.check(old.ok(), "免罚败仗不再撞科技（不屈换成了少扣）")
 	for ch in c.characters:
-		var data := ContentExporter.export_character(ch)
+		var data := ContentExporter.dump(ch)
 		var r := ImportReport.new()
 		ContentImporter.import_character(data, ctx, r)
 		t.check(r.ok(), "%s 导得进来：%s" % [ch.id, r.to_text().strip_edges().left(100)])

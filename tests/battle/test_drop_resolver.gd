@@ -269,15 +269,15 @@ static func run_pipeline(t: TestCase) -> void:
 	t.begin("掉落 · 规则走管线：往返、校验、仓库文件、章节引用")
 
 	var rule := _rule()
-	var text := ContentExporter.to_json(ContentExporter.export_drop_rule(rule))
+	var text := ContentExporter.to_json(ContentExporter.dump(rule))
 	var r := ImportReport.new()
 	var back := ContentImporter.import_drop_rule(JSON.parse_string(text), _ctx(), r)
 	t.check(r.ok(), "导得回来：%s" % r.to_text())
 	t.eq(back.base_chance, rule.base_chance, "概率表")
 	t.eq(back.treasure_weights, rule.treasure_weights, "珍宝权重（键是字符串）")
-	t.eq(ContentExporter.to_json(ContentExporter.export_drop_rule(back)), text, "再导出逐字节相同")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "再导出逐字节相同")
 
-	var base := ContentExporter.export_drop_rule(rule)
+	var base := ContentExporter.dump(rule)
 	var up := base.duplicate(true)
 	up["base_chance"] = [0.5, 0.6, 0.4]
 	r = ImportReport.new()
@@ -324,18 +324,18 @@ static func run_pipeline(t: TestCase) -> void:
 			var rep := ImportReport.new()
 			var res := ContentImporter.import_drop_rule(JSON.parse_string(file_text), ctx, rep)
 			t.check(rep.ok(), "drop_rules/%s 导得进：%s" % [id, rep.to_text()])
-			t.eq(ContentExporter.to_json(ContentExporter.export_drop_rule(res)), file_text, "drop_rules/%s 是导出器的格式" % id)
+			t.eq(ContentExporter.to_json(ContentExporter.dump(res)), file_text, "drop_rules/%s 是导出器的格式" % id)
 			var asset := ContentPaths.asset_file("drop_rules", id)
 			t.check(ResourceLoader.exists(asset), "有资产 %s" % asset)
 			if ResourceLoader.exists(asset):
-				t.eq(ContentExporter.export_drop_rule(load(asset)), ContentExporter.export_drop_rule(res), "资产与作者数据一致")
+				t.eq(ContentExporter.dump(load(asset)), ContentExporter.dump(res), "资产与作者数据一致")
 	t.check(count >= 1, "至少一份掉落规则")
 
 	var chapter := _chapter()
 	t.check(chapter != null and chapter.drop_rule != &"", "第一章有掉落规则")
 	if chapter != null:
 		t.check(ctx.drop_rules.has(chapter.drop_rule), "第一章的规则 '%s' 在仓库里" % chapter.drop_rule)
-		var ch := ContentExporter.export_chapter(chapter)
+		var ch := ContentExporter.dump(chapter)
 		ch["drop_rule"] = "no_such_rule"
 		r = ImportReport.new()
 		ContentImporter.import_chapter(ch, ctx, r)

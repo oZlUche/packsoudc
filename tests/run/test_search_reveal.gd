@@ -77,7 +77,7 @@ static func run_rules(t: TestCase) -> void:
 	var r2 := ImportReport.new()
 	var res := ContentImporter.import_node_rules(good, ContentImporter.Context.new(), r2)
 	t.check(r2.ok(), "非递减的表合法")
-	var again := ContentExporter.export_node_rules(res)
+	var again := ContentExporter.dump(res)
 	t.eq((again["search"] as Dictionary).get("reveal_seconds", []), [0.1, 0.1, 0.9], "非默认的表写进 JSON")
 
 

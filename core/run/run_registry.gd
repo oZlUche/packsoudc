@@ -107,6 +107,7 @@ const EVENT_OUTCOMES := {
 	&"next_event_random": "res://core/run/events/outcomes/next_event_random.gd",
 	&"revisit_later": "res://core/run/events/outcomes/revisit_later.gd",     # 作者 2026-10-12：门禁事件的退路
 	&"bless_item": "res://core/run/events/outcomes/bless_item.gd",
+	&"grant_belt": "res://core/run/events/outcomes/grant_belt.gd",     # 160 补一
 	&"jimie_sacrifice": "res://core/run/events/outcomes/jimie_sacrifice.gd",     # 281
 	&"jimie_ascend": "res://core/run/events/outcomes/jimie_ascend.gd",     # 281
 }
@@ -191,7 +192,6 @@ const HUNTER_LOSS_PICKS := {
 ## 侵蚀（5.7 / 075）：被侵蚀的点结算时过门的效果
 const EROSION_EFFECTS := {
 	&"spend_vitality": "res://core/run/erosion/effects/erode_spend_vitality.gd",
-	&"grant_belt": "res://core/run/events/outcomes/grant_belt.gd",     # 160 补一
 	&"damage_item": "res://core/run/erosion/effects/erode_damage_item.gd",
 	&"drain_money": "res://core/run/erosion/effects/erode_drain_money.gd",
 }

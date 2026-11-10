@@ -169,7 +169,7 @@ static func run_registry_and_content(t: TestCase) -> void:
 	var ctx := ContentImporter.Context.new()
 	var report := ImportReport.new()
 	# 拿真章节导出来的那份当底子（map_source 这种子对象的形状以导出器为准）
-	var data := ContentExporter.export_chapter(_content()["chapter"] as ChapterDef)
+	var data := ContentExporter.dump(_content()["chapter"] as ChapterDef)
 	data["id"] = "test_modules_chapter"
 	data["modules"] = [{"type": "safe", "size": [4, 4]}]
 	var ch := ContentImporter.import_chapter(data, ctx, report)
@@ -179,7 +179,7 @@ static func run_registry_and_content(t: TestCase) -> void:
 		t.check(sm != null and sm.size == Vector2i(4, 4), "参数（几格）按反射填进去了")
 	# 往返：导出再导入一致
 	if ch != null:
-		var dumped := ContentExporter.export_chapter(ch)
+		var dumped := ContentExporter.dump(ch)
 		t.check((dumped.get("modules", []) as Array).size() == 1, "导出带着 modules")
 		var again := ContentImporter.import_chapter(dumped, ContentImporter.Context.new(), ImportReport.new())
 		t.check(again != null and again.modules.size() == 1, "往返回来还在")

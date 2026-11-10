@@ -83,7 +83,7 @@ static func run_import(t: TestCase) -> void:
 		"axes": [{"axis": "damage_dealt", "stacks": 1}, {"axis": "attack_speed", "stacks": 2}]}, ctx, r)
 	t.check(r.ok() and r.warnings.is_empty(), "正常的 axes 不报错不提醒：%s" % r.to_text())
 	t.eq(def.axis_stacks_per(StatAxes.ATTACK_SPEED), 2, "读进来了")
-	var out := ContentExporter.export_buff(def)
+	var out := ContentExporter.dump(def)
 	t.check(out.has("axes") and (out["axes"] as Array).size() == 2, "导出带着 axes：%s" % str(out.get("axes")))
 	var back := ContentImporter.import_buff(out, ContentImporter.Context.new(), ImportReport.new())
 	t.eq(back.axis_stacks_per(StatAxes.DAMAGE_DEALT), 1, "往返一致")

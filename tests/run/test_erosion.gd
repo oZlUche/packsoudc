@@ -242,9 +242,9 @@ static func run_settle_save_and_pipeline(t: TestCase) -> void:
 			if m is ErosionMechanic:
 				em = m
 		t.check(em.warn_lead_actions >= 1, "预警提前量 ≥ 1（导入器要求）")
-		var text := ContentExporter.to_json(ContentExporter.export_difficulty(hard))
+		var text := ContentExporter.to_json(ContentExporter.dump(hard))
 		var back := ContentImporter.import_difficulty(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
-		t.eq(ContentExporter.to_json(ContentExporter.export_difficulty(back)), text, "带侵蚀效果的难度往返逐字节相同")
+		t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "带侵蚀效果的难度往返逐字节相同")
 		var kinds := {}
 		var any_gate := false
 		for e in em.effects:

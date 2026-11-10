@@ -62,7 +62,7 @@ static func frame_run_smoke(t: TestCase, root: Window) -> void:
 		for o in ed._def.options:
 			labels.append((o as EventOption).label)
 		t.eq(buttons, labels, "%s 的预览里每个选项一个按钮" % id)
-	t.eq(ed._json.text, ContentExporter.to_json(ContentExporter.export_event(ed._def)), "JSON 预览与导出器一致")
+	t.eq(ed._json.text, ContentExporter.to_json(ContentExporter.dump(ed._def)), "JSON 预览与导出器一致")
 	t.check(ed._placement.text.begins_with("现在挂在："), "写着现在挂在哪")
 
 	# 挂在哪是从节点规则里读的：搜索点默认事件在 standard 的 search 下（从数据推）
@@ -170,7 +170,7 @@ static func frame_run_save_roundtrip(t: TestCase, root: Window) -> void:
 	var report := ImportReport.new()
 	var again := ContentImporter.import_event(parsed, ContentImporter.Context.new(), report)
 	t.check(report.ok(), "读回来没有错：%s" % report.to_text())
-	t.eq(ContentExporter.to_json(ContentExporter.export_event(again)), text, "盘上的 JSON 是往返不动点")
+	t.eq(ContentExporter.to_json(ContentExporter.dump(again)), text, "盘上的 JSON 是往返不动点")
 	t.eq(again.options.size(), 2, "两个选项都在")
 	t.eq(again.options[0].requires.size(), 1, "条件在")
 	t.eq(int(again.options[0].requires[0].get("amount")), 7, "条件的数在")

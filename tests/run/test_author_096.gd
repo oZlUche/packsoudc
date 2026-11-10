@@ -75,7 +75,7 @@ static func run_import_tags_and_presets(t: TestCase) -> void:
 	ContentImporter.import_tag({"id": "imperial", "display_name": "帝国", "category": "affiliation"}, ctx, report)
 	ContentImporter.import_tag({"id": "melee", "display_name": "近战", "category": "internal"}, ctx, report)
 	t.check(report.ok() and tag.id == &"weapon" and ctx.tags.has(&"weapon"), "标签导入、登记进上下文")
-	var dumped := ContentExporter.export_tag(tag)
+	var dumped := ContentExporter.dump(tag)
 	t.check(dumped.get("display_name") == "武器" and (dumped.get("display_names") as Dictionary).get("en") == "Weapon", "导出往返")
 	var bad := ImportReport.new()
 	ContentImporter.import_tag({"id": "", "display_name": "", "category": "kind"}, ctx, bad)
