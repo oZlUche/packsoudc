@@ -4,7 +4,7 @@
 ##     godot --headless --path . --script res://tools/check_balance_scenarios.gd -- [木桩=res://data/authoring/calibration/archetypes.json]
 ##         [--pool=standard_ruins] [--difficulty=ascension_3] [--character=marcus] [--allow-dropped] [--out=<报告 .md>]
 ##
-## 退出码：0 全部合法；1 用法或读写错误；2 有不合法的（生成器丢件默认也算，加 --allow-dropped 降为提示）
+## 退出码：0 全部合法；1 用法或读写错误；2 有不合法的（生成器丢件默认也算，加 --allow-dropped 降为提示：丢的件和它连带的「核心件没放」都不挡）
 extends CliTool
 
 
@@ -32,7 +32,7 @@ func run() -> void:
 		var row: Dictionary = res["rows"][k]
 		var b: Dictionary = row["budget"]
 		var probs: Array[String] = row["problems"]
-		var blocking := probs.filter(func(p: String) -> bool: return not (allow_dropped and p.begins_with(ScenarioCheck.DROPPED)))
+		var blocking := ScenarioCheck.blocking(probs, allow_dropped)
 		if not blocking.is_empty():
 			hard += 1
 		lines.append("| %s | %d | %d | %d / %d | %d | %d | %s |" % [k, b["items"], b["bags"], b["cells"], b["board_cells"], b["weight"], b["value"],

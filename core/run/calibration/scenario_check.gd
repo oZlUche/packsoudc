@@ -35,6 +35,24 @@ static func budget_of(dummy: Dictionary, items: ItemDatabase) -> Dictionary:
 	return out
 
 
+## 挡不挡：[param allow_dropped] 时生成器丢的件不挡，那一件连带的「核心件没放」也不挡（是同一件事）
+static func blocking(probs: Array[String], allow_dropped: bool) -> Array[String]:
+	if not allow_dropped:
+		return probs.duplicate()
+	var dropped := {}
+	for p in probs:
+		if p.begins_with(DROPPED + ":"):
+			dropped[IdAliases.item(StringName(p.substr(DROPPED.length() + 1)))] = true
+	var out: Array[String] = []
+	for p in probs:
+		if p.begins_with(DROPPED + ":"):
+			continue
+		if p.begins_with(CORE_MISSING + ":") and dropped.has(StringName(p.substr(CORE_MISSING.length() + 1))):
+			continue
+		out.append(p)
+	return out
+
+
 ## 一份配装的问题，每条「原因:细节」；空数组 = 合法。[param weight_capacity] 大于 0 时再查超重。
 ## 核心件：木桩写了 `core` 就按它，没写按 `picked`（生成器挑中的）；每件都要在棋盘上（按件数算）
 static func problems(dummy: Dictionary, items: ItemDatabase, weight_capacity: int = 0) -> Array[String]:
