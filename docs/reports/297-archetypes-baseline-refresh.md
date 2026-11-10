@@ -27,7 +27,21 @@
 | 重造对照 | 现在重造 = 11-10 输入，108 份逐字一样 |
 | 全套测试 | 见 PR |
 
-## 四、交接
+## 四、已知：8 份木桩生成时丢了核心件
+
+`tools/check_balance_scenarios.gd` 查新表：108 份里 100 份合法，8 份是生成器放不下核心件、丢掉了（报告 294 §3.5 已经列过，这次换表没有变）：
+
+| 木桩 | 丢的件 |
+|---|---|
+| armor/1/2、burst/3/2 | leather_armor |
+| armor/3/2 | plate_cuirass |
+| blade+drill+phalera/3/1 | tower_shield |
+| blade+drill+phalera/3/2 | horse_halberd、blessed_shield |
+| blade/3/0、blade+drill/3/0、blade+sun/3/0 | dragoon_lance |
+
+这 8 份照样在表里（扫表用的就是这些），比较兵刃变体时要记得它们少带了件（报告 294 §3.3 的推测就是这一条）。v5.58 修了检测工具：`--allow-dropped` 以前只放过「丢件」那一条，同一件连带的「核心件没放」还挡着，退出码总是 2；现在两条一起放过，别的问题照挡（测试线程 2026-11-10 22:35 报的）。
+
+## 五、交接
 
 - 报告 294 里「仓库默认表过期」那一条已经解决。
 - 作者打十局以后由 `build_dummies` 生成的真实木桩 `dummies.json` 不受影响。

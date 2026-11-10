@@ -287,6 +287,9 @@ static func run_scenario_check(t: TestCase) -> void:
 	var dropped := good.duplicate(true)
 	dropped["left"] = ["warhammer"]
 	t.check(ScenarioCheck.problems(dropped, db).has("%s:warhammer" % ScenarioCheck.DROPPED), "生成器丢掉的件报出来")
+	var probs: Array[String] = ["%s:warhammer" % ScenarioCheck.CORE_MISSING, "%s:warhammer" % ScenarioCheck.DROPPED, "%s:longsword" % ScenarioCheck.CORE_MISSING]
+	t.eq(ScenarioCheck.blocking(probs, false), probs, "不放过丢件：三条都挡")
+	t.eq(ScenarioCheck.blocking(probs, true), ["%s:longsword" % ScenarioCheck.CORE_MISSING] as Array[String], "放过丢件：丢的那件连带的核心件也不挡，别的核心件照挡")
 	var cap := good.duplicate(true)
 	cap["budget"] = {"cells": 1}
 	t.check(ScenarioCheck.problems(cap, db).has("%s:cells" % ScenarioCheck.OVER_BUDGET), "超出声明的格子预算")
