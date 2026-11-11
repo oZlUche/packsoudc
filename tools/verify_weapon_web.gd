@@ -61,12 +61,12 @@ func _anvil(items: ItemDatabase, pool: Array) -> void:
 			exact = d
 		elif d.rarity == 2 and high == null:
 			high = d
-	print("  候选骨材：白 %s / 绿 %s / 蓝 %s" % [low.id if low else "无", exact.id if exact else "无", high.id if high else "无"])
+	print("  候选骨材：白 %s / 绿 %s / 蓝 %s" % [String(low.id) if low else "无", String(exact.id) if exact else "无", String(high.id) if high else "无"])
 	if low != null:
 		_check(Anvil.recipe_for(spear.def, low, pool) == null, "白色骨材达不到「骨≥绿」，配不上")
 	if exact != null:
 		var r := Anvil.result(spear, ItemInstance.create(exact), pool, items)
-		_check(r != null and r.def.id == &"bone_spear" and r.quality() == 0, "绿色骨材 → bone_spear，品质 0（%s）" % [r.def.id if r else null])
+		_check(r != null and r.def.id == &"bone_spear" and r.quality() == 0, "绿色骨材 → bone_spear，品质 0（%s）" % [String(r.def.id) if r else "<null>"])
 	if high != null:
 		var r2 := Anvil.result(spear, ItemInstance.create(high), pool, items)
 		_check(r2 != null and r2.def.id == &"bone_spear" and r2.quality() == 1, "蓝色骨材 → bone_spear，品质 1（材料高门槛一档）")
@@ -100,13 +100,13 @@ func _materials(items: ItemDatabase, mat: String) -> Array:
 ## 正式条件 [JimiePath.sacrifice_ready] 由事件条件 jimie_ready 以 (ctx.board, ctx.meta) 调用；本局地上不在这两个参数里
 func _jimie_second() -> void:
 	print("四、寂灭已在本局地上时的献祭条件（JimiePath.sacrifice_ready）")
-	var run: RunState = Altar._run()
-	var red := run.items.get_def(JimiePath.RED)
-	_check(JimiePath.sacrifice_ready(run.board, run.meta), "基线：法杖 + 四颗核在包里、哪儿都没有寂灭 → 可献祭")
-	run.storage.admit(ItemInstance.create(red))
-	print("  地上放一把寂灭后：UniqueItems.owned(meta+run) = %s，sacrifice_ready(board, meta) = %s" % [UniqueItems.owned(JimiePath.RED, run.meta, run), JimiePath.sacrifice_ready(run.board, run.meta)])
-	_check(UniqueItems.owned(JimiePath.RED, run.meta, run), "全局唯一性扫描能看到地上的寂灭")
-	_check(not JimiePath.sacrifice_ready(run.board, run.meta), "按用户规则应拒绝献出第二把（若此行「不符」即复现了漏洞）")
+	var rs: RunState = Altar._run()
+	var red := rs.items.get_def(JimiePath.RED)
+	_check(JimiePath.sacrifice_ready(rs.board, rs.meta), "基线：法杖 + 四颗核在包里、哪儿都没有寂灭 → 可献祭")
+	rs.storage.admit(ItemInstance.create(red))
+	print("  地上放一把寂灭后：UniqueItems.owned(meta+run) = %s，sacrifice_ready(board, meta) = %s" % [UniqueItems.owned(JimiePath.RED, rs.meta, rs), JimiePath.sacrifice_ready(rs.board, rs.meta)])
+	_check(UniqueItems.owned(JimiePath.RED, rs.meta, rs), "全局唯一性扫描能看到地上的寂灭")
+	_check(not JimiePath.sacrifice_ready(rs.board, rs.meta), "按用户规则应拒绝献出第二把（若此行「不符」即复现了漏洞）")
 
 
 const Altar := preload("res://tests/run/test_jimie_altar_281.gd")
