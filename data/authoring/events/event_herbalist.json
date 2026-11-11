@@ -1,0 +1,82 @@
+{
+  "id": "event_herbalist",
+  "title": "墙根的药摊",
+  "titles": {
+    "en": "The Wall-side Remedy Stall"
+  },
+  "text": "一名药贩把封好的药品摆在墙影里，摊布上压着半截帝国路税木牌。“想便宜些，就拿干草药来换。”他指向其中一份，包装仍然完整。",
+  "texts": {
+    "en": "A remedy seller has laid out sealed medicines in the shade of the wall, half an Imperial road-toll tag weighing down the cloth. \"Want it cheaper? Trade me dried herbs.\" He points at one parcel, its wrapping still intact."
+  },
+  "options": [
+    {
+      "label": "购买{reward_name}（{reward_price}）",
+      "labels": {
+        "en": "Buy the {reward_name} ({reward_price})"
+      },
+      "requires": [
+        {
+          "type": "can_afford",
+          "reward_key": "med"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "change_money",
+          "reward_key": "med"
+        },
+        {
+          "type": "give_pool_item",
+          "pool": "medicine",
+          "key": "med"
+        },
+        {
+          "type": "say",
+          "text": "他收好钱，将封好的{reward_name}放到你面前。",
+          "texts": {
+            "en": "He pockets the coins and sets the sealed {reward_name} in front of you."
+          }
+        }
+      ]
+    },
+    {
+      "label": "用{item:dried_herbs} ×{has_item_count}换{reward_name}",
+      "labels": {
+        "en": "Trade {has_item_count} {item:dried_herbs} for the {reward_name}"
+      },
+      "requires": [
+        {
+          "type": "has_item",
+          "item": "dried_herbs",
+          "count": 2,
+          "takeable": true
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "lose_item",
+          "item": "dried_herbs",
+          "count": 2
+        },
+        {
+          "type": "give_pool_item",
+          "pool": "medicine",
+          "key": "med"
+        },
+        {
+          "type": "say",
+          "text": "药贩闻了闻草束，把{reward_name}推了过来。",
+          "texts": {
+            "en": "The seller sniffs the bundle and pushes the {reward_name} across."
+          }
+        }
+      ]
+    },
+    {
+      "label": "不买",
+      "labels": {
+        "en": "Don't buy anything"
+      }
+    }
+  ]
+}

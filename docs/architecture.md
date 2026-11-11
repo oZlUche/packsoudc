@@ -3079,6 +3079,10 @@ class_name SearchRules extends Resource
 **事件拿得走的**（§2.6）：`EventContext.takeable` —— 玩家锁定的、独一的、包（除非 `include_bags`）不拿；`lose_item` 只从这一批里挑，`has_item` 开 `takeable` 后只数这一批，
 导入器要求每个 `lose_item` 前有一条 takeable 的 `has_item` 挡着（条件过了却扣不掉、奖励照发的事就不会有）。抽样统计：`tools/reward_pool_stats.gd`（`RewardPoolStats`）。
 
+**地图专属事件与每张图上限（报告 303 第 4 步）。** 两图共用 standard 节点规则；章节字段 `chapter_events`（`{"类型": {"事件 id": 权重}}`）开局时并进规则的**副本**（`NodeRules.with_chapter_events`）。
+节点规则 `event_max_per_map`（`{"事件 id": 次数}`）：生成、随机点揭开、踩上去现配都数图上已配的（`EventPlacer.used_counts`），满了的从同一张表里换别的抽，全满了不配。
+选项文字还有 `{lose_name}`（`LoseItem.preview`：会被拿走的那一件）；传送挑不到落点时选项灰掉。分布统计：`tools/event_distribution.gd`。
+
 ### 6.6 经济（M4-5）
 
 作者的设想：打赢战斗获得货币，数量按敌人强度、所在深度与难度；商店售卖随机稀有度道具且可以刷新，都花货币；

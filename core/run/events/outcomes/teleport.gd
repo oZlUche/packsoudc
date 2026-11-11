@@ -33,6 +33,13 @@ func apply(ctx: EventContext) -> void:
 	ctx.teleport_cost = maxi(0, action_cost)
 
 
+## 303（事件方案 §7 裂隙）：挑不到落点时整个选项灰掉 —— 不能照扣体力再说「成功」
+func blocked_reason(ctx: EventContext) -> String:
+	if ctx.graph == null or ctx.node == null:
+		return ""
+	return UiText.t("cond.no_landing") if pick(ctx) < 0 else ""
+
+
 func pick(ctx: EventContext) -> int:
 	if target == Target.FIXED:
 		var id := int(ctx.node.content.get(CONTENT_KEY, -1))

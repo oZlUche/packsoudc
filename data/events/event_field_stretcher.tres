@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_n1tug"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_30ml4"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="3_q5fp0"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="4_l7815"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_hu0p8"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_i2jei"]
+[ext_resource type="Script" path="res://core/run/events/conditions/vitality_not_full.gd" id="7_rfe3y"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/change_money.gd" id="8_epkku"]
+[ext_resource type="Script" path="res://core/run/events/conditions/can_afford.gd" id="9_lv5do"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="10_hjkuk"]
+
+[sub_resource type="Resource" id="Resource_eaupi"]
+script = ExtResource("3_q5fp0")
+actions = 2
+
+[sub_resource type="Resource" id="Resource_hruvq"]
+script = ExtResource("4_l7815")
+
+[sub_resource type="Resource" id="Resource_u4jib"]
+script = ExtResource("5_hu0p8")
+text = "绷带重新收紧，你起身时脚下稳了些。炉里的水已经烧开。"
+texts = {
+"en": "The bandages are pulled tight again, and you stand a little steadier. The water on the stove has come to the boil."
+}
+
+[sub_resource type="Resource" id="Resource_x4coy"]
+script = ExtResource("7_rfe3y")
+
+[sub_resource type="Resource" id="Resource_kcooo"]
+script = ExtResource("1_n1tug")
+label = "坐下处理伤处（倒计时 −{pass_time_actions}，体力 +{restore_vitality_amount}）"
+labels = {
+"en": "Sit and get treated (Countdown −{pass_time_actions}, Vitality +{restore_vitality_amount})"
+}
+requires = Array[ExtResource("6_i2jei")]([SubResource("Resource_x4coy")])
+outcomes = Array[ExtResource("2_30ml4")]([SubResource("Resource_eaupi"), SubResource("Resource_hruvq"), SubResource("Resource_u4jib")])
+
+[sub_resource type="Resource" id="Resource_m6ytd"]
+script = ExtResource("8_epkku")
+amount = -15
+
+[sub_resource type="Resource" id="Resource_2s0yq"]
+script = ExtResource("4_l7815")
+
+[sub_resource type="Resource" id="Resource_yq0uy"]
+script = ExtResource("5_hu0p8")
+text = "医工拆开预备好的敷料，很快处理完伤处。"
+texts = {
+"en": "An orderly unwraps the ready dressing and is done in moments."
+}
+
+[sub_resource type="Resource" id="Resource_o452j"]
+script = ExtResource("7_rfe3y")
+
+[sub_resource type="Resource" id="Resource_m2dvl"]
+script = ExtResource("9_lv5do")
+amount = 15
+
+[sub_resource type="Resource" id="Resource_mouje"]
+script = ExtResource("1_n1tug")
+label = "付钱快速处理（{change_money_amount|abs}，体力 +{restore_vitality_amount}）"
+labels = {
+"en": "Pay for a quick dressing ({change_money_amount|abs}, Vitality +{restore_vitality_amount})"
+}
+requires = Array[ExtResource("6_i2jei")]([SubResource("Resource_o452j"), SubResource("Resource_m2dvl")])
+outcomes = Array[ExtResource("2_30ml4")]([SubResource("Resource_m6ytd"), SubResource("Resource_2s0yq"), SubResource("Resource_yq0uy")])
+
+[sub_resource type="Resource" id="Resource_5tw1s"]
+script = ExtResource("1_n1tug")
+label = "继续赶路"
+labels = {
+"en": "Keep moving"
+}
+
+[resource]
+script = ExtResource("10_hjkuk")
+id = &"event_field_stretcher"
+title = "倒墙后的担架"
+titles = {
+"en": "Stretchers Behind the Fallen Wall"
+}
+text = "两名随军医工把担架架在倒墙后。水壶在小炉上冒着热气，绷带按干净和用过分成两堆。“坐下就慢慢处理；若赶时间，我们还有一份现成的。”"
+texts = {
+"en": "Two Legion orderlies have set their stretchers up behind a fallen wall. A kettle steams on a small stove; the bandages are sorted into clean and used. \"Sit down and we'll do it properly. If you're in a hurry, we have one dressing ready.\""
+}
+options = Array[ExtResource("1_n1tug")]([SubResource("Resource_kcooo"), SubResource("Resource_mouje"), SubResource("Resource_5tw1s")])

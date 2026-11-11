@@ -294,10 +294,10 @@ static func run_teleport_outcome(t: TestCase) -> void:
 		var n5 := int(f5["next"])
 		s5.step_to(n5)
 		var t5 := s5.travel.clock.total
+		t.check(not bool(s5.events.option_state(0)["ok"]), "挑不到目的地：选项灰掉（303）")
 		s5.events.choose(0)
 		t.eq(s5.travel.current_id, n5, "挑不到目的地：不传")
 		t.eq(s5.travel.clock.total, t5, "也不花点")
-		t.check(s5.map.get_node(n5).is_visited(), "点照样用过了")
 
 	# 导入器：撞车的组合
 	var ictx := ContentImporter.Context.new()

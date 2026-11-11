@@ -40,6 +40,9 @@ const COACH_KINDS: Array[StringName] = [&"map", &"battle", &"bag", &"prebattle"]
 ## 节点规则的 id（`data/node_rules/`，6.2 / 7.1）：随机点变什么、搜索怎么搜、输了扣多少、休息回多少。
 ## 空 = 踩到点只标用过，什么都不发生
 @export var node_rules: StringName = &""
+## 303（事件方案 2026-11-11 §8.1）：这一章另加的事件，`{"类型": {"事件 id": 权重}}`，开局时并进节点规则的 events_by_type（同 id 覆盖权重）。
+## 两张图共用 standard 节点规则，地图专属的事件写在这里，不复制整份规则
+@export var chapter_events: Dictionary = {}
 
 ## 经济规则的 id（`data/economy_rules/`，6.6）：打赢给多少钱、商店、付费撤离点。空 = 这一章不算钱
 @export var economy_rules: StringName = &""

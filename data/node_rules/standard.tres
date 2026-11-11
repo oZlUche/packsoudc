@@ -28,11 +28,16 @@ events_by_type = {
 "event": {
 "event_altar": 1,
 "event_ambush": 1,
-"event_cache": 2,
+"event_cache": 1,
+"event_field_stretcher": 1,
+"event_herbalist": 1,
 "event_marked_reward": 1,
+"event_refugee_weaver": 1,
 "event_rest_spot": 1,
 "event_rift": 1,
-"event_stranger": 2
+"event_stranger": 1,
+"event_stuck_cart": 1,
+"event_supply_bundle": 1
 },
 "extract": {
 "extract_default": 1
@@ -46,6 +51,16 @@ events_by_type = {
 "shop": {
 "shop_default": 1
 }
+}
+event_max_per_map = {
+"event_clock_oiler": 1,
+"event_cracked_foundry": 1,
+"event_field_stretcher": 1,
+"event_herbalist": 1,
+"event_refugee_weaver": 1,
+"event_stuck_cart": 1,
+"event_supply_bundle": 1,
+"event_ward_recess": 1
 }
 event_groups = {
 "faith_call": {

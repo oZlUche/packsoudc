@@ -303,7 +303,7 @@ func reveal(node: MapNode) -> StringName:
 		ChestPlacer.roll_one(node, chest_rules(), chest_skin)     # 154：揭出宝箱时补上生成时那一步
 	# 揭成什么就按什么类型配事件（生成时随机点没法配）
 	if rules != null and String(node.content.get("event", "")) == "":
-		var eid := EventPlacer.pick_for(node, type, rules)
+		var eid := EventPlacer.pick_for(node, type, rules, graph)
 		if eid != &"":
 			node.content["event"] = String(eid)
 	revealed.emit(node, type)
@@ -317,7 +317,7 @@ func _event_for(node: MapNode, type: StringName) -> EventDef:
 		return null
 	var id := String(node.content.get("event", ""))
 	if id == "":
-		var picked := EventPlacer.pick_for(node, type, rules)
+		var picked := EventPlacer.pick_for(node, type, rules, graph)
 		if picked == &"":
 			return null
 		id = String(picked)
@@ -356,6 +356,22 @@ func option_state(i: int) -> Dictionary:
 		return {"ok": false, "why": UiText.t("node.no_option")}
 	var why := (def.options[i] as EventOption).locked_reason(_event_ctx(node))
 	return {"ok": why == "", "why": why}
+
+
+## 303：第 i 个选项文字里要看一局才知道的占位符 —— `{lose_name}`（会被拿走的那一件，[method LoseItem.preview]）
+func option_params(i: int) -> Dictionary:
+	var def := pending_event()
+	var node := pending_node()
+	var out := {}
+	if def == null or node == null or i < 0 or i >= def.options.size():
+		return out
+	var ctx := _event_ctx(node)
+	for o in (def.options[i] as EventOption).outcomes:
+		if o is LoseItem and not out.has("lose_name"):
+			var inst := (o as LoseItem).preview(ctx)
+			if inst != null:
+				out["lose_name"] = TextTemplate.render("{item:%s}" % inst.def.id, {"_items": items})
+	return out
 
 
 ## 玩家选了第 i 个选项：条件过了就依次执行后果，然后按旗子往下走（接下一个事件 / 开搜索 / 开店 / 开战 / 点用过）。
