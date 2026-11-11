@@ -304,10 +304,13 @@ func ask_fuse(a_uid: int, b_uid: int) -> bool:
 		if not lost.is_empty():
 			lines.append("[color=@warn]%s[/color]" % (UiText.t("fuse.loses") % [Names.of((inst as ItemInstance).def), UiText.t("tip.list_sep").join(PackedStringArray(lost))]))
 	var at := board_view.get_global_mouse_position()
+	var pair := board_view.item_rect(a_uid).merge(board_view.item_rect(b_uid))     # UI设计 复核：摆在两件旁边、和小锤同高，不压住它们
+	var span := board_view.get_global_transform() * pair
+	var anchor := Rect2(Vector2(span.position.x, at.y - 12.0), Vector2(span.size.x, 24.0))
 	tip.ask("\n".join(PackedStringArray(lines)), at, [
 		ItemActions.make(&"fuse", UiText.t("fuse.go"), func() -> void: crafting.fuse(a_uid, b_uid)),
 		ItemActions.make(&"fuse_cancel", UiText.t("fuse.cancel"), func() -> void: pass),
-	])
+	], anchor)
 	return true
 
 
