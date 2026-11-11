@@ -135,12 +135,12 @@ static func run_home_art(t: TestCase) -> void:
 	t.eq(th.get_color("font_color", UiTheme.BUTTON_HOME), UiTheme.INK, "浅木墨字")
 	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_HOME_PRIMARY), UiTheme.sz(UiTheme.HOME_PRIMARY_SIZE), "再来一局字号大一档")
 	var rect := ColorRect.new()
-	t.not_null(UiTheme.dress_home_backdrop(rect), "背景铺上了")
+	t.not_null(UiTheme.dress_backdrop(rect, UiTheme.ART_HOME_BG, "HomeBackdrop"), "背景铺上了")
 	t.eq((rect.get_node(^"HomeBackdrop") as TextureRect).stretch_mode, TextureRect.STRETCH_KEEP_ASPECT_COVERED, "按比例铺满、多的裁掉")
 	rect.free()
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = "res://tests/fixtures/no_such_ui/"
 	var rect2 := ColorRect.new()
-	t.is_null(UiTheme.dress_home_backdrop(rect2), "没图：不铺背景")
+	t.is_null(UiTheme.dress_backdrop(rect2, UiTheme.ART_HOME_BG, "HomeBackdrop"), "没图：不铺背景")
 	rect2.free()
 	UiTheme.asset_root = saved

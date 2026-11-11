@@ -1407,7 +1407,9 @@ func dispose() -> void:
 	for sys in [faith_power, skills, hunters, travel.erosion if travel != null else null]:
 		if sys != null:
 			sys.dispose()
-	for o in [self, events, travel, travel.clock if travel != null else null, board, storage, wallet, vitality, pending_loot]:
+	# 开着的搜索 / 商店会话也断：它们的信号接着抓了节点的 lambda，搜索屏开着时退出，不断就留到引擎收尾（进程在那里崩）
+	for o in [self, events, events.current_search if events != null else null, events.current_shop if events != null else null,
+			travel, travel.clock if travel != null else null, board, storage, wallet, vitality, pending_loot]:
 		if o != null:
 			_cut_signals(o)
 	loot_seen = Callable()

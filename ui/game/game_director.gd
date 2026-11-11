@@ -293,6 +293,8 @@ func pick_up_all(uid: int) -> int:
 
 func _exit_tree() -> void:
 	BattleTraceWriter.flush()     # 236 补：退出（主菜单「退出」走 quit()，不发关窗通知）前收掉工作线程上的任务，没等过的任务留到引擎收尾才放会崩
+	if flow != null and flow.run != null:
+		flow.run.dispose()     # 一局还开着就退出（关窗、局内暂停菜单退出）：这一局不解环就一直留到引擎收尾，进程在那里崩（退出码 134）
 	if GroundLayer.current() == ground:
 		GroundLayer.set_current(null)
 	if NoticeLayer.current() == notices:

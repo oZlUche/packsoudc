@@ -91,6 +91,9 @@ var _shelf_sub_box: VBoxContainer = null
 ## 261：书架格 → 格上的小牌（按钮）；窗（压暗层）；开着的那扇
 var _shelf_view: ShelfView = null
 var _shelf_windows: Dictionary = {}
+## 各窗的内容等第一次用到再建（[method _fill_shelf]）：窗名 → 建内容的函数（已绑好那块粗布）。
+## 图鉴几百格、科技树、成就列表加起来一百多毫秒，每次回基地都提前建好不值
+var _shelf_pending: Dictionary = {}
 var _shelf_open: String = ""
 var _records: RunRecordsWindow = null
 ## 图鉴页的缩略图与它的悬浮窗
@@ -129,12 +132,8 @@ var _shelf_title: HeaderTag = null
 func open(payload: Dictionary) -> void:
 	var m := flow.meta
 	flow.ensure_market()     # 251：有集市却没货（老档、开发区改了级数）先上一次
-	_home_bg = UiTheme.dress_home_backdrop(_backdrop())
-	_home_bg_name = UiTheme.ART_HOME_BG
-	var first := backdrop_of("expedition")     # 271：进基地第一眼就是出征页 —— 起始底图直接铺它，不要每次进来淡一次
-	if _home_bg != null and first != _home_bg_name:
-		_home_bg.texture = UiTheme.art(first)
-		_home_bg_name = first
+	_home_bg_name = backdrop_of("expedition")     # 271：进基地第一眼就是出征页 —— 起始底图直接铺它，不要每次进来淡一次
+	_home_bg = UiTheme.dress_backdrop(_backdrop(), _home_bg_name, "HomeBackdrop", true)     # 每次回基地都要它：留着不重读（重读一张整屏图约 50 ms）
 	_margin = MarginContainer.new()
 	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
@@ -584,6 +583,7 @@ func _build_tech(root: Control) -> Control:
 
 ## 科技页（测试看）
 func tech_panel():
+	_fill_shelf("tech")
 	return _tech
 #endregion
 
@@ -702,6 +702,7 @@ func _build_achievements(root: Control) -> Control:
 
 ## 切「全部 / 已解锁 / 未解锁」（"all" / "done" / "todo"）并重列
 func show_achievement_filter(key: String) -> void:
+	_fill_shelf("achievements")
 	if not _ach_filter_btns.has(key):
 		key = "all"
 	_ach_filter = key
@@ -712,6 +713,7 @@ func show_achievement_filter(key: String) -> void:
 
 ## 现在列着的：[{id, done}]（测试看）
 func achievement_rows() -> Array:
+	_fill_shelf("achievements")
 	return _ach_rows.duplicate()
 
 
@@ -802,16 +804,12 @@ func _build_codex(root: Control) -> Control:
 	grid.add_theme_constant_override("h_separation", CODEX_GAP)
 	grid.add_theme_constant_override("v_separation", CODEX_GAP)
 	inner.add_child(grid)
-	_codex_grids.clear()
 	_codex_grids.append(grid)
-	_codex_tiles.clear()
 	for id in ids:
 		var def := flow.items.get_def(id)
 		var tile := _codex_tile_for(def)
 		grid.add_child(tile)
 		_codex_tiles.append(tile)
-	_codex_tip = HoverTip.new()
-	add_child(_codex_tip)
 	show_codex_filter("all")
 	if not m.changed.is_connected(_refilter_codex):
 		m.changed.connect(_refilter_codex)     # 收藏变了：「收藏」档跟着增减
@@ -822,6 +820,7 @@ func _build_codex(root: Control) -> Control:
 
 ## 265：图鉴切「全部 / 收藏」（"all" / "fav"）：收藏档只露收藏了的种类（异体并在原件格里，任一收藏就露）
 func show_codex_filter(key: String) -> void:
+	_fill_shelf("codex")
 	if not _codex_filter_btns.has(key):
 		key = "all"
 	_codex_filter = key
@@ -850,7 +849,7 @@ func _build_keepsakes(root: Control) -> Control:
 	root.add_child(page_)
 	var keeps: Array = flow.items.keepsake_ids()
 	keeps.sort()
-	var kgrid := UiTheme.grid(codex_columns_for(SHELF_WIN.x), CODEX_GAP)
+	var kgrid := UiTheme.grid(_codex_grids[0].columns, CODEX_GAP)
 	page_.add_child(kgrid)
 	_codex_grids.append(kgrid)
 	for id in keeps:
@@ -868,12 +867,14 @@ static func codex_columns_for(width: float) -> int:
 
 
 func fit_codex_to_width(width: float) -> void:
+	_fill_shelf("codex")
 	var cols := codex_columns_for(width)
 	for g in _codex_grids:
 		g.columns = cols
 
 
 func codex_columns() -> int:
+	_fill_shelf("codex")
 	return _codex_grids[0].columns if not _codex_grids.is_empty() else 0
 
 
@@ -984,6 +985,7 @@ func _on_tile_hovered(tile: CodexTile) -> void:
 
 
 func codex_tiles() -> Array[CodexTile]:
+	_fill_shelf("keepsakes")
 	return _codex_tiles
 
 
@@ -1097,11 +1099,22 @@ func _build_shelf_windows() -> void:
 		cloth.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		cloth.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		frame.content.add_child(cloth)
-		(pair[1] as Callable).call(cloth)
+		_shelf_pending[key] = (pair[1] as Callable).bind(cloth)
 		shade.visible = false
 		_shelf_windows[key] = shade
-	if _codex_tip != null:
-		move_child(_codex_tip, -1)     # 悬浮窗压在窗上面
+	_codex_tip = HoverTip.new()     # 图鉴、信物两扇窗共用的悬浮窗，压在窗上面
+	add_child(_codex_tip)
+
+
+## 把 [param key] 那扇窗的内容建出来（建过了什么也不做）。开窗、测试读窗里的东西之前都先过这里
+func _fill_shelf(key: String) -> void:
+	if not _shelf_pending.has(key):
+		return
+	if key == "keepsakes":
+		_fill_shelf("codex")     # 信物窗的网格跟着图鉴窗的列数走（_codex_grids[0] 一直是图鉴那块）
+	var build: Callable = _shelf_pending[key]
+	_shelf_pending.erase(key)
+	build.call()
 
 
 func _build_records(root: Control) -> Control:
@@ -1112,6 +1125,7 @@ func _build_records(root: Control) -> Control:
 
 
 func records_window() -> RunRecordsWindow:
+	_fill_shelf("records")
 	return _records
 
 
@@ -1122,6 +1136,7 @@ func open_shelf(key: String) -> void:
 	if _tab != "shelf":
 		show_tab("shelf")
 	close_shelf()
+	_fill_shelf(key)
 	_shelf_open = key
 	(_shelf_windows[key] as Control).visible = true
 	if key == "records" and _records != null:
@@ -1144,6 +1159,7 @@ func shelf_open() -> String:
 
 
 func shelf_window(key: String) -> Control:
+	_fill_shelf(key)
 	return _shelf_windows.get(key, null)
 #endregion
 

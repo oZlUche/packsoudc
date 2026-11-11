@@ -104,6 +104,12 @@ func tick(delta: float) -> bool:
 		return true
 	if _screen_frames < SETTLE_FRAMES:
 		return false
+	if _bench_step >= 0:     # bench 按帧量：每帧都要走一步，不能等 [method _act] 的节拍（教程提示在时它隔几帧才轮到回放屏）
+		if screen == GameFlow.Screen.BATTLE and _game.overlay() != null and _game.overlay().has_method("view"):
+			_bench_frames(_game.overlay().view())
+			return false
+		_bench_step = -1     # 回放屏没了：不量了
+		_bench_done = true
 	return _act(screen)
 
 
@@ -363,9 +369,6 @@ func _act_battle() -> void:
 			_bench_step = 0
 			_bench_frame = 0
 			_bench_deltas = []
-			return
-		if _bench_step >= 0:
-			_bench_frames(v)
 			return
 	if not screen.verdict_shown():
 		_verdict_msec = -1

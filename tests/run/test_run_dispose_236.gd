@@ -4,6 +4,7 @@ extends RefCounted
 
 const CS := preload("res://tests/run/test_character_skills.gd")
 const Support := preload("res://tests/run/flow_support.gd")
+const NS := preload("res://tests/ui/test_node_screens.gd")
 
 
 static func _content() -> TestSupport.Content:
@@ -64,3 +65,44 @@ static func run_flow_defers(t: TestCase) -> void:
 	f.to_main_menu()
 	t.check(f.run == null, "回主菜单：局没了（下一帧拆）")
 	Support.cleanup("dispose236")
+
+
+static func run_open_search_cut(t: TestCase) -> void:
+	t.begin("236 · 放旧局：搜索会话还开着（搜索屏接在它信号上的 lambda 抓着局）dispose 连它一起断")
+	var c := NS._content()
+	var kit := NS._kit(c)
+	var found := NS._seed_with(c, &"search", kit.items)
+	if found.is_empty():
+		t.check(false, "找不到种子")
+		return
+	var f := Support.flow(c, "dispose236s")
+	var run := f.begin(c.chapter, kit, int(found["seed"]))
+	f.pick_spawn(int(found["entry"]))
+	f.step_to(int(found["next"]))
+	var labels: Array = NS._labels(f.last_payload.get("def", null))
+	f.choose_event(labels.find("搜索（倒计时 −{pass_time_actions}）"))
+	var session: SearchSession = run.events.current_search
+	t.not_null(session, "会话开着")
+	if session != null:
+		session.haul_changed.connect(func(_box: GridInventory) -> void: run.tally.size())     # 像搜索屏那样：接在会话上、抓着局
+		run.dispose()
+		t.check(session.haul_changed.get_connections().is_empty() and session.ended.get_connections().is_empty(), "会话的信号都断了")
+	Support.cleanup("dispose236s")
+
+
+static func frame_quit_with_run_open(t: TestCase, root: Window) -> void:
+	t.begin("236 · 一局还开着就退出：游戏节点出树时把这一局拆掉（不拆就留到引擎收尾，进程在那里崩，退出码 134）")
+	var c := _content()
+	var p := Support.paths("dispose236q")
+	Support.cleanup("dispose236q")
+	var game = load("res://ui/game/game.tscn").instantiate()
+	game.save_path = p["run"]
+	game.meta_path = p["meta"]
+	game.settings_path = p["settings"]
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	var run := flow.begin(c.chapter, c.loadouts[0] if not c.loadouts.is_empty() else null, 13)
+	t.check(run != null and not run.modules.is_empty(), "局开着")
+	game.free()
+	t.check(run != null and run.modules.is_empty(), "出树：这一局拆了")
+	Support.cleanup("dispose236q")

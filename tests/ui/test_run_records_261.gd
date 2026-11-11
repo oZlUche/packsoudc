@@ -97,6 +97,7 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 	var screen = _screen(f, root)
 	screen.show_tab("shelf")
 	t.eq(screen.tab(), "shelf", "书架页")
+	t.eq(screen._shelf_pending.size(), 5, "五扇窗只有外壳：内容等第一次打开才建（每次回基地都全建一遍要一百多毫秒）")
 	var btns: Dictionary = screen.shelf_buttons()
 	t.eq(screen.SHELF_CELLS, ["codex", "records", "keepsakes", "achievements", "tech", ""], "六格顺序")
 	var view: ShelfView = screen.shelf_view()
@@ -122,6 +123,10 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 			t.check(fr.get_combined_minimum_size().x <= want.x + 0.5 and fr.get_combined_minimum_size().y <= want.y + 0.5,
 				"科技窗 %s 装得下科技页（窗不被撑大）" % fr.get_combined_minimum_size())
 			t.check(screen.tech_panel() != null and screen.tech_panel().is_visible_in_tree(), "科技窗里就是科技页")
+	t.check(screen._shelf_pending.is_empty(), "五扇窗都开过：内容都建了")
+	var tiles_n: int = screen.codex_tiles().size()
+	screen.open_shelf("codex")
+	t.eq(screen.codex_tiles().size(), tiles_n, "再开一次不重建")
 	t.check(screen.escape() and screen.shelf_open() == "" and screen.tab() == "shelf", "Esc 先关窗")
 	screen.show_tab("achievements")
 	t.check(screen.tab() == "shelf" and screen.shelf_open() == "achievements", "老名字 achievements → 书架 + 成就窗")
