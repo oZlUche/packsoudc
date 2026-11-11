@@ -19,6 +19,8 @@ const KEY_GAP := 6.0
 ## 格子区固定几列几行（多出来的行竖着滚）
 const COLS := 5
 const ROWS := 2
+## 298：前后两窗离格子区边、砧面上沿多远（原尺寸）
+const COMPARE_GAP := 16.0
 
 var flow: GameFlow = null
 var font: Font = null
@@ -32,6 +34,8 @@ var _grid: GridContainer = null
 var _pane: ScrollContainer = null
 var _empty: PanelContainer = null
 var _scroll: RecipeScroll = null
+## 298：升级类配方点开时并排的两块信息窗（仓库里那把 | 打完那把）
+var compare: UpgradeCompare = null
 ## 大类 → 左列那颗键
 var _group_keys: Dictionary = {}
 ## 配方 id → 那一格
@@ -82,6 +86,10 @@ func setup(p_flow: GameFlow, p_font: Font) -> void:
 	_stage.add_child(_empty)     # 这一类还没有配方：一块签压在空格子区正中
 	_scroll = RecipeScroll.make(font, func(): forge(_open))
 	_stage.add_child(_scroll)     # 后加 = 压在格子区上（砧顶小尖盖住格子区下沿）
+	compare = UpgradeCompare.new()
+	compare.resized.connect(_place_compare)
+	_pane.resized.connect(_place_compare)
+	_stage.add_child(compare)
 	npc = NpcBadge.make(NpcDef.BLACKSMITH, flow.meta, flow.items)     # 282
 	npc.on_given = _say_given
 	_stage.add_child(npc)
@@ -192,7 +200,36 @@ func rebuild() -> void:
 			if picks[m] != null:
 				mat_defs[m] = (picks[m] as ItemInstance).def
 		_scroll.show_recipe(open_recipe_def, flow.items, Smithy.have(flow.meta, open_recipe_def), Smithy.can_forge(flow.meta, open_recipe_def, flow.items), mat_defs)
+	_show_compare(open_recipe_def)
 	_aim_pointer.call_deferred()
+
+
+## 298：升级类配方（[method Anvil.is_upgrade]）点开了 → 两窗；仓库里没有那把 → 左窗按品质 0、压暗。别的配方收起
+func _show_compare(recipe: SmithRecipeDef) -> void:
+	var pv := Smithy.preview(flow.meta, recipe, flow.items) if recipe != null else {}
+	if pv.is_empty():
+		compare.clear()
+		return
+	var before := pv["before"] as ItemInstance
+	var missing := before == null
+	if missing:
+		before = ItemInstance.create(flow.items.get_def(StringName(String(recipe.inputs.keys()[0]))), 0)
+	compare.show_pair(before, pv["after"] as ItemInstance, missing)
+	_place_compare.call_deferred()     # 格子区这一帧可能还没排好
+
+
+## 摆在格子区上、选中那格的另一半边（选中格在左半就靠右，反之靠左），下沿贴着砧面上沿往上长；顶不出整页
+func _place_compare() -> void:
+	if compare == null or _stage == null or _stage.size.x <= 0.0 or not compare.visible or _pane == null:
+		return
+	var inv := compare.get_parent_control().get_global_transform().affine_inverse()
+	var pane := inv * _pane.get_global_rect()
+	var gap := COMPARE_GAP * _stage.scale_factor()
+	var picked: Control = cell(_open)
+	var on_left := picked == null or (inv * picked.get_global_rect().get_center()).x < pane.get_center().x
+	var x := pane.end.x - compare.size.x - gap if on_left else pane.position.x + gap
+	var y := (inv * _scroll.get_global_rect()).position.y - compare.size.y - gap
+	compare.position = Vector2(maxf(0.0, x), maxf(0.0, y)).floor()
 
 
 ## 照底图的摆法放各块（整页大小变了也走这里）；缩放变了格子按新大小重搭
@@ -224,6 +261,7 @@ func _place() -> void:
 	_scroll.fit(k)
 	_scroll.position = sr.position
 	_scroll.size = sr.size
+	_place_compare()
 	if absf(k - _cell_k) > 0.01 or not _cell_size(_cells.size()).is_equal_approx(_cell_px):
 		rebuild()
 	else:

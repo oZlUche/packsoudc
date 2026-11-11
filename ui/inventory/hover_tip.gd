@@ -190,7 +190,7 @@ class TipWindow extends PanelContainer:
 	## 鼠标停到 / 离开一个关键词（`term:<id>`；空 = 离开）
 	func hover(meta: String) -> void:
 		if meta != hover_term:
-			hover_term = meta if meta.begins_with("term:") or meta.begins_with(ItemTooltip.RECIPE_META) else ""
+			hover_term = meta if meta.begins_with("term:") or meta.begins_with(ItemTooltip.RECIPE_META) or meta.begins_with(ItemTooltip.ITEM_META) else ""
 			hover_t = 0.0
 
 	## 185：排版宽（只写文字的主窗按内容收窄时改它）
@@ -260,7 +260,8 @@ class TipWindow extends PanelContainer:
 	## 170：道具说明分块
 	func set_item(full: Dictionary) -> void:
 		item_mode = true
-		has_recipe = String(full.get("body", "")).contains("[url=" + ItemTooltip.RECIPE_META)
+		var body_bb := String(full.get("body", ""))
+		has_recipe = body_bb.contains("[url=" + ItemTooltip.RECIPE_META) or body_bb.contains("[url=" + ItemTooltip.ITEM_META)     # 298：道具词也算
 		set_width(full_width)
 		head.visible = true
 		sep.visible = true
@@ -683,6 +684,35 @@ func show_kind(def: ItemDef, at: Vector2, anchor: Rect2 = Rect2()) -> void:
 	_panel.clear_actions()
 
 
+## 298：常驻信息窗（[UpgradeCompare]）里停到一个词上 —— 照按钮那样当源叫出主窗：关键词（查 [param terms]）/ 配方词 / 道具词。
+## 查不到 / 钉住的窗不换 → false。鼠标离开那个词调 [method release]
+func show_meta(meta: String, terms: Dictionary, at: Vector2) -> bool:
+	if _panel.visible and _panel.pinned:
+		return false
+	if meta.begins_with(ItemTooltip.ITEM_META):
+		var def := ItemTooltip.item_def(StringName(meta.trim_prefix(ItemTooltip.ITEM_META)))
+		if def == null:
+			return false
+		show_kind(def, at)
+		return true
+	var full := {}
+	if meta.begins_with(ItemTooltip.RECIPE_META):
+		full = ItemTooltip.recipe_full(StringName(meta.trim_prefix(ItemTooltip.RECIPE_META)))
+		if full.is_empty():
+			return false
+	elif not terms.has(meta.trim_prefix("term:")):
+		return false
+	_for_view = null
+	_uid = -1
+	if not full.is_empty():
+		show_item(full, at)
+		_panel.clear_actions()
+		return true
+	var parts := term_parts(terms, meta.trim_prefix("term:"))
+	show_text(String(parts["bb"]), at, null, parts["terms"])
+	return true
+
+
 ## 丝带该是什么样：-1 不画（不是道具 / 没有局外状态）、0 没收藏、1 收藏了
 static func fav_state_of(def: ItemDef) -> int:
 	if def == null or not ItemFavorites.available():
@@ -1013,32 +1043,44 @@ func open_child(parent: TipWindow, meta: String) -> TipWindow:
 		return null
 	if meta.begins_with(ItemTooltip.RECIPE_META):
 		return _open_recipe(parent, at, meta)
+	if meta.begins_with(ItemTooltip.ITEM_META):
+		return _open_item(parent, at, meta)
 	var id := meta.trim_prefix("term:")
 	if not parent.terms.has(id):
 		return null
 	var w := _child_slot(parent, at, meta)
-	var entry: Dictionary = parent.terms[id]
-	# 子窗里的说明也可能提到别的词条：父窗认得的 + 固定词条（不含自己）
-	var extra := {}
-	for k in parent.terms:
-		if k != id:
-			extra[String(parent.terms[k]["name"])] = {"id": k, "text": parent.terms[k]["text"], "style": String((parent.terms[k] as Dictionary).get("style", "term"))}
-	var found := Glossary.terms_in(String(entry["text"]), extra).filter(func(f): return String(f["id"]) != id and String(f["name"]) != String(entry["name"]))
-	w.terms = {}
-	for k in parent.terms:
-		w.terms[k] = parent.terms[k]
-	for f in found:
-		w.terms[String(f["id"])] = {"name": f["name"], "text": f["text"], "style": String(f.get("style", "term"))}
-	var title := UiTheme.outline("[b][color=@%s]%s[/color][/b]" % [String((entry as Dictionary).get("style", "term")), String(entry["name"])])
-	var only_name := String(entry["text"]) == ""
-	w.set_text(title if only_name else "%s\n[color=@tip_fg]%s[/color]" % [title, Glossary.mark_rich(String(entry["text"]), found)])     # 170 定稿：只有名字描边；175 补 5.4：伤害字带色
-	w.set_codex(codex_for(String(entry["name"])))     # 220 E
+	var parts := term_parts(parent.terms, id)
+	w.terms = parts["terms"]
+	var only_name := bool(parts["only_name"])
+	w.set_text(String(parts["bb"]))
+	w.set_codex(codex_for(String(parts["name"])))     # 220 E
 	if only_name:     # 193 补充三：只有名字（标签图标的子窗）按名字宽收窄，不留大块空白
 		w.set_width(clampf(ceilf(w.content_width()) + 1.0, NAME_ONLY_MIN_WIDTH, scaled(CHILD_WIDTH)))
 	w.visible = true
 	w.reset_size()
 	_place_child(w, parent)
 	return w
+
+
+## 一个关键词窗的字（`bb`）和它认得的词条（`terms`：[param terms] 全部 + 说明里提到的固定词条，不含自己）；`only_name` = 只有名字
+static func term_parts(terms: Dictionary, id: String) -> Dictionary:
+	var entry: Dictionary = terms[id]
+	var extra := {}
+	for k in terms:
+		if k != id:
+			extra[String(terms[k]["name"])] = {"id": k, "text": terms[k]["text"], "style": String((terms[k] as Dictionary).get("style", "term"))}
+	var found := Glossary.terms_in(String(entry["text"]), extra).filter(func(f): return String(f["id"]) != id and String(f["name"]) != String(entry["name"]))
+	var known := {}
+	for k in terms:
+		known[k] = terms[k]
+	for f in found:
+		known[String(f["id"])] = {"name": f["name"], "text": f["text"], "style": String(f.get("style", "term"))}
+	var title := UiTheme.outline("[b][color=@%s]%s[/color][/b]" % [String(entry.get("style", "term")), String(entry["name"])])
+	var only_name := String(entry["text"]) == ""
+	return {
+		"bb": title if only_name else "%s\n[color=@tip_fg]%s[/color]" % [title, Glossary.mark_rich(String(entry["text"]), found)],     # 170 定稿：只有名字描边；175 补 5.4：伤害字带色
+		"terms": known, "only_name": only_name, "name": String(entry["name"]),
+	}
 
 
 ## 子窗的那一扇：同深度藏着的复用，没有就新开；排到父窗后面、清状态、记下是哪个词开的
@@ -1061,7 +1103,18 @@ func _child_slot(parent: TipWindow, at: int, meta: String) -> TipWindow:
 
 ## 286：配方词开的子窗 —— 出件那把的整段道具窗 + 要求 / 品质 / 在哪锤（[method ItemTooltip.recipe_full]）；查不到配方返回 null
 func _open_recipe(parent: TipWindow, at: int, meta: String) -> TipWindow:
-	var full := ItemTooltip.recipe_full(StringName(meta.trim_prefix(ItemTooltip.RECIPE_META)))
+	return _open_full(parent, at, meta, ItemTooltip.recipe_full(StringName(meta.trim_prefix(ItemTooltip.RECIPE_META))))
+
+
+## 298：道具词开的子窗 —— 那件道具（品质 0）的整段道具窗；查不到返回 null
+func _open_item(parent: TipWindow, at: int, meta: String) -> TipWindow:
+	var def := ItemTooltip.item_def(StringName(meta.trim_prefix(ItemTooltip.ITEM_META)))
+	if def == null:
+		return null
+	return _open_full(parent, at, meta, ItemTooltip.describe_full(ItemInstance.create(def, 0)))
+
+
+func _open_full(parent: TipWindow, at: int, meta: String, full: Dictionary) -> TipWindow:
 	if full.is_empty():
 		return null
 	var w := _child_slot(parent, at, meta)

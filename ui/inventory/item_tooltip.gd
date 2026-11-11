@@ -219,6 +219,10 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	for e in def.effects:
 		var d: String = e.describe() if e != null and e.has_method("describe") else ""
 		lines.append(UiText.t("tip.effect") % (d if d != "" else _type_name(e)))
+	if not wild:     # 298：贴着谁能拼成什么（拼接配方两边都写，材料那边也写），在「可升为」上面
+		var fus := fusions_line(def)
+		if fus != "":
+			lines.append(fus)
 	if def.tags.has(&"weapon") and not wild:     # 279 §四.3：能在砧上升成哪几把
 		var ups := upgrades_line(def)
 		if ups != "":
@@ -414,11 +418,11 @@ static func upgrades_line(def: ItemDef) -> String:
 	var names: Array[String] = []
 	var seen := {}
 	for r in Anvil.upgrades_for(def, Anvil.recipes()):
-		var d := _item_def(r.output)
+		var d := item_def(r.output)
 		if d == null or seen.has(r.output):     # 同一个产物有几张配方（不同材料）只写一遍
 			continue
 		seen[r.output] = true
-		names.append("[url=%s%s][color=@rarity%d][u]%s[/u][/color][/url]" % [RECIPE_META, r.id, d.rarity, Names.of(d)])
+		names.append(recipe_word(r.id, d))
 	if names.is_empty():
 		return ""
 	return "[color=@dim]%s[/color]" % (UiText.t("tip.upgrades_to") % " / ".join(PackedStringArray(names)))
@@ -426,9 +430,72 @@ static func upgrades_line(def: ItemDef) -> String:
 
 ## 286：配方词的前缀
 const RECIPE_META := "recipe:"
+## 298：道具词的前缀 —— 停上去开那件道具的整段悬浮窗（品质 0）
+const ITEM_META := "item:"
 
 
-static func _item_def(id: StringName) -> ItemDef:
+## 286：配方词 —— 出件名按稀有度上色、下划线，停上去开配方子窗
+static func recipe_word(recipe_id: StringName, out_def: ItemDef) -> String:
+	return "[url=%s%s][color=@rarity%d][u]%s[/u][/color][/url]" % [RECIPE_META, recipe_id, out_def.rarity, Names.of(out_def)]
+
+
+## 298：道具词 —— 名字按稀有度上色、下划线，停上去开那件道具的悬浮窗
+static func item_word(def: ItemDef) -> String:
+	return "[url=%s%s][color=@rarity%d][u]%s[/u][/color][/url]" % [ITEM_META, def.id, def.rarity, Names.of(def)]
+
+
+static var _fuse_all: Array[RecipeDef] = []
+
+
+## 298：全部拼接配方（`adjacent`，第一次用时读，按 id 排）
+static func fuse_recipes() -> Array[RecipeDef]:
+	if _fuse_all.is_empty():
+		for r in RecipeDef.load_all():
+			if r.adjacent and r.inputs.size() == 2:
+				_fuse_all.append(r)
+		_fuse_all.sort_custom(func(a: RecipeDef, b: RecipeDef) -> bool: return String(a.id) < String(b.id))
+	return _fuse_all
+
+
+## 298：「可拼为：+ 搭档 → 出件　+ …」—— 这件占一边的每张拼接配方一段；搭档是道具词，出件是配方词。拼不了 = 空
+static func fusions_line(def: ItemDef) -> String:
+	if def == null:
+		return ""
+	var parts: Array[String] = []
+	for r in fuse_recipes():
+		var at := r.inputs.find(def.id)
+		if at < 0:
+			continue
+		var partner := item_def(r.inputs[1 - at])
+		var out_def := item_def(r.output)
+		if partner == null or out_def == null:
+			continue
+		parts.append(UiText.t("tip.fuse_pair") % [item_word(partner), recipe_word(r.id, out_def)])
+	if parts.is_empty():
+		return ""
+	return "[color=@dim]%s[/color]" % (UiText.t("tip.fuses_to") % UiText.t("tip.fuse_sep").join(PackedStringArray(parts)))
+
+
+## 298：拼接配方的子窗 —— 出件整段悬浮窗（品质 0）+「要　甲 + 乙」（两个都是道具词）；不写怎么拼（铜徽自己会说）
+static func _fuse_full(recipe_id: StringName) -> Dictionary:
+	for r in fuse_recipes():
+		if r.id != recipe_id:
+			continue
+		var out_def := item_def(r.output)
+		var a := item_def(r.inputs[0])
+		var b := item_def(r.inputs[1])
+		if out_def == null or a == null or b == null:
+			return {}
+		var full := describe_full(ItemInstance.create(out_def, 0))
+		var line := UiText.t("tip.recipe_needs") % [item_word(a), item_word(b)]
+		full["body"] = "\n".join(PackedStringArray(([String(full.get("body", ""))] if String(full.get("body", "")) != "" else []) + [line]))
+		full["text"] = "%s\n%s" % [String(full.get("text", "")), line]
+		return full
+	return {}
+
+
+## 298：按 id 读道具定义（悬浮窗的道具词也用）；没有给 null
+static func item_def(id: StringName) -> ItemDef:
 	var path := ContentPaths.asset_file("items", String(id))
 	return load(path) as ItemDef if ResourceLoader.exists(path) else null
 
@@ -438,18 +505,20 @@ static func _item_def(id: StringName) -> ItemDef:
 static func recipe_full(recipe_id: StringName) -> Dictionary:
 	var pool := Anvil.recipes()
 	var r := SmithRecipeDef.find(pool, recipe_id)
-	var out_def := _item_def(r.output) if r != null else null
+	if r == null:
+		return _fuse_full(recipe_id)     # 298：拼接配方
+	var out_def := item_def(r.output)
 	if out_def == null:
 		return {}
 	var full := describe_full(ItemInstance.create(out_def, 0))
-	var input := _item_def(StringName(String(r.inputs.keys()[0]))) if not r.inputs.is_empty() else null
+	var input := item_def(StringName(String(r.inputs.keys()[0]))) if not r.inputs.is_empty() else null
 	var lines: Array[String] = []
 	var smithy := r.funds
 	for sib in Anvil.upgrades_for(input, pool):
 		if sib.output != r.output:
 			continue
 		for m in sib.material_inputs:
-			lines.append(UiText.t("tip.recipe_needs") % [Names.of(input) if input != null else "", recipe_material(sib, String(m))])
+			lines.append(UiText.t("tip.recipe_needs") % [item_word(input) if input != null else "", recipe_material(sib, String(m), true)])     # 298：武器名、魔晶名是道具词
 	lines.append("[color=@dim]%s[/color]" % UiText.t("tip.recipe_quality"))
 	lines.append("[color=@dim]%s[/color]" % (UiText.t("tip.recipe_where") % ("%s%d" % [icon("coin"), smithy])))
 	full["body"] = "\n".join(PackedStringArray(([String(full.get("body", ""))] if String(full.get("body", "")) != "" else []) + lines))
@@ -469,10 +538,13 @@ static func _all_items() -> ItemDatabase:
 
 
 ## 286：配方要的那一格材料写给人看：材质类「【金属】≥ 绿 ×1」（稀有度名按稀有度上色），魔晶石那一格「【火焰魔晶石】×1」
-static func recipe_material(r: SmithRecipeDef, material: String) -> String:
+## 298：[param words] = 魔晶石名写成道具词（悬浮窗里用；砧的便条不能停，照旧写死字）
+static func recipe_material(r: SmithRecipeDef, material: String, words: bool = false) -> String:
 	if SmithRecipeDef.is_crystal_key(material):
 		var d := r.material_sample(material, _all_items())
-		return UiText.t("tip.recipe_crystal") % (Names.of(d) if d != null else ItemMaterials.name_of(StringName(material.substr(SmithRecipeDef.CRYSTAL_PREFIX.length()))))
+		if d == null:
+			return UiText.t("tip.recipe_crystal") % ItemMaterials.name_of(StringName(material.substr(SmithRecipeDef.CRYSTAL_PREFIX.length())))
+		return UiText.t("tip.recipe_crystal") % (item_word(d) if words else Names.of(d))
 	var need := int(r.material_inputs.get(material, 0))
 	return UiText.t("tip.recipe_material") % [ItemMaterials.name_of(StringName(material)), "[color=@rarity%d]%s[/color]" % [need, rarity_name(need)]]
 

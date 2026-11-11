@@ -130,7 +130,7 @@ static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
 	host.size = Vector2(800, 600)
 	root.add_child(host)
 	var board := GridInventory.new(Vector2i(4, 3), 1)
-	board.place(ItemInstance.create(c.items.get_def(&"knife")), Vector2i(0, 0), 0)
+	board.place(ItemInstance.create(c.items.get_def(&"bandage")), Vector2i(0, 0), 0)     # 298：刀有「可拼为」的道具词，窗照 286 留着；要一件没配方词的
 	var view := InventoryView.new()
 	view.inventory = board
 	view.position = Vector2(300, 300)
@@ -142,7 +142,7 @@ static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
 	var on := InputEventMouseMotion.new()
 	on.position = Vector2(4, 4)
 	view.gui_input.emit(on)
-	t.check(tip.is_showing(), "停在刀上：显示")
+	t.check(tip.is_showing(), "停在纱布上：显示")
 	view.mouse_exited.emit()
 	t.check(not tip.is_showing(), "出视图：当场收")
 	view.gui_input.emit(on)
