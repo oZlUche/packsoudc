@@ -809,10 +809,30 @@ func _refresh_item() -> void:
 	_queue_refit()
 
 
+## 300 §2.5（作者 2026-11-11）：右键单击做的事 —— 悬浮窗按钮里排第一的那颗（各屏都让它 = 双击动作）。
+## 灰着、要两步确认（放到地上、出售……）、没有按钮 → null，右键照旧钉窗：丢东西不该一下就发生
+static func quick_action(view: ContainerView, uid: int) -> ItemActions.Action:
+	if view == null or not view.actions_for.is_valid():
+		return null
+	var c := view.container()
+	var inst := c.get_item(uid) if c != null else null
+	var acts := ItemActions.pinned_guard(inst, view.actions_for.call(uid))
+	if acts.is_empty():
+		return null
+	var a := acts[0] as ItemActions.Action
+	# 锁不是双击动作：排第一只说明这件没有默认动作，照旧钉窗
+	return a if a != null and a.enabled and not a.danger and a.pair != &"lock" and a.run.is_valid() else null
+
+
 ## 右键一件 = 立刻钉住它的窗（230 两者都要：省掉等一秒多，按钮展开）
 func pin_on(view: ContainerView, uid: int) -> void:
 	var inst := _shown_item(view, uid)
 	if inst == null:
+		return
+	var quick := quick_action(view, uid)
+	if quick != null:     # 300 §2.5：右键 = 这件的第一动作（就是双击做的那件事）
+		hide_tip()
+		quick.run.call()
 		return
 	if not (_panel.visible and _for_view == view and _uid == uid):
 		_close_from(0)

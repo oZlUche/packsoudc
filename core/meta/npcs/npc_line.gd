@@ -4,10 +4,12 @@ extends Resource
 
 const LORE := &"lore"
 const GUIDE := &"guide"
-const KINDS: Array[StringName] = [LORE, GUIDE]
+## 300 §2.2：问候 —— 进屏自动说一句（[method NpcChatter.greet]），不进点头像掷的池子
+const GREET := &"greet"
+const KINDS: Array[StringName] = [LORE, GUIDE, GREET]
 
 @export var id: StringName = &""
-## 世界观 `lore` / 指引 `guide`
+## 世界观 `lore` / 指引 `guide` / 问候 `greet`
 @export var kind: StringName = LORE
 @export var text: String = ""
 ## 别的语言（`{"en": "..."}`）

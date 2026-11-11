@@ -165,6 +165,19 @@ func open(payload: Dictionary) -> void:
 	_place()
 
 
+## 300 §2.4：包里这件双击 / 右键去哪：砧收就进砧，否则铸炉第一个空槽（铸炉用过 / 不收这件 = null）
+func _quick_pick(inst: ItemInstance) -> ItemContainer:
+	var s := _anvil.quick_slot(inst) if _anvil != null else null
+	if s != null:
+		return s
+	if not _forge_open() or Forge.is_token(inst) or inst.is_locked_by_player():
+		return null
+	for g in _slots:
+		if g.item_count() == 0:
+			return g
+	return null
+
+
 ## layout.json（底图尺寸、各块的矩形、切图的尺寸与原点）；读不出给空字典
 static func layout() -> Dictionary:
 	return UiTheme.art_meta("forge/layout")
@@ -403,8 +416,11 @@ func _refresh() -> void:
 	for g in _slots:
 		if g.item_count() == 0 and empty == null:
 			empty = g
-	if _inv != null:
-		_inv.set("quick_target", empty if open_ else null)
+	if _inv != null:     # 300 §2.4：先砧后炉 —— 砧和铸炉有一边能用，包里双击 / 右键就是「放进去」
+		var anvil_open := _anvil != null and flow.anvil_open(_node)
+		_inv.set("quick_target", empty if open_ and empty != null else (_anvil.weapon_slot if anvil_open else (empty if open_ else null)))
+		_inv.set("quick_pick", _quick_pick)
+		_inv.set("quick_refused", UiText.t("forge.quick_none"))
 	for i in _slots.size():
 		var inst: ItemInstance = _slots[i].items()[0] if _slots[i].item_count() == 1 else null
 		var lines := Forge.slot_summary(ForgeTable.SLOTS[i], inst.def) if inst != null else ([] as Array[String])

@@ -35,6 +35,9 @@ var hint_sink: Callable = Callable()
 ## 230：悬浮窗按钮里「双击做的那件事」叫什么（有 [member quick_target] 的屏给：`func(inst) -> ItemActions.Action`，出售区写「出售 N 币」……）；
 ## 不给 = 「放进去」；没有 quick_target = 「放到地上」
 var quick_action: Callable = Callable()
+## 300 §2.4：按件挑落点（`func(inst) -> ItemContainer`，铁炉屏先砧后炉）；给了就盖过 [member quick_target]，挑不出 = 不收，说 [member quick_refused]
+var quick_pick: Callable = Callable()
+var quick_refused := ""
 ## 230：这一屏另加的按钮（`func(inst) -> Array`，排在锁定后面）
 var extra_actions: Callable = Callable()
 ## 249（作者 2026-10-24）：这一屏棋盘上的东西出不去（战前屏：开战前不丢东西）—— 非空就是那句原因：拖出棋盘弹回、右键「放到地上」灰着、
@@ -239,9 +242,15 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		if inst.is_locked_by_player() and not _quick_allows(inst):
 			_hint_text(UiText.t("item.locked_no") % Names.of(inst.def))     # 230：锁住的不丢地上、不卖、不献
 			return false
-		if quick_target != null and _drag != null and _drag.drop_filter.is_valid() and not bool(_drag.drop_filter.call(inst, quick_target)):
+		var target := quick_target
+		if quick_pick.is_valid() and quick_target != null:
+			target = quick_pick.call(inst)
+			if target == null:
+				_hint_text(quick_refused)     # 300：这一屏哪个槽都不收这件，也不往地上丢
+				return false
+		if target != null and _drag != null and _drag.drop_filter.is_valid() and not bool(_drag.drop_filter.call(inst, target)):
 			return false     # 290：这一屏不收这件（商店：独一的、券、装着东西的包）—— 原因由过滤器说，也不往地上丢
-		if quick_target != null and InventoryService.transfer_auto(_run.board, uid, quick_target):
+		if target != null and InventoryService.transfer_auto(_run.board, uid, target):
 			return true
 		if inst.is_locked_by_player():
 			_hint_text(UiText.t("item.locked_no") % Names.of(inst.def))
