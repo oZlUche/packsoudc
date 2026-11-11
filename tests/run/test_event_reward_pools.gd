@@ -169,7 +169,7 @@ static func run_freeze_and_trade(t: TestCase) -> void:
 	# 钱买
 	var money0 := s.wallet.balance
 	var resolved: Array = []
-	s.events.event_resolved.connect(func(_n: MapNode, _o: StringName, d: Dictionary): resolved.append(d))
+	s.events.event_resolved.connect(func(_n: MapNode, _o: StringName, got_d: Dictionary): resolved.append(got_d))
 	t.check(bool(s.events.option_state(0)["ok"]), "钱够：能买")
 	t.check(not bool(s.events.option_state(1)["ok"]), "没有草药：换不了")
 	s.events.choose(0)
