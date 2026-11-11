@@ -1,0 +1,125 @@
+﻿recipe_id,kind,entry,inputs,material_predicates,output,funds,smith_level,tech,consumes,inputs_missing,output_missing,output_rarity,output_is_weapon
+antidote_satchel,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,antidote_kit + dried_herbs,,antidote_satchel,null,null,null,两件都消耗,,,蓝,False
+bandage_roll,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,bandage + linen_bolt,,bandage_roll,null,null,null,两件都消耗,,,绿,False
+field_rations,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,salted_meat + beeswax,,field_rations,null,null,null,两件都消耗,,,蓝,False
+fuse_battle_axe,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,hand_axe + whetstone,,battle_axe,null,null,null,两件都消耗,,,绿,True
+fuse_broadsword,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,shortsword + whetstone,,broadsword,null,null,null,两件都消耗,,,绿,True
+fuse_great_axe,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,felling_axe + whetstone,,great_axe,null,null,null,两件都消耗,,,绿,True
+fuse_great_club,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,club + club,,great_club,null,null,null,两件都消耗,,,绿,True
+fuse_greatsword,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,shortsword + shortsword,,greatsword,null,null,null,两件都消耗,,,绿,True
+fuse_light_crossbow,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,hand_crossbow + wooden_stick,,light_crossbow,null,null,null,两件都消耗,,,绿,True
+fuse_long_spear,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,wooden_stick + shortsword,,long_spear,null,null,null,两件都消耗,,,绿,True
+fuse_pole_axe,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,wooden_stick + hand_axe,,pole_axe,null,null,null,两件都消耗,,,绿,True
+fuse_quenched_dagger,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,knife + whetstone,,quenched_dagger,null,null,null,两件都消耗,,,绿,True
+fuse_short_spear,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,wooden_stick + knife,,short_spear,null,null,null,两件都消耗,,,绿,True
+fuse_shortbow,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,crude_bow + tanned_leather,,shortbow,null,null,null,两件都消耗,,,绿,True
+fuse_stone_maul,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,wooden_stick + flint,,stone_maul,null,null,null,两件都消耗,,,绿,True
+fuse_twin_axes,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,hand_axe + hand_axe,,twin_axes,null,null,null,两件都消耗,,,绿,True
+fuse_twin_blades,相邻拼接,棋盘相邻 + 点接缝小锤（Fusion）,knife + knife,,twin_blades,null,null,null,两件都消耗,,,绿,True
+healing_draught,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,strong_salve + crystal_shards,,healing_draught,null,null,null,两件都消耗,,,紫,False
+panacea,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,antidote_satchel + styptic_dressing,,panacea,null,null,null,两件都消耗,,,紫,False
+poisoned_knife,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,knife + poison_vial,,poisoned_knife,null,null,null,两件都消耗,,,紫,True
+salted_meat,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,ration + raw_salt,,salted_meat,null,null,null,两件都消耗,,,绿,False
+strong_salve,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,salve + beeswax,,strong_salve,null,null,null,两件都消耗,,,蓝,False
+styptic_dressing,拖上去合（局内）,拖到另一件上（CraftingModule.craft）,bandage_roll + dried_herbs,,styptic_dressing,null,null,null,两件都消耗,,,蓝,False
+anvil_barbarian_scimitar,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,scimitar×1,bone≥绿,barbarian_scimitar,60,1,,全部输入消耗,,,蓝,True
+anvil_berserker_twin_axes,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bone_twin_axes×1,metal≥蓝,berserker_twin_axes,120,2,,全部输入消耗,,,紫,True
+anvil_berserker_twin_axes_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_twin_axes×1,bone≥蓝,berserker_twin_axes,120,2,,全部输入消耗,,,紫,True
+anvil_bloodbone_spike,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bonefang_dagger×1,metal≥蓝,bloodbone_spike,120,2,,全部输入消耗,,,紫,True
+anvil_bloodbone_spike_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_stiletto×1,bone≥蓝,bloodbone_spike,120,2,,全部输入消耗,,,紫,True
+anvil_bloodletter,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,cleaver×1,bone≥绿,bloodletter,60,1,,全部输入消耗,,,蓝,True
+anvil_bloodoath_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bone_battle_axe×1,metal≥蓝,bloodoath_axe,120,2,,全部输入消耗,,,紫,True
+anvil_bloodoath_axe_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_axe×1,bone≥蓝,bloodoath_axe,120,2,,全部输入消耗,,,紫,True
+anvil_bloodoath_scimitar,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,barbarian_scimitar×1,bone≥蓝,bloodoath_scimitar,120,2,,全部输入消耗,,,紫,True
+anvil_bloodthirst_twin_blades,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bonefang_twin_blades×1,metal≥蓝,bloodthirst_twin_blades,120,2,,全部输入消耗,,,紫,True
+anvil_bloodthirst_twin_blades_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_twin_blades×1,bone≥蓝,bloodthirst_twin_blades,120,2,,全部输入消耗,,,紫,True
+anvil_bone_battle_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,battle_axe×1,bone≥绿,bone_battle_axe,60,1,,全部输入消耗,,,蓝,True
+anvil_bone_broadsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,broadsword×1,bone≥绿,bone_broadsword,60,1,,全部输入消耗,,,蓝,True
+anvil_bone_great_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,great_axe×1,bone≥绿,bone_great_axe,60,1,,全部输入消耗,,,蓝,True
+anvil_bone_great_club,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,great_club×1,bone≥绿,bone_great_club,60,1,,全部输入消耗,,,蓝,True
+anvil_bone_greatsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,greatsword×1,bone≥绿,bone_greatsword,60,1,,全部输入消耗,,,蓝,True
+anvil_bone_pole_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,pole_axe×1,bone≥绿,bone_pole_axe,60,1,,全部输入消耗,,,蓝,True
+anvil_bone_spear,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,short_spear×1,bone≥绿,bone_spear,60,1,,全部输入消耗,,,蓝,True
+anvil_bone_twin_axes,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,twin_axes×1,bone≥绿,bone_twin_axes,60,1,,全部输入消耗,,,蓝,True
+anvil_bonefang_dagger,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,quenched_dagger×1,bone≥绿,bonefang_dagger,60,1,,全部输入消耗,,,蓝,True
+anvil_bonefang_twin_blades,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,twin_blades×1,bone≥绿,bonefang_twin_blades,60,1,,全部输入消耗,,,蓝,True
+anvil_boneiron_club,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bone_great_club×1,metal≥蓝,boneiron_club,120,2,,全部输入消耗,,,紫,True
+anvil_boneiron_club_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,spiked_club×1,bone≥蓝,boneiron_club,120,2,,全部输入消耗,,,紫,True
+anvil_bonesteel_broadsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bone_broadsword×1,metal≥蓝,bonesteel_broadsword,120,2,,全部输入消耗,,,紫,True
+anvil_bonesteel_broadsword_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_broadsword×1,bone≥蓝,bonesteel_broadsword,120,2,,全部输入消耗,,,紫,True
+anvil_bonesteel_greatsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bone_greatsword×1,metal≥蓝,bonesteel_greatsword,120,2,,全部输入消耗,,,紫,True
+anvil_bonesteel_greatsword_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_greatsword×1,bone≥蓝,bonesteel_greatsword,120,2,,全部输入消耗,,,紫,True
+anvil_bonesteel_spear,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bone_spear×1,metal≥蓝,bonesteel_spear,120,2,,全部输入消耗,,,紫,True
+anvil_bonesteel_spear_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,iron_spear×1,bone≥蓝,bonesteel_spear,120,2,,全部输入消耗,,,紫,True
+anvil_composite_bow,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,longbow×1,bone≥蓝,composite_bow,120,2,,全部输入消耗,,,紫,True
+anvil_composite_bow_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,horn_bow×1,wood≥蓝,composite_bow,120,2,,全部输入消耗,,,紫,True
+anvil_dragonbone_siege_spear,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,siege_spear×1,bone≥蓝,dragonbone_siege_spear,120,2,,全部输入消耗,,,紫,True
+anvil_dragoon_lance,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_spear×1,wood≥蓝,dragoon_lance,120,2,,全部输入消耗,,,紫,True
+anvil_dragoon_lance_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,hardwood_spear×1,metal≥蓝,dragoon_lance,120,2,,全部输入消耗,,,紫,True
+anvil_execution_blade,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,decapitator_blade×1,bone≥蓝,execution_blade,120,2,,全部输入消耗,,,紫,True
+anvil_executioner_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bone_great_axe×1,metal≥蓝,executioner_axe,120,2,,全部输入消耗,,,紫,True
+anvil_executioner_axe_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_great_axe×1,bone≥蓝,executioner_axe,120,2,,全部输入消耗,,,紫,True
+anvil_flame_berserker_twin_axes,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,berserker_twin_axes×1,crystal:fire≥紫,flame_berserker_twin_axes,200,3,,全部输入消耗,,,金,True
+anvil_flame_bonesteel_broadsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bonesteel_broadsword×1,crystal:fire≥紫,flame_bonesteel_broadsword,200,3,,全部输入消耗,,,金,True
+anvil_flame_bonesteel_spear,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bonesteel_spear×1,crystal:fire≥紫,flame_bonesteel_spear,200,3,,全部输入消耗,,,金,True
+anvil_flame_composite_bow,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,composite_bow×1,crystal:fire≥紫,flame_composite_bow,200,3,,全部输入消耗,,,金,True
+anvil_flame_execution_blade,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,execution_blade×1,crystal:fire≥紫,flame_execution_blade,200,3,,全部输入消耗,,,金,True
+anvil_flame_executioner_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,executioner_axe×1,crystal:fire≥紫,flame_executioner_axe,200,3,,全部输入消耗,,,金,True
+anvil_flame_fang,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bloodbone_spike×1,crystal:fire≥紫,flame_fang,200,3,,全部输入消耗,,,金,True
+anvil_flame_meteor_maul,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,meteor_maul×1,crystal:fire≥紫,flame_meteor_maul,200,3,,全部输入消耗,,,金,True
+anvil_frost_bloodoath_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bloodoath_axe×1,crystal:frost≥紫,frost_bloodoath_axe,200,3,,全部输入消耗,,,金,True
+anvil_frost_bonesteel_greatsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bonesteel_greatsword×1,crystal:frost≥紫,frost_bonesteel_greatsword,200,3,,全部输入消耗,,,金,True
+anvil_frost_dragoon_lance,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,dragoon_lance×1,crystal:frost≥紫,frost_dragoon_lance,200,3,,全部输入消耗,,,金,True
+anvil_frost_fang,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bloodbone_spike×1,crystal:frost≥紫,frost_fang,200,3,,全部输入消耗,,,金,True
+anvil_granite_maul,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,stone_maul×1,stone≥绿,granite_maul,60,1,,全部输入消耗,,,蓝,True
+anvil_halberd,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,pole_axe×1,metal≥绿,halberd,60,1,,全部输入消耗,,,蓝,True
+anvil_hardwood_spear,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,long_spear×1,wood≥绿,hardwood_spear,60,1,,全部输入消耗,,,蓝,True
+anvil_heavy_crossbow,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_crossbow×1,wood≥蓝,heavy_crossbow,120,2,,全部输入消耗,,,紫,True
+anvil_heavy_crossbow_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_crossbow×1,bone≥蓝,heavy_crossbow,120,2,,全部输入消耗,,,紫,True
+anvil_horn_bow,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,shortbow×1,bone≥绿,horn_bow,60,1,,全部输入消耗,,,蓝,True
+anvil_horse_halberd,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,halberd×1,bone≥蓝,horse_halberd,120,2,,全部输入消耗,,,紫,True
+anvil_horse_halberd_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bone_pole_axe×1,metal≥蓝,horse_halberd,120,2,,全部输入消耗,,,紫,True
+anvil_imperial_sword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,mithril_sword×1,metal≥金,imperial_sword,200,3,,全部输入消耗,,,金,True
+anvil_iron_spear,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,short_spear×1,metal≥绿,iron_spear,60,1,,全部输入消耗,,,蓝,True
+anvil_ironwood_broadsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,broadsword×1,wood≥绿,ironwood_broadsword,60,1,,全部输入消耗,,,蓝,True
+anvil_ironwood_steel_sword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,ironwood_broadsword×1,metal≥蓝,ironwood_steel_sword,120,2,,全部输入消耗,,,紫,True
+anvil_ironwood_steel_sword_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,steel_broadsword×1,wood≥蓝,ironwood_steel_sword,120,2,,全部输入消耗,,,紫,True
+anvil_longbow,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,shortbow×1,wood≥绿,longbow,60,1,,全部输入消耗,,,蓝,True
+anvil_meteor_maul,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,siege_hammer×1,metal≥紫,meteor_maul,120,2,,全部输入消耗,,,紫,True
+anvil_meteor_maul_2,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,granite_maul×1,metal≥蓝,meteor_maul,120,2,,全部输入消耗,,,紫,True
+anvil_siege_hammer,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,warhammer×1,metal≥绿,siege_hammer,60,1,,全部输入消耗,,,蓝,True
+anvil_spiked_club,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,great_club×1,metal≥绿,spiked_club,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,battle_axe×1,metal≥绿,steel_axe,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_bow,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,longbow×1,metal≥蓝,steel_bow,120,2,,全部输入消耗,,,紫,True
+anvil_steel_broadsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,broadsword×1,metal≥绿,steel_broadsword,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_crossbow,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,light_crossbow×1,metal≥绿,steel_crossbow,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_great_axe,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,great_axe×1,metal≥绿,steel_great_axe,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_greatsword,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,greatsword×1,metal≥绿,steel_greatsword,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_spear,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,long_spear×1,metal≥绿,steel_spear,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_stiletto,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,quenched_dagger×1,metal≥绿,steel_stiletto,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_twin_axes,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,twin_axes×1,metal≥绿,steel_twin_axes,60,1,,全部输入消耗,,,蓝,True
+anvil_steel_twin_blades,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,twin_blades×1,metal≥绿,steel_twin_blades,60,1,,全部输入消耗,,,蓝,True
+anvil_thunder_bloodthirst_twin_blades,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,bloodthirst_twin_blades×1,crystal:lightning≥紫,thunder_bloodthirst_twin_blades,200,3,,全部输入消耗,,,金,True
+anvil_thunder_boneiron_club,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,boneiron_club×1,crystal:lightning≥紫,thunder_boneiron_club,200,3,,全部输入消耗,,,金,True
+anvil_thunder_heavy_crossbow,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,heavy_crossbow×1,crystal:lightning≥紫,thunder_heavy_crossbow,200,3,,全部输入消耗,,,金,True
+anvil_thunder_horse_halberd,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,horse_halberd×1,crystal:lightning≥紫,thunder_horse_halberd,200,3,,全部输入消耗,,,金,True
+anvil_thunder_siege_spear,升级（局内砧 / 局外铁匠铺同表）,休息点砧（每点免费一次）+ 基地铁匠铺（付钱）,dragonbone_siege_spear×1,crystal:lightning≥紫,thunder_siege_spear,200,3,,全部输入消耗,,,金,True
+smith_bloodletter,打造（铁匠铺）,基地铁匠铺,bone_charm_bits×1 + steel_ingot×1 + whetstone×1,,bloodletter,90,2,,全部输入消耗,,,蓝,True
+smith_cleaver,打造（铁匠铺）,基地铁匠铺,copper_ingot×1 + iron_ore×1,,cleaver,30,1,,全部输入消耗,,,绿,True
+smith_festering_blade,打造（铁匠铺）,基地铁匠铺,steel_ingot×1 + viper_gland×1 + wound_salt×1,,festering_blade,150,3,,全部输入消耗,,,紫,True
+smith_grand_magus_staff,打造（铁匠铺）,基地铁匠铺,fire_crystal_high×1 + magus_staff×1 + mithril_ingot×2,,grand_magus_staff,400,3,staffcraft Lv3,全部输入消耗,,,金,True
+smith_leather_armor,打造（铁匠铺）,基地铁匠铺,beast_hide×1 + tanned_leather×2,,leather_armor,40,1,,全部输入消耗,,,绿,False
+smith_longbow,打造（铁匠铺）,基地铁匠铺,fine_fur×1 + ironwood_branch×2 + rope_coil×1,,longbow,60,2,,全部输入消耗,,,蓝,True
+smith_longsword,打造（铁匠铺）,基地铁匠铺,steel_ingot×1 + tanned_leather×1,,longsword,60,1,,全部输入消耗,,,绿,True
+smith_mage_staff,打造（铁匠铺）,基地铁匠铺,fire_crystal_low×1 + silver_ingot×1 + wooden_stick×1,,mage_staff,90,2,staffcraft Lv2,全部输入消耗,,,蓝,True
+smith_magic_staff,打造（铁匠铺）,基地铁匠铺,crystal_shards×2 + wooden_stick×1,,magic_staff,30,1,staffcraft Lv1,全部输入消耗,,,绿,True
+smith_magus_staff,打造（铁匠铺）,基地铁匠铺,fire_crystal×1 + ironwood_branch×1 + mithril_ingot×1,,magus_staff,200,3,staffcraft Lv3,全部输入消耗,,,紫,True
+smith_mithril_ingot,冶炼（铁匠铺）,基地铁匠铺,silver_ingot×3,,mithril_ingot,150,2,mithril_smelting Lv1,全部输入消耗,,,紫,False
+smith_mithril_sword,打造（铁匠铺）,基地铁匠铺,fire_crystal_low×1 + longsword×1 + mithril_ingot×2,,mithril_sword,200,3,mithril_smelting Lv1,全部输入消耗,,,紫,True
+smith_pendulum_blade,打造（铁匠铺）,基地铁匠铺,brass_gear×1 + mainspring×1 + steel_ingot×1,,pendulum_blade,100,2,,全部输入消耗,,,蓝,True
+smith_plate_cuirass,打造（铁匠铺）,基地铁匠铺,rivet_box×1 + steel_ingot×2 + tanned_leather×1,,plate_cuirass,120,2,,全部输入消耗,,,蓝,False
+smith_round_shield,打造（铁匠铺）,基地铁匠铺,copper_ingot×1 + hardwood_plank×1,,round_shield,40,1,,全部输入消耗,,,绿,False
+smith_shortbow,打造（铁匠铺）,基地铁匠铺,ironwood_branch×1 + rope_coil×1,,shortbow,30,1,,全部输入消耗,,,绿,True
+smith_shortsword,打造（铁匠铺）,基地铁匠铺,hardwood_plank×1 + iron_ore×2,,shortsword,40,1,,全部输入消耗,,,白,True
+smith_silver_ingot,冶炼（铁匠铺）,基地铁匠铺,silver_ore×2,,silver_ingot,20,1,,全部输入消耗,,,蓝,False
+smith_warhammer,打造（铁匠铺）,基地铁匠铺,iron_ore×2 + oak_log×1,,warhammer,50,1,,全部输入消耗,,,绿,True

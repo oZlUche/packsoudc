@@ -1,0 +1,26 @@
+一、相邻拼接 fuse_twin_blades（knife + knife → twin_blades）
+  [符合] 贴着的两把匕首被认成一对，产物 twin_blades（[{ "a": 1, "b": 2, "output": &"twin_blades", "seam": (1.0, 0.5) }]）
+  [符合] 只认对、不自动合（棋盘上仍是 2 件）
+  [符合] 点合之后两件消耗、出一把 twin_blades
+  [符合] 拼接成品品质 = 0（ItemInstance.create 新建，不继承）
+  [符合] 隔开一格不算相邻，不出提示
+二、砧升级 anvil_bone_spear（short_spear + 骨≥绿 → bone_spear）
+  候选骨材：白 barbarian_necklace / 绿 antler / 蓝 beast_claw
+  [符合] 白色骨材达不到「骨≥绿」，配不上
+  [符合] 绿色骨材 → bone_spear，品质 0（bone_spear）
+  [符合] 蓝色骨材 → bone_spear，品质 1（材料高门槛一档）
+三、多来源成品 bloodbone_spike（anvil_bloodbone_spike / _2）
+  [符合] bloodbone_spike 有 2 张配方
+  [符合] 两条前驱各自有升级配方（骨牙匕首 1 张，钢刺 1 张）
+  bonefang_dagger 的全部升级：["anvil_bloodbone_spike→bloodbone_spike { \"metal\": 2 }"]
+  steel_stiletto 的全部升级：["anvil_bloodbone_spike_2→bloodbone_spike { \"bone\": 2 }"]
+四、寂灭已在本局地上时的献祭条件（JimiePath.sacrifice_ready）
+  [符合] 基线：法杖 + 四颗核在包里、哪儿都没有寂灭 → 可献祭
+  地上放一把寂灭后：UniqueItems.owned(meta+run) = true，sacrifice_ready(board, meta) = true
+  [符合] 全局唯一性扫描能看到地上的寂灭
+  [不符] 按用户规则应拒绝献出第二把（若此行「不符」即复现了漏洞）
+验证结束：1 处与预期不符
+WARNING: 7673 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 3392 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

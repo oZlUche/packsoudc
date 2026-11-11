@@ -1,0 +1,62 @@
+﻿item_id,name_zh,rarity,color,tags,material,crystal_family,has_combat,in_random_pool,channels_by_rule,named_refs,roles,recipes_as_input,recipes_as_output,predicate_fits,missing
+bandage,纱布,0,白,"remedy,nature",cloth,null,True,True,搜索池; 局内商店池,enemies/marksman; enemies/ragpicker; enemies/raider; enemies/tracker; enemies/witch_doctor; loadouts/preset_defense; loadouts/preset_spear; loadouts/preset_standard; loadouts/scavenger; loadouts/standard; reward_pools/medicine,拖合,bandage_roll,,,False
+crystal_shards,碎晶,0,白,"material,magic",gem,null,False,True,搜索池; 局内商店池,techs/mithril_smelting; techs/staffcraft,"打造/冶炼输入,拖合","healing_draught,smith_magic_staff",,,False
+dried_herbs,干草药束,0,白,"material,nature,plant",herb,null,False,True,搜索池; 局内商店池,events/event_herbalist,拖合,"antidote_satchel,styptic_dressing",,,False
+flint,燧石,0,白,"material,nature,mineral",stone,null,False,True,搜索池; 局内商店池,reward_pools/workshop_supplies,拼接输入,fuse_stone_maul,,,False
+linen_bolt,亚麻布卷,0,白,"material,crafted,supply",cloth,null,False,True,搜索池,events/event_refugee_weaver; reward_pools/light_salvage; reward_pools/wrapping_material; techs/pack,拖合,bandage_roll,,,False
+oak_log,橡木原木,0,白,"material,nature,plant",wood,null,False,True,搜索池; 局内商店池,,打造/冶炼输入,smith_warhammer,,,False
+ration,口粮,0,白,"food,nature",flesh,null,True,True,搜索池; 局内商店池,enemies/ragpicker; loadouts/preset_ranger; loadouts/preset_standard; loadouts/scavenger; loadouts/standard; reward_pools/food_supply,拖合,salted_meat,,,False
+raw_salt,粗盐块,0,白,"material,nature,mineral",stone,null,False,True,搜索池; 局内商店池,,拖合,salted_meat,,,False
+rope_coil,麻绳卷,0,白,"material,crafted",cloth,null,False,True,搜索池; 局内商店池,reward_pools/light_salvage; reward_pools/wrapping_material; techs/hauling,打造/冶炼输入,"smith_longbow,smith_shortbow",,,False
+wooden_stick,木棍,0,白,"material,nature,plant",wood,null,False,True,搜索池; 局内商店池,reward_pools/light_salvage; reward_pools/worked_wood,"拼接输入,打造/冶炼输入","fuse_light_crossbow,fuse_long_spear,fuse_pole_axe,fuse_short_spear,fuse_stone_maul,smith_mage_staff,smith_magic_staff",,,False
+antidote_kit,解毒包,1,绿,remedy,herb,null,True,True,搜索池; 局内商店池,enemies/apothecary; enemies/smuggler; reward_pools/medicine,拖合,antidote_satchel,,,False
+antler,鹿角,1,绿,"material,nature,beast_part",bone,null,False,True,搜索池; 局内商店池,enemies/tracker,无配方关系,,,bone≥绿,False
+bandage_roll,绷带卷,1,绿,"remedy,nature",cloth,null,True,True,搜索池; 局内商店池; 配方产出,enemies/apothecary; reward_pools/medicine,拖合,styptic_dressing,bandage_roll,,False
+beast_fang,兽牙,1,绿,"material,nature,beast_part",bone,null,False,True,搜索池; 局内商店池,enemies/flame_wolf; enemies/pit_viper,无配方关系,,,bone≥绿,False
+beast_hide,生兽皮,1,绿,"material,nature,beast_part",leather,null,False,True,搜索池; 局内商店池,enemies/cave_bear; enemies/flame_wolf; enemies/frost_toad; techs/hauling,打造/冶炼输入,smith_leather_armor,,,False
+beeswax,蜂蜡块,1,绿,"material,nature,plant",flesh,null,False,True,搜索池; 局内商店池,reward_pools/workshop_supplies,拖合,"field_rations,strong_salve",,,False
+copper_ingot,铜锭,1,绿,"material,crafted,supply",metal,null,False,True,搜索池,reward_pools/metal_cargo; reward_pools/metal_salvage; techs/sinew,打造/冶炼输入,"smith_cleaver,smith_round_shield",,metal≥绿,False
+gear_arm,齿轮臂,1,绿,"material,crafted,part,clockwork",metal,null,False,True,搜索池; 局内商店池,enemies/clockwork_sentry; enemies/gear_golem; reward_pools/mechanism_parts,无配方关系,,,metal≥绿,False
+granite_mortar,花岗石臼,1,绿,"material,crafted",stone,null,False,True,搜索池; 局内商店池,,无配方关系,,,stone≥绿,False
+iron_ore,铁矿石,1,绿,"material,nature,mineral",metal,null,False,True,搜索池; 局内商店池,reward_pools/metal_cargo; reward_pools/metal_salvage,打造/冶炼输入,"smith_cleaver,smith_shortsword,smith_warhammer",,metal≥绿,False
+leather_armor,皮甲,1,绿,"armor,barbarian,nature",leather,null,True,True,搜索池; 局内商店池; 配方产出,loadouts/brawler; loadouts/preset_defense; loadouts/preset_elite; loadouts/preset_spear; loadouts/preset_standard,铁匠打造成品,,smith_leather_armor,,False
+nail_keg,铁钉桶,1,绿,"material,crafted,supply",metal,null,False,True,搜索池,reward_pools/mechanism_fasteners; reward_pools/metal_cargo; reward_pools/metal_salvage; techs/market; techs/safe_box; techs/warehouse,无配方关系,,,metal≥绿,False
+oil_lamp,铜油灯,1,绿,"material,crafted",metal,null,False,True,搜索池; 局内商店池,reward_pools/metal_curios,无配方关系,,,metal≥绿,False
+poison_vial,毒药瓶,1,绿,"material,reagent,crafted,poison",clay,null,True,True,搜索池; 局内商店池,enemies/apothecary; enemies/witch_doctor,拖合,poisoned_knife,,,False
+round_shield,圆盾,1,绿,"shield,imperial",metal,null,True,True,搜索池; 局内商店池; 配方产出,enemies/shield_wall; enemies/shieldbearer; enemies/warden; loadouts/preset_defense; loadouts/preset_spear; loadouts/preset_standard,铁匠打造成品,,smith_round_shield,,False
+salted_meat,腌肉干,1,绿,"food,nature",flesh,null,True,True,搜索池; 局内商店池; 配方产出,enemies/berserker; reward_pools/food_supply,拖合,field_rations,salted_meat,,False
+salve,伤药,1,绿,"remedy,nature",herb,null,True,True,搜索池; 局内商店池,enemies/apothecary; enemies/bruiser; enemies/brute; enemies/marksman; enemies/raider; enemies/tracker; enemies/warden; enemies/witch_doctor; events/event_marked_reward; loadouts/brawler; loadouts/preset_defense; loadouts/preset_elite; loadouts/preset_offense; loadouts/preset_ranger; loadouts/preset_spear; loadouts/preset_standard; loadouts/preset_twin; loadouts/standard; reward_pools/medicine,拖合,strong_salve,,,False
+tanned_leather,熟皮革,1,绿,"material,crafted,supply",leather,null,False,True,搜索池,events/event_refugee_weaver; techs/hauling; techs/pack,"拼接输入,打造/冶炼输入","fuse_shortbow,smith_leather_armor,smith_longsword,smith_plate_cuirass",,,False
+whetstone,磨刀石,1,绿,"material,crafted,supply",stone,null,False,True,搜索池,reward_pools/workshop_supplies,"拼接输入,打造/冶炼输入","fuse_battle_axe,fuse_broadsword,fuse_great_axe,fuse_quenched_dagger,smith_bloodletter",,stone≥绿,False
+wound_salt,创口盐,1,绿,"material,reagent,crafted,bleed",stone,null,True,True,搜索池; 局内商店池,enemies/butcher,打造/冶炼输入,smith_festering_blade,,stone≥绿,False
+antidote_satchel,解毒药囊,2,蓝,remedy,herb,null,True,True,搜索池; 局内商店池; 配方产出,enemies/apothecary; enemies/witch_doctor,拖合,panacea,antidote_satchel,,False
+beast_claw,兽爪,2,蓝,"material,nature,bleed,beast_part",bone,null,False,True,搜索池; 局内商店池,enemies/cave_bear,无配方关系,,,"bone≥绿,bone≥蓝",False
+bone_charm_bits,碎骨串,2,蓝,"material,crafted,beast_part",bone,null,False,True,搜索池; 局内商店池,,打造/冶炼输入,smith_bloodletter,,"bone≥绿,bone≥蓝",False
+brass_gear,黄铜齿轮,2,蓝,"material,crafted",metal,null,False,True,搜索池; 局内商店池,enemies/clockwork_sentry; enemies/gear_golem; enemies/great_clock; enemies/pendulum_warden; enemies/steam_turret; reward_pools/mechanism_parts,打造/冶炼输入,smith_pendulum_blade,,"metal≥绿,metal≥蓝",False
+field_rations,行军军粮,2,蓝,"food,nature",flesh,null,True,True,搜索池; 局内商店池; 配方产出,reward_pools/food_supply,拖合,,field_rations,,False
+fine_fur,细毛皮,2,蓝,"material,nature,beast_part",leather,null,False,True,搜索池; 局内商店池,,打造/冶炼输入,smith_longbow,,,False
+fire_crystal_low,火焰晶石,2,蓝,"crystal,magic,part",gem,fire,False,True,搜索池; 局内商店池,enemies/apprentice_mage; techs/staffcraft,打造/冶炼输入,"smith_mage_staff,smith_mithril_sword",,,False
+hardwood_plank,硬木板,2,蓝,"material,crafted,supply",wood,null,False,True,搜索池,reward_pools/worked_wood; techs/hauling; techs/luck; techs/market; techs/scouting; techs/smithy; techs/undaunted; techs/warehouse,打造/冶炼输入,"smith_round_shield,smith_shortsword",,"wood≥绿,wood≥蓝",False
+ironwood_branch,铁木枝,2,蓝,"material,nature,plant",wood,null,False,True,搜索池; 局内商店池,,打造/冶炼输入,"smith_longbow,smith_magus_staff,smith_shortbow",,"wood≥绿,wood≥蓝",False
+mainspring,主发条,2,蓝,"material,crafted,part,clockwork",metal,null,True,True,搜索池; 局内商店池,enemies/gear_golem; enemies/great_clock; enemies/pendulum_warden; reward_pools/mechanism_parts,打造/冶炼输入,smith_pendulum_blade,,"metal≥绿,metal≥蓝",False
+plate_cuirass,板甲,2,蓝,"armor,heavy,imperial",metal,null,True,True,搜索池; 局内商店池; 配方产出,,铁匠打造成品,,smith_plate_cuirass,,False
+rivet_box,铆钉盒,2,蓝,"material,crafted,supply",metal,null,False,True,搜索池,reward_pools/mechanism_fasteners; techs/luck; techs/scouting; techs/smithy; techs/warehouse,打造/冶炼输入,smith_plate_cuirass,,"metal≥绿,metal≥蓝",False
+silver_ingot,银锭,2,蓝,"material,crafted,supply",metal,null,False,True,搜索池; 配方产出,reward_pools/metal_cargo; techs/bargain; techs/mithril_smelting; techs/staffcraft,打造/冶炼输入,"smith_mage_staff,smith_mithril_ingot",smith_silver_ingot,"metal≥绿,metal≥蓝",False
+silver_ore,银矿石,2,蓝,"material,nature,mineral",metal,null,False,True,搜索池; 局内商店池,,打造/冶炼输入,smith_silver_ingot,,"metal≥绿,metal≥蓝",False
+steam_vent,蒸汽阀,2,蓝,"material,crafted,part,clockwork,fire",metal,null,False,True,搜索池; 局内商店池,enemies/great_clock; enemies/steam_turret; reward_pools/mechanism_parts,无配方关系,,,"metal≥绿,metal≥蓝",False
+steel_ingot,钢锭,2,蓝,"material,crafted,supply",metal,null,False,True,搜索池,reward_pools/mechanism_fasteners; reward_pools/metal_cargo; reward_pools/metal_salvage; techs/market; techs/safe_box; techs/scouting; techs/smithy; techs/undaunted; techs/warehouse,打造/冶炼输入,"smith_bloodletter,smith_festering_blade,smith_longsword,smith_pendulum_blade,smith_plate_cuirass",,"metal≥绿,metal≥蓝",False
+strong_salve,浓缩伤药,2,蓝,"remedy,nature",herb,null,True,True,搜索池; 局内商店池; 配方产出,enemies/adept_mage; enemies/apothecary; enemies/bruiser; enemies/brute; enemies/core_guardian; reward_pools/medicine,拖合,healing_draught,strong_salve,,False
+styptic_dressing,止血敷料,2,蓝,"remedy,nature",cloth,null,True,True,搜索池; 局内商店池; 配方产出,reward_pools/medicine,拖合,panacea,styptic_dressing,,False
+bone_dice,骨骰子,3,紫,"material,crafted,beast_part",bone,null,False,True,搜索池; 局内商店池,,无配方关系,,,"bone≥绿,bone≥蓝",False
+fire_crystal,火焰魔晶石,3,紫,"crystal,magic,part",gem,fire,False,True,搜索池; 局内商店池,enemies/adept_mage; enemies/grand_magus; enemies/magus; loadouts/scavenger; techs/staffcraft,打造/冶炼输入,smith_magus_staff,,crystal:fire≥紫,False
+gilded_goblet,鎏金酒杯,3,紫,"material,crafted",metal,null,False,True,搜索池; 局内商店池,reward_pools/metal_curios,无配方关系,,,"metal≥绿,metal≥蓝,metal≥紫",False
+healing_draught,治愈药剂,3,紫,"remedy,nature",herb,null,True,True,搜索池; 局内商店池; 配方产出,,拖合,,healing_draught,,False
+ice_crystal,冰霜魔晶石,3,紫,"crystal,magic,part",gem,frost,False,True,搜索池; 局内商店池,enemies/adept_mage; enemies/grand_magus; enemies/magus,无配方关系,,,crystal:frost≥紫,False
+lightning_crystal,闪电魔晶石,3,紫,"crystal,magic,part",gem,lightning,False,True,搜索池; 局内商店池,enemies/adept_mage; enemies/grand_magus; enemies/magus,无配方关系,,,crystal:lightning≥紫,False
+mithril_ingot,秘银锭,3,紫,"material,crafted,supply",metal,null,False,True,搜索池; 配方产出,base_rules/market,打造/冶炼输入,"smith_grand_magus_staff,smith_magus_staff,smith_mithril_sword",smith_mithril_ingot,"metal≥绿,metal≥蓝,metal≥紫",False
+panacea,万灵药,3,紫,remedy,herb,null,True,True,搜索池; 局内商店池; 配方产出,,拖合,,panacea,,False
+viper_gland,蝰蛇毒腺,3,紫,"material,reagent,nature,poison,beast_part",flesh,null,True,True,搜索池; 局内商店池,enemies/pit_viper; enemies/witch_doctor,打造/冶炼输入,smith_festering_blade,,,False
+fire_crystal_high,火焰魔晶核,4,金,"crystal,magic,part",gem,fire,False,True,搜索池; 局内商店池,enemies/grand_magus; enemies/magus,打造/冶炼输入,smith_grand_magus_staff,,crystal:fire≥紫,False
+ice_crystal_high,冰霜魔晶核,4,金,"crystal,magic,part",gem,frost,False,True,搜索池; 局内商店池,enemies/grand_magus; enemies/magus,无配方关系,,,crystal:frost≥紫,False
+lightning_crystal_high,闪电魔晶核,4,金,"crystal,magic,part",gem,lightning,False,True,搜索池; 局内商店池,enemies/grand_magus; enemies/magus,无配方关系,,,crystal:lightning≥紫,False
+pale_shard,灰白色的金属碎片,4,金,"material,magic,treasure",metal,null,False,True,,,无配方关系,,,"metal≥绿,metal≥蓝,metal≥紫,metal≥金",False
