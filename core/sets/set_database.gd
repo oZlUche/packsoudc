@@ -33,7 +33,7 @@ func get_def(id: StringName) -> ItemSetDef:
 
 func ids() -> Array:
 	var k := _defs.keys()
-	k.sort()
+	Ids.sort(k)     # 303
 	return k
 
 

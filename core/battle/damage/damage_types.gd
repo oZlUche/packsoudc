@@ -152,7 +152,7 @@ static func has(id: StringName) -> bool:
 static func ids() -> Array:
 	_ensure_builtins()
 	var k := _defs.keys()
-	k.sort()
+	Ids.sort(k)     # 303
 	return k
 
 

@@ -38,5 +38,5 @@ static func class_of(o: Object, engine_fallback: bool = true) -> String:
 ## 这一种的全部类型名，升序
 static func type_names(tables: Dictionary, kind: StringName) -> Array:
 	var k := (tables.get(kind, {}) as Dictionary).keys()
-	k.sort()
+	Ids.sort(k)     # 303
 	return k

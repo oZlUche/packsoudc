@@ -85,7 +85,7 @@ static func produce_line(node: MapNode) -> String:
 	var best := ""
 	var best_mult := 1.0
 	var tags: Array = node.produce.keys()
-	tags.sort()
+	Ids.sort(tags)     # 303
 	for t in tags:
 		if float(node.produce[t]) > best_mult:
 			best = String(t)

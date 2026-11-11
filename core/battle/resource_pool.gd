@@ -111,7 +111,7 @@ func reset_regen_clock(now: int) -> void:
 
 func keys() -> Array:
 	var k := _max.keys()
-	k.sort()
+	Ids.sort(k)     # 303
 	return k
 
 

@@ -84,7 +84,7 @@ static func faiths_with_variant(db: ItemDatabase, base_id: StringName, faith_ids
 	for fid in faith_ids:
 		if variant_of(db, base_id, StringName(String(fid))) != null:
 			out.append(StringName(String(fid)))
-	out.sort()
+	Ids.sort(out)     # 303：按 id 文本排（StringName 的 sort 按指针，后面接随机数）
 	return out
 
 

@@ -72,7 +72,7 @@ func count_of(set_id: StringName) -> int:
 ## 当前有部件在场的套装 id，按字典序 —— 顺序稳定，编译结果才可复现
 func tracked_ids() -> Array:
 	var k := _counts.keys()
-	k.sort()
+	Ids.sort(k)     # 303
 	return k
 
 
