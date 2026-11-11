@@ -97,6 +97,8 @@ var owned_uids: Dictionary = {}
 ## 104：这一局获得过 / 置入过棋盘的道具种类（定义 id → true），给载荷的 first_in_run。跟着存档
 var acquired_ids: Dictionary = {}
 var placed_ids: Dictionary = {}
+## 305：这一局学到的（合成成功的配方、进过背包或自己造出的道具）；局终由 [method MetaState.absorb] 并进局外。跟着存档
+var lore: Lore = Lore.new()
 var hunters_saved: Dictionary = {}
 ## 侵蚀场的存档状态，读档时先放这儿等机制装（075）
 var erosion_saved: Dictionary = {}
@@ -1022,6 +1024,7 @@ func _wire_events() -> void:
 	hooks.register(&"relocate", relocate)
 	hooks.register(&"request_extract", try_extract)     # 085：撤离点的对话里选「撤离」
 	hooks.register(&"jimie_ascend", extract_by_jimie)     # 281
+	hooks.register(&"unique_owned", func(id: StringName) -> bool: return UniqueItems.owned(id, meta, self))     # 305：寂灭献祭查遍本局
 	hooks.register(&"faith_tier", active_faith_tier)     # 093：事件条件 faith_active
 	hooks.register(&"active_faith_id", active_faith_id)
 	hooks.register(&"skill_ready", func(id: StringName) -> String: return skills.can_use(id) if skills != null else UiText.t("log.no_skill"))
@@ -1074,6 +1077,7 @@ func _wire_faith_power() -> void:
 		if inst != null and inst.def != null:
 			var first := not placed_ids.has(String(inst.def.id))
 			placed_ids[String(inst.def.id)] = true
+			lore.meet(inst.def.id)
 			faith_power.credit(&"place_item", {"value": ItemValue.of(inst.def), "id": String(inst.def.id), "tags": _tag_strings(inst.def),
 				"rarity": inst.def.rarity, "first_in_run": first}))
 	wallet.changed.connect(func(_b: int, delta: int, _r: StringName):
@@ -1134,6 +1138,16 @@ func _seed_owned() -> void:
 			owned_uids[item.uid] = true
 			acquired_ids[String(item.def.id)] = true
 			item.mark_run_in()     # 281：带进来的法杖记一笔，带回基地才算一次进出
+
+
+## 305：知道这张合成配方吗 —— 这一局学到的，或局外早就知道的（[Lore]）
+func knows_recipe(id: StringName) -> bool:
+	return lore.knows_recipe(id) or (meta != null and meta.lore.knows_recipe(id))
+
+
+## 305：认识这件道具吗（同上）
+func has_met(id: StringName) -> bool:
+	return lore.has_met(id) or (meta != null and meta.lore.has_met(id))
 
 
 func _owned_now() -> Array:
@@ -1202,6 +1216,7 @@ func to_dict() -> Dictionary:
 		"owned_uids": owned_uids.keys(),
 		"acquired_ids": acquired_ids.keys(),
 		"placed_ids": placed_ids.keys(),
+		"lore": lore.to_dict(),
 		"pending_loot": loot_dict,
 		"boss_cleared": boss_cleared,
 		"tally": tally.duplicate(),
@@ -1365,6 +1380,7 @@ static func from_dict(
 		s.acquired_ids[String(k)] = true
 	for k in d.get("placed_ids", []):
 		s.placed_ids[String(k)] = true
+	s.lore = Lore.from_dict(d.get("lore", null))
 	if d.has("owned_uids"):
 		for k in d.get("owned_uids", []):
 			s.owned_uids[int(k)] = true

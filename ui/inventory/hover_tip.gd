@@ -759,6 +759,14 @@ func set_actions(actions: Array) -> void:
 	_queue_refit()
 
 
+## 305：确认窗 —— 一段字 + 几颗按钮，开出来就钉住（点哪颗都收起）。合成的「先看再合」用它
+func ask(bbcode: String, at: Vector2, actions: Array) -> void:
+	hide_tip()
+	show_text(bbcode, at)
+	set_actions(actions)
+	pin(_panel)
+
+
 ## 主窗现在的按钮（测试看；按行的顺序）
 func action_buttons() -> Array[TipButton]:
 	var out: Array[TipButton] = []

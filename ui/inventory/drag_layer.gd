@@ -83,6 +83,8 @@ var craft_filter: Callable = Callable()
 ## 140：配方说明 `func(a: ItemInstance, b: ItemInstance) -> String`（作者写的 `note`）。压到能合的那件上时，残影下面一行小字
 ## 「合成 → 产物：说明」；不给 = 只写产物
 var craft_note: Callable = Callable()
+## 305：`func(a: ItemInstance, b: ItemInstance) -> bool` —— 玩家认识这两件合出来的成品吗；不认识提示写问号。没接 = 认识
+var craft_known: Callable = Callable()
 ## 140：此刻残影下面那行合成提示（没压在能合的那件上 = 空串）。[method update_preview] 算，[method _draw] 画
 var craft_hint: String = ""
 const HINT_FONT := 13
@@ -925,7 +927,8 @@ func _hint_for(partner: ItemInstance) -> String:
 	var out: Variant = craft.call(_inst, partner)
 	if not (out is ItemDef):
 		return ""
-	var text := UiText.t("bag.craft") + Names.of(out as ItemDef)
+	var known := not craft_known.is_valid() or bool(craft_known.call(_inst, partner))
+	var text := UiText.t("bag.craft") + (Names.of(out as ItemDef) if known else UiText.t("fuse.unknown"))
 	var note := String(craft_note.call(_inst, partner)) if craft_note.is_valid() else ""
 	return text + (UiText.t("tip.colon") + note if note != "" else "")
 

@@ -1099,6 +1099,16 @@ func forge_token(node: MapNode, timing: ItemInstance, effect: ItemInstance, valu
 	return token
 
 
+## 305：玩家知道这张配方吗 —— 一局里看这一局 + 局外（[method RunState.knows_recipe]），局外只看局外
+func knows_recipe(id: StringName) -> bool:
+	return run.knows_recipe(id) if run != null else (meta != null and meta.lore.knows_recipe(id))
+
+
+## 305：玩家认识这件道具吗（同上）
+func has_met(id: StringName) -> bool:
+	return run.has_met(id) if run != null else (meta != null and meta.lore.has_met(id))
+
+
 ## 279：休息点 [param node] 的砧还能不能锤（是休息点、这一局没完、这座砧没锤过）
 func anvil_open(node: MapNode) -> bool:
 	return run != null and not run.is_over() and node != null and NodeEvents.effective_type(node) == &"rest" and not Anvil.used(node)
@@ -1118,6 +1128,10 @@ func anvil_strike(node: MapNode, weapon: ItemInstance, weapon_from: ItemContaine
 		if c != null and c.has_item(inst.uid):
 			c.remove(inst.uid)
 	Anvil.use(node)
+	var r := Anvil.recipe_for(weapon.def, material.def, smith_recipes)
+	if r != null:
+		run.lore.learn_recipe(r.id)     # 305：「可升为」也按自己锤过才列
+	run.lore.meet(out.def.id)
 	if meta != null:
 		meta.light_codex(out.def)
 	save()

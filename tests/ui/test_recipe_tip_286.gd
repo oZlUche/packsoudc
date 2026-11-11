@@ -25,6 +25,8 @@ static func run_recipe_words(t: TestCase) -> void:
 
 
 static func _board(root: Window, id: StringName) -> Dictionary:
+	ItemTooltip.recipe_probe = Callable()     # 305：单开面板 = 都知道（别的用例开着的局不算）
+	ItemTooltip.item_probe = Callable()
 	var c := CS._content()
 	var host := Control.new()
 	host.size = Vector2(1600, 900)

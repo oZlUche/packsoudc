@@ -111,6 +111,8 @@ static func frame_camp_anvil(t: TestCase, root: Window) -> void:
 	var before := flow.run.board.item_count()
 	t.check(col.strike_key is TextureButton and (col.strike_key as TextureButton).texture_normal != null, "定稿 A：锤键是圆的图键")
 	t.check(col._glyph_weapon.visible and col._glyph_material.visible, "空槽：淡刻剑和矿石")
+	for r in flow.smith_recipes:
+		flow.run.lore.learn_recipe(r.id)     # 305：这里看已经锤过的砧（不认识的打问号另测，test_fusion_lore_305）
 	var sword := _inst(flow.items, &"broadsword")
 	t.check(col.weapon_slot.try_add(sword, true), "武器槽放阔剑")
 	t.check(not col._glyph_weapon.visible and col._glyph_material.visible, "武器槽有东西：剑形藏起来")

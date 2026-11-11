@@ -55,15 +55,20 @@ func _window() -> HoverTip.TipWindow:
 	return w
 
 
-## 摆上两把：[param before] 现在这把，[param after] 之后那把；[param dimmed] = 左窗压暗（铁匠铺仓库里没有这把）
-func show_pair(before: ItemInstance, after: ItemInstance, dimmed: bool = false) -> void:
+## 摆上两把：[param before] 现在这把，[param after] 之后那把；[param dimmed] = 左窗压暗（铁匠铺仓库里没有这把）；
+## 305：[param unknown] = 玩家还不认识出件，右窗只写问号
+func show_pair(before: ItemInstance, after: ItemInstance, dimmed: bool = false, unknown: bool = false) -> void:
 	if before == null or after == null:
 		clear()
 		return
 	_fill(left, before)
 	_fill(right, after)
+	if unknown:
+		right.set_text("[b]%s[/b]" % UiText.t("fuse.unknown"))
+		right.terms = {}
+		right.reset_size()
 	left.modulate = DIMMED if dimmed else Color.WHITE
-	_marked = differing(_lines(left), _lines(right))
+	_marked = [] as Array[int] if unknown else differing(_lines(left), _lines(right))
 	_has_pair = true
 	visible = not anchors.is_valid() or (is_inside_tree() and hot(get_global_mouse_position()))
 	_linger = LINGER if visible else 0.0
