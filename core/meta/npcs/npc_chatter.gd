@@ -68,9 +68,20 @@ static func open_lines(def: NpcDef, meta: MetaState, run: RunState = null, items
 	if common != null and NpcDef.IDS.has(def.id):
 		pool.append_array(common.lines)
 	for l in pool:
-		if l != null and _open(l.requires, ctx):
+		if l != null and l.kind != NpcLine.GREET and _open(l.requires, ctx):     # 300：问候不进点头像的池子
 			out.append(l)
 	return out
+
+
+## 300 §2.2：进屏的问候 —— 这位自己的 `greet` 句里掷一句；没有 null
+static func greet(def: NpcDef, rng: RandomNumberGenerator) -> NpcLine:
+	if def == null:
+		return null
+	var pool: Array[NpcLine] = []
+	for l in def.lines:
+		if l != null and l.kind == NpcLine.GREET:
+			pool.append(l)
+	return pool[rng.randi_range(0, pool.size() - 1)] if not pool.is_empty() else null
 
 
 ## 掷一句：排除最近说过的 [constant RECENT] 句；开放的不够就从最早说过的那句起放开，直到有得挑。记进队列。没有开放的 null

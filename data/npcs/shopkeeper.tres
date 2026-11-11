@@ -59,6 +59,51 @@ texts = {
 "en": "Don't be greedy. The more you carry, the slower you walk."
 }
 
+[sub_resource type="Resource" id="Resource_7plk4"]
+script = ExtResource("1_a6um5")
+id = &"greet_1"
+kind = &"greet"
+text = "哟，来客人了。慢慢看，都是好东西，嘿嘿"
+texts = {
+"en": "Well, a customer. Take your time, it's all good stuff. Heh."
+}
+
+[sub_resource type="Resource" id="Resource_3psvl"]
+script = ExtResource("1_a6um5")
+id = &"greet_2"
+kind = &"greet"
+text = "又是你？活着就好，活着才能照顾我生意"
+texts = {
+"en": "You again? Good, you're alive. The living make better customers."
+}
+
+[sub_resource type="Resource" id="Resource_mfldd"]
+script = ExtResource("1_a6um5")
+id = &"greet_3"
+kind = &"greet"
+text = "这种地方还能碰上活人，真是缘分。看看货？"
+texts = {
+"en": "A living soul in a place like this. Must be fate. Care to browse?"
+}
+
+[sub_resource type="Resource" id="Resource_r2oko"]
+script = ExtResource("1_a6um5")
+id = &"greet_4"
+kind = &"greet"
+text = "别光站着，看上什么尽管拿，价钱好商量"
+texts = {
+"en": "Don't just stand there. Take what you fancy, the price can be talked over."
+}
+
+[sub_resource type="Resource" id="Resource_q2wyy"]
+script = ExtResource("1_a6um5")
+id = &"greet_5"
+kind = &"greet"
+text = "朋友，你来得正好，我刚把摊子摆好"
+texts = {
+"en": "Friend, perfect timing. I've only just laid out the stall."
+}
+
 [resource]
 script = ExtResource("3_r0rl5")
 id = &"shopkeeper"
@@ -67,4 +112,4 @@ display_names = {
 "en": "Hakim"
 }
 portrait = &"npc_shopkeeper"
-lines = Array[ExtResource("1_a6um5")]([SubResource("Resource_ysiyo"), SubResource("Resource_kxwx1"), SubResource("Resource_y1t7s"), SubResource("Resource_jwfa7"), SubResource("Resource_5d60i"), SubResource("Resource_rpkwe")])
+lines = Array[ExtResource("1_a6um5")]([SubResource("Resource_ysiyo"), SubResource("Resource_kxwx1"), SubResource("Resource_y1t7s"), SubResource("Resource_jwfa7"), SubResource("Resource_5d60i"), SubResource("Resource_rpkwe"), SubResource("Resource_7plk4"), SubResource("Resource_3psvl"), SubResource("Resource_mfldd"), SubResource("Resource_r2oko"), SubResource("Resource_q2wyy")])

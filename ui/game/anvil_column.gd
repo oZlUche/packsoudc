@@ -127,6 +127,11 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 	compare.tip = tip
 	compare.position = Vector2(0.0, row_y + row_h + FRAME_IN + COMPARE_GAP)
 	add_child(compare)
+	for v in [_weapon_view, _material_view, _out_view]:     # 300 §2.4：槽里、出件双击 / 右键 = 取回背包（放不下到地上）
+		var view := v as InventoryView
+		view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(view.inventory, uid))
+		view.actions_for = func(uid: int) -> Array:
+			return [ItemActions.make(&"quick", UiText.t("act.take" if view == _out_view else "act.take_back"), func(): take_back(view.inventory, uid))]
 	for v in [_weapon_view, _material_view, _out_view]:
 		if drag != null:
 			drag.register_view(v)
@@ -219,6 +224,26 @@ func strike() -> ItemInstance:
 		flow.run.storage.admit(made)
 	_refresh()
 	return made
+
+
+## 300 §2.4：包里的这件双击 / 右键先试砧 —— 砧没用过、出件槽空着：有升级配方的武器进空的武器槽，材料进空的材料槽；砧不收 = null
+func quick_slot(inst: ItemInstance) -> GridInventory:
+	if inst == null or flow == null or not flow.anvil_open(node) or out.item_count() > 0 or inst.is_locked_by_player():
+		return null
+	if weapon_slot.item_count() == 0 and weapon_slot.accepts(inst.def) and not Anvil.upgrades_for(inst.def, flow.smith_recipes).is_empty():
+		return weapon_slot
+	if material_slot.item_count() == 0 and material_slot.accepts(inst.def):
+		return material_slot
+	return null
+
+
+## 300 §2.4：槽里 / 出件的一件回背包，放不下到地上
+func take_back(g: GridInventory, uid: int) -> bool:
+	if flow == null or flow.run == null or g == null or not g.has_item(uid):
+		return false
+	if InventoryService.transfer_auto(g, uid, flow.run.board):
+		return true
+	return InventoryService.transfer_auto(g, uid, flow.run.storage)
 
 
 ## 离开：三个槽里的东西回背包（放不下到地上）

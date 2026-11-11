@@ -46,8 +46,9 @@ static func run_content(t: TestCase) -> void:
 			continue
 		t.not_null(NpcBadge.face_of(def), "%s 有头像" % id)
 		t.eq([def.display_name, String(def.display_names.get("en", ""))], NAMES_284[id], "%s 名字（284）" % id)
-		t.eq(def.lines.map(func(l: NpcLine) -> String: return String(l.id)), ["guide_1", "guide_2", "guide_3", "guide_4", "guide_5", "guide_6"], "%s 六句提示" % id)
-		t.check(def.lines.all(func(l: NpcLine) -> bool: return l.kind == &"guide" and l.requires.is_empty() and l.text != "" and String(l.texts.get("en", "")) != "" and not l.text.contains("【")), "%s 每句中英都有字、全是提示、无条件、不带【】" % id)
+		var guides := def.lines.filter(func(l: NpcLine) -> bool: return l.kind != NpcLine.GREET)     # 300：商人另有问候句
+		t.eq(guides.map(func(l: NpcLine) -> String: return String(l.id)), ["guide_1", "guide_2", "guide_3", "guide_4", "guide_5", "guide_6"], "%s 六句提示" % id)
+		t.check(guides.all(func(l: NpcLine) -> bool: return l.kind == &"guide" and l.requires.is_empty() and l.text != "" and String(l.texts.get("en", "")) != "" and not l.text.contains("【")), "%s 每句中英都有字、全是提示、无条件、不带【】" % id)
 		t.check(def.lines.all(func(l: NpcLine) -> bool: return NpcLine.KINDS.has(l.kind)), "种类只有世界观 / 指引")
 	var smith := NpcChatter.get_def(NpcDef.BLACKSMITH)
 	t.eq(smith.specials.size(), 1, "铁匠一段专属对话")

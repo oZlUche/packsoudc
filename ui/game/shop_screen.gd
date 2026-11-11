@@ -50,6 +50,7 @@ func open(payload: Dictionary) -> void:
 	left.add_child(pcol)
 	if flow != null and flow.run != null:
 		npc = NpcBadge.make(NpcDef.SHOPKEEPER, flow.meta, flow.run.items, flow.run)
+		npc.greet_on_enter = true     # 300 §2.2：进店问候一句
 		npc.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN     # UI设计 11-07：随身格比头像宽时别把头像拉成横椭圆
 		pcol.add_child(npc)
 	_belt_row = _hbox(10)

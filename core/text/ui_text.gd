@@ -1548,6 +1548,7 @@ const TEXT := {
 	"act.buy_coin": {"zh": "买下", "en": "Buy"},
 	"act.short": {"zh": "[coin_short]", "en": "[coin_short]"},
 	"act.take_back": {"zh": "取回", "en": "Take back"},
+	"forge.quick_none": {"zh": "砧和铸炉都不收这件", "en": "Neither the anvil nor the forge takes this"},
 	"act.anchor": {"zh": "奉为主信仰", "en": "Make main faith"},
 	"act.anchor_now": {"zh": "已是主信仰", "en": "Main faith already"},
 	"act.bench": {"zh": "不参战", "en": "Sit this one out"},     # 2026-10-22
