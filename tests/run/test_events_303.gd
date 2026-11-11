@@ -207,7 +207,11 @@ static func run_old_fixes(t: TestCase) -> void:
 	t.not_null(top, "棋盘上有东西")
 	if top == null:
 		return
-	top.set_locked(true)
+	for inst in s.board.items():
+		(inst as ItemInstance).set_locked(true)
+	t.eq(s.events.option_params(0).get("lose_name", ""), UiText.t("event.lose_none"), "一件都拿不走：灰着的选项也不露占位符")
+	for inst in s.board.items():
+		(inst as ItemInstance).set_locked(inst == top)
 	var p := s.events.option_params(0)
 	t.check(not String(p.get("lose_name", "")).contains(Names.of(top.def)) or s.board.items().filter(func(x): return (x as ItemInstance).def.id == top.def.id).size() > 1, "锁着的最值钱的不在预告里")
 	var lost: Array = []

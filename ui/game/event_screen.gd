@@ -12,6 +12,8 @@ const OPTION_INDENT := 40.0
 var _def: EventDef = null
 var _node: MapNode = null
 var _option_btns: Array[Button] = []
+## 303 复测：右页字区宽（选项字按它缩，不撑宽右页）
+var _page_w := 0.0
 ## 113：藏起来的选项要说的那几句（[member EventOption.hint_when_hidden]），排在选项下面
 var _hints: Array[String] = []
 
@@ -59,6 +61,7 @@ func _open_options() -> void:
 		var b := _option_button(TextTemplate.plain(opt.label_for(), octx), func(): choose(idx))
 		b.disabled = not ok
 		EventCostIcons.attach(b, opt)     # 157：选项前一排代价图标（只画会花掉什么）
+		_fit_option(b)
 		_option_btns.append(b)
 		col.add_child(b)
 		if not ok:
@@ -179,6 +182,7 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	image.size = ir.size
 	page.add_child(image)
 	var tr_ := _rect(meta.get("text_rect", [704, 44, 560, 672]))
+	_page_w = tr_.size.x
 	var col := _vbox(14)
 	col.name = "Page"
 	col.position = tr_.position
@@ -234,6 +238,18 @@ func _option_button(text: String, handler: Callable) -> Button:
 		(b as ScrollKey).indent(OPTION_INDENT)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return b
+
+
+## 303 复测（英文大字号）：选项字太长时缩字号，缩到底还放不下就裁掉，不撑宽右页
+func _fit_option(b: Button) -> void:
+	if _page_w <= 0.0:
+		return
+	var box := b.get_theme_stylebox("normal")
+	var room := _page_w - (box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT) if box != null else 0.0)
+	if b.icon != null:
+		room -= float(b.icon.get_width()) + float(b.get_theme_constant("h_separation"))
+	TextFit.shrink_button_to(b, room)
+	b.clip_text = true
 
 
 #region 公开动作
