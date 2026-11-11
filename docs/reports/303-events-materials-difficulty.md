@@ -9,10 +9,10 @@
 
 | 步 | 内容 | 方案出处 | 状态 |
 |---|---|---|---|
-| 1 | 主题奖励池：加权有放回、按事件实例冻结、按奖励定价、事件拿得走的统一、导入校验、抽样统计 | 事件 §8.4、§2.6 | 本节 |
+| 1 | 主题奖励池：加权有放回、按事件实例冻结、按奖励定价、事件拿得走的统一、导入校验、抽样统计 | 事件 §8.4、§2.6 | v5.72（PR #564） |
 | 2 | 材料供给审计工具与配方需求矩阵 | 材料 §6（A 批） | 未开始 |
 | 3 | 三件首批材料与来源 | 材料 §4.1、§5（B 批） | 未开始 |
-| 4 | 第一批八个事件 E01–E08、地图专属事件池、每局一次、旧事件安全修复 | 事件 §5、§7、§8.1–8.3 | 未开始 |
+| 4 | 第一批八个事件 E01–E08、地图专属事件池、每局一次、旧事件安全修复 | 事件 §5、§7、§8.1–8.3 | 见第 4 步 |
 | 5 | 材料供给复测 M1 / M2 | 材料 §7.2（C 批） | 未开始 |
 | 6 | 难度实验 D1–D5 候选表（正式值待作者定） | 材料 §7（D 批） | 未开始 |
 
@@ -73,3 +73,111 @@
 
 - 第 2–6 步。
 - 开放问题（交接时就挂着）：同种子商店 / 搜索结果随代码变动。v5.65 已改用 `Ids.sort`；本机复核 `Array[StringName].sort()` 确实按指针排（`[&"zeta", &"alpha", &"mid"]` 排出来是 zeta、mid、alpha）。剩下的 `sort()` 调用还没逐个审完。
+
+## 第 4 步：第一批八个事件
+
+### 产出
+
+| 文件 | 职责 |
+|---|---|
+| `data/authoring/events/event_{supply_bundle,herbalist,stuck_cart,field_stretcher,refugee_weaver}.json` | 两图共用的 E01 / E02 / E03 / E04 / E07 |
+| `data/authoring/events/event_{cracked_foundry,ward_recess}.json` | 废墟专属 E05 / E08 |
+| `data/authoring/events/event_clock_oiler.json` | 沙漏专属 E06 |
+| `core/run/chapter_def.gd`、`node_rules.gd`、`run_state.gd` | 章节新字段 `chapter_events`（`{"类型": {"事件 id": 权重}}`）：开局并进节点规则 `events_by_type` 的**副本**（`NodeRules.with_chapter_events`），共用的 standard 不动，不复制整份规则 |
+| `node_rules.gd`、`event_placer.gd`、`node_events.gd` | 节点规则新字段 `event_max_per_map`：生成时、随机点揭开时、踩上去现配时都数图上已配的（`EventPlacer.used_counts`），到了上限的从同一张表里换别的抽，全满了不配（转场，不会出现不可交互的空点） |
+| `data/authoring/node_rules/standard.json` | 事件表初始同权（cache / stranger 由 2 改 1），新加五个公共事件；八个新事件各上限 1 |
+| `data/authoring/chapters/free_mode.json`、`clockwork_hourglass.json` | 废墟加 E05 / E08，沙漏加 E06 |
+| `teleport.gd` | 挑不到落点时选项灰掉（「没有能落脚的地方」），裂隙不再先扣体力再什么也不发生 |
+| `lose_item.gd`、`node_events.gd`、`ui/game/event_screen.gd` | 选项文字新占位符 `{lose_name}`：会被拿走的那一件（最值钱 / 最不值钱 / 指定 id；随机的不预告） |
+| 旧事件 `event_cache` / `event_ambush` / `event_altar` / `event_rest_spot` / `event_rift` | 撬锁为什么费体力写进正文；伏击「上前查看（会遇敌）」；祭坛「献上……（{lose_name}）」「用匕首撬开石缝（匕首会断）」；歇脚处补一句环境；裂隙两个选项写出落点随机、倒计时与体力 |
+| `core/run/calibration/event_distribution.gd`、`tools/event_distribution.gd` | 分布统计：两图各 N 个种子，各事件几张图有、一共几处、一张图最多；超上限或串图退出 1 |
+| `assets/fonts/*` | 新文案的字重新子集 |
+| `tests/run/test_events_303.gd` | 见「验证」 |
+
+### 数值（首轮测试建议，不是定稿）
+
+| 事件 | 代价与收益 |
+|---|---|
+| E01 补给 | 倒计时 −1 换食物补给池 ×1；或白拿绳布池 ×1 |
+| E02 药摊 | 药品池预抽一件，按定价 ×1.0 收钱；或干草药束 ×2 换同一件 |
+| E03 货车 | 体力 ≥ 2 时体力 −1 换金属货池 ×1（预览名字）；或白拿轻便材料池 ×1（都 ≤ 2 重） |
+| E04 担架 | 倒计时 −2 回 1 体力；或付 15 回 1 体力；满体力两项都灰 |
+| E05 铸槽 | 倒计时 −1 换金属材料池或木材料池 ×1 |
+| E06 油槽 | 倒计时 −1 换机关零件池或固定件池 ×1 |
+| E07 补衣人 | 熟皮革 ×1 换 16（定价 24、局内卖 7、基地卖 12）；亚麻布卷 ×1 换 10（定价 15、局内卖 4、基地卖 7）—— 高于出售、低于买入 |
+| E08 凹龛 | 白拿加工材料池 ×1；或倒计时 −1 换金属旧物池 ×1 |
+
+### 关键决策
+
+- **地图专属池写在章节上**：两图共用 standard，原来没有章节覆盖能力。加一个薄字段 `chapter_events`，开局时并进规则副本，读档时同样重新并（规则不进存档）。
+- **每张图一次 = 事件模板的出现上限**，和奖励池无关；上限只给新事件，旧七个照旧可以重复。
+- **价钱不写「币」字**：选项按钮前的代价图标是金币（按奖励定价的付钱也算花钱，`EventCostIcons` 跟着改了）。
+- **图**：普通事件本来就都没有图（只有寂灭两个事件有）。八个新事件照旧留空，缺图清单见「遗留」。
+
+### 验证
+
+- `bash tools/test.sh events_303`：136 项断言通过（导入、中英文、每个选项都有英文与不带条件的离开；两图各 40 个种子的上限、专属与信仰事件；随机点揭开时的上限；E04 满体力 / 没钱 / 付钱 / 坐下耗时 / 选过不能再选；E07 锁定 / 成交 / 关闭；E01 冻结、读档、结果那句；E03 体力不足；祭坛预告与锁定；裂隙没落点）。
+- `godot --headless --path . --script res://tools/event_distribution.gd -- --n=100`（种子 1..100，只数生成时定进节点的）：
+
+每章种子 1..100，只数生成时定进节点的事件（随机点揭开时现配的不算）。
+
+#### free_mode：100 张图（开不出 0）
+
+事件点共 553 个；有信仰事件的图 100 张。
+
+| 事件 | 有它的图 | 一共几处 | 一张图最多 |
+|---|---|---|---|
+| event_altar | 25 | 28 | 2 |
+| event_ambush | 23 | 25 | 2 |
+| event_cache | 30 | 36 | 3 |
+| event_cracked_foundry | 42 | 42 | 1 |
+| event_field_stretcher | 28 | 28 | 1 |
+| event_herbalist | 39 | 39 | 1 |
+| event_marked_reward | 29 | 36 | 2 |
+| event_refugee_weaver | 36 | 36 | 1 |
+| event_rest_spot | 34 | 39 | 3 |
+| event_rift | 21 | 24 | 2 |
+| event_stranger | 31 | 32 | 2 |
+| event_stuck_cart | 31 | 31 | 1 |
+| event_supply_bundle | 29 | 29 | 1 |
+| event_ward_recess | 28 | 28 | 1 |
+| extract_default | 100 | 200 | 2 |
+| faith_call | 100 | 100 | 1 |
+| rest_default | 100 | 404 | 5 |
+| search_default | 100 | 1502 | 20 |
+| shop_default | 100 | 296 | 4 |
+
+#### clockwork_hourglass：100 张图（开不出 0）
+
+事件点共 477 个；有信仰事件的图 99 张。
+
+| 事件 | 有它的图 | 一共几处 | 一张图最多 |
+|---|---|---|---|
+| event_altar | 28 | 32 | 2 |
+| event_ambush | 20 | 22 | 2 |
+| event_cache | 14 | 15 | 2 |
+| event_clock_oiler | 22 | 22 | 1 |
+| event_clock_room | 100 | 100 | 1 |
+| event_field_stretcher | 17 | 17 | 1 |
+| event_herbalist | 18 | 18 | 1 |
+| event_marked_reward | 22 | 22 | 1 |
+| event_refugee_weaver | 20 | 20 | 1 |
+| event_rest_spot | 23 | 25 | 2 |
+| event_rift | 19 | 24 | 2 |
+| event_stranger | 24 | 25 | 2 |
+| event_stuck_cart | 15 | 15 | 1 |
+| event_supply_bundle | 21 | 21 | 1 |
+| extract_default | 100 | 400 | 4 |
+| faith_call | 99 | 99 | 1 |
+| rest_default | 100 | 200 | 2 |
+| search_default | 100 | 630 | 10 |
+| shop_default | 100 | 200 | 2 |
+
+
+沙漏有一张图没有信仰事件（种子 1..100 里的一张），这是信仰组只在事件点里挑、那张图事件点被别的占满的老情况，和这次无关；新事件没有一张图超过 1 处，也没有串图。
+
+### 遗留
+
+- 缺图：八个新事件和旧七个事件都没有插图。方案 §8.3 建议 5–6 张共享场景图（补给、行商 / 医工、废墟工坊、机关检修、人际援助、伏击），要请美术线程出。
+- 方案 §7 的 stranger / marked_reward：`marked` 本身什么都不改，只是给「熟面孔」开门；文案没有承诺一定会再见，没改。
+- 第二批 E09–E12 照方案等 UI 复测。

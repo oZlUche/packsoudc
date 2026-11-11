@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_vg8e0"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_rt24a"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="3_xy3nt"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_pool_item.gd" id="4_vm311"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_c8ln2"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_silwl"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_takl4"]
+
+[sub_resource type="Resource" id="Resource_yxra5"]
+script = ExtResource("3_xy3nt")
+
+[sub_resource type="Resource" id="Resource_chmtq"]
+script = ExtResource("4_vm311")
+pool = &"metal_salvage"
+
+[sub_resource type="Resource" id="Resource_oopux"]
+script = ExtResource("5_c8ln2")
+text = "炉渣裂开，你从灰里取出了{reward_name}。"
+texts = {
+"en": "The slag cracks, and you lift the {reward_name} out of the ash."
+}
+
+[sub_resource type="Resource" id="Resource_veqcp"]
+script = ExtResource("1_vg8e0")
+label = "撬出金属余料（倒计时 −{pass_time_actions}，金属材料 ×{give_pool_item_count}）"
+labels = {
+"en": "Pry out the metal scraps (Countdown −{pass_time_actions}, metal ×{give_pool_item_count})"
+}
+outcomes = Array[ExtResource("2_rt24a")]([SubResource("Resource_yxra5"), SubResource("Resource_chmtq"), SubResource("Resource_oopux")])
+
+[sub_resource type="Resource" id="Resource_rfdea"]
+script = ExtResource("3_xy3nt")
+
+[sub_resource type="Resource" id="Resource_8op4q"]
+script = ExtResource("4_vm311")
+pool = &"worked_wood"
+
+[sub_resource type="Resource" id="Resource_lugre"]
+script = ExtResource("5_c8ln2")
+text = "你卸下锈钉，留下腐坏的部分，收起{reward_name}。"
+texts = {
+"en": "You draw out the rusted nails, leave the rotten parts and keep the {reward_name}."
+}
+
+[sub_resource type="Resource" id="Resource_4su73"]
+script = ExtResource("1_vg8e0")
+label = "拆取结实木料（倒计时 −{pass_time_actions}，木材料 ×{give_pool_item_count}）"
+labels = {
+"en": "Take apart the sound timber (Countdown −{pass_time_actions}, wood ×{give_pool_item_count})"
+}
+outcomes = Array[ExtResource("2_rt24a")]([SubResource("Resource_rfdea"), SubResource("Resource_8op4q"), SubResource("Resource_lugre")])
+
+[sub_resource type="Resource" id="Resource_twxpt"]
+script = ExtResource("1_vg8e0")
+label = "不拆"
+labels = {
+"en": "Leave it"
+}
+
+[resource]
+script = ExtResource("7_takl4")
+id = &"event_cracked_foundry"
+title = "冷却的铸槽"
+titles = {
+"en": "The Cold Casting Trough"
+}
+text = "旧王国的铸槽已经冷透，炉渣间还露着金属余料。旁边堆着旧支架和工具柄，有些木料仍然结实。你可以花些时间拆出其中一类。"
+texts = {
+"en": "The old kingdom's casting trough has long gone cold, scraps of metal still showing through the slag. Beside it lie old supports and tool handles, some of the wood still sound. You could spend some time prying out one or the other."
+}
+options = Array[ExtResource("1_vg8e0")]([SubResource("Resource_veqcp"), SubResource("Resource_4su73"), SubResource("Resource_twxpt")])

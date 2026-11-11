@@ -12,15 +12,29 @@ static func fill(graph: MapGraph, rules: NodeRules) -> int:
 	if graph == null or rules == null:
 		return 0
 	var n := fill_groups(graph, rules)
+	var used := used_counts(graph)
 	for id in graph.node_ids():
 		var node := graph.get_node(id)
 		if node.type == &"random" or String(node.content.get("event", "")) != "":
 			continue
-		var eid := pick_for(node, node.type, rules)
+		var eid := _pick(node, node.type, rules, used)
 		if eid != &"":
 			node.content["event"] = String(eid)
+			used[String(eid)] = int(used.get(String(eid), 0)) + 1
 			n += 1
 	return n
+
+
+## 303：图上已经配了的事件 id → 几处（[member NodeRules.event_max_per_map] 对着它数）
+static func used_counts(graph: MapGraph) -> Dictionary:
+	var out := {}
+	if graph == null:
+		return out
+	for id in graph.node_ids():
+		var eid := String(graph.get_node(id).content.get("event", ""))
+		if eid != "":
+			out[eid] = int(out.get(eid, 0)) + 1
+	return out
 
 
 ## 093：成组限量的事件。每组：在还没配事件的**事件点**里挑 max_per_map 个（early = 越浅的点权重越高：(1 − 深度)² + 0.05），
@@ -73,12 +87,17 @@ static func fill_groups(graph: MapGraph, rules: NodeRules) -> int:
 
 
 ## 这个点按 [param type] 该配哪个事件（确定的：同一个点同一种类型永远同一个）
-static func pick_for(node: MapNode, type: StringName, rules: NodeRules) -> StringName:
+## 303：给了 [param graph] 就按图上已配的数避开到了上限的事件（随机点揭开、踩上去现配时用）
+static func pick_for(node: MapNode, type: StringName, rules: NodeRules, graph: MapGraph = null) -> StringName:
+	return _pick(node, type, rules, used_counts(graph) if graph != null and not rules.event_max_per_map.is_empty() else {}) if rules != null else &""
+
+
+static func _pick(node: MapNode, type: StringName, rules: NodeRules, used: Dictionary) -> StringName:
 	if node == null or rules == null:
 		return &""
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d:event:%s" % [node.content_seed, type])
-	return rules.event_pick_for(type, rng)
+	return rules.event_pick_for(type, rng, used)
 
 
 ## 资产目录里的全部事件：id → 定义

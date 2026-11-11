@@ -1021,6 +1021,7 @@ const TEXT := {
 	"cond.vitality": {"zh": "需要体力 ≥ %d", "en": "Needs Vitality ≥ %d"},
 	"cond.reward_empty": {"zh": "这里没有能拿的东西", "en": "There's nothing here to take"},
 	"cond.vitality_full": {"zh": "体力已满", "en": "Vitality is already full"},
+	"cond.no_landing": {"zh": "没有能落脚的地方", "en": "There's nowhere to land"},
 	# —— 221 F5a：event_outcomes ——
 	"outcome.belt_full": {"zh": "腰带满了，%s没放进去", "en": "Your Belt is full: %s didn't fit"},
 	"outcome.blessed": {"zh": "「%s」受了赐福，成了「%s」", "en": "\"%s\" was blessed and became \"%s\""},

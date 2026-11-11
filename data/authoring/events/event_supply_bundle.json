@@ -1,0 +1,69 @@
+{
+  "id": "event_supply_bundle",
+  "title": "油布下的补给",
+  "titles": {
+    "en": "Supplies Under Oilcloth"
+  },
+  "text": "断墙下压着一捆军团的油布，木牌上还刻着领用人的姓名。外层缠着可以回收的绳布，里面是防潮包好的食物。要保住内层的包装，得慢慢拆开。",
+  "texts": {
+    "en": "A bundle of Legion oilcloth is pinned under a broken wall, a wooden tag still carved with the name of whoever signed for it. The outer wrapping is rope and cloth worth saving; inside, food packed against the damp. Keeping the inner wrapping whole means opening it slowly."
+  },
+  "options": [
+    {
+      "label": "拆开内层（倒计时 −{pass_time_actions}，食物补给 ×{give_pool_item_count}）",
+      "labels": {
+        "en": "Open the inner pack (Countdown −{pass_time_actions}, food ×{give_pool_item_count})"
+      },
+      "outcomes": [
+        {
+          "type": "pass_time"
+        },
+        {
+          "type": "give_pool_item",
+          "pool": "food_supply"
+        },
+        {
+          "type": "say",
+          "text": "你剥去受潮的外层，取出了{reward_name}。四周的滴水声没有停过。",
+          "texts": {
+            "en": "You peel away the damp outer layer and take out the {reward_name}. The dripping around you never stops."
+          }
+        }
+      ]
+    },
+    {
+      "label": "回收外层（绳布材料 ×{give_pool_item_count}）",
+      "labels": {
+        "en": "Salvage the outer wrapping (rope or cloth ×{give_pool_item_count})"
+      },
+      "outcomes": [
+        {
+          "type": "give_pool_item",
+          "pool": "wrapping_material"
+        },
+        {
+          "type": "say",
+          "text": "你收起还能使用的{reward_name}，留下没有拆开的内包。",
+          "texts": {
+            "en": "You keep the {reward_name} that's still usable and leave the inner pack unopened."
+          }
+        }
+      ]
+    },
+    {
+      "label": "保持原样",
+      "labels": {
+        "en": "Leave it as it is"
+      },
+      "outcomes": [
+        {
+          "type": "say",
+          "text": "你把刻有姓名的木牌翻回正面，继续赶路。",
+          "texts": {
+            "en": "You turn the name tag face up again and move on."
+          }
+        }
+      ]
+    }
+  ]
+}

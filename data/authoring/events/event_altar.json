@@ -10,9 +10,9 @@
   },
   "options": [
     {
-      "label": "献上棋盘上最值钱的一件",
+      "label": "献上棋盘上最值钱的一件（{lose_name}）",
       "labels": {
-        "en": "Offer the most valuable item on your board"
+        "en": "Offer the most valuable item on your board ({lose_name})"
       },
       "tags": [
         "offering"
@@ -44,9 +44,9 @@
       ]
     },
     {
-      "label": "用{item:knife}撬开石缝",
+      "label": "用{item:knife}撬开石缝（{item:knife}会断）",
       "labels": {
-        "en": "Pry the crack open with your {item:knife}"
+        "en": "Pry the crack open with your {item:knife} (it will break)"
       },
       "requires": [
         {

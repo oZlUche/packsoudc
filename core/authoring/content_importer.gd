@@ -2062,6 +2062,11 @@ static func _validate_node_rules(rules: NodeRules, ctx: Context, report: ImportR
 				report.error("events_by_type", "'%s' 里 '%s' 的权重不能为负" % [type, eid])
 			if not ctx.events.is_empty() and not ctx.events.has(StringName(String(eid))):
 				report.error("events_by_type", "'%s' 里找不到事件 '%s'（已知：%s）" % [type, eid, ", ".join(ctx.events.keys())])
+	for eid in rules.event_max_per_map:     # 303
+		if int(rules.event_max_per_map[eid]) < 1:
+			report.error("event_max_per_map", "'%s' 的上限至少 1（不想出现就别写进 events_by_type）" % eid)
+		if not ctx.events.is_empty() and not ctx.events.has(StringName(String(eid))):
+			report.error("event_max_per_map", "找不到事件 '%s'" % eid)
 	for gname in rules.event_groups:
 		var g = rules.event_groups[gname]
 		if not (g is Dictionary) or not ((g as Dictionary).get("events", null) is Dictionary):
@@ -2388,6 +2393,16 @@ static func import_chapter(data: Dictionary, ctx: Context, report: ImportReport)
 	var def := ChapterDef.new()
 	_fill(def, data, "", ctx, report)
 	_validate_chapter(def, ctx, report)
+	for type in def.chapter_events:     # 303：章节另加的事件
+		var table = def.chapter_events[type]
+		if not (table is Dictionary):
+			report.error("chapter_events", "'%s' 下该是 {事件 id: 权重}" % type)
+			continue
+		for eid in table:
+			if float(table[eid]) < 0.0:
+				report.error("chapter_events", "'%s' 里 '%s' 的权重不能为负" % [type, eid])
+			if not ctx.events.is_empty() and not ctx.events.has(StringName(String(eid))):
+				report.error("chapter_events", "'%s' 里找不到事件 '%s'" % [type, eid])
 	for i in def.rules.size():     # 112：规则卡也认 {item:} {enemy:}
 		check_text_refs(def.rules[i], "rules[%d]" % i, ctx, report)
 	return def

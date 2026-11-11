@@ -10,9 +10,9 @@
   },
   "options": [
     {
-      "label": "跳进去",
+      "label": "跳进去（落点随机，倒计时 −{teleport_action_cost}）",
       "labels": {
-        "en": "Jump in"
+        "en": "Jump in (random landing, Countdown −{teleport_action_cost})"
       },
       "outcomes": [
         {
@@ -30,9 +30,9 @@
       ]
     },
     {
-      "label": "顺着风走到底（需要步数 ≥ {steps_within_min_steps}）",
+      "label": "顺着风走到最远处（体力 −{spend_vitality_amount}，倒计时 −{teleport_action_cost}）",
       "labels": {
-        "en": "Follow the wind to the end (needs steps ≥ {steps_within_min_steps})"
+        "en": "Follow the wind to the far end (Vitality −{spend_vitality_amount}, Countdown −{teleport_action_cost})"
       },
       "requires": [
         {

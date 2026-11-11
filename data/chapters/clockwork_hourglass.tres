@@ -102,6 +102,11 @@ drop_rule = &"standard"
 carry_rule = &"standard"
 encumbrance_rules = &"standard"
 node_rules = &"standard"
+chapter_events = {
+"event": {
+"event_clock_oiler": 1
+}
+}
 economy_rules = &"standard"
 order = 4
 requires_unlock = &"prologue3_done"

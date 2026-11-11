@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_o0dal"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_2f0gk"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_pool_item.gd" id="3_qo4wg"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="4_0pdod"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="5_w0xux"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="6_xiifj"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_ceqle"]
+
+[sub_resource type="Resource" id="Resource_w6jwh"]
+script = ExtResource("3_qo4wg")
+pool = &"workshop_supplies"
+
+[sub_resource type="Resource" id="Resource_uqf3e"]
+script = ExtResource("4_0pdod")
+text = "你抹去细灰，收起{reward_name}，它还能用在下一次加工上。"
+texts = {
+"en": "You wipe off the fine dust and keep the {reward_name}. It'll still serve for the next job."
+}
+
+[sub_resource type="Resource" id="Resource_au5o0"]
+script = ExtResource("1_o0dal")
+label = "收起工匠材料（加工材料 ×{give_pool_item_count}）"
+labels = {
+"en": "Take the craftsman's supplies (crafting material ×{give_pool_item_count})"
+}
+outcomes = Array[ExtResource("2_2f0gk")]([SubResource("Resource_w6jwh"), SubResource("Resource_uqf3e")])
+
+[sub_resource type="Resource" id="Resource_cwkdp"]
+script = ExtResource("6_xiifj")
+
+[sub_resource type="Resource" id="Resource_sdt0x"]
+script = ExtResource("3_qo4wg")
+pool = &"metal_curios"
+
+[sub_resource type="Resource" id="Resource_lbb8x"]
+script = ExtResource("4_0pdod")
+text = "你清开碎石，把{reward_name}放到脚边，余物滑入了更深的缝隙。"
+texts = {
+"en": "You clear the rubble and set the {reward_name} at your feet; the rest slides into a deeper crack."
+}
+
+[sub_resource type="Resource" id="Resource_80us3"]
+script = ExtResource("1_o0dal")
+label = "清开底座（倒计时 −{pass_time_actions}，金属旧物 ×{give_pool_item_count}）"
+labels = {
+"en": "Clear the base (Countdown −{pass_time_actions}, old metalwork ×{give_pool_item_count})"
+}
+outcomes = Array[ExtResource("2_2f0gk")]([SubResource("Resource_cwkdp"), SubResource("Resource_sdt0x"), SubResource("Resource_lbb8x")])
+
+[sub_resource type="Resource" id="Resource_bc7jq"]
+script = ExtResource("1_o0dal")
+label = "留下它们"
+labels = {
+"en": "Leave them be"
+}
+
+[resource]
+script = ExtResource("7_ceqle")
+id = &"event_ward_recess"
+title = "铜灯下的凹龛"
+titles = {
+"en": "The Recess Beneath the Bronze Lamp"
+}
+text = "凹龛的铜灯早已熄灭。墙边散着工匠留下的磨料和小工具，底座后还压着几件金属旧物。要搬出后面的东西，得先清开碎石。"
+texts = {
+"en": "The bronze lamp in the recess went out long ago. Abrasives and small tools left by some craftsman lie along the wall, and a few old metal pieces are wedged behind the base. Getting at those means clearing the rubble first."
+}
+options = Array[ExtResource("1_o0dal")]([SubResource("Resource_au5o0"), SubResource("Resource_80us3"), SubResource("Resource_bc7jq")])

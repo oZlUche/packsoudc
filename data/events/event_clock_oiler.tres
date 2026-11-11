@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_whlim"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_sqae3"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="3_fd0io"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_pool_item.gd" id="4_e84fg"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_375yk"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_iabiy"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_cy16i"]
+
+[sub_resource type="Resource" id="Resource_03iun"]
+script = ExtResource("3_fd0io")
+
+[sub_resource type="Resource" id="Resource_4p0td"]
+script = ExtResource("4_e84fg")
+pool = &"mechanism_parts"
+
+[sub_resource type="Resource" id="Resource_w3p7x"]
+script = ExtResource("5_375yk")
+text = "轴心松开，你取出{reward_name}，支架缓缓伏了下去。"
+texts = {
+"en": "The axle comes loose. You take the {reward_name}, and the bracket slowly sags."
+}
+
+[sub_resource type="Resource" id="Resource_8csfo"]
+script = ExtResource("1_whlim")
+label = "拆取传动零件（倒计时 −{pass_time_actions}，机关零件 ×{give_pool_item_count}）"
+labels = {
+"en": "Strip the drive parts (Countdown −{pass_time_actions}, mechanism part ×{give_pool_item_count})"
+}
+outcomes = Array[ExtResource("2_sqae3")]([SubResource("Resource_03iun"), SubResource("Resource_4p0td"), SubResource("Resource_w3p7x")])
+
+[sub_resource type="Resource" id="Resource_8exvg"]
+script = ExtResource("3_fd0io")
+
+[sub_resource type="Resource" id="Resource_a4ef3"]
+script = ExtResource("4_e84fg")
+pool = &"mechanism_fasteners"
+
+[sub_resource type="Resource" id="Resource_q62fq"]
+script = ExtResource("5_375yk")
+text = "你取下{reward_name}，余下的零件随支架沉进油泥。"
+texts = {
+"en": "You take the {reward_name}; the remaining parts sink into the sludge with the bracket."
+}
+
+[sub_resource type="Resource" id="Resource_wk6cu"]
+script = ExtResource("1_whlim")
+label = "回收固定架（倒计时 −{pass_time_actions}，固定件材料 ×{give_pool_item_count}）"
+labels = {
+"en": "Salvage the brackets (Countdown −{pass_time_actions}, fasteners ×{give_pool_item_count})"
+}
+outcomes = Array[ExtResource("2_sqae3")]([SubResource("Resource_8exvg"), SubResource("Resource_a4ef3"), SubResource("Resource_q62fq")])
+
+[sub_resource type="Resource" id="Resource_r217q"]
+script = ExtResource("1_whlim")
+label = "不碰机关"
+labels = {
+"en": "Leave the mechanism alone"
+}
+
+[resource]
+script = ExtResource("7_cy16i")
+id = &"event_clock_oiler"
+title = "停转的油槽"
+titles = {
+"en": "The Stalled Oil Trough"
+}
+text = "供油臂停在半空，传动机构夹着碎石。检修槽里还留着可用的活动零件，侧边固定架上也有能回收的材料。拆开其中一侧，失去支撑的余物便会沉入油泥。"
+texts = {
+"en": "The oiling arm hangs frozen in mid-air, its gears jammed with grit. Usable moving parts are still in the service trough, and the side brackets hold material worth salvaging. Take one side apart and whatever loses its support will sink into the sludge."
+}
+options = Array[ExtResource("1_whlim")]([SubResource("Resource_8csfo"), SubResource("Resource_wk6cu"), SubResource("Resource_r217q")])

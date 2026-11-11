@@ -4,15 +4,15 @@
   "titles": {
     "en": "Something Moving"
   },
-  "text": "前面有动静。",
+  "text": "前面有动静。再往前走，对方就会发现你。",
   "texts": {
-    "en": "Something's moving up ahead."
+    "en": "Something is moving up ahead. Go any closer and it will spot you."
   },
   "options": [
     {
-      "label": "上去看看",
+      "label": "上前查看（会遇敌）",
       "labels": {
-        "en": "Go take a look"
+        "en": "Go and look (you will be seen)"
       },
       "outcomes": [
         {

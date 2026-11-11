@@ -1,0 +1,95 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_rxeqs"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_nxb5m"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/lose_item.gd" id="3_hwgf0"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/change_money.gd" id="4_otk5v"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_jd1au"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_a7t3c"]
+[ext_resource type="Script" path="res://core/run/events/conditions/has_item.gd" id="7_87dmh"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="8_scqmg"]
+
+[sub_resource type="Resource" id="Resource_clsnw"]
+script = ExtResource("3_hwgf0")
+item = &"tanned_leather"
+
+[sub_resource type="Resource" id="Resource_ugu3b"]
+script = ExtResource("4_otk5v")
+amount = 16
+
+[sub_resource type="Resource" id="Resource_knw77"]
+script = ExtResource("5_jd1au")
+text = "她先试了试皮子的韧性，才数钱给你。针线随后穿过了第一道接缝。"
+texts = {
+"en": "She tests how tough the leather is before counting out the coins. Then the needle goes through the first seam."
+}
+
+[sub_resource type="Resource" id="Resource_qjr6d"]
+script = ExtResource("7_87dmh")
+item = &"tanned_leather"
+takeable = true
+
+[sub_resource type="Resource" id="Resource_k27k1"]
+script = ExtResource("1_rxeqs")
+label = "交出{item:tanned_leather} ×{lose_item_count}（+{change_money_amount}）"
+labels = {
+"en": "Hand over {item:tanned_leather} ×{lose_item_count} (+{change_money_amount})"
+}
+requires = Array[ExtResource("6_a7t3c")]([SubResource("Resource_qjr6d")])
+outcomes = Array[ExtResource("2_nxb5m")]([SubResource("Resource_clsnw"), SubResource("Resource_ugu3b"), SubResource("Resource_knw77")])
+
+[sub_resource type="Resource" id="Resource_5613c"]
+script = ExtResource("3_hwgf0")
+item = &"linen_bolt"
+
+[sub_resource type="Resource" id="Resource_8g28o"]
+script = ExtResource("4_otk5v")
+
+[sub_resource type="Resource" id="Resource_5svyg"]
+script = ExtResource("5_jd1au")
+text = "她展开布边，看过没有霉斑的部分，把钱放进你手中。"
+texts = {
+"en": "She unrolls the edge, checks the part free of mildew and puts the coins in your hand."
+}
+
+[sub_resource type="Resource" id="Resource_vmx4q"]
+script = ExtResource("7_87dmh")
+item = &"linen_bolt"
+takeable = true
+
+[sub_resource type="Resource" id="Resource_5ki4b"]
+script = ExtResource("1_rxeqs")
+label = "交出{item:linen_bolt} ×{lose_item_count}（+{change_money_amount}）"
+labels = {
+"en": "Hand over {item:linen_bolt} ×{lose_item_count} (+{change_money_amount})"
+}
+requires = Array[ExtResource("6_a7t3c")]([SubResource("Resource_vmx4q")])
+outcomes = Array[ExtResource("2_nxb5m")]([SubResource("Resource_5613c"), SubResource("Resource_8g28o"), SubResource("Resource_5svyg")])
+
+[sub_resource type="Resource" id="Resource_be03d"]
+script = ExtResource("5_jd1au")
+text = "你收好材料，她低头继续缝补那条旧腰带。"
+texts = {
+"en": "You put your materials away, and she bends back over the old belt."
+}
+
+[sub_resource type="Resource" id="Resource_a7ixp"]
+script = ExtResource("1_rxeqs")
+label = "保留材料"
+labels = {
+"en": "Keep your materials"
+}
+outcomes = Array[ExtResource("2_nxb5m")]([SubResource("Resource_be03d")])
+
+[resource]
+script = ExtResource("8_scqmg")
+id = &"event_refugee_weaver"
+title = "补衣人的针"
+titles = {
+"en": "The Mender's Needle"
+}
+text = "避风处挂着几件补过许多次的外衣。补衣人指了指断开的腰带：“皮子或者布都行。我不缺针，缺的是能缝上去的东西。”她打开钱袋，让你看见里面确实还有零钱。"
+texts = {
+"en": "A few coats, patched many times over, hang in the lee of the wind. The mender points at a broken belt. \"Leather or cloth, either will do. I've needles enough; what I lack is something to sew on.\" She opens her purse to show you there really are coins in it."
+}
+options = Array[ExtResource("1_rxeqs")]([SubResource("Resource_k27k1"), SubResource("Resource_5ki4b"), SubResource("Resource_a7ixp")])

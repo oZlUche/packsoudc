@@ -1,0 +1,63 @@
+{
+  "id": "event_cracked_foundry",
+  "title": "冷却的铸槽",
+  "titles": {
+    "en": "The Cold Casting Trough"
+  },
+  "text": "旧王国的铸槽已经冷透，炉渣间还露着金属余料。旁边堆着旧支架和工具柄，有些木料仍然结实。你可以花些时间拆出其中一类。",
+  "texts": {
+    "en": "The old kingdom's casting trough has long gone cold, scraps of metal still showing through the slag. Beside it lie old supports and tool handles, some of the wood still sound. You could spend some time prying out one or the other."
+  },
+  "options": [
+    {
+      "label": "撬出金属余料（倒计时 −{pass_time_actions}，金属材料 ×{give_pool_item_count}）",
+      "labels": {
+        "en": "Pry out the metal scraps (Countdown −{pass_time_actions}, metal ×{give_pool_item_count})"
+      },
+      "outcomes": [
+        {
+          "type": "pass_time"
+        },
+        {
+          "type": "give_pool_item",
+          "pool": "metal_salvage"
+        },
+        {
+          "type": "say",
+          "text": "炉渣裂开，你从灰里取出了{reward_name}。",
+          "texts": {
+            "en": "The slag cracks, and you lift the {reward_name} out of the ash."
+          }
+        }
+      ]
+    },
+    {
+      "label": "拆取结实木料（倒计时 −{pass_time_actions}，木材料 ×{give_pool_item_count}）",
+      "labels": {
+        "en": "Take apart the sound timber (Countdown −{pass_time_actions}, wood ×{give_pool_item_count})"
+      },
+      "outcomes": [
+        {
+          "type": "pass_time"
+        },
+        {
+          "type": "give_pool_item",
+          "pool": "worked_wood"
+        },
+        {
+          "type": "say",
+          "text": "你卸下锈钉，留下腐坏的部分，收起{reward_name}。",
+          "texts": {
+            "en": "You draw out the rusted nails, leave the rotten parts and keep the {reward_name}."
+          }
+        }
+      ]
+    },
+    {
+      "label": "不拆",
+      "labels": {
+        "en": "Leave it"
+      }
+    }
+  ]
+}

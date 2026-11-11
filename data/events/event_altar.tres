@@ -35,9 +35,9 @@ takeable = true
 
 [sub_resource type="Resource" id="Resource_kdbt3"]
 script = ExtResource("1_iddjc")
-label = "献上棋盘上最值钱的一件"
+label = "献上棋盘上最值钱的一件（{lose_name}）"
 labels = {
-"en": "Offer the most valuable item on your board"
+"en": "Offer the most valuable item on your board ({lose_name})"
 }
 tags = Array[StringName]([&"offering"])
 requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_re61q")])
@@ -64,9 +64,9 @@ takeable = true
 
 [sub_resource type="Resource" id="Resource_008v4"]
 script = ExtResource("1_iddjc")
-label = "用{item:knife}撬开石缝"
+label = "用{item:knife}撬开石缝（{item:knife}会断）"
 labels = {
-"en": "Pry the crack open with your {item:knife}"
+"en": "Pry the crack open with your {item:knife} (it will break)"
 }
 requires = Array[ExtResource("6_p34rm")]([SubResource("Resource_3jcw6")])
 outcomes = Array[ExtResource("2_nmtw7")]([SubResource("Resource_4jjh3"), SubResource("Resource_ntmko"), SubResource("Resource_8lbh3")])
