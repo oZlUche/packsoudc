@@ -123,6 +123,8 @@ const TIDY_SIZE := Vector2(120, 52)
 ## 277 第 2 条：【照上回带】宽（四个字）
 const REPEAT_W := 150.0
 var _readout: RichTextLabel = null
+## 作者 11-11：棋盘下右头一张耐力签（和背包窗同一张火漆签、同一套预估）
+var _stamina: StatsStrip = null
 ## 226 批一：「出发」上面那句常显的话（出发不了的原因、空手提示、军需官发的）—— 本地红字行删了：
 ## 变了才走一次告示卷轴，平时写在「出发」的悬浮窗里（[method status_text]）
 var _status := ""
@@ -1709,6 +1711,7 @@ func _rebuild_board() -> void:
 		_drag.unregister_view(_board_view)
 	_board_view = null
 	_readout = null
+	_stamina = null
 	board = null
 	_preset_uids.clear()
 	var ch := character()
@@ -1737,10 +1740,20 @@ func _rebuild_board() -> void:
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255（作者 10:51）：板按九格定宽，窄的棋盘居中
 	var room := BOARD_MAX_W * InventoryView.CELL + 2.0 * frame.inset()
 	_board_host.custom_minimum_size.x = room
+	var under := _hbox(8)
+	under.custom_minimum_size.x = room
+	_board_host.add_child(under)
 	_readout = _log_box(13)
-	_readout.custom_minimum_size = Vector2(room, 48)     # 180：只两行
+	_readout.custom_minimum_size = Vector2(0, 48)     # 180：只两行
+	_readout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_board_host.add_child(_readout)
+	under.add_child(_readout)
+	_stamina = StatsStrip.new()     # 作者 11-11：配装备时就看得到耐力预估
+	_stamina.name = "StaminaEstimate"
+	_stamina.set_kinds([StatsStrip.STAMINA] as Array[StringName])
+	_stamina.set_width(0.0)
+	_stamina.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	under.add_child(_stamina)
 	_drag.register_view(_board_view)
 	_board_view.actions_for = item_actions.bind(_board_view)     # 230：右键 = 钉住悬浮窗，信物奉为主信仰改成按钮
 	_board_view.item_double_clicked.connect(quick_move)     # 109：每次重建棋盘视图都要重新接
@@ -2002,6 +2015,19 @@ func reseat_anchor(uid: int) -> bool:
 	return board.reseat(uid)
 
 
+## 作者 11-11：配装备页的耐力预估 —— 这块棋盘按角色基线与角色技能编译（局内的 buff、负重、信仰效果出发后才有，不算）
+func stamina_spec() -> CombatantSpec:
+	var ch := character()
+	if board == null or ch == null:
+		return null
+	return BattleCompiler.compile(board, CompileInput.of(ch.baseline(), [] as Array[StatModifier], ch.combat_rules()))
+
+
+## 耐力签（测试看）
+func stamina_strip() -> StatsStrip:
+	return _stamina
+
+
 func _refresh() -> void:
 	if _hold_refresh > 0:
 		return     # 一批改动的中途（换预设 / 换角色），做完统一刷一次
@@ -2017,6 +2043,10 @@ func _refresh() -> void:
 		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
 			lines.append(carry_text(c, scale_id, carry_value()))
 		_readout.append_text("\n".join(lines))
+	if _stamina != null and board != null and ch != null:
+		if _stamina.tip == null:
+			_stamina.tip = HoverTip.host_for(_stamina)
+		_stamina.refresh(stamina_spec(), null)
 	_sync_stash_tab()
 	if _summary != null:
 		_summary.text = summary_text()

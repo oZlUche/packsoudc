@@ -25,6 +25,14 @@ static func frame_unarmed(t: TestCase, root: Window) -> void:
 			break
 	t.check(armed >= 0, "有一套预设带着武器")
 	t.eq(setup.status_text(), "", "放上武器：提示没了")
+	# 作者 11-11：配装备页棋盘下有一张耐力签，和背包窗同一套预估（角色基线 + 角色技能 + 棋盘）
+	var sta: StatsStrip = setup.stamina_strip()
+	t.check(sta != null and sta.is_inside_tree() and sta.shown() == ([StatsStrip.STAMINA] as Array[StringName]), "棋盘下只一张耐力签")
+	if sta != null:
+		var est := StaminaEstimate.of(setup.stamina_spec())
+		t.eq(sta.texts(StatsStrip.STAMINA)[1], UiText.t("strip.stamina_sub") % [est["cost"], est["regen"]], "签上的消耗 / 回复 = 预估")
+		t.check(float(est["cost"]) > 0.0, "带武器：每秒耐力消耗大于 0（%s）" % est["cost"])
+		t.check(sta.tip != null and sta.tip_text(StatsStrip.STAMINA) != "", "停上去有说明")
 	# 作者 11-07：两套带武器的预设之间换，中途拿掉旧的那一下不算空手 —— 不弹提示
 	setup.notice_layer().clear()
 	for i in flow.presets().size():
