@@ -244,7 +244,7 @@ func _build_summary() -> void:
 	page.add_child(_place(title, TITLE_PLATE_AT, TITLE_PLATE_SIZE))
 	# 104：信力节奏的量尺（数值都是占位，作者打几局对着这一行调表）
 	# 作者 10-26：单独的「导出信力 CSV」删了 —— 每局的信力记录随对局记录写进 calibration/runs_faith/，跟「导出平衡数据」一起打包
-	if r.faith_pace != "" and GameSettings.dev_build():     # 作者 2026-10-17：调表用的量尺只在开发环境
+	if r.faith_pace != "" and faith_pace_shown(flow.settings):     # 301：开发包里、设置开了才摆
 		var pace_row := _hbox(12)
 		pace_row.set_meta(&"exempt_bare_text", "dev")     # 226 守门：开发量尺
 		pace_row.add_child(_label(r.faith_pace, 13, LedgerView.INK_DIM))
@@ -370,3 +370,7 @@ func proceed() -> void:
 	else:
 		flow.finish_result()
 
+
+## 301：结算页摆不摆信力那一行 —— 开发包、且开发设置「信力记录」开着（默认关）
+static func faith_pace_shown(settings: GameSettings) -> bool:
+	return GameSettings.dev_build() and settings != null and settings.faith_pace_shown

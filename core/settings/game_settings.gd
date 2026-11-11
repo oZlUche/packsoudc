@@ -38,6 +38,8 @@ var battle_trace: bool = BattleArchive.default_on()
 ## 现在默认开；发布版把这里的默认改成关（一处改）
 var debug_mode: bool = DEBUG_MODE_DEFAULT
 const DEBUG_MODE_DEFAULT := true
+## 301（作者 2026-11-11：结算页左下角的信力记录对玩家隐藏）：开发包设置里的开关，默认关；关着结算页不摆那一行，记录文件照写
+var faith_pace_shown: bool = false
 ## 154 补充一：改过的键 —— 动作名 → 键码数组（文件里也可以写键名，如 "Enter"）。空 = 全用 `project.godot` 的默认。
 ## 设置层只存；哪些动作能改、怎么盖到 InputMap 上是界面的事
 var key_bindings: Dictionary = {}
@@ -63,7 +65,7 @@ var stele_roman: bool = true
 var battle_log_open: bool = true
 
 ## 读回来只转成布尔的开关（字段名 = 文件里的键；文件里没有 = 字段的默认值）
-const BOOLS: Array[String] = ["loot_auto_close", "node_tooltips_preview", "unlock_all", "reveal_names", "battle_trace", "debug_mode", "ui_fades", "stele_roman", "battle_log_open"]
+const BOOLS: Array[String] = ["loot_auto_close", "node_tooltips_preview", "unlock_all", "reveal_names", "battle_trace", "debug_mode", "faith_pace_shown", "ui_fades", "stele_roman", "battle_log_open"]
 const TEXT_SIZES: Array[StringName] = [&"small", &"medium", &"large"]
 
 ## 172：认得的窗口模式；全屏 = 无边框铺满桌面（待定 4 A）
@@ -99,6 +101,7 @@ func to_dict() -> Dictionary:
 		"battle_speed": battle_speed,
 		"battle_trace": battle_trace,
 		"debug_mode": debug_mode,
+		"faith_pace_shown": faith_pace_shown,
 		"key_bindings": key_bindings.duplicate(true),
 		"ui_fades": ui_fades,
 		"cursor_skin": cursor_skin,

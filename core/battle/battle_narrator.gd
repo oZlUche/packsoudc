@@ -77,6 +77,8 @@ class _Narration:
 	var _order := [[], []]
 	## 反转成治疗的那一下：它连带的那条治疗不另写
 	var _skip := {}
+	## 301：这一刻刚引发的反应那一组（它打的伤害缩进写在下面）
+	var _react: Dictionary = {}
 
 	func run() -> void:
 		_pair_inverted()
@@ -87,6 +89,7 @@ class _Narration:
 				_time = e.time
 				_fired = {}
 				_last = {}
+				_react = {}
 			_event(i, e)
 
 	func _pair_inverted() -> void:
@@ -126,7 +129,7 @@ class _Narration:
 					var label := Names.of(def) if def != null else String(e.get_name(&"reaction"))
 					var els: Array = e.payload.get("elements", [])
 					var c := _dmg(StringName(String(els[0]))) if not els.is_empty() else "crit"
-					_alone(i, e, UiText.t("log.reaction") % [_who(e.side), _paint(label, c)])
+					_react = _alone(i, e, UiText.t("log.reaction") % [_who(e.side), _paint(label, c)])
 				elif effect == "undying":
 					_alone(i, e, UiText.t("log.undying") % _who(e.side))
 			BattleEvent.DIED:
@@ -173,7 +176,8 @@ class _Narration:
 			var n := _paint(str(StatMath.to_int(absi(amount))), tint)
 			_alone(i, e, UiText.t("log.dot") % [_who(e.side), _dot_name(e.side, type), n, type_word])
 			return
-		var g := _group_of(src, uid)
+		var reacted := e.payload.has("reaction") and not _react.is_empty()     # 301：反应打的 —— 写在反应那一行下面
+		var g := _react if reacted else _group_of(src, uid)
 		var actor := _who(src)
 		var item := _item(src, uid, int(g["step"]))
 		var body := ""
@@ -186,7 +190,10 @@ class _Narration:
 			var crit := e.get_bool(&"crit")
 			var num_c := "crit" if crit else tint
 			var dealt := _paint(str(StatMath.to_int(maxi(e.get_int(&"raw"), amount + stopped))), num_c)
-			body = (UiText.t("log.hit_more") % [dealt, type_word]) if int(g["lines"]) > 0 else (UiText.t("log.hit") % [actor, item, dealt, type_word])
+			if reacted:
+				body = UiText.t("log.reaction_hit") % [dealt, type_word]
+			else:
+				body = (UiText.t("log.hit_more") % [dealt, type_word]) if int(g["lines"]) > 0 else (UiText.t("log.hit") % [actor, item, dealt, type_word])
 			if crit:
 				body = _paint(UiText.t("log.crit"), num_c) + body
 			if stopped > 0:
@@ -286,9 +293,10 @@ class _Narration:
 		return "[color=%s%s]%s[/color]" % [TextTemplate.STYLE_PREFIX, style, s]
 
 	## 一行自成一组
-	func _alone(i: int, e: BattleEvent, body: String) -> void:
+	func _alone(i: int, e: BattleEvent, body: String) -> Dictionary:
 		var g := {"side": e.side, "uid": 0, "step": -1, "id": -1, "lines": 0}
 		_put(i, e, g, body)
+		return g
 
 	func _put(i: int, e: BattleEvent, g: Dictionary, body: String) -> void:
 		var more := int(g["lines"]) > 0

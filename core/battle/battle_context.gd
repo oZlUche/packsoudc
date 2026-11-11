@@ -40,6 +40,8 @@ var event_seq: int = 0
 
 ## 175：正在结算的反应层数（[ReactionResolver]）。> 0 时伤害不盖印、施加状态不再引发反应 —— 反应不连锁
 var reacting: int = 0
+## 301：正在结算的那种反应（[member reacting] > 0 时）—— 反应效果打出的伤害事件带上它（`reaction`），战记 / 分账认得出
+var reaction: StringName = &""
 
 ## 事件名 → 订阅它的规则列表。
 ##

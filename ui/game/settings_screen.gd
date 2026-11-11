@@ -3,6 +3,7 @@ extends GameScreen
 
 var _auto_close_btn: Button = null
 var _tooltip_btn: Button = null
+var _pace_btn: Button = null
 var _unlock_all_btn: Button = null
 ## 标题牌：告示卷排在它下面（[method notice_top]）
 var _plate: Control = null
@@ -104,6 +105,8 @@ func open(_payload: Dictionary) -> void:
 		dev.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记。", 12, UiPalette.DIM, 500))
 		_debug_btn = StoneChip.toggle("调试模式", _flip.bind(&"debug_mode"))
 		dev.add_child(_debug_btn)
+		_pace_btn = StoneChip.toggle("信力记录", _flip.bind(&"faith_pace_shown"))     # 301：结算页左下角那一行
+		dev.add_child(_pace_btn)
 		dev.add_child(_wrapped("节点浮窗按章节开放（第二章才开），这里能强制打开先看效果。", 12, UiPalette.DIM, 500))
 		_tooltip_btn = StoneChip.toggle("节点浮窗预览", _flip.bind(&"node_tooltips_preview"))
 		dev.add_child(_tooltip_btn)
@@ -370,6 +373,9 @@ func _refresh() -> void:
 	if _debug_btn != null:
 		_debug_btn.set_pressed_no_signal(flow.settings.debug_mode)
 		_debug_btn.text = "调试模式：%s" % ("开" if flow.settings.debug_mode else "关")
+	if _pace_btn != null:
+		_pace_btn.set_pressed_no_signal(flow.settings.faith_pace_shown)
+		_pace_btn.text = "结算页信力记录：%s" % ("开" if flow.settings.faith_pace_shown else "关")
 	if _fades_btn != null:
 		_fades_btn.set_pressed_no_signal(flow.settings.ui_fades)
 		_fades_btn.text = UiText.t("settings.fades_state") % (UiText.t("settings.on") if flow.settings.ui_fades else UiText.t("settings.off"))
