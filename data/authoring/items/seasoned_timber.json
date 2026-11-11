@@ -1,0 +1,22 @@
+{
+  "id": "seasoned_timber",
+  "display_name": "风干木料",
+  "display_names": {
+    "en": "Seasoned Timber"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 1,
+  "weight": 3,
+  "tags": [
+    "material",
+    "crafted",
+    "supply"
+  ],
+  "material": "wood"
+}

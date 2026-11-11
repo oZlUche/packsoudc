@@ -1,0 +1,23 @@
+{
+  "id": "straight_ash_branch",
+  "display_name": "直纹梣木枝",
+  "display_names": {
+    "en": "Straight-grained Ash Branch"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "weight": 3,
+  "tags": [
+    "material",
+    "nature",
+    "plant"
+  ],
+  "material": "wood"
+}

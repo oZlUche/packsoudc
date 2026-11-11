@@ -10,6 +10,11 @@ weight = 3.0
 
 [sub_resource type="Resource" id="Resource_ki725"]
 script = ExtResource("1_hces2")
+item = &"seasoned_timber"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_avnen"]
+script = ExtResource("1_hces2")
 item = &"hardwood_plank"
 deep_mult = 2.0
 hard_mult = 1.2
@@ -18,4 +23,4 @@ hard_mult = 1.2
 script = ExtResource("2_vtvlo")
 id = &"worked_wood"
 display_name = "木材料"
-entries = Array[ExtResource("1_hces2")]([SubResource("Resource_osvhj"), SubResource("Resource_ki725")])
+entries = Array[ExtResource("1_hces2")]([SubResource("Resource_osvhj"), SubResource("Resource_ki725"), SubResource("Resource_avnen")])
