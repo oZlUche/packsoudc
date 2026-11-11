@@ -37,6 +37,8 @@ extends CombatEffect
 ## 279：真实伤害 —— 这一包跳过加成、护甲、受伤前、格挡与受到伤害轴（[member DamagePacket.pure]），原值落血。
 ## 武器的「其中 N 点真实伤害」= 主伤害（属性）照常 + 一条 `amount = N、damage_stat 留空、pure` 的这个效果
 @export var pure: bool = false
+## 305（作者 2026-11-11 17:12）：穿透 —— 这一下只跳过护甲（[member DamagePacket.penetration]），别的照算。默认不穿
+@export var penetration: bool = false
 
 const PERCENT_OF := [&"max_hp", &"current_hp", &"missing_hp"]
 
@@ -92,7 +94,7 @@ func deal(ctx: RuleContext, type: StringName, extra_raw: int, mult: int = StatMa
 			dmg *= victim.stacks_of(per_target_stack)
 		if dmg <= 0:
 			continue
-		var packet := DamagePacket.create(type, dmg, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override))
+		var packet := DamagePacket.create(type, dmg, victim, ctx.owner.side, ctx.source_uid(), direct_of(ctx, direct_override), penetration)
 		packet.crit = crit
 		packet.pure = pure
 		DamageResolver.resolve(ctx.battle, packet)

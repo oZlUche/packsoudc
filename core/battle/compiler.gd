@@ -203,20 +203,25 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	return spec
 
 
-## 279 补充二：品质每档 +10% 的那几样（伤害、格挡、护甲），向下取整到定点
-const QUALITY_SCALED: Array[StringName] = [BattleStats.DAMAGE, BattleStats.BLOCK, BattleStats.MAX_ARMOR]
+## 279 补充二：品质每档 +10% 的那几样（伤害、护甲），向下取整到定点。
+## 305（作者 2026-11-11 17:13「格挡值我要整数，不能用乘法」）：格挡不在这里，品质每档 +[constant QUALITY_BLOCK_STEP]
+const QUALITY_SCALED: Array[StringName] = [BattleStats.DAMAGE, BattleStats.MAX_ARMOR]
 const QUALITY_STEP := 0.1
+## 305：品质每档给格挡加几点（整数）
+const QUALITY_BLOCK_STEP := 1
 ## 句子里的百分比每档 +5 个百分点（暴击率这类写在自带属性里的）
 const QUALITY_PERCENT_STEP := 0.05
 
 
-## 279 补充二：按品质改这一件的基础值 —— 伤害 / 格挡 / 护甲 ×(1 + 0.1 × 品质)；自带的暴击率每档 +5 点。品质 0 什么也不动
+## 279 补充二：按品质改这一件的基础值 —— 伤害 / 护甲 ×(1 + 0.1 × 品质)、格挡每档 +1（305）；自带的暴击率每档 +5 点。品质 0 什么也不动
 static func quality_stats(into: StatSet, profile: CombatProfile, q: int) -> void:
 	if q <= 0:
 		return
 	for key in QUALITY_SCALED:
 		if profile.base_stats.has(String(key)):
 			into.set_base(key, int(floor(float(into.ensure(key).base) * (1.0 + QUALITY_STEP * q))))
+	if profile.base_stats.has(String(BattleStats.BLOCK)):
+		into.set_base(BattleStats.BLOCK, into.ensure(BattleStats.BLOCK).base + StatMath.ONE * QUALITY_BLOCK_STEP * q)
 	if profile.base_stats.has(String(BattleStats.CRIT_CHANCE)):
 		var v := into.ensure(BattleStats.CRIT_CHANCE)
 		v.base += StatMath.from_float(QUALITY_PERCENT_STEP * q)

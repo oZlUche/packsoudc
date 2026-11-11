@@ -1117,6 +1117,40 @@ static func validate_wear_targets(ctx: Context, report: ImportReport) -> void:
 			report.error("items/%s" % iid, "wear.broken_into：「%s」得是 1 格（换上去占原点那一格）" % to.display_name)
 
 
+## 305（作者 2026-11-11 17:13「格挡值我要整数，不能用乘法，考虑改成加法」）：格挡只许加减、只许整数 ——
+## 道具 / 敌人的基础格挡、任何一条改格挡的 [StatModifier]（包体、插槽、buff、套装…）都查。乘算或带小数报错
+static func validate_block_integer(ctx: Context, report: ImportReport) -> void:
+	for table in [ctx.items, ctx.buffs, ctx.enemies]:
+		for id in table:
+			var hits: Array[String] = []
+			_block_walk(table[id], hits, {})
+			for h in hits:
+				report.error(String(id), h)
+
+
+static func _block_walk(v: Variant, hits: Array[String], seen: Dictionary) -> void:
+	if v is Array:
+		for x in v:
+			_block_walk(x, hits, seen)
+		return
+	if not (v is Resource) or seen.has(v):
+		return
+	seen[v] = true
+	if v is StatModifier and (v as StatModifier).stat == BattleStats.BLOCK:
+		var m := v as StatModifier
+		if m.is_mult():
+			hits.append("格挡不许乘算（%s%%）—— 改成加减" % m.amount)
+		elif m.amount != floorf(m.amount):
+			hits.append("格挡得是整数（现在 %s）" % m.amount)
+	if v is CombatProfile and (v as CombatProfile).base_stats.has(String(BattleStats.BLOCK)):
+		var b := float((v as CombatProfile).base_stats[String(BattleStats.BLOCK)])
+		if b != floorf(b):
+			hits.append("基础格挡得是整数（现在 %s）" % b)
+	for prop in (v as Resource).get_property_list():
+		if int(prop["usage"]) & PROPERTY_USAGE_STORAGE and (int(prop["type"]) == TYPE_OBJECT or int(prop["type"]) == TYPE_ARRAY):
+			_block_walk((v as Resource).get(prop["name"]), hits, seen)
+
+
 ## 信仰标签（作者定的机制）：信仰道具带 `faith` + 恰好一个 `faith:<id>`；对象标签得是登记过的信仰（批量导入时）
 static func _validate_item_faith(def: ItemDef, ctx: Context, report: ImportReport) -> void:
 	var objects: Array[StringName] = []

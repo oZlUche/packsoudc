@@ -58,7 +58,7 @@ static func run_stacking(t: TestCase) -> void:
 
 
 static func run_shield_and_armor(t: TestCase) -> void:
-	t.begin("103 · 加时放大的是最终伤害：护甲、格挡按原值算完，扛下来的部分再乘")
+	t.begin("103 · 加时放大的是最终伤害：格挡按原值算完、扛下来的部分再乘；305：护甲最后吸")
 	var a := _dummy(100.0)
 	a.baseline = StatSet.new()
 	a.baseline.set_base(BattleStats.MAX_ARMOR, _sec(4.0))
@@ -69,10 +69,10 @@ static func run_shield_and_armor(t: TestCase) -> void:
 	var hp0 := me.resources.current(BattleStats.RES_HP)
 	# 106：格挡只减直接伤害，所以这一下按「武器打来的」造包（deal 的最后一个参数）
 	DamageResolver.deal(ctx, me, _sec(16.0), DamageTypes.PHYSICAL, 1, 9, true)
-	t.eq(me.resources.current(BattleStats.RES_ARMOR), 0, "护甲吸掉 4（原值）")
-	t.eq(hp0 - me.resources.current(BattleStats.RES_HP), _sec(14.0), "(16 − 4 盾 − 2 甲) × 1.4 = 14")
+	t.eq(me.resources.current(BattleStats.RES_ARMOR), 0, "护甲吸掉 4")
+	t.eq(hp0 - me.resources.current(BattleStats.RES_HP), _sec(15.6), "(16 − 2 格挡) × 1.4 − 4 护甲 = 15.6")
 
-	# 106：同一下若是 buff 造成的（非直接），格挡不减它 —— (16 − 4) × 1.4 = 16.8
+	# 106：同一下若是 buff 造成的（非直接），格挡不减它 —— 16 × 1.4 − 4 = 18.4
 	var b := _dummy(100.0)
 	b.baseline = StatSet.new()
 	b.baseline.set_base(BattleStats.MAX_ARMOR, _sec(4.0))
@@ -82,7 +82,7 @@ static func run_shield_and_armor(t: TestCase) -> void:
 	var me2 := ctx2.sides[0]
 	var hp2 := me2.resources.current(BattleStats.RES_HP)
 	DamageResolver.deal(ctx2, me2, _sec(16.0))
-	t.eq(hp2 - me2.resources.current(BattleStats.RES_HP), _sec(16.8), "非直接伤害不吃格挡：(16 − 4 护甲) × 1.4 = 16.8")
+	t.eq(hp2 - me2.resources.current(BattleStats.RES_HP), _sec(18.4), "非直接伤害不吃格挡：16 × 1.4 − 4 护甲 = 18.4")
 
 
 static func run_decay_death(t: TestCase) -> void:
