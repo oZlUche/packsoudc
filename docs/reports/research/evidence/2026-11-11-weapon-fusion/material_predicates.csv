@@ -1,0 +1,13 @@
+﻿predicate,candidate_count,candidates
+bone≥绿,5,antler(鹿角 绿); beast_fang(兽牙 绿); beast_claw(兽爪 蓝); bone_charm_bits(碎骨串 蓝); bone_dice(骨骰子 紫)
+bone≥蓝,3,beast_claw(兽爪 蓝); bone_charm_bits(碎骨串 蓝); bone_dice(骨骰子 紫)
+crystal:fire≥紫,2,fire_crystal(火焰魔晶石 紫); fire_crystal_high(火焰魔晶核 金)
+crystal:frost≥紫,2,ice_crystal(冰霜魔晶石 紫); ice_crystal_high(冰霜魔晶核 金)
+crystal:lightning≥紫,2,lightning_crystal(闪电魔晶石 紫); lightning_crystal_high(闪电魔晶核 金)
+metal≥绿,15,copper_ingot(铜锭 绿); gear_arm(齿轮臂 绿); iron_ore(铁矿石 绿); nail_keg(铁钉桶 绿); oil_lamp(铜油灯 绿); brass_gear(黄铜齿轮 蓝); mainspring(主发条 蓝); rivet_box(铆钉盒 蓝); silver_ingot(银锭 蓝); silver_ore(银矿石 蓝); steam_vent(蒸汽阀 蓝); steel_ingot(钢锭 蓝); gilded_goblet(鎏金酒杯 紫); mithril_ingot(秘银锭 紫); pale_shard(灰白色的金属碎片 金)
+metal≥蓝,10,brass_gear(黄铜齿轮 蓝); mainspring(主发条 蓝); rivet_box(铆钉盒 蓝); silver_ingot(银锭 蓝); silver_ore(银矿石 蓝); steam_vent(蒸汽阀 蓝); steel_ingot(钢锭 蓝); gilded_goblet(鎏金酒杯 紫); mithril_ingot(秘银锭 紫); pale_shard(灰白色的金属碎片 金)
+metal≥紫,3,gilded_goblet(鎏金酒杯 紫); mithril_ingot(秘银锭 紫); pale_shard(灰白色的金属碎片 金)
+metal≥金,1,pale_shard(灰白色的金属碎片 金)
+stone≥绿,3,granite_mortar(花岗石臼 绿); whetstone(磨刀石 绿); wound_salt(创口盐 绿)
+wood≥绿,2,hardwood_plank(硬木板 蓝); ironwood_branch(铁木枝 蓝)
+wood≥蓝,2,hardwood_plank(硬木板 蓝); ironwood_branch(铁木枝 蓝)

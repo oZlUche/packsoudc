@@ -116,6 +116,7 @@
 | E1 | 阶段 E：常规事件薄弱度 / 重复度盘点，挑 5～8 个候选（只列条件、后果、位置、数值影响，**不写正文**） | 执行方案 §7；238 | `data/authoring/events/`（非教程 24 个） | 阶段 B、C 结果 | 盘点表交作者；正文见 A10 |
 | E2 | 阶段 E：音乐需求表（主菜单 / 地图 / 战斗 / 结算：循环、切换、授权来源栏） | 执行方案 §7 | `ui/audio.gd`（`play_music`）、`data/authoring/audio/music.json`（`{}`） | 无 | 需求表按实际场景列；风格与曲子见 A8 / M2 |
 | E3 | 阶段 E：事件配图盘点（可共用的场景图、尺寸、缺口） | 执行方案 §7 | `ui/game/event_image.gd`、`assets/events/`（只有 1 张）、`data/authoring/events/*.json` 的 `image` | 无 | 61 个事件里 2 个有图；列出缺口与可复用的现成图 |
+| W1 | 寂灭献祭条件的唯一性漏洞：`JimiePath.sacrifice_ready(board, meta)` 只看棋盘与局外，本局地上 / 暂存已有一把寂灭时仍判可献（`tools/verify_weapon_web.gd` 第四项复现；冰 / 毒之核暂无来源，玩家目前走不到）；另补 304 §八列出的测试缺口 | 报告 304 §五.3、§八 | `core/run/jimie_path.gd:96-102`、`core/run/unique_items.gd` | 无（作者已定「同名一件」） | `verify_weapon_web.gd` 全部符合；新增回归测试 |
 
 ### 需要作者决定
 
@@ -134,6 +135,7 @@
 | A11 | 对外版本 `0.1.0` / `0.1.0.0` 与开发号 v5.46 是否有意分离 | 执行方案 §6；242 §十 | `project.godot:14`、`export_presets.cfg:33,75` | 无 | 作者一句；在定之前不改对外版本 |
 | A12 | 额外战斗效果：无敌 / 吸血 / 荆棘（已定要做，动手前先出方案）；眩晕、命中等候选 | `/mnt/project-files/reference/待做-战斗效果.md`（文件存在）；执行方案 §7 | `core/battle/buff_def.gd`、`core/battle/effects/` | 先交架构设计出报告 | 作者对方案点头 |
 | A13 | 大型地图（9 环以上）的第二道撤离环间等规模参数仍是占位 | 053；`core/map/generators/map_scale_profile.gd:31,92` | `data/authoring/chapters/free_mode.json:367`（`placeholder: true`） | 无 | 作者给大型图规则 |
+| A14 | 武器合成 / 铸造升级改革方向：保留哪些拼接、哪些升级改拼接、哪些直接获取，18 把 `forged_only` 金档以后从哪里来；红武能否出售、地上 / 托付里的算不算遗失；配方发现与图鉴的跨局范围与旧档继承；局内砧不看铁匠铺级数是否有意；破晓信物能否重拿、冰 / 毒之核来源；锁定件能否被拼掉。**只交了调查，改革未开始** | [报告 304](reports/304-weapon-fusion-forge-survey.md) §十；`plans/2026-11-11-weapon-fusion-reform-investigation.md` | `core/inventory/fusion.gd`、`core/run/anvil.gd`、`core/meta/smithy.gd`、`core/run/unique_items.gd`、`core/run/jimie_path.gd` | 无 | 作者逐条表态后再出改革方案 |
 
 ### 缺素材或真人数据
 
