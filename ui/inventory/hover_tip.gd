@@ -423,6 +423,8 @@ var _for_view: ContainerView = null
 var _fav_def: ItemDef = null
 ## 离开钉住的那一串窗多久了
 var _away := 0.0
+## 确认窗（[method ask]）：离开不收
+var _modal := false
 ## 鼠标还在叫出主窗的源上（作者 2026-10-17：停在源上也走钉住进度；钉住后在源上也不算离开）。源离开时调 [method release]
 var _on_source := false
 ## 最后一次摆放用的鼠标位置（全局）：排版完再量一次尺寸后照这个重摆
@@ -760,11 +762,22 @@ func set_actions(actions: Array) -> void:
 
 
 ## 305：确认窗 —— 一段字 + 几颗按钮，开出来就钉住（点哪颗都收起）。合成的「先看再合」用它
-func ask(bbcode: String, at: Vector2, actions: Array) -> void:
+## UI设计 复核：确认窗不走「离开 [constant AWAY_SEC] 秒收」—— 只在点按钮、按 Esc、点窗外时收；
+## [param anchor]（全局）给了就贴着它摆（右边，放不下摆左边）
+func ask(bbcode: String, at: Vector2, actions: Array, anchor: Rect2 = Rect2()) -> void:
 	hide_tip()
 	show_text(bbcode, at)
 	set_actions(actions)
 	pin(_panel)
+	_modal = true
+	if anchor.has_area():
+		_anchor = anchor
+		_place(at)
+
+
+## 开着的是确认窗吗（[method ask]）
+func is_asking() -> bool:
+	return _modal and _panel.visible
 
 
 ## 主窗现在的按钮（测试看；按行的顺序）
@@ -918,6 +931,7 @@ func follow(global_at: Vector2) -> void:
 
 ## 整串收掉
 func hide_tip() -> void:
+	_modal = false
 	_close_from(1)
 	_panel.visible = false
 	_panel.reset_state()
@@ -1008,7 +1022,7 @@ func tick(delta: float, mouse: Vector2) -> void:
 	for w in open:
 		if w.global_rect().has_point(mouse):
 			inside = true
-	if inside:
+	if inside or _modal:
 		_away = 0.0
 	else:
 		_away += delta

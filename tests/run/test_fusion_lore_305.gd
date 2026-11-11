@@ -167,7 +167,12 @@ static func frame_confirm(t: TestCase, root: Window) -> void:
 	k2.state[ItemInstance.QUALITY_KEY] = 1
 	t.check(bool(panel.call("ask_fuse", k1.uid, k2.uid)), "开了确认窗")
 	var tip: HoverTip = panel.get("tip")
-	t.check(tip.is_pinned(), "钉住")
+	t.check(tip.is_pinned() and tip.is_asking(), "钉住，是确认窗")
+	tip.tick(1.0, Vector2(-500, -500))
+	t.check(tip.is_showing(), "指针离开一秒：确认窗不自己收（UI设计 复核）")
+	var view: InventoryView = panel.get("board_view")
+	var pair := view.get_global_transform() * view.item_rect(k1.uid).merge(view.item_rect(k2.uid))
+	t.check(not tip.windows()[0].global_rect().intersects(pair), "确认窗不压住那一对")
 	var text := tip.text()
 	t.check(text.contains(UiText.t("fuse.unknown")) and not text.contains(Names.of(s.items.get_def(&"twin_blades"))), "成品打问号、不写名字（%s）" % text)
 	t.check(text.contains(UiText.t("fuse.quality")), "写出品质会丢")
