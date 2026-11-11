@@ -135,11 +135,9 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 			return [ItemActions.make(&"quick", UiText.t("act.take" if view == _out_view else "act.take_back"), func(): take_back(view.inventory, uid))]
 	if tip != null:     # 两窗显示时砧上三个槽不弹自己的悬浮窗：两扇说的是同一把（UI设计 复核 v5.71）
 		var slots: Array[ContainerView] = [_weapon_view, _material_view, _out_view]
-		var prev := tip.can_show
-		tip.can_show = func(v: ContainerView, uid: int) -> bool:
-			if compare.visible and v in slots:
-				return false
-			return not prev.is_valid() or bool(prev.call(v, uid))
+		var prev := tip.hover_quiet
+		tip.hover_quiet = func(v: ContainerView, uid: int) -> bool:     # 只管停留弹窗；右键 / 双击取回照旧（不用 can_show：那会连右键一起拦掉）
+			return (compare.visible and v in slots) or (prev.is_valid() and bool(prev.call(v, uid)))
 		compare.visibility_changed.connect(func():
 			if compare.visible and tip.showing_for() in slots and not tip.is_pinned():
 				tip.hide_tip())
