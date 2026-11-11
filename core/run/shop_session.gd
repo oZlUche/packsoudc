@@ -429,7 +429,7 @@ func _roll_belt() -> void:
 	for k in rules.belt_stock:
 		if BeltSkillDef.find(StringName(String(k))) != null:
 			ids.append(StringName(String(k)))
-	ids.sort()
+	Ids.sort(ids)
 	var n := mini(ids.size(), rng.randi_range(1, maxi(1, rules.belt_picks)))
 	for _i in n:
 		var weights: Array[float] = []
@@ -449,7 +449,7 @@ static func candidates(p_rules: EconomyRules, p_items: ItemDatabase) -> Array[St
 			continue
 		if not d.has_any_tag(p_rules.shop_exclude_tags):
 			out.append(id)
-	out.sort()
+	Ids.sort(out)
 	return out
 #endregion
 

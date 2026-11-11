@@ -46,7 +46,7 @@ static func ids() -> Array[StringName]:
 		var name := f.trim_suffix(".remap")
 		if name.ends_with(".tres"):
 			out.append(StringName(name.get_basename()))
-	out.sort()
+	Ids.sort(out)
 	return out
 
 

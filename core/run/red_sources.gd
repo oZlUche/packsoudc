@@ -80,7 +80,7 @@ static func arm(content: Dictionary, run: RunState, rng: RandomNumberGenerator, 
 		return &""
 	var reds := lesser_classes(run.items)
 	var ids: Array = reds.keys()
-	ids.sort()
+	Ids.sort(ids)
 	var entries: Array = content.get("items", [])
 	var options: Array = []     # [下标, 劣化版 id]
 	for i in entries.size():

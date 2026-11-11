@@ -368,5 +368,5 @@ static func candidates(p_rules: SearchRules, p_items: ItemDatabase, rarity_cap: 
 			continue
 		if not d.has_any_tag(p_rules.exclude_tags):
 			out.append(id)
-	out.sort()
+	Ids.sort(out)
 	return out

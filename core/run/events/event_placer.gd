@@ -34,7 +34,7 @@ static func fill_groups(graph: MapGraph, rules: NodeRules) -> int:
 		return 0
 	var depths := EnemyPlacer.depths_of(graph)
 	var groups: Array = rules.event_groups.keys()
-	groups.sort()
+	Ids.sort(groups)
 	for gname in groups:
 		var g = rules.event_groups[gname]
 		if not (g is Dictionary):
