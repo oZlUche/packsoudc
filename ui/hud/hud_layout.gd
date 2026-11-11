@@ -36,7 +36,7 @@ var entries: Array[Dictionary] = []
 
 
 ## 166（作者定）：地图屏 = 横贯顶部的顶端栏（`hud_bar`）+ 栏里三个槽：
-## 左槽第一行体力 / 货币 / 信仰（两倍档），第二行负重 / buff / 侵蚀（小档；行动点与距离照旧默认藏）；中槽倒计时（大档）；
+## 左槽第一行体力 / 货币 / 信仰（两倍档），第二行 buff / 侵蚀（小档；v5.62：负重与距离两件读数删了）；中槽倒计时（大档）；
 ## 右槽放大镜 / 主动技能 / 调试台箭头（235：背包并进栏的右头）。左下角路线在上、图例在下，右下角腰带。
 ## 日志与「地上 N 件」不再是部件（在调试台里），撤离按钮与「存档并回主菜单」删了（撤离点的事件屏里撤、进点自动存档）
 static func default_for(p_screen: String) -> HudLayout:
@@ -46,8 +46,8 @@ static func default_for(p_screen: String) -> HudLayout:
 		l.entries.append(entry(&"hud_bar", "top", Vector2.ZERO))
 		for id in [&"vitality", &"wallet", &"faith"]:
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 0, "double"))
-		for id in [&"encumbrance", &"buffs", &"erosion", &"distances"]:
-			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small", not hidden_by_default(id)))
+		for id in [&"buffs", &"erosion"]:
+			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small"))
 		l.entries.append(entry(&"countdown", "bar_center", Vector2.ZERO, 0, "large"))
 		for id in BAR_RIGHT:
 			l.entries.append(entry(id, "bar_right", Vector2.ZERO, 0, "small", not hidden_by_default(id)))
@@ -59,16 +59,14 @@ static func default_for(p_screen: String) -> HudLayout:
 
 ## 166：顶端栏右槽（自左向右）
 const BAR_RIGHT: Array[StringName] = [&"reopen_button", &"skills", &"dev_drawer"]
-## 退役的组件：旧布局文件里读到就静默丢掉（不算坏文件、不整份回默认）。235：右槽小背包钮并进顶端栏右头
-const RETIRED: Array[StringName] = [&"bag_button"]
-## 默认布局里藏着的读数（摆读数时右键还能放出来）
-## 作者 2026-10-17：负重不在顶端栏显示，看背包界面里的「负重 X / Y」那一行（[InventoryPanel]）
-const HIDDEN_BY_DEFAULT: Array[StringName] = [&"distances", &"encumbrance"]
+## 退役的组件：旧布局文件里读到就静默丢掉（不算坏文件、不整份回默认）。235：右槽小背包钮并进顶端栏右头；
+## v5.62：默认藏着的「距离」「负重」两件读数删了（负重看背包界面里的「负重 X / Y」那一行，[InventoryPanel]）
+const RETIRED: Array[StringName] = [&"bag_button", &"distances", &"encumbrance"]
 
 
-## 默认藏不藏：上面那几件，加上主动技能藏着（166 补充一，[constant RunSkills.ACTIVE_HIDDEN]）时的技能按钮
+## 默认藏不藏：主动技能藏着（166 补充一，[constant RunSkills.ACTIVE_HIDDEN]）时的技能按钮
 static func hidden_by_default(id: StringName) -> bool:
-	return id in HIDDEN_BY_DEFAULT or (id == &"skills" and RunSkills.ACTIVE_HIDDEN)
+	return id == &"skills" and RunSkills.ACTIVE_HIDDEN
 ## 160：腰带在右下角；166：路线与图例在左下角
 const BELT_OFFSET := Vector2(-8, -8)
 const CORNER_OFFSET := Vector2(16, -16)     # 作者 2026-10-13：图例往右上挪一点，说明文字不贴边框

@@ -3487,7 +3487,7 @@ func player_spec() -> CombatantSpec …
 - **负重** = 作战棋盘上每件的重量之和（161：包不算重，`ItemWeight` 对包返回 0）（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 40 / 马库斯 48 / 布鲁图斯 56，137；0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
 - **分级**：`EncumbranceRules`（内容种类 `encumbrance_rules`，章节 `encumbrance_rules` 引用，自由模式用 `standard`，序章不开）。负重**严格大于**上限 × `over` 才到那一级：×1.2 吃力（急速 −10%、耐力回复 −10%），×1.6 超重（急速 −25%、耐力回复 −25%、耐力上限 −20%），×2.2 寸步难行（161 补充一按测算定）（超重的减益照旧 + 走一步行动点 ×2）。**不碰伤害**（导入时拦）。`regen_* / max_*` 的 `flat` 写的是基线比例，`combat_mods(level, baseline)` 折成真值进 `CompileInput.baseline_mods`；急速进 `input.mods`（每件参战道具）。
 - **接线**：`RunState.compile_player` 并入减益；`BattlePassives` 列一条「负重：<级名>」；`RunState.refresh_encumbrance` 在棋盘变了、换了角色、开局 / 读档后重算，写 `MapTravel.action_cost_mult`，级数真变了发 `encumbrance_changed`。`MapTravel.cost_of(intent)` 是唯一的「这一步花几点」（`apply` 扣它、地图屏预览与日志读它），`wait()` 不乘。
-- **界面**：背包读数一行「负重 w / c　级名」（超重警示色）、道具悬浮窗「重 n」、地图顶栏负重小标、开局屏读数也算；术语「负重 / 吃力 / 超重 / 寸步难行」，百科「背包」类一页 `encumbrance`。
+- **界面**：背包读数一行「负重 w / c　级名」（超重警示色）、道具悬浮窗「重 n」、开局屏读数也算（地图顶栏负重小标 v5.62 删了，看背包窗的负重签）；术语「负重 / 吃力 / 超重 / 寸步难行」，百科「背包」类一页 `encumbrance`。
 
 
 ### 8.1 开局：角色、初始包、从仓库带入
@@ -3618,6 +3618,7 @@ func player_spec() -> CombatantSpec …
 自己给一行字（`text_of`，空串 = 现在不显示）、自己订阅数据源的信号（`watch`），有大小两档（14 / 34 号）。登记表 `HudWidgets.KINDS`：
 `countdown`（颜色与边框随剩余变，121 的两处特例从地图屏搬进这里）、`action_points`、`distances`（撤离 / 休息 / 核心三个距离一件）、`vitality`、`wallet`、
 `ground_count`、`encumbrance`（轻装不显示）、`faith`（停上去开悬浮窗）、`buffs`、`erosion`。新加一种 = 一个子类 + 登记一行。
+（v5.62：默认藏着的 `distances` 与 `encumbrance` 两件删了，脚本、登记行与文字键一起；旧布局文件里读到这两个 id 静默丢掉，`HudLayout.RETIRED`。）
 
 **摆法**是一份布局（`HudLayout`）：每件 `{id, anchor, offset, line, tier, visible}`，九宫锚点 + 偏移；锚点与偏移相同的几件是一组，组里按 `line` 分行（同行横排），
 整组按锚点对齐，没内容的行收起来。`HudHost` 是铺在地图那一块上、不接鼠标的一层：造组件、摆放、窗口变了重排，每件登记进地上层（128）。
@@ -3653,7 +3654,7 @@ func player_spec() -> CombatantSpec …
 **166（作者定）：顶端栏、图标按钮、图例**：
 - 读数层顶上横一条顶端栏：组件 `hud_bar`（`PanelHudBar` 变体，底图 `assets/ui/hud/bar.png`，缺图半透明深底 + 下边一条线），它本身也是布局里的一件，藏起来就退回老的九宫顶边。
   - 布局多三个锚点 `bar_left / bar_center / bar_right`（`HudLayout.BAR_ANCHORS`），栏槽里的件不用偏移，一槽一组，组里照样按 `line` 分行；栏高 = 最高的那组 + 上下留白，至少 `HudHost.BAR_HEIGHT`（64）。
-  - 默认：左槽第一行体力 / 货币 / 信仰（200% 档），第二行负重 / 增益 / 侵蚀（小字）；中槽倒计时（大档）；右槽 `HudLayout.BAR_RIGHT` = 背包、放大镜、技能、调试台箭头。左下路线与图例（`legend`），右下腰带。布局版本 4，旧文件回默认。
+  - 默认：左槽第一行体力 / 货币 / 信仰（200% 档），第二行负重（v5.62 删了）/ 增益 / 侵蚀（小字）；中槽倒计时（大档）；右槽 `HudLayout.BAR_RIGHT` = 背包、放大镜、技能、调试台箭头。左下路线与图例（`legend`），右下腰带。布局版本 4，旧文件回默认。
   - 摆读数时松在栏里 = 按横向三等分进左 / 中 / 右槽。
 - `extract_button`、`menu_button`、`log`、`ground_count` 不再是组件：撤离只在撤离点的事件里选；日志、「地上 N 件」和提示行都在调试台里（调试台 `dock` 在栏下面，悬浮盖着地图，不再挤地图的右边）。
 - 地图满幅：`MapView` 铺满整屏，`content_inset`（宿主的 `content_inset()`：上 = 栏与顶上几组的底，下 = 左下 / 右下几组的顶）只影响居中、适配与聚焦用的安全区，剩下不到一半就退回整块。

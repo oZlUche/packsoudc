@@ -25,10 +25,11 @@ static func run_layout(t: TestCase) -> void:
 		t.eq(String(d.entry_of(id)["anchor"]), "bar_left", "%s 在栏左槽" % id)
 		t.eq(int(d.entry_of(id)["line"]), 0, "%s 在左槽第一行" % id)
 		t.eq(String(d.entry_of(id)["tier"]), "double", "%s 是 200%% 档（作者 2026-10-12）" % id)
-	for id in [&"encumbrance", &"buffs", &"erosion"]:
+	for id in [&"buffs", &"erosion"]:
 		t.eq(int(d.entry_of(id)["line"]), 1, "%s 在左槽第二行（小字）" % id)
-	t.check(not bool(d.entry_of(&"distances")["visible"]), "距离默认藏着（作者 2026-10-12：没有意义）")
-	t.check(not bool(d.entry_of(&"encumbrance")["visible"]), "负重默认不在顶端栏（作者 2026-10-17：看背包界面）")
+		t.check(bool(d.entry_of(id)["visible"]), "%s 默认显示" % id)
+	for id in [&"distances", &"encumbrance"]:
+		t.check(not HudWidgets.has(id) and d.entry_of(id).is_empty(), "v5.62：%s 读数删了（登记表与默认布局都没有；负重看背包界面）" % id)
 	t.check(d.entry_of(&"action_points").is_empty() and not HudWidgets.KINDS.has(&"action_points"), "179：「行动点」读数删了（登记表与默认布局都没有）")
 	var right_ids: Array[StringName] = []
 	for e in d.entries:
@@ -49,6 +50,15 @@ static func run_layout(t: TestCase) -> void:
 		t.not_null(HudWidgets.create(id), "%s 造得出来" % id)
 	t.check(HudWidgets.create(&"nope") == null, "不认识的 id：null")
 	t.check(not HudWidgets.has(&"bag_button") and d.entry_of(&"bag_button").is_empty(), "235：右槽小背包钮退役（并进栏的右头）")
+	# v5.62：距离与负重两件读数删了 —— 旧布局里还写着它们：静默丢掉、不报错，别的摆法照用（不整份回默认）
+	var gone: Array[String] = []
+	var kept := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "left"},
+		{"id": "distances", "anchor": "bar_left", "offset": [0, 0], "tier": "small", "line": 1, "visible": false},
+		{"id": "encumbrance", "anchor": "top", "offset": [8, 16], "tier": "double"}]}, gone)
+	t.check(kept != null and gone.is_empty(), "旧布局带着删掉的读数：读得进来、不报错（%s）" % "；".join(gone))
+	if kept != null:
+		t.eq(kept.entries.size(), 1, "删掉的两件不进布局")
+		t.eq(String(kept.entry_of(&"wallet").get("anchor", "")), "left", "别的摆法照用")
 	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "left"}, {"id": "reopen_button", "anchor": "bar_right"}]})
 	t.not_null(old, "栏槽锚点认得")
 	if old != null:
@@ -105,6 +115,18 @@ static func run_layout(t: TestCase) -> void:
 	f.store_string("{\"version\": 5, \"widgets\": [{\"id\": \"action_points\", \"anchor\": \"bar_left\"}]}")
 	f.close()
 	t.eq(HudLayout.load_for(PROBE).to_dict(), HudLayout.default_for(PROBE).to_dict(), "179：版本 5 那份（还摆着行动点）：回默认")
+	# v5.62：玩家存的那份（当前版本）还列着距离 / 负重：照读，那两件丢掉，不说「读不了」
+	f = FileAccess.open(HudLayout.user_path(PROBE), FileAccess.WRITE)
+	f.store_string(JSON.stringify({"screen": PROBE, "version": HudLayout.VERSION, "widgets": [
+		{"id": "wallet", "anchor": "bottom_left", "offset": [16, -16], "tier": "double"},
+		{"id": "encumbrance", "anchor": "bar_left", "offset": [0, 0], "tier": "small", "line": 1},
+		{"id": "distances", "anchor": "bar_left", "offset": [0, 0], "tier": "small", "line": 1, "visible": false}]}))
+	f.close()
+	var quiet: Array[String] = []
+	var saved := HudLayout.load_for(PROBE, quiet)
+	t.check(quiet.is_empty(), "存的布局带着删掉的读数：不报（%s）" % "；".join(quiet))
+	t.eq(String(saved.entry_of(&"wallet").get("anchor", "")), "bottom_left", "存的摆法照用（货币还在左下角）")
+	t.check(saved.entry_of(&"distances").is_empty() and saved.entry_of(&"encumbrance").is_empty(), "读回来的布局里没有那两件")
 	HudLayout.reset(PROBE)
 	t.check(not FileAccess.file_exists(HudLayout.user_path(PROBE)), "重置：删掉了")
 
@@ -133,7 +155,6 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	t.eq(wallet.text(), "%d" % run.wallet.balance, "166：货币只写数字")
 	t.eq(wallet.tooltip_text, "货币", "悬浮窗写「货币」")
 	t.not_null(wallet.get("coin"), "左边一枚金币（缺图画描边圆）")
-	t.check(host.widget(&"distances").text().contains("距最近撤离点"), "距离一组")
 	var faith := host.widget(&"faith")
 	if run.active_faith_id() == &"":
 		t.eq(faith.text(), "", "166：没信仰不写字")
@@ -166,7 +187,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	no_belt.queue_free()
 	var belt_w := host.widget(&"belt")
 	t.eq(belt_w.has_content(), BeltModule.of(run) != null, "腰带：有腰带模块才有格子")
-	t.check(not host.widget(&"encumbrance").visible or run.encumbrance_level() > 0, "轻装：负重那件藏着")
+	t.check(host.widget(&"distances") == null and host.widget(&"encumbrance") == null, "v5.62：读数层不造距离与负重")
 
 	# 166：顶端栏横贯顶部；左槽贴左、第一行体力 / 货币 / 信仰同高；倒计时在栏正中；栏下面才是别的锚点
 	host.arrange()    # 上面改过档位，排一次（宿主自己是下一帧才排）

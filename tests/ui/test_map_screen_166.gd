@@ -116,7 +116,7 @@ static func run_coach_data(t: TestCase) -> void:
 	UiText.lang = "zh"
 	t.eq([en, CoachOverlay.text_of(step), CoachOverlay.text_of({"text": "只有中文"})], ["Coins", "货币", "只有中文"], "221 F3：按语言取，没写英文回落中文")
 	t.eq(CoachOverlay.load_steps(&"no_such_coach"), [], "没有这份：空")
-	# 218：自由模式那份三步（日晷、背包按钮、腰带）；负重读数默认藏着，所以指背包按钮
+	# 218：自由模式那份三步（日晷、背包按钮、腰带）；顶端栏没有负重读数（v5.62 删了），所以指背包按钮
 	var free := CoachOverlay.load_steps(&"free_mode_map")
 	t.eq(free.map(func(s: Dictionary) -> String: return String(s["target"])), ["countdown", "bag_end", "belt"], "218：自由模式三步按顺序（235：背包指栏的右头）")
 	t.eq(CoachOverlay.problems(free), [] as Array[String], "218：没有问题")
