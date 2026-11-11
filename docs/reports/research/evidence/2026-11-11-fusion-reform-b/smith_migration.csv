@@ -1,0 +1,3 @@
+﻿recipe_id,inputs,output,consumes_weapon,suggestion
+smith_grand_magus_staff,fire_crystal_high×1 + magus_staff×1 + mithril_ingot×2,grand_magus_staff,magus_staff,去掉前驱武器；改为其余材料 + 同档材料补足（C 批随泛材料数量一起改）
+smith_mithril_sword,fire_crystal_low×1 + longsword×1 + mithril_ingot×2,mithril_sword,longsword,去掉前驱武器；改为其余材料 + 同档材料补足（C 批随泛材料数量一起改）
