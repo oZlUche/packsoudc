@@ -227,6 +227,13 @@ func _draw() -> void:
 
 
 ## 测试看：现在写的产物名、素材那几行的字、工钱、浅字色
+## 298：砧面上名字 / 材料凹槽右边、工钱和打造键左边那段空（全局 x 起止）—— 铁匠铺的前后两窗摆这里
+func free_span() -> Vector2:
+	var x0 := maxf(_name.get_global_rect().position.x + _name.get_minimum_size().x, _groove.get_global_rect().end.x)
+	var x1 := forge_key.get_parent_control().get_global_rect().position.x
+	return Vector2(x0, x1)
+
+
 func title() -> String:
 	return _name.text
 

@@ -1,7 +1,7 @@
 ## 279 起的砧；286 §2.2：休息点点「铁炉」进一块两栏屏 砧 | 铸炉，这块是左栏（铸炉屏左上，压在炉子那块底图上，不要新图 —— 待定 2 A）。
 ## 一行横排：武器槽、材料槽、出件槽，下面锤键；右边一张便条。顶上一行「砧」+ 状态（免费一次 / 这处的砧用过了）。
 ## 只放了武器：便条列出它能升成的每一把（名字按稀有度上色 + 要哪类材料，待定 17 A）；没有升级配方 → 「这把没有可升的」；
-## 两件都放了、配不上：材料槽红框 + 便条头一句「要【金属】≥ 绿」（这把能配的第一类）；配得上：出件槽浮出结果件的淡影，便条换成结果件的完整说明。
+## 两件都放了、配不上：材料槽红框 + 便条头一句「要【金属】≥ 绿」（这把能配的第一类）；配得上：出件槽浮出结果件的淡影，砧下面并排两块信息窗（298 [UpgradeCompare]：现在这把 | 锤完那把）。
 ## 每个休息点免费锤一次（[method GameFlow.anvil_strike]）。离开铁炉时槽里的东西回背包（放不下到地上）
 class_name AnvilColumn
 extends Control
@@ -34,6 +34,8 @@ const NOTE_PAD_BOTTOM := 10
 const GHOST := Color(1, 1, 1, 0.45)
 ## 材料配不上：材料槽外一圈红
 const WARN_RING := 3.0
+## 298：两块信息窗的上沿 = 槽框下沿再往下这么多（压住砧板下边那一截，少盖铸炉槽上的签）
+const COMPARE_GAP := 4.0
 
 var flow: GameFlow = null
 var node: MapNode = null
@@ -52,6 +54,8 @@ var _status: Label = null
 var _warn: ReferenceRect = null
 var _note: RichTextLabel = null
 var _font: Font = null
+## 298：配得上时并排的两块信息窗（现在这把 | 锤完那把），挂在砧下面
+var compare: UpgradeCompare = null
 
 
 func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: HoverTip) -> AnvilColumn:
@@ -119,6 +123,10 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 	_note.scroll_active = true
 	_note.custom_minimum_size.y = HEIGHT - HEAD_H + FRAME_IN - float(NOTE_PAD_TOP + NOTE_PAD_BOTTOM)
 	paper.add_child(_note)
+	compare = UpgradeCompare.new()
+	compare.tip = tip
+	compare.position = Vector2(0.0, row_y + row_h + FRAME_IN + COMPARE_GAP)
+	add_child(compare)
 	for v in [_weapon_view, _material_view, _out_view]:
 		if drag != null:
 			drag.register_view(v)
@@ -254,8 +262,10 @@ func _refresh() -> void:
 	if made != null and out.item_count() == 0:
 		if not _ghost.place(made, Vector2i.ZERO, 0):
 			_ghost.try_add(made, true)
-		lines.append(ItemTooltip.describe(made))
-	elif w != null and out.item_count() == 0:
+		compare.show_pair(w, made)     # 298：出件简述换成两窗并排；便条照旧列这把能升成的
+	else:
+		compare.clear()
+	if w != null and out.item_count() == 0:
 		if ups.is_empty():
 			lines.append(UiText.t("anvil.no_upgrade"))
 		if mismatch:

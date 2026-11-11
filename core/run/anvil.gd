@@ -23,13 +23,15 @@ static func upgrades_for(weapon: ItemDef, pool: Array) -> Array[SmithRecipeDef]:
 		return out
 	for r in pool:
 		var def := r as SmithRecipeDef
-		if def == null or def.material_inputs.is_empty() or def.inputs.size() != 1:
-			continue
-		var key: Variant = def.inputs.keys()[0]
-		if StringName(String(key)) == weapon.id and int(def.inputs[key]) == 1:
+		if is_upgrade(def) and StringName(String(def.inputs.keys()[0])) == weapon.id:
 			out.append(def)
 	out.sort_custom(func(a: SmithRecipeDef, b: SmithRecipeDef) -> bool: return String(a.id) < String(b.id))
 	return out
+
+
+## 升级类配方：吃一件（一把武器）外加材料类 —— 砧上能锤的、铁匠铺里显示前后两窗的（298）
+static func is_upgrade(recipe: SmithRecipeDef) -> bool:
+	return recipe != null and not recipe.material_inputs.is_empty() and recipe.inputs.size() == 1 and int(recipe.inputs.values()[0]) == 1
 
 
 ## 这把 + 这件材料配上的那张（材质对、稀有度够；几张都配得上取第一张）；配不上 = null
