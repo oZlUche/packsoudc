@@ -11,6 +11,11 @@ func describe() -> String:
 	return ""
 
 
+## 事件方案 2026-11-11：要看一局才说得准的那一句（按冻结奖励定价的钱数）；默认就是 [method describe]
+func describe_in(_ctx: EventContext) -> String:
+	return describe()
+
+
 ## 2026-10-17：给玩家看的说明里写名字、不写 id —— 按种类与 id 读定义的名字；查不到给「数据缺失」
 static func content_name(kind: String, id: StringName) -> String:
 	if id == &"":

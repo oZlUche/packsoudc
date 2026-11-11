@@ -33,5 +33,9 @@ func locked_reason(ctx: EventContext) -> String:
 	for c in requires:
 		var cond := c as EventCondition
 		if cond != null and not cond.check(ctx):
-			return cond.describe()
+			return cond.describe_in(ctx)
+	for o in outcomes:
+		var why := (o as EventOutcome).blocked_reason(ctx) if o != null else ""
+		if why != "":
+			return why
 	return ""

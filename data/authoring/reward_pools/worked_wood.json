@@ -1,0 +1,15 @@
+{
+  "id": "worked_wood",
+  "display_name": "木材料",
+  "entries": [
+    {
+      "item": "wooden_stick",
+      "weight": 3.0
+    },
+    {
+      "item": "hardwood_plank",
+      "deep_mult": 2.0,
+      "hard_mult": 1.2
+    }
+  ]
+}

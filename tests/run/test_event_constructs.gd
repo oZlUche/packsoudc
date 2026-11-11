@@ -318,7 +318,7 @@ static func run_teleport_outcome(t: TestCase) -> void:
 		t.check(text.contains(needle), "导入器报：%s" % needle)
 	var good := {"id": "y", "title": "y", "options": [
 		{"label": "a", "outcomes": [{"type": "teleport", "target": "nearest", "node_types": ["rest"]}, {"type": "spend_vitality"}]},
-		{"label": "b", "requires": [{"type": "has_item", "item": "salve"}], "outcomes": [{"type": "lose_item", "item": "salve"}]},
+		{"label": "b", "requires": [{"type": "has_item", "item": "salve", "takeable": true}], "outcomes": [{"type": "lose_item", "item": "salve"}]},
 	]}
 	var rep2 := ImportReport.new()
 	var def := ContentImporter.import_event(good, ictx, rep2)

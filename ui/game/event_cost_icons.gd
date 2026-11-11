@@ -40,7 +40,7 @@ static func _kind_of(thing: Object) -> String:
 		return ""
 	for row in KINDS:
 		if is_instance_of(thing, row[0]):
-			if thing is ChangeMoney and (thing as ChangeMoney).amount >= 0:
+			if thing is ChangeMoney and (thing as ChangeMoney).amount >= 0 and (thing as ChangeMoney).reward_key == &"":     # 303：按奖励定价的是付钱
 				return ""
 			return String(row[1])
 	return ""

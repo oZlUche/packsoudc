@@ -35,6 +35,8 @@ func _choose(ctx: EventContext) -> Dictionary:
 					cands.append({"inst": inst, "from": c})
 	else:
 		cands = ItemPick.candidates(ctx.containers(where), include_bags)
+	# 事件方案 2026-11-11 §2.6：锁定的、独一的不拿（和 HasItem 的 takeable 同一批）
+	cands = cands.filter(func(c: Dictionary) -> bool: return EventContext.takeable(c["inst"] as ItemInstance, include_bags))
 	return ItemPick.choose(cands, pick, ctx.rng)     # BY_ID 不在挑法里：取第一件
 
 

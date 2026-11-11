@@ -20,7 +20,8 @@
       "requires": [
         {
           "type": "has_item",
-          "where": "BOARD"
+          "where": "BOARD",
+          "takeable": true
         }
       ],
       "outcomes": [
@@ -50,7 +51,8 @@
       "requires": [
         {
           "type": "has_item",
-          "item": "knife"
+          "item": "knife",
+          "takeable": true
         }
       ],
       "outcomes": [

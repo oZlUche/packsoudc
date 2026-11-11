@@ -1,0 +1,16 @@
+{
+  "id": "metal_curios",
+  "display_name": "金属旧物",
+  "entries": [
+    {
+      "item": "oil_lamp",
+      "weight": 4.0
+    },
+    {
+      "item": "gilded_goblet",
+      "deep_mult": 3.0,
+      "hard_mult": 1.2,
+      "min_depth": 0.3
+    }
+  ]
+}

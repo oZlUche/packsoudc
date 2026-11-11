@@ -1019,6 +1019,8 @@ const TEXT := {
 	"cond.steps_max": {"zh": "需要步数 ≤ %d", "en": "Needs steps ≤ %d"},
 	"cond.steps_range": {"zh": "需要步数 %d～%d", "en": "Needs steps %d–%d"},
 	"cond.vitality": {"zh": "需要体力 ≥ %d", "en": "Needs Vitality ≥ %d"},
+	"cond.reward_empty": {"zh": "这里没有能拿的东西", "en": "There's nothing here to take"},
+	"cond.vitality_full": {"zh": "体力已满", "en": "Vitality is already full"},
 	# —— 221 F5a：event_outcomes ——
 	"outcome.belt_full": {"zh": "腰带满了，%s没放进去", "en": "Your Belt is full: %s didn't fit"},
 	"outcome.blessed": {"zh": "「%s」受了赐福，成了「%s」", "en": "\"%s\" was blessed and became \"%s\""},

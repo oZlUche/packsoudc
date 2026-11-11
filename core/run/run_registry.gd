@@ -77,6 +77,7 @@ const EVENT_CONDITIONS := {
 	&"facility_at_least": "res://core/run/events/conditions/facility_at_least.gd",     # 282
 	&"owned_nowhere": "res://core/run/events/conditions/owned_nowhere.gd",     # 282
 	&"skill_ready": "res://core/run/events/conditions/skill_ready.gd",     # 136
+	&"vitality_not_full": "res://core/run/events/conditions/vitality_not_full.gd",     # 事件方案 2026-11-11
 }
 
 const EVENT_OUTCOMES := {
@@ -110,6 +111,7 @@ const EVENT_OUTCOMES := {
 	&"grant_belt": "res://core/run/events/outcomes/grant_belt.gd",     # 160 补一
 	&"jimie_sacrifice": "res://core/run/events/outcomes/jimie_sacrifice.gd",     # 281
 	&"jimie_ascend": "res://core/run/events/outcomes/jimie_ascend.gd",     # 281
+	&"give_pool_item": "res://core/run/events/outcomes/give_pool_item.gd",     # 事件方案 2026-11-11 §8.4
 }
 
 ## 局内技能（082）：被动常驻 + 可选的主动一击

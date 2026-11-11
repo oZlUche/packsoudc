@@ -1,0 +1,27 @@
+{
+  "id": "mechanism_parts",
+  "display_name": "机关零件",
+  "entries": [
+    {
+      "item": "gear_arm",
+      "weight": 4.0
+    },
+    {
+      "item": "brass_gear",
+      "weight": 2.0,
+      "deep_mult": 1.5
+    },
+    {
+      "item": "mainspring",
+      "weight": 2.0,
+      "deep_mult": 2.0,
+      "hard_mult": 1.2
+    },
+    {
+      "item": "steam_vent",
+      "deep_mult": 2.0,
+      "hard_mult": 1.2,
+      "min_depth": 0.3
+    }
+  ]
+}

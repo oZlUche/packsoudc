@@ -10,10 +10,12 @@ enum Where { BOARD, STORAGE, BOTH }
 @export var where: Where = Where.BOTH
 ## 114：反过来 —— 身上**没有**（不到 count 件）才过。序章一的退路：没拿到匕首就别卡在合成的门上
 @export var missing: bool = false
+## 事件方案 2026-11-11 §2.6：只算事件拿得走的（[method EventContext.takeable]）。同一选项后面要 [LoseItem] 的必须开（导入器查）
+@export var takeable: bool = false
 
 
 func check(ctx: EventContext) -> bool:
-	return (ctx.count_item(item, where, tag) >= maxi(1, count)) != missing
+	return (ctx.count_item(item, where, tag, takeable) >= maxi(1, count)) != missing
 
 
 func describe() -> String:

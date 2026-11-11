@@ -1,0 +1,34 @@
+{
+  "id": "medicine",
+  "display_name": "药品",
+  "entries": [
+    {
+      "item": "bandage",
+      "weight": 4.0
+    },
+    {
+      "item": "salve",
+      "weight": 3.0
+    },
+    {
+      "item": "bandage_roll",
+      "weight": 3.0
+    },
+    {
+      "item": "antidote_kit",
+      "weight": 2.0
+    },
+    {
+      "item": "strong_salve",
+      "deep_mult": 2.0,
+      "hard_mult": 1.2,
+      "min_depth": 0.3
+    },
+    {
+      "item": "styptic_dressing",
+      "deep_mult": 2.0,
+      "hard_mult": 1.2,
+      "min_depth": 0.3
+    }
+  ]
+}

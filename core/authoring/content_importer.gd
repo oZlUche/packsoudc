@@ -31,6 +31,8 @@ class Context:
 	var carry_rules: Dictionary = {}
 	## 209：id -> BagPool。章节对着它查
 	var bag_pools: Dictionary = {}
+	## 事件方案 2026-11-11 §8.4：id -> RewardPool。事件的「从池里给」对着它查
+	var reward_pools: Dictionary = {}
 	## 129：id -> EncumbranceRules。章节对着它查
 	var encumbrance_rules: Dictionary = {}
 	## id -> NodeRules。章节对着它查
@@ -96,6 +98,9 @@ class Context:
 
 	func register_bag_pool(pool: BagPool) -> void:
 		_put(bag_pools, pool)
+
+	func register_reward_pool(pool: RewardPool) -> void:
+		_put(reward_pools, pool)
 
 	func register_drop_rule(rule: DropRule) -> void:
 		_put(drop_rules, rule)
@@ -209,7 +214,7 @@ static func _importers() -> Dictionary:
 	return {
 		"tags": import_tag, "damage_types": import_damage_type, "buffs": import_buff, "rule_parts": import_rule_part,
 		"reactions": import_reaction, "forge": import_forge_table, "sets": import_set, "enemies": import_enemy,
-		"enemy_pools": import_enemy_pool, "drop_rules": import_drop_rule, "carry_rules": import_carry_rule, "bag_pools": import_bag_pool,
+		"enemy_pools": import_enemy_pool, "drop_rules": import_drop_rule, "carry_rules": import_carry_rule, "bag_pools": import_bag_pool, "reward_pools": import_reward_pool,
 		"encumbrance_rules": import_encumbrance_rules, "node_rules": import_node_rules, "economy_rules": import_economy_rules,
 		"loadouts": import_loadout, "characters": import_character, "difficulties": import_difficulty, "hunters": import_hunter,
 		"meta_rules": import_meta_rules, "run_buffs": import_run_buff, "faiths": import_faith, "recipes": import_recipe,
@@ -1265,6 +1270,51 @@ static func import_bag_pool(data: Dictionary, ctx: Context, report: ImportReport
 	return pool
 
 
+## 事件方案 2026-11-11 §8.4：主题奖励池 —— 每行是道具库里的道具、基础权重 > 0、倍率有限且不为负、最浅深度在 0～1；
+## 不收包、金银、封存的、独一的（独一的给了也收不下）；一份不能空
+static func import_reward_pool(data: Dictionary, ctx: Context, report: ImportReport) -> RewardPool:
+	var pool := RewardPool.new()
+	_fill(pool, data, "", ctx, report)
+	_require_id(pool.id, "奖励池", report)
+	if pool.entries.is_empty():
+		report.error("entries", "奖励池是空的")
+	var shallow := false
+	for i in pool.entries.size():
+		var e := pool.entries[i]
+		var at := "entries[%d]" % i
+		if e == null:
+			report.error(at, "空的一行")
+			continue
+		if not (e.weight > 0.0) or is_inf(e.weight):
+			report.error(at + ".weight", "基础权重得大于 0")
+		for f in ["deep_mult", "hard_mult"]:
+			var v := float(e.get(f))
+			if v < 0.0 or is_nan(v) or is_inf(v):
+				report.error("%s.%s" % [at, f], "倍率得是有限的、不为负")
+		if e.min_depth < 0.0 or e.min_depth > 1.0:
+			report.error(at + ".min_depth", "最浅深度在 0～1 之间")
+		if e.min_depth <= 0.0 and e.chapters.is_empty():
+			shallow = true
+		if not ctx.items.is_empty():
+			var d: ItemDef = ctx.items.get(e.item, null)
+			if d == null:
+				report.error(at + ".item", "找不到道具 '%s'" % e.item)
+			elif d.is_bag or d.is_bullion() or d.is_sealed() or d.has_tag(&"unique"):
+				report.error(at + ".item", "'%s' 是包 / 金银 / 封存 / 独一的，奖励池不收" % e.item)
+	# 各支持的上下文至少一个合格候选：最浅处、不限章节的那一行至少要有一行（限章节的池由审计逐章查）
+	if not pool.entries.is_empty() and not shallow and not _pool_covers_all_chapters(pool):
+		report.warn("entries", "没有「深度 0、不限章节」的一行：浅处或别的章节可能抽不出东西（选项会灰掉）")
+	ctx.register_reward_pool(pool)
+	return pool
+
+
+static func _pool_covers_all_chapters(pool: RewardPool) -> bool:
+	for e in pool.entries:
+		if e != null and e.min_depth <= 0.0 and e.chapters.is_empty():
+			return true
+	return false
+
+
 ## 129：负重规则 —— 每级 over ≥ 1 且严格递增、travel_mult ≥ 1、减益不碰伤害（作者定）
 static func import_encumbrance_rules(data: Dictionary, ctx: Context, report: ImportReport) -> EncumbranceRules:
 	var rules := EncumbranceRules.new()
@@ -1750,6 +1800,26 @@ static func import_run_buff(data: Dictionary, ctx: Context, report: ImportReport
 
 
 ## 事件（063）：至少一个选项、选项得有字；给的道具得存在、给的地图 buff 得存在且是地图作用域（对着别的东西查的只在批量导入时生效）
+## 事件方案 2026-11-11：这个事件里有没有 key 为 [param key] 的池奖励
+static func _event_has_reward(def: EventDef, key: StringName) -> bool:
+	for opt in def.options:
+		if opt == null:
+			continue
+		for o in (opt as EventOption).outcomes:
+			if o is GivePoolItem and (o as GivePoolItem).reward_key() == key:
+				return true
+	return false
+
+
+## 事件方案 2026-11-11 §2.6：失去指定道具（BY_ID）的选项得有同一道具、takeable 的 has_item；别的挑法（随机 / 最值钱）得有一条 takeable 的 has_item
+static func _option_checks_takeable(opt: EventOption, lose: LoseItem) -> bool:
+	for c in opt.requires:
+		if c is HasItem and (c as HasItem).takeable and not (c as HasItem).missing:
+			if lose.pick != LoseItem.Pick.BY_ID or (c as HasItem).item == lose.item:
+				return true
+	return false
+
+
 static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -> EventDef:
 	var def := EventDef.new()
 	_fill(def, data, "", ctx, report)
@@ -1781,6 +1851,16 @@ static func import_event(data: Dictionary, ctx: Context, report: ImportReport) -
 				report.error(at, "空的后果")
 			elif o is GrantBelt:
 				check_belt_ref((o as GrantBelt).skill, at, ctx, report)
+			elif o is GivePoolItem:
+				var gp := o as GivePoolItem
+				if gp.count < 1:
+					report.error(at, "至少抽 1 次")
+				if not ctx.reward_pools.is_empty() and not ctx.reward_pools.has(gp.pool):
+					report.error(at, "找不到奖励池 '%s'" % gp.pool)
+			elif o is ChangeMoney and (o as ChangeMoney).reward_key != &"" and not _event_has_reward(def, (o as ChangeMoney).reward_key):
+				report.error(at, "按奖励定价的钱：这个事件里没有 key 为 '%s' 的池奖励" % (o as ChangeMoney).reward_key)
+			elif o is LoseItem and not _option_checks_takeable(opt, o as LoseItem):
+				report.error(at, "失去道具前得有一条 takeable 的 has_item 挡着（锁定、独一的拿不走，条件和扣除要看同一批）")
 			elif o is GiveItem and not ctx.items.is_empty() and not ctx.items.has((o as GiveItem).item):
 				report.error(at, "找不到道具 '%s'" % (o as GiveItem).item)
 			elif o is GiveItem and not ctx.items.is_empty() and (ctx.items[(o as GiveItem).item] as ItemDef).is_sealed():

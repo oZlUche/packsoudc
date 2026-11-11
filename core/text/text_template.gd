@@ -360,9 +360,12 @@ static func _find_field(obj: Variant, key: String, depth: int) -> Variant:
 
 ## 193：事件选项文字的上下文 = 屏的上下文 + 这个选项自己的字段（[TextParams]）+ `{rest_total}`：
 ## 这一下总共回几点体力 = `{rest_restore}` + 第一条「回体力」后果的量（没有就等于 `{rest_restore}`）
-static func option_context(ctx: Dictionary, opt: Object) -> Dictionary:
+## 事件方案 2026-11-11：给了 [param node] 再加这个选项冻结好的池奖励（[method EventRewards.params]：`{reward_name}` `{reward_price}`）
+static func option_context(ctx: Dictionary, opt: Object, node: MapNode = null) -> Dictionary:
 	var out := ctx.merged(TextParams.of(opt))
 	out["rest_total"] = int(ctx.get("rest_restore", 0)) + int(out.get("restore_vitality_amount", 0))
+	if node != null and opt is EventOption:
+		out.merge(EventRewards.params(node, opt as EventOption, ctx.get("_items", null) as ItemDatabase), true)
 	return out
 
 

@@ -1,0 +1,19 @@
+{
+  "id": "wrapping_material",
+  "display_name": "绳布材料",
+  "entries": [
+    {
+      "item": "rope_coil",
+      "weight": 4.0
+    },
+    {
+      "item": "linen_bolt",
+      "weight": 3.0
+    },
+    {
+      "item": "wool_cloth",
+      "weight": 2.0,
+      "deep_mult": 1.5
+    }
+  ]
+}

@@ -3071,6 +3071,14 @@ class_name SearchRules extends Resource
 **原地耗时**走 `MapTravel.wait`（计数 → 侵蚀推进 → 脚下结算，不挪人），在判战败之前。**改类型**写 `resolved_type`（和随机点揭开同一个记号），同一选项里后面的「照常发生」「开战」按新类型走。
 **照常发生**（`proceed`）让休息 / 商店点也能先过事件屏而数值还在 `NodeRules`；`rest_default` / `shop_default` 挂在 `events_by_type`。导入器拦撞车的组合：传送 + 搜索 / 开店 / 接下一个（会话断了）、传送 + 给道具（离开时地上清空）。
 
+**主题奖励池（报告 303，事件方案 2026-11-11 §8.4）。** 事件的物品奖励从**主题池**（内容种类 `reward_pools`，`RewardPool` + `RewardPoolEntry`：道具、基础权重、`deep_mult` 深度 1 时的倍率（深度 0 为 1，线性过渡）、`hard_mult` 难度每高一档再乘一次、`min_depth`、`chapters`）里抽，
+后果 `give_pool_item`（`pool`、`key`、`count`）。池**有放回、永不抽空**：抽一次不删候选、不减权重、不记库存。**结果按事件实例冻结**：事件挂起（`NodeEvents.set_pending`）时 `EventRewards.freeze_all` 把每份 key 抽好，
+写进 `node.content["rewards"][key] = {items, pool, depth, level}`，随机数只由节点 `content_seed` 与 key 派生；预览（选项文字的 `{reward_name}` `{reward_names}` `{reward_price}`）、结算、读档、重进都读这一份。
+同一 key 的几个选项（钱买 / 材料换、付钱 / 打赢）发的是同一份。`change_money` / `can_afford` 给了 `reward_key` 就按那份奖励的定价（`ItemValue`）× `reward_price_mult` 收钱。
+池在这里没有合格候选时冻结的是空的，选项灰掉（`EventOutcome.blocked_reason`，「这里没有能拿的东西」），不先扣代价。
+**事件拿得走的**（§2.6）：`EventContext.takeable` —— 玩家锁定的、独一的、包（除非 `include_bags`）不拿；`lose_item` 只从这一批里挑，`has_item` 开 `takeable` 后只数这一批，
+导入器要求每个 `lose_item` 前有一条 takeable 的 `has_item` 挡着（条件过了却扣不掉、奖励照发的事就不会有）。抽样统计：`tools/reward_pool_stats.gd`（`RewardPoolStats`）。
+
 ### 6.6 经济（M4-5）
 
 作者的设想：打赢战斗获得货币，数量按敌人强度、所在深度与难度；商店售卖随机稀有度道具且可以刷新，都花货币；

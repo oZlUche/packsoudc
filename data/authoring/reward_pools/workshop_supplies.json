@@ -1,0 +1,22 @@
+{
+  "id": "workshop_supplies",
+  "display_name": "加工材料",
+  "entries": [
+    {
+      "item": "whetstone",
+      "weight": 4.0
+    },
+    {
+      "item": "flint",
+      "weight": 3.0
+    },
+    {
+      "item": "pine_resin",
+      "weight": 2.0
+    },
+    {
+      "item": "beeswax",
+      "weight": 2.0
+    }
+  ]
+}

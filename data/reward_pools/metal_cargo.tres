@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_etb1p"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_gapdl"]
+
+[sub_resource type="Resource" id="Resource_xi3kw"]
+script = ExtResource("1_etb1p")
+item = &"copper_ingot"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_jyd1p"]
+script = ExtResource("1_etb1p")
+item = &"iron_ore"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_obhrg"]
+script = ExtResource("1_etb1p")
+item = &"nail_keg"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_8ec35"]
+script = ExtResource("1_etb1p")
+item = &"steel_ingot"
+deep_mult = 3.0
+hard_mult = 1.2
+min_depth = 0.3
+
+[sub_resource type="Resource" id="Resource_ykwkg"]
+script = ExtResource("1_etb1p")
+item = &"silver_ingot"
+weight = 0.5
+deep_mult = 3.0
+hard_mult = 1.2
+min_depth = 0.5
+
+[resource]
+script = ExtResource("2_gapdl")
+id = &"metal_cargo"
+display_name = "金属货"
+entries = Array[ExtResource("1_etb1p")]([SubResource("Resource_xi3kw"), SubResource("Resource_jyd1p"), SubResource("Resource_obhrg"), SubResource("Resource_8ec35"), SubResource("Resource_ykwkg")])

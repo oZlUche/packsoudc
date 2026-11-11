@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_t352p"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_wwk7a"]
+
+[sub_resource type="Resource" id="Resource_hdvlh"]
+script = ExtResource("1_t352p")
+item = &"copper_ore"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_t7jww"]
+script = ExtResource("1_t352p")
+item = &"iron_ore"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_ypvif"]
+script = ExtResource("1_t352p")
+item = &"nail_keg"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_3v41m"]
+script = ExtResource("1_t352p")
+item = &"copper_ingot"
+
+[sub_resource type="Resource" id="Resource_b4i27"]
+script = ExtResource("1_t352p")
+item = &"steel_ingot"
+weight = 0.5
+deep_mult = 3.0
+hard_mult = 1.2
+min_depth = 0.4
+
+[resource]
+script = ExtResource("2_wwk7a")
+id = &"metal_salvage"
+display_name = "金属材料"
+entries = Array[ExtResource("1_t352p")]([SubResource("Resource_hdvlh"), SubResource("Resource_t7jww"), SubResource("Resource_ypvif"), SubResource("Resource_3v41m"), SubResource("Resource_b4i27")])

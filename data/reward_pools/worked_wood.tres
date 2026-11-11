@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_hces2"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_vtvlo"]
+
+[sub_resource type="Resource" id="Resource_osvhj"]
+script = ExtResource("1_hces2")
+item = &"wooden_stick"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_ki725"]
+script = ExtResource("1_hces2")
+item = &"hardwood_plank"
+deep_mult = 2.0
+hard_mult = 1.2
+
+[resource]
+script = ExtResource("2_vtvlo")
+id = &"worked_wood"
+display_name = "木材料"
+entries = Array[ExtResource("1_hces2")]([SubResource("Resource_osvhj"), SubResource("Resource_ki725")])

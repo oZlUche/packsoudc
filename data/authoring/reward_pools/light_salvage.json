@@ -1,0 +1,25 @@
+{
+  "id": "light_salvage",
+  "display_name": "轻便材料",
+  "entries": [
+    {
+      "item": "rope_coil",
+      "weight": 3.0
+    },
+    {
+      "item": "linen_bolt",
+      "weight": 3.0
+    },
+    {
+      "item": "wooden_stick",
+      "weight": 3.0
+    },
+    {
+      "item": "pine_resin",
+      "weight": 2.0
+    },
+    {
+      "item": "wool_cloth"
+    }
+  ]
+}

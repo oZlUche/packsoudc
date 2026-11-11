@@ -6,6 +6,11 @@ extends Resource
 
 @abstract func apply(ctx: EventContext) -> void
 
+## 事件方案 2026-11-11：这个后果现在做不成、整个选项该灰掉时的那一句（池里没有合格候选）；空 = 做得成
+func blocked_reason(_ctx: EventContext) -> String:
+	return ""
+
+
 ## 给编辑器看的一句话
 func describe() -> String:
 	return ""

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_lhh17"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_lckk5"]
+
+[sub_resource type="Resource" id="Resource_swpo6"]
+script = ExtResource("1_lhh17")
+item = &"oil_lamp"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_yayp8"]
+script = ExtResource("1_lhh17")
+item = &"gilded_goblet"
+deep_mult = 3.0
+hard_mult = 1.2
+min_depth = 0.3
+
+[resource]
+script = ExtResource("2_lckk5")
+id = &"metal_curios"
+display_name = "金属旧物"
+entries = Array[ExtResource("1_lhh17")]([SubResource("Resource_swpo6"), SubResource("Resource_yayp8")])
