@@ -434,7 +434,7 @@ static func run_reflect_details(t: TestCase) -> void:
 	t.eq(_hp(ctx, 0), 180, "自伤 20")
 	t.eq(_hp(ctx, 1), 200, "对手毫发无损 —— 自伤不反弹")
 
-	# 反弹量按【护甲吸收之后】的待结算量算：护甲扛住的部分不算在内
+	# 305：护甲挪到最后 —— 受伤前看到的是这一下原本多重，反弹量按它算（护甲扛不扛住都一样）
 	var ctx2 := H._battle(
 		_attacker(20.0),
 		H._spec(200.0, [H._compiled(2, "thorns", {"max_armor": 12.0},
@@ -442,7 +442,7 @@ static func run_reflect_details(t: TestCase) -> void:
 	)
 	_run(ctx2)
 	t.eq(_shield(ctx2, 1), 0, "护甲吃掉 12")
-	t.eq(_hp(ctx2, 0), 96, "只弹余下 8 的一半 = 4")
+	t.eq(_hp(ctx2, 0), 90, "弹原本 20 的一半 = 10")
 
 	# 反伤本身会被对方的格挡减免 —— 它是一包普通伤害，走完整管线
 	var ctx3 := H._battle(

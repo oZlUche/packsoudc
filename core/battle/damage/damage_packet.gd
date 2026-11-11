@@ -27,10 +27,12 @@ var crit: bool = false
 var direct: bool = false
 ## 279：这一包是真实伤害（[member DealDamage.pure]）—— 和真实伤害类型（流血）一样跳过加成、护甲、受伤前、格挡与受到伤害轴
 var pure: bool = false
+## 305（作者 2026-11-11 17:12）：穿透 —— 只跳过护甲吸收；火焰加成、受伤前效果、减伤、格挡、易伤照算
+var penetration: bool = false
 #endregion
 
 #region 管线中途写入
-## 被护甲吸收掉的量
+## 被护甲吸收掉的量（305：从减伤、格挡、易伤都算完之后的最终伤害里扣）
 var absorbed: int = 0
 ## 受伤前效果的固定增减，负为减伤
 var flat: int = 0
@@ -42,7 +44,7 @@ var inverted: bool = false
 var cancelled: bool = false
 ## 实际被格挡挡掉的量（153：原名 armor；破绽为负）
 var block: int = 0
-## 最终结算量。正为扣血，负为回血
+## 最终结算量（305：护甲之前），正为伤害、负为回血；落到血量的是 final - absorbed
 var final: int = 0
 ## 落到资源上的实际变化量（可能被上限或归零截断）
 var applied: int = 0
@@ -51,7 +53,7 @@ var applied: int = 0
 
 static func create(
 	p_type: StringName, p_raw: int, p_victim: CombatantRuntime,
-	p_source_side: int = -1, p_source_uid: int = 0, p_direct: bool = false
+	p_source_side: int = -1, p_source_uid: int = 0, p_direct: bool = false, is_penetration: bool = false
 ) -> DamagePacket:
 	var p := DamagePacket.new()
 	p.type = p_type
@@ -60,6 +62,7 @@ static func create(
 	p.source_side = p_source_side
 	p.source_uid = p_source_uid
 	p.direct = p_direct
+	p.penetration = is_penetration
 	return p
 
 
@@ -67,9 +70,10 @@ func victim_side() -> int:
 	return victim.side if victim != null else -1
 
 
-## 护甲吸收之后、受伤前效果之前的待结算量。受伤前效果据此判断「这一下够不够狠」。
+## 受伤前效果看到的待结算量。受伤前效果据此判断「这一下够不够狠」。
+## 305：护甲挪到最后，这时还没吸收 —— 就是这一下原本多重（火焰加成之后）
 func pending() -> int:
-	return maxi(0, raw - absorbed)
+	return maxi(0, raw)
 
 
 func def() -> DamageTypeDef:
@@ -95,7 +99,7 @@ func cancel() -> void:
 
 
 func _to_string() -> String:
-	return "DamagePacket(%s 原始 %.1f → 护甲 -%.1f → 格挡 -%.1f → 最终 %.1f)" % [
-		type, StatMath.to_float(raw), StatMath.to_float(absorbed),
-		StatMath.to_float(block), StatMath.to_float(final),
+	return "DamagePacket(%s 原始 %.1f → 格挡 -%.1f → 最终 %.1f → 护甲 -%.1f)" % [
+		type, StatMath.to_float(raw), StatMath.to_float(block),
+		StatMath.to_float(final), StatMath.to_float(absorbed),
 	]

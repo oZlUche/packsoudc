@@ -3,15 +3,16 @@
 ## [b]一切血量的减少都走这里[/b] —— 武器命中、持续伤害、以血为代价的自伤，
 ## 区别只在伤害类型。这样减伤、护甲、免疫、反转只需要实现一次。
 ##
-## 五步，顺序不可调换：
+## 六步，顺序不可调换（305，作者 2026-11-11：护甲是血量的延伸，放在扣血之前）：
 ## [codeblock]
-## 1. 确认类型      这一下能不能被护甲吸收、要不要通知；攻方的伤害类型加成（火焰轴）在这里乘
-## 2. 护甲吸收      能吸收则先扣护甲，中毒之类绕过
-## 3. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
-## 4. 计算受伤量    百分比 → 固定增减 → 反转 → 格挡（只对直接伤害，106）→ 「受到伤害」轴（103），然后落到血量
-## 5. 受伤后效果    发 damage 事件；流失类不通知默认监听（175 补充五：伤害不盖元素印 —— 印只从施加状态来）
+## 1. 确认类型      要不要通知；攻方的伤害类型加成（火焰轴）在这里乘
+## 2. 受伤前效果    【同步派发】效果在这里改写伤害包：减伤、反转、免疫
+## 3. 计算受伤量    百分比 → 固定增减 → 反转 → 格挡（只对直接伤害，106）→ 「受到伤害」轴（103）→ 按类型易伤
+## 4. 护甲吸收      从第 3 步的最终伤害里扣；中毒之类（类型不吃护甲）、真实伤害、穿透（[member DamagePacket.penetration]）绕过
+## 5. 剩下的落到血量
+## 6. 受伤后效果    发 damage 事件；流失类不通知默认监听（175 补充五：伤害不盖元素印 —— 印只从施加状态来）
 ## [endcodeblock]
-## 175 补充四：真实伤害（[member DamageTypeDef.pure]，流血）跳过 1b–4，原值直接落血；第 4 步末尾再乘守方按类型的易伤（剧毒）
+## 175 补充四：真实伤害（[member DamageTypeDef.pure]，流血）跳过加成、受伤前、格挡、轴与护甲，原值直接落血
 ##
 ## 第 3 步是整条管线存在的理由。护甲那种无条件减伤写成一个属性就够了，
 ## 但「消耗 2 层格挡减免 10 点」「喝了解毒剂时中毒反转成治疗」有前置条件，
@@ -45,19 +46,9 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 			if boost != StatMath.ONE:
 				packet.raw = maxi(0, StatMath.mul(packet.raw, boost))
 
-	# --- 2. 护甲吸收 ---
-	# 放在受伤前效果之前，是因为「这一下还剩多少要扛」本身就是减伤效果的判断依据。
-	# 281：只受一种伤害的（寂灭的试炼）：不对的这一下不扣护甲（第 3 步可能改类型，那一下照样不吃护甲）
-	var gated := victim.only_damage_type != &""
-	if td.armor_absorbable and packet.raw > 0 and not pure and not (gated and packet.type != victim.only_damage_type):
-		var pool := victim.resources
-		if pool.has(BattleStats.RES_ARMOR):
-			var take := mini(pool.current(BattleStats.RES_ARMOR), packet.raw)
-			if take > 0:
-				pool.change(BattleStats.RES_ARMOR, -take, BattleEvent.REASON_ABSORBED)
-				packet.absorbed = take
+	var gated := victim.only_damage_type != &""     # 281：只受一种伤害的（寂灭的试炼）
 
-	# --- 3. 受伤前效果。同步派发，不入队 —— 排队就赶不上这次结算了 ---
+	# --- 2. 受伤前效果。同步派发，不入队 —— 排队就赶不上这次结算了 ---
 	if not pure:
 		ctx.dispatch_before_damage(packet)
 	td = packet.def()     # 132：受伤前可能改了类型（convert_damage_type）；之后按新类型通知
@@ -73,7 +64,7 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 		_notify(ctx, packet, td)
 		return 0
 
-	# --- 4. 计算受伤量 ---
+	# --- 3. 计算受伤量 ---
 	var amount := packet.pending()
 	if packet.percent != 0:
 		amount = StatMath.mul(amount, StatMath.ONE + packet.percent)
@@ -90,7 +81,7 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 		var block := victim.stat(BattleStats.BLOCK, 0)
 		packet.block = mini(block, amount) if block > 0 else block
 		amount = maxi(0, amount - packet.block)
-	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 护甲、减伤、格挡都按原值算完，扛下来的那部分再乘；治疗不放大
+	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 减伤、格挡都按原值算完，扛下来的那部分再乘；治疗不放大
 	if amount > 0 and not pure:
 		var taken := victim.axis_factor(StatAxes.DAMAGE_TAKEN)     # 标准轴（4.3）：易伤为正、坚韧为负，加时在系统层
 		taken_factor = taken
@@ -102,17 +93,26 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 			amount = maxi(0, StatMath.mul(amount, StatMath.ONE + StatMath.from_float(by_type / 100.0)))
 	packet.final = amount
 
-	if amount > 0:
+	# --- 4. 护甲吸收（305）：最终伤害先扣护甲，扣到见底；治疗、不吃护甲的类型、真实伤害、穿透都不碰 ---
+	if amount > 0 and td.armor_absorbable and not pure and not packet.penetration and victim.resources.has(BattleStats.RES_ARMOR):
+		var take := mini(victim.resources.current(BattleStats.RES_ARMOR), amount)
+		if take > 0:
+			victim.resources.change(BattleStats.RES_ARMOR, -take, BattleEvent.REASON_ABSORBED)
+			packet.absorbed = take
+	var to_hp := amount - packet.absorbed
+
+	# --- 5. 落血 ---
+	if to_hp > 0:
 		packet.applied = victim.resources.change(
-			BattleStats.RES_HP, -amount, BattleEvent.REASON_DAMAGE
+			BattleStats.RES_HP, -to_hp, BattleEvent.REASON_DAMAGE
 		)
 		# 093（蛮神 4 级）：坚持期里血停在 0，扣不动 —— 但受到的伤害**照记**（作者定），事件里的 amount 是真实伤害
-		if victim.undying_active() and -packet.applied < amount:
-			packet.applied = -amount
+		if victim.undying_active() and -packet.applied < to_hp:
+			packet.applied = -to_hp
 	elif amount < 0:
 		packet.applied = victim.heal(ctx, -amount)     # 175：反转成的治疗也走治疗入口
 
-	# --- 5. 受伤后 ---
+	# --- 6. 受伤后 ---
 	if ctx.trace != null:
 		_trace(ctx, packet, raw_in, hp_before, taken_factor)
 	_notify(ctx, packet, td)
@@ -127,13 +127,13 @@ static func _side_of(ctx: BattleContext, side: int) -> CombatantRuntime:
 	return ctx.sides[side]
 
 
-## 117：内部日志的一条伤害管线：原始值 → 火焰加成 → 护甲 → 受伤前效果 → 格挡 → 受到伤害轴 → 实际扣血
+## 117：内部日志的一条伤害管线：原始值 → 火焰加成 → 受伤前效果 → 格挡 → 受到伤害轴 → 护甲 → 实际扣血（305 起护甲在最后）
 static func _trace(ctx: BattleContext, packet: DamagePacket, raw_in: int, hp_before: int, taken: int) -> void:
 	ctx.trace.record(ctx.now, packet.victim_side(), BattleTrace.DAMAGE, {
 		"type": String(packet.type), "source_side": packet.source_side, "uid": packet.source_uid, "victim": packet.victim_side(),
 		"raw_in": raw_in, "raw": packet.raw, "crit": packet.crit, "direct": packet.direct,
 		"absorbed": packet.absorbed, "flat": packet.flat, "percent": packet.percent, "inverted": packet.inverted,
-		"cancelled": packet.cancelled, "block": packet.block, "taken": taken, "final": packet.final,
+		"cancelled": packet.cancelled, "penetration": packet.penetration, "block": packet.block, "taken": taken, "final": packet.final,
 		"hp_before": hp_before, "hp_after": packet.victim.resources.current(BattleStats.RES_HP),
 		"hp_lost": maxi(0, -packet.applied),
 	})
