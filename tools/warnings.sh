@@ -16,12 +16,18 @@ if [ -e "$ROOT/override.cfg" ]; then
   exit 2
 fi
 printf '[network]\nlimits/debugger/max_warnings_per_second=100000\nlimits/debugger/max_errors_per_second=100000\nlimits/debugger/max_chars_per_second=10000000\n' > "$ROOT/override.cfg"
+"$GODOT" --headless --path "$ROOT" --import >"$OUT.import.log" 2>&1     # 新进来的资源没导入时收集器起不来，下面会把「没收到」当成 0 条
 WARN_OUT="$OUT" WARN_PORT="$PORT" "$GODOT" --headless --path "$ROOT" --script res://tools/warnings_collector.gd >"$OUT.collector.log" 2>&1 &
 CPID=$!
 sleep 3
 "$GODOT" --headless --path "$ROOT" --remote-debug "tcp://127.0.0.1:$PORT" --script res://tools/check_scripts.gd >"$OUT.client.log" 2>&1
 wait $CPID
+CSTATUS=$?
 rm -f "$ROOT/override.cfg"
+if [ "$CSTATUS" -ne 0 ] || grep -q '_try_connect' "$OUT.client.log"; then
+  echo "收集器没跑起来或没连上，这次的结果不算数；看 $OUT.collector.log 和 $OUT.client.log" >&2
+  exit 1
+fi
 python3 - "$OUT" <<'PY'
 import json, sys, collections
 rows = [json.loads(l) for l in open(sys.argv[1], encoding="utf-8") if l.strip()]

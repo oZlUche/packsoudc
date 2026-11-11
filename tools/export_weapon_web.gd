@@ -70,11 +70,15 @@ func _item(d: ItemDef) -> Dictionary:
 		"material": d.material, "crystal_family": String(d.crystal_family), "cells": cells, "weight": d.weight, "value": d.value,
 		"requires_unlock": String(d.requires_unlock), "unique": d.is_unique(), "forged_only": d.is_forged_only(),
 		"signature": d.is_signature(), "keepsake": d.is_keepsake(), "sealed": d.is_sealed(), "lesser": d.is_lesser(), "ticket": d.is_ticket(), "token": d.is_token(), "blessed_of": String(d.blessed_of), "has_wear": d.wear != null,
-		"wear_broken_into": String(d.wear.broken_into) if d.wear != null else null,
+		"wear_broken_into": null,
 		"has_enchant": d.enchant != null, "has_growth": d.growth != null, "is_bag": d.is_bag,
 		"applies": d.applies.map(func(a): return {"buff": String(a.get("buff")) if a.get("buff") != null else "", "stacks": a.get("stacks")}),
 	}
-	row["combat"] = _combat(d.combat) if d.combat != null else null
+	row["combat"] = null
+	if d.wear != null:
+		row["wear_broken_into"] = String(d.wear.broken_into)
+	if d.combat != null:
+		row["combat"] = _combat(d.combat)
 	return row
 
 
