@@ -12,7 +12,8 @@ extends RefCounted
 ## 精简批次二：两个沙盒、回放浏览器、回放、悬浮窗里 18 处盒子间距与 3 处四边边距改走 UiTheme.vbox / hbox / margins —— 130 → 109
 ## 精简批次四：七个编辑器的外壳（边距、三栏、校验框、JSON 框）收进 AuthoringEditor，各写一份的覆写只剩一份 —— 109 → 81
 ## 精简批次三：科技树节点收字号那处改走 TextFit.shrink_button_to（覆写在 ui/widgets 里那一份）—— 81 → 80
-const RATCHET := 80
+## 296 第五节之二：定稿图的「没图时退路」删掉，退路里那 5 处覆写（倒计时文字版、设置屏、书页标题）跟着没了 —— 80 → 75
+const RATCHET := 75
 const SCANNED := ["res://ui/game", "res://ui/inventory", "res://ui/battle", "res://ui/hud",
 	"res://ui/editor", "res://ui/event_editor", "res://ui/buff_editor", "res://ui/set_editor", "res://ui/map_editor", "res://ui/part_editor"]
 
