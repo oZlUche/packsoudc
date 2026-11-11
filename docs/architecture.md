@@ -1536,7 +1536,7 @@ while 双方存活 and now < 安全上限:
 #### 道具悬浮窗的版式与固定式悬浮窗（170，作者定）
 
 - **深底白字**（v3.00 定稿，作者 2026-10-14「样式就这样吧」）：`PanelTooltip` 是两层的 `SlabStyle`（`UiTheme.layered_box`，石板也走它）：深皮革板身 `tip/tooltip_body` 平铺铺满整窗、黄铜边框九宫格 `tip/tooltip_frame`（中心透明，json `tone: dark`）叠在上面；宽 360。字色走字色模板的三档：正文 `@tip_fg`（白）、标签与脚注 `@tip_meta`、说明 `@tip_desc`。**只有名字和稀有度名描边**（`UiTheme.outline`：`[outline_size=2][outline_color=#000000bf]`，常量 `OUTLINE_SIZE / OUTLINE_COLOR`）；正文里带色的属性字不描（作者对比后定）。
-- **版式 A**（`ItemTooltip.describe_full` 分块返回 `head / body / foot / set / text / terms`）：头 = 名字（粗体 19、稀有度色）、副行（稀有度名 · 标签，按 171 的大类排、来源类不列）、说明（`[i]` 斜体：正文字体斜切 0.2，`UiTheme.slanted`，主题的 `italics_font`）；分隔线；正文一行一条，行首图标（`UiTheme.tip_icon`，缺图退回「【增益】」等字，图标链到「增益槽 / 受益槽 / 装载槽」词条）；虚线；脚注金币与秤砣图标 + 右边套装名。不写格数、冷却、DPS。
+- **版式 A**（`ItemTooltip.describe_full` 分块返回 `head / body / foot / set / text / terms`）：头 = 名字（粗体 19、稀有度色）、副行（稀有度名 · 标签，按 171 的大类排、来源类不列）、说明（`[i]` 斜体：正文字体斜切 0.2，`UiTheme.slanted`，主题的 `italics_font`）；分隔线；正文一行一条，行首图标（`UiTheme.tip_icon`，还没有图的附魔写「【附魔】」，图标链到「增益槽 / 受益槽 / 装载槽」词条）；虚线；脚注金币与秤砣图标 + 右边套装名。不写格数、冷却、DPS。
 - **武器句**（`ItemTooltip.weapon_sentence`）：「每 X 秒造成 Y 点伤害，消耗 Z 耐力」，X / Y 用编译后（含开战 buff）的实值；规则施加 buff 就接「，附带【中毒】」（有专属解说写解说）。
 - **生成句**（171 §3，`AdjacencyText`）：条件 = 标签（`grant_filter` OR「XX、YY」，`grant_filter_all` AND 连写「XXYY」，都空「邻居」）+ 效果名（`Glossary.SENTENCE_NAMES`：伤害乘算「增伤」、加速、护甲……；`mod_text(m, true)`：乘算「10%」、加算「+5」）+ 附加规则（提到的 buff 走 `BuffDef.sentence_text`）。受益句「挨着盾时 护甲 +5」；晶石「装进法杖：…」+「装在：魔法杖 / 闲置」；法杖每颗装上的晶石一行「火焰魔晶石　每 X 秒 Y 火焰伤害　剩 N 次」。
 - **固定式悬浮窗**（`HoverTip`，十字军之王式）：离开道具后 `GRACE_SEC` 0.15 秒宽限（这期间进窗就留下）；窗里先停 `PIN_DELAY_SEC` 0.5 秒（193：路过不起圈），再停满 `PIN_SEC` 0.6 秒钉住（`pin_progress(dwell)`；2 px 黄铜线从左上角沿外框顺时针走一圈，`ring_points`；钉住画钉子 `pin.png`）；钉住后停在 `[url=term:<id>]` 关键词上 `TERM_SEC` 0.25 秒开子窗（`TipWindow`，同样可钉、可再开，`MAX_DEPTH` 3 层），位置右边、放不下下面、夹回屏内；离开整串 `AWAY_SEC` 0.4 秒、Esc、点窗外（含开始拖拽）收掉。计时都在 `tick(delta, 鼠标)`；193 起 `tick` 每帧先查源（`_source_alive`：文字窗看来源控件还在不在树里、可不可见，道具窗看那一格下面还是不是那件），源没了立刻收，换屏 / 叠层打开时地图屏也主动 `hide_tip()`。道具窗没有正文时不画分隔线与正文。087 的词条侧窗取消，`terms` 是 `{id: {name, text}}`；`Glossary.mark` 输出关键词链接，`wrap_terms` 不替 BBCode 标签里面的字。
@@ -1614,12 +1614,10 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
 #### 邻接标记必须画在棋盘上
 
 170 起画美术的格位图标（`assets/ui/tip/grant|receive|load_on|off.png`，32 px，点亮 / 没点亮两态），替换原来的半透明方框；一格上只有一种居中，好几种沿对角线错开；
-装载格「点亮」= 这颗晶石真的给了这把（`load_assignments`）。没图时的老画法：
-增益格／受益格画成**四个角括号**，叠在标记指向的那一格上：增益贴着格边、受益缩在里面，
-两类同时落在一格也分得清。不用整圈描边，那会和物品自己的稀有度描边撞车。
+装载格「点亮」= 这颗晶石真的给了这把（`load_assignments`）。
 
-**点亮状态一并画出来** —— 这一格确实站着一个符合过滤条件的邻居时填色加粗，
-否则只留细线。只画位置不画点亮，等于让玩家对着说明书心算，
+**点亮状态一并画出来** —— 这一格确实站着一个符合过滤条件的邻居时画点亮那张，
+否则画没点亮那张。只画位置不画点亮，等于让玩家对着说明书心算，
 而摆位正是这类游戏的全部乐趣所在。
 
 点亮判据与编译器的 `_lit_neighbors` 一致，标记格的绝对坐标由
@@ -3659,7 +3657,7 @@ func player_spec() -> CombatantSpec …
 - `extract_button`、`menu_button`、`log`、`ground_count` 不再是组件：撤离只在撤离点的事件里选；日志、「地上 N 件」和提示行都在调试台里（调试台 `dock` 在栏下面，悬浮盖着地图，不再挤地图的右边）。
 - 地图满幅：`MapView` 铺满整屏，`content_inset`（宿主的 `content_inset()`：上 = 栏与顶上几组的底，下 = 左下 / 右下几组的顶）只影响居中、适配与聚焦用的安全区，剩下不到一半就退回整块。
 - `IconButton`（`ui/widgets/`）：48 × 48，图 `assets/ui/hud/icon_<id>.png`，缺图写字；悬浮窗「名字（快捷键）+ 一句说明」；右上快捷键小字、右下次数角标。背包 B、放大镜 N、主动技能 `skill_<id>`（角标 = 这一局还能用几次）。
-- 货币只写数字，左边一枚金币（`HudIcon`，`assets/ui/hud/coin.png`，缺图画金色圆）；信仰有就一枚图标（`assets/ui/faith/<id>.png`）+「Lv.n　当前 / 下一级」，缺图退回老的字，没信仰留一个空槽。
+- 货币只写数字，左边一枚金币（`HudIcon`，`assets/ui/hud/coin.png`）；信仰有就一枚图标（`assets/ui/faith/<id>.png`）+「Lv.n　当前 / 下一级」，缺图退回老的字，没信仰留一个空槽。
 - 图例只列这张图上有的节点类型（揭开了的随机点按揭开的算），顺序按 `MapNodeStyle.STYLES`，名字是 `MapNodeStyle.NAMES` 的短名，图标与地图上那枚一样。
 - 166 补充一：角色的主动技能对玩家藏着（`RunSkills.ACTIVE_HIDDEN`）—— 右槽的 `skills` 默认不显示（摆读数右键还能放出来验技能），战前屏不建「溜走」，开局屏与百科只列被动；记账与代码都留着，日后翻这一处。
 - 自动存档：`GameFlow.step_to` 人到了新点、事件还没给玩家看就存一次；看完叠层回到地图（`_flush` 最后）再存一次。暂停菜单只留「回主菜单」（照旧先存）。
@@ -3711,7 +3709,7 @@ func player_spec() -> CombatantSpec …
 **回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真；沙盒 v5.61 退役），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
 
 **地图底图**（作者定：每章一张手绘地图，风格各不同）：`ChapterDef.map_skin`（默认 `ruins`）→ `assets/maps/<id>.png` + json（`tone`）。`MapView.skin` 设了就钉在画布上（192：json `safe_area` = 美术留给路网的淡色椭圆的外接矩形，`MapSkin.paper_rect` 把它等比放大到盖住画布、中心对齐，
-底图 / 装饰层 / 纸影和路网同一个变换一起缩放平移；画布外平铺桌面 `map/desk`，没图用底色；缩放下限 `zoom_min()` = 整张纸刚好装进安全区，拖动时纸边不越过安全区中心线；开局第三页预览按入局 zoom0 画同一张纸）画在路网底下；浅纸上前景 / 暗色字取字色模板的浅版（`UiPalette.for_tone`，169）。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
+底图 / 装饰层 / 纸影和路网同一个变换一起缩放平移；画布外平铺桌面 `map/desk`；缩放下限 `zoom_min()` = 整张纸刚好装进安全区，拖动时纸边不越过安全区中心线；开局第三页预览按入局 zoom0 画同一张纸）画在路网底下；浅纸上前景 / 暗色字取字色模板的浅版（`UiPalette.for_tone`，169）。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
 
 光标：`UiCursor.apply(skin)` 启动时（和设置里换材质时）按 `GameSettings.cursor_skin` 从 `cursors/<材质>/` 取图换上（铠甲手套秘银 / 铁 / 皮革，默认秘银，热点 (2, 2)）；拖拽层拿起是「拖动」、对准了按 `DragLayer.drop_ok_at` 切「可放 / 不可放」、放下还原。
 

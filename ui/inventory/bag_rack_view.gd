@@ -157,13 +157,6 @@ func _draw_frame() -> void:
 		sbt.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 		sbt.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 		draw_style_box(sbt, r)
-	else:
-		var flat := StyleBoxFlat.new()
-		flat.bg_color = Color("c9c7c2")
-		flat.border_color = Color("8e8b85")
-		flat.set_border_width_all(2)
-		flat.set_corner_radius_all(4)
-		draw_style_box(flat, r)
 
 
 ## 格与格之间的缝（227 `cell_seams`：深线 + 右 / 下错开一点的一条亮线，两端各留 2；外圈不画）

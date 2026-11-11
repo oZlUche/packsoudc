@@ -30,15 +30,15 @@ signal skipped
 signal seeked(t: float)
 
 const SPEEDS := GameSettings.BATTLE_SPEEDS
-## 167：倍速按钮上的罗马数字（缺图时写它，悬浮窗也写它；不写阿拉伯数字）
+## 167：倍速的罗马数字（悬浮窗写它；不写阿拉伯数字）
 const SPEED_NUMERALS := {1: "Ⅰ", 2: "Ⅱ", 4: "Ⅳ"}
 ## 167：原来底下那行常驻说明，挪进播放键的悬浮窗
 const PLAY_HINT := "结果在开打那一瞬就已定，这里只是回放；停在 buff 图标上看效果"
 ## 221 F1：[constant PLAY_HINT] 按当前语言（中文就是它）
 static func play_hint() -> String:
 	return UiText.t("battle.play_hint")
-## 167（作者定 D 版）：回放控件的符石按键图（`<id>.png` / `_hover` / `_pressed`）。测试指到别处走文字退路
-static var art_dir := "res://assets/ui/replay/"
+## 167（作者定 D 版）：回放控件的符石按键图（`<id>.png` / `_hover` / `_pressed`）
+const ART_DIR := "res://assets/ui/replay/"
 ## 166 补充二：战斗教程能指的控件（[method control_rect] 认这些；`next_button` 由战斗屏 [method add_coach_target] 登记）
 const COACH_TARGETS: Array[StringName] = [&"timeline", &"play_button", &"speed_button", &"skip_button", &"buffs_mine", &"buffs_enemy", &"next_button"]
 
@@ -861,21 +861,21 @@ func _build() -> void:
 		root.move_child(spacer, _log_box.get_index())
 
 	# 157：播放键 · 时间轴（可拖）· 倍速与跳过在杆的右端；播完了在下面出战报。
-	# 167：三个键是符石图（[method IconButton.make_art]），缺图写字；原来那行说明挪进播放键的悬浮窗
+	# 167：三个键是符石图（[method IconButton.make_art]）；原来那行说明挪进播放键的悬浮窗
 	var bar := UiTheme.hbox(8)
 	root.add_child(bar)
-	_play_btn = IconButton.make_art(art_dir, "", "", "", toggle_play)     # 图与悬浮窗由 _sync_buttons 按状态给
+	_play_btn = IconButton.make_art(ART_DIR, "", "", "", toggle_play)     # 图与悬浮窗由 _sync_buttons 按状态给
 	bar.add_child(_play_btn)
 	_timeline = ReplayTimeline.new()
 	_timeline.seek_requested.connect(seek)
 	_timeline.scrub_started.connect(_on_scrub_started)
 	_timeline.scrub_ended.connect(_on_scrub_ended)
 	bar.add_child(_timeline)
-	_speed_btn = IconButton.make_art(art_dir, "", "", "", cycle_speed)
+	_speed_btn = IconButton.make_art(ART_DIR, "", "", "", cycle_speed)
 	bar.add_child(_speed_btn)
-	_skip_btn = IconButton.make_art(art_dir, "skip", UiText.t("battle.skip"), UiText.t("battle.skip_tip"), skip_to_end)
+	_skip_btn = IconButton.make_art(ART_DIR, "skip", UiText.t("battle.skip"), UiText.t("battle.skip_tip"), skip_to_end)
 	bar.add_child(_skip_btn)
-	_log_btn = IconButton.make_art(art_dir, _log_art(), UiText.t("battle.log"), UiText.t("battle.log_tip"), toggle_log)     # 272：卷轴定稿（作者 11-04 选 A），开着是摊开的手卷、收起是扎好的一卷
+	_log_btn = IconButton.make_art(ART_DIR, _log_art(), UiText.t("battle.log"), UiText.t("battle.log_tip"), toggle_log)     # 272：卷轴定稿（作者 11-04 选 A），开着是摊开的手卷、收起是扎好的一卷
 	bar.add_child(_log_btn)
 	set_log_open(log_open)
 	_report = UiTheme.rich_block(0, UiTheme.RICH_SMALL_SIZE)

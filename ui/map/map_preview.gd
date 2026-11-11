@@ -64,7 +64,7 @@ const MARK_SLOP := 6.0
 const ZOOM_IN := 1.35
 const ZOOM_SHIFT := 0.4
 const ZOOM_SEC := 0.25
-## 印记的底色、选中那一圈（红）
+## 纸色（深底图上的圈 / 层线）
 const MARK_PAPER := Color("efe6cf")
 
 ## 182：入口 —— {id, rel（离圆心几个环距的向量，和尺寸无关）, route（路线下标）}
@@ -389,7 +389,7 @@ func _redraw_marks() -> void:
 		_marks.queue_redraw()
 
 
-## 印记：有美术图（小旗 `setup/spawn_flag_normal` / `_hover` / `_sel`，选中的红圈画在图里）就贴图；没有是一枚纸底墨圈、中间「生」的图标，选中外面加一圈红
+## 印记：美术图（小旗 `setup/spawn_flag_normal` / `_hover` / `_sel`，选中的红圈画在图里）
 func _draw_marks() -> void:
 	if marks_alpha() <= 0.0 or entries.is_empty():
 		return
@@ -404,23 +404,6 @@ func _draw_marks() -> void:
 		if tex != null:
 			var half := Vector2(MARK_SIZE, MARK_SIZE) * 0.5
 			_marks.draw_texture_rect(tex, Rect2(p - half, half * 2.0), false, Color(1, 1, 1, a))
-			continue
-		var r := MARK_SIZE * 0.5 - 2.0
-		var ink := Color(UiTheme.INK, a)
-		_marks.draw_circle(p, r, Color(MARK_PAPER, 0.92 * a))
-		_marks.draw_arc(p, r, 0.0, TAU, 48, ink, 3.0 if id == hovered else 2.0, true)
-		var icon := MapNodeStyle.icon(&"spawn")
-		if icon != null:
-			var s := r * 1.1
-			_marks.draw_texture_rect(icon, Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)), false, ink)
-		else:
-			var font := get_theme_default_font()
-			var fs := int(r)
-			var glyph := String(MapNodeStyle.of(&"spawn").get("glyph", "生"))
-			var w := font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-			_marks.draw_string(font, p + Vector2(-w * 0.5, fs * 0.36), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, ink)
-		if id == selected:
-			_marks.draw_arc(p, r + 5.0, 0.0, TAU, 48, Color(UiTheme.PARCHMENT_RED, a), 3.0, true)
 #endregion
 
 
@@ -493,7 +476,7 @@ func _paper_covers(shown: Rect2) -> bool:
 	return shown.encloses(Rect2(center() - Vector2(r, r), Vector2(r, r) * 2.0))
 
 
-## 213：纸外的桌面（[constant MapView.ART_DESK] 平铺；没有图用底色）与纸影，和局内 [MapView] 同一种画法
+## 213：纸外的桌面（[constant MapView.ART_DESK] 平铺）与纸影，和局内 [MapView] 同一种画法
 func _draw_desk(shown: Rect2) -> void:
 	var desk := UiTheme.art_cached(MapView.ART_DESK)
 	if desk != null:
@@ -501,8 +484,6 @@ func _draw_desk(shown: Rect2) -> void:
 		for y in range(0, int(ceil(size.y / step.y))):
 			for x in range(0, int(ceil(size.x / step.x))):
 				draw_texture(desk, Vector2(x, y) * step)
-	else:
-		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
 	var k := shown.size.x / maxf(1.0, MapSkin.paper_rect(skin, canvas).size.x)     # 影子按纸的缩放
 	draw_rect(Rect2(shown.position + MapView.PAPER_SHADOW * k, shown.size).grow(2.0 * k), MapView.PAPER_SHADOW_COLOR)
 

@@ -392,22 +392,16 @@ class TipWindow extends PanelContainer:
 		if ribbon != null:
 			var k := float(ribbon.get_height()) / HoverTip.FAV_RIBBON_LEN
 			draw_texture_rect_region(ribbon, dest, Rect2(0, ribbon.get_height() - fav_len * k, ribbon.get_width(), fav_len * k), tint)
-		else:
-			draw_rect(dest, Color("a3301f") * tint)
 		if fav_star_k > 0.0:
 			var side := HoverTip.FAV_STAR * fav_star_k
 			var at := Vector2(cx, HoverTip.FAV_TOP + fav_len - HoverTip.FAV_STAR_UP)
 			var star := UiTheme.art_cached("tip/fav_star")
 			if star != null:
 				draw_texture_rect(star, Rect2(at - Vector2.ONE * side * 0.5, Vector2.ONE * side), false)
-			else:
-				draw_colored_polygon(ItemPainter.star_points(at, side * 0.5), HoverTip.RING_COLOR)
 		var rod_r := Rect2(Vector2(size.x - HoverTip.FAV_ROD_RIGHT, HoverTip.FAV_ROD_Y), HoverTip.FAV_ROD)
 		var rod := UiTheme.art_cached("tip/fav_rod")
 		if rod != null:
 			draw_texture_rect(rod, rod_r, false)
-		else:
-			draw_rect(rod_r, HoverTip.RING_COLOR)
 
 
 var _windows: Array[TipWindow] = []

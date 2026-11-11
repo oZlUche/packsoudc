@@ -938,9 +938,6 @@ func _draw_hint_tag(at: Vector2, font: Font) -> void:
 		_hint_box = UiTheme.art_box(UiTheme.ART_MAP_TAG)
 	if _hint_box != null:
 		draw_style_box(_hint_box, box)
-	else:
-		draw_rect(box, Color(UiTheme.PAPER, 0.95))
-		draw_rect(box, Color(UiTheme.INK, 0.6), false, 1.0)
 	draw_string(font, Vector2(box.position.x + 8.0, box.position.y + HINT_TAG_H * 0.5 + HINT_FONT * 0.36), craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_FONT, HINT_INK)
 
 

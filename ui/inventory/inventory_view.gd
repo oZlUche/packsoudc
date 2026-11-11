@@ -122,10 +122,6 @@ var fusions: Array[Dictionary] = []:
 	set(v):
 		fusions = v
 		queue_redraw()
-## 小锤徽缺图时的占位色
-const FUSE_BADGE_FILL := Color("a8743a")     # 占位：铜
-const FUSE_BADGE_EDGE := Color("3a2614")
-const FUSE_BADGE_MARK := Color("f1e2c4")
 ## 279 小锤徽定稿（UI设计 A 铜徽）：图 bag/fuse_badge[_hover][_2x]（_pressed 留给「松开才合」，现在按下就合、不用）；边长 = 格宽 × 0.66（最小 32），悬停放大 1.12
 const FUSE_ART := "bag/fuse_badge"
 const FUSE_SIDE := 0.66
@@ -559,8 +555,7 @@ func _draw() -> void:
 		for cell in held:
 			var list: Array = held[cell]
 			for i in list.size():
-				var kind := String(list[i][1])
-				_draw_marker(cell, kind, bool(list[i][2]), MARK_COLORS.get(kind, UiPalette.GRANT), MARK_INSET_GRANT if kind == "grant" else MARK_INSET_RECEIVE, i, list.size())
+				_draw_marker(cell, String(list[i][1]), bool(list[i][2]), i, list.size())
 
 		# 被顶的那几件描一圈，让人放手前就知道要付什么代价
 		for uid in _preview_victims:
@@ -664,19 +659,6 @@ func _draw_fusions() -> void:
 		var c := Vector2(f["seam"]) * cell_px
 		if tex != null:
 			draw_texture_rect(tex, Rect2(c - Vector2.ONE * side * 0.5, Vector2.ONE * side), false)
-		else:
-			_draw_fuse_placeholder(c, side * 0.5)
-
-
-## 缺图：铜圆片 + 一把锤子的剪影
-func _draw_fuse_placeholder(c: Vector2, r: float) -> void:
-	draw_circle(c, r, FUSE_BADGE_FILL)
-	draw_arc(c, r, 0.0, TAU, 24, FUSE_BADGE_EDGE, maxf(1.5, r * 0.12), true)
-	var u := r / 10.0
-	var head := PackedVector2Array([c + Vector2(-5, -6) * u, c + Vector2(3, -6) * u, c + Vector2(3, -2) * u, c + Vector2(-5, -2) * u])
-	var handle := PackedVector2Array([c + Vector2(-1.2, -2) * u, c + Vector2(1.2, -2) * u, c + Vector2(1.2, 6) * u, c + Vector2(-1.2, 6) * u])
-	draw_colored_polygon(head, FUSE_BADGE_MARK)
-	draw_colored_polygon(handle, FUSE_BADGE_MARK)
 
 
 ## 274：按着 Ctrl 停在包上 = 沿包的外缘描一圈（按包的品质色）
@@ -803,27 +785,11 @@ func _draw_grid(grid_px: Vector2) -> void:
 
 
 #region 邻接标记
-## 170：有美术图标就画图标（增益 / 受益 / 装载三种，点亮 / 没点亮两态）；没图时的老画法 ——
-## 增益／受益格画成**四个角括号**，不是一圈方框。
-##
-## 方框会和物品自己的稀有度描边撞车 —— 蓝框的稀有物品和蓝色的增益标记挨在一起，
-## 谁也分不出哪个是哪个。角括号一看就是「贴在格子上的标注」而不是某件东西的轮廓。
-##
-## 两类标记缩进不同：**增益贴着格边、受益缩在里面**，同时落在一格上也分得清。
-##
-## 点亮（这一格确实站着一个符合条件的邻居）就填色加粗，没点亮只留细线。
+## 170：格位画美术图标（增益 / 受益 / 装载三种，点亮 / 没点亮两态）。
 ## 这一层是玩家判断「摆位对不对」的唯一依据 —— 只画位置不画点亮状态，
 ## 等于让人对着说明书心算，而摆位正是这类游戏的全部乐趣所在。
-const MARK_INSET_GRANT := 3.0
-const MARK_INSET_RECEIVE := 9.0
-## 193：格位种类 → 没图时画角括号用的颜色
-const MARK_COLORS := {"grant": UiPalette.GRANT, "receive": UiPalette.RECEIVE, "load": UiPalette.MANA}
-## 角括号单边长度，占格边的比例
-const MARK_CORNER := 0.3
-
-
 func _draw_adjacency() -> void:
-	var marks := {}     # 170：格 → [[种类, 点亮, 颜色, 缩进]]；同一格好几种时图标错开摆
+	var marks := {}     # 170：格 → [[种类, 点亮]]；同一格好几种时图标错开摆
 	var loads := {}     # 171：晶石 uid → 拿到它的法杖（被别的法杖抢走的那把，装载格按空画）
 	for inst in inventory.items():
 		var item := inst as ItemInstance
@@ -833,24 +799,24 @@ func _draw_adjacency() -> void:
 		if profile == null or inventory.acts_as_bag(item.def):
 			continue
 		if profile.has_grant():
-			_collect_markers(marks, item, profile.grant_cells, profile.grant_filter, profile.grant_filter_all, "grant", UiPalette.GRANT, MARK_INSET_GRANT)
+			_collect_markers(marks, item, profile.grant_cells, profile.grant_filter, profile.grant_filter_all, "grant")
 		if profile.has_receive():
-			_collect_markers(marks, item, profile.receive_cells, profile.receive_filter, [] as Array[StringName], "receive", UiPalette.RECEIVE, MARK_INSET_RECEIVE)
+			_collect_markers(marks, item, profile.receive_cells, profile.receive_filter, [] as Array[StringName], "receive")
 		if profile.has_load():     # 171：法杖的装载格
 			if loads.is_empty():
 				loads = BattleCompiler.load_assignments(inventory)
 				loads[-1] = -1     # 算过了（空表也只算一次）
-			_collect_markers(marks, item, profile.load_cells, profile.load_tags(), [] as Array[StringName], "load", UiPalette.MANA, MARK_INSET_RECEIVE, loads)
+			_collect_markers(marks, item, profile.load_cells, profile.load_tags(), [] as Array[StringName], "load", loads)
 	for cell in marks:
 		var list: Array = marks[cell]
 		for i in list.size():
 			var m: Array = list[i]
-			_draw_marker(cell, String(m[0]), bool(m[1]), m[2], float(m[3]), i, list.size())
+			_draw_marker(cell, String(m[0]), bool(m[1]), i, list.size())
 
 
 func _collect_markers(
 	marks: Dictionary, item: ItemInstance, offsets: Array[Vector2i], filter: Array[StringName], filter_all: Array[StringName],
-	kind: String, color: Color, inset: float, loads: Dictionary = {}
+	kind: String, loads: Dictionary = {}
 ) -> void:
 	for cell in item.absolute_cells(offsets):
 		if not inventory.in_bounds(cell):
@@ -860,7 +826,7 @@ func _collect_markers(
 		var lit := _marker_lit(item, cell, filter, filter_all)
 		if kind == "load":
 			lit = lit and int(loads.get(inventory.cell_uid(cell), -2)) == item.uid
-		marks[cell].append([kind, lit, color, inset])
+		marks[cell].append([kind, lit])
 
 
 ## 193 补充二（作者 2026-10-18 21:39 定 40）：格位图标的边长 —— 40，格子小了按格宽的 0.67 缩（格 60 时正好 40）
@@ -872,48 +838,18 @@ const MARKER_SIDE := 40.0
 
 
 ## 170（作者定）：格位画美术给的图标（`assets/ui/tip/<种类>_on|off.png`，点亮 / 没点亮两张），替换原来的半透明方框；
-## 一格上只有一种就居中，好几种沿对角线错开。图不在就画回原来的角括号（点亮的填色加粗）
-func _draw_marker(cell: Vector2i, kind: String, lit: bool, color: Color, inset: float, index: int, count: int) -> void:
+## 一格上只有一种就居中，好几种沿对角线错开
+func _draw_marker(cell: Vector2i, kind: String, lit: bool, index: int, count: int) -> void:
 	var tex := UiTheme.slot_icon(kind, lit)
-	if tex != null:
-		var side := marker_side(cell_px)
-		var origin := cell_origin_px(cell)
-		var at := origin + Vector2.ONE * (cell_px - side) * 0.5
-		if count > 1:
-			var t := float(index) / float(count - 1)
-			at = origin + Vector2.ONE * lerpf(2.0, cell_px - side - 2.0, t)
-		draw_texture_rect(tex, Rect2(at, Vector2(side, side)), false)
+	if tex == null:
 		return
-	var rect := Rect2(
-		cell_origin_px(cell) + Vector2(inset, inset),
-		Vector2(cell_px - inset * 2.0, cell_px - inset * 2.0)
-	)
-	if lit:
-		var fill := color
-		fill.a = 0.20
-		draw_rect(rect, fill, true)
-	var line := color
-	if not lit:
-		line.a = 0.5
-	_draw_corners(rect, line, 2.0 if lit else 1.0)
-
-
-## 四个角括号。比整圈描边省墨，也不会被误读成物品轮廓。
-func _draw_corners(rect: Rect2, color: Color, width: float) -> void:
-	var arm := rect.size.x * MARK_CORNER
-	var l := rect.position.x
-	var r := rect.position.x + rect.size.x
-	var top := rect.position.y
-	var bottom := rect.position.y + rect.size.y
-	for corner in [
-		[Vector2(l, top), Vector2(arm, 0), Vector2(0, arm)],
-		[Vector2(r, top), Vector2(-arm, 0), Vector2(0, arm)],
-		[Vector2(l, bottom), Vector2(arm, 0), Vector2(0, -arm)],
-		[Vector2(r, bottom), Vector2(-arm, 0), Vector2(0, -arm)],
-	]:
-		var at: Vector2 = corner[0]
-		draw_line(at, at + corner[1], color, width)
-		draw_line(at, at + corner[2], color, width)
+	var side := marker_side(cell_px)
+	var origin := cell_origin_px(cell)
+	var at := origin + Vector2.ONE * (cell_px - side) * 0.5
+	if count > 1:
+		var t := float(index) / float(count - 1)
+		at = origin + Vector2.ONE * lerpf(2.0, cell_px - side - 2.0, t)
+	draw_texture_rect(tex, Rect2(at, Vector2(side, side)), false)
 
 
 ## 这一格是否被一个符合过滤条件的邻居占住。判据与 [Compiler] 的点亮规则一致：

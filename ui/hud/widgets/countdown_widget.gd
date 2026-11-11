@@ -4,7 +4,7 @@
 ## 栏上只画一枚刻在槽底的半圆日规（[constant SIZE]，轴心 / 半径 / 各阶染色读 `hud/dial/dial.json`），不写字：
 ## 走过的扇面淡淡染色 → 表盘刻线（`face`）→ 深色刻凿的影子绕轴心转到当前时刻（`shadow_<阶段>`）→ 轴心（`hub`）。
 ## 停上去弹悬浮窗：「倒计时」/「倒计时还剩 N（共 M）」/「最近的撤离点倒计时剩 N 时关闭」，开着时走一步字跟着变（193 补充一：钟的数不说「步」）。
-## 小档按 0.5 缩。缺任何一张图 → 退回原来的一行字「倒计时 N / M」+ 随剩余变色的边框
+## 小档按 0.5 缩
 ##
 ## 235：栏是石刻皮时，日晷是栏皮正中那块下半圆底座（刻度在图里，[code]hud_bar[/code] 画）；这件在栏里就只画走过的扇面、指针、轴心，
 ## 落在底座的轴心上（`topbar.json` 的 `dial`：180° 在左、90° 正下、0° 在右，y 朝下），停在晷面上开悬浮窗。拖出栏照旧是上面那枚小日规
@@ -24,7 +24,6 @@ const LOW_STEPS := 5
 ## 阶段 → 悬浮窗里数字用的字色样式
 const STAGE_STYLE := {CALM: "val", HALF: "stamina", LOW: "hp"}
 
-var _box: StyleBoxFlat
 var _meta: Dictionary = {}
 ## 悬浮窗是不是这一件开的（开着时走一步只换字）
 var _tip_open: bool = false
@@ -33,15 +32,7 @@ var _tip_open: bool = false
 func _init() -> void:
 	super()
 	_meta = UiTheme.art_meta(DIAL_DIR + "dial")
-	if has_dial():
-		_text.visible = false
-	else:
-		_box = StyleBoxFlat.new()
-		_box.bg_color = UiPalette.PANEL
-		_box.border_color = UiPalette.STAMINA
-		_box.set_border_width_all(2)
-		_box.set_content_margin_all(6)
-		add_theme_stylebox_override("panel", _box)     # 121 特例：边框色随倒计时实时改（见 _paint），得是这一块自己的底（从地图屏搬来，数量不增）；190：只在缺日规图时
+	_text.visible = false
 
 
 func title() -> String:
@@ -66,18 +57,7 @@ func _cd() -> CountdownModule:
 
 
 func text_of() -> String:
-	var cd := _cd()
-	if cd == null:
-		return ""
-	if has_dial():
-		return UiText.t("hud.countdown")     # 只为显隐：栏上不写字
-	var left := cd.left()
-	var text_ := UiText.t("hud.countdown_line") % [left, cd.limit()]
-	var closing := cd.closing_extract_id()
-	if closing >= 0:
-		var node := run.map.get_node(closing)
-		text_ += UiText.t("hud.timed_extract") % [UiText.t("hud.timed_extract_closed") if cd.extract_closed(node) else (UiText.t("hud.timed_extract_closes") % PaidExtracts.closes_at(node))]     # 186：不写点号
-	return text_
+	return UiText.t("hud.countdown") if _cd() != null else ""     # 只为显隐：栏上不写字
 
 
 ## 现在在哪一阶（没有倒计时按 calm）
@@ -88,11 +68,6 @@ func stage() -> StringName:
 	var left := cd.left()
 	var ratio := float(left) / float(maxi(cd.limit(), 1))
 	return LOW if (ratio <= 0.25 or left <= LOW_STEPS) else (HALF if ratio <= 0.5 else CALM)
-
-
-## 现在该用的颜色（测试读它；缺图时的字与边框）
-func color() -> Color:
-	return {CALM: UiPalette.FG, HALF: UiPalette.STAMINA, LOW: UiPalette.HP}[stage()]
 
 
 ## 影子此刻的角度（度）：180 = 左端（刚开始），0 = 右端（走完），影子从左往右扫
@@ -113,14 +88,6 @@ func _pivot() -> Vector2:
 	return Vector2(float(p[0]), float(p[1]))
 
 
-func _paint() -> void:
-	if _box == null:
-		return
-	var col := color()
-	_text.add_theme_color_override("font_color", col)     # 121 特例：颜色随剩余回合实时变，不是固定样式（从地图屏搬来，数量不增）
-	_box.border_color = col
-
-
 func set_tier(t: Tier) -> void:
 	super(t)
 	_sync_size()
@@ -137,8 +104,6 @@ func _notification(what: int) -> void:
 
 ## 日规的大小：画布 × 档位，外加底的内边距（拖出栏时自带凹槽）。235：在石刻栏里没有底、只占晷面那么宽（画在栏皮的晷面上）
 func _sync_size() -> void:
-	if not has_dial():
-		return
 	var want := UiTheme.PANEL_BARE if _skin_bar() != null else UiTheme.PANEL_HUD
 	if theme_type_variation != want:
 		theme_type_variation = want
@@ -150,9 +115,9 @@ func _sync_size() -> void:
 	custom_minimum_size = SIZE * _scale() + (box.get_minimum_size() if box != null else Vector2.ZERO)
 
 
-## 235：在石刻栏里时那条栏（不在栏里 / 栏藏着 / 没有石刻皮 = null）
+## 235：在石刻栏里时那条栏（不在栏里 / 栏藏着 = null）
 func _skin_bar() -> HudWidget:
-	if not in_bar or not (host is HudHost) or not HudBarScript.has_skin():
+	if not in_bar or not (host is HudHost):
 		return null
 	var bar := (host as HudHost).widget(&"hud_bar")
 	return bar if bar != null and bar.visible else null

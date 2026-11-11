@@ -33,7 +33,7 @@ static func _host(root: Window, run: RunState, screen: Control = null) -> HudHos
 
 
 static func run_dial(t: TestCase) -> void:
-	t.begin("190 · 日规：阶段按剩余（过半 calm、不过半 half、不到四分之一或只剩五步 low）；角度 = 180 − 180 × 用掉的比例；栏上不写数字；小档缩一半；缺图退回文字")
+	t.begin("190 · 日规：阶段按剩余（过半 calm、不过半 half、不到四分之一或只剩五步 low）；角度 = 180 − 180 × 用掉的比例；栏上不写数字；小档缩一半")
 	var run := _run()
 	if run == null:
 		t.check(false, "开不了局")
@@ -62,16 +62,6 @@ static func run_dial(t: TestCase) -> void:
 	w.set_tier(HudWidget.Tier.SMALL)
 	t.eq(w.custom_minimum_size, Vector2(52, 26) + w.get_theme_stylebox("panel").get_minimum_size(), "小档缩一半")
 	w.free()
-	# 缺图：退回文字
-	var root_dir := UiTheme.asset_root
-	UiTheme.asset_root = "res://no/such/dir/"
-	UiTheme._art_cache.clear()
-	var plain = HudWidgets.create(&"countdown")
-	plain.setup(run, null)
-	t.check(not plain.has_dial() and plain.text().begins_with("倒计时 %d / %d" % [cdm.left(), lim]), "缺日规图：退回「倒计时 N / M」（%s）" % plain.text())
-	plain.free()
-	UiTheme.asset_root = root_dir
-	UiTheme._art_cache.clear()
 
 
 static func frame_dial_tip(t: TestCase, root: Window) -> void:

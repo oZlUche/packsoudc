@@ -1,6 +1,6 @@
 ## 166（作者定）：左下角的节点图例 —— 一列「图标 + 名字」，只列**这张图上有的**节点类型（岔路口不列），顺序按 [constant MapNodeStyle.STYLES]。
 ## 图标就是地图上的那一枚（155：`assets/nodes/<type>.png`，按类型色着色；缺图画圆里一个字），名字是 [constant MapNodeStyle.NAMES] 的短名。
-## 184：最上面一行「你」是玩家的小兵棋子，「出生」那一行是 182 的小旗（有图就用图，原色不着色）
+## 184：最上面一行「你」是玩家的小兵棋子，「出生」那一行是 182 的小旗（原色不着色）
 ## 267：材料节点（矿脉 / 林地 / 遗骸 / 符文堆）各算一行（图上有才列，排在「搜索」后面）；
 ## 最下面一段「产物」：由外到内每种环一行，写产物表里倍率 ≥ 1.5 的标签名
 extends HudWidget
@@ -110,10 +110,10 @@ func refresh() -> void:
 	UiTheme.clear_children(_rows)
 	if run == null:
 		return
-	if run.map != null and UiTheme.art_cached(UiTheme.ART_LEGEND_PAWN) != null:
+	if run.map != null:
 		_add_row(&"", UiText.t("hud.you"), UiTheme.ART_LEGEND_PAWN)
 	for t in types():
-		_add_row(t, MapNodeStyle.name_of(t), UiTheme.ART_LEGEND_FLAG if t == &"spawn" and UiTheme.art_cached(UiTheme.ART_LEGEND_FLAG) != null else "")
+		_add_row(t, MapNodeStyle.name_of(t), UiTheme.ART_LEGEND_FLAG if t == &"spawn" else "")
 	var produce := produce_lines()
 	if not produce.is_empty():
 		_add_row(&"", UiText.t("hud.produce"), "", false)
@@ -148,7 +148,7 @@ func row_names() -> Array[String]:
 	return out
 
 
-## 双尾旗底 + 白字的一份小主题（只给图例）；旗的图缺了退回深色半透明方块
+## 双尾旗底 + 白字的一份小主题（只给图例）
 static func _legend_theme() -> Theme:
 	if _dark_theme != null:
 		return _dark_theme
@@ -164,17 +164,10 @@ static func _legend_theme() -> Theme:
 
 ## 旗的九宫格（边距读 `legend_pennant.json`）
 static func pennant_box() -> StyleBox:
-	var tex := UiTheme.art_cached(PENNANT)
-	if tex == null:
-		var flat := StyleBoxFlat.new()
-		flat.bg_color = Color(0.08, 0.07, 0.06, 0.78)
-		flat.set_corner_radius_all(4)
-		flat.set_content_margin_all(10)
-		return flat
 	var meta := UiTheme.art_meta(PENNANT)
 	var tm: Array = meta.get("texture_margin", [44, 52, 44, 58])
 	var cm: Array = meta.get("content_margin", [34, 54, 34, 50])
-	return UiTheme.nine_box(tex, tm, cm)
+	return UiTheme.nine_box(UiTheme.art_cached(PENNANT), tm, cm)
 
 
 ## 一枚图标：图（按类型色着色）或者圆里一个字
@@ -193,7 +186,7 @@ class _Mark:
 			var pic := UiTheme.art_cached(art_name)
 			if pic != null:
 				draw_texture_rect(pic, Rect2(Vector2.ZERO, size), false)
-				return
+			return
 		var style := MapNodeStyle.of(type)
 		var col: Color = style["color"]
 		var tex := MapNodeStyle.icon(type)

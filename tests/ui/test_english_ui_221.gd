@@ -416,7 +416,6 @@ static func run_game_title(t: TestCase) -> void:
 	f.store_string(JSON.stringify({"language": "en"}))
 	f.close()
 	t.eq(boot.read_lang(path), "en", "settings say en")
-	t.eq(String(boot.WORDS["en"]["title"]), en, "boot screen uses the same name")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	t.eq(boot.read_lang(path), "zh", "no settings file: zh")
 
