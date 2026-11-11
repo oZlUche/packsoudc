@@ -113,6 +113,7 @@ func _build_page() -> void:
 		view.item_double_clicked.connect(func(_v: ContainerView, _uid: int): if on_buy.is_valid(): on_buy.call(id))
 		view.actions_for = func(_uid: int) -> Array: return actions_for.call(id) if actions_for.is_valid() else []
 		stage.add_child(view)
+		view.idle_tint = false     # 299：货格透明，不铺稀有度淡底
 		BoardFrame.mark(view, stage, CLEAR_SEAMS)     # 格子透明：底图的格子柜就是底（227 守门认它）
 		var price_n: int = _price_of.call(def) if _price_of.is_valid() else 0
 		var price := PriceTag.coins(price_n)

@@ -27,6 +27,20 @@ static func run_footprint_cells(t: TestCase) -> void:
 	t.eq(InventoryView.footprint_color(ell, 3), ItemPainter.rarity_color(ell, 3), "别的档照稀有度色")
 
 
+static func run_idle_tint_299(t: TestCase) -> void:
+	t.begin("299 · 平时每格垫 12% 稀有度淡底（白档偏灰）；包不铺；视图默认开")
+	var ell := Drag._def("ell", ["10", "11"])
+	t.eq(InventoryView.FOOTPRINT_IDLE_FILL, 0.12, "淡底 12%")
+	t.eq(InventoryView.idle_tone(ell, 3), Color(ItemPainter.rarity_color(ell, 3), 0.12), "蓝档：蓝色淡底")
+	t.eq(InventoryView.idle_tone(ell, 0), Color(InventoryView.FOOTPRINT_WHITE, 0.12), "白档：偏灰的白")
+	var bag := Drag._def("pouch", ["11", "11"])
+	bag.is_bag = true
+	t.eq(InventoryView.idle_tone(bag, 0).a, 0.0, "包不铺")
+	var view := InventoryView.make(GridInventory.new(Vector2i(2, 2), 0, false), null)
+	t.check(view.idle_tint, "棋盘默认铺")
+	view.free()
+
+
 static func frame_footprints_follow_drag(t: TestCase, root: Window) -> void:
 	t.begin("239 · 拿起时所有棋盘描出占格（含没登记到拖拽层的视图），放下 / 取消收起")
 	ItemInstance.reset_uid_counter()

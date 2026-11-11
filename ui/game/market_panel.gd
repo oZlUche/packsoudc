@@ -206,6 +206,7 @@ func _add_spot(i: int) -> void:
 	if sold:
 		view.modulate = SOLD_TINT
 	_stage.add_child(view)
+	view.idle_tint = false     # 299：货格透明，不铺稀有度淡底
 	BoardFrame.mark(view, _stage, CLEAR_SEAMS)     # 作者 10-31：格子透明 —— 屏自己的桌面就是底（227 守门认它）
 	var frame: Control = view
 	var price := PriceTag.coins(Market.price_of(flow.market(), def))
