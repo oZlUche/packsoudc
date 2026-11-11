@@ -44,6 +44,7 @@ const COLOR_VICTIM := Color(0.98, 0.62, 0.25)
 const FOOTPRINT_INSET := 0.0
 const FOOTPRINT_FILL := 0.26
 const FOOTPRINT_BAG_FILL := 0.12
+const FOOTPRINT_IDLE_FILL := 0.12     # 299：平时每格垫的稀有度淡底（画在图下面）
 ## 白档（普通）的占格层用带点灰的白 —— 纯白铺在浅色棋盘上看不出来（作者 10-27）
 const FOOTPRINT_WHITE := Color("b3afa6")
 ## 所有棋盘视图都在这一组里（点中一件时整组重画）
@@ -207,6 +208,8 @@ func _on_inventory_changed() -> void:
 #region 占格（239）
 ## 239：拖拽中（拖拽层按组开关，没登记到拖拽层的棋盘也算）每件道具的占格逐格描出来
 var footprints := false
+## 299：平时铺稀有度淡底；集市货格（格子透明）关掉
+var idle_tint := true
 
 
 func set_footprints(on: bool) -> void:
@@ -240,6 +243,26 @@ static func draw_footprint(ci: CanvasItem, def: ItemDef, cells: Array[Vector2i],
 	var tone := Color(COLOR_BAG_EDGE, FOOTPRINT_BAG_FILL) if hollow else Color(footprint_color(def, rarity), FOOTPRINT_FILL)
 	for r in footprint_cells(cells, anchor, px):
 		ci.draw_rect(r, tone, true)
+
+
+## 299：一件道具平时的淡底颜色；包不铺（透明）
+static func idle_tone(def: ItemDef, rarity: int = -1) -> Color:
+	if def == null or def.is_bag:
+		return Color(0, 0, 0, 0)
+	return Color(footprint_color(def, rarity), FOOTPRINT_IDLE_FILL)
+
+
+## 299：平时的淡底：每件道具（不含包）逐格铺 [constant FOOTPRINT_IDLE_FILL] 的稀有度色
+func _draw_idle_tints() -> void:
+	for inst in inventory.items():
+		var item := inst as ItemInstance
+		if inventory.acts_as_bag(item.def) or veiled.has(item.uid):
+			continue
+		var tone := idle_tone(item.def, item.rarity())
+		if tone.a <= 0.0:
+			continue
+		for r in footprint_cells(item.cells(), cell_origin_px(item.origin), cell_px):
+			draw_rect(r, tone, true)
 
 
 func _draw_footprints() -> void:
@@ -470,6 +493,8 @@ func _draw() -> void:
 			self, bag_cells, bag_anchor, cell_px, Names.of(b.def), font, 11, Color("79839a")
 		)
 
+	if idle_tint and not footprints:
+		_draw_idle_tints()     # 299：平时每格垫一层淡的稀有度色，压在图下面；拿起时换 239 那层
 	_draw_fusion_fills()
 	# 物品。休眠的信仰道具（8-4：不是激活的那个信仰）画灰、标「休眠」
 	var active_faith := FaithState.active_tag(inventory) if show_adjacency else &""
