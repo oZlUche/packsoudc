@@ -7,6 +7,8 @@
 # 开发期插件：ziva_agent 为 1.5GB 二进制（bin / zivacode），不纳入版本控制。
 # 需要时由各自开发机自行安装，项目代码不依赖它。
 /addons/ziva_agent/
+# godot_ai（让 AI 工具操作编辑器的插件，4.8 万行）同理：v5.60 起不进仓库（报告 296 §五.1，作者定）。
+/addons/godot_ai/
 
 # 导出产物
 /build/

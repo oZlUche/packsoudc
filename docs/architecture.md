@@ -4323,7 +4323,7 @@ res://
 3. **地图形态硬编码风险** —— 任何时候在 `MapGraph` / `MapNavigator` / `MapView` 主体里看到 `ring` / `angle` 字样，就是在给第二章挖坑，立即重构进 `layout` 字典或布局策略。
 4. **侵蚀节奏的数值调校是第一章最难平衡的部分。** `first_at_action` / `interval_actions` 与地图规模强耦合，改环数或节点密度就必须重调。建议写一个“给定策略下的行动点消耗”模拟脚本（用贪心 AI 走图），批量跑出行动点分布再反推侵蚀时间表，不要靠手感拍数字。
 5. **扩展机制的预留缝容易被无意堵死。** 凡是在 `ActionClock` / `ErosionField` / 存档 / HUD 里直接写死 `+1`、或绕开 `MoveIntent` 直接读 `edge` 的地方，都是在给传送与定点移动挖坑。见第 14 节。
-6. `godot_ai` 插件注册了 autoload `_mcp_game_helper`，**正式导出前必须摘除**，避免打进发布包。
+6. `godot_ai` 插件（v5.60 起不进仓库，各开发机自己装，和 `ziva_agent` 一样）启用时会注册 autoload `_mcp_game_helper`，**正式导出前必须摘除**，避免打进发布包。
 7. 使用 Godot 4.7（较新版本），自定义 Resource 的 `@export var x: Array[Vector2i]` 在编辑器内联编辑时偶有异常。`.tres` 出现数据丢失时优先排查泛型数组导出问题。
 
 ---
