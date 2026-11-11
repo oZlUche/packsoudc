@@ -1,6 +1,6 @@
 ## 把一场的内部日志与回放存档写进 [constant BattleArchive.DIR]（117）：`.jsonl` + `.txt` + `.replay.json`，写完滚动删旧。
 ##
-## [param info] 由开打的那一方填（[NodeEvents]、战斗沙盒）：
+## [param info] 由开打的那一方填（[NodeEvents]）：
 ## [codeblock]
 ## run_seed, chapter, node, enemy（对手 id）, enemy_content（敌人内容原样）, rng_seed, time_limit（秒）,
 ## names: [{uid: 名字}, {uid: 名字}],  boards: [GridInventory.to_dict 或 {}, ...]

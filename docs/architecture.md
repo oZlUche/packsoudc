@@ -1605,7 +1605,7 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
 
 #### 沙盒
 
-`ui/battle/battle_sandbox.tscn` 是 M2 的验收场景：左边摆背包、右边看回放。
+`ui/battle/battle_sandbox.tscn` 曾是 M2 的验收场景（v5.61 与 M1 的 `inventory_sandbox` 一起退役）：左边摆背包、右边看回放。
 拖动一件装备就重新编译，**预估 DPS 与套装进度实时跟着变** ——
 这个实时预览之所以成立，是因为编译是纯函数（4.2）。
 
@@ -1635,7 +1635,7 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
 - `BattleTrace`（`core/battle/battle_trace.gd`）挂在 `BattleContext.trace`，**默认 null**：每个记录点一行 `if trace != null`，关着零开销。记录不碰战斗状态、不取额外随机数 —— 开不开同一场逐条一样，掩码不变式照旧（测试守着）。每条 `{seq, t（定点秒）, side, kind, data}`：
   `event`（`emit` 的每一条，不看 VIEW_EVENTS、不看有没有人听；同步派发的 `before_damage` 也记）、`rule_fire` / `rule_skip`（`RuleEngine`：道具 uid、buff、时机类、下次就绪；跳过写原因 —— 频率没放行，或哪条消耗 / 条件不过，资源消耗写要多少有多少，`Cost.trace_info`）、`damage_pipeline`（`DamageResolver`：原始值 → 火焰加成 → 护甲 → 受伤前增减 / 反转 / 取消 → 格挡 → 受到伤害轴 → 最终与扣血前后）、`rng`（战斗里的掷骰都走 `BattleContext.roll(用途, lo, hi, need)`：取数和直接 `randi_range` 一模一样，记用途与值）、`buff`（叠层 / 移除 / 到期，带层数与到期时刻）、`schedule`（一刻结算了几条自发规则）、`snapshot`（开战、每 5 秒、结束）。
   方案写的 `TracedRng`（包一层随机数生成器）改成了 `roll`：GDScript 覆盖不了原生类的非虚方法，包一层拦不住原生调用。
-- `BattleSim.run(…, trace)` 多一个可选参数；`NodeEvents._fight`（猎手也走它）在 `trace_info` 非空时建 trace，跑完由 `BattleTraceWriter` 写进 `user://battle_logs/`：`<时间>_<种子>_n<点>_<章节>_<对手>` 三份 —— `.jsonl`（首行文件头，程序读）、`.txt`（人读）、`.replay.json`（`BattleResult.to_dict` + 名字表 + 双方棋盘，`JSON.from_native` 保住 int 键与定点整数）。文件头写现实时间、种子、章节、点、敌人内容、道具名表、开战快照、时限。只留最近 200 场（`BattleArchive.prune`，242 起；原 50）。战斗沙盒同样写（章节记 `sandbox`），基准与校准不写。
+- `BattleSim.run(…, trace)` 多一个可选参数；`NodeEvents._fight`（猎手也走它）在 `trace_info` 非空时建 trace，跑完由 `BattleTraceWriter` 写进 `user://battle_logs/`：`<时间>_<种子>_n<点>_<章节>_<对手>` 三份 —— `.jsonl`（首行文件头，程序读）、`.txt`（人读）、`.replay.json`（`BattleResult.to_dict` + 名字表 + 双方棋盘，`JSON.from_native` 保住 int 键与定点整数）。文件头写现实时间、种子、章节、点、敌人内容、道具名表、开战快照、时限。只留最近 200 场（`BattleArchive.prune`，242 起；原 50）。基准与校准不写（战斗沙盒原来也写、章节记 `sandbox`，v5.61 随沙盒退役）。
 - 回放存档**不存双方编译结果**（作者定）；buff 只存 id，读回来按道具能施加的 buff + 系统衰竭查定义。
 - 开关：`GameSettings.battle_trace`，默认开（`BattleArchive.default_on`；242 补充二起玩家包也记，开关仍只在开发区），生效看 `GameSettings.trace_on()`（玩家包恒开、旧设置里的「关」不算数）；`GameFlow.apply_battle_trace` 按它给这一局填 `NodeEvents.trace_info`。设置屏「开发」区（只在非导出包里画）一行开关 + 「打开日志文件夹」。测试入口开跑前 `BattleArchive.enabled = false`，几百场测试战斗不写文件。
 - 看：开发工具（启动选择器）的「战斗回放」（`ui/battle/replay_browser.tscn`）列存档、点一场交给 `BattleView` 重演；游戏里**没有入口**（作者定）。命令行 `tools/replay_log.gd -- <file.jsonl | --latest> [--summary]` 把日志排成人读格式打到标准输出（给无窗口环境的线程读），`--summary` 只打双方伤害、出手 / 跳过次数、暴击率、buff 层数。
@@ -2770,7 +2770,7 @@ func warnings(graph) -> Array[String]
 和玩家走**同一个** `BattleCompiler`。于是：
 
 - 预览的属性（生命、预估 DPS、参战件数）与真打出来的一致 —— 编译是纯函数（4.2），
-  战斗沙盒里玩家自己那一栏读数就是这么来的，给敌人用不用多写一行
+  战斗沙盒（v5.61 退役）里玩家自己那一栏读数就是这么来的，给敌人用不用多写一行
 - 预览的背包就是敌人真正的背包，玩家看得见每件道具、每个邻接标记，
   能像读自己的 build 一样读敌人的 build
 - 敌人的道具就是掉落的来源：打赢了搜的就是这个背包（6.1 的尸体容器）。
@@ -2780,7 +2780,7 @@ M4-1 落地的形态（6.0）：`EnemyDef` **不带固定棋盘** —— 棋盘�
 件数由强度档位定，结果写进 `MapNode.content`（敌人 id、档位、棋盘尺寸、每件道具的位置与朝向）。
 `EnemyKit.spec_of(content)` 把它重建成棋盘再编译，沙盒悬停看到的生命 / DPS / 件数就是这么来的；
 `EnemyKit.board_of(content)` 重建出来的棋盘直接是 6.1 的尸体容器。
-`battle_sandbox.gd` 里的训练假人仍是手搓的 `CombatantSpec`，是 M2 的权宜。
+`battle_sandbox.gd` 里手搓 `CombatantSpec` 的训练假人是 M2 的权宜，v5.61 随沙盒一起退役。
 
 **能看多远**：底层规则是全图可见。战争迷雾、侦察范围之类属于扩展机制，不实现，
 接缝留在 `MapView` 的「这个节点的内容给不给看」一处判断上（沙盒里是 `enemy_preview(id)` 这一个方法）。
@@ -3487,7 +3487,7 @@ func player_spec() -> CombatantSpec …
 - **负重** = 作战棋盘上每件的重量之和（161：包不算重，`ItemWeight` 对包返回 0）（`RunState.carry_weight`）；地上、保险箱、仓库不算。**上限** = `CharacterDef.weight_capacity`（安德烈乌斯 40 / 马库斯 48 / 布鲁图斯 56，137；0 = 不算负重）+ `RunContext.carry_capacity_bonus`（科技「扛重」，`carry_capacity_bonus` 构件）。全派生，不进存档。
 - **分级**：`EncumbranceRules`（内容种类 `encumbrance_rules`，章节 `encumbrance_rules` 引用，自由模式用 `standard`，序章不开）。负重**严格大于**上限 × `over` 才到那一级：×1.2 吃力（急速 −10%、耐力回复 −10%），×1.6 超重（急速 −25%、耐力回复 −25%、耐力上限 −20%），×2.2 寸步难行（161 补充一按测算定）（超重的减益照旧 + 走一步行动点 ×2）。**不碰伤害**（导入时拦）。`regen_* / max_*` 的 `flat` 写的是基线比例，`combat_mods(level, baseline)` 折成真值进 `CompileInput.baseline_mods`；急速进 `input.mods`（每件参战道具）。
 - **接线**：`RunState.compile_player` 并入减益；`BattlePassives` 列一条「负重：<级名>」；`RunState.refresh_encumbrance` 在棋盘变了、换了角色、开局 / 读档后重算，写 `MapTravel.action_cost_mult`，级数真变了发 `encumbrance_changed`。`MapTravel.cost_of(intent)` 是唯一的「这一步花几点」（`apply` 扣它、地图屏预览与日志读它），`wait()` 不乘。
-- **界面**：背包读数一行「负重 w / c　级名」（超重警示色）、道具悬浮窗「重 n」、地图顶栏负重小标、开局屏读数也算；术语「负重 / 吃力 / 超重 / 寸步难行」，百科「背包」类一页 `encumbrance`。
+- **界面**：背包读数一行「负重 w / c　级名」（超重警示色）、道具悬浮窗「重 n」、开局屏读数也算（地图顶栏负重小标 v5.62 删了，看背包窗的负重签）；术语「负重 / 吃力 / 超重 / 寸步难行」，百科「背包」类一页 `encumbrance`。
 
 
 ### 8.1 开局：角色、初始包、从仓库带入
@@ -3618,6 +3618,7 @@ func player_spec() -> CombatantSpec …
 自己给一行字（`text_of`，空串 = 现在不显示）、自己订阅数据源的信号（`watch`），有大小两档（14 / 34 号）。登记表 `HudWidgets.KINDS`：
 `countdown`（颜色与边框随剩余变，121 的两处特例从地图屏搬进这里）、`action_points`、`distances`（撤离 / 休息 / 核心三个距离一件）、`vitality`、`wallet`、
 `ground_count`、`encumbrance`（轻装不显示）、`faith`（停上去开悬浮窗）、`buffs`、`erosion`。新加一种 = 一个子类 + 登记一行。
+（v5.62：默认藏着的 `distances` 与 `encumbrance` 两件删了，脚本、登记行与文字键一起；旧布局文件里读到这两个 id 静默丢掉，`HudLayout.RETIRED`。）
 
 **摆法**是一份布局（`HudLayout`）：每件 `{id, anchor, offset, line, tier, visible}`，九宫锚点 + 偏移；锚点与偏移相同的几件是一组，组里按 `line` 分行（同行横排），
 整组按锚点对齐，没内容的行收起来。`HudHost` 是铺在地图那一块上、不接鼠标的一层：造组件、摆放、窗口变了重排，每件登记进地上层（128）。
@@ -3653,7 +3654,7 @@ func player_spec() -> CombatantSpec …
 **166（作者定）：顶端栏、图标按钮、图例**：
 - 读数层顶上横一条顶端栏：组件 `hud_bar`（`PanelHudBar` 变体，底图 `assets/ui/hud/bar.png`，缺图半透明深底 + 下边一条线），它本身也是布局里的一件，藏起来就退回老的九宫顶边。
   - 布局多三个锚点 `bar_left / bar_center / bar_right`（`HudLayout.BAR_ANCHORS`），栏槽里的件不用偏移，一槽一组，组里照样按 `line` 分行；栏高 = 最高的那组 + 上下留白，至少 `HudHost.BAR_HEIGHT`（64）。
-  - 默认：左槽第一行体力 / 货币 / 信仰（200% 档），第二行负重 / 增益 / 侵蚀（小字）；中槽倒计时（大档）；右槽 `HudLayout.BAR_RIGHT` = 背包、放大镜、技能、调试台箭头。左下路线与图例（`legend`），右下腰带。布局版本 4，旧文件回默认。
+  - 默认：左槽第一行体力 / 货币 / 信仰（200% 档），第二行负重（v5.62 删了）/ 增益 / 侵蚀（小字）；中槽倒计时（大档）；右槽 `HudLayout.BAR_RIGHT` = 背包、放大镜、技能、调试台箭头。左下路线与图例（`legend`），右下腰带。布局版本 4，旧文件回默认。
   - 摆读数时松在栏里 = 按横向三等分进左 / 中 / 右槽。
 - `extract_button`、`menu_button`、`log`、`ground_count` 不再是组件：撤离只在撤离点的事件里选；日志、「地上 N 件」和提示行都在调试台里（调试台 `dock` 在栏下面，悬浮盖着地图，不再挤地图的右边）。
 - 地图满幅：`MapView` 铺满整屏，`content_inset`（宿主的 `content_inset()`：上 = 栏与顶上几组的底，下 = 左下 / 右下几组的顶）只影响居中、适配与聚焦用的安全区，剩下不到一半就退回整块。
@@ -3707,7 +3708,7 @@ func player_spec() -> CombatantSpec …
 
 **名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_bronze.png`，2026-10-17 起铜质狗牌，单层九宫格、深底亮字），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
 （`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版；没图画细线），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
-**回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
+**回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真；沙盒 v5.61 退役），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
 
 **地图底图**（作者定：每章一张手绘地图，风格各不同）：`ChapterDef.map_skin`（默认 `ruins`）→ `assets/maps/<id>.png` + json（`tone`）。`MapView.skin` 设了就钉在画布上（192：json `safe_area` = 美术留给路网的淡色椭圆的外接矩形，`MapSkin.paper_rect` 把它等比放大到盖住画布、中心对齐，
 底图 / 装饰层 / 纸影和路网同一个变换一起缩放平移；画布外平铺桌面 `map/desk`，没图用底色；缩放下限 `zoom_min()` = 整张纸刚好装进安全区，拖动时纸边不越过安全区中心线；开局第三页预览按入局 zoom0 画同一张纸）画在路网底下；浅纸上前景 / 暗色字取字色模板的浅版（`UiPalette.for_tone`，169）。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
@@ -4162,7 +4163,7 @@ JSON 里写类型名与参数，导入器按注册表构造对应 Resource 并�
 
 ### 10.6 启动选择器
 
-`ui/launcher.tscn` 是项目主场景，列出三个开发期入口：背包沙盒、战斗沙盒、道具编辑器。
+`ui/launcher.tscn` 是项目主场景，列出三个开发期入口：背包沙盒、战斗沙盒、道具编辑器（两个沙盒 v5.61 退役）。
 在此之前主场景写死成其中一个，另外两个只能在 Godot 里手动挑（F6）。
 
 它只负责切场景，不碰任何游戏状态。真正的场景流（进关、战斗、结算）是 M6 的事，
@@ -4237,8 +4238,8 @@ res://
     game/           game_director  game_screen  main_menu  setup_screen  map_screen  inventory_panel   # 正式游戏（8 节），game.tscn 是主场景
                     battle_screen  container_screen（战利品 / 搜索合一）  shop_screen  event_screen  rest_screen  result_screen  meta_screen
                     settings_screen  warehouse_panel  loot_view  event_image
-    inventory/      inventory_sandbox  inventory_view  container_view  stash_view  drag_layer  item_painter
-    battle/         battle_sandbox  battle_view  combatant_panel
+    inventory/      inventory_view  container_view  stash_view  drag_layer  item_painter
+    battle/         battle_view  combatant_panel
     editor/         authoring_editor（141 各内容编辑器的基类）  content_editor  property_form  shape_editor
     event_editor/   event_editor      # 事件编辑器（10.5，报告 064）
     part_editor/    part_editor       # 构件编辑器（146）

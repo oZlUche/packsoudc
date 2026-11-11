@@ -68,7 +68,7 @@ var _suppress_popups: bool = false
 var _tip: HoverTip = null
 
 var _clock: Label
-## 计时 + 胜负那一行（作者 2026-10-17：游戏里的战斗屏不给玩家看，[method set_header_visible]；回放浏览器 / 沙盒照显示）
+## 计时 + 胜负那一行（作者 2026-10-17：游戏里的战斗屏不给玩家看，[method set_header_visible]；回放浏览器照显示）
 var _header: HBoxContainer
 var _verdict: Label
 ## 272 战记：逐条的人话记录（[BattleNarrator] 写的行），深底卷栏；[member log_open] 收合
@@ -393,7 +393,7 @@ func set_loads(side: int, loads: Dictionary) -> void:
 		_lines_dirty = true
 
 
-## 157：一方的名牌放在它的面板顶上（战斗屏给；沙盒、回放浏览器不给就没有）
+## 157：一方的名牌放在它的面板顶上（战斗屏给；回放浏览器不给就没有）
 func set_nameplate(side: int, plate: Control) -> void:
 	if side < 0 or side >= _plate_slots.size() or plate == null:
 		return
@@ -770,7 +770,7 @@ static func reaction_color(e: BattleEvent) -> Color:
 
 #region 界面
 func _build() -> void:
-	var bg := UiTheme.prepare_root(self, false)     # 091：底色跟设置走 —— 设置由宿主（导演 / 沙盒 / 回放浏览器）读过、apply 过，这里不再读盘
+	var bg := UiTheme.prepare_root(self, false)     # 091：底色跟设置走 —— 设置由宿主（导演 / 回放浏览器）读过、apply 过，这里不再读盘
 	# 战斗背景（白天的沙地场子，铺满裁边）垫在最底层；直接写在它上面的字（顶上一行、战报、播报）按它的深浅取字色，
 	# 对阵面板、名牌自带深底，不跟着变
 	var pic := UiTheme.dress_backdrop(bg, UiTheme.ART_BATTLE_BG, "BattleBackdrop")
@@ -885,7 +885,7 @@ func _build() -> void:
 		_build_footer()
 	else:
 		UiTheme.set_tone(_report, on_bg)
-		_report.set_meta(&"exempt_bare_text", "dev")     # 226 守门：非铜面板的战报只在开发工具（回放浏览器、沙盒）里出
+		_report.set_meta(&"exempt_bare_text", "dev")     # 226 守门：非铜面板的战报只在开发工具（回放浏览器）里出
 		root.add_child(_report)
 	_tip = HoverTip.new()
 	add_child(_tip)

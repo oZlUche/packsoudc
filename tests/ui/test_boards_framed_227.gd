@@ -1,6 +1,6 @@
 ## 227（作者 2026-10-21 17:25「所有的棋盘都要显示（包括格子）」）：全游戏每一块棋盘都有外框和格线 ——
 ## 运行时把有棋盘的屏开一遍，凡 [InventoryView]：外框（祖先里有 [BoardFrame]，或屏自己摆的框 [method BoardFrame.mark]），
-## 且格缝；棕底仓库的外框是木架 / 仓库框（补测：不再直接放行）；源码里造 [InventoryView] 的文件都得接上框（沙盒、测试除外）
+## 且格缝；棕底仓库的外框是木架 / 仓库框（补测：不再直接放行）；源码里造 [InventoryView] 的文件都得接上框（测试除外）
 extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
@@ -10,12 +10,10 @@ const Drawer139 := preload("res://tests/ui/test_base_drawer_139.gd")
 const Steps177 := preload("res://tests/ui/test_result_steps_177.gd")
 const PREFIX := "boards227"
 
-## 造了 [InventoryView] 却不在本文件里套框的：面板由用它的屏套（[method GameScreen._mount_bag]、背包窗、战前）；沙盒是开发工具
+## 造了 [InventoryView] 却不在本文件里套框的：面板由用它的屏套（[method GameScreen._mount_bag]、背包窗、战前）
 const STATIC_EXEMPT := {
 	"res://ui/game/inventory_panel.gd": "棋盘由 _mount_bag / 背包窗 / 战前各自套框",
 	"res://ui/inventory/inventory_view.gd": "造视图的工厂 make 本身，框由调用的那一屏套",
-	"res://ui/inventory/inventory_sandbox.gd": "开发沙盒",
-	"res://ui/battle/battle_sandbox.gd": "开发沙盒",
 }
 
 
@@ -226,7 +224,7 @@ static func frame_notice_cap_tent(t: TestCase, root: Window) -> void:
 
 
 static func frame_static_sources(t: TestCase, _root: Window) -> void:
-	t.begin("227 · 源码守门：ui 下凡是造了 InventoryView / LootView 的文件，都接了 BoardFrame（wrap / around / mark）或仓库棕底（沙盒、面板除外）")
+	t.begin("227 · 源码守门：ui 下凡是造了 InventoryView / LootView 的文件，都接了 BoardFrame（wrap / around / mark）或仓库棕底（面板除外）")
 	var bad: Array[String] = []
 	var files: Array[String] = []
 	_collect("res://ui", files)

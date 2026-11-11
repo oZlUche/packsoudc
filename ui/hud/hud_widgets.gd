@@ -5,10 +5,8 @@ extends RefCounted
 
 const KINDS := {
 	&"countdown": "res://ui/hud/widgets/countdown_widget.gd",
-	&"distances": "res://ui/hud/widgets/distances_widget.gd",
 	&"vitality": "res://ui/hud/widgets/vitality_widget.gd",
 	&"wallet": "res://ui/hud/widgets/wallet_widget.gd",
-	&"encumbrance": "res://ui/hud/widgets/encumbrance_widget.gd",
 	&"faith": "res://ui/hud/widgets/faith_widget.gd",
 	&"buffs": "res://ui/hud/widgets/buffs_widget.gd",
 	&"erosion": "res://ui/hud/widgets/erosion_widget.gd",

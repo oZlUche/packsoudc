@@ -25,7 +25,7 @@ static func _host(root: Window, screen: Control) -> Array:
 	if run == null:
 		return []
 	var layout := HudLayout.default_for("map")
-	for id in [&"encumbrance", &"buffs", &"erosion", &"distances"]:
+	for id in [&"buffs", &"erosion"]:
 		layout.entry_of(id)["visible"] = false
 	var host := HudHost.new()
 	host.size = HOST_SIZE

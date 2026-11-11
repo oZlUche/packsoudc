@@ -22,7 +22,7 @@ static func _run() -> RunState:
 ## 默认布局，左槽第二行的小字先藏掉（只看第一行与槽身对齐）
 static func _host(root: Window, run: RunState, screen: Control = null) -> HudHost:
 	var layout := HudLayout.default_for("map")
-	for id in [&"encumbrance", &"buffs", &"erosion", &"distances"]:
+	for id in [&"buffs", &"erosion"]:
 		layout.entry_of(id)["visible"] = false
 	var host := HudHost.new()
 	host.size = HOST_SIZE
