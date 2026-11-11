@@ -3,7 +3,7 @@
 ##
 ## 和 256 求饶的 [BalanceScale] 同一套拆法与版式键（底座 / 横梁绕 pivot 转 / 两只盘只平移、挂在梁的钩上 / 一枚金币按摞堆）：
 ## 版式 `shop/scale_layout.json`，图 `shop/scale_base`、`shop/scale_beam`、`shop/scale_pan_left`、`shop/scale_pan_right`、`shop/scale_coin`。
-## 美术：A 铜天平（作者 2026-11-07 18:37 挑定，art/ui/shop290/final）；缺图时按同一套坐标画铜色占位（底牌只在占位时画）
+## 美术：A 铜天平（作者 2026-11-07 18:37 挑定，art/ui/shop290/final）
 class_name ShopScale
 extends PanScale
 
@@ -12,9 +12,6 @@ const ART := "shop/scale_"
 const FONT_SIZE := 16
 const PLATE_FONT := 15
 const INK := Color("2e2219")
-const BRONZE := Color("b08a3a")
-const BRONZE_DARK := Color("6b4f22")
-const PLATE := Color("efe3c6")
 const MIN_FONT := 11
 
 ## 两盘的总价（左：你拿的；右：你给的 + 你的钱）
@@ -77,19 +74,14 @@ func price_rects() -> Array[Rect2]:
 
 func _draw() -> void:
 	var pans := pan_origins()
-	var base_size := _v(_lay["base_size"])
-	if not _layer("base", Vector2.ZERO, base_size):
-		_draw_post()
+	_layer("base", Vector2.ZERO, _v(_lay["base_size"]))
 	var beam_size := _v(_lay["beam_size"])
 	draw_set_transform(_v(_lay["pivot"]), deg_to_rad(-tilt_degrees()))
-	if not _layer("beam", -beam_size * 0.5, beam_size):
-		draw_rect(Rect2(-beam_size * 0.5, beam_size), BRONZE)
-		draw_rect(Rect2(-beam_size * 0.5, beam_size), BRONZE_DARK, false, 2.0)
+	_layer("beam", -beam_size * 0.5, beam_size)
 	draw_set_transform(Vector2.ZERO)
 	var pan_size := _v(_lay["pan_size"])
-	for i in 2:
-		if not _layer("pan_left" if i == 0 else "pan_right", pans[i], pan_size):
-			_draw_pan(pans[i], pan_size)
+	_layer("pan_left", pans[0], pan_size)
+	_layer("pan_right", pans[1], pan_size)
 	_draw_pile(pans[0], _pile(left_coins, left))
 	_draw_pile(pans[1], _pile(right_coins, right))
 	var prices := price_rects()
@@ -99,68 +91,32 @@ func _draw() -> void:
 		_draw_amount(prices[1], right)
 	if plate == "":
 		return
-	var status := control_rect("status")
-	if UiTheme.art_cached(ART + "base") == null:     # 底座图里已经有空牌：底牌只算占位
-		draw_rect(status, PLATE)
-		draw_rect(status, BRONZE_DARK, false, 2.0)
+	var status := control_rect("status")     # 底座图里已经有空牌
 	var amount := CoinShort.coin_amount(plate)
 	_draw_coin_text(status, CoinShort.strip(plate) if amount >= 0 else plate, amount, UiTheme.sz(PLATE_FONT), status.size.x - 12.0)
 
 
-## 一层图（有就画、返回 true）
-func _layer(p_name: String, at: Vector2, size_px: Vector2) -> bool:
+## 一层图
+func _layer(p_name: String, at: Vector2, size_px: Vector2) -> void:
 	var tex := UiTheme.art_cached(ART + p_name)
-	if tex == null:
-		return false
-	draw_texture_rect(tex, Rect2(at, size_px), false)
-	return true
-
-
-## 占位：立柱从梁心到秤座（「成交」键顶上），柱顶一枚圆钮
-func _draw_post() -> void:
-	var pivot := _v(_lay["pivot"])
-	var deal := control_rect("deal")
-	var foot := deal.position.y if deal.size.y > 0.0 else size.y
-	draw_rect(Rect2(pivot.x - 5.0, pivot.y, 10.0, foot - pivot.y), BRONZE)
-	draw_rect(Rect2(pivot.x - 22.0, foot - 8.0, 44.0, 8.0), BRONZE_DARK)
-	draw_circle(pivot, 9.0, BRONZE_DARK)
-	draw_circle(pivot, 5.0, BRONZE)
-
-
-## 占位：两根吊绳 + 一只浅碗
-func _draw_pan(at: Vector2, size_px: Vector2) -> void:
-	var hook := at + _v(_lay["hook_in_pan"])
-	var rim_y := at.y + size_px.y * 0.68
-	draw_line(hook, Vector2(at.x + 6.0, rim_y), BRONZE_DARK, 1.5, true)
-	draw_line(hook, Vector2(at.x + size_px.x - 6.0, rim_y), BRONZE_DARK, 1.5, true)
-	var bowl := PackedVector2Array([Vector2(at.x, rim_y), Vector2(at.x + size_px.x, rim_y),
-		Vector2(at.x + size_px.x - 14.0, at.y + size_px.y), Vector2(at.x + 14.0, at.y + size_px.y)])
-	draw_colored_polygon(bowl, BRONZE)
-	draw_polyline(bowl + PackedVector2Array([bowl[0]]), BRONZE_DARK, 2.0, true)
+	if tex != null:
+		draw_texture_rect(tex, Rect2(at, size_px), false)
 
 
 func _draw_pile(origin: Vector2, n: int) -> void:
-	if n <= 0:
+	var tex := UiTheme.art_cached(ART + "coin")
+	if n <= 0 or tex == null:
 		return
 	var pile: Dictionary = _lay["coin_pile"]
 	var step := float(pile["step"])
-	var tex := UiTheme.art_cached(ART + "coin")
-	var cs := tex.get_size() if tex != null else Vector2(20, 6)
+	var cs := tex.get_size()
 	for k in n:
 		var cell: Array = pile["order"][k]
-		var r := Rect2(origin + Vector2(float(pile["cols"][int(cell[0])]) - cs.x * 0.5, float(pile["base_y"]) - (int(cell[1]) + 1) * step), cs)
-		if tex != null:
-			draw_texture_rect(tex, r, false)
-		else:
-			draw_rect(r, CoinLabel.FALLBACK_FILL)
-			draw_rect(r, BRONZE_DARK, false, 1.0)
+		draw_texture_rect(tex, Rect2(origin + Vector2(float(pile["cols"][int(cell[0])]) - cs.x * 0.5, float(pile["base_y"]) - (int(cell[1]) + 1) * step), cs), false)
 
 
-## 价牌：「金币 + 数」（钱 = 金币图标 + 数）
+## 价牌：「金币 + 数」（钱 = 金币图标 + 数），数直接写在铜盘上
 func _draw_amount(r: Rect2, amount: int) -> void:
-	if UiTheme.art_cached(ART + "pan_left") == null:     # 有盘图：数直接写在铜盘上
-		draw_rect(r, PLATE)
-		draw_rect(r, BRONZE_DARK, false, 1.5)
 	_draw_coin_text(r, "", amount, UiTheme.sz(FONT_SIZE))
 
 
@@ -182,11 +138,7 @@ func _draw_coin_text(r: Rect2, words: String, amount: int, fs: int, max_w := -1.
 	if amount < 0:
 		return
 	x += ww + gap
-	var tex := CoinLabel.coin_texture()
-	if tex != null:
-		draw_texture_rect(tex, Rect2(Vector2(x, mid.y - side * 0.5), Vector2(side, side)), false)
-	else:
-		draw_circle(Vector2(x + side * 0.5, mid.y), side * 0.45, CoinLabel.FALLBACK_FILL)
+	CoinLabel.draw_coin(self, Rect2(Vector2(x, mid.y - side * 0.5), Vector2(side, side)))
 	draw_string(f, Vector2(x + side + CoinLabel.GAP, base_y), num, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 
 

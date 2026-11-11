@@ -1,17 +1,15 @@
 ## 251 补充一 §10.3（作者 14:49「金钱一定要用金币图标而不是文本」）：钱数 = 一枚金币（`assets/ui/hud/coin.png`，顶端栏那枚）+ 数字，不写「币」字。
 ## 集市的价签、钱袋读数，铁匠铺的工钱、钱袋读数都用它（一处写、两页用；局内商店以后也换它）。字由代码画在 `_draw` 里，
-## 本身不带底 —— 摆在签 / 牌 / 卷轴上（226 不裸字）。缺图画一个描边金圆。点不着
+## 本身不带底 —— 摆在签 / 牌 / 卷轴上（226 不裸字）。点不着
 class_name CoinLabel
 extends Control
 
 const ART := "res://assets/ui/hud/coin.png"
-## 「金币不够」那一枚（美术设计 A，作者 11-02 15:07：原样金币 + 左下到右上一道红杠）；缺图退回金币 + 代码画的红杠
+## 「金币不够」那一枚（美术设计 A，作者 11-02 15:07：原样金币 + 左下到右上一道红杠）
 const ART_SHORT := "res://assets/ui/hud/coin_short.png"
 ## 金币比字高大这么多（和顶端栏一样：币与数字同高）
 const COIN_SCALE := 1.15
 const GAP := 4.0
-const FALLBACK_FILL := Color("e2b33c")
-const FALLBACK_EDGE := Color("7a5414")
 ## 「不够」的红（同价签 [constant PriceTag.POOR_INK]）
 const SHORT_INK := Color("b0261c")
 
@@ -96,13 +94,11 @@ static func coin_icon(px: int) -> Texture2D:
 	return t
 
 
-## 把金币画进 [param rect]（在 [param ci] 的 `_draw` 里调）：有图贴图，缺图画一个金圆
+## 把金币画进 [param rect]（在 [param ci] 的 `_draw` 里调）
 static func draw_coin(ci: CanvasItem, rect: Rect2) -> void:
 	var tex := coin_texture()
 	if tex != null:
 		ci.draw_texture_rect(tex, rect, false)
-	else:
-		ci.draw_circle(rect.get_center(), rect.size.x * 0.45, FALLBACK_FILL)
 
 
 func coin_side() -> float:
@@ -132,20 +128,8 @@ func _draw() -> void:
 	var x := maxf(0.0, (size.x - custom_minimum_size.x) * 0.5) if centered else 0.0
 	var mid := size.y * 0.5
 	var rect := Rect2(Vector2(x, mid - side * 0.5), Vector2(side, side))
-	var tex := short_texture() if short else null
-	var drawn_short := tex != null
-	if tex == null:
-		tex = coin_texture()
+	var tex := short_texture() if short else coin_texture()
 	if tex != null:
 		draw_texture_rect(tex, rect, false)
-	else:
-		draw_circle(rect.get_center(), side * 0.45, FALLBACK_FILL)
-		draw_arc(rect.get_center(), side * 0.45, 0.0, TAU, 24, FALLBACK_EDGE, 1.5)
-	if short and not drawn_short:     # 缺定稿图的兜底：斜划一道红（左下到右上），描一圈深边免得糊在金色上
-		var a := rect.position + Vector2(side * 0.12, side * 0.88)
-		var b := rect.position + Vector2(side * 0.88, side * 0.12)
-		var wd := maxf(2.0, side * 0.14)
-		draw_line(a, b, Color(0.18, 0.05, 0.03), wd + 2.0, true)
-		draw_line(a, b, SHORT_INK, wd, true)
 	var y := mid + (f.get_ascent(font_size) - f.get_descent(font_size)) * 0.5
 	draw_string(f, Vector2(x + side + GAP, y), _text(), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, SHORT_INK if short else ink)

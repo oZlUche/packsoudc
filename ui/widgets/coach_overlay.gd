@@ -1,5 +1,5 @@
 ## 166（作者定）：静态教程 —— 整屏压一层阴影，目标周围挖一个洞（包围盒外扩 [constant HOLE_PAD]，洞边一圈高光），
-## 一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右，按方向转；缺图画一笔折线箭头）从洞外指向洞，箭尾一块悬浮窗底（[constant UiTheme.PANEL_TOOLTIP]）写说明。
+## 一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右，按方向转）从洞外指向洞，箭尾一块悬浮窗底（[constant UiTheme.PANEL_TOOLTIP]）写说明。
 ## **点任意处下一步**（键盘任意键也算，Esc 也是），最后一步点了收掉、发 [signal finished]。阴影层吞掉所有点击。
 ##
 ## 步骤是数据（`data/authoring/coach/<id>.json`：`{"id", "steps": [{"target": 目标 id, "text", "texts": {"en"}}]}`）；
@@ -203,9 +203,3 @@ func _draw() -> void:
 		draw_set_transform(tail, dir.angle(), Vector2.ONE)
 		draw_texture_rect(_arrow, Rect2(Vector2(0, -ARROW_SIZE.y * 0.5), ARROW_SIZE), false)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		return
-	# 没图：一笔稍弯的折线 + 箭头
-	var side := Vector2(-dir.y, dir.x)
-	var mid := (tip + tail) * 0.5 + side * 14.0
-	draw_polyline(PackedVector2Array([tail, mid, tip]), Color("f6eedb"), 4.0, true)
-	draw_polyline(PackedVector2Array([tip - dir * 18.0 + side * 10.0, tip, tip - dir * 18.0 - side * 10.0]), Color("f6eedb"), 4.0, true)

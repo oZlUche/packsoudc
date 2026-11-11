@@ -696,17 +696,17 @@ func _draw_art_bar(key: String, current: int, maximum: int, y: float) -> void:
 	var trough := Rect2(ART_TROUGH_X, y, maxf(0.0, size.x - ART_TROUGH_X - ART_RIGHT), ART_BAR_H)
 	var inner := trough.size.x - 4.0
 	var ratio := clampf(float(current) / float(maxi(1, maximum)), 0.0, 1.0)
-	_hslice(UiTheme.art_cached(ART_DIR + "bar_trough"), trough, Color("1a120a", 0.8))
+	_hslice(UiTheme.art_cached(ART_DIR + "bar_trough"), trough)
 	var fill := UiTheme.art_cached(ART_DIR + String(ART_FILL.get(key, "bar_fill_vigor")))
 	var tint := Color.WHITE if ART_FILL.has(key) else UiPalette.resource_color(key)
 	if ratio > 0.0:
-		_hslice(fill, Rect2(trough.position + Vector2(2, 2), Vector2(inner * ratio, ART_BAR_H - 4.0)), UiPalette.resource_color(key), tint)
+		_hslice(fill, Rect2(trough.position + Vector2(2, 2), Vector2(inner * ratio, ART_BAR_H - 4.0)), tint)
 	var text := "%d / %d" % [current, maximum]     # 作者 19:09：火漆已经说明是哪条，不再写「生命 / 耐力」
 	if key == "hp":
 		var hp_cap := maxi(1, maximum)
 		var armor := armor_value()
 		if armor > 0:
-			_hslice(UiTheme.art_cached(ART_DIR + "bar_armor"), Rect2(trough.position + Vector2(2, 2), Vector2(inner * clampf(float(armor) / float(hp_cap), 0.0, 1.0), ART_BAR_H - 4.0)), UiPalette.ARMOR_FRAME)     # 作者 10-22：护甲只看这层条，条上不再写「甲 N」
+			_hslice(UiTheme.art_cached(ART_DIR + "bar_armor"), Rect2(trough.position + Vector2(2, 2), Vector2(inner * clampf(float(armor) / float(hp_cap), 0.0, 1.0), ART_BAR_H - 4.0)))     # 作者 10-22：护甲只看这层条，条上不再写「甲 N」
 	var seal := UiTheme.art_cached(ART_DIR + String(ART_SEAL.get(key, "")))
 	if seal != null:
 		var side := seal.get_size() * ART_SEAL_SCALE
@@ -718,12 +718,9 @@ func _draw_art_bar(key: String, current: int, maximum: int, y: float) -> void:
 	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, ART_TEXT_SIZE, ART_TEXT)
 
 
-## 横向三段切（左右各 [constant ART_SLICE]，中段拉）；比两头还窄时两头按比例缩。缺图画纯色
-func _hslice(tex: Texture2D, r: Rect2, fallback: Color, p_modulate: Color = Color.WHITE) -> void:
-	if r.size.x <= 0.0:
-		return
-	if tex == null:
-		draw_rect(r, fallback)
+## 横向三段切（左右各 [constant ART_SLICE]，中段拉）；比两头还窄时两头按比例缩
+func _hslice(tex: Texture2D, r: Rect2, p_modulate: Color = Color.WHITE) -> void:
+	if tex == null or r.size.x <= 0.0:
 		return
 	var ts := tex.get_size()
 	var cap := minf(ART_SLICE, r.size.x * 0.5)
@@ -737,10 +734,6 @@ func _hslice(tex: Texture2D, r: Rect2, fallback: Color, p_modulate: Color = Colo
 func _draw_slot(r: Rect2) -> void:
 	var tex := UiTheme.art_cached(SLOT_ART)
 	if tex == null:
-		var box := StyleBoxFlat.new()
-		box.bg_color = Color("2a1c0e", 0.85)
-		box.set_corner_radius_all(4)
-		draw_style_box(box, r)
 		return
 	var sb := StyleBoxTexture.new()
 	sb.texture = tex

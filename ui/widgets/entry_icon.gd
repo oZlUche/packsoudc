@@ -100,4 +100,5 @@ func _draw_item(r: Rect2) -> void:
 
 
 func _draw_flaw(r: Rect2) -> void:
-	_draw_skill(r)     # 铁灰章 + 裂纹（美术 11:54 定稿）；没图只剩空槽
+	if texture != null:
+		draw_texture_rect(texture, r, false)     # 铁灰章 + 裂纹（美术 11:54 定稿）

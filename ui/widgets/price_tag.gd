@@ -87,8 +87,6 @@ func _draw() -> void:
 	var box := _box
 	if box != null:
 		draw_style_box(box, Rect2(Vector2.ZERO, size))
-	else:
-		draw_rect(Rect2(Vector2(0.0, BODY_TOP), Vector2(size.x, size.y - BODY_TOP)), Color("b07a3a"))
 	var f := UiPalette.cjk_font_bold()
 	var mid := BODY_TOP + (size.y - BODY_TOP) * 0.5
 	var y := mid + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5

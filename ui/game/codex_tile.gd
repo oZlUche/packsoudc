@@ -13,7 +13,6 @@ signal pressed(tile: CodexTile)
 const SIZE := Vector2(96, 112)
 const PAD := 8.0
 const NAME_H := 18.0
-const COLOR_DARK := Color("2a2e36")
 const COLOR_DARK_EDGE := Color("3c424d")
 ## 201：没点亮、有图的画成暗影（乙 石刻浅格上：作者 18:27「道具蒙一层阴影，不是整块黑」）
 const ART_UNLIT := Color(0.34, 0.32, 0.31)
@@ -97,20 +96,15 @@ func _draw_variant_stack(cells: Array[Vector2i], anchor: Vector2, cell: float, l
 	for i in range(layers, 0, -1):
 		var vdef: ItemDef = variants[mini(i, variants.size() - 1)]
 		var on := variant_lit[mini(i, variant_lit.size() - 1)] if not variant_lit.is_empty() else false
-		var body := ItemPainter.body_color(vdef).darkened(0.25) if on else (STACK_UNLIT if _box(CELL_ART, 16.0) != null else COLOR_DARK)
-		var edge := ItemPainter.rarity_color(vdef).lightened(0.1) if on else (INK_UNLIT if _box(CELL_ART, 16.0) != null else COLOR_DARK_EDGE)
+		var body := ItemPainter.body_color(vdef).darkened(0.25) if on else STACK_UNLIT
+		var edge := ItemPainter.rarity_color(vdef).lightened(0.1) if on else INK_UNLIT
 		ItemPainter.draw_item(self, cells, anchor + STACK_OFFSET * float(i), cell, body, edge)
 
 
 func _draw() -> void:
 	# 107（作者定）：**外框不动，叠的是里面的物品** —— 格子只画一个（底板 + 描边），
 	# 异体的叠影在下面画在形状上（见 `_draw_variant_stack`）
-	var cell_box := _box(CELL_ART if lit else CELL_ART + "_dim", 16.0)
-	if cell_box != null:
-		draw_style_box(cell_box, Rect2(Vector2.ZERO, size))
-	else:
-		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.PANEL)
-		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.LINE, false, 1.0)
+	draw_style_box(_box(CELL_ART if lit else CELL_ART + "_dim", 16.0), Rect2(Vector2.ZERO, size))
 	if def == null:
 		return
 	var font := label_font if label_font != null else get_theme_default_font()
@@ -124,7 +118,7 @@ func _draw() -> void:
 	var cell := minf(area.x / maxf(1.0, float(box.x)), area.y / maxf(1.0, float(box.y)))
 	cell = minf(cell, 40.0)
 	var anchor := Vector2(PAD + (area.x - cell * box.x) * 0.5, PAD + inset.y + (area.y - cell * box.y) * 0.5)
-	var body := ItemPainter.body_color(def) if lit else (ItemPainter.body_color(def) * ART_UNLIT if cell_box != null else COLOR_DARK)
+	var body := ItemPainter.body_color(def) if lit else ItemPainter.body_color(def) * ART_UNLIT
 	var edge := ItemPainter.rarity_color(def).lightened(0.2) if lit else COLOR_DARK_EDGE
 	_draw_variant_stack(cells, anchor, cell, layers)
 	# 201：有图就画图；没点亮的压成暗影（还看得出形，看不出细节）。异体叠影照旧用色块（错位叠图会花）
@@ -133,40 +127,26 @@ func _draw() -> void:
 	ItemPainter.draw_favorite_def(self, def, 0, anchor, cell)     # 265：收藏的种类右上角一枚星
 	# 名字
 	var name_ := shown_name()
-	if cell_box != null:
-		draw_string(font, Vector2(NAME_X, size.y - NAME_BASE), name_, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - NAME_X * 2), 12, INK_LIT if lit else INK_UNLIT)
-	else:
-		draw_string(font, Vector2(PAD, size.y - PAD), name_, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - PAD * 2), 12, UiPalette.FG if lit else Color("4a515e"))
+	draw_string(font, Vector2(NAME_X, size.y - NAME_BASE), name_, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - NAME_X * 2), 12, INK_LIT if lit else INK_UNLIT)
 	# 095：异体角标「1/3」（点亮几个 / 共几个）
 	if variant_count() > 0:
-		_draw_tag("%d/%d" % [variants_lit(), variants.size()], font, false, BADGE_ART, BADGE_INK, Color("6f9fe0"))
+		_draw_tag("%d/%d" % [variants_lit(), variants.size()], font, false, BADGE_ART, BADGE_INK)
 	# 累计件数
 	if lit and count > 1:
-		_draw_tag("×%d" % count, font, true, COUNT_ART, INK_LIT, UiPalette.HEAL)
+		_draw_tag("×%d" % count, font, true, COUNT_ART, INK_LIT)
 
 
-## 角上一枚小签：左上（异体）或右上（件数），有图用皮签 / 铜签，没图照旧色块
-func _draw_tag(text: String, font: Font, right: bool, art: String, ink: Color, fallback: Color) -> void:
+## 角上一枚小签：左上（异体，皮签）或右上（件数，铜签）
+func _draw_tag(text: String, font: Font, right: bool, art: String, ink: Color) -> void:
 	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_FONT).x + 12.0
-	var box := _box(art, 12.0)
 	var r := Rect2(Vector2(size.x - TAG_AT - w if right else TAG_AT, TAG_AT), Vector2(w, TAG_H))
-	if box == null:
-		r = Rect2(Vector2(size.x - w - 4 if right else 4.0, 4.0), Vector2(w - 4.0, 16.0))
-		draw_rect(r, fallback)
-		ink = Color("101216")
-	else:
-		draw_style_box(box, r)
+	draw_style_box(_box(art, 12.0), r)
 	var y := r.position.y + r.size.y * 0.5 + (font.get_ascent(TAG_FONT) - font.get_descent(TAG_FONT)) * 0.5
 	draw_string(font, Vector2(r.position.x, y), text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, TAG_FONT, ink)
 
 
-## 九宫格（图四周多 6），按图名缓存；没图 null
+## 九宫格（图四周多 6），按图名缓存
 static func _box(art: String, margin: float) -> StyleBoxTexture:
-	if _boxes.has(art):
-		return _boxes[art]
-	var tex := UiTheme.art_cached(art)
-	var box: StyleBoxTexture = null
-	if tex != null:
-		box = UiTheme.nine_box(tex, [margin, margin, margin, margin], [], 6.0)
-	_boxes[art] = box
-	return box
+	if not _boxes.has(art):
+		_boxes[art] = UiTheme.nine_box(UiTheme.art_cached(art), [margin, margin, margin, margin], [], 6.0)
+	return _boxes[art]

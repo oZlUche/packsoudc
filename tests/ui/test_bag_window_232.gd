@@ -17,7 +17,7 @@ static func frame_satchel(t: TestCase, root: Window) -> void:
 	var win := BagWindow.new()
 	host.add_child(win)
 	win.setup_bag(run, UiPalette.cjk_font(), func(): pass)
-	t.check(win.skinned(), "换上了背包皮")
+	t.not_null(win.get_node_or_null("Satchel"), "换上了背包皮")
 	var w := win.window_size()
 	var body := win.get_node("Satchel/Body") as Control
 	t.eq(body.position, Vector2(-30, -18), "包身左上 (-30, -18)")

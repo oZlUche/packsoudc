@@ -12,13 +12,8 @@ const NOWHERE := "res://tests/fixtures/no_such_ui/"
 
 
 static func run_theme_art(t: TestCase) -> void:
-	t.begin("157 / 补充三 · 石板框与悬浮窗底：有板身 + 板边两张图是一整块石板（板身平铺、板边九宫格，边距与标题条高读 json），没图是原来的平面底")
+	t.begin("157 / 补充三 · 石板框与悬浮窗底：有板身 + 板边两张图是一整块石板（板身平铺、板边九宫格，边距与标题条高读 json）")
 	var saved := UiTheme.asset_root
-	UiTheme.asset_root = NOWHERE
-	var flat := UiTheme.build()
-	t.check(flat.get_stylebox("panel", UiTheme.PANEL_OVERLAY) is StyleBoxFlat, "没图：石板框是平面底")
-	t.check(flat.get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxFlat, "没图：悬浮窗底是平面底")
-	t.eq(UiTheme.frame_title_height(), 0, "没图：标题条按字高")
 	UiTheme.asset_root = FIXTURES
 	var art := UiTheme.build()
 	var slab := art.get_stylebox("panel", UiTheme.PANEL_OVERLAY) as SlabStyle
@@ -30,20 +25,16 @@ static func run_theme_art(t: TestCase) -> void:
 		t.eq(slab.content_margin_left, 1.0, "其余内边距跟板边")
 		t.eq([slab.body.axis_stretch_horizontal, slab.body.axis_stretch_vertical], [StyleBoxTexture.AXIS_STRETCH_MODE_TILE, StyleBoxTexture.AXIS_STRETCH_MODE_TILE], "板身平铺，纹不随框大小拉花")
 		t.eq(slab.body_inset, [1.0, 1.0, 1.0, 1.0], "板身往里缩 json 的 body_inset（一个数 = 四边）")
-	t.check(UiTheme.is_art_box(slab), "石板算美术底（框的外边距听图的）")
-	var bar_slab := art.get_stylebox("panel", UiTheme.PANEL_HUD_BAR) as SlabStyle
-	t.check(bar_slab != null, "顶端栏也是一条石板（166）")
+	var bar_slab := UiTheme.slab_box(false, -1, UiTheme.ART_SLAB_BAR)
+	t.check(bar_slab != null, "板边换一张（slab_bar）也是石板")
 	if bar_slab != null:
-		t.eq(bar_slab.edge.texture, UiTheme.art(UiTheme.ART_SLAB_BAR), "顶端栏的板边是自己那张长条（slab_bar）")
+		t.eq(bar_slab.edge.texture, UiTheme.art(UiTheme.ART_SLAB_BAR), "板边是给的那张长条（slab_bar）")
 		t.eq(bar_slab.body_inset, [1.0, 0.0, 1.0, 1.0], "body_inset 四个数：各边分开（顶边贴屏幕不缩）")
 		t.eq([bar_slab.content_margin_top, bar_slab.content_margin_bottom], [1.0, 2.0], "栏的上下内边距按 slab_bar.json（组在这之间居中）")
 	t.check(art.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, "板里的分区是凹槽九宫格")
 	t.eq(UiTheme.frame_title_height(), 30, "标题条高按 json")
-	t.check(art.get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is StyleBoxFlat, "测试目录里没有纸：悬浮窗底照旧")
 	UiTheme.asset_root = saved
-	# 美术正在重画整块石板：assets/ui 里有两张图就是石板，没有就是平面底 —— 两条路都要能走
-	var real := UiTheme.build().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
-	t.eq(real is SlabStyle, UiTheme.has_slab(), "assets/ui：%s" % ("石板" if UiTheme.has_slab() else "还没有石板图，平面底"))
+	t.check(UiTheme.build().get_stylebox("panel", UiTheme.PANEL_OVERLAY) is SlabStyle, "assets/ui：石板")
 	for gone in ["bg_stone", "panel_stone", "panel_inset", "panel_hud", "frame_stone", "hud/bar"]:
 		t.is_null(UiTheme.art(gone), "砖墙底 / 小石板退了：%s" % gone)
 	t.check(UiTheme.build().get_stylebox("panel", UiTheme.PANEL_TOOLTIP) is SlabStyle, "assets/ui 里美术交付的悬浮窗底：皮革板身 + 黄铜边框两层（170 定稿）")
@@ -75,7 +66,7 @@ static func run_theme_art(t: TestCase) -> void:
 
 
 static func run_cost_icons(t: TestCase) -> void:
-	t.begin("157 · 事件选项的代价图标：只画会花掉什么（体力、花钱、交出道具、耗步、要信仰），得钱不算；有图用图、没图画字符")
+	t.begin("157 · 事件选项的代价图标：只画会花掉什么（体力、花钱、交出道具、耗步、要信仰），得钱不算")
 	var opt := EventOption.new()
 	var gain := ChangeMoney.new()
 	gain.amount = 20
@@ -90,14 +81,9 @@ static func run_cost_icons(t: TestCase) -> void:
 	t.eq(EventCostIcons.describe(kinds), "代价：耗体力、花钱、交出道具、耗倒计时、要信仰", "悬浮提示")
 	var strip := EventCostIcons.strip(kinds)
 	t.check(strip != null and strip.get_width() == 5 * EventCostIcons.SIZE + 4 * EventCostIcons.GAP and strip.get_height() == EventCostIcons.SIZE, "拼成一条 16 像素高的图")
-	t.eq(EventCostIcons.glyph_slots(kinds), [] as Array[int], "美术交付的五张图都在：不用画字符")
 	var b := Button.new()
 	t.eq(EventCostIcons.attach(b, opt), 5, "挂到按钮上")
 	t.check(b.icon != null and b.tooltip_text.begins_with("代价："), "按钮的图标与提示")
-	var saved := UiTheme.asset_root
-	UiTheme.asset_root = NOWHERE
-	t.eq(EventCostIcons.glyph_slots(kinds), [0, 1, 2, 3, 4] as Array[int], "没图：五格都画字符")
-	UiTheme.asset_root = saved
 	b.free()
 
 
@@ -457,7 +443,7 @@ static func _first_rich(n: Node) -> RichTextLabel:
 
 
 static func run_stone(t: TestCase) -> void:
-	t.begin("157 补充三 · 板里的分区是凹槽：PanelDark / PanelLine / PanelHud 有 inset 图是凹槽九宫格、内边距照旧；没图照旧纯色；不再有整屏砖墙底")
+	t.begin("157 补充三 · 板里的分区是凹槽：PanelDark / PanelLine / PanelHud 有 inset 图是凹槽九宫格、内边距照旧；不再有整屏砖墙底")
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = FIXTURES
 	var th := UiTheme.build()
@@ -468,10 +454,6 @@ static func run_stone(t: TestCase) -> void:
 			t.eq(box.content_margin_left, float(pair[1]), "%s 内边距照旧 %d（换皮不改排版）" % [pair[0], pair[1]])
 	t.eq(UiTheme.PANEL_ART[UiTheme.PANEL_DARK], UiTheme.ART_INSET, "PanelDark 的图是凹槽")
 	t.eq(UiTheme.PANEL_ART[UiTheme.PANEL_LINE], UiTheme.ART_INSET, "PanelLine 的图是凹槽")
-	UiTheme.asset_root = NOWHERE
-	var flat := UiTheme.build()
-	t.check(flat.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxFlat and flat.get_stylebox("panel", UiTheme.PANEL_HUD) is StyleBoxFlat, "没图：平面底")
-	t.check(flat.get_stylebox("panel", UiTheme.PANEL_OVERLAY) is StyleBoxFlat and flat.get_stylebox("panel", UiTheme.PANEL_HUD_BAR) is StyleBoxFlat, "没图：框与顶端栏也是平面底")
 	UiTheme.asset_root = saved
 
 
@@ -538,7 +520,7 @@ static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
 	var bare := PortraitSlot.new(64)
-	t.check(bare.frame == null and bare.placeholder == null and bare.picture == null, "没框图、没剪影图：框和剪影自己画")
+	t.check(bare.frame == null and bare.placeholder == null and bare.picture == null, "没框图、没剪影图：剪影自己画")
 	bare.free()
 	UiTheme.asset_root = saved
 	plate.free()

@@ -1,11 +1,10 @@
 ## 233（作者 21:42 选乙）：商店窗是集市帐篷 —— 篷面九宫格（三组 margin 照美术 tent.json）、尖顶和布招牌画在窗顶、标题字写在红布上；
-## 窗离顶端栏留够尖顶的高；缺图退回石板
+## 窗离顶端栏留够尖顶的高
 extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
 const PREFIX := "shop_tent_233"
-const NOWHERE := "res://tests/fixtures/__no_such_art__/"
 
 
 static func _shop(root: Window, f: GameFlow) -> Node:
@@ -66,23 +65,17 @@ static func frame_tent(t: TestCase, root: Window) -> void:
 
 
 static func frame_tent_fallback(t: TestCase, _root: Window) -> void:
-	t.begin("233 · 帐篷缺图退回石板，标题照旧；别的叠层还是石板")
+	t.begin("233 · 别的叠层还是石板")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	var f := Support.flow(c, PREFIX + "b")
 	f.begin(c.chapter, kit, 1)
 	f.pick_spawn(f.run.map.entry_ids[0])
-	var saved := UiTheme.asset_root
-	UiTheme.asset_root = NOWHERE
-	var bare := OverlayFrame.new(16, OverlayFrame.SKIN_TENT)
-	UiTheme.asset_root = saved
-	t.check(not bare.tent and bare.skin == OverlayFrame.SKIN_SLAB and bare.outset_top() == 0.0, "没图：石板、不让位")
-	bare.set_title("商店")
-	t.eq(bare.title(), "商店", "标题照旧")
-	t.eq(bare.title_label.theme_type_variation, UiTheme.LABEL_OVERLAY_TITLE, "石板的标题变体")
-	bare.free()
 	var slab := OverlayFrame.new()
-	t.check(not slab.tent and slab.skin == OverlayFrame.SKIN_SLAB, "默认还是石板")
+	t.check(not slab.tent and slab.skin == OverlayFrame.SKIN_SLAB and slab.outset_top() == 0.0, "默认还是石板、不让位")
+	slab.set_title("商店")
+	t.eq(slab.title(), "商店", "标题照旧")
+	t.eq(slab.title_label.theme_type_variation, UiTheme.LABEL_OVERLAY_TITLE, "石板的标题变体")
 	slab.free()
 	Support.cleanup(PREFIX + "b")
 

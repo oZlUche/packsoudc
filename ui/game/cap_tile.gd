@@ -1,14 +1,11 @@
 ## 179：选角色屏的图标牌 —— 图标 40 + 数字（28 粗体）+ 说明（13 灰），三块等宽横排（负重上限 / 棋盘 / 开局金币）。
-## 图标先找 `assets/ui/setup/icons/<id>.png`（美术定稿，源图 80 按 40 显示，彩色成品不调色），没有退回 [member FALLBACK] 里那张（170 的提示框图标），
-## 再没有就自己画一个占位（秤砣 / 格子 / 金币的轮廓）
+## 图标是 `assets/ui/setup/icons/<id>.png`（美术定稿，源图 80 按 40 显示，彩色成品不调色）；还没有图标的那几种（带入件数 / 稀有度上限）画一个占位轮廓
 class_name CapTile
 extends PanelContainer
 
 const ICON_DIR := "res://assets/ui/setup/icons/"
 const ICON_PX := 40.0
 const CAPTION_PX := 13
-## 美术图没到时先借用的图
-const FALLBACK := {&"weight": "res://assets/ui/tip/weight.png", &"coin": "res://assets/ui/tip/coin.png"}
 
 var id: StringName = &""
 var value_label: Label = null
@@ -43,12 +40,8 @@ func has_art() -> bool:
 
 
 static func texture_for(p_id: StringName) -> Texture2D:
-	for path in [ICON_DIR + String(p_id) + ".png", String(FALLBACK.get(p_id, ""))]:
-		if path != "" and ResourceLoader.exists(path):
-			var tex := load(path) as Texture2D
-			if tex != null:
-				return tex
-	return null
+	var path := ICON_DIR + String(p_id) + ".png"
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
 
 
 func _icon_for(p_id: StringName) -> Control:
@@ -60,28 +53,12 @@ func _icon_for(p_id: StringName) -> Control:
 		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		return pic
 	var drawn := Control.new()
-	drawn.draw.connect(func(): _draw_placeholder(drawn, p_id))
+	drawn.draw.connect(func(): _draw_placeholder(drawn))
 	return drawn
 
 
-## 没图时的占位轮廓
-static func _draw_placeholder(c: Control, p_id: StringName) -> void:
-	var r := Rect2(Vector2(4, 6), Vector2(ICON_PX - 8, ICON_PX - 12))
-	match p_id:
-		&"board":
-			c.draw_rect(r, Color("2d3340"))
-			var line := Color("8fa0bf")
-			for i in 4:
-				var x := r.position.x + r.size.x * float(i) / 4.0
-				c.draw_line(Vector2(x, r.position.y), Vector2(x, r.end.y), line, 1.0)
-			for j in 3:
-				var y := r.position.y + r.size.y * float(j) / 3.0
-				c.draw_line(Vector2(r.position.x, y), Vector2(r.end.x, y), line, 1.0)
-			c.draw_rect(r, line, false, 2.0)
-		&"coin":
-			c.draw_circle(Vector2(ICON_PX, ICON_PX) * 0.5, 14.0, Color("e6a83c"))
-			c.draw_arc(Vector2(ICON_PX, ICON_PX) * 0.5, 9.0, 0.0, TAU, 32, Color("5a4522"), 1.5)
-		_:
-			var pts := PackedVector2Array([Vector2(20, 4), Vector2(30, 12), Vector2(26, 34), Vector2(14, 34), Vector2(10, 12)])
-			c.draw_colored_polygon(pts, Color("8a7050"))
-			c.draw_circle(Vector2(20, 6), 3.0, Color("c9a86a"))
+## 还没有图标时的占位轮廓
+static func _draw_placeholder(c: Control) -> void:
+	var pts := PackedVector2Array([Vector2(20, 4), Vector2(30, 12), Vector2(26, 34), Vector2(14, 34), Vector2(10, 12)])
+	c.draw_colored_polygon(pts, Color("8a7050"))
+	c.draw_circle(Vector2(20, 6), 3.0, Color("c9a86a"))

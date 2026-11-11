@@ -40,7 +40,7 @@ var _skin_tex: Texture2D = null
 var _deco_tex: Texture2D = null
 ## 192：底图在画布坐标里占的矩形（[method MapSkin.paper_rect]）；没底图 / 没图是空矩形
 var _paper: Rect2 = Rect2()
-## 192：画布外的桌面（`assets/ui/map/desk.png` 平铺；没图用底色）与纸影
+## 192：画布外的桌面（`assets/ui/map/desk.png` 平铺）与纸影
 const ART_DESK := "map/desk"
 const PAPER_SHADOW := Vector2(8, 10)
 const PAPER_SHADOW_COLOR := Color(0, 0, 0, 0.35)
@@ -607,8 +607,6 @@ func _draw() -> void:
 			for y in range(0, int(ceil(size.y / step.y))):
 				for x in range(0, int(ceil(size.x / step.x))):
 					draw_texture(desk, Vector2(x, y) * step)
-		else:
-			draw_rect(Rect2(Vector2.ZERO, size), UiPalette.bg())
 		draw_set_transform(pan, 0.0, Vector2(zoom, zoom))
 		draw_rect(Rect2(_paper.position + PAPER_SHADOW, _paper.size).grow(2.0), PAPER_SHADOW_COLOR)
 		draw_texture_rect(_skin_tex, _paper, false)
@@ -1081,7 +1079,7 @@ func _draw_player_layer(pos: Dictionary, grow: Dictionary, rect: Rect2) -> void:
 		_draw_pawn(off + Vector2(0.0, OFFSCREEN_SIZE * 0.3), OFFSCREEN_SIZE * 0.8, 0.85, 1.0, UiTheme.ART_MAP_PAWN_SMALL)
 
 
-## 一枚棋子：脚底中心（图的 json `anchor`）对准 [param foot]，高 [param h]；脚下一枚淡影。没图画一个墨线的小兵
+## 一枚棋子：脚底中心（图的 json `anchor`）对准 [param foot]，高 [param h]；脚下一枚淡影
 func _draw_pawn(foot: Vector2, h: float, alpha: float, squash: float, art_name: String) -> void:
 	if alpha <= 0.0:
 		return
@@ -1093,17 +1091,6 @@ func _draw_pawn(foot: Vector2, h: float, alpha: float, squash: float, art_name: 
 	var tex := UiTheme.art_cached(art_name)
 	if tex != null:
 		draw_texture_rect(tex, pawn_rect(foot, h, squash, art_name), false, Color(1, 1, 1, alpha))
-		return
-	var ink := Color(_ink(UiPalette.FG), alpha)
-	var paper_ := Color(UiTheme.PAPER, alpha)
-	var u := h / 10.0 * Vector2(1.0, squash)
-	var body := PackedVector2Array([foot + Vector2(-2.5, 0) * u, foot + Vector2(2.5, 0) * u, foot + Vector2(1.2, -5) * u, foot + Vector2(-1.2, -5) * u])
-	draw_colored_polygon(body, paper_)
-	body.append(body[0])
-	draw_polyline(body, ink, 1.5, true)
-	var head := foot + Vector2(0, -6.6) * u
-	draw_circle(head, 1.8 * u.x, paper_)
-	draw_arc(head, 1.8 * u.x, 0.0, TAU, 24, ink, 1.5, true)
 
 
 ## 棋子图画在哪（屏幕坐标）：高 [param h]，图的 `anchor`（脚底中心，json 里按 `size` 的逻辑尺寸给）对准 [param foot]。只看像素，和缩放无关
@@ -1130,9 +1117,6 @@ func _draw_tag(text: String, at: Vector2, placed: Array[Rect2], ink: Color = UiT
 	var sb := UiTheme.art_box(UiTheme.ART_MAP_TAG)
 	if sb != null:
 		draw_style_box(sb, box)
-	else:
-		draw_rect(box, Color(UiTheme.PAPER, 0.9))
-		draw_rect(box, Color(UiTheme.INK, 0.6), false, 1.0)
 	draw_string(_font, Vector2(box.position.x + 8.0, box.position.y + TAG_H * 0.5 + TAG_FONT * 0.36), text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_FONT, ink)
 
 

@@ -1,9 +1,9 @@
 ## 251 补充一 §10.2：铁匠铺点一格配方后，下方弹出的打造界面。补充二 §12.2（作者 10-25 14:21「铁匠铺的合成界面应该是铁砧配色的」）：
-## 底是整块铁砧剪影 `smithy/anvil_plate.png`（深底 → 浅字 [constant UiPalette.ANVIL_INK]；缺图是铁灰平底 [constant UiPalette.ANVIL_IRON]），
+## 底是整块铁砧剪影 `smithy/anvil_plate.png`（深底 → 浅字 [constant UiPalette.ANVIL_INK]），
 ## 内容摆在砧面上（`smithy/layout.json` 的 `face` 相对 `scroll` 的那块），整页缩放时 [method fit] 跟着缩；砧顶一个小尖 `anvil_pointer` 对准选中的格子（[member pointer_x]）。
 ## 一行：产物（带框小棋盘）｜产物名 +「需要材料」+ 每样素材「小图 + 有几 / 要几」（不够的暖红 [constant UiPalette.WARN_ON_DARK]）｜「工钱」金币 + 数字、
 ## 补图（UI替换美术 10-25 15:14 C）：素材摆在一条深色凹槽里，每样一格（照格子区缩小：道具图 + 下面「有几 / 要几」数牌，格与格之间一道格线）；
-## 「打造」键 —— 烧红四态图 `smithy/forge_key*.png`（[method IconButton.make_art]，字由代码写：`forge_key.json` 的键面里、粗体浅字深红描边），没图是平键 [constant UiTheme.BUTTON_FORGE]
+## 「打造」键 —— 烧红四态图 `smithy/forge_key*.png`（[method IconButton.make_art]，字由代码写：`forge_key.json` 的键面里、粗体浅字深红描边）
 class_name RecipeScroll
 extends PanelContainer
 
@@ -108,20 +108,16 @@ func _build(on_forge: Callable) -> void:
 	_wage = CoinLabel.make(0, TEXT_SIZE, _ink)
 	wage_row.add_child(_wage)
 	forge_key = IconButton.make_art(KEY_DIR, KEY_ID, UiText.t("smithy.forge"), "", on_forge)
-	if forge_key.theme_type_variation == UiTheme.BUTTON_ART:
-		var km := UiTheme.art_meta(KEY_META)
-		var kr: Dictionary = km.get("key_rect", {})
-		forge_key.art_label = UiText.t("smithy.forge")     # 图上不带字（中英文）
-		forge_key.art_label_rect = Rect2(float(kr.get("x", 0)), float(kr.get("y", 0)), float(kr.get("w", 0)), float(kr.get("h", 0)))
-		forge_key.art_label_color = KEY_INK
-		forge_key.art_label_outline = KEY_OUTLINE
-		forge_key.art_label_disabled_color = KEY_OFF_INK
-		forge_key.art_label_drop = 1.0
-		forge_key.set_meta(&"art_size", forge_key.custom_minimum_size)
-		forge_key.set_meta(&"label_size", int(km.get("font_size", 30)))
-	else:
-		forge_key.theme_type_variation = UiTheme.BUTTON_FORGE     # 没图：烧亮的铁红平键
-		forge_key.custom_minimum_size = Vector2(110, 40)
+	var km := UiTheme.art_meta(KEY_META)
+	var kr: Dictionary = km.get("key_rect", {})
+	forge_key.art_label = UiText.t("smithy.forge")     # 图上不带字（中英文）
+	forge_key.art_label_rect = Rect2(float(kr.get("x", 0)), float(kr.get("y", 0)), float(kr.get("w", 0)), float(kr.get("h", 0)))
+	forge_key.art_label_color = KEY_INK
+	forge_key.art_label_outline = KEY_OUTLINE
+	forge_key.art_label_disabled_color = KEY_OFF_INK
+	forge_key.art_label_drop = 1.0
+	forge_key.set_meta(&"art_size", forge_key.custom_minimum_size)
+	forge_key.set_meta(&"label_size", int(km.get("font_size", 30)))
 	side.add_child(forge_key)
 	fit(1.0)
 
@@ -137,17 +133,8 @@ func fit(k: float) -> void:
 	var face := Rect2(float(fr.get("x", 188)) - float(sr.get("x", 45)), float(fr.get("y", 592)) - float(sr.get("y", 578)), float(fr.get("w", 1060)), float(fr.get("h", 178)))
 	if lay.is_empty():
 		face = Rect2(143, 14, 1060, 178)
-	var box: StyleBox = null
-	var plate := UiTheme.art_cached(PLATE)
-	if plate != null:
-		var t := StyleBoxTexture.new()
-		t.texture = plate     # 不切九宫格：底板矩形 = 原图 × k，整张等比缩
-		box = t
-	else:
-		var flat := StyleBoxFlat.new()
-		flat.bg_color = UiPalette.ANVIL_IRON
-		flat.set_corner_radius_all(int(10 * _k))
-		box = flat
+	var box := StyleBoxTexture.new()
+	box.texture = UiTheme.art_cached(PLATE)     # 不切九宫格：底板矩形 = 原图 × k，整张等比缩
 	box.content_margin_left = face.position.x * _k
 	box.content_margin_top = face.position.y * _k
 	box.content_margin_right = (sw - face.end.x) * _k
@@ -167,11 +154,10 @@ func fit(k: float) -> void:
 	g.set_corner_radius_all(maxi(2, roundi(5 * _k)))
 	g.set_content_margin_all(maxf(3.0, 6.0 * _k))
 	_groove.add_theme_stylebox_override("panel", g)
-	if forge_key.has_meta(&"art_size"):
-		var a: Vector2 = forge_key.get_meta(&"art_size")
-		forge_key.custom_minimum_size = (a * _k).floor()
-		forge_key.art_label_size = maxi(12, roundi(int(forge_key.get_meta(&"label_size")) * _k))
-		forge_key.hit_rect = Rect2(forge_key.art_label_rect.position * _k, forge_key.art_label_rect.size * _k)
+	var a: Vector2 = forge_key.get_meta(&"art_size")
+	forge_key.custom_minimum_size = (a * _k).floor()
+	forge_key.art_label_size = maxi(12, roundi(int(forge_key.get_meta(&"label_size")) * _k))
+	forge_key.hit_rect = Rect2(forge_key.art_label_rect.position * _k, forge_key.art_label_rect.size * _k)
 	if not _last.is_empty():
 		callv("show_recipe", _last)
 
@@ -238,8 +224,6 @@ func _draw() -> void:
 	var tex := UiTheme.art_cached(POINTER)
 	if tex != null:
 		draw_texture_rect(tex, r, false)
-	else:
-		draw_colored_polygon(PackedVector2Array([Vector2(r.position.x, r.end.y), Vector2(r.get_center().x, r.position.y), r.end]), UiPalette.ANVIL_IRON)
 
 
 ## 测试看：现在写的产物名、素材那几行的字、工钱、浅字色

@@ -25,9 +25,6 @@ const LINE_GAP := 4
 ## 作者 2026-10-13（「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」）：64 → 88，组在板边上下内边距之间居中（底下的投影不算）
 const BAR_HEIGHT := 88.0
 const GROUP := &"hud_host"
-const BAR_SIDE := 16.0
-## 作者 2026-10-17（体力条和金币栏更靠近中央，右边同理）：左右两组各往里收屏宽的这么多成（至少 [constant BAR_SIDE]）
-const BAR_SIDE_FRAC := 0.1
 const BAR_PAD := 4.0
 ## 没有栏时三个槽退回哪个锚点
 const BAR_FALLBACK := {"bar_left": "top_left", "bar_center": "top", "bar_right": "top_right"}
@@ -191,10 +188,10 @@ static func bar_height_in(tree: SceneTree) -> float:
 	return host.bar_height() if host != null and host.is_visible_in_tree() else 0.0
 
 
-## 235：顶端栏往下伸到哪（石刻皮的日晷下凸压在地图上；布局里栏藏着 / 没有石刻皮 = 0）：告示卷排在它下面。
+## 235：顶端栏往下伸到哪（石刻皮的日晷下凸压在地图上；布局里栏藏着 = 0）：告示卷排在它下面。
 ## 只看布局与皮，不等这一遍排完（开图那一刻说的话也要让开，游戏测试 v4.10 复测）
 func overhang() -> float:
-	if layout == null or not HudBarScript.has_skin():
+	if layout == null:
 		return 0.0
 	var e := layout.entry_of(&"hud_bar")
 	return HudBarScript.dial_bottom() if not e.is_empty() and bool(e.get("visible", true)) else 0.0
@@ -235,27 +232,14 @@ func _bar_frame() -> Rect2:
 	return Rect2(side, m.x, maxf(0.0, size.x - side * 2.0), maxf(0.0, _bar_h - m.x - m.y))
 
 
-## 顶端栏左右各留多宽（栏本身还是铺满）。235：石刻皮按两头石块外沿 + 间隙（`topbar.json`），不再按屏宽的一成
+## 顶端栏左右各留多宽（栏本身还是铺满）。235：石刻皮按两头石块外沿 + 间隙（`topbar.json`）
 func bar_side() -> float:
-	if _skinned():
-		return HudBarScript.side_inset()
-	return maxf(BAR_SIDE, size.x * BAR_SIDE_FRAC)
+	return HudBarScript.side_inset()
 
 
 ## 栏底的上、下内边距（没栏 0）。235：石刻皮是两头石块的上下沿，组在这一段里竖向居中
 func _bar_margins() -> Vector2:
-	var bar := _bar()
-	if bar == null:
-		return Vector2.ZERO
-	if _skinned():
-		return HudBarScript.band_margins()
-	var box := bar.get_theme_stylebox("panel")
-	return Vector2.ZERO if box == null else Vector2(box.content_margin_top, box.content_margin_bottom)
-
-
-## 235：顶端栏在、而且有石刻皮
-func _skinned() -> bool:
-	return _bar() != null and HudBarScript.has_skin()
+	return HudBarScript.band_margins() if _bar() != null else Vector2.ZERO
 
 
 ## 有没有顶端栏（布局里那件看得见）
@@ -291,7 +275,7 @@ func arrange() -> void:
 				offset = Vector2.ZERO     # 栏里的槽不用偏移：一个槽一组
 			else:
 				anchor = BAR_FALLBACK[anchor]
-		w.set_in_bar(HudLayout.in_bar(anchor), _skinned())
+		w.set_in_bar(HudLayout.in_bar(anchor))
 		var key := "%s@%s" % [anchor, offset]
 		if not groups.has(key):
 			groups[key] = {"anchor": anchor, "offset": offset, "lines": {}}
@@ -302,7 +286,7 @@ func arrange() -> void:
 	# 166：先定顶端栏多高（里面最高的一组 + 上下留白），铺满顶部；栏里的槽在栏里摆
 	_bar_h = 0.0
 	if bar != null:
-		_bar_h = HudBarScript.design_height() if _skinned() else BAR_HEIGHT
+		_bar_h = HudBarScript.design_height()
 		var m := _bar_margins()
 		for key in order:
 			if HudLayout.in_bar(String(groups[key]["anchor"])):

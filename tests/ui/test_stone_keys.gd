@@ -11,7 +11,7 @@ static func frame_primary_short_keys(t: TestCase, root: Window) -> void:
 	t.begin("乙 石刻：主键用蜡封纸卷（九宫格左 36、字让开 16）、矮键 44 高字 18、带小字的主键 64 高")
 	var p := ScrollKey.primary("献祭", func(): pass) as ScrollKey
 	root.add_child(p)
-	t.check(p != null and p.art and p.primary_key, "主键是纸卷键")
+	t.check(p != null and p.primary_key, "主键是纸卷键")
 	var box := p.get_theme_stylebox("normal") as StyleBoxTexture
 	t.check(box != null and box.texture == UiTheme.art_cached("kit/key_primary_normal"), "主键用 kit/key_primary")
 	if box != null:
@@ -34,10 +34,6 @@ static func frame_primary_short_keys(t: TestCase, root: Window) -> void:
 	t.check(two.get_combined_minimum_size().x >= w + 42.0 + 26.0, "宽容得下小字")
 	ScrollKey.show_sub(two, "献祭", "")
 	t.eq((two.get_theme_stylebox("normal") as StyleBoxTexture).content_margin_bottom, 0.0, "没小字：大字居中")
-	var flat := Button.new()
-	ScrollKey.show_sub(flat, "献祭", "用过了")
-	t.eq(flat.text, "献祭\n用过了", "平板按钮：小字接成第二行")
-	flat.free()
 	for b in [p, s, two]:
 		b.free()
 

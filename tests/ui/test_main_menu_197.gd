@@ -7,23 +7,8 @@ const BOOT := "res://ui/boot.gd"
 
 
 static func run(t: TestCase) -> void:
-	t.begin("197 补充一 · 游戏名样式（思源宋体 Bold、字距 +6、6 px 深褐描边、下投影）、三张画（暗调）、启动屏的字体与底画、存档目录不随改名走")
-	var title := UiTheme.make_hero_title("背包搜打撤")
-	t.eq(title.theme_type_variation, UiTheme.LABEL_HERO_TITLE, "走 LabelHeroTitle 变体")
-	t.check(not title.has_theme_font_size_override("font_size"), "默认 128 号：零覆写")
-	UiTheme.set_hero_size(title, 64)
-	t.check(title.has_theme_font_size_override("font_size"), "随屏高缩放：改字号")
-	title.free()
+	t.begin("197 补充一 · 主菜单那几行字的样式、三张画（暗调）、启动屏的底画、存档目录不随改名走")
 	var th := UiTheme.current()
-	t.eq(th.get_font_size("font_size", UiTheme.LABEL_HERO_TITLE), 128, "128 号（1080 高，补充三）")
-	t.eq(th.get_color("font_color", UiTheme.LABEL_HERO_TITLE), Color("f0e2c4"), "暖纸色")
-	t.eq(th.get_color("font_outline_color", UiTheme.LABEL_HERO_TITLE), Color("1a1410"), "深褐描边")
-	t.eq(th.get_constant("outline_size", UiTheme.LABEL_HERO_TITLE), 6, "描边 6 px")
-	t.eq(th.get_constant("shadow_offset_y", UiTheme.LABEL_HERO_TITLE), 4, "投影往下 4")
-	var font := th.get_font("font", UiTheme.LABEL_HERO_TITLE) as FontVariation
-	t.check(font != null and font.spacing_glyph == 6, "字距 +6")
-	var base := font.base_font as FontVariation if font != null else null
-	t.check(base != null and base.base_font != null and base.base_font.resource_path.ends_with("serif_bold.otf"), "思源宋体 Bold")
 	var line_font := th.get_font("font", UiTheme.BUTTON_MENU_LINE) as FontVariation
 	t.check(line_font != null and line_font.base_font != null and line_font.base_font.resource_path.ends_with("serif_bold.otf"), "菜单那几行字：思源宋体 Bold")
 	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_MENU_LINE), 44, "主档 44 号")
@@ -48,10 +33,8 @@ static func run(t: TestCase) -> void:
 		t.eq(UiTheme.art_tone(n), UiTheme.TONE_DARK, "%s：暗调" % n)
 	var boot: GDScript = load(BOOT)
 	var consts := boot.get_script_constant_map()
-	t.check(String(consts["TITLE_FONT"]).ends_with("serif_bold.otf"), "启动屏游戏名改思源宋体 Bold")
 	t.eq(consts["BACKDROP"], "res://assets/ui/menu/bg_camp.png", "启动屏底画 = 菜单第一张")
 	t.eq(consts["BACKDROP_DIM"], MenuBackdrop.BOOT_DIM, "压暗那档和菜单亮起来的起点同值")
-	t.eq(consts["TITLE_COLOR"], UiTheme.HERO_TITLE_COLOR, "游戏名同色")
 	var r: Rect2 = boot.cover_rect(Vector2(2112, 1320), Vector2(1600, 1000))
 	t.check(r.position.x <= 0.0 and r.position.y <= 0.0 and r.end.x >= 1600.0 and r.end.y >= 1000.0, "启动屏的画铺满屏（%s）" % r)
 	t.check(ProjectSettings.get_setting("application/config/use_custom_user_dir", false), "存档目录名钉死")
@@ -156,7 +139,7 @@ static func frame_backdrop_camera(t: TestCase, root: Window) -> void:
 
 
 static func frame_logo(t: TestCase, root: Window) -> void:
-	t.begin("197 补充二 §12 / 补充三 · 字标图在就用图（宽 1116、按图的比例，水平居中、上沿 90，随高缩放），不在退回文字标题；启动屏读 1× 那张")
+	t.begin("197 补充二 §12 / 补充三 · 字标图在就用图（宽 1116、按图的比例，水平居中、上沿 90，随高缩放）；启动屏读 1× 那张")
 	var consts := (load(BOOT) as GDScript).get_script_constant_map()
 	t.eq(consts["LOGO"], "res://assets/ui/menu/title_boot.png", "启动屏的字标是 1× 那张")
 	var saved := UiTheme.asset_root
@@ -177,19 +160,6 @@ static func frame_logo(t: TestCase, root: Window) -> void:
 		t.check(is_equal_approx(logo.position.y, 90.0 * s) and is_equal_approx(logo.position.x + logo.size.x * 0.5, menu.size.x * 0.5), "水平居中、上沿 90（%s）" % logo.position)
 		t.eq(logo.mouse_filter, Control.MOUSE_FILTER_IGNORE, "不接鼠标")
 	game.queue_free()
-	# 没字标图（图包里缺这张）：退回文字标题，横贯整屏、居中
-	UiTheme.asset_root = "res://tests/fixtures/ui/no_such_pack/"
-	var bare = (load(GAME) as PackedScene).instantiate()
-	bare.save_path = p["run"]
-	bare.meta_path = p["meta"]
-	bare.settings_path = p["settings"]
-	root.add_child(bare)
-	var plain = bare.base()
-	var text = plain.title_node() if plain != null and plain.has_method("title_node") else null
-	t.check(text is Label and (text as Label).horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER and is_equal_approx(text.size.x, plain.size.x), "没图：文字标题横贯整屏、居中")
-	if text is Label:
-		t.check(is_equal_approx(text.position.y, 90.0 * plain.ui_scale()), "文字标题上沿 90")
-	bare.queue_free()
 	UiTheme.asset_root = saved
 	Support.cleanup("menu197l")
 	var real := UiTheme.art_cached("menu/title")

@@ -21,8 +21,6 @@ const PANEL_MARGIN := 40
 const VIEW_WIDTH := 1100.0
 ## 继续旗的可点区（同战前「开战」旗）
 const FLAG_HIT := Rect2(22, 10, 156, 108)
-## 纸卷「继续」的大小（没有图时也按它留位）
-const SCROLL_SIZE := Vector2(246, 94)
 ## 231：双剑铜章（回放中在「继续」那一格里随出手对攻，看完分胜负、让位给继续旗）
 var _medal: DuelMedal = null
 var _result: BattleResult = null
@@ -127,11 +125,10 @@ func open(payload: Dictionary) -> void:
 		_maybe_coach.call_deferred()
 
 
-## 「继续」用哪张图（作者 19:09：沿用战前的旗 —— 赢了一面完整的红旗 `continue_win`，输了一面破口的旧旗 `continue_lose`）；
-## 旗图还没到时用原来的纸卷 `continue`。英文有 `_en` 版就换
+## 「继续」用哪张图（作者 19:09：沿用战前的旗 —— 赢了一面完整的红旗 `continue_win`，输了一面破口的旧旗 `continue_lose`）。
+## 英文有 `_en` 版就换
 static func continue_art(won: bool) -> String:
-	var flag := "continue_win" if won else "continue_lose"
-	var name_ := flag if ResourceLoader.exists(CONTINUE_ART + flag + ".png") else "continue"
+	var name_ := "continue_win" if won else "continue_lose"
 	if UiText.lang != "zh" and ResourceLoader.exists(CONTINUE_ART + name_ + "_en.png"):
 		name_ += "_en"
 	return name_
@@ -140,7 +137,7 @@ static func continue_art(won: bool) -> String:
 static func _continue_size(won: bool) -> Vector2:
 	var path := CONTINUE_ART + continue_art(won) + ".png"
 	var tex := EventImage.load_texture(path) if ResourceLoader.exists(path) else null
-	return tex.get_size() if tex != null else SCROLL_SIZE
+	return tex.get_size() if tex != null else Vector2.ZERO
 
 
 ## 277 第 1 条：空格 = 播 / 停；Enter = 没看完先跳到结尾，看完了（「继续」旗出来了）再按 = 继续。开战过场里吃掉不做事
@@ -204,9 +201,8 @@ func _on_finished() -> void:
 	_note(ViewingSession.REVEAL)
 	HudHost.release_in(get_tree())     # 231 补充二：回放看完（或跳到底）顶栏才变，和「继续」旗同一刻
 	if _next == null and _next_slot != null:
-		var art := continue_art(_won)
-		_next = IconButton.make_art(CONTINUE_ART, art, UiText.t("battle.continue"), "", proceed)
-		_next.hit_rect = FLAG_HIT if _next.has_art() and art.begins_with("continue_") and not art.begins_with("continue_en") else Rect2()     # 旗：挂绳与旗尾点不着
+		_next = IconButton.make_art(CONTINUE_ART, continue_art(_won), UiText.t("battle.continue"), "", proceed)
+		_next.hit_rect = FLAG_HIT     # 旗：挂绳与旗尾点不着
 		_next_slot.add_child(_next)
 		_center_slot()
 		_settle_medal()

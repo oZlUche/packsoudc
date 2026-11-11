@@ -25,8 +25,7 @@ static func run_tier_table(t: TestCase) -> void:
 		t.eq(th.get_font_size("font_size", UiTheme.LABEL_CAP_VALUE), int(want["cap"]), "%s：图标牌数字" % tier)
 		t.eq(UiPalette.sized("[font_size=16]x[/font_size]"), "[font_size=%d]x[/font_size]" % int(want["rich16"]), "%s：富文本 16 号" % tier)
 		t.eq(UiPalette.sized("[font_size=1]x"), "[font_size=1]x", "%s：1 号撑宽行不放大" % tier)
-		var m := [th.get_font_size("font_size", UiTheme.BUTTON_MENU_LINE), th.get_font_size("font_size", UiTheme.BUTTON_MENU_FOOT),
-			th.get_font_size("font_size", UiTheme.LABEL_HERO_TITLE)]
+		var m := [th.get_font_size("font_size", UiTheme.BUTTON_MENU_LINE), th.get_font_size("font_size", UiTheme.BUTTON_MENU_FOOT)]
 		menu[tier] = m
 		var l := UiTheme.make_label("x", 20)
 		t.eq(l.get_theme_font_size("font_size"), UiTheme.sz(20), "%s：make_label 传 20 按档放大" % tier)
@@ -34,7 +33,7 @@ static func run_tier_table(t: TestCase) -> void:
 		t.eq(plain.get_theme_font_size("font_size"), 20, "%s：不跟档的标签（主菜单）照原字号" % tier)
 		l.free()
 		plain.free()
-	t.check(menu[&"small"] == menu[&"medium"] and menu[&"small"] == menu[&"large"] and menu[&"small"] == [UiTheme.MENU_PRIMARY_SIZE, UiTheme.MENU_FOOT_SIZE, UiTheme.HERO_TITLE_SIZE],
+	t.check(menu[&"small"] == menu[&"medium"] and menu[&"small"] == menu[&"large"] and menu[&"small"] == [UiTheme.MENU_PRIMARY_SIZE, UiTheme.MENU_FOOT_SIZE],
 		"主菜单的字三档相同：%s" % str(menu))
 	UiTheme.set_text_size(saved)
 	UiTheme.pinned_text_size = pinned

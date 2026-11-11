@@ -115,7 +115,7 @@ func open(payload: Dictionary) -> void:
 	_belt_row = _hbox(10)     # 147：腰带里能在战前用的（160：名字后面带数量）
 	buttons.add_child(_belt_row)
 	var flag := IconButton.make_art(FIGHT_ART, "fight" if UiText.lang == "zh" else "fight_en", UiText.t("pre.fight"), "", start_battle)
-	flag.hit_rect = FIGHT_HIT if flag.has_art() else Rect2()
+	flag.hit_rect = FIGHT_HIT
 	_start_btn = flag
 	buttons.add_child(_start_btn)
 	_why_note = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, 12, 18, 12, 8)     # 上边给图钉留地方（同熔炉的便条）
@@ -263,8 +263,6 @@ func _make_art_key(art: String, label: String, tip: String, handler: Callable) -
 	b.art_label_color = Color(String(ink.get("normal", "#2e2219")))
 	b.art_label_disabled_color = Color(String(ink.get("disabled", "#605a50")))
 	b.art_label_drop = 1.0
-	if not b.has_art():
-		b.custom_minimum_size = Vector2(RETREAT_W, 40)
 	return b
 
 
@@ -372,8 +370,6 @@ func _refresh() -> void:
 		var amb := flow.prebattle_skill()
 		var aw := ambush_reason()
 		_ambush_btn.art_label = UiText.t("pre.ambush_btn") % [UiText.t("pre.ambush"), flow.run.skills.uses_of(amb.id)]     # 「偷袭 ×3」
-		if not _ambush_btn.has_art():
-			_ambush_btn.text = _ambush_btn.art_label
 		_ambush_btn.disabled = aw != ""
 		_ambush_btn.queue_redraw()
 		_ambush_btn.tooltip_text = amb.describe() if aw == "" else aw

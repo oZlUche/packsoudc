@@ -2,8 +2,7 @@
 ## 节点之间按前置（[member TechDef.requires]）画线：从前置的顶边中点到本节点的底边中点，两端都点亮了是朱红，否则墨色（229：宽 3 圆头，颜色读树区底纸的 json `line`）。
 ## 229：每列顶上一枚段头签（[HeaderTag]，`tech.col_<列>`）；列与列之间只垫一道 [constant H_GAP]，外侧交给 [constant MARGIN]。
 ##
-## 节点三种样子：**已点亮**（主按钮橙底白字）、**可点亮**（前置都满足、还没点：深底亮边，边框慢慢呼吸）、**锁住**（暗字无边）。
-## 选中的节点再加一圈前景色的边。乙 石刻（有图时）：已点亮 = 家的主档木牌、可点亮 = 木牌（慢慢亮暗呼吸）、锁住 = 灰木牌，墨字；
+## 节点三种样子（乙 石刻）：**已点亮** = 家的主档木牌、**可点亮**（前置都满足、还没点）= 木牌（慢慢亮暗呼吸）、**锁住** = 灰木牌，墨字；
 ## 选中叠一圈 `kit/node_sel`（四边外扩 5）。点一个节点发 [signal selected]；数据（等级、前置）全看 [TechService]，这里只画
 class_name TechTreeView
 extends Control
@@ -92,7 +91,7 @@ func rebuild() -> void:
 		b.pressed.connect(func(): select(id))
 		add_child(b)
 		# 名字长（英文）放不下就把字号往下收，别被截掉（游戏测试 10-21：Warehouse Expansion 截成 Expansio）
-		TextFit.shrink_button_to(b, r.size.x - (2.0 * PEG_ROOM if _wood() else 18.0), 10)     # 木牌：让开两头的钉子；平板：两边留白 6 + 选中描边 3
+		TextFit.shrink_button_to(b, r.size.x - 2.0 * PEG_ROOM, 10)     # 木牌：让开两头的钉子
 		_nodes[def.id] = b
 	var tags: Dictionary = {}
 	var widest := 0.0
@@ -115,18 +114,14 @@ func rebuild() -> void:
 	queue_redraw()
 
 
-## 选中圈：`kit/node_sel` 九宫格（20），四边外扩 [constant SEL_OUTSET]；没图不画（退回描边）
+## 选中圈：`kit/node_sel` 九宫格（20），四边外扩 [constant SEL_OUTSET]；没图不画
 func _draw_ring() -> void:
-	if _selected == &"" or not _rects.has(_selected) or not _wood():
+	if _selected == &"" or not _rects.has(_selected):
 		return
 	if _ring_box == null:
 		_ring_box = UiTheme.nine_box(UiTheme.art_cached(SEL_ART), [20.0, 20.0, 20.0, 20.0])
 	if _ring_box.texture != null:
 		_ring.draw_style_box(_ring_box, (_rects[_selected] as Rect2).grow(SEL_OUTSET + 6.0))     # 图四周多 6
-
-
-func _wood() -> bool:
-	return UiTheme.art_cached(String(WOOD_ART[1])) != null
 
 
 ## 选中一个节点（发 [signal selected]）；没有这个 id 返回 false
@@ -220,40 +215,20 @@ func _place() -> void:
 #region 画
 func _style(b: Button, def: TechDef) -> void:
 	var st := state_of(def.id)
-	var box: StyleBox = _wood_box(st)
+	var box := _wood_box(st)
 	var fg := UiTheme.INK if st != State.LOCKED else LOCKED_INK
+	for k in ["font_color", "font_hover_color", "font_pressed_color"]:
+		b.add_theme_color_override(k, fg)
 	if box == null:
-		var flat := StyleBoxFlat.new()
-		flat.set_corner_radius_all(4)
-		flat.set_content_margin_all(6)
-		match st:
-			State.LIT:
-				flat.bg_color = UiPalette.BTN_PRIMARY
-				fg = UiPalette.BTN_PRIMARY_TEXT
-			State.AVAILABLE:
-				flat.bg_color = UiPalette.PANEL
-				flat.border_color = UiPalette.BTN_SECONDARY_EDGE
-				flat.set_border_width_all(2)
-				fg = UiPalette.FG
-			State.LOCKED:
-				flat.bg_color = UiPalette.PANEL.darkened(0.2)
-				fg = UiPalette.DIM
-		if def.id == _selected:
-			flat.border_color = UiPalette.FG
-			flat.set_border_width_all(3)
-		box = flat
+		return
 	# 121 特例：节点的样子按点亮状态实时换、可点亮的还要呼吸（_process 改这份底），每个节点得有自己的一份
 	for k in ["normal", "hover", "pressed", "focus"]:
 		b.add_theme_stylebox_override(k, box)
-	for k in ["font_color", "font_hover_color", "font_pressed_color"]:
-		b.add_theme_color_override(k, fg)
 	_boxes[def.id] = box
 
 
-## 乙 石刻木牌（点亮 / 可点亮 / 锁住三张图）；没图 null（退回平板样子）
+## 乙 石刻木牌（点亮 / 可点亮 / 锁住三张图）；没图 null
 func _wood_box(st: State) -> StyleBoxTexture:
-	if not _wood():
-		return null
 	var wood := UiTheme.art_box(String(WOOD_ART[int(st)]))
 	if wood != null:
 		wood.set_content_margin_all(6)
@@ -280,16 +255,12 @@ func _draw() -> void:
 			draw_circle(b, _line_w * 0.5, c)
 
 
-## 可点亮的节点边框慢慢呼吸（选中的那个不闪）
+## 可点亮的节点慢慢呼吸（选中的那个不闪）
 func _process(delta: float) -> void:
 	_t += delta
 	var k := 0.5 + 0.5 * sin(_t * 2.4)
 	for id in _boxes:
 		if id == _selected or state_of(id) != State.AVAILABLE:
 			continue
-		var bx: StyleBox = _boxes[id]
-		if bx is StyleBoxTexture:
-			(bx as StyleBoxTexture).modulate_color = Color.WHITE.lerp(Color(1.06, 1.05, 1.02), k)     # 木牌：慢慢亮一点再暗回去
-		else:
-			(bx as StyleBoxFlat).border_color = UiPalette.BTN_SECONDARY_EDGE.lerp(UiPalette.FG, k * 0.6)
+		(_boxes[id] as StyleBoxTexture).modulate_color = Color.WHITE.lerp(Color(1.06, 1.05, 1.02), k)     # 木牌：慢慢亮一点再暗回去
 #endregion

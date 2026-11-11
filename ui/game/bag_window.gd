@@ -7,8 +7,7 @@
 ## 223（作者 16:07 选蜡板、甲 角色卡）：窗加宽到 984，原来整扇 660 一字不动；x 660 一条竖分隔线，右栏（`col`）放名牌和 [CharacterCard]，
 ## 棋盘变宽时竖线和右栏整体右移同样的量。
 ## 232（作者 19:23 选 2）：石板窗换成一只背包 —— 四件皮料（包身九宫格、翻盖、提手徽、两只侧环，`assets/ui/bag/layout.json`）
-## 垫在画布底下（[member _back]），翻盖整块是拖动把手、盖住标题行（横分隔线不画了），提手与侧环凸出窗外、夹边时算进去（[member FloatingWindow.outset]）。
-## 缺包身图退回石板窗
+## 垫在画布底下（[member _back]），翻盖整块是拖动把手、盖住标题行（横分隔线不画了），提手与侧环凸出窗外、夹边时算进去（[member FloatingWindow.outset]）
 class_name BagWindow
 extends FloatingWindow
 
@@ -57,11 +56,11 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	key = "bag"
 	_font = font
 	_spec = spec()
-	_satchel = satchel() if UiTheme.art_cached(SATCHEL_DIR + "bag_body") != null else {}
-	UiTheme.panel(self, 0, UiTheme.PANEL_BARE if skinned() else UiTheme.PANEL_WINDOW)     # 内边距 0：子节点按窗左上的设计像素摆
+	_satchel = satchel()
+	UiTheme.panel(self, 0, UiTheme.PANEL_BARE)     # 内边距 0：子节点按窗左上的设计像素摆
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	center_shift = _vec(_spec["window_center"]) - DESIGN * 0.5
-	if skinned():
+	if not _satchel.is_empty():
 		_build_back()
 
 	_canvas = Control.new()
@@ -155,11 +154,6 @@ static func satchel() -> Dictionary:
 	return UiTheme.art_meta(SATCHEL_DIR + "layout")
 
 
-## 232：换上背包皮了没有
-func skinned() -> bool:
-	return not _satchel.is_empty()
-
-
 ## 四件皮料（叠放：包身 → 侧环 → 翻盖 → 提手徽）；位置在 [method _layout] 里随窗宽摆
 func _build_back() -> void:
 	_back = Control.new()
@@ -218,12 +212,12 @@ func _layout_back(want: Vector2) -> void:
 	right.position = Vector2(want.x + float(String(right_at[0]).trim_prefix("W").replace(" ", "").replace("+-", "-")), float(right_at[1]))
 
 
-## 翻盖的矩形（窗里的坐标；拖动把手就是它）；没换皮 = 标题行
+## 翻盖的矩形（窗里的坐标；拖动把手就是它）
 func grip_rect() -> Rect2:
-	if _back != null:
-		var f := _back.get_node("Flap") as Control
-		return Rect2(f.position, f.size)
-	return Rect2(Vector2.ZERO, Vector2(window_size().x, float(_spec["header_h"])))
+	if _back == null:
+		return Rect2()
+	var f := _back.get_node("Flap") as Control
+	return Rect2(f.position, f.size)
 
 
 ## 精修稿的 `bag_window`（缺的键按 [constant DEFAULTS]）
@@ -290,12 +284,8 @@ func _layout() -> void:
 	reset_size()
 
 
-## 标题行下那条线：y = 窗上沿 + header_h，左右各缩 gap（232 换了背包皮不画：翻盖下沿就是分隔）；223：棋盘右边一条竖线（同色同粗，跟着棋盘右移、下端跟着窗长）
+## 223：棋盘右边一条竖线（跟着棋盘右移、下端跟着窗长；232：标题行下那条横线不画，翻盖下沿就是分隔）
 func _draw_divider() -> void:
-	if not skinned():
-		var y := float(_spec["header_h"])
-		var gap := float(_spec["gap"])
-		_canvas.draw_line(Vector2(gap, y), Vector2(_canvas.size.x - gap, y), DIVIDER_COLOR, DIVIDER_W)
 	var v := divider_v()
 	_canvas.draw_line(v[0], v[1], DIVIDER_COLOR, DIVIDER_W)
 

@@ -56,7 +56,7 @@ const SHELF_WIN_WIDE := Vector2(1320, 900)
 const FULL_TABS := ["market", "smithy"]
 ## 264 §三（作者 17:01 定稿）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地底图；换时淡入淡出 [constant SCENE_FADE] 秒。
 ## 有场景图的页不垫粗布
-const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition"}     # 271：出征页也有自己的场景图（UI替换美术 出图；缺图回基地底图）
+const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
 const SCENE_FADE := 0.25
 
 var _wh = null
@@ -290,8 +290,7 @@ func open(payload: Dictionary) -> void:
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
 	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
-		if backdrop_of(pair[0]) != UiTheme.ART_HOME_BG:
-			cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
+		cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
 		(pair[1] as Callable).call(cloth)
 		_pages[pair[0]] = cloth
 	# 139：抽屉盖在右半边上（后加 = 画在上面），贴右缘、标题行下面
@@ -1152,11 +1151,9 @@ func shelf_window(key: String) -> Control:
 ## 切页："expedition"（出征，默认；264 前叫家，"home" 留作别名）/ "warehouse" / "logistics" / "shelf"；261：老名字 "codex" / "achievements" / "tech" = 书架 + 开那扇窗。
 ## 262：分页名 "market" / "smithy" = 后勤 + 那个分页；"logistics" 落上次看的分页。268："sell"（出售页删了）落仓库页。
 ## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
-## 264 §三：中列这一页该铺哪张整屏背景（集市 / 铁匠铺有场景图用场景图，否则基地底图）
+## 264 §三：中列这一页该铺哪张整屏背景（集市 / 铁匠铺 / 出征用自己的场景图，别的页基地底图）
 static func backdrop_of(page_name: String) -> String:
-	if SCENES.has(page_name) and UiTheme.art(String(SCENES[page_name])) != null:
-		return String(SCENES[page_name])
-	return UiTheme.ART_HOME_BG
+	return String(SCENES.get(page_name, UiTheme.ART_HOME_BG))
 
 
 ## 整屏背景换成 [param art_name]：淡入淡出（上面叠一张新图从透明到不透明，满了换给底图）；不淡（测试）当场换

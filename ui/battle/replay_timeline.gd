@@ -4,8 +4,8 @@
 ## 点一下 / 拖动 = 跳到那一刻（[signal seek_requested]，回放层调现成的 [method BattleView.seek]）；拖着时回放停着，
 ## 松手按原来的状态接着放（[signal scrub_started] / [signal scrub_ended]）。只画、只发信号，不认识模拟。
 ##
-## 167（作者定 D 版）：有图时是石板上的铜章凹槽 —— 槽体九宫格（两端符石不拉伸）、已播的魔晶色亮段（同一套九宫格，按进度裁）、
-## 菱形魔晶游标（`pivot` 对准当前时刻）、两色刻度贴图（倒下的拉长 1.5 倍、加宽；没播到的压到 35%）。缺图照原来画线
+## 167（作者定 D 版）：石板上的铜章凹槽 —— 槽体九宫格（两端符石不拉伸）、已播的魔晶色亮段（同一套九宫格，按进度裁）、
+## 菱形魔晶游标（`pivot` 对准当前时刻）、两色刻度贴图（倒下的拉长 1.5 倍、加宽；没播到的压到 35%）
 class_name ReplayTimeline
 extends Control
 
@@ -14,9 +14,6 @@ signal scrub_started
 signal scrub_ended
 
 const HEIGHT := 34.0
-const PAD := 6.0
-const TICK := 9.0
-const SIDE_COLORS := [Color("6fa8dc"), Color("e06666")]
 ## 167：贴图（[method UiTheme.art] 的名字）、槽的半高（刻度从槽边起）、倒下的刻度放大、没播到的透明度
 const ART_GROOVE := "replay/timeline_groove"
 const ART_FILL := "replay/timeline_fill"
@@ -35,7 +32,7 @@ var cursor: float = 0.0:
 		cursor = v
 		queue_redraw()
 var _scrubbing := false
-## 167：贴图（缺一样就整条走画线）
+## 167：贴图（缺一样就整条不画）
 var _groove: StyleBoxTexture = null
 var _fill: StyleBoxTexture = null
 var _cursor_tex: Texture2D = null
@@ -67,14 +64,9 @@ func _load_art() -> void:
 		_groove = null
 
 
-## 有没有贴图（测试看两条路径）
-func has_art() -> bool:
-	return _groove != null
-
-
-## 杆两头留的空：有图 = 两端符石的宽（槽九宫格的左右边距），没图 [constant PAD]
+## 杆两头留的空：两端符石的宽（槽九宫格的左右边距）
 func pad() -> float:
-	return _groove.texture_margin_left if _groove != null else PAD
+	return _groove.texture_margin_left if _groove != null else 0.0
 
 
 ## 换一场：时长与刻度从日志来
@@ -129,24 +121,8 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
-	if _groove != null:
-		_draw_art()
+	if _groove == null:
 		return
-	var mid := size.y * 0.5
-	draw_line(Vector2(PAD, mid), Vector2(size.x - PAD, mid), UiPalette.LINE.lightened(0.3), 2.0)
-	for t in ticks:
-		var x := x_of(float(t[0]))
-		var up: bool = t[1]
-		var c: Color = SIDE_COLORS[int(t[2])]
-		var len_ := TICK * (1.5 if bool(t[3]) else 1.0)
-		draw_line(Vector2(x, mid), Vector2(x, mid - len_ if up else mid + len_), Color(c, 0.85), 2.0 if bool(t[3]) else 1.0)
-	var cx := x_of(cursor)
-	draw_line(Vector2(cx, 2), Vector2(cx, size.y - 2), UiPalette.FG, 2.0)
-	draw_colored_polygon(PackedVector2Array([Vector2(cx - 5, 0), Vector2(cx + 5, 0), Vector2(cx, 6)]), UiPalette.FG)
-
-
-## 167：贴图那条路径
-func _draw_art() -> void:
 	var mid := size.y * 0.5
 	var band := Rect2(0.0, mid - HEIGHT * 0.5, size.x, HEIGHT)
 	_groove.draw(get_canvas_item(), band)

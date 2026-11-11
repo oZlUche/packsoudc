@@ -1,7 +1,7 @@
 ## 商店按钮（UI替换美术，作者 2026-10-21 17:39 定纸卷那一案，同战斗屏的继续纸卷）：两头卷轴的纸键，九宫格横向按字长拉。
 ## 两种：普通键（收起、离开：宽 = 字宽 + 52，最窄 116）与币座键（刷新、「随身」买钮：右端 [member coin_cap] 宽的币座不拉，
 ## 金币画在图里，价钱数字由这里写在金币右边，只写数字）。卖掉的随身钮 = 禁用态 + 226 的已售戳（中心对准币座中心）。
-## 排版全读 `assets/ui/shop/keys.json`（美术 `layout.json` 原样）；缺图退回平板按钮的样子（[method UiTheme.make_button]）。
+## 排版全读 `assets/ui/shop/keys.json`（美术 `layout.json` 原样）。
 ## 乙 石刻那批（`kit/layout.json`）再加两种：主键 [method primary]（纸卷左头压蜡封，`kit/key_primary_*`，字在 [16, 宽] 里居中）
 ## 与矮键 [method short]（同图压到 44 高）；主键可以带一行小字 [member sub]（神坛「献祭」的预览）
 class_name ScrollKey
@@ -42,8 +42,6 @@ var sold := false:
 	set(v):
 		sold = v
 		queue_redraw()
-## 有没有用上图（缺图时是平板按钮）
-var art := false
 ## 主键（蜡封纸卷）
 var primary_key := false
 ## 第二行小字（只有 [method primary] 给了 [param two_line] 的键才留位置）
@@ -65,15 +63,10 @@ var _pressed_dy := 1.0
 
 ## [param p_coin] = 币座键；[param p_price] 币座键上的数字（负数不写）
 static func make(p_text: String, handler: Callable, p_coin: bool = false, p_price: int = -1) -> Button:
-	var spec := UiTheme.art_meta(LAYOUT)
-	if UiTheme.art_cached(ART_DIR + ("key_coin" if p_coin else "key") + "_normal") == null:
-		var flat_ := UiTheme.make_button("", handler, UiPalette.Tier.SECONDARY, 13)
-		show_price(flat_, p_text, p_price)
-		return flat_
 	var b := ScrollKey.new()
 	b.coin = p_coin
 	b.text = p_text
-	b._dress(spec)
+	b._dress(UiTheme.art_meta(LAYOUT))
 	b.price = p_price
 	b.pressed.connect(handler)
 	return b
@@ -81,8 +74,6 @@ static func make(p_text: String, handler: Callable, p_coin: bool = false, p_pric
 
 ## 主键：要动真格的那一下（神坛「献祭」、读档「读取」「在此开新档」）。[param two_line] = 底下留一行小字（[member sub]），整颗高 64
 static func primary(p_text: String, handler: Callable, two_line: bool = false) -> Button:
-	if UiTheme.art_cached(PRIMARY_ART + "normal") == null:
-		return make(p_text, handler)
 	var b := ScrollKey.new()
 	b.primary_key = true
 	b._two_line = two_line
@@ -95,35 +86,19 @@ static func primary(p_text: String, handler: Callable, two_line: bool = false) -
 ## 矮键：同纸卷压到 44 高、字 18（回地图、整理背包、上一页、删除）
 static func short(p_text: String, handler: Callable) -> Button:
 	var b := make(p_text, handler)
-	if b is ScrollKey:
-		b.custom_minimum_size.y = SHORT_H
-		b.add_theme_font_size_override("font_size", UiTheme.sz(SHORT_FONT))
+	b.custom_minimum_size.y = SHORT_H
+	b.add_theme_font_size_override("font_size", UiTheme.sz(SHORT_FONT))
 	return b
 
 
-## 写字和价钱：纸卷键字只写名字、数字画在币座上；缺图的平板按钮把数字（或「已售」）接在字后面
-static func show_price(b: Button, label: String, p: int = -1, p_sold: bool = false) -> void:
-	if b is ScrollKey:
-		b.text = label
-		b.price = p
-		b.sold = p_sold
-	elif p_sold:
-		b.text = "%s %s" % [label, UiText.t("shop.sold_tag")]
-	else:
-		b.text = label if p < 0 else "%s %d" % [label, p]
-
-
-## 写大字和小字：带小字的主键分两行画；别的按钮（缺图的平板）把小字接成第二行
+## 写大字和小字：带小字的主键分两行画
 static func show_sub(b: Button, label: String, line: String) -> void:
-	if b is ScrollKey and b._two_line:
-		b.text = label
+	b.text = label
+	if b is ScrollKey:
 		b.sub = line
-	else:
-		b.text = label + ("\n" + line if line != "" else "")
 
 
 func _dress(spec: Dictionary) -> void:
-	art = true
 	var piece: Dictionary = spec.get("key_coin" if coin else "key", {})
 	if primary_key:
 		piece = UiTheme.art_meta(KIT_LAYOUT).get("key_primary", {})
@@ -149,12 +124,9 @@ func _dress(spec: Dictionary) -> void:
 	_right = 26.0 + coin_cap - (2.0 if coin else 0.0)
 	var base := PRIMARY_ART if primary_key else ART_DIR + ("key_coin_" if coin else "key_")
 	for state in STATES:
-		var tex := UiTheme.art_cached(base + state)
-		if tex == null:
-			tex = UiTheme.art_cached(base + "normal")
 		var dy := _pressed_dy if state == "pressed" else 0.0
 		# 按下：字往下挪 dy（内容区上边让 2 dy，字居中）
-		add_theme_stylebox_override(state, UiTheme.nine_box(tex, m, [_left, 2.0 * dy, _right, 0.0], pad))
+		add_theme_stylebox_override(state, UiTheme.nine_box(UiTheme.art_cached(base + state), m, [_left, 2.0 * dy, _right, 0.0], pad))
 		add_theme_color_override("font_%s_color" % state if state != "normal" else "font_color", _colors[state])
 	add_theme_color_override("font_hover_pressed_color", _colors["pressed"])
 	add_theme_color_override("font_focus_color", _colors["normal"])
@@ -174,7 +146,7 @@ func indent(px: float) -> void:
 
 ## 有小字：大字往上让 [constant SUB_LIFT]，宽也要容得下小字
 func _fit_sub() -> void:
-	if not art or not _two_line:
+	if not _two_line:
 		return
 	for state in STATES + ["hover_pressed"]:
 		var box := get_theme_stylebox(state) as StyleBoxTexture
@@ -200,13 +172,13 @@ func stamp_center() -> Vector2:
 
 
 func _draw() -> void:
-	if art and _two_line and sub != "":
+	if _two_line and sub != "":
 		var st2 := _state()
 		var f2 := UiPalette.cjk_font()
 		var cy := size.y - SUB_FROM_BOTTOM + (_pressed_dy if st2 == "pressed" else 0.0)
 		var y := cy + (f2.get_ascent(SUB_FONT) - f2.get_descent(SUB_FONT)) * 0.5
 		draw_string(f2, Vector2(_left, y), sub, HORIZONTAL_ALIGNMENT_CENTER, size.x - _left - _right, SUB_FONT, _colors[st2])
-	if not art or not coin:
+	if not coin:
 		return
 	var st := _state()
 	var dy := _pressed_dy if st == "pressed" else 0.0

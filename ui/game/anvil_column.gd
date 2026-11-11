@@ -45,7 +45,7 @@ var _weapon_view: InventoryView = null
 var _material_view: InventoryView = null
 var _out_view: InventoryView = null
 var _ghost_view: InventoryView = null
-var strike_key: BaseButton = null
+var strike_key: TextureButton = null
 var _glyph_weapon: TextureRect = null
 var _glyph_material: TextureRect = null
 var _status: Label = null
@@ -160,15 +160,12 @@ func _view(g: GridInventory, at: Vector2) -> InventoryView:
 	return v
 
 
-## 圆锤键：图齐了是 TextureButton（不写字），缺图退回写「锤打」的短纸卷键
-func _hammer_key() -> BaseButton:
-	var normal := UiTheme.art_cached(KEY_ART + "ready")
-	if normal == null:
-		return ScrollKey.short(UiText.t("anvil.strike"), strike)
+## 圆锤键（不写字）
+func _hammer_key() -> TextureButton:
 	var k := TextureButton.new()
 	k.ignore_texture_size = true
 	k.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-	k.texture_normal = normal
+	k.texture_normal = UiTheme.art_cached(KEY_ART + "ready")
 	k.texture_hover = UiTheme.art_cached(KEY_ART + "hover")
 	k.texture_pressed = UiTheme.art_cached(KEY_ART + "pressed")
 	k.texture_disabled = UiTheme.art_cached(KEY_ART + "off")
@@ -271,8 +268,7 @@ func _refresh() -> void:
 	UiTheme.label(_status, STATUS_FONT, UiPalette.FG if open else UiPalette.DIM)     # 用过了：灰
 	_ghost_view.visible = out.item_count() == 0
 	strike_key.disabled = not open or made == null or out.item_count() > 0
-	if strike_key is TextureButton:
-		(strike_key as TextureButton).texture_disabled = UiTheme.art_cached(KEY_ART + ("off" if open else "used"))     # 用过了：冷
+	strike_key.texture_disabled = UiTheme.art_cached(KEY_ART + ("off" if open else "used"))     # 用过了：冷
 	_glyph_weapon.visible = weapon_slot.item_count() == 0
 	_glyph_material.visible = material_slot.item_count() == 0
 

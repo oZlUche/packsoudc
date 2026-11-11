@@ -1,5 +1,5 @@
-## 167（作者定 D 版）：战斗回放控件换图 —— 播放 / 倍速 / 跳过是符石键（三态图，缺图写字），倍速是罗马数字；
-## 时间轴有图时是铜章凹槽（两端符石留空），缺图照原来画线；底下那行常驻说明挪进播放键的悬浮窗
+## 167（作者定 D 版）：战斗回放控件换图 —— 播放 / 倍速 / 跳过是符石键（三态图），倍速是罗马数字；
+## 时间轴是铜章凹槽（两端符石留空）；底下那行常驻说明挪进播放键的悬浮窗
 extends RefCounted
 
 const GF := preload("res://tests/run/test_game_flow.gd")
@@ -64,50 +64,13 @@ static func frame_art_buttons(t: TestCase, root: Window) -> void:
 	view.queue_free()
 
 
-static func frame_text_fallback(t: TestCase, root: Window) -> void:
-	t.begin("167 · 缺图：三键写字（暂停 / 播放 / 重播、Ⅰ / Ⅱ / Ⅳ、跳过），走图标按钮变体")
-	var result := _result()
-	if result == null:
-		t.check(false, "没有一场战斗结果")
-		return
-	var saved := BattleView.art_dir
-	BattleView.art_dir = "res://tests/fixtures/no_such_replay/"
-	var view := BattleView.new()
-	root.add_child(view)
-	view.play(result)
-	var play: IconButton = view._play_btn
-	var speed: IconButton = view._speed_btn
-	t.check(not play.has_art() and play.theme_type_variation == UiTheme.BUTTON_ICON, "没图：图标按钮变体")
-	t.eq(play.text, "暂停", "在放：写暂停")
-	view.toggle_play()
-	t.eq(play.text, "播放", "停着：写播放")
-	view.skip_to_end()
-	t.eq(play.text, "重播", "播完：写重播")
-	view.set_speed(1.0)
-	var texts: Array = []
-	for i in BattleView.SPEEDS.size():
-		texts.append(speed.text)
-		view.cycle_speed()
-	t.eq(texts, ["Ⅰ", "Ⅱ", "Ⅳ"], "倍速写罗马数字，不写阿拉伯数字")
-	t.eq(view._skip_btn.text, "跳过", "跳过写字")
-	view.queue_free()
-	BattleView.art_dir = saved
-
-
 static func run_timeline(t: TestCase) -> void:
-	t.begin("167 · 时间轴：有图走铜章凹槽（两端符石留 16 像素），缺图走画线（留 6）；两条路径时刻 ↔ 横坐标都对得上")
+	t.begin("167 · 时间轴：铜章凹槽（两端符石留 16 像素）；时刻 ↔ 横坐标对得上")
 	var art := ReplayTimeline.new()
-	t.check(art.has_art(), "assets 里有图：贴图路径")
 	t.eq(art.pad(), 16.0, "两端留符石的宽")
-	var saved := UiTheme.asset_root
-	UiTheme.asset_root = "res://tests/fixtures/no_such_ui/"
-	var bare := ReplayTimeline.new()
-	UiTheme.asset_root = saved
-	t.check(not bare.has_art(), "缺图：画线路径")
-	t.eq(bare.pad(), ReplayTimeline.PAD, "留 %.0f" % ReplayTimeline.PAD)
-	for tl in [art, bare]:
+	for tl in [art]:
 		tl.size = Vector2(400, ReplayTimeline.HEIGHT)
 		tl.duration = 10.0
-		t.check(is_equal_approx(tl.x_of(0.0), tl.pad()) and is_equal_approx(tl.x_of(10.0), 400.0 - tl.pad()), "两头对着杆的两端（%s）" % ("图" if tl.has_art() else "线"))
+		t.check(is_equal_approx(tl.x_of(0.0), tl.pad()) and is_equal_approx(tl.x_of(10.0), 400.0 - tl.pad()), "两头对着杆的两端")
 		t.check(is_equal_approx(tl.time_at(tl.x_of(3.0)), 3.0), "来回换算一致")
 		tl.free()

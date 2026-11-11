@@ -176,7 +176,6 @@ func rebuild(keep_page: bool = true) -> void:
 	_views.clear()
 	_frames.clear()
 	_prices.clear()
-	_stage.tables = true     # 262：集市默认就有（1 级），不再有「未开」的空棚
 	_stage.tooltip_text = UiText.t("market.restock_tip")
 	_funds.amount = flow.meta.funds
 	_refresh.price = Market.refresh_cost(flow.meta, flow.market())
@@ -254,8 +253,6 @@ func _place() -> void:
 			var key := _stall_keys[id] as Button
 			if key is CatKey:
 				(key as CatKey).scale_k = kk
-			else:
-				key.custom_minimum_size.x = roundf(CatKey.SIZE.x * kk)
 	if _stage.size.x <= 0.0:
 		return
 	var layout := _stage.layout()

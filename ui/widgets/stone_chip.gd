@@ -2,7 +2,7 @@
 ## - 选项签（窗口 / 分辨率 / 底色 / 光标）：toggle_mode，一组里只有一个 on；宽 = 粗体字宽 + 38，底色签左边多 24 放色样（[member swatch]）；
 ## - 开关行（[member check] = true）：chip_normal 拉满整行，左头印 `kit/check_on` / `check_off`，字左对齐从 48 起；
 ## - 目录条（[method entry]，百科左栏）：`kit/entry_*` 高 36、字 17 左对齐从 14 起，正在看的那页 = entry_on（书签）。
-## 字由这里画（普通态宋体、选中态粗体，按粗体留宽）；缺图退回平板按钮（[method UiTheme.make_button]）
+## 字由这里画（普通态宋体、选中态粗体，按粗体留宽）
 class_name StoneChip
 extends Button
 
@@ -43,10 +43,6 @@ var _boxes := {}
 
 ## 选项签：[param p_swatch] 给了就是底色签
 static func make(p_text: String, handler: Callable, p_swatch: Color = Color(0, 0, 0, 0)) -> Button:
-	if UiTheme.art_cached(ART + "normal") == null:
-		var flat_ := UiTheme.make_button(p_text, handler, UiPalette.Tier.MINOR, 13)
-		flat_.toggle_mode = true
-		return flat_
 	var b := StoneChip.new()
 	b.text = p_text
 	b.toggle_mode = true
@@ -58,11 +54,6 @@ static func make(p_text: String, handler: Callable, p_swatch: Color = Color(0, 0
 
 ## 开关行：拉满整行，左头印表示开 / 关
 static func toggle(p_text: String, handler: Callable) -> Button:
-	if UiTheme.art_cached(ART + "normal") == null:
-		var flat_ := UiTheme.make_button(p_text, handler, UiPalette.Tier.MINOR, 14)
-		flat_.toggle_mode = true
-		flat_.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		return flat_
 	var b := StoneChip.new()
 	b.check = true
 	b.text = p_text
@@ -75,12 +66,6 @@ static func toggle(p_text: String, handler: Callable) -> Button:
 
 ## 目录条：拉满一栏，正在看的那页按下（[method set_pressed_no_signal]）= 书签
 static func entry(p_text: String, handler: Callable) -> Button:
-	if UiTheme.art_cached(ENTRY_ART + "normal") == null:
-		var flat_ := UiTheme.make_button(p_text, handler, UiPalette.Tier.MINOR, 13)
-		flat_.toggle_mode = true
-		flat_.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		flat_.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		return flat_
 	var b := StoneChip.new()
 	b.is_entry = true
 	b.text = p_text

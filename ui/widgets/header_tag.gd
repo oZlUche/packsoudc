@@ -1,5 +1,5 @@
 ## 段头签（226 §1.3，作者 17:25 定甲 小石牌 `notice/header_stone`）：左头一枚朱红圆点的小石牌，墨字由代码写。
-## 宽 = 字宽 + [constant LEFT] + [constant RIGHT]，高 [constant HEIGHT]；缺图画一块浅石色圆角底。点不着。
+## 宽 = 字宽 + [constant LEFT] + [constant RIGHT]，高 [constant HEIGHT]。点不着。
 ## 225 包架：挂绳版（[method hanging]，`notice/header_stone_hang` 160 × 46，牌身在挂绳下面，字大一号）
 class_name HeaderTag
 extends Control
@@ -75,11 +75,6 @@ func _draw() -> void:
 	if tex != null:
 		var m: Array = UiTheme.art_meta(art).get("margin", [24, 22, 24, 8] if hang else [22, 8, 12, 8])
 		draw_style_box(UiTheme.nine_box(tex, m), r)
-	else:
-		var flat := StyleBoxFlat.new()
-		flat.bg_color = Color("e4ded2")
-		flat.set_corner_radius_all(4)
-		draw_style_box(flat, Rect2(0, HANG_HEIGHT - HEIGHT, size.x, HEIGHT) if hang else r)
 	var font := UiPalette.cjk_font_bold()
 	var px := _font_size()
 	var mid := HANG_MID if hang else size.y * 0.5

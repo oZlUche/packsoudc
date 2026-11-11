@@ -67,16 +67,6 @@ func open(_payload: Dictionary) -> void:
 		var b := StoneChip.make(UiText.pick(t["name"]), func(): set_bg_theme(tid), t["color"])     # 乙 石刻：底色签左边一块色样
 		if t.has("note"):
 			b.tooltip_text = UiText.pick(t["note"])     # 226 批二：「默认」「最浅」进悬浮窗
-		var box := b.get_theme_stylebox("normal") as StyleBoxFlat
-		if box != null and not b is StoneChip:     # 缺图的平板按钮：按钮底就是那档底色
-			var swatch := box.duplicate() as StyleBoxFlat
-			swatch.bg_color = t["color"]
-			b.ready.connect(func():     # 226 批二：按下态边距更宽，按它撑宽（不然选中那键字被裁成「石」「Graphi」）；进了树才取得到主题里的按下态
-				var pressed_box := b.get_theme_stylebox("pressed")
-				for side in [SIDE_LEFT, SIDE_RIGHT]:
-					swatch.set_content_margin(side, maxf(swatch.get_content_margin(side), pressed_box.get_content_margin(side)))
-				b.update_minimum_size())
-			b.add_theme_stylebox_override("normal", swatch)     # 121 特例：底色色板，按钮底就是那档底色（画布色）
 		_bg_btns[tid] = b
 		bg_row.add_child(b)
 	col.add_child(bg_row)

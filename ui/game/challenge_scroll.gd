@@ -6,7 +6,7 @@
 ## 补五（作者 11:49）：底卷轴一直在，纸再短也由两根卷轴夹着；纸长超上限（[member max_paper]，第三页按「出发」按钮的上沿算）时
 ## 纸停在上限，底卷轴兼做收束：最早（最低级）的行藏在它后面，滚轮一格滚一行；加一级时回到顶。
 ## 卷轴、纸都按坐标摆（不进容器）：难度块收起时把这一对卷轴当「开启挑战」按钮背后的两根卷好的卷轴用，
-## 用 [member hold_h] 把两根卷轴之间的距离钉住、[member paper_alpha] 把纸藏掉。没图时卷轴、纸都是平色。
+## 用 [member hold_h] 把两根卷轴之间的距离钉住、[member paper_alpha] 把纸藏掉。
 ## 180 定稿：卷轴 `diff_roller` 304 × 30（上下同图，下面那根竖翻），纸 `diff_parch` 264 宽居中、纵向平铺；字血红不描边，行高 32
 class_name ChallengeScroll
 extends Control
@@ -22,7 +22,7 @@ const ROW_GAP := 0.0
 const FONT_SIZE := 16
 ## 一行最矮多高（定稿：行高 32）
 const ROW_MIN_H := 32.0
-## 卷轴多粗（没图时）
+## 卷轴最少多粗
 const ROD_H := 18.0
 
 ## 纸最长多长（像素，不含卷轴）；≤ 0 = 不限
@@ -61,7 +61,7 @@ var _list: VBoxContainer = null
 var _rows: Array[Dictionary] = []
 var _tween: Tween = null
 var _width := 0.0
-## 纸多宽（有图按图，居中在两根卷轴之间；没图 = 卷轴宽）
+## 纸多宽（按图，居中在两根卷轴之间）
 var _paper_w := 0.0
 ## 正在收回、收完就删的那一行
 var _dying: Control = null
@@ -70,7 +70,7 @@ var _dying: Control = null
 ## [param width]：纸多宽（= 难度块宽）
 func _init(width: float = 308.0) -> void:
 	_width = width
-	_paper_w = minf(width, float(UiTheme.art_meta(UiTheme.ART_PARCHMENT_STRIP).get("width", width))) if UiTheme.art(UiTheme.ART_PARCHMENT_STRIP) != null else width
+	_paper_w = minf(width, float(UiTheme.art_meta(UiTheme.ART_PARCHMENT_STRIP).get("width", width)))
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	paper = Panel.new()
 	paper.theme_type_variation = UiTheme.PANEL_PARCHMENT
@@ -83,9 +83,9 @@ func _init(width: float = 308.0) -> void:
 	paper.add_child(_list)
 	top_rod = make_rod(UiTheme.ART_SCROLL_ROD_TOP)
 	add_child(top_rod)
-	bottom_rod = make_rod(UiTheme.ART_SCROLL_ROD_BOTTOM)
-	if bottom_rod is TextureRect:
-		(bottom_rod as TextureRect).flip_v = true     # 上下同图，下面那根竖翻
+	var bottom := make_rod(UiTheme.ART_SCROLL_ROD_BOTTOM)
+	bottom.flip_v = true     # 上下同图，下面那根竖翻
+	bottom_rod = bottom
 	add_child(bottom_rod)
 	paper.gui_input.connect(_on_paper_input)
 	_relayout()
@@ -103,18 +103,13 @@ func _get_minimum_size() -> Vector2:
 	return Vector2(_width, rods_h() + shown_h)
 
 
-## 一根卷轴：有图贴图，没图平色（[param thick]：没图时多粗）
-static func make_rod(art_name: String, thick: float = ROD_H) -> Control:
+## 一根卷轴
+static func make_rod(art_name: String) -> TextureRect:
 	var tex := UiTheme.art(art_name)
+	var pic := UiTheme.picture(tex, TextureRect.STRETCH_SCALE)
 	if tex != null:
-		var pic := UiTheme.picture(tex, TextureRect.STRETCH_SCALE)
-		pic.custom_minimum_size.y = maxf(thick, tex.get_size().y)
-		return pic
-	var flat := ColorRect.new()
-	flat.color = UiTheme.SCROLL_ROD
-	flat.custom_minimum_size.y = thick
-	flat.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return flat
+		pic.custom_minimum_size.y = maxf(ROD_H, tex.get_size().y)
+	return pic
 
 
 ## 两根卷轴加起来多粗

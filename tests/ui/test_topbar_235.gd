@@ -37,7 +37,6 @@ static func _host(root: Window, screen: Control) -> Array:
 
 static func frame_skin(t: TestCase, root: Window) -> void:
 	t.begin("235 · 丙款栏皮：栏高 100（作者 10-22 13:31 下缘扩出回纹带）；组左右各让 100（石块外沿 + 12）、在石块上下沿 8～78 之间居中；栏里的件带自己的凹槽；两头 104 宽贴屏边、热区是凸起的石块")
-	t.check(HudBarScript.has_skin(), "丙款皮的图在")
 	var screen := FakeScreen.new()
 	screen.size = HOST_SIZE
 	root.add_child(screen)

@@ -154,7 +154,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	var wallet := host.widget(&"wallet")
 	t.eq(wallet.text(), "%d" % run.wallet.balance, "166：货币只写数字")
 	t.eq(wallet.tooltip_text, "货币", "悬浮窗写「货币」")
-	t.not_null(wallet.get("coin"), "左边一枚金币（缺图画描边圆）")
+	t.not_null(wallet.get("coin"), "左边一枚金币")
 	var faith := host.widget(&"faith")
 	if run.active_faith_id() == &"":
 		t.eq(faith.text(), "", "166：没信仰不写字")
@@ -193,14 +193,13 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	host.arrange()    # 上面改过档位，排一次（宿主自己是下一帧才排）
 	var bar := host.widget(&"hud_bar")
 	var bar_h := host.bar_height()
-	t.check(bar.visible and bar_h >= (HudHost.HudBarScript.design_height() if HudHost.HudBarScript.has_skin() else HudHost.BAR_HEIGHT), "顶端栏在，高 %s" % bar_h)
+	t.check(bar.visible and bar_h >= HudHost.HudBarScript.design_height(), "顶端栏在，高 %s" % bar_h)
 	t.eq(bar.position, Vector2.ZERO, "栏贴着左上")
 	t.eq(bar.size, Vector2(HOST_SIZE.x, bar_h), "栏横贯整屏宽")
 	t.eq(bar.theme_type_variation, UiTheme.PANEL_HUD_BAR, "栏的底是顶端栏变体")
 	var row_y := vit.position.y
 	t.eq(wallet.position.y + wallet.size.y * 0.5, row_y + vit.size.y * 0.5, "货币和体力同一行（竖向居中对齐）")
 	t.eq(vit.position.x, host.bar_side(), "作者 2026-10-17：体力往中间收（左边留 %s）" % host.bar_side())
-	t.check(host.bar_side() > HudHost.BAR_SIDE, "比原来的 %s 更靠里" % HudHost.BAR_SIDE)
 	t.check(vit.position.y >= 0.0 and vit.position.y + vit.size.y <= bar_h, "体力在栏里")
 	# 作者 2026-10-13：凹槽对齐石板 —— 栏里的东西在板边上下内边距之间（底下的投影不算板面）
 	var bar_box := bar.get_theme_stylebox("panel")
@@ -212,7 +211,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	if cd.visible:
 		t.check(absf(cd.position.x + cd.size.x * 0.5 - HOST_SIZE.x * 0.5) <= 1.0, "倒计时在栏正中")
 		t.eq(cd.tier, HudWidget.Tier.LARGE, "倒计时大档")
-		t.check(cd.stage() == &"calm" and cd.color() == UiPalette.FG and not cd.get("_text").visible, "190：倒计时是一枚日晷、栏上不写字；刚开局在 calm 阶（颜色跟着阶段）")
+		t.check(cd.stage() == &"calm" and not cd.get("_text").visible, "190：倒计时是一枚日晷、栏上不写字；刚开局在 calm 阶")
 	t.eq(host.top_inset(), bar_h, "顶上让出栏高")
 	var inset := host.content_inset()
 	t.eq(inset.position.y, bar_h, "地图上边躲开顶端栏")

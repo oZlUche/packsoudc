@@ -23,9 +23,6 @@ const INK := Color("2e2219")
 const OPEN_SEC := 0.25
 const CLOSE_SEC := 0.22
 const FADE_SEC := 0.1
-## 缺图时的纸色、轴色
-const PAPER_FALLBACK := Color("e9dfc8")
-const ROLLER_FALLBACK := Color("6b4a2e")
 
 var text := ""
 var urgent := false
@@ -147,7 +144,6 @@ func _draw() -> void:
 		return
 	var tex := _art(PAPER)
 	if tex == null:
-		draw_rect(r, PAPER_FALLBACK)
 		return
 	var m: Array = UiTheme.art_meta(PAPER).get("margin", [10, 6, 10, 6])
 	draw_style_box(UiTheme.nine_box(tex, [minf(float(m[0]), r.size.x * 0.5), m[1], minf(float(m[2]), r.size.x * 0.5), m[3]]), r)
@@ -155,12 +151,10 @@ func _draw() -> void:
 
 func _draw_rollers() -> void:
 	var tex := _art(ROLLER)
+	if tex == null:
+		return
 	for x in [roller_x().x, roller_x().y]:
-		var at := Rect2(Vector2(x - ROLLER_W * 0.5, 0.0), Vector2(ROLLER_W, ROLLER_H))
-		if tex != null:
-			_rollers.draw_texture_rect(tex, at, false)
-		else:
-			_rollers.draw_rect(at, ROLLER_FALLBACK)
+		_rollers.draw_texture_rect(tex, Rect2(Vector2(x - ROLLER_W * 0.5, 0.0), Vector2(ROLLER_W, ROLLER_H)), false)
 
 
 ## 开卷（[param on] = 动效开着）。返回 Tween（关着 null，直接全开）

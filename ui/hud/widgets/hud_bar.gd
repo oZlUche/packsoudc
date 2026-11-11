@@ -5,7 +5,7 @@
 ## 中间平铺段从日晷底座左右两边往外铺、只铺在两头之间；正中下半圆日晷底座（刻度在图里，扇面 / 指针 / 轴心归倒计时那件画，
 ## 底座下凸压在地图上、不占布局高度）；两头最后盖上去。两头是真按钮（[IconButton] 三态，热区是那块凸起的石块）：
 ## 左 = 本局菜单（等同 Esc），右 = 背包（右槽的小背包钮并进来了）。按下发 [signal end_pressed]，接到所在屏的 `hud_end(side)`。
-## 两头不进 150 的布局（不能拖、不能藏）。缺皮退回主题变体的底（`slab_bar` 石板），两头照样在、写字
+## 两头不进 150 的布局（不能拖、不能藏）
 ## 作者 10-22 13:31「两头的浮雕和下方边缘重合了，扩张顶端栏的下缘」：石面 86 → 100，回纹带挪到 y 87～95 整条贯通；
 ## 两头石块与读数仍在 y 8～78（[method band_margins] 按石块上下沿算，不按石面居中）
 extends HudWidget
@@ -41,7 +41,7 @@ func _init() -> void:
 			menu if side == LEFT else bag, func(): end_pressed.emit(side))
 		b.name = "End_" + String(side)
 		var hit: Array = (_meta.get("ends", {}) as Dictionary).get("hit_" + String(side), [])
-		if hit.size() == 4 and b.has_art():
+		if hit.size() == 4:
 			b.hit_rect = Rect2(float(hit[0]), float(hit[1]), float(hit[2]) - float(hit[0]), float(hit[3]) - float(hit[1]))
 		box.add_child(b)
 		_ends[side] = b
@@ -75,11 +75,6 @@ func _get_minimum_size() -> Vector2:
 ## `topbar.json`（没有 = 空）
 static func skin() -> Dictionary:
 	return UiTheme.art_meta(SKIN + "topbar")
-
-
-## 石刻皮的图在不在（平铺段与日晷底座）
-static func has_skin() -> bool:
-	return UiTheme.art_cached(SKIN + "bar_tile") != null and UiTheme.art_cached(SKIN + "dial_base") != null
 
 
 ## 石面多高（栏在布局里占的高；投影与日晷下凸不算）

@@ -69,8 +69,6 @@ func _draw() -> void:
 		draw_texture_rect_region(tex, Rect2(r.position, Vector2(CAP, r.size.y)), Rect2(0, 0, cap_t, ts.y))
 		draw_texture_rect_region(tex, Rect2(r.position + Vector2(CAP, 0), Vector2(r.size.x - 2.0 * CAP, r.size.y)), Rect2(cap_t, 0, ts.x - 2.0 * cap_t, ts.y))
 		draw_texture_rect_region(tex, Rect2(r.end.x - CAP, r.position.y, CAP, r.size.y), Rect2(ts.x - cap_t, 0, cap_t, ts.y))
-	else:
-		draw_rect(Rect2(Vector2.ZERO, size), Color("ece8e0"))
 	var font := _font()
 	var px := _px()
 	var base := size.y * 0.5 + (font.get_ascent(px) - font.get_descent(px)) * 0.5

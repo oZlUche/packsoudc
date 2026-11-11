@@ -125,7 +125,6 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	p = s.market_panel()
 	p.show_stall(Market.LOOSE)
 	t.eq(p.views().size(), 4, "四个货位")
-	t.check(p.stage().tables, "有木台")
 	t.check(p.note() == null, "没有签")
 	t.eq(Bare.audit(p, "market262_base"), [] as Array[String], "字不裸")
 	s.queue_free()
@@ -169,7 +168,7 @@ static func frame_smithy_page(t: TestCase, root: Window) -> void:
 	var b: Button = p.forge_button(&"smith_shortsword")
 	t.check(p.recipe_scroll().visible and p.opened() == &"smith_shortsword", "点了：卷轴展开到这张")
 	t.check(b.disabled, "缺素材：打造灰着")
-	t.check(b.theme_type_variation in [UiTheme.BUTTON_FORGE, UiTheme.BUTTON_ART], "打造键：铁红平键（图到之前）或四态图")
+	t.check(b.theme_type_variation == UiTheme.BUTTON_ART, "打造键：四态图")
 	t.eq(p.recipe_scroll().material_lines(), ["0 / 1", "0 / 2"] as Array[String], "素材：有几 / 要几（硬木板、铁矿石）")
 	t.eq(p.recipe_scroll().wage(), 40, "工钱 40（金币 + 数字）")
 	for id in [&"iron_ore", &"iron_ore", &"hardwood_plank"]:

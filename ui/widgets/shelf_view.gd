@@ -14,7 +14,6 @@ const TAG_SIZE := 18
 const TAG_PAD := 36.0
 const TAG_BASELINE := 6.5
 const INK := Color("2e2219")
-const STONE := Color("ddd6c8")
 const HOVER_LIFT := Color(1.15, 1.15, 1.15)
 ## 展示柱：layout.json 的 keepsake_columns 是用字写的规则，数抄在这里 —— n 件中线 = 格左 + 20 + 360 × (2k + 1) / (2n)，柱底 = 格上 + 397，
 ## 道具不透明部分的底边在柱底往上 208（红垫中间）、等比缩进 128 见方；柱距 360 / n 不够 136 时柱和道具一起按 (360 / n − 8) / 柱宽 缩
@@ -129,13 +128,11 @@ func piece_name(key: String, hover: bool = false) -> String:
 		if not tiers.is_empty():
 			var p: Array = _progress.get(key, [0, 0])
 			name_ = String(tiers[mini(tier_of(int(p[0]), int(p[1])), tiers.size() - 1)])
-			if UiTheme.art_cached(ART + name_) == null:
-				name_ = String(tiers[0])     # 缺图退 t0
 		elif c["file"] != "":
 			name_ = c["file"]
 		elif c["still_life"] != "":
 			name_ = c["still_life"]
-		if name_ != "" and hover and UiTheme.art_cached(ART + name_ + "_hover") != null:
+		if name_ != "" and hover and UiTheme.art_cached(ART + name_ + "_hover") != null:     # 静物（灯）没有悬停图
 			name_ += "_hover"
 		return name_
 	return ""
@@ -182,8 +179,6 @@ func _draw() -> void:
 	var body := UiTheme.art_cached(ART + "shelf_body")
 	if body != null:
 		draw_texture(body, Vector2.ZERO)
-	else:
-		draw_rect(Rect2(Vector2.ZERO, _body_size), STONE)
 	for c in _cells:
 		var key: String = c["key"]
 		var r: Rect2 = c["rect"]
@@ -216,8 +211,6 @@ func _draw() -> void:
 func _draw_keepsakes(cell: Rect2, lit: bool) -> void:
 	var n := _keepsakes.size()
 	var col := UiTheme.art_cached(ART + ("keepsake_column_hover" if lit else "keepsake_column"))
-	if col == null:
-		col = UiTheme.art_cached(ART + "keepsake_column")
 	for k in n:
 		var spot: Array = column_rect(cell, k, n)
 		if col != null:

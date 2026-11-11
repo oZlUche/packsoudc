@@ -2,7 +2,7 @@
 ## 换数时翻一页：「＋」旧页从下往上翻过去，「−」从上往下。牌面以中线为轴拆成上下两半，各是一块裁边的 Control，
 ## 里面放同一个数字的整块 Label（下半那份往上挪半个牌高）；翻页只是两半依次 `scale.y`，不用着色器。
 ## 底下那层 [member label] 换数时立刻是新数（测试不用等）。
-## 180 定稿：有图时牌面是一张翻页卡（`diff_flip_card`，在最下）、数字、中缝（`diff_flip_split`，盖在最上）；半页的底也是卡
+## 180 定稿：牌面是一张翻页卡（`diff_flip_card`，在最下）、数字、中缝（`diff_flip_split`，盖在最上）；半页的底也是卡
 class_name FlipCounter
 extends Control
 
@@ -18,7 +18,7 @@ var min_size := Vector2(MIN_WIDTH, 0.0):
 		_fit()
 ## 底层：现在的数
 var label: Label = null
-## 翻页卡与中缝（没图 null）
+## 翻页卡与中缝
 var _card: Control = null
 var _split: Control = null
 ## 上一次往哪翻（+1 =「＋」从下往上，-1 =「−」从上往下，0 = 没翻过；测试看）
@@ -29,10 +29,9 @@ var _leaves: Array[Control] = []
 
 
 func _init() -> void:
-	_card = _face()
-	if _card != null:
-		_card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		add_child(_card)
+	_card = _nine(UiTheme.ART_FLIP_CARD)
+	_card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_card)
 	label = UiTheme.make_variant_label("", UiTheme.LABEL_FLIP_NUM)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -40,23 +39,14 @@ func _init() -> void:
 	add_child(label)
 	label.minimum_size_changed.connect(_fit)
 	_split = _nine(UiTheme.ART_FLIP_SPLIT)
-	if _split != null:
-		_split.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		add_child(_split)
+	_split.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_split)
 	_fit()
 
 
-## 一张九宫格图（翻页卡、中缝同尺寸同拉伸，边距读 `diff_flip.json`）；没图 null
+## 一张九宫格图（翻页卡、中缝同尺寸同拉伸，边距读 `diff_flip.json`）
 static func _nine(art_name: String) -> NinePatchRect:
-	var tex := UiTheme.art(art_name)
-	if tex == null:
-		return null
-	return UiTheme.nine_rect(tex, UiTheme.art_meta("setup/diff_flip").get("margin", [16, 16, 16, 16]))
-
-
-## 翻页卡（没图 null）
-static func _face() -> Control:
-	return _nine(UiTheme.ART_FLIP_CARD)
+	return UiTheme.nine_rect(UiTheme.art(art_name), UiTheme.art_meta("setup/diff_flip").get("margin", [16, 16, 16, 16]))
 
 
 func _fit() -> void:
@@ -101,16 +91,9 @@ func _leaf(text: String, top: bool) -> Control:
 	half.position = Vector2(0.0, 0.0 if top else h)
 	half.size = Vector2(size.x, h)
 	half.pivot_offset = Vector2(size.x * 0.5, h if top else 0.0)
-	var face := _face()     # 半页自己的底，翻的时候盖住底层：有卡图是整张卡（下半那份往上挪半个牌高），没有是平色黑
-	if face != null:
-		face.position = Vector2(0.0, 0.0 if top else -h)
-		face.size = size
-	else:
-		var flat := ColorRect.new()
-		flat.color = UiTheme.FLIP_FACE
-		flat.size = half.size
-		flat.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		face = flat
+	var face := _nine(UiTheme.ART_FLIP_CARD)     # 半页自己的底，翻的时候盖住底层：整张卡（下半那份往上挪半个牌高）
+	face.position = Vector2(0.0, 0.0 if top else -h)
+	face.size = size
 	half.add_child(face)
 	var copy := UiTheme.make_variant_label(text, UiTheme.LABEL_FLIP_NUM)
 	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -119,8 +102,7 @@ func _leaf(text: String, top: bool) -> Control:
 	copy.size = size
 	half.add_child(copy)
 	add_child(half)
-	if _split != null:
-		move_child(_split, -1)     # 中缝永远在最上
+	move_child(_split, -1)     # 中缝永远在最上
 	return half
 
 

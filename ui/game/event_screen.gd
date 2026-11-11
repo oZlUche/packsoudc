@@ -6,8 +6,6 @@ extends GameScreen
 
 ## 整块框的大小（视口 1600×1000）：占大半个屏幕，左栏是图
 const PANEL_SIZE := Vector2(1320, 760)
-const IMAGE_WIDTH := 640.0
-const TEXT_WIDTH := 560.0
 ## 纸卷选项的字离左头卷轴
 const OPTION_INDENT := 40.0
 
@@ -156,44 +154,9 @@ func harvest_row() -> HarvestRow:
 	return _harvest if _harvest != null and is_instance_valid(_harvest) else null
 
 
-## 两栏的框（参考杀戮尖塔的事件屏）：左边整块是图，右边标题、正文、选项。占掉大半个屏幕，底下的地图压暗。
-##
-## 返回右栏底部放选项的容器，调用方往里加按钮；正文在可滚的区域里，选项贴在底部
+## 书页的框（占掉大半个屏幕，底下的地图压暗）：返回右页底部放选项的容器，调用方往里加按钮；正文在可滚的区域里，选项贴在底部
 func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
-	var panel := _centered_panel(PANEL_SIZE, 0, OverlayFrame.SKIN_BOOK)
-	if _overlay_frame.book:
-		return _book_page(panel, image_path, title, body)
-	var row := _hbox(0)
-	panel.add_child(row)
-	var image := EventImage.area(image_path, "", Vector2(IMAGE_WIDTH, 0))     # 左栏：图铺满、按比例裁；没有图就一块深底色（226 批二：占位标题不写）
-	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_child(image)
-
-	var margin := MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 28)
-	row.add_child(margin)
-	var col := _vbox(14)
-	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_child(col)
-
-	_frame_title(title)     # 157：标题在石板框的标题条上（横跨图与正文）
-	var heading := intro_heading()
-	if heading != "":
-		col.add_child(_heading_label(heading, TEXT_WIDTH))     # 168：开场事件先写章节名（大标题字体）
-	var scroll := UiTheme.vscroll()
-	col.add_child(scroll)
-	if body != "":
-		# RichTextLabel：正文里能变色、加粗（BBCode，TextTemplate 的样式码也翻成它）；121：17 号、行距 6
-		var text := UiTheme.rich_block(TEXT_WIDTH, UiTheme.RICH_BODY_SIZE, body)
-		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		scroll.add_child(text)
-	var options := _vbox(8)
-	options.name = "Options"
-	col.add_child(options)
-	return options
+	return _book_page(_centered_panel(PANEL_SIZE, 0, OverlayFrame.SKIN_BOOK), image_path, title, body)
 
 
 ## 232（作者 19:23 选 1）：书皮 —— 插图摆在左页 `image_rect`，右页 `text_rect` 里一列：标题（`title_h` 高，墨色居中）→ 章节名 → 正文 → 选项
@@ -258,15 +221,12 @@ func intro_heading() -> String:
 	return Names.of(ch) if ch.display_name != "" else String(ch.id)
 
 
-## 一个选项：整行宽、左对齐（乙 石刻：商店纸卷键拉满整行；缺图的平板按钮照旧 64 高）
+## 一个选项：整行宽、左对齐（乙 石刻：商店纸卷键拉满整行）
 func _option_button(text: String, handler: Callable) -> Button:
 	var b := ScrollKey.make(text, handler)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	if b is ScrollKey:
 		(b as ScrollKey).indent(OPTION_INDENT)
-	else:
-		b.add_theme_font_size_override("font_size", UiTheme.sz(UiPalette.button_font_size(17, UiPalette.Tier.SECONDARY)))
-		b.custom_minimum_size.y = 64
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return b
 

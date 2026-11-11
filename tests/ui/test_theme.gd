@@ -12,18 +12,24 @@ extends RefCounted
 ## 精简批次二：两个沙盒、回放浏览器、回放、悬浮窗里 18 处盒子间距与 3 处四边边距改走 UiTheme.vbox / hbox / margins —— 130 → 109
 ## 精简批次四：七个编辑器的外壳（边距、三栏、校验框、JSON 框）收进 AuthoringEditor，各写一份的覆写只剩一份 —— 109 → 81
 ## 精简批次三：科技树节点收字号那处改走 TextFit.shrink_button_to（覆写在 ui/widgets 里那一份）—— 81 → 80
-const RATCHET := 80
+## 296 第五节之二：定稿图的「没图时退路」删掉，退路里那 5 处覆写（倒计时文字版、设置屏、书页标题）跟着没了 —— 80 → 75
+const RATCHET := 75
 const SCANNED := ["res://ui/game", "res://ui/inventory", "res://ui/battle", "res://ui/hud",
 	"res://ui/editor", "res://ui/event_editor", "res://ui/buff_editor", "res://ui/set_editor", "res://ui/map_editor", "res://ui/part_editor"]
 
 
 static func run(t: TestCase) -> void:
-	t.begin("121 · UiTheme.build：默认字体与字号、按钮三档 / 标签 / 面板 / 富文本变体齐全；换底色重建，PanelDark 的底跟着变")
+	t.begin("121 · UiTheme.build：默认字体与字号、按钮三档 / 标签 / 面板 / 富文本变体齐全；换底色重建，没有美术图的平面底（树、输入框）跟着变")
 	var s := GameSettings.new()
 	s.bg_theme = "graphite"
-	# 157 补：assets/ui 里有了石板图，面板是九宫格；这两组看的是没图时的平面底跟底色走
+	# 缺图：变体照样登记，面板的底是空的（不画替代的平面底）
 	var saved_root := UiTheme.asset_root
 	UiTheme.asset_root = "res://tests/fixtures/no_such_ui/"
+	var bare := UiTheme.build(s)
+	UiTheme.asset_root = saved_root
+	for v in UiTheme.VARIATIONS:
+		t.check(bare.get_type_variation_base(v) != &"", "缺图：变体 %s 还在" % v)
+	t.check(bare.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxEmpty, "缺图：PanelDark 的底是空的")
 	var th := UiTheme.build(s)
 	t.not_null(th.default_font, "默认字体是 CJK 字体")
 	t.eq(th.default_font_size, UiTheme.sz(UiTheme.FONT_SIZE), "默认字号 14（258：按档）")
@@ -33,7 +39,8 @@ static func run(t: TestCase) -> void:
 	t.eq(th.get_type_variation_base(UiTheme.PANEL_DARK), &"PanelContainer", "面板变体基于 PanelContainer")
 	t.eq((th.get_stylebox("normal", UiTheme.BUTTON_PRIMARY) as StyleBoxFlat).bg_color, UiPalette.BTN_PRIMARY, "主按钮琥珀底")
 	t.eq(th.get_color("font_color", UiTheme.LABEL_DIM), UiPalette.DIM, "LabelDim 暗色字")
-	var graphite := (th.get_stylebox("panel", UiTheme.PANEL_DARK) as StyleBoxFlat).bg_color
+	t.check(th.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, "157 补充三：PanelDark 是凹槽九宫格")
+	var graphite := (th.get_stylebox("panel", "Tree") as StyleBoxFlat).bg_color
 	t.check(absf(graphite.r - UiPalette.PANEL.r) + absf(graphite.g - UiPalette.PANEL.g) + absf(graphite.b - UiPalette.PANEL.b) < 0.02, "默认底色下面板 ≈ 原来的 PANEL：%s" % graphite.to_html(false))
 	# 作者 2026-10-12：事件正文的粗体糊 —— [b] 换真粗体（字重 700），正文 20 号、行距 8
 	var bold := th.get_font("bold_font", "RichTextLabel")
@@ -42,23 +49,22 @@ static func run(t: TestCase) -> void:
 	t.eq(th.get_font_size("normal_font_size", UiTheme.RICH_BODY), UiTheme.sz(20), "正文 20 号")
 	t.eq(th.get_constant("line_separation", UiTheme.RICH_BODY), 8, "正文行距 8")
 	s.bg_theme = "moss"
-	var moss := (UiTheme.build(s).get_stylebox("panel", UiTheme.PANEL_DARK) as StyleBoxFlat).bg_color
-	t.check(moss != graphite, "换成苔绿底：PanelDark 的底色跟着变")
+	var mossy := UiTheme.build(s)
+	var moss := (mossy.get_stylebox("panel", "Tree") as StyleBoxFlat).bg_color
+	t.check(moss != graphite, "换成苔绿底：树的底色跟着变")
+	t.eq((mossy.get_stylebox("normal", "LineEdit") as StyleBoxFlat).bg_color, moss.darkened(0.2), "输入框的底跟着面板色")
 
 	t.begin("121 · 装上的主题原地重填：UiPalette.apply 换底色，当前那一份和默认主题都跟着变")
 	var cur := UiTheme.current()
 	var saved := UiPalette.bg_theme
 	UiPalette.apply(s)
-	t.eq((cur.get_stylebox("panel", UiTheme.PANEL_DARK) as StyleBoxFlat).bg_color, moss, "同一个 Theme 对象，底色变成苔绿的")
-	t.eq((ThemeDB.get_default_theme().get_stylebox("panel", UiTheme.PANEL_DARK) as StyleBoxFlat).bg_color, moss, "默认主题里也换了")
+	t.eq((cur.get_stylebox("panel", "Tree") as StyleBoxFlat).bg_color, moss, "同一个 Theme 对象，底色变成苔绿的")
+	t.eq((ThemeDB.get_default_theme().get_stylebox("panel", "Tree") as StyleBoxFlat).bg_color, moss, "默认主题里也换了")
 	var back := GameSettings.new()
 	back.bg_theme = saved
 	UiPalette.apply(back)
 	t.eq(UiTheme.current(), cur, "还是那一份")
-	UiTheme.asset_root = saved_root
-	UiPalette.apply(s)     # 底色没变不重填：换一下再换回来，让当前那一份按石板图重填（后面的套件照游戏的样子）
-	UiPalette.apply(back)
-	t.eq(cur.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, UiTheme.art(UiTheme.ART_INSET) != null, "157 补充三：放回美术目录，原地重填后 PanelDark 有凹槽图就是九宫格")
+	t.check(cur.get_stylebox("panel", UiTheme.PANEL_DARK) is StyleBoxTexture, "157 补充三：原地重填后 PanelDark 还是凹槽九宫格")
 
 	t.begin("121 · 小工具先选变体：前景色 / 14 号的标签零覆写、暗色走 LabelDim、语义色才覆写；按钮只设变体")
 	var l := UiTheme.label(Label.new(), 14, UiPalette.FG)

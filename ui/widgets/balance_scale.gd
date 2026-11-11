@@ -3,7 +3,7 @@
 ## 左右两只盘（不转只平移，盘层的 hook 点挂在梁的钩上：钩 = pivot + rot(倾角)·(±arm, hook_dy)）。坐标与各控件的位置都在
 ## `ransom/ransom_layout.json`。左盘上方的托盘棋盘、右盘下的开价小牌跟着盘走：屏往 [member tray_slot] 里放托盘，开价由这里画（金币 + 数）。
 ## 托盘坐在左盘的两根矮柱上，柱间是放上左盘的金币（[member coins]，按 `coin_pile` 一摞摞堆，刚好够开价时和右盘那摞一样多）。
-## 差额牌上写「还差 N」/「够了」。字都落在石牌 / 石台上（226：不裸字）。没有图时（美术目录缺）按同一套坐标画占位
+## 差额牌上写「还差 N」/「够了」。字都落在石牌 / 石台上（226：不裸字）
 class_name BalanceScale
 extends PanScale
 
@@ -19,9 +19,6 @@ const PLATE_FONT := 18
 const INK := Color("2e2219")
 ## 石台底下那行小字（浅底：淡墨）
 const INK_SOFT := Color("605a50")
-## 缺图时的占位色
-const BRONZE := Color("8a6a3a")
-const PLATE := Color("e4ded2")
 
 ## 左盘的重量 / 右盘的开价
 var left := 0:
@@ -53,7 +50,7 @@ func _init() -> void:
 	_relayout()
 
 
-## 版式：美术的 json；没有就用同形状的一份（尺寸与美术稿一样，测试与占位都按它摆）
+## 版式：美术的 json；没有就用同形状的一份（尺寸与美术稿一样）
 static func layout() -> Dictionary:
 	var d := UiTheme.art_meta(LAYOUT)
 	if not d.is_empty():
@@ -115,37 +112,20 @@ func _draw() -> void:
 	_draw_centered(control_rect("status"), plate_text(), PLATE_FONT)
 
 
-## 一层图；缺图画个占位（底座只画立柱和石台，梁一根线，盘一只碗）
+## 一层图
 func _draw_layer(art: String, at: Vector2, size_px: Vector2) -> void:
 	var tex := UiTheme.art_cached(art)
 	if tex != null:
 		draw_texture_rect(tex, Rect2(at, size_px), false)
-		return
-	match art:
-		BASE_ART:
-			var pivot := _v(_lay["pivot"])
-			draw_rect(Rect2(pivot.x - 18, pivot.y, 36, 450), PLATE)
-			draw_rect(Rect2(40, 568, size_px.x - 80, 152), PLATE)
-			for k in ["title", "status"]:
-				draw_rect(control_rect(k), PLATE)
-				draw_rect(control_rect(k), INK, false, 2.0)
-		BEAM_ART:
-			draw_rect(Rect2(at + Vector2(0, size_px.y * 0.4), Vector2(size_px.x, size_px.y * 0.2)), BRONZE)
-		_:
-			var rim := at + Vector2(0, 250)
-			draw_rect(Rect2(rim, Vector2(size_px.x, 50)), BRONZE)
-			draw_rect(Rect2(at + _rect(_lay["price_rect"]).position, _rect(_lay["price_rect"]).size), PLATE)
 
 
 ## 左盘柱间的金币：按 order 的先后落（同一摞总是先底下后上面），每枚坐在盘沿上方第几层
 func _draw_coin_pile(origin: Vector2) -> void:
 	var tex := UiTheme.art_cached(COIN_ART)
+	if tex == null:
+		return
 	for r in coin_rects():
-		var at := Rect2(origin + (r as Rect2).position, (r as Rect2).size)
-		if tex != null:
-			draw_texture_rect(tex, at, false)
-		else:
-			draw_rect(at, CoinLabel.FALLBACK_FILL)
+		draw_texture_rect(tex, Rect2(origin + (r as Rect2).position, (r as Rect2).size), false)
 
 
 ## 现在画的每枚金币（盘层坐标，[method pile_count] 枚，按落下的先后）

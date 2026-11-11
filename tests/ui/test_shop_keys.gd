@@ -37,7 +37,7 @@ static func frame_scroll_keys(t: TestCase, root: Window) -> void:
 	var screen = o["screen"]
 	var session: ShopSession = o["session"]
 	var deal: Button = screen.deal_key()
-	t.check(deal is ScrollKey and deal.art, "成交是纸卷键")
+	t.check(deal is ScrollKey, "成交是纸卷键")
 	t.eq(deal.text, "成交", "字写「成交」")
 	t.check(deal.get_parent() == screen.scale_widget(), "站在天秤上")
 	t.check(deal.disabled, "空桌：成交灰")
@@ -45,7 +45,7 @@ static func frame_scroll_keys(t: TestCase, root: Window) -> void:
 	t.eq(leave.size(), 1, "一枚离开键")
 	if not leave.is_empty():
 		var k: Button = leave[0]
-		t.check(k is ScrollKey and not k.coin and k.art, "离开是普通纸卷键")
+		t.check(k is ScrollKey and not k.coin, "离开是普通纸卷键")
 		t.check(k.get_combined_minimum_size().x >= 116.0, "最窄 116")
 		t.eq(k.get_combined_minimum_size().y, 56.0, "高 56")
 	t.check(screen.find_children("*", "Button", true, false).all(func(b): return (b as Button).text not in ["刷新", "收起", "回购"]), "刷新、收起、回购都没了")
@@ -91,7 +91,6 @@ static func frame_scroll_keys_fallback(t: TestCase, root: Window) -> void:
 	UiTheme.asset_root = NOWHERE
 	var o := _open(root)
 	var screen = o["screen"]
-	t.check(not (screen.deal_key() is ScrollKey), "成交是平板按钮")
 	t.not_null(screen.scale_widget(), "天秤照画（占位）")
 	if not screen._belt_btns.is_empty():
 		screen.toggle_belt(0)

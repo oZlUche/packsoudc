@@ -1536,7 +1536,7 @@ while 双方存活 and now < 安全上限:
 #### 道具悬浮窗的版式与固定式悬浮窗（170，作者定）
 
 - **深底白字**（v3.00 定稿，作者 2026-10-14「样式就这样吧」）：`PanelTooltip` 是两层的 `SlabStyle`（`UiTheme.layered_box`，石板也走它）：深皮革板身 `tip/tooltip_body` 平铺铺满整窗、黄铜边框九宫格 `tip/tooltip_frame`（中心透明，json `tone: dark`）叠在上面；宽 360。字色走字色模板的三档：正文 `@tip_fg`（白）、标签与脚注 `@tip_meta`、说明 `@tip_desc`。**只有名字和稀有度名描边**（`UiTheme.outline`：`[outline_size=2][outline_color=#000000bf]`，常量 `OUTLINE_SIZE / OUTLINE_COLOR`）；正文里带色的属性字不描（作者对比后定）。
-- **版式 A**（`ItemTooltip.describe_full` 分块返回 `head / body / foot / set / text / terms`）：头 = 名字（粗体 19、稀有度色）、副行（稀有度名 · 标签，按 171 的大类排、来源类不列）、说明（`[i]` 斜体：正文字体斜切 0.2，`UiTheme.slanted`，主题的 `italics_font`）；分隔线；正文一行一条，行首图标（`UiTheme.tip_icon`，缺图退回「【增益】」等字，图标链到「增益槽 / 受益槽 / 装载槽」词条）；虚线；脚注金币与秤砣图标 + 右边套装名。不写格数、冷却、DPS。
+- **版式 A**（`ItemTooltip.describe_full` 分块返回 `head / body / foot / set / text / terms`）：头 = 名字（粗体 19、稀有度色）、副行（稀有度名 · 标签，按 171 的大类排、来源类不列）、说明（`[i]` 斜体：正文字体斜切 0.2，`UiTheme.slanted`，主题的 `italics_font`）；分隔线；正文一行一条，行首图标（`UiTheme.tip_icon`，还没有图的附魔写「【附魔】」，图标链到「增益槽 / 受益槽 / 装载槽」词条）；虚线；脚注金币与秤砣图标 + 右边套装名。不写格数、冷却、DPS。
 - **武器句**（`ItemTooltip.weapon_sentence`）：「每 X 秒造成 Y 点伤害，消耗 Z 耐力」，X / Y 用编译后（含开战 buff）的实值；规则施加 buff 就接「，附带【中毒】」（有专属解说写解说）。
 - **生成句**（171 §3，`AdjacencyText`）：条件 = 标签（`grant_filter` OR「XX、YY」，`grant_filter_all` AND 连写「XXYY」，都空「邻居」）+ 效果名（`Glossary.SENTENCE_NAMES`：伤害乘算「增伤」、加速、护甲……；`mod_text(m, true)`：乘算「10%」、加算「+5」）+ 附加规则（提到的 buff 走 `BuffDef.sentence_text`）。受益句「挨着盾时 护甲 +5」；晶石「装进法杖：…」+「装在：魔法杖 / 闲置」；法杖每颗装上的晶石一行「火焰魔晶石　每 X 秒 Y 火焰伤害　剩 N 次」。
 - **固定式悬浮窗**（`HoverTip`，十字军之王式）：离开道具后 `GRACE_SEC` 0.15 秒宽限（这期间进窗就留下）；窗里先停 `PIN_DELAY_SEC` 0.5 秒（193：路过不起圈），再停满 `PIN_SEC` 0.6 秒钉住（`pin_progress(dwell)`；2 px 黄铜线从左上角沿外框顺时针走一圈，`ring_points`；钉住画钉子 `pin.png`）；钉住后停在 `[url=term:<id>]` 关键词上 `TERM_SEC` 0.25 秒开子窗（`TipWindow`，同样可钉、可再开，`MAX_DEPTH` 3 层），位置右边、放不下下面、夹回屏内；离开整串 `AWAY_SEC` 0.4 秒、Esc、点窗外（含开始拖拽）收掉。计时都在 `tick(delta, 鼠标)`；193 起 `tick` 每帧先查源（`_source_alive`：文字窗看来源控件还在不在树里、可不可见，道具窗看那一格下面还是不是那件），源没了立刻收，换屏 / 叠层打开时地图屏也主动 `hide_tip()`。道具窗没有正文时不画分隔线与正文。087 的词条侧窗取消，`terms` 是 `{id: {name, text}}`；`Glossary.mark` 输出关键词链接，`wrap_terms` 不替 BBCode 标签里面的字。
@@ -1614,12 +1614,10 @@ buff 词条（`Glossary.describe_buff` 按定义生成）。原来「有说明 =
 #### 邻接标记必须画在棋盘上
 
 170 起画美术的格位图标（`assets/ui/tip/grant|receive|load_on|off.png`，32 px，点亮 / 没点亮两态），替换原来的半透明方框；一格上只有一种居中，好几种沿对角线错开；
-装载格「点亮」= 这颗晶石真的给了这把（`load_assignments`）。没图时的老画法：
-增益格／受益格画成**四个角括号**，叠在标记指向的那一格上：增益贴着格边、受益缩在里面，
-两类同时落在一格也分得清。不用整圈描边，那会和物品自己的稀有度描边撞车。
+装载格「点亮」= 这颗晶石真的给了这把（`load_assignments`）。
 
-**点亮状态一并画出来** —— 这一格确实站着一个符合过滤条件的邻居时填色加粗，
-否则只留细线。只画位置不画点亮，等于让玩家对着说明书心算，
+**点亮状态一并画出来** —— 这一格确实站着一个符合过滤条件的邻居时画点亮那张，
+否则画没点亮那张。只画位置不画点亮，等于让玩家对着说明书心算，
 而摆位正是这类游戏的全部乐趣所在。
 
 点亮判据与编译器的 `_lit_neighbors` 一致，标记格的绝对坐标由
@@ -3496,9 +3494,9 @@ func player_spec() -> CombatantSpec …
 体力上限、棋盘尺寸、初始包、带入的件数 / 稀有度上限（-1 = 不限，作者：改成字段、默认不限）、**被动技能** `skills`（一局规则的效果构件，和局外 buff 同一套：
 侦察 / 潜行 / 逃跑三个构件往 `RunContext` 加数，猎手系统读；主动技能以后走事件层，报告 072）。**没有搜索速度**（作者：搜索在战斗外、不是实时的）。
 三个初始角色是作者定的安德烈乌斯 / 布鲁图斯 / 马库斯（7.3，082）；早期的占位 `default` / `scout` 已删。
-255（v4.48）再加三样：**短板** `flaw`（一条 `RunSkill`，必填、不能是主动，和被动技能同一套构件，`CharacterDef.traits()` = 技能 + 短板，一局规则 / 掉落 / 战斗规则都按它编；三人各一条：马库斯「不懂药」`unschooled` 只截【药剂】标签的治疗一半（`BuffDef.heal_cut_tags`，`heal(..., source_tags)`，不碰每秒回血）、安德烈乌斯「身子薄」`thin_build` 护甲上限 ×0.8、布鲁图斯「回气慢」`short_wind` 耐力低于两成时每秒回复减半（`BuffDef.regen_cut / regen_cut_below`，`CombatantRuntime.regen_kept`））；**随身之物** `fixed_items`（`FixedItem`：id、origin、rot）—— `CharacterDef.shape_board` 开局（`RunState.start`）与开局屏重摆时钉上去：`ItemInstance.is_pinned`，自带底板（`GridInventory.is_covered` 算覆盖、`requires_bag` 也不要包），`is_locked` 恒真，包压不上去，悬浮窗按钮全灰（`ItemActions.pinned_guard`），拖不动（`DragLayer.refused_notice`），不能标不参战，不进开局屏摆盘（`RunState.layout_of`）、不算带入、撤离不带回（`RunResult.settle`）；**棋盘缺格** `board_mask`（格坐标，`set_blocked`；缺格不放包不放东西，画成透空，`BoardFrame.wrap` 的框沿轮廓走 `contour`：`BoardContour.pieces` 按美术 11:21 的拼件规则排直边 `edge_*` → 凹角 `inner_*` → 凸角 `outer_*`（格 60、框厚 20，按格边长缩放），图在 `assets/ui/board/mask/<name>.png`，没图画占位皮带；整块矩形照旧九宫格）。导入器：棋盘最宽九格（`CHARACTER_BOARD_MAX_W`），缺格在盘内不重复、没有只对角相连的顶点（`BoardContour.pinch_points`，拼不出框），随身之物找得到 / 不是包 / 不是封印 / 在盘内 / 不压缺格 / 不互相重叠。
+255（v4.48）再加三样：**短板** `flaw`（一条 `RunSkill`，必填、不能是主动，和被动技能同一套构件，`CharacterDef.traits()` = 技能 + 短板，一局规则 / 掉落 / 战斗规则都按它编；三人各一条：马库斯「不懂药」`unschooled` 只截【药剂】标签的治疗一半（`BuffDef.heal_cut_tags`，`heal(..., source_tags)`，不碰每秒回血）、安德烈乌斯「身子薄」`thin_build` 护甲上限 ×0.8、布鲁图斯「回气慢」`short_wind` 耐力低于两成时每秒回复减半（`BuffDef.regen_cut / regen_cut_below`，`CombatantRuntime.regen_kept`））；**随身之物** `fixed_items`（`FixedItem`：id、origin、rot）—— `CharacterDef.shape_board` 开局（`RunState.start`）与开局屏重摆时钉上去：`ItemInstance.is_pinned`，自带底板（`GridInventory.is_covered` 算覆盖、`requires_bag` 也不要包），`is_locked` 恒真，包压不上去，悬浮窗按钮全灰（`ItemActions.pinned_guard`），拖不动（`DragLayer.refused_notice`），不能标不参战，不进开局屏摆盘（`RunState.layout_of`）、不算带入、撤离不带回（`RunResult.settle`）；**棋盘缺格** `board_mask`（格坐标，`set_blocked`；缺格不放包不放东西，画成透空，`BoardFrame.wrap` 的框沿轮廓走 `contour`：`BoardContour.pieces` 按美术 11:21 的拼件规则排直边 `edge_*` → 凹角 `inner_*` → 凸角 `outer_*`（格 60、框厚 20，按格边长缩放），图在 `assets/ui/board/mask/<name>.png`；整块矩形照旧九宫格）。导入器：棋盘最宽九格（`CHARACTER_BOARD_MAX_W`），缺格在盘内不重复、没有只对角相连的顶点（`BoardContour.pinch_points`，拼不出框），随身之物找得到 / 不是包 / 不是封印 / 在盘内 / 不压缺格 / 不互相重叠。
 
-**开局屏**（161 拆成三页，右下角大号「返回 / 继续」）：一、选角色（角色卡：`StatSealPlate` 一排火漆属性牌（生命 / 耐力 / 耐力回复 / 体力，255），技能，初始包预览；179：三栏各坐一块凹槽板 `PANEL_GROOVE`、间距 36，中栏撑满、棋盘栏按这个角色的棋盘宽贴右，负重上限 / 棋盘 / 开局金币是三块 `CapTile` 图标牌，技能「被动」小字 + 名字 22 粗体亮黄铜描边、说明 17（`CharacterDef.skill_entries`），不放角色说明与背包行；三页不再坐石板，整屏是 `setup/bg_hall` 背景画，没图纯色，`GameScreen._painted_screen`）；二、配道具（预设、这个角色的棋盘 —— 初始包已经摆好、地上、右边分页仓库（163），同一层拖拽）；三、选地图、规模、难度、种子，出发摘要。
+**开局屏**（161 拆成三页，右下角大号「返回 / 继续」）：一、选角色（角色卡：`StatSealPlate` 一排火漆属性牌（生命 / 耐力 / 耐力回复 / 体力，255），技能，初始包预览；179：三栏间距 36（255 选人页 B 起两栏坐木牌 `PANEL_HOME_PLAQUE`、棋盘栏不垫板），中栏撑满、棋盘栏按这个角色的棋盘宽贴右，负重上限 / 棋盘 / 开局金币是三块 `CapTile` 图标牌，技能「被动」小字 + 名字 22 粗体亮黄铜描边、说明 17（`CharacterDef.skill_entries`），不放角色说明与背包行；三页不再坐石板，整屏是 `setup/bg_hall` 背景画，没图纯色，`GameScreen._painted_screen`）；二、配道具（预设、这个角色的棋盘 —— 初始包已经摆好、地上、右边分页仓库（163），同一层拖拽）；三、选地图、规模、难度、种子，出发摘要。
 **从仓库往包里拖，放得进的就是带的** —— 带入的真正限制是初始包的空间，没有第二套规则去数格子。拖上棋盘那一刻东西就离开了仓库；
 出发时把棋盘记成 layout（一件一行：定义、落点、朝向），`RunState.start(..., character, layout)` 按它原样摆回一局的棋盘并存 meta；「回主菜单」放回仓库。
 **包不能带入**：局外不收包（`MetaState.keeps`），仓库的格子把同一条规则接成准入回调（`GridInventory.accept_filter`），初始包拖不进去。
@@ -3652,14 +3650,14 @@ func player_spec() -> CombatantSpec …
   - 停上去的提示仍是「体力 当前/上限」。
 
 **166（作者定）：顶端栏、图标按钮、图例**：
-- 读数层顶上横一条顶端栏：组件 `hud_bar`（`PanelHudBar` 变体，底图 `assets/ui/hud/bar.png`，缺图半透明深底 + 下边一条线），它本身也是布局里的一件，藏起来就退回老的九宫顶边。
+- 读数层顶上横一条顶端栏：组件 `hud_bar`（`PanelHudBar` 变体，底图 `assets/ui/hud/bar.png`），它本身也是布局里的一件，藏起来就退回老的九宫顶边。
   - 布局多三个锚点 `bar_left / bar_center / bar_right`（`HudLayout.BAR_ANCHORS`），栏槽里的件不用偏移，一槽一组，组里照样按 `line` 分行；栏高 = 最高的那组 + 上下留白，至少 `HudHost.BAR_HEIGHT`（64）。
   - 默认：左槽第一行体力 / 货币 / 信仰（200% 档），第二行负重（v5.62 删了）/ 增益 / 侵蚀（小字）；中槽倒计时（大档）；右槽 `HudLayout.BAR_RIGHT` = 背包、放大镜、技能、调试台箭头。左下路线与图例（`legend`），右下腰带。布局版本 4，旧文件回默认。
   - 摆读数时松在栏里 = 按横向三等分进左 / 中 / 右槽。
 - `extract_button`、`menu_button`、`log`、`ground_count` 不再是组件：撤离只在撤离点的事件里选；日志、「地上 N 件」和提示行都在调试台里（调试台 `dock` 在栏下面，悬浮盖着地图，不再挤地图的右边）。
 - 地图满幅：`MapView` 铺满整屏，`content_inset`（宿主的 `content_inset()`：上 = 栏与顶上几组的底，下 = 左下 / 右下几组的顶）只影响居中、适配与聚焦用的安全区，剩下不到一半就退回整块。
 - `IconButton`（`ui/widgets/`）：48 × 48，图 `assets/ui/hud/icon_<id>.png`，缺图写字；悬浮窗「名字（快捷键）+ 一句说明」；右上快捷键小字、右下次数角标。背包 B、放大镜 N、主动技能 `skill_<id>`（角标 = 这一局还能用几次）。
-- 货币只写数字，左边一枚金币（`HudIcon`，`assets/ui/hud/coin.png`，缺图画金色圆）；信仰有就一枚图标（`assets/ui/faith/<id>.png`）+「Lv.n　当前 / 下一级」，缺图退回老的字，没信仰留一个空槽。
+- 货币只写数字，左边一枚金币（`HudIcon`，`assets/ui/hud/coin.png`）；信仰有就一枚图标（`assets/ui/faith/<id>.png`）+「Lv.n　当前 / 下一级」，缺图退回老的字，没信仰留一个空槽。
 - 图例只列这张图上有的节点类型（揭开了的随机点按揭开的算），顺序按 `MapNodeStyle.STYLES`，名字是 `MapNodeStyle.NAMES` 的短名，图标与地图上那枚一样。
 - 166 补充一：角色的主动技能对玩家藏着（`RunSkills.ACTIVE_HIDDEN`）—— 右槽的 `skills` 默认不显示（摆读数右键还能放出来验技能），战前屏不建「溜走」，开局屏与百科只列被动；记账与代码都留着，日后翻这一处。
 - 自动存档：`GameFlow.step_to` 人到了新点、事件还没给玩家看就存一次；看完叠层回到地图（`_flush` 最后）再存一次。暂停菜单只留「回主菜单」（照旧先存）。
@@ -3676,7 +3674,7 @@ func player_spec() -> CombatantSpec …
 
 叠层屏（事件、战前、回放、容器、商店、保险箱、神坛、休息、百科）都走 `GameScreen._centered_panel()`：它造一块 `OverlayFrame`（`ui/widgets/`），
 顶上标题条（左标题、右槽）+ 内容区，返回内容区给各屏；标题写 `_frame_title(text)`。外观是主题变体 `PanelOverlay`：`UiTheme.asset_root`（默认 `res://assets/ui/`）
-下有石板两张图（`slab_body` + `slab_edge`，157 补充三）就是一整块石板（边距与标题条高读 `slab_edge.json`），没有就是平面底 —— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（170 起是深底 `tip/tooltip_dark.png`，原来的纸 `tooltip_paper.png` 退了）。
+下有石板两张图（`slab_body` + `slab_edge`，157 补充三）就是一整块石板（边距与标题条高读 `slab_edge.json`）—— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（170 起是深底 `tip/tooltip_dark.png`，原来的纸 `tooltip_paper.png` 退了）。
 宝箱屏整屏铺背景，不套框。
 **铜面板三屏**（战前准备、战斗回放、战利品 / 搜索，UI替换美术 bronze3，v3.79）走 `GameScreen._bronze_panel()` = `OverlayFrame.new(margin, true)`：`bronze/panel_bronze` 九宫（边 83、TILE_FIT，内容从 40 起）、tone dark、没有标题条。
 三屏的棋盘都套 `BoardFrame`（`ui/widgets/board_frame.gd`，`frame_<kind>_dark.png`：内垫深色半透明，格缝 `BoardFrame.dark_seams()`）；属性签用 `StatsStrip.use_inlay`（战利品屏 152 宽嵌槽、战前屏窄嵌槽两排：自己 生命 / 耐力 / 耗气 / DPS / 负重，敌人把负重换成特殊能力，免疫写在特殊能力签的悬浮窗）。
@@ -3699,19 +3697,19 @@ func player_spec() -> CombatantSpec …
 现在悬浮窗（主窗与关键词子窗）是深底（170）；石板是浅底。
 
 **石板**（157 补充三，作者定「每个界面（框）在一块完整的石板上显示」，取代原来平铺满屏的石砖墙）：**一屏一块石板，板即框**。
-- `SlabStyle`（`ui/widgets/`）是一个两层画的 StyleBox：下层板身 `slab_body.png` 平铺（`AXIS_STRETCH_MODE_TILE`，纹不随框大小拉花，往里缩 json `body_inset`，凿口外透出底下），上层板边 `slab_edge.png` 九宫格（中心透明：手凿轮廓、受光棱、投影、顶上一道刻线）。`UiTheme.slab_box()` 两张图都在才造，否则 null、退回平面底；`UiTheme.slab(c)` 把一块面板挂成石板（`PanelOverlay` 变体 + 按石板深浅挂字色）。没用「两个 Panel 子底」的写法：一个 StyleBox 画两层，凡是挂 `PanelOverlay` / `PanelHudBar` 的都自动是石板，容器排版也不受子底影响。
+- `SlabStyle`（`ui/widgets/`）是一个两层画的 StyleBox：下层板身 `slab_body.png` 平铺（`AXIS_STRETCH_MODE_TILE`，纹不随框大小拉花，往里缩 json `body_inset`，凿口外透出底下），上层板边 `slab_edge.png` 九宫格（中心透明：手凿轮廓、受光棱、投影、顶上一道刻线）。`UiTheme.slab_box()` 两张图都在才造，否则 null；`UiTheme.slab(c)` 把一块面板挂成石板（`PanelOverlay` 变体 + 按石板深浅挂字色）。没用「两个 Panel 子底」的写法：一个 StyleBox 画两层，凡是挂 `PanelOverlay` / `PanelHudBar` 的都自动是石板，容器排版也不受子底影响。
 - 叠层屏：`OverlayFrame` 就是石板；标题字刻在板顶刻线上方（标题条高 json `title_height`，`_art_box` 的顶内边距只留到标题条上沿，`TITLE_LINE_GAP` 6 给刻线）。板外是半透明暗罩（`GameScreen.OVERLAY_SHADE` 0.6），底下的地图压暗透出。
 - 底屏（主菜单、设置、存档位、结算；开局三页 179 起改成背景画 + 凹槽板，不走石板）：`GameScreen._slab_screen()` 造一块居中的大石板（宽高各 `SLAB_SHARE` 九成），返回板里的内容区；板外是纯色底（`_backdrop`，091 的底色设置照旧管它）。基地（164）有自己的家底、地图屏（166）是满幅纸底，都不走石板。
 - 板里的分区是刻进去的凹槽：`PanelDark` / `PanelLine` / `PanelHud` 都用 `inset.png` 九宫格，**内边距照旧按变体默认值**（`_art_box(name, false, content)`），换皮不改排版。
-- 顶端栏（166 `hud_bar`）是一条独立的长石板：同一张板身 + 专用的长条板边 `slab_bar.png`（贴屏幕顶、没有标题刻线、底下一道投影；`slab_box(..., edge_art = ART_SLAB_BAR)`，缺这张退回平面底）。`body_inset` 可写一个数或 `[左, 上, 右, 下]`（栏顶边不缩）。作者 2026-10-13「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」：`HudHost.BAR_HEIGHT` 64 → 88，栏里的组在板边的上下内边距（8 / 26）之间居中，底下的投影不算板面；栏高 = max(88, 最高一组 + 上下内边距)。
-- 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。都是有图用图、没图照旧（平面底）。
+- 顶端栏（166 `hud_bar`）是一条独立的长石板：同一张板身 + 专用的长条板边 `slab_bar.png`（贴屏幕顶、没有标题刻线、底下一道投影；`slab_box(..., edge_art = ART_SLAB_BAR)`）。`body_inset` 可写一个数或 `[左, 上, 右, 下]`（栏顶边不缩）。作者 2026-10-13「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」：`HudHost.BAR_HEIGHT` 64 → 88，栏里的组在板边的上下内边距（8 / 26）之间居中，底下的投影不算板面；栏高 = max(88, 最高一组 + 上下内边距)。
+- 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。
 
 **名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_bronze.png`，2026-10-17 起铜质狗牌，单层九宫格、深底亮字），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
-（`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版；没图画细线），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
+（`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
 **回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真；沙盒 v5.61 退役），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
 
 **地图底图**（作者定：每章一张手绘地图，风格各不同）：`ChapterDef.map_skin`（默认 `ruins`）→ `assets/maps/<id>.png` + json（`tone`）。`MapView.skin` 设了就钉在画布上（192：json `safe_area` = 美术留给路网的淡色椭圆的外接矩形，`MapSkin.paper_rect` 把它等比放大到盖住画布、中心对齐，
-底图 / 装饰层 / 纸影和路网同一个变换一起缩放平移；画布外平铺桌面 `map/desk`，没图用底色；缩放下限 `zoom_min()` = 整张纸刚好装进安全区，拖动时纸边不越过安全区中心线；开局第三页预览按入局 zoom0 画同一张纸）画在路网底下；浅纸上前景 / 暗色字取字色模板的浅版（`UiPalette.for_tone`，169）。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
+底图 / 装饰层 / 纸影和路网同一个变换一起缩放平移；画布外平铺桌面 `map/desk`；缩放下限 `zoom_min()` = 整张纸刚好装进安全区，拖动时纸边不越过安全区中心线；开局第三页预览按入局 zoom0 画同一张纸）画在路网底下；浅纸上前景 / 暗色字取字色模板的浅版（`UiPalette.for_tone`，169）。现配：序章一遗迹、序章二北方林地、序章三诅咒之地深处（深）、自由模式帝国营地。
 
 光标：`UiCursor.apply(skin)` 启动时（和设置里换材质时）按 `GameSettings.cursor_skin` 从 `cursors/<材质>/` 取图换上（铠甲手套秘银 / 铁 / 皮革，默认秘银，热点 (2, 2)）；拖拽层拿起是「拖动」、对准了按 `DragLayer.drop_ok_at` 切「可放 / 不可放」、放下还原。
 
@@ -3719,7 +3717,7 @@ func player_spec() -> CombatantSpec …
 
 ### 8.9 静态教程遮罩（166）
 
-`CoachOverlay`（`ui/widgets/`）：整屏一层阴影（吞掉所有点击），目标周围挖洞（包围盒外扩 `HOLE_PAD` 8，洞边一圈高光），一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右按方向转；缺图画折线）从洞外指过来，箭尾一块羊皮纸（`PanelTooltip`）写说明。点任意处 / 按任意键下一步，最后一步收掉、发 `finished`。
+`CoachOverlay`（`ui/widgets/`）：整屏一层阴影（吞掉所有点击），目标周围挖洞（包围盒外扩 `HOLE_PAD` 8，洞边一圈高光），一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右按方向转）从洞外指过来，箭尾一块羊皮纸（`PanelTooltip`）写说明。点任意处 / 按任意键下一步，最后一步收掉、发 `finished`。
 
 - 步骤是数据：`data/authoring/coach/<id>.json` = `{"id", "steps": [{"target": 读数部件 id, "text"}]}`，`CoachOverlay.problems` 校验目标是登记过的部件、写了字。目标位置每一步现问（地图屏给 `HudHost.rect_of`），所以玩家挪了读数，教程跟着走。
 - 章节写 `coaches.map`（`ChapterDef`），序章一 = `prologue_map`（体力、货币、背包、放大镜四步）。地图第一次露出来（没有事件 / 规则卡 / 暂停压着、屏在地图上）时放一次，放过记进 `MetaState.coach_seen`（跟着存档位）；调试台有「重放教程」。

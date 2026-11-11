@@ -1,5 +1,5 @@
 ## 乙 石刻输入框（kit `field_normal` / `field_focus` + `icon_search`）：刻进石板的一道浅槽，高 36，九宫格 16，图四周多 6；
-## 字从 36 起（左头放放大镜，左 10、上 8），墨字、占位字淡棕。百科搜索框在用；缺图照旧引擎默认的框
+## 字从 36 起（左头放放大镜，左 10、上 8），墨字、占位字淡棕。百科搜索框在用
 class_name StoneField
 extends LineEdit
 
@@ -15,8 +15,6 @@ const PLACEHOLDER := Color("8a7a64")
 
 func _init(p_placeholder: String = "", search: bool = true) -> void:
 	placeholder_text = p_placeholder
-	if UiTheme.art_cached(ART + "normal") == null:
-		return
 	custom_minimum_size.y = HEIGHT
 	for pair in [["normal", "normal"], ["focus", "focus"], ["read_only", "normal"]]:
 		var box := UiTheme.nine_box(UiTheme.art_cached(ART + String(pair[1])), [16.0, 16.0, 16.0, 16.0], [TEXT_LEFT if search else 12.0, 0.0, 10.0, 0.0], 6.0)
