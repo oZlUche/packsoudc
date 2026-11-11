@@ -288,14 +288,13 @@ func discard_board() -> void:
 	changed.emit()
 
 
-## 109：整理仓库**当前页**（163；不动别的页，也不动带回来的棋盘 —— 那块是玩家摆的阵）。排不开就原样不动
+## 109：整理仓库（302 起整个仓库一起排，不动带回来的棋盘 —— 那块是玩家摆的阵）。排不开就原样不动
 func tidy() -> bool:
-	var page := _shelf.current_page() if _shelf != null else null
-	if page == null:
+	if _meta == null or _meta.warehouse == null:
 		return false
-	var ok := GridTidy.tidy(page)
-	if page.item_count() > 1:
-		_say(UiText.t("wh.page_tidied") if ok else UiText.t("wh.tidy_failed"))
+	var ok := GridTidy.tidy_all(_meta.warehouse.pages)     # 302：整个仓库一起整理，不只这一页；留在当前页
+	if _meta.warehouse.item_count() > 1:
+		_say(UiText.t("wh.tidied") if ok else UiText.t("wh.tidy_failed"))
 	changed.emit()
 	return ok
 
@@ -402,6 +401,5 @@ func _refresh() -> void:
 	var pending := _meta.has_pending_board()
 	_store_btn.disabled = not pending
 	_store_btn.visible = _meta.board != null     # 178：没有带回来的背包就不摆「一键置入」（基地「仓库」页只剩整理）
-	var page := _shelf.current_page() if _shelf != null else null
-	_tidy_btn.disabled = page == null or page.item_count() <= 1
+	_tidy_btn.disabled = _meta.warehouse == null or _meta.warehouse.item_count() <= 1     # 302：按整个仓库
 

@@ -68,6 +68,55 @@ static func tidy(grid: GridInventory) -> bool:
 	return ok
 
 
+## 302（作者 2026-11-11：整理要跨页）：仓库的几页当一个整体整理 —— 全部取下、同一套顺序（[method _before]），
+## 每件从第一页起找第一个放得下的位置（后面的小件会回头填前面页的缝）。任何一件放不下就整批回原位、返回 false。
+## 每页只发一次 changed；跨页挪也不算置入（不盖 placed_seq）。棋盘模式的页、没东西返回 false
+static func tidy_all(pages: Array[GridInventory]) -> bool:
+	var items: Array[ItemInstance] = []
+	var homes := {}     # uid -> [页, origin, rot]
+	for p in pages:
+		if p == null or p.requires_bag:
+			return false
+		for inst in p.items():
+			var item := inst as ItemInstance
+			items.append(item)
+			homes[item.uid] = [p, item.origin, item.rotation]
+	if items.is_empty():
+		return false
+	items.sort_custom(_before)
+	for p in pages:
+		p.begin_batch()
+	for item in items:
+		(homes[item.uid][0] as GridInventory).remove(item.uid)
+	var placed := {}     # uid -> 页
+	var ok := true
+	for item in items:
+		var into: GridInventory = null
+		var fit := {}
+		for p in pages:
+			fit = p.find_first_fit(item.def, true)
+			if fit["found"]:
+				into = p
+				break
+		if into == null:
+			ok = false
+			break
+		item.container_id = into.id     # 仓库内挪位，不算置入
+		into.place(item, fit["origin"], fit["rotation"])
+		placed[item.uid] = into
+	if not ok:
+		for item in items:
+			if placed.has(item.uid):
+				(placed[item.uid] as GridInventory).remove(item.uid)
+		for item in items:
+			var home: GridInventory = homes[item.uid][0]
+			item.container_id = home.id
+			home.place(item, homes[item.uid][1], homes[item.uid][2])
+	for p in pages:
+		p.end_batch()
+	return ok
+
+
 ## 排序：同类 → 占格多 → 稀有度高 → def id → uid
 static func _before(a: ItemInstance, b: ItemInstance) -> bool:
 	var ka := kind_of(a.def)
