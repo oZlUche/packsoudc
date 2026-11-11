@@ -145,7 +145,7 @@ func with_chapter_events(extra: Dictionary) -> NodeRules:
 		if not (add is Dictionary):
 			continue
 		var table: Dictionary = (copy.events_by_type.get(String(type), {}) as Dictionary).duplicate()
-		for id in add:
-			table[String(id)] = add[id]
+		for ev_id in add:
+			table[String(ev_id)] = add[ev_id]
 		copy.events_by_type[String(type)] = table
 	return copy
