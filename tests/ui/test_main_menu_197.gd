@@ -7,23 +7,8 @@ const BOOT := "res://ui/boot.gd"
 
 
 static func run(t: TestCase) -> void:
-	t.begin("197 补充一 · 游戏名样式（思源宋体 Bold、字距 +6、6 px 深褐描边、下投影）、三张画（暗调）、启动屏的字体与底画、存档目录不随改名走")
-	var title := UiTheme.make_hero_title("背包搜打撤")
-	t.eq(title.theme_type_variation, UiTheme.LABEL_HERO_TITLE, "走 LabelHeroTitle 变体")
-	t.check(not title.has_theme_font_size_override("font_size"), "默认 128 号：零覆写")
-	UiTheme.set_hero_size(title, 64)
-	t.check(title.has_theme_font_size_override("font_size"), "随屏高缩放：改字号")
-	title.free()
+	t.begin("197 补充一 · 主菜单那几行字的样式、三张画（暗调）、启动屏的底画、存档目录不随改名走")
 	var th := UiTheme.current()
-	t.eq(th.get_font_size("font_size", UiTheme.LABEL_HERO_TITLE), 128, "128 号（1080 高，补充三）")
-	t.eq(th.get_color("font_color", UiTheme.LABEL_HERO_TITLE), Color("f0e2c4"), "暖纸色")
-	t.eq(th.get_color("font_outline_color", UiTheme.LABEL_HERO_TITLE), Color("1a1410"), "深褐描边")
-	t.eq(th.get_constant("outline_size", UiTheme.LABEL_HERO_TITLE), 6, "描边 6 px")
-	t.eq(th.get_constant("shadow_offset_y", UiTheme.LABEL_HERO_TITLE), 4, "投影往下 4")
-	var font := th.get_font("font", UiTheme.LABEL_HERO_TITLE) as FontVariation
-	t.check(font != null and font.spacing_glyph == 6, "字距 +6")
-	var base := font.base_font as FontVariation if font != null else null
-	t.check(base != null and base.base_font != null and base.base_font.resource_path.ends_with("serif_bold.otf"), "思源宋体 Bold")
 	var line_font := th.get_font("font", UiTheme.BUTTON_MENU_LINE) as FontVariation
 	t.check(line_font != null and line_font.base_font != null and line_font.base_font.resource_path.ends_with("serif_bold.otf"), "菜单那几行字：思源宋体 Bold")
 	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_MENU_LINE), 44, "主档 44 号")

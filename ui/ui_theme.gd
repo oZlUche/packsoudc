@@ -61,8 +61,6 @@ const PANEL_HOME_PLAQUE := &"PanelHomePlaque"
 const PANEL_HOME_PLAQUE_SMALL := &"PanelHomePlaqueSmall"
 const PANEL_HOME_CHIP := &"PanelHomeChip"
 const PANEL_SHELF := &"PanelShelf"
-## 179：开局屏坐在场地背景上的凹槽板（比背景更暗的板身、细黄铜边、内阴影；深底白字）；美术给了 `setup/groove` 就用图
-const PANEL_GROOVE := &"PanelGroove"
 ## 179：选角色屏 —— 图标牌的底、牌上的数字（28 粗体）、技能名（22 粗体亮黄铜黑描边）、技能说明（17，行距半字）、开局屏标题（白字带阴影）
 const PANEL_CAP_TILE := &"PanelCapTile"
 const LABEL_CAP_VALUE := &"LabelCapValue"
@@ -74,7 +72,6 @@ const LABEL_FLAW_NAME := &"LabelFlawName"
 const PANEL_FLIP_COUNTER := &"PanelFlipCounter"
 const LABEL_FLIP_NUM := &"LabelFlipNum"
 const FLIP_NUM_SIZE := 72
-const FLIP_FACE := Color("0b0b0d")
 ## 180 补三：难度块下面的挑战说明 —— 羊皮纸（浅底，竖向平铺九宫格 `setup/parchment_strip`）与上下两根卷轴。纸上的挑战句是墨红
 const PANEL_PARCHMENT := &"PanelParchment"
 ## 180 补四：难度的「−」「＋」（到头时字暗一半）与「开启挑战」铜牌按钮（〇级时整块只剩它、背后两根卷好的卷轴就是羊皮纸的顶、底卷轴；美术图 `setup/difficulty_plate`）
@@ -83,7 +80,6 @@ const BUTTON_DIFF_PLATE := &"ButtonDiffPlate"
 ## 180 补五：展开后顶上那枚「当前难度」铜牌（和「开启挑战」按钮面同一块铜，只是不能点）与它上面的字
 const PANEL_DIFF_TITLE := &"PanelDiffTitle"
 const LABEL_DIFF_TITLE := &"LabelDiffTitle"
-const SCROLL_ROD := Color("5a4632")
 ## 180 定稿：挑战句血红、不描边
 const PARCHMENT_RED := Color("c81018")
 ## 180 定稿美术（作者 2026-10-17 12:04「定稿」，`art/ui/setup/p180/`）：开局第二、三页的整套图
@@ -100,7 +96,7 @@ const PANEL_BARE := &"PanelBare"
 const PANEL_NODE_HINT := &"PanelNodeHint"
 ## 226 批四守门（tests/ui/test_no_bare_text_226.gd）：算「控件」的底 —— 字的祖先里有这些变体之一就算坐在控件上（牌、纸、签、板、提示框）
 const PLATE_VARIANTS: Array[StringName] = [PANEL_NAMEPLATE, PANEL_PARCHMENT, PANEL_SUMMARY_NOTE, PANEL_NODE_HINT, PANEL_TOOLTIP,
-	PANEL_DIFF_TITLE, PANEL_FLIP_COUNTER, PANEL_DARK, PANEL_GROOVE, PANEL_PACK_LEATHER, PANEL_HOME_BOX,
+	PANEL_DIFF_TITLE, PANEL_FLIP_COUNTER, PANEL_DARK, PANEL_PACK_LEATHER, PANEL_HOME_BOX,
 	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
 	PANEL_CAP_TILE, PANEL_HUD, PANEL_HUD_WELL, &"TooltipPanel"]
 const BUTTON_SETUP_TAB := &"ButtonSetupTab"
@@ -131,37 +127,26 @@ const BUTTON_ICON := &"ButtonIcon"
 const BUTTON_ART := &"ButtonArt"
 ## 168：大标题（寒蝉锦书宋 Heavy，子集改名 PackSDC Display；2026-10-27 起替换马善政，[method UiPalette.display_font]）—— 主菜单游戏名、开局屏与开场事件的章节名、宝箱屏的说明字
 const LABEL_DISPLAY := &"LabelDisplay"
-## 197 补充一 §6：主菜单 / 启动屏的游戏名 —— 思源宋体 Bold、暖纸色、6 px 深褐描边、下投影、字距 +6（[method make_hero_title]）
-const LABEL_HERO_TITLE := &"LabelHeroTitle"
 ## 197 补充三 §14：主菜单左下角那几行字（思源宋体 Bold 描边字，悬停 / 焦点行前一枚铜菱形）与最底下一行小字链接（语言、开发工具、退出）
 const BUTTON_MENU_LINE := &"ButtonMenuLine"
 const BUTTON_MENU_FOOT := &"ButtonMenuFoot"
-## 251 补充一：铁匠铺「打造」键没图时挂的变体（只登记，没有底）
-const BUTTON_FORGE := &"ButtonForge"
 
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, PANEL_HUD_WELL, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
 	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, LABEL_TENT_SIGN, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
 	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
-	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_GROOVE, PANEL_CAP_TILE, LABEL_CAP_VALUE,
+	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
 	PANEL_DIFF_TITLE, LABEL_DIFF_TITLE, PANEL_PACK_LEATHER, PANEL_SUMMARY_NOTE, BUTTON_SETUP_TAB, BUTTON_PRESET_TAG,
 	BUTTON_MAP_ENTRY, BUTTON_MAP_SUB, BUTTON_SETUP_BACK, BUTTON_SETUP_GO, BUTTON_SETUP_CHAR, BUTTON_DIFF_MINUS, BUTTON_DIFF_PLUS, PANEL_BARE, PANEL_NODE_HINT,
-	LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE, BUTTON_FORGE, LABEL_FLAW_NAME]
+	BUTTON_MENU_LINE, BUTTON_MENU_FOOT, LABEL_NOTE_TITLE, LABEL_FLAW_NAME]
 
 const TITLE_SIZE := 18
 ## 168：大标题字号
 const DISPLAY_SIZE := 40
-## 197 补充一 §6：游戏名（1080 高时；屏幕按高等比缩放；补充三：居中上方、128 号）、颜色、描边、投影、字距
-const HERO_TITLE_SIZE := 128
-const HERO_TITLE_COLOR := Color("f0e2c4")
+## 197：主菜单那几行字的描边色
 const HERO_OUTLINE_COLOR := Color("1a1410")
-const HERO_OUTLINE := 6
-const HERO_SHADOW := Color(0, 0, 0, 0.6)
-const HERO_SHADOW_OFFSET := Vector2i(0, 4)
-const HERO_SHADOW_SPREAD := 4
-const HERO_SPACING := 6
 ## 197 补充三 §14：主菜单的字 —— 主档 44 / 次档 34 号，暖纸色、悬停提亮，7 px 深褐描边；行前菱形（≈ 0.4 字高、离字 14）画在固定的左缩进里；
 ## 最底下一行小字 18 号
 const MENU_PRIMARY_SIZE := 44
@@ -230,7 +215,6 @@ const ART_SETUP_BG := "setup/bg_hall"
 ## 作者 2026-10-17：选人场地只给第一页；第二页（带装备）木板拼接 / 仓库，第三页（选地图）桌上铺着的军用地图。没图：纯色底
 const ART_SETUP_KIT_BG := "setup/bg_kit"
 const ART_SETUP_MAP_BG := "setup/bg_map"
-const ART_GROOVE := "setup/groove"
 ## 180 补二：难度翻页计数器的外框（深黄铜）；定稿：窗里一张翻页卡（下）+ 数字 + 中缝（上）
 const ART_FLIP_COUNTER := "setup/diff_counter_frame"
 const ART_FLIP_CARD := "setup/diff_flip_card"
@@ -263,9 +247,6 @@ const ART_LEGEND_FLAG := "map/flag_24"
 const ART_MAP_TAG := "map/tag_paper"
 ## 战斗界面的整屏背景（白天的沙地场子，铺满裁边；深浅读图旁 json 的 `tone`）；没图：照旧纯色底
 const ART_BATTLE_BG := "battle/battle_bg"
-## 179：凹槽板没图时的平面底（样稿第二版的色）
-const GROOVE_BG := Color("14161c")
-const GROOVE_EDGE := Color("5a4522")
 ## 家的按钮字号：页签 / 回主菜单 20，「再来一局」28
 const HOME_BUTTON_SIZE := 20
 const HOME_PRIMARY_SIZE := 28
@@ -276,7 +257,7 @@ const TEXT_MIN_STEP := {&"small": 0, &"medium": 1, &"large": 2}
 ## 至少涨几号只管这么大以上的字（撑行宽的 1 号空白、2～7 号的小角标照倍率走）
 const TEXT_STEP_FROM := 8
 ## 258：主菜单不跟着字号档放大（作者 20:57「注意主菜单的字体不用改」）—— 这几个变体在主题里保持原字号
-const MENU_VARIATIONS: Array[StringName] = [LABEL_HERO_TITLE, BUTTON_MENU_LINE, BUTTON_MENU_FOOT]
+const MENU_VARIATIONS: Array[StringName] = [BUTTON_MENU_LINE, BUTTON_MENU_FOOT]
 
 ## 并进默认主题的那一份；[method refresh] 原地重填它
 static var _current: Theme = null
@@ -289,7 +270,6 @@ static var _font_italic: Font = null
 static var _font_bold_italic: Font = null
 static var _font_title: Font = null
 static var _font_display: Font = null
-static var _font_hero: Font = null
 ## 258：现在的字号档与倍率（[method set_text_size] 改；[method sz] 按它算）
 static var text_size: StringName = &"medium"
 static var text_scale := 1.125
@@ -488,23 +468,6 @@ static func make_display(text: String, font_size: int = DISPLAY_SIZE) -> Label:
 	if font_size != DISPLAY_SIZE:
 		l.add_theme_font_size_override("font_size", sz(font_size))
 	return l
-
-
-## 197 补充一 §6：游戏名（[constant LABEL_HERO_TITLE]）；字号不是 [constant HERO_TITLE_SIZE] 才覆写（主菜单按屏高缩放时改它）
-static func make_hero_title(text: String, font_size: int = HERO_TITLE_SIZE) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.theme_type_variation = LABEL_HERO_TITLE
-	set_hero_size(l, font_size)
-	return l
-
-
-## 游戏名换字号（窗口改了高度）
-static func set_hero_size(l: Label, font_size: int) -> void:
-	if font_size == HERO_TITLE_SIZE:
-		l.remove_theme_font_size_override("font_size")
-	else:
-		l.add_theme_font_size_override("font_size", font_size)
 
 
 ## 197 补充三 §14：主菜单的一行字（[constant BUTTON_MENU_LINE]）：左对齐、描边；悬停或键盘焦点时行前画一枚铜菱形，按下时菱形与字一起下沉 1 px。
@@ -867,7 +830,7 @@ const TONE_LIGHT := &"light"
 const PANEL_TONES := {
 	PANEL_DARK: TONE_DARK, PANEL_LINE: TONE_DARK, PANEL_HUD: TONE_DARK, PANEL_OVERLAY: TONE_DARK, PANEL_TOOLTIP: TONE_DARK,
 	PANEL_NAMEPLATE: TONE_DARK, PANEL_HOME_BOX: TONE_LIGHT, PANEL_SHELF: TONE_DARK, PANEL_HUD_BAR: TONE_DARK,
-	PANEL_WINDOW: TONE_DARK, PANEL_GROOVE: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
+	PANEL_WINDOW: TONE_DARK, PANEL_CAP_TILE: TONE_DARK, PANEL_FLIP_COUNTER: TONE_DARK,
 	PANEL_PARCHMENT: TONE_LIGHT, PANEL_DIFF_TITLE: TONE_LIGHT, PANEL_PACK_LEATHER: TONE_DARK,
 	PANEL_SUMMARY_NOTE: TONE_LIGHT, PANEL_BARE: TONE_LIGHT, PANEL_NODE_HINT: TONE_LIGHT, PANEL_HUD_WELL: TONE_LIGHT,
 	PANEL_HOME_PLAQUE: TONE_LIGHT, PANEL_HOME_PLAQUE_SMALL: TONE_LIGHT, PANEL_HOME_CHIP: TONE_LIGHT,
@@ -876,7 +839,7 @@ const PANEL_TONES := {
 ## 157 补充三：叠层框与顶端栏是石板（深浅读板边的 json；顶端栏是自己那张长条板边），板里的分区都是凹槽
 const PANEL_ART := {PANEL_DARK: ART_INSET, PANEL_LINE: ART_INSET, PANEL_HUD: ART_INSET, PANEL_OVERLAY: ART_SLAB_EDGE, PANEL_TOOLTIP: ART_TOOLTIP,
 	PANEL_NAMEPLATE: ART_NAMEPLATE, PANEL_HOME_BOX: ART_HOME_BOX, PANEL_SHELF: ART_SHELF, PANEL_HUD_BAR: ART_SLAB_BAR,
-	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_GROOVE: ART_GROOVE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER,
+	PANEL_WINDOW: ART_SLAB_EDGE, PANEL_FLIP_COUNTER: ART_FLIP_COUNTER,
 	PANEL_PARCHMENT: ART_PARCHMENT_STRIP, PANEL_DIFF_TITLE: ART_DIFF_TITLE, PANEL_PACK_LEATHER: ART_PACK_LEATHER,
 	PANEL_SUMMARY_NOTE: ART_SUMMARY_NOTE, PANEL_NODE_HINT: ART_NODE_HINT, PANEL_HUD_WELL: ART_HUD_WELL,
 	PANEL_HOME_PLAQUE: ART_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL: ART_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP: ART_HOME_CHIP}
@@ -1172,11 +1135,6 @@ static func layered_box(edge_art: String, body_art: String, title_strip: bool = 
 	return s
 
 
-## 底是不是美术的图（九宫格或石板）：[OverlayFrame] 按它决定外框边距听图的还是听各屏的
-static func is_art_box(box: StyleBox) -> bool:
-	return box is StyleBoxTexture or box is SlabStyle
-
-
 ## 157 补充三：把一块面板做成一整块石板（叠层框、底屏的大板）：石板变体 + 按石板的深浅挂字色。
 ## 224 补充二：[param edge_art] 给了 = 板边换这张（结算屏的 `slab_edge_plain`：没有顶上那道标题刻线）；缺图照旧
 static func slab(c: PanelContainer, edge_art: String = "") -> PanelContainer:
@@ -1332,9 +1290,6 @@ static func _fill(t: Theme, bg: Color) -> void:
 	for pair in [[PANEL_HOME_PLAQUE, ART_HOME_PLAQUE], [PANEL_HOME_PLAQUE_SMALL, ART_HOME_PLAQUE_SMALL], [PANEL_HOME_CHIP, ART_HOME_CHIP]]:     # 264 木牌
 		_panel_variation(t, pair[0], _art_box(pair[1]))
 	_panel_variation(t, PANEL_SHELF, _art_box(ART_SHELF))
-	# 179：开局屏的凹槽板
-	var groove: StyleBox = _art_box(ART_GROOVE)
-	_panel_variation(t, PANEL_GROOVE, groove if groove != null else _groove_box())
 	_setup_card(t)
 	# 180 补二：难度翻页计数器
 	_panel_variation(t, PANEL_FLIP_COUNTER, _art_box(ART_FLIP_COUNTER))
@@ -1345,7 +1300,6 @@ static func _fill(t: Theme, bg: Color) -> void:
 		parchment.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE     # 竖着平铺，纸多长都不拉花
 	_panel_variation(t, PANEL_PARCHMENT, parchment)
 	_difficulty_buttons(t)
-	t.set_type_variation(BUTTON_FORGE, "Button")
 	_home_buttons(t)
 	_menu_styles(t)
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
@@ -1506,18 +1460,6 @@ static func _home_buttons(t: Theme) -> void:
 
 ## 197 补充一 / 三：游戏名与主菜单的几行字、小字链接
 static func _menu_styles(t: Theme) -> void:
-	if _font_hero == null:
-		var hero := FontVariation.new()
-		hero.base_font = UiPalette.cjk_font_bold()
-		hero.spacing_glyph = HERO_SPACING
-		_font_hero = hero
-	_label_variation(t, LABEL_HERO_TITLE, HERO_TITLE_SIZE, HERO_TITLE_COLOR, _font_hero)
-	t.set_color("font_outline_color", LABEL_HERO_TITLE, HERO_OUTLINE_COLOR)
-	t.set_constant("outline_size", LABEL_HERO_TITLE, HERO_OUTLINE)
-	t.set_color("font_shadow_color", LABEL_HERO_TITLE, HERO_SHADOW)
-	t.set_constant("shadow_offset_x", LABEL_HERO_TITLE, HERO_SHADOW_OFFSET.x)
-	t.set_constant("shadow_offset_y", LABEL_HERO_TITLE, HERO_SHADOW_OFFSET.y)
-	t.set_constant("shadow_outline_size", LABEL_HERO_TITLE, HERO_SHADOW_SPREAD)
 	t.set_type_variation(BUTTON_MENU_LINE, "Button")
 	var still := StyleBoxEmpty.new()     # 左缩进留给菱形；下边多 1 px，按下时挪到上边 = 字下沉 1 px
 	still.content_margin_left = MENU_LINE_INDENT
@@ -1667,11 +1609,6 @@ static func make_difficulty_plate(text: String, handler: Callable) -> Button:
 	return b
 
 
-## 180 定稿：这几样有没有图（开局屏按它决定用图的尺寸、去不去掉凹槽板）
-static func has_setup_art(art_name: String) -> bool:
-	return art(art_name) != null or art(art_name + "_normal") != null
-
-
 ## 179：选角色屏的几种字与图标牌的底
 static func _setup_card(t: Theme) -> void:
 	t.set_type_variation(PANEL_CAP_TILE, "PanelContainer")
@@ -1696,15 +1633,6 @@ static func make_variant_label(text: String, variation: StringName) -> Label:
 	l.text = text
 	l.theme_type_variation = variation
 	return l
-
-
-## 179：凹槽板的平面底 —— 暗板身、细黄铜边、往下一点投影
-static func _groove_box() -> StyleBoxFlat:
-	var s := _box(Color(GROOVE_BG, 0.94), GROOVE_EDGE, PANEL_MARGIN)
-	s.shadow_color = Color(0, 0, 0, 0.55)
-	s.shadow_size = 14
-	s.shadow_offset = Vector2(0, 6)
-	return s
 
 
 static func _box(bg: Color, edge: Color, margin: int) -> StyleBoxFlat:

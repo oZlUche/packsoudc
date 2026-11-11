@@ -25,7 +25,6 @@ static func run_theme_art(t: TestCase) -> void:
 		t.eq(slab.content_margin_left, 1.0, "其余内边距跟板边")
 		t.eq([slab.body.axis_stretch_horizontal, slab.body.axis_stretch_vertical], [StyleBoxTexture.AXIS_STRETCH_MODE_TILE, StyleBoxTexture.AXIS_STRETCH_MODE_TILE], "板身平铺，纹不随框大小拉花")
 		t.eq(slab.body_inset, [1.0, 1.0, 1.0, 1.0], "板身往里缩 json 的 body_inset（一个数 = 四边）")
-	t.check(UiTheme.is_art_box(slab), "石板算美术底（框的外边距听图的）")
 	var bar_slab := UiTheme.slab_box(false, -1, UiTheme.ART_SLAB_BAR)
 	t.check(bar_slab != null, "板边换一张（slab_bar）也是石板")
 	if bar_slab != null:

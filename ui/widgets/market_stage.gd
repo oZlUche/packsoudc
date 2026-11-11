@@ -18,9 +18,6 @@ var sign_text := "":
 	set(v):
 		sign_text = v
 		queue_redraw()
-## 木桌画在底图里，这一项不再管画面（集市页还在设）
-var tables := true
-
 var _layout: Dictionary = {}
 var _bg := BG
 

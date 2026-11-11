@@ -182,8 +182,7 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	page.add_child(col)
 	var head := _frame_title(title)
 	head.custom_minimum_size.y = float(meta.get("title_h", 52))
-	if head.get_parent() == null:
-		col.add_child(head)
+	col.add_child(head)
 	var under := Control.new()     # 花饰线在图里：正文从 title_h + 22 起
 	under.custom_minimum_size.y = 22.0 - 14.0
 	col.add_child(under)

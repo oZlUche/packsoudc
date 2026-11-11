@@ -176,7 +176,6 @@ func rebuild(keep_page: bool = true) -> void:
 	_views.clear()
 	_frames.clear()
 	_prices.clear()
-	_stage.tables = true     # 262：集市默认就有（1 级），不再有「未开」的空棚
 	_stage.tooltip_text = UiText.t("market.restock_tip")
 	_funds.amount = flow.meta.funds
 	_refresh.price = Market.refresh_cost(flow.meta, flow.market())

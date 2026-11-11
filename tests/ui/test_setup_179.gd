@@ -38,7 +38,6 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		return b.theme_type_variation == UiTheme.BUTTON_SETUP_CHAR and b.toggle_mode and b.custom_minimum_size.y == setup.CHAR_KEY_H), "选人页 B：角色名单是基地平头木键")
 	t.check(setup._character_btns[setup.character_index].button_pressed, "选中的那颗按下（深色木）")
 	t.check(setup._preset_btns.all(func(b: Button) -> bool: return b.theme_type_variation == UiTheme.BUTTON_PRESET_TAG and b.custom_minimum_size.y == PresetTag.H), "285：预设是中栏一列挂牌（同仓库页签一副皮）")
-	t.eq(UiTheme.tone_of(UiTheme.PANEL_GROOVE), UiTheme.TONE_DARK, "凹槽板深底（白字）")
 	t.eq(setup._grooves[1].size_flags_horizontal, Control.SIZE_SHRINK_BEGIN, "255：中栏定宽，不再撑满")
 	t.eq(setup._grooves[1].custom_minimum_size.x, setup.mid_width(), "255：中栏宽 = 设计宽减页边、两栏与栏距")
 	t.eq(setup._grooves[2].size_flags_horizontal, Control.SIZE_SHRINK_END, "棋盘栏贴右")

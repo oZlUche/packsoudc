@@ -125,7 +125,6 @@ static func frame_market_page(t: TestCase, root: Window) -> void:
 	p = s.market_panel()
 	p.show_stall(Market.LOOSE)
 	t.eq(p.views().size(), 4, "四个货位")
-	t.check(p.stage().tables, "有木台")
 	t.check(p.note() == null, "没有签")
 	t.eq(Bare.audit(p, "market262_base"), [] as Array[String], "字不裸")
 	s.queue_free()
