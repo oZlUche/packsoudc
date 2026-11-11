@@ -348,7 +348,7 @@ static func frame_supplement_three_four(t: TestCase, root: Window) -> void:
 	t.check(not block.transitioning(), "过渡完了")
 	t.check(absf(setup._diff_block.scroll.shown_h - setup._diff_block.scroll.paper_height()) < 0.5, "拉开到一行的高")
 	t.check(not setup._diff_block.open_btn.visible and block.title.modulate.a == 1.0 and setup._diff_block.counter.modulate.a == 1.0, "展开态：铜牌、计数器、加减")
-	t.check(setup._diff_block.minus_btn.theme_type_variation in [UiTheme.BUTTON_STEP, UiTheme.BUTTON_DIFF_MINUS], "加减用专门的灰态（定稿：四态图）")
+	t.check(setup._diff_block.minus_btn.theme_type_variation == UiTheme.BUTTON_DIFF_MINUS, "加减用专门的灰态（定稿：四态图）")
 	t.check(not setup._diff_block.minus_btn.disabled, "Ⅰ 级：减可按（回〇级收起）")
 	# 收起：先翻成空白、卷轴合拢，再上移回按钮背后
 	setup.step_difficulty(-1)

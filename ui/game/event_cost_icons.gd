@@ -1,19 +1,19 @@
 ## 事件选项的代价图标（157）：选项按钮文字前一排小格，只画「会花掉什么」，不画「会得到什么」（读完才知道的乐趣）。
 ##
-## 每种一格 16 像素：`assets/ui/cost_<种>.png` 有图用图，没图在那一格写字符。哪些后果 / 条件算哪种代价写在 [member KINDS] 里 ——
+## 每种一格 16 像素：`assets/ui/cost_<种>.png`。哪些后果 / 条件算哪种代价写在 [member KINDS] 里 ——
 ## 新的后果类加一行就有图标。拼成一张图挂在按钮的 `icon` 上（按钮自己把它排在字前面，不加子控件、不加覆写）
 class_name EventCostIcons
 extends RefCounted
 
 const SIZE := 16
 const GAP := 4
-## [类, 种, 没图时写的字符, 说法的 UiText 键]；钱只有花钱（数是负的）才算
+## [类, 种, 说法的 UiText 键]；钱只有花钱（数是负的）才算
 static var KINDS: Array = [
-	[SpendVitality, "vitality", "♥", "event.cost_vitality"],
-	[ChangeMoney, "money", "¤", "event.cost_money"],
-	[LoseItem, "item", "▣", "event.cost_item"],
-	[PassTime, "time", "⌛", "event.cost_time"],
-	[FaithActive, "faith", "✦", "event.cost_faith"],
+	[SpendVitality, "vitality", "event.cost_vitality"],
+	[ChangeMoney, "money", "event.cost_money"],
+	[LoseItem, "item", "event.cost_item"],
+	[PassTime, "time", "event.cost_time"],
+	[FaithActive, "faith", "event.cost_faith"],
 ]
 
 
@@ -46,23 +46,16 @@ static func _kind_of(thing: Object) -> String:
 	return ""
 
 
-static func glyph_of(kind: String) -> String:
-	for row in KINDS:
-		if String(row[1]) == kind:
-			return String(row[2])
-	return "?"
-
-
 ## 「代价：耗体力、花钱」（按钮的悬浮提示）
 static func describe(kinds: Array[String]) -> String:
 	var words: Array[String] = []
 	for row in KINDS:
 		if kinds.has(String(row[1])):
-			words.append(UiText.t(String(row[3])))
+			words.append(UiText.t(String(row[2])))
 	return UiText.t("event.costs") % UiText.t("setup.list_sep").join(words) if not words.is_empty() else ""
 
 
-## 一排代价拼成的一张图（没有代价 null）。没图的那几种在图上留空，[method glyph_slots] 说哪几格要画字符
+## 一排代价拼成的一张图（没有代价 null）
 static func strip(kinds: Array[String]) -> Texture2D:
 	if kinds.is_empty():
 		return null
@@ -97,16 +90,7 @@ static func _build_strip(kinds: Array[String]) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-## 哪几格没有图（要在按钮上补画字符）
-static func glyph_slots(kinds: Array[String]) -> Array[int]:
-	var out: Array[int] = []
-	for i in kinds.size():
-		if not UiTheme.has_art("cost_" + kinds[i]):
-			out.append(i)
-	return out
-
-
-## 给一个选项按钮挂上代价：图挂在 `icon`、没图的格子在按钮上画字符、悬浮提示写代价。返回挂了几种
+## 给一个选项按钮挂上代价：图挂在 `icon`、悬浮提示写代价。返回挂了几种
 static func attach(b: Button, opt: EventOption) -> int:
 	var kinds := kinds_of(opt)
 	b.set_meta("costs", kinds)
@@ -114,13 +98,4 @@ static func attach(b: Button, opt: EventOption) -> int:
 		return 0
 	b.icon = strip(kinds)
 	b.tooltip_text = describe(kinds)
-	var missing := glyph_slots(kinds)
-	if not missing.is_empty():
-		b.draw.connect(func():
-			var font := b.get_theme_font("font")
-			var left := b.get_theme_stylebox("normal").get_margin(SIDE_LEFT)
-			var top := (b.size.y - SIZE) * 0.5
-			for i in missing:
-				b.draw_string(font, Vector2(left + i * (SIZE + GAP), top + SIZE - 2), glyph_of(kinds[i]),
-					HORIZONTAL_ALIGNMENT_CENTER, SIZE, SIZE, b.get_theme_color("font_color")))     # 字色随按钮（纸卷是墨字）
 	return kinds.size()

@@ -288,7 +288,6 @@ const TEXT := {
 	"tip.recipe_crystal": {"zh": "【%s】×1", "en": "%s ×1"},
 	"tip.recipe_quality": {"zh": "材料比要求高几档，出件就几档品质", "en": "Each tier the material is above the requirement adds a tier of quality"},
 	"tip.recipe_where": {"zh": "休息点的砧（每处免费一次）／ 基地铁匠铺（%s）", "en": "Anvil at a rest site (free once each) / base smithy (%s)"},
-	"anvil.strike": {"zh": "锤打", "en": "Strike"},
 	"anvil.needs": {"zh": "要一件%s（%s起）", "en": "needs %s (%s or better)"},
 	"anvil.no_upgrade": {"zh": "这把没有可升的", "en": "This weapon has no upgrade"},
 	"anvil.free": {"zh": "免费一次", "en": "Free once"},

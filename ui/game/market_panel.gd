@@ -254,8 +254,6 @@ func _place() -> void:
 			var key := _stall_keys[id] as Button
 			if key is CatKey:
 				(key as CatKey).scale_k = kk
-			else:
-				key.custom_minimum_size.x = roundf(CatKey.SIZE.x * kk)
 	if _stage.size.x <= 0.0:
 		return
 	var layout := _stage.layout()

@@ -45,4 +45,4 @@ static func frame_director(t: TestCase, _root: Window) -> void:
 	d.free()
 	var meta: GDScript = load("res://ui/game/meta_screen.gd")
 	t.eq(meta.SCENES.get("expedition"), "home/scene_expedition", "出征页场景图位")
-	t.eq(meta.backdrop_of("expedition"), "home/scene_expedition" if UiTheme.art("home/scene_expedition") != null else UiTheme.ART_HOME_BG, "缺图回基地底图")
+	t.eq(meta.backdrop_of("expedition"), "home/scene_expedition", "出征页铺自己的场景图")

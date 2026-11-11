@@ -215,8 +215,6 @@ func _place() -> void:
 		var key := _group_keys[g] as Button
 		if key is CatKey:
 			(key as CatKey).scale_k = k
-		else:
-			key.custom_minimum_size.x = kr.size.x
 	var gr := _stage.to_local_rect(lay.get("grid", {}))
 	_shelf.position = gr.position
 	_shelf.size = gr.size

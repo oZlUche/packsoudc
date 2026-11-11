@@ -3,7 +3,7 @@
 ## 197（作者定稿）：不再是屏心一块石板 —— 整屏三张画轮换带慢镜头（[MenuBackdrop]）；补充三 §14（作者草图）：游戏名居中在上方天空，
 ## 菜单是左下角几行描边字，从底往上堆：主档（继续 / 新的游戏）、次档（读取存档 / 仓库与战绩 / 百科 / 设置）、最底下一行小字（语言 / 开发工具 / 退出）。
 ## 不用木牌、不加暗纱（左下角的安静由画自己负责）；战绩行拿掉（在仓库与战绩页），备份 / 对账提示是右下角小字。
-## 补充二 §12：游戏名做成字标图（`menu/title`）—— 图在就用图，不在退回描边粗体的文字标题（[method UiTheme.make_hero_title]）。
+## 补充二 §12：游戏名做成字标图（`menu/title`）。
 ## 尺寸都按 1080 高写，随屏高等比缩放（游戏名照比例，菜单最小缩到 [constant MIN_SCALE]）
 extends GameScreen
 
@@ -13,8 +13,7 @@ signal dev_tools_requested
 const DESIGN_HEIGHT := 1080.0
 ## 菜单最小缩到这么多（1280 × 720）
 const MIN_SCALE := 0.75
-## 游戏名（文字退路）的上沿；字标图的宽（美术 720 × 200 的画布放大 1.55 倍）与上沿 —— 都居中
-const TITLE_TOP := 90.0
+## 字标图的宽（美术 720 × 200 的画布放大 1.55 倍）与上沿 —— 居中
 const ART_LOGO := "menu/title"
 const LOGO_WIDTH := 1116.0
 const LOGO_TOP := 90.0
@@ -34,8 +33,8 @@ const NOTICE_SIZE := 15
 static var _shown_once := false
 
 var _scenery: MenuBackdrop = null
-## 游戏名：字标图（[TextureRect]）或文字（[Label]）
-var _title: Control = null
+## 游戏名：字标图
+var _title: TextureRect = null
 ## 左下角整块（主档、次档、最底下一行），从底往上堆
 var _column: VBoxContainer = null
 var _primary: VBoxContainer = null
@@ -62,17 +61,11 @@ func open(_payload: Dictionary) -> void:
 	UiTheme.set_tone(area, UiTheme.art_tone(UiTheme.ART_MENU_BGS[0]))     # 三张都是暗画：亮字
 	add_child(area)
 
-	var logo := UiTheme.art_cached(UiTheme.lang_art(ART_LOGO))     # 221：英文字标 Pack & Extract，画布比例一样
-	if logo != null:
-		var pic := UiTheme.picture(logo, TextureRect.STRETCH_KEEP_ASPECT)
-		pic.name = "MenuLogo"
-		_title = pic
-		if brighten:     # 启动屏把字标压暗到 40 %：跟着画一起亮起来
-			pic.modulate = Color(MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM)
-	else:
-		_title = UiTheme.make_hero_title(UiText.t("game.title"))
+	_title = UiTheme.picture(UiTheme.art_cached(UiTheme.lang_art(ART_LOGO)), TextureRect.STRETCH_KEEP_ASPECT)     # 221：英文字标 Pack & Extract，画布比例一样
+	_title.name = "MenuLogo"
 	area.add_child(_title)
-	if brighten and _title is TextureRect:
+	if brighten:     # 启动屏把字标压暗到 40 %：跟着画一起亮起来
+		_title.modulate = Color(MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM)
 		create_tween().tween_property(_title, "modulate", Color.WHITE, MenuBackdrop.BRIGHTEN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	# 089（作者定）：第一项「继续」（当前位有存档才显示）；「读取存档」（有任何一位有存档才显示）；「新的游戏」= 开一份新存档。只写这几个词，不写章名
@@ -159,17 +152,11 @@ func _layout() -> void:
 	var c := column_scale()
 	var h := size.y if size.y > 0.0 else DESIGN_HEIGHT
 	var w := size.x if size.x > 0.0 else DESIGN_HEIGHT * 1.6
-	if _title is TextureRect:
-		var tex := (_title as TextureRect).texture
+	var tex := _title.texture
+	if tex != null:
 		var wide := LOGO_WIDTH * s
 		_title.size = Vector2(wide, wide * tex.get_height() / maxf(tex.get_width(), 1.0))
 		_title.position = Vector2((w - wide) * 0.5, LOGO_TOP * s)
-	else:
-		var label := _title as Label
-		UiTheme.set_hero_size(label, int(round(UiTheme.HERO_TITLE_SIZE * s)))
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.position = Vector2(0, TITLE_TOP * s)
-		label.size = Vector2(w, 0)
 	# 菜单从底往上堆：字的左沿对齐 LEFT（行前留给菱形的缩进挂在线左边），最底下一行离屏底 BOTTOM
 	_column.scale = Vector2.ONE * c
 	_column.reset_size()

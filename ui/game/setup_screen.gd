@@ -253,28 +253,9 @@ func open(_payload: Dictionary) -> void:
 	show_page(0)
 
 
-## 179：一块凹槽板（深底白字），内边距 左 / 上 / 右 / 下
-func _groove(l: int, t: int, r: int, b: int) -> PanelContainer:
-	return UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_GROOVE, l, t, r, b)
-
-
-## 180 定稿：一块有图的框（第二页的背包皮框、仓库框，内边距 [param inset]）；没图退回凹槽板
-func _framed(variation: StringName, art_name: String, inset: int) -> PanelContainer:
-	if UiTheme.art(art_name) == null:
-		return _groove(16, 14, 16, 14)
-	return UiTheme.panel_margins(PanelContainer.new(), variation, inset, inset, inset, inset)
-
-
-## 180 定稿：第三页的东西直接摆在地图纸上（没有板，左右让开纸的毛边 [constant PAPER_INSET]）；没有地图纸那张背景退回凹槽板
+## 180 定稿：第三页的东西直接摆在地图纸上（没有板，左右让开纸的毛边 [constant PAPER_INSET]）
 func _on_paper(left: int, right: int) -> PanelContainer:
-	if not _paper_art():
-		return _groove(16, 14, 16, 14)
 	return UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_BARE, left, 0, right, 0)
-
-
-## 第三页有没有地图纸那张背景
-static func _paper_art() -> bool:
-	return UiTheme.art(UiTheme.ART_SETUP_MAP_BG) != null
 
 
 ## 255：右栏宽 = 九格棋盘 + 皮带框两边的缩进 + 凹槽内边距（作者 10:51：最宽九格定死，窄的棋盘居中）
@@ -342,7 +323,7 @@ func _build_kit_page() -> Control:
 	var row := _hbox(KIT_ROW_GAP)
 	play.add_child(row)
 
-	var board_panel := _framed(UiTheme.PANEL_PACK_LEATHER, UiTheme.ART_PACK_LEATHER, FRAME_INSET)     # 180 定稿：背包皮框
+	var board_panel := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PACK_LEATHER, FRAME_INSET, FRAME_INSET, FRAME_INSET, FRAME_INSET)     # 180 定稿：背包皮框
 	board_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(board_panel)
 	var left := _vbox(12)
@@ -383,9 +364,8 @@ func _build_kit_page() -> Control:
 	_warehouse_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	right.add_child(_warehouse_scroll)
 	_warehouse_pages = WarehousePages.new()
-	if UiTheme.has_setup_art(UiTheme.ART_SETUP_TAB):     # 180 定稿：挂牌页签
-		_warehouse_pages.tab_variation = UiTheme.BUTTON_SETUP_TAB
-		_warehouse_pages.tab_height = TAB_TAG_H
+	_warehouse_pages.tab_variation = UiTheme.BUTTON_SETUP_TAB     # 180 定稿：挂牌页签
+	_warehouse_pages.tab_height = TAB_TAG_H
 	_warehouse_pages.frame_variation = UiTheme.PANEL_SHELF
 	_warehouse_scroll.add_child(_warehouse_pages)
 	_warehouse_pages.setup(w, font, _drag, TechWarehousePages.plan_of(flow.tech_defs))
@@ -641,20 +621,16 @@ func _build_map_page() -> Control:
 	# 180 补二（作者 10:09）：右上只写角色名，没有标题，负重 / 地图 / 难度各行都不要（左列与难度块自己在显示）。
 	# 定稿：写在一张钉着的便条上（浅底墨字、居中）
 	_summary = _label("", 22, UiPalette.FG)
-	if UiTheme.art(UiTheme.ART_SUMMARY_NOTE) != null:
-		var note := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, 26, 20, 26, 20)
-		note.custom_minimum_size.y = 88
-		_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		var lines := _vbox(2)
-		lines.alignment = BoxContainer.ALIGNMENT_CENTER
-		lines.add_child(_summary)
-		lines.add_child(_build_summary_preset())
-		note.add_child(lines)
-		right.add_child(note)
-	else:
-		right.add_child(_summary)
-		right.add_child(_build_summary_preset())
+	var note := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, 26, 20, 26, 20)
+	note.custom_minimum_size.y = 88
+	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var lines := _vbox(2)
+	lines.alignment = BoxContainer.ALIGNMENT_CENTER
+	lines.add_child(_summary)
+	lines.add_child(_build_summary_preset())
+	note.add_child(lines)
+	right.add_child(note)
 	# 180 补四 / 补五（作者 11:38 / 11:43 / 11:49）：〇级时整块（计数器、加减、羊皮纸）收成一颗居中写「开启挑战」的铜牌按钮，
 	# 背后两根卷好的卷轴；点它拨到 Ⅰ —— 卷轴下移再拉开，按钮换成「当前难度」铜牌、计数器与加减。一个难度都没解锁时压灰
 	_diff_block = DifficultyBlock.new()
@@ -684,7 +660,7 @@ func show_page(i: int) -> void:
 		_fit_warehouse()     # 作者 10-31 木架：框的边距要等进了树、主题生效才算得出来，翻到这页再量一次
 	_repaint(PAGE_ART[_page])
 	if _title_indent != null:
-		_title_indent.custom_minimum_size.x = float(PAPER_INSET) if _page == PAGE_MAP and _paper_art() else 0.0
+		_title_indent.custom_minimum_size.x = float(PAPER_INSET) if _page == PAGE_MAP else 0.0
 	if _title != null:
 		_title.text = UiText.t(PAGE_TITLES[_page])
 	if _enter_btn != null:
@@ -784,16 +760,16 @@ func _choice_column(box: Control, names: Array[String], on_pick: Callable, p_siz
 		var idx := i
 		var b := _button(names[i], func(): on_pick.call(idx), p_size)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, UiTheme.ART_MAP_ENTRY, entry_h)     # 乙 石刻：同第三页选地图的纸条，选中压蜡封
+		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, entry_h)     # 乙 石刻：同第三页选地图的纸条，选中压蜡封
 		btns.append(b)
 		box.add_child(b)
 	return btns
 
 
-## 121：一列里第 [param index] 个是选中的（前景色），其余暗色（[method UiTheme.mark]）
+## 121：一列里第 [param index] 个是选中的（按下态）
 func _mark_choice(btns: Array, index: int) -> void:
 	for k in btns.size():
-		_mark_entry(btns[k], k == index)
+		(btns[k] as Button).set_pressed_no_signal(k == index)
 
 
 #region 公开动作
@@ -861,8 +837,8 @@ func _rebuild_map_list() -> void:
 		var idx := i
 		var b := _button(Names.of(c) if c.display_name != "" else String(c.id), func(): choose_chapter(idx), 16)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, UiTheme.ART_MAP_ENTRY, MAP_ENTRY_H)
-		_mark_entry(b, i == chapter_index)
+		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, MAP_ENTRY_H)
+		b.set_pressed_no_signal(i == chapter_index)
 		_map_list.add_child(b)
 		if i != chapter_index:
 			continue
@@ -875,8 +851,8 @@ func _rebuild_map_list() -> void:
 			var sb := _button(String(o["display_name"]), func(): choose_scale(sid), 14)
 			sb.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			sb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			_skin_entry(sb, UiTheme.BUTTON_MAP_SUB, UiTheme.ART_MAP_SUB, MAP_SUB_H)
-			_mark_entry(sb, sid == scale_id)
+			_skin_entry(sb, UiTheme.BUTTON_MAP_SUB, MAP_SUB_H)
+			sb.set_pressed_no_signal(sid == scale_id)
 			var note := _label(scale_note(o), 12, UiPalette.DIM)
 			note.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			note.offset_right = -12
@@ -889,21 +865,11 @@ func _rebuild_map_list() -> void:
 			_scale_btns[sid] = sb
 
 
-## 180 定稿：地图条目 / 规模换成图（钉位、连线红勾在图上，选中是 on 图 = 按下态）；没图照旧
-func _skin_entry(b: Button, variation: StringName, art_name: String, height: float) -> void:
-	if not UiTheme.has_setup_art(art_name):
-		return
+## 180 定稿：地图条目 / 规模换成图（钉位、连线红勾在图上，选中是 on 图 = 按下态）
+func _skin_entry(b: Button, variation: StringName, height: float) -> void:
 	b.theme_type_variation = variation
 	b.toggle_mode = true
 	b.custom_minimum_size.y = height
-
-
-## 选中的那条：有图按下（on 图），没图前景色 / 暗色（[method UiTheme.mark]）
-func _mark_entry(b: Button, on: bool) -> void:
-	if b.toggle_mode:
-		b.set_pressed_no_signal(on)
-	else:
-		UiTheme.mark(b, on)
 
 
 ## 挑一档规模。空 = 章节自己的默认配置（界面上不列；测试按章节默认配置找的种子用它）
@@ -912,7 +878,7 @@ func choose_scale(id: StringName) -> void:
 		return
 	scale_id = id
 	for k in _scale_btns:
-		_mark_entry(_scale_btns[k], k == scale_id)
+		(_scale_btns[k] as Button).set_pressed_no_signal(k == scale_id)
 	_sync_preview()
 	_refresh()
 

@@ -154,7 +154,7 @@ static func frame_backdrop_camera(t: TestCase, root: Window) -> void:
 
 
 static func frame_logo(t: TestCase, root: Window) -> void:
-	t.begin("197 补充二 §12 / 补充三 · 字标图在就用图（宽 1116、按图的比例，水平居中、上沿 90，随高缩放），不在退回文字标题；启动屏读 1× 那张")
+	t.begin("197 补充二 §12 / 补充三 · 字标图在就用图（宽 1116、按图的比例，水平居中、上沿 90，随高缩放）；启动屏读 1× 那张")
 	var consts := (load(BOOT) as GDScript).get_script_constant_map()
 	t.eq(consts["LOGO"], "res://assets/ui/menu/title_boot.png", "启动屏的字标是 1× 那张")
 	var saved := UiTheme.asset_root
@@ -175,19 +175,6 @@ static func frame_logo(t: TestCase, root: Window) -> void:
 		t.check(is_equal_approx(logo.position.y, 90.0 * s) and is_equal_approx(logo.position.x + logo.size.x * 0.5, menu.size.x * 0.5), "水平居中、上沿 90（%s）" % logo.position)
 		t.eq(logo.mouse_filter, Control.MOUSE_FILTER_IGNORE, "不接鼠标")
 	game.queue_free()
-	# 没字标图（图包里缺这张）：退回文字标题，横贯整屏、居中
-	UiTheme.asset_root = "res://tests/fixtures/ui/no_such_pack/"
-	var bare = (load(GAME) as PackedScene).instantiate()
-	bare.save_path = p["run"]
-	bare.meta_path = p["meta"]
-	bare.settings_path = p["settings"]
-	root.add_child(bare)
-	var plain = bare.base()
-	var text = plain.title_node() if plain != null and plain.has_method("title_node") else null
-	t.check(text is Label and (text as Label).horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER and is_equal_approx(text.size.x, plain.size.x), "没图：文字标题横贯整屏、居中")
-	if text is Label:
-		t.check(is_equal_approx(text.position.y, 90.0 * plain.ui_scale()), "文字标题上沿 90")
-	bare.queue_free()
 	UiTheme.asset_root = saved
 	Support.cleanup("menu197l")
 	var real := UiTheme.art_cached("menu/title")

@@ -1300,20 +1300,12 @@ func begin_reveal(reveal: Dictionary) -> void:
 	_reveal_tween.tween_callback(finish_reveal)
 
 
-## 那张纸：开局第三页的背景画（有就铺，和那一页同一种铺法），没有就是底色；挂反过来的墨化着色器
+## 那张纸：开局第三页的背景画（和那一页同一种铺法）；挂反过来的墨化着色器
 func _make_paper(center: Vector2) -> Control:
-	var tex := UiTheme.art(UiTheme.ART_SETUP_MAP_BG)
-	var paper: Control
-	if tex != null:
-		var pic := TextureRect.new()
-		pic.texture = tex
-		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		paper = pic
-	else:
-		var flat := ColorRect.new()
-		flat.color = UiPalette.bg()
-		paper = flat
+	var paper := TextureRect.new()
+	paper.texture = UiTheme.art(UiTheme.ART_SETUP_MAP_BG)
+	paper.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	paper.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	paper.name = "RevealPaper"
 	paper.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
