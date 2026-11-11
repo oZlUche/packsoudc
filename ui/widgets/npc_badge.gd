@@ -115,6 +115,11 @@ func _input(event: InputEvent) -> void:
 ## 300 §2.2：进屏自动问候一句（局内商店开）。只在第一次进树时说
 var greet_on_enter := false
 var _greeted := false
+## 进店问候的纸条自己收（UI设计 复核 11-11）：停 [constant GREET_SEC] 秒，或指针进了这些块（`func() -> Array`，元素是 Control，比如两块棋盘），先到为准
+const GREET_SEC := 4.0
+var greet_quiet: Callable = Callable()
+## 问候纸条还剩几秒（0 = 不是问候纸条，点头像的照旧点别处才收）
+var greet_left := 0.0
 
 
 func _ready() -> void:
@@ -130,11 +135,34 @@ func greet() -> bool:
 		return false
 	last = {"text": Names.pick(line.texts, line.text), "special": &"", "given": &"", "greet": line.id}
 	_show_line(String(last["text"]))
+	greet_left = GREET_SEC
 	return true
+
+
+func _process(delta: float) -> void:
+	if greet_left > 0.0:
+		greet_tick(delta, get_global_mouse_position())
+
+
+## 问候纸条的计时（测试直接喂）：到时或指针进了 [member greet_quiet] 的哪块就收
+func greet_tick(delta: float, at: Vector2) -> void:
+	if greet_left <= 0.0:
+		return
+	greet_left -= delta
+	var quiet := greet_left <= 0.0
+	if not quiet and greet_quiet.is_valid():
+		for c in greet_quiet.call():
+			var ctl := c as Control
+			if ctl != null and is_instance_valid(ctl) and ctl.is_visible_in_tree() and ctl.get_global_rect().has_point(at):
+				quiet = true
+				break
+	if quiet:
+		close()
 
 
 ## 说一句：专属对话优先，否则掷一句闲话；纸条贴在头像旁边（右边放不下就放左边）
 func talk() -> void:
+	greet_left = 0.0
 	last = NpcChatter.talk(npc, meta, items, _rng, run)
 	if last.is_empty():
 		close()
@@ -155,6 +183,7 @@ func fit(r: Rect2) -> void:
 
 
 func close() -> void:
+	greet_left = 0.0
 	if note != null:
 		note.visible = false
 

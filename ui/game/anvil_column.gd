@@ -125,6 +125,7 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 	paper.add_child(_note)
 	compare = UpgradeCompare.new()
 	compare.tip = tip
+	compare.anchors = func() -> Array: return [_weapon_view, _material_view, strike_key, _out_view, _ghost_view]     # 指针在砧面上才显示（UI设计 复核 11-11）
 	compare.position = Vector2(0.0, row_y + row_h + FRAME_IN + COMPARE_GAP)
 	add_child(compare)
 	for v in [_weapon_view, _material_view, _out_view]:     # 300 §2.4：槽里、出件双击 / 右键 = 取回背包（放不下到地上）
