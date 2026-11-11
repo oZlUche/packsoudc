@@ -371,8 +371,28 @@ func _stock() -> void:
 		var ca := picks[a].shape.cells_rotated(0).size() if picks[a].shape != null else 1
 		var cb := picks[b].shape.cells_rotated(0).size() if picks[b].shape != null else 1
 		return ca > cb or (ca == cb and a < b))
+	var gold_uid := -1
 	for k in order:
-		board.try_add(ItemInstance.create(picks[k], 0))
+		var inst := ItemInstance.create(picks[k], 0)
+		if board.try_add(inst) and picks[k] == gold:
+			gold_uid = inst.uid
+	if gold != null and gold_uid < 0:
+		_make_room_for(gold)     # 金银那一格是规则给的（概率 1 就一定有）：摆满了让最小的一件普通货
+
+
+## 摆不下 [param def] 时，从最小的普通货起逐件试着拿掉一件给它腾地方；腾不出来就照旧丢（不拿走任何货）
+func _make_room_for(def: ItemDef) -> void:
+	var goods: Array = board.items().filter(func(i: ItemInstance) -> bool: return not i.def.is_bag and not i.def.is_bullion())
+	goods.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool:
+		return a.def.cell_count() < b.def.cell_count() or (a.def.cell_count() == b.def.cell_count() and String(a.def.id) < String(b.def.id)))
+	for g in goods:
+		var inst := g as ItemInstance
+		var at := inst.origin
+		var rot := inst.rotation
+		board.remove(inst.uid)
+		if board.try_add(ItemInstance.create(def, 0)):
+			return
+		board.place(inst, at, rot)
 
 
 ## 按权重抽一个下标；总权重 ≤ 0 就等概率抽一个

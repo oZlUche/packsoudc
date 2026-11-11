@@ -1,0 +1,23 @@
+{
+  "id": "dense_basalt",
+  "display_name": "致密玄武岩",
+  "display_names": {
+    "en": "Dense Basalt"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "weight": 5,
+  "tags": [
+    "material",
+    "nature",
+    "mineral"
+  ],
+  "material": "stone"
+}

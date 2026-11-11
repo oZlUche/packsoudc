@@ -7,6 +7,10 @@
       "weight": 3.0
     },
     {
+      "item": "seasoned_timber",
+      "weight": 2.0
+    },
+    {
       "item": "hardwood_plank",
       "deep_mult": 2.0,
       "hard_mult": 1.2
