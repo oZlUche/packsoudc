@@ -87,6 +87,7 @@ func setup(p_flow: GameFlow, p_font: Font) -> void:
 	_scroll = RecipeScroll.make(font, func(): forge(_open))
 	_stage.add_child(_scroll)     # 后加 = 压在格子区上（砧顶小尖盖住格子区下沿）
 	compare = UpgradeCompare.new()
+	compare.anchors = func() -> Array: return [cell(_open)]     # 指针在选中那张配方格上才显示，不再盖住格子区（UI设计 复核 11-11）
 	compare.resized.connect(_place_compare)
 	_pane.resized.connect(_place_compare)
 	_stage.add_child(compare)

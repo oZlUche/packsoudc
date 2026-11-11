@@ -127,7 +127,7 @@ static func frame_camp_anvil(t: TestCase, root: Window) -> void:
 	t.check(col.material_slot.try_add(_inst(flow.items, &"beast_claw"), true), "换成兽爪")
 	t.check(not col.material_warned(), "配上了：红框收")
 	t.check(col.preview() != null and col.preview().quality() == 1, "预览 1 档")
-	t.check(col.compare.visible and col.compare.texts()[1].contains(Names.of(col.preview().def)) and not col.compare.marked_lines().is_empty(), "298：砧下面并排两窗，右窗是出件、有改了的行")
+	t.check(col.compare.has_pair() and col.compare.texts()[1].contains(Names.of(col.preview().def)) and not col.compare.marked_lines().is_empty(), "298：砧下面并排两窗，右窗是出件、有改了的行")
 	t.check(not col.strike_key.disabled, "两件配上：锤键亮")
 	var made := col.strike()
 	t.check(made != null and col.out.has_item(made.uid), "锤：出件进出件槽")

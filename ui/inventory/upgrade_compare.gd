@@ -1,6 +1,7 @@
 ## 298：升级前后两块信息窗并排 —— 左 = 现在这把（真实例），右 = 锤 / 打完那把（预览件）。用悬浮窗的皮和 [method ItemTooltip.describe_full] 的排版，不要新图。
 ## 右窗正文里和左窗对不上的行（逐行比字：改了数的、新添的）左侧一条金线；名字和稀有度在头里，不比。不写差值。
-## 常驻的信息窗：不用停、不会收；窗里的关键词 / 配方词 / 道具词停 [constant HoverTip.TERM_SEC] 秒照按钮那样叫出悬浮窗（[method HoverTip.show_meta]）。
+## 设了 [member anchors] 就不常驻（UI设计 复核 11-11）：指针在那几块上或两窗自己身上才显示，离开 [constant LINGER] 秒收起；没设 = 摆上就显示。
+## 窗里的关键词 / 配方词 / 道具词停 [constant HoverTip.TERM_SEC] 秒照按钮那样叫出悬浮窗（[method HoverTip.show_meta]）。
 ## 用在砧（[AnvilColumn]，配得上时）和铁匠铺（[SmithyPanel]，升级类配方点开时；仓库没这把 → 左窗品质 0、整窗压暗）
 class_name UpgradeCompare
 extends Control
@@ -10,6 +11,8 @@ const GAP := 12.0
 const MARK_W := 3.0
 const MARK_GAP := 7.0
 const MARK_COLOR := HoverTip.RING_COLOR
+## 离开砧面 / 配方格后多留一会儿，好挪到窗上
+const LINGER := 0.2
 ## 仓库里没有这把：左窗整窗压暗
 const DIMMED := Color(0.55, 0.55, 0.55)
 
@@ -24,6 +27,11 @@ var _marked: Array[int] = []
 var window_width := HoverTip.scaled(HoverTip.MAX_WIDTH)
 ## 正叫着悬浮窗的那个词（空 = 没有）
 var _shown := ""
+## 指针停在这些块上才显示（`func() -> Array`，元素是 Control）；空 = 常驻
+var anchors: Callable = Callable()
+## 摆着两把（显不显示看指针）
+var _has_pair := false
+var _linger := 0.0
 
 
 func _init() -> void:
@@ -56,7 +64,9 @@ func show_pair(before: ItemInstance, after: ItemInstance, dimmed: bool = false) 
 	_fill(right, after)
 	left.modulate = DIMMED if dimmed else Color.WHITE
 	_marked = differing(_lines(left), _lines(right))
-	visible = true
+	_has_pair = true
+	visible = not anchors.is_valid() or (is_inside_tree() and hot(get_global_mouse_position()))
+	_linger = LINGER if visible else 0.0
 	_layout()
 
 
@@ -64,7 +74,42 @@ func show_pair(before: ItemInstance, after: ItemInstance, dimmed: bool = false) 
 func clear() -> void:
 	_release()
 	visible = false
+	_has_pair = false
 	_marked.clear()
+
+
+## 摆着两把吗（显示与否另看指针）
+func has_pair() -> bool:
+	return _has_pair
+
+
+## [param at]（全局）在 [member anchors] 的哪块上，或在显示着的两窗上
+func hot(at: Vector2) -> bool:
+	if visible and (left.get_global_rect().has_point(at) or right.get_global_rect().has_point(at)):
+		return true
+	if not anchors.is_valid():
+		return true
+	for c in anchors.call():
+		var ctl := c as Control
+		if ctl != null and is_instance_valid(ctl) and ctl.is_visible_in_tree() and ctl.get_global_rect().has_point(at):
+			return true
+	return false
+
+
+## 指针跟随（测试直接喂）：在上面就显示，离开 [constant LINGER] 秒收起（词悬浮窗一起放手）
+func follow(delta: float, at: Vector2) -> void:
+	if not _has_pair:
+		return
+	if hot(at):
+		_linger = LINGER
+		if not visible:
+			visible = true
+			_layout()
+		return
+	_linger -= delta
+	if _linger <= 0.0 and visible:
+		_release()
+		visible = false
 
 
 func _fill(w: HoverTip.TipWindow, inst: ItemInstance) -> void:
@@ -139,6 +184,8 @@ func _draw_marks() -> void:
 
 
 func _process(delta: float) -> void:
+	if _has_pair and anchors.is_valid():
+		follow(delta, get_global_mouse_position())
 	if visible:
 		tick(delta, get_global_mouse_position())
 
