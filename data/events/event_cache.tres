@@ -49,8 +49,8 @@ title = "上锁的箱子"
 titles = {
 "en": "A Locked Chest"
 }
-text = "角落里有一只上了锁的铁箱，锁已经锈得差不多了。"
+text = "角落里有一只上了锁的铁箱。锁已经锈死了，钥匙是找不到的，只能使劲撬。"
 texts = {
-"en": "An iron chest sits locked in the corner. The lock is nearly rusted through."
+"en": "An iron chest sits locked in the corner. The lock has rusted solid and there's no key to be found; the only way in is to force it."
 }
 options = Array[ExtResource("1_35w1q")]([SubResource("Resource_safsw"), SubResource("Resource_ukd1x")])

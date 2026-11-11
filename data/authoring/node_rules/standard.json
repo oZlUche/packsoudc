@@ -101,6 +101,16 @@
       "extract_default": 1
     }
   },
+  "event_max_per_map": {
+    "event_supply_bundle": 1,
+    "event_herbalist": 1,
+    "event_stuck_cart": 1,
+    "event_field_stretcher": 1,
+    "event_refugee_weaver": 1,
+    "event_cracked_foundry": 1,
+    "event_ward_recess": 1,
+    "event_clock_oiler": 1
+  },
   "event_groups": {
     "faith_call": {
       "max_per_map": 1,
@@ -139,15 +149,5 @@
       ],
       "other_share": 0.25
     }
-  },
-  "event_max_per_map": {
-    "event_supply_bundle": 1,
-    "event_herbalist": 1,
-    "event_stuck_cart": 1,
-    "event_field_stretcher": 1,
-    "event_refugee_weaver": 1,
-    "event_cracked_foundry": 1,
-    "event_ward_recess": 1,
-    "event_clock_oiler": 1
   }
 }

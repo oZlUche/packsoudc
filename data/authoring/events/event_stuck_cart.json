@@ -16,8 +16,7 @@
       },
       "requires": [
         {
-          "type": "vitality_at_least",
-          "amount": 2
+          "type": "vitality_at_least"
         }
       ],
       "outcomes": [
@@ -38,9 +37,9 @@
       ]
     },
     {
-      "label": "收拢路旁杂物（轻便材料 ×1）",
+      "label": "收拢路旁杂物（轻便材料 ×{give_pool_item_count}）",
       "labels": {
-        "en": "Gather the roadside scraps (light material ×1)"
+        "en": "Gather the roadside scraps (light material ×{give_pool_item_count})"
       },
       "outcomes": [
         {

@@ -10,9 +10,9 @@
   },
   "options": [
     {
-      "label": "收起工匠材料（加工材料 ×1）",
+      "label": "收起工匠材料（加工材料 ×{give_pool_item_count}）",
       "labels": {
-        "en": "Take the craftsman's supplies (crafting material ×1)"
+        "en": "Take the craftsman's supplies (crafting material ×{give_pool_item_count})"
       },
       "outcomes": [
         {
@@ -29,9 +29,9 @@
       ]
     },
     {
-      "label": "清开底座（倒计时 −{pass_time_actions}，金属旧物 ×1）",
+      "label": "清开底座（倒计时 −{pass_time_actions}，金属旧物 ×{give_pool_item_count}）",
       "labels": {
-        "en": "Clear the base (Countdown −{pass_time_actions}, old metalwork ×1)"
+        "en": "Clear the base (Countdown −{pass_time_actions}, old metalwork ×{give_pool_item_count})"
       },
       "outcomes": [
         {

@@ -10,9 +10,9 @@
   },
   "options": [
     {
-      "label": "拆开内层（倒计时 −{pass_time_actions}，食物补给 ×1）",
+      "label": "拆开内层（倒计时 −{pass_time_actions}，食物补给 ×{give_pool_item_count}）",
       "labels": {
-        "en": "Open the inner pack (Countdown −{pass_time_actions}, food ×1)"
+        "en": "Open the inner pack (Countdown −{pass_time_actions}, food ×{give_pool_item_count})"
       },
       "outcomes": [
         {
@@ -32,9 +32,9 @@
       ]
     },
     {
-      "label": "回收外层（绳布材料 ×1）",
+      "label": "回收外层（绳布材料 ×{give_pool_item_count}）",
       "labels": {
-        "en": "Salvage the outer wrapping (rope or cloth ×1)"
+        "en": "Salvage the outer wrapping (rope or cloth ×{give_pool_item_count})"
       },
       "outcomes": [
         {

@@ -10,9 +10,9 @@
   },
   "options": [
     {
-      "label": "交出{item:tanned_leather} ×1（+{change_money_amount}）",
+      "label": "交出{item:tanned_leather} ×{lose_item_count}（+{change_money_amount}）",
       "labels": {
-        "en": "Hand over {item:tanned_leather} ×1 (+{change_money_amount})"
+        "en": "Hand over {item:tanned_leather} ×{lose_item_count} (+{change_money_amount})"
       },
       "requires": [
         {
@@ -40,9 +40,9 @@
       ]
     },
     {
-      "label": "交出{item:linen_bolt} ×1（+{change_money_amount}）",
+      "label": "交出{item:linen_bolt} ×{lose_item_count}（+{change_money_amount}）",
       "labels": {
-        "en": "Hand over {item:linen_bolt} ×1 (+{change_money_amount})"
+        "en": "Hand over {item:linen_bolt} ×{lose_item_count} (+{change_money_amount})"
       },
       "requires": [
         {
@@ -57,8 +57,7 @@
           "item": "linen_bolt"
         },
         {
-          "type": "change_money",
-          "amount": 10
+          "type": "change_money"
         },
         {
           "type": "say",

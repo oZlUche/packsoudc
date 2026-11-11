@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_vukap"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_hd8nn"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="3_6kmoh"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_pool_item.gd" id="4_20dn0"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_ji4er"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_ufieh"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_qf4gs"]
+
+[sub_resource type="Resource" id="Resource_1g3vj"]
+script = ExtResource("3_6kmoh")
+
+[sub_resource type="Resource" id="Resource_i5eow"]
+script = ExtResource("4_20dn0")
+pool = &"food_supply"
+
+[sub_resource type="Resource" id="Resource_b3fum"]
+script = ExtResource("5_ji4er")
+text = "你剥去受潮的外层，取出了{reward_name}。四周的滴水声没有停过。"
+texts = {
+"en": "You peel away the damp outer layer and take out the {reward_name}. The dripping around you never stops."
+}
+
+[sub_resource type="Resource" id="Resource_gc2cq"]
+script = ExtResource("1_vukap")
+label = "拆开内层（倒计时 −{pass_time_actions}，食物补给 ×{give_pool_item_count}）"
+labels = {
+"en": "Open the inner pack (Countdown −{pass_time_actions}, food ×{give_pool_item_count})"
+}
+outcomes = Array[ExtResource("2_hd8nn")]([SubResource("Resource_1g3vj"), SubResource("Resource_i5eow"), SubResource("Resource_b3fum")])
+
+[sub_resource type="Resource" id="Resource_22ivb"]
+script = ExtResource("4_20dn0")
+pool = &"wrapping_material"
+
+[sub_resource type="Resource" id="Resource_xx4yp"]
+script = ExtResource("5_ji4er")
+text = "你收起还能使用的{reward_name}，留下没有拆开的内包。"
+texts = {
+"en": "You keep the {reward_name} that's still usable and leave the inner pack unopened."
+}
+
+[sub_resource type="Resource" id="Resource_yqdlg"]
+script = ExtResource("1_vukap")
+label = "回收外层（绳布材料 ×{give_pool_item_count}）"
+labels = {
+"en": "Salvage the outer wrapping (rope or cloth ×{give_pool_item_count})"
+}
+outcomes = Array[ExtResource("2_hd8nn")]([SubResource("Resource_22ivb"), SubResource("Resource_xx4yp")])
+
+[sub_resource type="Resource" id="Resource_xrapl"]
+script = ExtResource("5_ji4er")
+text = "你把刻有姓名的木牌翻回正面，继续赶路。"
+texts = {
+"en": "You turn the name tag face up again and move on."
+}
+
+[sub_resource type="Resource" id="Resource_2a650"]
+script = ExtResource("1_vukap")
+label = "保持原样"
+labels = {
+"en": "Leave it as it is"
+}
+outcomes = Array[ExtResource("2_hd8nn")]([SubResource("Resource_xrapl")])
+
+[resource]
+script = ExtResource("7_qf4gs")
+id = &"event_supply_bundle"
+title = "油布下的补给"
+titles = {
+"en": "Supplies Under Oilcloth"
+}
+text = "断墙下压着一捆军团的油布，木牌上还刻着领用人的姓名。外层缠着可以回收的绳布，里面是防潮包好的食物。要保住内层的包装，得慢慢拆开。"
+texts = {
+"en": "A bundle of Legion oilcloth is pinned under a broken wall, a wooden tag still carved with the name of whoever signed for it. The outer wrapping is rope and cloth worth saving; inside, food packed against the damp. Keeping the inner wrapping whole means opening it slowly."
+}
+options = Array[ExtResource("1_vukap")]([SubResource("Resource_gc2cq"), SubResource("Resource_yqdlg"), SubResource("Resource_2a650")])
