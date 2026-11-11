@@ -1,0 +1,1489 @@
+{
+  "date": "2026-11-11",
+  "base_commit": "f8750a7284ae82db3277c62bb6ebce176e149d0d",
+  "scope": "base definitions with material tag; excludes dynamically derived blessing variants; counts are kinds not drop rates",
+  "item_definition_count": 267,
+  "material_definition_count": 62,
+  "rarity_names": [
+    "white",
+    "green",
+    "blue",
+    "purple",
+    "orange",
+    "red"
+  ],
+  "material_matrix": {
+    "metal": [
+      1,
+      5,
+      7,
+      2,
+      1,
+      0
+    ],
+    "wood": [
+      3,
+      0,
+      2,
+      0,
+      0,
+      0
+    ],
+    "leather": [
+      0,
+      3,
+      1,
+      0,
+      0,
+      0
+    ],
+    "cloth": [
+      2,
+      1,
+      0,
+      2,
+      0,
+      0
+    ],
+    "bone": [
+      1,
+      2,
+      2,
+      1,
+      0,
+      0
+    ],
+    "stone": [
+      3,
+      3,
+      0,
+      0,
+      0,
+      0
+    ],
+    "gem": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      4
+    ],
+    "clay": [
+      2,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    "flesh": [
+      0,
+      2,
+      5,
+      1,
+      0,
+      0
+    ],
+    "herb": [
+      2,
+      0,
+      1,
+      0,
+      0,
+      0
+    ]
+  },
+  "rarity_totals": [
+    15,
+    17,
+    19,
+    6,
+    1,
+    4
+  ],
+  "unique_material_ids": [
+    "jimie_core_fire",
+    "jimie_core_ice",
+    "jimie_core_lightning",
+    "jimie_core_poison"
+  ],
+  "materials": [
+    {
+      "id": "antler",
+      "name": "鹿角",
+      "material": "bone",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "nature",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "barbarian_necklace",
+      "name": "蛮族的项链",
+      "material": "bone",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "crafted",
+        "barbarian"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "beast_claw",
+      "name": "兽爪",
+      "material": "bone",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "nature",
+        "bleed",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "beast_fang",
+      "name": "兽牙",
+      "material": "bone",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "nature",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "beast_hide",
+      "name": "生兽皮",
+      "material": "leather",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "nature",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "beast_tail",
+      "name": "兽尾",
+      "material": "leather",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "nature",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "beast_tusk_root",
+      "name": "巨兽獠牙根",
+      "material": "flesh",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "nature",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "beeswax",
+      "name": "蜂蜡块",
+      "material": "flesh",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "nature",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "bone_charm_bits",
+      "name": "碎骨串",
+      "material": "bone",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "bone_dice",
+      "name": "骨骰子",
+      "material": "bone",
+      "rarity": 3,
+      "tags": [
+        "material",
+        "crafted",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "brass_gear",
+      "name": "黄铜齿轮",
+      "material": "metal",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "clay_bowls",
+      "name": "陶碗一摞",
+      "material": "clay",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "clay_pot",
+      "name": "陶罐",
+      "material": "clay",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "copper_ingot",
+      "name": "铜锭",
+      "material": "metal",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "copper_ore",
+      "name": "铜矿石",
+      "material": "metal",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "mineral"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "crystal_shards",
+      "name": "碎晶",
+      "material": "gem",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "magic"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "datura_flower",
+      "name": "曼陀罗花",
+      "material": "herb",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "reagent",
+        "nature",
+        "poison",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "dried_herbs",
+      "name": "干草药束",
+      "material": "herb",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "fine_fur",
+      "name": "细毛皮",
+      "material": "leather",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "nature",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "fire_gland",
+      "name": "火焰腺",
+      "material": "flesh",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "reagent",
+        "nature",
+        "fire",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "flint",
+      "name": "燧石",
+      "material": "stone",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "mineral"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "frost_gland",
+      "name": "霜腺",
+      "material": "flesh",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "reagent",
+        "nature",
+        "ice",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "gear_arm",
+      "name": "齿轮臂",
+      "material": "metal",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "crafted",
+        "part",
+        "clockwork"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "gilded_goblet",
+      "name": "鎏金酒杯",
+      "material": "metal",
+      "rarity": 3,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "glazed_vase",
+      "name": "彩釉瓷瓶",
+      "material": "clay",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "granite_mortar",
+      "name": "花岗石臼",
+      "material": "stone",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "gravestone_shard",
+      "name": "墓碑碎块",
+      "material": "stone",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "mineral"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "hardwood_plank",
+      "name": "硬木板",
+      "material": "wood",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "honey_jar",
+      "name": "蜂蜜罐",
+      "material": "flesh",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "nature",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "iron_ore",
+      "name": "铁矿石",
+      "material": "metal",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "nature",
+        "mineral"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "ironwood_branch",
+      "name": "铁木枝",
+      "material": "wood",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "nature",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "jimie_core_fire",
+      "name": "火之核",
+      "material": "gem",
+      "rarity": 5,
+      "tags": [
+        "material",
+        "magic",
+        "unique"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "jimie_core_ice",
+      "name": "冰之核",
+      "material": "gem",
+      "rarity": 5,
+      "tags": [
+        "material",
+        "magic",
+        "unique"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "jimie_core_lightning",
+      "name": "雷之核",
+      "material": "gem",
+      "rarity": 5,
+      "tags": [
+        "material",
+        "magic",
+        "unique"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "jimie_core_poison",
+      "name": "毒之核",
+      "material": "gem",
+      "rarity": 5,
+      "tags": [
+        "material",
+        "magic",
+        "unique"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "linen_bolt",
+      "name": "亚麻布卷",
+      "material": "cloth",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "mainspring",
+      "name": "主发条",
+      "material": "metal",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted",
+        "part",
+        "clockwork"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "mint_bundle",
+      "name": "薄荷叶束",
+      "material": "herb",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "mithril_ingot",
+      "name": "秘银锭",
+      "material": "metal",
+      "rarity": 3,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "nail_keg",
+      "name": "铁钉桶",
+      "material": "metal",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "oak_log",
+      "name": "橡木原木",
+      "material": "wood",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "oil_lamp",
+      "name": "铜油灯",
+      "material": "metal",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "pale_shard",
+      "name": "灰白色的金属碎片",
+      "material": "metal",
+      "rarity": 4,
+      "tags": [
+        "material",
+        "magic",
+        "treasure"
+      ],
+      "requires_unlock": "ach_boss"
+    },
+    {
+      "id": "pine_resin",
+      "name": "松脂块",
+      "material": "wood",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "poison_vial",
+      "name": "毒药瓶",
+      "material": "clay",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "reagent",
+        "crafted",
+        "poison"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "raw_salt",
+      "name": "粗盐块",
+      "material": "stone",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "mineral"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "rivet_box",
+      "name": "铆钉盒",
+      "material": "metal",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "rope_coil",
+      "name": "麻绳卷",
+      "material": "cloth",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "shock_sac",
+      "name": "电囊",
+      "material": "flesh",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "reagent",
+        "nature",
+        "lightning",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "silk_bolt",
+      "name": "丝绸卷",
+      "material": "cloth",
+      "rarity": 3,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "silver_ingot",
+      "name": "银锭",
+      "material": "metal",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "silver_ore",
+      "name": "银矿石",
+      "material": "metal",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "nature",
+        "mineral"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "steam_vent",
+      "name": "蒸汽阀",
+      "material": "metal",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted",
+        "part",
+        "clockwork",
+        "fire"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "steel_ingot",
+      "name": "钢锭",
+      "material": "metal",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "tanned_leather",
+      "name": "熟皮革",
+      "material": "leather",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "tapestry",
+      "name": "挂毯",
+      "material": "cloth",
+      "rarity": 3,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "viper_gland",
+      "name": "蝰蛇毒腺",
+      "material": "flesh",
+      "rarity": 3,
+      "tags": [
+        "material",
+        "reagent",
+        "nature",
+        "poison",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "whetstone",
+      "name": "磨刀石",
+      "material": "stone",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "crafted",
+        "supply"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "wolf_heart",
+      "name": "狼心",
+      "material": "flesh",
+      "rarity": 2,
+      "tags": [
+        "material",
+        "reagent",
+        "nature",
+        "beast_part"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "wooden_stick",
+      "name": "木棍",
+      "material": "wood",
+      "rarity": 0,
+      "tags": [
+        "material",
+        "nature",
+        "plant"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "wool_cloth",
+      "name": "羊毛呢",
+      "material": "cloth",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "crafted"
+      ],
+      "requires_unlock": ""
+    },
+    {
+      "id": "wound_salt",
+      "name": "创口盐",
+      "material": "stone",
+      "rarity": 1,
+      "tags": [
+        "material",
+        "reagent",
+        "crafted",
+        "bleed"
+      ],
+      "requires_unlock": ""
+    }
+  ],
+  "crystals": [
+    {
+      "id": "fire_crystal",
+      "name": "火焰魔晶石",
+      "family": "fire",
+      "rarity": 3
+    },
+    {
+      "id": "fire_crystal_high",
+      "name": "火焰魔晶核",
+      "family": "fire",
+      "rarity": 4
+    },
+    {
+      "id": "fire_crystal_low",
+      "name": "火焰晶石",
+      "family": "fire",
+      "rarity": 2
+    },
+    {
+      "id": "heart_of_guoguo",
+      "name": "果果之心",
+      "family": "",
+      "rarity": 5
+    },
+    {
+      "id": "ice_crystal",
+      "name": "冰霜魔晶石",
+      "family": "frost",
+      "rarity": 3
+    },
+    {
+      "id": "ice_crystal_high",
+      "name": "冰霜魔晶核",
+      "family": "frost",
+      "rarity": 4
+    },
+    {
+      "id": "ice_crystal_low",
+      "name": "冰霜晶石",
+      "family": "frost",
+      "rarity": 2
+    },
+    {
+      "id": "lightning_crystal",
+      "name": "闪电魔晶石",
+      "family": "lightning",
+      "rarity": 3
+    },
+    {
+      "id": "lightning_crystal_high",
+      "name": "闪电魔晶核",
+      "family": "lightning",
+      "rarity": 4
+    },
+    {
+      "id": "lightning_crystal_low",
+      "name": "闪电晶石",
+      "family": "lightning",
+      "rarity": 2
+    },
+    {
+      "id": "quartz_cluster",
+      "name": "清明魔晶石",
+      "family": "",
+      "rarity": 3
+    },
+    {
+      "id": "raw_amber",
+      "name": "琥珀魔晶",
+      "family": "",
+      "rarity": 3
+    }
+  ],
+  "difficulties": [
+    {
+      "id": "ascension_1",
+      "display_name": "进阶一",
+      "display_names": {
+        "en": "Ascension I"
+      },
+      "description": "体力上限 {vitality_max_bonus_amount|signed}。局外解锁后可选。",
+      "descriptions": {
+        "en": "Max Vitality {vitality_max_bonus_amount|signed}. Selectable once unlocked outside of runs."
+      },
+      "challenge": "体力上限少一点",
+      "challenges": {
+        "en": "Less max Vitality"
+      },
+      "level": 1,
+      "requires_unlock": "ascension_1",
+      "grants_unlock": "ascension_2",
+      "effects": [
+        {
+          "type": "vitality_max_bonus",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "ascension_2",
+      "display_name": "进阶二",
+      "display_names": {
+        "en": "Ascension II"
+      },
+      "description": "侵蚀开启（本体第七阶段），体力上限 {vitality_max_bonus_amount|signed}。在进阶一撤离一次后解锁。",
+      "descriptions": {
+        "en": "Erosion is on (stage seven of the base game), max Vitality {vitality_max_bonus_amount|signed}. Unlocked by extracting once on Ascension I."
+      },
+      "challenge": "越深侵蚀越重",
+      "challenges": {
+        "en": "Erosion grows deeper"
+      },
+      "level": 2,
+      "requires_unlock": "ascension_2",
+      "grants_unlock": "ascension_3",
+      "mechanics": [
+        {
+          "type": "erosion",
+          "effects": [
+            {
+              "type": "spend_vitality",
+              "per_depth": 1
+            },
+            {
+              "type": "damage_item",
+              "from_depth": 2,
+              "chance": 0.25
+            },
+            {
+              "type": "drain_money",
+              "amount": 10,
+              "enabled": false,
+              "only_total": true
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "type": "vitality_max_bonus",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "ascension_3",
+      "display_name": "进阶三",
+      "display_names": {
+        "en": "Ascension III"
+      },
+      "description": "侵蚀开启（本体第七阶段），猎手循着脚步追来，体力上限 {vitality_max_bonus_amount|signed}。在进阶二撤离一次后解锁。",
+      "descriptions": {
+        "en": "Erosion is on (stage seven of the base game) and hunters follow your footsteps, max Vitality {vitality_max_bonus_amount|signed}. Unlocked by extracting once on Ascension II."
+      },
+      "challenge": "猎手循迹追来",
+      "challenges": {
+        "en": "Hunters track you"
+      },
+      "level": 3,
+      "requires_unlock": "ascension_3",
+      "mechanics": [
+        {
+          "type": "erosion",
+          "effects": [
+            {
+              "type": "spend_vitality",
+              "per_depth": 1
+            },
+            {
+              "type": "damage_item",
+              "from_depth": 2,
+              "chance": 0.25
+            },
+            {
+              "type": "drain_money",
+              "amount": 10,
+              "enabled": false,
+              "only_total": true
+            }
+          ]
+        },
+        {
+          "type": "hunters",
+          "hunter_ids": [
+            "hunter_1"
+          ],
+          "bracket_steps": [
+            0,
+            5,
+            10,
+            20
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "type": "vitality_max_bonus",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "normal",
+      "display_name": "普通",
+      "display_names": {
+        "en": "Normal"
+      },
+      "description": "没有额外机制。",
+      "descriptions": {
+        "en": "No extra mechanics."
+      }
+    }
+  ],
+  "pools": {
+    "clockwork": {
+      "tiers": [
+        {
+          "board": [
+            5,
+            3
+          ],
+          "stat_scale": {
+            "max_hp": 1.15
+          },
+          "rarity_cap": 1,
+          "weapon_rarity_cap": 0,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 1,
+          "item_count": [
+            3,
+            4
+          ],
+          "board": [
+            6,
+            4
+          ],
+          "stat_scale": {
+            "max_hp": 1.5
+          },
+          "bag_count": [
+            2,
+            2
+          ],
+          "rarity_cap": 2,
+          "weapon_rarity_cap": 1,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 2,
+          "item_count": [
+            4,
+            6
+          ],
+          "board": [
+            6,
+            5
+          ],
+          "stat_scale": {
+            "max_hp": 1.9,
+            "block": 1.25
+          },
+          "bag_count": [
+            2,
+            3
+          ],
+          "weapon_rarity_cap": 2,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 3,
+          "item_count": [
+            6,
+            8
+          ],
+          "board": [
+            8,
+            6
+          ],
+          "stat_scale": {
+            "max_hp": 2.4,
+            "block": 1.75
+          },
+          "bag_count": [
+            3,
+            4
+          ],
+          "weapon_rarity_cap": 3
+        }
+      ],
+      "strength_rule": {
+        "type_bonus": {
+          "elite": 1,
+          "core": 1
+        },
+        "steps_per_tier": 10,
+        "searches_per_tier": 4
+      }
+    },
+    "hunters": {
+      "tiers": [
+        {
+          "board": [
+            5,
+            3
+          ],
+          "rarity_cap": 1,
+          "weapon_rarity_cap": 0,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 1,
+          "item_count": [
+            3,
+            4
+          ],
+          "board": [
+            6,
+            4
+          ],
+          "stat_scale": {
+            "max_hp": 1.25
+          },
+          "rarity_cap": 2,
+          "weapon_rarity_cap": 1,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 2,
+          "item_count": [
+            4,
+            6
+          ],
+          "board": [
+            6,
+            5
+          ],
+          "stat_scale": {
+            "max_hp": 1.6
+          },
+          "weapon_rarity_cap": 2,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 3,
+          "item_count": [
+            6,
+            8
+          ],
+          "board": [
+            8,
+            5
+          ],
+          "stat_scale": {
+            "max_hp": 2,
+            "block": 1.5
+          },
+          "weapon_rarity_cap": 3
+        }
+      ],
+      "strength_rule": {
+        "steps_per_tier": 10
+      }
+    },
+    "standard_ruins": {
+      "tiers": [
+        {
+          "board": [
+            5,
+            3
+          ],
+          "stat_scale": {
+            "max_hp": 1.15
+          },
+          "rarity_cap": 1,
+          "weapon_rarity_cap": 0,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 1,
+          "item_count": [
+            3,
+            4
+          ],
+          "board": [
+            6,
+            4
+          ],
+          "stat_scale": {
+            "max_hp": 1.5
+          },
+          "bag_count": [
+            2,
+            2
+          ],
+          "rarity_cap": 2,
+          "weapon_rarity_cap": 1,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 2,
+          "item_count": [
+            4,
+            6
+          ],
+          "board": [
+            6,
+            5
+          ],
+          "stat_scale": {
+            "max_hp": 1.9,
+            "block": 1.25
+          },
+          "bag_count": [
+            2,
+            3
+          ],
+          "weapon_rarity_cap": 2,
+          "weapon_no_true_damage": true
+        },
+        {
+          "strength": 3,
+          "item_count": [
+            6,
+            8
+          ],
+          "board": [
+            8,
+            6
+          ],
+          "stat_scale": {
+            "max_hp": 2.4,
+            "block": 1.75
+          },
+          "bag_count": [
+            3,
+            4
+          ],
+          "weapon_rarity_cap": 3
+        }
+      ],
+      "strength_rule": {
+        "type_bonus": {
+          "elite": 1,
+          "core": 1
+        },
+        "by_scale": {
+          "large": 1
+        },
+        "steps_per_tier": 12,
+        "searches_per_tier": 4
+      }
+    }
+  },
+  "search_floors": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      1,
+      0
+    ],
+    [
+      2,
+      1,
+      1
+    ]
+  ],
+  "recipe_material_supply": [
+    {
+      "material": "bone",
+      "minimum_rarity": 1,
+      "recipe_count": 13,
+      "candidates": [
+        "antler",
+        "beast_claw",
+        "beast_fang",
+        "bone_charm_bits",
+        "bone_dice"
+      ],
+      "candidate_count": 5
+    },
+    {
+      "material": "bone",
+      "minimum_rarity": 2,
+      "recipe_count": 15,
+      "candidates": [
+        "beast_claw",
+        "bone_charm_bits",
+        "bone_dice"
+      ],
+      "candidate_count": 3
+    },
+    {
+      "material": "crystal:fire",
+      "minimum_rarity": 3,
+      "recipe_count": 8,
+      "candidates": [
+        "fire_crystal",
+        "fire_crystal_high"
+      ],
+      "candidate_count": 2
+    },
+    {
+      "material": "crystal:frost",
+      "minimum_rarity": 3,
+      "recipe_count": 4,
+      "candidates": [
+        "ice_crystal",
+        "ice_crystal_high"
+      ],
+      "candidate_count": 2
+    },
+    {
+      "material": "crystal:lightning",
+      "minimum_rarity": 3,
+      "recipe_count": 5,
+      "candidates": [
+        "lightning_crystal",
+        "lightning_crystal_high"
+      ],
+      "candidate_count": 2
+    },
+    {
+      "material": "metal",
+      "minimum_rarity": 1,
+      "recipe_count": 13,
+      "candidates": [
+        "brass_gear",
+        "copper_ingot",
+        "gear_arm",
+        "gilded_goblet",
+        "iron_ore",
+        "mainspring",
+        "mithril_ingot",
+        "nail_keg",
+        "oil_lamp",
+        "pale_shard",
+        "rivet_box",
+        "silver_ingot",
+        "silver_ore",
+        "steam_vent",
+        "steel_ingot"
+      ],
+      "candidate_count": 15
+    },
+    {
+      "material": "metal",
+      "minimum_rarity": 2,
+      "recipe_count": 14,
+      "candidates": [
+        "brass_gear",
+        "gilded_goblet",
+        "mainspring",
+        "mithril_ingot",
+        "pale_shard",
+        "rivet_box",
+        "silver_ingot",
+        "silver_ore",
+        "steam_vent",
+        "steel_ingot"
+      ],
+      "candidate_count": 10
+    },
+    {
+      "material": "metal",
+      "minimum_rarity": 3,
+      "recipe_count": 1,
+      "candidates": [
+        "gilded_goblet",
+        "mithril_ingot",
+        "pale_shard"
+      ],
+      "candidate_count": 3
+    },
+    {
+      "material": "metal",
+      "minimum_rarity": 4,
+      "recipe_count": 1,
+      "candidates": [
+        "pale_shard"
+      ],
+      "candidate_count": 1
+    },
+    {
+      "material": "stone",
+      "minimum_rarity": 1,
+      "recipe_count": 1,
+      "candidates": [
+        "granite_mortar",
+        "whetstone",
+        "wound_salt"
+      ],
+      "candidate_count": 3
+    },
+    {
+      "material": "wood",
+      "minimum_rarity": 1,
+      "recipe_count": 3,
+      "candidates": [
+        "hardwood_plank",
+        "ironwood_branch"
+      ],
+      "candidate_count": 2
+    },
+    {
+      "material": "wood",
+      "minimum_rarity": 2,
+      "recipe_count": 4,
+      "candidates": [
+        "hardwood_plank",
+        "ironwood_branch"
+      ],
+      "candidate_count": 2
+    }
+  ],
+  "runtime_material_field_differences": []
+}
