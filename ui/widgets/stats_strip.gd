@@ -106,6 +106,13 @@ func use_inlay(narrow: bool, kinds: Array[StringName] = []) -> void:
 		_relayout()
 
 
+## 只摆这几张（羊皮纸签；作者 11-11 配装备页只要耐力那张）
+func set_kinds(kinds: Array[StringName]) -> void:
+	_kinds.assign(kinds)
+	_shown.assign(kinds)
+	_relayout()
+
+
 ## 跟棋盘一样宽（三张签在这宽度里居中；棋盘窄于签就按签宽）。窄嵌槽那排从左沿排起，不居中
 func set_width(px: float) -> void:
 	_width = maxf(px, 0.0)
