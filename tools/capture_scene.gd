@@ -2,9 +2,11 @@
 ## 必须在非 headless 下运行 —— headless 用的是空渲染驱动，截出来是黑的。
 ##
 ##     "E:/Godot/..._console.exe" --path . --script res://tools/capture_scene.gd -- <输出路径> [场景路径]
+##
+## 不给场景路径就截启动选择器（`ui/launcher.tscn`：不碰存档，不用演示钩子也有东西可看）。
 extends CliTool
 
-const DEFAULT_SCENE := "res://ui/inventory/inventory_sandbox.tscn"
+const DEFAULT_SCENE := "res://ui/launcher.tscn"
 const WARMUP_FRAMES := 4
 
 var _frames: int = 0

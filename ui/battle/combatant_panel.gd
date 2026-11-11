@@ -60,7 +60,7 @@ signal buff_unhovered
 var display_name: String = ""
 ## 铜面板三屏的画法（进树之前设）
 var bronze := false
-## 顶上画不画名字那一行（作者 2026-10-13：战斗屏有名牌了，这行去掉；沙盒、回放浏览器没名牌照画）
+## 顶上画不画名字那一行（作者 2026-10-13：战斗屏有名牌了，这行去掉；回放浏览器没名牌照画）
 var show_title: bool = true:
 	set(v):
 		show_title = v

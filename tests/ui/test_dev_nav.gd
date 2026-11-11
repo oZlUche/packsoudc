@@ -47,7 +47,7 @@ static func frame_run_visibility(t: TestCase, root: Window) -> void:
 
 	# --- 别的场景里要有 ---
 	var other := QuietScene.new()
-	other.scene_file_path = "res://ui/battle/battle_sandbox.tscn"
+	other.scene_file_path = "res://ui/battle/replay_browser.tscn"
 	root.add_child(other)
 	tree.current_scene = other
 	nav._relabel()
@@ -94,7 +94,7 @@ static func frame_run_confirm(t: TestCase, root: Window) -> void:
 	nav._request_back()
 	t.check(nav._armed, "又上膛了")
 	var another := QuietScene.new()
-	another.scene_file_path = "res://ui/battle/battle_sandbox.tscn"
+	another.scene_file_path = "res://ui/battle/replay_browser.tscn"
 	root.add_child(another)
 	tree.current_scene = another
 	nav._process(0.0)

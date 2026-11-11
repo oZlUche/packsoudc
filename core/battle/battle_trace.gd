@@ -26,7 +26,7 @@ const BUFF := "buff"
 const SCHEDULE := "schedule"
 const SNAPSHOT := "snapshot"
 
-## 文件头：现实时间、种子、章节、点、敌人、双方道具名表与棋盘、时限……由调用方（[NodeEvents]、沙盒）填
+## 文件头：现实时间、种子、章节、点、敌人、双方道具名表与棋盘、时限……由调用方（[NodeEvents]）填
 var header: Dictionary = {}
 ## 全部条目，按发生顺序
 var entries: Array[Dictionary] = []

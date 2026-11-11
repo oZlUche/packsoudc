@@ -75,7 +75,7 @@ const TEXT := {
 	"slots.newer_tag": {"zh": "　（更新版本的存档）", "en": " (saved by a newer version)"},
 	"menu.settings": {"zh": "设置", "en": "Settings"},
 	"menu.encyclopedia": {"zh": "百科", "en": "Encyclopedia"},
-	"menu.dev_tools": {"zh": "开发工具（沙盒与编辑器）", "en": "Dev tools (sandboxes & editors)"},
+	"menu.dev_tools": {"zh": "开发工具（回放与编辑器）", "en": "Dev tools (replays & editors)"},
 	"menu.quit": {"zh": "退出", "en": "Quit"},
 	"menu.language": {"zh": "语言：中文（点击切换 English）", "en": "Language: English (click for 中文)"},
 	"menu.lang_short": {"zh": "中 / EN", "en": "中 / EN"},     # 197 补充一：主菜单左下那一行的语言开关

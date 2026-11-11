@@ -1,6 +1,6 @@
 ## 启动选择器 —— 开发期的入口。
 ##
-## 有好几个能单独跑的场景（沙盒、编辑器），命令行还得记住路径。这里列出来，点一下就行。
+## 有好几个能单独跑的场景（战斗回放、编辑器），命令行还得记住路径。这里列出来，点一下就行。
 ## M6 之后项目的主场景是正式游戏（`ui/game/game.tscn`），这里退化成调试入口：
 ## 从主菜单的「开发工具」进来，F1 回去。
 ##
@@ -16,18 +16,6 @@ const ENTRIES := [
 		"title": "正式游戏",
 		"desc": "M6 场景流（也是项目的主场景）：主菜单 → 开局选装备 → 地图 ⇄ 战斗 / 搜刮 / 商店 / 事件 / 休息 → 结算 → 仓库",
 		"keys": "地图上 B 开背包　F 缩到放下　F1 回这里",
-	},
-	{
-		"scene": "res://ui/inventory/inventory_sandbox.tscn",
-		"title": "背包整理沙盒",
-		"desc": "M1 验收：棋盘 + 包体、异形拖拽、地上与战利品",
-		"keys": "左键拖动　R 旋转　右键 / Esc 取消",
-	},
-	{
-		"scene": "res://ui/battle/battle_sandbox.tscn",
-		"title": "战斗沙盒",
-		"desc": "M2 验收：摆背包 → 开打 → 看回放。拖一件装备就重新编译，预估 DPS 实时变",
-		"keys": "播放 / 倍速 / 跳过　战斗中只能看",
 	},
 	{
 		"scene": "res://ui/battle/replay_browser.tscn",
@@ -118,7 +106,7 @@ func _build() -> void:
 	center.add_child(col)
 
 	col.add_child(UiTheme.make_label("背包搜打撤", 28, UiPalette.FG))
-	col.add_child(UiTheme.make_label("第一项是正式游戏，其余是开发期的沙盒与编辑器。", 13, UiPalette.DIM))
+	col.add_child(UiTheme.make_label("第一项是正式游戏，其余是开发期的工具与编辑器。", 13, UiPalette.DIM))
 	col.add_child(HSeparator.new())
 
 	for entry in ENTRIES:
