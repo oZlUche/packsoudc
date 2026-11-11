@@ -291,3 +291,62 @@ static func frame_setup_double_click(t: TestCase, root: Window) -> void:
 	RunSave.remove(save)
 	MetaSave.remove(META)
 	GameSettings.remove(SETTINGS)
+
+
+static func run_tidy_all_302(t: TestCase) -> void:
+	t.begin("302 · 整理跨页：三页杂物一起排，武器在最前、按类连续、空格在最后、一件不少、两次一样；放不下全回原位；棋盘不动")
+	ItemInstance.reset_uid_counter()
+	var pages: Array[GridInventory] = []
+	for i in 3:
+		pages.append(GridInventory.new(Vector2i(3, 2), 200 + i, false))
+	var sword := _def("sword", ["1", "1"])
+	sword.tags = [&"weapon"]
+	var herb := _def("herb", ["1"])
+	herb.tags = [&"remedy"]
+	var rock := _def("rock", ["1"])
+	rock.tags = [&"material"]
+	var all_uids := {}
+	for row in [[0, rock, Vector2i(0, 0)], [0, herb, Vector2i(2, 1)], [1, sword, Vector2i(1, 0)], [2, rock, Vector2i(2, 0)], [2, herb, Vector2i(0, 1)], [2, sword, Vector2i(1, 0)]]:
+		var inst := ItemInstance.create(row[1])
+		t.check(pages[row[0]].place(inst, row[2], 0), "摆 %s" % inst.def.id)
+		all_uids[inst.uid] = true
+	t.check(GridTidy.tidy_all(pages), "整理成功")
+	var kinds: Array[int] = []
+	var seen := {}
+	for p in pages:
+		for y in p.size.y:
+			for x in p.size.x:
+				var it := p.get_item(p.cell_uid(Vector2i(x, y)))
+				if it != null and not seen.has(it.uid):
+					seen[it.uid] = true
+					kinds.append(GridTidy.kind_of(it.def))
+	t.eq(seen.size(), all_uids.size(), "一件不少")
+	var sorted := kinds.duplicate()
+	sorted.sort()
+	t.eq(kinds, sorted, "按类连续，武器在最前（%s）" % str(kinds))
+	t.eq(pages[2].item_count(), 0, "空格集中在最后一页")
+	var snap := []
+	for p in pages:
+		for inst in p.items():
+			snap.append([p.id, (inst as ItemInstance).uid, (inst as ItemInstance).origin])
+	t.check(GridTidy.tidy_all(pages), "再整理一次")
+	var snap2 := []
+	for p in pages:
+		for inst in p.items():
+			snap2.append([p.id, (inst as ItemInstance).uid, (inst as ItemInstance).origin])
+	t.eq(snap2, snap, "两次一样")
+	# 排不开：第一页 4×2 两件 L 形咬合拼满（同 109 回滚那例），第二页 1×1 一颗石子 —— L 形哪页都放不下第二件，全部回原位
+	var g := GridInventory.new(Vector2i(4, 2), 210, false)
+	var tiny := GridInventory.new(Vector2i(1, 1), 211, false)
+	var b_hook := ItemInstance.create(_def("b_hook", ["111", "100"]))
+	var a_hook := ItemInstance.create(_def("a_hook", ["001", "111"]))
+	var pebble := ItemInstance.create(_def("pebble", ["1"]))
+	t.check(g.place(b_hook, Vector2i.ZERO, 0) and g.place(a_hook, Vector2i(1, 0), 0) and tiny.place(pebble, Vector2i.ZERO, 0), "摆好")
+	var fired := [0]
+	tiny.changed.connect(func(): fired[0] += 1)
+	t.check(not GridTidy.tidy_all([g, tiny] as Array[GridInventory]), "排不开：返回 false")
+	t.eq([b_hook.origin, a_hook.origin, pebble.origin], [Vector2i.ZERO, Vector2i(1, 0), Vector2i.ZERO], "都在原位")
+	t.check(g.has_item(b_hook.uid) and g.has_item(a_hook.uid) and tiny.has_item(pebble.uid), "各回各页")
+	t.eq(fired[0], 1, "每页只发一次 changed")
+	var board := GridInventory.new(Vector2i(3, 3), 1)
+	t.check(not GridTidy.tidy_all([board] as Array[GridInventory]), "棋盘（要求包）不整理")

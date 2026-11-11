@@ -1575,7 +1575,7 @@ const TEXT := {
 	"wh.and_more": {"zh": "%s等", "en": "%s, etc."},
 	"wh.stuck": {"zh": "；仓库放不下 %d 件（%s）—— 挪一挪仓库，或者不要了", "en": "; no room in the Warehouse for %d (%s). Rearrange the Warehouse, or let them go"},
 	"wh.board_cleared": {"zh": "带回来的背包清空了", "en": "The pack you brought back is now empty"},
-	"wh.page_tidied": {"zh": "这一页整理好了", "en": "This page is tidied"},
+	"wh.tidied": {"zh": "仓库整理好了", "en": "Storage tidied"},
 	"wh.tidy_failed": {"zh": "这堆东西排不开，没动", "en": "These won't fit any tidier; left as they were"},
 	"wh.board_no_room": {"zh": "带回来的背包里放不下「%s」", "en": "No room in the pack you brought back for \"%s\""},
 	# —— 221 F5b：achievements ——

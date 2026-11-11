@@ -374,7 +374,7 @@ func _build_kit_page() -> Control:
 	_warehouse_view = _warehouse_pages.view
 	var tools := _hbox(12)
 	right.add_child(tools)
-	_tidy_btn = UiTheme.make_home_button(UiText.t("wh.tidy"), tidy_warehouse, false, TIDY_SIZE, 18)     # 作者 10-31「需要有整理按钮」：同基地仓库，只排当前页
+	_tidy_btn = UiTheme.make_home_button(UiText.t("wh.tidy"), tidy_warehouse, false, TIDY_SIZE, 18)     # 作者 10-31「需要有整理按钮」：同基地仓库（302：整个仓库）
 	_tidy_btn.name = "TidyButton"
 	_tidy_btn.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	tools.add_child(_tidy_btn)
@@ -405,14 +405,14 @@ func _build_kit_page() -> Control:
 	return play
 
 
-## 作者 10-31：整理仓库**当前页**（[GridTidy]，同基地仓库）；排不开就原样不动、说一句
+## 作者 10-31：整理仓库（[GridTidy]，同基地仓库；302 起整个仓库一起排）；排不开就原样不动、说一句
 func tidy_warehouse() -> bool:
-	var page_ := _warehouse_pages.current_page() if _warehouse_pages != null else null
-	if page_ == null:
+	var wh := flow.meta.warehouse if flow != null and flow.meta != null else null
+	if wh == null:
 		return false
-	var ok := GridTidy.tidy(page_)
-	if page_.item_count() > 1:
-		warn(UiText.t("wh.page_tidied") if ok else UiText.t("wh.tidy_failed"))
+	var ok := GridTidy.tidy_all(wh.pages)
+	if wh.item_count() > 1:
+		warn(UiText.t("wh.tidied") if ok else UiText.t("wh.tidy_failed"))
 	return ok
 
 

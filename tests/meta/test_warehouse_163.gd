@@ -193,15 +193,10 @@ static func frame_setup_and_result(t: TestCase, root: Window) -> void:
 	t.check(panel.quick_move(shelf.view, k.uid), "带回来的背包搬空了还在：再双击仓库的那件放回去")
 	t.check(panel.quick_move(panel.board_view(), k.uid), "再置入一次")
 	shelf.show_page(0)
-	var before: Array = []
-	for inst in f.meta.warehouse.page(1).items():
-		before.append((inst as ItemInstance).origin)
+	var total := f.meta.warehouse.item_count()
 	panel.tidy()
-	var after: Array = []
-	for inst in f.meta.warehouse.page(1).items():
-		after.append((inst as ItemInstance).origin)
-	t.eq(after, before, "整理第一页：第二页不动")
-	t.eq(f.meta.warehouse.page(0).item_count(), n, "第一页件数不变")
+	t.eq(f.meta.warehouse.item_count(), total, "302：整个仓库一起整理，件数不变（%d 块钢锭 + 刀）" % n)
+	t.eq(shelf.current(), 0, "整理完留在当前页")
 	panel.queue_free()
 	MetaSave.remove(META)
 	GameSettings.remove(SETTINGS)
