@@ -3652,7 +3652,7 @@ func player_spec() -> CombatantSpec …
   - 停上去的提示仍是「体力 当前/上限」。
 
 **166（作者定）：顶端栏、图标按钮、图例**：
-- 读数层顶上横一条顶端栏：组件 `hud_bar`（`PanelHudBar` 变体，底图 `assets/ui/hud/bar.png`，缺图半透明深底 + 下边一条线），它本身也是布局里的一件，藏起来就退回老的九宫顶边。
+- 读数层顶上横一条顶端栏：组件 `hud_bar`（`PanelHudBar` 变体，底图 `assets/ui/hud/bar.png`），它本身也是布局里的一件，藏起来就退回老的九宫顶边。
   - 布局多三个锚点 `bar_left / bar_center / bar_right`（`HudLayout.BAR_ANCHORS`），栏槽里的件不用偏移，一槽一组，组里照样按 `line` 分行；栏高 = 最高的那组 + 上下留白，至少 `HudHost.BAR_HEIGHT`（64）。
   - 默认：左槽第一行体力 / 货币 / 信仰（200% 档），第二行负重（v5.62 删了）/ 增益 / 侵蚀（小字）；中槽倒计时（大档）；右槽 `HudLayout.BAR_RIGHT` = 背包、放大镜、技能、调试台箭头。左下路线与图例（`legend`），右下腰带。布局版本 4，旧文件回默认。
   - 摆读数时松在栏里 = 按横向三等分进左 / 中 / 右槽。
@@ -3676,7 +3676,7 @@ func player_spec() -> CombatantSpec …
 
 叠层屏（事件、战前、回放、容器、商店、保险箱、神坛、休息、百科）都走 `GameScreen._centered_panel()`：它造一块 `OverlayFrame`（`ui/widgets/`），
 顶上标题条（左标题、右槽）+ 内容区，返回内容区给各屏；标题写 `_frame_title(text)`。外观是主题变体 `PanelOverlay`：`UiTheme.asset_root`（默认 `res://assets/ui/`）
-下有石板两张图（`slab_body` + `slab_edge`，157 补充三）就是一整块石板（边距与标题条高读 `slab_edge.json`），没有就是平面底 —— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（170 起是深底 `tip/tooltip_dark.png`，原来的纸 `tooltip_paper.png` 退了）。
+下有石板两张图（`slab_body` + `slab_edge`，157 补充三）就是一整块石板（边距与标题条高读 `slab_edge.json`）—— 换皮只换图。悬浮窗（`HoverTip`）同理走 `PanelTooltip`（170 起是深底 `tip/tooltip_dark.png`，原来的纸 `tooltip_paper.png` 退了）。
 宝箱屏整屏铺背景，不套框。
 **铜面板三屏**（战前准备、战斗回放、战利品 / 搜索，UI替换美术 bronze3，v3.79）走 `GameScreen._bronze_panel()` = `OverlayFrame.new(margin, true)`：`bronze/panel_bronze` 九宫（边 83、TILE_FIT，内容从 40 起）、tone dark、没有标题条。
 三屏的棋盘都套 `BoardFrame`（`ui/widgets/board_frame.gd`，`frame_<kind>_dark.png`：内垫深色半透明，格缝 `BoardFrame.dark_seams()`）；属性签用 `StatsStrip.use_inlay`（战利品屏 152 宽嵌槽、战前屏窄嵌槽两排：自己 生命 / 耐力 / 耗气 / DPS / 负重，敌人把负重换成特殊能力，免疫写在特殊能力签的悬浮窗）。
@@ -3699,12 +3699,12 @@ func player_spec() -> CombatantSpec …
 现在悬浮窗（主窗与关键词子窗）是深底（170）；石板是浅底。
 
 **石板**（157 补充三，作者定「每个界面（框）在一块完整的石板上显示」，取代原来平铺满屏的石砖墙）：**一屏一块石板，板即框**。
-- `SlabStyle`（`ui/widgets/`）是一个两层画的 StyleBox：下层板身 `slab_body.png` 平铺（`AXIS_STRETCH_MODE_TILE`，纹不随框大小拉花，往里缩 json `body_inset`，凿口外透出底下），上层板边 `slab_edge.png` 九宫格（中心透明：手凿轮廓、受光棱、投影、顶上一道刻线）。`UiTheme.slab_box()` 两张图都在才造，否则 null、退回平面底；`UiTheme.slab(c)` 把一块面板挂成石板（`PanelOverlay` 变体 + 按石板深浅挂字色）。没用「两个 Panel 子底」的写法：一个 StyleBox 画两层，凡是挂 `PanelOverlay` / `PanelHudBar` 的都自动是石板，容器排版也不受子底影响。
+- `SlabStyle`（`ui/widgets/`）是一个两层画的 StyleBox：下层板身 `slab_body.png` 平铺（`AXIS_STRETCH_MODE_TILE`，纹不随框大小拉花，往里缩 json `body_inset`，凿口外透出底下），上层板边 `slab_edge.png` 九宫格（中心透明：手凿轮廓、受光棱、投影、顶上一道刻线）。`UiTheme.slab_box()` 两张图都在才造，否则 null；`UiTheme.slab(c)` 把一块面板挂成石板（`PanelOverlay` 变体 + 按石板深浅挂字色）。没用「两个 Panel 子底」的写法：一个 StyleBox 画两层，凡是挂 `PanelOverlay` / `PanelHudBar` 的都自动是石板，容器排版也不受子底影响。
 - 叠层屏：`OverlayFrame` 就是石板；标题字刻在板顶刻线上方（标题条高 json `title_height`，`_art_box` 的顶内边距只留到标题条上沿，`TITLE_LINE_GAP` 6 给刻线）。板外是半透明暗罩（`GameScreen.OVERLAY_SHADE` 0.6），底下的地图压暗透出。
 - 底屏（主菜单、设置、存档位、结算；开局三页 179 起改成背景画 + 凹槽板，不走石板）：`GameScreen._slab_screen()` 造一块居中的大石板（宽高各 `SLAB_SHARE` 九成），返回板里的内容区；板外是纯色底（`_backdrop`，091 的底色设置照旧管它）。基地（164）有自己的家底、地图屏（166）是满幅纸底，都不走石板。
 - 板里的分区是刻进去的凹槽：`PanelDark` / `PanelLine` / `PanelHud` 都用 `inset.png` 九宫格，**内边距照旧按变体默认值**（`_art_box(name, false, content)`），换皮不改排版。
-- 顶端栏（166 `hud_bar`）是一条独立的长石板：同一张板身 + 专用的长条板边 `slab_bar.png`（贴屏幕顶、没有标题刻线、底下一道投影；`slab_box(..., edge_art = ART_SLAB_BAR)`，缺这张退回平面底）。`body_inset` 可写一个数或 `[左, 上, 右, 下]`（栏顶边不缩）。作者 2026-10-13「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」：`HudHost.BAR_HEIGHT` 64 → 88，栏里的组在板边的上下内边距（8 / 26）之间居中，底下的投影不算板面；栏高 = max(88, 最高一组 + 上下内边距)。
-- 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。都是有图用图、没图照旧（平面底）。
+- 顶端栏（166 `hud_bar`）是一条独立的长石板：同一张板身 + 专用的长条板边 `slab_bar.png`（贴屏幕顶、没有标题刻线、底下一道投影；`slab_box(..., edge_art = ART_SLAB_BAR)`）。`body_inset` 可写一个数或 `[左, 上, 右, 下]`（栏顶边不缩）。作者 2026-10-13「凹槽没有和石板位置对齐，考虑增加顶端栏纵向面积」：`HudHost.BAR_HEIGHT` 64 → 88，栏里的组在板边的上下内边距（8 / 26）之间居中，底下的投影不算板面；栏高 = max(88, 最高一组 + 上下内边距)。
+- 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。
 
 **名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_bronze.png`，2026-10-17 起铜质狗牌，单层九宫格、深底亮字），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
 （`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版；没图画细线），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。

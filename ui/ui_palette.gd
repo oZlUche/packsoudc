@@ -448,12 +448,6 @@ const BTN_MINOR := Color("232932")
 const BTN_MINOR_HOVER := Color("2f3641")
 const BTN_MINOR_EDGE := Color("454d5c")
 const BTN_DISABLED := Color("1b1f26")
-## 251 补充一 §10.2（作者 14:49「铁匠铺的打造按钮要烧亮的铁红」）：「打造」键四态图到之前的平键底色（[constant UiTheme.BUTTON_FORGE]）
-const HOT_IRON := Color("d2461e")
-const HOT_IRON_HOVER := Color("ec6a2c")
-const HOT_IRON_PRESSED := Color("a8331a")
-const HOT_IRON_OFF := Color("6a4a3e")
-const HOT_IRON_TEXT := Color("fff1dc")
 ## 251 补充二 §12.2（作者 10-25 14:21「铁匠铺的合成界面应该是铁砧配色的」）：打造界面的铁砧铁灰底（没有 `smithy/anvil_plate` 图时的平底）、
 ## 上面的浅字（定稿 layout 的 `text_light`），深底上缺素材的暖红（`text_missing`；浅底的铁红 a8331a 在铁灰上看不清）
 const ANVIL_IRON := Color("3b3936")

@@ -140,8 +140,6 @@ static func run_home_art(t: TestCase) -> void:
 	rect.free()
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = "res://tests/fixtures/no_such_ui/"
-	var bare := UiTheme.build()
-	t.check(bare.get_stylebox("normal", UiTheme.BUTTON_HOME) is StyleBoxFlat, "没图：木牌按钮回落成平面按钮")
 	var rect2 := ColorRect.new()
 	t.is_null(UiTheme.dress_home_backdrop(rect2), "没图：不铺背景")
 	rect2.free()
