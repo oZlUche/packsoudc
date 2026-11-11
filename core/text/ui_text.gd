@@ -1020,6 +1020,7 @@ const TEXT := {
 	"cond.steps_range": {"zh": "需要步数 %d～%d", "en": "Needs steps %d–%d"},
 	"cond.vitality": {"zh": "需要体力 ≥ %d", "en": "Needs Vitality ≥ %d"},
 	"cond.reward_empty": {"zh": "这里没有能拿的东西", "en": "There's nothing here to take"},
+	"event.lose_none": {"zh": "没有能拿走的", "en": "nothing to take"},
 	"cond.vitality_full": {"zh": "体力已满", "en": "Vitality is already full"},
 	"cond.no_landing": {"zh": "没有能落脚的地方", "en": "There's nowhere to land"},
 	# —— 221 F5a：event_outcomes ——

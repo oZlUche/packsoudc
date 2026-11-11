@@ -369,8 +369,8 @@ func option_params(i: int) -> Dictionary:
 	for o in (def.options[i] as EventOption).outcomes:
 		if o is LoseItem and not out.has("lose_name"):
 			var inst := (o as LoseItem).preview(ctx)
-			if inst != null:
-				out["lose_name"] = TextTemplate.render("{item:%s}" % inst.def.id, {"_items": items})
+			# 303 复测：一件都拿不走时选项是灰的，也别露出占位符
+			out["lose_name"] = TextTemplate.render("{item:%s}" % inst.def.id, {"_items": items}) if inst != null else UiText.t("event.lose_none")
 	return out
 
 

@@ -87,3 +87,24 @@ static func run_fixed_boxes(t: TestCase) -> void:
 	UiTheme.set_text_size(saved)
 	UiTheme.pinned_text_size = pinned
 	UiTheme.refresh(GameSettings.new())
+
+
+static func run_event_option_fits(t: TestCase) -> void:
+	t.begin("303 复测 · 大字号英文：事件选项字太长时缩字号 / 裁掉，选项键不宽过右页")
+	var saved := UiTheme.text_size
+	var pinned := UiTheme.pinned_text_size
+	UiTheme.pinned_text_size = &""
+	var page_w := float((OverlayFrame.book_meta().get("text_rect", [704, 44, 560, 672]) as Array)[2])
+	var screen: Object = load("res://ui/game/event_screen.gd").new()
+	screen.set("_page_w", page_w)
+	for tier in GameSettings.TEXT_SIZES:
+		UiTheme.set_text_size(tier)
+		UiTheme.refresh(GameSettings.new())
+		var b: Button = screen.call("_option_button", "Take apart the sound timber and the old iron fittings (Countdown -1, wood x1, metal x1)", func(): pass)
+		screen.call("_fit_option", b)
+		t.check(b.get_minimum_size().x <= page_w, "%s：选项键最小宽 %d ≤ 右页 %d" % [tier, int(b.get_minimum_size().x), int(page_w)])
+		b.free()
+	(screen as Node).free()
+	UiTheme.set_text_size(saved)
+	UiTheme.pinned_text_size = pinned
+	UiTheme.refresh(GameSettings.new())
