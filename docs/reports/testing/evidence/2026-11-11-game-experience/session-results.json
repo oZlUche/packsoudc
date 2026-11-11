@@ -1,0 +1,99 @@
+{
+  "1": [
+    {
+      "outcome": "extracted",
+      "reason": "extract",
+      "seed": 71888,
+      "chapter": "prologue",
+      "steps": 5,
+      "visited": 6,
+      "battles_won": 3,
+      "battles_lost": 0,
+      "balance": 66,
+      "value": 506,
+      "items": [
+        "bag_leather",
+        "bag_leather",
+        "salve",
+        "leather_armor",
+        "bag_small",
+        "poison_vial",
+        "knife_brute",
+        "bandage",
+        "ration",
+        "bag_small",
+        "cleaver_sun",
+        "bag_leather",
+        "bag_leather",
+        "round_shield",
+        "shortsword"
+      ],
+      "safe": 0,
+      "safe_value": 0,
+      "character": "brutus",
+      "difficulty": "",
+      "ended_at": 1794424298,
+      "elite_won": 1,
+      "boss_won": 0,
+      "searches": 2,
+      "crafts": 0,
+      "scale": "",
+      "faith": {},
+      "score": 953,
+      "score_parts": {
+        "loot": 506,
+        "battle": 150,
+        "explore": 297,
+        "mult": 1
+      },
+      "run_no": 1,
+      "pinned": false
+    }
+  ],
+  "2": [
+    {
+      "outcome": "extracted",
+      "reason": "extract",
+      "seed": 780613,
+      "chapter": "free_mode",
+      "steps": 6,
+      "visited": 6,
+      "battles_won": 2,
+      "battles_lost": 0,
+      "balance": 1,
+      "value": 390,
+      "items": [
+        "bag_leather",
+        "bag_leather",
+        "longsword",
+        "cleaver",
+        "knife",
+        "salve",
+        "bag_long",
+        "fire_crystal_low",
+        "honey_jar",
+        "beast_fang"
+      ],
+      "safe": 0,
+      "safe_value": 0,
+      "character": "andreus",
+      "difficulty": "normal",
+      "ended_at": 1794425284,
+      "elite_won": 1,
+      "boss_won": 0,
+      "searches": 0,
+      "crafts": 0,
+      "scale": "small",
+      "faith": {},
+      "score": 752,
+      "score_parts": {
+        "loot": 390,
+        "battle": 125,
+        "explore": 237,
+        "mult": 1
+      },
+      "run_no": 1,
+      "pinned": false
+    }
+  ]
+}
