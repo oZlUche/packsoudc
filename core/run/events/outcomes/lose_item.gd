@@ -26,6 +26,14 @@ func apply(ctx: EventContext) -> void:
 			ctx.items_lost.append(Names.of(inst.def))
 
 
+## 303（事件方案 §7 祭坛）：会拿走哪一件（最值钱 / 最不值钱 / 指定 id 是确定的；随机的不预告，返回 null）。选项文字的 `{lose_name}` 用它
+func preview(ctx: EventContext) -> ItemInstance:
+	if pick == Pick.RANDOM:
+		return null
+	var chosen := _choose(ctx)
+	return chosen.get("inst", null) as ItemInstance if not chosen.is_empty() else null
+
+
 func _choose(ctx: EventContext) -> Dictionary:
 	var cands: Array = []
 	if pick == Pick.BY_ID:

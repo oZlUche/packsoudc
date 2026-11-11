@@ -958,6 +958,8 @@ func _resolve_rules() -> void:
 	bag_pool = _rule_asset("bag_pools", chapter.bag_pool) as BagPool
 	encumbrance = _rule_asset("encumbrance_rules", chapter.encumbrance_rules) as EncumbranceRules
 	node_rules = _rule_asset("node_rules", chapter.node_rules) as NodeRules
+	if node_rules != null:
+		node_rules = node_rules.with_chapter_events(chapter.chapter_events)     # 303：地图专属事件并进来（副本，不动共用的那份）
 	economy = _rule_asset("economy_rules", chapter.economy_rules) as EconomyRules
 
 

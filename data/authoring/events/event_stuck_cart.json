@@ -1,0 +1,66 @@
+{
+  "id": "event_stuck_cart",
+  "title": "陷住的货车",
+  "titles": {
+    "en": "The Stuck Cart"
+  },
+  "text": "货车斜陷在碎石里，车主正收拢散落的货物。“帮我抬起轮轴，金属货里分你一件。”他指向车底卡住的货箱，路旁另堆着已经顾不上收的绳布杂物。",
+  "texts": {
+    "en": "A cart lies tilted in the rubble while its owner gathers the spilled load. \"Help me lift the axle and you can have one piece of the metal goods.\" He points at the crate wedged under the cart. Rope and cloth scraps he hasn't bothered with lie piled by the road."
+  },
+  "options": [
+    {
+      "label": "抬起轮轴（体力 −{spend_vitality_amount}，{reward_name}）",
+      "labels": {
+        "en": "Lift the axle (Vitality −{spend_vitality_amount}, {reward_name})"
+      },
+      "requires": [
+        {
+          "type": "vitality_at_least",
+          "amount": 2
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "spend_vitality"
+        },
+        {
+          "type": "give_pool_item",
+          "pool": "metal_cargo"
+        },
+        {
+          "type": "say",
+          "text": "轮子滚回石面，车主把答应的{reward_name}搬到你脚边。",
+          "texts": {
+            "en": "The wheel rolls back onto the stone, and the owner sets the promised {reward_name} at your feet."
+          }
+        }
+      ]
+    },
+    {
+      "label": "收拢路旁杂物（轻便材料 ×1）",
+      "labels": {
+        "en": "Gather the roadside scraps (light material ×1)"
+      },
+      "outcomes": [
+        {
+          "type": "give_pool_item",
+          "pool": "light_salvage"
+        },
+        {
+          "type": "say",
+          "text": "车主摆摆手，你收起了路边的{reward_name}。",
+          "texts": {
+            "en": "The owner waves you on, and you pick up the {reward_name} by the road."
+          }
+        }
+      ]
+    },
+    {
+      "label": "离开",
+      "labels": {
+        "en": "Leave"
+      }
+    }
+  ]
+}

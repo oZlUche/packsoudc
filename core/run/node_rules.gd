@@ -99,6 +99,9 @@ static func _weighted(table: Dictionary, rng: RandomNumberGenerator, fallback: S
 ## 事件层（063）：节点类型 → {事件 id: 权重}。生成地图时按它给每个点定一个事件（[EventPlacer]），踩上去先过事件屏。
 ## 没列的类型（多数是战斗）没有事件 = 转场，踩上去直接发生。搜索点的「要不要搜」就是它的事件（选项里 OpenSearch）
 @export var events_by_type: Dictionary = {}
+## 303（事件方案 2026-11-11 §8.1）：一张图上某个事件最多几处，`{"事件 id": 次数}`（没列的不限）。生成与随机点揭开都看它（[EventPlacer]）；
+## 到了上限就从同一张表里别的事件里抽，全到上限了就不配事件（转场）
+@export var event_max_per_map: Dictionary = {}
 ## 093（作者定）：**成组限量**的事件 —— 生成时先于 events_by_type 铺：`{"组名": {"max_per_map": 1, "early": true, "chance": 1.0, "events": {"事件 id": 权重}}}`。
 ## 每张图最多放 max_per_map 个（在事件点里挑）；early = 偏前期（越浅的点权重越高）；chance = 这张图有没有它的概率。「触发信仰」用它：每张图最多一位神
 @export var event_groups: Dictionary = {}
@@ -117,8 +120,32 @@ func group_pick(group: String, rng: RandomNumberGenerator) -> StringName:
 	return _weighted(table, rng, &"") if table is Dictionary and not (table as Dictionary).is_empty() else &""
 
 
-func event_pick_for(type: StringName, rng: RandomNumberGenerator) -> StringName:
+## [param used]：图上已经配了的事件 id → 几处；到了 [member event_max_per_map] 上限的不抽，在剩下的里掷一次（全满了不掷、返回空）
+func event_pick_for(type: StringName, rng: RandomNumberGenerator, used: Dictionary = {}) -> StringName:
 	var table = events_by_type.get(String(type), null)
 	if not (table is Dictionary) or (table as Dictionary).is_empty():
 		return &""
-	return _weighted(table, rng, &"")
+	if used.is_empty() or event_max_per_map.is_empty():
+		return _weighted(table, rng, &"")
+	var open := {}
+	for k in table:
+		var cap := int(event_max_per_map.get(String(k), -1))
+		if cap < 0 or int(used.get(String(k), 0)) < cap:
+			open[k] = table[k]
+	return _weighted(open, rng, &"") if not open.is_empty() else &""
+
+
+## 303：把一章另加的事件（[member ChapterDef.chapter_events]）并进来的副本；没加的原样返回自己
+func with_chapter_events(extra: Dictionary) -> NodeRules:
+	if extra.is_empty():
+		return self
+	var copy := duplicate(true) as NodeRules
+	for type in extra:
+		var add = extra[type]
+		if not (add is Dictionary):
+			continue
+		var table: Dictionary = (copy.events_by_type.get(String(type), {}) as Dictionary).duplicate()
+		for id in add:
+			table[String(id)] = add[id]
+		copy.events_by_type[String(type)] = table
+	return copy

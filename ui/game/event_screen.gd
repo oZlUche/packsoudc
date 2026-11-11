@@ -53,7 +53,10 @@ func _open_options() -> void:
 			continue
 		var idx := i
 		# 104：选项文字里的数写成 {change_money_amount|abs} 这类，取这个选项自己的结果 / 条件的字段（TextParams）；193 加 {rest_total}
-		var b := _option_button(TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt, _node)), func(): choose(idx))
+		var octx := TextTemplate.option_context(ctx, opt, _node)
+		if not is_briefing():
+			octx.merge(flow.run.events.option_params(i), true)     # 303：{lose_name}
+		var b := _option_button(TextTemplate.plain(opt.label_for(), octx), func(): choose(idx))
 		b.disabled = not ok
 		EventCostIcons.attach(b, opt)     # 157：选项前一排代价图标（只画会花掉什么）
 		_option_btns.append(b)

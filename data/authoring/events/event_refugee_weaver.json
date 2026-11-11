@@ -1,0 +1,88 @@
+{
+  "id": "event_refugee_weaver",
+  "title": "补衣人的针",
+  "titles": {
+    "en": "The Mender's Needle"
+  },
+  "text": "避风处挂着几件补过许多次的外衣。补衣人指了指断开的腰带：“皮子或者布都行。我不缺针，缺的是能缝上去的东西。”她打开钱袋，让你看见里面确实还有零钱。",
+  "texts": {
+    "en": "A few coats, patched many times over, hang in the lee of the wind. The mender points at a broken belt. \"Leather or cloth, either will do. I've needles enough; what I lack is something to sew on.\" She opens her purse to show you there really are coins in it."
+  },
+  "options": [
+    {
+      "label": "交出{item:tanned_leather} ×1（+{change_money_amount}）",
+      "labels": {
+        "en": "Hand over {item:tanned_leather} ×1 (+{change_money_amount})"
+      },
+      "requires": [
+        {
+          "type": "has_item",
+          "item": "tanned_leather",
+          "takeable": true
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "lose_item",
+          "item": "tanned_leather"
+        },
+        {
+          "type": "change_money",
+          "amount": 16
+        },
+        {
+          "type": "say",
+          "text": "她先试了试皮子的韧性，才数钱给你。针线随后穿过了第一道接缝。",
+          "texts": {
+            "en": "She tests how tough the leather is before counting out the coins. Then the needle goes through the first seam."
+          }
+        }
+      ]
+    },
+    {
+      "label": "交出{item:linen_bolt} ×1（+{change_money_amount}）",
+      "labels": {
+        "en": "Hand over {item:linen_bolt} ×1 (+{change_money_amount})"
+      },
+      "requires": [
+        {
+          "type": "has_item",
+          "item": "linen_bolt",
+          "takeable": true
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "lose_item",
+          "item": "linen_bolt"
+        },
+        {
+          "type": "change_money",
+          "amount": 10
+        },
+        {
+          "type": "say",
+          "text": "她展开布边，看过没有霉斑的部分，把钱放进你手中。",
+          "texts": {
+            "en": "She unrolls the edge, checks the part free of mildew and puts the coins in your hand."
+          }
+        }
+      ]
+    },
+    {
+      "label": "保留材料",
+      "labels": {
+        "en": "Keep your materials"
+      },
+      "outcomes": [
+        {
+          "type": "say",
+          "text": "你收好材料，她低头继续缝补那条旧腰带。",
+          "texts": {
+            "en": "You put your materials away, and she bends back over the old belt."
+          }
+        }
+      ]
+    }
+  ]
+}

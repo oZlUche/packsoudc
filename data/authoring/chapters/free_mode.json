@@ -497,6 +497,12 @@
   "carry_rule": "standard",
   "encumbrance_rules": "standard",
   "node_rules": "standard",
+  "chapter_events": {
+    "event": {
+      "event_cracked_foundry": 1,
+      "event_ward_recess": 1
+    }
+  },
   "economy_rules": "standard",
   "order": 3,
   "requires_unlock": "prologue3_done",

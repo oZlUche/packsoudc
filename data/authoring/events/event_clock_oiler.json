@@ -1,0 +1,63 @@
+{
+  "id": "event_clock_oiler",
+  "title": "停转的油槽",
+  "titles": {
+    "en": "The Stalled Oil Trough"
+  },
+  "text": "供油臂停在半空，传动机构夹着碎石。检修槽里还留着可用的活动零件，侧边固定架上也有能回收的材料。拆开其中一侧，失去支撑的余物便会沉入油泥。",
+  "texts": {
+    "en": "The oiling arm hangs frozen in mid-air, its gears jammed with grit. Usable moving parts are still in the service trough, and the side brackets hold material worth salvaging. Take one side apart and whatever loses its support will sink into the sludge."
+  },
+  "options": [
+    {
+      "label": "拆取传动零件（倒计时 −{pass_time_actions}，机关零件 ×1）",
+      "labels": {
+        "en": "Strip the drive parts (Countdown −{pass_time_actions}, mechanism part ×1)"
+      },
+      "outcomes": [
+        {
+          "type": "pass_time"
+        },
+        {
+          "type": "give_pool_item",
+          "pool": "mechanism_parts"
+        },
+        {
+          "type": "say",
+          "text": "轴心松开，你取出{reward_name}，支架缓缓伏了下去。",
+          "texts": {
+            "en": "The axle comes loose. You take the {reward_name}, and the bracket slowly sags."
+          }
+        }
+      ]
+    },
+    {
+      "label": "回收固定架（倒计时 −{pass_time_actions}，固定件材料 ×1）",
+      "labels": {
+        "en": "Salvage the brackets (Countdown −{pass_time_actions}, fasteners ×1)"
+      },
+      "outcomes": [
+        {
+          "type": "pass_time"
+        },
+        {
+          "type": "give_pool_item",
+          "pool": "mechanism_fasteners"
+        },
+        {
+          "type": "say",
+          "text": "你取下{reward_name}，余下的零件随支架沉进油泥。",
+          "texts": {
+            "en": "You take the {reward_name}; the remaining parts sink into the sludge with the bracket."
+          }
+        }
+      ]
+    },
+    {
+      "label": "不碰机关",
+      "labels": {
+        "en": "Leave the mechanism alone"
+      }
+    }
+  ]
+}

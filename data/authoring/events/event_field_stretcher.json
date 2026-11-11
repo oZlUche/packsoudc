@@ -1,0 +1,79 @@
+{
+  "id": "event_field_stretcher",
+  "title": "倒墙后的担架",
+  "titles": {
+    "en": "Stretchers Behind the Fallen Wall"
+  },
+  "text": "两名随军医工把担架架在倒墙后。水壶在小炉上冒着热气，绷带按干净和用过分成两堆。“坐下就慢慢处理；若赶时间，我们还有一份现成的。”",
+  "texts": {
+    "en": "Two Legion orderlies have set their stretchers up behind a fallen wall. A kettle steams on a small stove; the bandages are sorted into clean and used. \"Sit down and we'll do it properly. If you're in a hurry, we have one dressing ready.\""
+  },
+  "options": [
+    {
+      "label": "坐下处理伤处（倒计时 −{pass_time_actions}，体力 +{restore_vitality_amount}）",
+      "labels": {
+        "en": "Sit and get treated (Countdown −{pass_time_actions}, Vitality +{restore_vitality_amount})"
+      },
+      "requires": [
+        {
+          "type": "vitality_not_full"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "pass_time",
+          "actions": 2
+        },
+        {
+          "type": "restore_vitality",
+          "amount": 1
+        },
+        {
+          "type": "say",
+          "text": "绷带重新收紧，你起身时脚下稳了些。炉里的水已经烧开。",
+          "texts": {
+            "en": "The bandages are pulled tight again, and you stand a little steadier. The water on the stove has come to the boil."
+          }
+        }
+      ]
+    },
+    {
+      "label": "付钱快速处理（{change_money_amount|abs}，体力 +{restore_vitality_amount}）",
+      "labels": {
+        "en": "Pay for a quick dressing ({change_money_amount|abs}, Vitality +{restore_vitality_amount})"
+      },
+      "requires": [
+        {
+          "type": "vitality_not_full"
+        },
+        {
+          "type": "can_afford",
+          "amount": 15
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "change_money",
+          "amount": -15
+        },
+        {
+          "type": "restore_vitality",
+          "amount": 1
+        },
+        {
+          "type": "say",
+          "text": "医工拆开预备好的敷料，很快处理完伤处。",
+          "texts": {
+            "en": "An orderly unwraps the ready dressing and is done in moments."
+          }
+        }
+      ]
+    },
+    {
+      "label": "继续赶路",
+      "labels": {
+        "en": "Keep moving"
+      }
+    }
+  ]
+}
