@@ -1,0 +1,83 @@
+﻿manifest_version,old_recipe_id,inputs,material_threshold,funds,smith_level,tech,output,output_name,output_rarity,disposition,new_entry,new_recipe_id,unlock,old_id_compat,evidence
+1,anvil_barbarian_scimitar,scimitar×1,bone≥绿,60,1,,barbarian_scimitar,蛮族大弯刀,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_berserker_twin_axes,bone_twin_axes×1,metal≥蓝,120,2,,berserker_twin_axes,狂战双斧,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_berserker_twin_axes_2,steel_twin_axes×1,bone≥蓝,120,2,,berserker_twin_axes,狂战双斧,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bloodbone_spike,bonefang_dagger×1,metal≥蓝,120,2,,bloodbone_spike,噬血骨刺,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bloodbone_spike_2,steel_stiletto×1,bone≥蓝,120,2,,bloodbone_spike,噬血骨刺,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bloodletter,cleaver×1,bone≥绿,60,1,,bloodletter,放血刀,蓝,保留其他来源并停用；另加合成候选,相邻合成：cleaver + beast_fang；原随机来源,fuse_bloodletter,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bloodoath_axe,bone_battle_axe×1,metal≥蓝,120,2,,bloodoath_axe,血誓斧,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bloodoath_axe_2,steel_axe×1,bone≥蓝,120,2,,bloodoath_axe,血誓斧,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bloodoath_scimitar,barbarian_scimitar×1,bone≥蓝,120,2,,bloodoath_scimitar,血誓弯刀,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bloodthirst_twin_blades,bonefang_twin_blades×1,metal≥蓝,120,2,,bloodthirst_twin_blades,噬血双刀,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bloodthirst_twin_blades_2,steel_twin_blades×1,bone≥蓝,120,2,,bloodthirst_twin_blades,噬血双刀,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bone_battle_axe,battle_axe×1,bone≥绿,60,1,,bone_battle_axe,兽骨战斧,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bone_broadsword,broadsword×1,bone≥绿,60,1,,bone_broadsword,骨柄阔剑,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bone_great_axe,great_axe×1,bone≥绿,60,1,,bone_great_axe,兽骨巨斧,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bone_great_club,great_club×1,bone≥绿,60,1,,bone_great_club,兽骨大棒,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bone_greatsword,greatsword×1,bone≥绿,60,1,,bone_greatsword,骨柄双手剑,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bone_pole_axe,pole_axe×1,bone≥绿,60,1,,bone_pole_axe,骨柄长柄斧,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bone_spear,short_spear×1,bone≥绿,60,1,,bone_spear,骨矛,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bone_twin_axes,twin_axes×1,bone≥绿,60,1,,bone_twin_axes,兽骨双斧,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bonefang_dagger,quenched_dagger×1,bone≥绿,60,1,,bonefang_dagger,骨牙匕首,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bonefang_twin_blades,twin_blades×1,bone≥绿,60,1,,bonefang_twin_blades,骨牙双刀,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_boneiron_club,bone_great_club×1,metal≥蓝,120,2,,boneiron_club,骨铁大棒,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_boneiron_club_2,spiked_club×1,bone≥蓝,120,2,,boneiron_club,骨铁大棒,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bonesteel_broadsword,bone_broadsword×1,metal≥蓝,120,2,,bonesteel_broadsword,骨钢阔剑,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bonesteel_broadsword_2,steel_broadsword×1,bone≥蓝,120,2,,bonesteel_broadsword,骨钢阔剑,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bonesteel_greatsword,bone_greatsword×1,metal≥蓝,120,2,,bonesteel_greatsword,骨钢双手剑,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bonesteel_greatsword_2,steel_greatsword×1,bone≥蓝,120,2,,bonesteel_greatsword,骨钢双手剑,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bonesteel_spear,bone_spear×1,metal≥蓝,120,2,,bonesteel_spear,骨钢矛,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_bonesteel_spear_2,iron_spear×1,bone≥蓝,120,2,,bonesteel_spear,骨钢矛,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_composite_bow,longbow×1,bone≥蓝,120,2,,composite_bow,复合弓,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_composite_bow_2,horn_bow×1,wood≥蓝,120,2,,composite_bow,复合弓,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_dragonbone_siege_spear,siege_spear×1,bone≥蓝,120,2,,dragonbone_siege_spear,龙骨破城矛,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 配方产出
+1,anvil_dragoon_lance,steel_spear×1,wood≥蓝,120,2,,dragoon_lance,龙骑枪,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_dragoon_lance_2,hardwood_spear×1,metal≥蓝,120,2,,dragoon_lance,龙骑枪,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_execution_blade,decapitator_blade×1,bone≥蓝,120,2,,execution_blade,处刑巨刃,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 配方产出
+1,anvil_executioner_axe,bone_great_axe×1,metal≥蓝,120,2,,executioner_axe,刽子手巨斧,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_executioner_axe_2,steel_great_axe×1,bone≥蓝,120,2,,executioner_axe,刽子手巨斧,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_flame_berserker_twin_axes,berserker_twin_axes×1,crystal:fire≥紫,200,3,,flame_berserker_twin_axes,焰纹狂战双斧,金,改为材料打造,基地铁匠铺,forge_flame_berserker_twin_axes,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_flame_bonesteel_broadsword,bonesteel_broadsword×1,crystal:fire≥紫,200,3,,flame_bonesteel_broadsword,焰纹骨钢阔剑,金,改为材料打造,基地铁匠铺,forge_flame_bonesteel_broadsword,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_flame_bonesteel_spear,bonesteel_spear×1,crystal:fire≥紫,200,3,,flame_bonesteel_spear,焰纹骨钢矛,金,改为材料打造,基地铁匠铺,forge_flame_bonesteel_spear,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_flame_composite_bow,composite_bow×1,crystal:fire≥紫,200,3,,flame_composite_bow,焰纹复合弓,金,改为材料打造,基地铁匠铺,forge_flame_composite_bow,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_flame_execution_blade,execution_blade×1,crystal:fire≥紫,200,3,,flame_execution_blade,焰纹处刑巨刃,金,改为材料打造,基地铁匠铺,forge_flame_execution_blade,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_flame_executioner_axe,executioner_axe×1,crystal:fire≥紫,200,3,,flame_executioner_axe,焰纹刽子手巨斧,金,改为材料打造,基地铁匠铺,forge_flame_executioner_axe,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_flame_fang,bloodbone_spike×1,crystal:fire≥紫,200,3,,flame_fang,焰牙,金,替换合成（局内限定）,相邻合成：bloodbone_spike + fire_crystal,fuse_flame_fang,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_flame_meteor_maul,meteor_maul×1,crystal:fire≥紫,200,3,,flame_meteor_maul,焰纹陨铁大锤,金,改为材料打造,基地铁匠铺,forge_flame_meteor_maul,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_frost_bloodoath_axe,bloodoath_axe×1,crystal:frost≥紫,200,3,,frost_bloodoath_axe,霜纹血誓斧,金,改为材料打造,基地铁匠铺,forge_frost_bloodoath_axe,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_frost_bonesteel_greatsword,bonesteel_greatsword×1,crystal:frost≥紫,200,3,,frost_bonesteel_greatsword,霜纹骨钢双手剑,金,改为材料打造,基地铁匠铺,forge_frost_bonesteel_greatsword,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_frost_dragoon_lance,dragoon_lance×1,crystal:frost≥紫,200,3,,frost_dragoon_lance,霜纹龙骑枪,金,改为材料打造,基地铁匠铺,forge_frost_dragoon_lance,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_frost_fang,bloodbone_spike×1,crystal:frost≥紫,200,3,,frost_fang,霜牙,金,替换合成（局内限定）,相邻合成：bloodbone_spike + ice_crystal,fuse_frost_fang,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_granite_maul,stone_maul×1,stone≥绿,60,1,,granite_maul,花岗石锤,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_halberd,pole_axe×1,metal≥绿,60,1,,halberd,戟,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_hardwood_spear,long_spear×1,wood≥绿,60,1,,hardwood_spear,硬木长枪,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_heavy_crossbow,steel_crossbow×1,wood≥蓝,120,2,,heavy_crossbow,重弩,紫,保留其他来源并停用；另加合成候选,相邻合成：steel_crossbow + hardwood_plank；原随机来源,fuse_heavy_crossbow,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_heavy_crossbow_2,steel_crossbow×1,bone≥蓝,120,2,,heavy_crossbow,重弩,紫,保留其他来源并停用；另加合成候选,相邻合成：steel_crossbow + hardwood_plank；原随机来源,fuse_heavy_crossbow,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_horn_bow,shortbow×1,bone≥绿,60,1,,horn_bow,角弓,蓝,保留其他来源并停用；另加合成候选,相邻合成：shortbow + antler；原随机来源,fuse_horn_bow,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_horse_halberd,halberd×1,bone≥蓝,120,2,,horse_halberd,斩马戟,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_horse_halberd_2,bone_pole_axe×1,metal≥蓝,120,2,,horse_halberd,斩马戟,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_imperial_sword,mithril_sword×1,metal≥金,200,3,,imperial_sword,帝国佩剑,金,改为材料打造,基地铁匠铺,forge_imperial_sword,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_iron_spear,short_spear×1,metal≥绿,60,1,,iron_spear,铁矛,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_ironwood_broadsword,broadsword×1,wood≥绿,60,1,,ironwood_broadsword,铁木阔剑,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_ironwood_steel_sword,ironwood_broadsword×1,metal≥蓝,120,2,,ironwood_steel_sword,铁木钢剑,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_ironwood_steel_sword_2,steel_broadsword×1,wood≥蓝,120,2,,ironwood_steel_sword,铁木钢剑,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_longbow,shortbow×1,wood≥绿,60,1,,longbow,长弓,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_meteor_maul,siege_hammer×1,metal≥紫,120,2,,meteor_maul,陨铁大锤,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_meteor_maul_2,granite_maul×1,metal≥蓝,120,2,,meteor_maul,陨铁大锤,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_siege_hammer,warhammer×1,metal≥绿,60,1,,siege_hammer,破城锤,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_spiked_club,great_club×1,metal≥绿,60,1,,spiked_club,钉头大棒,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_axe,battle_axe×1,metal≥绿,60,1,,steel_axe,钢斧,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_bow,longbow×1,metal≥蓝,120,2,,steel_bow,钢弓,紫,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_broadsword,broadsword×1,metal≥绿,60,1,,steel_broadsword,钢阔剑,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_crossbow,light_crossbow×1,metal≥绿,60,1,,steel_crossbow,钢弩,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_great_axe,great_axe×1,metal≥绿,60,1,,steel_great_axe,钢巨斧,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_greatsword,greatsword×1,metal≥绿,60,1,,steel_greatsword,钢双手剑,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_spear,long_spear×1,metal≥绿,60,1,,steel_spear,钢枪,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_stiletto,quenched_dagger×1,metal≥绿,60,1,,steel_stiletto,钢刺,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_twin_axes,twin_axes×1,metal≥绿,60,1,,steel_twin_axes,钢双斧,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_steel_twin_blades,twin_blades×1,metal≥绿,60,1,,steel_twin_blades,钢双刀,蓝,保留其他来源并停用,原随机来源,,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,搜索池; 局内商店池; 集市兵器摊(≥3级); 集市散货摊; 敌人携带池(武器档≤3); 配方产出
+1,anvil_thunder_bloodthirst_twin_blades,bloodthirst_twin_blades×1,crystal:lightning≥紫,200,3,,thunder_bloodthirst_twin_blades,雷纹噬血双刀,金,改为材料打造,基地铁匠铺,forge_thunder_bloodthirst_twin_blades,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_thunder_boneiron_club,boneiron_club×1,crystal:lightning≥紫,200,3,,thunder_boneiron_club,雷纹骨铁大棒,金,改为材料打造,基地铁匠铺,forge_thunder_boneiron_club,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_thunder_heavy_crossbow,heavy_crossbow×1,crystal:lightning≥紫,200,3,,thunder_heavy_crossbow,雷纹重弩,金,替换合成（局内限定）,相邻合成：heavy_crossbow + lightning_crystal,fuse_thunder_heavy_crossbow,,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_thunder_horse_halberd,horse_halberd×1,crystal:lightning≥紫,200,3,,thunder_horse_halberd,雷纹斩马戟,金,改为材料打造,基地铁匠铺,forge_thunder_horse_halberd,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
+1,anvil_thunder_siege_spear,dragonbone_siege_spear×1,crystal:lightning≥紫,200,3,,thunder_siege_spear,雷纹破城矛,金,改为材料打造,基地铁匠铺,forge_thunder_siege_spear,铁匠铺 3 级,旧 recipe_id 不再被任何入口读；武器 id、图、存档实例不变,配方产出
