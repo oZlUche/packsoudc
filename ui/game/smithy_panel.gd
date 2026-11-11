@@ -89,6 +89,7 @@ func setup(p_flow: GameFlow, p_font: Font) -> void:
 	compare = UpgradeCompare.new()
 	compare.anchors = func() -> Array: return [cell(_open)]     # 指针在选中那张配方格上才显示，不再盖住格子区（UI设计 复核 11-11）
 	compare.resized.connect(_place_compare)
+	compare.visibility_changed.connect(_place_compare)     # 摆上时还藏着（指针不在选中格上），显示出来那一刻再摆
 	_pane.resized.connect(_place_compare)
 	_stage.add_child(compare)
 	npc = NpcBadge.make(NpcDef.BLACKSMITH, flow.meta, flow.items)     # 282

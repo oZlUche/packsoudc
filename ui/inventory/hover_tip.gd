@@ -946,6 +946,11 @@ func is_pinned() -> bool:
 	return _panel.visible and _panel.pinned
 
 
+## 主窗开着、说的是哪个视图里的道具（没开 = null）
+func showing_for() -> ContainerView:
+	return _for_view if _panel.visible and _panel.item_mode else null
+
+
 ## 开着的窗（主窗 + 子窗），测试看
 func windows() -> Array[TipWindow]:
 	var out: Array[TipWindow] = []
