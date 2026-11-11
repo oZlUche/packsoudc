@@ -415,6 +415,8 @@ var _faith_parts: Array[Control] = []
 var _views: Array[ContainerView] = []
 ## 可选：`func(view, uid) -> bool`，假就不显示（容器屏：没亮出来的不说）
 var can_show: Callable = Callable()
+## 可选：`func(view, uid) -> bool`，真就**停留时**不弹（右键钉窗 / 右键快捷动作不受影响）
+var hover_quiet: Callable = Callable()
 var _uid: int = -1
 var _for_view: ContainerView = null
 ## 265：主窗现在说的是哪一种道具（丝带切的就是它的收藏）；不是道具窗 = null
@@ -1215,6 +1217,8 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 		_on_source = _panel.visible and view == _for_view and uid == _uid     # 钉住了：只记还在不在源上
 		return
 	var inst := _shown_item(view, uid)
+	if inst != null and hover_quiet.is_valid() and bool(hover_quiet.call(view, uid)):
+		inst = null
 	if not _panel.visible:
 		if inst != null:
 			_show_for(view, uid, inst, mm.position)
