@@ -63,7 +63,7 @@ func total_int_of(key: StringName, fallback: int = 0) -> int:
 ## 键名列表，按字典序 —— 顺序稳定，便于快照比对与测试。
 func keys() -> Array:
 	var k := _values.keys()
-	k.sort()
+	Ids.sort(k)     # 303：StringName 键的 sort 按指针，不是字典序
 	return k
 
 

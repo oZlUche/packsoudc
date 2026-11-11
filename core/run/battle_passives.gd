@@ -62,12 +62,12 @@ static func of(run: RunState) -> Array[PassiveNote]:
 	if not bonus.is_empty() or not mult.is_empty():
 		var mods2: Array = []
 		var mkeys := mult.keys()
-		mkeys.sort()
+		Ids.sort(mkeys)     # 303：属性名是 StringName，sort 按指针
 		for k in mkeys:
 			if float(mult[k]) != 0.0:
 				mods2.append(StatModifier.make(StringName(String(k)), StatModifier.Mode.MULT, float(mult[k])))
 		var keys := bonus.keys()
-		keys.sort()
+		Ids.sort(keys)
 		for k in keys:
 			if float(bonus[k]) == 0.0:
 				continue
