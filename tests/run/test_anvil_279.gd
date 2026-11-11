@@ -128,6 +128,12 @@ static func frame_camp_anvil(t: TestCase, root: Window) -> void:
 	t.check(not col.material_warned(), "配上了：红框收")
 	t.check(col.preview() != null and col.preview().quality() == 1, "预览 1 档")
 	t.check(col.compare.has_pair() and col.compare.texts()[1].contains(Names.of(col.preview().def)) and not col.compare.marked_lines().is_empty(), "298：砧下面并排两窗，右窗是出件、有改了的行")
+	var tip: HoverTip = screen._tip
+	col.compare.follow(0.016, col._weapon_view.get_global_rect().get_center())
+	t.check(col.compare.visible, "指针在砧的武器上：两窗显示")
+	t.check(not tip.can_show.call(col._weapon_view, sword.uid), "两窗显示时：砧上的武器不弹自己的悬浮窗")
+	col.compare.follow(0.5, Vector2(-50, -50))
+	t.check(not col.compare.visible and tip.can_show.call(col._weapon_view, sword.uid), "指针离开：两窗收，武器的悬浮窗照旧")
 	t.check(not col.strike_key.disabled, "两件配上：锤键亮")
 	var made := col.strike()
 	t.check(made != null and col.out.has_item(made.uid), "锤：出件进出件槽")

@@ -133,6 +133,16 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 		view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(view.inventory, uid))
 		view.actions_for = func(uid: int) -> Array:
 			return [ItemActions.make(&"quick", UiText.t("act.take" if view == _out_view else "act.take_back"), func(): take_back(view.inventory, uid))]
+	if tip != null:     # 两窗显示时砧上三个槽不弹自己的悬浮窗：两扇说的是同一把（UI设计 复核 v5.71）
+		var slots: Array[ContainerView] = [_weapon_view, _material_view, _out_view]
+		var prev := tip.can_show
+		tip.can_show = func(v: ContainerView, uid: int) -> bool:
+			if compare.visible and v in slots:
+				return false
+			return not prev.is_valid() or bool(prev.call(v, uid))
+		compare.visibility_changed.connect(func():
+			if compare.visible and tip.showing_for() in slots and not tip.is_pinned():
+				tip.hide_tip())
 	for v in [_weapon_view, _material_view, _out_view]:
 		if drag != null:
 			drag.register_view(v)
