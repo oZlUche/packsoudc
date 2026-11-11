@@ -88,7 +88,7 @@ func loss_cost_of(type: StringName) -> int:
 
 static func _weighted(table: Dictionary, rng: RandomNumberGenerator, fallback: StringName) -> StringName:
 	var keys: Array = table.keys()
-	keys.sort()   # 顺序稳定，同种子同结果
+	Ids.sort(keys)   # 顺序稳定，同种子同结果
 	var weights: Array[float] = []
 	for k in keys:
 		weights.append(maxf(0.0, float(table[k])))

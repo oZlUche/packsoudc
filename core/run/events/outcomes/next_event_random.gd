@@ -10,7 +10,7 @@ func apply(ctx: EventContext) -> void:
 	if events.is_empty():
 		return
 	var keys: Array = events.keys()
-	keys.sort()
+	Ids.sort(keys)
 	var total := 0.0
 	for k in keys:
 		total += maxf(0.0, float(events[k]))

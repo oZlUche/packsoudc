@@ -58,7 +58,7 @@ static func material_picks(meta: MetaState, recipe: SmithRecipeDef) -> Dictionar
 	if recipe == null:
 		return out
 	var mats: Array = recipe.material_inputs.keys()
-	mats.sort()
+	Ids.sort(mats)
 	var used := {}
 	for m in mats:
 		var best: ItemInstance = null

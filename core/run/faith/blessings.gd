@@ -60,7 +60,7 @@ static func derive_all(db: ItemDatabase, faiths: Dictionary) -> int:
 	var n := 0
 	var bases: Array = db.all_ids().duplicate()
 	var fids: Array = faiths.keys()
-	fids.sort()
+	Ids.sort(fids)
 	for id in bases:
 		var def := db.get_def(id)
 		for fid in fids:
