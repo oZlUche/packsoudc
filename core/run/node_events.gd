@@ -73,6 +73,9 @@ var wallet: Wallet = null
 var meta: MetaState = null
 var economy: EconomyRules = null
 var difficulty: int = 0
+## 事件方案 2026-11-11 §8.4：这一章的 id（主题奖励池按章节筛候选）；池本身第一次用时读盘（[method RewardPool.load_all]）
+var chapter_id: StringName = &""
+var reward_pools: Dictionary = {}
 var scale_id: StringName = &""
 ## 285：这一章核心 BOSS 必掉的券（[member ChapterDef.boss_ticket]）；空 = 不掉
 var boss_ticket: StringName = &""
@@ -327,6 +330,7 @@ func _event_for(node: MapNode, type: StringName) -> EventDef:
 func set_pending(node: MapNode, def: EventDef, type: StringName, extra: Dictionary = {}) -> void:
 	pending = {"node": node.id, "event": String(def.id), "type": String(type)}
 	pending.merge(extra)
+	EventRewards.freeze_all(_event_ctx(node), def)     # 事件方案 2026-11-11：池奖励这时就抽好、冻结，预览和结算读同一份
 	event_pending.emit(node, def)
 
 
@@ -491,6 +495,11 @@ func _event_ctx(node: MapNode) -> EventContext:
 	ctx.storage = storage
 	ctx.meta = meta
 	ctx.hooks = hooks
+	if reward_pools.is_empty():
+		reward_pools = RewardPool.load_all()
+	ctx.reward_pools = reward_pools
+	ctx.chapter = chapter_id
+	ctx.difficulty_level = difficulty_def.level if difficulty_def != null else 0
 	if travel != null and travel.erosion != null:
 		var field := travel.erosion
 		ctx.erosion_depth = func(n: MapNode) -> int: return field.depth_of(n)

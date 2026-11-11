@@ -996,6 +996,7 @@ func _wire_events() -> void:
 	events.bag_pool = bag_pool
 	events.boss_ticket = chapter.boss_ticket if chapter != null else &""     # 285
 	events.difficulty_def = difficulty
+	events.chapter_id = chapter.id if chapter != null else &""     # 事件方案 2026-11-11：主题奖励池按章节筛
 	events.wallet = wallet
 	events.economy = economy
 	events.difficulty = chapter.difficulty

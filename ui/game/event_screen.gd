@@ -53,7 +53,7 @@ func _open_options() -> void:
 			continue
 		var idx := i
 		# 104：选项文字里的数写成 {change_money_amount|abs} 这类，取这个选项自己的结果 / 条件的字段（TextParams）；193 加 {rest_total}
-		var b := _option_button(TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)), func(): choose(idx))
+		var b := _option_button(TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt, _node)), func(): choose(idx))
 		b.disabled = not ok
 		EventCostIcons.attach(b, opt)     # 157：选项前一排代价图标（只画会花掉什么）
 		_option_btns.append(b)
@@ -72,8 +72,10 @@ func _open_options() -> void:
 func _open_result(payload: Dictionary) -> void:
 	var detail: Dictionary = payload.get("detail", {})
 	var lines: Array[String] = []
+	# 事件方案 2026-11-11：结果里的 `{item:…}`（祭坛「{item:knife}断了」、池奖励的名字）按稀有度上色，以前原样露出记号
+	var tctx := TextTemplate.context_for(flow.run, _node) if flow.run != null else {"_items": flow.items}
 	for text in detail.get("log", []):
-		lines.append(CoinLabel.inline_bbcode(String(text), UiTheme.sz(UiTheme.RICH_BODY_SIZE)))     # 钱画金币（撤离费付不起那句）
+		lines.append(CoinLabel.inline_bbcode(TextTemplate.render(String(text), tctx), UiTheme.sz(UiTheme.RICH_BODY_SIZE)))     # 钱画金币（撤离费付不起那句）
 	# 157：给的东西画成下面的「收获」行（还在地上的那几件，能直接拖进棋盘）；认不出是哪几件（老存档）才写成一行字
 	var harvest := _harvest_uids(detail)
 	var names: Array[String] = []

@@ -1,0 +1,25 @@
+{
+  "id": "food_supply",
+  "display_name": "食物补给",
+  "entries": [
+    {
+      "item": "ration",
+      "weight": 4.0
+    },
+    {
+      "item": "smoked_fish",
+      "weight": 3.0
+    },
+    {
+      "item": "salted_meat",
+      "weight": 2.0,
+      "deep_mult": 2.0
+    },
+    {
+      "item": "field_rations",
+      "deep_mult": 3.0,
+      "hard_mult": 1.2,
+      "min_depth": 0.3
+    }
+  ]
+}

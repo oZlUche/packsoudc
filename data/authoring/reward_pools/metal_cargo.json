@@ -1,0 +1,31 @@
+{
+  "id": "metal_cargo",
+  "display_name": "金属货",
+  "entries": [
+    {
+      "item": "copper_ingot",
+      "weight": 4.0
+    },
+    {
+      "item": "iron_ore",
+      "weight": 3.0
+    },
+    {
+      "item": "nail_keg",
+      "weight": 2.0
+    },
+    {
+      "item": "steel_ingot",
+      "deep_mult": 3.0,
+      "hard_mult": 1.2,
+      "min_depth": 0.3
+    },
+    {
+      "item": "silver_ingot",
+      "weight": 0.5,
+      "deep_mult": 3.0,
+      "hard_mult": 1.2,
+      "min_depth": 0.5
+    }
+  ]
+}

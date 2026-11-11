@@ -1585,7 +1585,7 @@ func outcome_title(state: RunState, node: MapNode, outcome: StringName) -> Strin
 		return text
 	var ctx := TextTemplate.context_for(state, node)
 	if _chosen_option != null:
-		ctx = TextTemplate.option_context(ctx, _chosen_option)
+		ctx = TextTemplate.option_context(ctx, _chosen_option, node)
 	return TextTemplate.plain(text, ctx)
 
 

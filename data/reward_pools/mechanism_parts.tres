@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_b215v"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_simke"]
+
+[sub_resource type="Resource" id="Resource_blype"]
+script = ExtResource("1_b215v")
+item = &"gear_arm"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_xy13k"]
+script = ExtResource("1_b215v")
+item = &"brass_gear"
+weight = 2.0
+deep_mult = 1.5
+
+[sub_resource type="Resource" id="Resource_5sw6o"]
+script = ExtResource("1_b215v")
+item = &"mainspring"
+weight = 2.0
+deep_mult = 2.0
+hard_mult = 1.2
+
+[sub_resource type="Resource" id="Resource_nwi3c"]
+script = ExtResource("1_b215v")
+item = &"steam_vent"
+deep_mult = 2.0
+hard_mult = 1.2
+min_depth = 0.3
+
+[resource]
+script = ExtResource("2_simke")
+id = &"mechanism_parts"
+display_name = "机关零件"
+entries = Array[ExtResource("1_b215v")]([SubResource("Resource_blype"), SubResource("Resource_xy13k"), SubResource("Resource_5sw6o"), SubResource("Resource_nwi3c")])

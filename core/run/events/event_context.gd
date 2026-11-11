@@ -28,6 +28,10 @@ var erosion_depth: Callable = Callable()
 ## 一局的能力（101 第 3 刀）：地图 buff 的给 / 去 / 查、buff 标签、段位、信仰阶与 id、赐福。
 ## 条件与后果经它问一局；默认那一份全是「没人接」的默认值，所以不接也能跑
 var hooks: RunHooks = RunHooks.new()
+## 事件方案 2026-11-11 §8.4：主题奖励池（id → [RewardPool]）与抽它时看的章节、难度档（[EventRewards]）
+var reward_pools: Dictionary = {}
+var chapter: StringName = &""
+var difficulty_level: int = 0
 
 ## 后果立的旗子，NodeEvents 看着走
 var open_search: bool = false
@@ -66,6 +70,8 @@ var items_given: Array[StringName] = []
 ## 160 补一：放进腰带的随身技能（「烟雾弹 ×1」，给 detail 与日志）
 var belts_given: Array[String] = []
 var items_lost: Array[String] = []
+## 这次从池里发的：奖励 key → 道具 id（[Say] 的 `{reward_name}` 用）
+var reward_names: Dictionary = {}
 var restored: int = 0
 var spent: int = 0
 var money: int = 0
@@ -79,15 +85,21 @@ func depth_at(n: MapNode) -> int:
 	return int(erosion_depth.call(n)) if erosion_depth.is_valid() and n != null else -1
 
 
-## 棋盘 / 地上某道具有几件（id 为空 = 任何道具；tag 给了就只算带这个标签的）。[param where]：0 棋盘、1 地上、2 两处
-func count_item(id: StringName, where: int = 2, tag: StringName = &"") -> int:
+## 棋盘 / 地上某道具有几件（id 为空 = 任何道具；tag 给了就只算带这个标签的）。[param where]：0 棋盘、1 地上、2 两处。
+## [param takeable_only]：只算事件拿得走的（[method takeable]）—— 「有」和「失去」得是同一批，不然条件过了却扣不掉、奖励照发
+func count_item(id: StringName, where: int = 2, tag: StringName = &"", takeable_only: bool = false) -> int:
 	var n := 0
 	for c in containers(where):
 		for inst in (c as ItemContainer).items():
 			var def := (inst as ItemInstance).def
-			if (id == &"" or def.id == id) and (tag == &"" or def.tags.has(tag)):
+			if (id == &"" or def.id == id) and (tag == &"" or def.tags.has(tag)) and (not takeable_only or takeable(inst)):
 				n += 1
 	return n
+
+
+## 事件方案 2026-11-11 §2.6：事件能不能把这件拿走 —— 玩家锁定的（230：锁住的不献祭）、独一的（281）不拿，包默认不拿（包没了里面全散）
+static func takeable(inst: ItemInstance, include_bags: bool = false) -> bool:
+	return inst != null and not inst.is_locked_by_player() and not inst.def.has_tag(&"unique") and (include_bags or not inst.def.is_bag)
 
 
 func containers(where: int) -> Array:

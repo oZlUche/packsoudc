@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_mjwnp"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_wf7jw"]
+
+[sub_resource type="Resource" id="Resource_riqjs"]
+script = ExtResource("1_mjwnp")
+item = &"rope_coil"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_xccv1"]
+script = ExtResource("1_mjwnp")
+item = &"linen_bolt"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_yjibi"]
+script = ExtResource("1_mjwnp")
+item = &"wooden_stick"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_orue1"]
+script = ExtResource("1_mjwnp")
+item = &"pine_resin"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_1dcri"]
+script = ExtResource("1_mjwnp")
+item = &"wool_cloth"
+
+[resource]
+script = ExtResource("2_wf7jw")
+id = &"light_salvage"
+display_name = "轻便材料"
+entries = Array[ExtResource("1_mjwnp")]([SubResource("Resource_riqjs"), SubResource("Resource_xccv1"), SubResource("Resource_yjibi"), SubResource("Resource_orue1"), SubResource("Resource_1dcri")])

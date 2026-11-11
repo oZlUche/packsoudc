@@ -1,0 +1,21 @@
+{
+  "id": "mechanism_fasteners",
+  "display_name": "固定件材料",
+  "entries": [
+    {
+      "item": "nail_keg",
+      "weight": 4.0
+    },
+    {
+      "item": "rivet_box",
+      "weight": 2.0,
+      "deep_mult": 1.5
+    },
+    {
+      "item": "steel_ingot",
+      "deep_mult": 2.0,
+      "hard_mult": 1.2,
+      "min_depth": 0.3
+    }
+  ]
+}

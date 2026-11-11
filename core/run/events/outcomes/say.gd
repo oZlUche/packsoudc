@@ -8,8 +8,13 @@ extends EventOutcome
 
 
 func apply(ctx: EventContext) -> void:
-	if text != "":
-		ctx.log.append(Names.pick(texts, text))
+	if text == "":
+		return
+	var line := Names.pick(texts, text)
+	# 事件方案 2026-11-11：`{reward_name}` 换成这次从池里发的那件的 `{item:…}`（最后一份），显示时和别的 `{item:…}` 一起上色
+	for k in ctx.reward_names:
+		line = line.replace("{reward_name}", "{item:%s}" % ctx.reward_names[k])
+	ctx.log.append(line)
 
 
 func describe() -> String:

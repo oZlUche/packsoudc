@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_lg3lc"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_xeu53"]
+
+[sub_resource type="Resource" id="Resource_8s0ka"]
+script = ExtResource("1_lg3lc")
+item = &"whetstone"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_c3au6"]
+script = ExtResource("1_lg3lc")
+item = &"flint"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_0u18k"]
+script = ExtResource("1_lg3lc")
+item = &"pine_resin"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_8jbfa"]
+script = ExtResource("1_lg3lc")
+item = &"beeswax"
+weight = 2.0
+
+[resource]
+script = ExtResource("2_xeu53")
+id = &"workshop_supplies"
+display_name = "加工材料"
+entries = Array[ExtResource("1_lg3lc")]([SubResource("Resource_8s0ka"), SubResource("Resource_c3au6"), SubResource("Resource_0u18k"), SubResource("Resource_8jbfa")])

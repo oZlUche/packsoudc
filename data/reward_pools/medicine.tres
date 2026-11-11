@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_13o01"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_ghehl"]
+
+[sub_resource type="Resource" id="Resource_krvka"]
+script = ExtResource("1_13o01")
+item = &"bandage"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_788ec"]
+script = ExtResource("1_13o01")
+item = &"salve"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_a7xia"]
+script = ExtResource("1_13o01")
+item = &"bandage_roll"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_o1pvl"]
+script = ExtResource("1_13o01")
+item = &"antidote_kit"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_p1g6h"]
+script = ExtResource("1_13o01")
+item = &"strong_salve"
+deep_mult = 2.0
+hard_mult = 1.2
+min_depth = 0.3
+
+[sub_resource type="Resource" id="Resource_73icg"]
+script = ExtResource("1_13o01")
+item = &"styptic_dressing"
+deep_mult = 2.0
+hard_mult = 1.2
+min_depth = 0.3
+
+[resource]
+script = ExtResource("2_ghehl")
+id = &"medicine"
+display_name = "药品"
+entries = Array[ExtResource("1_13o01")]([SubResource("Resource_krvka"), SubResource("Resource_788ec"), SubResource("Resource_a7xia"), SubResource("Resource_o1pvl"), SubResource("Resource_p1g6h"), SubResource("Resource_73icg")])

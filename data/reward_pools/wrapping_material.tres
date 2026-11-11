@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RewardPool" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/reward_pool_entry.gd" id="1_jc8y5"]
+[ext_resource type="Script" path="res://core/run/events/reward_pool.gd" id="2_p1gyv"]
+
+[sub_resource type="Resource" id="Resource_nc146"]
+script = ExtResource("1_jc8y5")
+item = &"rope_coil"
+weight = 4.0
+
+[sub_resource type="Resource" id="Resource_gx3j8"]
+script = ExtResource("1_jc8y5")
+item = &"linen_bolt"
+weight = 3.0
+
+[sub_resource type="Resource" id="Resource_2jgwi"]
+script = ExtResource("1_jc8y5")
+item = &"wool_cloth"
+weight = 2.0
+deep_mult = 1.5
+
+[resource]
+script = ExtResource("2_p1gyv")
+id = &"wrapping_material"
+display_name = "绳布材料"
+entries = Array[ExtResource("1_jc8y5")]([SubResource("Resource_nc146"), SubResource("Resource_gx3j8"), SubResource("Resource_2jgwi")])
