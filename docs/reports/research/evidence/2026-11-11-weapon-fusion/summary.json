@@ -1,0 +1,158 @@
+{
+ "items_authored_loaded": 267,
+ "blessed_variants_excluded": 312,
+ "weapons": 120,
+ "weapons_by_rarity": {
+  "白": 7,
+  "绿": 20,
+  "蓝": 34,
+  "紫": 24,
+  "金": 19,
+  "红": 16
+ },
+ "recipes_total": 124,
+ "recipes_by_kind": {
+  "冶炼（铁匠铺）": 2,
+  "升级（局内砧 / 局外铁匠铺同表）": 82,
+  "打造（铁匠铺）": 17,
+  "拖上去合（局内）": 9,
+  "相邻拼接": 14
+ },
+ "recipes_output_weapon": 111,
+ "broken_refs": [],
+ "families": 18,
+ "solo_weapons": 18,
+ "weapons_role_counts": {
+  "拼接输入": 7,
+  "拖合": 2,
+  "铁匠打造成品": 14,
+  "拼接成品": 14,
+  "升级输入": 65,
+  "打造/冶炼输入": 2,
+  "无配方关系": 18,
+  "升级成品": 67
+ },
+ "outputs_with_multiple_recipes": {
+  "shortbow": [
+   "fuse_shortbow",
+   "smith_shortbow"
+  ],
+  "berserker_twin_axes": [
+   "anvil_berserker_twin_axes",
+   "anvil_berserker_twin_axes_2"
+  ],
+  "bloodbone_spike": [
+   "anvil_bloodbone_spike",
+   "anvil_bloodbone_spike_2"
+  ],
+  "bloodletter": [
+   "anvil_bloodletter",
+   "smith_bloodletter"
+  ],
+  "bloodoath_axe": [
+   "anvil_bloodoath_axe",
+   "anvil_bloodoath_axe_2"
+  ],
+  "bloodthirst_twin_blades": [
+   "anvil_bloodthirst_twin_blades",
+   "anvil_bloodthirst_twin_blades_2"
+  ],
+  "boneiron_club": [
+   "anvil_boneiron_club",
+   "anvil_boneiron_club_2"
+  ],
+  "bonesteel_broadsword": [
+   "anvil_bonesteel_broadsword",
+   "anvil_bonesteel_broadsword_2"
+  ],
+  "bonesteel_greatsword": [
+   "anvil_bonesteel_greatsword",
+   "anvil_bonesteel_greatsword_2"
+  ],
+  "bonesteel_spear": [
+   "anvil_bonesteel_spear",
+   "anvil_bonesteel_spear_2"
+  ],
+  "composite_bow": [
+   "anvil_composite_bow",
+   "anvil_composite_bow_2"
+  ],
+  "dragoon_lance": [
+   "anvil_dragoon_lance",
+   "anvil_dragoon_lance_2"
+  ],
+  "executioner_axe": [
+   "anvil_executioner_axe",
+   "anvil_executioner_axe_2"
+  ],
+  "heavy_crossbow": [
+   "anvil_heavy_crossbow",
+   "anvil_heavy_crossbow_2"
+  ],
+  "horse_halberd": [
+   "anvil_horse_halberd",
+   "anvil_horse_halberd_2"
+  ],
+  "ironwood_steel_sword": [
+   "anvil_ironwood_steel_sword",
+   "anvil_ironwood_steel_sword_2"
+  ],
+  "longbow": [
+   "anvil_longbow",
+   "smith_longbow"
+  ],
+  "meteor_maul": [
+   "anvil_meteor_maul",
+   "anvil_meteor_maul_2"
+  ]
+ },
+ "search_rarity_weights": [
+  50.0,
+  30.0,
+  15.0,
+  4.0,
+  1.0
+ ],
+ "shop_rarity_weights": [
+  40.0,
+  30.0,
+  20.0,
+  8.0,
+  2.0,
+  0.5
+ ],
+ "enemy_weapon_caps": {
+  "clockwork": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "hunters": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "standard_ruins": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ "market": {
+  "rarity_cap_per_level": [
+   0,
+   1,
+   2
+  ],
+  "loose_rarity_weights": [
+   50.0,
+   30.0,
+   14.0,
+   5.0,
+   1.0
+  ]
+ }
+}
