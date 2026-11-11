@@ -22,6 +22,7 @@ const NAMES := {
 	&"remove_map_buff": "BuffModule：去掉一个地图 buff",
 	&"has_map_buff": "BuffModule：有这个地图 buff 吗",
 	&"bracket": "HunterSystem / RunState：现在第几段位",
+	&"unique_owned": "RunState：这件独一的道具本局或局外已经有了吗（305）",
 	&"request_extract": "RunState：从这个撤离点撤离（付不起返回 false）",
 	&"jimie_ascend": "RunState：281 寂灭的献祭说完了，当场结算回基地",
 	&"relocate": "RunState：把人挪到别处（清地上、给猎手一个回合）",
@@ -105,6 +106,11 @@ func jimie_ascend() -> bool:
 
 func relocate(intent: MoveIntent) -> bool:
 	return bool(_at(&"relocate").call(intent)) if has(&"relocate") else false
+
+
+## 305：这件独一的道具哪儿已经有了（本局地上、托付、待拾取…与局外，[method UniqueItems.owned]）。没人接 = false
+func unique_owned(id: StringName) -> bool:
+	return bool(_at(&"unique_owned").call(id)) if has(&"unique_owned") else false
 
 
 func faith_tier() -> int:

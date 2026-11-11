@@ -4,7 +4,7 @@ extends EventOutcome
 
 
 func apply(ctx: EventContext) -> void:
-	if ctx != null:
+	if ctx != null and not ctx.hooks.unique_owned(JimiePath.RED):     # 305：执行时再查一遍
 		JimiePath.sacrifice(ctx.board, ctx.storage, ctx.items)     # 自己摆好了：不进 items_given（那是「持有方发到地上」的单子，进了会多发一把）
 
 

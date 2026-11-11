@@ -114,10 +114,12 @@ func _build() -> void:
 		_drag.craft_grid = _run.board
 		_drag.craft_drop = func(a: ItemInstance, b_uid: int) -> bool:
 			return bool(crafting.craft(a, b_uid)["ok"])
-		_drag.craft_note = func(a: ItemInstance, b: ItemInstance) -> String:     # 140：预览旁边那行小字
-			return crafting.note_of(a.def, b.def)
+		_drag.craft_note = func(a: ItemInstance, b: ItemInstance) -> String:     # 140：预览旁边那行小字；305：没合成过不说
+			return crafting.note_of(a.def, b.def) if crafting.known_level(a.def, b.def) == 2 else ""
+		_drag.craft_known = func(a: ItemInstance, b: ItemInstance) -> bool:     # 305：成品不认识 = 打问号
+			return crafting.known_level(a.def, b.def) > 0
 		crafting.done.connect(_on_crafted)
-		board_view.fuse_requested.connect(func(_v: InventoryView, a: int, b: int) -> void: crafting.fuse(a, b))     # 279：点锤合
+		board_view.fuse_requested.connect(func(_v: InventoryView, a: int, b: int) -> void: ask_fuse(a, b))     # 279：点锤；305：先看再合
 	# 175 第三批：铸牌压到武器上放手 = 附魔（任何格子容器里都行；铸牌已经拿在手上）
 	_drag.enchant_drop = func(token: ItemInstance, grid: GridInventory, weapon_uid: int) -> bool:
 		return InventoryService.enchant(token, null, grid, weapon_uid)
@@ -279,6 +281,36 @@ func say_no_room(inst: ItemInstance) -> void:
 
 
 ## 114：合成了：提示一句产物（装不下落在地上也说）
+## 305（改造 A，方案 §6.2 / §6.3）：点锤先开确认窗 —— 成品（不认识就是问号）、消耗哪两件、会丢掉的附魔 / 品质 / 成长；
+## 按「合成」才合（合的那一下再查一遍两件还贴着、没锁），「取消」什么都不动。拼不了 = false
+func ask_fuse(a_uid: int, b_uid: int) -> bool:
+	var crafting := CraftingModule.of(_run)
+	var pv := crafting.fuse_preview(a_uid, b_uid) if crafting != null else {}
+	if pv.is_empty() or tip == null:
+		return false
+	var a := pv["a"] as ItemInstance
+	var b := pv["b"] as ItemInstance
+	var out := pv["output"] as ItemDef
+	var lines: Array[String] = ["[b]%s[/b]" % (ItemTooltip.item_word(out) if int(pv["known"]) > 0 else UiText.t("fuse.unknown"))]
+	lines.append("[color=@dim]%s[/color]" % (UiText.t("fuse.spends") % [Names.of(a.def), Names.of(b.def)]))
+	for inst in [a, b]:
+		var lost: Array[String] = []
+		if not Forge.enchant_of(inst).is_empty():
+			lost.append(UiText.t("fuse.enchant"))
+		if (inst as ItemInstance).quality() > 0:
+			lost.append(UiText.t("fuse.quality"))
+		if (inst as ItemInstance).runs() > 0:
+			lost.append(UiText.t("fuse.growth"))
+		if not lost.is_empty():
+			lines.append("[color=@warn]%s[/color]" % (UiText.t("fuse.loses") % [Names.of((inst as ItemInstance).def), UiText.t("tip.list_sep").join(PackedStringArray(lost))]))
+	var at := board_view.get_global_mouse_position()
+	tip.ask("\n".join(PackedStringArray(lines)), at, [
+		ItemActions.make(&"fuse", UiText.t("fuse.go"), func() -> void: crafting.fuse(a_uid, b_uid)),
+		ItemActions.make(&"fuse_cancel", UiText.t("fuse.cancel"), func() -> void: pass),
+	])
+	return true
+
+
 func _on_crafted(detail: Dictionary) -> void:
 	if not is_inside_tree():
 		return

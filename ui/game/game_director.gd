@@ -140,6 +140,8 @@ func _ready() -> void:
 	# 没有角色定义时的兜底基线（角色路上基线来自 CharacterDef，067）
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
 	flow.screen_changed.connect(_on_screen_changed)
+	ItemTooltip.recipe_probe = flow.knows_recipe     # 305：悬浮窗只列玩家知道的配方
+	ItemTooltip.item_probe = flow.has_met
 	flow.run_changed.connect(_on_run_changed)     # 101 第 5 刀：只属于一局的 UI 接线（信仰探针）
 	flow.derive_techs()     # 110 / 120：新档也按进度表推算科技派生值
 	flow.check_achievements()     # 091：读档后补算（老存档、新加的成就）
@@ -295,6 +297,9 @@ func _exit_tree() -> void:
 	BattleTraceWriter.flush()     # 236 补：退出（主菜单「退出」走 quit()，不发关窗通知）前收掉工作线程上的任务，没等过的任务留到引擎收尾才放会崩
 	if flow != null and flow.run != null:
 		flow.run.dispose()     # 一局还开着就退出（关窗、局内暂停菜单退出）：这一局不解环就一直留到引擎收尾，进程在那里崩（退出码 134）
+	if flow != null and ItemTooltip.recipe_probe == Callable(flow, &"knows_recipe"):     # 305：别的导演接上的不摘
+		ItemTooltip.recipe_probe = Callable()
+		ItemTooltip.item_probe = Callable()
 	if GroundLayer.current() == ground:
 		GroundLayer.set_current(null)
 	if NoticeLayer.current() == notices:

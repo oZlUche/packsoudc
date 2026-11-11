@@ -223,6 +223,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var fus := fusions_line(def)
 		if fus != "":
 			lines.append(fus)
+		var made := made_from_line(def)
+		if made != "":
+			lines.append(made)
 	if def.tags.has(&"weapon") and not wild:     # 279 §四.3：能在砧上升成哪几把
 		var ups := upgrades_line(def)
 		if ups != "":
@@ -419,7 +422,7 @@ static func upgrades_line(def: ItemDef) -> String:
 	var seen := {}
 	for r in Anvil.upgrades_for(def, Anvil.recipes()):
 		var d := item_def(r.output)
-		if d == null or seen.has(r.output):     # 同一个产物有几张配方（不同材料）只写一遍
+		if d == null or seen.has(r.output) or not recipe_known(r.id):     # 305：没自己锤过的不列     # 同一个产物有几张配方（不同材料）只写一遍
 			continue
 		seen[r.output] = true
 		names.append(recipe_word(r.id, d))
@@ -445,6 +448,18 @@ static func item_word(def: ItemDef) -> String:
 
 
 static var _fuse_all: Array[RecipeDef] = []
+## 305（改造 A，方案 §6.2）：玩家知道这张配方 / 认识这件道具吗 —— `func(id: StringName) -> bool`，[GameDirector] 接到 [GameFlow]。
+## 没接（测试、单开面板）= 都知道
+static var recipe_probe: Callable = Callable()
+static var item_probe: Callable = Callable()
+
+
+static func recipe_known(id: StringName) -> bool:
+	return not recipe_probe.is_valid() or bool(recipe_probe.call(id))
+
+
+static func item_known(id: StringName) -> bool:
+	return not item_probe.is_valid() or bool(item_probe.call(id))
 
 
 ## 298：全部拼接配方（`adjacent`，第一次用时读，按 id 排）
@@ -464,7 +479,7 @@ static func fusions_line(def: ItemDef) -> String:
 	var parts: Array[String] = []
 	for r in fuse_recipes():
 		var at := r.inputs.find(def.id)
-		if at < 0:
+		if at < 0 or not recipe_known(r.id):     # 305：没自己合成过的不列
 			continue
 		var partner := item_def(r.inputs[1 - at])
 		var out_def := item_def(r.output)
@@ -474,6 +489,23 @@ static func fusions_line(def: ItemDef) -> String:
 	if parts.is_empty():
 		return ""
 	return "[color=@dim]%s[/color]" % (UiText.t("tip.fuses_to") % UiText.t("tip.fuse_sep").join(PackedStringArray(parts)))
+
+
+## 305：成品那边 ——「由 甲 与 乙 合成」（知道的配方每张一段，两个都是道具词）；不知道 = 空
+static func made_from_line(def: ItemDef) -> String:
+	if def == null:
+		return ""
+	var parts: Array[String] = []
+	for r in fuse_recipes():
+		if r.output != def.id or not recipe_known(r.id):
+			continue
+		var a := item_def(r.inputs[0])
+		var b := item_def(r.inputs[1])
+		if a != null and b != null:
+			parts.append(UiText.t("tip.made_from") % [item_word(a), item_word(b)])
+	if parts.is_empty():
+		return ""
+	return "[color=@dim]%s[/color]" % UiText.t("tip.fuse_sep").join(PackedStringArray(parts))
 
 
 ## 298：拼接配方的子窗 —— 出件整段悬浮窗（品质 0）+「要　甲 + 乙」（两个都是道具词）；不写怎么拼（铜徽自己会说）

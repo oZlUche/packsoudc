@@ -4,7 +4,8 @@ extends EventCondition
 
 
 func check(ctx: EventContext) -> bool:
-	return ctx != null and ctx.hooks.faith_tier() < 0 and JimiePath.sacrifice_ready(ctx.board, ctx.meta)
+	return ctx != null and ctx.hooks.faith_tier() < 0 and JimiePath.sacrifice_ready(ctx.board, ctx.meta) \
+		and not ctx.hooks.unique_owned(JimiePath.RED)     # 305：地上、托付、待拾取里有一把也不行
 
 
 func describe() -> String:

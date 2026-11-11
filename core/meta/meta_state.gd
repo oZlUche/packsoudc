@@ -41,6 +41,8 @@ var rack: BagRack = null
 var bag_grants: Array[StringName] = []
 ## 图鉴：道具 id（字符串）→ 累计带出件数。点亮 = 计数 > 0
 var codex: Dictionary = {}
+## 305：玩家知道的合成配方与认识的道具（[Lore]；和图鉴计数分开）。一局学到的在局终并进来
+var lore: Lore = Lore.new()
 ## 175：引发过的元素反应（id）—— 百科的反应页点亮。打完一场由 [method note_reactions] 记
 var reactions_seen: Array[StringName] = []
 ## 激活的局外 buff（id）。谁来改它不写死：现在是局外屏的开关列表占位，将来是任务系统、局外科技
@@ -254,6 +256,7 @@ func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
 	battles_won += result.battles_won
 	if result.boss_cleared:
 		boss_kills += 1
+	lore.merge(result.lore)     # 305：死了也记得（知识不随东西丢）
 	if result.is_extracted():
 		extractions += 1
 		if result.chapter_id != &"":
@@ -393,6 +396,7 @@ func _record_codex(inst: ItemInstance, got: Dictionary) -> void:
 func light_codex(def: ItemDef) -> void:
 	if def == null or def.is_token():
 		return
+	lore.meet(def.id)     # 305：自己打出来的也认识了
 	codex[String(def.id)] = int(codex.get(String(def.id), 0)) + 1
 
 
@@ -736,6 +740,8 @@ func to_dict() -> Dictionary:
 		"warehouse": warehouse.to_dict(),
 		"board": board_dict,
 		"codex": codex.duplicate(),
+		"discovered_fusion_recipes": lore.to_dict()["recipes"],
+		"seen_item_ids": lore.to_dict()["items"],
 		"active_buffs": _names_of(active_buffs),
 		"unlocks": _names_of(unlocks),
 		"keepsakes": _names_of(keepsakes),
@@ -895,5 +901,21 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		for k in done_:
 			if bool(done_[k]):
 				m.npc_done[String(k)] = true
+	# 305：知识。老档没有「认识的道具」—— 按图鉴点亮的与手上真有的补上；配方不反推（有成品不等于自己合过）
+	for id in d.get("discovered_fusion_recipes", []):
+		m.lore.learn_recipe(StringName(String(id)))
+	if d.has("seen_item_ids"):
+		for id in d["seen_item_ids"]:
+			m.lore.meet(IdAliases.item(StringName(String(id))))
+	else:
+		for k in m.codex:
+			if int(m.codex[k]) > 0:
+				m.lore.meet(IdAliases.item(StringName(k)))
+		var held: Array = m.warehouse.items().duplicate()
+		if m.board != null:
+			held.append_array(m.board.items())
+		for inst in held:
+			if (inst as ItemInstance).def != null:
+				m.lore.meet((inst as ItemInstance).def.id)
 	return m
 #endregion

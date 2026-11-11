@@ -29,6 +29,8 @@ var elite_won: int = 0
 var boss_won: int = 0
 var searches: int = 0
 var crafts: int = 0
+## 305：这一局学到的（[member RunState.lore]），局终并进局外
+var lore: Lore = null
 ## 撤离时剩多少钱（战败为 0：钱也没了）
 var balance: int = 0
 ## 背出去的：撤离时棋盘上的全部（含包）。战败为空
@@ -77,6 +79,7 @@ static func settle(state: RunState) -> RunResult:
 	r.boss_won = int(state.tally.get("boss_won", 0))
 	r.searches = int(state.tally.get("searches", 0))
 	r.crafts = int(state.tally.get("crafts", 0))
+	r.lore = state.lore
 	r.board_size = state.board.size if state.board != null else Vector2i.ZERO
 	r.boss_cleared = state.boss_cleared
 	r.scale_id = state.scale_id()

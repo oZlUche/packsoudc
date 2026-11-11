@@ -7,7 +7,7 @@ extends RefCounted
 const DIRS: Array[Vector2i] = [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vector2i.UP]
 
 
-## 棋盘上能拼的每一对：`{"a": uid, "b": uid（a < b）, "output": 产物 id, "seam": Vector2（接缝中点，格为单位，左上角 = 0,0）}`。
+## 棋盘上能拼的每一对：`{"a": uid, "b": uid（a < b）, "output": 产物 id, "recipe": 配方 id, "seam": Vector2（接缝中点，格为单位，左上角 = 0,0）}`。
 ## 一对只出一次；接缝取两件相邻的格边里最靠中间的那一条。按 (a, b) 排好
 static func pairs(board: GridInventory, recipes: Array) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -31,10 +31,12 @@ static func pairs(board: GridInventory, recipes: Array) -> Array[Dictionary]:
 	for key in keys:
 		var a := board.get_item(key.x)
 		var b := board.get_item(key.y)
+		if not spendable(board, a) or not spendable(board, b):
+			continue
 		var r := RecipeDef.find(recipes, a.def.id, b.def.id, true)
 		if r == null:
 			continue
-		out.append({"a": key.x, "b": key.y, "output": r.output, "seam": _middle(edges[key])})
+		out.append({"a": key.x, "b": key.y, "output": r.output, "recipe": r.id, "seam": _middle(edges[key])})
 	return out
 
 
@@ -49,6 +51,11 @@ static func _middle(points: Array) -> Vector2:
 		if (p as Vector2).distance_squared_to(avg) < best.distance_squared_to(avg) - 0.0001:
 			best = p
 	return best
+
+
+## 305（改造 A）：这件能被合成吃掉吗 —— 玩家锁定的、扎了根的、随身之物都不行（拼接与拖合共用）
+static func spendable(board: GridInventory, inst: ItemInstance) -> bool:
+	return inst != null and not inst.is_locked_by_player() and (board == null or not board.keeps(inst.uid))
 
 
 ## 两件拿掉之后，[param out_def] 落在它们原来占格并集里的位置：`{"origin": Vector2i, "rot": int}`；落不下 = 空。

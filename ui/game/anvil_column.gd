@@ -294,9 +294,11 @@ func _refresh() -> void:
 	var ups := Anvil.upgrades_for(w.def, flow.smith_recipes if flow != null else []) if w != null else ([] as Array[SmithRecipeDef])
 	var mismatch := w != null and material() != null and made == null and not ups.is_empty() and out.item_count() == 0
 	if made != null and out.item_count() == 0:
-		if not _ghost.place(made, Vector2i.ZERO, 0):
+		var r := Anvil.recipe_for(w.def, material().def, flow.smith_recipes)
+		var known := r != null and known_upgrade(r)     # 305：没锤过、也不认识出件 —— 不画出件、右窗打问号
+		if known and not _ghost.place(made, Vector2i.ZERO, 0):
 			_ghost.try_add(made, true)
-		compare.show_pair(w, made)     # 298：出件简述换成两窗并排；便条照旧列这把能升成的
+		compare.show_pair(w, made, false, not known)     # 298：出件简述换成两窗并排；便条照旧列这把能升成的
 	else:
 		compare.clear()
 	if w != null and out.item_count() == 0:
@@ -332,4 +334,10 @@ static func upgrade_line(r: SmithRecipeDef, items: ItemDatabase) -> String:
 	var mats: Array[String] = []
 	for m in r.material_inputs:
 		mats.append(UiText.t("anvil.needs") % [r.material_name(String(m), items), ItemTooltip.rarity_name(int(r.material_inputs[m]))])
-	return "[color=@rarity%d]%s[/color]　%s" % [d.rarity, Names.of(d), UiText.t("tip.sep").join(PackedStringArray(mats))]
+	var shown := "[color=@rarity%d]%s[/color]" % [d.rarity, Names.of(d)] if known_upgrade(r) else UiText.t("fuse.unknown")     # 305
+	return "%s　%s" % [shown, UiText.t("tip.sep").join(PackedStringArray(mats))]
+
+
+## 305（方案 §6.2）：玩家知道这张升级出什么吗 —— 自己锤过，或认识出件
+static func known_upgrade(r: SmithRecipeDef) -> bool:
+	return ItemTooltip.recipe_known(r.id) or ItemTooltip.item_known(r.output)

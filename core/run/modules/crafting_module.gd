@@ -8,7 +8,7 @@ extends RunModule
 
 const ID := &"crafting"
 
-## 合成了一次：`detail = {"ok": true, "log": [几句话], "output": 产物 id, "where": "board" / "storage"}`
+## 合成了一次：`detail = {"ok": true, "log": [几句话], "output": 产物 id, "recipe": 配方 id, "where": "board" / "storage"}`
 signal done(detail: Dictionary)
 
 ## 配方表（内容，持有方给；没有就是这一局不合成）。[GameFlow] 在接管一局时赋上，
@@ -45,6 +45,36 @@ func output_of(a: ItemDef, b: ItemDef) -> ItemDef:
 	return _run.items.get_def(r.output) if r != null else null
 
 
+## 305（方案 §6.2）：玩家对这两件合成什么知道多少 —— 2 = 自己合成过这张配方；1 = 没合成过、但认识成品；0 = 都不知道（成品打问号）。没配方 = -1
+## [param adjacent] = 拼接配方（贴着点锤），否则拖合
+func known_level(a: ItemDef, b: ItemDef, adjacent: bool = false) -> int:
+	var r := RecipeDef.find(recipes, a.id, b.id, adjacent) if a != null and b != null else null
+	if r == null or _run == null:
+		return -1
+	return _known(r.id, r.output)
+
+
+func _known(recipe_id: StringName, output: StringName) -> int:
+	if _run.knows_recipe(recipe_id):
+		return 2
+	return 1 if _run.has_met(output) else 0
+
+
+## 305：点锤之后、合之前看一眼：`{"a", "b": 两件 ItemInstance, "output": 成品 ItemDef, "known": [method known_level]}`；拼不了 = 空
+func fuse_preview(a_uid: int, b_uid: int) -> Dictionary:
+	if _run == null or _run.board == null or _run.items == null:
+		return {}
+	for p in Fusion.pairs(_run.board, recipes):
+		if (int(p["a"]) == a_uid and int(p["b"]) == b_uid) or (int(p["a"]) == b_uid and int(p["b"]) == a_uid):
+			var a := _run.board.get_item(a_uid)
+			var b := _run.board.get_item(b_uid)
+			var out_def := _run.items.get_def(StringName(p["output"]))
+			if out_def == null:
+				return {}
+			return {"a": a, "b": b, "output": out_def, "known": _known(StringName(p["recipe"]), out_def.id)}
+	return {}
+
+
 ## 140：这两件的配方说明（作者写的 `note`，拖到搭档上时预览旁边那行小字）；没有配方或没写返回空串
 func note_of(a: ItemDef, b: ItemDef) -> String:
 	if a == null or b == null:
@@ -63,9 +93,10 @@ func craft(a: ItemInstance, b_uid: int) -> Dictionary:
 	if board == null or a == null or a.def == null:
 		return failed
 	var b := board.get_item(b_uid)
-	if b == null or b.def == null:
-		return failed
-	var out_def := output_of(a.def, b.def)
+	if b == null or b.def == null or a.is_locked_by_player() or not Fusion.spendable(board, b):
+		return failed     # 305：锁定的、扎根的、随身之物不被合掉
+	var r := RecipeDef.find(recipes, a.def.id, b.def.id)
+	var out_def := _run.items.get_def(r.output) if r != null and _run.items != null else null
 	if out_def == null:
 		return failed
 	var home := b.origin
@@ -86,10 +117,7 @@ func craft(a: ItemInstance, b_uid: int) -> Dictionary:
 	var lines: Array = [UiText.t("craft.done") % [Names.of(a.def), Names.of(b.def), Names.of(out_def)]]
 	if where == "storage":
 		lines.append(UiText.t("craft.to_ground"))
-	var detail := {"ok": true, "output": String(out_def.id), "where": where, "log": lines}
-	_run.tally["crafts"] = int(_run.tally.get("crafts", 0)) + 1     # 224：结算账单「合成」
-	done.emit(detail)
-	return detail
+	return _settle(r.id, out_def, where, lines)
 
 
 ## 279 拼接：棋盘上贴着、能拼的每一对（[method Fusion.pairs]）；没棋盘 / 没配方 = 空
@@ -132,7 +160,14 @@ func fuse(a_uid: int, b_uid: int) -> Dictionary:
 	var lines: Array = [UiText.t("craft.done") % names]
 	if where == "storage":
 		lines.append(UiText.t("craft.to_ground"))
-	var detail := {"ok": true, "output": String(out_def.id), "where": where, "log": lines}
+	return _settle(StringName(pair["recipe"]), out_def, where, lines)
+
+
+## 两种合成成了的同一笔账：记一次合成、学到这张配方、认识成品（落在地上也算），发 [signal done]
+func _settle(recipe_id: StringName, out_def: ItemDef, where: String, lines: Array) -> Dictionary:
+	var detail := {"ok": true, "output": String(out_def.id), "recipe": String(recipe_id), "where": where, "log": lines}
 	_run.tally["crafts"] = int(_run.tally.get("crafts", 0)) + 1     # 224：结算账单「合成」
+	_run.lore.learn_recipe(recipe_id)     # 305
+	_run.lore.meet(out_def.id)
 	done.emit(detail)
 	return detail
