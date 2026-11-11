@@ -208,8 +208,8 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	host.size = Vector2(800, 600)
 	root.add_child(host)
 	var board := GridInventory.new(Vector2i(4, 3), 1)
-	var knife := ItemInstance.create(c.items.get_def(&"knife"))
-	board.place(knife, Vector2i(0, 0), 0)
+	var gauze := ItemInstance.create(c.items.get_def(&"bandage"))     # 298：刀有「可拼为」的道具词，窗会照 286 留着；这里要一件没配方词的
+	board.place(gauze, Vector2i(0, 0), 0)
 	var view := InventoryView.new()
 	view.inventory = board
 	view.position = Vector2(20, 20)
@@ -221,7 +221,7 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	var mm := InputEventMouseMotion.new()
 	mm.position = Vector2(24, 24)
 	view.gui_input.emit(mm)
-	t.check(tip.is_showing() and tip.text().contains("匕首"), "停在刀上：显示刀的说明")
+	t.check(tip.is_showing() and tip.text().contains("纱布"), "停在纱布上：显示纱布的说明")
 	var mm2 := InputEventMouseMotion.new()
 	mm2.position = Vector2(150, 120)
 	view.gui_input.emit(mm2)
