@@ -25,6 +25,7 @@ static func of(result: BattleResult, limit_sec: float, specs: Array = []) -> Dic
 	var first_damage: Array = [null, null]     # 这一方第一次真打出伤害的时刻
 	var damage := [{"direct": 0.0, "indirect": 0.0, "true": 0.0, "unknown": 0.0}, {"direct": 0.0, "indirect": 0.0, "true": 0.0, "unknown": 0.0}]
 	var by_item := [{}, {}]
+	var by_reaction := [{}, {}]     # 301：反应打的（来源 uid 0）单列反应名
 	var min_hp: Array = [null, null]
 	var first_low: Array = [null, null]
 	var low_since: Array = [null, null]
@@ -52,6 +53,9 @@ static func of(result: BattleResult, limit_sec: float, specs: Array = []) -> Dic
 				damage[src][kind] = float(damage[src][kind]) + amount
 				if uid != 0:
 					by_item[src][uid] = float(by_item[src].get(uid, 0.0)) + amount
+				elif e.payload.has("reaction"):
+					var rid := String(e.payload["reaction"])
+					by_reaction[src][rid] = float(by_reaction[src].get(rid, 0.0)) + amount
 			BattleEvent.RESOURCE_CHANGED:
 				if String(e.payload.get("key", "")) != "hp" or (e.side != 0 and e.side != 1):
 					continue
@@ -74,6 +78,7 @@ static func of(result: BattleResult, limit_sec: float, specs: Array = []) -> Dic
 	out["first_damage"] = first_damage
 	out["damage"] = damage
 	out["damage_by_item"] = [_keyed(by_item[0], _names(specs, 0)), _keyed(by_item[1], _names(specs, 1))]
+	out["damage_by_reaction"] = by_reaction
 	out["min_hp"] = min_hp
 	out["first_low_hp"] = first_low
 	out["low_hp_time"] = low_time

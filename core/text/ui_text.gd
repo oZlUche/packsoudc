@@ -475,6 +475,7 @@ const TEXT := {
 	"log.indent": {"zh": "　　", "en": "    "},
 	"log.hit": {"zh": "%s使用%s造成了 %s %s伤害", "en": "%s's %s dealt %s %s damage"},
 	"log.hit_more": {"zh": "又造成了 %s %s伤害", "en": "then dealt %s %s damage"},
+	"log.reaction_hit": {"zh": "造成了 %s %s伤害", "en": "dealing %s %s damage"},
 	"log.true_word": {"zh": "真实", "en": "true"},
 	"log.blocked": {"zh": "（被抵挡了 %s 伤害，最终伤害为 %s）", "en": " (%s blocked, %s taken)"},
 	"log.blocked_split": {"zh": "（被抵挡了 %s 伤害：护甲 %s、格挡 %s，最终伤害为 %s）", "en": " (%s blocked: armor %s, block %s; %s taken)"},

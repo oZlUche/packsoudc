@@ -234,6 +234,8 @@ static func before_status(ctx: BattleContext, victim: CombatantRuntime, def: Buf
 ## 结算一次，返回 N。补充三（作者更正）：N = min(已有, 新来)，两边各扣 N
 static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: ReactionDef, present: StringName, incoming: StringName, n: int) -> int:
 	ctx.reacting += 1
+	var outer := ctx.reaction
+	ctx.reaction = def.id     # 301：反应效果打的伤害标上是哪种反应
 	var rc := foe_context(ctx, victim)
 	var stacks := mini(mark_stacks(victim, present), n)     # 伪代码的 maxStackReacted（作者更正为 min）
 	rc.reaction_stacks = stacks
@@ -248,6 +250,7 @@ static func _resolve(ctx: BattleContext, victim: CombatantRuntime, def: Reaction
 	for e in def.effects_for(stacks):
 		if e != null:
 			(e as Effect).apply(rc)
+	ctx.reaction = outer
 	ctx.reacting -= 1
 	return stacks
 

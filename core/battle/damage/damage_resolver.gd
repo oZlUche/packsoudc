@@ -159,6 +159,8 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 	}
 	if packet.pure:
 		payload["pure"] = true     # 279：真实伤害（战记写「真实」，不写伤害类型）
+	if ctx.reacting > 0 and ctx.reaction != &"" and packet.source_uid == 0:
+		payload["reaction"] = String(ctx.reaction)     # 301：反应打的（来源 = 引发方，不记到哪件道具）
 	if packet.cancelled:
 		payload["cancelled"] = true     # 175 补充五：被取消的一下（「造成伤害后施加」不认它，[member DamageTrigger.landed_only]）
 	ctx.emit(BattleEvent.DAMAGE, packet.victim_side(), payload)
