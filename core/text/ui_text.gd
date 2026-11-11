@@ -943,7 +943,6 @@ const TEXT := {
 	"shop.gap_even": {"zh": "够了", "en": "Even"},
 	"shop.gap_change": {"zh": "找你", "en": "Change"},
 	"shop.gap_cant_pay": {"zh": "他只付得起", "en": "He only has"},
-	"shop.sold_tag": {"zh": "已售", "en": "Sold"},
 	"shop.belt_tip": {"zh": "%s\n%s\n买了直接进腰带（右下角）", "en": "%s\n%s\nGoes straight into your Belt (bottom right)"},
 	"shop.no_shop": {"zh": "没有店", "en": "No shop here"},
 	"shop.cant_buy": {"zh": "「%s」买不了：%s", "en": "Can't buy \"%s\": %s"},

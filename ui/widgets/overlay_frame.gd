@@ -2,7 +2,7 @@
 ##
 ## [method GameScreen._centered_panel] 造它、把 [member content] 交给各屏 —— 各屏照旧往里加一个子节点，标题写进 [method set_title]。
 ## 外观是主题变体 [constant UiTheme.PANEL_OVERLAY]：157 补充三起是**一整块石板**（[SlabStyle]：板身平铺 + 板边九宫格，
-## 标题字刻在板顶那道刻线上方，高度读 `slab_edge.json` 的 `title_height`），没图就是原来那块平面底。
+## 标题字刻在板顶那道刻线上方，高度读 `slab_edge.json` 的 `title_height`）。
 class_name OverlayFrame
 extends PanelContainer
 
@@ -64,7 +64,7 @@ var emblem: Texture2D = null:
 		queue_redraw()
 var _base_box: StyleBoxTexture = null
 
-## 皮：石板（默认）/ 铜面板 / 书 / 帐篷；要的图缺了一律退回石板，[member skin] 记实际用上的那张
+## 皮：石板（默认）/ 铜面板 / 书 / 帐篷 / 石碑，[member skin] 记用的那张
 const SKIN_SLAB := &"slab"
 const SKIN_BRONZE := &"bronze"
 const SKIN_BOOK := &"book"
@@ -73,22 +73,21 @@ const SKIN_STELE := &"stele"
 var skin: StringName = SKIN_SLAB
 
 
-## [param margin] 是各屏原来给面板的内边距：平面底照旧当外框内边距；九宫格底时外框边距由图定，多出来的部分垫在内容区里。
-## [param p_skin]：[constant SKIN_SLAB] / [constant SKIN_BRONZE] / [constant SKIN_BOOK]（232）/ [constant SKIN_TENT]（233）/ [constant SKIN_STELE]（神坛石碑）；缺图退回石板
+## [param margin] 是各屏原来给面板的内边距：外框边距由图定，多出来的部分垫在内容区里。
+## [param p_skin]：[constant SKIN_SLAB] / [constant SKIN_BRONZE] / [constant SKIN_BOOK]（232）/ [constant SKIN_TENT]（233）/ [constant SKIN_STELE]（神坛石碑）
 func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
-	book = p_skin == SKIN_BOOK and UiTheme.art_cached(BOOK_ART) != null
+	book = p_skin == SKIN_BOOK
 	if book:
 		skin = SKIN_BOOK
 		_init_book()
 		return
-	bronze = p_skin == SKIN_BRONZE and UiTheme.art(BRONZE_ART) != null
+	bronze = p_skin == SKIN_BRONZE
 	if bronze:
 		skin = SKIN_BRONZE
 		_init_bronze(margin)
 		return
-	tent = p_skin == SKIN_TENT and UiTheme.art_cached(TENT_ART) != null
-	var stele_box: SlabStyle = UiTheme.layered_box(STELE_EDGE, STELE_BODY, true) if p_skin == SKIN_STELE else null
-	stele = stele_box != null
+	tent = p_skin == SKIN_TENT
+	stele = p_skin == SKIN_STELE
 	var box: StyleBox
 	if tent:
 		skin = SKIN_TENT
@@ -97,14 +96,15 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 		UiTheme.set_tone(self, StringName(String(UiTheme.art_meta(TENT_ART).get("tone", "light"))))
 	elif stele:
 		skin = SKIN_STELE
-		box = stele_box
+		box = UiTheme.layered_box(STELE_EDGE, STELE_BODY, true)
+		if box == null:
+			box = StyleBoxEmpty.new()
 		_band_art = STELE_BAND
 		add_theme_stylebox_override("panel", box)
 		UiTheme.set_tone(self, UiTheme.art_tone(STELE_EDGE))
 	else:
 		UiTheme.slab(self)     # 157 补充三：一整块石板；深底浅字、浅底墨字
 		box = UiTheme.current().get_stylebox("panel", UiTheme.PANEL_OVERLAY)
-	var textured := UiTheme.is_art_box(box) or tent
 	var want := margin if margin >= 0 else UiTheme.PANEL_MARGIN
 	var col := UiTheme.vbox(GAP)
 	add_child(col)
@@ -122,7 +122,7 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 		title_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		title_label.custom_minimum_size.y = TENT_TITLE_H
 		title_bar.custom_minimum_size.y = tent_title_bar_height(box)
-	band = not tent and textured and UiTheme.art_cached(_band_art) != null
+	band = not tent
 	if band:
 		var spec := UiTheme.art_meta(_band_art)
 		var lab: Dictionary = spec.get("label", {})
@@ -137,23 +137,16 @@ func _init(margin: int = -1, p_skin: StringName = SKIN_SLAB) -> void:
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(content)
-	if textured:
-		# 九宫格：外框边距是图上的边；各屏要的内边距比图边宽的那部分垫进内容区
-		var pad := maxi(0, want - int(box.content_margin_left))
-		var side := pad + (TENT_SIDE_PAD if tent else 0)
-		UiTheme.margins(content, side, 0, side, pad)
-		if band:     # 字从槽左头 18 起，右边的槽留 8
-			UiTheme.margins(head, int(UiTheme.art_meta(_band_art).get("label", {}).get("x", 18)), 0, 8, 0)
-		else:
-			UiTheme.margins(head, 0, 0, 0, 0)
-		if band:
-			head.resized.connect(queue_redraw)
+	# 九宫格：外框边距是图上的边；各屏要的内边距比图边宽的那部分垫进内容区
+	var pad := maxi(0, want - int(box.content_margin_left))
+	var side := pad + (TENT_SIDE_PAD if tent else 0)
+	UiTheme.margins(content, side, 0, side, pad)
+	if band:     # 字从槽左头 18 起，右边的槽留 8
+		UiTheme.margins(head, int(UiTheme.art_meta(_band_art).get("label", {}).get("x", 18)), 0, 8, 0)
 	else:
-		UiTheme.panel(self, want, UiTheme.PANEL_OVERLAY)
-		UiTheme.margins(content, 0, 0, 0, 0)
-		# 内边距很小的框（事件屏：左栏的图铺到边）—— 标题条自己垫一点，字不贴边
-		var head_pad := maxi(0, UiTheme.PANEL_MARGIN - want)
-		UiTheme.margins(head, head_pad, head_pad, head_pad, 0)
+		UiTheme.margins(head, 0, 0, 0, 0)
+	if band:
+		head.resized.connect(queue_redraw)
 
 
 func _init_bronze(margin: int) -> void:
@@ -195,7 +188,8 @@ func _init_book() -> void:
 	book_back.texture = UiTheme.art_cached(BOOK_ART)
 	var at: Array = meta.get("panel_at", [40, 34])
 	book_back.position = -Vector2(float(at[0]), float(at[1]))
-	book_back.size = book_back.texture.get_size()
+	if book_back.texture != null:
+		book_back.size = book_back.texture.get_size()
 	back.add_child(book_back)
 	title_bar = UiTheme.hbox(8)     # 没有标题条：留着空的
 	title_bar.visible = false

@@ -1,7 +1,7 @@
 ## 260 军功碑（作者 14:13 选 B；16:37 定稿 B 弧顶碑）：基地家页的战绩。补充一（作者 16:38）：碑额只刻仓库总价值（罗马数字，千位上画横线），
 ## 军功牌竖排在左、次数与单位在右（撤离 / 击败核心 / 打赢按次数分五阶，阈值在 [member MetaRules.medal_tiers]；阶由圆牌的图说，碑面不写阶名），
 ## 碑脚铭文带一行累计账（局数 · 总分 · 图鉴 · 金币）。
-## 件和摆位照 UI替换美术 的 art/ui/stele260/out/layout.json（都相对碑身左上）；碑的图在 `ui/records/`，没到就画石色占位；
+## 件和摆位照 UI替换美术 的 art/ui/stele260/out/layout.json（都相对碑身左上）；碑的图在 `ui/records/`；
 ## 圆牌的图（美术设计 records260）没到用 256 的军团圆牌 `legion_phalera@sN` 占位。字全由代码写，浅底墨字，碑额的数朱红
 class_name RecordsStele
 extends Control
@@ -51,9 +51,6 @@ const MIN_SIZE := 10
 const INK := Color("2e2219")
 const VERM := Color("a3301f")
 const LIT := Color("f1ece2")
-## 缺图时的石色
-const STONE := Color("ddd6c8")
-const STONE_DARK := Color("a8a091")
 ## 军功牌：[图名, MetaState 字段, 名目文本键]；战败不上碑（deaths 数据留给成就、对局记录）
 const ROWS := [["escape", "extractions", "records.medal_extract"], ["core", "boss_kills", "records.medal_core"],
 	["win", "battles_won", "records.medal_wins"]]
@@ -283,39 +280,21 @@ func medal_texture(i: int) -> Texture2D:
 
 func _draw() -> void:
 	var o := ORIGIN
-	_piece("stele_base", o + BASE_AT, Rect2(o + Vector2(-20, BODY.y - 4), Vector2(BODY.x + 40, 40)))
-	_piece("stele_body", o, Rect2(o, BODY))
-	_piece("stele_tablet", o + TABLET.position, Rect2(o + TABLET.position, TABLET.size), true)
+	_piece("stele_base", o + BASE_AT)
+	_piece("stele_body", o)
+	_piece("stele_tablet", o + TABLET.position)
 	for i in _rows.size():
 		var mp := o + MEDAL_AT + Vector2(0, ROW_STEP * i)
-		var socket := _tex("stele_socket")
-		if socket != null:
-			draw_texture(socket, mp - Vector2.ONE * SOCKET_PAD)
-		else:
-			draw_circle(mp + Vector2.ONE * MEDAL * 0.5, MEDAL * 0.5 + SOCKET_PAD * 0.5, STONE_DARK)
+		_piece("stele_socket", mp - Vector2.ONE * SOCKET_PAD)
 		var mt := medal_texture(i)
 		if mt != null:
 			var locked := int(_rows[i]["tier"]) == 0 and _tex("record_%s_locked" % _rows[i]["kind"]) == null
 			draw_texture_rect(mt, Rect2(mp, Vector2.ONE * MEDAL), false, Color(1, 1, 1, 0.45) if locked else Color.WHITE)
 		if i > 0:
-			var rule := _tex("stele_rule")
-			if rule != null:
-				draw_texture(rule, o + RULE_AT + Vector2(0, ROW_STEP * i))
-			else:
-				draw_rect(Rect2(o + RULE_AT + Vector2(0, ROW_STEP * i + 1), Vector2(258, 2)), STONE_DARK)     # 2 像素高：1600 逻辑缩到 1280 时 1 像素的线会被吞掉一道
-	_piece("stele_band", o + BAND.position, Rect2(o + BAND.position, BAND.size), true)
-	var gable := _tex("stele_gable")
-	if gable != null:
-		draw_texture(gable, o + GABLE_AT)
-	else:
-		var pts := PackedVector2Array()
-		for k in 17:
-			var a := PI + PI * k / 16.0
-			pts.append(o + Vector2(BODY.x * 0.5, 2) + Vector2(cos(a) * 160.0, sin(a) * 70.0))
-		draw_colored_polygon(pts, STONE)
-	var laurel := _tex("stele_laurel")
-	if laurel != null:
-		draw_texture(laurel, o + LAUREL_AT)
+			_piece("stele_rule", o + RULE_AT + Vector2(0, ROW_STEP * i))
+	_piece("stele_band", o + BAND.position)
+	_piece("stele_gable", o + GABLE_AT)
+	_piece("stele_laurel", o + LAUREL_AT)
 	var f := UiPalette.cjk_font()
 	var fb := UiPalette.cjk_font_bold()
 	_draw_tablet(f, fb)
@@ -396,8 +375,6 @@ func _draw_tablet(_f: Font, fb: Font) -> void:
 	var icon := CoinLabel.coin_icon(int(coin_r.size.x))
 	if icon != null:
 		draw_texture_rect(icon, coin_r, false)
-	else:
-		draw_circle(coin_r.get_center(), coin_r.size.x * 0.5, CoinLabel.FALLBACK_FILL)
 	var th := maxf(2.0, px * OVERLINE_K)
 	var step := maxf(2.0, px * OVERLINE_STEP)
 	for row_ in lay["rows"]:
@@ -439,14 +416,11 @@ static func worth_width(fb: Font, segs: Array, px: int) -> float:
 	return w
 
 
-## 一件碑的图；缺图在 [param fallback] 上画石色块（[param sunk] = 凹框：深一点的边）
-func _piece(p_name: String, at: Vector2, fallback: Rect2, sunk := false) -> void:
+## 一件碑的图
+func _piece(p_name: String, at: Vector2) -> void:
 	var t := _tex(p_name)
 	if t != null:
 		draw_texture(t, at)
-		return
-	draw_rect(fallback, STONE.darkened(0.06) if sunk else STONE)
-	draw_rect(fallback, STONE_DARK, false, 2.0)
 
 
 ## 刻字：字下一道亮边

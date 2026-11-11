@@ -1,9 +1,9 @@
 ## 160（作者定）：腰带的圆槽 —— 一排圆，一格一种随身技能（[BeltModule]），圆里画图标（没图画名字的头一个字），
 ## 右下角一个小圆标写还有几个；空槽一个淡的小圆点。双击一个圆 = 用一个（[member on_use]，用不了的原因走告示卷轴 —— 226 批一删了圆上方的飘字）。
 ## 没有拖进拖出：随身技能不是道具，不落地、不进包。悬停看名字、说明与什么时候能用。
-## 圆槽底图 `assets/ui/belt_slot.png`（72 px 一张圆底，有就贴，没有画圆）。
+## 圆槽底图 `assets/ui/belt_slot.png`（72 px 一张圆底）。
 ## 232（作者 19:23 选 6）：1–6 格换成一整张弯皮带挂皮袋（`belt/belt_<n>`，圆心读 `belt/layout.json`，袋面的压花圆就是槽）；
-## 超过 6 格或缺图退回一排直圆槽
+## 超过 6 格退回一排直圆槽
 class_name BeltSlots
 extends Control
 
@@ -83,17 +83,14 @@ func slot_at(local: Vector2) -> int:
 	return -1
 
 
-## 232：现在是不是弯皮带（格数有图）
+## 232：现在是不是弯皮带
 func curved() -> bool:
 	return not _layout().is_empty()
 
 
-## 这个格数的弯皮带摆位 {file, size, centers}；没有（超过 6 格、缺图）空
+## 这个格数的弯皮带摆位 {file, size, centers}；没有（超过 6 格）空
 func _layout() -> Dictionary:
-	var lay: Dictionary = belt_layouts().get(str(slot_count()), {})
-	if lay.is_empty() or UiTheme.art_cached(BELT_DIR + String(lay["file"]).get_basename()) == null:
-		return {}
-	return lay
+	return belt_layouts().get(str(slot_count()), {})
 
 
 ## `belt/layout.json` 的 layouts（读一次）
@@ -149,17 +146,15 @@ func _draw() -> void:
 	var r := SLOT * 0.5
 	var lay := _layout()
 	var bent := not lay.is_empty()
-	if bent:
-		draw_texture(UiTheme.art_cached(BELT_DIR + String(lay["file"]).get_basename()), Vector2.ZERO)
+	var belt := UiTheme.art_cached(BELT_DIR + String(lay["file"]).get_basename()) if bent else null
+	if belt != null:
+		draw_texture(belt, Vector2.ZERO)
 	for i in slot_count():
 		var c := slot_center(i)
 		if bent:
 			pass     # 袋面的压花圆就是槽
 		elif _slot_tex != null:
 			draw_texture_rect(_slot_tex, Rect2(c - Vector2(r, r), Vector2(SLOT, SLOT)), false)
-		else:
-			draw_circle(c, r, UiPalette.PANEL.darkened(0.2))
-			draw_arc(c, r - 1.0, 0.0, TAU, 48, UiPalette.LINE.lightened(0.35), 2.0, true)
 		var sid := skill_at(i)
 		if sid == &"":
 			draw_circle(c, 3.0, Color(UiPalette.DIM, 0.45))

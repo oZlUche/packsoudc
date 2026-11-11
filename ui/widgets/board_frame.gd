@@ -20,13 +20,10 @@ const FRAMED_META := &"board_framed_by"
 var kind := ""
 var dark := false
 ## 255：沿格子轮廓走的框（作战棋盘有缺格时）—— 不画九宫格图，按 [BoardContour] 的拼件规则拼：能用的格垫浅灰底，
-## 直边 → 凹角 → 凸角；缺格什么都不画（透空见底板）。拼件图在 `board/mask/<name>.png`（美术定稿后交来），没图画占位皮带
+## 直边 → 凹角 → 凸角；缺格什么都不画（透空见底板）。拼件图在 `board/mask/<name>.png`
 var contour: GridInventory = null
 ## 拼件图的目录（[member UiTheme.asset_root] 下）
 const MASK_DIR := "board/mask/"
-## 没图时占位皮带的颜色
-const CONTOUR_FILL := Color("6b4a2e")
-const CONTOUR_EDGE := Color("2a1a0e")
 
 
 ## 227：把 [param view] 套进外框 —— [param kind] 空 = 棋盘（`requires_bag`）用皮带 `player`、别的（槽、出售区、祭品台、保险箱……）用素框 `plain`；
@@ -84,9 +81,6 @@ func _draw() -> void:
 		var tex := UiTheme.art_cached(MASK_DIR + String(pc["name"]))
 		if tex != null:
 			draw_texture_rect(tex, r, false)
-		else:
-			draw_rect(r, CONTOUR_FILL)
-			draw_rect(r, CONTOUR_EDGE, false, 1.0)
 
 
 ## 九宫格框套在太窄 / 太矮的棋盘上会被裁掉一边（游戏测试 v4.39：铁匠铺 1×4 的长剑，格子区 14 px 宽时右边框没了；实测 ≥ 18 px 才完整）

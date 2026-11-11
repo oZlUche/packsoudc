@@ -4,8 +4,7 @@
 ## 数据一个入口 [method refresh]（和战前屏同一套算法：`StaminaEstimate.of`、`rough_dps`、`encumbrance_*`）；纯读数，点了没动作。
 ## 三张签各自停上去开悬浮窗（[member tip]）。
 ##
-## 画法读 `assets/ui/stats_strip/`（`tag` 签底、`seal_<stamina|dps|load>` 火漆、`layout.json` 尺寸与字位，UI替换美术 出）；
-## 没图时画浅纸圆角 + 左头实心圆 + 字，尺寸照同一份默认 —— 精修图到了只换资源。浅底墨字（tone light）
+## 画法读 `assets/ui/stats_strip/`（`tag` 签底、`seal_<stamina|dps|load>` 火漆、`layout.json` 尺寸与字位，UI替换美术 出）。浅底墨字（tone light）
 ##
 ## 铜面板三屏（UI替换美术 bronze3的嵌槽签方案，作者 2026-10-21 16:21）：[method use_inlay] 换成凹进铜板的深槽签、浅字（tone dark）——
 ## 战利品 / 搜索屏是 152 宽的 `tag_inlay_wide`；战前准备屏是窄签 `tag_inlay`（三段切，按签宽拉），敌我两边各五张：
@@ -36,12 +35,11 @@ const DEFAULTS := {
 	"text": {"main": {"pos_in_tag": [50, 23], "size": 19}, "sub": {"pos_in_tag": [50, 38], "size": 12}},
 	"pieces": {"tag": {"origin_in_tag": [16, -6]}, "seal": {"center_in_tag": [20, 23], "size": [56, 56]}},
 }
-## 签高（没图时的纸）与火漆没图时的颜色（耐力橙、伤害红、负重铁灰）
+## 签高
 const TAG_H := 46.0
 ## 签里的字离签右沿至少这么远；放不下就收字号，最小到这么大
 const TEXT_RIGHT_PAD := 8.0
 const MIN_TEXT_SIZE := 10     # 10-27 正文换思源宋体 Medium 后字面变宽：英文「Stamina」11 号多出 1 px，再让一号
-const SEAL_COLORS := {HP: Color("b0303a"), VIGOR: Color("d49a2a"), STAMINA: Color("c8742a"), DPS: Color("a8322a"), LOAD: Color("5d6168"), SPECIAL: Color("5a3c8c")}
 ## 切图文件里负重那枚叫 load、DPS 那枚叫 dps
 const SEAL_ART := {HP: "seal_hp", VIGOR: "seal_vigor", STAMINA: "seal_stamina", DPS: "seal_dps", LOAD: "seal_load", SPECIAL: "seal_special"}
 ## 221 F1：耐力档（[StaminaEstimate] 给的中文档名，配色按它比对）→ 给人看的字的 [UiText] 键
@@ -273,13 +271,6 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 		var bg := UiTheme.art_cached(ART + "tag")
 		if bg != null:
 			tag.draw_texture(bg, _vec((pieces.get("tag", {}) as Dictionary).get("origin_in_tag", [16, -6])))
-		else:
-			var paper := StyleBoxFlat.new()
-			paper.bg_color = UiTheme.PAPER
-			paper.border_color = Color(UiTheme.INK_SOFT, 0.55)
-			paper.set_border_width_all(1)
-			paper.set_corner_radius_all(6)
-			tag.draw_style_box(paper, Rect2(Vector2(16, 0), Vector2(tag.size.x - 16, tag.size.y)))
 		var seal_piece: Dictionary = pieces.get(SEAL_ART[kind], pieces.get("seal", {}))
 		center = _vec(seal_piece.get("center_in_tag", [20, 23]))
 	var room := tag.size.x - main_pos.x - TEXT_RIGHT_PAD     # 复测 v3.79：「37 / 40」「Very high」比签宽时收字号，不顶签的右沿
@@ -290,9 +281,6 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 	if seal != null:
 		var side := seal.get_size() * seal_scale
 		tag.draw_texture_rect(seal, Rect2((center - side * 0.5).floor(), side), false)
-	else:
-		tag.draw_circle(center, 15.0 * seal_scale, SEAL_COLORS[kind])
-		tag.draw_arc(center, 15.0 * seal_scale, 0.0, TAU, 32, Color(SEAL_COLORS[kind]).darkened(0.35), 2.0, true)
 
 
 ## 收到最小字号还放不下的（英文「Overloaded」之类），横向压扁到正好 [param room] 宽 —— 不伸出签的右沿（游戏测试 10-27）
@@ -315,10 +303,6 @@ func _draw_fit(tag: Control, font: Font, pos: Vector2, text: String, p_size: int
 func _draw_inlay(tag: Control, tex: Texture2D, sliced: bool) -> void:
 	var at := Vector2(INLAY_TAG_X, INLAY_TOP)
 	if tex == null:
-		var box := StyleBoxFlat.new()
-		box.bg_color = Color("2a1c0e", 0.85)
-		box.set_corner_radius_all(4)
-		tag.draw_style_box(box, Rect2(Vector2(INLAY_TAG_X, 0), Vector2(tag.size.x - INLAY_TAG_X, tag.size.y)))
 		return
 	if not sliced:
 		tag.draw_texture(tex, at)

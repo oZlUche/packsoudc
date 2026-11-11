@@ -1,6 +1,6 @@
 ## 肖像位 / 徽记位（157 补充二，作者定：没图也先留框）：一块方位，**框永远在，图来了填进去**。
 ##
-## 框是美术的 `portrait_frame.png`（中间透明的九宫格），画在位子外扩 json `inset` 处，不占排版；没这张图就画一圈细线。
+## 框是美术的 `portrait_frame.png`（中间透明的九宫格），画在位子外扩 json `inset` 处，不占排版。
 ## 214 定稿是铜币圆框：json 的边距、外扩都是 0，整张等比缩放盖在币缘上。
 ## 图都比位子大（源图 256，摆在 96 / 160 / 32），整块按 mipmap 缩小，币缘的细纹和刻线才不起锯齿（导入也要开 mipmap）
 ## 里面：有图放图；没图且是肖像位放 `portrait_empty.png`（暗底半身剪影），连这张也没有就自己画剪影；徽记位没图就空着
@@ -11,7 +11,7 @@ extends Control
 var picture: TextureRect = null
 ## 没图时的占位（肖像位才有：美术的剪影图，或者 null = 自己画）
 var placeholder: TextureRect = null
-## 框（美术的框图；没图 null = 自己画细线）
+## 框（美术的框图；没图 null）
 var frame: NinePatchRect = null
 var _silhouette := false
 
@@ -57,11 +57,10 @@ func _fill(tex: Texture2D) -> TextureRect:
 	return r
 
 
-## 没框图：暗底 + 一圈细线；没剪影图：半身剪影（头一个圆、肩一道弧）
+## 没剪影图：暗底 + 半身剪影（头一个圆、肩一道弧）
 func _draw() -> void:
-	if frame == null or _silhouette:
-		draw_rect(Rect2(Vector2.ZERO, size), Color(UiPalette.BG, 0.6))
 	if _silhouette:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(UiPalette.BG, 0.6))
 		var c := size * 0.5
 		var r := size.x * 0.17
 		draw_arc(c - Vector2(0, size.y * 0.1), r, 0.0, TAU, 32, UiPalette.LINE.lightened(0.3), 2.0)
@@ -70,5 +69,3 @@ func _draw() -> void:
 			var a := PI + PI * float(i) / 16.0
 			pts.append(Vector2(c.x + cos(a) * size.x * 0.32, size.y - 2.0 + sin(a) * size.y * 0.22))
 		draw_polyline(pts, UiPalette.LINE.lightened(0.3), 2.0)
-	if frame == null:
-		draw_rect(Rect2(Vector2.ZERO, size), UiPalette.LINE.lightened(0.25), false, 2.0)

@@ -3496,7 +3496,7 @@ func player_spec() -> CombatantSpec …
 体力上限、棋盘尺寸、初始包、带入的件数 / 稀有度上限（-1 = 不限，作者：改成字段、默认不限）、**被动技能** `skills`（一局规则的效果构件，和局外 buff 同一套：
 侦察 / 潜行 / 逃跑三个构件往 `RunContext` 加数，猎手系统读；主动技能以后走事件层，报告 072）。**没有搜索速度**（作者：搜索在战斗外、不是实时的）。
 三个初始角色是作者定的安德烈乌斯 / 布鲁图斯 / 马库斯（7.3，082）；早期的占位 `default` / `scout` 已删。
-255（v4.48）再加三样：**短板** `flaw`（一条 `RunSkill`，必填、不能是主动，和被动技能同一套构件，`CharacterDef.traits()` = 技能 + 短板，一局规则 / 掉落 / 战斗规则都按它编；三人各一条：马库斯「不懂药」`unschooled` 只截【药剂】标签的治疗一半（`BuffDef.heal_cut_tags`，`heal(..., source_tags)`，不碰每秒回血）、安德烈乌斯「身子薄」`thin_build` 护甲上限 ×0.8、布鲁图斯「回气慢」`short_wind` 耐力低于两成时每秒回复减半（`BuffDef.regen_cut / regen_cut_below`，`CombatantRuntime.regen_kept`））；**随身之物** `fixed_items`（`FixedItem`：id、origin、rot）—— `CharacterDef.shape_board` 开局（`RunState.start`）与开局屏重摆时钉上去：`ItemInstance.is_pinned`，自带底板（`GridInventory.is_covered` 算覆盖、`requires_bag` 也不要包），`is_locked` 恒真，包压不上去，悬浮窗按钮全灰（`ItemActions.pinned_guard`），拖不动（`DragLayer.refused_notice`），不能标不参战，不进开局屏摆盘（`RunState.layout_of`）、不算带入、撤离不带回（`RunResult.settle`）；**棋盘缺格** `board_mask`（格坐标，`set_blocked`；缺格不放包不放东西，画成透空，`BoardFrame.wrap` 的框沿轮廓走 `contour`：`BoardContour.pieces` 按美术 11:21 的拼件规则排直边 `edge_*` → 凹角 `inner_*` → 凸角 `outer_*`（格 60、框厚 20，按格边长缩放），图在 `assets/ui/board/mask/<name>.png`，没图画占位皮带；整块矩形照旧九宫格）。导入器：棋盘最宽九格（`CHARACTER_BOARD_MAX_W`），缺格在盘内不重复、没有只对角相连的顶点（`BoardContour.pinch_points`，拼不出框），随身之物找得到 / 不是包 / 不是封印 / 在盘内 / 不压缺格 / 不互相重叠。
+255（v4.48）再加三样：**短板** `flaw`（一条 `RunSkill`，必填、不能是主动，和被动技能同一套构件，`CharacterDef.traits()` = 技能 + 短板，一局规则 / 掉落 / 战斗规则都按它编；三人各一条：马库斯「不懂药」`unschooled` 只截【药剂】标签的治疗一半（`BuffDef.heal_cut_tags`，`heal(..., source_tags)`，不碰每秒回血）、安德烈乌斯「身子薄」`thin_build` 护甲上限 ×0.8、布鲁图斯「回气慢」`short_wind` 耐力低于两成时每秒回复减半（`BuffDef.regen_cut / regen_cut_below`，`CombatantRuntime.regen_kept`））；**随身之物** `fixed_items`（`FixedItem`：id、origin、rot）—— `CharacterDef.shape_board` 开局（`RunState.start`）与开局屏重摆时钉上去：`ItemInstance.is_pinned`，自带底板（`GridInventory.is_covered` 算覆盖、`requires_bag` 也不要包），`is_locked` 恒真，包压不上去，悬浮窗按钮全灰（`ItemActions.pinned_guard`），拖不动（`DragLayer.refused_notice`），不能标不参战，不进开局屏摆盘（`RunState.layout_of`）、不算带入、撤离不带回（`RunResult.settle`）；**棋盘缺格** `board_mask`（格坐标，`set_blocked`；缺格不放包不放东西，画成透空，`BoardFrame.wrap` 的框沿轮廓走 `contour`：`BoardContour.pieces` 按美术 11:21 的拼件规则排直边 `edge_*` → 凹角 `inner_*` → 凸角 `outer_*`（格 60、框厚 20，按格边长缩放），图在 `assets/ui/board/mask/<name>.png`；整块矩形照旧九宫格）。导入器：棋盘最宽九格（`CHARACTER_BOARD_MAX_W`），缺格在盘内不重复、没有只对角相连的顶点（`BoardContour.pinch_points`，拼不出框），随身之物找得到 / 不是包 / 不是封印 / 在盘内 / 不压缺格 / 不互相重叠。
 
 **开局屏**（161 拆成三页，右下角大号「返回 / 继续」）：一、选角色（角色卡：`StatSealPlate` 一排火漆属性牌（生命 / 耐力 / 耐力回复 / 体力，255），技能，初始包预览；179：三栏各坐一块凹槽板 `PANEL_GROOVE`、间距 36，中栏撑满、棋盘栏按这个角色的棋盘宽贴右，负重上限 / 棋盘 / 开局金币是三块 `CapTile` 图标牌，技能「被动」小字 + 名字 22 粗体亮黄铜描边、说明 17（`CharacterDef.skill_entries`），不放角色说明与背包行；三页不再坐石板，整屏是 `setup/bg_hall` 背景画，没图纯色，`GameScreen._painted_screen`）；二、配道具（预设、这个角色的棋盘 —— 初始包已经摆好、地上、右边分页仓库（163），同一层拖拽）；三、选地图、规模、难度、种子，出发摘要。
 **从仓库往包里拖，放得进的就是带的** —— 带入的真正限制是初始包的空间，没有第二套规则去数格子。拖上棋盘那一刻东西就离开了仓库；
@@ -3707,7 +3707,7 @@ func player_spec() -> CombatantSpec …
 - 退掉：`bg_stone`、`panel_stone`、`panel_inset`、`panel_hud`、`frame_stone`、`hud/bar`；`UiTheme.dress_backdrop / backdrop_art / backdrop_tint / tint_backdrop` 删了，地图视图没底图时就是底色。
 
 **名牌**（157 补充二，作者定「没图也先留框」）：`Nameplate` 是 `PanelNameplate` 底（`nameplate_bronze.png`，2026-10-17 起铜质狗牌，单层九宫格、深底亮字），左边 64×64 肖像位、右边 32×32 徽记位都是 `PortraitSlot`
-（`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版；没图画细线），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
+（`ui/widgets/`）—— 框永远在（`portrait_frame.png` 画在位子外扩 json `inset` 处，不占排版），有肖像填图、没有放 `portrait_empty.png` 剪影（再没有就自己画）。
 **回放**（157 补充一）：正式游戏的 `BattleView` 不建逐条文字播报（`show_ticker` 默认假，回放浏览器与战斗沙盒设真；沙盒 v5.61 退役），空出来的高度给棋盘；`BOARD_SCALE` 0.5 → 1.0。
 
 **地图底图**（作者定：每章一张手绘地图，风格各不同）：`ChapterDef.map_skin`（默认 `ruins`）→ `assets/maps/<id>.png` + json（`tone`）。`MapView.skin` 设了就钉在画布上（192：json `safe_area` = 美术留给路网的淡色椭圆的外接矩形，`MapSkin.paper_rect` 把它等比放大到盖住画布、中心对齐，
@@ -3719,7 +3719,7 @@ func player_spec() -> CombatantSpec …
 
 ### 8.9 静态教程遮罩（166）
 
-`CoachOverlay`（`ui/widgets/`）：整屏一层阴影（吞掉所有点击），目标周围挖洞（包围盒外扩 `HOLE_PAD` 8，洞边一圈高光），一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右按方向转；缺图画折线）从洞外指过来，箭尾一块羊皮纸（`PanelTooltip`）写说明。点任意处 / 按任意键下一步，最后一步收掉、发 `finished`。
+`CoachOverlay`（`ui/widgets/`）：整屏一层阴影（吞掉所有点击），目标周围挖洞（包围盒外扩 `HOLE_PAD` 8，洞边一圈高光），一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右按方向转）从洞外指过来，箭尾一块羊皮纸（`PanelTooltip`）写说明。点任意处 / 按任意键下一步，最后一步收掉、发 `finished`。
 
 - 步骤是数据：`data/authoring/coach/<id>.json` = `{"id", "steps": [{"target": 读数部件 id, "text"}]}`，`CoachOverlay.problems` 校验目标是登记过的部件、写了字。目标位置每一步现问（地图屏给 `HudHost.rect_of`），所以玩家挪了读数，教程跟着走。
 - 章节写 `coaches.map`（`ChapterDef`），序章一 = `prologue_map`（体力、货币、背包、放大镜四步）。地图第一次露出来（没有事件 / 规则卡 / 暂停压着、屏在地图上）时放一次，放过记进 `MetaState.coach_seen`（跟着存档位）；调试台有「重放教程」。

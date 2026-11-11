@@ -1,5 +1,5 @@
 ## 作者 10-27（带入现金）：乙 石刻拖条 —— 横向滚动条那道石槽（kit `sb_groove_h`）+ 把手（`sb_grab_<态>_h`），槽里已拖过的一段铺一层金。
-## 按住把手或槽上任一处拖，值按左右比例走（[member Range.min_value] … [member Range.max_value]）；缺图画平色槽与把手
+## 按住把手或槽上任一处拖，值按左右比例走（[member Range.min_value] … [member Range.max_value]）
 class_name StoneSlider
 extends Range
 
@@ -8,8 +8,6 @@ const GROOVE_H := 14.0
 const GRAB_W := 30.0
 const GRAB_H := 24.0
 const FILL := Color(0.86, 0.66, 0.24, 0.55)
-const FLAT_GROOVE := Color("8a7a64")
-const FLAT_GRAB := Color("d8cbb0")
 
 ## 关着：不响应拖、整条压灰（仓库没钱时）
 var enabled := true:
@@ -86,8 +84,6 @@ func _draw() -> void:
 	var gb := _box("kit/sb_groove_h", 14.0)
 	if gb != null:
 		draw_style_box(gb, groove)
-	else:
-		draw_rect(groove, FLAT_GROOVE)
 	var gx := _grab_x()
 	if gx > 0.0:
 		draw_rect(Rect2(2.0, y + 3.0, gx - 2.0, GROOVE_H - 6.0), FILL)
@@ -98,7 +94,5 @@ func _draw() -> void:
 	var kb := _box("kit/sb_grab_%s_h" % state, 12.0)
 	if kb != null:
 		draw_style_box(kb, grab)
-	else:
-		draw_rect(grab, FLAT_GRAB)
 	if not enabled:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.5, 0.5, 0.5, 0.25))

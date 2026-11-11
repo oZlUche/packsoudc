@@ -65,8 +65,6 @@ func _draw() -> void:
 	var tex: Texture2D = _tex.get(st)
 	if tex != null:
 		draw_texture_rect(tex, Rect2(Vector2.ZERO, size), false)
-	else:
-		draw_rect(Rect2(Vector2.ZERO, size), Color("8a5a32") if st != "disabled" else Color("6e655a"))
 	var dy := 1.0 if st == "pressed" else 0.0
 	var f := UiPalette.cjk_font_bold()
 	# 字框（原尺寸）× 缩放；字号按档放大，放不下（框宽 − LABEL_PAD，别贴左边的钉子）就一号号缩

@@ -243,7 +243,7 @@ static func run_art(t: TestCase) -> void:
 	for n in ["tip/pin_badge", "tip/pin_badge_2x"]:
 		t.not_null(UiTheme.art_cached(n), "随身钉 %s" % n)
 	var tag := GiftTag.make("首次选他：x")
-	t.check(tag.has_art(), "首次赠包签用定稿九宫格")
+	t.check(tag.get_theme_stylebox("panel") is StyleBoxTexture, "首次赠包签用定稿九宫格")
 	tag.free()
 	for k in ["t", "r", "b", "l"]:
 		t.not_null(UiTheme.art_cached(BoardFrame.MASK_DIR + "edge_" + k), "直边 edge_%s" % k)

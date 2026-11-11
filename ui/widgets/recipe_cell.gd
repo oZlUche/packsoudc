@@ -66,17 +66,11 @@ static func blank(size_px: Vector2) -> RecipeCell:
 	return c
 
 
-## 补充二：铁匠铺的格子区（深铁框九宫格，没图退回 227 素框）
+## 补充二：铁匠铺的格子区（深铁框九宫格）
 static func shelf() -> PanelContainer:
 	var p := PanelContainer.new()
-	var tex := UiTheme.art_cached(FRAME)
-	var box: StyleBox = null
-	if tex != null:
-		var edge := [FRAME_EDGE, FRAME_EDGE, FRAME_EDGE, FRAME_EDGE]
-		box = UiTheme.nine_box(tex, edge, edge)
-	else:
-		box = BoardFrame.box("plain", false)
-	p.add_theme_stylebox_override("panel", box)
+	var edge := [FRAME_EDGE, FRAME_EDGE, FRAME_EDGE, FRAME_EDGE]
+	p.add_theme_stylebox_override("panel", UiTheme.nine_box(UiTheme.art_cached(FRAME), edge, edge))
 	UiTheme.set_tone(p, UiTheme.TONE_LIGHT)
 	return p
 

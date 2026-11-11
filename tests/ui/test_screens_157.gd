@@ -526,7 +526,7 @@ static func frame_nameplate_slots(t: TestCase, root: Window) -> void:
 	var saved := UiTheme.asset_root
 	UiTheme.asset_root = NOWHERE
 	var bare := PortraitSlot.new(64)
-	t.check(bare.frame == null and bare.placeholder == null and bare.picture == null, "没框图、没剪影图：框和剪影自己画")
+	t.check(bare.frame == null and bare.placeholder == null and bare.picture == null, "没框图、没剪影图：剪影自己画")
 	bare.free()
 	UiTheme.asset_root = saved
 	plate.free()

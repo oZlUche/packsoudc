@@ -64,13 +64,8 @@ static func fits_half(label: String) -> bool:
 
 
 func _box(state: String) -> StyleBox:
-	var tex := UiTheme.art_cached("tip/tipbtn_" + state)
-	if tex == null:
-		var flat_ := StyleBoxFlat.new()
-		flat_.bg_color = {"danger": Color("7a2a1e"), "disabled": Color("3a342c"), "hover": Color("5a4a38"), "pressed": Color("3e3226")}.get(state, Color("4a3c2e"))
-		return flat_
 	# 内边距不跟九宫格边走（那 12 含投影边）：上下 0、左右 8，按钮高就是 HEIGHT（UI替换美术 21:37 量出 46）
-	return UiTheme.nine_box(tex, [12.0, 12.0, 12.0, 12.0], [8.0, 0.0, 8.0, 0.0], BLEED)
+	return UiTheme.nine_box(UiTheme.art_cached("tip/tipbtn_" + state), [12.0, 12.0, 12.0, 12.0], [8.0, 0.0, 8.0, 0.0], BLEED)
 
 
 ## 平常 / 等第二下 两套样子

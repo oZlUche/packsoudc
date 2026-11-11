@@ -89,9 +89,5 @@ func _draw() -> void:
 	var tex := UiTheme.art_cached(POUCH_ART)
 	if tex != null:
 		draw_texture_rect(tex, Rect2(at, ps), false)
-	else:
-		draw_circle(at + ps * Vector2(0.5, 0.6), ps.x * 0.4, Color("8b5a33"))
 	if _slip != null:
 		draw_style_box(_slip, r)
-	else:
-		draw_rect(r, Color("efe3c6"))
