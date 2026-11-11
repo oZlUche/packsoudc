@@ -39,6 +39,10 @@ static func run(dummies: Dictionary, ctx: Dictionary) -> Dictionary:
 	var overtime: OvertimeRules = ctx.get("overtime", null)
 	var out := {"cases": [], "packs": [], "seeds": {"base": p_seed, "rule": _seed_rule(mode)}, "population": {}, "cells": {}}
 	var groups := _groups(dummies, items)
+	var mut: Dictionary = ctx.get("mutation", {})     # 303：难度实验的改数（[BalanceMutation]）；空 = 基线
+	for g in groups:
+		for member in groups[g]:
+			BalanceMutation.scale_hp((member as Dictionary)["spec"], mut)
 	var population: Array = []
 	if mode == FREQUENCY:
 		population = real_nodes(ctx)
@@ -54,6 +58,9 @@ static func run(dummies: Dictionary, ctx: Dictionary) -> Dictionary:
 			var targets: Array = [&""]
 			if mode == COVERAGE:
 				targets = coverage_targets(pool, enemies)
+				var only: Array = ctx.get("only_enemies", [])     # 303：覆盖测试只跑这几种敌人（空 = 全池）
+				if not only.is_empty():
+					targets = targets.filter(func(t: StringName) -> bool: return only.has(String(t)))
 			for target in targets:
 				var cell := "%s/t%d" % [g, tier] + ("/%s" % target if target != &"" else "")
 				out["cells"][cell] = {"group": g, "archetype": String(g).get_slice("/", 0), "bracket": int(String(g).get_slice("/", 1)),
@@ -66,7 +73,7 @@ static func run(dummies: Dictionary, ctx: Dictionary) -> Dictionary:
 					if not cache.has(key):     # 敌人只看（种子, 档, 敌人, i），各路木桩共用一份：造一次，连同造完时随机源的状态记下
 						var r0 := RandomNumberGenerator.new()
 						r0.seed = case_seed(p_seed, tier, i, target)
-						var built := _enemy(mode, pool, enemies, items, tier, target, bare, population, r0)
+						var built := _enemy(mode, pool, enemies, items, tier, target, bare, population, r0, mut)
 						built["state"] = r0.state
 						cache[key] = built
 					var made: Dictionary = cache[key]
@@ -181,7 +188,7 @@ static func _head(n: int, cell: String, mode: String, member: Dictionary, bracke
 
 ## 造这一场的敌人：{spec, summary, node} 或 {error, …}
 static func _enemy(mode: String, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, tier: int, target: StringName,
-		bare: MapNode, population: Array, rng: RandomNumberGenerator) -> Dictionary:
+		bare: MapNode, population: Array, rng: RandomNumberGenerator, mut: Dictionary = {}) -> Dictionary:
 	var content := {}
 	var node: Variant = null
 	match mode:
@@ -202,9 +209,12 @@ static func _enemy(mode: String, pool: EnemyPool, enemies: EnemyDatabase, items:
 			node = {"type": "battle", "kind": "", "danger": 0}
 	var summary := {"id": String(content.get("enemy", target)), "strength": int(content.get("strength", tier)),
 		"items": EnemyKit.entries_of(content).size(), "digest": ExperimentManifest.canonical_hash(content)}
+	if not mut.is_empty() and not content.is_empty():
+		content = BalanceMutation.foe_content(content, mut, enemies, pool)     # 303：摘要照原件算（同一个敌人实例），改的是打的那份
 	var spec := EnemyKit.spec_of(content, enemies, pool, items) if not content.is_empty() else null
 	if spec == null:
 		return {"error": E_ENEMY_BUILD, "summary": summary, "node": node}
+	BalanceMutation.scale_hp(spec, mut)
 	return {"spec": spec, "summary": summary, "node": node}
 
 
