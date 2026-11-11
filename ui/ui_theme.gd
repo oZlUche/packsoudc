@@ -1197,14 +1197,10 @@ static func _art_box(name: String, title_strip: bool = false, content: int = -1)
 	return s
 
 
-## 164：基地整屏背景（`home/bg_home.png`，按比例铺满、多的裁掉）；没图什么也不加、返回 null
-static func dress_home_backdrop(rect: ColorRect) -> TextureRect:
-	return dress_backdrop(rect, ART_HOME_BG, "HomeBackdrop")
-
-
-## 整屏背景图铺进 [param rect]（按比例铺满、多的裁掉）；没图什么也不加、返回 null（179：开局屏的场地也走这里）
-static func dress_backdrop(rect: ColorRect, art_name: String, node_name: String) -> TextureRect:
-	var tex := art(art_name)
+## 整屏背景图铺进 [param rect]（按比例铺满、多的裁掉）；没图什么也不加、返回 null（179：开局屏的场地也走这里）。
+## [param keep]：这张图留在 [method art_cached] 里不放（基地的起始底图：每次回基地都要，重读一张约 50 ms）
+static func dress_backdrop(rect: ColorRect, art_name: String, node_name: String, keep: bool = false) -> TextureRect:
+	var tex := art_cached(art_name) if keep else art(art_name)
 	if tex == null:
 		return null
 	var pic := TextureRect.new()
