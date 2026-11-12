@@ -36,6 +36,8 @@ static var _arrow_pressed: Texture2D = null
 
 ## 现在的默认形状（拖拽层切的那个；测试看 —— 无头跑时系统那头读不回来）
 static var shape: int = Input.CURSOR_ARROW
+## 314：手上拿着东西（拖拽层设）。悬浮窗看它，拿着东西停在道具上不弹道具窗
+static var holding := false
 
 
 ## 按材质换上那一套（认不出的材质按默认）；没图的那几种还原成系统光标。返回换了几种
@@ -67,6 +69,7 @@ static func press(down: bool) -> void:
 
 ## 拖拽层用：拿起来（[param dragging] 真、还没对准哪儿）是「拖动」，对准了按 [param ok] 是「可放 / 不可放」；放下还原成箭头
 static func set_drag(dragging: bool, ok: Variant = null) -> void:
+	holding = dragging
 	var want: int = Input.CURSOR_ARROW
 	if dragging:
 		want = Input.CURSOR_DRAG if ok == null else (Input.CURSOR_CAN_DROP if bool(ok) else Input.CURSOR_FORBIDDEN)

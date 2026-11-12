@@ -110,7 +110,14 @@ static func run_drag(t: TestCase) -> void:
 	drag.fuse_drop = func(held: ItemInstance, home: ItemContainer, target: ItemInstance, target_home: ItemContainer, ghost: Rect2) -> void:
 		asked.append([held.uid, home, target.uid, target_home, ghost])
 	view.grab_requested.emit(view, k1.uid, Vector2(24, 24))
-	t.check(drag.is_dragging(), "拿起匕首")
+	t.check(drag.is_dragging() and UiCursor.holding, "拿起匕首（手上拿着：悬浮窗不弹）")
+	var tip := HoverTip.new()
+	tip.watch(view)
+	var mv := InputEventMouseMotion.new()
+	mv.position = (Vector2(3, 0) + Vector2(0.5, 0.5)) * InventoryView.CELL
+	tip._on_view_input(view, mv)
+	t.check(not tip.is_showing(), "拿着匕首停在另一把上：不弹道具窗（UI设计 复核 v6.10）")
+	tip.free()
 	t.check(view.fuse_marks.has(k2.uid) and view.fuse_marks.has(vial.uid) and not view.fuse_marks.has(fish.uid), "另一把匕首、毒药瓶标小锤，熏鱼不标（%s）" % [view.fuse_marks.keys()])
 	t.not_null(UiTheme.art_cached(InventoryView.FUSE_ART), "小锤有图（占位）")
 	var at := (Vector2(3, 0) + Vector2(0.5, 0.5)) * InventoryView.CELL
@@ -123,7 +130,7 @@ static func run_drag(t: TestCase) -> void:
 		t.check((asked[0][4] as Rect2).has_area(), "带着残影的外框")
 	t.check(board.has_item(k1.uid) and k1.origin == Vector2i(0, 0), "手上那把已经回到原处")
 	t.check(board.has_item(k2.uid), "被压那把没动")
-	t.check(view.fuse_marks.is_empty(), "放下：小锤收了")
+	t.check(view.fuse_marks.is_empty() and not UiCursor.holding, "放下：小锤收了、手上空了")
 	drag.fuse_partner = func(_a: ItemInstance, _b: ItemInstance) -> bool: return false
 	view.grab_requested.emit(view, k1.uid, Vector2(24, 24))
 	drag.update_preview(at)
