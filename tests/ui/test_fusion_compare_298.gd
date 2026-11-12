@@ -13,7 +13,7 @@ static func run_fusion_line(t: TestCase) -> void:
 	var line := ItemTooltip.fusions_line(knife)
 	t.check(line.contains("[url=item:whetstone]") and line.contains("[url=recipe:fuse_quenched_dagger]"), "刀：+ 磨刀石 → 淬火匕首（%s）" % line)
 	t.check(ItemTooltip.fusions_line(stone).contains("[url=item:knife]"), "磨刀石那边也写（搭档是刀）")
-	t.eq(ItemTooltip.fusions_line(c.items.get_def(&"salve")), "", "伤药拼不了：空")
+	t.eq(ItemTooltip.fusions_line(c.items.get_def(&"smoked_fish")), "", "熏鱼拼不了：空（310：伤药有了拼接配方）")
 	var body := String(ItemTooltip.describe_full(ItemInstance.create(knife)).get("body", ""))
 	var fi := body.find(UiText.t("tip.fuses_to").split("%")[0])
 	t.check(fi >= 0, "刀的悬浮窗里有「可拼为」")

@@ -32,7 +32,7 @@ static func _bagged() -> RunState:
 
 
 static func run_locked(t: TestCase) -> void:
-	t.begin("305 · 锁定的、随身之物：贴着不出锤、点锤不合、拖上去不合")
+	t.begin("305 · 锁定的、随身之物：贴着不出锤、点锤不合（310：涂毒匕首也一样）")
 	var s := _run()
 	var crafting := CraftingModule.of(s)
 	var k1 := _put(s.board, s.items, &"knife", Vector2i(0, 0))
@@ -47,14 +47,14 @@ static func run_locked(t: TestCase) -> void:
 	t.eq(crafting.fusion_pairs().size(), 0, "随身之物：不出锤")
 	k2.state.erase(ItemInstance.PINNED_KEY)
 	var knife := _put(s.board, s.items, &"knife", Vector2i(4, 0))
-	var vial := ItemInstance.create(s.items.get_def(&"poison_vial"), 0)
+	var vial := _put(s.board, s.items, &"poison_vial", Vector2i(5, 0))     # 310：涂毒匕首也是贴着点锤
 	knife.set_locked(true)
-	t.check(not bool(crafting.craft(vial, knife.uid)["ok"]), "拖合压在锁着的刀上：不合")
+	t.check(not bool(crafting.fuse(vial.uid, knife.uid)["ok"]), "涂毒匕首：刀锁着，不合")
 	knife.set_locked(false)
 	vial.set_locked(true)
-	t.check(not bool(crafting.craft(vial, knife.uid)["ok"]), "手上那件锁着：不合")
+	t.check(not bool(crafting.fuse(vial.uid, knife.uid)["ok"]), "毒药瓶锁着：不合")
 	vial.set_locked(false)
-	t.check(bool(crafting.craft(vial, knife.uid)["ok"]), "都没锁：合了")
+	t.check(bool(crafting.fuse(vial.uid, knife.uid)["ok"]), "都没锁：合了")
 
 
 static func run_learn(t: TestCase) -> void:
@@ -63,7 +63,7 @@ static func run_learn(t: TestCase) -> void:
 	var crafting := CraftingModule.of(s)
 	var knife := s.items.get_def(&"knife")
 	var stone := s.items.get_def(&"whetstone")
-	t.eq(crafting.known_level(knife, stone, true), 0, "开局：不知道刀 + 磨刀石出什么")
+	t.eq(crafting.known_level(knife, stone), 0, "开局：不知道刀 + 磨刀石出什么")
 	var k := _put(s.board, s.items, &"knife", Vector2i(0, 0))
 	var w := _put(s.board, s.items, &"whetstone", Vector2i(0, 2))
 	var pv := crafting.fuse_preview(k.uid, w.uid)
@@ -74,12 +74,12 @@ static func run_learn(t: TestCase) -> void:
 	t.check(bool(d["ok"]) and d["recipe"] == "fuse_quenched_dagger", "合了，回执带配方 id")
 	t.check(s.knows_recipe(&"fuse_quenched_dagger"), "记下配方")
 	t.check(s.has_met(&"quenched_dagger"), "认识成品")
-	t.eq(crafting.known_level(knife, stone, true), 2, "再看：知道")
+	t.eq(crafting.known_level(knife, stone), 2, "再看：知道")
 	t.check(not s.knows_recipe(&"fuse_twin_blades"), "别的配方照旧不知道")
 	var s2 := _bagged()
 	t.not_null(_put(s2.board, s2.items, &"twin_blades", Vector2i(0, 0)), "双刀摆进这一局自己的背包")
 	t.check(s2.has_met(&"twin_blades"), "摆进背包：认识")
-	t.eq(CraftingModule.of(s2).known_level(knife, knife, true), 1, "没合过、但双刀进过背包：认识成品")
+	t.eq(CraftingModule.of(s2).known_level(knife, knife), 1, "没合过、但双刀进过背包：认识成品")
 
 
 static func run_save(t: TestCase) -> void:

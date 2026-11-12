@@ -34,6 +34,9 @@ const STRIP_GAP := 22.0
 var quick_target: ItemContainer = null
 ## 双击之后的提示回调（容器屏想自己写）：`func(text: String)`
 var hint_sink: Callable = Callable()
+## 审查 A1 / 310：这件许不许拿去合成 `func(inst: ItemInstance) -> bool`（商店给还没成交的货返回 false：合掉就结不了账）。
+## 不许的那件旁边不浮小锤、点了也不合。不给 = 都许
+var fuse_filter: Callable = Callable()
 ## 230：悬浮窗按钮里「双击做的那件事」叫什么（有 [member quick_target] 的屏给：`func(inst) -> ItemActions.Action`，出售区写「出售 N 币」……）；
 ## 不给 = 「放进去」；没有 quick_target = 「放到地上」
 var quick_action: Callable = Callable()
@@ -58,9 +61,9 @@ func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 	_drag = drag
 	_build()
 	_run.board.changed.connect(_refresh_readout)
-	_run.board.changed.connect(_refresh_fusions)
+	_run.board.changed.connect(refresh_fusions)
 	_refresh_readout()
-	_refresh_fusions()
+	refresh_fusions()
 
 
 ## 这块面板用的拖拽层（279：砧的槽也登记到这一层）
@@ -68,11 +71,21 @@ func drag_layer() -> DragLayer:
 	return _drag
 
 
-## 279 拼接：贴着、配得上的两件接缝上画小锤（棋盘一变就重找）
-func _refresh_fusions() -> void:
+## 279 拼接：贴着、配得上的两件接缝上画小锤（棋盘一变就重找；持有方改了 [member fuse_filter] 的判断时自己再调一次）
+func refresh_fusions() -> void:
 	var crafting := CraftingModule.of(_run)
-	if board_view != null:
-		board_view.fusions = crafting.fusion_pairs() if crafting != null else ([] as Array[Dictionary])
+	if board_view == null:
+		return
+	var pairs: Array[Dictionary] = []
+	if crafting != null:
+		for p in crafting.fusion_pairs():
+			if _fusable(int(p["a"])) and _fusable(int(p["b"])):
+				pairs.append(p)
+	board_view.fusions = pairs
+
+
+func _fusable(uid: int) -> bool:
+	return not fuse_filter.is_valid() or bool(fuse_filter.call(_run.board.get_item(uid)))
 
 
 func _build() -> void:
@@ -108,18 +121,9 @@ func _build() -> void:
 	_attach_ground()
 	_drag.items_displaced.connect(_on_displaced)
 	_drag.grab_refused.connect(func(uid: int): _hint_text(DragLayer.refused_notice(_run.board, uid)))     # 207 / 255
-	# 114 合成（作者定）：拖到上面立刻合 —— 拖起一件时能合的那几件高光；压到其中一件上放手，两件立刻变成产物
+	# 279 / 310：合成只有一种 —— 贴着放、点接缝上的小锤、确认（114 的拖上去合已删）
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
-	_drag.craft = func(a: ItemInstance, b: ItemInstance) -> ItemDef:
-		return crafting.output_of(a.def, b.def) if crafting != null else null
 	if crafting != null:
-		_drag.craft_grid = _run.board
-		_drag.craft_drop = func(a: ItemInstance, b_uid: int) -> bool:
-			return bool(crafting.craft(a, b_uid)["ok"])
-		_drag.craft_note = func(a: ItemInstance, b: ItemInstance) -> String:     # 140：预览旁边那行小字；305：没合成过不说
-			return crafting.note_of(a.def, b.def) if crafting.known_level(a.def, b.def) == 2 else ""
-		_drag.craft_known = func(a: ItemInstance, b: ItemInstance) -> bool:     # 305：成品不认识 = 打问号
-			return crafting.known_level(a.def, b.def) > 0
 		crafting.done.connect(_on_crafted)
 		board_view.fuse_requested.connect(func(_v: InventoryView, a: int, b: int) -> void: ask_fuse(a, b))     # 279：点锤；305：先看再合
 	# 175 第三批：铸牌压到武器上放手 = 附魔（任何格子容器里都行；铸牌已经拿在手上）
@@ -288,7 +292,7 @@ func say_no_room(inst: ItemInstance) -> void:
 ## 306 定稿：窗是 [FuseNote]（纸条），摆在两件右边、尖角和小锤同高；开着时那一对照悬停那一档画
 func ask_fuse(a_uid: int, b_uid: int) -> bool:
 	var crafting := CraftingModule.of(_run)
-	var pv := crafting.fuse_preview(a_uid, b_uid) if crafting != null else {}
+	var pv := crafting.fuse_preview(a_uid, b_uid) if crafting != null and _fusable(a_uid) and _fusable(b_uid) else {}
 	if pv.is_empty():
 		return false
 	var a := pv["a"] as ItemInstance
@@ -317,7 +321,9 @@ func ask_fuse(a_uid: int, b_uid: int) -> bool:
 		if (int(f["a"]) == a_uid and int(f["b"]) == b_uid) or (int(f["a"]) == b_uid and int(f["b"]) == a_uid):
 			hammer_y = (xf * (Vector2(f["seam"]) * board_view.cell_px)).y
 	fuse_note.open(a.def, b.def, pv["output"] as ItemDef, int(pv["known"]) > 0, "\n".join(PackedStringArray(lines)), pair, hammer_y,
-		func() -> void: crafting.fuse(a_uid, b_uid))
+		func() -> void:
+			if _fusable(a_uid) and _fusable(b_uid):
+				crafting.fuse(a_uid, b_uid))
 	board_view.held_fusion = Vector2i(a_uid, b_uid)
 	return true
 

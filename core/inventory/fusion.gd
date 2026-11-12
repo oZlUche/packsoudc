@@ -33,7 +33,7 @@ static func pairs(board: GridInventory, recipes: Array) -> Array[Dictionary]:
 		var b := board.get_item(key.y)
 		if not spendable(board, a) or not spendable(board, b):
 			continue
-		var r := RecipeDef.find(recipes, a.def.id, b.def.id, true)
+		var r := RecipeDef.find(recipes, a.def.id, b.def.id)
 		if r == null:
 			continue
 		out.append({"a": key.x, "b": key.y, "output": r.output, "recipe": r.id, "seam": _middle(edges[key])})
@@ -53,7 +53,7 @@ static func _middle(points: Array) -> Vector2:
 	return best
 
 
-## 305（改造 A）：这件能被合成吃掉吗 —— 玩家锁定的、扎了根的、随身之物都不行（拼接与拖合共用）
+## 305（改造 A）：这件能被合成吃掉吗 —— 玩家锁定的、扎了根的、随身之物都不行
 static func spendable(board: GridInventory, inst: ItemInstance) -> bool:
 	return inst != null and not inst.is_locked_by_player() and (board == null or not board.keeps(inst.uid))
 

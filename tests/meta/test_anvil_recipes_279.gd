@@ -112,7 +112,7 @@ static func run_fusions(t: TestCase) -> void:
 	var db := T110._db()
 	var fuse: Array[RecipeDef] = []
 	for r in RecipeDef.load_all():
-		if r.adjacent and not TestReformC.NEW.has(r.id):     # 310：改造 C 批新加的六张另测（tests/inventory/test_fusion_reform_c.gd）
+		if String(r.id).begins_with("fuse_") and not TestReformC.NEW.has(r.id):     # 310：改造 C 批新加的六张另测（tests/inventory/test_fusion_reform_c.gd）；迁过来的 9 张生存配方不是 fuse_*
 			fuse.append(r)
 	t.eq(fuse.size(), 14, "14 张")
 	for r in fuse:
@@ -125,7 +125,6 @@ static func run_fusions(t: TestCase) -> void:
 			if d != null and d.tags.has(&"weapon"):
 				t.eq(d.rarity, 0, "%s：拼的武器是白的（%s）" % [r.id, id])
 	var all := RecipeDef.load_all()
-	t.not_null(RecipeDef.find(all, &"knife", &"knife", true), "匕首 + 匕首：贴着拼得到双刀")
-	t.is_null(RecipeDef.find(all, &"knife", &"knife"), "拖上去合查不到")
-	t.not_null(RecipeDef.find(all, &"poison_vial", &"knife"), "涂毒匕首照旧拖上去合")
-	t.is_null(RecipeDef.find(all, &"poison_vial", &"knife", true), "涂毒匕首不是拼接")
+	t.not_null(RecipeDef.find(all, &"knife", &"knife"), "匕首 + 匕首：贴着拼得到双刀")
+	t.not_null(RecipeDef.find(all, &"poison_vial", &"knife"), "310：涂毒匕首也是贴着拼")
+	t.check(all.all(func(r: RecipeDef) -> bool: return r.adjacent), "310：没有拖上去合的配方了")

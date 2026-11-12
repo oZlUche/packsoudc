@@ -68,28 +68,11 @@ var drop_filter: Callable = Callable()
 var drop_outside_to_stash: bool = false
 ## 249：顶替顶出两件以上时许不许把它们挤到地上（[member stash]）。战前屏关掉（开战前不丢东西）：这样的落点当放不下
 var displace_to_stash: bool = true
-## 配方查询 `func(a: ItemInstance, b: ItemInstance) -> ItemDef`：拖起一件时，所有能和它合成的那几件亮一圈；
-## 配了 [member craft_drop] 时也用它判「压上去是合成」（预览画绿的，不是顶替）
-var craft: Callable = Callable()
-## 114（作者定）：**拖到上面立刻合**。`func(a: ItemInstance, b_uid: int) -> bool`：手上的 a 压在 [member craft_grid] 上
-## 正好一件 b、两件有配方时放手就调它，成了算放下（a 被消耗）。不给（沙盒、开局屏、基地）= 压上去照常顶替。
-## 拖拽层仍然不认识配方，合成那一下在调用方（一局里是 [CraftingModule]）
-var craft_drop: Callable = Callable()
-## 能合成的那张棋盘（一局里的作战棋盘）。别的格子容器（战利品箱）里压上去照常顶替
-var craft_grid: GridInventory = null
-## 审查 A1：手上这件许不许拿去合成 `func(inst: ItemInstance) -> bool`。商店给货架上还没付钱的商品返回 false ——
-## 否则压到能合的那件上放手，商品在合成里被消耗，结账那一步看不到它，等于白拿。不给 = 都许
-var craft_filter: Callable = Callable()
-## 140：配方说明 `func(a: ItemInstance, b: ItemInstance) -> String`（作者写的 `note`）。压到能合的那件上时，残影下面一行小字
-## 「合成 → 产物：说明」；不给 = 只写产物
-var craft_note: Callable = Callable()
-## 305：`func(a: ItemInstance, b: ItemInstance) -> bool` —— 玩家认识这两件合出来的成品吗；不认识提示写问号。没接 = 认识
-var craft_known: Callable = Callable()
-## 140：此刻残影下面那行合成提示（没压在能合的那件上 = 空串）。[method update_preview] 算，[method _draw] 画
-var craft_hint: String = ""
+## 140 / 175：此刻残影下面那行提示（铸牌压在武器上时的附魔提示；没有 = 空串）。[method update_preview] 算，[method _draw] 画
+var drop_hint: String = ""
 const HINT_FONT := 13
 const HINT_TAG_H := 22.0
-## 合成提示的字色：深绿墨（纸签是浅的）
+## 提示的字色：深绿墨（纸签是浅的）
 const HINT_INK := Color("2f6b2a")
 var _hint_box: StyleBoxTexture = null
 ## 175 第三批：铸牌附魔 `func(token: ItemInstance, grid: GridInventory, weapon_uid: int) -> bool` —— 手上是铸牌、压在恰好一件武器上，
@@ -229,7 +212,6 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 
 	set_process_input(true)
 	InventoryView.set_focused(_inst, get_tree() if is_inside_tree() else null)     # 作者 10-21：拿起的这件就是点中的那件（地上拿起的也算）
-	_highlight_partners()
 	UiCursor.set_drag(true)     # 157
 	_show_footprints(true)
 	queue_redraw()
@@ -258,7 +240,6 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	_payload = {}
 	_inst = inst
 	set_process_input(true)
-	_highlight_partners()
 	UiCursor.set_drag(true)     # 157
 	_show_footprints(true)
 	if is_inside_tree():
@@ -461,7 +442,7 @@ func _update_preview(global_pos: Vector2) -> void:
 	_prune_views()
 	if not is_dragging():
 		return
-	_set_craft_hint("")
+	_set_drop_hint("")
 	var target := view_at(global_pos)
 	for view in _views:
 		if view != target:
@@ -508,14 +489,7 @@ func _update_preview(global_pos: Vector2) -> void:
 	var weapon := _enchant_target(inv, origin)
 	if weapon != null:
 		grid_view.set_preview(cells, origin, true)
-		_set_craft_hint(enchant_hint(_inst, weapon))
-		return
-
-	# 114：压在恰好一件上、两件有配方 → 合成（绿的，不算顶替）；140：残影下面写一行产物与说明
-	var partner := _craft_target(inv, origin)
-	if partner != null:
-		grid_view.set_preview(cells, origin, true)
-		_set_craft_hint(_hint_for(partner))
+		_set_drop_hint(enchant_hint(_inst, weapon))
 		return
 
 	if inv.acts_as_bag(_inst.def):
@@ -794,10 +768,6 @@ func drop_at(global_pos: Vector2) -> bool:
 			# 175：铸牌压到武器上 = 附魔（铸牌被消耗，不再落到任何容器里）
 			dropped = bool(enchant_drop.call(inst, grid_view.inventory, _enchant_target(grid_view.inventory, at).uid))
 			back_home = false
-		elif _craft_target(grid_view.inventory, at) != null:
-			# 114：压到能合的那件上 = 立刻合成（a 被消耗，不再落到任何容器里）
-			dropped = bool(craft_drop.call(inst, _craft_target(grid_view.inventory, at).uid))
-			back_home = false
 		elif grid_view.inventory.acts_as_bag(inst.def):
 			var swap2 := _drop_replacing_bag(grid_view.inventory, at)     # 087：空包替换包
 			dropped = swap2["ok"]
@@ -884,24 +854,6 @@ func _can_shed(fallen: Array) -> bool:
 	return stash != null and stash.room_for(fallen.size())
 
 
-## 114：拖着的这件压到这个位置上会正好压着一件、且两件有配方吗。返回被压的那件；没有 null。
-## 只在 [member craft_grid] 上、配了 [member craft_drop] 时成立
-func _craft_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
-	if _inst == null or not _payload.is_empty() or not craft.is_valid() or not craft_drop.is_valid():
-		return null
-	if craft_filter.is_valid() and not bool(craft_filter.call(_inst)):
-		return null
-	if inv == null or inv != craft_grid:
-		return null
-	var under := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
-	if under.size() != 1:
-		return null
-	var b := inv.get_item(int(under[0]))
-	if b == null or b.def == null:
-		return null
-	return b if craft.call(_inst, b) is ItemDef else null
-
-
 ## 175：拖着的铸牌压到这个位置上会正好压着一件武器吗。返回那件武器；没有 null
 func _enchant_target(inv: GridInventory, origin: Vector2i) -> ItemInstance:
 	if _inst == null or not _payload.is_empty() or not enchant_drop.is_valid() or not Forge.is_token(_inst) or inv == null:
@@ -922,46 +874,21 @@ static func enchant_hint(token: ItemInstance, weapon: ItemInstance) -> String:
 	return text
 
 
-## 140：「合成 → 产物：说明」
-func _hint_for(partner: ItemInstance) -> String:
-	var out: Variant = craft.call(_inst, partner)
-	if not (out is ItemDef):
-		return ""
-	var known := not craft_known.is_valid() or bool(craft_known.call(_inst, partner))
-	var text := UiText.t("bag.craft") + (Names.of(out as ItemDef) if known else UiText.t("fuse.unknown"))
-	var note := String(craft_note.call(_inst, partner)) if craft_note.is_valid() else ""
-	return text + (UiText.t("tip.colon") + note if note != "" else "")
-
-
-## 226 批三：合成 / 附魔提示写在纸签上（地图墨路签那张 `map/tag_paper`），左上角在 [param at]，跟着残影走
+## 226 批三：附魔提示写在纸签上（地图墨路签那张 `map/tag_paper`），左上角在 [param at]，跟着残影走
 func _draw_hint_tag(at: Vector2, font: Font) -> void:
-	var tw := font.get_string_size(craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_FONT).x
+	var tw := font.get_string_size(drop_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_FONT).x
 	var box := Rect2(at, Vector2(tw + 16.0, HINT_TAG_H))
 	if _hint_box == null:
 		_hint_box = UiTheme.art_box(UiTheme.ART_MAP_TAG)
 	if _hint_box != null:
 		draw_style_box(_hint_box, box)
-	draw_string(font, Vector2(box.position.x + 8.0, box.position.y + HINT_TAG_H * 0.5 + HINT_FONT * 0.36), craft_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_FONT, HINT_INK)
+	draw_string(font, Vector2(box.position.x + 8.0, box.position.y + HINT_TAG_H * 0.5 + HINT_FONT * 0.36), drop_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, HINT_FONT, HINT_INK)
 
 
-func _set_craft_hint(text: String) -> void:
-	if craft_hint != text:
-		craft_hint = text
+func _set_drop_hint(text: String) -> void:
+	if drop_hint != text:
+		drop_hint = text
 		queue_redraw()
-
-
-## 085 / 114：拖起一件时，所有登记的视图里能和它合成的那几件亮一圈（放下 / 取消时熄）—— 提醒「拖到它上面就合」
-func _highlight_partners() -> void:
-	for view in _views:
-		var marks := {}
-		var c := view.container()
-		if _inst != null and _payload.is_empty() and craft.is_valid() and c != null:
-			for inst in c.items():
-				var b := inst as ItemInstance
-				if b.uid != _inst.uid and craft.call(_inst, b) is ItemDef:
-					marks[b.uid] = true
-		view.set("highlights", marks)
-		view.queue_redraw()
 
 
 ## 顶替式放下。返回 [code]{"ok": bool, "victims": Array}[/code]；
@@ -1144,8 +1071,7 @@ func _end_drag() -> void:
 	_inst = null
 	_motion.clear()
 	_cell = InventoryView.CELL
-	craft_hint = ""
-	_highlight_partners()     # _inst 空了：全熄
+	drop_hint = ""
 	_source = null
 	_src_index = -1
 	_src_spot = ItemStash.NO_SPOT
@@ -1191,7 +1117,7 @@ func _draw() -> void:
 	InventoryView.draw_footprint(self, _inst.def, cells, anchor, cell, is_bag or InventoryView.footprint_hollow(_inst.def), _inst.rarity())     # 239：手里那件也逐格描
 	if not is_bag and not (view_at(mouse) is InventoryView):
 		_draw_held_markers(anchor, cell)
-	if craft_hint != "":     # 140：压在能合的那件上：残影下面一行小字
+	if drop_hint != "":     # 175：铸牌压在武器上：残影下面一行小字
 		var rows := _inst.def.shape.size_rotated(_rot).y
 		_draw_hint_tag(anchor + Vector2(0.0, rows * cell + 4.0), font)
 

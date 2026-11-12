@@ -320,7 +320,7 @@ static func _walk(t: TestCase, p_seed: int) -> void:
 		t.eq(s.storage.item_count(), 0, "新搜到的都放进包里了（放不下的先不管）")
 	else:
 		t.check(true, "（有放不下的，留在地上，走了就没）")
-	# 精英（114）：先把毒药瓶拖到匕首上合成涂毒匕首，门才开
+	# 精英（114 / 310）：先把毒药瓶贴着匕首点锤合成涂毒匕首，门才开
 	t.check(s.step_to(path[4].id), "走到精英")
 	ev = s.events.pending_event()
 	t.check(ev != null and ev.id == &"tut_elite", "精英的教程事件")
@@ -335,15 +335,34 @@ static func _walk(t: TestCase, p_seed: int) -> void:
 		return
 	if not s.board.has_item(knife.uid):
 		s.equip(knife.uid)
-	var knife_home := knife.origin
-	if s.storage.has_item(vial.uid):     # 拿在手上
+	var knife_cells := {}
+	for kc in knife.cells():
+		knife_cells[knife.origin + kc] = true
+	if s.storage.has_item(vial.uid):     # 拿起来，摆到匕首旁边
 		s.storage.remove(vial.uid)
 	else:
 		s.board.remove(vial.uid)
-	var made := CraftingModule.of(s).craft(vial, knife.uid)
-	t.check(bool(made["ok"]) and String(made["where"]) == "board", "拖到匕首上：立刻合成，落在棋盘上")
+	var beside := false
+	for pass_ in 2:     # 先找匕首旁边的空格；都占着就像玩家那样把挡着的一件挪到地上
+		for cell in knife_cells:
+			for d in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]:
+				var at: Vector2i = cell + d
+				if beside or knife_cells.has(at) or not s.board.in_bounds(at):
+					continue
+				if pass_ == 1:
+					var other := s.board.cell_uid(at)
+					var it := s.board.get_item(other) if other != GridInventory.EMPTY_UID else null
+					if it != null and not s.board.acts_as_bag(it.def) and it.uid != knife.uid:
+						s.board.remove(it.uid)
+						s.storage.admit(it)
+				beside = s.board.place(vial, at, 0)
+	t.check(beside, "毒药瓶摆在匕首旁边")
+	var pair_cells := knife_cells.duplicate()
+	pair_cells[vial.origin] = true
+	var made := CraftingModule.of(s).fuse(knife.uid, vial.uid)
+	t.check(bool(made["ok"]) and String(made["where"]) == "board", "点锤：合成，落在棋盘上")
 	var pk := _find(s, &"poisoned_knife")
-	t.check(pk != null and s.board.has_item(pk.uid) and pk.origin == knife_home, "涂毒匕首在匕首原来的位置")
+	t.check(pk != null and s.board.has_item(pk.uid) and pair_cells.has(pk.origin), "涂毒匕首落在两件原来的占格里")
 	t.check(_find(s, &"knife") == null and _find(s, &"poison_vial") == null, "两件原料没了")
 	t.check(bool(s.events.option_state(0)["ok"]), "合成了：门开了")
 	# 220 §2.2：翻出弯刀那条事件提示带上它 —— 涂毒匕首 + 弯刀对守卫，这一场打得出菌血（序章一的「第一次反应」）

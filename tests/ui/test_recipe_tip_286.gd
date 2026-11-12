@@ -21,7 +21,7 @@ static func run_recipe_words(t: TestCase) -> void:
 	t.check(body.contains(UiText.t("tip.recipe_where").split("%")[0]) and body.contains("120"), "在哪锤：休息点的砧 / 铁匠铺 120")
 	t.check(body.contains("[url=recipe:"), "出件自己的「可升为」也是配方词（能一路往下开）")
 	t.eq(ItemTooltip.recipe_full(&"no_such_recipe"), {}, "查不到配方：空")
-	t.check(String(ItemTooltip.describe_full(ItemInstance.create(c.items.get_def(&"salve"))).get("body", "")).find("recipe:") < 0, "伤药没有配方词")
+	t.check(String(ItemTooltip.describe_full(ItemInstance.create(c.items.get_def(&"smoked_fish"))).get("body", "")).find("recipe:") < 0, "熏鱼没有配方词（310：伤药有了拼接配方）")
 
 
 static func _board(root: Window, id: StringName) -> Dictionary:
@@ -89,9 +89,9 @@ static func frame_pin_exception(t: TestCase, root: Window) -> void:
 			t.is_null(tip.open_child(grand, deeper if deeper != "" else meta), "到 %d 层就停" % HoverTip.MAX_DEPTH)
 	(f["host"] as Control).queue_free()
 	# 没有配方词的窗：挪进窗里照收
-	f = _board(root, &"salve")
+	f = _board(root, &"smoked_fish")
 	tip = f["tip"]
-	t.check(tip.is_showing() and not tip._panel.has_recipe, "伤药的窗没有配方词")
+	t.check(tip.is_showing() and not tip._panel.has_recipe, "熏鱼的窗没有配方词")
 	inside = _inside(tip, f["view"])
 	tip.tick(0.016, inside)
 	t.check(not tip.is_showing(), "挪进窗里：当场收（作者 10-27）")

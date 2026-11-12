@@ -20,9 +20,8 @@ static func run_new_pairs(t: TestCase) -> void:
 	var pool := db.ids()
 	for id in NEW:
 		var spec: Array = NEW[id]
-		var r := RecipeDef.find(recipes, spec[0], spec[1], true)
+		var r := RecipeDef.find(recipes, spec[0], spec[1])
 		t.check(r != null and r.id == id and r.output == spec[2], "%s：%s + %s → %s" % [id, spec[0], spec[1], spec[2]])
-		t.is_null(RecipeDef.find(recipes, spec[0], spec[1]), "%s 不是拖合" % id)
 		ItemInstance.reset_uid_counter()
 		var board := GridInventory.new(Vector2i(10, 6), 1, false)
 		var a := ItemInstance.create(db.get_def(spec[0]))

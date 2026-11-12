@@ -62,7 +62,7 @@
 | 种类 | 文件数 | 说明 |
 |---|---|---|
 | 道具 `items` | 267 | 武器 120、包 15；独一 `unique` 13（8 把红武 + 4 颗元素之核 + 破晓的信物）、劣化版 `lesser` 8、只能锻造 `forged_only` 18（橙档）、极端 `extreme` 6、券 2、随身之物 `keepsake` 2、铸牌 `token` 1、招牌 `signature` 1、成就解锁 3；**封存 `sealed` 0 件**（旧版的 15 件现代道具已不在作者数据里）；赐福版运行时派生，不在作者文件里（`blessed_of` 0 份）。按 `ItemDatabase.ids()` 的排除规则估，能进随机候选的约 **219** 件（还要再过各池的标签与稀有度上限） |
-| 拼接 / 拖合配方 `recipes` | 23 | 另有铁匠铺 / 砧配方 `smith_recipes` 101 |
+| 拼接配方 `recipes`（310 起全部贴着点锤） | 23 | 另有铁匠铺 / 砧配方 `smith_recipes` 101 |
 | 敌人 `enemies` | 33 | 敌人池 3（standard_ruins / clockwork / hunters）、猎手 2 |
 | 事件 `events` | 61 | 序章教程 37（序章一 11、序章二 14、序章三 12）；其余 24（默认事件、搜索收尾、信仰召唤 5、寂灭 2、钟房、军团交代等）；**有配图的只有 2 个**（`briefing_legion`、`event_jimie_god`） |
 | 章节 `chapters` | 5 | 序章三张 + 魔法废墟（`free_mode`）+ 机关沙漏 |

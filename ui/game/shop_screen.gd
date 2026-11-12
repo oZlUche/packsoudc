@@ -67,7 +67,7 @@ func open(payload: Dictionary) -> void:
 	_inv = _mount_bag(row, _view, _session.board if _session != null else null)
 	_drag.drop_outside_to_stash = false     # 店里放到外面 = 放回原处
 	_drag.drop_filter = _allow_drop
-	_drag.craft_filter = _allow_craft     # 审查 A1：没成交的货不能拿去合成（会被消耗掉、结不了账）
+	_inv.fuse_filter = _allow_craft     # 审查 A1：没成交的货不能拿去合成（会被消耗掉、结不了账）
 	_inv.quick_action = _offer_action
 	_inv.extra_actions = func(_inst: ItemInstance) -> Array: return []
 	_mark(_view)
@@ -540,6 +540,8 @@ func _refresh() -> void:
 		var price := _belt_row.get_child(i).get_node_or_null("BeltPrice%d" % i) as PriceTag
 		if price != null:
 			price.sold = tile.sold
+	if _inv != null:
+		_inv.refresh_fusions()     # 310：成交了 / 摆上桌了，哪件许合成跟着变
 
 
 ## 差额牌上的字：还差 N / 够了 / 找你 N / 他只付得起 N（钱写成 [method CoinShort.coin] 记号，秤上画成金币；空桌写空）

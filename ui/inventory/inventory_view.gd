@@ -105,9 +105,6 @@ const GROUND_WAREHOUSE := {
 @export var show_adjacency: bool = true
 ## 085：物品右上角的小记号（uid → 文字），比如配了对等着合成的「合」。持有方设，改了 queue_redraw
 var badges: Dictionary = {}
-## 085：亮一圈的物品（uid → true）：拖着的那件能和它合成。拖拽层设
-var highlights: Dictionary = {}
-const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 ## 281：先不画的物品（uid → true）—— 寂灭的黑洞动画自己画那件，演完再交回来。持有方设，改了 queue_redraw
 var veiled: Dictionary = {}
 ## 264 §六：筛选（`func(item: ItemInstance) -> bool`）—— 给了就把不匹配的压灰（不挪位）；不给 = 都不压。持有方设，改了 queue_redraw
@@ -548,10 +545,6 @@ func _draw() -> void:
 		ItemPainter.draw_quality(self, item, item.rotation, anchor, cell_px, tint)     # 279 补充二：品质：右下角小菱形
 		if picked:
 			ItemPainter.draw_check(self, item, item.rotation, anchor, cell_px)     # 268：勾了的
-		if highlights.has(item.uid):
-			var hb := item.def.shape.size_rotated(item.rotation)
-			var pulse := 0.6 + 0.4 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0))
-			draw_rect(Rect2(anchor - Vector2(3, 3), Vector2(hb) * cell_px + Vector2(6, 6)), Color(COLOR_HIGHLIGHT, pulse), false, 3.0)
 		if badges.has(item.uid):
 			var badge := String(badges[item.uid])
 			var box := item.def.shape.size_rotated(item.rotation)

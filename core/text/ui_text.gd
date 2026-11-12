@@ -408,7 +408,6 @@ const TEXT := {
 	# ui/inventory/drag_layer.gd
 	"bag.enchant": {"zh": "附魔：%s%s", "en": "Enchant: %s%s"},
 	"bag.enchant_replace": {"zh": "（覆盖原有的%s附魔）", "en": " (replaces its %s enchantment)"},
-	"bag.craft": {"zh": "合成 → ", "en": "Craft → "},
 	"bag.displaced_one": {"zh": "顶出了「%s」，已经拿在手上", "en": "Pushed out \"%s\": it's in your hand"},
 	"bag.displaced_many": {"zh": "顶出了 %d 件（%s），都放在地上了", "en": "Pushed out %d items (%s): all on the Ground"},
 	# core/run/faith/faith_tooltip.gd

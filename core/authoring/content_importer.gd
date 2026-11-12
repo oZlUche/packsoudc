@@ -883,6 +883,8 @@ static func import_recipe(data: Dictionary, ctx: Context, report: ImportReport) 
 		report.error("inputs", "配方是两件合一件：inputs 得恰好两个")
 	if def.output == &"":
 		report.error("output", "配方得有产物")
+	if not def.adjacent:
+		report.error("adjacent", "310：配方都是贴着放、点锤合，adjacent 得是 true")
 	for i in def.inputs.size():
 		if not ctx.items.is_empty() and not ctx.items.has(def.inputs[i]):
 			report.error("inputs[%d]" % i, "道具库里没有 %s" % def.inputs[i])
