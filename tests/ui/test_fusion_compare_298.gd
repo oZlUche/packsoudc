@@ -54,6 +54,10 @@ static func frame_compare_windows(t: TestCase, root: Window) -> void:
 	t.check(cmp.texts()[1].contains(Names.of(after.def)), "右窗是出件")
 	t.check(not cmp.marked_lines().is_empty(), "右窗有金线行")
 	t.check(cmp.left_dimmed(), "左窗压暗")
+	cmp.show_pair(before, after, false, true)
+	var right := cmp.texts()[1]
+	t.check(not right.contains(Names.of(after.def)) and not right.contains(UiText.t("fuse.unknown")), "306：不认识出件 —— 右窗不写名字也不写问号字（%s）" % right)
+	t.check(cmp.marked_lines().is_empty(), "306：不认识出件 —— 不画金线")
 	cmp.clear()
 	t.check(not cmp.visible, "收起")
 	cmp.free()

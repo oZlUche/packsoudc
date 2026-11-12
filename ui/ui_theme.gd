@@ -1178,6 +1178,31 @@ static func art_panel(p: PanelContainer, name: String, content: int) -> void:
 		p.add_theme_stylebox_override("panel", box)
 
 
+## 306：面板换一块现成的底（纸条这类按摆法换图的，九宫格参数由调用方从 json 读好）；null 不动
+static func box_panel(p: PanelContainer, box: StyleBox) -> void:
+	if box != null:
+		p.add_theme_stylebox_override("panel", box)
+
+
+## 306：平签（作者「按钮的样式我要平的」）—— 一层平色 + 1 像素线、圆角 3；悬停只把线换成 [param hover_line]，按下不下沉；粗体
+static func flat_key(text: String, fill: Color, line: Color, hover_line: Color, ink: Color, key_size: Vector2, font_size: int) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = key_size
+	b.add_theme_font_override("font", UiPalette.cjk_font_bold())
+	b.add_theme_font_size_override("font_size", sz(font_size))
+	for st in ["normal", "hover", "pressed", "hover_pressed"]:
+		var s := StyleBoxFlat.new()
+		s.bg_color = fill
+		s.border_color = hover_line if st.begins_with("hover") else line
+		s.set_border_width_all(1)
+		s.set_corner_radius_all(3)
+		b.add_theme_stylebox_override(st, s)
+		b.add_theme_color_override("font_color" if st == "normal" else "font_%s_color" % st, ink)
+	return b
+
+
 ## 九宫格底：图 + json 的边距（没写边距按图边长的四分之一）。没图 null。
 ## [param title_strip] 真 = 石板框：顶边的内边距只留到标题条上沿（标题条 [OverlayFrame] 自己占住刻线上方那一条）；
 ## [param content] ≥ 0 = 内边距用它（换皮不改排版），否则跟图边一样

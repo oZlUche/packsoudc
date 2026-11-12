@@ -140,6 +140,11 @@ const FUSE_LINE := 2.5
 const FUSE_DASH := 11.0
 const FUSE_GAP := 4.0
 var _fuse_hover := -1
+## 306：合成确认窗开着时，那一对（两件的 uid）照悬停那一档画；没有 = (-1, -1)
+var held_fusion := Vector2i(-1, -1):
+	set(v):
+		held_fusion = v
+		queue_redraw()
 
 
 ## 作者 10-21：只有最后点中的那件画增益槽 / 受益槽 / 装载槽（不点就都不画）；所有棋盘共用这一件
@@ -653,12 +658,18 @@ static func _outer(polys: Array[PackedVector2Array]) -> PackedVector2Array:
 	return best
 
 
+func _is_held(f: Dictionary) -> bool:
+	var a := int(f["a"])
+	var b := int(f["b"])
+	return held_fusion.x >= 0 and ((a == held_fusion.x and b == held_fusion.y) or (a == held_fusion.y and b == held_fusion.x))
+
+
 ## 道具底下：淡暖底 + 墨衬线
 func _draw_fusion_fills() -> void:
 	if select_mode:
 		return
 	for i in fusions.size():
-		var hot := i == _fuse_hover
+		var hot := i == _fuse_hover or _is_held(fusions[i])
 		var poly := _fusion_poly(fusions[i], FUSE_OUT)
 		if poly.size() < 3:
 			continue
@@ -675,7 +686,7 @@ func _draw_fusions() -> void:
 		return
 	for i in fusions.size():
 		var f := fusions[i]
-		var hot := i == _fuse_hover
+		var hot := i == _fuse_hover or _is_held(fusions[i])
 		var poly := _fusion_poly(f, FUSE_OUT)
 		if poly.size() >= 3:
 			DangerZones.dashed_loop(self, poly, FUSE_GOLD_HOT if hot else FUSE_GOLD, FUSE_LINE, FUSE_DASH, FUSE_GAP)
