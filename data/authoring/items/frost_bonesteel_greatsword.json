@@ -21,7 +21,7 @@
     "two_hand",
     "heavy",
     "ice",
-    "forged_only"
+    "no_random_source"
   ],
   "material": "metal",
   "combat": {

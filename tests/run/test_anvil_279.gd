@@ -202,7 +202,7 @@ static func run_orange(t: TestCase) -> void:
 	t.check(Anvil.result(spike, _inst(db, &"fire_crystal_low"), pool, db) == null, "火焰晶石（蓝）不够档")
 	t.eq(Anvil.result(spike, _inst(db, &"ice_crystal"), pool, db).def.id, &"frost_fang", "冰晶：霜牙")
 	t.check(Anvil.result(spike, _inst(db, &"beast_claw"), pool, db) == null, "骨材升不了橙")
-	t.check(db.get_def(&"flame_fang").is_forged_only() and not db.ids().has(&"flame_fang") and db.ids(true).has(&"flame_fang"), "焰牙：生成池里没有，图鉴照列")
+	t.check(db.get_def(&"flame_fang").is_no_random_source() and not db.ids().has(&"flame_fang") and db.ids(true).has(&"flame_fang"), "焰牙：生成池里没有，图鉴照列")
 	t.check(db.ids().has(&"bloodbone_spike"), "紫的照常能掉")
 	var r := Anvil.recipe_for(db.get_def(&"bloodbone_spike"), db.get_def(&"fire_crystal"), pool)
 	t.check(AnvilColumn.upgrade_line(r, db).contains(Names.of(db.get_def(&"fire_crystal"))), "便条：要一件火焰魔晶石（%s）" % AnvilColumn.upgrade_line(r, db))

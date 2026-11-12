@@ -68,7 +68,7 @@ func _item(d: ItemDef) -> Dictionary:
 		"id": String(d.id), "name_zh": d.display_name, "name_en": String(d.display_names.get("en", "")),
 		"has_description": d.description != "", "rarity": d.rarity, "tags": d.tags.map(func(x): return String(x)),
 		"material": d.material, "crystal_family": String(d.crystal_family), "cells": cells, "weight": d.weight, "value": d.value,
-		"requires_unlock": String(d.requires_unlock), "unique": d.is_unique(), "forged_only": d.is_forged_only(),
+		"requires_unlock": String(d.requires_unlock), "unique": d.is_unique(), "no_random_source": d.is_no_random_source(),
 		"signature": d.is_signature(), "keepsake": d.is_keepsake(), "sealed": d.is_sealed(), "lesser": d.is_lesser(), "ticket": d.is_ticket(), "token": d.is_token(), "blessed_of": String(d.blessed_of), "has_wear": d.wear != null,
 		"wear_broken_into": null,
 		"has_enchant": d.enchant != null, "has_growth": d.growth != null, "is_bag": d.is_bag,

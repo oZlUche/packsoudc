@@ -11,6 +11,10 @@ const GOLD15: Array[StringName] = [&"flame_berserker_twin_axes", &"flame_boneste
 	&"frost_dragoon_lance", &"imperial_sword", &"thunder_bloodthirst_twin_blades", &"thunder_boneiron_club", &"thunder_horse_halberd", &"thunder_siege_spear"]
 
 
+## 第五步经济对照：基地卖价 900 的五件，资金提到 750，打了再卖不比直接卖料赚
+const HEAVY: Array[StringName] = [&"flame_execution_blade", &"flame_executioner_axe", &"flame_meteor_maul", &"frost_bonesteel_greatsword", &"thunder_boneiron_club"]
+
+
 static func _recipe(slots: Array) -> SmithRecipeDef:
 	var r := SmithRecipeDef.new()
 	r.id = &"t_counts"
@@ -88,7 +92,7 @@ static func run_import(t: TestCase) -> void:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("310 · 15 件金武有 forge_* 打造配方（铁匠铺 3 级、300、只用材料格、不吃武器）；秘银剑、大魔导杖不再吃上一把")
+	t.begin("310 · 15 件金武有 forge_* 打造配方（铁匠铺 3 级、300 或 750、只用材料格、不吃武器）；秘银剑、大魔导杖不再吃上一把")
 	var db := ItemDatabase.new()
 	db.load_dir()
 	var all := SmithRecipeDef.load_all()
@@ -98,7 +102,7 @@ static func run_content(t: TestCase) -> void:
 		if r == null:
 			continue
 		t.check(r.inputs.is_empty() and r.material_inputs.is_empty() and not r.material_slots.is_empty(), "%s：只用材料格" % out)
-		t.check(r.level == 3 and r.funds == 300, "%s：3 级、300" % out)
+		t.check(r.level == 3 and r.funds == (750 if HEAVY.has(out) else 300), "%s：3 级、%d" % [out, r.funds])
 		for s in r.slots():
 			t.not_null(SmithRecipeDef.slot_sample(s, db), "%s：%s ≥%d 有能顶的" % [out, s["material"], int(s["min"])])
 	for id in [&"smith_mithril_sword", &"smith_grand_magus_staff"]:

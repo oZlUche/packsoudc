@@ -1,0 +1,14 @@
+{
+  "id": "no_random_source",
+  "display_name": "不进随机来源",
+  "display_names": {
+    "en": "No random source"
+  },
+  "description": "只从合成或打造来：搜索、掉落、商店、集市、敌人、事件都不出；图鉴照列。",
+  "descriptions": {
+    "en": "Only comes from fusing or forging: never found, dropped, sold, offered at the market, carried by enemies or given by events. Listed in the codex."
+  },
+  "tip": false,
+  "category": "internal",
+  "internal": true
+}

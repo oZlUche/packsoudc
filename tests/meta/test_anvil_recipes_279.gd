@@ -40,7 +40,7 @@ static func run_content(t: TestCase) -> void:
 			t.not_null(r.material_sample(String(m), db), "%s：道具库里有能顶的 %s" % [r.id, m])
 		var want := {2: [60, 1], 3: [120, 2], 4: [200, 3]}.get(out.rarity, [0, 0]) as Array
 		t.check(r.funds == int(want[0]) and r.level == int(want[1]), "%s：工钱 %d、铺子 %d 级" % [r.id, want[0], want[1]])
-		t.eq(out.is_forged_only(), out.rarity == 4, "%s：只有橙档只能锻造" % r.id)
+		t.eq(out.is_no_random_source(), out.rarity == 4, "%s：只有橙档只能锻造" % r.id)
 	t.eq(by_tier, {2: 30, 3: 34, 4: 18}, "升蓝 30、升紫 32 + 2、升橙 16 + 2（281 极端武器）")
 
 
