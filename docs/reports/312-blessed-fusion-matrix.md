@@ -59,7 +59,7 @@
 - [research/evidence/2026-11-12-blessed-fusion/matrix.csv](research/evidence/2026-11-12-blessed-fusion/matrix.csv)：145 行，每组一行，带分类和成品有哪些神的赐福版。
 - [research/evidence/2026-11-12-blessed-fusion/blessed_materials.csv](research/evidence/2026-11-12-blessed-fusion/blessed_materials.csv)：31 件抬档的赐福材料。
 
-## 七、实现（v6.02）
+## 七、实现（v6.03）
 
 - **唯一的解析入口** `FusionResolve.resolve`（core/run/fusion_resolve.gd）：配方按两件原件配；返回 ready / unavailable / invalid、成品 id、来源神、择神、提示。出锤、确认窗、合成、悬浮窗都走它。神查不到报 invalid，不当普通件吞掉。
 - **确认窗**：缺赐福版写「本次合成不会保留赐福。」；非武器异神写「保留X的赐福，Y的那份不叠加。」；两把武器分属两位神写「两位神的赐福互不相容。」，没有合成键，不扣物、不记配方。按合成时再解析一次，和窗上的成品不一样就不合、重开窗。
@@ -74,4 +74,4 @@
 | 版本 | PR | 内容 |
 |---|---|---|
 | v6.00 | #603 | 第一步：矩阵（只读） |
-| v6.02 | #605 | 实现：解析入口、确认窗提示、家族认识、教程认原件 |
+| v6.03 | #605 | 实现：解析入口、确认窗提示、家族认识、教程认原件 |
