@@ -2,10 +2,9 @@
 ## 敌人棋盘摆得下；赐福替换在切片的掉落、搜索规则里关掉；能从出生点开局
 extends RefCounted
 
-## 切片可得道具（报告 311 清单，S1 核对后：浓缩伤药没有来源，去掉）
-const ALLOWED := ["knife", "shortsword", "scimitar", "cleaver", "twin_blades", "quenched_dagger", "broadsword", "poisoned_knife",
-	"round_shield", "leather_armor", "whetstone", "poison_vial", "linen_bolt", "bandage", "bandage_roll", "salve", "ration",
-	"bag_leather", "bag_small"]
+## 切片可得道具：正式清单 data/manifests/slice_ruins.json（313 第三批起）
+static func _allowed() -> Array:
+	return SliceAudit.load_manifest("slice_ruins").get("allowed_item_ids", [])
 
 
 static func _map() -> Dictionary:
@@ -68,7 +67,7 @@ static func run_map(t: TestCase) -> void:
 	for n in nodes:
 		var c: Dictionary = n["content"]
 		for id in _ids_in(c):
-			t.check(ALLOWED.has(id), "点 %d 的 %s 在可得清单里" % [n["id"], id])
+			t.check(_allowed().has(id), "点 %d 的 %s 在可得清单里" % [n["id"], id])
 			t.not_null(items.get_def(StringName(id)), "点 %d 的 %s 存在" % [n["id"], id])
 		for foe in ([c] if c.has("enemy") else []) + ([c["encounter"]] if c.has("encounter") else []):
 			t.not_null(enemies.enemy(StringName(String(foe["enemy"]))), "点 %d 的敌人 %s 存在" % [n["id"], foe["enemy"]])
@@ -80,7 +79,7 @@ static func run_map(t: TestCase) -> void:
 		shortswords += _ids_in(n["content"]).count("shortsword")
 	t.eq(shortswords, 1, "制式短剑全图只有一把（商店）：拼不出双手剑")
 	for id in ch.starting_items:
-		t.check(ALLOWED.has(String(id)), "开局 %s 在清单里" % id)
+		t.check(_allowed().has(String(id)), "开局 %s 在清单里" % id)
 
 
 static func run_start(t: TestCase) -> void:

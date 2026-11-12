@@ -1,0 +1,45 @@
+{
+  "id": "slice_ruins",
+  "version": 1,
+  "chapter": "slice_ruins",
+  "character": "andreus",
+  "recipe_ids": [
+    "fuse_twin_blades",
+    "fuse_broadsword",
+    "fuse_quenched_dagger",
+    "poisoned_knife",
+    "bandage_roll"
+  ],
+  "allowed_item_ids": [
+    "knife",
+    "shortsword",
+    "scimitar",
+    "cleaver",
+    "twin_blades",
+    "quenched_dagger",
+    "broadsword",
+    "poisoned_knife",
+    "round_shield",
+    "leather_armor",
+    "whetstone",
+    "poison_vial",
+    "linen_bolt",
+    "bandage",
+    "bandage_roll",
+    "salve",
+    "ration",
+    "bag_leather",
+    "bag_small"
+  ],
+  "enemy_ids": [
+    "raider",
+    "butcher",
+    "brute",
+    "shield_wall",
+    "warden"
+  ],
+  "event_ids": [
+    "event_refugee_weaver",
+    "event_field_stretcher"
+  ]
+}
