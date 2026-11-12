@@ -106,3 +106,23 @@ static func run_start(t: TestCase) -> void:
 	for id in ["knife", "bandage", "ration"]:
 		t.check(have.has(id), "开局有 %s（%s）" % [id, have])
 	s.dispose()
+
+
+static func run_loss_line(t: TestCase) -> void:
+	t.begin("313 · S2 战后得失：打输扣了体力，回地图说一句扣几点、剩几点；赢了、没扣、等求饶都不说")
+	var c := TestSupport.load_content("slice_ruins")
+	var ch := ContentPaths.load_asset("characters", "andreus") as CharacterDef
+	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch)
+	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(GameFlow.load_meta_rules()))
+	f.run = s
+	var screen = load("res://ui/game/battle_screen.gd").new()
+	screen.flow = f
+	screen._won = false
+	s.events.last_battle = {"before": s.events.state_brief()}
+	t.eq(screen.loss_line(), "", "没扣：不说")
+	s.vitality.spend(1, &"battle_lost")
+	t.eq(screen.loss_line(), UiText.t("battle.lost_vitality") % [1, s.vitality.current, s.vitality.maximum], "扣了一点：说扣几点、剩几点")
+	screen._won = true
+	t.eq(screen.loss_line(), "", "赢了：不说（有战利品屏）")
+	screen.free()
+	s.dispose()

@@ -480,6 +480,7 @@ const TEXT := {
 	# ui/game/battle_screen.gd
 	"battle.me": {"zh": "我", "en": "You"},
 	"battle.continue": {"zh": "继续", "en": "Continue"},
+	"battle.lost_vitality": {"zh": "打输了：体力 -%d，还剩 %d / %d", "en": "Lost: Vitality -%d, %d / %d left"},
 	# core/battle/battle_narrator.gd（272 战记；%s 处是已上色的名字 / 数字）
 	"log.time": {"zh": "%.1fs", "en": "%.1fs"},
 	"log.indent": {"zh": "　　", "en": "    "},
