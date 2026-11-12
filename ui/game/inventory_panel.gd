@@ -21,6 +21,8 @@ var cell_px: float = InventoryView.CELL
 ## 128：导演那一层地（没有 = null：测试里单开面板）
 var ground: GroundLayer = null
 var tip: HoverTip
+## 306：合成确认窗（第一次点锤时才造）
+var fuse_note: FuseNote = null
 ## 216：棋盘下的数值栏（容器屏把它摘出去摆到「全部拾取」那一行，[method detach_strip]）
 var strip: StatsStrip
 var _strip_box: MarginContainer
@@ -281,18 +283,17 @@ func say_no_room(inst: ItemInstance) -> void:
 
 
 ## 114：合成了：提示一句产物（装不下落在地上也说）
-## 305（改造 A，方案 §6.2 / §6.3）：点锤先开确认窗 —— 成品（不认识就是问号）、消耗哪两件、会丢掉的附魔 / 品质 / 成长；
+## 305（改造 A，方案 §6.2 / §6.3）：点锤先开确认窗 —— 成品（不认识就是问号）、两件的图、会丢掉的附魔 / 品质 / 成长；
 ## 按「合成」才合（合的那一下再查一遍两件还贴着、没锁），「取消」什么都不动。拼不了 = false
+## 306 定稿：窗是 [FuseNote]（纸条），摆在两件右边、尖角和小锤同高；开着时那一对照悬停那一档画
 func ask_fuse(a_uid: int, b_uid: int) -> bool:
 	var crafting := CraftingModule.of(_run)
 	var pv := crafting.fuse_preview(a_uid, b_uid) if crafting != null else {}
-	if pv.is_empty() or tip == null:
+	if pv.is_empty():
 		return false
 	var a := pv["a"] as ItemInstance
 	var b := pv["b"] as ItemInstance
-	var out := pv["output"] as ItemDef
-	var lines: Array[String] = ["[b]%s[/b]" % (ItemTooltip.item_word(out) if int(pv["known"]) > 0 else UiText.t("fuse.unknown"))]
-	lines.append("[color=@dim]%s[/color]" % (UiText.t("fuse.spends") % [Names.of(a.def), Names.of(b.def)]))
+	var lines: Array[String] = []
 	for inst in [a, b]:
 		var lost: Array[String] = []
 		if not Forge.enchant_of(inst).is_empty():
@@ -302,15 +303,22 @@ func ask_fuse(a_uid: int, b_uid: int) -> bool:
 		if (inst as ItemInstance).runs() > 0:
 			lost.append(UiText.t("fuse.growth"))
 		if not lost.is_empty():
-			lines.append("[color=@warn]%s[/color]" % (UiText.t("fuse.loses") % [Names.of((inst as ItemInstance).def), UiText.t("tip.list_sep").join(PackedStringArray(lost))]))
-	var at := board_view.get_global_mouse_position()
-	var pair := board_view.item_rect(a_uid).merge(board_view.item_rect(b_uid))     # UI设计 复核：摆在两件旁边、和小锤同高，不压住它们
-	var span := board_view.get_global_transform() * pair
-	var anchor := Rect2(Vector2(span.position.x, at.y - 12.0), Vector2(span.size.x, 24.0))
-	tip.ask("\n".join(PackedStringArray(lines)), at, [
-		ItemActions.make(&"fuse", UiText.t("fuse.go"), func() -> void: crafting.fuse(a_uid, b_uid)),
-		ItemActions.make(&"fuse_cancel", UiText.t("fuse.cancel"), func() -> void: pass),
-	], anchor)
+			lines.append(UiText.t("fuse.loses") % [Names.of((inst as ItemInstance).def), UiText.t("tip.list_sep").join(PackedStringArray(lost))])
+	if fuse_note == null:
+		fuse_note = FuseNote.new()
+		add_child(fuse_note)
+		fuse_note.closed = func() -> void: board_view.held_fusion = Vector2i(-1, -1)
+	if tip != null:
+		tip.hide_tip()
+	var xf := board_view.get_global_transform()
+	var pair := xf * board_view.item_rect(a_uid).merge(board_view.item_rect(b_uid))
+	var hammer_y := board_view.get_global_mouse_position().y
+	for f in board_view.fusions:
+		if (int(f["a"]) == a_uid and int(f["b"]) == b_uid) or (int(f["a"]) == b_uid and int(f["b"]) == a_uid):
+			hammer_y = (xf * (Vector2(f["seam"]) * board_view.cell_px)).y
+	fuse_note.open(a.def, b.def, pv["output"] as ItemDef, int(pv["known"]) > 0, "\n".join(PackedStringArray(lines)), pair, hammer_y,
+		func() -> void: crafting.fuse(a_uid, b_uid))
+	board_view.held_fusion = Vector2i(a_uid, b_uid)
 	return true
 
 

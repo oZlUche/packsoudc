@@ -290,7 +290,6 @@ const TEXT := {
 	"fuse.unknown": {"zh": "？？？", "en": "???"},
 	"fuse.go": {"zh": "合成", "en": "Fuse"},
 	"fuse.cancel": {"zh": "取消", "en": "Cancel"},
-	"fuse.spends": {"zh": "消耗 %s 与 %s", "en": "Uses up %s and %s"},
 	"fuse.loses": {"zh": "%s的%s不会留下", "en": "%s loses its %s"},
 	"fuse.enchant": {"zh": "附魔", "en": "enchantment"},
 	"fuse.quality": {"zh": "品质", "en": "quality"},

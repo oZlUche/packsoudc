@@ -47,6 +47,8 @@ var _weapon_view: InventoryView = null
 var _material_view: InventoryView = null
 var _out_view: InventoryView = null
 var _ghost_view: InventoryView = null
+## 306 定稿：配上了但不认识出件 —— 出件格居中放问号图（两格见方，和虚影一样淡）
+var _unknown_pic: TextureRect = null
 var strike_key: TextureButton = null
 var _glyph_weapon: TextureRect = null
 var _glyph_material: TextureRect = null
@@ -104,6 +106,16 @@ func setup(p_flow: GameFlow, p_node: MapNode, font: Font, drag: DragLayer, tip: 
 	_ghost_view = _view(_ghost, out_at)
 	_ghost_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ghost_view.modulate = GHOST
+	_unknown_pic = TextureRect.new()
+	_unknown_pic.name = "UnknownOut"
+	_unknown_pic.texture = UiTheme.art_cached(FuseNote.UNKNOWN_ART)
+	_unknown_pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_unknown_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_unknown_pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_unknown_pic.size = Vector2.ONE * CELL * 2.0
+	_unknown_pic.position = (Vector2(OUT_SLOT) * CELL - _unknown_pic.size) * 0.5
+	_unknown_pic.visible = false
+	_ghost_view.add_child(_unknown_pic)
 	strike_key = _hammer_key()
 	strike_key.name = "StrikeKey"
 	var key_x := (mat_at.x + float(MATERIAL_SLOT.x) * CELL + FRAME_IN + out_at.x - FRAME_IN) * 0.5
@@ -287,6 +299,7 @@ func _refresh() -> void:
 	if _note == null:
 		return
 	_ghost.clear()
+	_unknown_pic.visible = false
 	var lines: Array[String] = []
 	var open := flow != null and flow.anvil_open(node)
 	var w := weapon()
@@ -298,6 +311,7 @@ func _refresh() -> void:
 		var known := r != null and known_upgrade(r)     # 305：没锤过、也不认识出件 —— 不画出件、右窗打问号
 		if known and not _ghost.place(made, Vector2i.ZERO, 0):
 			_ghost.try_add(made, true)
+		_unknown_pic.visible = not known
 		compare.show_pair(w, made, false, not known)     # 298：出件简述换成两窗并排；便条照旧列这把能升成的
 	else:
 		compare.clear()

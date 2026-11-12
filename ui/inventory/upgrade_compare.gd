@@ -15,6 +15,8 @@ const MARK_COLOR := HoverTip.RING_COLOR
 const LINGER := 0.2
 ## 仓库里没有这把：左窗整窗压暗
 const DIMMED := Color(0.55, 0.55, 0.55)
+## 306：不认识出件时右窗那张问号图多大
+const UNKNOWN_SIDE := 72.0
 
 var left: HoverTip.TipWindow = null
 var right: HoverTip.TipWindow = null
@@ -56,7 +58,7 @@ func _window() -> HoverTip.TipWindow:
 
 
 ## 摆上两把：[param before] 现在这把，[param after] 之后那把；[param dimmed] = 左窗压暗（铁匠铺仓库里没有这把）；
-## 305：[param unknown] = 玩家还不认识出件，右窗只写问号
+## 305：[param unknown] = 玩家还不认识出件，右窗只放问号图（306 定稿）
 func show_pair(before: ItemInstance, after: ItemInstance, dimmed: bool = false, unknown: bool = false) -> void:
 	if before == null or after == null:
 		clear()
@@ -64,7 +66,10 @@ func show_pair(before: ItemInstance, after: ItemInstance, dimmed: bool = false, 
 	_fill(left, before)
 	_fill(right, after)
 	if unknown:
-		right.set_text("[b]%s[/b]" % UiText.t("fuse.unknown"))
+		right.set_text("")     # 306 定稿：只放问号图，不写字
+		right.body.push_paragraph(HORIZONTAL_ALIGNMENT_CENTER)
+		right.body.add_image(UiTheme.art_cached(FuseNote.UNKNOWN_ART), int(UNKNOWN_SIDE), int(UNKNOWN_SIDE))
+		right.body.pop()
 		right.terms = {}
 		right.reset_size()
 	left.modulate = DIMMED if dimmed else Color.WHITE
