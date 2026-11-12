@@ -126,6 +126,7 @@ func _build() -> void:
 	tip = HoverTip.new()
 	add_child(tip)
 	tip.watch(board_view)
+	_quiet_tip(tip)
 	strip.tip = tip
 	board_view.item_double_clicked.connect(quick_move)
 	board_view.actions_for = board_actions     # 230：右键 = 钉住悬浮窗（信物奉为主信仰改成按钮）
@@ -304,8 +305,11 @@ func ask_fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_h
 		fuse_note = FuseNote.new()
 		add_child(fuse_note)
 	fuse_note.closed = func() -> void: _hold_fusion(-1, -1)
-	if tip != null:
-		tip.hide_tip()
+	_quiet_uid = b.uid
+	for t in [tip, ground.tip if ground != null else null]:
+		if t != null:
+			_quiet_tip(t)
+			(t as HoverTip).hide_tip()
 	var target := _global_rect(b, b_home)
 	var pair := target.merge(ghost) if ghost.has_area() else target
 	var expect := StringName(res.get("output_id", &""))
@@ -334,6 +338,26 @@ func ask_fuse(a_uid: int, b_uid: int) -> bool:
 	var ha := crafting.home_of(a_uid)
 	var hb := crafting.home_of(b_uid)
 	return ha != null and hb != null and ask_fuse_items(ha.get_item(a_uid), ha, hb.get_item(b_uid), hb)
+
+
+## 314 复测（游戏测试 v6.11）：确认窗开着时不弹道具窗（会和纸条叠在一起）；关了之后鼠标还停在被压那件上也不弹，挪到别的道具上才恢复
+var _quiet_uid := -1
+var _quieted: Array[HoverTip] = []
+
+
+func _quiet_tip(t: HoverTip) -> void:
+	if t == null or _quieted.has(t):
+		return
+	_quieted.append(t)
+	var prev := t.hover_quiet
+	t.hover_quiet = func(v: ContainerView, uid: int) -> bool:
+		if fuse_note != null and fuse_note.is_open():
+			return true
+		if _quiet_uid >= 0:
+			if uid == _quiet_uid:
+				return true
+			_quiet_uid = -1
+		return prev.is_valid() and bool(prev.call(v, uid))
 
 
 ## 确认窗开着时：手上那件在棋盘原处先不画（[param veil_uid]，-1 = 没有），被压那件的小锤画亮的；都 -1 = 收
