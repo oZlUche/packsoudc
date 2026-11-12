@@ -56,7 +56,7 @@ const LABELS := {
 	"name_prefix": "名字前缀", "name_prefix_en": "英文前缀", "add_tags": "多出的标签", "rarity_up": "稀有度加几", "value_mult": "价值倍率", "convert_chance": "包内转化概率", "convert_per_tier": "每级加的转化概率",
 	"bless_chance": "赐福替代概率（没激活）", "bless_chance_active": "赐福替代概率（激活了）", "cost": "花费", "carry_budget": "带入预算（价值）", "carry_over_cost": "每超多少价值倒计时 −1", "event_groups": "成组限量的事件", "events": "事件与权重", "offerings": "献祭品", "perks": "信仰效果", "multiplier": "倍率", "cap": "每场上限",
 	"count_dealt": "算造成的", "count_taken": "算受到的", "min_cells": "最少格子数", "exact_grade": "体积恰好", "per_cell": "乘格子数", "first_amount": "首次给", "again_amount": "再次给", "has_stat": "显式带有的属性", "rarity_pow": "按 2^稀有度给", "plus": "再加", "first_kind_only": "同种一局只算一次", "by_type": "按节点类型", "closing_extract": "过半关一个撤离点", "safe_size": "托付格子大小",
-	"grants_unlock": "通关给的解锁", "hidden_by_unlock": "拿到此解锁后收起", "characters": "可选角色", "vitality_bonus": "额外体力", "starting_items": "开局道具",
+	"profile": "所属档案", "grants_unlock": "通关给的解锁", "hidden_by_unlock": "拿到此解锁后收起", "characters": "可选角色", "vitality_bonus": "额外体力", "starting_items": "开局道具",
 	"starting_keepsakes": "开局特殊道具", "next_chapter": "下一章", "allow_carry_in": "允许从仓库带入", "auto_spawn": "直接站在出生点", "skip_setup": "不走开局屏",
 	"intro_event": "开场事件", "departure_event": "出发前的交代", "coaches": "界面教程", "outro_event": "收尾事件", "node_tooltips": "节点浮窗", "tooltip_mode": "浮窗模板", "tooltip_texts": "浮窗文字", "rings": "环", "kind": "种类",
 	"slots": "槽位数", "node_count": "点数", "quota": "配额", "type_weights": "类型权重", "ring_template": "环模板", "scales": "规模", "routes": "路线",

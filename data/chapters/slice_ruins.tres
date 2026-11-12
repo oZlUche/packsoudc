@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="ChapterDef" format=3]
+
+[ext_resource type="Script" path="res://core/map/map_source.gd" id="1_pnd55"]
+[ext_resource type="Script" path="res://core/run/run_module.gd" id="2_0h84p"]
+[ext_resource type="Script" path="res://core/run/chapter_def.gd" id="3_l575v"]
+
+[sub_resource type="Resource" id="Resource_pat14"]
+script = ExtResource("1_pnd55")
+mode = 1
+preset_path = "res://data/maps/slice_ruins.json"
+
+[resource]
+script = ExtResource("3_l575v")
+id = &"slice_ruins"
+display_name = "魔法废墟"
+display_names = {
+"en": "Magic Ruins"
+}
+map_source = SubResource("Resource_pat14")
+profile = &"slice"
+drop_rule = &"slice_ruins"
+bag_pool = &""
+node_rules = &"slice_ruins"
+economy_rules = &"slice_ruins"
+characters = Array[StringName]([&"andreus"])
+starting_items = Array[StringName]([&"knife", &"bandage", &"ration"])
+allow_carry_in = false
+auto_spawn = true
+step_limit = 20
+closing_extract = false

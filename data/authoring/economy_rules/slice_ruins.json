@@ -1,0 +1,31 @@
+{
+  "id": "slice_ruins",
+  "display_name": "试玩切片的经济：没有付费撤离点，货架按节点清单摆",
+  "shop_rarity_weights": [
+    40.0,
+    30.0,
+    20.0,
+    8.0,
+    2.0
+  ],
+  "shop_sell_ratio": 0.3,
+  "shop_exclude_tags": [
+    "treasure",
+    "supply"
+  ],
+  "shop_bag_slot_chance": 0.0,
+  "bullion_slot_chance": 0.0,
+  "bullion_shallow": {
+    "silver_nugget": 1,
+    "silver_bar": 1,
+    "silver_ingot_large": 1,
+    "gold_nugget": 1
+  },
+  "bullion_deep": {
+    "gold_nugget": 1,
+    "gold_bar": 1,
+    "gold_ingot": 1,
+    "silver_ingot_large": 1
+  },
+  "paid_extracts": 0
+}

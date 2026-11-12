@@ -1,0 +1,65 @@
+{
+  "id": "slice_ruins",
+  "display_name": "试玩切片的节点规则",
+  "random_weights": {
+    "battle": 1
+  },
+  "search": {
+    "encounter_curve": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "rarity_weights": [
+      50.0,
+      30.0,
+      15.0,
+      4.0,
+      1.0
+    ],
+    "exclude_tags": [
+      "treasure"
+    ],
+    "bless_chance": 0.0,
+    "bless_chance_active": 0.0,
+    "again_event": "search_again",
+    "done_event": "search_done",
+    "encounter_event": "search_encounter",
+    "destroyed_event": "search_destroyed",
+    "reveal_seconds": [
+      0.3,
+      0.5,
+      0.8,
+      1.2,
+      2.0,
+      3.0
+    ]
+  },
+  "loss_cost": {
+    "battle": 1,
+    "elite": 2,
+    "hunter": 1
+  },
+  "event_weights": {
+    "story": 1
+  },
+  "flee": {
+    "chance": 0.5,
+    "fail_vitality": 1,
+    "fail_buff": "weakened"
+  },
+  "events_by_type": {
+    "search": {
+      "search_default": 1
+    },
+    "rest": {
+      "rest_default": 1
+    },
+    "shop": {
+      "shop_default": 1
+    },
+    "extract": {
+      "extract_default": 1
+    }
+  }
+}
