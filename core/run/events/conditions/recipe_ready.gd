@@ -1,6 +1,7 @@
 ## 条件：身上凑得齐某条局内配方（[RecipeDef]）的原料 —— 每种原料都有一件玩家没锁的（报告 309 / v5.85 体验 E01）。
 ## [member missing] 反过来：凑不齐才过。序章守卫的退路用它：手里只有赐福的匕首、或者缺毒药，都算「当前没有可用的合成组合」，
-## 不再说「没有匕首」。精确匹配原料 id，和 [method RecipeDef.matches] 一样 —— 赐福版不顶普通版
+## 不再说「没有匕首」。312：按原件认（赐福版顶普通版，和合成本身一样，[method FusionResolve.base_of]）；
+## 两件分属两位神的武器合不了（禁忌待办）这里不细分，照样算凑得齐
 class_name RecipeReady
 extends EventCondition
 
@@ -24,7 +25,7 @@ func ready(ctx: EventContext) -> bool:
 		for c in ctx.containers(2):
 			for inst in (c as ItemContainer).items():
 				var ii := inst as ItemInstance
-				if ii.def.id == id and not ii.is_locked_by_player():
+				if FusionResolve.base_of(ii.def) == id and not ii.is_locked_by_player():
 					n += 1
 		if n < int(need[id]):
 			return false

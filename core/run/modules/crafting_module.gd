@@ -37,8 +37,9 @@ func install(run: RunState) -> void:
 
 
 ## 305（方案 §6.2）：玩家对这两件合成什么知道多少 —— 2 = 自己合成过这张配方；1 = 没合成过、但认识成品；0 = 都不知道（成品打问号）。没配方 = -1
+## 312：赐福版按原件配，认识按原件家族算（[method RunState.has_met]）
 func known_level(a: ItemDef, b: ItemDef) -> int:
-	var r := RecipeDef.find(recipes, a.id, b.id) if a != null and b != null else null
+	var r := RecipeDef.find(recipes, FusionResolve.base_of(a), FusionResolve.base_of(b)) if a != null and b != null else null
 	if r == null or _run == null:
 		return -1
 	return _known(r.id, r.output)
@@ -50,7 +51,17 @@ func _known(recipe_id: StringName, output: StringName) -> int:
 	return 1 if _run.has_met(output) else 0
 
 
-## 305：点锤之后、合之前看一眼：`{"a", "b": 两件 ItemInstance, "output": 成品 ItemDef, "known": [method known_level]}`；拼不了 = 空
+## 312：这两件实际合成什么（[method FusionResolve.resolve]，带上这一局的道具库、神表、当前信仰）；没配方 = 空
+func resolve(a: ItemDef, b: ItemDef) -> Dictionary:
+	if _run == null:
+		return {}
+	var faiths: Array = _run.faith_defs.keys()
+	Ids.sort(faiths)
+	return FusionResolve.resolve(recipes, a, b, _run.items, faiths, _run.active_faith_id())
+
+
+## 305：点锤之后、合之前看一眼：`{"a", "b": 两件 ItemInstance, "output": 成品 ItemDef（禁忌待办时是原件成品，只用来占位）,
+## "known": [method known_level], "resolution": [method resolve]}`；拼不了 / 数据不对 = 空
 func fuse_preview(a_uid: int, b_uid: int) -> Dictionary:
 	if _run == null or _run.board == null or _run.items == null:
 		return {}
@@ -58,23 +69,38 @@ func fuse_preview(a_uid: int, b_uid: int) -> Dictionary:
 		if (int(p["a"]) == a_uid and int(p["b"]) == b_uid) or (int(p["a"]) == b_uid and int(p["b"]) == a_uid):
 			var a := _run.board.get_item(a_uid)
 			var b := _run.board.get_item(b_uid)
-			var out_def := _run.items.get_def(StringName(p["output"]))
+			var res := resolve(a.def, b.def)
+			if res.is_empty() or String(res["status"]) == FusionResolve.INVALID:
+				return {}
+			var shown := StringName(res["output_id"]) if String(res["status"]) == FusionResolve.READY else StringName(res["base_output_id"])
+			var out_def := _run.items.get_def(shown)
 			if out_def == null:
 				return {}
-			return {"a": a, "b": b, "output": out_def, "known": _known(StringName(p["recipe"]), out_def.id)}
+			return {"a": a, "b": b, "output": out_def, "known": _known(StringName(p["recipe"]), out_def.id), "resolution": res}
 	return {}
 
 
-## 279 拼接：棋盘上贴着、能拼的每一对（[method Fusion.pairs]）；没棋盘 / 没配方 = 空
+## 279 拼接：棋盘上贴着、能拼的每一对（[method Fusion.pairs]）；没棋盘 / 没配方 = 空。
+## 312：`output` 换成解析后的成品，另带 `status`（禁忌待办的那一对照样出锤，点开只说一句、没有合成键）；数据不对的那一对不出锤
 func fusion_pairs() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	if _run == null or _run.board == null:
-		return [] as Array[Dictionary]
-	return Fusion.pairs(_run.board, recipes)
+		return out
+	for p in Fusion.pairs(_run.board, recipes):
+		var res := resolve(_run.board.get_item(int(p["a"])).def, _run.board.get_item(int(p["b"])).def)
+		if res.is_empty() or String(res["status"]) == FusionResolve.INVALID:
+			continue
+		p["status"] = res["status"]
+		if String(res["status"]) == FusionResolve.READY:
+			p["output"] = res["output_id"]
+		out.append(p)
+	return out
 
 
 ## 279 拼接（待定 2：点锤合）：棋盘上贴着的 [param a_uid]、[param b_uid] 两件有拼接配方 —— 两件消失，产物落在两件原来的占格里；
-## 落不下在棋盘上找位，再不行到地上并提醒。不贴着、没配方、产物没地方去：棋盘原样不动。返回 `{"ok": bool, "output": 产物 id, "recipe": 配方 id, "where": "board" / "storage", "log": [几句话]}`，成了发一次 [signal done]
-func fuse(a_uid: int, b_uid: int) -> Dictionary:
+## 落不下在棋盘上找位，再不行到地上并提醒。不贴着、没配方、产物没地方去：棋盘原样不动。返回 `{"ok": bool, "output": 产物 id, "recipe": 配方 id, "where": "board" / "storage", "log": [几句话]}`，成了发一次 [signal done]。
+## 312：成品按 [method resolve]；禁忌待办 / 数据不对不合；[param expect] 给了（确认窗上显示的成品 id）而现在解析出来不一样 = 不合（`"changed": true`），让界面重开
+func fuse(a_uid: int, b_uid: int, expect: StringName = &"") -> Dictionary:
 	var failed := {"ok": false, "output": "", "where": "", "log": []}
 	var board: GridInventory = _run.board if _run != null else null
 	if board == null:
@@ -88,7 +114,13 @@ func fuse(a_uid: int, b_uid: int) -> Dictionary:
 		return failed
 	var a := board.get_item(a_uid)
 	var b := board.get_item(b_uid)
-	var out_def := _run.items.get_def(StringName(pair["output"])) if _run.items != null else null
+	var res := resolve(a.def, b.def)
+	if res.is_empty() or String(res["status"]) != FusionResolve.READY:
+		return failed
+	if expect != &"" and StringName(res["output_id"]) != expect:
+		failed["changed"] = true
+		return failed
+	var out_def := _run.items.get_def(StringName(res["output_id"])) if _run.items != null else null
 	if out_def == null:
 		return failed
 	var names := [Names.of(a.def), Names.of(b.def), Names.of(out_def)]

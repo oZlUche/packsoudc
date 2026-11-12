@@ -45,7 +45,8 @@ func _init() -> void:
 	visible = false
 
 
-## 开窗：[param pair] = 两件合起来的外框（全局），[param hammer_y] = 小锤中心的全局 y；[param loss] 空 = 不写那一行
+## 开窗：[param pair] = 两件合起来的外框（全局），[param hammer_y] = 小锤中心的全局 y；[param loss] 空 = 不写那一行；
+## [param on_go] 无效 = 合不了（312 禁忌待办）：不出「合成」签，只留「取消」
 func open(a: ItemDef, b: ItemDef, out: ItemDef, known: bool, loss: String, pair: Rect2, hammer_y: float, on_go: Callable) -> void:
 	close()
 	_on_go = on_go
@@ -143,11 +144,12 @@ func _fill(side_key: String, a: ItemDef, b: ItemDef, out: ItemDef, known: bool, 
 		col.add_child(loss_label)
 	var keys := UiTheme.hbox(KEY_GAP)
 	keys.alignment = BoxContainer.ALIGNMENT_CENTER
-	go_key = _key(UiText.t("fuse.go"), BRASS, ink, ink)
-	go_key.pressed.connect(go)
+	if _on_go.is_valid():
+		go_key = _key(UiText.t("fuse.go"), BRASS, ink, ink)
+		go_key.pressed.connect(go)
+		keys.add_child(go_key)
 	cancel_key = _key(UiText.t("fuse.cancel"), Color(0, 0, 0, 0), BROWN, BROWN)
 	cancel_key.pressed.connect(close)
-	keys.add_child(go_key)
 	keys.add_child(cancel_key)
 	col.add_child(keys)
 

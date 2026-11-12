@@ -478,7 +478,7 @@ static func fusions_line(def: ItemDef) -> String:
 		return ""
 	var parts: Array[String] = []
 	for r in fuse_recipes():
-		var at := r.inputs.find(def.id)
+		var at := r.inputs.find(FusionResolve.base_of(def))     # 312 §3：赐福版列原件的配方，出件写原件（不替另一件许诺信仰）
 		if at < 0 or not recipe_known(r.id):     # 305：没自己合成过的不列
 			continue
 		var partner := item_def(r.inputs[1 - at])
@@ -497,7 +497,7 @@ static func made_from_line(def: ItemDef) -> String:
 		return ""
 	var parts: Array[String] = []
 	for r in fuse_recipes():
-		if r.output != def.id or not recipe_known(r.id):
+		if r.output != FusionResolve.base_of(def) or not recipe_known(r.id):
 			continue
 		var a := item_def(r.inputs[0])
 		var b := item_def(r.inputs[1])

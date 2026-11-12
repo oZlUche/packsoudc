@@ -420,9 +420,10 @@ static func run_crafting_gate(t: TestCase) -> void:
 	Support.cleanup("prologue")
 
 
-## 309（v5.85 体验 E01）：旧档在守卫门口只有赐福匕首 + 毒药 —— 补领一把普通匕首，只一次；赐福匕首原样不动
+## 309（v5.85 体验 E01）→ 312（赐福合成，方案 §5、§8.3）：旧档在守卫门口只有赐福匕首 + 毒药 —— 赐福匕首能直接合，不再补发普通匕首；
+## 合出的赐福涂毒匕首照样开正门；真没有匕首才补领一把（只一次）
 static func run_old_save_knife_once(t: TestCase) -> void:
-	t.begin("309 · 旧档：赐福匕首 + 毒药在守卫门口能补领一把普通匕首（只一次，回地图合成后再来）；有普通匕首就不给")
+	t.begin("312 · 旧档：赐福匕首 + 毒药凑得齐、不补发；赐福涂毒匕首开正门；真没匕首才补领一把（只一次）")
 	var c := _content()
 	var g := c.prologue.map_source.resolve(1)
 	var path := _path(g)
@@ -430,17 +431,28 @@ static func run_old_save_knife_once(t: TestCase) -> void:
 	s.meta = MetaState.new()
 	var brute := ItemInstance.create(c.items.get_def(&"knife_brute"))
 	s.board.try_add(brute, true)
-	s.board.try_add(ItemInstance.create(c.items.get_def(&"poison_vial")), true)
+	var vial := ItemInstance.create(c.items.get_def(&"poison_vial"))
+	s.board.try_add(vial, true)
 	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
-	t.check(bool(s.events.option_state(1)["ok"]), "凑不齐：跳过照样能选")
-	t.check(bool(s.events.option_state(2)["ok"]), "补领普通匕首能选")
+	t.check(not bool(s.events.option_state(1)["ok"]), "赐福匕首 + 毒药凑得齐：跳过藏起来，要先合成")
+	t.check(not bool(s.events.option_state(2)["ok"]), "手里有赐福匕首：不补发普通匕首")
+	t.check(not bool(s.events.option_state(0)["ok"]), "还没合：正门关着")
+	var res := CraftingModule.of(s).resolve(brute.def, vial.def)
+	t.eq(StringName(res.get("output_id", &"")), &"poisoned_knife_brute", "这两件合出赐福涂毒匕首")
+	s.board.remove(brute.uid)
+	s.board.remove(vial.uid)
+	var made := ItemInstance.create(c.items.get_def(&"poisoned_knife_brute"))
+	s.board.try_add(made, true)
+	t.check(bool(s.events.option_state(0)["ok"]), "赐福涂毒匕首：正门开着")
+	t.check(not bool(s.events.option_state(1)["ok"]), "有成品：跳过藏着")
+	s.board.remove(made.uid)
+	s.board.try_add(ItemInstance.create(c.items.get_def(&"poison_vial")), true)
+	t.check(bool(s.events.option_state(2)["ok"]), "只剩毒药、没有匕首：能补领")
 	t.check(s.events.choose(2), "选补领")
 	t.not_null(_find(s, &"knife"), "拿到一把普通匕首")
-	t.check(_find(s, &"knife_brute") == brute and brute.def.id == &"knife_brute", "赐福匕首原样")
 	t.eq(s.meta.flag(&"tut_knife_given"), 1, "记了领过")
 	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
 	t.check(not bool(s.events.option_state(2)["ok"]), "手里有普通匕首：不再给")
-	t.check(not bool(s.events.option_state(1)["ok"]), "凑齐了：跳过藏起来，要先合成")
 	var k := _find(s, &"knife")
 	if s.board.items().has(k):
 		s.board.remove(k.uid)

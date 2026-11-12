@@ -21,7 +21,8 @@
       "requires": [
         {
           "type": "has_item",
-          "item": "poisoned_knife"
+          "item": "poisoned_knife",
+          "family": true
         }
       ],
       "outcomes": [
@@ -45,7 +46,8 @@
         {
           "type": "has_item",
           "item": "poisoned_knife",
-          "missing": true
+          "missing": true,
+          "family": true
         }
       ],
       "outcomes": [
@@ -72,12 +74,14 @@
         {
           "type": "has_item",
           "item": "knife",
-          "missing": true
+          "missing": true,
+          "family": true
         },
         {
           "type": "has_item",
           "item": "poisoned_knife",
-          "missing": true
+          "missing": true,
+          "family": true
         },
         {
           "type": "has_flag",

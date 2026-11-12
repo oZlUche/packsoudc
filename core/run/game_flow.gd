@@ -1108,7 +1108,14 @@ func knows_recipe(id: StringName) -> bool:
 
 ## 305：玩家认识这件道具吗（同上）
 func has_met(id: StringName) -> bool:
-	return run.has_met(id) if run != null else (meta != null and meta.lore.has_met(id))
+	if run != null:
+		return run.has_met(id)
+	if meta == null:
+		return false
+	for f in FusionResolve.family(items, id, faith_defs.keys()):
+		if meta.lore.has_met(f):
+			return true
+	return false
 
 
 ## 279：休息点 [param node] 的砧还能不能锤（是休息点、这一局没完、这座砧没锤过）

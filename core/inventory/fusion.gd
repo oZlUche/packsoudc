@@ -7,7 +7,7 @@ extends RefCounted
 const DIRS: Array[Vector2i] = [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vector2i.UP]
 
 
-## 棋盘上能拼的每一对：`{"a": uid, "b": uid（a < b）, "output": 产物 id, "recipe": 配方 id, "seam": Vector2（接缝中点，格为单位，左上角 = 0,0）}`。
+## 棋盘上能拼的每一对：`{"a": uid, "b": uid（a < b）, "output": 配方上的产物 id（原件；赐福怎么继承看 core/run 的解析入口）, "recipe": 配方 id, "seam": Vector2（接缝中点，格为单位，左上角 = 0,0）}`。
 ## 一对只出一次；接缝取两件相邻的格边里最靠中间的那一条。按 (a, b) 排好
 static func pairs(board: GridInventory, recipes: Array) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -33,7 +33,7 @@ static func pairs(board: GridInventory, recipes: Array) -> Array[Dictionary]:
 		var b := board.get_item(key.y)
 		if not spendable(board, a) or not spendable(board, b):
 			continue
-		var r := RecipeDef.find(recipes, a.def.id, b.def.id)
+		var r := RecipeDef.find(recipes, _base(a.def), _base(b.def))     # 312：赐福版按原件配
 		if r == null:
 			continue
 		out.append({"a": key.x, "b": key.y, "output": r.output, "recipe": r.id, "seam": _middle(edges[key])})
@@ -111,3 +111,8 @@ static func fuse(board: GridInventory, a_uid: int, b_uid: int, out_def: ItemDef)
 		return null
 	board.end_batch()
 	return out
+
+
+## 312：原件 id（赐福版找回原件）
+static func _base(def: ItemDef) -> StringName:
+	return def.blessed_of if def.is_blessed() else def.id
