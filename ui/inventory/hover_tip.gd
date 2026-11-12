@@ -1273,7 +1273,7 @@ func _begin_leave(view: ContainerView, local: Vector2) -> void:
 func _uid_under(view: ContainerView, local: Vector2) -> int:
 	if view is InventoryView:
 		var iv := view as InventoryView
-		if iv.inventory == null or not iv.fusion_at(local).is_empty():     # 279：停在小锤徽上不弹道具窗（会盖住要拼的两件，测试 11-07）
+		if iv.inventory == null:
 			return -1
 		return iv.uid_at_cell(iv.cell_at_local(local), InventoryView.whole_bag_key())     # 274：按着 Ctrl = 包的说明
 	if view.has_method("uid_at_local"):
