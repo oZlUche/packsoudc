@@ -19,8 +19,8 @@ static func _brutus(c: TestSupport.Content) -> CharacterDef:
 	return null
 
 
-static func _start(c: TestSupport.Content) -> RunState:
-	var s := RunState.start(c.prologue, 7, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], _brutus(c))
+static func _start(c: TestSupport.Content, p_seed: int = 7) -> RunState:
+	var s := RunState.start(c.prologue, p_seed, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], _brutus(c))
 	if s == null:
 		return null
 	s.event_defs = c.events
@@ -197,8 +197,18 @@ static func run_data(t: TestCase) -> void:
 
 static func run_walkthrough(t: TestCase) -> void:
 	t.begin("序章 · 走一遍：搜索循环（搜索 → 关闭回事件 → 再搜 → 搜完事件）→ 整理事件只有「进入战前准备」→ 战斗赢 → 战利品 → 第二点两次之后第三次遭遇事件 → 迎战赢 → 余波事件 → 战利品里有包 → 精英赢 → 撤离")
+	_walk(t, 7)
+
+
+## 309（v5.85 体验 D 批）：报告里出事的种子 71888 照样走通 —— 第一战掉的是普通匕首、真的合成、过守卫
+static func run_walkthrough_71888(t: TestCase) -> void:
+	t.begin("309 · 序章种子 71888 走一遍：必掉普通匕首、合成涂毒匕首、守卫正门开、撤离")
+	_walk(t, 71888)
+
+
+static func _walk(t: TestCase, p_seed: int) -> void:
 	var c := _content()
-	var s := _start(c)
+	var s := _start(c, p_seed)
 	t.not_null(s, "按布鲁图斯开局")
 	if s == null:
 		return
