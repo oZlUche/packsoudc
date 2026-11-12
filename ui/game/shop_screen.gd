@@ -118,6 +118,20 @@ func open(payload: Dictionary) -> void:
 		flow.run.wallet.changed.connect(func(_b: int, _d: int, _r: StringName): _refresh())
 	_rebuild_belt()
 	_refresh()
+	_first_visit_hint()
+
+
+## 309（v5.85 体验 E05）：头一回进店说一句怎么买（记在局外的 coach_seen，每个存档位一次；帮助页照旧能看）
+const VISIT_HINT_SEEN := "shop_first_visit"
+
+
+## 说了返回真
+func _first_visit_hint() -> bool:
+	if _session == null or flow == null or flow.meta == null or flow.meta.coach_seen.has(VISIT_HINT_SEEN):
+		return false
+	flow.meta.coach_seen.append(VISIT_HINT_SEEN)
+	say(UiText.t("shop.first_visit"))
+	return true
 
 
 func _bottom_hold(c: Control) -> Control:
@@ -219,7 +233,18 @@ func withdraw(uid: int) -> bool:
 
 ## 点自己的钱袋：把还差的钱放上右盘 / 收回
 func pay_gap() -> int:
-	return _session.toggle_my_coins() if _session != null else 0
+	if _session == null:
+		return 0
+	var was := _session.my_coins
+	var n := _session.toggle_my_coins()
+	# 309（E05）：补差时说清楚 —— 不差钱就说不用补；钱不够就说还差多少（钱照样全放上去，和以前一样）
+	if was == 0 and not _session.table_empty():
+		var gap := _session.left_total() - _session.goods_right()
+		if gap <= 0:
+			say(UiText.t("shop.gap_none"))
+		elif gap > n:
+			say(UiText.t("shop.gap_short") + CoinShort.coin(gap - n))
+	return n
 
 
 ## 点商人的钱袋：让他把多出来的放上左盘 / 收回

@@ -206,3 +206,33 @@ static func frame_scale_art(t: TestCase, root: Window) -> void:
 	UiTheme.asset_root = NOWHERE
 	t.eq(BalanceScale._v(ShopScale.layout()["pivot"]), Vector2(210, 28), "缺图：退回占位版式")
 	UiTheme.asset_root = keep
+
+
+## 309（v5.85 体验 E05）：头一回进店说一句怎么买，第二回不说；点钱袋补差：不差钱说不用补，钱不够说还差多少
+static func frame_first_visit_hint(t: TestCase, root: Window) -> void:
+	t.begin("309 · 商店首访提示只说一次；点钱袋时不差钱 / 钱不够各说一句")
+	var o := _open(root)
+	var screen = o["screen"]
+	var session: ShopSession = o["session"]
+	t.eq(screen.notice_layer().current_text(), UiText.t("shop.first_visit"), "头一回进店：说怎么买")
+	t.check(screen.flow.meta.coach_seen.has(screen.VISIT_HINT_SEEN), "记在局外")
+	var f = screen.flow
+	screen.free()
+	var again = load("res://ui/game/shop_screen.gd").new()
+	again.flow = f
+	again.font = UiPalette.cjk_font()
+	root.add_child(again)
+	again.open({"node": session.node, "session": session})
+	t.check(not again._first_visit_hint() and f.meta.coach_seen.count(screen_seen_id()) == 1, "第二回不说")
+	t.eq(again.toggle_belt(0), "", "随身一格上秤")
+	var price := int(session.belt_offers[0]["price"])
+	var w := flow_wallet(again)
+	w.spend(w.balance - (price - 1), &"test")
+	again.pay_gap()
+	t.eq(again.notice_layer().current_text(), UiText.t("shop.gap_short") + CoinShort.coin(1), "钱不够：说还差 1")
+	again.free()
+	Support.cleanup(PREFIX)
+
+
+static func screen_seen_id() -> String:
+	return (load("res://ui/game/shop_screen.gd") as GDScript).get_script_constant_map()["VISIT_HINT_SEEN"]
