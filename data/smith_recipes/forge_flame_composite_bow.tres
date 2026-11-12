@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_jm6q8"]
+
+[resource]
+script = ExtResource("1_jm6q8")
+id = &"forge_flame_composite_bow"
+output = &"flame_composite_bow"
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "crystal:fire",
+"min": 3
+}, {
+"count": 2,
+"material": "bone",
+"min": 2
+}])
+funds = 300
+group = "bow"
+level = 3

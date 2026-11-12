@@ -1,0 +1,19 @@
+{
+  "id": "forge_frost_bloodoath_axe",
+  "output": "frost_bloodoath_axe",
+  "material_slots": [
+    {
+      "material": "crystal:frost",
+      "min": 3,
+      "count": 1
+    },
+    {
+      "material": "metal",
+      "min": 2,
+      "count": 2
+    }
+  ],
+  "funds": 300,
+  "group": "hammer",
+  "level": 3
+}

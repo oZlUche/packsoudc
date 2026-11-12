@@ -34,13 +34,13 @@ static func run_content(t: TestCase) -> void:
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
 	var all := SmithRecipeDef.load_all()
-	t.eq(all.size(), 101, "14 张 + 252 的 6 张，10-31 棉甲那张删了；279 加 30 张升蓝、32 张升紫、16 张升橙；281 极端武器 4 张")
+	t.eq(all.size(), 116, "14 张 + 252 的 6 张，10-31 棉甲那张删了；279 加 30 张升蓝、32 张升紫、16 张升橙；281 极端武器 4 张；310 金武材料打造 15 张")
 	var ok := true
 	for r in all:
 		var o := db.get_def(r.output)
 		var kinds := [&"material"] if r.group == SmithRecipeDef.SMELT else [&"weapon", &"armor", &"shield", &"gear_plug"]
 		ok = ok and o != null and kinds.any(func(tag): return o.tags.has(tag))
-		ok = ok and r.level >= 1 and r.level <= 3 and r.funds > 0 and not r.inputs.is_empty()
+		ok = ok and r.level >= 1 and r.level <= 3 and r.funds > 0 and not (r.inputs.is_empty() and r.slots().is_empty())
 		for k in r.inputs:
 			ok = ok and db.get_def(StringName(String(k))) != null and int(r.inputs[k]) >= 1
 	t.check(ok, "产物都是装备（冶炼的是素材）、素材都在、级 1 ～ 3")
@@ -131,7 +131,7 @@ static func run_groups(t: TestCase) -> void:
 		by[g] = []
 	for r in SmithRecipeDef.load_all():
 		t.check(SmithRecipeDef.GROUPS.has(r.group), "%s 有大类（%s）" % [r.id, r.group])
-		if by.has(r.group) and not String(r.id).begins_with("anvil_"):     # 279 的升蓝另有测试
+		if by.has(r.group) and not String(r.id).begins_with("anvil_") and not String(r.id).begins_with("forge_"):     # 279 的升蓝另有测试；310 的金武打造见 test_smith_counts_310
 			(by[r.group] as Array).append(String(r.output))
 	for g in by:
 		(by[g] as Array).sort()

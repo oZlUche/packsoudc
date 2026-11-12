@@ -22,7 +22,7 @@ static func run_lines(t: TestCase) -> void:
 			t.eq(def.description, "", "%s：说明留空" % line[k])
 			if k == 0:
 				continue
-			var from := recipes.filter(func(r: SmithRecipeDef) -> bool: return r.output == line[k])
+			var from := recipes.filter(func(r: SmithRecipeDef) -> bool: return r.output == line[k] and String(r.id).begins_with("anvil_"))     # 310：橙档另有 forge_* 材料打造
 			t.check(from.size() == 1 and (from[0] as SmithRecipeDef).inputs.has(line[k - 1]), "%s：砧上从 %s 升" % [line[k], line[k - 1]])
 
 

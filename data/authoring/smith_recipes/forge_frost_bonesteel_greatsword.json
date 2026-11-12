@@ -1,0 +1,19 @@
+{
+  "id": "forge_frost_bonesteel_greatsword",
+  "output": "frost_bonesteel_greatsword",
+  "material_slots": [
+    {
+      "material": "crystal:frost",
+      "min": 3,
+      "count": 1
+    },
+    {
+      "material": "metal",
+      "min": 2,
+      "count": 2
+    }
+  ],
+  "funds": 300,
+  "group": "blade",
+  "level": 3
+}

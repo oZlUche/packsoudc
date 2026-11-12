@@ -16,6 +16,10 @@ extends Resource
 ## （`{"bone": 1}` = 一件绿或更高的骨材）；和 [member inputs] 一起要。
 ## 279 第二批：键也可以是 `crystal:<元素家族>`（[member ItemDef.crystal_family]）—— 那一族够档的魔晶石都行（`{"crystal:fire": 3}` = 火焰魔晶石起）
 @export var material_inputs: Dictionary = {}
+## 310（改造 C 批，方案 §5.1）：带件数的材料格，一格一条 `{"material": 材质或 crystal:<家族>, "min": 最低稀有度, "count": 件数}`。
+## 同一类可以写两格不同的门槛（帝国佩剑「金属 ≥金 ×1 + 金属 ≥紫 ×1」）。写了它的配方出件**固定品质 0**（高档材料只满足资格）。
+## 和 [member material_inputs]（一类一件）一起要；界面与扣料都走 [method slots]
+@export var material_slots: Array[Dictionary] = []
 ## 要的钱
 @export var funds: int = 0
 ## 251 补充一：铁匠铺左列的大类（刀剑 / 斧锤 / 弓 / 法杖 / 盾 / 护甲），导入器必填；252：冶炼 `smelt`（产物是素材）
@@ -51,6 +55,29 @@ static func find(recipes: Array, p_id: StringName) -> SmithRecipeDef:
 	return null
 
 
+## 310：全部材料格，旧的 [member material_inputs] 读作「一件、最低稀有度」排在前（按键排），[member material_slots] 跟在后：
+## `[{"material": String, "min": int, "count": int}, ...]`
+func slots() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var keys: Array = material_inputs.keys()
+	Ids.sort(keys)
+	for m in keys:
+		out.append({"material": String(m), "min": int(material_inputs[m]), "count": 1})
+	for raw in material_slots:
+		out.append({"material": String(raw.get("material", "")), "min": int(raw.get("min", 0)), "count": int(raw.get("count", 1))})
+	return out
+
+
+## 310：这件能不能顶那一格（[method slots] 里的一条）
+static func slot_fits(slot: Dictionary, def: ItemDef) -> bool:
+	if def == null or def.rarity < int(slot.get("min", 0)):
+		return false
+	var material := String(slot.get("material", ""))
+	if is_crystal_key(material):
+		return def.tags.has(&"crystal") and String(def.crystal_family) == material.substr(CRYSTAL_PREFIX.length())
+	return def.tags.has(&"material") and def.material == material
+
+
 ## 279 第二批：魔晶石那一格的键前缀（后面跟元素家族）
 const CRYSTAL_PREFIX := "crystal:"
 
@@ -58,11 +85,7 @@ const CRYSTAL_PREFIX := "crystal:"
 ## 279：[param def] 能不能顶 [member material_inputs] 里 [param material] 那一格（是素材、材质对、稀有度够；
 ## 魔晶石那一格：是魔晶石、家族对、稀有度够）
 func material_fits(material: String, def: ItemDef) -> bool:
-	if def == null or def.rarity < int(material_inputs.get(material, 0)):
-		return false
-	if is_crystal_key(material):
-		return def.tags.has(&"crystal") and String(def.crystal_family) == material.substr(CRYSTAL_PREFIX.length())
-	return def.tags.has(&"material") and def.material == material
+	return slot_fits({"material": material, "min": int(material_inputs.get(material, 0))}, def)
 
 
 static func is_crystal_key(material: String) -> bool:
@@ -79,6 +102,11 @@ func material_name(material: String, items: ItemDatabase) -> String:
 
 ## 279：材质类那一格在道具库里最便宜的一件（仓库里一件都没有时画它的样子）；道具库里也没有 = null
 func material_sample(material: String, items: ItemDatabase) -> ItemDef:
+	return slot_sample({"material": material, "min": int(material_inputs.get(material, 0))}, items)
+
+
+## 310：那一格（[method slots] 里的一条）在道具库里最便宜的一件；没有 = null
+static func slot_sample(slot: Dictionary, items: ItemDatabase) -> ItemDef:
 	var best: ItemDef = null
 	if items == null:
 		return null
@@ -86,6 +114,6 @@ func material_sample(material: String, items: ItemDatabase) -> ItemDef:
 	Ids.sort(ids)
 	for item_id in ids:
 		var d := items.get_def(StringName(String(item_id)))
-		if material_fits(material, d) and (best == null or d.rarity < best.rarity):
+		if slot_fits(slot, d) and (best == null or d.rarity < best.rarity):
 			best = d
 	return best

@@ -28,16 +28,16 @@ static func need_tech_text(recipe: SmithRecipeDef) -> String:
 
 
 ## 仓库里每样素材有几件（锁住的不算）：道具 id 字符串 → 件数，只列配方要的；
-## 279：按材质类认的那几格记在 `"material:<材质>"` 下（有没有能顶的一件：1 / 0）
+## 材料格（[method SmithRecipeDef.slots]）记在 `"slot:<序号>"` 下：这一格分得到几件（不超过要的件数）
 static func have(meta: MetaState, recipe: SmithRecipeDef) -> Dictionary:
 	var out := {}
 	if recipe == null:
 		return out
 	for key in recipe.inputs:
 		out[String(key)] = 0
-	var picks := material_picks(meta, recipe)
-	for m in recipe.material_inputs:
-		out[MATERIAL_KEY % m] = 1 if picks.get(String(m)) != null else 0
+	var picks := slot_picks(meta, recipe)
+	for i in picks.size():
+		out[SLOT_KEY % i] = (picks[i] as Array).size()
 	if meta == null:
 		return out
 	for inst in meta.warehouse.items():
@@ -48,31 +48,53 @@ static func have(meta: MetaState, recipe: SmithRecipeDef) -> Dictionary:
 	return out
 
 
-const MATERIAL_KEY := "material:%s"
+const SLOT_KEY := "slot:%d"
 
 
-## 279：每个材质类格会扣仓库里哪一件：材质 → ItemInstance（没有能顶的 = null）。
-## 稀有度最低的先用（好材料留着），同档按仓库顺序；不拿 [member SmithRecipeDef.inputs] 点名的那几样、不拿锁住的
-static func material_picks(meta: MetaState, recipe: SmithRecipeDef) -> Dictionary:
-	var out := {}
+## 310（方案 §5.1）：每个材料格会扣仓库里哪几件：序号 → `Array[ItemInstance]`（分不够就少几件）。
+## 先把要求高的格排前面，候选按稀有度从低到高（好材料留着）、同档按仓库顺序；一件只顶一格；
+## 用增广路找最大分配 —— 不会因为先占了稀缺的那件而「明明够料却打不了」。不拿 [member SmithRecipeDef.inputs] 点名的那几样、不拿锁住的
+static func slot_picks(meta: MetaState, recipe: SmithRecipeDef) -> Array:
+	var out: Array = []
 	if recipe == null:
 		return out
-	var mats: Array = recipe.material_inputs.keys()
-	Ids.sort(mats)
-	var used := {}
-	for m in mats:
-		var best: ItemInstance = null
-		if meta != null:
-			for inst in meta.warehouse.items():
-				var it := inst as ItemInstance
-				if used.has(it.uid) or it.is_locked_by_player() or recipe.inputs.has(it.def.id) or recipe.inputs.has(String(it.def.id)):
-					continue
-				if recipe.material_fits(String(m), it.def) and (best == null or it.def.rarity < best.def.rarity):
-					best = it
-		if best != null:
-			used[best.uid] = true
-		out[String(m)] = best
+	var slots := recipe.slots()
+	for i in slots.size():
+		out.append([] as Array[ItemInstance])
+	if meta == null:
+		return out
+	var pool: Array[ItemInstance] = []
+	for inst in meta.warehouse.items():
+		var it := inst as ItemInstance
+		if it.is_locked_by_player() or recipe.inputs.has(it.def.id) or recipe.inputs.has(String(it.def.id)):
+			continue
+		pool.append(it)
+	var order := range(pool.size())
+	order.sort_custom(func(x: int, y: int) -> bool: return pool[x].def.rarity < pool[y].def.rarity or (pool[x].def.rarity == pool[y].def.rarity and x < y))
+	var units: Array[int] = []     # 一件一个位：所属格的序号
+	for i in slots.size():
+		for _n in maxi(0, int(slots[i]["count"])):
+			units.append(i)
+	units.sort_custom(func(x: int, y: int) -> bool: return int(slots[x]["min"]) > int(slots[y]["min"]) or (int(slots[x]["min"]) == int(slots[y]["min"]) and x < y))
+	var owner := {}     # 候选下标 → 位下标
+	for u in units.size():
+		_augment(u, units, slots, pool, order, owner, {})
+	var taken: Array = owner.keys()
+	taken.sort()
+	for k in taken:
+		(out[units[int(owner[k])]] as Array).append(pool[int(k)])
 	return out
+
+
+static func _augment(u: int, units: Array[int], slots: Array[Dictionary], pool: Array[ItemInstance], order: Array, owner: Dictionary, seen: Dictionary) -> bool:
+	for k in order:
+		if seen.has(k) or not SmithRecipeDef.slot_fits(slots[units[u]], pool[k].def):
+			continue
+		seen[k] = true
+		if not owner.has(k) or _augment(int(owner[k]), units, slots, pool, order, owner, seen):
+			owner[k] = u
+			return true
+	return false
 
 
 ## 能不能打：空串 = 行；否则是说给玩家听的那一句（科技没点 / 级不够 / 缺素材 / 钱不够 / 仓库放不下）
@@ -87,8 +109,9 @@ static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDataba
 	for key in recipe.inputs:
 		if int(got.get(String(key), 0)) < int(recipe.inputs[key]):
 			return UiText.t("smithy.missing")
-	for m in recipe.material_inputs:
-		if int(got.get(MATERIAL_KEY % m, 0)) < 1:
+	var slots := recipe.slots()
+	for i in slots.size():
+		if int(got.get(SLOT_KEY % i, 0)) < int(slots[i]["count"]):
 			return UiText.t("smithy.missing")
 	if meta.funds < recipe.funds:
 		return UiText.t("smithy.no_funds")
@@ -103,13 +126,11 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) 
 		return null
 	var out := ItemInstance.create(items.get_def(recipe.output), 0)
 	out.uid = meta.allocate_uid()
-	var picks := material_picks(meta, recipe)
-	var q := 0     # 279 补充二：材料比要求高几档，产物就几档品质；和吃掉的那把取较高，不累加
+	var q := _material_quality(meta, recipe)     # 279 补充二：材料比要求高几档，产物就几档品质；和吃掉的那把取较高，不累加
 	meta.warehouse.begin_batch()
-	for m in picks:
-		var used := picks[m] as ItemInstance
-		q = maxi(q, used.def.rarity - int(recipe.material_inputs[m]))
-		meta.warehouse.remove(used.uid)
+	for used in slot_picks(meta, recipe):
+		for inst in used:
+			meta.warehouse.remove((inst as ItemInstance).uid)
 	var left := {}
 	for key in recipe.inputs:
 		left[String(key)] = int(recipe.inputs[key])
@@ -145,15 +166,22 @@ static func preview(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase
 			if String(it.def.id) == key and not it.is_locked_by_player():
 				before = it
 				break
-	var q := before.quality() if before != null else 0
-	var picks := material_picks(meta, recipe)
-	for m in picks:
-		var used := picks[m] as ItemInstance
-		if used != null:
-			q = maxi(q, used.def.rarity - int(recipe.material_inputs[m]))
+	var q := maxi(before.quality() if before != null else 0, _material_quality(meta, recipe))
 	var after := ItemInstance.create(items.get_def(recipe.output), 0)
 	after.set_quality(clampi(q, 0, ItemInstance.QUALITY_MAX))
 	return {"before": before, "after": after}
+
+
+## 279 补充二：旧的一类一件格（[member SmithRecipeDef.material_inputs]，排在 [method SmithRecipeDef.slots] 最前）用的那件比要求高几档；
+## 310：带件数的新格（[member SmithRecipeDef.material_slots]）不升品质（方案 §5.3）
+static func _material_quality(meta: MetaState, recipe: SmithRecipeDef) -> int:
+	var q := 0
+	var picks := slot_picks(meta, recipe)
+	var slots := recipe.slots()
+	for i in mini(recipe.material_inputs.size(), picks.size()):
+		for inst in picks[i]:
+			q = maxi(q, (inst as ItemInstance).def.rarity - int(slots[i]["min"]))
+	return q
 
 
 ## 说明面板：到第 k 级会打哪一档

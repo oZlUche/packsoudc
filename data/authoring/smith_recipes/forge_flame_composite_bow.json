@@ -1,0 +1,19 @@
+{
+  "id": "forge_flame_composite_bow",
+  "output": "flame_composite_bow",
+  "material_slots": [
+    {
+      "material": "crystal:fire",
+      "min": 3,
+      "count": 1
+    },
+    {
+      "material": "bone",
+      "min": 2,
+      "count": 2
+    }
+  ],
+  "funds": 300,
+  "group": "bow",
+  "level": 3
+}

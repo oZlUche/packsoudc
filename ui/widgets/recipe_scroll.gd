@@ -163,7 +163,7 @@ func fit(k: float) -> void:
 
 
 ## 换成这一张：产物、名字、每样素材有几 / 要几、工钱；[param why] 空 = 能打（打造键亮）
-## 279：按材质类认的格画 [param shown] 里给的那件（仓库里会被扣的那件，材质 → ItemDef）；没给就画这类最便宜的一件
+## 279：材料格画 [param shown] 里给的那件（仓库里会被扣的那件；310：格序号 → ItemDef）；没给就画这格最便宜的一件
 func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: String, shown: Dictionary = {}) -> void:
 	_last = [r, items, got, why, shown]
 	UiTheme.clear_children(_product)
@@ -186,11 +186,10 @@ func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: S
 	for key in keys:
 		var d := items.get_def(StringName(String(key)))
 		_mats.add_child(_mat(d, int(got.get(String(key), 0)), int(r.inputs[key])))
-	var mats: Array = r.material_inputs.keys()
-	mats.sort()
-	for m in mats:
-		var md: ItemDef = shown.get(String(m)) if shown.get(String(m)) != null else r.material_sample(String(m), items)
-		_mats.add_child(_mat(md, int(got.get(Smithy.MATERIAL_KEY % m, 0)), 1))
+	var slots := r.slots()
+	for i in slots.size():
+		var md: ItemDef = shown.get(i) if shown.get(i) != null else SmithRecipeDef.slot_sample(slots[i], items)
+		_mats.add_child(_mat(md, int(got.get(Smithy.SLOT_KEY % i, 0)), int(slots[i]["count"])))
 	var n := _mats.get_child_count()
 	for i in n:
 		(_mats.get_child(i) as MatSlot).line_right = i < n - 1

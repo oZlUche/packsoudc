@@ -1,0 +1,19 @@
+{
+  "id": "forge_thunder_boneiron_club",
+  "output": "thunder_boneiron_club",
+  "material_slots": [
+    {
+      "material": "crystal:lightning",
+      "min": 3,
+      "count": 1
+    },
+    {
+      "material": "bone",
+      "min": 2,
+      "count": 2
+    }
+  ],
+  "funds": 300,
+  "group": "hammer",
+  "level": 3
+}

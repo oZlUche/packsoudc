@@ -1,0 +1,19 @@
+{
+  "id": "forge_imperial_sword",
+  "output": "imperial_sword",
+  "material_slots": [
+    {
+      "material": "metal",
+      "min": 4,
+      "count": 1
+    },
+    {
+      "material": "metal",
+      "min": 3,
+      "count": 1
+    }
+  ],
+  "funds": 300,
+  "group": "blade",
+  "level": 3
+}

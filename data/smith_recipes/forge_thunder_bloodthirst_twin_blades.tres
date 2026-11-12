@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_yi0sf"]
+
+[resource]
+script = ExtResource("1_yi0sf")
+id = &"forge_thunder_bloodthirst_twin_blades"
+output = &"thunder_bloodthirst_twin_blades"
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "crystal:lightning",
+"min": 3
+}, {
+"count": 2,
+"material": "bone",
+"min": 2
+}])
+funds = 300
+group = "blade"
+level = 3
