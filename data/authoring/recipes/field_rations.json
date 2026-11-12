@@ -10,8 +10,8 @@
   ],
   "output": "field_rations",
   "adjacent": true,
-  "note": "蜂蜡块贴着腌肉干放、点锤：封成军粮。",
+  "note": "蜂蜡块拖到腌肉干上：封成军粮。",
   "notes": {
-    "en": "Put the Beeswax next to the Salted Meat and tap the hammer: it seals into Field Rations."
+    "en": "Drop the Beeswax onto the Salted Meat: it seals into Field Rations."
   }
 }

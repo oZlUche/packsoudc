@@ -14,9 +14,9 @@
       "labels": {
         "en": "Go to Pre-battle"
       },
-      "hint_when_hidden": "先把{item:poison_vial}贴着{item:knife}放，点接缝上的小锤合成{item:poisoned_knife}（按 {key:B} 打开背包）。",
+      "hint_when_hidden": "先把{item:poison_vial}拖到{item:knife}上，确认合成{item:poisoned_knife}（按 {key:B} 打开背包）。",
       "hints_when_hidden": {
-        "en": "First put the {item:poison_vial} next to the {item:knife} and click the hammer on the seam to craft a {item:poisoned_knife} (press {key:B} to open your pack)."
+        "en": "First drag the {item:poison_vial} onto the {item:knife} and confirm to craft a {item:poisoned_knife} (press {key:B} to open your pack)."
       },
       "requires": [
         {

@@ -79,6 +79,13 @@ var _hint_box: StyleBoxTexture = null
 ## 预览画绿的、残影下面写「附魔：嗜血的长剑」，放手就调它（成了算放下，铸牌被消耗）。不给 = 压上去照常顶替
 var enchant_drop: Callable = Callable()
 
+## 314：拖放合成。`func(held: ItemInstance, other: ItemInstance) -> bool` —— 这两件能合（持有方判：配方、锁定、商店未成交）。
+## 拿起时所有登记的视图里它判出来的那几件标小锤（视图的 `fuse_marks`），放下 / 取消时收
+var fuse_partner: Callable = Callable()
+## 314：松手在能合的那件上（格子里正好压着它一件，或地上光标下就是它）：拖拽层先把手上那件放回拿起前的位置、结束这次拖拽，
+## 再叫 `func(held: ItemInstance, home: ItemContainer, target: ItemInstance, target_home: ItemContainer, ghost: Rect2) -> void`
+## （[param ghost] = 松手那一刻残影的全局矩形，确认窗在那儿画半透明的手上那件）。不给 = 压上去照常顶替
+var fuse_drop: Callable = Callable()
 var _views: Array[ContainerView] = []
 
 var _inst: ItemInstance = null
@@ -212,6 +219,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 
 	set_process_input(true)
 	InventoryView.set_focused(_inst, get_tree() if is_inside_tree() else null)     # 作者 10-21：拿起的这件就是点中的那件（地上拿起的也算）
+	_mark_partners()
 	UiCursor.set_drag(true)     # 157
 	_show_footprints(true)
 	queue_redraw()
@@ -240,6 +248,7 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	_payload = {}
 	_inst = inst
 	set_process_input(true)
+	_mark_partners()
 	UiCursor.set_drag(true)     # 157
 	_show_footprints(true)
 	if is_inside_tree():
@@ -433,6 +442,8 @@ func drop_ok_at(global_pos: Vector2) -> bool:
 		return false
 	if target is InventoryView:
 		return (target as InventoryView).preview_ok()
+	if target is GroundLayer and _fuse_target_ground(target as GroundLayer, global_pos) != null:
+		return true
 	if target is BagRackView:
 		return _payload.is_empty() and (target as BagRackView).rack.accepts(_inst.def)     # 225：包架只收空包
 	return target is GroundLayer
@@ -490,6 +501,10 @@ func _update_preview(global_pos: Vector2) -> void:
 	if weapon != null:
 		grid_view.set_preview(cells, origin, true)
 		_set_drop_hint(enchant_hint(_inst, weapon))
+		return
+
+	if _fuse_target_grid(inv, origin) != null:
+		grid_view.set_preview(cells, origin, true)     # 314：压在能合的那件上 = 合成（绿的，不算顶替；松手先弹确认窗）
 		return
 
 	if inv.acts_as_bag(_inst.def):
@@ -688,6 +703,19 @@ func drop_at(global_pos: Vector2) -> bool:
 	var pending: Array = []
 	var home: ItemContainer = null
 
+	# 314：松手在能合的那件上（地上光标下 / 格子里正好压着它）：先放回原处，再交给持有方开确认窗
+	var ground := target as GroundLayer if target is GroundLayer else (_ground_view() if target == null else null)
+	var on_ground := _fuse_target_ground(ground, global_pos) if ground != null else null
+	if on_ground != null:
+		return _begin_fuse(on_ground, ground.stash, global_pos)
+	if target is InventoryView and (target as InventoryView).inventory != null and _drop_allowed(target.container()):
+		var gv := target as InventoryView
+		var at0 := target_origin(gv, global_pos)
+		if not gv.inventory.can_place_def(inst.def, at0, _rot, inst.uid) and _enchant_target(gv.inventory, at0) == null:
+			var under := _fuse_target_grid(gv.inventory, at0)
+			if under != null:
+				return _begin_fuse(under, gv.inventory, global_pos)
+
 	# 249：棋盘外（地上）松手、这一屏却不许往地上放 —— 弹回原处之后告诉宿主
 	var refused := target == null and _drops_outside_to_stash() and not _drop_allowed(stash)
 	if target != null and not _drop_allowed(target.container()):
@@ -852,6 +880,54 @@ func _can_shed(fallen: Array) -> bool:
 	if fallen.is_empty():
 		return true
 	return stash != null and stash.room_for(fallen.size())
+
+
+## 314：拖着的这件压到这个位置上正好压着一件、且两件能合吗。返回被压的那件；没有 null（带东西的包不合）
+func _fuse_target_grid(inv: GridInventory, origin: Vector2i) -> ItemInstance:
+	if _inst == null or not _payload.is_empty() or not fuse_partner.is_valid() or not fuse_drop.is_valid() or inv == null:
+		return null
+	var under := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
+	if under.size() != 1:
+		return null
+	var b := inv.get_item(int(under[0]))
+	return b if b != null and bool(fuse_partner.call(_inst, b)) else null
+
+
+## 314：地上光标下那一件和手上这件能合吗。返回它；没有 null
+func _fuse_target_ground(ground: GroundLayer, global_pos: Vector2) -> ItemInstance:
+	if ground == null or ground.stash == null or _inst == null or not _payload.is_empty() or not fuse_partner.is_valid() or not fuse_drop.is_valid():
+		return null
+	var uid := ground.uid_at_local(ground.get_global_transform().affine_inverse() * global_pos)
+	var b := ground.stash.get_item(uid) if uid >= 0 else null
+	return b if b != null and b != _inst and bool(fuse_partner.call(_inst, b)) else null
+
+
+## 314：手上这件放回原处、结束拖拽，交给持有方开确认窗。返回 false（这一下没有放下）
+func _begin_fuse(target: ItemInstance, target_home: ItemContainer, global_pos: Vector2) -> bool:
+	var inst := _inst
+	var home := _source
+	var cell := ghost_cell(global_pos)
+	var ghost := Rect2(get_global_transform() * ghost_anchor(global_pos), Vector2(inst.def.shape.size_rotated(_rot)) * cell)
+	_restore()
+	_end_drag()
+	drag_finished.emit(inst.uid, false)
+	fuse_drop.call(inst, home, target, target_home, ghost)
+	return false
+
+
+## 314：拿起一件时，登记的视图里能和它合的那几件标小锤（[member fuse_partner]）；手上空了 = 全收
+func _mark_partners() -> void:
+	for view in _views:
+		if not ("fuse_marks" in view):
+			continue
+		var marks := {}
+		var c := view.container()
+		if _inst != null and _payload.is_empty() and fuse_partner.is_valid() and c != null:
+			for raw in c.items():
+				var b := raw as ItemInstance
+				if b != null and b.uid != _inst.uid and bool(fuse_partner.call(_inst, b)):
+					marks[b.uid] = true
+		view.set("fuse_marks", marks)
 
 
 ## 175：拖着的铸牌压到这个位置上会正好压着一件武器吗。返回那件武器；没有 null
@@ -1069,6 +1145,7 @@ func _end_drag() -> void:
 	for view in _views:
 		view.clear_preview()
 	_inst = null
+	_mark_partners()     # 手上空了：小锤全收
 	_motion.clear()
 	_cell = InventoryView.CELL
 	drop_hint = ""

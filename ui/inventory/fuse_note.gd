@@ -1,6 +1,6 @@
 ## 306 定稿（作者 2026-11-12 选 B）：合成确认窗 —— 300 那张纸条（`npc/note_l`，右边放不下换 `npc/note_r`），尖角和小锤同高。
 ## 自上而下：认识成品才有的名字行 / [甲] + [乙] → [成品] 一排图（不认识 = `fuse/unknown`）/ 红墨「会丢」一行（没有就不写）/ 平签「合成」「取消」。
-## 只在点签、按 Esc、点窗外时收（v5.85：离开不收）
+## 只在点签、按 Esc、点窗外时收（v5.85：离开不收）。314：拖到能合的那件上松手开的窗，手上那件半透明留在松手处（[method show_ghost]）
 class_name FuseNote
 extends Control
 
@@ -35,6 +35,10 @@ var out_pic: TextureRect = null
 var _on_go: Callable = Callable()
 ## 关上时叫一下（棋盘放下那一对的高亮）
 var closed: Callable = Callable()
+## 314：半透明画着的手上那件（null = 不画）和它的全局外框
+var ghost_item: ItemInstance = null
+var ghost_rect := Rect2()
+const GHOST_ALPHA := 0.5
 
 
 func _init() -> void:
@@ -74,7 +78,27 @@ func side() -> String:
 	return String(paper.get_meta("side", "")) if paper != null else ""
 
 
+## 314：在 [param rect]（全局）半透明画 [param inst]（按它现在的朝向）
+func show_ghost(inst: ItemInstance, rect: Rect2) -> void:
+	ghost_item = inst
+	ghost_rect = rect
+	queue_redraw()
+
+
+func _draw() -> void:
+	if ghost_item == null or ghost_item.def == null:
+		return
+	var local := get_global_transform().affine_inverse() * ghost_rect
+	var span := ghost_item.def.shape.size_rotated(ghost_item.rotation)
+	var cell := local.size.x / maxf(1.0, float(span.x))
+	if not ItemPainter.draw_art(self, ghost_item.def, ghost_item.rotation, local.position, cell, Color(1, 1, 1, GHOST_ALPHA), Transform2D.IDENTITY, ItemPainter.variant_of(ghost_item)):
+		ItemPainter.draw_item(self, ghost_item.def.cells_rotated(ghost_item.rotation), local.position, cell,
+			Color(ItemPainter.body_color(ghost_item.def, ghost_item.rarity()), GHOST_ALPHA), Color(ItemPainter.rarity_color(ghost_item.def, ghost_item.rarity()), GHOST_ALPHA))
+
+
 func close() -> void:
+	ghost_item = null
+	queue_redraw()
 	if paper != null:
 		paper.queue_free()
 		paper = null

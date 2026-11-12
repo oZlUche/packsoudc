@@ -1,8 +1,7 @@
 ## 合成配方（084，作者定的第一条：毒药瓶 + 匕首 → 涂毒匕首）。架构文档 15 节第 5 项的落地。
 ##
 ## 作者数据，走内容管线：`data/authoring/recipes/*.json` → `data/recipes/*.tres`。一份配方就是「哪两件 → 哪一件」，顺序无关。
-## 310（改造 C 批）：全部配方都是**贴着放、点锤**（[Fusion]），先开确认窗再合（[method CraftingModule.fuse]）；
-## 114 的「拖到上面立刻合」已删。
+## 314 起：拿起一件、拖到能合的另一件上松手，先开确认窗再合（[method CraftingModule.fuse_items]）；不看贴不贴着，也不是松手立刻合。
 class_name RecipeDef
 extends Resource
 
@@ -14,7 +13,7 @@ extends Resource
 @export var inputs: Array[StringName] = []
 ## 产物的道具 id
 @export var output: StringName = &""
-## 279 拼接：两件在棋盘上**贴着**、点接缝上的小锤合。310 起必须是 true（导入与内容测试都拦 false）
+## 279 起的「拼接」标记。310 起必须是 true（导入与内容测试都拦 false）；314 起合成只有一种，这一项只剩兼容旧数据
 @export var adjacent: bool = false
 ## 给界面看的一句（悬浮窗 / 事件文本里引用）
 @export var note: String = ""

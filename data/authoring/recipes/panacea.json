@@ -10,8 +10,8 @@
   ],
   "output": "panacea",
   "adjacent": true,
-  "note": "止血敷料贴着解毒药囊放、点锤：合成万灵药。",
+  "note": "止血敷料拖到解毒药囊上：合成万灵药。",
   "notes": {
-    "en": "Put the Styptic Dressing next to the Antidote Satchel and tap the hammer: they make a Panacea."
+    "en": "Drop the Styptic Dressing onto the Antidote Satchel: they make a Panacea."
   }
 }

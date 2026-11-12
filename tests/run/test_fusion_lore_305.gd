@@ -1,6 +1,6 @@
 ## 305（合成与锻造改造 A，方案 §6）：拼接 / 拖合不吃锁定件、随身之物；自己合成才记下配方，进过背包或自己造出才认识道具；
 ## 知识随这一局存、局终并进局外（死了也记得），老档按图鉴与手上的东西补「认识」、不反推配方；
-## 悬浮窗「可拼为 / 由…合成 / 可升为」只列知道的，拖合提示与确认窗不认识成品就打问号；点锤先开确认窗，取消什么都不记；
+## 悬浮窗「可拼为 / 由…合成 / 可升为」只列知道的，确认窗不认识成品就打问号；拖到能合的那件上先开确认窗，取消什么都不记；
 ## 寂灭已在本局地上时献祭条件不成立
 extends RefCounted
 
@@ -32,22 +32,22 @@ static func _bagged() -> RunState:
 
 
 static func run_locked(t: TestCase) -> void:
-	t.begin("305 · 锁定的、随身之物：贴着不出锤、点锤不合（310：涂毒匕首也一样）")
+	t.begin("305 · 锁定的、随身之物：不算搭档（拿起不标）、合不了（310：涂毒匕首也一样）")
 	var s := _run()
 	var crafting := CraftingModule.of(s)
 	var k1 := _put(s.board, s.items, &"knife", Vector2i(0, 0))
 	var k2 := _put(s.board, s.items, &"knife", Vector2i(1, 0))
-	t.eq(crafting.fusion_pairs().size(), 1, "没锁：一对")
+	t.check(crafting.partner_ok(k1, k2), "没锁：配得上")
 	k2.set_locked(true)
-	t.eq(crafting.fusion_pairs().size(), 0, "锁了一把：不出锤")
-	t.check(not bool(crafting.fuse(k1.uid, k2.uid)["ok"]), "点锤：不合")
+	t.check(not crafting.partner_ok(k1, k2) and not crafting.partner_ok(k2, k1), "锁了一把：不算搭档")
+	t.check(not bool(crafting.fuse(k1.uid, k2.uid)["ok"]), "确认也不合")
 	t.check(s.board.has_item(k2.uid), "锁着的还在")
 	k2.set_locked(false)
 	k2.state[ItemInstance.PINNED_KEY] = true
-	t.eq(crafting.fusion_pairs().size(), 0, "随身之物：不出锤")
+	t.check(not crafting.partner_ok(k1, k2), "随身之物：不算搭档")
 	k2.state.erase(ItemInstance.PINNED_KEY)
 	var knife := _put(s.board, s.items, &"knife", Vector2i(4, 0))
-	var vial := _put(s.board, s.items, &"poison_vial", Vector2i(5, 0))     # 310：涂毒匕首也是贴着点锤
+	var vial := _put(s.board, s.items, &"poison_vial", Vector2i(5, 0))
 	knife.set_locked(true)
 	t.check(not bool(crafting.fuse(vial.uid, knife.uid)["ok"]), "涂毒匕首：刀锁着，不合")
 	knife.set_locked(false)
@@ -157,7 +157,7 @@ static func run_jimie_ground(t: TestCase) -> void:
 
 
 static func frame_confirm(t: TestCase, root: Window) -> void:
-	t.begin("305 / 306 · 点锤先开纸条确认窗：不认识成品放问号图、写会丢；取消 / Esc / 点窗外都收、什么都不动不记；按合成才合并记下；认识了写名字")
+	t.begin("305 / 306 · 先开纸条确认窗：不认识成品放问号图、写会丢；取消 / Esc / 点窗外都收、什么都不动不记；按合成才合并记下；认识了写名字")
 	var s := _run()
 	var panel: Control = InvPanel.new()
 	panel.setup(s, null)
@@ -172,7 +172,7 @@ static func frame_confirm(t: TestCase, root: Window) -> void:
 	tip.tick(1.0, Vector2(-500, -500))
 	t.check(note.is_open(), "指针离开一秒：确认窗不自己收（UI设计 复核）")
 	var view: InventoryView = panel.get("board_view")
-	t.eq(view.held_fusion, Vector2i(k1.uid, k2.uid), "开着时那一对照悬停那一档画")
+	t.check(view.fuse_hot == k2.uid and view.fuse_marks.has(k2.uid), "开着时被压那件的小锤画亮的")
 	var pair := view.get_global_transform() * view.item_rect(k1.uid).merge(view.item_rect(k2.uid))
 	t.check(not note.paper.get_global_rect().intersects(pair), "确认窗不压住那一对")
 	t.check(note.name_label == null, "不认识成品：没有名字行")
@@ -182,7 +182,7 @@ static func frame_confirm(t: TestCase, root: Window) -> void:
 	if note.cancel_key != null:
 		note.cancel_key.pressed.emit()
 		t.check(not note.is_open(), "取消：收起")
-		t.eq(view.held_fusion, Vector2i(-1, -1), "收起：那一对不再高亮")
+		t.check(view.fuse_hot == -1 and view.fuse_marks.is_empty(), "收起：小锤收了")
 		t.check(s.board.has_item(k1.uid) and s.board.has_item(k2.uid), "取消：两把还在")
 		t.check(not s.knows_recipe(&"fuse_twin_blades"), "取消：不记配方")
 		panel.call("ask_fuse", k1.uid, k2.uid)

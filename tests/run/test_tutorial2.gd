@@ -233,7 +233,7 @@ static func _beside(board: GridInventory, inst: ItemInstance, home: Vector2i) ->
 
 
 static func run_crafting_drop(t: TestCase) -> void:
-	t.begin("310 · 涂毒匕首改成贴着放、点锤合（改造 C 批）：挨着走一步不自动合；接缝上有这一对；fuse 合成 —— 成品落在两件的占格里、发一次 done；没配方不合；装不下到地上并提醒")
+	t.begin("310 / 314 · 涂毒匕首：挨着走一步不自动合；两件配得上；fuse 合成 —— 成品落在两件的占格里、发一次 done；没配方不合；哪都放不下原样不动")
 	var c := _content()
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	t.not_null(s, "开得了局")
@@ -257,10 +257,9 @@ static func run_crafting_drop(t: TestCase) -> void:
 			cells[(it as ItemInstance).origin + cc] = true
 	t.check(s.step_to(s.travel.available_moves()[0]), "走到下一个点")
 	t.check(done.is_empty() and s.board.has_item(knife.uid) and s.board.has_item(vial.uid), "挨着、走一步：没合成，两件都还在")
-	var pairs := cm.fusion_pairs()
-	t.check(pairs.any(func(p: Dictionary) -> bool: return String(p["recipe"]) == "poisoned_knife"), "接缝上有涂毒匕首这一对")
+	t.check(cm.partner_ok(knife, vial), "匕首和毒药瓶配得上")
 	var r := cm.fuse(knife.uid, vial.uid)
-	t.check(bool(r["ok"]), "点锤：合成了")
+	t.check(bool(r["ok"]), "确认：合成了")
 	t.eq(done.size(), 1, "发了一次 done")
 	t.eq(String(r["output"]), "poisoned_knife", "产物是涂毒匕首")
 	t.eq(String(r["where"]), "board", "落在棋盘上")
@@ -295,23 +294,19 @@ static func run_crafting_drop(t: TestCase) -> void:
 	while s3.board.try_add(ItemInstance.create(c.items.get_def(&"salve")), true):
 		pass     # 塞满
 	var r3 := cm3.fuse(knife3.uid, vial3.uid)
-	t.check(bool(r3["ok"]) and String(r3["where"]) == "storage", "产物装不下：到地上")
-	t.check((r3["log"] as Array).size() == 2 and String((r3["log"] as Array)[1]).contains("装不下"), "提醒玩家装不下")
-	var in_storage := false
-	for inst in s3.storage.items():
-		if (inst as ItemInstance).def.id == &"plate_cuirass":
-			in_storage = true
-	t.check(in_storage, "产物在地上")
+	t.check(not bool(r3["ok"]) and r3.get("reason", "") == "no_room", "成品哪都放不下：不合（314：不往地上丢）")
+	t.check(s3.board.has_item(knife3.uid) and s3.board.has_item(vial3.uid), "两件原样")
 
 
 static func run_crafting_drag(t: TestCase) -> void:
-	t.begin("310 · 拖拽层不再合成：毒药瓶压到匕首上放手 = 顶替（匕首拿在手上），不出成品；拖拽层没有合成的接口")
+	t.begin("314 · 地上的毒药瓶拖到棋盘的匕首上：拿起时匕首标小锤；松手毒药瓶回到地上、交给确认；确认后涂毒匕首落在匕首的位置")
 	var c := _content()
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], c.brutus)
 	t.not_null(s, "开得了局")
 	if s == null:
 		return
-	CraftingModule.of(s).recipes = c.recipes
+	var cm := CraftingModule.of(s)
+	cm.recipes = c.recipes
 	var board := s.board
 	var stash := s.storage
 	var knife := _knife_on(s)
@@ -328,15 +323,24 @@ static func run_crafting_drag(t: TestCase) -> void:
 	drag.register_view(view)
 	drag.register_view(sview)
 	drag.stash = stash
-	t.check(not ("craft_drop" in drag) and not ("craft" in drag), "拖拽层没有合成的接口")
+	drag.fuse_partner = func(a: ItemInstance, b: ItemInstance) -> bool: return cm.home_of(b.uid) != null and cm.partner_ok(a, b)
+	var asked: Array = []
+	drag.fuse_drop = func(held: ItemInstance, home: ItemContainer, target: ItemInstance, target_home: ItemContainer, _ghost: Rect2) -> void:
+		asked.append([held, home, target, target_home])
 	sview.grab_requested.emit(sview, vial.uid, Vector2(10, 10))
 	t.check(drag.is_dragging(), "抓起毒药瓶")
+	t.check(view.fuse_marks.has(knife.uid), "匕首标小锤")
 	var at := (Vector2(knife.origin) + Vector2(0.5, 0.5)) * InventoryView.CELL
 	drag.update_preview(at)
-	t.eq(drag.drop_hint, "", "压在匕首上：没有合成提示")
-	t.check(drag.drop_at(at) and drag.is_dragging() and board.has_item(vial.uid), "放手：顶替，匕首拿在手上")
-	t.check(board.items().all(func(i: ItemInstance) -> bool: return i.def.id != &"poisoned_knife"), "没合出涂毒匕首")
-	t.check(drag.drop_at(sview.position + Vector2(20, 20)) and not drag.is_dragging(), "匕首放到地上")
+	t.check(not drag.drop_at(at) and not drag.is_dragging(), "松手：不算放下")
+	t.check(stash.has_item(vial.uid) and board.has_item(knife.uid), "毒药瓶回到地上，匕首没动")
+	t.eq(asked.size(), 1, "交给确认")
+	if asked.size() == 1:
+		var origin := knife.origin
+		var d := cm.fuse_items(asked[0][0], asked[0][1], asked[0][2], asked[0][3])
+		t.check(bool(d["ok"]) and d["output"] == "poisoned_knife" and d["where"] == "board", "确认：合出涂毒匕首，在棋盘上")
+		t.check(board.items().any(func(i: ItemInstance) -> bool: return i.def.id == &"poisoned_knife" and i.origin == origin), "落在匕首的位置")
+		t.check(not stash.has_item(vial.uid), "地上的毒药瓶用掉了")
 	view.free()
 	sview.free()
 	drag.free()

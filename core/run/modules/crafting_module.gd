@@ -1,5 +1,6 @@
-## 合成（279 拼接；310 改造 C 批起是唯一的一种）：两件在棋盘上贴着、有配方，接缝上浮一枚小锤；点锤先开确认窗
-## （[method fuse_preview]），按「合成」才合（[method fuse]）。114 的「拖到上面立刻合」已删。
+## 合成（314 起唯一的一种）：拿起一件、松手在能和它合成的另一件上（棋盘或地上）先开确认窗（[method fuse_preview]），
+## 按「合成」才合（[method fuse]），成品落在被压那件的位置。拿起时能合的那几件标小锤（[method partner_ok]）。
+## 不再看贴不贴着；也不是松手立刻合（114 那种已删）。
 ##
 ## 101 第 1 刀：配方表、配对规则、合成那一下全在这里，[RunState] 不认识合成。取它用 [method of]。
 class_name CraftingModule
@@ -60,62 +61,68 @@ func resolve(a: ItemDef, b: ItemDef) -> Dictionary:
 	return FusionResolve.resolve(recipes, a, b, _run.items, faiths, _run.active_faith_id())
 
 
-## 305：点锤之后、合之前看一眼：`{"a", "b": 两件 ItemInstance, "output": 成品 ItemDef（禁忌待办时是原件成品，只用来占位）,
-## "known": [method known_level], "resolution": [method resolve]}`；拼不了 / 数据不对 = 空
-func fuse_preview(a_uid: int, b_uid: int) -> Dictionary:
-	if _run == null or _run.board == null or _run.items == null:
-		return {}
-	for p in Fusion.pairs(_run.board, recipes):
-		if (int(p["a"]) == a_uid and int(p["b"]) == b_uid) or (int(p["a"]) == b_uid and int(p["b"]) == a_uid):
-			var a := _run.board.get_item(a_uid)
-			var b := _run.board.get_item(b_uid)
-			var res := resolve(a.def, b.def)
-			if res.is_empty() or String(res["status"]) == FusionResolve.INVALID:
-				return {}
-			var shown := StringName(res["output_id"]) if String(res["status"]) == FusionResolve.READY else StringName(res["base_output_id"])
-			var out_def := _run.items.get_def(shown)
-			if out_def == null:
-				return {}
-			return {"a": a, "b": b, "output": out_def, "known": _known(StringName(p["recipe"]), out_def.id), "resolution": res}
-	return {}
-
-
-## 279 拼接：棋盘上贴着、能拼的每一对（[method Fusion.pairs]）；没棋盘 / 没配方 = 空。
-## 312：`output` 换成解析后的成品，另带 `status`（禁忌待办的那一对照样出锤，点开只说一句、没有合成键）；数据不对的那一对不出锤
-func fusion_pairs() -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	if _run == null or _run.board == null:
-		return out
-	for p in Fusion.pairs(_run.board, recipes):
-		var res := resolve(_run.board.get_item(int(p["a"])).def, _run.board.get_item(int(p["b"])).def)
-		if res.is_empty() or String(res["status"]) == FusionResolve.INVALID:
-			continue
-		p["status"] = res["status"]
-		if String(res["status"]) == FusionResolve.READY:
-			p["output"] = res["output_id"]
-		out.append(p)
-	return out
-
-
-## 279 拼接（待定 2：点锤合）：棋盘上贴着的 [param a_uid]、[param b_uid] 两件有拼接配方 —— 两件消失，产物落在两件原来的占格里；
-## 落不下在棋盘上找位，再不行到地上并提醒。不贴着、没配方、产物没地方去：棋盘原样不动。返回 `{"ok": bool, "output": 产物 id, "recipe": 配方 id, "where": "board" / "storage", "log": [几句话]}`，成了发一次 [signal done]。
-## 312：成品按 [method resolve]；禁忌待办 / 数据不对不合；[param expect] 给了（确认窗上显示的成品 id）而现在解析出来不一样 = 不合（`"changed": true`），让界面重开
-func fuse(a_uid: int, b_uid: int, expect: StringName = &"") -> Dictionary:
-	var failed := {"ok": false, "output": "", "where": "", "log": []}
-	var board: GridInventory = _run.board if _run != null else null
-	if board == null:
-		return failed
-	var pair: Dictionary = {}
-	for p in Fusion.pairs(board, recipes):
-		if (int(p["a"]) == a_uid and int(p["b"]) == b_uid) or (int(p["a"]) == b_uid and int(p["b"]) == a_uid):
-			pair = p
-			break
-	if pair.is_empty():
-		return failed
-	var a := board.get_item(a_uid)
-	var b := board.get_item(b_uid)
+## 314：[param a]（手上那件）和 [param b]（被压那件）能不能合 —— 有配方、数据对（禁忌待办也算：照样标、弹窗说一句）、两件都吃得掉
+func partner_ok(a: ItemInstance, b: ItemInstance) -> bool:
+	if a == null or b == null or a == b or a.def == null or b.def == null or _run == null:
+		return false
+	if not Fusion.spendable(_run.board, a) or not Fusion.spendable(_run.board, b):
+		return false
 	var res := resolve(a.def, b.def)
-	if res.is_empty() or String(res["status"]) != FusionResolve.READY:
+	return not res.is_empty() and String(res["status"]) != FusionResolve.INVALID
+
+
+## 这件在哪：棋盘、地上；都不在 = null
+func home_of(uid: int) -> ItemContainer:
+	if _run == null:
+		return null
+	if _run.board != null and _run.board.has_item(uid):
+		return _run.board
+	if _run.storage != null and _run.storage.has_item(uid):
+		return _run.storage
+	return null
+
+
+## 305：合之前看一眼：`{"a", "b": 两件 ItemInstance, "output": 成品 ItemDef（禁忌待办时是原件成品，只用来占位）,
+## "known": [method known_level], "resolution": [method resolve]}`；合不了 / 数据不对 = 空。[param b] 是被压的那件
+func preview(a: ItemInstance, b: ItemInstance) -> Dictionary:
+	if not partner_ok(a, b):
+		return {}
+	var res := resolve(a.def, b.def)
+	var shown := StringName(res["output_id"]) if String(res["status"]) == FusionResolve.READY else StringName(res["base_output_id"])
+	var out_def := _run.items.get_def(shown) if _run.items != null else null
+	if out_def == null:
+		return {}
+	return {"a": a, "b": b, "output": out_def, "known": _known(StringName(res["recipe_id"]), out_def.id), "resolution": res}
+
+
+## 同上，按 uid 在棋盘、地上找
+func fuse_preview(a_uid: int, b_uid: int) -> Dictionary:
+	var ha := home_of(a_uid)
+	var hb := home_of(b_uid)
+	return preview(ha.get_item(a_uid), hb.get_item(b_uid)) if ha != null and hb != null else {}
+
+
+## 按 uid 合（两件都在棋盘或地上）：见 [method fuse_items]
+func fuse(a_uid: int, b_uid: int, expect: StringName = &"") -> Dictionary:
+	var ha := home_of(a_uid)
+	var hb := home_of(b_uid)
+	if ha == null or hb == null:
+		return {"ok": false, "output": "", "where": "", "log": []}
+	return fuse_items(ha.get_item(a_uid), ha, hb.get_item(b_uid), hb, expect)
+
+
+## 314：合 —— [param a]（手上那件，已回到 [param a_home]）压在 [param b]（在 [param b_home]：棋盘或地上）上，两件消耗，
+## 成品落在 b 的位置：棋盘上先在 b 的格里、再加上 a 在棋盘上的格、再盖住 b 的某一格、再在棋盘上找空；地上落在 b 那一处。放不下原样不动（`"reason": "no_room"`）。
+## 312：成品按 [method resolve]；禁忌待办 / 数据不对不合；[param expect] 给了（确认窗上显示的成品 id）而现在解析出来不一样 = 不合（`"changed": true`），让界面重开。
+## 返回 `{"ok", "output": 产物 id, "recipe": 配方 id, "where": "board" / "storage", "log": [几句话]}`，成了发一次 [signal done]
+func fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_home: ItemContainer, expect: StringName = &"") -> Dictionary:
+	var failed := {"ok": false, "output": "", "where": "", "log": []}
+	if _run == null or a_home == null or b_home == null or a == null or b == null:
+		return failed
+	if not a_home.has_item(a.uid) or not b_home.has_item(b.uid) or not partner_ok(a, b):
+		return failed
+	var res := resolve(a.def, b.def)
+	if String(res["status"]) != FusionResolve.READY:
 		return failed
 	if expect != &"" and StringName(res["output_id"]) != expect:
 		failed["changed"] = true
@@ -124,20 +131,53 @@ func fuse(a_uid: int, b_uid: int, expect: StringName = &"") -> Dictionary:
 	if out_def == null:
 		return failed
 	var names := [Names.of(a.def), Names.of(b.def), Names.of(out_def)]
-	var where := "board"
-	if Fusion.fuse(board, a_uid, b_uid, out_def) == null:
-		var out := ItemInstance.create(out_def, 0)
-		if _run.storage == null or not _run.storage.admit(out):
-			return failed
-		board.begin_batch()
-		board.remove(a_uid)
-		board.remove(b_uid)
+	var out := ItemInstance.create(out_def, b.rotation)
+	var where := ""
+	if b_home == _run.board:
+		where = "board" if _land_on_board(a, a_home, b, out) else ""
+	elif b_home == _run.storage:
+		var spot := _run.storage.spot_of(b.uid)
+		var at := _run.storage.index_of(b.uid)
+		_run.storage.remove(b.uid)
+		a_home.remove(a.uid)
+		where = "storage" if _run.storage.insert(out, at, spot) else ""
+	if where == "":
+		failed["reason"] = "no_room"
+		return failed
+	return _settle(StringName(res["recipe_id"]), out_def, where, [UiText.t("craft.done") % names])
+
+
+## 成品落进棋盘：拿掉 b（a 在棋盘上也拿掉），先落在 b 的格里，再加上 a 的格，再盖住 b 的某一格往四周伸，再随便找空；都不行两件原样放回
+func _land_on_board(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, out: ItemInstance) -> bool:
+	var board := _run.board
+	var a_on := a_home == board
+	var homes := [[b, b.origin, b.rotation]]
+	if a_on:
+		homes.append([a, a.origin, a.rotation])
+	board.begin_batch()
+	board.remove(b.uid)
+	if a_on:
+		board.remove(a.uid)
+	var ok := false
+	for freed in ([[b], [b, a]] if a_on else [[b]]):
+		var spot := Fusion.landing(board, freed, out.def)
+		if not spot.is_empty() and board.place(out, spot["origin"], int(spot["rot"])):
+			ok = true
+			break
+	if not ok:
+		var cover := Fusion.covering(board, b, out.def)
+		ok = not cover.is_empty() and board.place(out, cover["origin"], int(cover["rot"]))
+	if not ok:
+		ok = board.try_add(out, true)
+	if not ok:
+		for h in homes:
+			board.place(h[0], h[1], h[2])
 		board.end_batch()
-		where = "storage"
-	var lines: Array = [UiText.t("craft.done") % names]
-	if where == "storage":
-		lines.append(UiText.t("craft.to_ground"))
-	return _settle(StringName(pair["recipe"]), out_def, where, lines)
+		return false
+	board.end_batch()
+	if not a_on:
+		a_home.remove(a.uid)
+	return true
 
 
 ## 合成成了的那笔账：记一次合成、学到这张配方、认识成品（落在地上也算），发 [signal done]

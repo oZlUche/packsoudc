@@ -810,7 +810,6 @@ const TEXT := {
 	"enemy.carried": {"zh": "　携带 %d 件", "en": " · carrying %d"},
 	# —— 221 F3 顺带（游戏测试 2026-10-21 第 4 条）——
 	"craft.done": {"zh": "「%s」和「%s」合成了「%s」。", "en": "%s and %s crafted into %s."},
-	"craft.to_ground": {"zh": "背包里装不下它：放在了地上。走之前记得放回包里，地上的东西会留在这个点上。", "en": "It doesn't fit in your pack, so it's on the Ground. Put it back in a bag before you leave: anything on the Ground stays at this spot."},
 	# —— 221 F4：百科拼接句（core/text/encyclopedia.gd）——
 	"codex.effects": {"zh": "效果：%s", "en": "Effects: %s"},
 	"codex.reaction_intro": {"zh": "【元素反应】%s：%s碰上%s。%s　两种不同的元素叠在同一个人身上就会起反应，组合不止这一种；打出过的都会在百科里点亮。", "en": "[Element reaction] %s: %s meets %s. %s Two different elements on the same fighter set off a reaction, and there are more pairs than this one; each one you trigger lights up in the Encyclopedia."},
