@@ -71,3 +71,13 @@
 - 章节只在 slice 档案里列，正式版看不到；开局条件、赐福替换关闭、没有付费撤离。
 - 地图 13 点、两条路在歇脚点合流；每个点写的道具都在清单里、都存在；敌人存在、东西摆得下、写明格挡；短剑全图一把。
 - 切片能开局，开局道具到手。
+
+## 六、第二批：切片档案开关与独立存档（v6.02）
+
+- 新 `core/run/slice_profile.gd`（`SliceProfile`）：导出包带 `slice` 特性，或命令行 `-- --profile=slice`，就是切片；否则是正式版。
+- 切片里：章节表只有切片章节；存档位在 `user://slice/slots`，不搬老的单文件存档；设置在 `user://slice/settings.json`；校准记录在 `user://slice/calibration/`。正式版的存档、设置一个字节都不碰。
+- 切片的基地只有「出征」「仓库」两个页签；结算照常。
+- 在编辑器里试切片：编辑器设置「运行 → 主运行参数」填 `-- --profile=slice`，再按 F5。
+- 切片的导出预设留到 S3（作者本机的 `export_presets.cfg` 有没提交的改动，不在这边动）。
+
+测试：新 `tests/run/test_slice_profile_313.gd`（开关、两档存档位不重叠、章节表不相交、基地页签）；另用 `--profile=slice` 无头启动一次，只建了 `user://slice/slots/1`，`user://slots` 没动。
