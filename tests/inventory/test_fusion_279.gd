@@ -36,10 +36,10 @@ static func run_pairs(t: TestCase) -> void:
 	var b2 := GridInventory.new(Vector2i(6, 4), 1, false)
 	_put(b2, db, &"knife", Vector2i(0, 0))
 	_put(b2, db, &"poison_vial", Vector2i(1, 0))
-	t.eq(Fusion.pairs(b2, recipes).size(), 0, "涂毒匕首是拖上去合的，贴着不出锤")
+	t.eq(Fusion.pairs(b2, recipes).size(), 1, "310：涂毒匕首也是贴着出锤")
 	_put(b2, db, &"whetstone", Vector2i(0, 2))
 	var q := Fusion.pairs(b2, recipes)
-	t.check(q.size() == 1 and StringName(q[0]["output"]) == &"quenched_dagger", "匕首下面贴一块磨刀石：淬火匕首")
+	t.check(q.size() == 2 and q.any(func(pair: Dictionary) -> bool: return StringName(pair["output"]) == &"quenched_dagger"), "匕首下面贴一块磨刀石：多一对淬火匕首")
 
 
 static func run_fuse(t: TestCase) -> void:

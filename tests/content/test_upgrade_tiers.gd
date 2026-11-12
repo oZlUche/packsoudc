@@ -83,7 +83,7 @@ static func run(t: TestCase) -> void:
 	var see: Array = page.get("see_items")
 	t.check(see.has(&"salted_meat") and see.has(&"bandage_roll"), "相关道具里有")
 
-	t.begin("124 · 一局里：粗盐块压到口粮上 → 腌肉干")
+	t.begin("124 / 310 · 一局里：粗盐块贴着口粮、点锤 → 腌肉干")
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()
 	var sets := SetDatabase.new()
@@ -103,6 +103,12 @@ static func run(t: TestCase) -> void:
 	t.not_null(ration, "开局背包里有口粮")
 	if ration == null:
 		return
-	var r := cm.craft(ItemInstance.create(db.get_def(&"raw_salt")), ration.uid)
+	var salt := ItemInstance.create(db.get_def(&"raw_salt"))
+	var beside := false
+	for d in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]:
+		if not beside:
+			beside = run_.board.place(salt, ration.origin + d, 0)
+	t.check(beside, "粗盐块摆在口粮旁边")
+	var r := cm.fuse(salt.uid, ration.uid)
 	t.check(bool(r["ok"]), "合成了")
 	t.eq(String(r["output"]), "salted_meat", "产物是腌肉干")

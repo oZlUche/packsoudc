@@ -1,4 +1,4 @@
-## 251：铁匠铺的一张配方 —— 仓库里的几样素材（各几件）+ 一笔钱 → 一件武器 / 防具。和 114 的 [RecipeDef]（局内两件拖合、无钱无数量）是两回事。
+## 251：铁匠铺的一张配方 —— 仓库里的几样素材（各几件）+ 一笔钱 → 一件武器 / 防具。和 114 的 [RecipeDef]（局内两件贴着点锤合、无钱无数量）是两回事。
 ##
 ## 作者数据，走内容管线：`data/authoring/smith_recipes/*.json` → `data/smith_recipes/*.tres`。表是占位，作者改 json
 class_name SmithRecipeDef

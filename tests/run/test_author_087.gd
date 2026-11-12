@@ -273,9 +273,9 @@ static func run_shop_logic(t: TestCase) -> void:
 	if mine != null:
 		t.check(screen._allow_drop(mine, session.board), "自己的东西能拖进他的棋盘（上秤）")
 	# 审查 A1：没成交的货不能拿去合成（会被合成消耗、结不了账 = 白拿）；自己的东西照常能合
-	t.check(not bool(screen.drag_layer().craft_filter.call(ware)), "他的货不许合成")
+	t.check(not bool(screen._inv.fuse_filter.call(ware)), "他的货不许合成（310：不出锤、点了也不合）")
 	if mine != null:
-		t.check(bool(screen.drag_layer().craft_filter.call(mine)), "自己的东西许合成")
+		t.check(bool(screen._inv.fuse_filter.call(mine)), "自己的东西许合成")
 	# 拖着买：他的棋盘 → 自己的棋盘（模拟拖拽层做的事），补钱成交
 	var price := session.tag_price(ware)
 	var before := run.wallet.balance

@@ -1,8 +1,8 @@
 ## 合成配方（084，作者定的第一条：毒药瓶 + 匕首 → 涂毒匕首）。架构文档 15 节第 5 项的落地。
 ##
 ## 作者数据，走内容管线：`data/authoring/recipes/*.json` → `data/recipes/*.tres`。一份配方就是「哪两件 → 哪一件」，顺序无关。
-## **拖到上面立刻合**（114 作者定）：一局里把一件拖到棋盘上另一件上面，有配方就立刻合成（[method CraftingModule.craft]）；
-## 产物落在被压那件的位置上，放不下自动找位，再放不下到地上并提醒。
+## 310（改造 C 批）：全部配方都是**贴着放、点锤**（[Fusion]），先开确认窗再合（[method CraftingModule.fuse]）；
+## 114 的「拖到上面立刻合」已删。
 class_name RecipeDef
 extends Resource
 
@@ -14,7 +14,7 @@ extends Resource
 @export var inputs: Array[StringName] = []
 ## 产物的道具 id
 @export var output: StringName = &""
-## 279 拼接：true = 两件在棋盘上**贴着**、点接缝上的小锤合（不是拖上去合）；拖上去合的配方查不到它，反过来也一样
+## 279 拼接：两件在棋盘上**贴着**、点接缝上的小锤合。310 起必须是 true（导入与内容测试都拦 false）
 @export var adjacent: bool = false
 ## 给界面看的一句（悬浮窗 / 事件文本里引用）
 @export var note: String = ""
@@ -36,10 +36,10 @@ static func load_all() -> Array[RecipeDef]:
 	return out
 
 
-## 在一组配方里找这两件能合成什么；没有返回 null。[param fuse]：找贴着拼接的（279），否则找拖上去合的
-static func find(recipes: Array, a: StringName, b: StringName, fuse: bool = false) -> RecipeDef:
+## 在一组配方里找这两件能合成什么；没有返回 null
+static func find(recipes: Array, a: StringName, b: StringName) -> RecipeDef:
 	for r in recipes:
 		var def := r as RecipeDef
-		if def != null and def.adjacent == fuse and def.matches(a, b):
+		if def != null and def.adjacent and def.matches(a, b):
 			return def
 	return null

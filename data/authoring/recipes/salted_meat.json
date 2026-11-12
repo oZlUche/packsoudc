@@ -9,8 +9,9 @@
     "raw_salt"
   ],
   "output": "salted_meat",
-  "note": "把粗盐块拖到口粮上：腌成肉干。",
+  "adjacent": true,
+  "note": "粗盐块贴着口粮放、点锤：腌成肉干。",
   "notes": {
-    "en": "Drag the Rock Salt onto the Ration: it cures into Salted Meat."
+    "en": "Put the Rock Salt next to the Ration and tap the hammer: it cures into Salted Meat."
   }
 }

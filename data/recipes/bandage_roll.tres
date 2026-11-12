@@ -11,7 +11,8 @@ display_names = {
 }
 inputs = Array[StringName]([&"bandage", &"linen_bolt"])
 output = &"bandage_roll"
-note = "把亚麻布卷拖到纱布上：卷成绷带。"
+adjacent = true
+note = "亚麻布卷贴着纱布放、点锤：卷成绷带。"
 notes = {
-"en": "Drag the Linen Bolt onto the Bandage: it rolls into a Bandage Roll."
+"en": "Put the Linen Bolt next to the Bandage and tap the hammer: it rolls into a Bandage Roll."
 }

@@ -51,7 +51,6 @@ const LAND_SCALE_SINK := 1.05
 ## 触地后弹一下多久；起点已经贴着地（就地放下、放手点就在地上）时缩放 / 翻转用多久
 const LAND_BOUNCE_SEC := 0.18
 const LAND_PLACE_SEC := 0.2
-const COLOR_HIGHLIGHT := Color(0.42, 0.86, 0.52)
 ## 180 §2.2：碰撞 —— 恢复系数（物件之间 / 墙、地面），撞墙的反弹速度封顶（× LAND_VMAX × 屏高），
 ## 每次反弹后速度再乘（物件之间 / 墙），两次反弹隔得比这短就贴住，速度低于这个（像素 / 秒）算静止
 const BUMP_E := 0.5
@@ -111,8 +110,6 @@ var stash: ItemStash:
 	set = set_stash
 ## 见类注释
 var fills_screen: bool = false
-## 085：亮一圈的（uid → true）：拖着的那件能和它合成。拖拽层设
-var highlights: Dictionary = {}
 var tip: HoverTip = null
 ## 接着这层地的拖拽层（后接的在上）。好几块面板同时开着时（地图上的背包浮窗 + 叠层），只有最上面那块接地上的抓取 / 双击
 var _drags: Array[DragLayer] = []
@@ -1510,7 +1507,7 @@ func _draw() -> void:
 			continue
 		var r := item_rect(inst.uid)
 		var cells := inst.def.cells_rotated(inst.rotation)
-		var edge := COLOR_HIGHLIGHT if highlights.has(inst.uid) else ItemPainter.rarity_color(inst.def, inst.rarity())
+		var edge := ItemPainter.rarity_color(inst.def, inst.rarity())
 		var body := ItemPainter.body_color(inst.def, inst.rarity())
 		var ink := ItemPainter.label_color(inst.def, inst.rarity())
 		var at := r.position

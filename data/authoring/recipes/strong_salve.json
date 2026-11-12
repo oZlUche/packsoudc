@@ -9,8 +9,9 @@
     "beeswax"
   ],
   "output": "strong_salve",
-  "note": "把蜂蜡块拖到伤药上：熬成浓缩伤药。",
+  "adjacent": true,
+  "note": "蜂蜡块贴着伤药放、点锤：熬成浓缩伤药。",
   "notes": {
-    "en": "Drag the Beeswax onto the Salve: it boils down into a Strong Salve."
+    "en": "Put the Beeswax next to the Salve and tap the hammer: it boils down into a Strong Salve."
   }
 }

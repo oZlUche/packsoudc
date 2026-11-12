@@ -1649,7 +1649,7 @@ func _adopt(state: RunState) -> void:
 			"player": ev.last_battle.get("player", null), "enemy": ev.last_battle.get("enemy", null),
 			"enemy_content": ev.last_battle.get("content", {}), "battle_id": ev.last_battle.get("battle_id", ""),
 			"before": ev.last_battle.get("before", {})}))
-	# 114：合成是拖到上面立刻发生的（整理面板里），提示就在面板上，不再排结果屏
+	# 合成在整理面板里点锤确认（279 / 310），提示就在面板上，不再排结果屏
 	state.loot_pending.connect(func(container: GridInventory):
 		# 一步之内可能来两份（打赢的尸体 + 搜索收获），RunState 已经并成一份，队里留一个就够
 		if _queue.is_empty() or int(_queue[-1]["screen"]) != Screen.LOOT:

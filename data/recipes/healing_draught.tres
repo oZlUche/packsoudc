@@ -11,7 +11,8 @@ display_names = {
 }
 inputs = Array[StringName]([&"strong_salve", &"crystal_shards"])
 output = &"healing_draught"
-note = "把碎晶拖到浓缩伤药上：装成治愈药剂。"
+adjacent = true
+note = "碎晶贴着浓缩伤药放、点锤：装成治愈药剂。"
 notes = {
-"en": "Drag the Crystal Shards onto the Strong Salve: it makes a Healing Draught."
+"en": "Put the Crystal Shards next to the Strong Salve and tap the hammer: it makes a Healing Draught."
 }
