@@ -151,6 +151,8 @@ func open(payload: Dictionary) -> void:
 	# 226 批二：「基地」二字删了（页签已说明在哪）
 	for pair in TABS:
 		var key: String = pair[0]
+		if not SliceProfile.keeps_tab(flow.profile, key):
+			continue     # 313：试玩切片的基地只留出征、仓库
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): toggle_tab(key))
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)

@@ -89,7 +89,8 @@ func _ready() -> void:
 	flow.meta_rules = rules
 	flow.buff_defs = RunBuffs.load_all()
 	flow.event_defs = EventPlacer.load_all()
-	flow.chapters = GameFlow.load_chapters()
+	flow.profile = SliceProfile.current()     # 313：试玩切片只列切片章节，存档、设置、校准记录都另放
+	flow.chapters = GameFlow.load_chapters(flow.profile)
 	flow.loadouts = GameFlow.load_loadouts()
 	flow.characters = GameFlow.load_characters()
 	flow.difficulties = GameFlow.load_difficulties()
@@ -101,11 +102,13 @@ func _ready() -> void:
 	flow.tech_defs = techs     # 110
 	flow.help_pages = GameFlow.load_help_pages()     # 114：百科
 	# 校准记录（073）：正式游戏每走一步记一份玩家配置到 user://calibration/，木桩工具吃它
-	flow.recorder = CalibrationRecorder.new()
+	flow.recorder = CalibrationRecorder.new() if flow.profile == &"" else CalibrationRecorder.new(SliceProfile.CALIBRATION + "/snapshots.jsonl", SliceProfile.CALIBRATION + "/runs.jsonl")
 	flow.save_path = save_path
 	flow.meta_path = meta_path
-	flow.settings_path = settings_path
-	flow.settings = GameSettings.load_from(settings_path)
+	flow.settings_path = SliceProfile.settings_path(flow.profile, settings_path)
+	if flow.settings_path != settings_path:
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(flow.settings_path.get_base_dir()))
+	flow.settings = GameSettings.load_from(flow.settings_path)
 	UiText.apply(flow.settings)
 	AudioHub.apply(flow.settings)     # 204：音效 / 音乐音量
 	UiPalette.apply(flow.settings)     # 091：背景底色
@@ -134,8 +137,9 @@ func _ready() -> void:
 	# 089：存档位 —— 用默认路径（正式游戏）时按位存：老的单文件存档先搬进第 1 位，再切到设置里记的那一位。
 	# 测试 / 演示改了路径的走单文件模式
 	if save_path == RunSave.DEFAULT_PATH and meta_path == MetaSave.DEFAULT_PATH:
-		flow.slots = SaveSlots.new()
-		flow.slots.migrate_legacy()
+		flow.slots = SaveSlots.new(SliceProfile.slots_root(flow.profile))
+		if flow.profile == &"":
+			flow.slots.migrate_legacy()     # 老的单文件存档只搬进正式版
 		flow.use_slot(flow.settings.save_slot)
 	# 没有角色定义时的兜底基线（角色路上基线来自 CharacterDef，067）
 	flow.player_baseline = CombatantBaseline.with_hp(60.0)
