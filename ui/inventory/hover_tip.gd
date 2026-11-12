@@ -1208,7 +1208,7 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 	var mm := event as InputEventMouseMotion
 	if mm == null:
 		return
-	if mm.button_mask & MOUSE_BUTTON_MASK_LEFT and not _panel.pinned:     # 按着左键 = 在拖：别弹道具窗盖住拖拽的合成提示签
+	if (mm.button_mask & MOUSE_BUTTON_MASK_LEFT or UiCursor.holding) and not _panel.pinned:     # 按着左键 / 手上拿着东西 = 在拖：别弹道具窗盖住棋盘（314：停在搭档上也不弹）
 		if _panel.visible:
 			hide_tip()
 		return
