@@ -1,0 +1,7 @@
+{
+  "id": "slice_prebattle",
+  "steps": [
+    {"target": "enemy_board", "text": "右边是对手。鼠标停在它的东西上，看它带了什么。", "texts": {"en": "On the right is your opponent. Hover over its things to see what it carries."}},
+    {"target": "my_board", "text": "左边是你的棋盘：东西要摆在包里才算数。摆好了，按开战。", "texts": {"en": "On the left is your Board. Only what sits in a bag counts. Once it's sorted, press Fight."}}
+  ]
+}

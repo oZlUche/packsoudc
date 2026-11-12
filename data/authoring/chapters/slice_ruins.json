@@ -23,6 +23,10 @@
   ],
   "allow_carry_in": false,
   "auto_spawn": true,
+  "coaches": {
+    "map": "slice_map",
+    "prebattle": "slice_prebattle"
+  },
   "step_limit": 20,
   "closing_extract": false
 }

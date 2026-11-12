@@ -46,6 +46,13 @@ static func run_chapter(t: TestCase) -> void:
 	t.check(drop != null and drop.bless_chance == 0.0 and drop.bless_chance_active == 0.0 and drop.treasure_chance == 0.0, "掉落不换赐福版、不掉宝物")
 	t.check(rules != null and rules.search.bless_chance == 0.0 and rules.search.bless_chance_active == 0.0, "搜索不换赐福版")
 	t.check(econ != null and econ.paid_extracts == 0, "没有付费撤离点")
+	# S2：切片自己的引导 —— 地图一段、战前一段，各不超过两步（不搬三张序章）
+	t.eq(ch.coaches.keys(), ["map", "prebattle"], "只在地图、战前放引导")
+	for key in ch.coaches:
+		var steps := CoachOverlay.load_steps(StringName(String(ch.coaches[key])))
+		t.check(steps.size() >= 1 and steps.size() <= 2, "%s 的引导 1～2 步（%d）" % [key, steps.size()])
+		for s in steps:
+			t.check(String(s.get("text", "")) != "" and String((s.get("texts", {}) as Dictionary).get("en", "")) != "", "%s 每步有中英两句" % key)
 
 
 static func run_map(t: TestCase) -> void:

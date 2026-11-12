@@ -216,6 +216,14 @@ static func frame_first_visit_hint(t: TestCase, root: Window) -> void:
 	var session: ShopSession = o["session"]
 	t.eq(screen.notice_layer().current_text(), UiText.t("shop.first_visit"), "头一回进店：说怎么买")
 	t.check(screen.flow.meta.coach_seen.has(screen.VISIT_HINT_SEEN), "记在局外")
+	var hint := UiText.t("shop.first_visit")
+	screen.notice_layer().step(10.0)
+	t.check(screen.notice_layer().lines().has(hint), "313：过了 10 秒还挂着（普通告示 3 秒就收）")
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	screen._input(press)
+	t.check(not screen.notice_layer().lines().has(hint), "313：在店里头一回按下鼠标就收")
 	var f = screen.flow
 	screen.free()
 	var again = load("res://ui/game/shop_screen.gd").new()
