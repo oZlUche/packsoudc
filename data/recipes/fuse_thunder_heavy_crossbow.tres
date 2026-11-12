@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_mrbky"]
+
+[resource]
+script = ExtResource("1_mrbky")
+id = &"fuse_thunder_heavy_crossbow"
+inputs = Array[StringName]([&"heavy_crossbow", &"lightning_crystal"])
+output = &"thunder_heavy_crossbow"
+adjacent = true

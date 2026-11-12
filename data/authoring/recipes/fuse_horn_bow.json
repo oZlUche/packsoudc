@@ -1,0 +1,9 @@
+{
+  "id": "fuse_horn_bow",
+  "inputs": [
+    "shortbow",
+    "antler"
+  ],
+  "output": "horn_bow",
+  "adjacent": true
+}

@@ -1,0 +1,9 @@
+{
+  "id": "fuse_bloodletter",
+  "inputs": [
+    "cleaver",
+    "beast_fang"
+  ],
+  "output": "bloodletter",
+  "adjacent": true
+}

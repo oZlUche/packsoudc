@@ -1,0 +1,9 @@
+{
+  "id": "fuse_flame_fang",
+  "inputs": [
+    "bloodbone_spike",
+    "fire_crystal"
+  ],
+  "output": "flame_fang",
+  "adjacent": true
+}
