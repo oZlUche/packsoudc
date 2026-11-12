@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_0d04a"]
+
+[resource]
+script = ExtResource("1_0d04a")
+id = &"forge_frost_bonesteel_greatsword"
+output = &"frost_bonesteel_greatsword"
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "crystal:frost",
+"min": 3
+}, {
+"count": 2,
+"material": "metal",
+"min": 2
+}])
+funds = 300
+group = "blade"
+level = 3

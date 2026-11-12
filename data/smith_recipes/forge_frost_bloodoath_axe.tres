@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_a4auy"]
+
+[resource]
+script = ExtResource("1_a4auy")
+id = &"forge_frost_bloodoath_axe"
+output = &"frost_bloodoath_axe"
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "crystal:frost",
+"min": 3
+}, {
+"count": 2,
+"material": "metal",
+"min": 2
+}])
+funds = 300
+group = "hammer"
+level = 3

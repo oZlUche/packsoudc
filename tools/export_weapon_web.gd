@@ -28,7 +28,7 @@ func run() -> void:
 			"adjacent": r.adjacent, "display_name": r.display_name, "note": r.note})
 	var smith_rows: Array = []
 	for s in smith:
-		smith_rows.append({"id": String(s.id), "output": String(s.output), "inputs": _str_dict(s.inputs), "material_inputs": _str_dict(s.material_inputs),
+		smith_rows.append({"id": String(s.id), "output": String(s.output), "inputs": _str_dict(s.inputs), "material_inputs": _str_dict(s.material_inputs), "material_slots": s.material_slots,
 			"funds": s.funds, "group": s.group, "level": s.level, "tech": String(s.tech), "tech_level": s.tech_level,
 			"is_upgrade": Anvil.is_upgrade(s), "note": s.note})
 	var doc := {
