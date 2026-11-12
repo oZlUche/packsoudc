@@ -39,6 +39,8 @@ const OVERLAY_FADE := 0.15
 ## 屏里的悬浮窗（[HoverTip] 60）、拖拽残影（50）都是相对自己那一屏的；地上画在最上面那一屏 + [constant GROUND_Z] 。
 ## 于是地图的悬浮窗高于地图和地上、低于叠层；叠层里的悬浮窗高于叠层本身
 const OVERLAY_Z := 100
+## 劈心盖在一切之上（告示、地上都在它下面）
+const HEART_BREAK_Z := 300
 const GROUND_Z := 40
 const BASE_FADE := 0.2
 ## 157：测试与截图工具关掉淡入（几百个屏幕用例的时序不变、截图不截到半透明）；正式游戏看设置
@@ -237,6 +239,9 @@ func overlay() -> GameScreen:
 ##
 ## 101 第 5 刀：接线在这边 —— [GameFlow] 只发 [signal GameFlow.run_changed] 并提供 [method GameFlow.faith_status]，不认识 ui
 func _on_run_changed(state: RunState) -> void:
+	HeartBreak.owed = 0
+	if state != null and not state.vitality.changed.is_connected(_on_vitality_changed):
+		state.vitality.changed.connect(_on_vitality_changed)
 	ItemTooltip.faith_probe = Callable() if state == null else flow.faith_status
 	ItemTooltip.weight_probe = Callable() if state == null else func() -> Array: return state.buff_context().weight_pct
 
@@ -251,6 +256,38 @@ func _on_screen_changed(screen: int, payload: Dictionary) -> void:
 		notices.motion = UiMotion.enabled(flow.settings)     # 设置里关了动效：告示直接开合
 		move_child(notices, -1)     # 新屏加在后面：告示层挪回去（画的先后按 z，地上随后照旧挪到最后）
 	_sync_ground()
+	_maybe_break_hearts()
+
+
+## 作者 11-12：打输 / 逃跑失败扣的体力记下来，回到地图时放劈心（[HeartBreak]）；动效关着就不记（直接变黑）
+func _on_vitality_changed(_current: int, _maximum: int, delta: int, reason: StringName) -> void:
+	if delta < 0 and HeartBreak.REASONS.has(reason) and UiMotion.enabled(flow.settings):
+		HeartBreak.owed += -delta
+
+
+## 欠着劈心、又回到了地图（上面没有叠层）：放。一局结束了（战败、撤离）就不放了
+var _heart_break: HeartBreak = null
+
+
+func _maybe_break_hearts() -> void:
+	if HeartBreak.owed <= 0 or is_instance_valid(_heart_break):
+		return
+	if flow.run == null or flow.run.is_over():
+		HeartBreak.owed = 0
+		return
+	if _overlay != null or _base == null or _base.screen != GameFlow.Screen.MAP:
+		return
+	var vitality: Control = null
+	for host in HudHost.hosts_in(get_tree()):
+		vitality = host.widgets.get(&"vitality", null)
+		if vitality != null:
+			break
+	if vitality == null or not vitality.is_visible_in_tree():
+		HeartBreak.owed = 0
+		return
+	_heart_break = HeartBreak.play_on(self, vitality)
+	if _heart_break != null:
+		_heart_break.z_index = HEART_BREAK_Z
 
 
 ## 128：地上画不画（最上面那一屏是一局里某个点上的界面才画），并保持在屏栈之上

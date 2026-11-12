@@ -56,7 +56,8 @@ func grid() -> Vector2i:
 
 
 func _paint() -> void:
-	_hearts = Vector2i(run.vitality.maximum, run.vitality.current) if run != null else Vector2i.ZERO
+	# 作者 11-12：打输扣的那几颗等劈心动画落下来才变黑（[member HeartBreak.owed]）
+	_hearts = Vector2i(run.vitality.maximum, mini(run.vitality.maximum, run.vitality.current + HeartBreak.owed)) if run != null else Vector2i.ZERO
 	tooltip_text = _text.text
 	var g := grid()
 	var s := heart_size()
@@ -65,11 +66,22 @@ func _paint() -> void:
 		+ (box.get_minimum_size() if box != null else Vector2.ZERO)     # 自定最小尺寸是连底框边距在内的
 
 
+## 第 [param i] 颗心的框（屏幕坐标；劈心动画落在这儿）
+func heart_rect(i: int) -> Rect2:
+	var s := heart_size()
+	var xf := get_global_transform()
+	return Rect2(xf * _heart_at(i), xf.basis_xform(Vector2(s, s)))
+
+
+func _heart_at(i: int) -> Vector2:
+	var margin := get_theme_stylebox("panel").get_offset() if has_theme_stylebox("panel") else Vector2.ZERO
+	return margin + Vector2(i % PER_ROW, floori(float(i) / PER_ROW)) * (heart_size() + HEART_GAP)
+
+
 func _draw() -> void:
 	super()
 	var h := hearts()
 	var s := heart_size()
-	var margin := get_theme_stylebox("panel").get_offset() if has_theme_stylebox("panel") else Vector2.ZERO
 	for i in h.x:
-		var at := margin + Vector2(i % PER_ROW, floori(float(i) / PER_ROW)) * (s + HEART_GAP)
+		var at := _heart_at(i)
 		UiPalette.draw_heart(self, at, s, UiPalette.HP if i < h.y else UiPalette.HEART_LOST)     # 161：和开局屏角色卡同一颗心
