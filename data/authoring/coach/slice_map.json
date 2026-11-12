@@ -1,0 +1,7 @@
+{
+  "id": "slice_map",
+  "steps": [
+    {"target": "countdown", "text": "日晷是倒计时：每走一步少一格，二十步走完这一趟就算失败。", "texts": {"en": "The sundial is the countdown: each step takes one notch. Use up all twenty and this trip fails."}},
+    {"target": "vitality", "text": "这是体力：打输一场就少一点，用光了这一趟也结束。两个撤离点都不收钱。", "texts": {"en": "This is Vitality: each lost fight costs some, and when it runs out the trip ends too. Both extraction points are free."}}
+  ]
+}

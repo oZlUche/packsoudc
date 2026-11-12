@@ -69,22 +69,32 @@ func _exit_tree() -> void:
 ## 写一句（[param urgent] = 要紧：朱红卷、停得久）。[param cap] 是这一次最多留几卷（233 复测：帐篷屏只留一卷，第二卷会压住窗顶的布招牌）；
 ## [param beside] 不是 0 = 卷不居中、左沿从屏中线往右这么远起排（神坛碑顶正对着卷的位置，v4.02 复测）；
 ## [param top] > [constant TOP] = 卷顶往下挪到这（235：地图屏让开日晷下凸）
-func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: float = 0.0, top: float = 0.0) -> void:
+## [param seconds] > 0 = 这一卷停这么久（313：商店头一回的提示，见 [method hold]）
+func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: float = 0.0, top: float = 0.0, seconds: float = 0.0) -> void:
 	if text == "":
 		return
 	_place(beside, top)
+	var left := seconds if seconds > 0.0 else (URGENT_SEC if urgent else SHOW_SEC)
 	for l in _lines:
 		if (l["scroll"] as NoticeScroll).text == text:
-			l["left"] = URGENT_SEC if urgent else SHOW_SEC
+			l["left"] = left
 			return
 	while _lines.size() >= maxi(1, cap):
 		_drop(0)
 	var s := NoticeScroll.make(text, urgent)
 	s.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_col.add_child(s)
-	_lines.append({"scroll": s, "left": URGENT_SEC if urgent else SHOW_SEC, "urgent": urgent})
+	_lines.append({"scroll": s, "left": left, "urgent": urgent})
 	s.open(motion)
 	visible = true
+
+
+## 收掉 [param text] 那一卷（没挂着不做事）
+func dismiss(text: String) -> void:
+	for i in _lines.size():
+		if (_lines[i]["scroll"] as NoticeScroll).text == text:
+			_drop(i)
+			return
 
 
 ## 现在挂着的几句（老的在前）

@@ -125,13 +125,25 @@ func open(payload: Dictionary) -> void:
 const VISIT_HINT_SEEN := "shop_first_visit"
 
 
+## 313（复测 v5.93 发现 1）：这句是三步操作，3 秒读不完 —— 停到玩家在店里头一回按下鼠标再收，最多停这么久
+const VISIT_HINT_SEC := 60.0
+var _visit_hint_up := false
+
+
 ## 说了返回真
 func _first_visit_hint() -> bool:
 	if _session == null or flow == null or flow.meta == null or flow.meta.coach_seen.has(VISIT_HINT_SEEN):
 		return false
 	flow.meta.coach_seen.append(VISIT_HINT_SEEN)
-	say(UiText.t("shop.first_visit"))
+	notice_layer().push(UiText.t("shop.first_visit"), false, notice_cap(), notice_beside(), notice_top(), VISIT_HINT_SEC)
+	_visit_hint_up = true
 	return true
+
+
+func _input(event: InputEvent) -> void:
+	if _visit_hint_up and event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		_visit_hint_up = false
+		notice_layer().dismiss(UiText.t("shop.first_visit"))
 
 
 func _bottom_hold(c: Control) -> Control:
