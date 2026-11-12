@@ -1,0 +1,301 @@
+{
+ "profile_id": "slice_ruins",
+ "manifest_version": 0,
+ "status": "draft (report 311, S0); values marked tbd are set in S1",
+ "baseline": {
+  "sha": "045ed6f",
+  "version": "v5.95"
+ },
+ "chapter": {
+  "id": "slice_ruins",
+  "display_name": "魔法废墟",
+  "map": "preset, 13 nodes (10 content nodes), one branch",
+  "characters": [
+   "andreus"
+  ],
+  "starting_items": [
+   "knife",
+   "bandage",
+   "ration"
+  ],
+  "step_limit": 20,
+  "paid_extracts": 0,
+  "bless_chance": 0
+ },
+ "recipe_ids": [
+  "fuse_twin_blades",
+  "fuse_broadsword",
+  "fuse_quenched_dagger",
+  "poisoned_knife",
+  "bandage_roll"
+ ],
+ "recipes_waiting_on_reform_c": [
+  "poisoned_knife",
+  "bandage_roll"
+ ],
+ "allowed_item_ids": [
+  "knife",
+  "shortsword",
+  "scimitar",
+  "cleaver",
+  "twin_blades",
+  "quenched_dagger",
+  "broadsword",
+  "poisoned_knife",
+  "round_shield",
+  "leather_armor",
+  "whetstone",
+  "poison_vial",
+  "linen_bolt",
+  "bandage",
+  "bandage_roll",
+  "salve",
+  "strong_salve",
+  "ration",
+  "bag_leather",
+  "bag_small"
+ ],
+ "enemy_ids": {
+  "baseline": "raider",
+  "normal": [
+   "brute",
+   "butcher"
+  ],
+  "elite": "shield_wall",
+  "guard": "warden"
+ },
+ "enemy_items": {
+  "raider": [
+   "knife",
+   "salve"
+  ],
+  "brute": [
+   "scimitar",
+   "salve",
+   "strong_salve"
+  ],
+  "butcher": [
+   "cleaver",
+   "knife"
+  ],
+  "shield_wall": [
+   "round_shield",
+   "cleaver"
+  ],
+  "warden": [
+   "round_shield",
+   "scimitar"
+  ]
+ },
+ "event_ids": [
+  "event_refugee_weaver",
+  "event_field_stretcher"
+ ],
+ "nodes": [
+  {
+   "n": 0,
+   "type": "spawn"
+  },
+  {
+   "n": 1,
+   "type": "battle",
+   "enemy": "raider",
+   "guaranteed_drops": [
+    "knife"
+   ]
+  },
+  {
+   "n": 2,
+   "type": "search",
+   "finds": [
+    [
+     "whetstone",
+     "linen_bolt"
+    ],
+    [
+     "leather_armor"
+    ]
+   ],
+   "encounter": "butcher"
+  },
+  {
+   "n": 3,
+   "type": "battle",
+   "enemy": "brute"
+  },
+  {
+   "n": 4,
+   "type": "shop",
+   "stock": [
+    "shortsword",
+    "poison_vial",
+    "whetstone",
+    "round_shield",
+    "leather_armor",
+    "salve",
+    "bandage",
+    "ration"
+   ]
+  },
+  {
+   "n": 5,
+   "type": "event",
+   "event": "event_refugee_weaver"
+  },
+  {
+   "n": 6,
+   "type": "elite",
+   "enemy": "shield_wall"
+  },
+  {
+   "n": 7,
+   "type": "search",
+   "finds": [
+    [
+     "poison_vial",
+     "round_shield"
+    ]
+   ]
+  },
+  {
+   "n": 8,
+   "type": "rest"
+  },
+  {
+   "n": 9,
+   "type": "extract",
+   "fee": 0
+  },
+  {
+   "n": 10,
+   "type": "event",
+   "event": "event_field_stretcher"
+  },
+  {
+   "n": 11,
+   "type": "battle",
+   "enemy": "warden",
+   "role": "guard"
+  },
+  {
+   "n": 12,
+   "type": "extract",
+   "fee": 0,
+   "after": "guard"
+  }
+ ],
+ "edges": [
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   2
+  ],
+  [
+   2,
+   3
+  ],
+  [
+   3,
+   4
+  ],
+  [
+   4,
+   5
+  ],
+  [
+   3,
+   6
+  ],
+  [
+   6,
+   7
+  ],
+  [
+   5,
+   8
+  ],
+  [
+   7,
+   8
+  ],
+  [
+   8,
+   9
+  ],
+  [
+   8,
+   10
+  ],
+  [
+   10,
+   11
+  ],
+  [
+   11,
+   12
+  ]
+ ],
+ "sources": {
+  "knife": [
+   "start",
+   "raider drop (guaranteed)",
+   "butcher drop"
+  ],
+  "shortsword": [
+   "shop only"
+  ],
+  "whetstone": [
+   "search 2",
+   "shop"
+  ],
+  "poison_vial": [
+   "shop",
+   "search 7"
+  ],
+  "linen_bolt": [
+   "search 2"
+  ],
+  "bandage": [
+   "start",
+   "shop"
+  ],
+  "round_shield": [
+   "shop",
+   "search 7",
+   "elite/guard drop"
+  ],
+  "leather_armor": [
+   "search 2 (second dig)",
+   "shop"
+  ],
+  "scimitar": [
+   "brute drop",
+   "guard drop"
+  ],
+  "cleaver": [
+   "butcher drop",
+   "elite drop"
+  ],
+  "salve": [
+   "raider/brute drop",
+   "shop"
+  ],
+  "strong_salve": [
+   "brute drop"
+  ],
+  "ration": [
+   "start",
+   "shop"
+  ]
+ },
+ "tbd_in_s1": [
+  "enemy base_stats per node (bench with existing battle tools)",
+  "event rewards checked against allowed_item_ids",
+  "shop prices vs. coins earned",
+  "branching preset layout kind",
+  "bag sources"
+ ]
+}
