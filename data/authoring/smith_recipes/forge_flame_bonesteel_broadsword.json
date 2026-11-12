@@ -1,0 +1,19 @@
+{
+  "id": "forge_flame_bonesteel_broadsword",
+  "output": "flame_bonesteel_broadsword",
+  "material_slots": [
+    {
+      "material": "crystal:fire",
+      "min": 3,
+      "count": 1
+    },
+    {
+      "material": "metal",
+      "min": 2,
+      "count": 2
+    }
+  ],
+  "funds": 300,
+  "group": "blade",
+  "level": 3
+}

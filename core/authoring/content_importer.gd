@@ -910,21 +910,31 @@ static func import_smith_recipe(data: Dictionary, ctx: Context, report: ImportRe
 				report.error("output", "冶炼的产物得是素材：%s 不是" % def.output)
 		elif not SMITH_OUTPUT_TAGS.any(func(t: StringName) -> bool: return out.tags.has(t)):
 			report.error("output", "铁匠铺只打武器 / 防具 / 盾 / 插件：%s 不是" % def.output)
-	if def.inputs.is_empty():
+	if def.inputs.is_empty() and def.slots().is_empty():
 		report.error("inputs", "配方至少要一样素材")
 	for key in def.inputs:
 		if int(def.inputs[key]) < 1:
 			report.error("inputs.%s" % key, "件数至少 1")
 		if not ctx.items.is_empty() and not ctx.items.has(StringName(String(key))):
 			report.error("inputs.%s" % key, "道具库里没有 %s" % key)
-	for m in def.material_inputs:     # 279：按材质类认的素材
-		var r := int(def.material_inputs[m])
-		if not ItemMaterials.is_material(StringName(String(m))) and not SmithRecipeDef.is_crystal_key(String(m)):
-			report.error("material_inputs.%s" % m, "没有这类材质（%s，或 crystal:元素家族）" % " / ".join(PackedStringArray(ItemMaterials.IDS)))
+	for i in def.material_slots.size():     # 310：带件数的格只认这三个键
+		for k in def.material_slots[i]:
+			if not ["material", "min", "count"].has(String(k)):
+				report.error("material_slots[%d].%s" % [i, k], "未知字段（可用：material, min, count）")
+	var slots := def.slots()
+	for i in slots.size():     # 279：按材质类认的素材；310：带件数的格
+		var slot := slots[i]
+		var m := String(slot["material"])
+		var at := "material_inputs.%s" % m if i < def.material_inputs.size() else "material_slots[%d]" % (i - def.material_inputs.size())
+		var r := int(slot["min"])
+		if not ItemMaterials.is_material(StringName(m)) and not SmithRecipeDef.is_crystal_key(m):
+			report.error(at, "没有这类材质（%s，或 crystal:元素家族）" % " / ".join(PackedStringArray(ItemMaterials.IDS)))
 		elif r < 0 or r > 5:
-			report.error("material_inputs.%s" % m, "最低稀有度 0 ～ 5")
-		elif not ctx.items.is_empty() and not ctx.items.values().any(func(d: ItemDef) -> bool: return def.material_fits(String(m), d)):
-			report.error("material_inputs.%s" % m, "道具库里没有能顶这一格的素材")
+			report.error(at, "最低稀有度 0 ～ 5")
+		elif int(slot["count"]) < 1:
+			report.error(at, "件数至少 1（门槛写 min，件数写 count，两样分开）")
+		elif not ctx.items.is_empty() and not ctx.items.values().any(func(d: ItemDef) -> bool: return SmithRecipeDef.slot_fits(slot, d)):
+			report.error(at, "道具库里没有能顶这一格的素材")
 	if def.funds < 0:
 		report.error("funds", "钱不能是负的")
 	if def.level < 1 or def.level > 3:
@@ -2855,6 +2865,10 @@ static func _coerce_array(
 				item = int(raw)
 			TYPE_FLOAT:
 				item = float(raw)
+			TYPE_DICTIONARY:     # 310：`Array[Dictionary]`（铁匠配方的材料格）—— 数字还原成整数，同字段值的对象
+				item = MapGraph.normalize((raw as Dictionary).duplicate(true)) if raw is Dictionary else null
+				if item == null:
+					report.error(at, "应为对象")
 			_:
 				item = raw
 		if item != null:

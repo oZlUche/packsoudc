@@ -10,6 +10,8 @@ const TRAY_SIZE := Vector2i(6, 3)
 const COIN_STEP := 10
 ## 比别的叠层压得暗一点（美术：「窗后面那层遮罩可以压暗一点，盘子之间是透明的」）
 const SHADE := 0.8
+## 标题字离石牌边留的空（像素，底座层坐标）
+const TITLE_PAD := 8.0
 
 var _price := 0
 var coins := 0
@@ -34,7 +36,11 @@ func open(payload: Dictionary) -> void:
 	_scale.right = _price
 	row.add_child(_scale)
 	# 底座上的字都落在石牌 / 石台上（226）
-	_place(_label(UiText.t("ransom.title"), 22, BalanceScale.INK), "title", true)
+	var title := _label(UiText.t("ransom.title"), 22, BalanceScale.INK)
+	var plate := _scale.control_rect("title")
+	TextFit.shrink_label(title, plate.size.x - 2.0 * TITLE_PAD, UiTheme.sz(22), 16)     # 测试 v5.93：英文大字「Beg for Mercy」比石牌宽，两头被切
+	TextFit.shrink_label_height(title, plate.size.y, 16)     # 中文大字贴着牌子下沿
+	_place(title, "title", true)
 	var intro := _label(UiText.t("ransom.intro"), 17, BalanceScale.INK)     # 正面在前；限制写在石台底下的小字（作者 10-26：短处后放、小字）
 	_place(intro, "subtitle", true)
 	_place(_label(UiText.t("ransom.limits"), 13, BalanceScale.INK_SOFT), "hint", true)

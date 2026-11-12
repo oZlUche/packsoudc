@@ -1,0 +1,19 @@
+{
+  "id": "forge_thunder_bloodthirst_twin_blades",
+  "output": "thunder_bloodthirst_twin_blades",
+  "material_slots": [
+    {
+      "material": "crystal:lightning",
+      "min": 3,
+      "count": 1
+    },
+    {
+      "material": "bone",
+      "min": 2,
+      "count": 2
+    }
+  ],
+  "funds": 300,
+  "group": "blade",
+  "level": 3
+}

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SmithRecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/smith_recipe_def.gd" id="1_pkgpm"]
+
+[resource]
+script = ExtResource("1_pkgpm")
+id = &"forge_flame_bonesteel_spear"
+output = &"flame_bonesteel_spear"
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "crystal:fire",
+"min": 3
+}, {
+"count": 2,
+"material": "metal",
+"min": 2
+}])
+funds = 300
+group = "blade"
+level = 3

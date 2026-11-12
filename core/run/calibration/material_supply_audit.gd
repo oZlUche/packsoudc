@@ -178,8 +178,8 @@ static func _recipe_ready(rd: SmithRecipeDef, items: ItemDatabase, got: Dictiona
 	for id in rd.inputs:
 		if not got.has(String(id)):
 			return false
-	for mat in rd.material_inputs:
-		if fitting(rd, String(mat), items).filter(func(d: ItemDef) -> bool:
+	for slot in rd.slots():     # 310：件数只看「有没有」，供给审计不数件
+		if fitting_slot(slot, items).filter(func(d: ItemDef) -> bool:
 			return got.has(String(d.id)) and (not open or d.requires_unlock == &"")).is_empty():
 			return false
 	return true
@@ -187,12 +187,17 @@ static func _recipe_ready(rd: SmithRecipeDef, items: ItemDatabase, got: Dictiona
 
 ## [param rd] 那一格（材质类 / 魔晶石）库里顶得上的道具，按稀有度、id 排
 static func fitting(rd: SmithRecipeDef, mat: String, items: ItemDatabase) -> Array[ItemDef]:
+	return fitting_slot({"material": mat, "min": int(rd.material_inputs.get(mat, 0))}, items)
+
+
+## 310：[method SmithRecipeDef.slots] 里的一格库里顶得上的道具，按稀有度、id 排
+static func fitting_slot(slot: Dictionary, items: ItemDatabase) -> Array[ItemDef]:
 	var out: Array[ItemDef] = []
 	var ids: Array = items.ids(true)
 	Ids.sort(ids)
 	for id in ids:
 		var d := items.get_def(StringName(String(id)))
-		if rd.material_fits(mat, d):
+		if SmithRecipeDef.slot_fits(slot, d):
 			out.append(d)
 	out.sort_custom(func(a: ItemDef, b: ItemDef) -> bool: return a.rarity < b.rarity if a.rarity != b.rarity else String(a.id) < String(b.id))
 	return out
@@ -222,10 +227,12 @@ static func audit(items: ItemDatabase, enemies: EnemyDatabase, recipes: Array = 
 		for id in fixed:
 			var d := items.get_def(StringName(String(id)))
 			rows.append(_row(rd, "id:" + String(id), "%s ×%d" % [id, int(rd.inputs[id])], [d] if d != null else [], ext, producers, open, full))
-		var mats: Array = rd.material_inputs.keys()
-		mats.sort()
-		for mat in mats:
-			rows.append(_row(rd, String(mat), "%s ≥ %d" % [mat, int(rd.material_inputs[mat])], fitting(rd, String(mat), items), ext, producers, open, full))
+		var slots := rd.slots()
+		for i in slots.size():
+			var slot := slots[i]
+			var key := String(slot["material"]) if i < rd.material_inputs.size() else "%s@%d" % [slot["material"], i]
+			var need := "%s ≥ %d" % [slot["material"], int(slot["min"])] + ("" if int(slot["count"]) == 1 else " ×%d" % int(slot["count"]))
+			rows.append(_row(rd, key, need, fitting_slot(slot, items), ext, producers, open, full))
 	return {"slots": rows, "sources": ext, "open": open, "full": full}
 
 

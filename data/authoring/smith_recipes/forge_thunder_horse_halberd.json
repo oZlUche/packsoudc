@@ -1,0 +1,19 @@
+{
+  "id": "forge_thunder_horse_halberd",
+  "output": "thunder_horse_halberd",
+  "material_slots": [
+    {
+      "material": "crystal:lightning",
+      "min": 3,
+      "count": 1
+    },
+    {
+      "material": "metal",
+      "min": 2,
+      "count": 2
+    }
+  ],
+  "funds": 300,
+  "group": "hammer",
+  "level": 3
+}

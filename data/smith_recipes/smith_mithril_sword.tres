@@ -8,9 +8,13 @@ id = &"smith_mithril_sword"
 output = &"mithril_sword"
 inputs = {
 "fire_crystal_low": 1,
-"longsword": 1,
 "mithril_ingot": 2
 }
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "metal",
+"min": 1
+}])
 funds = 200
 group = "blade"
 level = 3
