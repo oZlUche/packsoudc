@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DropRule" format=3]
+
+[ext_resource type="Script" path="res://core/loot/drop_rule.gd" id="1_i1dvd"]
+
+[resource]
+script = ExtResource("1_i1dvd")
+id = &"slice_ruins"
+display_name = "试玩切片的掉落（不换赐福版）"
+treasure_chance = 0.0
+min_drops = 1
+bags_always_drop = true
+bless_chance = 0.0
+bless_chance_active = 0.0

@@ -18,6 +18,8 @@ const COACH_KINDS: Array[StringName] = [&"map", &"battle", &"bag", &"prebattle"]
 
 ## 随机生成还是载入预设，见 5.3.1
 @export var map_source: MapSource = null
+## 313（试玩切片）：属于哪一档 —— 空 = 正式版；`slice` = 只在试玩切片里列（[method GameFlow.load_chapters]）
+@export var profile: StringName = &""
 
 ## 敌人池的 id（`data/enemy_pools/`，6.0）。空 = 这一章没有敌人（战斗点空着）。
 ## 按 id 引用而不是内联：几章共用一个池、只改难度是常态

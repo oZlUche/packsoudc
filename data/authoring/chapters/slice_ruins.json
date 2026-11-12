@@ -1,0 +1,28 @@
+{
+  "id": "slice_ruins",
+  "display_name": "魔法废墟",
+  "display_names": {
+    "en": "Magic Ruins"
+  },
+  "map_source": {
+    "mode": "PRESET",
+    "preset_path": "res://data/maps/slice_ruins.json"
+  },
+  "profile": "slice",
+  "drop_rule": "slice_ruins",
+  "bag_pool": "",
+  "node_rules": "slice_ruins",
+  "economy_rules": "slice_ruins",
+  "characters": [
+    "andreus"
+  ],
+  "starting_items": [
+    "knife",
+    "bandage",
+    "ration"
+  ],
+  "allow_carry_in": false,
+  "auto_spawn": true,
+  "step_limit": 20,
+  "closing_extract": false
+}

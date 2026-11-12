@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="NodeRules" format=3]
+
+[ext_resource type="Script" path="res://core/run/node_rules.gd" id="1_g5whl"]
+[ext_resource type="Script" path="res://core/run/search_rules.gd" id="2_sa7d0"]
+
+[sub_resource type="Resource" id="Resource_n2a7j"]
+script = ExtResource("2_sa7d0")
+encounter_curve = Array[float]([0.0, 0.0, 1.0])
+bless_chance = 0.0
+bless_chance_active = 0.0
+again_event = &"search_again"
+done_event = &"search_done"
+encounter_event = &"search_encounter"
+destroyed_event = &"search_destroyed"
+
+[resource]
+script = ExtResource("1_g5whl")
+id = &"slice_ruins"
+display_name = "试玩切片的节点规则"
+random_weights = {
+"battle": 1
+}
+search = SubResource("Resource_n2a7j")
+event_weights = {
+"story": 1
+}
+events_by_type = {
+"extract": {
+"extract_default": 1
+},
+"rest": {
+"rest_default": 1
+},
+"search": {
+"search_default": 1
+},
+"shop": {
+"shop_default": 1
+}
+}
