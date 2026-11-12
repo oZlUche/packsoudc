@@ -180,9 +180,21 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 	t.check(note != null and note.is_open(), "松手：开确认窗")
 	t.check(s.board.has_item(k1.uid) and k1.origin == Vector2i(0, 0), "手上那把回到原处")
 	t.check(view.veiled.has(k1.uid) and note.ghost_item == k1, "原处先不画，残影留在松手处")
+	var tip: HoverTip = panel.get("tip")
+	var over_k2 := InputEventMouseMotion.new()
+	over_k2.position = view.cell_origin_px(Vector2i(3, 0)) + Vector2.ONE * view.cell_px * 0.5
+	var over_k1 := InputEventMouseMotion.new()
+	over_k1.position = view.cell_origin_px(Vector2i(0, 0)) + Vector2.ONE * view.cell_px * 0.5
+	tip._on_view_input(view, over_k2)
+	t.check(not tip.is_showing(), "确认窗开着：停在被压那把上不弹道具窗（游戏测试 v6.11）")
 	if note != null and note.cancel_key != null:
 		note.cancel_key.pressed.emit()
 		t.check(not view.veiled.has(k1.uid) and s.board.item_count() == 2 and not s.knows_recipe(&"fuse_twin_blades"), "取消：两把都在、不记配方")
+		tip._on_view_input(view, over_k2)
+		t.check(not tip.is_showing(), "关了窗、鼠标还在被压那把上：不弹")
+		tip._on_view_input(view, over_k1)
+		t.check(tip.is_showing(), "挪到别的道具上：照常弹")
+		tip.hide_tip()
 		view.grab_requested.emit(view, k1.uid, Vector2.ONE * view.cell_px * 0.5)
 		drag.update_preview(at)
 		drag.drop_at(at)
