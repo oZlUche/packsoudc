@@ -161,27 +161,7 @@ func confirm_key(space: bool) -> bool:
 func proceed() -> void:
 	HudHost.release_in(get_tree())     # 231 补充二：兜底（没看完就走了）
 	_close_viewing()
-	var lost := loss_line()
 	flow.resume()
-	if lost != "":
-		NoticeLayer.post(self, lost)
-
-
-## 313（切片 S2，方案第 7 节「战后列实际得失」）：打输了扣了体力 —— 回地图时说一句扣了几点、还剩几点。
-## 赢了有战利品屏、求饶有天平屏，都不说；没扣（免罚、无代价）也不说
-func loss_line() -> String:
-	if _won or flow == null or flow.run == null or flow.run.events == null or flow.run.vitality == null:
-		return ""
-	var ev := flow.run.events
-	if ev.ransom_node() != null:
-		return ""
-	var before: Variant = (ev.last_battle.get("before", {}) as Dictionary).get("vitality", null)
-	if before == null:
-		return ""
-	var spent := int(before) - flow.run.vitality.current
-	if spent <= 0:
-		return ""
-	return UiText.t("battle.lost_vitality") % [spent, flow.run.vitality.current, flow.run.vitality.maximum]
 
 
 ## 记一件观看的事（没开诊断时什么也不做）
