@@ -1028,6 +1028,8 @@ const TEXT := {
 	"cond.steps_max": {"zh": "需要步数 ≤ %d", "en": "Needs steps ≤ %d"},
 	"cond.steps_range": {"zh": "需要步数 %d～%d", "en": "Needs steps %d–%d"},
 	"cond.vitality": {"zh": "需要体力 ≥ %d", "en": "Needs Vitality ≥ %d"},
+	"cond.recipe_missing": {"zh": "原料还没凑齐", "en": "You don't have the ingredients yet"},
+	"cond.recipe_ready": {"zh": "原料已经凑齐了", "en": "You already have the ingredients"},
 	"cond.reward_empty": {"zh": "这里没有能拿的东西", "en": "There's nothing here to take"},
 	"event.lose_none": {"zh": "没有能拿走的", "en": "nothing to take"},
 	"cond.vitality_full": {"zh": "体力已满", "en": "Vitality is already full"},

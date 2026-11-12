@@ -78,6 +78,7 @@ const EVENT_CONDITIONS := {
 	&"owned_nowhere": "res://core/run/events/conditions/owned_nowhere.gd",     # 282
 	&"skill_ready": "res://core/run/events/conditions/skill_ready.gd",     # 136
 	&"vitality_not_full": "res://core/run/events/conditions/vitality_not_full.gd",     # 事件方案 2026-11-11
+	&"recipe_ready": "res://core/run/events/conditions/recipe_ready.gd",     # 309：v5.85 体验 E01
 }
 
 const EVENT_OUTCOMES := {

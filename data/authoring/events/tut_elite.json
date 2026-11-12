@@ -31,15 +31,15 @@
       ]
     },
     {
-      "label": "手里没有{item:knife}，就这么上",
+      "label": "当前没有可用的合成组合，直接准备战斗",
       "labels": {
-        "en": "No {item:knife} on hand. Go in anyway"
+        "en": "No usable crafting combination right now. Prepare for battle"
       },
       "hide_when_locked": true,
       "requires": [
         {
-          "type": "has_item",
-          "item": "knife",
+          "type": "recipe_ready",
+          "recipe": "poisoned_knife",
           "missing": true
         },
         {
@@ -50,7 +50,52 @@
       ],
       "outcomes": [
         {
+          "type": "set_flag",
+          "flag": "tut_craft_skipped"
+        },
+        {
           "type": "proceed"
+        }
+      ]
+    },
+    {
+      "label": "补领一把普通{item:knife}",
+      "labels": {
+        "en": "Take a plain {item:knife}"
+      },
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "has_item",
+          "item": "poison_vial"
+        },
+        {
+          "type": "has_item",
+          "item": "knife",
+          "missing": true
+        },
+        {
+          "type": "has_item",
+          "item": "poisoned_knife",
+          "missing": true
+        },
+        {
+          "type": "has_flag",
+          "flag": "tut_knife_given",
+          "absent": true
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "give_item",
+          "item": "knife"
+        },
+        {
+          "type": "set_flag",
+          "flag": "tut_knife_given"
+        },
+        {
+          "type": "revisit_later"
         }
       ]
     },

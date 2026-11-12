@@ -383,9 +383,44 @@ static func run_crafting_gate(t: TestCase) -> void:
 	# 直接站到精英点上看门（没匕首、没毒药瓶）
 	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
 	t.check(not bool(s.events.option_state(0)["ok"]), "没有涂毒匕首：进不去")
-	t.check(bool(s.events.option_state(1)["ok"]), "也没有匕首：退路「就这么上」能选")
+	t.check(bool(s.events.option_state(1)["ok"]), "也没有匕首：退路「直接准备战斗」能选")
 	s.board.try_add(ItemInstance.create(c.items.get_def(&"knife")), true)
-	t.check(not bool(s.events.option_state(1)["ok"]), "有匕首了：退路藏起来")
+	t.check(bool(s.events.option_state(1)["ok"]), "309：只有匕首、没毒药 —— 还是凑不齐，退路照样在")
+	s.board.try_add(ItemInstance.create(c.items.get_def(&"poison_vial")), true)
+	t.check(not bool(s.events.option_state(1)["ok"]), "匕首 + 毒药都在：退路藏起来（要先合成）")
+	Support.cleanup("prologue")
+
+
+## 309（v5.85 体验 E01）：旧档在守卫门口只有赐福匕首 + 毒药 —— 补领一把普通匕首，只一次；赐福匕首原样不动
+static func run_old_save_knife_once(t: TestCase) -> void:
+	t.begin("309 · 旧档：赐福匕首 + 毒药在守卫门口能补领一把普通匕首（只一次，回地图合成后再来）；有普通匕首就不给")
+	var c := _content()
+	var g := c.prologue.map_source.resolve(1)
+	var path := _path(g)
+	var s := _start(c)
+	s.meta = MetaState.new()
+	var brute := ItemInstance.create(c.items.get_def(&"knife_brute"))
+	s.board.try_add(brute, true)
+	s.board.try_add(ItemInstance.create(c.items.get_def(&"poison_vial")), true)
+	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
+	t.check(bool(s.events.option_state(1)["ok"]), "凑不齐：跳过照样能选")
+	t.check(bool(s.events.option_state(2)["ok"]), "补领普通匕首能选")
+	t.check(s.events.choose(2), "选补领")
+	t.not_null(_find(s, &"knife"), "拿到一把普通匕首")
+	t.check(_find(s, &"knife_brute") == brute and brute.def.id == &"knife_brute", "赐福匕首原样")
+	t.eq(s.meta.flag(&"tut_knife_given"), 1, "记了领过")
+	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
+	t.check(not bool(s.events.option_state(2)["ok"]), "手里有普通匕首：不再给")
+	t.check(not bool(s.events.option_state(1)["ok"]), "凑齐了：跳过藏起来，要先合成")
+	var k := _find(s, &"knife")
+	if s.board.items().has(k):
+		s.board.remove(k.uid)
+	else:
+		s.storage.remove(k.uid)
+	t.check(not bool(s.events.option_state(2)["ok"]), "卖掉 / 丢了也不再补：只一次")
+	t.check(bool(s.events.option_state(1)["ok"]), "这时只剩跳过")
+	s.events.choose(1)
+	t.eq(s.meta.flag(&"tut_craft_skipped"), 1, "选了跳过就记跳过，不算合成过")
 	Support.cleanup("prologue")
 
 
