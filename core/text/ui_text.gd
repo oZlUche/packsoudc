@@ -947,6 +947,8 @@ const TEXT := {
 	"shop.dealt": {"zh": "成交了：%s", "en": "Deal done: %s"},
 	"shop.dealt_plain": {"zh": "成交了", "en": "Deal done"},
 	"shop.gap_short": {"zh": "还差", "en": "Short by"},
+	"shop.gap_none": {"zh": "不用补钱，按成交就行", "en": "Nothing to add. Press Deal"},     # 309 E05
+	"shop.first_visit": {"zh": "双击挑选商品；点自己的钱袋补差价；按成交确认", "en": "Double-click goods to pick them; click your pouch to cover the difference; press Deal to confirm"},     # 309 E05
 	"shop.gap_even": {"zh": "够了", "en": "Even"},
 	"shop.gap_change": {"zh": "找你", "en": "Change"},
 	"shop.gap_cant_pay": {"zh": "他只付得起", "en": "He only has"},

@@ -110,8 +110,17 @@ func next() -> void:
 		finished.emit()
 		queue_free()
 		return
-	_line.text = text_of(steps[index])
+	_line.text = text_of(steps[index]) + progress_suffix(index, steps.size())
 	_layout()
+
+
+## 309（v5.85 体验 E04）：多步的教程在字后面写进度「　2/4」，让人知道还有几步；一步的不写
+static func progress_suffix(i: int, total: int) -> String:
+	return "　%d/%d" % [i + 1, total] if total > 1 else ""
+
+
+func line_text() -> String:
+	return _line.text
 
 
 ## 221 F3：一步的字按当前语言取（`texts: {"en": …}`），没写回落 `text`
