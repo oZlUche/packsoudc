@@ -121,12 +121,12 @@ text = "最后一道门有精英守着：更硬，带的东西也更好。输给
 
 和刚才一样先进{ui:战前准备}：看清对手的棋盘，把新搜到的也放进包里，调整好位置再按{ui:开战}。
 
-它披着甲，普通刀剑每下都要被削掉一截；{item:poisoned_knife}的毒不看这个。"
+它举着{item:round_shield}：格挡会把刀剑的每一下抵掉一截；{item:poisoned_knife}留下的毒是身上自己发作的，不吃格挡。"
 texts = {
 "en": "An elite guards the last door: tougher, and better equipped. Losing to an elite costs more Vitality.
 
 Same as before, go through {ui:战前准备} first: read the enemy's board, put your new finds in your bag, adjust where everything sits, then press {ui:开战}.
 
-It's armored, so ordinary blades lose a chunk of every hit. The poison on a {item:poisoned_knife} doesn't care."
+It carries a {item:round_shield}: block takes a chunk off every blade hit. The poison from a {item:poisoned_knife} works on its own and ignores block."
 }
 options = Array[ExtResource("1_3rytr")]([SubResource("Resource_a3enw"), SubResource("Resource_usnjx"), SubResource("Resource_mectk"), SubResource("Resource_pokta")])
