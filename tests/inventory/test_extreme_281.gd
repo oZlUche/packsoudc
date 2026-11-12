@@ -18,7 +18,7 @@ static func run_lines(t: TestCase) -> void:
 			t.check(def != null and def.rarity == k + 2 and def.tags.has(EnemyPlacer.EXTREME), "%s：%d 档、极端" % [line[k], k + 2])
 			if def == null:
 				continue
-			t.eq(def.is_forged_only(), k == 2, "%s：橙只能锻造" % line[k])
+			t.eq(def.is_no_random_source(), k == 2, "%s：橙只能锻造" % line[k])
 			t.eq(def.description, "", "%s：说明留空" % line[k])
 			if k == 0:
 				continue

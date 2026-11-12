@@ -20,7 +20,7 @@
     "dual",
     "bleed",
     "lightning",
-    "forged_only"
+    "no_random_source"
   ],
   "material": "bone",
   "combat": {

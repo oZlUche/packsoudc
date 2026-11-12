@@ -21,7 +21,7 @@
     "burst",
     "one_hand",
     "imperial",
-    "forged_only"
+    "no_random_source"
   ],
   "material": "metal",
   "combat": {

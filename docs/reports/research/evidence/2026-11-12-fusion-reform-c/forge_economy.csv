@@ -1,0 +1,18 @@
+recipe,output,output_rarity,funds,materials_value,forge_cost,sell_at_base,margin,old_anvil_step_cost,profit_vs_selling_mats,cheapest_set
+forge_flame_berserker_twin_axes,flame_berserker_twin_axes,4,300,380,680,400,-280,520,-90,fire_crystal×1 + brass_gear×2
+forge_flame_bonesteel_broadsword,flame_bonesteel_broadsword,4,300,380,680,400,-280,520,-90,fire_crystal×1 + brass_gear×2
+forge_flame_bonesteel_spear,flame_bonesteel_spear,4,300,380,680,500,-180,520,10,fire_crystal×1 + brass_gear×2
+forge_flame_composite_bow,flame_composite_bow,4,300,380,680,600,-80,520,110,fire_crystal×1 + bone_charm_bits×2
+forge_flame_execution_blade,flame_execution_blade,4,750,380,1130,900,-230,520,-40,fire_crystal×1 + brass_gear×2
+forge_flame_executioner_axe,flame_executioner_axe,4,750,380,1130,900,-230,520,-40,fire_crystal×1 + brass_gear×2
+forge_flame_meteor_maul,flame_meteor_maul,4,750,380,1130,900,-230,520,-40,fire_crystal×1 + brass_gear×2
+forge_frost_bloodoath_axe,frost_bloodoath_axe,4,300,380,680,400,-280,520,-90,ice_crystal×1 + brass_gear×2
+forge_frost_bonesteel_greatsword,frost_bonesteel_greatsword,4,750,380,1130,900,-230,520,-40,ice_crystal×1 + brass_gear×2
+forge_frost_dragoon_lance,frost_dragoon_lance,4,300,380,680,500,-180,520,10,ice_crystal×1 + brass_gear×2
+forge_imperial_sword,imperial_sword,4,300,875,1175,600,-575,1000,-138,pale_shard×1 + gilded_goblet×1
+forge_thunder_bloodthirst_twin_blades,thunder_bloodthirst_twin_blades,4,300,380,680,400,-280,520,-90,lightning_crystal×1 + bone_charm_bits×2
+forge_thunder_boneiron_club,thunder_boneiron_club,4,750,380,1130,900,-230,520,-40,lightning_crystal×1 + bone_charm_bits×2
+forge_thunder_horse_halberd,thunder_horse_halberd,4,300,380,680,500,-180,520,10,lightning_crystal×1 + brass_gear×2
+forge_thunder_siege_spear,thunder_siege_spear,4,300,380,680,500,-180,520,10,lightning_crystal×1 + brass_gear×2
+smith_grand_magus_staff,grand_magus_staff,4,400,1070,1470,300,-1170,-1,-635,fire_crystal_high×1 + mithril_ingot×2 + hardwood_plank×2
+smith_mithril_sword,mithril_sword,3,200,474,674,225,-449,-1,-212,fire_crystal_low×1 + mithril_ingot×2 + copper_ingot×1

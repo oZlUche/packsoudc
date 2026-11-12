@@ -113,6 +113,6 @@ descriptions = {
 }
 shape = SubResource("Resource_pdtof")
 rarity = 4
-tags = Array[StringName]([&"weapon", &"melee", &"burst", &"polearm", &"extreme", &"lightning", &"forged_only"])
+tags = Array[StringName]([&"weapon", &"melee", &"burst", &"polearm", &"extreme", &"lightning", &"no_random_source"])
 material = "metal"
 combat = SubResource("Resource_sohsd")

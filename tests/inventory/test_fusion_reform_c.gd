@@ -42,3 +42,41 @@ static func run_new_pairs(t: TestCase) -> void:
 		var p := Fusion.pairs(board, recipes)
 		t.check(placed and p.size() == 1 and StringName(p[0]["output"]) == spec[2], "%s：贴着摆出一枚锤" % id)
 		t.eq(pool.has(spec[2]), not LIMITED.has(spec[2]), "%s：随机来源%s" % [spec[2], "不出" if LIMITED.has(spec[2]) else "照旧"])
+
+
+## 310 第四步：「不进随机来源」（原 forged_only）的道具，作者数据里除了道具本身、拼接与铁匠配方，没有别处点名它（事件奖励、集市、商店、敌人、地图、章节开局都不行）
+static func run_no_random_source(t: TestCase) -> void:
+	t.begin("310 · 不进随机来源：生成池里没有、图鉴照列；作者数据只有道具、配方、铁匠配方提到它们")
+	var db := ItemDatabase.new()
+	db.load_dir()
+	var ids: Array[String] = []
+	for id in db.all_ids():
+		var d := db.get_def(id)
+		if d.is_no_random_source() and not d.is_blessed():
+			ids.append(String(id))
+	t.eq(ids.size(), 18, "18 件（3 件局内限定 + 15 件材料打造）")
+	var pool := db.ids()
+	var codex := db.ids(true)
+	t.check(ids.all(func(id: String) -> bool: return not pool.has(StringName(id)) and codex.has(StringName(id))), "生成池里没有、图鉴照列")
+	var hits: Array[String] = []
+	_scan("res://data", ids, hits)
+	t.eq(hits, [] as Array[String], "别处没点名")
+
+
+const _ALLOWED_DIRS := ["items", "recipes", "smith_recipes", "tags"]
+
+
+static func _scan(dir_path: String, ids: Array[String], hits: Array[String]) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	for sub in dir.get_directories():
+		if not _ALLOWED_DIRS.has(sub) and not sub.begins_with("."):
+			_scan(dir_path.path_join(sub), ids, hits)
+	for f in dir.get_files():
+		if not f.ends_with(".json"):
+			continue
+		var text := FileAccess.get_file_as_string(dir_path.path_join(f))
+		for id in ids:
+			if text.contains("\"%s\"" % id):
+				hits.append("%s/%s: %s" % [dir_path, f, id])
