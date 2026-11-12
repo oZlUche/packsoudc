@@ -12,10 +12,12 @@ enum Where { BOARD, STORAGE, BOTH }
 @export var missing: bool = false
 ## 事件方案 2026-11-11 §2.6：只算事件拿得走的（[method EventContext.takeable]）。同一选项后面要 [LoseItem] 的必须开（导入器查）
 @export var takeable: bool = false
+## 312（方案 §5）：赐福版也算这件（[member item] 写原件 id）。只给教学用，扣物的条件别开
+@export var family: bool = false
 
 
 func check(ctx: EventContext) -> bool:
-	return (ctx.count_item(item, where, tag, takeable) >= maxi(1, count)) != missing
+	return (ctx.count_item(item, where, tag, takeable, family) >= maxi(1, count)) != missing
 
 
 func describe() -> String:

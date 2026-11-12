@@ -297,8 +297,10 @@ func ask_fuse(a_uid: int, b_uid: int) -> bool:
 		return false
 	var a := pv["a"] as ItemInstance
 	var b := pv["b"] as ItemInstance
-	var lines: Array[String] = []
-	for inst in [a, b]:
+	var res: Dictionary = pv.get("resolution", {})
+	var can_fuse := String(res.get("status", FusionResolve.READY)) == FusionResolve.READY
+	var lines := _faith_lines(res)
+	for inst in ([a, b] if can_fuse else []):
 		var lost: Array[String] = []
 		if not Forge.enchant_of(inst).is_empty():
 			lost.append(UiText.t("fuse.enchant"))
@@ -320,12 +322,34 @@ func ask_fuse(a_uid: int, b_uid: int) -> bool:
 	for f in board_view.fusions:
 		if (int(f["a"]) == a_uid and int(f["b"]) == b_uid) or (int(f["a"]) == b_uid and int(f["b"]) == a_uid):
 			hammer_y = (xf * (Vector2(f["seam"]) * board_view.cell_px)).y
-	fuse_note.open(a.def, b.def, pv["output"] as ItemDef, int(pv["known"]) > 0, "\n".join(PackedStringArray(lines)), pair, hammer_y,
-		func() -> void:
-			if _fusable(a_uid) and _fusable(b_uid):
-				crafting.fuse(a_uid, b_uid))
+	var expect := StringName(res.get("output_id", &""))
+	var on_go := Callable()     # 312 §8.1：禁忌待办没有合成键
+	if can_fuse:
+		on_go = func() -> void:
+			if _fusable(a_uid) and _fusable(b_uid) and bool(crafting.fuse(a_uid, b_uid, expect).get("changed", false)):
+				ask_fuse(a_uid, b_uid)     # 312 §3：确认后结果变了（信仰换了等）：不合，按新结果重开
+	fuse_note.open(a.def, b.def, pv["output"] as ItemDef, int(pv["known"]) > 0, "\n".join(PackedStringArray(lines)), pair, hammer_y, on_go)
 	board_view.held_fusion = Vector2i(a_uid, b_uid)
 	return true
+
+
+## 312（方案 §3、§8.1）：信仰后果那几句 —— 禁忌待办只说一句（不说成品会丢什么）；择神说保留谁；没那位神的赐福版说不保留
+func _faith_lines(res: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	if String(res.get("status", "")) == FusionResolve.UNAVAILABLE:
+		out.append(UiText.t("fuse.forbidden"))
+		return out
+	var warnings: Array = res.get("warnings", [])
+	if warnings.has(FusionResolve.FAITH_DROPPED):
+		out.append(UiText.t("fuse.faith_dropped") % [_faith_name(StringName(res["selected_faith"])), _faith_name(StringName(res["dropped_faith"]))])
+	if warnings.has(FusionResolve.BLESSING_LOST):
+		out.append(UiText.t("fuse.blessing_lost"))
+	return out
+
+
+func _faith_name(id: StringName) -> String:
+	var def: Object = _run.faith_defs.get(id, null)
+	return Names.of(def) if def != null else String(id)
 
 
 func _on_crafted(detail: Dictionary) -> void:

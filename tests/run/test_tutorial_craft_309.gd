@@ -42,7 +42,7 @@ static func run_guaranteed_drop_stays_plain(t: TestCase) -> void:
 
 
 static func run_recipe_ready(t: TestCase) -> void:
-	t.begin("309 · recipe_ready：普通匕首 + 毒药才算凑齐；赐福匕首不顶、锁着的不算；守卫的退路只在凑不齐、也没有成品时出现")
+	t.begin("309 / 312 · recipe_ready：匕首（普通或赐福）+ 毒药就算凑齐、锁着的不算；守卫的退路只在凑不齐、也没有成品（含赐福版）时出现")
 	var c := _content()
 	var s := RunState.start(c.chapter, 71888, c.items, c.enemies, c.sets)
 	if s == null:
@@ -57,9 +57,12 @@ static func run_recipe_ready(t: TestCase) -> void:
 	var cond := RecipeReady.new()
 	cond.recipe = &"poisoned_knife"
 	t.not_null(c.items.get_def(&"knife_brute"), "库里有赐福匕首 knife_brute")
-	_put(s, c, &"knife_brute")
+	var kb := _put(s, c, &"knife_brute", true)
 	_put(s, c, &"poison_vial")
-	t.check(not cond.check(ctx), "赐福匕首 + 毒药：凑不齐")
+	t.check(not cond.check(ctx), "赐福匕首锁着：凑不齐")
+	kb.set_locked(false)
+	t.check(cond.check(ctx), "312：赐福匕首 + 毒药：凑齐了（按原件认）")
+	s.storage.remove(kb.uid)
 	var k := _put(s, c, &"knife", true)
 	t.check(not cond.check(ctx), "普通匕首锁着：凑不齐")
 	k.set_locked(false)
@@ -72,8 +75,8 @@ static func run_recipe_ready(t: TestCase) -> void:
 	t.check(not back.label.contains("{item:knife}"), "退路不再说「没有匕首」")
 	t.eq(back.locked_reason(ctx) != "", true, "凑得齐时退路藏着（要先合成）")
 	s.storage.remove(k.uid)
-	t.eq(back.locked_reason(ctx), "", "只有赐福匕首时退路出现")
-	_put(s, c, &"poisoned_knife")
-	t.check(back.locked_reason(ctx) != "", "已经有成品时退路藏着，走正门")
-	t.eq((def.options[0] as EventOption).locked_reason(ctx), "", "有成品：正门开着")
+	t.eq(back.locked_reason(ctx), "", "只有毒药时退路出现")
+	_put(s, c, &"poisoned_knife_brute")
+	t.check(back.locked_reason(ctx) != "", "312：有赐福成品时退路藏着，走正门")
+	t.eq((def.options[0] as EventOption).locked_reason(ctx), "", "赐福成品：正门开着")
 	s.dispose()

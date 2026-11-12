@@ -1145,9 +1145,12 @@ func knows_recipe(id: StringName) -> bool:
 	return lore.knows_recipe(id) or (meta != null and meta.lore.knows_recipe(id))
 
 
-## 305：认识这件道具吗（同上）
+## 305：认识这件道具吗（同上）。312：按原件家族认（认识普通件 = 认识它的赐福版，反过来也一样；方案 §4）
 func has_met(id: StringName) -> bool:
-	return lore.has_met(id) or (meta != null and meta.lore.has_met(id))
+	for f in FusionResolve.family(items, id, faith_defs.keys()):
+		if lore.has_met(f) or (meta != null and meta.lore.has_met(f)):
+			return true
+	return false
 
 
 func _owned_now() -> Array:

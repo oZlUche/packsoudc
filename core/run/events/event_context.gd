@@ -87,12 +87,13 @@ func depth_at(n: MapNode) -> int:
 
 ## 棋盘 / 地上某道具有几件（id 为空 = 任何道具；tag 给了就只算带这个标签的）。[param where]：0 棋盘、1 地上、2 两处。
 ## [param takeable_only]：只算事件拿得走的（[method takeable]）—— 「有」和「失去」得是同一批，不然条件过了却扣不掉、奖励照发
-func count_item(id: StringName, where: int = 2, tag: StringName = &"", takeable_only: bool = false) -> int:
+## 312：[param family] = 原件 [param id] 的赐福版也算（教学认原件家族，方案 §5；别处照旧精确）
+func count_item(id: StringName, where: int = 2, tag: StringName = &"", takeable_only: bool = false, family: bool = false) -> int:
 	var n := 0
 	for c in containers(where):
 		for inst in (c as ItemContainer).items():
 			var def := (inst as ItemInstance).def
-			if (id == &"" or def.id == id) and (tag == &"" or def.tags.has(tag)) and (not takeable_only or takeable(inst)):
+			if (id == &"" or def.id == id or (family and FusionResolve.base_of(def) == id)) and (tag == &"" or def.tags.has(tag)) and (not takeable_only or takeable(inst)):
 				n += 1
 	return n
 
