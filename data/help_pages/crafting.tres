@@ -11,11 +11,11 @@ display_names = {
 }
 category = &"bag"
 order = 4
-text = "两件能合成的道具在棋盘上贴着放，接缝上会浮出一枚小锤。点它先看一眼要用掉哪两件、合出什么（没合成过也没见过的成品是问号），按「合成」才合：两件消失，成品落在两件原来的格子里。放不下自动找位，再不行到{zone:地上}。
+text = "拿起一件道具，能和它合成的道具身上会标一枚小锤。拖到其中一件上松手，先看一眼要用掉哪两件、合出什么（没合成过也没见过的成品是问号），按「合成」才合：两件消失，成品落在被压的那件的位置，放不下自动找位。取消就放回原处。棋盘和{zone:地上}的都能合。
 
 锁着的、随身之物不会被合掉。合成只在一局里发生。"
 texts = {
-"en": "Put two items that combine next to each other on the board and a small hammer appears on the seam. Click it to see which two items will be used and what they make (a result you have never made or seen shows as a question mark), then press Fuse. Both items disappear and the result takes their cells. If it doesn't fit, it finds a spot automatically; failing that, it goes to the {zone:地上}.
+"en": "Pick up an item and every item it can combine with is marked with a small hammer. Drop it on one of them to see which two items will be used and what they make (a result you have never made or seen shows as a question mark), then press Fuse. Both items disappear and the result lands where the item underneath was; if it doesn't fit, it finds a spot automatically. Cancel puts it back. Items on the board and on the {zone:地上} both count.
 
 Locked and pinned items are never used up. Crafting only happens during a run."
 }

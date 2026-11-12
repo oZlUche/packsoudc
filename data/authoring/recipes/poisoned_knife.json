@@ -10,8 +10,8 @@
   ],
   "output": "poisoned_knife",
   "adjacent": true,
-  "note": "毒药瓶贴着匕首放、点锤：中毒无视格挡与护甲。",
+  "note": "毒药瓶拖到匕首上：中毒无视格挡与护甲。",
   "notes": {
-    "en": "Put the Poison Vial next to the Knife and tap the hammer: its poison ignores Block and Armor."
+    "en": "Drop the Poison Vial onto the Knife: its poison ignores Block and Armor."
   }
 }

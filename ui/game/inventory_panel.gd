@@ -21,7 +21,7 @@ var cell_px: float = InventoryView.CELL
 ## 128：导演那一层地（没有 = null：测试里单开面板）
 var ground: GroundLayer = null
 var tip: HoverTip
-## 306：合成确认窗（第一次点锤时才造）
+## 306：合成确认窗（第一次拖到能合的那件上时才造）
 var fuse_note: FuseNote = null
 ## 216：棋盘下的数值栏（容器屏把它摘出去摆到「全部拾取」那一行，[method detach_strip]）
 var strip: StatsStrip
@@ -35,7 +35,7 @@ var quick_target: ItemContainer = null
 ## 双击之后的提示回调（容器屏想自己写）：`func(text: String)`
 var hint_sink: Callable = Callable()
 ## 审查 A1 / 310：这件许不许拿去合成 `func(inst: ItemInstance) -> bool`（商店给还没成交的货返回 false：合掉就结不了账）。
-## 不许的那件旁边不浮小锤、点了也不合。不给 = 都许
+## 不许的那件拿起时不标、压上去照常顶替。不给 = 都许
 var fuse_filter: Callable = Callable()
 ## 230：悬浮窗按钮里「双击做的那件事」叫什么（有 [member quick_target] 的屏给：`func(inst) -> ItemActions.Action`，出售区写「出售 N 币」……）；
 ## 不给 = 「放进去」；没有 quick_target = 「放到地上」
@@ -61,9 +61,7 @@ func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 	_drag = drag
 	_build()
 	_run.board.changed.connect(_refresh_readout)
-	_run.board.changed.connect(refresh_fusions)
 	_refresh_readout()
-	refresh_fusions()
 
 
 ## 这块面板用的拖拽层（279：砧的槽也登记到这一层）
@@ -71,21 +69,14 @@ func drag_layer() -> DragLayer:
 	return _drag
 
 
-## 279 拼接：贴着、配得上的两件接缝上画小锤（棋盘一变就重找；持有方改了 [member fuse_filter] 的判断时自己再调一次）
-func refresh_fusions() -> void:
+func _fusable(inst: ItemInstance) -> bool:
+	return inst != null and (not fuse_filter.is_valid() or bool(fuse_filter.call(inst)))
+
+
+## 314：拖拽层问「手上这件和那件能合吗」—— 那件得在棋盘或地上、两件都许拿去合成、有配方
+func _fuse_partner(held: ItemInstance, other: ItemInstance) -> bool:
 	var crafting := CraftingModule.of(_run)
-	if board_view == null:
-		return
-	var pairs: Array[Dictionary] = []
-	if crafting != null:
-		for p in crafting.fusion_pairs():
-			if _fusable(int(p["a"])) and _fusable(int(p["b"])):
-				pairs.append(p)
-	board_view.fusions = pairs
-
-
-func _fusable(uid: int) -> bool:
-	return not fuse_filter.is_valid() or bool(fuse_filter.call(_run.board.get_item(uid)))
+	return crafting != null and crafting.home_of(other.uid) != null and _fusable(held) and _fusable(other) and crafting.partner_ok(held, other)
 
 
 func _build() -> void:
@@ -121,11 +112,13 @@ func _build() -> void:
 	_attach_ground()
 	_drag.items_displaced.connect(_on_displaced)
 	_drag.grab_refused.connect(func(uid: int): _hint_text(DragLayer.refused_notice(_run.board, uid)))     # 207 / 255
-	# 279 / 310：合成只有一种 —— 贴着放、点接缝上的小锤、确认（114 的拖上去合已删）
+	# 314：合成只有一种 —— 拿起一件、拖到能合的那件上松手、确认（拿起时能合的那几件标小锤）
 	var crafting := CraftingModule.of(_run)     # 101：合成是一局的模块
 	if crafting != null:
 		crafting.done.connect(_on_crafted)
-		board_view.fuse_requested.connect(func(_v: InventoryView, a: int, b: int) -> void: ask_fuse(a, b))     # 279：点锤；305：先看再合
+		_drag.fuse_partner = _fuse_partner
+		_drag.fuse_drop = func(held: ItemInstance, home: ItemContainer, target: ItemInstance, target_home: ItemContainer, ghost: Rect2) -> void:
+			ask_fuse_items(held, home, target, target_home, ghost)
 	# 175 第三批：铸牌压到武器上放手 = 附魔（任何格子容器里都行；铸牌已经拿在手上）
 	_drag.enchant_drop = func(token: ItemInstance, grid: GridInventory, weapon_uid: int) -> bool:
 		return InventoryService.enchant(token, null, grid, weapon_uid)
@@ -286,17 +279,14 @@ func say_no_room(inst: ItemInstance) -> void:
 		_hint_text(UiText.t("bag.no_room") % Names.of(inst.def))
 
 
-## 114：合成了：提示一句产物（装不下落在地上也说）
-## 305（改造 A，方案 §6.2 / §6.3）：点锤先开确认窗 —— 成品（不认识就是问号）、两件的图、会丢掉的附魔 / 品质 / 成长；
-## 按「合成」才合（合的那一下再查一遍两件还贴着、没锁），「取消」什么都不动。拼不了 = false
-## 306 定稿：窗是 [FuseNote]（纸条），摆在两件右边、尖角和小锤同高；开着时那一对照悬停那一档画
-func ask_fuse(a_uid: int, b_uid: int) -> bool:
+## 305 / 314：开确认窗 —— 成品（不认识就是问号）、两件的图、会丢掉的附魔 / 品质 / 成长、赐福提示（312）；
+## 按「合成」才合（合的那一下再查一遍两件还在、没锁、结果没变），「取消」/ Esc / 点窗外什么都不动（手上那件已经回到原处）。合不了 = false。
+## 306 定稿：窗是 [FuseNote]（纸条），摆在被压那件旁边、尖角和它同高；开着时被压那件的小锤画亮的，手上那件半透明留在松手处（[param ghost]）
+func ask_fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_home: ItemContainer, ghost: Rect2 = Rect2()) -> bool:
 	var crafting := CraftingModule.of(_run)
-	var pv := crafting.fuse_preview(a_uid, b_uid) if crafting != null and _fusable(a_uid) and _fusable(b_uid) else {}
+	var pv := crafting.preview(a, b) if crafting != null and _fusable(a) and _fusable(b) and a_home != null and b_home != null else {}
 	if pv.is_empty():
 		return false
-	var a := pv["a"] as ItemInstance
-	var b := pv["b"] as ItemInstance
 	var res: Dictionary = pv.get("resolution", {})
 	var can_fuse := String(res.get("status", FusionResolve.READY)) == FusionResolve.READY
 	var lines := _faith_lines(res)
@@ -313,24 +303,57 @@ func ask_fuse(a_uid: int, b_uid: int) -> bool:
 	if fuse_note == null:
 		fuse_note = FuseNote.new()
 		add_child(fuse_note)
-		fuse_note.closed = func() -> void: board_view.held_fusion = Vector2i(-1, -1)
+	fuse_note.closed = func() -> void: _hold_fusion(-1, -1)
 	if tip != null:
 		tip.hide_tip()
-	var xf := board_view.get_global_transform()
-	var pair := xf * board_view.item_rect(a_uid).merge(board_view.item_rect(b_uid))
-	var hammer_y := board_view.get_global_mouse_position().y
-	for f in board_view.fusions:
-		if (int(f["a"]) == a_uid and int(f["b"]) == b_uid) or (int(f["a"]) == b_uid and int(f["b"]) == a_uid):
-			hammer_y = (xf * (Vector2(f["seam"]) * board_view.cell_px)).y
+	var target := _global_rect(b, b_home)
+	var pair := target.merge(ghost) if ghost.has_area() else target
 	var expect := StringName(res.get("output_id", &""))
 	var on_go := Callable()     # 312 §8.1：禁忌待办没有合成键
 	if can_fuse:
 		on_go = func() -> void:
-			if _fusable(a_uid) and _fusable(b_uid) and bool(crafting.fuse(a_uid, b_uid, expect).get("changed", false)):
-				ask_fuse(a_uid, b_uid)     # 312 §3：确认后结果变了（信仰换了等）：不合，按新结果重开
-	fuse_note.open(a.def, b.def, pv["output"] as ItemDef, int(pv["known"]) > 0, "\n".join(PackedStringArray(lines)), pair, hammer_y, on_go)
-	board_view.held_fusion = Vector2i(a_uid, b_uid)
+			if not (_fusable(a) and _fusable(b)):
+				return
+			var d := crafting.fuse_items(a, a_home, b, b_home, expect)
+			if bool(d.get("changed", false)):
+				ask_fuse_items(a, a_home, b, b_home)     # 312 §3：确认后结果变了（信仰换了等）：不合，按新结果重开
+			elif String(d.get("reason", "")) == "no_room":
+				_hint_text(UiText.t("bag.no_room") % Names.of(pv["output"] as ItemDef))
+	fuse_note.open(a.def, b.def, pv["output"] as ItemDef, int(pv["known"]) > 0, "\n".join(PackedStringArray(lines)), pair, target.get_center().y, on_go)
+	if ghost.has_area():
+		fuse_note.show_ghost(a, ghost)
+	_hold_fusion(a.uid if ghost.has_area() and a_home == _run.board else -1, b.uid)     # 有残影才把原处那件先藏起来
 	return true
+
+
+## 按 uid 开（两件都在棋盘或地上；测试与键盘路径用）
+func ask_fuse(a_uid: int, b_uid: int) -> bool:
+	var crafting := CraftingModule.of(_run)
+	if crafting == null:
+		return false
+	var ha := crafting.home_of(a_uid)
+	var hb := crafting.home_of(b_uid)
+	return ha != null and hb != null and ask_fuse_items(ha.get_item(a_uid), ha, hb.get_item(b_uid), hb)
+
+
+## 确认窗开着时：手上那件在棋盘原处先不画（[param veil_uid]，-1 = 没有），被压那件的小锤画亮的；都 -1 = 收
+func _hold_fusion(veil_uid: int, hot_uid: int) -> void:
+	board_view.veiled = {veil_uid: true} if veil_uid >= 0 else {}
+	board_view.queue_redraw()
+	board_view.fuse_marks = {hot_uid: true} if hot_uid >= 0 and _run.board.has_item(hot_uid) else {}
+	board_view.fuse_hot = hot_uid
+	if ground != null:
+		ground.fuse_marks = {hot_uid: true} if hot_uid >= 0 and _run.storage.has_item(hot_uid) else {}
+		ground.fuse_hot = hot_uid
+
+
+## 这件此刻在屏上的外框（全局）：棋盘上按格、地上按地层
+func _global_rect(inst: ItemInstance, home: ItemContainer) -> Rect2:
+	if home == _run.board:
+		return board_view.get_global_transform() * board_view.item_rect(inst.uid)
+	if ground != null and home == ground.stash:
+		return ground.get_global_transform() * ground.item_rect(inst.uid)
+	return Rect2(get_global_mouse_position(), Vector2.ONE)
 
 
 ## 312（方案 §3、§8.1）：信仰后果那几句 —— 禁忌待办只说一句（不说成品会丢什么）；择神说保留谁；没那位神的赐福版说不保留
@@ -352,6 +375,7 @@ func _faith_name(id: StringName) -> String:
 	return Names.of(def) if def != null else String(id)
 
 
+## 114：合成了：提示一句产物
 func _on_crafted(detail: Dictionary) -> void:
 	if not is_inside_tree():
 		return

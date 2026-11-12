@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 背包 | 棋盘 + 包体拼可用区，异形占格，可旋转；格子外整屏是「地上」，按点保留；腰带槽；Ctrl（Mac Cmd）整包拿 | `GridInventory`、`InventoryView`、`DragLayer` | 007、128、147、274（v5.04） |
 | 战斗 | 编译背包 → 战斗单位，事件驱动模拟；标准轴、单一乘区、反应、加时与衰竭；战记（可读回放） | `BattleCompiler`（`core/battle/compiler.gd`）、`BattleSim`、`BattleNarrator` | 103～106、133、272（v5.00） |
-| 武器体系 | 五类 × 白→橙，另有弓弩与法杖；**拼接**：白 + 白贴着出小锤徽、点锤合成绿；**砧**：上一把 + 一类材料升蓝 / 紫，+ 魔晶石升橙（橙只能升，不掉落）；**品质** 0～2（伤害 / 格挡 / 护甲每档 ×1.1、暴击 +5 点、层数与个数 +1，每下叠层照加）；极端武器两条线 6 把；弓弩装箭 | `Fusion`（`core/inventory/fusion.gd`）、`Anvil`（`core/run/anvil.gd`）、`BattleCompiler.quality_stats / quality_rules` | 279（v5.05～v5.17、v5.42、v5.43）、281（v5.18、v5.19） |
+| 武器体系 | 五类 × 白→橙，另有弓弩与法杖；**拼接**：拿起白武器，能合的那件标小锤，拖上去确认合成绿；**砧**：上一把 + 一类材料升蓝 / 紫，+ 魔晶石升橙（橙只能升，不掉落）；**品质** 0～2（伤害 / 格挡 / 护甲每档 ×1.1、暴击 +5 点、层数与个数 +1，每下叠层照加）；极端武器两条线 6 把；弓弩装箭 | `Fusion`（`core/inventory/fusion.gd`）、`Anvil`（`core/run/anvil.gd`）、`BattleCompiler.quality_stats / quality_rules` | 279（v5.05～v5.17、v5.42、v5.43）、281（v5.18、v5.19） |
 | 红武 | 刹那 / 断水 / 双生 / 贯日 / 崩山 / 坠星 / 破晓 / 寂灭 8 件：裸数据、定稿图、`unique`（不进随机池、不可卖、全局一件）；**独有机制未做**；BOSS / 猎手按概率持有并掉**劣化版** `<id>_lesser`；**寂灭**的来路已做完（法杖进出局计数 → 单元素试炼 → 神坛献祭）；破晓只有铁匠起点 | `RedSources`、`UniqueItems`、`JimiePath`（`core/run/`） | 281（v5.20～v5.27）、282（v5.29） |
 | 休息点 | 营地屏；「铁炉」= 两栏屏 **砧 \| 铸炉**，每个休息点砧免费一次；神坛 | `ui/game/rest_camp_screen.gd`、`ui/game/anvil_column.gd`、`NodeEvents.hearth_open` | 286（v5.34） |
 | 悬浮窗 | 道具说明 + 词条侧窗；「可升为」每个名字是配方词，停上去开配方子窗（出件整段、要哪类材料、在哪锤），可一路点到橙；耐力签列出消耗与回复来源；说明文字的数字读数据（288 普查 17 条已改） | `HoverTip`、`ItemTooltip`、`StaminaEstimate.breakdown`、`Glossary` | 286、288（v5.37）、289（v5.38） |
@@ -62,7 +62,7 @@
 | 种类 | 文件数 | 说明 |
 |---|---|---|
 | 道具 `items` | 267 | 武器 120、包 15；独一 `unique` 13（8 把红武 + 4 颗元素之核 + 破晓的信物）、劣化版 `lesser` 8、只能锻造 `forged_only` 18（橙档）、极端 `extreme` 6、券 2、随身之物 `keepsake` 2、铸牌 `token` 1、招牌 `signature` 1、成就解锁 3；**封存 `sealed` 0 件**（旧版的 15 件现代道具已不在作者数据里）；赐福版运行时派生，不在作者文件里（`blessed_of` 0 份）。按 `ItemDatabase.ids()` 的排除规则估，能进随机候选的约 **219** 件（还要再过各池的标签与稀有度上限） |
-| 拼接配方 `recipes`（310 起全部贴着点锤） | 23 | 另有铁匠铺 / 砧配方 `smith_recipes` 116 |
+| 拼接配方 `recipes`（314 起全部拖到搭档上、确认） | 23 | 另有铁匠铺 / 砧配方 `smith_recipes` 116 |
 | 敌人 `enemies` | 33 | 敌人池 3（standard_ruins / clockwork / hunters）、猎手 2 |
 | 事件 `events` | 61 | 序章教程 37（序章一 11、序章二 14、序章三 12）；其余 24（默认事件、搜索收尾、信仰召唤 5、寂灭 2、钟房、军团交代等）；**有配图的只有 2 个**（`briefing_legion`、`event_jimie_god`） |
 | 章节 `chapters` | 5 | 序章三张 + 魔法废墟（`free_mode`）+ 机关沙漏 |

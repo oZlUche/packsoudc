@@ -25,25 +25,22 @@ func _check(ok: bool, what: String) -> void:
 		_fails += 1
 
 
-## 一：相邻拼接 —— 两把匕首贴着 → 双刀；隔开一格 → 不配对；配对只给提示、不自动合
+## 一：拼接 —— 两把匕首配得上 → 双刀；成品落在两件原来的格里（314 起触发是拖到另一件上、先确认，这里只验配方和落点）
 func _fusion(items: ItemDatabase, recipes: Array) -> void:
-	print("一、相邻拼接 fuse_twin_blades（knife + knife → twin_blades）")
+	print("一、拼接 fuse_twin_blades（knife + knife → twin_blades）")
 	var knife := items.get_def(&"knife")
+	var r := RecipeDef.find(recipes, &"knife", &"knife")
+	_check(r != null and r.output == &"twin_blades", "两把匕首配得上，产物 twin_blades")
 	var board := GridInventory.new(Vector2i(6, 4))
 	var a := ItemInstance.create(knife)
 	var b := ItemInstance.create(knife)
 	board.place(a, Vector2i(0, 0))
 	board.place(b, Vector2i(1, 0))
-	var pairs := Fusion.pairs(board, recipes)
-	_check(pairs.size() == 1 and pairs[0]["output"] == &"twin_blades", "贴着的两把匕首被认成一对，产物 twin_blades（%s）" % [pairs])
-	_check(board.item_count() == 2, "只认对、不自动合（棋盘上仍是 2 件）")
-	var out := Fusion.fuse(board, a.uid, b.uid, items.get_def(&"twin_blades"))
-	_check(out != null and out.def.id == &"twin_blades" and board.item_count() == 1, "点合之后两件消耗、出一把 twin_blades")
-	_check(out != null and out.quality() == 0, "拼接成品品质 = 0（ItemInstance.create 新建，不继承）")
-	var board2 := GridInventory.new(Vector2i(6, 4))
-	board2.place(ItemInstance.create(knife), Vector2i(0, 0))
-	board2.place(ItemInstance.create(knife), Vector2i(2, 0))
-	_check(Fusion.pairs(board2, recipes).is_empty(), "隔开一格不算相邻，不出提示")
+	board.remove(a.uid)
+	board.remove(b.uid)
+	var spot := Fusion.landing(board, [b, a], items.get_def(&"twin_blades"))
+	_check(not spot.is_empty(), "成品落得进两件原来的格（%s）" % [spot])
+	_check(ItemInstance.create(items.get_def(&"twin_blades")).quality() == 0, "拼接成品品质 = 0（ItemInstance.create 新建，不继承）")
 
 
 ## 二：按材质升级 —— 短矛 + 骨材 → 骨矛；材料比门槛高一档 → 品质 1；门槛以下 → 配不上

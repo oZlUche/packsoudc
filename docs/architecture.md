@@ -3429,7 +3429,7 @@ func to_dict() / restore(d)              # 自己的状态，进 run.to_dict()["
 |---|---|---|
 | `SafeModule`（092） | 容器、锁、`closed` | `RunState.leaving`；`safe_open` 挂在 `RunHooks`（7.5） |
 | `NodeStorageModule`（087） | 哪个点上留着什么、`dropped` / `restored` | `leaving`（留下）、`arrived`（拿回） |
-| `CraftingModule`（084 / 279 / 310） | 配方表、贴着的配对（`fusion_pairs`）、预览与合成（`fuse_preview` / `fuse(a_uid, b_uid)`：点锤确认后合）、`done(detail)` | 无（由整理面板点锤 → 确认窗调） |
+| `CraftingModule`（084 / 279 / 310 / 314） | 配方表、能不能合（`partner_ok`：拿起时标小锤、拖放判搭档）、预览与合成（`preview` / `fuse_items`：确认后合，成品落在被压那件的位置；棋盘、地上都算）、`done(detail)` | 无（由整理面板：拖到搭档上松手 → 确认窗调） |
 | `BuffModule`（062） | 一局里拿到的 buff（`entries`、给 / 去 / 查 / 走表）、`buffs_changed` | `stepped`（任何花行动点的方式） |
 | `AltarModule`（093 / 095） | 神坛开在哪、用过哪些点、仪式的账与改过的基线、献祭 / 特殊操作、信仰级效果（`perks`）、赐福、`noted` / `item_blessed` | `NodeEvents.altar_opened`、`leaving`（关）、`stepped`（赐福）、`MapTravel.moved`（踩点回调） |
 | `CountdownModule`（092 / 094） | 倒计时上限 / 剩余、带入价值与超带罚步、关哪个撤离点、`notice` | `stepped`（归零就 `run.fail`） |

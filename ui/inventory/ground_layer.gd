@@ -111,6 +111,15 @@ var stash: ItemStash:
 ## 见类注释
 var fills_screen: bool = false
 var tip: HoverTip = null
+## 314：拿起一件时地上能和它合成的那几件（uid → true，拖拽层设）：身上画一枚小锤；[member fuse_hot] 那件画亮的
+var fuse_marks: Dictionary = {}:
+	set(v):
+		fuse_marks = v
+		queue_redraw()
+var fuse_hot := -1:
+	set(v):
+		fuse_hot = v
+		queue_redraw()
 ## 接着这层地的拖拽层（后接的在上）。好几块面板同时开着时（地图上的背包浮窗 + 叠层），只有最上面那块接地上的抓取 / 双击
 var _drags: Array[DragLayer] = []
 ## 134：上一次见过的 uid（uid → true）—— 多出来的就是刚落地的
@@ -1553,5 +1562,7 @@ func _draw() -> void:
 				for k in line.size():
 					line[k] += at
 				draw_polyline(line, edge, 2.0)
+		if fuse_marks.has(inst.uid):
+			InventoryView.draw_fuse_mark(self, Rect2(at, Vector2(inst.def.shape.size_rotated(rot)) * InventoryView.CELL), InventoryView.CELL, inst.uid == fuse_hot)     # 314
 		if landing or tilt != 0.0:
 			draw_set_transform(Vector2.ZERO)

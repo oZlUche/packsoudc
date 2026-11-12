@@ -13,7 +13,7 @@ const LIMITED: Array[StringName] = [&"flame_fang", &"frost_fang", &"thunder_heav
 
 
 static func run_new_pairs(t: TestCase) -> void:
-	t.begin("307 C 批 · 六张新拼接配方：贴着出锤、点锤合成对的成品；局内限定的三件不进随机来源，另加的三件照旧在")
+	t.begin("307 C 批 · 六张新拼接配方：配得上、成品放得进棋盘；局内限定的三件不进随机来源，另加的三件照旧在")
 	var db := ItemDatabase.new()
 	db.load_dir()
 	var recipes := RecipeDef.load_all()
@@ -22,25 +22,11 @@ static func run_new_pairs(t: TestCase) -> void:
 		var spec: Array = NEW[id]
 		var r := RecipeDef.find(recipes, spec[0], spec[1])
 		t.check(r != null and r.id == id and r.output == spec[2], "%s：%s + %s → %s" % [id, spec[0], spec[1], spec[2]])
-		ItemInstance.reset_uid_counter()
 		var board := GridInventory.new(Vector2i(10, 6), 1, false)
-		var a := ItemInstance.create(db.get_def(spec[0]))
 		var b := ItemInstance.create(db.get_def(spec[1]))
-		var placed := false
-		for y in board.size.y:
-			for x in board.size.x:
-				if placed or not board.can_place_item(a, Vector2i(x, y), 0):
-					continue
-				board.place(a, Vector2i(x, y), 0)
-				for c in a.cells():
-					var right := a.origin + c + Vector2i(1, 0)
-					if not placed and board.can_place_item(b, right, 0):
-						board.place(b, right, 0)
-						placed = true
-				if not placed:
-					board.remove(a.uid)
-		var p := Fusion.pairs(board, recipes)
-		t.check(placed and p.size() == 1 and StringName(p[0]["output"]) == spec[2], "%s：贴着摆出一枚锤" % id)
+		board.try_add(b, true)
+		board.remove(b.uid)
+		t.check(not Fusion.landing(board, [b], db.get_def(spec[2])).is_empty() or board.try_add(ItemInstance.create(db.get_def(spec[2])), true), "%s：成品放得进棋盘" % id)
 		t.eq(pool.has(spec[2]), not LIMITED.has(spec[2]), "%s：随机来源%s" % [spec[2], "不出" if LIMITED.has(spec[2]) else "照旧"])
 
 

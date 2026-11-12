@@ -15,8 +15,6 @@ extends ContainerView
 signal cell_px_changed
 ## 268：勾选模式里单击了一件（勾 / 取消由持有方定）
 signal item_picked(view: InventoryView, uid: int)
-## 279 拼接：点了接缝上的小锤（[member fusions] 里的一对）
-signal fuse_requested(view: InventoryView, a_uid: int, b_uid: int)
 
 ## 087（作者定）：格子放大
 const CELL := 60.0
@@ -115,33 +113,28 @@ var _hover_cell := Vector2i(-1, -1)     # 274：鼠标停的格（出了棋盘 =
 const BAG_OUTLINE_WIDTH := 3.0
 var selected: Dictionary = {}
 const FILTERED_ART := Color(0.4, 0.4, 0.4, 0.55)
-## 279 拼接：接缝上画小锤的那几对（[method Fusion.pairs] 的结果，持有方设；空 = 不画）。勾选模式下不画、不响应
-var fusions: Array[Dictionary] = []:
+## 314：拿起一件时能和它合成的那几件（uid → true，拖拽层设）：身上画一枚小锤；[member fuse_hot] 那件（确认窗开着时被压的那件）画亮的
+var fuse_marks: Dictionary = {}:
 	set(v):
-		fusions = v
+		fuse_marks = v
 		queue_redraw()
-## 279 小锤徽定稿（UI设计 A 铜徽）：图 bag/fuse_badge[_hover][_2x]（_pressed 留给「松开才合」，现在按下就合、不用）；边长 = 格宽 × 0.66（最小 32），悬停放大 1.12
+var fuse_hot := -1:
+	set(v):
+		fuse_hot = v
+		queue_redraw()
+## 279 小锤徽（UI设计 A 铜徽）：图 bag/fuse_badge[_hover][_2x]。314 起当「能合」标记（作者 11-12 选 A：正中大徽）：边长 = 格宽 × 0.66（最小 32），静止；亮的放大 1.12
 const FUSE_ART := "bag/fuse_badge"
 const FUSE_SIDE := 0.66
 const FUSE_MIN := 32.0
-const FUSE_HOVER_SCALE := 1.12
-## 两件并集脚印的描边：外扩 3、圆角；淡暖底 + 墨衬线（压在道具下面），金虚线（压在道具上面）
-const FUSE_OUT := 3.0
-const FUSE_GOLD := Color("f2c14e")
-const FUSE_GOLD_HOT := Color("ffd978")
-const FUSE_FILL := Color("e8bf62")
-const FUSE_FILL_A := 0.12
-const FUSE_FILL_HOT_A := 0.18
-const FUSE_INK := Color(0.18, 0.13, 0.1, 0.6)
-const FUSE_LINE := 2.5
-const FUSE_DASH := 11.0
-const FUSE_GAP := 4.0
-var _fuse_hover := -1
-## 306：合成确认窗开着时，那一对（两件的 uid）照悬停那一档画；没有 = (-1, -1)
-var held_fusion := Vector2i(-1, -1):
-	set(v):
-		held_fusion = v
-		queue_redraw()
+const FUSE_HOT_SCALE := 1.12
+
+
+## 314：在 [param box]（那件的外框，本地像素）正中画一枚小锤
+static func draw_fuse_mark(ci: CanvasItem, box: Rect2, cell: float, hot: bool) -> void:
+	var side := maxf(FUSE_MIN, cell * FUSE_SIDE) * (FUSE_HOT_SCALE if hot else 1.0)
+	var tex := UiTheme.art_cached(FUSE_ART + ("_hover" if hot else "") + ("_2x" if side > 48.0 else ""))
+	if tex != null:
+		ci.draw_texture_rect(tex, Rect2(box.get_center() - Vector2.ONE * side * 0.5, Vector2.ONE * side), false)
 
 
 ## 作者 10-21：只有最后点中的那件画增益槽 / 受益槽 / 装载槽（不点就都不画）；所有棋盘共用这一件
@@ -176,7 +169,6 @@ func _init() -> void:
 func _on_mouse_exited() -> void:
 	var had := _hover_bag() != GridInventory.EMPTY_UID
 	_hover_cell = Vector2i(-1, -1)
-	_fuse_hover = -1
 	if had:
 		queue_redraw()
 
@@ -419,10 +411,6 @@ func _gui_input(event: InputEvent) -> void:
 	if inventory == null:
 		return
 	if event is InputEventMouseMotion:
-		var fh := _fusion_index_at((event as InputEventMouseMotion).position)
-		if fh != _fuse_hover:
-			_fuse_hover = fh
-			queue_redraw()
 		var hc := cell_at_local((event as InputEventMouseMotion).position)
 		if hc != _hover_cell:
 			var before := _hover_bag()
@@ -432,12 +420,6 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
-		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT and not mb.double_click:
-			var f := fusion_at(mb.position)
-			if not f.is_empty():
-				fuse_requested.emit(self, int(f["a"]), int(f["b"]))
-				accept_event()
-				return
 		if mb.pressed and mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 			var c := cell_at_local(mb.position)
 			var uid := uid_at_cell(c, InputKeys.held_with(mb, InputKeys.WHOLE_BAG))
@@ -497,7 +479,6 @@ func _draw() -> void:
 
 	if idle_tint and not footprints:
 		_draw_idle_tints()     # 299：平时每格垫一层淡的稀有度色，压在图下面；拿起时换 239 那层
-	_draw_fusion_fills()
 	# 物品。休眠的信仰道具（8-4：不是激活的那个信仰）画灰、标「休眠」
 	var active_faith := FaithState.active_tag(inventory) if show_adjacency else &""
 	for inst in inventory.items():
@@ -594,100 +575,18 @@ func _draw() -> void:
 
 	if not framed and not grounded:
 		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
-	_draw_fusions()
+	_draw_fuse_marks()
 	_draw_bag_outline(_hover_bag())
 
 
-## 279：[param p]（本地像素）落在哪一枚小锤上：那一对；没有 = 空
-func fusion_at(p: Vector2) -> Dictionary:
-	if select_mode:
-		return {}
-	var i := _fusion_index_at(p)
-	return fusions[i] if i >= 0 else {}
-
-
-func _fusion_index_at(p: Vector2) -> int:
-	if select_mode:
-		return -1
-	var r := _fuse_side() * 0.5
-	for i in fusions.size():
-		if (Vector2(fusions[i]["seam"]) * cell_px).distance_to(p) <= r:
-			return i
-	return -1
-
-
-func _fuse_side() -> float:
-	return maxf(FUSE_MIN, cell_px * FUSE_SIDE)
-
-
-## 两件占格的并集（本地像素），外扩 [param grow]（圆角）
-func _fusion_poly(f: Dictionary, grow: float) -> PackedVector2Array:
-	var poly := PackedVector2Array()
-	for uid in [int(f["a"]), int(f["b"])]:
-		var it := inventory.get_item(uid)
-		if it == null:
-			continue
-		for c in it.cells():
-			var o := cell_origin_px(it.origin + c)
-			var r := PackedVector2Array([o, o + Vector2(cell_px, 0), o + Vector2(cell_px, cell_px), o + Vector2(0, cell_px)])
-			poly = r if poly.is_empty() else _outer(Geometry2D.merge_polygons(poly, r))
-	if grow != 0.0 and not poly.is_empty():
-		poly = _outer(Geometry2D.offset_polygon(poly, grow, Geometry2D.JOIN_ROUND))
-	return poly
-
-
-static func _outer(polys: Array[PackedVector2Array]) -> PackedVector2Array:
-	var best := PackedVector2Array()
-	var best_area := -1.0
-	for p in polys:
-		if Geometry2D.is_polygon_clockwise(p):
-			continue
-		var a := 0.0
-		for i in p.size():
-			a += p[i].cross(p[(i + 1) % p.size()])
-		if absf(a) > best_area:
-			best_area = absf(a)
-			best = p
-	return best
-
-
-func _is_held(f: Dictionary) -> bool:
-	var a := int(f["a"])
-	var b := int(f["b"])
-	return held_fusion.x >= 0 and ((a == held_fusion.x and b == held_fusion.y) or (a == held_fusion.y and b == held_fusion.x))
-
-
-## 道具底下：淡暖底 + 墨衬线
-func _draw_fusion_fills() -> void:
-	if select_mode:
+## 314：能合的那几件身上画小锤（勾选模式下不画）
+func _draw_fuse_marks() -> void:
+	if select_mode or inventory == null:
 		return
-	for i in fusions.size():
-		var hot := i == _fuse_hover or _is_held(fusions[i])
-		var poly := _fusion_poly(fusions[i], FUSE_OUT)
-		if poly.size() < 3:
-			continue
-		draw_colored_polygon(poly, Color(FUSE_FILL, FUSE_FILL_HOT_A if hot else FUSE_FILL_A))
-		var ink := _fusion_poly(fusions[i], 0.5)
-		if ink.size() >= 3:
-			ink.append(ink[0])
-			draw_polyline(ink, FUSE_INK, 2.0, true)
-
-
-## 279：道具上面：金虚线 + 小锤徽
-func _draw_fusions() -> void:
-	if select_mode:
-		return
-	for i in fusions.size():
-		var f := fusions[i]
-		var hot := i == _fuse_hover or _is_held(fusions[i])
-		var poly := _fusion_poly(f, FUSE_OUT)
-		if poly.size() >= 3:
-			DangerZones.dashed_loop(self, poly, FUSE_GOLD_HOT if hot else FUSE_GOLD, FUSE_LINE, FUSE_DASH, FUSE_GAP)
-		var side := _fuse_side() * (FUSE_HOVER_SCALE if hot else 1.0)
-		var tex := UiTheme.art_cached(FUSE_ART + ("_hover" if hot else "") + ("_2x" if side > 48.0 else ""))
-		var c := Vector2(f["seam"]) * cell_px
-		if tex != null:
-			draw_texture_rect(tex, Rect2(c - Vector2.ONE * side * 0.5, Vector2.ONE * side), false)
+	for uid in fuse_marks:
+		var it := inventory.get_item(int(uid))
+		if it != null:
+			draw_fuse_mark(self, item_rect(it.uid), cell_px, int(uid) == fuse_hot)
 
 
 ## 274：按着 Ctrl 停在包上 = 沿包的外缘描一圈（按包的品质色）
