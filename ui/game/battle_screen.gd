@@ -16,6 +16,8 @@ var _won: bool = false
 var _coach: CoachOverlay = null
 ## 220：这一场头一回打出的反应（流程给的；作者 10-24：只有存档还没见过任何反应时才有）；回放放到第一次弹字时停下解释一句，之后整场不再停
 var _fresh_reactions: Array[StringName] = []
+## 309（E03）：等着讲的反应（这一刻还没放完）；空 = 没在等
+var _reaction_wait: StringName = &""
 ## 铜面板：斗技场图从面板内缩（40）处铺起；场地宽
 const PANEL_MARGIN := 40
 const VIEW_WIDTH := 1100.0
@@ -80,6 +82,8 @@ func open(payload: Dictionary) -> void:
 		_view.set_speed(flow.settings.battle_speed)
 	_view.speed_changed.connect(_on_speed_changed)
 	_view.reaction_shown.connect(_on_reaction_shown)
+	_view.moment_held.connect(_on_moment_held)
+	_view.seeked.connect(func(_t: float): _reaction_wait = &"")     # 309：拖了时间轴，等着的讲解作废
 	_view.log_toggled.connect(_on_log_toggled)
 
 	_next_slot = Control.new()
@@ -435,15 +439,29 @@ func coach() -> CoachOverlay:
 	return _coach
 
 
-## 220：回放弹了一次反应字 —— 这一场头一回见的就停住，一步纸条指着挨反应那一方的状态行，点了接着放
+## 220：回放弹了一次反应字 —— 这一场头一回见的，等这一刻放完停住（309），一步纸条指着反应弹字，点了接着放
 func _on_reaction_shown(id: StringName, side: int) -> void:
-	if not _fresh_reactions.has(id) or _coach != null:
+	if not _fresh_reactions.has(id) or _coach != null or _reaction_wait != &"":
 		return
-	var def := ReactionResolver.by_id(id)
-	if def == null:
+	if ReactionResolver.by_id(id) == null:
 		return
 	_fresh_reactions.clear()     # 作者 10-24：讲一次机制就够 —— 同一场打出的别种反应也不再停
-	_view.hold()
+	# 309（v5.85 体验 E03）：不当场停 —— 这一刻后面还有事件（状态增减、伤害），等这一刻放完再停再讲（[signal BattleView.moment_held]）
+	_reaction_wait = id
+	_view.hold_after_moment(side)
+
+
+## 309（E03）：反应那一刻放完、回放停住了 —— 讲解指反应弹字（状态可能已被反应吃掉）；弹字没了退回那一方的状态行
+func _on_moment_held(side: int) -> void:
+	var id := _reaction_wait
+	_reaction_wait = &""
+	var def := ReactionResolver.by_id(id)
+	if _coach != null:
+		return     # 别的教程正开着、停着回放：它收掉时会放开
+	if def == null:
+		_view.release()
+		return
+	var target := "reaction_popup" if _view.control_rect(&"reaction_popup").has_area() else ("buffs_mine" if side == 0 else "buffs_enemy")
 	_note(ViewingSession.HINT, {"id": "reaction:%s" % id})
 	_coach = CoachOverlay.new()
 	_coach.font = font
@@ -453,7 +471,7 @@ func _on_reaction_shown(id: StringName, side: int) -> void:
 		_note(ViewingSession.HINT_END)
 		_coach = null
 		_view.release())
-	_coach.start([{"target": "buffs_mine" if side == 0 else "buffs_enemy", "text": Encyclopedia.reaction_intro(def)}])
+	_coach.start([{"target": target, "text": Encyclopedia.reaction_intro(def)}])
 
 
 func view() -> BattleView:

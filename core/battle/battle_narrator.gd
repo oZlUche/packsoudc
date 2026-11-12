@@ -186,22 +186,27 @@ class _Narration:
 		elif amount < 0:
 			body = UiText.t("log.inverted") % [actor, item, _paint(str(StatMath.to_int(-amount)), "heal")]
 		else:
-			var stopped := absorbed + block
 			var crit := e.get_bool(&"crit")
 			var num_c := "crit" if crit else tint
-			var dealt := _paint(str(StatMath.to_int(maxi(e.get_int(&"raw"), amount + stopped))), num_c)
+			var dealt := _paint(str(StatMath.to_int(maxi(e.get_int(&"raw"), amount + absorbed + block))), num_c)
 			if reacted:
 				body = UiText.t("log.reaction_hit") % [dealt, type_word]
 			else:
 				body = (UiText.t("log.hit_more") % [dealt, type_word]) if int(g["lines"]) > 0 else (UiText.t("log.hit") % [actor, item, dealt, type_word])
 			if crit:
 				body = _paint(UiText.t("log.crit"), num_c) + body
-			if stopped > 0:
-				var final := _paint(str(StatMath.to_int(amount)), tint)
-				if absorbed > 0 and block > 0:
-					body += UiText.t("log.blocked_split") % [str(StatMath.to_int(stopped)), str(StatMath.to_int(absorbed)), str(StatMath.to_int(block)), final]
-				else:
-					body += UiText.t("log.blocked") % [str(StatMath.to_int(stopped)), final]
+			# 309（E02，对齐 305）：格挡、护甲各写各的 —— 格挡在易伤前抵掉，护甲在最后当血的延伸吸收；
+			# 数字全取伤害事件（[method DamageResolver._notify]），这里不重算减伤。生命只写这一下真扣的
+			var parts: Array[String] = []
+			if block > 0:
+				parts.append(UiText.t("log.part_block") % str(StatMath.to_int(block)))
+			if absorbed > 0:
+				parts.append(UiText.t("log.part_armor") % str(StatMath.to_int(absorbed)))
+			if e.get_bool(&"penetration"):
+				parts.append(UiText.t("log.part_pierce"))
+			if not parts.is_empty():
+				var hp := (UiText.t("log.hp_lost") % _paint(str(StatMath.to_int(amount)), tint)) if amount > 0 else UiText.t("log.hp_none")
+				body += UiText.t("log.mitigated") % [UiText.t("log.part_sep").join(parts), hp]
 		_put(i, e, g, body)
 
 	func _heal(i: int, e: BattleEvent) -> void:

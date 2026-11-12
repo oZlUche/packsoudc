@@ -468,8 +468,10 @@ func popup_text(text: String, color: Color, time_scale: float = 1.0) -> Label:
 	l.position = Vector2(size.x * 0.5 - 30.0, size.y * 0.3)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(l)
+	l.reset_size()
 	var span := 1.2 * time_scale
 	var tw := create_tween()
+	l.set_meta(&"tween", tw)     # 309：回放停住时，反应讲解指着的这条字跟着停
 	tw.set_parallel(true)
 	tw.tween_property(l, "position:y", l.position.y - 36.0, span)
 	tw.tween_property(l, "modulate:a", 0.0, span * 0.6).set_delay(span * 0.4)

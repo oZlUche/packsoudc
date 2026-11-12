@@ -21,6 +21,8 @@ signal finished
 signal speed_changed(speed: float)
 ## 220：回放里弹了一次反应字（[param side] = 挨反应的那一方）；跳转 / 跳过时不发。战斗屏拿它停下来解释第一次见的反应
 signal reaction_shown(id: StringName, side: int)
+## 309（E03）：[method hold_after_moment] 等到了：这一刻放完、回放停住
+signal moment_held(side: int)
 ## 231：一条事件照常播到了画面上（跳转、跳过补的那些不发）—— 战斗屏的双剑铜章跟着它动
 signal event_applied(e: BattleEvent)
 ## 272：玩家按「战记」键收起 / 展开了战记栏（战斗屏接它写回设置）
@@ -105,6 +107,10 @@ var _resume_after_scrub := false
 var _skip_btn: IconButton
 ## 166 补充二：教程压着时停住（[method hold]），收掉按原状态接着放（[method release]）
 var _held := false
+## 309（E03）：要停在「这一刻」末尾的那一方（[method hold_after_moment]）；-1 = 不等
+var _hold_moment_side := -1
+## 309（E03）：最近一次反应弹字（反应讲解指它）；停着时它的淡出也停
+var _reaction_label: Label = null
 ## 231：这一次「看完」是跳过 / 拖到头来的（不是一条条放完的）—— 收尾的动画不演、直接终态
 var ended_by_jump := false
 var _resume_after_hold := false
@@ -443,6 +449,7 @@ func skip_to_end() -> void:
 func seek(t: float) -> void:
 	if _result == null:
 		return
+	_hold_moment_side = -1     # 309：跳转了，等着停的那一刻作废
 	play(_result, _names)
 	_playing = false
 	_suppress_popups = true
@@ -472,10 +479,16 @@ func _on_scrub_ended() -> void:
 
 
 ## 166 补充二：教程开着 —— 停住（和拖时间轴一样：记下在不在放，[method _process] 不推时间）
+## 309（E03）：放完当前这一刻的事件再停（反应讲解用）—— 不是马上停，免得状态那一排还是上一刻的
+func hold_after_moment(side: int) -> void:
+	_hold_moment_side = side
+
+
 func hold() -> void:
 	if _held:
 		return
 	_held = true
+	_pause_reaction_label(true)
 	_resume_after_hold = _playing
 	_playing = false
 	_sync_buttons()
@@ -486,10 +499,22 @@ func release() -> void:
 	if not _held:
 		return
 	_held = false
+	_pause_reaction_label(false)
 	if _resume_after_hold and _result != null and _cursor < _result.log.size():
 		_playing = true
 	_resume_after_hold = false
 	_sync_buttons()
+
+
+func _pause_reaction_label(paused: bool) -> void:
+	if _reaction_label == null or not is_instance_valid(_reaction_label) or not _reaction_label.has_meta(&"tween"):
+		return
+	var tw := _reaction_label.get_meta(&"tween") as Tween
+	if tw != null and tw.is_valid():
+		if paused:
+			tw.pause()
+		else:
+			tw.play()
 
 
 func is_held() -> bool:
@@ -513,6 +538,7 @@ func control_rect(id: StringName) -> Rect2:
 		&"play_button": c = _play_btn
 		&"speed_button": c = _speed_btn
 		&"skip_button": c = _skip_btn
+		&"reaction_popup": c = _reaction_label     # 309：反应弹字（状态可能已被反应吃掉，指真的那条字）
 		&"buffs_mine", &"buffs_enemy":     # 220：对手那一排（反应解释指它）
 			var p := panel(0 if id == &"buffs_mine" else 1)
 			if p == null or not p.is_visible_in_tree():
@@ -573,6 +599,13 @@ func _drain_until(t: float) -> void:
 			break
 		_apply(e)
 		_cursor += 1
+		# 309（E03）：同一刻的事件都放完（状态那一排已经是这一刻的样子）才停，再发 [signal moment_held]
+		if _hold_moment_side >= 0 and not _suppress_popups and not _held:
+			if _cursor >= log_.size() or (log_[_cursor] as BattleEvent).time > e.time:
+				var side := _hold_moment_side
+				_hold_moment_side = -1
+				hold()
+				moment_held.emit(side)
 		if _held and not _suppress_popups:
 			break     # 220：这一条把回放停住了（反应解释）—— 后面的等放开再走，不在停着时偷跑
 	_flush_log(_cursor - 1)
@@ -726,7 +759,7 @@ func _on_damage(e: BattleEvent) -> void:
 func _on_reaction(e: BattleEvent) -> void:
 	if _suppress_popups or e.side < 0 or e.side >= _panels.size():
 		return
-	_panels[e.side].popup_text(reaction_label(e), reaction_color(e), _feedback_scale())
+	_reaction_label = _panels[e.side].popup_text(reaction_label(e), reaction_color(e), _feedback_scale())
 	_sfx(StringName("battle.reaction." + String(e.get_name(&"reaction"))))
 	reaction_shown.emit(e.get_name(&"reaction"), e.side)
 
