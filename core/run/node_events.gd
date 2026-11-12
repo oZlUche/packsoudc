@@ -790,7 +790,20 @@ func _bless_rolled(node: MapNode, rolled: Dictionary) -> void:
 	var dropped: Array[StringName] = rolled.get("dropped", [] as Array[StringName])
 	if dropped.is_empty():
 		return
-	rolled["dropped"] = hooks.bless_substitute(dropped, drop_rule.bless_chance, drop_rule.bless_chance_active, _rng_for(node, "bless"))
+	# 309（v5.85 体验 E01）：节点写死的必掉（`guaranteed_drops`，序章的教学供给）原样给，不换赐福版 ——
+	# 换成赐福匕首就和后面教的配方对不上了。随机掉的照旧按概率换
+	var keep: Array[StringName] = []
+	var rest: Array[StringName] = dropped.duplicate()
+	for raw in node.content.get("guaranteed_drops", []) if node != null else []:
+		var gid := StringName(String(raw))
+		if rest.has(gid):
+			rest.erase(gid)
+			keep.append(gid)
+	var out: Array[StringName] = []
+	if not rest.is_empty():
+		out.assign(hooks.bless_substitute(rest, drop_rule.bless_chance, drop_rule.bless_chance_active, _rng_for(node, "bless")))
+	out.append_array(keep)     # 必掉的本来就排在最后（[method DropResolver.roll]）
+	rolled["dropped"] = out
 
 
 ## 打一场（猎手系统也走这条路：给它自己的掉落上下文与自己的战败代价）。返回赢没赢
