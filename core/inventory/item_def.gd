@@ -47,8 +47,8 @@ const SIGNATURE := &"signature"
 ## 244：金银（金块 / 金条）—— 只有商店出（[ShopSession] 单开一格）、不参战不进配方、不算总分，基地按面值全额回收。
 ## 搜索、掉落、敌人装备、头一回踩点白给这些「从全库里抽」的地方都跳过它（[method is_bullion]）。250：降为内部标签，类别是贵重品
 const BULLION := &"bullion"
-## 279：只在砧上升出来（橙档武器）—— 搜索、掉落、商店、敌人都不出（[method ItemDatabase.ids] 拦），图鉴照列
-const FORGED_ONLY := &"forged_only"
+## 279 / 310：不进随机来源（原名 forged_only）—— 只从合成或打造来；搜索、掉落、商店、集市、敌人、事件都不出（[method ItemDatabase.ids] 拦），图鉴照列
+const NO_RANDOM_SOURCE := &"no_random_source"
 ## 281：独一的红武 —— 全局只存在一件（[UniqueItems]），搜索、掉落、商店、敌人都不出（[method ItemDatabase.ids] 拦），图鉴照列；不可出售
 const UNIQUE := &"unique"
 ## 281（作者 10:47）：红武的劣化版 —— 只从拿着它的 BOSS / 猎手身上掉（[RedSources]），搜索、掉落、商店、敌人都不出，图鉴照列；
@@ -112,8 +112,8 @@ func is_token() -> bool:
 	return tags.has(TOKEN)
 
 
-func is_forged_only() -> bool:
-	return tags.has(FORGED_ONLY)
+func is_no_random_source() -> bool:
+	return tags.has(NO_RANDOM_SOURCE)
 
 
 func is_unique() -> bool:

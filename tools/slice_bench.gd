@@ -1,4 +1,4 @@
-## 试玩切片对打表（报告 312）：切片地图上每一场仗 × 四种玩家配置，各打 N 个种子。只打印，不改数
+## 试玩切片对打表（报告 313）：切片地图上每一场仗 × 四种玩家配置，各打 N 个种子。只打印，不改数
 ##
 ##     godot --headless --path . --script res://tools/slice_bench.gd -- [--seeds=20] [--map=res://data/maps/slice_ruins.json] [--out=路径.md]
 extends CliTool

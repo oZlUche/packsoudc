@@ -86,7 +86,7 @@ def main():
     weapons = {w["item_id"]: w for w in load(os.path.join(src, "weapons.csv"))}
     materials = load(os.path.join(src, "materials_all.csv"))
     upgrades = [r for r in recipes if r["kind"].startswith("升级")]
-    gold = sorted(k for k, w in weapons.items() if w["forged_only"] == "True")
+    gold = sorted(k for k, w in weapons.items() if w.get("no_random_source", w.get("forged_only")) == "True")
 
     manifest = []
     for r in upgrades:
@@ -95,7 +95,7 @@ def main():
         channels = w.get("channels_by_rule", "").strip()
         if o in FUSION_ONLY:
             disp, entry, new_id = "替换合成（局内限定）", "相邻合成：%s + %s" % FUSION_ONLY[o], "fuse_" + o
-        elif w.get("forged_only") == "True":
+        elif w.get("no_random_source", w.get("forged_only")) == "True":
             disp, entry, new_id = "改为材料打造", "基地铁匠铺", "forge_" + o
         elif o in FUSION_EXTRA:
             disp, entry, new_id = "保留其他来源并停用；另加合成候选", "相邻合成：%s + %s；原随机来源" % FUSION_EXTRA[o], "fuse_" + o

@@ -31,7 +31,7 @@ static func run_sealed_listing(t: TestCase) -> void:
 	var tokens: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_token())
 	var signature: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_signature())
 	t.check(signature.has(&"legion_phalera"), "256：军功牌是随身之物")
-	var forged: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_forged_only() and not db.get_def(id).is_blessed())     # 赐福版上面数过了
+	var forged: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_no_random_source() and not db.get_def(id).is_blessed())     # 赐福版上面数过了
 	t.check(not forged.is_empty() and forged.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "279：只能锻造的不在 ids()、图鉴（ids(true)）照列")
 	var unique: Array = db.all_ids().filter(func(id) -> bool: return db.get_def(id).is_unique())     # 独一的不赐福，没有赐福版
 	t.check(unique.size() == 13 and unique.all(func(id) -> bool: return not db.ids().has(id) and db.ids(true).has(id)), "281 / 282：独一的（红武八把 + 元素之核四颗 + 破晓的信物）不在 ids()、图鉴照列")

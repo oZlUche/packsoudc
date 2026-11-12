@@ -1,4 +1,4 @@
-## 312（试玩切片 S1 第一批）：切片章节只在切片档案里列；预设地图 13 点一处分支；每个点写的道具都在可得清单里；
+## 313（试玩切片 S1 第一批）：切片章节只在切片档案里列；预设地图 13 点一处分支；每个点写的道具都在可得清单里；
 ## 敌人棋盘摆得下；赐福替换在切片的掉落、搜索规则里关掉；能从出生点开局
 extends RefCounted
 
@@ -29,7 +29,7 @@ static func _ids_in(content: Dictionary) -> Array:
 
 
 static func run_chapter(t: TestCase) -> void:
-	t.begin("312 · 切片章节：只在 slice 档案里列，正式版看不到；只有安德烈乌斯、开局匕首纱布口粮、不带东西进、倒计时 20、免费撤离点不关")
+	t.begin("313 · 切片章节：只在 slice 档案里列，正式版看不到；只有安德烈乌斯、开局匕首纱布口粮、不带东西进、倒计时 20、免费撤离点不关")
 	var ch := ContentPaths.load_asset("chapters", "slice_ruins") as ChapterDef
 	t.not_null(ch, "有切片章节")
 	if ch == null:
@@ -50,7 +50,7 @@ static func run_chapter(t: TestCase) -> void:
 
 
 static func run_map(t: TestCase) -> void:
-	t.begin("312 · 切片地图：13 点（出生、两个撤离、10 个内容点）、商店线和精英线在歇脚点合流；写的道具都在清单里；敌人的东西都摆得下")
+	t.begin("313 · 切片地图：13 点（出生、两个撤离、10 个内容点）、商店线和精英线在歇脚点合流；写的道具都在清单里；敌人的东西都摆得下")
 	var d := _map()
 	var items := ItemDatabase.new()
 	items.load_dir()
@@ -84,7 +84,7 @@ static func run_map(t: TestCase) -> void:
 
 
 static func run_start(t: TestCase) -> void:
-	t.begin("312 · 切片能开局：安德烈乌斯站在出生点，开局道具到手")
+	t.begin("313 · 切片能开局：安德烈乌斯站在出生点，开局道具到手")
 	var c := TestSupport.load_content("slice_ruins")
 	var ch := ContentPaths.load_asset("characters", "andreus") as CharacterDef
 	var s := RunState.start(c.chapter, 1, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], ch)

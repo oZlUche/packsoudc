@@ -22,7 +22,7 @@
     "burst",
     "polearm",
     "ice",
-    "forged_only"
+    "no_random_source"
   ],
   "material": "metal",
   "combat": {

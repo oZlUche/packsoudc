@@ -223,7 +223,7 @@ def main():
         wrows.append({
             "item_id": wid, "name_zh": i["name_zh"], "name_en": i["name_en"], "class_tags": ",".join(cls),
             "rarity": i["rarity"], "color": RARITY[i["rarity"]], "tags": ",".join(i["tags"]), "material": i["material"] or None,
-            "unique": i["unique"], "lesser": i["lesser"], "forged_only": i["forged_only"], "requires_unlock": i["requires_unlock"] or None,
+            "unique": i["unique"], "lesser": i["lesser"], "no_random_source": i.get("no_random_source", i.get("forged_only")), "requires_unlock": i["requires_unlock"] or None,
             "cells": len(i["cells"]), "shape": json.dumps(i["cells"]), "weight": i["weight"], "value": i["value"],
             "damage_base": dmg, "cooldown_s": cd, "costs": st, "per_hit_extra": per_hit, "other_effects": extra,
             "applies": json.dumps(i["applies"], ensure_ascii=False) if i["applies"] else "",

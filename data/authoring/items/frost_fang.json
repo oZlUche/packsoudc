@@ -20,7 +20,7 @@
     "dagger",
     "bleed",
     "ice",
-    "forged_only"
+    "no_random_source"
   ],
   "material": "bone",
   "combat": {

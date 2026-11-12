@@ -1813,7 +1813,7 @@ func _go(s: int, payload: Dictionary = {}) -> void:
 #region 内容
 ## 资产目录里的全部章节 / 开局装备 / 角色 / 难度 / 成就 / 科技 / 百科页，按文件名（或 order）排序。
 ## 猎手、信仰、配方、局外 buff、事件各自有 `load_all`（HunterSystem / FaithDef / RecipeDef / RunBuffs / EventPlacer），持有方直接调
-## 312（试玩切片）：只要这一档的章节（[member ChapterDef.profile]）—— 正式版看不到切片章节，切片里只有切片章节
+## 313（试玩切片）：只要这一档的章节（[member ChapterDef.profile]）—— 正式版看不到切片章节，切片里只有切片章节
 static func load_chapters(p_profile: StringName = &"") -> Array[ChapterDef]:
 	var out: Array[ChapterDef] = []
 	for c in ContentPaths.load_typed(ContentPaths.CHAPTERS, ChapterDef):
