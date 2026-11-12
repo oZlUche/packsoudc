@@ -348,24 +348,28 @@ func _stock() -> void:
 	var seed_ := node.content_seed if node != null else 0
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d:shop" % seed_)
-	var cands := candidates(rules, items)
-	var weights: Array[float] = []
-	for id in cands:
-		weights.append(rules.shop_rarity_weight(items.get_def(id).rarity, depth))
 	var picks: Array[ItemDef] = []
-	for _n in rules.shop_stock:
-		if cands.is_empty():
-			break
-		var k := _weighted(rng, weights)
-		picks.append(items.get_def(cands[k]))
-		cands.remove_at(k)
-		weights.remove_at(k)
-	var bag := _roll_bag(seed_)
-	if bag != null:
-		picks.append(bag)
-	var gold := _roll_bullion(seed_)
-	if gold != null:
-		picks.append(gold)
+	var gold: ItemDef = null
+	if node != null and node.content.has(FIXED_KEY):
+		picks = fixed_stock(node.content, items)     # 313：节点写死的货架，不抽、不加包和金银
+	else:
+		var cands := candidates(rules, items)
+		var weights: Array[float] = []
+		for id in cands:
+			weights.append(rules.shop_rarity_weight(items.get_def(id).rarity, depth))
+		for _n in rules.shop_stock:
+			if cands.is_empty():
+				break
+			var k := _weighted(rng, weights)
+			picks.append(items.get_def(cands[k]))
+			cands.remove_at(k)
+			weights.remove_at(k)
+		var bag := _roll_bag(seed_)
+		if bag != null:
+			picks.append(bag)
+		gold = _roll_bullion(seed_)
+		if gold != null:
+			picks.append(gold)
 	var order := range(picks.size())
 	order.sort_custom(func(a: int, b: int) -> bool:
 		var ca := picks[a].shape.cells_rotated(0).size() if picks[a].shape != null else 1
@@ -378,6 +382,20 @@ func _stock() -> void:
 			gold_uid = inst.uid
 	if gold != null and gold_uid < 0:
 		_make_room_for(gold)     # 金银那一格是规则给的（概率 1 就一定有）：摆满了让最小的一件普通货
+
+
+## 313（试玩切片）：节点内容里写死的货架 —— 道具 id 的表，照写的顺序上架（同一个 id 写两次就两件）
+const FIXED_KEY := "shop_stock"
+
+
+## 节点内容里写死的货架换成道具；不认识的 id 跳过（清单核对工具会报出来）
+static func fixed_stock(content: Dictionary, p_items: ItemDatabase) -> Array[ItemDef]:
+	var out: Array[ItemDef] = []
+	for id in content.get(FIXED_KEY, []):
+		var def := p_items.get_def(StringName(String(id)))
+		if def != null:
+			out.append(def)
+	return out
 
 
 ## 摆不下 [param def] 时，从最小的普通货起逐件试着拿掉一件给它腾地方；腾不出来就照旧丢（不拿走任何货）
