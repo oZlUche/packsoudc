@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_lidwj"]
+
+[resource]
+script = ExtResource("1_lidwj")
+id = &"fuse_heavy_crossbow"
+inputs = Array[StringName]([&"steel_crossbow", &"hardwood_plank"])
+output = &"heavy_crossbow"
+adjacent = true

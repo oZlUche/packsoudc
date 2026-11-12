@@ -1,0 +1,9 @@
+{
+  "id": "fuse_heavy_crossbow",
+  "inputs": [
+    "steel_crossbow",
+    "hardwood_plank"
+  ],
+  "output": "heavy_crossbow",
+  "adjacent": true
+}

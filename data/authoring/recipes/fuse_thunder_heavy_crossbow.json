@@ -1,0 +1,9 @@
+{
+  "id": "fuse_thunder_heavy_crossbow",
+  "inputs": [
+    "heavy_crossbow",
+    "lightning_crystal"
+  ],
+  "output": "thunder_heavy_crossbow",
+  "adjacent": true
+}

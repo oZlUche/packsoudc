@@ -2,6 +2,8 @@
 ## 14 张拼接（两件贴着、点锤合 —— `RecipeDef.adjacent`，拖上去合的查不到它们）
 extends RefCounted
 
+const TestReformC := preload("res://tests/inventory/test_fusion_reform_c.gd")
+
 const T110 := preload("res://tests/meta/test_tech.gd")
 const T251 := preload("res://tests/meta/test_smithy_251.gd")
 
@@ -110,7 +112,7 @@ static func run_fusions(t: TestCase) -> void:
 	var db := T110._db()
 	var fuse: Array[RecipeDef] = []
 	for r in RecipeDef.load_all():
-		if r.adjacent:
+		if r.adjacent and not TestReformC.NEW.has(r.id):     # 310：改造 C 批新加的六张另测（tests/inventory/test_fusion_reform_c.gd）
 			fuse.append(r)
 	t.eq(fuse.size(), 14, "14 张")
 	for r in fuse:

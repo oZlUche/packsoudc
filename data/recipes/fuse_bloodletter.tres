@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/recipe_def.gd" id="1_mp1dg"]
+
+[resource]
+script = ExtResource("1_mp1dg")
+id = &"fuse_bloodletter"
+inputs = Array[StringName]([&"cleaver", &"beast_fang"])
+output = &"bloodletter"
+adjacent = true
