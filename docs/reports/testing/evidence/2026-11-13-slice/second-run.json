@@ -1,0 +1,823 @@
+{
+  "version": 4,
+  "seed": 370532,
+  "run_id": "run-1a1d5bc69e3-216a2da2",
+  "chapter": "slice_ruins",
+  "character": "andreus",
+  "map_scale": "",
+  "difficulty": "normal",
+  "hunters": {},
+  "erosion": {},
+  "phase": 1,
+  "end_reason": "",
+  "map": {
+    "version": 1,
+    "layout_kind": "line",
+    "layout_meta": {},
+    "nodes": [
+      {
+        "id": 0,
+        "type": "spawn",
+        "danger": 0,
+        "zone": 0,
+        "tier": 0,
+        "erosion_band": 0,
+        "content_seed": 2322023651,
+        "content": {},
+        "state": 1,
+        "layout": {
+          "col": 0,
+          "row": 1
+        }
+      },
+      {
+        "id": 1,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 1,
+        "erosion_band": 0,
+        "content_seed": 2322023652,
+        "content": {
+          "enemy": "raider",
+          "strength": 0,
+          "board": [
+            4,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_small",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                0,
+                1
+              ],
+              "rot": 1
+            },
+            {
+              "id": "salve",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            }
+          ],
+          "base_stats": {
+            "max_hp": 20,
+            "block": 0
+          },
+          "guaranteed_drops": [
+            "knife"
+          ]
+        },
+        "state": 0,
+        "layout": {
+          "col": 1,
+          "row": 1
+        }
+      },
+      {
+        "id": 2,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 2,
+        "erosion_band": 0,
+        "content_seed": 2322023653,
+        "content": {
+          "search_max": 3,
+          "search_curve": [
+            0,
+            0,
+            1
+          ],
+          "search_finds": [
+            [
+              "whetstone",
+              "linen_bolt"
+            ],
+            [
+              "leather_armor"
+            ]
+          ],
+          "encounter": {
+            "enemy": "butcher",
+            "strength": 0,
+            "board": [
+              4,
+              3
+            ],
+            "items": [
+              {
+                "id": "bag_leather",
+                "at": [
+                  0,
+                  0
+                ],
+                "rot": 0
+              },
+              {
+                "id": "cleaver"
+              },
+              {
+                "id": "knife"
+              }
+            ],
+            "base_stats": {
+              "max_hp": 25,
+              "block": 0
+            }
+          },
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "col": 2,
+          "row": 1
+        }
+      },
+      {
+        "id": 3,
+        "type": "battle",
+        "danger": 0,
+        "zone": 0,
+        "tier": 3,
+        "erosion_band": 0,
+        "content_seed": 2322023654,
+        "content": {
+          "enemy": "brute",
+          "strength": 0,
+          "board": [
+            4,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "scimitar",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "salve",
+              "at": [
+                2,
+                0
+              ],
+              "rot": 0
+            }
+          ],
+          "base_stats": {
+            "max_hp": 30,
+            "block": 2
+          }
+        },
+        "state": 0,
+        "layout": {
+          "col": 3,
+          "row": 1
+        }
+      },
+      {
+        "id": 4,
+        "type": "shop",
+        "danger": 0,
+        "zone": 0,
+        "tier": 4,
+        "erosion_band": 0,
+        "content_seed": 2322023655,
+        "content": {
+          "shop_stock": [
+            "shortsword",
+            "poison_vial",
+            "whetstone",
+            "round_shield",
+            "leather_armor",
+            "salve",
+            "bandage",
+            "ration"
+          ],
+          "event": "shop_default"
+        },
+        "state": 0,
+        "layout": {
+          "col": 4,
+          "row": 0
+        }
+      },
+      {
+        "id": 5,
+        "type": "event",
+        "danger": 0,
+        "zone": 0,
+        "tier": 5,
+        "erosion_band": 0,
+        "content_seed": 2322023656,
+        "content": {
+          "event": "event_refugee_weaver"
+        },
+        "state": 0,
+        "layout": {
+          "col": 5,
+          "row": 0
+        }
+      },
+      {
+        "id": 6,
+        "type": "elite",
+        "danger": 0,
+        "zone": 0,
+        "tier": 4,
+        "erosion_band": 0,
+        "content_seed": 2322023657,
+        "content": {
+          "enemy": "shield_wall",
+          "strength": 0,
+          "board": [
+            4,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "round_shield",
+              "at": [
+                1,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 1
+            }
+          ],
+          "base_stats": {
+            "max_hp": 45,
+            "block": 0
+          }
+        },
+        "state": 0,
+        "layout": {
+          "col": 4,
+          "row": 2
+        }
+      },
+      {
+        "id": 7,
+        "type": "search",
+        "danger": 0,
+        "zone": 0,
+        "tier": 5,
+        "erosion_band": 0,
+        "content_seed": 2322023658,
+        "content": {
+          "search_max": 1,
+          "search_curve": [
+            0
+          ],
+          "search_finds": [
+            [
+              "poison_vial",
+              "round_shield"
+            ]
+          ],
+          "event": "search_default"
+        },
+        "state": 0,
+        "layout": {
+          "col": 5,
+          "row": 2
+        }
+      },
+      {
+        "id": 8,
+        "type": "rest",
+        "danger": 0,
+        "zone": 0,
+        "tier": 6,
+        "erosion_band": 0,
+        "content_seed": 2322023659,
+        "content": {
+          "event": "rest_default"
+        },
+        "state": 0,
+        "layout": {
+          "col": 6,
+          "row": 1
+        }
+      },
+      {
+        "id": 9,
+        "type": "extract",
+        "danger": 0,
+        "zone": 0,
+        "tier": 7,
+        "erosion_band": 0,
+        "content_seed": 2322023660,
+        "content": {
+          "event": "extract_default"
+        },
+        "state": 0,
+        "layout": {
+          "col": 7,
+          "row": 0
+        }
+      },
+      {
+        "id": 10,
+        "type": "event",
+        "danger": 0,
+        "zone": 0,
+        "tier": 7,
+        "erosion_band": 0,
+        "content_seed": 3612336532,
+        "content": {
+          "event": "event_field_stretcher"
+        },
+        "state": 0,
+        "layout": {
+          "col": 7,
+          "row": 2
+        }
+      },
+      {
+        "id": 11,
+        "type": "elite",
+        "danger": 0,
+        "zone": 0,
+        "tier": 8,
+        "erosion_band": 0,
+        "content_seed": 3612336533,
+        "content": {
+          "enemy": "warden",
+          "strength": 0,
+          "board": [
+            6,
+            3
+          ],
+          "items": [
+            {
+              "id": "bag_leather",
+              "at": [
+                0,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "bag_leather",
+              "at": [
+                3,
+                0
+              ],
+              "rot": 0
+            },
+            {
+              "id": "round_shield",
+              "at": [
+                2,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "knife",
+              "at": [
+                5,
+                1
+              ],
+              "rot": 0
+            },
+            {
+              "id": "salve",
+              "at": [
+                4,
+                0
+              ],
+              "rot": 0
+            }
+          ],
+          "base_stats": {
+            "max_hp": 60,
+            "block": 0
+          }
+        },
+        "state": 0,
+        "layout": {
+          "col": 8,
+          "row": 2
+        }
+      },
+      {
+        "id": 12,
+        "type": "extract",
+        "danger": 0,
+        "zone": 0,
+        "tier": 9,
+        "erosion_band": 0,
+        "content_seed": 3612336534,
+        "content": {
+          "event": "extract_default"
+        },
+        "state": 0,
+        "layout": {
+          "col": 9,
+          "row": 2
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": 0,
+        "to": 1,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 3,
+        "to": 6,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 5,
+        "to": 8,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 8,
+        "to": 10,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      },
+      {
+        "from": 11,
+        "to": 12,
+        "directed": false,
+        "kind": "",
+        "action_cost": 1,
+        "layout": {}
+      }
+    ],
+    "entry_ids": [
+      0
+    ],
+    "goal_ids": [
+      9,
+      12
+    ],
+    "zones": [],
+    "routes": []
+  },
+  "travel": {
+    "current": 0,
+    "history": [
+      0
+    ],
+    "clock": {
+      "total": 0
+    }
+  },
+  "vitality": {
+    "current": 3,
+    "max": 3
+  },
+  "wallet": {
+    "balance": 0
+  },
+  "board": {
+    "id": 1,
+    "size": [
+      7,
+      6
+    ],
+    "requires_bag": true,
+    "blocked": [],
+    "items": [
+      {
+        "uid": 1,
+        "def": "bag_leather",
+        "rot": 0,
+        "origin": [
+          0,
+          0
+        ],
+        "seq": 1,
+        "state": {}
+      },
+      {
+        "uid": 2,
+        "def": "bag_leather",
+        "rot": 0,
+        "origin": [
+          3,
+          0
+        ],
+        "seq": 2,
+        "state": {}
+      },
+      {
+        "uid": 3,
+        "def": "longsword",
+        "rot": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "seq": 3,
+        "state": {}
+      },
+      {
+        "uid": 4,
+        "def": "cleaver",
+        "rot": 2,
+        "origin": [
+          3,
+          0
+        ],
+        "seq": 4,
+        "state": {}
+      },
+      {
+        "uid": 5,
+        "def": "knife",
+        "rot": 0,
+        "origin": [
+          5,
+          0
+        ],
+        "seq": 5,
+        "state": {}
+      },
+      {
+        "uid": 6,
+        "def": "salve",
+        "rot": 0,
+        "origin": [
+          0,
+          1
+        ],
+        "seq": 6,
+        "state": {}
+      },
+      {
+        "uid": 7,
+        "def": "knife",
+        "rot": 0,
+        "origin": [
+          1,
+          1
+        ],
+        "seq": 7,
+        "state": {}
+      },
+      {
+        "uid": 8,
+        "def": "bandage",
+        "rot": 0,
+        "origin": [
+          2,
+          1
+        ],
+        "seq": 8,
+        "state": {}
+      }
+    ],
+    "place_seq": 9
+  },
+  "storage": {
+    "id": 2,
+    "capacity": 0,
+    "items": [
+      {
+        "uid": 9,
+        "def": "ration",
+        "rot": 0,
+        "origin": [
+          0,
+          0
+        ],
+        "seq": 9,
+        "state": {}
+      }
+    ],
+    "spots": [
+      [
+        0.3751440346241,
+        0.930813610553741,
+        2.1
+      ]
+    ]
+  },
+  "rng": {
+    "seed": 370532,
+    "counters": {}
+  },
+  "events": {
+    "searches_closed": 0,
+    "last_handled": -1,
+    "pending": {},
+    "losses_forgiven": 0,
+    "pending_battle": {},
+    "pending_ransom": {},
+    "search_haul": null
+  },
+  "skills": {
+    "uses": {
+      "ambush": 3,
+      "ransom": -1
+    },
+    "cooldowns": {
+      "ambush": 0,
+      "ransom": 0
+    },
+    "armed": [],
+    "evade_left": 0
+  },
+  "faith_power": {},
+  "faith_history": [],
+  "owned_uids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "acquired_ids": [
+    "bag_leather",
+    "longsword",
+    "cleaver",
+    "knife",
+    "salve",
+    "bandage",
+    "ration"
+  ],
+  "placed_ids": [],
+  "lore": {
+    "recipes": [],
+    "items": []
+  },
+  "pending_loot": null,
+  "boss_cleared": false,
+  "tally": {
+    "battles_won": 0,
+    "battles_lost": 0,
+    "elite_won": 0,
+    "boss_won": 0,
+    "searches": 0,
+    "crafts": 0
+  },
+  "searched_nodes": [],
+  "buffs": {
+    "meta": []
+  },
+  "modules": {
+    "safe": {
+      "inventory": {
+        "id": 3,
+        "size": [
+          3,
+          3
+        ],
+        "requires_bag": false,
+        "blocked": [],
+        "items": [],
+        "place_seq": 0
+      },
+      "locked": false,
+      "sealed": []
+    },
+    "node_storage": {
+      "nodes": {},
+      "spots": {}
+    },
+    "crafting": {},
+    "buff": {
+      "map": []
+    },
+    "altar": {
+      "rituals": {},
+      "stat_bonus": {},
+      "axis_bonus": {},
+      "used": []
+    },
+    "countdown": {
+      "carry_value": 0
+    },
+    "belt": {
+      "stacks": {}
+    },
+    "wear": {},
+    "growth": {},
+    "honor": {}
+  },
+  "content_stamp": "6d381f95eb78"
+}
