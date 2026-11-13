@@ -24,6 +24,11 @@ search = SubResource("Resource_n2a7j")
 event_weights = {
 "story": 1
 }
+flee = {
+"chance": 0.5,
+"fail_buff": "",
+"fail_vitality": 0
+}
 events_by_type = {
 "extract": {
 "extract_default": 1

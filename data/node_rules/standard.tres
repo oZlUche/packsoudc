@@ -24,6 +24,11 @@ random_weights = {
 "shop": 1
 }
 search = SubResource("Resource_4xugp")
+flee = {
+"chance": 0.5,
+"fail_buff": "",
+"fail_vitality": 0
+}
 events_by_type = {
 "event": {
 "event_altar": 1,

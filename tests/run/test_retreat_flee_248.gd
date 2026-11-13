@@ -238,6 +238,7 @@ static func run_flee_hunter(t: TestCase) -> void:
 		t.check(false, "开不了局")
 		return
 	s.buff_defs = RunBuffs.load_all()
+	_flee_rules(s, 0.5)     # 作者 11-13 起正式规则没逃掉不扣不背：这里测的是机制，规则自己配上
 	s.step_to(s.travel.available_moves()[0])
 	var sys := s.hunters
 	if sys == null or sys.alive().is_empty():
@@ -259,3 +260,12 @@ static func run_flee_hunter(t: TestCase) -> void:
 	t.eq(spent, [1], "没逃掉：扣一点体力（猎手定义的 flee_fail_vitality）")
 	t.check(_weak(s), "没逃掉：背虚弱（248 新加）")
 
+
+
+static func run_shipped_rules(t: TestCase) -> void:
+	t.begin("作者 2026-11-13：逃跑失败直接开打 —— 正式的节点规则、猎手都不另扣体力、不背虚弱")
+	for id in ["standard", "prologue", "slice_ruins"]:
+		var r := ContentPaths.load_asset("node_rules", id) as NodeRules
+		t.check(r != null and r.flee_fail_vitality() == 0 and r.flee_fail_buff() == &"", "%s：没逃掉不扣体力、不背东西" % id)
+	for def in HunterSystem.load_all().values():
+		t.eq((def as HunterDef).flee_fail_vitality, 0, "猎手 %s 没逃掉不扣体力" % (def as HunterDef).id)
