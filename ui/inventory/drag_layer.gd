@@ -32,6 +32,8 @@ signal items_shed(instances: Array)
 signal grab_refused(uid: int)
 ## 249：在棋盘外（地上）松手，可这一屏不许往地上放（[member drop_filter] 拦了）—— 东西已经弹回原处。宿主拿它说一句为什么
 signal drop_refused(uid: int)
+## 317 U01：想合成却同时压到别的道具 —— 没挪任何东西，弹回原处；宿主把 [param text] 说出来
+signal fuse_refused(text: String)
 
 const ROOTED_NOTICE := "notice.rooted"
 ## 255：随身之物拿不下来时那一句
@@ -507,6 +509,12 @@ func _update_preview(global_pos: Vector2) -> void:
 		grid_view.set_preview(cells, origin, true)     # 314：压在能合的那件上 = 合成（绿的，不算顶替；松手先弹确认窗）
 		return
 
+	var why := _fuse_blocked(grid_view, origin, global_pos)
+	if why != "":
+		grid_view.set_preview(cells, origin, false)     # 317 U01：光标在搭档上、却还压着别的 —— 红的，不顶替
+		_set_drop_hint(why)
+		return
+
 	if inv.acts_as_bag(_inst.def):
 		# 087：空包压到另一个包上 = 替换它
 		var victim := _replaceable_bag(inv, origin)
@@ -715,6 +723,14 @@ func drop_at(global_pos: Vector2) -> bool:
 			var under := _fuse_target_grid(gv.inventory, at0)
 			if under != null:
 				return _begin_fuse(under, gv.inventory, global_pos)
+			var why := _fuse_blocked(gv, at0, global_pos)
+			if why != "":
+				_restore()
+				AudioHub.play(&"bag.invalid")
+				_end_drag()
+				drag_finished.emit(inst.uid, false)
+				fuse_refused.emit(why)
+				return false
 
 	# 249：棋盘外（地上）松手、这一屏却不许往地上放 —— 弹回原处之后告诉宿主
 	var refused := target == null and _drops_outside_to_stash() and not _drop_allowed(stash)
@@ -891,6 +907,28 @@ func _fuse_target_grid(inv: GridInventory, origin: Vector2i) -> ItemInstance:
 		return null
 	var b := inv.get_item(int(under[0]))
 	return b if b != null and bool(fuse_partner.call(_inst, b)) else null
+
+
+## 317 U01：光标停在能合的搭档上、拖着的这件却压了不止一件 —— 是想合成，不按顶替处理。
+## 返回要说的那句（压到两件搭档 / 还压到别的）；不是这种情况返回空
+func _fuse_blocked(gv: InventoryView, origin: Vector2i, global_pos: Vector2) -> String:
+	if _inst == null or not _payload.is_empty() or not fuse_partner.is_valid() or not fuse_drop.is_valid() or gv == null or gv.inventory == null:
+		return ""
+	var inv := gv.inventory
+	var under := inv.displaced_by(_inst.def, origin, _rot, _inst.uid)
+	if under.size() < 2:
+		return ""
+	var aim := inv.cell_uid(gv.cell_at_global(global_pos))
+	var partners := 0
+	var aimed := false
+	for raw in under:
+		var b := inv.get_item(int(raw))
+		if b != null and bool(fuse_partner.call(_inst, b)):
+			partners += 1
+			aimed = aimed or b.uid == aim
+	if not aimed:
+		return ""
+	return UiText.t("fuse.two_partners" if partners >= 2 else "fuse.overlap")
 
 
 ## 314：地上光标下那一件和手上这件能合吗。返回它；没有 null

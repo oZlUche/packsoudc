@@ -1154,6 +1154,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if key == null or not key.pressed or key.echo:
 		return
+	if InputKeys.is_key_of(key, InputKeys.MAP_FIT):     # 切片 v6.14 D：看全图走改键表
+		_view.fit()
+		_remember_zoom(0.0)     # 看全图 = 回到自动
+		get_viewport().set_input_as_handled()
+		return
 	match key.keycode:
 		KEY_SPACE:     # 作者 10-27：空格 = 镜头回正到自己；按住 = 锁住跟着（战略游戏那样）
 			if _confirm != null or _pause != null or _rules != null or _ask != null or revealing():
@@ -1165,9 +1170,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 				toggle_bag()
 		KEY_N:
 			reopen()
-		KEY_F:
-			_view.fit()
-			_remember_zoom(0.0)     # 看全图 = 回到自动
 		KEY_1:
 			_view.zoom = 1.0
 			_view.focus(_view.current_id)

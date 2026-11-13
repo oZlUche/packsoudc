@@ -18,10 +18,12 @@ const ROTATE_ITEM := &"rotate_item"
 const HIDE_TIP := &"hide_tip"
 ## 284 §3.5：按住时点包里的道具 = 点这个包（274）
 const WHOLE_BAG := &"whole_bag"
+## 切片 v6.14 D：地图屏看全图（原来写死 F）
+const MAP_FIT := &"map_fit"
 ## 玩家能改的动作
-const ACTIONS: Array[StringName] = [CONFIRM, CANCEL, TOGGLE_FULLSCREEN, ROTATE_ITEM, HIDE_TIP, WHOLE_BAG]
+const ACTIONS: Array[StringName] = [CONFIRM, CANCEL, TOGGLE_FULLSCREEN, ROTATE_ITEM, HIDE_TIP, WHOLE_BAG, MAP_FIT]
 ## 284 §3.5：代码里登记默认键的动作（动作 → 键码）
-const CODE_DEFAULTS := {ROTATE_ITEM: [KEY_R], HIDE_TIP: [KEY_ALT], WHOLE_BAG: [KEY_CTRL, KEY_META]}
+const CODE_DEFAULTS := {ROTATE_ITEM: [KEY_R], HIDE_TIP: [KEY_ALT], WHOLE_BAG: [KEY_CTRL, KEY_META], MAP_FIT: [KEY_F]}
 
 
 ## 284 §3.5：[constant CODE_DEFAULTS] 里的动作没登记就按默认键登记（可以反复叫）

@@ -126,7 +126,7 @@ func line_text() -> String:
 ## 221 F3：一步的字按当前语言取（`texts: {"en": …}`），没写回落 `text`
 static func text_of(p_step: Dictionary) -> String:
 	var table: Variant = p_step.get("texts", {})
-	return Names.pick(table as Dictionary if table is Dictionary else {}, String(p_step.get("text", "")))
+	return KeyNames.expand(Names.pick(table as Dictionary if table is Dictionary else {}, String(p_step.get("text", ""))))     # [key=动作] 换成现在绑的键
 
 
 func step() -> Dictionary:

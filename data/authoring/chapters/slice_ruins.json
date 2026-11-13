@@ -26,6 +26,7 @@
     "slice_offense",
     "slice_defense"
   ],
+  "fuse_hint": true,
   "auto_spawn": true,
   "coaches": {
     "map": "slice_map",
