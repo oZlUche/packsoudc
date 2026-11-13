@@ -1,6 +1,6 @@
-## 难度候选实验（报告 303，材料与难度方案 §7.2 D1 / D3）：基线和每个改数用同一批种子各跑一遍，逐场配对出候选表。只出表，不改数。
+## 难度候选实验（报告 303，材料与难度方案 §7.2 D1 / D3 / D5）：基线和每个改数用同一批种子各跑一遍，逐场配对出候选表。只出表，不改数。
 ##
-##     godot --headless --path . --script res://tools/difficulty_candidates.gd -- --exp=D1|D3 [--fights=100] [--maps=20] [--seed=1] [--pool=standard_ruins] [--difficulty=ascension_3] [--out=路径.md]
+##     godot --headless --path . --script res://tools/difficulty_candidates.gd -- --exp=D1|D3|D5 [--fights=100] [--maps=20] [--seed=1] [--pool=standard_ruins] [--difficulty=ascension_3] [--out=路径.md]
 extends CliTool
 
 

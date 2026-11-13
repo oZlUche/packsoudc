@@ -3,7 +3,8 @@
 ##
 ## 实验：
 ## - D1 brute 局部：覆盖测试只跑 brute，原值 / 生命 -10% / 格挡 -10% 分开跑（只改 brute 自己的基线，不动档位表）；
-## - D3 节奏拉长：频率测试（真实地图上的战斗点），双方最大生命 ×1.15 / ×1.30。
+## - D3 节奏拉长：频率测试（真实地图上的战斗点），双方最大生命 ×1.15 / ×1.30；
+## - D5 品质：频率测试，木桩身上的武器、护甲、盾全部换成品质 1 / 2（[method with_quality]），敌人不动。
 ## 命令行外壳 `tools/difficulty_candidates.gd`
 class_name DifficultyCandidates
 extends RefCounted
@@ -12,7 +13,10 @@ const EXPERIMENTS := {
 	"D1": {"mode": "coverage", "only_enemies": ["brute"], "variants": {
 		"base": {}, "hp_-10%": {"foe": {"brute": {"max_hp": 0.9}}}, "block_-10%": {"foe": {"brute": {"block": 0.9}}}}},
 	"D3": {"mode": "frequency", "variants": {"base": {}, "hp_x1.15": {"hp": 1.15}, "hp_x1.30": {"hp": 1.3}}},
+	"D5": {"mode": "frequency", "variants": {"base": {}, "q1": {"quality": 1}, "q2": {"quality": 2}}},
 }
+## D5 换品质的道具：带这几个标签之一的（铁匠铺打得出来的那几类）
+const QUALITY_TAGS: Array[StringName] = [&"weapon", &"armor", &"shield"]
 
 
 ## 一个实验的全部改数各跑一遍：{变体名: run 的结果}（[BalanceExperiment.run]）
@@ -24,7 +28,21 @@ static func run_all(exp_id: String, dummies: Dictionary, ctx: Dictionary) -> Dic
 		c["mode"] = spec["mode"]
 		c["only_enemies"] = spec.get("only_enemies", [])
 		c["mutation"] = spec["variants"][v]
-		out[v] = BalanceExperiment.run(dummies, c)     # 木桩每次现编译（[method BalanceExperiment._groups]），改生命不串
+		var q := int((c["mutation"] as Dictionary).get("quality", 0))
+		out[v] = BalanceExperiment.run(with_quality(dummies, q, ctx["items"]) if q > 0 else dummies, c)     # 木桩每次现编译（[method BalanceExperiment._groups]），改生命不串
+	return out
+
+
+## 木桩副本：带 [constant QUALITY_TAGS] 的道具品质都设成 [param q]（写进摆放行的 state，和存档里的实例一样）；原件不动
+static func with_quality(dummies: Dictionary, q: int, items: ItemDatabase) -> Dictionary:
+	var out := dummies.duplicate(true)
+	for key in out:
+		for row in (out[key] as Dictionary).get("layout", []):
+			var d := items.get_def(StringName(String((row as Dictionary).get("id", ""))))
+			if d == null or not QUALITY_TAGS.any(func(t: StringName) -> bool: return d.tags.has(t)):
+				continue
+			var st: Dictionary = (row as Dictionary).get_or_add("state", {})
+			st[ItemInstance.QUALITY_KEY] = q
 	return out
 
 

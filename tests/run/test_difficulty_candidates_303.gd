@@ -55,3 +55,33 @@ static func run_pairing(t: TestCase) -> void:
 	t.check(absf(float(r["win_diff"]["diff"]) - (0.5)) < 0.0001, "胜率差 +50 个百分点")
 	t.check(absf(float(r["dur_diff"]["diff"]) - (1.0)) < 0.0001, "时长差 +1 秒")
 	t.eq(DifficultyCandidates.compare(base, var_, true).size(), 2, "按流派分两格")
+
+
+static func run_quality_copy(t: TestCase) -> void:
+	t.begin("303 · D5：木桩副本里武器、护甲、盾换品质，包和别的不动，原件不动")
+	var items := ItemDatabase.new()
+	items.load_dir()
+	var dummies := {"x": {"layout": [{"id": "bag_leather", "origin": [0, 0], "rot": 0}, {"id": "club", "origin": [0, 0], "rot": 0},
+		{"id": "round_shield", "origin": [1, 0], "rot": 0}, {"id": "bandage", "origin": [2, 0], "rot": 0}]}}
+	var before := dummies.duplicate(true)
+	var got := DifficultyCandidates.with_quality(dummies, 2, items)
+	t.eq(dummies, before, "原件不动")
+	var rows: Array = got["x"]["layout"]
+	t.check(not (rows[0] as Dictionary).has("state"), "包不换")
+	t.eq(int(rows[1]["state"][ItemInstance.QUALITY_KEY]), 2, "武器品质 2")
+	t.eq(int(rows[2]["state"][ItemInstance.QUALITY_KEY]), 2, "盾品质 2")
+	t.check(not (rows[3] as Dictionary).has("state"), "消耗品不换")
+
+
+static func run_execution_player(t: TestCase) -> void:
+	t.begin("303 · D4：处决武器的玩家去掉处决那条只少一条规则，别的不动")
+	var items := ItemDatabase.new()
+	items.load_dir()
+	var on := ExecutionPhase.player(items, true)
+	var off := ExecutionPhase.player(items, false)
+	t.eq(on.items.size(), 1, "只带一件")
+	var on_rules := (on.items[0] as CompiledItem).rules
+	var off_rules := (off.items[0] as CompiledItem).rules
+	t.eq(off_rules.size(), on_rules.size() - 1, "少一条")
+	t.check(on_rules.any(func(r: AbilityRule) -> bool: return r.trigger is OnItemFired), "原样有出手后再判的那条")
+	t.check(not off_rules.any(func(r: AbilityRule) -> bool: return r.trigger is OnItemFired), "去掉后没有")
