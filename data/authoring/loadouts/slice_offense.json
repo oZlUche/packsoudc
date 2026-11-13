@@ -1,0 +1,18 @@
+{
+  "id": "slice_offense",
+  "display_name": "强攻",
+  "display_names": {
+    "en": "Assault"
+  },
+  "description": "偏输出：多一把匕首和一块磨刀石，能合出双刀或淬火匕首",
+  "descriptions": {
+    "en": "Offense: an extra knife and a whetstone, enough to fuse twin blades or a quenched dagger."
+  },
+  "preset": true,
+  "items": [
+    "knife",
+    "whetstone",
+    "salve"
+  ],
+  "chapter_only": true
+}

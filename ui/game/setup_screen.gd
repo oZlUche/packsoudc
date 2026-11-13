@@ -37,6 +37,8 @@ var difficulty_index: int = 0
 var preset_index: int = -1
 ## 096：棋盘上预设套的实例 uid → true（不算带入、不能拖去仓库）
 var _preset_uids: Dictionary = {}
+## 切片 v6.14 U02：棋盘上的章节补给（[member ChapterDef.starting_items]）—— 也记在 [member _preset_uids] 里（只能在棋盘上挪），出发时按它少发
+var _supply_uids: Dictionary = {}
 var _preset_btns: Array[Button] = []
 var _preset_box: BoxContainer = null
 ## 285：挑着的那套（[member preset_index] 是它在这一章能列的那几套里的下标；换章节时按它重新找）
@@ -89,6 +91,9 @@ var _characters: Array[CharacterDef] = []
 var _char_box: VBoxContainer = null
 ## 180 补二：第二页右边的仓库框（按自己的内容定大小）与框里的滚动区（格子多到放不下时滚，预留滚动条位）
 var _warehouse_box: Control = null
+## 切片 v6.14 §3.3：不许带入的章，仓库框的位置换一张小纸条
+var _no_carry_note: PanelContainer = null
+const NO_CARRY_W := 260.0
 var _warehouse_scroll: ScrollContainer = null
 var _character_btns: Array[Button] = []
 ## 180：第三页 —— 左列的地图 / 规模、中间的预览、右边的难度块
@@ -110,6 +115,8 @@ var _hint: NodeHintCard = null
 const FLAG_LAST_MAP := &"last_map"
 const FLAG_LAST_SCALE := &"last_scale"
 const FLAG_LAST_DIFFICULTY := &"last_difficulty"
+## 切片 v6.14 §3.3：第一次翻到配道具页、这一章有预设 —— 说一句怎么挑（只说一次）
+const FLAG_PRESET_HINT := &"preset_hint_seen"
 var _board_host: VBoxContainer
 var _board_view: InventoryView = null
 var _warehouse_view: InventoryView = null
@@ -354,6 +361,17 @@ func _build_kit_page() -> Control:
 	ware_panel.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_END
 	row.add_child(ware_panel)
 	_warehouse_box = ware_panel
+	_no_carry_note = UiTheme.panel(PanelContainer.new(), 12, UiTheme.PANEL_PARCHMENT)
+	UiTheme.set_tone(_no_carry_note, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
+	_no_carry_note.name = "NoCarryNote"
+	_no_carry_note.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_no_carry_note.custom_minimum_size.x = NO_CARRY_W
+	var note_l := Label.new()
+	note_l.text = UiText.t("setup.no_carry_note")
+	note_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_no_carry_note.add_child(note_l)
+	_no_carry_note.visible = false
+	row.add_child(_no_carry_note)
 	var right := _vbox(6)
 	ware_panel.add_child(right)
 	var w := flow.meta.warehouse
@@ -648,6 +666,14 @@ func page() -> int:
 	return _page
 
 
+## 切片 v6.14 §3.3：第一次翻到配道具页、这一章有预设 —— 说一句「任选一套，点一下就换上」（只说一次，记在局外）
+func _preset_hint() -> void:
+	if flow.meta == null or flow.meta.flag(FLAG_PRESET_HINT) > 0 or _preset_list().is_empty():
+		return
+	flow.meta.set_flag(FLAG_PRESET_HINT, 1)
+	say(UiText.t("setup.preset_hint"))
+
+
 ## 换到第 [param i] 页（0..2）：只显示那一页，标题与右下角按钮跟着变
 func show_page(i: int) -> void:
 	var was := _page
@@ -660,6 +686,7 @@ func show_page(i: int) -> void:
 		_pages[k].visible = k == _page
 	if _page == 1:
 		_fit_warehouse()     # 作者 10-31 木架：框的边距要等进了树、主题生效才算得出来，翻到这页再量一次
+		_preset_hint()
 	_repaint(PAGE_ART[_page])
 	if _title_indent != null:
 		_title_indent.custom_minimum_size.x = float(PAPER_INSET) if _page == PAGE_MAP else 0.0
@@ -785,8 +812,13 @@ func choose_chapter(i: int) -> void:
 	_rebuild_characters()
 	_rebuild_scales()
 	_sync_presets()     # 285：序章只列免费的
+	_hold_refresh += 1
+	_apply_supply()     # 切片 v6.14 U02：换了章节，补给跟着换
+	_hold_refresh -= 1
 	if _warehouse_box != null:
 		_warehouse_box.visible = chapter().allow_carry_in
+	if _no_carry_note != null:
+		_no_carry_note.visible = not chapter().allow_carry_in     # 切片 v6.14 §3.3：仓库藏起来的地方说一句为什么
 	var at := _characters.find(keep) if keep != null else -1
 	if at < 0 or board == null:
 		choose_character(0)
@@ -1008,10 +1040,13 @@ func _rebuild_presets() -> void:
 	_preset_sig = _presets_signature(sets)
 	_preset_scroll.visible = not sets.is_empty()
 	var none := PresetTag.make(UiText.t("setup.no_preset"))
-	none.tooltip_text = UiText.t("setup.no_preset_tip")
+	var c := chapter()
+	none.tooltip_text = UiText.t("setup.no_preset_tip" if c == null or c.allow_carry_in else "setup.no_preset_tip_fixed")
 	_preset_btns.append(none)
 	for def in sets:
 		var lines: Array[String] = []
+		if Names.description_of(def) != "":
+			lines.append(Names.description_of(def))     # 切片 v6.14 §3.3：先一句打法，再列东西
 		for id in def.items:
 			var idef := flow.items.get_def(id)
 			lines.append(Names.of(idef) if idef != null else String(id))
@@ -1063,6 +1098,7 @@ func choose_preset(i: int) -> bool:
 	_preset_def = def
 	_apply_preset()
 	ensure_bag()     # 225：换回「不带」时棋盘上可能一只包都没了
+	_apply_supply()
 	_hold_refresh -= 1
 	carry_funds = clampi(carry_funds, 0, cash_cap())     # 285：收费的那笔要留在账上
 	_color_presets()
@@ -1103,6 +1139,47 @@ func _clear_preset() -> void:
 			if board.get_item(int(uid)) != null:
 				board.remove(int(uid))
 	_preset_uids.clear()
+	_supply_uids.clear()
+
+
+## 切片 v6.14 U02：章节补给也摆上棋盘（预设套之后、和开局一样自动找位），出发时 [method RunState.supply_left] 就不再另发 ——
+## 看到的就是带出去的。先拿掉上一章摆的；放不下的在状态栏说（出发时落在地上）
+func _apply_supply() -> void:
+	if board == null:
+		return
+	for uid in _supply_uids:
+		if board.get_item(int(uid)) != null:
+			board.remove(int(uid))
+		_preset_uids.erase(uid)
+	_supply_uids.clear()
+	var c := chapter()
+	if c == null:
+		return
+	var missed: Array[String] = []
+	for id in c.starting_items:
+		var idef := flow.items.get_def(id)
+		if idef == null:
+			continue
+		var inst := ItemInstance.create(idef, 0)
+		inst.uid = flow.meta.allocate_uid()
+		if board.try_add(inst, true):
+			_preset_uids[inst.uid] = true
+			_supply_uids[inst.uid] = true
+		else:
+			missed.append(Names.of(idef))
+	if not missed.is_empty():
+		say(UiText.t("setup.supply_missed") % UiText.t("setup.list_sep").join(missed))
+
+
+## 棋盘上的章节补给
+func supply_items() -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	if board == null:
+		return out
+	for inst in board.items():
+		if _supply_uids.has((inst as ItemInstance).uid):
+			out.append(inst)
+	return out
 
 
 ## 把预设套的道具放上棋盘（和拖进包里一样自动找位置）。放不下的记在状态栏。三档都新造（285）
@@ -1296,7 +1373,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 			why = "" if ok else UiText.t("setup.no_room_bag") % Names.of(inst.def)
 	elif from == board:
 		if _preset_uids.has(uid):
-			why = UiText.t("setup.preset_stays")
+			why = UiText.t("setup.supply_stays" if _supply_uids.has(uid) else "setup.preset_stays")
 		elif BagRack.holds(inst.def):     # 225：包 → 包架（空包才行）
 			ok = rack_bag(uid)
 			why = "" if ok else UiText.t("rack.has_contents") % Names.of(inst.def)
@@ -1338,7 +1415,7 @@ func item_actions(uid: int, view: ContainerView) -> Array:
 	elif from == board:
 		quick.label = UiText.t("act.to_rack" if BagRack.holds(inst.def) else "act.to_warehouse")
 		if _preset_uids.has(uid):
-			ItemActions.disable(quick, UiText.t("setup.preset_stays"))
+			ItemActions.disable(quick, UiText.t("setup.supply_stays" if _supply_uids.has(uid) else "setup.preset_stays"))
 		out.append(ItemActions.lock(inst, from, save))
 		if inst.def.is_anchor():
 			out.append(ItemActions.anchor(inst, board, reseat_anchor))
@@ -1526,8 +1603,8 @@ func _go_now() -> bool:
 	var ch := character()
 	flow.map_reveal = reveal_payload()
 	_record_carry()
-	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board), difficulty(), scale_id, carry_value(), spawn_id, carry_funds,
-			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"")
+	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board, _supply_uids), difficulty(), scale_id, carry_value(), spawn_id, carry_funds,
+			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"", preset())
 	flow.map_reveal = {}
 	if run == null:
 		warn(UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source")))
@@ -1760,6 +1837,7 @@ func _rebuild_board() -> void:
 	board.changed.connect(_refresh)
 	_apply_preset()     # 096：挑着的预设套跟着角色换过来
 	ensure_bag()
+	_apply_supply()
 
 
 ## 225（§9.4 第 2 条兜底）：棋盘上一只包都没有、包架也空、又没挑预设 → 发一只粗麻袋（最差那只），状态行说「军需官发的」。

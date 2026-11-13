@@ -13,6 +13,12 @@ const CONFIGS := {
 	"淬火匕首 + 匕首 + 皮甲": ["quenched_dagger", "knife", "leather_armor", "bandage", "ration"],
 	"阔剑 + 圆盾 + 皮甲": ["broadsword", "round_shield", "leather_armor", "bandage", "ration"],
 	"涂毒匕首 + 弯刀 + 圆盾 + 皮甲": ["poisoned_knife", "scimitar", "round_shield", "leather_armor", "bandage", "ration"],
+	# 切片 v6.14 B：两套切片预设 + 章节补给（匕首、纱布、口粮）；强攻按出发就合 / 不合各一行
+	"预设强攻（不合）": ["knife", "knife", "whetstone", "salve", "bandage", "ration"],
+	"预设强攻（合淬火）": ["quenched_dagger", "knife", "salve", "bandage", "ration"],
+	"预设强攻（合双刀）": ["twin_blades", "whetstone", "salve", "bandage", "ration"],
+	"预设坚守（不合）": ["leather_armor", "whetstone", "knife", "salve", "bandage", "ration"],
+	"预设坚守（合淬火）": ["leather_armor", "quenched_dagger", "salve", "bandage", "ration"],
 }
 
 

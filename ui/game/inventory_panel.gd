@@ -126,7 +126,7 @@ func _build() -> void:
 	tip = HoverTip.new()
 	add_child(tip)
 	tip.watch(board_view)
-	_quiet_tip(tip)
+	tip.quiet_on(self, _quiet_check)
 	strip.tip = tip
 	board_view.item_double_clicked.connect(quick_move)
 	board_view.actions_for = board_actions     # 230：右键 = 钉住悬浮窗（信物奉为主信仰改成按钮）
@@ -167,8 +167,12 @@ func _attach_ground() -> void:
 	_drag.register_view(g)
 	g.attach(_drag)
 	g.item_double_clicked.connect(_on_ground_double)
+	if g.tip != null:
+		g.tip.quiet_on(self, _quiet_check)     # 地上那块的窗跨面板常驻：离开时撤掉（v6.14 切片 B01）
 	tree_exiting.connect(func():
 		if is_instance_valid(g):
+			if g.tip != null:
+				g.tip.quiet_off(self)
 			g.detach(_drag)
 			if g.item_double_clicked.is_connected(_on_ground_double):
 				g.item_double_clicked.disconnect(_on_ground_double))
@@ -308,7 +312,6 @@ func ask_fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_h
 	_quiet_uid = b.uid
 	for t in [tip, ground.tip if ground != null else null]:
 		if t != null:
-			_quiet_tip(t)
 			(t as HoverTip).hide_tip()
 	var target := _global_rect(b, b_home)
 	var pair := target.merge(ghost) if ghost.has_area() else target
@@ -341,23 +344,18 @@ func ask_fuse(a_uid: int, b_uid: int) -> bool:
 
 
 ## 314 复测（游戏测试 v6.11）：确认窗开着时不弹道具窗（会和纸条叠在一起）；关了之后鼠标还停在被压那件上也不弹，挪到别的道具上才恢复
+## 登记在自己的窗和地上那块的窗上（[method HoverTip.quiet_on]），离开时撤
 var _quiet_uid := -1
-var _quieted: Array[HoverTip] = []
 
 
-func _quiet_tip(t: HoverTip) -> void:
-	if t == null or _quieted.has(t):
-		return
-	_quieted.append(t)
-	var prev := t.hover_quiet
-	t.hover_quiet = func(v: ContainerView, uid: int) -> bool:
-		if fuse_note != null and fuse_note.is_open():
+func _quiet_check(_view: ContainerView, uid: int) -> bool:
+	if fuse_note != null and fuse_note.is_open():
+		return true
+	if _quiet_uid >= 0:
+		if uid == _quiet_uid:
 			return true
-		if _quiet_uid >= 0:
-			if uid == _quiet_uid:
-				return true
-			_quiet_uid = -1
-		return prev.is_valid() and bool(prev.call(v, uid))
+		_quiet_uid = -1
+	return false
 
 
 ## 确认窗开着时：手上那件在棋盘原处先不画（[param veil_uid]，-1 = 没有），被压那件的小锤画亮的；都 -1 = 收

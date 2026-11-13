@@ -46,7 +46,19 @@ static func _map_dict(ch: ChapterDef) -> Dictionary:
 
 
 ## 静态核对；[param recipes] 是全部配方（清单外的也要看，看它做不做得出来）
-static func check_static(m: Dictionary, items: ItemDatabase, enemies: EnemyDatabase, recipes: Array, events: Dictionary) -> Array[String]:
+## 切片 v6.14 B02：开局入口 —— 「不带预设」+ 这一章开局屏列得出的每套预设（[method GameFlow.presets_of]，同一份）。
+## [{"label": 名字, "items": 预设套里的道具 id}]；章节补给与角色初始包各入口都有，另算
+static func entries(ch: ChapterDef) -> Array:
+	var out: Array = [{"label": "不带预设", "items": [] as Array[StringName]}]
+	if ch == null:
+		return out
+	for l in GameFlow.presets_of(ch, GameFlow.load_loadouts()):
+		out.append({"label": "预设 %s（%s）" % [Names.of(l), l.id], "items": l.items.duplicate()})
+	return out
+
+
+## [param extra]：这个开局入口另带的道具（预设套）—— 也得在清单里，也算原料来源
+static func check_static(m: Dictionary, items: ItemDatabase, enemies: EnemyDatabase, recipes: Array, events: Dictionary, extra: Array = []) -> Array[String]:
 	var bad: Array[String] = []
 	var allowed := _strs(m.get("allowed_item_ids", []))
 	for id in allowed:
@@ -79,6 +91,10 @@ static func check_static(m: Dictionary, items: ItemDatabase, enemies: EnemyDatab
 		sources[String(id)] = int(sources.get(String(id), 0)) + 1
 		if not allowed.has(String(id)):
 			bad.append("开局道具 %s 不在清单里" % id)
+	for id in extra:
+		sources[String(id)] = int(sources.get(String(id), 0)) + 1
+		if not allowed.has(String(id)):
+			bad.append("开局带的 %s 不在清单里" % id)
 	for id in ch.characters:
 		if String(id) != String(m.get("character", "")):
 			bad.append("章节的角色 %s 不是清单的角色" % id)
@@ -243,11 +259,12 @@ static func _path(g: MapGraph, from: int, to: int) -> Array[int]:
 
 
 ## 按 [param seed] 整局走一遍：按节点编号挨个去（走不到的跳过），最后去最近的撤离点。返回见过的道具 id
-static func walk(m: Dictionary, p_seed: int, items: ItemDatabase, enemies: EnemyDatabase, sets: SetDatabase) -> Dictionary:
+## [param kit]：开局入口另带的（预设套）；角色初始包、章节补给照开局发
+static func walk(m: Dictionary, p_seed: int, items: ItemDatabase, enemies: EnemyDatabase, sets: SetDatabase, kit: Array[StringName] = []) -> Dictionary:
 	var log_ := {}
 	var ch := ContentPaths.load_asset("chapters", String(m.get("chapter", ""))) as ChapterDef
 	var who := ContentPaths.load_asset("characters", String(m.get("character", ""))) as CharacterDef
-	var s := RunState.start(ch, p_seed, items, enemies, sets, [] as Array[StringName], RunBuffs.load_all(), [] as Array[StringName], who)
+	var s := RunState.start(ch, p_seed, items, enemies, sets, kit, RunBuffs.load_all(), [] as Array[StringName], who)
 	if s == null:
 		return log_
 	s.event_defs = EventPlacer.load_all()
@@ -285,17 +302,30 @@ static func run_all(m: Dictionary, seeds: int) -> Dictionary:
 	enemies.load_all()
 	var sets := SetDatabase.new()
 	sets.load_dir()
-	var problems := check_static(m, items, enemies, RecipeDef.load_all(), EventPlacer.load_all())
+	var recipes := RecipeDef.load_all()
+	var events := EventPlacer.load_all()
+	var ch := ContentPaths.load_asset("chapters", String(m.get("chapter", ""))) as ChapterDef
+	var problems: Array[String] = []
 	var allowed := _strs(m.get("allowed_item_ids", []))
 	var seen := {}
-	for k in range(1, seeds + 1):
-		var log_ := walk(m, k, items, enemies, sets)
-		if log_.is_empty():
-			problems.append("种子 %d 开不了局" % k)
-		for id in log_:
-			seen[id] = true
-			if not allowed.has(String(id)):
-				problems.append("种子 %d 见到了清单外的 %s" % [k, id])
+	var covered: Array[String] = []
+	for e in entries(ch):     # 切片 v6.14 B02：每个开局入口各核一遍、各走一遍
+		var label := String(e["label"])
+		var kit: Array[StringName] = []
+		kit.assign(e["items"])
+		covered.append(label)
+		for line in check_static(m, items, enemies, recipes, events, kit):
+			var tagged := "%s：%s" % [label, line]
+			if not problems.has(tagged):
+				problems.append(tagged)
+		for k in range(1, seeds + 1):
+			var log_ := walk(m, k, items, enemies, sets, kit)
+			if log_.is_empty():
+				problems.append("%s：种子 %d 开不了局" % [label, k])
+			for id in log_:
+				seen[id] = true
+				if not allowed.has(String(id)):
+					problems.append("%s：种子 %d 见到了清单外的 %s" % [label, k, id])
 	var ids: Array = seen.keys()
 	ids.sort()
-	return {"problems": problems, "seen": ids}
+	return {"problems": problems, "seen": ids, "entries": covered}

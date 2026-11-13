@@ -2488,6 +2488,10 @@ static func _validate_chapter(def: ChapterDef, ctx: Context, report: ImportRepor
 		report.warn("map_skin", "找不到地图底图 assets/maps/%s.png（照旧石板底）" % def.map_skin)
 	if def.economy_rules != &"" and not ctx.economy_rules.is_empty() and not ctx.economy_rules.has(def.economy_rules):
 		report.error("economy_rules", "找不到经济规则 '%s'（已知：%s）" % [def.economy_rules, ", ".join(ctx.economy_rules.keys())])
+	for i in def.presets.size():     # 切片 v6.14 B02：点名的预设套得是预设
+		var lo: LoadoutDef = ctx.loadouts.get(def.presets[i], null)
+		if not ctx.loadouts.is_empty() and (lo == null or not lo.preset):
+			report.error("presets[%d]" % i, "找不到预设套 '%s'" % def.presets[i])
 	for i in def.characters.size():
 		if not ctx.characters.is_empty() and not ctx.characters.has(def.characters[i]):
 			report.error("characters[%d]" % i, "找不到角色 '%s'（已知：%s）" % [def.characters[i], ", ".join(ctx.characters.keys())])

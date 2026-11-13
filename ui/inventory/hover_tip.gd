@@ -415,8 +415,9 @@ var _faith_parts: Array[Control] = []
 var _views: Array[ContainerView] = []
 ## 可选：`func(view, uid) -> bool`，假就不显示（容器屏：没亮出来的不说）
 var can_show: Callable = Callable()
-## 可选：`func(view, uid) -> bool`，真就**停留时**不弹（右键钉窗 / 右键快捷动作不受影响）
-var hover_quiet: Callable = Callable()
+## 停留时不弹的条件（右键钉窗 / 右键快捷动作不受影响）：登记者 id → `func(view, uid) -> bool`，任一条为真就不弹。
+## 谁登记谁撤（[method quiet_on] / [method quiet_off]）：地上那块的窗跨面板常驻，面板没了还挂着它的条件会调到已释放的对象（v6.14 切片 B01）
+var _quiet: Dictionary = {}
 var _uid: int = -1
 var _for_view: ContainerView = null
 ## 265：主窗现在说的是哪一种道具（丝带切的就是它的收藏）；不是道具窗 = null
@@ -1188,7 +1189,7 @@ func _on_view_input(view: ContainerView, event: InputEvent) -> void:
 		_on_source = _panel.visible and view == _for_view and uid == _uid     # 钉住了：只记还在不在源上
 		return
 	var inst := _shown_item(view, uid)
-	if inst != null and hover_quiet.is_valid() and bool(hover_quiet.call(view, uid)):
+	if inst != null and is_quiet(view, uid):
 		inst = null
 	if not _panel.visible:
 		if inst != null:
@@ -1330,3 +1331,32 @@ static func ring_points(r: Rect2, p: float) -> PackedVector2Array:
 			pts.append(a + (b - a) * (left / maxf(seg, 0.001)))
 			break
 	return pts
+
+
+## 登记一条「停留时不弹」的条件（同一 [param p_owner] 再登记 = 换掉，不叠）
+func quiet_on(p_owner: Object, fn: Callable) -> void:
+	if p_owner != null:
+		_quiet[p_owner.get_instance_id()] = fn
+
+
+## 撤掉 [param p_owner] 登记的条件（没登记过照样可以调）
+func quiet_off(p_owner: Object) -> void:
+	if p_owner != null:
+		_quiet.erase(p_owner.get_instance_id())
+
+
+## 现在挂着几条（测试看注册量不随开关面板增长）
+func quiet_count() -> int:
+	return _quiet.size()
+
+
+## 停留在 [param uid] 上该不该不弹。登记者已经没了还没撤 = 生命周期写错了：丢掉那条并报警告，不调它
+func is_quiet(view: ContainerView, uid: int) -> bool:
+	for id in _quiet.keys():
+		if not is_instance_id_valid(id):
+			_quiet.erase(id)
+			push_warning("HoverTip：登记「不弹」条件的对象已释放却没撤销（%d）" % id)
+			continue
+		if bool((_quiet[id] as Callable).call(view, uid)):
+			return true
+	return false

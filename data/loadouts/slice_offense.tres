@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_efn7w"]
+
+[resource]
+script = ExtResource("1_efn7w")
+id = &"slice_offense"
+display_name = "强攻"
+display_names = {
+"en": "Assault"
+}
+description = "偏输出：多一把匕首和一块磨刀石，能合出双刀或淬火匕首"
+descriptions = {
+"en": "Offense: an extra knife and a whetstone, enough to fuse twin blades or a quenched dagger."
+}
+preset = true
+items = Array[StringName]([&"knife", &"whetstone", &"salve"])
+chapter_only = true

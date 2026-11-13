@@ -930,7 +930,11 @@ func save_settings() -> bool:
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse: Array[int] = [] as Array[int],
 		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0,
-		spawn_id: int = -1, carry_funds: int = 0, preset_cost: int = 0, preset_ticket: StringName = &"") -> RunState:
+		spawn_id: int = -1, carry_funds: int = 0, preset_cost: int = 0, preset_ticket: StringName = &"", preset: LoadoutDef = null) -> RunState:
+	var refused := start_refusal(chapter, layout, preset)
+	if refused != "":
+		push_warning("GameFlow.begin：%s" % refused)
+		return null
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
@@ -995,6 +999,37 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	map_reveal = {}
 	_go(Screen.MAP, {"reveal": reveal} if not reveal.is_empty() else {})
 	return state
+
+
+## 切片 v6.14 B02：开局的后端门 —— 挑的预设得是这一章列得出的；不许带入的章，棋盘上除了包和章节补给（[method RunState.supply_left]），
+## 只能是这套预设里的东西（件数也算）。空串 = 放行
+func start_refusal(chapter: ChapterDef, layout: Array, preset: LoadoutDef) -> String:
+	if chapter == null:
+		return ""
+	if preset != null and not presets(chapter).has(preset):
+		return "预设 %s 不属于章节 %s" % [preset.id, chapter.id]
+	if chapter.allow_carry_in or layout.is_empty() or items == null:
+		return ""
+	var left := {}
+	for id in (preset.items if preset != null else [] as Array[StringName]):
+		left[id] = int(left.get(id, 0)) + 1
+	var supply := {}
+	for id in chapter.starting_items:
+		supply[id] = int(supply.get(id, 0)) + 1
+	for row in layout:
+		if not (row is Dictionary):
+			continue
+		var id := StringName(String(row.get("id", "")))
+		var d := items.get_def(id)
+		if d == null or d.is_bag:
+			continue
+		if bool(row.get(RunState.SUPPLY_KEY, false)) and int(supply.get(id, 0)) > 0:
+			supply[id] = int(supply[id]) - 1
+		elif int(left.get(id, 0)) > 0:
+			left[id] = int(left[id]) - 1
+		else:
+			return "章节 %s 不许带入，开局棋盘上多了 %s" % [chapter.id, id]
+	return ""
 
 
 func has_save() -> bool:
@@ -1805,11 +1840,23 @@ static func load_chapters(p_profile: StringName = &"") -> Array[ChapterDef]:
 ## 096：开局屏可选的预设套（`LoadoutDef.preset`），按装回的顺序。
 ## 285：给了章节且这一章不许从仓库带（序章）就只列免费的 —— 序章没有钱、也没有仓库可拉。
 ## 排法：免费 → 收费 → 高级，同档按装回的顺序
+## 切片 v6.14 B02：章节点了名（[member ChapterDef.presets]）就只列那几套、按它写的顺序；点名专用的（[member LoadoutDef.chapter_only]）别处不列
 func presets(chapter: ChapterDef = null) -> Array[LoadoutDef]:
+	return presets_of(chapter, loadouts)
+
+
+## 同 [method presets]，给不开 [GameFlow] 的工具用（切片审计按它枚举开局入口，和开局屏同一份）
+static func presets_of(chapter: ChapterDef, all: Array[LoadoutDef]) -> Array[LoadoutDef]:
 	var out: Array[LoadoutDef] = []
+	if chapter != null and not chapter.presets.is_empty():
+		for id in chapter.presets:
+			for l in all:
+				if l != null and l.preset and l.id == id:
+					out.append(l)
+		return out
 	for tier in LoadoutDef.TIERS:
-		for l in loadouts:
-			if l != null and l.preset and l.tier == tier and (chapter == null or chapter.allow_carry_in or tier == LoadoutDef.TIER_FREE):
+		for l in all:
+			if l != null and l.preset and not l.chapter_only and l.tier == tier and (chapter == null or chapter.allow_carry_in or tier == LoadoutDef.TIER_FREE):
 				out.append(l)
 	return out
 

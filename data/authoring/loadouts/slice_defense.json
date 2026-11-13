@@ -1,0 +1,18 @@
+{
+  "id": "slice_defense",
+  "display_name": "坚守",
+  "display_names": {
+    "en": "Bulwark"
+  },
+  "description": "偏防御：一件皮甲和一块磨刀石，挨得住打",
+  "descriptions": {
+    "en": "Defense: leather armor and a whetstone. Takes hits well."
+  },
+  "preset": true,
+  "items": [
+    "leather_armor",
+    "whetstone",
+    "salve"
+  ],
+  "chapter_only": true
+}
