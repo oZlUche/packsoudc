@@ -52,7 +52,7 @@ const NO_RANDOM_SOURCE := &"no_random_source"
 ## 281：独一的红武 —— 全局只存在一件（[UniqueItems]），搜索、掉落、商店、敌人都不出（[method ItemDatabase.ids] 拦），图鉴照列；不可出售
 const UNIQUE := &"unique"
 ## 281（作者 10:47）：红武的劣化版 —— 只从拿着它的 BOSS / 猎手身上掉（[RedSources]），搜索、掉落、商店、敌人都不出，图鉴照列；
-## 不上砧、不附魔、不赐福
+## 不附魔、不赐福
 const LESSER := &"lesser"
 ## 285：券（高级预设拿它换一套）
 const TICKET := &"ticket"

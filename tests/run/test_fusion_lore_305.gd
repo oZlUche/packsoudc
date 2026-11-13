@@ -1,6 +1,6 @@
 ## 305（合成与锻造改造 A，方案 §6）：拼接 / 拖合不吃锁定件、随身之物；自己合成才记下配方，进过背包或自己造出才认识道具；
 ## 知识随这一局存、局终并进局外（死了也记得），老档按图鉴与手上的东西补「认识」、不反推配方；
-## 悬浮窗「可拼为 / 由…合成 / 可升为」只列知道的，确认窗不认识成品就打问号；拖到能合的那件上先开确认窗，取消什么都不记；
+## 悬浮窗「可拼为 / 由…合成」只列知道的，确认窗不认识成品就打问号；拖到能合的那件上先开确认窗，取消什么都不记；
 ## 寂灭已在本局地上时献祭条件不成立
 extends RefCounted
 
@@ -112,7 +112,7 @@ static func run_save(t: TestCase) -> void:
 
 
 static func run_tooltip(t: TestCase) -> void:
-	t.begin("305 · 悬浮窗只列知道的配方：可拼为 / 由…合成 / 可升为；不接探针 = 都知道")
+	t.begin("305 · 悬浮窗只列知道的配方：可拼为 / 由…合成；不接探针 = 都知道")
 	var s := _run()
 	var knife := s.items.get_def(&"knife")
 	var saved_r := ItemTooltip.recipe_probe
@@ -121,7 +121,6 @@ static func run_tooltip(t: TestCase) -> void:
 	ItemTooltip.item_probe = s.has_met
 	t.eq(ItemTooltip.fusions_line(knife), "", "没合成过：刀的悬浮窗不列可拼为")
 	t.eq(ItemTooltip.made_from_line(s.items.get_def(&"quenched_dagger")), "", "成品那边也不写")
-	t.eq(ItemTooltip.upgrades_line(s.items.get_def(&"bonefang_dagger")), "", "没锤过：不列可升为")
 	s.lore.learn_recipe(&"fuse_quenched_dagger")
 	var line := ItemTooltip.fusions_line(knife)
 	t.check(line.contains("fuse_quenched_dagger") and not line.contains("fuse_twin_blades"), "只列合成过的那张（%s）" % line)

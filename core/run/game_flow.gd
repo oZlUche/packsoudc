@@ -1063,7 +1063,7 @@ func leave_chest() -> bool:
 
 
 ## 175 补充二：在休息点 [param node] 上打开铸炉。194 起玩家走休息点事件的「铸炉」选项（[OpenForge]），这里留给测试 / 调试台。
-## 286 §2.2：铸炉屏是「铁炉」两栏（砧 | 铸炉），两栏都用过了才不开。不是休息点返回 false
+## 铸炉屏（「铁炉」，改造 D 起只有铸炉）铸过了就不开。不是休息点返回 false
 func open_forge(node: MapNode) -> bool:
 	if run == null or run.is_over() or node == null or NodeEvents.effective_type(node) != &"rest" or not NodeEvents.hearth_open(node):
 		return false
@@ -1116,35 +1116,6 @@ func has_met(id: StringName) -> bool:
 		if meta.lore.has_met(f):
 			return true
 	return false
-
-
-## 279：休息点 [param node] 的砧还能不能锤（是休息点、这一局没完、这座砧没锤过）
-func anvil_open(node: MapNode) -> bool:
-	return run != null and not run.is_over() and node != null and NodeEvents.effective_type(node) == &"rest" and not Anvil.used(node)
-
-
-## 279：在休息点 [param node] 的砧上锤一下 —— [param weapon]（在 [param weapon_from] 里）+ [param material]（在 [param material_from] 里）
-## 配得上升级配方：两件消耗、这座砧用掉（免费一次），返回出件（带品质，放哪由调用方定）；配不上 / 砧用过 = null，什么也不动
-func anvil_strike(node: MapNode, weapon: ItemInstance, weapon_from: ItemContainer, material: ItemInstance, material_from: ItemContainer) -> ItemInstance:
-	if not anvil_open(node) or weapon == null or material == null or weapon.is_locked_by_player() or material.is_locked_by_player():
-		return null
-	var out := Anvil.result(weapon, material, smith_recipes, items)
-	if out == null:
-		return null
-	for pair in [[weapon, weapon_from], [material, material_from]]:
-		var c := pair[1] as ItemContainer
-		var inst := pair[0] as ItemInstance
-		if c != null and c.has_item(inst.uid):
-			c.remove(inst.uid)
-	Anvil.use(node)
-	var r := Anvil.recipe_for(weapon.def, material.def, smith_recipes)
-	if r != null:
-		run.lore.learn_recipe(r.id)     # 305：「可升为」也按自己锤过才列
-	run.lore.meet(out.def.id)
-	if meta != null:
-		meta.light_codex(out.def)
-	save()
-	return out
 
 
 ## 093：关掉神坛屏（回地图；站着还能再开，除非用过特殊操作）
@@ -1478,7 +1449,7 @@ func _reopen_entry() -> Dictionary:
 	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"rest":
 		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 反馈：休息点还有没用的那一份
 	if here != null and NodeEvents.effective_type(here) == &"rest" and NodeEvents.hearth_open(here):
-		return {"screen": Screen.FORGE, "node": here}     # 175 补充二：休息点的铸炉没用过，站着随时能开（286：砧没锤过也算）
+		return {"screen": Screen.FORGE, "node": here}     # 175 补充二：休息点的铸炉没用过，站着随时能开
 	return {}
 
 

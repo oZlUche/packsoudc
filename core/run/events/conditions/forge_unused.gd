@@ -1,5 +1,5 @@
 ## 条件（194 §1）：这座休息点的铸炉还没用过（一座只能铸一次）。配 hide_when_locked，铸过了「铸炉」选项就藏起来。
-## 286 §2.2：「铁炉」是砧 | 铸炉两栏 —— 两栏都用过了才算用过
+## 「铁炉」只剩铸炉（改造 D 拆了砧）—— 铸过了才算用过
 class_name ForgeUnused
 extends EventCondition
 

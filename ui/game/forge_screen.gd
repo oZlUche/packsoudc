@@ -5,8 +5,6 @@
 ## 196 §5（美术定稿「乙 炉台版」，作者 2026-10-19）：不再是石板叠层，是「走到铁炉前」的整屏近景 —— 底图 cover 铺满（铸过换冷炉），
 ## 三槽、出牌槽、槽下小字、背包、「将铸出」几行、说明石板都按 `assets/ui/forge/layout.json` 摆（底图像素，跟底图同一个缩放与偏移）；
 ## 【时机】【效果】【数值】和「铸炉」画在底图里，代码不写。「铸牌」= 台面右端的铜盾牌键（作者 2026-10-27，原来是左上风箱把手；可铸 / 没放满 / 铸过 三张图），「返回」= 左下路标
-## 286 §2.2：营地的「铁炉」= 两栏 砧 | 铸炉 —— 砧（[AnvilColumn]）压在左上炉子那块底图上（不要新图，待定 2 A），和铸炉共用右边的背包。
-## 铸过了、砧没锤过照样能进（[method NodeEvents.hearth_open]）
 extends GameScreen
 
 const SLOT_SIZE := Vector2i(4, 4)
@@ -26,10 +24,6 @@ const SLOT_NOTE_TOP := 980.0
 const NOTE_PAD := 12
 ## 便条左上角有图钉：字从图钉下面起
 const NOTE_PIN_ROOM := 18
-## 286：砧那块的左上角（底图像素）与内边
-const ANVIL_AT := Vector2(48, 40)
-const ANVIL_PAD := 16
-const ANVIL_PLATE := "anvil/plate"
 
 var _node: MapNode = null
 ## 时机、效果、数值三个槽
@@ -57,9 +51,6 @@ var _bag_host: Control
 ## 槽与出牌槽的宿主（视图在里面居中）
 var _slot_hosts: Array[Control] = []
 var _out_host: Control
-## 286：左栏的砧（套在深色板上）
-var _anvil: AnvilColumn = null
-var _anvil_box: PanelContainer = null
 
 
 ## 236 第三项：整屏底图盖死地图
@@ -148,12 +139,6 @@ func open(payload: Dictionary) -> void:
 			return false
 		var g := _slots[i]
 		return g.item_count() == 0 or (g.item_count() == 1 and g.has_item(inst.uid))     # 一槽一件
-	_anvil_box = UiTheme.panel(PanelContainer.new(), ANVIL_PAD, UiTheme.PANEL_PACK_LEATHER)     # 和右边背包同一块深皮
-	UiTheme.art_panel(_anvil_box, ANVIL_PLATE, ANVIL_PAD)     # 279 定稿 A 铁砧：铁板九宫格（边 = 图边的四分之一 30）换掉深皮；没图照旧深皮
-	_anvil_box.name = "AnvilBox"
-	add_child(_anvil_box)
-	_anvil = AnvilColumn.new().setup(flow, _node, font, _drag, _tip)     # 包住上面的 drop_filter：砧的三个槽另外管
-	_anvil_box.add_child(_anvil)
 	move_child(_drag, -1)
 	move_child(_tip, -1)
 	for g in _slots:
@@ -165,11 +150,8 @@ func open(payload: Dictionary) -> void:
 	_place()
 
 
-## 300 §2.4：包里这件双击 / 右键去哪：砧收就进砧，否则铸炉第一个空槽（铸炉用过 / 不收这件 = null）
+## 300 §2.4：包里这件双击 / 右键去哪：铸炉第一个空槽（铸炉用过 / 不收这件 = null）
 func _quick_pick(inst: ItemInstance) -> ItemContainer:
-	var s := _anvil.quick_slot(inst) if _anvil != null else null
-	if s != null:
-		return s
 	if not _forge_open() or Forge.is_token(inst) or inst.is_locked_by_player():
 		return null
 	for g in _slots:
@@ -274,7 +256,6 @@ func _place() -> void:
 	_align_slot_notes.call_deferred()
 	_place_piece(_forge_btn, "forge_btn", s, offset)
 	_place_piece(_back_btn, "sign", s, offset)
-	_anvil_box.position = (offset + ANVIL_AT * s).floor()     # 格子 32 像素不缩放
 
 
 ## 说明板的字能占多高（设计坐标）：板面上沿到便条上沿，留一点缝
@@ -354,10 +335,8 @@ func forge() -> ItemInstance:
 	return token
 
 
-## 返回：槽里的东西、没拿走的铸牌先回背包（286：砧的三个槽也是）
+## 返回：槽里的东西、没拿走的铸牌先回背包
 func to_map() -> bool:
-	if _anvil != null:
-		_anvil.release()
 	for i in _slots.size():
 		for inst in _slots[i].items().duplicate():
 			take_back(i, (inst as ItemInstance).uid)
@@ -416,9 +395,8 @@ func _refresh() -> void:
 	for g in _slots:
 		if g.item_count() == 0 and empty == null:
 			empty = g
-	if _inv != null:     # 300 §2.4：先砧后炉 —— 砧和铸炉有一边能用，包里双击 / 右键就是「放进去」
-		var anvil_open := _anvil != null and flow.anvil_open(_node)
-		_inv.set("quick_target", empty if open_ and empty != null else (_anvil.weapon_slot if anvil_open else (empty if open_ else null)))
+	if _inv != null:     # 300 §2.4：铸炉能用，包里双击 / 右键就是「放进去」
+		_inv.set("quick_target", empty if open_ else null)
 		_inv.set("quick_pick", _quick_pick)
 		_inv.set("quick_refused", UiText.t("forge.quick_none"))
 	for i in _slots.size():
@@ -502,11 +480,6 @@ func spot_rect(which: String) -> Rect2:
 	if which.begins_with("slot"):
 		return _slot_hosts[int(which.substr(4))].get_rect()
 	return Rect2()
-
-
-## 286：左栏的砧
-func anvil() -> AnvilColumn:
-	return _anvil
 
 
 func slot_view(i: int) -> InventoryView:

@@ -40,7 +40,7 @@ var fuse_filter: Callable = Callable()
 ## 230：悬浮窗按钮里「双击做的那件事」叫什么（有 [member quick_target] 的屏给：`func(inst) -> ItemActions.Action`，出售区写「出售 N 币」……）；
 ## 不给 = 「放进去」；没有 quick_target = 「放到地上」
 var quick_action: Callable = Callable()
-## 300 §2.4：按件挑落点（`func(inst) -> ItemContainer`，铁炉屏先砧后炉）；给了就盖过 [member quick_target]，挑不出 = 不收，说 [member quick_refused]
+## 300 §2.4：按件挑落点（`func(inst) -> ItemContainer`，铁炉屏进铸炉的空槽）；给了就盖过 [member quick_target]，挑不出 = 不收，说 [member quick_refused]
 var quick_pick: Callable = Callable()
 var quick_refused := ""
 ## 230：这一屏另加的按钮（`func(inst) -> Array`，排在锁定后面）
@@ -64,7 +64,7 @@ func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 	_refresh_readout()
 
 
-## 这块面板用的拖拽层（279：砧的槽也登记到这一层）
+## 这块面板用的拖拽层
 func drag_layer() -> DragLayer:
 	return _drag
 

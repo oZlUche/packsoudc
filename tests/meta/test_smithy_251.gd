@@ -34,7 +34,7 @@ static func run_content(t: TestCase) -> void:
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
 	var all := SmithRecipeDef.load_all()
-	t.eq(all.size(), 116, "14 张 + 252 的 6 张，10-31 棉甲那张删了；279 加 30 张升蓝、32 张升紫、16 张升橙；281 极端武器 4 张；310 金武材料打造 15 张")
+	t.eq(all.size(), 34, "14 张 + 252 的 6 张，10-31 棉甲那张删了；310 金武材料打造 15 张；改造 D 拆了 82 张砧升级")
 	var ok := true
 	for r in all:
 		var o := db.get_def(r.output)
