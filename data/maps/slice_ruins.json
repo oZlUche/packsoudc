@@ -204,7 +204,7 @@
         "row": 0
       },
       "content": {
-        "event": "event_refugee_weaver"
+        "event": "event_refugee_weaver_slice"
       }
     },
     {

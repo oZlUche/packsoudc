@@ -39,7 +39,7 @@
     "warden"
   ],
   "event_ids": [
-    "event_refugee_weaver",
+    "event_refugee_weaver_slice",
     "event_field_stretcher"
   ]
 }

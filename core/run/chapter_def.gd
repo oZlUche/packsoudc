@@ -75,6 +75,8 @@ const COACH_KINDS: Array[StringName] = [&"map", &"battle", &"bag", &"prebattle"]
 ## 切片 v6.14 B02：这一章能挑的预设套（loadout id，按列的顺序）。空 = 照旧（全部能列的，见 [method GameFlow.presets]）；
 ## 写了就只列这几套，出发时后端也只认这几套
 @export var presets: Array[StringName] = []
+## 切片 v6.14 C：第一次背包和地上有一对能合的，标出两件、说一句怎么合（这个存档没合成过、没说过才说）
+@export var fuse_hint: bool = false
 ## 285：打赢核心 BOSS 必掉的券（道具 id，带 `ticket` 标签；高级预设拿它换一套）。空 = 不掉（序章）
 @export var boss_ticket: StringName = &""
 ## 开局直接站在第一个出生点上，不用挑（084：序章只有一条路、一个出生点）

@@ -1013,6 +1013,14 @@ func _rebuild_characters() -> void:
 		var why := lock_reason(ch)
 		names.append(n + ("\n" + UiText.t("setup.locked_character") % why if why != "" else ""))
 	_character_btns = _choice_column(_char_box, names, choose_character, 16)
+	var ch_def := chapter()
+	if ch_def != null and ch_def.profile != &"" and not ch_def.characters.is_empty():
+		var roster := Label.new()     # 切片 v6.14 D：试玩档案的章节只开放点了名的角色，说一句（羊皮纸栏里，不是裸字）
+		roster.name = "RosterNote"
+		roster.text = UiText.t("setup.roster_one" if _characters.size() == 1 else "setup.roster_some")
+		roster.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		roster.custom_minimum_size.x = LEFT_W - 2 * HALL_INSET
+		_char_box.add_child(roster)
 	for b in _character_btns:     # 选人页 B：平头木键、字居中，选中 = 按下态（深色木），不压蜡封
 		b.theme_type_variation = UiTheme.BUTTON_SETUP_CHAR
 		b.remove_theme_font_size_override("font_size")     # 字号交给变体（20）

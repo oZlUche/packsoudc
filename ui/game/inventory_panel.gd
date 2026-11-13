@@ -61,6 +61,12 @@ func setup(run: RunState, font: Font, drag: DragLayer = null) -> void:
 	_drag = drag
 	_build()
 	_run.board.changed.connect(_refresh_readout)
+	if _fuse_hint_due():
+		_run.board.changed.connect(_queue_fuse_hint)
+		if _run.storage != null:
+			_run.storage.changed.connect(_queue_fuse_hint)
+		visibility_changed.connect(_queue_fuse_hint)
+		tree_entered.connect(_queue_fuse_hint)
 	_refresh_readout()
 
 
@@ -74,6 +80,77 @@ func _fusable(inst: ItemInstance) -> bool:
 
 
 ## 314：拖拽层问「手上这件和那件能合吗」—— 那件得在棋盘或地上、两件都许拿去合成、有配方
+## 切片 v6.14 C：第一次能合成的那一说（存档里各记一次：说过、合成过）
+const FLAG_FUSE_HINT := &"fuse_hint_shown"
+const FLAG_FUSE_DONE := &"fuse_hint_done"
+var _fuse_hint_queued := false
+
+
+## 这一局该不该等第一次合成机会：章节开着、存档没说过、没合成过、也没认过任何配方
+func _fuse_hint_due() -> bool:
+	var meta := _run.meta
+	if _run.chapter == null or not _run.chapter.fuse_hint or meta == null or CraftingModule.of(_run) == null:
+		return false
+	return meta.flag(FLAG_FUSE_HINT) == 0 and meta.flag(FLAG_FUSE_DONE) == 0 and meta.lore.recipes.is_empty()
+
+
+func _queue_fuse_hint() -> void:
+	if not _fuse_hint_queued and _fuse_hint_due():
+		_fuse_hint_queued = true
+		_try_fuse_hint.call_deferred()     # 等这一帧的摆放、揭示走完
+
+
+## 棋盘和地上眼下能合的一对（两件都看得见、许拿去合、没锁、不是随身之物）：先找两件都在棋盘上的，再找一件在地上的；同档按 uid 小的。没有 = 空
+func fuse_hint_pair() -> Array:
+	var pool: Array = []
+	for c in [_run.board, _run.storage]:
+		if c == null:
+			continue
+		for raw in c.items():
+			var it := raw as ItemInstance
+			if it != null and not it.is_pinned() and _fusable(it):
+				pool.append(it)
+	var best: Array = []
+	var best_key := -1
+	for i in pool.size():
+		for j in range(i + 1, pool.size()):
+			var a := pool[i] as ItemInstance
+			var b := pool[j] as ItemInstance
+			if not _fuse_partner(a, b) and not _fuse_partner(b, a):
+				continue
+			var off := int(not _run.board.has_item(a.uid)) + int(not _run.board.has_item(b.uid))
+			var key := off * 1000000000000 + mini(a.uid, b.uid) * 1000000 + maxi(a.uid, b.uid)
+			if best.is_empty() or key < best_key:
+				best = [a, b]
+				best_key = key
+	return best
+
+
+## 第一次机会：标出两件（小锤），说一句。手上拿着东西、确认窗开着、面板没在屏上 = 等下一次变动再看。说了返回 true
+func _try_fuse_hint() -> bool:
+	_fuse_hint_queued = false
+	if not is_inside_tree() or not is_visible_in_tree() or not _fuse_hint_due():
+		return false
+	if (_drag != null and _drag.is_dragging()) or (fuse_note != null and fuse_note.is_open()):
+		return false
+	var pair := fuse_hint_pair()
+	if pair.is_empty():
+		return false
+	_run.meta.set_flag(FLAG_FUSE_HINT, 1)
+	var marks := {}
+	var ground_marks := {}
+	for it in pair:
+		if _run.board.has_item((it as ItemInstance).uid):
+			marks[(it as ItemInstance).uid] = true
+		else:
+			ground_marks[(it as ItemInstance).uid] = true
+	board_view.fuse_marks = marks
+	if ground != null:
+		ground.fuse_marks = ground_marks
+	_hint_text(UiText.t("fuse.first_hint"))
+	return true
+
+
 func _fuse_partner(held: ItemInstance, other: ItemInstance) -> bool:
 	var crafting := CraftingModule.of(_run)
 	return crafting != null and crafting.home_of(other.uid) != null and _fusable(held) and _fusable(other) and crafting.partner_ok(held, other)
@@ -117,6 +194,7 @@ func _build() -> void:
 	if crafting != null:
 		crafting.done.connect(_on_crafted)
 		_drag.fuse_partner = _fuse_partner
+		_drag.fuse_refused.connect(_hint_text)     # 317 U01
 		_drag.fuse_drop = func(held: ItemInstance, home: ItemContainer, target: ItemInstance, target_home: ItemContainer, ghost: Rect2) -> void:
 			ask_fuse_items(held, home, target, target_home, ghost)
 	# 175 第三批：铸牌压到武器上放手 = 附魔（任何格子容器里都行；铸牌已经拿在手上）
@@ -399,6 +477,8 @@ func _faith_name(id: StringName) -> String:
 
 ## 114：合成了：提示一句产物
 func _on_crafted(detail: Dictionary) -> void:
+	if _run.meta != null and _run.chapter != null and _run.chapter.fuse_hint:
+		_run.meta.set_flag(FLAG_FUSE_DONE, 1)     # 只有真合成了才记「合过」
 	if not is_inside_tree():
 		return
 	_hint_text(" ".join(PackedStringArray(detail.get("log", []))))

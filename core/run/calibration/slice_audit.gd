@@ -117,6 +117,13 @@ static func check_static(m: Dictionary, items: ItemDatabase, enemies: EnemyDatab
 				bad.append("搜索点 %d 有一轮没写搜到什么（会按正式版随机抽）" % nid)
 		if c.has("event") and not event_ids.has(String(c["event"])):
 			bad.append("点 %d 的事件 %s 不在清单里" % [nid, c["event"]])
+		var ev: EventDef = events.get(StringName(String(c.get("event", ""))), null)
+		if ev != null:
+			for opt in ev.options:
+				for cond in (opt as EventOption).requires:
+					var need := StringName(String(cond.get("item"))) if "item" in cond and not bool(cond.get("missing")) else &""
+					if need != &"" and not allowed.has(String(need)):
+						bad.append("点 %d 的事件 %s 有一项要 %s，切片里拿不到（v6.14 D02）" % [nid, ev.id, need])
 		var foes: Array = []
 		if c.has("enemy"):
 			foes.append(c)

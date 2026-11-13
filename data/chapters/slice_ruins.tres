@@ -26,6 +26,7 @@ characters = Array[StringName]([&"andreus"])
 starting_items = Array[StringName]([&"knife", &"bandage", &"ration"])
 allow_carry_in = false
 presets = Array[StringName]([&"slice_offense", &"slice_defense"])
+fuse_hint = true
 auto_spawn = true
 coaches = {
 "map": "slice_map",
