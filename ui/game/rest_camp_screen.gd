@@ -183,7 +183,7 @@ func _state(i: int, p: StringName) -> Dictionary:
 	if _done:
 		if p == &"sign":
 			return {"ok": true, "why": ""}
-		if p == &"forge" and NodeEvents.hearth_open(_node):     # 286：铁炉 = 砧 | 铸炉，有一栏没用过就能进
+		if p == &"forge" and NodeEvents.hearth_open(_node):     # 铸炉没铸过就能进
 			return {"ok": true, "why": ""}
 		return {"ok": false, "why": UiText.t("camp.used")}
 	return flow.run.events.option_state(i) if flow.run != null else {"ok": false, "why": ""}
@@ -205,7 +205,7 @@ func _build_footer() -> void:
 	row.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	add_child(row)
 	if flow.run != null:
-		row.add_child(ScrollKey.short(UiText.t("event.sort_pack"), toggle_bag))     # 和事件屏一样能整理背包（286：砧挪进「铁炉」两栏屏，占位键删了）
+		row.add_child(ScrollKey.short(UiText.t("event.sort_pack"), toggle_bag))     # 和事件屏一样能整理背包
 	for b in _extra_btns:
 		row.add_child(b)
 

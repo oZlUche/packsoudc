@@ -219,17 +219,13 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	for e in def.effects:
 		var d: String = e.describe() if e != null and e.has_method("describe") else ""
 		lines.append(UiText.t("tip.effect") % (d if d != "" else _type_name(e)))
-	if not wild:     # 298：贴着谁能拼成什么（拼接配方两边都写，材料那边也写），在「可升为」上面
+	if not wild:     # 298：贴着谁能拼成什么（拼接配方两边都写，材料那边也写）
 		var fus := fusions_line(def)
 		if fus != "":
 			lines.append(fus)
 		var made := made_from_line(def)
 		if made != "":
 			lines.append(made)
-	if def.tags.has(&"weapon") and not wild:     # 279 §四.3：能在砧上升成哪几把
-		var ups := upgrades_line(def)
-		if ups != "":
-			lines.append(ups)
 	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
 		lines.append(wear_line(inst))
 	if inst.is_benched():     # 2026-10-22：标了不参战 —— 写清楚，不然读数掉下来不知道为什么
@@ -415,22 +411,6 @@ static func opening_strikes(rule: AbilityRule) -> int:
 	return n
 
 
-## 279：「可升为：甲 / 乙」（按稀有度上色）；升不了 = 空。
-## 286（作者 11-07）：每个名字是**配方词**（`[url=recipe:<配方 id>]`，下划线同关键词）—— 悬浮窗里停上去开配方子窗（[method recipe_full]）
-static func upgrades_line(def: ItemDef) -> String:
-	var names: Array[String] = []
-	var seen := {}
-	for r in Anvil.upgrades_for(def, Anvil.recipes()):
-		var d := item_def(r.output)
-		if d == null or seen.has(r.output) or not recipe_known(r.id):     # 305：没自己锤过的不列     # 同一个产物有几张配方（不同材料）只写一遍
-			continue
-		seen[r.output] = true
-		names.append(recipe_word(r.id, d))
-	if names.is_empty():
-		return ""
-	return "[color=@dim]%s[/color]" % (UiText.t("tip.upgrades_to") % " / ".join(PackedStringArray(names)))
-
-
 ## 286：配方词的前缀
 const RECIPE_META := "recipe:"
 ## 298：道具词的前缀 —— 停上去开那件道具的整段悬浮窗（品质 0）
@@ -508,8 +488,8 @@ static func made_from_line(def: ItemDef) -> String:
 	return "[color=@dim]%s[/color]" % UiText.t("tip.fuse_sep").join(PackedStringArray(parts))
 
 
-## 298：拼接配方的子窗 —— 出件整段悬浮窗（品质 0）+「要　甲 + 乙」（两个都是道具词）；不写怎么拼（铜徽自己会说）
-static func _fuse_full(recipe_id: StringName) -> Dictionary:
+## 298：配方词的子窗（[code]recipe:<id>[/code]）—— 出件整段悬浮窗（品质 0）+「要　甲 + 乙」（两个都是道具词）；不写怎么拼（铜徽自己会说）。查不到 = 空字典
+static func recipe_full(recipe_id: StringName) -> Dictionary:
 	for r in fuse_recipes():
 		if r.id != recipe_id:
 			continue
@@ -530,55 +510,6 @@ static func _fuse_full(recipe_id: StringName) -> Dictionary:
 static func item_def(id: StringName) -> ItemDef:
 	var path := ContentPaths.asset_file("items", String(id))
 	return load(path) as ItemDef if ResourceLoader.exists(path) else null
-
-
-## 286：配方子窗 —— 出件那把的整段悬浮窗（品质 0；它自己的「可升为」照样是配方词，能一路往下开），
-## 正文末尾接：要什么（这把 + 材料**类** ≥ 最低稀有度；同一个产物的几张配方各一行）、品质一句、在哪锤。查不到配方 = 空字典
-static func recipe_full(recipe_id: StringName) -> Dictionary:
-	var pool := Anvil.recipes()
-	var r := SmithRecipeDef.find(pool, recipe_id)
-	if r == null:
-		return _fuse_full(recipe_id)     # 298：拼接配方
-	var out_def := item_def(r.output)
-	if out_def == null:
-		return {}
-	var full := describe_full(ItemInstance.create(out_def, 0))
-	var input := item_def(StringName(String(r.inputs.keys()[0]))) if not r.inputs.is_empty() else null
-	var lines: Array[String] = []
-	var smithy := r.funds
-	for sib in Anvil.upgrades_for(input, pool):
-		if sib.output != r.output:
-			continue
-		for m in sib.material_inputs:
-			lines.append(UiText.t("tip.recipe_needs") % [item_word(input) if input != null else "", recipe_material(sib, String(m), true)])     # 298：武器名、魔晶名是道具词
-	lines.append("[color=@dim]%s[/color]" % UiText.t("tip.recipe_quality"))
-	lines.append("[color=@dim]%s[/color]" % (UiText.t("tip.recipe_where") % ("%s%d" % [icon("coin"), smithy])))
-	full["body"] = "\n".join(PackedStringArray(([String(full.get("body", ""))] if String(full.get("body", "")) != "" else []) + lines))
-	full["text"] = "%s\n%s" % [String(full.get("text", "")), "\n".join(PackedStringArray(lines))]
-	return full
-
-
-static var _items_db: ItemDatabase = null
-
-
-## 286：魔晶石那一格要按家族找最便宜那颗的名字 —— 道具库（第一次用时读）
-static func _all_items() -> ItemDatabase:
-	if _items_db == null:
-		_items_db = ItemDatabase.new()
-		_items_db.load_dir()
-	return _items_db
-
-
-## 286：配方要的那一格材料写给人看：材质类「【金属】≥ 绿 ×1」（稀有度名按稀有度上色），魔晶石那一格「【火焰魔晶石】×1」
-## 298：[param words] = 魔晶石名写成道具词（悬浮窗里用；砧的便条不能停，照旧写死字）
-static func recipe_material(r: SmithRecipeDef, material: String, words: bool = false) -> String:
-	if SmithRecipeDef.is_crystal_key(material):
-		var d := r.material_sample(material, _all_items())
-		if d == null:
-			return UiText.t("tip.recipe_crystal") % ItemMaterials.name_of(StringName(material.substr(SmithRecipeDef.CRYSTAL_PREFIX.length())))
-		return UiText.t("tip.recipe_crystal") % (item_word(d) if words else Names.of(d))
-	var need := int(r.material_inputs.get(material, 0))
-	return UiText.t("tip.recipe_material") % [ItemMaterials.name_of(StringName(material)), "[color=@rarity%d]%s[/color]" % [need, rarity_name(need)]]
 
 
 ## 279 补充二：品质标记（一档一个）

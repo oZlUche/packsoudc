@@ -3,7 +3,7 @@
 ## [method ShopSession.candidates]、[method DropResolver.treasure_candidates]、[method RewardPool.probabilities]、[method Market.catalogue] /
 ## [method Market.loose_candidates]），这里不另写一套。敌人身上背的从真生成的图里数（[method RunState.start]），不按身份标签猜。
 ##
-## 来源分两种：**外部**（搜索、材料节点、宝箱、局内商店、敌人携带、珍宝掉落、事件奖励池、集市）和**派生**（铁匠铺 / 砧的配方、局内拼接配方）。
+## 来源分两种：**外部**（搜索、材料节点、宝箱、局内商店、敌人携带、珍宝掉落、事件奖励池、集市）和**派生**（铁匠铺配方、局内拼接配方）。
 ## 可达性 = 从外部来源出发在配方上做不动点闭包：算两遍 —— 「不要门槛」（不认 requires_unlock 的道具、不认要科技的配方）和「全开」。
 ## 每一格的结论（方案 §6.1 的 1～4；第 5 种「仓库里有但锁着」是存档状态，静态审计不管）：
 ## - `no_item`：库里没有顶得上的道具

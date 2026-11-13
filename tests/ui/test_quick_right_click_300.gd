@@ -1,5 +1,5 @@
 ## 300（作者 2026-11-11 13:29 / 13:30 / 13:31）：右键单击 = 这件的双击动作（悬浮窗第一颗按钮）；要两步确认的（放到地上）照旧钉窗。
-## 局内商店：右键商人的货 = 拿过来（待成交），右键待成交的 = 收回；进店商人问候一句。铁炉屏：包里双击 / 右键先砧后炉
+## 局内商店：右键商人的货 = 拿过来（待成交），右键待成交的 = 收回；进店商人问候一句。铁炉屏：包里双击 / 右键进铸炉
 extends RefCounted
 
 const Shop := preload("res://tests/ui/test_shop_keys.gd")
@@ -79,7 +79,7 @@ static func frame_shop(t: TestCase, root: Window) -> void:
 
 
 static func frame_forge(t: TestCase, root: Window) -> void:
-	t.begin("300 · 铁炉屏：包里右键 / 双击先砧后炉；砧的槽右键取回")
+	t.begin("300 · 铁炉屏：包里右键 / 双击进铸炉第一个空槽；槽右键取回（改造 D：砧拆了）")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
 	Support.cleanup("quick300")
@@ -93,27 +93,25 @@ static func frame_forge(t: TestCase, root: Window) -> void:
 	var node := F175._rest_next_to_spawn(flow, c, kit)
 	t.check(node != null and flow.step_to(node.id) and flow.open_forge(node), "进铁炉")
 	var screen = game.overlay()
-	if screen == null or not screen.has_method("anvil"):
-		t.check(false, "进了铁炉两栏屏")
+	if screen == null or not screen.has_method("slot"):
+		t.check(false, "进了铁炉屏")
 		game.queue_free()
 		Support.cleanup("quick300")
 		return
-	var col: AnvilColumn = screen.anvil()
+	t.check(not screen.has_method("anvil"), "没有砧那一栏")
 	var inv = screen._inv
 	var tip: HoverTip = screen._tip
 	var sword := ItemInstance.create(flow.items.get_def(&"broadsword"), 0)
-	var claw := ItemInstance.create(flow.items.get_def(&"beast_claw"), 0)
 	var salve := ItemInstance.create(flow.items.get_def(&"salve"), 0)
 	for it in flow.run.board.items().duplicate():     # 包留着，别的先拿走腾地方
 		if not flow.run.board.acts_as_bag((it as ItemInstance).def):
 			flow.run.board.remove((it as ItemInstance).uid)
-	for it in [sword, claw, salve]:
+	for it in [sword, salve]:
 		t.check(flow.run.board.try_add(it), "包里放 %s" % it.def.id)
 	tip.pin_on(inv.board_view, sword.uid)
-	t.check(col.weapon_slot.has_item(sword.uid), "右键阔剑（有升级配方）：进砧的武器槽")
-	t.check(inv.quick_move(inv.board_view, claw.uid) and col.material_slot.has_item(claw.uid), "双击兽爪：进砧的材料槽")
-	t.check(inv.quick_move(inv.board_view, salve.uid) and screen.output() != null and not flow.run.board.has_item(salve.uid) and not col.weapon_slot.has_item(salve.uid), "伤药砧不收：进铸炉的槽")
-	tip.pin_on(col._weapon_view, sword.uid)
-	t.check(flow.run.board.has_item(sword.uid) and not col.weapon_slot.has_item(sword.uid), "砧的武器槽右键：取回背包")
+	t.check((screen.slot(0) as GridInventory).has_item(sword.uid), "右键阔剑：进铸炉第一个槽")
+	t.check(inv.quick_move(inv.board_view, salve.uid) and (screen.slot(1) as GridInventory).has_item(salve.uid), "双击伤药：进下一个空槽")
+	tip.pin_on(screen.slot_view(0), sword.uid)
+	t.check(flow.run.board.has_item(sword.uid) and not (screen.slot(0) as GridInventory).has_item(sword.uid), "槽里右键：取回背包")
 	game.queue_free()
 	Support.cleanup("quick300")

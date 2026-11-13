@@ -1,5 +1,5 @@
 ## 304（武器、合成与铸造升级现状调查）：只读导出 —— 用正式加载入口（[ItemDatabase]、[RecipeDef.load_all]、[SmithRecipeDef.load_all]）
-## 把全部道具、相邻 / 拖合配方、铁匠铺与砧配方导成一份 JSON，供调查附表用。不写存档、不改内容。
+## 把全部道具、相邻 / 拖合配方、铁匠铺配方导成一份 JSON，供调查附表用。不写存档、不改内容。
 ##
 ##     godot --headless --path . --script res://tools/export_weapon_web.gd -- <输出.json>
 extends CliTool
@@ -30,7 +30,7 @@ func run() -> void:
 	for s in smith:
 		smith_rows.append({"id": String(s.id), "output": String(s.output), "inputs": _str_dict(s.inputs), "material_inputs": _str_dict(s.material_inputs), "material_slots": s.material_slots,
 			"funds": s.funds, "group": s.group, "level": s.level, "tech": String(s.tech), "tech_level": s.tech_level,
-			"is_upgrade": Anvil.is_upgrade(s), "note": s.note})
+			"note": s.note})
 	var doc := {
 		"generated_by": "tools/export_weapon_web.gd",
 		"engine": Engine.get_version_info().get("string", ""),

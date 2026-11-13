@@ -217,9 +217,9 @@ static func forge_used(node: MapNode) -> bool:
 	return node != null and bool(node.content.get("used_forge", false))
 
 
-## 286 §2.2：休息点的「铁炉」（砧 | 铸炉两栏）还有一栏能用 —— 铸炉没铸过，或砧没锤过
+## 休息点的「铁炉」还能进 —— 铸炉没铸过（改造 D：砧拆了，只剩铸炉）
 static func hearth_open(node: MapNode) -> bool:
-	return node != null and (not forge_used(node) or not Anvil.used(node))
+	return node != null and not forge_used(node)
 
 
 ## 175：铸炉用掉了：记在节点内容里（跟存档）。补充二：不影响休息点灰不灰（那是休息与神坛两份的事，[method settle_rest]）

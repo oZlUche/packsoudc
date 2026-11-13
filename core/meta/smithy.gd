@@ -153,25 +153,6 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) 
 	return out
 
 
-## 298：升级类配方（[method Anvil.is_upgrade]）打下去前后的两把：`before` = 仓库里会被吃掉的那把（没有 = null），
-## `after` = 出件（品质照 [method forge]：用得上的材料比要求高几档，和那把的品质取较高）。不是升级类 / 查不到出件 = 空字典
-static func preview(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) -> Dictionary:
-	if not Anvil.is_upgrade(recipe) or items == null or items.get_def(recipe.output) == null:
-		return {}
-	var key := String(recipe.inputs.keys()[0])
-	var before: ItemInstance = null
-	if meta != null:
-		for inst in meta.warehouse.items():
-			var it := inst as ItemInstance
-			if String(it.def.id) == key and not it.is_locked_by_player():
-				before = it
-				break
-	var q := maxi(before.quality() if before != null else 0, _material_quality(meta, recipe))
-	var after := ItemInstance.create(items.get_def(recipe.output), 0)
-	after.set_quality(clampi(q, 0, ItemInstance.QUALITY_MAX))
-	return {"before": before, "after": after}
-
-
 ## 279 补充二：旧的一类一件格（[member SmithRecipeDef.material_inputs]，排在 [method SmithRecipeDef.slots] 最前）用的那件比要求高几档；
 ## 310：带件数的新格（[member SmithRecipeDef.material_slots]）不升品质（方案 §5.3）
 static func _material_quality(meta: MetaState, recipe: SmithRecipeDef) -> int:

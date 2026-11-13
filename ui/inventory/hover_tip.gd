@@ -86,7 +86,7 @@ class TipWindow extends PanelContainer:
 	## 子窗：是父窗的哪个关键词开的
 	var origin_term := ""
 	var item_mode := false
-	## 286：正文里有配方词（「可升为」那一行）—— 没钉住时鼠标从源挪进窗里不收、接着走钉住进度
+	## 286：正文里有配方词 / 道具词（「可拼为」那一行）—— 没钉住时鼠标从源挪进窗里不收、接着走钉住进度
 	var has_recipe := false
 	## 265：右上角收藏丝带 —— -1 = 不画（不是道具窗 / 没有局外状态），0 = 没收藏，1 = 收藏了（[method set_fav]）
 	var fav := -1
@@ -686,35 +686,6 @@ func show_kind(def: ItemDef, at: Vector2, anchor: Rect2 = Rect2()) -> void:
 	_panel.clear_actions()
 
 
-## 298：常驻信息窗（[UpgradeCompare]）里停到一个词上 —— 照按钮那样当源叫出主窗：关键词（查 [param terms]）/ 配方词 / 道具词。
-## 查不到 / 钉住的窗不换 → false。鼠标离开那个词调 [method release]
-func show_meta(meta: String, terms: Dictionary, at: Vector2) -> bool:
-	if _panel.visible and _panel.pinned:
-		return false
-	if meta.begins_with(ItemTooltip.ITEM_META):
-		var def := ItemTooltip.item_def(StringName(meta.trim_prefix(ItemTooltip.ITEM_META)))
-		if def == null:
-			return false
-		show_kind(def, at)
-		return true
-	var full := {}
-	if meta.begins_with(ItemTooltip.RECIPE_META):
-		full = ItemTooltip.recipe_full(StringName(meta.trim_prefix(ItemTooltip.RECIPE_META)))
-		if full.is_empty():
-			return false
-	elif not terms.has(meta.trim_prefix("term:")):
-		return false
-	_for_view = null
-	_uid = -1
-	if not full.is_empty():
-		show_item(full, at)
-		_panel.clear_actions()
-		return true
-	var parts := term_parts(terms, meta.trim_prefix("term:"))
-	show_text(String(parts["bb"]), at, null, parts["terms"])
-	return true
-
-
 ## 丝带该是什么样：-1 不画（不是道具 / 没有局外状态）、0 没收藏、1 收藏了
 static func fav_state_of(def: ItemDef) -> int:
 	if def == null or not ItemFavorites.available():
@@ -984,7 +955,7 @@ func tick(delta: float, mouse: Vector2) -> void:
 	if not _panel.visible:
 		return     # 源刚离开（[method _begin_leave]）：没钉住的当场收了
 	if not _panel.pinned:     # 作者 10-27：没钉住时只有停在源上才走钉住进度；鼠标在窗里不算
-		if _on_source or _held_by_recipe(mouse):     # 286：带配方词的窗，鼠标在窗里也走（不然点不到「可升为」的词）
+		if _on_source or _held_by_recipe(mouse):     # 286：带配方词的窗，鼠标在窗里也走（不然点不到「可拼为」的词）
 			_panel.dwell += delta
 			if _panel.dwell >= PIN_DELAY_SEC + PIN_SEC:
 				pin(_panel)

@@ -8,7 +8,7 @@ const LINES := [
 
 
 static func run_lines(t: TestCase) -> void:
-	t.begin("281 · 极端武器：蓝 / 紫 / 橙各一把，标签 extreme，橙只能锻造；紫、橙在砧上从上一档升（骨 / 魔晶）；说明留空")
+	t.begin("281 · 极端武器：蓝 / 紫 / 橙各一把，标签 extreme，橙只能锻造（铁匠铺材料打造）；说明留空")
 	var items := ItemDatabase.new()
 	items.load_dir()
 	var recipes := SmithRecipeDef.load_all()
@@ -20,10 +20,8 @@ static func run_lines(t: TestCase) -> void:
 				continue
 			t.eq(def.is_no_random_source(), k == 2, "%s：橙只能锻造" % line[k])
 			t.eq(def.description, "", "%s：说明留空" % line[k])
-			if k == 0:
-				continue
-			var from := recipes.filter(func(r: SmithRecipeDef) -> bool: return r.output == line[k] and String(r.id).begins_with("anvil_"))     # 310：橙档另有 forge_* 材料打造
-			t.check(from.size() == 1 and (from[0] as SmithRecipeDef).inputs.has(line[k - 1]), "%s：砧上从 %s 升" % [line[k], line[k - 1]])
+			if k == 2:     # 改造 D：砧升级拆了，橙档走 forge_* 材料打造
+				t.eq(recipes.filter(func(r: SmithRecipeDef) -> bool: return r.output == line[k]).size(), 1, "%s：铁匠铺能打" % line[k])
 
 
 static func run_enemies_skip(t: TestCase) -> void:

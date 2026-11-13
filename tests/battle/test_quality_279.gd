@@ -2,6 +2,8 @@
 ## 句子里的个数每档 +1、自带的百分比每档 +5 点，耐力价不动、定义不碰；悬浮窗写最终值、名字旁菱形；存档往返
 extends RefCounted
 
+const T279R := preload("res://tests/meta/test_anvil_recipes_279.gd")
+
 const T110 := preload("res://tests/meta/test_tech.gd")
 const T251 := preload("res://tests/meta/test_smithy_251.gd")
 
@@ -71,7 +73,7 @@ static func run_forge(t: TestCase) -> void:
 	t.begin("279 补充二 · 铁匠铺：材料比要求高几档，产物就几档；和吃掉的那把取较高，不累加")
 	ItemInstance.reset_uid_counter()
 	var db := _db()
-	var r := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"anvil_bone_broadsword")
+	var r := T279R.bone_broadsword()     # 改造 D：砧升级拆了，铁匠铺的认材料还在，拿原样那张测
 	var m := T251._meta(1)
 	m.funds = 1000
 	T110._add(m, db, &"broadsword")
@@ -111,10 +113,10 @@ static func run_tooltip_numbers(t: TestCase) -> void:
 
 
 static func run_tooltip_crossbow_text(t: TestCase) -> void:
-	t.begin("279 测试 v5.15 · 钢弩：出手时那句单独写「造成 5 点真实伤害」；可升为同一产物只写一遍")
+	t.begin("279 测试 v5.15 · 钢弩：出手时那句单独写「造成 5 点真实伤害」；改造 D：不写可升为")
 	var db := _db()
 	var text := Glossary.strip_bbcode(ItemTooltip.describe(ItemInstance.create(db.get_def(&"steel_crossbow"), 0)))
 	t.check(text.contains("造成 5 点真实伤害") and not text.contains("其中 5 点"), "单独一段的真实伤害有主句（%s）" % text.replace("\n", " | "))
-	t.check(text.contains("可升为") and not text.contains("重弩 / 重弩"), "可升为不重复")
+	t.check(not text.contains("可升为"), "砧升级拆了：没有可升为")
 	var sword := Glossary.strip_bbcode(ItemTooltip.describe(ItemInstance.create(db.get_def(&"steel_broadsword"), 0)))
 	t.check(sword.contains("其中") and sword.contains("点真实伤害"), "跟在主伤害后面的仍写「其中 N 点真实伤害」")

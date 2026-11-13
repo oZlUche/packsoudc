@@ -79,7 +79,7 @@ static func run_closure(t: TestCase) -> void:
 
 
 static func run_new_materials(t: TestCase) -> void:
-	t.begin("303 第 3 步 · 三件首批材料：绿、说明留空；梣木枝出在废墟林地、沙漏没有林地；风干木料出在遗骸和木材料池；玄武岩出在矿脉；都被木 / 石配方认")
+	t.begin("303 第 3 步 · 三件首批材料：绿、说明留空；梣木枝出在废墟林地、沙漏没有林地；风干木料出在遗骸和木材料池；玄武岩出在矿脉；改造 D 后暂时没有配方认")
 	var items := _items()
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()
@@ -99,8 +99,8 @@ static func run_new_materials(t: TestCase) -> void:
 		for it in row["items"]:
 			if it["open"]:
 				used[it["id"]] = true
-	for id in ["straight_ash_branch", "seasoned_timber", "dense_basalt"]:
-		t.check(used.has(id), "%s：有配方认、不要门槛拿得到" % id)
+	for id in ["straight_ash_branch", "seasoned_timber", "dense_basalt"]:     # 改造 D：砧拆了，绿木 / 石没有打造格认了（报告 316 §四，等作者定）
+		t.check(not used.has(id), "%s：砧拆了以后暂时没有配方认" % id)
 	var c := MaterialSupplyAudit.counts(res)
 	t.eq(int(c[MaterialSupplyAudit.NO_ITEM]), 0, "全库没有「库里没道具」的格（%s）" % c)
 	var open_broken: Array = res["slots"].filter(func(row: Dictionary) -> bool:     # 只扫两张图时，敌人才背的锁定件可能没碰上；不要门槛的不该断

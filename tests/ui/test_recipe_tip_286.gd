@@ -1,4 +1,4 @@
-## 286（作者 2026-11-07 15:02）：道具悬浮窗「可升为」的名字是配方词 —— 停上去开配方子窗（出件整段悬浮窗 + 要什么 / 品质 / 在哪锤），能一路往下开；
+## 286（作者 2026-11-07 15:02）：道具悬浮窗里的配方词 —— 停上去开配方子窗（出件整段悬浮窗 + 要什么），能一路往下开（改造 D 起只剩「可拼为」的合成配方词）；
 ## 带配方词的窗没钉住时鼠标从道具挪进窗里不收、接着走钉住进度（别的窗照作者 10-27 收）
 extends RefCounted
 
@@ -6,22 +6,18 @@ const CS := preload("res://tests/run/test_characters_149.gd")
 
 
 static func run_recipe_words(t: TestCase) -> void:
-	t.begin("286 · 「可升为」每个名字是配方词；配方子窗写出件、要什么（材料类 ≥ 色）、品质一句、在哪锤")
+	t.begin("286 · 配方词：「可拼为」的出件是配方词；配方子窗写出件、要哪两件；改造 D：没有「可升为」")
+	ItemTooltip.recipe_probe = Callable()
 	var c := CS._content()
-	var dagger := c.items.get_def(&"bonefang_dagger")
-	var line := ItemTooltip.upgrades_line(dagger)
-	t.check(line.contains("[url=recipe:anvil_bloodbone_spike]"), "骨牙匕首：嗜血骨刺是配方词（%s）" % line)
-	t.check(line.contains("[u]"), "下划线同关键词")
-	var full := ItemTooltip.recipe_full(&"anvil_bloodbone_spike")
-	var body := String(full.get("body", ""))
-	var spike := c.items.get_def(&"bloodbone_spike")
-	t.check(String(full.get("head", "")).contains(Names.of(spike)), "子窗头是出件那把")
-	t.check(body.contains(Names.of(dagger)) and body.contains(ItemMaterials.name_of(&"metal")) and body.contains(ItemTooltip.rarity_name(2)), "要　骨牙匕首 + 【金属】≥ 绿 ×1（%s）" % body)
-	t.check(body.contains(UiText.t("tip.recipe_quality")), "品质一句")
-	t.check(body.contains(UiText.t("tip.recipe_where").split("%")[0]) and body.contains("120"), "在哪锤：休息点的砧 / 铁匠铺 120")
-	t.check(body.contains("[url=recipe:"), "出件自己的「可升为」也是配方词（能一路往下开）")
+	var knife := c.items.get_def(&"knife")
+	var line := ItemTooltip.fusions_line(knife)
+	t.check(line.contains("[url=recipe:fuse_twin_blades]") and line.contains("[u]"), "匕首：双刀是配方词、下划线同关键词（%s）" % line)
+	var full := ItemTooltip.recipe_full(&"fuse_twin_blades")
+	t.check(String(full.get("head", "")).contains(Names.of(c.items.get_def(&"twin_blades"))), "子窗头是出件")
+	t.check(String(full.get("body", "")).contains("[url=item:knife]"), "要　匕首 + 匕首")
 	t.eq(ItemTooltip.recipe_full(&"no_such_recipe"), {}, "查不到配方：空")
-	t.check(String(ItemTooltip.describe_full(ItemInstance.create(c.items.get_def(&"smoked_fish"))).get("body", "")).find("recipe:") < 0, "熏鱼没有配方词（310：伤药有了拼接配方）")
+	t.eq(ItemTooltip.recipe_full(&"anvil_bloodbone_spike"), {}, "旧砧配方：查不到")
+	t.check(String(ItemTooltip.describe_full(ItemInstance.create(c.items.get_def(&"bonefang_dagger"))).get("body", "")).find("recipe:anvil_") < 0, "骨牙匕首不再写可升为")
 
 
 static func _board(root: Window, id: StringName) -> Dictionary:
@@ -57,36 +53,29 @@ static func _inside(tip: HoverTip, view: Control) -> Vector2:
 
 static func frame_pin_exception(t: TestCase, root: Window) -> void:
 	t.begin("286 · 带配方词的窗：鼠标从道具挪进窗里不收、走满钉住；停配方词开子窗、再开到 3 层停；别的窗照旧收")
-	var f := _board(root, &"bonefang_dagger")
+	var f := _board(root, &"knife")
 	var tip: HoverTip = f["tip"]
-	t.check(tip.is_showing() and tip._panel.has_recipe, "骨牙匕首的窗有配方词")
+	t.check(tip.is_showing() and tip._panel.has_recipe, "匕首的窗有配方词")
 	var inside := _inside(tip, f["view"])
 	t.check(inside.x >= 0.0, "窗里有一点不在视图上")
 	tip.tick(0.016, inside)
 	t.check(tip.is_showing() and not tip.is_pinned(), "挪进窗里：不收")
 	tip.tick(HoverTip.PIN_DELAY_SEC + HoverTip.PIN_SEC + 0.01, inside)
 	t.check(tip.is_pinned(), "在窗里走满：钉住了")
-	tip._panel.hover("recipe:anvil_bloodbone_spike")
+	tip._panel.hover("recipe:fuse_twin_blades")
 	tip.tick(HoverTip.TERM_SEC + 0.01, inside)
 	var open := tip.windows()
 	t.eq(open.size(), 2, "停在配方词上：开了子窗")
 	if open.size() == 2:
 		var child := open[1]
-		t.check(child.item_mode and child.text().contains(Names.of(CS._content().items.get_def(&"bloodbone_spike"))), "子窗是嗜血骨刺的整段窗")
-		t.check(child.has_recipe, "子窗里也有配方词")
+		t.check(child.item_mode and child.text().contains(Names.of(CS._content().items.get_def(&"twin_blades"))), "子窗是双刀的整段窗")
+		t.check(child.has_recipe, "子窗里也有道具词")
 		tip.pin(child)
-		var meta := ""
-		for r in Anvil.upgrades_for(CS._content().items.get_def(&"bloodbone_spike"), Anvil.recipes()):
-			meta = "recipe:" + String(r.id)
-			break
-		var grand := tip.open_child(child, meta)
-		t.not_null(grand, "再往下开一层（%s）" % meta)
+		var grand := tip.open_child(child, "item:knife")
+		t.not_null(grand, "再往下开一层（匕首）")
 		if grand != null:
 			tip.pin(grand)
-			var deeper := ""
-			for r in Anvil.upgrades_for(CS._content().items.get_def((Anvil.recipes().filter(func(x): return "recipe:" + String(x.id) == meta)[0] as SmithRecipeDef).output), Anvil.recipes()):
-				deeper = "recipe:" + String(r.id)
-			t.is_null(tip.open_child(grand, deeper if deeper != "" else meta), "到 %d 层就停" % HoverTip.MAX_DEPTH)
+			t.is_null(tip.open_child(grand, "recipe:fuse_twin_blades"), "到 %d 层就停" % HoverTip.MAX_DEPTH)
 	(f["host"] as Control).queue_free()
 	# 没有配方词的窗：挪进窗里照收
 	f = _board(root, &"smoked_fish")
@@ -97,7 +86,7 @@ static func frame_pin_exception(t: TestCase, root: Window) -> void:
 	t.check(not tip.is_showing(), "挪进窗里：当场收（作者 10-27）")
 	(f["host"] as Control).queue_free()
 	# 286 测试 11-07：格子边到窗边有一条几像素的缝 —— 鼠标停在缝上不收
-	f = _board(root, &"bonefang_dagger")
+	f = _board(root, &"knife")
 	tip = f["tip"]
 	var rr := tip._panel.global_rect()
 	var gap := Vector2(rr.position.x - 6.0, rr.end.y - 6.0)
@@ -108,7 +97,7 @@ static func frame_pin_exception(t: TestCase, root: Window) -> void:
 		t.check(not tip.is_showing(), "再往外：收")
 	(f["host"] as Control).queue_free()
 	# 带配方词的窗：挪进窗里又挪出去（不回道具）→ 收
-	f = _board(root, &"bonefang_dagger")
+	f = _board(root, &"knife")
 	tip = f["tip"]
 	inside = _inside(tip, f["view"])
 	tip.tick(0.016, inside)
