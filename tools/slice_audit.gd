@@ -15,6 +15,7 @@ func run() -> void:
 		finish(1)
 		return
 	var r := SliceAudit.run_all(m, int(opts.get("seeds", "20")))
+	print("覆盖的开局入口：%s" % "、".join(r["entries"]))
 	print("见过的道具：%s" % ", ".join(r["seen"]))
 	for line in r["problems"]:
 		print("✗ " + String(line))

@@ -202,7 +202,7 @@ static func start(
 		board_size = p_character.board_size
 		if p_layout.is_empty():
 			full_kit = p_character.starting_bags + kit
-	full_kit.append_array(p_chapter.starting_items)     # 章节发的（序章二：一把匕首）
+	full_kit.append_array(supply_left(p_chapter, p_layout))     # 章节发的（序章二：一把匕首）；开局屏已经摆上棋盘的不再发（切片 v6.14 U02）
 	var ctx := s.buff_context()     # 角色定了再算：技能的被动（体力上限、开局钱）也在里面（082）
 	# 149：体力上限、开局钱按角色的基数乘科技的百分比再加加算；章节的体力加成在最后加
 	s.vitality = Vitality.new(ctx.vitality_max_of(vitality_max) + p_chapter.vitality_bonus)
@@ -881,7 +881,30 @@ func _offer_loot(container: GridInventory) -> void:
 
 
 ## 开局屏摆好的棋盘怎么记：一件一行（定义 id、落点、朝向）。不记实例：一局的 uid 从 1 重编，进来时重造
-static func layout_of(board_: GridInventory) -> Array:
+## 切片 v6.14 U02：开局屏把章节补给（[member ChapterDef.starting_items]）也摆上了棋盘，那几行带 `supply: true`。
+## 开局时章节补给里还没摆的那些才另发 —— 预览和真开局同一份：摆了几件就少发几件，多标的不算
+const SUPPLY_KEY := "supply"
+
+
+static func supply_left(chapter_: ChapterDef, layout: Array) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if chapter_ == null:
+		return out
+	var placed := {}
+	for row in layout:
+		if row is Dictionary and bool((row as Dictionary).get(SUPPLY_KEY, false)):
+			var id := StringName(String(row.get("id", "")))
+			placed[id] = int(placed.get(id, 0)) + 1
+	for id in chapter_.starting_items:
+		if int(placed.get(id, 0)) > 0:
+			placed[id] = int(placed[id]) - 1
+		else:
+			out.append(id)
+	return out
+
+
+## [param supply]：开局屏标成章节补给的 uid（uid → true），那几行写 `supply: true`
+static func layout_of(board_: GridInventory, supply: Dictionary = {}) -> Array:
 	var out: Array = []
 	if board_ == null:
 		return out
@@ -897,6 +920,8 @@ static func layout_of(board_: GridInventory) -> Array:
 	for inst in rows:
 		var it := inst as ItemInstance
 		var row := {"id": String(it.def.id), "origin": [it.origin.x, it.origin.y], "rot": it.rotation}
+		if supply.has(it.uid):
+			row[SUPPLY_KEY] = true
 		if not it.state.is_empty():
 			row["state"] = it.state.duplicate(true)     # 148：魔晶石剩几次跟着带进来
 		out.append(row)

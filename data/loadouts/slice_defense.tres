@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="LoadoutDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/loadout_def.gd" id="1_r1aad"]
+
+[resource]
+script = ExtResource("1_r1aad")
+id = &"slice_defense"
+display_name = "坚守"
+display_names = {
+"en": "Bulwark"
+}
+description = "偏防御：一件皮甲和一块磨刀石，挨得住打"
+descriptions = {
+"en": "Defense: leather armor and a whetstone. Takes hits well."
+}
+preset = true
+items = Array[StringName]([&"leather_armor", &"whetstone", &"salve"])
+chapter_only = true

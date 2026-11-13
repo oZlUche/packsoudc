@@ -26,6 +26,8 @@ extends Resource
 @export var tier: StringName = TIER_FREE
 ## 285 第二版（作者 14:56「类似新兵券、制式券之类的」）：高级预设要的券（道具 id，带 `ticket` 标签）；免费 / 收费不写
 @export var ticket: StringName = &""
+## 切片 v6.14 B02：只给在 [member ChapterDef.presets] 里点名它的章节用，别的章不列（切片专用的两套）
+@export var chapter_only: bool = false
 
 const TIER_FREE := &"free"
 const TIER_PAID := &"paid"

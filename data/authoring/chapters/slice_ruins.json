@@ -22,6 +22,10 @@
     "ration"
   ],
   "allow_carry_in": false,
+  "presets": [
+    "slice_offense",
+    "slice_defense"
+  ],
   "auto_spawn": true,
   "coaches": {
     "map": "slice_map",

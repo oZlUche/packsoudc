@@ -72,6 +72,9 @@ const COACH_KINDS: Array[StringName] = [&"map", &"battle", &"bag", &"prebattle"]
 @export var next_chapter: StringName = &""
 ## 开局能不能从仓库带东西进来（序章不能：教程从空包开始）
 @export var allow_carry_in: bool = true
+## 切片 v6.14 B02：这一章能挑的预设套（loadout id，按列的顺序）。空 = 照旧（全部能列的，见 [method GameFlow.presets]）；
+## 写了就只列这几套，出发时后端也只认这几套
+@export var presets: Array[StringName] = []
 ## 285：打赢核心 BOSS 必掉的券（道具 id，带 `ticket` 标签；高级预设拿它换一套）。空 = 不掉（序章）
 @export var boss_ticket: StringName = &""
 ## 开局直接站在第一个出生点上，不用挑（084：序章只有一条路、一个出生点）
