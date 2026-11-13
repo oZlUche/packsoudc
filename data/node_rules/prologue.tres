@@ -22,3 +22,8 @@ search = SubResource("Resource_cf8xj")
 event_weights = {
 "story": 1
 }
+flee = {
+"chance": 0.5,
+"fail_buff": "",
+"fail_vitality": 0
+}

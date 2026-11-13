@@ -62,3 +62,11 @@
 - **三处**：`search_encounter` 加「逃跑（{flee_chance}%）」；`event_ambush` 的「绕开」换成同一项（成功不再背虚弱）；`HunterSystem.flee` 改调 `flee_roll`（成功率、扣体力、歇几步仍按猎手定义，失败也背虚弱）。新占位符 `{flee_chance}`（`docs/text-placeholders.md`）。序章教程那场遭遇（`tut_search_2_encounter`）没动。
 - 测试 `tests/run/test_retreat_flee_248.gd`（退回的步数 / 点 / 同一场、哪些场合不给、三种逃跑成败、占位符）；`test_unarmed_222` 验战前屏左下角的「退回」；`test_node_screens` 的「有人来了」改成两项。
 
+
+## 补充（作者 2026-11-13）：逃跑失败直接开打
+
+作者：「逃跑失败应该直接开打才对」。原先没逃掉要扣 1 点体力、背虚弱，再开打；现在只开打，不扣体力、不背虚弱。
+- 三张节点规则（standard / prologue / slice_ruins）的 `flee` 改成 `fail_vitality 0`、`fail_buff ""`；猎手定义的 `flee_fail_vitality` 默认改成 0。机制本身留着（规则写了就照扣）。
+- 跟着改的字：求饶的限制说明、技能说明、百科「体力」「角色」两页，不再提「逃跑失败」。
+- 逃跑失败不扣体力，就不会进求饶屏，也不会放劈心动画。
+- 测试：`test_retreat_flee_248` 的机制用例自己配规则；新加一条，核对正式规则和猎手都不扣。

@@ -46,9 +46,9 @@
       "display_names": {
         "en": "Beg for Mercy"
       },
-      "description": "打输了或逃跑失败，可以用金币和道具抵掉体力损失。核心点不能。",
+      "description": "打输了，可以用金币和道具抵掉体力损失。核心点不能。",
       "descriptions": {
-        "en": "Lost a fight or failed to flee? Pay coins and items instead of Vitality (not at the core)."
+        "en": "Lost a fight? Pay coins and items instead of Vitality (not at the core)."
       },
       "passive": [
         {

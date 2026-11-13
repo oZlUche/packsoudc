@@ -543,7 +543,7 @@ const TEXT := {
 	"pre.ambush_btn": {"zh": "%s ×%d", "en": "%s ×%d"},     # 256：键上写名字和剩几次（字区 72 宽）
 	"ransom.title": {"zh": "求饶", "en": "Beg for Mercy"},
 	"ransom.intro": {"zh": "求饶：拿金币和道具抵掉这一回的体力损失", "en": "Beg for mercy: pay coins and items instead of losing Vitality"},
-	"ransom.limits": {"zh": "打输了、逃跑失败都能求饶；核心点不能", "en": "Works for lost fights and failed escapes; not at the core"},
+	"ransom.limits": {"zh": "打输了能求饶；核心点不能", "en": "Works for lost fights; not at the core"},
 	"ransom.tray_tip": {"zh": "把道具拖上来：每件按局内出售价算重量；锁住的放不上", "en": "Drag items here: each weighs its in-run sell price; locked items can't go on"},
 	"ransom.coins_tip": {"zh": "放上左盘的金币（一枚算 1）", "en": "Coins on your pan (each weighs 1)"},
 	"ransom.price_tip": {"zh": "对方开价：打赢对方能得的钱 ×%s", "en": "Their price: the win reward for this foe ×%s"},
@@ -1282,7 +1282,7 @@ const TEXT := {
 	"bonus.erosion_resist": {"zh": "侵蚀扣体力少扣 %d 点", "en": "Erosion costs %d less Vitality"},
 	"bonus.extra_searches": {"zh": "每个搜索点多搜 %d 次", "en": "Extra searches per search spot: %d"},
 	"bonus.flee": {"zh": "逃跑 %+.0f%%", "en": "Flee %+.0f%%"},
-	"bonus.ransom": {"zh": "打输了、逃跑失败，可以用金币和道具抵掉体力损失（核心点不能）", "en": "Lost a fight or failed to flee: pay coins and items instead of Vitality (not at the core)"},
+	"bonus.ransom": {"zh": "打输了，可以用金币和道具抵掉体力损失（核心点不能）", "en": "Lost a fight: pay coins and items instead of Vitality (not at the core)"},
 	"bonus.tag_mods": {"zh": "%s：%s", "en": "%s: %s"},
 	"bonus.tag_weight": {"zh": "%s的重量 %s", "en": "%s weight %s"},
 	"bonus.tag_sep": {"zh": "、", "en": ", "},
