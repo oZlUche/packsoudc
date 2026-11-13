@@ -1,0 +1,34 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+   at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+WARNING: DragLayer: uid 45 无法放回原位，改为自动装填
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _restore (res://ui/inventory/drag_layer.gd:1135)
+       [1] cancel (res://ui/inventory/drag_layer.gd:1108)
+       [2] _input (res://ui/inventory/drag_layer.gd:290)
+WARNING: DragLayer: uid 25 无法放回原位，改为自动装填
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _restore (res://ui/inventory/drag_layer.gd:1135)
+       [1] cancel (res://ui/inventory/drag_layer.gd:1108)
+       [2] _input (res://ui/inventory/drag_layer.gd:290)
+ERROR: Condition "slot >= slot_max" is true. Returning: nullptr
+   at: get_instance (./core/object/object.h:912)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://ui/game/inventory_panel.gd:360)
+       [1] _on_view_input (res://ui/inventory/hover_tip.gd:1220)
+       [2] <anonymous lambda> (res://ui/inventory/hover_tip.gd:496)
+SCRIPT ERROR: Invalid call. Nonexistent function 'is_open' in base 'Vector2'.
+   at: BagWindow.<anonymous lambda> (res://ui/game/inventory_panel.gd:354)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://ui/game/inventory_panel.gd:354)
+       [1] _on_view_input (res://ui/inventory/hover_tip.gd:1220)
+       [2] <anonymous lambda> (res://ui/inventory/hover_tip.gd:496)
+
+Debugger Break, Reason: 'Invalid call. Nonexistent function 'is_open' in base 'Vector2'.'
+*Frame 0 - res://ui/game/inventory_panel.gd:354 in function '<anonymous lambda>'
+Enter "help" for assistance.
+debug>

@@ -1,0 +1,49 @@
+[
+  {
+    "outcome": "extracted",
+    "reason": "extract",
+    "seed": 70060,
+    "chapter": "slice_ruins",
+    "steps": 14,
+    "visited": 11,
+    "battles_won": 3,
+    "battles_lost": 0,
+    "balance": 24,
+    "value": 438,
+    "items": [
+      "bag_leather",
+      "bag_leather",
+      "bag_small",
+      "ration",
+      "leather_armor",
+      "salve",
+      "broadsword",
+      "bandage_roll",
+      "poisoned_knife",
+      "round_shield",
+      "bag_leather",
+      "round_shield",
+      "knife"
+    ],
+    "safe": 0,
+    "safe_value": 0,
+    "character": "andreus",
+    "difficulty": "normal",
+    "ended_at": 1794587015,
+    "elite_won": 1,
+    "boss_won": 0,
+    "searches": 2,
+    "crafts": 4,
+    "scale": "",
+    "faith": {},
+    "score": 890,
+    "score_parts": {
+      "loot": 438,
+      "battle": 150,
+      "explore": 302,
+      "mult": 1
+    },
+    "run_no": 1,
+    "pinned": false
+  }
+]
