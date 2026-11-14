@@ -94,6 +94,7 @@ static func run_achievements(t: TestCase) -> void:
 	r.outcome = &"extracted"
 	r.chapter_id = c.chapter.id
 	r.value = 350
+	r.loot_net = 350     # 319：结算按本局新得
 	r.boss_cleared = true
 	r.battles_won = 4
 	flow.meta.absorb(r)

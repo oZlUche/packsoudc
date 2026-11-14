@@ -87,7 +87,7 @@ static func frame_last_and_supplies(t: TestCase, root: Window) -> void:
 	if hard != null:
 		f.meta.set_flag(&"last_difficulty", hard.level)
 	f.meta.belt_grants = {&"smoke_bomb": 2}
-	var buff := load(ContentPaths.asset_file("run_buffs", "tech_luck_1")) as RunBuffDef
+	var buff := load(ContentPaths.asset_file("run_buffs", "tech_pack_1")) as RunBuffDef
 	if buff != null:
 		f.buff_defs[buff.id] = buff
 		f.meta.tech_buffs.append(buff.id)

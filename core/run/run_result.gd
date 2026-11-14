@@ -10,6 +10,8 @@ extends RefCounted
 var outcome: StringName = &""       # &"extracted" / &"defeated"
 var reason: StringName = &""        # RunState.end_reason：extract / vitality_depleted / boss_lost
 var run_seed: int = 0
+## 319：这一局的 [member RunState.run_id] —— 局外按它认「这一局结算过没有」（空 = 不查重：测试造的局）
+var run_id: String = ""
 var chapter_id: StringName = &""
 var chapter_name: String = ""
 ## 260：哪个角色、哪档难度、几时结束（unix 秒）—— 基地军功碑的「最佳一局」要写
@@ -55,6 +57,12 @@ var score: int = 0
 var score_parts: Dictionary = {}
 ## 269：难度档（[member DifficultyDef.level]，普通 0）—— 难度系数按它
 var difficulty_level: int = 0
+## 319：战利分用的「本局新得」价值（[method ItemValue.net_in]：带进来的、买来的扣掉本金）—— 棋盘上带出的 / 保险箱里的。
+## [member value] / [member safe_value] 照旧是背出去的全价（账单、军功碑看它）
+var loot_net: int = 0
+var safe_net: int = 0
+## 319：这一局按总分阶梯领了几点见识（[method MetaState.absorb] 发的时候写；试玩切片不发 = 0）
+var insight: int = 0
 
 
 ## 结束了的一局才算得出账；没结束返回 null
@@ -65,6 +73,7 @@ static func settle(state: RunState) -> RunResult:
 	r.outcome = &"extracted" if state.phase == RunState.Phase.EXTRACTED else &"defeated"
 	r.reason = state.end_reason
 	r.run_seed = state.run_seed
+	r.run_id = state.run_id
 	r.chapter_id = state.chapter.id if state.chapter != null else &""
 	r.chapter_name = Names.of(state.chapter) if state.chapter != null else ""
 	r.character_id = state.character_id
@@ -98,6 +107,7 @@ static func settle(state: RunState) -> RunResult:
 			r.carried.append(item)
 			if not item.def.is_bullion():     # 244：金银是花钱买的，不算搜刮成绩（钱照样回仓库）
 				r.value += ItemValue.of_in(item, state.board)     # 209：百宝囊里的按倍率
+				r.loot_net += ItemValue.net_in(item, state.board)     # 319：扣掉本金
 	var safe := SafeModule.of(state)     # 101：保险箱的状态在模块里
 	if safe != null and safe.inventory != null:
 		r.safe_size = safe.inventory.size
@@ -106,6 +116,7 @@ static func settle(state: RunState) -> RunResult:
 			r.safe_items.append(item)
 			if not item.def.is_bullion():     # 244：同上
 				r.safe_value += ItemValue.of(item.def)
+				r.safe_net += ItemValue.net_in(item, null)     # 319
 			r.safe_layout.append({"def": item.def, "origin": item.origin, "rotation": item.rotation})
 	r.compute_score()
 	return r
@@ -116,8 +127,8 @@ func compute_score(lit: int = 0, rules: ScoreRules = null) -> int:
 	if rules == null:
 		rules = ScoreRules.load_rules()
 	var loot := 0
-	if rules.loot_counts:
-		loot = safe_value + (value if is_extracted() else 0)
+	if rules.loot_counts:     # 319：按本局新得的算（带进带出、买来带出不得分）
+		loot = safe_net + (loot_net if is_extracted() else 0)
 	var normal := maxi(0, battles_won - elite_won - boss_won)
 	var battle := normal * rules.kill_points("normal") + elite_won * rules.kill_points("elite") + boss_won * rules.kill_points("boss")
 	var explore := visited * rules.explore_points("visited") + searches * rules.explore_points("search") \
@@ -159,6 +170,7 @@ func to_dict() -> Dictionary:
 		"character": String(character_id), "difficulty": String(difficulty_id), "ended_at": ended_at,
 		"elite_won": elite_won, "boss_won": boss_won, "searches": searches, "crafts": crafts, "scale": String(scale_id),
 		"faith": faith_top, "score": score, "score_parts": score_parts.duplicate(),
+		"score_v": ScoreRules.load_rules().version, "insight": insight, "run_id": run_id,     # 319
 	}
 
 

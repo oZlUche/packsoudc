@@ -922,8 +922,10 @@ static func layout_of(board_: GridInventory, supply: Dictionary = {}) -> Array:
 		var row := {"id": String(it.def.id), "origin": [it.origin.x, it.origin.y], "rot": it.rotation}
 		if supply.has(it.uid):
 			row[SUPPLY_KEY] = true
-		if not it.state.is_empty():
-			row["state"] = it.state.duplicate(true)     # 148：魔晶石剩几次跟着带进来
+		var st := it.state.duplicate(true)
+		st.erase(ItemInstance.BASIS_KEY)     # 319：本金是一局里的账，开局时重记
+		if not st.is_empty():
+			row["state"] = st     # 148：魔晶石剩几次跟着带进来
 		out.append(row)
 	return out
 
@@ -1163,6 +1165,7 @@ func _seed_owned() -> void:
 			owned_uids[item.uid] = true
 			acquired_ids[String(item.def.id)] = true
 			item.mark_run_in()     # 281：带进来的法杖记一笔，带回基地才算一次进出
+			item.set_basis(ItemValue.of_instance(item))     # 319：带进来的是本金，带出去不算战利分
 
 
 ## 305：知道这张合成配方吗 —— 这一局学到的，或局外早就知道的（[Lore]）

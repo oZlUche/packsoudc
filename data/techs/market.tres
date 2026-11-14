@@ -10,18 +10,11 @@ facility = &"market"
 
 [sub_resource type="Resource" id="Resource_f80tu"]
 script = ExtResource("3_l1jbx")
-funds = 1200
-items = {
-"hardwood_plank": 2
-}
+insight = 2
 
 [sub_resource type="Resource" id="Resource_3mobv"]
 script = ExtResource("3_l1jbx")
-funds = 2000
-items = {
-"nail_keg": 1,
-"steel_ingot": 2
-}
+insight = 3
 
 [resource]
 script = ExtResource("2_f76vl")
@@ -30,12 +23,12 @@ display_name = "高级货物"
 display_names = {
 "en": "Finer Goods"
 }
-order = 2
 requires = Array[StringName]([&"bargain"])
 column = 1
 description = "集市进更好的货：固定摊位进绿色、蓝色货，散货摊货位更多。"
 descriptions = {
 "en": "The market stocks finer goods: fixed stalls carry green and blue wares, and the Bazaar gets more slots."
 }
+tree = &"mechanism"
 effect = SubResource("Resource_eelas")
 tiers = Array[ExtResource("3_l1jbx")]([SubResource("Resource_f80tu"), SubResource("Resource_3mobv")])

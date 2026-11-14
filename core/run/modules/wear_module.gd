@@ -75,6 +75,7 @@ static func shatter(board: GridInventory, inst: ItemInstance, items: ItemDatabas
 	if board.remove(inst.uid) == null:
 		return null
 	var shard := ItemInstance.create(to, 0)
+	CraftingModule.carry_basis(shard, [inst])     # 319
 	shard.container_id = board.id
 	shard.placed_seq = seq
 	if board.place(shard, at, 0):

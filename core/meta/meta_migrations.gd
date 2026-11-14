@@ -23,6 +23,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v2_to_v3(d)
 			3:
 				d = _v3_to_v4(d)
+			4:
+				d = _v4_to_v5(d)
 			_:
 				push_warning("MetaMigrations: 没有 v%d → v%d 的迁移，停在 v%d" % [v, v + 1, v])
 				return d
@@ -56,3 +58,62 @@ static func _v3_to_v4(d: Dictionary) -> Dictionary:
 				levels[id] = mini(int(levels[id]), 2)
 	return d
 
+
+
+## 319：v4 那一版（v6.19）的旧成本 —— 迁移按它退，**不按现在的科技表推算**（表改了，旧账还是旧账）。科技 id → 每级 {funds, items}
+const V4_COSTS := {
+	"luck": [{"funds": 400, "items": {}}, {"funds": 800, "items": {}}, {"funds": 1300, "items": {"hardwood_plank": 2, "rivet_box": 2}}],
+	"bargain": [{"funds": 500, "items": {}}, {"funds": 1000, "items": {"silver_ingot": 1}}],
+}
+## 319：v5 归机制树的科技（v4 时它们还花钱和材料）—— 没交完的材料退回、上交记录清掉
+const V5_MECHANISM := ["pack", "thorough_search", "scouting", "bargain", "market", "smithy", "mithril_smelting", "staffcraft", "luck"]
+
+
+## v4 → v5（319，双科技树）：
+## - 幸运删掉：已买的每一级按 v4 成本退钱退材料，等级去掉；
+## - 讨价并成一级：1、2 级都记 1 级，2 级多花的那一级（1000 币 + 1 银锭）退回；
+## - 归机制树的科技没交完的材料退回，上交记录清掉；已有的等级照旧（不补交见识）；
+## - 数值树的等级与上交记录不动；历史总分不换见识。
+## 钱直接加进 `funds`；材料写进 `migration_refund.items`，[method MetaState.from_dict] 装完仓库再放进去（放不下折钱）。迁移做了什么记进 `migration_log`
+static func _v4_to_v5(d: Dictionary) -> Dictionary:
+	var levels: Dictionary = d.get("tech_levels", {}) if d.get("tech_levels", null) is Dictionary else {}
+	var deposits: Dictionary = d.get("tech_deposits", {}) if d.get("tech_deposits", null) is Dictionary else {}
+	var funds := 0
+	var items := {}
+	var notes: Array = []
+	var luck := clampi(int(levels.get("luck", 0)), 0, (V4_COSTS["luck"] as Array).size())
+	for k in luck:
+		funds += _refund_tier(V4_COSTS["luck"][k], items)
+	if luck > 0:
+		notes.append("luck %d" % luck)
+	levels.erase("luck")
+	var bargain := int(levels.get("bargain", 0))
+	if bargain >= 2:
+		for k in range(1, mini(bargain, (V4_COSTS["bargain"] as Array).size())):
+			funds += _refund_tier(V4_COSTS["bargain"][k], items)
+		notes.append("bargain %d -> 1" % bargain)
+	if bargain >= 1:
+		levels["bargain"] = 1
+	for id in V5_MECHANISM:
+		var got = deposits.get(id, null)
+		if got is Dictionary:
+			for item in got:
+				if int(got[item]) > 0:
+					items[String(item)] = int(items.get(String(item), 0)) + int(got[item])
+			if not (got as Dictionary).is_empty():
+				notes.append("deposits %s" % id)
+		deposits.erase(id)
+	d["tech_levels"] = levels
+	d["tech_deposits"] = deposits
+	d["funds"] = int(d.get("funds", 0)) + funds
+	d["migration_refund"] = {"items": items}
+	var log_: Array = d.get("migration_log", []) if d.get("migration_log", null) is Array else []
+	log_.append({"to": 5, "funds": funds, "items": items.duplicate(), "notes": notes})
+	d["migration_log"] = log_
+	return d
+
+
+static func _refund_tier(tier: Dictionary, items: Dictionary) -> int:
+	for item in tier.get("items", {}):
+		items[String(item)] = int(items.get(String(item), 0)) + int(tier["items"][item])
+	return int(tier.get("funds", 0))

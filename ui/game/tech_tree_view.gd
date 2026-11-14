@@ -1,6 +1,6 @@
 ## 科技树（118，作者定）：节点按 [member TechDef.column] 横排、按深度竖排 —— **深度 0 在最下面，往上长**。
 ## 节点之间按前置（[member TechDef.requires]）画线：从前置的顶边中点到本节点的底边中点，两端都点亮了是朱红，否则墨色（229：宽 3 圆头，颜色读树区底纸的 json `line`）。
-## 229：每列顶上一枚段头签（[HeaderTag]，`tech.col_<列>`）；列与列之间只垫一道 [constant H_GAP]，外侧交给 [constant MARGIN]。
+## 229：每列顶上一枚段头签（[HeaderTag]，`tech.col_<树>_<列>`，319 起两棵树各一套）；列与列之间只垫一道 [constant H_GAP]，外侧交给 [constant MARGIN]。
 ##
 ## 节点三种样子（乙 石刻）：**已点亮** = 家的主档木牌、**可点亮**（前置都满足、还没点）= 木牌（慢慢亮暗呼吸）、**锁住** = 灰木牌，墨字；
 ## 选中叠一圈 `kit/node_sel`（四边外扩 5）。点一个节点发 [signal selected]；数据（等级、前置）全看 [TechService]，这里只画
@@ -96,7 +96,7 @@ func rebuild() -> void:
 	var tags: Dictionary = {}
 	var widest := 0.0
 	for c in _col_mid:
-		var key := "tech.col_%d" % int(c)
+		var key := "tech.col_%s_%d" % [tree_of_defs(), int(c)]
 		if UiText.TEXT.has(key):
 			tags[c] = HeaderTag.new(UiText.t(key))
 			widest = maxf(widest, (tags[c] as HeaderTag).size.x)
@@ -166,6 +166,11 @@ static func level_text(m: MetaState, def: TechDef) -> String:
 	if def.max_level() <= 1:
 		return UiText.t("tech.lit") if lv >= 1 else UiText.t("tech.unlit")
 	return "Lv %d / %d" % [lv, def.max_level()]
+
+
+## 319：这张树是哪一棵（看第一个节点；空树当数值树）
+func tree_of_defs() -> String:
+	return String(defs[0].tree) if not defs.is_empty() else String(TechDef.TREE_STAT)
 
 
 #region 排位
@@ -247,12 +252,32 @@ func _draw() -> void:
 				continue
 			var from: Rect2 = _rects[req]
 			var lit := TechService.level(meta, req) >= 1 and TechService.level(meta, def.id) >= 1
-			var a := Vector2(from.get_center().x, from.position.y)
-			var b := Vector2(to.get_center().x, to.end.y)
 			var c := _line_lit if lit else _line_ink
-			draw_line(a, b, c, _line_w, true)
-			draw_circle(a, _line_w * 0.5, c)     # 圆头
-			draw_circle(b, _line_w * 0.5, c)
+			var pts := line_points(from, to, _rects.values())
+			draw_polyline(pts, c, _line_w, true)
+			for p in pts:
+				draw_circle(p, _line_w * 0.5, c)     # 圆头（折角也圆）
+
+
+## 319：前置 [param from] 到本节点 [param to] 的连线折点 —— 平常是前置顶边中点到本节点底边中点一条直线；
+## 同一列、中间隔着别的节点（[method TechService.row_of] 往上挪过的）就绕到右边的列缝里走：前置右边 → 缝 → 本节点右边
+static func line_points(from: Rect2, to: Rect2, rects: Array) -> PackedVector2Array:
+	var a := Vector2(from.get_center().x, from.position.y)
+	var b := Vector2(to.get_center().x, to.end.y)
+	var blocked := false
+	if is_equal_approx(a.x, b.x):
+		var lane := Rect2(Vector2(a.x - 1.0, b.y), Vector2(2.0, a.y - b.y))
+		for r in rects:
+			var rr: Rect2 = r
+			if rr != from and rr != to and rr.intersects(lane):
+				blocked = true
+				break
+	if not blocked:
+		return PackedVector2Array([a, b])
+	var gx := from.end.x + H_GAP * 0.5
+	var y0 := from.get_center().y
+	var y1 := to.get_center().y
+	return PackedVector2Array([Vector2(from.end.x, y0), Vector2(gx, y0), Vector2(gx, y1), Vector2(to.end.x, y1)])
 
 
 ## 可点亮的节点慢慢呼吸（选中的那个不闪）

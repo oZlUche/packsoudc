@@ -24,7 +24,7 @@
 | NPC | 局内商店店主（哈基姆）、散货摊主（德米特里）、铁匠（布伦努斯）；点头像出纸条，每人六句提示 + 通用三句（按键名走 `[key=…]` 引用）；铁匠铺 3 级后铁匠给【破晓的信物】，之后留白 | `NpcChatter`（`core/meta/npcs/npc_chatter.gd`）、`NpcBadge`、`InputKeys` | 282（v5.29、v5.32）、284（v5.36、v5.45） |
 | 地图 | 魔法废墟：环形生成，三档规模；机关沙漏：分层格阵，一左一右两个出生点、核心在中轴、钟房在其下；每章自带材料节点（出征「倾向」已删）；高危区画成一片 | `RingMapGenerator`、`LatticeMapGenerator`、`DangerZones` | 078、278（v5.03）、281 §六（v5.26）、283（v5.28～v5.31） |
 | 一局 | 体力、倒计时、负重、搜索揭示、猎手、侵蚀、信仰与信力、局内技能、事件层（条件 / 后果构件） | `RunState`、`GameFlow`、`NodeEvents`、`ErosionField`、`HunterDef` | 063、069～075、081、082、129 |
-| 局外 | 三个存档位、仓库格子、图鉴、科技树（15 项）、集市（五个固定摊 + 散货摊）、铁匠铺、成就 | `MetaState`、`TechService`、`Market`、`Smithy`、`Achievements` | 089、118、252、262、270 |
+| 局外 | 三个存档位、仓库格子、图鉴、两棵科技树（数值 / 机制，14 项，319）、见识、集市（五个固定摊 + 散货摊）、铁匠铺、成就 | `MetaState`、`TechService`、`Market`、`Smithy`、`Achievements` | 089、118、252、262、270 |
 | 平衡工具 | 流派木桩、扫表、单件台架、猎手胜率表、对局记录（玩家版也记）、导出平衡数据 zip | `tools/build_archetypes.gd`、`bench_matrix.gd`、`bench_battle.gd`、`bench_hunters.gd`、`build_dummies.gd`、`assumptions_report.gd` | 073、151、242（v4.23、v4.24）、279 台架 |
 | 语言与音频 | 中英界面与内容名字；字号三档；界面音效（cue 表）；**配乐没有**（`play_music` 有，曲表空） | `UiText`、`Names`、`ui/audio.gd`、`data/authoring/audio/` | 204、221、258 |
 
@@ -70,7 +70,7 @@
 | 难度 `difficulties` | 4 | 普通 + 进阶 Ⅰ～Ⅲ |
 | NPC `npcs` | 4 | 三位 NPC + `common`（通用三句） |
 | 开局装备与预设 `loadouts` | 10 | 开局装备 3（标准 / 拾荒者 / 打手）+ 预设 7（免费 2、收费 3、高级 2） |
-| 其余 | — | 成就 7（1 个隐藏：`fallen_thrice`）、科技 15、百科 57、局内 buff 22、buff 14、标签 49、伤害类型 8、信仰 7（`church` 自述占位）、反应 10、集市摊位 6、构件 18、随身技能 2、铸炉 3、宝箱皮肤 5、教练 5、音频 2（`music.json` = `{}`）、手绘地图 1 份 `.txt` |
+| 其余 | — | 成就 7（1 个隐藏：`fallen_thrice`）、科技 14、百科 57、局内 buff 22、buff 14、标签 49、伤害类型 8、信仰 7（`church` 自述占位）、反应 10、集市摊位 6、构件 18、随身技能 2、铸炉 3、宝箱皮肤 5、教练 5、音频 2（`music.json` = `{}`）、手绘地图 1 份 `.txt` |
 
 **测试 / 开发数据**：所有作者文件的文件名与 id 里没有 test / dev / debug / demo / sample / dummy / tmp；顶层没有 `hidden` / `dev` / `test` / `sealed` 开关，只有成就 `fallen_thrice` 是 `hidden: true`（隐藏成就，属正式内容）。旧版记作「测试用」的两个局内 buff（`marked` / `weakened`）现在被事件与节点规则引用（`node_rules.gd:52` 逃跑失败给 `weakened`），按正式内容计。
 

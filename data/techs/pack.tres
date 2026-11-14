@@ -10,19 +10,15 @@ buffs = Array[StringName]([&"tech_pack_1", &"tech_pack_2", &"tech_pack_3"])
 
 [sub_resource type="Resource" id="Resource_al8cp"]
 script = ExtResource("3_l4xpf")
-funds = 400
+insight = 1
 
 [sub_resource type="Resource" id="Resource_vsc1q"]
 script = ExtResource("3_l4xpf")
-funds = 800
+insight = 2
 
 [sub_resource type="Resource" id="Resource_shidj"]
 script = ExtResource("3_l4xpf")
-funds = 1200
-items = {
-"linen_bolt": 1,
-"tanned_leather": 2
-}
+insight = 3
 
 [resource]
 script = ExtResource("2_slg58")
@@ -31,10 +27,11 @@ display_name = "行囊"
 display_names = {
 "en": "Travel Pack"
 }
-requires = Array[StringName]([&"safe_box"])
+lift = 2
 description = "死里逃生：战败时保住身上一部分钱，级数越高留得越多。"
 descriptions = {
 "en": "Keep part of the coins you're carrying if you die; higher levels keep more."
 }
+tree = &"mechanism"
 effect = SubResource("Resource_3wda7")
 tiers = Array[ExtResource("3_l4xpf")]([SubResource("Resource_al8cp"), SubResource("Resource_vsc1q"), SubResource("Resource_shidj")])

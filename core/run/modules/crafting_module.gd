@@ -132,6 +132,7 @@ func fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_home:
 		return failed
 	var names := [Names.of(a.def), Names.of(b.def), Names.of(out_def)]
 	var out := ItemInstance.create(out_def, b.rotation)
+	carry_basis(out, [a, b])     # 319：成品接着两件的本金
 	var where := ""
 	if b_home == _run.board:
 		where = "board" if _land_on_board(a, a_home, b, out) else ""
@@ -145,6 +146,18 @@ func fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_home:
 		failed["reason"] = "no_room"
 		return failed
 	return _settle(StringName(res["recipe_id"]), out_def, where, [UiText.t("craft.done") % names])
+
+
+## 319：[param from] 里有本金的（带进来的、买来的），成品记它们本金之和；都没有就不记（全是这一局得的）
+static func carry_basis(out: ItemInstance, from: Array) -> void:
+	var total := 0
+	var any := false
+	for inst in from:
+		if inst is ItemInstance and (inst as ItemInstance).has_basis():
+			any = true
+			total += (inst as ItemInstance).basis()
+	if any and out != null:
+		out.set_basis(total)
 
 
 ## 成品落进棋盘：拿掉 b（a 在棋盘上也拿掉），先落在 b 的格里，再加上 a 的格，再盖住 b 的某一格往四周伸，再随便找空；都不行两件原样放回

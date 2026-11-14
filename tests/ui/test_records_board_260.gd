@@ -298,6 +298,7 @@ static func run_best_run_round_trip(t: TestCase) -> void:
 	r.character_id = &"marcus"
 	r.difficulty_id = &"normal"
 	r.value = 100
+	r.loot_net = 100     # 319：结算按本局新得
 	r.steps = 20
 	r.battles_won = 3
 	r.ended_at = 1700000000
@@ -308,11 +309,13 @@ static func run_best_run_round_trip(t: TestCase) -> void:
 	var low := RunResult.new()
 	low.outcome = &"extracted"
 	low.value = 50
+	low.loot_net = 50     # 319：结算按本局新得
 	m.absorb(low)
 	t.eq(m.best_run.get("run_no"), 1, "更低的那局不换")
 	var dead := RunResult.new()
 	dead.outcome = &"defeated"
 	dead.value = 0
+	dead.loot_net = 0     # 319：结算按本局新得
 	m.absorb(dead)
 	t.eq(m.best_run.get("value"), 100, "战败不换")
 	var back := MetaState.from_dict(m.to_dict(), db, GameFlow.load_meta_rules())

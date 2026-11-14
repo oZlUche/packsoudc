@@ -4,7 +4,6 @@
   "display_names": {
     "en": "Finer Goods"
   },
-  "order": 2,
   "requires": [
     "bargain"
   ],
@@ -13,23 +12,17 @@
   "descriptions": {
     "en": "The market stocks finer goods: fixed stalls carry green and blue wares, and the Bazaar gets more slots."
   },
+  "tree": "mechanism",
   "effect": {
     "type": "tech_facility",
     "facility": "market"
   },
   "tiers": [
     {
-      "funds": 1200,
-      "items": {
-        "hardwood_plank": 2
-      }
+      "insight": 2
     },
     {
-      "funds": 2000,
-      "items": {
-        "steel_ingot": 2,
-        "nail_keg": 1
-      }
+      "insight": 3
     }
   ]
 }

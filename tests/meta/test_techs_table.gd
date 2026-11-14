@@ -30,19 +30,23 @@ static func _put_cell(sheets: Dictionary, sheet: String, id: String, header: Str
 
 
 static func run(t: TestCase) -> void:
-	t.begin("119 · 科技表读得出十节点二十六级；按表生成的和仓库里的一致（含 18 份 tech_* run_buff）；镜像最新；check 无问题")
+	t.begin("119 / 319 · 科技表读得出十四节点三十二级（两棵树）；按表生成的和仓库里的一致（含 16 份 tech_* run_buff）；镜像最新；check 无问题")
 	var problems: Array[String] = []
 	var f := TechsTable.fields(_sheets(), problems)
 	t.eq(problems.size(), 0, "表里没问题：%s" % "；".join(PackedStringArray(problems)))
-	t.eq(f.size(), 15, "十五个节点（129 加了扛重；251 加了集市、铁匠铺；252 加了秘银冶炼、法杖工艺）")
+	t.eq(f.size(), 14, "十四个节点（319：幸运删了）")
 	var levels := 0
 	for id in f:
 		levels += (f[id]["tiers"] as Array).size()
-	t.eq(levels, 36, "三十六级（252 加四级；262 高级货物、高级配方各砍一级；11-07 耐久砍到两级）")
-	t.eq(f["scouting"]["requires"], ["bargain"], "侦察的前置：讨价（229 补充一收成链）")
+	t.eq(levels, 32, "三十二级（319：幸运三级删了、讨价并成一级）")
+	t.eq(f["scouting"]["requires"], ["thorough_search"], "319：侦察的前置是细搜")
+	t.eq(f["scouting"]["tree"], "机制", "319：侦察在机制树")
+	t.eq(f["scouting"]["tiers"][0]["insight"], 2, "319：侦察花两点见识")
+	t.eq(f["scouting"]["tiers"][0]["funds"], 0, "319：机制树不花钱")
+	t.eq(f["warehouse"]["tree"], "数值", "仓库在数值树")
 	t.eq(f["safe_box"]["tiers"][1]["items"], {"nail_keg": 1, "steel_ingot": 1}, "材料按「；」拆成道具 → 件数（122 改成铁钉桶）")
 	var out := TechsTable.build(_sheets(), problems)
-	t.eq(out.size(), 35, "生成 15 份科技 + 20 份 run_buff")
+	t.eq(out.size(), 30, "生成 14 份科技 + 16 份 run_buff")
 	var same := 0
 	for path in out:
 		var json := JSON.new()
@@ -51,10 +55,12 @@ static func run(t: TestCase) -> void:
 		else:
 			t.check(false, "%s 和表生成的不一致" % path)
 	t.eq(same, out.size(), "每份都和仓库里的一致")
-	var luck: Dictionary = out[ContentPaths.authoring_file("run_buffs", "tech_luck_3")]
-	t.eq(luck["effects"][0]["type"], "luck_bonus", "tech_luck_3：效果类型取节点的 effect")
-	t.eq(luck["scope"], "META", "tech_luck_3：局外")
-	t.eq(out[ContentPaths.authoring_file("techs", "luck")]["effect"]["buffs"], ["tech_luck_1", "tech_luck_2", "tech_luck_3"], "节点的 effect.buffs 由工具填")
+	var pack: Dictionary = out[ContentPaths.authoring_file("run_buffs", "tech_pack_3")]
+	t.eq(pack["effects"][0]["type"], "keep_on_death", "tech_pack_3：效果类型取节点的 effect")
+	t.eq(pack["scope"], "META", "tech_pack_3：局外")
+	t.eq(out[ContentPaths.authoring_file("techs", "pack")]["effect"]["buffs"], ["tech_pack_1", "tech_pack_2", "tech_pack_3"], "节点的 effect.buffs 由工具填")
+	t.eq(out[ContentPaths.authoring_file("techs", "pack")]["tree"], "mechanism", "319：生成的 JSON 写着树")
+	t.eq(out[ContentPaths.authoring_file("techs", "pack")]["tiers"][2]["insight"], 3, "319：每级的见识")
 	t.eq(TechsTable.markdown(f), FileAccess.get_file_as_string(TechsTable.MIRROR), "docs/techs.md 是按表生成的最新镜像")
 	t.check(TechsTable.markdown(f).contains("源是 `docs/techs.xlsx`"), "镜像头一段写明源是 xlsx")
 	var left := TechsTable.check()
@@ -62,16 +68,21 @@ static func run(t: TestCase) -> void:
 
 
 static func run_bad_tables(t: TestCase) -> void:
-	t.begin("119 · 坏表：级号断档、前置不存在、前置成环、构件未注册、材料不是道具、JSON 格解析不了、同 id 两行 —— 每种都进问题清单，一份都不生成")
+	t.begin("119 / 319 · 坏表：级号断档、前置不存在、前置成环、前置跨树、树写错、机制树花钱 / 没写见识、数值树花见识、构件未注册、材料不是道具、JSON 格解析不了、同 id 两行 —— 每种都进问题清单，一份都不生成")
 	var cases := [
 		["级号断档", func(s): return _put_cell(s, "等级", "warehouse", "级", 7.0, 3), "连续"],
 		["前置不存在", func(s): return _put_cell(s, "节点", "pack", "前置", "nope"), "nope"],
-		["前置成环", func(s): return _put_cell(s, "节点", "warehouse", "前置", "pack"), "成环"],
+		["前置成环", func(s): return _put_cell(s, "节点", "warehouse", "前置", "safe_box"), "成环"],
+		["前置跨树", func(s): return _put_cell(s, "节点", "sinew", "前置", "pack"), "另一棵树"],
+		["树写错", func(s): return _put_cell(s, "节点", "sinew", "树", "杂项"), "树得写"],
+		["机制树花钱", func(s): return _put_cell(s, "等级", "pack", "钱", 100.0, 1), "只花见识"],
+		["机制树没写见识", func(s): return _put_cell(s, "等级", "pack", "见识", null, 1), "得花见识"],
+		["数值树花见识", func(s): return _put_cell(s, "等级", "sinew", "见识", 2.0, 1), "不花见识"],
 		["构件未注册", func(s): return _put_cell(s, "节点", "warehouse", "效果构件", "fly_rows"), "fly_rows"],
 		["材料不是道具", func(s): return _put_cell(s, "等级", "safe_box", "材料", "unobtainium: 2", 2), "unobtainium"],
 		["材料件数不对", func(s): return _put_cell(s, "等级", "safe_box", "材料", "steel_ingot: 0", 2), "steel_ingot: 0"],
 		["JSON 格解析不了", func(s): return _put_cell(s, "等级", "pack", "效果参数（JSON）", "{amount: 50", 1), "不是 JSON"],
-		["run_buff 效果没注册", func(s): return _put_cell(s, "节点", "luck", "构件参数（JSON）", "{\"effect\": \"luckier\"}"), "luckier"],
+		["run_buff 效果没注册", func(s): return _put_cell(s, "节点", "pack", "构件参数（JSON）", "{\"effect\": \"luckier\"}"), "luckier"],
 		["钱是负的", func(s): return _put_cell(s, "等级", "bargain", "钱", -5.0, 1), "钱"],
 		["模板写死数字", func(s): return _put_cell(s, "节点", "pack", "每级说明模板", "开局钱 +50"), "写死"],
 	]

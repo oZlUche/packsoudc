@@ -6,18 +6,11 @@
 
 [sub_resource type="Resource" id="Resource_3dbfo"]
 script = ExtResource("1_a8bkp")
-buffs = Array[StringName]([&"tech_bargain_1", &"tech_bargain_2"])
+buffs = Array[StringName]([&"tech_bargain_1"])
 
 [sub_resource type="Resource" id="Resource_glqmy"]
 script = ExtResource("3_hlnqw")
-funds = 500
-
-[sub_resource type="Resource" id="Resource_g3r2s"]
-script = ExtResource("3_hlnqw")
-funds = 1000
-items = {
-"silver_ingot": 1
-}
+insight = 1
 
 [resource]
 script = ExtResource("2_nxqgc")
@@ -26,12 +19,11 @@ display_name = "讨价"
 display_names = {
 "en": "Haggling"
 }
-order = 1
-requires = Array[StringName]([&"luck"])
-column = 2
+column = 1
 description = "商店的东西更便宜。"
 descriptions = {
 "en": "Shop prices are lower."
 }
+tree = &"mechanism"
 effect = SubResource("Resource_3dbfo")
-tiers = Array[ExtResource("3_hlnqw")]([SubResource("Resource_glqmy"), SubResource("Resource_g3r2s")])
+tiers = Array[ExtResource("3_hlnqw")]([SubResource("Resource_glqmy")])

@@ -24,7 +24,7 @@ static func _ids(list: Array) -> Array[String]:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("252 §3.1～3.3：两项科技都在深度 4（前置铁匠铺；秘银冶炼列 0、法杖工艺列 1，树宽守门），构件 tech_recipes；新道具五件；配方写着要哪项科技几级")
+	t.begin("252 §3.1～3.3：两项科技都在铁匠铺上面（319 起在机制树：秘银冶炼第 1 层、法杖工艺同列第 2 层），构件 tech_recipes；新道具五件；配方写着要哪项科技几级")
 	var defs: Array = []
 	for f in DirAccess.get_files_at(ContentPaths.TECHS):
 		var d := load(ContentPaths.TECHS + "/" + f.trim_suffix(".remap")) as TechDef
@@ -38,8 +38,8 @@ static func run_content(t: TestCase) -> void:
 			continue
 		t.eq(def.requires, [&"smithy"] as Array[StringName], "%s 前置铁匠铺" % id)
 		t.check(def.effect is TechRecipes and (def.effect as TechRecipes).tech == id, "%s 的构件是 tech_recipes、写着自己" % id)
-	t.eq(lay.get(&"mithril_smelting", Vector2i(-1, -1)), Vector2i(0, 4), "秘银冶炼：列 0 深度 4")
-	t.eq(lay.get(&"staffcraft", Vector2i(-1, -1)), Vector2i(1, 4), "法杖工艺：列 1 深度 4")
+	t.eq(lay.get(&"mithril_smelting", Vector2i(-1, -1)), Vector2i(2, 1), "319：秘银冶炼在机制树第 2 列第 1 层")
+	t.eq(lay.get(&"staffcraft", Vector2i(-1, -1)), Vector2i(2, 2), "319：法杖工艺同列上移一层")
 	t.eq(TechService.find(defs, &"mithril_smelting").max_level(), 1, "秘银冶炼一级")
 	t.eq(TechService.find(defs, &"staffcraft").max_level(), 3, "法杖工艺三级")
 	var db := T110._db()

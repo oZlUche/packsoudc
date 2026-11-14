@@ -32,3 +32,7 @@ func _strip(meta: MetaState) -> void:
 	for id in buffs:
 		while meta.tech_buffs.has(id):
 			meta.tech_buffs.erase(id)
+
+
+func applies_next_run() -> bool:
+	return true

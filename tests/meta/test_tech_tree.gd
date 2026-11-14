@@ -75,10 +75,12 @@ static func run_run_buff_effect(t: TestCase) -> void:
 	var eff := pack.effect as TechRunBuff
 	t.not_null(eff, "行囊是 tech_run_buff")
 	var m := _meta()
-	m.funds = 100000
-	m.tech_levels["warehouse"] = 1
-	m.tech_levels["safe_box"] = 1
+	t.check(not TechService.upgrade(m, pack), "319：行囊在机制树，没见识升不了")
+	m.insight = 3
 	t.check(TechService.upgrade(m, pack), "升 1 级")
+	t.eq(m.insight, 2, "319：花了一点见识")
+	t.eq(m.insight_spent, 1, "319：记着花了多少")
+	m.insight = 100
 	t.eq(m.tech_buffs, [eff.buffs[0]] as Array[StringName], "tech_buffs = 第一条")
 	TechService.upgrade(m, pack)
 	t.eq(m.tech_buffs, [eff.buffs[1]] as Array[StringName], "升 2 级：换成第二条（不叠）")
@@ -189,41 +191,60 @@ static func run_import_checks(t: TestCase) -> void:
 
 
 static func run_first_tree(t: TestCase) -> void:
-	t.begin("118 · 首批树：三列十个节点（数值占位）；仓库扩建在第 0 列根上；侦察要幸运和讨价；每个 tech_run_buff 的 buff 都在且是局外的")
+	t.begin("118 / 319 · 两棵树：数值树六个节点两列、机制树八个节点三列（幸运删了）；两树之间没有前置；每个 tech_run_buff 的 buff 都在且是局外的；两棵树都装得进羊皮内框")
 	var defs := GameFlow.load_techs()
 	var buffs := RunBuffs.load_all()
-	t.eq(defs.size(), 15, "十五个节点（129 加了扛重；251 加了集市、铁匠铺；252 加了秘银冶炼、法杖工艺）")
-	var cols := {}
+	t.eq(defs.size(), 14, "十四个节点（319：幸运删了）")
+	t.is_null(TechService.find(defs, &"luck"), "319：没有幸运")
 	for def in defs:
-		cols[def.column] = true
 		if def.effect is TechRunBuff:
 			var rb := def.effect as TechRunBuff
 			t.eq(rb.buffs.size(), def.max_level(), "%s：每级一条 buff" % def.id)
 			for id in rb.buffs:
 				t.check(buffs.has(id) and (buffs[id] as RunBuffDef).is_meta(), "%s 在且是局外的" % id)
-	t.eq(cols.size(), 3, "三列")
+		for req in def.requires:
+			t.eq(TechService.find(defs, req).tree, def.tree, "%s ← %s：同一棵树" % [def.id, req])
+	var stat := TechService.of_tree(defs, TechDef.TREE_STAT)
+	var mech := TechService.of_tree(defs, TechDef.TREE_MECHANISM)
+	t.eq(stat.size(), 6, "数值树：仓库、背囊、耐久、筋骨、扛重、不屈")
+	t.eq(mech.size(), 8, "机制树：行囊、细搜、侦察、讨价、高级货物、高级配方、秘银、法杖")
 	var lay := TechService.layout(defs)
-	t.eq(lay[&"warehouse"], Vector2i(0, 0), "仓库扩建：第 0 列根")
-	t.eq(lay[&"pack"], Vector2i(0, 2), "行囊：第 0 列深度 2")
-	t.eq(lay[&"scouting"], Vector2i(2, 3), "229 补充一：侦察 ← 讨价 ← 幸运 ← 细搜，第 2 列深度 3")
-	t.eq(TechService.find(defs, &"scouting").requires, [&"bargain"] as Array[StringName], "侦察只要讨价")
-	t.eq(TechService.find(defs, &"undaunted").requires, [&"sinew"] as Array[StringName], "不屈 ← 筋骨")
-	t.eq(lay[&"undaunted"], Vector2i(1, 2), "不屈：第 1 列深度 2")
-	t.eq(lay[&"market"], Vector2i(1, 3), "251：集市 ← 讨价，第 1 列深度 3（不和侦察并排，树不加宽）")
-	t.eq(lay[&"smithy"], Vector2i(0, 3), "251：铁匠铺 ← 行囊（← 保险箱 ← 仓库），第 0 列深度 3")
-	t.eq(lay[&"mithril_smelting"], Vector2i(0, 4), "252：秘银冶炼 ← 铁匠铺，第 0 列深度 4")
-	t.eq(lay[&"staffcraft"], Vector2i(1, 4), "252：法杖工艺 ← 铁匠铺，放第 1 列深度 4（列 0 并排两个会让树宽过 792）")
+	t.eq(lay[&"warehouse"], Vector2i(0, 0), "仓库扩建：数值树第 0 列根")
+	t.eq(lay[&"undaunted"], Vector2i(1, 2), "不屈 ← 筋骨：第 1 列第 2 层")
+	t.eq(TechService.find(defs, &"scouting").requires, [&"thorough_search"] as Array[StringName], "319：侦察 ← 细搜")
+	t.eq(TechService.find(defs, &"bargain").requires, [] as Array[StringName], "319：讨价是根")
+	t.eq(TechService.find(defs, &"smithy").requires, [] as Array[StringName], "319：高级配方是根")
+	t.eq(TechService.find(defs, &"pack").requires, [] as Array[StringName], "319：行囊是根")
+	t.eq(lay[&"thorough_search"], Vector2i(0, 0), "细搜：机制树第 0 列根")
+	t.eq(lay[&"scouting"], Vector2i(0, 1), "侦察：第 0 列第 1 层")
+	t.eq(lay[&"pack"], Vector2i(0, 2), "行囊：根，上移两层摆在侦察上面")
+	t.eq(lay[&"market"], Vector2i(1, 1), "高级货物 ← 讨价")
+	t.eq(lay[&"mithril_smelting"], Vector2i(2, 1), "秘银冶炼 ← 高级配方")
+	t.eq(lay[&"staffcraft"], Vector2i(2, 2), "法杖工艺 ← 高级配方，上移一层（同列不并排）")
 	t.check(TechService.cycle_members(defs).is_empty(), "没有环")
-	# 229 补充一 守门：树要装进羊皮的双线框（792 宽）；以后加节点扇形过宽就红 —— 每列同深度最多并排两个，宽的扇形改成链
-	var view := TechTreeView.new()
-	view.setup(MetaState.new(), defs, UiPalette.cjk_font())
-	t.check(view.custom_minimum_size.x <= 792.0, "树宽 %.0f ≤ 792（羊皮内框）" % view.custom_minimum_size.x)
-	t.check(view.custom_minimum_size.y <= 556.0, "树高 %.0f ≤ 556" % view.custom_minimum_size.y)
-	var tags := view.find_children("*", "HeaderTag", true, false)
-	t.eq(tags.size(), 3, "三列各一枚列头签")
-	t.eq(tags.map(func(n): return (n as HeaderTag).text), ["营造", "体魄", "探索"], "列头签：营造（262 补充二：不和「后勤」页签同名）/ 体魄 / 探索")
-	t.eq(tags.map(func(n): return (n as HeaderTag).size.x).reduce(func(a, b): return a if a == b else -1.0), (tags[0] as HeaderTag).size.x if not tags.is_empty() else 0.0, "三枚列头签一样宽")
-	view.free()
+	# 229 补充一 守门：每棵树都要装进羊皮的双线框（792 宽）
+	var heads := {TechDef.TREE_STAT: ["营造", "体魄"], TechDef.TREE_MECHANISM: ["探索", "交易", "锻造"]}
+	for tree in TechDef.TREES:
+		var view := TechTreeView.new()
+		view.setup(MetaState.new(), TechService.of_tree(defs, tree), UiPalette.cjk_font())
+		t.check(view.custom_minimum_size.x <= 792.0, "%s 树宽 %.0f ≤ 792（羊皮内框）" % [tree, view.custom_minimum_size.x])
+		t.check(view.custom_minimum_size.y <= 556.0, "%s 树高 %.0f ≤ 556" % [tree, view.custom_minimum_size.y])
+		var tags := view.find_children("*", "HeaderTag", true, false)
+		t.eq(tags.map(func(n): return (n as HeaderTag).text), heads[tree], "%s 列头签" % tree)
+		view.free()
+
+
+## 319：同一列中间隔着节点的连线绕到右边的列缝；不挡的照旧一条直线
+static func run_line_route(t: TestCase) -> void:
+	t.begin("319 · 连线：同列隔着节点就从右边列缝绕过去（四个折点），不挡的照旧直线")
+	var low := Rect2(0, 200, 160, 60)
+	var mid := Rect2(0, 100, 160, 60)
+	var high := Rect2(0, 0, 160, 60)
+	var straight := TechTreeView.line_points(low, mid, [low, mid])
+	t.eq(straight.size(), 2, "相邻两层：直线")
+	var around := TechTreeView.line_points(low, high, [low, mid, high])
+	t.eq(around.size(), 4, "隔着一个：四个折点")
+	t.check(around[1].x > low.end.x and around[1].x == around[2].x, "折到右边的列缝里")
 
 
 static func frame_tree_panel(t: TestCase, root: Window) -> void:
@@ -286,7 +307,7 @@ static func frame_tree_panel(t: TestCase, root: Window) -> void:
 	m.changed.emit()
 	t.eq(panel.submit_many(&"hardwood_plank", 1), 1, "前置点了：硬木板交给不屈")
 	t.eq(TechService.deposited(m, &"undaunted", &"hardwood_plank"), 1, "记在不屈名下")
-	t.eq(TechService.deposited(m, &"luck", &"hardwood_plank"), 0, "没记给别的科技")
+	t.eq(TechService.deposited(m, &"sinew", &"hardwood_plank"), 0, "没记给别的科技")
 	t.is_null(panel.submit_button(&"rivet_box"), "不屈不要铆钉盒：没有那一行")
 	t.check(not ("_warehouse_box" in panel), "164：科技页不再有收起式仓库")
 	t.check(panel.nameplate() != null and panel.nameplate().visible, "226：名称 + 等级进名牌")

@@ -18,6 +18,17 @@ static func _kit(c: TestSupport.Content) -> LoadoutDef:
 
 
 ## 一条 RunEffect 加的数（从定义里读，不写死）
+## 319：一条给幸运 +2 的局外 buff（科技表里不再有幸运）
+static func _lucky() -> RunBuffDef:
+	var def := RunBuffDef.new()
+	def.id = &"test_luck"
+	def.scope = RunBuffDef.Scope.META
+	var e := LuckBonus.new()
+	e.amount = 2
+	def.effects.append(e)
+	return def
+
+
 static func _run_amount(def: RunBuffDef, prop: String) -> int:
 	var ctx := RunBuffs.context([def])
 	return int(ctx.get(prop))
@@ -71,7 +82,7 @@ static func run_pipeline(t: TestCase) -> void:
 	t.check(files >= 4, "至少四个测试用的 buff（实际 %d）" % files)
 	var c := _content()
 	t.eq(c.buffs.size(), files, "load_all 装回全部 %d 个" % files)
-	t.check(c.buffs.has(&"tech_endurance_1") and c.buffs.has(&"tech_luck_1") and c.buffs.has(&"marked") and c.buffs.has(&"weakened"), "四个都在")
+	t.check(c.buffs.has(&"tech_endurance_1") and c.buffs.has(&"tech_pack_1") and c.buffs.has(&"marked") and c.buffs.has(&"weakened"), "四个都在")
 	t.check((c.buffs[&"tech_endurance_1"] as RunBuffDef).is_meta() and (c.buffs[&"marked"] as RunBuffDef).is_map(), "作用域按文件")
 
 
@@ -81,7 +92,8 @@ static func run_context_and_start(t: TestCase) -> void:
 	var c := _content()
 	var kit := _kit(c)
 	var hardy: RunBuffDef = c.buffs[&"tech_endurance_1"]
-	var lucky: RunBuffDef = c.buffs[&"tech_luck_1"]
+	var lucky := _lucky()     # 319：幸运科技删了；通用的幸运属性还在，测试自己造一条局外 buff
+	c.buffs[lucky.id] = lucky
 	var weakened: RunBuffDef = c.buffs[&"weakened"]
 	var ctx := RunBuffs.context([hardy, lucky])
 	t.eq(ctx.vitality_max_bonus, _run_amount(hardy, "vitality_max_bonus"), "耐久：体力上限的加成从定义里来（作者 11-07：直接 +1）")
@@ -89,7 +101,7 @@ static func run_context_and_start(t: TestCase) -> void:
 	t.check(ctx.vitality_max_bonus > 0 and ctx.luck_bonus > 0, "两个都是正的（作者文件写的）")
 
 	var plain := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items)
-	var buffed := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1", &"tech_luck_1"] as Array[StringName])
+	var buffed := RunState.start(c.chapter, 41, c.items, c.enemies, c.sets, kit.items, c.buffs, [&"tech_endurance_1", lucky.id] as Array[StringName])
 	t.eq(buffed.vitality.maximum, ctx.vitality_max_of(Vitality.PLACEHOLDER_MAX) + c.chapter.vitality_bonus, "开局体力上限按 buff 加上去")
 	t.check(buffed.vitality.maximum > plain.vitality.maximum, "比没 buff 的多")
 	t.eq(buffed.wallet.balance, plain.wallet.balance, "开局钱不再受 buff 影响（2026-10-22 起钱全由玩家自己带，两个都是 0）")

@@ -10,11 +10,7 @@ tech = &"mithril_smelting"
 
 [sub_resource type="Resource" id="Resource_odi0p"]
 script = ExtResource("3_6l6en")
-funds = 1500
-items = {
-"crystal_shards": 3,
-"silver_ingot": 2
-}
+insight = 2
 
 [resource]
 script = ExtResource("2_jy34w")
@@ -24,9 +20,11 @@ display_names = {
 "en": "Mithril Smelting"
 }
 requires = Array[StringName]([&"smithy"])
+column = 2
 description = "学会炼秘银：银锭加钱炼成秘银锭，再用它打更好的刀剑。"
 descriptions = {
 "en": "Learn to smelt mithril: turn Silver Ingots and coins into Mithril Ingots, then forge better blades with them."
 }
+tree = &"mechanism"
 effect = SubResource("Resource_r78r0")
 tiers = Array[ExtResource("3_6l6en")]([SubResource("Resource_odi0p")])

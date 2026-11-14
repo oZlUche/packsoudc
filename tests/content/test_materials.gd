@@ -73,12 +73,12 @@ static func run(t: TestCase) -> void:
 	t.eq(skill.offering_value(pot), int(5 * pow(2, pot.rarity)), "陶罐：%d" % skill.offering_value(pot))
 	t.eq(skill.offering_value(db.get_def(&"copper_ore")), 0, "铜矿石：不收")
 
-	t.begin("122 · 科技材料接上：行囊 3 级要熟皮革与亚麻布，保险箱 2 级要铁钉桶；带 supply 的商店不卖")
+	t.begin("122 · 科技材料接上：保险箱 2 级要铁钉桶、筋骨 3 级要铜锭（319：机制树只花见识，不再要材料）；带 supply 的商店不卖")
 	var techs := GameFlow.load_techs()
-	t.eq(TechService.find(techs, &"pack").tiers[2].items, {"tanned_leather": 2, "linen_bolt": 1}, "行囊 3 级")
+	t.eq(TechService.find(techs, &"pack").tiers[2].items, {}, "319：行囊在机制树，不要材料")
 	t.eq(TechService.find(techs, &"safe_box").tiers[1].items, {"nail_keg": 1, "steel_ingot": 1}, "保险箱扩格 2 级")
 	t.eq(TechService.find(techs, &"sinew").tiers[2].items, {"copper_ingot": 2}, "筋骨 3 级")
-	t.eq(TechService.find(techs, &"bargain").tiers[1].items, {"silver_ingot": 1}, "讨价 2 级")
+	t.eq(TechService.find(techs, &"bargain").max_level(), 1, "319：讨价一级")
 	t.eq(int(TechService.find(techs, &"warehouse").tiers[4].items.get("nail_keg", 0)), 1, "仓库扩建 5 级加铁钉桶")
 	var eco := load(ContentPaths.asset_file("economy_rules", "standard")) as EconomyRules
 	var shop := ShopSession.candidates(eco, db)

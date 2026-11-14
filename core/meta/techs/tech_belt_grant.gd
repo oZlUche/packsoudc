@@ -29,3 +29,7 @@ func describe_level(level: int, _buff_defs: Dictionary = {}) -> String:
 func _name() -> String:
 	var def := BeltSkillDef.find(skill)
 	return Names.of(def) if def != null else String(skill)
+
+
+func applies_next_run() -> bool:
+	return true

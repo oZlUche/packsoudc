@@ -18,3 +18,5 @@ explore = {
 "visited": 2
 }
 difficulty_step = 0.25
+version = 2
+insight_ladder = Array[int]([1000, 2000, 5000])

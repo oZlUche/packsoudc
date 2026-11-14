@@ -38,7 +38,8 @@ func fill(p_director: GameDirector, p_flow: GameFlow) -> void:
 		flow.meta.funds = 900
 		for id in ["warehouse", "endurance", "thorough_search"]:
 			flow.meta.tech_levels[id] = 1
-		flow.meta.tech_levels["luck"] = 2
+		flow.meta.tech_levels["bargain"] = 1
+		flow.meta.insight = 3     # 319：机制树花见识
 		flow.derive_techs()
 		flow.show_meta()
 		var screen := director.base()

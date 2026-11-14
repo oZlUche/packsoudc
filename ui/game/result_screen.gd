@@ -254,12 +254,52 @@ func _build_summary() -> void:
 	page.add_child(_place(_ledger, LEDGER_AT, LedgerView.LEDGER_SIZE))
 	if extracted:
 		_add_safe(page)
+	_add_insight(page)
 	_continue = _continue_button(to_step.bind(2) if _has_store_step() else proceed)
 	page.add_child(_place(_continue, CONTINUE_AT, CONTINUE_SIZE))
 	_continue.disabled = not _ledger.is_revealed()
 	_ledger.revealed.connect(func():
+		if is_instance_valid(_insight):
+			_insight.visible = true
 		if is_instance_valid(_continue):
 			_continue.disabled = false)
+	if _insight != null:
+		_insight.visible = _ledger.is_revealed()
+
+
+## 319：账单左边一张小纸 —— 这一局领了几点见识、三档各到没有、离下一档还差几分、余额。试玩切片不摆（不发见识）；账单全显了才露
+const INSIGHT_AT := Vector2(96, 210)
+const INSIGHT_W := 240.0
+var _insight: PanelContainer = null
+
+
+func _add_insight(page: Control) -> void:
+	_insight = null
+	var rules := ScoreRules.load_rules()
+	if flow.profile == SliceProfile.SLICE or rules.insight_ladder.is_empty():
+		return
+	_insight = insight_panel(_r, rules, flow.meta.insight)
+	page.add_child(_place(_insight, INSIGHT_AT, Vector2(INSIGHT_W, 0)))
+
+
+## 小纸的内容（测试直接造来看）
+static func insight_panel(r: RunResult, rules: ScoreRules, balance: int) -> PanelContainer:
+	var box := UiTheme.panel(PanelContainer.new(), 16, UiTheme.PANEL_PARCHMENT)
+	box.name = "Insight"
+	var col := UiTheme.vbox(4)
+	box.add_child(col)
+	var head := UiTheme.make_label(UiText.t("result.insight_gain") % r.insight, 22, LedgerView.INK_TOTAL)
+	head.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	col.add_child(head)
+	for gate in rules.insight_ladder:
+		var done := r.score >= gate
+		col.add_child(UiTheme.make_label(UiText.t("result.insight_tier") % gate + (UiText.t("result.insight_done") if done else ""),
+			17, LedgerView.INK_LABEL if done else LedgerView.INK_DIM))
+	var gap := rules.insight_gap(r.score)
+	col.add_child(UiTheme.make_wrapped(UiText.t("result.insight_gap") % gap if gap > 0 else UiText.t("result.insight_all"),
+		15, LedgerView.INK_DIM, INSIGHT_W - 32.0))
+	col.add_child(UiTheme.make_label(UiText.t("result.insight_balance") % balance, 17, LedgerView.INK_LABEL))
+	return box
 
 
 ## 281 寂灭的路（三）：献祭回来的这一局，带回来的寂灭上放一次黑洞（B 劈开，[JimieBlackHole]）

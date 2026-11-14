@@ -213,17 +213,17 @@ static func run_derive_on_load(t: TestCase) -> void:
 
 	t.begin("120 · 存档不存 tech_buffs / safe_bonus；带这两项的旧档读回来一样（派生值来自进度表）")
 	var tm := MetaState.new(rules)
-	tm.tech_levels["luck"] = 2
+	tm.tech_levels["pack"] = 2
 	tm.tech_levels["safe_box"] = 1
 	TechService.derive(tm, defs)
 	var td := tm.to_dict()
 	t.check(not td.has("tech_buffs") and not td.has("safe_bonus"), "to_dict 里没有这两项")
 	var fresh := MetaState.from_dict(td, db, rules, defs)
 	var old := td.duplicate(true)
-	old["tech_buffs"] = ["tech_luck_1", "tech_gone_9"]
+	old["tech_buffs"] = ["tech_pack_1", "tech_gone_9"]
 	old["safe_bonus"] = [5, 5]
 	var stale := MetaState.from_dict(old, db, rules, defs)
-	t.eq(fresh.tech_buffs, [&"tech_luck_2"] as Array[StringName], "派生出幸运第 2 级那条")
+	t.eq(fresh.tech_buffs, [&"tech_pack_2"] as Array[StringName], "派生出行囊第 2 级那条")
 	t.eq(stale.tech_buffs, fresh.tech_buffs, "旧档里存的 buff 不读")
 	t.eq(stale.safe_bonus, fresh.safe_bonus, "旧档里存的保险箱加成不读")
 	t.eq(fresh.safe_bonus, tm.safe_bonus, "保险箱加成 = 按级数算的")

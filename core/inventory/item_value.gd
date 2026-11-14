@@ -31,6 +31,18 @@ static func of_in(inst: ItemInstance, board: ItemContainer) -> int:
 	return base if bag == null or bag.bag_value_mult == 1.0 else maxi(1, roundi(float(base) * bag.bag_value_mult))
 
 
+## 319：结算战利分用的「本局新得」价值 —— 没本金（[method ItemInstance.has_basis]）同 [method of_in]；
+## 有本金按「现在值的 − 本金」的那一份算（包的倍率同样乘），不到本金算 0
+static func net_in(inst: ItemInstance, board: ItemContainer) -> int:
+	var full := of_in(inst, board)
+	if inst == null or not inst.has_basis():
+		return full
+	var own := of_instance(inst)
+	if own <= 0:
+		return 0
+	return roundi(float(full) * float(maxi(0, own - inst.basis())) / float(own))
+
+
 ## 148：这一件值多少 —— 用坏了（[method ItemInstance.is_broken]）按 [member WearProfile.broken_value_ratio] 打折，至少 1；其余同 [method of]
 static func of_instance(inst: ItemInstance) -> int:
 	if inst == null or inst.def == null:
