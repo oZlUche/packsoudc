@@ -1649,7 +1649,7 @@ func _adopt(state: RunState) -> void:
 		crafting.recipes = recipes
 	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（本体模块在 from_dict 里已经装过，再装一次是幂等的）
 	if state.difficulty == null and state.difficulty_id != &"":
-		state.difficulty = difficulty_of(state.difficulty_id)
+		state.difficulty = state.resolve_difficulty(difficulty_of(state.difficulty_id))     # 320：进行中的这一局按开局时的规则走到底
 		state.install_modules()
 	if state.events != null:
 		state.events.difficulty_def = state.difficulty     # 127：搜索保底按难度等级

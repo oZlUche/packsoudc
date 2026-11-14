@@ -14,6 +14,7 @@
   },
   "level": 8,
   "requires_unlock": "ascension_8",
+  "grants_unlock": "ascension_9",
   "mechanics": [
     {
       "type": "erosion",

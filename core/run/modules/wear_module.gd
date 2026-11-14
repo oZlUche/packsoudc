@@ -76,6 +76,7 @@ static func shatter(board: GridInventory, inst: ItemInstance, items: ItemDatabas
 		return null
 	var shard := ItemInstance.create(to, 0)
 	CraftingModule.carry_basis(shard, [inst])     # 319
+	ItemErosion.carry(shard, [inst])     # 320 A9：碎片接着层数
 	shard.container_id = board.id
 	shard.placed_seq = seq
 	if board.place(shard, at, 0):

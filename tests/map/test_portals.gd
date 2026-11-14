@@ -10,7 +10,7 @@ class FakeErosion extends ErosionField:
 		log = p_log
 	func on_action(_clock: ActionClock, _graph: MapGraph) -> void:
 		log.append("erosion")
-	func settle(_node: MapNode) -> void:
+	func settle(_node: MapNode, _entered: bool = true) -> void:
 		log.append("penalty")
 
 

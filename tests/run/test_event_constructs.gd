@@ -10,7 +10,7 @@ class FakeErosion extends ErosionField:
 	var depths: Dictionary = {}
 	func on_action(clock: ActionClock, _graph: MapGraph) -> void:
 		log.append("erosion@%d" % clock.total)
-	func settle(_node: MapNode) -> void:
+	func settle(_node: MapNode, _entered: bool = true) -> void:
 		log.append("penalty")
 	func depth_of(node: MapNode) -> int:
 		return int(depths.get(node.id, -1))

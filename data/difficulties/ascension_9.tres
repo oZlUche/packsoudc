@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="DifficultyDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_qgjl2"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_k00fv"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="3_fcami"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="4_884my"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="5_mrl0a"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_item_layer.gd" id="6_u5udj"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="7_q8bov"]
+[ext_resource type="Script" path="res://core/run/mechanics/hunter_mechanic.gd" id="8_lna3q"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="9_5fdte"]
+
+[sub_resource type="Resource" id="Resource_4koiq"]
+script = ExtResource("4_884my")
+per_depth = 1
+
+[sub_resource type="Resource" id="Resource_vbj48"]
+script = ExtResource("5_mrl0a")
+amount = 10
+enabled = false
+only_total = true
+
+[sub_resource type="Resource" id="Resource_go1mf"]
+script = ExtResource("6_u5udj")
+from_depth = 2
+
+[sub_resource type="Resource" id="Resource_lhri3"]
+script = ExtResource("7_q8bov")
+effects = Array[ExtResource("3_fcami")]([SubResource("Resource_4koiq"), SubResource("Resource_vbj48"), SubResource("Resource_go1mf")])
+
+[sub_resource type="Resource" id="Resource_847xk"]
+script = ExtResource("8_lna3q")
+hunter_ids = Array[StringName]([&"hunter_1"])
+hp_from = Array[float]([1.0, 0.6, 0.6, 0.5])
+hp_to = Array[float]([1.4, 1.4, 1.6, 1.0])
+
+[resource]
+script = ExtResource("9_5fdte")
+id = &"ascension_9"
+display_name = "进阶九"
+display_names = {
+"en": "Ascension IX"
+}
+description = "进阶八的一切，再加：走进侵蚀了 {erosion_item_layer_from_depth} 层以上的点，随机侵蚀一件随身道具，到 {erosion_item_layer_limit} 层永久损毁；正常撤离后，未损毁道具的侵蚀清零。在进阶八撤离一次后解锁。"
+descriptions = {
+"en": "Everything in Ascension VIII, and stepping into spots eroded {erosion_item_layer_from_depth}+ layers deep erodes a random carried item; at {erosion_item_layer_limit} layers it is destroyed for good. Extracting normally clears erosion on surviving items. Unlocked by extracting once on Ascension VIII."
+}
+challenge = "深处侵蚀道具"
+challenges = {
+"en": "Deep erosion eats items"
+}
+level = 9
+requires_unlock = &"ascension_9"
+mechanics = Array[ExtResource("2_k00fv")]([SubResource("Resource_lhri3"), SubResource("Resource_847xk")])
+enemy_hp_percent = 10
+advanced_percent = 15
+hunter_hp_percent = 10
+hunter_damage_percent = 10
+faith_threshold_percent = 10
+countdown_percent = 10

@@ -123,7 +123,7 @@ const TYPE_LABELS := {
 	"erosion": "侵蚀", "hunters": "猎手", "safe": "托付（免费撤离点）", "node_storage": "按点暂存", "countdown": "全局倒计时", "crafting": "合成", "altar": "神坛", "buff": "一局的 buff", "belt": "腰带", "wear": "道具耐久", "growth": "生长", "honor": "军功",     # 101：一局的模块（本体功能与难度机制同一张表）；256 军功
 	"approach": "逼近", "flee": "逃跑", "wander": "游荡", "ambush": "伏击", "patrol": "巡逻",
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
-	"damage_item": "损坏道具", "drain_money": "掉钱",
+	"damage_item": "损坏道具", "item_layer": "道具侵蚀层数", "drain_money": "掉钱",
 	"warehouse_pages": "仓库加页",     # 110 / 163：局外科技的效果
 	"belt_slots_bonus": "腰带扩格", "smoke_escape": "烟雾：这一场不打", "mend_vitality": "回体力（随身）",     # 147
 	"starting_belt": "开局发随身技能", "tech_belt_grant": "开局发随身技能（科技）", "grant_belt": "给随身技能",     # 160 补一

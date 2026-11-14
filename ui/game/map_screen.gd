@@ -628,6 +628,8 @@ func _adopt() -> void:
 			for line in detail.get("log", []):
 				bits.append(String(line))
 			_note("[color=#d9534f]　侵蚀区（点 %d，深 %d 层）：%s[/color]" % [node.id, int(detail.get("depth", 0)), "，".join(bits)]))
+		_run.item_destroyed.connect(func(inst: ItemInstance, _why: StringName):
+			_hud_host.notice(UiText.t("erosion.item_destroyed") % Names.of(inst.def), true))     # 320 A9：永久损毁要看得见
 		field.total_reached.connect(func():
 			_note("[color=#d9534f]　全图都被侵蚀了：快撤[/color]")
 			_hud_host.notice(UiText.t("notice.erosion_total"), true))
@@ -810,6 +812,9 @@ func _update_tooltip(id: int) -> void:
 		return
 	var node := _run.map.get_node(id)
 	var stash := NodeTooltip.stash_text(_run, node)     # 反馈：每个点的地上悬停就能看，不受「节点浮窗」开关管
+	var eroding := ItemErosion.entry_warning(_run, node)     # 320 A9：进去会侵蚀一件随身道具（不受「节点浮窗」开关管）
+	if eroding != "":
+		stash = eroding if stash == "" else stash + "\n" + eroding
 	var hunt := _hunter_tip(id)     # 134：站在这个点上、看得见的猎手输了会怎样（感知之后才说）
 	if hunt != "":
 		stash = hunt if stash == "" else stash + "\n" + hunt
