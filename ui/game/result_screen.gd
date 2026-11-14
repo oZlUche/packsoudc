@@ -283,8 +283,13 @@ func _add_insight(page: Control) -> void:
 
 
 ## 小纸的内容（测试直接造来看）
+const INSIGHT_PAD_X := 26
+const INSIGHT_PAD_Y := 16
+
+
 static func insight_panel(r: RunResult, rules: ScoreRules, balance: int) -> PanelContainer:
-	var box := UiTheme.panel(PanelContainer.new(), 16, UiTheme.PANEL_PARCHMENT)
+	# 羊皮纸条默认没有内边距（左右是毛边）：字要离开毛边（测试 v6.20～v6.26：英文大字的第一个字母压在毛边外）
+	var box := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, INSIGHT_PAD_X, INSIGHT_PAD_Y, INSIGHT_PAD_X, INSIGHT_PAD_Y)
 	box.name = "Insight"
 	var col := UiTheme.vbox(4)
 	box.add_child(col)
@@ -297,7 +302,7 @@ static func insight_panel(r: RunResult, rules: ScoreRules, balance: int) -> Pane
 			17, LedgerView.INK_LABEL if done else LedgerView.INK_DIM))
 	var gap := rules.insight_gap(r.score)
 	col.add_child(UiTheme.make_wrapped(UiText.t("result.insight_gap") % gap if gap > 0 else UiText.t("result.insight_all"),
-		15, LedgerView.INK_DIM, INSIGHT_W - 32.0))
+		15, LedgerView.INK_DIM, INSIGHT_W - 2.0 * INSIGHT_PAD_X))
 	col.add_child(UiTheme.make_label(UiText.t("result.insight_balance") % balance, 17, LedgerView.INK_LABEL))
 	return box
 
