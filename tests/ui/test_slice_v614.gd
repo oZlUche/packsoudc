@@ -351,3 +351,27 @@ static func run_route_and_events(t: TestCase) -> void:
 	var steps := CoachOverlay.load_steps(&"slice_map")
 	var last := CoachOverlay.text_of(steps[steps.size() - 1]) if not steps.is_empty() else ""
 	t.check(last.contains(OS.get_keycode_string(KEY_F)) and not last.contains("[key="), "地图教程写着现在的键（%s）" % last)
+
+
+static func run_elite_prize(t: TestCase) -> void:
+	t.begin("切片 v6.14 D01（作者 11-14）：打赢精英额外保底一件切片清单里最高稀有度的（涂毒匕首）；普通仗不给；搜索二照旧放毒药和圆盾")
+	var rule := ContentPaths.load_asset("drop_rules", "slice_ruins") as DropRule
+	var items := ItemDatabase.new()
+	items.load_dir()
+	var allowed: Array = SliceAudit.load_manifest("slice_ruins").get("allowed_item_ids", [])
+	t.check(rule.elite_rarity == 3 and rule.guarantee_pool.all(func(id: StringName) -> bool: return allowed.has(String(id))), "保底稀有度 3，池子都在清单里")
+	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/slice_ruins.json"))
+	var by_id := {}
+	for n in d["nodes"]:
+		by_id[int(n["id"])] = n
+	for nid in [6, 11]:
+		var content: Dictionary = by_id[nid]["content"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 5
+		var got := DropResolver.roll(content, rule, LootContext.new(), items, rng, false, true)
+		t.eq(got["treasure"], [&"poisoned_knife"] as Array[StringName], "%d 号精英：保底涂毒匕首" % nid)
+		var plain := DropResolver.roll(content, rule, LootContext.new(), items, rng, false, false)
+		t.eq((plain["treasure"] as Array).size(), 0, "%d 号当普通仗打：不给" % nid)
+	t.eq(by_id[7]["content"]["search_finds"], [["poison_vial", "round_shield"]], "搜索二不动")
+	var formal := ContentPaths.load_asset("drop_rules", "standard") as DropRule
+	t.check(formal == null or formal.elite_rarity < 0, "正式版不保底")

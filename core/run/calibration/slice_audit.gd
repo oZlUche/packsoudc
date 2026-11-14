@@ -87,6 +87,13 @@ static func check_static(m: Dictionary, items: ItemDatabase, enemies: EnemyDatab
 		return bad
 	# 来源：开局 + 地图上写到的，按件数记（短剑全图一把，就拼不出要两把短剑的配方）
 	var sources := {}
+	var drops := ContentPaths.load_asset("drop_rules", String(ch.drop_rule)) as DropRule if ch.drop_rule != &"" else null
+	if drops != null:
+		for id in drops.guarantee_pool:
+			if not allowed.has(String(id)):
+				bad.append("精英保底的 %s 不在清单里" % id)
+		if drops.elite_rarity >= 0 and drops.guarantee_pool.is_empty():
+			bad.append("精英保底没限定道具池（会从全部道具里挑）")
 	for id in ch.starting_items:
 		sources[String(id)] = int(sources.get(String(id), 0)) + 1
 		if not allowed.has(String(id)):

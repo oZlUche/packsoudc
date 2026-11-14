@@ -74,7 +74,7 @@ static func treasure_candidates(rule: DropRule, items: ItemDatabase, rarity: int
 
 ## 掷：返回 {"dropped": [敌人自己掉的 id], "treasure": [珍宝 id], "treasure_missing": 中了却没有可掉的珍宝的次数}
 static func roll(
-	content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator, boss: bool = false
+	content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator, boss: bool = false, elite: bool = false
 ) -> Dictionary:
 	var out := {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName], "treasure_missing": 0}
 	if rule == null or items == null:
@@ -85,6 +85,11 @@ static func roll(
 		var pick := rarity_guarantee(rule.boss_rarity, rule, items, carried, rng)
 		if pick != &"":
 			(out["treasure"] as Array[StringName]).append(pick)
+	# 切片 v6.14 D01：精英点保底一件（[member DropRule.elite_rarity]）
+	if elite and rule.elite_rarity >= 0:
+		var prize := rarity_guarantee(rule.elite_rarity, rule, items, carried, rng)
+		if prize != &"":
+			(out["treasure"] as Array[StringName]).append(prize)
 	# 093（日神 4 级）：必掉额外一件某稀有度的 —— 和 BOSS 保底同一条路，从这一档往低找
 	if ctx != null and ctx.extra_drop_rarity >= 0:
 		var extra := rarity_guarantee(ctx.extra_drop_rarity, rule, items, carried, rng)
@@ -149,11 +154,14 @@ static func roll(
 static func rarity_guarantee(rarity: int, rule: DropRule, items: ItemDatabase, carried: Array[StringName], rng: RandomNumberGenerator) -> StringName:
 	var r := rarity
 	while r >= 0:
-		var cands := treasure_candidates(rule, items, r, carried)
+		var cands: Array[StringName] = []
+		if rule.guarantee_pool.is_empty():
+			cands = treasure_candidates(rule, items, r, carried)
 		if cands.is_empty():
 			for id in items.ids():
 				var d := items.get_def(id)
-				if d != null and d.rarity == r and not d.is_bag and not d.is_bullion() and not carried.has(id):     # 244：金银只有商店出
+				if d != null and d.rarity == r and not d.is_bag and not d.is_bullion() and not carried.has(id) \
+						and (rule.guarantee_pool.is_empty() or rule.guarantee_pool.has(id)):     # 244：金银只有商店出；切片只在 guarantee_pool 里挑
 					cands.append(id)
 			Ids.sort(cands)     # 按文本排，不是 StringName 的指针序（见 [Ids]）
 		if not cands.is_empty():

@@ -978,7 +978,7 @@ func refuse_ransom() -> bool:
 func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null) -> void:
 	var ctx := loot_ctx if loot_ctx != null else _loot_ctx()
 	# 087：核心点的 BOSS 保底一件金色（DropRule.boss_rarity）
-	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core") \
+	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core", type == &"elite") \
 		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 	hooks.red_drop(node, content, rolled)     # 281
 	if type == &"core" and boss_ticket != &"" and items != null and items.get_def(boss_ticket) != null:     # 285：核心 BOSS 必掉一张券
