@@ -1,0 +1,24 @@
+{
+  "id": "elite_bounty",
+  "display_name": "精英奖励",
+  "display_names": {
+    "en": "Elite Bounty"
+  },
+  "lift": 3,
+  "description": "打赢精英额外掉一件稀有及以上的东西。",
+  "descriptions": {
+    "en": "Elites drop one extra Rare-or-better item."
+  },
+  "tree": "mechanism",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_elite_bounty_1"
+    ]
+  },
+  "tiers": [
+    {
+      "insight": 2
+    }
+  ]
+}

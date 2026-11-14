@@ -16,6 +16,6 @@ display_name = "讨价（科技）"
 display_names = {
 "en": "Haggling (Tech)"
 }
-description = "商店售价 ×{shop_price_mult_factor}"
+description = "商店买价 ×{shop_price_mult_factor}"
 scope = 0
 effects = Array[ExtResource("1_qf2pd")]([SubResource("Resource_6y5kj")])

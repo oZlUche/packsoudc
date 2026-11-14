@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_5whem"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_d5yc4"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_d0ogd"]
+
+[sub_resource type="Resource" id="Resource_vrfvx"]
+script = ExtResource("1_5whem")
+buffs = Array[StringName]([&"tech_boss_bounty_1"])
+
+[sub_resource type="Resource" id="Resource_uorgn"]
+script = ExtResource("3_d0ogd")
+insight = 3
+
+[resource]
+script = ExtResource("2_d5yc4")
+id = &"boss_bounty"
+display_name = "首领奖励"
+display_names = {
+"en": "Boss Bounty"
+}
+requires = Array[StringName]([&"elite_bounty"])
+description = "打赢 BOSS 额外掉一件史诗及以上的东西。"
+descriptions = {
+"en": "Bosses drop one extra Epic-or-better item."
+}
+tree = &"mechanism"
+effect = SubResource("Resource_vrfvx")
+tiers = Array[ExtResource("3_d0ogd")]([SubResource("Resource_uorgn")])

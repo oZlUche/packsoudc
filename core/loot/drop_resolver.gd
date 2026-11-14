@@ -11,6 +11,8 @@
 class_name DropResolver
 extends RefCounted
 
+const MATERIAL_TAG := &"material"
+
 
 ## 敌人自己这件道具掉不掉的概率
 static func owned_chance(rule: DropRule, ctx: LootContext, def: ItemDef) -> float:
@@ -168,6 +170,46 @@ static func rarity_guarantee(rarity: int, rule: DropRule, items: ItemDatabase, c
 			return cands[rng.randi_range(0, cands.size() - 1)]
 		r -= 1
 	return &""
+
+
+## 319：额外奖励的合格道具（这个稀有度）：能随机出现（[method ItemDatabase.ids] 已拦掉红武、劣化版、券、不进随机来源、赐福版、铸牌、随身之物），
+## 再去掉包、金银、信物和不在白名单里的素材。id 升序
+static func bounty_candidates(rule: DropRule, items: ItemDatabase, rarity: int) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if rule == null or items == null:
+		return out
+	for id in items.ids():
+		var d := items.get_def(id)
+		if d == null or d.rarity != rarity or d.is_bag or d.is_bullion() or d.is_anchor():
+			continue
+		if d.tags.has(MATERIAL_TAG) and not rule.bounty_materials.has(id):
+			continue
+		out.append(id)
+	Ids.sort(out)
+	return out
+
+
+## 319：额外奖励抽一件（有放回：抽了不从池里拿走）。这类点没配、或配的档位一件合格的都没有，返回空并报错（发布前就该被测试拦下）
+static func bounty_pick(rule: DropRule, items: ItemDatabase, node_type: StringName, rng: RandomNumberGenerator) -> StringName:
+	if rule == null or items == null:
+		return &""
+	var rarities: Array[int] = []
+	var weights: Array[float] = []
+	var pools: Array = []
+	for r in rule.bounty_rarities(node_type):
+		var cands := bounty_candidates(rule, items, r)
+		var w := rule.bounty_weight(node_type, r)
+		if cands.is_empty() or w <= 0.0:
+			continue
+		rarities.append(r)
+		weights.append(w)
+		pools.append(cands)
+	if rarities.is_empty():
+		push_error("DropResolver: 额外奖励池是空的（掉落规则 %s，点 %s）" % [rule.id, node_type])
+		return &""
+	var i := MapRng.pick_index(weights, rng)
+	var pick: Array[StringName] = pools[i if i >= 0 else 0]
+	return pick[rng.randi_range(0, pick.size() - 1)]
 
 
 ## 珍宝的稀有度：表里的权重 + 战利品效果的 rarity_bias（同单位：权重）

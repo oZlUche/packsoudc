@@ -1,0 +1,28 @@
+{
+  "id": "shop_refresh",
+  "display_name": "换货",
+  "display_names": {
+    "en": "Restock"
+  },
+  "requires": [
+    "bargain"
+  ],
+  "column": 1,
+  "lift": 1,
+  "description": "每家局内商店可以付钱让商人换一批货，一家一次。",
+  "descriptions": {
+    "en": "Pay a shop to restock its goods, once per shop."
+  },
+  "tree": "mechanism",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_shop_refresh_1"
+    ]
+  },
+  "tiers": [
+    {
+      "insight": 2
+    }
+  ]
+}

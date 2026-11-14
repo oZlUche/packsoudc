@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_mm1qh"]
+[ext_resource type="Script" path="res://core/run/effects/loot_bounty.gd" id="2_56yoq"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_22h7s"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_8tm6g"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ua5dr"]
+
+[sub_resource type="Resource" id="Resource_758ph"]
+script = ExtResource("2_56yoq")
+node_type = &"core"
+
+[resource]
+script = ExtResource("5_ua5dr")
+id = &"tech_boss_bounty_1"
+display_name = "首领奖励（科技）"
+display_names = {
+"en": "Boss Bounty (Tech)"
+}
+description = "打赢 BOSS 额外掉一件史诗及以上"
+scope = 0
+effects = Array[ExtResource("1_mm1qh")]([SubResource("Resource_758ph")])

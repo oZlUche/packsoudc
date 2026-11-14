@@ -42,6 +42,13 @@ extends Resource
 ## 保底那件只从这些道具里挑（切片：允许清单里的）；空 = 不限
 @export var guarantee_pool: Array[StringName] = []
 
+## 319（局外机制树「精英 / BOSS 额外奖励」）：点的类型 → {稀有度: 权重}。科技点了才掉，另起一件，不占原有保底和信仰那一件。
+## 有放回地抽：先按权重抽稀有度（只在有合格道具的档位里抽，**不往低一档退**），再在这一档的合格道具里均匀抽一件。
+## 首版不出神话（5）；合格道具见 [method DropResolver.bounty_candidates]
+@export var bounty_weights: Dictionary = {"elite": {"2": 6, "3": 3, "4": 1}, "core": {"3": 3, "4": 1}}
+## 319：素材默认不进额外奖励，写在这里的才进（白名单）
+@export var bounty_materials: Array[StringName] = []
+
 ## 至少掉几件身上有的（084 作者定：打赢了至少掉一件敌人拥有的道具）。掷完不够就从没掉的里随机补；身上没那么多就掉光。0 = 不保底。
 ## **包不算在这个名额里**（作者定：包另有 bags_always_drop）
 @export var min_drops: int = 0
@@ -75,3 +82,20 @@ func treasure_rarities() -> Array[int]:
 
 func treasure_weight(rarity: int) -> float:
 	return float(treasure_weights.get(str(rarity), 0))
+
+
+## 319：额外奖励这一类点的稀有度列表（升序）；没配返回空
+func bounty_rarities(node_type: StringName) -> Array[int]:
+	var out: Array[int] = []
+	var w: Variant = bounty_weights.get(String(node_type), null)
+	if not (w is Dictionary):
+		return out
+	for key in w:
+		out.append(int(String(key)))
+	out.sort()
+	return out
+
+
+func bounty_weight(node_type: StringName, rarity: int) -> float:
+	var w: Variant = bounty_weights.get(String(node_type), {})
+	return float((w as Dictionary).get(str(rarity), 0)) if w is Dictionary else 0.0

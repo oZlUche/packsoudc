@@ -16,8 +16,12 @@ var vitality_max_mult: int = 0
 var carry_capacity_mult: int = 0
 ## 每个搜索点多搜几次
 var extra_searches: int = 0
-## 商店售价的倍数（1 = 原价；0.9 = 九折）
+## 商店买价的倍数（1 = 原价；0.9 = 九折）。319：只管买，卖给商人不吃
 var shop_price_mult: float = 1.0
+## 319：每家局内商店能刷新几次货（0 = 不能）
+var shop_refreshes: int = 0
+## 319：打赢这些类型的点额外掉一件（elite / core，[LootBounty]）
+var bounty: Array[StringName] = []
 ## 256（马库斯「操练」）：一局里按标签筛件的战斗修饰（105 的 [ScopedMod]，[method RunState.compile_player] 并进 `CompileInput.scoped`）
 var scoped: Array[ScopedMod] = []
 ## 256：按标签打折的重量 `[{tags: [..], percent: −20}]`（[method ItemWeight.total_scaled]）

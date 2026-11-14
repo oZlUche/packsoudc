@@ -32,7 +32,7 @@ var rules: EconomyRules = null
 var items: ItemDatabase = null
 var wallet: Wallet = null
 var depth: float = 0.0
-## buff 给的售价倍数（[RunContext.shop_price_mult]），乘在规则的倍数之上
+## buff 给的买价倍数（[RunContext.shop_price_mult]），乘在规则的倍数之上；319：卖价不吃
 var price_mult: float = 1.0
 ## 209：章节的包池（开张时可能摆一个包）；null = 不卖包
 var bag_pool: BagPool = null
@@ -63,6 +63,12 @@ var my_coins: int = 0
 var his_coins: int = 0
 ## 277 第 4 条：这次进店卖给他的 uid → 你拿到的价（原价买回）；离开就没了（不进存档）
 var resale: Dictionary = {}
+## 319：这家店能刷新几次（科技给的，[RunContext.shop_refreshes]；开店的人填）、已经刷了几次（进存档，离店读档都不重置）
+var refreshes: int = 0
+var refreshed: int = 0
+
+## 319：你卖给商人的东西带这个记号（跟着道具进存档）；刷新只换没有记号的货，你买回来就摘掉
+const SOLD_IN_KEY := "sold_in"
 
 
 func _init(
@@ -80,6 +86,7 @@ func _init(
 	if int(saved.get("v", 0)) >= SAVE_VERSION and saved.get("board", null) is Dictionary and items != null:
 		board = GridInventory.from_dict(saved["board"], items, BOARD_SIZE)
 		purse = int(saved.get("purse", 0))
+		refreshed = int(saved.get("refreshed", 0))
 		for i in saved.get("belt_sold", []):
 			belt_sold.append(int(i))
 		_roll_belt()
@@ -103,15 +110,16 @@ static func price_for(def: ItemDef, p_rules: EconomyRules, p_mult: float = 1.0) 
 	return maxi(1, roundi(float(ItemValue.of(def)) * (p_rules.shop_price_mult if p_rules != null else 1.0) * p_mult))
 
 
-## 卖给店里得多少：定价 × 出售比例。246 补充二：给了 [param inst] 且它碎了，定价按 [member WearProfile.broken_value_ratio] 打折
+## 卖给店里得多少：定价 × 出售比例。246 补充二：给了 [param inst] 且它碎了，定价按 [member WearProfile.broken_value_ratio] 打折。
+## 319：buff 的倍数（讨价）只管买价，卖价按不打折的定价算
 func sell_price_of(def: ItemDef, inst: ItemInstance = null) -> int:
-	return sell_price_for(def, inst, rules, price_mult)
+	return sell_price_for(def, inst, rules)
 
 
-static func sell_price_for(def: ItemDef, inst: ItemInstance, p_rules: EconomyRules, p_mult: float = 1.0) -> int:
+static func sell_price_for(def: ItemDef, inst: ItemInstance, p_rules: EconomyRules) -> int:
 	if def == null:
 		return 0
-	var price := float(price_for(def, p_rules, p_mult))
+	var price := float(price_for(def, p_rules))
 	if inst != null and inst.is_broken():
 		price = maxf(1.0, roundf(price * def.wear.broken_value_ratio))
 	return maxi(0, floori(price * (p_rules.shop_sell_ratio if p_rules != null else 0.5)))
@@ -284,12 +292,14 @@ func deal() -> bool:
 		var inst := _find_home(uid)
 		if inst != null:
 			got.append(inst)
+			inst.state.erase(SOLD_IN_KEY)
 		_owned.erase(uid)
 		resale.erase(uid)
 	for uid in given:
 		var inst := board.get_item(uid)
 		if inst != null:
 			gave.append(inst)
+			inst.state[SOLD_IN_KEY] = true
 			resale[uid] = int(given[uid])
 	taken.clear()
 	given.clear()
@@ -339,18 +349,76 @@ func leave() -> void:
 #endregion
 
 
+#region 刷新（319）
+func refresh_price() -> int:
+	return maxi(0, rules.shop_refresh_price) if rules != null else 0
+
+
+## 能不能刷新：空串 = 能，否则是原因（没科技、刷过了、秤上有东西、钱不够）。拖拽中由界面自己拦
+func refresh_reason() -> String:
+	if not active or refreshes <= 0:
+		return UiText.t("shop.refresh_locked")
+	if refreshed >= refreshes:
+		return UiText.t("shop.refresh_used")
+	if not table_empty() or my_coins > 0 or his_coins > 0:
+		return UiText.t("shop.refresh_table")
+	if wallet == null or not wallet.can_afford(refresh_price()):
+		return UiText.t("shop.refresh_poor")
+	return ""
+
+
+## 换一次货：你卖进来的东西原位不动，其余的货换成新抽的一批（种子跟着第几次刷新走，同一局同一家店刷出来一样）；
+## 商人的钱袋、随身格不动。新货一件都摆不上就什么都不改、不收钱（返回 false）。扣钱、换棋盘、记次数一起提交
+func refresh() -> bool:
+	if refresh_reason() != "":
+		return false
+	var old: Array = []     # 换下来的货 [道具, 原位, 朝向]：失败时原样放回
+	for v in board.items():
+		var inst := v as ItemInstance
+		if not inst.state.has(SOLD_IN_KEY):
+			old.append([inst, inst.origin, inst.rotation])
+	board.begin_batch()
+	for o in old:
+		board.remove((o[0] as ItemInstance).uid)
+	var before := board.items().map(func(i: ItemInstance) -> int: return i.uid)
+	var placed := _fill(board, "%d:shop:refresh%d" % [node.content_seed if node != null else 0, refreshed + 1], false)
+	if placed == 0 or not wallet.spend(refresh_price(), &"shop_refresh"):
+		for v in board.items():     # 一样都不改：新摆的拿掉，原来的放回原位
+			if not before.has((v as ItemInstance).uid):
+				board.remove((v as ItemInstance).uid)
+		for o in old:
+			board.place(o[0], o[1], o[2])
+		board.end_batch()
+		return false
+	board.end_batch()
+	refreshed += 1
+	_commit_owned()
+	_persist()
+	table_changed.emit()
+	return true
+#endregion
+
+
 #region 开张
 ## 一次摆满：候选按稀有度 × 深度权重不重复抽 [member EconomyRules.shop_stock] 件，再按概率加一个包、一件金银；大件先放，放不下的丢
 func _stock() -> void:
 	board = GridInventory.new(BOARD_SIZE, 0, false)
 	if rules == null or items == null:
 		return
+	_fill(board, "%d:shop" % (node.content_seed if node != null else 0), true)
+
+
+## 往 [param into] 上摆一批货（开张与 319 刷新共用）：[param seed_key] 定随机数；[param first] = 开张（写死的货架只在开张时摆）。
+## 返回摆上了几件
+func _fill(into: GridInventory, seed_key: String, first: bool) -> int:
+	if rules == null or items == null:
+		return 0
 	var seed_ := node.content_seed if node != null else 0
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash("%d:shop" % seed_)
+	rng.seed = hash(seed_key)
 	var picks: Array[ItemDef] = []
 	var gold: ItemDef = null
-	if node != null and node.content.has(FIXED_KEY):
+	if first and node != null and node.content.has(FIXED_KEY):
 		picks = fixed_stock(node.content, items)     # 313：节点写死的货架，不抽、不加包和金银
 	else:
 		var cands := candidates(rules, items)
@@ -364,25 +432,30 @@ func _stock() -> void:
 			picks.append(items.get_def(cands[k]))
 			cands.remove_at(k)
 			weights.remove_at(k)
-		var bag := _roll_bag(seed_)
-		if bag != null:
-			picks.append(bag)
-		gold = _roll_bullion(seed_)
-		if gold != null:
-			picks.append(gold)
+		if first:     # 319：刷新只换普通货，包和金银那一格不重抽
+			var bag := _roll_bag(seed_)
+			if bag != null:
+				picks.append(bag)
+			gold = _roll_bullion(seed_)
+			if gold != null:
+				picks.append(gold)
 	var order := range(picks.size())
 	order.sort_custom(func(a: int, b: int) -> bool:
 		var ca := picks[a].shape.cells_rotated(0).size() if picks[a].shape != null else 1
 		var cb := picks[b].shape.cells_rotated(0).size() if picks[b].shape != null else 1
 		return ca > cb or (ca == cb and a < b))
 	var gold_uid := -1
+	var placed := 0
 	for k in order:
 		var inst := ItemInstance.create(picks[k], 0)
 		inst.set_basis(ItemValue.of_instance(inst))     # 319：店里的货买走了是花钱买的，带出去不算战利分
-		if board.try_add(inst) and picks[k] == gold:
-			gold_uid = inst.uid
+		if into.try_add(inst):
+			placed += 1
+			if picks[k] == gold:
+				gold_uid = inst.uid
 	if gold != null and gold_uid < 0:
 		_make_room_for(gold)     # 金银那一格是规则给的（概率 1 就一定有）：摆满了让最小的一件普通货
+	return placed
 
 
 ## 313（试玩切片）：节点内容里写死的货架 —— 道具 id 的表，照写的顺序上架（同一个 id 写两次就两件）
@@ -523,3 +596,5 @@ func _find_home(uid: int) -> ItemInstance:
 func _persist() -> void:
 	if node != null:
 		node.content["shop"] = {"v": SAVE_VERSION, "board": board.to_dict(), "purse": purse, "belt_sold": belt_sold.duplicate()}
+		if refreshed > 0:
+			node.content["shop"]["refreshed"] = refreshed     # 319：没刷过不写键（老档逐字节不变）

@@ -1,0 +1,14 @@
+{
+  "id": "tech_shop_refresh_1",
+  "display_name": "换货（科技）",
+  "display_names": {
+    "en": "Restock (Tech)"
+  },
+  "description": "每家商店可付钱换货 {shop_refresh_times} 次",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "shop_refresh"
+    }
+  ]
+}

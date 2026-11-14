@@ -1,0 +1,14 @@
+{
+  "id": "tech_elite_bounty_1",
+  "display_name": "精英奖励（科技）",
+  "display_names": {
+    "en": "Elite Bounty (Tech)"
+  },
+  "description": "打赢精英额外掉一件稀有及以上",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "loot_bounty"
+    }
+  ]
+}

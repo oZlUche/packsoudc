@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_7cn4f"]
+[ext_resource type="Script" path="res://core/run/effects/shop_refresh.gd" id="2_thiid"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_oxth1"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_0ko41"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_dv40u"]
+
+[sub_resource type="Resource" id="Resource_j2xdi"]
+script = ExtResource("2_thiid")
+
+[resource]
+script = ExtResource("5_dv40u")
+id = &"tech_shop_refresh_1"
+display_name = "换货（科技）"
+display_names = {
+"en": "Restock (Tech)"
+}
+description = "每家商店可付钱换货 {shop_refresh_times} 次"
+scope = 0
+effects = Array[ExtResource("1_7cn4f")]([SubResource("Resource_j2xdi")])
