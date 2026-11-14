@@ -425,12 +425,14 @@ func build_content(h: Hunter, node: MapNode) -> Dictionary:
 	var built := EnemyPlacer.build_content(run.enemies.enemy(entry.enemy), pool, run.items, wanted, r)
 	var content: Dictionary = built.get("content", {})     # build_content 的回报是 {content, dropped}，和 NodeEvents._enemy_for 一样只取内容
 	EnemyKit.stamp_hp(content, hp_mult())
+	EnemyKit.stamp_damage(content, run.difficulty.hunter_damage_mult() if run.difficulty != null else 1.0)     # 320 A8
 	return content
 
 
-## 320：猎手这会儿的生命倍率 —— 段内渐变（A3）
+## 320：猎手这会儿的生命倍率 —— 段内渐变（A3）× 这一档的猎手生命（A5）
 func hp_mult() -> float:
-	return config.hp_for_steps(step_count()) if config != null else 1.0
+	var ramp := config.hp_for_steps(step_count()) if config != null else 1.0
+	return ramp * (run.difficulty.hunter_hp_mult() if run != null and run.difficulty != null else 1.0)
 
 
 func spend_vitality(amount: int) -> void:

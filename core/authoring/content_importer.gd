@@ -1605,6 +1605,9 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 					report.error("mechanics[%d]" % i, "段内生命倍率得是正数、不比段位表长")
 	if def.enemy_hp_percent <= -100 or def.advanced_percent < 0 or def.advanced_percent > 100 or def.advanced_skip_first < 0:
 		report.error("enemy_hp_percent", "生命多几成得大于 -100，强敌份额在 0～100，开头几场不能为负")
+	for key in ["hunter_hp_percent", "hunter_damage_percent", "faith_threshold_percent", "countdown_percent"]:     # 320 C
+		if int(def.get(key)) < 0:
+			report.error(key, "进阶只加不减：不能是负数")
 	for i in def.effects.size():
 		var e := def.effects[i] as Effect
 		if e == null:

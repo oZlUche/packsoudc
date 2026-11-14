@@ -1,0 +1,62 @@
+{
+  "id": "ascension_5",
+  "display_name": "进阶五",
+  "display_names": {
+    "en": "Ascension V"
+  },
+  "description": "进阶四的一切，再加：猎手最大生命再 +{hunter_hp_percent}%。在进阶四撤离一次后解锁。",
+  "descriptions": {
+    "en": "Everything in Ascension IV, and hunters have +{hunter_hp_percent}% max HP. Unlocked by extracting once on Ascension IV."
+  },
+  "challenge": "猎手更耐打",
+  "challenges": {
+    "en": "Hunters are tougher"
+  },
+  "level": 5,
+  "requires_unlock": "ascension_5",
+  "grants_unlock": "ascension_6",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
+      ]
+    }
+  ],
+  "enemy_hp_percent": 10,
+  "advanced_percent": 15,
+  "hunter_hp_percent": 10
+}

@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="DifficultyDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_n0uhw"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_lu4ib"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="3_2i4ya"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="4_1or76"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="5_2caja"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="6_ghlva"]
+[ext_resource type="Script" path="res://core/run/mechanics/hunter_mechanic.gd" id="7_xixov"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="8_ek5fn"]
+
+[sub_resource type="Resource" id="Resource_3sf28"]
+script = ExtResource("4_1or76")
+per_depth = 1
+
+[sub_resource type="Resource" id="Resource_lnj5k"]
+script = ExtResource("5_2caja")
+amount = 10
+enabled = false
+only_total = true
+
+[sub_resource type="Resource" id="Resource_26kxj"]
+script = ExtResource("6_ghlva")
+effects = Array[ExtResource("3_2i4ya")]([SubResource("Resource_3sf28"), SubResource("Resource_lnj5k")])
+
+[sub_resource type="Resource" id="Resource_26ltx"]
+script = ExtResource("7_xixov")
+hunter_ids = Array[StringName]([&"hunter_1"])
+hp_from = Array[float]([1.0, 0.6, 0.6, 0.5])
+hp_to = Array[float]([1.4, 1.4, 1.6, 1.0])
+
+[resource]
+script = ExtResource("8_ek5fn")
+id = &"ascension_5"
+display_name = "进阶五"
+display_names = {
+"en": "Ascension V"
+}
+description = "进阶四的一切，再加：猎手最大生命再 +{hunter_hp_percent}%。在进阶四撤离一次后解锁。"
+descriptions = {
+"en": "Everything in Ascension IV, and hunters have +{hunter_hp_percent}% max HP. Unlocked by extracting once on Ascension IV."
+}
+challenge = "猎手更耐打"
+challenges = {
+"en": "Hunters are tougher"
+}
+level = 5
+requires_unlock = &"ascension_5"
+grants_unlock = &"ascension_6"
+mechanics = Array[ExtResource("2_lu4ib")]([SubResource("Resource_26kxj"), SubResource("Resource_26ltx")])
+enemy_hp_percent = 10
+advanced_percent = 15
+hunter_hp_percent = 10

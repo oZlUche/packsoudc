@@ -150,3 +150,122 @@ static func run_enemy_hp_in_run(t: TestCase) -> void:
 	slice.profile = &"test_profile"
 	var sliced := RunState.start(slice, 5, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], one)
 	t.check(absf(sliced.enemy_hp_mult() - (1.0)) <= 0.0001, "有档案的章不吃倍率")
+
+
+static func run_faith_thresholds(t: TestCase) -> void:
+	t.begin("320 A6 · 信仰门槛：首阶不变，之后 × 倍率四舍五入，严格递增；原表不动")
+	t.eq(DifficultyDef.scale_thresholds([50, 150, 300, 1000] as Array[int], 10), [50, 165, 330, 1100] as Array[int], "日神 50 / 150 / 300 / 1000 → 50 / 165 / 330 / 1100")
+	t.eq(DifficultyDef.scale_thresholds([3, 8] as Array[int], 10), [3, 9] as Array[int], "教会 3 / 8 → 3 / 9")
+	t.eq(DifficultyDef.scale_thresholds([3, 4, 5] as Array[int], 10), [3, 4, 6] as Array[int], "小整数取整后至少比前一阶多 1")
+	var d := DifficultyDef.new()
+	d.faith_threshold_percent = 10
+	var src := FaithDef.new()
+	src.id = &"probe"
+	src.thresholds = [10, 20] as Array[int]
+	var out := d.scaled_faiths({&"probe": src})
+	t.eq((out[&"probe"] as FaithDef).thresholds, [10, 22] as Array[int], "复制的那份改了")
+	t.eq(src.thresholds, [10, 20] as Array[int], "原表没动")
+	d.faith_threshold_percent = 0
+	t.check(d.scaled_faiths({&"probe": src})[&"probe"] == src, "0 = 原样")
+
+
+static func run_countdown_percent(t: TestCase) -> void:
+	t.begin("320 A7 · 倒计时多扣：按累计行动点算、向下取整 —— 基础 1 点走 10 次扣 11，9 次扣 9")
+	var c = NodeScreens._content()
+	var d := DifficultyDef.new()
+	d.countdown_percent = 10
+	var run := RunState.start(c.chapter, 5, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], d)
+	var cd := CountdownModule.of(run)
+	if cd == null or not cd.has_countdown():
+		t.check(false, "这一章有倒计时")
+		return
+	run.travel.clock.total = 9
+	t.eq(cd.spent(), 9, "9 个行动点扣 9")
+	run.travel.clock.total = 10
+	t.eq(cd.spent(), 11, "10 个行动点扣 11")
+	t.eq(cd.left(), maxi(0, cd.limit() - 11), "剩余 = 上限 − 扣的")
+	run.travel.clock.total = 25
+	t.eq(cd.spent(), 27, "25 个扣 27（不逐步进位）")
+	t.eq(run.hunters == null or run.hunters.step_count() == 25, true, "猎手看的步数不变")
+	d.countdown_percent = 0
+	t.eq(cd.spent(), 25, "0 = 照旧")
+
+
+static func run_hunter_mods(t: TestCase) -> void:
+	t.begin("320 A5 / A8 · 猎手生命乘在渐变上；直接攻击伤害终值 × 倍率，固定附伤不变")
+	var spec := CombatantSpec.new()
+	var it := CompiledItem.new()
+	it.stats = StatSet.new()
+	var v := it.stats.ensure(&"damage")
+	v.base = StatMath.from_float(10.0)
+	v.flat = StatMath.from_float(2.0)
+	v.percent = StatMath.from_float(0.5)
+	it.loaded = [{"damage": StatMath.from_float(4.0)}] as Array[Dictionary]
+	spec.items = [it] as Array[CompiledItem]
+	var before := StatMath.to_float(it.stats.total_of(&"damage"))
+	EnemyKit.scale_damage(spec, {EnemyKit.DMG_MULT: 1.1})
+	t.check(absf(StatMath.to_float(it.stats.total_of(&"damage")) - before * 1.1) <= 0.01, "伤害 %.2f → %.2f（× 1.1）" % [before, StatMath.to_float(it.stats.total_of(&"damage"))])
+	t.check(absf(StatMath.to_float(int(it.loaded[0]["damage"])) - 4.4) <= 0.01, "晶石加的那份也 × 1.1")
+	var content := {"enemy": "brute"}
+	EnemyKit.stamp_damage(content, 1.0)
+	t.check(not content.has(EnemyKit.DMG_MULT), "倍率 1 不写")
+	var d := DifficultyDef.new()
+	d.hunter_hp_percent = 10
+	d.hunter_damage_percent = 5
+	t.check(absf(d.hunter_hp_mult() - 1.1) <= 0.0001 and absf(d.hunter_damage_mult() - 1.05) <= 0.0001, "百分数换成倍率")
+
+
+static func run_ladder_c(t: TestCase) -> void:
+	t.begin("320 C · 进阶五～八：每一级只比上一级多一样，解锁接成一条链")
+	var keys := ["hunter_hp_percent", "faith_threshold_percent", "countdown_percent", "hunter_damage_percent"]
+	var prev := _by_id(&"ascension_4")
+	for i in range(5, 9):
+		var d := _by_id(StringName("ascension_%d" % i))
+		t.check(d != null and prev != null, "进阶 %d 在" % i)
+		if d == null or prev == null:
+			return
+		t.eq(d.level, i, "第 %d 档" % i)
+		t.eq([prev.grants_unlock, d.requires_unlock], [d.id, d.id], "上一级撤离开 %s" % d.id)
+		var changed: Array[String] = []
+		for key in keys + ["enemy_hp_percent", "advanced_percent", "advanced_skip_first"]:
+			if d.get(key) != prev.get(key):
+				changed.append(key)
+		t.eq(changed, [keys[i - 5]] as Array[String], "进阶 %d 只多了 %s" % [i, keys[i - 5]])
+		t.eq(d.hunter_bracket_steps(), prev.hunter_bracket_steps(), "猎手段位表不变")
+		t.check(not d.challenge.contains("；") and d.challenge.length() <= 10, "%s：中文一行（%s）" % [d.id, d.challenge])
+		prev = d
+	t.eq(prev.grants_unlock, &"", "进阶八暂时是最后一级")
+	t.eq(ScoreRules.load_rules().mult(8), 1.75, "计分系数：五～八暂时和进阶三一样")
+
+
+static func run_flow_c(t: TestCase) -> void:
+	t.begin("320 C · 一局里：进阶六的信仰表是改过门槛的那份（界面读的同一份），进阶五的猎手生命乘上 1.1")
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	var f := Support.flow(c, "asc320c")
+	f.difficulties = GameFlow.load_difficulties()
+	var six := _by_id(&"ascension_6")
+	f.meta.grant_unlock(six.requires_unlock)
+	f.faith_defs = FaithDef.load_all()
+	var run := f.begin(c.chapter, kit, 5, [] as Array[int], null, [], six)
+	t.check(run != null, "进阶六开局")
+	if run != null:
+		var any := false
+		for id in f.faith_defs:
+			var base: FaithDef = f.faith_defs[id]
+			var mine: FaithDef = run.faith_defs.get(id, null)
+			t.check(mine != null and mine.thresholds == DifficultyDef.scale_thresholds(base.thresholds, six.faith_threshold_percent), "%s：门槛按档改过" % id)
+			any = any or mine.thresholds != base.thresholds
+		t.check(not f.faith_defs.is_empty() and any, "至少一种信仰的门槛变了（%d 种）" % f.faith_defs.size())
+	Support.cleanup("asc320c")
+	var five := _by_id(&"ascension_5")
+	var f5 := Support.flow(c, "asc320c5")
+	f5.difficulties = GameFlow.load_difficulties()
+	f5.meta.grant_unlock(five.requires_unlock)
+	var r5 := f5.begin(c.chapter, kit, 5, [] as Array[int], null, [], five)
+	if r5 != null and r5.hunters != null:
+		var ramp := r5.hunters.config.hp_for_steps(r5.hunters.step_count())
+		t.check(absf(r5.hunters.hp_mult() - ramp * 1.1) <= 0.0001, "猎手生命 = 渐变 × 1.1（%.3f）" % r5.hunters.hp_mult())
+	else:
+		t.check(false, "进阶五开局、有猎手")
+	Support.cleanup("asc320c5")

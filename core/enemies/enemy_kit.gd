@@ -131,6 +131,7 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	inp.only_damage_type = StringName(String(content.get(JimiePath.ONLY_KEY, "")))     # 281：寂灭的试炼
 	var spec := BattleCompiler.compile(board_of(content, items), inp)
 	scale_hp(spec, content)
+	scale_damage(spec, content)
 	return spec
 
 
@@ -142,6 +143,31 @@ const HP_MULT := "hp_mult"
 static func stamp_hp(content: Dictionary, k: float) -> void:
 	if k > 0.0 and k != 1.0 and has_enemy(content):
 		content[HP_MULT] = k
+
+
+## 320 A8：直接攻击伤害倍率（只有猎手用）
+const DMG_MULT := "dmg_mult"
+
+
+static func stamp_damage(content: Dictionary, k: float) -> void:
+	if k > 0.0 and k != 1.0 and has_enemy(content):
+		content[DMG_MULT] = k
+
+
+## 每件道具属性里的 damage（武器那一下的伤害）整体乘倍率：基础与加算都乘，乘算不动，所以终值正好 × 倍率；
+## 法杖 / 弓轮读的晶石、箭加的那份伤害也乘（[member CompiledItem.loaded]）。流血层数、反伤、固定附伤、箭的真实伤害不变
+static func scale_damage(spec: CombatantSpec, content: Dictionary) -> void:
+	var k := float(content.get(DMG_MULT, 1.0))
+	if spec == null or k <= 0.0 or k == 1.0:
+		return
+	var f := StatMath.from_float(k)
+	for it in spec.items:
+		if it.stats != null and it.stats.has(&"damage"):
+			var v := it.stats.ensure(&"damage")
+			v.base = StatMath.mul(v.base, f)
+			v.flat = StatMath.mul(v.flat, f)
+		for entry in it.loaded:
+			entry["damage"] = StatMath.mul(int(entry.get("damage", 0)), f)
 
 
 static func scale_hp(spec: CombatantSpec, content: Dictionary) -> void:
