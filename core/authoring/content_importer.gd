@@ -1061,6 +1061,9 @@ static func import_score_rules(data: Dictionary, ctx: Context, report: ImportRep
 				d[key] = int(d[key])
 	if rules.difficulty_step < 0.0:
 		report.error("difficulty_step", "不能是负数")
+	for i in rules.difficulty_mults.size():     # 320：各档难度系数 —— 不小于 1、不降
+		if rules.difficulty_mults[i] < 1.0 or (i > 0 and rules.difficulty_mults[i] < rules.difficulty_mults[i - 1]):
+			report.error("difficulty_mults[%d]" % i, "得不小于 1、不比前一档低")
 	if rules.extract_bonus < 0:
 		report.error("extract_bonus", "不能是负数")
 	for i in rules.insight_ladder.size():     # 319：见识阶梯 —— 正数、严格升序
@@ -1597,6 +1600,11 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 			for j in range(1, hm.bracket_steps.size()):
 				if hm.bracket_steps[j] < hm.bracket_steps[j - 1]:
 					report.error("mechanics[%d].bracket_steps[%d]" % [i, j], "段位表得非递减")
+			for arr in [hm.hp_from, hm.hp_to]:     # 320 A3：段内生命渐变
+				if arr.size() > hm.bracket_steps.size() or arr.any(func(x: float) -> bool: return x <= 0.0):
+					report.error("mechanics[%d]" % i, "段内生命倍率得是正数、不比段位表长")
+	if def.enemy_hp_percent <= -100 or def.advanced_percent < 0 or def.advanced_percent > 100 or def.advanced_skip_first < 0:
+		report.error("enemy_hp_percent", "生命多几成得大于 -100，强敌份额在 0～100，开头几场不能为负")
 	for i in def.effects.size():
 		var e := def.effects[i] as Effect
 		if e == null:

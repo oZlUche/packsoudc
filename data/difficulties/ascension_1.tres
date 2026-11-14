@@ -1,30 +1,25 @@
 [gd_resource type="Resource" script_class="DifficultyDef" format=3]
 
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_iqh37"]
-[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="2_8shm4"]
-[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="3_hft6w"]
-[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="4_x8oog"]
-
-[sub_resource type="Resource" id="Resource_ge756"]
-script = ExtResource("2_8shm4")
-amount = -1
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_o20os"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_iqh37"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="3_8shm4"]
 
 [resource]
-script = ExtResource("4_x8oog")
+script = ExtResource("3_8shm4")
 id = &"ascension_1"
 display_name = "进阶一"
 display_names = {
 "en": "Ascension I"
 }
-description = "体力上限 {vitality_max_bonus_amount|signed}。局外解锁后可选。"
+description = "普通敌人（猎手以外）最大生命 +{enemy_hp_percent}%。局外解锁后可选。"
 descriptions = {
-"en": "Max Vitality {vitality_max_bonus_amount|signed}. Selectable once unlocked outside of runs."
+"en": "Regular enemies (not hunters) have +{enemy_hp_percent}% max HP. Selectable once unlocked outside of runs."
 }
-challenge = "体力上限少一点"
+challenge = "敌人更耐打"
 challenges = {
-"en": "Less max Vitality"
+"en": "Tougher enemies"
 }
 level = 1
 requires_unlock = &"ascension_1"
 grants_unlock = &"ascension_2"
-effects = Array[ExtResource("1_iqh37")]([SubResource("Resource_ge756")])
+enemy_hp_percent = 10

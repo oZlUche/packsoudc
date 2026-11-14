@@ -13,6 +13,13 @@
     "lit": 25
   },
   "difficulty_step": 0.25,
+  "difficulty_mults": [
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    1.75
+  ],
   "version": 2,
   "insight_ladder": [
     1000,

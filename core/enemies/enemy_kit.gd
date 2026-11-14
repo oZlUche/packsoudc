@@ -129,7 +129,25 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	inp.wild = def.is_wild()     # 212：魔兽 / 机关用道具的 wild 面
 	inp.immune_buffs = def.immune_buffs     # 210
 	inp.only_damage_type = StringName(String(content.get(JimiePath.ONLY_KEY, "")))     # 281：寂灭的试炼
-	return BattleCompiler.compile(board_of(content, items), inp)
+	var spec := BattleCompiler.compile(board_of(content, items), inp)
+	scale_hp(spec, content)
+	return spec
+
+
+## 320（十档进阶 A1 / A5）：节点内容带的最大生命倍率 —— 编译完（道具加的生命也在内）乘一次。写的是最终值，重复写不会叠
+const HP_MULT := "hp_mult"
+
+
+## 给一份敌人内容写上倍率（只写有敌人的；1 就不写）
+static func stamp_hp(content: Dictionary, k: float) -> void:
+	if k > 0.0 and k != 1.0 and has_enemy(content):
+		content[HP_MULT] = k
+
+
+static func scale_hp(spec: CombatantSpec, content: Dictionary) -> void:
+	var k := float(content.get(HP_MULT, 1.0))
+	if spec != null and k > 0.0 and k != 1.0:
+		spec.max_hp = roundi(float(spec.max_hp) * k)
 
 
 ## 一行给人看的摘要：名字、生命、几件、都是什么（2026-10-17：档位、流派键、DPS 是内部读数，不给玩家看）

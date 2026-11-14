@@ -34,6 +34,13 @@ extends Resource
 ## 127：这一档的搜索保底和阶梯表（[member SearchRules.search_floors]）不一样时写这里（绝对值）：
 ## `{"normal": [...], "advanced": [...]}`，没写的那种沿用阶梯
 @export var search_floors: Dictionary = {}
+## 320 A1：普通敌人（猎手以外，精英、核心也算）最大生命多几成（百分数，10 = ×1.10）—— 绝对值，不随档位连乘；0 = 不改。
+## 有档案的章（切片、教程）不吃。写成百分数是为了说明文本能写 {enemy_hp_percent}
+@export var enemy_hp_percent: int = 0
+## 320 A4：普通战斗点里换成更强一种敌人的份额（百分数，[AdvancedPool]，按配额取整）；0 = 不换
+@export var advanced_percent: int = 0
+## 离入口最近的几场普通战斗不换
+@export var advanced_skip_first: int = 2
 
 
 func run_effects() -> Array[RunEffect]:
@@ -59,3 +66,13 @@ func hunter_bracket_steps() -> Array[int]:
 		if m is HunterMechanic:
 			return (m as HunterMechanic).bracket_steps.duplicate()
 	return out
+
+
+## 320 A1：普通敌人生命的最终倍率
+func enemy_hp_mult() -> float:
+	return 1.0 + float(enemy_hp_percent) / 100.0
+
+
+## 320 A4：换成更强一种敌人的份额（0～1）
+func advanced_share() -> float:
+	return float(advanced_percent) / 100.0

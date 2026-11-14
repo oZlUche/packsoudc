@@ -1,42 +1,37 @@
 [gd_resource type="Resource" script_class="DifficultyDef" format=3]
 
-[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_y4p1k"]
-[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="2_av66y"]
-[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="3_ny6q8"]
-[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="4_5hkdk"]
-[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="5_6f6gp"]
-[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="6_0cce5"]
-[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="7_sfow5"]
-[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="8_ktknq"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_irbb5"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_y4p1k"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="3_av66y"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="4_ny6q8"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="5_5hkdk"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="6_6f6gp"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="7_0cce5"]
 
-[sub_resource type="Resource" id="Resource_tbpkp"]
-script = ExtResource("2_av66y")
-amount = -1
-
-[sub_resource type="Resource" id="Resource_7jwm7"]
-script = ExtResource("5_6f6gp")
+[sub_resource type="Resource" id="Resource_sfow5"]
+script = ExtResource("4_ny6q8")
 per_depth = 1
 
-[sub_resource type="Resource" id="Resource_5oci1"]
-script = ExtResource("6_0cce5")
+[sub_resource type="Resource" id="Resource_ktknq"]
+script = ExtResource("5_5hkdk")
 amount = 10
 enabled = false
 only_total = true
 
-[sub_resource type="Resource" id="Resource_x4owo"]
-script = ExtResource("7_sfow5")
-effects = Array[ExtResource("4_5hkdk")]([SubResource("Resource_7jwm7"), SubResource("Resource_5oci1")])
+[sub_resource type="Resource" id="Resource_tbpkp"]
+script = ExtResource("6_6f6gp")
+effects = Array[ExtResource("3_av66y")]([SubResource("Resource_sfow5"), SubResource("Resource_ktknq")])
 
 [resource]
-script = ExtResource("8_ktknq")
+script = ExtResource("7_0cce5")
 id = &"ascension_2"
 display_name = "进阶二"
 display_names = {
 "en": "Ascension II"
 }
-description = "侵蚀开启（本体第七阶段），体力上限 {vitality_max_bonus_amount|signed}。在进阶一撤离一次后解锁。"
+description = "普通敌人最大生命 +{enemy_hp_percent}%，侵蚀开启（本体第七阶段，只扣体力）。在进阶一撤离一次后解锁。"
 descriptions = {
-"en": "Erosion is on (stage seven of the base game), max Vitality {vitality_max_bonus_amount|signed}. Unlocked by extracting once on Ascension I."
+"en": "Regular enemies +{enemy_hp_percent}% max HP; erosion is on (stage seven of the base game, Vitality only). Unlocked by extracting once on Ascension I."
 }
 challenge = "越深侵蚀越重"
 challenges = {
@@ -45,5 +40,5 @@ challenges = {
 level = 2
 requires_unlock = &"ascension_2"
 grants_unlock = &"ascension_3"
-mechanics = Array[ExtResource("3_ny6q8")]([SubResource("Resource_x4owo")])
-effects = Array[ExtResource("1_y4p1k")]([SubResource("Resource_tbpkp")])
+mechanics = Array[ExtResource("2_y4p1k")]([SubResource("Resource_tbpkp")])
+enemy_hp_percent = 10

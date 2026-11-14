@@ -1653,6 +1653,7 @@ func _adopt(state: RunState) -> void:
 		state.install_modules()
 	if state.events != null:
 		state.events.difficulty_def = state.difficulty     # 127：搜索保底按难度等级
+		state.events.enemy_hp_mult = state.enemy_hp_mult()     # 320 A1
 	var ch := character_of(state.character_id)
 	if ch != null:
 		state.set_character(ch)     # 基线、技能的账（读档回来的状态在这里接上定义）

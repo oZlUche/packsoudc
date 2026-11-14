@@ -67,6 +67,8 @@ var carry_rule: CarryRule = null
 var bag_pool: BagPool = null
 ## 127：这一局的进阶难度（搜索保底按它的等级挑阶梯表的行）
 var difficulty_def: DifficultyDef = null
+## 320 A1：普通敌人的生命倍率（[method RunState.enemy_hp_mult]）；现造的、开打的都写上，写的是最终值，重复写不叠
+var enemy_hp_mult := 1.0
 ## 钱（6.6）。null = 这一局不算钱
 var wallet: Wallet = null
 ## 091：局外状态（旗标）；沙盒里 null
@@ -545,6 +547,7 @@ static func effective_type(node: MapNode) -> StringName:
 #region 战前准备（084）
 ## 节点上的一场：开着 [member pause_before_battle] 就先停下等玩家，否则立刻打。打完（或根本没有敌人）按 [param kind] 收尾
 func _battle_at(node: MapNode, type: StringName, content: Dictionary, kind: String, loss_cost: int = LOSS_DEFAULT) -> void:
+	EnemyKit.stamp_hp(content, enemy_hp_mult)
 	if type == &"core":
 		hooks.red_hold(node, type, content)     # 281：BOSS 可能拿着红武劣化版（记进点的内容，战前准备屏看得见）
 	if pause_before_battle and _can_fight(content):
@@ -1263,7 +1266,9 @@ func _enemy_for(node: MapNode, as_type: StringName, rng: RandomNumberGenerator) 
 	view.type = as_type
 	# 踩上去才造的敌人跟探索度挂钩：走得越远、搜得越多，遇到的越强
 	var built := EnemyPlacer.place_one(view, pool, enemies, items, _depth_of(node), difficulty, scale_id, rng, exploration(), carry_rule, bag_pool)
-	return built.get("content", {})
+	var content: Dictionary = built.get("content", {})
+	EnemyKit.stamp_hp(content, enemy_hp_mult)
+	return content
 
 
 ## 掉落上下文：没人接就自己造一个只带难度的（难度只有这里知道，所以不能像 run_context 那样放进 [RunHooks] 当默认值）

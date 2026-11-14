@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Ascension III"
   },
-  "description": "侵蚀开启（本体第七阶段），猎手循着脚步追来，体力上限 {vitality_max_bonus_amount|signed}。在进阶二撤离一次后解锁。",
+  "description": "普通敌人最大生命 +{enemy_hp_percent}%，侵蚀开启（只扣体力），猎手循着脚步追来。在进阶二撤离一次后解锁。",
   "descriptions": {
-    "en": "Erosion is on (stage seven of the base game) and hunters follow your footsteps, max Vitality {vitality_max_bonus_amount|signed}. Unlocked by extracting once on Ascension II."
+    "en": "Regular enemies +{enemy_hp_percent}% max HP, erosion is on (Vitality only) and hunters follow your footsteps. Unlocked by extracting once on Ascension II."
   },
   "challenge": "猎手循迹追来",
   "challenges": {
@@ -14,6 +14,7 @@
   },
   "level": 3,
   "requires_unlock": "ascension_3",
+  "grants_unlock": "ascension_4",
   "mechanics": [
     {
       "type": "erosion",
@@ -40,13 +41,20 @@
         5,
         10,
         20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
       ]
     }
   ],
-  "effects": [
-    {
-      "type": "vitality_max_bonus",
-      "amount": -1
-    }
-  ]
+  "enemy_hp_percent": 10
 }
