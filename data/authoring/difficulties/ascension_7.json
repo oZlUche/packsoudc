@@ -1,0 +1,64 @@
+{
+  "id": "ascension_7",
+  "display_name": "进阶七",
+  "display_names": {
+    "en": "Ascension VII"
+  },
+  "description": "进阶六的一切，再加：倒计时多扣 {countdown_percent}%（按走过的总步数算，向下取整）。在进阶六撤离一次后解锁。",
+  "descriptions": {
+    "en": "Everything in Ascension VI, and the countdown runs {countdown_percent}% faster (counted over all actions, rounded down). Unlocked by extracting once on Ascension VI."
+  },
+  "challenge": "倒计时走得更快",
+  "challenges": {
+    "en": "The clock runs faster"
+  },
+  "level": 7,
+  "requires_unlock": "ascension_7",
+  "grants_unlock": "ascension_8",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
+      ]
+    }
+  ],
+  "enemy_hp_percent": 10,
+  "advanced_percent": 15,
+  "hunter_hp_percent": 10,
+  "faith_threshold_percent": 10,
+  "countdown_percent": 10
+}

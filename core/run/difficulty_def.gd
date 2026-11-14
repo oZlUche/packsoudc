@@ -41,6 +41,14 @@ extends Resource
 @export var advanced_percent: int = 0
 ## 离入口最近的几场普通战斗不换
 @export var advanced_skip_first: int = 2
+## 320 A5：猎手最大生命多几成（百分数，乘在段内渐变上）；0 = 不改
+@export var hunter_hp_percent: int = 0
+## 320 A8：猎手直接攻击伤害多几成（百分数：武器 / 法杖那一下；流血层数、反伤、固定附伤不算）；0 = 不改
+@export var hunter_damage_percent: int = 0
+## 320 A6：信仰第二阶起的累计门槛多几成（百分数；首阶不变，取整后严格递增）；0 = 不改
+@export var faith_threshold_percent: int = 0
+## 320 A7：倒计时按行动点多扣几成（百分数；按累计行动点算，向下取整，不逐步进位）；0 = 不改
+@export var countdown_percent: int = 0
 
 
 func run_effects() -> Array[RunEffect]:
@@ -76,3 +84,36 @@ func enemy_hp_mult() -> float:
 ## 320 A4：换成更强一种敌人的份额（0～1）
 func advanced_share() -> float:
 	return float(advanced_percent) / 100.0
+
+
+## 320 A5：猎手生命倍率
+func hunter_hp_mult() -> float:
+	return 1.0 + float(hunter_hp_percent) / 100.0
+
+
+## 320 A8：猎手直接攻击伤害倍率
+func hunter_damage_mult() -> float:
+	return 1.0 + float(hunter_damage_percent) / 100.0
+
+
+## 320 A6：按这一档改过门槛的信仰表（原表不动，复制一份）。首阶不变，之后每阶 × 倍率四舍五入，至少比前一阶多 1
+func scaled_faiths(defs: Dictionary) -> Dictionary:
+	if faith_threshold_percent == 0:
+		return defs
+	var out := {}
+	for fid in defs:
+		var src: FaithDef = defs[fid]
+		var copy := src.duplicate() as FaithDef
+		copy.thresholds = scale_thresholds(src.thresholds, faith_threshold_percent)
+		out[fid] = copy
+	return out
+
+
+static func scale_thresholds(src: Array[int], percent: int) -> Array[int]:
+	var out: Array[int] = []
+	for i in src.size():
+		var v := src[i] if i == 0 else roundi(float(src[i]) * (1.0 + float(percent) / 100.0))
+		if i > 0:
+			v = maxi(v, out[i - 1] + 1)
+		out.append(v)
+	return out

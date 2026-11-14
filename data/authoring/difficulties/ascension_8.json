@@ -1,0 +1,64 @@
+{
+  "id": "ascension_8",
+  "display_name": "进阶八",
+  "display_names": {
+    "en": "Ascension VIII"
+  },
+  "description": "进阶七的一切，再加：猎手直接攻击伤害 +{hunter_damage_percent}%。在进阶七撤离一次后解锁。",
+  "descriptions": {
+    "en": "Everything in Ascension VII, and hunters deal +{hunter_damage_percent}% direct attack damage. Unlocked by extracting once on Ascension VII."
+  },
+  "challenge": "猎手下手更重",
+  "challenges": {
+    "en": "Hunters hit harder"
+  },
+  "level": 8,
+  "requires_unlock": "ascension_8",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
+      ]
+    }
+  ],
+  "enemy_hp_percent": 10,
+  "advanced_percent": 15,
+  "hunter_hp_percent": 10,
+  "hunter_damage_percent": 10,
+  "faith_threshold_percent": 10,
+  "countdown_percent": 10
+}

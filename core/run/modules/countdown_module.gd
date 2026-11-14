@@ -52,8 +52,16 @@ func has_countdown() -> bool:
 func left() -> int:
 	if not has_countdown():
 		return -1
-	var spent := _run.travel.clock.total if _run.travel != null and _run.travel.clock != null else 0
-	return maxi(0, limit() - spent)
+	return maxi(0, limit() - spent())
+
+
+## 320 A7：倒计时已经扣了几步 = 累计行动点 ×（1 + 这一档多扣的几成），向下取整。
+## 按累计算而不是每步进位：基础 1 点走 10 次扣 11，不是 20。行动点只增不减，所以余数不用另存，读档照样对
+func spent() -> int:
+	var total := _run.travel.clock.total if _run != null and _run.travel != null and _run.travel.clock != null else 0
+	var pct := _run.difficulty.countdown_percent if _run != null and _run.difficulty != null else 0
+	@warning_ignore("integer_division")
+	return total * (100 + maxi(0, pct)) / 100
 
 
 ## 094：带入预算（0 = 不限）

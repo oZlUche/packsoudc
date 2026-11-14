@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="DifficultyDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_ldjs2"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_sb26b"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="3_w6v8c"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="4_j18xh"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="5_7tvol"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="6_04fo4"]
+[ext_resource type="Script" path="res://core/run/mechanics/hunter_mechanic.gd" id="7_cevpm"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="8_nk7q4"]
+
+[sub_resource type="Resource" id="Resource_6hqg2"]
+script = ExtResource("4_j18xh")
+per_depth = 1
+
+[sub_resource type="Resource" id="Resource_8vvgh"]
+script = ExtResource("5_7tvol")
+amount = 10
+enabled = false
+only_total = true
+
+[sub_resource type="Resource" id="Resource_ugbn3"]
+script = ExtResource("6_04fo4")
+effects = Array[ExtResource("3_w6v8c")]([SubResource("Resource_6hqg2"), SubResource("Resource_8vvgh")])
+
+[sub_resource type="Resource" id="Resource_l1x3u"]
+script = ExtResource("7_cevpm")
+hunter_ids = Array[StringName]([&"hunter_1"])
+hp_from = Array[float]([1.0, 0.6, 0.6, 0.5])
+hp_to = Array[float]([1.4, 1.4, 1.6, 1.0])
+
+[resource]
+script = ExtResource("8_nk7q4")
+id = &"ascension_6"
+display_name = "进阶六"
+display_names = {
+"en": "Ascension VI"
+}
+description = "进阶五的一切，再加：信仰第二阶起的门槛 +{faith_threshold_percent}%（首阶不变）。在进阶五撤离一次后解锁。"
+descriptions = {
+"en": "Everything in Ascension V, and faith tiers from the second up need +{faith_threshold_percent}% faith (the first is unchanged). Unlocked by extracting once on Ascension V."
+}
+challenge = "信仰门槛更高"
+challenges = {
+"en": "Faith tiers cost more"
+}
+level = 6
+requires_unlock = &"ascension_6"
+grants_unlock = &"ascension_7"
+mechanics = Array[ExtResource("2_sb26b")]([SubResource("Resource_ugbn3"), SubResource("Resource_l1x3u")])
+enemy_hp_percent = 10
+advanced_percent = 15
+hunter_hp_percent = 10
+faith_threshold_percent = 10

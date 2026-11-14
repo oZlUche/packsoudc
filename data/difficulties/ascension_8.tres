@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="DifficultyDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_g0sn7"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_mhndv"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="3_a0exm"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="4_emt52"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="5_pbyen"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="6_nfdav"]
+[ext_resource type="Script" path="res://core/run/mechanics/hunter_mechanic.gd" id="7_0f8s8"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="8_beogd"]
+
+[sub_resource type="Resource" id="Resource_eqiw7"]
+script = ExtResource("4_emt52")
+per_depth = 1
+
+[sub_resource type="Resource" id="Resource_qvshv"]
+script = ExtResource("5_pbyen")
+amount = 10
+enabled = false
+only_total = true
+
+[sub_resource type="Resource" id="Resource_dskgj"]
+script = ExtResource("6_nfdav")
+effects = Array[ExtResource("3_a0exm")]([SubResource("Resource_eqiw7"), SubResource("Resource_qvshv")])
+
+[sub_resource type="Resource" id="Resource_223j4"]
+script = ExtResource("7_0f8s8")
+hunter_ids = Array[StringName]([&"hunter_1"])
+hp_from = Array[float]([1.0, 0.6, 0.6, 0.5])
+hp_to = Array[float]([1.4, 1.4, 1.6, 1.0])
+
+[resource]
+script = ExtResource("8_beogd")
+id = &"ascension_8"
+display_name = "进阶八"
+display_names = {
+"en": "Ascension VIII"
+}
+description = "进阶七的一切，再加：猎手直接攻击伤害 +{hunter_damage_percent}%。在进阶七撤离一次后解锁。"
+descriptions = {
+"en": "Everything in Ascension VII, and hunters deal +{hunter_damage_percent}% direct attack damage. Unlocked by extracting once on Ascension VII."
+}
+challenge = "猎手下手更重"
+challenges = {
+"en": "Hunters hit harder"
+}
+level = 8
+requires_unlock = &"ascension_8"
+mechanics = Array[ExtResource("2_mhndv")]([SubResource("Resource_dskgj"), SubResource("Resource_223j4")])
+enemy_hp_percent = 10
+advanced_percent = 15
+hunter_hp_percent = 10
+hunter_damage_percent = 10
+faith_threshold_percent = 10
+countdown_percent = 10

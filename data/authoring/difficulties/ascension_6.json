@@ -1,0 +1,63 @@
+{
+  "id": "ascension_6",
+  "display_name": "进阶六",
+  "display_names": {
+    "en": "Ascension VI"
+  },
+  "description": "进阶五的一切，再加：信仰第二阶起的门槛 +{faith_threshold_percent}%（首阶不变）。在进阶五撤离一次后解锁。",
+  "descriptions": {
+    "en": "Everything in Ascension V, and faith tiers from the second up need +{faith_threshold_percent}% faith (the first is unchanged). Unlocked by extracting once on Ascension V."
+  },
+  "challenge": "信仰门槛更高",
+  "challenges": {
+    "en": "Faith tiers cost more"
+  },
+  "level": 6,
+  "requires_unlock": "ascension_6",
+  "grants_unlock": "ascension_7",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
+      ]
+    }
+  ],
+  "enemy_hp_percent": 10,
+  "advanced_percent": 15,
+  "hunter_hp_percent": 10,
+  "faith_threshold_percent": 10
+}
