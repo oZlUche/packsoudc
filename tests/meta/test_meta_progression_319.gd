@@ -209,6 +209,8 @@ static func run_result_panel(t: TestCase) -> void:
 	t.check(texts[1].ends_with("✓") and texts[2].ends_with("✓") and not texts[3].ends_with("✓"), "1000、2000 打勾，5000 没有：%s" % [texts])
 	t.eq(texts[4], UiText.t("result.insight_gap") % 2660, "还差 2660")
 	t.eq(texts[5], UiText.t("result.insight_balance") % 7, "余额 7")
+	var sb := box.get_theme_stylebox("panel")
+	t.check(sb.content_margin_left >= 20.0 and sb.content_margin_right >= 20.0, "字离开纸的毛边（左右内边距 %.0f / %.0f）" % [sb.content_margin_left, sb.content_margin_right])
 	box.free()
 	r.score = 6000
 	var full := ResultScreenScript.insight_panel(r, rules, 7)
