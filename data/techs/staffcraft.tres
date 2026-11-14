@@ -10,25 +10,15 @@ tech = &"staffcraft"
 
 [sub_resource type="Resource" id="Resource_im0xb"]
 script = ExtResource("3_3kb7p")
-funds = 600
-items = {
-"crystal_shards": 3
-}
+insight = 1
 
 [sub_resource type="Resource" id="Resource_iqxew"]
 script = ExtResource("3_3kb7p")
-funds = 1200
-items = {
-"fire_crystal_low": 1
-}
+insight = 2
 
 [sub_resource type="Resource" id="Resource_kh4ay"]
 script = ExtResource("3_3kb7p")
-funds = 2000
-items = {
-"fire_crystal": 1,
-"silver_ingot": 2
-}
+insight = 3
 
 [resource]
 script = ExtResource("2_fb0a7")
@@ -38,10 +28,12 @@ display_names = {
 "en": "Staffcraft"
 }
 requires = Array[StringName]([&"smithy"])
-column = 1
+column = 2
+lift = 1
 description = "学会做法杖：级数越高，做得出的杖越好。"
 descriptions = {
 "en": "Learn to make staves: higher levels make better staves."
 }
+tree = &"mechanism"
 effect = SubResource("Resource_iu68j")
 tiers = Array[ExtResource("3_3kb7p")]([SubResource("Resource_im0xb"), SubResource("Resource_iqxew"), SubResource("Resource_kh4ay")])

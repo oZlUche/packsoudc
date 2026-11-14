@@ -10,12 +10,7 @@ buffs = Array[StringName]([&"tech_scouting_1"])
 
 [sub_resource type="Resource" id="Resource_pkg26"]
 script = ExtResource("3_es8ai")
-funds = 1500
-items = {
-"hardwood_plank": 2,
-"rivet_box": 2,
-"steel_ingot": 3
-}
+insight = 2
 
 [resource]
 script = ExtResource("2_pjjjq")
@@ -24,11 +19,11 @@ display_name = "侦察"
 display_names = {
 "en": "Scouting"
 }
-requires = Array[StringName]([&"bargain"])
-column = 2
+requires = Array[StringName]([&"thorough_search"])
 description = "隐形的猎手走近到一定距离就看得见。"
 descriptions = {
 "en": "Hidden hunters become visible once they come close enough."
 }
+tree = &"mechanism"
 effect = SubResource("Resource_jek2h")
 tiers = Array[ExtResource("3_es8ai")]([SubResource("Resource_pkg26")])

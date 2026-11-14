@@ -32,6 +32,7 @@ static func read(items: ItemDatabase, path: String = DEFAULT_PATH, rules: MetaRu
 		report: SaveReport = null) -> MetaState:
 	var m: MetaState = null
 	if FileAccess.file_exists(path):
+		backup_before_upgrade(path)
 		m = from_text(FileAccess.get_file_as_string(path), items, rules, tech_defs, report)
 	var prev := AtomicFile.prev_path(path)
 	if m == null and FileAccess.file_exists(prev):
@@ -43,6 +44,27 @@ static func read(items: ItemDatabase, path: String = DEFAULT_PATH, rules: MetaRu
 			report.prev_used = true
 			push_warning("MetaSave: %s 读不出来，用了上一份 %s" % [path, prev])
 	return m
+
+
+## 319：旧版本的档迁移之前先原样留一份 `<文件>.v<旧版本>.bak`（已经有就不覆盖：那是最早的那份）。返回备份的路径；不用备份返回空
+static func backup_before_upgrade(path: String) -> String:
+	var text := FileAccess.get_file_as_string(path)
+	var parsed = JSON.parse_string(text)
+	if not (parsed is Dictionary):
+		return ""
+	var v := int((parsed as Dictionary).get("version", -1))
+	if v < 1 or v >= MetaState.SAVE_VERSION:
+		return ""
+	var bak := "%s.v%d.bak" % [path, v]
+	if FileAccess.file_exists(bak):
+		return bak
+	var f := FileAccess.open(bak, FileAccess.WRITE)
+	if f == null:
+		push_warning("MetaSave: 迁移前备份写不了 %s" % bak)
+		return ""
+	f.store_string(text)
+	f.close()
+	return bak
 
 
 static func from_text(text: String, items: ItemDatabase, rules: MetaRules = null, tech_defs: Array = [],

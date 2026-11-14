@@ -42,6 +42,9 @@ var _last_said := ""
 var _selected: StringName = &""
 ## 材料行的【交 k】按钮：道具 id（字符串）→ Button（138；只有选中节点、前置满足、拥有且还差的才有）
 var _submit_buttons: Dictionary = {}
+## 319：树区上面两枚页签（数值成长 / 机制成长）—— 树 id → Button；现在看哪一棵
+var _tabs: Dictionary = {}
+var _tree_id: StringName = TechDef.TREE_STAT
 
 
 func setup(flow: GameFlow, font: Font) -> void:
@@ -56,17 +59,52 @@ func setup(flow: GameFlow, font: Font) -> void:
 	_refresh()
 
 
+## 319：换到某一棵树（页签）—— 树区只画这一棵，右板落到这棵树里第一个能点的。没这棵树返回 false
+func show_tree(tree_id: StringName) -> bool:
+	if not TechDef.TREES.has(tree_id):
+		return false
+	if tree_id != _tree_id or _tree.defs.is_empty():
+		_tree_id = tree_id
+		_tree.setup(_meta, TechService.of_tree(_flow.tech_defs, tree_id), _font)
+		_selected = &""
+		var first := _default_selection()
+		if first != &"":
+			_tree.select(first)
+	_refresh()
+	return true
+
+
+func current_tree() -> StringName:
+	return _tree_id
+
+
+## 319：页签按钮（测试看）
+func tree_tab(tree_id: StringName) -> Button:
+	return _tabs.get(tree_id, null)
+
+
 func _build() -> void:
 	var row := UiTheme.hbox(12)
 	add_child(row)
 
+	var left := UiTheme.vbox(8)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(left)
+	var tabs := UiTheme.hbox(8)     # 319：两棵树两枚页签，字写在木牌上
+	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+	left.add_child(tabs)
+	for tree_id in TechDef.TREES:
+		var tab := UiTheme.make_home_button("", show_tree.bind(tree_id), false, Vector2.ZERO, 18)
+		tabs.add_child(tab)
+		_tabs[tree_id] = tab
 	_area = TreeArea.new()
 	_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_child(_area)
+	left.add_child(_area)
 	_tree = TechTreeView.new()
 	_area.holder.add_child(_tree)
-	_tree.setup(_meta, _flow.tech_defs, _font)
+	_tree.setup(_meta, TechService.of_tree(_flow.tech_defs, _tree_id), _font)
 	_tree.selected.connect(_on_tree_selected)
 
 	var board := UiTheme.panel(PanelContainer.new(), 24, UiTheme.PANEL_PARCHMENT)
@@ -100,10 +138,13 @@ func _build() -> void:
 
 
 #region 公开动作
-## 选中一个节点（右板切到它）。没有这项返回 false
+## 选中一个节点（右板切到它；在另一棵树上先换页签）。没有这项返回 false
 func select(id: StringName) -> bool:
-	if _flow.tech_of(id) == null:
+	var def := _flow.tech_of(id)
+	if def == null:
 		return false
+	if def.tree != _tree_id:
+		show_tree(def.tree)
 	if _tree.selected_id() != id:
 		return _tree.select(id)     # 树会发 selected，回到 _on_tree_selected
 	_selected = id
@@ -187,12 +228,13 @@ func _say(text: String) -> void:
 #endregion
 
 
-## 一开始选谁：第一个能点的（前置满足、没满级）；都不能就第一个
+## 一开始选谁：这棵树里第一个能点的（前置满足、没满级）；都不能就第一个
 func _default_selection() -> StringName:
-	for def in _flow.tech_defs:
+	var defs := TechService.of_tree(_flow.tech_defs, _tree_id)
+	for def in defs:
 		if TechService.prereqs_met(_meta, def) and TechService.next_tier(_meta, def) != null:
 			return def.id
-	return _flow.tech_defs[0].id if not _flow.tech_defs.is_empty() else &""
+	return defs[0].id if not defs.is_empty() else &""
 
 
 func _on_tree_selected(id: StringName) -> void:
@@ -204,6 +246,13 @@ func _on_tree_selected(id: StringName) -> void:
 func _refresh() -> void:
 	if _tree == null:
 		return
+	for tree_id in _tabs:     # 319：当前那棵是主档木牌；机制成长那枚带见识余额
+		var tab: Button = _tabs[tree_id]
+		tab.text = UiText.t("tech.tree_" + String(tree_id))
+		if tree_id == TechDef.TREE_MECHANISM:
+			tab.text += "　" + UiText.t("tech.insight_have") % _meta.insight
+			tab.tooltip_text = UiText.t("tech.insight_how")
+		tab.theme_type_variation = UiTheme.BUTTON_HOME_PRIMARY if tree_id == _tree_id else UiTheme.BUTTON_HOME
 	_tree.rebuild()     # 等级变了节点样子跟着变；选中的那圈边 rebuild 时照旧画
 	UiTheme.clear_children(_effect)
 	UiTheme.clear_children(_cost)
@@ -229,6 +278,8 @@ func _refresh() -> void:
 			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.now") % def.effect.describe_level(lv, _flow.buff_defs), LINE_SIZE, UiPalette.HEAL, TEXT_WIDTH))
 		if tier != null:
 			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.next") % def.effect.describe_level(lv + 1, _flow.buff_defs), LINE_SIZE, UiPalette.FG, TEXT_WIDTH))
+			if def.effect.applies_next_run():     # 319：开局才定的效果，买了下一局才看得到
+				_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.next_run"), SMALL_SIZE, UiPalette.DIM, TEXT_WIDTH))
 
 	# 费用：账目行
 	if tier == null:
@@ -242,11 +293,16 @@ func _refresh() -> void:
 			names.append(Names.of(m))
 		_cost.add_child(UiTheme.make_wrapped(UiText.t("tech.needs_prereq") % UiText.t("hud.buff_sep").join(names), LINE_SIZE, UiPalette.DIM, TEXT_WIDTH))
 	_cost.add_child(_rule())
-	var rich := _meta.funds >= tier.funds
-	var funds_row := _ledger_row("", str(tier.funds), UiText.t("tech.owned") % _meta.funds, rich,
-		UiText.t("tech.funds_tip") % [tier.funds, _meta.funds])
-	_coin_head(funds_row)
-	_cost.add_child(funds_row)
+	if def.is_mechanism():     # 319：机制树只花见识
+		_cost.add_child(_ledger_row(UiText.t("tech.insight"), str(tier.insight), UiText.t("tech.owned") % _meta.insight,
+			_meta.insight >= tier.insight, UiText.t("tech.insight_tip") % [tier.insight, _meta.insight]))
+		_cost.add_child(UiTheme.make_wrapped(UiText.t("tech.insight_how"), SMALL_SIZE, UiPalette.DIM, TEXT_WIDTH))
+	else:
+		var rich := _meta.funds >= tier.funds
+		var funds_row := _ledger_row("", str(tier.funds), UiText.t("tech.owned") % _meta.funds, rich,
+			UiText.t("tech.funds_tip") % [tier.funds, _meta.funds])
+		_coin_head(funds_row)
+		_cost.add_child(funds_row)
 	var keys: Array = tier.items.keys()
 	keys.sort()
 	var owned := _owned_counts()

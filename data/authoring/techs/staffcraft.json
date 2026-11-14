@@ -7,34 +7,26 @@
   "requires": [
     "smithy"
   ],
-  "column": 1,
+  "column": 2,
+  "lift": 1,
   "description": "学会做法杖：级数越高，做得出的杖越好。",
   "descriptions": {
     "en": "Learn to make staves: higher levels make better staves."
   },
+  "tree": "mechanism",
   "effect": {
     "type": "tech_recipes",
     "tech": "staffcraft"
   },
   "tiers": [
     {
-      "funds": 600,
-      "items": {
-        "crystal_shards": 3
-      }
+      "insight": 1
     },
     {
-      "funds": 1200,
-      "items": {
-        "fire_crystal_low": 1
-      }
+      "insight": 2
     },
     {
-      "funds": 2000,
-      "items": {
-        "silver_ingot": 2,
-        "fire_crystal": 1
-      }
+      "insight": 3
     }
   ]
 }

@@ -378,6 +378,7 @@ func _stock() -> void:
 	var gold_uid := -1
 	for k in order:
 		var inst := ItemInstance.create(picks[k], 0)
+		inst.set_basis(ItemValue.of_instance(inst))     # 319：店里的货买走了是花钱买的，带出去不算战利分
 		if board.try_add(inst) and picks[k] == gold:
 			gold_uid = inst.uid
 	if gold != null and gold_uid < 0:
@@ -408,7 +409,9 @@ func _make_room_for(def: ItemDef) -> void:
 		var at := inst.origin
 		var rot := inst.rotation
 		board.remove(inst.uid)
-		if board.try_add(ItemInstance.create(def, 0)):
+		var fresh := ItemInstance.create(def, 0)
+		fresh.set_basis(ItemValue.of_instance(fresh))     # 319
+		if board.try_add(fresh):
 			return
 		board.place(inst, at, rot)
 

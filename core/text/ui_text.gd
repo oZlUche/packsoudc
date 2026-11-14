@@ -618,6 +618,13 @@ const TEXT := {
 	"result.none": {"zh": "没有可结算的一局", "en": "No run to show results for"},
 	"result.extracted": {"zh": "撤离成功", "en": "Extracted"},
 	"result.defeat": {"zh": "战败", "en": "Defeat"},
+	# 319: insight ladder on the result screen
+	"result.insight_gain": {"zh": "见识 +%d", "en": "Insight +%d"},
+	"result.insight_tier": {"zh": "%d 分", "en": "%d pts"},
+	"result.insight_done": {"zh": "　✓", "en": " ✓"},
+	"result.insight_gap": {"zh": "还差 %d 分到下一档", "en": "%d more points to the next tier"},
+	"result.insight_all": {"zh": "已完成所有档位", "en": "All tiers reached"},
+	"result.insight_balance": {"zh": "见识余额 %d", "en": "Insight balance %d"},
 	"result.store_title": {"zh": "置入仓库", "en": "Into the Warehouse"},     # 228：第二页标题木牌
 	# —— 224：结算第一页的账单 ——
 	"ledger.visited": {"zh": "走过的点", "en": "Nodes visited"},
@@ -1495,9 +1502,20 @@ const TEXT := {
 	"settings.sound": {"zh": "声音", "en": "Sound"},
 	"settings.sfx_volume": {"zh": "音效 %d%%", "en": "Sound effects %d%%"},
 	# —— 221 F5b：tech panel and tech effects ——
-	"tech.col_0": {"zh": "营造", "en": "Works"},
-	"tech.col_1": {"zh": "体魄", "en": "Physique"},
-	"tech.col_2": {"zh": "探索", "en": "Exploration"},
+	"tech.col_stat_0": {"zh": "营造", "en": "Works"},
+	"tech.col_stat_1": {"zh": "体魄", "en": "Physique"},
+	"tech.col_mechanism_0": {"zh": "探索", "en": "Exploration"},
+	"tech.col_mechanism_1": {"zh": "交易", "en": "Trade"},
+	"tech.col_mechanism_2": {"zh": "锻造", "en": "Forging"},
+	"tech.col_mechanism_3": {"zh": "战利", "en": "Spoils"},
+	# 319: two trees
+	"tech.tree_stat": {"zh": "数值成长", "en": "Growth"},
+	"tech.tree_mechanism": {"zh": "机制成长", "en": "Know-how"},
+	"tech.insight": {"zh": "见识", "en": "Insight"},
+	"tech.insight_have": {"zh": "见识 %d", "en": "Insight %d"},
+	"tech.insight_how": {"zh": "见识：每局结算达到积分档位获得，撤离失败也可获得", "en": "Insight: earned at the end of every run by reaching score tiers, even if you fail to extract"},
+	"tech.insight_tip": {"zh": "这一级要 %d 点见识，现在有 %d 点；按升级时一次扣", "en": "This level costs %d Insight; you have %d. It is spent when you press Upgrade"},
+	"tech.next_run": {"zh": "下一次出征起生效", "en": "Takes effect from your next expedition"},
 	"tech.handed_in_many": {"zh": "交了 %d 件「%s」", "en": "Handed in %d × \"%s\""},
 	"tech.lit_up": {"zh": "%s 点亮了", "en": "%s is lit up"},
 	"tech.leveled_up": {"zh": "%s 升到 Lv %d", "en": "%s is now Lv %d"},

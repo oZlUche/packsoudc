@@ -4,13 +4,12 @@
   "display_names": {
     "en": "Travel Pack"
   },
-  "requires": [
-    "safe_box"
-  ],
+  "lift": 2,
   "description": "死里逃生：战败时保住身上一部分钱，级数越高留得越多。",
   "descriptions": {
     "en": "Keep part of the coins you're carrying if you die; higher levels keep more."
   },
+  "tree": "mechanism",
   "effect": {
     "type": "tech_run_buff",
     "buffs": [
@@ -21,17 +20,13 @@
   },
   "tiers": [
     {
-      "funds": 400
+      "insight": 1
     },
     {
-      "funds": 800
+      "insight": 2
     },
     {
-      "funds": 1200,
-      "items": {
-        "tanned_leather": 2,
-        "linen_bolt": 1
-      }
+      "insight": 3
     }
   ]
 }

@@ -4,11 +4,11 @@
   "display_names": {
     "en": "Thorough Search"
   },
-  "column": 2,
   "description": "每个搜索点能多搜几次。",
   "descriptions": {
     "en": "Search each search spot a few more times."
   },
+  "tree": "mechanism",
   "effect": {
     "type": "tech_run_buff",
     "buffs": [
@@ -18,10 +18,10 @@
   },
   "tiers": [
     {
-      "funds": 250
+      "insight": 1
     },
     {
-      "funds": 700
+      "insight": 2
     }
   ]
 }

@@ -41,7 +41,9 @@ static func run_screenshot_run(t: TestCase) -> void:
 	t.eq(String(total["parts"]), UiText.t("ledger.score_parts") % [0, 300, 53], "下面小字：战利 0 · 战绩 300 · 探索 53（普通难度不写难度）")
 	t.eq(rows.size(), 12, "十一行 + 总分，行数不变")
 	r.safe_value = 30
+	r.safe_net = 30     # 319：结算按本局新得
 	r.value = 999     # 战败：棋盘上的不算
+	r.loot_net = 999     # 319：结算按本局新得
 	r.compute_score()
 	t.eq(r.score, 383, "战败只算保险箱的价值：353 + 30")
 
@@ -52,7 +54,9 @@ static func run_extract_and_difficulty(t: TestCase) -> void:
 	r.outcome = &"extracted"
 	r.reason = &"extract"
 	r.value = 400
+	r.loot_net = 400     # 319：结算按本局新得
 	r.safe_value = 50
+	r.safe_net = 50     # 319：结算按本局新得
 	r.crafts = 2
 	r.boss_won = 1
 	r.battles_won = 10
@@ -85,6 +89,7 @@ static func run_meta_score(t: TestCase) -> void:
 	win.outcome = &"extracted"
 	win.reason = &"extract"
 	win.value = 100
+	win.loot_net = 100     # 319：结算按本局新得
 	var knife := ItemInstance.create(db.get_def(&"knife"))
 	win.carried.append(knife)
 	got = m.absorb(win)
@@ -97,11 +102,13 @@ static func run_meta_score(t: TestCase) -> void:
 	var big := RunResult.new()
 	big.outcome = &"extracted"
 	big.value = 300
+	big.loot_net = 300     # 319：结算按本局新得
 	m.absorb(big)
 	t.eq(int(m.best_run["value"]), 500, "老 best_run 没分：按价值 500 比，300 分的新局不顶掉")
 	var bigger := RunResult.new()
 	bigger.outcome = &"extracted"
 	bigger.value = 600
+	bigger.loot_net = 600     # 319：结算按本局新得
 	m.absorb(bigger)
 	t.eq(int(m.best_run.get("score", -1)), 600, "超过了才换成新局（带分）")
 	var back := MetaState.from_dict(m.to_dict(), db)

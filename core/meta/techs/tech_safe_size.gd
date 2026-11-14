@@ -29,3 +29,7 @@ static func _text(c: int, r: int) -> String:
 	if r != 0:
 		parts.append(UiText.t("tech.safe_rows") % r)
 	return UiText.t("hud.buff_sep").join(parts) if not parts.is_empty() else UiText.t("tech.safe_unchanged")
+
+
+func applies_next_run() -> bool:
+	return true

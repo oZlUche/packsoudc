@@ -5,13 +5,13 @@
     "en": "Scouting"
   },
   "requires": [
-    "bargain"
+    "thorough_search"
   ],
-  "column": 2,
   "description": "隐形的猎手走近到一定距离就看得见。",
   "descriptions": {
     "en": "Hidden hunters become visible once they come close enough."
   },
+  "tree": "mechanism",
   "effect": {
     "type": "tech_run_buff",
     "buffs": [
@@ -20,12 +20,7 @@
   },
   "tiers": [
     {
-      "funds": 1500,
-      "items": {
-        "steel_ingot": 3,
-        "hardwood_plank": 2,
-        "rivet_box": 2
-      }
+      "insight": 2
     }
   ]
 }

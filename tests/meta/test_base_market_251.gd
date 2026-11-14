@@ -122,6 +122,7 @@ static func run_flow(t: TestCase) -> void:
 	f.after_run_market()
 	t.eq(f.meta.market_seed, seed0 + 1, "回基地：换了一次货")
 	f.meta.funds = 1000000
+	f.meta.insight = 100     # 319：高级货物在机制树，花见识
 	var def := f.tech_of(&"market")
 	for key in TechService.needed(f.meta, def):
 		for _i in int(TechService.needed(f.meta, def)[key]):

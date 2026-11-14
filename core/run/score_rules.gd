@@ -21,6 +21,10 @@ const ID := &"score"
 @export var extract_bonus: int = 0
 ## 带出价值算不算分（A 算）
 @export var loot_counts: bool = true
+## 319：计分规则的版本 —— 历史记录各记各的（`score_v`），旧的不重算
+@export var version: int = 1
+## 319：见识阶梯（升序的分数门槛）：最终总分达到一档领一点，几档都到就领几点；空 = 不发
+@export var insight_ladder: Array[int] = []
 
 static var _rules: ScoreRules = null
 
@@ -50,3 +54,20 @@ func mult(level: int) -> float:
 ## 三项加起来乘系数，向下取整
 func total(loot: int, battle: int, explore_sum: int, level: int) -> int:
 	return floori(float(loot + battle + explore_sum) * mult(level) + 0.0001)
+
+
+## 319：总分 [param s] 领几点见识（达到的档数）
+func insight_for(s: int) -> int:
+	var n := 0
+	for gate in insight_ladder:
+		if s >= gate:
+			n += 1
+	return n
+
+
+## 319：离下一档还差几分；全到了返回 0
+func insight_gap(s: int) -> int:
+	for gate in insight_ladder:
+		if s < gate:
+			return gate - s
+	return 0

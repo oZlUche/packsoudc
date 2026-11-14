@@ -23,14 +23,15 @@ static func _recipe(out: StringName, inputs: Dictionary, funds: int, lv: int = 1
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("251 §三 / 262：内容 —— 科技「高级配方」（id 还是 smithy）两级、前置行囊（← 保险箱 ← 仓库，树不加宽）；首批 14 张配方，产物都是装备、素材都在、级 1 ～ 3")
+	t.begin("251 §三 / 262：内容 —— 科技「高级配方」（id 还是 smithy）两级、319 起是机制树的根（没有前置）；首批 14 张配方，产物都是装备、素材都在、级 1 ～ 3")
 	var def := load(ContentPaths.asset_file("techs", "smithy")) as TechDef
 	t.not_null(def, "科技资产在")
 	if def == null:
 		return
 	t.eq(def.max_level(), 2, "两级（262：铁匠铺默认就有）")
 	t.eq(Smithy.level(T110._meta()), 1, "262：没点科技，铁匠铺 1 级")
-	t.eq(def.requires, [&"pack"] as Array[StringName], "前置行囊（一路往下是仓库）")
+	t.eq(def.requires, [] as Array[StringName], "319：机制树的根，没有前置")
+	t.check(def.is_mechanism(), "319：在机制树上")
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
 	var all := SmithRecipeDef.load_all()

@@ -145,10 +145,12 @@ static func _extracted_result(gun: ItemDef) -> RunResult:
 	r.chapter_name = "自由模式"
 	r.run_seed = 87326
 	r.value = 953
+	r.loot_net = 953     # 319：结算按本局新得
 	r.balance = 153
 	r.carried = [ItemInstance.create(gun), ItemInstance.create(gun)] as Array[ItemInstance]
 	r.safe_items = [ItemInstance.create(gun)] as Array[ItemInstance]
 	r.safe_value = 40
+	r.safe_net = 40     # 319：结算按本局新得
 	r.safe_layout = [{"def": gun, "origin": Vector2i.ZERO, "rotation": 0}] as Array[Dictionary]
 	r.visited = 12
 	r.steps = 37
@@ -239,6 +241,7 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	d.reason = &"vitality_depleted"
 	d.safe_items = [ItemInstance.create(gun)] as Array[ItemInstance]
 	d.safe_value = 40
+	d.safe_net = 40     # 319：结算按本局新得
 	d.safe_layout = [{"def": gun, "origin": Vector2i.ZERO, "rotation": 0}] as Array[Dictionary]
 	f.last_absorbed = {"lit": 0}
 	var lost = load("res://ui/game/result_screen.gd").new()

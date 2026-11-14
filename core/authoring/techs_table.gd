@@ -17,6 +17,8 @@ const MIRROR := "res://docs/techs.md"
 
 const SHEET_NODES := "节点"
 const SHEET_LEVELS := "等级"
+## 319：节点表「树」那一格写的字 → [member TechDef.tree]
+const TREE_NAMES := {"数值": TechDef.TREE_STAT, "机制": TechDef.TREE_MECHANISM}
 
 ## `run_buffs` 目录里归这张表管的文件前缀
 const BUFF_PREFIX := "tech_"
@@ -40,22 +42,25 @@ static func fields(sheets: Dictionary, problems: Array[String] = []) -> Dictiona
 		var f := {
 			"name": XlsxReader.cell_text(row.get("名称", "")).strip_edges(),
 			"en": XlsxReader.cell_text(row.get("英文名", "")).strip_edges(),
-			"column": 0, "order": 0, "requires": [],
+			"column": 0, "order": 0, "lift": 0, "requires": [],
 			"description": XlsxReader.cell_text(row.get("说明", "")).strip_edges(),
 			"description_en": XlsxReader.cell_text(row.get("英文说明", "")).strip_edges(),
 			"effect": XlsxReader.cell_text(row.get("效果构件", "")).strip_edges(),
 			"params": XlsxReader.json_cell(row.get("构件参数（JSON）", null), "%s 的构件参数" % where, problems),
 			"template": XlsxReader.cell_text(row.get("每级说明模板", "")).strip_edges(),
+			"tree": XlsxReader.cell_text(row.get("树", "")).strip_edges(),
 			"tiers": [],
 		}
+		if not TREE_NAMES.has(f["tree"]):
+			problems.append("%s：树得写「数值」或「机制」：%s" % [where, f["tree"]])
 		if f["name"] == "":
 			problems.append("%s：没写名称" % where)
-		for pair in [["列", "column"], ["排序", "order"]]:
+		for pair in [["列", "column"], ["排序", "order"], ["上移", "lift"]]:
 			var raw: Variant = row.get(pair[0], null)
 			if raw == null or XlsxReader.cell_text(raw).strip_edges() == "":
 				continue
 			var n: Variant = _int(raw)
-			if n == null or (pair[1] == "column" and int(n) < 0):
+			if n == null or (pair[1] != "order" and int(n) < 0):
 				problems.append("%s：%s得是不小于 0 的整数：%s" % [where, pair[0], XlsxReader.cell_text(raw)])
 			else:
 				f[pair[1]] = int(n)
@@ -83,6 +88,8 @@ static func fields(sheets: Dictionary, problems: Array[String] = []) -> Dictiona
 		for req in out[id]["requires"]:
 			if not out.has(req):
 				problems.append("%s/%s：前置 %s 不在节点表里" % [SHEET_NODES, id, req])
+			elif out[req]["tree"] != out[id]["tree"]:
+				problems.append("%s/%s：前置 %s 在另一棵树上（两棵树互不做前置，319）" % [SHEET_NODES, id, req])
 	var probe: Array[TechDef] = []
 	for id in out:
 		var d := TechDef.new()
@@ -126,11 +133,14 @@ static func generate(f: Dictionary, problems: Array[String] = []) -> Dictionary:
 		var tiers: Array = []
 		for tier in t["tiers"]:
 			var td := {"funds": tier["funds"]}
+			if int(tier.get("insight", 0)) > 0:
+				td["insight"] = int(tier["insight"])
 			if not (tier["items"] as Dictionary).is_empty():
 				td["items"] = (tier["items"] as Dictionary).duplicate()
 			tiers.append(td)
 		var node := {"id": id, "display_name": t["name"], "order": t["order"], "requires": (t["requires"] as Array).duplicate(),
-			"column": t["column"], "description": t["description"], "effect": effect, "tiers": tiers}
+			"column": t["column"], "lift": t.get("lift", 0), "description": t["description"], "effect": effect, "tiers": tiers,
+			"tree": String(TREE_NAMES.get(t.get("tree", ""), TechDef.TREE_STAT))}
 		if t["en"] != "":
 			node["display_names"] = {"en": t["en"]}
 		if t["description_en"] != "":
@@ -207,14 +217,14 @@ static func markdown(f: Dictionary) -> String:
 		"",
 		"## 节点",
 		"",
-		"| id | 名称 | 英文名 | 列 | 排序 | 前置 | 说明 | 英文说明 | 效果构件 | 构件参数 | 每级说明模板 |",
-		"|---|---|---|---|---|---|---|---|---|---|---|",
+		"| id | 名称 | 英文名 | 树 | 列 | 排序 | 上移 | 前置 | 说明 | 英文说明 | 效果构件 | 构件参数 | 每级说明模板 |",
+		"|---|---|---|---|---|---|---|---|---|---|---|---|---|",
 	]
 	for id in f:
 		var t: Dictionary = f[id]
-		lines.append(_row([id, t["name"], t["en"], str(t["column"]), str(t["order"]), "、".join(PackedStringArray(t["requires"])),
+		lines.append(_row([id, t["name"], t["en"], t.get("tree", ""), str(t["column"]), str(t["order"]), str(t.get("lift", 0)), "、".join(PackedStringArray(t["requires"])),
 			t["description"], t["description_en"], t["effect"], _json_text(t["params"]), t["template"]]))
-	lines.append_array(["", "## 等级", "", "| 科技 id | 级 | 钱 | 材料 | 效果参数 |", "|---|---|---|---|---|"])
+	lines.append_array(["", "## 等级", "", "| 科技 id | 级 | 钱 | 见识 | 材料 | 效果参数 |", "|---|---|---|---|---|---|"])
 	for id in f:
 		var tiers: Array = f[id]["tiers"]
 		for k in tiers.size():
@@ -222,7 +232,8 @@ static func markdown(f: Dictionary) -> String:
 			var mats: Array[String] = []
 			for item in tier["items"]:
 				mats.append("%s: %d" % [item, tier["items"][item]])
-			lines.append(_row([id, str(k + 1), str(tier["funds"]), "；".join(PackedStringArray(mats)), _json_text(tier["params"])]))
+			lines.append(_row([id, str(k + 1), str(tier["funds"]), str(tier.get("insight", 0)) if int(tier.get("insight", 0)) > 0 else "",
+				"；".join(PackedStringArray(mats)), _json_text(tier["params"])]))
 	return "\n".join(lines) + "\n"
 
 
@@ -253,7 +264,20 @@ static func _read_levels(sheets: Dictionary, out: Dictionary, problems: Array[St
 		var params := XlsxReader.json_cell(row.get("效果参数（JSON）", null), "%s 的效果参数" % where, problems)
 		if not params.is_empty() and out[id]["effect"] != "tech_run_buff":
 			problems.append("%s：效果参数只 tech_run_buff 用，%s 这格留空" % [where, out[id]["effect"]])
-		by_id[id][int(lv)] = {"funds": int(funds), "items": _materials(XlsxReader.cell_text(row.get("材料", "")), where, problems), "params": params}
+		var insight_raw: Variant = row.get("见识", null)     # 319
+		var insight: Variant = 0 if insight_raw == null or XlsxReader.cell_text(insight_raw).strip_edges() == "" else _int(insight_raw)
+		if insight == null or int(insight) < 0:
+			problems.append("%s：见识得是不小于 0 的整数：%s" % [where, XlsxReader.cell_text(insight_raw)])
+			insight = 0
+		var mats := _materials(XlsxReader.cell_text(row.get("材料", "")), where, problems)
+		if out[id]["tree"] == "机制":
+			if int(insight) < 1:
+				problems.append("%s：机制树每级得花见识（正整数）" % where)
+			if int(funds) != 0 or not mats.is_empty():
+				problems.append("%s：机制树只花见识，钱和材料留空（319）" % where)
+		elif int(insight) != 0:
+			problems.append("%s：数值树不花见识，见识这格留空" % where)
+		by_id[id][int(lv)] = {"funds": int(funds), "insight": int(insight), "items": mats, "params": params}
 	for id in out:
 		var levels: Dictionary = by_id.get(id, {})
 		if levels.is_empty():

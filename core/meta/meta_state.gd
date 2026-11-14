@@ -16,7 +16,10 @@ extends RefCounted
 
 ## 110：v3 多了局外科技的等级与上交记录（[member tech_levels] / [member tech_deposits]）
 ## 262：v4 科技「集市」「铁匠铺」改义为「高级货物」「高级配方」，最多两级（[MetaMigrations] 把 3 压到 2）
-const SAVE_VERSION := 4
+## 319：v5 科技分成数值树与机制树、机制树只花见识；幸运科技删了（退钱退材料）、讨价并成一级，见 [MetaMigrations]
+const SAVE_VERSION := 5
+## 319：记住最近结算过的几局（[member settled_runs]），重复结算不再发东西
+const SETTLED_MAX := 64
 ## 262（作者 14:19）：集市、铁匠铺默认就有 —— 没点科技也是 1 级，科技每点一级铺子再升一级
 const BASE_FACILITY_LEVEL := 1
 const WAREHOUSE_ID := 100
@@ -106,6 +109,15 @@ var last_carry_funds: int = 0
 var favorites: Array[StringName] = []
 ## 最近几局的 [RunResult.to_dict]，新的在前
 var history: Array[Dictionary] = []
+## 319：见识 —— 机制树的点数。每局结算按总分阶梯发（[ScoreRules]），撤离失败也发；余额跨局保留
+var insight: int = 0
+## 319：累计得到、花掉的见识（对账用：余额 = 得到 − 花掉）
+var insight_earned: int = 0
+var insight_spent: int = 0
+## 319：结算过的局（[member RunState.run_id]，旧的在前，最多 [constant SETTLED_MAX] 条）—— 同一局再结算一次什么也不发
+var settled_runs: Array[String] = []
+## 319：存档迁移做过的事（版本、退了什么），一版一条，只记不用
+var migration_log: Array[Dictionary] = []
 var _next_uid: int = 1
 
 
@@ -150,6 +162,29 @@ func grant(defs: Array) -> int:
 	if n > 0:
 		changed.emit()
 	return n
+
+
+## 319：存档迁移退回的材料（`{"items": {道具 id: 件数}}`，[MetaMigrations] 写在字典里）放进仓库 —— 按页序找空位、再不行临时加页；
+## 道具库里没有的、还放不下的按价值折进 funds 并记报告。钱在迁移那一步已经加进 funds 了
+func _claim_refund(raw: Variant, items: ItemDatabase, report: SaveReport = null) -> void:
+	if not (raw is Dictionary) or items == null:
+		return
+	var want: Dictionary = (raw as Dictionary).get("items", {}) if (raw as Dictionary).get("items", {}) is Dictionary else {}
+	var keys := want.keys()
+	keys.sort()
+	for key in keys:
+		var def := items.get_def(IdAliases.item(StringName(String(key))))
+		for _i in maxi(0, int(want[key])):
+			if def == null:
+				continue
+			var inst := ItemInstance.create(def, 0)
+			inst.uid = allocate_uid()
+			if keeps(def) and warehouse.rescue(inst) >= 0:
+				continue
+			var value := ItemValue.of_instance(inst)
+			funds += value
+			if report != null:
+				report.refund(def.id, value, "warehouse")
 
 
 ## 173（待定 2 A）：因版本更新作废的那一局，捞出来的道具字典（[member SaveReport.salvage]）放回仓库 —— 只收 [method keeps] 认的
@@ -248,10 +283,18 @@ func sell_bag(uid: int, ratio: float = 0.5) -> int:
 
 #region 一局结束
 ## 一局结束了进来。返回这次进了什么：{"items": 带回棋盘的件数, "value", "funds", "lit": 新点亮的图鉴条目数, "score": 这一局的总分（269）}
-func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
-	var got := {"items": 0, "value": 0, "funds": 0, "lit": 0, "safe": 0, "score": 0}
+## 319：[param grant_insight] = 按总分阶梯发见识（试玩切片不发）；这一局结算过了（[member settled_runs]）返回 `{"duplicate": true}`，什么也不动
+func absorb(result: RunResult, death_refund_percent: int = 0, grant_insight: bool = true) -> Dictionary:
+	var got := {"items": 0, "value": 0, "funds": 0, "lit": 0, "safe": 0, "score": 0, "insight": 0}
 	if result == null:
 		return got
+	if result.run_id != "":
+		if settled_runs.has(result.run_id):
+			push_warning("MetaState.absorb: %s 已经结算过，不再发" % result.run_id)
+			return {"duplicate": true}
+		settled_runs.append(result.run_id)
+		while settled_runs.size() > SETTLED_MAX:
+			settled_runs.remove_at(0)
 	runs += 1
 	battles_won += result.battles_won
 	if result.boss_cleared:
@@ -325,6 +368,13 @@ func absorb(result: RunResult, death_refund_percent: int = 0) -> Dictionary:
 	result.compute_score(int(got["lit"]))
 	score += result.score
 	got["score"] = result.score
+	# 319：见识按最终总分的阶梯发（达到即领、每档一点；成功失败同一张表）
+	if grant_insight:
+		result.insight = ScoreRules.load_rules().insight_for(result.score)
+		if result.insight > 0:
+			insight += result.insight
+			insight_earned += result.insight
+		got["insight"] = result.insight
 	if result.score > 0 and result.score > int(best_run.get("score", best_run.get("value", 0))):
 		best_run = best_run_of(result, runs)
 	var row := result.to_dict()
@@ -407,6 +457,7 @@ func _adopt(inst: ItemInstance) -> bool:
 	GrowthProfile.on_leave(inst)     # 207：带回基地 = 离开了作战棋盘，长到哪一阶都清零（reset_on_leave）
 	inst.set_benched(false)     # 244：「不参战」是这一局的事，回了基地就摘掉
 	inst.close_run()     # 281：带进去过的法杖回了基地（撤离或保险箱）算一次完整进出
+	inst.state.erase(ItemInstance.BASIS_KEY)     # 319：本金只在一局里有
 	inst.uid = _next_uid
 	_next_uid += 1
 	return true
@@ -730,6 +781,17 @@ func add_flag(id: StringName, delta: int) -> int:
 #endregion
 
 
+## 319：花见识（机制树升级）。不够返回 false、什么也不动
+func spend_insight(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if insight < amount:
+		return false
+	insight -= amount
+	insight_spent += amount
+	return true
+
+
 #region 存档
 func to_dict() -> Dictionary:
 	var board_dict: Variant = null     # 搬空了留着显示的空棋盘不存（读回来也是没有）
@@ -771,6 +833,9 @@ func to_dict() -> Dictionary:
 		"market_stall": String(market_stall),
 		"npc_said": npc_said.duplicate(true),     # 282
 		"npc_done": npc_done.duplicate(),
+		"insight": insight, "insight_earned": insight_earned, "insight_spent": insight_spent,     # 319
+		"settled_runs": settled_runs.duplicate(),
+		"migration_log": migration_log.duplicate(true),
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -840,7 +905,8 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	for key in ["codex", "achievements", "chapter_extractions", "flags"]:
 		for k in d.get(key, {}):
 			(m.get(key) as Dictionary)[String(k)] = int((d[key] as Dictionary)[k])
-	for key in ["score", "runs", "extractions", "deaths", "best_value", "boss_kills", "battles_won", "market_seed"]:
+	for key in ["score", "runs", "extractions", "deaths", "best_value", "boss_kills", "battles_won", "market_seed",
+			"insight", "insight_earned", "insight_spent"]:
 		m.set(key, int(d.get(key, 0)))
 	m._next_uid = int(d.get("next_uid", 1))
 	for inst in m.warehouse.items():
@@ -890,6 +956,12 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 			continue
 		m.market_stock.append({"id": String(id), "sold": bool((row as Dictionary).get("sold", false)), "locked": bool((row as Dictionary).get("locked", false))})     # 270：老档没锁
 	m.market_refreshes = maxi(0, int(d.get("market_refreshes", 0)))
+	for id in d.get("settled_runs", []):     # 319
+		m.settled_runs.append(String(id))
+	for row in d.get("migration_log", []):
+		if row is Dictionary:
+			m.migration_log.append(MapGraph.normalize(row))
+	m._claim_refund(d.get("migration_refund", {}), items, report)
 	m.market_stall = StringName(String(d.get("market_stall", "")))
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
 	if said is Dictionary:

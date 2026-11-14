@@ -1063,6 +1063,9 @@ static func import_score_rules(data: Dictionary, ctx: Context, report: ImportRep
 		report.error("difficulty_step", "不能是负数")
 	if rules.extract_bonus < 0:
 		report.error("extract_bonus", "不能是负数")
+	for i in rules.insight_ladder.size():     # 319：见识阶梯 —— 正数、严格升序
+		if rules.insight_ladder[i] <= 0 or (i > 0 and rules.insight_ladder[i] <= rules.insight_ladder[i - 1]):
+			report.error("insight_ladder[%d]" % i, "见识阶梯得是正数、从小到大")
 	return rules
 
 
@@ -1648,6 +1651,10 @@ static func import_tech(data: Dictionary, ctx: Context, report: ImportReport) ->
 			continue
 		if tier.funds < 0:
 			report.error("tiers[%d].funds" % i, "钱不能是负的")
+		if def.is_mechanism() and (tier.insight < 1 or tier.funds != 0 or not tier.items.is_empty()):
+			report.error("tiers[%d]" % i, "机制树每级只花见识（insight ≥ 1，funds 0，不要材料）")     # 319
+		elif not def.is_mechanism() and tier.insight != 0:
+			report.error("tiers[%d].insight" % i, "数值树不花见识")
 		for key in tier.items:
 			var n := int(tier.items[key])
 			if n < 1:
@@ -1655,8 +1662,12 @@ static func import_tech(data: Dictionary, ctx: Context, report: ImportReport) ->
 			if not ctx.items.is_empty() and not ctx.items.has(StringName(String(key))):
 				report.error("tiers[%d].items.%s" % [i, key], "道具库里没有 %s" % key)
 	# 118：树的字段
+	if not TechDef.TREES.has(def.tree):
+		report.error("tree", "树得是 %s 之一" % ", ".join(TechDef.TREES))     # 319
 	if def.column < 0:
 		report.error("column", "列从 0 起")
+	if def.lift < 0:
+		report.error("lift", "上移不能是负数")
 	for i in def.requires.size():
 		if def.requires[i] == def.id:
 			report.error("requires[%d]" % i, "前置不能是自己")
@@ -1684,6 +1695,8 @@ static func validate_techs(ctx: Context, report: ImportReport) -> void:
 		for i in d.requires.size():
 			if not ctx.techs.has(d.requires[i]):
 				report.error("techs/%s.requires[%d]" % [d.id, i], "前置科技 %s 不存在" % d.requires[i])
+			elif (ctx.techs[d.requires[i]] as TechDef).tree != d.tree:
+				report.error("techs/%s.requires[%d]" % [d.id, i], "前置科技 %s 在另一棵树上（两棵树互不做前置）" % d.requires[i])     # 319
 	var loop := TechService.cycle_members(defs)
 	if not loop.is_empty():
 		report.error("techs", "科技的前置成环：%s" % ", ".join(loop))
@@ -1694,10 +1707,11 @@ static func validate_techs(ctx: Context, report: ImportReport) -> void:
 	ids.sort()
 	for id in ids:
 		var at: Vector2i = lay[id]
-		if slots.has(at):
-			report.warn("techs/%s" % id, "和 %s 撞位（第 %d 列、深度 %d）：按 order 左右排" % [slots[at], at.x, at.y])
+		var key := "%s/%d/%d" % [(ctx.techs[id] as TechDef).tree, at.x, at.y]     # 319：两棵树分开画，各查各的
+		if slots.has(key):
+			report.warn("techs/%s" % id, "和 %s 撞位（第 %d 列、深度 %d）：按 order 左右排" % [slots[key], at.x, at.y])
 		else:
-			slots[at] = id
+			slots[key] = id
 
 
 ## 160 补一：随身技能（不是道具）—— 要有名字、至少一个效果、价格不为负

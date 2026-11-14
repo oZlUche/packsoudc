@@ -18,3 +18,8 @@ func describe() -> String:
 ## [param buff_defs]：局外 buff id → [RunBuffDef]（按 buff 给效果的科技要查名字与说明）。默认就是 [method describe]
 func describe_level(_level: int, _buff_defs: Dictionary = {}) -> String:
 	return describe()
+
+
+## 319：效果要等下一次出征才看得到（开局才定下来的：局外 buff、保险箱、腰带）；基地里马上变的（仓库、铺子、配方）是 false
+func applies_next_run() -> bool:
+	return false

@@ -6,6 +6,11 @@
 class_name TechDef
 extends Resource
 
+## 319：两棵树 —— 数值成长（钱 + 材料）与机制成长（只花见识），两树之间不许有前置
+const TREE_STAT := &"stat"
+const TREE_MECHANISM := &"mechanism"
+const TREES: Array[StringName] = [TREE_STAT, TREE_MECHANISM]
+
 @export var id: StringName = &""
 @export var display_name: String = ""
 ## 别的语言的名字，`{"en": "..."}`
@@ -16,10 +21,14 @@ extends Resource
 @export var requires: Array[StringName] = []
 ## 118：树上的列（0 起，从左往右）
 @export var column: int = 0
+## 319：在树上往上挪几层（[method TechService.row_of]）—— 同列两个节点上下摆、一列放两串小树时用；0 = 照前置算
+@export var lift: int = 0
 ## 118：说明面板「效果」区的一句总述（占位符照 112，不写数字 —— 数字由各级的 [method TechEffect.describe_level] 生成）
 @export_multiline var description: String = ""
 ## 221 F5: description in other languages, {"en": ...}; read with [method Names.description_of]
 @export var descriptions: Dictionary = {}
+## 319：属于哪棵树（[constant TREES]）
+@export var tree: StringName = TREE_STAT
 ## 每升一级做什么
 @export var effect: TechEffect = null
 ## 各级要什么：下标 0 = 升到第 1 级；有几项就有几级
@@ -29,3 +38,8 @@ extends Resource
 ## 一共几级
 func max_level() -> int:
 	return tiers.size()
+
+
+## 319：机制树的节点（每级只花见识）
+func is_mechanism() -> bool:
+	return tree == TREE_MECHANISM

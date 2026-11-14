@@ -108,6 +108,23 @@ func close_run() -> void:
 		state[RUNS_KEY] = runs() + 1
 
 
+## 319：本金 —— 这一件进这一局时就算玩家的（带进来的、店里买的）记它那时的价值；合成的成品记两件本金之和。
+## 结算的战利分只算「现在值的 − 本金」（[method ItemValue.net_in]），带进带出、买来带出不得分。只在一局里有，回局外时去掉
+const BASIS_KEY := "basis"
+
+
+func has_basis() -> bool:
+	return state.has(BASIS_KEY)
+
+
+func basis() -> int:
+	return maxi(0, int(state.get(BASIS_KEY, 0)))
+
+
+func set_basis(v: int) -> void:
+	state[BASIS_KEY] = maxi(0, v)
+
+
 ## 230：玩家锁定（防手滑：锁住的不卖、不丢到地上、不献祭、不进铸炉；可以拖、可以搬）。存在 [member state] 里，没锁不写键（存档逐字节不变）。
 ## 不是 207 的「扎根」（[method GridInventory.is_locked]）
 const LOCKED_KEY := "locked"
@@ -263,6 +280,8 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> ItemInstance:
 	inst.state = (d.get("state", {}) as Dictionary).duplicate(true)
 	if inst.state.has(WearProfile.CHARGES_KEY):     # 148：JSON 读回来是 3.0，存回去得还是 3（存档逐字节往返）
 		inst.state[WearProfile.CHARGES_KEY] = int(inst.state[WearProfile.CHARGES_KEY])
+	if inst.state.has(BASIS_KEY):     # 319：本金同理
+		inst.state[BASIS_KEY] = int(inst.state[BASIS_KEY])
 	GrowthProfile.normalize_state(inst.state)     # 207：生长计数同理
 	if inst.state.has(QUALITY_KEY):     # 279：品质同理
 		inst.state[QUALITY_KEY] = int(inst.state[QUALITY_KEY])

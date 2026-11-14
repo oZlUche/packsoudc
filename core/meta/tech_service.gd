@@ -76,10 +76,20 @@ static func items_complete(meta: MetaState, def: TechDef) -> bool:
 	return true
 
 
-## 能不能升：不是满级、前置都点亮了（118）、材料全齐、钱够
+## 能不能升：不是满级、前置都点亮了（118）、材料全齐、钱够、见识够（319）
 static func ready(meta: MetaState, def: TechDef) -> bool:
 	var tier := next_tier(meta, def)
-	return tier != null and prereqs_met(meta, def) and items_complete(meta, def) and meta.funds >= tier.funds
+	return tier != null and prereqs_met(meta, def) and items_complete(meta, def) and meta.funds >= tier.funds \
+		and meta.insight >= tier.insight
+
+
+## 319：某一棵树的节点（保持 [param defs] 的先后）
+static func of_tree(defs: Array, tree: StringName) -> Array[TechDef]:
+	var out: Array[TechDef] = []
+	for d in defs:
+		if d is TechDef and (d as TechDef).tree == tree:
+			out.append(d)
+	return out
 
 
 #region 树（118）
@@ -147,23 +157,47 @@ static func cycle_members(defs: Array) -> Array[StringName]:
 	return out
 
 
-## 树的格位：科技 id → Vector2i(列, 深度)
+## 319：画在第几层 —— 根在 0 层，其余在前置里最高那层的上一层；再按 [member TechDef.lift] 往上挪几层
+## （同一列里两个节点上下摆、或一列里放两串小树时用）。成环返回 −1
+static func row_of(def: TechDef, defs: Array, _seen: Dictionary = {}) -> int:
+	if def == null or _seen.has(def.id):
+		return -1
+	var base := 0
+	if not def.requires.is_empty():
+		_seen[def.id] = true
+		var top := -1
+		for req in def.requires:
+			var d := find(defs, req)
+			if d == null:
+				continue
+			var r := row_of(d, defs, _seen)
+			if r < 0:
+				_seen.erase(def.id)
+				return -1
+			top = maxi(top, r)
+		_seen.erase(def.id)
+		base = top + 1
+	return base + maxi(0, def.lift)
+
+
+## 树的格位：科技 id → Vector2i(列, 层)（层见 [method row_of]）
 static func layout(defs: Array) -> Dictionary:
 	var out := {}
 	for d in defs:
 		var def := d as TechDef
 		if def != null:
-			out[def.id] = Vector2i(def.column, maxi(0, depth_of(def, defs)))
+			out[def.id] = Vector2i(def.column, maxi(0, row_of(def, defs)))
 	return out
 #endregion
 
 
-## 升一级：扣钱、清这一项的上交记录、等级 +1、按新级数推算效果（120：和读档同一条路）。不 [method ready] 什么也不动
+## 升一级：扣钱（机制树扣见识）、清这一项的上交记录、等级 +1、按新级数推算效果（120：和读档同一条路）。不 [method ready] 什么也不动
 static func upgrade(meta: MetaState, def: TechDef) -> bool:
 	if not ready(meta, def):
 		return false
 	var tier := next_tier(meta, def)
 	meta.funds -= tier.funds
+	meta.spend_insight(tier.insight)     # 319：机制树只花见识
 	meta.tech_deposits.erase(String(def.id))
 	meta.tech_levels[String(def.id)] = level(meta, def.id) + 1
 	if def.effect != null:

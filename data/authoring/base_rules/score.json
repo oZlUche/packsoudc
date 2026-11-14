@@ -12,5 +12,11 @@
     "craft": 5,
     "lit": 25
   },
-  "difficulty_step": 0.25
+  "difficulty_step": 0.25,
+  "version": 2,
+  "insight_ladder": [
+    1000,
+    2000,
+    5000
+  ]
 }

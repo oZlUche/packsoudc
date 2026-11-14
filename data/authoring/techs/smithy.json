@@ -4,31 +4,22 @@
   "display_names": {
     "en": "Advanced Recipes"
   },
-  "order": 1,
-  "requires": [
-    "pack"
-  ],
+  "column": 2,
   "description": "铁匠铺接更难的活：级数越高，打得出的配方档次越高。",
   "descriptions": {
     "en": "The smithy takes on harder work: higher levels unlock better recipes."
   },
+  "tree": "mechanism",
   "effect": {
     "type": "tech_facility",
     "facility": "smithy"
   },
   "tiers": [
     {
-      "funds": 1000,
-      "items": {
-        "steel_ingot": 2
-      }
+      "insight": 1
     },
     {
-      "funds": 1800,
-      "items": {
-        "hardwood_plank": 2,
-        "rivet_box": 2
-      }
+      "insight": 3
     }
   ]
 }

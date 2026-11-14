@@ -350,6 +350,10 @@ func continue_run() -> bool:
 		elif salvaged:
 			run_backup = SaveSlots.backup_file(save_path)     # 单文件模式：捞过了就挪开，下次「继续」不会再捞一遍
 	_note_repair(report)
+	if state != null and meta != null and state.run_id != "" and meta.settled_runs.has(state.run_id):
+		push_warning("GameFlow.continue_run: %s 已经结算过（局外存档写好了、这一局的档没删掉），删档不再继续" % state.run_id)     # 319
+		RunSave.remove(save_path)
+		state = null
 	if state != null:
 		_adopt(state)
 		_flush()     # 读档回来：等着选的事件还在这一屏；结束了的直接进结算；否则回地图
@@ -1126,6 +1130,7 @@ func forge_token(node: MapNode, timing: ItemInstance, effect: ItemInstance, valu
 	var token := Forge.make_token(items, timing, effect, value)
 	if token == null:
 		return null
+	CraftingModule.carry_basis(token, [timing, effect, value])     # 319
 	for i in 3:
 		var c := from[i] as ItemContainer
 		var inst := [timing, effect, value][i] as ItemInstance
@@ -1343,7 +1348,12 @@ func _settle_run() -> void:
 	if not _settled:
 		_settled = true
 		# 2026-10-22（作者定）：行囊给的「战败保住几成钱」由 absorb 在战败分支里兑现
-		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0)
+		# 319：见识按总分阶梯发（试玩切片不发）；这一局结算过（重复结算）absorb 什么也不动
+		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0, profile != SliceProfile.SLICE)
+		if bool(last_absorbed.get("duplicate", false)):
+			if writable():
+				RunSave.remove(save_path)
+			return
 		after_run_market()     # 251：一局一换货（撤离、战败都换）
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
@@ -1355,8 +1365,10 @@ func _settle_run() -> void:
 		if recorder != null:
 			recorder.record_run(result, run)     # 242：对局结果进 runs.jsonl（带版本号）
 		if writable():
-			MetaSave.write(meta, meta_path)
-			RunSave.remove(save_path)
+			if MetaSave.write(meta, meta_path) == OK:     # 319：局外存档写成了才删这一局的档（写不成下次还能重新结算这一局）
+				RunSave.remove(save_path)
+			else:
+				push_warning("GameFlow: 局外存档写不了，这一局的档先留着")
 #endregion
 
 
