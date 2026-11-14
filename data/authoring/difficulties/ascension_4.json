@@ -1,0 +1,60 @@
+{
+  "id": "ascension_4",
+  "display_name": "进阶四",
+  "display_names": {
+    "en": "Ascension IV"
+  },
+  "description": "进阶三的一切，再把约 {advanced_percent}% 的普通战斗换成更强的一种敌人（离入口最近的 {advanced_skip_first} 场不换）。在进阶三撤离一次后解锁。",
+  "descriptions": {
+    "en": "Everything in Ascension III, and about {advanced_percent}% of regular battles get a stronger kind of enemy (never the {advanced_skip_first} nearest the entrance). Unlocked by extracting once on Ascension III."
+  },
+  "challenge": "强敌混进战斗",
+  "challenges": {
+    "en": "Stronger foes mixed in"
+  },
+  "level": 4,
+  "requires_unlock": "ascension_4",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
+      ]
+    }
+  ],
+  "enemy_hp_percent": 10,
+  "advanced_percent": 15
+}

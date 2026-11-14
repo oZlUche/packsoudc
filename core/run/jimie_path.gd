@@ -56,6 +56,7 @@ static func plant(run: RunState) -> int:
 		node.content.erase(key)
 	for key in built:
 		node.content[key] = built[key]
+	EnemyKit.stamp_hp(node.content, run.enemy_hp_mult())     # 320 A1
 	node.content["event"] = String(EVENT)
 	node.content["loss_cost"] = 0
 	node.content[ONLY_KEY] = String(element)

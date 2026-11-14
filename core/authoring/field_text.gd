@@ -68,7 +68,7 @@ const LABELS := {
 	# 规则表
 	"random_weights": "随机点权重", "event_weights": "事件权重", "events_by_type": "各类点的事件表", "event_restore": "事件回体力", "event_item_rarity_cap": "事件道具稀有度上限",
 	"loss_cost": "战败代价", "rest_restore": "休息回体力", "search": "搜索", "reveal_seconds": "揭示秒数", "items_per_search": "每次搜几件", "max_searches": "最多搜几次",
-	"boss_extracts": "打完核心直接撤离", "fail_vitality": "失败扣体力", "fail_buff": "失败背的 buff", "boss_rarity": "核心保底稀有度", "elite_rarity": "精英保底稀有度", "guarantee_pool": "保底从这些里挑", "bounty_weights": "科技额外奖励（稀有度权重）", "bounty_materials": "额外奖励收的素材", "shop_refresh_price": "商店刷新价", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
+	"boss_extracts": "打完核心直接撤离", "fail_vitality": "失败扣体力", "fail_buff": "失败背的 buff", "boss_rarity": "核心保底稀有度", "elite_rarity": "精英保底稀有度", "enemy_hp_percent": "敌人生命多几成（百分数）", "difficulty_mults": "各档难度系数", "advanced_percent": "换成强敌的份额（百分数）", "advanced_skip_first": "开头几场不换", "guarantee_pool": "保底从这些里挑", "bounty_weights": "科技额外奖励（稀有度权重）", "bounty_materials": "额外奖励收的素材", "shop_refresh_price": "商店刷新价", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
 	"bags_always_drop": "包必掉", "rarity_weights": "稀有度权重", "shop_stock": "商店货量", "shop_purse_base": "商人钱袋", "shop_purse_depth": "商人钱袋随深度", "shop_sell_ratio": "出售折价", "shop_price_mult": "商店价格倍率", "times": "次数",
 	"extract_fee": "撤离费", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
 	# 角色 / 敌人 / 猎手 / 信仰
@@ -77,7 +77,7 @@ const LABELS := {
 	"strength": "档位", "strength_rule": "档位规则", "loadout": "装备", "behavior": "行动逻辑", "visibility": "可见性", "loss_options": "战败结果档", "loss_pick": "选档方式", "HunterLossOption.weight": "权重", "LossPickFixed.index": "第几档（从 0 数）", "loss_type": "战败类型",
 	"god": "神", "camp": "阵营", "thresholds": "阈值", "deeds": "行为", "single_faith": "只认一位神", "grants": "给的解锁", "level": "档",
 	"mechanics": "机制", "warn_lead_actions": "预警提前量", "first_at_action": "第一次在第几步", "interval_actions": "间隔步数",
-	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "inputs": "输入", "output": "产物",
+	"from_depth": "从第几层起", "per_depth": "每层", "hunter_ids": "猎手", "bracket_steps": "段位表", "hp_from": "段首生命倍率", "hp_to": "段尾生命倍率", "hp_last_span": "最后一段走几步到段尾", "inputs": "输入", "output": "产物",
 	"group": "大类", "funds": "钱", "rows": "行数", "pages": "页数", "effect": "效果",     # 110：局外科技
 	"chest": "宝箱", "chest_skin": "宝箱皮肤", "map_skin": "地图底图", "rarity_by_tier": "各档位的宝箱稀有度权重", "danger_bonus": "高危区稀有度加几", "hold_seconds": "开锁要按几秒",
 	"release_decay": "松手回退倍速", "items_by_rarity": "各档出几件", "floor_by_rarity": "各档收获下限", "include_treasure": "能开出珍宝", "haul_board": "收获箱大小",

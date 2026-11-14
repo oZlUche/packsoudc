@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="DifficultyDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_f7dj6"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_xb3e3"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="3_rrtia"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="4_4sysh"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="5_xydx8"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="6_5uknk"]
+[ext_resource type="Script" path="res://core/run/mechanics/hunter_mechanic.gd" id="7_ghdyu"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="8_ncs8s"]
+
+[sub_resource type="Resource" id="Resource_b75dv"]
+script = ExtResource("4_4sysh")
+per_depth = 1
+
+[sub_resource type="Resource" id="Resource_a7x0j"]
+script = ExtResource("5_xydx8")
+amount = 10
+enabled = false
+only_total = true
+
+[sub_resource type="Resource" id="Resource_lbfwt"]
+script = ExtResource("6_5uknk")
+effects = Array[ExtResource("3_rrtia")]([SubResource("Resource_b75dv"), SubResource("Resource_a7x0j")])
+
+[sub_resource type="Resource" id="Resource_4rvev"]
+script = ExtResource("7_ghdyu")
+hunter_ids = Array[StringName]([&"hunter_1"])
+hp_from = Array[float]([1.0, 0.6, 0.6, 0.5])
+hp_to = Array[float]([1.4, 1.4, 1.6, 1.0])
+
+[resource]
+script = ExtResource("8_ncs8s")
+id = &"ascension_4"
+display_name = "进阶四"
+display_names = {
+"en": "Ascension IV"
+}
+description = "进阶三的一切，再把约 {advanced_percent}% 的普通战斗换成更强的一种敌人（离入口最近的 {advanced_skip_first} 场不换）。在进阶三撤离一次后解锁。"
+descriptions = {
+"en": "Everything in Ascension III, and about {advanced_percent}% of regular battles get a stronger kind of enemy (never the {advanced_skip_first} nearest the entrance). Unlocked by extracting once on Ascension III."
+}
+challenge = "强敌混进战斗"
+challenges = {
+"en": "Stronger foes mixed in"
+}
+level = 4
+requires_unlock = &"ascension_4"
+mechanics = Array[ExtResource("2_xb3e3")]([SubResource("Resource_lbfwt"), SubResource("Resource_4rvev")])
+enemy_hp_percent = 10
+advanced_percent = 15

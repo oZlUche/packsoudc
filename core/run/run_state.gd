@@ -62,6 +62,8 @@ var character: CharacterDef = null
 ## 这一局的进阶难度（069）：id 跟着存档，定义由持有方按 id 找回；null = 普通
 var difficulty_id: StringName = &""
 var difficulty: DifficultyDef = null
+## 320 A4：开局换了哪些点（诊断用，不进存档）
+var advanced_report: Dictionary = {}
 ## 101 第 0 刀：这一局装了哪些模块（id → [RunModule]）。**本类不认识任何具体模块** —— 加一种玩法不用改这里。
 ## 取一个用 [method module]（各模块通常还给一个带类型的 `of(run)`）
 var modules: Dictionary = {}
@@ -178,6 +180,7 @@ static func start(
 	ItemInstance.reset_uid_counter()
 	if s.pool != null:
 		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule, s.bag_pool)
+		s.advanced_report = s.place_advanced(p_difficulty)     # 320 A4：在事件、宝箱之前，换的点只有敌人内容
 	EnemyPlacer.arrange_map(s.map, p_items)     # 165：预设图里没写位置的敌人道具（与相邻组）在这里摆一次、记进内容
 	PaidExtracts.mark(s.map, s.economy)
 	EventPlacer.fill(s.map, s.node_rules)
@@ -192,6 +195,7 @@ static func start(
 	if p_difficulty != null:
 		s.difficulty = p_difficulty
 		s.difficulty_id = p_difficulty.id
+	s.stamp_enemy_hp()
 	s.hunter_defs = p_hunter_defs
 	var vitality_max := Vitality.PLACEHOLDER_MAX
 	var board_size := BOARD_SIZE
@@ -1014,6 +1018,29 @@ func _bind_tracker() -> void:
 	tracker.bind(board)
 
 
+## 320 A4：开局把一部分普通战斗换成更强的一种（有档案的章不换）。返回 [method AdvancedPool.apply] 的回报
+func place_advanced(d: DifficultyDef) -> Dictionary:
+	if d == null or d.advanced_share() <= 0.0 or (chapter != null and chapter.profile != &""):
+		return {}
+	return AdvancedPool.apply(map, pool, enemies, items, d.advanced_share(), d.advanced_skip_first, run_seed, carry_rule, bag_pool)
+
+
+## 320 A1：这一局普通敌人的生命倍率（有档案的章不吃）
+func enemy_hp_mult() -> float:
+	if difficulty == null or (chapter != null and chapter.profile != &""):
+		return 1.0
+	return difficulty.enemy_hp_mult()
+
+
+## 图上已经放好的敌人都写上倍率（开局一次；之后现造的由 [NodeEvents] 写）
+func stamp_enemy_hp() -> void:
+	var k := enemy_hp_mult()
+	if map == null or k == 1.0:
+		return
+	for id in map.node_ids():
+		EnemyKit.stamp_hp(map.get_node(id).content, k)
+
+
 func _wire_events() -> void:
 	events = NodeEvents.new(map)
 	events.vitality = vitality
@@ -1027,6 +1054,7 @@ func _wire_events() -> void:
 	events.bag_pool = bag_pool
 	events.boss_ticket = chapter.boss_ticket if chapter != null else &""     # 285
 	events.difficulty_def = difficulty
+	events.enemy_hp_mult = enemy_hp_mult()
 	events.chapter_id = chapter.id if chapter != null else &""     # 事件方案 2026-11-11：主题奖励池按章节筛
 	events.wallet = wallet
 	events.economy = economy

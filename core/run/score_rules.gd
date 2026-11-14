@@ -17,6 +17,9 @@ const ID := &"score"
 @export var explore: Dictionary = {}
 ## 每档难度加几成（普通 0 档 ×1）
 @export var difficulty_step: float = 0.0
+## 320：按档写死的难度系数（下标 = 档，0 = 普通）。写了就按它，超出表长按最后一项；空 = 按 [member difficulty_step] 线性。
+## 进阶四以后暂时和进阶三一样（实验对照值，不是正式奖励）
+@export var difficulty_mults: Array[float] = []
 ## 撤离额外记几分（A 不用，0）
 @export var extract_bonus: int = 0
 ## 带出价值算不算分（A 算）
@@ -48,6 +51,8 @@ func explore_points(key: String) -> int:
 
 ## 难度系数（[param level] = [member DifficultyDef.level]）
 func mult(level: int) -> float:
+	if not difficulty_mults.is_empty():
+		return difficulty_mults[clampi(level, 0, difficulty_mults.size() - 1)]
 	return 1.0 + difficulty_step * float(maxi(0, level))
 
 

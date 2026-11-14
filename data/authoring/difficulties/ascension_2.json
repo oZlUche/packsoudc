@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Ascension II"
   },
-  "description": "侵蚀开启（本体第七阶段），体力上限 {vitality_max_bonus_amount|signed}。在进阶一撤离一次后解锁。",
+  "description": "普通敌人最大生命 +{enemy_hp_percent}%，侵蚀开启（本体第七阶段，只扣体力）。在进阶一撤离一次后解锁。",
   "descriptions": {
-    "en": "Erosion is on (stage seven of the base game), max Vitality {vitality_max_bonus_amount|signed}. Unlocked by extracting once on Ascension I."
+    "en": "Regular enemies +{enemy_hp_percent}% max HP; erosion is on (stage seven of the base game, Vitality only). Unlocked by extracting once on Ascension I."
   },
   "challenge": "越深侵蚀越重",
   "challenges": {
@@ -32,10 +32,5 @@
       ]
     }
   ],
-  "effects": [
-    {
-      "type": "vitality_max_bonus",
-      "amount": -1
-    }
-  ]
+  "enemy_hp_percent": 10
 }

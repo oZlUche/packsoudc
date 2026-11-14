@@ -30,7 +30,7 @@ static func brackets_of(difficulty_id: String) -> Array[int]:
 ## 一格：[param specs] 轮流上场，共 [param fights] 场。返回 {fights, wins, draws, rate, duration（秒，全部场次平均）, hp_left（赢的那些场的余血比例平均）}
 static func cell(specs: Array[CombatantSpec], pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase, node: MapNode,
 		tier: int, fights: int, p_seed: int, time_limit: float = BattleSim.DEFAULT_TIME_LIMIT, overtime: OvertimeRules = null,
-		rows: Array = [], head: Dictionary = {}) -> Dictionary:
+		rows: Array = [], head: Dictionary = {}, stamp: Dictionary = {}, advanced := false) -> Dictionary:
 	var wins := 0
 	var draws := 0
 	var built := 0
@@ -39,10 +39,11 @@ static func cell(specs: Array[CombatantSpec], pool: EnemyPool, enemies: EnemyDat
 	for i in maxi(1, fights):
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash("%d:%d:%d" % [p_seed, tier, i])
-		var entry := EnemyPlacer.pick(pool, enemies, node, tier, rng)
+		var entry := AdvancedPool.pick(pool, enemies, node, tier, rng) if advanced else EnemyPlacer.pick(pool, enemies, node, tier, rng)     # 320 A4：更强的一种
 		if entry == null:
 			continue
 		var content: Dictionary = EnemyPlacer.build_content(enemies.enemy(entry.enemy), pool, items, tier, rng).get("content", {})
+		content.merge(stamp, true)     # 320：难度给敌人内容盖的章（生命倍率……），和正式战斗同一个入口
 		var enemy := EnemyKit.spec_of(content, enemies, pool, items)
 		if enemy == null:
 			continue

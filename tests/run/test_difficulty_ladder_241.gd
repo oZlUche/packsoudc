@@ -21,7 +21,7 @@ static func _kinds(d: DifficultyDef) -> Array:
 
 
 static func run_ladder_data(t: TestCase) -> void:
-	t.begin("241 · 三级的数据：一级一样东西、机制带齐到本级、数值不改；解锁链 Ⅰ → Ⅱ → Ⅲ")
+	t.begin("241 · 三级的数据：一级一样东西、机制带齐到本级；解锁链 Ⅰ → Ⅱ → Ⅲ → Ⅳ")
 	var all := GameFlow.load_difficulties()
 	var one := _by_id(all, &"ascension_1")
 	var two := _by_id(all, &"ascension_2")
@@ -33,11 +33,11 @@ static func run_ladder_data(t: TestCase) -> void:
 	t.eq([_kinds(one), _kinds(two), _kinds(three)], [[], ["erosion"], ["erosion", "hunters"]], "Ⅰ 无机制、Ⅱ 侵蚀、Ⅲ 侵蚀 + 猎手")
 	for d: DifficultyDef in [one, two, three]:
 		var fx: Array[RunEffect] = d.run_effects()
-		t.check(fx.size() == 1 and fx[0] is VitalityMaxBonus and (fx[0] as VitalityMaxBonus).amount == -1, "%s：体力上限 −1" % d.id)
+		t.check(fx.is_empty() and d.enemy_hp_percent > 0, "%s：体力上限 −1 换成敌人更耐打（320 B）" % d.id)
 		t.check(not d.challenge.contains("；") and d.challenge.length() <= 10, "%s：中文一行（%s）" % [d.id, d.challenge])
 		t.check(String(d.challenges.get("en", "")) != "", "%s：有英文" % d.id)
 	t.eq([one.requires_unlock, two.requires_unlock, three.requires_unlock], [&"ascension_1", &"ascension_2", &"ascension_3"], "各要各的解锁")
-	t.eq([one.grants_unlock, two.grants_unlock, three.grants_unlock], [&"ascension_2", &"ascension_3", &""], "Ⅰ 发 Ⅱ、Ⅱ 发 Ⅲ、Ⅲ 不发")
+	t.eq([one.grants_unlock, two.grants_unlock, three.grants_unlock], [&"ascension_2", &"ascension_3", &"ascension_4"], "Ⅰ 发 Ⅱ、Ⅱ 发 Ⅲ、Ⅲ 发 Ⅳ（320）")
 	t.eq(three.hunter_bracket_steps(), [0, 5, 10, 20] as Array[int], "猎手段位表原数")
 	var em := two.mechanics[0] as ErosionMechanic
 	t.eq(em.effects.size(), 2, "侵蚀两条：扣体力、掉钱（关着）；损坏道具拆了（320 A，作者 11-14）")

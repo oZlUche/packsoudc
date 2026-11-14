@@ -4,21 +4,16 @@
   "display_names": {
     "en": "Ascension I"
   },
-  "description": "体力上限 {vitality_max_bonus_amount|signed}。局外解锁后可选。",
+  "description": "普通敌人（猎手以外）最大生命 +{enemy_hp_percent}%。局外解锁后可选。",
   "descriptions": {
-    "en": "Max Vitality {vitality_max_bonus_amount|signed}. Selectable once unlocked outside of runs."
+    "en": "Regular enemies (not hunters) have +{enemy_hp_percent}% max HP. Selectable once unlocked outside of runs."
   },
-  "challenge": "体力上限少一点",
+  "challenge": "敌人更耐打",
   "challenges": {
-    "en": "Less max Vitality"
+    "en": "Tougher enemies"
   },
   "level": 1,
   "requires_unlock": "ascension_1",
   "grants_unlock": "ascension_2",
-  "effects": [
-    {
-      "type": "vitality_max_bonus",
-      "amount": -1
-    }
-  ]
+  "enemy_hp_percent": 10
 }
