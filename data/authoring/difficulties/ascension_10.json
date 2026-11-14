@@ -1,0 +1,69 @@
+{
+  "id": "ascension_10",
+  "display_name": "进阶十",
+  "display_names": {
+    "en": "Ascension X"
+  },
+  "description": "进阶九的一切，再加：猎手追得更快，平均每走十步多追一步（追击 +{hunter_chase_percent}%）；刚撞上过的猎手不会立刻再追上来。在进阶九撤离一次后解锁。",
+  "descriptions": {
+    "en": "Everything in Ascension IX, and hunters chase faster: about one extra step for every ten (+{hunter_chase_percent}% chase). A hunter you just ran into will not catch up again right away. Unlocked by extracting once on Ascension IX."
+  },
+  "challenge": "猎手追得更快",
+  "challenges": {
+    "en": "Hunters close in faster"
+  },
+  "level": 10,
+  "requires_unlock": "ascension_10",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        },
+        {
+          "type": "item_layer",
+          "from_depth": 2
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
+      ]
+    }
+  ],
+  "enemy_hp_percent": 10,
+  "advanced_percent": 15,
+  "hunter_hp_percent": 10,
+  "hunter_damage_percent": 10,
+  "faith_threshold_percent": 10,
+  "countdown_percent": 10,
+  "hunter_chase_percent": 10
+}

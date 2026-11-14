@@ -3,6 +3,7 @@ extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const Support := preload("res://tests/run/flow_support.gd")
+const Hunters := preload("res://tests/run/test_hunters.gd")
 
 
 static func _by_id(id: StringName) -> DifficultyDef:
@@ -236,7 +237,7 @@ static func run_ladder_c(t: TestCase) -> void:
 		prev = d
 	t.eq(prev.grants_unlock, &"ascension_9", "进阶八撤离开进阶九")
 	var nine := _by_id(&"ascension_9")
-	t.check(nine != null and nine.level == 9 and nine.requires_unlock == &"ascension_9" and nine.grants_unlock == &"", "进阶九：第 9 档，暂时是最后一级")
+	t.check(nine != null and nine.level == 9 and nine.requires_unlock == &"ascension_9" and nine.grants_unlock == &"ascension_10", "进阶九：第 9 档，撤离开进阶十")
 	t.eq(ScoreRules.load_rules().mult(8), 1.75, "计分系数：五～八暂时和进阶三一样")
 
 
@@ -405,3 +406,123 @@ static func run_rule_snapshot(t: TestCase) -> void:
 	t.check(run.difficulty_from_snapshot() == null, "旧档没有快照：返回空（按 id 用现在的）")
 	run.difficulty_rules = "{坏的"
 	t.check(run.difficulty_from_snapshot() == null, "快照坏了：返回空")
+
+
+static func run_ladder_e(t: TestCase) -> void:
+	t.begin("320 E · 进阶十 = 进阶九 + 猎手追击加速，是最后一级")
+	var nine := _by_id(&"ascension_9")
+	var ten := _by_id(&"ascension_10")
+	t.check(nine != null and ten != null, "进阶九、十都在")
+	if nine == null or ten == null:
+		return
+	t.eq([ten.level, ten.requires_unlock, ten.grants_unlock], [10, &"ascension_10", &""], "第 10 档、进阶九撤离开、最后一级")
+	t.eq(ten.hunter_chase_percent, 10, "追击 +10%")
+	t.eq(nine.hunter_chase_percent, 0, "进阶九不追击")
+	var changed: Array[String] = []
+	for key in ["enemy_hp_percent", "advanced_percent", "advanced_skip_first", "hunter_hp_percent", "hunter_damage_percent",
+			"faith_threshold_percent", "countdown_percent", "hunter_chase_percent"]:
+		if ten.get(key) != nine.get(key):
+			changed.append(key)
+	t.eq(changed, ["hunter_chase_percent"] as Array[String], "只多了追击")
+	t.eq(ResourceSnapshot.dump(ten.mechanics[0]), ResourceSnapshot.dump(nine.mechanics[0]), "侵蚀规则不变")
+	t.eq(ten.hunter_bracket_steps(), nine.hunter_bracket_steps(), "猎手段位表不变")
+	t.check(ten.description.contains("{hunter_chase_percent}"), "说明写的是占位，不写死数字")
+
+
+## 只开猎手、追击 [param pct] 的一局；猎手的开打距离改成 [param engage]（副本，不动别的用例）
+static func _chase_run(c, pct: int, engage: float) -> RunState:
+	var defs := Hunters._copy_defs(c.hunter_defs)
+	var def: HunterDef = defs[Hunters._first_def(c).id]
+	def.engage_range = engage
+	def.speed = 1
+	def.behavior = WanderBehavior.new()     # 有路就走（靠近在没感知到时会站着，测累计不方便）
+	var d := Hunters._difficulty([def.id] as Array[StringName], 1, 3.0)
+	d.hunter_chase_percent = pct
+	return Hunters._start(c, defs, d)
+
+
+static func run_hunter_chase(t: TestCase) -> void:
+	t.begin("320 A10 · 追击累计：十次原本能走的机会多走一步；够得着、没路走不多走也不多攒；出现那一步不攒；撞上清零；跟着存档")
+	var c = Hunters._content()
+	var s := _chase_run(c, 10, -1.0)
+	t.check(s != null, "开局")
+	if s == null:
+		return
+	t.check(Hunters._step_once(s) and s.hunters.alive().size() == 1, "走一步，猎手出现")
+	var h: Hunter = s.hunters.alive()[0]
+	var sys := s.hunters
+	t.eq(h.chase, 0, "出现那一步不攒")
+	var def := sys.def_of(h)
+	# 远着、有路：攒满走一步
+	h.chase = 90
+	var before := h.node_id
+	var had_moves := not sys.allowed_moves(h).is_empty()
+	sys._chase(h)
+	t.check(not had_moves or (h.node_id != before and h.chase == 0 and h.chased == 1), "攒到一百多走一步，扣掉一百（%d → %d，余 %d）" % [before, h.node_id, h.chase])
+	# 没路可走：留着，最多攒满一次
+	var keep := h.territory.duplicate()
+	h.territory = [h.node_id] as Array[int]
+	h.chase = 95
+	sys._chase(h)
+	sys._chase(h)
+	t.eq([h.chase, h.chased], [100, 1], "没路走：留在一百，不再往上攒")
+	h.territory = keep
+	# 够得着玩家：不多走
+	def.engage_range = 999.0
+	var at := h.node_id
+	sys._chase(h)
+	t.eq([h.node_id, h.chase, h.chased], [at, 100, 1], "原有那一步已经够得着：不多走")
+	def.engage_range = -1.0
+	s.difficulty.hunter_chase_window = 999
+	sys._chase(h)
+	t.eq([h.node_id, h.chase, h.chased], [at, 100, 1], "离玩家在安全窗口以内：不多走")
+	s.difficulty.hunter_chase_window = 0
+	# 撞上一次清零
+	sys._engage(h, def)
+	t.eq(h.chase, 0, "撞上清掉攒的")
+	s.events.pending.clear()
+	def.engage_range = -1.0
+	# 驻守、没开：不攒
+	h.guarding = true
+	sys._chase(h)
+	t.eq(h.chase, 0, "驻守不攒")
+	h.guarding = false
+	# 存档
+	h.chase = 40
+	h.moved = 7
+	h.chased = 2
+	var back := Hunter.from_dict(JSON.parse_string(JSON.stringify(h.to_dict())))
+	t.eq([back.chase, back.moved, back.chased], [40, 7, 2], "累计和诊断数跟着存档")
+	var off := _chase_run(c, 0, -1.0)
+	Hunters._step_once(off)
+	var oh: Hunter = off.hunters.alive()[0] if not off.hunters.alive().is_empty() else null
+	if oh != null:
+		oh.chase = 90
+		off.hunters._chase(oh)
+		t.eq([oh.chase, oh.chased], [90, 0], "不开追击：什么也不做")
+
+
+static func run_hunter_chase_turns(t: TestCase) -> void:
+	t.begin("320 A10 · 一回合一回合走：同一种子开 / 不开追击，原有移动照旧；多走的不超过机会的一成，累计在 0～100")
+	var c = Hunters._content()
+	var total := 0
+	var extra := 0
+	for pct in [0, 10]:
+		var s := _chase_run(c, pct, -1.0)
+		if s == null or not Hunters._step_once(s):
+			t.check(false, "开局走一步")
+			return
+		var h: Hunter = s.hunters.alive()[0]
+		var opp := 0
+		for i in 40:
+			s.hunters.on_player_step()
+			opp += 1
+		if pct == 0:
+			t.eq(h.chased, 0, "不开：一步不多")
+			total = h.moved
+		else:
+			extra = h.chased
+			@warning_ignore("integer_division")
+			t.check(h.chased <= opp * pct / 100, "多走 %d 步 ≤ %d 次机会的一成" % [h.chased, opp])
+			t.check(h.chase >= 0 and h.chase <= HunterSystem.CHASE_FULL, "累计在 0～100（%d）" % h.chase)
+	t.check(total >= 0 and extra >= 0, "原有 %d 步，追击多 %d 步" % [total, extra])

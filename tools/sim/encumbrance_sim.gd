@@ -26,6 +26,9 @@ var want_extract := false
 var policy := "greedy"
 var last_snap := {}
 var hp := 10000.0
+## 320 E：这一局猎手开打前事件屏出现在第几步（统计接战次数、连着两步被拦）
+var hunter_steps: Array[int] = []
+var cur_step := 0
 var difficulty: DifficultyDef = null
 
 
@@ -95,6 +98,8 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, p_seed: 
 	var why := "guard"
 	want_extract = false
 	last_snap = {}
+	hunter_steps.clear()
+	cur_step = 0
 	while not run.is_over() and guard < 400:
 		guard += 1
 		visited[run.travel.current_id] = true
@@ -134,6 +139,7 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, p_seed: 
 			why = "step_refused:%d screen%d" % [best, f.screen]
 			break
 		steps += 1
+		cur_step = steps
 		var t := String(NodeEvents.effective_type(run.current_node())) if run.current_node() != null else ""
 		if not visited.has(best):
 			nodes_by_type[t] = int(nodes_by_type.get(t, 0)) + 1
@@ -152,12 +158,28 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, p_seed: 
 	snap["peak_ratio"] = peak
 	snap["level_steps"] = level_steps
 	snap["nodes"] = nodes_by_type
+	snap["hunter"] = _hunter_stats(run)
 	if f.result != null:     # 269：结算的分（absorb 里算过，含图鉴新点亮）
 		snap["outcome"] = String(f.result.outcome)
 		snap["score"] = f.result.score
 		snap["score_parts"] = f.result.score_parts
 	FS.cleanup("encsim")
 	return snap
+
+
+## 320 E：接战次数、连着两步被拦几次、猎手原有移动 / 追击多走的步数
+func _hunter_stats(run: RunState) -> Dictionary:
+	var moved := 0
+	var chased := 0
+	if run.hunters != null:
+		for h in run.hunters.hunters:
+			moved += h.moved
+			chased += h.chased
+	var back := 0
+	for i in range(1, hunter_steps.size()):
+		if hunter_steps[i] - hunter_steps[i - 1] == 1:
+			back += 1
+	return {"encounters": hunter_steps.size(), "first": hunter_steps[0] if not hunter_steps.is_empty() else -1, "back_to_back": back, "moved": moved, "chased": chased}
 
 
 func _snapshot(run: RunState) -> Dictionary:
@@ -279,6 +301,8 @@ func _settle_one(f: GameFlow) -> void:
 				if bool(run.events.option_state(i).get("ok", false)):
 					ok.append(i)
 			var sid := String(def.id)
+			if sid.begins_with(HunterSystem.ENCOUNTER_PREFIX) and (hunter_steps.is_empty() or hunter_steps[-1] != cur_step):
+				hunter_steps.append(cur_step)     # 同一步的事件屏重画不重记
 			var pick := 0
 			if sid.begins_with("extract"):
 				if want_extract:
