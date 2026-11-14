@@ -23,11 +23,6 @@
           "per_depth": 1
         },
         {
-          "type": "damage_item",
-          "from_depth": 2,
-          "chance": 0.25
-        },
-        {
           "type": "drain_money",
           "amount": 10,
           "enabled": false,
