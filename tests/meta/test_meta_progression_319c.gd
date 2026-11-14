@@ -161,3 +161,29 @@ static func _ids_at(board: GridInventory) -> Array:
 		out.append([String(inst.def.id), inst.origin])
 	out.sort_custom(func(a, b): return str(a) < str(b))
 	return out
+
+
+static func run_shop_refresh_keeps_bag_bullion(t: TestCase) -> void:
+	t.begin("319 · 换货不动包和金银那一格（测试 v6.22 回归：大银锭换完没了）")
+	var db := Shop._items()
+	var r := Shop._rules()
+	r.bullion_slot_chance = 1.0
+	var s := Shop._shop(db, Wallet.new(500), Shop._node(9), r)
+	s.refreshes = 1
+	var gold: ItemInstance = null
+	for v in s.board.items():
+		if (v as ItemInstance).def.is_bullion():
+			gold = v
+	t.not_null(gold, "开张有一件金银")
+	if gold == null:
+		return
+	var at := gold.origin
+	t.check(s.refresh(), "换了")
+	t.check(s.board.has_item(gold.uid) and gold.origin == at, "金银原位还在")
+	var bag := ItemInstance.create(db.get_def(&"bag_leather"))
+	var s2 := Shop._shop(db, Wallet.new(500), Shop._node(4))
+	s2.refreshes = 1
+	t.check(s2.board.try_add(bag), "摊上摆一个包")
+	s2._commit_owned()
+	t.check(s2.refresh(), "换了")
+	t.check(s2.board.has_item(bag.uid), "包还在")

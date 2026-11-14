@@ -367,7 +367,7 @@ func refresh_reason() -> String:
 	return ""
 
 
-## 换一次货：你卖进来的东西原位不动，其余的货换成新抽的一批（种子跟着第几次刷新走，同一局同一家店刷出来一样）；
+## 换一次货：你卖进来的东西、包和金银原位不动，其余的普通货换成新抽的一批（种子跟着第几次刷新走，同一局同一家店刷出来一样）；
 ## 商人的钱袋、随身格不动。新货一件都摆不上就什么都不改、不收钱（返回 false）。扣钱、换棋盘、记次数一起提交
 func refresh() -> bool:
 	if refresh_reason() != "":
@@ -375,7 +375,7 @@ func refresh() -> bool:
 	var old: Array = []     # 换下来的货 [道具, 原位, 朝向]：失败时原样放回
 	for v in board.items():
 		var inst := v as ItemInstance
-		if not inst.state.has(SOLD_IN_KEY):
+		if not inst.state.has(SOLD_IN_KEY) and not inst.def.is_bag and not inst.def.is_bullion():     # 包和金银那一格留原位
 			old.append([inst, inst.origin, inst.rotation])
 	board.begin_batch()
 	for o in old:
