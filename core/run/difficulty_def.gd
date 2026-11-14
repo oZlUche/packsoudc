@@ -49,6 +49,10 @@ extends Resource
 @export var faith_threshold_percent: int = 0
 ## 320 A7：倒计时按行动点多扣几成（百分数；按累计行动点算，向下取整，不逐步进位）；0 = 不改
 @export var countdown_percent: int = 0
+## 320 A10：猎手追击加速（百分数）：每次原本能走的机会攒这么多，攒满一百多走一步（[HunterSystem]，不和倒计时共用）；0 = 不加
+@export var hunter_chase_percent: int = 0
+## 320 A10 安全窗口：猎手离玩家只差开打距离再加这么多步时不多走（0 = 只看开打距离）
+@export var hunter_chase_window: int = 0
 
 
 func run_effects() -> Array[RunEffect]:

@@ -17,11 +17,17 @@ var guarding: bool = false
 var sensed: bool = false
 ## 134：生成时选定的战败结果档（[HunterLossOption.id]）。空 = 旧存档，按第一档
 var loss_id: StringName = &""
+## 320 A10：追击累计（百分数，满一百多走一步；最多攒满一次）
+var chase: int = 0
+## 320 A10 诊断：原有移动走了几步、追击多走了几步
+var moved: int = 0
+var chased: int = 0
 
 
 func to_dict() -> Dictionary:
 	return {"uid": uid, "def": String(def_id), "node": node_id, "home": home_id, "alive": alive,
-		"territory": territory.duplicate(), "cooldown": cooldown, "guarding": guarding, "sensed": sensed, "loss": String(loss_id)}
+		"territory": territory.duplicate(), "cooldown": cooldown, "guarding": guarding, "sensed": sensed, "loss": String(loss_id),
+		"chase": chase, "moved": moved, "chased": chased}
 
 
 static func from_dict(d: Dictionary) -> Hunter:
@@ -37,4 +43,7 @@ static func from_dict(d: Dictionary) -> Hunter:
 	h.guarding = bool(d.get("guarding", false))
 	h.sensed = bool(d.get("sensed", false))
 	h.loss_id = StringName(String(d.get("loss", "")))
+	h.chase = int(d.get("chase", 0))
+	h.moved = int(d.get("moved", 0))
+	h.chased = int(d.get("chased", 0))
 	return h

@@ -18,6 +18,8 @@ signal changed()
 const STREAM := &"hunters"
 const ENCOUNTER_PREFIX := "hunter_encounter:"
 const TYPE := &"hunter"
+## 320 A10：追击累计攒到这么多多走一步
+const CHASE_FULL := 100
 
 var run: RunState = null
 var config: HunterMechanic = null
@@ -196,13 +198,17 @@ func allowed_moves(h: Hunter) -> Array[int]:
 func on_player_step() -> void:
 	if run == null or run.is_over() or player_node() < 0:
 		return
+	var fresh := false
 	if not has_spawned and step_count() >= (config.spawn_after_steps if config != null else 0):
 		spawn()
+		fresh = true     # 320 A10：出现的那一步不追击
 	for h in alive():
 		if h.cooldown > 0:
 			h.cooldown -= 1
 			continue
 		_move(h)
+		if not fresh:
+			_chase(h)
 	_update_sense()
 	check_engagement()
 	changed.emit()
@@ -270,11 +276,44 @@ func _move(h: Hunter) -> void:
 	if def == null or h.guarding:
 		return
 	for i in maxi(0, def.speed):
-		var options := allowed_moves(h)
-		var next := def.behavior.next_node(h, self, options) if def.behavior != null else h.node_id
-		if next == h.node_id or not options.has(next):
+		if not _step(h, def):
 			break
-		h.node_id = next
+		h.moved += 1
+
+
+## 按行动逻辑走一小步（只走合法的相邻点）。没走成返回 false
+func _step(h: Hunter, def: HunterDef) -> bool:
+	var options := allowed_moves(h)
+	var next := def.behavior.next_node(h, self, options) if def.behavior != null else h.node_id
+	if next == h.node_id or not options.has(next):
+		return false
+	h.node_id = next
+	return true
+
+
+## 320 A10：这一档的追击加速（百分数；没有难度 = 0）
+func chase_percent() -> int:
+	return run.difficulty.hunter_chase_percent if run != null and run.difficulty != null else 0
+
+
+## 320 A10 安全窗口：开打距离再往外几步以内不多走（0 = 只看开打距离；1 = 多走的那一步不会直接撞上）
+func chase_window() -> float:
+	return float(run.difficulty.hunter_chase_window) if run != null and run.difficulty != null else 0.0
+
+
+## 320 A10：每次原本能走的机会（速度几就算几次）攒 [method chase_percent]，攒满一百多走一步。
+## 原有那一步走完已经够得着玩家、或只差安全窗口那么远就不多走（留着）；没路可走也留着；有路时行动逻辑选了站着也算用掉；最多攒满一次，攒不出第二步
+func _chase(h: Hunter) -> void:
+	var pct := chase_percent()
+	var def := def_of(h)
+	if pct <= 0 or def == null or h.guarding or def.speed <= 0:
+		return
+	h.chase = mini(h.chase + pct * def.speed, CHASE_FULL)
+	if h.chase < CHASE_FULL or distance_to_player(h) <= def.engage_range + chase_window() or allowed_moves(h).is_empty():
+		return
+	h.chase -= CHASE_FULL     # 多给的是一次机会：行动逻辑这一下选了站着也算用掉（和原有移动同一口径）
+	if _step(h, def):
+		h.chased += 1
 
 
 func _update_sense() -> void:
@@ -305,6 +344,7 @@ func check_engagement() -> bool:
 
 
 func _engage(h: Hunter, def: HunterDef) -> void:
+	h.chase = 0     # 320 A10：撞上一次就清掉攒的，打完 / 逃掉不能立刻再追上来
 	var node := run.current_node()
 	var ev := _encounter_def(def, loss_option_of(h))
 	run.events.set_pending(node, ev, TYPE, {"hunter": h.uid})

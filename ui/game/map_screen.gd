@@ -737,6 +737,8 @@ func _hunter_tip(id: int) -> String:
 		var def: HunterDef = _run.hunters.def_of(h)
 		var hint := _run.hunters.loss_hint(h)
 		lines.append("[color=#d9534f]%s[/color]%s" % [Names.of(def) if def != null else "?", UiText.t("map.hunter_loss") % hint if hint != "" else ""])
+		if debug_mode() and _run.hunters.chase_percent() > 0:     # 320 A10 开发诊断：追击多走 / 原有移动
+			lines.append("[color=#8a8a8a]chase %d / %d · %d%%[/color]" % [h.chased, h.moved, h.chase])
 	return "\n".join(lines)
 
 
