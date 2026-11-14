@@ -31,7 +31,13 @@ static func shrink_button_to(b: Button, room: float, floor_size: int = 14) -> vo
 static func shrink_label(l: Label, width: float, base: int, floor_size: int) -> void:
 	if l == null:
 		return
-	l.add_theme_font_size_override("font_size", size_for(l.get_theme_font("font"), l.text, base, width, floor_size))
+	set_size(l, size_for(l.get_theme_font("font"), l.text, base, width, floor_size))
+
+
+## 定死一个字号（几行共用一个字号时，先量出来再一起贴）
+static func set_size(l: Label, px: int) -> void:
+	if l != null:
+		l.add_theme_font_size_override("font_size", px)
 
 
 ## 一行字放不下 [param width] 就缩字号：从 [param base] 号一号一号往回缩，最小 [param floor_size]（字由自己画的控件也用）
