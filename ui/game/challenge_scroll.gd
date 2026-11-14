@@ -19,6 +19,8 @@ const DOT_W := 14.0
 const PAD_X := 14.0
 const PAD_Y := 8.0
 const ROW_GAP := 0.0
+## 缩字时右边多让出的空（纸右沿是毛边，字不贴上去）
+const FIT_SLACK := 10.0
 const FONT_SIZE := 16
 ## 一行最矮多高（定稿：行高 32）
 const ROW_MIN_H := 32.0
@@ -182,22 +184,33 @@ func _add_row(level: int, p_text: String, at: int) -> Dictionary:
 	line.add_child(body)
 	var row := {"level": level, "text": p_text, "box": box, "line": line, "body": body, "h": 0.0}
 	_list.add_child(box)
-	_measure(row)
 	if at >= 0:
 		_list.move_child(box, at)
 		_rows.insert(at, row)
 	else:
 		_rows.append(row)
+	var fs := _shared_size()
+	for r in _rows:
+		_measure(r, fs)
 	box.custom_minimum_size = Vector2(_paper_w - PAD_X * 2.0, float(row["h"]))
 	return row
 
 
 ## 量一行多高（进树之后字体才是正文字体，[method _relayout] 时重量）
-func _measure(row: Dictionary) -> void:
-	TextFit.shrink_label(row["body"], text_width(), UiTheme.sz(FONT_SIZE), FONT_SIZE)     # 258：纸宽是美术定的，放不下一行就缩回小档
+func _measure(row: Dictionary, fs: int) -> void:
+	TextFit.set_size(row["body"], fs)
 	var h := _row_height(row["body"])
 	row["h"] = h
 	(row["line"] as Control).size = Vector2(_paper_w - PAD_X * 2.0, h)
+
+
+## 258：纸宽是美术定的，放不下一行就缩回小档。测试 v6.29：所有行用同一个字号（取最长那行缩到的），不各缩各的
+func _shared_size() -> int:
+	var fs := UiTheme.sz(FONT_SIZE)
+	for r in _rows:
+		var body: Label = r["body"]
+		fs = mini(fs, TextFit.size_for(body.get_theme_font("font"), body.text, UiTheme.sz(FONT_SIZE), text_width() - FIT_SLACK, FONT_SIZE))
+	return fs
 
 
 ## 正文一列多宽
@@ -287,8 +300,9 @@ func max_scroll() -> float:
 func _relayout() -> void:
 	if paper == null:
 		return
+	var fs := _shared_size()
 	for r in _rows:
-		_measure(r)
+		_measure(r, fs)
 		(r["box"] as Control).custom_minimum_size.y = float(r["h"])
 	scroll_y = clampf(scroll_y, 0.0, max_scroll())
 	_sync_scroll()
