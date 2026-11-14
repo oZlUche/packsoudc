@@ -40,7 +40,8 @@ static func run_ladder_data(t: TestCase) -> void:
 	t.eq([one.grants_unlock, two.grants_unlock, three.grants_unlock], [&"ascension_2", &"ascension_3", &""], "Ⅰ 发 Ⅱ、Ⅱ 发 Ⅲ、Ⅲ 不发")
 	t.eq(three.hunter_bracket_steps(), [0, 5, 10, 20] as Array[int], "猎手段位表原数")
 	var em := two.mechanics[0] as ErosionMechanic
-	t.eq(em.effects.size(), 3, "侵蚀三条原样")
+	t.eq(em.effects.size(), 2, "侵蚀两条：扣体力、掉钱（关着）；损坏道具拆了（320 A，作者 11-14）")
+	t.check(not em.effects.any(func(e: ErosionEffect) -> bool: return e is ErodeDamageItem), "没有损坏道具")
 
 
 static func frame_rows_fit_one_line(t: TestCase, root: Window) -> void:
