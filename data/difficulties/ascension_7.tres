@@ -42,7 +42,7 @@ descriptions = {
 }
 challenge = "倒计时走得更快"
 challenges = {
-"en": "The clock runs faster"
+"en": "The clock runs fast"
 }
 level = 7
 requires_unlock = &"ascension_7"

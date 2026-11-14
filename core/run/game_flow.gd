@@ -550,11 +550,29 @@ func _sync_achievements() -> Achievements:
 ## 「全部解锁」开着不计（作者定 10.2 第 4 条）；一局结算之后与读档之后各算一次
 func check_achievements() -> Array[AchievementDef]:
 	var got := _sync_achievements().check()
+	if not backfill_difficulty_unlocks().is_empty() and got.is_empty():
+		save_meta()
 	if not got.is_empty():
 		_notes.append_array(achievements.notes)
 		achievements.notes.clear()
 		save_meta()
 	return got
+
+
+## 320 F：补发难度解锁（幂等）—— 对局记录（最近几局、最佳一局）里在某一档撤离过，却没有它许诺的下一档
+## （下一档是后来才接上的，如进阶三撤离开进阶四），补上。记录里没有就不补。返回补了哪些
+func backfill_difficulty_unlocks() -> Array[StringName]:
+	var out: Array[StringName] = []
+	if meta == null:
+		return out
+	var won := {}
+	for row in meta.history + [meta.best_run]:
+		if String((row as Dictionary).get("outcome", "")) == "extracted":
+			won[String((row as Dictionary).get("difficulty", ""))] = true
+	for d in difficulties:
+		if d.grants_unlock != &"" and won.has(String(d.id)) and meta.grant_unlock(d.grants_unlock):
+			out.append(d.grants_unlock)
+	return out
 
 
 ## 哪一枚成就给这个解锁 id；没有 null

@@ -526,3 +526,17 @@ static func run_hunter_chase_turns(t: TestCase) -> void:
 			t.check(h.chased <= opp * pct / 100, "多走 %d 步 ≤ %d 次机会的一成" % [h.chased, opp])
 			t.check(h.chase >= 0 and h.chase <= HunterSystem.CHASE_FULL, "累计在 0～100（%d）" % h.chase)
 	t.check(total >= 0 and extra >= 0, "原有 %d 步，追击多 %d 步" % [total, extra])
+
+
+static func run_unlock_backfill(t: TestCase) -> void:
+	t.begin("320 F · 补发难度解锁：记录里在某档撤离过就补它许诺的下一档，只补一级，补过不再补；战败不补")
+	var c = NodeScreens._content()
+	var f := Support.flow(c, "asc320f")
+	f.difficulties = GameFlow.load_difficulties()
+	f.meta.history = [{"outcome": "extracted", "difficulty": "ascension_3"}, {"outcome": "defeated", "difficulty": "ascension_5"}] as Array[Dictionary]
+	f.meta.best_run = {"outcome": "extracted", "difficulty": "ascension_1"}
+	var got := f.backfill_difficulty_unlocks()
+	t.check(got.has(&"ascension_4") and got.has(&"ascension_2"), "撤离过的两档各补下一档（%s）" % [got])
+	t.check(not f.meta.has_unlock(&"ascension_5") and not f.meta.has_unlock(&"ascension_6"), "只补一级；战败的那档不补")
+	t.eq(f.backfill_difficulty_unlocks(), [] as Array[StringName], "再调一次什么也不补")
+	Support.cleanup("asc320f")

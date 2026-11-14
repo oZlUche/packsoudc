@@ -47,7 +47,7 @@ descriptions = {
 }
 challenge = "猎手追得更快"
 challenges = {
-"en": "Hunters close in faster"
+"en": "Hunters move faster"
 }
 level = 10
 requires_unlock = &"ascension_10"

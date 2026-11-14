@@ -42,7 +42,7 @@ descriptions = {
 }
 challenge = "信仰门槛更高"
 challenges = {
-"en": "Faith tiers cost more"
+"en": "Faith costs more"
 }
 level = 6
 requires_unlock = &"ascension_6"
