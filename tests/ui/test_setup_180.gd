@@ -135,8 +135,9 @@ static func frame_difficulty_and_memory(t: TestCase, root: Window) -> void:
 		if ladder[i].challenge != "":
 			t.check(setup._diff_block.scroll.text().contains(ladder[i].challenge), "列出第 %d 级的挑战" % ladder[i].level)
 	t.eq(ladder[1].display_name, "进阶一", "进阶去掉「（占位）」")
-	t.eq(ladder.map(func(d): return (d as DifficultyDef).level), [0, 1, 2, 3, 4, 5, 6, 7, 8], "241 / 320：进阶一～八")
-	t.eq(setup._diff_block.scroll.rows().size(), 8, "320：纸上八行（一级一行）")
+	t.eq(ladder.map(func(d): return (d as DifficultyDef).level), range(ladder.size()), "241 / 320：档位 0 起连着排（%d 档）" % ladder.size())
+	t.check(ladder.size() >= 10, "320：至少到进阶九")
+	t.eq(setup._diff_block.scroll.rows().size(), ladder.size() - 1, "320：纸上一级一行")
 	for row in setup._diff_block.scroll.rows():
 		t.eq(float(row["h"]), ChallengeScroll.ROW_MIN_H, "241：%s 一行高" % row["text"])
 	setup.choose_scale(&"medium")

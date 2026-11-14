@@ -383,6 +383,14 @@ func ask_fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_h
 			lost.append(UiText.t("fuse.growth"))
 		if not lost.is_empty():
 			lines.append(UiText.t("fuse.loses") % [Names.of((inst as ItemInstance).def), UiText.t("tip.list_sep").join(PackedStringArray(lost))])
+	var eroded := 0
+	var cap := ItemErosion.DEFAULT_LIMIT
+	for inst in ([a, b] if can_fuse else []):     # 320 A9：成品继承最高的侵蚀层数，满了合完就损毁 —— 确认窗写明
+		if ItemErosion.count(inst) > eroded:
+			eroded = ItemErosion.count(inst)
+			cap = ItemErosion.limit(inst)
+	if eroded > 0:
+		lines.append(UiText.t("erosion.fuse_destroy") if eroded >= cap else UiText.t("erosion.fuse_inherit") % [eroded, cap])
 	if fuse_note == null:
 		fuse_note = FuseNote.new()
 		add_child(fuse_note)

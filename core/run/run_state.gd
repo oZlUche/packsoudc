@@ -62,6 +62,9 @@ var character: CharacterDef = null
 ## 这一局的进阶难度（069）：id 跟着存档，定义由持有方按 id 找回；null = 普通
 var difficulty_id: StringName = &""
 var difficulty: DifficultyDef = null
+## 320（方案 §7）：开局那一刻这一档难度的完整规则（[ResourceSnapshot]，序列化成一行字串存档）。读档按它重建，
+## 改了难度数据也不影响进行中的这一局；旧档没有 = 空，读档时按 id 用现在的
+var difficulty_rules: String = ""
 ## 320 A4：开局换了哪些点（诊断用，不进存档）
 var advanced_report: Dictionary = {}
 ## 101 第 0 刀：这一局装了哪些模块（id → [RunModule]）。**本类不认识任何具体模块** —— 加一种玩法不用改这里。
@@ -83,6 +86,8 @@ signal stepped(node_id: int, reason: StringName)
 ## 模块订阅它做「到了就……」的事 —— 留在这个点的东西回到地上、相邻的道具合成。
 ## [param first_time] = 头一回踩上这个点
 signal arrived(node_id: int, first_time: bool)
+## 320 A9：一件道具永久损毁了（侵蚀满值）
+signal item_destroyed(inst: ItemInstance, reason: StringName)
 ## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
 var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
@@ -195,6 +200,7 @@ static func start(
 	if p_difficulty != null:
 		s.difficulty = p_difficulty
 		s.difficulty_id = p_difficulty.id
+		s.difficulty_rules = JSON.stringify(ResourceSnapshot.dump(p_difficulty))
 	s.stamp_enemy_hp()
 	s.hunter_defs = p_hunter_defs
 	var vitality_max := Vitality.PLACEHOLDER_MAX
@@ -1018,11 +1024,39 @@ func _bind_tracker() -> void:
 	tracker.bind(board)
 
 
+## 320 A9：统一的永久损毁入口 —— 从 [param from] 拿掉（棋盘会重算战斗、负重），不留残件；独一道具按扫描算，拿掉就不再算已有。
+## 返回拿掉没有
+func destroy_item(inst: ItemInstance, from: ItemContainer, reason: StringName = &"erosion") -> bool:
+	if inst == null or from == null or from.remove(inst.uid) == null:
+		return false
+	item_destroyed.emit(inst, reason)
+	return true
+
+
 ## 320 A4：开局把一部分普通战斗换成更强的一种（有档案的章不换）。返回 [method AdvancedPool.apply] 的回报
 func place_advanced(d: DifficultyDef) -> Dictionary:
 	if d == null or d.advanced_share() <= 0.0 or (chapter != null and chapter.profile != &""):
 		return {}
 	return AdvancedPool.apply(map, pool, enemies, items, d.advanced_share(), d.advanced_skip_first, run_seed, carry_rule, bag_pool)
+
+
+## 320：读档时定这一局的难度：现在的定义和快照一样就用现在的（同一个对象）；不一样按快照重建；没快照 / 快照坏了用现在的
+func resolve_difficulty(current: DifficultyDef) -> DifficultyDef:
+	if difficulty_rules == "" or (current != null and JSON.stringify(ResourceSnapshot.dump(current)) == difficulty_rules):
+		return current
+	var snap := difficulty_from_snapshot()
+	return snap if snap != null else current
+
+
+## 320：按存档里的规则快照重建这一局的难度；没有快照、或快照读不出来返回 null
+func difficulty_from_snapshot() -> DifficultyDef:
+	if difficulty_rules == "":
+		return null
+	var data: Variant = JSON.parse_string(difficulty_rules)
+	if not (data is Dictionary):
+		return null
+	var def := ResourceSnapshot.build(data) as DifficultyDef
+	return def if def != null and def.id == difficulty_id else null
 
 
 ## 320 A1：这一局普通敌人的生命倍率（有档案的章不吃）
@@ -1254,6 +1288,7 @@ func to_dict() -> Dictionary:
 		"character": String(character_id),
 		"map_scale": String(map_scale),
 		"difficulty": String(difficulty_id),
+		"difficulty_rules": difficulty_rules,
 		"hunters": hunters.to_dict() if hunters != null else {},
 		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null else {},
 		"phase": phase,
@@ -1350,6 +1385,7 @@ static func from_dict(
 	s.character_id = StringName(String(d.get("character", "")))
 	s.map_scale = StringName(String(d.get("map_scale", "")))
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
+	s.difficulty_rules = String(d.get("difficulty_rules", ""))
 	s.hunters_saved = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}
 	s.erosion_saved = d.get("erosion", {}) if d.get("erosion", {}) is Dictionary else {}
 	s.items = p_items

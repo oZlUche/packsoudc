@@ -213,13 +213,13 @@ func wait(actions: int, reason: StringName = &"wait") -> void:
 	if erosion != null:
 		erosion.on_action(clock, graph)
 		if graph.has_node(current_id):
-			_settle_penalty(graph.get_node(current_id))
+			_settle_penalty(graph.get_node(current_id), false)     # 320 A9：待着不算走进
 	waited.emit(actions)
 
 
-func _settle_penalty(node: MapNode) -> void:
+func _settle_penalty(node: MapNode, entered: bool = true) -> void:
 	if node != null:
-		erosion.settle(node)     # 本体（075）自己结算：效果构件过门
+		erosion.settle(node, entered)     # 本体（075）自己结算：效果构件过门
 
 
 #region 存档

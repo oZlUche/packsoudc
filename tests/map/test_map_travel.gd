@@ -23,7 +23,7 @@ class FakeErosion extends ErosionField:
 		log.append("erosion")
 		seen_totals.append(clock.total)
 
-	func settle(_node: MapNode) -> void:
+	func settle(_node: MapNode, _entered: bool = true) -> void:
 		log.append("penalty")
 		if damage > 0 and vitality != null:
 			vitality.spend(damage, &"erosion")

@@ -63,6 +63,8 @@ var loot_net: int = 0
 var safe_net: int = 0
 ## 319：这一局按总分阶梯领了几点见识（[method MetaState.absorb] 发的时候写；试玩切片不发 = 0）
 var insight: int = 0
+## 320 A9：撤离时清掉了几件道具的侵蚀
+var erosion_cleared: int = 0
 
 
 ## 结束了的一局才算得出账；没结束返回 null
@@ -118,6 +120,8 @@ static func settle(state: RunState) -> RunResult:
 				r.safe_value += ItemValue.of(item.def)
 				r.safe_net += ItemValue.net_in(item, null)     # 319
 			r.safe_layout.append({"def": item.def, "origin": item.origin, "rotation": item.rotation})
+	if r.outcome == &"extracted":
+		r.erosion_cleared = ItemErosion.clear_all(r.carried) + ItemErosion.clear_all(r.safe_items)     # 320 A9：正常撤离，带出来的幸存道具侵蚀清零；战败不清
 	r.compute_score()
 	return r
 

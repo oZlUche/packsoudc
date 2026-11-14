@@ -234,7 +234,9 @@ static func run_ladder_c(t: TestCase) -> void:
 		t.eq(d.hunter_bracket_steps(), prev.hunter_bracket_steps(), "猎手段位表不变")
 		t.check(not d.challenge.contains("；") and d.challenge.length() <= 10, "%s：中文一行（%s）" % [d.id, d.challenge])
 		prev = d
-	t.eq(prev.grants_unlock, &"", "进阶八暂时是最后一级")
+	t.eq(prev.grants_unlock, &"ascension_9", "进阶八撤离开进阶九")
+	var nine := _by_id(&"ascension_9")
+	t.check(nine != null and nine.level == 9 and nine.requires_unlock == &"ascension_9" and nine.grants_unlock == &"", "进阶九：第 9 档，暂时是最后一级")
 	t.eq(ScoreRules.load_rules().mult(8), 1.75, "计分系数：五～八暂时和进阶三一样")
 
 
@@ -269,3 +271,137 @@ static func run_flow_c(t: TestCase) -> void:
 	else:
 		t.check(false, "进阶五开局、有猎手")
 	Support.cleanup("asc320c5")
+
+
+static func _plain_def(c) -> ItemDef:
+	for id in c.items.ids():
+		var d: ItemDef = c.items.get_def(id)
+		var probe := ItemInstance.create(d, 0)
+		if ItemErosion.eligible(probe) and d.combat != null:
+			return d
+	return null
+
+
+static func _a9_run(c, s: int) -> RunState:
+	var nine := _by_id(&"ascension_9")
+	return RunState.start(c.chapter, s, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], nine) if nine != null else null
+
+
+## 把侵蚀推到 [param node] 够深（直接改状态，测效果本身）
+static func _deepen(run: RunState, node: MapNode, depth: int) -> void:
+	run.travel.erosion.eroded_bands = node.erosion_band + depth
+
+
+static func run_item_erosion_layers(t: TestCase) -> void:
+	t.begin("320 A9 · 道具侵蚀：走进够深的点一件 +1，第 3 层永久损毁；待着不算；不够深不算；包、随身之物不算")
+	var c = NodeScreens._content()
+	var run := _a9_run(c, 7)
+	if run == null or run.travel.erosion == null:
+		t.check(false, "进阶九开局、有侵蚀")
+		return
+	var node := run.map.get_node(run.map.node_ids()[0])
+	for inst in run.board.items():
+		if not (inst as ItemInstance).def.is_bag:
+			run.board.remove((inst as ItemInstance).uid)     # 包留着（格子在包上）
+	for id in c.items.ids():     # 棋盘的格子在包上：先放一个包
+		var bd: ItemDef = c.items.get_def(id)
+		if bd.is_bag and run.board.try_add(ItemInstance.create(bd, 0), true):
+			break
+	var sword := ItemInstance.create(_plain_def(c), 0)
+	t.check(run.board.try_add(sword, true), "棋盘上放一件")
+	_deepen(run, node, 1)
+	run.travel.erosion.settle(node, true)
+	t.eq(ItemErosion.count(sword), 0, "深 1 层：不侵蚀道具")
+	_deepen(run, node, 2)
+	run.travel.erosion.settle(node, false)
+	t.eq(ItemErosion.count(sword), 0, "待着（原地耗时）不算")
+	run.travel.erosion.settle(node, true)
+	t.eq(ItemErosion.count(sword), 1, "走进深 2 层：0 → 1")
+	t.eq(ItemErosion.line(sword), UiText.t("erosion.item_line") % [1, 3], "浮窗：侵蚀1/3")
+	run.travel.erosion.settle(node, true)
+	t.eq(ItemErosion.count(sword), 2, "1 → 2，还在")
+	t.check(run.board.has_item(sword.uid), "第 2 层还在棋盘上")
+	var gone := [false]
+	run.item_destroyed.connect(func(inst: ItemInstance, _why: StringName): gone[0] = inst == sword)
+	run.travel.erosion.settle(node, true)
+	t.check(not run.board.has_item(sword.uid) and gone[0], "第 3 层永久损毁（不是第 4 次）")
+	var left := run.board.items().size()
+	run.travel.erosion.settle(node, true)
+	t.eq(run.board.items().size(), left, "只剩包（不合格）：什么也不做")
+	t.check(not ItemErosion.eligible(null), "空的不算")
+	for inst in run.board.items():
+		t.check(ItemErosion.eligible(inst) or inst.def.is_bag or inst.is_pinned(), "合格规则")
+
+
+static func run_item_erosion_lifecycle(t: TestCase) -> void:
+	t.begin("320 A9 · 层数跟着实例走：存读档保留、合成继承最高值（满了合完损毁）、正常撤离清零、战败不清")
+	var c = NodeScreens._content()
+	var d := _plain_def(c)
+	var a := ItemInstance.create(d, 0)
+	ItemErosion.add(a)
+	ItemErosion.add(a)
+	var back := ItemInstance.from_dict(JSON.parse_string(JSON.stringify(a.to_dict())), c.items)
+	t.eq([ItemErosion.count(back), ItemErosion.limit(back)], [2, 3], "存读档：2/3")
+	var b := ItemInstance.create(d, 0)
+	ItemErosion.add(b)
+	var out := ItemInstance.create(d, 0)
+	t.eq(ItemErosion.carry(out, [a, b]), 2, "合成继承最高的 2")
+	var nine := _by_id(&"ascension_9")
+	var fresh := RunState.start(c.chapter, 12, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], nine)
+	t.check(fresh.resolve_difficulty(nine) == nine, "读档：快照和现在一样就用现在的那个对象")
+	t.eq(ItemErosion.count(out), 2, "成品 2/3")
+	t.check(not ItemErosion.is_full(out), "没满")
+	ItemErosion.add(a)
+	var full := ItemInstance.create(d, 0)
+	ItemErosion.carry(full, [a])
+	t.check(ItemErosion.is_full(full), "输入已满 → 成品满了（合完损毁）")
+	var old := ItemInstance.from_dict({"uid": 999001, "def": String(d.id), "rot": 0, "origin": [0, 0], "seq": 0, "state": {}}, c.items)
+	t.eq(ItemErosion.count(old), 0, "旧档没有字段 = 0")
+	var run := _a9_run(c, 9)
+	if run == null:
+		return
+	for id in c.items.ids():
+		var bd: ItemDef = c.items.get_def(id)
+		if bd.is_bag and run.board.try_add(ItemInstance.create(bd, 0), true):
+			break
+	var kept := ItemInstance.create(d, 0)
+	t.check(run.board.try_add(kept, true), "棋盘上放一件")
+	if run.board.has_item(kept.uid):
+		ItemErosion.add(kept)
+		run.phase = RunState.Phase.EXTRACTED
+		var r := RunResult.settle(run)
+		t.eq(ItemErosion.count(kept), 0, "正常撤离：带出来的清零")
+		t.check(r.erosion_cleared >= 1, "回报记了清了几件")
+	var lost := _a9_run(c, 10)
+	var safe := SafeModule.of(lost) if lost != null else null
+	if safe != null and safe.inventory != null:
+		var keep := ItemInstance.create(d, 0)
+		t.check(safe.inventory.try_add(keep, true), "托付一件")
+		if safe.inventory.has_item(keep.uid):
+			ItemErosion.add(keep)
+			lost.phase = RunState.Phase.DEFEATED
+			RunResult.settle(lost)
+			t.eq(ItemErosion.count(keep), 1, "战败：托付出去的保留层数")
+
+
+static func run_rule_snapshot(t: TestCase) -> void:
+	t.begin("320 · 存档带着开局时的难度规则：读档按它重建，数据改了也不变")
+	var c = NodeScreens._content()
+	var nine := _by_id(&"ascension_9")
+	var run := _a9_run(c, 11)
+	if run == null:
+		t.check(false, "进阶九开局")
+		return
+	t.check(run.difficulty_rules != "", "开局记了规则")
+	var snap := run.difficulty_from_snapshot()
+	t.check(snap != null and snap.id == nine.id and snap.level == 9, "按快照重建出来")
+	t.eq([snap.enemy_hp_percent, snap.hunter_damage_percent, snap.countdown_percent], [nine.enemy_hp_percent, nine.hunter_damage_percent, nine.countdown_percent], "数一样")
+	t.check(not snap.mechanics.filter(func(m: RunMechanic) -> bool: return m is ErosionMechanic and (m as ErosionMechanic).effects.any(func(e: ErosionEffect) -> bool: return e is ErodeItemLayer)).is_empty(), "道具侵蚀也在")
+	var data: Dictionary = JSON.parse_string(run.difficulty_rules)
+	data["enemy_hp_percent"] = 99
+	run.difficulty_rules = JSON.stringify(data)
+	t.eq(run.difficulty_from_snapshot().enemy_hp_percent, 99, "读的是快照，不是现在的数据")
+	run.difficulty_rules = ""
+	t.check(run.difficulty_from_snapshot() == null, "旧档没有快照：返回空（按 id 用现在的）")
+	run.difficulty_rules = "{坏的"
+	t.check(run.difficulty_from_snapshot() == null, "快照坏了：返回空")

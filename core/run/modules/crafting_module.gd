@@ -133,6 +133,7 @@ func fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_home:
 	var names := [Names.of(a.def), Names.of(b.def), Names.of(out_def)]
 	var out := ItemInstance.create(out_def, b.rotation)
 	carry_basis(out, [a, b])     # 319：成品接着两件的本金
+	ItemErosion.carry(out, [a, b])     # 320 A9：成品继承最高的侵蚀层数（确认窗写明；满了合完就损毁）
 	var where := ""
 	if b_home == _run.board:
 		where = "board" if _land_on_board(a, a_home, b, out) else ""
@@ -145,7 +146,14 @@ func fuse_items(a: ItemInstance, a_home: ItemContainer, b: ItemInstance, b_home:
 	if where == "":
 		failed["reason"] = "no_room"
 		return failed
-	return _settle(StringName(res["recipe_id"]), out_def, where, [UiText.t("craft.done") % names])
+	var lines: Array = [UiText.t("craft.done") % names]
+	if ItemErosion.is_full(out):
+		var home: ItemContainer = _run.board
+		if where != "board":
+			home = _run.storage
+		_run.destroy_item(out, home)
+		lines.append(UiText.t("erosion.item_destroyed") % Names.of(out_def))
+	return _settle(StringName(res["recipe_id"]), out_def, where, lines)
 
 
 ## 319：[param from] 里有本金的（带进来的、买来的），成品记它们本金之和；都没有就不记（全是这一局得的）

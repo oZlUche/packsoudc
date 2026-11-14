@@ -30,6 +30,8 @@ static var faith_probe: Callable = Callable()
 ## 256：这一局按标签打折的重量（[member RunContext.weight_pct]）；没接 = 不打折
 static var weight_probe: Callable = Callable()
 const DIM_HEX := "8b93a1"
+## 320 A9：侵蚀那一行的红
+const DANGER_HEX := "b0413e"
 static var _sets: SetDatabase = null
 
 
@@ -228,6 +230,9 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 			lines.append(made)
 	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
 		lines.append(wear_line(inst))
+	if ItemErosion.count(inst) > 0:     # 320 A9：侵蚀层数 —— 坏消息放后面
+		lines.append("[color=#%s]%s[/color]" % [DANGER_HEX, ItemErosion.line(inst)])
+		lines.append("[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("erosion.item_help")])
 	if inst.is_benched():     # 2026-10-22：标了不参战 —— 写清楚，不然读数掉下来不知道为什么
 		lines.append("[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("tip.benched")])
 	if def.growth != null and def.growth.runs_on_honor():     # 256：军功牌 —— 攒了几点、各阶的增益圈

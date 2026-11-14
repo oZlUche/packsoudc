@@ -815,6 +815,14 @@ const TEXT := {
 	"enemy.summary_one": {"zh": "%s　生命 %d　%d 件：%s", "en": "%s · Health %d · %d item: %s"},
 	"enemy.carried": {"zh": "　携带 %d 件", "en": " · carrying %d"},
 	# —— 221 F3 顺带（游戏测试 2026-10-21 第 4 条）——
+	"erosion.item_line": {"zh": "侵蚀%d/%d：达到满值时损毁", "en": "Erosion %d/%d: destroyed when full"},
+	"erosion.item_help": {"zh": "正常撤离后，未损毁道具的侵蚀清零。损毁无法恢复。", "en": "Extracting normally clears erosion on surviving items. Destroyed items cannot be recovered."},
+	"erosion.entry_warning": {"zh": "进入后随机侵蚀一件随身道具。", "en": "Entering erodes a random carried item."},
+	"erosion.item_layer": {"zh": "「%s」被侵蚀（%d/%d）", "en": "%s is eroded (%d/%d)"},
+	"erosion.item_destroyed": {"zh": "「%s」侵蚀满了，永久损毁", "en": "%s is fully eroded and destroyed for good"},
+	"erosion.item_none": {"zh": "身上没有能被侵蚀的道具", "en": "Nothing carried can be eroded"},
+	"erosion.fuse_inherit": {"zh": "成品继承侵蚀%d/%d", "en": "The result inherits erosion %d/%d"},
+	"erosion.fuse_destroy": {"zh": "成品侵蚀已满，合成后立即损毁", "en": "The result is fully eroded and will be destroyed right after fusing"},
 	"craft.done": {"zh": "「%s」和「%s」合成了「%s」。", "en": "%s and %s crafted into %s."},
 	# —— 221 F4：百科拼接句（core/text/encyclopedia.gd）——
 	"codex.effects": {"zh": "效果：%s", "en": "Effects: %s"},

@@ -1,0 +1,68 @@
+{
+  "id": "ascension_9",
+  "display_name": "进阶九",
+  "display_names": {
+    "en": "Ascension IX"
+  },
+  "description": "进阶八的一切，再加：走进侵蚀了 {erosion_item_layer_from_depth} 层以上的点，随机侵蚀一件随身道具，到 {erosion_item_layer_limit} 层永久损毁；正常撤离后，未损毁道具的侵蚀清零。在进阶八撤离一次后解锁。",
+  "descriptions": {
+    "en": "Everything in Ascension VIII, and stepping into spots eroded {erosion_item_layer_from_depth}+ layers deep erodes a random carried item; at {erosion_item_layer_limit} layers it is destroyed for good. Extracting normally clears erosion on surviving items. Unlocked by extracting once on Ascension VIII."
+  },
+  "challenge": "深处侵蚀道具",
+  "challenges": {
+    "en": "Deep erosion eats items"
+  },
+  "level": 9,
+  "requires_unlock": "ascension_9",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        },
+        {
+          "type": "item_layer",
+          "from_depth": 2
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
+      ]
+    }
+  ],
+  "enemy_hp_percent": 10,
+  "advanced_percent": 15,
+  "hunter_hp_percent": 10,
+  "hunter_damage_percent": 10,
+  "faith_threshold_percent": 10,
+  "countdown_percent": 10
+}

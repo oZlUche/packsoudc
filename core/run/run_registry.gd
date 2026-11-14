@@ -198,6 +198,7 @@ const HUNTER_LOSS_PICKS := {
 const EROSION_EFFECTS := {
 	&"spend_vitality": "res://core/run/erosion/effects/erode_spend_vitality.gd",
 	&"damage_item": "res://core/run/erosion/effects/erode_damage_item.gd",
+	&"item_layer": "res://core/run/erosion/effects/erode_item_layer.gd",     # 320 A9
 	&"drain_money": "res://core/run/erosion/effects/erode_drain_money.gd",
 }
 

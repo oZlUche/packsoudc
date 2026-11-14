@@ -96,8 +96,8 @@ func on_action(clock: ActionClock, _graph: MapGraph) -> void:
 			warned.emit(coming, left)
 
 
-## 目的地结算：被侵蚀的点才有事；效果构件挨个过门
-func settle(node: MapNode) -> void:
+## 目的地结算：被侵蚀的点才有事；效果构件挨个过门。[param entered] = 真正走进来的（320 A9 的道具侵蚀只认这种）
+func settle(node: MapNode, entered: bool = true) -> void:
 	if mechanic == null or run == null or not is_eroded(node):
 		return
 	var ctx := ErosionContext.new()
@@ -105,6 +105,7 @@ func settle(node: MapNode) -> void:
 	ctx.node = node
 	ctx.depth = depth_of(node)
 	ctx.total = is_total()
+	ctx.entered = entered
 	ctx.rng = run.rng.next(STREAM) if run.rng != null else RandomNumberGenerator.new()
 	for e in mechanic.effects:
 		var effect := e as ErosionEffect

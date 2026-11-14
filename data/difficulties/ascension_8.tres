@@ -46,6 +46,7 @@ challenges = {
 }
 level = 8
 requires_unlock = &"ascension_8"
+grants_unlock = &"ascension_9"
 mechanics = Array[ExtResource("2_mhndv")]([SubResource("Resource_dskgj"), SubResource("Resource_223j4")])
 enemy_hp_percent = 10
 advanced_percent = 15
