@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_qmnqy"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_1mfqh"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_4fo67"]
+
+[sub_resource type="Resource" id="Resource_oapo0"]
+script = ExtResource("1_qmnqy")
+buffs = Array[StringName]([&"tech_elite_bounty_1"])
+
+[sub_resource type="Resource" id="Resource_nncd4"]
+script = ExtResource("3_4fo67")
+insight = 2
+
+[resource]
+script = ExtResource("2_1mfqh")
+id = &"elite_bounty"
+display_name = "精英奖励"
+display_names = {
+"en": "Elite Bounty"
+}
+lift = 3
+description = "打赢精英额外掉一件稀有及以上的东西。"
+descriptions = {
+"en": "Elites drop one extra Rare-or-better item."
+}
+tree = &"mechanism"
+effect = SubResource("Resource_oapo0")
+tiers = Array[ExtResource("3_4fo67")]([SubResource("Resource_nncd4")])

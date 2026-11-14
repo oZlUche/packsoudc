@@ -1,0 +1,26 @@
+{
+  "id": "boss_bounty",
+  "display_name": "首领奖励",
+  "display_names": {
+    "en": "Boss Bounty"
+  },
+  "requires": [
+    "elite_bounty"
+  ],
+  "description": "打赢 BOSS 额外掉一件史诗及以上的东西。",
+  "descriptions": {
+    "en": "Bosses drop one extra Epic-or-better item."
+  },
+  "tree": "mechanism",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_boss_bounty_1"
+    ]
+  },
+  "tiers": [
+    {
+      "insight": 3
+    }
+  ]
+}

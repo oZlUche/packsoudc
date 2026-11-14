@@ -20,9 +20,9 @@ display_names = {
 "en": "Haggling"
 }
 column = 1
-description = "商店的东西更便宜。"
+description = "商店的东西买得更便宜（卖给商人照原价）。"
 descriptions = {
-"en": "Shop prices are lower."
+"en": "Goods in shops cost less to buy (selling prices stay the same)."
 }
 tree = &"mechanism"
 effect = SubResource("Resource_3dbfo")

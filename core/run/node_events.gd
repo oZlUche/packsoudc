@@ -921,7 +921,7 @@ func ransom_node() -> MapNode:
 func ransom_value_of(inst: ItemInstance) -> int:
 	if inst == null:
 		return 0
-	return ShopSession.sell_price_for(inst.def, inst, economy, hooks.run_context().shop_price_mult)
+	return ShopSession.sell_price_for(inst.def, inst, economy)
 
 
 ## 左盘一共多重：金币一枚 1，道具按 [method ransom_value_of]
@@ -981,6 +981,10 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core", type == &"elite") \
 		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 	hooks.red_drop(node, content, rolled)     # 281
+	var bounty := bounty_drop(node, type)     # 319：科技的额外奖励另起一件，随机数另起一条（不挪别的掉落）
+	if bounty != &"":
+		(rolled["treasure"] as Array).append(bounty)
+		rolled["bounty"] = [bounty]
 	if type == &"core" and boss_ticket != &"" and items != null and items.get_def(boss_ticket) != null:     # 285：核心 BOSS 必掉一张券
 		var dropped: Array = rolled.get("dropped", [])
 		dropped.append(boss_ticket)
@@ -992,6 +996,13 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	_pay_battle_reward(node, content)
 	if type == &"core":
 		boss_defeated.emit(node)
+
+
+## 319：这个点打赢了科技给不给额外一件、给哪件（没点科技、不是精英 / BOSS 返回空）。同一个点同一局每次算出来一样
+func bounty_drop(node: MapNode, type: StringName) -> StringName:
+	if drop_rule == null or items == null or not hooks.run_context().bounty.has(type):
+		return &""
+	return DropResolver.bounty_pick(drop_rule, items, type, _rng_for(node, "bounty"))
 
 
 ## 开搜索。[param auto] = 事件屏上选了「搜索」（084）：第一次开会话，然后**搜一次**；没遭遇就给看搜索屏，遭遇了会话自己结束、走 _close_search。
@@ -1167,6 +1178,7 @@ func _open_shop(node: MapNode) -> void:
 		_visited(node)
 		return
 	var session := ShopSession.new(node, economy, items, wallet, _depth_of(node), hooks.run_context().shop_price_mult, bag_pool)
+	session.refreshes = hooks.run_context().shop_refreshes     # 319
 	if hooks.has(&"belt_grant"):
 		session.belt_grant = hooks.belt_grant     # 160 补一：「随身」那一排买了直接进腰带
 	session.closed.connect(func():

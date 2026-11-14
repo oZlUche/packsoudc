@@ -16,11 +16,14 @@
 | hauling | 扛重 | Hauling | 数值 | 1 | 2 | 0 | endurance | 背得更多再开始吃力：按角色自己的负重上限加百分比。 | Carry more before it gets heavy: a percentage of the character's own Load limit. | tech_run_buff | {"effect": "carry_capacity_bonus"} | 负重上限 {carry_capacity_bonus_percent\|signed}% |
 | scouting | 侦察 | Scouting | 机制 | 0 | 0 | 0 | thorough_search | 隐形的猎手走近到一定距离就看得见。 | Hidden hunters become visible once they come close enough. | tech_run_buff | {"effect": "scout_range"} | 侦察距离 {scout_range_range} |
 | thorough_search | 细搜 | Thorough Search | 机制 | 0 | 0 | 0 |  | 每个搜索点能多搜几次。 | Search each search spot a few more times. | tech_run_buff | {"effect": "extra_searches"} | 每个搜索点多搜 {extra_searches_amount} 次 |
-| bargain | 讨价 | Haggling | 机制 | 1 | 0 | 0 |  | 商店的东西更便宜。 | Shop prices are lower. | tech_run_buff | {"effect": "shop_price_mult"} | 商店售价 ×{shop_price_mult_factor} |
+| bargain | 讨价 | Haggling | 机制 | 1 | 0 | 0 |  | 商店的东西买得更便宜（卖给商人照原价）。 | Goods in shops cost less to buy (selling prices stay the same). | tech_run_buff | {"effect": "shop_price_mult"} | 商店买价 ×{shop_price_mult_factor} |
 | market | 高级货物 | Finer Goods | 机制 | 1 | 0 | 0 | bargain | 集市进更好的货：固定摊位进绿色、蓝色货，散货摊货位更多。 | The market stocks finer goods: fixed stalls carry green and blue wares, and the Bazaar gets more slots. | tech_facility | {"facility": "market"} |  |
 | smithy | 高级配方 | Advanced Recipes | 机制 | 2 | 0 | 0 |  | 铁匠铺接更难的活：级数越高，打得出的配方档次越高。 | The smithy takes on harder work: higher levels unlock better recipes. | tech_facility | {"facility": "smithy"} |  |
 | mithril_smelting | 秘银冶炼 | Mithril Smelting | 机制 | 2 | 0 | 0 | smithy | 学会炼秘银：银锭加钱炼成秘银锭，再用它打更好的刀剑。 | Learn to smelt mithril: turn Silver Ingots and coins into Mithril Ingots, then forge better blades with them. | tech_recipes | {"tech": "mithril_smelting"} |  |
 | staffcraft | 法杖工艺 | Staffcraft | 机制 | 2 | 0 | 1 | smithy | 学会做法杖：级数越高，做得出的杖越好。 | Learn to make staves: higher levels make better staves. | tech_recipes | {"tech": "staffcraft"} |  |
+| shop_refresh | 换货 | Restock | 机制 | 1 | 0 | 1 | bargain | 每家局内商店可以付钱让商人换一批货，一家一次。 | Pay a shop to restock its goods, once per shop. | tech_run_buff | {"effect": "shop_refresh"} | 每家商店可付钱换货 {shop_refresh_times} 次 |
+| elite_bounty | 精英奖励 | Elite Bounty | 机制 | 0 | 0 | 3 |  | 打赢精英额外掉一件稀有及以上的东西。 | Elites drop one extra Rare-or-better item. | tech_run_buff | {"effect": "loot_bounty"} | 打赢精英额外掉一件稀有及以上 |
+| boss_bounty | 首领奖励 | Boss Bounty | 机制 | 0 | 0 | 0 | elite_bounty | 打赢 BOSS 额外掉一件史诗及以上的东西。 | Bosses drop one extra Epic-or-better item. | tech_run_buff | {"effect": "loot_bounty"} | 打赢 BOSS 额外掉一件史诗及以上 |
 
 ## 等级
 
@@ -58,3 +61,6 @@
 | staffcraft | 1 | 0 | 1 |  |  |
 | staffcraft | 2 | 0 | 2 |  |  |
 | staffcraft | 3 | 0 | 3 |  |  |
+| shop_refresh | 1 | 0 | 2 |  | {"times": 1} |
+| elite_bounty | 1 | 0 | 2 |  | {"node_type": "elite"} |
+| boss_bounty | 1 | 0 | 3 |  | {"node_type": "core"} |

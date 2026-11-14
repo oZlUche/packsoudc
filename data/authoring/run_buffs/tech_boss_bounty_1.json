@@ -1,0 +1,15 @@
+{
+  "id": "tech_boss_bounty_1",
+  "display_name": "首领奖励（科技）",
+  "display_names": {
+    "en": "Boss Bounty (Tech)"
+  },
+  "description": "打赢 BOSS 额外掉一件史诗及以上",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "loot_bounty",
+      "node_type": "core"
+    }
+  ]
+}

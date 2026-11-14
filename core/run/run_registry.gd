@@ -33,6 +33,8 @@ const RUN_EFFECTS := {
 	&"ransom": "res://core/run/effects/ransom.gd",     # 256：安德烈乌斯「求饶」
 	&"tag_mods": "res://core/run/effects/tag_mods.gd",     # 256：马库斯「操练」（战斗侧）
 	&"tag_weight_mult": "res://core/run/effects/tag_weight_mult.gd",     # 256：马库斯「操练」（负重侧）
+	&"loot_bounty": "res://core/run/effects/loot_bounty.gd",     # 319：精英 / BOSS 额外奖励
+	&"shop_refresh": "res://core/run/effects/shop_refresh.gd",     # 319：局内商店刷新
 }
 
 ## 147：随身技能点一下的效果（[BeltUse.effects]；160 补一：挂在 [BeltSkillDef] 上）

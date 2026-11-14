@@ -34,6 +34,17 @@
     "salve",
     "ration"
   ],
+  "bounty_weights": {
+    "core": {
+      "3": 3,
+      "4": 1
+    },
+    "elite": {
+      "2": 6,
+      "3": 3,
+      "4": 1
+    }
+  },
   "min_drops": 1,
   "bags_always_drop": true,
   "bless_chance": 0.0,

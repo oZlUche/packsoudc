@@ -8,7 +8,7 @@ const PREFIX := "shop_keys"
 const NOWHERE := "res://tests/fixtures/__no_such_art__/"
 
 
-static func _open(root: Window) -> Dictionary:
+static func _open(root: Window, refreshes: int = 0) -> Dictionary:
 	var c = NodeScreens._content()
 	var f := Support.flow(c, PREFIX)
 	f.begin(c.chapter, NodeScreens._kit(c), 1)
@@ -19,6 +19,7 @@ static func _open(root: Window) -> Dictionary:
 	node.content_seed = 17
 	var session := ShopSession.new(node, econ, c.items, f.run.wallet)
 	session.belt_grant = func(_sid: StringName, n: int) -> int: return n
+	session.refreshes = refreshes
 	var screen = load("res://ui/game/shop_screen.gd").new()
 	screen.flow = f
 	screen.font = UiPalette.cjk_font()
@@ -244,3 +245,25 @@ static func frame_first_visit_hint(t: TestCase, root: Window) -> void:
 
 static func screen_seen_id() -> String:
 	return (load("res://ui/game/shop_screen.gd") as GDScript).get_script_constant_map()["VISIT_HINT_SEEN"]
+
+
+static func frame_refresh_key(t: TestCase, root: Window) -> void:
+	t.begin("319 · 换一批货：没科技没有这把键；有科技是币座键、写价钱、悬停说明；换完一次置灰")
+	var o := _open(root)
+	t.eq(o["screen"].refresh_key(), null, "没科技：没有换货键")
+	(o["screen"] as Node).free()
+	Support.cleanup(PREFIX)
+	o = _open(root, 1)
+	var screen = o["screen"]
+	var session: ShopSession = o["session"]
+	var key: Button = screen.refresh_key()
+	t.check(key is ScrollKey and key.coin, "币座键")
+	t.check(key.tooltip_text != "", "悬停有说明")
+	t.check(not key.disabled, "能换")
+	var cash := flow_wallet(screen).balance
+	t.check(screen.restock(), "换了")
+	t.eq(flow_wallet(screen).balance, cash - session.refresh_price(), "扣了钱")
+	t.check(key.disabled, "换过了置灰")
+	t.check(not screen.restock(), "再按不换")
+	screen.free()
+	Support.cleanup(PREFIX)

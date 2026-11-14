@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_ko171"]
+[ext_resource type="Script" path="res://core/run/effects/loot_bounty.gd" id="2_iga35"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_qv7kf"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_alwk2"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_00cq5"]
+
+[sub_resource type="Resource" id="Resource_6mnvx"]
+script = ExtResource("2_iga35")
+
+[resource]
+script = ExtResource("5_00cq5")
+id = &"tech_elite_bounty_1"
+display_name = "精英奖励（科技）"
+display_names = {
+"en": "Elite Bounty (Tech)"
+}
+description = "打赢精英额外掉一件稀有及以上"
+scope = 0
+effects = Array[ExtResource("1_ko171")]([SubResource("Resource_6mnvx")])

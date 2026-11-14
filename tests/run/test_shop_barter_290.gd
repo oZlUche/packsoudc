@@ -84,7 +84,7 @@ static func run_stock(t: TestCase) -> void:
 		t.check(s.is_merchants(inst.uid), "是商人的")
 		t.eq(s.tag_price(inst), s.price_of(inst.def), "挂的是售价")
 	t.check(seen.size() <= r.shop_stock and seen.size() >= r.shop_stock - 3, "摆了约 shop_stock 件（%d，放不下的丢）" % seen.size())
-	t.check(not s.has_method("refresh") and not s.has_method("refresh_cost"), "没有刷新")
+	t.check(s.refresh_reason() != "" and not s.refresh(), "没有刷新（319：点了换货科技才能付钱换一次）")
 	var s2 := _shop(items, Wallet.new(0), _node(), r)
 	var a: Array = []
 	var b: Array = []

@@ -154,7 +154,7 @@ static func run_ransom(t: TestCase) -> void:
 	var def := c.items.get_def(&"knife")
 	var knife := ItemInstance.create(def)
 	var worth := run.events.ransom_value_of(knife)
-	t.eq(worth, ShopSession.sell_price_for(def, knife, run.economy, run.buff_context().shop_price_mult), "道具按局内出售价算重量（%d）" % worth)
+	t.eq(worth, ShopSession.sell_price_for(def, knife, run.economy), "道具按局内出售价算重量（%d）" % worth)
 	var m0 := run.wallet.balance
 	t.eq(f.pay_ransom(price - worth, [knife]), "", "金币 + 道具 ≥ 开价：成交")
 	t.eq(run.wallet.balance, m0 - (price - worth), "钱包扣了放上去的金币")

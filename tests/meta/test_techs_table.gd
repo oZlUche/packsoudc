@@ -30,15 +30,15 @@ static func _put_cell(sheets: Dictionary, sheet: String, id: String, header: Str
 
 
 static func run(t: TestCase) -> void:
-	t.begin("119 / 319 · 科技表读得出十四节点三十二级（两棵树）；按表生成的和仓库里的一致（含 16 份 tech_* run_buff）；镜像最新；check 无问题")
+	t.begin("119 / 319 · 科技表读得出十七节点三十五级（两棵树）；按表生成的和仓库里的一致（含 19 份 tech_* run_buff）；镜像最新；check 无问题")
 	var problems: Array[String] = []
 	var f := TechsTable.fields(_sheets(), problems)
 	t.eq(problems.size(), 0, "表里没问题：%s" % "；".join(PackedStringArray(problems)))
-	t.eq(f.size(), 14, "十四个节点（319：幸运删了）")
+	t.eq(f.size(), 17, "十七个节点（319：幸运删了，C 批加三个）")
 	var levels := 0
 	for id in f:
 		levels += (f[id]["tiers"] as Array).size()
-	t.eq(levels, 32, "三十二级（319：幸运三级删了、讨价并成一级）")
+	t.eq(levels, 35, "三十五级（319：幸运三级删了、讨价并成一级，C 批加三级）")
 	t.eq(f["scouting"]["requires"], ["thorough_search"], "319：侦察的前置是细搜")
 	t.eq(f["scouting"]["tree"], "机制", "319：侦察在机制树")
 	t.eq(f["scouting"]["tiers"][0]["insight"], 2, "319：侦察花两点见识")
@@ -46,7 +46,7 @@ static func run(t: TestCase) -> void:
 	t.eq(f["warehouse"]["tree"], "数值", "仓库在数值树")
 	t.eq(f["safe_box"]["tiers"][1]["items"], {"nail_keg": 1, "steel_ingot": 1}, "材料按「；」拆成道具 → 件数（122 改成铁钉桶）")
 	var out := TechsTable.build(_sheets(), problems)
-	t.eq(out.size(), 30, "生成 14 份科技 + 16 份 run_buff")
+	t.eq(out.size(), 36, "生成 17 份科技 + 19 份 run_buff")
 	var same := 0
 	for path in out:
 		var json := JSON.new()

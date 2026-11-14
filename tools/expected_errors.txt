@@ -15,3 +15,5 @@
 # 退出时的泄漏统计（测试报告 Q02，单独治理；不是某条用例的错）
 ^ERROR: [0-9]+ resources still in use at exit
 ^ERROR: [0-9]+ RID allocations of type '.*' were leaked at exit\.$
+# 319：额外奖励池空的负向用例（test_meta_progression_319c）
+^ERROR: DropResolver: 额外奖励池是空的（掉落规则 t_empty，点 elite）

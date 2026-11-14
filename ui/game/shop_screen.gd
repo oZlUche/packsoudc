@@ -23,6 +23,8 @@ var _belt_btns: Array[Control] = []
 var _scale: ShopScale = null
 var _deal_btn: Button = null
 var _leave_btn: Button = null
+## 319：「换一批货」币座键（点了「局内商店刷新」科技才有）
+var _refresh_btn: Button = null
 ## 右下角自己的钱袋、左下角商人的钱袋
 var _pouch: CoinPouch = null
 var _his_pouch: CoinPouch = null
@@ -100,6 +102,12 @@ func open(payload: Dictionary) -> void:
 	rsec.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rsec.alignment = BoxContainer.ALIGNMENT_END
 	bottom.add_child(rsec)
+	if _session != null and _session.refreshes > 0:     # 319
+		_refresh_btn = ScrollKey.make(UiText.t("shop.refresh"), restock, true, _session.refresh_price())
+		_refresh_btn.name = "RefreshKey"
+		_refresh_btn.size_flags_vertical = Control.SIZE_SHRINK_END
+		_refresh_btn.tooltip_text = UiText.t("shop.refresh_tip")
+		rsec.add_child(_refresh_btn)
 	var lv := ScrollKey.make(UiText.t("shop.leave"), leave)
 	lv.size_flags_vertical = Control.SIZE_SHRINK_END
 	rsec.add_child(lv)
@@ -314,6 +322,28 @@ func scale_widget() -> ShopScale:
 
 func deal_key() -> Button:
 	return _deal_btn
+
+
+## 319：「换一批货」那把钥匙（没点科技 = null）
+func refresh_key() -> Button:
+	return _refresh_btn
+
+
+## 319：付钱换一批货。拖着东西、秤上有东西、钱不够、换过了都不换，说一句原因
+func restock() -> bool:
+	if _session == null:
+		return false
+	var why := _session.refresh_reason()
+	if why == "" and _drag != null and _drag.is_dragging():
+		why = UiText.t("shop.refresh_table")
+	if why != "":
+		say(why)
+		return false
+	if not _session.refresh():
+		say(UiText.t("shop.refresh_none"))
+		return false
+	_refresh()
+	return true
 
 
 func pouches() -> Array[CoinPouch]:
@@ -543,6 +573,8 @@ func _refresh() -> void:
 	var st := _session.status()
 	_scale.plate = plate_text(st)
 	_deal_btn.disabled = not _session.can_deal()
+	if _refresh_btn != null:
+		_refresh_btn.disabled = _session.refresh_reason() != ""
 	_pouch.amount = flow.run.wallet.balance - _session.my_coins
 	_his_pouch.amount = _session.purse - _session.his_coins
 	for i in _belt_btns.size():

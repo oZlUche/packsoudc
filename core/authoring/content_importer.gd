@@ -2206,6 +2206,9 @@ static func _floor_rows(rows: Array, at: String, report: ImportReport) -> Array:
 
 
 ## 作者定的形状写成校验：概率在 0～1，**稀有度越高基础掉落率越低**（非递增），珍宝的稀有度得是真的稀有度、权重为正。
+const BOUNTY_NODE_TYPES := ["elite", "core"]
+
+
 static func _validate_drop_rule(rule: DropRule, report: ImportReport) -> void:
 	_require_id(rule.id, "掉落规则", report)
 	if rule.base_chance.is_empty():
@@ -2229,6 +2232,20 @@ static func _validate_drop_rule(rule: DropRule, report: ImportReport) -> void:
 			report.error("treasure_weights", "稀有度 %s 的权重应为正" % text)
 	if rule.treasure_tag == &"":
 		report.error("treasure_tag", "珍宝得有个标签，不然不知道哪些道具算珍宝")
+	for kind in rule.bounty_weights:     # 319：科技的额外奖励（合格道具够不够由测试按道具库查）
+		var at := "bounty_weights.%s" % String(kind)
+		if not BOUNTY_NODE_TYPES.has(String(kind)):
+			report.error(at, "只认 elite / core")
+		var w: Variant = rule.bounty_weights[kind]
+		if not (w is Dictionary) or (w as Dictionary).is_empty():
+			report.error(at, "得是「稀有度: 权重」，至少一档")
+			continue
+		for key in w:
+			var text := String(key)
+			if not text.is_valid_int() or int(text) < 0 or int(text) > 4:
+				report.error(at, "键 '%s' 得是 0～4 的稀有度（首版不出神话）" % text)
+			elif float((w as Dictionary)[key]) <= 0.0:
+				report.error(at, "稀有度 %s 的权重应为正" % text)
 
 
 ## 比引擎严格：流派没有道具就组不出来，招牌道具得存在，档位不能为负。

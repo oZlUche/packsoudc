@@ -48,6 +48,8 @@ extends Resource
 ## 160 补一：货架之外一排「随身」—— 候选的随身技能 id → 权重；开张时抽 1 ～ [member belt_picks] 种，成交了直接进腰带。空 = 没有这一排
 @export var belt_stock: Dictionary = {}
 @export_range(1, 4) var belt_picks: int = 2
+## 319（局外机制树「局内商店刷新」）：换一次货要多少钱（局内的钱）。首轮试的数：比付费撤离点（50）便宜一点，约一件紫色货的价
+@export var shop_refresh_price: int = 40
 
 @export_group("付费撤离点")
 ## 几个中途撤离点收费（挑最深的那几个）
