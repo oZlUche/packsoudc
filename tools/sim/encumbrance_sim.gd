@@ -9,6 +9,7 @@
 ## 机器人：
 ## - 路线：从出生点起，每次去最近的没去过的「有东西」的点（搜索 / 战斗 / 精英 / 宝箱 / 事件 / 随机），
 ##   倒计时剩的步数只够走到最近的撤离点（按当前的行动点倍率算）时转去撤离。
+##   320 F：被侵蚀的点不当目标；同样近的一步挑侵蚀浅的；体力剩两点就去撤离
 ## - 战斗：玩家血量设成 10000（必赢），只看搜刮，不看打不打得过。
 ## - 搜索：能搜就搜满；事件：在能选的选项里随机挑。商店 / 休息 / 保险箱 / 神坛直接离开。
 ## - 拿东西：按「价值 / 格」从高到低往棋盘放；包有空位就拿；放不下时拿棋盘上价值 / 格最低的一两件换（换完更值钱才换）。
@@ -29,6 +30,8 @@ var hp := 10000.0
 ## 320 E：这一局猎手开打前事件屏出现在第几步（统计接战次数、连着两步被拦）
 var hunter_steps: Array[int] = []
 var cur_step := 0
+## 320 F：这一局侵蚀满了损毁的道具件数
+var destroyed := 0
 var difficulty: DifficultyDef = null
 
 
@@ -100,6 +103,8 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, p_seed: 
 	last_snap = {}
 	hunter_steps.clear()
 	cur_step = 0
+	destroyed = 0
+	run.item_destroyed.connect(func(_inst: ItemInstance, _why: StringName): destroyed += 1)
 	while not run.is_over() and guard < 400:
 		guard += 1
 		visited[run.travel.current_id] = true
@@ -112,9 +117,12 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, p_seed: 
 		var left := cd.left() if cd != null else 999
 		var ext := _nearest_extract(run)
 		var mult := maxi(1, run.travel.action_cost_mult)
-		var ext_cost := int(ext["dist"]) * mult if not ext.is_empty() else 999
+		var pct := run.difficulty.countdown_percent if run.difficulty != null else 0     # 320 F：进阶七起倒计时多扣
+		@warning_ignore("integer_division")
+		var ext_cost := int(ext["dist"]) * mult * (100 + pct) / 100 + 1 if not ext.is_empty() else 999
 		var target := -1
-		if not ext.is_empty() and (want_extract or left <= ext_cost + 2 * mult):
+		var low := run.vitality != null and run.vitality.current <= 2     # 320 F：体力见底就撤（侵蚀扣体力）
+		if not ext.is_empty() and (want_extract or low or left <= ext_cost + 2 * mult):
 			want_extract = true
 			target = int(ext["id"])
 		else:
@@ -132,8 +140,8 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, p_seed: 
 			break
 		var dist := MapNavigator.distance_map(run.map, target)
 		var best := -1
-		for nb in run.travel.available_moves():
-			if dist.has(nb) and (best < 0 or int(dist[nb]) < int(dist[best])):
+		for nb in run.travel.available_moves():     # 320 F：同样近的里挑侵蚀浅的，侵蚀一层算多走两步
+			if dist.has(nb) and (best < 0 or _cost(run, nb, dist) < _cost(run, best, dist)):
 				best = nb
 		if best < 0 or not f.step_to(best):
 			why = "step_refused:%d screen%d" % [best, f.screen]
@@ -159,6 +167,8 @@ func _one_run(scale: StringName, ch: CharacterDef, loadout: LoadoutDef, p_seed: 
 	snap["level_steps"] = level_steps
 	snap["nodes"] = nodes_by_type
 	snap["hunter"] = _hunter_stats(run)
+	snap["destroyed"] = destroyed
+	snap["reason"] = String(f.result.reason) if f.result != null else ""
 	if f.result != null:     # 269：结算的分（absorb 里算过，含图鉴新点亮）
 		snap["outcome"] = String(f.result.outcome)
 		snap["score"] = f.result.score
@@ -227,11 +237,19 @@ func _nearest_target(run: RunState, visited: Dictionary) -> int:
 		var node := run.map.get_node(id)
 		if node == null or not INTERESTING.has(NodeEvents.effective_type(node)):
 			continue
+		if run.travel.erosion != null and run.travel.erosion.is_eroded(node):
+			continue     # 320 F：被侵蚀的点不去搜
 		var d := int(dist[id]) * 100 + rng.randi_range(0, 99)
 		if d < best_d:
 			best_d = d
 			best = id
 	return best
+
+
+## 320 F：走到相邻点 [param id] 的代价：离目标几步 + 侵蚀层数 × 2
+func _cost(run: RunState, id: int, dist: Dictionary) -> int:
+	var depth := run.travel.erosion.depth_of(run.map.get_node(id)) if run.travel.erosion != null else 0
+	return int(dist[id]) + depth * 2
 
 
 func _nearest_extract(run: RunState) -> Dictionary:

@@ -176,7 +176,7 @@ func _add_row(level: int, p_text: String, at: int) -> Dictionary:
 	dot.name = "Dot"
 	line.add_child(dot)
 	var body := UiTheme.make_label(p_text, FONT_SIZE, UiTheme.PARCHMENT_RED)
-	body.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # 320 F：英文按词折行（中文照样逐字）
 	body.custom_minimum_size.x = text_width()
 	body.name = "Text"
 	line.add_child(body)
