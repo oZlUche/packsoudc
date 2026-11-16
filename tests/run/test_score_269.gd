@@ -26,7 +26,7 @@ static func run_rules(t: TestCase) -> void:
 	t.eq(rules.difficulty_step, 0.25, "难度每档 +0.25")
 	t.eq(rules.extract_bonus, 0, "撤离不另加")
 	t.check(rules.loot_counts, "带出价值算分")
-	t.eq([rules.mult(0), rules.mult(3)], [1.0, 1.75], "普通 ×1、进阶三 ×1.75")
+	t.eq([rules.mult(0), rules.mult(3)], [1.0, 1.35], "普通 ×1、进阶三 ×1.35（320：按难度台阶的表）")
 
 
 static func run_screenshot_run(t: TestCase) -> void:
@@ -49,7 +49,7 @@ static func run_screenshot_run(t: TestCase) -> void:
 
 
 static func run_extract_and_difficulty(t: TestCase) -> void:
-	t.begin("269 · 撤离 = 带出价值 + 保险箱 + 战绩 + 探索；图鉴新点亮一件 25；进阶三 ×1.75 向下取整，账单小字写难度")
+	t.begin("269 · 撤离 = 带出价值 + 保险箱 + 战绩 + 探索；图鉴新点亮一件 25；进阶三 ×1.35 向下取整，账单小字写难度")
 	var r := _screenshot_run()
 	r.outcome = &"extracted"
 	r.reason = &"extract"
@@ -67,11 +67,11 @@ static func run_extract_and_difficulty(t: TestCase) -> void:
 	t.eq(r.score, 450 + 800 + 138, "普通难度不乘")
 	r.difficulty_level = 3
 	r.compute_score(3)
-	t.eq(r.score, floori((450 + 800 + 138) * 1.75), "进阶三 ×1.75 向下取整（%d）" % r.score)
-	t.check(LedgerView.score_parts_text(r).ends_with(UiText.t("ledger.score_mult") % "1.75"), "小字末尾「 · 难度 ×1.75」（%s）" % LedgerView.score_parts_text(r))
+	t.eq(r.score, floori((450 + 800 + 138) * 1.35 + 0.0001), "进阶三 ×1.35 向下取整（%d）" % r.score)
+	t.check(LedgerView.score_parts_text(r).ends_with(UiText.t("ledger.score_mult") % "1.35"), "小字末尾「 · 难度 ×1.35」（%s）" % LedgerView.score_parts_text(r))
 	r.difficulty_level = 1
 	r.compute_score(3)
-	t.check(LedgerView.score_parts_text(r).ends_with(UiText.t("ledger.score_mult") % "1.25"), "进阶一 ×1.25（%s）" % LedgerView.score_parts_text(r))
+	t.check(LedgerView.score_parts_text(r).ends_with(UiText.t("ledger.score_mult") % "1.05"), "进阶一 ×1.05（%s）" % LedgerView.score_parts_text(r))
 
 
 static func run_meta_score(t: TestCase) -> void:

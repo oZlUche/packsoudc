@@ -72,7 +72,7 @@ static func run_ladder_b(t: TestCase) -> void:
 	t.eq([defs[2].grants_unlock, defs[3].requires_unlock], [&"ascension_4", &"ascension_4"], "进阶三撤离开进阶四")
 	t.eq(defs[3].hunter_bracket_steps(), defs[2].hunter_bracket_steps(), "进阶四的猎手和进阶三一样")
 	var rules := ScoreRules.load_rules()
-	t.eq([rules.mult(0), rules.mult(3), rules.mult(4)], [1.0, 1.75, 1.75], "计分系数：进阶四暂时和进阶三一样")
+	t.eq([rules.mult(0), rules.mult(3), rules.mult(4)], [1.0, 1.35, 1.4], "计分系数：进阶四比进阶三多 0.05")
 
 
 static func run_advanced_pool(t: TestCase) -> void:
@@ -238,7 +238,7 @@ static func run_ladder_c(t: TestCase) -> void:
 	t.eq(prev.grants_unlock, &"ascension_9", "进阶八撤离开进阶九")
 	var nine := _by_id(&"ascension_9")
 	t.check(nine != null and nine.level == 9 and nine.requires_unlock == &"ascension_9" and nine.grants_unlock == &"ascension_10", "进阶九：第 9 档，撤离开进阶十")
-	t.eq(ScoreRules.load_rules().mult(8), 1.75, "计分系数：五～八暂时和进阶三一样")
+	t.eq([ScoreRules.load_rules().mult(8), ScoreRules.load_rules().mult(10)], [1.6, 1.7], "计分系数：作者定按难度台阶（进阶八 1.6、进阶十 1.7）")
 
 
 static func run_flow_c(t: TestCase) -> void:
