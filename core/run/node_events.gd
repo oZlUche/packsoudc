@@ -22,6 +22,10 @@ extends RefCounted
 signal revealed(node: MapNode, type: StringName)
 signal battle_finished(node: MapNode, result: BattleResult, won: bool)
 signal loot_ready(node: MapNode, corpse: GridInventory)
+## 319：一局的计数加一笔（[member RunState.tally]）：bounty = 科技额外奖励掉了几件，shop_refresh / shop_refresh_coins = 换货几次、花了多少
+signal counted(key: String, n: int)
+## 319 D：科技的额外奖励掉了一件（[param type] = elite / core）—— 地图屏提示一句来源
+signal bounty_given(node: MapNode, item_id: StringName, type: StringName)
 ## 087：核心点的 BOSS 倒下了（战利品已经交出去）：持有方据此直接撤离结算
 signal boss_defeated(node: MapNode)
 signal search_opened(node: MapNode, session: SearchSession)
@@ -988,6 +992,8 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	if bounty != &"":
 		(rolled["treasure"] as Array).append(bounty)
 		rolled["bounty"] = [bounty]
+		counted.emit("bounty", 1)
+		bounty_given.emit(node, bounty, type)
 	if type == &"core" and boss_ticket != &"" and items != null and items.get_def(boss_ticket) != null:     # 285：核心 BOSS 必掉一张券
 		var dropped: Array = rolled.get("dropped", [])
 		dropped.append(boss_ticket)
@@ -1182,6 +1188,9 @@ func _open_shop(node: MapNode) -> void:
 		return
 	var session := ShopSession.new(node, economy, items, wallet, _depth_of(node), hooks.run_context().shop_price_mult, bag_pool)
 	session.refreshes = hooks.run_context().shop_refreshes     # 319
+	session.restocked.connect(func(price: int) -> void:
+		counted.emit("shop_refresh", 1)
+		counted.emit("shop_refresh_coins", price))
 	if hooks.has(&"belt_grant"):
 		session.belt_grant = hooks.belt_grant     # 160 补一：「随身」那一排买了直接进腰带
 	session.closed.connect(func():

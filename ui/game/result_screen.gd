@@ -278,7 +278,7 @@ func _add_insight(page: Control) -> void:
 	var rules := ScoreRules.load_rules()
 	if flow.profile == SliceProfile.SLICE or rules.insight_ladder.is_empty():
 		return
-	_insight = insight_panel(_r, rules, flow.meta.insight)
+	_insight = insight_panel(_r, rules, flow.meta.insight, flow.tech_target_line())
 	page.add_child(_place(_insight, INSIGHT_AT, Vector2(INSIGHT_W, 0)))
 
 
@@ -287,7 +287,8 @@ const INSIGHT_PAD_X := 26
 const INSIGHT_PAD_Y := 16
 
 
-static func insight_panel(r: RunResult, rules: ScoreRules, balance: int) -> PanelContainer:
+## [param target] = 追踪的科技还差什么（[method GameFlow.tech_target_line]；空 = 不写）
+static func insight_panel(r: RunResult, rules: ScoreRules, balance: int, target: String = "") -> PanelContainer:
 	# 羊皮纸条默认没有内边距（左右是毛边）：字要离开毛边（测试 v6.20～v6.26：英文大字的第一个字母压在毛边外）
 	var box := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, INSIGHT_PAD_X, INSIGHT_PAD_Y, INSIGHT_PAD_X, INSIGHT_PAD_Y)
 	box.name = "Insight"
@@ -304,6 +305,10 @@ static func insight_panel(r: RunResult, rules: ScoreRules, balance: int) -> Pane
 	col.add_child(UiTheme.make_wrapped(UiText.t("result.insight_gap") % gap if gap > 0 else UiText.t("result.insight_all"),
 		15, LedgerView.INK_DIM, INSIGHT_W - 2.0 * INSIGHT_PAD_X))
 	col.add_child(UiTheme.make_label(UiText.t("result.insight_balance") % balance, 17, LedgerView.INK_LABEL))
+	if target != "":     # 319 D：追踪的科技
+		var t := UiTheme.make_wrapped(target, 15, LedgerView.INK_LABEL, INSIGHT_W - 2.0 * INSIGHT_PAD_X)
+		t.name = "Target"
+		col.add_child(t)
 	return box
 
 

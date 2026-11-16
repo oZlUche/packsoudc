@@ -605,6 +605,9 @@ func _adopt() -> void:
 			_hud_host.notice(UiText.t("notice.expelled"), true)
 			_view.current_id = to
 			_after_move())
+	_run.events.bounty_given.connect(func(_n: MapNode, id: StringName, type: StringName):     # 319 D：额外奖励从哪来
+		var def := _run.items.get_def(id) if _run.items != null else null
+		_hud_host.notice(UiText.t("notice.bounty_boss" if type == &"core" else "notice.bounty_elite") % (Names.of(def) if def != null else String(id))))
 	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色。直接接侵蚀场
 	var field := _run.travel.erosion
 	if field != null:

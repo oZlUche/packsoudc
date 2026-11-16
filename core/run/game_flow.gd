@@ -738,6 +738,21 @@ func upgrade_tech(id: StringName) -> bool:
 	return ok
 
 
+## 319 D：追踪一项科技（再点同一项 = 取消；空 = 取消）。没这项返回 false
+func track_tech(id: StringName) -> bool:
+	if id != &"" and tech_of(id) == null:
+		return false
+	meta.tracked_tech = &"" if id == meta.tracked_tech else id
+	save_meta()
+	meta.changed.emit()
+	return true
+
+
+## 319 D：结算小纸上那一行「目标：……还差……」；没追踪 / 满级 = 空
+func tech_target_line() -> String:
+	return TechTarget.line(meta, tech_defs, items, TechTarget.search_kinds(chapters))
+
+
 ## 251：升的 / 改的是集市 —— 立刻重新上货（多出来的格马上有东西；改回 0 级就清空）
 func _facility_changed(id: StringName) -> void:
 	var def := tech_of(id)

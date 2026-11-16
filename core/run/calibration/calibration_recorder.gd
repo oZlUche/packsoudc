@@ -87,6 +87,8 @@ func record_run(result: RunResult, run: RunState) -> bool:
 	row["version"] = version()
 	row["character"] = String(run.character_id) if run != null else ""
 	row["difficulty"] = String(run.difficulty_id) if run != null else ""
+	if run != null and not run.meta_buffs.is_empty():     # 319：局外科技快照（这一局冻结的局外 buff）
+		row["meta_buffs"] = run.meta_buffs.map(func(b: StringName) -> String: return String(b))
 	row[ExperimentManifest.K_RUN] = run.run_id if run != null else ""
 	ExperimentManifest.stamp(row, current_source())
 	DirAccess.make_dir_recursive_absolute(faith_dir())     # 作者 10-26：信力记录也进「导出平衡数据」的包（结算页单独的导出键删了）

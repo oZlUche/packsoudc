@@ -37,6 +37,8 @@ var _level: Label
 var _effect: VBoxContainer
 var _cost: VBoxContainer
 var _action: Button
+## 319 D：【追踪】/【取消追踪】（选中的那项；满级不摆）
+var _track: Button
 ## 226 批一：最近一句回话（回话本身走告示卷轴；测试读 [method line_text]）
 var _last_said := ""
 var _selected: StringName = &""
@@ -132,9 +134,15 @@ func _build() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(spacer)
+	var keys := UiTheme.hbox(8)
+	keys.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(keys)
 	_action = UiTheme.make_home_button("", func(): upgrade(_selected), true)     # 乙 石刻：升级 = 主档木牌
 	_action.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(_action)
+	keys.add_child(_action)
+	_track = UiTheme.make_home_button("", func(): track(_selected), false, Vector2.ZERO, 16)     # 319 D：追踪 = 次档木牌
+	_track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	keys.add_child(_track)
 
 
 #region 公开动作
@@ -190,6 +198,16 @@ func upgrade(id: StringName) -> bool:
 		_say(UiText.t("tech.lit_up") % Names.of(def) if def.max_level() <= 1 else UiText.t("tech.leveled_up") % [Names.of(def), TechService.level(_meta, id)])
 		changed.emit()
 	return ok
+
+
+## 319 D：追踪 / 取消追踪这一项（结算小纸写还差什么）
+func track(id: StringName) -> bool:
+	return _flow.track_tech(id)
+
+
+## 【追踪】按钮（测试看）；不摆 null
+func track_button() -> Button:
+	return _track if _track.visible else null
 
 
 ## 【点亮 / 升级】按钮 —— 只有选中的那个节点有（测试看）；不是选中的 null
@@ -263,7 +281,10 @@ func _refresh() -> void:
 		_name.text = ""
 		_level.text = ""
 		_action.visible = false
+		_track.visible = false
 		return
+	_track.visible = TechService.next_tier(_meta, def) != null
+	_track.text = UiText.t("tech.untrack") if _meta.tracked_tech == def.id else UiText.t("tech.track")
 	var lv := TechService.level(_meta, def.id)
 	var tier := TechService.next_tier(_meta, def)
 	_name.text = Names.of(def)

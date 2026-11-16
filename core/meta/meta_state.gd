@@ -118,6 +118,8 @@ var insight_spent: int = 0
 var settled_runs: Array[String] = []
 ## 319：存档迁移做过的事（版本、退了什么），一版一条，只记不用
 var migration_log: Array[Dictionary] = []
+## 319 D：追踪的那一项科技（科技页【追踪】；结算小纸写「还差什么」）。没追踪 = 空
+var tracked_tech: StringName = &""
 var _next_uid: int = 1
 
 
@@ -836,6 +838,7 @@ func to_dict() -> Dictionary:
 		"insight": insight, "insight_earned": insight_earned, "insight_spent": insight_spent,     # 319
 		"settled_runs": settled_runs.duplicate(),
 		"migration_log": migration_log.duplicate(true),
+		"tracked_tech": String(tracked_tech),     # 319 D
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -963,6 +966,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 			m.migration_log.append(MapGraph.normalize(row))
 	m._claim_refund(d.get("migration_refund", {}), items, report)
 	m.market_stall = StringName(String(d.get("market_stall", "")))
+	m.tracked_tech = StringName(String(d.get("tracked_tech", "")))     # 319 D
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
 	if said is Dictionary:
 		for k in said:
