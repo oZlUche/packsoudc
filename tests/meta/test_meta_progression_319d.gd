@@ -103,3 +103,33 @@ static func run_bench_smoke(t: TestCase) -> void:
 	t.eq([again["score"], again["steps"]], [rows[0]["score"], rows[0]["steps"]], "同种子同分同步数")
 	var md := InsightBench.markdown(InsightBench.summarize(rows), [])
 	t.check(md.contains("| rush |") and md.contains("| explore |"), "汇总表两组都在")
+
+
+static func frame_bounty_notice_on_loot(t: TestCase, root: Window) -> void:
+	t.begin("319 D · 额外奖励的告示：打赢那一刻不说（战斗屏还在播），打开那一堆战利品时说，说完清掉")
+	var db := T110._db()
+	var enemies := EnemyDatabase.new()
+	enemies.load_all()
+	var sets := SetDatabase.new()
+	sets.load_dir()
+	var chapter: ChapterDef = load(ContentPaths.asset_file("chapters", "free_mode"))
+	var f := GameFlow.new(db, enemies, sets, MetaState.new())
+	var run := RunState.start(chapter, 1, db, enemies, sets, [] as Array[StringName])
+	t.not_null(run, "开得了局")
+	if run == null:
+		return
+	f.run = run
+	run.events.bounty_given.emit(null, &"ration", &"elite")
+	t.eq(run.pending_bounty.size(), 1, "记下了，没说")
+	var box := GridInventory.new(Vector2i(4, 4), 99)
+	run.pending_loot = box
+	var screen = load("res://ui/game/container_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	screen.screen = GameFlow.Screen.LOOT
+	root.add_child(screen)
+	screen.open({})
+	t.eq(screen.bounty_told(), 1, "打开战利品屏：说了一句")
+	t.check(run.pending_bounty.is_empty(), "说完清掉")
+	screen.queue_free()
+	run.dispose()

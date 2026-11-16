@@ -59,6 +59,7 @@ var _player_frame: NinePatchRect
 var _extras: Array[TextureRect] = []
 ## 267：材料节点的搜索屏，收获框左上角一枚段头签写节点种类（矿脉 / 林地 / 遗骸 / 符文堆）；普通搜索点没有
 var kind_tag: HeaderTag = null
+var _bounty_told := 0
 
 
 func open(payload: Dictionary) -> void:
@@ -78,6 +79,8 @@ func open(payload: Dictionary) -> void:
 	panel.add_child(_stage)
 
 	_boss = _session == null and flow.run != null and flow.run.boss_cleared
+	if _session == null and flow.run != null and _container == flow.run.pending_loot:
+		_tell_bounty()
 	var chest := _session != null and NodeEvents.effective_type(_session.node) == &"chest"     # 154：宝箱开锁后的那一次搜索
 	_kind = frame_kind_of(_session != null, chest, ChestPlacer.rarity_of(_session.node) if chest else 0, _boss)
 	_loot_frame = _nine(_kind)
@@ -415,3 +418,17 @@ func _on_container_changed() -> void:
 func _refresh() -> void:
 	if _loot != null and _container != null and _loot.inventory != _container:
 		_loot.inventory = _container
+
+
+## 319 D：这堆战利品里有科技额外奖励的话，打开时告示一句来源（打赢那一刻不说：战斗屏还在播，会提前剧透胜负）
+func _tell_bounty() -> void:
+	_bounty_told = flow.run.pending_bounty.size()
+	for b in flow.run.pending_bounty:
+		var def := flow.run.items.get_def(b["id"]) if flow.run.items != null else null
+		NoticeLayer.post(self, UiText.t("notice.bounty_boss" if b["type"] == &"core" else "notice.bounty_elite") % (Names.of(def) if def != null else String(b["id"])))
+	flow.run.pending_bounty.clear()
+
+
+## 319 D：最近一次 [method _tell_bounty] 说了几句（测试看）
+func bounty_told() -> int:
+	return _bounty_told
