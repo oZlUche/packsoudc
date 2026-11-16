@@ -128,6 +128,8 @@ var end_reason: StringName = &""
 var boss_cleared: bool = false
 ## 等着拾取的容器（尸体 / 搜索收获）；null = 没有
 var pending_loot: GridInventory = null
+## 319 D：这一堆战利品里科技额外奖励的那几件 [{id, type}]（战利品屏打开时告示来源，然后清掉）；不入档
+var pending_bounty: Array[Dictionary] = []
 ## 173：读档时的修复报告（[RunSave.from_text] 给的；模块安置放不回原位的道具也记在这里）。null = 不记
 var repair: SaveReport = null
 ## 159：搜索收获箱里哪件算「亮过」（uid → bool）—— 走开时开着的搜索只落亮过的，没亮的算没搜到（下次回来再搜还能亮）。
@@ -1100,6 +1102,7 @@ func _wire_events() -> void:
 	events.storage = storage
 	events.hooks = hooks
 	events.counted.connect(func(key: String, n: int) -> void: tally[key] = int(tally.get(key, 0)) + n)     # 319
+	events.bounty_given.connect(func(_n: MapNode, id: StringName, type: StringName) -> void: pending_bounty.append({"id": id, "type": type}))     # 319 D
 	# 骨架接自己的那几条（模块与机制各接自己的，见 RunHooks.NAMES）
 	hooks.register(&"player_spec", compile_player)
 	hooks.register(&"loot_context", _loot_context)
