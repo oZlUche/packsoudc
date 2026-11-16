@@ -31,6 +31,10 @@ var elite_won: int = 0
 var boss_won: int = 0
 var searches: int = 0
 var crafts: int = 0
+## 319：机制科技的实际效果 —— 额外奖励掉了几件、换货几次（花了多少）；都是 0 的不进对局记录
+var bounty: int = 0
+var shop_refreshes: int = 0
+var shop_refresh_coins: int = 0
 ## 305：这一局学到的（[member RunState.lore]），局终并进局外
 var lore: Lore = null
 ## 撤离时剩多少钱（战败为 0：钱也没了）
@@ -71,8 +75,25 @@ var erosion_cleared: int = 0
 static func settle(state: RunState) -> RunResult:
 	if state == null or not state.is_over():
 		return null
+	var r := _count(state, state.phase == RunState.Phase.EXTRACTED)
+	if r.outcome == &"extracted":
+		r.erosion_cleared = ItemErosion.clear_all(r.carried) + ItemErosion.clear_all(r.safe_items)     # 320 A9：正常撤离，带出来的幸存道具侵蚀清零；战败不清
+	r.compute_score()
+	return r
+
+
+## 319 D：没结束的一局「要是现在撤离」（[param extracted] = false：现在倒下）能拿多少分（校准台用）；不动局面
+static func estimate(state: RunState, extracted: bool = true) -> RunResult:
+	if state == null:
+		return null
+	var r := _count(state, extracted)
+	r.compute_score()
+	return r
+
+
+static func _count(state: RunState, extracted: bool) -> RunResult:
 	var r := RunResult.new()
-	r.outcome = &"extracted" if state.phase == RunState.Phase.EXTRACTED else &"defeated"
+	r.outcome = &"extracted" if extracted else &"defeated"
 	r.reason = state.end_reason
 	r.run_seed = state.run_seed
 	r.run_id = state.run_id
@@ -90,6 +111,9 @@ static func settle(state: RunState) -> RunResult:
 	r.boss_won = int(state.tally.get("boss_won", 0))
 	r.searches = int(state.tally.get("searches", 0))
 	r.crafts = int(state.tally.get("crafts", 0))
+	r.bounty = int(state.tally.get("bounty", 0))     # 319
+	r.shop_refreshes = int(state.tally.get("shop_refresh", 0))
+	r.shop_refresh_coins = int(state.tally.get("shop_refresh_coins", 0))
 	r.lore = state.lore
 	r.board_size = state.board.size if state.board != null else Vector2i.ZERO
 	r.boss_cleared = state.boss_cleared
@@ -120,9 +144,6 @@ static func settle(state: RunState) -> RunResult:
 				r.safe_value += ItemValue.of(item.def)
 				r.safe_net += ItemValue.net_in(item, null)     # 319
 			r.safe_layout.append({"def": item.def, "origin": item.origin, "rotation": item.rotation})
-	if r.outcome == &"extracted":
-		r.erosion_cleared = ItemErosion.clear_all(r.carried) + ItemErosion.clear_all(r.safe_items)     # 320 A9：正常撤离，带出来的幸存道具侵蚀清零；战败不清
-	r.compute_score()
 	return r
 
 
@@ -166,7 +187,7 @@ func to_dict() -> Dictionary:
 	var ids: Array = []
 	for inst in carried:
 		ids.append(String(inst.def.id))
-	return {
+	var d := {
 		"outcome": String(outcome), "reason": String(reason), "seed": run_seed, "chapter": String(chapter_id),
 		"steps": steps, "visited": visited, "battles_won": battles_won, "battles_lost": battles_lost,
 		"balance": balance, "value": value, "items": ids,
@@ -176,6 +197,12 @@ func to_dict() -> Dictionary:
 		"faith": faith_top, "score": score, "score_parts": score_parts.duplicate(),
 		"score_v": ScoreRules.load_rules().version, "insight": insight, "run_id": run_id,     # 319
 	}
+	if bounty > 0:
+		d["bounty"] = bounty
+	if shop_refreshes > 0:
+		d["shop_refreshes"] = shop_refreshes
+		d["shop_refresh_coins"] = shop_refresh_coins
+	return d
 
 
 ## 「走过的点」= 这一局到过的不同点（出生点算），按 [member MapTravel.history] 数（测试报告 G02，2026-11-10）。

@@ -26,6 +26,8 @@ signal dealt(got: Array, gave: Array, paid: int, change: int)
 ## 160 补一：随身技能进了腰带
 signal bought_belt(skill_id: StringName, price: int)
 signal closed()
+## 319：换了一次货（付了 [param price]）
+signal restocked(price: int)
 
 var node: MapNode = null
 var rules: EconomyRules = null
@@ -392,6 +394,7 @@ func refresh() -> bool:
 		return false
 	board.end_batch()
 	refreshed += 1
+	restocked.emit(refresh_price())
 	_commit_owned()
 	_persist()
 	table_changed.emit()

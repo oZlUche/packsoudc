@@ -1099,6 +1099,7 @@ func _wire_events() -> void:
 	events.board = board
 	events.storage = storage
 	events.hooks = hooks
+	events.counted.connect(func(key: String, n: int) -> void: tally[key] = int(tally.get(key, 0)) + n)     # 319
 	# 骨架接自己的那几条（模块与机制各接自己的，见 RunHooks.NAMES）
 	hooks.register(&"player_spec", compile_player)
 	hooks.register(&"loot_context", _loot_context)
