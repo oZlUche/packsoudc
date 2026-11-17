@@ -500,8 +500,12 @@ func release() -> void:
 		return
 	_held = false
 	_pause_reaction_label(false)
-	if _resume_after_hold and _result != null and _cursor < _result.log.size():
-		_playing = true
+	if _resume_after_hold and _result != null:
+		if _cursor < _result.log.size():
+			_playing = true
+		else:
+			# 秒杀没有回放事件；入场动画暂停后仍须结束，否则永远没有「继续」。
+			_finish()
 	_resume_after_hold = false
 	_sync_buttons()
 

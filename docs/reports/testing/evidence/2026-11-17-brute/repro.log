@@ -1,0 +1,18 @@
+Fontconfig error: No writable cache directories
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+Fontconfig error: No writable cache directories
+只跑含「smite_replay」的套件：1 个
+
+======================================================
+通过  6 项断言，1 个套件，耗时 4345 ms
+======================================================
+WARNING: 13412 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 3980 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools11BucketSmallE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: 136 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.
+ERROR: 50 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 7 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.
