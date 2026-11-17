@@ -1,0 +1,77 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+只跑含「battle」的套件：40 个
+WARNING: DamageTypes: 未登记的伤害类型 'typo_here'，按常规结算
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] get_def (res://core/battle/damage/damage_types.gd:122)
+         [1] run (res://tests/battle/test_damage_pipeline.gd:97)
+         [2] _initialize (res://tests/run_tests.gd:107)
+WARNING: BattleContext: 伤害结算嵌套超过 4 层，本层不再派发受伤前效果
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] dispatch_before_damage (res://core/battle/battle_context.gd:215)
+         [1] resolve (res://core/battle/damage/damage_resolver.gd:53)
+         [2] deal (res://core/battle/effects/deal_damage.gd:100)
+         [3] apply (res://core/battle/effects/deal_damage.gd:47)
+         [4] _settle (res://core/battle/rule_engine.gd:121)
+         [5] evaluate (res://core/battle/rule_engine.gd:82)
+         [6] dispatch (res://core/battle/rule_engine.gd:51)
+         [7] dispatch_before_damage (res://core/battle/battle_context.gd:229)
+         [8] resolve (res://core/battle/damage/damage_resolver.gd:53)
+         [9] deal (res://core/battle/effects/deal_damage.gd:100)
+         [10] apply (res://core/battle/effects/deal_damage.gd:47)
+         [11] _settle (res://core/battle/rule_engine.gd:121)
+         [12] evaluate (res://core/battle/rule_engine.gd:82)
+         [13] dispatch (res://core/battle/rule_engine.gd:51)
+         [14] dispatch_before_damage (res://core/battle/battle_context.gd:229)
+         [15] resolve (res://core/battle/damage/damage_resolver.gd:53)
+         [16] deal (res://core/battle/effects/deal_damage.gd:100)
+         [17] apply (res://core/battle/effects/deal_damage.gd:47)
+         [18] _settle (res://core/battle/rule_engine.gd:121)
+         [19] evaluate (res://core/battle/rule_engine.gd:82)
+         [20] dispatch (res://core/battle/rule_engine.gd:51)
+         [21] dispatch_before_damage (res://core/battle/battle_context.gd:229)
+         [22] resolve (res://core/battle/damage/damage_resolver.gd:53)
+         [23] deal (res://core/battle/effects/deal_damage.gd:100)
+         [24] apply (res://core/battle/effects/deal_damage.gd:47)
+         [25] _settle (res://core/battle/rule_engine.gd:121)
+         [26] evaluate (res://core/battle/rule_engine.gd:82)
+         [27] dispatch (res://core/battle/rule_engine.gd:51)
+         [28] dispatch_before_damage (res://core/battle/battle_context.gd:229)
+         [29] resolve (res://core/battle/damage/damage_resolver.gd:53)
+         [30] deal (res://core/battle/effects/deal_damage.gd:100)
+         [31] apply (res://core/battle/effects/deal_damage.gd:47)
+         [32] _settle (res://core/battle/rule_engine.gd:121)
+         [33] evaluate (res://core/battle/rule_engine.gd:82)
+         [34] dispatch (res://core/battle/rule_engine.gd:51)
+         [35] drain (res://core/battle/battle_context.gd:179)
+         [36] _start (res://tests/battle/test_damage_pipeline.gd:10)
+         [37] run_nesting_guard (res://tests/battle/test_damage_pipeline.gd:333)
+         [38] _initialize (res://tests/run_tests.gd:107)
+WARNING: BattleContext: 单帧连锁派发超过 1 条，已截断
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] drain (res://core/battle/battle_context.gd:176)
+         [1] run_chain_and_guard (res://tests/battle/test_effect_system.gd:493)
+         [2] _initialize (res://tests/run_tests.gd:107)
+WARNING: SetDatabase: id 重复 'scavenger'，保留先登记的那条
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] register (res://core/sets/set_database.gd:24)
+         [1] run (res://tests/battle/test_sets.gd:77)
+         [2] _initialize (res://tests/run_tests.gd:107)
+
+======================================================
+通过  2713 项断言，40 个套件，耗时 80637 ms
+======================================================
+WARNING: 79632 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4479 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools11BucketSmallE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit.
+ERROR: 205 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.
+ERROR: 150 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 7 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.
