@@ -82,7 +82,7 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 			t.check(not TextTemplate.plain((opt as EventOption).label, TextTemplate.option_context(ctx, opt)).contains("{"), "%s 选项没漏换" % id)
 		for digits in ["三秒一下", "二十多点", "十二点", "六秒一次", "输两场"]:
 			t.check(not def.text.contains(digits), "%s 不再写死「%s」" % [id, digits])
-	t.eq(n, 37, "三张序章 37 条事件都查了（113 加了序章三的 12 条）")
+	t.eq(n, 38, "三张序章 38 条事件都查了（113 加了序章三的 12 条；D3 加了休息点 tut_rest）")
 	for cid in ["prologue", "prologue_2", "prologue_3"]:
 		t.check((load(ContentPaths.asset_file("chapters", cid)) as ChapterDef).rules.is_empty(), "220：%s 没有规则卡" % cid)
 	var glass := load(ContentPaths.asset_file("chapters", "clockwork_hourglass")) as ChapterDef
@@ -157,7 +157,7 @@ static func run_tutorial_events_english(t: TestCase) -> void:
 			UiText.lang = "zh"
 			if han.search(shown) != null or shown.contains("{"):
 				bad.append(where + "：渲染后还有汉字或记号（%s）" % shown.left(40))
-	t.eq(n, 38, "37 条序章事件 + 交代")
+	t.eq(n, 39, "38 条序章事件 + 交代")
 	t.eq(bad, [] as Array[String], "都齐")
 	var intro := defs[&"tut_intro"] as EventDef
 	UiText.lang = "en"

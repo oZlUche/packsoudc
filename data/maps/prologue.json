@@ -98,16 +98,32 @@
 			}
 		},
 		{
+			"id": 6,
+			"type": "rest",
+			"danger": 0,
+			"zone": 0,
+			"tier": 3,
+			"erosion_band": 0,
+			"content_seed": 7,
+			"content": {
+				"event": "tut_rest"
+			},
+			"state": 0,
+			"layout": {
+				"col": 3
+			}
+		},
+		{
 			"id": 3,
 			"type": "search",
 			"danger": 1,
 			"zone": 0,
-			"tier": 3,
+			"tier": 4,
 			"erosion_band": 0,
 			"content_seed": 4,
 			"state": 0,
 			"layout": {
-				"col": 3
+				"col": 4
 			},
 			"content": {
 				"event": "tut_search_2",
@@ -173,12 +189,12 @@
 			"type": "elite",
 			"danger": 1,
 			"zone": 0,
-			"tier": 4,
+			"tier": 5,
 			"erosion_band": 0,
 			"content_seed": 5,
 			"state": 0,
 			"layout": {
-				"col": 4
+				"col": 5
 			},
 			"content": {
 				"event": "tut_elite",
@@ -233,12 +249,12 @@
 			"type": "extract",
 			"danger": 0,
 			"zone": 0,
-			"tier": 5,
+			"tier": 6,
 			"erosion_band": 0,
 			"content_seed": 6,
 			"state": 0,
 			"layout": {
-				"col": 5
+				"col": 6
 			},
 			"content": {
 				"event": "tut_extract"
@@ -264,6 +280,14 @@
 		},
 		{
 			"from": 2,
+			"to": 6,
+			"directed": false,
+			"kind": "",
+			"action_cost": 1,
+			"layout": {}
+		},
+		{
+			"from": 6,
 			"to": 3,
 			"directed": false,
 			"kind": "",

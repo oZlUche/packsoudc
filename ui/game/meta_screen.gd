@@ -309,6 +309,7 @@ func open(payload: Dictionary) -> void:
 	_refresh()
 	_refresh_shelf_title()
 	layout()
+	_maybe_tour()
 
 
 #region 三列与仓库的大小（164）
@@ -437,6 +438,59 @@ func close_skip_tutorial() -> void:
 	if _skip != null:
 		_skip.queue_free()
 		_skip = null
+#endregion
+
+
+#region 统一教程 D3（方案 §5 B2–B9）：第一段教程打完回基地放一次基地导览（入库、仓库、后勤、书架、出征）；可收起，收起了下次进基地再放
+const BASE_TOUR := &"base_tour"
+var _tour: CoachOverlay = null
+
+
+## 该不该放：第一段是打完的（跳过的不放）、这个存档没看过
+func tour_due() -> bool:
+	return TutorialRewards.state_of(flow.meta, &"prologue") == TutorialRewards.COMPLETED and CoachOverlay.due(flow, BASE_TOUR)
+
+
+## 这一回的步骤：没有带回来的东西就不教入库；这一档没有的页签不提
+func tour_steps() -> Array:
+	return CoachOverlay.load_steps(BASE_TOUR).filter(func(s: Dictionary) -> bool:
+		var target := String(s.get("target", ""))
+		if target == "warehouse_page":
+			return flow.meta.has_pending_board()
+		if target.begins_with("tab_"):
+			return _tab_btns.has(target.trim_prefix("tab_"))
+		return true)
+
+
+func _maybe_tour() -> void:
+	if tour_due() and is_inside_tree():
+		get_tree().process_frame.connect(show_tour, CONNECT_ONE_SHOT)     # 等一帧，页签和木牌摆好了再挖洞
+
+
+func show_tour() -> bool:
+	if _tour != null or not is_inside_tree():
+		return false
+	_tour = CoachOverlay.run_steps(self, BASE_TOUR, tour_steps(), flow, font, tour_rect)
+	if _tour == null:
+		return false
+	_tour.z_index = 20     # 压在跳过确认页上面
+	_tour.closed.connect(func(): _tour = null)
+	return true
+
+
+func tour() -> CoachOverlay:
+	return _tour
+
+
+## 导览目标的全局矩形
+func tour_rect(id: StringName) -> Rect2:
+	var c: Control = null
+	match String(id):
+		"warehouse_page": c = _wh_page
+		_:
+			if String(id).begins_with("tab_"):
+				c = _tab_btns.get(String(id).trim_prefix("tab_"))
+	return c.get_global_rect() if c != null and is_instance_valid(c) and c.is_visible_in_tree() else Rect2()
 #endregion
 
 
