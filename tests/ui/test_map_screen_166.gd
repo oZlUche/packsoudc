@@ -152,7 +152,7 @@ static func run_coach_data(t: TestCase) -> void:
 
 
 static func frame_coach_overlay(t: TestCase, root: Window) -> void:
-	t.begin("166 · 教程遮罩：目标外扩 8 挖洞；箭头从洞外指向洞；点一下下一步；最后一下收掉、发完成")
+	t.begin("166 · 教程遮罩：目标外扩 8 挖洞；箭头从洞外指向洞；「知道了」下一步（点阴影不算）；最后一下收掉、发完成")
 	var o := CoachOverlay.new()
 	var target := Rect2(100, 60, 40, 40)
 	o.target_rect = func(id: StringName) -> Rect2: return target if id == &"wallet" else Rect2()
@@ -170,11 +170,13 @@ static func frame_coach_overlay(t: TestCase, root: Window) -> void:
 	click.button_index = MOUSE_BUTTON_LEFT
 	click.pressed = true
 	o._gui_input(click)
-	t.eq(o.index, 1, "点一下：下一步")
+	t.eq(o.index, 0, "统一教程 C：点阴影不算下一步")
+	o.acknowledge()
+	t.eq(o.index, 1, "点「知道了」：下一步")
 	t.eq(o.hole(), Rect2(), "找不到目标：不挖洞")
 	t.eq(o.arrow_ends(), [] as Array[Vector2], "也不画箭头")
 	t.eq(done[0], 0, "还没完")
-	o._gui_input(click)
+	o.acknowledge()
 	t.eq(done[0], 1, "最后一下：发完成")
 	t.check(o.is_queued_for_deletion(), "收掉")
 

@@ -377,11 +377,20 @@ func toggle_pause() -> void:
 	col.add_child(ScrollKey.make(UiText.t("map.pause_encyclopedia"), func(): pause_encyclopedia()))     # 114
 	if _run != null and _run.chapter != null and not _run.chapter.rules.is_empty():
 		col.add_child(ScrollKey.make(UiText.t("map.pause_rules"), func(): show_rules()))     # 091：再看一遍规则卡
+	if not coach_steps().is_empty():
+		col.add_child(ScrollKey.make(UiText.t("map.pause_coach"), replay_map_coach))     # 统一教程 C（方案 §3.6）：重看这一段的地图教程，不改进度和奖励
 	col.add_child(ScrollKey.make(UiText.t("map.pause_main_menu"), func(): flow.save_and_quit()))     # 166：进点自动存档；这里回去之前也静默存一次
 
 
 func pause_open() -> bool:
 	return _pause != null
+
+
+## 暂停菜单「重看教程」：关掉暂停菜单，从头放这一章的地图教程（看过也放）
+func replay_map_coach() -> bool:
+	if _pause != null:
+		toggle_pause()
+	return show_coach(true)
 
 
 ## 090：暂停菜单里的「设置」：设置屏嵌进暂停菜单（它的「返回」回暂停菜单，不回主菜单 —— 一局还在）
@@ -1248,8 +1257,9 @@ func show_coach(replay: bool = false) -> bool:
 	_coach.font = font
 	_coach.target_rect = func(id: StringName) -> Rect2: return _hud_host.rect_of(id)
 	add_child(_coach)
+	_coach.flow = flow
+	_coach.closed.connect(func(): _coach = null)
 	_coach.finished.connect(func():
-		_coach = null
 		if flow.meta != null and not flow.meta.coach_seen.has(String(_run.chapter.coach_for(&"map"))):
 			flow.meta.coach_seen.append(String(_run.chapter.coach_for(&"map")))
 			flow.save_meta())

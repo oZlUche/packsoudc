@@ -286,7 +286,7 @@ func intro_from(prev: Control) -> void:
 	_intro_running = true
 	var pf = prev.call("overlay_frame") if prev.has_method("overlay_frame") else null
 	_fit_duel_panel(pf as Control)     # 两块铜框撑齐：过场里不用缩放
-	_view.hold()
+	_view.hold(BattleView.HOLD_INTRO)
 	var from := Rect2()
 	if prev.has_method("outro"):
 		from = prev.call("outro", true, INTRO_OUT)
@@ -364,12 +364,9 @@ func _end_intro() -> void:
 	if _outgoing != null and is_instance_valid(_outgoing):
 		_outgoing.queue_free()
 	_outgoing = null
-	if _coach != null:
-		return
-	if coach_due():
+	if _coach == null and coach_due():
 		show_coach()     # 166 补充二：教程接着停住回放，一帧都不偷跑
-	else:
-		_view.release()
+	_view.release(BattleView.HOLD_INTRO)     # 统一教程 C：过场只放开自己那一份；教程、反应讲解压着的还停着
 
 
 func _exit_tree() -> void:
@@ -419,16 +416,22 @@ func show_coach() -> bool:
 	_coach = CoachOverlay.new()
 	_coach.font = font
 	_coach.target_rect = _view.control_rect
+	_coach.flow = flow
 	add_child(_coach)
+	_coach.closed.connect(_on_coach_closed)
 	_coach.finished.connect(_on_coach_finished)
 	_coach.start(steps)
 	return true
 
 
-func _on_coach_finished() -> void:
+## 统一教程 C：看完或收起都放开教程压着的那一份
+func _on_coach_closed() -> void:
 	_note(ViewingSession.HINT_END)
 	_coach = null
 	_view.release()
+
+
+func _on_coach_finished() -> void:
 	var id := String(coach_id())
 	if flow.meta != null and not flow.meta.coach_seen.has(id):
 		flow.meta.coach_seen.append(id)
@@ -457,9 +460,10 @@ func _on_moment_held(side: int) -> void:
 	_reaction_wait = &""
 	var def := ReactionResolver.by_id(id)
 	if _coach != null:
-		return     # 别的教程正开着、停着回放：它收掉时会放开
+		_view.release(BattleView.HOLD_REACTION)     # 别的教程正开着、压着回放：这一份先放开，它收掉时才接着放
+		return
 	if def == null:
-		_view.release()
+		_view.release(BattleView.HOLD_REACTION)
 		return
 	var target := "reaction_popup" if _view.control_rect(&"reaction_popup").has_area() else ("buffs_mine" if side == 0 else "buffs_enemy")
 	_note(ViewingSession.HINT, {"id": "reaction:%s" % id})
@@ -467,10 +471,10 @@ func _on_moment_held(side: int) -> void:
 	_coach.font = font
 	_coach.target_rect = _view.control_rect
 	add_child(_coach)
-	_coach.finished.connect(func():
+	_coach.closed.connect(func():
 		_note(ViewingSession.HINT_END)
 		_coach = null
-		_view.release())
+		_view.release(BattleView.HOLD_REACTION))
 	_coach.start([{"target": target, "text": Encyclopedia.reaction_intro(def)}])
 
 

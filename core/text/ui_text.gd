@@ -137,6 +137,7 @@ const TEXT := {
 	"map.pause_settings": {"zh": "设置", "en": "Settings"},
 	"map.pause_encyclopedia": {"zh": "百科", "en": "Encyclopedia"},
 	"map.pause_rules": {"zh": "本图规则", "en": "Map rules"},
+	"map.pause_coach": {"zh": "重看教程", "en": "Replay tutorial"},
 	"map.pause_main_menu": {"zh": "回主菜单", "en": "Main menu"},
 	"map.rules_title": {"zh": "本图规则　%s", "en": "Map rules · %s"},
 	"map.rules_ok": {"zh": "知道了（Esc）", "en": "Got it (Esc)"},
@@ -627,6 +628,9 @@ const TEXT := {
 	"result.insight_gap": {"zh": "还差 %d 分到下一档", "en": "%d more points to the next tier"},
 	"result.insight_all": {"zh": "已完成所有档位", "en": "All tiers reached"},
 	"result.insight_balance": {"zh": "见识余额 %d", "en": "Insight balance %d"},
+	"coach.ok": {"zh": "知道了", "en": "Got it"},
+	"coach.back": {"zh": "上一步", "en": "Back"},
+	"coach.hide": {"zh": "收起", "en": "Hide"},
 	"result.tutorial_reward": {"zh": "教程奖励", "en": "Tutorial reward"},
 	"result.tutorial_pending": {"zh": "仓库放不下 %d 件，先记着，腾出地方就放进去", "en": "%d won't fit in the warehouse yet. They go in once there is room."},
 	"result.store_title": {"zh": "置入仓库", "en": "Into the Warehouse"},     # 228：第二页标题木牌

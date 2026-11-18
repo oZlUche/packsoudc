@@ -438,7 +438,7 @@ func show_coach() -> bool:
 	_coach = CoachOverlay.run_on(self, coach_id(), flow, font, control_rect)
 	if _coach == null:
 		return false
-	_coach.finished.connect(func(): _coach = null)
+	_coach.closed.connect(func(): _coach = null)
 	return true
 
 
