@@ -57,3 +57,22 @@ static func run_tutorial_sources(t: TestCase) -> void:
 	Ids.sort(want)
 	Ids.sort(got)
 	t.eq(got, want, "清单与奖励表一致")
+
+
+static func run_market_level_one(t: TestCase) -> void:
+	t.begin("游戏测试 v6.40 · 切片集市只有 1 级也把清单里的货都摆出来：三张配方的料在固定摊上真买得到")
+	var db := ItemDatabase.new()
+	db.load_dir()
+	var slice := SliceBase.market_rules(Market.load_rules(), SliceProfile.SLICE)
+	var on_shelf: Array[StringName] = []
+	for st in Market.stalls():
+		for id in Market.catalogue(slice, db, st, 1):
+			if not on_shelf.has(id):
+				on_shelf.append(id)
+	for id in SliceBase.ids("market_item_ids"):
+		t.check(on_shelf.has(id), "1 级固定摊摆着 %s" % id)
+	for r in SliceBase.recipes(SmithRecipeDef.load_all(), SliceProfile.SLICE):
+		for id in r.inputs:
+			t.check(on_shelf.has(StringName(String(id))), "%s 的料 %s 1 级就买得到" % [r.id, id])
+	var formal := Market.load_rules()
+	t.check(not Market.catalogue(formal, db, Market.stall(&"goods"), 1).has(&"hardwood_plank"), "正式版 1 级照样按稀有度上限：不摆绿色的硬木板")
