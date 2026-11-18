@@ -142,7 +142,7 @@ const TEXT := {
 	"map.rules_title": {"zh": "本图规则　%s", "en": "Map rules · %s"},
 	"map.rules_ok": {"zh": "知道了（Esc）", "en": "Got it (Esc)"},
 	"tut_ask.title": {"zh": "要带你走一遍吗？", "en": "Want a walkthrough?"},     # 240：开场一问
-	"tut_ask.body": {"zh": "序章三张图手把手教你搜、打、撤。老手可以直接去自由模式，开局那套和两枚护符照样在仓库里等你。", "en": "The three prologue runs teach you to search, fight and get out. If you know the drill, head straight for free mode: the starter kit and both charms will be waiting in your storeroom."},
+	"tut_ask.body": {"zh": "序章三张图手把手教你搜、打、撤，每段打完回基地整理。老手可以跳过：每段的固定奖励（金币和道具）照样补进仓库。", "en": "The three prologue runs teach you to search, fight and get out, with a stop at the base after each. If you know the drill, skip them: each run's fixed reward (coins and items) still goes into your storeroom."},
 	"tut_ask.yes": {"zh": "需要", "en": "Yes"},
 	"tut_ask.no": {"zh": "不需要", "en": "No need"},
 	"map.hunter_loss": {"zh": "　输了会怎样 —— %s", "en": " · If you lose: %s"},
@@ -1391,6 +1391,13 @@ const TEXT := {
 	"meta.new_run": {"zh": "开始探索", "en": "Set out"},     # 264：出征页的主档木牌（原左下「再来一局」）
 	"meta.tab_expedition": {"zh": "出征", "en": "Expedition"},
 	"meta.last_expedition": {"zh": "上回出征", "en": "Last expedition"},
+	"meta.tutorial": {"zh": "教程", "en": "Tutorial"},     # 统一教程 D：出征页的教程木牌
+	"meta.tutorial_step": {"zh": "教程 %d/%d", "en": "Tutorial %d/%d"},
+	"meta.tutorial_skip": {"zh": "跳过剩余教程", "en": "Skip the rest"},
+	"skip_tut.title": {"zh": "跳过剩余教程？", "en": "Skip the rest of the tutorial?"},
+	"skip_tut.body": {"zh": "没打的几段都算通了，每段的固定奖励补进仓库，你留在基地。局里随机掉的东西不补。", "en": "The runs you haven't played count as done. Their fixed rewards go into your storeroom and you stay at the base. Random loot from those runs isn't included."},
+	"skip_tut.yes": {"zh": "跳过", "en": "Skip"},
+	"skip_tut.no": {"zh": "接着学", "en": "Keep learning"},
 	"meta.supplies": {"zh": "军需", "en": "Supplies"},
 	"meta.none_yet": {"zh": "尚无", "en": "None yet"},
 	"meta.supplies_tip": {"zh": "每局开局随身带的，与科技给的局外加成", "en": "Belt skills granted each run, and lasting bonuses from tech"},

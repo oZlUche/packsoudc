@@ -218,6 +218,23 @@ func skip_prologue() -> bool:
 	return save_meta()
 
 
+## 统一教程 D（方案 §8.2）：基地出征页的「跳过剩余教程」—— 和开场一问的【不需要】同一个服务：补上没领的固定奖励、三段都算通了，
+## 留在基地（不开局）。局里不走这里（局内的跳过还是 [method decline_tutorial]）。返回局外存档写成了没有
+func skip_remaining_tutorials() -> bool:
+	if meta == null or run != null or tutorial_gate() == null:
+		return false
+	meta.set_flag(TUTORIAL_ASKED)
+	meta.set_flag(PROLOGUE_SKIPPED)
+	var saved := skip_prologue()
+	show_meta()
+	return saved
+
+
+## 这一段是第几段教程（从 1 数）；不是教程 0
+func tutorial_number(chapter: ChapterDef) -> int:
+	return tutorial_chapters().find(chapter) + 1
+
+
 ## 统一教程 B（方案 §8.2）：跳过之前的清单 —— 还没领的段加起来补多少金币、哪些道具（[method TutorialRewards.preview]）
 func skip_preview() -> Dictionary:
 	return TutorialRewards.preview(meta, tutorial_chapters(), items)

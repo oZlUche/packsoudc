@@ -4,11 +4,13 @@ extends RefCounted
 
 const Records := preload("res://tests/ui/test_records_board_260.gd")
 const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
+const Support := preload("res://tests/run/flow_support.gd")
 
 
 static func _flow() -> GameFlow:
 	var f := Records._flow()
 	f.difficulties = GameFlow.load_difficulties()
+	Support.pass_tutorials(f)     # 统一教程 D：教程没通时这块木牌换成教程木牌（test_unified_tutorial_d）；这里看的是通了之后的样子
 	return f
 
 

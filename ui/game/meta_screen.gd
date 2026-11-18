@@ -257,6 +257,7 @@ func open(payload: Dictionary) -> void:
 	_expedition = ExpeditionBoard.new()
 	board_col.add_child(_expedition)
 	_expedition.setup(flow)
+	_expedition.skip_asked.connect(show_skip_tutorial)     # 统一教程 D
 	_new_run_btn = _expedition.start_btn
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
 	var wh_page := _cloth()
@@ -368,6 +369,56 @@ func _on_pick_refused(item: ItemInstance) -> void:
 
 func expedition_board() -> ExpeditionBoard:
 	return _expedition
+
+
+#region 统一教程 D（方案 §8.2）：跳过剩余教程的确认页 —— 列出要补的金币和道具、去向「基地」；取消什么也不动
+const ResultScreenScript := preload("res://ui/game/result_screen.gd")
+const SKIP_PAPER_PAD := Vector2i(36, 22)
+const SKIP_REWARD_W := 440.0
+var _skip: Control = null
+
+
+func show_skip_tutorial() -> void:
+	if _skip != null or flow.tutorial_gate() == null:
+		return
+	_skip = _shade(0.72, true)
+	_skip.name = "SkipTutorial"
+	_skip.z_index = 10     # 出征页木牌的挂牌 z = 1，确认页要压在它们上面
+	var panel := _modal_panel(UiText.t("skip_tut.title"), 28)
+	_skip.get_child(0).add_child(panel)
+	var col := _vbox(16)
+	panel.content.add_child(col)
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, SKIP_PAPER_PAD.x, SKIP_PAPER_PAD.y, SKIP_PAPER_PAD.x, SKIP_PAPER_PAD.y)
+	col.add_child(paper)
+	paper.add_child(UiTheme.rich_block(520, 16, UiText.t("skip_tut.body")))
+	var pre := flow.skip_preview()
+	var owed := ResultScreenScript.tutorial_reward_panel({"funds": int(pre["funds"]),
+		"items": (pre["items"] as Array).map(func(d: ItemDef) -> String: return String(d.id))}, flow.items)
+	if owed != null:
+		owed.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		owed.custom_minimum_size.x = SKIP_REWARD_W     # 道具图排成一两行，不竖成一长条
+		col.add_child(owed)
+	var keys := _hbox(24)
+	keys.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(keys)
+	keys.add_child(ScrollKey.primary(UiText.t("skip_tut.yes"), confirm_skip_tutorial))
+	keys.add_child(ScrollKey.make(UiText.t("skip_tut.no"), close_skip_tutorial))
+
+
+func skip_tutorial_open() -> bool:
+	return _skip != null
+
+
+func confirm_skip_tutorial() -> void:
+	close_skip_tutorial()
+	flow.skip_remaining_tutorials()     # 内含存局外、回基地（出征页按新进度重摆）
+
+
+func close_skip_tutorial() -> void:
+	if _skip != null:
+		_skip.queue_free()
+		_skip = null
+#endregion
 
 
 ## 按屏幕大小排：右半边占屏宽一半，仓库格子按右半边的宽高取小（40 ～ 80）；带回来的背包与右边同一个格子大小（中列放不下再缩）
