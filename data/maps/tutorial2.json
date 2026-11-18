@@ -181,11 +181,36 @@
       }
     },
     {
+      "id": 9,
+      "type": "shop",
+      "danger": 0,
+      "zone": 0,
+      "tier": 4,
+      "erosion_band": 0,
+      "content_seed": 109,
+      "content": {
+        "event": "tut2_shop",
+        "shop_stock": [
+          "salve",
+          "bandage",
+          "whetstone",
+          "poison_vial",
+          "round_shield",
+          "ration"
+        ]
+      },
+      "state": 0,
+      "layout": {
+        "col": 4,
+        "row": 1
+      }
+    },
+    {
       "id": 5,
       "type": "battle",
       "danger": 0,
       "zone": 0,
-      "tier": 4,
+      "tier": 5,
       "erosion_band": 0,
       "content_seed": 105,
       "content": {
@@ -220,7 +245,7 @@
       },
       "state": 0,
       "layout": {
-        "col": 4,
+        "col": 5,
         "row": 0
       }
     },
@@ -229,7 +254,7 @@
       "type": "battle",
       "danger": 0,
       "zone": 0,
-      "tier": 4,
+      "tier": 5,
       "erosion_band": 0,
       "content_seed": 106,
       "content": {
@@ -264,7 +289,7 @@
       },
       "state": 0,
       "layout": {
-        "col": 4,
+        "col": 5,
         "row": 2
       }
     },
@@ -273,7 +298,7 @@
       "type": "event",
       "danger": 0,
       "zone": 0,
-      "tier": 5,
+      "tier": 6,
       "erosion_band": 0,
       "content_seed": 107,
       "content": {
@@ -281,7 +306,7 @@
       },
       "state": 0,
       "layout": {
-        "col": 5,
+        "col": 6,
         "row": 1
       }
     },
@@ -290,7 +315,7 @@
       "type": "extract",
       "danger": 0,
       "zone": 0,
-      "tier": 6,
+      "tier": 7,
       "erosion_band": 0,
       "content_seed": 108,
       "content": {
@@ -298,7 +323,7 @@
       },
       "state": 0,
       "layout": {
-        "col": 6,
+        "col": 7,
         "row": 1
       }
     }
@@ -346,6 +371,14 @@
     },
     {
       "from": 4,
+      "to": 9,
+      "directed": false,
+      "kind": "",
+      "action_cost": 1,
+      "layout": {}
+    },
+    {
+      "from": 9,
       "to": 5,
       "directed": false,
       "kind": "",
@@ -353,7 +386,7 @@
       "layout": {}
     },
     {
-      "from": 4,
+      "from": 9,
       "to": 6,
       "directed": false,
       "kind": "",

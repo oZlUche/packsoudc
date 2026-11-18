@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_cjvjr"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_qe6u6"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_shop.gd" id="3_co8io"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_fw4jc"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_vlxru"]
+
+[sub_resource type="Resource" id="Resource_d283t"]
+script = ExtResource("3_co8io")
+
+[sub_resource type="Resource" id="Resource_y5cok"]
+script = ExtResource("1_cjvjr")
+label = "进去看看"
+labels = {
+"en": "Have a look"
+}
+outcomes = Array[ExtResource("2_qe6u6")]([SubResource("Resource_d283t")])
+
+[sub_resource type="Resource" id="Resource_e4fr8"]
+script = ExtResource("1_cjvjr")
+label = "不进"
+labels = {
+"en": "Pass"
+}
+
+[resource]
+script = ExtResource("5_vlxru")
+id = &"tut2_shop"
+title = "商店"
+titles = {
+"en": "Shop"
+}
+text = "路边一个商人。
+
+这里的买卖用的是{b}这一趟{/b}带着的金币和东西，和基地集市不是一回事。东西放上秤只是在谈价，按【成交】才算数；钱不够就点自己的钱袋补差价，你卖得多，商人会找钱；不想要了拿回来就行。
+
+买不买随你，后面的路不靠这里。"
+texts = {
+"en": "A merchant by the road.
+
+Trades here use the gold and gear you carry {b}this run{/b}. That's separate from the Market at base. Putting things on the scale is just haggling; nothing changes hands until you press [Deal]. Short on gold? Click your pouch to cover the gap. Sell more than you buy and the merchant gives change. Changed your mind? Take it back.
+
+Buying is optional. Nothing ahead depends on it."
+}
+options = Array[ExtResource("1_cjvjr")]([SubResource("Resource_y5cok"), SubResource("Resource_e4fr8")])
