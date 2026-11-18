@@ -53,3 +53,40 @@ static func frame_second_step(t: TestCase, root: Window) -> void:
 	t.eq(int(f.skip_preview()["funds"]), 350, "跳过补 350")
 	s.queue_free()
 	W178._cleanup()
+
+
+static func frame_skip_after_first_run(t: TestCase, root: Window) -> void:
+	t.begin("游戏测试 v6.38 · 打完第一段、结算后直接回基地点跳过：照样跳（打完的那一局不算在局里）；跳过后出征页和碑当场换新")
+	var c := TestSupport.load_content("prologue", ["characters", "events", "faiths", "loadouts", "meta_rules"])
+	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new(c.meta_rules))
+	f.meta_rules = c.meta_rules
+	f.chapters = GameFlow.load_chapters()
+	f.characters = c.characters
+	f.event_defs = c.events
+	f.loadouts = c.loadouts
+	f.tech_defs = GameFlow.load_techs()
+	f.save_path = "user://test_unified_d_run.json"
+	f.meta_path = W178.META
+	f.settings_path = W178.SETTINGS
+	f.new_run()
+	t.check(f.run != null and f.choose_event(0), "开了第一段、过了开场")
+	if f.run == null:
+		return
+	f.run.travel.start_at(f.run.map.goal_ids[0])
+	t.check(f.extract(), "撤离")
+	f.finish_result()
+	t.eq(f.screen, GameFlow.Screen.META, "回基地")
+	t.check(f.run != null and not f.in_run(), "打完的那一局还留着，但不算在局里")
+	var funds := f.meta.funds
+	var s: Control = W178._screen(f, root)
+	t.eq(s.expedition_board().tutorial_plate.find_children("*", "Label", true, false).filter(func(l: Label) -> bool: return l.text == UiText.t("meta.tutorial_step") % [2, 3]).size(), 1, "木牌写着第二段")
+	s.show_skip_tutorial()
+	s.confirm_skip_tutorial()
+	t.check(f.tutorials_done(), "跳过成了：三段都通了")
+	t.eq(f.meta.funds, funds + 350, "补了剩下两段的 350")
+	t.check(s.expedition_board().tutorial_plate == null and s.expedition_board().last_plate != null, "出征页当场换回上回出征")
+	t.check(s.expedition_board().skip_btn == null, "跳过键没了")
+	s.queue_free()
+	if FileAccess.file_exists(f.save_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(f.save_path))
+	W178._cleanup()
