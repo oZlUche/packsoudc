@@ -373,37 +373,13 @@ func expedition_board() -> ExpeditionBoard:
 
 
 #region 统一教程 D（方案 §8.2）：跳过剩余教程的确认页 —— 列出要补的金币和道具、去向「基地」；取消什么也不动
-const ResultScreenScript := preload("res://ui/game/result_screen.gd")
-const SKIP_PAPER_PAD := Vector2i(36, 22)
-const SKIP_REWARD_W := 440.0
 var _skip: Control = null
 
 
 func show_skip_tutorial() -> void:
 	if _skip != null or flow.tutorial_gate() == null:
 		return
-	_skip = _shade(0.72, true)
-	_skip.name = "SkipTutorial"
-	_skip.z_index = 10     # 出征页木牌的挂牌 z = 1，确认页要压在它们上面
-	var panel := _modal_panel(UiText.t("skip_tut.title"), 28)
-	_skip.get_child(0).add_child(panel)
-	var col := _vbox(16)
-	panel.content.add_child(col)
-	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, SKIP_PAPER_PAD.x, SKIP_PAPER_PAD.y, SKIP_PAPER_PAD.x, SKIP_PAPER_PAD.y)
-	col.add_child(paper)
-	paper.add_child(UiTheme.rich_block(520, 16, UiText.t("skip_tut.body")))
-	var pre := flow.skip_preview()
-	var owed := ResultScreenScript.tutorial_reward_panel({"funds": int(pre["funds"]),
-		"items": (pre["items"] as Array).map(func(d: ItemDef) -> String: return String(d.id))}, flow.items)
-	if owed != null:
-		owed.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		owed.custom_minimum_size.x = SKIP_REWARD_W     # 道具图排成一两行，不竖成一长条
-		col.add_child(owed)
-	var keys := _hbox(24)
-	keys.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_child(keys)
-	keys.add_child(ScrollKey.primary(UiText.t("skip_tut.yes"), confirm_skip_tutorial))
-	keys.add_child(ScrollKey.make(UiText.t("skip_tut.no"), close_skip_tutorial))
+	_skip = skip_tutorial_page(confirm_skip_tutorial, close_skip_tutorial)
 
 
 func skip_tutorial_open() -> bool:
@@ -1314,7 +1290,7 @@ func _swap_backdrop(art_name: String) -> void:
 	top.modulate.a = 0.0
 	_home_bg.get_parent().add_child(top)
 	_bg_fade = top
-	var tw := create_tween()
+	var tw := top.create_tween()     # 游戏测试 v6.43：连切页签时上一张还在淡入就被换掉 —— 补间绑在它身上，跟着它一起停，回调不碰已释放的 top
 	tw.tween_property(top, "modulate:a", 1.0, SCENE_FADE)
 	tw.tween_callback(func():
 		_home_bg.texture = tex

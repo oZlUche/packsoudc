@@ -138,6 +138,7 @@ const TEXT := {
 	"map.pause_encyclopedia": {"zh": "百科", "en": "Encyclopedia"},
 	"map.pause_rules": {"zh": "本图规则", "en": "Map rules"},
 	"map.pause_coach": {"zh": "重看教程", "en": "Replay tutorial"},
+	"map.pause_skip_tutorial": {"zh": "跳过剩余教程", "en": "Skip the rest of the tutorial"},     # 统一教程 F（方案 §8.2）
 	"map.pause_main_menu": {"zh": "回主菜单", "en": "Main menu"},
 	"map.rules_title": {"zh": "本图规则　%s", "en": "Map rules · %s"},
 	"map.rules_ok": {"zh": "知道了（Esc）", "en": "Got it (Esc)"},
@@ -1394,10 +1395,12 @@ const TEXT := {
 	"meta.tutorial": {"zh": "教程", "en": "Tutorial"},     # 统一教程 D：出征页的教程木牌
 	"meta.tutorial_step": {"zh": "教程 %d/%d", "en": "Tutorial %d/%d"},
 	"meta.tutorial_skip": {"zh": "跳过剩余教程", "en": "Skip the rest"},
+	"meta.tutorial_try": {"zh": "体验统一教程", "en": "Try the tutorial"},     # 统一教程 F：切片老档
 	"skip_tut.title": {"zh": "跳过剩余教程？", "en": "Skip the rest of the tutorial?"},
 	"skip_tut.body": {"zh": "没打的几段都算通了，每段的固定奖励补进仓库，你留在基地。局里随机掉的东西不补。", "en": "The runs you haven't played count as done. Their fixed rewards go into your storeroom and you stay at the base. Random loot from those runs isn't included."},
 	"skip_tut.yes": {"zh": "跳过", "en": "Skip"},
 	"skip_tut.no": {"zh": "接着学", "en": "Keep learning"},
+	"skip_tut.in_run": {"zh": "这一局身上的东西不会带出来，直接回基地。", "en": "Nothing you carry in this run comes out with you. You go straight to base."},
 	"meta.supplies": {"zh": "军需", "en": "Supplies"},
 	"meta.none_yet": {"zh": "尚无", "en": "None yet"},
 	"meta.supplies_tip": {"zh": "每局开局随身带的，与科技给的局外加成", "en": "Belt skills granted each run, and lasting bonuses from tech"},

@@ -49,6 +49,8 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	else:
 		last_plate = _plate(LAST_H, "meta.last_expedition")
 		_fill_last(_col(last_plate))
+		if flow.legacy_tutorial() != null:
+			_fill_try(_col(last_plate))
 	supply_plate = _plate(SUPPLY_H, "meta.supplies")
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -102,6 +104,22 @@ func _fill_tutorial(col: VBoxContainer, nxt: ChapterDef) -> void:
 	skip_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	skip_btn.pressed.connect(func(): skip_asked.emit())
 	col.add_child(skip_btn)
+
+
+## 统一教程 F：切片老档在「上回出征」右下多一个「体验统一教程」（[method GameFlow.try_tutorial]）
+var try_btn: Button = null
+
+
+func _fill_try(col: VBoxContainer) -> void:
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(spacer)
+	try_btn = UiTheme.flat_key(UiText.t("meta.tutorial_try"), Color(0, 0, 0, 0), UiTheme.INK, SKIP_HOVER, UiTheme.INK, SKIP_SIZE, 15)
+	try_btn.name = "TryTutorial"
+	try_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
+	try_btn.pressed.connect(func(): flow.try_tutorial())
+	col.add_child(try_btn)
 
 
 const SKIP_SIZE := Vector2(150, 32)

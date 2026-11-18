@@ -274,6 +274,21 @@ func _open_legacy_slice() -> void:
 	meta.set_flag(TUTORIAL_ASKED)
 
 
+## 统一教程 F（方案 §12.1）：切片老档的「体验统一教程」—— 不锁出战，但最早一段没通的教程照样能打（打完照账本领固定奖励）；不是老档 / 都通了返回 null
+func legacy_tutorial() -> ChapterDef:
+	return next_tutorial() if meta != null and meta.flag(SLICE_LEGACY) != 0 else null
+
+
+## 开 [method legacy_tutorial] 那一段（和出征一样直接进，不经开局屏）
+func try_tutorial() -> bool:
+	var c := legacy_tutorial()
+	if c == null:
+		return false
+	grant_first_kit()
+	save_meta()
+	return begin_direct(c) != null
+
+
 ## 240：问过要不要教程的局外旗标（一份存档只问一次）
 const TUTORIAL_ASKED := &"tutorial_asked"
 ## 测试报告 G04（作者 2026-11-10 选「单独开头」）：开场一问选了【不需要】—— 出发交代换成 `<交代>_skipped` 那一版（有的话）
