@@ -132,7 +132,7 @@ static func run_data(t: TestCase) -> void:
 	for n in path:
 		types.append(n.type)
 		t.check(g.edges_of(n.id).size() <= 2, "点 %d 最多两条边（一条路）" % n.id)
-	t.eq(types, [&"spawn", &"search", &"battle", &"search", &"elite", &"extract"], "顺序：生 → 搜 → 战 → 搜 → 精 → 撤")
+	t.eq(types, [&"spawn", &"search", &"battle", &"rest", &"search", &"elite", &"extract"], "顺序：生 → 搜 → 战 → 歇 → 搜 → 精 → 撤（D3 首战后加一个休息点）")
 	t.eq(g.entry_ids, [path[0].id] as Array[int], "出生点是第一个")
 	t.eq(g.goal_ids, [path[-1].id] as Array[int], "终点是撤离点")
 	for i in range(1, path.size()):
@@ -152,7 +152,7 @@ static func run_data(t: TestCase) -> void:
 					t.not_null(c.items.get_def(StringName(String(id))), "固定收获 %s 存在" % id)
 	# 第一个搜索点：两次、必不遇敌；第二个：三次、至少三次、第三次必遇敌、遭遇写死
 	var s1 := path[1].content
-	var s2 := path[3].content
+	var s2 := path[4].content
 	t.eq(int(s1.get("search_max", 0)), 2, "第一个搜索点搜两次")
 	var all_zero := true
 	for v in s1.get("search_curve", [1.0]):
@@ -182,7 +182,7 @@ static func run_data(t: TestCase) -> void:
 	t.check(curve.size() == 3 and float(curve[2]) >= 1.0 and float(curve[0]) == 0.0 and float(curve[1]) == 0.0, "第三次必遇敌、前两次不遇")
 	t.check(s2.has("encounter") and EnemyKit.has_enemy(s2["encounter"]), "遭遇写死了")
 	# 打得赢：用教程里到那一步为止搜到的东西对着每个敌人模拟几个种子
-	var fights := [[path[2].content, 1], [s2["encounter"], 2], [path[4].content, 3]]     # 遭遇那一次什么都翻不到：只带到第二个点的收获
+	var fights := [[path[2].content, 1], [s2["encounter"], 2], [path[5].content, 3]]     # 遭遇那一次什么都翻不到：只带到第二个点的收获
 	for f in fights:
 		var me := _player(c, _finds_until(path, int(f[1])))
 		var foe := EnemyKit.spec_of(f[0], c.enemies, null, c.items)
@@ -272,8 +272,15 @@ static func _walk(t: TestCase, p_seed: int) -> void:
 	s.take_all_loot()
 	for inst in s.storage.items().duplicate():
 		s.equip((inst as ItemInstance).uid)
+	# D3 休息点：先讲体力，满体力选「不用歇」也算过
+	t.check(s.step_to(path[3].id), "走到休息点")
+	ev = s.events.pending_event()
+	t.check(ev != null and ev.id == &"tut_rest", "休息点的教程事件")
+	t.eq(ev.options.size() if ev != null else 0, 3, "歇一下、多歇一会、不用歇")
+	t.check(s.events.choose(2), "满体力：不用歇，接着走")
+	t.is_null(s.events.pending_event(), "事件关了")
 	# 搜索点 2
-	t.check(s.step_to(path[3].id), "走到第二个搜索点")
+	t.check(s.step_to(path[4].id), "走到第二个搜索点")
 	t.check(s.events.choose(0), "选「搜索」：第一次")
 	session = s.events.current_search
 	t.eq(session.searches_done, 1, "搜了一次")
@@ -282,9 +289,9 @@ static func _walk(t: TestCase, p_seed: int) -> void:
 	t.eq(session.searches_done, 2, "搜了两次")
 	t.check(s.events.pause_search() and s.events.pending_event().id == &"tut_search_2_again_2", "关闭 → 「包装不下了」")
 	t.check(s.events.choose(0), "再搜一次：第三次")
-	t.eq(session.encounter, path[3].content["encounter"], "第三次遭遇 = 写死的那个")
+	t.eq(session.encounter, path[4].content["encounter"], "第三次遭遇 = 写死的那个")
 	var expect_found := 0
-	for round_ in path[3].content["search_finds"]:
+	for round_ in path[4].content["search_finds"]:
 		expect_found += (round_ as Array).size()
 	t.eq(session.found.size(), expect_found, "遭遇那一次什么都没翻到（前两次共 %d 件）" % expect_found)
 	t.check(not session.active, "会话结束（遭遇）")
@@ -297,14 +304,14 @@ static func _walk(t: TestCase, p_seed: int) -> void:
 	# 091（作者定）：打赢了会话接着开、还能再搜 —— 回到「再搜 / 走」那一屏（这里是教程的第二段 again 事件，搜满则是 done）
 	ev = s.events.pending_event()
 	t.check(ev != null and (ev.id == &"tut_search_2_again_2" or ev.id == &"search_done"), "打完回到「再搜 / 走」那一屏（%s）" % (String(ev.id) if ev != null else "?"))
-	t.check(s.events.current_search == session and session.active and not path[3].is_visited(), "会话接着开、点还没用过（还能搜）")
+	t.check(s.events.current_search == session and session.active and not path[4].is_visited(), "会话接着开、点还没用过（还能搜）")
 	var leave_at := 0
 	if ev != null:
 		for i in ev.options.size():
 			if (ev.options[i] as EventOption).label == "离开":
 				leave_at = i
 	t.check(s.events.choose(leave_at), "离开")
-	t.check(s.events.current_search == null and path[3].is_visited(), "走了：会话收了、点用过了")
+	t.check(s.events.current_search == null and path[4].is_visited(), "走了：会话收了、点用过了")
 	t.not_null(s.pending_loot, "战利品（敌人掉的 + 前两次的收获）")
 	var got_bag := false
 	if s.pending_loot != null:
@@ -321,7 +328,7 @@ static func _walk(t: TestCase, p_seed: int) -> void:
 	else:
 		t.check(true, "（有放不下的，留在地上，走了就没）")
 	# 精英（114 / 310）：先把毒药瓶贴着匕首点锤合成涂毒匕首，门才开
-	t.check(s.step_to(path[4].id), "走到精英")
+	t.check(s.step_to(path[5].id), "走到精英")
 	ev = s.events.pending_event()
 	t.check(ev != null and ev.id == &"tut_elite", "精英的教程事件")
 	t.check(not bool(s.events.option_state(0)["ok"]), "还没合成：「进入战前准备」灰着")
@@ -379,9 +386,9 @@ static func _walk(t: TestCase, p_seed: int) -> void:
 	if s.pending_loot != null:
 		s.take_all_loot()
 	# 撤离
-	t.check(s.step_to(path[5].id), "走到撤离点")
+	t.check(s.step_to(path[6].id), "走到撤离点")
 	ev = s.events.pending_event()
-	t.check(ev != null and ev.id == StringName(String(path[5].content["event"])), "撤离的教程事件")
+	t.check(ev != null and ev.id == StringName(String(path[6].content["event"])), "撤离的教程事件")
 	t.eq(NodeEvents.effective_type(s.current_node()), &"extract", "站在撤离点上")
 	t.check((ev.options[0] as EventOption).label == "撤离", "对话里第一项就是「撤离」（085）")
 	t.check(s.events.choose(0), "选「撤离」")
@@ -405,12 +412,12 @@ static func run_crafting_gate(t: TestCase) -> void:
 	var g := c.prologue.map_source.resolve(1)
 	var path := _path(g)
 	t.eq(path[2].content.get("guaranteed_drops", []), ["knife"], "拾荒者必掉匕首")
-	t.check((path[3].content["search_finds"][0] as Array).has("poison_vial"), "第一次搜到毒药瓶")
+	t.check((path[4].content["search_finds"][0] as Array).has("poison_vial"), "第一次搜到毒药瓶")
 	t.check(c.prologue.rules.is_empty(), "220：序章一的规则卡删了")
 	var s := _start(c)
 	t.check(_find(s, &"knife") == null and s.storage.item_count() == 0, "开局只有包")
 	# 直接站到精英点上看门（没匕首、没毒药瓶）
-	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
+	s.events.pending = {"node": path[5].id, "event": "tut_elite", "type": "elite"}
 	t.check(not bool(s.events.option_state(0)["ok"]), "没有涂毒匕首：进不去")
 	t.check(bool(s.events.option_state(1)["ok"]), "也没有匕首：退路「直接准备战斗」能选")
 	s.board.try_add(ItemInstance.create(c.items.get_def(&"knife")), true)
@@ -433,7 +440,7 @@ static func run_old_save_knife_once(t: TestCase) -> void:
 	s.board.try_add(brute, true)
 	var vial := ItemInstance.create(c.items.get_def(&"poison_vial"))
 	s.board.try_add(vial, true)
-	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
+	s.events.pending = {"node": path[5].id, "event": "tut_elite", "type": "elite"}
 	t.check(not bool(s.events.option_state(1)["ok"]), "赐福匕首 + 毒药凑得齐：跳过藏起来，要先合成")
 	t.check(not bool(s.events.option_state(2)["ok"]), "手里有赐福匕首：不补发普通匕首")
 	t.check(not bool(s.events.option_state(0)["ok"]), "还没合：正门关着")
@@ -451,7 +458,7 @@ static func run_old_save_knife_once(t: TestCase) -> void:
 	t.check(s.events.choose(2), "选补领")
 	t.not_null(_find(s, &"knife"), "拿到一把普通匕首")
 	t.eq(s.meta.flag(&"tut_knife_given"), 1, "记了领过")
-	s.events.pending = {"node": path[4].id, "event": "tut_elite", "type": "elite"}
+	s.events.pending = {"node": path[5].id, "event": "tut_elite", "type": "elite"}
 	t.check(not bool(s.events.option_state(2)["ok"]), "手里有普通匕首：不再给")
 	var k := _find(s, &"knife")
 	if s.board.items().has(k):

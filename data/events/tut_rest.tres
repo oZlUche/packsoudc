@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_me00x"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_hjp4g"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="3_fv63k"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="4_02ugp"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="5_50pkw"]
+[ext_resource type="Script" path="res://core/run/events/conditions/rest_part_unused.gd" id="6_umau0"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="7_fbxi1"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="8_ojfq4"]
+
+[sub_resource type="Resource" id="Resource_lhuw2"]
+script = ExtResource("3_fv63k")
+
+[sub_resource type="Resource" id="Resource_qskq6"]
+script = ExtResource("4_02ugp")
+
+[sub_resource type="Resource" id="Resource_tgmi6"]
+script = ExtResource("6_umau0")
+
+[sub_resource type="Resource" id="Resource_21fqe"]
+script = ExtResource("1_me00x")
+label = "倒计时 −{pass_time_actions}，回 {rest_restore} 点体力"
+labels = {
+"en": "Countdown −{pass_time_actions}, restore {rest_restore} Vitality"
+}
+hide_when_locked = true
+requires = Array[ExtResource("5_50pkw")]([SubResource("Resource_tgmi6")])
+outcomes = Array[ExtResource("2_hjp4g")]([SubResource("Resource_lhuw2"), SubResource("Resource_qskq6")])
+
+[sub_resource type="Resource" id="Resource_33kpn"]
+script = ExtResource("3_fv63k")
+actions = 2
+
+[sub_resource type="Resource" id="Resource_xbwqp"]
+script = ExtResource("4_02ugp")
+
+[sub_resource type="Resource" id="Resource_ns5k5"]
+script = ExtResource("7_fbxi1")
+
+[sub_resource type="Resource" id="Resource_8yo7m"]
+script = ExtResource("6_umau0")
+
+[sub_resource type="Resource" id="Resource_1jtu5"]
+script = ExtResource("1_me00x")
+label = "倒计时 −{pass_time_actions}，回 {rest_total} 点体力"
+labels = {
+"en": "Countdown −{pass_time_actions}, restore {rest_total} Vitality"
+}
+hide_when_locked = true
+requires = Array[ExtResource("5_50pkw")]([SubResource("Resource_8yo7m")])
+outcomes = Array[ExtResource("2_hjp4g")]([SubResource("Resource_33kpn"), SubResource("Resource_xbwqp"), SubResource("Resource_ns5k5")])
+
+[sub_resource type="Resource" id="Resource_qvuvw"]
+script = ExtResource("1_me00x")
+label = "不用歇，接着走"
+labels = {
+"en": "No need, keep going"
+}
+
+[resource]
+script = ExtResource("8_ojfq4")
+id = &"tut_rest"
+title = "休息点"
+titles = {
+"en": "Rest Spot"
+}
+text = "一处能歇脚的地方。
+
+这里回的是{b}体力{/b}：战斗输了扣体力，扣光这一趟就算失败。你现在有 {vitality} 点。歇脚要让倒计时往前走，每个休息点只能歇一次。
+
+生命和耐力不用歇，每场战斗开打都是满的。体力满着就接着走。"
+texts = {
+"en": "A place to catch your breath.
+
+Resting restores {b}Vitality{/b}: you lose Vitality when you lose a fight, and at zero the run fails. You have {vitality} now. Resting moves the countdown forward, and each rest spot works once.
+
+Health and Stamina don't need rest: every fight starts with them full. If your Vitality is full, keep going."
+}
+options = Array[ExtResource("1_me00x")]([SubResource("Resource_21fqe"), SubResource("Resource_1jtu5"), SubResource("Resource_qvuvw")])
+scene = &"rest_camp"

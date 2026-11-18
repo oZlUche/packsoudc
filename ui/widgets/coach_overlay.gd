@@ -60,7 +60,11 @@ static func due(p_flow: GameFlow, id: StringName) -> bool:
 
 ## 218 补充一：在 [param host] 上铺满放 [param id] 这份教程，走完记进 [member MetaState.coach_seen]、存局外。没有步骤返回 null
 static func run_on(host: Control, id: StringName, p_flow: GameFlow, p_font: Font, p_target_rect: Callable) -> CoachOverlay:
-	var p_steps := load_steps(id)
+	return run_steps(host, id, load_steps(id), p_flow, p_font, p_target_rect)
+
+
+## 同 [method run_on]，步骤由调用方挑过（统一教程 D3 基地导览：没带东西回来就不教入库）
+static func run_steps(host: Control, id: StringName, p_steps: Array, p_flow: GameFlow, p_font: Font, p_target_rect: Callable) -> CoachOverlay:
 	if p_steps.is_empty() or host == null:
 		return null
 	var o := CoachOverlay.new()
