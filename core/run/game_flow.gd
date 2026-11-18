@@ -146,6 +146,7 @@ func use_slot(n: int) -> void:
 	_repair_text = ""
 	var loaded := opened["meta"] as MetaState
 	meta = loaded if loaded != null else MetaState.new(meta_rules)
+	_open_legacy_slice()
 	derive_techs()
 	_reset_run()
 	if settings != null and settings.save_slot != n:
@@ -160,11 +161,12 @@ func profile_exists() -> bool:
 	return has_save() or continue_target() != null
 
 
-## 主菜单「继续」：读当前位接着玩 —— 有局内存档读档；教程打到中途开下一张；都没有就进基地（089 补充二）
+## 主菜单「继续」：读当前位接着玩 —— 有局内存档读档；没有就进基地（089 补充二）。
+## 统一教程（方案 2026-11-18 §8.1）：教程打到中途也只进基地，下一段由玩家在出征页点出战
 func continue_game() -> bool:
 	if newer_slot > 0:
 		return false
-	if has_save() or continue_target() != null:
+	if has_save():
 		return continue_run()
 	if not profile_exists():
 		return false
@@ -221,6 +223,21 @@ func skip_prologue() -> void:
 	save_meta()
 
 
+## 统一教程（方案 2026-11-18 §12.1）：切片以前没有教程，玩过切片的老档不能因为加了教程就把常规出战锁上 ——
+## 没问过教程、出过远征的切片档补上第三段的解锁（只开常规图，不发教程奖励、不算跳过），第一段教程仍列着可以体验
+const SLICE_LEGACY := &"slice_legacy_open"
+
+
+func _open_legacy_slice() -> void:
+	if meta == null or profile != SliceProfile.SLICE or meta.runs <= 0 or meta.flag(TUTORIAL_ASKED) != 0 or meta.flag(SLICE_LEGACY) != 0:
+		return
+	for c in tutorial_chapters():
+		if c.grants_unlock != &"" and c.next_chapter == &"":
+			meta.grant_unlock(c.grants_unlock)
+	meta.set_flag(SLICE_LEGACY)
+	meta.set_flag(TUTORIAL_ASKED)
+
+
 ## 240：问过要不要教程的局外旗标（一份存档只问一次）
 const TUTORIAL_ASKED := &"tutorial_asked"
 ## 测试报告 G04（作者 2026-11-10 选「单独开头」）：开场一问选了【不需要】—— 出发交代换成 `<交代>_skipped` 那一版（有的话）
@@ -245,7 +262,7 @@ func accept_tutorial() -> void:
 
 
 ## 240：开场一问选【不需要】—— 记下问过、补上三张序章留下的东西（[method skip_prologue]），这一局悄悄结束
-## （不进结算、不记场次，局内存档删掉），再开新的一局：教程全通了，落到开局屏
+## （不进结算、不记场次，局内存档删掉）。统一教程（方案 §8.2）：之后回基地，不再直接开下一局
 func decline_tutorial() -> void:
 	if meta == null:
 		return
@@ -256,7 +273,7 @@ func decline_tutorial() -> void:
 		RunSave.remove(save_path)
 	_reset_run()
 	run_changed.emit(null)
-	new_run()
+	show_meta()
 
 
 ## 读第 n 位：切过去，然后和「继续」一样。空位返回 false
@@ -304,20 +321,20 @@ func new_run() -> void:
 
 
 ## 「新的一局」会直接开哪一章（不经开局屏）；会走开局屏时返回 null。
-## 作者定（085）：**新的一局 = 从头开始**。教程（带 `hidden_by_unlock` 的章）还没全通就从第一张教程开，不管前面几张通没通 ——
-## 接着往下打的是「继续」（[method continue_target]）。教程全通了就看还能选的：只剩一章又 skip_setup 才直接开，否则开局屏
+## 统一教程（方案 2026-11-18 §8.1）：教程（带 `hidden_by_unlock` 的章）还没全通，就开**最早一张没通的**（[method next_tutorial]）——
+## 同一份存档出战不再回第一段。教程全通了就看还能选的：只剩一章又 skip_setup 才直接开，否则开局屏
 func new_run_target() -> ChapterDef:
-	var tuts := tutorial_chapters()
-	if not tuts.is_empty() and not tutorials_done():
-		return tuts[0]
+	var nxt := tutorial_gate()
+	if nxt != null:
+		return nxt
 	var chs := available_chapters()
 	if chs.size() == 1 and chs[0].skip_setup:
 		return chs[0]
 	return null
 
 
-## 「继续」会直接开哪一章：有局内存档时是 null（那是读档，不是开新章）；教程打到中途（有通关的、还有没通关的）
-## 就是下一张没通关的教程；别的情况 null。主菜单：有存档或这里非 null 才显示「继续」，和「新的一局」并列
+## 教程打到中途（有通关的、还有没通关的）时的下一张没通关的教程；有局内存档、没打过、全通了都是 null。
+## 只用来判断这一位「有没有进度」（主菜单显示「继续」）；统一教程起「继续」不再直接开它，进基地由玩家出战
 func continue_target() -> ChapterDef:
 	if has_save():
 		return null
@@ -337,7 +354,7 @@ func continue_target() -> ChapterDef:
 	return null
 
 
-## 有存档就读档接着玩；没有就接着打下一张教程（[method continue_target]）。两样都没有返回 false
+## 有存档就读档接着玩；没有返回 false（统一教程：不再顺手开下一张教程）
 func continue_run() -> bool:
 	if newer_slot > 0:
 		return false
@@ -358,12 +375,7 @@ func continue_run() -> bool:
 		_adopt(state)
 		_flush()     # 读档回来：等着选的事件还在这一屏；结束了的直接进结算；否则回地图
 		return true
-	var target := continue_target()
-	if target == null:
-		return false
-	grant_first_kit()
-	save_meta()
-	return begin_direct(target) != null
+	return false
 
 
 ## 173（待定 2 A）：读不回来的那一局作废前，棋盘 / 地上 / 保险箱里的道具放回仓库（钱包随这一局作废），存局外。返回捞了没有
@@ -414,6 +426,27 @@ func tutorial_chapters() -> Array[ChapterDef]:
 ## 内容按 order 再按 id 排（章节、科技、成就都这么排；难度按档位另算）
 static func _by_order(a: Resource, b: Resource) -> bool:
 	return a.order < b.order if a.order != b.order else String(a.id) < String(b.id)
+
+
+## 统一教程：最早一张还没通的教程章；全通了（或没有教程章）null
+func next_tutorial() -> ChapterDef:
+	for c in tutorial_chapters():
+		if not (meta != null and meta.has_unlock(c.hidden_by_unlock)):
+			return c
+	return null
+
+
+## 统一教程：出战被锁在哪一段 —— 最早没通的教程；切片老档（[constant SLICE_LEGACY]）不锁
+func tutorial_gate() -> ChapterDef:
+	if meta != null and meta.flag(SLICE_LEGACY) != 0:
+		return null
+	return next_tutorial()
+
+
+## 统一教程（方案 §8.1）：这一章现在能不能出 —— 教程没全通时只能出最早没通的那一段，别的章（后面的教程、常规图）都不行
+func tutorial_allows(chapter: ChapterDef) -> bool:
+	var nxt := tutorial_gate()
+	return nxt == null or chapter == nxt or not chapters.has(chapter)
 
 
 ## 教程是不是全通了（没有教程章也算全通）
@@ -667,8 +700,12 @@ func available_difficulties() -> Array[DifficultyDef]:
 	return out
 
 
-## 开局屏能列的章节（083）：没有解锁要求的和已解锁的，按 order 再按 id 排。一章都列不出来就全列（解锁 id 写错了不该把游戏锁死）
+## 开局屏能列的章节（083）：没有解锁要求的和已解锁的，按 order 再按 id 排。一章都列不出来就全列（解锁 id 写错了不该把游戏锁死）。
+## 统一教程（方案 §8.1）：教程没全通时只列最早没通的那一段，「全列」的兜底也不绕过它
 func available_chapters() -> Array[ChapterDef]:
+	var nxt := tutorial_gate()
+	if nxt != null:
+		return [nxt] as Array[ChapterDef]
 	var out: Array[ChapterDef] = []
 	for c in chapters:
 		if c.hidden_by_unlock != &"" and meta != null and meta.has_unlock(c.hidden_by_unlock):
@@ -1043,6 +1080,8 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 func start_refusal(chapter: ChapterDef, layout: Array, preset: LoadoutDef) -> String:
 	if chapter == null:
 		return ""
+	if not tutorial_allows(chapter):
+		return "章节 %s 还没开：先完成或跳过教程（下一段 %s）" % [chapter.id, tutorial_gate().id]
 	if preset != null and not presets(chapter).has(preset):
 		return "预设 %s 不属于章节 %s" % [preset.id, chapter.id]
 	if chapter.allow_carry_in or layout.is_empty() or items == null:
@@ -1342,7 +1381,8 @@ func finish_result() -> void:
 	_go(Screen.META, {"result": result})
 
 
-## 085：结算之后该直接进的下一章（撤离成功、这一章配了 next_chapter、它开着）；没有 null
+## 085：这一局之后的下一章（撤离成功、这一章配了 next_chapter、它开着）；没有 null。
+## 统一教程（方案 §2）：只是教程的先后，结算后一律回基地，不再直接开它
 func next_chapter() -> ChapterDef:
 	if result == null or not result.is_extracted() or run == null or run.chapter == null or run.chapter.next_chapter == &"":
 		return null
@@ -1355,22 +1395,6 @@ func next_chapter() -> ChapterDef:
 func chapter_of(id: StringName) -> ChapterDef:
 	var c := _by_id(chapters, id)
 	return (c if c != null else _by_id(chapters, IdAliases.chapter(id))) as ChapterDef     # 114：老存档里的 chapter_01 = free_mode
-
-
-## 085：从结算屏直接进下一张教学图：带回来的先全进仓库（教程不从仓库带东西），再按下一章直接开。开不了回局外
-func start_next_chapter() -> bool:
-	var next := next_chapter()
-	if next == null:
-		finish_result()
-		return false
-	meta.store_all()
-	if meta.board != null:
-		meta.discard_board()
-	save_meta()
-	if begin_direct(next) == null:
-		finish_result()
-		return false
-	return true
 
 
 ## 一局结束了：算账、进 meta（只进一次）、存 meta、删掉这一局的存档。结算屏拿到的已经是记完账的局外
@@ -1877,10 +1901,11 @@ func _go(s: int, payload: Dictionary = {}) -> void:
 ## 资产目录里的全部章节 / 开局装备 / 角色 / 难度 / 成就 / 科技 / 百科页，按文件名（或 order）排序。
 ## 猎手、信仰、配方、局外 buff、事件各自有 `load_all`（HunterSystem / FaithDef / RecipeDef / RunBuffs / EventPlacer），持有方直接调
 ## 313（试玩切片）：只要这一档的章节（[member ChapterDef.profile]）—— 正式版看不到切片章节，切片里只有切片章节
+## 统一教程（方案 2026-11-18 §2）：`shared` 的章（三段教程）两档都列
 static func load_chapters(p_profile: StringName = &"") -> Array[ChapterDef]:
 	var out: Array[ChapterDef] = []
 	for c in ContentPaths.load_typed(ContentPaths.CHAPTERS, ChapterDef):
-		if (c as ChapterDef).profile == p_profile:
+		if (c as ChapterDef).profile == p_profile or (c as ChapterDef).profile == ChapterDef.SHARED:
 			out.append(c)
 	return out
 

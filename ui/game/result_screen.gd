@@ -413,12 +413,9 @@ func store_all() -> Dictionary:
 	return _wh.store_all() if _wh != null else {"moved": 0, "left": 0, "stuck": ""}
 
 
-## 「继续」：有下一张教学图就直接进（085），否则去局外
+## 「继续」：去局外
 func proceed() -> void:
-	if flow.next_chapter() != null:
-		flow.start_next_chapter()
-	else:
-		flow.finish_result()
+	flow.finish_result()     # 统一教程（方案 2026-11-18 §2）：教程段打完也回基地，下一段由玩家出战
 
 
 ## 301：结算页摆不摆信力那一行 —— 开发包、且开发设置「信力记录」开着（默认关）

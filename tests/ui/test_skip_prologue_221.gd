@@ -46,7 +46,7 @@ static func _through_intro(t: TestCase, flow: GameFlow) -> int:
 
 
 static func frame_decline(t: TestCase, root: Window) -> void:
-	t.begin("240 · 开场一问选【不需要】：三个解锁 + 望远镜 + 两枚信物进仓库，这一局悄悄收掉（不记场次、局内存档删掉），落在开局屏；存盘重读还在")
+	t.begin("240 · 开场一问选【不需要】：三个解锁 + 望远镜 + 两枚信物进仓库，这一局悄悄收掉（不记场次、局内存档删掉），回基地；存盘重读还在")
 	var game = _open_game(root)
 	var flow: GameFlow = game.flow
 	var menu = game.base()
@@ -65,7 +65,7 @@ static func frame_decline(t: TestCase, root: Window) -> void:
 	t.is_null(flow.run, "这一局收掉了")
 	t.check(not flow.has_save(), "局内存档删了（「继续」不会回到序章一）")
 	t.eq(flow.meta.runs, runs, "不记场次")
-	t.eq(flow.screen, GameFlow.Screen.SETUP, "落在开局屏")
+	t.eq(flow.screen, GameFlow.Screen.META, "统一教程：跳过后回基地")
 	var ids: Array = flow.available_chapters().map(func(c): return String((c as ChapterDef).id))
 	ids.sort()
 	t.eq(ids, ["clockwork_hourglass", "free_mode"], "能选的恰是自由模式与机关沙漏")

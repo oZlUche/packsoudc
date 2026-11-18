@@ -33,6 +33,7 @@ static func frame_confirm_through_battle(t: TestCase, root: Window) -> void:
 	var flow: GameFlow = game.flow
 	flow.settings.ui_fades = false     # 不演开战过场
 	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
+	Support.pass_tutorials(flow)
 	flow.begin(c.chapter, kit, int(found["seed"]), [] as Array[int], null)
 	var map = game.base()
 	map.pick_spawn(int(found["entry"]))

@@ -270,6 +270,8 @@ static func run_departure_briefing_218(t: TestCase) -> void:
 	f.event_defs = EventPlacer.load_all()
 	f.save_path = SAVE
 	f.meta_path = META
+	f.meta.grant_unlock(&"prologue_done")     # 统一教程：前两段通了才出得了第三段
+	f.meta.grant_unlock(&"prologue2_done")
 	var run := f.begin_direct(c.chapter, 7)
 	t.not_null(run, "开了序章三")
 	if run != null:

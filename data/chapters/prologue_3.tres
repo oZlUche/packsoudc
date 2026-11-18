@@ -17,6 +17,7 @@ display_names = {
 "en": "Prologue III: The Altar"
 }
 map_source = SubResource("Resource_07ocq")
+profile = &"shared"
 drop_rule = &"prologue"
 bag_pool = &""
 node_rules = &"prologue"
