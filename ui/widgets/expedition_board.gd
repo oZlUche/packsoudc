@@ -21,9 +21,15 @@ const TAG_X := 18
 const TAG_RISE := 34.0
 const CHIP_FONT := 15
 
+## 统一教程 D（方案 §8.1 / §8.2）：教程还没全通时点了「跳过剩余教程」（基地弹确认页，[method MetaScreen.show_skip_tutorial]）
+signal skip_asked()
+
 var flow: GameFlow = null
 var start_btn: Button = null
 var last_plate: PanelContainer = null
+## 教程木牌（教程还没全通才有，顶替「上回出征」）
+var tutorial_plate: PanelContainer = null
+var skip_btn: Button = null
 var supply_plate: PanelContainer = null
 ## 「上回出征」三行写的字（测试看）；没出征过是空
 var _last_lines: Array[String] = []
@@ -36,8 +42,13 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	flow = p_flow
 	add_theme_constant_override("separation", 18)
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	last_plate = _plate(LAST_H, "meta.last_expedition")
-	_fill_last(_col(last_plate))
+	var nxt := flow.tutorial_gate()
+	if nxt != null:
+		tutorial_plate = _plate(LAST_H, "meta.tutorial")
+		_fill_tutorial(_col(tutorial_plate), nxt)
+	else:
+		last_plate = _plate(LAST_H, "meta.last_expedition")
+		_fill_last(_col(last_plate))
 	supply_plate = _plate(SUPPLY_H, "meta.supplies")
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -76,6 +87,25 @@ func _chip(text: String) -> PanelContainer:
 	chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	chip.add_child(UiTheme.make_label(text, CHIP_FONT, UiTheme.INK))
 	return chip
+
+
+## 统一教程 D：下一段是哪张图、第几段；右下一个「跳过剩余教程」（点了先弹确认页，不直接跳）
+func _fill_tutorial(col: VBoxContainer, nxt: ChapterDef) -> void:
+	col.add_child(UiTheme.make_label(Names.of(nxt), NAME_FONT, UiTheme.INK))
+	col.add_child(_chip(UiText.t("meta.tutorial_step") % [flow.tutorial_number(nxt), flow.tutorial_chapters().size()]))
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(spacer)
+	skip_btn = UiTheme.flat_key(UiText.t("meta.tutorial_skip"), Color(0, 0, 0, 0), UiTheme.INK, SKIP_HOVER, UiTheme.INK, SKIP_SIZE, 15)
+	skip_btn.name = "SkipTutorial"
+	skip_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
+	skip_btn.pressed.connect(func(): skip_asked.emit())
+	col.add_child(skip_btn)
+
+
+const SKIP_SIZE := Vector2(150, 32)
+const SKIP_HOVER := Color("8a5a2b")
 
 
 ## 上回出征：开局屏出发时记下的角色（[member MetaState.last_character]）与图 / 规模 / 难度旗标（开局屏照这些预选）
