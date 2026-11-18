@@ -120,6 +120,11 @@ var settled_runs: Array[String] = []
 var migration_log: Array[Dictionary] = []
 ## 319 D：追踪的那一项科技（科技页【追踪】；结算小纸写「还差什么」）。没追踪 = 空
 var tracked_tech: StringName = &""
+## 统一教程 B（方案 2026-11-18 §9.2）：教程固定奖励的账本 —— 键 = [method TutorialRewards.key]，值 = {"state", "funds", "items"}；
+## 同一个包只发一次（正常撤离和跳过共用）
+var tutorial_ledger: Dictionary = {}
+## 发到仓库放不下的固定奖励（加了临时页还放不下才会有）：已编了 uid，先存着，回基地时再试着放（[method store_pending]）
+var reward_pending: Array[ItemInstance] = []
 var _next_uid: int = 1
 
 
@@ -161,6 +166,46 @@ func grant(defs: Array) -> int:
 		if warehouse.try_add(inst, true):
 			n += 1
 	warehouse.end_batch()
+	if n > 0:
+		changed.emit()
+	return n
+
+
+## 统一教程 B（方案 §9.2）：不丢东西地发 —— 按页序找空位、再临时加页（[method Warehouse.rescue]）；还放不下的记进
+## [member reward_pending]（不丢、不折钱）。返回 {"stored": 进了仓库几件, "pending": 待入库几件}
+func grant_lossless(defs: Array) -> Dictionary:
+	var out := {"stored": 0, "pending": 0}
+	warehouse.begin_batch()
+	for d in defs:
+		var def := d as ItemDef
+		if not keeps(def):
+			continue
+		var inst := ItemInstance.create(def, 0)
+		inst.uid = allocate_uid()
+		if warehouse.rescue(inst) >= 0:
+			out["stored"] = int(out["stored"]) + 1
+		else:
+			reward_pending.append(inst)
+			out["pending"] = int(out["pending"]) + 1
+	warehouse.end_batch()
+	changed.emit()
+	return out
+
+
+## 待入库的固定奖励再往仓库里放一次（腾出地方之后）。返回这次放进几件
+func store_pending() -> int:
+	if reward_pending.is_empty():
+		return 0
+	var n := 0
+	var left: Array[ItemInstance] = []
+	warehouse.begin_batch()
+	for inst in reward_pending:
+		if warehouse.rescue(inst) >= 0:
+			n += 1
+		else:
+			left.append(inst)
+	warehouse.end_batch()
+	reward_pending = left
 	if n > 0:
 		changed.emit()
 	return n
@@ -839,6 +884,8 @@ func to_dict() -> Dictionary:
 		"settled_runs": settled_runs.duplicate(),
 		"migration_log": migration_log.duplicate(true),
 		"tracked_tech": String(tracked_tech),     # 319 D
+		"tutorial_ledger": tutorial_ledger.duplicate(true),     # 统一教程 B
+		"reward_pending": reward_pending.map(func(i: ItemInstance) -> Dictionary: return i.to_dict()),
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -967,6 +1014,16 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m._claim_refund(d.get("migration_refund", {}), items, report)
 	m.market_stall = StringName(String(d.get("market_stall", "")))
 	m.tracked_tech = StringName(String(d.get("tracked_tech", "")))     # 319 D
+	var ledger = d.get("tutorial_ledger", {})     # 统一教程 B：老档没有 = 一个包都没记（[method GameFlow._migrate_tutorial_ledger] 补历史）
+	if ledger is Dictionary:
+		for k in ledger:
+			if ledger[k] is Dictionary:
+				m.tutorial_ledger[String(k)] = (ledger[k] as Dictionary).duplicate(true)
+	for raw in d.get("reward_pending", []):
+		var inst := ItemInstance.from_dict(raw as Dictionary, items) if raw is Dictionary and items != null else null
+		if inst != null:
+			m.reward_pending.append(inst)
+			m._next_uid = maxi(m._next_uid, inst.uid + 1)
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
 	if said is Dictionary:
 		for k in said:

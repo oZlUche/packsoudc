@@ -627,6 +627,8 @@ const TEXT := {
 	"result.insight_gap": {"zh": "还差 %d 分到下一档", "en": "%d more points to the next tier"},
 	"result.insight_all": {"zh": "已完成所有档位", "en": "All tiers reached"},
 	"result.insight_balance": {"zh": "见识余额 %d", "en": "Insight balance %d"},
+	"result.tutorial_reward": {"zh": "教程奖励", "en": "Tutorial reward"},
+	"result.tutorial_pending": {"zh": "仓库放不下 %d 件，先记着，腾出地方就放进去", "en": "%d won't fit in the warehouse yet. They go in once there is room."},
 	"result.store_title": {"zh": "置入仓库", "en": "Into the Warehouse"},     # 228：第二页标题木牌
 	# —— 224：结算第一页的账单 ——
 	"ledger.visited": {"zh": "走过的点", "en": "Nodes visited"},

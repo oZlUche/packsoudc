@@ -14,6 +14,12 @@
   "node_rules": "prologue",
   "economy_rules": "prologue",
   "grants_unlock": "prologue_done",
+  "tutorial_funds": 100,
+  "tutorial_items": [
+    "knife",
+    "bandage",
+    "salve"
+  ],
   "characters": [
     "brutus"
   ],

@@ -259,27 +259,70 @@ func _build_summary() -> void:
 	page.add_child(_place(_continue, CONTINUE_AT, CONTINUE_SIZE))
 	_continue.disabled = not _ledger.is_revealed()
 	_ledger.revealed.connect(func():
-		if is_instance_valid(_insight):
-			_insight.visible = true
+		if is_instance_valid(_side):
+			_side.visible = true
 		if is_instance_valid(_continue):
 			_continue.disabled = false)
-	if _insight != null:
-		_insight.visible = _ledger.is_revealed()
+	if _side != null:
+		_side.visible = _ledger.is_revealed()
 
 
 ## 319：账单左边一张小纸 —— 这一局领了几点见识、三档各到没有、离下一档还差几分、余额。试玩切片不摆（不发见识）；账单全显了才露
 const INSIGHT_AT := Vector2(96, 210)
 const INSIGHT_W := 240.0
 var _insight: PanelContainer = null
+## 账单左边那一列：见识小纸、教程奖励小纸（统一教程 B）从上往下摆；账单全显了才露
+var _side: VBoxContainer = null
 
 
 func _add_insight(page: Control) -> void:
 	_insight = null
+	_side = UiTheme.vbox(12)
+	_side.name = "Side"
+	_side.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	page.add_child(_place(_side, INSIGHT_AT, Vector2(INSIGHT_W, 0)))
 	var rules := ScoreRules.load_rules()
-	if flow.profile == SliceProfile.SLICE or rules.insight_ladder.is_empty():
-		return
-	_insight = insight_panel(_r, rules, flow.meta.insight, flow.tech_target_line())
-	page.add_child(_place(_insight, INSIGHT_AT, Vector2(INSIGHT_W, 0)))
+	if flow.profile != SliceProfile.SLICE and not rules.insight_ladder.is_empty():
+		_insight = insight_panel(_r, rules, flow.meta.insight, flow.tech_target_line())
+		_side.add_child(_insight)
+	var reward := tutorial_reward_panel(flow.last_tutorial_reward, flow.items)
+	if reward != null:
+		_side.add_child(reward)
+
+
+## 统一教程 B（方案 §9.1）：这一段教程的固定奖励 —— 和账单里的战利品分开摆。金币是一枚金币 + 数，道具只摆图。
+## [param got] = [member GameFlow.last_tutorial_reward]；什么也没发返回 null
+const REWARD_PIC := 40.0
+
+
+static func tutorial_reward_panel(got: Dictionary, items: ItemDatabase) -> PanelContainer:
+	var ids: Array = got.get("items", [])
+	var funds := int(got.get("funds", 0))
+	if funds <= 0 and ids.is_empty():
+		return null
+	var box := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, INSIGHT_PAD_X, INSIGHT_PAD_Y, INSIGHT_PAD_X, INSIGHT_PAD_Y)
+	box.name = "TutorialReward"
+	var col := UiTheme.vbox(6)
+	box.add_child(col)
+	var head := UiTheme.make_label(UiText.t("result.tutorial_reward"), 20, LedgerView.INK_TOTAL)
+	head.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	col.add_child(head)
+	if funds > 0:
+		col.add_child(CoinLabel.make(funds, 20, LedgerView.INK_TOTAL))
+	var row := HFlowContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(row)
+	for id in ids:
+		var def := items.get_def(StringName(String(id))) if items != null else null
+		if def == null:
+			continue
+		var pic := UiTheme.picture(ItemPainter.art_of(def), TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
+		pic.custom_minimum_size = Vector2(REWARD_PIC, REWARD_PIC)
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(pic)
+	if int(got.get("pending", 0)) > 0:
+		col.add_child(UiTheme.make_wrapped(UiText.t("result.tutorial_pending") % int(got["pending"]), 15, LedgerView.INK_DIM, INSIGHT_W - 2.0 * INSIGHT_PAD_X))
+	return box
 
 
 ## 小纸的内容（测试直接造来看）
