@@ -16,6 +16,11 @@
   "order": 1,
   "requires_unlock": "prologue_done",
   "grants_unlock": "prologue2_done",
+  "tutorial_funds": 150,
+  "tutorial_items": [
+    "shortsword",
+    "whetstone"
+  ],
   "characters": [
     "brutus"
   ],

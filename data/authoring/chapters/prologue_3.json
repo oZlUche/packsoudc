@@ -16,6 +16,12 @@
   "order": 2,
   "requires_unlock": "prologue2_done",
   "grants_unlock": "prologue3_done",
+  "tutorial_funds": 200,
+  "tutorial_items": [
+    "charm_brute",
+    "charm_sun"
+  ],
+  "tutorial_items_carried": true,
   "characters": [
     "brutus"
   ],

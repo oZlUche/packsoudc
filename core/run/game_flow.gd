@@ -86,6 +86,8 @@ var run: RunState = null
 var result: RunResult = null
 ## 最近一次进 meta 的账（absorb 的返回：带回几件、值、钱、新点亮几条）
 var last_absorbed: Dictionary = {}
+## 统一教程 B：这一局结算时发的教程固定奖励（[method TutorialRewards.claim] 的返回；没发 = 空），结算屏摆一张小纸
+var last_tutorial_reward: Dictionary = {}
 var screen: int = Screen.MAIN_MENU
 var last_payload: Dictionary = {}
 ## 待拾取里已经在搜索屏亮过的 uid（6.2 的揭示只做一次）。拾取完清空
@@ -147,6 +149,7 @@ func use_slot(n: int) -> void:
 	var loaded := opened["meta"] as MetaState
 	meta = loaded if loaded != null else MetaState.new(meta_rules)
 	_open_legacy_slice()
+	_migrate_tutorial_ledger()
 	derive_techs()
 	_reset_run()
 	if settings != null and settings.save_slot != n:
@@ -198,29 +201,39 @@ func new_game_in(n: int) -> bool:
 	return true
 
 
-## 221 G：跳过序章时补的两枚信物（240：入口从主菜单搬到开场一问的【不需要】）（序章三撤离时随包回仓库的那两枚）
-const SKIP_PROLOGUE_ITEMS: Array[StringName] = [&"charm_brute", &"charm_sun"]
-
-
-## 221 G：把三张序章「打完」留下的东西补进这份局外 —— 各章的 `grants_unlock`、`starting_keepsakes`（望远镜）、两枚信物进仓库，存盘。
-## 不补图鉴、教练看过与否；交代、自由模式教练、反应暂停照旧会来
-func skip_prologue() -> void:
+## 221 G：把三张序章「打完」留下的东西补进这份局外 —— 各章的 `grants_unlock`、`starting_keepsakes`（望远镜），存盘。
+## 统一教程 B（方案 §9）：还没领的固定奖励包按账本补发（[TutorialRewards]；领过的段不再发，金币进余额、道具进仓库）。
+## 不补图鉴、教练看过与否；交代、自由模式教练、反应暂停照旧会来。返回局外存档写成了没有
+func skip_prologue() -> bool:
 	if meta == null:
-		return
-	grant_first_kit()     # 开局那套先进仓库（[method new_run] 见仓库不空就不再发）
+		return false
+	grant_first_kit()
 	for c in tutorial_chapters():
 		if c.grants_unlock != &"":
 			meta.grant_unlock(c.grants_unlock)
 		for id in c.starting_keepsakes:
 			if items != null and items.get_def(id) != null:
 				meta.grant_keepsake(id)
-	var defs: Array = []
-	for id in SKIP_PROLOGUE_ITEMS:
-		var def := items.get_def(id) if items != null else null
-		if def != null:
-			defs.append(def)
-	meta.grant(defs)
-	save_meta()
+		TutorialRewards.claim(meta, c, items, TutorialRewards.SKIPPED)
+	return save_meta()
+
+
+## 统一教程 B（方案 §8.2）：跳过之前的清单 —— 还没领的段加起来补多少金币、哪些道具（[method TutorialRewards.preview]）
+func skip_preview() -> Dictionary:
+	return TutorialRewards.preview(meta, tutorial_chapters(), items)
+
+
+## 统一教程 B（方案 §12.1）：统一教程之前的档 —— 已经打通（或跳过）的段当时按老规矩发过，记成 [constant TutorialRewards.LEGACY]、不补新奖励；
+## 出过远征或仓库里有东西的，开局那套也算领过。新档什么也不记
+func _migrate_tutorial_ledger() -> void:
+	if meta == null:
+		return
+	for c in tutorial_chapters():
+		if c.hidden_by_unlock != &"" and meta.has_unlock(c.hidden_by_unlock):
+			TutorialRewards.mark(meta, c.id, TutorialRewards.LEGACY)
+	if meta.runs > 0 or meta.warehouse.item_count() > 0 or meta.has_pending_board():
+		TutorialRewards.mark(meta, TutorialRewards.START, TutorialRewards.LEGACY)
+	meta.store_pending()
 
 
 ## 统一教程（方案 2026-11-18 §12.1）：切片以前没有教程，玩过切片的老档不能因为加了教程就把常规出战锁上 ——
@@ -268,8 +281,8 @@ func decline_tutorial() -> void:
 		return
 	meta.set_flag(TUTORIAL_ASKED)
 	meta.set_flag(PROLOGUE_SKIPPED)
-	skip_prologue()     # 内含存局外
-	if writable():
+	var saved := skip_prologue()     # 内含存局外
+	if saved and writable():     # 局外存档写成了才删这一局（写不成下次读档还能再跳一次，账本保证不重复发）
 		RunSave.remove(save_path)
 	_reset_run()
 	run_changed.emit(null)
@@ -649,11 +662,15 @@ func mark_rules_seen() -> void:
 #endregion
 
 
-## 仓库空的第一局发第一套（[MetaRules.first_kit]，058 第六节的占位；正式游戏由教程关发）。发了返回件数，否则 0
+## 新档发一次开局那套（[MetaRules.first_kit]）。统一教程 B（方案 §9.1）：记在教程账本上（[constant TutorialRewards.START]），
+## 不再按「仓库空不空」判断 —— 卖空了仓库也不再发第二套；仓库里已经有东西的（老档、测试摆好的）记成领过。发了返回件数，否则 0
 func grant_first_kit() -> int:
 	if meta == null or meta_rules == null or meta_rules.first_kit == &"" or items == null:
 		return 0
+	if TutorialRewards.claimed(meta, TutorialRewards.START):
+		return 0
 	if meta.warehouse.item_count() > 0 or meta.has_pending_board():
+		TutorialRewards.mark(meta, TutorialRewards.START, TutorialRewards.LEGACY)
 		return 0
 	var kit := loadout_of(meta_rules.first_kit)
 	if kit == null:
@@ -663,7 +680,10 @@ func grant_first_kit() -> int:
 		var def := items.get_def(id)
 		if def != null:
 			defs.append(def)
-	return meta.grant(defs)
+	var got := meta.grant_lossless(defs)
+	meta.tutorial_ledger[TutorialRewards.key(TutorialRewards.START)] = {"state": TutorialRewards.COMPLETED, "funds": 0,
+		"items": defs.map(func(d: ItemDef) -> String: return String(d.id))}
+	return int(got["stored"]) + int(got["pending"])
 
 
 func loadout_of(id: StringName) -> LoadoutDef:
@@ -964,6 +984,8 @@ func toggle_unlock(id: StringName) -> bool:
 
 
 func show_meta() -> void:
+	if meta != null and meta.store_pending() > 0:     # 统一教程 B：放不下的教程奖励，腾出地方了就放进去
+		save_meta()
 	_go(Screen.META)
 
 
@@ -1069,6 +1091,8 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	_adopt(state)
 	JimiePath.plant(state)     # 281：局外状态接上了才看得见仓库里有没有那颗元素之核
 	_grant_keepsakes(chapter)
+	if tutorial_chapters().has(chapter):
+		TutorialRewards.mark(meta, chapter.id, TutorialRewards.STARTED)     # 统一教程 B：账本记「打到一半」（跳过时照样补这一段）
 	var reveal := map_reveal
 	map_reveal = {}
 	_go(Screen.MAP, {"reveal": reveal} if not reveal.is_empty() else {})
@@ -1404,6 +1428,7 @@ func _settle_run() -> void:
 	result = RunResult.settle(run)
 	if not _settled:
 		_settled = true
+		last_tutorial_reward = {}
 		# 2026-10-22（作者定）：行囊给的「战败保住几成钱」由 absorb 在战败分支里兑现
 		# 319：见识按总分阶梯发（试玩切片不发）；这一局结算过（重复结算）absorb 什么也不动
 		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0, profile != SliceProfile.SLICE)
@@ -1415,6 +1440,10 @@ func _settle_run() -> void:
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
 			meta.grant_unlock(run.chapter.grants_unlock)
+		# 统一教程 B（方案 §9）：撤离成功的教程段发固定奖励（和跳过同一个账本；这一局带回来的信物抵名额），和局外一起存
+		if result.is_extracted() and run != null and tutorial_chapters().has(run.chapter):
+			last_tutorial_reward = TutorialRewards.claim(meta, run.chapter, items, TutorialRewards.COMPLETED,
+				meta.board.items() if meta.board != null else [])
 		# 241：在这一档难度撤离一次，开下一档
 		if result.is_extracted() and run != null and run.difficulty != null and run.difficulty.grants_unlock != &"":
 			meta.grant_unlock(run.difficulty.grants_unlock)

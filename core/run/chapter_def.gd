@@ -69,7 +69,13 @@ const SHARED := &"shared"
 @export var starting_belt: Array[StringName] = []
 ## 088（作者定）：这一章开局发的**特殊道具**（不进背包，只是文本通知 + 图鉴点亮；序章二发望远镜 → 节点浮窗）。记在局外，以后每一局都有
 @export var starting_keepsakes: Array[StringName] = []
-## 撤离成功之后直接进的下一章（085 作者定：序章撤离后不是再来一局而是下一张教学图）。空 = 照常去局外
+## 统一教程 B（方案 2026-11-18 §9.1）：这一段教程的固定奖励 —— 撤离成功或跳过都发一次（[TutorialRewards]）。金币进局外余额
+@export var tutorial_funds: int = 0
+## 固定奖励的道具 id（写几次发几件），进仓库
+@export var tutorial_items: Array[StringName] = []
+## true = 这一局自己带回来的同名道具抵掉奖励里的名额（序章三途中给的两枚信物：撤离带回了就不再补）
+@export var tutorial_items_carried: bool = false
+## 教程的先后（085；统一教程起结算后一律回基地，不再直接开它）。空 = 最后一段
 @export var next_chapter: StringName = &""
 ## 开局能不能从仓库带东西进来（序章不能：教程从空包开始）
 @export var allow_carry_in: bool = true
