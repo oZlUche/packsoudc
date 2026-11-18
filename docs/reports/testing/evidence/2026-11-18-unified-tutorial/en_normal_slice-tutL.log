@@ -1,0 +1,10 @@
+F644 老档主菜单：「Continue」找到，真点
+F643 基地：档案 slice；下一段 全通；钱 4124；仓库 13 件；待入库 false；场次 3 撤离 2 战败 1；解锁 [&"prologue3_done", &"ach_first_extract"]；看过 []；做过 []；账本 { "1/prologue_3": { "state": "legacy" }, "1/start": { "state": "legacy" } }
+F643 切页、挂机后：屏 META；木牌「None yet / Travel Pack (Tech)」
+F644 「Try the tutorial」键：有；legacy_tutorial prologue
+F644 真点「Try the tutorial」
+F643 结算：prologue 撤离；教程奖励小纸 Tutorial reward / 图 3 张
+F643 基地：档案 slice；下一段 全通；钱 4291；仓库 16 件；待入库 true；场次 4 撤离 3 战败 1；解锁 [&"prologue3_done", &"ach_first_extract", &"prologue_done", &"ach_extract_3", &"ascension_1"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour"]；做过 ["fuse"]；账本 { "1/prologue_3": { "state": "legacy" }, "1/start": { "state": "legacy" }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] } }
+F643 切页、挂机后：屏 META；木牌「None yet / Travel Pack (Tech)」
+F644 「Try the tutorial」键：有；legacy_tutorial prologue_2
+perf_probe 结束：F643 走完（老档体验）（2528 帧，262.6 秒）

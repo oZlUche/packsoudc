@@ -1,0 +1,16 @@
+F643 结算：prologue 撤离；教程奖励小纸 教程奖励 / 图 3 张
+F643 基地：档案 ；下一段 prologue_2；钱 167；仓库 7 件；待入库 true；场次 1 撤离 1 战败 0；解锁 [&"prologue_done", &"ach_first_extract", &"ascension_1"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour"]；做过 ["fuse"]；账本 { "1/start": { "state": "completed", "funds": 0, "items": ["bag_leather", "bag_leather", "shortsword", "salve", "bandage", "ration"] }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] } }
+F643 切页、挂机后：屏 META；木牌「序章二：岔路 / 教程 2/3 / 尚无」
+F644 「体验统一教程」键：没有；legacy_tutorial null
+F643 点【开始探索】开 prologue_2
+F644 第二段地图：按 Esc；能跳 true；钱 167；场次 1
+F644 暂停菜单「跳过剩余教程」：找到，真点
+F644 确认页：开着 true；文字「跳过剩余教程？ / 教程奖励」
+F644 点【接着学】
+F644 取消后：节点 0；；确认页开着 false；屏 MAP；钱 167；场次 1
+F644 暂停菜单「跳过剩余教程」：找到，真点
+F644 点【跳过】找到
+F643 基地：档案 ；下一段 全通；钱 517；仓库 11 件；待入库 false；场次 1 撤离 1 战败 0；解锁 [&"prologue_done", &"ach_first_extract", &"ascension_1", &"prologue2_done", &"prologue3_done"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour"]；做过 ["fuse"]；账本 { "1/start": { "state": "completed", "funds": 0, "items": ["bag_leather", "bag_leather", "shortsword", "salve", "bandage", "ration"] }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] }, "1/prologue_2": { "state": "skipped", "funds": 150, "items": ["shortsword", "whetstone"] }, "1/prologue_3": { "state": "skipped", "funds": 200, "items": ["charm_brute", "charm_sun"] } }
+F643 切页、挂机后：屏 META；木牌「尚无 / 尚无」
+F644 「体验统一教程」键：没有；legacy_tutorial null
+perf_probe 结束：F643 三段都通了（2597 帧，257.9 秒）

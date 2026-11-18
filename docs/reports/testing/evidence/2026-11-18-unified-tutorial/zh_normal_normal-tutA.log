@@ -1,0 +1,20 @@
+F643 结算：prologue 撤离；教程奖励小纸 教程奖励 / 图 3 张
+F643 基地：档案 ；下一段 prologue_2；钱 167；仓库 7 件；待入库 true；场次 1 撤离 1 战败 0；解锁 [&"prologue_done", &"ach_first_extract", &"ascension_1"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour"]；做过 ["fuse"]；账本 { "1/start": { "state": "completed", "funds": 0, "items": ["bag_leather", "bag_leather", "shortsword", "salve", "bandage", "ration"] }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] } }
+F643 切页、挂机后：屏 META；木牌「序章二：岔路 / 教程 2/3 / 尚无」
+F644 「体验统一教程」键：没有；legacy_tutorial null
+F643 点【开始探索】开 prologue_2
+F643 结算：prologue_2 撤离；教程奖励小纸 教程奖励 / 图 2 张
+F643 基地：档案 ；下一段 prologue_3；钱 377；仓库 9 件；待入库 true；场次 2 撤离 2 战败 0；解锁 [&"prologue_done", &"ach_first_extract", &"ascension_1", &"prologue2_done"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour", "shop_first_visit"]；做过 ["fuse"]；账本 { "1/start": { "state": "completed", "funds": 0, "items": ["bag_leather", "bag_leather", "shortsword", "salve", "bandage", "ration"] }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] }, "1/prologue_2": { "state": "completed", "funds": 150, "items": ["shortsword", "whetstone"] } }
+F643 切页、挂机后：屏 META；木牌「序章三：祭坛 / 教程 3/3 / 尚无」
+F644 「体验统一教程」键：没有；legacy_tutorial null
+F643 点【开始探索】开 prologue_3
+F643 神坛：信仰 brute 阶 0；放上 ["bone_dice", "bone_charm_bits"]；预览 { "points": 60, "tier_before": 0, "tier_after": 1, "count": 2 }；字「神坛　蛮神 Lv.0　20 / 30」
+F643 献祭：["献祭 2 件，蛮神 +60 信力", "蛮神升到 Lv.1"]；现在 1 阶，信力 80
+F643 教程三第二战要蛮神：重新落下蛮神护符 → 信仰 brute
+F643 神坛：信仰 brute 阶 2；没有祭品；特殊操作 ["祈求赐福（花 40 信力，赐福最值钱的一件）", "献祭 5 生命上限"]
+F643 真点特殊操作「祈求赐福（花 40 信力，赐福最值钱的一件）」
+F643 结算：prologue_3 撤离；教程奖励小纸 教程奖励 / 图 0 张
+F643 基地：档案 ；下一段 全通；钱 594；仓库 9 件；待入库 true；场次 3 撤离 3 战败 0；解锁 [&"prologue_done", &"ach_first_extract", &"ascension_1", &"prologue2_done", &"prologue3_done", &"ach_extract_3"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour", "shop_first_visit"]；做过 ["fuse"]；账本 { "1/start": { "state": "completed", "funds": 0, "items": ["bag_leather", "bag_leather", "shortsword", "salve", "bandage", "ration"] }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] }, "1/prologue_2": { "state": "completed", "funds": 150, "items": ["shortsword", "whetstone"] }, "1/prologue_3": { "state": "completed", "funds": 200, "items": [] } }
+F643 切页、挂机后：屏 META；木牌「尚无 / 尚无」
+F644 「体验统一教程」键：没有；legacy_tutorial null
+perf_probe 结束：F643 三段都通了（8769 帧，907.3 秒）
