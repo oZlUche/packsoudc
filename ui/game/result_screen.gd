@@ -282,7 +282,7 @@ func _add_insight(page: Control) -> void:
 	_side.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	page.add_child(_place(_side, INSIGHT_AT, Vector2(INSIGHT_W, 0)))
 	var rules := ScoreRules.load_rules()
-	if flow.profile != SliceProfile.SLICE and not rules.insight_ladder.is_empty():
+	if not rules.insight_ladder.is_empty():     # 统一教程 D2：切片也发见识
 		_insight = insight_panel(_r, rules, flow.meta.insight, flow.tech_target_line())
 		_side.add_child(_insight)
 	var reward := tutorial_reward_panel(flow.last_tutorial_reward, flow.items)

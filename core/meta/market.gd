@@ -55,6 +55,8 @@ static func level(meta: MetaState) -> int:
 static func _sellable(rules: MarketRules, d: ItemDef) -> bool:
 	if d == null or d.is_bag or d.is_bullion() or d.is_valuable() or d.is_token() or d.is_sealed() or d.has_faith():
 		return false
+	if not rules.allowed_ids.is_empty() and not rules.allowed_ids.has(d.id):
+		return false     # 统一教程 D2：切片基地只卖清单里的货
 	return not d.tags.any(func(t: StringName) -> bool: return rules.excluded_tags.has(t)) and not rules.excluded_ids.has(d.id)
 
 
