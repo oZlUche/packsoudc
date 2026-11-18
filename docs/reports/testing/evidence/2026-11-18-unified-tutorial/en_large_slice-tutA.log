@@ -1,0 +1,20 @@
+F643 结算：prologue 撤离；教程奖励小纸 Tutorial reward / 图 3 张
+F643 基地：档案 slice；下一段 prologue_2；钱 167；仓库 7 件；待入库 true；场次 1 撤离 1 战败 0；解锁 [&"prologue_done", &"ach_first_extract", &"ascension_1"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour"]；做过 ["fuse"]；账本 { "1/start": { "state": "completed", "funds": 0, "items": ["bag_leather", "bag_leather", "shortsword", "salve", "bandage", "ration"] }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] } }
+F643 切页、挂机后：屏 META；木牌「Prologue II: The Fork / Tutorial 2/3 / None yet」
+F644 「Try the tutorial」键：没有；legacy_tutorial null
+F643 点【Set out】开 prologue_2
+F643 结算：prologue_2 撤离；教程奖励小纸 Tutorial reward / 图 2 张
+F643 基地：档案 slice；下一段 prologue_3；钱 360；仓库 9 件；待入库 true；场次 2 撤离 2 战败 0；解锁 [&"prologue_done", &"ach_first_extract", &"ascension_1", &"prologue2_done"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour", "shop_first_visit"]；做过 ["fuse"]；账本 { "1/start": { "state": "completed", "funds": 0, "items": ["bag_leather", "bag_leather", "shortsword", "salve", "bandage", "ration"] }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] }, "1/prologue_2": { "state": "completed", "funds": 150, "items": ["shortsword", "whetstone"] } }
+F643 切页、挂机后：屏 META；木牌「Prologue III: The Altar / Tutorial 3/3 / None yet」
+F644 「Try the tutorial」键：没有；legacy_tutorial null
+F643 点【Set out】开 prologue_3
+F643 神坛：信仰 brute 阶 0；放上 ["bone_dice", "bone_charm_bits"]；预览 { "points": 60, "tier_before": 0, "tier_after": 1, "count": 2 }；字「Altar · The Brute Lv.0 · 19 / 30」
+F643 献祭：["Offered 2 items, The Brute +60 Faith", "The Brute rose to Lv.1"]；现在 1 阶，信力 79
+F643 教程三第二战要蛮神：重新落下蛮神护符 → 信仰 brute
+F643 神坛：信仰 brute 阶 2；没有祭品；特殊操作 ["Pray for a Blessing (40 Faith: bless your most valuable item)", "Offer 5 Max Health"]
+F643 真点特殊操作「Pray for a Blessing (40 Faith: bless your most valuable item)」
+F643 结算：prologue_3 撤离；教程奖励小纸 Tutorial reward / 图 0 张
+F643 基地：档案 slice；下一段 全通；钱 597；仓库 9 件；待入库 true；场次 3 撤离 3 战败 0；解锁 [&"prologue_done", &"ach_first_extract", &"ascension_1", &"prologue2_done", &"prologue3_done", &"ach_extract_3"]；看过 ["prologue_map", "prologue_prebattle", "prologue_battle", "base_tour", "shop_first_visit"]；做过 ["fuse"]；账本 { "1/start": { "state": "completed", "funds": 0, "items": ["bag_leather", "bag_leather", "shortsword", "salve", "bandage", "ration"] }, "1/prologue": { "state": "completed", "funds": 100, "items": ["knife", "bandage", "salve"] }, "1/prologue_2": { "state": "completed", "funds": 150, "items": ["shortsword", "whetstone"] }, "1/prologue_3": { "state": "completed", "funds": 200, "items": [] } }
+F643 切页、挂机后：屏 META；木牌「None yet / None yet」
+F644 「Try the tutorial」键：没有；legacy_tutorial null
+perf_probe 结束：F643 三段都通了（8949 帧，981.5 秒）
