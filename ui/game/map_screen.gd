@@ -338,6 +338,9 @@ func escape() -> bool:
 		return true
 	if _ask != null:
 		return true     # 240：开场一问得二选一，Esc 不替玩家选
+	if _skip != null:
+		close_skip_tutorial()     # 跳过确认页：Esc = 接着学
+		return true
 	if _pause_book != null:
 		close_pause_encyclopedia()
 		return true
@@ -379,11 +382,48 @@ func toggle_pause() -> void:
 		col.add_child(ScrollKey.make(UiText.t("map.pause_rules"), func(): show_rules()))     # 091：再看一遍规则卡
 	if not coach_steps().is_empty():
 		col.add_child(ScrollKey.make(UiText.t("map.pause_coach"), replay_map_coach))     # 统一教程 C（方案 §3.6）：重看这一段的地图教程，不改进度和奖励
+	if can_skip_tutorial():
+		col.add_child(ScrollKey.make(UiText.t("map.pause_skip_tutorial"), show_skip_tutorial))     # 统一教程 F（方案 §8.2）
 	col.add_child(ScrollKey.make(UiText.t("map.pause_main_menu"), func(): flow.save_and_quit()))     # 166：进点自动存档；这里回去之前也静默存一次
 
 
 func pause_open() -> bool:
 	return _pause != null
+
+
+#region 统一教程 F（方案 §8.2）：局内暂停菜单的「跳过剩余教程」—— 和基地出征页同一张确认页；确认走开场一问【不需要】那条路
+## （[method GameFlow.decline_tutorial]：这一局悄悄结束、不记场次、补没领的固定奖励、回基地）
+var _skip: Control = null
+
+
+## 这一局是教程、教程还没全通
+func can_skip_tutorial() -> bool:
+	return _run != null and _run.chapter != null and flow.tutorial_gate() != null and flow.tutorial_chapters().any(func(c: ChapterDef) -> bool: return c.id == _run.chapter.id)
+
+
+func show_skip_tutorial() -> void:
+	if _skip != null or not can_skip_tutorial():
+		return
+	_skip = skip_tutorial_page(confirm_skip_tutorial, close_skip_tutorial, true)
+	_skip.z_index = 20     # 压在暂停菜单上面
+
+
+func skip_tutorial_open() -> bool:
+	return _skip != null
+
+
+func confirm_skip_tutorial() -> void:
+	close_skip_tutorial()
+	if _pause != null:
+		toggle_pause()
+	flow.decline_tutorial()
+
+
+func close_skip_tutorial() -> void:
+	if _skip != null:
+		_skip.queue_free()
+		_skip = null
+#endregion
 
 
 ## 暂停菜单「重看教程」：关掉暂停菜单，从头放这一章的地图教程（看过也放）

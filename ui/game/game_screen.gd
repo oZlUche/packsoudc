@@ -371,6 +371,39 @@ func _modal_panel(title: String, margin: int = 16) -> OverlayFrame:
 	return frame
 
 
+## 统一教程（方案 §8.2）：「跳过剩余教程」的确认页 —— 基地出征页和局内暂停菜单共用一张：说明、要补的金币和道具、【跳过】【接着学】。
+## [param in_run]：在局里跳，多写一句「这一局身上的东西不带出来」。返回整张遮罩（已经加进本屏）
+const SKIP_PAPER_PAD := Vector2i(36, 22)
+const SKIP_REWARD_W := 440.0
+
+
+func skip_tutorial_page(on_yes: Callable, on_no: Callable, in_run: bool = false) -> Control:
+	var page := _shade(0.72, true)
+	page.name = "SkipTutorial"
+	page.z_index = 10     # 出征页木牌的挂牌 z = 1，确认页要压在它们上面
+	var panel := _modal_panel(UiText.t("skip_tut.title"), 28)
+	page.get_child(0).add_child(panel)
+	var col := _vbox(16)
+	panel.content.add_child(col)
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, SKIP_PAPER_PAD.x, SKIP_PAPER_PAD.y, SKIP_PAPER_PAD.x, SKIP_PAPER_PAD.y)
+	col.add_child(paper)
+	var body := UiText.t("skip_tut.body") + ("\n" + UiText.t("skip_tut.in_run") if in_run else "")
+	paper.add_child(UiTheme.rich_block(520, 16, body))
+	var pre := flow.skip_preview()
+	var owed: Control = load("res://ui/game/result_screen.gd").tutorial_reward_panel({"funds": int(pre["funds"]),
+		"items": (pre["items"] as Array).map(func(d: ItemDef) -> String: return String(d.id))}, flow.items)
+	if owed != null:
+		owed.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		owed.custom_minimum_size.x = SKIP_REWARD_W     # 道具图排成一两行，不竖成一长条
+		col.add_child(owed)
+	var keys := _hbox(24)
+	keys.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(keys)
+	keys.add_child(ScrollKey.primary(UiText.t("skip_tut.yes"), on_yes))
+	keys.add_child(ScrollKey.make(UiText.t("skip_tut.no"), on_no))
+	return page
+
+
 ## 居中的一块面板（叠层用）：半透明压暗底下的地图，石板框放中间（157：[OverlayFrame]，标题写进 [method _frame_title]）。
 ## 返回框的内容区，各屏往里加东西
 ## [param skin]：[constant OverlayFrame.SKIN_SLAB] / 铜 / 书 / 帐篷（233）
