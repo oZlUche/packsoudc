@@ -411,7 +411,26 @@ func skip_tutorial_open() -> bool:
 
 func confirm_skip_tutorial() -> void:
 	close_skip_tutorial()
-	flow.skip_remaining_tutorials()     # 内含存局外、回基地（出征页按新进度重摆）
+	if flow.skip_remaining_tutorials():     # 内含存局外、回基地
+		_rebuild_home()     # 游戏测试 v6.38：已经在基地屏时 show_meta 不重摆 —— 碑上的钱、出征页木牌这里换新
+
+
+## 出征页的碑和木牌按现在的局外重摆（放在原位）
+func _rebuild_home() -> void:
+	var stele := RecordsStele.new()
+	_stele.get_parent().add_child(stele)
+	_stele.get_parent().move_child(stele, _stele.get_index())
+	_stele.queue_free()
+	_stele = stele
+	_stele.setup(flow)
+	var board := ExpeditionBoard.new()
+	_expedition.get_parent().add_child(board)
+	_expedition.get_parent().move_child(board, _expedition.get_index())
+	_expedition.queue_free()
+	_expedition = board
+	_expedition.setup(flow)
+	_expedition.skip_asked.connect(show_skip_tutorial)
+	_new_run_btn = _expedition.start_btn
 
 
 func close_skip_tutorial() -> void:
