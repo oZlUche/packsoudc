@@ -219,15 +219,21 @@ func skip_prologue() -> bool:
 
 
 ## 统一教程 D（方案 §8.2）：基地出征页的「跳过剩余教程」—— 和开场一问的【不需要】同一个服务：补上没领的固定奖励、三段都算通了，
-## 留在基地（不开局）。局里不走这里（局内的跳过还是 [method decline_tutorial]）。返回局外存档写成了没有
+## 留在基地（不开局）。局里不走这里（局内的跳过还是 [method decline_tutorial]）。返回局外存档写成了没有。
+## 游戏测试 v6.38：结算完回基地时 [member run] 还留着刚打完的那一局（账已记完）—— 那不算在局里，照样能跳
 func skip_remaining_tutorials() -> bool:
-	if meta == null or run != null or tutorial_gate() == null:
+	if meta == null or in_run() or tutorial_gate() == null:
 		return false
 	meta.set_flag(TUTORIAL_ASKED)
 	meta.set_flag(PROLOGUE_SKIPPED)
 	var saved := skip_prologue()
 	show_meta()
 	return saved
+
+
+## 正在打的一局（还没结算）。结算完回基地时 [member run] 可能还留着打完的那一局，不算
+func in_run() -> bool:
+	return run != null and result == null and not run.is_over()
 
 
 ## 这一段是第几段教程（从 1 数）；不是教程 0
