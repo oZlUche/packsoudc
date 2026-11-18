@@ -29,6 +29,8 @@ extends Resource
 @export var excluded_tags: Array[StringName] = [&"treasure", &"valuable", &"bullion", &"keepsake", &"token", &"sealed"]
 ## 252：点名不上架的道具（秘银锭只从铁匠铺来）
 @export var excluded_ids: Array[StringName] = []
+## 统一教程 D2：只卖这些（空 = 不限；切片基地用，[SliceBase]）
+@export var allowed_ids: Array[StringName] = []
 ## 第几级起散货摊最后一格换成一只空包（0 = 不卖包）
 @export var bag_slot_from_level: int = 3
 ## 空包从哪张包池抽

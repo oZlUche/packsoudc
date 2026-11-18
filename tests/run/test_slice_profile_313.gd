@@ -19,7 +19,7 @@ static func run_switch(t: TestCase) -> void:
 	t.eq(SliceProfile.settings_path(&"slice", SETTINGS), SETTINGS, "测试改过的路径不动")
 	t.check(SliceProfile.keeps_tab(&"", "logistics") and SliceProfile.keeps_tab(&"", "shelf"), "正式版四个页签都在")
 	t.check(SliceProfile.keeps_tab(&"slice", "expedition") and SliceProfile.keeps_tab(&"slice", "warehouse"), "切片留出征、仓库")
-	t.check(not SliceProfile.keeps_tab(&"slice", "logistics") and not SliceProfile.keeps_tab(&"slice", "shelf"), "切片没有后勤、书架")
+	t.check(SliceProfile.keeps_tab(&"slice", "logistics") and SliceProfile.keeps_tab(&"slice", "shelf"), "统一教程 D2：切片也开后勤、书架")
 
 
 static func run_saves(t: TestCase) -> void:
@@ -69,11 +69,11 @@ static func _tabs(f: GameFlow, root: Window) -> Array:
 
 
 static func frame_base_tabs(t: TestCase, root: Window) -> void:
-	t.begin("313 · 切片的基地只有出征和仓库两个页签，默认在出征页；正式版照旧四个")
+	t.begin("313 · 切片的基地四个页签（统一教程 D2 起和正式版一样），默认在出征页")
 	var formal := _tabs(_flow(&""), root)
 	t.eq(formal[0], ["expedition", "warehouse", "logistics", "shelf"], "正式版四个页签")
 	var slice := _tabs(_flow(&"slice"), root)
-	t.eq(slice[0], ["expedition", "warehouse"], "切片两个页签")
+	t.eq(slice[0], ["expedition", "warehouse", "logistics", "shelf"], "统一教程 D2：切片也是四个页签")
 	t.eq(slice[1], "expedition", "默认在出征页")
 	MetaSave.remove(META)
 	GameSettings.remove(SETTINGS)

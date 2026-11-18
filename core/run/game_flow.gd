@@ -844,7 +844,7 @@ func _facility_changed(id: StringName) -> void:
 #region 基地铺子（251）
 func market() -> MarketRules:
 	if market_rules == null:
-		market_rules = Market.load_rules()
+		market_rules = SliceBase.market_rules(Market.load_rules(), profile)     # 统一教程 D2：切片只卖清单里的货
 	return market_rules
 
 
@@ -1483,7 +1483,7 @@ func _settle_run() -> void:
 		last_tutorial_reward = {}
 		# 2026-10-22（作者定）：行囊给的「战败保住几成钱」由 absorb 在战败分支里兑现
 		# 319：见识按总分阶梯发（试玩切片不发）；这一局结算过（重复结算）absorb 什么也不动
-		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0, profile != SliceProfile.SLICE)
+		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0)     # 统一教程 D2：切片也按阶梯发见识
 		if bool(last_absorbed.get("duplicate", false)):
 			if writable():
 				RunSave.remove(save_path)

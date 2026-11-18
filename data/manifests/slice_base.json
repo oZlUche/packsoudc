@@ -1,0 +1,39 @@
+{
+  "id": "slice_base",
+  "version": 1,
+  "market_item_ids": [
+    "knife",
+    "shortsword",
+    "round_shield",
+    "leather_armor",
+    "whetstone",
+    "poison_vial",
+    "linen_bolt",
+    "bandage",
+    "salve",
+    "ration",
+    "iron_ore",
+    "copper_ingot",
+    "hardwood_plank",
+    "beast_hide",
+    "tanned_leather"
+  ],
+  "smith_recipe_ids": [
+    "smith_shortsword",
+    "smith_round_shield",
+    "smith_leather_armor"
+  ],
+  "tech_ids": [
+    "warehouse",
+    "pack"
+  ],
+  "tutorial_item_ids": [
+    "knife",
+    "bandage",
+    "salve",
+    "shortsword",
+    "whetstone",
+    "charm_brute",
+    "charm_sun"
+  ]
+}

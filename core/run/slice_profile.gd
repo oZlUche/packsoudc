@@ -1,6 +1,6 @@
 ## 313（试玩切片 S1 第二批）：现在跑的是哪一档 —— 空 = 正式版；`slice` = 试玩切片。
 ## 切片的判断：导出包带 `slice` 特性，或命令行 `-- --profile=slice`（开发时用）。
-## 切片只列切片章节、存档和设置都放在 user://slice/ 下（不碰正式版的存档）、基地只留出征和仓库两个页签
+## 切片只列切片章节、存档和设置都放在 user://slice/ 下（不碰正式版的存档）。统一教程 D2：基地四个页签都开（后勤、书架里能用的由 [SliceBase] 定）
 class_name SliceProfile
 extends RefCounted
 
@@ -11,7 +11,7 @@ const SLOTS := ROOT + "/slots"
 const SETTINGS := ROOT + "/settings.json"
 const CALIBRATION := ROOT + "/calibration"
 ## 切片的基地只留这几个页签（[constant MetaScreen.TABS] 的键）
-const TABS: Array[String] = ["expedition", "warehouse"]
+const TABS: Array[String] = ["expedition", "warehouse", "logistics", "shelf"]
 
 ## 测试用：不看特性和命令行，直接当成这一档（null = 照常判断）
 static var forced: Variant = null

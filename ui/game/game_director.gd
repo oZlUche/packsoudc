@@ -83,7 +83,7 @@ func _ready() -> void:
 	var sets := SetDatabase.new()
 	sets.load_dir()
 	var rules := GameFlow.load_meta_rules()
-	var techs := GameFlow.load_techs()     # 120：读档先按科技算仓库容量，再装仓库
+	var techs := SliceBase.techs(GameFlow.load_techs(), SliceProfile.current())     # 120：读档先按科技算仓库容量，再装仓库；统一教程 D2：切片只开清单里的几项
 	var meta := MetaSave.read(items, meta_path, rules, techs)
 	if meta == null:
 		meta = MetaState.new(rules)
@@ -99,7 +99,7 @@ func _ready() -> void:
 	flow.hunter_defs = HunterSystem.load_all()
 	flow.faith_defs = FaithDef.load_all()
 	flow.recipes = RecipeDef.load_all()
-	flow.smith_recipes = SmithRecipeDef.load_all()     # 251
+	flow.smith_recipes = SliceBase.recipes(SmithRecipeDef.load_all(), flow.profile)     # 251；统一教程 D2：切片只列清单里的配方
 	flow.achievement_defs = GameFlow.load_achievements()     # 091
 	flow.tech_defs = techs     # 110
 	flow.help_pages = GameFlow.load_help_pages()     # 114：百科
