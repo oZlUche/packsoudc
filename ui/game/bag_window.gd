@@ -126,7 +126,7 @@ func show_coach(flow: GameFlow, host: Control) -> bool:
 	coach = CoachOverlay.run_on(host, coach_id(flow), flow, _font, control_rect)
 	if coach == null:
 		return false
-	coach.finished.connect(func(): coach = null)
+	coach.closed.connect(func(): coach = null)
 	return true
 
 

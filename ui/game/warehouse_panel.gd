@@ -130,6 +130,9 @@ func _build() -> void:
 	_rack_view.item_double_clicked.connect(quick_move)
 	if not _drag.drop_filter.is_valid():
 		_drag.drop_filter = _allow_drop
+	if not _drag.drag_started.is_connected(_on_drag_started):
+		_drag.drag_started.connect(_on_drag_started)
+		_drag.drag_finished.connect(_on_drag_finished)
 	if _own_shelf:
 		_shelf.setup(_meta.warehouse, _font, _drag, TechWarehousePages.plan_of(_flow.tech_defs))
 		_drag.register_view(_shelf.view)
@@ -240,6 +243,20 @@ func has_board() -> bool:
 	return _meta.board != null
 
 
+## 统一教程 C：从带回来的背包拖进仓库 = 教学动作「入库」做过了
+var _dragging_from_board := false
+
+
+func _on_drag_started(_uid: int) -> void:
+	_dragging_from_board = _meta.board != null and _drag != null and _drag.source() == _meta.board
+
+
+func _on_drag_finished(uid: int, dropped: bool) -> void:
+	if dropped and _dragging_from_board and _meta.warehouse.has_item(uid):
+		_flow.note_action(GameFlow.ACTION_STORE)
+	_dragging_from_board = false
+
+
 ## 225：落点规则 —— 包架上的包只在包架里挪（不上带回来的棋盘）；进包架的只能是包（[BagRack] 自己也会拒）
 func _allow_drop(inst: ItemInstance, target: ItemContainer) -> bool:
 	if inst == null:
@@ -315,6 +332,7 @@ func quick_move(view: ContainerView, uid: int) -> bool:
 		if not ok:
 			_say(UiText.t("setup.no_room_warehouse") % Names.of(inst.def))
 		else:
+			_flow.note_action(GameFlow.ACTION_STORE)     # 统一教程 C
 			if _shelf != null:
 				_shelf.show_item(uid)
 	elif _meta.warehouse.owns(from) and _meta.board != null:

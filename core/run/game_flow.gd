@@ -913,8 +913,37 @@ func forge(id: StringName) -> String:
 ## 仓库面板的两个动作：改了就存
 func store_all() -> Dictionary:
 	var got := meta.store_all()
+	if int(got.get("moved", 0)) > 0:
+		note_action(ACTION_STORE)
 	save_meta()
 	return got
+
+
+#region 统一教程 C：教学动作（方案 2026-11-18 §3.2）
+## 真做成了一个教学动作（真实成功事件，不是点了「知道了」）：记进 [member MetaState.coach_done]，发 [signal tutorial_action]，
+## 开着的教学卡等的就是这个（[method CoachOverlay.notify_action]）
+signal tutorial_action(id: StringName)
+## 合成成了一件
+const ACTION_FUSE := &"fuse"
+## 带回来的东西放进了仓库（一键、双击、拖都算）
+const ACTION_STORE := &"store"
+
+
+func note_action(id: StringName) -> void:
+	if id == &"":
+		return
+	if meta != null and not meta.coach_done.has(String(id)):
+		meta.coach_done.append(String(id))
+	tutorial_action.emit(id)
+
+
+func action_done(id: StringName) -> bool:
+	return meta != null and meta.coach_done.has(String(id))
+
+
+func _on_crafted(_detail: Dictionary) -> void:
+	note_action(ACTION_FUSE)
+#endregion
 
 
 func discard_board() -> void:
@@ -1733,6 +1762,8 @@ func _adopt(state: RunState) -> void:
 	var crafting := CraftingModule.of(state)     # 101：合成是一局的模块（配方表是内容，持有方给）
 	if crafting != null:
 		crafting.recipes = recipes
+		if not crafting.done.is_connected(_on_crafted):
+			crafting.done.connect(_on_crafted)     # 统一教程 C：合成成了 = 教学动作「合成」做过了
 	# 难度：读档回来只有 id，在这里找回定义并把机制重新接上（本体模块在 from_dict 里已经装过，再装一次是幂等的）
 	if state.difficulty == null and state.difficulty_id != &"":
 		state.difficulty = state.resolve_difficulty(difficulty_of(state.difficulty_id))     # 320：进行中的这一局按开局时的规则走到底

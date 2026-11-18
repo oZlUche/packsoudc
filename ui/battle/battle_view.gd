@@ -484,7 +484,14 @@ func hold_after_moment(side: int) -> void:
 	_hold_moment_side = side
 
 
-func hold() -> void:
+## 统一教程 C（方案 2026-11-18 §3.5）：谁停的记着谁（[param who]：开战过场、教程、反应讲解……），全都放开了才接着放 ——
+## 收掉一张卡不让别人还压着的停失效
+var _holders: Array[StringName] = []
+
+
+func hold(who: StringName = HOLD_COACH) -> void:
+	if not _holders.has(who):
+		_holders.append(who)
 	if _held:
 		return
 	_held = true
@@ -494,9 +501,16 @@ func hold() -> void:
 	_sync_buttons()
 
 
-## 教程收掉：按停之前的样子接着放（播完了就不动）
-func release() -> void:
-	if not _held:
+## 停回放的几方（[method hold] 的 who）
+const HOLD_COACH := &"coach"
+const HOLD_INTRO := &"intro"
+const HOLD_REACTION := &"reaction"
+
+
+## [param who] 放开；还有别人压着就继续停。都放开了：按停之前的样子接着放（播完了就不动）
+func release(who: StringName = HOLD_COACH) -> void:
+	_holders.erase(who)
+	if not _held or not _holders.is_empty():
 		return
 	_held = false
 	_pause_reaction_label(false)
@@ -523,6 +537,11 @@ func _pause_reaction_label(paused: bool) -> void:
 
 func is_held() -> bool:
 	return _held
+
+
+## 现在是谁压着（测试、调试用）
+func holders() -> Array[StringName]:
+	return _holders.duplicate()
 
 
 func is_playing() -> bool:
@@ -608,7 +627,7 @@ func _drain_until(t: float) -> void:
 			if _cursor >= log_.size() or (log_[_cursor] as BattleEvent).time > e.time:
 				var side := _hold_moment_side
 				_hold_moment_side = -1
-				hold()
+				hold(HOLD_REACTION)
 				moment_held.emit(side)
 		if _held and not _suppress_popups:
 			break     # 220：这一条把回放停住了（反应解释）—— 后面的等放开再走，不在停着时偷跑

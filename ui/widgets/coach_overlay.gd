@@ -1,6 +1,9 @@
 ## 166（作者定）：静态教程 —— 整屏压一层阴影，目标周围挖一个洞（包围盒外扩 [constant HOLE_PAD]，洞边一圈高光），
 ## 一只手绘箭头（`assets/ui/coach/arrow.png`，图朝右，按方向转）从洞外指向洞，箭尾一块悬浮窗底（[constant UiTheme.PANEL_TOOLTIP]）写说明。
-## **点任意处下一步**（键盘任意键也算，Esc 也是），最后一步点了收掉、发 [signal finished]。阴影层吞掉所有点击。
+## 统一教程 C（方案 2026-11-18 §3）：纸上三个键 ——「知道了」下一步、「上一步」、「收起」（没看完先收掉，发 [signal dismissed]，不记看过）；
+## 回车 / 空格 = 知道了、Esc = 收起，别的键和点阴影都不算（不误触、不穿透）。最后一步「知道了」收掉、发 [signal finished]。
+## 一步写了 `"action"`（教学动作 id，[constant GameFlow.ACTION_FUSE] 这类）就是动作步：「知道了」只算看过，阴影撤掉、放开真实操作，
+## 纸条留着当目标提示，等真做成了（[method notify_action]，接在 [signal GameFlow.tutorial_action] 上）才下一步；已经做过的动作步直接跳过。
 ##
 ## 步骤是数据（`data/authoring/coach/<id>.json`：`{"id", "steps": [{"target": 目标 id, "text", "texts": {"en"}}]}`）；
 ## 目标的位置每一步现问（[member target_rect]：地图屏给 [method HudHost.rect_of]，战斗屏给 [method BattleView.control_rect]，背包窗、战前屏各有 `control_rect`）—— 部件挪了位置，教程跟着走
@@ -8,6 +11,10 @@ class_name CoachOverlay
 extends Control
 
 signal finished()
+## 玩家点了「收起」（没看完）
+signal dismissed()
+## 收掉了（看完或收起都发）：用它做收尾（放开回放、清引用），记看过用 [signal finished]
+signal closed()
 
 const DIR := "res://data/authoring/coach/"
 const SHADE := Color(0, 0, 0, 0.62)
@@ -26,26 +33,45 @@ var index: int = -1
 var _paper: PanelContainer
 var _line: Label
 var _arrow: Texture2D = null
+var _back: Button
+var _ok: Button
+var _hide: Button
+## 动作步：看过了，阴影撤了，等玩家真做
+var _waiting := false
+## 给了就接它的 [signal GameFlow.tutorial_action]，也按它的 [member MetaState.coach_done] 跳过做过的动作步
+var flow: GameFlow = null:
+	set(v):
+		if flow != null and flow.tutorial_action.is_connected(notify_action):
+			flow.tutorial_action.disconnect(notify_action)
+		flow = v
+		if flow != null:
+			flow.tutorial_action.connect(notify_action)
+const KEY_SIZE := Vector2(88, 30)
+const KEY_FILL := Color("c9a25a")
+const KEY_INK := Color("1e140a")
+const KEY_SOFT := Color("e8dcc0")
+const KEY_HOVER := Color("f4e3b0")
 
 
 ## 218 补充一：[param id] 这份教程该不该自己放（写了、这个存档还没看过）
-static func due(flow: GameFlow, id: StringName) -> bool:
-	return id != &"" and (flow == null or flow.meta == null or not flow.meta.coach_seen.has(String(id)))
+static func due(p_flow: GameFlow, id: StringName) -> bool:
+	return id != &"" and (p_flow == null or p_flow.meta == null or not p_flow.meta.coach_seen.has(String(id)))
 
 
 ## 218 补充一：在 [param host] 上铺满放 [param id] 这份教程，走完记进 [member MetaState.coach_seen]、存局外。没有步骤返回 null
-static func run_on(host: Control, id: StringName, flow: GameFlow, p_font: Font, p_target_rect: Callable) -> CoachOverlay:
+static func run_on(host: Control, id: StringName, p_flow: GameFlow, p_font: Font, p_target_rect: Callable) -> CoachOverlay:
 	var p_steps := load_steps(id)
 	if p_steps.is_empty() or host == null:
 		return null
 	var o := CoachOverlay.new()
 	o.font = p_font
 	o.target_rect = p_target_rect
+	o.flow = p_flow
 	host.add_child(o)
 	o.finished.connect(func():
-		if flow != null and flow.meta != null and not flow.meta.coach_seen.has(String(id)):
-			flow.meta.coach_seen.append(String(id))
-			flow.save_meta())
+		if p_flow != null and p_flow.meta != null and not p_flow.meta.coach_seen.has(String(id)):
+			p_flow.meta.coach_seen.append(String(id))
+			p_flow.save_meta())
 	o.start(p_steps)
 	return o
 
@@ -89,11 +115,27 @@ func _init() -> void:
 	UiTheme.apply_tone(_paper, UiTheme.PANEL_TOOLTIP)     # 170 起悬浮窗是深底：白字
 	_paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_paper)
+	var col := UiTheme.vbox(10)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paper.add_child(col)
 	_line = Label.new()
 	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_line.custom_minimum_size.x = PAPER_WIDTH
 	_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_paper.add_child(_line)
+	col.add_child(_line)
+	var keys := UiTheme.hbox(8)
+	keys.alignment = BoxContainer.ALIGNMENT_END
+	col.add_child(keys)
+	_hide = UiTheme.flat_key(UiText.t("coach.hide"), Color(0, 0, 0, 0), KEY_SOFT, KEY_HOVER, KEY_SOFT, KEY_SIZE, 15)
+	_hide.pressed.connect(dismiss)
+	keys.add_child(_hide)
+	_back = UiTheme.flat_key(UiText.t("coach.back"), Color(0, 0, 0, 0), KEY_SOFT, KEY_HOVER, KEY_SOFT, KEY_SIZE, 15)
+	_back.pressed.connect(back)
+	keys.add_child(_back)
+	_ok = UiTheme.flat_key(UiText.t("coach.ok"), KEY_FILL, KEY_FILL, KEY_HOVER, KEY_INK, KEY_SIZE, 15)
+	_ok.pressed.connect(acknowledge)
+	keys.add_child(_ok)
+	_paper.mouse_filter = Control.MOUSE_FILTER_PASS     # 纸上的键要点得着（阴影照样吞别处的点）
 	resized.connect(_layout)
 
 
@@ -103,15 +145,76 @@ func start(p_steps: Array) -> void:
 	next()
 
 
-## 下一步；没有了就收掉
+## 下一步（做过的动作步跳过）；没有了就收掉
 func next() -> void:
 	index += 1
+	while index < steps.size() and _done_already(steps[index]):
+		index += 1
 	if index >= steps.size():
 		finished.emit()
+		closed.emit()
 		queue_free()
 		return
+	_show()
+
+
+func _show() -> void:
+	_waiting = false
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	_line.text = text_of(steps[index]) + progress_suffix(index, steps.size())
+	_back.visible = index > 0
+	_ok.visible = true
 	_layout()
+
+
+## 这一步要的动作（空 = 解说步）
+static func action_of(p_step: Dictionary) -> StringName:
+	return StringName(String(p_step.get("action", "")))
+
+
+func _done_already(p_step: Dictionary) -> bool:
+	var a := action_of(p_step)
+	return a != &"" and flow != null and flow.action_done(a)
+
+
+## 「知道了」：解说步下一步；动作步只算看过 —— 撤掉阴影、放开操作，纸条留着当目标，等 [method notify_action]
+func acknowledge() -> void:
+	if _waiting:
+		return
+	if action_of(step()) == &"":
+		next()
+		return
+	_waiting = true
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paper.mouse_filter = Control.MOUSE_FILTER_PASS
+	_back.visible = false
+	_ok.visible = false
+	_layout()
+
+
+## 真做成了一个教学动作：正是这一步要的就下一步（没点「知道了」先做了也算）
+func notify_action(id: StringName) -> void:
+	if index >= 0 and index < steps.size() and action_of(step()) == id:
+		next()
+
+
+func waiting() -> bool:
+	return _waiting
+
+
+## 「上一步」
+func back() -> void:
+	if index <= 0:
+		return
+	index -= 1
+	_show()
+
+
+## 「收起」：没看完先收掉 —— 不记看过、不发 [signal finished]
+func dismiss() -> void:
+	dismissed.emit()
+	closed.emit()
+	queue_free()
 
 
 ## 309（v5.85 体验 E04）：多步的教程在字后面写进度「　2/4」，让人知道还有几步；一步的不写
@@ -178,22 +281,32 @@ func _layout() -> void:
 	queue_redraw()
 
 
+## 点阴影：吞掉，不算下一步（统一教程 C：不误触）
 func _gui_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if mb != null and mb.pressed:
 		accept_event()
-		next()
 
 
+## 回车 / 空格 = 知道了，Esc = 收起；解说步别的键也吞掉（不漏到底下的屏）。动作步等着时键照常给游戏
 func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if key != null and key.pressed and not key.echo:
-		get_viewport().set_input_as_handled()
-		next()
+	if key == null or not key.pressed or key.echo or _waiting:
+		return
+	get_viewport().set_input_as_handled()
+	match key.keycode:
+		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+			acknowledge()
+		KEY_ESCAPE:
+			dismiss()
 
 
 func _draw() -> void:
 	var h := hole()
+	if _waiting:
+		if h.size != Vector2.ZERO:
+			draw_rect(h, UiPalette.STAMINA, false, RIM)     # 动作步：不压暗，只框着目标
+		return
 	if h.size == Vector2.ZERO:
 		draw_rect(Rect2(Vector2.ZERO, size), SHADE)
 		return
