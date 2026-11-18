@@ -117,8 +117,15 @@ static func run_data(t: TestCase) -> void:
 	t.eq(fork1.size(), 2, "第一个岔路口分到两个战斗点")
 	for nid in fork1:
 		t.check(g.neighbors(nid).has(s2.id), "战斗点 %d 归到搜索点 2" % nid)
+	# 统一教程 E：搜索点 2 后面接一家教学商店（写死货架、可以不进），岔路从商店分出去
+	var shop := _node_of(g, &"shop", 0)
+	t.check(shop != null and g.neighbors(s2.id).has(shop.id), "搜索点 2 接教学商店")
+	if shop == null:
+		return
+	t.eq(String(shop.content.get("event", "")), "tut2_shop", "商店先过教学事件")
+	t.check(not (shop.content.get("shop_stock", []) as Array).is_empty(), "货架写死")
 	var fork2: Array[int] = []
-	for nid in g.neighbors(s2.id):
+	for nid in g.neighbors(shop.id):
 		if g.get_node(nid).type == &"battle" and not fork1.has(nid):
 			fork2.append(nid)
 	t.eq(fork2.size(), 2, "第二个岔路口分到两个战斗点")

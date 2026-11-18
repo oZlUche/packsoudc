@@ -1,0 +1,30 @@
+{
+  "id": "tut2_shop",
+  "title": "商店",
+  "titles": {
+    "en": "Shop"
+  },
+  "text": "路边一个商人。\n\n这里的买卖用的是{b}这一趟{/b}带着的金币和东西，和基地集市不是一回事。东西放上秤只是在谈价，按【成交】才算数；钱不够就点自己的钱袋补差价，你卖得多，商人会找钱；不想要了拿回来就行。\n\n买不买随你，后面的路不靠这里。",
+  "texts": {
+    "en": "A merchant by the road.\n\nTrades here use the gold and gear you carry {b}this run{/b}. That's separate from the Market at base. Putting things on the scale is just haggling; nothing changes hands until you press [Deal]. Short on gold? Click your pouch to cover the gap. Sell more than you buy and the merchant gives change. Changed your mind? Take it back.\n\nBuying is optional. Nothing ahead depends on it."
+  },
+  "options": [
+    {
+      "label": "进去看看",
+      "labels": {
+        "en": "Have a look"
+      },
+      "outcomes": [
+        {
+          "type": "open_shop"
+        }
+      ]
+    },
+    {
+      "label": "不进",
+      "labels": {
+        "en": "Pass"
+      }
+    }
+  ]
+}

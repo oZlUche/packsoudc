@@ -49,10 +49,10 @@ titles = {
 }
 text = "一个{enemy:brute}挡在路上，皮糙肉厚。
 
-带着{faith:brute}的第一阶打这一场：血掉得越多，你打得越狠，留意回放里的数字。打完信力该过 {faith_threshold:brute:2} 了。"
+你现在信{faith}，第 {faith_tier} 阶，信力 {faith_points}。到了第一阶，血掉得越多，你打得越狠，留意回放里的数字。打完看看顶端栏的徽记涨了多少。"
 texts = {
 "en": "A {enemy:brute} blocks the road. Thick hide.
 
-Fight this one at Rank one of {faith:brute}: the more Health you lose, the harder you hit. Watch the numbers in the replay. By the end your Faith should be past {faith_threshold:brute:2}."
+You follow {faith}: Rank {faith_tier}, {faith_points} Faith. From Rank one, the more Health you lose, the harder you hit. Watch the numbers in the replay. Afterwards, check the emblem in the top bar to see how much you gained."
 }
 options = Array[ExtResource("1_blc65")]([SubResource("Resource_c183t"), SubResource("Resource_2thao")])

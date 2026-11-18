@@ -66,7 +66,7 @@ const HARDCODED := ["蛮兵", "制式短剑", "弯刀", "塔盾", "板甲", "长
 static func run_tutorial_events_clean(t: TestCase) -> void:
 	t.begin("112 · 序章事件与规则卡：全部占位符都换得掉，名字不写死，汉字数没了")
 	var defs := EventPlacer.load_all()
-	var ctx := {"char_name": "阿岚", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1}     # 196：教程的休息点选项写「回 {rest_restore} 点体力」
+	var ctx := {"char_name": "阿岚", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1, "faith": "蛮神", "faith_tier": 1, "faith_points": 12}     # 196：教程的休息点选项写「回 {rest_restore} 点体力」
 	var n := 0
 	for id in defs:
 		if not String(id).begins_with("tut"):
@@ -82,7 +82,7 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 			t.check(not TextTemplate.plain((opt as EventOption).label, TextTemplate.option_context(ctx, opt)).contains("{"), "%s 选项没漏换" % id)
 		for digits in ["三秒一下", "二十多点", "十二点", "六秒一次", "输两场"]:
 			t.check(not def.text.contains(digits), "%s 不再写死「%s」" % [id, digits])
-	t.eq(n, 38, "三张序章 38 条事件都查了（113 加了序章三的 12 条；D3 加了休息点 tut_rest）")
+	t.eq(n, 39, "三张序章 39 条事件都查了（113 加了序章三的 12 条；D3 加了休息点 tut_rest，E 加了商店 tut2_shop）")
 	for cid in ["prologue", "prologue_2", "prologue_3"]:
 		t.check((load(ContentPaths.asset_file("chapters", cid)) as ChapterDef).rules.is_empty(), "220：%s 没有规则卡" % cid)
 	var glass := load(ContentPaths.asset_file("chapters", "clockwork_hourglass")) as ChapterDef
@@ -100,7 +100,7 @@ static func run_tutorial_events_clean(t: TestCase) -> void:
 static func run_stale_wording_217(t: TestCase) -> void:
 	t.begin("217 · 教程和百科不再写已经变了的界面（三角标、地图左上的信力）；口粮那条讲耐力；218：自由模式没有规则卡")
 	var defs := EventPlacer.load_all()
-	var ctx := {"char_name": "阿岚", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1}
+	var ctx := {"char_name": "阿岚", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1, "faith": "蛮神", "faith_tier": 1, "faith_points": 12}
 	for id in defs:
 		if not String(id).begins_with("tut"):
 			continue
@@ -121,7 +121,7 @@ static func run_stale_wording_217(t: TestCase) -> void:
 static func run_tutorial_events_english(t: TestCase) -> void:
 	t.begin("221 F2 · 序章事件与交代：标题、正文、选项、藏起来那句、结果里说的话都有英文；占位符和中文一样、渲染后没有汉字")
 	var defs := EventPlacer.load_all()
-	var ctx := {"char_name": "Brutus", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1}
+	var ctx := {"char_name": "Brutus", "vitality": 5, "loss_cost": 1, "_items": _db(), "rest_restore": 1, "faith": "Brute", "faith_tier": 1, "faith_points": 12}
 	var token := RegEx.create_from_string("\\{[^}]*\\}")
 	var han := RegEx.create_from_string("[\\x{4e00}-\\x{9fff}]")
 	var digit := RegEx.create_from_string("[0-9]")
@@ -157,7 +157,7 @@ static func run_tutorial_events_english(t: TestCase) -> void:
 			UiText.lang = "zh"
 			if han.search(shown) != null or shown.contains("{"):
 				bad.append(where + "：渲染后还有汉字或记号（%s）" % shown.left(40))
-	t.eq(n, 39, "38 条序章事件 + 交代")
+	t.eq(n, 40, "39 条序章事件 + 交代")
 	t.eq(bad, [] as Array[String], "都齐")
 	var intro := defs[&"tut_intro"] as EventDef
 	UiText.lang = "en"

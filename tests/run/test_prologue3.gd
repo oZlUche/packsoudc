@@ -69,7 +69,7 @@ static func run_data(t: TestCase) -> void:
 		var e := c.events.get(StringName(id), null) as EventDef
 		t.not_null(e, "事件 %s 在" % id)
 		if e != null:
-			var shown := TextTemplate.plain(e.title + e.text, {"_items": c.items, "_faiths": c.faiths})
+			var shown := TextTemplate.plain(e.title + e.text, {"_items": c.items, "_faiths": c.faiths, "faith": "蛮神", "faith_tier": 1, "faith_points": 12})
 			t.check(not shown.contains("{"), "%s 的占位符都换得掉：%s" % [id, shown.left(40)])
 
 
