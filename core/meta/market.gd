@@ -66,7 +66,7 @@ static func catalogue(rules: MarketRules, items: ItemDatabase, st: StallDef, lv:
 	var out: Array[StringName] = []
 	if rules == null or items == null or st == null or not st.fixed or lv <= 0:
 		return out
-	var cap := rules.rarity_cap_at(lv)
+	var cap := rules.rarity_cap_at(lv) if rules.allowed_ids.is_empty() else 99     # 游戏测试 v6.40：切片清单就是货单，不按级数卡稀有度（切片集市升不了级）
 	var listed: Array[ItemDef] = []
 	var above: Array[ItemDef] = []
 	for id in items.ids():
