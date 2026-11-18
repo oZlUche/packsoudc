@@ -17,6 +17,7 @@ display_names = {
 "en": "Prologue II: The Fork"
 }
 map_source = SubResource("Resource_t1xtx")
+profile = &"shared"
 drop_rule = &"prologue"
 bag_pool = &""
 node_rules = &"prologue"

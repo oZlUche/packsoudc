@@ -379,7 +379,7 @@ static func run_random_mode(t: TestCase) -> void:
 
 
 static func run_gating(t: TestCase) -> void:
-	t.begin("序章二 · 章节的门：序章通关 → 序章收起、只剩序章二 → 「新的一局」直接开它、先过 intro → 通关 → 第一章开、序章二收起")
+	t.begin("序章二 · 章节的门：序章通关 → 序章收起、只剩序章二 → 出战开最早没通的那段、先过 intro → 通关 → 回基地、序章二收起")
 	var c := _content()
 	Support.cleanup("t2")
 	var f := GameFlow.new(c.items, c.enemies, c.sets, MetaState.new())
@@ -397,29 +397,24 @@ static func run_gating(t: TestCase) -> void:
 	var avail := f.available_chapters()
 	t.check(avail.size() == 1 and avail[0].id == &"prologue_2", "序章通关之后只列序章二（序章收起）：%s" % str(avail.map(func(x: ChapterDef) -> String: return String(x.id))))
 	var target := f.new_run_target()
-	t.check(target != null and target.id == &"prologue", "序章通关后「新的一局」仍从序章一开始（新的一局 = 从头）")
+	t.check(target != null and target.id == &"prologue_2", "统一教程：序章通关后出战开最早没通的序章二，不再回第一段")
 	var cont := f.continue_target()
-	t.check(cont != null and cont.id == &"prologue_2", "「继续」指向序章二（和新的一局并列）")
+	t.check(cont != null and cont.id == &"prologue_2", "这一位有进度（主菜单显示「继续」）")
 	t.check(not f.tutorials_done(), "教程还没全通")
-	# 新的一局：真的开序章一
-	f.new_run()
-	t.check(f.run != null and f.run.chapter == c.prologue, "新的一局开的是序章一")
-	t.eq(f.screen, GameFlow.Screen.EVENT, "先过序章一的 intro")
-	f.to_main_menu()
-	RunSave.remove(SAVE)
-	# 有局内存档时「继续」是读档：开序章一走到地图、存盘、回菜单再继续
+	t.check(not f.continue_run(), "统一教程：没有局内存档时「继续」不直接开下一段（进基地由玩家出战）")
+	# 有局内存档时「继续」是读档：开序章二走到地图、存盘、回菜单再继续
 	f.new_run()
 	f.choose_event(0)
 	t.check(f.save(), "存盘")
 	f.to_main_menu()
 	t.check(f.has_save() and f.continue_target() == null, "有存档：继续 = 读档，不指向章")
-	t.check(f.continue_run() and f.run != null and f.run.chapter == c.prologue, "读档回到序章一")
+	t.check(f.continue_run() and f.run != null and f.run.chapter == c.chapter, "读档回到序章二")
 	f.to_main_menu()
 	RunSave.remove(SAVE)
-	# 继续：开序章二
-	t.check(f.continue_run(), "继续开得了")
+	# 出战：开序章二
+	f.new_run()
 	var run := f.run
-	t.not_null(run, "「继续」直接开了序章二")
+	t.not_null(run, "出战开了序章二")
 	if run == null:
 		return
 	t.check(run.chapter == c.chapter and run.character_id == &"brutus", "章是序章二、角色布鲁图斯")
@@ -440,7 +435,7 @@ static func run_gating(t: TestCase) -> void:
 	t.check(f.extract(), "撤离")
 	t.check(f.meta.has_unlock(c.chapter.grants_unlock), "拿到序章二的解锁")
 	var nxt := f.next_chapter()
-	t.check(nxt != null and nxt.id == &"prologue_3", "序章二之后直接进序章三（113）")
+	t.check(nxt != null and nxt.id == &"prologue_3", "序章二之后是序章三（只是先后，结算后回基地）")
 	f.finish_result()
 	avail = f.available_chapters()
 	t.check(avail.size() == 1 and avail[0].id == &"prologue_3", "序章二收起，只剩序章三：%s" % str(avail.map(func(x: ChapterDef) -> String: return String(x.id))))

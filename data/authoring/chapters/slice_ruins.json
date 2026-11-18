@@ -9,6 +9,7 @@
     "preset_path": "res://data/maps/slice_ruins.json"
   },
   "profile": "slice",
+  "requires_unlock": "prologue3_done",
   "drop_rule": "slice_ruins",
   "bag_pool": "",
   "node_rules": "slice_ruins",

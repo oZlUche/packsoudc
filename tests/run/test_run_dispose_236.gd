@@ -101,6 +101,7 @@ static func frame_quit_with_run_open(t: TestCase, root: Window) -> void:
 	game.settings_path = p["settings"]
 	root.add_child(game)
 	var flow: GameFlow = game.flow
+	Support.pass_tutorials(flow)
 	var run := flow.begin(c.chapter, c.loadouts[0] if not c.loadouts.is_empty() else null, 13)
 	t.check(run != null and not run.modules.is_empty(), "局开着")
 	game.free()

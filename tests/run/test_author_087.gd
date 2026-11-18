@@ -692,6 +692,7 @@ static func run_spyglass_and_codex(t: TestCase) -> void:
 	t.check(back != null and back.has_keepsake(&"spyglass"), "跟局外存档")
 	f.to_main_menu()
 	RunSave.remove(SAVE)
+	f.meta.grant_unlock(&"prologue2_done")     # 统一教程：序章二打完才出得了常规图
 	var run2 := f.begin(c.chapter, _kit(c), 3)
 	t.check(run2 != null and f.tooltips_enabled(), "之后开第一章：浮窗也开着（能力是局外的）")
 	t.check(f.take_notes().is_empty(), "已经有了不再通知")

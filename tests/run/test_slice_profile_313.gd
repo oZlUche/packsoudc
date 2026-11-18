@@ -32,12 +32,15 @@ static func run_saves(t: TestCase) -> void:
 
 
 static func run_chapters(t: TestCase) -> void:
-	t.begin("313 · 两档的章节表不相交：正式版没有切片章节，切片只有切片章节")
+	t.begin("313 · 两档的章节表：正式版没有切片章节，切片只有切片章节；统一教程的三段两档共用")
 	var formal := GameFlow.load_chapters()
 	var slice := GameFlow.load_chapters(&"slice")
 	t.check(not slice.is_empty(), "切片有章节")
-	t.check(slice.all(func(c: ChapterDef) -> bool: return c.profile == &"slice"), "切片表里都是切片章节")
-	t.check(formal.all(func(c: ChapterDef) -> bool: return c.profile == &""), "正式版表里没有切片章节")
+	t.check(slice.all(func(c: ChapterDef) -> bool: return c.profile == &"slice" or c.profile == ChapterDef.SHARED), "切片表里只有切片章节和共用的教程")
+	t.check(formal.all(func(c: ChapterDef) -> bool: return c.profile == &"" or c.profile == ChapterDef.SHARED), "正式版表里没有切片章节")
+	var shared := func(list: Array[ChapterDef]) -> Array: return list.filter(func(c: ChapterDef) -> bool: return c.profile == ChapterDef.SHARED).map(func(c: ChapterDef) -> StringName: return c.id)
+	t.eq(shared.call(slice), [&"prologue", &"prologue_2", &"prologue_3"], "统一教程：三段教程两档都有")
+	t.eq(shared.call(formal), shared.call(slice), "两档是同一套教程")
 
 
 static func _flow(p_profile: StringName) -> GameFlow:

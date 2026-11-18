@@ -20,6 +20,7 @@ static func frame_walk_through_visited(t: TestCase, root: Window) -> void:
 	root.add_child(game)
 	var flow: GameFlow = game.flow
 	flow.settings.ui_fades = false
+	Support.pass_tutorials(flow)
 	flow.begin(c.chapter, kit, 7, [] as Array[int], null)
 	var map = game.base()
 	var run: RunState = flow.run

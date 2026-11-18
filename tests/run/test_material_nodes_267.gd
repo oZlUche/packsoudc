@@ -4,6 +4,7 @@
 extends RefCounted
 
 const Records := preload("res://tests/ui/test_records_board_260.gd")
+const FlowSupport := preload("res://tests/run/flow_support.gd")
 
 const SEEDS := 32
 const KIND_TAGS := {"mine": ["mineral", "bullion"], "grove": ["plant", "beast_part"], "remains": ["crafted"], "runes": ["crystal", "magic"]}
@@ -174,5 +175,6 @@ static func frame_expedition_no_bias(t: TestCase, root: Window) -> void:
 	for ch in f.chapters:
 		if (ch as ChapterDef).id == &"free_mode":
 			chapter = ch
+	FlowSupport.pass_tutorials(f)
 	t.not_null(f.begin(chapter, null, 7) if chapter != null else null, "开局照常")
 	Records._cleanup()

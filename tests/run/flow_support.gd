@@ -131,3 +131,9 @@ static func depart(setup) -> bool:
 		flow_.close_briefing()
 		return flow_.run != null
 	return went
+
+
+## 统一教程（方案 2026-11-18 §8.1）：教程没通时出不了常规图 —— 要直接开常规图的测试先把这份局外的教程记成通过
+static func pass_tutorials(f: GameFlow) -> void:
+	for c in f.tutorial_chapters():
+		f.meta.grant_unlock(c.hidden_by_unlock)
