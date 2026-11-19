@@ -12,11 +12,11 @@
 [ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_nj4v6"]
 [ext_resource type="Script" path="res://core/battle/rule_part_def.gd" id="11_v63d5"]
 
-[sub_resource type="Resource" id="Resource_aai0p"]
+[sub_resource type="Resource" id="Resource_lr2xp"]
 script = ExtResource("5_m4t1i")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_ekrv1"]
+[sub_resource type="Resource" id="Resource_vj3v3"]
 script = ExtResource("7_01o0x")
 target = 1
 damage_type = &"poison"
@@ -24,14 +24,14 @@ amount = 1.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_1qngc"]
+[sub_resource type="Resource" id="Resource_bda45"]
 script = ExtResource("8_ovua5")
 
-[sub_resource type="Resource" id="Resource_cv4xq"]
+[sub_resource type="Resource" id="Resource_56y6x"]
 script = ExtResource("4_ex32o")
-trigger = SubResource("Resource_1qngc")
-cadence = SubResource("Resource_aai0p")
-effects = Array[ExtResource("3_wt86r")]([SubResource("Resource_ekrv1")])
+trigger = SubResource("Resource_bda45")
+cadence = SubResource("Resource_lr2xp")
+effects = Array[ExtResource("3_wt86r")]([SubResource("Resource_vj3v3")])
 
 [sub_resource type="Resource" id="Resource_isath"]
 script = ExtResource("9_teun6")
@@ -41,7 +41,7 @@ display_names = {
 "en": "Poison"
 }
 is_debuff = true
-rules = Array[ExtResource("4_ex32o")]([SubResource("Resource_cv4xq")])
+rules = Array[ExtResource("4_ex32o")]([SubResource("Resource_56y6x")])
 element = &"poison"
 
 [sub_resource type="Resource" id="Resource_lq06f"]

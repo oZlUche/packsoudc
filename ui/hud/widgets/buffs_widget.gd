@@ -1,5 +1,5 @@
 ## 150：这一局的 buff 一句：局外的和一局里拿到的都列，有时限的写还剩几步。没有 buff 不显示
-extends "res://ui/hud/widgets/status_readout.gd"
+extends HudWidget
 
 
 func title() -> String:
@@ -8,13 +8,10 @@ func title() -> String:
 
 func watch() -> Array[Signal]:
 	var mod := BuffModule.of(run)
-	var signals: Array[Signal] = []
-	if mod != null:
-		signals.append(mod.buffs_changed)
-	return signals
+	return ([mod.buffs_changed] if mod != null else []) as Array[Signal]
 
 
-func _parts() -> Array[String]:
+func text_of() -> String:
 	var parts: Array[String] = []
 	for id_ in run.meta_buffs:
 		var def: RunBuffDef = run.buff_defs.get(id_, null)
@@ -23,19 +20,4 @@ func _parts() -> Array[String]:
 		var def: RunBuffDef = run.buff_defs.get(StringName(String(entry["id"])), null)
 		var name_ := Names.of(def) if def != null else String(entry["id"])
 		parts.append(name_ + (UiText.t("hud.buff_left") % int(entry["left"]) if int(entry["left"]) > 0 else ""))
-	return parts
-
-
-func text_of() -> String:
-	var parts := _parts()
 	return UiText.t("hud.buffs") % UiText.t("hud.buff_sep").join(parts) if not parts.is_empty() else ""
-
-
-func _summary() -> String:
-	return UiText.t("hud.status_count") % (run.meta_buffs.size() + BuffModule.entries_of(run).size())
-
-
-func _paint() -> void:
-	super()
-	if not tooltip_text.is_empty():
-		tooltip_text = "\n".join(_parts())

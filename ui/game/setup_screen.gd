@@ -26,7 +26,6 @@
 extends GameScreen
 
 ## 地上容器的 id（局外的 100 / 101 之外）
-const CampaignDesk := preload("res://ui/widgets/campaign_desk.gd")
 const STASH_ID := 110
 ## 225：包架空、棋盘上也没包时军需官发的那只（最差的包）
 const FALLBACK_BAG := &"sack"
@@ -138,7 +137,6 @@ var _stamina: StatsStrip = null
 var _status := ""
 ## 标题前面那段空（第三页 = [constant PAPER_INSET]，让开地图纸的毛边）
 var _title_indent: Control = null
-var _step_keys: Array[Button] = []
 ## 161：右下角「继续 / 出发」与「返回」
 var _enter_btn: Button
 var _back_btn: Button
@@ -247,31 +245,10 @@ func open(_payload: Dictionary) -> void:
 	margin.add_child(col)
 	_title = TitlePlate.new()     # 226 批二：页标题刻在标题牌上（页码去掉，翻页计数在右下角按钮上）
 	_title.wood = true     # 选人页 B（作者 11:56「左上角跟着更新」）：三页的标题牌都是木框羊皮纸
-	_title.add_theme_stylebox_override("panel", CampaignDesk.surface("limestone", UiTheme.current().get_stylebox("panel", UiTheme.PANEL_HOME_PLAQUE)))
 	var title_row := _hbox(0)
 	_title_indent = Control.new()     # 180 定稿：第三页让开地图纸的毛边
 	title_row.add_child(_title_indent)
 	title_row.add_child(_title)
-	var header_space := Control.new()
-	header_space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_space.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	title_row.add_child(header_space)
-	var steps := _hbox(5)
-	steps.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	title_row.add_child(steps)
-	for i in PAGE_TITLES.size():
-		var stage := Button.new()
-		stage.text = ["I", "II", "III"][i]
-		stage.tooltip_text = UiText.t(PAGE_TITLES[i])
-		stage.accessibility_name = stage.tooltip_text
-		stage.custom_minimum_size = Vector2(54, 44)
-		stage.toggle_mode = true
-		stage.add_theme_font_override("font", UiPalette.numeral_font())
-		stage.add_theme_font_size_override("font_size", UiTheme.sz(18))
-		stage.pressed.connect(show_page.bind(i))
-		CampaignDesk.button(stage)
-		steps.add_child(stage)
-		_step_keys.append(stage)
 	col.add_child(title_row)
 	_chapters = map_chapters()
 	_pages.clear()
@@ -308,9 +285,7 @@ static func card_width() -> float:
 
 ## 选人页 B：第一页三栏的木框羊皮纸板（浅底墨字）
 static func _hall_board(inset: int) -> PanelContainer:
-	var p := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_PLAQUE, inset, inset, inset, inset)
-	CampaignDesk.panel(p)
-	return p
+	return UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_PLAQUE, inset, inset, inset, inset)
 
 
 ## 161 第一页：角色列表 | 角色卡 | 棋盘预览（只看不拖）。
@@ -358,8 +333,6 @@ func _build_kit_page() -> Control:
 	play.add_child(row)
 
 	var board_panel := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PACK_LEATHER, FRAME_INSET, FRAME_INSET, FRAME_INSET, FRAME_INSET)     # 180 定稿：背包皮框
-	CampaignDesk.panel(board_panel)
-	UiTheme.set_tone(board_panel, UiTheme.TONE_LIGHT)
 	board_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(board_panel)
 	var left := _vbox(12)
@@ -422,13 +395,11 @@ func _build_kit_page() -> Control:
 	_tidy_btn = UiTheme.make_home_button(UiText.t("wh.tidy"), tidy_warehouse, false, TIDY_SIZE, 18)     # 作者 10-31「需要有整理按钮」：同基地仓库（302：整个仓库）
 	_tidy_btn.name = "TidyButton"
 	_tidy_btn.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	CampaignDesk.button(_tidy_btn)
 	tools.add_child(_tidy_btn)
 	_repeat_btn = UiTheme.make_home_button(UiText.t("setup.repeat_last"), repeat_last, false, Vector2(REPEAT_W, TIDY_SIZE.y), 18)     # 277 第 2 条
 	_repeat_btn.name = "RepeatLastButton"
 	_repeat_btn.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_repeat_btn.disabled = flow.meta.last_carry.is_empty() and flow.meta.last_carry_funds <= 0
-	CampaignDesk.button(_repeat_btn)
 	tools.add_child(_repeat_btn)
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -721,10 +692,6 @@ func show_page(i: int) -> void:
 		_title_indent.custom_minimum_size.x = float(PAPER_INSET) if _page == PAGE_MAP else 0.0
 	if _title != null:
 		_title.text = UiText.t(PAGE_TITLES[_page])
-	for k in _step_keys.size():
-		var step := _step_keys[k]
-		step.disabled = k > _page
-		step.set_pressed_no_signal(k == _page)
 	if _enter_btn != null:
 		_enter_btn.text = UiText.t("setup.depart") if _page == PAGE_TITLES.size() - 1 else UiText.t("menu.continue")
 	if _back_btn != null:
@@ -1056,7 +1023,6 @@ func _rebuild_characters() -> void:
 		_char_box.add_child(roster)
 	for b in _character_btns:     # 选人页 B：平头木键、字居中，选中 = 按下态（深色木），不压蜡封
 		b.theme_type_variation = UiTheme.BUTTON_SETUP_CHAR
-		CampaignDesk.button(b)
 		b.remove_theme_font_size_override("font_size")     # 字号交给变体（20）
 		b.toggle_mode = true
 		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1593,8 +1559,6 @@ func _build_nav() -> void:
 	# 选人页 B（作者 11:56「右下角跟着更新」）：三页都用基地木键 ——「返回」浅木、「继续 / 出发」橙色主键（同基地【开始探索】）
 	_back_btn.theme_type_variation = UiTheme.BUTTON_SETUP_BACK
 	_enter_btn.theme_type_variation = UiTheme.BUTTON_SETUP_GO
-	CampaignDesk.button(_back_btn)
-	CampaignDesk.button(_enter_btn, true)
 	_back_btn.custom_minimum_size.y = NAV_BTN_H
 	_enter_btn.custom_minimum_size.y = NAV_BTN_H
 	box.add_child(row)

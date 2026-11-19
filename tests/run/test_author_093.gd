@@ -36,10 +36,10 @@ static func run_faith_files(t: TestCase) -> void:
 	var brute: FaithDef = defs.get(&"brute", null)
 	if brute == null:
 		return
-	t.eq(brute.thresholds, [30, 100, 200, 400] as Array[int], "蛮神阈值 30 / 100 / 200 / 400（表）")
-	t.eq(brute.deeds.size(), 2, "两条增长方式")
+	t.eq(brute.thresholds, [20, 60, 120] as Array[int], "蛮神阈值 20 / 60 / 120（信仰重构 D）")
+	t.eq(brute.deeds.size(), 3, "三条增长方式（信仰重构 D：打赢、反击、低血打赢）")
 	t.eq(brute.offerings.size(), 3, "三条献祭规矩（250：骨与血肉并成兽材）")
-	t.eq(brute.perks.size(), 5, "五条效果（含 4 级「不死 10 秒」与 1 级「祈求赐福」）")
+	t.eq(brute.perks.size(), 7, "七条效果（信仰重构 D：怒气一阶一行 4 条，加祈求赐福、献祭生命上限、秒杀）")
 	var db := ItemDatabase.new()
 	db.load_dir()
 	t.eq(db.get_def(&"charm_brute").faith_tag(), &"faith:brute", "蛮神的护符归蛮神")
@@ -193,14 +193,8 @@ static func run_undying(t: TestCase) -> void:
 	var ctx3 := BattleContext.create(plain, CombatantRuntime.from_spec(b, 1), rng)
 	DamageResolver.resolve(ctx3, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(50.0), plain, 1, 0))
 	t.check(plain.dead and not plain.is_alive(), "没有不死：当场倒下")
-	# 整场：蛮神 4 级的效果从信仰文件来，编译出来的单位带旗子
-	var defs := FaithDef.load_all()
-	var brute: FaithDef = defs[&"brute"]
-	var und: FaithPerk = null
-	for p in brute.perks_at(4):
-		if p is UndyingPerk:
-			und = p
-	t.check(und != null and brute.perks_at(3).find(und) < 0, "4 级才有「不死」")
+	# 信仰重构 D：蛮神不再带这一条（三阶的不屈定 3 秒，走怒气 perk），构件还在注册表里，这里验构件本身
+	var und := UndyingPerk.new()
 	var input := CompileInput.of(CombatantBaseline.with_hp(10.0))
 	und.compile_into(input, null, null)
 	var spec := BattleCompiler.compile(null, input)

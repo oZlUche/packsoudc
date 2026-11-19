@@ -98,7 +98,7 @@ static func problems(p_steps: Array, known_ids: Array = []) -> Array[String]:
 	for i in p_steps.size():
 		var s: Dictionary = p_steps[i]
 		var target := StringName(String(s.get("target", "")))
-		var known := known_ids.has(target) if not known_ids.is_empty() else (HudWidgets.has(target) or HudWidgets.BAR_ENDS.has(target) or target == &"current_node")
+		var known := known_ids.has(target) if not known_ids.is_empty() else (HudWidgets.has(target) or HudWidgets.BAR_ENDS.has(target))
 		if not known:
 			out.append("steps[%d]：没有这个目标 '%s'" % [i, target])
 		if String(s.get("text", "")) == "":

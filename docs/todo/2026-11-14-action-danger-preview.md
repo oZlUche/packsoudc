@@ -1,7 +1,7 @@
 # 待办：行动前预览实际代价与危险
 
 - 日期：2026-11-14
-- 状态：方案里的要求，未实施。
+- 状态：已实施（v6.50，报告 334，`core/run/action_preview.gd`）。
 - 依赖：[十档进阶与侵蚀改革](../plans/2026-11-14-ten-ascensions-and-erosion.md) §5.2、[报告 320 §F](../reports/320-ten-ascensions-and-erosion.md)。
 
 ## 要做的

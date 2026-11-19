@@ -247,12 +247,10 @@ static func frame_records_window(t: TestCase, root: Window) -> void:
 	f.settings.debug_mode = false
 	win.show_detail(0)
 	t.eq(win.detail_index(), 0, "开详情")
-	t.eq(root.gui_get_focus_owner(), win._back_btn, "详情页的返回键接过焦点")
 	t.check(win.detail_text().contains(UiText.t("records.detail_out")), "详情有带出那行")
 	t.check(not win.detail_text().contains(UiText.t("records.seed")), "非调试：没有种子")
 	win.show_list()
 	t.eq(win.detail_index(), -1, "回列表")
-	t.eq(root.gui_get_focus_owner(), win._rows[0], "回列表后焦点还在刚看的那局")
 	if DevGate.on():
 		f.settings.debug_mode = true
 		win.show_detail(0)

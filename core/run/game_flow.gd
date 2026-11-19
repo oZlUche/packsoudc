@@ -1639,7 +1639,7 @@ func _reopen_entry() -> Dictionary:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
 	var here := run.current_node()
 	if here != null and bool(here.content.get("revisit_event", false)):
-		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 10-22：「先回地图」的点，点节点或按 N 就再弹
+		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 10-22：「先回地图」的点，点节点 / 放大镜就再弹
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开

@@ -8,7 +8,6 @@ const ICON := 32.0
 const ART_DIR := "res://assets/ui/faith/"
 
 var icon: HudIcon
-var _two_lines := false
 
 
 func _init() -> void:
@@ -66,64 +65,7 @@ func text_at(p: int) -> String:
 	if def == null:
 		return text_of()
 	var next := def.next_threshold(p)
-	if in_bar:
-		return UiText.t("hud.faith_bar_level") % [def.tier_of(p), "\n" if _two_lines else " ", p, ("/%d" % next) if next >= 0 else ""]
 	return UiText.t("hud.faith_level") % [def.tier_of(p), p, (" / %d" % next) if next >= 0 else ""]
-
-
-func _bar_changed() -> void:
-	_two_lines = false
-	_text.remove_theme_constant_override("line_spacing")
-	_text.remove_theme_font_size_override("font_size")
-	refresh()
-
-
-func _bar_sample() -> String:
-	return UiText.t("hud.faith_bar_level") % [8, " ", 888, "/888"]
-
-
-func _bar_padding() -> float:
-	return get_theme_stylebox("panel").get_minimum_size().x + ICON + (icon.get_parent() as HBoxContainer).get_theme_constant("separation")
-
-
-## 按当前一行 / 两行字号给等级和三位信力预留空间；实际更宽时宿主采用实测宽。
-func bar_reserve_width() -> float:
-	var font := _text.get_theme_font("font")
-	var px := _text.get_theme_font_size("font_size")
-	var lines := _bar_sample().split(" ", true, 1) if _two_lines else PackedStringArray([_bar_sample()])
-	var width := 0.0
-	for line in lines:
-		width = maxf(width, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x)
-	return ceilf(width + _bar_padding())
-
-
-## 只在信仰槽内调排版。先用单行；要缩小超过约一成时，把阶位放到信力上方。
-func fit_bar_width(room: float) -> void:
-	var base: int = UiTheme.sz({Tier.SMALL: UiTheme.FONT_SIZE, Tier.DOUBLE: UiTheme.HUD_DOUBLE_SIZE,
-			Tier.LARGE: UiTheme.HUD_LARGE_SIZE}[tier])
-	var available := room - _bar_padding()
-	var font := _text.get_theme_font("font")
-	var single := _text.text.replace("\n", " ")
-	var sample := _bar_sample()
-	var widest := single if font.get_string_size(single, HORIZONTAL_ALIGNMENT_LEFT, -1, base).x > font.get_string_size(sample, HORIZONTAL_ALIGNMENT_LEFT, -1, base).x else sample
-	var px := TextFit.size_for(font, widest, base, available, maxi(1, roundi(base * 0.88)))
-	var fields := single.split(" ", true, 1)
-	var stack := font.get_string_size(widest, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > available and (single.is_empty() or roll_value() >= 0)
-	if stack:
-		px = mini(base, UiTheme.sz(14))
-	if stack != _two_lines:
-		_two_lines = stack
-		if stack:
-			# 两行只有拉丁字母和数字，复用字体行内留白即可维持基准横梁高度。
-			_text.add_theme_constant_override("line_spacing", -UiTheme.sz(3))
-		else:
-			_text.remove_theme_constant_override("line_spacing")
-		_text.text = "\n".join(fields) if stack else single
-	if px == base:
-		if _text.has_theme_font_size_override("font_size"):
-			_text.remove_theme_font_size_override("font_size")
-	elif _text.get_theme_font_size("font_size") != px:
-		_text.add_theme_font_size_override("font_size", px)
 
 
 func _paint() -> void:

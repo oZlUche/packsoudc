@@ -132,6 +132,14 @@ class _Narration:
 					_react = _alone(i, e, UiText.t("log.reaction") % [_who(e.side), _paint(label, c)])
 				elif effect == "undying":
 					_alone(i, e, UiText.t("log.undying") % _who(e.side))
+				elif effect == SkillMomentum.MECHANIC:     # 信仰重构 C / D：信仰机制发生的那一下（连携、烈日……）
+					var body := UiText.t("log." + String(e.payload.get("key", "")))
+					if e.payload.has("arg"):
+						_alone(i, e, body % [_who(e.side), UiText.t(String(e.payload["arg"]))])
+					elif e.payload.has("count"):
+						_alone(i, e, body % [_who(e.side), int(e.payload["count"])])
+					else:
+						_alone(i, e, body % _who(e.side))
 			BattleEvent.DIED:
 				_alone(i, e, UiText.t("log.down") % _who(e.side))
 			BattleEvent.OVERTIME_STACKED:

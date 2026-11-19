@@ -383,18 +383,6 @@ static func cjk_font() -> Font:
 	return _font_for("body", func() -> Font: return _wrap(FONT_BODY, system_font()))
 
 
-## 顶栏读数：Cinzel Bold 碑刻数字使用等宽字位；汉字和缺字沿用思源宋体 Medium。
-static func hud_readout_font() -> Font:
-	return _font_for("hud_readout", func() -> Font:
-		var f := FontVariation.new()
-		f.base_font = font_file(FONT_NUMERAL)
-		if f.base_font == null:
-			return cjk_font()
-		f.opentype_features = {&"tnum": 1, &"kern": 0}
-		f.fallbacks = [cjk_font()]
-		return f)
-
-
 ## 真粗体：富文本的 [b] 用它（思源宋体 Black（文件 serif_bold），不让引擎把常规体描粗 —— 描出来的发糊）
 static func cjk_font_bold() -> Font:
 	return _font_for("bold", func() -> Font: return _wrap(FONT_BOLD, system_font(true)))

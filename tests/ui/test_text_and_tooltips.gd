@@ -208,10 +208,7 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	host.size = Vector2(800, 600)
 	root.add_child(host)
 	var board := GridInventory.new(Vector2i(4, 3), 1)
-	# 此处测无配方链接时离开来源立即关闭；正式纱布已加入绷带卷配方。
-	var plain_gauze := c.items.get_def(&"bandage").duplicate() as ItemDef
-	plain_gauze.id = &"test_gauze_without_recipe"
-	var gauze := ItemInstance.create(plain_gauze)
+	var gauze := ItemInstance.create(c.items.get_def(&"bandage"))     # 298：刀有「可拼为」的道具词，窗会照 286 留着；这里要一件没配方词的
 	board.place(gauze, Vector2i(0, 0), 0)
 	var view := InventoryView.new()
 	view.inventory = board

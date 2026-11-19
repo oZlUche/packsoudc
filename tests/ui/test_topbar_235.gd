@@ -1,5 +1,5 @@
 ## 235（作者 2026-10-22「按推荐来」）：顶端栏丙款皮 —— 两头是真按钮（左 = 本局菜单，右 = 背包，右槽小背包钮并进来），
-## 栏里的组按两头石块外沿 + 间隙排、在石块上下沿之间居中；正中下半圆日晷（底座、扇面、指针和轴心一起盖在直栏上）；
+## 栏里的组按两头石块外沿 + 间隙排、在石块上下沿之间居中；正中下半圆日晷（底座归栏，扇面 / 指针 / 轴心归倒计时那件）；
 ## 旧布局里的 `bag_button` 静默丢掉、不整份回默认
 extends RefCounted
 
@@ -57,32 +57,15 @@ static func frame_skin(t: TestCase, root: Window) -> void:
 	var wallet := host.widget(&"wallet")
 	t.eq(wallet.theme_type_variation, UiTheme.PANEL_HUD_WELL, "栏里的件坐在米色凹槽里（长槽退役）")
 	t.eq(UiTheme.tone_at(wallet), UiTheme.TONE_LIGHT, "浅底墨字")
-	var readout := UiPalette.hud_readout_font()
-	var readout_size := wallet._text.get_theme_font_size("font_size")
-	t.eq(wallet._text.get_theme_font("font"), readout, "顶栏货币使用读数字体")
-	t.eq(host.widget(&"faith")._text.get_theme_font("font"), readout, "信仰沿用同一读数字体")
-	t.eq((readout as FontVariation).base_font, UiPalette.font_file(UiPalette.FONT_NUMERAL), "顶栏数字使用 Cinzel Bold")
-	t.eq(readout.fallbacks[0], UiPalette.cjk_font(), "中英混排的汉字沿用正文")
-	var numeral_width := readout.get_string_size("0", HORIZONTAL_ALIGNMENT_LEFT, -1, readout_size).x
-	for digit in "123456789":
-		t.eq(readout.get_string_size(digit, HORIZONTAL_ALIGNMENT_LEFT, -1, readout_size).x, numeral_width, "%s 与 0 等宽" % digit)
-	t.eq(readout.get_string_size("1111", HORIZONTAL_ALIGNMENT_LEFT, -1, readout_size).x,
-			readout.get_string_size("8080", HORIZONTAL_ALIGNMENT_LEFT, -1, readout_size).x, "货币滚数的四位数等宽")
-	var bill := UiPalette.numeral_font()
-	t.check(bill.get_string_size("1111").x < bill.get_string_size("8080").x, "结算仍使用 Cinzel 原来的比例数字")
-	t.check(readout.get_string_size("W").x > readout.get_string_size("i").x, "英文字母按字形取宽")
-	t.eq(host.overhang(), 124.0, "告示卷让到下凸的半圆石缘以下")
+	t.eq(host.overhang(), 124.0, "栏往下伸到日晷下沿 124（告示卷排在它下面）")
 	host.layout.entry_of(&"wallet")["anchor"] = "top_left"
 	host.layout.entry_of(&"wallet")["offset"] = Vector2(0, 20)
 	host.arrange()
 	t.eq(wallet.theme_type_variation, UiTheme.PANEL_HUD, "拖出栏：回通用凹槽")
-	t.check(wallet._text.get_theme_font("font") != readout, "拖出栏恢复通用字体")
-	t.eq(wallet._text.get_theme_font_size("font_size"), readout_size, "拖动不改变字号档位")
 	host.layout.entry_of(&"wallet")["anchor"] = "bar_left"
 	host.layout.entry_of(&"wallet")["offset"] = Vector2.ZERO
 	host.arrange()
 	t.eq(wallet.theme_type_variation, UiTheme.PANEL_HUD_WELL, "拖回栏：又是米色凹槽")
-	t.eq(wallet._text.get_theme_font("font"), readout, "拖回栏恢复读数字体")
 	var left: IconButton = bar.call("end_button", HudBarScript.LEFT)
 	var right: IconButton = bar.call("end_button", HudBarScript.RIGHT)
 	t.check(left != null and right != null and left.has_art() and right.has_art(), "两头是图按钮")
@@ -109,28 +92,12 @@ static func frame_skin(t: TestCase, root: Window) -> void:
 	t.eq(host.rect_of(&"bag_end"), bar.call("end_rect", HudBarScript.RIGHT), "教程目标 bag_end = 右头的石块")
 	t.eq(host.rect_of(&"menu_end"), bar.call("end_rect", HudBarScript.LEFT), "教程目标 menu_end = 左头的石块")
 	t.eq(CoachOverlay.problems([{"target": "bag_end", "text": "x", "texts": {"en": "x"}}]), [] as Array[String], "教程认得栏两头")
-	var rich_run: RunState = got[1]
-	rich_run.faith_defs = FaithDef.load_all()
-	CS.Support.activate(rich_run, &"charm_sun")
-	rich_run.faith_power.add_points(&"sun", 248 - rich_run.faith_power.points_of(&"sun"))
-	rich_run.wallet.earn(1250 - rich_run.wallet.balance)
-	var faith := host.widget(&"faith")
-	var lang_before := UiText.lang
-	for lang in ["zh", "en"]:
-		UiText.lang = lang
-		faith.refresh()
-		host.arrange()
-		t.check(faith.text().contains("248/300") and wallet.text() == "1250", "%s：四位金币、三位信力和阈值完整" % lang)
-		var stone_left := host.size.x * 0.5 - UiTheme.art_cached(HudBarScript.SKIN + "dial_base").get_width() * 0.5
-		t.check(faith.get_rect().end.x + HudHost.GAP <= stone_left, "%s：信力不碰盘面及阴影" % lang)
-		t.eq(host.bar_height(), HudBarScript.design_height(), "%s：横梁基准高度不变，石盘下缘仍可见" % lang)
-	UiText.lang = lang_before
 	host.queue_free()
 	screen.queue_free()
 
 
 static func frame_dial(t: TestCase, root: Window) -> void:
-	t.begin("235 · 下半圆日晷：底座在栏正中（轴心 800, 6），倒计时那件把半盘盖在直栏上；180° 在左、90° 正下、0° 在右；晷面算停在这件上；拖出栏回小日规")
+	t.begin("235 · 下半圆日晷：底座在栏正中（轴心 800, 6），倒计时那件在栏里只画扇面 / 指针 / 轴心；180° 在左、90° 正下、0° 在右；晷面算停在这件上；拖出栏回小日规")
 	var screen := FakeScreen.new()
 	screen.size = HOST_SIZE
 	root.add_child(screen)
@@ -152,7 +119,7 @@ static func frame_dial(t: TestCase, root: Window) -> void:
 		screen.queue_free()
 		return
 	t.eq(bar.call("dial_pivot"), Vector2(800, 6), "轴心在栏正中、y 6")
-	t.eq(cd.theme_type_variation, UiTheme.PANEL_BARE, "栏里的日晷不带凹槽（独立画在横梁上）")
+	t.eq(cd.theme_type_variation, UiTheme.PANEL_BARE, "栏里的日晷不带凹槽（画在栏皮的晷面上）")
 	var lim := cdm.limit()
 	var cases := [[0, Vector2(800 - 94, 6)], [lim / 2.0, Vector2(800, 100)], [lim, Vector2(800 + 94, 6)]]
 	for cs in cases:
@@ -162,28 +129,19 @@ static func frame_dial(t: TestCase, root: Window) -> void:
 		if float(cs[0]) == lim / 2.0 and lim % 2 == 1:
 			continue     # 奇数步数取不到正一半
 		t.check(tip.distance_to(cs[1]) < 1.0, "用掉 %s / %d：指针尖在 %s（%s）" % [cs[0], lim, cs[1], tip])
-	t.check(cd._has_point(Vector2(800, 105) - cd.global_position), "栏底以下的晷面也算停在日晷上")
+	t.check(cd._has_point(Vector2(800, 90) - cd.global_position), "晷面下半圆算停在日晷上")
 	t.check(not cd._has_point(Vector2(800, 140) - cd.global_position), "晷面外不算")
-	t.eq(host.rect_of(&"countdown"), Rect2(698, 6, 204, 102), "教程指整块晷面")
+	t.eq(host.rect_of(&"countdown"), Rect2(800 - 102, 6, 204, 102), "教程指整块晷面")
 	run.travel.clock.total = 0
 	cd.refresh()
 	cd.open_tip()
 	t.check((screen._tip as HoverTip).is_showing(), "停上去：开悬浮窗")
 	cd.close_tip()
-	host.layout.entry_of(&"countdown")["anchor"] = "bar_right"
-	host.arrange()
-	var moved := host.rect_of(&"countdown")
-	t.check(moved.get_center().x > HOST_SIZE.x * 0.5 and moved.position.y == 6 and moved.end.y > host.bar_height(), "移动到右槽时，日晷和热区跟随控件，保留下凸轮廓")
 	host.layout.entry_of(&"countdown")["anchor"] = "top_left"
 	host.layout.entry_of(&"countdown")["offset"] = Vector2(0, 100)
 	host.arrange()
 	t.check(not cd.in_bar and cd.theme_type_variation == UiTheme.PANEL_HUD and cd.custom_minimum_size.y > 0.0, "拖出栏：回自带凹槽的小日规")
 	t.eq(cd.hand_tip(), Vector2.INF, "不在栏里：不画栏上的指针")
-	t.eq(host.overhang(), host.bar_height(), "拖出日晷后告示恢复到横梁下面")
-	host.layout.entry_of(&"countdown")["anchor"] = "bar_center"
-	cd.hide()
-	host.arrange()
-	t.eq(host.overhang(), host.bar_height(), "隐藏日晷不会留下不可见的下凸占位")
 	host.queue_free()
 	screen.queue_free()
 
@@ -207,7 +165,7 @@ static func frame_notice_top(t: TestCase, root: Window) -> void:
 static func run_layout(t: TestCase) -> void:
 	t.begin("235 · 右槽小背包钮退役：登记表与默认布局都没有；旧布局文件里的 bag_button 静默丢掉，别的摆法照用（不整份回默认）")
 	t.check(not HudWidgets.has(&"bag_button") and HudLayout.default_for("map").entry_of(&"bag_button").is_empty(), "没有 bag_button")
-	t.eq(HudLayout.BAR_RIGHT, [&"skills", &"dev_drawer"] as Array[StringName], "右槽：技能、调试台箭头")
+	t.eq(HudLayout.BAR_RIGHT, [&"reopen_button", &"skills", &"dev_drawer"] as Array[StringName], "右槽：放大镜、技能、调试台箭头")
 	var problems: Array[String] = []
 	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "top_left", "offset": [40, 120]}, {"id": "bag_button", "anchor": "bar_right"}]}, problems)
 	t.check(old != null and problems.is_empty() and old.entry_of(&"bag_button").is_empty(), "读得进来、不报错、没有 bag_button（%s）" % "；".join(problems))

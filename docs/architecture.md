@@ -486,6 +486,9 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - 道具的额外功能写在道具上：`ItemDef.faith_bonuses`（`FaithBonus`：`tier`、`mods`、`rules`），只许信仰道具有；`BattleCompiler.compile` 多两个参数 `faith_tiers`（标签 → 阶）与 `faith_points`（标签 → 点数，095 的 scaled 模式用），tier ≤ 现在的并进那件道具 —— 仍是纯函数。
   编译之后 `RunState.compile_player` 还会套一次 `FaithPerk`（093，编译期钩子改 spec），所以战斗单位 = 编译器输出 + perk；这一层在 097 里列为待收口。
 - **信力与祈愿分开**（信仰重构 B，报告 330）：`FaithPower.points` 是信力（devotion，只增不减，阶只看它），`FaithPower.prayer` 是祈愿（可花，`prayer_cap` 封顶，默认 `PRAYER_CAP_DEFAULT` = 100）。
+- **单位级信仰机制**（信仰重构 C，报告 331）：一位神的整套战斗机制是一条规则 —— 扳机 `FaithMechanicTrigger`（订阅几条事件、全部放行），效果按事件名分流（`SkillMomentum` / `HuntDismantle` / `EarthSupport`，`core/battle/faith/`），状态在 `RuleContext.state()`。perk 按 `part` 一阶一行，只有 part 0 编译。大地承托编译期按摆放算（`EarthSupport.layers`，纯函数），修饰按 uid 放 `CompileInput.item_mods`，编译器按 uid 升序并入。战记 `EFFECT_RESOLVED{effect: faith_mechanic}`，战斗账 `battle_summary.mechanic` 喂 `MechanicDeed`；`RunState.last_mechanic` 交给紧接着的掉落（`LootContext.battle_notes`）。
+  信仰重构 D（报告 332）：扳机多了 `pulse`，频率层用 `FaithPulseCadence`（事件总放行，另按战斗时间轴整格自发一次，`event` 为空），日神窗口与自然周期治疗靠它；效果 `BruteRage` / `SunCycle` / `NatureRegrowth`。`MechanicDeed.per_count / cap` 按次给并封顶；`battle_summary.mechanic.low_hp_won`；秒杀不记战斗信力。
+  信仰重构 E（报告 333）：六神对照台架 `tools/faith_bench.gd`（同一批流派木桩只差奉哪位神、几阶，对敌人池每档固定种子打，记胜率、时长、机制首触发与次数、每场信力）；各 perk 有按阶直接编的入口（`rule_at` / `compile_at`），台架与测试不必造一局。
   祈愿来源：`battle_finished` 有效战斗 `PRAYER_PER_BATTLE`（秒杀不给）、`AltarModule.offer` min(2V, 余量)。只有 `spend_prayer` 能花（祈求赐福、秒杀），不再有扣信力的路径。
   存档键 `faith_progress` {神: {devotion, prayer}}（一局档 v6；v5 → v6 拆成 devotion = P、prayer = min(P, 100)）。节奏表的行多 `prayer` / `prayer_total`。
 - 切换信仰不清别的池子；继承（作者说可以）还没做。不信者、新教留空（作者定）。

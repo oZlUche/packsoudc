@@ -28,37 +28,26 @@ static func _rows(def: FaithDef, points: int) -> Array[Dictionary]:
 
 
 static func run_perk_lines(t: TestCase) -> void:
-	t.begin("188 补充一 · 蛮神信仰窗：一级一行；45 信力 Lv.1 行有赐福武器 / 30% / 10%，Lv.2～4 灰，Lv.4 按 400 写 10 秒；400 → 50%、360 → 45%")
+	t.begin("188 补充一 · 蛮神信仰窗（信仰重构 D 起三阶 + 基础）：一级一行；45 信力 Lv.0、Lv.1 亮，Lv.2、Lv.3 灰；不屈定 3 秒，不随信力涨")
 	var brute: FaithDef = FaithDef.load_all().get(&"brute", null)
 	t.not_null(brute, "蛮神")
 	if brute == null:
 		return
 	var rows := _rows(brute, 45)
-	t.eq(rows.size(), 4, "四组（Lv.1～Lv.4 各一组）")
+	t.eq(rows.size(), 4, "四组（基础 + Lv.1～Lv.3）")
 	if rows.size() != 4:
 		return
-	var lv1 := String(rows[0]["text"])
-	t.check(String(rows[0]["lv"]) == "Lv.1" and lv1.contains("可以在祭坛赐福武器") and lv1.contains("生命值低于 30% 时，造成伤害提高 10%") and lv1.split("\n").size() == 2, "Lv.1 一组两句、一条一行（257）：%s" % lv1)
-	t.check(not String(rows[0]["raw"]).begins_with("[color=@dim]"), "Lv.1 到了：不灰")
-	for i in range(1, 4):
-		t.check(String(rows[i]["raw"]).begins_with("[color=@dim]"), "Lv.%d 没到：整行灰" % (i + 1))
-	t.check(String(rows[1]["text"]).contains("可以在祭坛献祭生命上限换取能力"), "Lv.2：%s" % rows[1]["text"])
-	t.check(String(rows[2]["text"]).contains("可消耗 1 体力或 30 祈愿立即击败非首领敌人"), "Lv.3：%s" % rows[2]["text"])
-	t.check(String(rows[3]["text"]).contains("在战斗中，首次生命值归零时会持续战斗 10 秒"), "Lv.4 按到那一级的 400 信力写：%s" % rows[3]["text"])
-	var at400 := _rows(brute, 400)
-	t.check(at400.size() == 4 and String(at400[0]["text"]).contains("造成伤害提高 50%"), "400 信力：50%")
-	t.check(at400.size() == 4 and not String(at400[3]["raw"]).begins_with("[color=@dim]"), "400 信力：Lv.4 亮")
-	var at360 := _rows(brute, 360)
-	t.check(at360.size() == 4 and String(at360[0]["text"]).contains("造成伤害提高 45%"), "赐福花 40 降到 360：360 / 50 取整 = 7，7 × 5 + 10 = 45%")
-	var low: LowHpEmpowerPerk = null
-	var und: UndyingPerk = null
-	for p in brute.perks:
-		if p is LowHpEmpowerPerk:
-			low = p
-		if p is UndyingPerk:
-			und = p
-	t.check(low != null and low.percent_at(100000) == 50, "增伤封顶 50%")
-	t.check(und != null and und.seconds_at(100000) == 20.0, "持续战斗封顶 20 秒")
+	t.check(String(rows[0]["lv"]) == "Lv.0" and String(rows[0]["text"]).contains("怒气"), "基础：怒气（%s）" % rows[0]["text"])
+	var lv1 := String(rows[1]["text"])
+	t.check(lv1.contains("可以在祭坛赐福武器") and lv1.contains("穿透护甲") and lv1.split("\n").size() == 2, "Lv.1 一组两句、一条一行（257）：%s" % lv1)
+	t.check(not String(rows[1]["raw"]).begins_with("[color=@dim]"), "Lv.1 到了：不灰")
+	for i in range(2, 4):
+		t.check(String(rows[i]["raw"]).begins_with("[color=@dim]"), "Lv.%d 没到：整行灰" % i)
+	t.check(String(rows[2]["text"]).contains("可以在祭坛献祭生命上限换取能力"), "Lv.2：%s" % rows[2]["text"])
+	t.check(String(rows[3]["text"]).contains("可消耗 1 体力或 30 祈愿立即击败非首领敌人"), "Lv.3：%s" % rows[3]["text"])
+	t.check(String(rows[3]["text"]).contains("持续战斗 3 秒"), "Lv.3 不屈 3 秒：%s" % rows[3]["text"])
+	var top := _rows(brute, 400)
+	t.check(top.size() == 4 and String(top[3]["text"]).contains("持续战斗 3 秒") and not String(top[3]["raw"]).begins_with("[color=@dim]"), "400 信力：Lv.3 亮，还是 3 秒")
 
 
 static func run_low_hp_threshold(t: TestCase) -> void:

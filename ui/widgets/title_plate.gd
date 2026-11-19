@@ -61,8 +61,7 @@ func _draw() -> void:
 	var tex := UiTheme.art_cached(ART)
 	var r := Rect2(Vector2(-BLEED, -BLEED), size + Vector2(BLEED, BLEED) * 2.0)
 	if wood:
-		var plate := get_theme_stylebox("panel") if has_theme_stylebox_override("panel") else UiTheme.current().get_stylebox("panel", UiTheme.PANEL_HOME_PLAQUE)
-		draw_style_box(plate, Rect2(Vector2.ZERO, size))
+		draw_style_box(UiTheme.current().get_stylebox("panel", UiTheme.PANEL_HOME_PLAQUE), Rect2(Vector2.ZERO, size))
 	elif tex != null:
 		draw_rect(Rect2(Vector2(2, 2), size - Vector2(4, 4)), BACKING)     # 图的牌心是半透明的（结算屏是叠在石板上画的）：别的屏底下是画，先垫一层石色
 		var ts := tex.get_size()

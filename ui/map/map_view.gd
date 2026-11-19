@@ -21,11 +21,7 @@ signal zoom_changed(zoom: float)
 
 const NODE_RADIUS := 16.0     # 155：13 → 16，图标放大（作者：图案再大一点），外圈与命中都跟着它
 ## 155：图标的边长 = 节点半径 × 它（圆里留一圈边）
-const ICON_SCALE := 1.46
-const SURVEY_INK := Color("#344c5b")
-const SURVEY_CHALK := Color("#c8c7b3")
-const SURVEY_PAPER := Color("#f5ebce")
-const SEAL_EDGE := Color("#342e27")
+const ICON_SCALE := 1.6
 const SLOT_RADIUS := 5.0
 const EDGE_PICK := 6.0
 
@@ -180,7 +176,6 @@ var _march: float = 0.0
 var _hop: Dictionary = {}
 ## 落地后过了几秒（-1 = 没在落地）
 var _land_t: float = -1.0
-var _pawn_mask: BitMap
 var _follow_tween: Tween = null
 
 ## 画布 → 屏幕：screen = canvas * zoom + pan
@@ -491,23 +486,6 @@ func node_at(p: Vector2) -> int:
 			continue     # 096：遮罩下只有出生点能点中
 		if (pos[id] as Vector2).distance_to(p) <= reach:
 			return int(id)
-	# 棋子头部在节点圆之外。先保留相邻节点的圆形命中，再按棋子的实心像素补上它。
-	if not spawn_mask and current_id >= 0 and _hop.is_empty() and pos.has(current_id):
-		var rect := pawn_rect(to_screen(pos[current_id]))
-		var screen_point := to_screen(p)
-		if rect.has_point(screen_point):
-			if _pawn_mask == null:
-				var art := UiTheme.art_cached(UiTheme.ART_MAP_PAWN)
-				var img := art.get_image() if art != null else null
-				if img != null:
-					if img.is_compressed():
-						img.decompress()
-					_pawn_mask = BitMap.new()
-					_pawn_mask.create_from_image_alpha(img, 0.35)
-			if _pawn_mask != null:
-				var pixel := Vector2i((screen_point - rect.position) / rect.size * Vector2(_pawn_mask.get_size()))
-				if _pawn_mask.get_bitv(pixel):
-					return current_id
 	return -1
 
 
@@ -683,7 +661,7 @@ func _draw() -> void:
 		var f := minf(float(grow.get(e.from_id, 1.0)), float(grow.get(e.to_id, 1.0)))
 		if f <= 0.0:
 			continue
-		var color := _route_ink()
+		var color := _ink(UiPalette.DIM).darkened(0.25)
 		var width := 1.5
 		if route_of_edge.has(key):
 			var ri: int = route_of_edge[key]
@@ -844,7 +822,7 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, f
 		if route >= 0:
 			draw_line(center_, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85 * fade), 3.0, true)
 		else:
-			var c := _route_ink()
+			var c := _ink(UiPalette.DIM).darkened(0.25)
 			draw_line(center_, pos[int(id)], Color(c, c.a * fade), 1.5, true)
 	var dot := _ink(UiPalette.DIM)
 	draw_circle(center_, 3.0, Color(dot, dot.a * fade))
@@ -855,21 +833,6 @@ func _draw_hunter(p: Vector2, label: String) -> void:
 	draw_arc(p, NODE_RADIUS + 7.0, 0.0, TAU, 32, UiPalette.HP, 3.0, true)
 	if label != "":     # 226 批三：名字写在纸签上（原来是红字直接写在地图纸上）
 		_tag_queue.append([label, p + Vector2(0.0, -NODE_RADIUS - 8.0 - TAG_H * 0.5), UiPalette.HP.darkened(0.2)])
-
-
-## Blue survey ink on light paper; pale chalk on the two night plates.
-func _route_ink() -> Color:
-	return SURVEY_INK if _skin_light else SURVEY_CHALK
-
-
-## Each station is a stamped enamel pin. Its outline, category ring and pale
-## pictogram stay distinct even when a visited station loses its category colour.
-func _draw_station_stamp(p: Vector2, enamel: Color) -> void:
-	draw_circle(p + Vector2(0.8, 1.6), NODE_RADIUS + 1.0, Color(0.15, 0.12, 0.08, 0.30), true, -1.0, true)
-	draw_circle(p, NODE_RADIUS + 0.8, SEAL_EDGE, true, -1.0, true)
-	draw_circle(p, NODE_RADIUS - 0.5, enamel.darkened(0.12), true, -1.0, true)
-	draw_circle(p, NODE_RADIUS - 2.7, enamel.darkened(0.62), true, -1.0, true)
-	draw_arc(p, NODE_RADIUS - 0.8, 3.45, 4.85, 12, Color(SURVEY_PAPER, 0.64), 1.0, true)
 
 
 func _draw_node(n: MapNode, p: Vector2) -> void:
@@ -884,7 +847,8 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	if n.is_visited() and n.type != &"core":
 		var grey := color.get_luminance()
 		color = Color(grey, grey, grey).lerp(_ink(UiPalette.DIM), 0.5)
-	_draw_station_stamp(p, color)
+	draw_circle(p, NODE_RADIUS, color.darkened(0.55))
+	draw_arc(p, NODE_RADIUS, 0.0, TAU, 32, color, 2.0, true)
 	if graph.entry_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.HEAL, 2.0, true)
 	if graph.goal_ids.has(n.id):
@@ -894,15 +858,15 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, _ink(UiPalette.FG), 2.0, true)
 	elif n.id == _hover_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.35), 1.0, true)
-	# Pale engraved pictograms use the same ink on every category enamel.
+	# 155：有图标画图标（白线稿按节点色着色，圆底是同色压暗的深色，图标不会融进去）；没图退回写字
 	var tex := MapNodeStyle.icon(key)
 	if tex != null:
 		var side := NODE_RADIUS * ICON_SCALE
-		draw_texture_rect(tex, Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), false, SURVEY_PAPER)
+		draw_texture_rect(tex, Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), false, color)
 	else:
 		var glyph: String = style["glyph"]
 		var w := _font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-		draw_string(_font, p + Vector2(-w / 2.0, 5.5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, SURVEY_PAPER)
+		draw_string(_font, p + Vector2(-w / 2.0, 5.5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
 	# 184：出生点在右上插一面小旗（182 的那面）
 	if graph.entry_ids.has(n.id):
 		var flag := UiTheme.art_cached(UiTheme.ART_LEGEND_FLAG)

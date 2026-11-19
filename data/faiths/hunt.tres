@@ -1,40 +1,61 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_rs70y"]
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="2_mrnmw"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="3_t1q52"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/first_place_deed.gd" id="4_t2an8"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="5_w22es"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="6_ijxoi"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="7_k5tdd"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_t1q52"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="2_t2an8"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="3_w22es"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/first_place_deed.gd" id="4_ijxoi"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="5_k5tdd"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="6_yrrbb"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="7_0k2lu"]
+[ext_resource type="Script" path="res://core/run/faith/perks/hunt_dismantle_perk.gd" id="8_xpuyb"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="9_8obof"]
 
-[sub_resource type="Resource" id="Resource_yrrbb"]
-script = ExtResource("3_t1q52")
-by_type = {
-"battle": 5,
-"core": 50,
-"elite": 20,
-"hunter": 30
-}
+[sub_resource type="Resource" id="Resource_otlgf"]
+script = ExtResource("3_w22es")
+won_only = true
+amount = 6
 
-[sub_resource type="Resource" id="Resource_0k2lu"]
-script = ExtResource("4_t2an8")
+[sub_resource type="Resource" id="Resource_8q245"]
+script = ExtResource("4_ijxoi")
 tag = &"beast_part"
 rarity_pow = true
 plus = 1
 
-[sub_resource type="Resource" id="Resource_xpuyb"]
-script = ExtResource("5_w22es")
+[sub_resource type="Resource" id="Resource_6vpnn"]
+script = ExtResource("5_k5tdd")
+key = &"hunt_stage1"
+amount = 2
+
+[sub_resource type="Resource" id="Resource_a57wv"]
+script = ExtResource("6_yrrbb")
 tags = Array[StringName]([&"beast_part"])
 multiplier = 10.0
 
-[sub_resource type="Resource" id="Resource_8obof"]
-script = ExtResource("5_w22es")
+[sub_resource type="Resource" id="Resource_lk15h"]
+script = ExtResource("6_yrrbb")
 tags = Array[StringName]([&"food"])
 multiplier = 5.0
 
+[sub_resource type="Resource" id="Resource_c5v20"]
+script = ExtResource("8_xpuyb")
+tier = 0
+
+[sub_resource type="Resource" id="Resource_64ec5"]
+script = ExtResource("8_xpuyb")
+part = 1
+
+[sub_resource type="Resource" id="Resource_brlgl"]
+script = ExtResource("8_xpuyb")
+part = 2
+tier = 2
+
+[sub_resource type="Resource" id="Resource_ij8mm"]
+script = ExtResource("8_xpuyb")
+part = 3
+tier = 3
+
 [resource]
-script = ExtResource("7_k5tdd")
+script = ExtResource("9_8obof")
 id = &"hunt"
 display_name = "狩猎之神"
 display_names = {
@@ -48,6 +69,7 @@ description = "不被帝国祭祀，但在民间被猎人信奉"
 descriptions = {
 "en": "Not worshipped in the Empire's rites, but common hunters follow this god."
 }
-thresholds = Array[int]([25, 80])
-deeds = Array[ExtResource("2_mrnmw")]([SubResource("Resource_yrrbb"), SubResource("Resource_0k2lu")])
-offerings = Array[ExtResource("5_w22es")]([SubResource("Resource_xpuyb"), SubResource("Resource_8obof")])
+thresholds = Array[int]([20, 60, 120])
+deeds = Array[ExtResource("2_t2an8")]([SubResource("Resource_otlgf"), SubResource("Resource_8q245"), SubResource("Resource_6vpnn")])
+offerings = Array[ExtResource("6_yrrbb")]([SubResource("Resource_a57wv"), SubResource("Resource_lk15h")])
+perks = Array[ExtResource("7_0k2lu")]([SubResource("Resource_c5v20"), SubResource("Resource_64ec5"), SubResource("Resource_brlgl"), SubResource("Resource_ij8mm")])

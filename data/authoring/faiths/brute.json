@@ -13,19 +13,25 @@
     "en": "A concept of nature (a falling stone is violence too). Worshipped by the northern barbarians and by most of the Empire's border provinces; one of the Empire's gods, but of low standing."
   },
   "thresholds": [
-    30,
-    100,
-    200,
-    400
+    20,
+    60,
+    120
   ],
   "deeds": [
     {
-      "type": "damage",
-      "multiplier": 0.2,
-      "cap": 30
+      "type": "battle",
+      "won_only": true,
+      "amount": 6
     },
     {
-      "type": "vitality_lost"
+      "type": "mechanic",
+      "key": "brute_strike",
+      "amount": 2
+    },
+    {
+      "type": "mechanic",
+      "key": "low_hp_won",
+      "amount": 2
     }
   ],
   "offerings": [
@@ -48,14 +54,29 @@
   ],
   "perks": [
     {
+      "type": "brute_rage",
+      "tier": 0
+    },
+    {
       "type": "altar_bless"
     },
     {
-      "type": "low_hp_empower"
+      "type": "brute_rage",
+      "part": 1
+    },
+    {
+      "type": "brute_rage",
+      "part": 2,
+      "tier": 2
     },
     {
       "type": "altar_sacrifice_hp",
       "tier": 2
+    },
+    {
+      "type": "brute_rage",
+      "part": 3,
+      "tier": 3
     },
     {
       "type": "smite",
@@ -64,10 +85,6 @@
         "elite"
       ],
       "tier": 3
-    },
-    {
-      "type": "undying",
-      "tier": 4
     }
   ],
   "blessings": [

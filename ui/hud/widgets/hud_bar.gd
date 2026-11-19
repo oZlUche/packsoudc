@@ -1,8 +1,13 @@
 ## 166（作者定）：顶端栏 —— 横贯顶部的一条底。它本身不写字：栏里摆什么由布局里锚在 `bar_left / bar_center / bar_right` 的条目决定（[HudHost] 排），
 ## 所以「摆读数」时照样能把东西拖进拖出、换槽，栏自己也能藏。大小由宿主定（整屏宽 × 栏高）；宿主把它排成第一个子节点，垫在栏里的组件下面
 ##
-## 顶栏沿用两端三态按钮与原有热区；中段为暖白大理石横梁，内凿的浅石槽承载读数。
-## 下凸的大理石半圆日晷由倒计时组件绘制，组件挪动或隐藏时晷面跟随。
+## 235（作者 2026-10-22「按推荐来」）：石刻栏皮 —— 浅色石刻一整条，图与数值在 `hud/topbar/`（`topbar.json`）：
+## 中间平铺段从日晷底座左右两边往外铺、只铺在两头之间；正中下半圆日晷底座（刻度在图里，扇面 / 指针 / 轴心归倒计时那件画，
+## 底座下凸压在地图上、不占布局高度）；两头最后盖上去。两头是真按钮（[IconButton] 三态，热区是那块凸起的石块）：
+## 左 = 本局菜单（等同 Esc），右 = 背包（右槽的小背包钮并进来了）。按下发 [signal end_pressed]，接到所在屏的 `hud_end(side)`。
+## 两头不进 150 的布局（不能拖、不能藏）
+## 作者 10-22 13:31「两头的浮雕和下方边缘重合了，扩张顶端栏的下缘」：石面 86 → 100，回纹带挪到 y 87～95 整条贯通；
+## 两头石块与读数仍在 y 8～78（[method band_margins] 按石块上下沿算，不按石面居中）
 extends HudWidget
 
 ## 两头按下：[constant LEFT] / [constant RIGHT]
@@ -99,13 +104,11 @@ static func dial_bottom() -> float:
 	return float((skin().get("dial", {}) as Dictionary).get("bottom", 124))
 
 
-## 默认居中布局的日晷轴心（栏的坐标）
+## 日晷轴心（栏的坐标）
 func dial_pivot() -> Vector2:
 	var d: Dictionary = _meta.get("dial", {})
-	var p: Array = d.get("pivot", [137, 6])
-	# 多行读数加高横梁时，盘缘跟着实际栏底，仍盖住石边。
-	var extra := maxf(size.y - design_height(), 0.0)
-	return Vector2(roundf(size.x * 0.5) - float(d.get("center_x", 137)) + float(p[0]), float(p[1]) + extra)
+	var p: Array = d.get("pivot", [151, 6])
+	return Vector2(roundf(size.x * 0.5) - float(d.get("center_x", 151)) + float(p[0]), float(p[1]))
 
 
 ## 日晷的数（`topbar.json` 的 `dial`）
@@ -136,19 +139,24 @@ func _place_ends() -> void:
 		b.position = Vector2(0.0 if side == LEFT else w - b.size.x, 0.0)
 
 
-## 中段石面随大字号增加高度，上下边线保持设计厚度。
+## 平铺段（从日晷两边往外、只铺在两头之间）→ 日晷底座；两头是子节点，画在上面
 func _draw() -> void:
 	var tile := UiTheme.art_cached(SKIN + "bar_tile")
-	if tile != null:
-		var x := 0.0
-		var extra := maxf(0.0, size.y - design_height())
-		var top := 15.0
-		var face := 62.0
-		var foot := tile.get_height() - top - face
-		while x < size.x:
-			var width := minf(tile.get_width(), size.x - x)
-			draw_texture_rect_region(tile, Rect2(x, 0, width, top), Rect2(0, 0, width, top))
-			draw_texture_rect_region(tile, Rect2(x, top, width, face + extra), Rect2(0, top, width, face))
-			draw_texture_rect_region(tile, Rect2(x, top + face + extra, width, foot), Rect2(0, top + face, width, foot))
-			x += width
+	var dial := UiTheme.art_cached(SKIN + "dial_base")
+	if tile != null and dial != null:
+		var ew := float((_meta.get("ends", {}) as Dictionary).get("width", 104))
+		var tw := tile.get_width()
+		var th := tile.get_height()
+		var dx := roundf(size.x * 0.5) - float(dial_meta().get("center_x", 151))
+		var x := dx + dial.get_width()
+		while x < size.x - ew:
+			var w := minf(tw, size.x - ew - x)
+			draw_texture_rect_region(tile, Rect2(x, 0, w, th), Rect2(0, 0, w, th))
+			x += tw
+		x = dx
+		while x > ew:
+			var w := minf(tw, x - ew)
+			draw_texture_rect_region(tile, Rect2(x - w, 0, w, th), Rect2(tw - w, 0, w, th))
+			x -= tw
+		draw_texture(dial, Vector2(dx, 0))
 	super()

@@ -201,7 +201,9 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	map.show_rules()
 	t.check(not map.rules_open(), "没有规则：show_rules 不弹")
 	map.toggle_pause()
-	t.is_null(map.hud_part(&"reopen_button"), "回到当前地点无需顶栏按钮")
+	# 166（作者定）：「回到这个点」换成顶端栏的放大镜图标按钮（缺图写字），快捷键与说明进悬浮提示；撤离按钮删了
+	t.check(map._reopen_btn is IconButton and map._reopen_btn.hotkey == "N", "「回到这个点」是放大镜图标按钮，角上标 N")
+	t.check(map._reopen_btn.tooltip_text.begins_with("放大镜（N）"), "悬浮提示写名字与快捷键")
 	t.check(not ("_extract_btn" in map), "撤离按钮删了（撤离点的事件屏里撤）")
 
 	# 地图上的 Esc：开着什么就关什么，什么都没开着就呼出暂停菜单；暂停菜单里的设置返回回暂停菜单、一局还在
@@ -242,23 +244,15 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	# 点当前节点 = 恢复
 	var cur: int = map._view.current_id
 	t.check(cur >= 0, "地图知道当前节点")
-	var position: Vector2 = map._view.positions()[cur]
-	var time_before := flow.run.travel.clock.total
-	map._view.press(position)
-	t.eq(flow.run.travel.clock.total, time_before, "点脚下节点不花行动点")
+	map._on_node_pressed(cur, MOUSE_BUTTON_LEFT, false)
 	t.check(game.overlay() == ov and ov.visible and game.minimized() == null, "点当前节点：收起的那一屏原样回来了")
 	# 再收起、点别的节点不算恢复（照旧是走一步的意思，这里只验当前节点那一条）
 	t.check(ov.to_map(), "再收起")
 	t.check(game.minimized() == ov, "又藏起来了")
 	map._on_node_pressed(cur, MOUSE_BUTTON_RIGHT, false)
 	t.is_null(game.overlay(), "右键当前节点不算")
-	map._update_tooltip(cur)
-	t.check(map.tooltip_text().contains(UiText.t("map.current_reopen")), "悬停脚下节点提示可重开")
-	var key := InputEventKey.new()
-	key.keycode = KEY_N
-	key.pressed = true
-	map._unhandled_key_input(key)
-	t.check(game.overlay() == ov, "N 快捷键恢复同一搜索屏")
+	map._on_node_pressed(cur, MOUSE_BUTTON_LEFT, false)
+	t.check(game.overlay() == ov, "左键当前节点又回来了")
 	# 作者 10-22：搜索屏的 Esc = 关闭（同右上角关闭：回到「再搜 / 走」的事件屏），不是收起
 	t.check(game.escape(), "搜索屏 Esc 接了")
 	t.check(game.minimized() == null, "没收起")

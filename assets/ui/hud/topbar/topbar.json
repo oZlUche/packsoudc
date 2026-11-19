@@ -29,29 +29,65 @@
  "gap": 12,
  "tile": {
   "file": "bar_tile",
-  "width": 1120,
-  "phase": "repeat across the lintel from the left edge"
+  "width": 280,
+  "phase": "tile outward from the dial_base left/right edges"
  },
  "dial": {
+  "file": "dial_base",
+  "size": [
+   274,
+   140
+  ],
+  "center_x": 137,
   "pivot": [
    137,
    6
   ],
-  "center_x": 137,
   "radius": 94,
   "face_radius": 102,
-  "bottom": 124,
+  "sweep": "lower semicircle: 180° = left end, 90° = straight down, 0° = right end; point = pivot + (cos a, +sin a) * r (y down)",
+  "hand": {
+   "files": {
+    "calm": "dial_hand_calm",
+    "half": "dial_hand_half",
+    "low": "dial_hand_low"
+   },
+   "size": [
+    24,
+    94
+   ],
+   "pivot": [
+    12,
+    8
+   ],
+   "points": "down (90°)"
+  },
+  "hub": {
+   "file": "dial_hub",
+   "size": [
+    28,
+    28
+   ],
+   "pivot": [
+    14.0,
+    14.0
+   ]
+  },
   "stages": {
    "calm": {
-    "wash": "#c18f4c"
+    "above": 0.5,
+    "wash": "#6b6255"
    },
    "half": {
-    "wash": "#db873e"
+    "above": 0.25,
+    "wash": "#9A5A22"
    },
    "low": {
-    "wash": "#bd5144"
+    "above": 0,
+    "wash": "#8E2A22"
    }
   },
-  "wash_opacity": 0.42
+  "wash_opacity": 0.16,
+  "bottom": 124
  }
 }

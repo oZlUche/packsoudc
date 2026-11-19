@@ -42,7 +42,7 @@ static func run(t: TestCase) -> void:
 
 
 static func frame_menu_layout(t: TestCase, root: Window) -> void:
-	t.begin("主菜单：整屏风景、居中字标、左下透明文字操作；键盘焦点与首次存档分支")
+	t.begin("197 补充三 · 主菜单：整屏画、不上石板、首张营地；游戏名水平居中、上沿 90；左下角几行字从底往上堆（主 44 / 次 34 / 末行小字），字的左沿 x 96、末行离屏底 72；焦点行前画菱形；没有木牌、暗纱、战绩行")
 	var p := Support.paths("menu197")
 	Support.cleanup("menu197")
 	var game = (load(GAME) as PackedScene).instantiate()
@@ -59,30 +59,23 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	var sc: MenuBackdrop = menu.scenery()
 	t.eq(sc.current_name(), "menu/bg_camp", "第一张是营地（启动屏那张）")
 	t.eq(sc.art_names.size(), 3, "三张画")
-	t.eq(sc.live_tweens() > 0, UiMotion.enabled(game.flow.settings), "镜头跟随动效设置")
+	t.check(sc.live_tweens() > 0, "镜头在走")
 	var s: float = menu.ui_scale()
 	var c: float = menu.column_scale()
 	t.check(c >= 0.75 and is_equal_approx(s, menu.size.y / 1080.0), "按屏高缩放（%.3f），菜单不小于 0.75" % c)
 	var title: Control = menu.title_node()
-	t.is_null(menu.find_child("SurveyIndex", true, false), "风景上无书页")
-	t.check(title is TextureRect and title.texture != null and title.texture.resource_path.ends_with("/title.png"), "使用原版字标")
-	t.check(is_equal_approx(title.position.x + title.size.x * 0.5, menu.size.x * 0.5), "字标在整屏水平居中")
+	t.check(title is TextureRect and is_equal_approx(title.size.x, 1116.0 * s) and is_equal_approx(title.position.x + title.size.x * 0.5, menu.size.x * 0.5), "定稿字标图：宽 1116、水平居中")
+	t.check(is_equal_approx(title.position.y, 90.0 * s), "上沿 90（随高缩放）")
 	var col: VBoxContainer = menu.column()
-	t.check(col.position.y >= title.get_rect().end.y and col.get_global_rect().end.x < menu.size.x * 0.65, "文字操作位于左下")
-	t.check(col.get_global_rect().end.y < menu.size.y, "末行不出屏")
+	t.check(is_equal_approx(col.position.x + UiTheme.MENU_LINE_INDENT * c, 96.0 * c), "字的左沿 x = 96（菱形挂在左边的缩进里）")
+	t.check(is_equal_approx(col.position.y + col.size.y * c, menu.size.y - 72.0 * c), "最底下一行离屏底 72（从底往上堆）")
 	var lines: Array[Button] = menu.lines()
 	t.check(lines.size() >= 3, "几行字（%d）" % lines.size())
 	if lines.size() >= 3:
 		t.eq(lines[0].text, UiText.t("menu.new_run"), "没存档：第一行是「新的游戏」（不留「继续」的空行）")
-		t.eq(lines[0].get_theme_font_size("font_size"), UiTheme.sz(menu.PRIMARY_SIZE), "主档遵从当前字号")
-		t.eq(lines[1].get_theme_font_size("font_size"), UiTheme.sz(menu.SECONDARY_SIZE), "次档遵从当前字号")
-		t.check(lines.all(func(b): return b.flat and b.icon == null and b.get_theme_stylebox("normal") is StyleBoxEmpty), "选项没有填充背景")
-		t.check(lines.all(func(b): return b.get_theme_constant("outline_size") > 0 and b.focus_mode != Control.FOCUS_NONE), "风景上文字有描边，可用键盘操作")
-		t.eq(lines[0].get_theme_font("font"), UiPalette.display_font(), "中文主操作使用锦书宋")
-		t.eq(lines[1].get_theme_font("font"), UiPalette.cjk_font(), "次操作使用思源宋体 Medium")
-		t.check(lines[0].get_theme_color("font_hover_color") != lines[0].get_theme_color("font_pressed_color"), "悬停和按下使用不同字色")
-		var focus := lines[0].get_theme_stylebox("focus") as StyleBoxFlat
-		t.check(focus != null and not focus.draw_center and focus.border_width_bottom >= 2, "焦点透明并有独立底线")
+		t.eq(lines[0].get_theme_font_size("font_size"), 44, "主档 44 号")
+		t.eq(lines[1].get_theme_font_size("font_size"), 34, "次档 34 号")
+		t.check(lines.all(func(b): return b.theme_type_variation == UiTheme.BUTTON_MENU_LINE), "都是描边字，不是木牌")
 		var texts: Array = lines.map(func(b): return b.text)
 		t.eq(texts.slice(1), [UiText.t("menu.encyclopedia"), UiText.t("menu.settings")], "240：「跳过序章」搬到开场一问；089 补充二：「仓库与战绩」去掉，次档：百科 / 设置")
 		t.check(not UiText.t("menu.continue") in texts, "089 补充二：没存档只有「新的游戏」，没有「继续」")
@@ -95,7 +88,6 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	t.eq(link_texts.front() if not link_texts.is_empty() else "", "中 / EN", "末行第一个：语言「中 / EN」")
 	t.eq(link_texts.back() if not link_texts.is_empty() else "", UiText.t("menu.quit"), "末行最后：退出")
 	t.check(links.all(func(b): return (b as Button).theme_type_variation == UiTheme.BUTTON_MENU_FOOT), "末行是小字链接")
-	t.check(links.all(func(b): return (b as Button).flat and (b as Button).get_theme_font_size("font_size") == UiTheme.sz(menu.FOOT_SIZE)), "页脚使用透明小字")
 	t.eq(menu.find_children("MenuVeil", "", true, false).size(), 0, "没有暗纱")
 	t.eq(menu.notices().get_child_count(), 0, "没有提示：右下不占位")
 	var stats := false
@@ -103,25 +95,6 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 		if (l as Label).text.contains("撤离") and (l as Label).text.contains("战败"):
 			stats = true
 	t.check(not stats, "战绩行从菜单拿掉")
-	var flow: GameFlow = game.flow
-	flow.slots = SaveSlots.new("user://test_menu197_slots")
-	flow.slots.remove(1)
-	flow.use_slot(1)
-	t.check(flow.save_meta(), "建立可继续的存档")
-	(links[0] as Button).grab_focus()
-	(links[0] as Button).pressed.emit()
-	t.check((menu.foot().get_child(0) as Button).has_focus(), "更换语言后键盘焦点回到语言入口")
-	t.eq(menu.title_node().texture.resource_path.get_file(), "title_en.png", "英文目录同步更换字标")
-	lines = menu.lines()
-	t.eq([lines[0].text, lines[1].text], ["Continue", "Load game"], "已有存档的英文入口")
-	var last_link := menu.foot().get_child(-1) as Button
-	t.eq(lines[0].get_theme_font("font"), UiPalette.cjk_font_bold(), "英文主操作使用粗体")
-	t.check(menu.column().get_global_rect().end.x <= menu.size.x, "英文操作完整可见")
-	t.check(last_link != null and last_link.text == "Quit" and last_link.focus_mode != Control.FOCUS_NONE, "英文退出保留键盘操作")
-	menu.toggle_language()
-	menu.lines()[0].pressed.emit()
-	t.eq(flow.screen, GameFlow.Screen.META, "点继续回到该存档基地")
-	flow.slots.remove(1)
 	game.queue_free()
 	Support.cleanup("menu197")
 
@@ -166,7 +139,7 @@ static func frame_backdrop_camera(t: TestCase, root: Window) -> void:
 
 
 static func frame_logo(t: TestCase, root: Window) -> void:
-	t.begin("主菜单：局部资源下原字标保持比例并在屏幕居中；启动屏仍读其专属字标")
+	t.begin("197 补充二 §12 / 补充三 · 字标图在就用图（宽 1116、按图的比例，水平居中、上沿 90，随高缩放）；启动屏读 1× 那张")
 	var consts := (load(BOOT) as GDScript).get_script_constant_map()
 	t.eq(consts["LOGO"], "res://assets/ui/menu/title_boot.png", "启动屏的字标是 1× 那张")
 	var saved := UiTheme.asset_root
@@ -182,15 +155,10 @@ static func frame_logo(t: TestCase, root: Window) -> void:
 	var logo = menu.title_node() if menu != null and menu.has_method("title_node") else null
 	t.check(logo is TextureRect, "有图：标题是图")
 	if logo is TextureRect:
-		t.check(is_equal_approx(logo.size.y, logo.size.x * 40.0 / 144.0), "回退图仍按原比例（%s）" % logo.size)
-		t.check(is_equal_approx(logo.position.x + logo.size.x * 0.5, menu.size.x * 0.5), "回退图也在屏幕居中")
+		var s: float = menu.ui_scale()
+		t.check(is_equal_approx(logo.size.x, 1116.0 * s) and is_equal_approx(logo.size.y, 1116.0 * s * 40.0 / 144.0), "宽 1116、按图的比例（%s）" % logo.size)
+		t.check(is_equal_approx(logo.position.y, 90.0 * s) and is_equal_approx(logo.position.x + logo.size.x * 0.5, menu.size.x * 0.5), "水平居中、上沿 90（%s）" % logo.position)
 		t.eq(logo.mouse_filter, Control.MOUSE_FILTER_IGNORE, "不接鼠标")
-	UiTheme.asset_root = "res://tests/fixtures/absent_menu_art/"
-	menu.toggle_language()
-	var fallback: Control = menu.title_node()
-	t.check(fallback is Label and (fallback as Label).text == "Pack & Extract", "缺图时显示当前语言的文字标题")
-	t.check(is_equal_approx(fallback.position.x + fallback.size.x * 0.5, menu.size.x * 0.5), "文字标题仍然居中")
-	menu.toggle_language()
 	game.queue_free()
 	UiTheme.asset_root = saved
 	Support.cleanup("menu197l")

@@ -177,38 +177,8 @@ static func draw_art(
 	canvas.draw_set_transform_matrix(base)
 	var mark := mark_of(faith_of(def), cell)     # 205：赐福版盖信仰印记（画完图再盖，永远正着）
 	if mark != null:
-		var seal := mark_rect(def, rot, anchor, cell)
-		var center := seal.get_center()
-		var radius := seal.size.x * 0.50
-		canvas.draw_circle(center + Vector2(0, radius * 0.10), radius, Color("211b20") * modulate, true, -1.0, true)
-		canvas.draw_circle(center, radius, Color("82513a") * modulate, true, -1.0, true)
-		canvas.draw_arc(center, radius * 0.87, -PI * 0.95, PI * 0.67, 20, Color("e8c78c") * modulate, maxf(1, cell * 0.018), true)
-		canvas.draw_texture_rect(mark, seal.grow(-radius * 0.16), false, modulate)
+		canvas.draw_texture_rect(mark, mark_rect(def, rot, anchor, cell), false, modulate)
 	return true
-
-
-## A red surveyor's breach mark, inset within one occupied cell. Critical
-## exposure adds a second branch; the tooltip carries the exact count and cap.
-static func draw_erosion(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, tint: Color = Color.WHITE) -> void:
-	var depth := ItemErosion.count(inst)
-	if depth <= 0:
-		return
-	var origin := anchor + Vector2(corner_cell(inst.def.shape, rot, false, false)) * cell
-	var junction := origin + Vector2(0.48, 0.45) * cell
-	var crack := PackedVector2Array([
-		origin + Vector2(0.19, 0.30) * cell, origin + Vector2(0.33, 0.47) * cell,
-		junction, origin + Vector2(0.44, 0.59) * cell, origin + Vector2(0.65, 0.73) * cell
-	])
-	_draw_fissure(canvas, crack, cell, tint)
-	if depth + 1 >= ItemErosion.limit(inst):
-		_draw_fissure(canvas, PackedVector2Array([
-			junction, origin + Vector2(0.61, 0.36) * cell, origin + Vector2(0.75, 0.38) * cell
-		]), cell, tint)
-
-
-static func _draw_fissure(canvas: CanvasItem, points: PackedVector2Array, cell: float, tint: Color) -> void:
-	canvas.draw_polyline(points, Color("451d28") * tint, maxf(2.5, cell * 0.065), true)
-	canvas.draw_polyline(points, Color("feb38b") * tint, maxf(1.0, cell * 0.020), true)
 
 
 ## 281 寂灭：法杖进出 [constant ItemInstance.RUNS_TINT_FROM] 次起越来越暗，[constant ItemInstance.RUNS_BLACK] 次全黑（叠色，不另画图）

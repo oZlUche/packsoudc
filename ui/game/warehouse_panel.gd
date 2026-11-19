@@ -15,8 +15,6 @@
 ## 268 补充二（作者 10-31 11:25）：基地「仓库」页的包架不在这一列，[method rack_box] 交给 [MetaScreen] 贴在右边仓库棋盘左边；结算页照旧
 extends MarginContainer
 
-const StationFinish := preload("res://ui/widgets/station_finish.gd")
-
 signal changed()
 
 ## 两块格子之间的空隙
@@ -150,10 +148,7 @@ func _build() -> void:
 func _small_button(text: String, handler: Callable) -> Button:
 	if art_buttons:
 		return UiTheme.make_home_button(text, handler, false, RESULT_BUTTON_SIZE, RESULT_BUTTON_FONT_EN if UiText.lang == "en" else RESULT_BUTTON_FONT)
-	var b := UiTheme.make_home_button(text, handler)
-	if not _own_shelf:
-		StationFinish.button(b)
-	return b
+	return UiTheme.make_home_button(text, handler)
 
 
 ## 226 批一：回话 —— 告示卷轴（本地那行字删了）

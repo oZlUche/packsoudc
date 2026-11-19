@@ -85,7 +85,6 @@ class TipWindow extends PanelContainer:
 	var hover_t := 0.0
 	## 子窗：是父窗的哪个关键词开的
 	var origin_term := ""
-	var node_note := false
 	var item_mode := false
 	## 286：正文里有配方词 / 道具词（「可拼为」那一行）—— 没钉住时鼠标从源挪进窗里不收、接着走钉住进度
 	var has_recipe := false
@@ -301,24 +300,7 @@ class TipWindow extends PanelContainer:
 		parts.append(foot.text + (UiText.t("tip.gap") + set_label.text if set_label.text != "" else ""))
 		return "\n".join(parts)
 
-	func set_node_note(title: String, text_bb: String) -> void:
-		node_note = true
-		UiTheme.art_panel(self, "survey/node_note", 18)
-		UiTheme.set_tone(self, UiTheme.TONE_LIGHT)
-		sep.color = Color("94624d")
-		head.add_theme_font_override("normal_font", UiPalette.title_font())
-		head.add_theme_font_size_override("normal_font_size", UiTheme.sz(20))
-		set_status(title, text_bb)
-
 	func reset_state() -> void:
-		if node_note:
-			node_note = false
-			remove_theme_stylebox_override("panel")
-			UiTheme.set_tone(self, UiTheme.TONE_DARK)
-			theme = UiTheme.bright_text_theme()
-			sep.color = UiPalette.LINE.lightened(0.3)
-			head.remove_theme_font_override("normal_font")
-			head.add_theme_font_size_override("normal_font_size", UiTheme.sz(UiTheme.RICH_SMALL_SIZE + 1))
 		pinned = false
 		dwell = 0.0
 		hover_term = ""
@@ -524,18 +506,13 @@ func watch(view: ContainerView) -> void:
 
 ## 直接显示一段文字（地图上的点）；[param extra] 是文字下面再放的一个控件（对手的棋盘），可为 null；
 ## [param terms] 是关键词的词条（`{id: {"name", "text"}}`），钉住后停在关键词上开子窗
-func show_text(bbcode: String, at: Vector2, extra: Control = null, terms: Dictionary = {}, node_title: String = "") -> void:
+func show_text(bbcode: String, at: Vector2, extra: Control = null, terms: Dictionary = {}) -> void:
 	if _panel.visible and _panel.pinned:
-		if extra != null:
-			extra.queue_free()
 		return     # 钉住的窗不被别的源换掉（离开它才收，[constant AWAY_SEC]）
 	_close_from(1)
 	_anchor = Rect2()
 	_panel.reset_state()
-	if node_title.is_empty():
-		_panel.set_text(bbcode)
-	else:
-		_panel.set_node_note(node_title, bbcode)
+	_panel.set_text(bbcode)
 	_panel.terms = terms
 	_drop_extra()
 	if extra != null:

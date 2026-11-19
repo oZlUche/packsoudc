@@ -47,9 +47,6 @@ static func frame_pawn_and_paths(t: TestCase, root: Window) -> void:
 	var small := view.pawn_rect(view.pawn_at()["at"])
 	view.zoom = 2.0
 	var big := view.pawn_rect(view.pawn_at()["at"])
-	var head := big.position + Vector2(big.size.x * 0.5, big.size.y * 0.2)
-	t.check(head.distance_to(view.pawn_at()["at"]) > MapView.NODE_RADIUS + 2, "棋子头部在节点圆外")
-	t.eq(view.node_at(view.to_canvas(head)), here, "点可见棋子头部仍命中当前节点")
 	t.check(small.size.is_equal_approx(big.size), "缩放 0.3 与 2.0 下棋子一样大（%s / %s）" % [small.size, big.size])
 	t.eq(MapView.END_RING_R, 28.0, "终点墨环半径是像素定长")
 	view.focus(here)
@@ -122,18 +119,7 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 	# 复测 #361：靠纸边的点回正时纸仍盖满安全区（顶栏下不露出纸外桌面）
 	var bare := []
 	var z_keep := view.zoom
-	# 看全图使用 contain 缩放；折起图例或腰带后安全区的长宽比会变化。
-	# 此用例测的是纸能盖满两轴时的回正夹边，先按 cover 比例建立这个条件。
-	var sheet := view.paper().size
-	if sheet.x <= 0.0 or sheet.y <= 0.0:
-		t.check(false, "地图有底图纸")
-		game.queue_free()
-		return
-	var cover_scale := view.safe_rect().size / sheet
-	view.zoom = minf(cover_scale.x, cover_scale.y) * 0.9
-	view.focus(here)
-	t.check(view.paper_on_screen().get_center().distance_to(view.safe_rect().get_center()) < 0.5, "纸比安全区小时居中")
-	view.zoom = maxf(cover_scale.x, cover_scale.y) * 1.1
+	view.zoom = view.zoom_min() * 1.1     # 纸只比安全区大一点：离中心稍远的点都会碰到纸边
 	for nid in view.positions():
 		view.focus(int(nid))
 		if view.paper().has_area() and not view.paper_on_screen().grow(0.5).encloses(view.safe_rect()):
@@ -146,13 +132,6 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 	var key := InputEventKey.new()
 	key.keycode = KEY_SPACE
 	key.pressed = true
-	var key_button: Button = map.hud().widget(&"legend").get("_toggle")
-	key_button.grab_focus()
-	var reading_pan := view.pan
-	map._unhandled_key_input(key)
-	t.eq(view.pan, reading_pan, "聚焦图例时空格不拉走地图")
-	t.check(not view.lock_on_player, "聚焦图例时空格不锁镜头")
-	key_button.release_focus()
 	map._unhandled_key_input(key)
 	t.check(view.pan.distance_to(view.focus_pan(here)) < 0.5 or view.following(), "空格：回正")
 	t.check(view.lock_on_player, "按住空格：锁住")

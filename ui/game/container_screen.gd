@@ -53,16 +53,13 @@ var _strip: StatsStrip = null
 ## 棋盘美术：左边容器的外框种类（`search` / `chest_iron` / `chest_gold` / `corpse` / `boss`）与摆位用的那几块
 var _kind := ""
 var _stage: Control
-var _loot_box: ScrollContainer
+var _loot_box: Control
 var _loot_frame: NinePatchRect
 var _player_frame: NinePatchRect
 var _extras: Array[TextureRect] = []
 ## 267：材料节点的搜索屏，收获框左上角一枚段头签写节点种类（矿脉 / 林地 / 遗骸 / 符文堆）；普通搜索点没有
 var kind_tag: HeaderTag = null
 var _bounty_told := 0
-var _finds_label: Label
-var _pack_label: Label
-var _prior_focus: Control
 
 
 func open(payload: Dictionary) -> void:
@@ -80,11 +77,6 @@ func open(payload: Dictionary) -> void:
 	_stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_child(_stage)
-	if _session != null:
-		UiTheme.art_panel(_overlay_frame, "survey/search_tablet", OverlayFrame.BRONZE_INSET)
-		_finds_label = _section_label()
-		_pack_label = _section_label()
-		_pack_label.text = UiText.t("bag.field_pack")
 
 	_boss = _session == null and flow.run != null and flow.run.boss_cleared
 	if _session == null and flow.run != null and _container == flow.run.pending_loot:
@@ -118,7 +110,6 @@ func open(payload: Dictionary) -> void:
 	if _session != null:
 		_close_btn = _corner("btn_close", "×", UiText.t("loot.close_tip"), close_search)
 		_minimize_btn = _corner("btn_minimize", "－", UiText.t("loot.to_map_tip"), to_map)
-		_wire_search_focus()
 	else:
 		_minimize_btn = _corner("btn_minimize", "－", UiText.t("camp.fold") + "\n" + (UiText.t("loot.extract_results") if _boss else UiText.t("loot.leave_rest")), to_map)
 
@@ -150,10 +141,7 @@ func open(payload: Dictionary) -> void:
 			_loot.inventory = box
 			if _inv != null:
 				_inv.quick_target = box
-			if not box.changed.is_connected(_refresh):
-				box.changed.connect(_refresh)
-			_layout()
-			_refresh())
+			_layout())
 		_container.changed.connect(_refresh)
 		# 084：这一屏打开时那一次已经搜完了：亮新来的，见过的不重放
 		_loot.mark_revealed(flow.seen_loot.keys())
@@ -174,74 +162,6 @@ func open(payload: Dictionary) -> void:
 #region 棋盘美术
 static func _v2(a) -> Vector2:
 	return Vector2(float(a[0]), float(a[1])) if a is Array and (a as Array).size() >= 2 else Vector2.ZERO
-
-
-func _wire_search_focus() -> void:
-	var buttons: Array[Button] = [_take_btn, _minimize_btn, _close_btn]
-	for i in buttons.size():
-		var button := buttons[i]
-		var next := button.get_path_to(buttons[(i + 1) % buttons.size()])
-		var previous := button.get_path_to(buttons[posmod(i - 1, buttons.size())])
-		button.focus_mode = Control.FOCUS_ALL
-		button.focus_next = next
-		button.focus_previous = previous
-		button.focus_neighbor_left = previous
-		button.focus_neighbor_right = next
-		button.focus_neighbor_top = previous
-		button.focus_neighbor_bottom = next
-		var ring := StyleBoxFlat.new()
-		ring.draw_center = false
-		ring.border_color = Color("85472e")
-		ring.set_border_width_all(3)
-		ring.set_expand_margin_all(2)
-		button.add_theme_stylebox_override("focus", ring)
-	visibility_changed.connect(_search_focus)
-	_search_focus()
-
-
-func _search_focus() -> void:
-	if is_visible_in_tree():
-		var current := get_viewport().gui_get_focus_owner()
-		if current != null and not is_ancestor_of(current):
-			_prior_focus = current
-		if _container != null and _container.item_count() == 0:
-			_close_btn.grab_focus()
-		else:
-			_take_btn.grab_focus()
-	elif is_instance_valid(_prior_focus) and _prior_focus.is_visible_in_tree():
-		_prior_focus.grab_focus()
-		_prior_focus = null
-
-
-func _input(event: InputEvent) -> void:
-	if _session == null or not is_visible_in_tree() or is_queued_for_deletion():
-		return
-	if not event.is_action_pressed(&"ui_focus_next") and not event.is_action_pressed(&"ui_focus_prev"):
-		return
-	var owner := get_viewport().gui_get_focus_owner()
-	if owner == null or not is_ancestor_of(owner):
-		# 搜索窗上还可能盖了百科。此时 Tab 归最上层处理。
-		for sibling in get_parent().get_children():
-			if sibling is GameScreen and sibling.z_index > z_index and sibling.is_visible_in_tree() and not sibling.is_queued_for_deletion():
-				return
-		if event.is_action_pressed(&"ui_focus_prev") or _container.item_count() == 0:
-			_close_btn.grab_focus()
-		else:
-			_take_btn.grab_focus()
-		get_viewport().set_input_as_handled()
-
-
-func _section_label() -> Label:
-	var label := UiTheme.make_label("", 22)
-	label.add_theme_font_override("font", UiPalette.title_font())
-	label.add_theme_color_override("font_color", Color("48382d"))
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_stage.add_child(label)
-	return label
-
-
-func _grid_top() -> float:
-	return TOP + 40.0 if _session != null else TOP
 
 
 ## 左边容器用哪种外框：搜索 藤编；宝箱开锁后那一次 稀有及以上金角、以下铁角；战利品 BOSS 黑铁，其余 生皮
@@ -286,13 +206,12 @@ func panel_size() -> Vector2:
 	var pp := frame_pad("player")
 	var loot := _loot_cells_size() + Vector2(lp, lp) * 2.0
 	var player := _player_slot() + Vector2(pp, pp) * 2.0 if _inv != null else Vector2.ZERO
-	var gap := 64.0 if _session != null else MID
-	var w := EDGE + loot.x + gap + player.x + EDGE
+	var w := EDGE + loot.x + MID + player.x + EDGE
 	if _strip != null and _inv != null:     # 复测 v3.79：棋盘窄、三张签比它宽时面板跟着加宽，签不伸出铜板
 		w += maxf(0.0, _strip.span_for(player.x - pp * 2.0) - (player.x - pp))
-	var h := maxf(_grid_top() + loot.y + ABOVE_TAKE + TAKE_VISIBLE + EDGE + 6.0, _grid_top() + player.y + BELOW_PLAYER)
+	var h := maxf(TOP + loot.y + ABOVE_TAKE + TAKE_VISIBLE + EDGE + 6.0, TOP + player.y + BELOW_PLAYER)
 	if _strip != null and _inv != null:     # 216：数值栏放得下（中线对齐「全部拾取」，上沿让开棋盘）
-		h = maxf(h, _grid_top() + player.y - pp + STRIP_GAP + _strip.strip_height() * 0.5 + take_mid())
+		h = maxf(h, TOP + player.y - pp + STRIP_GAP + _strip.strip_height() * 0.5 + take_mid())
 	return Vector2(w, ceilf(h))     # 「全部拾取」中线是半像素：面板高取整
 
 
@@ -319,29 +238,20 @@ func _loot_cells_size() -> Vector2:
 func _layout() -> void:
 	if _stage == null or _overlay_frame == null or _inv == null:
 		return
-	if _session != null:
-		var frame_height := _grid_top() + 2.0 * frame_pad(_kind) + ABOVE_TAKE + TAKE_VISIBLE + EDGE + 6
-		var viewport_height := get_viewport_rect().size.y - HudHost.bar_height_in(get_tree())
-		var max_rows := clampi(floori((viewport_height - frame_height) / _loot.cell_px), 1, 10)
-		if max_rows != int(_loot_box.get_meta("max_rows", 10)):
-			ScrollBox.set_rows(_loot_box, _loot, max_rows)
 	var want := panel_size()
 	if _overlay_frame.custom_minimum_size != want:
 		_overlay_frame.custom_minimum_size = want
 	var off := _stage.global_position - _overlay_frame.global_position
 	var lp := frame_pad(_kind)
 	var pp := frame_pad("player")
-	var loot_cells := Vector2(EDGE + lp, _grid_top() + lp) - off
+	var loot_cells := Vector2(EDGE + lp, TOP + lp) - off
 	var loot_size := _loot_cells_size()
 	_loot_box.position = loot_cells
 	_place_frame(_loot_frame, loot_cells, loot_size, lp)
 	var player_size := Vector2(_inv.board_view.inventory.size) * _inv.board_view.cell_px
 	var slot := _player_slot()
-	var slot_cells := Vector2(want.x - EDGE - pp - slot.x, _grid_top() + pp) - off
+	var slot_cells := Vector2(want.x - EDGE - pp - slot.x, TOP + pp) - off
 	var player_cells := slot_cells + Vector2(BoardNine.offset_for(_inv.board_view.inventory.size.x, _inv.board_view.cell_px), 0.0)
-	if _session != null:
-		_finds_label.position = Vector2(EDGE + 4, 32) - off
-		_pack_label.position = Vector2(slot_cells.x - pp + 4, 32 - off.y)
 	_inv.position = player_cells - _inv.board_view.position
 	_place_frame(_player_frame, player_cells, player_size, pp)
 	_place_extras(loot_cells - Vector2(lp, lp), loot_size + Vector2(lp, lp) * 2.0)
@@ -430,13 +340,24 @@ func take_all() -> void:
 		starts[it.uid] = _loot.global_position + _loot.cell_origin_px(it.origin)
 	ground.landing_from.merge(starts, true)
 	var before := _container.item_count()
-	InventoryService.transfer_all_prefer(_container, flow.run.board, ground)
+	var got := InventoryService.transfer_all_prefer(_container, flow.run.board, ground)
 	if _container.item_count() < before:
 		AudioHub.play(&"loot.take_all")     # 206：搬走了至少一件才响
+	_last_take = got
+	if int(got.get("storage", 0)) > 0:     # 局内界面布局方案 §9.1：只拿进去一部分时说清楚多少进了背包、多少放不下落在地上
+		NoticeLayer.post(self, UiText.t("loot.took_partial") % [int(got.get("board", 0)), int(got.get("storage", 0))])
 	for uid in starts:
 		if not ground.has_item(uid):
 			ground.landing_from.erase(uid)
 	_refresh()
+
+
+## §9.1：上一次「全部拾取」的结果 `{"board": 进了背包几件, "storage": 放不下落在地上几件}`（测试读）
+var _last_take: Dictionary = {}
+
+
+func last_take() -> Dictionary:
+	return _last_take
 
 
 ## 搜索会话：离开这个点的搜索（收获交到待拾取）。待拾取：同「收起」—— 剩下的留在这个点上，走了才没（084）
@@ -508,11 +429,6 @@ func _on_container_changed() -> void:
 func _refresh() -> void:
 	if _loot != null and _container != null and _loot.inventory != _container:
 		_loot.inventory = _container
-	if _session != null and _container != null:
-		var count := _container.item_count()
-		if count == 0 and _take_btn.has_focus():
-			_close_btn.grab_focus()
-		_finds_label.text = UiText.t("loot.identified") % [count - _loot.unrevealed_count(), count]
 
 
 ## 319 D：这堆战利品里有科技额外奖励的话，打开时告示一句来源（打赢那一刻不说：战斗屏还在播，会提前剧透胜负）

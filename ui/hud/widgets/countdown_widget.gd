@@ -6,10 +6,16 @@
 ## 停上去弹悬浮窗：「倒计时」/「倒计时还剩 N（共 M）」/「最近的撤离点倒计时剩 N 时关闭」，开着时走一步字跟着变（193 补充一：钟的数不说「步」）。
 ## 小档按 0.5 缩
 ##
-## 顶栏日晷是从栏顶切入、向下探出的半圆大理石盘；凿刻时线与青铜晷针共用上沿轴心。拖出顶栏时沿用独立小日规。
+## 局内界面布局方案 §4.1：精确的剩余数平时还收在悬浮窗里（既有设计）；剩得少（[constant LOW]）时直接刻在晷面上，
+## 设置「日晷读数：始终显示」时一直刻着（[member GameSettings.dial_number_always]）。只写剩几，不写「还能走几步」——
+## 进阶多扣、负重、免费步让每一步扣的不一样，每一步实际扣几看地图点的行动预览
+##
+## 235：栏是石刻皮时，日晷是栏皮正中那块下半圆底座（刻度在图里，[code]hud_bar[/code] 画）；这件在栏里就只画走过的扇面、指针、轴心，
+## 落在底座的轴心上（`topbar.json` 的 `dial`：180° 在左、90° 正下、0° 在右，y 朝下），停在晷面上开悬浮窗。拖出栏照旧是上面那枚小日规
 extends HudWidget
 
 const HudBarScript := preload("res://ui/hud/widgets/hud_bar.gd")
+const SKIN := HudBarScript.SKIN
 
 const DIAL_DIR := "hud/dial/"
 ## 画布大小（和表盘图一样）
@@ -21,6 +27,10 @@ const LOW := &"low"
 const LOW_STEPS := 5
 ## 阶段 → 悬浮窗里数字用的字色样式
 const STAGE_STYLE := {CALM: "val", HALF: "stamina", LOW: "hp"}
+## §4.1 晷面上那个数的字号（栏里 / 拖出栏的小日规）与它在轴心下方多远（半径的几成）
+const NUMBER_PX := 22
+const NUMBER_PX_SMALL := 14
+const NUMBER_DROP := 0.5
 
 var _meta: Dictionary = {}
 ## 悬浮窗是不是这一件开的（开着时走一步只换字）
@@ -100,7 +110,7 @@ func _notification(what: int) -> void:
 		_sync_size()
 
 
-## 日规的大小：画布 × 档位，外加底的内边距（拖出栏时自带凹槽）。235：在石刻栏里仅保留盘面所需的宽度，独立绘制底座
+## 日规的大小：画布 × 档位，外加底的内边距（拖出栏时自带凹槽）。235：在石刻栏里没有底、只占晷面那么宽（画在栏皮的晷面上）
 func _sync_size() -> void:
 	var want := UiTheme.PANEL_BARE if _skin_bar() != null else UiTheme.PANEL_HUD
 	if theme_type_variation != want:
@@ -125,33 +135,33 @@ func _dial() -> Dictionary:
 	return HudBarScript.skin().get("dial", {})
 
 
-## 横向跟随布局槽；纵向轴心固定在横梁上沿，盘缘下凸不参与读数行的高度。
+## 235：栏皮晷面的轴心（这一件的坐标）
 func _skin_pivot(bar: HudWidget) -> Vector2:
-	var pivot: Vector2 = bar.call("dial_pivot")
-	return Vector2(size.x * 0.5, bar.global_position.y + pivot.y - global_position.y)
+	return bar.global_position + bar.call("dial_pivot") - global_position
 
 
-## 235：在石刻栏里时教程指半圆盘面
+## 235：在石刻栏里时教程指整块晷面（下半圆的包围盒）
 func focus_rect() -> Rect2:
 	var bar := _skin_bar()
 	if bar == null:
 		return super()
 	var r := float(_dial().get("face_radius", 102))
 	var p := global_position + _skin_pivot(bar)
-	return Rect2(Vector2(p.x - r, p.y), Vector2(r * 2.0, r))
+	return Rect2(p.x - r, p.y, r * 2.0, r)
 
 
-## 235：在石刻栏里时，只有可见半圆的刻度区算悬停
+## 235：在石刻栏里时，晷面那个下半圆都算停在这一件上
 func _has_point(point: Vector2) -> bool:
 	var bar := _skin_bar()
 	if bar == null:
 		return Rect2(Vector2.ZERO, size).has_point(point)
 	var d := point - _skin_pivot(bar)
-	return point.y + global_position.y >= bar.global_position.y and d.length() <= float(_dial().get("face_radius", 102))
+	return d.y >= -float(_dial().get("pivot", [0, 6])[1]) and d.length() <= float(_dial().get("face_radius", 102))
 
 
 func refresh() -> void:
 	super()
+	queue_redraw()     # §4.1：晷面上的数跟着设置 / 剩余变
 	if _tip_open:
 		var tip := _tip()
 		if tip != null:
@@ -165,6 +175,7 @@ func _draw() -> void:
 	var bar := _skin_bar()
 	if bar != null:
 		_draw_on_bar(_skin_pivot(bar))
+		_draw_number(_skin_pivot(bar), float(_dial().get("radius", 94)), NUMBER_PX)
 		return
 	var s := _scale()
 	var origin := ((size - SIZE * s) * 0.5).round()
@@ -172,54 +183,79 @@ func _draw() -> void:
 	var radius := float(_meta.get("radius", 40))
 	var st := stage()
 	var a := angle()
+	# 1. 走过的扇面：从左端扫到现在，淡淡染色
+	if a < 180.0:
+		var stages: Dictionary = _meta.get("stages", {})
+		var wash := Color(String((stages.get(String(st), {}) as Dictionary).get("wash", "#6b6255")))
+		wash.a = float(_meta.get("wash_opacity", 0.16))
+		var pts := PackedVector2Array([origin + pivot * s])
+		var steps := maxi(2, int((180.0 - a) / 4.0) + 1)
+		for i in steps + 1:
+			var deg := lerpf(180.0, a, float(i) / float(steps))
+			pts.append(origin + (pivot + Vector2(cos(deg_to_rad(deg)), -sin(deg_to_rad(deg))) * radius) * s)
+		draw_colored_polygon(pts, wash)
+	# 2. 表盘刻线
 	draw_texture_rect(UiTheme.art_cached(DIAL_DIR + "face"), Rect2(origin, SIZE * s), false)
-	_draw_elapsed(origin + pivot * s, radius * s, a, st, _meta, -1.0)
 	# 3. 影子：图朝正上（90°），绕轴心转到当前角度（Godot 的 y 朝下，正角顺时针）
 	draw_set_transform(origin + pivot * s, deg_to_rad(90.0 - a), Vector2(s, s))
 	draw_texture_rect(UiTheme.art_cached(DIAL_DIR + "shadow_" + String(st)), Rect2(-pivot, SIZE), false)
 	draw_set_transform(Vector2.ZERO)
 	# 4. 轴心
 	draw_texture_rect(UiTheme.art_cached(DIAL_DIR + "hub"), Rect2(origin, SIZE * s), false)
+	# 5. §4.1 读数（小日规的晷面朝上：数写在轴心上方）
+	_draw_number(origin + pivot * s, -radius * s, NUMBER_PX if s >= 1.0 else NUMBER_PX_SMALL)
 
 
-## 两个晷面共用真实进度。收起的小日规刻线朝上，栏中圆盘的刻线朝下。
-func _draw_elapsed(pivot: Vector2, radius: float, degrees: float, st: StringName, meta: Dictionary, direction: float) -> void:
-	if degrees >= 180.0:
+## §4.1：晷面上要不要刻剩余数 —— 剩得少，或设置了始终显示
+func shows_number() -> bool:
+	return _cd() != null and (stage() == LOW or number_always())
+
+
+## §4.1：设置「日晷读数：始终显示」（读不到设置按默认：危险时才显示）
+func number_always() -> bool:
+	var f = screen.get("flow") if screen != null else null
+	return f != null and f.settings != null and bool(f.settings.dial_number_always)
+
+
+## §4.1：剩余数，描边、按阶段着色，居中写在轴心往下 [param drop] × [constant NUMBER_DROP] 处（[param drop] 为负 = 往上）
+func _draw_number(pivot: Vector2, drop: float, px: int) -> void:
+	if not shows_number():
 		return
-	var stages: Dictionary = meta.get("stages", {})
-	var wash := Color(String((stages.get(String(st), {}) as Dictionary).get("wash", "#997555")))
-	wash.a = float(meta.get("wash_opacity", 0.16))
-	var points := PackedVector2Array([pivot])
-	var steps := maxi(2, ceili((180.0 - degrees) / 4.0))
-	for i in steps + 1:
-		var a := deg_to_rad(lerpf(180.0, degrees, float(i) / steps))
-		points.append(pivot + Vector2(cos(a), sin(a) * direction) * radius)
-	draw_colored_polygon(points, wash)
+	var font := get_theme_default_font()
+	if font == null:
+		return
+	var num := str(_cd().left())
+	var w := font.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var at := Vector2(pivot.x - w * 0.5, pivot.y + drop * NUMBER_DROP + px * 0.35).round()
+	draw_string_outline(font, at, num, HORIZONTAL_ALIGNMENT_LEFT, -1, px, UiTheme.OUTLINE_SIZE + 2, UiTheme.OUTLINE_COLOR)
+	draw_string(font, at, num, HORIZONTAL_ALIGNMENT_LEFT, -1, px, UiPalette.style_color(String(STAGE_STYLE[stage()]), &"dark"))
 
 
-## 雕石、分面铸造的晷针和青铜轴心分别绘制，转动时石纹留在原位。
+## 235：画在栏皮的晷面上 —— 走过的扇面（180° 扫到现在）→ 指针（图朝正下，绕轴心转 a − 90°）→ 轴心
 func _draw_on_bar(pivot: Vector2) -> void:
-	var meta := _dial()
-	var radius := float(meta.get("radius", 94))
+	var d := _dial()
+	var radius := float(d.get("radius", 94))
 	var st := stage()
 	var a := angle()
-	var art := HudBarScript.SKIN
-	var face := UiTheme.art_cached(art + "dial_base")
-	var hand := UiTheme.art_cached(art + "dial_hand_" + String(st))
-	var hub := UiTheme.art_cached(art + "dial_hub")
-	if face == null or hand == null or hub == null:
-		return
-	var origin: Array = meta.get("pivot", [137, 6])
-	var face_rect := Rect2(pivot - Vector2(float(origin[0]), float(origin[1])), face.get_size())
-	# 盘底贴图包含由其透明轮廓投出的两层阴影，两侧的横梁通过透明区连续可见。
-	draw_texture_rect(face, face_rect, false)
-	_draw_elapsed(pivot, radius, a, st, meta, 1.0)
-	# 三态纹理共用同一铸造轴心 (12, 8)，纹理中针尖距轴心 83 像素。
-	var hand_scale := radius / 83.0
-	draw_set_transform(pivot, deg_to_rad(a - 90.0), Vector2.ONE * hand_scale)
-	draw_texture(hand, Vector2(-12, -8))
-	draw_set_transform(Vector2.ZERO)
-	draw_texture_rect(hub, Rect2(pivot - Vector2.ONE * 6.0, Vector2.ONE * 12.0), false)
+	if a < 180.0:
+		var wash := Color(String(((d.get("stages", {}) as Dictionary).get(String(st), {}) as Dictionary).get("wash", "#6b6255")))
+		wash.a = float(d.get("wash_opacity", 0.16))
+		var pts := PackedVector2Array([pivot])
+		var steps := maxi(2, int((180.0 - a) / 4.0) + 1)
+		for i in steps + 1:
+			var deg := deg_to_rad(lerpf(180.0, a, float(i) / float(steps)))
+			pts.append(pivot + Vector2(cos(deg), sin(deg)) * radius)
+		draw_colored_polygon(pts, wash)
+	var hand_meta: Dictionary = d.get("hand", {})
+	var hand := UiTheme.art_cached(SKIN + String((hand_meta.get("files", {}) as Dictionary).get(String(st), "dial_hand_" + String(st))))
+	if hand != null:
+		var hp: Array = hand_meta.get("pivot", [12, 8])
+		draw_set_transform(pivot, deg_to_rad(a - 90.0))
+		draw_texture(hand, -Vector2(float(hp[0]), float(hp[1])))
+		draw_set_transform(Vector2.ZERO)
+	var hub := UiTheme.art_cached(SKIN + "dial_hub")
+	if hub != null:
+		draw_texture(hub, (pivot - hub.get_size() * 0.5).round())
 
 
 ## 235：指针此刻指向哪（这一件的坐标；测试读）。不在石刻栏里 = 空
@@ -294,4 +330,6 @@ func _ready() -> void:
 	mouse_filter = _idle_mouse_filter()
 	mouse_entered.connect(open_tip)
 	mouse_exited.connect(close_tip)
+	focus_entered.connect(open_tip)     # §4.1：键盘停到日晷上也能读到精确数
+	focus_exited.connect(close_tip)
 #endregion

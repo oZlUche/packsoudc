@@ -26,10 +26,6 @@ const LINE_GAP := 4
 const BAR_HEIGHT := 88.0
 const GROUP := &"hud_host"
 const BAR_PAD := 4.0
-const WALLET_SAMPLE := "8888"
-const MIN_HEARTS := 5
-const SKILL_BUTTONS := 2
-const VitalityWidget := preload("res://ui/hud/widgets/vitality_widget.gd")
 ## 没有栏时三个槽退回哪个锚点
 const BAR_FALLBACK := {"bar_left": "top_left", "bar_center": "top", "bar_right": "top_right"}
 const HudBarScript := preload("res://ui/hud/widgets/hud_bar.gd")
@@ -47,8 +43,6 @@ var _bar_h: float = 0.0
 var _run: RunState = null
 var _screen: Control = null
 var _pending: bool = false
-## 本轮排版的读数占位；不写回组件的最小尺寸，拖出顶栏即回到实际内容宽。
-var _slot_sizes: Dictionary = {}
 
 
 func _init() -> void:
@@ -93,7 +87,6 @@ func setup(run: RunState, screen: Control, p_layout: HudLayout) -> void:
 		w.setup(run, screen)
 		w.set_editing(editing)
 		w.resized.connect(_queue_arrange)
-		w.minimum_size_changed.connect(_queue_arrange)
 		w.visibility_changed.connect(_queue_arrange)
 	if widgets.has(&"hud_bar"):
 		move_child(widgets[&"hud_bar"], 0)     # 166：栏垫在别的组件下面（同一层里先画）
@@ -201,14 +194,7 @@ func overhang() -> float:
 	if layout == null:
 		return 0.0
 	var e := layout.entry_of(&"hud_bar")
-	if e.is_empty() or not bool(e.get("visible", true)):
-		return 0.0
-	var height := maxf(_bar_h, HudBarScript.design_height())
-	var dial := widget(&"countdown")
-	var slot := layout.entry_of(&"countdown")
-	if dial != null and dial.visible and HudLayout.in_bar(String(slot.get("anchor", ""))):
-		return height + maxf(0.0, HudBarScript.dial_bottom() - HudBarScript.design_height())
-	return height
+	return HudBarScript.dial_bottom() if not e.is_empty() and bool(e.get("visible", true)) else 0.0
 
 
 ## 166：一件读数在屏幕上的包围盒（教程挖洞用：部件挪了位置教程跟着走）；没有 / 藏着返回空矩形。
@@ -275,7 +261,6 @@ func arrange() -> void:
 	_pending = false
 	if layout == null:
 		return
-	_slot_sizes.clear()
 	var groups := {}
 	var order: Array[String] = []
 	var bar := _bar()
@@ -303,29 +288,15 @@ func arrange() -> void:
 	if bar != null:
 		_bar_h = HudBarScript.design_height()
 		var m := _bar_margins()
-		var overflow := _fit_bar_slots(groups)
 		for key in order:
 			if HudLayout.in_bar(String(groups[key]["anchor"])):
 				_bar_h = maxf(_bar_h, (_rows(groups[key])[1] as Vector2).y + maxf(BAR_PAD, m.x) + maxf(BAR_PAD, m.y))
-		# 单件超过侧边宽度时放在横梁上沿的独立一行。加高的横梁会带着盘面下移。
-		var overflow_y := m.x
-		for w: HudWidget in overflow:
-			var extent := _slot_size(w)
-			var anchor: String = layout.entry_of(w.id)["anchor"]
-			w.position = Vector2(bar_side() if anchor == "bar_left" else size.x - bar_side() - extent.x, overflow_y)
-			w.size = extent
-			overflow_y += extent.y + LINE_GAP
-		var extra := overflow_y - LINE_GAP + GAP if not overflow.is_empty() else 0.0
-		_bar_h += extra
 		bar.position = Vector2.ZERO
 		bar.size = Vector2(size.x, _bar_h)
-		var band := _bar_frame()
-		band.position.y += extra
-		band.size.y -= extra
 		for key in order:
 			var a := String(groups[key]["anchor"])
 			if HudLayout.in_bar(a):
-				_place_group(groups[key], band, HudLayout.BAR_ANCHORS[a])
+				_place_group(groups[key], _bar_frame(), HudLayout.BAR_ANCHORS[a])
 	# 再摆右边那一条，量出它占多宽；其余的在剩下那块里摆
 	_right = 0.0
 	for key in order:
@@ -342,126 +313,23 @@ func arrange() -> void:
 	arranged.emit()
 
 
-## 两端石块在 bar_side() 外，中槽（含日晷阴影）在中心线上。
-## 空间够时按用户选的行排列，窄侧栏内的读数依次换行。
-func _fit_bar_slots(groups: Dictionary) -> Array[HudWidget]:
-	var overflow: Array[HudWidget] = []
-	var lanes := {}
-	for group: Dictionary in groups.values():
-		if HudLayout.in_bar(group["anchor"]):
-			lanes[group["anchor"]] = group
-	var frame_width := maxf(0, size.x - bar_side() * 2)
-	var center_width := 0.0
-	if lanes.has("bar_center"):
-		center_width = (_rows(lanes["bar_center"])[1] as Vector2).x
-	var side_width := maxf(1, (frame_width - center_width) * 0.5 - GAP)
-	for anchor: String in lanes:
-		var group: Dictionary = lanes[anchor]
-		var width := frame_width
-		if anchor != "bar_center":
-			if center_width > 0:
-				width = side_width
-			elif lanes.has("bar_left") and lanes.has("bar_right"):
-				var opposite: Dictionary = lanes["bar_left" if anchor == "bar_right" else "bar_right"]
-				width = maxf(side_width, frame_width - (_rows(opposite)[1] as Vector2).x - GAP)
-		group["wrap_width"] = width
-		for row: Array in group["lines"].values():
-			var faith := widget(&"faith")
-			if row.has(faith):
-				var room := width
-				for other: HudWidget in row:
-					if other != faith:
-						room -= _slot_size(other).x + GAP
-				faith.call("fit_bar_width", room)
-				_slot_sizes.erase(faith)
-			_fit_status_slots(row, width)
-			if anchor != "bar_center":
-				for w: HudWidget in row.duplicate():
-					if w.id != &"countdown" and _slot_size(w).x > width:
-						overflow.append(w)
-						row.erase(w)
-	return overflow
-
-
-## 给同一行的状态分别预留空间；调换槽或隐藏其一时，另一件可用整段。
-func _fit_status_slots(row: Array, width: float) -> void:
-	var buffs := widget(&"buffs")
-	var erosion := widget(&"erosion")
-	var has_buffs := row.has(buffs)
-	var has_erosion := row.has(erosion)
-	if not has_buffs and not has_erosion:
-		return
-	var room := width - GAP * maxi(0, row.size() - 1)
-	for other: HudWidget in row:
-		if other != buffs and other != erosion:
-			room -= _slot_size(other).x
-	if has_erosion:
-		var budget := room * 0.45 if has_buffs else room
-		erosion.call("fit_bar_width", maxf(1, budget))
-		_slot_sizes.erase(erosion)
-		room -= _slot_size(erosion).x
-	if has_buffs:
-		buffs.call("fit_bar_width", maxf(1, room))
-		_slot_sizes.erase(buffs)
-
-
-func _slot_size(w: HudWidget) -> Vector2:
-	if not w.in_bar:
-		return w.get_combined_minimum_size()
-	if _slot_sizes.has(w):
-		return _slot_sizes[w]
-	var result := w.get_combined_minimum_size()
-	var panel := w.get_theme_stylebox("panel").get_minimum_size().x
-	match w.id:
-		&"countdown":
-			var stone := UiTheme.art_cached(HudBarScript.SKIN + "dial_base")
-			if stone != null:
-				result.x = maxf(result.x, stone.get_width())
-		&"wallet":
-			var font := w._text.get_theme_font("font")
-			var digits := font.get_string_size(WALLET_SAMPLE, HORIZONTAL_ALIGNMENT_LEFT, -1, w._text.get_theme_font_size("font_size")).x
-			var row := w._text.get_parent() as HBoxContainer
-			result.x = maxf(result.x, panel + w.get("coin").get_combined_minimum_size().x + row.get_theme_constant("separation") + digits)
-		&"vitality":
-			var vitality := w as VitalityWidget
-			var hearts := maxi(MIN_HEARTS, vitality.grid().x)
-			result.x = maxf(result.x, panel + hearts * vitality.heart_size() + (hearts - 1) * VitalityWidget.HEART_GAP)
-		&"faith", &"buffs", &"erosion":
-			result.x = maxf(result.x, float(w.call("bar_reserve_width")))
-		&"skills":
-			var buttons := (w as HudPartWidget).part as HBoxContainer
-			if buttons != null and buttons.get_child_count() > 0:
-				result.x = maxf(result.x, panel + SKILL_BUTTONS * IconButton.SIZE + (SKILL_BUTTONS - 1) * buttons.get_theme_constant("separation"))
-	_slot_sizes[w] = result
-	return result
-
-
-## 将同一行依布局顺序放入槽；空间不足时从下一个完整组件开始换行。
+## 一组的行（按 line 排好）与整组多大
 func _rows(g: Dictionary) -> Array:
 	var line_keys: Array = (g["lines"] as Dictionary).keys()
 	line_keys.sort()
 	var rows: Array = []
 	var group_size := Vector2.ZERO
-	var limit := float(g.get("wrap_width", INF))
 	for ln in line_keys:
-		var ws: Array[HudWidget] = []
-		var extent := Vector2.ZERO
-		for w: HudWidget in g["lines"][ln]:
-			var s := _slot_size(w)
-			if not ws.is_empty() and extent.x + GAP + s.x > limit:
-				rows.append({"ws": ws, "size": extent})
-				ws = []
-				extent = Vector2.ZERO
-			if not ws.is_empty():
-				extent.x += GAP
-			ws.append(w)
-			extent.x += s.x
-			extent.y = maxf(extent.y, s.y)
-		if not ws.is_empty():
-			rows.append({"ws": ws, "size": extent})
-	for row in rows:
-		group_size.x = maxf(group_size.x, row["size"].x)
-		group_size.y += row["size"].y
+		var ws: Array = g["lines"][ln]
+		var row_size := Vector2.ZERO
+		for w in ws:
+			var s := (w as HudWidget).get_combined_minimum_size()
+			row_size.x += s.x
+			row_size.y = maxf(row_size.y, s.y)
+		row_size.x += GAP * maxi(0, ws.size() - 1)
+		rows.append({"ws": ws, "size": row_size})
+		group_size.x = maxf(group_size.x, row_size.x)
+		group_size.y += row_size.y
 	group_size.y += LINE_GAP * maxi(0, rows.size() - 1)
 	return [rows, group_size]
 
@@ -479,7 +347,7 @@ func _place_group(g: Dictionary, frame: Rect2, pivot: Vector2) -> void:
 		var x := origin.x + pivot.x * (group_size.x - row_size.x)
 		for w in row["ws"]:
 			var hw := w as HudWidget
-			var s := _slot_size(hw)
+			var s := hw.get_combined_minimum_size()
 			hw.position = Vector2(x, y + pivot.y * (row_size.y - s.y))
 			hw.size = s
 			x += s.x + GAP

@@ -38,10 +38,10 @@ titles = {
 }
 text = "到撤离点了。三张序章都过了。
 
-{item:charm_brute}和{item:charm_sun}跟着包回{zone:仓库}，下一局带哪枚进去，就从哪位神开始。再往上的阶（{faith_threshold:brute:3}、{faith_threshold:brute:4}）有立即击败非首领敌人和不死，{ui:自由模式}里慢慢攒。"
+{item:charm_brute}和{item:charm_sun}跟着包回{zone:仓库}，下一局带哪枚进去，就从哪位神开始。再往上的第三阶（{faith_threshold:brute:3}）有不屈和立即击败非首领敌人，{ui:自由模式}里慢慢攒。"
 texts = {
 "en": "You've reached the extraction point. That's all three prologues done.
 
-The {item:charm_brute} and the {item:charm_sun} go back to the {zone:仓库} with your bag. Whichever one you carry into the next run, that's the god you start with. The higher Ranks ({faith_threshold:brute:3}, {faith_threshold:brute:4}) bring instant kills on non-boss enemies, and a way to cheat death. Build up to them in {ui:自由模式}."
+The {item:charm_brute} and the {item:charm_sun} go back to the {zone:仓库} with your bag. Whichever one you carry into the next run, that's the god you start with. Rank three ({faith_threshold:brute:3}) brings a way to cheat death and instant kills on non-boss enemies. Build up to them in {ui:自由模式}."
 }
 options = Array[ExtResource("1_sq26k")]([SubResource("Resource_wu5mu"), SubResource("Resource_8mujs")])

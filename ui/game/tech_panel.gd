@@ -13,7 +13,6 @@ extends MarginContainer
 
 signal changed()
 
-const CampaignDesk := preload("res://ui/widgets/campaign_desk.gd")
 const PANEL_WIDTH := 320.0
 ## 说明板里正文的宽（纸的左右内边距让掉）
 const TEXT_WIDTH := PANEL_WIDTH - 48.0
@@ -99,8 +98,6 @@ func _build() -> void:
 	left.add_child(tabs)
 	for tree_id in TechDef.TREES:
 		var tab := UiTheme.make_home_button("", show_tree.bind(tree_id), false, Vector2.ZERO, 18)
-		tab.toggle_mode = true
-		CampaignDesk.button(tab)
 		tabs.add_child(tab)
 		_tabs[tree_id] = tab
 	_area = TreeArea.new()
@@ -113,7 +110,6 @@ func _build() -> void:
 	_tree.selected.connect(_on_tree_selected)
 
 	var board := UiTheme.panel(PanelContainer.new(), 24, UiTheme.PANEL_PARCHMENT)
-	CampaignDesk.panel(board)
 	board.custom_minimum_size.x = PANEL_WIDTH
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(board)
@@ -123,7 +119,6 @@ func _build() -> void:
 	_plate = UiTheme.panel(PanelContainer.new(), 14, UiTheme.PANEL_NAMEPLATE)
 	if UiTheme.tone_of(UiTheme.PANEL_NAMEPLATE) == UiTheme.TONE_DARK:
 		_plate.theme = UiTheme.bright_text_theme()     # 铜名牌深底：不继承纸上的墨字
-	_plate.add_theme_stylebox_override("panel", CampaignDesk.surface("enamel", _plate.get_theme_stylebox("panel")))
 	col.add_child(_plate)
 	var plate_col := UiTheme.vbox(2)
 	_plate.add_child(plate_col)
@@ -144,11 +139,9 @@ func _build() -> void:
 	col.add_child(keys)
 	_action = UiTheme.make_home_button("", func(): upgrade(_selected), true)     # 乙 石刻：升级 = 主档木牌
 	_action.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	CampaignDesk.button(_action, true)
 	keys.add_child(_action)
 	_track = UiTheme.make_home_button("", func(): track(_selected), false, Vector2.ZERO, 16)     # 319 D：追踪 = 次档木牌
 	_track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	CampaignDesk.button(_track)
 	keys.add_child(_track)
 
 
@@ -278,7 +271,6 @@ func _refresh() -> void:
 			tab.text += "　" + UiText.t("tech.insight_have") % _meta.insight
 			tab.tooltip_text = UiText.t("tech.insight_how")
 		tab.theme_type_variation = UiTheme.BUTTON_HOME_PRIMARY if tree_id == _tree_id else UiTheme.BUTTON_HOME
-		tab.set_pressed_no_signal(tree_id == _tree_id)
 	_tree.rebuild()     # 等级变了节点样子跟着变；选中的那圈边 rebuild 时照旧画
 	UiTheme.clear_children(_effect)
 	UiTheme.clear_children(_cost)

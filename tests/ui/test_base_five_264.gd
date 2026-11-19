@@ -28,14 +28,7 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	t.eq(board.start_btn.text, "开始探索", "【开始探索】")
 	t.eq(board.start_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "主档木牌")
 	t.check(board.start_btn.custom_minimum_size == ExpeditionBoard.START, "360 × 96")
-	var nav := screen._tab_btns["expedition"] as Button
-	var active := nav.get_theme_stylebox("pressed") as StyleBoxTexture
-	var focus := nav.get_theme_stylebox("focus") as StyleBoxFlat
-	t.check(active != null and active.texture != null and active.texture.resource_path.ends_with("station/selected.png"), "当前导航牌使用军绿底")
-	t.check(focus != null and not focus.draw_center and focus.border_width_top >= 2, "焦点线独立于按下态")
-	t.check(board.start_btn.get_theme_stylebox("normal").texture.resource_path.ends_with("station/march.png"), "开始探索使用军令红牌")
-	t.eq(board.supply_plate.custom_minimum_size, Vector2(ExpeditionBoard.WIDTH, ExpeditionBoard.EMPTY_H), "空军需收成短档")
-	t.check(board.last_plate.custom_minimum_size.x == ExpeditionBoard.WIDTH and board.last_plate.custom_minimum_size.y <= ExpeditionBoard.LAST_H, "出征记录保留所需高度")
+	t.check(board.last_plate.custom_minimum_size == Vector2(560, 200) and board.supply_plate.custom_minimum_size == Vector2(560, 260), "两块木牌 560 × 200、560 × 260")
 	var left: Control = (screen._tab_btns["expedition"] as Button).get_parent()
 	var keys: Array = left.find_children("*", "Button", true, false).filter(func(b): return (b as Button).is_visible_in_tree()).map(func(b): return (b as Button).text)
 	t.check(not keys.has("再来一局") and not keys.has("开始探索") and not keys.has("回主菜单"), "左列只剩页签（%s）" % [keys])
@@ -57,21 +50,13 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回基地底图；这两页不垫粗布
 	var exp_bg := "home/scene_expedition" if UiTheme.art("home/scene_expedition") != null else UiTheme.ART_HOME_BG
 	t.eq(screen.backdrop_name(), exp_bg, "271：出征页铺自己的场景图（图在时；缺图回基地底图）：%s" % exp_bg)
-	var warehouse_bg := "home/scene_warehouse" if UiTheme.has_art("home/scene_warehouse") else UiTheme.ART_HOME_BG
-	var archive_bg := "home/scene_archive" if UiTheme.has_art("home/scene_archive") else UiTheme.ART_HOME_BG
-	for pair in [["market", "market/scene"], ["smithy", "smithy/scene"], ["warehouse", warehouse_bg], ["sell", warehouse_bg], ["shelf", archive_bg], ["codex", archive_bg]]:
+	for pair in [["market", "market/scene"], ["smithy", "smithy/scene"], ["warehouse", UiTheme.ART_HOME_BG]]:
 		screen.show_tab(pair[0])
 		t.eq(screen.backdrop_name(), pair[1], "%s 页的背景" % pair[0])
 	t.check((screen._pages["market"] as Control).get_theme_stylebox("panel") is StyleBoxEmpty, "集市页不垫粗布")
 	t.check(not ((screen._pages["warehouse"] as Control).get_theme_stylebox("panel") is StyleBoxEmpty), "仓库页照旧粗布")
 	screen.show_tab("warehouse")
-	t.eq(screen.backdrop_name(), warehouse_bg, "回仓库：货栈场景")
-	t.eq(screen._wh_page.size_flags_vertical, Control.SIZE_SHRINK_BEGIN, "空仓工具面板按内容收起")
-	var saved_root := UiTheme.asset_root
-	UiTheme.asset_root = "res://tests/fixtures/ui/"
-	t.eq(screen.backdrop_of("warehouse"), UiTheme.ART_HOME_BG, "缺货栈图回基地背景")
-	t.eq(screen.backdrop_of("shelf"), UiTheme.ART_HOME_BG, "缺书架图回基地背景")
-	UiTheme.asset_root = saved_root
+	t.eq(screen.backdrop_name(), UiTheme.ART_HOME_BG, "回仓库：基地底图")
 	t.check(screen.escape() and screen.tab() == "expedition", "Esc：别页回出征页")
 	board.start_btn.pressed.emit()
 	t.check(f.screen in [GameFlow.Screen.SETUP, GameFlow.Screen.MAP], "按【开始探索】出发（开局屏；教程没通直接进图）")
@@ -110,7 +95,6 @@ static func frame_last_and_supplies(t: TestCase, root: Window) -> void:
 		f.meta.tech_buffs.append(buff.id)
 	var screen = Records._screen(f, root)
 	var board: ExpeditionBoard = screen.expedition_board()
-	t.check(board.last_plate.custom_minimum_size.y == ExpeditionBoard.LAST_H and board.supply_plate.custom_minimum_size.y == ExpeditionBoard.SUPPLY_H, "非空军需和记录使用完整高度")
 	var lines := board.last_lines()
 	t.eq(lines[0] if lines.size() > 0 else "", Names.of(ch), "第一行：角色名")
 	var portraits: Array = board.last_plate.find_children("*", "PortraitSlot", true, false)
@@ -226,24 +210,3 @@ static func run_last_character_round_trip(t: TestCase) -> void:
 	var old := m.to_dict()
 	old.erase("last_character")
 	t.eq(MetaState.from_dict(old, db, GameFlow.load_meta_rules()).last_character, &"", "老存档：空")
-
-
-static func frame_scene_fade_setting(t: TestCase, root: Window) -> void:
-	t.begin("基地切页遵从动效设置")
-	var f := _flow()
-	var saved := GameDirector.fades_allowed
-	GameDirector.fades_allowed = true
-	f.settings.ui_fades = true
-	var screen = Records._screen(f, root)
-	screen.show_tab("market")
-	var fading := screen._bg_fade as TextureRect
-	t.check(is_instance_valid(fading), "开启动效时两张背景交替显示")
-	f.settings.ui_fades = false
-	screen.show_tab("smithy")
-	t.is_null(screen._bg_fade, "关闭动效后直接显示目的页")
-	if is_instance_valid(fading):
-		t.check(not fading.visible, "正在淡入的旧图立即隐藏")
-	t.eq(screen._home_bg.texture.resource_path, UiTheme.asset_root + "smithy/scene.png", "最终背景为铁匠铺")
-	screen.free()
-	GameDirector.fades_allowed = saved
-	Records._cleanup()

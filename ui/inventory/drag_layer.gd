@@ -109,8 +109,6 @@ var _motion: Array = []
 ## 139：起拖那块视图的格子边长（基地屏的仓库会放大）。跟手的残影、整块判定按它；吸附到某块视图上时按那块的
 var _cell: float = InventoryView.CELL
 var _rot: int = 0
-var _lift := 1.0
-var _lift_tween: Tween
 ## 162 补充二：从地上拿起，放回离原处这么近（像素）以内算「放回原处」（就地，不掉）
 const PUT_BACK_PX := 4.0
 ## 253：光标出了棋盘多少格以内还算吸回棋盘（再远就是地上）
@@ -221,7 +219,6 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 			_inst = null
 			return
 
-	_begin_lift()
 	set_process_input(true)
 	InventoryView.set_focused(_inst, get_tree() if is_inside_tree() else null)     # 作者 10-21：拿起的这件就是点中的那件（地上拿起的也算）
 	_mark_partners()
@@ -252,7 +249,6 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	_source = home
 	_payload = {}
 	_inst = inst
-	_begin_lift()
 	set_process_input(true)
 	_mark_partners()
 	UiCursor.set_drag(true)     # 157
@@ -1179,32 +1175,7 @@ func _restore() -> void:
 	push_error("DragLayer: uid %d 放不回源容器，物品已丢失" % _inst.uid)
 
 
-## Keep the inked silhouette at its exact placement anchor. Only its cast shadow
-## travels, so every orientation stays registered with the footprint and mouse.
-func _begin_lift() -> void:
-	if _lift_tween != null:
-		_lift_tween.kill()
-	_lift = 1.0
-	var parent := get_parent()
-	while parent != null and not parent is GameScreen:
-		parent = parent.get_parent()
-	var screen := parent as GameScreen
-	if screen == null or screen.flow == null or not UiMotion.enabled(screen.flow.settings):
-		return
-	_lift = 0.0
-	_lift_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_lift_tween.tween_method(_set_lift, 0.0, 1.0, 0.16)
-
-
-func _set_lift(value: float) -> void:
-	_lift = value
-	queue_redraw()
-
-
 func _end_drag() -> void:
-	if _lift_tween != null:
-		_lift_tween.kill()
-		_lift_tween = null
 	_prune_views()
 	for view in _views:
 		view.clear_preview()
@@ -1249,19 +1220,12 @@ func _draw() -> void:
 	var edge := (
 		InventoryView.COLOR_BAG_EDGE if is_bag else ItemPainter.rarity_color(_inst.def, _inst.rarity())
 	)
-	var texture := ItemPainter.art_of(_inst.def, cell, ItemPainter.variant_of(_inst))
-	if texture != null:
-		var shift := Vector2(0.065, 0.095) * cell * _lift
-		draw_set_transform_matrix(ItemPainter.art_transform(_inst.def, _rot, anchor + shift, cell))
-		draw_texture_rect(texture, Rect2(Vector2.ZERO, Vector2(_inst.def.shape.size_rotated(0)) * cell), false, Color(0.10, 0.08, 0.06, 0.42))
-		draw_set_transform_matrix(Transform2D.IDENTITY)
 	if not ItemPainter.draw_art(self, _inst.def, _rot, anchor, cell, Color(1, 1, 1, 0.85) * ItemPainter.runs_tint(_inst), Transform2D.IDENTITY, ItemPainter.variant_of(_inst)):     # 201：有图画图
 		ItemPainter.draw_item(self, cells, anchor, cell, body, edge)
 		ItemPainter.draw_label(
 			self, cells, anchor, cell,
 			Names.of_item(_inst), font, 11 if is_bag else 13, Color("f2f4f8")
 		)
-	ItemPainter.draw_erosion(self, _inst, _rot, anchor, cell)
 	InventoryView.draw_footprint(self, _inst.def, cells, anchor, cell, is_bag or InventoryView.footprint_hollow(_inst.def), _inst.rarity())     # 239：手里那件也逐格描
 	if not is_bag and not (view_at(mouse) is InventoryView):
 		_draw_held_markers(anchor, cell)
@@ -1281,7 +1245,6 @@ func _draw() -> void:
 			var at: Vector2 = anchor + Vector2(g["origin"] as Vector2i) * cell
 			var item_cells := item.def.cells_rotated(int(g["rot"]))
 			if ItemPainter.draw_art(self, item.def, int(g["rot"]), at, cell, Color(1, 1, 1, 0.9) * ItemPainter.runs_tint(item), Transform2D.IDENTITY, ItemPainter.variant_of(item)):
-				ItemPainter.draw_erosion(self, item, int(g["rot"]), at, cell)
 				InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false, item.rarity())     # 239：袋里各件描自己的稀有度框
 				continue
 			var c_body := ItemPainter.body_color(item.def, item.rarity())
@@ -1294,7 +1257,6 @@ func _draw() -> void:
 				Names.of_item(item), font, 12, Color("f2f4f8")
 			)
 			InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false, item.rarity())
-			ItemPainter.draw_erosion(self, item, int(g["rot"]), at, cell)
 		_draw_straddlers(font)
 
 

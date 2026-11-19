@@ -39,9 +39,9 @@ static func run_four_sections(t: TestCase) -> void:
 		gains += 1
 		t.check(m.get_string(1).contains("[color=@faith]"), "信力来源所得信力色：%s" % Glossary.strip_bbcode(m.get_string(1)))
 	t.check(gains >= 2, "信力来源至少两行（%d）" % gains)
-	# 条件里的数不上色：Lv.1「生命值低于 30%」的 30 不在 val 色里
-	t.check(not String(sections[0]).contains("[color=@val]30"), "条件里的 30% 不上色")
-	t.check(String(sections[0]).contains("[color=@val]10%[/color]"), "加成的 10% 上数值色")
+	# 条件里的数不上色：Lv.2「生命值低于 35%」的 35 不在 val 色里（信仰重构 D）
+	t.check(not String(sections[0]).contains("[color=@val]35"), "条件里的 35% 不上色")
+	t.check(String(sections[0]).contains("[color=@val]+6%[/color]"), "加成的 +6% 上数值色")
 
 
 static func run_bonus_numbers(t: TestCase) -> void:
@@ -74,7 +74,7 @@ static func frame_item_faith_divider(t: TestCase, root: Window) -> void:
 	t.check(not body.contains("右键"), "正文里没有信物行")
 	var faith := String(full["faith"])
 	var foot: String = faith.split("\n")[-1]
-	t.check(not foot.contains("[font_size") and Glossary.strip_bbcode(foot).contains("信物 · 右键奉为主信仰"), "信物脚注一行，和正文同号（作者 11-04：小字太小）：%s" % foot)
+	t.check(not foot.contains("[font_size") and Glossary.strip_bbcode(foot) == "信物" and not Glossary.strip_bbcode(faith).contains("右键"), "信物脚注一行、不教右键（右键是收回仓库），和正文同号（作者 11-04：小字太小）：%s" % foot)
 	t.check(not Glossary.strip_bbcode(faith).contains("：右键"), "信物行不再两个冒号")
 	tip.show_text("别的", Vector2(100, 100))
 	t.check(not panel.faith_dash.visible and not panel.faith_body.visible, "换别的窗：小节藏起")

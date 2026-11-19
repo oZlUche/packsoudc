@@ -5,12 +5,14 @@
 ## 所有动作都是公开方法，鼠标只是调它们；测试直接调。
 ## 150 补 1：原来的右栏没了 —— 按钮、技能、路线、调试台箭头都是这一屏的「部件」（[method hud_part]），装进读数层的组件里按布局摆。
 ## 166（作者定）：地图铺满整屏，读数浮在上面（顶端栏、左下图例与路线、右下腰带；地图按 [method HudHost.content_inset] 躲开它们）；
-## 背包在顶端栏右头，主动技能是右槽的图标按钮；撤离按钮删了（撤离点的事件屏里有「撤离」），「存档并回主菜单」删了（进点自动存档，
+## 背包 / 放大镜 / 主动技能是顶端栏右槽的图标按钮；撤离按钮删了（撤离点的事件屏里有「撤离」），「存档并回主菜单」删了（进点自动存档，
 ## 暂停菜单「回主菜单」前静默存一次）；日志与「地上 N 件」挪进调试台，调试台盖在地图上、顶缘在顶端栏下面；序章开头的静态教程（[CoachOverlay]）
 extends GameScreen
 
 ## 227：悬浮窗里敌人棋盘的格子（正常 60，框又占两边各 40 —— 缩一档放得进纸签）
 const ENEMY_TIP_CELL := 44.0
+## §4.2 行动预览里金币图的边长（浮窗正文字号上下）
+const PREVIEW_COIN_PX := 16
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 ## 路线卡片的宽（左下角）
@@ -37,6 +39,7 @@ var _routes_box: VBoxContainer
 var _log: RichTextLabel
 ## 166：调试台里的「地上 N 件」
 var _ground_line: Label
+var _reopen_btn: IconButton
 var _skills_box: HBoxContainer
 ## 166：序章开头的静态教程（开着时盖在最上面）
 var _coach: CoachOverlay = null
@@ -111,8 +114,7 @@ func pick_spawn(id: int) -> bool:
 	_view.bold_route = _route_index_of_entry(id)
 	_after_move()
 	_rebuild_routes()
-	_say(UiText.t("map.spawn_ready"))
-	_maybe_coach.call_deferred()
+	_say("出发了。点相邻的点走一步；B 开背包")
 	return true
 
 
@@ -341,6 +343,9 @@ func escape() -> bool:
 	if _skip != null:
 		close_skip_tutorial()     # 跳过确认页：Esc = 接着学
 		return true
+	if _recent != null:
+		close_recent()     # §10：最近记录叠在暂停菜单上，先收它
+		return true
 	if _pause_book != null:
 		close_pause_encyclopedia()
 		return true
@@ -365,6 +370,7 @@ func toggle_pause() -> void:
 	if _pause != null:
 		close_pause_settings()
 		close_pause_encyclopedia()
+		close_recent()
 		_pause.queue_free()
 		_pause = null
 		return
@@ -382,6 +388,8 @@ func toggle_pause() -> void:
 		col.add_child(ScrollKey.make(UiText.t("map.pause_rules"), func(): show_rules()))     # 091：再看一遍规则卡
 	if not coach_steps().is_empty():
 		col.add_child(ScrollKey.make(UiText.t("map.pause_coach"), replay_map_coach))     # 统一教程 C（方案 §3.6）：重看这一段的地图教程，不改进度和奖励
+	if not NoticeLayer.history().is_empty():
+		col.add_child(ScrollKey.make(UiText.t("map.pause_recent"), show_recent))     # 局内界面布局方案 §10：最近记录
 	if can_skip_tutorial():
 		col.add_child(ScrollKey.make(UiText.t("map.pause_skip_tutorial"), show_skip_tutorial))     # 统一教程 F（方案 §8.2）
 	col.add_child(ScrollKey.make(UiText.t("map.pause_main_menu"), func(): flow.save_and_quit()))     # 166：进点自动存档；这里回去之前也静默存一次
@@ -389,6 +397,49 @@ func toggle_pause() -> void:
 
 func pause_open() -> bool:
 	return _pause != null
+
+
+#region 局内界面布局方案 §10：最近记录（暂停菜单里翻；新的在前，要紧的朱红；钱照样画金币）
+var _recent: Control = null
+## 最近记录那张纸的宽
+const RECENT_W := 560
+const RECENT_H := 420
+
+
+func show_recent() -> void:
+	if _recent != null:
+		return
+	_recent = _shade(0.72, true)
+	var panel := _modal_panel(UiText.t("map.recent_title"), 28)
+	_recent.get_child(0).add_child(panel)
+	var col := _vbox(12)
+	panel.content.add_child(col)
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, RULES_PAPER_PAD.x, RULES_PAPER_PAD.y, RULES_PAPER_PAD.x, RULES_PAPER_PAD.y)
+	paper.name = "RecentPaper"
+	col.add_child(paper)
+	var scroll := UiTheme.vscroll()
+	scroll.custom_minimum_size = Vector2(RECENT_W, RECENT_H)
+	paper.add_child(scroll)
+	var lines := _vbox(8)
+	scroll.add_child(lines)
+	for h in NoticeLayer.history():
+		var text := CoinLabel.inline_bbcode(CoinShort.strip(String(h["text"])) if CoinShort.has(String(h["text"])) else String(h["text"]), PREVIEW_COIN_PX)
+		lines.add_child(UiTheme.rich_block(RECENT_W - 24, 15, ("[color=%sdanger]%s[/color]" % [TextTemplate.STYLE_PREFIX, text]) if bool(h["urgent"]) else text))
+	var ok := ScrollKey.primary(UiText.t("map.rules_ok"), close_recent)
+	ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(ok)
+
+
+func close_recent() -> void:
+	if _recent == null:
+		return
+	_recent.queue_free()
+	_recent = null
+
+
+func recent_open() -> bool:
+	return _recent != null
+#endregion
 
 
 #region 统一教程 F（方案 §8.2）：局内暂停菜单的「跳过剩余教程」—— 和基地出征页同一张确认页；确认走开场一问【不需要】那条路
@@ -587,6 +638,7 @@ func _close_ask() -> void:
 
 #region 接线：RunState 与 NodeEvents 的信号写进日志
 func _adopt() -> void:
+	NoticeLayer.claim_history(_run.get_instance_id())     # §10：最近记录只记这一局的（读档 = 新实例，从空的开始）
 	_view.skin = _run.chapter.map_skin if _run.chapter != null else &""     # 每章一张手绘底图
 	_view.graph = _run.map
 	_view.current_id = _run.travel.current_id if _run.phase != RunState.Phase.PICK_SPAWN else -1
@@ -825,6 +877,8 @@ func _after_move() -> void:
 	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
+	_reopen_btn.disabled = not flow.can_reopen()
+	_reopen_btn.tooltip_text = UiText.t("map.lens_tip") % UiText.t("map.reopen_hint" if flow.can_reopen() else "map.reopen_none")
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
@@ -861,14 +915,16 @@ func _update_tooltip(id: int) -> void:
 		return
 	var node := _run.map.get_node(id)
 	var stash := NodeTooltip.stash_text(_run, node)     # 反馈：每个点的地上悬停就能看，不受「节点浮窗」开关管
-	var eroding := ItemErosion.entry_warning(_run, node)     # 320 A9：进去会侵蚀一件随身道具（不受「节点浮窗」开关管）
+	# 局内界面布局方案 §4.2：这一步（连走就是这一串）实际扣几倒计时、进去会受什么侵蚀、看得见的猎手够不够得着 ——
+	# 和真走一步同一套算法（[ActionPreview]）；不受「节点浮窗」开关管。走不过去（脚下、到不了）退回 320 A9 的侵蚀预告
+	var eroding := CoinLabel.inline_bbcode(ActionPreview.lines(ActionPreview.of(_run, preview_path(id))), PREVIEW_COIN_PX)
+	if eroding == "":
+		eroding = ItemErosion.entry_warning(_run, node)     # 320 A9：进去会侵蚀一件随身道具
 	if eroding != "":
 		stash = eroding if stash == "" else stash + "\n" + eroding
 	var hunt := _hunter_tip(id)     # 134：站在这个点上、看得见的猎手输了会怎样（感知之后才说）
 	if hunt != "":
 		stash = hunt if stash == "" else stash + "\n" + hunt
-	if id == _run.travel.current_id and flow.can_reopen():
-		stash += ("\n" if stash != "" else "") + UiText.t("map.current_reopen")
 	if not flow.tooltips_enabled():
 		if stash == "":
 			_tip.release()
@@ -883,7 +939,16 @@ func _update_tooltip(id: int) -> void:
 		extra = BoardFrame.wrap(v, "corpse")     # 227：生皮框 + 格缝，格子小一档（纸签里放得下）
 	# 101 第 5 刀：浮窗文字里的样式码（`{c:hp}`）—— 169 起由悬浮窗按自己的底换成真颜色（浅纸暗字）
 	var text := NodeTooltip.text_for(_run, _run.chapter, node)
-	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra, {}, NodeText.label_of(MapNodeStyle.key_of(node)))
+	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra)
+
+
+## 预览按哪条路算：隔壁 = 这一步；远处 = 连走的路线（[method walk_path]）；脚下、到不了 = 空
+func preview_path(id: int) -> Array[int]:
+	if _run == null or _run.travel == null or id == _run.travel.current_id:
+		return [] as Array[int]
+	if _run.travel.available_moves().has(id):
+		return [id] as Array[int]
+	return walk_path(id)
 
 
 func tooltip_text() -> String:
@@ -1075,9 +1140,13 @@ func _build_parts() -> void:
 	if DevGate.on():
 		_drawer = DevDrawer.new()
 		_part(&"dev_drawer", _drawer.arrow)
-		_style_tablet_action(_drawer.arrow)
 	# 作者 2026-10-12：提示行（章节、种子、在哪个点、操作说明，「布局已保存」这类回话）挪进调试台，不再是部件
 	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
+	# 090（作者定）：三个互动按键放大到 300%
+	# 166（作者定）：「回到这个点」是顶端栏里的图标按钮（放大镜），快捷键照旧。235：背包是栏的右头（[method hud_end]）
+	_reopen_btn = IconButton.make("lens", UiText.t("map.lens"), UiText.t("map.lens"), UiText.t("map.reopen_hint"), func(): reopen(), "N")
+	_reopen_btn.disabled = true
+	_part(&"reopen_button", _reopen_btn)
 	_skills_box = _hbox(4)
 	_part(&"skills", _skills_box)
 	_routes_box = _vbox(6)
@@ -1086,25 +1155,6 @@ func _build_parts() -> void:
 	_log = _log_box(12)
 	_log.custom_minimum_size = Vector2(0, LOG_HEIGHT)
 	_ground_line = _label("", 13, UiPalette.FG)
-
-
-## 调试台按钮使用浅石与青铜角刻；取原按钮内距，以保留热区与排版。
-func _style_tablet_action(button: Button) -> void:
-	var tablet := UiTheme.art_cached("hud/topbar/action_tablet")
-	if tablet == null:
-		return
-	var previous := button.get_theme_stylebox("normal")
-	var padding := [previous.get_margin(SIDE_LEFT), previous.get_margin(SIDE_TOP),
-		previous.get_margin(SIDE_RIGHT), previous.get_margin(SIDE_BOTTOM)]
-	var tints := {"normal": Color.WHITE, "hover": Color(1.08, 1.06, 1.03),
-		"pressed": Color("ccaf96"), "hover_pressed": Color("ccaf96"), "disabled": Color("dedcd6")}
-	for state in tints:
-		var box := UiTheme.nine_box(tablet, [9, 9, 9, 9], padding)
-		box.modulate_color = tints[state]
-		button.add_theme_stylebox_override(state, box)
-	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
-		button.add_theme_color_override(state, Color("783c30"))
-	button.add_theme_color_override("icon_disabled_color", Color(0.52, 0.49, 0.44, 0.65))
 
 
 func _part(id: StringName, c: Control, full_width: bool = false) -> void:
@@ -1225,27 +1275,20 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if key == null or not key.pressed or key.echo:
 		return
-	# 相机键只作用于可操作的地图；整理背包时按键不能改变背后的镜头和全局缩放设置。
-	if _confirm != null or _pause != null or _rules != null or _ask != null or revealing():
-		return
-	if _bag != null and key.keycode != KEY_B:
-		return
-	# 空格在聚焦的按钮上用于激活它，关闭折签时也不应把地图拉回玩家。
-	if key.keycode == KEY_SPACE:
-		var focused := get_viewport().gui_get_focus_owner() as BaseButton
-		if focused != null and focused.is_visible_in_tree() and not focused.disabled:
-			return
-	if InputKeys.is_key_of(key, InputKeys.MAP_FIT) and _bag == null:     # 切片 v6.14 D：看全图走改键表
+	if InputKeys.is_key_of(key, InputKeys.MAP_FIT):     # 切片 v6.14 D：看全图走改键表
 		_view.fit()
 		_remember_zoom(0.0)     # 看全图 = 回到自动
 		get_viewport().set_input_as_handled()
 		return
 	match key.keycode:
 		KEY_SPACE:     # 作者 10-27：空格 = 镜头回正到自己；按住 = 锁住跟着（战略游戏那样）
+			if _confirm != null or _pause != null or _rules != null or _ask != null or revealing():
+				return
 			_view.recenter_on_player()
 			_view.lock_on_player = true
 		KEY_B:
-			toggle_bag()
+			if _confirm == null and _pause == null and _rules == null and _ask == null:
+				toggle_bag()
 		KEY_N:
 			reopen()
 		KEY_1:
@@ -1315,15 +1358,9 @@ func show_coach(replay: bool = false) -> bool:
 		return false
 	if _drawer != null and replay:
 		_drawer.set_open(false)
-	if steps.any(func(step: Dictionary): return step["target"] == "current_node"):
-		if _view.current_id < 0:
-			return false     # 老存档可能还在选出生点；选好才有可指的棋子。
-		var pawn := _view.pawn_at()
-		if not pawn.is_empty() and not _view.visible_rect().encloses(_view.pawn_rect(pawn["at"])):
-			_view.focus(_view.current_id)
 	_coach = CoachOverlay.new()
 	_coach.font = font
-	_coach.target_rect = _map_coach_rect
+	_coach.target_rect = func(id: StringName) -> Rect2: return _hud_host.rect_of(id)
 	add_child(_coach)
 	_coach.flow = flow
 	_coach.closed.connect(func(): _coach = null)
@@ -1333,13 +1370,6 @@ func show_coach(replay: bool = false) -> bool:
 			flow.save_meta())
 	_coach.start(steps)
 	return true
-
-
-func _map_coach_rect(id: StringName) -> Rect2:
-	if id == &"current_node":
-		var pawn := _view.pawn_at()
-		return _view.get_global_transform() * _view.pawn_rect(pawn["at"]) if not pawn.is_empty() else Rect2()
-	return _hud_host.rect_of(id)
 
 
 func coach() -> CoachOverlay:

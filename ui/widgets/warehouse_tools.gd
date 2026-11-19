@@ -7,8 +7,6 @@
 class_name WarehouseTools
 extends VBoxContainer
 
-const StationFinish := preload("res://ui/widgets/station_finish.gd")
-
 ## 268：【快速出售】按下 / 抬起
 signal sell_mode_toggled(on: bool)
 
@@ -66,8 +64,6 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages) -> WarehouseTools:
 	quick_btn.toggle_mode = true
 	quick_btn.tooltip_text = UiText.t("wh.quick_sell_tip")
 	add_child(quick_btn)
-	for btn in [fav_btn, clear_btn, quick_btn]:
-		StationFinish.button(btn)
 	meta.warehouse.changed.connect(refresh)
 	meta.changed.connect(refresh)
 	refresh()
@@ -77,7 +73,6 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages) -> WarehouseTools:
 ## 一块小木牌（内边距是九宫格的框宽）；返回牌，[method _col] 取里面那一列
 func _plate(h: float) -> PanelContainer:
 	var p := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_PLAQUE_SMALL)
-	StationFinish.book(p, true)
 	p.custom_minimum_size = Vector2(WIDTH, h)
 	add_child(p)
 	p.add_child(UiTheme.vbox(6))

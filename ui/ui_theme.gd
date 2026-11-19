@@ -120,7 +120,7 @@ const SKILL_NAME_INK := Color("8a3b12")
 const FLAW_NAME_INK := Color("4a4f57")
 const SKILL_TEXT_SIZE := 17
 ## 166：地图屏的顶端栏（[code]hud_bar[/code] 部件的底）、
-## 栏里的图标按钮（[IconButton]：背包、主动技能；按下态走这个变体）
+## 栏里的图标按钮（[IconButton]：背包、放大镜、主动技能；按下态走这个变体）
 const PANEL_HUD_BAR := &"PanelHudBar"
 const BUTTON_ICON := &"ButtonIcon"
 ## 167：整颗按钮就是一张图（三态图自己画悬停与按下，[method IconButton.make_art]）—— 各态都没有底
@@ -896,16 +896,6 @@ static func text_theme(tone: StringName) -> Theme:
 	t.set_color("font_color", "TooltipLabel", INK)
 	_tone_themes[tone] = t
 	return t
-
-
-## 石槽本身与其内的动态技能、角标共享读数字体；沿用浅底的字色和所有字号档位。
-static func hud_well_theme() -> Theme:
-	const KEY := &"hud_well"
-	if not _tone_themes.has(KEY):
-		var t := text_theme(TONE_LIGHT).duplicate() as Theme
-		t.default_font = UiPalette.hud_readout_font()
-		_tone_themes[KEY] = t
-	return _tone_themes[KEY]
 
 
 ## 深底嵌在浅底里（浅色石板框里的铜名牌）：外面挂的墨字小主题会一路继承进来 —— 这份小主题把同样那几种字色改回全局的浅色字

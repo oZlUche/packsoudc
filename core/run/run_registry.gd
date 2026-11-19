@@ -146,6 +146,7 @@ const FAITH_DEEDS := {
 	&"item_acquired": "res://core/run/faith/deeds/item_acquired_deed.gd",
 	&"distinct_items_fired": "res://core/run/faith/deeds/distinct_items_fired_deed.gd",
 	&"first_place": "res://core/run/faith/deeds/first_place_deed.gd",
+	&"mechanic": "res://core/run/faith/deeds/mechanic_deed.gd",     # 信仰重构 C / D：战斗机制真发生了几次
 }
 
 ## 093：信仰级的效果（写在信仰上、按阶生效）
@@ -167,6 +168,12 @@ const FAITH_PERKS := {
 	&"overtime_regen": "res://core/run/faith/perks/overtime_regen_perk.gd",
 	&"undying": "res://core/run/faith/perks/undying_perk.gd",
 	&"altar_bless": "res://core/run/faith/perks/altar_bless_perk.gd",
+	&"skill_momentum": "res://core/run/faith/perks/skill_momentum_perk.gd",     # 信仰重构 C
+	&"hunt_dismantle": "res://core/run/faith/perks/hunt_dismantle_perk.gd",
+	&"earth_support": "res://core/run/faith/perks/earth_support_perk.gd",
+	&"brute_rage": "res://core/run/faith/perks/brute_rage_perk.gd",     # 信仰重构 D
+	&"sun_cycle": "res://core/run/faith/perks/sun_cycle_perk.gd",
+	&"nature_regrowth": "res://core/run/faith/perks/nature_regrowth_perk.gd",
 }
 
 ## 猎手（069 / 071）：行动逻辑与战败后果

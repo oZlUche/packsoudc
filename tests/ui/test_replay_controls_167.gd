@@ -74,30 +74,3 @@ static func run_timeline(t: TestCase) -> void:
 		t.check(is_equal_approx(tl.x_of(0.0), tl.pad()) and is_equal_approx(tl.x_of(10.0), 400.0 - tl.pad()), "两头对着杆的两端")
 		t.check(is_equal_approx(tl.time_at(tl.x_of(3.0)), 3.0), "来回换算一致")
 		tl.free()
-
-
-static func frame_faith_crest(t: TestCase, root: Window) -> void:
-	t.begin("战斗神徽按同侧快照显示，回拖重建不死状态")
-	var result := BattleResult.new()
-	var gods := ["brute", "sun", "earth", "nature", "skill", "hunt"]
-	for god in gods:
-		result.passives[0].append(PassiveNote.make(StringName("faith:" + god), god))
-	result.passives[1].append(PassiveNote.make(&"faith:sun", "sun"))
-	for side in 2:
-		result.log.append(BattleEvent.make(BattleEvent.EFFECT_RESOLVED, 2000, side, {"effect": "undying", "uid": 0, "until": 5000}))
-	result.duration = 10000
-	result.log.append(BattleEvent.make(BattleEvent.BATTLE_END, result.duration, -1))
-	var view := BattleView.new()
-	root.add_child(view)
-	view.play(result)
-	for i in gods.size():
-		var tex := view.panel(0).icon_texture("passive:" + str(i))
-		t.check(tex != null and tex == UiTheme.art_cached("faith/%s" % gods[i]), "对应神徽 " + gods[i])
-	view.seek(StatMath.to_float(3000))
-	t.check(is_equal_approx(view.panel(0).time_left("passive:0"), StatMath.to_float(2000)), "同侧蛮神显示剩余时间")
-	t.check(view.panel(1).time_left("passive:0") < 0.0, "对面的太阳徽记保持常态")
-	view.seek(StatMath.to_float(1000))
-	t.check(view.panel(0).time_left("passive:0") < 0.0, "回拖至事件前，印记复原")
-	view.seek(StatMath.to_float(6000))
-	t.check(is_zero_approx(view.panel(0).time_left("passive:0")), "事件到期，神徽退亮")
-	view.queue_free()

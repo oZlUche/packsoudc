@@ -27,6 +27,8 @@ var rules: Array[AbilityRule] = []
 var baseline_mods: Array[StatModifier] = []
 ## 按件（3.2）：按下标顺序施加
 var scoped: Array[ScopedMod] = []
+## 信仰重构 C：按 uid 给某几件的修饰（大地的承托按摆放算出来，[ScopedMod] 按标签筛不出）：uid → Array[StatModifier]。第 7 步和按件修饰一起并
+var item_mods: Dictionary = {}
 
 ## 标准轴（4.3）→ 开战时的层数。种进**系统层**：这一场的常驻加成，对手的净化洗不掉
 var axes: Dictionary = {}

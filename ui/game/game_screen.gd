@@ -147,7 +147,7 @@ func toggle_bag() -> void:
 
 ## 打开背包浮窗（084：能拖着走的浮窗，关掉再开还在上次放的位置）：遮罩上放一个 [BagWindow]；[param drag] / [param hint_sink] 照传给 [method BagWindow.setup_bag]
 func _open_bag(run: RunState, drag: DragLayer = null, hint_sink: Callable = Callable()) -> void:
-	_bag = _shade(0.46)
+	_bag = _shade(0.7)
 	var win := BagWindow.new()
 	_bag.add_child(win)
 	_bag_panel = win.setup_bag(run, font, toggle_bag, drag, hint_sink)
