@@ -128,7 +128,7 @@ static func _count(state: RunState, extracted: bool) -> RunResult:
 		r.balance = state.wallet.balance if state.wallet != null else 0
 		for inst in state.board.items():
 			var item := inst as ItemInstance
-			if item.is_pinned():
+			if item.is_pinned() or item.def.is_commission():     # 336：委托物不带回仓库（交没交在委托进度里）
 				continue     # 255：随身之物随角色回营 —— 不带回、不进仓库 / 包架 / 图鉴、不计价值，下一局开局再发
 			r.carried.append(item)
 			if not item.def.is_bullion():     # 244：金银是花钱买的，不算搜刮成绩（钱照样回仓库）
@@ -139,6 +139,8 @@ static func _count(state: RunState, extracted: bool) -> RunResult:
 		r.safe_size = safe.inventory.size
 		for inst in safe.inventory.items():
 			var item := inst as ItemInstance
+			if item.def.is_commission():
+				continue     # 336：委托物不带回仓库
 			r.safe_items.append(item)
 			if not item.def.is_bullion():     # 244：同上
 				r.safe_value += ItemValue.of(item.def)

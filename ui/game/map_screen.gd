@@ -282,6 +282,11 @@ func _open_confirm(node: MapNode) -> void:
 			note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			entrust.add_child(note)
 		buttons.add_child(entrust)
+	var mod := CommissionModule.of(_run)     # 336：带着委托 —— 查验这处出口、把信交给接应员
+	if mod != null and mod.can_inspect(node):
+		buttons.add_child(_button(UiText.t("map.inspect"), inspect_here, 14))
+	if mod != null and mod.can_deliver(node):
+		buttons.add_child(_button(UiText.t("map.deliver"), deliver_here, 14))
 	buttons.add_child(_button(UiText.t("map.extract_cancel"), cancel_extract, 14, UiPalette.Tier.MINOR))
 	col.add_child(buttons)
 
@@ -290,6 +295,41 @@ func _open_confirm(node: MapNode) -> void:
 func entrust_here() -> bool:
 	cancel_extract()
 	return flow.open_safe(_run.current_node())
+
+
+## 336：撤离确认框上的【查验】—— 记一处，框重开（键没了）。返回记上没有
+func inspect_here() -> bool:
+	var node := _run.current_node()
+	var got := flow.inspect_extract(node)
+	if got.is_empty():
+		return false
+	_say_commissions(got, UiText.t("notice.inspected"))
+	_open_confirm(node)
+	return true
+
+
+## 336：撤离确认框上的【交信】—— 信交出去当场算数，框重开。返回交了没有
+func deliver_here() -> bool:
+	var node := _run.current_node()
+	var got := flow.deliver_letter(node)
+	if got.is_empty():
+		return false
+	_say_commissions(got, "")
+	_open_confirm(node)
+	return true
+
+
+## 记上的几份各报一句（进最近记录）：这一步做完了说办成 / 送达，没做完说 [param plain]
+func _say_commissions(got: Array, plain: String) -> void:
+	for row in got:
+		var d := Commissions.def(StringName(String(row["id"])))
+		var cname := Names.of(d)
+		if bool(row.get("finished", false)):
+			_hud_host.notice(UiText.t("notice.commission_done") % cname)
+		elif String(row.get("goal", "")) == "deliver_letter":
+			_hud_host.notice(UiText.t("notice.delivered") % cname)
+		elif plain != "":
+			_hud_host.notice(plain)
 
 
 ## 193 §3.2：叠层（背包、撤离确认、暂停、规则卡）一打开就收掉浮窗 —— 叠层盖住了源，不一定还有鼠标事件来收

@@ -88,7 +88,7 @@ func ids(include_locked: bool = false) -> Array:
 	var out: Array = []
 	for id in _defs:
 		var d := _defs[id] as ItemDef
-		if d.is_sealed() or d.is_keepsake() or d.is_blessed() or d.is_token() or d.is_signature():     # 088：特殊道具也不能生成；095：赐福版只从赐福来；175：铸牌只从铸炉来；256：随身之物只从角色来
+		if d.is_sealed() or d.is_keepsake() or d.is_blessed() or d.is_token() or d.is_signature() or d.is_commission():     # 336：委托物只从委托发；088：特殊道具也不能生成；095：赐福版只从赐福来；175：铸牌只从铸炉来；256：随身之物只从角色来
 			continue
 		if not include_locked and (_locked.has(id) or d.is_no_random_source() or d.is_unique() or d.is_lesser() or d.is_ticket()):     # 279 / 310：不进随机来源的只从合成或打造来；281：红武与劣化版只走专属来路；图鉴（include_locked）照列
 			continue

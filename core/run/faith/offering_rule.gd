@@ -21,6 +21,8 @@ extends Resource
 
 
 func matches(def: ItemDef) -> bool:
+	if def == null or def.is_commission():     # 336：委托物不能献祭
+		return false
 	if not FaithTags.item_matches(def, tags, min_cells, exact_grade):
 		return false
 	if has_stat != &"" and (def.combat == null or not def.combat.base_stats.has(String(has_stat))):

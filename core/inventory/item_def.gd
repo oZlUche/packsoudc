@@ -56,6 +56,8 @@ const UNIQUE := &"unique"
 const LESSER := &"lesser"
 ## 285：券（高级预设拿它换一套）
 const TICKET := &"ticket"
+## 336：委托物（任务信这类）—— 只从委托里发：不能卖、不能献祭、不受赐福、不参与合成、不进随机来源，不带回仓库（[method is_commission]）
+const COMMISSION := &"commission"
 ## 244 补充一 / 250：贵重品（类别：金银、工艺摆件……）—— 值钱是它的本分，基地回收按面值全额（[method is_valuable]）
 const VALUABLE := &"valuable"
 ## 250：魔晶石（类别）—— 244 起按面值回收，类别恰好一个后不再另带贵重品，[method is_valuable] 照算它
@@ -123,6 +125,11 @@ func is_unique() -> bool:
 ## 285：券（[constant TICKET]）—— 高级预设拿它换一套；不能卖、不进掉落池与商店，只从核心 BOSS 掉
 func is_ticket() -> bool:
 	return tags.has(TICKET)
+
+
+## 336：委托物（[constant COMMISSION]）
+func is_commission() -> bool:
+	return tags.has(COMMISSION)
 
 
 func is_lesser() -> bool:

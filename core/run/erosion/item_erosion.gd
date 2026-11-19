@@ -21,7 +21,7 @@ static func limit(inst: ItemInstance) -> int:
 static func eligible(inst: ItemInstance) -> bool:
 	if inst == null or inst.def == null or inst.def.is_bag or inst.is_pinned():
 		return false
-	for t in [ItemDef.SIGNATURE, ItemDef.TICKET, ItemDef.KEEPSAKE, ItemDef.TOKEN]:
+	for t in [ItemDef.SIGNATURE, ItemDef.TICKET, ItemDef.KEEPSAKE, ItemDef.TOKEN, ItemDef.COMMISSION]:
 		if inst.def.tags.has(t):
 			return false
 	return true

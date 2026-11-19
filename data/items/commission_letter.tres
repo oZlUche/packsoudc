@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_fflm6"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_74wb6"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_oemm6"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_6c8f8"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_ss58u"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_getnd"]
+
+[sub_resource type="Resource" id="Resource_0jqdb"]
+script = ExtResource("6_getnd")
+
+[resource]
+script = ExtResource("5_ss58u")
+id = &"commission_letter"
+display_name = "未署名的信"
+display_names = {
+"en": "Unsigned Letter"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_0jqdb")
+tags = Array[StringName]([&"commission", &"crafted"])
+material = "cloth"

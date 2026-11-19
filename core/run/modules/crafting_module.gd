@@ -65,6 +65,8 @@ func resolve(a: ItemDef, b: ItemDef) -> Dictionary:
 func partner_ok(a: ItemInstance, b: ItemInstance) -> bool:
 	if a == null or b == null or a == b or a.def == null or b.def == null or _run == null:
 		return false
+	if a.def.is_commission() or b.def.is_commission():     # 336：委托物不参与合成
+		return false
 	if not Fusion.spendable(_run.board, a) or not Fusion.spendable(_run.board, b):
 		return false
 	var res := resolve(a.def, b.def)
