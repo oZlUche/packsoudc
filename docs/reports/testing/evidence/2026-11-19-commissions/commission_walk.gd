@@ -155,6 +155,7 @@ func _next_hop(to: int) -> int:
 			var nd := r.map.get_node(v)
 			var w := 1
 			if nd != null and nd.type in [&"battle", &"elite"] and not nd.is_visited(): w = 12
+			if nd != null and nd.type in [&"core", &"boss"]: w = 200
 			if nd != null and nd.type == &"extract" and v != to: w = 30
 			if not dist.has(v) or dist[u] + w < dist[v]:
 				dist[v] = dist[u] + w; prev[v] = u
@@ -251,6 +252,7 @@ func _walk() -> bool:
 	if hop < 0: L("到 %d 没路" % _target); quit(1); return false
 	var v: MapView = _ms()._view
 	var gp := v.get_global_transform() * v.to_screen(v.positions().get(hop, Vector2.ZERO))
+	for n in root.find_children("*", "HoverTip", true, false): n.hide_tip()
 	if Rect2(Vector2.ZERO, root.get_visible_rect().size).has_point(gp): _click_node(hop)
 	else:
 		if not _off.has(hop): L("（节点 %d 在屏幕外 %s：改直接调 _on_node_pressed）" % [hop, str(gp)]); _off[hop] = true
@@ -263,6 +265,13 @@ var _off := {}
 func _ev_state(tag: String) -> void:
 	var r := _flow.run
 	L("%s：屏 %s；事件 %s；键 %s" % [tag, GameFlow.Screen.keys()[_flow.screen], String(r.events.pending_event().id) if r.events.pending_event() != null else "无", _list_buttons()])
+	var fee := []
+	for l in root.find_children("*", "", true, false):
+		if (l is Label or l is RichTextLabel) and (l as Control).is_visible_in_tree():
+			var t: String = (l as RichTextLabel).get_parsed_text() if l is RichTextLabel else (l as Label).text
+			for line in t.split("\n"):
+				if line.contains("费用") or line.contains("Fee") or line.contains("能出去") or line.contains("A way out"): fee.append(line.strip_edges())
+	L("　　正文：%s" % " | ".join(fee))
 	L("　　小牌「%s」；本局记账 %d 条；托付键 %s" % [_hud_text(), _mod_rows(), "在" if _btn_has([UiText.t("map.entrust")]) != null else "不在"])
 
 
