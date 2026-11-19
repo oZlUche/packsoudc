@@ -5,9 +5,11 @@
 class_name ExpeditionBoard
 extends VBoxContainer
 
+const CampaignDesk := preload("res://ui/widgets/campaign_desk.gd")
 const WIDTH := 560.0
 const LAST_H := 200.0
 const SUPPLY_H := 260.0
+const EMPTY_H := 112.0
 const START := Vector2(360, 96)
 const START_FONT := 30
 const PORTRAIT := 72
@@ -51,11 +53,16 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 		_fill_last(_col(last_plate))
 		if flow.legacy_tutorial() != null:
 			_fill_try(_col(last_plate))
+		elif _last_lines.is_empty():
+			last_plate.custom_minimum_size.y = EMPTY_H
 	supply_plate = _plate(SUPPLY_H, "meta.supplies")
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
 	_fill_supplies(_col(supply_plate))
+	if _belt.is_empty() and _buffs.is_empty():
+		supply_plate.custom_minimum_size.y = EMPTY_H
 	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true, START, START_FONT)
+	CampaignDesk.button(start_btn, true)
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	add_child(start_btn)
@@ -73,6 +80,8 @@ func _plate(h: float, title_key: String) -> PanelContainer:
 	hold.add_child(HeaderTag.hanging(UiText.t(title_key)))
 	wrap_.add_child(hold)
 	var p := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_PLAQUE)
+	CampaignDesk.panel(p)
+	p.get_theme_stylebox("panel").content_margin_top = 30
 	p.custom_minimum_size = Vector2(WIDTH, h)
 	wrap_.add_child(p)
 	p.add_child(UiTheme.vbox(10))

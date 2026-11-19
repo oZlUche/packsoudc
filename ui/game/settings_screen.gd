@@ -5,6 +5,9 @@ var _auto_close_btn: Button = null
 var _tooltip_btn: Button = null
 var _pace_btn: Button = null
 var _unlock_all_btn: Button = null
+var _unlock_note: Label
+var _tab_width := 210.0
+var _sheet_area: Control
 ## 标题牌：告示卷排在它下面（[method notice_top]）
 var _plate: Control = null
 var _scroll: ScrollContainer = null
@@ -39,7 +42,8 @@ func open(_payload: Dictionary) -> void:
 	# UI替换美术 10-22：标题牌固定在板顶刻线上、不跟着滚；滚动框从标题牌下面开始，滚过去的内容不压刻线
 	var frame := _vbox(10)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_slab_screen().add_child(frame)     # 157 补充三：内容在一整块石板上
+	_sheet_area = _slab_screen()
+	_sheet_area.add_child(frame)     # 157 补充三：内容在一整块石板上
 	var plate := TitlePlate.new(UiText.t("menu.settings"))     # 226 批二：标题刻在标题牌上
 	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	frame.add_child(plate)
@@ -51,18 +55,24 @@ func open(_payload: Dictionary) -> void:
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(center)
-	var col := _vbox(10)
-	col.custom_minimum_size.x = 520
-	center.add_child(col)
-	_build_display(col)
-	_build_sound(col)
-	col.add_child(HSeparator.new())
-	col.add_child(HeaderTag.new(UiText.t("settings.loot_section")))     # 226 批二：分区名上段头签
+	_tab_width = 210.0
+	for key in ["settings.display", "settings.sound", "settings.loot_section", "settings.bg_section", "settings.veteran"]:
+		var caption_width := UiPalette.cjk_font_bold().get_string_size(UiText.t(key), HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(HeaderTag.FONT_SIZE)).x
+		_tab_width = maxf(_tab_width, ceilf(caption_width) + HeaderTag.LEFT + HeaderTag.RIGHT)
+	var folio := _vbox(12)
+	center.add_child(folio)
+	var fit_width := func():
+		folio.custom_minimum_size.x = clampf(_sheet_area.size.x - 32.0, 0.0, 1120.0)
+	_sheet_area.resized.connect(fit_width)
+	fit_width.call()
+	scroll.follow_focus = true
+	_build_display(_section(folio, UiText.t("settings.display")))
+	_build_sound(_section(folio, UiText.t("settings.sound")))
+	var col := _section(folio, UiText.t("settings.loot_section"))
 	_auto_close_btn = StoneChip.toggle(UiText.t("settings.loot_auto_close"), _flip.bind(&"loot_auto_close"))
 	col.add_child(_auto_close_btn)
-	col.add_child(HSeparator.new())
-	col.add_child(HeaderTag.new(UiText.t("settings.bg_section")))
-	var bg_row := _hbox(8)
+	col = _section(folio, UiText.t("settings.bg_section"))
+	var bg_row := _choices()
 	for t in UiPalette.BG_THEMES:
 		var tid := String(t["id"])
 		var b := StoneChip.make(UiText.pick(t["name"]), func(): set_bg_theme(tid), t["color"])     # 乙 石刻：底色签左边一块色样
@@ -73,7 +83,7 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(bg_row)
 	_fades_btn = StoneChip.toggle(UiText.t("settings.fades"), _flip.bind(&"ui_fades"))     # 157
 	col.add_child(_fades_btn)
-	var cursor_row := _hbox(8)
+	var cursor_row := _choices()
 	cursor_row.add_child(HeaderTag.new(UiText.t("settings.cursor")))     # 226：「光标」上段头签
 	for skin in UiCursor.SKINS:
 		var sid := String(skin)
@@ -81,11 +91,12 @@ func open(_payload: Dictionary) -> void:
 		_cursor_btns[sid] = cb
 		cursor_row.add_child(cb)
 	col.add_child(cursor_row)
-	col.add_child(HSeparator.new())
-	col.add_child(HeaderTag.new(UiText.t("settings.veteran")))
+	col = _section(folio, UiText.t("settings.veteran"))
 	_unlock_all_btn = StoneChip.toggle(UiText.t("settings.unlock_all"), toggle_unlock_all)
 	_unlock_all_btn.tooltip_text = UiText.t("settings.unlock_all_desc")     # 226 批二：说明进开关的悬浮窗
 	col.add_child(_unlock_all_btn)
+	_unlock_note = _wrapped(UiText.t("settings.unlock_all_desc"), 15, Color("513e2c"), 0.0)
+	col.add_child(_unlock_note)
 	var export_btn := StoneChip.make(UiText.t("settings.export_data"), func(): export_balance_data())     # 242：玩家版也有；和同页选项同一张石签（UI替换美术），只是不切换
 	export_btn.toggle_mode = false
 	export_btn.tooltip_text = UiText.t("settings.export_data_desc")
@@ -96,12 +107,9 @@ func open(_payload: Dictionary) -> void:
 	_reveal_names_btn = StoneChip.toggle(UiText.t("settings.reveal_names"), _flip.bind(&"reveal_names"))
 	_reveal_names_btn.tooltip_text = UiText.t("settings.reveal_names_desc")
 	col.add_child(_reveal_names_btn)
-	col.add_child(HSeparator.new())
 	if DevGate.on():     # 117：开发区只在非导出包里有 —— 日志是给作者看的，玩家看不到。186：调试模式、节点浮窗预览也挪进来
-		var dev := _vbox(8)     # 226 批四：开发区的说明字不算裸字，守门测试放过（只在开发包里有）
+		var dev := _section(folio, "开发")     # 226 批四：开发区的说明字不算裸字，守门测试放过（只在开发包里有）
 		dev.set_meta(&"exempt_bare_text", "dev")
-		col.add_child(dev)
-		dev.add_child(_label("开发", 15, UiPalette.DIM))
 		dev.add_child(_wrapped("调试模式：地图上摆出只给开发看的东西（事件日志）。关掉就藏起来，日志照样在记。", 12, UiPalette.DIM, 500))
 		_debug_btn = StoneChip.toggle("调试模式", _flip.bind(&"debug_mode"))
 		dev.add_child(_debug_btn)
@@ -111,26 +119,88 @@ func open(_payload: Dictionary) -> void:
 		_tooltip_btn = StoneChip.toggle("节点浮窗预览", _flip.bind(&"node_tooltips_preview"))
 		dev.add_child(_tooltip_btn)
 		dev.add_child(_wrapped("战斗日志：每场战斗的内部日志（逐条、带时间）与回放存档写进 user://battle_logs，只留最近 %d 场。回放在开发工具的「战斗回放」里翻。" % BattleArchive.KEEP, 12, UiPalette.DIM, 500))
-		var row := _hbox(8)
+		var row := _choices()
 		_trace_btn = StoneChip.toggle("战斗日志", toggle_battle_trace)
 		row.add_child(_trace_btn)
 		var open_btn := StoneChip.make("打开日志文件夹", open_log_folder)     # UI替换美术：和整页同一张石签，不切换
 		open_btn.toggle_mode = false
 		row.add_child(open_btn)
 		dev.add_child(row)
-		dev.add_child(HSeparator.new())
 	var back_key := ScrollKey.make(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back)     # 乙 石刻
 	back_key.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	col.add_child(back_key)
+	frame.add_child(back_key)
+	_enable_navigation(frame)
+	_sheet_area.resized.connect(_queue_focus_reveal)
 	_refresh()
+
+
+## 石牌置于纸页左栏，窄视口改为上方。每个分组的内容仍按原来的顺序获得焦点。
+func _section(folio: VBoxContainer, caption: String) -> VBoxContainer:
+	var page := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_PARCHMENT)
+	page.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	page.add_theme_stylebox_override("panel", UiTheme.nine_box(UiTheme.art_cached("campaign/dossier"), [28, 23, 28, 23], [27, 16, 27, 17]))
+	folio.add_child(page)
+	var spread := BoxContainer.new()
+	spread.add_theme_constant_override("separation", 16)
+	page.add_child(spread)
+	var tab := HeaderTag.new(caption)
+	tab.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	spread.add_child(tab)
+	var natural_width := tab.custom_minimum_size.x
+	var content := _vbox(9)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spread.add_child(content)
+	var fit := func():
+		spread.vertical = _sheet_area.size.x < 950
+		if not spread.vertical:
+			tab.widen(_tab_width)
+		else:
+			tab.custom_minimum_size.x = natural_width
+	_sheet_area.resized.connect(fit)
+	fit.call()
+	return content
+
+
+func _choices() -> HFlowContainer:
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 9)
+	row.add_theme_constant_override("v_separation", 7)
+	return row
+
+
+## 石签默认用于鼠标；设置屏为它们开启标准键盘导航，并让滚动框跟随当前焦点。
+func _enable_navigation(frame: Control) -> void:
+	var ring := StyleBoxFlat.new()
+	ring.draw_center = false
+	ring.border_color = Color("783a29")
+	ring.set_border_width_all(2)
+	ring.set_expand_margin_all(2)
+	for node in frame.find_children("*", "BaseButton", true, false):
+		var button := node as BaseButton
+		button.focus_mode = Control.FOCUS_ALL
+		button.add_theme_stylebox_override("focus", ring)
+		if _scroll.is_ancestor_of(button):
+			button.focus_entered.connect(_queue_focus_reveal)
+
+
+## 解锁说明展开、窄屏分组换行后，等容器完成排版再校正焦点所在的滚动位置。
+func _queue_focus_reveal() -> void:
+	if not is_inside_tree() or get_tree().process_frame.is_connected(_show_current_focus):
+		return
+	get_tree().process_frame.connect(_show_current_focus, CONNECT_ONE_SHOT)
+
+
+func _show_current_focus() -> void:
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused != null and _scroll.is_ancestor_of(focused):
+		_scroll.ensure_control_visible(focused)
 
 
 ## 172：「显示」一节（放最上面）—— 窗口 / 全屏两个按钮；分辨率按宽高比分行，只列放得进这块屏幕的档；全屏时整块灰掉、注一句。
 ## 主菜单的设置和 Esc 暂停菜单里嵌的是同一屏，两个入口都有它
 func _build_display(col: VBoxContainer) -> void:
 	add_to_group(GameDirector.DISPLAY_GROUP)     # F11 切了模式，这一节跟着刷新
-	col.add_child(HeaderTag.new(UiText.t("settings.display")))
-	var mode_row := _hbox(8)
+	var mode_row := _choices()
 	for m in [[WindowSetup.WINDOWED, "settings.windowed"], [WindowSetup.FULLSCREEN, "settings.fullscreen"]]:
 		var mode: String = m[0]
 		var b := StoneChip.make(UiText.t(String(m[1])), func(): set_window_mode(mode))
@@ -142,7 +212,7 @@ func _build_display(col: VBoxContainer) -> void:
 	for p in shown:
 		var aspect := WindowSetup.aspect_name(p)
 		if not rows.has(aspect):
-			var row := _hbox(8)
+			var row := _choices()
 			rows[aspect] = row
 			col.add_child(row)
 		var size_: Vector2i = p
@@ -154,7 +224,7 @@ func _build_display(col: VBoxContainer) -> void:
 		follow.disabled = true
 		col.add_child(follow)
 	# 258（作者 2026-10-27 定）：字号三档 小 / 中 / 大（主菜单不跟）；点了这一屏当场按新字号重建，别的屏下次进来生效
-	var size_row := _hbox(8)
+	var size_row := _choices()
 	size_row.add_child(HeaderTag.new(UiText.t("settings.text_size")))
 	for tier in GameSettings.TEXT_SIZES:
 		var id: StringName = tier
@@ -166,8 +236,6 @@ func _build_display(col: VBoxContainer) -> void:
 
 ## 204：「声音」一节 —— 音效音量一行（− / + 一步 10%，按钮本身响 `ui.press`，当场听到新音量）。音乐那行等第一首曲子再露出来（待定 4.2）
 func _build_sound(col: VBoxContainer) -> void:
-	col.add_child(HSeparator.new())
-	col.add_child(HeaderTag.new(UiText.t("settings.sound")))
 	# 226 §1.5 + 乙 石刻：读数并进步进件 [−][音效 80%][+]
 	_sfx = StoneStepper.new(func(): step_sfx_volume(-1), func(): step_sfx_volume(1))
 	_sfx.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -340,6 +408,8 @@ func set_text_size(id: StringName) -> void:
 	UiPalette.apply(flow.settings)
 	flow.save_settings()
 	_rebuild()
+	var selected := _text_btns[id] as Button
+	selected.grab_focus.call_deferred()
 
 
 func _rebuild() -> void:
@@ -360,7 +430,10 @@ func toggle_unlock_all() -> void:
 func _refresh() -> void:
 	refresh_display()
 	if _sfx != null:
-		_sfx.set_text(UiText.t("settings.sfx_volume") % roundi(flow.settings.sfx_volume * 100.0))
+		var volume := UiText.t("settings.sfx_volume") % roundi(flow.settings.sfx_volume * 100.0)
+		_sfx.set_text(volume)
+		_sfx.minus.accessibility_name = "− " + volume
+		_sfx.plus.accessibility_name = "+ " + volume
 	if _tooltip_btn != null:
 		_tooltip_btn.set_pressed_no_signal(flow.settings.node_tooltips_preview)
 		_tooltip_btn.text = "节点浮窗预览：%s" % ("开（不管章节）" if flow.settings.node_tooltips_preview else "关（按章节：第二章开）")
@@ -388,7 +461,8 @@ func _refresh() -> void:
 		(_bg_btns[tid] as Button).set_pressed_no_signal(String(tid) == UiPalette.bg_theme)
 	if _unlock_all_btn != null:
 		_unlock_all_btn.set_pressed_no_signal(flow.settings.unlock_all)
-		_unlock_all_btn.text = UiText.t("settings.unlock_all_state") % (UiText.t("settings.unlock_all_on") if flow.settings.unlock_all else UiText.t("settings.off"))
+		_unlock_all_btn.text = UiText.t("settings.unlock_all_state") % UiText.t("settings.on" if flow.settings.unlock_all else "settings.off")
+		_unlock_note.visible = flow.settings.unlock_all
 	if _reveal_names_btn != null:
 		_reveal_names_btn.set_pressed_no_signal(flow.settings.reveal_names)
 		_reveal_names_btn.text = UiText.t("settings.reveal_names_state") % (UiText.t("settings.on") if flow.settings.reveal_names else UiText.t("settings.off"))

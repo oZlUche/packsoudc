@@ -41,6 +41,7 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 		if setup._chapters[gi].id == &"free_mode":
 			setup.choose_chapter(gi)
 	t.eq(setup.page(), 0, "第一页")
+	t.check(setup._step_keys.size() == 3 and setup._step_keys[0].button_pressed and setup._step_keys[2].disabled, "页签提示当前步骤，不能跨过配置")
 	t.check(setup._title.text.contains("角色选择"), "标题：%s" % setup._title.text)
 	t.eq(setup._back_btn.text, "返回", "264 §五：第一页也写「返回」（回基地）")
 	t.check(not setup._warehouse_view.is_visible_in_tree(), "第一页看不到仓库")
@@ -94,8 +95,8 @@ static func frame_three_pages(t: TestCase, root: Window) -> void:
 	t.check(setup.escape(), "Esc")
 	t.eq(setup.page(), 1, "Esc 回第二页")
 	t.eq(setup.carried().size(), 1, "带上的还在")
-	setup.prev_page()
-	t.eq(setup.page(), 0, "回第一页")
+	setup._step_keys[0].pressed.emit()
+	t.eq(setup.page(), 0, "页签返回角色选择")
 	t.eq(setup.carried().size(), 1, "回第一页也还在")
 
 	# 出发：最后一页的「出发」= depart

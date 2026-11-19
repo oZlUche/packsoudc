@@ -883,7 +883,7 @@ func _update_tooltip(id: int) -> void:
 		extra = BoardFrame.wrap(v, "corpse")     # 227：生皮框 + 格缝，格子小一档（纸签里放得下）
 	# 101 第 5 刀：浮窗文字里的样式码（`{c:hp}`）—— 169 起由悬浮窗按自己的底换成真颜色（浅纸暗字）
 	var text := NodeTooltip.text_for(_run, _run.chapter, node)
-	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra)
+	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra, {}, NodeText.label_of(MapNodeStyle.key_of(node)))
 
 
 func tooltip_text() -> String:

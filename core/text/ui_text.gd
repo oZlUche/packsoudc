@@ -705,6 +705,7 @@ const TEXT := {
 	"camp.unfold": {"zh": "展开", "en": "Show"},
 	"camp.rest_note": {"zh": "体力 +%d，现在 %d / %d", "en": "Vitality +%d, now %d / %d"},
 	# ui/game/container_screen.gd
+	"loot.identified": {"zh": "已辨认　%d / %d", "en": "Identified   %d / %d"},
 	"loot.take_all": {"zh": "全部拾取", "en": "Take all"},
 	"loot.take_all_tip": {"zh": "全部拾取\n先进背包，放不下的到地上", "en": "Take all\nInto your pack first; whatever doesn't fit goes to the Ground"},
 	"loot.close_tip": {"zh": "关闭\n回到事件：再搜 / 走", "en": "Close\nBack to the event: search again / leave"},
@@ -1444,6 +1445,7 @@ const TEXT := {
 	"shelf.title_achievements": {"zh": "成就", "en": "Achievements"},
 	"shelf.tech": {"zh": "科技　%d / %d", "en": "Tech %d / %d"},
 	"shelf.title_tech": {"zh": "科技", "en": "Tech"},
+	"records.empty": {"zh": "完成一局后，可以在这里查看结果和带出的物品。", "en": "Finish a run to see its outcome and the items you brought back."},
 	"records.count": {"zh": "%d / %d 场　收藏 %d / %d", "en": "%d / %d runs · pinned %d / %d"},
 	"records.pinned_full": {"zh": "收藏已满（最多 %d 场）", "en": "Pins full (at most %d)"},
 	"records.pin_tip": {"zh": "收藏：收藏的记录不会被新的挤掉", "en": "Pin: pinned runs are never pushed out by new ones"},

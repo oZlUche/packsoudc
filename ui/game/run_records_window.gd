@@ -6,8 +6,8 @@ extends VBoxContainer
 const ROW_H := 44.0
 const STAR_W := 52.0
 const FONT_SIZE := 15
-const WIN := UiPalette.HEAL
-const LOSS := UiPalette.HP
+const WIN := Color("#315539")
+const LOSS := Color("#852e27")
 
 var flow: GameFlow = null
 var font: Font = null
@@ -36,39 +36,50 @@ func history() -> Array[Dictionary]:
 
 #region 列表
 func show_list() -> void:
+	var return_to := _detail
 	_detail = -1
 	_clear()
 	var m := flow.meta
 	_head = HeaderTag.new(UiText.t("records.count") % [m.history.size(), MetaState.HISTORY_MAX, m.pinned_count(), MetaState.PIN_MAX])
 	add_child(_head)
 	var scroll := UiTheme.vscroll()
+	scroll.follow_focus = true
 	add_child(scroll)
 	_list = UiTheme.vbox(4)
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_list)
+	if m.history.is_empty():
+		var empty := Label.new()
+		empty.text = UiText.t("records.empty")
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.add_theme_color_override("font_color", RecordRow.INK)
+		_list.add_child(empty)
 	for i in m.history.size():
 		var line := UiTheme.hbox(6)
 		_list.add_child(line)
 		var star := UiTheme.make_home_button("", toggle_pin.bind(i), false, Vector2(STAR_W, ROW_H), FONT_SIZE)
 		star.toggle_mode = true
 		star.tooltip_text = UiText.t("records.pin_tip")
+		star.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		star.accessibility_name = UiText.t("records.run_no") % int(m.history[i].get("run_no", 0)) + " · " + star.tooltip_text
 		line.add_child(star)
 		_stars.append(star)
 		var row := RecordRow.new()
 		row.setup(_columns(m.history[i]), _outcome_color(m.history[i]))
-		row.custom_minimum_size.y = ROW_H
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.pressed.connect(show_detail.bind(i))
 		line.add_child(row)
 		_rows.append(row)
 	_sync_stars()
+	if return_to >= 0 and return_to < _rows.size():
+		_rows[return_to].grab_focus()
 
 
 func _sync_stars() -> void:
 	for i in _stars.size():
 		var on := bool(flow.meta.history[i].get("pinned", false))
 		_stars[i].set_pressed_no_signal(on)
-		_stars[i].text = "★" if on else ""
+		_stars[i].icon = UiTheme.art_cached("tip/fav_star" if on else "tip/record_star_empty")
 
 
 ## 点星：收藏 / 取消；收藏满了说一声，星不亮
@@ -124,6 +135,7 @@ func show_detail(i: int) -> void:
 	add_child(top)
 	_back_btn = UiTheme.make_home_button(UiText.t("records.back"), show_list, false, Vector2.ZERO, FONT_SIZE)
 	top.add_child(_back_btn)
+	_back_btn.grab_focus()
 	top.add_child(HeaderTag.new("%s · %s · %s" % [UiText.t("records.run_no") % int(h.get("run_no", 0)), _when(h), _outcome(h)]))
 	var cols := UiTheme.hbox(24)
 	add_child(cols)

@@ -2,6 +2,16 @@
 
 打开游戏后，从主菜单进入自由探索，走入一张铜版测绘图，再打开随身背包。地图里的建筑、包里的旧物和撤离账单上的印章共同指向一个视角：玩家正在记录一次边境考察。画面深度来自纸张叠放、投影与局部压印，全部使用二维素材。
 
+## 主菜单、基地与节点搜索
+
+![主菜单、基地与出征准备的同档对照](field-guide-fronts-comparison.jpg)
+
+主菜单左侧石质目录承载操作，右侧三幅远征地景缓慢轮换。基地使用军营外廊和纸档，出征准备移入角色厅。墨绿标示已选项目，出征主键为朱红。[三幅轮播地景](game-menu-three-landscapes.jpg) · [主菜单](game-field-guide-menu.jpg) · [基地](game-field-guide-camp.jpg) · [选角](game-field-guide-setup.jpg) · [英文大字号配装](game-preparation-large-en.jpg) · [科技成长](game-growth-large-zh.jpg)
+
+存档夹按档位标明当前进度，设置页按宽度调整分组布局。对局记录分两行列出结果及时间、收获，实心星标出已收藏的场次。[存档](game-slots.jpg) · [设置](game-settings.jpg) · [对局记录](game-record-archive.jpg)
+
+节点悬停先读地点名，搜索板把辨认进度与收获摆在一侧，行装摆在另一侧。收起后点棋子可以接续。[局内前后对照](field-guide-search-comparison.jpg) · [本轮测试记录](../../docs/reports/testing/2026-11-19-field-guide-ui.md)
+
 ## 当前顶栏 · 碑铭数字与独立半盘
 
 ![当前地图，顶栏采用碑铭数字，右侧是背包](game-map-cinzel-readouts.jpg)

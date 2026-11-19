@@ -1,10 +1,5 @@
-## 主菜单（M6）：继续（有存档才显示）、读取存档（有任何一位有存档才显示）、新的游戏（= 开一份新存档）、仓库、开发工具、退出（089 作者定的顺序）。
-## 085：多了一个「语言」按钮 —— 切 [GameSettings.language] 并存盘，[UiText.lang] 跟着改，菜单原地重建。
-## 197（作者定稿）：不再是屏心一块石板 —— 整屏三张画轮换带慢镜头（[MenuBackdrop]）；补充三 §14（作者草图）：游戏名居中在上方天空，
-## 菜单是左下角几行描边字，从底往上堆：主档（继续 / 新的游戏）、次档（读取存档 / 仓库与战绩 / 百科 / 设置）、最底下一行小字（语言 / 开发工具 / 退出）。
-## 不用木牌、不加暗纱（左下角的安静由画自己负责）；战绩行拿掉（在仓库与战绩页），备份 / 对账提示是右下角小字。
-## 补充二 §12：游戏名做成字标图（`menu/title`）。
-## 尺寸都按 1080 高写，随屏高等比缩放（游戏名照比例，菜单最小缩到 [constant MIN_SCALE]）
+## 帝国测绘册的首页：右侧轮换远征地景，左侧石质目录承载全部操作。
+## 存档、语言、开发工具和通知仍取自当前 GameFlow。
 extends GameScreen
 
 signal dev_tools_requested
@@ -13,18 +8,15 @@ signal dev_tools_requested
 const DESIGN_HEIGHT := 1080.0
 ## 菜单最小缩到这么多（1280 × 720）
 const MIN_SCALE := 0.75
-## 字标图的宽（美术 720 × 200 的画布放大 1.55 倍）与上沿 —— 居中
-const ART_LOGO := "menu/title"
-const LOGO_WIDTH := 1116.0
-const LOGO_TOP := 90.0
-## 菜单的左边线（字的左沿；行前菱形画在字左边的缩进里）、最底下一行离屏底
-const LEFT := 96.0
-const BOTTOM := 72.0
-## 行距：主档 / 次档；档与档之间：主次、次末
-const PRIMARY_GAP := 10
-const SECONDARY_GAP := 8
+const ART_LOGO := "menu/survey_title"
+const SLAB_WIDTH := 620.0
+const LOGO_WIDTH := 496.0
+const LOGO_TOP := 181.0
+const LEFT := 61.0
+const PRIMARY_GAP := 8
+const SECONDARY_GAP := 2
 const PRIMARY_TO_SECONDARY := 18
-const SECONDARY_TO_FOOT := 24
+const SECONDARY_TO_FOOT := 40
 ## 右下提示离屏边、字号
 const NOTICE_MARGIN := 48.0
 const NOTICE_SIZE := 15
@@ -33,9 +25,10 @@ const NOTICE_SIZE := 15
 static var _shown_once := false
 
 var _scenery: MenuBackdrop = null
+var _slab: TextureRect
 ## 游戏名：字标图
 var _title: TextureRect = null
-## 左下角整块（主档、次档、最底下一行），从底往上堆
+## 目录内的主操作、次操作与页脚。
 var _column: VBoxContainer = null
 var _primary: VBoxContainer = null
 var _secondary: VBoxContainer = null
@@ -53,20 +46,25 @@ func open(_payload: Dictionary) -> void:
 	add_child(_scenery)
 	var brighten := not _shown_once
 	_scenery.start(UiTheme.ART_MENU_BGS, brighten)
+	if not UiMotion.enabled(flow.settings):
+		_scenery.stop()
 	_shown_once = true
 	var area := Control.new()
 	area.name = "MenuContent"
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	UiTheme.set_tone(area, UiTheme.art_tone(UiTheme.ART_MENU_BGS[0]))     # 三张都是暗画：亮字
+	UiTheme.set_tone(area, UiTheme.TONE_LIGHT)
 	add_child(area)
 
-	_title = UiTheme.picture(UiTheme.art_cached(UiTheme.lang_art(ART_LOGO)), TextureRect.STRETCH_KEEP_ASPECT)     # 221：英文字标 Pack & Extract，画布比例一样
+	_slab = UiTheme.picture(load("res://assets/ui/menu/survey_slab.jpg"), TextureRect.STRETCH_SCALE)
+	_slab.name = "SurveyIndex"
+	area.add_child(_slab)
+	var logo := UiTheme.art_cached(UiTheme.lang_art(ART_LOGO))
+	if logo == null:
+		logo = UiTheme.art_cached(UiTheme.lang_art("menu/title"))
+	_title = UiTheme.picture(logo, TextureRect.STRETCH_KEEP_ASPECT)
 	_title.name = "MenuLogo"
 	area.add_child(_title)
-	if brighten:     # 启动屏把字标压暗到 40 %：跟着画一起亮起来
-		_title.modulate = Color(MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM)
-		create_tween().tween_property(_title, "modulate", Color.WHITE, MenuBackdrop.BRIGHTEN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	# 089（作者定）：第一项「继续」（当前位有存档才显示）；「读取存档」（有任何一位有存档才显示）；「新的游戏」= 开一份新存档。只写这几个词，不写章名
 	_column = _vbox(0)
@@ -89,10 +87,10 @@ func open(_payload: Dictionary) -> void:
 	_line(_secondary, UiText.t("menu.settings"), flow.show_settings)
 	_column.add_child(_spacer(SECONDARY_TO_FOOT))
 
-	_foot = _hbox(28)     # 226 批二：链接之间的「·」删了，改成间距
+	_foot = _hbox(18)     # 226 批二：链接之间的「·」删了，改成间距
 	_foot.name = "MenuFoot"
-	var indent := MarginContainer.new()     # 和上面几行字同一条左边线（它们左边留着菱形的缩进）
-	UiTheme.margins(indent, UiTheme.MENU_LINE_INDENT, 0, 0, 0)
+	var indent := MarginContainer.new()
+	UiTheme.margins(indent, 2, 0, 0, 0)
 	indent.add_child(_foot)
 	_column.add_child(indent)
 	var links: Array[Button] = [UiTheme.make_menu_link(UiText.t("menu.lang_short"), toggle_language)]
@@ -100,6 +98,7 @@ func open(_payload: Dictionary) -> void:
 		links.append(UiTheme.make_menu_link(UiText.t("menu.dev_tools"), func(): dev_tools_requested.emit()))
 	links.append(UiTheme.make_menu_link(UiText.t("menu.quit"), func(): get_tree().quit()))
 	for link in links:
+		_ink_button(link, false, true)
 		_foot.add_child(link)
 
 	# 098：这个存档位读不回来、已备份的那一句；173：读档时对账 / 挪位 / 打捞过 —— 右下角，没有不占位。
@@ -122,9 +121,53 @@ func open(_payload: Dictionary) -> void:
 ## 一行字挂进 [param box]
 func _line(box: VBoxContainer, text: String, handler: Callable, font_size: int = UiTheme.MENU_SECONDARY_SIZE) -> Button:
 	var b := UiTheme.make_menu_line(text, font_size, handler)
-	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_ink_button(b, box == _primary, false)
+	if box == _primary:
+		b.draw.connect(_draw_route_arrow.bind(b))
 	box.add_child(b)
 	return b
+
+
+## 朱红条末端的测向箭头，随按钮宽度对齐；键盘焦点保留独立描边。
+func _draw_route_arrow(button: Button) -> void:
+	var tip := Vector2(button.size.x - 22.0, roundf(button.size.y * 0.5))
+	var color := Color("e0c394")
+	button.draw_line(tip - Vector2(25, 0), tip, color, 1.4, true)
+	button.draw_polyline(PackedVector2Array([tip - Vector2(7, 5), tip, tip - Vector2(7, -5)]), color, 1.4, true)
+
+
+## 朱红主键、石面刻线和键盘焦点都只用于首页。
+func _ink_button(button: Button, primary: bool, foot_link: bool) -> void:
+	button.flat = false
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.add_theme_constant_override("outline_size", 0)
+	var ink := Color("fff4d8") if primary else Color("40392f")
+	var lit := Color("fff9e9") if primary else Color("7f3329")
+	for state in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
+		button.add_theme_color_override(state, ink if state == "font_color" else lit)
+	var px := UiTheme.sz(UiTheme.MENU_FOOT_SIZE if foot_link else (UiTheme.MENU_PRIMARY_SIZE if primary else UiTheme.MENU_SECONDARY_SIZE))
+	button.add_theme_font_size_override("font_size", px)
+	for state in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+		var style := StyleBoxFlat.new()
+		style.content_margin_left = 2 if foot_link else 26
+		style.content_margin_right = 2 if foot_link else 24
+		style.content_margin_top = 4 if foot_link else 5
+		style.content_margin_bottom = style.content_margin_top
+		match state:
+			"normal":
+				style.bg_color = Color("773c32") if primary else Color.TRANSPARENT
+			"focus":
+				style.draw_center = false
+				style.set_border_width_all(2)
+			"pressed", "hover_pressed":
+				style.bg_color = Color("67352d") if primary else Color("af8e5c48")
+			_:
+				style.bg_color = Color("8a493a") if primary else Color("c6ac743b")
+		style.border_color = Color("bb9a64") if primary else Color("ae9c79")
+		if state != "focus" and not foot_link:
+			style.border_width_bottom = 2 if primary else 1
+			style.border_width_top = 1 if primary else 0
+		button.add_theme_stylebox_override(state, style)
 
 
 ## 档与档之间的空（VBox 两侧的间距是 0，空多高就隔多远）
@@ -152,15 +195,18 @@ func _layout() -> void:
 	var c := column_scale()
 	var h := size.y if size.y > 0.0 else DESIGN_HEIGHT
 	var w := size.x if size.x > 0.0 else DESIGN_HEIGHT * 1.6
+	var panel_width := minf(w, maxf(SLAB_WIDTH * c, _foot.get_combined_minimum_size().x * c + 2.0 * LEFT * c))
+	_slab.size = Vector2(panel_width, h)
 	var tex := _title.texture
 	if tex != null:
-		var wide := LOGO_WIDTH * s
+		var wide := minf(LOGO_WIDTH * c, panel_width - 2.0 * LEFT * c)
 		_title.size = Vector2(wide, wide * tex.get_height() / maxf(tex.get_width(), 1.0))
-		_title.position = Vector2((w - wide) * 0.5, LOGO_TOP * s)
-	# 菜单从底往上堆：字的左沿对齐 LEFT（行前留给菱形的缩进挂在线左边），最底下一行离屏底 BOTTOM
+		_title.position = Vector2((panel_width - wide) * 0.5, LOGO_TOP * s)
 	_column.scale = Vector2.ONE * c
+	_column.custom_minimum_size.x = maxf(0.0, panel_width / c - 2.0 * LEFT)
 	_column.reset_size()
-	_column.position = Vector2((LEFT - UiTheme.MENU_LINE_INDENT) * c, h - (BOTTOM + _column.size.y) * c)
+	var latest_top := h - (94.0 + _column.size.y) * c
+	_column.position = Vector2(LEFT * c, minf(0.445 * h, latest_top))
 	_note_paper.reset_size()
 	_note_paper.position = Vector2(w - NOTICE_MARGIN * c - _note_paper.size.x, h - NOTICE_MARGIN * c - _note_paper.size.y)
 

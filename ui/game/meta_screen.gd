@@ -9,6 +9,7 @@
 ## 出售 → 卖、科技 → 上交、图鉴 / 成就 → 不做事。整屏一层拖拽，中列与右半边之间能拖。背景、按钮、文本框、仓库木架用「家」套件（`assets/ui/home/`）
 extends GameScreen
 
+const CampaignDesk := preload("res://ui/widgets/campaign_desk.gd")
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 const TechPanelScript := preload("res://ui/game/tech_panel.gd")
 const MarketPanelScript := preload("res://ui/game/market_panel.gd")     # 251
@@ -145,7 +146,7 @@ func open(payload: Dictionary) -> void:
 	_drag.label_font = font
 
 	# 左列：标题、五个页签竖排；底下「再来一局」「回主菜单」
-	var left := _vbox(12)
+	var left := _vbox(8)
 	left.custom_minimum_size.x = LEFT_W
 	_cols.add_child(left)
 	# 226 批二：「基地」二字删了（页签已说明在哪）
@@ -154,6 +155,7 @@ func open(payload: Dictionary) -> void:
 		if not SliceProfile.keeps_tab(flow.profile, key):
 			continue     # 313：试玩切片的基地只留出征、仓库
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): toggle_tab(key))
+		CampaignDesk.button(b)
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -165,7 +167,7 @@ func open(payload: Dictionary) -> void:
 		left.add_child(b)
 		if SUB_TABS.has(key):
 			_build_sub_tabs(left, key)
-	var tab_w := LEFT_W * 0.8     # 英文页签加了图标放不下：几个页签一样宽，取最宽的那个
+	var tab_w := LEFT_W - 12     # 英文页签加了图标放不下：几个页签一样宽，取最宽的那个
 	for key in _tab_btns:
 		tab_w = maxf(tab_w, (_tab_btns[key] as Button).get_combined_minimum_size().x)
 	for key in _tab_btns:
@@ -178,6 +180,7 @@ func open(payload: Dictionary) -> void:
 	# 264：左下「再来一局」搬进出征页改叫【开始探索】
 	# 280 B：「回主菜单」钉在屏幕右下 —— 和开局屏「返回」、结算「继续」同一个角
 	var menu_btn := UiTheme.make_home_button(UiText.t("setup.main_menu"), flow.to_main_menu)
+	CampaignDesk.button(menu_btn)
 	menu_btn.name = "MainMenuButton"
 	menu_btn.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 	var menu_size := menu_btn.get_combined_minimum_size()
@@ -236,7 +239,7 @@ func open(payload: Dictionary) -> void:
 	m.warehouse.changed.connect(_refresh_shelf_title)
 
 	# 264：出征页（原「家」页）—— 左边军功碑（260 原样，碑顶山墙上沿在设计坐标 y 52），右边上回出征 / 军需两块木牌与【开始探索】
-	var home := _hbox(52)
+	var home := _hbox(36)
 	home.name = "ExpeditionPage"
 	home.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_middle.add_child(home)
@@ -316,6 +319,7 @@ func open(payload: Dictionary) -> void:
 ## 中列一页的底：一块粗布，占满中列
 func _cloth() -> PanelContainer:
 	var cloth := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)
+	CampaignDesk.panel(cloth)
 	cloth.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	cloth.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_middle.add_child(cloth)
@@ -735,6 +739,7 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 	for pair in SUB_TABS[tab_key]:
 		var key: String = pair[0]
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
+		CampaignDesk.button(b)
 		b.toggle_mode = true
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		btns[key] = b
@@ -1195,9 +1200,12 @@ func _build_shelf_windows() -> void:
 		var frame := OverlayFrame.new(16)
 		frame.custom_minimum_size = SHELF_WIN_WIDE if key == "tech" else SHELF_WIN
 		frame.set_title(UiText.t("shelf.title_" + key))
-		frame.add_slot(UiTheme.make_home_button(UiText.t("meta.close"), close_shelf))
+		var close := UiTheme.make_home_button(UiText.t("meta.close"), close_shelf)
+		CampaignDesk.button(close)
+		frame.add_slot(close)
 		center.add_child(frame)
-		var cloth := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)     # 窗里垫原来那块粗布（浅底墨字），内容照旧
+		var cloth := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)
+		CampaignDesk.panel(cloth)
 		cloth.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		cloth.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		frame.content.add_child(cloth)
