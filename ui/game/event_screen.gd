@@ -42,7 +42,7 @@ func _open_options() -> void:
 	_hints.clear()
 	var title := TextTemplate.plain(_def.title_for() if _def.title_for() != "" else String(_def.id), ctx)
 	# 101 第 5 刀：文本层只产出带颜色名的样式码；169：颜色名由富文本块按所在的底换（浅石板暗字）
-	var body := TextTemplate.render(_def.text_for(), ctx)
+	var body := CoinLabel.inline_bbcode(TextTemplate.render(_def.text_for(), ctx), UiTheme.sz(UiTheme.RICH_BODY_SIZE))     # 336 修：正文里的钱画金币（撤离费）
 	var col := _frame(_def.image, title, body)
 	for i in _def.options.size():
 		var opt := _def.options[i] as EventOption

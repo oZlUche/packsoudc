@@ -102,9 +102,16 @@ static func run_loop(t: TestCase) -> void:
 	if s2 == null:
 		return
 	t.check(not _letter_on(s2), "信送到了：不再发")
+	var mod2 := CommissionModule.of(s2)
+	var row2 := mod2.lines().filter(func(r: Dictionary) -> bool: return String(r["id"]) == String(TWO))
+	t.eq([int(row2[0]["done"]), int(row2[0]["need"])] if not row2.is_empty() else [], [1, 2], "336 修：第二局一进图小牌就是 1 / 2（带上上一局的进度）")
 	var exits2 := _extracts(s2)
 	var picked: MapNode = exits2[1] if exits2.size() > 1 else exits2[0]
-	s2.hooks.commission_act(CommissionModule.INSPECT, picked)
+	var got2 := s2.hooks.commission_act(CommissionModule.INSPECT, picked)
+	t.check(not got2.is_empty() and bool(got2[0]["finished"]), "336 修：第二处查完，这一局里就算办成")
+	row2 = mod2.lines().filter(func(r: Dictionary) -> bool: return String(r["id"]) == String(TWO))
+	t.check(not row2.is_empty() and bool(row2[0]["finished"]), "336 修：小牌写「已办成」")
+	t.check(not mod2.can_inspect(exits2[0] if exits2[0] != picked else exits2[-1]), "办成了不再出现查验")
 	s2.fail(&"time_out")
 	f.result = null
 	f._settled = false
@@ -141,6 +148,17 @@ static func run_event_options(t: TestCase) -> void:
 		(o as EventOutcome).apply(ctx)
 	t.eq(CommissionModule.of(s2).progress(TWO, 0), 1, "选了记一处")
 	t.eq(ctx.next_event, &"extract_default", "回到同一个事件（还能撤）")
+	# 336 修（游戏测试 v6.58）：正文的撤离费画金币，免费点不写那一行
+	for n in _extracts(s2, true):
+		var body_free := TextTemplate.render(ev.text_for(), TextTemplate.context_for(s2, n))
+		t.check(not body_free.contains("币") and not body_free.contains("[coin="), "免费撤离点：不写费用那一行，也没有「币」字")
+		break
+	for n in _extracts(s2):
+		if PaidExtracts.fee_of(n) > 0:
+			var body_paid := TextTemplate.render(ev.text_for(), TextTemplate.context_for(s2, n))
+			t.check(body_paid.contains(CoinShort.coin(PaidExtracts.fee_of(n))) and not body_paid.contains("币"), "付费撤离点：费用画金币（[coin=N]），没有「币」字")
+			t.check(CoinLabel.inline_bbcode(body_paid, 16).contains("[img="), "事件屏把它换成金币图")
+			break
 	t.check(not ctx.log.is_empty(), "结果页写一句")
 
 
