@@ -6,7 +6,7 @@
 ## 停上去弹悬浮窗：「倒计时」/「倒计时还剩 N（共 M）」/「最近的撤离点倒计时剩 N 时关闭」，开着时走一步字跟着变（193 补充一：钟的数不说「步」）。
 ## 小档按 0.5 缩
 ##
-## 顶栏内为完整的大理石日晷。上半盘雕贝壳浮雕，下半盘刻时线，着色的青铜晷针指示时限。拖出顶栏时沿用独立小日规。
+## 顶栏日晷是从栏顶切入、向下探出的半圆大理石盘；凿刻时线与青铜晷针共用上沿轴心。拖出顶栏时沿用独立小日规。
 extends HudWidget
 
 const HudBarScript := preload("res://ui/hud/widgets/hud_bar.gd")
@@ -100,14 +100,14 @@ func _notification(what: int) -> void:
 		_sync_size()
 
 
-## 日规的大小：画布 × 档位，外加底的内边距（拖出栏时自带凹槽）。235：在石刻栏里没有底、只占晷面那么宽（画在栏皮的晷面上）
+## 日规的大小：画布 × 档位，外加底的内边距（拖出栏时自带凹槽）。235：在石刻栏里仅保留盘面所需的宽度，独立绘制底座
 func _sync_size() -> void:
 	var want := UiTheme.PANEL_BARE if _skin_bar() != null else UiTheme.PANEL_HUD
 	if theme_type_variation != want:
 		theme_type_variation = want
 		UiTheme.apply_tone(self, want)
 	if want == UiTheme.PANEL_BARE:
-		custom_minimum_size = Vector2(float(_dial().get("face_radius", 40)) * 2.0 + 8.0, 66.0)
+		custom_minimum_size = Vector2(float(_dial().get("face_radius", 102)) * 2.0, 0.0)
 		return
 	var box := get_theme_stylebox("panel")
 	custom_minimum_size = SIZE * _scale() + (box.get_minimum_size() if box != null else Vector2.ZERO)
@@ -125,28 +125,29 @@ func _dial() -> Dictionary:
 	return HudBarScript.skin().get("dial", {})
 
 
-## 顶栏内日晷随布局槽位移动，轴心对齐控件中心。
-func _skin_pivot() -> Vector2:
-	return size * 0.5 + Vector2(0, 2)
+## 横向跟随布局槽；纵向轴心固定在横梁上沿，盘缘下凸不参与读数行的高度。
+func _skin_pivot(bar: HudWidget) -> Vector2:
+	var pivot: Vector2 = bar.call("dial_pivot")
+	return Vector2(size.x * 0.5, bar.global_position.y + pivot.y - global_position.y)
 
 
-## 235：在石刻栏里时教程指完整盘面
+## 235：在石刻栏里时教程指半圆盘面
 func focus_rect() -> Rect2:
 	var bar := _skin_bar()
 	if bar == null:
 		return super()
-	var r := float(_dial().get("face_radius", 40))
-	var p := global_position + _skin_pivot()
-	return Rect2(p - Vector2.ONE * r, Vector2.ONE * r * 2.0)
+	var r := float(_dial().get("face_radius", 102))
+	var p := global_position + _skin_pivot(bar)
+	return Rect2(Vector2(p.x - r, p.y), Vector2(r * 2.0, r))
 
 
-## 235：在石刻栏里时，整个圆面都算停在这一件上
+## 235：在石刻栏里时，只有可见半圆的刻度区算悬停
 func _has_point(point: Vector2) -> bool:
 	var bar := _skin_bar()
 	if bar == null:
 		return Rect2(Vector2.ZERO, size).has_point(point)
-	var d := point - _skin_pivot()
-	return d.length() <= float(_dial().get("face_radius", 40))
+	var d := point - _skin_pivot(bar)
+	return point.y + global_position.y >= bar.global_position.y and d.length() <= float(_dial().get("face_radius", 102))
 
 
 func refresh() -> void:
@@ -163,7 +164,7 @@ func _draw() -> void:
 		return
 	var bar := _skin_bar()
 	if bar != null:
-		_draw_on_bar(_skin_pivot())
+		_draw_on_bar(_skin_pivot(bar))
 		return
 	var s := _scale()
 	var origin := ((size - SIZE * s) * 0.5).round()
@@ -196,11 +197,10 @@ func _draw_elapsed(pivot: Vector2, radius: float, degrees: float, st: StringName
 	draw_colored_polygon(points, wash)
 
 
-## 雕石、分面铸造的晷针和青铜轴帽分别绘制，转动时石纹留在原位。
+## 雕石、分面铸造的晷针和青铜轴心分别绘制，转动时石纹留在原位。
 func _draw_on_bar(pivot: Vector2) -> void:
 	var meta := _dial()
-	var face_radius := float(meta.get("face_radius", 40))
-	var radius := float(meta.get("radius", 32))
+	var radius := float(meta.get("radius", 94))
 	var st := stage()
 	var a := angle()
 	var art := HudBarScript.SKIN
@@ -209,8 +209,9 @@ func _draw_on_bar(pivot: Vector2) -> void:
 	var hub := UiTheme.art_cached(art + "dial_hub")
 	if face == null or hand == null or hub == null:
 		return
-	var face_rect := Rect2(pivot - Vector2.ONE * face_radius, Vector2.ONE * face_radius * 2.0)
-	draw_texture_rect(face, Rect2(face_rect.position + Vector2(1.0, 2.0), face_rect.size), false, Color(0.14, 0.09, 0.05, 0.55))
+	var origin: Array = meta.get("pivot", [137, 6])
+	var face_rect := Rect2(pivot - Vector2(float(origin[0]), float(origin[1])), face.get_size())
+	# 盘底贴图包含由其透明轮廓投出的两层阴影，两侧的横梁通过透明区连续可见。
 	draw_texture_rect(face, face_rect, false)
 	_draw_elapsed(pivot, radius, a, st, meta, 1.0)
 	# 三态纹理共用同一铸造轴心 (12, 8)，纹理中针尖距轴心 83 像素。
@@ -218,7 +219,7 @@ func _draw_on_bar(pivot: Vector2) -> void:
 	draw_set_transform(pivot, deg_to_rad(a - 90.0), Vector2.ONE * hand_scale)
 	draw_texture(hand, Vector2(-12, -8))
 	draw_set_transform(Vector2.ZERO)
-	draw_texture_rect(hub, Rect2(pivot - Vector2.ONE * 4.5, Vector2.ONE * 9.0), false)
+	draw_texture_rect(hub, Rect2(pivot - Vector2.ONE * 6.0, Vector2.ONE * 12.0), false)
 
 
 ## 235：指针此刻指向哪（这一件的坐标；测试读）。不在石刻栏里 = 空
@@ -227,7 +228,7 @@ func hand_tip() -> Vector2:
 	if bar == null:
 		return Vector2.INF
 	var a := deg_to_rad(angle())
-	return _skin_pivot() + Vector2(cos(a), sin(a)) * float(_dial().get("radius", 32))
+	return _skin_pivot(bar) + Vector2(cos(a), sin(a)) * float(_dial().get("radius", 94))
 
 
 #region 悬浮窗
@@ -276,8 +277,8 @@ func open_tip() -> void:
 	var bar := _skin_bar()
 	var at := global_position + Vector2(0, size.y)
 	if bar != null:     # 235：晷面底下
-		var r := float(_dial().get("face_radius", 40))
-		at = global_position + _skin_pivot() + Vector2(-r, r + 6.0)
+		var r := float(_dial().get("face_radius", 102))
+		at = global_position + _skin_pivot(bar) + Vector2(-r, r + 6.0)
 	tip.show_status(parts, at)
 	_tip_open = true
 

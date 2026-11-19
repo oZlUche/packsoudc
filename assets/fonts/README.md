@@ -8,6 +8,8 @@
 | `display_heavy.otf` | 寒蝉锦书宋 Heavy ChillJinshuSong Heavy（github.com/Warren2060），子集改名 **PackSDC Display** | 2.000 | 大标题：章节名、宝箱屏说明（`display_font()`，变体 `LabelDisplay`） |
 | `cinzel_bold.ttf` | Cinzel Bold（github.com/NDISCOVER/Cinzel，Google Fonts） | 2.000 | 224：结算账单的数字（`numeral_font()`）。只裁数字、I V X 和 `+ − - % / · —` 空格，不按字集裁 |
 
+顶栏的金币与信力读数使用 Godot 自带的 Open Sans SemiBold，汉字由项目思源宋体 Medium 补足。组件移出顶栏后恢复其原主题字体。此组合由 `UiPalette.hud_readout_font()` 定义。
+
 五个文件四款字体，都是 SIL Open Font License 1.1，授权原文在 `LICENSES/`，随游戏一起分发。
 
 ## 子集与改名

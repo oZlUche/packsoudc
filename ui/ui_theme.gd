@@ -898,6 +898,16 @@ static func text_theme(tone: StringName) -> Theme:
 	return t
 
 
+## 石槽本身与其内的动态技能、角标共享读数字体；沿用浅底的字色和所有字号档位。
+static func hud_well_theme() -> Theme:
+	const KEY := &"hud_well"
+	if not _tone_themes.has(KEY):
+		var t := text_theme(TONE_LIGHT).duplicate() as Theme
+		t.default_font = UiPalette.hud_readout_font()
+		_tone_themes[KEY] = t
+	return _tone_themes[KEY]
+
+
 ## 深底嵌在浅底里（浅色石板框里的铜名牌）：外面挂的墨字小主题会一路继承进来 —— 这份小主题把同样那几种字色改回全局的浅色字
 static func bright_text_theme() -> Theme:
 	if _tone_themes.has(&"bright"):

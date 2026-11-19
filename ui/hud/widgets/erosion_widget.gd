@@ -1,5 +1,5 @@
 ## 150：侵蚀一句（075）：几步后开始 / 第几档、下一档还有几步 / 全图。没有侵蚀场不显示
-extends HudWidget
+extends "res://ui/hud/widgets/status_readout.gd"
 
 
 func title() -> String:
@@ -7,7 +7,7 @@ func title() -> String:
 
 
 func watch() -> Array[Signal]:
-	var f: ErosionField = run.travel.erosion
+	var f: ErosionField = run.travel.erosion if run.travel != null else null
 	return ([f.advanced, f.warned] if f != null else []) as Array[Signal]
 
 
@@ -20,3 +20,12 @@ func text_of() -> String:
 	if not f.started():
 		return UiText.t("hud.erosion_soon") % f.actions_left()
 	return UiText.t("hud.erosion_band") % [f.eroded_bands + 1, f.actions_left()]
+
+
+func _summary() -> String:
+	var f := run.travel.erosion if run.travel != null else null
+	if f == null or f.is_total():
+		return text_of()
+	if not f.started():
+		return UiText.t("hud.erosion_wait") % f.actions_left()
+	return UiText.t("hud.erosion_stage_steps") % [f.eroded_bands + 1, f.actions_left()]

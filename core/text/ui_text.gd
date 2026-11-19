@@ -819,6 +819,9 @@ const TEXT := {
 	"hud.countdown_left": {"zh": "倒计时还剩 %s（共 [color=%sval]%d[/color]）", "en": "Countdown: %s left (of [color=%sval]%d[/color])"},
 	"hud.nearest_closed": {"zh": "[color=%sdim]最近的撤离点已关闭[/color]", "en": "[color=%sdim]The nearest extraction point has closed[/color]"},
 	"hud.nearest_closes": {"zh": "最近的撤离点倒计时剩 %s 时关闭", "en": "The nearest extraction point closes at Countdown %s"},
+	"hud.status_count": {"zh": "状态 %d", "en": "Effects: %d"},
+	"hud.erosion_wait": {"zh": "侵蚀前 %d 步", "en": "Erosion in %d steps"},
+	"hud.erosion_stage_steps": {"zh": "侵蚀 %d 档 · %d 步", "en": "Band %d · %d steps"},
 	"hud.erosion_total": {"zh": "侵蚀：全图", "en": "Erosion: whole map"},
 	"hud.erosion_soon": {"zh": "侵蚀：%d 步后开始", "en": "Erosion: starts in %d steps"},
 	"hud.erosion_band": {"zh": "侵蚀 %d 档（下一档 %d 步）", "en": "Erosion band %d (next in %d steps)"},
@@ -826,8 +829,8 @@ const TEXT := {
 	"hud.buffs": {"zh": "状态：%s", "en": "Status: %s"},
 	"hud.buff_sep": {"zh": "、", "en": ", "},
 	"hud.belt_used": {"zh": "用了「%s」", "en": "Used %s"},
-	"hud.legend_open": {"zh": "图例  ▴", "en": "Map key  ▴"},
-	"hud.legend_close": {"zh": "收起图例  ▾", "en": "Hide map key  ▾"},
+	"hud.legend_open": {"zh": "图例  ▲", "en": "Map key  ▲"},
+	"hud.legend_close": {"zh": "收起图例  ▼", "en": "Hide map key  ▼"},
 	"hud.you": {"zh": "你", "en": "You"},
 	"hud.produce": {"zh": "产物", "en": "Yields"},
 	"hud.produce_ring.outer": {"zh": "外", "en": "Outer"},
@@ -953,6 +956,7 @@ const TEXT := {
 	"hud.belt": {"zh": "腰带", "en": "Belt"},
 	"hud.belt_fold": {"zh": "收起空槽。双击已装的随身技能即可使用。", "en": "Hide empty slots. Double-click an equipped skill to use it."},
 	"hud.belt_unfold": {"zh": "展开查看所有随身技能槽。双击技能即可使用。", "en": "Show all belt skill slots. Double-click a skill to use it."},
+	"hud.faith_bar_level": {"zh": "Lv.%d%s%d%s", "en": "Lv.%d%s%d%s"},
 	"hud.faith_level": {"zh": "Lv.%d　%d%s", "en": "Lv.%d  %d%s"},     # faith widget: rank, points, " / next"
 	"hud.notice_extract_closed": {"zh": "有一个撤离点关闭了", "en": "An extraction point has closed"},     # countdown_module notice
 	# —— 221 F5a：encumbrance ——

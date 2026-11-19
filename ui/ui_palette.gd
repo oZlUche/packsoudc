@@ -383,6 +383,15 @@ static func cjk_font() -> Font:
 	return _font_for("body", func() -> Font: return _wrap(FONT_BODY, system_font()))
 
 
+## 顶栏读数：引擎内置 Open Sans SemiBold 的等宽数字，汉字沿用正文的思源宋体 Medium。
+static func hud_readout_font() -> Font:
+	return _font_for("hud_readout", func() -> Font:
+		var f := FontVariation.new()
+		f.base_font = ThemeDB.fallback_font
+		f.fallbacks = [cjk_font()]
+		return f)
+
+
 ## 真粗体：富文本的 [b] 用它（思源宋体 Black（文件 serif_bold），不让引擎把常规体描粗 —— 描出来的发糊）
 static func cjk_font_bold() -> Font:
 	return _font_for("bold", func() -> Font: return _wrap(FONT_BOLD, system_font(true)))

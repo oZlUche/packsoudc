@@ -1,8 +1,8 @@
 ## 166（作者定）：顶端栏 —— 横贯顶部的一条底。它本身不写字：栏里摆什么由布局里锚在 `bar_left / bar_center / bar_right` 的条目决定（[HudHost] 排），
 ## 所以「摆读数」时照样能把东西拖进拖出、换槽，栏自己也能藏。大小由宿主定（整屏宽 × 栏高）；宿主把它排成第一个子节点，垫在栏里的组件下面
 ##
-## 顶栏沿用两端三态按钮与原有热区；中段为暖白大理石檐口，内凿的浅石槽承载读数。
-## 完整日晷由倒计时组件绘制，收在顶栏以内；当组件挪动或隐藏时，晷面跟随它。
+## 顶栏沿用两端三态按钮与原有热区；中段为暖白大理石横梁，内凿的浅石槽承载读数。
+## 下凸的大理石半圆日晷由倒计时组件绘制，组件挪动或隐藏时晷面跟随。
 extends HudWidget
 
 ## 两头按下：[constant LEFT] / [constant RIGHT]
@@ -102,8 +102,10 @@ static func dial_bottom() -> float:
 ## 默认居中布局的日晷轴心（栏的坐标）
 func dial_pivot() -> Vector2:
 	var d: Dictionary = _meta.get("dial", {})
-	var p: Array = d.get("pivot", [151, 6])
-	return Vector2(roundf(size.x * 0.5) - float(d.get("center_x", 151)) + float(p[0]), float(p[1]))
+	var p: Array = d.get("pivot", [137, 6])
+	# 多行读数加高横梁时，盘缘跟着实际栏底，仍盖住石边。
+	var extra := maxf(size.y - design_height(), 0.0)
+	return Vector2(roundf(size.x * 0.5) - float(d.get("center_x", 137)) + float(p[0]), float(p[1]) + extra)
 
 
 ## 日晷的数（`topbar.json` 的 `dial`）
@@ -134,7 +136,7 @@ func _place_ends() -> void:
 		b.position = Vector2(0.0 if side == LEFT else w - b.size.x, 0.0)
 
 
-## 中段石面随大字号增加高度，上下檐线保持设计厚度。
+## 中段石面随大字号增加高度，上下边线保持设计厚度。
 func _draw() -> void:
 	var tile := UiTheme.art_cached(SKIN + "bar_tile")
 	if tile != null:

@@ -34,13 +34,13 @@
  },
  "dial": {
   "pivot": [
-   0,
-   45
+   137,
+   6
   ],
-  "center_x": 0,
-  "radius": 32,
-  "face_radius": 40,
-  "bottom": 100,
+  "center_x": 137,
+  "radius": 94,
+  "face_radius": 102,
+  "bottom": 124,
   "stages": {
    "calm": {
     "wash": "#c18f4c"

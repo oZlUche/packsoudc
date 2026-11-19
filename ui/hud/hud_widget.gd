@@ -185,13 +185,15 @@ func set_in_bar(on: bool) -> void:
 		if theme_type_variation != want:
 			theme_type_variation = want
 			UiTheme.apply_tone(self, want)
+			if on:
+				theme = UiTheme.hud_well_theme()
 	if in_bar == on:
 		return
 	in_bar = on
 	_bar_changed()
 
 
-## 子类可改：进出栏之后（日晷在栏里画在栏皮的晷面上）
+## 子类可改：进出栏之后（日晷在栏内独立绘制底座）
 func _bar_changed() -> void:
 	pass
 

@@ -68,7 +68,7 @@ func _paint() -> void:
 	_clasp.add_theme_font_size_override("font_size", UiTheme.sz(15))
 	var occupied := slots.module.stacks.size()
 	slots.visible = _expanded or occupied > 0
-	_clasp.text = "%s  %d/%d  %s" % [UiText.t("hud.belt"), occupied, slots.slot_count(), "▾" if _expanded else "▴"]
+	_clasp.text = "%s  %d/%d  %s" % [UiText.t("hud.belt"), occupied, slots.slot_count(), "▼" if _expanded else "▲"]
 	_clasp.tooltip_text = UiText.t("hud.belt_fold" if _expanded else "hud.belt_unfold")
 
 

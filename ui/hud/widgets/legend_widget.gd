@@ -8,7 +8,7 @@ extends HudWidget
 const ICON := 24.0
 const ROW_GAP := 4.0
 const TEXT_GAP := 8.0
-## 靛蓝折签采用九宫格，黄铜包角保持原比，英文长名可向右撑宽。
+## 深蓝折签采用九宫格，黄铜包角保持原比，英文长名可向右撑宽。
 const PENNANT := "hud/legend_pennant"
 const MIN_WIDTH := 158.0
 
