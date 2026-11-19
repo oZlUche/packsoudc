@@ -455,23 +455,24 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 
 ---
 
-### 3.8 信仰：最后置入的信仰道具决定激活（8-4，报告 081）
+### 3.8 信仰：显式选择、三态（信仰重构 A，报告 329；取代 8-4 的「最后置入的信物决定激活」）
 
 作者定的道具一级分类。**靠标签**：信仰道具带 `faith`，再带恰好一个信仰对象标签 `faith:<id>`（`FaithTags.PREFIX`；新教也是 `faith` + 专属标签）；
 无信仰之物人人能用，而且**现实里也能存在的东西（皮甲、短刀、弓箭……）一律不归信仰**（作者定），带信仰标签的只有赐福之物、符号、神的遗物。信仰的名字、阵营（诸神 / 新教）、说明是内容种类 `faiths`（`FaithDef`，加一位神 = 加一份 JSON）；
 **机制只看标签，不认具体的神**（`FaithState`，纯静态）。
 
-- **置入序号**：`GridInventory.place` 在道具从别的容器进来时（`inst.container_id != id`）把 `place_seq` +1 盖到 `ItemInstance.placed_seq`。
-  同容器内挪位置、顶替时原样放回、同容器里挪包（载荷记 `from`）都不算。跟着存档走（道具 `seq`、容器 `place_seq`）。
-- **激活** = 棋盘上**信物**（带 `faith_anchor` 的道具，095）里置入序号最大那件的对象标签；序号相同取 uid 大的。赐福版的武器防具不能激活，只跟着当前信仰生效或休眠。
-  一件信物都没有 = 没激活（「不信者」现在就是这个状态）。任何时刻只激活一个，诸神与新教因此天然互斥。
-- **休眠** = 有信仰、不是激活的那个：**通常情况下完全不起作用** —— `BattleCompiler.compile` 第一步跳过它（不参战、不给也不吃邻接），`SetTracker` 不计它；占格照占、价值照算。
-- **切换**（099，作者定）：**在背包里一下就切，不进菜单**，两条路都是明确规则，没有代价（将来可继承积攒的信力）：
-  - 在棋盘里**把信物重新落下**（拖起来放回棋盘任意位置）→ `GridInventory.reseat(uid)`；
-  - **右键**棋盘上的信物（`InventoryView.item_context` → `InventoryPanel.reseat_anchor` / 开局屏的 `reseat_anchor`）。
-  `reseat` 只盖 `placed_seq`，**不发 `placed`** —— 切信仰不是「置入道具」，信力的 `place_item` 行为不记它（这就是 097 发现的「棋盘内来回拖刷信力」的根因）。
-  取消拖拽（右键 / Esc）、放不回原位都**不切**：`DragLayer` 放回同一容器前先把 `inst.container_id` 设回该容器（和 `InventoryService.move` 同一行），所以不算 arrived；
-  普通道具在棋盘内挪位置照旧不盖序号。挪到地上再挪回仍然算置入（从别的容器进来），信力照记。地上一移动就清（3.4）；开局屏的棋盘同一套。
+- **选择**：`RunState.selected_faith`（神 id，空 = 不奉神）是唯一可写处，只由 `select_faith`（信物说明窗「奉为主信仰」/「不再奉神」）、
+  `choose_starting_faith`（开局屏选的，`GameFlow.begin` 交过来）和读档改。拾取、挪动、旋转、整理、整包挪、交易、合成、从地上拿回来都不改。
+  选择镜像到棋盘元数据 `FaithState.SELECTED_META`（`GridInventory.select_faith`），给只拿着棋盘的读者（套装、画灰、悬浮窗）。
+- **有效信仰** = 选了、且棋盘上有这位神的**有效信物**（`ItemDef.is_anchor()`、没标不参战）—— 纯查询 `FaithState.connection` → `none / ok / benched / missing`。
+  选了但没有有效信物 = **联系中断**：有效信仰为空、神赐停用、不记信力，**不自动换神**；同神信物回到棋盘就恢复。同神几件只维持一份联系。
+  一次查询的快照是 `FaithContext`（`RunState.faith_context()`）。
+- **编译器不扫棋盘**：`CompileInput.faith` 显式给有效信仰（玩家：`compile_player`；敌人、台架：`FaithState.assembled_tag`，信物都是一位神就是祂），
+  编译结果记 `CombatantSpec.faith`（这一场的快照，进 `BattleInputCodec`）；战后信力按它记（`FaithPower.credit` 的快照参数）。
+  `FaithState.board_tag`：记了选择的棋盘按选择，没记的（组装出来的）按 `assembled_tag`。
+- **休眠** = 有信仰、不是有效的那个（不奉神时所有信仰道具都休眠）：**通常情况下完全不起作用** —— `BattleCompiler.compile` 第一步跳过它（不参战、不给也不吃邻接），`SetTracker` 不计它；占格照占、价值照算（087 的 `dormant_keeps_combat` 例外照旧）。
+- **置入序号**（`ItemInstance.placed_seq`）不再决定信仰，只剩晶石装载归属（171「后来者优先」）读它；`FaithState.legacy_last_placed_tag` 只给旧档迁移（一局档 v4 → v5 读档时推一次选择）。
+- **改信锁**：还没站上出生点、这一局结束、商店桌上有没成交的东西时不能改（`RunState.faith_switch_refusal`）；其余时间免费、不加冷却。
 - **敌人只信一个神**（`EnemyLoadout.single_faith`）：信仰 = 组装偏好标签里的 `faith:xxx`，没有就是招牌 / 第一件信仰道具的，别的信仰的换掉；
   `min_weapons` / `weapon_tag` 保证至少一件会打的 —— 流派池按信仰分之后里面有护甲与零件。都是数据。
 - **不写流派**：作者不提倡除套装以外的明确流派，道具的联动让玩家自然组成流派。信仰不是流派，`EnemyDef.schools` 只是组装偏好，不给玩家看。
@@ -3447,7 +3448,7 @@ func to_dict() / restore(d)              # 自己的状态，进 run.to_dict()["
 **一件道具一个定义**，明亮 / 闪烁 / 黯淡 / 破碎是同一件的状态；名字看实例：`Names.of_item(inst)`（格子标签、悬浮窗、拖拽、回放名字表），只有定义的地方照旧 `Names.of(def)`。
 破碎的卖价 `ItemValue.of_instance` 打折；开局带入（`layout_of / place_layout`）也带着 `state`。
 **碎成别的**（208）：`WearProfile.broken_into`（三颗晶石写 `crystal_shards` 碎晶，导入器查得是 1 格的道具）。`WearModule` 扣到 0 就 `shatter`：原件摘下、碎晶放在原点那一格（朝向 0），
-装载格空出来；原地换件不发 `placed`（信力不记、「最后置入」不变），原点放不下进地上，再不行原件放回。
+装载格空出来；原地换件不发 `placed`（信力不记、置入序号不变），原点放不下进地上，再不行原件放回。
 老档里已经碎了的，读档时 `SaveReconcile._shatter` 换成碎晶（原点不动、状态清空、报告一条 replace）。
 
 为此 `RunState` 一共多了三个**通用**生命周期信号（都不认识任何具体模块）与一个方法：

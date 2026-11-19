@@ -1426,7 +1426,7 @@ func item_actions(uid: int, view: ContainerView) -> Array:
 			ItemActions.disable(quick, UiText.t("setup.supply_stays" if _supply_uids.has(uid) else "setup.preset_stays"))
 		out.append(ItemActions.lock(inst, from, save))
 		if inst.def.is_anchor():
-			out.append(ItemActions.anchor(inst, board, reseat_anchor))
+			out.append(ItemActions.anchor(inst, board, select_faith))
 	if board == null and from != board:
 		ItemActions.disable(quick, "")
 	return out
@@ -1612,7 +1612,7 @@ func _go_now() -> bool:
 	flow.map_reveal = reveal_payload()
 	_record_carry()
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board, _supply_uids), difficulty(), scale_id, carry_value(), spawn_id, carry_funds,
-			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"", preset())
+			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"", preset(), chosen_faith())
 	flow.map_reveal = {}
 	if run == null:
 		warn(UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source")))
@@ -1805,6 +1805,7 @@ func _rebuild_board() -> void:
 	if flow.meta.grant_starting_bags(ch, flow.items) > 0:
 		_gifted[ch.id] = true     # 255：这一回是第一次选他 —— 右栏的「首次赠包」小签亮着
 	board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
+	board.select_faith(&"")     # 信仰重构 A：开局默认不奉神；记上空选择，界面读的是选择而不是组装结果
 	ch.shape_board(board, flow.items, flow.meta.allocate_uid, false)     # 255：缺格挖掉、随身之物先钉上（包绕开它们）
 	board.begin_batch()
 	var rack := flow.meta.rack
@@ -2093,12 +2094,20 @@ func summary_text() -> String:
 	return Names.of(ch) if ch != null else ""
 
 
-## 099（作者定）：右键棋盘上的信物 = 奉它为主信仰（出发带走的就是这个顺序）。不是信物什么也不做
-func reseat_anchor(uid: int) -> bool:
-	var inst := board.get_item(uid) if board != null else null
-	if inst == null or inst.def == null or not inst.def.is_anchor():
+## 信仰重构 A：开局屏显式选这一局奉谁（空 = 不奉神）；出发时交给 [method GameFlow.begin]。棋盘上没有它的有效信物不选
+func select_faith(faith_id: StringName) -> bool:
+	if board == null:
 		return false
-	return board.reseat(uid)
+	var tag := FaithTags.tag_of(faith_id)
+	if tag != &"" and FaithState.connection(board, tag) != FaithState.OK:
+		return false
+	board.select_faith(tag)
+	return true
+
+
+## 出发时奉的神：选了、且棋盘上还有它的信物（拖走了就不奉）
+func chosen_faith() -> StringName:
+	return FaithState.active_id(board) if board != null else &""
 
 
 ## 作者 11-11：配装备页的耐力预估 —— 这块棋盘按角色基线与角色技能编译（局内的 buff、负重、信仰效果出发后才有，不算）
@@ -2106,7 +2115,9 @@ func stamina_spec() -> CombatantSpec:
 	var ch := character()
 	if board == null or ch == null:
 		return null
-	return BattleCompiler.compile(board, CompileInput.of(ch.baseline(), [] as Array[StatModifier], ch.combat_rules()))
+	var inp := CompileInput.of(ch.baseline(), [] as Array[StatModifier], ch.combat_rules())
+	inp.faith = FaithState.board_tag(board)
+	return BattleCompiler.compile(board, inp)
 
 
 ## 耐力签（测试看）

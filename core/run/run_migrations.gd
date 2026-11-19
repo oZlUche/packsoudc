@@ -22,12 +22,23 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v2_to_v3(d)
 			3:
 				d = _v3_to_v4(d)
+			4:
+				d = _v4_to_v5(d)
 			_:
 				break     # 没有这一步的迁移：停在这一版，下面照实报
 		v += 1
 		d["version"] = v
 	if int(d.get("version", -1)) != RunState.SAVE_VERSION:
 		push_warning("RunMigrations: 没有 v%s → v%d 的迁移，这一局作废（局外进度不受影响）" % [str(d.get("version", "?")), RunState.SAVE_VERSION])
+	return d
+
+
+## v4 → v5（信仰重构 A，2026-11-19）：信仰从「棋盘上最后置入的信物说了算」改成玩家显式选择（`faith_selection`）。
+## 迁移这一步看不到道具定义（谁是信物要读 [ItemDef]），所以只标一句 `derive`：[method RunState.from_dict] 在棋盘恢复、
+## 内容对账之后按旧规则推一次，下次存档写成真正的选择。已经有选择的档不动（重复迁移结果一样）
+static func _v4_to_v5(d: Dictionary) -> Dictionary:
+	if not (d.get("faith_selection", null) is Dictionary):
+		d["faith_selection"] = {"derive": true}
 	return d
 
 

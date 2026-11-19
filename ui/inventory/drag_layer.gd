@@ -830,9 +830,6 @@ func drop_at(global_pos: Vector2) -> bool:
 						stash.landing_from[vi.uid] = grid_view.global_position + grid_view.cell_origin_px(vi.origin)
 		if dropped:
 			home = grid_view.inventory
-			# 099（作者定）：在棋盘里把信物重新落下 = 奉它为主信仰。只有信物盖序号，普通道具不盖
-			if back_home and inst.def.is_anchor():
-				grid_view.inventory.reseat(inst.uid)
 
 	if not dropped:
 		_restore()

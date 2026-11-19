@@ -205,4 +205,6 @@ static func compile(snap: Dictionary, items: ItemDatabase) -> CombatantSpec:
 	var axes: Dictionary = snap.get("axes", {})
 	for axis in axes:
 		input.shift_axis(StringName(String(axis)), int(axes[axis]))
-	return BattleCompiler.compile(board_of(snap, items), input)
+	var board := board_of(snap, items)
+	input.faith = FaithState.assembled_tag(board)     # 信仰重构 A：快照的棋盘是组装出来的
+	return BattleCompiler.compile(board, input)

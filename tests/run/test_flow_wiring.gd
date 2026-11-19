@@ -13,6 +13,7 @@ const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 
 ## 发了没人接、但有正当理由的（写清理由；这张表越短越好）
 const NO_LISTENER_OK := {
+	&"faith_changed": "信仰重构 A：HUD 的信仰徽记经 HudWidget.watch() 接（返回信号数组，不是 .connect( 的写法）",
 	&"shop_closed": "GameFlow 走会话自己的 closed 往下走（_adopt 里 session.closed.connect(_flush)）；这条留给测试与将来的界面",
 	&"grown": "207：升阶走 board.changed 刷新（前缀、扎根、悬浮窗都读实例）；这条留给测试与将来的升阶动画 / 音效",
 	&"ransom_settled": "256：天平了结走 GameFlow 的 pay_ransom / refuse_ransom 自己 save + _flush；这条留给测试与将来的音效",

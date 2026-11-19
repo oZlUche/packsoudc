@@ -11,7 +11,7 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 4
+const SAVE_VERSION := 5
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
@@ -88,11 +88,18 @@ signal stepped(node_id: int, reason: StringName)
 signal arrived(node_id: int, first_time: bool)
 ## 320 A9：一件道具永久损毁了（侵蚀满值）
 signal item_destroyed(inst: ItemInstance, reason: StringName)
+## 信仰重构 A：选择或联系状态变了（改信、不奉神、主信物移出 / 放回 / 标了不参战）。HUD 与悬浮窗听
+signal faith_changed()
 ## 猎手（069 / 071）：难度清单里的猎手机制装进来的系统；null = 这一局没有猎手。定义表由持有方给，存档里的状态读档时先放这儿等机制装
 var hunters: HunterSystem = null
 var hunter_defs: Dictionary = {}
-## 信仰定义（8-4）：持有方给，名字与说明用；激活规则只看棋盘上的标签（[FaithState]）
+## 信仰定义（8-4）：持有方给，名字与说明用；激活规则见 [FaithState]
 var faith_defs: Dictionary = {}
+## 信仰重构 A：玩家**显式选择**的信仰 id（空 = 不奉神）。只有 [method select_faith] 改它；拾取、移动、整理、交易、合成都不改。
+## 跟着存档（`faith_selection`）。有效信仰是纯查询（[method active_faith_id]），不存
+var selected_faith: StringName = &""
+## 上一次通知时的 [选择, 有效信仰]（只为判断要不要发 [signal faith_changed]）
+var _faith_seen: Array = [&"", &""]
 ## 局内技能的账（082）：定义在角色上，这里记次数、冷却、旗子；没角色也有一份空的
 var skills: RunSkills = null
 ## 读档回来的技能账，等持有方按 id 找回角色（[method set_character]）再接上
@@ -225,6 +232,7 @@ static func start(
 	if p_character != null:
 		p_character.shape_board(s.board, p_items)     # 255：缺格与随身之物在开局屏的摆盘之前（它们不进 layout_of）
 	s.storage = ItemStash.new(STORAGE_ID, 0)
+	s._bind_faith_watch()     # 信仰重构 A：新局默认不奉神（开局屏选的由 GameFlow.begin 接着奉）
 	s._bind_tracker()
 	place_layout(s.board, p_layout, p_items, s.storage)
 	give_kit(s.board, full_kit, p_items, s.storage)
@@ -620,6 +628,7 @@ func compile_player() -> CombatantSpec:
 			input.shift_axis(axis, int(bonus[axis]))
 		for p in altar.perks():
 			(p as FaithPerk).compile_into(input, board, self)
+	input.faith = FaithTags.tag_of(active_faith_id())     # 信仰重构 A：有效信仰显式进编译输入
 	var spec := BattleCompiler.compile(board, input)
 	spec.passives = BattlePassives.of(self)     # 103：常驻加成也进 buff 栏
 	return spec
@@ -763,14 +772,105 @@ func use_skill(id: StringName) -> String:
 	return skills.use(id)
 
 
-## 现在激活的信仰（8-4）：最后置入棋盘的信仰道具所属的那个；一件都没有 = null（不信者）
+#region 信仰选择（信仰重构 A，交接方案 §2）
+## 现在**有效**的信仰：选了、且棋盘上有它的有效信物；不奉神 / 联系中断 = null
 func active_faith() -> FaithDef:
-	return faith_defs.get(FaithState.active_id(board), null) if board != null else null
+	return faith_defs.get(active_faith_id(), null)
 
 
-## 激活的信仰 id；没有返回空
+## 有效信仰的 id；不奉神 / 联系中断返回空
 func active_faith_id() -> StringName:
-	return FaithState.active_id(board) if board != null else &""
+	return selected_faith if faith_connection() == FaithState.OK else &""
+
+
+## 选的那位神的定义（联系中断时也有）；不奉神 = null
+func selected_faith_def() -> FaithDef:
+	return faith_defs.get(selected_faith, null)
+
+
+## 联系状态：[constant FaithState.NONE] / [constant FaithState.OK] / [constant FaithState.BENCHED] / [constant FaithState.MISSING]
+func faith_connection() -> StringName:
+	return FaithState.connection(board, FaithTags.tag_of(selected_faith)) if board != null else FaithState.NONE
+
+
+## 现在能不能改信；能 = 空串，不能 = 原因。空闲探索、看着事件选项、战前准备都随便改（免费、不加冷却）；
+## 不在图上（挑出生点、已结束）、商店桌上有没成交的东西时不行。战斗模拟、事件后果、献祭都是同步结算，
+## 结算过程中界面插不进改信；信力按事务开始时的信仰快照记（战斗读 [member CombatantSpec.faith]）
+func faith_switch_refusal() -> String:
+	if phase != Phase.ON_MAP:
+		return UiText.t("act.faith_locked")
+	if events != null and events.current_shop != null and not events.current_shop.table_empty():
+		return UiText.t("act.faith_locked")
+	return ""
+
+
+## 奉 [param id] 为主信仰（空 = 不奉神）。奉神要求棋盘上此刻有它的有效信物。返回空串 = 改了（或本来就是）；否则是原因。
+## 不发信力、不触发首获 / 升级奖励；各神的信力各自留着
+func select_faith(id: StringName) -> String:
+	var fid := IdAliases.faith(id) if id != &"" else &""
+	if fid == selected_faith:
+		return ""
+	var refused := faith_switch_refusal()
+	if refused != "":
+		return refused
+	if fid != &"":
+		if not faith_defs.is_empty() and not faith_defs.has(fid):
+			return UiText.t("act.faith_unknown")
+		if FaithState.connection(board, FaithTags.tag_of(fid)) != FaithState.OK:
+			return UiText.t("act.faith_no_anchor")
+	selected_faith = fid
+	_sync_faith_selection()
+	return ""
+
+
+## 开局配置显式选的神（[method GameFlow.begin]）：挑出生点之前也算，不过改信锁；棋盘上没有它的有效信物就不奉
+func choose_starting_faith(id: StringName) -> void:
+	var fid := IdAliases.faith(id) if id != &"" else &""
+	if fid != &"" and FaithState.connection(board, FaithTags.tag_of(fid)) != FaithState.OK:
+		fid = &""
+	selected_faith = fid
+	_sync_faith_selection()
+
+
+## 给 UI / 事件 / 神坛 / 预估的同一份快照
+func faith_context() -> FaithContext:
+	var c := FaithContext.new()
+	c.selected = selected_faith
+	c.connection = faith_connection()
+	c.effective = selected_faith if c.connection == FaithState.OK else &""
+	c.tier = faith_power.tier_of(c.effective) if faith_power != null and c.effective != &"" else -1
+	c.points = faith_power.points_of(selected_faith) if faith_power != null and selected_faith != &"" else 0
+	return c
+
+
+## 把选择镜像到棋盘（[constant FaithState.SELECTED_META]），再看要不要发 [signal faith_changed]
+func _sync_faith_selection() -> void:
+	if board != null:
+		board.select_faith(FaithTags.tag_of(selected_faith))
+	_check_faith_changed()
+
+
+func _check_faith_changed() -> void:
+	var now := [selected_faith, active_faith_id()]
+	if now != _faith_seen:
+		_faith_seen = now
+		faith_changed.emit()
+
+
+## 棋盘一变就看联系状态变没变（主信物移出 / 放回 / 标了不参战 / 毁了）；不自动换神
+func _bind_faith_watch() -> void:
+	if board != null and not board.changed.is_connected(_check_faith_changed):
+		board.changed.connect(_check_faith_changed)
+	_sync_faith_selection()
+
+
+## 读旧档（没有 `faith_selection`）：内容对账、实例恢复完之后按旧规则（棋盘上最后置入的有效信物）推一次，存进新字段。
+## 只在这里用旧排序（交接方案 §8.2 第 2 条）
+func _derive_legacy_faith() -> void:
+	selected_faith = FaithTags.id_of_tag(FaithState.legacy_last_placed_tag(board))
+	if selected_faith != &"" and not faith_defs.is_empty() and not faith_defs.has(selected_faith):
+		selected_faith = &""
+#endregion
 
 
 ## 给界面的一句：「信仰：暴力之神」/「信仰：无」；定义表里没有的按 id 写
@@ -1184,7 +1284,10 @@ func _wire_faith_power() -> void:
 		var t := StringName(String(events.last_battle.get("type", "")))
 		if t != HunterSystem.TYPE:
 			t = NodeEvents.effective_type(n) if n != null else &""
-		faith_power.credit(&"battle", battle_summary(r, won, board, t)))
+		# 信仰重构 A：记给开战那一刻的有效信仰（编译快照 [member CombatantSpec.faith]），不回头看此刻的背包
+		var me: CombatantSpec = events.last_battle.get("player", null) as CombatantSpec
+		var snap := FaithTags.id_of_tag(me.faith) if me != null else active_faith_id()
+		faith_power.credit(&"battle", battle_summary(r, won, board, t), snap))
 	travel.moved.connect(func(i: MoveIntent, first: bool):
 		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
 		faith_power.credit(&"travel", {"steps": travel.clock.total, "first_visit": first, "node_type": String(n.type) if n != null else ""}))
@@ -1309,6 +1412,7 @@ func to_dict() -> Dictionary:
 			"pending_ransom": events.pending_ransom.duplicate(true),     # 256：读档回来还在天平上
 			"search_haul": search_haul},
 		"skills": skills.to_dict(),
+		"faith_selection": {"selected_id": String(selected_faith)},     # 信仰重构 A：只存选择，有效信仰读档后由棋盘重建
 		"faith_power": faith_power.to_dict(),
 		"faith_history": faith_power.history_to_array(),     # 104
 		"owned_uids": owned_uids.keys(),
@@ -1410,6 +1514,14 @@ static func from_dict(
 	var mods_raw: Variant = d.get("modules", {})
 	s.modules_saved = (mods_raw as Dictionary).duplicate(true) if mods_raw is Dictionary else {}
 	s.rng = RunRNG.from_dict(d.get("rng", {}))
+	# 信仰重构 A：选择按神 id 读回（别名规范化、不认识的当不奉神）；旧档（v4 迁移标了 derive）按旧规则推一次
+	var fsel: Dictionary = d.get("faith_selection", {}) if d.get("faith_selection", {}) is Dictionary else {}
+	if bool(fsel.get("derive", false)) or not d.has("faith_selection"):
+		s._derive_legacy_faith()
+	else:
+		var sid := String(fsel.get("selected_id", "")) if fsel.get("selected_id", "") is String else ""
+		s.selected_faith = IdAliases.faith(StringName(sid)) if sid != "" else &""
+	s._bind_faith_watch()
 	s._bind_tracker()
 	s._wire_events()
 	var ev: Dictionary = d.get("events", {})

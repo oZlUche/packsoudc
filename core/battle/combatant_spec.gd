@@ -12,6 +12,9 @@ var undying_sec: float = 0.0
 var immune_buffs: Array[StringName] = []
 ## 281：只受这一种伤害（[DamageResolver] 第 3 步之后判）；空 = 不限
 var only_damage_type: StringName = &""
+## 信仰重构 A：编译时的有效信仰（对象标签；空 = 不奉神 / 联系中断 / 魔兽）。这是这一场的信仰快照 ——
+## 战后的信力结算、战记、回放都读它，不回头看此刻的背包
+var faith: StringName = &""
 
 ## 105：开战时就带着的标准轴层数（4.3）：轴 → 层数。来源是编译期的单位级增益
 ## （祈祷攒的火焰加成、将来的局内 / 局外 / 套装 / 技能）。[CombatantRuntime] 把它种进**系统层** ——

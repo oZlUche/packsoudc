@@ -40,7 +40,7 @@ func recount() -> void:
 	var fresh := {}
 	if _board != null:
 		var seen_defs := {}
-		var active_faith := FaithState.active_tag(_board)
+		var active_faith := FaithState.board_tag(_board)     # 信仰重构 A：和编译、界面同一份有效信仰
 		for inst in _board.items():
 			var item := inst as ItemInstance
 			if item.def == null or item.def.set_id == &"":

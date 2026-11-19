@@ -402,6 +402,7 @@ const TEXT := {
 	"bag.drag_hint": {"zh": "按住标题拖动", "en": "Drag the title to move"},
 	# ui/game/inventory_panel.gd
 	"bag.reseat": {"zh": "奉「%s」为主信仰", "en": "Your Faith now follows \"%s\""},
+	"bag.renounce": {"zh": "不再奉任何神", "en": "You no longer follow any god"},
 	"bag.no_room_container": {"zh": "容器里放不下「%s」，放在了地上", "en": "No room in the container for \"%s\": it's on the Ground"},
 	"bag.no_room": {"zh": "背包里没有空间放「%s」", "en": "No room in your pack for \"%s\""},
 	# ui/inventory/drag_layer.gd
@@ -413,6 +414,9 @@ const TEXT := {
 	"faith.blessed": {"zh": "赐福的道具", "en": "Blessed items"},
 	"faith.sources": {"zh": "信力来源", "en": "Faith sources"},
 	"faith.dormant": {"zh": "%d 件休眠", "en": "%d dormant"},
+	"faith.broken": {"zh": "联系中断", "en": "Connection lost"},
+	"faith.broken_missing": {"zh": "信物不在棋盘上", "en": "Anchor not on your board"},
+	"faith.broken_benched": {"zh": "信物标了不参战", "en": "Anchor is benched"},
 	"faith.points": {"zh": "信力 %s%s", "en": "Faith %s%s"},
 	"faith.max_rank": {"zh": "（满阶）", "en": " (max Rank)"},
 	"faith.perk_sep": {"zh": "；", "en": "; "},
@@ -1634,7 +1638,10 @@ const TEXT := {
 	"act.take_back": {"zh": "取回", "en": "Take back"},
 	"forge.quick_none": {"zh": "铸炉不收这件", "en": "The forge doesn't take this"},
 	"act.anchor": {"zh": "奉为主信仰", "en": "Make main faith"},
-	"act.anchor_now": {"zh": "已是主信仰", "en": "Main faith already"},
+	"act.anchor_drop": {"zh": "不再奉神", "en": "Renounce faith"},
+	"act.faith_locked": {"zh": "现在不能改信", "en": "Can't change Faith right now"},
+	"act.faith_no_anchor": {"zh": "这位神的信物不在棋盘上", "en": "This god's Anchor isn't on your board"},
+	"act.faith_unknown": {"zh": "没有这位神", "en": "Unknown god"},
 	"act.bench": {"zh": "不参战", "en": "Sit this one out"},     # 2026-10-22
 	"act.bench_on": {"zh": "参战", "en": "Join the fight"},
 	"act.to_safe": {"zh": "托付出去", "en": "Entrust"},

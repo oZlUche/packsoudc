@@ -129,7 +129,9 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	inp.wild = def.is_wild()     # 212：魔兽 / 机关用道具的 wild 面
 	inp.immune_buffs = def.immune_buffs     # 210
 	inp.only_damage_type = StringName(String(content.get(JimiePath.ONLY_KEY, "")))     # 281：寂灭的试炼
-	var spec := BattleCompiler.compile(board_of(content, items), inp)
+	var board := board_of(content, items)
+	inp.faith = FaithState.assembled_tag(board)     # 信仰重构 A：敌人信谁由组装结果定（一个敌人只信一个神），不看置入先后
+	var spec := BattleCompiler.compile(board, inp)
 	scale_hp(spec, content)
 	scale_damage(spec, content)
 	return spec

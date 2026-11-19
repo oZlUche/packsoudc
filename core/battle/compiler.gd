@@ -25,15 +25,18 @@ class_name BattleCompiler
 extends RefCounted
 
 
-## 薄的兼容入口：只关心棋盘与这几样的调用方（大多是测试与敌人 kit）用它，内部造一份 [CompileInput]。
-## 正式的玩家编译走 [method compile] + 完整的 [CompileInput]（信仰效果、轴、按件修饰都在里面）
+## 薄的兼容入口：只关心棋盘与这几样的调用方（测试、台架、调参场景）用它，内部造一份 [CompileInput]。
+## 信仰重构 A：有效信仰取 [method FaithState.board_tag] —— 记了选择的棋盘按选择，组装出来的按组装结果（不看置入先后）。
+## 正式的玩家编译走 [method compile] + 完整的 [CompileInput]（有效信仰、信仰效果、轴、按件修饰都在里面）
 static func compile_board(
 	board: GridInventory, baseline: CombatantBaseline = null,
 	set_mods: Array[StatModifier] = [] as Array[StatModifier],
 	set_rules: Array[AbilityRule] = [] as Array[AbilityRule],
 	faith_tiers: Dictionary = {}, faith_points: Dictionary = {}
 ) -> CombatantSpec:
-	return compile(board, CompileInput.of(baseline, set_mods, set_rules, faith_tiers, faith_points))
+	var inp := CompileInput.of(baseline, set_mods, set_rules, faith_tiers, faith_points)
+	inp.faith = FaithState.board_tag(board)
+	return compile(board, inp)
 
 
 ## [param input] 装齐这一场的全部外来加成（套装、一局 buff、信力、信仰效果、轴的初值）。
@@ -50,14 +53,15 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	spec.undying_sec = inp.undying_sec
 	spec.immune_buffs = inp.immune_buffs.duplicate()     # 210
 	spec.only_damage_type = inp.only_damage_type     # 281
+	spec.faith = inp.faith if not inp.wild else &""     # 信仰重构 A：这一场按哪位神编的（战记、战后信力结算读它，不回头看背包）
 
 	# --- 1. 收集参战物品：棋盘上的非包物品，按 uid 升序 ---
-	# 信仰（8-4）：只激活最后置入的信仰道具所属的信仰，别的信仰的道具休眠。
+	# 信仰（重构 A）：有效信仰显式由 input.faith 给（编译器不扫棋盘），别的信仰的道具休眠。
 	# 087（作者定）：休眠的仍可能有**通用效果**（盾的固定减伤、武器的攻击力 = 它自己的 combat）：留着的照样参战，
 	# 只丢信力加成与邻接（`dormant` 记着谁是休眠的）；不留的（护符）彻底不参战
 	# 140：没有棋盘（敌人基线、测试）只跳过这一段 —— 后面几步对着空的 fighters 自然什么都不做，九步只有一条路
 	# 212：魔兽的棋盘不认信仰（身上本来就没有信仰道具；不让 is_dormant 去猜）
-	var active_faith := FaithState.active_tag(board) if board != null and not inp.wild else &""
+	var active_faith := inp.faith if not inp.wild else &""
 	var fighters: Array[int] = []
 	var dormant: Dictionary = {}     # uid -> true
 	for inst in (board.items() if board != null else []):
@@ -144,7 +148,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 			social.append(uid)
 	var attach_pending: Dictionary = {}     # uid -> [[rule, origin], ...]（108：邻居给我挂的规则，第 6 步打包时挂上）
 	var fed: Dictionary = {}     # 148：这一场真的供给了的（魔晶石点亮了法杖）uid -> true，耐久按它扣
-	spec.loads = _apply_adjacency(board, social, stats, links, attach_pending, fed)
+	spec.loads = _apply_adjacency(board, social, stats, links, attach_pending, fed, active_faith)
 	var fed_list: Array[int] = []
 	for f in fed:
 		fed_list.append(int(f))
@@ -337,7 +341,7 @@ static func _apply_bag_effects(board: GridInventory, fighters: Array[int], stats
 ## 非对称会让内容作者踩坑：把配件贴在武器旁边，却只有一边听得见对方出手。
 static func _apply_adjacency(
 	board: GridInventory, fighters: Array[int], stats: Dictionary, links: Dictionary,
-	attach_pending: Dictionary, fed: Dictionary
+	attach_pending: Dictionary, fed: Dictionary, active_faith: StringName = &"?"
 ) -> Dictionary:
 	for uid in fighters:
 		var holder := board.get_item(uid)
@@ -348,7 +352,7 @@ static func _apply_adjacency(
 		# 增益：站在这些格子上的邻居，各得一份
 		if profile.has_grant():
 			var receivers := _lit_neighbors(
-				board, holder, profile.grant_cells, profile.grant_filter, profile.grant_filter_all
+				board, holder, profile.grant_cells, profile.grant_filter, profile.grant_filter_all, active_faith
 			)
 			for other in receivers:
 				if not stats.has(other):
@@ -363,7 +367,7 @@ static func _apply_adjacency(
 		# 受益：点亮几个格，本物品就得几份
 		if not profile.receive_cells.is_empty():
 			var providers := _lit_neighbors(
-				board, holder, profile.receive_cells, profile.receive_filter
+				board, holder, profile.receive_cells, profile.receive_filter, [] as Array[StringName], active_faith
 			)
 			if profile.has_receive():
 				for other in providers:
@@ -381,7 +385,7 @@ static func _apply_adjacency(
 	var social := {}
 	for uid in fighters:
 		social[uid] = true
-	var loads := load_assignments(board, social)
+	var loads := load_assignments(board, social, active_faith)
 	var crystals := loads.keys()
 	crystals.sort()
 	for other in crystals:
@@ -506,7 +510,8 @@ static func _centroid(cells: Array[Vector2i]) -> Vector2:
 ## 压着几把法杖的装载格，只给 `placed_seq` 最大的那把（**后来者优先**；一样大按 uid 大的）。没压着任何一把的不在表里。
 ## 编译、悬浮窗（法杖的装载行、晶石的「装在」）都查它，所以永远说同一句话
 ## [param only]：只算这些 uid（编译时 = 参与邻接的；空 = 棋盘上全部）
-static func load_assignments(board: GridInventory, only: Dictionary = {}) -> Dictionary:
+## [param active]：有效信仰（编译时由 input.faith 给；`?` = 读棋盘上记着的选择，界面用）
+static func load_assignments(board: GridInventory, only: Dictionary = {}, active: StringName = &"?") -> Dictionary:
 	var out := {}
 	if board == null:
 		return out
@@ -516,7 +521,7 @@ static func load_assignments(board: GridInventory, only: Dictionary = {}) -> Dic
 		var profile: AdjacencyProfile = holder.def.adjacency if holder.def != null else null
 		if profile == null or not profile.has_load() or (not only.is_empty() and not only.has(holder.uid)):
 			continue
-		for other in _lit_neighbors(board, holder, profile.load_cells, profile.load_tags()):
+		for other in _lit_neighbors(board, holder, profile.load_cells, profile.load_tags(), [] as Array[StringName], active):
 			if not only.is_empty() and not only.has(other):
 				continue
 			var feeder := board.get_item(other)
@@ -566,14 +571,15 @@ static func _lit_neighbors(
 	holder: ItemInstance,
 	marker_cells: Array[Vector2i],
 	filter: Array[StringName],
-	filter_all: Array[StringName] = []
+	filter_all: Array[StringName] = [],
+	p_active: StringName = &"?"
 ) -> Array[int]:
 	var found: Array[int] = []
 	if holder.def.shape == null:
 		return found
 
 	var seen := {}
-	var active: StringName = &"?"     # 还没查过
+	var active: StringName = p_active     # `?` = 还没查过（界面路径：读棋盘上记着的选择）
 	for cell in holder.absolute_cells(marker_cells):
 		var other := board.cell_uid(cell)
 		if other == GridInventory.EMPTY_UID or other == holder.uid or seen.has(other):
@@ -585,7 +591,7 @@ static func _lit_neighbors(
 			continue
 		if other_inst.def.has_faith():
 			if active == &"?":
-				active = FaithState.active_tag(board)
+				active = FaithState.board_tag(board)
 			if FaithState.is_dormant(other_inst.def, active):
 				continue
 		seen[other] = true

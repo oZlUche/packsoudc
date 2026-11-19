@@ -160,10 +160,13 @@ static func run_dormant_and_bonus(t: TestCase) -> void:
 	var rules_lit := BattleCompiler.compile_board(g2).item_of(sd2.uid).rules.size()
 	t.check(rules_lit >= 1, "茎叶：有荆棘规则（%d 条）" % rules_lit)
 	g2.remove((f2["charm"] as ItemInstance).uid)
-	# 250：种子自己带 faith:nature，也是信物 —— 光拿走护符它照样激活自然；最后置入日神护符，自然才休眠
+	# 250：种子自己带 faith:nature，也是信物 —— 光拿走护符它照样维持自然的联系；信仰重构 A：放上日神护符、奉日神，自然才休眠
+	g2.select_faith(&"faith:nature")
 	var sun := ItemInstance.create(c.items.get_def(&"charm_sun"))
-	t.check(g2.place(sun, Vector2i(2, 0), 0), "放上日神护符（最后置入的信物）")
-	t.eq(FaithState.active_id(g2), &"sun", "日神激活，自然休眠")
+	t.check(g2.place(sun, Vector2i(2, 0), 0), "放上日神护符")
+	t.eq(FaithState.active_id(g2), &"nature", "放上不改信：种子维持着自然的联系")
+	g2.select_faith(&"faith:sun")
+	t.eq(FaithState.active_id(g2), &"sun", "奉日神，自然休眠")
 	s2.travel.clock.spend(10)
 	t.eq(GrowthProfile.stage_of(sd2), 1, "休眠：不长")
 	t.eq(GrowthProfile.ticks_of(sd2), 0, "休眠：不计步")
@@ -172,6 +175,7 @@ static func run_dormant_and_bonus(t: TestCase) -> void:
 	t.check(dormant_spec.item_of(sd2.uid) == null or dormant_spec.item_of(sd2.uid).rules.is_empty(), "休眠：编译不带阶段加成")
 	g2.remove(sun.uid)
 	g2.place(ItemInstance.create(c.items.get_def(&"charm_nature")), Vector2i(2, 0), 0)
+	g2.select_faith(&"faith:nature")
 	s2.travel.clock.spend(6)
 	t.eq(GrowthProfile.stage_of(sd2), 2, "拿走日神、放回自然信物：接着长到绽放")
 

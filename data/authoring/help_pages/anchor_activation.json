@@ -5,9 +5,9 @@
     "en": "Anchors and Activation"
   },
   "category": "faith",
-  "text": "信仰靠道具激活。带着某位神印记的道具就是信物，能激活信仰（赐福版的武器防具除外），每位神至少有一枚一格的护符。把信物放进棋盘就算信了这位神，任何时刻只信一位，棋盘上最后置入的那枚信物说了算。\n\n激活之后这位神的道具按阶解锁功能，别的神的道具休眠。信物多半是从地图上的祭坛事件里拿到的，撤离时也会回到仓库、下一局带进去就从这位神开始。把信物从{zone:地上}挪回棋盘也算置入，会重新决定激活的是谁。",
+  "text": "信仰靠道具维系。带着某位神印记的道具就是信物（赐福版的武器防具除外），每位神至少有一枚一格的护符。拿到信物不会自动改信：把它放进棋盘，再点它说明窗下的「奉为主信仰」，才算信了这位神；任何时刻只奉一位。\n\n奉了之后，这位神的道具按阶解锁功能，别的神的道具休眠。主信物离开棋盘，联系就中断：神赐全部停用，也不涨信力，但不会自动换成别的神；同一位神的信物回到棋盘，联系就恢复。信物多半是从地图上的祭坛事件里拿到的，撤离时会回到仓库，开局屏上也可以选这一局奉谁。",
   "texts": {
-    "en": "Faith is activated by items. An item that carries a god's mark is an Anchor and can activate a Faith (Blessed weapons and armor excepted), and every god has at least one one-cell Charm. Put an Anchor on the board and you follow that god. You follow only one god at a time: the Anchor most recently placed on the board decides which.\n\nOnce a Faith is active, that god's items unlock their effects by Rank, and other gods' items go dormant. Anchors mostly come from Altar events on the map. They also return to the Warehouse when you extract, and you can bring one into your next run to start with that god. Moving an Anchor from the {zone:地上} back onto the board also counts as placing it, and decides again which god is active."
+    "en": "Faith is held through items. An item that carries a god's mark is an Anchor (Blessed weapons and armor excepted), and every god has at least one one-cell Charm. Picking up an Anchor doesn't change your Faith: put it on the board, then press Make main faith under its tooltip to follow that god. You follow only one god at a time.\n\nOnce you do, that god's items unlock their effects by Rank, and other gods' items go dormant. If your main Anchor leaves the board, the connection is lost: the god's gifts stop and you earn no Faith, but you don't switch to another god on your own. Bring an Anchor of the same god back onto the board and the connection returns. Anchors mostly come from Altar events on the map. They return to the Warehouse when you extract, and on the Setup screen you can choose which god to follow for the run."
   },
   "related": [
     "anchor_and_right_click",

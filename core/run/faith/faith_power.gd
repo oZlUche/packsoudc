@@ -48,11 +48,12 @@ func tiers() -> Dictionary:
 	return out
 
 
-## 一局里发生了一件事：激活信仰的每个行为各自说给几点，加起来记到它的池子里。没激活信仰 = 不记。返回加了几点
-func credit(event: StringName, payload: Dictionary = {}) -> int:
+## 一局里发生了一件事：有效信仰的每个行为各自说给几点，加起来记到它的池子里。不奉神 / 联系中断 = 不记。返回加了几点。
+## [param faith_id]：事务开始时定下的信仰快照（战斗用开战那一刻编译的信仰）；`?` = 此刻的有效信仰
+func credit(event: StringName, payload: Dictionary = {}, faith_id: StringName = &"?") -> int:
 	if run == null:
 		return 0
-	var def := run.active_faith()
+	var def: FaithDef = run.active_faith() if faith_id == &"?" else run.faith_defs.get(faith_id, null)
 	if def == null:
 		return 0
 	var gained := 0
