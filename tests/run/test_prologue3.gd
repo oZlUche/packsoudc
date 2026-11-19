@@ -74,7 +74,7 @@ static func run_data(t: TestCase) -> void:
 
 
 static func run_walkthrough(t: TestCase) -> void:
-	t.begin("序章三 · 走一遍：拿护符 → 不放包打不了 → 放包激活蛮神 → 打完有信力 → 搜三件 → 献祭过 1 阶、神坛关 → 拿日神护符换神、蛮神信力不丢 → 不切回打不了 → 切回打完过 2 阶 → 第二座神坛两个特殊操作、做一个就关 → 撤离")
+	t.begin("序章三 · 走一遍：拿护符 → 不放包打不了 → 放包并奉为主信仰 → 打完有信力 → 搜三件 → 献祭过 1 阶、神坛关 → 拿日神护符换神、蛮神信力不丢 → 不切回打不了 → 切回打完过 2 阶 → 第二座神坛两个特殊操作、做一个就关 → 撤离")
 	var c := _content()
 	var s := _start(c)
 	t.not_null(s, "按布鲁图斯开局")
@@ -107,6 +107,8 @@ static func run_walkthrough(t: TestCase) -> void:
 	if charm == null:
 		return
 	s.equip(charm.uid)
+	t.is_null(s.active_faith(), "信仰重构 A：放进包里不自动改信")
+	t.eq(s.select_faith(&"brute"), "", "点「奉为主信仰」")
 	t.check(s.step_to(2), "再走回战斗点")
 	ev = s.events.pending_event()
 	t.check(ev != null and ev.id == &"tut3_battle_1", "战斗事件还在等着")
@@ -170,7 +172,9 @@ static func run_walkthrough(t: TestCase) -> void:
 	if sun == null:
 		return
 	s.equip(sun.uid)
-	t.eq(s.active_faith().id, &"sun", "放进包里：换成日神")
+	t.eq(s.active_faith().id, &"brute", "放进包里不自动换神：还是蛮神")
+	t.eq(s.select_faith(&"sun"), "", "点日神护符的「奉为主信仰」")
+	t.eq(s.active_faith().id, &"sun", "换成日神")
 	t.eq(s.faith_power.points_of(&"brute"), p2, "蛮神的信力还记着（%d）" % p2)
 	# 6 战斗 2：门禁要蛮神
 	t.check(s.step_to(6), "走到第二场")
@@ -178,7 +182,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(ev != null and ev.id == &"tut3_battle_2", "第二场的事件")
 	go = _option(ev, "进入战前准备")
 	t.check(not bool(s.events.option_state(go)["ok"]), "信的是日神：锁着")
-	t.check(s.board.reseat(charm.uid), "右键蛮神护符（重新落下）")
+	t.eq(s.select_faith(&"brute"), "", "右键蛮神护符，点「奉为主信仰」（事件开着也能改）")
 	t.eq(s.active_faith().id, &"brute", "切回蛮神")
 	t.check(bool(s.events.option_state(go)["ok"]), "现在能打")
 	t.check(s.events.choose(go), "开打")

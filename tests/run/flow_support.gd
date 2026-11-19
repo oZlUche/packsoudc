@@ -57,6 +57,8 @@ static func activate(run: RunState, item_id: StringName) -> ItemInstance:
 		return null
 	var inst := ItemInstance.create(def)
 	if run.board.try_add(inst, true):
+		if def.is_anchor():
+			run.choose_starting_faith(FaithTags.id_of_tag(def.faith_tag()))     # 信仰重构 A：放上去不自动改信，测试替玩家点「奉为主信仰」
 		return inst
 	run.storage.admit(inst)
 	return null

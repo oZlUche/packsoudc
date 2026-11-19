@@ -21,7 +21,7 @@ static func encode(spec: CombatantSpec, rules: Array[AbilityRule], index: Dictio
 		})
 	return {
 		"format": FORMAT, "max_hp": spec.max_hp, "undying_sec": spec.undying_sec, "immune_buffs": spec.immune_buffs.duplicate(),
-		"only_damage_type": spec.only_damage_type, "axes": spec.axes.duplicate(true),
+		"only_damage_type": spec.only_damage_type, "axes": spec.axes.duplicate(true), "faith": String(spec.faith),
 		"baseline": (stats_to(spec.baseline) as Variant) if spec.baseline != null else null,
 		"items": items, "set_rules": _rule_ids(spec.set_rules, rules, index),
 		"fed_uids": spec.fed_uids.duplicate(), "loads": spec.loads.duplicate(true),
@@ -37,6 +37,7 @@ static func decode(d: Dictionary, rules: Array[AbilityRule]) -> CombatantSpec:
 		spec.immune_buffs.append(StringName(b))
 	spec.only_damage_type = StringName(d.get("only_damage_type", &""))
 	spec.axes = (d.get("axes", {}) as Dictionary).duplicate(true)
+	spec.faith = StringName(String(d.get("faith", "")))     # 信仰重构 A：老诊断包没有 = 空（只是说明，结算内核不读）
 	var base: Variant = d.get("baseline", null)
 	spec.baseline = stats_from(base) if base is Dictionary else null
 	for e in d.get("items", []):

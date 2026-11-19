@@ -196,7 +196,9 @@ static func run_engage_fight_flee(t: TestCase) -> void:
 	s.faith_defs = FaithDef.load_all()
 	var charm := ItemInstance.create(s.items.get_def(&"charm_hunt"))
 	s.storage.admit(charm)
-	t.check(InventoryService.transfer_auto(s.storage, charm.uid, s.board) and s.active_faith_id() == &"hunt", "狩猎之神的护符上棋盘：激活狩猎之神")
+	t.check(InventoryService.transfer_auto(s.storage, charm.uid, s.board), "狩猎之神的护符上棋盘")
+	s.choose_starting_faith(&"hunt")     # 信仰重构 A：放上不自动改信
+	t.eq(s.active_faith_id(), &"hunt", "奉狩猎之神")
 	var faith_before := s.faith_power.points_of(&"hunt")
 	var vit_before := s.vitality.current
 	var node_before := s.travel.current_id

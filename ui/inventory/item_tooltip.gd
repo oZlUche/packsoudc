@@ -885,6 +885,7 @@ static func spec_for(inst: ItemInstance, board: GridInventory) -> CombatantSpec:
 	if board != null and board.has_item(inst.uid):
 		var inp := CompileInput.new()
 		inp.wild = wild
+		inp.faith = FaithState.board_tag(board)     # 信仰重构 A：玩家棋盘读记着的选择，敌人棋盘读组装结果
 		return BattleCompiler.compile(board, inp)
 	var size := inst.def.shape.size_rotated(0) if inst.def.shape != null else Vector2i.ONE
 	var scratch := GridInventory.new(size, 0, false)

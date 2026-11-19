@@ -11,6 +11,9 @@ extends RefCounted
 
 ## 角色自带的那份属性；null = 用 [method CombatantBaseline.default_baseline]
 var baseline: CombatantBaseline = null
+## 信仰重构 A：这一场的**有效信仰**（对象标签 `faith:xxx`；空 = 不奉神 / 联系中断）。编译器不再自己扫棋盘猜，
+## 别的信仰的道具按它休眠。玩家由 [method RunState.compile_player] 填有效信仰；敌人与台架由组装结果填（[method FaithState.assembled_tag]）
+var faith: StringName = &""
 ## 信力（082）：信仰标签 → 现在第几阶
 var faith_tiers: Dictionary = {}
 ## 信力：信仰标签 → 现在多少点

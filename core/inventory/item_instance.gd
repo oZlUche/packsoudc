@@ -25,7 +25,7 @@ var origin: Vector2i = Vector2i.ZERO
 ## 所属容器的 id，0 表示游离态（拖拽途中）。
 var container_id: int = 0
 ## 置入这个容器时盖的序号（[GridInventory.place] 在道具从别的容器进来时盖；同容器内挪位置不变）。
-## 信仰的激活规则看它：最后置入的信仰道具（[FaithState]）。跟着存档走
+## 信仰重构 A 起信仰不再看它（只在旧档迁移时推一次选择，[method FaithState.legacy_last_placed_tag]）；晶石的装载归属还看它。跟着存档走
 var placed_seq: int = 0
 
 ## 运行时可变状态：耐久、充能、随机词条等。

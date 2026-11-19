@@ -1093,7 +1093,8 @@ func save_settings() -> bool:
 ## 生成不出图返回 null，停在开局屏
 func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse: Array[int] = [] as Array[int],
 		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0,
-		spawn_id: int = -1, carry_funds: int = 0, preset_cost: int = 0, preset_ticket: StringName = &"", preset: LoadoutDef = null) -> RunState:
+		spawn_id: int = -1, carry_funds: int = 0, preset_cost: int = 0, preset_ticket: StringName = &"", preset: LoadoutDef = null,
+		faith: StringName = &"") -> RunState:
 	var refused := start_refusal(chapter, layout, preset)
 	if refused != "":
 		push_warning("GameFlow.begin：%s" % refused)
@@ -1156,6 +1157,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 		save_meta()
 	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
+	state.choose_starting_faith(faith)     # 信仰重构 A：开局屏显式选的神（没选 = 不奉神；不按载入顺序猜）
 	JimiePath.plant(state)     # 281：局外状态接上了才看得见仓库里有没有那颗元素之核
 	_grant_keepsakes(chapter)
 	if tutorial_chapters().has(chapter):

@@ -15,9 +15,9 @@
         "en": "Enter Pre-battle"
       },
       "hide_when_locked": true,
-      "hint_when_hidden": "你现在信的不是{faith:brute}：右键{item:charm_brute}切回来再打。",
+      "hint_when_hidden": "你现在信的不是{faith:brute}：右键{item:charm_brute}点「奉为主信仰」，切回来再打。",
       "hints_when_hidden": {
-        "en": "You're not following {faith:brute} right now. Right-click the {item:charm_brute} to switch back, then fight."
+        "en": "You're not following {faith:brute} right now. Right-click the {item:charm_brute} and press Make main faith to switch back, then fight."
       },
       "requires": [
         {

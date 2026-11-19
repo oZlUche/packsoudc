@@ -38,11 +38,15 @@ static func run_variants_and_modes(t: TestCase) -> void:
 	t.eq(FaithState.active_id(b), &"", "赐福的武器不激活信仰")
 	var charm := ItemInstance.create(db.get_def(&"charm_sun"))
 	t.check(b.try_add(charm, true), "放上日神的护符")
-	t.eq(FaithState.active_id(b), &"sun", "护符是信物：激活日神")
+	t.eq(FaithState.anchor_tags(b), [&"faith:sun"] as Array[StringName], "护符是信物（赐福短剑不是）：只能奉日神")
+	b.select_faith(&"faith:sun")
+	t.eq(FaithState.active_id(b), &"sun", "奉日神")
 	t.check(FaithState.is_dormant(sb, FaithState.active_tag(b)), "蛮神赐福的短剑在日神下休眠（留通用效果）")
 	var sigil := TestSupport.put_apart(b, db.get_def(&"charm_brute"), [sword])
 	t.not_null(sigil, "再放蛮神的护符（142：放远一点，别让它的增益槽碰到短剑）")
-	t.eq(FaithState.active_id(b), &"brute", "最后置入的信物说了算：蛮神")
+	t.eq(FaithState.active_id(b), &"sun", "信仰重构 A：后放的信物不抢信仰")
+	b.select_faith(&"faith:brute")
+	t.eq(FaithState.active_id(b), &"brute", "奉蛮神")
 	# 三种生效方式
 	var fb := FaithBonus.new()
 	fb.mode = "tier"
@@ -93,7 +97,9 @@ static func run_blessing_paths(t: TestCase) -> void:
 	# 激活蛮神
 	var charm := ItemInstance.create(db.get_def(&"charm_brute"))
 	run.storage.admit(charm)
-	t.check(InventoryService.transfer_auto(run.storage, charm.uid, run.board) and run.active_faith_id() == &"brute", "护符上棋盘：蛮神")
+	t.check(InventoryService.transfer_auto(run.storage, charm.uid, run.board), "护符上棋盘")
+	run.choose_starting_faith(&"brute")     # 信仰重构 A：放上不自动改信
+	t.eq(run.active_faith_id(), &"brute", "奉蛮神")
 	var altar := AltarModule.of(run)     # 101：赐福与神坛是一局的模块
 	var active := altar.bless_substitute([&"shortsword", &"longbow"] as Array[StringName], 0.0, 1.0, rng)
 	t.eq(active, [&"shortsword_brute", &"longbow_brute"] as Array[StringName], "激活了、概率 1：都换成蛮神的")

@@ -314,6 +314,7 @@ static func run_faith_call(t: TestCase) -> void:
 		t.check(run.storage.item_count() == before + 1 and charm != null, "护符到了地上")
 		if charm != null:
 			t.check(InventoryService.transfer_auto(run.storage, charm.uid, run.board), "放上棋盘")
+			t.eq(run.select_faith(StringName(fid)), "", "奉为主信仰（信仰重构 A：放上不自动改信）")
 			t.eq(String(run.active_faith_id()), fid, "激活了那位神")
 			if fid == "earth":
 				t.check(run.board.acts_as_bag(charm.def), "大地的护符在棋盘上是个包")

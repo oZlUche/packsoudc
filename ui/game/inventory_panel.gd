@@ -283,7 +283,7 @@ func board_actions(uid: int) -> Array:
 	out.append(first)
 	out.append(ItemActions.lock(inst, _run.board))
 	if inst.def.is_anchor():
-		out.append(ItemActions.anchor(inst, _run.board, reseat_anchor))
+		out.append(ItemActions.anchor(inst, _run.board, select_faith, _run.faith_switch_refusal()))
 	if can_bench(inst):
 		out.append(ItemActions.bench(inst, _run.board))     # 2026-10-22：不参战（战前整备用）
 	if extra_actions.is_valid():
@@ -297,14 +297,16 @@ static func can_bench(inst: ItemInstance) -> bool:
 	return inst != null and inst.def != null and inst.def.combat != null and not inst.def.is_anchor() and not inst.is_pinned()     # 255：随身之物不能标
 
 
-## 099（作者定）：信物奉为主信仰（230 起走悬浮窗按钮，右键改成钉住悬浮窗）。不是信物什么也不做。返回切没切
-func reseat_anchor(uid: int) -> bool:
-	var inst := _run.board.get_item(uid) if _run != null and _run.board != null else null
-	if inst == null or inst.def == null or not inst.def.is_anchor():
+## 信仰重构 A：奉 [param faith_id] 为主信仰（空 = 不再奉神），走 [method RunState.select_faith]。返回改没改
+func select_faith(faith_id: StringName) -> bool:
+	if _run == null:
 		return false
-	if not _run.board.reseat(uid):
+	var refused := _run.select_faith(faith_id)
+	if refused != "":
+		_hint_text(refused)
 		return false
-	_hint_text(UiText.t("bag.reseat") % Names.of(inst.def))
+	var def := _run.selected_faith_def()
+	_hint_text(UiText.t("bag.reseat") % Names.of(def) if def != null else UiText.t("bag.renounce"))
 	return true
 
 

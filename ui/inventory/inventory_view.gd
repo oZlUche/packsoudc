@@ -480,7 +480,7 @@ func _draw() -> void:
 	if idle_tint and not footprints:
 		_draw_idle_tints()     # 299：平时每格垫一层淡的稀有度色，压在图下面；拿起时换 239 那层
 	# 物品。休眠的信仰道具（8-4：不是激活的那个信仰）画灰、标「休眠」
-	var active_faith := FaithState.active_tag(inventory) if show_adjacency else &""
+	var active_faith := FaithState.board_tag(inventory) if show_adjacency else &""
 	for inst in inventory.items():
 		var item := inst as ItemInstance
 		if inventory.acts_as_bag(item.def) or veiled.has(item.uid):

@@ -21,9 +21,9 @@ labels = {
 "en": "Enter Pre-battle"
 }
 hide_when_locked = true
-hint_when_hidden = "先把{item:charm_brute}放进包里（按 {key:B} 打开背包；留在上一个点的话，回去拿），信了{faith:brute}再打。"
+hint_when_hidden = "先把{item:charm_brute}放进包里（按 {key:B} 打开背包；留在上一个点的话，回去拿），右键它点「奉为主信仰」，信了{faith:brute}再打。"
 hints_when_hidden = {
-"en": "Put the {item:charm_brute} in your bag first (press {key:B} to open your pack; if you left it at the last spot, go back for it). Follow {faith:brute}, then fight."
+"en": "Put the {item:charm_brute} in your bag first (press {key:B} to open your pack; if you left it at the last spot, go back for it), then right-click it and press Make main faith. Follow {faith:brute}, then fight."
 }
 requires = Array[ExtResource("4_80eby")]([SubResource("Resource_sioq8")])
 outcomes = Array[ExtResource("2_a2eua")]([SubResource("Resource_klsow")])

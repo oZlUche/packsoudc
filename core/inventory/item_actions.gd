@@ -99,21 +99,23 @@ static func sell_same(inst: ItemInstance, container: ItemContainer, price_of: Ca
 	return disable(a, UiText.t("act.locked")) if same.is_empty() else a
 
 
-## 信物「奉为主信仰」（099 的右键改成按钮）：[param reseat] = `func(uid)`；已经是主信仰的灰着写「已是主信仰」
-static func anchor(inst: ItemInstance, board: ItemContainer, reseat: Callable) -> Action:
-	var main := is_main_anchor(inst, board)
-	var a := make(&"anchor", UiText.t("act.anchor_now" if main else "act.anchor"), func(): reseat.call(inst.uid))
-	return disable(a, "") if main else a
+## 信物「奉为主信仰」（信仰重构 A：显式选择）：[param select] = `func(faith_id: StringName)`，空 id = 不奉神。
+## 选的就是这位神 → 键变成「不再奉神」；不在棋盘上 / 标了不参战的信物灰着写原因；[param refusal] 非空（此刻不能改信）也灰着
+static func anchor(inst: ItemInstance, board: ItemContainer, select: Callable, refusal: String = "") -> Action:
+	var fid := FaithTags.id_of_tag(inst.def.faith_tag()) if inst != null and inst.def != null else &""
+	if is_main_anchor(inst, board):
+		var drop := make(&"anchor", UiText.t("act.anchor_drop"), func(): select.call(&""))
+		return disable(drop, refusal) if refusal != "" else drop
+	var a := make(&"anchor", UiText.t("act.anchor"), func(): select.call(fid))
+	if board == null or not board.has_item(inst.uid) or not FaithState.is_live_anchor(inst):
+		return disable(a, UiText.t("act.faith_no_anchor"))
+	return disable(a, refusal) if refusal != "" else a
 
 
-## 这件信物是不是现在的主信仰（棋盘上最后置入的那件信物）
+## 这件信物的神是不是现在选的主信仰（按神算，同神的几件都是）
 static func is_main_anchor(inst: ItemInstance, board: ItemContainer) -> bool:
-	var best: ItemInstance = null
-	for i in board.items():
-		var it := i as ItemInstance
-		if it.def.is_anchor() and (best == null or it.placed_seq > best.placed_seq):
-			best = it
-	return best == inst
+	return inst != null and inst.def != null and inst.def.is_anchor() and board != null \
+		and FaithState.selected_tag(board) == inst.def.faith_tag()
 
 
 ## 255：随身之物的按钮全灰（不参战 / 锁定 / 出售 / 丢到地上 / 献祭 / 进铸炉），理由一句「随身之物」。悬浮窗拿按钮时过一道（[HoverTip]）

@@ -36,8 +36,10 @@ static func blessed_name() -> String:
 
 ## `{"head": 名字行 + 信力行, "sections": [神赐?, 赐福之物?, 信力来源, 献祭?]（各段 BBCode）, "bar": {"thresholds", "points"}（分段进度条）, "text": 连起来}`。
 ## [param power] 可为 null（只写定义，按 0 点算）；[param board] 给了就数休眠的道具；[param items] 给了就把这位神的道具的按阶加成单列一段「赐福之物」（193 / 257）。
-## 没有信仰返回空字典（悬浮窗不开）
-static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemContainer = null, items: ItemDatabase = null) -> Dictionary:
+## 没有信仰返回空字典（悬浮窗不开）。信仰重构 A：[param connection] 是联系中断（[constant FaithState.BENCHED] / [constant FaithState.MISSING]）时，
+## 名字行右边写「联系中断」，信力行下面写原因
+static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemContainer = null, items: ItemDatabase = null,
+		connection: StringName = FaithState.OK) -> Dictionary:
 	if def == null:
 		return {}
 	var p := power.points_of(def.id) if power != null else 0
@@ -60,6 +62,9 @@ static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemCo
 	for i in sections.size():
 		sections[i] = "[font_size=%d]%s[/font_size]" % [Glossary.BODY_SIZE, sections[i]]
 	var head := _head(def, p, tier, next, dormant)
+	if connection == FaithState.BENCHED or connection == FaithState.MISSING:
+		var why := UiText.t("faith.broken_benched" if connection == FaithState.BENCHED else "faith.broken_missing")
+		head += "\n" + _meta("[color=%swarn]%s　%s[/color]" % [TextTemplate.STYLE_PREFIX, UiText.t("faith.broken"), why])
 	return {
 		"head": head,
 		"sections": sections,

@@ -374,9 +374,8 @@ func _put_back(p_items: Array[ItemInstance], homes: Array[Vector2i], rots: Array
 
 
 #region 放置与移除
-## 099：把这件已在本容器里的道具盖成「最新置入」（信仰切换用）。只改 [member ItemInstance.placed_seq]，
-## 不动格子、**不发 [signal placed]** —— 切换信仰不是「置入一件道具」，信力的 `place_item` 行为不该记它。
-## 发 changed 让界面重画（棋盘上谁在生效、谁休眠跟着变）。不在本容器里返回 false
+## 099：把这件已在本容器里的道具盖成「最新置入」。只改 [member ItemInstance.placed_seq]，不动格子、不发 [signal placed]。
+## 信仰重构 A 起**不再改信**（信仰只认显式选择）；序号的其他用途（晶石压着两把法杖给后来者，171）还读它
 func reseat(uid: int) -> bool:
 	var inst: ItemInstance = _items.get(uid, null)
 	if inst == null:
@@ -385,6 +384,16 @@ func reseat(uid: int) -> bool:
 	inst.placed_seq = place_seq
 	_notify_changed()
 	return true
+
+
+## 信仰重构 A：记下玩家选的信仰（对象标签，空 = 不奉神；[constant FaithState.SELECTED_META]）。只改元数据，
+## 不动格子、**不发 [signal placed]**（改信不是「置入一件道具」）。真变了才发 changed 让界面、套装跟着重算。
+## 选择的正主在 [RunState]（开局屏在自己的棋盘上记），这里只是给只拿着棋盘的读者的镜像
+func select_faith(tag: StringName) -> void:
+	if has_meta(FaithState.SELECTED_META) and FaithState.selected_tag(self) == tag:
+		return
+	set_meta(FaithState.SELECTED_META, String(tag))
+	_notify_changed()
 
 
 ## 放置。成功后会写回 [member ItemInstance.origin]、[member ItemInstance.rotation]

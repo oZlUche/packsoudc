@@ -105,6 +105,7 @@ static func run_acquired_wiring(t: TestCase) -> void:
 	var charm := ItemInstance.create(db.get_def(&"charm_skill"), 0)
 	s.storage.admit(charm)
 	t.check(s.equip(charm.uid), "放上技巧之神的护符")
+	s.choose_starting_faith(&"skill")     # 信仰重构 A：放上不自动改信，替玩家点「奉为主信仰」
 	t.eq(s.active_faith_id(), &"skill", "激活技巧之神")
 	var metal: ItemDef = null
 	for id in db.ids():

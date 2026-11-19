@@ -104,6 +104,7 @@ static func _run_for(c: Dictionary, faith: StringName) -> RunState:
 		var inst := ItemInstance.create(def)
 		if not run.board.try_add(inst, true):
 			push_error("金样：%s 放不上棋盘" % id)
+	run.choose_starting_faith(faith)     # 信仰重构 A：显式奉这位神（金样录的是奉神时的结果）
 	# 时钟与阶
 	if run.travel != null and run.travel.clock != null:
 		run.travel.clock.total = CLOCK
