@@ -15,7 +15,7 @@ const DELIVER := &"deliver"
 ## 记了一条进度（委托 id、第几步、这一步做完没有）
 signal progressed(id: StringName, stage: int, step_done: bool)
 
-## 带进来的委托：[{"id", "stage", "pick"}]（出征那一刻的局外进度）
+## 带进来的委托：[{"id", "stage", "pick", "done": 这一步之前几局已经做到几}]（出征那一刻的局外进度）
 var tracked: Array[Dictionary] = []
 ## 这一局记下的进度：[{"id", "stage", "key", "via"}]（[method Commissions.merge_run] 读）
 var rows: Array[Dictionary] = []
@@ -40,7 +40,7 @@ func install(run: RunState) -> void:
 	if tracked.is_empty():
 		for raw in run.module_input(ID).get("tracked", []):
 			if raw is Dictionary:
-				tracked.append({"id": String(raw.get("id", "")), "stage": int(raw.get("stage", 0)), "pick": String(raw.get("pick", ""))})
+				tracked.append({"id": String(raw.get("id", "")), "stage": int(raw.get("stage", 0)), "pick": String(raw.get("pick", "")), "done": int(raw.get("done", 0))})
 
 
 func is_active() -> bool:
@@ -59,8 +59,21 @@ func stage_of(cid: StringName) -> int:
 	return -1
 
 
-## 这一步在这一局里记了几处
+## 这一步一共做到几处：出征时这一步已经做到的（之前几局并进局外的）+ 这一局记下的
 func progress(cid: StringName, stage: int) -> int:
+	return _carried(cid, stage) + progress_here(cid, stage)
+
+
+## 出征那一刻这一步已经做到几（只有带进来的那一步有）
+func _carried(cid: StringName, stage: int) -> int:
+	for t in tracked:
+		if StringName(String(t["id"])) == cid and int(t["stage"]) == stage:
+			return int(t.get("done", 0))
+	return 0
+
+
+## 这一步在这一局里记了几处
+func progress_here(cid: StringName, stage: int) -> int:
 	var n := 0
 	for r in rows:
 		if StringName(String(r["id"])) == cid and int(r["stage"]) == stage:
@@ -184,7 +197,7 @@ func _add(d: CommissionDef, stage: int, key: String, via: String) -> Dictionary:
 	return {"id": String(d.id), "goal": String(d.stages[stage].goal), "finished": stage_of(d.id) >= d.stages.size()}
 
 
-## 局内小牌的几行：[{"id", "name", "text": 这一步做什么, "done": 这一局里做到了几, "need": 要几, "finished": 这一局里全做完了}]
+## 局内小牌的几行：[{"id", "name", "text": 这一步做什么, "done": 这一步一共做到几（带上之前几局）, "need": 要几, "finished": 全做完了}]
 func lines() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for t in tracked:
@@ -210,7 +223,7 @@ func restore(d: Dictionary) -> void:
 	rows.clear()
 	for raw in d.get("tracked", []):
 		if raw is Dictionary:
-			tracked.append({"id": String(raw.get("id", "")), "stage": int(raw.get("stage", 0)), "pick": String(raw.get("pick", ""))})
+			tracked.append({"id": String(raw.get("id", "")), "stage": int(raw.get("stage", 0)), "pick": String(raw.get("pick", "")), "done": int(raw.get("done", 0))})
 	for raw in d.get("rows", []):
 		if raw is Dictionary:
 			rows.append({"id": String(raw.get("id", "")), "stage": int(raw.get("stage", 0)), "key": String(raw.get("key", "")), "via": String(raw.get("via", "self"))})

@@ -971,7 +971,7 @@ func commission_snapshot(chapter: ChapterDef) -> Array:
 			continue
 		var e := meta.commissions.entry(cid)
 		if d.stages.any(func(st: CommissionStage) -> bool: return st.where != CommissionStage.CAMP):
-			out.append({"id": String(cid), "stage": int(e.get("stage", 0)), "pick": String(e.get("pick", ""))})
+			out.append({"id": String(cid), "stage": int(e.get("stage", 0)), "pick": String(e.get("pick", "")), "done": int(e.get("progress", 0))})     # 336 修：小牌带上之前几局的进度
 	return out
 
 

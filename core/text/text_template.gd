@@ -414,6 +414,8 @@ static func context_for(run: RunState, node: MapNode = null, extra: Dictionary =
 		ctx["node_type"] = NodeText.label_of(type)
 		ctx["node_danger"] = node.danger
 		ctx["extract_fee"] = PaidExtracts.fee_of(node) if NodeEvents.effective_type(node) == &"extract" else 0
+		# 336 修（游戏测试 v6.58）：撤离费那一行 —— 钱画金币图（`[coin=N]`，事件屏换成图），免费的点整行不写
+		ctx["extract_fee_line"] = UiText.t("event.extract_fee_line") % int(ctx["extract_fee"]) if int(ctx["extract_fee"]) > 0 else ""
 		var content: Dictionary = node.content
 		if EnemyKit.has_enemy(content):
 			_enemy_into(ctx, content, run)

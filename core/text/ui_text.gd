@@ -46,6 +46,7 @@ const TEXT := {
 	"notice.not_extract": {"zh": "这里不是撤离点", "en": "This isn't an extraction point"},
 	"notice.extract_closed": {"zh": "这个撤离点已经关闭了", "en": "This extraction point has closed"},
 	"notice.extract_fee": {"zh": "[coin_short=%d]", "en": "[coin_short=%d]"},
+	"event.extract_fee_line": {"zh": "\n\n费用：[coin=%d]", "en": "\n\nFee: [coin=%d]"},
 	"notice.nothing_to_reopen": {"zh": "这里没有能再打开的东西", "en": "There's nothing here to reopen"},
 	"notice.pick_spawn": {"zh": "先在地图上挑一个出生点", "en": "Pick a starting point on the map first"},
 	"notice.countdown": {"zh": Glossary.COUNTDOWN_WORD + "只剩 %d", "en": "Countdown: only %d left"},
