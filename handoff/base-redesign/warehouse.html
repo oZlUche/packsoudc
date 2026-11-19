@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>基地 · 仓库</title>
+    <style>
+      @font-face {
+        font-family: ledger;
+        src: url("../../assets/fonts/serif_regular.otf");
+      }
+      @font-face {
+        font-family: ledger;
+        src: url("../../assets/fonts/serif_bold.otf");
+        font-weight: 800;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #2e261c url("../../assets/ui/home/scene_warehouse.png")
+          center 56% / cover fixed;
+        color: #f3e6cb;
+        font:
+          15px ledger,
+          serif;
+        min-height: 100vh;
+      }
+      body:before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(95deg, #120f0bba 0%, #1c1b155b 39%, transparent 73%),
+          linear-gradient(
+            0deg,
+            #100e0cbc,
+            transparent 32%,
+            transparent 79%,
+            #15120c95
+          );
+        z-index: -1;
+      }
+      button,
+      select {
+        font: inherit;
+        cursor: pointer;
+      }
+      button:focus-visible,
+      select:focus-visible {
+        outline: 3px solid #ffd77a;
+        outline-offset: 3px;
+        z-index: 5;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      header,
+      main,
+      footer {
+        width: min(1176px, 94vw);
+        margin: auto;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 128px;
+        text-shadow: 0 2px 7px #160e08;
+      }
+      header small {
+        color: #dcc397;
+        letter-spacing: 0.21em;
+        font-size: 13px;
+      }
+      h1 {
+        font-size: 45px;
+        line-height: 1.1;
+        margin: 5px 0 0;
+        letter-spacing: 0.12em;
+      }
+      header .wallet {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #211d16bb;
+        border: 1px solid #a18b61;
+        padding: 6px 16px;
+        border-radius: 3px;
+        font:
+          bold 20px Georgia,
+          serif;
+      }
+      .wallet img {
+        width: 25px;
+        height: 25px;
+      }
+      main {
+        display: grid;
+        grid-template-columns: minmax(305px, 350px) 1fr;
+        gap: 26px;
+        align-items: start;
+      }
+      .side {
+        display: grid;
+        gap: 17px;
+      }
+      .paper {
+        color: #433526;
+        background:
+          radial-gradient(at 4% 25%, #a7773921, transparent 46%),
+          repeating-linear-gradient(1deg, #fff0 0 3px, #7a54250a 4px),
+          linear-gradient(115deg, #f2e3c2, #e4d1ab 77%, #d1b88b);
+        border: 1px solid #8d744d;
+        box-shadow:
+          inset 0 0 0 4px #eee0c2,
+          inset 0 0 0 5px #b6a078,
+          0 2px 0 #513b29,
+          0 7px 22px #100d0880;
+        position: relative;
+        padding: 18px 22px 20px;
+      }
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      h2 {
+        font-size: 24px;
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+      .paper h2 {
+        font-size: 22px;
+      }
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+      .section-title small,
+      .muted {
+        font-size: 13px;
+        color: #695841;
+      }
+      .section-title small {
+        border-bottom: 1px solid #b99d6b;
+      }
+      .filterrow {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      label.select {
+        display: grid;
+        gap: 4px;
+        color: #665741;
+        font-size: 12px;
+      }
+      select,
+      .key {
+        border: 1px solid #947c53;
+        background: linear-gradient(#f9edce, #ddc59b);
+        color: #443320;
+        padding: 6px 8px;
+        border-radius: 2px;
+      }
+      select {
+        width: 100%;
+        font-size: 14px;
+        padding: 6px 4px;
+      }
+      .toggleline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 11px;
+      }
+      .quiet {
+        color: #604831;
+        background: none;
+        border: 0;
+        padding: 4px 1px;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        font-size: 13px;
+      }
+      .check {
+        font-size: 14px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .check input {
+        accent-color: #655b39;
+        width: 16px;
+        height: 16px;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .key {
+        min-height: 34px;
+        flex: 1;
+      }
+      .key:hover:enabled,
+      select:hover {
+        filter: brightness(1.06);
+      }
+      .key.active,
+      .red {
+        background: linear-gradient(#974f37, #783d2e);
+        color: #fff0ce;
+        border: 1px solid #773e2d;
+        box-shadow: inset 0 0 0 2px #ac7555;
+      }
+      .sellbar {
+        border-top: 1px solid #b19a73;
+        margin-top: 11px;
+        padding-top: 9px;
+        display: grid;
+        gap: 6px;
+      }
+      .sellbar div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sellbar small {
+        font-size: 11px;
+        color: #6a5539;
+      }
+      .sellbar .quiet {
+        margin-left: auto;
+      }
+      .return {
+        padding-top: 18px;
+      }
+      .return-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        width: 100%;
+        height: 112px;
+        position: relative;
+        overflow: hidden;
+        background-color: #786344;
+        background-image:
+          linear-gradient(#c6af8536 1px, transparent 1px),
+          linear-gradient(90deg, #c6af8536 1px, transparent 1px);
+        background-size: calc(100% / 6) calc(100% / 3);
+        border: 4px solid #6f5539;
+        box-shadow:
+          0 0 0 1px #a88c62,
+          inset 0 0 15px #33291b8c;
+      }
+      .return-grid.empty {
+        display: grid;
+        place-items: center;
+        color: #f2dfbc;
+        font-size: 14px;
+      }
+      .return .red {
+        width: 100%;
+        margin-top: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+      .item img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+        pointer-events: none;
+        filter: drop-shadow(1px 3px 2px #100c089c);
+      }
+      .cabinet {
+        position: relative;
+        border: 1px solid #a68a5d;
+        padding: 21px 25px 18px;
+        color: #eadebf;
+        background:
+          linear-gradient(105deg, #3f4336f5, #292c25f8 75%),
+          url("../../assets/ui/home/scene_warehouse.png") center/cover;
+        box-shadow:
+          inset 0 0 0 4px #40382a,
+          inset 0 0 0 5px #827052,
+          0 8px 28px #100e08aa;
+        border-radius: 2px;
+      }
+      .cabinet:before,
+      .cabinet:after {
+        content: "";
+        position: absolute;
+        top: 8px;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #b9a374;
+        box-shadow: inset -1px -1px 1px #4e4230;
+      }
+      .cabinet:before {
+        left: 8px;
+      }
+      .cabinet:after {
+        right: 8px;
+      }
+      .cabhead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #b8a77a55;
+      }
+      .cabhead h2 {
+        font-size: 27px;
+        color: #f9ebc9;
+      }
+      .pages {
+        display: flex;
+        gap: 3px;
+      }
+      .page {
+        width: 32px;
+        background: none;
+        color: #b5aa90;
+        border: 1px solid transparent;
+        padding: 4px 0 2px;
+        font:
+          bold 15px Georgia,
+          serif;
+      }
+      .page small {
+        display: block;
+        font:
+          10px ledger,
+          serif;
+        margin-top: 2px;
+      }
+      .page:hover {
+        border-color: #b99b67;
+      }
+      .page[aria-pressed="true"] {
+        border-color: #bf9c63;
+        background: #564c38;
+        color: #ffebbc;
+        box-shadow: inset 0 -2px #bf9958;
+      }
+      .shelves {
+        display: grid;
+        grid-template-columns: 62px 1fr;
+        gap: 21px;
+        margin-top: 14px;
+      }
+      .rack h3,
+      .store h3 {
+        font-size: 13px;
+        color: #ddc99f;
+        letter-spacing: 0.15em;
+        margin: 0 0 8px;
+      }
+      .rack h3 {
+        text-align: center;
+      }
+      .rack-body {
+        display: grid;
+        grid-template-rows: repeat(7, 1fr);
+        height: var(--boardh);
+        border: 3px solid #5f4b35;
+        background: repeating-linear-gradient(
+          0deg,
+          #463c2e 0 2px,
+          #514736 3px 5px
+        );
+        box-shadow: 0 0 0 1px #8c7652;
+      }
+      .peg {
+        min-height: 0;
+        position: relative;
+        border: 0;
+        border-bottom: 2px solid #786246;
+        background: #30291e50;
+        padding: 3px;
+        width: 100%;
+      }
+      .peg img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .peg:empty:after {
+        content: "";
+        position: absolute;
+        top: 24%;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #9d865b;
+        box-shadow: 1px 3px 3px #17150f;
+      }
+      .store h3 {
+        display: flex;
+        justify-content: space-between;
+      }
+      .store h3 small {
+        letter-spacing: 0;
+        font-size: 12px;
+        font-weight: normal;
+        color: #b9ae94;
+      }
+      .board {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        width: 100%;
+        height: var(--boardh);
+        border: 4px solid #64513b;
+        box-shadow:
+          0 0 0 1px #a38d63,
+          inset 0 0 34px #130f0bb5;
+        background-color: #493f31;
+        background-image:
+          linear-gradient(#bdab873f 1px, transparent 1px),
+          linear-gradient(90deg, #bdab873f 1px, transparent 1px),
+          repeating-linear-gradient(4deg, transparent 0 3px, #231d160c 4px);
+        background-size:
+          10% 12.5%,
+          10% 12.5%,
+          auto;
+      }
+      .cabinet {
+        --boardh: min(37vw, 452px);
+        width: max-content;
+        max-width: 100%;
+        justify-self: end;
+      }
+      .shelves {
+        grid-template-columns: 62px minmax(0, calc(var(--boardh) * 1.25));
+      }
+      .board {
+        box-sizing: content-box;
+        width: calc(100% - 8px);
+        height: calc(var(--boardh) - 8px);
+      }
+      .item {
+        padding: 3px;
+        border: 1px solid #dac19039;
+        position: relative;
+        display: block;
+        min-width: 0;
+        min-height: 0;
+        background: linear-gradient(128deg, #c8be9224, #332b1f66);
+        transition:
+          opacity 0.1s,
+          background 0.1s;
+      }
+      .item:hover {
+        background: #cbb47444;
+        border-color: #eed29a;
+      }
+      .item.dim {
+        opacity: 0.26;
+      }
+      .item.marked {
+        background: #a4863b77;
+        border: 2px solid #fbd374;
+      }
+      .item.marked:before {
+        content: "✓";
+        position: absolute;
+        z-index: 1;
+        bottom: 1px;
+        left: 3px;
+        color: #ffe18c;
+        font: bold 22px Georgia;
+      }
+      .flag {
+        position: absolute;
+        right: 3px;
+        top: 1px;
+        color: #f3c96d;
+        font: 16px Georgia;
+        text-shadow: 0 1px 3px #21190c;
+      }
+      .cabfoot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        border-top: 1px solid #b8a77a44;
+        margin-top: 14px;
+        padding-top: 9px;
+        color: #cbbd9e;
+        min-height: 31px;
+        font-size: 13px;
+      }
+      .cabfoot b {
+        color: #ecdcb8;
+        font-weight: 400;
+      }
+      .cabfoot small {
+        color: #b5a88d;
+      }
+      .status {
+        min-height: 22px;
+        color: #ffe0a5;
+        max-width: 60%;
+        text-align: right;
+      }
+      .status:empty {
+        display: none;
+      }
+      footer {
+        margin-top: 13px;
+        text-shadow: 0 1px 4px #130e08;
+        color: #f1e4c9;
+        font-size: 13px;
+      }
+      footer kbd {
+        font:
+          12px Georgia,
+          serif;
+        border: 1px solid #ab9b7c;
+        border-radius: 2px;
+        padding: 2px 5px;
+        background: #322c22;
+        margin-right: 5px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 850px) {
+        header {
+          height: 95px;
+        }
+        main {
+          grid-template-columns: 240px 1fr;
+          gap: 12px;
+        }
+        .paper,
+        .cabinet {
+          padding: 14px;
+        }
+        .shelves {
+          grid-template-columns: 40px 1fr;
+          gap: 10px;
+        }
+        .pages {
+          gap: 0;
+        }
+        .page {
+          width: 24px;
+        }
+        .cabhead h2 {
+          font-size: 20px;
+        }
+        .cabinet {
+          --boardh: 34vw;
+        }
+        .shelves {
+          grid-template-columns: 40px minmax(0, calc(var(--boardh) * 1.25));
+        }
+      }
+      @media (max-width: 650px) {
+        main {
+          display: flex;
+          flex-direction: column;
+        }
+        .side {
+          width: 100%;
+          grid-template-columns: 1fr 1fr;
+        }
+        .cabinet {
+          width: 100%;
+          --boardh: 60vw;
+        }
+        .paper {
+          padding: 12px;
+        }
+        .section-title h2 {
+          font-size: 18px;
+        }
+        .section-title small {
+          font-size: 11px;
+        }
+        h1 {
+          font-size: 34px;
+        }
+        .shelves {
+          grid-template-columns: 40px 1fr;
+        }
+        .status {
+          max-width: 50%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <small>基地　／　后勤仓储</small>
+        <h1>仓库</h1>
+      </div>
+      <div class="wallet" title="持有金币">
+        <img src="../../assets/ui/hud/coin.png" alt="金币" /><span id="funds"
+          >520</span
+        >
+      </div>
+    </header>
+    <main>
+      <aside class="side">
+        <section class="paper">
+          <div class="section-title">
+            <h2>仓储筛选</h2>
+            <small id="match">全部物品</small>
+          </div>
+          <div class="filterrow">
+            <label class="select"
+              >物品标签<select id="kind">
+                <option value="">全部标签</option>
+                <option>武器</option>
+                <option>防具</option>
+                <option>材料</option>
+                <option>补给</option>
+              </select></label
+            ><label class="select"
+              >稀有度<select id="tier">
+                <option value="9">全部品质</option>
+                <option value="0">普通及以下</option>
+                <option value="1">绿色及以下</option>
+                <option value="2">蓝色及以下</option>
+              </select></label
+            >
+          </div>
+          <div class="toggleline">
+            <label class="check"
+              ><input type="checkbox" id="fav" />只看收藏</label
+            ><button id="clear" class="quiet">清除筛选</button>
+          </div>
+          <div class="actions">
+            <button class="key" id="sale" aria-pressed="false">快速出售</button
+            ><button class="key" id="tidy">整理仓库</button>
+          </div>
+          <div class="sellbar" id="sellbar" hidden>
+            <div>
+              <strong id="total">已选 0 件</strong
+              ><button class="quiet" id="all">全选匹配</button>
+            </div>
+            <small>收藏与锁定物品会保留。</small>
+            <div>
+              <button class="key red" id="sell">出售</button
+              ><button class="key" id="cancel">取消</button>
+            </div>
+          </div>
+        </section>
+        <section class="paper return">
+          <div class="section-title">
+            <h2>撤回的背包</h2>
+            <small id="pending"></small>
+          </div>
+          <div
+            id="incoming"
+            class="return-grid"
+            aria-label="待入库的棋盘"
+          ></div>
+          <button id="deposit" class="key red">全部入库　→</button>
+        </section>
+      </aside>
+      <section class="cabinet">
+        <div class="cabhead">
+          <h2>仓库货架</h2>
+          <nav class="pages" id="pages" aria-label="仓库分页"></nav>
+        </div>
+        <div class="shelves">
+          <div class="rack">
+            <h3>包架</h3>
+            <div class="rack-body" id="rack"></div>
+          </div>
+          <div class="store">
+            <h3><span id="pagename">第一页</span><small>10 × 8</small></h3>
+            <div id="board" class="board" aria-label="仓库物品棋盘"></div>
+          </div>
+        </div>
+        <div class="cabfoot">
+          <b id="info">选择物品可查看名称及售价</b
+          ><span class="status" role="status" id="status"></span>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <kbd>Tab</kbd> 切换控件　 <kbd>Enter</kbd> 操作　
+      <span id="hint">双击撤回物品可单独入库</span>
+    </footer>
+    <script>
+      const $ = (id) => document.getElementById(id),
+        path = "../../assets/items/";
+      const defs = {
+        shortsword: ["短剑", "武器", 1, 18, 1, 3],
+        round_shield: ["圆盾", "防具", 1, 25, 2, 2],
+        iron_ore: ["铁矿石", "材料", 0, 6, 1, 2],
+        hardwood_plank: ["硬木板", "材料", 0, 5, 2, 1],
+        brass_gear: ["黄铜齿轮", "材料", 1, 9, 1, 1],
+        pale_shard: ["苍白碎片", "材料", 2, 22, 1, 1],
+        crystal_shards: ["晶石碎屑", "材料", 2, 18, 1, 1],
+        bandage: ["绷带", "补给", 0, 3, 1, 1],
+        rope_coil: ["绳圈", "材料", 0, 4, 1, 1],
+        tool_roll: ["工具卷", "补给", 1, 14, 2, 1],
+        knife: ["短刀", "武器", 0, 8, 1, 2],
+        field_rations: ["行军口粮", "补给", 0, 5, 1, 1],
+        clay_pot: ["陶罐", "材料", 0, 7, 1, 1],
+        antler: ["鹿角", "材料", 1, 9, 2, 1],
+        battle_axe: ["战斧", "武器", 2, 28, 2, 3],
+        hunting_bag: ["狩猎挎包", "背包", 1, 0, 2, 2],
+        bag_small: ["小背包", "背包", 0, 0, 1, 1],
+      };
+      let next = 0,
+        page = 0,
+        selling = false,
+        armed = false,
+        timer = 0,
+        funds = 520;
+      const chosen = new Set(),
+        stock = [],
+        bags = ["bag_small"],
+        incoming = [];
+      function item(id, p, x, y, flag = "") {
+        return { id, p, x, y, flag, uid: ++next, d: defs[id] };
+      }
+      for (const [p, list] of [
+        [
+          0,
+          [
+            ["shortsword", 0, 0],
+            ["round_shield", 1, 0, "★"],
+            ["iron_ore", 3, 0],
+            ["hardwood_plank", 4, 0],
+            ["bandage", 6, 0],
+            ["brass_gear", 7, 0],
+            ["crystal_shards", 8, 0],
+            ["rope_coil", 9, 0],
+            ["battle_axe", 5, 2, "▣"],
+            ["knife", 2, 3],
+            ["tool_roll", 3, 4],
+            ["clay_pot", 8, 3],
+            ["field_rations", 8, 4],
+            ["antler", 0, 6],
+            ["pale_shard", 3, 6],
+          ],
+        ],
+        [
+          1,
+          [
+            ["rope_coil", 0, 0],
+            ["crystal_shards", 1, 0, "★"],
+            ["round_shield", 2, 0],
+            ["iron_ore", 4, 0],
+          ],
+        ],
+        [
+          2,
+          [
+            ["tool_roll", 0, 0],
+            ["hardwood_plank", 2, 0],
+            ["bandage", 4, 0],
+          ],
+        ],
+      ])
+        for (const [id, x, y, flag] of list)
+          stock.push(item(id, p, x, y, flag));
+      for (const [id, x, y] of [
+        ["hunting_bag", 0, 0],
+        ["pale_shard", 2, 0],
+        ["iron_ore", 3, 0],
+        ["rope_coil", 4, 1],
+      ])
+        incoming.push(item(id, -1, x, y));
+      const numerals = ["I", "II", "III", "IV", "V", "VI", "VII"],
+        names = ["一", "二", "三", "四", "五", "六", "七"];
+      function match(o) {
+        return (
+          (!$("kind").value || o.d[1] === $("kind").value) &&
+          o.d[2] <= +$("tier").value &&
+          (!$("fav").checked || o.flag === "★")
+        );
+      }
+      function eligible(o) {
+        return match(o) && !o.flag;
+      }
+      function say(s) {
+        $("status").textContent = s;
+      }
+      function unarm() {
+        clearTimeout(timer);
+        armed = false;
+      }
+      function position(o, others) {
+        for (let p = 0; p < 7; p++)
+          for (let y = 0; y <= 8 - o.d[5]; y++)
+            for (let x = 0; x <= 10 - o.d[4]; x++)
+              if (
+                !others.some(
+                  (a) =>
+                    a.p === p &&
+                    x < a.x + a.d[4] &&
+                    x + o.d[4] > a.x &&
+                    y < a.y + a.d[5] &&
+                    y + o.d[5] > a.y,
+                )
+              ) {
+                Object.assign(o, { p, x, y });
+                return true;
+              }
+        return false;
+      }
+      function label(o) {
+        return (
+          o.d[0] +
+          " · " +
+          o.d[1] +
+          " · " +
+          o.d[3] +
+          " 金币" +
+          (o.flag ? " · " + (o.flag === "★" ? "已收藏" : "已锁定") : "")
+        );
+      }
+      function showItem(o) {
+        $("info").textContent = label(o);
+      }
+      function tile(o, transit) {
+        const b = document.createElement("button");
+        b.className = "item";
+        b.title = label(o);
+        b.setAttribute("aria-label", b.title);
+        b.style.gridArea =
+          o.y +
+          1 +
+          " / " +
+          (o.x + 1) +
+          " / span " +
+          o.d[5] +
+          " / span " +
+          o.d[4];
+        const img = new Image();
+        img.src = path + o.id + ".png";
+        img.alt = "";
+        b.append(img);
+        if (o.flag) {
+          const f = document.createElement("span");
+          f.textContent = o.flag;
+          f.className = "flag";
+          b.append(f);
+        }
+        if (!transit) {
+          b.classList.toggle("dim", !match(o) || (selling && !!o.flag));
+          b.classList.toggle("marked", chosen.has(o.uid));
+          if (selling)
+            b.setAttribute("aria-pressed", String(chosen.has(o.uid)));
+        }
+        b.onclick = () => {
+          showItem(o);
+          if (!transit && selling) {
+            if (!eligible(o)) {
+              say("当前条件下不可勾选");
+              return;
+            }
+            unarm();
+            chosen.has(o.uid) ? chosen.delete(o.uid) : chosen.add(o.uid);
+            draw();
+            $("board")
+              .querySelector('[data-uid="' + o.uid + '"]')
+              ?.focus();
+          }
+        };
+        b.dataset.uid = o.uid;
+        if (transit) {
+          b.ondblclick = () => deposit([o]);
+          b.onkeydown = (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              deposit([o]);
+              $("deposit").focus();
+            }
+          };
+        }
+        return b;
+      }
+      function deposit(items) {
+        let count = 0,
+          bagcount = 0,
+          last = page;
+        for (const o of items) {
+          if (o.d[1] === "背包") {
+            if (bags.length >= 7) continue;
+            bags.push(o.id);
+            bagcount++;
+          } else {
+            if (!position(o, stock)) continue;
+            stock.push(o);
+            last = o.p;
+          }
+          incoming.splice(incoming.indexOf(o), 1);
+          count++;
+        }
+        page = last;
+        draw();
+        say(
+          count
+            ? "已置入 " +
+                count +
+                " 件" +
+                (bagcount ? "，其中 " + bagcount + " 个背包上架" : "")
+            : "空间不足",
+        );
+      }
+      function draw() {
+        const sel = stock.filter((o) => chosen.has(o.uid)),
+          matches = stock.filter(match),
+          filtered =
+            $("kind").value || $("tier").value !== "9" || $("fav").checked;
+        $("clear").disabled = !filtered;
+        $("match").textContent = filtered
+          ? "匹配 " + matches.length + " 件"
+          : "全部物品";
+        $("sale").classList.toggle("active", selling);
+        $("sale").setAttribute("aria-pressed", selling);
+        $("sellbar").hidden = !selling;
+        $("total").textContent =
+          "已选 " +
+          sel.length +
+          " 件 · " +
+          sel.reduce((a, o) => a + o.d[3], 0) +
+          " 金币";
+        $("sell").disabled = !sel.length;
+        $("sell").textContent = armed ? "确认出售" : "出售";
+        const targets = stock.filter(eligible);
+        $("all").disabled = !targets.length;
+        $("all").textContent =
+          targets.length && targets.every((o) => chosen.has(o.uid))
+            ? "全不选"
+            : "全选匹配";
+        $("pages").replaceChildren();
+        for (let i = 0; i < 7; i++) {
+          const b = document.createElement("button");
+          b.className = "page";
+          const list = stock.filter((o) => o.p === i),
+            found = list.filter(match).length;
+          b.innerHTML =
+            numerals[i] +
+            "<small>" +
+            (selling
+              ? list.filter((o) => chosen.has(o.uid)).length + "/"
+              : "") +
+            found +
+            "</small>";
+          b.title = "第" + names[i] + "页，匹配 " + found + " 件";
+          b.setAttribute("aria-label", b.title);
+          b.setAttribute("aria-pressed", i === page);
+          b.onclick = () => {
+            page = i;
+            draw();
+            $("pages").children[i].focus();
+          };
+          $("pages").append(b);
+        }
+        $("pagename").textContent = "第" + names[page] + "页";
+        $("board").replaceChildren(
+          ...stock.filter((o) => o.p === page).map((o) => tile(o, false)),
+        );
+        $("rack").replaceChildren();
+        for (let i = 0; i < 7; i++) {
+          const el = document.createElement(bags[i] ? "button" : "div");
+          el.className = "peg";
+          if (bags[i]) {
+            const id = bags[i];
+            el.title = defs[id][0];
+            el.setAttribute("aria-label", el.title);
+            const img = new Image();
+            img.src = path + id + ".png";
+            img.alt = "";
+            el.append(img);
+            el.onclick = () => {
+              $("info").textContent = el.title + " · 包架";
+            };
+          }
+          $("rack").append(el);
+        }
+        $("incoming").replaceChildren(...incoming.map((o) => tile(o, true)));
+        $("incoming").classList.toggle("empty", !incoming.length);
+        if (!incoming.length) $("incoming").textContent = "撤回物品已收妥";
+        $("pending").textContent = incoming.length + " 件待入库";
+        $("deposit").disabled = !incoming.length;
+        $("funds").textContent = funds;
+        $("hint").textContent = selling
+          ? "单击仓库物品勾选出售，Esc 结束出售"
+          : "双击撤回物品可单独入库";
+      }
+      function mode(on) {
+        selling = on;
+        chosen.clear();
+        unarm();
+        say("");
+        draw();
+      }
+      $("sale").onclick = () => mode(!selling);
+      $("cancel").onclick = () => mode(false);
+      $("deposit").onclick = () => deposit([...incoming]);
+      for (const id of ["kind", "tier", "fav"])
+        $(id).onchange = () => {
+          unarm();
+          draw();
+        };
+      $("clear").onclick = () => {
+        $("kind").value = "";
+        $("tier").value = "9";
+        $("fav").checked = false;
+        unarm();
+        draw();
+      };
+      $("all").onclick = () => {
+        const targets = stock.filter(eligible),
+          all = targets.every((o) => chosen.has(o.uid));
+        for (const o of targets) {
+          if (all) chosen.delete(o.uid);
+          else chosen.add(o.uid);
+        }
+        unarm();
+        draw();
+      };
+      $("sell").onclick = () => {
+        if (!chosen.size) return;
+        if (!armed) {
+          armed = true;
+          draw();
+          timer = setTimeout(() => {
+            unarm();
+            draw();
+          }, 2500);
+          return;
+        }
+        const sold = stock.filter((o) => chosen.has(o.uid) && !o.flag),
+          value = sold.reduce((a, o) => a + o.d[3], 0);
+        for (const o of sold) stock.splice(stock.indexOf(o), 1);
+        funds += value;
+        chosen.clear();
+        unarm();
+        draw();
+        say("已售出 " + sold.length + " 件，收入 " + value + " 金币");
+      };
+      $("tidy").onclick = () => {
+        const sorted = stock
+            .slice()
+            .sort((a, b) => b.d[4] * b.d[5] - a.d[4] * a.d[5]),
+          placed = [];
+        for (const o of sorted) {
+          position(o, placed);
+          placed.push(o);
+        }
+        page = 0;
+        draw();
+        say("已按占格大小整理仓库");
+      };
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && selling) {
+          mode(false);
+          $("sale").focus();
+        }
+      });
+      draw();
+    </script>
+  </body>
+</html>

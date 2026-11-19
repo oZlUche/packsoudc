@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>出征 · 基地交互原型</title>
+<style>
+@font-face{font-family:Song;src:url("../../assets/fonts/serif_regular.otf")}
+@font-face{font-family:Song;src:url("../../assets/fonts/serif_bold.otf");font-weight:700}
+@font-face{font-family:Carved;src:url("../../assets/fonts/display_heavy.otf")}
+@font-face{font-family:Roman;src:url("../../assets/fonts/cinzel_bold.ttf")}
+:root{--ink:#34281d;--soft:#564632;--gold:#c7a36d;--red:#78372b;--limestone:url("../../assets/ui/records/stele_body.png")}
+[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;background:#181714;color:var(--ink);font:17px Song,serif}
+#frame{width:100vw;height:100dvh;display:grid;place-items:center;overflow:hidden}
+#scene{flex:none;position:relative;width:1280px;height:800px;transform-origin:center center;overflow:hidden;isolation:isolate;background:#897556 url("../../assets/ui/home/scene_expedition.png") center/cover}
+#scene:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,#191a1828,transparent 26%,transparent 84%,#291b1368)}
+button,select,a{font:inherit}button,select{cursor:pointer}button{color:inherit}a{color:inherit;text-decoration:none}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #ffd67c;outline-offset:3px}
+button:disabled{cursor:not-allowed}.tabs{position:absolute;top:18px;left:21px;display:flex;gap:2px;align-items:stretch;filter:drop-shadow(0 3px 3px #26170670)}
+.tabs a{min-width:95px;height:44px;display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(#342e24ee,#28241ded);color:#fff0ce;border:1px solid #a48c67;border-bottom:3px solid #8d7251;font-size:16px}
+.tabs a[aria-current]{color:#fff6e4;background:linear-gradient(#804735,#5d3128);border-color:#dbb985}
+.tabs img{width:22px;height:22px;object-fit:contain;filter:brightness(0) saturate(100%) invert(89%) sepia(18%) saturate(461%) hue-rotate(338deg)}
+.tabs a:hover{background:#514634}
+.stele{position:absolute;left:37px;bottom:87px;width:293px;filter:drop-shadow(6px 7px 6px #33201166);text-align:center}
+.cap{width:82%;height:71px;margin:0 auto -3px;position:relative;background:url("../../assets/ui/records/stele_gable.png") center/100% 100% no-repeat;display:grid;place-items:center}
+.cap img{width:46px;height:47px;opacity:.9;object-fit:contain;margin-top:5px}
+.stone{width:93%;margin:auto;padding:14px 20px 15px;background:#d2c7ae var(--limestone) center/100% 100% no-repeat;border:1px solid #84745b;border-radius:13px 13px 1px 1px;box-shadow:inset 0 0 0 3px #e6dbc5,inset 0 0 0 4px #a99b80}
+.stone h1,.stone h2,.orders h2,.orders h3,p{margin:0}.stone h1{font:28px Carved,Song,serif;letter-spacing:5px;text-indent:5px;color:#413124;text-shadow:0 1px #fff9e6}
+.value{margin:9px 0 10px;width:100%;height:64px;border:0;display:flex;justify-content:center;gap:9px;align-items:center;background:transparent url("../../assets/ui/records/stele_tablet.png") center/100% 100%;color:#7d3326;text-shadow:0 1px #fff3d6;font:700 35px Roman,Georgia,serif}
+.value img,.coin{width:23px;height:23px;object-fit:contain}
+.medals{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #a69a82;border-bottom:1px solid #a69a82;padding:12px 0 11px}
+.medals button{display:flex;align-items:center;flex-direction:column;gap:3px;border:0;background:transparent;min-width:0;padding:0;color:#423527}
+.medals button+button{border-left:1px solid #b6aa91}.medals img{width:51px;height:51px;object-fit:contain;filter:drop-shadow(0 2px 1px #50433258)}
+.medals strong{font:700 25px Roman,Georgia,serif;line-height:1.15}.medals span{font-size:13px;letter-spacing:1px}.ledger{display:grid;grid-template-columns:1fr 1fr;gap:10px 13px;margin:12px 0 1px;text-align:left}.ledger div{display:flex;justify-content:space-between;align-items:baseline;gap:4px}.ledger dt{color:#655642;font-size:13px}.ledger dd{margin:0;font:700 15px Roman,Georgia,serif;color:#413324}.ledger .coin{width:15px;height:15px;vertical-align:middle}
+.footstone{height:34px;background:url("../../assets/ui/records/stele_base.png") center/100% 100% no-repeat}
+.orders{position:absolute;top:81px;right:35px;width:338px;filter:drop-shadow(4px 6px 5px #261a1466)}
+.orders:before,.orders:after{content:"";position:absolute;top:-90px;height:103px;width:5px;background:repeating-linear-gradient(37deg,#513921 0 2px,#a58150 2.5px 4px,#6b5032 4px 5px);border-radius:3px;z-index:-1}.orders:before{left:30px}.orders:after{right:30px}
+.beam{position:relative;min-height:46px;border:1px solid #433328;border-radius:3px;background:linear-gradient(95deg,#514335,#3a3028 56%,#523f2d);box-shadow:inset 0 2px #937b5d,inset 0 -3px #281e18;display:grid;place-items:center}
+.beam:before,.beam:after{content:"";position:absolute;top:17px;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#efce8c,#805e35 52%,#423726);box-shadow:0 1px 2px #100e0a}.beam:before{left:27px}.beam:after{right:27px}
+.beam h2{font:700 19px Song,serif;letter-spacing:5px;color:#f3d9ac;text-shadow:0 1px 2px #17100d}
+.paper{position:relative;margin:-1px 9px 0;background:#ede0c6 linear-gradient(92deg,#d2c3a3,#efe4cd 7%,#eee2c7 91%,#d4c3a4);padding:18px 21px 14px;box-shadow:inset 3px 0 #c0a88265,inset -3px 0 #a2845a55;border:1px solid #907858;border-top:0}
+.paper:before{content:"";position:absolute;inset:0;opacity:.17;pointer-events:none;background:url("../../assets/ui/campaign/dossier.png") center/100% 100%}
+.paper>*{position:relative}.overline{font-size:13px;letter-spacing:2px;color:#71583a}.orders h3{font:32px Carved,Song,serif;margin:3px 0 10px;color:#35291c;line-height:1.4}
+.detail{font-size:15px;color:#51432f;min-height:24px}.sectionline{border:0;border-top:1px solid #ab976f;margin:14px 0 10px}
+.supplies{display:flex;align-items:center;min-height:38px;margin-top:3px;gap:9px;font-size:15px}.supplies img{width:32px;height:32px;object-fit:contain}.supplies small{font-size:13px;color:#685943}
+.launch{width:100%;min-height:53px;display:flex;justify-content:space-between;align-items:center;margin:0;background:#803e30 url("../../assets/ui/home/station/march.png") center/100% 100% no-repeat;border:1px solid #68442f;color:#ffefd4;text-shadow:0 1px 1px #50281c;padding:6px 22px;font:bold 21px Song,serif;letter-spacing:2px;box-shadow:0 3px 1px #38261977}
+.launch:hover{filter:brightness(1.12)}.launch:disabled{filter:saturate(.24);color:#e0d4bc}.arrow{font:25px Georgia,serif;letter-spacing:0}
+.tools{position:absolute;bottom:18px;left:22px;display:flex;align-items:center;gap:10px}.tools label,.return{display:flex;align-items:center;gap:8px;background:#2e271fdf;color:#eee1ca;border:1px solid #a28a66;padding:7px 10px;font:13px Song,serif}.tools select{color:#fff0cb;font-weight:700;font-size:14px;border:0;background:#3a3228}.return{position:absolute;right:22px;bottom:18px}.tiny{font-size:13px;color:#733d2b;text-decoration:underline;background:none;border:0;padding:2px 0}
+dialog{max-width:370px;border:2px solid #876a48;padding:24px;background:#efe2c8;color:#352b1f;box-shadow:0 6px 36px #1b150fc9}dialog::backdrop{background:#1916117a}dialog h2{margin:0 0 12px;font:25px Carved,Song,serif}dialog p{line-height:1.75}dialog form{margin-top:18px;display:flex;gap:8px}dialog button{padding:7px 15px;background:#574232;color:#fff1d6;border:1px solid #8a7052}.link{display:inline-block;margin:3px 0 8px}
+#roman{display:flex;gap:.12em;align-items:center;line-height:1}
+#roman.stacked{flex-direction:column;gap:.2em}#roman span{position:relative}
+#roman i{position:absolute;height:.06em;background:currentColor;left:0;right:0}
+</style></head>
+<body><div id="frame"><main id="scene" aria-label="出征营门">
+<nav class="tabs" aria-label="基地页签">
+<a href="#scene" aria-current="page"><img alt="" src="../../assets/ui/home/tabs/tab_expedition.png">出征</a>
+<a href="index.html#warehouse" target="_top"><img alt="" src="../../assets/ui/home/tabs/tab_warehouse.png">仓库</a>
+<a href="index.html#market" target="_top"><img alt="" src="../../assets/ui/home/tabs/tab_logistics.png">后勤</a>
+<a href="index.html#archive" target="_top"><img alt="" src="../../assets/ui/home/tabs/tab_shelf.png">书架</a>
+</nav>
+<section class="stele" aria-labelledby="merit"><div class="cap"><img alt="" src="../../assets/ui/records/stele_laurel.png"></div><div class="stone">
+<h1 id="merit">军功碑</h1><button class="value" id="wealth"><img alt="" src="../../assets/ui/hud/coin.png"><span id="roman"></span></button>
+<div class="medals" id="medals"></div>
+<dl class="ledger"><div><dt>出征</dt><dd id="runs"></dd></div><div><dt>总分</dt><dd id="score"></dd></div><div><dt>图鉴</dt><dd id="codex"></dd></div><div><dt><img class="coin" alt="基地金币" src="../../assets/ui/hud/coin.png"></dt><dd id="funds"></dd></div></dl>
+</div><div class="footstone"></div></section>
+<section class="orders" aria-label="出征军令"><header class="beam"><h2>出征军令</h2></header><div class="paper">
+<p class="overline" id="orderType"></p><h3 id="chapter"></h3><p class="detail" id="route"></p><button id="skip" class="tiny" hidden>跳过剩余教程</button>
+<hr class="sectionline"><p class="overline">军需</p><div class="supplies" id="supplies"></div><a class="tiny link" id="unpack" href="index.html#warehouse" target="_top" hidden>去仓库置入物资 →</a>
+</div><button class="launch" id="start">开始探索 <span class="arrow" aria-hidden="true">⟶</span></button></section>
+<div class="tools"><label for="sample">样例状态 <select id="sample"><option value="veteran">归营 · 有记录</option><option value="first">初访 · 教程</option><option value="unpacked">归营 · 物资待置入</option></select></label></div>
+<button class="return" id="toMenu">回主菜单</button>
+</main></div>
+<dialog id="info"><h2 id="infoTitle"></h2><p id="infoText"></p><form method="dialog"><button value="close">关闭</button><button id="confirm" hidden value="confirm">跳过剩余教程</button></form></dialog>
+<script>
+const el=id=>document.getElementById(id), assets="../../assets/";
+const first={worth:0,medals:[0,0,0],runs:0,score:0,codex:"12/153",funds:0};
+const veteran={worth:1250,medals:[6,1,12],runs:9,score:6840,codex:"37/153",funds:450};
+const labels=["撤离","击败核心","胜场"], images=["escape","core","win"], thresholds=[[1,5,15,30,60],[1,3,8,15,25],[5,20,50,100,200]], tiers=["locked","bronze","silver","gold","gilded","laurel"];
+let current="veteran",notice="",skipped=false;
+let romanMode=true;
+try{romanMode=localStorage.getItem("stele-roman")!=="false"}catch{}
+function romanDigits(value){
+ let out="";
+ for(const [amount,glyph] of [[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]]){
+  while(value>=amount){value-=amount;out+=glyph}
+ }
+ return out;
+}
+function romanParts(value){
+ if(value<=0)return [["—",0]];
+ let divisor=1,lines=0;
+ while(Math.floor(value/divisor)>=1000){divisor*=1000;lines++}
+ const parts=[[romanDigits(Math.floor(value/divisor)),lines]];
+ if(lines){
+  const lower=Math.floor(Math.floor(value/(divisor/1000))%1000/10)*10;
+  if(lower)parts.push([romanDigits(lower),lines-1]);
+ }
+ return parts;
+}
+function compact(value){
+ for(const [unit,label] of [[1e12,"T"],[1e9,"B"],[1e6,"M"],[1e3,"K"]]){
+  if(value>=unit)return String(Math.floor(value*100/unit)/100)+label;
+ }
+ return value>0?String(value):"—";
+}
+function renderValue(worth){
+ const slot=el("roman"),button=el("wealth"),parts=romanMode?romanParts(worth):[[compact(worth),0]];
+ const ctx=document.createElement("canvas").getContext("2d");
+ function textWidth(text,px){ctx.font="bold "+px+"px Roman, Georgia, serif";return ctx.measureText(text).width}
+ let size=50;
+ while(size>10 && 58+size*.12*(parts.length-1)+parts.reduce((w,[text])=>w+textWidth(text,size),0)>330)size--;
+ const stacked=parts.length===2&&size<36;
+ if(stacked){size=44;while(size>10&&(parts.some(([text])=>textWidth(text,size)>272)||size*2.2>84))size--}
+ slot.classList.toggle("stacked",stacked);
+ slot.style.fontSize=(size*.65)+"px";slot.replaceChildren();
+ for(const [text,lines] of parts){
+  const segment=document.createElement("span");segment.textContent=text;
+  for(let i=0;i<lines;i++){const rule=document.createElement("i");rule.style.top=(-.02-i*.12)+"em";segment.append(rule)}
+  slot.append(segment);
+ }
+ button.title=button.ariaLabel="仓库总价值 "+worth.toLocaleString("zh-CN")+" 金币，点击切换"+(romanMode?"常用数字":"罗马数字");
+}
+function show(title,text,action=""){el("infoTitle").textContent=title;el("infoText").textContent=text;notice=action;el("confirm").hidden=!action;el("info").showModal()}
+function render(){
+ const fresh=current==="first", tutorial=fresh&&!skipped, unpacked=current==="unpacked", s=fresh?first:veteran;
+ renderValue(unpacked?888888:s.worth);
+ for(const id of ["runs","score","codex","funds"])el(id).textContent=s[id];
+ el("medals").replaceChildren();
+ s.medals.forEach((value,i)=>{const tier=thresholds[i].filter(n=>value>=n).length,btn=document.createElement("button"),next=thresholds[i][tier],tip=next?"下一阶还差 "+(next-value)+" 次。":"已到最高阶。";
+ btn.innerHTML='<img alt="" src="'+assets+'ui/records/record_'+images[i]+'_'+tiers[tier]+'.png"><strong>'+value+'</strong><span>'+labels[i]+'</span>';btn.title=tip;btn.onclick=()=>show(labels[i],tip);el("medals").append(btn)});
+ el("orderType").textContent=tutorial?"教程 · 1/3":"上回出征";
+ el("chapter").textContent=tutorial?"序章：废墟边缘":fresh?"尚无出征记录":"机关沙漏";
+ el("route").textContent=tutorial?"从营地出发，进入废墟边缘。":fresh?"开始探索时选择出征配置。":"马库斯　·　中型　·　普通";
+ el("skip").hidden=!tutorial;el("unpack").hidden=!unpacked;
+ el("supplies").innerHTML=fresh?"尚无":'<img src="'+assets+'belt_skills/aid_pack.png" alt=""><span>急救包 ×2</span>';
+ el("start").title="打开出征准备";
+}
+el("sample").onchange=e=>{current=e.target.value;skipped=false;render()};
+el("wealth").onclick=()=>{romanMode=!romanMode;try{localStorage.setItem("stele-roman",String(romanMode))}catch{}render()};
+el("skip").onclick=()=>show("跳过剩余教程","跳过后可以直接选择常规章节。","skip");
+el("info").addEventListener("close",()=>{if(notice==="skip"&&el("info").returnValue==="confirm"){skipped=true;render()}notice=""});
+el("start").onclick=()=>show("出征准备",current==="first"?(skipped?"下一步选择章节、出征者与携带物资。":"下一步进入序章：废墟边缘。"):"下一步选择章节、出征者与携带物资。上回配置为机关沙漏、马库斯、中型、普通。");
+el("toMenu").onclick=()=>show("回主菜单","实装后在此返回主菜单。");
+function fit(){const scale=Math.min(innerWidth/1280,innerHeight/800);el("scene").style.transform="scale("+scale+")";el("scene").style.position="absolute"}
+addEventListener("resize",fit);fit();render();document.fonts.ready.then(render);
+</script></body></html>
