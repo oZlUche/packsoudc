@@ -1,0 +1,15 @@
+{
+  "id": "nature_guard",
+  "display_name": "守护",
+  "display_names": {
+    "en": "Guard"
+  },
+  "stackable": false,
+  "duration_sec": 3.0,
+  "axes": [
+    {
+      "axis": "damage_taken",
+      "stacks": -4
+    }
+  ]
+}

@@ -20,11 +20,11 @@ static func run_faith_layout(t: TestCase) -> void:
 		return
 	var full := FaithTooltip.describe_full(brute, _power(&"brute", 45))
 	var head := Glossary.strip_bbcode(String(full["head"]))
-	t.check(head.contains("蛮神") and head.contains("Lv.1") and head.contains("45 / 100"), "名字行与信力行（%s）" % head)
+	t.check(head.contains("蛮神") and head.contains("Lv.1") and head.contains("45 / 60"), "名字行与信力行（%s）" % head)
 	var text := Glossary.strip_bbcode(String(full["text"]))
 	for word in ["阈值", "暴力与杀戮", "帝国", "这个信仰的道具", "休眠，只保留", "右键信物", "信力怎么涨"]:
 		t.check(not text.contains(word), "不写「%s」" % word)
-	t.check(full["bar"]["thresholds"] == [30, 100, 200, 400] and int(full["bar"]["points"]) == 45, "进度条：各级阈值与现在的信力（%s）" % str(full["bar"]))
+	t.check(full["bar"]["thresholds"] == [20, 60, 120] and int(full["bar"]["points"]) == 45, "进度条：各级阈值与现在的信力（%s）" % str(full["bar"]))
 	var sections: Array = full["sections"]
 	t.check(sections.size() == 3, "三段：各阶效果、信力来源、献祭（%d）" % sections.size())
 	var perks := String(sections[0])
@@ -62,20 +62,20 @@ static func frame_faith_window(t: TestCase, root: Window) -> void:
 	t.not_null(bar, "挂了进度条")
 	if bar != null:
 		var segs: Array[Vector2] = bar.segments(HoverTip.MAX_WIDTH)
-		t.eq(segs.size(), 4, "四段")
-		if segs.size() == 4:
-			var unit := segs[0].y / 30.0
-			var ok := absf(segs[1].y - 70.0 * unit) <= 1.0 and absf(segs[2].y - 100.0 * unit) <= 1.0 and absf(segs[3].y - 200.0 * unit) <= 1.0
-			t.check(ok, "四段宽度 30:70:100:200（容差 1 px）：%s" % str(segs))
+		t.eq(segs.size(), 3, "三段（信仰重构 D：蛮神三阶 20 / 60 / 120）")
+		if segs.size() == 3:
+			var unit := segs[0].y / 20.0
+			var ok := absf(segs[1].y - 40.0 * unit) <= 1.0 and absf(segs[2].y - 60.0 * unit) <= 1.0
+			t.check(ok, "三段宽度 20:40:60（容差 1 px）：%s" % str(segs))
 			t.check(segs[1].x > segs[0].x + segs[0].y, "段与段之间有缝")
-		t.check(absf(float(bar.fill_of(0)) - 1.0) < 0.001 and absf(float(bar.fill_of(1)) - 15.0 / 70.0) < 0.001 and float(bar.fill_of(2)) == 0.0, "45 点：第一段满、第二段 15/70、后面空")
+		t.check(absf(float(bar.fill_of(0)) - 1.0) < 0.001 and absf(float(bar.fill_of(1)) - 25.0 / 40.0) < 0.001 and float(bar.fill_of(2)) == 0.0, "45 点：第一段满、第二段 25/40、后面空")
 		t.check(bar.get_index() == tip._panel.head.get_index() + 1, "在名字行下面")
 	t.eq(tip._faith_parts.size(), 1 + 2 * 2, "进度条 + 两段（各一条虚线）")
 	tip._refit()
 	t.eq(tip._panel.body.custom_minimum_size.x, HoverTip.scaled(HoverTip.MAX_WIDTH), "宽 360（258：随字号档），不按内容收窄")
 	tip.show_faith(FaithTooltip.describe_full(brute, _power(&"brute", 999)), Vector2(100, 100))
 	var full_bar = tip.faith_bar()
-	t.check(full_bar != null and float(full_bar.fill_of(3)) == 1.0, "满阶：还挂着、全满")
+	t.check(full_bar != null and float(full_bar.fill_of(2)) == 1.0, "满阶：还挂着、全满")
 	tip.show_text("别的", Vector2(100, 100))
 	t.check(tip._faith_parts.is_empty() and tip._panel.body.visible, "换别的窗：信仰窗的件都摘了")
 	tip.show_faith({}, Vector2(100, 100))

@@ -1,91 +1,108 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_gp63j"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="2_fhojw"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_thvtn"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_on25b"]
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="5_7cvah"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/damage_deed.gd" id="6_ywd2h"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/vitality_lost_deed.gd" id="7_bswie"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="8_yf1t8"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="9_c5kw4"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="10_ymc0b"]
-[ext_resource type="Script" path="res://core/run/faith/perks/low_hp_empower_perk.gd" id="11_h1qlm"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_sacrifice_hp_perk.gd" id="12_nnwp2"]
-[ext_resource type="Script" path="res://core/run/faith/perks/smite_perk.gd" id="13_3qeta"]
-[ext_resource type="Script" path="res://core/run/faith/perks/undying_perk.gd" id="14_mkgi2"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="15_uvriy"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_2b5af"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="2_gp63j"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_fhojw"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_thvtn"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="5_on25b"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="6_7cvah"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="7_ywd2h"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="8_bswie"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="9_yf1t8"]
+[ext_resource type="Script" path="res://core/run/faith/perks/brute_rage_perk.gd" id="10_c5kw4"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="11_ymc0b"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_sacrifice_hp_perk.gd" id="12_h1qlm"]
+[ext_resource type="Script" path="res://core/run/faith/perks/smite_perk.gd" id="13_nnwp2"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="14_3qeta"]
 
-[sub_resource type="Resource" id="Resource_1868r"]
-script = ExtResource("3_thvtn")
+[sub_resource type="Resource" id="Resource_mkgi2"]
+script = ExtResource("3_fhojw")
 mode = 1
 amount = 10.0
 
-[sub_resource type="Resource" id="Resource_w6b0e"]
-script = ExtResource("2_fhojw")
+[sub_resource type="Resource" id="Resource_uvriy"]
+script = ExtResource("2_gp63j")
 mode = "active"
-mods = Array[ExtResource("3_thvtn")]([SubResource("Resource_1868r")])
+mods = Array[ExtResource("3_fhojw")]([SubResource("Resource_mkgi2")])
 
-[sub_resource type="Resource" id="Resource_umwjh"]
-script = ExtResource("3_thvtn")
+[sub_resource type="Resource" id="Resource_1868r"]
+script = ExtResource("3_fhojw")
 amount = 1.0
 
-[sub_resource type="Resource" id="Resource_qgcs4"]
-script = ExtResource("2_fhojw")
+[sub_resource type="Resource" id="Resource_w6b0e"]
+script = ExtResource("2_gp63j")
 mode = "scaled"
 max_shares = 6
-mods = Array[ExtResource("3_thvtn")]([SubResource("Resource_umwjh")])
+mods = Array[ExtResource("3_fhojw")]([SubResource("Resource_1868r")])
 
-[sub_resource type="Resource" id="Resource_dwbhk"]
-script = ExtResource("1_gp63j")
+[sub_resource type="Resource" id="Resource_umwjh"]
+script = ExtResource("1_2b5af")
 tags = Array[StringName]([&"weapon"])
 name_prefix = "蛮神赐福的"
 name_prefix_en = "Brute-blessed "
-faith_bonuses = Array[ExtResource("2_fhojw")]([SubResource("Resource_w6b0e"), SubResource("Resource_qgcs4")])
+faith_bonuses = Array[ExtResource("2_gp63j")]([SubResource("Resource_uvriy"), SubResource("Resource_w6b0e")])
+
+[sub_resource type="Resource" id="Resource_qgcs4"]
+script = ExtResource("6_7cvah")
+won_only = true
+amount = 6
+
+[sub_resource type="Resource" id="Resource_dwbhk"]
+script = ExtResource("7_ywd2h")
+key = &"brute_strike"
+amount = 2
 
 [sub_resource type="Resource" id="Resource_dyeg3"]
-script = ExtResource("6_ywd2h")
-multiplier = 0.2
-cap = 30
+script = ExtResource("7_ywd2h")
+key = &"low_hp_won"
+amount = 2
 
 [sub_resource type="Resource" id="Resource_6l0tu"]
-script = ExtResource("7_bswie")
-
-[sub_resource type="Resource" id="Resource_ogl8n"]
-script = ExtResource("8_yf1t8")
+script = ExtResource("8_bswie")
 tags = Array[StringName]([&"beast_part"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_47mtk"]
-script = ExtResource("8_yf1t8")
+[sub_resource type="Resource" id="Resource_ogl8n"]
+script = ExtResource("8_bswie")
 min_cells = 9
 multiplier = 10.0
 
-[sub_resource type="Resource" id="Resource_d5och"]
-script = ExtResource("8_yf1t8")
+[sub_resource type="Resource" id="Resource_47mtk"]
+script = ExtResource("8_bswie")
 tags = Array[StringName]([&"weapon"])
 multiplier = 2.0
 
+[sub_resource type="Resource" id="Resource_d5och"]
+script = ExtResource("10_c5kw4")
+tier = 0
+
 [sub_resource type="Resource" id="Resource_ffrn5"]
-script = ExtResource("10_ymc0b")
+script = ExtResource("11_ymc0b")
 
 [sub_resource type="Resource" id="Resource_erbkk"]
-script = ExtResource("11_h1qlm")
+script = ExtResource("10_c5kw4")
+part = 1
 
 [sub_resource type="Resource" id="Resource_d7f50"]
-script = ExtResource("12_nnwp2")
+script = ExtResource("10_c5kw4")
+part = 2
 tier = 2
 
 [sub_resource type="Resource" id="Resource_3cl5e"]
-script = ExtResource("13_3qeta")
-tier = 3
+script = ExtResource("12_h1qlm")
+tier = 2
 
 [sub_resource type="Resource" id="Resource_4uynj"]
-script = ExtResource("14_mkgi2")
-tier = 4
+script = ExtResource("10_c5kw4")
+part = 3
+tier = 3
+
+[sub_resource type="Resource" id="Resource_oph1j"]
+script = ExtResource("13_nnwp2")
+tier = 3
 
 [resource]
-script = ExtResource("15_uvriy")
+script = ExtResource("14_3qeta")
 id = &"brute"
 display_name = "蛮神"
 display_names = {
@@ -99,8 +116,8 @@ description = "自然的概念（石头砸下也是暴力）；北境蛮族信�
 descriptions = {
 "en": "A concept of nature (a falling stone is violence too). Worshipped by the northern barbarians and by most of the Empire's border provinces; one of the Empire's gods, but of low standing."
 }
-thresholds = Array[int]([30, 100, 200, 400])
-deeds = Array[ExtResource("5_7cvah")]([SubResource("Resource_dyeg3"), SubResource("Resource_6l0tu")])
-offerings = Array[ExtResource("8_yf1t8")]([SubResource("Resource_ogl8n"), SubResource("Resource_47mtk"), SubResource("Resource_d5och")])
-perks = Array[ExtResource("9_c5kw4")]([SubResource("Resource_ffrn5"), SubResource("Resource_erbkk"), SubResource("Resource_d7f50"), SubResource("Resource_3cl5e"), SubResource("Resource_4uynj")])
-blessings = Array[ExtResource("1_gp63j")]([SubResource("Resource_dwbhk")])
+thresholds = Array[int]([20, 60, 120])
+deeds = Array[ExtResource("5_on25b")]([SubResource("Resource_qgcs4"), SubResource("Resource_dwbhk"), SubResource("Resource_dyeg3")])
+offerings = Array[ExtResource("8_bswie")]([SubResource("Resource_6l0tu"), SubResource("Resource_ogl8n"), SubResource("Resource_47mtk")])
+perks = Array[ExtResource("9_yf1t8")]([SubResource("Resource_d5och"), SubResource("Resource_ffrn5"), SubResource("Resource_erbkk"), SubResource("Resource_d7f50"), SubResource("Resource_3cl5e"), SubResource("Resource_4uynj"), SubResource("Resource_oph1j")])
+blessings = Array[ExtResource("1_2b5af")]([SubResource("Resource_umwjh")])

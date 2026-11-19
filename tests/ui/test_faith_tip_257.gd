@@ -39,9 +39,9 @@ static func run_four_sections(t: TestCase) -> void:
 		gains += 1
 		t.check(m.get_string(1).contains("[color=@faith]"), "信力来源所得信力色：%s" % Glossary.strip_bbcode(m.get_string(1)))
 	t.check(gains >= 2, "信力来源至少两行（%d）" % gains)
-	# 条件里的数不上色：Lv.1「生命值低于 30%」的 30 不在 val 色里
-	t.check(not String(sections[0]).contains("[color=@val]30"), "条件里的 30% 不上色")
-	t.check(String(sections[0]).contains("[color=@val]10%[/color]"), "加成的 10% 上数值色")
+	# 条件里的数不上色：Lv.2「生命值低于 35%」的 35 不在 val 色里（信仰重构 D）
+	t.check(not String(sections[0]).contains("[color=@val]35"), "条件里的 35% 不上色")
+	t.check(String(sections[0]).contains("[color=@val]+6%[/color]"), "加成的 +6% 上数值色")
 
 
 static func run_bonus_numbers(t: TestCase) -> void:

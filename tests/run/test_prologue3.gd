@@ -158,10 +158,9 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(int(got["points"]) > 0, "献祭得了 %d 信力" % int(got["points"]))
 	var p2 := s.faith_power.points_of(&"brute")
 	t.check(s.active_faith_tier() >= 1, "过了 1 阶（信力 %d，阈值 %d）" % [p2, c.faiths[&"brute"].thresholds[0]])
-	t.check(p2 < c.faiths[&"brute"].thresholds[1], "但还没到 2 阶（%d < %d）—— 第二场才到" % [p2, c.faiths[&"brute"].thresholds[1]])
 	t.check(tier0 < s.active_faith_tier(), "阶变了（%d → %d）" % [tier0, s.active_faith_tier()])
 	t.check(not altar.is_open(), "献祭了：这座神坛关了（二选一）")
-	t.not_null(altar.perk(&"low_hp_empower"), "1 阶效果「低血增伤」生效")
+	t.not_null(altar.perk(&"altar_bless"), "1 阶效果「祈求赐福」生效（信仰重构 D：低血增伤摘掉了）")
 	# 5 日神：换神与休眠
 	t.check(s.step_to(5), "走到日神的事件")
 	ev = s.events.pending_event()
@@ -252,9 +251,9 @@ static func run_faith_placeholders(t: TestCase) -> void:
 	var brute := c.faiths[&"brute"] as FaithDef
 	t.eq(TextTemplate.render("{faith:brute}", ctx), "[color=@faith][b]%s[/b][/color]" % Names.of(brute), "{faith:}：信仰名、faith 色")
 	t.eq(TextTemplate.plain("{faith_threshold:brute:2}", ctx), str(brute.thresholds[1]), "第二阶阈值")
-	t.eq(TextTemplate.plain("{faith_deed:brute:damage:cap}", ctx), "30", "伤害行为的封顶")
-	t.eq(TextTemplate.plain("{faith_deed:brute:damage:multiplier}", ctx), "0.2", "伤害行为的倍数")
-	t.eq(TextTemplate.plain("{faith_deed:brute:vitality_lost:multiplier}", ctx), "50", "失去体力的倍数（默认值也读得到）")
+	# 信仰重构 D：蛮神的行为换成「打赢 6」+ 机制次数
+	t.eq(TextTemplate.plain("{faith_deed:brute:battle:amount}", ctx), "6", "打赢一场的信力")
+	t.eq(TextTemplate.plain("{faith_deed:brute:mechanic:at_least}", ctx), "1", "机制行为的门槛（默认值也读得到）")
 	t.eq(TextTemplate.plain("{faith_offer:brute:beast_part:multiplier}", ctx), "5", "兽材的献祭倍数（250：骨并进兽材）")
 	t.eq(TextTemplate.plain("{faith_perk:brute:altar_bless:cost}", ctx), "40", "祈求赐福花的信力")
 	t.eq(TextTemplate.plain("{faith_threshold:brute:9}", ctx), "{faith_threshold:brute:9}", "没有这一阶：原样保留")

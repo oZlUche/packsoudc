@@ -162,13 +162,8 @@ static func run_armor_rename(t: TestCase) -> void:
 	ContentImporter.import_damage_type({"id": "t_dt", "display_name": "测试", "shield_absorbable": false}, ContentImporter.Context.new(), dt)
 	t.check(not dt.ok() and dt.to_text().contains("armor_absorbable"), "旧键 shield_absorbable：报错，可用字段里有 armor_absorbable（%s）" % dt.to_text())
 
-	var nature: FaithDef = load(ContentPaths.asset_file("faiths", "nature"))
-	var has_food := false
-	if nature != null:
-		for p in nature.perks:
-			if p is FoodArmorPerk:
-				has_food = true
-	t.check(has_food, "自然的「按食物给护甲」是 food_armor")
+	# 信仰重构 D：自然不再带这一条（换成生息），构件还在注册表里
+	t.eq(ContentSchema.registry_name_of(FoodArmorPerk.new()), &"food_armor", "「按食物给护甲」构件叫 food_armor")
 	for id in ["leather_armor", "plate_cuirass"]:
 		var item: ItemDef = TestSupport.content().items.get_def(StringName(id))
 		t.check(item != null and item.combat != null and item.combat.base_stats.has("max_armor"), "%s 给护甲上限" % id)

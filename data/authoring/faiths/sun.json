@@ -13,21 +13,21 @@
     "en": "Constancy (the recurring cycle), which humans pushed onto the sun before stealing its fire; one of the Empire's gods, and the Sun God's people hold high standing."
   },
   "thresholds": [
-    50,
-    150,
-    300,
-    1000
+    20,
+    60,
+    120
   ],
   "deeds": [
     {
-      "type": "damage",
-      "damage_type": "fire",
-      "count_taken": false,
-      "cap": 40
+      "type": "battle",
+      "won_only": true,
+      "amount": 6
     },
     {
-      "type": "item_cycle",
-      "cap": 30,
+      "type": "mechanic",
+      "key": "sun_window",
+      "per_count": true,
+      "cap": 4,
       "amount": 2
     }
   ],
@@ -57,34 +57,24 @@
   ],
   "perks": [
     {
+      "type": "sun_cycle",
+      "tier": 0
+    },
+    {
       "type": "altar_bless"
     },
     {
-      "type": "enchant_weapons"
+      "type": "sun_cycle",
+      "part": 1
     },
     {
       "type": "altar_pray_fire",
       "tier": 2
     },
     {
-      "type": "enchant_weapons",
-      "count": 0,
+      "type": "sun_cycle",
+      "part": 3,
       "tier": 3
-    },
-    {
-      "type": "axis_boost",
-      "axis": "stamina_cost",
-      "stacks": 5,
-      "tier": 3
-    },
-    {
-      "type": "extra_drop_by_node",
-      "by_type": {
-        "battle": 3,
-        "elite": 4,
-        "core": 5
-      },
-      "tier": 4
     }
   ],
   "blessings": [

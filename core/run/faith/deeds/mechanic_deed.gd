@@ -7,14 +7,23 @@ extends FaithDeed
 ## 数哪一样：buff id（`skill_momentum`）或机制事件的 key（`skill_combo`）
 @export var key: StringName = &""
 @export var at_least: int = 1
+## 按次给（每次 [member amount]，一场合计不超过 [member cap]，0 = 不封顶）；不填就是「到了 [member at_least] 次给一次」
+@export var per_count: bool = false
+@export var cap: int = 0
 
 
 func gain(event: StringName, payload: Dictionary) -> int:
 	if event != &"battle" or key == &"":
 		return 0
 	var counts: Dictionary = payload.get("mechanic", {})
-	return amount if int(counts.get(String(key), 0)) >= maxi(1, at_least) else 0
+	var n := int(counts.get(String(key), 0))
+	if per_count:
+		var got := n * amount
+		return mini(got, cap) if cap > 0 else got
+	return amount if n >= maxi(1, at_least) else 0
 
 
 func describe() -> String:
+	if per_count:
+		return UiText.t("deed.mechanic_each") % [UiText.t("deed.mech_" + String(key)), amount, cap]
 	return UiText.t("deed.mechanic") % [UiText.t("deed.mech_" + String(key)), at_least, amount]

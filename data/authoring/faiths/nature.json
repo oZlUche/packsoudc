@@ -13,22 +13,25 @@
     "en": "Closely bound to life. One of the Empire's gods, with followers almost everywhere, many rites and great influence."
   },
   "thresholds": [
-    25,
-    80,
-    150,
-    400,
-    800
+    20,
+    60,
+    120
   ],
   "deeds": [
     {
-      "type": "item_triggered",
-      "tag": "nature",
-      "cap": 30,
-      "amount": 3
+      "type": "battle",
+      "won_only": true,
+      "amount": 6
     },
     {
-      "type": "heal",
-      "cap": 30
+      "type": "mechanic",
+      "key": "nature_heal",
+      "amount": 2
+    },
+    {
+      "type": "mechanic",
+      "key": "nature_release",
+      "amount": 2
     }
   ],
   "offerings": [
@@ -54,32 +57,29 @@
   ],
   "perks": [
     {
+      "type": "nature_regrowth",
+      "tier": 0
+    },
+    {
       "type": "altar_bless"
     },
     {
-      "type": "stat_mod",
-      "mods": [
-        {
-          "stat": "regen_hp",
-          "amount": 1.0
-        }
-      ]
+      "type": "nature_regrowth",
+      "part": 1
+    },
+    {
+      "type": "nature_regrowth",
+      "part": 2,
+      "tier": 2
     },
     {
       "type": "altar_food_vitality",
       "tier": 2
     },
     {
-      "type": "food_armor",
+      "type": "nature_regrowth",
+      "part": 3,
       "tier": 3
-    },
-    {
-      "type": "food_double",
-      "tier": 4
-    },
-    {
-      "type": "overtime_regen",
-      "tier": 5
     }
   ],
   "blessings": [
