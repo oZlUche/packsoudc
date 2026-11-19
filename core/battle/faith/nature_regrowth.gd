@@ -1,6 +1,6 @@
 ## 信仰重构 D（交接方案 §6.3）：自然之神「恢复存量」。一条规则（[FaithMechanicTrigger] 听资源变化、伤害、加时，另按 [FaithPulseCadence] 打节拍）放整套：
 ##
-## - 自启动：每个节拍（默认从第 6 秒起每 6 秒）恢复最大生命 [member pulse_percent]%。
+## - 自启动：每个节拍（默认从第 2 秒起每 4 秒）恢复最大生命 [member pulse_percent]%。
 ## - 实际回上来的生命（治疗与每秒回血）的 [member store_percent]% 存进【生息】，容量是最大生命的 [member cap_percent]%；
 ##   生息自己放出来的那口治疗不再存（[code]skip[/code] 记着）。层数 = 存着的整点生命。
 ## - 一阶：生命低于 [member low_percent]% 时放出生息治疗（最多补到满，按实际回了多少扣），两次至少隔 [member release_gap_sec] 秒。

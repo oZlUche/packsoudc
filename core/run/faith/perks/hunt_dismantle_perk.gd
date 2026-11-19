@@ -5,7 +5,7 @@ class_name HuntDismantlePerk
 extends FaithPerk
 
 @export var part: int = 0
-@export var point_gap_sec: float = 1.0
+@export var point_gap_sec: float = 0.5
 @export var stage1: int = 3
 @export var stage2: int = 6
 @export var weaken1: int = 10

@@ -60,7 +60,7 @@ static func run_marks(t: TestCase) -> void:
 
 
 static func run_points_and_stages(t: TestCase) -> void:
-	t.begin("信仰重构 C · 拆解：每秒最多一点；一阶 3 点第一档 −10%；二阶 6 点第二档到 −20%；没到一阶只有一半")
+	t.begin("信仰重构 C · 拆解：每半秒最多一点；一阶 3 点第一档 −10%；二阶 6 点第二档到 −20%；没到一阶只有一半")
 	var fast := BattleSim.run(_me(1, 0.25), _hitter(), _rng(2), 10.0)
 	var stacked := 0
 	var last_at := -999999
@@ -69,10 +69,10 @@ static func run_points_and_stages(t: TestCase) -> void:
 		var e := raw as BattleEvent
 		if e.name == BattleEvent.STATUS_STACKED and e.side == 1 and e.get_name(&"buff") == ID and e.get_int(&"delta") > 0:
 			stacked += 1
-			if e.time - last_at < StatMath.ONE:
+			if e.time - last_at < StatMath.from_float(0.5):
 				too_close = true
 			last_at = e.time
-	t.check(stacked > 0 and not too_close, "四分之一秒一下的弓：点数照样每秒最多一点（%d 点）" % stacked)
+	t.check(stacked > 0 and not too_close, "四分之一秒一下的弓：点数照样每半秒最多一点（%d 点，E 批从每秒缩短）" % stacked)
 	t.eq(_events(fast, "hunt_stage1").size(), 1, "一阶：到第一档一次")
 	t.eq(_events(fast, "hunt_stage2").size(), 0, "一阶没有第二档")
 	var step := int(StatAxes.info(StatAxes.ATTACK_SPEED)["step"])
