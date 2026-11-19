@@ -157,7 +157,7 @@ func _line(box: VBoxContainer, text: String, handler: Callable, icon_name: Strin
 			skin.content_margin_top += 2
 			skin.content_margin_bottom -= 2
 		b.add_theme_stylebox_override(state, skin)
-	b.add_theme_stylebox_override("focus", _focus_frame(Color("ffe19b") if primary else Color("743f2d")))
+	b.add_theme_stylebox_override("focus", _focus_frame(Color("563427")))
 	var ink := Color("fff0cb") if primary else Color("3f342b")
 	for state in ["font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 		b.add_theme_color_override(state, ink if primary or state == "font_color" else Color("753d2a"))
@@ -173,9 +173,9 @@ func _line(box: VBoxContainer, text: String, handler: Callable, icon_name: Strin
 static func _focus_frame(ink: Color) -> StyleBoxFlat:
 	var focus := StyleBoxFlat.new()
 	focus.draw_center = false
-	focus.set_border_width_all(2)
+	focus.set_border_width_all(3)
 	focus.border_color = ink
-	focus.set_expand_margin_all(2)
+	focus.set_expand_margin_all(4)
 	return focus
 
 
