@@ -23,7 +23,7 @@ const FG := Color("dfe3ea")
 const DIM := Color("8b93a1")
 const LINE := Color("2a2f38")
 
-const HP := Color("d9534f")
+const HP := Color("e05d56")
 ## 150 补 4：体力心「失去」的那颗（黑心，外面描一圈 DIM）
 const HEART_LOST := Color("0a0a0c")
 const ARMOR := Color("5bc0de")

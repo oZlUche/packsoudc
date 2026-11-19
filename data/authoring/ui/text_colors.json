@@ -3,7 +3,7 @@
   "styles": {
     "fg": {"dark": "#dfe3ea", "light": "#2e2219"},
     "dim": {"dark": "#8b93a1", "light": "#5a4433"},
-    "hp": {"dark": "#d9534f", "light": "#8c2b22"},
+    "hp": {"dark": "#e05d56", "light": "#8c2b22"},
     "armor": {"dark": "#5bc0de", "light": "#1f5f7a"},
     "stamina": {"dark": "#f0ad4e", "light": "#7a4b10"},
     "mana": {"dark": "#7a8cf0", "light": "#2f3f9a"},
@@ -11,7 +11,7 @@
     "grant": {"dark": "#6fb3f0", "light": "#1f4f8a"},
     "receive": {"dark": "#f0a85c", "light": "#7a4b10"},
     "warn": {"dark": "#f0ad4e", "light": "#9a5a22"},
-    "danger": {"dark": "#d9534f", "light": "#8c2b22"},
+    "danger": {"dark": "#e05d56", "light": "#8c2b22"},
     "good": {"dark": "#5cb85c", "light": "#2f6b2f"},
     "faith": {"dark": "#c79bf2", "light": "#5c3a8a"},
     "fire": {"dark": "#f25a46", "light": "#a3291a"},
