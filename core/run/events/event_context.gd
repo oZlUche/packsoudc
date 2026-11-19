@@ -53,6 +53,8 @@ var proceed: bool = false
 var open_altar: bool = false
 ## 194：打开铸炉
 var open_forge: bool = false
+## 287：撤离点上的「托付」—— 打开托付屏（保险箱屏），这个点不算用过，关了回来再弹
+var open_safe: bool = false
 ## 085：从这个撤离点撤离（事件对话里的「撤离」选项）
 var extract: bool = false
 ## 281：寂灭的献祭说完了 —— 当场结算回基地

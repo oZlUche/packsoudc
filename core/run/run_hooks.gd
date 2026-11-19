@@ -27,6 +27,7 @@ const NAMES := {
 	&"jimie_ascend": "RunState：281 寂灭的献祭说完了，当场结算回基地",
 	&"relocate": "RunState：把人挪到别处（清地上、给猎手一个回合）",
 	&"safe_open": "SafeModule：保险箱还能开吗",
+	&"entrust_open": "SafeModule：站在这个撤离点上能不能托付（287：免费、出口没关、托付没关）",
 	&"belt_use": "BeltModule：用腰带里的一个随身技能（147 / 160：空串 = 用了，否则是原因）",
 	&"belt_grant": "BeltModule：往腰带里放几个随身技能（160 补一：事件发的；返回放进了几个）",
 	&"faith_tier": "RunState：激活信仰现在第几阶（-1 = 没激活）",
@@ -162,6 +163,11 @@ func commission_act(action: StringName, node: MapNode) -> Array:
 ## 保险箱还能开吗。没装保险箱模块 = 能（老路：踩上去就开）
 func safe_open() -> bool:
 	return bool(_at(&"safe_open").call()) if has(&"safe_open") else true
+
+
+## 287：站在 [param node] 上能不能托付。没装保险箱模块 = 不能
+func entrust_open(node: MapNode) -> bool:
+	return bool(_at(&"entrust_open").call(node)) if has(&"entrust_open") else false
 
 
 ## 147：用腰带里的一个（160 补一：按随身技能 id）。空串 = 用了

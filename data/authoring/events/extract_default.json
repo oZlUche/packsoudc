@@ -74,6 +74,23 @@
           "event": "extract_default"
         }
       ]
+    },
+    {
+      "label": "托付",
+      "labels": {
+        "en": "Entrust"
+      },
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "entrust_ready"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "open_safe"
+        }
+      ]
     }
   ]
 }

@@ -64,6 +64,15 @@ func install(run: RunState) -> void:
 	if not run.leaving.is_connected(_on_leaving):
 		run.leaving.connect(_on_leaving)
 	run.hooks.register(&"safe_open", is_open)     # 092：锁上的保险箱再踩上去不开
+	run.hooks.register(&"entrust_open", entrust_at)
+
+
+## 287：[param node] 上能不能托付 —— 免费撤离点、出口没关、托付还开着
+func entrust_at(node: MapNode) -> bool:
+	if _run == null or node == null or NodeEvents.effective_type(node) != &"extract" or PaidExtracts.fee_of(node) > 0:
+		return false
+	var cd := CountdownModule.of(_run)
+	return (cd == null or not cd.extract_closed(node)) and is_open()
 
 
 ## 还能开（装了、没锁）

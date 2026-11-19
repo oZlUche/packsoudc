@@ -454,6 +454,11 @@ func choose(i: int) -> bool:
 			return true
 		event_resolved.emit(node, StringName(UiText.t("node.short.extract")), {"log": [UiText.t("node.extract_unaffordable") % CoinShort.coin(PaidExtracts.fee_of(node))]})
 		return true
+	# 287：撤离点上选了「托付」：开托付屏，点不算用过（关了站着点 / 走开回来都再弹撤离）
+	if ctx.open_safe:
+		node.content["revisit_event"] = true
+		safe_opened.emit(node)
+		return true
 	# 作者 2026-10-12：先回地图 —— 不标用过，记一笔，回到这个点时再弹同一个事件（[method RunState._arrived_again]）
 	if ctx.revisit:
 		node.content["revisit_event"] = true

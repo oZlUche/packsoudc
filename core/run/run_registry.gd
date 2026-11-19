@@ -63,6 +63,7 @@ const RUN_MODULES := {
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）
 const EVENT_CONDITIONS := {
 	&"commission_ready": "res://core/run/events/conditions/commission_ready.gd",     # 336
+	&"entrust_ready": "res://core/run/events/conditions/entrust_ready.gd",     # 287
 	&"has_buff_tag": "res://core/run/events/conditions/has_buff_tag.gd",
 	&"has_map_buff": "res://core/run/events/conditions/has_map_buff.gd",
 	&"can_afford": "res://core/run/events/conditions/can_afford.gd",
@@ -110,6 +111,7 @@ const EVENT_OUTCOMES := {
 	&"set_flag": "res://core/run/events/outcomes/set_flag.gd",
 	&"open_altar": "res://core/run/events/outcomes/open_altar.gd",
 	&"open_forge": "res://core/run/events/outcomes/open_forge.gd",     # 194
+	&"open_safe": "res://core/run/events/outcomes/open_safe.gd",     # 287
 	&"next_event_random": "res://core/run/events/outcomes/next_event_random.gd",
 	&"revisit_later": "res://core/run/events/outcomes/revisit_later.gd",     # 作者 2026-10-12：门禁事件的退路
 	&"bless_item": "res://core/run/events/outcomes/bless_item.gd",
