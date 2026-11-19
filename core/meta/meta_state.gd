@@ -128,6 +128,8 @@ var tracked_tech: StringName = &""
 var tutorial_ledger: Dictionary = {}
 ## 发到仓库放不下的固定奖励（加了临时页还放不下才会有）：已编了 uid，先存着，回基地时再试着放（[method store_pending]）
 var reward_pending: Array[ItemInstance] = []
+## 336：阵营声望与委托（[CommissionBook]）。老档没有 = 全空（没接过委托、各方声望 0），不升版本
+var commissions: CommissionBook = CommissionBook.new()
 var _next_uid: int = 1
 
 
@@ -890,6 +892,7 @@ func to_dict() -> Dictionary:
 		"tracked_tech": String(tracked_tech),     # 319 D
 		"tutorial_ledger": tutorial_ledger.duplicate(true),     # 统一教程 B
 		"reward_pending": reward_pending.map(func(i: ItemInstance) -> Dictionary: return i.to_dict()),
+		"commissions": commissions.to_dict(),     # 336
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -1030,6 +1033,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		if inst != null:
 			m.reward_pending.append(inst)
 			m._next_uid = maxi(m._next_uid, inst.uid + 1)
+	m.commissions = CommissionBook.from_dict(d.get("commissions", null))     # 336：老档没有 = 全空
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
 	if said is Dictionary:
 		for k in said:

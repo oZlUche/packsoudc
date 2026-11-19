@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_tvhm1"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_r6oyw"]
+
+[sub_resource type="Resource" id="Resource_ohtil"]
+script = ExtResource("2_r6oyw")
+goal = &"inspect_extracts"
+count = 2
+text = "在两处不同的撤离点各查验一次"
+texts = {
+"en": "Inspect two different extraction points."
+}
+
+[resource]
+script = ExtResource("1_tvhm1")
+id = &"legion_two_routes"
+display_name = "两条回路"
+display_names = {
+"en": "Two Ways Back"
+}
+faction = &"legion"
+order = 3
+tier = &"inquiry"
+min_tier = 0
+stages = Array[ExtResource("2_r6oyw")]([SubResource("Resource_ohtil")])
+funds = 60
+quote = "去的时候路都好走。替我看看，回来还能走哪条。"
+quotes = {
+"en": "Every road is easy on the way in. Find out which ones still lead back."
+}
+client = "军需官"
+clients = {
+"en": "Quartermaster"
+}

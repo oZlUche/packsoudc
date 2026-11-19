@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_0f1wt"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_ljx0d"]
+
+[sub_resource type="Resource" id="Resource_3yoya"]
+script = ExtResource("2_ljx0d")
+goal = &"smith_forge"
+where = &"camp"
+text = "在铁匠铺照选定的配方打造一次"
+texts = {
+"en": "Forge the chosen recipe once at the smithy."
+}
+
+[resource]
+script = ExtResource("1_0f1wt")
+id = &"society_copy_recipe"
+display_name = "照抄也要做得出"
+display_names = {
+"en": "Copy It, Then Make It"
+}
+faction = &"society"
+order = 1
+stages = Array[ExtResource("2_ljx0d")]([SubResource("Resource_3yoya")])
+funds = 40
+client = "考据所研究员"
+clients = {
+"en": "Archive researcher"
+}

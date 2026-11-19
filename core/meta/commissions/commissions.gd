@@ -1,0 +1,334 @@
+## 336（阵营与委托 W0，报告 335）：委托与声望的规则 —— 纯逻辑，状态在 [CommissionBook]（局外存档），定义在 [CommissionDef] / [FactionDef]。
+##
+## 规则（方案「接取、交付与声望」，数值是候选）：
+## - 每方四级，门槛 0 / 2 / 5 / 9；代言另要做完这一方的结案（[member CommissionBook.signed]）。
+## - 入门陌生就能接、调查要熟面、结案要受托且前置委托齐备；模板最多把一方推到熟面（[constant TEMPLATE_CAP]）。
+## - 同时最多接 [constant SLOTS] 份；暂缓不占位，进度保留；放弃清掉进度，可以重接。剧情单不设现实倒计时。
+## - 正常战败不扣声望。现场交付的步骤失败也算；带回的步骤只在撤离成功（或写明托付算数时托付成功）才算（[method merge_run]）。
+## - 同一委托、同一步、同一处（节点 id / 实例 uid）只记一次（去重键），读档重进、反复进同一节点不重复记账。
+class_name Commissions
+extends RefCounted
+
+const SLOTS := 2
+const TEMPLATE_CAP := 2
+## 去重键：委托 id | 第几步 | 那一处
+const KEY_FMT := "%s|%d|%s"
+
+## 目标种类 → 允许的完成地点（[member CommissionStage.where]）。按批次加，每种对应一个真实事件（报告 335 第三节）
+const GOALS := {
+	&"inspect_extracts": [CommissionStage.FIELD],     # 撤离点上的「查验」：不同的撤离点 N 处
+	&"smith_forge": [CommissionStage.CAMP],     # 接单后在铁匠铺真的打一次（接单时选的那张配方）
+	&"deliver_letter": [CommissionStage.FIELD],     # 撤离点上的「交信」：把任务信交出去
+}
+
+## 不能接的原因（字表键 `commission.why_<原因>`）
+const WHY_HIDDEN := "hidden"
+const WHY_DONE := "done"
+const WHY_TAKEN := "taken"
+const WHY_SLOTS := "slots"
+const WHY_TIER := "tier"
+const WHY_REQUIRES := "requires"
+const WHY_MUTEX := "mutex"
+const WHY_PICK := "pick"
+
+static var _factions: Array[FactionDef] = []
+static var _defs: Array[CommissionDef] = []
+
+
+#region 定义
+static func factions() -> Array[FactionDef]:
+	if _factions.is_empty():
+		_factions.assign(ContentPaths.load_typed(ContentPaths.FACTIONS, FactionDef))
+		_factions.sort_custom(func(a: FactionDef, b: FactionDef) -> bool: return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
+	return _factions
+
+
+## 委托簿里列出来的几方
+static func listed_factions() -> Array[FactionDef]:
+	return factions().filter(func(f: FactionDef) -> bool: return f.listed)
+
+
+static func faction(id: StringName) -> FactionDef:
+	for f in factions():
+		if f.id == id:
+			return f
+	return null
+
+
+static func defs() -> Array[CommissionDef]:
+	if _defs.is_empty():
+		_defs.assign(ContentPaths.load_typed(ContentPaths.COMMISSIONS, CommissionDef))
+		_defs.sort_custom(func(a: CommissionDef, b: CommissionDef) -> bool: return a.order < b.order if a.order != b.order else String(a.id) < String(b.id))
+	return _defs
+
+
+static func def(id: StringName) -> CommissionDef:
+	for d in defs():
+		if d.id == id:
+			return d
+	return null
+
+
+## 这一方的委托，按 order
+static func of_faction(id: StringName, pool: Array = []) -> Array[CommissionDef]:
+	var out: Array[CommissionDef] = []
+	for d in (pool if not pool.is_empty() else defs()):
+		if (d as CommissionDef).faction == id:
+			out.append(d)
+	return out
+#endregion
+
+
+#region 档位与声望
+## 档位的默认声望：入门 1、调查 2、结案 3、模板 1
+static func default_reputation(tier: StringName) -> int:
+	match tier:
+		CommissionDef.INQUIRY:
+			return 2
+		CommissionDef.FINALE:
+			return 3
+	return 1
+
+
+static func reputation_of(d: CommissionDef) -> int:
+	return d.reputation if d.reputation > 0 else default_reputation(d.tier)
+
+
+## 接这一档要几级（0 陌生、1 熟面、2 受托）
+static func required_tier(d: CommissionDef) -> int:
+	if d.min_tier >= 0:
+		return d.min_tier
+	match d.tier:
+		CommissionDef.INQUIRY:
+			return 1
+		CommissionDef.FINALE:
+			return 2
+	return 0
+
+
+## 这一方现在几级（0..3）。到了第四档门槛但没署名结案，停在受托
+static func tier_of(book: CommissionBook, f: FactionDef) -> int:
+	if f == null:
+		return 0
+	var r := book.rep_of(f.id) if book != null else 0
+	var lv := 0
+	for i in f.thresholds.size():
+		if r >= f.thresholds[i]:
+			lv = i
+	if lv >= 3 and not (book != null and book.signed.has(String(f.id))):
+		lv = 2
+	return lv
+
+
+## 下一级还差几点（满级 = 0）
+static func rep_to_next(book: CommissionBook, f: FactionDef) -> int:
+	var lv := tier_of(book, f)
+	if f == null or lv + 1 >= f.thresholds.size():
+		return 0
+	return maxi(0, f.thresholds[lv + 1] - book.rep_of(f.id))
+#endregion
+
+
+#region 接取
+## 能不能接：空串 = 能；否则是原因（[constant WHY_HIDDEN] 这些）。[param pick] = 接单时要选的（配方 id），[param picks] = 现在能选的
+static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &"", picks: Array = []) -> String:
+	var f := faction(d.faction) if d != null else null
+	if d == null or f == null or not f.listed:
+		return WHY_HIDDEN
+	var st := book.state_of(d.id)
+	if st == CommissionBook.TAKEN:
+		return WHY_TAKEN
+	if book.is_done(d.id) and d.tier != CommissionDef.TEMPLATE:
+		return WHY_DONE
+	if d.mutex != &"" and book.mutex.has(String(d.mutex)):
+		return WHY_MUTEX
+	if tier_of(book, f) < required_tier(d):
+		return WHY_TIER
+	for r in d.requires:
+		if not book.is_done(r):
+			return WHY_REQUIRES
+	if book.taken().size() >= SLOTS:
+		return WHY_SLOTS
+	if needs_pick(d) and st != CommissionBook.PAUSED and (pick == &"" or not picks.has(pick)):
+		return WHY_PICK
+	return ""
+
+
+## 接单时要不要先选一样（配方实验）
+static func needs_pick(d: CommissionDef) -> bool:
+	return d != null and d.stages.any(func(s: CommissionStage) -> bool: return s.goal == &"smith_forge")
+
+
+## 接下（暂缓过的接着做，进度照旧）。返回接成没有
+static func take(book: CommissionBook, d: CommissionDef, pick: StringName = &"", picks: Array = []) -> bool:
+	if why_not(book, d, pick, picks) != "":
+		return false
+	var e: Dictionary = book.entry(d.id).duplicate(true)
+	if String(e.get("state", "")) != CommissionBook.PAUSED:
+		e["stage"] = 0
+		e["progress"] = 0
+		e["keys"] = []
+		e["pick"] = String(pick)
+	e["state"] = CommissionBook.TAKEN
+	e["times"] = int(e.get("times", 0))
+	e["seq"] = _next_seq(book)
+	book.entries[String(d.id)] = e
+	return true
+
+
+static func _next_seq(book: CommissionBook) -> int:
+	var n := 0
+	for k in book.entries:
+		n = maxi(n, int((book.entries[k] as Dictionary).get("seq", 0)))
+	return n + 1
+
+
+## 暂缓：不占位，进度保留
+static func pause(book: CommissionBook, id: StringName) -> bool:
+	if book.state_of(id) != CommissionBook.TAKEN:
+		return false
+	book.entries[String(id)]["state"] = CommissionBook.PAUSED
+	return true
+
+
+## 放弃：进度清掉（完成过几次留着），可以重接
+static func abandon(book: CommissionBook, id: StringName) -> bool:
+	var st := book.state_of(id)
+	if st != CommissionBook.TAKEN and st != CommissionBook.PAUSED:
+		return false
+	var times := int(book.entry(id).get("times", 0))
+	if times > 0:
+		book.entries[String(id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": times, "pick": "", "seq": 0}
+	else:
+		book.entries.erase(String(id))
+	return true
+#endregion
+
+
+#region 记账
+## 这份委托现在在第几步（没在做 = -1）
+static func current_stage(book: CommissionBook, id: StringName) -> int:
+	return int(book.entry(id).get("stage", 0)) if book.state_of(id) == CommissionBook.TAKEN else -1
+
+
+## 记一次进度：只认正在做、正停在 [param stage] 这一步的；同一个 [param key] 只记一次。
+## 这一步做够了进下一步，最后一步做完就结案（[method _complete]）。返回 {"ok": 记上没有, "step": 进了下一步, "done": 结案, "got": 结案发的}
+static func credit(meta: MetaState, d: CommissionDef, stage: int, key: String, items: ItemDatabase = null) -> Dictionary:
+	var out := {"ok": false, "step": false, "done": false}
+	if meta == null or d == null:
+		return out
+	var book := meta.commissions
+	if current_stage(book, d.id) != stage or stage < 0 or stage >= d.stages.size():
+		return out
+	var e: Dictionary = book.entries[String(d.id)]
+	var k := KEY_FMT % [d.id, stage, key]
+	if (e["keys"] as Array).has(k):
+		return out
+	(e["keys"] as Array).append(k)
+	e["progress"] = int(e["progress"]) + 1
+	out["ok"] = true
+	if int(e["progress"]) < maxi(1, d.stages[stage].count):
+		return out
+	e["progress"] = 0
+	e["stage"] = stage + 1
+	out["step"] = true
+	if int(e["stage"]) < d.stages.size():
+		book.add_receipt({"id": String(d.id), "kind": "step", "stage": stage, "run": meta.runs})
+		return out
+	out["done"] = true
+	out["got"] = _complete(meta, d, items)
+	return out
+
+
+## 结案：声望（模板封顶熟面）、署名、互斥、酬金，写回执。返回发了什么 {"rep", "funds", "items"}
+static func _complete(meta: MetaState, d: CommissionDef, items: ItemDatabase) -> Dictionary:
+	var book := meta.commissions
+	var fid := String(d.faction)
+	var gain := reputation_of(d)
+	if d.tier == CommissionDef.TEMPLATE:
+		gain = clampi(TEMPLATE_CAP - book.rep_of(d.faction), 0, gain)
+	book.rep[fid] = book.rep_of(d.faction) + gain
+	if d.tier == CommissionDef.FINALE:
+		book.signed[fid] = true
+	if d.mutex != &"":
+		book.mutex[String(d.mutex)] = String(d.id)
+	var times := int(book.entry(d.id).get("times", 0)) + 1
+	book.entries[String(d.id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": times, "pick": "", "seq": 0}
+	var got := {"rep": gain, "funds": maxi(0, d.funds), "items": 0}
+	meta.funds += maxi(0, d.funds)
+	if not d.items.is_empty() and items != null:
+		var gifts: Array = []
+		for id in d.items:
+			for _i in maxi(0, int(d.items[id])):
+				var item := items.get_def(StringName(String(id)))
+				if item != null:
+					gifts.append(item)
+		got["items"] = int(meta.grant_lossless(gifts)["stored"])
+	book.add_receipt({"id": String(d.id), "kind": "done", "stage": d.stages.size() - 1, "run": meta.runs})
+	return got
+
+
+## 一局结束：把这一局记下的进度并进局外（和 [method MetaState.absorb] 同一次结算，重复结算由 `settled_runs` 挡掉）。
+## [param rows] 每条 {"id": 委托 id, "stage": 第几步, "key": 那一处, "via": "self" / "entrust"}；
+## [param extracted] = 本人撤离成功，[param entrusted] = 这一局托付交出去过（托付成功）。
+## 现场交付的照记；带回的看撤离 / 托付，没带回写一条「重做」回执。返回 {"credited": 记上几条, "redo": 要重做几条}
+static func merge_run(meta: MetaState, rows: Array, extracted: bool, entrusted: bool, items: ItemDatabase = null) -> Dictionary:
+	var out := {"credited": 0, "redo": 0}
+	if meta == null:
+		return out
+	for raw in rows:
+		if not (raw is Dictionary):
+			continue
+		var row := raw as Dictionary
+		var d := def(StringName(String(row.get("id", ""))))
+		var stage := int(row.get("stage", -1))
+		if d == null or stage < 0 or stage >= d.stages.size():
+			continue
+		var s := d.stages[stage]
+		var counts := s.where == CommissionStage.FIELD
+		if s.where == CommissionStage.CARRY:
+			counts = extracted or (String(row.get("via", "self")) == "entrust" and s.entrust_ok and entrusted)
+		if not counts:
+			if current_stage(meta.commissions, d.id) == stage:
+				meta.commissions.add_receipt({"id": String(d.id), "kind": "redo", "stage": stage, "run": meta.runs})
+				out["redo"] = int(out["redo"]) + 1
+			continue
+		if bool(credit(meta, d, stage, String(row.get("key", "")), items)["ok"]):
+			out["credited"] = int(out["credited"]) + 1
+	return out
+#endregion
+
+
+#region 校验（导入之后整批查：前置与互斥要对着全部委托）
+## 全部委托一起查：前置得是同一方、存在、不成环；结案的前置要齐（这一方的调查都列上）。返回问题清单（空 = 没问题）
+static func validate_all(pool: Array, faction_pool: Array) -> Array[String]:
+	var problems: Array[String] = []
+	var by_id := {}
+	for d in pool:
+		by_id[(d as CommissionDef).id] = d
+	var fids := faction_pool.map(func(f: FactionDef) -> StringName: return f.id)
+	for d: CommissionDef in pool:
+		if not fids.has(d.faction):
+			problems.append("%s：找不到阵营 %s" % [d.id, d.faction])
+		for r in d.requires:
+			if not by_id.has(r):
+				problems.append("%s：前置 %s 不存在" % [d.id, r])
+			elif (by_id[r] as CommissionDef).faction != d.faction:
+				problems.append("%s：前置 %s 不是同一方" % [d.id, r])
+		if _cycles(d.id, by_id, {}):
+			problems.append("%s：前置成环" % d.id)
+	return problems
+
+
+static func _cycles(id: StringName, by_id: Dictionary, path: Dictionary) -> bool:
+	if path.has(id):
+		return true
+	if not by_id.has(id):
+		return false
+	path[id] = true
+	for r in (by_id[id] as CommissionDef).requires:
+		if _cycles(r, by_id, path):
+			return true
+	path.erase(id)
+	return false
+#endregion

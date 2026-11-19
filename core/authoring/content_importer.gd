@@ -177,6 +177,16 @@ class Context:
 	## id -> SmithRecipeDef（252：配方要的科技等科技导完才查）
 	var smith_recipes: Dictionary = {}
 
+	## 336：id -> FactionDef / CommissionDef（委托对着阵营查）
+	var factions: Dictionary = {}
+	var commissions: Dictionary = {}
+
+	func register_faction(def: FactionDef) -> void:
+		_put(factions, def)
+
+	func register_commission(def: CommissionDef) -> void:
+		_put(commissions, def)
+
 	func register_smith_recipe(def: SmithRecipeDef) -> void:
 		_put(smith_recipes, def)
 
@@ -221,6 +231,7 @@ static func _importers() -> Dictionary:
 		"smith_recipes": import_smith_recipe, "base_rules": import_market_rules, "events": import_event, "chapters": import_chapter,
 		"achievements": import_achievement, "techs": import_tech, "help_pages": import_help_page, "chest_skins": import_chest_skin,
 		"market_stalls": import_market_stall, "npcs": import_npc, "belt_skills": import_belt_skill, "items": import_item,     # 270、282
+		"factions": import_faction, "commissions": import_commission,     # 336
 	}
 
 
@@ -1007,6 +1018,67 @@ static func import_market_stall(data: Dictionary, ctx: Context, report: ImportRe
 	for id in def.excluded_ids:
 		if not ctx.items.is_empty() and not ctx.items.has(id):
 			report.error("excluded_ids", "找不到道具 '%s'" % id)
+	return def
+
+
+## 336：阵营 —— 门槛四个、第一个 0、从小到大；服务的级数在 0..3
+static func import_faction(data: Dictionary, ctx: Context, report: ImportReport) -> FactionDef:
+	var def := FactionDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "阵营", report)
+	if def.thresholds.size() != 4 or def.thresholds[0] != 0:
+		report.error("thresholds", "门槛要四个（陌生 / 熟面 / 受托 / 代言），第一个是 0")
+	for i in range(1, def.thresholds.size()):
+		if def.thresholds[i] <= def.thresholds[i - 1]:
+			report.error("thresholds", "门槛要从小到大")
+	for k in def.services:
+		if int(def.services[k]) < 0 or int(def.services[k]) > 3:
+			report.error("services", "服务 %s 的级数要在 0..3" % k)
+	ctx.register_faction(def)
+	return def
+
+
+## 336：委托 —— 阵营在、档位认得、至少一步；每一步的目标种类认得、完成地点是这种目标允许的；
+## 任务道具得在、带 `commission` 标签；酬金不为负、实物得在。前置与互斥要对着全部委托查（[method Commissions.validate_all]，测试里跑）
+static func import_commission(data: Dictionary, ctx: Context, report: ImportReport) -> CommissionDef:
+	var def := CommissionDef.new()
+	_fill(def, data, "", ctx, report)
+	_require_id(def.id, "委托", report)
+	if not ctx.factions.is_empty() and not ctx.factions.has(def.faction):
+		report.error("faction", "找不到阵营 '%s'" % def.faction)
+	if not CommissionDef.TIERS.has(def.tier):
+		report.error("tier", "档位只认 %s" % ", ".join(CommissionDef.TIERS))
+	if def.stages.is_empty():
+		report.error("stages", "至少一步")
+	for i in def.stages.size():
+		var s := def.stages[i]
+		var at := "stages[%d]" % i
+		if not Commissions.GOALS.has(s.goal):
+			report.error(at + ".goal", "不认识的目标 '%s'（只认 %s）" % [s.goal, ", ".join(Commissions.GOALS.keys())])
+		elif not (Commissions.GOALS[s.goal] as Array).has(s.where):
+			report.error(at + ".where", "%s 只能在 %s 完成" % [s.goal, ", ".join(Commissions.GOALS[s.goal])])
+		if not CommissionStage.WHERES.has(s.where):
+			report.error(at + ".where", "完成地点只认 camp / field / carry")
+		if s.count < 1:
+			report.error(at + ".count", "至少做一次")
+		if s.entrust_ok and s.where != CommissionStage.CARRY:
+			report.error(at + ".entrust_ok", "只有带回的步骤才谈得上托付算不算")
+		if s.item != &"" and not ctx.items.is_empty():
+			var item: ItemDef = ctx.items.get(s.item, null)
+			if item == null:
+				report.error(at + ".item", "找不到道具 '%s'" % s.item)
+			elif not item.tags.has(&"commission"):
+				report.error(at + ".item", "任务道具 '%s' 要带 commission 标签" % s.item)
+	if def.funds < 0:
+		report.error("funds", "酬金不能是负数")
+	for id in def.items:
+		if not ctx.items.is_empty() and not ctx.items.has(StringName(String(id))):
+			report.error("items", "找不到道具 '%s'" % id)
+	if def.reputation < 0:
+		report.error("reputation", "声望不能是负数")
+	if def.tier == CommissionDef.TEMPLATE and def.reputation > 1:
+		report.warn("reputation", "模板一次最多给 1 点（重复刷不该冲级）")
+	ctx.register_commission(def)
 	return def
 
 

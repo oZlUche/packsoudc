@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/faction_def.gd" id="1_510xp"]
+
+[resource]
+script = ExtResource("1_510xp")
+id = &"envoy"
+display_name = "诸族元老院边境使团"
+display_names = {
+"en": "Senate Frontier Envoys"
+}
+order = 4
+listed = false

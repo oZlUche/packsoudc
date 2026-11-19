@@ -1,0 +1,30 @@
+{
+  "id": "legion_two_routes",
+  "display_name": "两条回路",
+  "display_names": {
+    "en": "Two Ways Back"
+  },
+  "faction": "legion",
+  "order": 3,
+  "tier": "inquiry",
+  "min_tier": 0,
+  "stages": [
+    {
+      "goal": "inspect_extracts",
+      "count": 2,
+      "text": "在两处不同的撤离点各查验一次",
+      "texts": {
+        "en": "Inspect two different extraction points."
+      }
+    }
+  ],
+  "funds": 60,
+  "quote": "去的时候路都好走。替我看看，回来还能走哪条。",
+  "quotes": {
+    "en": "Every road is easy on the way in. Find out which ones still lead back."
+  },
+  "client": "军需官",
+  "clients": {
+    "en": "Quartermaster"
+  }
+}

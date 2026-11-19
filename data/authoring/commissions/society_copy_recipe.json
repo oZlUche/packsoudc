@@ -1,0 +1,24 @@
+{
+  "id": "society_copy_recipe",
+  "display_name": "照抄也要做得出",
+  "display_names": {
+    "en": "Copy It, Then Make It"
+  },
+  "faction": "society",
+  "order": 1,
+  "stages": [
+    {
+      "goal": "smith_forge",
+      "where": "camp",
+      "text": "在铁匠铺照选定的配方打造一次",
+      "texts": {
+        "en": "Forge the chosen recipe once at the smithy."
+      }
+    }
+  ],
+  "funds": 40,
+  "client": "考据所研究员",
+  "clients": {
+    "en": "Archive researcher"
+  }
+}

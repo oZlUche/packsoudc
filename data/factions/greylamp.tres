@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/faction_def.gd" id="1_pgkw3"]
+
+[resource]
+script = ExtResource("1_pgkw3")
+id = &"greylamp"
+display_name = "灰灯互助会"
+display_names = {
+"en": "Grey Lamp Mutual Aid"
+}
+order = 3

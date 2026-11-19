@@ -1,0 +1,26 @@
+{
+  "id": "greylamp_unsigned_letter",
+  "display_name": "无人署名的信",
+  "display_names": {
+    "en": "The Unsigned Letter"
+  },
+  "faction": "greylamp",
+  "order": 2,
+  "stages": [
+    {
+      "goal": "deliver_letter",
+      "params": {
+        "kind": "free"
+      },
+      "text": "把信交给免费撤离点的接应员",
+      "texts": {
+        "en": "Hand the letter to the contact at a free extraction point."
+      }
+    }
+  ],
+  "funds": 30,
+  "client": "不留名的寄信人",
+  "clients": {
+    "en": "An unnamed sender"
+  }
+}
