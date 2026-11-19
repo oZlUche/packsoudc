@@ -137,7 +137,8 @@ func _dial() -> Dictionary:
 
 ## 235：栏皮晷面的轴心（这一件的坐标）
 func _skin_pivot(bar: HudWidget) -> Vector2:
-	return bar.global_position + bar.call("dial_pivot") - global_position
+	var bar_pivot: Vector2 = bar.call("dial_pivot")
+	return Vector2(size.x * 0.5, bar.global_position.y + bar_pivot.y - global_position.y)
 
 
 ## 235：在石刻栏里时教程指整块晷面（下半圆的包围盒）
@@ -221,7 +222,7 @@ func number_always() -> bool:
 func _draw_number(pivot: Vector2, drop: float, px: int) -> void:
 	if not shows_number():
 		return
-	var font := get_theme_default_font()
+	var font := UiPalette.numeral_font()
 	if font == null:
 		return
 	var num := str(_cd().left())
@@ -237,6 +238,10 @@ func _draw_on_bar(pivot: Vector2) -> void:
 	var radius := float(d.get("radius", 94))
 	var st := stage()
 	var a := angle()
+	var base := UiTheme.art_cached(SKIN + "dial_base")
+	if base != null:
+		var face_pivot: Array = d.get("pivot", [137, 6])
+		draw_texture(base, pivot - Vector2(float(face_pivot[0]), float(face_pivot[1])))
 	if a < 180.0:
 		var wash := Color(String(((d.get("stages", {}) as Dictionary).get(String(st), {}) as Dictionary).get("wash", "#6b6255")))
 		wash.a = float(d.get("wash_opacity", 0.16))

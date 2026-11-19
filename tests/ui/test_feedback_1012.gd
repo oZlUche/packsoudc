@@ -125,12 +125,16 @@ static func frame_spawn_view(t: TestCase, root: Window) -> void:
 
 static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
 	t.begin("作者 2026-10-16 → 10-27 · 鼠标移开道具：没钉住当场收，宽限取消（往哪走都一样）")
-	var c := TestSupport.load_content()
+	# 带配方链接的窗允许鼠标从格子移进窗内；这里只测无链接道具的即时收起。
+	var plain := ItemDef.new()
+	plain.id = &"test_hover_plain"
+	plain.display_name = "样品"
+	plain.shape = ItemShape.new()
 	var host := Control.new()
 	host.size = Vector2(800, 600)
 	root.add_child(host)
 	var board := GridInventory.new(Vector2i(4, 3), 1)
-	board.place(ItemInstance.create(c.items.get_def(&"bandage")), Vector2i(0, 0), 0)     # 298：刀有「可拼为」的道具词，窗照 286 留着；要一件没配方词的
+	board.place(ItemInstance.create(plain), Vector2i.ZERO, 0)
 	var view := InventoryView.new()
 	view.inventory = board
 	view.position = Vector2(300, 300)
@@ -142,12 +146,14 @@ static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
 	var on := InputEventMouseMotion.new()
 	on.position = Vector2(4, 4)
 	view.gui_input.emit(on)
-	t.check(tip.is_showing(), "停在纱布上：显示")
+	t.check(tip.is_showing() and not tip._panel.has_recipe, "停在普通道具上：显示没有配方链接的提示")
 	view.mouse_exited.emit()
 	t.check(not tip.is_showing(), "出视图：当场收")
 	view.gui_input.emit(on)
 	var empty := InputEventMouseMotion.new()
-	empty.position = Vector2(150, 100)
+	var empty_cell := Vector2i(2, 1)
+	empty.position = view.cell_origin_px(empty_cell) + Vector2.ONE * view.cell_px / 2.0
+	t.eq(view.uid_at_cell(empty_cell), GridInventory.EMPTY_UID, "鼠标目标是棋盘内的空格")
 	view.gui_input.emit(empty)
 	t.check(not tip.is_showing(), "移到空格：当场收")
 	host.queue_free()

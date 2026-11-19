@@ -130,7 +130,7 @@ func _dress(spec: Dictionary) -> void:
 		add_theme_color_override("font_%s_color" % state if state != "normal" else "font_color", _colors[state])
 	add_theme_color_override("font_hover_pressed_color", _colors["pressed"])
 	add_theme_color_override("font_focus_color", _colors["normal"])
-	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	add_theme_stylebox_override("focus", UiTheme.focus_ring())
 	add_theme_stylebox_override("hover_pressed", get_theme_stylebox("pressed"))
 
 

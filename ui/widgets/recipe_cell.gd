@@ -18,7 +18,7 @@ const PLATE_GAP := 12.0
 const PLATE := Color("efe6d2")
 const PLATE_OFF := Color("cfc8b6")
 const INK := Color("2e2219")
-const INK_OFF := Color("8a8378")
+const INK_OFF := Color("574e45")
 const NAME_SIZE := 15
 const SELECT := Color("d4401c")
 const SELECT_W := 3.0
@@ -43,6 +43,7 @@ var line_right := true
 var line_bottom := true
 var _k := 1.0
 var _glow := Color.WHITE
+var _focus_ring := UiTheme.focus_ring()
 
 
 ## [param size_px]：这一格多大；[param k]：整页缩放（1 = 底图原尺寸）
@@ -53,6 +54,9 @@ static func make(p_id: StringName, p_def: ItemDef, p_name: String, size_px: Vect
 	c.title = p_name
 	c._k = maxf(0.4, k)
 	c.custom_minimum_size = size_px
+	c.focus_mode = Control.FOCUS_ALL
+	c.focus_entered.connect(c.queue_redraw)
+	c.focus_exited.connect(c.queue_redraw)
 	c.mouse_filter = Control.MOUSE_FILTER_STOP
 	c.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	return c
@@ -124,6 +128,10 @@ func _set_glow(c: Color) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if has_focus() and event.is_action_pressed("ui_accept") and not is_blank():
+		accept_event()
+		clicked.emit(self)
+		return
 	var mb := event as InputEventMouseButton
 	if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT and not is_blank():
 		accept_event()
@@ -154,3 +162,5 @@ func _draw() -> void:
 	draw_string(f, Vector2(pr.position.x + 4.0 * _k, y), title, HORIZONTAL_ALIGNMENT_CENTER, room, fs, INK if lit else INK_OFF)
 	if selected:
 		draw_rect(Rect2(Vector2.ZERO, size).grow(-SELECT_W * 0.5), SELECT, false, SELECT_W)
+	if has_focus():
+		draw_style_box(_focus_ring, Rect2(Vector2.ZERO, size).grow(-5))

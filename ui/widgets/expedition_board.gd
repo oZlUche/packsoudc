@@ -5,9 +5,11 @@
 class_name ExpeditionBoard
 extends VBoxContainer
 
+const ART := "home/expedition/"
+const EMPTY_H := 106.0
 const WIDTH := 560.0
 const LAST_H := 200.0
-const SUPPLY_H := 260.0
+const SUPPLY_H := 206.0
 const START := Vector2(360, 96)
 const START_FONT := 30
 const PORTRAIT := 72
@@ -51,11 +53,16 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 		_fill_last(_col(last_plate))
 		if flow.legacy_tutorial() != null:
 			_fill_try(_col(last_plate))
+		elif _last_lines.is_empty():
+			last_plate.custom_minimum_size.y = EMPTY_H
 	supply_plate = _plate(SUPPLY_H, "meta.supplies")
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
 	_fill_supplies(_col(supply_plate))
+	if _belt.is_empty() and _buffs.is_empty():
+		supply_plate.custom_minimum_size.y = EMPTY_H
 	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true, START, START_FONT)
+	_dress_start()
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	add_child(start_btn)
@@ -73,10 +80,47 @@ func _plate(h: float, title_key: String) -> PanelContainer:
 	hold.add_child(HeaderTag.hanging(UiText.t(title_key)))
 	wrap_.add_child(hold)
 	var p := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_PLAQUE)
+	var tex := UiTheme.art_cached(ART + ("stores" if title_key == "meta.supplies" else "order"))
+	if tex != null:
+		p.add_theme_stylebox_override("panel", UiTheme.nine_box(tex, [36, 20, 44, 20], [30, 20, 28, 20]))
 	p.custom_minimum_size = Vector2(WIDTH, h)
 	wrap_.add_child(p)
-	p.add_child(UiTheme.vbox(10))
+	var body := UiTheme.vbox(10)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	p.add_child(body)
 	return p
+
+
+func _dress_start() -> void:
+	for state in ["normal", "hover", "pressed", "hover_pressed"]:
+		var pressed: bool = state in ["pressed", "hover_pressed"]
+		var tex := UiTheme.art_cached(ART + "march_" + ("pressed" if pressed else state))
+		if tex != null:
+			start_btn.add_theme_stylebox_override(state, UiTheme.nine_box(tex, [32, 20, 32, 20], [34, 12 if pressed else 8, 34, 4 if pressed else 8]))
+	for state in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
+		start_btn.add_theme_color_override(state, Color("fff3cd"))
+	start_btn.add_theme_color_override("font_outline_color", Color("763128"))
+	start_btn.add_theme_constant_override("outline_size", 3)
+	start_btn.add_theme_font_override("font", UiPalette.cjk_font_bold())
+	var focus := StyleBoxFlat.new()
+	focus.draw_center = false
+	focus.set_corner_radius_all(9)
+	focus.set_border_width_all(3)
+	focus.set_expand_margin_all(2)
+	focus.border_color = Color("ffdc75")
+	start_btn.add_theme_stylebox_override("focus", focus)
+	start_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+
+func _empty(col: VBoxContainer, art_name: String) -> void:
+	var row := UiTheme.hbox(12)
+	col.add_child(row)
+	var tex := UiTheme.art_cached(ART + art_name)
+	if tex != null:
+		var pic := UiTheme.picture(tex, TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
+		pic.custom_minimum_size = Vector2(66, 50)
+		row.add_child(pic)
+	row.add_child(_line(UiText.t("meta.none_yet")))
 
 
 static func _col(p: PanelContainer) -> VBoxContainer:
@@ -87,13 +131,17 @@ static func _col(p: PanelContainer) -> VBoxContainer:
 func _chip(text: String) -> PanelContainer:
 	var chip := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_CHIP)
 	chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	chip.add_child(UiTheme.make_label(text, CHIP_FONT, UiTheme.INK))
+	var label := UiTheme.make_label(text, CHIP_FONT, UiTheme.INK)
+	var width := UiPalette.cjk_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(CHIP_FONT)).x
+	label.custom_minimum_size.x = minf(ceilf(width) + 2.0, WIDTH - 122.0)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	chip.add_child(label)
 	return chip
 
 
 ## 统一教程 D：下一段是哪张图、第几段；右下一个「跳过剩余教程」（点了先弹确认页，不直接跳）
 func _fill_tutorial(col: VBoxContainer, nxt: ChapterDef) -> void:
-	col.add_child(UiTheme.make_label(Names.of(nxt), NAME_FONT, UiTheme.INK))
+	col.add_child(_line(Names.of(nxt), NAME_FONT))
 	col.add_child(_chip(UiText.t("meta.tutorial_step") % [flow.tutorial_number(nxt), flow.tutorial_chapters().size()]))
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -132,13 +180,14 @@ func _fill_last(col: VBoxContainer) -> void:
 	var ch := flow.character_of(m.last_character) if m.last_character != &"" else null
 	var chapter := _last_chapter()
 	if ch == null and chapter == null:
-		col.add_child(_line(UiText.t("meta.none_yet")))
+		_empty(col, "rolled_map")
 		return
 	if ch != null:
 		var row := UiTheme.hbox(14)
 		col.add_child(row)
 		row.add_child(PortraitSlot.new(PORTRAIT, Nameplate.character_face(ch.id)))
-		var name_ := UiTheme.make_label(Names.of(ch), NAME_FONT, UiTheme.INK)
+		var name_ := _line(Names.of(ch), NAME_FONT)
+		name_.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(name_)
 		_last_lines.append(name_.text)
@@ -189,18 +238,30 @@ func _fill_supplies(col: VBoxContainer) -> void:
 			_belt.append([StringName(String(id)), int(grants[id])])
 	_buffs = flow.meta_buffs()
 	if _belt.is_empty() and _buffs.is_empty():
-		col.add_child(_line(UiText.t("meta.none_yet")))
+		_empty(col, "ration_crate")
 		return
+	var scroll := ScrollContainer.new()
+	scroll.name = "SupplyScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.follow_focus = true
+	scroll.get_v_scroll_bar().focus_mode = Control.FOCUS_ALL
+	col.add_child(scroll)
+	var contents := UiTheme.vbox(10)
+	contents.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(contents)
 	if not _belt.is_empty():
-		var row := UiTheme.hbox(12)
-		col.add_child(row)
+		var row := HFlowContainer.new()
+		row.add_theme_constant_override("h_separation", 12)
+		row.add_theme_constant_override("v_separation", 8)
+		contents.add_child(row)
 		for pair in _belt:
 			row.add_child(BeltSlot.new(BeltSkillDef.find(pair[0]), int(pair[1])))
 	if not _buffs.is_empty():
 		var flow_row := HFlowContainer.new()
 		flow_row.add_theme_constant_override("h_separation", 8)
 		flow_row.add_theme_constant_override("v_separation", 8)
-		col.add_child(flow_row)
+		contents.add_child(flow_row)
 		for id in _buffs:
 			var def: RunBuffDef = flow.buff_defs.get(id, null)
 			var chip := _chip(Names.of(def) if def != null else String(id))
@@ -209,8 +270,11 @@ func _fill_supplies(col: VBoxContainer) -> void:
 			flow_row.add_child(chip)
 
 
-func _line(text: String) -> Label:
-	return UiTheme.make_label(text, LINE_FONT, UiTheme.INK)
+func _line(text: String, font_size: int = LINE_FONT) -> Label:
+	var label := UiTheme.make_label(text, font_size, UiTheme.INK)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return label
 
 
 func last_lines() -> Array[String]:

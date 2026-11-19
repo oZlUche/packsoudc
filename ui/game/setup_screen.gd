@@ -674,6 +674,14 @@ func _preset_hint() -> void:
 	say(UiText.t("setup.preset_hint"))
 
 
+## 页标题占左上角。选套装的第一次提示和出发警告从标题右边排，卷轴层还会约束屏幕右缘。
+func notice_beside() -> float:
+	if _title == null or size.x <= 0:
+		return 0.0
+	var title_end := PAGE_MARGIN + _title_indent.custom_minimum_size.x + _title.get_combined_minimum_size().x
+	return title_end + NoticeLayer.GAP - size.x * 0.5
+
+
 ## 换到第 [param i] 页（0..2）：只显示那一页，标题与右下角按钮跟着变
 func show_page(i: int) -> void:
 	var was := _page
@@ -1829,8 +1837,9 @@ func _rebuild_board() -> void:
 	var under := _hbox(8)
 	under.custom_minimum_size.x = room
 	_board_host.add_child(under)
-	_readout = _log_box(13)
-	_readout.custom_minimum_size = Vector2(0, 48)     # 180：只两行
+	_readout = UiTheme.rich_line("", 17, Color("f6e8bf"))
+	_readout.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_readout.custom_minimum_size = Vector2(0, 48)     # 放大字号或长文本时可向下增长
 	_readout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_readout.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	under.add_child(_readout)
@@ -1840,6 +1849,9 @@ func _rebuild_board() -> void:
 	_stamina.set_width(0.0)
 	_stamina.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	under.add_child(_stamina)
+	# 第一次内容刷新通常在容器排版前。先按棋盘减去耐力签和列距量行宽，避免按一字宽换行撑高整块行囊板。
+	_readout.custom_minimum_size.x = room - _stamina.get_combined_minimum_size().x - under.get_theme_constant("separation")
+	_readout.size.x = _readout.custom_minimum_size.x
 	_drag.register_view(_board_view)
 	_board_view.actions_for = item_actions.bind(_board_view)     # 230：右键 = 钉住悬浮窗，信物奉为主信仰改成按钮
 	_board_view.item_double_clicked.connect(quick_move)     # 109：每次重建棋盘视图都要重新接
@@ -1959,7 +1971,7 @@ func _entry_row(icon: EntryIcon, title: String, text: String, tail: String, iron
 		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col.add_child(body)
 	if tail != "":
-		var tail_label := _label(tail, ENTRY_TAIL_SIZE, UiPalette.DIM)
+		var tail_label := _wrapped(tail, ENTRY_TAIL_SIZE, UiPalette.DIM, card_width() - EntryIcon.SIDE - 12)
 		col.add_child(tail_label)
 		_fit_labels.append([tail_label, ENTRY_TAIL_SIZE])
 	_entries.append(row)

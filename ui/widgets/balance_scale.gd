@@ -147,8 +147,10 @@ func coin_rects() -> Array[Rect2]:
 ## 小牌上的「金币 + 数」（钱 = 金币图标 + 数）
 func _draw_coin_amount(r: Rect2, amount: int) -> void:
 	var fs := UiTheme.sz(FONT_SIZE)     # 258：按字号档
-	var f := UiPalette.cjk_font_bold()
-	var text := "%d" % amount
+	var f := UiPalette.numeral_font()
+	var text := str(amount)
+	while fs > 9 and roundf(fs * CoinLabel.COIN_SCALE) + CoinLabel.GAP + f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > r.size.x - 6.0:
+		fs -= 1
 	var side := roundf(fs * CoinLabel.COIN_SCALE)
 	var w := side + CoinLabel.GAP + f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	var mid := r.get_center()
@@ -160,5 +162,7 @@ func _draw_coin_amount(r: Rect2, amount: int) -> void:
 
 func _draw_centered(r: Rect2, text: String, font_size: int) -> void:
 	var f := UiPalette.cjk_font_bold()
-	draw_string(f, Vector2(r.position.x, r.get_center().y + (f.get_ascent(font_size) - f.get_descent(font_size)) * 0.5),
-		text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, font_size, INK)
+	var fs := TextFit.size_for(f, text, UiTheme.sz(font_size), r.size.x - 8.0, 9)
+	var ink := Color("226145") if left >= right else Color("853e30")
+	draw_string(f, Vector2(r.position.x, r.get_center().y + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5),
+		text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, fs, ink)

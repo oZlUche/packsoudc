@@ -35,14 +35,13 @@ static func run_layout(t: TestCase) -> void:
 	for e in d.entries:
 		if String(e["anchor"]) == "bar_right":
 			right_ids.append(StringName(e["id"]))
-	t.eq(right_ids, [&"reopen_button", &"skills", &"dev_drawer"] as Array[StringName], "栏右槽：放大镜、技能、调试台箭头（235：背包并进栏的右头）")
+	t.eq(right_ids, [&"skills", &"dev_drawer"] as Array[StringName], "栏右槽：技能、调试台箭头（235：背包并进栏的右头）")
 	# 166 补充一：主动技能对玩家藏着 —— 技能按钮的条目在（摆读数右键放得出来），默认不显示；其余右槽照常
 	t.eq(bool(d.entry_of(&"skills")["visible"]), not RunSkills.ACTIVE_HIDDEN, "技能按钮默认%s（ACTIVE_HIDDEN = %s）" % ["藏着" if RunSkills.ACTIVE_HIDDEN else "显示", RunSkills.ACTIVE_HIDDEN])
-	for id in [&"reopen_button", &"dev_drawer"]:
-		t.check(bool(d.entry_of(id)["visible"]), "%s 默认显示" % id)
+	t.check(bool(d.entry_of(&"dev_drawer")["visible"]), "调试台默认显示")
 	t.eq(String(d.entry_of(&"legend")["anchor"]), "bottom_left", "图例在左下角")
 	t.check(int(d.entry_of(&"routes")["line"]) < int(d.entry_of(&"legend")["line"]), "路线在图例上面")
-	for id in [&"extract_button", &"menu_button", &"log", &"ground_count", &"status"]:
+	for id in [&"extract_button", &"menu_button", &"log", &"ground_count", &"status", &"reopen_button"]:
 		t.check(not HudWidgets.has(id) and d.entry_of(id).is_empty(), "%s 不再是部件（删了 / 进了调试台）" % id)
 	t.eq(int(d.to_dict()["version"]), HudLayout.VERSION, "存的布局带版本")
 	t.not_null(HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "top", "tier": "double"}]}), "double 档认得")
@@ -60,8 +59,10 @@ static func run_layout(t: TestCase) -> void:
 		t.eq(kept.entries.size(), 1, "删掉的两件不进布局")
 		t.eq(String(kept.entry_of(&"wallet").get("anchor", "")), "left", "别的摆法照用")
 	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "left"}, {"id": "reopen_button", "anchor": "bar_right"}]})
-	t.not_null(old, "栏槽锚点认得")
+	t.not_null(old, "旧放大镜条目可迁移")
 	if old != null:
+		t.eq(old.entries.size(), 1, "迁移后无放大镜占位")
+		t.eq(old.entry_of(&"wallet")["anchor"], "left", "钱包仍在自定义左侧锚点")
 		t.check(not bool(old.entry_of(&"wallet")["debug_only"]), "文件里没写 debug_only：按默认（货币不是）")
 	t.check(GameSettings.new().debug_mode, "调试模式：默认开")
 	var gs := GameSettings.new()
@@ -178,7 +179,7 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	vit.refresh()
 	t.eq(vit.call("grid").y, 1, "回到 %d 颗：一行" % max0)
 	# 屏幕的部件：没有屏幕（这里）就空着、藏着，不报错
-	for id in [&"reopen_button", &"routes"]:
+	for id in [&"skills", &"routes"]:
 		t.check(host.widget(id) != null and not host.widget(id).visible, "%s：没有屏幕给部件，藏着" % id)
 	var no_belt := HudWidgets.create(&"belt")
 	root.add_child(no_belt)
@@ -313,11 +314,10 @@ static func frame_map_screen(t: TestCase, root: Window) -> void:
 ## 日志、地上件数、提示行在调试台里（调试模式关了也照写）；暂停菜单没有「存档并回主菜单」
 static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow, run: RunState) -> void:
 	host.arrange()
-	for id in [&"dev_drawer", &"reopen_button"]:
-		var w := host.widget(id) as HudPartWidget
-		t.check(w != null and w.part == map.hud_part(id) and w.part.get_parent() == w, "%s：部件装进了组件" % id)
-		t.check(w.position.y + w.size.y <= host.bar_height(), "%s 在顶端栏里" % id)
-	t.check(map.hud_part(&"reopen_button") is IconButton and map.hud_part(&"bag_button") == null, "放大镜是图标按钮；235：背包不再是部件（栏的右头）")
+	var drawer_part := host.widget(&"dev_drawer") as HudPartWidget
+	t.check(drawer_part != null and drawer_part.part == map.hud_part(&"dev_drawer") and drawer_part.part.get_parent() == drawer_part, "调试台按钮装进了组件")
+	t.check(drawer_part.position.y + drawer_part.size.y <= host.bar_height(), "调试台按钮在顶端栏里")
+	t.check(map.hud_part(&"reopen_button") == null and map.hud_part(&"bag_button") == null, "地图没有单独的放大镜与背包小钮")
 	# 166 补充一：技能按钮默认藏着；摆读数时右键放出来，有主动技能的角色就画出按钮（验技能用）
 	var sk := host.widget(&"skills")
 	if sk != null and RunSkills.ACTIVE_HIDDEN:
@@ -387,7 +387,7 @@ static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow,
 	flow.settings.debug_mode = false
 	map.apply_debug_mode()
 	map._note("关着时写的一行")
-	t.check(host.widget(&"reopen_button") != null, "别的组件照旧")
+	t.check(host.widget(&"wallet") != null, "钱包组件照旧")
 	flow.settings.debug_mode = true
 	map.apply_debug_mode()
 	var said := log_.get_parsed_text()

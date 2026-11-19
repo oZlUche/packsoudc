@@ -51,7 +51,7 @@ func open(payload: Dictionary) -> void:
 	var buttons := _hbox(8)
 	_offer_btn = ScrollKey.primary(UiText.t("altar.offer"), offer, true)     # 乙 石刻：主键压蜡封，预览是第二行小字
 	_offer_btn.disabled = true
-	_offer_btn.tooltip_text = UiText.t("altar.intro") + ((UiText.t("altar.offerings") % def.offerings_summary()) if def != null and not def.offerings.is_empty() else "")
+
 	buttons.add_child(_offer_btn)
 	var back := ScrollKey.make(UiText.t("setup.back"), to_map)
 	back.tooltip_text = UiText.t("altar.back_tip")
@@ -213,9 +213,7 @@ func _rebuild_actions() -> void:
 		b.toggle_mode = false
 		if b is StoneChip:
 			(b as StoneChip).set_state_ink("disabled", STELE_DISABLED_INK)
-		var why := perk.altar_available(run, _node)
-		b.disabled = why != "" or not _altar_open()
-		b.tooltip_text = why if why != "" else perk.describe() + "\n" + UiText.t("altar.actions")     # 226 批二：「特殊操作（二选一……）」那行删了，括号里的话进按钮悬浮窗
+		b.set_meta(&"perk", perk)
 		arow.add_child(b)
 		if not perk.altar_options().is_empty():
 			var pick := OptionButton.new()
@@ -241,6 +239,7 @@ func _refresh() -> void:
 		_rebuild_actions()
 	if def == null:
 		_head.text = UiText.t("altar.no_faith")
+		_offer_btn.tooltip_text = _head.text
 		_offer_btn.disabled = true
 		return
 	_head.text = UiText.t("altar.head") % run.faith_power.line()     # line() 自己以神名开头
@@ -257,8 +256,18 @@ func _refresh() -> void:
 		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"]), int(p.get("prayer", 0))]
 		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
 	ScrollKey.show_sub(_offer_btn, UiText.t("altar.offer"), line)
-	for b in _action_btns:
-		(b as Button).disabled = (b as Button).disabled or not open_
+	var rules := UiText.t("altar.offerings") % def.offerings_summary() if not def.offerings.is_empty() else ""
+	_offer_btn.tooltip_text = UiText.t("altar.intro") + rules
+	if int(p["count"]) > 0:
+		_offer_btn.tooltip_text += "\n" + _preview
+	for node in _action_btns:
+		var b := node as Button
+		var perk := b.get_meta(&"perk") as FaithPerk
+		var why := perk.altar_available(run, _node)
+		b.disabled = not open_ or why != ""
+		b.tooltip_text = UiText.t("altar.used") if not open_ else (why if why != "" else perk.describe() + "\n" + UiText.t("altar.actions"))
+		if b.has_meta(&"pick"):
+			(b.get_meta(&"pick") as OptionButton).disabled = b.disabled
 
 
 ## 101：神坛是一局的模块（没装 = 这一局没有神坛）

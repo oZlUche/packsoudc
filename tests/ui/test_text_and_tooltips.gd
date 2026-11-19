@@ -208,7 +208,7 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	host.size = Vector2(800, 600)
 	root.add_child(host)
 	var board := GridInventory.new(Vector2i(4, 3), 1)
-	var gauze := ItemInstance.create(c.items.get_def(&"bandage"))     # 298：刀有「可拼为」的道具词，窗会照 286 留着；这里要一件没配方词的
+	var gauze := ItemInstance.create(c.items.get_def(&"bandage"))
 	board.place(gauze, Vector2i(0, 0), 0)
 	var view := InventoryView.new()
 	view.inventory = board
@@ -223,7 +223,11 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	view.gui_input.emit(mm)
 	t.check(tip.is_showing() and tip.text().contains("纱布"), "停在纱布上：显示纱布的说明")
 	var mm2 := InputEventMouseMotion.new()
-	mm2.position = Vector2(150, 120)
+	# 纱布可合成绷带卷，移入配方窗本应保留。走到道具正下方的空格，避开右侧的窗。
+	var empty_cell := Vector2i(0, 2)
+	mm2.position = view.cell_origin_px(empty_cell) + Vector2.ONE * view.cell_px / 2.0
+	t.eq(view.uid_at_cell(empty_cell), GridInventory.EMPTY_UID, "道具下方是空格")
+	t.check(not tip._held_by_recipe(view.get_global_transform() * mm2.position), "空格中心在配方窗与连接区之外")
 	view.gui_input.emit(mm2)
 	t.check(not tip.is_showing(), "作者 10-27：移到空格当场藏起来（不再有宽限）")
 	tip.can_show = func(_v: ContainerView, _uid: int) -> bool: return false

@@ -230,11 +230,14 @@ func _scene_size() -> Vector2:
 
 
 func _on_piece_hovered(on: bool, p_piece: CampPiece) -> void:
+	if not is_instance_valid(_tip) or _bag != null:
+		return
 	if not on:
 		_tip.release()
 		return
 	var second := p_piece.effect if p_piece.enabled else (p_piece.why if p_piece.why != "" else UiText.t("camp.unavailable"))
-	_tip.show_text("[b]%s[/b]\n%s" % [p_piece.display_name, second], get_global_mouse_position())
+	var at := p_piece.get_global_rect().get_center() if p_piece.has_focus() and not p_piece.hovered else get_global_mouse_position()
+	_tip.show_text("[b]%s[/b]\n%s" % [p_piece.display_name, second], at)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -408,6 +411,8 @@ func toggle_bag() -> void:
 	if flow.run == null:
 		return
 	_tip.hide_tip()
+	for piece_: CampPiece in _pieces.values():
+		piece_.focus_mode = Control.FOCUS_NONE
 	_open_bag(flow.run)
 
 
@@ -488,6 +493,13 @@ class CampPiece extends Control:
 
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
+		focus_mode = Control.FOCUS_ALL
+		focus_entered.connect(func():
+			queue_redraw()
+			hovered_changed.emit(true))
+		focus_exited.connect(func():
+			queue_redraw()
+			hovered_changed.emit(hovered))
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		mouse_entered.connect(func():
 			hovered = true
@@ -496,7 +508,7 @@ class CampPiece extends Control:
 		mouse_exited.connect(func():
 			hovered = false
 			queue_redraw()
-			hovered_changed.emit(false))
+			hovered_changed.emit(has_focus()))
 
 	func texture_name() -> String:
 		return tex_on if enabled else tex_off
@@ -523,7 +535,7 @@ class CampPiece extends Control:
 	func _draw() -> void:
 		var name_ := texture_name()
 		var org := _origin(name_) * _scale
-		if hovered and enabled:
+		if (hovered and enabled) or has_focus():
 			var ring := UiTheme.art_cached("rest/hover_ring")
 			if ring != null:
 				draw_texture_rect(ring, Rect2(org - _origin("hover_ring") * _scale, _size_of("hover_ring") * _scale), false)
@@ -569,6 +581,11 @@ class CampPiece extends Control:
 		return bm
 
 	func _gui_input(event: InputEvent) -> void:
+		if event.is_action_pressed("ui_accept") and has_focus():
+			accept_event()
+			if enabled:
+				pressed.emit()
+			return
 		var mb := event as InputEventMouseButton
 		if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT and enabled:
 			accept_event()

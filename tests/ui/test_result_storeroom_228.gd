@@ -57,6 +57,8 @@ static func frame_storeroom_page(t: TestCase, root: Window) -> void:
 	t.eq(_art_of(screen.continue_button()), UiTheme.art_cached("result/btn_wood_continue_normal"), "继续换琥珀木牌")
 	t.eq(screen.continue_button().custom_minimum_size, Vector2(252, 77), "继续 252 × 77")
 	var wh = screen.get("_wh")
+	t.eq(_art_of(wh._store_btn), UiTheme.art_cached("result/action_stock"), "入库操作使用绿漆牌")
+	t.eq(_art_of(wh._tidy_btn), UiTheme.art_cached("result/action_sort"), "整理使用浅木牌")
 	for b: Button in [wh._store_btn, wh._tidy_btn]:
 		t.check(_home(b) and b.custom_minimum_size == Vector2(180, 67), "「%s」木牌 180 × 67" % b.text)
 	var shelf: WarehousePages = wh.shelf()

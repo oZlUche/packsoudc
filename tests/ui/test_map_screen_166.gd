@@ -103,10 +103,10 @@ static func run_autosave(t: TestCase) -> void:
 
 
 static func run_coach_data(t: TestCase) -> void:
-	t.begin("166 · 教程步骤是数据：序章地图那份四步（体力、货币、背包、放大镜），目标都是登记过的读数部件；坏的报出来")
+	t.begin("166 · 教程步骤是数据：序章地图那份四步（体力、货币、背包、当前节点），目标跟随实际组件与棋子；坏的报出来")
 	var steps := CoachOverlay.load_steps(&"prologue_map")
 	var targets: Array = steps.map(func(s: Dictionary) -> String: return String(s["target"]))
-	t.eq(targets, ["vitality", "wallet", "bag_end", "reopen_button"], "四步按顺序（235：背包指栏的右头）")
+	t.eq(targets, ["vitality", "wallet", "bag_end", "current_node"], "四步按顺序（235：背包指栏的右头）")
 	t.eq(CoachOverlay.problems(steps), [] as Array[String], "没有问题")
 	var bad := CoachOverlay.problems([{"target": "nope", "text": "x", "texts": {"en": "x"}}, {"target": "wallet", "texts": {"en": "x"}}])
 	t.check(bad.size() == 2 and bad[0].contains("nope") and bad[1].contains("没写说明"), "坏目标、没写字都报：%s" % "；".join(bad))

@@ -204,7 +204,7 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	t.eq(nums.get("总分"), "1422", "269：总分 = 战利 953 + 40 + 战绩 4×25 + 100 + 探索 12×2 + 4×5 + 2×5 + 7×25")
 	t.check(not ledger.is_revealed() and not ledger.rows()[0]["shown"], "进屏时还没显出")
 	var plate := screen.find_child("TitlePlate", true, false) as TextureRect
-	t.check(plate != null and plate.texture != null, "224（作者 16:32）：标题刻在标题牌上")
+	t.check(plate != null and plate.texture == UiTheme.art_cached("result/title_plate"), "撤离牌使用月桂图案")
 	t.check(screen.continue_button() != null and screen.continue_button().disabled, "全显之前「继续」不可点")
 	t.eq(LedgerView.text_at(ledger._rows[0], 0.5), "6", "数字从零滚到实值（一半时 6）")
 	ledger.reveal_all()
@@ -250,6 +250,8 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	root.add_child(lost)
 	lost.open({"result": d})
 	t.eq(lost.numbers().get("带出的东西"), "托付 1 件", "224：战败同一张账单，带出的东西只有保险箱那半句")
+	var lost_plate := lost.find_child("TitlePlate", true, false) as TextureRect
+	t.check(lost_plate != null and lost_plate.texture == UiTheme.art_cached("result/title_defeat"), "战败牌使用断矛图案")
 	t.eq(lost.numbers().get("总分"), "40", "总分 = 保险箱")
 	t.eq(lost.numbers().get("带出金币"), "0", "钱没了")
 	t.eq(lost.safe_view(), null, "224 补充二：战败不显示保险箱")

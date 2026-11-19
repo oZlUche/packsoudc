@@ -65,7 +65,10 @@ func _init() -> void:
 		var b := Button.new()
 		b.name = "Shelf_" + key
 		b.flat = true
-		b.focus_mode = Control.FOCUS_NONE
+		b.focus_mode = Control.FOCUS_ALL
+		b.add_theme_stylebox_override("focus", UiTheme.focus_ring())
+		b.focus_entered.connect(queue_redraw)
+		b.focus_exited.connect(queue_redraw)
 		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		b.position = (c["rect"] as Rect2).position
 		b.size = (c["rect"] as Rect2).size
@@ -108,7 +111,7 @@ func tag_text(key: String) -> String:
 
 
 func hot(key: String) -> bool:
-	return _btns.has(key) and (_btns[key] as Button).is_hovered()
+	return _btns.has(key) and UiTheme.menu_line_lit(_btns[key] as Button)
 
 
 ## 进度 → 档：clampi(floori(done × 5 / total), 0, 4)；total 为 0 时 t0

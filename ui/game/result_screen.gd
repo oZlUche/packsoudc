@@ -7,6 +7,7 @@
 ## （皮带框 + 格缝，同背包棋盘），第二页只剩带回的棋盘（格子 72）和贴右上角的仓库；战败只有标题牌、账单、继续，没有第二页
 extends GameScreen
 
+const ResultControls := preload("res://ui/widgets/result_controls.gd")
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 
 var _wh = null
@@ -34,13 +35,11 @@ var _continue: Button = null
 ## 224：设计稿（1600 × 1000）上的摆位 —— 账面左上、继续钮左上（账单下居中）。补充二按美术 v2 `layout.json`（×1.2）
 const LEDGER_AT := Vector2(368, 210)
 const CONTINUE_AT := Vector2(674, 834)
-const CONTINUE_SIZE := Vector2(252, 77)
+const CONTINUE_SIZE := ResultControls.BUTTON_SIZE
 ## 224：「继续」的图（`assets/ui/result/<它>_*.png`）与字心。作者 16:06 定石键（罗马式箭头），两页同款；第 2 页的小钮也是石键。
 ## 补充二：英文小一号、字心左移（字尾离箭头的圆头留 25 px）
 const CONTINUE_ART := "result/btn_stone"
-const CONTINUE_LABEL_AT := Vector2(110, 38)
-const CONTINUE_LABEL_AT_EN := Vector2(100, 38)
-const CONTINUE_BLEED := 7.0
+const CONTINUE_BLEED := ResultControls.BUTTON_BLEED
 ## 224（作者 16:32）：第一页的标题牌 —— 牌左上、大小；图比牌四周各大 7（2 倍分辨率，按图的 1x 大小缩着画）
 const TITLE_PLATE_ART := "result/title_plate"
 const TITLE_PLATE_AT := Vector2(608, 92)
@@ -71,6 +70,7 @@ func to_step(n: int) -> void:
 	if UiMotion.enabled(flow.settings if flow != null else null) and is_inside_tree():
 		old = Control.new()
 		old.name = "PageFadeOut"
+		old.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		old.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		for c in get_children():
 			if c != _own_notices:
@@ -169,13 +169,6 @@ func _place(c: Control, at: Vector2, sz: Vector2) -> Control:
 	return c
 
 
-## 224：「继续」图按钮（字由代码写）；228：第一页石键、第二页琥珀木牌（同尺寸、同字心）
-func _continue_button(handler: Callable, art: String = CONTINUE_ART) -> Button:
-	var en := UiText.lang == "en"
-	return UiTheme.make_art_text_button(UiText.t("menu.continue"), handler, art, CONTINUE_SIZE,
-		CONTINUE_LABEL_AT_EN if en else CONTINUE_LABEL_AT, 28 if en else 34, CONTINUE_BLEED)
-
-
 ## 228：第二页顶上挂着的标题木牌 —— 九宫格（两头不拉伸），字写在牌面正中；牌是浅木（tone light）、墨字。
 ## 牌宽按字撑（至少图上那块 384），图上方 36 是两根麻绳
 func _title_plank(text: String) -> Control:
@@ -234,13 +227,10 @@ func _build_summary() -> void:
 	add_child(page)
 	UiTheme.set_tone(page, UiTheme.TONE_LIGHT)     # 石板是浅底：标题墨字
 	# 作者 16:32「去掉所有界面里的裸露文字」：标题刻进标题牌（半透明，直接画在石板上），副标题（章节 · 结局）删掉
-	var plate := UiTheme.picture(UiTheme.art_cached(TITLE_PLATE_ART), TextureRect.STRETCH_SCALE)     # 补充二：图是 2 倍分辨率，按牌的 1x 大小缩着画
+	var plate := UiTheme.picture(UiTheme.art_cached(TITLE_PLATE_ART if extracted else "result/title_defeat"), TextureRect.STRETCH_SCALE)     # 补充二：图是 2 倍分辨率，按牌的 1x 大小缩着画
 	plate.name = "TitlePlate"
 	page.add_child(_place(plate, TITLE_PLATE_AT + TITLE_PLATE_ORIGIN, TITLE_PLATE_SIZE - TITLE_PLATE_ORIGIN * 2.0))
-	var title := UiTheme.make_title_label(UiText.t("result.extracted") if extracted else UiText.t("result.defeat"), TITLE_SIZE)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.set_meta(&"exempt_bare_text", "TitlePlate")     # 226 守门：字摆在同位置那块标题牌图上
+	var title := ResultControls.outcome_heading(extracted, TITLE_SIZE, TITLE_PLATE_SIZE.y)
 	page.add_child(_place(title, TITLE_PLATE_AT, TITLE_PLATE_SIZE))
 	# 104：信力节奏的量尺（数值都是占位，作者打几局对着这一行调表）
 	# 作者 10-26：单独的「导出信力 CSV」删了 —— 每局的信力记录随对局记录写进 calibration/runs_faith/，跟「导出平衡数据」一起打包
@@ -255,7 +245,7 @@ func _build_summary() -> void:
 	if extracted:
 		_add_safe(page)
 	_add_insight(page)
-	_continue = _continue_button(to_step.bind(2) if _has_store_step() else proceed)
+	_continue = ResultControls.continue_button(to_step.bind(2) if _has_store_step() else proceed, CONTINUE_ART)
 	page.add_child(_place(_continue, CONTINUE_AT, CONTINUE_SIZE))
 	_continue.disabled = not _ledger.is_revealed()
 	_ledger.revealed.connect(func():
@@ -377,6 +367,8 @@ func _add_warehouse(col: VBoxContainer) -> void:
 	_wh.setup(flow, font)
 	_wh.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(_wh)
+	ResultControls.dress_store_button(_wh._store_btn, "action_stock")
+	ResultControls.dress_store_button(_wh._tidy_btn, "action_sort")
 	if _area != null:     # 量石板内容区（锚在屏上，不随内容变）；量滚动区会被仓库撑宽、越放越大
 		_area.resized.connect(_fit_shelf.bind(_area))
 		_fit_shelf(_area)
@@ -415,7 +407,7 @@ func _add_safe(page: Control) -> void:
 
 ## 「继续」（[method proceed]）：224 起放进仓库面板按钮行的右端（作者 16:32：序章之间那句「下面直接进…」也删了）
 func _add_proceed(outer: VBoxContainer) -> void:
-	_continue = _continue_button(proceed, STORE_CONTINUE_ART)     # 228：琥珀木牌
+	_continue = ResultControls.continue_button(proceed, STORE_CONTINUE_ART)     # 228：琥珀木牌
 	var row: HBoxContainer = _wh.button_row() if _wh != null else null
 	if row == null:
 		outer.add_child(_continue)

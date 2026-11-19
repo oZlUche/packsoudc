@@ -38,6 +38,8 @@ var _coin: CoinLabel = null
 var _clip: Control
 var _rollers: Control
 var _paper_w := 0.0
+var _natural_w := 0.0
+var _paper_h := PAPER_H
 
 
 static func make(p_text: String, p_urgent: bool = false) -> NoticeScroll:
@@ -82,10 +84,30 @@ func _build() -> void:
 	var tw := UiPalette.cjk_font().get_string_size(_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(FONT_SIZE)).x if _label.text != "" else 0.0
 	if _coin != null:
 		tw += _coin.custom_minimum_size.x + (COIN_GAP if _label.text != "" else 0.0)
-	_paper_w = ceilf(tw) + 2.0 * PAD
+	_natural_w = ceilf(tw) + 2.0 * PAD
+	_paper_w = _natural_w
 	custom_minimum_size = Vector2(_paper_w + 2.0 * SIDE, ROLLER_H)
 	size = custom_minimum_size
 	resized.connect(_sync)
+	_sync()
+
+
+## Fit long notifications inside the available screen width, including their price.
+func fit_width(available: float) -> void:
+	var limit := maxf(1.0, available - 2.0 * SIDE)
+	_paper_w = minf(_natural_w, limit)
+	var wrapped := _natural_w > limit
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrapped else TextServer.AUTOWRAP_OFF
+	_paper_h = PAPER_H
+	if wrapped:
+		var price_w := _coin.custom_minimum_size.x + COIN_GAP if _coin != null else 0.0
+		_label.size.x = maxf(1.0, _paper_w - 2.0 * PAD - price_w)
+		_label.size.y = _label.get_minimum_size().y
+		_paper_h = maxf(PAPER_H, _label.size.y + 8.0)
+	else:
+		_label.reset_size()
+	custom_minimum_size = Vector2(_paper_w + 2.0 * SIDE, _paper_h + ROLLER_H - PAPER_H)
+	size = custom_minimum_size
 	_sync()
 
 
@@ -102,7 +124,7 @@ func coin() -> CoinLabel:
 ## 纸此刻在本控件里的矩形
 func paper_rect() -> Rect2:
 	var w := _paper_w * amount
-	return Rect2(Vector2((size.x - w) * 0.5, (ROLLER_H - PAPER_H) * 0.5), Vector2(w, PAPER_H))
+	return Rect2(Vector2((size.x - w) * 0.5, (ROLLER_H - PAPER_H) * 0.5), Vector2(w, _paper_h))
 
 
 ## 两根轴的中心 x（左、右）
@@ -118,7 +140,8 @@ func _sync() -> void:
 	var inset := minf(CLIP_IN, r.size.x * 0.5)
 	_clip.position = Vector2(r.position.x + inset, r.position.y)
 	_clip.size = Vector2(maxf(0.0, r.size.x - 2.0 * inset), r.size.y)
-	_label.reset_size()
+	if _label.autowrap_mode == TextServer.AUTOWRAP_OFF:
+		_label.reset_size()
 	# 字钉在整卷中心：裁切框挪，字反着挪（有那枚红金币就字 + 金币一起居中）
 	var lw := _label.size.x if _label.text != "" else 0.0
 	var cw := 0.0
@@ -126,9 +149,9 @@ func _sync() -> void:
 		_coin.size = _coin.custom_minimum_size
 		cw = _coin.size.x + (COIN_GAP if lw > 0.0 else 0.0)
 	var x0 := (size.x - lw - cw) * 0.5 - _clip.position.x
-	_label.position = Vector2(x0, (PAPER_H - _label.size.y) * 0.5)
+	_label.position = Vector2(x0, (_paper_h - _label.size.y) * 0.5)
 	if _coin != null:
-		_coin.position = Vector2(x0 + lw + cw - _coin.size.x, (PAPER_H - _coin.size.y) * 0.5)
+		_coin.position = Vector2(x0 + lw + cw - _coin.size.x, (_paper_h - _coin.size.y) * 0.5)
 	_rollers.size = size
 	queue_redraw()
 	_rollers.queue_redraw()
@@ -154,7 +177,7 @@ func _draw_rollers() -> void:
 	if tex == null:
 		return
 	for x in [roller_x().x, roller_x().y]:
-		_rollers.draw_texture_rect(tex, Rect2(Vector2(x - ROLLER_W * 0.5, 0.0), Vector2(ROLLER_W, ROLLER_H)), false)
+		_rollers.draw_texture_rect(tex, Rect2(Vector2(x - ROLLER_W * 0.5, 0.0), Vector2(ROLLER_W, _paper_h + ROLLER_H - PAPER_H)), false)
 
 
 ## 开卷（[param on] = 动效开着）。返回 Tween（关着 null，直接全开）

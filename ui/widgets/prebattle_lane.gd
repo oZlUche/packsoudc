@@ -164,7 +164,7 @@ func _draw() -> void:
 	if medal != null and not medal_hidden:
 		# 按下去时整枚往下挪 2 px，做出「压下」的手感
 		var drop := 2.0 if _down else 0.0
-		draw_texture_rect(medal, Rect2(Vector2(cx, my + drop) - Vector2.ONE * MEDAL_SIDE * 0.5, Vector2.ONE * MEDAL_SIDE), false)
+		draw_texture_rect(medal, Rect2(Vector2(cx, my + drop) - Vector2.ONE * MEDAL_SIDE * 0.5, Vector2.ONE * MEDAL_SIDE), false, Color.WHITE if _enabled else Color("96908b"))
 		# 悬停一圈亮边；按着时更亮 —— 这枚铜章能按，得让人看得出来
 		if _clickable() and (_hover or _down):
 			var ring := Color("f0dcb4", 0.75 if _down else 0.45)

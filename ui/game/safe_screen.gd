@@ -9,6 +9,7 @@ extends GameScreen
 var _safe: GridInventory = null
 var _module: SafeModule = null
 var _view: InventoryView
+var _seals: Control
 var _inv: InventoryPanelScript = null
 
 
@@ -26,6 +27,12 @@ func open(_payload: Dictionary) -> void:
 	_view.dim_filter = func(it: ItemInstance) -> bool: return _module == null or not _module.is_sealed(it.uid)     # 287：交出去的压灰
 	_view.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_child(_view)
+	_seals = Control.new()
+	_seals.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_view.add_child(_seals)
+	_seals.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_seals.draw.connect(_draw_seals)
+	_view.draw.connect(_seals.queue_redraw)
 	BoardFrame.wrap(_view)     # 227：素框 + 格缝
 	var buttons := _hbox(8)
 	var back := ScrollKey.make(UiText.t("safe.close"), to_map)     # 乙 石刻：商店纸卷键
@@ -35,7 +42,12 @@ func open(_payload: Dictionary) -> void:
 
 	_inv = _mount_bag(row, _view, _safe)     # 棋盘上双击 → 进保险箱；226 批一：回话走告示层
 	_view.item_double_clicked.connect(func(_v: ContainerView, uid: int): take_back(uid))
-	_tip_double(_view, "act.take_back")     # 230
+	_view.actions_for = func(uid: int) -> Array:
+		var action := ItemActions.make(&"quick", UiText.t("act.take_back"), func(): _view.item_double_clicked.emit(_view, uid))
+		var item := _safe.get_item(uid)
+		if item != null and _module.is_sealed(uid):
+			return [ItemActions.disable(action, UiText.t("safe.sealed") % Names.of(item.def))]
+		return [action]     # 230
 	_tip_quick(_inv, "act.to_safe", func(inst: ItemInstance) -> String:
 		return "" if MetaState.keeps(inst.def) else UiText.t("safe.no_bags"))
 	# 包不进保险箱（局外不留包，MetaState.keeps）
@@ -45,6 +57,21 @@ func open(_payload: Dictionary) -> void:
 		return _is_open() and (target != _safe or MetaState.keeps(inst.def))
 	_safe.changed.connect(_refresh)
 	_refresh()
+
+
+## 托付出去的道具在其实际占据的左上格中部盖蜡封，避开品质和玩家锁的角标。
+func _draw_seals() -> void:
+	var cell := _view.cell_px
+	for item: ItemInstance in _safe.items():
+		if not _module.is_sealed(item.uid) or _view.veiled.has(item.uid):
+			continue
+		var corner := ItemPainter.corner_cell(item.def.shape, item.rotation, false, false)
+		var center := _view.cell_origin_px(item.origin + corner) + Vector2(0.21, 0.52) * cell
+		var r := cell * 0.14
+		_seals.draw_circle(center, r, Color("692c25"), true, -1.0, true)
+		_seals.draw_circle(center - Vector2.ONE * r * 0.10, r * 0.78, Color("c2573e"), true, -1.0, true)
+		_seals.draw_polyline(PackedVector2Array([center + Vector2(-0.42, 0) * r, center + Vector2(-0.09, 0.32) * r,
+			center + Vector2(0.47, -0.36) * r]), Color("ffe1a4"), maxf(1.0, r * 0.21), true)
 
 
 ## 保险箱还能改动（装了、没锁）

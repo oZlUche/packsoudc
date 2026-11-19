@@ -92,6 +92,8 @@ func _place(c: Control, slot: String, fill: bool) -> void:
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_scale.add_child(box)
 	if fill and c is Label:
+		var label := c as Label
+		TextFit.shrink_label(label, r.size.x - TITLE_PAD * 2.0, label.get_theme_font_size("font_size"), 11)
 		(c as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		(c as Label).vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		c.custom_minimum_size = r.size

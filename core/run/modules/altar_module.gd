@@ -65,7 +65,9 @@ func install(run: RunState) -> void:
 ## 现在生效的信仰级效果（激活信仰的、tier ≤ 现在的阶）
 func perks() -> Array[FaithPerk]:
 	var def := _run.active_faith() if _run != null else null
-	return def.perks_at(_run.active_faith_tier()) if def != null else [] as Array[FaithPerk]
+	if def == null:
+		return []
+	return def.perks_at(_run.active_faith_tier())
 
 
 ## 某一种效果现在生效没有（按注册表名字，`stat_mod` 之类）；没有 null

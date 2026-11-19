@@ -26,6 +26,7 @@ var motion := false
 ## 一卷一条：{"scroll": NoticeScroll, "left": 还剩几秒, "urgent": bool}
 var _lines: Array[Dictionary] = []
 var _col: VBoxContainer
+var _beside := 0.0
 
 
 static func current() -> NoticeLayer:
@@ -64,6 +65,7 @@ func _init() -> void:
 	_col.offset_top = TOP
 	_col.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_col)
+	resized.connect(_fit_scrolls)
 	set_process(true)
 
 
@@ -92,6 +94,7 @@ func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: floa
 	s.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_col.add_child(s)
 	_lines.append({"scroll": s, "left": left, "urgent": urgent})
+	_fit_scrolls()
 	s.open(motion)
 	visible = true
 
@@ -194,6 +197,22 @@ func _drop(i: int) -> void:
 ## 卷排在哪：[param beside] = 0 居中；不是 0 = 卷左沿从屏中线往右这么远起排（负 = 中线左边；游戏测试 v4.26：设置页卷排在导出石签右边）
 func _place(beside: float, top: float = 0.0) -> void:
 	set_top(top)
+	_beside = beside
+	_fit_scrolls()
+
+
+func _fit_scrolls() -> void:
+	if size.x <= 0.0:
+		return
+	var margin := 12.0
+	var widest := 0.0
+	for line in _lines:
+		var scroll := line["scroll"] as NoticeScroll
+		scroll.fit_width(maxf(1.0, size.x - 2.0 * margin))
+		widest = maxf(widest, scroll.custom_minimum_size.x)
+	var beside := _beside
+	if beside != 0.0:
+		beside = clampf(beside, margin - size.x * 0.5, size.x * 0.5 - margin - widest)
 	_col.grow_horizontal = Control.GROW_DIRECTION_END if beside != 0.0 else Control.GROW_DIRECTION_BOTH
 	_col.offset_left = beside
 	_col.offset_right = beside

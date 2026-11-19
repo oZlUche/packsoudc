@@ -210,6 +210,12 @@ func _piece_button(which: String, text: String, handler: Callable) -> TextureBut
 	var b := TextureButton.new()
 	b.name = text
 	b.ignore_texture_size = true
+	var ring := UiTheme.focus_ring()
+	b.draw.connect(func():
+		if b.has_focus() and not b.disabled:
+			b.draw_style_box(ring, Rect2(Vector2.ZERO, b.size)))
+	b.focus_entered.connect(b.queue_redraw)
+	b.focus_exited.connect(b.queue_redraw)
 	b.stretch_mode = TextureButton.STRETCH_SCALE
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.pressed.connect(func(): handler.call())
@@ -272,6 +278,10 @@ func _place_piece(b: TextureButton, which: String, s: float, offset: Vector2) ->
 	var org: Array = meta.get("origin", [0, 0])
 	b.position = offset + (Vector2(float(at[0]), float(at[1])) - Vector2(float(org[0]), float(org[1]))) * s
 	b.size = Vector2(float(sz[0]), float(sz[1])) * s
+	if which == "sign":
+		# 路标可以落在背景被裁掉的下沿，操作区域始终保留屏内留白。
+		var inset := Vector2.ONE * 14.0 * s
+		b.position = b.position.clamp(inset, (size - b.size - inset).max(inset))
 
 
 #region 公开动作

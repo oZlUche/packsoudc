@@ -25,7 +25,7 @@ static func run(t: TestCase) -> void:
 	t.check(not UiTheme.menu_line_lit(second), "没悬停没焦点：不画菱形")
 	second.free()
 	t.eq(th.get_font_size("font_size", UiTheme.BUTTON_MENU_FOOT), 18, "末档小字 18 号")
-	t.eq(th.get_color("font_color", UiTheme.BUTTON_MENU_FOOT), UiPalette.DIM, "末档暗色")
+	t.eq(th.get_color("font_color", UiTheme.BUTTON_MENU_FOOT), Color("ded4bd"), "末档暖灰字在三张背景上可读")
 	t.eq(UiTheme.ART_MENU_BGS, ["menu/bg_camp", "menu/bg_legion", "menu/bg_map"] as Array[String], "顺序：营地 → 军营 → 地图")
 	for n in UiTheme.ART_MENU_BGS:
 		var tex := UiTheme.art(n)

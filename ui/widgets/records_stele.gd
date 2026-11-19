@@ -296,17 +296,20 @@ func _draw() -> void:
 	_piece("stele_gable", o + GABLE_AT)
 	_piece("stele_laurel", o + LAUREL_AT)
 	var f := UiPalette.cjk_font()
-	var fb := UiPalette.cjk_font_bold()
+	var fb := UiPalette.numeral_font()
 	_draw_tablet(f, fb)
 	for i in _rows.size():
 		var top := o.y + MEDAL_AT.y + ROW_STEP * i
 		var num := "%d" % int(_rows[i]["count"])
-		var ns := UiTheme.sz(NUM_SIZE)
+		var label := String(_rows[i]["label"])
+		var available := BODY.x - TEXT_RIGHT - TEXT_X - 10.0
+		var label_width := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(LABEL_SIZE)).x
+		var number_room := maxf(available * 0.5, available - label_width)
+		var ns := TextFit.size_for(fb, num, UiTheme.sz(NUM_SIZE), number_room, MIN_SIZE)
 		_carved(fb, Vector2(o.x + TEXT_X, top + 56), num, ns, INK)
 		var nw := fb.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, ns).x
-		var room := BODY.x - TEXT_RIGHT - TEXT_X - nw - 10.0
-		var label := String(_rows[i]["label"])
-		_carved(f, Vector2(o.x + TEXT_X + nw + 10, top + 54), label, TextFit.size_for(f, label, UiTheme.sz(LABEL_SIZE), room, MIN_SIZE), INK)
+		_carved(f, Vector2(o.x + TEXT_X + nw + 10, top + 54), label, TextFit.size_for(f, label, UiTheme.sz(LABEL_SIZE), available - nw, MIN_SIZE), INK)
+
 	var total := f.get_string_size(_ledger, HORIZONTAL_ALIGNMENT_LEFT, -1, _ledger_size).x + _funds.size.x
 	var x0 := o.x + BAND.position.x + (BAND.size.x - total) * 0.5
 	_carved(f, Vector2(x0, o.y + BAND.position.y + BAND.size.y * 0.5 + _ledger_size * 0.35), _ledger, _ledger_size, INK)

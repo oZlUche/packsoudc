@@ -194,7 +194,13 @@ func overhang() -> float:
 	if layout == null:
 		return 0.0
 	var e := layout.entry_of(&"hud_bar")
-	return HudBarScript.dial_bottom() if not e.is_empty() and bool(e.get("visible", true)) else 0.0
+	if e.is_empty() or not bool(e.get("visible", true)):
+		return 0.0
+	var dial := widget(&"countdown")
+	var position_ := layout.entry_of(&"countdown")
+	if dial != null and dial.visible and HudLayout.in_bar(String(position_.get("anchor", ""))):
+		return HudBarScript.dial_bottom()
+	return maxf(_bar_h, HudBarScript.design_height())
 
 
 ## 166：一件读数在屏幕上的包围盒（教程挖洞用：部件挪了位置教程跟着走）；没有 / 藏着返回空矩形。

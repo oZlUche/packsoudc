@@ -20,7 +20,7 @@ static func frame_repeat_last(t: TestCase, root: Window) -> void:
 	flow.meta.funds = 30
 	var ration := flow.items.get_def(&"ration")
 	var inst := ItemInstance.create(ration)
-	t.check(flow.meta.warehouse.try_add(inst), "仓库里一份口粮")
+	t.check(flow.meta.take_back(inst), "仓库里一份口粮")
 	flow.meta.last_carry = [{"id": "ration", "origin": [0, 0], "rot": 0}, {"id": "no_such_item", "origin": [1, 0], "rot": 0}]
 	flow.meta.last_carry_funds = 50
 	for gch in flow.chapters:
@@ -35,7 +35,7 @@ static func frame_repeat_last(t: TestCase, root: Window) -> void:
 	t.eq(setup.carry_funds, 30, "现金照上回 50，收到仓库余额 30")
 	setup._record_carry()
 	t.eq(flow.meta.last_carry.size(), 1, "出发时记下这回带的")
-	t.eq(String(flow.meta.last_carry[0]["id"]), "ration", "记的是口粮")
+	t.eq(flow.meta.last_carry.map(func(e: Dictionary): return String(e["id"])), ["ration"], "记的是口粮")
 	t.eq(flow.meta.last_carry_funds, 30, "现金也记下")
 	var back := MetaState.from_dict(flow.meta.to_dict(), flow.items)
 	t.check(back != null and back.last_carry == flow.meta.last_carry and back.last_carry_funds == 30, "存档往返不丢")

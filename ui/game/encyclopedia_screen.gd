@@ -23,6 +23,7 @@ var _query: String = ""
 var _search: LineEdit
 var _toc: VBoxContainer
 var _title: Label
+var _page_scroll: ScrollContainer
 var _body: RichTextLabel
 ## 226 批四：页底下垫的那张纸
 var _paper: PanelContainer = null
@@ -67,14 +68,15 @@ func open(payload: Dictionary) -> void:
 	var sheet := _vbox(10)
 	_paper.add_child(sheet)
 	_title = _label("", 24, UiTheme.INK)
+	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sheet.add_child(_title)
 	sheet.add_child(HSeparator.new())
-	var page_scroll := UiTheme.vscroll()
-	sheet.add_child(page_scroll)
+	_page_scroll = UiTheme.vscroll()
+	sheet.add_child(_page_scroll)
 	_body = UiTheme.rich_block(PAGE_WIDTH - 20 - 2 * PAPER_PAD, UiTheme.RICH_BODY_SIZE)     # 121：正文档（现 20 号、行距 8）
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.meta_clicked.connect(func(meta: Variant): open_page(String(meta)))
-	page_scroll.add_child(_body)
+	_page_scroll.add_child(_body)
 
 	_fill_toc()
 	var first := String(payload.get("page", ""))
@@ -90,6 +92,8 @@ func open_page(id: String, remember: bool = true) -> bool:
 		return false
 	if remember and _current != "" and _current != id:
 		_history.append(_current)
+	if _current != id:
+		_page_scroll.scroll_vertical = 0
 	_current = id
 	_title.text = String(book.page(id)["title"])
 	UiTheme.set_rich(_body, book.render(id, _ctx))     # 169：颜色名按所在的底取版

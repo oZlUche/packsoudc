@@ -65,6 +65,17 @@ func setup(display_name: String, sub: String, face: Texture2D = null, portrait_s
 	return self
 
 
+static func duel(title: String, face: Texture2D, ally: bool) -> Nameplate:
+	var side := UiText.t("battle.side_mine" if ally else "battle.side_enemy")
+	var plate := Nameplate.new().setup(title, side, face, Nameplate.COMPACT_PORTRAIT)
+	var skin := UiTheme.art_box("battle/plate_ally" if ally else "battle/plate_foe")
+	if skin != null:
+		plate.add_theme_stylebox_override("panel", skin)
+	plate.name_label.add_theme_color_override("font_color", Color("fff3d5"))
+	plate.sub_label.add_theme_color_override("font_color", Color("c3eadb") if ally else Color("ffdec8"))
+	return plate
+
+
 ## 255：名字与副行下面加一句说明（13 号、折行，[param width] 是最小宽度）
 func set_blurb(text: String, width: float) -> Nameplate:
 	if text == "" or _col == null:

@@ -576,11 +576,16 @@ func _draw() -> void:
 		var tint := COLOR_BAD
 		if _preview_valid:
 			tint = COLOR_DISPLACE if _preview_costly else COLOR_OK
+		var marked := false
 		for c in _preview_cells:
 			var p := _preview_origin + c
 			if p.x < 0 or p.y < 0 or p.x >= inventory.size.x or p.y >= inventory.size.y:
 				continue
-			draw_rect(Rect2(cell_origin_px(p), Vector2(cell_px, cell_px)), tint, true)
+			var box := Rect2(cell_origin_px(p), Vector2.ONE * cell_px)
+			draw_rect(box, tint, true)
+			if not marked:
+				_draw_drop_symbol(box)
+				marked = true
 
 		# 193 §4：手上这件的格位（含旋转），点亮照现在的邻居
 		var held := {}
@@ -607,6 +612,24 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
 	_draw_fuse_marks()
 	_draw_bag_outline(_hover_bag())
+
+
+## 落点角签：同一片只画一次。可放用勾，挤占用双箭，拒绝用叉，低分彩色也能分辨。
+func _draw_drop_symbol(box: Rect2) -> void:
+	var radius := clampf(box.size.x * 0.16, 5.0, 10.0)
+	var center := box.position + Vector2(radius + 2.0, box.size.y - radius - 2.0)
+	draw_circle(center, radius, Color("#313b39"), true, -1.0, true)
+	var ink := Color("#d2f3ba")
+	if not _preview_valid:
+		ink = Color("#ffc7a7")
+		draw_line(center + Vector2(-0.45, -0.45) * radius, center + Vector2(0.45, 0.45) * radius, ink, 2.0, true)
+		draw_line(center + Vector2(0.45, -0.45) * radius, center + Vector2(-0.45, 0.45) * radius, ink, 2.0, true)
+	elif _preview_costly:
+		for dx in [-0.36, 0.14]:
+			var start := center + Vector2(dx, -0.43) * radius
+			draw_polyline(PackedVector2Array([start, start + Vector2(0.35, 0.43) * radius, start + Vector2(0, 0.86) * radius]), Color("#ffe09b"), 1.8, true)
+	else:
+		draw_polyline(PackedVector2Array([center + Vector2(-0.49, 0) * radius, center + Vector2(-0.10, 0.38) * radius, center + Vector2(0.53, -0.45) * radius]), ink, 2.1, true)
 
 
 ## 314：能合的那几件身上画小锤（勾选模式下不画）

@@ -7,8 +7,12 @@ func title() -> String:
 
 
 func watch() -> Array[Signal]:
-	var f: ErosionField = run.travel.erosion
-	return ([f.advanced, f.warned] if f != null else []) as Array[Signal]
+	var f: ErosionField = run.travel.erosion if run.travel != null else null
+	var signals: Array[Signal] = []
+	if f != null:
+		signals.append(f.advanced)
+		signals.append(f.warned)
+	return signals
 
 
 func text_of() -> String:

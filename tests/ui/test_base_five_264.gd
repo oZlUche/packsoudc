@@ -28,7 +28,12 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	t.eq(board.start_btn.text, "开始探索", "【开始探索】")
 	t.eq(board.start_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "主档木牌")
 	t.check(board.start_btn.custom_minimum_size == ExpeditionBoard.START, "360 × 96")
-	t.check(board.last_plate.custom_minimum_size == Vector2(560, 200) and board.supply_plate.custom_minimum_size == Vector2(560, 260), "两块木牌 560 × 200、560 × 260")
+	t.eq(board.supply_plate.custom_minimum_size, Vector2(ExpeditionBoard.WIDTH, ExpeditionBoard.EMPTY_H), "空军需收成一行短牌")
+	t.check(board.last_plate.custom_minimum_size.y <= ExpeditionBoard.LAST_H, "无记录时可以收短")
+	var up := board.start_btn.get_theme_stylebox("normal") as StyleBoxTexture
+	var over := board.start_btn.get_theme_stylebox("hover") as StyleBoxTexture
+	var down := board.start_btn.get_theme_stylebox("pressed") as StyleBoxTexture
+	t.check(up.texture != over.texture and down.texture != up.texture and down.content_margin_top > up.content_margin_top, "出发键三态独立，按下文字下沉")
 	var left: Control = (screen._tab_btns["expedition"] as Button).get_parent()
 	var keys: Array = left.find_children("*", "Button", true, false).filter(func(b): return (b as Button).is_visible_in_tree()).map(func(b): return (b as Button).text)
 	t.check(not keys.has("再来一局") and not keys.has("开始探索") and not keys.has("回主菜单"), "左列只剩页签（%s）" % [keys])
@@ -95,6 +100,8 @@ static func frame_last_and_supplies(t: TestCase, root: Window) -> void:
 		f.meta.tech_buffs.append(buff.id)
 	var screen = Records._screen(f, root)
 	var board: ExpeditionBoard = screen.expedition_board()
+	t.eq(board.supply_plate.custom_minimum_size.y, ExpeditionBoard.SUPPLY_H, "有物资时保留可滚动空间")
+	t.check(board.supply_plate.find_child("SupplyScroll", true, false) is ScrollContainer, "军需可换行并纵向滚动")
 	var lines := board.last_lines()
 	t.eq(lines[0] if lines.size() > 0 else "", Names.of(ch), "第一行：角色名")
 	var portraits: Array = board.last_plate.find_children("*", "PortraitSlot", true, false)
@@ -186,6 +193,7 @@ static func frame_warehouse_tools(t: TestCase, root: Window) -> void:
 	t.eq(shelf.match_count(0), 3, "页签回到全部件数")
 	screen.layout()
 	t.check(screen._wh_page.size.x <= screen.WH_NARROW + 60.0, "没带回来的棋盘：窄布（%.0f）" % screen._wh_page.size.x)
+	t.eq(screen._wh_page.size_flags_vertical, Control.SIZE_SHRINK_BEGIN, "没有撤回棋盘时，面板只占工具的高度")
 	t.eq(Bare.audit(screen._pages["warehouse"], "warehouse264"), [] as Array[String], "仓库页没有裸字")
 	screen.free()
 	var g := Records._flow()
@@ -194,6 +202,7 @@ static func frame_warehouse_tools(t: TestCase, root: Window) -> void:
 	var s2 = Records._screen(g, root)
 	s2.show_tab("warehouse")
 	t.eq(s2._wh_page.size_flags_horizontal, Control.SIZE_EXPAND_FILL, "有带回来的棋盘：粗布铺满")
+	t.eq(s2._wh_page.size_flags_vertical, Control.SIZE_EXPAND_FILL, "带回棋盘保持完整工作区")
 	s2.free()
 	Records._cleanup()
 

@@ -165,7 +165,7 @@ static func frame_notice_top(t: TestCase, root: Window) -> void:
 static func run_layout(t: TestCase) -> void:
 	t.begin("235 · 右槽小背包钮退役：登记表与默认布局都没有；旧布局文件里的 bag_button 静默丢掉，别的摆法照用（不整份回默认）")
 	t.check(not HudWidgets.has(&"bag_button") and HudLayout.default_for("map").entry_of(&"bag_button").is_empty(), "没有 bag_button")
-	t.eq(HudLayout.BAR_RIGHT, [&"reopen_button", &"skills", &"dev_drawer"] as Array[StringName], "右槽：放大镜、技能、调试台箭头")
+	t.eq(HudLayout.BAR_RIGHT, [&"skills", &"dev_drawer"] as Array[StringName], "右槽：技能、调试台箭头")
 	var problems: Array[String] = []
 	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "top_left", "offset": [40, 120]}, {"id": "bag_button", "anchor": "bar_right"}]}, problems)
 	t.check(old != null and problems.is_empty() and old.entry_of(&"bag_button").is_empty(), "读得进来、不报错、没有 bag_button（%s）" % "；".join(problems))

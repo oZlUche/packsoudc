@@ -14,12 +14,12 @@ extends InventoryView
 signal item_revealed(uid: int)
 signal reveal_finished
 
-const COLOR_SILHOUETTE := Color("2a2e36")
-const COLOR_SILHOUETTE_EDGE := Color("3c424d")
-const COLOR_NOISE := Color("4a515e")
-const COLOR_PROGRESS := Color("dfe3ea")
-const COLOR_NEXT := Color("8b93a1")
-const NOISE_PER_CELL := 14
+const COLOR_SILHOUETTE := Color("374744")
+const COLOR_SILHOUETTE_EDGE := Color("687b6b")
+const COLOR_NOISE := Color("53675b")
+const COLOR_PROGRESS := Color("ffe8a4")
+const COLOR_NEXT := Color("dfd9b7")
+const NOISE_PER_CELL := 4
 ## 没给规则时的耗时表（和 SearchRules 的默认一样）
 ## 每档稀有度搜几秒是搜索规则里的数（[method SearchRules.reveal_time]）；容器屏给这一局 / 会话的规则，没给就是一份默认的
 var rules: SearchRules = SearchRules.new()
@@ -271,30 +271,51 @@ func _label_visible(item: ItemInstance) -> bool:
 func _draw_silhouette(item: ItemInstance) -> void:
 	var cells := item.cells()
 	var anchor := cell_origin_px(item.origin)
-	ItemPainter.draw_item(self, cells, anchor, CELL, COLOR_SILHOUETTE, COLOR_SILHOUETTE_EDGE)
+	ItemPainter.draw_item(self, cells, anchor, cell_px, COLOR_SILHOUETTE, COLOR_SILHOUETTE_EDGE)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(item.uid)
 	for c in cells:
-		var p := anchor + Vector2(c) * CELL
+		var p := anchor + Vector2(c) * cell_px
 		for i in NOISE_PER_CELL:
-			var q := p + Vector2(rng.randf_range(3.0, CELL - 5.0), rng.randf_range(3.0, CELL - 5.0))
-			draw_rect(Rect2(q, Vector2(2.0, 2.0)), COLOR_NOISE, true)
+			var q := p + Vector2(rng.randf_range(3.0, cell_px - 5.0), rng.randf_range(3.0, cell_px - 5.0))
+			draw_line(q, q + Vector2(3.0, -1.0), COLOR_NOISE, 1.0, true)
 	var font := label_font if label_font != null else get_theme_default_font()
-	ItemPainter.draw_label(self, cells, anchor, CELL, "?", font, 16, Color("6b7280"))
+	ItemPainter.draw_label(self, cells, anchor, cell_px, "?", font, 16, Color("#cad2ba"))
 
 
 ## 当前那件：一圈进度环
 func _draw_progress(item: ItemInstance) -> void:
-	var center := cell_origin_px(item.origin) + Vector2(item.def.shape.size_rotated(item.rotation)) * CELL * 0.5
-	var radius := CELL * 0.38
-	UiDraw.ring(self, center, radius, _progress, COLOR_NEXT.darkened(0.4), COLOR_PROGRESS, 3.0, 2.0)
+	var cells := item.cells()
+	if cells.is_empty():
+		return
+	var middle := Vector2(item.def.shape.size_rotated(item.rotation)) * 0.5 - Vector2.ONE * 0.5
+	var nearest: Vector2i = cells[0]
+	for c in cells:
+		if Vector2(c).distance_squared_to(middle) < Vector2(nearest).distance_squared_to(middle):
+			nearest = c
+	var center := cell_origin_px(item.origin + nearest) + Vector2.ONE * cell_px * 0.5
+	var radius := cell_px * 0.30
+	draw_circle(center, radius + 1.5, Color("#344640"), true, -1.0, true)
+	UiDraw.ring(self, center, radius, _progress, Color("#829582"), COLOR_PROGRESS, 3.0, 3.0)
+	draw_arc(center - Vector2(1.5, 1.5), radius * 0.36, 0, TAU, 20, COLOR_PROGRESS, 1.8, true)
+	draw_line(center + Vector2.ONE * radius * 0.16, center + Vector2.ONE * radius * 0.5, COLOR_PROGRESS, 2.5, true)
 
 
 ## 下一件：左上角一个小标
 func _draw_next(item: ItemInstance) -> void:
-	var anchor := cell_origin_px(item.origin)
+	var cells := item.cells()
+	if cells.is_empty():
+		return
+	var first: Vector2i = cells[0]
+	for c in cells:
+		if c.y < first.y or (c.y == first.y and c.x < first.x):
+			first = c
+	var anchor := cell_origin_px(item.origin + first)
 	var font := label_font if label_font != null else get_theme_default_font()
-	draw_string(font, anchor + Vector2(4.0, 13.0), UiText.t("loot.next"), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, COLOR_NEXT)
+	var text := UiText.t("loot.next")
+	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+	draw_rect(Rect2(anchor + Vector2(2, 2), Vector2(w + 7, 16)), Color("#364741"))
+	draw_string(font, anchor + Vector2(5, 14), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, COLOR_NEXT)
 
 
 ## 正在搜的那件锁住，抓不起来；别的没亮的能抓（只能在容器里挪，那道门在拖拽层）

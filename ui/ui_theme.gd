@@ -120,7 +120,7 @@ const SKILL_NAME_INK := Color("8a3b12")
 const FLAW_NAME_INK := Color("4a4f57")
 const SKILL_TEXT_SIZE := 17
 ## 166：地图屏的顶端栏（[code]hud_bar[/code] 部件的底）、
-## 栏里的图标按钮（[IconButton]：背包、放大镜、主动技能；按下态走这个变体）
+## 栏里的图标按钮（[IconButton]：背包、主动技能；按下态走这个变体）
 const PANEL_HUD_BAR := &"PanelHudBar"
 const BUTTON_ICON := &"ButtonIcon"
 ## 167：整颗按钮就是一张图（三态图自己画悬停与按下，[method IconButton.make_art]）—— 各态都没有底
@@ -578,10 +578,10 @@ static func dress_chip_option(ob: OptionButton, font_size: int = 16, disabled_in
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		ob.add_theme_stylebox_override(state, nine_box(art_cached(StoneChip.ART + state), m, [StoneChip.PAD_X, 0.0, StoneChip.PAD_X, 0.0], 6.0))
 	ob.add_theme_stylebox_override("hover_pressed", ob.get_theme_stylebox("pressed"))
-	ob.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	ob.add_theme_stylebox_override("focus", focus_ring())
 	ob.add_theme_font_override("font", UiPalette.cjk_font())
 	ob.custom_minimum_size.y = StoneChip.HEIGHT
-	ob.focus_mode = Control.FOCUS_NONE
+	ob.focus_mode = Control.FOCUS_ALL
 	_dress_drop(ob, font_size, ink)
 	ob.add_theme_color_override("font_disabled_color", disabled_ink)
 
@@ -632,7 +632,7 @@ static func make_art_text_button(text: String, handler: Callable, p_art: String,
 		box.content_margin_bottom = maxf(0.0, btn_size.y - center.y * 2.0)
 		b.add_theme_stylebox_override(state, box)
 		if state == "normal":
-			b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+			b.add_theme_stylebox_override("focus", focus_ring())
 		if state == "pressed":
 			b.add_theme_stylebox_override("hover_pressed", box)
 	b.add_theme_color_override("font_color", ART_BTN_INK["normal"])
@@ -1188,7 +1188,8 @@ static func box_panel(p: PanelContainer, box: StyleBox) -> void:
 static func flat_key(text: String, fill: Color, line: Color, hover_line: Color, ink: Color, key_size: Vector2, font_size: int) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.focus_mode = Control.FOCUS_NONE
+	b.focus_mode = Control.FOCUS_ALL
+	b.add_theme_stylebox_override("focus", focus_ring())
 	b.custom_minimum_size = key_size
 	b.add_theme_font_override("font", UiPalette.cjk_font_bold())
 	b.add_theme_font_size_override("font_size", sz(font_size))
@@ -1339,12 +1340,14 @@ static func _fill(t: Theme, bg: Color) -> void:
 	var bare := StyleBoxEmpty.new()
 	for st in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
 		t.set_stylebox(st, BUTTON_ART, bare)
+	t.set_stylebox("focus", BUTTON_ART, focus_ring())
 	t.set_type_variation(LABEL_HUD, "Label")
 	t.set_type_variation(LABEL_HUD_LARGE, "Label")
 	t.set_font_size("font_size", LABEL_HUD_LARGE, HUD_LARGE_SIZE)
 	t.set_type_variation(LABEL_HUD_DOUBLE, "Label")
 	t.set_font_size("font_size", LABEL_HUD_DOUBLE, HUD_DOUBLE_SIZE)
 	for v in [LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE]:
+		t.set_font("font", v, UiPalette.numeral_font())
 		t.set_color("font_color", v, UiPalette.FG)     # 193：变体自己写上默认字色（缺了别人取色会拿到纯黑）
 	# 富文本
 	for pair in [[RICH_BODY, RICH_BODY_SIZE], [RICH_SMALL, RICH_SMALL_SIZE]]:
@@ -1436,7 +1439,7 @@ static func _button_variation(t: Theme, name: StringName, tier: int) -> void:
 	t.set_stylebox("pressed", name, _button_box(hover, Color.WHITE.lerp(edge, 0.3), pad))
 	t.set_stylebox("hover_pressed", name, _button_box(hover, Color.WHITE.lerp(edge, 0.2), pad))
 	t.set_stylebox("disabled", name, _button_box(UiPalette.BTN_DISABLED, UiPalette.LINE, pad))
-	t.set_stylebox("focus", name, StyleBoxEmpty.new())
+	t.set_stylebox("focus", name, focus_ring())
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 		t.set_color(state, name, text)
 	t.set_color("font_disabled_color", name, UiPalette.DIM)
@@ -1451,7 +1454,7 @@ static func _home_buttons(t: Theme) -> void:
 	for pair in [[BUTTON_HOME, HOME_BUTTON_SIZE], [BUTTON_HOME_PRIMARY, HOME_PRIMARY_SIZE]]:
 		var name: StringName = pair[0]
 		t.set_type_variation(name, "Button")
-		t.set_stylebox("focus", name, StyleBoxEmpty.new())
+		t.set_stylebox("focus", name, focus_ring())
 		t.set_font_size("font_size", name, pair[1])
 		var normal := _art_box(ART_HOME_BTN_PRIMARY if name == BUTTON_HOME_PRIMARY else ART_HOME_BTN)
 		if normal == null:
@@ -1506,10 +1509,27 @@ static func _menu_styles(t: Theme) -> void:
 	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
 		t.set_stylebox(state, BUTTON_MENU_FOOT, bare)
 	t.set_font_size("font_size", BUTTON_MENU_FOOT, MENU_FOOT_SIZE)
-	t.set_color("font_color", BUTTON_MENU_FOOT, UiPalette.DIM)
-	t.set_color("font_focus_color", BUTTON_MENU_FOOT, UiPalette.DIM)
+	# 桌面和草地都有亮色笔触；透明脚注用细描边从画上分开。
+	t.set_color("font_color", BUTTON_MENU_FOOT, Color("ded4bd"))
+	t.set_color("font_focus_color", BUTTON_MENU_FOOT, Color("fff4ce"))
+	t.set_color("font_outline_color", BUTTON_MENU_FOOT, Color("332737"))
+	t.set_constant("outline_size", BUTTON_MENU_FOOT, 3)
 	for state in ["font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 		t.set_color(state, BUTTON_MENU_FOOT, UiPalette.FG)
+
+
+## A light rim and dark outer edge stay visible on both paper and bronze.
+static func focus_ring() -> StyleBoxFlat:
+	var ring := StyleBoxFlat.new()
+	ring.draw_center = false
+	ring.border_color = Color("fff0b7")
+	ring.set_border_width_all(3)
+	ring.set_corner_radius_all(4)
+	ring.set_expand_margin_all(1)
+	ring.shadow_color = Color("4a3028")
+	ring.shadow_size = 2
+	ring.set_content_margin_all(0)
+	return ring
 
 
 static func _button_box(bg: Color, edge: Color, pad: Vector2i) -> StyleBoxFlat:
@@ -1600,7 +1620,7 @@ static func _art_button(t: Theme, variation: StringName, base: String, margin: A
 		var box := _tex_box(base + "_" + String(states[state]), margin, content)
 		if box != null:
 			t.set_stylebox(state, variation, box)
-	t.set_stylebox("focus", variation, StyleBoxEmpty.new())
+	t.set_stylebox("focus", variation, focus_ring())
 	return true
 
 

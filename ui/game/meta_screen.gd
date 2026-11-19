@@ -95,6 +95,7 @@ var _shelf_windows: Dictionary = {}
 ## 图鉴几百格、科技树、成就列表加起来一百多毫秒，每次回基地都提前建好不值
 var _shelf_pending: Dictionary = {}
 var _shelf_open: String = ""
+var _shelf_opener: Control
 var _records: RunRecordsWindow = null
 ## 图鉴页的缩略图与它的悬浮窗
 var _codex_tiles: Array[CodexTile] = []
@@ -336,6 +337,7 @@ func _fit_wh_cloth() -> void:
 		_wh_wide = wide
 		layout.call_deferred()     # 带回来的背包来了 / 清了：中列要的宽变了
 	_wh_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL if wide else Control.SIZE_SHRINK_BEGIN
+	_wh_page.size_flags_vertical = Control.SIZE_EXPAND_FILL if wide else Control.SIZE_SHRINK_BEGIN
 	_wh_page.custom_minimum_size.x = 0.0 if wide else WH_NARROW
 
 
@@ -1195,7 +1197,9 @@ func _build_shelf_windows() -> void:
 		var frame := OverlayFrame.new(16)
 		frame.custom_minimum_size = SHELF_WIN_WIDE if key == "tech" else SHELF_WIN
 		frame.set_title(UiText.t("shelf.title_" + key))
-		frame.add_slot(UiTheme.make_home_button(UiText.t("meta.close"), close_shelf))
+		var close := UiTheme.make_home_button(UiText.t("meta.close"), close_shelf)
+		frame.add_slot(close)
+		shade.set_meta(&"close_key", close)
 		center.add_child(frame)
 		var cloth := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)     # 窗里垫原来那块粗布（浅底墨字），内容照旧
 		cloth.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1240,7 +1244,11 @@ func open_shelf(key: String) -> void:
 	close_shelf()
 	_fill_shelf(key)
 	_shelf_open = key
-	(_shelf_windows[key] as Control).visible = true
+	var shade := _shelf_windows[key] as Control
+	shade.show()
+	if is_inside_tree():
+		_shelf_opener = get_viewport().gui_get_focus_owner()
+		(shade.get_meta(&"close_key") as Button).grab_focus()
 	if key == "records" and _records != null:
 		_records.show_list()
 	_sync_shelf_sub()
@@ -1253,6 +1261,9 @@ func close_shelf() -> void:
 	for k in _shelf_windows:
 		(_shelf_windows[k] as Control).visible = false
 	_shelf_open = ""
+	if is_instance_valid(_shelf_opener) and _shelf_opener.is_visible_in_tree():
+		_shelf_opener.grab_focus()
+	_shelf_opener = null
 	_sync_shelf_sub()
 
 

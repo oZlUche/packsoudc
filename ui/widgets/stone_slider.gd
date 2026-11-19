@@ -13,18 +13,24 @@ const FILL := Color(0.86, 0.66, 0.24, 0.55)
 var enabled := true:
 	set(v):
 		enabled = v
+		focus_mode = Control.FOCUS_ALL if v else Control.FOCUS_NONE
+		if not v:
+			_dragging = false
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if v else Control.CURSOR_ARROW
 		queue_redraw()
 var _dragging := false
 var _hover := false
 var _boxes := {}
+var _focus_ring := UiTheme.focus_ring()
 
 
 func _init() -> void:
 	step = 1.0
 	custom_minimum_size = Vector2(120.0, HEIGHT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	focus_mode = Control.FOCUS_NONE
+	focus_mode = Control.FOCUS_ALL
+	focus_entered.connect(queue_redraw)
+	focus_exited.connect(queue_redraw)
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	mouse_entered.connect(func() -> void: _hover = true; queue_redraw())
 	mouse_exited.connect(func() -> void: _hover = false; queue_redraw())
@@ -52,6 +58,11 @@ func _grab_x() -> float:
 func _gui_input(event: InputEvent) -> void:
 	if not enabled:
 		_dragging = false
+		return
+	if event.is_action_pressed("ui_left", true) or event.is_action_pressed("ui_right", true):
+		var delta := step if step > 0.0 else (max_value - min_value) / 100.0
+		value += delta if event.is_action_pressed("ui_right", true) else -delta
+		accept_event()
 		return
 	var mb := event as InputEventMouseButton
 	if mb != null and mb.button_index == MOUSE_BUTTON_LEFT:
@@ -94,5 +105,7 @@ func _draw() -> void:
 	var kb := _box("kit/sb_grab_%s_h" % state, 12.0)
 	if kb != null:
 		draw_style_box(kb, grab)
+	if has_focus() and enabled:
+		draw_style_box(_focus_ring, grab)
 	if not enabled:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.5, 0.5, 0.5, 0.25))

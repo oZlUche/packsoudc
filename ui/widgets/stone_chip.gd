@@ -97,7 +97,7 @@ func _dress() -> void:
 		_colors[state] = Color(String(cols.get(state, "#2e2219")))
 	custom_minimum_size.y = ENTRY_HEIGHT if is_entry else HEIGHT
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	focus_mode = Control.FOCUS_NONE
+	focus_mode = Control.FOCUS_ALL
 	# 宽按粗体留：主题字体换成粗体，Button 自己按它量最小宽；字本身由 _draw 画（主题字色全透明）
 	add_theme_font_override("font", UiPalette.cjk_font_bold())
 	add_theme_font_size_override("font_size", _font_size())
@@ -114,7 +114,7 @@ func _dress() -> void:
 	add_theme_stylebox_override("pressed", _boxes["on"])
 	add_theme_stylebox_override("hover_pressed", _boxes["on"])
 	add_theme_stylebox_override("disabled", _boxes["disabled"])
-	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	add_theme_stylebox_override("focus", UiTheme.focus_ring())
 	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_disabled_color", "font_focus_color"]:
 		add_theme_color_override(c, Color(0, 0, 0, 0))
 	_fit()

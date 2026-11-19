@@ -709,15 +709,22 @@ func _draw_art_bar(key: String, current: int, maximum: int, y: float) -> void:
 		var armor := armor_value()
 		if armor > 0:
 			_hslice(UiTheme.art_cached(ART_DIR + "bar_armor"), Rect2(trough.position + Vector2(2, 2), Vector2(inner * clampf(float(armor) / float(hp_cap), 0.0, 1.0), ART_BAR_H - 4.0)))     # 作者 10-22：护甲只看这层条，条上不再写「甲 N」
+		# Quarters stay visible in both the full and empty portions of a health bar.
+		for quarter in range(1, 4):
+			var tick := trough.position + Vector2(2 + inner * quarter / 4.0, 3)
+			draw_line(tick, tick + Vector2(0, 5), Color("412c24cc"), 2.0)
+		if _dead:
+			text += UiText.t("battle.fallen_tag")
 	var seal := UiTheme.art_cached(ART_DIR + String(ART_SEAL.get(key, "")))
 	if seal != null:
 		var side := seal.get_size() * ART_SEAL_SCALE
 		draw_texture_rect(seal, Rect2((Vector2(0, y) + ART_SEAL_AT - side * 0.5).floor(), side), false)
 	var font := UiPalette.cjk_font_bold()
-	var at := Vector2(trough.position.x + 12.0, y + ART_BAR_H * 0.5 + 6.0)
+	var px := UiTheme.sz(ART_TEXT_SIZE if key == "hp" else ART_TEXT_SIZE - 2)
+	var at := Vector2(trough.position.x + 12.0, y + (ART_BAR_H - font.get_height(px)) * 0.5 + font.get_ascent(px))
 	# 复测 v3.79：14 号细描边在红 / 橙填充上看不清 —— 17 号、描边 5
-	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, ART_TEXT_SIZE, ART_TEXT_OUTLINE, ART_OUTLINE)
-	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, ART_TEXT_SIZE, ART_TEXT)
+	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, ART_TEXT_OUTLINE, ART_OUTLINE)
+	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, ART_TEXT)
 
 
 ## 横向三段切（左右各 [constant ART_SLICE]，中段拉）；比两头还窄时两头按比例缩

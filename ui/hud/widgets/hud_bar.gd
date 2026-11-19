@@ -139,24 +139,14 @@ func _place_ends() -> void:
 		b.position = Vector2(0.0 if side == LEFT else w - b.size.x, 0.0)
 
 
-## 平铺段（从日晷两边往外、只铺在两头之间）→ 日晷底座；两头是子节点，画在上面
+## 横梁连续铺到两枚端钮背后；半圆日晷属于倒计时组件，隐藏时不会留下一块空盘。
 func _draw() -> void:
 	var tile := UiTheme.art_cached(SKIN + "bar_tile")
-	var dial := UiTheme.art_cached(SKIN + "dial_base")
-	if tile != null and dial != null:
-		var ew := float((_meta.get("ends", {}) as Dictionary).get("width", 104))
-		var tw := tile.get_width()
-		var th := tile.get_height()
-		var dx := roundf(size.x * 0.5) - float(dial_meta().get("center_x", 151))
-		var x := dx + dial.get_width()
-		while x < size.x - ew:
-			var w := minf(tw, size.x - ew - x)
-			draw_texture_rect_region(tile, Rect2(x, 0, w, th), Rect2(0, 0, w, th))
-			x += tw
-		x = dx
-		while x > ew:
-			var w := minf(tw, x - ew)
-			draw_texture_rect_region(tile, Rect2(x - w, 0, w, th), Rect2(tw - w, 0, w, th))
-			x -= tw
-		draw_texture(dial, Vector2(dx, 0))
+	if tile != null:
+		var x := 0.0
+		while x < size.x:
+			var width := minf(tile.get_width(), size.x - x)
+			var region := Rect2(0, 0, width, tile.get_height())
+			draw_texture_rect_region(tile, Rect2(Vector2(x, 0), region.size), region)
+			x += width
 	super()

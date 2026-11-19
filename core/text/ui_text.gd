@@ -138,6 +138,7 @@ const TEXT := {
 	"map.pause_encyclopedia": {"zh": "百科", "en": "Encyclopedia"},
 	"map.pause_rules": {"zh": "本图规则", "en": "Map rules"},
 	"map.pause_coach": {"zh": "重看教程", "en": "Replay tutorial"},
+	"map.coach_before_spawn": {"zh": "选一个出生点，棋子就会出现在那里。之后，点击棋子或它脚下的节点，或按 N，可继续搜索或取回留下的战利品。", "en": "Pick a starting point to place your pawn. Later, click the pawn or its node, or press N, to resume a search or collect loot you left behind."},
 	"map.pause_skip_tutorial": {"zh": "跳过剩余教程", "en": "Skip the rest of the tutorial"},     # 统一教程 F（方案 §8.2）
 	"map.pause_recent": {"zh": "最近记录", "en": "Recent notices"},
 	"map.recent_title": {"zh": "最近记录", "en": "Recent notices"},
@@ -149,10 +150,8 @@ const TEXT := {
 	"tut_ask.yes": {"zh": "需要", "en": "Yes"},
 	"tut_ask.no": {"zh": "不需要", "en": "No need"},
 	"map.hunter_loss": {"zh": "　输了会怎样 —— %s", "en": " · If you lose: %s"},
-	"map.lens": {"zh": "放大镜", "en": "Magnifier"},
-	"map.lens_tip": {"zh": "放大镜（N）\n%s", "en": "Magnifier (N)\n%s"},
-	"map.reopen_hint": {"zh": "再看一眼脚下这个点：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行", "en": "Take another look at this spot: unclaimed loot, or a search or shop still open. Clicking your current node works too"},
-	"map.reopen_none": {"zh": "这里没有可重开的界面", "en": "Nothing here to reopen"},
+	"map.current_reopen": {"zh": "点击此处或按 N，重新打开节点内容。", "en": "Click here or press N to reopen this location."},
+	"map.spawn_ready": {"zh": "点相邻节点走一步，点脚下的棋子重开当前节点，按 B 开背包。", "en": "Click a neighboring node to travel. Click your pawn to reopen this location. Press B for your pack."},
 	"map.bag": {"zh": "背包", "en": "Pack"},
 	"map.bag_hint": {"zh": "整理棋盘上的东西，打架前先排好", "en": "Arrange what's on your Board. Sort it before a fight"},
 	"map.menu_end": {"zh": "本局菜单", "en": "Run menu"},
@@ -712,6 +711,7 @@ const TEXT := {
 	"camp.unfold": {"zh": "展开", "en": "Show"},
 	"camp.rest_note": {"zh": "体力 +%d，现在 %d / %d", "en": "Vitality +%d, now %d / %d"},
 	# ui/game/container_screen.gd
+	"loot.identified": {"zh": "搜得物资　%d / %d 已探明", "en": "Finds　%d / %d identified"},
 	"loot.take_all": {"zh": "全部拾取", "en": "Take all"},
 	"loot.take_all_tip": {"zh": "全部拾取\n先进背包，放不下的到地上", "en": "Take all\nInto your pack first; whatever doesn't fit goes to the Ground"},
 	"loot.took_partial": {"zh": "装进背包 %d 件；%d 件背包放不下，落在地上", "en": "%d into the bag; %d didn't fit and landed on the ground"},

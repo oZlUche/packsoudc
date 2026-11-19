@@ -904,7 +904,9 @@ func _build() -> void:
 	_ticker.bbcode_enabled = true
 	_ticker.scroll_following = true
 	_ticker.selection_enabled = false
-	_ticker.theme_type_variation = UiTheme.RICH_SMALL     # 121：13 号
+	_ticker.theme_type_variation = UiTheme.RICH_SMALL
+	if bronze:
+		UiTheme.rich(_ticker, 16)
 	_ticker.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	UiTheme.set_tone(_ticker, UiTheme.TONE_DARK)
 	_log_box.add_child(_ticker)
@@ -1002,6 +1004,8 @@ func _sync_buttons() -> void:
 	if _play_btn == null:
 		return
 	var done := _result != null and _cursor >= _result.log.size()
+	_skip_btn.disabled = _result == null or done
+	_skip_btn.self_modulate = Color("a8a19a") if _skip_btn.disabled else Color.WHITE
 	var id := "replay" if done else ("pause" if _playing else "play")
 	var name_: String = UiText.t("battle." + id)     # battle.replay / battle.pause / battle.play
 	if _play_btn.icon_id != id:

@@ -286,7 +286,11 @@ class ChestView extends Control:
 					# 「开锁」占位：锁孔里一根拨片来回转
 					var a := sin(Time.get_ticks_msec() / 1000.0 * 9.0) * 0.6 - PI * 0.5
 					draw_line(lock, lock + Vector2.from_angle(a) * 18.0, Color("e8e2d0"), 2.0)
-			UiDraw.ring(self, lock, s.ring_radius, hold.progress, Color(0, 0, 0, 0.55), Color("ffd23f"), s.ring_width, s.ring_width + 2.0, 64)
+			var fill := Color("ffdf78") if hold.is_holding() else Color("c1bbab")
+			UiDraw.ring(self, lock, s.ring_radius, hold.progress, Color("483528"), fill, s.ring_width, s.ring_width + 3.0, 64)
+			var tip := lock + Vector2.UP.rotated(TAU * hold.progress) * s.ring_radius
+			draw_circle(tip, s.ring_width * 0.65, Color("483528"))
+			draw_circle(tip, s.ring_width * 0.4, fill)
 
 	func _draw_centered(tex: Texture2D, at: Vector2) -> void:
 		if tex != null:

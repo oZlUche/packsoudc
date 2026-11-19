@@ -197,16 +197,45 @@ func _draw() -> void:
 		var y := i * ROW_H
 		var total := bool(row.get("total", false))
 		var label := String(row["label"])
-		if total:
-			draw_string(_bold_font, Vector2(LABEL_X, y + 35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, INK_LABEL)
-		else:
-			draw_string(_body_font, Vector2(LABEL_X, y + 32), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, INK_LABEL)
+		var label_font := _bold_font if total else _body_font
 		var text := text_at(row, _progress(i))
 		var font := _bold_font if bool(row.get("rarity", false)) or (row.get("values", []) as Array).is_empty() else _num_font
-		var px := 38 if total else (22 if font == _bold_font else 24)
-		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		draw_string(font, Vector2(NUMBER_RIGHT - w, y + (40 if total else (32 if font == _bold_font else 34))), text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, row["color"])
-		var parts := String(row.get("parts", ""))
-		if parts != "" and _progress(i) >= 1.0:     # 269：总分行里、数的左边一行小字（数滚到位才写；账单框下沿紧贴，放不下另起一行）
-			var pw := _body_font.get_string_size(parts, HORIZONTAL_ALIGNMENT_LEFT, -1, PARTS_PX).x
-			draw_string(_body_font, Vector2(NUMBER_RIGHT - w - PARTS_GAP - pw, y + 33), parts, HORIZONTAL_ALIGNMENT_LEFT, -1, PARTS_PX, INK_DIM)
+		var label_px := _fit_size(label_font, label, UiTheme.sz(26 if total else 22), 350, ROW_H - 4)
+		var label_w := _width(label_font, label, label_px)
+		var right_room := NUMBER_RIGHT - LABEL_X - label_w - PARTS_GAP
+		var px := _fit_size(font, text, UiTheme.sz(38 if total else (22 if font == _bold_font else 24)), right_room, ROW_H - 2)
+		var w := _width(font, text, px)
+		var parts := String(row.get("parts", "")) if _progress(i) >= 1.0 else ""
+		var parts_px := UiTheme.sz(PARTS_PX)
+		var two_lines := not parts.is_empty() and _width(_body_font, parts, parts_px) > right_room - w - PARTS_GAP
+		var mid := y + ROW_H * 0.5
+		if two_lines:
+			mid = y + 15
+			label_px = _fit_size(label_font, label, label_px, 350, 29)
+			px = _fit_size(font, text, px, right_room, 30)
+			w = _width(font, text, px)
+			parts_px = _fit_size(_body_font, parts, parts_px, NUMBER_RIGHT - LABEL_X, 18)
+		draw_string(label_font, Vector2(LABEL_X, _baseline(label_font, label_px, mid)), label,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, label_px, INK_LABEL)
+		draw_string(font, Vector2(NUMBER_RIGHT - w, _baseline(font, px, mid)), text,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, px, row["color"])
+		if not parts.is_empty():
+			var pw := _width(_body_font, parts, parts_px)
+			var x := NUMBER_RIGHT - pw if two_lines else NUMBER_RIGHT - w - PARTS_GAP - pw
+			var parts_mid := y + 38 if two_lines else mid
+			draw_string(_body_font, Vector2(x, _baseline(_body_font, parts_px, parts_mid)), parts,
+					HORIZONTAL_ALIGNMENT_LEFT, -1, parts_px, INK_DIM)
+
+
+static func _width(font: Font, text: String, px: int) -> float:
+	return font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+
+
+static func _fit_size(font: Font, text: String, px: int, room: float, height: float) -> int:
+	while px > 10 and (_width(font, text, px) > room or font.get_height(px) > height):
+		px -= 1
+	return px
+
+
+static func _baseline(font: Font, px: int, middle: float) -> float:
+	return roundf(middle + (font.get_ascent(px) - font.get_descent(px)) * 0.5)

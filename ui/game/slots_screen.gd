@@ -11,7 +11,7 @@ func open(payload: Dictionary) -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_slab_screen().add_child(center)     # 157 补充三：内容在一整块石板上
 	var col := _vbox(12)
-	col.custom_minimum_size.x = 860
+	col.custom_minimum_size.x = 1040
 	center.add_child(col)
 	var plate := TitlePlate.new(UiText.t("slots.title"))     # 226 批二：标题刻在标题牌上（整屏石板，同结算屏）
 	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -38,24 +38,25 @@ func open(payload: Dictionary) -> void:
 
 
 func _row(n: int) -> Control:
-	var panel := _panel(12)
+	var panel := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_PLAQUE_SMALL, 24, 14, 24, 14)
 	var row := _hbox(12)
 	panel.add_child(row)
 	var summary := flow.slots.summary(n, flow.items, flow.meta_rules) if flow.slots != null else {"exists": false}
 	var exists := bool(summary.get("exists", false))
-	var text := UiText.t("slots.slot") % n + UiText.t("slots.sep")
+	var details := _vbox(4)
+	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(details)
+	var title := UiText.t("slots.slot") % n
+	if flow.slot == n:
+		title += UiText.t("slots.current")
+	details.add_child(_label(title, 24, UiTheme.INK))
+	var text := UiText.t("slots.empty")
 	if exists:
-		text += UiText.t("slots.summary") % [int(summary.get("runs", 0)) + 1, int(summary.get("extractions", 0)), int(summary.get("deaths", 0)),
+		text = UiText.t("slots.summary") % [int(summary.get("runs", 0)) + 1, int(summary.get("extractions", 0)), int(summary.get("deaths", 0)),
 			UiText.t("slots.in_run") if bool(summary.get("has_run", false)) else ""]
 		if int(summary.get("newer", 0)) > 0:
 			text += UiText.t("slots.newer_tag")
-	else:
-		text += UiText.t("slots.empty")
-	if flow.slot == n:
-		text += UiText.t("slots.current")
-	var l := _label(text, 14, UiPalette.FG if exists else UiPalette.DIM)
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(l)
+	details.add_child(_wrapped(text, 18, UiTheme.INK, 260))
 	var slot := n
 	if exists:
 		row.add_child(ScrollKey.primary(UiText.t("slots.load"), func(): load_slot(slot)))     # 乙 石刻：读、开新档是主键，删是矮键

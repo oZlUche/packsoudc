@@ -176,6 +176,7 @@ var _march: float = 0.0
 var _hop: Dictionary = {}
 ## 落地后过了几秒（-1 = 没在落地）
 var _land_t: float = -1.0
+var _pawn_mask: BitMap
 var _follow_tween: Tween = null
 
 ## 画布 → 屏幕：screen = canvas * zoom + pan
@@ -486,6 +487,23 @@ func node_at(p: Vector2) -> int:
 			continue     # 096：遮罩下只有出生点能点中
 		if (pos[id] as Vector2).distance_to(p) <= reach:
 			return int(id)
+	# 棋子头部在节点圆之外。先保留相邻节点的圆形命中，再按棋子的实心像素补上它。
+	if not spawn_mask and current_id >= 0 and _hop.is_empty() and pos.has(current_id):
+		var rect := pawn_rect(to_screen(pos[current_id]))
+		var screen_point := to_screen(p)
+		if rect.has_point(screen_point):
+			if _pawn_mask == null:
+				var art := UiTheme.art_cached(UiTheme.ART_MAP_PAWN)
+				var img := art.get_image() if art != null else null
+				if img != null:
+					if img.is_compressed():
+						img.decompress()
+					_pawn_mask = BitMap.new()
+					_pawn_mask.create_from_image_alpha(img, 0.35)
+			if _pawn_mask != null:
+				var pixel := Vector2i((screen_point - rect.position) / rect.size * Vector2(_pawn_mask.get_size()))
+				if _pawn_mask.get_bitv(pixel):
+					return current_id
 	return -1
 
 
@@ -652,6 +670,14 @@ func _draw() -> void:
 	var junctions := _junctions() if merge_junctions else {"quads": [], "tris": [], "edge_keys": {}}
 	var in_junction: Dictionary = junctions["edge_keys"]
 
+	# 暗地图缩到全貌时，普通路至少留 1.6 屏幕像素；近景、编辑器与传送虚线沿用原笔触。
+	var road_ink := _ink(UiPalette.DIM).darkened(0.25)
+	var road_width := 1.5
+	if _skin_tex != null and not _skin_light and not show_backdrop and zoom < 0.8:
+		var distance_mix := 1.0 - smoothstep(0.50, 0.8, zoom)
+		road_ink = road_ink.lerp(Color("#ada9a1"), distance_mix)
+		road_width = lerpf(road_width, maxf(road_width, 1.6 / zoom), distance_mix)
+
 	for e in graph.edges:
 		if not pos.has(e.from_id) or not pos.has(e.to_id):
 			continue
@@ -661,8 +687,8 @@ func _draw() -> void:
 		var f := minf(float(grow.get(e.from_id, 1.0)), float(grow.get(e.to_id, 1.0)))
 		if f <= 0.0:
 			continue
-		var color := _ink(UiPalette.DIM).darkened(0.25)
-		var width := 1.5
+		var color := road_ink
+		var width := 1.5 if e.is_portal() else road_width
 		if route_of_edge.has(key):
 			var ri: int = route_of_edge[key]
 			color = Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7)
@@ -680,7 +706,7 @@ func _draw() -> void:
 		for id in clique:
 			f = minf(f, float(grow.get(int(id), 1.0)))
 		if f > 0.0:
-			_draw_junction(clique, pos, route_of_edge, f)
+			_draw_junction(clique, pos, route_of_edge, road_ink, road_width, f)
 
 	if show_free_slots:
 		for slot in _layout.free_slots(graph, rect):
@@ -806,7 +832,7 @@ func _junctions() -> Dictionary:
 
 ## 一个路口：中心一个小点，向每个成员伸一条腿。
 ## 腿的颜色：这个成员在路口内部有路线经过的边，就用那条路线的颜色。
-func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, fade: float = 1.0) -> void:
+func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, road_ink: Color, road_width: float, fade: float) -> void:
 	var center_ := Vector2.ZERO
 	for id in clique:
 		if not pos.has(int(id)):
@@ -822,8 +848,7 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, f
 		if route >= 0:
 			draw_line(center_, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85 * fade), 3.0, true)
 		else:
-			var c := _ink(UiPalette.DIM).darkened(0.25)
-			draw_line(center_, pos[int(id)], Color(c, c.a * fade), 1.5, true)
+			draw_line(center_, pos[int(id)], Color(road_ink, road_ink.a * fade), road_width, true)
 	var dot := _ink(UiPalette.DIM)
 	draw_circle(center_, 3.0, Color(dot, dot.a * fade))
 
@@ -847,26 +872,32 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	if n.is_visited() and n.type != &"core":
 		var grey := color.get_luminance()
 		color = Color(grey, grey, grey).lerp(_ink(UiPalette.DIM), 0.5)
-	draw_circle(p, NODE_RADIUS, color.darkened(0.55))
-	draw_arc(p, NODE_RADIUS, 0.0, TAU, 32, color, 2.0, true)
+	var rim := Color("#443c3c")
+	var symbol := color.lightened(0.57)
+	draw_circle(p + Vector2(0, 1.8), NODE_RADIUS + 1.0, rim, true, -1.0, true)
+	draw_circle(p, NODE_RADIUS, color.darkened(0.48), true, -1.0, true)
+	draw_arc(p, NODE_RADIUS - 0.6, 0.0, TAU, 40, color, 1.8, true)
+	draw_arc(p, NODE_RADIUS - 1.5, PI * 1.05, PI * 1.60, 14, color.lightened(0.38), 1.4, true)
 	if graph.entry_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.HEAL, 2.0, true)
 	if graph.goal_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.STAMINA, 2.0, true)
 	# 184：可走的点由墨路与墨环说明、玩家由棋子说明（原来的细环、脉动环、三角标都撤了）；选中 / 悬停环是操作反馈，留着
 	if n.id == selected_id:
-		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, _ink(UiPalette.FG), 2.0, true)
+		for i in 4:
+			var angle := PI * 0.25 + i * PI * 0.5
+			draw_arc(p, NODE_RADIUS + 7.0, angle - 0.42, angle + 0.42, 10, _ink(UiPalette.FG), 2.8, true)
 	elif n.id == _hover_id:
 		draw_arc(p, NODE_RADIUS + 7.5, 0.0, TAU, 32, Color(_ink(UiPalette.FG), 0.35), 1.0, true)
 	# 155：有图标画图标（白线稿按节点色着色，圆底是同色压暗的深色，图标不会融进去）；没图退回写字
 	var tex := MapNodeStyle.icon(key)
 	if tex != null:
 		var side := NODE_RADIUS * ICON_SCALE
-		draw_texture_rect(tex, Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), false, color)
+		draw_texture_rect(tex, Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), false, symbol)
 	else:
 		var glyph: String = style["glyph"]
 		var w := _font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-		draw_string(_font, p + Vector2(-w / 2.0, 5.5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
+		draw_string(_font, p + Vector2(-w / 2.0, 5.5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, symbol)
 	# 184：出生点在右上插一面小旗（182 的那面）
 	if graph.entry_ids.has(n.id):
 		var flag := UiTheme.art_cached(UiTheme.ART_LEGEND_FLAG)
@@ -1031,7 +1062,8 @@ func _offscreen_point() -> Vector2:
 func _draw_player_layer(pos: Dictionary, grow: Dictionary, rect: Rect2) -> void:
 	if current_id < 0 or not pos.has(current_id):
 		return
-	var ink := _ink(UiPalette.FG)
+	var ink := Color("#175951") if _skin_light else Color("#a5ebd1")
+	var casing := Color("#ffedbb") if _skin_light else Color("#233b41")
 	if grow.is_empty() and _hop.is_empty():     # 跳的时候路先不画，落地那一帧和人一起出现
 		var tags: Array[Rect2] = []
 		for id in reachable:
@@ -1054,12 +1086,15 @@ func _draw_player_layer(pos: Dictionary, grow: Dictionary, rect: Rect2) -> void:
 					sp.append(to_screen(q))
 				sp = _trim(sp, NODE_RADIUS + 4.0, NODE_RADIUS + 4.0)
 				if sp.size() >= 2:
-					_march_line(sp, PATH_W_HOVER if hot else PATH_W, Color(ink, 1.0 if hot else 0.85), _march)
+					var width := PATH_W_HOVER if hot else PATH_W
+					draw_polyline(sp, Color(casing, 0.90), width + 2.4, true)
+					_march_line(sp, width, Color(ink, 1.0 if hot else 0.92), _march)
 					mid = _point_at(sp, _length(sp) * 0.5)
 				if cost > 1:
 					_draw_tag(step_tag(cost), mid, tags)
 			var r := END_RING_R + 2.0 * sin(_pulse)
-			draw_arc(to_sp, r, 0.0, TAU, 48, Color(ink, 1.0 if hot else 0.6), END_RING_W, true)
+			draw_arc(to_sp, r, 0.0, TAU, 48, casing, END_RING_W + 1.8, true)
+			draw_arc(to_sp, r, 0.0, TAU, 48, Color(ink, 1.0 if hot else 0.82), END_RING_W, true)
 	var pawn := pawn_at()
 	if not pawn.is_empty():
 		var alpha := float(pawn["alpha"]) * (float(grow.get(current_id, 1.0)) if not grow.is_empty() else 1.0)

@@ -9,7 +9,7 @@ const Support := preload("res://tests/run/flow_support.gd")
 static func frame_warm_up(t: TestCase, root: Window) -> void:
 	t.begin("236 · 启动预热：五种字体 + 两种系统字体建好、裁切着色器建好、斗技场底图在缓存里；预热那块画完就放；release_art 按前缀踢掉")
 	Support.cleanup("warm236")
-	UiTheme.release_art(UiTheme.ART_BATTLE_BG)
+	UiTheme.release_art("battle/")     # Isolate the warm-up from prior combat screens.
 	var game = (load(GAME) as PackedScene).instantiate()
 	game.save_path = String(Support.paths("warm236")["run"])
 	game.meta_path = String(Support.paths("warm236")["meta"])

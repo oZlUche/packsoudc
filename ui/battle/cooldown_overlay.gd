@@ -82,13 +82,6 @@ func _draw() -> void:
 	if view == null or view.inventory == null:
 		return
 	var cell := InventoryView.CELL
-	for uid in _flash:
-		if not flashing(int(uid)):
-			continue
-		var lit := view.inventory.get_item(int(uid))
-		if lit != null:
-			for c in lit.cells():
-				draw_rect(Rect2(Vector2(lit.origin + c) * cell, Vector2(cell, cell)), FLASH)
 	for uid in cycles:
 		var p := progress_of(uid)
 		if p >= 1.0:
@@ -106,6 +99,23 @@ func _draw() -> void:
 			var square := PackedVector2Array([at, at + Vector2(cell, 0), at + Vector2(cell, cell), at + Vector2(0, cell)])
 			for piece in Geometry2D.intersect_polygons(fan, square):
 				draw_colored_polygon(piece, MASK)
+	# A just-fired item stays legible above its new cooldown mask.
+	for uid in _flash:
+		if not flashing(int(uid)):
+			continue
+		var lit := view.inventory.get_item(int(uid))
+		if lit == null:
+			continue
+		var cells := lit.cells()
+		for c in cells:
+			var square := Rect2(Vector2(lit.origin + c) * cell, Vector2.ONE * cell)
+			draw_rect(square, FLASH)
+			for dir in [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]:
+				if cells.has(c + dir):
+					continue
+				var edge := square.get_center() + Vector2(dir) * (cell * 0.5 - 1.5)
+				var half := Vector2(-dir.y, dir.x) * (cell * 0.5 - 1.5)
+				draw_line(edge - half, edge + half, Color("ffdf91"), 3.0)
 	_draw_steps(int(cell))
 
 

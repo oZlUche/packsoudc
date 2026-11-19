@@ -22,6 +22,7 @@ var scale_k := 1.0:
 		custom_minimum_size = (SIZE * scale_k).floor()
 		queue_redraw()
 
+var _focus_ring := UiTheme.focus_ring()
 var _boxes := {}
 var _ink := {}
 var _margin := Vector2(8, 24)
@@ -41,7 +42,9 @@ static func space(column: VBoxContainer, px: int) -> void:
 
 func _init() -> void:
 	toggle_mode = true
-	focus_mode = Control.FOCUS_NONE
+	focus_mode = Control.FOCUS_ALL
+	focus_entered.connect(queue_redraw)
+	focus_exited.connect(queue_redraw)
 	clip_text = true
 	custom_minimum_size = SIZE
 	var spec := UiTheme.art_meta(LAYOUT)
@@ -78,3 +81,5 @@ func _draw() -> void:
 	var fs := TextFit.size_for(f, text, maxi(12, roundi(UiTheme.sz(FONT_SIZE) * scale_k)), w, maxi(12, roundi(FONT_SIZE * scale_k)))
 	var y := size.y * 0.5 + (f.get_ascent(fs) - f.get_descent(fs)) * 0.5
 	draw_string(f, Vector2(left, y), text, HORIZONTAL_ALIGNMENT_CENTER, w, fs, _ink[st])
+	if has_focus():
+		draw_style_box(_focus_ring, Rect2(Vector2.ZERO, size).grow(-2))

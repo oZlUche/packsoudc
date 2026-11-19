@@ -65,14 +65,14 @@ func set_text(t: String) -> void:
 func _key(which: String, glyph: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(BUTTON, BUTTON)
-	b.focus_mode = Control.FOCUS_NONE
+	b.focus_mode = Control.FOCUS_ALL
 	for state in STATES:
 		var box := StyleBoxTexture.new()
 		box.texture = UiTheme.art_cached(ART + which + "_" + state)
 		box.set_expand_margin_all(6.0)
 		b.add_theme_stylebox_override(state, box)
 	b.add_theme_stylebox_override("hover_pressed", b.get_theme_stylebox("pressed"))
-	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	b.add_theme_stylebox_override("focus", UiTheme.focus_ring())
 	b.tooltip_text = glyph
 	if handler.is_valid():
 		b.pressed.connect(handler)

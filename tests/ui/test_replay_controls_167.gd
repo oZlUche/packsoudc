@@ -51,6 +51,7 @@ static func frame_art_buttons(t: TestCase, root: Window) -> void:
 	play._set_hover(false)
 	t.eq(play.icon, play._states[""], "松开移走：常态")
 	view.skip_to_end()
+	t.check(skip.disabled, "已到结尾，跳过键禁用")
 	t.eq(play.icon_id, "replay", "播完了：重播键（逆时针箭头）")
 	view.set_speed(1.0)
 	var seen: Array = []
@@ -59,6 +60,8 @@ static func frame_art_buttons(t: TestCase, root: Window) -> void:
 		view.cycle_speed()
 	t.eq(seen, [["speed_1", "倍速 Ⅰ"], ["speed_2", "倍速 Ⅱ"], ["speed_4", "倍速 Ⅳ"]], "倍速一圈：图与悬浮窗都是罗马数字")
 	t.eq(speed.icon_id, "speed_1", "转回一倍")
+	view.seek(0.0)
+	t.check(not skip.disabled, "倒回开头后可以再次跳过")
 	var labels: Array = view.find_children("*", "Label", true, false).filter(func(l): return (l as Label).text.contains("开打那一瞬"))
 	t.eq(labels.size(), 0, "那行常驻说明不在了")
 	view.queue_free()
@@ -73,4 +76,5 @@ static func run_timeline(t: TestCase) -> void:
 		tl.duration = 10.0
 		t.check(is_equal_approx(tl.x_of(0.0), tl.pad()) and is_equal_approx(tl.x_of(10.0), 400.0 - tl.pad()), "两头对着杆的两端")
 		t.check(is_equal_approx(tl.time_at(tl.x_of(3.0)), 3.0), "来回换算一致")
+		t.eq(tl._get_tooltip(Vector2(tl.x_of(3.0), 0)), "3.00 秒 / 10.00 秒", "悬停显示指向时刻和总长")
 		tl.free()

@@ -233,17 +233,18 @@ func _enemy_name(content: Dictionary) -> String:
 func _enemy_plate(content: Dictionary) -> Nameplate:
 	var id := StringName(String(content.get("enemy", ""))) if not content.is_empty() else &""
 	var def := flow.enemies.enemy(id) if id != &"" else null
-	if def == null:
-		return Nameplate.new().setup(UiText.t("screen.enemy"), "", null, Nameplate.COMPACT_PORTRAIT)
-	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id), Nameplate.COMPACT_PORTRAIT)
+	var face := Nameplate.enemy_face(id) if def != null else null
+	var title := Names.of(def) if def != null else UiText.t("screen.enemy")
+	return Nameplate.duel(title, face, false)
 
 
-## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）
+## 战前与回放沿用同一底色和文字标明名牌所属方。
 func _player_plate() -> Nameplate:
 	var ch := flow.run.character if flow.run != null else null
-	if ch == null:
-		return Nameplate.new().setup(UiText.t("battle.me"), "", null, Nameplate.COMPACT_PORTRAIT)
-	return Nameplate.new().setup(Names.of(ch), UiText.t("battle.side_mine"), Nameplate.character_face(ch.id), Nameplate.COMPACT_PORTRAIT)
+	var face := Nameplate.character_face(ch.id) if ch != null else null
+	var title := Names.of(ch) if ch != null else UiText.t("battle.me")
+	return Nameplate.duel(title, face, true)
+
 
 
 #region 控件（造控件的活在 [UiTheme] 里，这里只留给子类的短名字）

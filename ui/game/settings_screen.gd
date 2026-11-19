@@ -46,6 +46,7 @@ func open(_payload: Dictionary) -> void:
 	frame.add_child(plate)
 	_plate = plate
 	var scroll := UiTheme.vscroll()
+	scroll.follow_focus = true
 	_scroll = scroll
 	frame.add_child(scroll)
 	var center := CenterContainer.new()
@@ -53,7 +54,7 @@ func open(_payload: Dictionary) -> void:
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(center)
 	var col := _vbox(10)
-	col.custom_minimum_size.x = 520
+	col.custom_minimum_size.x = 720
 	center.add_child(col)
 	_build_display(col)
 	_build_sound(col)
@@ -63,7 +64,7 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(_auto_close_btn)
 	col.add_child(HSeparator.new())
 	col.add_child(HeaderTag.new(UiText.t("settings.bg_section")))
-	var bg_row := _hbox(8)
+	var bg_row := UiTheme.hflow(8)
 	for t in UiPalette.BG_THEMES:
 		var tid := String(t["id"])
 		var b := StoneChip.make(UiText.pick(t["name"]), func(): set_bg_theme(tid), t["color"])     # 乙 石刻：底色签左边一块色样
@@ -76,7 +77,7 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(_fades_btn)
 	_dial_btn = StoneChip.toggle(UiText.t("settings.dial_number"), _flip.bind(&"dial_number_always"))     # 局内界面布局方案 §4.1
 	col.add_child(_dial_btn)
-	var cursor_row := _hbox(8)
+	var cursor_row := UiTheme.hflow(8)
 	cursor_row.add_child(HeaderTag.new(UiText.t("settings.cursor")))     # 226：「光标」上段头签
 	for skin in UiCursor.SKINS:
 		var sid := String(skin)
@@ -124,7 +125,7 @@ func open(_payload: Dictionary) -> void:
 		dev.add_child(HSeparator.new())
 	var back_key := ScrollKey.make(UiText.t("setup.back") if back.is_valid() else UiText.t("setup.main_menu"), go_back)     # 乙 石刻
 	back_key.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	col.add_child(back_key)
+	frame.add_child(back_key)
 	_refresh()
 
 
@@ -145,7 +146,7 @@ func _build_display(col: VBoxContainer) -> void:
 	for p in shown:
 		var aspect := WindowSetup.aspect_name(p)
 		if not rows.has(aspect):
-			var row := _hbox(8)
+			var row := UiTheme.hflow(8)
 			rows[aspect] = row
 			col.add_child(row)
 		var size_: Vector2i = p
@@ -157,7 +158,7 @@ func _build_display(col: VBoxContainer) -> void:
 		follow.disabled = true
 		col.add_child(follow)
 	# 258（作者 2026-10-27 定）：字号三档 小 / 中 / 大（主菜单不跟）；点了这一屏当场按新字号重建，别的屏下次进来生效
-	var size_row := _hbox(8)
+	var size_row := UiTheme.hflow(8)
 	size_row.add_child(HeaderTag.new(UiText.t("settings.text_size")))
 	for tier in GameSettings.TEXT_SIZES:
 		var id: StringName = tier

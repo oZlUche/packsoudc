@@ -31,6 +31,16 @@ static func frame_scroll_geometry(t: TestCase, root: Window) -> void:
 	var u := NoticeScroll.make("倒计时只剩 3 步", true)
 	t.check(u.urgent, "要紧的一卷")
 	u.free()
+	var long_notice := NoticeScroll.make("A long notification that needs to wrap cleanly across lines. ".repeat(2) + CoinShort.coin(123))
+	root.add_child(long_notice)
+	var natural := long_notice.custom_minimum_size
+	long_notice.fit_width(340.0)
+	t.check(long_notice.size.x <= 340.0 and long_notice.size.y > natural.y, "A narrow notice wraps within its width")
+	t.check(long_notice.paper_rect().size.y >= long_notice.label().size.y, "The paper fits all lines")
+	t.check(long_notice.coin().get_global_rect().position.x >= long_notice.label().get_global_rect().end.x, "The coin has its own space")
+	long_notice.fit_width(natural.x + 20.0)
+	t.eq(long_notice.custom_minimum_size, natural, "A wider viewport restores the single-line scroll")
+	long_notice.free()
 	s.queue_free()
 
 

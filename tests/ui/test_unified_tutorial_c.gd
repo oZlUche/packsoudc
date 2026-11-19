@@ -137,12 +137,22 @@ static func frame_pause_replay(t: TestCase, root: Window) -> void:
 	flow.meta.coach_seen.append("prologue_map")
 	flow.begin(ch, GF._loadout(c, &"standard"), 1, [] as Array[int], null)
 	var map = game.base()
-	map.toggle_pause()
-	t.check(map.pause_open(), "暂停菜单开着")
-	t.check(map.replay_map_coach(), "重看")
-	t.check(not map.pause_open() and map.coach() != null, "暂停菜单关了、教程开了")
-	if map.coach() != null:
-		map.coach().dismiss()
-	t.is_null(map.coach(), "收起：收掉")
+	var previous_lang := UiText.lang
+	for lang in ["zh", "en"]:
+		UiText.lang = lang
+		map.toggle_pause()
+		t.check(map.pause_open(), "暂停菜单开着")
+		t.check(map.replay_map_coach(), "重看")
+		var coach: CoachOverlay = map.coach()
+		t.check(not map.pause_open() and coach != null, "暂停菜单关了、教程开了")
+		if coach != null:
+			for i in coach.steps.size() - 1:
+				coach.next()
+			t.eq(coach.step()["target"], "starting_node", "还没落子：指一个可选出生点")
+			t.check(coach.hole().has_area(), "出生点在地图上有目标框")
+			t.check(coach.line_text().begins_with(UiText.t("map.coach_before_spawn")), "%s：选点前的说明" % lang)
+			coach.dismiss()
+		t.is_null(map.coach(), "收起：收掉")
+	UiText.lang = previous_lang
 	game.queue_free()
 	Support.cleanup(PREFIX)

@@ -163,7 +163,12 @@ func rebuild() -> void:
 			var why_t := CoinShort.strip(why)     # 「金币不够」不写字（打开配方卷，工钱那枚金币是红的）
 			cell_.tooltip_text = name_ + ("\n" + why_t if why_t != "" else "")
 			cell_.selected = rd.id == _open
-			cell_.clicked.connect(func(c: RecipeCell): open_recipe(c.recipe_id))
+			cell_.clicked.connect(func(c: RecipeCell):
+				var focused := c.has_focus()
+				var id := c.recipe_id
+				open_recipe(id)
+				if focused and _cells.has(id):
+					(_cells[id] as RecipeCell).grab_focus())
 			_cells[rd.id] = cell_
 			if rd.id == _open:
 				open_recipe_def = rd

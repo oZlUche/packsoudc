@@ -47,6 +47,9 @@ static func frame_pawn_and_paths(t: TestCase, root: Window) -> void:
 	var small := view.pawn_rect(view.pawn_at()["at"])
 	view.zoom = 2.0
 	var big := view.pawn_rect(view.pawn_at()["at"])
+	var head := big.position + Vector2(big.size.x * 0.5, big.size.y * 0.2)
+	t.check(head.distance_to(view.pawn_at()["at"]) > MapView.NODE_RADIUS + 2, "棋子头部在节点圆外")
+	t.eq(view.node_at(view.to_canvas(head)), here, "点可见棋子头部仍命中当前节点")
 	t.check(small.size.is_equal_approx(big.size), "缩放 0.3 与 2.0 下棋子一样大（%s / %s）" % [small.size, big.size])
 	t.eq(MapView.END_RING_R, 28.0, "终点墨环半径是像素定长")
 	view.focus(here)
