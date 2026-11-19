@@ -396,6 +396,15 @@ const TEXT := {
 	"belt.empty_tip": {"zh": "腰带：空格", "en": "Belt: empty slot"},
 	"belt.tip": {"zh": "%s ×%d\n%s\n%s\n双击使用", "en": "%s ×%d\n%s\n%s\nDouble-click to use"},
 	# ui/game/bag_window.gd
+	"bag.rotate_held": {"zh": "拖动时旋转", "en": "Rotate held item"},
+	"bag.cancel_drag": {"zh": "取消拖动", "en": "Cancel drag"},
+	"bag.right_click": {"zh": "鼠标右键", "en": "Right click"},
+	"bag.wheel": {"zh": "鼠标滚轮", "en": "Mouse wheel"},
+	"bag.field_pack": {"zh": "行装", "en": "Field pack"},
+	"bag.bearer": {"zh": "持有者", "en": "Pack bearer"},
+	"bag.hide_record": {"zh": "收起档案", "en": "Hide record"},
+	"bag.show_record": {"zh": "展开档案", "en": "Show record"},
+	"bag.free_cells": {"zh": "空余格位", "en": "Free cells"},
 	"bag.minimize": {"zh": "收起（B）", "en": "Close (B)"},
 	# ui/game/floating_window.gd
 	"bag.collapse": {"zh": "收起", "en": "Close"},
@@ -817,6 +826,8 @@ const TEXT := {
 	"hud.buffs": {"zh": "状态：%s", "en": "Status: %s"},
 	"hud.buff_sep": {"zh": "、", "en": ", "},
 	"hud.belt_used": {"zh": "用了「%s」", "en": "Used %s"},
+	"hud.legend_open": {"zh": "图例  ▴", "en": "Map key  ▴"},
+	"hud.legend_close": {"zh": "收起图例  ▾", "en": "Hide map key  ▾"},
 	"hud.you": {"zh": "你", "en": "You"},
 	"hud.produce": {"zh": "产物", "en": "Yields"},
 	"hud.produce_ring.outer": {"zh": "外", "en": "Outer"},
@@ -940,6 +951,8 @@ const TEXT := {
 	"gloss.no_effect": {"zh": "（没有效果）", "en": "(no effect)"},
 	# —— 221 F5a：hud widgets ——
 	"hud.belt": {"zh": "腰带", "en": "Belt"},
+	"hud.belt_fold": {"zh": "收起空槽。双击已装的随身技能即可使用。", "en": "Hide empty slots. Double-click an equipped skill to use it."},
+	"hud.belt_unfold": {"zh": "展开查看所有随身技能槽。双击技能即可使用。", "en": "Show all belt skill slots. Double-click a skill to use it."},
 	"hud.faith_level": {"zh": "Lv.%d　%d%s", "en": "Lv.%d  %d%s"},     # faith widget: rank, points, " / next"
 	"hud.notice_extract_closed": {"zh": "有一个撤离点关闭了", "en": "An extraction point has closed"},     # countdown_module notice
 	# —— 221 F5a：encumbrance ——

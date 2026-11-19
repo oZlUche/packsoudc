@@ -1,4 +1,4 @@
-## 166（作者定）：左下角的节点图例 —— 一列「图标 + 名字」，只列**这张图上有的**节点类型（岔路口不列），顺序按 [constant MapNodeStyle.STYLES]。
+## 166（作者定）：左下角的节点图例 —— 可折叠的两栏「图标 + 名字」，只列**这张图上有的**节点类型（岔路口不列），顺序按 [constant MapNodeStyle.STYLES]。
 ## 图标就是地图上的那一枚（155：`assets/nodes/<type>.png`，按类型色着色；缺图画圆里一个字），名字是 [constant MapNodeStyle.NAMES] 的短名。
 ## 184：最上面一行「你」是玩家的小兵棋子，「出生」那一行是 182 的小旗（原色不着色）
 ## 267：材料节点（矿脉 / 林地 / 遗骸 / 符文堆）各算一行（图上有才列，排在「搜索」后面）；
@@ -8,13 +8,16 @@ extends HudWidget
 const ICON := 24.0
 const ROW_GAP := 4.0
 const TEXT_GAP := 8.0
-## 232（作者 19:23 选 10）：图例的底是一面双尾旗（`hud/legend_pennant` 九宫格，钉子、绳、横杆都在图里），白字；最窄这么宽，英文长名往宽撑
+## 靛蓝折签采用九宫格，黄铜包角保持原比，英文长名可向右撑宽。
 const PENNANT := "hud/legend_pennant"
 const MIN_WIDTH := 158.0
 
 static var _dark_theme: Theme = null
 
-var _rows: VBoxContainer
+var _rows: GridContainer
+var _produce: VBoxContainer
+var _toggle: Button
+var _body: VBoxContainer
 
 
 func _init() -> void:
@@ -23,9 +26,44 @@ func _init() -> void:
 	set_meta(&"tone", UiTheme.TONE_DARK)     # 169：里面的字按深底取版（HudWidget 默认挂的是凹槽的浅）
 	_text.visible = false
 	custom_minimum_size.x = MIN_WIDTH
-	_rows = UiTheme.vbox(int(ROW_GAP))
+	var column := UiTheme.vbox(4)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(column)
+	_body = UiTheme.vbox(8)
+	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_body)
+	_rows = GridContainer.new()
+	_rows.columns = 2
 	_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_rows)
+	_rows.add_theme_constant_override("h_separation", 14)
+	_rows.add_theme_constant_override("v_separation", int(ROW_GAP))
+	_body.add_child(_rows)
+	_produce = UiTheme.vbox(2)
+	_produce.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.add_child(_produce)
+	_body.hide()
+	_toggle = UiTheme.flat_key("", Color("#263d46"), Color("#977a50"), Color("#e5c68d"),
+			Color("#fff4d9"), Vector2(0, 36), 16)
+	_toggle.focus_mode = Control.FOCUS_ALL
+	_toggle.toggle_mode = true
+	_toggle.toggled.connect(_set_open)
+	column.add_child(_toggle)
+	_set_open(false)
+
+
+func _set_open(open: bool) -> void:
+	_body.visible = open
+	_toggle.text = UiText.t("hud.legend_close" if open else "hud.legend_open")
+	# 折起时由底部重新锚定，避免留下展开时的空白热区。
+	reset_size()
+	if host is HudHost:
+		(host as HudHost).arrange.call_deferred()
+
+
+func set_editing(on: bool) -> void:
+	super(on)
+	_toggle.mouse_filter = Control.MOUSE_FILTER_IGNORE if on else Control.MOUSE_FILTER_STOP
+	_toggle.focus_mode = Control.FOCUS_NONE if on else Control.FOCUS_ALL
 
 
 func title() -> String:
@@ -108,6 +146,9 @@ func refresh() -> void:
 	if _rows == null:
 		return
 	UiTheme.clear_children(_rows)
+	UiTheme.clear_children(_produce)
+	_toggle.text = UiText.t("hud.legend_close" if _toggle.button_pressed else "hud.legend_open")
+	_toggle.add_theme_font_size_override("font_size", UiTheme.sz(16))
 	if run == null:
 		return
 	if run.map != null:
@@ -135,7 +176,10 @@ func _add_row(type: StringName, p_text: String, art_name: String, with_mark: boo
 	name_.text = p_text
 	name_.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(name_)
-	_rows.add_child(row)
+	if with_mark:
+		_rows.add_child(row)
+	else:
+		_produce.add_child(row)
 
 
 ## 一行的名字（测试看）
@@ -143,12 +187,12 @@ func row_names() -> Array[String]:
 	var out: Array[String] = []
 	if _rows == null:
 		return out
-	for row in _rows.get_children():
+	for row in _rows.get_children() + _produce.get_children():
 		out.append((row.get_child(row.get_child_count() - 1) as Label).text)
 	return out
 
 
-## 双尾旗底 + 白字的一份小主题（只给图例）
+## 折签底 + 白字的一份小主题（只给图例）
 static func _legend_theme() -> Theme:
 	if _dark_theme != null:
 		return _dark_theme
@@ -162,11 +206,11 @@ static func _legend_theme() -> Theme:
 	return t
 
 
-## 旗的九宫格（边距读 `legend_pennant.json`）
+## 折签的九宫格（边距读 `legend_pennant.json`）
 static func pennant_box() -> StyleBox:
 	var meta := UiTheme.art_meta(PENNANT)
-	var tm: Array = meta.get("texture_margin", [44, 52, 44, 58])
-	var cm: Array = meta.get("content_margin", [34, 54, 34, 50])
+	var tm: Array = meta.get("texture_margin", [12, 10, 12, 12])
+	var cm: Array = meta.get("content_margin", [13, 9, 13, 10])
 	return UiTheme.nine_box(UiTheme.art_cached(PENNANT), tm, cm)
 
 

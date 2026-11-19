@@ -33,61 +33,25 @@
   "phase": "tile outward from the dial_base left/right edges"
  },
  "dial": {
-  "file": "dial_base",
-  "size": [
-   274,
-   140
-  ],
-  "center_x": 137,
   "pivot": [
-   137,
-   6
+   0,
+   45
   ],
-  "radius": 94,
-  "face_radius": 102,
-  "sweep": "lower semicircle: 180° = left end, 90° = straight down, 0° = right end; point = pivot + (cos a, +sin a) * r (y down)",
-  "hand": {
-   "files": {
-    "calm": "dial_hand_calm",
-    "half": "dial_hand_half",
-    "low": "dial_hand_low"
-   },
-   "size": [
-    24,
-    94
-   ],
-   "pivot": [
-    12,
-    8
-   ],
-   "points": "down (90°)"
-  },
-  "hub": {
-   "file": "dial_hub",
-   "size": [
-    28,
-    28
-   ],
-   "pivot": [
-    14.0,
-    14.0
-   ]
-  },
+  "center_x": 0,
+  "radius": 32,
+  "face_radius": 40,
+  "bottom": 100,
   "stages": {
    "calm": {
-    "above": 0.5,
-    "wash": "#6b6255"
+    "wash": "#c18f4c"
    },
    "half": {
-    "above": 0.25,
-    "wash": "#9A5A22"
+    "wash": "#db873e"
    },
    "low": {
-    "above": 0,
-    "wash": "#8E2A22"
+    "wash": "#bd5144"
    }
   },
-  "wash_opacity": 0.16,
-  "bottom": 124
+  "wash_opacity": 0.42
  }
 }

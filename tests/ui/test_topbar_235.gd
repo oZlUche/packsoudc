@@ -57,7 +57,7 @@ static func frame_skin(t: TestCase, root: Window) -> void:
 	var wallet := host.widget(&"wallet")
 	t.eq(wallet.theme_type_variation, UiTheme.PANEL_HUD_WELL, "栏里的件坐在米色凹槽里（长槽退役）")
 	t.eq(UiTheme.tone_at(wallet), UiTheme.TONE_LIGHT, "浅底墨字")
-	t.eq(host.overhang(), 124.0, "栏往下伸到日晷下沿 124（告示卷排在它下面）")
+	t.eq(host.overhang(), 100.0, "完整日晷收入栏内（告示卷排在栏下面）")
 	host.layout.entry_of(&"wallet")["anchor"] = "top_left"
 	host.layout.entry_of(&"wallet")["offset"] = Vector2(0, 20)
 	host.arrange()
@@ -97,7 +97,7 @@ static func frame_skin(t: TestCase, root: Window) -> void:
 
 
 static func frame_dial(t: TestCase, root: Window) -> void:
-	t.begin("235 · 下半圆日晷：底座在栏正中（轴心 800, 6），倒计时那件在栏里只画扇面 / 指针 / 轴心；180° 在左、90° 正下、0° 在右；晷面算停在这件上；拖出栏回小日规")
+	t.begin("235 · 下半圆日晷：底座在栏正中（轴心 800, 45），倒计时那件在栏里只画扇面 / 指针 / 轴心；180° 在左、90° 正下、0° 在右；晷面算停在这件上；拖出栏回小日规")
 	var screen := FakeScreen.new()
 	screen.size = HOST_SIZE
 	root.add_child(screen)
@@ -118,10 +118,10 @@ static func frame_dial(t: TestCase, root: Window) -> void:
 		host.queue_free()
 		screen.queue_free()
 		return
-	t.eq(bar.call("dial_pivot"), Vector2(800, 6), "轴心在栏正中、y 6")
+	t.eq(bar.call("dial_pivot"), Vector2(800, 45), "轴心在栏正中、y 45")
 	t.eq(cd.theme_type_variation, UiTheme.PANEL_BARE, "栏里的日晷不带凹槽（画在栏皮的晷面上）")
 	var lim := cdm.limit()
-	var cases := [[0, Vector2(800 - 94, 6)], [lim / 2.0, Vector2(800, 100)], [lim, Vector2(800 + 94, 6)]]
+	var cases := [[0, Vector2(800 - 32, 45)], [lim / 2.0, Vector2(800, 77)], [lim, Vector2(800 + 32, 45)]]
 	for cs in cases:
 		run.travel.clock.total = int(cs[0])
 		cd.refresh()
@@ -129,14 +129,18 @@ static func frame_dial(t: TestCase, root: Window) -> void:
 		if float(cs[0]) == lim / 2.0 and lim % 2 == 1:
 			continue     # 奇数步数取不到正一半
 		t.check(tip.distance_to(cs[1]) < 1.0, "用掉 %s / %d：指针尖在 %s（%s）" % [cs[0], lim, cs[1], tip])
-	t.check(cd._has_point(Vector2(800, 90) - cd.global_position), "晷面下半圆算停在日晷上")
+	t.check(cd._has_point(Vector2(800, 12) - cd.global_position), "完整上半盘也算停在日晷上")
 	t.check(not cd._has_point(Vector2(800, 140) - cd.global_position), "晷面外不算")
-	t.eq(host.rect_of(&"countdown"), Rect2(800 - 102, 6, 204, 102), "教程指整块晷面")
+	t.eq(host.rect_of(&"countdown"), Rect2(760, 5, 80, 80), "教程指整块晷面")
 	run.travel.clock.total = 0
 	cd.refresh()
 	cd.open_tip()
 	t.check((screen._tip as HoverTip).is_showing(), "停上去：开悬浮窗")
 	cd.close_tip()
+	host.layout.entry_of(&"countdown")["anchor"] = "bar_right"
+	host.arrange()
+	var moved := host.rect_of(&"countdown")
+	t.check(moved.get_center().x > HOST_SIZE.x * 0.5 and moved.position.y >= 0 and moved.end.y <= host.bar_height(), "移动到右槽时，日晷和热区跟随控件，并完整留在栏内")
 	host.layout.entry_of(&"countdown")["anchor"] = "top_left"
 	host.layout.entry_of(&"countdown")["offset"] = Vector2(0, 100)
 	host.arrange()

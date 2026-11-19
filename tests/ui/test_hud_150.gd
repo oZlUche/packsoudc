@@ -361,8 +361,16 @@ static func _map_parts(t: TestCase, map: Control, host: HudHost, flow: GameFlow,
 	bag.pressed.emit()
 	t.check(map.bag_open(), "点栏右头的背包：开背包")
 	var key := InputEventKey.new()
-	key.keycode = KEY_B
 	key.pressed = true
+	var camera_zoom := view.zoom
+	var camera_pan := view.pan
+	for camera_key in [KEY_F, KEY_1, KEY_SPACE]:
+		key.keycode = camera_key
+		map._unhandled_key_input(key)
+	t.eq(view.zoom, camera_zoom, "整理背包时相机快捷键不会缩放地图")
+	t.eq(view.pan, camera_pan, "整理背包时地图保持原位")
+	t.check(not view.lock_on_player, "背包中按空格不锁住地图")
+	key.keycode = KEY_B
 	map._unhandled_key_input(key)
 	t.check(not map.bag_open(), "按 B：收起（和按钮是同一个开关）")
 	bag.pressed.emit()

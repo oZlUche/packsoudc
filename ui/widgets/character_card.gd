@@ -2,13 +2,13 @@
 ##
 ## 身体三行（生命上限 / 耐力上限 / 耐力恢复/秒）= [method RunState.effective_baseline]（局外加成、信仰、难度、角色被动乘完之后的数），
 ## 比角色本身的基线多或少就在数后面写 ▲N / ▼N，停上去看是谁给的；下面两条被动（名字 + 现成的一句说明，写全文：英文按词折行，卡跟着长高）。
-## 画法读 `assets/ui/stats_panel/`（`card_wax` 九宫底板、`layout.json` 的卡内坐标与字色，美术设计出）；行间刻线由代码画
+## 属性与说明印在同一张角色档案纸上，浅底墨色与行间刻线从 stats_panel/layout.json 读取。
 class_name CharacterCard
 extends Control
 
 const ART := "stats_panel/"
 const LAYOUT := ART + "layout"
-const STYLE := "wax"
+const STYLE := "parchment"
 const ROWS: Array[StringName] = [BattleStats.MAX_HP, BattleStats.MAX_STAMINA, BattleStats.REGEN_STAMINA]
 const ROW_KEYS := {BattleStats.MAX_HP: "card.max_hp", BattleStats.MAX_STAMINA: "card.max_stamina", BattleStats.REGEN_STAMINA: "card.regen"}
 ## 没有 `layout.json` 时的卡内排版（和美术定稿同一份）
@@ -63,11 +63,11 @@ func refresh(run: RunState) -> void:
 				_passives.append({"name": String(e["name"]), "text": String(e["text"])})
 	var top := PASSIVE_TOP
 	for p in _passives:
-		p["lines"] = wrap_lines(String(p["text"]), UiPalette.cjk_font(), SUMMARY_SIZE, SUMMARY_W, SUMMARY_LINES)
+		p["lines"] = wrap_lines(String(p["text"]), UiPalette.cjk_font(), UiTheme.sz(SUMMARY_SIZE), SUMMARY_W, SUMMARY_LINES)
 		p["top"] = top
-		p["height"] = PASSIVE_HEAD + SUMMARY_LINE_H * (p["lines"] as Array).size() + PASSIVE_PAD
+		p["height"] = PASSIVE_HEAD + UiTheme.sz(int(SUMMARY_LINE_H)) * (p["lines"] as Array).size() + PASSIVE_PAD
 		top += float(p["height"])
-	custom_minimum_size = Vector2(SIZE.x, maxf(SIZE.y, top + BOTTOM_PAD))
+	custom_minimum_size = Vector2(SIZE.x, top + BOTTOM_PAD)
 	size = custom_minimum_size
 	queue_redraw()
 
@@ -185,9 +185,9 @@ func _color(key: String, fallback: Color) -> Color:
 
 
 func _draw() -> void:
-	var bg := UiTheme.art_cached(ART + "card_" + STYLE)
-	if bg != null:
-		draw_style_box(UiTheme.nine_box(bg, [16, 16, 16, 16]), Rect2(Vector2.ZERO, size))
+	draw_rect(Rect2(6, 0, size.x - 12, size.y), Color("efe6ce"))
+	for i in ROWS.size():
+		_rule(ROW_TOP + i * ROW_H - 3)
 	var regular := UiPalette.cjk_font()
 	var bold := UiPalette.cjk_font_bold()
 	var label := _color("label", UiTheme.INK)
@@ -196,31 +196,32 @@ func _draw() -> void:
 	for i in _rows.size():
 		var r: Dictionary = _rows[i]
 		var base_y := ROW_TOP + ROW_H * i + 20.0
-		draw_string(regular, Vector2(LABEL_X, base_y), String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, label)
+		draw_string(regular, Vector2(LABEL_X, base_y), String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(15), label)
 		if String(r["unit"]) != "":
-			var lw := regular.get_string_size(String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-			draw_string(regular, Vector2(LABEL_X + lw + 5.0, base_y), String(r["unit"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, dim)
+			var lw := regular.get_string_size(String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(15)).x
+			draw_string(regular, Vector2(LABEL_X + lw + 5.0, base_y), String(r["unit"]), HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(11), dim)
 		var x := VALUE_RIGHT
 		var d := float(r["delta"])
 		if not is_zero_approx(d):
 			var mark := (UiText.t("card.up") if d > 0.0 else UiText.t("card.down")) % _num(absf(d), bool(r["regen"]))
-			x -= regular.get_string_size(mark, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
-			draw_string(regular, Vector2(x, base_y), mark, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, _color("good" if d > 0.0 else "bad", value))
+			x -= regular.get_string_size(mark, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(12)).x
+			draw_string(regular, Vector2(x, base_y), mark, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(12), _color("good" if d > 0.0 else "bad", value))
 			x -= 4.0
 		var vs := String(r["value"])
-		x -= bold.get_string_size(vs, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-		draw_string(bold, Vector2(x, base_y), vs, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, value)
-	for y in DIVIDER_Y:
-		_rule(y)
+		x -= bold.get_string_size(vs, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(15)).x
+		draw_string(bold, Vector2(x, base_y), vs, HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(15), value)
+	if not _passives.is_empty():
+		for y in DIVIDER_Y:
+			_rule(y)
 	for i in _passives.size():
 		var p: Dictionary = _passives[i]
 		var top := float(p["top"])
 		if i > 0:
 			_rule(top)
-		draw_string(bold, Vector2(LABEL_X, top + 18.0), String(p["name"]), HORIZONTAL_ALIGNMENT_LEFT, SUMMARY_W, 15, value)
+		draw_string(bold, Vector2(LABEL_X, top + 18.0), String(p["name"]), HORIZONTAL_ALIGNMENT_LEFT, SUMMARY_W, UiTheme.sz(15), value)
 		var lines: Array = p["lines"]
 		for j in lines.size():
-			draw_string(regular, Vector2(LABEL_X, top + PASSIVE_HEAD + 9.0 + SUMMARY_LINE_H * j), String(lines[j]), HORIZONTAL_ALIGNMENT_LEFT, -1, SUMMARY_SIZE, dim)
+			draw_string(regular, Vector2(LABEL_X, top + PASSIVE_HEAD + 9.0 + UiTheme.sz(int(SUMMARY_LINE_H)) * j), String(lines[j]), HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(SUMMARY_SIZE), dim)
 
 
 ## 行间刻线：`styles.<材质>.rule` 的几条 1 px 横线叠出来

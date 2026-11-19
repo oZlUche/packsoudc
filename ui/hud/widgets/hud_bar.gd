@@ -1,13 +1,8 @@
 ## 166（作者定）：顶端栏 —— 横贯顶部的一条底。它本身不写字：栏里摆什么由布局里锚在 `bar_left / bar_center / bar_right` 的条目决定（[HudHost] 排），
 ## 所以「摆读数」时照样能把东西拖进拖出、换槽，栏自己也能藏。大小由宿主定（整屏宽 × 栏高）；宿主把它排成第一个子节点，垫在栏里的组件下面
 ##
-## 235（作者 2026-10-22「按推荐来」）：石刻栏皮 —— 浅色石刻一整条，图与数值在 `hud/topbar/`（`topbar.json`）：
-## 中间平铺段从日晷底座左右两边往外铺、只铺在两头之间；正中下半圆日晷底座（刻度在图里，扇面 / 指针 / 轴心归倒计时那件画，
-## 底座下凸压在地图上、不占布局高度）；两头最后盖上去。两头是真按钮（[IconButton] 三态，热区是那块凸起的石块）：
-## 左 = 本局菜单（等同 Esc），右 = 背包（右槽的小背包钮并进来了）。按下发 [signal end_pressed]，接到所在屏的 `hud_end(side)`。
-## 两头不进 150 的布局（不能拖、不能藏）
-## 作者 10-22 13:31「两头的浮雕和下方边缘重合了，扩张顶端栏的下缘」：石面 86 → 100，回纹带挪到 y 87～95 整条贯通；
-## 两头石块与读数仍在 y 8～78（[method band_margins] 按石块上下沿算，不按石面居中）
+## 顶栏沿用两端三态按钮与原有热区；中段为深色珐琅量尺，浅色凹槽承载资源。
+## 完整日晷由倒计时组件绘制，收在顶栏以内；当组件挪动或隐藏时，晷面跟随它。
 extends HudWidget
 
 ## 两头按下：[constant LEFT] / [constant RIGHT]
@@ -104,7 +99,7 @@ static func dial_bottom() -> float:
 	return float((skin().get("dial", {}) as Dictionary).get("bottom", 124))
 
 
-## 日晷轴心（栏的坐标）
+## 默认居中布局的日晷轴心（栏的坐标）
 func dial_pivot() -> Vector2:
 	var d: Dictionary = _meta.get("dial", {})
 	var p: Array = d.get("pivot", [151, 6])
@@ -139,24 +134,29 @@ func _place_ends() -> void:
 		b.position = Vector2(0.0 if side == LEFT else w - b.size.x, 0.0)
 
 
-## 平铺段（从日晷两边往外、只铺在两头之间）→ 日晷底座；两头是子节点，画在上面
+## 深色珐琅横梁把浅色资源凹槽与两端的金属操作钮分开。
 func _draw() -> void:
 	var tile := UiTheme.art_cached(SKIN + "bar_tile")
-	var dial := UiTheme.art_cached(SKIN + "dial_base")
-	if tile != null and dial != null:
-		var ew := float((_meta.get("ends", {}) as Dictionary).get("width", 104))
+	if tile != null:
 		var tw := tile.get_width()
 		var th := tile.get_height()
-		var dx := roundf(size.x * 0.5) - float(dial_meta().get("center_x", 151))
-		var x := dx + dial.get_width()
-		while x < size.x - ew:
-			var w := minf(tw, size.x - ew - x)
-			draw_texture_rect_region(tile, Rect2(x, 0, w, th), Rect2(0, 0, w, th))
-			x += tw
-		x = dx
-		while x > ew:
-			var w := minf(tw, x - ew)
-			draw_texture_rect_region(tile, Rect2(x - w, 0, w, th), Rect2(tw - w, 0, w, th))
-			x -= tw
-		draw_texture(dial, Vector2(dx, 0))
+		var x := 0.0
+		while x < size.x:
+			var width := minf(tw, size.x - x)
+			draw_texture_rect_region(tile, Rect2(x, 0, width, th), Rect2(0, 0, width, th))
+			x += width
+	var inset := float((_meta.get("ends", {}) as Dictionary).get("width", 104))
+	var width := maxf(0, size.x - inset * 2)
+	var extra := maxf(0, size.y - design_height())
+	if width > 0:
+		draw_rect(Rect2(inset, 2, width, 82 + extra), Color("263b3d"))
+		draw_rect(Rect2(inset, 4, width, 1), Color("a58b5f"))
+		draw_rect(Rect2(inset, 6, width, 1), Color("536050"))
+		# 横穿金属面的细划线与分度刻痕，在状态与动作之间留出安静的读数区。
+		var y := 43.0 + extra * 0.5
+		draw_line(Vector2(inset, y), Vector2(size.x - inset, y), Color("43524a"), 1.0)
+		for x in range(int(inset) + 15, floori(size.x - inset), 28):
+			draw_line(Vector2(x, y - 2), Vector2(x, y + 2), Color("637062"), 1.0)
+		draw_rect(Rect2(inset, 79 + extra, width, 1), Color("768171"))
+		draw_rect(Rect2(inset, 82 + extra, width, 2), Color("a48d64"))
 	super()

@@ -38,6 +38,16 @@ static func run_legend(t: TestCase) -> void:
 		return
 	var legend := HudWidgets.create(&"legend")
 	legend.setup(run, null)
+	var toggle: Button = legend.get("_toggle")
+	var body: Control = legend.get("_body")
+	t.check(not toggle.button_pressed and not body.visible, "默认收起，保留地图空间")
+	t.check(toggle.focus_mode == Control.FOCUS_ALL, "图例按钮可用键盘聚焦")
+	toggle.button_pressed = true
+	t.check(body.visible and toggle.text == UiText.t("hud.legend_close"), "展开图例并提供收起操作")
+	legend.refresh()
+	t.check(body.visible and toggle.button_pressed, "刷新保留当前的展开状态")
+	toggle.button_pressed = false
+	t.check(not body.visible and toggle.text == UiText.t("hud.legend_open"), "再次切换后收起")
 	var types: Array = legend.call("types")
 	var have := {}
 	for id in run.map.node_ids():
@@ -57,9 +67,9 @@ static func run_legend(t: TestCase) -> void:
 		if MapNodeStyle.NAMES.has(ty) or MapNodeStyle.KINDS.has(ty):
 			t.check(types.has(ty), "图上有的 %s 列进去了" % ty)
 	t.eq(legend.title(), "图例", "部件标题")
-	# 作者 2026-10-13：图例白字、有内边距；232：底是双尾旗九宫格（深底），最窄 158
+	# 作者 2026-10-13：图例白字、有内边距；232：底是折签九宫格（深底），最窄 158
 	var box := legend.theme.get_stylebox("panel", UiTheme.PANEL_HUD) as StyleBoxTexture
-	t.check(box != null and box.texture != null, "双尾旗底")
+	t.check(box != null and box.texture != null, "折签底")
 	t.check(box != null and box.content_margin_left >= 8 and box.content_margin_top >= 4, "有内边距，图标和字不压边框")
 	t.check(legend.custom_minimum_size.x >= 158.0, "最窄 158")
 	t.check(box != null and box.content_margin_right >= box.content_margin_left, "右边内边距不小于左边（复测 v4.78：最宽那行贴右边金线）")

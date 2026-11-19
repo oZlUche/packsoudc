@@ -22,6 +22,11 @@ const INK := Color("2e2219")
 static var _belt_layouts: Dictionary = {}
 static var _belt_loaded := false
 
+## 地图读数用小号铆钉槽，默认只画已装技能；展开时补齐空位。
+const FIELD_SLOT := 52.0
+const FIELD_GAP := 5.0
+var field_mode := false
+var show_empty := false
 var module: BeltModule = null
 ## 用一个：`func(skill_id) -> String`（空串 = 用了，否则是原因）。没接 = 直接调模块
 var on_use: Callable = Callable()
@@ -47,6 +52,12 @@ func bind(p_module: BeltModule) -> void:
 
 
 func _on_changed() -> void:
+	if field_mode:
+		var count := _display_count()
+		custom_minimum_size = Vector2(count * FIELD_SLOT + maxi(0, count - 1) * FIELD_GAP, FIELD_SLOT) if count else Vector2.ZERO
+		update_minimum_size()
+		queue_redraw()
+		return
 	var n := slot_count()
 	var lay := _layout()
 	custom_minimum_size = Vector2(lay["size"][0], lay["size"][1]) if not lay.is_empty() else Vector2(n * SLOT + maxi(0, n - 1) * GAP, SLOT)
@@ -56,6 +67,17 @@ func _on_changed() -> void:
 
 func slot_count() -> int:
 	return module.slot_count() if module != null else 0
+
+
+func _display_count() -> int:
+	if field_mode and not show_empty:
+		return module.stacks.size() if module != null else 0
+	return slot_count()
+
+
+func reveal_empty(on: bool) -> void:
+	show_empty = on
+	_on_changed()
 
 
 ## 第 [param i] 格里的随身技能 id（空格 &""）
@@ -68,6 +90,8 @@ func skill_at(i: int) -> StringName:
 
 ## 第 [param i] 个圆的圆心（本控件内像素）：弯皮带读表，直圆槽一排
 func slot_center(i: int) -> Vector2:
+	if field_mode:
+		return Vector2.ONE * FIELD_SLOT * 0.5 + Vector2.RIGHT * i * (FIELD_SLOT + FIELD_GAP)
 	var lay := _layout()
 	if not lay.is_empty() and i >= 0 and i < (lay["centers"] as Array).size():
 		var c: Array = lay["centers"][i]
@@ -77,15 +101,16 @@ func slot_center(i: int) -> Vector2:
 
 ## 本控件内一点落在哪个圆里（按圆心距 ≤ [constant HIT]）；不在圆里 -1
 func slot_at(local: Vector2) -> int:
-	for i in slot_count():
-		if local.distance_to(slot_center(i)) <= HIT:
+	var hit_radius := FIELD_SLOT * 0.5 if field_mode else HIT
+	for i in _display_count():
+		if local.distance_to(slot_center(i)) <= hit_radius:
 			return i
 	return -1
 
 
 ## 232：现在是不是弯皮带
 func curved() -> bool:
-	return not _layout().is_empty()
+	return not field_mode and not _layout().is_empty()
 
 
 ## 这个格数的弯皮带摆位 {file, size, centers}；没有（超过 6 格）空
@@ -143,6 +168,9 @@ func _get_tooltip(at: Vector2) -> String:
 
 func _draw() -> void:
 	var f := font if font != null else get_theme_default_font()
+	if field_mode:
+		_draw_field_slots(f)
+		return
 	var r := SLOT * 0.5
 	var lay := _layout()
 	var bent := not lay.is_empty()
@@ -179,3 +207,32 @@ func _draw() -> void:
 			var n := str(module.count_of(sid))
 			var nw := f.get_string_size(n, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
 			draw_string(f, b + Vector2(-nw.x * 0.5, 4.5), n, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiPalette.BTN_PRIMARY_TEXT)
+
+
+## 黄铜压圈、内衬和皮面刻线。数量底牌独立于技能图标。
+func _draw_field_slots(f: Font) -> void:
+	for i in _display_count():
+		var c := slot_center(i)
+		var sid := skill_at(i)
+		var filled := sid != &""
+		draw_circle(c + Vector2(0, 1), 25, Color("221e19"), true, -1, true)
+		draw_circle(c, 24, Color("443d32") if filled else Color("39332b"), true, -1, true)
+		draw_arc(c, 23.5, 0, TAU, 48, Color("b49a68") if filled else Color("86765c"), 1.5, true)
+		draw_arc(c, 20.5, 0, TAU, 48, Color("736249"), 1, true)
+		if not filled:
+			draw_dashed_line(c + Vector2(-8, 0), c + Vector2(8, 0), Color("a38c69"), 1, 2)
+			continue
+		var def := BeltSkillDef.find(sid)
+		var icon := def.icon() if def != null else null
+		if icon != null:
+			draw_texture_rect(icon, Rect2(c - Vector2(17, 17), Vector2(34, 34)), false)
+		else:
+			var glyph := (Names.of(def) if def != null else String(sid)).left(1)
+			draw_string(f, c + Vector2(-16, 6), glyph, HORIZONTAL_ALIGNMENT_CENTER, 32, 19, Color("f4e4c3"))
+		var quantity := str(module.count_of(sid))
+		var px := UiTheme.sz(12)
+		var width := maxf(18, f.get_string_size(quantity, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x + 5)
+		var badge := Rect2(c + Vector2(25 - width, 21 - px), Vector2(width, px + 4))
+		draw_rect(badge, Color("292823"))
+		draw_rect(badge, Color("b99c68"), false, 1)
+		draw_string(f, badge.position + Vector2(0, px), quantity, HORIZONTAL_ALIGNMENT_CENTER, width, px, Color("f6e9ce"))

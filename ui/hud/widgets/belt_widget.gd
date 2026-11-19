@@ -1,10 +1,11 @@
-## 150 补 1（作者定）：147 的腰带做成地图屏上的一件组件，随布局摆。
-## 160（作者定）：腰带离开背包，只留这一处，默认在右下角；画成一排圆槽（[BeltSlots]）—— 一格一种随身技能、右下角写几个。
-## 双击一个圆 = 用一个（走 [method GameFlow.use_belt]；用不了的原因在圆上方飘一行）。没有拖进拖出（随身技能不是道具）。
-## 这一局没装腰带模块 = 空着（布局里写了也不报错，平时藏着）
+## 地图上的随身技能腰带。铜扣标示占用格数，展开可检查空槽。
+## 已装技能常显，由 BeltSlots 提供悬停说明与双击使用。
+## 位置及显隐由 HudHost 的布局控制。
 extends HudWidget
 
 var slots: BeltSlots = null
+var _clasp: Button
+var _expanded := false
 
 
 func title() -> String:
@@ -14,26 +15,69 @@ func title() -> String:
 func setup(p_run: RunState, p_screen: Control) -> void:
 	var belt := BeltModule.of(p_run)
 	if slots == null and belt != null:
-		_text.visible = false
+		_text.hide()
+		theme_type_variation = UiTheme.PANEL_BARE
+		UiTheme.apply_tone(self, UiTheme.PANEL_BARE)
+		var column := VBoxContainer.new()
+		column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		column.add_theme_constant_override("separation", 3)
+		add_child(column)
 		slots = BeltSlots.new()
+		slots.field_mode = true
 		slots.font = p_screen.get("font") if p_screen != null else null
 		slots.on_use = use
-		add_child(slots)
+		slots.size_flags_horizontal = Control.SIZE_SHRINK_END
+		column.add_child(slots)
 		slots.bind(belt)
-		belt.changed.connect(_sync_skin)
-		_sync_skin()
+		_clasp = Button.new()
+		_clasp.icon = preload("res://assets/ui/belt/field_clasp.svg")
+		_clasp.size_flags_horizontal = Control.SIZE_SHRINK_END
+		_clasp.custom_minimum_size = Vector2(0, 34)
+		_clasp.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		_clasp.toggle_mode = true
+		if slots.font != null:
+			_clasp.add_theme_font_override("font", slots.font)
+		for state in ["normal", "hover", "pressed", "hover_pressed"]:
+			var style := StyleBoxFlat.new()
+			style.bg_color = Color("332e28") if state == "normal" else Color("504537")
+			style.border_color = Color("998358") if state == "normal" else Color("cfb47c")
+			style.set_border_width_all(1)
+			style.set_corner_radius_all(3)
+			style.content_margin_left = 9
+			style.content_margin_right = 9
+			style.content_margin_top = 2
+			style.content_margin_bottom = 2
+			_clasp.add_theme_stylebox_override(state, style)
+		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+			_clasp.add_theme_color_override(state, Color("f2e3c6"))
+		column.add_child(_clasp)
+		_clasp.toggled.connect(_toggle)
+		minimum_size_changed.connect(reset_size, CONNECT_DEFERRED)
 	super.setup(p_run, p_screen)
 
 
-## 232：弯皮带自己就是底 —— 不要 HUD 凹槽（栏里栏外都空底）；退回直圆槽时还给凹槽
-func _sync_skin() -> void:
-	var bent := slots != null and slots.curved()
-	if bent and theme_type_variation != UiTheme.PANEL_BARE:
-		theme_type_variation = UiTheme.PANEL_BARE
-		UiTheme.apply_tone(self, UiTheme.PANEL_BARE)
-	elif not bent and theme_type_variation == UiTheme.PANEL_BARE:
-		theme_type_variation = UiTheme.PANEL_HUD
-		UiTheme.apply_tone(self, UiTheme.PANEL_HUD)
+func _toggle(on: bool) -> void:
+	_expanded = on
+	slots.reveal_empty(on)
+	_paint()
+
+
+func _paint() -> void:
+	if slots == null:
+		return
+	_clasp.add_theme_font_size_override("font_size", UiTheme.sz(15))
+	var occupied := slots.module.stacks.size()
+	slots.visible = _expanded or occupied > 0
+	_clasp.text = "%s  %d/%d  %s" % [UiText.t("hud.belt"), occupied, slots.slot_count(), "▾" if _expanded else "▴"]
+	_clasp.tooltip_text = UiText.t("hud.belt_fold" if _expanded else "hud.belt_unfold")
+
+
+func set_editing(on: bool) -> void:
+	if slots != null:
+		slots.mouse_filter = Control.MOUSE_FILTER_IGNORE if on else Control.MOUSE_FILTER_STOP
+		_clasp.mouse_filter = Control.MOUSE_FILTER_IGNORE if on else Control.MOUSE_FILTER_STOP
+		_clasp.focus_mode = Control.FOCUS_NONE if on else Control.FOCUS_ALL
+	super.set_editing(on)
 
 
 func watch() -> Array[Signal]:

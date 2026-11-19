@@ -119,7 +119,18 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 	# 复测 #361：靠纸边的点回正时纸仍盖满安全区（顶栏下不露出纸外桌面）
 	var bare := []
 	var z_keep := view.zoom
-	view.zoom = view.zoom_min() * 1.1     # 纸只比安全区大一点：离中心稍远的点都会碰到纸边
+	# 看全图使用 contain 缩放；折起图例或腰带后安全区的长宽比会变化。
+	# 此用例测的是纸能盖满两轴时的回正夹边，先按 cover 比例建立这个条件。
+	var sheet := view.paper().size
+	if sheet.x <= 0.0 or sheet.y <= 0.0:
+		t.check(false, "地图有底图纸")
+		game.queue_free()
+		return
+	var cover_scale := view.safe_rect().size / sheet
+	view.zoom = minf(cover_scale.x, cover_scale.y) * 0.9
+	view.focus(here)
+	t.check(view.paper_on_screen().get_center().distance_to(view.safe_rect().get_center()) < 0.5, "纸比安全区小时居中")
+	view.zoom = maxf(cover_scale.x, cover_scale.y) * 1.1
 	for nid in view.positions():
 		view.focus(int(nid))
 		if view.paper().has_area() and not view.paper_on_screen().grow(0.5).encloses(view.safe_rect()):
@@ -132,6 +143,13 @@ static func frame_follow_and_offscreen(t: TestCase, root: Window) -> void:
 	var key := InputEventKey.new()
 	key.keycode = KEY_SPACE
 	key.pressed = true
+	var key_button: Button = map.hud().widget(&"legend").get("_toggle")
+	key_button.grab_focus()
+	var reading_pan := view.pan
+	map._unhandled_key_input(key)
+	t.eq(view.pan, reading_pan, "聚焦图例时空格不拉走地图")
+	t.check(not view.lock_on_player, "聚焦图例时空格不锁镜头")
+	key_button.release_focus()
 	map._unhandled_key_input(key)
 	t.check(view.pan.distance_to(view.focus_pan(here)) < 0.5 or view.following(), "空格：回正")
 	t.check(view.lock_on_player, "按住空格：锁住")

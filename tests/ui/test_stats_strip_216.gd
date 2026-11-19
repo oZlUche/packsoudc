@@ -123,6 +123,16 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 			if col != null:
 				t.eq(box.get_theme_constant("margin_top") + col.get_theme_constant("separation"), int(InvPanel.STRIP_GAP), "上沿离棋盘下沿 %d" % int(InvPanel.STRIP_GAP))
 			t.eq(s.custom_minimum_size.x, float(win.board_slot().x) * cell, "和九格位子一样宽，签在里面居中")
+		var expanded := win.window_size()
+		var grid_rect: Rect2 = inv.board_view.get_global_rect()
+		var toggle := win.get_node("Canvas/DossierToggle") as Button
+		toggle.pressed.emit()
+		t.check(win.window_size().x < expanded.x and not win.control_rect(&"character_card").has_area(), "收档只隐藏角色栏并缩窄背包")
+		t.eq(inv.board_view.get_global_rect(), grid_rect, "收档保留棋盘的拖放坐标")
+		t.check(not toggle.get_global_rect().intersects(win.close_button.get_global_rect()), "窄版档案按钮与关窗按钮各有命中区")
+		toggle.pressed.emit()
+		t.eq(win.window_size(), expanded, "展开档案回到完整窗口尺寸")
+		t.check(win.control_rect(&"character_card").has_area(), "展开档案恢复角色栏教程和悬浮区域")
 		win.close_button.pressed.emit()
 		t.check(not map.bag_open(), "按圆钮：收起")
 	game.queue_free()

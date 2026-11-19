@@ -20,8 +20,6 @@ const MINIMIZE_ART := "btn_minimize"
 const MINIMIZE_SIDE := 56.0
 ## 232：背包皮的图与摆位
 const SATCHEL_DIR := "bag/"
-const DIVIDER_COLOR := Color("786e64")
-const DIVIDER_W := 1.2
 ## 没有 `layout.json` 时的摆位（和精修稿同一份）
 const DEFAULTS := {
 	"cell": 72, "board": [8, 6], "window_size": [984, 620], "window_center": [800, 510], "gap": 26, "header_h": 52,
@@ -49,6 +47,10 @@ var _spec: Dictionary = {}
 ## 232：背包皮（包身 / 侧环 / 翻盖 / 提手徽，画在 [member _canvas] 底下）；没图 null
 var _back: Control = null
 var _satchel: Dictionary = {}
+var _dossier_open := true
+var _dossier_toggle: Button
+var _pack_title: Label
+var _drag_reference: PanelContainer
 
 
 ## 搭好整块窗并返回里面的面板。[param drag] 同 [method InventoryPanelScript.setup]；[param hint_sink] 是面板回话的去处
@@ -66,7 +68,7 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	_canvas = Control.new()
 	_canvas.name = "Canvas"
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_canvas.draw.connect(_draw_divider)
+	_canvas.draw.connect(_draw_surfaces)
 	add_child(_canvas)
 	var grip := Control.new()     # 标题行空着，整行都是把手
 	grip.name = "Grip"
@@ -87,7 +89,11 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	_canvas.add_child(panel)
 
 	var ch := run.character
-	nameplate = Nameplate.new().setup(Names.of(ch) if ch != null else UiText.t("battle.me"), "", Nameplate.character_face(ch.id) if ch != null else null)
+	nameplate = Nameplate.new().setup(Names.of(ch) if ch != null else UiText.t("battle.me"), UiText.t("bag.bearer"), Nameplate.character_face(ch.id) if ch != null else null)
+	nameplate.badge_slot.hide()
+	nameplate.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	nameplate.name_label.add_theme_color_override("font_color", Color("302a25"))
+	nameplate.sub_label.add_theme_color_override("font_color", Color("675143"))
 	_canvas.add_child(nameplate)
 	card = CharacterCard.new()
 	card.tip = panel.tip
@@ -106,10 +112,54 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	close_button = b
 	_canvas.add_child(b)
 
+	_pack_title = UiTheme.make_label(UiText.t("bag.field_pack"), 23)
+	_pack_title.add_theme_color_override("font_color", Color("ece1c9"))
+	_pack_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_canvas.add_child(_pack_title)
+	_dossier_toggle = Button.new()
+	_dossier_toggle.name = "DossierToggle"
+	UiPalette.style_button(_dossier_toggle, UiPalette.Tier.MINOR, 15)
+	_dossier_toggle.pressed.connect(_toggle_dossier)
+	_canvas.add_child(_dossier_toggle)
+	_build_drag_reference()
+	run.board.changed.connect(_canvas.queue_redraw)
 	panel.board_view.resized.connect(_layout)
 	resized.connect(_clamp)
 	_layout()
 	return panel
+
+
+## 拖拽中的两种操作。键位由实际动作读取；旋转键未绑定时滚轮仍然可用。
+func _build_drag_reference() -> void:
+	_drag_reference = PanelContainer.new()
+	_drag_reference.name = "DragReference"
+	_drag_reference.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var paper := StyleBoxFlat.new()
+	paper.bg_color = Color("d2c8ac")
+	paper.border_color = Color("897858")
+	paper.border_width_top = 2
+	paper.border_width_bottom = 1
+	paper.set_content_margin_all(10)
+	_drag_reference.add_theme_stylebox_override("panel", paper)
+	var lines := UiTheme.vbox(3)
+	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_drag_reference.add_child(lines)
+	var rotation := KeyNames.of(InputKeys.ROTATE_ITEM) if not InputKeys.keys_of(InputKeys.ROTATE_ITEM).is_empty() else UiText.t("bag.wheel")
+	for entry in [[UiText.t("bag.rotate_held"), rotation], [UiText.t("bag.cancel_drag"), UiText.t("bag.right_click")]]:
+		var row := UiTheme.hbox(7)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lines.add_child(row)
+		var action := UiTheme.make_label(entry[0], 14)
+		action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		action.add_theme_color_override("font_color", Color("4b4335"))
+		action.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(action)
+		var binding := UiTheme.make_label(entry[1], 14)
+		binding.add_theme_font_override("font", UiPalette.cjk_font_bold())
+		binding.add_theme_color_override("font_color", Color("374b44"))
+		binding.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(binding)
+	_canvas.add_child(_drag_reference)
 
 
 ## 218 补充一：这一章写了背包窗教程（章节 `coaches` 的 `bag`）、这个存档还没看过就放 —— 窗摆稳了再放（等一帧），铺满 [param host]（压暗那一层）
@@ -123,6 +173,8 @@ func maybe_coach(flow: GameFlow, host: Control) -> void:
 func show_coach(flow: GameFlow, host: Control) -> bool:
 	if coach != null or not is_inside_tree() or not is_instance_valid(host):
 		return false
+	if not _dossier_open:
+		_toggle_dossier()
 	coach = CoachOverlay.run_on(host, coach_id(flow), flow, _font, control_rect)
 	if coach == null:
 		return false
@@ -234,7 +286,12 @@ static func spec() -> Dictionary:
 func window_size() -> Vector2:
 	var cell := float(_spec["cell"])
 	var drawn: Vector2 = _vec(_spec["board"]) * cell
-	return _vec(_spec["window_size"]) + (Vector2(board_slot()) * cell - drawn)
+	var want := _vec(_spec["window_size"]) + (Vector2(board_slot()) * cell - drawn)
+	if not _dossier_open:
+		want.x -= _vec(_spec["window_size"]).x - float(_spec["divider_v"]["x"])
+	elif card != null:
+		want.y = maxf(want.y, float(_spec["col"]["card"]["y"]) + card.size.y + 84.0)
+	return want
 
 
 ## 255 补充一（作者 10:51）：棋盘那块位子按几格算 —— 宽永远九格（窄的棋盘居中），高照棋盘行数（神坛训练会加行）
@@ -250,7 +307,7 @@ func board_cells_at() -> Vector2:
 
 
 func _layout() -> void:
-	if panel == null:
+	if panel == null or _dossier_toggle == null:
 		return
 	var want := window_size()
 	_canvas.custom_minimum_size = want
@@ -277,17 +334,57 @@ func _layout() -> void:
 	nameplate.custom_minimum_size = Vector2(want_plate.x / k, 0.0)
 	nameplate.size = Vector2(want_plate.x / k, want_plate.y / k)
 	card.position = Vector2(col_x, float((col.get("card", {}) as Dictionary).get("y", 202)))
+	_drag_reference.size = Vector2(want_plate.x, _drag_reference.get_combined_minimum_size().y)
+	_drag_reference.position = Vector2(col_x, want.y - _drag_reference.size.y - 24)
+	_drag_reference.visible = _dossier_open and _drag_reference.position.y >= card.position.y + card.size.y + 78
 	var ms: Dictionary = _spec["minimize"]
 	var at: Array = (_satchel.get("minimize", {}) as Dictionary).get("topleft_rel_window", ms.get("topleft_rel_window", [918, 13]))
 	close_button.position = _vec(at) + Vector2(grow.x, 0.0)
+	_pack_title.position = Vector2(cells.x, -8)
+	_pack_title.size.y = 44
+	_dossier_toggle.text = UiText.t("bag.hide_record" if _dossier_open else "bag.show_record")
+	_dossier_toggle.reset_size()
+	_dossier_toggle.size.y = maxf(40, _dossier_toggle.size.y)
+	_dossier_toggle.position = Vector2(close_button.position.x - _dossier_toggle.size.x - 18, -6)
 	_canvas.queue_redraw()
 	reset_size()
 
 
-## 223：棋盘右边一条竖线（跟着棋盘右移、下端跟着窗长；232：标题行下那条横线不画，翻盖下沿就是分隔）
-func _draw_divider() -> void:
-	var v := divider_v()
-	_canvas.draw_line(v[0], v[1], DIVIDER_COLOR, DIVIDER_W)
+func _toggle_dossier() -> void:
+	_dossier_open = not _dossier_open
+	nameplate.visible = _dossier_open
+	card.visible = _dossier_open
+	_layout()
+	_clamp()
+
+
+## 棋盘深衬、角色资料纸与空余格计量条共用画布，均不占鼠标命中。
+func _draw_surfaces() -> void:
+	if not is_instance_valid(panel) or not is_instance_valid(card):
+		return
+	var board_right := divider_v()[0].x if _dossier_open else window_size().x
+	var liner := Rect2(15, 60, board_right - 30, window_size().y - 72)
+	_canvas.draw_rect(liner, Color("222724ec"))
+	_canvas.draw_rect(liner.grow(-3), Color("7b705a"), false, 1)
+	if not _dossier_open:
+		return
+	# Character record, ruled as a single sheet from the portrait to the capacity reading.
+	var sheet := Rect2(nameplate.position - Vector2(8, 9), Vector2(288, card.position.y + card.size.y + 65 - nameplate.position.y))
+	_canvas.draw_rect(Rect2(sheet.position + Vector2(3, 4), sheet.size), Color("74644b"))
+	_canvas.draw_rect(sheet, Color("dfd5b9"))
+	_canvas.draw_rect(sheet.grow(-4), Color("a79879"), false, 1)
+	var origin := Vector2(card.position.x + 16, card.position.y + card.size.y + 5)
+	var board := panel.board_view.inventory
+	var total := board.usable_cell_count()
+	var free := board.free_cell_count()
+	var label_font := UiPalette.cjk_font()
+	var px := UiTheme.sz(15)
+	_canvas.draw_string(label_font, origin + Vector2(0, 19), UiText.t("bag.free_cells"), HORIZONTAL_ALIGNMENT_LEFT, 130, px, Color("41382c"))
+	_canvas.draw_string(UiPalette.cjk_font_bold(), origin + Vector2(138, 19), "%d / %d" % [free, total], HORIZONTAL_ALIGNMENT_RIGHT, 102, UiTheme.sz(18), Color("334c44"))
+	var gauge := Rect2(origin + Vector2(0, 29), Vector2(240, 5))
+	_canvas.draw_rect(gauge, Color("b5a98e"))
+	if total > 0 and free > 0:
+		_canvas.draw_rect(Rect2(gauge.position, Vector2(gauge.size.x * free / total, gauge.size.y)), Color("466861"))
 
 
 ## 223：竖分隔线的两端（窗里的设计像素）

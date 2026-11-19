@@ -1210,20 +1210,27 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if key == null or not key.pressed or key.echo:
 		return
-	if InputKeys.is_key_of(key, InputKeys.MAP_FIT):     # 切片 v6.14 D：看全图走改键表
+	# 相机键只作用于可操作的地图；整理背包时按键不能改变背后的镜头和全局缩放设置。
+	if _confirm != null or _pause != null or _rules != null or _ask != null or revealing():
+		return
+	if _bag != null and key.keycode != KEY_B:
+		return
+	# 空格在聚焦的按钮上用于激活它，关闭折签时也不应把地图拉回玩家。
+	if key.keycode == KEY_SPACE:
+		var focused := get_viewport().gui_get_focus_owner() as BaseButton
+		if focused != null and focused.is_visible_in_tree() and not focused.disabled:
+			return
+	if InputKeys.is_key_of(key, InputKeys.MAP_FIT) and _bag == null:     # 切片 v6.14 D：看全图走改键表
 		_view.fit()
 		_remember_zoom(0.0)     # 看全图 = 回到自动
 		get_viewport().set_input_as_handled()
 		return
 	match key.keycode:
 		KEY_SPACE:     # 作者 10-27：空格 = 镜头回正到自己；按住 = 锁住跟着（战略游戏那样）
-			if _confirm != null or _pause != null or _rules != null or _ask != null or revealing():
-				return
 			_view.recenter_on_player()
 			_view.lock_on_player = true
 		KEY_B:
-			if _confirm == null and _pause == null and _rules == null and _ask == null:
-				toggle_bag()
+			toggle_bag()
 		KEY_N:
 			reopen()
 		KEY_1:

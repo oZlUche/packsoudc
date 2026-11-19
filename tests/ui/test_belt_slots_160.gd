@@ -29,6 +29,15 @@ static func frame_slots(t: TestCase, root: Window) -> void:
 	var slots := BeltSlots.new()
 	root.add_child(slots)
 	slots.bind(belt)
+	var field := BeltSlots.new()
+	field.field_mode = true
+	root.add_child(field)
+	field.bind(belt)
+	t.eq(field.custom_minimum_size, Vector2.ZERO, "空腰带折起时不占槽位空间")
+	t.eq(field.slot_at(field.slot_center(0)), -1, "隐藏的空槽不拦点击")
+	field.reveal_empty(true)
+	t.eq(field.slot_at(field.slot_center(belt.slot_count() - 1)), belt.slot_count() - 1, "展开可命中最后一个空槽")
+	field.reveal_empty(false)
 	var n := belt.slot_count()
 	if slots.curved():     # 232：1–6 格是一整张弯皮带，大小 = 图
 		var lay: Dictionary = BeltSlots.belt_layouts()[str(n)]
@@ -41,6 +50,9 @@ static func frame_slots(t: TestCase, root: Window) -> void:
 	t.eq(slots.slot_at(Vector2(2, 2)), -1, "外接方块的角（圆外）：不命中")
 	belt.add(&"aid_pack", 2)
 	belt.add(&"smoke_bomb", 1)
+	t.eq(field.slot_at(field.slot_center(1)), 1, "新技能无需展开即可命中")
+	t.eq(field.slot_at(field.slot_center(2)), -1, "剩余空槽仍让开")
+	field.queue_free()
 	t.eq(slots.skill_at(0), &"aid_pack", "第一格是急救包")
 	t.eq(slots.skill_at(1), &"smoke_bomb", "第二格是烟雾弹")
 	t.eq(slots.skill_at(2), &"", "第三格空")
