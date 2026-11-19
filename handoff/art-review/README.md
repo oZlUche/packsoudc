@@ -2,17 +2,17 @@
 
 打开游戏后，从主菜单进入自由探索，走入一张铜版测绘图，再打开随身背包。地图里的建筑、包里的旧物和撤离账单上的印章共同指向一个视角：玩家正在记录一次边境考察。画面深度来自纸张叠放、投影与局部压印，全部使用二维素材。
 
-## 主菜单的行军登记簿
+## 透明主菜单
 
-![同一营地背景，石质目录与行军登记簿的实机对照](menu-interface-comparison.jpg)
+![同一营地背景，登记簿与透明菜单的实机对照](menu-interface-comparison.jpg)
 
-主操作使用带铜铆的红皮签。读取存档、百科和设置排成三枚有图标的索引，语言与退出放在页脚。纸面和缝线沿着边缘走，为中文与英文标题留出完整的字面。[主按钮四态](menu-button-input-states.jpg) · [中英文大字号与存档状态](menu-large-type-and-new-game.jpg) · [验收报告](../../docs/reports/testing/2026-11-19-menu-components.md)
+标题在画面上方居中，文字选项位于左下。原版字标保留了皮革背包和青铜剑形笔画。三幅背景从左至右完整铺开，玩家可以从营火、木栅门和桌面地图辨认场景。[主选项四态](menu-button-input-states.jpg) · [中英文大字号与存档状态](menu-large-type-and-new-game.jpg) · [验收报告](../../docs/reports/testing/2026-11-19-transparent-menu.md)
 
 ## 主菜单、基地与节点搜索
 
 ![主菜单、基地与出征准备的同档对照](field-guide-fronts-comparison.jpg)
 
-主菜单左侧行军登记簿承载操作，右侧依次呈现边境夜营、军团登记口与灯下地图桌。夜营的帐篷和营火交代休息处，边营门边的账册交代登记用途，桌上的路线和行具交代出发准备。基地使用军营外廊和纸档，出征准备移入角色厅。墨绿标示已选项目，出征主键为朱红。[原定稿与本次重绘，上下对照](menu-originals-and-repaint.jpg) · [三张菜单实景](game-menu-three-landscapes.jpg) · [主菜单](game-field-guide-menu.jpg) · [基地](game-field-guide-camp.jpg) · [选角](game-field-guide-setup.jpg) · [英文大字号配装](game-preparation-large-en.jpg) · [科技成长](game-growth-large-zh.jpg)
+主菜单背景依次呈现边境夜营、军团登记口与灯下地图桌。夜营的帐篷和营火交代休息处，边营门边的账册交代登记用途，桌上的路线和行具交代出发准备。基地使用军营外廊和纸档，出征准备移入角色厅。墨绿标示已选项目，出征主键为朱红。[原定稿与本次重绘，上下对照](menu-originals-and-repaint.jpg) · [三张菜单实景](game-menu-three-landscapes.jpg) · [主菜单](game-field-guide-menu.jpg) · [基地](game-field-guide-camp.jpg) · [选角](game-field-guide-setup.jpg) · [英文大字号配装](game-preparation-large-en.jpg) · [科技成长](game-growth-large-zh.jpg)
 
 存档夹按档位标明当前进度，设置页按宽度调整分组布局。对局记录分两行列出结果及时间、收获，实心星标出已收藏的场次。[存档](game-slots.jpg) · [设置](game-settings.jpg) · [对局记录](game-record-archive.jpg)
 

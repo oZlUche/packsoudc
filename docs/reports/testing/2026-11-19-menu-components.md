@@ -13,4 +13,4 @@
 
 Godot 4.7.1 主菜单套件在小、中、大字号下各通过 85 项断言，字体覆盖通过 42 项。全项目脚本加载完成，玩家资源包中的 9 张组件贴图均可独立加载。部分进程在退出时报告渲染资源仍在使用。本轮覆盖主菜单与提示卡片，未运行全量套件。
 
-[同档画面对照](../../../handoff/art-review/menu-interface-comparison.jpg) · [主按钮输入状态](../../../handoff/art-review/menu-button-input-states.jpg) · [大字号样张](../../../handoff/art-review/menu-large-type-and-new-game.jpg)
+[同档画面对照](https://github.com/oZlUche/packsoudc/blob/967492c1/handoff/art-review/menu-interface-comparison.jpg) · [主按钮输入状态](https://github.com/oZlUche/packsoudc/blob/967492c1/handoff/art-review/menu-button-input-states.jpg) · [大字号样张](https://github.com/oZlUche/packsoudc/blob/967492c1/handoff/art-review/menu-large-type-and-new-game.jpg)

@@ -1,4 +1,4 @@
-## 帝国测绘册的首页：右侧轮换夜营、军营与地图桌，左侧行军登记册承载全部操作。
+## 主菜单让出整张风景，标题居中，操作从左下向上排列。
 ## 存档、语言、开发工具和通知仍取自当前 GameFlow。
 extends GameScreen
 
@@ -8,16 +8,18 @@ signal dev_tools_requested
 const DESIGN_HEIGHT := 1080.0
 ## 菜单最小缩到这么多（1280 × 720）
 const MIN_SCALE := 0.75
-const ART_LOGO := "menu/survey_title"
-const SLAB_WIDTH := 620.0
-const LOGO_WIDTH := 496.0
-const LOGO_TOP := 181.0
-const LEFT := 61.0
+const ART_LOGO := "menu/title"
+const LOGO_WIDTH := 1116.0
+const LOGO_TOP := 90.0
+const LEFT := 96.0
+const BOTTOM := 72.0
+const PRIMARY_SIZE := 51
+const SECONDARY_SIZE := 32
+const FOOT_SIZE := 20
 const PRIMARY_GAP := 8
 const SECONDARY_GAP := 4
 const PRIMARY_TO_SECONDARY := 18
 const SECONDARY_TO_FOOT := 22
-const DISPATCH_ART := "menu/dispatch/"
 ## 右下提示离屏边、字号
 const NOTICE_MARGIN := 48.0
 const NOTICE_SIZE := 15
@@ -26,9 +28,8 @@ const NOTICE_SIZE := 15
 static var _shown_once := false
 
 var _scenery: MenuBackdrop = null
-var _slab: TextureRect
 ## 游戏名：字标图
-var _title: TextureRect = null
+var _title: Control = null
 ## 目录内的主操作、次操作与页脚。
 var _column: VBoxContainer = null
 var _primary: VBoxContainer = null
@@ -54,16 +55,21 @@ func open(_payload: Dictionary) -> void:
 	area.name = "MenuContent"
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	UiTheme.set_tone(area, UiTheme.TONE_LIGHT)
+	UiTheme.set_tone(area, UiTheme.TONE_DARK)
 	add_child(area)
 
-	_slab = UiTheme.picture(load("res://assets/ui/menu/survey_slab.jpg"), TextureRect.STRETCH_SCALE)
-	_slab.name = "SurveyIndex"
-	area.add_child(_slab)
 	var logo := UiTheme.art_cached(UiTheme.lang_art(ART_LOGO))
-	if logo == null:
-		logo = UiTheme.art_cached(UiTheme.lang_art("menu/title"))
-	_title = UiTheme.picture(logo, TextureRect.STRETCH_KEEP_ASPECT)
+	if logo != null:
+		_title = UiTheme.picture(logo, TextureRect.STRETCH_KEEP_ASPECT)
+		if brighten and UiMotion.enabled(flow.settings):
+			_title.modulate = Color(MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM, MenuBackdrop.BOOT_DIM)
+			create_tween().tween_property(_title, "modulate", Color.WHITE, MenuBackdrop.BRIGHTEN)
+	else:
+		var label := UiTheme.make_display(UiText.t("game.title"), 90)
+		label.add_theme_color_override("font_color", Color("ffe6b6"))
+		label.add_theme_color_override("font_outline_color", Color("261b18"))
+		label.add_theme_constant_override("outline_size", 8)
+		_title = label
 	_title.name = "MenuLogo"
 	area.add_child(_title)
 
@@ -83,21 +89,15 @@ func open(_payload: Dictionary) -> void:
 	_secondary = _vbox(SECONDARY_GAP)
 	_column.add_child(_secondary)
 	if flow.slots != null and flow.slots.any():
-		_line(_secondary, UiText.t("menu.load"), flow.show_slots, "load")
-	_line(_secondary, UiText.t("menu.encyclopedia"), func(): flow.show_encyclopedia(), "codex")     # 114
-	_line(_secondary, UiText.t("menu.settings"), flow.show_settings, "settings")
+		_line(_secondary, UiText.t("menu.load"), flow.show_slots)
+	_line(_secondary, UiText.t("menu.encyclopedia"), func(): flow.show_encyclopedia())     # 114
+	_line(_secondary, UiText.t("menu.settings"), flow.show_settings)
 	_column.add_child(_spacer(SECONDARY_TO_FOOT))
 
-	var foot_rule := Control.new()
-	foot_rule.name = "FooterRule"
-	foot_rule.custom_minimum_size.y = 9
-	foot_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	foot_rule.draw.connect(_draw_footer_rule.bind(foot_rule))
-	_column.add_child(foot_rule)
 	_foot = _hbox(14)     # 226 批二：链接之间的「·」删了，改成间距
 	_foot.name = "MenuFoot"
 	var indent := MarginContainer.new()
-	UiTheme.margins(indent, 2, 0, 0, 0)
+	UiTheme.margins(indent, UiTheme.MENU_LINE_INDENT - 2, 0, 0, 0)
 	indent.add_child(_foot)
 	_column.add_child(indent)
 	var links: Array[Button] = [UiTheme.make_menu_link(UiText.t("menu.lang_short"), toggle_language)]
@@ -130,81 +130,42 @@ func open(_payload: Dictionary) -> void:
 	_layout()
 
 
-## 主操作是行军皮签；次级页签用各自的档案图标和共用的纸边。
-func _line(box: VBoxContainer, text: String, handler: Callable, icon_name: String = "") -> Button:
+func _line(box: VBoxContainer, text: String, handler: Callable) -> Button:
 	var primary := box == _primary
-	var b := Button.new()
-	b.text = text
-	b.theme_type_variation = UiTheme.BUTTON_MENU_LINE
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	b.pressed.connect(handler)
-	b.add_theme_font_size_override("font_size", UiTheme.sz(UiTheme.MENU_PRIMARY_SIZE if primary else UiTheme.MENU_SECONDARY_SIZE))
-	b.add_theme_constant_override("outline_size", 0)
-	b.custom_minimum_size.y = 80.0 if primary else 56.0
-	var art := "dispatch_tag" if primary else "archive_edge"
-	var edges: Array = [48, 13, 64, 13] if primary else [12, 7, 14, 7]
-	var pad: Array = [50, 8, 50, 8] if primary else [16, 3, 17, 3]
-	var base := UiTheme.nine_box(UiTheme.art_cached(DISPATCH_ART + art), edges, pad)
-	for state in ["normal", "hover", "pressed", "hover_pressed"]:
-		var skin := base.duplicate() as StyleBoxTexture
-		if state == "normal":
-			skin.modulate_color = Color("ead6c1") if primary else Color.WHITE
-		elif state == "hover":
-			skin.modulate_color = Color.WHITE if primary else Color("f0d7ad")
-		else:
-			skin.modulate_color = Color("b79c86") if primary else Color("d8c8aa")
-			skin.content_margin_top += 2
-			skin.content_margin_bottom -= 2
-		b.add_theme_stylebox_override(state, skin)
-	b.add_theme_stylebox_override("focus", _focus_frame(Color("563427")))
-	var ink := Color("fff0cb") if primary else Color("3f342b")
-	for state in ["font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-		b.add_theme_color_override(state, ink if primary or state == "font_color" else Color("753d2a"))
-	if not icon_name.is_empty():
-		b.icon = UiTheme.art_cached(DISPATCH_ART + icon_name)
-		b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.add_theme_constant_override("h_separation", 15)
+	var em := UiTheme.sz(PRIMARY_SIZE if primary else SECONDARY_SIZE)
+	var b := UiTheme.make_menu_line(text, em, handler)
+	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	b.add_theme_font_size_override("font_size", em)
+	var font := UiPalette.cjk_font()
+	if primary:
+		font = UiPalette.display_font() if UiText.lang == "zh" else UiPalette.cjk_font_bold()
+	b.add_theme_font_override("font", font)
+	_style_text(b, Color("ffe6b6") if primary else Color("f2e7d4"), 6 if primary else 4)
 	box.add_child(b)
 	return b
 
 
-## 一道独立焦点线，叠于按钮本身，鼠标按下时仍可辨认。
-static func _focus_frame(ink: Color) -> StyleBoxFlat:
+func _style_link(b: Button) -> void:
+	b.add_theme_font_size_override("font_size", UiTheme.sz(FOOT_SIZE))
+	b.add_theme_font_override("font", UiPalette.cjk_font())
+	_style_text(b, Color("dccdb7"), 3)
+
+
+## 文字带暗描边；键盘焦点用金色底线，按住时变成铜色。
+func _style_text(b: Button, ink: Color, outline: int) -> void:
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	b.add_theme_color_override("font_color", ink)
+	b.add_theme_color_override("font_hover_color", Color("ffffff"))
+	b.add_theme_color_override("font_focus_color", Color("fff1cd"))
+	b.add_theme_color_override("font_pressed_color", Color("e7af70"))
+	b.add_theme_color_override("font_hover_pressed_color", Color("e7af70"))
+	b.add_theme_color_override("font_outline_color", Color("261b18"))
+	b.add_theme_constant_override("outline_size", outline)
 	var focus := StyleBoxFlat.new()
 	focus.draw_center = false
-	focus.set_border_width_all(3)
-	focus.border_color = ink
-	focus.set_expand_margin_all(4)
-	return focus
-
-
-func _draw_footer_rule(rule: Control) -> void:
-	var ink := Color("9b8766")
-	rule.draw_line(Vector2(0, 2), Vector2(rule.size.x, 2), Color(ink, 0.6), 1)
-	rule.draw_line(Vector2(0, 2), Vector2(25, 2), ink, 2)
-
-
-func _style_link(b: Button) -> void:
-	b.flat = false
-	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	b.add_theme_font_size_override("font_size", UiTheme.sz(UiTheme.MENU_FOOT_SIZE))
-	b.add_theme_constant_override("outline_size", 0)
-	for state in ["normal", "hover", "pressed", "hover_pressed"]:
-		var style := StyleBoxFlat.new()
-		style.content_margin_left = 3
-		style.content_margin_right = 3
-		style.content_margin_top = 6
-		style.content_margin_bottom = 6
-		style.bg_color = Color.TRANSPARENT
-		if state != "normal":
-			style.bg_color = Color("8a654423") if state == "hover" else Color("77523241")
-			style.border_color = Color("846440")
-			style.border_width_bottom = 1
-		b.add_theme_stylebox_override(state, style)
-	b.add_theme_stylebox_override("focus", _focus_frame(Color("805e42")))
-	for state in ["font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-		b.add_theme_color_override(state, Color("51483c") if state == "font_color" else Color("723d2c"))
+	focus.border_color = Color("ffe3a5")
+	focus.border_width_bottom = 3
+	b.add_theme_stylebox_override("focus", focus)
 
 
 ## 档与档之间的空（VBox 两侧的间距是 0，空多高就隔多远）
@@ -232,21 +193,23 @@ func _layout() -> void:
 	var c := column_scale()
 	var h := size.y if size.y > 0.0 else DESIGN_HEIGHT
 	var w := size.x if size.x > 0.0 else DESIGN_HEIGHT * 1.6
-	var panel_width := minf(w, maxf(SLAB_WIDTH * c, _foot.get_combined_minimum_size().x * c + 2.0 * LEFT * c))
-	_slab.size = Vector2(panel_width, h)
-	var tex := _title.texture
-	if tex != null:
-		var wide := minf(LOGO_WIDTH * c, panel_width - 2.0 * LEFT * c)
+	if _title is TextureRect:
+		var tex := (_title as TextureRect).texture
+		var wide := minf(LOGO_WIDTH * s, w * 0.9)
 		_title.size = Vector2(wide, wide * tex.get_height() / maxf(tex.get_width(), 1.0))
-		_title.position = Vector2((panel_width - wide) * 0.5, LOGO_TOP * s)
+		_title.position = Vector2((w - wide) * 0.5, LOGO_TOP * s)
+	else:
+		var title_label := _title as Label
+		title_label.add_theme_font_size_override("font_size", roundi(90.0 * s))
+		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title_label.size = Vector2(w, 0)
+		title_label.position = Vector2(0, LOGO_TOP * s)
 	_column.scale = Vector2.ONE * c
-	_column.custom_minimum_size.x = maxf(0.0, panel_width / c - 2.0 * LEFT)
 	_column.reset_size()
-	var latest_top := h - (94.0 + _column.size.y) * c
-	_column.position = Vector2(LEFT * c, minf(0.445 * h, latest_top))
+	_column.position = Vector2((LEFT - UiTheme.MENU_LINE_INDENT) * c, h - (BOTTOM + _column.size.y) * c)
 	if _note_paper.visible:
 		var margin := roundi(NOTICE_MARGIN * c)
-		var message_width := clampf(w - panel_width - 2 * margin - 48, 120.0, 460.0 * c)
+		var message_width := clampf(w - _column.get_rect().end.x - 2 * margin - 48, 120.0, 460.0 * c)
 		for message: RichTextLabel in _notices.get_children():
 			message.custom_minimum_size.x = message_width
 		_note_paper.set_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, margin)
