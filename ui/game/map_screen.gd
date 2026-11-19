@@ -1075,6 +1075,7 @@ func _build_parts() -> void:
 	if DevGate.on():
 		_drawer = DevDrawer.new()
 		_part(&"dev_drawer", _drawer.arrow)
+		_style_tablet_action(_drawer.arrow)
 	# 作者 2026-10-12：提示行（章节、种子、在哪个点、操作说明，「布局已保存」这类回话）挪进调试台，不再是部件
 	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
 	# 090（作者定）：三个互动按键放大到 300%
@@ -1082,6 +1083,7 @@ func _build_parts() -> void:
 	_reopen_btn = IconButton.make("lens", UiText.t("map.lens"), UiText.t("map.lens"), UiText.t("map.reopen_hint"), func(): reopen(), "N")
 	_reopen_btn.disabled = true
 	_part(&"reopen_button", _reopen_btn)
+	_style_tablet_action(_reopen_btn)
 	_skills_box = _hbox(4)
 	_part(&"skills", _skills_box)
 	_routes_box = _vbox(6)
@@ -1090,6 +1092,25 @@ func _build_parts() -> void:
 	_log = _log_box(12)
 	_log.custom_minimum_size = Vector2(0, LOG_HEIGHT)
 	_ground_line = _label("", 13, UiPalette.FG)
+
+
+## 顶栏两枚小键共用浅石与青铜角刻；取原按钮内距，以保留热区与排版。
+func _style_tablet_action(button: Button) -> void:
+	var tablet := UiTheme.art_cached("hud/topbar/action_tablet")
+	if tablet == null:
+		return
+	var previous := button.get_theme_stylebox("normal")
+	var padding := [previous.get_margin(SIDE_LEFT), previous.get_margin(SIDE_TOP),
+		previous.get_margin(SIDE_RIGHT), previous.get_margin(SIDE_BOTTOM)]
+	var tints := {"normal": Color.WHITE, "hover": Color(1.08, 1.06, 1.03),
+		"pressed": Color("ccaf96"), "hover_pressed": Color("ccaf96"), "disabled": Color("dedcd6")}
+	for state in tints:
+		var box := UiTheme.nine_box(tablet, [9, 9, 9, 9], padding)
+		box.modulate_color = tints[state]
+		button.add_theme_stylebox_override(state, box)
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		button.add_theme_color_override(state, Color("783c30"))
+	button.add_theme_color_override("icon_disabled_color", Color(0.52, 0.49, 0.44, 0.65))
 
 
 func _part(id: StringName, c: Control, full_width: bool = false) -> void:

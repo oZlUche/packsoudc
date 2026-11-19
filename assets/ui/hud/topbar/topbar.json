@@ -29,8 +29,8 @@
  "gap": 12,
  "tile": {
   "file": "bar_tile",
-  "width": 280,
-  "phase": "tile outward from the dial_base left/right edges"
+  "width": 1120,
+  "phase": "repeat across the lintel from the left edge"
  },
  "dial": {
   "pivot": [

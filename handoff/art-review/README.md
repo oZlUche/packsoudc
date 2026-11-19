@@ -2,11 +2,19 @@
 
 打开游戏后，从主菜单进入自由探索，走入一张铜版测绘图，再打开随身背包。地图里的建筑、包里的旧物和撤离账单上的印章共同指向一个视角：玩家正在记录一次边境考察。画面深度来自纸张叠放、投影与局部压印，全部使用二维素材。
 
-## 当前分支 · 探索与行装 UI
+## 当前顶栏 · 罗马大理石
+
+![同一局顶栏，上为旧版，下为新版](topbar-before-after-native.png)
+
+横梁采用暖白大理石，浅灰矿脉跨过石面，庞贝红饰线下压一层细齿檐口。体力、钱币和信仰读数坐进浅凿槽。两端石键分别嵌鹰徽与行囊，受光边和按下深度随按钮状态变化。中央日晷的石盘固定，金属晷针随真实倒计时转动。将倒计时组件移出顶栏可查看同材质的小日规。
+
+[当前完整地图](game-map-topbar-revision.jpg) · [运行环境与验收](../../docs/reports/testing/2026-11-19-marble-topbar.md)
+
+## 探索与行装布局
 
 ![探索与背包改版前后](layout-before-after.jpg)
 
-- 探索界面将完整日晷收入顶栏。左下图例可展开，右下铜扣显示技能占用量；有技能时会直接显示可用图标。[当前地图](game-map-layout.jpg) · [同镜头展开](game-map-legend-open.jpg) · [大字号图例](game-map-key-large.jpg)
+- 探索界面将完整日晷收入顶栏。左下图例可展开，右下铜扣显示技能占用量；有技能时会直接显示可用图标。[上一版顶栏与探索布局](game-map-layout.jpg) · [同镜头展开](game-map-legend-open.jpg) · [大字号图例](game-map-key-large.jpg)
 - 背包右栏是一张人物档案，显示属性、空余格位和拖动操作。只整理物品时可收起档案，棋盘停在原位。[展开](game-inventory-v3.jpg) · [收起](game-inventory-folded.jpg)
 - 大字号分别验收中文和英文。两栏允许的宽度、关闭键与折叠开关按实际屏幕检查。[改版前](game-inventory-large-before.jpg) · [中文大字号](game-inventory-large.jpg) · [英文大字号](game-inventory-large-en.jpg)
 - 同一配装中，第三版器物恢复各自材质的明暗，三件材料采用单独的透明栅格母版，其他五件保留矢量母版。[同配装材料对照](inventory-v2-v3.jpg)

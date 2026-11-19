@@ -1,7 +1,7 @@
 ## 166（作者定）：顶端栏 —— 横贯顶部的一条底。它本身不写字：栏里摆什么由布局里锚在 `bar_left / bar_center / bar_right` 的条目决定（[HudHost] 排），
 ## 所以「摆读数」时照样能把东西拖进拖出、换槽，栏自己也能藏。大小由宿主定（整屏宽 × 栏高）；宿主把它排成第一个子节点，垫在栏里的组件下面
 ##
-## 顶栏沿用两端三态按钮与原有热区；中段为深色珐琅量尺，浅色凹槽承载资源。
+## 顶栏沿用两端三态按钮与原有热区；中段为暖白大理石檐口，内凿的浅石槽承载读数。
 ## 完整日晷由倒计时组件绘制，收在顶栏以内；当组件挪动或隐藏时，晷面跟随它。
 extends HudWidget
 
@@ -134,29 +134,19 @@ func _place_ends() -> void:
 		b.position = Vector2(0.0 if side == LEFT else w - b.size.x, 0.0)
 
 
-## 深色珐琅横梁把浅色资源凹槽与两端的金属操作钮分开。
+## 中段石面随大字号增加高度，上下檐线保持设计厚度。
 func _draw() -> void:
 	var tile := UiTheme.art_cached(SKIN + "bar_tile")
 	if tile != null:
-		var tw := tile.get_width()
-		var th := tile.get_height()
 		var x := 0.0
+		var extra := maxf(0.0, size.y - design_height())
+		var top := 15.0
+		var face := 62.0
+		var foot := tile.get_height() - top - face
 		while x < size.x:
-			var width := minf(tw, size.x - x)
-			draw_texture_rect_region(tile, Rect2(x, 0, width, th), Rect2(0, 0, width, th))
+			var width := minf(tile.get_width(), size.x - x)
+			draw_texture_rect_region(tile, Rect2(x, 0, width, top), Rect2(0, 0, width, top))
+			draw_texture_rect_region(tile, Rect2(x, top, width, face + extra), Rect2(0, top, width, face))
+			draw_texture_rect_region(tile, Rect2(x, top + face + extra, width, foot), Rect2(0, top + face, width, foot))
 			x += width
-	var inset := float((_meta.get("ends", {}) as Dictionary).get("width", 104))
-	var width := maxf(0, size.x - inset * 2)
-	var extra := maxf(0, size.y - design_height())
-	if width > 0:
-		draw_rect(Rect2(inset, 2, width, 82 + extra), Color("263b3d"))
-		draw_rect(Rect2(inset, 4, width, 1), Color("a58b5f"))
-		draw_rect(Rect2(inset, 6, width, 1), Color("536050"))
-		# 横穿金属面的细划线与分度刻痕，在状态与动作之间留出安静的读数区。
-		var y := 43.0 + extra * 0.5
-		draw_line(Vector2(inset, y), Vector2(size.x - inset, y), Color("43524a"), 1.0)
-		for x in range(int(inset) + 15, floori(size.x - inset), 28):
-			draw_line(Vector2(x, y - 2), Vector2(x, y + 2), Color("637062"), 1.0)
-		draw_rect(Rect2(inset, 79 + extra, width, 1), Color("768171"))
-		draw_rect(Rect2(inset, 82 + extra, width, 2), Color("a48d64"))
 	super()

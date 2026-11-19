@@ -6,7 +6,7 @@
 ## 停上去弹悬浮窗：「倒计时」/「倒计时还剩 N（共 M）」/「最近的撤离点倒计时剩 N 时关闭」，开着时走一步字跟着变（193 补充一：钟的数不说「步」）。
 ## 小档按 0.5 缩
 ##
-## 顶栏内为完整的圆形铜制日晷。上半盘刻朝阳，下半盘刻流逝时间。拖出顶栏时沿用独立小日规。
+## 顶栏内为完整的大理石日晷。上半盘雕贝壳浮雕，下半盘刻时线，着色的青铜晷针指示时限。拖出顶栏时沿用独立小日规。
 extends HudWidget
 
 const HudBarScript := preload("res://ui/hud/widgets/hud_bar.gd")
@@ -171,19 +171,8 @@ func _draw() -> void:
 	var radius := float(_meta.get("radius", 40))
 	var st := stage()
 	var a := angle()
-	# 1. 走过的扇面：从左端扫到现在，淡淡染色
-	if a < 180.0:
-		var stages: Dictionary = _meta.get("stages", {})
-		var wash := Color(String((stages.get(String(st), {}) as Dictionary).get("wash", "#6b6255")))
-		wash.a = float(_meta.get("wash_opacity", 0.16))
-		var pts := PackedVector2Array([origin + pivot * s])
-		var steps := maxi(2, int((180.0 - a) / 4.0) + 1)
-		for i in steps + 1:
-			var deg := lerpf(180.0, a, float(i) / float(steps))
-			pts.append(origin + (pivot + Vector2(cos(deg_to_rad(deg)), -sin(deg_to_rad(deg))) * radius) * s)
-		draw_colored_polygon(pts, wash)
-	# 2. 表盘刻线
 	draw_texture_rect(UiTheme.art_cached(DIAL_DIR + "face"), Rect2(origin, SIZE * s), false)
+	_draw_elapsed(origin + pivot * s, radius * s, a, st, _meta, -1.0)
 	# 3. 影子：图朝正上（90°），绕轴心转到当前角度（Godot 的 y 朝下，正角顺时针）
 	draw_set_transform(origin + pivot * s, deg_to_rad(90.0 - a), Vector2(s, s))
 	draw_texture_rect(UiTheme.art_cached(DIAL_DIR + "shadow_" + String(st)), Rect2(-pivot, SIZE), false)
@@ -192,45 +181,44 @@ func _draw() -> void:
 	draw_texture_rect(UiTheme.art_cached(DIAL_DIR + "hub"), Rect2(origin, SIZE * s), false)
 
 
-## 235：画在栏皮的晷面上 —— 走过的扇面（180° 扫到现在）→ 指针（图朝正下，绕轴心转 a − 90°）→ 轴心
+## 两个晷面共用真实进度。收起的小日规刻线朝上，栏中圆盘的刻线朝下。
+func _draw_elapsed(pivot: Vector2, radius: float, degrees: float, st: StringName, meta: Dictionary, direction: float) -> void:
+	if degrees >= 180.0:
+		return
+	var stages: Dictionary = meta.get("stages", {})
+	var wash := Color(String((stages.get(String(st), {}) as Dictionary).get("wash", "#997555")))
+	wash.a = float(meta.get("wash_opacity", 0.16))
+	var points := PackedVector2Array([pivot])
+	var steps := maxi(2, ceili((180.0 - degrees) / 4.0))
+	for i in steps + 1:
+		var a := deg_to_rad(lerpf(180.0, degrees, float(i) / steps))
+		points.append(pivot + Vector2(cos(a), sin(a) * direction) * radius)
+	draw_colored_polygon(points, wash)
+
+
+## 雕石、分面铸造的晷针和青铜轴帽分别绘制，转动时石纹留在原位。
 func _draw_on_bar(pivot: Vector2) -> void:
-	var d := _dial()
-	var radius := float(d.get("radius", 32))
+	var meta := _dial()
+	var face_radius := float(meta.get("face_radius", 40))
+	var radius := float(meta.get("radius", 32))
 	var st := stage()
 	var a := angle()
-	var face_radius := float(d.get("face_radius", 40))
-	var brass := Color("d9ba78")
-	var ink := Color("243c40")
-	draw_circle(pivot + Vector2(0, 2), face_radius + 2, Color("18292a"), true, -1, true)
-	draw_circle(pivot, face_radius + 1, brass, true, -1, true)
-	draw_circle(pivot, face_radius - 1, ink, true, -1, true)
-	draw_circle(pivot, face_radius - 4, Color("dfcca3"), true, -1, true)
-	# 上半盘的朝阳纹与下半盘的可用刻度分开。
-	var sunrise := pivot + Vector2(0, -12)
-	draw_arc(sunrise, 7, PI, TAU, 18, ink, 1.7, true)
-	draw_line(sunrise + Vector2(-14, 0), sunrise + Vector2(14, 0), ink, 1.4, true)
-	for i in 7:
-		var ray := Vector2.from_angle(PI + PI * i / 6.0)
-		draw_line(sunrise + ray * 10, sunrise + ray * (15 if i % 2 == 0 else 13), ink, 1.2, true)
-	if a < 180.0:
-		var wash := Color(String(((d.get("stages", {}) as Dictionary).get(String(st), {}) as Dictionary).get("wash", "#6b6255")))
-		wash.a = float(d.get("wash_opacity", 0.16))
-		var pts := PackedVector2Array([pivot])
-		var steps := maxi(2, int((180.0 - a) / 4.0) + 1)
-		for i in steps + 1:
-			var deg := deg_to_rad(lerpf(180.0, a, float(i) / float(steps)))
-			pts.append(pivot + Vector2(cos(deg), sin(deg)) * radius)
-		draw_colored_polygon(pts, wash)
-	for i in 21:
-		var ray := Vector2.from_angle(PI * i / 20.0)
-		var long_tick := i % 5 == 0
-		draw_line(pivot + ray * (radius - (6 if long_tick else 2)), pivot + ray * radius, ink, 1.6 if long_tick else 1.0, true)
-	var axis := Vector2.from_angle(deg_to_rad(a))
-	var side := axis.orthogonal() * 3.0
-	var needle_color := Color("a43f37") if st == LOW else ink
-	draw_colored_polygon(PackedVector2Array([pivot - axis * 5 + side, pivot + axis * radius, pivot - axis * 5 - side]), needle_color)
-	draw_circle(pivot, 5.0, ink, true, -1, true)
-	draw_circle(pivot, 2.5, brass, true, -1, true)
+	var art := HudBarScript.SKIN
+	var face := UiTheme.art_cached(art + "dial_base")
+	var hand := UiTheme.art_cached(art + "dial_hand_" + String(st))
+	var hub := UiTheme.art_cached(art + "dial_hub")
+	if face == null or hand == null or hub == null:
+		return
+	var face_rect := Rect2(pivot - Vector2.ONE * face_radius, Vector2.ONE * face_radius * 2.0)
+	draw_texture_rect(face, Rect2(face_rect.position + Vector2(1.0, 2.0), face_rect.size), false, Color(0.14, 0.09, 0.05, 0.55))
+	draw_texture_rect(face, face_rect, false)
+	_draw_elapsed(pivot, radius, a, st, meta, 1.0)
+	# 三态纹理共用同一铸造轴心 (12, 8)，纹理中针尖距轴心 83 像素。
+	var hand_scale := radius / 83.0
+	draw_set_transform(pivot, deg_to_rad(a - 90.0), Vector2.ONE * hand_scale)
+	draw_texture(hand, Vector2(-12, -8))
+	draw_set_transform(Vector2.ZERO)
+	draw_texture_rect(hub, Rect2(pivot - Vector2.ONE * 4.5, Vector2.ONE * 9.0), false)
 
 
 ## 235：指针此刻指向哪（这一件的坐标；测试读）。不在石刻栏里 = 空
