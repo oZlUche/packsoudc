@@ -117,7 +117,6 @@ func open(payload: Dictionary) -> void:
 	if _session != null:
 		_close_btn = _corner("btn_close", "×", UiText.t("loot.close_tip"), close_search)
 		_minimize_btn = _corner("btn_minimize", "－", UiText.t("loot.to_map_tip"), to_map)
-		_wire_search_focus()
 	else:
 		_minimize_btn = _corner("btn_minimize", "－", UiText.t("camp.fold") + "\n" + (UiText.t("loot.extract_results") if _boss else UiText.t("loot.leave_rest")), to_map)
 
@@ -126,6 +125,15 @@ func open(payload: Dictionary) -> void:
 	_strip = _inv.detach_strip()     # 216：数值栏摆到「全部拾取」那一行
 	_strip.use_inlay(false)     # 铜面板：152 宽嵌槽签、浅字
 	_stage.add_child(_strip)
+	var load_tag := _strip.load_tag()
+	if _session != null:
+		_wire_search_focus()
+	if load_tag != null:
+		_take_btn.focus_neighbor_bottom = _take_btn.get_path_to(load_tag)
+		var take_path := load_tag.get_path_to(_take_btn)
+		load_tag.focus_neighbor_top = take_path
+		load_tag.focus_next = take_path
+		load_tag.focus_previous = take_path
 	BoardFrame.mark(_inv.board_view, _player_frame, BoardFrame.dark_seams())
 	_stage.move_child(_inv, _player_frame.get_index() + 1)
 	# 084：容器里双击 → 试着放进背包（没空间就到地上）；没亮的不动。

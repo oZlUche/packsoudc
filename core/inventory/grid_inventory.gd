@@ -50,6 +50,22 @@ func _init(p_size: Vector2i = Vector2i(8, 6), p_id: int = 0, p_requires_bag: boo
 	_reset_cells()
 
 
+## 独立试摆盘，沿用原盘的占用、禁用格与准入。试摆发出的变更只属于副本。
+func placement_copy() -> GridInventory:
+	var copy := GridInventory.new(size, id, requires_bag)
+	copy._occ = _occ.duplicate()
+	copy._bag_owner = _bag_owner.duplicate()
+	copy._blocked = _blocked.duplicate()
+	copy.accept_filter = accept_filter
+	copy.only_tags = only_tags
+	copy.reject_tags = reject_tags
+	copy.growth_locks = growth_locks
+	copy.place_seq = place_seq
+	for inst: ItemInstance in _items.values():
+		copy._items[inst.uid] = inst.placement_copy()
+	return copy
+
+
 #region 格子查询
 func in_bounds(c: Vector2i) -> bool:
 	return c.x >= 0 and c.y >= 0 and c.x < size.x and c.y < size.y

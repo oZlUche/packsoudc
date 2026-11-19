@@ -44,6 +44,19 @@ static func create(p_def: ItemDef, p_rotation: int = 0) -> ItemInstance:
 	return inst
 
 
+## 落点试算使用独立的摆放坐标与容器归属，不占用新的 uid。试算只读道具状态。
+func placement_copy() -> ItemInstance:
+	var copy := ItemInstance.new()
+	copy.uid = uid
+	copy.def = def
+	copy.rotation = rotation
+	copy.origin = origin
+	copy.container_id = container_id
+	copy.placed_seq = placed_seq
+	copy.state = state.duplicate()
+	return copy
+
+
 ## 开新一局时调用，让 uid 从 1 重新开始。
 static func reset_uid_counter() -> void:
 	_next_uid = 1

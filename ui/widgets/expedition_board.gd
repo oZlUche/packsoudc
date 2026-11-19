@@ -1,18 +1,17 @@
-## 264 §二（作者 16:43「按推荐来」= 线框 1-A）：基地「出征」页碑右边那一列 —— 「上回出征」木牌（角色肖像小框 + 名、地图 · 规模、难度）、
-## 「军需」木牌（每局开局随身带的技能圆槽 + 数量角标、科技给的局外加成小牌；都没有写「尚无」）、右下【开始探索】主档木牌（原左下「再来一局」）。
-## 木牌定稿（UI替换美术 plaque264）：大木牌 [constant UiTheme.PANEL_HOME_PLAQUE]，标题是挂牌 [method HeaderTag.hanging] 挂在木牌左上（x + 18、高出 34）；
-## 局外加成与难度写在平的浅羊皮小签上（[constant UiTheme.PANEL_HOME_CHIP]）。不做「沿用上回直接出发」（待定 2）
+## 基地出征栏：军需和出发主键在上，最近一次出征的角色、地点、难度收在下方记录条。
+## 教程未完成时，记录条的位置用于展示下一段教程与跳过入口。
 class_name ExpeditionBoard
 extends VBoxContainer
 
 const ART := "home/expedition/"
 const EMPTY_H := 106.0
 const WIDTH := 560.0
-const LAST_H := 200.0
+const LAST_H := 66.0
+const TUTORIAL_H := 200.0
 const SUPPLY_H := 206.0
 const START := Vector2(360, 96)
 const START_FONT := 30
-const PORTRAIT := 72
+const PORTRAIT := 48
 const NAME_FONT := 22
 const LINE_FONT := 17
 const SLOT := 56.0
@@ -44,17 +43,6 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	flow = p_flow
 	add_theme_constant_override("separation", 18)
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	var nxt := flow.tutorial_gate()
-	if nxt != null:
-		tutorial_plate = _plate(LAST_H, "meta.tutorial")
-		_fill_tutorial(_col(tutorial_plate), nxt)
-	else:
-		last_plate = _plate(LAST_H, "meta.last_expedition")
-		_fill_last(_col(last_plate))
-		if flow.legacy_tutorial() != null:
-			_fill_try(_col(last_plate))
-		elif _last_lines.is_empty():
-			last_plate.custom_minimum_size.y = EMPTY_H
 	supply_plate = _plate(SUPPLY_H, "meta.supplies")
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -66,6 +54,19 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	add_child(start_btn)
+	var nxt := flow.tutorial_gate()
+	if nxt != null:
+		tutorial_plate = _plate(TUTORIAL_H, "meta.tutorial")
+		_fill_tutorial(_col(tutorial_plate), nxt)
+	else:
+		last_plate = UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_CHIP)
+		last_plate.custom_minimum_size = Vector2(WIDTH, LAST_H)
+		add_child(last_plate)
+		var content := UiTheme.vbox(6)
+		last_plate.add_child(content)
+		_fill_last(content)
+		if flow.legacy_tutorial() != null:
+			_fill_try(content)
 	return self
 
 
@@ -179,29 +180,37 @@ func _fill_last(col: VBoxContainer) -> void:
 	var m := flow.meta
 	var ch := flow.character_of(m.last_character) if m.last_character != &"" else null
 	var chapter := _last_chapter()
+	var row := UiTheme.hbox(12)
+	col.add_child(row)
+	if ch != null:
+		row.add_child(PortraitSlot.new(PORTRAIT, Nameplate.character_face(ch.id)))
+	var details := UiTheme.vbox(2)
+	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	details.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(details)
+	var head := UiTheme.hbox(10)
+	details.add_child(head)
+	head.add_child(UiTheme.make_label(UiText.t("meta.last_expedition"), 15, UiTheme.INK_SOFT))
 	if ch == null and chapter == null:
-		_empty(col, "rolled_map")
+		head.add_child(_line(UiText.t("meta.none_yet"), 15))
 		return
 	if ch != null:
-		var row := UiTheme.hbox(14)
-		col.add_child(row)
-		row.add_child(PortraitSlot.new(PORTRAIT, Nameplate.character_face(ch.id)))
-		var name_ := _line(Names.of(ch), NAME_FONT)
-		name_.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(name_)
-		_last_lines.append(name_.text)
+		var name_ := Names.of(ch)
+		head.add_child(_line(name_, LINE_FONT))
+		_last_lines.append(name_)
+	var route := PackedStringArray()
 	if chapter != null:
 		var map := Names.of(chapter) if chapter.display_name != "" else String(chapter.id)
 		var scale_ := _last_scale(chapter)
 		var where := map + (UiText.t("setup.sep") + scale_ if scale_ != "" else "")
-		col.add_child(_line(where))
+		route.append(where)
 		_last_lines.append(where)
 	var diff := _last_difficulty()
 	if diff != null:
-		var text := Names.of(diff)     # 难度名自己带级（「进阶一」）
-		col.add_child(_chip(text))
-		_last_lines.append(text)
+		route.append(Names.of(diff))
+		_last_lines.append(Names.of(diff))
+	if not route.is_empty():
+		details.add_child(_line(UiText.t("setup.sep").join(route), CHIP_FONT))
 
 
 func _last_chapter() -> ChapterDef:

@@ -1,15 +1,4 @@
-## 216（作者 2026-10-20 选定丁 火漆签）：背包窗与战利品 / 搜索屏右棋盘下面那条数值栏 —— 三张羊皮纸签，从左到右
-## 耐力 / DPS / 负重；每张 = 签底 + 大字 + 小字 + 左头一枚火漆。三张总在（作者 2026-10-20 16:20：负重签任何章节都显示）。
-##
-## 数据一个入口 [method refresh]（和战前屏同一套算法：`StaminaEstimate.of`、`rough_dps`、`encumbrance_*`）；纯读数，点了没动作。
-## 三张签各自停上去开悬浮窗（[member tip]）。
-##
-## 画法读 `assets/ui/stats_strip/`（`tag` 签底、`seal_<stamina|dps|load>` 火漆、`layout.json` 尺寸与字位，UI替换美术 出）。浅底墨字（tone light）
-##
-## 铜面板三屏（UI替换美术 bronze3的嵌槽签方案，作者 2026-10-21 16:21）：[method use_inlay] 换成凹进铜板的深槽签、浅字（tone dark）——
-## 战利品 / 搜索屏是 152 宽的 `tag_inlay_wide`；战前准备屏是窄签 `tag_inlay`（三段切，按签宽拉），敌我两边各五张：
-## 生命 / 耐力 / 耗气 / DPS + 敌人「特殊能力」或自己「负重」（battle_stats v2，作者 15:19–15:20）
-
+## 背包与搜索共用的棋盘读数。负重主签按本章规则计算，战前四签使用对称顺序。
 class_name StatsStrip
 extends Control
 
@@ -19,10 +8,10 @@ const STAMINA := &"stamina"
 const DPS := &"dps"
 const LOAD := &"load"
 const SPECIAL := &"special"
-const ORDER: Array[StringName] = [STAMINA, DPS, LOAD]
+const ORDER: Array[StringName] = [LOAD, STAMINA, DPS]
 ## 战前准备屏的两排（battle_stats v2 `prebattle_row`）
-const ORDER_PLAYER: Array[StringName] = [HP, VIGOR, STAMINA, DPS, LOAD]
-const ORDER_ENEMY: Array[StringName] = [HP, VIGOR, STAMINA, DPS, SPECIAL]
+const ORDER_PLAYER: Array[StringName] = [HP, VIGOR, STAMINA, DPS]
+const ORDER_ENEMY: Array[StringName] = [HP, VIGOR, STAMINA, DPS]
 const ALL: Array[StringName] = [HP, VIGOR, STAMINA, DPS, LOAD, SPECIAL]
 ## 切图目录（[method UiTheme.art_cached] 的名字前缀）与排版文件
 const ART := "stats_strip/"
@@ -37,6 +26,9 @@ const DEFAULTS := {
 }
 ## 签高
 const TAG_H := 46.0
+const LOAD_WIDTH := 212.0
+const COST_WIDTH := 136.0
+const DPS_WIDTH := 108.0
 ## 签里的字离签右沿至少这么远；放不下就收字号，最小到这么大
 const TEXT_RIGHT_PAD := 8.0
 const MIN_TEXT_SIZE := 10     # 10-27 正文换思源宋体 Medium 后字面变宽：英文「Stamina」11 号多出 1 px，再让一号
@@ -60,7 +52,10 @@ var _shown: Array[StringName] = []
 var _tags: Dictionary = {}
 var _layout: Dictionary = {}
 var _width := 0.0
-## "" = 羊皮纸签（216，背包窗）；"wide" = 铜面板宽嵌槽（战利品 / 搜索）；"narrow" = 铜面板窄嵌槽（战前准备）
+var _preview_weight := -1
+var _baseline_weight := -1
+var _focus_ring := UiTheme.focus_ring()
+## "" = 背包的皮签和纸签；"wide" = 搜索的宽铜嵌槽；"narrow" = 战前窄铜嵌槽。
 var _inlay := ""
 var _bronze: Dictionary = {}
 var _row: Dictionary = {}
@@ -79,10 +74,18 @@ func _init() -> void:
 		var tag := Control.new()
 		tag.name = String(kind)
 		tag.mouse_filter = Control.MOUSE_FILTER_STOP
+		if kind == LOAD:
+			tag.focus_mode = Control.FOCUS_ALL
+			tag.focus_entered.connect(_hover.bind(tag, kind))
+			tag.focus_entered.connect(tag.queue_redraw)
+			tag.focus_exited.connect(tag.queue_redraw)
+			tag.focus_exited.connect(func():
+				if tip != null:
+					tip.release())
 		tag.draw.connect(_draw_tag.bind(tag, kind))
 		tag.mouse_entered.connect(_hover.bind(tag, kind))
 		tag.mouse_exited.connect(func():
-			if tip != null:
+			if tip != null and not tag.has_focus():
 				tip.release())
 		add_child(tag)
 		_tags[kind] = tag
@@ -91,7 +94,7 @@ func _init() -> void:
 	_relayout()
 
 
-## 铜面板的嵌槽签（[param narrow]：战前准备屏那排窄签，否则 152 宽）；换完浅字、tone dark。[param kinds] 给了就换这几张
+## 铜面板使用嵌槽和浅字。战前四签按战斗版式排，其余跟随玩家棋盘宽度。
 func use_inlay(narrow: bool, kinds: Array[StringName] = []) -> void:
 	_inlay = "narrow" if narrow else "wide"
 	_bronze = UiTheme.art_meta(BRONZE + "layout")
@@ -119,7 +122,7 @@ func set_width(px: float) -> void:
 	_relayout()
 
 
-## 给 [param px] 宽时整条实际多宽（宽签一张不拉伸：签比棋盘宽就按签宽；窄嵌槽那排按各签宽之和）
+## 给定棋盘宽度，返回为整排预留的宽度。
 func span_for(px: float) -> float:
 	if _inlay == "narrow":
 		var widths: Dictionary = _row.get("tag_w", {})
@@ -132,8 +135,7 @@ func span_for(px: float) -> float:
 	return maxf(px, float(s.get("tag_w", 152)) * n + float(s.get("tag_gap", 12)) * maxi(0, n - 1))
 
 
-## 重算各张签的字。负重那张：算负重的章「当前 / 上限」+ 档名；不算负重的章有上限照样写「当前 / 上限」、小字空着，
-## 没有上限（没角色、角色没配）只写当前重量。[param run] 为 null 时负重那张不显示
+## 从同一份战斗与章节数据重算。没有 run 的读数排只显示战斗属性。
 func refresh(spec: CombatantSpec, run: RunState) -> void:
 	_spec = spec
 	_run = run
@@ -143,8 +145,13 @@ func refresh(spec: CombatantSpec, run: RunState) -> void:
 	_blocks[STAMINA] = {"main": UiText.t(RATING_KEYS[rating]) if RATING_KEYS.has(rating) else rating, "sub": UiText.t("strip.stamina_sub") % [e["cost"], e["regen"]],
 		"main_color": _rating_ink(rating), "sub_color": soft, "sub_bold": false,
 		"tip": StaminaEstimate.describe(spec, CombatantSpec.item_names(spec, run.items) if run != null else {})}     # 289：两段来源用棋盘上的名字
+	if _inlay == "narrow":
+		_blocks[STAMINA]["main"] = "%.1f/s" % e["cost"]
+		_blocks[STAMINA]["sub"] = UiText.t("strip.drain")
+	elif _kinds.has(LOAD):
+		_blocks[STAMINA]["main"] = UiText.t("strip.drain_rating") % _blocks[STAMINA]["main"]
 	var dps := spec.rough_dps()
-	_blocks[DPS] = {"main": "%.1f" % dps, "sub": "DPS", "main_color": _main_color(), "sub_color": soft, "sub_bold": false,
+	_blocks[DPS] = {"main": "%.1f" % dps, "sub": UiText.t("strip.dps_est"), "main_color": _main_color(), "sub_color": soft, "sub_bold": false,
 		"tip": _dps_tip(spec, run)}
 	var hp := spec.max_hp_int()
 	_blocks[HP] = {"main": str(hp), "sub": UiText.t("strip.hp"), "main_color": _main_color(), "sub_color": soft, "sub_bold": false,
@@ -220,6 +227,23 @@ func inlay() -> String:
 	return _inlay
 
 
+func load_tag() -> Control:
+	return _tags[LOAD]
+
+
+## 持物期间以拿起前的重量为准；外部容器移入或移出只在落点越档时预告。
+func set_preview_weight(weight: int = -1, baseline: int = -1) -> void:
+	if _preview_weight == weight and _baseline_weight == baseline:
+		return
+	_preview_weight = weight
+	_baseline_weight = baseline
+	if _run != null and _shown.has(LOAD):
+		_blocks[LOAD] = _load_block(_run)
+		load_tag().queue_redraw()
+		if load_tag().has_focus():
+			_hover(load_tag(), LOAD)
+
+
 func _relayout() -> void:
 	var s := _strip()
 	var top := float(s.get("tag_top_in_strip", 6))
@@ -241,17 +265,22 @@ func _relayout() -> void:
 		return
 	var w := float(s.get("tag_w", 152))
 	var gap := float(s.get("tag_gap", 12))
-	var total := w * _shown.size() + gap * maxi(0, _shown.size() - 1)
-	var span := maxf(_width, total)     # 签宽固定（图不拉伸）：棋盘比三张签窄时整条撑到签那么宽
+	var widths := {}
+	if _shown == ORDER:
+		var extra := clampf(_width - (LOAD_WIDTH + COST_WIDTH + DPS_WIDTH + 2 * gap), 0.0, 96.0)
+		widths = {LOAD: LOAD_WIDTH + extra * 0.55, STAMINA: COST_WIDTH + extra * 0.30, DPS: DPS_WIDTH + extra * 0.15}
+	var total := gap * maxi(0, _shown.size() - 1)
+	for kind in _shown:
+		total += float(widths.get(kind, w))
+	var span := maxf(_width, total)     # 棋盘比签组窄时由宿主为整排预留位置
 	var x := floorf((span - total) * 0.5)
 	for kind in ALL:
-		(_tags[kind] as Control).visible = false
+		(_tags[kind] as Control).visible = _shown.has(kind)
 	for kind in _shown:
 		var tag := _tags[kind] as Control
-		tag.visible = true
 		tag.position = Vector2(x, top)
-		tag.size = Vector2(w, TAG_H)
-		x += w + gap
+		tag.size = Vector2(float(widths.get(kind, w)), TAG_H)
+		x += tag.size.x + gap
 	custom_minimum_size = Vector2(span, strip_height())
 	size = custom_minimum_size
 
@@ -266,28 +295,37 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 	var sub: Dictionary = text.get("sub", {})
 	var main_pos := _vec(main.get("pos_in_tag", [36, 22] if narrow else [50, 23]))
 	var sub_pos := _vec(sub.get("pos_in_tag", [36, 37] if narrow else [50, 38]))
-	var main_size := int(main.get("size", 17 if narrow else 19))
-	var sub_size := int(sub.get("size", 11 if narrow else 12))
+	var main_size := UiTheme.sz(int(main.get("size", 17 if narrow else 19)))
+	var sub_size := UiTheme.sz(int(sub.get("size", 11 if narrow else 12)))
 	var seal_scale := 0.8 if narrow else 1.0
 	var center := Vector2(16, 23) if narrow else Vector2(20, 23)
 	if narrow:
-		_draw_inlay(tag, UiTheme.art_cached(BRONZE + "tag_inlay"), true)
+		_draw_sliced(tag, UiTheme.art_cached(BRONZE + "tag_inlay"), Vector2(INLAY_TAG_X, INLAY_TOP))
 	elif _inlay == "wide":
-		_draw_inlay(tag, UiTheme.art_cached(BRONZE + "tag_inlay_wide"), false)
+		_draw_sliced(tag, UiTheme.art_cached(BRONZE + "tag_inlay_wide"), Vector2(INLAY_TAG_X, INLAY_TOP))
+	elif kind == LOAD:
+		_draw_leather(tag)
 	else:
 		var bg := UiTheme.art_cached(ART + "tag")
 		if bg != null:
-			tag.draw_texture(bg, _vec((pieces.get("tag", {}) as Dictionary).get("origin_in_tag", [16, -6])))
+			var offset := _vec((pieces.get("tag", {}) as Dictionary).get("origin_in_tag", [16, -6]))
+			_draw_sliced(tag, bg, offset)
 		var seal_piece: Dictionary = pieces.get(SEAL_ART[kind], pieces.get("seal", {}))
 		center = _vec(seal_piece.get("center_in_tag", [20, 23]))
-	var room := tag.size.x - main_pos.x - TEXT_RIGHT_PAD     # 复测 v3.79：「37 / 40」「Very high」比签宽时收字号，不顶签的右沿
+	if not narrow and _shown == ORDER:
+		main_pos.x = 44.0
+		sub_pos.x = main_pos.x
+	var right_pad := 17.0 if kind == LOAD and _inlay == "" else TEXT_RIGHT_PAD
+	var room := tag.size.x - main_pos.x - right_pad     # 复测 v3.79：「37 / 40」「Very high」比签宽时收字号，不顶签的右沿
 	var sub_font := UiPalette.cjk_font_bold() if bool(b["sub_bold"]) else UiPalette.cjk_font()
-	_draw_fit(tag, UiPalette.cjk_font_bold(), main_pos, String(b["main"]), main_size, room, b["main_color"])
-	_draw_fit(tag, sub_font, sub_pos, String(b["sub"]), sub_size, tag.size.x - sub_pos.x - TEXT_RIGHT_PAD, b["sub_color"])
+	_draw_fit(tag, UiPalette.numeral_font() if kind in [HP, VIGOR, DPS] else UiPalette.cjk_font_bold(), main_pos, String(b["main"]), main_size, room, b["main_color"])
+	_draw_fit(tag, sub_font, sub_pos, String(b["sub"]), sub_size, tag.size.x - sub_pos.x - right_pad, b["sub_color"])
 	var seal := UiTheme.art_cached(ART + String(SEAL_ART[kind]))
 	if seal != null:
 		var side := seal.get_size() * seal_scale
 		tag.draw_texture_rect(seal, Rect2((center - side * 0.5).floor(), side), false)
+	if tag.has_focus():
+		tag.draw_style_box(_focus_ring, Rect2(Vector2.ZERO, tag.size).grow(-1))
 
 
 ## 收到最小字号还放不下的（英文「Overloaded」之类），横向压扁到正好 [param room] 宽 —— 不伸出签的右沿（游戏测试 10-27）
@@ -306,16 +344,35 @@ func _draw_fit(tag: Control, font: Font, pos: Vector2, text: String, p_size: int
 		tag.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## 嵌槽签底：从火漆下面（x = [constant INLAY_TAG_X]）铺到签右沿；[param sliced] 三段切拉到签宽，否则原大
-func _draw_inlay(tag: Control, tex: Texture2D, sliced: bool) -> void:
-	var at := Vector2(INLAY_TAG_X, INLAY_TOP)
+## 背包秤签：铜铆钉把鞍革固定在火漆背后，双色缝边留在字行之外。
+func _draw_leather(tag: Control) -> void:
+	var w := tag.size.x
+	var h := tag.size.y
+	var outline := PackedVector2Array([
+		Vector2(13, 2), Vector2(w - 9, 2), Vector2(w - 1, 10), Vector2(w - 1, h - 8),
+		Vector2(w - 8, h - 2), Vector2(14, h - 2), Vector2(7, h - 9), Vector2(7, 10)
+	])
+	var colors := PackedColorArray([
+		Color("#985631"), Color("#995834"), Color("#8d4c2b"), Color("#723d29"),
+		Color("#623725"), Color("#71442c"), Color("#784327"), Color("#955430")
+	])
+	tag.draw_polygon(outline, colors)
+	outline.append(outline[0])
+	tag.draw_polyline(outline, Color("#593526"), 2.0, true)
+	tag.draw_line(Vector2(18, 3), Vector2(w - 10, 3), Color("#d0925d"), 1.5, true)
+	for y in [6.0, h - 6.0]:
+		tag.draw_dashed_line(Vector2(24, y), Vector2(w - 11, y), Color("#dfad79"), 1.0, 4.0, true)
+	var rivet := Vector2(w - 8, h * 0.5)
+	tag.draw_circle(rivet, 2.8, Color("#583526"), true, -1.0, true)
+	tag.draw_circle(rivet - Vector2(0, 0.6), 1.8, Color("#e1b779"), true, -1.0, true)
+
+
+## 中段拉伸，两端的签角保持原宽。
+func _draw_sliced(tag: Control, tex: Texture2D, at: Vector2) -> void:
 	if tex == null:
 		return
-	if not sliced:
-		tag.draw_texture(tex, at)
-		return
 	var ts := tex.get_size()
-	var w := maxf(tag.size.x - INLAY_TAG_X, INLAY_LEFT + INLAY_RIGHT)
+	var w := maxf(tag.size.x - at.x, INLAY_LEFT + INLAY_RIGHT)
 	tag.draw_texture_rect_region(tex, Rect2(at, Vector2(INLAY_LEFT, ts.y)), Rect2(0, 0, INLAY_LEFT, ts.y))
 	tag.draw_texture_rect_region(tex, Rect2(at + Vector2(INLAY_LEFT, 0), Vector2(w - INLAY_LEFT - INLAY_RIGHT, ts.y)),
 		Rect2(INLAY_LEFT, 0, ts.x - INLAY_LEFT - INLAY_RIGHT, ts.y))
@@ -328,18 +385,48 @@ func _hover(tag: Control, kind: StringName) -> void:
 
 
 func _load_block(run: RunState) -> Dictionary:
-	var weight := run.carry_weight()
+	var weight := _baseline_weight if _baseline_weight >= 0 else run.carry_weight()
 	var cap := run.carry_capacity()
-	var main := "%d / %d" % [weight, cap] if cap > 0 else str(weight)
-	var line := run.encumbrance_line()
-	if line == "":     # 这一章不算负重：没有档（战前准备屏那排窄签副行写「负重」；作者 10-25：别的签副行也写状态「不计负重」，不空着）
-		return {"main": main, "sub": UiText.t("strip.load") if _inlay == "narrow" else UiText.t("strip.load_not_counted"), "main_color": _main_color(), "sub_color": _sub_color(), "sub_bold": false,
-			"tip": UiText.t("strip.load_off") % main}
-	var lv := run.encumbrance_level()
-	var level_name := run.encumbrance.name_of(lv)
-	return {"main": main, "sub": level_name,
-		"main_color": _main_color(), "sub_color": _load_ink(level_name, lv), "sub_bold": lv > 0,
-		"tip": line + ("\n" + run.encumbrance.effect_text(lv) if lv > 0 else "")}
+	var main := "%s %d" % [UiText.t("strip.load"), weight]
+	var rules := run.encumbrance
+	var details := PackedStringArray([main])
+	if cap > 0:
+		details.append(UiText.t("strip.load_capacity") % cap)
+	var sub := UiText.t("strip.load_not_counted")
+	var color := _sub_color()
+	var warning := false
+	if rules == null or cap <= 0:
+		details.append(UiText.t("strip.load_chapter_off") if rules == null else UiText.t("strip.load_character_off"))
+	else:
+		var level := rules.level_of(weight, cap)
+		var name_ := rules.name_of(level)
+		main += " · " + name_
+		details[0] = main
+		var next := rules.row(level + 1)
+		if next != null:
+			sub = UiText.t("strip.load_next") % [_threshold(cap, next), rules.name_of(level + 1)]
+		else:
+			sub = UiText.t("strip.load_last")
+		for i in rules.levels.size():
+			var start := _threshold(cap, rules.levels[i])
+			var effect := rules.effect_text(i + 1)
+			details.append("%d · %s%s" % [start, rules.name_of(i + 1), (" — " + effect) if effect != "" else ""])
+		var projected := rules.level_of(_preview_weight, cap) if _preview_weight >= 0 else level
+		warning = projected > 0
+		color = _load_ink(rules.name_of(projected), projected)
+		if projected != level:
+			sub = "→ %d · %s" % [_preview_weight, rules.name_of(projected)]
+			details.append(sub)
+	var ink := _main_color()
+	if _inlay == "":
+		ink = Color("#fff5d9")
+		color = Color("#ffe2a0") if warning else Color("#f5ddbc")
+	return {"main": main, "sub": sub, "main_color": ink, "sub_color": color, "sub_bold": warning, "tip": "\n".join(details)}
+
+
+## 规则使用严格“大于”；刚好等于分界值时仍在原档。
+static func _threshold(cap: int, row: EncumbranceLevel) -> int:
+	return floori(float(cap) * row.over) + 1
 
 
 ## 出手的几件各自约多少 DPS（3.1 待定：列）

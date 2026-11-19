@@ -25,6 +25,7 @@ var tip: HoverTip
 var fuse_note: FuseNote = null
 ## 216：棋盘下的数值栏（容器屏把它摘出去摆到「全部拾取」那一行，[method detach_strip]）
 var strip: StatsStrip
+var _weight_before_grab: int = -1
 var _strip_box: MarginContainer
 ## 255 补充一：棋盘坐的九格宽位子（[method hold_nine] 之后才有）
 var nine: BoardNine = null
@@ -187,6 +188,12 @@ func _build() -> void:
 	_drag.stash = _run.storage
 	_drag.drop_outside_to_stash = true     # 084 / 128：棋盘外的空间全都是地上
 	_attach_ground()
+	_drag.before_grab.connect(func(): _weight_before_grab = _run.carry_weight())
+	_drag.drag_started.connect(func(_uid: int): strip.set_preview_weight(-1, _weight_before_grab))
+	_drag.preview_updated.connect(_preview_load)
+	_drag.drag_finished.connect(func(_uid: int, _dropped: bool):
+		_weight_before_grab = -1
+		strip.set_preview_weight())
 	_drag.items_displaced.connect(_on_displaced)
 	_drag.grab_refused.connect(func(uid: int): _hint_text(DragLayer.refused_notice(_run.board, uid)))     # 207 / 255
 	# 314：合成只有一种 —— 拿起一件、拖到能合的那件上松手、确认（拿起时能合的那几件标小锤）
@@ -514,7 +521,15 @@ func strip_width() -> float:
 	return maxi(CharacterDef.BOARD_MAX_W, _run.board.size.x) * board_view.cell_px
 
 
+func _preview_load(global_pos: Vector2) -> void:
+	if _run.encumbrance == null or _run.carry_capacity() <= 0:
+		return
+	var projected := _drag.projected_weight(_run.board, _run.buff_context().weight_pct, global_pos)
+	strip.set_preview_weight(projected, _weight_before_grab)
+
+
 func _refresh_readout() -> void:
+	_drag.invalidate_weight_preview()
 	if strip != null:
 		strip.set_width(strip_width())
 		strip.refresh(_run.compile_player(), _run)     # 129：超重那张的档名变色由数值栏管

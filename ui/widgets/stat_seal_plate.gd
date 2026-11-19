@@ -1,5 +1,5 @@
 ## 选人页改版 B（作者 2026-10-31 11:56）：角色卡头像右边的铭牌 —— 基地小木牌底（[constant UiTheme.PANEL_HOME_PLAQUE_SMALL]，浅底墨字），
-## 名字（粗体）→ 一道细线 → 两列网格，每格一枚火漆印 + 粗体数，项名只在悬停里（补充一 13:20「图像能说明的不加文字」）。不再写「角色」和角色说明。
+## 名字（粗体）→ 一道细线 → 两列网格，每格一枚火漆印 + 粗体数，数旁直接标出项名。不再写「角色」和角色说明。
 ## 生命 / 耐力 / 耐力回复 / 体力各有专属火漆（`stats_strip/seal_*`）；角色在 base_stats 里改过的别的面板项接着往后排，没有专属火漆的写项名小字 + 数
 class_name StatSealPlate
 extends PanelContainer
@@ -7,9 +7,9 @@ extends PanelContainer
 const NAME_SIZE := 26
 const CAPTION_SIZE := 15
 const VALUE_SIZE := 24
-const SEAL := 40.0
+const SEAL := 32.0
 const SEAL_GAP := 10
-const COL_GAP := 18
+const COL_GAP := 10
 const ROW_GAP := 8
 const RULE_INK := Color(0.29, 0.21, 0.13, 0.4)
 
@@ -52,14 +52,15 @@ func setup(title: String, stats: Array) -> StatSealPlate:
 			seal.custom_minimum_size = Vector2(SEAL, SEAL)
 			seal.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			cell.add_child(seal)
-		else:     # 没有专属火漆：写项名，不然只剩一个光数字
-			var cap := UiTheme.make_label(String(spec[0]), CAPTION_SIZE, UiTheme.INK_SOFT)
-			cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			cell.add_child(cap)
+		var stack := UiTheme.vbox(0)
+		stack.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		cell.add_child(stack)
+		var cap := UiTheme.make_label(String(spec[0]), CAPTION_SIZE, UiTheme.INK_SOFT)
+		stack.add_child(cap)
 		var val := UiTheme.make_label(String(spec[1]), VALUE_SIZE, UiTheme.INK)
 		val.add_theme_font_override("font", UiPalette.cjk_font_bold())
 		val.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		cell.add_child(val)
+		stack.add_child(val)
 		cells.append([cell, val])
 	return self
 

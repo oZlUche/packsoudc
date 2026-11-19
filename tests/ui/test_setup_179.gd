@@ -79,11 +79,11 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 		t.check(not texts.any(func(s: String) -> bool: return s.begins_with("背包：")), "%s：棋盘下面不列背包" % ch.id)
 		var tiles: Array = setup._cap_tiles
 		# 2026-10-22（作者定）：开局金币那块撤掉了 —— 钱改成玩家自己从仓库带，角色身上这个数不再有作用
-		t.eq(tiles.size(), 2, "%s：两块图标牌（负重 / 棋盘）" % ch.id)
-		t.eq(tiles.map(func(c: CapTile) -> String: return c.value_label.text),
-			[str(ch.weight_capacity), "%d × %d" % [ch.board_size.x, ch.board_size.y]], "%s：负重 / 棋盘的数" % ch.id)
-		t.eq(tiles.map(func(c: CapTile) -> String: return c.tooltip_text), ["负重上限", "棋盘"], "选人页 B 补充一：说明只在悬停里")
-		t.check(tiles.all(func(c: CapTile) -> bool: return not c.caption_label.visible), "说明行不显示（图标 + 数字就够）")
+		t.eq(tiles.size(), 1, "%s：角色卡只保留负重上限" % ch.id)
+		t.eq(tiles[0].value_label.text, str(ch.weight_capacity), "负重数值")
+		t.check(tiles[0].caption_label.visible and tiles[0].caption_label.text == UiText.t("setup.cap_load"), "上限直接标明")
+		t.eq(setup._board_dimensions.text, UiText.t("setup.board_size") % [ch.board_size.x, ch.board_size.y], "棋盘旁列宽与高")
+		t.check(setup._preview_host.is_ancestor_of(setup._board_dimensions), "尺寸属于预览栏")
 		t.check(tiles.all(func(c: CapTile) -> bool: return c.has_art() and ((c.icon as TextureRect).texture.resource_path.begins_with(CapTile.ICON_DIR))), "%s：两块牌都用美术定稿的图标" % ch.id)
 		t.eq((tiles[0] as CapTile).icon.modulate, Color.WHITE, "彩色成品，不调色")
 		t.eq((tiles[0] as CapTile).value_label.get_theme_font_size("font_size"), UiTheme.sz(28), "数字 28（258：按字号档）")

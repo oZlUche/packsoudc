@@ -48,9 +48,10 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	screen.toggle_tab("expedition")
 	t.eq(screen.tab(), "expedition", "再点选中的不动")
 	# 木牌定稿（plaque264）：大木牌 + 挂牌标题、浅羊皮小签；都是浅底
-	t.check(board.last_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE and board.supply_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE, "两块大木牌")
+	t.check(board.last_plate.theme_type_variation == UiTheme.PANEL_HOME_CHIP and board.supply_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE, "军需占主牌，历史使用短签")
+	t.check(board.supply_plate.get_parent().get_index() < board.start_btn.get_index() and board.start_btn.get_index() < board.last_plate.get_index(), "军需、开始探索、上回记录按行动顺序排列")
 	var hangs: Array = board.find_children("*", "HeaderTag", true, false).filter(func(h): return (h as HeaderTag).hang)
-	t.eq(hangs.size(), 2, "标题是两枚挂牌（283 删了 267 的「倾向」）")
+	t.eq(hangs.size(), 1, "仅军需使用置顶挂牌")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_HOME_PLAQUE), UiTheme.TONE_LIGHT, "木牌浅底")
 	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回基地底图；这两页不垫粗布
 	var exp_bg := "home/scene_expedition" if UiTheme.art("home/scene_expedition") != null else UiTheme.ART_HOME_BG
@@ -105,7 +106,7 @@ static func frame_last_and_supplies(t: TestCase, root: Window) -> void:
 	var lines := board.last_lines()
 	t.eq(lines[0] if lines.size() > 0 else "", Names.of(ch), "第一行：角色名")
 	var portraits: Array = board.last_plate.find_children("*", "PortraitSlot", true, false)
-	t.check(portraits.size() == 1 and (portraits[0] as PortraitSlot).custom_minimum_size == Vector2(72, 72), "肖像小框 72")
+	t.check(portraits.size() == 1 and (portraits[0] as PortraitSlot).custom_minimum_size == Vector2(48, 48), "记录使用紧凑肖像")
 	t.check(lines.size() > 1 and lines[1].begins_with(Names.of(chapter)), "第二行：地图（%s）" % [lines[1] if lines.size() > 1 else ""])
 	if not opts.is_empty():
 		t.check(lines[1].ends_with(String(opts[0]["display_name"])), "· 规模")

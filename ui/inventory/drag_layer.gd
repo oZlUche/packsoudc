@@ -21,6 +21,9 @@
 class_name DragLayer
 extends Control
 
+## 在源物品离盘前抓取真实基线。顶替接手时，基线是上一次落子后的盘面。
+signal before_grab
+signal preview_updated(global_pos: Vector2)
 signal drag_started(uid: int)
 signal drag_finished(uid: int, dropped: bool)
 ## 放下时顶出来了东西。[param grabbed] 为真表示那一件已经拿在手上，
@@ -115,6 +118,8 @@ const PUT_BACK_PX := 4.0
 const SNAP_BACK_CELLS := 0.5
 ## 非空表示正在拖一个带内容物的包，内容为 detach_bag 的载荷
 var _payload: Dictionary = {}
+var _weight_key: Array = []
+var _weight_result: int = -1
 
 
 func _ready() -> void:
@@ -184,6 +189,7 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 		grab_refused.emit(uid)     # 207：扎了根的拿不起来（包被钉住同理）
 		return
 
+	before_grab.emit()
 	_src_origin = inst.origin
 	_src_rot = inst.rotation
 	_rot = inst.rotation
@@ -242,6 +248,7 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 		clampi(grab_cell.x, 0, maxi(0, box.x - 1)),
 		clampi(grab_cell.y, 0, maxi(0, box.y - 1))
 	)
+	before_grab.emit()
 	_src_origin = home_at
 	_src_rot = home_rot
 	_src_index = -1
@@ -253,11 +260,11 @@ func grab_free(inst: ItemInstance, home: ItemContainer, home_at: Vector2i, home_
 	_mark_partners()
 	UiCursor.set_drag(true)     # 157
 	_show_footprints(true)
+	drag_started.emit(inst.uid)
 	if is_inside_tree():
 		update_preview(get_global_mouse_position())
 	queue_redraw()
 	AudioHub.play(SfxMaterial.pick_cue(inst.def))     # 206
-	drag_started.emit(inst.uid)
 
 
 func _input(event: InputEvent) -> void:
@@ -433,6 +440,7 @@ func update_preview(global_pos: Vector2) -> void:
 	_update_preview(global_pos)
 	if is_dragging():
 		UiCursor.set_drag(true, drop_ok_at(global_pos))
+		preview_updated.emit(global_pos)
 
 
 ## 157：在这里松手算不算放下了（不是弹回原处）：棋盘外看会不会到地上（249：也看 [member drop_filter] 许不许），格子看预览是不是绿 / 黄的
@@ -527,6 +535,75 @@ func _update_preview(global_pos: Vector2) -> void:
 	# 放不进空位，但地形允许 —— 那就是「压着别人」，可以顶替
 	var victims := _displaceable(inv, origin)
 	grid_view.set_preview(cells, origin, not victims.is_empty(), victims)
+
+
+## 当前鼠标落点真正会留下的负重。预览仅在棋盘副本上试摆，不动局内的 uid、信力或存档。
+## -1 表示无有效转移（包括尚待确认的合成）。
+func projected_weight(board: GridInventory, rules: Array, global_pos: Vector2) -> int:
+	if not is_dragging() or not drop_ok_at(global_pos):
+		return -1
+	var view := view_at(global_pos)
+	var grid_view := view as InventoryView
+	if grid_view == null:
+		var ground := view as GroundLayer if view != null else _ground_view()
+		var dest := ground.stash if ground != null else stash
+		if ground != null and _fuse_target_ground(ground, global_pos) != null:
+			return -1
+		if not (view is BagRackView) and not _stash_accepts(dest, _inst):
+			return -1
+		return ItemWeight.total_scaled(board, rules) if _source == board else -1
+	var grid := grid_view.inventory
+	var at := target_origin(grid_view, global_pos)
+	if _source != board and grid != board:
+		return -1
+	if _payload.is_empty() and not grid.can_place_def(_inst.def, at, _rot, _inst.uid):
+		if _enchant_target(grid, at) != null:
+			return ItemWeight.total_scaled(board, rules)
+		if _fuse_target_grid(grid, at) != null:
+			return -1
+	var victims := grid_view.preview_victims()
+	if victims.size() > 1 and (stash == null or not stash.room_for(victims.size())):
+		return -1
+	if grid != board:
+		return ItemWeight.total_scaled(board, rules)
+	# 指针在同一格内移动不重复试摆。真实盘变动由面板清空缓存。
+	var key := [board, _inst.uid, at, _rot, victims, rules, stash.item_count() if stash != null else -1]
+	if key != _weight_key:
+		_weight_key = key
+		_weight_result = _trial_weight(board, rules, at, victims)
+	return _weight_result
+
+
+func invalidate_weight_preview() -> void:
+	_weight_key.clear()
+
+
+func _trial_weight(board: GridInventory, rules: Array, at: Vector2i, victims: Array[int]) -> int:
+	var trial := board.placement_copy()
+	var shed := 0
+	for uid in victims:
+		if trial.acts_as_bag(trial.get_item(uid).def):
+			var detached := trial.detach_bag(uid)
+			shed += detached["contents"].size() + detached["straddlers"].size()
+		else:
+			trial.remove(uid)
+	if _payload.is_empty():
+		if not trial.place(_inst.placement_copy(), at, _rot):
+			return -1
+	else:
+		var payload := _payload.duplicate(true)
+		payload["bag"] = _inst.placement_copy()
+		for n in payload["contents"].size():
+			payload["contents"][n] = (payload["contents"][n] as ItemInstance).placement_copy()
+		for row: Dictionary in payload["straddlers"]:
+			row["inst"] = (row["inst"] as ItemInstance).placement_copy()
+		var report := trial.attach_bag_shedding(payload, at, _rot)
+		if not report["ok"]:
+			return -1
+		shed += report["fallen"].size()
+	if shed > 0 and (stash == null or not stash.room_for(shed)):
+		return -1
+	return ItemWeight.total_scaled(trial, rules)
 
 
 func _drop_allowed(target: ItemContainer) -> bool:
@@ -1176,6 +1253,7 @@ func _restore() -> void:
 
 
 func _end_drag() -> void:
+	invalidate_weight_preview()
 	_prune_views()
 	for view in _views:
 		view.clear_preview()

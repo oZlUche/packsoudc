@@ -184,6 +184,7 @@ var _area: Control = null
 var _grooves: Array[PanelContainer] = []
 ## 179：中栏的三块图标牌、技能名的标签（测试看）
 var _cap_tiles: Array[CapTile] = []
+var _board_dimensions: Label = null
 var _skill_names: Array[Label] = []
 ## 258：卡里放不下时可以往回缩的字 —— [标签, 小档字号]
 var _fit_labels: Array = []
@@ -1020,7 +1021,7 @@ func _rebuild_characters() -> void:
 		var n := Names.of(ch) if ch.display_name != "" else String(ch.id)
 		var why := lock_reason(ch)
 		names.append(n + ("\n" + UiText.t("setup.locked_character") % why if why != "" else ""))
-	_character_btns = _choice_column(_char_box, names, choose_character, 16)
+	_character_btns = _choice_column(_char_box, names, _pick_character, 16)
 	var ch_def := chapter()
 	if ch_def != null and ch_def.profile != &"" and not ch_def.characters.is_empty():
 		var roster := Label.new()     # 切片 v6.14 D：试玩档案的章节只开放点了名的角色，说一句（羊皮纸栏里，不是裸字）
@@ -1041,6 +1042,13 @@ func _rebuild_characters() -> void:
 			_character_btns[i].disabled = true
 
 
+func _pick_character(index: int) -> void:
+	if board != null and index == character_index:
+		_mark_choice(_character_btns, index)
+		return
+	choose_character(index)
+
+
 ## 255：这个角色没解锁的原因（解锁条件那一行）；空 = 能选。角色解锁（254 成就解锁）来之前一律能选，这里只是留好的口子
 func lock_reason(_ch: CharacterDef) -> String:
 	return ""
@@ -1048,14 +1056,19 @@ func lock_reason(_ch: CharacterDef) -> String:
 
 ## 096：预设套那一栏：「不带」+ 每套一块。285：中栏一列挂牌 —— 收费的写价钱，高级的写券（没券灰着加小锁）；悬停 = 清单（高级的多一行要哪张券）
 func _rebuild_presets() -> void:
-	_preset_btns.clear()
 	if _preset_box == null:
 		return
+	var focused: Variant = null
+	for tag in _preset_btns:
+		if tag.has_focus():
+			focused = tag.get_meta(&"preset_id")
+	_preset_btns.clear()
 	UiTheme.clear_children(_preset_box)
 	var sets := _preset_list()
 	_preset_sig = _presets_signature(sets)
 	_preset_scroll.visible = not sets.is_empty()
 	var none := PresetTag.make(UiText.t("setup.no_preset"))
+	none.set_meta(&"preset_id", &"")
 	var c := chapter()
 	none.tooltip_text = UiText.t("setup.no_preset_tip" if c == null or c.allow_carry_in else "setup.no_preset_tip_fixed")
 	_preset_btns.append(none)
@@ -1070,11 +1083,14 @@ func _rebuild_presets() -> void:
 		if ticket != null:
 			lines.append(UiText.t("setup.preset_ticket_tip") % Names.of(ticket))
 		var tag := PresetTag.make(Names.of(def), flow.preset_price(def), ItemPainter.art_of(ticket), flow.preset_ticket_ok(def), def.is_advanced())
+		tag.set_meta(&"preset_id", def.id)
 		tag.tooltip_text = "\n".join(lines)
 		_preset_btns.append(tag)
 	for k in _preset_btns.size():
 		_preset_btns[k].pressed.connect(choose_preset.bind(k - 1))     # 第 0 个是「不带」
 		_preset_box.add_child(_preset_btns[k])
+		if focused != null and _preset_btns[k].get_meta(&"preset_id") == focused and not _preset_btns[k].disabled and _preset_btns[k].is_visible_in_tree():
+			_preset_btns[k].grab_focus()
 	var rows := mini(_preset_btns.size(), PRESET_ROWS)
 	var bar := 12.0 if _preset_btns.size() > PRESET_ROWS else 0.0     # 多了竖着滚：给滚动条留位，不缩牌
 	_preset_scroll.custom_minimum_size = Vector2(PresetTag.W + bar, rows * PresetTag.H + (rows - 1) * PRESET_TAG_GAP)
@@ -1108,6 +1124,9 @@ func choose_preset(i: int) -> bool:
 	if def != null and not flow.preset_ticket_ok(def):
 		_color_presets()
 		return false
+	if j == preset_index and def == _preset_def:
+		_color_presets()
+		return true
 	_hold_refresh += 1     # 作者 11-07：换预设时先拿掉旧的一套 —— 棋盘每变一下都 _refresh，中途空手就弹「一件能出手的都没有」
 	_clear_preset()
 	preset_index = j
@@ -1848,9 +1867,15 @@ func _rebuild_board() -> void:
 	_stamina.set_kinds([StatsStrip.STAMINA] as Array[StringName])
 	_stamina.set_width(0.0)
 	_stamina.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	under.add_child(_stamina)
+	var estimate := _vbox(1)
+	estimate.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	under.add_child(estimate)
+	var label := _label(UiText.t("setup.stamina_estimate"), 15, Color("f6e8bf"))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	estimate.add_child(label)
+	estimate.add_child(_stamina)
 	# 第一次内容刷新通常在容器排版前。先按棋盘减去耐力签和列距量行宽，避免按一字宽换行撑高整块行囊板。
-	_readout.custom_minimum_size.x = room - _stamina.get_combined_minimum_size().x - under.get_theme_constant("separation")
+	_readout.custom_minimum_size.x = room - estimate.get_combined_minimum_size().x - under.get_theme_constant("separation")
 	_readout.size.x = _readout.custom_minimum_size.x
 	_drag.register_view(_board_view)
 	_board_view.actions_for = item_actions.bind(_board_view)     # 230：右键 = 钉住悬浮窗，信物奉为主信仰改成按钮
@@ -1918,8 +1943,7 @@ func _rebuild_card() -> void:
 	var tw := minf(TILE_MAX_W, floorf((inner - STAT_GAP * (caps.size() - 1)) / maxf(1.0, caps.size())))
 	for cap in caps:
 		var tile := CapTile.new().setup(cap[0], cap[1], cap[2])
-		UiTheme.panel_margins(tile, UiTheme.PANEL_HOME_PLAQUE_SMALL, 16, 12, 16, 16)     # 选人页 B：小木牌底；补充一：说明行不显示，放整块悬停
-		tile.caption_label.visible = false
+		UiTheme.panel_margins(tile, UiTheme.PANEL_HOME_PLAQUE_SMALL, 16, 12, 16, 16)
 		tile.tooltip_text = String(cap[2])
 		tile.mouse_filter = Control.MOUSE_FILTER_STOP
 		tile.size_flags_horizontal = Control.SIZE_FILL
@@ -1978,7 +2002,7 @@ func _entry_row(icon: EntryIcon, title: String, text: String, tail: String, iron
 	return row
 
 
-## 255：右栏 —— 只画形状的棋盘（缺格 + 随身之物，不画包），居中；下面题字、图例、首次赠包小签
+## 右栏：形状棋盘下显示尺寸、缺格与随身之物图例，再列首次赠包。
 func _build_preview(ch: CharacterDef) -> void:
 	_grooves[2].custom_minimum_size.x = right_width()
 	_preview_board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
@@ -1988,17 +2012,18 @@ func _build_preview(ch: CharacterDef) -> void:
 	var frame := BoardFrame.wrap(_preview_view)     # 227：皮带框 + 格缝；255：有缺格时框沿轮廓走
 	frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER     # 255：不足九格居中，差额是左右内距
 	var counts := ch.board_counts(flow.items)
-	# 作者 10-31（能画出来的就不写字）：棋盘画出来了，「棋盘 N × M 格」那行字删了
+	var summary := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_CHIP, 12, 4, 12, 4)
+	summary.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_board_dimensions = _label(UiText.t("setup.board_size") % [ch.board_size.x, ch.board_size.y], 17, UiTheme.INK)
+	summary.add_child(_board_dimensions)
 	var legend := _hbox(10)
 	legend.alignment = BoxContainer.ALIGNMENT_CENTER
+	legend.add_child(summary)
 	if int(counts["missing"]) > 0:
-		legend.add_child(_legend_tag(UiText.t("setup.legend_missing"), Color(0, 0, 0, 0)))
+		legend.add_child(_legend_tag(UiText.t("setup.legend_missing") + " ×%d" % int(counts["missing"]), Color(0, 0, 0, 0)))
 	if int(counts["pinned"]) > 0:
 		legend.add_child(_legend_tag(UiText.t("setup.legend_pinned"), Color("c9a24e")))
-	if legend.get_child_count() > 0:
-		_preview_host.add_child(legend)
-	else:
-		legend.free()
+	_preview_host.add_child(legend)
 	var gift := first_gift_text(ch)
 	if gift != "" and _gifted.has(ch.id):
 		_gift_tag = GiftTag.make(gift, right_width() - 2.0 * RIGHT_PAD)
@@ -2055,14 +2080,12 @@ static func stat_plaques(ch: CharacterDef) -> Array:
 	return out
 
 
-## 179：图标牌 [id, 数字, 说明]：负重上限（有才有）、棋盘；255：缺格写进棋盘那块的说明，带入件数 / 稀有度上限有才有
+## 角色操作上限的图标牌 [id, 数字, 说明]；棋盘尺寸与缺格随预览显示。
 ## 2026-10-22（作者定）：**开局金币那块不再显示** —— 钱改成玩家自己从仓库带了，角色身上这个数不再有任何作用
 static func cap_tiles(ch: CharacterDef) -> Array:
 	var out: Array = []
 	if ch.weight_capacity > 0:
 		out.append([&"weight", str(ch.weight_capacity), UiText.t("setup.cap_load")])
-	out.append([&"board", "%d × %d" % [ch.board_size.x, ch.board_size.y],
-		UiText.t("setup.cap_board_missing") % ch.board_mask.size() if not ch.board_mask.is_empty() else UiText.t("setup.cap_board")])
 	if ch.carry_max_items >= 0:
 		out.append([&"carry", str(ch.carry_max_items), UiText.t("setup.cap_carry")])
 	if ch.carry_rarity_cap >= 0:
@@ -2143,14 +2166,19 @@ func _refresh() -> void:
 	var c := chapter()
 	var ch := character()
 	if _readout != null and board != null:
-		# 180（作者定）：棋盘下只留两行 —— 负重、带入预算
+		# 同一处显示实物负重和本次带入价值，有限额时同时列预算。
 		_readout.clear()
 		var lines: Array[String] = []
 		var enc_line := encumbrance_text()
 		if enc_line != "":
 			lines.append(enc_line)
-		if c != null and CountdownModule.budget_for(c, scale_id) > 0:
-			lines.append(carry_text(c, scale_id, carry_value()))
+		if c != null:
+			var value := carry_value()
+			var budget := carry_text(c, scale_id, value)
+			if budget != "":
+				lines.append(budget)
+			elif c.allow_carry_in:
+				lines.append(UiText.t("setup.carry_value") % value)
 		_readout.append_text("\n".join(lines))
 	if _stamina != null and board != null and ch != null:
 		if _stamina.tip == null:

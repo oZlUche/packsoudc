@@ -29,7 +29,7 @@ static func make(title: String, price: int = 0, ticket: Texture2D = null, has_ti
 func _build(title: String, price: int, ticket: Texture2D, has_ticket: bool, is_advanced: bool) -> void:
 	theme_type_variation = UiTheme.BUTTON_PRESET_TAG
 	toggle_mode = true
-	focus_mode = Control.FOCUS_NONE
+	focus_mode = Control.FOCUS_NONE if is_advanced and not has_ticket else Control.FOCUS_ALL
 	custom_minimum_size = Vector2(W, H)
 	disabled = is_advanced and not has_ticket
 	var ink := UiTheme.SETUP_TAB_LOCKED_INK if disabled else UiTheme.INK

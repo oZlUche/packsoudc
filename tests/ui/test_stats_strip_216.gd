@@ -18,7 +18,7 @@ static func _flow(prefix: String) -> GameFlow:
 
 
 static func frame_refresh(t: TestCase, root: Window) -> void:
-	t.begin("216 · 数值栏：耐力档 / 耗 · 回、DPS 和战前屏同一个数、负重「当前 / 上限」与档名；三张总在（不算负重的章负重签照样在，小字写「不计负重」）；字里没有「停上去」「按住」")
+	t.begin("216 · 数值栏：耐力档 / 耗 · 回、DPS 和战前屏同一个数、负重主签与副签；三张总在（不算负重的章负重签照样在，小字写「不计负重」）；字里没有「停上去」「按住」")
 	var f := _flow("strip216a")
 	var run := f.run
 	var strip := StatsStrip.new()
@@ -27,30 +27,26 @@ static func frame_refresh(t: TestCase, root: Window) -> void:
 	var spec := run.compile_player()
 	strip.refresh(spec, run)
 	var e := StaminaEstimate.of(spec)
-	t.eq(strip.texts(StatsStrip.STAMINA), [String(e["rating"]), "耗 %.1f · 回 %.1f" % [e["cost"], e["regen"]]] as Array[String], "耐力：档位 + 每秒耗 / 回")
-	t.eq(strip.texts(StatsStrip.DPS), ["%.1f" % spec.rough_dps(), "DPS"] as Array[String], "DPS：和战前屏「约 x DPS」同一个数")
+	t.eq(strip.texts(StatsStrip.STAMINA), ["耗气 · %s" % e["rating"], "耗 %.1f · 回 %.1f" % [e["cost"], e["regen"]]] as Array[String], "耐力：档位 + 每秒耗 / 回")
+	t.eq(strip.texts(StatsStrip.DPS), ["%.1f" % spec.rough_dps(), "估算 DPS"] as Array[String], "DPS：和战前屏「约 x DPS」同一个数")
 	t.eq(strip.tip_text(StatsStrip.STAMINA), StaminaEstimate.describe(spec), "耐力的悬浮窗沿用原来的细节")
 	t.check(strip.tip_text(StatsStrip.DPS).contains("%.1f" % spec.rough_dps()), "DPS 的悬浮窗写总数、列出手件")
 	t.eq(strip.shown(), StatsStrip.ORDER, "三张总在")
-	if run.encumbrance_line() != "":
-		t.eq(strip.texts(StatsStrip.LOAD), ["%d / %d" % [run.carry_weight(), run.carry_capacity()], run.encumbrance.name_of(run.encumbrance_level())] as Array[String], "负重：当前 / 上限 + 档名")
 	for kind in strip.shown():
 		var both := " ".join(strip.texts(kind)) + strip.tip_text(kind)
 		t.check(not both.contains("停上去") and not both.contains("按住"), "%s 没有老说明字" % kind)
-	var three := strip.tag_rect(StatsStrip.STAMINA).position.x
-	t.check(absf(three - (480.0 - strip.tag_rect(StatsStrip.LOAD).end.x)) <= 1.0, "三张居中")
+	var three := strip.tag_rect(StatsStrip.LOAD).position.x
+	t.check(absf(three - (480.0 - strip.tag_rect(StatsStrip.DPS).end.x)) <= 1.0, "三张居中")
 	# 作者 2026-10-20 16:20：负重签任何章节都显示
 	run.encumbrance = null     # 这一章不算负重
 	strip.refresh(spec, run)
 	t.eq(strip.shown(), StatsStrip.ORDER, "不算负重：负重签照样在")
-	var cap := run.carry_capacity()
-	var want_main := "%d / %d" % [run.carry_weight(), cap] if cap > 0 else str(run.carry_weight())
-	t.eq(strip.texts(StatsStrip.LOAD), [want_main, "不计负重"] as Array[String], "不算负重：大字「当前 / 上限」（没上限只写当前）；作者 10-25：小字写状态「不计负重」")
+	t.eq(strip.texts(StatsStrip.LOAD), ["负重 %d" % run.carry_weight(), "不计负重"] as Array[String], "不算负重仍保留重量与状态")
 	t.check(strip.tip_text(StatsStrip.LOAD).contains("不算负重"), "悬浮窗说这一章不算负重")
 	var ch := run.character
 	run.character = null     # 没角色 = 没上限
 	strip.refresh(spec, run)
-	t.eq(strip.texts(StatsStrip.LOAD), [str(run.carry_weight()), "不计负重"] as Array[String], "没上限：只写当前重量")
+	t.eq(strip.texts(StatsStrip.LOAD), ["负重 %d" % run.carry_weight(), "不计负重"] as Array[String], "没上限：只写当前重量")
 	run.character = ch
 	strip.refresh(spec, null)
 	t.eq(strip.shown(), [StatsStrip.STAMINA, StatsStrip.DPS] as Array[StringName], "没有这一局（run 为 null）：只排两张")
@@ -161,7 +157,7 @@ static func frame_container_screen(t: TestCase, root: Window) -> void:
 
 
 static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
-	t.begin("铜面板三屏 · 嵌槽签：战利品屏 152 宽；战前屏窄签按 prebattle_row 的签宽从左沿排；浅字 tone dark；生命 / 耐力 / 特殊能力三张新签（免疫归进特殊能力）")
+	t.begin("铜面板三屏 · 嵌槽签：战利品屏主副签；战前屏窄签按 prebattle_row 的签宽从左沿排；浅字 tone dark；生命 / 耐力 / 特殊能力三张新签（免疫归进特殊能力）")
 	var f := _flow("stripbronze")
 	var run := f.run
 	var spec := run.compile_player()
@@ -171,7 +167,7 @@ static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
 	wide.use_inlay(false)
 	t.eq(wide.inlay(), "wide", "战利品屏：宽嵌槽")
 	t.eq(wide.shown(), StatsStrip.ORDER, "还是耐力 / DPS / 负重三张")
-	t.eq(wide.tag_rect(StatsStrip.STAMINA).size.x, 152.0, "签宽 152")
+	t.check(wide.tag_rect(StatsStrip.LOAD).size.x > wide.tag_rect(StatsStrip.STAMINA).size.x and wide.tag_rect(StatsStrip.STAMINA).size.x > wide.tag_rect(StatsStrip.DPS).size.x, "负重主签最宽，其次是耗气")
 	t.eq(String(wide.get_meta(&"tone")), "dark", "铜面板上浅字")
 	t.eq(wide.span_for(100.0), 152.0 * 3 + 12.0 * 2, "复测 v3.79：棋盘比三张签窄，整条按签宽")
 	t.eq(wide.span_for(600.0), 600.0, "棋盘更宽：跟棋盘一样宽")
@@ -183,7 +179,7 @@ static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
 	root.add_child(strip)
 	strip.use_inlay(true, StatsStrip.ORDER_PLAYER)
 	strip.refresh(spec, run)
-	t.eq([strip.inlay(), strip.shown()], ["narrow", StatsStrip.ORDER_PLAYER], "战前屏自己那排：生命 / 耐力 / 耗气 / DPS / 负重")
+	t.eq([strip.inlay(), strip.shown()], ["narrow", StatsStrip.ORDER_PLAYER], "战前屏自己那排：生命 / 耐力 / 耗气 / DPS")
 	t.eq(strip.texts(StatsStrip.HP), [str(spec.max_hp_int()), "生命"] as Array[String], "生命签 = 生命上限")
 	t.eq(strip.texts(StatsStrip.VIGOR), [str(StatsStrip.vigor_of(spec)), "耐力"] as Array[String], "耐力签 = 耐力上限")
 	t.check(StatsStrip.vigor_of(spec) > 0, "耐力上限有数")
@@ -198,7 +194,7 @@ static func frame_inlay_bronze(t: TestCase, root: Window) -> void:
 	root.add_child(es)
 	es.use_inlay(true, StatsStrip.ORDER_ENEMY)
 	es.refresh(foe, null)
-	t.eq(es.shown(), StatsStrip.ORDER_ENEMY, "敌人那排：生命 / 耐力 / 耗气 / DPS / 特殊能力")
+	t.eq(es.shown(), StatsStrip.ORDER_ENEMY, "敌人那排：生命 / 耐力 / 耗气 / DPS")
 	t.eq(es.texts(StatsStrip.SPECIAL), [str(StatsStrip.specials_of(foe).size()), "特殊能力"] as Array[String], "特殊能力：条数")
 	t.check(es.tip_text(StatsStrip.SPECIAL).contains("免疫流血"), "悬浮窗写免疫：%s" % es.tip_text(StatsStrip.SPECIAL))
 	t.eq(StatsStrip.specials_of(CombatantSpec.new()), [] as Array[String], "什么都没有：空")
@@ -231,3 +227,50 @@ static func run_squeeze(t: TestCase) -> void:
 	UiText.lang = "en"
 	t.eq(UiText.t("run.load_light"), "Light", "轻装英文换短词")
 	UiText.lang = was
+
+static func frame_load_rules(t: TestCase, root: Window) -> void:
+	t.begin("棋盘负重签：实际整数阈值、跨档预告、无规则、持物基线、键盘焦点与本地化")
+	var f := _flow("stripload")
+	var run := f.run
+	run.character = CharacterDef.new()
+	run.character.weight_capacity = 48
+	run.encumbrance = EncumbranceRules.standard()
+	var strip := StatsStrip.new()
+	root.add_child(strip)
+	strip.tip = HoverTip.new()
+	strip.add_child(strip.tip)
+	strip.refresh(run.compile_player(), run)
+	strip.set_preview_weight(-1, 54)
+	var stable := strip.texts(StatsStrip.LOAD)
+	t.eq(stable, ["负重 54 · 轻装", "下档 58 · 吃力"] as Array[String], "容量 48 时重量 54 轻装，到 58 才吃力")
+	t.check(strip.tip_text(StatsStrip.LOAD).contains("48") and strip.tip_text(StatsStrip.LOAD).contains(run.encumbrance.effect_text(1)), "详情含标称容量和负面影响")
+	strip.set_preview_weight(57, 54)
+	t.eq(strip.texts(StatsStrip.LOAD), stable, "同档预览读数稳定")
+	strip.set_preview_weight(60, 54)
+	t.eq(strip.texts(StatsStrip.LOAD), [stable[0], "→ 60 · 吃力"] as Array[String], "外部拾入跨档时保留起点并预告落点")
+	strip.set_preview_weight(-1, 58)
+	t.eq(strip.texts(StatsStrip.LOAD), ["负重 58 · 吃力", "下档 77 · 超重"] as Array[String], "第二档由规则重新计算")
+	strip.load_tag().grab_focus()
+	t.check(strip.load_tag().has_focus() and strip.tip.is_showing() and strip.tip.text().contains("48"), "键盘聚焦可读明细")
+	strip.refresh(run.compile_player(), run)
+	t.check(strip.load_tag().has_focus(), "更新棋盘保持已有焦点")
+	strip.load_tag().release_focus()
+	t.check(not strip.tip.is_showing(), "焦点离开后收起明细")
+	var lang := UiText.lang
+	UiText.lang = "en"
+	strip.set_preview_weight(-1, 54)
+	t.eq(strip.texts(StatsStrip.LOAD), ["Load 54 · Light", "Next 58 · Burdened"] as Array[String], "英文取本章的本地化档名")
+	UiText.lang = lang
+	run.encumbrance = run.encumbrance.duplicate(true)
+	run.encumbrance.levels[0].over = 1.0
+	strip.refresh(run.compile_player(), run)
+	strip.set_preview_weight(-1, 48)
+	t.eq(strip.texts(StatsStrip.LOAD)[1], "下档 49 · 吃力", "自定义整倍数严格超过才跨档")
+	run.encumbrance = null
+	strip.refresh(run.compile_player(), run)
+	strip.set_preview_weight(200, 54)
+	t.eq(strip.texts(StatsStrip.LOAD), ["负重 54", "不计负重"] as Array[String], "无规则不可出现跨档预告")
+	strip.set_preview_weight()
+	t.eq(strip.texts(StatsStrip.LOAD)[0], "负重 %d" % run.carry_weight(), "释放持物后用实际盘重")
+	strip.queue_free()
+	Support.cleanup("stripload")

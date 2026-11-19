@@ -290,7 +290,7 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 			t.eq(skill_name.get_theme_color("font_color"), UiTheme.SKILL_NAME_INK, "选人页 B：浅底上技能名朱褐")
 		t.check(entries.all(func(e: Control) -> bool: return e.get_child(0) is EntryIcon), "每行左端一个图标槽")
 		if pins == 0 and ch.board_mask.is_empty():
-			t.check(not "_board_title" in setup, "%s：作者 10-31 棋盘下面不写尺寸" % ch.id)
+			t.check(setup._board_dimensions.is_visible_in_tree(), "%s：普通棋盘也显示尺寸" % ch.id)
 			t.eq(setup._legend.size(), 0, "%s：没有缺格 / 随身之物不出图例" % ch.id)
 		else:
 			t.check(setup._legend.size() > 0, "%s：有随身之物出图例" % ch.id)

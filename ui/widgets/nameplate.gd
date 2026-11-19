@@ -76,6 +76,11 @@ static func duel(title: String, face: Texture2D, ally: bool) -> Nameplate:
 	return plate
 
 
+## 战前的简报复用名牌副行的位置。
+func add_sub_control(control: Control) -> void:
+	_col.add_child(control)
+
+
 ## 255：名字与副行下面加一句说明（13 号、折行，[param width] 是最小宽度）
 func set_blurb(text: String, width: float) -> Nameplate:
 	if text == "" or _col == null:

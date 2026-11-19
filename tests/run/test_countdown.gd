@@ -173,7 +173,7 @@ static func run_carry_budget(t: TestCase) -> void:
 		t.eq(CountdownModule.of(run).limit(), CountdownModule.limit_for(c.chapter, &"small", total), "倒计时按它罚")
 	# 开局屏那一行
 	var SetupScript = load("res://ui/game/setup_screen.gd")
-	t.check(String(SetupScript.carry_text(c.chapter, &"small", 420)).contains("带入预算　420 / 600") and not String(SetupScript.carry_text(c.chapter, &"small", 420)).contains("超出"), "没超：绿字「带入预算 420 / 600」（180：不写「已带」）")
+	t.check(String(SetupScript.carry_text(c.chapter, &"small", 420)).contains("带入价值 420 / 预算 600") and not String(SetupScript.carry_text(c.chapter, &"small", 420)).contains("超出"), "没超：同一行分别标注带入价值与预算")
 	var over_text: String = SetupScript.carry_text(c.chapter, &"small", 750)
 	t.check(over_text.contains("超出 150") and over_text.contains("倒计时 −3") and over_text.contains("36 → 33"), "超了：说清超多少、扣几步（%s）" % over_text)
 	t.eq(String(SetupScript.carry_text(c.prologue, &"", 999)), "", "序章没有预算：不显示")

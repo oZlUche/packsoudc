@@ -374,6 +374,10 @@ func preview_markers() -> Array:
 
 
 ## 157：现在画着的落点预览是不是能放（拖拽层按它切光标）
+func preview_victims() -> Array[int]:
+	return _preview_victims.duplicate()
+
+
 func preview_ok() -> bool:
 	return _preview_on and _preview_valid
 

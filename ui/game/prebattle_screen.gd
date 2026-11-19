@@ -1,9 +1,9 @@
 ## 战前准备屏（084，作者定）：踩上战斗点（或事件里选了开打、搜索遭遇了）先到这里，不是直接开打。
 ##
-## 右边是对手（作者 2026-10-21 18:19：和回放统一，自己在左）：从节点内容重建的棋盘（[method EnemyKit.board_of]）与一排属性签（生命 / 耐力 / 耗气 / DPS / 特殊能力）—— 和真打出来的是同一份编译（4.2）；
+## 右边是对手（作者 2026-10-21 18:19：和回放统一，自己在左）：从节点内容重建的棋盘（[method EnemyKit.board_of]）与一排属性签（生命 / 耐力 / 耗气 / DPS）—— 和真打出来的是同一份编译（4.2）；
 ## 左边是自己的棋盘与地上（[InventoryPanel]），棋盘里随便挪；249（作者 2026-10-24）：开战前不丢东西 —— 棋盘上的出不去（拖出去弹回、
 ## 右键「放到地上」灰着、双击不搬），不想让它打就右键「不参战」；地上的照样能拾进棋盘。
-## 只有一个按钮「开战」：棋盘上一件会出手的东西都没有时灰掉（打不起来的仗不让开）。这一屏是**必须过的**：不能收起回地图，也走不了 ——
+## 空手可以开战，旗旁的便条会提醒。此屏不能直接收起返回地图。
 ## 248：地图上看得见的战斗 / 精英点可以「退回」（退回上一个点、照走一步，这一场留着）
 extends GameScreen
 
@@ -29,6 +29,10 @@ var _col: VBoxContainer = null
 ## 作者 2026-10-21 定（战旗 / 纸卷）：「开战」是一面战旗，四态，字画在图里；可点的是旗面
 const FIGHT_ART := "res://assets/ui/battle/"
 const FIGHT_HIT := Rect2(22, 10, 156, 108)
+const TraitButton := preload("res://ui/widgets/trait_button.gd")
+var _trait_key: TraitButton
+var _perk_row: HFlowContainer
+var _perk_keys := {}
 var _why: Label
 ## 256 补（架构 2026-10-26 17:05）：「为什么开不了 / 空棋盘」那句写在旗旁边的一张便条上 —— 不另起一行（铜面板不超出顶端栏下面），226 落在纸上
 var _why_note: PanelContainer = null
@@ -41,9 +45,8 @@ const AMBUSH_ART := "battle/ambush_key"
 ## 图里不带字：字由代码写在 json 的 `text_rect` 里（中英文同一张图）。退不了的场合不建
 var _retreat_btn: IconButton = null
 const RETREAT_ART := "battle/retreat_key"
-const RETREAT_W := 112.0
 ## 147：腰带里能在这儿用的（烟雾弹）一件一个按钮
-var _belt_row: HBoxContainer = null
+var _belt_row: HFlowContainer = null
 var _inv: Control
 ## 157：两边的名牌
 var _enemy_plate_node: Nameplate = null
@@ -73,6 +76,9 @@ func open(payload: Dictionary) -> void:
 	row.add_child(_left)
 	_enemy_plate_node = _enemy_plate(_content)
 	_left.add_child(_enemy_plate_node)
+	_trait_key = TraitButton.new()
+	_trait_key.name = "EnemyTraits"
+	_enemy_plate_node.add_sub_control(_trait_key)
 	_enemy_view = InventoryView.make(flow.run.events.pending_battle_board() if not flow.run.events.pending_battle.is_empty() else EnemyKit.board_of(_content, flow.items), font, true)
 	_enemy_view.mouse_filter = Control.MOUSE_FILTER_STOP     # 只看（没登记进拖拽层，点了没事），停上去有说明
 	_left.add_child(_enemy_view)
@@ -110,14 +116,28 @@ func open(payload: Dictionary) -> void:
 	row.move_child(_lane, 1)
 
 	# 「开战」居中、主档；腰带件在左，信仰 / 技能给的动作在右，开不了的原因写在旗右边的便条上
-	var buttons := _hbox(10)
-	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
-	_belt_row = _hbox(10)     # 147：腰带里能在战前用的（160：名字后面带数量）
-	buttons.add_child(_belt_row)
+	var foot := _hbox(10)
+	var left_actions := _vbox(4)
+	left_actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	left_actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.add_child(left_actions)
+	_belt_row = HFlowContainer.new()
+	left_actions.add_child(_belt_row)
+	if flow.retreat_reason() == "":
+		_retreat_btn = _make_art_key(RETREAT_ART, UiText.t("pre.retreat"), UiText.t("pre.retreat_tip"), func(): retreat())
+		_retreat_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		left_actions.add_child(_retreat_btn)
 	var flag := IconButton.make_art(FIGHT_ART, "fight" if UiText.lang == "zh" else "fight_en", UiText.t("pre.fight"), "", start_battle)
 	flag.hit_rect = FIGHT_HIT
 	_start_btn = flag
-	buttons.add_child(_start_btn)
+	foot.add_child(_start_btn)
+	_start_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var right_actions := _vbox(4)
+	right_actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	right_actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.add_child(right_actions)
+	var buttons := HFlowContainer.new()
+	right_actions.add_child(buttons)
 	_why_note = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_SUMMARY_NOTE, 12, 18, 12, 8)     # 上边给图钉留地方（同熔炉的便条）
 	UiTheme.apply_tone(_why_note, UiTheme.PANEL_SUMMARY_NOTE)
 	_why_note.name = "WhyNote"
@@ -126,18 +146,13 @@ func open(payload: Dictionary) -> void:
 	_why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_why.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_why_note.add_child(_why)
-	buttons.add_child(_why_note)
+	_why_note.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	right_actions.add_child(_why_note)
 	# 093（蛮神 3 级）：信仰级效果给的额外动作。188 补充一：一条效果可以给几个（耗体力 / 耗信力立即击败），不够的灰着、写原因
-	var altar := AltarModule.of(flow.run)     # 101：信仰级效果在神坛模块里取
-	for p in (altar.perks() if altar != null else []):
-		var perk := p as FaithPerk
-		for a in perk.prebattle_actions(flow.run, _type):
-			var option: StringName = a["option"]
-			var pb := _button(String(a["label"]), func(): smite(option), 14)
-			pb.disabled = String(a["why"]) != ""
-			pb.tooltip_text = String(a["why"]) if pb.disabled else perk.describe()
-			pb.set_meta("perk_option", option)
-			buttons.add_child(pb)
+	_perk_row = HFlowContainer.new()
+	right_actions.add_child(_perk_row)
+	flow.run.vitality.changed.connect(_sync_perks.unbind(4))
+	flow.run.faith_power.changed.connect(_sync_perks.unbind(3))
 	# 136：脱身（安德烈乌斯）：这一场不打。166 补充一：主动技能藏着时不建
 	var slip := flow.slip_skill()
 	if slip != null and not RunSkills.ACTIVE_HIDDEN:
@@ -149,23 +164,6 @@ func open(payload: Dictionary) -> void:
 	if amb != null:
 		_ambush_btn = _make_art_key(AMBUSH_ART, UiText.t("pre.ambush"), amb.describe(), func(): ambush())
 		buttons.add_child(_ambush_btn)
-	for c in buttons.get_children():
-		(c as Control).size_flags_vertical = Control.SIZE_SHRINK_CENTER     # 旗比按钮高：别的按钮不跟着拉长
-	# 248：「退回」放在左下角（战旗居中，右边垫一块同宽的空位让它不偏）；地图上看得见的战斗 / 精英点才有
-	var foot := _hbox(0)
-	var corner := VBoxContainer.new()
-	corner.alignment = BoxContainer.ALIGNMENT_END
-	corner.custom_minimum_size = Vector2(RETREAT_W, 0)
-	if flow.retreat_reason() == "":
-		_retreat_btn = _make_art_key(RETREAT_ART, UiText.t("pre.retreat"), UiText.t("pre.retreat_tip"), func(): retreat())
-		corner.add_child(_retreat_btn)
-	foot.add_child(corner)
-	buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	foot.add_child(buttons)
-	var mirror := Control.new()
-	mirror.custom_minimum_size = Vector2(RETREAT_W, 0)
-	mirror.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	foot.add_child(mirror)
 	col.add_child(foot)
 	flow.run.board.changed.connect(_refresh)
 	var belt := BeltModule.of(flow.run)
@@ -335,23 +333,49 @@ func belt_ids() -> Array[StringName]:
 func _refresh_belt() -> void:
 	if _belt_row == null or not is_instance_valid(_belt_row):
 		return
-	for c in _belt_row.get_children():
-		c.queue_free()
+	UiTheme.clear_children(_belt_row)
 	var belt := BeltModule.of(flow.run)
 	for sid in belt_ids():
 		var def := BeltSkillDef.find(sid)
 		var name_ := "%s ×%d" % [Names.of(def), belt.count_of(sid)]
 		var why := belt.can_use(sid)
-		var b := _button((UiText.t("pre.use_belt") % name_) if why == "" else (UiText.t("pre.belt_blocked") % [name_, why]), func(): use_belt(sid), 14)
-		b.tooltip_text = def.describe()
+		var b := ScrollKey.short(UiText.t("pre.use_belt") % name_, func(): use_belt(sid))
+		b.tooltip_text = why if why != "" else def.describe()
 		b.disabled = why != ""
 		_belt_row.add_child(b)
+	_belt_row.visible = _belt_row.get_child_count() > 0
+
+
+func _sync_perks() -> void:
+	var present := {}
+	var altar := AltarModule.of(flow.run)
+	for perk: FaithPerk in (altar.perks() if altar != null else []):
+		for action in perk.prebattle_actions(flow.run, _type):
+			var option: StringName = action["option"]
+			var key: Button = _perk_keys.get(option)
+			if key == null:
+				key = ScrollKey.short(String(action["label"]), smite.bind(option))
+				key.set_meta("perk_option", option)
+				_perk_row.add_child(key)
+				_perk_keys[option] = key
+			var why := String(action["why"])
+			key.disabled = why != ""
+			key.tooltip_text = why if key.disabled else perk.describe()
+			present[option] = true
+	for option in _perk_keys.keys():
+		if not present.has(option):
+			_perk_keys[option].hide()
+			_perk_keys[option].queue_free()
+			_perk_keys.erase(option)
+	_perk_row.visible = not present.is_empty()
 
 
 func _refresh() -> void:
 	var spec := flow.run.events.pending_battle_spec() if flow.run != null else null
 	if spec != null:
-		_enemy_strip.refresh(spec, null)     # battle_stats v2：原来那行「生命 / DPS」和「免疫」都归进敌人那排签（免疫在特殊能力签的悬浮窗里）
+		_enemy_strip.refresh(spec, null)     # 双方使用同一组数值；免疫归到敌方名牌。
+	_refresh_briefs(spec)
+	_sync_perks()
 	_even_columns()
 	var why := can_start()
 	_start_btn.disabled = why != ""
@@ -373,6 +397,27 @@ func _refresh() -> void:
 		_ambush_btn.disabled = aw != ""
 		_ambush_btn.queue_redraw()
 		_ambush_btn.tooltip_text = amb.describe() if aw == "" else aw
+
+
+## 普通遭遇只显示阵营；能力与负重惩罚在各自名牌上就地出现。
+func _refresh_briefs(spec: CombatantSpec) -> void:
+	_trait_key.display(StatsStrip.specials_of(spec))
+	_enemy_plate_node.sub_label.visible = not _trait_key.visible
+	var sub := _player_plate_node.sub_label
+	sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	sub.text = UiText.t("battle.side_mine")
+	sub.tooltip_text = ""
+	var run := flow.run
+	if run == null or run.encumbrance_level() == 0:
+		return
+	var level := run.encumbrance_level()
+	var effect := run.encumbrance.effect_text(level)
+	if effect.is_empty():
+		return
+	var tier := run.encumbrance.name_of(level)
+	sub.text += " · " + tier + "　" + effect.get_slice(UiText.t("hud.buff_sep"), 0)
+	sub.tooltip_text = tier + "\n" + effect
+	sub.mouse_filter = Control.MOUSE_FILTER_PASS
 
 
 ## 两列一样宽（中缝和铜章都在面板正中）：各列按两列里较宽的那份内容撑

@@ -38,7 +38,7 @@ static func _texts(n: Node) -> Array[String]:
 
 
 static func frame_kit_page_text(t: TestCase, root: Window) -> void:
-	t.begin("180 · 第二页减文案：没有「往左边的包里拖……」；226 批二起仓库标题、棋盘标题也删了；读数只有负重一行（225：带入预算去掉了）")
+	t.begin("180 · 第二页减文案：没有「往左边的包里拖……」；226 批二起仓库标题、棋盘标题也删了；负重与带入价值随章节规则显示")
 	var game = _game(root, "setup180a")
 	var setup = game.base()
 	setup.show_page(1)
@@ -48,7 +48,19 @@ static func frame_kit_page_text(t: TestCase, root: Window) -> void:
 	t.check(not texts.any(func(s: String) -> bool: return s.begins_with("仓库　") or s.begins_with("行囊　")), "仓库标题、棋盘标题删了")
 	t.check(not texts.any(func(s: String) -> bool: return s.contains("已带") or s.contains("带上")), "没有「已带」「带上」")
 	var readout: String = setup._readout.get_parsed_text()
-	t.check(readout.contains("负重") and not readout.contains("带入预算") and readout.get_slice_count("\n") == 1, "225：只剩负重一行：%s" % readout)
+	t.check(readout.contains("负重") and not readout.contains("预算") and readout.contains("带入价值") and readout.get_slice_count("\n") == 2, "无预算章显示负重与带入价值：%s" % readout)
+	t.check(texts.has(UiText.t("setup.stamina_estimate")), "耐力估算签直接标注")
+	var ch: ChapterDef = setup.chapter()
+	var original: StringName = ch.encumbrance_rules
+	ch.encumbrance_rules = &""
+	setup._refresh()
+	t.eq(setup._readout.get_parsed_text(), UiText.t("setup.carry_value") % setup.carry_value(), "无负重规则时只保留带入价值")
+	var carry_allowed := ch.allow_carry_in
+	ch.allow_carry_in = false
+	setup._refresh()
+	t.eq(setup._readout.get_parsed_text(), "", "无负重、无预算且禁止带入的章节没有多余读数")
+	ch.allow_carry_in = carry_allowed
+	ch.encumbrance_rules = original
 	game.queue_free()
 	Support.cleanup("setup180a")
 
