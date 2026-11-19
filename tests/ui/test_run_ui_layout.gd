@@ -185,6 +185,47 @@ static func frame_loot_partial(t: TestCase, root: Window) -> void:
 	Support.cleanup(PREFIX)
 
 
+static func frame_ground_warn(t: TestCase, root: Window) -> void:
+	t.begin("作者 11-19 · 离开时地上还有东西：点地图先问一句；「先收拾」不走；勾「不再提醒」再走就记进设置，以后直接走")
+	var got := _map(root)
+	var game = got[0]
+	var flow: GameFlow = got[1]
+	var map = got[2]
+	var run: RunState = flow.run
+	if run == null or not map.has_method("open_ground_warn"):
+		t.check(false, "进了地图")
+		game.queue_free()
+		return
+	t.check(flow.settings.leave_ground_warn, "默认开着")
+	var moves := run.travel.available_moves()
+	if moves.is_empty():
+		t.check(false, "有能走的点")
+		game.queue_free()
+		return
+	var to: int = moves[0]
+	var here := run.travel.current_id
+	t.check(not map.ground_warn_due(), "地上空：不问")
+	var db := ItemDatabase.new()
+	db.load_dir()
+	run.storage.admit(ItemInstance.create(db.get_def(&"ration")))
+	t.check(map.ground_warn_due(), "地上有一件：要问")
+	map._on_node_pressed(to, MOUSE_BUTTON_LEFT, false)
+	t.check(map.ground_warn_open(), "点隔壁：先弹「地上还有东西」")
+	t.eq(run.travel.current_id, here, "还没走")
+	t.check(map.escape(), "Esc：收起（同「先收拾」）")
+	t.check(not map.ground_warn_open(), "收起了")
+	t.eq(run.travel.current_id, here, "先收拾：没走")
+	map._on_node_pressed(to, MOUSE_BUTTON_LEFT, false)
+	map.ground_go(to, true)
+	t.eq(run.travel.current_id, to, "点「走」：走到了")
+	t.check(not flow.settings.leave_ground_warn, "勾了「不再提醒」：设置关了")
+	var back := GameSettings.from_dict(flow.settings.to_dict())
+	t.check(not back.leave_ground_warn, "设置存得回来")
+	t.check(GameSettings.from_dict({"version": GameSettings.SAVE_VERSION}).leave_ground_warn, "旧设置文件没有这一项：默认开")
+	game.queue_free()
+	Support.cleanup(PREFIX)
+
+
 static func run_recent_notices(t: TestCase) -> void:
 	t.begin("U3 · 最近记录：告示按先后记、新的在前；紧挨着的同一句只记一次；最多 30 条；换一局清空")
 	NoticeLayer.claim_history(-12345)

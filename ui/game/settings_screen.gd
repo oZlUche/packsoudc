@@ -19,6 +19,7 @@ var _debug_btn: Button = null
 ## 157：换屏淡入开关
 var _fades_btn: Button = null
 var _dial_btn: Button = null
+var _ground_btn: Button = null
 ## 157 补：光标材质的按钮（材质 id → 按钮）
 var _cursor_btns: Dictionary = {}
 ## 091：背景底色的按钮（主题 id → 按钮）
@@ -76,6 +77,8 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(_fades_btn)
 	_dial_btn = StoneChip.toggle(UiText.t("settings.dial_number"), _flip.bind(&"dial_number_always"))     # 局内界面布局方案 §4.1
 	col.add_child(_dial_btn)
+	_ground_btn = StoneChip.toggle(UiText.t("settings.ground_warn"), _flip.bind(&"leave_ground_warn"))     # 作者 2026-11-19：离开时提醒地上的东西
+	col.add_child(_ground_btn)
 	var cursor_row := _hbox(8)
 	cursor_row.add_child(HeaderTag.new(UiText.t("settings.cursor")))     # 226：「光标」上段头签
 	for skin in UiCursor.SKINS:
@@ -382,6 +385,9 @@ func _refresh() -> void:
 	if _dial_btn != null:
 		_dial_btn.set_pressed_no_signal(flow.settings.dial_number_always)
 		_dial_btn.text = UiText.t("settings.dial_number_state") % UiText.t("settings.dial_always" if flow.settings.dial_number_always else "settings.dial_low")
+	if _ground_btn != null:
+		_ground_btn.set_pressed_no_signal(flow.settings.leave_ground_warn)
+		_ground_btn.text = UiText.t("settings.ground_warn_state") % (UiText.t("settings.on") if flow.settings.leave_ground_warn else UiText.t("settings.off"))
 	if _fades_btn != null:
 		_fades_btn.set_pressed_no_signal(flow.settings.ui_fades)
 		_fades_btn.text = UiText.t("settings.fades_state") % (UiText.t("settings.on") if flow.settings.ui_fades else UiText.t("settings.off"))

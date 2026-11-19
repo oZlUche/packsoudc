@@ -118,7 +118,7 @@ func pick_spawn(id: int) -> bool:
 	return true
 
 
-## 走一步。087 起地上按点保留（走了东西留在那个点上、回来能拿），109（作者定）：不再弹「地上还有东西」的提示，直接走
+## 走一步。087 起地上按点保留（走了东西留在那个点上、回来能拿）。这里直接走；点地图时地上有东西先问一句的是 [method open_ground_warn]（作者 2026-11-19）
 func step(to_id: int) -> bool:
 	_view.clear_hover()     # 反馈：进点后悬浮窗一直挂着 —— 走之前收起，鼠标再动才按新位置重算
 	var ok := flow.step_to(to_id)
@@ -893,8 +893,61 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 		reopen()
 	elif not _walk.is_empty():
 		_walk.clear()     # 277 第 3 条：连走途中再点 = 停下（这一下不另走）
-	elif _run.travel.available_moves().has(id) or not walk_to(id):
+	elif ground_warn_due():
+		open_ground_warn(id)     # 作者 2026-11-19：地上还有东西，先问一句
+	else:
+		_go_toward(id)
+
+
+func _go_toward(id: int) -> void:
+	if _run.travel.available_moves().has(id) or not walk_to(id):
 		step(id)
+
+
+## 作者 2026-11-19（改 109）：离开时地上还有东西、设置没关提醒 → 走之前先问一句。只管玩家点地图，[method step] 本身照旧直接走
+func ground_warn_due() -> bool:
+	return _run != null and _run.storage != null and _run.storage.item_count() > 0 \
+		and flow.settings != null and flow.settings.leave_ground_warn
+
+
+## 「地上还有东西」：几件、值多少；「走」照原来那一下走（隔壁一步 / 连走），「先收拾」留下；勾了「不再提醒」再走就记进设置
+func open_ground_warn(to_id: int) -> void:
+	cancel_extract()
+	_confirm = _shade(0.7, true)
+	_confirm.name = "GroundWarn"
+	var panel := _modal_panel(UiText.t("map.ground_title"), 20)
+	panel.custom_minimum_size.x = 460
+	_confirm.get_child(0).add_child(panel)
+	var col := _vbox(10)
+	panel.content.add_child(col)
+	var ledger := LedgerRows.new()
+	col.add_child(ledger)
+	var left := _run.storage.item_count()
+	var value := 0
+	for inst in _run.storage.items():
+		value += ItemValue.of((inst as ItemInstance).def)
+	ledger.add_row(UiText.t("map.row_ground"), UiText.tn("map.row_items", left) % [left, value, ""], UiPalette.STAMINA)
+	col.add_child(_label(UiText.t("map.ground_note"), 14, UiPalette.DIM))
+	var never := StoneChip.toggle(UiText.t("map.ground_never"), func(): pass)
+	never.name = "Never"
+	col.add_child(never)
+	var buttons := _hbox(8)
+	buttons.add_child(_button(UiText.t("map.ground_go"), func(): ground_go(to_id, never.button_pressed), 14))
+	buttons.add_child(_button(UiText.t("map.ground_stay"), cancel_extract, 14, UiPalette.Tier.MINOR))
+	col.add_child(buttons)
+
+
+func ground_warn_open() -> bool:
+	return _confirm != null and _confirm.name == "GroundWarn"
+
+
+## 「走」：[param never] = 勾了「不再提醒」
+func ground_go(to_id: int, never: bool = false) -> void:
+	cancel_extract()
+	if never and flow.settings != null:
+		flow.settings.leave_ground_warn = false
+		flow.save_settings()
+	_go_toward(to_id)
 
 
 func _on_node_hovered(id: int) -> void:
