@@ -17,7 +17,7 @@ static func _flow(c) -> GameFlow:
 
 
 static func run_perks_and_altar_logic(t: TestCase) -> void:
-	t.begin("神坛 · 信仰级效果与那一次机会（093）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护甲 / 翻倍 / 加时回春；大地耐力 / 锻炼加行 / 踩点赐物 / 改造此点；献祭换信力、共享一次机会")
+	t.begin("神坛 · 信仰级效果与那一次机会（093）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护甲 / 翻倍 / 加时回春；大地锻炼加行（踩点赐物 / 改造此点只验构件）；献祭换信力、共享一次机会")
 	var c = NodeScreens._content()
 	var f := _flow(c)
 	var run := f.begin(c.chapter, NodeScreens._kit(c), 4)
@@ -200,14 +200,16 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var train: FaithPerk = null
 	var gift: FaithPerk = null
 	var reshape: FaithPerk = null
-	for p in earth.perks_at(4):
+	for p in earth.perks_at(3):
 		if p is AltarTrainBoardPerk:
 			train = p
-		elif p is GiftOnEnterPerk:
-			gift = p
-		elif p is AltarReshapeNodePerk:
-			reshape = p
-	t.check(train != null and gift != null and reshape != null, "2 / 3 / 4 级效果都在")
+	# 信仰重构 C：大地换成「空间承托」，踩点赐物、改造此点不再挂在大地身上；构件本身照旧验
+	gift = GiftOnEnterPerk.new()
+	gift.by_type = {"battle": ["weapon"], "elite": ["armor", "shield"], "event": ["trinket", "material"], "extract": [], "core": ["valuable"]}
+	reshape = AltarReshapeNodePerk.new()
+	reshape.types = [&"battle", &"elite", &"search", &"event", &"shop"] as Array[StringName]
+	t.check(train != null, "二阶锻炼还在（过渡，等等面积改形的样张）")
+	t.check(earth.perks_at(3).any(func(p): return p is EarthSupportPerk), "大地有承托")
 	t.check(train.altar_apply(run, run.current_node()) != "", "锻炼")
 	t.check(run.board.size.y == rows0 + 1 and run.board.item_count() == count0, "棋盘多一行，东西原地不动")
 	var battle_node: MapNode = null

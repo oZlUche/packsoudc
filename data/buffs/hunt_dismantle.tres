@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_q2bii"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_487la"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_6qbrk"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ls7fe"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_dxcsa"]
+
+[resource]
+script = ExtResource("5_dxcsa")
+id = &"hunt_dismantle"
+display_name = "拆解"
+display_names = {
+"en": "Dismantle"
+}
+is_debuff = true

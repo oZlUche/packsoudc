@@ -277,6 +277,14 @@ static func profile_of(def: ItemDef, wild: bool) -> CombatProfile:
 
 ## 第 7 步：按件修饰。逐条按下标顺序 —— 随机挑选的种子里带着下标，所以两条都挑 3 把时挑的不是同一批
 static func _apply_scoped(spec: CombatantSpec, board: GridInventory, inp: CompileInput) -> void:
+	var keyed: Array = inp.item_mods.keys()
+	keyed.sort()
+	for uid in keyed:     # 信仰重构 C：按 uid 的修饰（承托），uid 升序
+		var item := spec.item_of(int(uid))
+		if item == null:
+			continue
+		for mod in inp.item_mods[uid]:
+			(mod as StatModifier).apply_to(item.stats, 1)
 	for i in inp.scoped.size():
 		var scope := inp.scoped[i] as ScopedMod
 		if scope == null or scope.is_empty():

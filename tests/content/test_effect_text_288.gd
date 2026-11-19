@@ -71,15 +71,9 @@ static func run_shop_ratio(t: TestCase) -> void:
 
 
 static func run_gift_summary(t: TestCase) -> void:
-	t.begin("288 §6 · 大地三阶赐物：说明按 by_type 拼（精英含盾、事件含素材、核心是贵重品）")
-	var earth := load("res://data/faiths/earth.tres") as FaithDef
-	var perk: GiftOnEnterPerk = null
-	for p in (earth.perks if earth != null else []):
-		if p is GiftOnEnterPerk:
-			perk = p
-	t.not_null(perk, "大地有赐物")
-	if perk == null:
-		return
+	t.begin("288 §6 · 踩点赐物构件：说明按 by_type 拼（精英含盾、事件含素材、核心是贵重品）")
+	# 信仰重构 C：大地之神不再带这一条（换成承托），构件还在注册表里，这里验构件本身（默认值就是当时大地那份）
+	var perk := GiftOnEnterPerk.new()
 	var text := perk.describe()
 	for key in perk.by_type:
 		t.check(text.contains(NodeText.label_of(StringName(String(key)))), "写了 %s" % key)

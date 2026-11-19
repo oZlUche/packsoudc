@@ -1,119 +1,120 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_yrdk8"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="2_texte"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_2gic1"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_gfojj"]
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="5_81xyc"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/item_triggered_deed.gd" id="6_bd1g6"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/enter_node_deed.gd" id="7_5xycn"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="8_rcova"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="9_xhs8b"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="10_t8ftl"]
-[ext_resource type="Script" path="res://core/run/faith/perks/stat_mod_perk.gd" id="11_p841y"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_train_board_perk.gd" id="12_kac8c"]
-[ext_resource type="Script" path="res://core/run/faith/perks/gift_on_enter_perk.gd" id="13_da2uv"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_reshape_node_perk.gd" id="14_cb8j2"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="15_knk1t"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_poydk"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="2_bwg0x"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_yrdk8"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_texte"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="5_2gic1"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="6_gfojj"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="7_81xyc"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="8_bd1g6"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="9_5xycn"]
+[ext_resource type="Script" path="res://core/run/faith/perks/earth_support_perk.gd" id="10_rcova"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="11_xhs8b"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_train_board_perk.gd" id="12_t8ftl"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="13_p841y"]
 
-[sub_resource type="Resource" id="Resource_rexqm"]
-script = ExtResource("3_2gic1")
+[sub_resource type="Resource" id="Resource_kac8c"]
+script = ExtResource("3_yrdk8")
 stat = &"max_stamina"
 amount = 5.0
 
-[sub_resource type="Resource" id="Resource_q5jy6"]
-script = ExtResource("2_texte")
+[sub_resource type="Resource" id="Resource_da2uv"]
+script = ExtResource("2_bwg0x")
 mode = "active"
-mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_rexqm")])
+mods = Array[ExtResource("3_yrdk8")]([SubResource("Resource_kac8c")])
 
-[sub_resource type="Resource" id="Resource_bpi0t"]
-script = ExtResource("3_2gic1")
+[sub_resource type="Resource" id="Resource_cb8j2"]
+script = ExtResource("3_yrdk8")
 stat = &"block"
 amount = 1.0
 
-[sub_resource type="Resource" id="Resource_2fhbu"]
-script = ExtResource("2_texte")
+[sub_resource type="Resource" id="Resource_knk1t"]
+script = ExtResource("2_bwg0x")
 mode = "scaled"
 max_shares = 5
-mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_bpi0t")])
+mods = Array[ExtResource("3_yrdk8")]([SubResource("Resource_cb8j2")])
 
-[sub_resource type="Resource" id="Resource_tr00d"]
-script = ExtResource("1_yrdk8")
+[sub_resource type="Resource" id="Resource_rexqm"]
+script = ExtResource("1_poydk")
 tags = Array[StringName]([&"shield"])
 min_cells = 5
 name_prefix = "大地之神赐福的"
 name_prefix_en = "Earth-blessed "
-faith_bonuses = Array[ExtResource("2_texte")]([SubResource("Resource_q5jy6"), SubResource("Resource_2fhbu")])
+faith_bonuses = Array[ExtResource("2_bwg0x")]([SubResource("Resource_da2uv"), SubResource("Resource_knk1t")])
 
-[sub_resource type="Resource" id="Resource_uajvw"]
-script = ExtResource("3_2gic1")
+[sub_resource type="Resource" id="Resource_q5jy6"]
+script = ExtResource("3_yrdk8")
 stat = &"max_stamina"
 amount = 5.0
 
-[sub_resource type="Resource" id="Resource_eoqlt"]
-script = ExtResource("2_texte")
+[sub_resource type="Resource" id="Resource_bpi0t"]
+script = ExtResource("2_bwg0x")
 mode = "active"
-mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_uajvw")])
+mods = Array[ExtResource("3_yrdk8")]([SubResource("Resource_q5jy6")])
 
-[sub_resource type="Resource" id="Resource_iqm5g"]
-script = ExtResource("3_2gic1")
+[sub_resource type="Resource" id="Resource_2fhbu"]
+script = ExtResource("3_yrdk8")
 stat = &"max_armor"
 amount = 4.0
 
-[sub_resource type="Resource" id="Resource_72j3p"]
-script = ExtResource("2_texte")
+[sub_resource type="Resource" id="Resource_tr00d"]
+script = ExtResource("2_bwg0x")
 mode = "scaled"
 max_shares = 5
-mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_iqm5g")])
+mods = Array[ExtResource("3_yrdk8")]([SubResource("Resource_2fhbu")])
 
-[sub_resource type="Resource" id="Resource_udmsc"]
-script = ExtResource("1_yrdk8")
+[sub_resource type="Resource" id="Resource_uajvw"]
+script = ExtResource("1_poydk")
 min_cells = 5
 name_prefix = "大地之神赐福的"
 name_prefix_en = "Earth-blessed "
-faith_bonuses = Array[ExtResource("2_texte")]([SubResource("Resource_eoqlt"), SubResource("Resource_72j3p")])
+faith_bonuses = Array[ExtResource("2_bwg0x")]([SubResource("Resource_bpi0t"), SubResource("Resource_tr00d")])
 
-[sub_resource type="Resource" id="Resource_mgcyf"]
-script = ExtResource("6_bd1g6")
-min_cells = 5
-cap = 40
-amount = 8
+[sub_resource type="Resource" id="Resource_eoqlt"]
+script = ExtResource("6_gfojj")
+won_only = true
+amount = 6
 
-[sub_resource type="Resource" id="Resource_7l3a5"]
-script = ExtResource("7_5xycn")
+[sub_resource type="Resource" id="Resource_iqm5g"]
+script = ExtResource("7_81xyc")
+key = &"earth_support"
+amount = 2
 
-[sub_resource type="Resource" id="Resource_leima"]
-script = ExtResource("8_rcova")
+[sub_resource type="Resource" id="Resource_72j3p"]
+script = ExtResource("7_81xyc")
+key = &"earth_support"
+at_least = 2
+amount = 2
+
+[sub_resource type="Resource" id="Resource_udmsc"]
+script = ExtResource("8_bd1g6")
 min_cells = 9
 multiplier = 5.0
 per_cell = true
 
+[sub_resource type="Resource" id="Resource_mgcyf"]
+script = ExtResource("10_rcova")
+tier = 0
+
+[sub_resource type="Resource" id="Resource_7l3a5"]
+script = ExtResource("11_xhs8b")
+
+[sub_resource type="Resource" id="Resource_leima"]
+script = ExtResource("10_rcova")
+part = 1
+
 [sub_resource type="Resource" id="Resource_pnbk5"]
-script = ExtResource("10_t8ftl")
-
-[sub_resource type="Resource" id="Resource_ncrry"]
-script = ExtResource("3_2gic1")
-stat = &"max_stamina"
-amount = 20.0
-
-[sub_resource type="Resource" id="Resource_egaqq"]
-script = ExtResource("11_p841y")
-mods = Array[ExtResource("3_2gic1")]([SubResource("Resource_ncrry")])
-
-[sub_resource type="Resource" id="Resource_ojtgt"]
-script = ExtResource("12_kac8c")
+script = ExtResource("12_t8ftl")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_4eqxy"]
-script = ExtResource("13_da2uv")
+[sub_resource type="Resource" id="Resource_ncrry"]
+script = ExtResource("10_rcova")
+part = 3
 tier = 3
 
-[sub_resource type="Resource" id="Resource_xc4as"]
-script = ExtResource("14_cb8j2")
-tier = 4
-
 [resource]
-script = ExtResource("15_knk1t")
+script = ExtResource("13_p841y")
 id = &"earth"
 display_name = "大地之神"
 display_names = {
@@ -127,8 +128,8 @@ description = "帝国祭祀的主神之一，但信徒很少，对应种族也�
 descriptions = {
 "en": "One of the chief gods in the Empire's rites, but with very few followers; its people keep a very low profile."
 }
-thresholds = Array[int]([25, 100, 250, 500])
-deeds = Array[ExtResource("5_81xyc")]([SubResource("Resource_mgcyf"), SubResource("Resource_7l3a5")])
-offerings = Array[ExtResource("8_rcova")]([SubResource("Resource_leima")])
-perks = Array[ExtResource("9_xhs8b")]([SubResource("Resource_pnbk5"), SubResource("Resource_egaqq"), SubResource("Resource_ojtgt"), SubResource("Resource_4eqxy"), SubResource("Resource_xc4as")])
-blessings = Array[ExtResource("1_yrdk8")]([SubResource("Resource_tr00d"), SubResource("Resource_udmsc")])
+thresholds = Array[int]([20, 60, 120])
+deeds = Array[ExtResource("5_2gic1")]([SubResource("Resource_eoqlt"), SubResource("Resource_iqm5g"), SubResource("Resource_72j3p")])
+offerings = Array[ExtResource("8_bd1g6")]([SubResource("Resource_udmsc")])
+perks = Array[ExtResource("9_5xycn")]([SubResource("Resource_mgcyf"), SubResource("Resource_7l3a5"), SubResource("Resource_leima"), SubResource("Resource_pnbk5"), SubResource("Resource_ncrry")])
+blessings = Array[ExtResource("1_poydk")]([SubResource("Resource_rexqm"), SubResource("Resource_uajvw")])

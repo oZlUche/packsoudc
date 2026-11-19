@@ -106,6 +106,8 @@ var skills: RunSkills = null
 var skills_saved: Dictionary = {}
 ## 信力（082）：每个信仰一个池子，只有激活的信仰收点；行为与阈值在信仰文件里
 var faith_power: FaithPower = null
+## 信仰重构 C：最近一场战斗的机制次数（[method battle_summary] 的 `mechanic`）。只给紧接着的掉落用，不存档
+var last_mechanic: Dictionary = {}
 ## 104：对过账的道具实例（uid → true）：一件道具头一回出现在棋盘 / 地上 / 保险箱里发一次 `item_acquired`。只增不减，跟着存档
 var owned_uids: Dictionary = {}
 ## 104：这一局获得过 / 置入过棋盘的道具种类（定义 id → true），给载荷的 first_in_run。跟着存档
@@ -638,7 +640,7 @@ func compile_player() -> CombatantSpec:
 ## 量是浮点（定点换回来）。dealt = 敌方受的伤（不管谁打的，反射也算）；taken = 我方受的；healed = 我方战斗内回的血；
 ## fired = 我方道具**真的出手**的次数（因耐力 / 资源不足跳过的那次不发 ITEM_FIRED，自然不算）
 static func battle_summary(result: BattleResult, won: bool, p_board: GridInventory, node_type: StringName = &"") -> Dictionary:
-	var out := {"won": won, "node_type": String(node_type), "dealt": {}, "taken": {}, "healed": 0.0, "fired_total": 0, "fired_items": []}
+	var out := {"won": won, "node_type": String(node_type), "dealt": {}, "taken": {}, "healed": 0.0, "fired_total": 0, "fired_items": [], "mechanic": {}}
 	if result == null:
 		return out
 	var fired := {}
@@ -657,6 +659,16 @@ static func battle_summary(result: BattleResult, won: bool, p_board: GridInvento
 			BattleEvent.RESOURCE_CHANGED:
 				if e.side == 0 and String(e.payload.get("key", "")) == String(BattleStats.RES_HP) and String(e.payload.get("reason", "")) == String(BattleEvent.REASON_HEAL) and int(e.payload.get("delta", 0)) > 0:
 					out["healed"] = float(out["healed"]) + StatMath.to_float(int(e.payload["delta"]))
+			BattleEvent.STATUS_STACKED:     # 信仰重构 C / D：本方开战之后叠上的层数（开战那一刻送的不算）
+				if e.side == 0 and e.time > 0 and int(e.payload.get("delta", 0)) > 0:
+					var mech: Dictionary = out["mechanic"]
+					var b := String(e.payload.get("buff", ""))
+					mech[b] = int(mech.get(b, 0)) + int(e.payload["delta"])
+			BattleEvent.EFFECT_RESOLVED:
+				if e.side == 0 and String(e.payload.get("effect", "")) == SkillMomentum.MECHANIC:
+					var mech2: Dictionary = out["mechanic"]
+					var k := String(e.payload.get("key", ""))
+					mech2[k] = int(mech2.get(k, 0)) + int(e.payload.get("count", 1))     # 大地：一次写几件
 			BattleEvent.ITEM_FIRED:
 				if e.side == 0:
 					var uid := int(e.payload.get("uid", 0))
@@ -900,6 +912,7 @@ func _loot_context() -> LootContext:
 		for e in character.loot_effects():
 			e.modify(ctx)
 	var here := current_node()
+	ctx.battle_notes = last_mechanic.duplicate()     # 信仰重构 C：刚打完那一场的机制次数
 	var altar := AltarModule.of(self)
 	if altar != null:
 		for p in altar.perks():     # 093（日神 4 级）
@@ -1288,7 +1301,9 @@ func _wire_faith_power() -> void:
 		# 信仰重构 A：记给开战那一刻的有效信仰（编译快照 [member CombatantSpec.faith]），不回头看此刻的背包
 		var me: CombatantSpec = events.last_battle.get("player", null) as CombatantSpec
 		var snap := FaithTags.id_of_tag(me.faith) if me != null else active_faith_id()
-		faith_power.credit(&"battle", battle_summary(r, won, board, t), snap)
+		var summary := battle_summary(r, won, board, t)
+		last_mechanic = summary["mechanic"]     # 信仰重构 C：给紧接着的掉落看（狩猎三阶）；不存档
+		faith_power.credit(&"battle", summary, snap)
 		# 信仰重构 B：打完一场有效战斗（输赢都算）给这位神祈愿；秒杀不算打了一场
 		if snap != &"" and not bool(events.last_battle.get("smite", false)):
 			faith_power.add_prayer(snap, FaithPower.PRAYER_PER_BATTLE, &"battle"))

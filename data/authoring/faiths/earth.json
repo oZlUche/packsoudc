@@ -13,20 +13,26 @@
     "en": "One of the chief gods in the Empire's rites, but with very few followers; its people keep a very low profile."
   },
   "thresholds": [
-    25,
-    100,
-    250,
-    500
+    20,
+    60,
+    120
   ],
   "deeds": [
     {
-      "type": "item_triggered",
-      "min_cells": 5,
-      "cap": 40,
-      "amount": 8
+      "type": "battle",
+      "won_only": true,
+      "amount": 6
     },
     {
-      "type": "enter_node"
+      "type": "mechanic",
+      "key": "earth_support",
+      "amount": 2
+    },
+    {
+      "type": "mechanic",
+      "key": "earth_support",
+      "at_least": 2,
+      "amount": 2
     }
   ],
   "offerings": [
@@ -38,52 +44,24 @@
   ],
   "perks": [
     {
+      "type": "earth_support",
+      "tier": 0
+    },
+    {
       "type": "altar_bless"
     },
     {
-      "type": "stat_mod",
-      "mods": [
-        {
-          "stat": "max_stamina",
-          "amount": 20.0
-        }
-      ]
+      "type": "earth_support",
+      "part": 1
     },
     {
       "type": "altar_train_board",
       "tier": 2
     },
     {
-      "type": "gift_on_enter",
-      "by_type": {
-        "battle": [
-          "weapon"
-        ],
-        "elite": [
-          "armor",
-          "shield"
-        ],
-        "event": [
-          "trinket",
-          "material"
-        ],
-        "extract": [],
-        "core": [
-          "valuable"
-        ]
-      },
+      "type": "earth_support",
+      "part": 3,
       "tier": 3
-    },
-    {
-      "type": "altar_reshape_node",
-      "types": [
-        "battle",
-        "elite",
-        "search",
-        "event",
-        "shop"
-      ],
-      "tier": 4
     }
   ],
   "blessings": [
