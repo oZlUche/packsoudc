@@ -37,7 +37,7 @@ func _fit_summary() -> void:
 		return
 	var lead := traits[0].get_slice(UiText.t("strip.special_sep"), 0)
 	var tail := UiText.t("pre.trait_more") % (traits.size() - 1) if traits.size() > 1 else ""
-	tail += "  ›"
+	tail += "  →"
 	var role := UiText.t("screen.enemy") + " · "
 	var font := get_theme_font("font")
 	var px := get_theme_font_size("font_size")

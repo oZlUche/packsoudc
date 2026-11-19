@@ -344,7 +344,7 @@ func _draw_fit(tag: Control, font: Font, pos: Vector2, text: String, p_size: int
 		tag.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## 背包秤签：铜铆钉把鞍革固定在火漆背后，双色缝边留在字行之外。
+## 背包秤签：铜铆钉把皮革固定在火漆背后，双色缝边留在字行之外。
 func _draw_leather(tag: Control) -> void:
 	var w := tag.size.x
 	var h := tag.size.y
