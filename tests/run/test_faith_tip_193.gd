@@ -29,7 +29,9 @@ static func run_item_tiers(t: TestCase) -> void:
 	t.check(lv1, "Lv.1：长弓 伤害 +4（%s）" % str(groups))
 	t.check(lv2, "Lv.2：长弓那一条")
 	var full := FaithTooltip.describe_full(hunt, null, null, c.items)
-	t.check(Glossary.strip_bbcode(String(full["sections"][0])).contains("长弓"), "狩猎之神没有 perk：第一段就是赐福之物（257），写着长弓")
+	# 信仰重构 C：狩猎之神有了各级效果（拆解）—— 第一段是它，第二段才是赐福之物（257）
+	t.check(Glossary.strip_bbcode(String(full["sections"][0])).contains("拆解"), "第一段是各级效果：拆解")
+	t.check(full["sections"].size() > 1 and Glossary.strip_bbcode(String(full["sections"][1])).contains("长弓"), "第二段是赐福之物，写着长弓")
 	t.check(not Glossary.strip_bbcode(String(FaithTooltip.describe_full(hunt)["sections"][0])).contains("长弓"), "不给道具库：照旧（没有这一段）")
 	var church: FaithDef = defs.get(&"church", null)
 	if church != null:

@@ -30,6 +30,9 @@ var drop_mult: float = 1.0
 ## 093（日神 4 级）：必掉额外一件这个稀有度的（-1 = 没有）；从道具库里挑，不必是身上有的
 var extra_drop_rarity: int = -1
 
+## 信仰重构 C：刚打完的这一场记下的事（战斗账的 `mechanic`：机制次数，按 id）—— 狩猎三阶看拆没拆完第二档。不是战斗掉落时为空
+var battle_notes: Dictionary = {}
+
 
 func add_rolls(n: int) -> void:
 	rolls = maxi(0, rolls + n)

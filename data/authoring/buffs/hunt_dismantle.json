@@ -1,0 +1,8 @@
+{
+  "id": "hunt_dismantle",
+  "display_name": "拆解",
+  "display_names": {
+    "en": "Dismantle"
+  },
+  "is_debuff": true
+}

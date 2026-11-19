@@ -13,24 +13,26 @@
     "en": "Not worshipped in the Empire's rites, but common hunters follow this god."
   },
   "thresholds": [
-    25,
-    80
+    20,
+    60,
+    120
   ],
   "deeds": [
     {
       "type": "battle",
-      "by_type": {
-        "battle": 5,
-        "elite": 20,
-        "hunter": 30,
-        "core": 50
-      }
+      "won_only": true,
+      "amount": 6
     },
     {
       "type": "first_place",
       "tag": "beast_part",
       "rarity_pow": true,
       "plus": 1
+    },
+    {
+      "type": "mechanic",
+      "key": "hunt_stage1",
+      "amount": 2
     }
   ],
   "offerings": [
@@ -45,6 +47,26 @@
         "food"
       ],
       "multiplier": 5.0
+    }
+  ],
+  "perks": [
+    {
+      "type": "hunt_dismantle",
+      "tier": 0
+    },
+    {
+      "type": "hunt_dismantle",
+      "part": 1
+    },
+    {
+      "type": "hunt_dismantle",
+      "part": 2,
+      "tier": 2
+    },
+    {
+      "type": "hunt_dismantle",
+      "part": 3,
+      "tier": 3
     }
   ]
 }

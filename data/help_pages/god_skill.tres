@@ -11,9 +11,13 @@ display_names = {
 }
 category = &"faith"
 order = 9
-text = "{faith:skill}管尺度、变形与结构，锻造、战斗技巧和各种手艺都归祂，矮人、盗贼与工匠信祂。信力看的是获得工艺道具，按格子数给；还看一场战斗里出手过的不同武器有几种，每场有上限。献祭爱武器、防具、工艺品，带暴击属性的道具倍率最高。"
+text = "{faith:skill}管尺度、变形与结构，锻造、战斗技巧和各种手艺都归祂，矮人、盗贼与工匠信祂。信力看的是打赢战斗，一场里换着类别出手攒到巧劲再多给；每局头一回得到一种工艺道具也给。献祭爱武器、防具、工艺品，带暴击属性的道具倍率最高。
+
+奉了祂就有【巧劲】：近战、远程、施法换一类出手，和上一下离得不远，就攒一层，最多 {faith_perk:skill:skill_momentum:cap} 层，开战先送一层；同一类连着出手不攒。一阶起武器打出伤害时用掉全部巧劲，每层造成伤害提高 {faith_perk:skill:skill_momentum:percent_per}%，攒满那一下还穿透护甲；二阶格挡挡下伤害也算一次防御动作；三阶每场头一回打出「防御、攻击、另一类攻击」，再追加一下连携。"
 texts = {
-"en": "{faith:skill} governs measure, transformation and structure. Forging, combat technique and every craft belong to this god, worshipped by dwarves, thieves and artisans. You gain Faith from obtaining Crafted items, by the number of cells they take up, and from how many different weapons activate in a single battle, capped per battle. Offerings favor weapons, armor and crafted goods, and items with Crit stats earn the highest multiplier."
+"en": "{faith:skill} governs measure, transformation and structure. Forging, combat technique and every craft belong to this god, worshipped by dwarves, thieves and artisans. Faith points come from winning battles, with extra when you build Finesse by switching kinds of action, and from obtaining a kind of Crafted item for the first time in a run. Offerings favor weapons, armor and crafted goods, and items with Crit stats earn the highest multiplier.
+
+Following this god grants Finesse: acting with a different kind of action (melee, ranged, spell) soon after the last builds one stack, up to {faith_perk:skill:skill_momentum:cap}, and you start each battle with one; repeating the same kind builds nothing. From Rank one, a weapon hit spends all Finesse for {faith_perk:skill:skill_momentum:percent_per}% more damage per stack, and a full-stack hit pierces Armor. At Rank two, blocking an attack counts as a defensive action. At Rank three, the first time each battle you chain defend, attack, then a different attack, you strike again with a combo."
 }
 related = Array[String](["faith_power_and_tiers", "altar_offering"])
 see_items = Array[StringName]([&"charm_skill"])

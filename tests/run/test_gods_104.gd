@@ -68,9 +68,13 @@ static func run_content(t: TestCase) -> void:
 
 static func run_deeds(t: TestCase) -> void:
 	t.begin("104 · 四条新行为：获得工艺道具按格 ×3（250）、每种武器首次出手 +10 封顶 50、按节点类型给（输了也给）、每局首次置入一种兽材 2^稀有度 + 1（250）")
-	var defs := FaithDef.load_all()
-	var skill: FaithDef = defs[&"skill"]
-	var hunt: FaithDef = defs[&"hunt"]
+	# 信仰重构 C：技巧、狩猎换了新的行为（打赢 + 机制次数）；这四个构件本身照旧，用 104 时的那份数据验
+	var skill := ContentImporter.import_faith({"id": "t_skill104", "display_name": "t", "thresholds": [25, 80], "deeds": [
+		{"type": "item_acquired", "tag": "crafted", "per_cell": true, "amount": 3},
+		{"type": "distinct_items_fired", "tag": "weapon", "cap": 50, "amount": 10}]}, ContentImporter.Context.new(), ImportReport.new())
+	var hunt := ContentImporter.import_faith({"id": "t_hunt104", "display_name": "t", "thresholds": [25, 80], "deeds": [
+		{"type": "battle", "by_type": {"battle": 5, "elite": 20, "hunter": 30, "core": 50}},
+		{"type": "first_place", "tag": "beast_part", "rarity_pow": true, "plus": 1}]}, ContentImporter.Context.new(), ImportReport.new())
 	t.eq(_gain(skill, &"item_acquired", {"id": "x", "tags": ["crafted", "weapon"], "cells": 4}), 12, "4 格工艺 +12（250：金属换成工艺）")
 	t.eq(_gain(skill, &"item_acquired", {"id": "x", "tags": ["weapon"], "cells": 4}), 0, "不是工艺不给")
 	var two_same := {"fired_items": [{"id": "knife", "tags": ["weapon"], "count": 3}, {"id": "knife", "tags": ["weapon"], "count": 1},
@@ -87,8 +91,17 @@ static func run_deeds(t: TestCase) -> void:
 	t.eq(_gain(hunt, &"place_item", {"tags": ["beast_part"], "rarity": 3, "first_in_run": true}), 9, "首次置入稀有度 3 的兽材 +9（250：战利品并进兽材）")
 	t.eq(_gain(hunt, &"place_item", {"tags": ["beast_part"], "rarity": 3, "first_in_run": false}), 0, "再置入同种不给")
 	t.eq(_gain(hunt, &"place_item", {"tags": ["weapon"], "rarity": 3, "first_in_run": true}), 0, "不是兽材不给")
+	# 信仰重构 C 的新数据：打赢 6、输了不给；机制次数另给
+	var defs := FaithDef.load_all()
+	for fid in [&"skill", &"hunt", &"earth"]:
+		var d: FaithDef = defs[fid]
+		t.eq(_gain(d, &"battle", {"won": true, "node_type": "battle", "mechanic": {}}), 6, "%s：打赢 +6" % fid)
+		t.eq(_gain(d, &"battle", {"won": false, "node_type": "elite", "mechanic": {}}), 0, "%s：输了不给胜利分" % fid)
+	t.eq(_gain(defs[&"skill"], &"battle", {"won": false, "mechanic": {"skill_momentum": 3}}), 4, "技巧：输了也保留攒到的巧劲 +2 +2")
+	t.eq(_gain(defs[&"hunt"], &"battle", {"won": true, "mechanic": {"hunt_stage1": 1}}), 8, "狩猎：打赢 6 + 拆到第一档 2")
+	t.eq(_gain(defs[&"earth"], &"battle", {"won": true, "mechanic": {"earth_support": 2}}), 10, "大地：打赢 6 + 两件受承托 2 + 2")
 	# 往返
-	var text := ContentExporter.to_json(ContentExporter.dump(skill))
+	var text := ContentExporter.to_json(ContentExporter.dump(defs[&"skill"]))
 	var back := ContentImporter.import_faith(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
 	t.eq(ContentExporter.to_json(ContentExporter.dump(back)), text, "技巧之神导出 → 导入 → 再导出逐字节相同")
 
@@ -119,8 +132,11 @@ static func run_acquired_wiring(t: TestCase) -> void:
 	var before := s.faith_power.points_of(&"skill")
 	s.storage.admit(ItemInstance.create(metal, 0))
 	t.eq(s.reconcile_owned(), 2, "护符和工艺道具两件新对上")
-	var want := 3 * ItemVolume.cells_of(metal) + _gain(defs[&"skill"], &"item_acquired", {"tags": charm.def.tags.map(func(x): return String(x)), "cells": 1})     # 护符若带工艺也算
-	t.eq(s.faith_power.points_of(&"skill") - before, want, "%s（%d 格工艺）+%d" % [metal.id, ItemVolume.cells_of(metal), 3 * ItemVolume.cells_of(metal)])
+	var tags_of := func(it: ItemDef) -> Array: return it.tags.map(func(x): return String(x))
+	var want := _gain(defs[&"skill"], &"item_acquired", {"tags": tags_of.call(metal), "cells": ItemVolume.cells_of(metal), "first_in_run": true}) \
+		+ _gain(defs[&"skill"], &"item_acquired", {"tags": tags_of.call(charm.def), "cells": 1, "first_in_run": true})     # 护符若带工艺也算
+	t.check(want > 0, "技巧之神认头一回得到的工艺道具")
+	t.eq(s.faith_power.points_of(&"skill") - before, want, "%s 头一回得到 +%d（信仰重构 C：按种去重，不再按格）" % [metal.id, want])
 	var mid := s.faith_power.points_of(&"skill")
 	t.eq(s.reconcile_owned(), 0, "再对一次：没有新的")
 	t.eq(s.faith_power.points_of(&"skill"), mid, "同一件不再给")
@@ -345,7 +361,7 @@ static func run_gods_table(t: TestCase) -> void:
 	var table := GodsTable.fields(sheets, problems)
 	t.check(problems.is_empty(), "表里没有看不懂的：%s" % "；".join(problems))
 	t.eq(table.size(), 7, "七位神")
-	t.eq((table.get("skill", {}) as Dictionary).get("thresholds", []), [25, 80], "技巧之神占位阈值 25 / 80")
+	t.eq((table.get("skill", {}) as Dictionary).get("thresholds", []), [20, 60, 120], "技巧之神三阶 20 / 60 / 120（信仰重构 C）")
 	var check := GodsTable.check()
 	t.check(check.is_empty(), "表与 JSON 一致：%s" % "；".join(check))
 	# 改一处就红
