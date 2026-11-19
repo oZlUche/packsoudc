@@ -1,0 +1,14 @@
+{
+  "id": "greylamp",
+  "display_name": "灰灯互助会",
+  "display_names": {
+    "en": "Grey Lamp Mutual Aid"
+  },
+  "order": 3,
+  "thresholds": [
+    0,
+    2,
+    5,
+    9
+  ]
+}

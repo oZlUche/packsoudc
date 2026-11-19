@@ -1,0 +1,14 @@
+{
+  "id": "society",
+  "display_name": "魔法师协会边境考据所",
+  "display_names": {
+    "en": "Mages' Society Frontier Archive"
+  },
+  "order": 2,
+  "thresholds": [
+    0,
+    2,
+    5,
+    9
+  ]
+}

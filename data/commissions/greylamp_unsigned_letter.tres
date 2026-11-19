@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_60q57"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_tb81y"]
+
+[sub_resource type="Resource" id="Resource_alh45"]
+script = ExtResource("2_tb81y")
+goal = &"deliver_letter"
+params = {
+"kind": "free"
+}
+text = "把信交给免费撤离点的接应员"
+texts = {
+"en": "Hand the letter to the contact at a free extraction point."
+}
+
+[resource]
+script = ExtResource("1_60q57")
+id = &"greylamp_unsigned_letter"
+display_name = "无人署名的信"
+display_names = {
+"en": "The Unsigned Letter"
+}
+faction = &"greylamp"
+order = 2
+stages = Array[ExtResource("2_tb81y")]([SubResource("Resource_alh45")])
+funds = 30
+client = "不留名的寄信人"
+clients = {
+"en": "An unnamed sender"
+}

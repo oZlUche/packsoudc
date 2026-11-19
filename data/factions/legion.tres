@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/faction_def.gd" id="1_phf8j"]
+
+[resource]
+script = ExtResource("1_phf8j")
+id = &"legion"
+display_name = "边区军团接应队"
+display_names = {
+"en": "Legion Recovery Corps"
+}
+order = 1

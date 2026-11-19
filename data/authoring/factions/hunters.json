@@ -1,0 +1,15 @@
+{
+  "id": "hunters",
+  "display_name": "北境猎盟",
+  "display_names": {
+    "en": "Northern Hunters' League"
+  },
+  "order": 5,
+  "listed": false,
+  "thresholds": [
+    0,
+    2,
+    5,
+    9
+  ]
+}

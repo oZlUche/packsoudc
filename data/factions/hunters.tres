@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/faction_def.gd" id="1_t02cd"]
+
+[resource]
+script = ExtResource("1_t02cd")
+id = &"hunters"
+display_name = "北境猎盟"
+display_names = {
+"en": "Northern Hunters' League"
+}
+order = 5
+listed = false
