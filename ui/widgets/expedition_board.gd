@@ -5,7 +5,7 @@
 class_name ExpeditionBoard
 extends VBoxContainer
 
-const CampaignDesk := preload("res://ui/widgets/campaign_desk.gd")
+const StationFinish := preload("res://ui/widgets/station_finish.gd")
 const WIDTH := 560.0
 const LAST_H := 200.0
 const SUPPLY_H := 260.0
@@ -62,7 +62,8 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	if _belt.is_empty() and _buffs.is_empty():
 		supply_plate.custom_minimum_size.y = EMPTY_H
 	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true, START, START_FONT)
-	CampaignDesk.button(start_btn, true)
+	StationFinish.button(start_btn, true)
+	start_btn.add_theme_font_override("font", UiPalette.cjk_font_bold())
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	add_child(start_btn)
@@ -80,8 +81,10 @@ func _plate(h: float, title_key: String) -> PanelContainer:
 	hold.add_child(HeaderTag.hanging(UiText.t(title_key)))
 	wrap_.add_child(hold)
 	var p := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_PLAQUE)
-	CampaignDesk.panel(p)
-	p.get_theme_stylebox("panel").content_margin_top = 30
+	StationFinish.book(p, title_key == "meta.supplies")
+	var surface := p.get_theme_stylebox("panel").duplicate() as StyleBox
+	surface.content_margin_top = 30
+	p.add_theme_stylebox_override("panel", surface)
 	p.custom_minimum_size = Vector2(WIDTH, h)
 	wrap_.add_child(p)
 	p.add_child(UiTheme.vbox(10))
@@ -141,7 +144,7 @@ func _fill_last(col: VBoxContainer) -> void:
 	var ch := flow.character_of(m.last_character) if m.last_character != &"" else null
 	var chapter := _last_chapter()
 	if ch == null and chapter == null:
-		col.add_child(_line(UiText.t("meta.none_yet")))
+		_fill_empty(col, "route_stamp")
 		return
 	if ch != null:
 		var row := UiTheme.hbox(14)
@@ -198,10 +201,12 @@ func _fill_supplies(col: VBoxContainer) -> void:
 			_belt.append([StringName(String(id)), int(grants[id])])
 	_buffs = flow.meta_buffs()
 	if _belt.is_empty() and _buffs.is_empty():
-		col.add_child(_line(UiText.t("meta.none_yet")))
+		_fill_empty(col, "supply_stamp")
 		return
 	if not _belt.is_empty():
-		var row := UiTheme.hbox(12)
+		var row := HFlowContainer.new()
+		row.add_theme_constant_override("h_separation", 12)
+		row.add_theme_constant_override("v_separation", 8)
 		col.add_child(row)
 		for pair in _belt:
 			row.add_child(BeltSlot.new(BeltSkillDef.find(pair[0]), int(pair[1])))
@@ -216,6 +221,20 @@ func _fill_supplies(col: VBoxContainer) -> void:
 			chip.tooltip_text = Names.description_of(def) if def != null else ""
 			chip.mouse_filter = Control.MOUSE_FILTER_PASS
 			flow_row.add_child(chip)
+
+
+## 空账页保留状态文字，页末用淡印章区分出征记录和军需。
+func _fill_empty(col: VBoxContainer, stamp: String) -> void:
+	var row := UiTheme.hbox(10)
+	col.add_child(row)
+	var label := _line(UiText.t("meta.none_yet"))
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	var art := UiTheme.art_cached(StationFinish.ART + stamp)
+	if art != null:
+		var mark := UiTheme.picture(art, TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
+		mark.custom_minimum_size = Vector2(54, 54)
+		row.add_child(mark)
 
 
 func _line(text: String) -> Label:

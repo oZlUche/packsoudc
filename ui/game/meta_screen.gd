@@ -9,6 +9,8 @@
 ## 出售 → 卖、科技 → 上交、图鉴 / 成就 → 不做事。整屏一层拖拽，中列与右半边之间能拖。背景、按钮、文本框、仓库木架用「家」套件（`assets/ui/home/`）
 extends GameScreen
 
+const StationFinish := preload("res://ui/widgets/station_finish.gd")
+
 const CampaignDesk := preload("res://ui/widgets/campaign_desk.gd")
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 const TechPanelScript := preload("res://ui/game/tech_panel.gd")
@@ -57,7 +59,8 @@ const SHELF_WIN_WIDE := Vector2(1320, 900)
 const FULL_TABS := ["market", "smithy"]
 ## 264 §三（作者 17:01 定稿）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地底图；换时淡入淡出 [constant SCENE_FADE] 秒。
 ## 有场景图的页不垫粗布
-const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
+const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition",
+		"warehouse": "home/scene_warehouse", "shelf": "home/scene_archive"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
 const SCENE_FADE := 0.25
 
 var _wh = null
@@ -155,7 +158,7 @@ func open(payload: Dictionary) -> void:
 		if not SliceProfile.keeps_tab(flow.profile, key):
 			continue     # 313：试玩切片的基地只留出征、仓库
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): toggle_tab(key))
-		CampaignDesk.button(b)
+		StationFinish.button(b)
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -180,7 +183,7 @@ func open(payload: Dictionary) -> void:
 	# 264：左下「再来一局」搬进出征页改叫【开始探索】
 	# 280 B：「回主菜单」钉在屏幕右下 —— 和开局屏「返回」、结算「继续」同一个角
 	var menu_btn := UiTheme.make_home_button(UiText.t("setup.main_menu"), flow.to_main_menu)
-	CampaignDesk.button(menu_btn)
+	StationFinish.button(menu_btn)
 	menu_btn.name = "MainMenuButton"
 	menu_btn.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 	var menu_size := menu_btn.get_combined_minimum_size()
@@ -264,6 +267,7 @@ func open(payload: Dictionary) -> void:
 	_new_run_btn = _expedition.start_btn
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
 	var wh_page := _cloth()
+	StationFinish.book(wh_page, true)
 	_pages["warehouse"] = wh_page
 	_wh_page = wh_page
 	var wh_col := _vbox(10)
@@ -340,6 +344,7 @@ func _fit_wh_cloth() -> void:
 		_wh_wide = wide
 		layout.call_deferred()     # 带回来的背包来了 / 清了：中列要的宽变了
 	_wh_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL if wide else Control.SIZE_SHRINK_BEGIN
+	_wh_page.size_flags_vertical = Control.SIZE_EXPAND_FILL if wide else Control.SIZE_SHRINK_BEGIN
 	_wh_page.custom_minimum_size.x = 0.0 if wide else WH_NARROW
 
 
@@ -739,7 +744,7 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 	for pair in SUB_TABS[tab_key]:
 		var key: String = pair[0]
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
-		CampaignDesk.button(b)
+		StationFinish.button(b)
 		b.toggle_mode = true
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		btns[key] = b
@@ -1279,7 +1284,8 @@ func shelf_window(key: String) -> Control:
 ## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
 ## 264 §三：中列这一页该铺哪张整屏背景（集市 / 铁匠铺 / 出征用自己的场景图，别的页基地底图）
 static func backdrop_of(page_name: String) -> String:
-	return String(SCENES.get(page_name, UiTheme.ART_HOME_BG))
+	var art := String(SCENES.get(page_name, UiTheme.ART_HOME_BG))
+	return art if UiTheme.has_art(art) else UiTheme.ART_HOME_BG
 
 
 ## 整屏背景换成 [param art_name]：淡入淡出（上面叠一张新图从透明到不透明，满了换给底图）；不淡（测试）当场换
@@ -1288,9 +1294,11 @@ func _swap_backdrop(art_name: String) -> void:
 		return
 	_home_bg_name = art_name
 	var tex := UiTheme.art(art_name)
-	if _bg_fade != null and is_instance_valid(_bg_fade):
+	if is_instance_valid(_bg_fade):
+		_bg_fade.hide()
 		_bg_fade.queue_free()
-	if not GameDirector.fades_allowed or not is_inside_tree():
+		_bg_fade = null
+	if not UiMotion.enabled(flow.settings) or not is_inside_tree():
 		_home_bg.texture = tex
 		return
 	var top := _home_bg.duplicate() as TextureRect
@@ -1301,7 +1309,9 @@ func _swap_backdrop(art_name: String) -> void:
 	var tw := top.create_tween()     # 游戏测试 v6.43：连切页签时上一张还在淡入就被换掉 —— 补间绑在它身上，跟着它一起停，回调不碰已释放的 top
 	tw.tween_property(top, "modulate:a", 1.0, SCENE_FADE)
 	tw.tween_callback(func():
-		_home_bg.texture = tex
+		if _bg_fade == top:
+			_home_bg.texture = tex
+			_bg_fade = null
 		top.queue_free())
 
 

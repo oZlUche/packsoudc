@@ -2,6 +2,14 @@
 
 打开游戏后，从主菜单进入自由探索，走入一张铜版测绘图，再打开随身背包。地图里的建筑、包里的旧物和撤离账单上的印章共同指向一个视角：玩家正在记录一次边境考察。画面深度来自纸张叠放、投影与局部压印，全部使用二维素材。
 
+## 基地 · 边营五处
+
+![同一存档下的出征、仓库和书架，左为改版前，右为改版后](station-home-comparison.jpg)
+
+出征页沿用「营门·清晨」的构图。军功碑立在左侧石台上，仓库估值、三枚战绩章和累计记录各占一层。右侧军士正在清点军需，读完出征单，视线可以沿木门间的土路望向野外。[出征实机](game-station-expedition.jpg)
+
+仓库和书架各有一幅底图。仓库的储物格与整理工具集中在账册上，书架用陈列物区分五个档案入口。后勤分为市场和铁匠两处，摊位价签和锻造操作各有自己的材质与状态。[仓库](game-station-warehouse.jpg) · [书架](game-station-shelf.jpg) · [后勤同档对照](station-logistics-comparison.jpg) · [市场](game-station-market.jpg) · [铁匠](game-station-smithy.jpg) · [验收报告](../../docs/reports/testing/2026-11-19-base-redraw.md)
+
 ## 透明主菜单
 
 ![同一营地背景，登记簿与透明菜单的实机对照](menu-interface-comparison.jpg)
@@ -12,7 +20,7 @@
 
 ![主菜单、基地与出征准备的同档对照](field-guide-fronts-comparison.jpg)
 
-主菜单背景依次呈现边境夜营、军团登记口与灯下地图桌。夜营的帐篷和营火交代休息处，边营门边的账册交代登记用途，桌上的路线和行具交代出发准备。基地使用军营外廊和纸档，出征准备移入角色厅。墨绿标示已选项目，出征主键为朱红。[原定稿与本次重绘，上下对照](menu-originals-and-repaint.jpg) · [三张菜单实景](game-menu-three-landscapes.jpg) · [主菜单](game-field-guide-menu.jpg) · [基地](game-field-guide-camp.jpg) · [选角](game-field-guide-setup.jpg) · [英文大字号配装](game-preparation-large-en.jpg) · [科技成长](game-growth-large-zh.jpg)
+主菜单背景依次呈现边境夜营、军团登记口与灯下地图桌。夜营的帐篷和营火交代休息处，边营门边的账册交代登记用途，桌上的路线和行具交代出发准备。基地从清晨的军营木门出发，出征准备移入角色厅。墨绿标示已选项目，出征主键为朱红。[原定稿与本次重绘，上下对照](menu-originals-and-repaint.jpg) · [三张菜单实景](game-menu-three-landscapes.jpg) · [主菜单](game-field-guide-menu.jpg) · [基地](game-field-guide-camp.jpg) · [选角](game-field-guide-setup.jpg) · [英文大字号配装](game-preparation-large-en.jpg) · [科技成长](game-growth-large-zh.jpg)
 
 存档夹按档位标明当前进度，设置页按宽度调整分组布局。对局记录分两行列出结果及时间、收获，实心星标出已收藏的场次。[存档](game-slots.jpg) · [设置](game-settings.jpg) · [对局记录](game-record-archive.jpg)
 
