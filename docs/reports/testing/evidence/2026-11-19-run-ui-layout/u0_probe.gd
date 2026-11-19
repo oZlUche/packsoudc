@@ -247,6 +247,18 @@ func _map(run_: RunState) -> bool:
 		ms.toggle_bag()
 		sf = 0
 		return false
+	if not shots.has("ground_warn") and ms.has_method("open_ground_warn"):
+		if not ms.ground_warn_open():
+			var db := ItemDatabase.new(); db.load_dir()
+			run_.storage.admit(ItemInstance.create(db.get_def(&"ration")))
+			ms._on_node_pressed(run_.travel.available_moves()[0], MOUSE_BUTTON_LEFT, false)
+			sf = SETTLE - 20
+			return false
+		shot("ground_warn")
+		ms.cancel_extract()
+		for it in run_.storage.items(): run_.storage.remove((it as ItemInstance).uid)
+		sf = 0
+		return false
 	steps += 1
 	if steps > 40 or _all_done():
 		return _end("截够了 / 步数到了")
