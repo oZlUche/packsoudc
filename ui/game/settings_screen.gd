@@ -18,6 +18,7 @@ var _trace_btn: Button = null
 var _debug_btn: Button = null
 ## 157：换屏淡入开关
 var _fades_btn: Button = null
+var _dial_btn: Button = null
 ## 157 补：光标材质的按钮（材质 id → 按钮）
 var _cursor_btns: Dictionary = {}
 ## 091：背景底色的按钮（主题 id → 按钮）
@@ -73,6 +74,8 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(bg_row)
 	_fades_btn = StoneChip.toggle(UiText.t("settings.fades"), _flip.bind(&"ui_fades"))     # 157
 	col.add_child(_fades_btn)
+	_dial_btn = StoneChip.toggle(UiText.t("settings.dial_number"), _flip.bind(&"dial_number_always"))     # 局内界面布局方案 §4.1
+	col.add_child(_dial_btn)
 	var cursor_row := _hbox(8)
 	cursor_row.add_child(HeaderTag.new(UiText.t("settings.cursor")))     # 226：「光标」上段头签
 	for skin in UiCursor.SKINS:
@@ -376,6 +379,9 @@ func _refresh() -> void:
 	if _pace_btn != null:
 		_pace_btn.set_pressed_no_signal(flow.settings.faith_pace_shown)
 		_pace_btn.text = "结算页信力记录：%s" % ("开" if flow.settings.faith_pace_shown else "关")
+	if _dial_btn != null:
+		_dial_btn.set_pressed_no_signal(flow.settings.dial_number_always)
+		_dial_btn.text = UiText.t("settings.dial_number_state") % UiText.t("settings.dial_always" if flow.settings.dial_number_always else "settings.dial_low")
 	if _fades_btn != null:
 		_fades_btn.set_pressed_no_signal(flow.settings.ui_fades)
 		_fades_btn.text = UiText.t("settings.fades_state") % (UiText.t("settings.on") if flow.settings.ui_fades else UiText.t("settings.off"))

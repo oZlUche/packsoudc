@@ -6,6 +6,10 @@
 ## 停上去弹悬浮窗：「倒计时」/「倒计时还剩 N（共 M）」/「最近的撤离点倒计时剩 N 时关闭」，开着时走一步字跟着变（193 补充一：钟的数不说「步」）。
 ## 小档按 0.5 缩
 ##
+## 局内界面布局方案 §4.1：精确的剩余数平时还收在悬浮窗里（既有设计）；剩得少（[constant LOW]）时直接刻在晷面上，
+## 设置「日晷读数：始终显示」时一直刻着（[member GameSettings.dial_number_always]）。只写剩几，不写「还能走几步」——
+## 进阶多扣、负重、免费步让每一步扣的不一样，每一步实际扣几看地图点的行动预览
+##
 ## 235：栏是石刻皮时，日晷是栏皮正中那块下半圆底座（刻度在图里，[code]hud_bar[/code] 画）；这件在栏里就只画走过的扇面、指针、轴心，
 ## 落在底座的轴心上（`topbar.json` 的 `dial`：180° 在左、90° 正下、0° 在右，y 朝下），停在晷面上开悬浮窗。拖出栏照旧是上面那枚小日规
 extends HudWidget
@@ -23,6 +27,10 @@ const LOW := &"low"
 const LOW_STEPS := 5
 ## 阶段 → 悬浮窗里数字用的字色样式
 const STAGE_STYLE := {CALM: "val", HALF: "stamina", LOW: "hp"}
+## §4.1 晷面上那个数的字号（栏里 / 拖出栏的小日规）与它在轴心下方多远（半径的几成）
+const NUMBER_PX := 22
+const NUMBER_PX_SMALL := 14
+const NUMBER_DROP := 0.5
 
 var _meta: Dictionary = {}
 ## 悬浮窗是不是这一件开的（开着时走一步只换字）
@@ -153,6 +161,7 @@ func _has_point(point: Vector2) -> bool:
 
 func refresh() -> void:
 	super()
+	queue_redraw()     # §4.1：晷面上的数跟着设置 / 剩余变
 	if _tip_open:
 		var tip := _tip()
 		if tip != null:
@@ -166,6 +175,7 @@ func _draw() -> void:
 	var bar := _skin_bar()
 	if bar != null:
 		_draw_on_bar(_skin_pivot(bar))
+		_draw_number(_skin_pivot(bar), float(_dial().get("radius", 94)), NUMBER_PX)
 		return
 	var s := _scale()
 	var origin := ((size - SIZE * s) * 0.5).round()
@@ -192,6 +202,33 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 	# 4. 轴心
 	draw_texture_rect(UiTheme.art_cached(DIAL_DIR + "hub"), Rect2(origin, SIZE * s), false)
+	# 5. §4.1 读数（小日规的晷面朝上：数写在轴心上方）
+	_draw_number(origin + pivot * s, -radius * s, NUMBER_PX if s >= 1.0 else NUMBER_PX_SMALL)
+
+
+## §4.1：晷面上要不要刻剩余数 —— 剩得少，或设置了始终显示
+func shows_number() -> bool:
+	return _cd() != null and (stage() == LOW or number_always())
+
+
+## §4.1：设置「日晷读数：始终显示」（读不到设置按默认：危险时才显示）
+func number_always() -> bool:
+	var f = screen.get("flow") if screen != null else null
+	return f != null and f.settings != null and bool(f.settings.dial_number_always)
+
+
+## §4.1：剩余数，描边、按阶段着色，居中写在轴心往下 [param drop] × [constant NUMBER_DROP] 处（[param drop] 为负 = 往上）
+func _draw_number(pivot: Vector2, drop: float, px: int) -> void:
+	if not shows_number():
+		return
+	var font := get_theme_default_font()
+	if font == null:
+		return
+	var num := str(_cd().left())
+	var w := font.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var at := Vector2(pivot.x - w * 0.5, pivot.y + drop * NUMBER_DROP + px * 0.35).round()
+	draw_string_outline(font, at, num, HORIZONTAL_ALIGNMENT_LEFT, -1, px, UiTheme.OUTLINE_SIZE + 2, UiTheme.OUTLINE_COLOR)
+	draw_string(font, at, num, HORIZONTAL_ALIGNMENT_LEFT, -1, px, UiPalette.style_color(String(STAGE_STYLE[stage()]), &"dark"))
 
 
 ## 235：画在栏皮的晷面上 —— 走过的扇面（180° 扫到现在）→ 指针（图朝正下，绕轴心转 a − 90°）→ 轴心
@@ -293,4 +330,6 @@ func _ready() -> void:
 	mouse_filter = _idle_mouse_filter()
 	mouse_entered.connect(open_tip)
 	mouse_exited.connect(close_tip)
+	focus_entered.connect(open_tip)     # §4.1：键盘停到日晷上也能读到精确数
+	focus_exited.connect(close_tip)
 #endregion

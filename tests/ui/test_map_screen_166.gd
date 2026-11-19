@@ -57,11 +57,13 @@ static func run_legend(t: TestCase) -> void:
 		if MapNodeStyle.NAMES.has(ty) or MapNodeStyle.KINDS.has(ty):
 			t.check(types.has(ty), "图上有的 %s 列进去了" % ty)
 	t.eq(legend.title(), "图例", "部件标题")
-	# 作者 2026-10-13：图例白字、有内边距；232：底是双尾旗九宫格（深底），最窄 158
+	# 作者 2026-10-13：图例白字、有内边距；232：底是双尾旗九宫格（深底），展开时最窄 158
 	var box := legend.theme.get_stylebox("panel", UiTheme.PANEL_HUD) as StyleBoxTexture
 	t.check(box != null and box.texture != null, "双尾旗底")
 	t.check(box != null and box.content_margin_left >= 8 and box.content_margin_top >= 4, "有内边距，图标和字不压边框")
-	t.check(legend.custom_minimum_size.x >= 158.0, "最窄 158")
+	legend.set_expanded(true)     # 334：默认收起成一列图标，展开才是这个宽
+	t.check(legend.custom_minimum_size.x >= 158.0, "展开时最窄 158")
+	legend.set_expanded(false)
 	t.check(box != null and box.content_margin_right >= box.content_margin_left, "右边内边距不小于左边（复测 v4.78：最宽那行贴右边金线）")
 	t.eq(legend.get_meta(&"tone", &""), UiTheme.TONE_DARK, "深底（白字）")
 	t.eq(legend.theme.get_color("font_color", UiTheme.LABEL_HUD), Color.WHITE, "白字")

@@ -107,12 +107,27 @@ var badges: Dictionary = {}
 var veiled: Dictionary = {}
 ## 264 §六：筛选（`func(item: ItemInstance) -> bool`）—— 给了就把不匹配的压灰（不挪位）；不给 = 都不压。持有方设，改了 queue_redraw
 var dim_filter: Callable = Callable()
+## 局内界面布局方案 §6：查看方式 —— 普通（[constant VIEW_NORMAL]）/ 联动（[constant VIEW_LINKS]：所有道具之间真正点亮了的增益 / 受益 / 装载格，
+## 判据和平时停在一件上看的那套一样；没连上的压灰）/ 风险（[constant VIEW_RISK]：侵蚀了的写「侵蚀 n/满」、不参战的写「不参战」，其余压灰）。
+## 只改画法，不动道具、不改规则。持有方设
+const VIEW_NORMAL := &""
+const VIEW_LINKS := &"links"
+const VIEW_RISK := &"risk"
+var view_mode: StringName = VIEW_NORMAL:
+	set(v):
+		view_mode = v
+		queue_redraw()
 ## 268：快速出售的勾选模式 —— 左键单击发 [signal item_picked]、不抓（不拖）、双击不发；勾了的（[member selected]，uid → true）左下角画金勾
 var select_mode := false
 var _hover_cell := Vector2i(-1, -1)     # 274：鼠标停的格（出了棋盘 = -1）
 const BAG_OUTLINE_WIDTH := 3.0
 var selected: Dictionary = {}
 const FILTERED_ART := Color(0.4, 0.4, 0.4, 0.55)
+## §6 风险：快毁了的那行字
+const RISK_COLOR := Color("e0574f")
+const RISK_PX := 15
+const RISK_PLATE := Color(0.08, 0.07, 0.06, 0.82)
+const RISK_PLATE_INK := Color("e8dcc4")
 ## 314：拿起一件时能和它合成的那几件（uid → true，拖拽层设）：身上画一枚小锤；[member fuse_hot] 那件（确认窗开着时被压的那件）画亮的
 var fuse_marks: Dictionary = {}:
 	set(v):
@@ -481,6 +496,7 @@ func _draw() -> void:
 		_draw_idle_tints()     # 299：平时每格垫一层淡的稀有度色，压在图下面；拿起时换 239 那层
 	# 物品。休眠的信仰道具（8-4：不是激活的那个信仰）画灰、标「休眠」
 	var active_faith := FaithState.board_tag(inventory) if show_adjacency else &""
+	var linked: Dictionary = link_marks()["uids"] if view_mode == VIEW_LINKS else {}     # §6 联动：连上了的道具
 	for inst in inventory.items():
 		var item := inst as ItemInstance
 		if inventory.acts_as_bag(item.def) or veiled.has(item.uid):
@@ -491,6 +507,10 @@ func _draw() -> void:
 		# 2026-10-22（作者）：标了「不参战」的也压灰、写小字 —— 不然看不出这一场为什么没算它
 		var benched := item.is_benched()
 		var muted := dim_filter.is_valid() and not bool(dim_filter.call(item))
+		if view_mode == VIEW_RISK:
+			muted = muted or risk_note(item) == ""     # §6 风险：没风险的压灰
+		elif view_mode == VIEW_LINKS:
+			muted = muted or not linked.has(item.uid)     # §6 联动：没连上的压灰
 		var body := ItemPainter.body_color(item.def, item.rarity())
 		var edge := ItemPainter.rarity_color(item.def, item.rarity()).lightened(0.2)
 		var text_color := ItemPainter.label_color(item.def, item.rarity())
@@ -506,9 +526,17 @@ func _draw() -> void:
 		# 201：有图就画图、不写名字（170：名字在悬浮窗）；休眠 / 不参战的压到 55 % 灰；不参战再写一行小字（作者 10-26：休眠只压灰，不写「休眠」）
 		var tint := FILTERED_ART if muted else (DORMANT_ART if (dormant or benched) else Color.WHITE)
 		var note := status_note(dormant, benched)
+		var note_color := COLOR_TEXT
+		if view_mode == VIEW_RISK and risk_note(item) != "":
+			note = risk_note(item)     # §6 风险：最要紧的那条（快毁了的侵蚀红字）
+			tint = Color.WHITE
+			note_color = RISK_COLOR if risk_critical(item) else COLOR_TEXT
+		var risk_plate := view_mode == VIEW_RISK and risk_note(item) != ""
 		if ItemPainter.draw_art(self, item.def, item.rotation, anchor, cell_px, tint * ItemPainter.runs_tint(item), Transform2D.IDENTITY, ItemPainter.variant_of(item)):
-			if note != "" and _label_visible(item):
-				ItemPainter.draw_label(self, cells, anchor, cell_px, note, font, 13, COLOR_TEXT)
+			if risk_plate:
+				_draw_risk_plate(cells, anchor, note, note_color)
+			elif note != "" and _label_visible(item):
+				ItemPainter.draw_label(self, cells, anchor, cell_px, note, font, 13, note_color)
 		else:
 			ItemPainter.draw_item(self, cells, anchor, cell_px, body, edge)
 			if _label_visible(item):
@@ -538,7 +566,9 @@ func _draw() -> void:
 
 	# 邻接标记：画在物品之上、落点预览之下。
 	# 压在物品身上才看得出「这一格已经被谁占住了」—— 那正是标记点亮与否的判据。
-	if show_adjacency:
+	if show_adjacency and view_mode == VIEW_LINKS:
+		_draw_marks(link_marks()["marks"])     # §6 联动：全棋盘点亮了的格位
+	elif show_adjacency:
 		_draw_adjacency()
 
 	# 落点预览：整片染色。合法绿、会顶人黄、放不下红
@@ -735,11 +765,78 @@ func _draw_adjacency() -> void:
 				loads = BattleCompiler.load_assignments(inventory)
 				loads[-1] = -1     # 算过了（空表也只算一次）
 			_collect_markers(marks, item, profile.load_cells, profile.load_tags(), [] as Array[StringName], "load", loads)
+	_draw_marks(marks)
+
+
+func _draw_marks(marks: Dictionary) -> void:
 	for cell in marks:
 		var list: Array = marks[cell]
 		for i in list.size():
 			var m: Array = list[i]
 			_draw_marker(cell, String(m[0]), bool(m[1]), i, list.size())
+
+
+## §6 联动：所有道具点亮了的格位 `{"marks": 格 → [[种类, true]], "uids": 连上了的 uid → true}`（给的一方和收的一方都算）。
+## 和 [method _draw_adjacency] 同一套判据（[method _marker_lit]、法杖装载按 [method BattleCompiler.load_assignments]）；没点亮的不画
+func link_marks() -> Dictionary:
+	var marks := {}
+	var uids := {}
+	var loads := {}
+	for inst in inventory.items():
+		var item := inst as ItemInstance
+		if item.def == null or inventory.acts_as_bag(item.def):
+			continue
+		var profile := GrowthProfile.adjacency_of(item)
+		if profile == null:
+			continue
+		var all := {}
+		if profile.has_grant():
+			_collect_markers(all, item, profile.grant_cells, profile.grant_filter, profile.grant_filter_all, "grant")
+		if profile.has_receive():
+			_collect_markers(all, item, profile.receive_cells, profile.receive_filter, [] as Array[StringName], "receive")
+		if profile.has_load():
+			if loads.is_empty():
+				loads = BattleCompiler.load_assignments(inventory)
+				loads[-1] = -1
+			_collect_markers(all, item, profile.load_cells, profile.load_tags(), [] as Array[StringName], "load", loads)
+		for cell in all:
+			for m in all[cell]:
+				if not bool(m[1]):
+					continue
+				(marks.get_or_add(cell, []) as Array).append(m)
+				uids[item.uid] = true
+				uids[inventory.cell_uid(cell)] = true
+	return {"marks": marks, "uids": uids}
+
+
+## §6 风险：这一件的风险一句（侵蚀写「侵蚀 n/满」，不参战写「不参战」，都有写侵蚀 —— 那个会永久损毁）；没有风险空串
+## §6 风险：压在道具图下沿正中的一块深色小牌（图上的细字看不清）
+func _draw_risk_plate(cells: Array[Vector2i], anchor: Vector2, text: String, color: Color) -> void:
+	var mx := Vector2i.ZERO
+	for c in cells:
+		mx = Vector2i(maxi(mx.x, c.x), maxi(mx.y, c.y))
+	var box := Vector2(mx.x + 1, mx.y + 1) * cell_px
+	var f := UiPalette.cjk_font()
+	var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, RISK_PX).x
+	var h := float(RISK_PX) + 8.0
+	var r := Rect2(anchor + Vector2((box.x - tw) * 0.5 - 6.0, box.y - h - 6.0), Vector2(tw + 12.0, h))
+	draw_rect(r, RISK_PLATE, true)
+	var base := r.position.y + (h + f.get_ascent(RISK_PX) - f.get_descent(RISK_PX)) * 0.5
+	draw_string(f, Vector2(r.position.x + 6.0, base), text, HORIZONTAL_ALIGNMENT_LEFT, -1, RISK_PX, color if color != COLOR_TEXT else RISK_PLATE_INK)
+
+
+static func risk_note(item: ItemInstance) -> String:
+	if item == null:
+		return ""
+	var n := ItemErosion.count(item)
+	if n > 0:
+		return UiText.t("inv.risk_erosion") % [n, ItemErosion.limit(item)]
+	return UiText.t("inv.benched") if item.is_benched() else ""
+
+
+## §6 风险：再侵蚀一次就永久损毁
+static func risk_critical(item: ItemInstance) -> bool:
+	return item != null and ItemErosion.count(item) > 0 and ItemErosion.count(item) >= ItemErosion.limit(item) - 1
 
 
 func _collect_markers(

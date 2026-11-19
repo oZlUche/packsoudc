@@ -63,9 +63,13 @@ var text_size: StringName = &"medium"
 var stele_roman: bool = true
 ## 272（作者 2026-11-04）：战斗屏的战记栏开着没有（默认开；控制条上的「战记」键收合，下一场照这个）
 var battle_log_open: bool = true
+## 局内界面布局方案 §4.1：日晷上一直刻着剩余数（默认关 = 剩得少时才刻，平时停上去看悬浮窗）
+var dial_number_always: bool = false
+## 局内界面布局方案 §4.3：地图左下的图例展开着（默认收起：只有图标）
+var legend_open: bool = false
 
 ## 读回来只转成布尔的开关（字段名 = 文件里的键；文件里没有 = 字段的默认值）
-const BOOLS: Array[String] = ["loot_auto_close", "node_tooltips_preview", "unlock_all", "reveal_names", "battle_trace", "debug_mode", "faith_pace_shown", "ui_fades", "stele_roman", "battle_log_open"]
+const BOOLS: Array[String] = ["loot_auto_close", "node_tooltips_preview", "unlock_all", "reveal_names", "battle_trace", "debug_mode", "faith_pace_shown", "ui_fades", "stele_roman", "battle_log_open", "dial_number_always", "legend_open"]
 const TEXT_SIZES: Array[StringName] = [&"small", &"medium", &"large"]
 
 ## 172：认得的窗口模式；全屏 = 无边框铺满桌面（待定 4 A）
@@ -113,6 +117,8 @@ func to_dict() -> Dictionary:
 		"text_size": String(text_size),
 		"stele_roman": stele_roman,
 		"battle_log_open": battle_log_open,
+		"dial_number_always": dial_number_always,
+		"legend_open": legend_open,
 	}
 
 

@@ -14,6 +14,12 @@ const GAP := 6.0
 const TOP := 78.0
 
 static var _current: NoticeLayer = null
+## 局内界面布局方案 §10：最近记录 —— 写过的告示按先后记下（只在内存里：读档不复播、换一局清掉），暂停菜单里「最近记录」翻看。
+## 只记告示本身（本来就是给玩家看的话），不记开发日志
+const HISTORY_MAX := 30
+static var _history: Array[Dictionary] = []
+## 记录属于哪一局（[method claim_history]：换了一局就清）
+static var _history_owner: int = 0
 
 ## 动效开不开（宿主按 [method UiMotion.enabled] 设）
 var motion := false
@@ -73,6 +79,7 @@ func _exit_tree() -> void:
 func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: float = 0.0, top: float = 0.0, seconds: float = 0.0) -> void:
 	if text == "":
 		return
+	remember(text, urgent)
 	_place(beside, top)
 	var left := seconds if seconds > 0.0 else (URGENT_SEC if urgent else SHOW_SEC)
 	for l in _lines:
@@ -87,6 +94,31 @@ func push(text: String, urgent: bool = false, cap: int = MAX_LINES, beside: floa
 	_lines.append({"scroll": s, "left": left, "urgent": urgent})
 	s.open(motion)
 	visible = true
+
+
+## §10：记一句（紧挨着的同一句只记一次 —— 同一件事重复提醒不算两条）
+static func remember(text: String, urgent: bool = false) -> void:
+	if text == "":
+		return
+	if not _history.is_empty() and String(_history[-1]["text"]) == text:
+		return
+	_history.append({"text": text, "urgent": urgent})
+	while _history.size() > HISTORY_MAX:
+		_history.pop_front()
+
+
+## §10：最近记录，新的在前 `[{"text", "urgent"}]`
+static func history() -> Array[Dictionary]:
+	var out: Array[Dictionary] = _history.duplicate()
+	out.reverse()
+	return out
+
+
+## §10：这些记录归 [param owner_id]（一局的实例号）；换了主人就清空 —— 读档、新开一局都从空的开始
+static func claim_history(owner_id: int) -> void:
+	if owner_id != _history_owner:
+		_history_owner = owner_id
+		_history.clear()
 
 
 ## 收掉 [param text] 那一卷（没挂着不做事）
