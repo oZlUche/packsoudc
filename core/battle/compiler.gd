@@ -64,6 +64,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	var active_faith := inp.faith if not inp.wild else &""
 	var fighters: Array[int] = []
 	var dormant: Dictionary = {}     # uid -> true
+	var unblessed: Dictionary = {}     # 信仰重构 B：派生赐福版休眠 = 只停神力层（信力加成），基础层照常参战、邻接、生长
 	for inst in (board.items() if board != null else []):
 		var item := inst as ItemInstance
 		if item.def == null or board.acts_as_bag(item.def):
@@ -72,9 +73,12 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 		if item.is_benched():
 			continue
 		if not inp.wild and FaithState.is_dormant(item.def, active_faith):
-			if not FaithState.keeps_combat_when_dormant(item.def):
+			if FaithState.keeps_base_layer(item.def):
+				unblessed[item.uid] = true
+			elif not FaithState.keeps_combat_when_dormant(item.def):
 				continue
-			dormant[item.uid] = true
+			else:
+				dormant[item.uid] = true
 		fighters.append(item.uid)
 	fighters.sort()
 
@@ -100,7 +104,7 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	var bonus_rules: Dictionary = {}  # uid -> Array[AbilityRule]
 	for uid in fighters:
 		var def := board.get_item(uid).def
-		if inp.wild or not def.has_faith() or def.faith_bonuses.is_empty() or dormant.has(uid):
+		if inp.wild or not def.has_faith() or def.faith_bonuses.is_empty() or dormant.has(uid) or unblessed.has(uid):
 			continue
 		var tier := int(inp.faith_tiers.get(def.faith_tag(), 0))
 		var pts := int(inp.faith_points.get(def.faith_tag(), 0))
@@ -592,7 +596,7 @@ static func _lit_neighbors(
 		if other_inst.def.has_faith():
 			if active == &"?":
 				active = FaithState.board_tag(board)
-			if FaithState.is_dormant(other_inst.def, active):
+			if FaithState.is_inert(other_inst.def, active):
 				continue
 		seen[other] = true
 		found.append(other)

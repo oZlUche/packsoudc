@@ -24,12 +24,33 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v3_to_v4(d)
 			4:
 				d = _v4_to_v5(d)
+			5:
+				d = _v5_to_v6(d)
 			_:
 				break     # 没有这一步的迁移：停在这一版，下面照实报
 		v += 1
 		d["version"] = v
 	if int(d.get("version", -1)) != RunState.SAVE_VERSION:
 		push_warning("RunMigrations: 没有 v%s → v%d 的迁移，这一局作废（局外进度不受影响）" % [str(d.get("version", "?")), RunState.SAVE_VERSION])
+	return d
+
+
+## v5 → v6（信仰重构 B，交接方案 §8.2 第 3、4 条）：一个池子的信力 P 拆成信力（成长）与祈愿（消费）：
+## devotion = P，prayer = min(P, 上限)。这是一次明确的兼容补偿：不恢复历史上花掉的，不从日志猜总收益。
+## 上限按默认值（[constant FaithPower.PRAYER_CAP_DEFAULT]；迁移看不到信仰定义）。已经有 `faith_progress` 的档不动 ——
+## 重复迁移不会因为祈愿花掉了再补齐
+static func _v5_to_v6(d: Dictionary) -> Dictionary:
+	if d.get("faith_progress", null) is Dictionary:
+		d.erase("faith_power")
+		return d
+	var old: Dictionary = d.get("faith_power", {}) if d.get("faith_power", {}) is Dictionary else {}
+	var out := {}
+	for key in old:
+		var raw: Variant = old[key]
+		var p := maxi(0, int(raw)) if (raw is int or raw is float) else 0
+		out[String(key)] = {"devotion": p, "prayer": mini(p, FaithPower.PRAYER_CAP_DEFAULT)}
+	d["faith_progress"] = out
+	d.erase("faith_power")
 	return d
 
 

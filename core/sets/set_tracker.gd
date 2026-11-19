@@ -47,8 +47,8 @@ func recount() -> void:
 				continue
 			if _board.acts_as_bag(item.def):
 				continue  # 包不算套装部件，它是承载物
-			if FaithState.is_dormant(item.def, active_faith):
-				continue  # 休眠的信仰道具不计套装（8-4）
+			if FaithState.is_inert(item.def, active_faith):
+				continue  # 休眠的信仰道具不计套装（8-4）；派生赐福版只停神力层，套装照计（信仰重构 B）
 			var set_id := item.def.set_id
 			var def := db.get_def(set_id) if db != null else null
 			if def != null and def.count_mode == ItemSetDef.CountMode.DISTINCT_DEFS:

@@ -77,7 +77,7 @@ static func run_variants_and_modes(t: TestCase) -> void:
 
 
 static func run_blessing_paths(t: TestCase) -> void:
-	t.begin("095 · 赐福从哪来：战利品 / 搜索替代（激活只换那位神的、没激活随机一位）、包内每步转化（位置不动、发信号）、神坛「祈求赐福」花信力、事件后果赐福一件")
+	t.begin("095 · 赐福从哪来：战利品 / 搜索替代（激活只换那位神的、没激活随机一位）、包内每步转化（位置不动、发信号）、神坛「祈求赐福」花祈愿、事件后果赐福一件")
 	var c = NodeScreens._content()
 	var f: GameFlow = Support.flow(c, "095")
 	f.faith_defs = FaithDef.load_all()
@@ -130,12 +130,14 @@ static func run_blessing_paths(t: TestCase) -> void:
 	var fresh := ItemInstance.create(db.get_def(&"shortsword"))
 	run.storage.admit(fresh)
 	run.faith_power.add_points(&"brute", 60)
+	run.faith_power.add_prayer(&"brute", 60)     # 信仰重构 B：赐福花祈愿，不花信力
 	var bless_perk := altar.perk(&"altar_bless")
 	t.check(bless_perk != null, "1 级起神坛有「祈求赐福」")
 	if bless_perk != null:
 		altar.node = run.travel.current_id
-		t.eq(bless_perk.altar_available(run, run.current_node()), "", "信力够、包里有能赐福的（地上那把短剑）")
-		var p0 := run.faith_power.points_of(&"brute")
+		t.eq(bless_perk.altar_available(run, run.current_node()), "", "祈愿够、包里有能赐福的（地上那把短剑）")
+		var p0 := run.faith_power.prayer_of(&"brute")
+		var d0 := run.faith_power.points_of(&"brute")
 		# 赐福的是最值钱的那件（棋盘优先、其次地上）：走的那一步可能捡到了比短剑更值钱的
 		var target := Blessings.best_candidate(run.board, db, &"brute")
 		if target == null:
@@ -143,13 +145,14 @@ static func run_blessing_paths(t: TestCase) -> void:
 		var target_id: StringName = target.def.id if target != null else &""
 		var line := altar.special(bless_perk, run.current_node())
 		t.check(line.contains("成了"), "做了：%s" % line)
-		t.eq(run.faith_power.points_of(&"brute"), p0 - 40, "花了 40 信力")
+		t.eq(run.faith_power.prayer_of(&"brute"), p0 - 40, "花了 40 祈愿")
+		t.eq(run.faith_power.points_of(&"brute"), d0, "信力不扣")
 		if target == fresh:
 			t.eq(fresh.def.id, &"shortsword_brute", "地上那把短剑受了赐福")
 		else:
 			t.eq(target.def.id, Blessings.variant_id(target_id, &"brute"), "最值钱的那件（%s）受了赐福" % target_id)
-		run.faith_power.spend_points(&"brute", run.faith_power.points_of(&"brute"))
-		t.check(bless_perk.altar_available(run, run.current_node()) != "", "信力不够就做不了")
+		run.faith_power.spend_prayer(&"brute", run.faith_power.prayer_of(&"brute"))
+		t.check(bless_perk.altar_available(run, run.current_node()) != "", "祈愿不够就做不了")
 	# 事件后果
 	var ctx := run.events._event_ctx(run.current_node())
 	var another := ItemInstance.create(db.get_def(&"longsword"))

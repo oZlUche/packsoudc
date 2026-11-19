@@ -126,7 +126,7 @@ func put_on_table(uid: int) -> bool:
 	return InventoryService.transfer_auto(from, uid, _table)
 
 
-## 台上献祭的预览：{"points", "tier_after"}
+## 台上献祭的预览：{"points"（信力）, "prayer"（实际能进的祈愿）, "tier_after"}
 func preview() -> Dictionary:
 	var run := flow.run
 	var def := run.active_faith()
@@ -136,6 +136,7 @@ func preview() -> Dictionary:
 	for inst in _table.items():
 		out["points"] = int(out["points"]) + def.offering_value((inst as ItemInstance).def)
 	out["tier_after"] = def.tier_of(run.faith_power.points_of(def.id) + int(out["points"]))
+	out["prayer"] = mini(2 * int(out["points"]), run.faith_power.prayer_room(def.id))     # 信仰重构 B：和 AltarModule.offer 同一条式子，满了照实写 0
 	return out
 
 
@@ -253,7 +254,7 @@ func _refresh() -> void:
 	elif int(p["count"]) == 0:
 		_preview = UiText.t("altar.drag_hint")
 	else:
-		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"]), int(p.get("prayer", 0))]
 		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
 	ScrollKey.show_sub(_offer_btn, UiText.t("altar.offer"), line)
 	for b in _action_btns:

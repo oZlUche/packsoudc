@@ -96,7 +96,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	run.faith_power.add_points(&"brute", 100)
 	t.eq(run.active_faith_tier(), 3, "Lv.3")
 	var smite := altar.perk(&"smite")
-	t.check(smite != null and smite.prebattle_actions(run, &"elite").size() == 2 and smite.prebattle_actions(run, &"battle").size() == 2 and smite.prebattle_actions(run, &"boss").is_empty(), "立即击败：普通与精英都能（耗体力 / 耗信力两个按钮），首领不能")
+	t.check(smite != null and smite.prebattle_actions(run, &"elite").size() == 2 and smite.prebattle_actions(run, &"battle").size() == 2 and smite.prebattle_actions(run, &"boss").is_empty(), "立即击败：普通与精英都能（耗体力 / 耗祈愿两个按钮），首领不能")
 	# 献祭（AltarModule.offer：换信力；祭品由献的那一方拿走）
 	var sword: ItemInstance = null
 	for inst in run.board.items():

@@ -38,6 +38,7 @@ static func _case(t: TestCase, root: Window, type: StringName, option: StringNam
 	f.pick_spawn(int(found["entry"]))
 	Support.activate(f.run, &"charm_brute")
 	f.run.faith_power.add_points(&"brute", 200)
+	f.run.faith_power.add_prayer(&"brute", 100)     # 信仰重构 B：秒杀花祈愿
 	t.check(f.step_to(int(found["next"])), label + "：到战前准备")
 	var pre = game.overlay()
 	GameDirector.fades_allowed = motion

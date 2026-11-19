@@ -471,6 +471,7 @@ func move(from: GridInventory, uid: int, to: GridInventory,
   编译结果记 `CombatantSpec.faith`（这一场的快照，进 `BattleInputCodec`）；战后信力按它记（`FaithPower.credit` 的快照参数）。
   `FaithState.board_tag`：记了选择的棋盘按选择，没记的（组装出来的）按 `assembled_tag`。
 - **休眠** = 有信仰、不是有效的那个（不奉神时所有信仰道具都休眠）：**通常情况下完全不起作用** —— `BattleCompiler.compile` 第一步跳过它（不参战、不给也不吃邻接），`SetTracker` 不计它；占格照占、价值照算（087 的 `dormant_keeps_combat` 例外照旧）。
+  **基础层与赐福层**（信仰重构 B，报告 330）：普通道具派生的赐福版（`ItemDef.is_blessed()`）休眠时只停神力层（`faith_bonuses`），基础层照常 —— 属性、规则、邻接、套装、生长、不压灰（`FaithState.keeps_base_layer` / `is_inert`；`dormant_uids` 只列整件休眠的）。手写信仰道具照上一条。
 - **置入序号**（`ItemInstance.placed_seq`）不再决定信仰，只剩晶石装载归属（171「后来者优先」）读它；`FaithState.legacy_last_placed_tag` 只给旧档迁移（一局档 v4 → v5 读档时推一次选择）。
 - **改信锁**：还没站上出生点、这一局结束、商店桌上有没成交的东西时不能改（`RunState.faith_switch_refusal`）；其余时间免费、不加冷却。
 - **敌人只信一个神**（`EnemyLoadout.single_faith`）：信仰 = 组装偏好标签里的 `faith:xxx`，没有就是招牌 / 第一件信仰道具的，别的信仰的换掉；
@@ -484,6 +485,9 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - `FaithPower`（`run.faith_power`）每个信仰一个池子，只给此刻激活的信仰记；`RunState` 接线把一局里的事喂进去（`GridInventory.placed`、`Wallet.changed`、`battle_finished`、`travel.moved`、搜索会话的 `searched`、`NodeEvents.option_chosen`）。跟着存档走。
 - 道具的额外功能写在道具上：`ItemDef.faith_bonuses`（`FaithBonus`：`tier`、`mods`、`rules`），只许信仰道具有；`BattleCompiler.compile` 多两个参数 `faith_tiers`（标签 → 阶）与 `faith_points`（标签 → 点数，095 的 scaled 模式用），tier ≤ 现在的并进那件道具 —— 仍是纯函数。
   编译之后 `RunState.compile_player` 还会套一次 `FaithPerk`（093，编译期钩子改 spec），所以战斗单位 = 编译器输出 + perk；这一层在 097 里列为待收口。
+- **信力与祈愿分开**（信仰重构 B，报告 330）：`FaithPower.points` 是信力（devotion，只增不减，阶只看它），`FaithPower.prayer` 是祈愿（可花，`prayer_cap` 封顶，默认 `PRAYER_CAP_DEFAULT` = 100）。
+  祈愿来源：`battle_finished` 有效战斗 `PRAYER_PER_BATTLE`（秒杀不给）、`AltarModule.offer` min(2V, 余量)。只有 `spend_prayer` 能花（祈求赐福、秒杀），不再有扣信力的路径。
+  存档键 `faith_progress` {神: {devotion, prayer}}（一局档 v6；v5 → v6 拆成 devotion = P、prayer = min(P, 100)）。节奏表的行多 `prayer` / `prayer_total`。
 - 切换信仰不清别的池子；继承（作者说可以）还没做。不信者、新教留空（作者定）。
 - **信物里必然有一枚 1 格护符**（104，作者定）：每位诸神至少一件 1 格、带 `faith_anchor` 的道具（新教是占位，不查）；导入器批量导入完了守（`ContentImporter.validate_faith_charms`）。
 - 104：「首次」「获得」这类判断**不放在行为构件里**（构件是共享的 Resource，不能记状态）：`RunState` 记 `owned_uids`（对过账的实例）/ `acquired_ids` / `placed_ids`（种类），
