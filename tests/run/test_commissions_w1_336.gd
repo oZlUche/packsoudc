@@ -119,7 +119,7 @@ static func run_event_options(t: TestCase) -> void:
 	t.not_null(ev, "撤离点事件")
 	if ev == null:
 		return
-	t.eq(ev.options.size(), 4, "四项（后两项不满足就不显示）")
+	t.eq(ev.options.size(), 5, "五项（后三项不满足就不显示；第五项是托付）")
 	t.check(ev.options[2].hide_when_locked and ev.options[3].hide_when_locked, "查验 / 交信不满足就不显示")
 	t.check(ev.options[1].outcomes.any(func(o) -> bool: return o is RevisitLater), "第二项仍是「再看看」")
 	var c := TestSupport.load_content("free_mode")

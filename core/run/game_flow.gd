@@ -1354,13 +1354,7 @@ func save_and_quit() -> bool:
 
 ## 287：站在 [param node] 上能不能「托付」—— 人站在这儿、免费撤离点、出口没关、这一局装了托付（[SafeModule]）
 func entrust_open(node: MapNode) -> bool:
-	if run == null or run.is_over() or node == null or node != run.current_node() or NodeEvents.effective_type(node) != &"extract" or PaidExtracts.fee_of(node) > 0:
-		return false
-	var cd := CountdownModule.of(run)
-	if cd != null and cd.extract_closed(node):
-		return false
-	var safe := SafeModule.of(run)
-	return safe != null and safe.is_open()
+	return run != null and not run.is_over() and node != null and node == run.current_node() and run.hooks.entrust_open(node)
 
 
 ## 287：在免费撤离点 [param node] 上开托付屏（就是 092 的保险箱屏）。开不了返回 false
