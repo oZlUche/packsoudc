@@ -383,11 +383,14 @@ static func cjk_font() -> Font:
 	return _font_for("body", func() -> Font: return _wrap(FONT_BODY, system_font()))
 
 
-## 顶栏读数：引擎内置 Open Sans SemiBold 的等宽数字，汉字沿用正文的思源宋体 Medium。
+## 顶栏读数：Cinzel Bold 碑刻数字使用等宽字位；汉字和缺字沿用思源宋体 Medium。
 static func hud_readout_font() -> Font:
 	return _font_for("hud_readout", func() -> Font:
 		var f := FontVariation.new()
-		f.base_font = ThemeDB.fallback_font
+		f.base_font = font_file(FONT_NUMERAL)
+		if f.base_font == null:
+			return cjk_font()
+		f.opentype_features = {&"tnum": 1, &"kern": 0}
 		f.fallbacks = [cjk_font()]
 		return f)
 

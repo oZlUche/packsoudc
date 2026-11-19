@@ -120,7 +120,7 @@ const SKILL_NAME_INK := Color("8a3b12")
 const FLAW_NAME_INK := Color("4a4f57")
 const SKILL_TEXT_SIZE := 17
 ## 166：地图屏的顶端栏（[code]hud_bar[/code] 部件的底）、
-## 栏里的图标按钮（[IconButton]：背包、放大镜、主动技能；按下态走这个变体）
+## 栏里的图标按钮（[IconButton]：背包、主动技能；按下态走这个变体）
 const PANEL_HUD_BAR := &"PanelHudBar"
 const BUTTON_ICON := &"ButtonIcon"
 ## 167：整颗按钮就是一张图（三态图自己画悬停与按下，[method IconButton.make_art]）—— 各态都没有底

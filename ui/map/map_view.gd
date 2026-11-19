@@ -180,6 +180,7 @@ var _march: float = 0.0
 var _hop: Dictionary = {}
 ## 落地后过了几秒（-1 = 没在落地）
 var _land_t: float = -1.0
+var _pawn_mask: BitMap
 var _follow_tween: Tween = null
 
 ## 画布 → 屏幕：screen = canvas * zoom + pan
@@ -490,6 +491,23 @@ func node_at(p: Vector2) -> int:
 			continue     # 096：遮罩下只有出生点能点中
 		if (pos[id] as Vector2).distance_to(p) <= reach:
 			return int(id)
+	# 棋子头部在节点圆之外。先保留相邻节点的圆形命中，再按棋子的实心像素补上它。
+	if not spawn_mask and current_id >= 0 and _hop.is_empty() and pos.has(current_id):
+		var rect := pawn_rect(to_screen(pos[current_id]))
+		var screen_point := to_screen(p)
+		if rect.has_point(screen_point):
+			if _pawn_mask == null:
+				var art := UiTheme.art_cached(UiTheme.ART_MAP_PAWN)
+				var img := art.get_image() if art != null else null
+				if img != null:
+					if img.is_compressed():
+						img.decompress()
+					_pawn_mask = BitMap.new()
+					_pawn_mask.create_from_image_alpha(img, 0.35)
+			if _pawn_mask != null:
+				var pixel := Vector2i((screen_point - rect.position) / rect.size * Vector2(_pawn_mask.get_size()))
+				if _pawn_mask.get_bitv(pixel):
+					return current_id
 	return -1
 
 

@@ -6,11 +6,11 @@
 | `serif_bold.otf` | 思源宋体 Noto Serif CJK SC **Black**（文件名沿用） | 2.003 | 粗体：名字、数字、富文本 `[b]`（`cjk_font_bold()`） |
 | `zhuque_fangsong.ttf` | 朱雀仿宋 Zhuque Fangsong（github.com/TrionesType/zhuque） | 0.212 技术预览 | 标题、名牌、叠层标题条（`title_font()`） |
 | `display_heavy.otf` | 寒蝉锦书宋 Heavy ChillJinshuSong Heavy（github.com/Warren2060），子集改名 **PackSDC Display** | 2.000 | 大标题：章节名、宝箱屏说明（`display_font()`，变体 `LabelDisplay`） |
-| `cinzel_bold.ttf` | Cinzel Bold（github.com/NDISCOVER/Cinzel，Google Fonts） | 2.000 | 224：结算账单的数字（`numeral_font()`）。只裁数字、I V X 和 `+ − - % / · —` 空格，不按字集裁 |
+| `cinzel_bold.ttf` | Cinzel Bold（github.com/NDISCOVER/Cinzel，Google Fonts） | 2.000 | 顶栏读数与结算账单的数字（`numeral_font()`）。只裁数字、I V X 和 `+ − - % / · —` 空格，不按字集裁 |
 
-顶栏的金币与信力读数使用 Godot 自带的 Open Sans SemiBold，汉字由项目思源宋体 Medium 补足。组件移出顶栏后恢复其原主题字体。此组合由 `UiPalette.hud_readout_font()` 定义。
+顶栏金币与信力的数字使用 Cinzel Bold。子集增加了 OpenType 等宽数字特性（tnum），使同位数的读数等宽，结算账单沿用原字宽。汉字由项目思源宋体 Medium 补足。组件移出顶栏后恢复其原主题字体。此组合由 `UiPalette.hud_readout_font()` 定义。
 
-五个文件四款字体，都是 SIL Open Font License 1.1，授权原文在 `LICENSES/`，随游戏一起分发。
+五个文件四款字体，都是 SIL Open Font License 1.1，授权原文在 `LICENSES/`，随游戏一起分发。Cinzel 的许可证允许嵌入付费游戏、修改和再分发。分发字体时须保留版权声明和 OFL 1.1，修改后的字体也沿用该许可证。字体不可单独出售，游戏代码与美术可使用各自的许可。[Cinzel 授权原文](LICENSES/OFL_Cinzel.txt)
 
 ## 子集与改名
 

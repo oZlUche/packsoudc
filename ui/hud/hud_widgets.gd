@@ -14,7 +14,6 @@ const KINDS := {
 	&"hud_bar": "res://ui/hud/widgets/hud_bar.gd",
 	&"legend": "res://ui/hud/widgets/legend_widget.gd",
 	&"dev_drawer": PART,
-	&"reopen_button": PART,
 	&"skills": PART,
 	&"routes": PART,
 }
@@ -25,7 +24,7 @@ const DEV_ONLY: Array[StringName] = [&"dev_drawer"]
 const BAR_ENDS := {&"menu_end": &"left", &"bag_end": &"right"}
 ## 屏幕那几块的中文名（摆读数时没内容的露这个名字）
 const PART_TITLES := {
-	&"dev_drawer": "调试台", &"reopen_button": "放大镜", &"skills": "技能", &"routes": "路线",
+	&"dev_drawer": "调试台", &"skills": "技能", &"routes": "路线",
 }
 
 

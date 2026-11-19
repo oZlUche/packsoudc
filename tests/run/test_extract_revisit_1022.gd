@@ -1,5 +1,5 @@
 ## 作者 2026-10-22：序章撤离点第一次选「再整理一下」，走开再回来就不再弹撤离 —— 卡死。
-## 撤离点的「先不撤」一律是「先回地图，回来再弹」（revisit_later），这个点不算用过；站着点节点 / 放大镜也能再弹
+## 撤离点的「先不撤」一律是「先回地图，回来再弹」（revisit_later），这个点不算用过；站着点节点或按 N也能再弹
 extends RefCounted
 
 const Prologue := preload("res://tests/run/test_prologue.gd")
@@ -46,7 +46,7 @@ static func run_prologue_extract_again(t: TestCase) -> void:
 
 
 static func run_reopen_on_the_spot(t: TestCase) -> void:
-	t.begin("作者 10-22 · 撤离点选「再整理一下」：站着点节点 / 放大镜就再弹撤离（不用走开）")
+	t.begin("作者 10-22 · 撤离点选「再整理一下」：站着点节点或按 N 就再弹撤离（不用走开）")
 	var c := Prologue._content()
 	var f := Support.flow(c, PREFIX)
 	f.chapters = [c.prologue] as Array[ChapterDef]
@@ -63,8 +63,14 @@ static func run_reopen_on_the_spot(t: TestCase) -> void:
 	t.check(s.events.pending_event() != null and s.events.pending_event().id == &"tut_extract", "到了撤离点：弹撤离")
 	t.check(f.choose_event(1), "选「再整理一下」")
 	t.eq(f.screen, GameFlow.Screen.MAP, "回地图")
-	t.check(f.can_reopen(), "放大镜亮着：有可开的")
-	t.check(f.reopen_node(), "点节点 / 放大镜")
+	t.eq(RunSave.write(s, f.save_path), OK, "按现有存档格式保存待重访的撤离点")
+	var resumed := Support.flow(c, PREFIX, 10000.0, null, true)
+	resumed.chapters = [c.prologue] as Array[ChapterDef]
+	t.check(resumed.continue_run(), "从存档继续")
+	f = resumed
+	s = f.run
+	t.check(f.can_reopen(), "读档后当前节点仍有可重开的内容")
+	t.check(f.reopen_node(), "点节点或按 N")
 	t.eq(f.screen, GameFlow.Screen.EVENT, "撤离又弹出来了")
 	t.check(s.events.pending_event() != null and s.events.pending_event().id == &"tut_extract", "是撤离事件")
 	t.check(f.choose_event(0), "撤离")

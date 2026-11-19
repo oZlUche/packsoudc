@@ -52,4 +52,5 @@ for path in sys.argv[1:]:
 PY
 # 224：账单数字 Cinzel Bold（罗马碑刻体，OFL）—— 不按字集裁，只留数字、I V X 和 + − - % / · — × 空格（225：包架角标「×n」）（汉字不走它，缺的走思源宋体 Bold）
 pyftsubset "$SRC/Cinzel-Bold.ttf" --text="0123456789IVX+−-%/·—× " --layout-features='*' --name-IDs='*' --output-file="$OUT/cinzel_bold.ttf"
+python3 tools/cinzel_tabular.py "$OUT/cinzel_bold.ttf"
 printf '%s → %s（%s 字节）\n' "$SRC/Cinzel-Bold.ttf" "$OUT/cinzel_bold.ttf" "$(wc -c < "$OUT/cinzel_bold.ttf")"

@@ -61,10 +61,15 @@ static func frame_skin(t: TestCase, root: Window) -> void:
 	var readout_size := wallet._text.get_theme_font_size("font_size")
 	t.eq(wallet._text.get_theme_font("font"), readout, "顶栏货币使用读数字体")
 	t.eq(host.widget(&"faith")._text.get_theme_font("font"), readout, "信仰沿用同一读数字体")
+	t.eq((readout as FontVariation).base_font, UiPalette.font_file(UiPalette.FONT_NUMERAL), "顶栏数字使用 Cinzel Bold")
 	t.eq(readout.fallbacks[0], UiPalette.cjk_font(), "中英混排的汉字沿用正文")
 	var numeral_width := readout.get_string_size("0", HORIZONTAL_ALIGNMENT_LEFT, -1, readout_size).x
 	for digit in "123456789":
 		t.eq(readout.get_string_size(digit, HORIZONTAL_ALIGNMENT_LEFT, -1, readout_size).x, numeral_width, "%s 与 0 等宽" % digit)
+	t.eq(readout.get_string_size("1111", HORIZONTAL_ALIGNMENT_LEFT, -1, readout_size).x,
+			readout.get_string_size("8080", HORIZONTAL_ALIGNMENT_LEFT, -1, readout_size).x, "货币滚数的四位数等宽")
+	var bill := UiPalette.numeral_font()
+	t.check(bill.get_string_size("1111").x < bill.get_string_size("8080").x, "结算仍使用 Cinzel 原来的比例数字")
 	t.check(readout.get_string_size("W").x > readout.get_string_size("i").x, "英文字母按字形取宽")
 	t.eq(host.overhang(), 124.0, "告示卷让到下凸的半圆石缘以下")
 	host.layout.entry_of(&"wallet")["anchor"] = "top_left"
@@ -202,7 +207,7 @@ static func frame_notice_top(t: TestCase, root: Window) -> void:
 static func run_layout(t: TestCase) -> void:
 	t.begin("235 · 右槽小背包钮退役：登记表与默认布局都没有；旧布局文件里的 bag_button 静默丢掉，别的摆法照用（不整份回默认）")
 	t.check(not HudWidgets.has(&"bag_button") and HudLayout.default_for("map").entry_of(&"bag_button").is_empty(), "没有 bag_button")
-	t.eq(HudLayout.BAR_RIGHT, [&"reopen_button", &"skills", &"dev_drawer"] as Array[StringName], "右槽：放大镜、技能、调试台箭头")
+	t.eq(HudLayout.BAR_RIGHT, [&"skills", &"dev_drawer"] as Array[StringName], "右槽：技能、调试台箭头")
 	var problems: Array[String] = []
 	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "top_left", "offset": [40, 120]}, {"id": "bag_button", "anchor": "bar_right"}]}, problems)
 	t.check(old != null and problems.is_empty() and old.entry_of(&"bag_button").is_empty(), "读得进来、不报错、没有 bag_button（%s）" % "；".join(problems))

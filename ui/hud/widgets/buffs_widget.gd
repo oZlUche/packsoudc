@@ -8,7 +8,10 @@ func title() -> String:
 
 func watch() -> Array[Signal]:
 	var mod := BuffModule.of(run)
-	return ([mod.buffs_changed] if mod != null else []) as Array[Signal]
+	var signals: Array[Signal] = []
+	if mod != null:
+		signals.append(mod.buffs_changed)
+	return signals
 
 
 func _parts() -> Array[String]:

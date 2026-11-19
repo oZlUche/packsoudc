@@ -37,7 +37,7 @@ var entries: Array[Dictionary] = []
 
 ## 166（作者定）：地图屏 = 横贯顶部的顶端栏（`hud_bar`）+ 栏里三个槽：
 ## 左槽第一行体力 / 货币 / 信仰（两倍档），第二行 buff / 侵蚀（小档；v5.62：负重与距离两件读数删了）；中槽倒计时（大档）；
-## 右槽放大镜 / 主动技能 / 调试台箭头（235：背包并进栏的右头）。左下角路线在上、图例在下，右下角腰带。
+## 右槽主动技能 / 调试台箭头（235：背包并进栏的右头）。左下角路线在上、图例在下，右下角腰带。
 ## 日志与「地上 N 件」不再是部件（在调试台里），撤离按钮与「存档并回主菜单」删了（撤离点的事件屏里撤、进点自动存档）
 static func default_for(p_screen: String) -> HudLayout:
 	var l := HudLayout.new()
@@ -58,10 +58,10 @@ static func default_for(p_screen: String) -> HudLayout:
 
 
 ## 166：顶端栏右槽（自左向右）
-const BAR_RIGHT: Array[StringName] = [&"reopen_button", &"skills", &"dev_drawer"]
+const BAR_RIGHT: Array[StringName] = [&"skills", &"dev_drawer"]
 ## 退役的组件：旧布局文件里读到就静默丢掉（不算坏文件、不整份回默认）。235：右槽小背包钮并进顶端栏右头；
 ## v5.62：默认藏着的「距离」「负重」两件读数删了（负重看背包界面里的「负重 X / Y」那一行，[InventoryPanel]）
-const RETIRED: Array[StringName] = [&"bag_button", &"distances", &"encumbrance"]
+const RETIRED: Array[StringName] = [&"bag_button", &"distances", &"encumbrance", &"reopen_button"]
 
 
 ## 默认藏不藏：主动技能藏着（166 补充一，[constant RunSkills.ACTIVE_HIDDEN]）时的技能按钮

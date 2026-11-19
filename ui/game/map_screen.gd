@@ -5,7 +5,7 @@
 ## 所有动作都是公开方法，鼠标只是调它们；测试直接调。
 ## 150 补 1：原来的右栏没了 —— 按钮、技能、路线、调试台箭头都是这一屏的「部件」（[method hud_part]），装进读数层的组件里按布局摆。
 ## 166（作者定）：地图铺满整屏，读数浮在上面（顶端栏、左下图例与路线、右下腰带；地图按 [method HudHost.content_inset] 躲开它们）；
-## 背包 / 放大镜 / 主动技能是顶端栏右槽的图标按钮；撤离按钮删了（撤离点的事件屏里有「撤离」），「存档并回主菜单」删了（进点自动存档，
+## 背包在顶端栏右头，主动技能是右槽的图标按钮；撤离按钮删了（撤离点的事件屏里有「撤离」），「存档并回主菜单」删了（进点自动存档，
 ## 暂停菜单「回主菜单」前静默存一次）；日志与「地上 N 件」挪进调试台，调试台盖在地图上、顶缘在顶端栏下面；序章开头的静态教程（[CoachOverlay]）
 extends GameScreen
 
@@ -37,7 +37,6 @@ var _routes_box: VBoxContainer
 var _log: RichTextLabel
 ## 166：调试台里的「地上 N 件」
 var _ground_line: Label
-var _reopen_btn: IconButton
 var _skills_box: HBoxContainer
 ## 166：序章开头的静态教程（开着时盖在最上面）
 var _coach: CoachOverlay = null
@@ -112,7 +111,8 @@ func pick_spawn(id: int) -> bool:
 	_view.bold_route = _route_index_of_entry(id)
 	_after_move()
 	_rebuild_routes()
-	_say("出发了。点相邻的点走一步；B 开背包")
+	_say(UiText.t("map.spawn_ready"))
+	_maybe_coach.call_deferred()
 	return true
 
 
@@ -825,8 +825,6 @@ func _after_move() -> void:
 	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
-	_reopen_btn.disabled = not flow.can_reopen()
-	_reopen_btn.tooltip_text = UiText.t("map.lens_tip") % UiText.t("map.reopen_hint" if flow.can_reopen() else "map.reopen_none")
 
 
 func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
@@ -869,6 +867,8 @@ func _update_tooltip(id: int) -> void:
 	var hunt := _hunter_tip(id)     # 134：站在这个点上、看得见的猎手输了会怎样（感知之后才说）
 	if hunt != "":
 		stash = hunt if stash == "" else stash + "\n" + hunt
+	if id == _run.travel.current_id and flow.can_reopen():
+		stash += ("\n" if stash != "" else "") + UiText.t("map.current_reopen")
 	if not flow.tooltips_enabled():
 		if stash == "":
 			_tip.release()
@@ -1078,12 +1078,6 @@ func _build_parts() -> void:
 		_style_tablet_action(_drawer.arrow)
 	# 作者 2026-10-12：提示行（章节、种子、在哪个点、操作说明，「布局已保存」这类回话）挪进调试台，不再是部件
 	_status = _wrapped("", 12, UiPalette.DIM, PART_WIDTH)
-	# 090（作者定）：三个互动按键放大到 300%
-	# 166（作者定）：「回到这个点」是顶端栏里的图标按钮（放大镜），快捷键照旧。235：背包是栏的右头（[method hud_end]）
-	_reopen_btn = IconButton.make("lens", UiText.t("map.lens"), UiText.t("map.lens"), UiText.t("map.reopen_hint"), func(): reopen(), "N")
-	_reopen_btn.disabled = true
-	_part(&"reopen_button", _reopen_btn)
-	_style_tablet_action(_reopen_btn)
 	_skills_box = _hbox(4)
 	_part(&"skills", _skills_box)
 	_routes_box = _vbox(6)
@@ -1094,7 +1088,7 @@ func _build_parts() -> void:
 	_ground_line = _label("", 13, UiPalette.FG)
 
 
-## 顶栏两枚小键共用浅石与青铜角刻；取原按钮内距，以保留热区与排版。
+## 调试台按钮使用浅石与青铜角刻；取原按钮内距，以保留热区与排版。
 func _style_tablet_action(button: Button) -> void:
 	var tablet := UiTheme.art_cached("hud/topbar/action_tablet")
 	if tablet == null:
@@ -1321,9 +1315,15 @@ func show_coach(replay: bool = false) -> bool:
 		return false
 	if _drawer != null and replay:
 		_drawer.set_open(false)
+	if steps.any(func(step: Dictionary): return step["target"] == "current_node"):
+		if _view.current_id < 0:
+			return false     # 老存档可能还在选出生点；选好才有可指的棋子。
+		var pawn := _view.pawn_at()
+		if not pawn.is_empty() and not _view.visible_rect().encloses(_view.pawn_rect(pawn["at"])):
+			_view.focus(_view.current_id)
 	_coach = CoachOverlay.new()
 	_coach.font = font
-	_coach.target_rect = func(id: StringName) -> Rect2: return _hud_host.rect_of(id)
+	_coach.target_rect = _map_coach_rect
 	add_child(_coach)
 	_coach.flow = flow
 	_coach.closed.connect(func(): _coach = null)
@@ -1333,6 +1333,13 @@ func show_coach(replay: bool = false) -> bool:
 			flow.save_meta())
 	_coach.start(steps)
 	return true
+
+
+func _map_coach_rect(id: StringName) -> Rect2:
+	if id == &"current_node":
+		var pawn := _view.pawn_at()
+		return _view.get_global_transform() * _view.pawn_rect(pawn["at"]) if not pawn.is_empty() else Rect2()
+	return _hud_host.rect_of(id)
 
 
 func coach() -> CoachOverlay:

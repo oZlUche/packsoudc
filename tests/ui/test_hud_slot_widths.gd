@@ -31,7 +31,7 @@ static func frame_stable_readouts(t: TestCase, root: Window) -> void:
 		host.arrange()
 		var skills := host.widget(&"skills") as HudPartWidget
 		t.eq(skills.visible, not run.skills.active_skills().is_empty(), "%s：实际主动技能有槽，被动不占位" % character)
-		var slots: Array[StringName] = [&"vitality", &"wallet", &"faith", &"countdown", &"reopen_button", &"dev_drawer", &"buffs", &"erosion"]
+		var slots: Array[StringName] = [&"vitality", &"wallet", &"faith", &"countdown", &"dev_drawer", &"buffs", &"erosion"]
 		if skills.visible:
 			slots.append(&"skills")
 		var before := {}
@@ -49,8 +49,7 @@ static func frame_stable_readouts(t: TestCase, root: Window) -> void:
 		t.eq(stone.size.x, float(UiTheme.art_cached("hud/topbar/dial_base").get_width()), "留出整块日晷及阴影宽")
 		for id in [&"vitality", &"wallet", &"faith", &"buffs", &"erosion"]:
 			t.check(host.widget(id).get_rect().end.x <= stone.position.x - HudHost.GAP, "%s：%s 在日晷左侧" % [character, id])
-		for id in [&"reopen_button", &"dev_drawer"]:
-			t.check(host.widget(id).position.x >= stone.end.x + HudHost.GAP, "%s：%s 在日晷右侧" % [character, id])
+		t.check(host.widget(&"dev_drawer").position.x >= stone.end.x + HudHost.GAP, "%s：调试台在日晷右侧" % character)
 		if skills.visible:
 			t.check(skills.position.x >= stone.end.x + HudHost.GAP, "主动技能与晷盘分开")
 		var arrow := map._drawer.arrow
