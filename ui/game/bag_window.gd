@@ -302,14 +302,12 @@ func _build_views() -> void:
 	views.alignment = FlowContainer.ALIGNMENT_CENTER
 	_canvas.add_child(views)
 	var group := ButtonGroup.new()
-	for pair in [[InventoryView.VIEW_NORMAL, "inv.view_normal", ""], [InventoryView.VIEW_LINKS, "inv.view_links", "inv.view_links_tip"],
-			[InventoryView.VIEW_RISK, "inv.view_risk", "inv.view_risk_tip"]]:
+	# 游戏测试 v6.51：英文大字号折成两行时，下一行签的悬浮说明盖住上一行、点不到。签名自己就说清了，不配说明
+	for pair in [[InventoryView.VIEW_NORMAL, "inv.view_normal"], [InventoryView.VIEW_LINKS, "inv.view_links"], [InventoryView.VIEW_RISK, "inv.view_risk"]]:
 		var mode: StringName = pair[0]
 		var b := StoneChip.make(UiText.t(pair[1]), func(): set_view(mode))
 		b.button_group = group
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if String(pair[2]) != "":
-			b.tooltip_text = UiText.t(pair[2])
 		_view_btns[mode] = b
 		views.add_child(b)
 	set_view(InventoryView.VIEW_NORMAL)

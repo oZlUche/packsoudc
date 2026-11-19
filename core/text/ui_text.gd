@@ -1343,8 +1343,6 @@ const TEXT := {
 	"inv.view_normal": {"zh": "普通", "en": "Normal"},
 	"inv.view_links": {"zh": "联动", "en": "Links"},
 	"inv.view_risk": {"zh": "风险", "en": "Risk"},
-	"inv.view_links_tip": {"zh": "看所有道具之间真正连上的增益、受益与装载", "en": "Show every boost, benefit and load link that is actually active"},
-	"inv.view_risk_tip": {"zh": "只亮出被侵蚀的与不参战的道具", "en": "Highlight eroded and benched items only"},
 	"item.belt_use_map": {"zh": "地图上用：%s", "en": "Use on the map: %s"},
 	"item.belt_use_prebattle": {"zh": "战前准备屏上用：%s", "en": "Use on the Pre-battle screen: %s"},
 	"item.belt_use_any": {"zh": "地图上或战前准备屏上用：%s", "en": "Use on the map or the Pre-battle screen: %s"},

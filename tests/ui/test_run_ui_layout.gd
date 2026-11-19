@@ -114,6 +114,8 @@ static func frame_bag_views(t: TestCase, root: Window) -> void:
 		game.queue_free()
 		return
 	var view: InventoryView = win.panel.board_view
+	for b in win.views.get_children():
+		t.eq((b as Control).tooltip_text, "", "查看签不配悬浮说明（英文大字号折两行时会盖住上一行）")
 	t.eq(win.view_mode(), InventoryView.VIEW_NORMAL, "默认：普通")
 	var item: ItemInstance = null
 	for inst in run.board.items():
@@ -137,9 +139,48 @@ static func frame_bag_views(t: TestCase, root: Window) -> void:
 			t.check(bool(m[1]), "联动只画点亮了的（%s）" % str(cell))
 	for uid in links["uids"]:
 		t.check(run.board.has_item(int(uid)), "联动里的 %d 在棋盘上" % int(uid))
-	win.set_view(InventoryView.VIEW_NORMAL)
+	(win.views.get_child(2) as BaseButton).pressed.emit()
+	t.eq(view.view_mode, InventoryView.VIEW_RISK, "点「风险」签：切过去")
+	(win.views.get_child(0) as BaseButton).pressed.emit()
+	t.eq(view.view_mode, InventoryView.VIEW_NORMAL, "接着点「普通」签：切回来")
 	if not before.is_empty():
 		t.eq(run.board.to_dict(), before, "切了三种查看，棋盘一格没动")
+	game.queue_free()
+	Support.cleanup(PREFIX)
+
+
+static func frame_loot_partial(t: TestCase, root: Window) -> void:
+	t.begin("U3 · 全部拾取部分成功：背包塞满时，战利品屏告示写几件进了背包、几件落在地上")
+	var got := _map(root)
+	var game = got[0]
+	var flow: GameFlow = got[1]
+	var run: RunState = flow.run
+	if run == null:
+		t.check(false, "进了地图")
+		game.queue_free()
+		return
+	var db := ItemDatabase.new()
+	db.load_dir()
+	var ration := db.get_def(&"ration")
+	var guard := 0
+	while guard < 400 and run.board.try_add(ItemInstance.create(ration)):
+		guard += 1
+	t.check(guard > 0 and not run.board.try_add(ItemInstance.create(ration)), "背包塞满了（塞了 %d 份口粮）" % guard)
+	var loot := GridInventory.new(Vector2i(6, 6), 0, false)
+	for i in 3:
+		loot.try_add(ItemInstance.create(ration))
+	run.pending_loot = loot
+	flow._go(GameFlow.Screen.LOOT, {"container": loot})
+	var screen = game.overlay()     # 战利品屏叠在地图上
+	t.check(screen != null and screen.has_method("take_all"), "战利品屏开着")
+	if screen == null or not screen.has_method("take_all"):
+		game.queue_free()
+		return
+	screen.take_all()
+	var take: Dictionary = screen.last_take()
+	t.eq([int(take.get("board", -1)), int(take.get("storage", -1))], [0, 3], "一件也进不去，三件落地")
+	var h := NoticeLayer.history()
+	t.check(not h.is_empty() and String(h[0]["text"]) == UiText.t("loot.took_partial") % [0, 3], "告示：%s" % (String(h[0]["text"]) if not h.is_empty() else "（没有）"))
 	game.queue_free()
 	Support.cleanup(PREFIX)
 
