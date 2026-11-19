@@ -94,7 +94,7 @@ static func _weapon_costs(d: Dictionary, items: ItemDatabase) -> Array[float]:
 
 
 static func run_variants(t: TestCase) -> void:
-	t.begin("242 补：兵刃四路 —— 同一份道具同样摆，只差加成：操练武器耐力消耗 ×0.8、金阶军功牌钉在 (3, 2) 圈里的武器再 −10%、日神带 5 层灵巧；极差表不算它们，另出表五")
+	t.begin("242 补：兵刃四路 —— 同一份道具同样摆，只差加成：操练武器耐力消耗 ×0.8、金阶军功牌钉在 (3, 2) 圈里的武器再 −10%、日神那路（信仰重构 D 起暂无加成）；极差表不算它们，另出表五")
 	var items := _items()
 	var pool := _pool()
 	var brackets: Array[int] = [0, 5]
@@ -125,8 +125,8 @@ static func run_variants(t: TestCase) -> void:
 		t.eq(b.item_count(), (ring["layout"] as Array).size(), tag + "：按记录原样摆得回去（牌也在）")
 		var costs := _weapon_costs(ring, items)
 		t.check(is_equal_approx(costs[0], 0.7), tag + "：圈里的武器 ×0.7（操练 −20%% + 牌边 −10%%）%s" % str(costs))
-		t.eq(int((DummyBuilder.compile(faith, items).axes as Dictionary).get(StatAxes.STAMINA_COST, 0)), 5, tag + "：日神开战带 5 层灵巧")
-		t.check(_weapon_costs(faith, items).all(func(f: float) -> bool: return f < 1.0), tag + "：灵巧让武器耐力消耗打折")
+		# 信仰重构 D：日神的 5 层灵巧摘掉了（换成烈日，一条单位级规则）；校准木桩只记开战轴，这一路暂时和兵刃一样，E 批定怎么记
+		t.eq(int((DummyBuilder.compile(faith, items).axes as Dictionary).get(StatAxes.STAMINA_COST, 0)), 0, tag + "：日神不再带灵巧")
 	var enemies := EnemyDatabase.new()
 	enemies.load_all()
 	var two: Array[StringName] = [&"burst", &"shield"]

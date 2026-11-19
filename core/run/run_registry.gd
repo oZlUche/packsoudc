@@ -171,6 +171,9 @@ const FAITH_PERKS := {
 	&"skill_momentum": "res://core/run/faith/perks/skill_momentum_perk.gd",     # 信仰重构 C
 	&"hunt_dismantle": "res://core/run/faith/perks/hunt_dismantle_perk.gd",
 	&"earth_support": "res://core/run/faith/perks/earth_support_perk.gd",
+	&"brute_rage": "res://core/run/faith/perks/brute_rage_perk.gd",     # 信仰重构 D
+	&"sun_cycle": "res://core/run/faith/perks/sun_cycle_perk.gd",
+	&"nature_regrowth": "res://core/run/faith/perks/nature_regrowth_perk.gd",
 }
 
 ## 猎手（069 / 071）：行动逻辑与战败后果

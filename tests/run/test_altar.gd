@@ -17,7 +17,7 @@ static func _flow(c) -> GameFlow:
 
 
 static func run_perks_and_altar_logic(t: TestCase) -> void:
-	t.begin("神坛 · 信仰级效果与那一次机会（093）：蛮神低血增伤 / 献祭生命上限 / 秒杀；日神附魔 + 祈祷非线性；自然回血 / 食物护甲 / 翻倍 / 加时回春；大地锻炼加行（踩点赐物 / 改造此点只验构件）；献祭换信力、共享一次机会")
+	t.begin("神坛 · 信仰级效果与那一次机会（093）：蛮神怒气 / 献祭生命上限 / 秒杀；日神烈日 + 祈祷非线性（附魔只验构件）；自然生息（食物护甲 / 加时回春只验构件）；大地锻炼加行（踩点赐物 / 改造此点只验构件）；献祭换信力、共享一次机会")
 	var c = NodeScreens._content()
 	var f := _flow(c)
 	var run := f.begin(c.chapter, NodeScreens._kit(c), 4)
@@ -30,24 +30,25 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.eq(run.active_faith_tier(), 0, "0 级")
 	var altar := AltarModule.of(run)     # 101：神坛与信仰级效果是一局的模块
 	t.not_null(altar, "默认清单里有神坛")
-	t.check(altar.perks().is_empty(), "0 级没有效果")
-	# 战斗的账喂进去
-	var got := run.faith_power.credit(&"battle", {"won": true, "dealt": {"physical": 60.0}, "taken": {"physical": 60.0}})
-	t.eq(got, 24, "一场 120 伤害 × 0.2 = 24 信力")
-	t.eq(run.faith_power.credit(&"vitality_change", {"delta": -1}), 50, "掉 1 体力 +50")
-	t.eq(run.active_faith_tier(), 1, "74 点：Lv.1")
+	t.check(altar.perks().all(func(p): return p is BruteRagePerk), "0 级只有奉神即有的怒气（信仰重构 D）")
+	# 战斗的账喂进去（信仰重构 D：打赢 6 + 反击 2 + 低血打赢 2）
+	var got := run.faith_power.credit(&"battle", {"won": true, "dealt": {"physical": 60.0}, "taken": {"physical": 60.0}, "mechanic": {"brute_strike": 2, "low_hp_won": 1}})
+	t.eq(got, 10, "打赢 6 + 反击 2 + 低血打赢 2 = 10")
+	t.eq(run.faith_power.credit(&"vitality_change", {"delta": -1}), 0, "掉体力不再给（信仰重构 D）")
+	run.faith_power.add_points(&"brute", 10)
+	t.eq(run.active_faith_tier(), 1, "20 点：Lv.1")
 	t.check(run.faith_power.line().begins_with("蛮神 Lv.1"), "HUD 一句：%s" % run.faith_power.line())
-	t.check(altar.perk(&"low_hp_empower") != null, "1 级：低血增伤生效")
+	t.check(altar.perk(&"brute_rage") != null, "怒气生效")
 	var spec := run.compile_player()
 	var has_rule := false
 	for rule in spec.set_rules:
 		for e in (rule as AbilityRule).effects:
-			if e is LowHpEmpower:
+			if e is BruteRage and (e as BruteRage).tier == 1:
 				has_rule = true
-	t.check(has_rule, "编译出来的玩家带着「造成伤害前 · 低血增伤」规则")
+	t.check(has_rule, "编译出来的玩家带着一阶的怒气规则")
 	# 2 级：神坛献祭生命上限
-	run.faith_power.add_points(&"brute", 30)
-	t.eq(run.active_faith_tier(), 2, "104 点：Lv.2")
+	run.faith_power.add_points(&"brute", 40)
+	t.eq(run.active_faith_tier(), 2, "60 点：Lv.2")
 	var actions: Array[FaithPerk] = []
 	for p in altar.actions():
 		if p is AltarSacrificeHpPerk:
@@ -93,7 +94,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.eq(run.effective_baseline().value_of(BattleStats.MAX_HP, 0.0), hp0 - 10.0, "两回都扣生命上限")
 	t.eq(AltarSacrificeHpPerk.buff_times(run), 1, "换信力不叠「能力」")
 	# 3 级：立即击败
-	run.faith_power.add_points(&"brute", 100)
+	run.faith_power.add_points(&"brute", 60)
 	t.eq(run.active_faith_tier(), 3, "Lv.3")
 	var smite := altar.perk(&"smite")
 	t.check(smite != null and smite.prebattle_actions(run, &"elite").size() == 2 and smite.prebattle_actions(run, &"battle").size() == 2 and smite.prebattle_actions(run, &"boss").is_empty(), "立即击败：普通与精英都能（耗体力 / 耗祈愿两个按钮），首领不能")
@@ -116,11 +117,10 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	# 日神：附魔 + 祈祷
 	var defs := FaithDef.load_all()
 	var sun: FaithDef = defs[&"sun"]
-	var ench: EnchantWeaponsPerk = null
-	for p in sun.perks_at(1):
-		if p is EnchantWeaponsPerk:
-			ench = p
-	t.check(ench != null, "日神 1 级有火焰附魔")
+	# 信仰重构 D：日神换成「烈日」，附魔不再挂在日神身上；构件本身照旧验
+	t.check(sun.perks_at(0).any(func(p): return p is SunCyclePerk), "日神奉神即有烈日")
+	t.check(not sun.perks.any(func(p): return p is EnchantWeaponsPerk), "日神不再带全武器附魔（不和烈日叠）")
+	var ench := EnchantWeaponsPerk.new()
 	# 105：祈祷攒的加成从「次数套公式填进 FireEnchant」变成标准轴 fire_damage 的层数（斐波那契）
 	var pray: AltarPrayFirePerk = null
 	for p in sun.perks_at(2):
@@ -156,18 +156,17 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var plain4 := run.compile_player()
 	var regen0 := plain4.baseline.total_of(BattleStats.REGEN_HP)
 	var shield0 := plain4.baseline.total_of(BattleStats.MAX_ARMOR)
+	# 信仰重构 D：自然换成「生息」，回血、食物护甲、翻倍、加时回春不再挂在自然身上；构件本身照旧验
+	t.check(nature.perks_at(0).any(func(p): return p is NatureRegrowthPerk), "自然奉神即有生息")
+	t.check(not nature.perks.any(func(p): return p is OvertimeRegenPerk or p is FoodArmorPerk or p is FoodDoublePerk), "旧的加时回春、食物护甲、翻倍摘掉了")
 	var input4 := CompileInput.of(run.effective_baseline())
-	for p in nature.perks_at(3):
-		(p as FaithPerk).compile_into(input4, run.board, run)
+	FoodArmorPerk.new().compile_into(input4, run.board, run)
 	var spec4 := BattleCompiler.compile(run.board, input4)
-	t.check(spec4.baseline.total_of(BattleStats.REGEN_HP) > regen0, "1 级：基线每秒回血 +")
+	t.eq(spec4.baseline.total_of(BattleStats.REGEN_HP), regen0, "食物护甲不碰回血")
 	if run.board.has_item(ration.uid):
-		t.check(spec4.baseline.total_of(BattleStats.MAX_ARMOR) > shield0, "3 级：棋盘上有口粮就有护甲")
-	var regen_perk: OvertimeRegenPerk = null
-	for p in nature.perks_at(5):
-		if p is OvertimeRegenPerk:
-			regen_perk = p
-	t.check(regen_perk != null and regen_perk.stacks > 0, "5 级（103 改）：加时阶段回春，数值在 nature.json 里可调")
+		t.check(spec4.baseline.total_of(BattleStats.MAX_ARMOR) > shield0, "食物护甲构件：棋盘上有口粮就有护甲")
+	var regen_perk := OvertimeRegenPerk.new()
+	t.check(regen_perk.stacks > 0, "加时回春构件（103）：层数可调")
 	# 两边都不出手、我方先掉一半血，打到第 40 秒：没有自然 5 级就停在一半，有就在加时开始后回满
 	var hp_at_40 := func(blessed_: bool) -> Array:
 		var input_a := CompileInput.of(CombatantBaseline.with_hp(100.0))
