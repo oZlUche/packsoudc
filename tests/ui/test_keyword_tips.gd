@@ -68,7 +68,8 @@ static func run_longbow_sidebar(t: TestCase) -> void:
 	names.sort()
 	# 方案举例时说「只剩信仰、信物两个」，漏算了它自己施加的【标记】——
 	# buff 词条按 2.3 的规矩不受 tip 管（说明是按定义生成的效果，正是玩家要看的），所以是三个
-	t.eq(names, ["信仰", "信物", "标记"], "只剩这三个词条：%s" % str(names))
+	# 游戏测试 11-19：信物脚注不再写「右键奉为主信仰」，文字里没有「信仰」一词，那条词条也就不弹了
+	t.eq(names, ["信物", "标记"], "只剩这两个词条：%s" % str(names))
 	t.check(Glossary.describe_buff(Glossary.buffs_in_item(bow).get(&"marked", null)).contains("格挡"), "标记的说明仍按定义生成（破绽 3 层 → 格挡 −3）")
 	# 不弹的词在主文字里也不标色
 	var text := String(full["text"])

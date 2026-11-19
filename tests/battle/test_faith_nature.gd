@@ -56,6 +56,12 @@ static func run_store(t: TestCase) -> void:
 	t.eq(_top(r), 8, "两次各回 20，存 20% = 8 点生息")
 	var full := BattleSim.run(_me(0), FX._spec(50000.0, []), _rng(1), 7.0)
 	t.eq(_top(full), 0, "一直满血：治疗没回上来，也就不存")
+	t.eq(_mech(r, "nature_pulse").size(), 2, "游戏测试 11-19：没满血的每次节拍都写一句战记")
+	t.eq(_mech(full, "nature_pulse").size(), 0, "满血的节拍不写")
+	var said := ""
+	for line in BattleNarrator.lines(r, ["我", "敌"]):
+		said += BattleNarrator.plain(line) + "\n"
+	t.check(said.contains("借自然之力恢复"), "战记里看得到自然：%s" % said.left(200))
 	var long := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 120.0)
 	t.check(_top(long) <= 150, "存量不超过最大生命的 15%%（%d）" % _top(long))
 	var again := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 7.0)

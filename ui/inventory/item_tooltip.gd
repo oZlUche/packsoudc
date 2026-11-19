@@ -298,7 +298,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	return {"head": head, "body": body, "faith_title": faith_title, "faith": faith, "foot": foot, "set": set_name, "text": text, "terms": terms}
 
 
-## 257：赐福小节 —— 每条加成一行两列（左：生效条件 `@faith`；右：加成 `@val`），信物降成一行脚注「信物 · 右键奉为主信仰」（正文同号 tip_meta —— 作者 11-04，
+## 257：赐福小节 —— 每条加成一行两列（左：生效条件 `@faith`；右：加成 `@val`），信物降成一行脚注「信物」（奉着的写「信物 · 当前信仰」）（正文同号 tip_meta —— 作者 11-04，
 ## 「信物」信力色）。096 / 107：局里没生效的（没激活 / 阶不够 / 别的神）整行灰、不分色；局外照分色写。不归神或什么都没有返回空
 static func faith_section(def: ItemDef, status: Dictionary) -> String:
 	if def == null or not def.has_faith():
@@ -315,14 +315,15 @@ static func faith_section(def: ItemDef, status: Dictionary) -> String:
 	var out: Array[String] = []
 	if not rows.is_empty():
 		out.append(Glossary.columns(rows, Glossary.two_widths(rows)))
-	if def.is_anchor():     # 099：切信仰不进菜单 —— 右键一下，或者在棋盘里把它重新落下
+	if def.is_anchor():     # 信仰重构 A：改信只走说明窗的「奉为主信仰」键，脚注不再教右键（右键是收回仓库）
 		var lit := faith_lit(def, status)
-		var what := UiText.t("tip.anchor_current") if lit else UiText.t("tip.anchor_right_click")
 		var line := ""
-		if status.is_empty() or lit:
-			line = UiText.t("tip.anchor_foot") % [Glossary.faith(UiText.t("tip.anchor_word")), "[color=@tip_meta]%s[/color]" % what]
+		if lit:
+			line = UiText.t("tip.anchor_foot") % [Glossary.faith(UiText.t("tip.anchor_word")), "[color=@tip_meta]%s[/color]" % UiText.t("tip.anchor_current")]
+		elif status.is_empty():
+			line = Glossary.faith(UiText.t("tip.anchor_word"))
 		else:
-			line = "[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("tip.anchor_foot") % [UiText.t("tip.anchor_word"), what]]
+			line = "[color=#%s]%s[/color]" % [DIM_HEX, UiText.t("tip.anchor_word")]
 		out.append(line)     # 作者 11-04：和别的正文同号（以前 13 号小字太小）
 	return "\n".join(out)
 
