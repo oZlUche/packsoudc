@@ -167,7 +167,9 @@ func _frame(image_path: String, title: String, body: String) -> VBoxContainer:
 	return _book_page(_centered_panel(PANEL_SIZE, 0, OverlayFrame.SKIN_BOOK), image_path, title, body)
 
 
-## 232（作者 19:23 选 1）：书皮 —— 插图摆在左页 `image_rect`，右页 `text_rect` 里一列：标题（`title_h` 高，墨色居中）→ 章节名 → 正文 → 选项
+## 232（作者 19:23 选 1）：书皮 —— 插图摆在左页 `image_rect`，右页 `text_rect` 里一列：标题（`title_h` 高，墨色居中）→ 章节名 → 正文 → 选项。
+## 局内界面布局方案 §9.3：没有插图的事件（大多数）不留一整页空白 —— 标题、章节名、正文摆在左页，右页只放选项（从正文起始那一行开始），
+## 不编文字补空；有图照旧
 func _book_page(panel: Container, image_path: String, title: String, body: String) -> VBoxContainer:
 	var meta := OverlayFrame.book_meta()
 	var page := Control.new()
@@ -176,18 +178,21 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	page.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(page)
 	var ir := _rect(meta.get("image_rect", [14, 44, 640, 672]))
-	var image := EventImage.area(image_path, "", ir.size, 22, 12, "", 6, true)     # 226 批二：缺图不写占位标题
-	image.name = "Image"
-	image.position = ir.position
-	image.size = ir.size
-	page.add_child(image)
 	var tr_ := _rect(meta.get("text_rect", [704, 44, 560, 672]))
+	var has_art := EventImage.load_texture(image_path) != null
+	if has_art:
+		var image := EventImage.area(image_path, "", ir.size, 22, 12, "", 6, true)     # 226 批二：缺图不写占位标题
+		image.name = "Image"
+		image.position = ir.position
+		image.size = ir.size
+		page.add_child(image)
+	var text_rect := tr_ if has_art else ir
 	_page_w = tr_.size.x
 	var col := _vbox(14)
 	col.name = "Page"
-	col.position = tr_.position
-	col.size = tr_.size
-	col.custom_minimum_size = tr_.size
+	col.position = text_rect.position
+	col.size = text_rect.size
+	col.custom_minimum_size = text_rect.size
 	page.add_child(col)
 	var head := _frame_title(title)
 	head.custom_minimum_size.y = float(meta.get("title_h", 52))
@@ -197,17 +202,30 @@ func _book_page(panel: Container, image_path: String, title: String, body: Strin
 	col.add_child(under)
 	var heading := intro_heading()
 	if heading != "":
-		col.add_child(_heading_label(heading, tr_.size.x))
+		col.add_child(_heading_label(heading, text_rect.size.x))
 	var scroll := UiTheme.vscroll()
 	col.add_child(scroll)
 	if body != "":
-		var text := UiTheme.rich_block(tr_.size.x, UiTheme.RICH_BODY_SIZE, body)
+		var text := UiTheme.rich_block(text_rect.size.x, UiTheme.RICH_BODY_SIZE, body)
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		scroll.add_child(text)
 	var options := _vbox(8)
 	options.name = "Options"
-	col.add_child(options)
+	if has_art:
+		col.add_child(options)
+		return options
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL     # §9.3：左页整页给正文（长了在页里滚）
+	var top := float(meta.get("title_h", 52)) + 22.0
+	options.position = tr_.position + Vector2(0.0, top)
+	options.size = Vector2(tr_.size.x, tr_.size.y - top)
+	options.custom_minimum_size = Vector2(tr_.size.x, 0.0)
+	page.add_child(options)
 	return options
+
+
+## §9.3：这一页是不是没插图的紧凑版式（测试读）
+func compact() -> bool:
+	return overlay_frame() != null and overlay_frame().find_child("Image", true, false) == null
 
 
 ## 章节名一行：258 字号放大后英文（「Prologue: Edge of the Ruins」）比书页宽 —— 缩回小档为止，不撑宽右页

@@ -4,6 +4,7 @@
 ## 圆槽底图 `assets/ui/belt_slot.png`（72 px 一张圆底）。
 ## 232（作者 19:23 选 6）：1–6 格换成一整张弯皮带挂皮袋（`belt/belt_<n>`，圆心读 `belt/layout.json`，袋面的压花圆就是槽）；
 ## 超过 6 格退回一排直圆槽
+## 局内界面布局方案 §4.3：一格都没装时整条皮带淡下去（[constant EMPTY_ALPHA]），不和地图抢眼；装上一种就恢复
 class_name BeltSlots
 extends Control
 
@@ -18,6 +19,8 @@ const BELT_DIR := "belt/"
 const HIT := 36.0
 ## 弯皮带上没图标时那个字的墨色
 const INK := Color("2e2219")
+## §4.3：全空时皮带的不透明度
+const EMPTY_ALPHA := 0.5
 
 static var _belt_layouts: Dictionary = {}
 static var _belt_loaded := false
@@ -51,7 +54,16 @@ func _on_changed() -> void:
 	var lay := _layout()
 	custom_minimum_size = Vector2(lay["size"][0], lay["size"][1]) if not lay.is_empty() else Vector2(n * SLOT + maxi(0, n - 1) * GAP, SLOT)
 	update_minimum_size()
+	modulate.a = EMPTY_ALPHA if all_empty() else 1.0
 	queue_redraw()
+
+
+## §4.3：一格都没装
+func all_empty() -> bool:
+	for i in slot_count():
+		if skill_at(i) != &"":
+			return false
+	return true
 
 
 func slot_count() -> int:

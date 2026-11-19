@@ -340,13 +340,24 @@ func take_all() -> void:
 		starts[it.uid] = _loot.global_position + _loot.cell_origin_px(it.origin)
 	ground.landing_from.merge(starts, true)
 	var before := _container.item_count()
-	InventoryService.transfer_all_prefer(_container, flow.run.board, ground)
+	var got := InventoryService.transfer_all_prefer(_container, flow.run.board, ground)
 	if _container.item_count() < before:
 		AudioHub.play(&"loot.take_all")     # 206：搬走了至少一件才响
+	_last_take = got
+	if int(got.get("storage", 0)) > 0:     # 局内界面布局方案 §9.1：只拿进去一部分时说清楚多少进了背包、多少放不下落在地上
+		NoticeLayer.post(self, UiText.t("loot.took_partial") % [int(got.get("board", 0)), int(got.get("storage", 0))])
 	for uid in starts:
 		if not ground.has_item(uid):
 			ground.landing_from.erase(uid)
 	_refresh()
+
+
+## §9.1：上一次「全部拾取」的结果 `{"board": 进了背包几件, "storage": 放不下落在地上几件}`（测试读）
+var _last_take: Dictionary = {}
+
+
+func last_take() -> Dictionary:
+	return _last_take
 
 
 ## 搜索会话：离开这个点的搜索（收获交到待拾取）。待拾取：同「收起」—— 剩下的留在这个点上，走了才没（084）

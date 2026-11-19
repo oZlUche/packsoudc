@@ -11,6 +11,8 @@ extends GameScreen
 
 ## 227：悬浮窗里敌人棋盘的格子（正常 60，框又占两边各 40 —— 缩一档放得进纸签）
 const ENEMY_TIP_CELL := 44.0
+## §4.2 行动预览里金币图的边长（浮窗正文字号上下）
+const PREVIEW_COIN_PX := 16
 const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
 const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 ## 路线卡片的宽（左下角）
@@ -341,6 +343,9 @@ func escape() -> bool:
 	if _skip != null:
 		close_skip_tutorial()     # 跳过确认页：Esc = 接着学
 		return true
+	if _recent != null:
+		close_recent()     # §10：最近记录叠在暂停菜单上，先收它
+		return true
 	if _pause_book != null:
 		close_pause_encyclopedia()
 		return true
@@ -365,6 +370,7 @@ func toggle_pause() -> void:
 	if _pause != null:
 		close_pause_settings()
 		close_pause_encyclopedia()
+		close_recent()
 		_pause.queue_free()
 		_pause = null
 		return
@@ -382,6 +388,8 @@ func toggle_pause() -> void:
 		col.add_child(ScrollKey.make(UiText.t("map.pause_rules"), func(): show_rules()))     # 091：再看一遍规则卡
 	if not coach_steps().is_empty():
 		col.add_child(ScrollKey.make(UiText.t("map.pause_coach"), replay_map_coach))     # 统一教程 C（方案 §3.6）：重看这一段的地图教程，不改进度和奖励
+	if not NoticeLayer.history().is_empty():
+		col.add_child(ScrollKey.make(UiText.t("map.pause_recent"), show_recent))     # 局内界面布局方案 §10：最近记录
 	if can_skip_tutorial():
 		col.add_child(ScrollKey.make(UiText.t("map.pause_skip_tutorial"), show_skip_tutorial))     # 统一教程 F（方案 §8.2）
 	col.add_child(ScrollKey.make(UiText.t("map.pause_main_menu"), func(): flow.save_and_quit()))     # 166：进点自动存档；这里回去之前也静默存一次
@@ -389,6 +397,49 @@ func toggle_pause() -> void:
 
 func pause_open() -> bool:
 	return _pause != null
+
+
+#region 局内界面布局方案 §10：最近记录（暂停菜单里翻；新的在前，要紧的朱红；钱照样画金币）
+var _recent: Control = null
+## 最近记录那张纸的宽
+const RECENT_W := 560
+const RECENT_H := 420
+
+
+func show_recent() -> void:
+	if _recent != null:
+		return
+	_recent = _shade(0.72, true)
+	var panel := _modal_panel(UiText.t("map.recent_title"), 28)
+	_recent.get_child(0).add_child(panel)
+	var col := _vbox(12)
+	panel.content.add_child(col)
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, RULES_PAPER_PAD.x, RULES_PAPER_PAD.y, RULES_PAPER_PAD.x, RULES_PAPER_PAD.y)
+	paper.name = "RecentPaper"
+	col.add_child(paper)
+	var scroll := UiTheme.vscroll()
+	scroll.custom_minimum_size = Vector2(RECENT_W, RECENT_H)
+	paper.add_child(scroll)
+	var lines := _vbox(8)
+	scroll.add_child(lines)
+	for h in NoticeLayer.history():
+		var text := CoinLabel.inline_bbcode(CoinShort.strip(String(h["text"])) if CoinShort.has(String(h["text"])) else String(h["text"]), PREVIEW_COIN_PX)
+		lines.add_child(UiTheme.rich_block(RECENT_W - 24, 15, ("[color=%sdanger]%s[/color]" % [TextTemplate.STYLE_PREFIX, text]) if bool(h["urgent"]) else text))
+	var ok := ScrollKey.primary(UiText.t("map.rules_ok"), close_recent)
+	ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(ok)
+
+
+func close_recent() -> void:
+	if _recent == null:
+		return
+	_recent.queue_free()
+	_recent = null
+
+
+func recent_open() -> bool:
+	return _recent != null
+#endregion
 
 
 #region 统一教程 F（方案 §8.2）：局内暂停菜单的「跳过剩余教程」—— 和基地出征页同一张确认页；确认走开场一问【不需要】那条路
@@ -587,6 +638,7 @@ func _close_ask() -> void:
 
 #region 接线：RunState 与 NodeEvents 的信号写进日志
 func _adopt() -> void:
+	NoticeLayer.claim_history(_run.get_instance_id())     # §10：最近记录只记这一局的（读档 = 新实例，从空的开始）
 	_view.skin = _run.chapter.map_skin if _run.chapter != null else &""     # 每章一张手绘底图
 	_view.graph = _run.map
 	_view.current_id = _run.travel.current_id if _run.phase != RunState.Phase.PICK_SPAWN else -1
@@ -863,7 +915,11 @@ func _update_tooltip(id: int) -> void:
 		return
 	var node := _run.map.get_node(id)
 	var stash := NodeTooltip.stash_text(_run, node)     # 反馈：每个点的地上悬停就能看，不受「节点浮窗」开关管
-	var eroding := ItemErosion.entry_warning(_run, node)     # 320 A9：进去会侵蚀一件随身道具（不受「节点浮窗」开关管）
+	# 局内界面布局方案 §4.2：这一步（连走就是这一串）实际扣几倒计时、进去会受什么侵蚀、看得见的猎手够不够得着 ——
+	# 和真走一步同一套算法（[ActionPreview]）；不受「节点浮窗」开关管。走不过去（脚下、到不了）退回 320 A9 的侵蚀预告
+	var eroding := CoinLabel.inline_bbcode(ActionPreview.lines(ActionPreview.of(_run, preview_path(id))), PREVIEW_COIN_PX)
+	if eroding == "":
+		eroding = ItemErosion.entry_warning(_run, node)     # 320 A9：进去会侵蚀一件随身道具
 	if eroding != "":
 		stash = eroding if stash == "" else stash + "\n" + eroding
 	var hunt := _hunter_tip(id)     # 134：站在这个点上、看得见的猎手输了会怎样（感知之后才说）
@@ -884,6 +940,15 @@ func _update_tooltip(id: int) -> void:
 	# 101 第 5 刀：浮窗文字里的样式码（`{c:hp}`）—— 169 起由悬浮窗按自己的底换成真颜色（浅纸暗字）
 	var text := NodeTooltip.text_for(_run, _run.chapter, node)
 	_tip.show_text(text + ("\n" + stash if stash != "" else ""), get_global_mouse_position(), extra)
+
+
+## 预览按哪条路算：隔壁 = 这一步；远处 = 连走的路线（[method walk_path]）；脚下、到不了 = 空
+func preview_path(id: int) -> Array[int]:
+	if _run == null or _run.travel == null or id == _run.travel.current_id:
+		return [] as Array[int]
+	if _run.travel.available_moves().has(id):
+		return [id] as Array[int]
+	return walk_path(id)
 
 
 func tooltip_text() -> String:

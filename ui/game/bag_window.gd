@@ -41,6 +41,11 @@ var frame: NinePatchRect = null
 ## 223：右栏的名牌与角色卡
 var nameplate: Nameplate = null
 var card: CharacterCard = null
+## 局内界面布局方案 §6：角色卡下面那排查看方式（普通 / 联动 / 风险）
+var views: HFlowContainer = null     # 英文 / 大字号一行放不下就折到第二行（方案 §11：换行，不压字号）
+var _view_btns: Dictionary = {}
+## §6：查看方式那排在角色卡下面隔多远
+const VIEWS_GAP := 14.0
 ## 218 补充一：开着的背包窗教程（没开 null）
 var coach: CoachOverlay = null
 var _canvas: Control
@@ -97,6 +102,8 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	visibility_changed.connect(func():
 		if visible:
 			card.refresh(run))
+
+	_build_views()
 
 	var ms: Dictionary = _spec["minimize"]
 	var side := MINIMIZE_SIDE * float(ms.get("scale", 0.72))
@@ -277,11 +284,48 @@ func _layout() -> void:
 	nameplate.custom_minimum_size = Vector2(want_plate.x / k, 0.0)
 	nameplate.size = Vector2(want_plate.x / k, want_plate.y / k)
 	card.position = Vector2(col_x, float((col.get("card", {}) as Dictionary).get("y", 202)))
+	if views != null:
+		var card_size := _vec((col.get("card", {}) as Dictionary).get("size", [272, 228]))
+		views.position = Vector2(col_x, card.position.y + maxf(card_size.y, card.size.y) + VIEWS_GAP)
+		views.size = Vector2(float(col.get("width", 272)), 0.0)
 	var ms: Dictionary = _spec["minimize"]
 	var at: Array = (_satchel.get("minimize", {}) as Dictionary).get("topleft_rel_window", ms.get("topleft_rel_window", [918, 13]))
 	close_button.position = _vec(at) + Vector2(grow.x, 0.0)
 	_canvas.queue_redraw()
 	reset_size()
+
+
+## §6：三种查看方式（一排小签，同一时间按下一个）。切换只改棋盘怎么画
+func _build_views() -> void:
+	views = HFlowContainer.new()
+	views.name = "Views"
+	views.alignment = FlowContainer.ALIGNMENT_CENTER
+	_canvas.add_child(views)
+	var group := ButtonGroup.new()
+	for pair in [[InventoryView.VIEW_NORMAL, "inv.view_normal", ""], [InventoryView.VIEW_LINKS, "inv.view_links", "inv.view_links_tip"],
+			[InventoryView.VIEW_RISK, "inv.view_risk", "inv.view_risk_tip"]]:
+		var mode: StringName = pair[0]
+		var b := StoneChip.make(UiText.t(pair[1]), func(): set_view(mode))
+		b.button_group = group
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if String(pair[2]) != "":
+			b.tooltip_text = UiText.t(pair[2])
+		_view_btns[mode] = b
+		views.add_child(b)
+	set_view(InventoryView.VIEW_NORMAL)
+
+
+## §6：切到 [param mode]（[constant InventoryView.VIEW_NORMAL] 等）
+func set_view(mode: StringName) -> void:
+	if panel == null or panel.board_view == null:
+		return
+	panel.board_view.view_mode = mode
+	for m in _view_btns:
+		(_view_btns[m] as Button).set_pressed_no_signal(m == mode)
+
+
+func view_mode() -> StringName:
+	return panel.board_view.view_mode if panel != null and panel.board_view != null else InventoryView.VIEW_NORMAL
 
 
 ## 223：棋盘右边一条竖线（跟着棋盘右移、下端跟着窗长；232：标题行下那条横线不画，翻盖下沿就是分隔）

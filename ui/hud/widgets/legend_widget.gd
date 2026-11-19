@@ -3,6 +3,9 @@
 ## 184：最上面一行「你」是玩家的小兵棋子，「出生」那一行是 182 的小旗（原色不着色）
 ## 267：材料节点（矿脉 / 林地 / 遗骸 / 符文堆）各算一行（图上有才列，排在「搜索」后面）；
 ## 最下面一段「产物」：由外到内每种环一行，写产物表里倍率 ≥ 1.5 的标签名
+##
+## 局内界面布局方案 §4.3：默认收起 —— 一列图标（地图上的那一枚），名字和产物段藏着；点旗展开 / 收起，
+## 记在设置里（[member GameSettings.legend_open]）。教程要指名字时可以 [method set_expanded] 临时展开
 extends HudWidget
 
 const ICON := 24.0
@@ -15,6 +18,10 @@ const MIN_WIDTH := 158.0
 static var _dark_theme: Theme = null
 
 var _rows: VBoxContainer
+## §4.3：名字和产物段展开着没有
+var _expanded: bool = false
+## §4.3：临时展开（教程用；不写进设置）
+var _forced: bool = false
 
 
 func _init() -> void:
@@ -22,7 +29,6 @@ func _init() -> void:
 	theme = _legend_theme()     # 深底（tone dark）：不挂墨色字，自己的底和白字
 	set_meta(&"tone", UiTheme.TONE_DARK)     # 169：里面的字按深底取版（HudWidget 默认挂的是凹槽的浅）
 	_text.visible = false
-	custom_minimum_size.x = MIN_WIDTH
 	_rows = UiTheme.vbox(int(ROW_GAP))
 	_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_rows)
@@ -30,6 +36,66 @@ func _init() -> void:
 
 func title() -> String:
 	return "图例"
+
+
+func _idle_mouse_filter() -> Control.MouseFilter:
+	return Control.MOUSE_FILTER_STOP     # §4.3：点旗展开 / 收起
+
+
+func _ready() -> void:
+	mouse_filter = _idle_mouse_filter()
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+
+func setup(p_run: RunState, p_screen: Control) -> void:
+	var f = p_screen.get("flow") if p_screen != null else null
+	_expanded = f != null and f.settings != null and bool(f.settings.legend_open)
+	super(p_run, p_screen)
+
+
+## §4.3：现在名字露着没有（收起时只有图标）
+func expanded() -> bool:
+	return _expanded or _forced
+
+
+## §4.3：点一下切换并记进设置
+func toggle_expanded() -> void:
+	_expanded = not _expanded
+	var f = screen.get("flow") if screen != null else null
+	if f != null and f.settings != null:
+		f.settings.legend_open = _expanded
+		f.save_settings()
+	_apply_expanded()
+
+
+## §4.3：教程临时展开（[param on] 假 = 回到玩家自己选的样子）
+func set_expanded(on: bool) -> void:
+	_forced = on
+	_apply_expanded()
+
+
+func _apply_expanded() -> void:
+	if _rows == null:
+		return
+	var open := expanded()
+	for row in _rows.get_children():
+		var name_ := row.get_child(row.get_child_count() - 1) as Label
+		var marked := row.get_child_count() > 1
+		row.visible = open or marked     # 产物段（没有图标的行）收起时整行藏
+		if name_ != null:
+			name_.visible = open
+	custom_minimum_size.x = MIN_WIDTH if open else 0.0
+	tooltip_text = "" if open else text_of()     # 收起时停上去照样读得到每个图标叫什么
+	reset_size()
+
+
+func _gui_input(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if not editing and mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+		toggle_expanded()
+		accept_event()
+		return
+	super(event)
 
 
 ## 产物段只写倍率到这么高的标签
@@ -119,6 +185,7 @@ func refresh() -> void:
 		_add_row(&"", UiText.t("hud.produce"), "", false)
 		for line in produce:
 			_add_row(&"", line, "", false)
+	_apply_expanded()
 
 
 ## 267：[param with_mark] 假 = 没有图标的一行字（产物段）
