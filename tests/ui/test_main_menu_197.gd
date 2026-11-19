@@ -42,7 +42,7 @@ static func run(t: TestCase) -> void:
 
 
 static func frame_menu_layout(t: TestCase, root: Window) -> void:
-	t.begin("主菜单：营火与白石目录，字标、主操作和页脚在目录内；键盘焦点与首次存档分支")
+	t.begin("主菜单：营火与登记册，字标、主操作和页脚在目录内；键盘焦点与首次存档分支")
 	var p := Support.paths("menu197")
 	Support.cleanup("menu197")
 	var game = (load(GAME) as PackedScene).instantiate()
@@ -65,9 +65,9 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	t.check(c >= 0.75 and is_equal_approx(s, menu.size.y / 1080.0), "按屏高缩放（%.3f），菜单不小于 0.75" % c)
 	var title: Control = menu.title_node()
 	var slab := menu.find_child("SurveyIndex", true, false) as TextureRect
-	t.check(slab != null and slab.texture != null and slab.mouse_filter == Control.MOUSE_FILTER_IGNORE, "白石目录有专属底纹，点击穿透")
+	t.check(slab != null and slab.texture != null and slab.mouse_filter == Control.MOUSE_FILTER_IGNORE, "登记册有专属底纹，点击穿透")
 	t.check(title is TextureRect and title.texture != null and title.texture.resource_path.contains("survey_title"), "使用独立的测绘字标")
-	t.check(is_equal_approx(title.position.x + title.size.x * 0.5, slab.size.x * 0.5), "字标在石栏水平居中")
+	t.check(is_equal_approx(title.position.x + title.size.x * 0.5, slab.size.x * 0.5), "字标在书页水平居中")
 	var col: VBoxContainer = menu.column()
 	t.check(col.position.y >= title.get_rect().end.y and col.get_global_rect().end.x < slab.get_global_rect().end.x, "目录操作都在标题下、右边线内")
 	t.check(col.get_global_rect().end.y < menu.size.y, "末行不出屏")
@@ -77,7 +77,17 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 		t.eq(lines[0].text, UiText.t("menu.new_run"), "没存档：第一行是「新的游戏」（不留「继续」的空行）")
 		t.eq(lines[0].get_theme_font_size("font_size"), UiTheme.sz(UiTheme.MENU_PRIMARY_SIZE), "主档遵从当前字号")
 		t.eq(lines[1].get_theme_font_size("font_size"), UiTheme.sz(UiTheme.MENU_SECONDARY_SIZE), "次档遵从当前字号")
-		t.check(lines.all(func(b): return b.get_theme_constant("outline_size") == 0 and b.focus_mode != Control.FOCUS_NONE), "石面墨字与键盘焦点")
+		t.check(lines.all(func(b): return b.get_theme_constant("outline_size") == 0 and b.focus_mode != Control.FOCUS_NONE), "纸面墨字与键盘焦点")
+		var tag := lines[0].get_theme_stylebox("normal") as StyleBoxTexture
+		var index := lines[1].get_theme_stylebox("normal") as StyleBoxTexture
+		t.check(tag != null and tag.texture != null and tag.texture.resource_path.ends_with("dispatch_tag.png"), "主要操作使用红皮签")
+		t.check(index != null and index.texture != null and index.texture.resource_path.ends_with("archive_edge.png"), "次级操作使用索引纸边")
+		t.check(lines[1].icon != null and lines[2].icon != null and lines[1].icon != lines[2].icon, "百科与设置各有可识别的图标")
+		var over := lines[0].get_theme_stylebox("hover") as StyleBoxTexture
+		var down := lines[0].get_theme_stylebox("pressed") as StyleBoxTexture
+		t.check(tag != null and over != null and down != null and over.modulate_color != tag.modulate_color and down.content_margin_top > tag.content_margin_top, "悬停提亮，按下文字下移")
+		var focus := lines[0].get_theme_stylebox("focus") as StyleBoxFlat
+		t.check(focus != null and not focus.draw_center and focus.border_width_top >= 2, "键盘焦点有独立描边")
 		var texts: Array = lines.map(func(b): return b.text)
 		t.eq(texts.slice(1), [UiText.t("menu.encyclopedia"), UiText.t("menu.settings")], "240：「跳过序章」搬到开场一问；089 补充二：「仓库与战绩」去掉，次档：百科 / 设置")
 		t.check(not UiText.t("menu.continue") in texts, "089 补充二：没存档只有「新的游戏」，没有「继续」")
@@ -90,6 +100,7 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	t.eq(link_texts.front() if not link_texts.is_empty() else "", "中 / EN", "末行第一个：语言「中 / EN」")
 	t.eq(link_texts.back() if not link_texts.is_empty() else "", UiText.t("menu.quit"), "末行最后：退出")
 	t.check(links.all(func(b): return (b as Button).theme_type_variation == UiTheme.BUTTON_MENU_FOOT), "末行是小字链接")
+	t.check(menu.find_child("FooterRule", true, false) != null and links.all(func(b): return (b as Button).get_theme_font_size("font_size") == UiTheme.sz(UiTheme.MENU_FOOT_SIZE)), "尾部横线和小字号区分辅助操作")
 	t.eq(menu.find_children("MenuVeil", "", true, false).size(), 0, "没有暗纱")
 	t.eq(menu.notices().get_child_count(), 0, "没有提示：右下不占位")
 	var stats := false
@@ -102,7 +113,9 @@ static func frame_menu_layout(t: TestCase, root: Window) -> void:
 	flow.slots.remove(1)
 	flow.use_slot(1)
 	t.check(flow.save_meta(), "建立可继续的存档")
-	menu.toggle_language()
+	(links[0] as Button).grab_focus()
+	(links[0] as Button).pressed.emit()
+	t.check((menu.foot().get_child(0) as Button).has_focus(), "更换语言后键盘焦点回到语言入口")
 	t.eq(menu.title_node().texture.resource_path.get_file(), "survey_title_en.png", "英文目录同步更换字标")
 	lines = menu.lines()
 	t.eq([lines[0].text, lines[1].text], ["Continue", "Load game"], "已有存档的英文入口")
@@ -176,7 +189,7 @@ static func frame_logo(t: TestCase, root: Window) -> void:
 	if logo is TextureRect:
 		var slab := menu.find_child("SurveyIndex", true, false) as TextureRect
 		t.check(is_equal_approx(logo.size.y, logo.size.x * 40.0 / 144.0), "回退图仍按原比例（%s）" % logo.size)
-		t.check(is_equal_approx(logo.position.x + logo.size.x * 0.5, slab.size.x * 0.5), "回退图也在白石目录居中")
+		t.check(is_equal_approx(logo.position.x + logo.size.x * 0.5, slab.size.x * 0.5), "回退图也在登记册居中")
 		t.eq(logo.mouse_filter, Control.MOUSE_FILTER_IGNORE, "不接鼠标")
 	game.queue_free()
 	UiTheme.asset_root = saved
