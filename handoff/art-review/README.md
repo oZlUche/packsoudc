@@ -6,7 +6,7 @@
 
 ![主菜单、基地与出征准备的同档对照](field-guide-fronts-comparison.jpg)
 
-主菜单左侧石质目录承载操作，右侧三幅远征地景缓慢轮换。基地使用军营外廊和纸档，出征准备移入角色厅。墨绿标示已选项目，出征主键为朱红。[三幅轮播地景](game-menu-three-landscapes.jpg) · [主菜单](game-field-guide-menu.jpg) · [基地](game-field-guide-camp.jpg) · [选角](game-field-guide-setup.jpg) · [英文大字号配装](game-preparation-large-en.jpg) · [科技成长](game-growth-large-zh.jpg)
+主菜单左侧石质目录承载操作，右侧依次呈现边境夜营、军团登记口与灯下地图桌。夜营的帐篷和营火交代休息处，边营门边的账册交代登记用途，桌上的路线和行具交代出发准备。基地使用军营外廊和纸档，出征准备移入角色厅。墨绿标示已选项目，出征主键为朱红。[原定稿与本次重绘，上下对照](menu-originals-and-repaint.jpg) · [三张菜单实景](game-menu-three-landscapes.jpg) · [主菜单](game-field-guide-menu.jpg) · [基地](game-field-guide-camp.jpg) · [选角](game-field-guide-setup.jpg) · [英文大字号配装](game-preparation-large-en.jpg) · [科技成长](game-growth-large-zh.jpg)
 
 存档夹按档位标明当前进度，设置页按宽度调整分组布局。对局记录分两行列出结果及时间、收获，实心星标出已收藏的场次。[存档](game-slots.jpg) · [设置](game-settings.jpg) · [对局记录](game-record-archive.jpg)
 

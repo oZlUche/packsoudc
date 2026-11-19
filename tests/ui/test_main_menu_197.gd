@@ -42,7 +42,7 @@ static func run(t: TestCase) -> void:
 
 
 static func frame_menu_layout(t: TestCase, root: Window) -> void:
-	t.begin("主菜单：持仪石像与白石目录，字标、主操作和页脚在目录内；键盘焦点与首次存档分支")
+	t.begin("主菜单：营火与白石目录，字标、主操作和页脚在目录内；键盘焦点与首次存档分支")
 	var p := Support.paths("menu197")
 	Support.cleanup("menu197")
 	var game = (load(GAME) as PackedScene).instantiate()
