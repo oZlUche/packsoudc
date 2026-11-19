@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+  <defs>
+    <linearGradient id="metal" x1="0.05" y1="0" x2="0.83" y2="1">
+      <stop offset="0.000" stop-color="#ebe3ce"/>
+      <stop offset="0.250" stop-color="#b6ae96"/>
+      <stop offset="0.500" stop-color="#9a8c73"/>
+      <stop offset="0.750" stop-color="#665f51"/>
+      <stop offset="1.000" stop-color="#b3aa95"/>
+    </linearGradient>
+    <linearGradient id="iron" x1="0.05" y1="0" x2="0.83" y2="1">
+      <stop offset="0.000" stop-color="#f1ebd7"/>
+      <stop offset="0.250" stop-color="#a8aea5"/>
+      <stop offset="0.500" stop-color="#788480"/>
+      <stop offset="0.750" stop-color="#aaa99b"/>
+      <stop offset="1.000" stop-color="#777c74"/>
+    </linearGradient>
+    <radialGradient id="boss" cx="0.31" cy="0.23" r="0.87">
+      <stop offset="0.000" stop-color="#eee3c7"/>
+      <stop offset="0.250" stop-color="#c9b99b"/>
+      <stop offset="0.500" stop-color="#9e8c72"/>
+      <stop offset="0.750" stop-color="#6c6254"/>
+      <stop offset="1.000" stop-color="#a69b85"/>
+    </radialGradient>
+    <linearGradient id="timber" x1="0.05" y1="0" x2="0.83" y2="1">
+      <stop offset="0.000" stop-color="#c7ab83"/>
+      <stop offset="0.250" stop-color="#b59873"/>
+      <stop offset="0.500" stop-color="#988669"/>
+      <stop offset="0.750" stop-color="#847359"/>
+      <stop offset="1.000" stop-color="#aa9270"/>
+    </linearGradient>
+    <linearGradient id="hide" x1="0.05" y1="0" x2="0.83" y2="1">
+      <stop offset="0.000" stop-color="#c1a58a"/>
+      <stop offset="0.250" stop-color="#a68c72"/>
+      <stop offset="0.500" stop-color="#93816b"/>
+      <stop offset="0.750" stop-color="#766653"/>
+      <stop offset="1.000" stop-color="#98856c"/>
+    </linearGradient>
+    <linearGradient id="leather" x1="0.05" y1="0" x2="0.83" y2="1">
+      <stop offset="0.000" stop-color="#857360"/>
+      <stop offset="0.333" stop-color="#a88c6e"/>
+      <stop offset="0.667" stop-color="#867059"/>
+      <stop offset="1.000" stop-color="#62574b"/>
+    </linearGradient>
+  </defs>
+  <path d="M7 38 L11 28 13 19 24 13 33 7 42 8 49 17 48 25 52 31 50 38 36 48 22 53 13 49Z" fill="#465358" stroke="#3d4241" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M9 37 Q13 29 15 20 Q22 19 31 11 Q29 20 24 26 Q19 33 12 39Z" fill="#87938d" stroke="#424d4c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16 20 Q25 16 32 10 L40 9 Q36 12 34 15 Q23 22 18 31Z" fill="#adb2a4" stroke="#424d4c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M23 28 Q30 21 33 12 Q36 10 40 10 L46 17 Q39 19 33 23Z" fill="#667877" stroke="#424d4c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M19 35 Q29 27 34 23 Q40 19 46 19 L46 25 49 31 Q38 28 31 36 L20 45 14 45Z" fill="#566667" stroke="#424d4c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 47 Q36 30 48 32 L48 36 35 46 23 50Z" fill="#6c7770" stroke="#424d4c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <clipPath id="fracture">
+      <path d="M20 35 Q32 24 44 19 L46 25 49 31 Q38 28 31 36 L20 45 14 45Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#fracture)">
+    <path d="M16 43 Q24 27 45 23.0" fill="none" stroke="#a2a89b" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M19 43 Q26 27 46 23.82" fill="none" stroke="#889489" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 43 Q28 27 47 24.64" fill="none" stroke="#3e4b4c" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M25 43 Q30 27 48 25.46" fill="none" stroke="#a2a89b" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M28 43 Q32 27 49 26.28" fill="none" stroke="#889489" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 43 Q34 27 50 27.1" fill="none" stroke="#3e4b4c" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M34 43 Q36 27 51 27.92" fill="none" stroke="#a2a89b" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M37 43 Q38 27 52 28.74" fill="none" stroke="#889489" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40 43 Q40 27 53 29.56" fill="none" stroke="#3e4b4c" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M43 43 Q42 27 54 30.38" fill="none" stroke="#a2a89b" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 43 Q44 27 55 31.2" fill="none" stroke="#889489" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <path d="M13 35 L18 29 19 25 M24 43 Q33 31 40 30 M32 17 l6 -4" fill="none" stroke="#c4c6ae" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M15 45 l8 -5 2 -5 5 -3 2 -5 6 -3" fill="none" stroke="#b09880" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

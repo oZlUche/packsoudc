@@ -516,6 +516,7 @@ func _draw() -> void:
 					self, cells, anchor, cell_px, Names.of_item(item) + ("
 " + note if note != "" else ""), font, 13, text_color
 				)
+		ItemPainter.draw_erosion(self, item, item.rotation, anchor, cell_px, tint)
 		var picked := select_mode and selected.has(item.uid)
 		if not picked:     # 268：勾了的左下角让给金勾（美术设计 15:57：和耐久点同一角）
 			ItemPainter.draw_charges(self, item, item.rotation, anchor, cell_px, tint)     # 208：耐久没满、又没这一档的图：左下角次数点

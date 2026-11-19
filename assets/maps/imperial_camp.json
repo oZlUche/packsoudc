@@ -1,1 +1,1 @@
-{"id": "imperial_camp", "display_name": "帝国营地", "tone": "light", "size": [1920, 1200], "safe_area": [192, 168, 1536, 864], "note": "192：贴图 3840×2400（两倍），size 是逻辑尺寸；safe_area = 中间淡色椭圆（80%×72%）的外接矩形，按 size 算"}
+{"id": "imperial_camp", "display_name": "帝国营地", "tone": "light", "size": [1920, 1200], "safe_area": [192, 168, 1536, 864], "note": "边境测绘图版；size 与 safe_area 使用逻辑坐标，独立于纹理分辨率。"}

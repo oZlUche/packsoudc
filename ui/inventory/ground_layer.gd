@@ -1552,6 +1552,7 @@ func _draw() -> void:
 		if not ItemPainter.draw_art(self, inst.def, rot, at, InventoryView.CELL, tint * ItemPainter.runs_tint(inst), base, ItemPainter.variant_of(inst)):
 			ItemPainter.draw_item(self, cells, at, InventoryView.CELL, body, edge)
 			ItemPainter.draw_label(self, cells, at, InventoryView.CELL, Names.of_item(inst), font, 13, ink)
+		ItemPainter.draw_erosion(self, inst, rot, at, InventoryView.CELL, tint)
 		ItemPainter.draw_lock(self, inst, rot, at, InventoryView.CELL, tint)     # 230
 		ItemPainter.draw_favorite(self, inst, rot, at, InventoryView.CELL, tint)     # 265
 		var sil := ItemSilhouette.of(inst.def, rot)

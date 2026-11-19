@@ -214,7 +214,12 @@ func buff_tip_parts(id: String, side: int = 0) -> Dictionary:
 		return _parts(Glossary.tip_head(StatAxes.name_of(a, v), "@term", "×%d" % absi(v), kind), [StatAxes.effect_text(a, v + _system_of(side, a))])
 	var note := panel_.passive_of(id)
 	if note != null:
-		return _parts(Glossary.tip_head(note.name, "@term", "", UiText.t("battle.kind_passive")), [note.describe()])
+		var lines := [note.describe()]
+		var left := panel_.time_left(id)
+		if left > 0.0:
+			lines.append(UiText.t("log.undying") % panel_.display_name)
+			lines.append(UiText.t("gloss.time_left") % ceili(left))
+		return _parts(Glossary.tip_head(note.name, "@term", "", UiText.t("battle.kind_passive")), lines)
 	var def: BuffDef = panel_.buff_defs.get(StringName(id), null)
 	if def == null:
 		return _parts(Glossary.tip_head(id, "@term"), [UiText.t("battle.missing_paren")])
@@ -742,6 +747,8 @@ func _apply(e: BattleEvent) -> void:
 		BattleEvent.EFFECT_RESOLVED:
 			if e.get_int(&"uid") > 0:
 				_flash(e)     # 157：规则触发也算那一件出手
+			if e.get_name(&"effect") == &"undying" and e.get_int(&"uid") == 0 and e.payload.has("until") and e.side >= 0 and e.side < _panels.size():
+				_panels[e.side].note_undying(StatMath.to_float(e.get_int(&"until")))
 			if String(e.payload.get("effect", "")) == ReactionResolver.EFFECT:
 				_on_reaction(e)
 		BattleEvent.DIED:

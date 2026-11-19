@@ -1,0 +1,32 @@
+# 帝国边境测绘图册 · 美术交接与验收
+
+打开游戏后，从主菜单进入自由探索，走入一张铜版测绘图，再打开随身背包。地图里的建筑、包里的旧物和撤离账单上的印章共同指向一个视角：玩家正在记录一次边境考察。画面深度来自纸张叠放、投影与局部压印，全部使用二维素材。
+
+## 看实机
+
+| 场景 | 在游戏中查看 | 验收图 |
+|---|---|---|
+| 主菜单 | 停在菜单，等背景轮播至测绘桌 | [测绘桌](game-menu.jpg) |
+| 探索 | 在自由探索里缩放地图，对照路线、节点和底纹 | [玩家视角](game-map.jpg) · [全图](game-atlas.jpg) |
+| 背包 | 打开背包，对照圆盾的盾面、剑刃和单格碎片 | [初版](game-inventory-before.jpg) · [修订版](game-inventory.jpg) · [实机局部对照](inventory-v1-v2.jpg) |
+| 战斗 | 在开战后查看双方棋盘与状态栏 | [战斗实机](game-battle.jpg) |
+| 撤离 | 成功撤离后等账单逐项显示完，观察标题右侧 | [落印后的账单](game-ledger.jpg) |
+
+## 美术决策
+
+- **地图**。遗迹用淡色纸本承载建筑线刻。林地、钟械、深处和军营各有单独底图。把高密度地标留在路线外围，用内深外亮的搪瓷节点和浅色图记标记交互位置。明底上画蓝墨线，暗底上画浅线。[五章图版](chapters.jpg)
+- **随身器物**。圆盾、短剑、黄铜齿轮、太阳护符、工具卷与三件矿物分别靠轮廓、朝光面和材质辨认。地图的细排线缩到一格后容易糊成灰块，优先把线放在能交代形体的位置：盾缘顺弧、剑刃顺脊、裂石沿断面。布与皮革的缝线低于刃口反光的亮度。加入新物品时，先按实际格子缩小，与其余道具放在同一只包里检查，再验放大图。[首轮物品样张](items.png) · [第二版物品样张](items-engraved-v2.png) · [绘法对照](engraving-comparison.png)
+- **器具与信仰**。顶栏采用黄铜仪表、纸面读数和深色端盖，六神使用六种独立剪影。战斗从开战快照取对应神徽，蛮神的不死事件在同侧已有蛮神条目时点亮双圈，悬停显示剩余秒数。旧磁盘回放缺少常驻快照时沿用原有战记。[仪表与神徽](hud.png) · [箱包与面板](surfaces.png)
+- **状态与动画**。侵蚀用裂纹分叉表示风险，赐福用蜡印标记，拖动用 160 毫秒投影变化表现物品离开纸面。撤离落印发生在账单揭示之后。两处动画都读取游戏的动态效果设置，关闭后直接显示终态。[短剑的四种状态](item-states.png)
+
+## 文件入口
+
+| 以后要改什么 | 入口 |
+|---|---|
+| 章图、纸色与路线 | `assets/maps/`、`ui/map/map_view.gd` |
+| 道具母版、运行时贴图 | `assets/items/survey-masters/`、`assets/items/`、`assets/items/@2x/` |
+| 面板、菜单、仪表与神徽 | `assets/ui/board/`、`assets/ui/bag/`、`assets/ui/bronze/`、`assets/ui/menu/`、`assets/ui/hud/topbar/`、`assets/ui/faith/` |
+| 背包手感与物品状态 | `ui/inventory/drag_layer.gd`、`item_painter.gd`、`inventory_view.gd`、`ground_layer.gd`（同目录） |
+| 战斗神徽与结算落印 | `ui/battle/combatant_panel.gd`、`ui/battle/battle_view.gd`、`ui/game/result_screen.gd`、`assets/icon/expedition_seal.svg` |
+
+[验收条件、测试结果与未覆盖项](../../docs/reports/testing/2026-11-19-art-atlas.md)

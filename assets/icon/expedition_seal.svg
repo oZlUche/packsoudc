@@ -1,0 +1,16 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="216" height="216" viewBox="0 0 216 216">
+<title>Frontier expedition return seal</title>
+<defs>
+ <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 6L6 0" stroke="#a33e2a" stroke-width="1.4"/></pattern>
+ <g id="tick"><path d="M108 17V25 M113 19V23" fill="none" stroke="#a33e2a" stroke-width="2"/></g>
+ <g id="sprig" fill="#a33e2a"><path d="M76 162Q42 139 43 98Q47 139 78 159Z"/><path d="M46 123Q36 118 34 104Q44 111 46 123ZM48 129Q48 118 55 112Q55 125 48 129ZM52 138Q40 137 36 126Q46 129 52 138ZM56 144Q55 131 61 127Q63 139 56 144ZM62 151Q50 151 44 144Q55 143 62 151ZM68 154Q64 145 69 139Q73 149 68 154Z"/></g>
+</defs>
+<g fill="none" stroke="#a33e2a">
+ <circle cx="108" cy="108" r="96" stroke-width="4" stroke-dasharray="301 3 213 2 80 4"/>
+ <circle cx="108" cy="108" r="89" stroke-width="1.6"/><circle cx="108" cy="108" r="80" stroke-width="2" stroke-dasharray="326 4 166 7"/>
+</g>
+<g><use xlink:href="#tick"/><use xlink:href="#tick" transform="rotate(45 108 108)"/><use xlink:href="#tick" transform="rotate(90 108 108)"/><use xlink:href="#tick" transform="rotate(135 108 108)"/><use xlink:href="#tick" transform="rotate(180 108 108)"/><use xlink:href="#tick" transform="rotate(225 108 108)"/><use xlink:href="#tick" transform="rotate(270 108 108)"/><use xlink:href="#tick" transform="rotate(315 108 108)"/></g>
+<use xlink:href="#sprig"/><use xlink:href="#sprig" transform="translate(216) scale(-1 1)"/>
+<g fill="#a33e2a"><path d="M50 66Q81 74 98 86L76 57Q102 65 119 85Q127 81 136 86L152 84L140 93Q136 103 120 107L100 122L103 111L81 114L93 102Q66 89 50 66Z"/><path d="M129 50l3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1Z"/><path d="M76 150V122H83V129H89V122H96V133H120V122H127V129H133V122H140V150L133 154V139H119Q108 127 97 139V154L88 151Z"/><path d="M80 155Q99 159 102 165L84 163ZM136 155L132 163L113 168Q118 160 136 155Z"/></g>
+<path d="M95 156L101 141Q108 136 115 141L109 153L118 159L106 175L107 162Z" fill="url(#hatch)"/>
+</svg>

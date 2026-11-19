@@ -257,6 +257,11 @@ func chip_count(id: String) -> String:
 
 ## 175 补 5.5：这一格的图标（保底的中毒 / 流血换彩色成品）；没有 null
 func icon_texture(id: String) -> Texture2D:
+	var note := passive_of(id)
+	if note != null:
+		var god := String(FaithTags.id_of_tag(note.id))
+		if god.is_valid_identifier():
+			return UiTheme.art_cached("faith/%s" % god)
 	return EffectIcons.of(id, int(_stacks.get(id, 0)), int(guards.get(id, 0)))
 
 
@@ -326,6 +331,16 @@ func note_stacked(id: String, payload: Dictionary, at: float) -> void:
 		timers[id] = {"end": StatMath.to_float(expires), "total": def.duration_sec}
 	elif payload.has("expires_at"):
 		timers.erase(id)
+
+
+## 只给同一侧快照中确有的蛮神常驻格点亮不死印。按回放时间重建，拖动时也能复现。
+func note_undying(until: float) -> void:
+	for i in passives.size():
+		var note := passives[i] as PassiveNote
+		if note != null and note.id == &"faith:brute":
+			timers[PASSIVE_PREFIX + str(i)] = {"end": until, "total": -1.0}
+			queue_redraw()
+			return
 
 
 ## 还剩几秒；不限时的 -1
@@ -596,7 +611,13 @@ func _draw_icon_chip(id: String, def: BuffDef, group: int, tex: Texture2D, drawn
 	if id == _hover_id:
 		draw_rect(drawn, Color(tint, 0.22))
 	var guard_art := EffectIcons.is_guard_art(id, stacks_, int(guards.get(id, 0)))
-	draw_texture_rect(tex, drawn, false, Color.WHITE if guard_art else tint)
+	var passive_art := passive_of(id) != null
+	draw_texture_rect(tex, drawn, false, Color.WHITE if guard_art or passive_art else tint)
+	if passive_art and time_left(id) > 0.0:
+		# 坚持期间固定的双圈，在暂停、关闭动画和拖动时间轴时都保留。
+		var radius := minf(drawn.size.x, drawn.size.y) * 0.5
+		draw_arc(drawn.get_center(), radius, 0, TAU, 32, ART_OUTLINE, 4.0 * k, true)
+		draw_arc(drawn.get_center(), radius, 0, TAU, 32, Color("#ffcf75"), 2.0 * k, true)
 	var n := chip_count(id)
 	if n == "":
 		return

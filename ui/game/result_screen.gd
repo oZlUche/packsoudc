@@ -47,6 +47,7 @@ const TITLE_PLATE_AT := Vector2(608, 92)
 const TITLE_PLATE_SIZE := Vector2(384, 72)
 const TITLE_PLATE_ORIGIN := Vector2(-7, -7)
 const TITLE_SIZE := 43
+const RETURN_SEAL := preload("res://assets/icon/expedition_seal.svg")
 ## 228（作者 17:33 选第三案）：第二页是回到基地的木头库间 —— 整屏一幅画（tone dark），标题刻在挂着的浅木牌上（墨字），「继续」换琥珀木牌
 const STOREROOM_ART := "result/bg_storeroom"
 const STORE_CONTINUE_ART := "result/btn_wood_continue"
@@ -253,6 +254,7 @@ func _build_summary() -> void:
 	_ledger.setup(r, int(flow.last_absorbed.get("lit", 0)))
 	page.add_child(_place(_ledger, LEDGER_AT, LedgerView.LEDGER_SIZE))
 	if extracted:
+		_add_return_seal(page)
 		_add_safe(page)
 	_add_insight(page)
 	_continue = _continue_button(to_step.bind(2) if _has_store_step() else proceed)
@@ -265,6 +267,30 @@ func _build_summary() -> void:
 			_continue.disabled = false)
 	if _side != null:
 		_side.visible = _ledger.is_revealed()
+
+
+## 撤离账单揭完时，在标题木牌右侧落印。印章不参与布局或命中检测。
+func _add_return_seal(page: Control) -> void:
+	var seal := TextureRect.new()
+	seal.name = "ReturnSeal"
+	seal.texture = RETURN_SEAL
+	seal.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var stamp_size := Vector2(82, 82)
+	page.add_child(_place(seal, Vector2(1008, 86), stamp_size))
+	seal.pivot_offset = stamp_size * 0.5
+	seal.rotation = -0.12
+	seal.visible = _ledger.is_revealed()
+	if not seal.visible:
+		_ledger.revealed.connect(func():
+			seal.show()
+			if UiMotion.enabled(flow.settings):
+				seal.scale = Vector2.ONE * 1.18
+				seal.modulate.a = 0.25
+				var tween := seal.create_tween().set_parallel()
+				tween.tween_property(seal, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				tween.tween_property(seal, "modulate:a", 1.0, 0.12)
+		, CONNECT_ONE_SHOT)
 
 
 ## 319：账单左边一张小纸 —— 这一局领了几点见识、三档各到没有、离下一档还差几分、余额。试玩切片不摆（不发见识）；账单全显了才露
