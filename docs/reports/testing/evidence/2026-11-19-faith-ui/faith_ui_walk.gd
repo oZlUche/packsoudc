@@ -158,6 +158,8 @@ func _process(_d: float) -> bool:
 		return _setup()
 	if mode == "layout":
 		return _layout()
+	if mode == "ground":
+		return _ground()
 	if _st == 40:
 		return _after_smite()
 	if _st == 31:
@@ -643,7 +645,7 @@ func _gods() -> bool:
 
 ## 往战斗走一步（地图挑战斗、事件挑能打的、搜索关、战利品全拿）
 var _rs := 0
-const FAITH_WORDS := ["Finesse", "连携", "combo", "盯上", "marked the foe", "拆掉", "拆到", "took apart", "broke the foe", "Supported", "加时", "Overtime", "信仰", "Faith", "巧劲", "Momentum", "拆解", "Dismantl", "承托", "Support", "怒气", "Rage", "烈日", "Blazing", "生息", "Regrowth", "守护", "不屈", "Undying"]
+const FAITH_WORDS := ["自然之力", "draws on Nature", "Finesse", "连携", "combo", "盯上", "marked the foe", "拆掉", "拆到", "took apart", "broke the foe", "Supported", "加时", "Overtime", "信仰", "Faith", "巧劲", "Momentum", "拆解", "Dismantl", "承托", "Support", "怒气", "Rage", "烈日", "Blazing", "生息", "Regrowth", "守护", "不屈", "Undying"]
 
 
 ## 六神走完：测试辅助直接记成撤离（force_extract），看结果页
@@ -1016,3 +1018,162 @@ func _layout_walk() -> bool:
 var _ev_shot := {}
 var _pend_take := false
 var _pend_shot := false
+
+
+## ground（v6.54 PR #677）：离开节点时地上还有东西的提醒 —— 真点地图节点、真点「先收拾 / 不再提醒 / 走」，设置页真点开关
+var _gr := 0
+var _from := -1
+func _drop_on_ground() -> void:
+	var r := _flow.run
+	var ok: bool = r.storage.insert(ItemInstance.create(_flow.items.get_def(&"bone_dice"), 0))
+	_flow._flush()
+	L("测试辅助：脚下 %d 号点地上放一副骨骰 → %s（地上 %d 件）" % [r.travel.current_id, str(ok), r.storage.item_count()])
+
+
+func _click_node(id: int) -> void:
+	var ms := _ms()
+	var v: MapView = ms._view
+	var gp := v.get_global_transform() * v.to_screen(v.positions().get(id, Vector2.ZERO))
+	_mouse_at(gp, MOUSE_BUTTON_LEFT)
+
+
+func _ground_next() -> int:
+	var r := _flow.run
+	for n in r.travel.available_moves():
+		var nd := r.map.get_node(n)
+		if nd != null and not nd.is_visited() and nd.type in [&"search", &"rest", &"shop", &"event", &"random"]: return n
+	return r.travel.available_moves()[0]
+
+
+func _ground() -> bool:
+	var scr := _flow.screen
+	if _st < 4:
+		match _st:
+			0:
+				if _f < 60: return false
+				_flow.start_new_game(); _st = 1
+			1:
+				var b = _game.base()
+				if b != null and b.has_method("tutorial_ask_open") and b.tutorial_ask_open():
+					b.decline_tutorial(); _wait = 20; _st = 2
+				elif _f > 240:
+					_flow.decline_tutorial(); _wait = 20; _st = 2
+			2:
+				var ch: ChapterDef = null
+				for c in _flow.available_chapters():
+					if not (c as ChapterDef).id.begins_with("prologue"): ch = c; break
+				_flow.begin_direct(ch, 780613); _st = 3
+			3:
+				if scr == GameFlow.Screen.EVENT:
+					if bool(_flow.last_payload.get("briefing", false)): _flow.close_briefing()
+					elif _flow.run.events.pending_event() != null: _flow.choose_event(0)
+					_wait = 10; return false
+				if scr != GameFlow.Screen.MAP: return false
+				for c in root.find_children("*", "CoachOverlay", true, false):
+					(c as CoachOverlay).next(); _wait = 5; return false
+				if _flow.run.phase == RunState.Phase.PICK_SPAWN:
+					_ms().pick_spawn(_flow.run.map.entry_ids[0]); _wait = 20; return false
+				_wait = 30; _st = 4
+		return false
+	var r := _flow.run
+	var ms := _ms()
+	match _gr:
+		0:
+			L("设置 leave_ground_warn 默认 %s" % str(_flow.settings.leave_ground_warn))
+			_drop_on_ground()
+			_from = r.travel.current_id
+			_click_node(_ground_next()); _wait = 20; _gr = 1
+		1:
+			if not ms.ground_warn_open():
+				L("真点地图节点没弹（屏 %s，点 %d → %d），改直接调 _on_node_pressed" % [GameFlow.Screen.keys()[scr], _from, r.travel.current_id])
+				ms._on_node_pressed(_ground_next(), MOUSE_BUTTON_LEFT, false); _wait = 20
+			_gr = 2
+		2:
+			var txt := []
+			for n in ms._confirm.find_children("*", "Label", true, false): txt.append((n as Label).text.strip_edges().replace("\n", " "))
+			for n in ms._confirm.find_children("*", "Button", true, false): txt.append("[%s]" % (n as Button).text.strip_edges())
+			L("点隔壁：提醒窗开着 %s；还在 %d 号点（应 = %d）；窗里：%s" % [str(ms.ground_warn_open()), r.travel.current_id, _from, " / ".join(txt)])
+			shot("ground_warn")
+			var b := _text_btn(UiText.t("map.ground_stay"))
+			if b != null: _click(b)
+			_wait = 20; _gr = 3
+		3:
+			L("真点「先收拾」：窗开着 %s；还在 %d 号点（应 = %d）；地上 %d 件" % [str(ms.ground_warn_open()), r.travel.current_id, _from, r.storage.item_count()])
+			_click_node(_ground_next()); _wait = 20; _gr = 4
+		4:
+			if not ms.ground_warn_open(): ms._on_node_pressed(_ground_next(), MOUSE_BUTTON_LEFT, false); _wait = 20; return false
+			var nv := _text_btn(UiText.t("map.ground_never"))
+			if nv != null: _click(nv)
+			_wait = 10; _gr = 5
+		5:
+			var nv := _text_btn(UiText.t("map.ground_never"))
+			L("真点「不再提醒」：勾上 %s" % str(nv.button_pressed if nv != null else "无键"))
+			shot("ground_never_ticked")
+			var b := _text_btn(UiText.t("map.ground_go"))
+			if b != null: _click(b)
+			_wait = 40; _gr = 6
+		6:
+			if scr != GameFlow.Screen.MAP: return _walk_step()
+			var f := FileAccess.get_file_as_string("user://settings.json")
+			var d = JSON.parse_string(f) if f != "" else {}
+			L("真点「走」：现在 %d 号点（从 %d 走开 %s）；设置 leave_ground_warn %s；settings.json 里 %s" % [r.travel.current_id, _from, str(r.travel.current_id != _from), str(_flow.settings.leave_ground_warn), str(d.get("leave_ground_warn", "没有") if d is Dictionary else "读不出")])
+			_drop_on_ground()
+			_from = r.travel.current_id
+			_click_node(_ground_next()); _wait = 40; _gr = 7
+		7:
+			L("关了提醒再点隔壁：提醒窗 %s；从 %d 走到 %d" % [str(ms.ground_warn_open()), _from, r.travel.current_id])
+			if ms.ground_warn_open(): ms.cancel_extract()
+			_gr = 8; _steps = 0
+		8:
+			if scr != GameFlow.Screen.MAP: return _walk_step()
+			_key(KEY_ESCAPE); _wait = 20; _gr = 9
+		9:
+			var b := _text_btn(UiText.t("map.pause_settings"))
+			L("暂停书「设置」键 %s" % ("在" if b != null else "不在"))
+			if b != null: _click(b)
+			_wait = 30; _gr = 10
+		10:
+			var gb: Button = null
+			var pre := UiText.t("settings.ground_warn_state").split("%")[0]
+			for n in root.find_children("*", "Button", true, false):
+				if (n as Button).is_visible_in_tree() and (n as Button).text.begins_with(pre): gb = n
+			L("设置页开关：%s" % (gb.text if gb != null else "没找到（前缀「%s」）" % pre))
+			shot("settings_off")
+			if gb != null: _click(gb)
+			_wait = 20; _gr = 11
+		11:
+			var gb: Button = null
+			var pre := UiText.t("settings.ground_warn_state").split("%")[0]
+			for n in root.find_children("*", "Button", true, false):
+				if (n as Button).is_visible_in_tree() and (n as Button).text.begins_with(pre): gb = n
+			var f := FileAccess.get_file_as_string("user://settings.json")
+			var d = JSON.parse_string(f) if f != "" else {}
+			L("真点设置开关后：%s；设置 %s；settings.json %s" % [gb.text if gb != null else "-", str(_flow.settings.leave_ground_warn), str(d.get("leave_ground_warn", "没有") if d is Dictionary else "读不出")])
+			shot("settings_on")
+			_key(KEY_ESCAPE); _wait = 30; _gr = 12
+		12:
+			if scr != GameFlow.Screen.MAP:
+				L("Esc 后屏 %s" % GameFlow.Screen.keys()[scr]); _key(KEY_ESCAPE); _wait = 30; return false
+			if ms._pause != null: _key(KEY_ESCAPE); _wait = 20; return false
+			_drop_on_ground()
+			_from = r.travel.current_id
+			_click_node(_ground_next()); _wait = 20; _gr = 13
+		13:
+			if not ms.ground_warn_open(): ms._on_node_pressed(_ground_next(), MOUSE_BUTTON_LEFT, false); _wait = 20
+			_gr = 14
+		14:
+			L("设置里重新打开后点隔壁：提醒窗 %s" % str(ms.ground_warn_open()))
+			shot("ground_warn_again")
+			var b := _text_btn(UiText.t("map.ground_go"))
+			if b != null: _click(b)
+			_wait = 40; _gr = 15
+		15:
+			if scr != GameFlow.Screen.MAP: return _walk_step()
+			L("不勾直接「走」：从 %d 到 %d；设置仍 %s" % [_from, r.travel.current_id, str(_flow.settings.leave_ground_warn)])
+			_from = r.travel.current_id
+			_click_node(_ground_next()); _wait = 20; _gr = 16
+		16:
+			L("这个点地上空着（%d 件）再点隔壁：提醒窗 %s；从 %d 到 %d" % [r.storage.item_count(), str(ms.ground_warn_open()), _from, r.travel.current_id])
+			shot("ground_empty_go")
+			L("地上提醒走查完"); quit(0); return true
+	return false
