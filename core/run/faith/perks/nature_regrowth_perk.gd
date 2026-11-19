@@ -4,7 +4,9 @@ class_name NatureRegrowthPerk
 extends FaithPerk
 
 @export var part: int = 0
-@export var pulse_sec: float = 6.0
+## 信仰重构 E：按对照台架缩短（一场大多不到 6 秒）—— 第一次在第 [member first_sec] 秒，之后每 [member pulse_sec] 秒
+@export var first_sec: float = 2.0
+@export var pulse_sec: float = 4.0
 @export var pulse_percent: int = 2
 @export var store_percent: int = 20
 @export var cap_percent: int = 15
@@ -41,7 +43,7 @@ func rule_at(at_tier: int, food: int = 0) -> AbilityRule:
 	trig.events = [BattleEvent.RESOURCE_CHANGED, BattleEvent.DAMAGE, BattleEvent.OVERTIME_STACKED] as Array[StringName]
 	trig.pulse = true
 	var cad := FaithPulseCadence.new()
-	cad.first_sec = pulse_sec
+	cad.first_sec = first_sec
 	cad.every_sec = pulse_sec
 	var eff := NatureRegrowth.new()
 	eff.tier = at_tier

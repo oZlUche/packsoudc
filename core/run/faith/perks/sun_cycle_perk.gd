@@ -4,8 +4,8 @@ class_name SunCyclePerk
 extends FaithPerk
 
 @export var part: int = 0
-@export var first_sec: float = 6.0
-@export var every_sec: float = 6.0
+@export var first_sec: float = 2.0
+@export var every_sec: float = 4.0
 @export var window_sec: float = 2.0
 @export var fire_percent: int = 20
 @export var charge_cap: int = 3

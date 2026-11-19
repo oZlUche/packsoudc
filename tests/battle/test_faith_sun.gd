@@ -1,4 +1,4 @@
-## 信仰重构 D（交接方案 §6.2）：日神「周期」—— 第 6 秒起每 6 秒烈日 2 秒（半开区间）；窗口里每件武器头一下追加 20% 火焰；
+## 信仰重构 D（交接方案 §6.2；E 批缩短）：日神「周期」—— 第 2 秒起每 4 秒烈日 2 秒（半开区间）；窗口里每件武器头一下追加 20% 火焰；
 ## 一阶窗外出手蓄力（最多 3 次）；三阶每第 3 次 ×1.5；有追加的窗口按次给信力、封顶
 extends RefCounted
 
@@ -46,16 +46,16 @@ static func _extras(res: BattleResult) -> Array:
 
 
 static func run_windows(t: TestCase) -> void:
-	t.begin("信仰重构 D · 烈日：半开区间 [6k, 6k + 2)；开、关写战记；窗口里每件武器只追加一次")
+	t.begin("信仰重构 D · 烈日：半开区间 [2 + 4k, 4 + 4k)；开、关写战记；窗口里每件武器只追加一次")
 	var eff := SunCycle.new()
-	t.eq(eff.window_at(StatMath.from_float(5.99)), 0, "第 6 秒之前没有")
-	t.eq(eff.window_at(StatMath.from_float(6.0)), 1, "第 6 秒整：第 1 个窗口")
-	t.eq(eff.window_at(StatMath.from_float(7.99)), 1, "7.99 秒还在")
-	t.eq(eff.window_at(StatMath.from_float(8.0)), 0, "第 8 秒整：关了（半开）")
-	t.eq(eff.window_at(StatMath.from_float(12.5)), 2, "12.5 秒：第 2 个")
-	var r := BattleSim.run(_me(0), FX._spec(50000.0, []), _rng(1), 13.0)
-	t.eq(_mech(r, "sun_open").size(), 2, "13 秒里开了两次（6、12）")
-	t.eq(_mech(r, "sun_close").size(), 1, "关了一次（8）")
+	t.eq(eff.window_at(StatMath.from_float(1.99)), 0, "第 2 秒之前没有")
+	t.eq(eff.window_at(StatMath.from_float(2.0)), 1, "第 2 秒整：第 1 个窗口")
+	t.eq(eff.window_at(StatMath.from_float(3.99)), 1, "3.99 秒还在")
+	t.eq(eff.window_at(StatMath.from_float(4.0)), 0, "第 4 秒整：关了（半开）")
+	t.eq(eff.window_at(StatMath.from_float(6.5)), 2, "6.5 秒：第 2 个")
+	var r := BattleSim.run(_me(0), FX._spec(50000.0, []), _rng(1), 7.0)
+	t.eq(_mech(r, "sun_open").size(), 2, "7 秒里开了两次（2、6）")
+	t.eq(_mech(r, "sun_close").size(), 1, "关了一次（4）")
 	var ex := _extras(r)
 	t.eq(ex.size(), 2, "一件武器：每个窗口追加一次（%d）" % ex.size())
 	var inside := true
@@ -64,17 +64,17 @@ static func run_windows(t: TestCase) -> void:
 			inside = false
 	t.check(inside, "追加都在窗口里")
 	t.check(not ex.is_empty() and int(ex[0][1]) == StatMath.mul(int(ex[0][2]), StatMath.from_percent(20)), "追加 = 这一下的 20%")
-	var two := BattleSim.run(_me(0, 0.5, true), FX._spec(50000.0, []), _rng(1), 7.5)
+	var two := BattleSim.run(_me(0, 0.5, true), FX._spec(50000.0, []), _rng(1), 3.5)
 	t.eq(_extras(two).size(), 2, "两件武器：同一个窗口各追加一次")
-	var again := BattleSim.run(_me(0), FX._spec(50000.0, []), _rng(1), 13.0)
+	var again := BattleSim.run(_me(0), FX._spec(50000.0, []), _rng(1), 7.0)
 	t.eq(again.log.size(), r.log.size(), "同种子同结果")
 
 
 static func run_tiers(t: TestCase) -> void:
 	t.begin("信仰重构 D · 烈日：一阶窗外蓄力（最多 3 次 × 10%）；三阶每第 3 个窗口 ×1.5")
-	var one := _extras(BattleSim.run(_me(1), FX._spec(50000.0, []), _rng(2), 7.0))
+	var one := _extras(BattleSim.run(_me(1), FX._spec(50000.0, []), _rng(2), 3.0))
 	t.check(not one.is_empty() and int(one[0][1]) == StatMath.mul(int(one[0][2]), StatMath.from_percent(50)), "一阶：蓄满 3 次，追加 20% + 30%")
-	var three := _extras(BattleSim.run(_me(3, 3.0), FX._spec(50000.0, []), _rng(2), 19.0))
+	var three := _extras(BattleSim.run(_me(3, 1.5), FX._spec(50000.0, []), _rng(2), 11.0))
 	var strong := -1
 	for x in three:
 		if SunCycle.new().window_at(int(x[0])) == 3:

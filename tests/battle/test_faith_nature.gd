@@ -1,4 +1,4 @@
-## 信仰重构 D（交接方案 §6.3）：自然之神「恢复存量」—— 每 6 秒回 2% 生命；实际回的 20% 存进生息（上限 15%）；满血不存；
+## 信仰重构 D（交接方案 §6.3；E 批缩短）：自然之神「恢复存量」—— 第 2 秒起每 4 秒回 2% 生命；实际回的 20% 存进生息（上限 15%）；满血不存；
 ## 一阶低血放出（隔 6 秒，放出的不再存）；二阶食物加容量（最多 3 件）；三阶进加时给守护
 extends RefCounted
 
@@ -46,19 +46,19 @@ static func _top(res: BattleResult) -> int:
 
 static func run_store(t: TestCase) -> void:
 	t.begin("信仰重构 D · 生息：周期治疗回 2%、实际回的 20% 存进去、满血不存、存量封顶")
-	var r := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 13.0)
+	var r := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 7.0)
 	var heals := 0
 	for raw in r.log:
 		var e := raw as BattleEvent
 		if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "hp" and String(e.payload.get("reason", "")) == "heal" and e.get_int(&"delta") > 0:
 			heals += 1
-	t.eq(heals, 2, "13 秒里周期治疗两次（6、12）")
+	t.eq(heals, 2, "7 秒里周期治疗两次（2、6）")
 	t.eq(_top(r), 8, "两次各回 20，存 20% = 8 点生息")
-	var full := BattleSim.run(_me(0), FX._spec(50000.0, []), _rng(1), 13.0)
+	var full := BattleSim.run(_me(0), FX._spec(50000.0, []), _rng(1), 7.0)
 	t.eq(_top(full), 0, "一直满血：治疗没回上来，也就不存")
 	var long := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 120.0)
 	t.check(_top(long) <= 150, "存量不超过最大生命的 15%%（%d）" % _top(long))
-	var again := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 13.0)
+	var again := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 7.0)
 	t.eq(again.log.size(), r.log.size(), "同种子同结果")
 
 

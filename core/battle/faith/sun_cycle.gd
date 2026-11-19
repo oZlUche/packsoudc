@@ -1,4 +1,4 @@
-## 信仰重构 D（交接方案 §6.2）：日神「周期」。一条规则（[FaithMechanicTrigger] 听出手、伤害，另按 [FaithPulseCadence] 打节拍）放整套：
+## 信仰重构 D（交接方案 §6.2；E 批按对照台架把节奏从 6 秒缩到 4 秒、第一次从第 2 秒起）：日神「周期」。一条规则（[FaithMechanicTrigger] 听出手、伤害，另按 [FaithPulseCadence] 打节拍）放整套：
 ##
 ## - 烈日窗口：从第 [member first_sec] 秒起每 [member every_sec] 秒开一次，开 [member window_sec] 秒，半开区间 [开, 开 + 长)。
 ##   在不在窗口只按战斗时间算（[method window_at]），节拍只负责写战记「烈日开始 / 结束」。
@@ -10,8 +10,8 @@ class_name SunCycle
 extends CombatEffect
 
 @export var tier: int = 0
-@export var first_sec: float = 6.0
-@export var every_sec: float = 6.0
+@export var first_sec: float = 2.0
+@export var every_sec: float = 4.0
 @export var window_sec: float = 2.0
 @export var fire_percent: int = 20
 @export var charge_cap: int = 3

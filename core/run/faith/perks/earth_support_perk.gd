@@ -21,7 +21,13 @@ extends FaithPerk
 func compile_into(input: CompileInput, board: GridInventory, run: RunState) -> void:
 	if part != 0 or board == null:
 		return
-	var at_tier := maxi(0, run.active_faith_tier()) if run != null else 0
+	compile_at(input, board, maxi(0, run.active_faith_tier()) if run != null else 0)
+
+
+## 按 [param at_tier] 阶编进去（台架与测试直接拿）
+func compile_at(input: CompileInput, board: GridInventory, at_tier: int) -> void:
+	if board == null:
+		return
 	var got := EarthSupport.layers(board, FaithState.board_tag(board), min_cells_t1 if at_tier >= 1 else min_cells, max_layers)
 	for uid in got:
 		var mods := mods_for(board.get_item(int(uid)).def, int(got[uid]))
