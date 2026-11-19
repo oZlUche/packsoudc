@@ -1175,5 +1175,27 @@ func _ground() -> bool:
 		16:
 			L("这个点地上空着（%d 件）再点隔壁：提醒窗 %s；从 %d 到 %d" % [r.storage.item_count(), str(ms.ground_warn_open()), _from, r.travel.current_id])
 			shot("ground_empty_go")
+			_gr = 17; _wait = 10
+		17:
+			if scr != GameFlow.Screen.MAP: return _walk_step()
+			_drop_on_ground()
+			var ex: MapNode = null
+			for id in r.map.node_ids():
+				if NodeEvents.effective_type(r.map.get_node(id)) == &"extract" and r.events.extract_fee(r.map.get_node(id)) > 0: ex = r.map.get_node(id); break
+			if ex == null: ex = r.current_node()
+			ms._open_confirm(ex)
+			L("测试辅助：直接开撤离确认窗（按 %d 号撤离点算撤离费 %d）" % [ex.id, r.events.extract_fee(ex)])
+			_wait = 20; _gr = 18
+		18:
+			var txt := []
+			for n in ms._confirm.find_children("*", "Label", true, false): txt.append((n as Label).text.strip_edges().replace("\n", " "))
+			L("撤离确认窗字：%s" % " / ".join(txt))
+			shot("extract_confirm")
+			ms.cancel_extract(); _wait = 10; _gr = 19
+		19:
+			_click_node(_ground_next()); _wait = 20; _gr = 20
+		20:
+			if not ms.ground_warn_open(): ms._on_node_pressed(_ground_next(), MOUSE_BUTTON_LEFT, false); _wait = 20; return false
+			shot("ground_warn_coin")
 			L("地上提醒走查完"); quit(0); return true
 	return false
