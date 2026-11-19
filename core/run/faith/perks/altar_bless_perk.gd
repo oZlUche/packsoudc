@@ -1,4 +1,4 @@
-## 神坛特殊操作（095，各神都有）：花 [member cost] 信力，赐福包里能被赐福的最值钱的一件（棋盘优先，其次地上）
+## 神坛特殊操作（095，各神都有）：花 [member cost] 祈愿（信仰重构 B：不再扣信力、不降阶），赐福包里能被赐福的最值钱的一件（棋盘优先，其次地上）
 class_name AltarBlessPerk
 extends FaithPerk
 
@@ -13,8 +13,8 @@ func altar_available(run: RunState, _node: MapNode) -> String:
 	var def := run.active_faith() if run != null else null
 	if def == null:
 		return UiText.t("perk.no_active_faith")
-	if run.faith_power.points_of(def.id) < cost:
-		return UiText.t("perk.faith_short") % cost
+	if run.faith_power.prayer_of(def.id) < cost:
+		return UiText.t("perk.prayer_short") % cost
 	if Blessings.best_candidate(run.board, run.items, def.id) == null and Blessings.best_candidate(run.storage, run.items, def.id) == null:
 		return UiText.t("perk.bless_none")
 	return ""
@@ -33,7 +33,7 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	var v := Blessings.bless_instance(inst, run.items, def.id)
 	if v == null:
 		return ""
-	run.faith_power.spend_points(def.id, cost)
+	run.faith_power.spend_prayer(def.id, cost)
 	where.changed.emit()
 	var altar := AltarModule.of(run)
 	if altar != null:
@@ -41,7 +41,7 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	return UiText.t("perk.bless_done") % [cost, was, Names.of(v)]
 
 
-## 188 补充一（作者原话「可以在祭坛赐福武器」）：花多少信力只在神坛按钮上写
+## 188 补充一（作者原话「可以在祭坛赐福武器」）：花多少祈愿只在神坛按钮上写
 func _summary() -> String:
 	return UiText.t("perk.bless_summary") % UiText.t("perk.items")
 

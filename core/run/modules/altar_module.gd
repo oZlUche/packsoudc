@@ -85,12 +85,12 @@ func is_open() -> bool:
 	return node >= 0 and _run.travel.current_id == node and not used.has(node) and _run.active_faith() != null
 
 
-## 献祭：这些道具（从棋盘 / 地上 / 祭品台拿来的实例）销毁换信力。
-## 返回 {"points", "tier_before", "tier_after", "log", "count"}；不能献的跳过
+## 献祭：这些道具（从棋盘 / 地上 / 祭品台拿来的实例）销毁换信力与祈愿。
+## 返回 {"points"（信力）, "prayer"（实际进的祈愿）, "tier_before", "tier_after", "log", "count"}；不能献的跳过
 func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 	var def := _run.active_faith() if _run != null else null
 	var tier := _run.active_faith_tier() if _run != null else -1
-	var out := {"points": 0, "tier_before": tier, "tier_after": tier, "log": [] as Array[String], "count": 0}
+	var out := {"points": 0, "prayer": 0, "tier_before": tier, "tier_after": tier, "log": [] as Array[String], "count": 0}
 	if def == null:
 		return out
 	var defs: Array = []
@@ -107,7 +107,11 @@ func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 	if int(out["points"]) <= 0:
 		return out
 	out["tier_after"] = _run.faith_power.add_points(def.id, int(out["points"]))
+	# 信仰重构 B（交接方案 §3.3 候选）：献祭同时进祈愿 min(2V, 余量)；实际进多少写在结果里，界面照写
+	out["prayer"] = _run.faith_power.add_prayer(def.id, 2 * int(out["points"]), &"offering")
 	(out["log"] as Array[String]).append(UiText.tn("log.offered", int(out["count"])) % [int(out["count"]), Names.of(def), int(out["points"])])
+	if int(out["prayer"]) > 0:
+		(out["log"] as Array[String]).append(UiText.t("log.offered_prayer") % int(out["prayer"]))
 	if int(out["tier_after"]) > int(out["tier_before"]):
 		(out["log"] as Array[String]).append(UiText.t("log.faith_tier_up") % [Names.of(def), int(out["tier_after"])])
 	for p in perks():

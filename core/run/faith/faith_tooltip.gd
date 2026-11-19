@@ -61,7 +61,9 @@ static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemCo
 		sections.append(offers)
 	for i in sections.size():
 		sections[i] = "[font_size=%d]%s[/font_size]" % [Glossary.BODY_SIZE, sections[i]]
-	var head := _head(def, p, tier, next, dormant)
+	var pr := power.prayer_of(def.id) if power != null else 0
+	var cap := power.prayer_cap(def.id) if power != null else FaithPower.PRAYER_CAP_DEFAULT
+	var head := _head(def, p, tier, next, dormant, pr, cap)
 	if connection == FaithState.BENCHED or connection == FaithState.MISSING:
 		var why := UiText.t("faith.broken_benched" if connection == FaithState.BENCHED else "faith.broken_missing")
 		head += "\n" + _meta("[color=%swarn]%s　%s[/color]" % [TextTemplate.STYLE_PREFIX, UiText.t("faith.broken"), why])
@@ -73,13 +75,14 @@ static func describe_full(def: FaithDef, power: FaithPower = null, board: ItemCo
 	}
 
 
-static func _head(def: FaithDef, points: int, tier: int, next: int, dormant: int) -> String:
+static func _head(def: FaithDef, points: int, tier: int, next: int, dormant: int, prayer: int = 0, prayer_cap: int = FaithPower.PRAYER_CAP_DEFAULT) -> String:
 	var right := ""
 	if dormant > 0:
 		right += _meta("[color=%swarn]%s[/color]" % [TextTemplate.STYLE_PREFIX, UiText.t("faith.dormant") % dormant]) + "　"
 	right += _meta(Glossary.faith("Lv.%d" % tier))     # 257：Lv 与信力数都是信力色
 	var name := "[font_size=%d]%s[/font_size]" % [Glossary.NAME_SIZE, Glossary.NAME_OUTLINE % ("[b][color=%sfaith]%s[/color][/b]" % [TextTemplate.STYLE_PREFIX, Names.of(def)])]
 	var power := UiText.t("faith.points") % [Glossary.faith(str(points)), (" / " + Glossary.faith(str(next))) if next >= 0 else UiText.t("faith.max_rank")]
+	power += "　" + UiText.t("faith.prayer") % [Glossary.faith(str(prayer)), str(prayer_cap)]     # 信仰重构 B：花的是祈愿
 	return "%s　　%s\n[font_size=%d][color=%stip_meta]%s[/color][/font_size]" % [name, right, POWER_SIZE, TextTemplate.STYLE_PREFIX, power]
 
 

@@ -158,8 +158,18 @@ static func run_bench(t: TestCase) -> void:
 	board.remove(b.uid)
 	board.place(c, Vector2i(1, 0), 0)
 	var spec := BattleCompiler.compile_board(board, CombatantBaseline.with_hp(25.0))
-	t.eq(spec.stats_of(a.uid).total_int_of(BattleStats.DAMAGE), 10, "休眠的邻居：不算点亮")
-	t.not_null(spec.item_of(c.uid), "休眠的件自己还参战（dormant_keeps_combat）")
+	# 信仰重构 B：派生赐福版休眠只停神力层，基础层（含邻接）照常 —— 它还算邻居
+	t.eq(spec.stats_of(a.uid).total_int_of(BattleStats.DAMAGE), 30, "派生赐福版休眠：基础层照常，算点亮")
+	t.not_null(spec.item_of(c.uid), "派生赐福版自己照常参战")
+	# 手写的信仰道具（信物）休眠 = 不存在：选了别的神（联系中断，有效信仰为空）
+	var relic2 := Comp._weapon("t_relic2", ["1"], 4.0, 2.0, ["faith:sun"])
+	var e := ItemInstance.create(relic2)
+	board.remove(c.uid)
+	board.place(e, Vector2i(1, 0), 0)
+	board.select_faith(&"faith:brute")
+	spec = BattleCompiler.compile_board(board, CombatantBaseline.with_hp(25.0))
+	t.eq(spec.stats_of(a.uid).total_int_of(BattleStats.DAMAGE), 10, "休眠的手写信仰道具：不算点亮")
+	t.not_null(spec.item_of(e.uid), "休眠的件自己还参战（dormant_keeps_combat）")
 
 	var meta := MetaState.new()
 	var inst := ItemInstance.create(dot)

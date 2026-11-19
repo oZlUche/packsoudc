@@ -11,7 +11,7 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
@@ -840,6 +840,7 @@ func faith_context() -> FaithContext:
 	c.effective = selected_faith if c.connection == FaithState.OK else &""
 	c.tier = faith_power.tier_of(c.effective) if faith_power != null and c.effective != &"" else -1
 	c.points = faith_power.points_of(selected_faith) if faith_power != null and selected_faith != &"" else 0
+	c.prayer = faith_power.prayer_of(selected_faith) if faith_power != null and selected_faith != &"" else 0
 	return c
 
 
@@ -1287,7 +1288,10 @@ func _wire_faith_power() -> void:
 		# 信仰重构 A：记给开战那一刻的有效信仰（编译快照 [member CombatantSpec.faith]），不回头看此刻的背包
 		var me: CombatantSpec = events.last_battle.get("player", null) as CombatantSpec
 		var snap := FaithTags.id_of_tag(me.faith) if me != null else active_faith_id()
-		faith_power.credit(&"battle", battle_summary(r, won, board, t), snap))
+		faith_power.credit(&"battle", battle_summary(r, won, board, t), snap)
+		# 信仰重构 B：打完一场有效战斗（输赢都算）给这位神祈愿；秒杀不算打了一场
+		if snap != &"" and not bool(events.last_battle.get("smite", false)):
+			faith_power.add_prayer(snap, FaithPower.PRAYER_PER_BATTLE, &"battle"))
 	travel.moved.connect(func(i: MoveIntent, first: bool):
 		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
 		faith_power.credit(&"travel", {"steps": travel.clock.total, "first_visit": first, "node_type": String(n.type) if n != null else ""}))
@@ -1413,7 +1417,7 @@ func to_dict() -> Dictionary:
 			"search_haul": search_haul},
 		"skills": skills.to_dict(),
 		"faith_selection": {"selected_id": String(selected_faith)},     # 信仰重构 A：只存选择，有效信仰读档后由棋盘重建
-		"faith_power": faith_power.to_dict(),
+		"faith_progress": faith_power.progress_to_dict(),     # 信仰重构 B：每位神 {devotion 信力, prayer 祈愿}
 		"faith_history": faith_power.history_to_array(),     # 104
 		"owned_uids": owned_uids.keys(),
 		"acquired_ids": acquired_ids.keys(),
@@ -1529,7 +1533,10 @@ static func from_dict(
 	s.events.last_handled_id = int(ev.get("last_handled", -1))
 	s.events.losses_forgiven = int(ev.get("losses_forgiven", 0))
 	s.skills_saved = d.get("skills", {}) if d.get("skills", {}) is Dictionary else {}
-	s.faith_power.restore(d.get("faith_power", {}) if d.get("faith_power", {}) is Dictionary else {})
+	if d.get("faith_progress", null) is Dictionary:
+		s.faith_power.restore_progress(d["faith_progress"])
+	else:
+		s.faith_power.restore(d.get("faith_power", {}) if d.get("faith_power", {}) is Dictionary else {})     # 没走迁移的手造档：只有信力
 	var pending = ev.get("pending", {})
 	if pending is Dictionary and not (pending as Dictionary).is_empty():
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}

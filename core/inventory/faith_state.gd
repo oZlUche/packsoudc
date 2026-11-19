@@ -118,13 +118,25 @@ static func is_dormant(def: ItemDef, active: StringName) -> bool:
 	return def != null and def.has_faith() and def.faith_tag() != active
 
 
+## 信仰重构 B（交接方案 §4「失去赐福的普通剑仍是剑」）：普通道具派生的赐福版（[method ItemDef.is_blessed]）休眠时
+## 只停神力层（[member ItemDef.faith_bonuses]），**基础层照常**：原物品的属性、规则、邻接、套装、生长都在。
+## 手写的信仰道具（信物、赐福的长弓这类）没有可分离的基础层，照 087 的老规矩休眠
+static func keeps_base_layer(def: ItemDef) -> bool:
+	return def != null and def.is_blessed()
+
+
+## 这件在这个有效信仰下是不是**整件**休眠（邻接、套装、生长都不算）：休眠、且不是带基础层的派生赐福版
+static func is_inert(def: ItemDef, active: StringName) -> bool:
+	return is_dormant(def, active) and not keeps_base_layer(def)
+
+
 ## 087（作者定）：休眠的这件还留着通用效果没有 —— 有战斗定义、且 [member ItemDef.dormant_keeps_combat] 开着。
 ## 留着 = 编译时仍参战（基础属性 + 自己的规则 + 包体加成），只丢信力加成、邻接、套装；不留 = 彻底不参战
 static func keeps_combat_when_dormant(def: ItemDef) -> bool:
 	return def != null and def.combat != null and def.dormant_keeps_combat
 
 
-## 棋盘上休眠的那些 uid，升序（按 [method board_tag]）
+## 棋盘上整件休眠的那些 uid，升序（按 [method board_tag]；派生赐福版只停神力层，不在里面）
 static func dormant_uids(container: ItemContainer) -> Array[int]:
 	var out: Array[int] = []
 	if container == null:
@@ -132,7 +144,7 @@ static func dormant_uids(container: ItemContainer) -> Array[int]:
 	var active := board_tag(container)
 	for raw in container.items():
 		var inst := raw as ItemInstance
-		if inst != null and is_dormant(inst.def, active):
+		if inst != null and is_inert(inst.def, active):
 			out.append(inst.uid)
 	out.sort()
 	return out

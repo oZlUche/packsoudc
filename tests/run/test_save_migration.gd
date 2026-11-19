@@ -122,6 +122,17 @@ static func run_run_chain(t: TestCase) -> void:
 	t.check(not (((RunMigrations.upgrade(v2_none)["modules"] as Dictionary)["altar"] as Dictionary).has("axis_bonus")),
 		"没祈祷过的老档不凭空多出一条轴")
 	t.eq(int(v2["version"]), 2, "不改入参")
+	# 信仰重构 B：v5 → v6 一个池子拆成信力（照搬）与祈愿（min(P, 上限)）；已经拆过的不再补
+	var v5 := {"version": 5, "chapter": "chapter_01", "faith_power": {"brute": 260, "sun": 40, "bad": "x"}}
+	var up6 := RunMigrations.upgrade(v5)
+	t.eq(int(up6["version"]), RunState.SAVE_VERSION, "v5 升到了当前版本")
+	t.check(not up6.has("faith_power"), "旧的单池键删掉了（不留两处）")
+	var prog: Dictionary = up6["faith_progress"]
+	t.eq(prog["brute"], {"devotion": 260, "prayer": FaithPower.PRAYER_CAP_DEFAULT}, "260 → 信力 260、祈愿封顶 %d" % FaithPower.PRAYER_CAP_DEFAULT)
+	t.eq(prog["sun"], {"devotion": 40, "prayer": 40}, "40 → 两样都是 40")
+	t.eq(prog["bad"], {"devotion": 0, "prayer": 0}, "坏值清成 0")
+	var spent := {"version": 5, "chapter": "chapter_01", "faith_progress": {"brute": {"devotion": 260, "prayer": 3}}, "faith_power": {"brute": 260}}
+	t.eq((RunMigrations.upgrade(spent)["faith_progress"] as Dictionary)["brute"], {"devotion": 260, "prayer": 3}, "已经有 faith_progress：不动（花掉的不补）")
 
 
 static func run_backup_instead_of_overwrite(t: TestCase) -> void:

@@ -487,7 +487,7 @@ func _draw() -> void:
 			continue
 		var cells := item.cells()
 		var anchor := cell_origin_px(item.origin)
-		var dormant := show_adjacency and FaithState.is_dormant(item.def, active_faith)
+		var dormant := show_adjacency and FaithState.is_inert(item.def, active_faith)     # 信仰重构 B：派生赐福版基础层还在，不压灰
 		# 2026-10-22（作者）：标了「不参战」的也压灰、写小字 —— 不然看不出这一场为什么没算它
 		var benched := item.is_benched()
 		var muted := dim_filter.is_valid() and not bool(dim_filter.call(item))

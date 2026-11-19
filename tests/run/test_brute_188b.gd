@@ -1,5 +1,5 @@
 ## 188 补充一（作者 2026-10-18 10:30）：信仰窗一级一行、没到的级灰；蛮神说明改写，X 随信力（每 50 信力一阶）；
-## 二级献祭生命上限二选一（信力 / 造成伤害 + 急速）；三级耗体力或信力立即击败非首领敌人；献祭写「大型道具」
+## 二级献祭生命上限二选一（信力 / 造成伤害 + 急速）；三级耗体力或祈愿立即击败非首领敌人；献祭写「大型道具」
 extends RefCounted
 
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
@@ -43,7 +43,7 @@ static func run_perk_lines(t: TestCase) -> void:
 	for i in range(1, 4):
 		t.check(String(rows[i]["raw"]).begins_with("[color=@dim]"), "Lv.%d 没到：整行灰" % (i + 1))
 	t.check(String(rows[1]["text"]).contains("可以在祭坛献祭生命上限换取能力"), "Lv.2：%s" % rows[1]["text"])
-	t.check(String(rows[2]["text"]).contains("可消耗 1 体力或 30 信力立即击败非首领敌人"), "Lv.3：%s" % rows[2]["text"])
+	t.check(String(rows[2]["text"]).contains("可消耗 1 体力或 30 祈愿立即击败非首领敌人"), "Lv.3：%s" % rows[2]["text"])
 	t.check(String(rows[3]["text"]).contains("在战斗中，首次生命值归零时会持续战斗 10 秒"), "Lv.4 按到那一级的 400 信力写：%s" % rows[3]["text"])
 	var at400 := _rows(brute, 400)
 	t.check(at400.size() == 4 and String(at400[0]["text"]).contains("造成伤害提高 50%"), "400 信力：50%")
@@ -81,7 +81,7 @@ static func run_low_hp_threshold(t: TestCase) -> void:
 
 
 static func run_sacrifice_and_smite(t: TestCase) -> void:
-	t.begin("188 补充一 · 神坛二级：换信力 +20 / 换能力（每件道具造成伤害、急速 MULT +5，再做一次 +10）；三级：普通战斗也有两个按钮，不够的灰着写原因、点了花对的那样（体力 1 灰；信力 29 灰只在构件上验）")
+	t.begin("188 补充一 · 神坛二级：换信力 +20 / 换能力（每件道具造成伤害、急速 MULT +5，再做一次 +10）；三级：普通战斗也有两个按钮，不够的灰着写原因、点了花对的那样（体力 1 灰；祈愿 29 灰只在构件上验）")
 	var c = NodeScreens._content()
 	var kit = NodeScreens._kit(c)
 	var found: Dictionary = NodeScreens._seed_with(c, &"battle", kit.items)
@@ -126,12 +126,11 @@ static func run_sacrifice_and_smite(t: TestCase) -> void:
 	var acts: Array[Dictionary] = smite.prebattle_actions(run, &"battle") if smite != null else [] as Array[Dictionary]
 	t.eq(acts.size(), 2, "普通战斗：两个按钮")
 	t.check(smite != null and smite.prebattle_actions(run, &"core").is_empty(), "首领点：没有")
-	# 信力不够那一档：到了 3 级信力至少 200，屏上碰不到（花信力会掉级），只在构件上验
-	var keep := run.faith_power.points_of(&"brute")
-	run.faith_power.spend_points(&"brute", keep - 29)
+	# 信仰重构 B：秒杀花祈愿（不花信力、不掉阶）。祈愿不够那一档
+	run.faith_power.add_prayer(&"brute", 29)
 	acts = smite.prebattle_actions(run, &"battle")
-	t.check(acts.size() == 2 and String(acts[0]["why"]) == "" and String(acts[1]["why"]).contains("信力不够"), "信力 29：信力那个灰、写原因（%s）" % acts[1]["why"])
-	run.faith_power.add_points(&"brute", keep - 29)
+	t.check(acts.size() == 2 and String(acts[0]["why"]) == "" and String(acts[1]["why"]).contains("祈愿不够"), "祈愿 29：祈愿那个灰、写原因（%s）" % acts[1]["why"])
+	run.faith_power.add_prayer(&"brute", 100)
 	var vit_keep := run.vitality.current
 	run.vitality.current = 1
 	var screen = load("res://ui/game/prebattle_screen.gd").new()
@@ -148,12 +147,14 @@ static func run_sacrifice_and_smite(t: TestCase) -> void:
 	t.check(btns.size() == 2 and vb != null and fb != null, "屏上两个按钮")
 	if vb != null and fb != null:
 		t.check(vb.disabled and vb.tooltip_text.contains("体力不够"), "体力 1：体力那个灰，停上去写原因")
-		t.check(not fb.disabled and fb.text.contains("30 信力"), "信力那个能点：%s" % fb.text)
+		t.check(not fb.disabled and fb.text.contains("30 祈愿"), "祈愿那个能点：%s" % fb.text)
 	screen.queue_free()
 	t.check(not f.smite(SmitePerk.VITALITY), "体力不够：点不动")
-	var before := run.faith_power.points_of(&"brute")
-	t.check(f.smite(SmitePerk.FAITH), "耗信力立即击败")
-	t.eq(run.faith_power.points_of(&"brute"), before - 30, "信力 −30")
+	var before := run.faith_power.prayer_of(&"brute")
+	var dev := run.faith_power.points_of(&"brute")
+	t.check(f.smite(SmitePerk.FAITH), "耗祈愿立即击败")
+	t.eq(run.faith_power.prayer_of(&"brute"), before - 30, "祈愿 −30")
+	t.eq(run.faith_power.points_of(&"brute"), dev, "信力不扣")
 	t.eq(run.vitality.current, 1, "体力没动")
 	t.check(run.events.pending_battle.is_empty() and f.screen != GameFlow.Screen.PREBATTLE, "这一场算打过了")
 	run.vitality.current = vit_keep
