@@ -212,6 +212,11 @@ static func frame_ground_warn(t: TestCase, root: Window) -> void:
 	map._on_node_pressed(to, MOUSE_BUTTON_LEFT, false)
 	t.check(map.ground_warn_open(), "点隔壁：先弹「地上还有东西」")
 	t.eq(run.travel.current_id, here, "还没走")
+	var ledger: Node = null
+	for l in (map._confirm.find_children("*", "LedgerRows", true, false) if map._confirm != null else []):
+		ledger = l
+	var vals: Array = (ledger as LedgerRows).rows().map(func(r: Dictionary) -> String: return String(r["value"])) if ledger is LedgerRows else []
+	t.check(not vals.is_empty() and vals.all(func(v: String) -> bool: return v.contains(LedgerRows.COIN) and not v.contains("币")), "钱画金币、不写「币」（%s）" % [vals])
 	t.check(map.escape(), "Esc：收起（同「先收拾」）")
 	t.check(not map.ground_warn_open(), "收起了")
 	t.eq(run.travel.current_id, here, "先收拾：没走")

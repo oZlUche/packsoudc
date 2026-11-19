@@ -141,3 +141,7 @@ xvfb-run -a -s "-screen 0 1920x1200x24" godot --path . --rendering-driver opengl
 - `docs/architecture.md` 里 109 那段补了这次的改动。
 - 测试 `test_run_ui_layout` 的 `frame_ground_warn`（12 项断言）：地上空时不问；有东西时先弹窗、还没走；Esc 收起不走；勾「不再提醒」再走，走到了、设置关了、存得回来；旧设置文件默认开。
 - 截图：`new_ground_warn.jpg`（中文默认）、`new_ground_warn_en_large.jpg`（英文大字号）。
+
+## 10. 修正：账目行的钱改用金币图（游戏测试 v6.54）
+
+「地上还有东西」和撤离确认共用的账目行写成了「值 75 币」，违反「钱用金币图，不写币字」。`LedgerRows` 现在把数里的 `[coin]` 记号画成一枚金币。`map.row_items`、`map.row_fee_value`、`map.row_coin_value` 都改成用这个记号，所以撤离确认的撤离费、带出的钱也一起换成了金币图。`frame_ground_warn` 加了检查：账目行的钱带金币记号、不含「币」字。截图 `new_ground_warn.jpg` 已重截。

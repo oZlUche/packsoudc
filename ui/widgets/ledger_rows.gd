@@ -10,6 +10,9 @@ const INK_LABEL := Color("2e2219")
 const INK_NUM := Color("16110d")
 const LINE := Color(0.18, 0.13, 0.10, 0.35)
 
+## 数里的这个记号画成金币图（钱不写「币」字）
+const COIN := "[coin]"
+
 ## 每行 {"label", "value", "color"}
 var _rows: Array[Dictionary] = []
 
@@ -43,7 +46,7 @@ func _get_minimum_size() -> Vector2:
 	var fb := UiPalette.cjk_font_bold()
 	for r in _rows:
 		w = maxf(w, f.get_string_size(String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-			+ fb.get_string_size(String(r["value"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 32.0 + 2.0 * PAD_X)
+			+ _value_width(String(r["value"]), fb, fs) + 32.0 + 2.0 * PAD_X)
 	return Vector2(w, ROW_H * _rows.size())
 
 
@@ -58,6 +61,26 @@ func _draw() -> void:
 		var col: Color = r["color"]
 		draw_string(f, Vector2(PAD_X, mid + base), String(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK_LABEL)
 		var v := String(r["value"])
-		var vw := fb.get_string_size(v, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-		draw_string(fb, Vector2(size.x - PAD_X - vw, mid + base), v, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK_NUM if col.a == 0.0 else col)
+		var x := size.x - PAD_X - _value_width(v, fb, fs)
+		var parts := v.split(COIN)
+		for k in parts.size():
+			if k > 0:     # 两段之间是一枚金币
+				var side := _coin_side(fs)
+				CoinLabel.draw_coin(self, Rect2(Vector2(x, mid - side * 0.5), Vector2(side, side)))
+				x += side + CoinLabel.GAP
+			draw_string(fb, Vector2(x, mid + base), parts[k], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK_NUM if col.a == 0.0 else col)
+			x += fb.get_string_size(parts[k], HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		draw_line(Vector2(0.0, ROW_H * (i + 1) - 1.0), Vector2(size.x, ROW_H * (i + 1) - 1.0), LINE, 1.0)
+
+
+static func _coin_side(fs: int) -> float:
+	return roundf(fs * CoinLabel.COIN_SCALE)
+
+
+## 数这一栏的宽：字 + 每个 [constant COIN] 换成一枚金币
+static func _value_width(v: String, f: Font, fs: int) -> float:
+	var parts := v.split(COIN)
+	var w := (_coin_side(fs) + CoinLabel.GAP) * float(parts.size() - 1)
+	for part in parts:
+		w += f.get_string_size(part, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	return w
