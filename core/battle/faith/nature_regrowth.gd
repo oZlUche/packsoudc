@@ -6,7 +6,7 @@
 ## - 一阶：生命低于 [member low_percent]% 时放出生息治疗（最多补到满，按实际回了多少扣），两次至少隔 [member release_gap_sec] 秒。
 ## - 二阶：棋盘上每件有效食物容量 +[member food_percent]%，最多算 [member food_cap] 件（件数由 perk 编译时数好放进 [member food]）。
 ## - 三阶：进加时的第一下给【守护】（短时减伤，buff 自己定时长与轴），一场一次。
-## 一场里有效治疗到最大生命的 [member heal_mark]%、放出过生息，各记一次（`faith_mechanic`）
+## 一场里有效治疗到最大生命的 [member heal_mark]%、放出过生息，各记一次（`faith_mechanic`）；没满血时的每次节拍也写一句（`nature_pulse`）
 class_name NatureRegrowth
 extends CombatEffect
 
@@ -41,7 +41,9 @@ func apply(ctx: RuleContext) -> void:
 	var e := ctx.event
 	if e == null:
 		var hp_max := me.resources.maximum(BattleStats.RES_HP)
-		if pulse_percent > 0 and hp_max > 0:
+		if pulse_percent > 0 and hp_max > 0 and me.resources.current(BattleStats.RES_HP) < hp_max:
+			# 游戏测试 11-19：周期治疗以前只留一行没来由的「恢复」，战记里看不出是自然；先写一句，紧跟的恢复行就归到它
+			ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, me.side, {"effect": SkillMomentum.MECHANIC, "key": "nature_pulse"})
 			me.heal(ctx.battle, StatMath.mul(hp_max, StatMath.from_percent(pulse_percent)))
 		_try_release(ctx)
 		return

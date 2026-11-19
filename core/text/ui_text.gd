@@ -278,9 +278,8 @@ const TEXT := {
 	"tip.broken_feed": {"zh": "（破碎：不再供给）", "en": " (broken: no longer feeds)"},
 	"tip.benched": {"zh": "不参战：这一场不算它（右键可改回）", "en": "Sitting this one out: not counted in this fight (right-click to undo)"},
 	"tip.anchor_current": {"zh": "当前信仰", "en": "your current Faith"},
-	"tip.anchor_foot": {"zh": "%s · %s", "en": "%s · %s"},     # 257：信物降成赐福小节的脚注「信物 · 右键奉为主信仰」
+	"tip.anchor_foot": {"zh": "%s · %s", "en": "%s · %s"},     # 257：奉着的信物脚注「信物 · 当前信仰」
 	"tip.anchor_word": {"zh": "信物", "en": "Anchor"},
-	"tip.anchor_right_click": {"zh": "右键奉为主信仰", "en": "right-click to make it your Faith"},
 	"tip.foot": {"zh": "%s%d　%s%d", "en": "%s%d   %s%d"},
 	"tip.set": {"zh": "　套装：%s", "en": "   Set: %s"},
 	"tip.weapon": {"zh": "每 [b]%s[/b] 秒造成 [b]%s[/b] 点%s", "en": "Every [b]%s[/b]s, deals [b]%s[/b] %s"},
@@ -524,6 +523,7 @@ const TEXT := {
 	"log.sun_open": {"zh": "%s第 %d 次烈日开始", "en": "%s: Blazing Sun %d begins"},
 	"log.sun_close": {"zh": "%s第 %d 次烈日结束", "en": "%s: Blazing Sun %d ends"},
 	"log.sun_window": {"zh": "%s借烈日追加了火焰", "en": "%s added Fire in the Blazing Sun"},
+	"log.nature_pulse": {"zh": "%s借自然之力恢复", "en": "%s draws on Nature to recover"},
 	"log.nature_heal": {"zh": "%s这一场的治疗够数了", "en": "%s has healed enough this battle"},
 	"log.nature_release": {"zh": "%s放出生息，恢复 %d 生命", "en": "%s released Regrowth, restoring %d Health"},
 	"log.nature_guard": {"zh": "%s进入加时，得到守护", "en": "%s gained Guard as Overtime began"},
