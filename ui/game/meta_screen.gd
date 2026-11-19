@@ -13,6 +13,7 @@ const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 const TechPanelScript := preload("res://ui/game/tech_panel.gd")
 const MarketPanelScript := preload("res://ui/game/market_panel.gd")     # 251
 const SmithyPanelScript := preload("res://ui/game/smithy_panel.gd")     # 251
+const CommissionPanelScript := preload("res://ui/game/commission_panel.gd")     # 336
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -33,7 +34,8 @@ const TAB_ICON_ART := "home/tabs/tab_"
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
 ## 262（作者 14:19）：集市、铁匠铺默认就有，和出售并成「后勤」一页；261 补充一（作者 16:37）：科技并进书架 —— 左列只剩 仓库 / 后勤 / 书架
 ## 264（作者 16:43「按推荐来」）：加「出征」放第一、默认选中（军功碑 + 上回出征 + 军需 + 【开始探索】），「家」页没了 —— 页签单选
-const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_warehouse"], ["logistics", "meta.tab_logistics"], ["shelf", "meta.tab_shelf"]]
+## 336：「委托」排在「出征」之后（统一教程没走完 / 试玩切片不列，[method GameFlow.commissions_visible]）
+const TABS := [["expedition", "meta.tab_expedition"], ["commissions", "meta.tab_commissions"], ["warehouse", "meta.tab_warehouse"], ["logistics", "meta.tab_logistics"], ["shelf", "meta.tab_shelf"]]
 ## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
@@ -44,7 +46,7 @@ const SUB_TAB_SIZE := Vector2(170, 44)
 const SUB_TAB_FONT := 17
 const SUB_TAB_INDENT := 28
 ## 178：这几页不显示右半边的仓库，中列吃满。264：出征页也收起 —— 碑 + 560 宽的两块木牌要 1308 宽的中列（露着仓库中列只剩 508）
-const NO_SHELF_TABS := ["shelf", "expedition"]
+const NO_SHELF_TABS := ["shelf", "expedition", "commissions"]
 ## 261（作者 14:13）：「图鉴」页签改「书架」—— 两层三格，点开各一扇窗；补充一（作者 16:37）：上 图鉴 / 对局记录 / 特殊道具，
 ## 下 成就 / 科技（科技页签并进来）/ 油灯静物（墨水瓶去掉）
 const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "tech", ""]
@@ -153,6 +155,8 @@ func open(payload: Dictionary) -> void:
 		var key: String = pair[0]
 		if not SliceProfile.keeps_tab(flow.profile, key):
 			continue     # 313：试玩切片的基地只留出征、仓库
+		if key == "commissions" and not flow.commissions_visible():
+			continue     # 336：教程没走完不列
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): toggle_tab(key))
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
@@ -287,6 +291,14 @@ func open(payload: Dictionary) -> void:
 	if _drawer != null:
 		_build_dev_drawer(m)
 
+	# 336：委托页（粗布上一列阵营键 + 任务卡）
+	if _tab_btns.has("commissions"):
+		var cm_page := _cloth()
+		_commissions = CommissionPanelScript.new()
+		_commissions.setup(flow)
+		_commissions.changed.connect(_refresh)
+		cm_page.add_child(_commissions)
+		_pages["commissions"] = cm_page
 	# 图鉴页、成就页（091）
 	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
@@ -709,6 +721,14 @@ func _build_smithy(root: Control) -> Control:
 	_smithy.changed.connect(_refresh)
 	root.add_child(_smithy)
 	return _smithy
+
+
+## 336：委托页（没列这一页 = null）
+var _commissions = null
+
+
+func commission_panel():
+	return _commissions
 
 
 ## 测试看

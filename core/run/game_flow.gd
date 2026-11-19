@@ -88,6 +88,8 @@ var result: RunResult = null
 var last_absorbed: Dictionary = {}
 ## 统一教程 B：这一局结算时发的教程固定奖励（[method TutorialRewards.claim] 的返回；没发 = 空），结算屏摆一张小纸
 var last_tutorial_reward: Dictionary = {}
+## 336：这一局并进局外的委托（[method Commissions.merge_run] 的返回 + `rows`：这一局记下的每条），结算屏的「委托」段读它
+var last_commissions: Dictionary = {}
 var screen: int = Screen.MAIN_MENU
 var last_payload: Dictionary = {}
 ## 待拾取里已经在搜索屏亮过的 uid（6.2 的揭示只做一次）。拾取完清空
@@ -940,11 +942,141 @@ func _output_rarity(r: SmithRecipeDef) -> int:
 func forge(id: StringName) -> String:
 	var r := SmithRecipeDef.find(smith_recipes, id)
 	var why := Smithy.can_forge(meta, r, items)
-	if why == "" and Smithy.forge(meta, r, items) == null:
-		why = UiText.t("smithy.full")
+	var made: ItemInstance = null
 	if why == "":
+		made = Smithy.forge(meta, r, items)
+		if made == null:
+			why = UiText.t("smithy.full")
+	if why == "":
+		_credit_forge(id, made)     # 336：配方实验
 		save_meta()
 	return why
+#endregion
+
+
+#region 336：委托（阵营与委托，报告 335 / 336）
+## 委托簿露不露：统一教程走完了、不是试玩切片
+func commissions_visible() -> bool:
+	return meta != null and profile != SliceProfile.SLICE and tutorials_done()
+
+
+## 出征带进去的委托快照（[CommissionModule]）：接着的那几份、现在第几步、接单时选的。教程章 / 切片不带
+func commission_snapshot(chapter: ChapterDef) -> Array:
+	var out: Array = []
+	if not commissions_visible() or tutorial_chapters().has(chapter):
+		return out
+	for cid in meta.commissions.taken():
+		var d := Commissions.def(cid)
+		if d == null or (not d.chapters.is_empty() and chapter != null and not d.chapters.has(chapter.id)):
+			continue
+		var e := meta.commissions.entry(cid)
+		if d.stages.any(func(st: CommissionStage) -> bool: return st.where != CommissionStage.CAMP):
+			out.append({"id": String(cid), "stage": int(e.get("stage", 0)), "pick": String(e.get("pick", ""))})
+	return out
+
+
+## 出征：带进来的委托这一步要发的任务道具（任务信）发进背包，放不下落在地上
+func _issue_commission_items(state: RunState) -> void:
+	var mod := CommissionModule.of(state)
+	if mod == null or items == null:
+		return
+	for t in mod.tracked:
+		var d := Commissions.def(StringName(String(t["id"])))
+		var s := int(t["stage"])
+		if d == null or s < 0 or s >= d.stages.size() or d.stages[s].item == &"":
+			continue
+		var def := items.get_def(d.stages[s].item)
+		if def == null:
+			continue
+		var inst := ItemInstance.create(def, 0)
+		if state.board.try_add(inst, true):
+			continue
+		if state.storage != null and state.storage.insert(inst):
+			_notes.append(UiText.t("commission.item_on_ground") % Names.of(def))
+
+
+## 能拿来做配方实验的铁匠配方（已解锁、现在材料与钱都够、仓库放得下）
+func commission_picks() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for r in sorted_smith_recipes():
+		if Smithy.can_forge(meta, r, items) == "":
+			out.append(r.id)
+	return out
+
+
+## 接一份委托（配方实验要给 [param pick]）。返回空串 = 接了（存盘），否则是原因（[constant Commissions.WHY_HIDDEN] 这些）
+func take_commission(id: StringName, pick: StringName = &"") -> String:
+	var d := Commissions.def(id)
+	var picks := commission_picks()
+	var why := Commissions.why_not(meta.commissions, d, pick, picks) if commissions_visible() else Commissions.WHY_HIDDEN
+	if why == "" and Commissions.take(meta.commissions, d, pick, picks):
+		save_meta()
+		meta.changed.emit()
+	return why
+
+
+func pause_commission(id: StringName) -> bool:
+	var ok := Commissions.pause(meta.commissions, id)
+	if ok:
+		save_meta()
+		meta.changed.emit()
+	return ok
+
+
+func abandon_commission(id: StringName) -> bool:
+	var ok := Commissions.abandon(meta.commissions, id)
+	if ok:
+		save_meta()
+		meta.changed.emit()
+	return ok
+
+
+## 铁匠铺打成了：正停在「打这张配方」那一步、接单时选的就是它的委托记一次（这一件的 uid 去重）
+func _credit_forge(id: StringName, made: ItemInstance) -> void:
+	if meta == null or made == null:
+		return
+	for cid in meta.commissions.taken():
+		var d := Commissions.def(cid)
+		var s := Commissions.current_stage(meta.commissions, cid)
+		if d == null or s < 0 or s >= d.stages.size() or d.stages[s].goal != &"smith_forge":
+			continue
+		if String(meta.commissions.entry(cid).get("pick", "")) != String(id):
+			continue
+		Commissions.credit(meta, d, s, "forge:%d" % made.uid, items)
+
+
+## 撤离确认框上的【查验】：记进这一局的委托进度、存档。返回记上的那几份（[method CommissionModule.inspect]）
+func inspect_extract(node: MapNode) -> Array:
+	var mod := CommissionModule.of(run) if run != null and not run.is_over() else null
+	if mod == null or node == null or node != run.current_node():
+		return []
+	var got := mod.inspect(node)
+	if not got.is_empty():
+		save()
+	return got
+
+
+## 撤离确认框上的【交信】：信交给接应员、存档。返回交了的那几份
+func deliver_letter(node: MapNode) -> Array:
+	var mod := CommissionModule.of(run) if run != null and not run.is_over() else null
+	if mod == null or node == null or node != run.current_node():
+		return []
+	var got := mod.deliver(node)
+	if not got.is_empty():
+		save()
+	return got
+
+
+## 一局结算：这一局记下的委托进度并进局外（现场的照记，带回的看撤离 / 托付）
+func _merge_commissions() -> void:
+	var mod := CommissionModule.of(run) if run != null else null
+	if mod == null or not mod.is_active():
+		return
+	var safe := SafeModule.of(run)
+	var entrusted := safe != null and not safe.sealed.is_empty()
+	last_commissions = Commissions.merge_run(meta, mod.rows, result.is_extracted(), entrusted, items)
+	last_commissions["rows"] = mod.rows.duplicate(true)
+	last_commissions["tracked"] = mod.tracked.duplicate(true)
 #endregion
 
 
@@ -1117,7 +1249,8 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 		value += ItemValue.of(inst.def)
 	# 101：模块要的运行时输入（保险箱几格来自局外成长、带入价值来自这一次的选择）
 	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value},
-		BeltModule.ID: {"grants": meta.belt_grants.duplicate() if meta != null else {}}}     # 160 补一：科技发的随身技能
+		BeltModule.ID: {"grants": meta.belt_grants.duplicate() if meta != null else {}},     # 160 补一：科技发的随身技能
+		CommissionModule.ID: {"tracked": commission_snapshot(chapter)}}     # 336：接着的委托带进局
 	# 2026-10-22（作者定）：这一局带多少现金进来 —— 由开局屏选，从仓库账上扣，死在局内就没了。
 	# 夹在 0 和仓库余额之间：界面本来就按余额封顶，这里是兜底（存档改过、并发调用都不至于扣成负数）
 	# 285：收费预设出发这一刻付钱（钱不够开不了，界面本来就灰着出发键，这里兜底）；带入现金在付完之后的余额里封顶
@@ -1159,6 +1292,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	_adopt(state)
 	state.choose_starting_faith(faith)     # 信仰重构 A：开局屏显式选的神（没选 = 不奉神；不按载入顺序猜）
 	JimiePath.plant(state)     # 281：局外状态接上了才看得见仓库里有没有那颗元素之核
+	_issue_commission_items(state)     # 336：任务信这类发进背包
 	_grant_keepsakes(chapter)
 	if tutorial_chapters().has(chapter):
 		TutorialRewards.mark(meta, chapter.id, TutorialRewards.STARTED)     # 统一教程 B：账本记「打到一半」（跳过时照样补这一段）
@@ -1498,6 +1632,7 @@ func _settle_run() -> void:
 	if not _settled:
 		_settled = true
 		last_tutorial_reward = {}
+		last_commissions = {}
 		# 2026-10-22（作者定）：行囊给的「战败保住几成钱」由 absorb 在战败分支里兑现
 		# 319：见识按总分阶梯发（试玩切片不发）；这一局结算过（重复结算）absorb 什么也不动
 		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0)     # 统一教程 D2：切片也按阶梯发见识
@@ -1505,6 +1640,7 @@ func _settle_run() -> void:
 			if writable():
 				RunSave.remove(save_path)
 			return
+		_merge_commissions()     # 336：委托进度和这一局同一次结算
 		after_run_market()     # 251：一局一换货（撤离、战败都换）
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":

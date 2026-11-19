@@ -1,0 +1,19 @@
+{
+  "id": "commission_letter",
+  "display_name": "未署名的信",
+  "display_names": {
+    "en": "Unsigned Letter"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "commission",
+    "crafted"
+  ],
+  "material": "cloth"
+}

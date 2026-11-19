@@ -288,6 +288,56 @@ func _add_insight(page: Control) -> void:
 	var reward := tutorial_reward_panel(flow.last_tutorial_reward, flow.items)
 	if reward != null:
 		_side.add_child(reward)
+	var cm := commission_panel(flow.last_commissions, flow.meta)
+	if cm != null:
+		_side.add_child(cm)
+
+
+## 336：这一局带着的委托各一行 —— 办成了 / 这一步办成了 / 没带回要重做 / 还差几处 / 没进展。没带委托返回 null
+static func commission_panel(got: Dictionary, meta: MetaState) -> PanelContainer:
+	var lines := commission_lines(got, meta)
+	if lines.is_empty():
+		return null
+	var box := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, INSIGHT_PAD_X, INSIGHT_PAD_Y, INSIGHT_PAD_X, INSIGHT_PAD_Y)
+	box.name = "Commissions"
+	var col := UiTheme.vbox(6)
+	box.add_child(col)
+	var head := UiTheme.make_label(UiText.t("meta.tab_commissions"), 20, LedgerView.INK_TOTAL)
+	head.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	col.add_child(head)
+	for t in lines:
+		col.add_child(UiTheme.make_wrapped(t, 15, LedgerView.INK_LABEL, INSIGHT_W - 2.0 * INSIGHT_PAD_X))
+	return box
+
+
+## 每份带进去的委托一句（结算屏、测试读）
+static func commission_lines(got: Dictionary, meta: MetaState) -> Array[String]:
+	var out: Array[String] = []
+	if meta == null:
+		return out
+	var rows: Array = got.get("rows", [])
+	for t in got.get("tracked", []):
+		var cid := StringName(String((t as Dictionary).get("id", "")))
+		var d := Commissions.def(cid)
+		if d == null:
+			continue
+		var cname := Names.of(d)
+		var before := int((t as Dictionary).get("stage", 0))
+		var redo := meta.commissions.receipts.any(func(r: Dictionary) -> bool: return String(r.get("id", "")) == String(cid) and String(r.get("kind", "")) == "redo" and int(r.get("run", -1)) == meta.runs)
+		var mine := rows.filter(func(r: Dictionary) -> bool: return String(r.get("id", "")) == String(cid))
+		if meta.commissions.state_of(cid) != CommissionBook.TAKEN and meta.commissions.is_done(cid) and not mine.is_empty():
+			out.append(UiText.t("commission.rcpt_done") % cname)
+		elif redo:
+			out.append(UiText.t("commission.rcpt_redo") % cname)
+		elif Commissions.current_stage(meta.commissions, cid) > before:
+			out.append(UiText.t("commission.rcpt_step") % cname)
+		elif not mine.is_empty():
+			var s := Commissions.current_stage(meta.commissions, cid)
+			var need := maxi(1, d.stages[s].count) if s >= 0 and s < d.stages.size() else 1
+			out.append(UiText.t("commission.res_left") % [cname, need - int(meta.commissions.entry(cid).get("progress", 0))])
+		else:
+			out.append(UiText.t("commission.res_none") % cname)
+	return out
 
 
 ## 统一教程 B（方案 §9.1）：这一段教程的固定奖励 —— 和账单里的战利品分开摆。金币是一枚金币 + 数，道具只摆图。

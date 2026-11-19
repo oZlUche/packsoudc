@@ -38,6 +38,8 @@ const NAMES := {
 	&"skill_ready": "RunState：局内技能现在能不能用（136：空串 = 能，否则是原因）",
 	&"red_hold": "RunState：核心 BOSS 开战前掷红武劣化版持有（281，[RedSources]）",
 	&"red_drop": "RunState：打赢了掷持有的劣化版掉不掉（281）",
+	&"commission_can": "CommissionModule：这个撤离点能不能查验 / 交信（336）",
+	&"commission_act": "CommissionModule：查验 / 交信，返回记上的那几份（336）",
 }
 
 var _fns: Dictionary = {}
@@ -147,6 +149,16 @@ func red_drop(node: MapNode, content: Dictionary, rolled: Dictionary) -> void:
 
 
 #region 模块接的
+## 336：这个撤离点能不能做 [param action]（`inspect` 查验 / `deliver` 交信）。没装委托模块 = 不能
+func commission_can(action: StringName, node: MapNode) -> bool:
+	return bool(_at(&"commission_can").call(action, node)) if has(&"commission_can") else false
+
+
+## 336：做 [param action]，返回记上的那几份（[method CommissionModule.inspect]）。没装 = 空
+func commission_act(action: StringName, node: MapNode) -> Array:
+	return _at(&"commission_act").call(action, node) as Array if has(&"commission_act") else []
+
+
 ## 保险箱还能开吗。没装保险箱模块 = 能（老路：踩上去就开）
 func safe_open() -> bool:
 	return bool(_at(&"safe_open").call()) if has(&"safe_open") else true

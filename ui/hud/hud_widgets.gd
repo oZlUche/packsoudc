@@ -13,6 +13,7 @@ const KINDS := {
 	&"belt": "res://ui/hud/widgets/belt_widget.gd",
 	&"hud_bar": "res://ui/hud/widgets/hud_bar.gd",
 	&"legend": "res://ui/hud/widgets/legend_widget.gd",
+	&"commissions": "res://ui/hud/widgets/commissions_widget.gd",     # 336
 	&"dev_drawer": PART,
 	&"reopen_button": PART,
 	&"skills": PART,

@@ -30,6 +30,50 @@
           "type": "revisit_later"
         }
       ]
+    },
+    {
+      "label": "查验这处出口",
+      "labels": {
+        "en": "Inspect this exit"
+      },
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "commission_ready"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "commission_act"
+        },
+        {
+          "type": "next_event",
+          "event": "extract_default"
+        }
+      ]
+    },
+    {
+      "label": "把信交给接应员",
+      "labels": {
+        "en": "Hand the letter to the contact"
+      },
+      "hide_when_locked": true,
+      "requires": [
+        {
+          "type": "commission_ready",
+          "action": "deliver"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "commission_act",
+          "action": "deliver"
+        },
+        {
+          "type": "next_event",
+          "event": "extract_default"
+        }
+      ]
     }
   ]
 }

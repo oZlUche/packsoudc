@@ -1,0 +1,13 @@
+{
+  "id": "commission",
+  "display_name": "委托物",
+  "display_names": {
+    "en": "Commission item"
+  },
+  "description": "委托要用的东西：不能卖、不能献祭、不受赐福、不参与合成，只在委托里发。",
+  "descriptions": {
+    "en": "Needed for a commission: cannot be sold, sacrificed, blessed or fused, and only comes from commissions."
+  },
+  "tip": false,
+  "category": "kind"
+}

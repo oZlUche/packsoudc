@@ -54,6 +54,7 @@ static func default_for(p_screen: String) -> HudLayout:
 		l.entries.append(entry(&"routes", "bottom_left", CORNER_OFFSET, 0))
 		l.entries.append(entry(&"legend", "bottom_left", CORNER_OFFSET, 1))
 		l.entries.append(entry(&"belt", "bottom_right", BELT_OFFSET))     # 160：腰带常驻右下角
+		l.entries.append(entry(&"commissions", "top_left", COMMISSIONS_OFFSET))     # 336：委托小牌（没带委托不显示）
 	return l
 
 
@@ -69,6 +70,10 @@ static func hidden_by_default(id: StringName) -> bool:
 	return id == &"skills" and RunSkills.ACTIVE_HIDDEN
 ## 160：腰带在右下角；166：路线与图例在左下角
 const BELT_OFFSET := Vector2(-8, -8)
+## 336：委托小牌在左上（顶端栏下面）
+const COMMISSIONS_OFFSET := Vector2(16, 16)
+## 336：后来才加的件 —— 旧布局文件里没有就按默认补上（不升 [constant VERSION]，玩家摆过的别的件照旧）
+const ADDED_LATER: Array[StringName] = [&"commissions"]
 const CORNER_OFFSET := Vector2(16, -16)     # 作者 2026-10-13：图例往右上挪一点，说明文字不贴边框
 
 
@@ -185,6 +190,9 @@ static func from_dict(d: Dictionary, problems: Array[String] = []) -> HudLayout:
 		var debug_default := bool(fallback.entry_of(id).get("debug_only", false))
 		l.entries.append(entry(id, anchor, Vector2(float(off[0]), float(off[1])), int(w.get("line", 0)), tier, bool(w.get("visible", true)),
 			bool(w.get("debug_only", debug_default))))
+	for id in ADDED_LATER:
+		if not seen.has(id) and not fallback.entry_of(id).is_empty():
+			l.entries.append(fallback.entry_of(id).duplicate())
 	return l if problems.size() == before else null
 
 

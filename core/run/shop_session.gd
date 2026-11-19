@@ -157,6 +157,8 @@ func refuse_reason(inst: ItemInstance) -> String:
 		return UiText.t("act.unique")
 	if inst.def.is_ticket():     # 285：券也不
 		return UiText.t("act.ticket")
+	if inst.def.is_commission():     # 336：委托物也不
+		return UiText.t("act.commission")
 	if inst.is_locked_by_player() or inst.is_pinned():
 		return UiText.t("item.locked_no") % Names.of(inst.def)
 	if home_board != null and home_board.has_item(inst.uid):

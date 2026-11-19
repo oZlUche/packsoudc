@@ -12,6 +12,7 @@
       "params": {
         "kind": "free"
       },
+      "item": "commission_letter",
       "text": "把信交给免费撤离点的接应员",
       "texts": {
         "en": "Hand the letter to the contact at a free extraction point."

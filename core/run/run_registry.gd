@@ -62,6 +62,7 @@ const RUN_MODULES := {
 
 ## 事件层（063）：选项的条件（只读）与后果（做一件事或立一面旗）
 const EVENT_CONDITIONS := {
+	&"commission_ready": "res://core/run/events/conditions/commission_ready.gd",     # 336
 	&"has_buff_tag": "res://core/run/events/conditions/has_buff_tag.gd",
 	&"has_map_buff": "res://core/run/events/conditions/has_map_buff.gd",
 	&"can_afford": "res://core/run/events/conditions/can_afford.gd",
@@ -84,6 +85,7 @@ const EVENT_CONDITIONS := {
 }
 
 const EVENT_OUTCOMES := {
+	&"commission_act": "res://core/run/events/outcomes/commission_act.gd",     # 336
 	&"give_item": "res://core/run/events/outcomes/give_item.gd",
 	&"give_random_item": "res://core/run/events/outcomes/give_random_item.gd",
 	&"restore_vitality": "res://core/run/events/outcomes/restore_vitality.gd",
