@@ -276,7 +276,9 @@ static func frame_reveal_into_run(t: TestCase, root: Window) -> void:
 
 static func run_map_deco(t: TestCase) -> void:
 	t.begin("180 §4 · 地图装饰层 `<底图>_deco.png`：美术没交 = null；交了地图屏铺在底图上")
-	t.is_null(MapSkin.deco(&"ruins") if not FileAccess.file_exists(MapSkin.root + "ruins_deco.png") else null, "遗迹的装饰层还没交")
+	for skin in [&"ruins", &"north_woods", &"clockwork", &"cursed_depths", &"imperial_camp"]:
+		t.not_null(MapSkin.deco(skin), "%s：章节纹理能随地图加载" % skin)
+	t.is_null(MapSkin.deco(&"missing_test_map"), "没有装饰图时仍可回退")
 	t.is_null(MapSkin.deco(&""), "没底图就没装饰")
 	var keep := MapSkin.root
 	var dir := "user://test_map_deco_180/"
