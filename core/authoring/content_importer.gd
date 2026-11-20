@@ -1037,6 +1037,12 @@ static func import_faction(data: Dictionary, ctx: Context, report: ImportReport)
 	for k in def.facilities:
 		if not Commissions.FACILITIES.has(StringName(String(k))):
 			report.error("facilities", "不认识的设施 '%s'（只认 %s）" % [k, ", ".join(Commissions.FACILITIES)])
+	for i in def.regular.size():     # 342 B2：告示栏模板 —— 目标认得、单份酬值为正、有名字和说明（{n} = 件数）
+		var r := def.regular[i]
+		if not NoticeBoard.BANDS.has(StringName(String(r.get("goal", "")))):
+			report.error("regular[%d].goal" % i, "告示栏只认 %s" % ", ".join(NoticeBoard.BANDS.keys()))
+		if int(r.get("u", 0)) <= 0 or String(r.get("name", "")) == "" or not String(r.get("text", "")).contains("{n}"):
+			report.error("regular[%d]" % i, "要写 u（正数）、name、text（含 {n}）")
 	ctx.register_faction(def)
 	return def
 

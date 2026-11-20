@@ -15,5 +15,52 @@
   "facilities": {
     "smithy": "legion_forge_token"
   },
-  "permit": "legion_permit"
+  "permit": "legion_permit",
+  "regular": [
+    {
+      "goal": "defeat_enemies",
+      "params": {
+        "kind": "normal"
+      },
+      "u": 10,
+      "name": "巡路",
+      "names": {
+        "en": "Road Patrol"
+      },
+      "text": "打赢 {n} 场普通的仗",
+      "texts": {
+        "en": "Win {n} battles against ordinary enemies"
+      }
+    },
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "metal"
+      },
+      "u": 8,
+      "name": "收金属",
+      "names": {
+        "en": "Metal Wanted"
+      },
+      "text": "交 {n} 件金属材料",
+      "texts": {
+        "en": "Hand in {n} metal materials"
+      }
+    },
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "wood"
+      },
+      "u": 8,
+      "name": "收木料",
+      "names": {
+        "en": "Timber Wanted"
+      },
+      "text": "交 {n} 件木材",
+      "texts": {
+        "en": "Hand in {n} wood materials"
+      }
+    }
+  ]
 }

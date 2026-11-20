@@ -245,3 +245,100 @@ static func frame_old_save_no_toast(t: TestCase, root: Window) -> void:
 	t.check(s.notice_layer().current_text() == "", "不弹")
 	s.queue_free()
 	W178._cleanup()
+
+
+static func _open_legion(book: CommissionBook) -> void:
+	_done(book, [&"legion_forge_token", &"legion_check_materials", &"legion_clear_road", &"legion_permit"])
+	book.rep["legion"] = 25
+
+
+static func run_board(t: TestCase) -> void:
+	t.begin("342 B2 · 告示栏：有一方开放常规才贴；第一次贴 4 张；没接的 3 局到期、接下的不到期；回营补位、栏上至少 2 张；同种子同结果；放弃的不回栏")
+	var m := MetaState.new(GameFlow.load_meta_rules())
+	m.market_seed = 7
+	var book := m.commissions
+	t.eq(NoticeBoard.first_fill(m), 0, "谁都没开：不贴")
+	_open_legion(book)
+	t.eq(NoticeBoard.first_fill(m), NoticeBoard.FIRST_FILL, "后勤部队开了：贴 4 张")
+	t.eq(NoticeBoard.first_fill(m), 0, "只贴一次")
+	t.eq(book.pins.size(), NoticeBoard.PINS, "6 个钉位")
+	var ids := NoticeBoard.posted(book)
+	t.check(ids.all(func(id: String) -> bool: return String(book.notes[id]["faction"]) == "legion"), "都是后勤部队的")
+	t.check(ids.all(func(id: String) -> bool:
+		var n: Dictionary = book.notes[id]
+		var span: Array = NoticeBoard.BANDS[StringName(String(n["goal"]))][int(n["band"])]
+		return int(n["count"]) >= int(span[0]) and int(n["count"]) <= int(span[1]) and int(n["funds"]) > 0), "件数落在档里、有酬金")
+	var m2 := MetaState.new(GameFlow.load_meta_rules())
+	m2.market_seed = 7
+	_open_legion(m2.commissions)
+	NoticeBoard.first_fill(m2)
+	t.eq(JSON.stringify(m2.commissions.notes), JSON.stringify(book.notes), "同种子同一局：贴的一样")
+	var took := StringName(ids[0])
+	var stay := ids[1]
+	t.eq(Commissions.why_not(book, Commissions.def(took)), "", "栏上的能接")
+	t.check(Commissions.take(book, Commissions.def(took)), "接下")
+	t.check(not book.pins.has(String(took)), "接下的离开钉位")
+	t.check(not Commissions.pause(book, took), "纸条不暂缓")
+	for i in NoticeBoard.LIFE:
+		m.runs += 1
+		NoticeBoard.refresh(m)
+		t.check(NoticeBoard.posted(book).size() >= NoticeBoard.FLOOR, "第 %d 局后栏上至少 2 张" % (i + 1))
+	t.check(not book.notes.has(stay), "没接的 3 局后撤下")
+	t.eq(book.state_of(took), CommissionBook.TAKEN, "接下的不到期")
+	t.check(Commissions.abandon(book, took), "放弃")
+	t.check(not book.notes.has(String(took)) and not book.pins.has(String(took)), "放弃的不回栏上")
+	var back := CommissionBook.from_dict(JSON.parse_string(JSON.stringify(book.to_dict())))
+	t.eq(JSON.stringify(back.to_dict()), JSON.stringify(book.to_dict()), "存档往返相同")
+
+
+static func run_board_hand_in(t: TestCase) -> void:
+	t.begin("342 B2 · 告示栏交货单：接下、营地交够办成；声望 +1、酬金；这一局办成的纸条留到下一局结算才清掉")
+	ItemInstance.reset_uid_counter()
+	var c := TestSupport.load_content("free_mode")
+	var f := Support.flow(c, PREFIX)
+	var book := f.meta.commissions
+	_open_legion(book)
+	book.board_init = true
+	book.pins = ["note_1", "", "", "", "", ""]
+	book.note_seq = 1
+	book.notes["note_1"] = {"faction": "legion", "goal": "hand_in", "params": {"material": "metal"}, "count": 2, "band": 0, "left": 3,
+		"name": "收金属", "text": "交 {n} 件金属材料", "funds": 17}
+	var d := Commissions.def(&"note_1")
+	t.check(d != null and d.tier == CommissionDef.TEMPLATE and d.stages[0].where == CommissionStage.CAMP, "纸条认成模板、营地交货")
+	t.eq(f.take_commission(&"note_1"), "", "接下")
+	T110._add(f.meta, c.items, &"iron_ore")
+	T110._add(f.meta, c.items, &"iron_ore")
+	var funds0 := f.meta.funds
+	var r := f.report_commission(&"note_1")
+	t.check(bool(r["done"]), "交够办成")
+	t.eq(book.rep_of(&"legion"), 26, "声望 +1")
+	t.eq(f.meta.funds - funds0, 17, "酬金")
+	t.check(book.notes.has("note_1"), "这一局还留着（结算屏要写名字）")
+	t.eq(String(book.receipts[0].get("name", "")), Names.of(d), "回执记了名字")
+	f.meta.runs += 1
+	NoticeBoard.refresh(f.meta)
+	t.check(not book.notes.has("note_1") and book.state_of(&"note_1") == "", "下一局结算清掉")
+	Support.cleanup(PREFIX)
+
+
+static func frame_board_panel(t: TestCase, root: Window) -> void:
+	t.begin("342 B2 · 常规页：手头几份、栏上的纸条（接下、还剩几局）、没开的那方写明差什么；字不裸")
+	ItemInstance.reset_uid_counter()
+	var f := W178._flow()
+	_open_legion(f.meta.commissions)
+	var s: Control = W178._screen(f, root)
+	s.show_tab("commissions")
+	var p = s.commission_panel()
+	p.show_sub("regular")
+	var ids := NoticeBoard.posted(f.meta.commissions)
+	t.eq(ids.size(), NoticeBoard.FIRST_FILL, "进基地贴了第一批")
+	t.not_null(p.find_child("Hand", true, false), "写手头几份")
+	t.not_null(p.find_child("Card_" + ids[0], true, false), "栏上的纸条有卡")
+	t.not_null(p.find_child("Regular_society", true, false), "协会没开：写明差什么")
+	t.check(p.find_child("Regular_legion", true, false) == null, "后勤开了：不写")
+	t.eq(p.take(StringName(ids[0])), "", "按【接下】")
+	t.not_null(p.find_child("Abandon_" + ids[0], true, false), "手头的有【放弃】")
+	t.eq(Bare.audit(p, "board342"), [] as Array[String], "字不裸")
+	CP.last_sub = "story"
+	s.queue_free()
+	W178._cleanup()

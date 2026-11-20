@@ -14,3 +14,46 @@ facilities = {
 "tech": "society_first_survey"
 }
 permit = &"society_permit"
+regular = Array[Dictionary]([{
+"goal": "hand_in",
+"name": "收晶石",
+"names": {
+"en": "Crystals Wanted"
+},
+"params": {
+"material": "gem"
+},
+"text": "交 {n} 块晶石",
+"texts": {
+"en": "Hand in {n} crystals"
+},
+"u": 20
+}, {
+"goal": "visit_nodes",
+"name": "勘察",
+"names": {
+"en": "Survey"
+},
+"params": {
+"type": "search"
+},
+"text": "到访 {n} 处搜索点",
+"texts": {
+"en": "Visit {n} search points"
+},
+"u": 15
+}, {
+"goal": "hand_in",
+"name": "收草药",
+"names": {
+"en": "Herbs Wanted"
+},
+"params": {
+"material": "herb"
+},
+"text": "交 {n} 件草药",
+"texts": {
+"en": "Hand in {n} herbs"
+},
+"u": 8
+}])

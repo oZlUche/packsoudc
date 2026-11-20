@@ -1,7 +1,7 @@
 ## 336（W0，报告 335 第三节）：一份具名委托或一种可重复模板。
 ##
 ## 档位（[member tier]）定接取要几级声望、给多少声望（[method Commissions.required_tier]、[method Commissions.default_reputation]）：
-## 入门 +1（陌生就能接）、调查 +2（熟面）、结案 +3（受托，且前置齐备）；模板最多把一方推到熟面。
+## 入门 +1（陌生就能接）、调查 +2（熟面）、结案 +3（受托，且前置齐备）；模板（告示栏纸条）最多把一方推到信赖。
 ##
 ## 走内容管线：`data/authoring/commissions/*.json` → `data/commissions/*.tres`（[method Commissions.defs]）
 class_name CommissionDef

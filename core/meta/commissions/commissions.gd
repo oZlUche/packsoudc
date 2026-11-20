@@ -9,9 +9,10 @@
 class_name Commissions
 extends RefCounted
 
-const SLOTS := 2
-## 342 B2：模板（常规）最多把一方推到多少声望（B2 第二步换成告示栏规则）
-const TEMPLATE_CAP := 10
+## 342 B2：手头（接下的常规纸条）最多几份（报告 341 第 3.1 节）
+const SLOTS := 3
+## 342 B2：常规纸条最多把一方推到多少声望（信赖；代言要靠结案）
+const TEMPLATE_CAP := 50
 ## 声望五档
 const TIERS := 5
 ## 342 B2：能由剧情开放的基地设施
@@ -46,6 +47,8 @@ const WHY_PICK := "pick"
 
 static var _factions: Array[FactionDef] = []
 static var _defs: Array[CommissionDef] = []
+## 342 B2：现在用着的委托簿（告示栏的纸条按它查，[method def]）。建簿、读档时设
+static var active: CommissionBook = null
 
 
 #region 定义
@@ -79,6 +82,8 @@ static func def(id: StringName) -> CommissionDef:
 	for d in defs():
 		if d.id == id:
 			return d
+	if NoticeBoard.is_note(id) and active != null and active.notes.has(String(id)):     # 342 B2：告示栏的纸条
+		return NoticeBoard.def_of(String(id), active.notes[String(id)])
 	return null
 
 
@@ -164,6 +169,8 @@ static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &
 	var st := book.state_of(d.id)
 	if st == CommissionBook.TAKEN:
 		return WHY_TAKEN
+	if NoticeBoard.is_note(d.id) and not book.pins.has(String(d.id)):     # 342 B2：纸条只能从栏上接
+		return WHY_HIDDEN
 	if book.is_done(d.id) and d.tier != CommissionDef.TEMPLATE:
 		return WHY_DONE
 	if d.mutex != &"" and book.mutex.has(String(d.mutex)):
@@ -280,6 +287,7 @@ static func take(book: CommissionBook, d: CommissionDef, pick: StringName = &"",
 	e["times"] = int(e.get("times", 0))
 	e["seq"] = _next_seq(book)
 	book.entries[String(d.id)] = e
+	NoticeBoard.on_taken(book, d.id)
 	return true
 
 
@@ -292,7 +300,7 @@ static func _next_seq(book: CommissionBook) -> int:
 
 ## 暂缓：不占位，进度保留
 static func pause(book: CommissionBook, id: StringName) -> bool:
-	if book.state_of(id) != CommissionBook.TAKEN or is_story(def(id)):     # 342 B2：剧情常驻，不暂缓
+	if book.state_of(id) != CommissionBook.TAKEN or is_story(def(id)) or NoticeBoard.is_note(id):     # 342 B2：剧情常驻、纸条全带进局，都不暂缓
 		return false
 	book.entries[String(id)]["state"] = CommissionBook.PAUSED
 	return true
@@ -303,6 +311,9 @@ static func abandon(book: CommissionBook, id: StringName) -> bool:
 	var st := book.state_of(id)
 	if (st != CommissionBook.TAKEN and st != CommissionBook.PAUSED) or is_story(def(id)):     # 342 B2：剧情不放弃
 		return false
+	if NoticeBoard.is_note(id):     # 342 B2：放弃的纸条不回栏上
+		NoticeBoard.discard(book, id)
+		return true
 	var times := int(book.entry(id).get("times", 0))
 	if times > 0:
 		book.entries[String(id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": times, "pick": "", "seq": 0}
@@ -373,7 +384,11 @@ static func _complete(meta: MetaState, d: CommissionDef, items: ItemDatabase) ->
 				if item != null:
 					gifts.append(item)
 		got["items"] = int(meta.grant_lossless(gifts)["stored"])
-	book.add_receipt({"id": String(d.id), "kind": "done", "stage": d.stages.size() - 1, "run": meta.runs})
+	var rc := {"id": String(d.id), "kind": "done", "stage": d.stages.size() - 1, "run": meta.runs}
+	if NoticeBoard.is_note(d.id):     # 342 B2：纸条下一局结算时清掉，回执自己记名字
+		rc["name"] = Names.of(d)
+		(book.notes[String(d.id)] as Dictionary)["done_run"] = meta.runs
+	book.add_receipt(rc)
 	return got
 
 
