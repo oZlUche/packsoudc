@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_aqf80"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_hdcdm"]
+
+[sub_resource type="Resource" id="Resource_m80g7"]
+script = ExtResource("2_hdcdm")
+goal = &"hand_in"
+count = 2
+params = {
+"material": "gem"
+}
+where = &"camp"
+text = "把两块晶石交给协会辨认"
+texts = {
+"en": "Hand two crystals to the Society for identification"
+}
+
+[resource]
+script = ExtResource("1_aqf80")
+id = &"society_identify_ore"
+display_name = "辨认矿样"
+display_names = {
+"en": "Identify the Samples"
+}
+faction = &"society"
+order = 2
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"society_first_survey"])
+stages = Array[ExtResource("2_hdcdm")]([SubResource("Resource_m80g7")])
+client = "协会登记员"
+clients = {
+"en": "Society registrar"
+}

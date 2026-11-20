@@ -37,8 +37,8 @@ static func run_content(t: TestCase) -> void:
 	t.eq(Commissions.validate_all(Commissions.defs(), Commissions.factions()), [] as Array[String], "前置、阵营都查得过")
 	var two := Commissions.def(&"legion_two_routes")
 	t.eq(two.quote, "去的时候路都好走。替我看看，回来还能走哪条。", "方案的原话原样用")
-	t.eq([two.tier, Commissions.reputation_of(two), Commissions.required_tier(two)], [CommissionDef.INQUIRY, 2, 0], "两条回路：调查 +2，原型期陌生可接")
-	t.eq(Commissions.required_tier(Commissions.def(&"society_copy_recipe")), 0, "入门陌生可接")
+	t.eq([two.tier, Commissions.reputation_of(two), Commissions.required_tier(two)], [CommissionDef.INQUIRY, 2, 1], "两条回路：调查 +2，熟面（342 B2：排在后勤许可单之后，B3 改给地图协会）")
+	t.eq(Commissions.required_tier(Commissions.def(&"society_copy_recipe")), 1, "342 B2：配方实验成了协会的基础剧情，熟面可接")
 	t.check(Commissions.needs_pick(Commissions.def(&"society_copy_recipe")), "配方实验要先选配方")
 
 
@@ -123,9 +123,12 @@ static func run_take_rules(t: TestCase) -> void:
 	b2.mutex["roll"] = "t_m0"
 	t.eq(Commissions.why_not(b2, m1), Commissions.WHY_MUTEX, "互斥组被别人结了")
 	var copy := Commissions.def(&"society_copy_recipe")
-	t.eq(Commissions.why_not(CommissionBook.new(), copy, &"", [&"iron_sword"]), Commissions.WHY_PICK, "没选配方不能接")
-	t.eq(Commissions.why_not(CommissionBook.new(), copy, &"bogus", [&"iron_sword"]), Commissions.WHY_PICK, "选的不在可选里不能接")
-	var b3 := CommissionBook.new()
+	var b0 := CommissionBook.new()     # 342 B2：前面那份开放单办完、熟面
+	b0.entries["society_first_survey"] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": 1, "pick": "", "seq": 0}
+	b0.rep["society"] = 10
+	t.eq(Commissions.why_not(b0, copy, &"", [&"iron_sword"]), Commissions.WHY_PICK, "没选配方不能接")
+	t.eq(Commissions.why_not(b0, copy, &"bogus", [&"iron_sword"]), Commissions.WHY_PICK, "选的不在可选里不能接")
+	var b3 := CommissionBook.from_dict(b0.to_dict())
 	t.check(Commissions.take(b3, copy, &"iron_sword", [&"iron_sword"]), "选了能做的配方就能接")
 	t.eq(String(b3.entry(copy.id)["pick"]), "iron_sword", "记下选的配方")
 
@@ -194,7 +197,9 @@ static func run_save(t: TestCase) -> void:
 	var db := T110._db()
 	var m := _meta()
 	var d := Commissions.def(&"legion_two_routes")
-	Commissions.take(m.commissions, d)
+	m.commissions.entries["legion_permit"] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": 1, "pick": "", "seq": 0}     # 342 B2：排在许可单后
+	m.commissions.rep["legion"] = 25
+	t.check(Commissions.take(m.commissions, d), "接上《两条回路》")
 	Commissions.credit(m, d, 0, "node:2")
 	m.commissions.rep["greylamp"] = 1
 	var text := MetaSave.to_text(m)

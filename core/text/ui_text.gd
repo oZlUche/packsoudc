@@ -150,7 +150,7 @@ const TEXT := {
 	"commission.sub_story": {"zh": "剧情", "en": "Story"},
 	"commission.sub_regular": {"zh": "常规", "en": "Regular"},
 	"commission.sub_reputation": {"zh": "声望", "en": "Standing"},
-	"commission.regular_locked": {"zh": "声望到 %d 后，这一方的常规委托才会贴出来", "en": "Regular commissions from them appear at %d standing"},
+	"commission.regular_locked": {"zh": "声望到 %d、办完《%s》后，这一方的常规委托才会贴出来", "en": "Regular commissions from them appear at %d standing, after %s"},
 	"commission.regular_soon": {"zh": "告示栏上还没有这一方的纸条", "en": "No notices from them on the board yet"},
 	"commission.facility_open": {"zh": "%s：已开放", "en": "%s: open"},
 	"commission.facility_locked": {"zh": "%s：办成《%s》后开放", "en": "%s: opens after \"%s\""},

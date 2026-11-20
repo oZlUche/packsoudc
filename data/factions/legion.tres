@@ -13,3 +13,4 @@ order = 1
 facilities = {
 "smithy": "legion_forge_token"
 }
+permit = &"legion_permit"

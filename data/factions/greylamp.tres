@@ -13,3 +13,4 @@ order = 3
 facilities = {
 "market": "greylamp_check_scale"
 }
+permit = &"greylamp_permit"

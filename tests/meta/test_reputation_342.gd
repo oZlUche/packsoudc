@@ -1,11 +1,14 @@
 ## 342 B2（报告 348）：五档声望的地基 —— 旧档声望折算；新档教程走完后铁匠铺、科技、集市要三份引导剧情开放（营地一步办完，各 +10）；
-## 老档、切片、教程没走完都不门控；剧情自动接上、不占位；委托页三子页；没开放的设施点进去是说明板，有键直达那份剧情
+## 老档、切片、教程没走完都不门控；剧情自动接上、不占位；委托页三子页；没开放的设施点进去是说明板，有键直达那份剧情。
+## 第二步：每方两份基础剧情 + 一份许可单各 +5 到 25；营地交货、击败、到访三种目标；常规委托要受托 + 许可单
 extends RefCounted
 
 const W178 := preload("res://tests/ui/test_base_warehouse_178.gd")
 const T110 := preload("res://tests/meta/test_tech.gd")
 const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
 const CP := preload("res://ui/game/commission_panel.gd")
+const Support := preload("res://tests/run/flow_support.gd")
+const PREFIX := "reputation_342"
 
 const OPENERS := {&"smithy": &"legion_forge_token", &"tech": &"society_first_survey", &"market": &"greylamp_check_scale"}
 
@@ -108,3 +111,123 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 	s.queue_free()
 	W178._cleanup()
 
+
+
+static func _done(book: CommissionBook, ids: Array) -> void:
+	for id in ids:
+		book.entries[String(id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": 1, "pick": "", "seq": 0}
+
+
+static func run_followups(t: TestCase) -> void:
+	t.begin("342 B2 · 后续剧情：每方开放单 10 + 两份基础 5 + 许可单 5 = 25；许可单要两份基础都办完；常规委托要受托且许可单办完")
+	for f in Commissions.listed_factions():
+		var permit := Commissions.def(f.permit)
+		t.check(permit != null and permit.faction == f.id and Commissions.is_story(permit), "%s 有许可单" % Names.of(f))
+		if permit == null:
+			continue
+		var total := 0
+		for fac in f.facilities:
+			total += Commissions.reputation_of(Commissions.def(StringName(String(f.facilities[fac]))))
+		t.eq(permit.requires.size(), 2, "《%s》要两份基础剧情" % Names.of(permit))
+		for r in permit.requires:
+			var d := Commissions.def(r)
+			total += Commissions.reputation_of(d) if d != null else 0
+		total += Commissions.reputation_of(permit)
+		t.eq(total, f.thresholds[Commissions.REGULAR_TIER], "%s 的剧情加起来正好到受托" % Names.of(f))
+	var book := CommissionBook.new()
+	var legion := Commissions.faction(&"legion")
+	book.rep["legion"] = 25
+	t.check(not Commissions.regular_open(book, legion), "受托了、许可单没办：常规不开")
+	_done(book, [legion.permit])
+	t.check(Commissions.regular_open(book, legion), "许可单办完：常规开")
+	book.rep["legion"] = 20
+	t.check(not Commissions.regular_open(book, legion), "没到受托：常规不开")
+
+
+static func run_hand_in(t: TestCase) -> void:
+	t.begin("342 B2 · 营地交货：《查验材料》要三件金属；按【办理】交仓库里合格的（没锁的、便宜的先交），可以分批；交够办成 +5")
+	ItemInstance.reset_uid_counter()
+	var c := TestSupport.load_content("free_mode")
+	var f := Support.flow(c, PREFIX)
+	var book := f.meta.commissions
+	_done(book, [&"legion_forge_token"])
+	book.rep["legion"] = 10
+	f.sync_commissions()
+	var id := &"legion_check_materials"
+	var d := Commissions.def(id)
+	t.eq(book.state_of(id), CommissionBook.TAKEN, "开放单办完：《查验材料》自动接上")
+	t.check(not Commissions.can_report(book, d, f.meta), "仓库里没有金属：不能办理")
+	var a := T110._add(f.meta, c.items, &"iron_ore")
+	var b := T110._add(f.meta, c.items, &"iron_ore")
+	var locked := T110._add(f.meta, c.items, &"nail_keg")
+	locked.set_locked(true)
+	T110._add(f.meta, c.items, &"bandage")
+	t.check(Commissions.can_report(book, d, f.meta), "有两件金属：能办理")
+	var r := f.report_commission(id)
+	t.eq(int(r.get("handed", 0)), 2, "交了两件（锁着的不交）")
+	t.check(not bool(r["done"]), "还差一件")
+	t.check(f.meta.warehouse.get_item(a.uid) == null and f.meta.warehouse.get_item(b.uid) == null and f.meta.warehouse.get_item(locked.uid) != null, "交的从仓库拿走，锁着的留着")
+	t.eq(int(book.entry(id)["progress"]), 2, "进度 2 / 3")
+	t.check(not Commissions.can_report(book, d, f.meta), "没有合格的了：不能办理")
+	T110._add(f.meta, c.items, &"iron_ore")
+	T110._add(f.meta, c.items, &"iron_ore")
+	r = f.report_commission(id)
+	t.eq(int(r.get("handed", 0)), 1, "只交还差的一件")
+	t.check(bool(r["done"]) and book.is_done(id), "办成")
+	t.eq(book.rep_of(&"legion"), 15, "后勤部队 +5")
+	Support.cleanup(PREFIX)
+
+
+static func run_field_goals(t: TestCase) -> void:
+	t.begin("342 B2 · 局内两种新目标：《清出一条路》打赢普通的仗（精英、首领、输了不算；同一场只记一次）；《协会登记证》到访搜索点（同一局同一处只记一次）；败退也算")
+	ItemInstance.reset_uid_counter()
+	var c := TestSupport.load_content("free_mode")
+	var f := Support.flow(c, PREFIX)
+	var book := f.meta.commissions
+	_done(book, [&"legion_forge_token", &"society_first_survey", &"society_copy_recipe", &"society_identify_ore"])
+	book.rep["legion"] = 10
+	book.rep["society"] = 20
+	f.sync_commissions()
+	var road := &"legion_clear_road"
+	var reg := &"society_permit"
+	t.check(book.state_of(road) == CommissionBook.TAKEN and book.state_of(reg) == CommissionBook.TAKEN, "两份都自动接上")
+	var s := f.begin_direct(c.chapter, 23)
+	t.not_null(s, "开局")
+	if s == null:
+		Support.cleanup(PREFIX)
+		return
+	var mod := CommissionModule.of(s)
+	mod.install(s)     # 再装一次也只接一次信号
+	var node: MapNode = s.map.get_node(s.map.node_ids()[0])
+	s.events.last_battle = {"type": "battle", "battle_id": "b1", "content": {"enemy": "brute"}}
+	s.events.battle_finished.emit(node, BattleResult.new(), true)
+	t.eq(mod.progress(road, 0), 1, "打赢一场记一场")
+	s.events.battle_finished.emit(node, BattleResult.new(), true)
+	t.eq(mod.progress(road, 0), 1, "同一场不重记")
+	t.check(mod.on_battle(node, true, {"type": "elite", "battle_id": "b2"}).is_empty(), "精英不算普通敌人")
+	t.check(mod.on_battle(node, false, {"type": "battle", "battle_id": "b3"}).is_empty(), "输了不算")
+	t.eq(mod.on_battle(node, true, {"type": "search", "battle_id": "b4"}).size(), 1, "搜索里遇上的仗算")
+	var searches: Array[MapNode] = []
+	var other: MapNode = null
+	for nid in s.map.node_ids():
+		var n := s.map.get_node(nid)
+		if NodeEvents.effective_type(n) == &"search":
+			searches.append(n)
+		elif other == null:
+			other = n
+	t.check(searches.size() >= 2, "图上至少两处搜索点")
+	if searches.size() < 2:
+		Support.cleanup(PREFIX)
+		return
+	t.eq(mod.on_visit(searches[0]).size(), 1, "到访一处搜索点")
+	t.check(mod.on_visit(searches[0]).is_empty(), "同一处不重记")
+	if other != null:
+		t.check(mod.on_visit(other).is_empty(), "别的点不算")
+	t.eq(mod.on_visit(searches[1]).size(), 1, "第二处")
+	s.fail(&"time_out")
+	f._settle_run()
+	t.eq(int(book.entry(road)["progress"]), 2, "败退：打赢的两场照记")
+	t.check(book.is_done(reg), "败退：两处到访照记，《协会登记证》办成")
+	t.eq(book.rep_of(&"society"), 25, "魔法师协会到受托")
+	t.check(Commissions.regular_open(book, Commissions.faction(&"society")), "协会的常规委托开了")
+	Support.cleanup(PREFIX)

@@ -14,5 +14,6 @@
   ],
   "facilities": {
     "market": "greylamp_check_scale"
-  }
+  },
+  "permit": "greylamp_permit"
 }

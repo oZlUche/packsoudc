@@ -1,0 +1,32 @@
+{
+  "id": "society_identify_ore",
+  "display_name": "辨认矿样",
+  "display_names": {
+    "en": "Identify the Samples"
+  },
+  "faction": "society",
+  "order": 2,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "society_first_survey"
+  ],
+  "stages": [
+    {
+      "goal": "hand_in",
+      "where": "camp",
+      "count": 2,
+      "params": {
+        "material": "gem"
+      },
+      "text": "把两块晶石交给协会辨认",
+      "texts": {
+        "en": "Hand two crystals to the Society for identification"
+      }
+    }
+  ],
+  "client": "协会登记员",
+  "clients": {
+    "en": "Society registrar"
+  }
+}

@@ -21,3 +21,5 @@ extends Resource
 @export var facilities: Dictionary = {}
 ## 联系人 NPC（可空）
 @export var contact: StringName = &""
+## 342 B2：许可单（办完它、又到了受托，常规委托才开；空 = 只看声望）
+@export var permit: StringName = &""

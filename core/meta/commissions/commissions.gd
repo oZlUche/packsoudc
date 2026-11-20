@@ -25,7 +25,14 @@ const GOALS := {
 	&"smith_forge": [CommissionStage.CAMP],     # 接单后在铁匠铺真的打一次（接单时选的那张配方）
 	&"deliver_letter": [CommissionStage.FIELD],     # 撤离点上的「交信」：把任务信交出去
 	&"camp_report": [CommissionStage.CAMP],     # 342 B2：营地里找对应的人办一次（委托页卡上的【办理】）
+	&"hand_in": [CommissionStage.CAMP],     # 342 B2：营地交货 —— 仓库里合格的几件（`params` 的 material / min，或 id），可以分批
+	&"defeat_enemies": [CommissionStage.FIELD],     # 342 B2：打赢 N 场（`params.kind` = normal 只认普通敌人；`params.enemy` 认一种）
+	&"visit_nodes": [CommissionStage.FIELD],     # 342 B2：到访 N 处（`params.type` = 节点类型），同一局同一处只记一次
 }
+## 342 B2：营地当场能办的目标（卡上有【办理】）
+const CAMP_GOALS: Array[StringName] = [&"camp_report", &"hand_in"]
+## 342 B2：常规委托从第几档开（受托），还要办完这一方的许可单（[member FactionDef.permit]）
+const REGULAR_TIER := 2
 
 ## 不能接的原因（字表键 `commission.why_<原因>`）
 const WHY_HIDDEN := "hidden"
@@ -188,18 +195,70 @@ static func auto_take(book: CommissionBook) -> Array[StringName]:
 	return out
 
 
-## 342 B2：营地「办理」—— 这份正停在 `camp_report` 那一步就记一次。返回 [method credit] 的结果
+## 342 B2：营地「办理」—— 停在 `camp_report` 那一步就记一次；停在 `hand_in` 就把仓库里合格的交上去（够几件交几件）。
+## 返回 [method credit] 的结果（交货另有 `handed` = 交了几件）
 static func report(meta: MetaState, d: CommissionDef, items: ItemDatabase = null) -> Dictionary:
 	var s := current_stage(meta.commissions, d.id) if meta != null and d != null else -1
-	if s < 0 or s >= d.stages.size() or d.stages[s].goal != &"camp_report":
+	if s < 0 or s >= d.stages.size() or not CAMP_GOALS.has(d.stages[s].goal):
 		return {"ok": false, "step": false, "done": false}
+	if d.stages[s].goal == &"hand_in":
+		return _hand_in(meta, d, s, items)
 	return credit(meta, d, s, "camp", items)
 
 
-## 342 B2：现在停在「营地办理」这一步
-static func can_report(book: CommissionBook, d: CommissionDef) -> bool:
+## 342 B2：现在停在营地能办的那一步（交货要仓库里至少有一件合格的，所以要 [param meta]）
+static func can_report(book: CommissionBook, d: CommissionDef, meta: MetaState = null) -> bool:
 	var s := current_stage(book, d.id) if d != null else -1
-	return s >= 0 and s < d.stages.size() and d.stages[s].goal == &"camp_report"
+	if s < 0 or s >= d.stages.size() or not CAMP_GOALS.has(d.stages[s].goal):
+		return false
+	return d.stages[s].goal != &"hand_in" or not hand_in_picks(meta, d, s).is_empty()
+
+
+## 342 B2：这一步能收这件吗（任务物不收）
+static func hand_in_fits(stage: CommissionStage, item: ItemDef) -> bool:
+	if stage == null or item == null or item.tags.has(&"commission"):
+		return false
+	var want := String(stage.params.get("id", ""))
+	if want != "":
+		return String(item.id) == want
+	return SmithRecipeDef.slot_fits({"material": String(stage.params.get("material", "")), "min": int(stage.params.get("min", 0))}, item)
+
+
+## 342 B2：交货会交仓库里哪几件：合格、没锁的，稀有度低的先交，最多交到这一步还差的件数
+static func hand_in_picks(meta: MetaState, d: CommissionDef, stage: int) -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	if meta == null or meta.warehouse == null or d == null or stage < 0 or stage >= d.stages.size():
+		return out
+	var st := d.stages[stage]
+	for inst in meta.warehouse.items():
+		var it := inst as ItemInstance
+		if not it.is_locked_by_player() and hand_in_fits(st, it.def):
+			out.append(it)
+	out.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool: return a.def.rarity < b.def.rarity)
+	var need := maxi(1, st.count) - int(meta.commissions.entry(d.id).get("progress", 0))
+	return out.slice(0, maxi(0, need))
+
+
+static func _hand_in(meta: MetaState, d: CommissionDef, stage: int, items: ItemDatabase) -> Dictionary:
+	var out := {"ok": false, "step": false, "done": false, "handed": 0}
+	for it in hand_in_picks(meta, d, stage):
+		if meta.warehouse.remove(it.uid) == null:
+			continue
+		var r := credit(meta, d, stage, "uid:%d" % it.uid, items)
+		if not bool(r["ok"]):
+			continue
+		out["ok"] = true
+		out["handed"] = int(out["handed"]) + 1
+		out["step"] = bool(out["step"]) or bool(r["step"])
+		if bool(r["done"]):
+			out["done"] = true
+			out["got"] = r["got"]
+	return out
+
+
+## 342 B2：这一方的常规委托开了没有：到受托，且办完了这一方的许可单
+static func regular_open(book: CommissionBook, f: FactionDef) -> bool:
+	return f != null and tier_of(book, f) >= REGULAR_TIER and (f.permit == &"" or book.is_done(f.permit))
 
 
 ## 接单时要不要先选一样（配方实验）
@@ -367,6 +426,9 @@ static func validate_all(pool: Array, faction_pool: Array) -> Array[String]:
 				problems.append("%s：前置 %s 不是同一方" % [d.id, r])
 		if _cycles(d.id, by_id, {}):
 			problems.append("%s：前置成环" % d.id)
+	for f: FactionDef in faction_pool:     # 342 B2：许可单得是这一方的剧情
+		if f.permit != &"" and (not by_id.has(f.permit) or (by_id[f.permit] as CommissionDef).faction != f.id or not is_story(by_id[f.permit])):
+			problems.append("%s：许可单 %s 不是这一方的剧情" % [f.id, f.permit])
 	return problems
 
 

@@ -1064,6 +1064,12 @@ static func import_commission(data: Dictionary, ctx: Context, report: ImportRepo
 			report.error(at + ".where", "完成地点只认 camp / field / carry")
 		if s.count < 1:
 			report.error(at + ".count", "至少做一次")
+		if s.goal == &"hand_in":     # 342 B2：交货要么点名一样（id），要么一类材质（material，可带 min 稀有度）
+			var want := StringName(String(s.params.get("id", "")))
+			if want == &"" and String(s.params.get("material", "")) == "":
+				report.error(at + ".params", "交货要写 id 或 material")
+			elif want != &"" and not ctx.items.is_empty() and not ctx.items.has(want):
+				report.error(at + ".params", "找不到道具 '%s'" % want)
 		if s.entrust_ok and s.where != CommissionStage.CARRY:
 			report.error(at + ".entrust_ok", "只有带回的步骤才谈得上托付算不算")
 		if s.item != &"" and not ctx.items.is_empty():

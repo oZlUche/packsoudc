@@ -1,0 +1,32 @@
+{
+  "id": "greylamp_check_medkits",
+  "display_name": "核对药包",
+  "display_names": {
+    "en": "Check the Medicine Packs"
+  },
+  "faction": "greylamp",
+  "order": 3,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "greylamp_check_scale"
+  ],
+  "stages": [
+    {
+      "goal": "hand_in",
+      "where": "camp",
+      "count": 2,
+      "params": {
+        "material": "herb"
+      },
+      "text": "交两件草药，给药师核对药包",
+      "texts": {
+        "en": "Hand in two herbs so the apothecary can check the packs"
+      }
+    }
+  ],
+  "client": "灰灯的药师",
+  "clients": {
+    "en": "Greylamp apothecary"
+  }
+}

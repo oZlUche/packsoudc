@@ -7,7 +7,6 @@
   "faction": "legion",
   "order": 3,
   "tier": "inquiry",
-  "min_tier": 0,
   "stages": [
     {
       "goal": "inspect_extracts",
@@ -26,5 +25,8 @@
   "client": "军需官",
   "clients": {
     "en": "Quartermaster"
-  }
+  },
+  "requires": [
+    "legion_permit"
+  ]
 }
