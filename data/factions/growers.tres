@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="FactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/faction_def.gd" id="1_gblmt"]
+
+[resource]
+script = ExtResource("1_gblmt")
+id = &"growers"
+display_name = "河滩垦户社"
+display_names = {
+"en": "Riverbank Growers"
+}
+order = 5
+arrives = &"first_run"
+facilities = {
+"nursery": "growers_first_bed"
+}
+permit = &"growers_permit"
+regular = Array[Dictionary]([{
+"goal": "hand_in",
+"name": "收草药",
+"names": {
+"en": "Herbs Wanted"
+},
+"params": {
+"material": "herb"
+},
+"text": "交 {n} 件草药",
+"texts": {
+"en": "Hand in herbs: {n}"
+},
+"u": 8
+}, {
+"goal": "hand_in",
+"name": "收篱木",
+"names": {
+"en": "Fence Timber"
+},
+"params": {
+"material": "wood"
+},
+"text": "交 {n} 件木材",
+"texts": {
+"en": "Hand in wood materials: {n}"
+},
+"u": 8
+}, {
+"goal": "defeat_enemies",
+"name": "护田",
+"names": {
+"en": "Guard the Fields"
+},
+"params": {
+"kind": "normal"
+},
+"text": "打赢 {n} 场普通的仗",
+"texts": {
+"en": "Win battles against ordinary enemies: {n}"
+},
+"u": 10
+}])

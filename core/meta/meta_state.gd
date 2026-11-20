@@ -18,7 +18,7 @@ extends RefCounted
 ## 262：v4 科技「集市」「铁匠铺」改义为「高级货物」「高级配方」，最多两级（[MetaMigrations] 把 3 压到 2）
 ## 319：v5 科技分成数值树与机制树、机制树只花见识；幸运科技删了（退钱退材料）、讨价并成一级，见 [MetaMigrations]
 ## 342 B2：v6 委托声望改五档（旧值折算），老档的铁匠铺、科技、集市一直开着
-const SAVE_VERSION := 6     # 342 B2：五档声望折算 + 老档设施照开（[method MetaMigrations._v5_to_v6]）
+const SAVE_VERSION := 7     # 342 B3：苗圃（[method MetaMigrations._v6_to_v7]）
 ## 319：记住最近结算过的几局（[member settled_runs]），重复结算不再发东西
 const SETTLED_MAX := 64
 ## 262（作者 14:19）：集市、铁匠铺默认就有 —— 没点科技也是 1 级，科技每点一级铺子再升一级
@@ -131,6 +131,8 @@ var tutorial_ledger: Dictionary = {}
 var reward_pending: Array[ItemInstance] = []
 ## 336：阵营声望与委托（[CommissionBook]）。老档没有 = 全空（没接过委托、各方声望 0），不升版本
 var commissions: CommissionBook = CommissionBook.new()
+## 342 B3：河滩垦户社的苗圃（几畦地、最后推进过的那一局）
+var nursery: Nursery = Nursery.new()
 var _next_uid: int = 1
 
 
@@ -894,6 +896,7 @@ func to_dict() -> Dictionary:
 		"tutorial_ledger": tutorial_ledger.duplicate(true),     # 统一教程 B
 		"reward_pending": reward_pending.map(func(i: ItemInstance) -> Dictionary: return i.to_dict()),
 		"commissions": commissions.to_dict(),     # 336
+		"nursery": nursery.to_dict(),     # 342 B3
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -1035,6 +1038,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 			m.reward_pending.append(inst)
 			m._next_uid = maxi(m._next_uid, inst.uid + 1)
 	m.commissions = CommissionBook.from_dict(d.get("commissions", null))     # 336：老档没有 = 全空
+	m.nursery = Nursery.from_dict(d.get("nursery", null))     # 342 B3
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
 	if said is Dictionary:
 		for k in said:

@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_miqcq"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_0y3xn"]
+
+[sub_resource type="Resource" id="Resource_m3jcx"]
+script = ExtResource("2_0y3xn")
+goal = &"nursery_plant"
+params = {
+"crop": "bitter_leaf"
+}
+where = &"camp"
+text = "用自己的干草药束留种，种一畦苦叶草"
+texts = {
+"en": "Keep back a bundle of your own dried herbs and sow a bed of bitterleaf"
+}
+
+[resource]
+script = ExtResource("1_miqcq")
+id = &"growers_permit"
+display_name = "登记留种"
+display_names = {
+"en": "Register the Seed Stock"
+}
+faction = &"growers"
+order = 4
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"growers_first_harvest"])
+stages = Array[ExtResource("2_0y3xn")]([SubResource("Resource_m3jcx")])
+client = "垦户社的老农"
+clients = {
+"en": "Old grower"
+}

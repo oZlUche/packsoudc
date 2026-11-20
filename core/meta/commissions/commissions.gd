@@ -32,7 +32,9 @@ const GOALS := {
 	&"camp_report": [CommissionStage.CAMP],     # 342 B2：营地里找对应的人办一次（委托页卡上的【办理】）
 	&"hand_in": [CommissionStage.CAMP],     # 342 B2：营地交货 —— 仓库里合格的几件（`params` 的 material / min，或 id），可以分批
 	&"defeat_enemies": [CommissionStage.FIELD],     # 342 B2：打赢 N 场（`params.kind` = normal 只认普通敌人；`params.enemy` 认一种）
-	&"visit_nodes": [CommissionStage.FIELD],     # 342 B2：到访 N 处（`params.type` = 节点类型），同一局同一处只记一次
+	&"visit_nodes": [CommissionStage.FIELD],
+	&"nursery_plant": [CommissionStage.CAMP],     # 342 B3：苗圃里种下一畦（`params.crop` 认一种）
+	&"nursery_harvest": [CommissionStage.CAMP],     # 342 B3：苗圃里收一畦     # 342 B2：到访 N 处（`params.type` = 节点类型），同一局同一处只记一次
 }
 ## 342 B2：营地当场能办的目标（卡上有【办理】）
 const CAMP_GOALS: Array[StringName] = [&"camp_report", &"hand_in"]

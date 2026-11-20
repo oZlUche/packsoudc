@@ -28,7 +28,7 @@ static func _def(id: StringName, faction: StringName, tier: StringName, wheres: 
 static func run_content(t: TestCase) -> void:
 	t.begin("336 W0：五方按顺序（军团 / 协会 / 灰灯 / 使团 / 猎盟），首版只列前三方；三张原型单导得进来、前置与阵营查得过")
 	var fs := Commissions.factions()
-	t.eq(fs.map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp", "cartographers", "envoy", "hunters"], "六方、顺序对（342 B3 加地图协会）")
+	t.eq(fs.map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp", "cartographers", "envoy", "growers", "hunters"], "七方、顺序对（342 B3 加地图协会、垦户社）")
 	Commissions.active = CommissionBook.new()
 	t.eq(Commissions.listed_factions().map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp"], "只列三方（地图协会第一次正式探索结算后才来）")
 	t.check(fs.all(func(f: FactionDef) -> bool: return f.thresholds == ([0, 10, 25, 50, 100] as Array[int])), "门槛 0 / 10 / 25 / 50 / 100（342 B2）")

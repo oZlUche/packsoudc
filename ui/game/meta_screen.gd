@@ -14,6 +14,7 @@ const TechPanelScript := preload("res://ui/game/tech_panel.gd")
 const MarketPanelScript := preload("res://ui/game/market_panel.gd")     # 251
 const SmithyPanelScript := preload("res://ui/game/smithy_panel.gd")     # 251
 const CommissionPanelScript := preload("res://ui/game/commission_panel.gd")     # 336
+const NurseryPanelScript := preload("res://ui/game/nursery_panel.gd")     # 342 B3
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -40,7 +41,7 @@ const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_wa
 ## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
-	"logistics": [["market", "market.title"], ["smithy", "smithy.title"]],
+	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"]],
 	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"]],
 }
 const SUB_TAB_SIZE := Vector2(170, 44)
@@ -312,6 +313,18 @@ func open(payload: Dictionary) -> void:
 	_tech_cloth.name = "TechPage"
 	_pages["tech"] = _tech_cloth
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
+	if _sub_btns.has("nursery"):     # 342 B3：苗圃页（右边照常露仓库，收获进仓库）
+		var ns_page := _cloth()
+		_nursery = NurseryPanelScript.new()
+		_nursery.setup(flow)
+		_nursery.changed.connect(_refresh)
+		_nursery.said.connect(func(text: String, is_warn: bool):
+			if is_warn:
+				warn(text)
+			else:
+				say(text))
+		ns_page.add_child(_nursery)
+		_pages["nursery"] = ns_page
 	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
 		cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
@@ -814,6 +827,30 @@ func _build_smithy(root: Control) -> Control:
 
 ## 336：委托页（没列这一页 = null）
 var _commissions = null
+## 342 B3：苗圃页（垦户社没来 = null）
+var _nursery = null
+
+
+func nursery_panel():
+	return _nursery
+
+
+## 342 B3：苗圃里有熟的 —— 后勤页签与苗圃小键的字后面挂「可收获」（占位，标记的图请 UI设计 出），不弹窗
+func _sync_ripe_mark() -> void:
+	var ripe := flow.nursery_ripe()
+	if _tab_btns.has("logistics"):
+		var b := _tab_btns["logistics"] as Button
+		b.text = UiText.t("meta.tab_logistics") + ("　" + UiText.t("nursery.ripe") if ripe else "")
+		b.tooltip_text = UiText.t("nursery.ripe") if ripe else ""
+	if _sub_btns.has("nursery"):
+		(_sub_btns["nursery"] as Button).text = UiText.t("nursery.title") + ("　" + UiText.t("nursery.ripe") if ripe else "")
+	if _nursery != null:
+		_nursery.refresh()
+
+
+## 342 B3：垦户社到营地了没有
+func _growers_here() -> bool:
+	return flow.commissions_visible() and Commissions.present(flow.meta.commissions, Commissions.faction(&"growers"))
 
 
 func commission_panel():
@@ -843,6 +880,8 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 	var btns := _sub_btns if tab_key == "logistics" else _shelf_sub_btns
 	for pair in SUB_TABS[tab_key]:
 		var key: String = pair[0]
+		if key == "nursery" and not _growers_here():
+			continue     # 342 B3：垦户社还没来营地，不列
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
 		b.toggle_mode = true
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -1422,7 +1461,7 @@ func show_tab(p_name: String) -> void:
 	if not (_pages.has(p_name) or p_name == "logistics"):
 		p_name = "expedition"
 	var shown := _sub if p_name == "logistics" else p_name
-	if Commissions.FACILITIES.has(StringName(shown)) and not flow.facility_open(StringName(shown)):
+	if Commissions.opens_known(StringName(shown)) and not flow.facility_open(StringName(shown)):
 		_fill_locked(StringName(shown))     # 342 B2：没开放 —— 入口照常，页里换成说明板
 		shown = "locked"
 	if shown == "tech":
@@ -1524,5 +1563,6 @@ func _refresh() -> void:
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
 	if _tab_btns.has("warehouse"):
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗
+	_sync_ripe_mark()     # 342 B3
 	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
 		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))

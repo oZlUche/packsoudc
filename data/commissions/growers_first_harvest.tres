@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_flu28"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_iyipx"]
+
+[sub_resource type="Resource" id="Resource_ovrvr"]
+script = ExtResource("2_iyipx")
+goal = &"nursery_harvest"
+where = &"camp"
+text = "从苗圃收一畦"
+texts = {
+"en": "Harvest a bed in the nursery"
+}
+
+[resource]
+script = ExtResource("1_flu28")
+id = &"growers_first_harvest"
+display_name = "收获"
+display_names = {
+"en": "First Harvest"
+}
+faction = &"growers"
+order = 3
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"growers_trial_sow"])
+stages = Array[ExtResource("2_iyipx")]([SubResource("Resource_ovrvr")])
+client = "垦户社的老农"
+clients = {
+"en": "Old grower"
+}

@@ -27,6 +27,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v4_to_v5(d)
 			5:
 				d = _v5_to_v6(d)
+			6:
+				d = _v6_to_v7(d)
 			_:
 				push_warning("MetaMigrations: 没有 v%d → v%d 的迁移，停在 v%d" % [v, v + 1, v])
 				return d
@@ -169,3 +171,10 @@ static func _refund_tier(tier: Dictionary, items: Dictionary) -> int:
 	for item in tier.get("items", {}):
 		items[String(item)] = int(items.get(String(item), 0)) + int(tier["items"][item])
 	return int(tier.get("funds", 0))
+
+
+## v6 → v7（342 B3）：加苗圃 —— 老档一畦空地，没推进过
+static func _v6_to_v7(d: Dictionary) -> Dictionary:
+	if not (d.get("nursery", null) is Dictionary):
+		d["nursery"] = Nursery.new().to_dict()
+	return d
