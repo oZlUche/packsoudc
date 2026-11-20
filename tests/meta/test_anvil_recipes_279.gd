@@ -90,7 +90,7 @@ static func run_import(t: TestCase) -> void:
 	for id in db.ids():
 		ctx.items[id] = db.get_def(id)
 	var base := {"id": "x", "output": "bone_broadsword", "inputs": {"broadsword": 1}, "funds": 60, "group": "blade"}
-	for c in [[{"plastic": 1}, "材质不认识"], [{"bone": 9}, "稀有度太高"], [{"gem": 3}, "没有蓝起的宝石材料"]]:
+	for c in [[{"plastic": 1}, "材质不认识"], [{"bone": 9}, "稀有度太高"], [{"stone": 2}, "没有蓝起的石料"]]:
 		var d := base.duplicate()
 		d["material_inputs"] = c[0]
 		var rep := ImportReport.new()

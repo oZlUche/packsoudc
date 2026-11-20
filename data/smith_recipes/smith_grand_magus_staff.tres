@@ -14,6 +14,10 @@ material_slots = Array[Dictionary]([{
 "count": 2,
 "material": "wood",
 "min": 2
+}, {
+"count": 1,
+"material": "gem",
+"min": 3
 }])
 funds = 400
 group = "staff"

@@ -107,19 +107,19 @@ static func run_describe(t: TestCase) -> void:
 
 
 static func run_forge_eats_crystal(t: TestCase) -> void:
-	t.begin("252 §3.3：打法师杖 —— 木棍、下品火晶石、银锭各吃一件，扣 90 币，法师杖进仓库")
+	t.begin("252 §3.3：打法师杖 —— 木棍、下品火晶石、银锭、晶 ≥优良（347）各吃一件，扣 90 币，法师杖进仓库")
 	ItemInstance.reset_uid_counter()
 	var db := T110._db()
 	var m := _meta(2, {"staffcraft": 2})
 	m.funds = 100
-	for id in [&"wooden_stick", &"fire_crystal_low", &"silver_ingot"]:
+	for id in [&"wooden_stick", &"fire_crystal_low", &"silver_ingot", &"mist_crystal"]:
 		T110._add(m, db, id)
 	var r := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"smith_mage_staff")
 	t.eq(Smithy.can_forge(m, r, db), "", "齐了")
 	var got := Smithy.forge(m, r, db)
 	t.check(got != null and got.def.id == &"mage_staff" and m.warehouse.has_item(got.uid), "法师杖进了仓库")
 	t.eq(m.funds, 10, "扣了 90 币")
-	t.eq(m.warehouse.items().filter(func(i) -> bool: return (i as ItemInstance).def.id in [&"wooden_stick", &"fire_crystal_low", &"silver_ingot"]).size(), 0, "三样料都吃掉了（晶石也算料）")
+	t.eq(m.warehouse.items().filter(func(i) -> bool: return (i as ItemInstance).def.id in [&"wooden_stick", &"fire_crystal_low", &"silver_ingot", &"mist_crystal"]).size(), 0, "四样料都吃掉了（晶石也算料）")
 
 
 static func run_import_checks(t: TestCase) -> void:

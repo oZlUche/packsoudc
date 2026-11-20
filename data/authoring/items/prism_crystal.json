@@ -1,0 +1,20 @@
+{
+  "id": "prism_crystal",
+  "display_name": "棱晶",
+  "display_names": {
+    "en": "Prism Crystal"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "magic"
+  ],
+  "material": "gem"
+}
