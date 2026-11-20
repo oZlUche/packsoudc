@@ -6,6 +6,13 @@
     "ironwood_branch": 1,
     "mithril_ingot": 1
   },
+  "material_slots": [
+    {
+      "material": "gem",
+      "min": 2,
+      "count": 1
+    }
+  ],
   "funds": 200,
   "group": "staff",
   "level": 3,

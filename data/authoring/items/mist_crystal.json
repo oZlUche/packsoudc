@@ -1,0 +1,20 @@
+{
+  "id": "mist_crystal",
+  "display_name": "雾晶",
+  "display_names": {
+    "en": "Mist Crystal"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "magic"
+  ],
+  "material": "gem"
+}

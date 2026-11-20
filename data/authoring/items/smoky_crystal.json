@@ -1,0 +1,20 @@
+{
+  "id": "smoky_crystal",
+  "display_name": "烟晶",
+  "display_names": {
+    "en": "Smoky Crystal"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "magic"
+  ],
+  "material": "gem"
+}

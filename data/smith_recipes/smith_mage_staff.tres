@@ -11,6 +11,11 @@ inputs = {
 "silver_ingot": 1,
 "wooden_stick": 1
 }
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "gem",
+"min": 1
+}])
 funds = 90
 group = "staff"
 level = 2

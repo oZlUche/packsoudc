@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_63gkj"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_kl670"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_tst8i"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_0itq4"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_g38w4"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_2604a"]
+
+[sub_resource type="Resource" id="Resource_j6dik"]
+script = ExtResource("6_2604a")
+
+[resource]
+script = ExtResource("5_g38w4")
+id = &"prism_crystal"
+display_name = "棱晶"
+display_names = {
+"en": "Prism Crystal"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_j6dik")
+rarity = 2
+tags = Array[StringName]([&"material", &"magic"])
+material = "gem"

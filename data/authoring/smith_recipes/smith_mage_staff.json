@@ -6,6 +6,13 @@
     "silver_ingot": 1,
     "wooden_stick": 1
   },
+  "material_slots": [
+    {
+      "material": "gem",
+      "min": 1,
+      "count": 1
+    }
+  ],
   "funds": 90,
   "group": "staff",
   "level": 2,
