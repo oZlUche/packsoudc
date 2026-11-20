@@ -162,7 +162,7 @@ const TEXT := {
 	"commission.band_2": {"zh": "长单", "en": "Long"},
 	"commission.left": {"zh": "还剩 %d 局", "en": "%d runs left"},
 	"commission.hand": {"zh": "手头 %d / %d", "en": "In hand %d / %d"},
-	"commission.facility_board": {"zh": "%s还没开放。去委托页办成%s的《%s》就能用。", "en": "%s is not open yet. On the Commissions page, finish %s's \"%s\" to use it."},
+	"commission.facility_how": {"zh": "办成《%s》开放", "en": "Opens once %s is done"},
 	"commission.opened": {"zh": "%s开放了", "en": "%s is now open"},
 	"commission.rep": {"zh": "声望 %d", "en": "Standing %d"},
 	"commission.rep_next": {"zh": "声望 %d，下一级还差 %d", "en": "Standing %d, %d to the next rank"},
