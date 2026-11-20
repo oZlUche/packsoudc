@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://byp5jvmh2l255"
-path="res://.godot/imported/v662-crit-fire-zh.jpg-99c2a7b9eb676ae18f13bb1715b90c69.ctex"
+uid="uid://c150sqipn16k6"
+path="res://.godot/imported/v664-crit-gold-mark-zh.jpg-a6ecc8c3eaa93fadc63f4f1e02eb15c6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://docs/reports/testing/images/v662-crit-fire-zh.jpg"
-dest_files=["res://.godot/imported/v662-crit-fire-zh.jpg-99c2a7b9eb676ae18f13bb1715b90c69.ctex"]
+source_file="res://docs/reports/testing/images/v664-crit-gold-mark-zh.jpg"
+dest_files=["res://.godot/imported/v664-crit-gold-mark-zh.jpg-a6ecc8c3eaa93fadc63f4f1e02eb15c6.ctex"]
 
 [params]
 

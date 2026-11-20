@@ -114,7 +114,10 @@ func _desc(l: Label) -> String:
 			var ps := []
 			for pr in mat.shader.get_shader_uniform_list(): ps.append("%s=%s" % [pr["name"], str(mat.get_shader_parameter(pr["name"]))])
 			g = "；渐变 " + ", ".join(ps)
-	return "「%s」字号 %d 字色 #%s 描边 %d%s" % [l.text, ls.font_size, ls.font_color.to_html(false), ls.outline_size, g]
+	var mk := ""
+	var m := l.get_node_or_null("CritMark") as Label
+	if m != null: mk = "；后缀「%s」#%s 材质 %s" % [m.text, m.label_settings.font_color.to_html(false), str(m.material != null)]
+	return "「%s」字号 %d 字色 #%s 描边 %d%s%s" % [l.text, ls.font_size, ls.font_color.to_html(false), ls.outline_size, g, mk]
 
 
 var _acc := 0.0
@@ -245,10 +248,10 @@ func _process(_d: float) -> bool:
 			var types := ["physical", "fire", "poison", "bleed", "reflect", "drain", "ice", "lightning"]
 			for i in types.size():
 				var l := p.popup(18 + i, StringName(types[i]), false, false, 1.0)
-				_place(l, Vector2(20 + (i % 3) * 90, 30 + (i / 3) * 40))
+				_place(l, Vector2(270 + (i % 3) * 110, 150 + (i / 3) * 45))
 				L("　　%s：%s" % [types[i], _desc(l)])
 			var h := p.popup(12, &"physical", true, false, 1.0)
-			_place(h, Vector2(20 + 2 * 90, 30 + 2 * 40))
+			_place(h, Vector2(270 + 2 * 110, 150 + 2 * 45))
 			L("　　治疗：%s" % _desc(h))
 			_wait = 3; _st = 31
 		31:
@@ -257,7 +260,7 @@ func _process(_d: float) -> bool:
 			_clear(p)
 			var c := p.popup(34, &"fire", false, true, 1.0)
 			var n := p.popup(34, &"fire", false, false, 1.0)
-			_place(n, Vector2(20, 40))
+			_place(n, Vector2(270, 160))
 			c.position = Vector2(120, 40)
 			L("暴击：%s；普通对照：%s" % [_desc(c), _desc(n)])
 			_lab = c; _maxs = 1.0; _wait = 1; _st = 32
@@ -270,9 +273,12 @@ func _process(_d: float) -> bool:
 			var p := _enemy_panel()
 			_clear(p)
 			var c := p.popup(34, &"fire", false, true, 1.0)
-			_place(c, Vector2(120, 40)); c.scale = Vector2.ONE
+			_place(c, Vector2(390, 160)); c.scale = Vector2.ONE
 			var n := p.popup(34, &"fire", false, false, 1.0)
-			_place(n, Vector2(20, 40))
+			_place(n, Vector2(270, 160))
+			var cr := p.popup(52, &"fire", false, true, 1.0, [UiPalette.damage_color(&"fire"), UiPalette.damage_color(&"ice")])
+			_place(cr, Vector2(530, 160)); cr.scale = Vector2.ONE
+			L("　　暴击 + 反应（火冰）：%s" % _desc(cr))
 			_wait = 3; _st = 33
 		33:
 			shot("crit")
@@ -285,19 +291,32 @@ func _process(_d: float) -> bool:
 				var cols: Array[Color] = []
 				for el in d.elements: cols.append(UiPalette.damage_color(StringName(String(el))))
 				var nm := p.popup_text(Names.of(d), cols[0] if not cols.is_empty() else Color.WHITE, 1.0, cols)
-				var x := 10.0 + (row % 2) * 260.0
-				var y := -40.0 + (row / 2) * 52.0
+				var x := 270.0 + (row % 2) * 240.0
+				var y := 140.0 + (row / 2) * 52.0
 				_place(nm, Vector2(x, y))
 				var dmg := p.popup(40 + row, StringName(String(d.elements[0])) if not d.elements.is_empty() else &"physical", false, false, 1.0, cols)
 				_place(dmg, Vector2(x + nm.size.x + 12, y + 6))
 				L("　　%s（%s）：名 %s；伤害 %s" % [String(d.id), str(d.elements), _desc(nm), _desc(dmg)])
 				row += 1
 			var plain := p.popup(21, &"fire", false, false, 1.0)
-			_place(plain, Vector2(10, -40 + ((row + 1) / 2) * 52.0))
+			_place(plain, Vector2(270, 140 + ((row + 1) / 2) * 52.0))
 			L("　　普通伤害对照：%s" % _desc(plain))
 			_wait = 3; _st = 34
 		34:
 			shot("reactions")
+			var p := _enemy_panel()
+			_clear(p)
+			var types := ["physical", "fire", "lightning", "ice", "poison"]
+			for i in types.size():
+				var l := p.popup(20 + i, StringName(types[i]), false, false, 1.0)
+				var y := l.position.y
+				_place(l, Vector2(200 + i * 80, y))
+			var c := p.popup(33, &"fire", false, true, 1.0)
+			_place(c, Vector2(620, c.position.y)); c.scale = Vector2.ONE
+			L("原位（面板 0.45 高处，y≈%.0f，面板高 %.0f）摆五种伤害 + 火暴击，停住截图" % [c.position.y, p.size.y])
+			_wait = 3; _st = 37
+		37:
+			shot("natural_position")
 			L("走查完")
 			quit(0); return true
 	return false
