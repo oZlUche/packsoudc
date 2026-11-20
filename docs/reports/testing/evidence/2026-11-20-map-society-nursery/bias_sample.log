@@ -1,0 +1,23 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+B678 章 free_mode；候选 196 件；倍率 1.5
+B678 深度 0.2 方向 无       ：共 8925 件，非材料 5193，材料 3732；材料里各系 mineral 13.8%、plant 19.2%、crafted 40.4%、beast 15.6%、magic 12.3%；材料稀有度 0档 1339、1档 1408、2档 842、3档 128、4档 15
+B678 深度 0.2 方向 mineral ：共 8925 件，非材料 5142，材料 3783；材料里各系 mineral 19.0%、plant 17.3%、crafted 38.7%、beast 14.6%、magic 11.6%；材料稀有度 0档 1358、1档 1415、2档 857、3档 143、4档 10
+B678 深度 0.2 方向 plant   ：共 8925 件，非材料 5165，材料 3760；材料里各系 mineral 13.1%、plant 24.5%、crafted 37.7%、beast 15.1%、magic 10.9%；材料稀有度 0档 1381、1档 1410、2档 825、3档 134、4档 10
+B678 深度 0.2 方向 crafted ：共 8925 件，非材料 5230，材料 3695；材料里各系 mineral 12.1%、plant 15.8%、crafted 50.0%、beast 14.0%、magic 9.6%；材料稀有度 0档 1350、1档 1375、2档 832、3档 127、4档 11
+B678 深度 0.2 方向 beast   ：共 8925 件，非材料 5243，材料 3682；材料里各系 mineral 12.5%、plant 18.3%、crafted 38.9%、beast 20.1%、magic 11.5%；材料稀有度 0档 1279、1档 1410、2档 839、3档 147、4档 7
+B678 深度 0.2 方向 magic   ：共 8925 件，非材料 5118，材料 3807；材料里各系 mineral 13.4%、plant 18.3%、crafted 38.6%、beast 14.4%、magic 16.3%；材料稀有度 0档 1372、1档 1427、2档 872、3档 124、4档 12
+B678 深度 0.9 方向 无       ：共 8925 件，非材料 5455，材料 3470；材料里各系 mineral 11.9%、plant 16.5%、crafted 41.6%、beast 18.6%、magic 13.0%；材料稀有度 0档 829、1档 1379、2档 1066、3档 182、4档 14
+B678 深度 0.9 方向 mineral ：共 8925 件，非材料 5459，材料 3466；材料里各系 mineral 15.8%、plant 14.9%、crafted 39.6%、beast 18.2%、magic 13.4%；材料稀有度 0档 820、1档 1383、2档 1050、3档 201、4档 12
+B678 深度 0.9 方向 plant   ：共 8925 件，非材料 5423，材料 3502；材料里各系 mineral 11.1%、plant 21.0%、crafted 38.7%、beast 17.8%、magic 13.0%；材料稀有度 0档 864、1档 1375、2档 1053、3档 198、4档 12
+B678 深度 0.9 方向 crafted ：共 8925 件，非材料 5486，材料 3439；材料里各系 mineral 10.3%、plant 12.6%、crafted 50.8%、beast 16.6%、magic 11.9%；材料稀有度 0档 808、1档 1367、2档 1044、3档 203、4档 17
+B678 深度 0.9 方向 beast   ：共 8925 件，非材料 5452，材料 3473；材料里各系 mineral 10.0%、plant 14.5%、crafted 40.5%、beast 24.8%、magic 12.7%；材料稀有度 0档 847、1档 1367、2档 1026、3档 210、4档 23
+B678 深度 0.9 方向 magic   ：共 8925 件，非材料 5400，材料 3525；材料里各系 mineral 11.4%、plant 15.2%、crafted 39.5%、beast 17.3%、magic 18.2%；材料稀有度 0档 845、1档 1389、2档 1080、3档 195、4档 16
+B678 材料节点 grove（["plant", "beast_part"]，从普通池抽 0.25）：带「草木」倾向和不带，2000 次里不一样的 0 次
+B678 材料节点 mine（["mineral", "bullion"]，从普通池抽 0.25）：带「草木」倾向和不带，2000 次里不一样的 0 次
+B678 材料节点 remains（["crafted"]，从普通池抽 0.25）：带「草木」倾向和不带，2000 次里不一样的 0 次
+B678 材料节点 runes（["crystal", "magic"]，从普通池抽 0.25）：带「草木」倾向和不带，2000 次里不一样的 0 次
+WARNING: 7208 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 2933 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
