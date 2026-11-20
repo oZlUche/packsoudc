@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_u0nim"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_b6mt0"]
+
+[sub_resource type="Resource" id="Resource_pck6u"]
+script = ExtResource("2_b6mt0")
+goal = &"camp_report"
+where = &"camp"
+text = "把你这几趟的探索记录交给协会登记"
+texts = {
+"en": "Register your expedition records with the Society"
+}
+
+[resource]
+script = ExtResource("1_u0nim")
+id = &"society_first_survey"
+display_name = "第一份勘察记录"
+display_names = {
+"en": "The First Survey Record"
+}
+faction = &"society"
+reputation = 10
+stages = Array[ExtResource("2_b6mt0")]([SubResource("Resource_pck6u")])
+opens = &"tech"
+client = "协会登记员"
+clients = {
+"en": "Society registrar"
+}

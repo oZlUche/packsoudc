@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_itnn3"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_i0ept"]
+
+[sub_resource type="Resource" id="Resource_4dj1s"]
+script = ExtResource("2_i0ept")
+goal = &"camp_report"
+where = &"camp"
+text = "和摊主核对样货，签收"
+texts = {
+"en": "Check the sample goods with the stallholder and sign for them"
+}
+
+[resource]
+script = ExtResource("1_itnn3")
+id = &"greylamp_check_scale"
+display_name = "认一认秤"
+display_names = {
+"en": "Know the Scales"
+}
+faction = &"greylamp"
+reputation = 10
+stages = Array[ExtResource("2_i0ept")]([SubResource("Resource_4dj1s")])
+opens = &"market"
+client = "灰灯引荐的摊主"
+clients = {
+"en": "A stallholder sent by the Grey Lamp"
+}

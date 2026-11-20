@@ -1,16 +1,21 @@
 ## 336（阵营与委托 W0，报告 335）：委托与声望的规则 —— 纯逻辑，状态在 [CommissionBook]（局外存档），定义在 [CommissionDef] / [FactionDef]。
 ##
 ## 规则（方案「接取、交付与声望」，数值是候选）：
-## - 每方四级，门槛 0 / 2 / 5 / 9；代言另要做完这一方的结案（[member CommissionBook.signed]）。
-## - 入门陌生就能接、调查要熟面、结案要受托且前置委托齐备；模板最多把一方推到熟面（[constant TEMPLATE_CAP]）。
-## - 同时最多接 [constant SLOTS] 份；暂缓不占位，进度保留；放弃清掉进度，可以重接。剧情单不设现实倒计时。
+## - 342 B2：每方五档，门槛 0 / 10 / 25 / 50 / 100（初识 / 熟面 / 受托 / 信赖 / 代言）；代言另要做完这一方的结案（[member CommissionBook.signed]）。
+## - 剧情（不是模板的委托）：够格就自动接上（[method auto_take]），常驻到办成，不占位、不能暂缓或放弃；办成开放写在 [member CommissionDef.opens] 的设施。
+## - 常规（模板）：同时最多接 [constant SLOTS] 份；暂缓不占位，进度保留；放弃清掉进度，可以重接。模板最多把一方推到 [constant TEMPLATE_CAP] 点。
 ## - 正常战败不扣声望。现场交付的步骤失败也算；带回的步骤只在撤离成功（或写明托付算数时托付成功）才算（[method merge_run]）。
 ## - 同一委托、同一步、同一处（节点 id / 实例 uid）只记一次（去重键），读档重进、反复进同一节点不重复记账。
 class_name Commissions
 extends RefCounted
 
 const SLOTS := 2
-const TEMPLATE_CAP := 2
+## 342 B2：模板（常规）最多把一方推到多少声望（B2 第二步换成告示栏规则）
+const TEMPLATE_CAP := 10
+## 声望五档
+const TIERS := 5
+## 342 B2：能由剧情开放的基地设施
+const FACILITIES: Array[StringName] = [&"smithy", &"tech", &"market"]
 ## 去重键：委托 id | 第几步 | 那一处
 const KEY_FMT := "%s|%d|%s"
 
@@ -19,6 +24,7 @@ const GOALS := {
 	&"inspect_extracts": [CommissionStage.FIELD],     # 撤离点上的「查验」：不同的撤离点 N 处
 	&"smith_forge": [CommissionStage.CAMP],     # 接单后在铁匠铺真的打一次（接单时选的那张配方）
 	&"deliver_letter": [CommissionStage.FIELD],     # 撤离点上的「交信」：把任务信交出去
+	&"camp_report": [CommissionStage.CAMP],     # 342 B2：营地里找对应的人办一次（委托页卡上的【办理】）
 }
 
 ## 不能接的原因（字表键 `commission.why_<原因>`）
@@ -106,7 +112,7 @@ static func required_tier(d: CommissionDef) -> int:
 	return 0
 
 
-## 这一方现在几级（0..3）。到了第四档门槛但没署名结案，停在受托
+## 这一方现在几档（0..4）。到了代言门槛但没署名结案，停在信赖
 static func tier_of(book: CommissionBook, f: FactionDef) -> int:
 	if f == null:
 		return 0
@@ -115,9 +121,22 @@ static func tier_of(book: CommissionBook, f: FactionDef) -> int:
 	for i in f.thresholds.size():
 		if r >= f.thresholds[i]:
 			lv = i
-	if lv >= 3 and not (book != null and book.signed.has(String(f.id))):
-		lv = 2
+	if lv >= TIERS - 1 and not (book != null and book.signed.has(String(f.id))):
+		lv = TIERS - 2
 	return lv
+
+
+## 342 B2：剧情委托（不是模板）
+static func is_story(d: CommissionDef) -> bool:
+	return d != null and d.tier != CommissionDef.TEMPLATE
+
+
+## 342 B2：开 [param facility] 的那份剧情（没有 = null）
+static func opener_of(facility: StringName) -> CommissionDef:
+	for d in defs():
+		if d.opens == facility:
+			return d
+	return null
 
 
 ## 下一级还差几点（满级 = 0）
@@ -147,11 +166,40 @@ static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &
 	for r in d.requires:
 		if not book.is_done(r):
 			return WHY_REQUIRES
-	if book.taken().size() >= SLOTS:
+	if not is_story(d) and _taken_regular(book) >= SLOTS:
 		return WHY_SLOTS
 	if needs_pick(d) and st != CommissionBook.PAUSED and (pick == &"" or not picks.has(pick)):
 		return WHY_PICK
 	return ""
+
+
+static func _taken_regular(book: CommissionBook) -> int:
+	return book.taken().filter(func(id: StringName) -> bool: return not is_story(def(id))).size()
+
+
+## 342 B2：够格的剧情自动接上（暂缓过的接着做；要先选配方的留给玩家点）。返回这回接上的 id
+static func auto_take(book: CommissionBook) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for d in defs():
+		if not is_story(d) or needs_pick(d) or book.state_of(d.id) == CommissionBook.TAKEN:
+			continue
+		if take(book, d):
+			out.append(d.id)
+	return out
+
+
+## 342 B2：营地「办理」—— 这份正停在 `camp_report` 那一步就记一次。返回 [method credit] 的结果
+static func report(meta: MetaState, d: CommissionDef, items: ItemDatabase = null) -> Dictionary:
+	var s := current_stage(meta.commissions, d.id) if meta != null and d != null else -1
+	if s < 0 or s >= d.stages.size() or d.stages[s].goal != &"camp_report":
+		return {"ok": false, "step": false, "done": false}
+	return credit(meta, d, s, "camp", items)
+
+
+## 342 B2：现在停在「营地办理」这一步
+static func can_report(book: CommissionBook, d: CommissionDef) -> bool:
+	var s := current_stage(book, d.id) if d != null else -1
+	return s >= 0 and s < d.stages.size() and d.stages[s].goal == &"camp_report"
 
 
 ## 接单时要不要先选一样（配方实验）
@@ -185,7 +233,7 @@ static func _next_seq(book: CommissionBook) -> int:
 
 ## 暂缓：不占位，进度保留
 static func pause(book: CommissionBook, id: StringName) -> bool:
-	if book.state_of(id) != CommissionBook.TAKEN:
+	if book.state_of(id) != CommissionBook.TAKEN or is_story(def(id)):     # 342 B2：剧情常驻，不暂缓
 		return false
 	book.entries[String(id)]["state"] = CommissionBook.PAUSED
 	return true
@@ -194,7 +242,7 @@ static func pause(book: CommissionBook, id: StringName) -> bool:
 ## 放弃：进度清掉（完成过几次留着），可以重接
 static func abandon(book: CommissionBook, id: StringName) -> bool:
 	var st := book.state_of(id)
-	if st != CommissionBook.TAKEN and st != CommissionBook.PAUSED:
+	if (st != CommissionBook.TAKEN and st != CommissionBook.PAUSED) or is_story(def(id)):     # 342 B2：剧情不放弃
 		return false
 	var times := int(book.entry(id).get("times", 0))
 	if times > 0:
@@ -252,9 +300,11 @@ static func _complete(meta: MetaState, d: CommissionDef, items: ItemDatabase) ->
 		book.signed[fid] = true
 	if d.mutex != &"":
 		book.mutex[String(d.mutex)] = String(d.id)
+	if d.opens != &"":
+		book.grants[String(d.opens)] = true
 	var times := int(book.entry(d.id).get("times", 0)) + 1
 	book.entries[String(d.id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": times, "pick": "", "seq": 0}
-	var got := {"rep": gain, "funds": maxi(0, d.funds), "items": 0}
+	var got := {"rep": gain, "funds": maxi(0, d.funds), "items": 0, "faction": fid, "opens": String(d.opens)}
 	meta.funds += maxi(0, d.funds)
 	if not d.items.is_empty() and items != null:
 		var gifts: Array = []

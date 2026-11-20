@@ -5,8 +5,11 @@
 [resource]
 script = ExtResource("1_phf8j")
 id = &"legion"
-display_name = "边区军团接应队"
+display_name = "后勤部队"
 display_names = {
-"en": "Legion Recovery Corps"
+"en": "Logistics Corps"
 }
 order = 1
+facilities = {
+"smithy": "legion_forge_token"
+}

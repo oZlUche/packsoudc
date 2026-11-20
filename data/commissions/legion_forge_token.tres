@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_5ulpy"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_xcm1g"]
+
+[sub_resource type="Resource" id="Resource_fnwmr"]
+script = ExtResource("2_xcm1g")
+goal = &"camp_report"
+where = &"camp"
+text = "到军需员那里核对领用单，领一块炉牌"
+texts = {
+"en": "Check your requisition slip with the quartermaster and collect a forge token"
+}
+
+[resource]
+script = ExtResource("1_5ulpy")
+id = &"legion_forge_token"
+display_name = "领炉牌"
+display_names = {
+"en": "The Forge Token"
+}
+faction = &"legion"
+reputation = 10
+stages = Array[ExtResource("2_xcm1g")]([SubResource("Resource_fnwmr")])
+opens = &"smithy"
+client = "军需员"
+clients = {
+"en": "Quartermaster"
+}

@@ -42,7 +42,7 @@ static func run_loop(t: TestCase) -> void:
 	t.check(f.commissions_visible(), "没有教程章、不是切片：委托簿露出来")
 	t.eq(f.take_commission(TWO), "", "接《两条回路》")
 	t.eq(f.take_commission(LETTER), "", "接《无人署名的信》")
-	t.eq(f.take_commission(COPY, &"x"), Commissions.WHY_SLOTS, "第三份没位")
+	t.eq(f.take_commission(COPY, &"x"), Commissions.WHY_PICK, "342 B2：剧情不占位，第三份只差选配方")
 	var s := f.begin_direct(c.chapter, 23)
 	t.not_null(s, "开局")
 	if s == null:

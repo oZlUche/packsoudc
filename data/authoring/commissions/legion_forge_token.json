@@ -1,0 +1,24 @@
+{
+  "id": "legion_forge_token",
+  "display_name": "领炉牌",
+  "display_names": {
+    "en": "The Forge Token"
+  },
+  "faction": "legion",
+  "reputation": 10,
+  "opens": "smithy",
+  "stages": [
+    {
+      "goal": "camp_report",
+      "where": "camp",
+      "text": "到军需员那里核对领用单，领一块炉牌",
+      "texts": {
+        "en": "Check your requisition slip with the quartermaster and collect a forge token"
+      }
+    }
+  ],
+  "client": "军需员",
+  "clients": {
+    "en": "Quartermaster"
+  }
+}
