@@ -29,7 +29,7 @@
       },
       "text": "交 {n} 块晶石",
       "texts": {
-        "en": "Hand in {n} crystals"
+        "en": "Hand in crystals: {n}"
       }
     },
     {
@@ -44,7 +44,7 @@
       },
       "text": "到访 {n} 处搜索点",
       "texts": {
-        "en": "Visit {n} search points"
+        "en": "Visit search points: {n}"
       }
     },
     {
@@ -59,7 +59,7 @@
       },
       "text": "交 {n} 件草药",
       "texts": {
-        "en": "Hand in {n} herbs"
+        "en": "Hand in herbs: {n}"
       }
     }
   ]

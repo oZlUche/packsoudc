@@ -29,7 +29,7 @@
       },
       "text": "到访 {n} 处休息点",
       "texts": {
-        "en": "Visit {n} rest points"
+        "en": "Visit rest points: {n}"
       }
     },
     {
@@ -44,7 +44,7 @@
       },
       "text": "交 {n} 件布料",
       "texts": {
-        "en": "Hand in {n} cloth materials"
+        "en": "Hand in cloth materials: {n}"
       }
     },
     {
@@ -59,7 +59,7 @@
       },
       "text": "打赢 {n} 场普通的仗",
       "texts": {
-        "en": "Win {n} battles against ordinary enemies"
+        "en": "Win battles against ordinary enemies: {n}"
       }
     }
   ]
