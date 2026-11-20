@@ -1,0 +1,30 @@
+{
+  "id": "faith_call_skill",
+  "title": "技巧之神的祭坛",
+  "titles": {
+    "en": "Altar of the God of Skill"
+  },
+  "options": [
+    {
+      "label": "拿起护符",
+      "labels": {
+        "en": "Take the charm"
+      },
+      "tags": [
+        "offering"
+      ],
+      "outcomes": [
+        {
+          "type": "give_item",
+          "item": "charm_skill"
+        }
+      ]
+    },
+    {
+      "label": "不拿，离开",
+      "labels": {
+        "en": "Leave it and go"
+      }
+    }
+  ]
+}

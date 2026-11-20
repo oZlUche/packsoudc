@@ -151,7 +151,7 @@ static func frame_shelf_art(t: TestCase, root: Window) -> void:
 	t.eq(view.piece_name("codex"), "codex_t0", "图鉴没亮：t0")
 	t.eq(view.piece_name("codex", true), "codex_t0_hover", "悬停换提亮图")
 	t.eq(view.piece_name("records"), "records", "对局记录不分档：一张")
-	t.eq(view._piece_of(view._cells[4], false), "", "342 B1：第五格空着")
+	t.eq(view._piece_of(view._cells[4], false), "backpack", "344：第五格旧背包静物")
 	t.eq(view._piece_of(view._cells[5], false), "lamp", "第六格油灯")
 	var ids := f.items.ids(true)
 	@warning_ignore("integer_division")

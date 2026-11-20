@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_4xgex"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_d3gf0"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_item.gd" id="3_cv85l"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_vh3bd"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_t85qn"]
+
+[sub_resource type="Resource" id="Resource_u3tws"]
+script = ExtResource("3_cv85l")
+item = &"charm_skill"
+
+[sub_resource type="Resource" id="Resource_lgeyj"]
+script = ExtResource("1_4xgex")
+label = "拿起护符"
+labels = {
+"en": "Take the charm"
+}
+tags = Array[StringName]([&"offering"])
+outcomes = Array[ExtResource("2_d3gf0")]([SubResource("Resource_u3tws")])
+
+[sub_resource type="Resource" id="Resource_4odgg"]
+script = ExtResource("1_4xgex")
+label = "不拿，离开"
+labels = {
+"en": "Leave it and go"
+}
+
+[resource]
+script = ExtResource("5_t85qn")
+id = &"faith_call_skill"
+title = "技巧之神的祭坛"
+titles = {
+"en": "Altar of the God of Skill"
+}
+options = Array[ExtResource("1_4xgex")]([SubResource("Resource_lgeyj"), SubResource("Resource_4odgg")])

@@ -35,7 +35,7 @@ static func run_content(t: TestCase) -> void:
 	t.check(def.effect is TechFacility and (def.effect as TechFacility).facility == Smithy.ID, "tech_facility(smithy)")
 	var db := T110._db()
 	var all := SmithRecipeDef.load_all()
-	t.eq(all.size(), 34, "14 张 + 252 的 6 张，10-31 棉甲那张删了；310 金武材料打造 15 张；改造 D 拆了 82 张砧升级")
+	t.eq(all.size(), 35, "14 张 + 252 的 6 张，10-31 棉甲那张删了；310 金武材料打造 15 张；改造 D 拆了 82 张砧升级；346 加铜锭冶炼")
 	var ok := true
 	for r in all:
 		var o := db.get_def(r.output)
@@ -140,7 +140,7 @@ static func run_groups(t: TestCase) -> void:
 	t.eq(by["hammer"], ["pendulum_blade", "warhammer"], "斧锤两张")
 	t.eq(by["bow"], ["longbow", "shortbow"], "弓两张")
 	t.eq(by["staff"], ["grand_magus_staff", "mage_staff", "magic_staff", "magus_staff"], "252：法杖四张")
-	t.eq(by["smelt"], ["mithril_ingot", "silver_ingot"], "252：冶炼两张")
+	t.eq(by["smelt"], ["copper_ingot", "mithril_ingot", "silver_ingot"], "252：冶炼两张；346 加铜锭")
 	t.eq(by["shield"], ["round_shield"], "盾一张")
 	t.eq(by["armor"], ["leather_armor", "plate_cuirass"], "护甲两张（10-31 棉甲删了）")
 	for g in SmithRecipeDef.GROUPS:
