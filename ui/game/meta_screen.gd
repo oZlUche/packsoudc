@@ -34,25 +34,24 @@ const TAB_ICON_ART := "home/tabs/tab_"
 ## 178（作者 2026-10-16，待定 1 选 A）：加「仓库」，顺序 仓库 / 出售 / 科技 / 图鉴 / 成就 —— 右半边有仓库的三页挨着
 ## 262（作者 14:19）：集市、铁匠铺默认就有，和出售并成「后勤」一页；261 补充一（作者 16:37）：科技并进书架 —— 左列只剩 仓库 / 后勤 / 书架
 ## 264（作者 16:43「按推荐来」）：加「出征」放第一、默认选中（军功碑 + 上回出征 + 军需 + 【开始探索】），「家」页没了 —— 页签单选
-## 336：「委托」排在「出征」之后（统一教程没走完 / 试玩切片不列，[method GameFlow.commissions_visible]）
-const TABS := [["expedition", "meta.tab_expedition"], ["commissions", "meta.tab_commissions"], ["warehouse", "meta.tab_warehouse"], ["logistics", "meta.tab_logistics"], ["shelf", "meta.tab_shelf"]]
+## 336：「委托」页签（统一教程没走完 / 试玩切片不列，[method GameFlow.commissions_visible]）
+## 342 B1：科技从书架搬出来当一级页签；顺序 出征 / 仓库 / 科技 / 委托 / 后勤 / 书架
+const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_warehouse"], ["tech", "meta.tab_tech"], ["commissions", "meta.tab_commissions"], ["logistics", "meta.tab_logistics"], ["shelf", "meta.tab_shelf"]]
 ## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
 	"logistics": [["market", "market.title"], ["smithy", "smithy.title"]],
-	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"], ["tech", "meta.sub_tech"]],
+	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"]],
 }
 const SUB_TAB_SIZE := Vector2(170, 44)
 const SUB_TAB_FONT := 17
 const SUB_TAB_INDENT := 28
 ## 178：这几页不显示右半边的仓库，中列吃满。264：出征页也收起 —— 碑 + 560 宽的两块木牌要 1308 宽的中列（露着仓库中列只剩 508）
-const NO_SHELF_TABS := ["shelf", "expedition", "commissions"]
+const NO_SHELF_TABS := ["shelf", "expedition", "commissions", "tech"]
 ## 261（作者 14:13）：「图鉴」页签改「书架」—— 两层三格，点开各一扇窗；补充一（作者 16:37）：上 图鉴 / 对局记录 / 特殊道具，
-## 下 成就 / 科技（科技页签并进来）/ 油灯静物（墨水瓶去掉）
-const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "tech", ""]
+## 下 成就 / 空格（342 B1：科技搬回一级页签，这格先空着等静物）/ 油灯静物（墨水瓶去掉）
+const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "", ""]
 const SHELF_WIN := Vector2(1100, 820)
-## 261 补充一：科技窗要宽一些 —— 科技页最窄约 1190 × 660（羊皮 MIN_SCALE 0.9 + 右边说明板），1100 × 820 装不下
-const SHELF_WIN_WIDE := Vector2(1320, 900)
 ## 251 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要」）：整页的两页 —— 右列（仓库木架 + 挂牌）收起、中列吃满。
 ## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
 const FULL_TABS := ["market", "smithy"]
@@ -301,6 +300,10 @@ func open(payload: Dictionary) -> void:
 		_pages["commissions"] = cm_page
 	# 图鉴页、成就页（091）
 	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
+	# 342 B1：科技页 —— 页签头一回打开才建（[method _ensure_tech]）
+	_tech_cloth = _cloth()
+	_tech_cloth.name = "TechPage"
+	_pages["tech"] = _tech_cloth
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
 	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
@@ -315,7 +318,7 @@ func open(payload: Dictionary) -> void:
 		add_child(_drawer.arrow)
 	add_child(_drag)     # 164：整屏一层拖拽，盖在三列上（残影画在最上面）
 	_drag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_build_shelf_windows()     # 261：书架的五扇窗（科技在里面，110 的科技页整个搬进窗）盖在最上面，先藏着
+	_build_shelf_windows()     # 261：书架的窗盖在最上面，先藏着（342 B1：科技搬出去了，剩四扇）
 	resized.connect(layout)
 	show_tab(String(payload.get("tab", initial_tab(payload))))
 	_refresh()
@@ -684,6 +687,7 @@ func toggle_dev_drawer() -> bool:
 
 #region 科技（110）
 var _tech = null
+var _tech_cloth: PanelContainer = null
 
 
 func _build_tech(root: Control) -> Control:
@@ -695,9 +699,22 @@ func _build_tech(root: Control) -> Control:
 	return _tech
 
 
+func _ensure_tech() -> void:
+	if _tech != null or _tech_cloth == null:
+		return
+	var col := _vbox(0)
+	_tech_cloth.add_child(col)
+	_build_tech(col)
+	var foot := Control.new()     # 右下钉着「回主菜单」：科技页底下让出它那一截，【升级】【追踪】不被压住
+	var menu := get_node_or_null("MainMenuButton") as Control
+	foot.custom_minimum_size.y = menu.get_combined_minimum_size().y if menu != null else 56.0
+	foot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(foot)
+
+
 ## 科技页（测试看）
 func tech_panel():
-	_fill_shelf("tech")
+	_ensure_tech()
 	return _tech
 #endregion
 
@@ -1137,19 +1154,19 @@ func _fit_shelf_view() -> void:
 	_shelf_view.position = ((holder.size - body * k) * 0.5).floor()
 
 
-## 格上小牌写什么：图鉴 40 / 153、对局记录 N 场、特殊道具 N / N、成就 N / N、科技 N / N
+## 格上小牌写什么：图鉴 40 / 153、对局记录 N 场、特殊道具 N / N、成就 N / N
 func shelf_label(key: String) -> String:
 	var p := shelf_progress(key)
 	match key:
 		"records":
 			return UiText.t("shelf.records") % p[0]
-		"codex", "keepsakes", "achievements", "tech":
+		"codex", "keepsakes", "achievements":
 			return UiText.t("shelf." + key) % p
 	return ""
 
 
 ## 261 补充一：这一格的进度 [分子, 分母] —— 图鉴 已点亮 / 全部道具；对局记录 场数 / 20；特殊道具 拿到过 / 全部；
-## 成就 完成 / 全部；科技 点过至少 1 级的节点 / 全部节点
+## 成就 完成 / 全部
 func shelf_progress(key: String) -> Array:
 	var m := flow.meta
 	match key:
@@ -1166,12 +1183,6 @@ func shelf_progress(key: String) -> Array:
 				if m.has_achievement(def.id):
 					done += 1
 			return [done, flow.achievement_defs.size()]
-		"tech":
-			var lit := 0
-			for def in flow.tech_defs:
-				if TechService.level(m, def.id) >= 1:
-					lit += 1
-			return [lit, flow.tech_defs.size()]
 	return [0, 0]
 
 
@@ -1194,10 +1205,10 @@ func shelf_view() -> ShelfView:
 	return _shelf_view
 
 
-## 五扇窗：压暗的底 + 居中一块石板（1100 × 820；科技 1320 × 900），标题 + 右上「关」；内容照原来那几页
+## 四扇窗：压暗的底 + 居中一块石板（1100 × 820），标题 + 右上「关」；内容照原来那几页
 func _build_shelf_windows() -> void:
 	_shelf_windows.clear()
-	for pair in [["codex", _build_codex], ["records", _build_records], ["keepsakes", _build_keepsakes], ["achievements", _build_achievements], ["tech", _build_tech]]:
+	for pair in [["codex", _build_codex], ["records", _build_records], ["keepsakes", _build_keepsakes], ["achievements", _build_achievements]]:
 		var key: String = pair[0]
 		var shade := ColorRect.new()
 		shade.name = "ShelfWindow_" + key
@@ -1213,7 +1224,7 @@ func _build_shelf_windows() -> void:
 		shade.add_child(center)
 		center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		var frame := OverlayFrame.new(16)
-		frame.custom_minimum_size = SHELF_WIN_WIDE if key == "tech" else SHELF_WIN
+		frame.custom_minimum_size = SHELF_WIN
 		frame.set_title(UiText.t("shelf.title_" + key))
 		frame.add_slot(UiTheme.make_home_button(UiText.t("meta.close"), close_shelf))
 		center.add_child(frame)
@@ -1251,7 +1262,7 @@ func records_window() -> RunRecordsWindow:
 	return _records
 
 
-## 开书架上一格的窗（"codex" / "records" / "keepsakes" / "achievements" / "tech"）；不在书架页就先切过去
+## 开书架上一格的窗（"codex" / "records" / "keepsakes" / "achievements"）；不在书架页就先切过去
 func open_shelf(key: String) -> void:
 	if not _shelf_windows.has(key):
 		return
@@ -1286,7 +1297,7 @@ func shelf_window(key: String) -> Control:
 #endregion
 
 
-## 切页："expedition"（出征，默认；264 前叫家，"home" 留作别名）/ "warehouse" / "logistics" / "shelf"；261：老名字 "codex" / "achievements" / "tech" = 书架 + 开那扇窗。
+## 切页："expedition"（出征，默认；264 前叫家，"home" 留作别名）/ "warehouse" / "tech" / "logistics" / "shelf"；261：老名字 "codex" / "achievements" = 书架 + 开那扇窗。
 ## 262：分页名 "market" / "smithy" = 后勤 + 那个分页；"logistics" 落上次看的分页。268："sell"（出售页删了）落仓库页。
 ## 178：图鉴 / 成就页收起右半边的仓库（翻到的那页不变）
 ## 264 §三：中列这一页该铺哪张整屏背景（集市 / 铁匠铺 / 出征用自己的场景图，别的页基地底图）
@@ -1339,6 +1350,8 @@ func show_tab(p_name: String) -> void:
 	if not (_pages.has(p_name) or p_name == "logistics"):
 		p_name = "expedition"
 	var shown := _sub if p_name == "logistics" else p_name
+	if shown == "tech":
+		_ensure_tech()
 	if _tab != "" and shown != was:
 		notice_layer().clear()     # 游戏测试 v4.34：上一页的告示（「买不了：钱不够」）不跟到下一页
 	_tab = p_name

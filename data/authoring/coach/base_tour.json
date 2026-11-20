@@ -3,8 +3,9 @@
   "steps": [
     {"target": "warehouse_page", "action": "store", "text": "这一趟带回来的东西在这里。点【一键置入】，或者双击、拖进右边的仓库。", "texts": {"en": "What you brought back is here. Press [Put all away], or double-click or drag things into the Warehouse on the right."}},
     {"target": "tab_warehouse", "text": "仓库：存东西、整理、出售。", "texts": {"en": "Warehouse: store, sort and sell."}},
+    {"target": "tab_tech", "text": "科技分两棵：数值树花金币和材料，机制树花见识。", "texts": {"en": "Tech has two trees: the stat tree costs gold and materials, the mechanics tree costs Insight."}},
     {"target": "tab_logistics", "text": "后勤：集市用金币买卖，铁匠铺按配方打造。买不买随你。", "texts": {"en": "Logistics: buy and sell for gold at the Market, forge from recipes at the Smithy. Entirely optional."}},
-    {"target": "tab_shelf", "text": "书架：图鉴、对局记录、特殊道具、成就和科技。科技分两棵：数值树花金币和材料，机制树花见识。", "texts": {"en": "Bookshelf: Collection, Run records, Keepsakes, Achievements and Tech. Tech has two trees: the stat tree costs gold and materials, the mechanics tree costs Insight."}},
+    {"target": "tab_shelf", "text": "书架：图鉴、对局记录、特殊道具和成就。", "texts": {"en": "Bookshelf: Collection, Run records, Keepsakes and Achievements."}},
     {"target": "tab_expedition", "text": "想继续时，在出征页点【开始探索】开下一段。不急，先逛逛也行。", "texts": {"en": "When you're ready, press [Set out] on the Expedition page for the next part. No rush, look around first."}}
   ]
 }

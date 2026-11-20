@@ -99,20 +99,8 @@
     400,
     400
    ],
-   "key": "tech",
-   "tiers": [
-    "tech_t0",
-    "tech_t1",
-    "tech_t2",
-    "tech_t3",
-    "tech_t4"
-   ],
-   "opens": "tech",
-   "tag_center": [
-    654.0,
-    913
-   ],
-   "tag_sample": "科技　5 / 15"
+   "key": "",
+   "note": "342 B1：科技搬成一级页签，这格先空着，等 UI设计 的静物样张"
   },
   {
    "rect": [
@@ -125,18 +113,17 @@
    "still_life": "lamp"
   }
  ],
- "cell_button": "前五格整格是按钮（rect），点开各自的窗（科技窗 1320 × 900，其余 1100 × 820）；第六格静物不可点、不亮",
+ "cell_button": "前四格整格是按钮（rect），点开各自的窗（1100 × 820）；第五格空着、第六格静物，都不可点、不亮",
  "objects": {
   "size": [
    400,
    400
   ],
   "at": "格左上（rect 的 x, y），和格一样大，已裁在格口里，不出格",
-  "tier_rule": "tier = clampi(floori(done * 5 / total), 0, 4)；total 为 0 → t0；缺图退 t0（架构 261 §9.2）。只有图鉴、成就、科技三格分档",
+  "tier_rule": "tier = clampi(floori(done * 5 / total), 0, 4)；total 为 0 → t0；缺图退 t0（架构 261 §9.2）。只有图鉴、成就两格分档",
   "done_total": {
    "codex": "已点亮 / 全部图鉴",
-   "achievements": "已达成 / 全部成就",
-   "tech": "至少 1 级的科技 / 全部科技"
+   "achievements": "已达成 / 全部成就"
   }
  },
  "keepsake_columns": {

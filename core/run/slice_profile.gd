@@ -11,7 +11,7 @@ const SLOTS := ROOT + "/slots"
 const SETTINGS := ROOT + "/settings.json"
 const CALIBRATION := ROOT + "/calibration"
 ## 切片的基地只留这几个页签（[constant MetaScreen.TABS] 的键）
-const TABS: Array[String] = ["expedition", "warehouse", "logistics", "shelf"]
+const TABS: Array[String] = ["expedition", "warehouse", "tech", "logistics", "shelf"]     # 342 B1：科技原在书架里，搬成页签后照留
 
 ## 测试用：不看特性和命令行，直接当成这一档（null = 照常判断）
 static var forced: Variant = null

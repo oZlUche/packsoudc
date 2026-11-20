@@ -91,24 +91,23 @@ static func run_trim_and_pins(t: TestCase) -> void:
 
 
 static func frame_shelf(t: TestCase, root: Window) -> void:
-	t.begin("261 · 书架：两层三格在中列里（补充一：上 图鉴 / 对局记录 / 特殊道具，下 成就 / 科技 / 静物），前五格各开一扇窗（1100 × 820，科技 1320 × 900），小牌写数；老名字 codex / achievements / tech 也开书架上的窗")
+	t.begin("261 · 书架：两层三格在中列里（补充一：上 图鉴 / 对局记录 / 特殊道具，下 成就 / 空格 / 静物；342 B1 科技搬走），前四格各开一扇窗（1100 × 820），小牌写数；老名字 codex / achievements 也开书架上的窗")
 	var f := _flow()
 	_run(f.meta, 300)
 	var screen = _screen(f, root)
 	screen.show_tab("shelf")
 	t.eq(screen.tab(), "shelf", "书架页")
-	t.eq(screen._shelf_pending.size(), 5, "五扇窗只有外壳：内容等第一次打开才建（每次回基地都全建一遍要一百多毫秒）")
+	t.eq(screen._shelf_pending.size(), 4, "四扇窗只有外壳：内容等第一次打开才建（每次回基地都全建一遍要一百多毫秒）")
 	var btns: Dictionary = screen.shelf_buttons()
-	t.eq(screen.SHELF_CELLS, ["codex", "records", "keepsakes", "achievements", "tech", ""], "六格顺序")
+	t.eq(screen.SHELF_CELLS, ["codex", "records", "keepsakes", "achievements", "", ""], "六格顺序（342 B1：第五格科技搬走，空着）")
 	var view: ShelfView = screen.shelf_view()
-	t.eq(btns.keys(), ["codex", "records", "keepsakes", "achievements", "tech"], "前五格能点（第六格静物不可点）")
-	t.eq(view.tag_text("tech"), UiText.t("shelf.tech") % [0, f.tech_defs.size()], "科技的小牌：点过的节点 / 全部")
+	t.eq(btns.keys(), ["codex", "records", "keepsakes", "achievements"], "前四格能点（空格、静物不可点）")
 	var page: Control = screen._pages["shelf"]
 	var need: Vector2 = page.get_combined_minimum_size()
 	t.check(need.x <= MIDDLE.x and need.y <= MIDDLE.y, "书架 %s 放得进中列 %s" % [need, MIDDLE])
 	t.eq(view.tag_text("records"), UiText.t("shelf.records") % 1, "对局记录的小牌写场数")
 	t.eq(view.tag_text(""), "", "静物没有小牌")
-	for k in ["shelf.codex", "shelf.records", "shelf.keepsakes", "shelf.achievements", "shelf.tech"]:
+	for k in ["shelf.codex", "shelf.records", "shelf.keepsakes", "shelf.achievements"]:
 		t.check(not String(UiText.TEXT[k]["en"]).contains(":"), "英文书架小牌写法统一、不带冒号（%s）" % k)     # 复测：「Run records: 0」
 	for key in btns:
 		(btns[key] as Button).pressed.emit()
@@ -116,14 +115,9 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 		var win: Control = screen.shelf_window(key)
 		t.check(win != null and win.is_visible_in_tree(), "%s 窗看得见" % key)
 		var frame := win.find_children("*", "OverlayFrame", true, false)
-		var want: Vector2 = screen.SHELF_WIN_WIDE if key == "tech" else screen.SHELF_WIN
+		var want: Vector2 = screen.SHELF_WIN
 		t.check(not frame.is_empty() and (frame[0] as Control).custom_minimum_size == want, "%s 窗 %s" % [key, want])
-		if key == "tech" and not frame.is_empty():
-			var fr := frame[0] as Control
-			t.check(fr.get_combined_minimum_size().x <= want.x + 0.5 and fr.get_combined_minimum_size().y <= want.y + 0.5,
-				"科技窗 %s 装得下科技页（窗不被撑大）" % fr.get_combined_minimum_size())
-			t.check(screen.tech_panel() != null and screen.tech_panel().is_visible_in_tree(), "科技窗里就是科技页")
-	t.check(screen._shelf_pending.is_empty(), "五扇窗都开过：内容都建了")
+	t.check(screen._shelf_pending.is_empty(), "四扇窗都开过：内容都建了")
 	var tiles_n: int = screen.codex_tiles().size()
 	screen.open_shelf("codex")
 	t.eq(screen.codex_tiles().size(), tiles_n, "再开一次不重建")
@@ -131,7 +125,8 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 	screen.show_tab("achievements")
 	t.check(screen.tab() == "shelf" and screen.shelf_open() == "achievements", "老名字 achievements → 书架 + 成就窗")
 	screen.show_tab("tech")
-	t.check(screen.tab() == "shelf" and screen.shelf_open() == "tech", "老名字 tech → 书架 + 科技窗")
+	t.check(screen.tab() == "tech" and screen.shelf_open() == "", "342 B1：tech 是一级页签，不再开书架窗")
+	t.check(screen.tech_panel() != null and screen.tech_panel().is_visible_in_tree(), "科技页看得见")
 	screen.show_tab("expedition")
 	t.eq(screen.shelf_open(), "", "换页签关窗")
 	screen.free()
@@ -139,7 +134,7 @@ static func frame_shelf(t: TestCase, root: Window) -> void:
 
 
 static func frame_shelf_art(t: TestCase, root: Window) -> void:
-	t.begin("261 补充二 · 石砌壁龛：件和摆位读 layout.json；图鉴 / 成就 / 科技按进度取档、悬停换提亮图，对局记录一张、第六格油灯；特殊道具每件一根柱，拿到过的摆道具图")
+	t.begin("261 补充二 · 石砌壁龛：件和摆位读 layout.json；图鉴 / 成就按进度取档、悬停换提亮图，对局记录一张、第五格空着、第六格油灯；特殊道具每件一根柱，拿到过的摆道具图")
 	var f := _flow()
 	var screen = _screen(f, root)
 	screen.show_tab("shelf")
@@ -151,12 +146,13 @@ static func frame_shelf_art(t: TestCase, root: Window) -> void:
 	t.not_null(UiTheme.art_cached("home/shelf/shelf_body"), "壁龛底图在")
 	t.not_null(UiTheme.art_cached("home/tabs/tab_shelf"), "书架页签图标在")
 	t.eq(view.cell_rect("codex"), Rect2(30, 60, 400, 400), "图鉴格照 layout")
-	for key in ["codex", "records", "keepsakes", "achievements", "tech"]:
+	for key in ["codex", "records", "keepsakes", "achievements"]:
 		t.eq((view.buttons()[key] as Button).get_rect(), view.cell_rect(key), "%s 整格是按钮" % key)
 	t.eq(view.piece_name("codex"), "codex_t0", "图鉴没亮：t0")
 	t.eq(view.piece_name("codex", true), "codex_t0_hover", "悬停换提亮图")
 	t.eq(view.piece_name("records"), "records", "对局记录不分档：一张")
-	t.eq(view.piece_name(""), "lamp", "第六格油灯")
+	t.eq(view._piece_of(view._cells[4], false), "", "342 B1：第五格空着")
+	t.eq(view._piece_of(view._cells[5], false), "lamp", "第六格油灯")
 	var ids := f.items.ids(true)
 	@warning_ignore("integer_division")
 	for i in ids.size() / 2:
@@ -166,7 +162,6 @@ static func frame_shelf_art(t: TestCase, root: Window) -> void:
 	@warning_ignore("integer_division")
 	t.eq(view.piece_name("codex"), "codex_t%d" % ShelfView.tier_of(ids.size() / 2, ids.size()), "图鉴亮一半：t2")
 	t.eq(view.piece_name("codex"), "codex_t2", "一半 = t2")
-	t.eq(view.piece_name("tech"), "tech_t%d" % ShelfView.tier_of(1, f.tech_defs.size()), "科技按点过的节点取档")
 	var keeps: Array = f.items.keepsake_ids()
 	t.check(keeps.size() >= 2, "特殊道具 %d 件" % keeps.size())
 	var cell := view.cell_rect("keepsakes")
@@ -198,7 +193,7 @@ static func frame_shelf_art(t: TestCase, root: Window) -> void:
 			UiTheme.with_text_size(tier, func():
 				screen._refresh()
 				var font := UiPalette.cjk_font_bold()
-				for key in ["codex", "records", "keepsakes", "achievements", "tech"]:
+				for key in ["codex", "records", "keepsakes", "achievements"]:
 					var w := font.get_string_size(view.tag_text(key), HORIZONTAL_ALIGNMENT_LEFT, -1, UiTheme.sz(ShelfView.TAG_SIZE)).x + ShelfView.TAG_PAD
 					t.check(w <= view.cell_rect(key).size.x, "%s %s：%s 的纸签 %.0f 宽不出格" % [lang, tier, key, w]))
 	UiText.lang = "zh"

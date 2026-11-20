@@ -43,7 +43,7 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 	var screen = _screen(f, root)
 	t.eq(screen.tab(), "expedition", "264：默认在出征页")
 	var keys: Array = screen._tab_btns.keys()
-	t.eq(keys, ["expedition", "commissions", "warehouse", "logistics", "shelf"], "264：页签：出征（第一）、委托（336）、仓库、后勤（262）、书架（261）")
+	t.eq(keys, ["expedition", "warehouse", "tech", "commissions", "logistics", "shelf"], "264：页签：出征（第一）、仓库、科技（342 B1）、委托（336）、后勤（262）、书架（261）")
 	var first: Button = screen._tab_btns["shelf"]
 	var col: Node = first.get_parent()
 	t.check(col is VBoxContainer, "页签竖排")
