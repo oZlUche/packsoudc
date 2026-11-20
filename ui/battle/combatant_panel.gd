@@ -453,7 +453,7 @@ var _popups_paused := false
 ## 339：暴击仍是类型色，靠大一号、描边加粗、出现时放大一下来分；[param mix] 是反应的两种元素色（有两种才用渐变）
 func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false, time_scale: float = 1.0, mix: Array = []) -> Label:
 	var l := Label.new()
-	l.text = ("+%d" % amount) if heal else (("-%d!" if crit else "-%d") % amount)
+	l.text = ("+%d" % amount) if heal else ("-%d" % amount)
 	var color := UiPalette.HEAL if heal else UiPalette.damage_color(type)
 	# 104：暴击的飘字大一号；339：描边细一层，暴击两倍
 	l.label_settings = _popup_settings(UiTheme.sz((28 if crit else 20) if amount >= 10 else (22 if crit else 16)), color, UiTheme.OUTLINE_SIZE * (2 if crit else 1))
@@ -466,6 +466,8 @@ func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false
 	l.reset_size()
 	if not heal:
 		_apply_gradient(l, mix)
+	if crit and not heal:
+		_add_crit_mark(l)
 
 	var span := maxf(POPUP_MIN_SEC, POPUP_SEC * time_scale)
 	var tw := _track(create_tween())
@@ -538,6 +540,22 @@ static func _popup_settings(font_size: int, color: Color, outline: int) -> Label
 	ls.outline_size = outline
 	ls.outline_color = UiTheme.OUTLINE_COLOR
 	return ls
+
+
+## 339 样张 2C（作者 2026-11-20）：暴击末尾的「!」单独一小段，染暴击金；数字仍是类型色。
+## 是数字那条字的子节点：跟着飘、淡出、放大，不吃渐变（材质不往下传）
+static func _add_crit_mark(l: Label) -> void:
+	var mark := Label.new()
+	mark.name = "CritMark"
+	mark.text = "!"
+	var ls := l.label_settings.duplicate() as LabelSettings
+	ls.font_color = UiPalette.CRIT
+	mark.label_settings = ls
+	mark.set_meta(&"exempt_bare_text", "effect")     # 226 守门：战斗飘字是画面效果，不是一行字
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.add_child(mark)
+	mark.reset_size()
+	mark.position = Vector2(l.size.x, 0.0)
 
 
 ## 339：有两种色才挂渐变（字改成白色，着色器按横向位置乘上两色之间的颜色）；否则不动，保持单色

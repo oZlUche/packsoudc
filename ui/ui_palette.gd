@@ -31,7 +31,9 @@ const ARMOR := Color("5bc0de")
 const ARMOR_FRAME := Color("f2f6ff")
 const STAMINA := Color("f0ad4e")
 const MANA := Color("7a8cf0")
-const HEAL := Color("5cb85c")
+const HEAL := Color("4fd8b0")     # 339 样张 1B（作者 2026-11-20）：治疗改青绿，和毒绿拉开
+## 「好 / 成了」的绿（原来和治疗同色；339 起治疗换色，这些地方仍用原来的绿）
+const GOOD := Color("5cb85c")
 ## 104：暴击的飘字
 const CRIT := Color("ffd23f")
 
@@ -79,7 +81,7 @@ const STYLE_COLORS := {
 	"fg": FG, "dim": DIM, "hp": HP, "armor": ARMOR,
 	"stamina": STAMINA, "mana": MANA, "heal": HEAL,
 	"grant": GRANT, "receive": RECEIVE,
-	"warn": STAMINA, "danger": HP, "good": HEAL, "faith": FAITH,
+	"warn": STAMINA, "danger": HP, "good": GOOD, "faith": FAITH,
 	# 175 补 5.4：美术设计在 D2 深皮革底上定的色值 —— 伤害类型字（更沉）/ 元素状态关键词（亮）
 	"fire": Color("f25a46"), "frost": Color("5aa6e8"), "thunder": Color("d9b43a"), "toxin": Color("66b44a"), "true": Color("d8606f"),
 	"scorch": Color("ff8a4c"), "chill": Color("8fdcff"), "shock": Color("ffe45c"), "poison": Color("8fe060"), "bleed": Color("ff4f72"),

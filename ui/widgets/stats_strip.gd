@@ -391,7 +391,7 @@ func _color(block: String, key: String, value: String, fallback: Color) -> Color
 static func _rating_color(rating: String) -> Color:
 	match rating:
 		"低":
-			return UiTheme.ink_color(UiPalette.HEAL)
+			return UiTheme.ink_color(UiPalette.GOOD)
 		"高":
 			return UiTheme.ink_color(UiPalette.STAMINA)
 		"极高":

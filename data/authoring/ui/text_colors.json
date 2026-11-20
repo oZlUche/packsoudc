@@ -7,7 +7,7 @@
     "armor": {"dark": "#5bc0de", "light": "#1f5f7a"},
     "stamina": {"dark": "#f0ad4e", "light": "#7a4b10"},
     "mana": {"dark": "#7a8cf0", "light": "#2f3f9a"},
-    "heal": {"dark": "#5cb85c", "light": "#2f6b2f"},
+    "heal": {"dark": "#4fd8b0", "light": "#17695a"},
     "grant": {"dark": "#6fb3f0", "light": "#1f4f8a"},
     "receive": {"dark": "#f0a85c", "light": "#7a4b10"},
     "warn": {"dark": "#f0ad4e", "light": "#9a5a22"},

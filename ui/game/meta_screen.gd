@@ -650,7 +650,7 @@ func _build_dev_drawer(m: MetaState) -> void:
 	for h in m.history:
 		var extracted := String(h.get("outcome", "")) == "extracted"
 		log_.append_text("[color=#%s]%s[/color]　走了 %d 步　打赢 %d　%s\n" % [
-			(UiPalette.HEAL if extracted else UiPalette.HP).to_html(false), "撤离" if extracted else "战败",
+			(UiPalette.GOOD if extracted else UiPalette.HP).to_html(false), "撤离" if extracted else "战败",
 			int(h.get("steps", 0)), int(h.get("battles_won", 0)),
 			"%d 件、值 %d 币、带出 %d 币" % [(h.get("items", []) as Array).size(), int(h.get("value", 0)), int(h.get("balance", 0))] if extracted else ""])
 	if m.history.is_empty():
@@ -873,7 +873,7 @@ func _achievement_row(def: AchievementDef, done: bool) -> Control:
 	var secret := def.hidden and not done
 	var head := _hbox(12)
 	col.add_child(head)
-	head.add_child(_label((UiText.t("meta.secret") if secret else Names.of(def)), 16, UiPalette.HEAL if done else UiPalette.FG))
+	head.add_child(_label((UiText.t("meta.secret") if secret else Names.of(def)), 16, UiPalette.GOOD if done else UiPalette.FG))
 	var status := ""
 	if done:
 		var t := m.achievement_time(def.id)
@@ -882,7 +882,7 @@ func _achievement_row(def: AchievementDef, done: bool) -> Control:
 		status = UiText.t("meta.ach_not_done")
 	else:
 		status = UiText.t("meta.ach_progress") % def.progress_text(m)
-	head.add_child(_label(status, 13, UiPalette.HEAL if done else UiPalette.DIM))
+	head.add_child(_label(status, 13, UiPalette.GOOD if done else UiPalette.DIM))
 	col.add_child(_wrapped(UiText.t("meta.ach_how") % (UiText.t("meta.secret") if secret else Names.description_of(def)), 13, UiPalette.FG, 700))
 	var opens: Array[String] = []
 	for g in def.grants:

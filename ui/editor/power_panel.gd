@@ -64,7 +64,7 @@ func show_estimate(b: PowerEstimate.Breakdown) -> void:
 
 ## 正绿负红的一个数
 static func _signed(v: float) -> String:
-	var col := UiPalette.HEAL if v > 0.0 else (UiPalette.HP if v < 0.0 else UiPalette.DIM)
+	var col := UiPalette.GOOD if v > 0.0 else (UiPalette.HP if v < 0.0 else UiPalette.DIM)
 	return "[color=#%s]%+.1f[/color]" % [col.to_html(false), v]
 
 

@@ -58,7 +58,7 @@ func _build_ui() -> void:
 		row.add_child(pick)
 		side.add_child(row)
 		_picks.append(pick)
-	_trial = UiTheme.make_wrapped("", 13, UiPalette.HEAL, 380)
+	_trial = UiTheme.make_wrapped("", 13, UiPalette.GOOD, 380)
 	side.add_child(_trial)
 	_status_block(side)
 	_json_block(side)
