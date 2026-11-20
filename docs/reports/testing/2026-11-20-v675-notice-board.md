@@ -56,3 +56,15 @@
 3. **文字小处。**
    - 到访和击败类纸条的「在哪完成」写「局内现场，交了就算」，但这两类没有东西可交。
    - 英文件数为 1 时写成 "Visit 1 rest points"，多了复数 s。
+
+## 五、v6.76 复测（PR #717，main 65719b98）
+
+- 全量测试：通过 42055 项断言、346 个套件，SCRIPT ERROR 0；静态警告 0 条。
+- 告示栏走查（`board675.gd`）在三组里重跑，结果和上面一样。
+- 第四节观察 3 已修：
+  - 到访 / 击败类的「在哪完成」改为「局内现场，做到就算」，英文是 "In the field, counts as soon as it is done"。
+  - 英文纸条改为 "Visit rest points: 1"、"Hand in metal materials: 8" 的写法，没有错的复数了。
+  - 营地交货类仍写「营地当场」。
+- 观察 1、2 是占位界面的问题，照旧。
+
+![英文大字：v6.76 的纸条文字](images/v676-board-texts-en-large.jpg)
