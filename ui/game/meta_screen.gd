@@ -572,7 +572,20 @@ func _fill_locked(facility: StringName) -> void:
 	var col := UiTheme.vbox(14)
 	paper.add_child(col)
 	var fname := UiText.t(String(CommissionPanelScript.FACILITY_TEXT.get(facility, String(facility))))
-	col.add_child(UiTheme.make_wrapped(UiText.t("commission.facility_board") % [fname, Names.of(fac) if fac != null else "", Names.of(d) if d != null else ""], 20, CommissionPanelScript.INK, 560.0))
+	if fac != null:     # 342 B2 A 告示板：纹章 96、锁 + 设施名（大字）、阵营名、一句怎么开
+		var em := CommissionPanelScript.emblem(fac.id, 96)
+		em.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		col.add_child(em)
+	var head := UiTheme.hbox(8)
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_child(CommissionPanelScript._pic("lock", Vector2(28, 28)))
+	var big := UiTheme.make_label(fname, 30, CommissionPanelScript.INK)
+	big.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	head.add_child(big)
+	col.add_child(head)
+	if fac != null:
+		col.add_child(UiTheme.make_label(Names.of(fac), 18, CommissionPanelScript.INK_DIM))
+	col.add_child(UiTheme.make_wrapped(UiText.t("commission.facility_how") % (Names.of(d) if d != null else ""), 18, CommissionPanelScript.INK, 420.0))
 	if d != null and _commissions != null:
 		var fid := d.faction
 		var b := ScrollKey.make(UiText.t("commission.go_story"), func():
