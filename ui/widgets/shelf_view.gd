@@ -121,21 +121,25 @@ static func tier_of(done: int, total: int) -> int:
 ## 这一格现在画哪张图（不带 `home/shelf/`）：分档的按 [method tier_of] 取档，悬停取 `_hover`；拼的（特殊道具）空串
 func piece_name(key: String, hover: bool = false) -> String:
 	for c in _cells:
-		if c["key"] != key:
-			continue
-		var name_ := ""
-		var tiers: Array = c["tiers"]
-		if not tiers.is_empty():
-			var p: Array = _progress.get(key, [0, 0])
-			name_ = String(tiers[mini(tier_of(int(p[0]), int(p[1])), tiers.size() - 1)])
-		elif c["file"] != "":
-			name_ = c["file"]
-		elif c["still_life"] != "":
-			name_ = c["still_life"]
-		if name_ != "" and hover and UiTheme.art_cached(ART + name_ + "_hover") != null:     # 静物（灯）没有悬停图
-			name_ += "_hover"
-		return name_
+		if c["key"] == key:
+			return _piece_of(c, hover)
 	return ""
+
+
+## 342 B1：按格算（空键的格不止一格：空格、油灯）
+func _piece_of(c: Dictionary, hover: bool) -> String:
+	var name_ := ""
+	var tiers: Array = c["tiers"]
+	if not tiers.is_empty():
+		var p: Array = _progress.get(c["key"], [0, 0])
+		name_ = String(tiers[mini(tier_of(int(p[0]), int(p[1])), tiers.size() - 1)])
+	elif c["file"] != "":
+		name_ = c["file"]
+	elif c["still_life"] != "":
+		name_ = c["still_life"]
+	if name_ != "" and hover and UiTheme.art_cached(ART + name_ + "_hover") != null:     # 静物（灯）没有悬停图
+		name_ += "_hover"
+	return name_
 
 
 ## 特殊道具第 k 根柱（共 n 根）：[柱的框, 缩放]
@@ -190,7 +194,7 @@ func _draw() -> void:
 		if c["compose"] == "keepsake_columns":
 			_draw_keepsakes(r, lit)
 			continue
-		var tex := UiTheme.art_cached(ART + piece_name(key, lit))
+		var tex := UiTheme.art_cached(ART + _piece_of(c, lit))
 		if tex != null:
 			draw_texture(tex, r.position)
 	var font := UiPalette.cjk_font_bold()

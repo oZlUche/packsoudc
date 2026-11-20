@@ -52,7 +52,7 @@ static func frame_logistics_tab(t: TestCase, root: Window) -> void:
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	var s: Control = W178._screen(f, root)
-	t.eq(s._tab_btns.keys(), ["expedition", "commissions", "warehouse", "logistics", "shelf"], "出征（264）/ 委托（336）/ 仓库 / 后勤 / 书架（262 §七：科技并进书架）")
+	t.eq(s._tab_btns.keys(), ["expedition", "warehouse", "tech", "commissions", "logistics", "shelf"], "出征（264）/ 仓库 / 科技（342 B1）/ 委托（336）/ 后勤 / 书架")
 	t.eq((s._tab_btns["logistics"] as Button).text, UiText.t("meta.tab_logistics"), "页签写「后勤」")
 	var subs: Dictionary = s.sub_tab_buttons()
 	t.eq(subs.keys(), ["market", "smithy"], "268：两颗分页小键：集市 / 铁匠铺")

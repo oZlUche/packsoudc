@@ -69,11 +69,11 @@ static func _tabs(f: GameFlow, root: Window) -> Array:
 
 
 static func frame_base_tabs(t: TestCase, root: Window) -> void:
-	t.begin("313 · 切片的基地四个页签（统一教程 D2 起和正式版一样），默认在出征页")
+	t.begin("313 · 切片的基地五个页签（统一教程 D2 起和正式版一样，只少委托；342 B1 加科技），默认在出征页")
 	var formal := _tabs(_flow(&""), root)
-	t.eq(formal[0], ["expedition", "commissions", "warehouse", "logistics", "shelf"], "正式版五个页签（336 加了委托）")
+	t.eq(formal[0], ["expedition", "warehouse", "tech", "commissions", "logistics", "shelf"], "正式版六个页签（336 委托；342 B1 科技）")
 	var slice := _tabs(_flow(&"slice"), root)
-	t.eq(slice[0], ["expedition", "warehouse", "logistics", "shelf"], "统一教程 D2：切片也是四个页签")
+	t.eq(slice[0], ["expedition", "warehouse", "tech", "logistics", "shelf"], "统一教程 D2：切片五个页签（342 B1 科技原在书架里，照留）")
 	t.eq(slice[1], "expedition", "默认在出征页")
 	MetaSave.remove(META)
 	GameSettings.remove(SETTINGS)

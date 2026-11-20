@@ -48,7 +48,7 @@ static func run_rest_node(t: TestCase) -> void:
 
 
 static func frame_tour(t: TestCase, root: Window) -> void:
-	t.begin("统一教程 D3 · 基地导览：第一段打完回基地才放；带了东西回来先教入库（真入库才往下走），再点后勤、书架、开始探索；看完记下不再放")
+	t.begin("统一教程 D3 · 基地导览：第一段打完回基地才放；带了东西回来先教入库（真入库才往下走），再点科技（342 B1）、后勤、书架、开始探索；看完记下不再放")
 	for p in [&"", SliceProfile.SLICE]:
 		var f := _flow(p)
 		var s: Control = W178._screen(f, root)
@@ -60,7 +60,7 @@ static func frame_tour(t: TestCase, root: Window) -> void:
 		t.check(s.tour_due(), "%s：第一段打完：该放" % p)
 		t.check(s.show_tour(), "%s：放了" % p)
 		var o: CoachOverlay = s.tour()
-		t.eq(o.steps.size(), 5, "%s：入库 + 四处" % p)
+		t.eq(o.steps.size(), 6, "%s：入库 + 五处" % p)
 		for st in o.steps:
 			t.check(s.tour_rect(StringName(String(st["target"]))).size != Vector2.ZERO, "%s：%s 在屏上" % [p, st["target"]])
 		t.eq(CoachOverlay.action_of(o.step()), GameFlow.ACTION_STORE, "%s：第一步要入库" % p)
@@ -68,7 +68,7 @@ static func frame_tour(t: TestCase, root: Window) -> void:
 		t.check(o.waiting(), "%s：点知道了：等你真放进去" % p)
 		f.store_all()
 		t.eq(o.index, 1, "%s：入库了：下一步" % p)
-		for i in 4:
+		for i in 5:
 			o.acknowledge()
 		t.is_null(s.tour(), "%s：看完收掉" % p)
 		t.check(not s.tour_due(), "%s：记下看过了" % p)
@@ -82,7 +82,7 @@ static func frame_tour_variants(t: TestCase, root: Window) -> void:
 	_first_done(f)
 	var s: Control = W178._screen(f, root)
 	t.check(s.show_tour(), "放了")
-	t.eq(s.tour().steps.size(), 4, "没带东西：四步")
+	t.eq(s.tour().steps.size(), 5, "没带东西：五步")
 	t.eq(String(s.tour().step()["target"]), "tab_warehouse", "从仓库页签讲起")
 	s.tour().dismiss()
 	t.is_null(s.tour(), "收起了")

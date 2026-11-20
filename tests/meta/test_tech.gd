@@ -347,7 +347,7 @@ static func frame_meta_tab(t: TestCase, root: Window) -> void:
 	root.add_child(screen)
 	screen.open({})
 	screen.show_tab("tech")
-	t.check(screen.tab() == "shelf" and screen.shelf_open() == "tech", "切到科技（261 补充一：书架上的科技窗）")
+	t.check(screen.tab() == "tech" and screen.shelf_open() == "", "切到科技（342 B1：一级页签）")
 	t.not_null(screen.tech_panel(), "科技页建好了")
 	t.check(screen.tech_panel().is_visible_in_tree(), "科技页可见")
 	screen.queue_free()
