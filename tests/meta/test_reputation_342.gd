@@ -92,6 +92,7 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 	t.not_null(rb, "《领炉牌》卡上有【办理】")
 	t.check(bool(p.report(&"legion_forge_token")["done"]), "按【办理】办成")
 	t.check(f.facility_open(&"smithy"), "铁匠铺开了")
+	t.eq(s.notice_layer().current_text(), UiText.t("commission.opened") % UiText.t("smithy.title"), "新档：说一句「铁匠铺开放了」")
 	p.show_sub("reputation")
 	t.not_null(p.find_child("Go_smithy", true, false), "声望页：铁匠铺开了，有「去看看」")
 	t.not_null(p.find_child("Story_market", true, false), "声望页：集市没开，有「去办」")
@@ -100,6 +101,7 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 	t.not_null(p.find_child("Regular_legion", true, false), "常规页每方一块")
 	s.show_tab("market")
 	t.check(s.locked_page().is_visible_in_tree(), "集市没开：说明板")
+	t.check(not s._right.visible, "说明板和科技页一样不露右边的仓库")
 	var go := s.locked_page().find_child("LockedGo", true, false) as Button
 	t.not_null(go, "说明板上有直达键")
 	if go != null:
@@ -231,3 +233,15 @@ static func run_field_goals(t: TestCase) -> void:
 	t.eq(book.rep_of(&"society"), 25, "魔法师协会到受托")
 	t.check(Commissions.regular_open(book, Commissions.faction(&"society")), "协会的常规委托开了")
 	Support.cleanup(PREFIX)
+
+
+static func frame_old_save_no_toast(t: TestCase, root: Window) -> void:
+	t.begin("342 B2 · 老档办《领炉牌》：铁匠铺本来就开着，不说「铁匠铺开放了」")
+	ItemInstance.reset_uid_counter()
+	var f := W178._flow()
+	var s: Control = W178._screen(f, root)
+	s.notice_layer().clear()
+	s._on_reported({"done": true, "got": {"opens": "smithy"}})
+	t.check(s.notice_layer().current_text() == "", "不弹")
+	s.queue_free()
+	W178._cleanup()
