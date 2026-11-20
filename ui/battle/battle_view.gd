@@ -65,6 +65,7 @@ var _playing: bool = false
 var _speed_idx: int = 0
 ## 跳转时抑制飘字：一次补上几十条事件会喷一屏数字，那不是信息是噪音
 var _suppress_popups: bool = false
+var _popups_paused := false
 
 ## 087：悬浮窗（buff 图标的具体效果）
 var _tip: HoverTip = null
@@ -495,9 +496,9 @@ func hold(who: StringName = HOLD_COACH) -> void:
 	if _held:
 		return
 	_held = true
-	_pause_reaction_label(true)
 	_resume_after_hold = _playing
 	_playing = false
+	_sync_popup_pause()
 	_sync_buttons()
 
 
@@ -513,7 +514,6 @@ func release(who: StringName = HOLD_COACH) -> void:
 	if not _held or not _holders.is_empty():
 		return
 	_held = false
-	_pause_reaction_label(false)
 	if _resume_after_hold and _result != null:
 		if _cursor < _result.log.size():
 			_playing = true
@@ -521,18 +521,24 @@ func release(who: StringName = HOLD_COACH) -> void:
 			# 秒杀没有回放事件；入场动画暂停后仍须结束，否则永远没有「继续」。
 			_finish()
 	_resume_after_hold = false
+	_sync_popup_pause()
 	_sync_buttons()
 
 
-func _pause_reaction_label(paused: bool) -> void:
-	if _reaction_label == null or not is_instance_valid(_reaction_label) or not _reaction_label.has_meta(&"tween"):
+## 339（接 309）：回放停着（暂停、教程 / 反应讲解压着、拖时间轴）时，两边面板上的飘字都停在原地，接着放时接着飘；
+## 播完了不算停 —— 最后几条字照常飘完
+func _popups_should_pause() -> bool:
+	return _result != null and not _playing and _cursor < _result.log.size()
+
+
+func _sync_popup_pause() -> void:
+	var paused := _popups_should_pause()
+	if paused == _popups_paused:
 		return
-	var tw := _reaction_label.get_meta(&"tween") as Tween
-	if tw != null and tw.is_valid():
-		if paused:
-			tw.pause()
-		else:
-			tw.play()
+	_popups_paused = paused
+	for p in _panels:
+		if p != null and is_instance_valid(p):
+			(p as CombatantPanel).pause_popups(paused)
 
 
 func is_held() -> bool:
@@ -581,6 +587,7 @@ func toggle_play() -> void:
 		play(_result, _names)  # 播完了再按就是重播
 		return
 	_playing = not _playing
+	_sync_popup_pause()
 	_sync_buttons()
 
 
@@ -603,6 +610,7 @@ func speed() -> float:
 
 
 func _process(delta: float) -> void:
+	_sync_popup_pause()
 	if not _playing or _result == null:
 		return
 	_now += delta * SPEEDS[_speed_idx]
@@ -694,6 +702,11 @@ func _feedback_scale() -> float:
 	return 1.0 / sp if sp >= 4.0 else 1.0
 
 
+## 339：飘字（伤害数、反应名）的时长每档倍速都缩短：1 / 倍速（下限在面板上）
+func _popup_scale() -> float:
+	return 1.0 / maxf(1.0, speed())
+
+
 #region 事件 → 画面
 func _apply(e: BattleEvent) -> void:
 	match e.name:
@@ -773,8 +786,10 @@ func _on_damage(e: BattleEvent) -> void:
 		if e.get_bool(&"crit"):
 			_sfx(&"battle.crit")     # 叠在命中上
 	# amount 为负表示这一下最终是治疗（受伤前效果把它反转了）
+	# 339：反应打的那一下（带 reaction）用两种元素色渐变，一眼看出是反应打的
 	_panels[e.side].popup(
-		StatMath.to_int(absi(amount)), e.get_name(&"type"), amount < 0, e.get_bool(&"crit")
+		StatMath.to_int(absi(amount)), e.get_name(&"type"), amount < 0, e.get_bool(&"crit"),
+		_popup_scale(), reaction_colors(e) if e.payload.has("reaction") else []
 	)
 
 
@@ -782,7 +797,7 @@ func _on_damage(e: BattleEvent) -> void:
 func _on_reaction(e: BattleEvent) -> void:
 	if _suppress_popups or e.side < 0 or e.side >= _panels.size():
 		return
-	_reaction_label = _panels[e.side].popup_text(reaction_label(e), reaction_color(e), _feedback_scale())
+	_reaction_label = _panels[e.side].popup_text(reaction_label(e), reaction_color(e), _popup_scale(), reaction_colors(e))
 	_sfx(StringName("battle.reaction." + String(e.get_name(&"reaction"))))
 	reaction_shown.emit(e.get_name(&"reaction"), e.side)
 
@@ -815,10 +830,24 @@ static func reaction_label(e: BattleEvent) -> String:
 	return Names.of(def) if def != null else String(e.get_name(&"reaction"))
 
 
-## 175：弹字颜色 = 第一种元素的伤害色
+## 175：弹字颜色 = 第一种元素的伤害色（339：没有渐变时的单色，也是金牌闪的那一色）
 static func reaction_color(e: BattleEvent) -> Color:
-	var els: Array = e.payload.get("elements", [])
-	return UiPalette.damage_color(StringName(String(els[0]))) if not els.is_empty() else UiPalette.CRIT
+	var cs := reaction_colors(e)
+	return cs[0] if not cs.is_empty() else UiPalette.CRIT
+
+
+## 339：反应的两种元素色，顺序按反应表里定义的顺序；表里查不到就按事件上带的 elements；都没有 = 空
+static func reaction_colors(e: BattleEvent) -> Array[Color]:
+	var els: Array = []
+	var def := ReactionResolver.by_id(e.get_name(&"reaction"))
+	if def != null and not def.elements.is_empty():
+		els = def.elements
+	else:
+		els = e.payload.get("elements", [])
+	var out: Array[Color] = []
+	for el in els:
+		out.append(UiPalette.damage_color(StringName(String(el))))
+	return out
 
 
 #endregion

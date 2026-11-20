@@ -69,7 +69,7 @@ static func run_replay(t: TestCase) -> void:
 	panel.size = Vector2(300, 200)
 	var l := panel.popup_text("爆燃", Color.RED)
 	t.eq(l.text, "爆燃", "面板上飘一行反应名")
-	t.check(l.get_theme_constant("outline_size") > 0, "描边")
+	t.check(l.label_settings.outline_size > 0, "描边")
 	panel.free()
 	var lib := ContentLibrary.buffs()
 	# 185：玩家看的只有效果的合计；机制说明（元素印、按层计时、减半）只进 buff_rule_lines 给作者工具

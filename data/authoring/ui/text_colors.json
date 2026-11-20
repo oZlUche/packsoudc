@@ -48,7 +48,7 @@
     "bleed": {"dark": "#e05c7a", "light": "#8c2b4a"},
     "reflect": {"dark": "#c9a0ff", "light": "#5c3a8a"},
     "drain": {"dark": "#9aa3b2", "light": "#4a4433"},
-    "ice": {"dark": "#dfe3ea", "light": "#2e2219"},
-    "lightning": {"dark": "#dfe3ea", "light": "#2e2219"}
+    "ice": {"dark": "#7fd0ff", "light": "#1f5f8a"},
+    "lightning": {"dark": "#f2e36b", "light": "#6b5a10"}
   }
 }
