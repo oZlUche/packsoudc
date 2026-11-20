@@ -37,6 +37,8 @@ var pins: Array = []
 var note_seq := 0
 ## 贴过第一批没有
 var board_init := false
+## 342 B3：后来的几方到营地的那一局，阵营 id → 第几局（[method Commissions.arrive]）
+var arrived: Dictionary = {}
 
 
 func _init() -> void:
@@ -79,7 +81,7 @@ func add_receipt(row: Dictionary) -> void:
 
 
 func is_empty() -> bool:
-	return rep.is_empty() and entries.is_empty() and receipts.is_empty() and clues.is_empty() and grants.is_empty() and not gated and notes.is_empty() and not board_init
+	return rep.is_empty() and entries.is_empty() and receipts.is_empty() and clues.is_empty() and grants.is_empty() and not gated and notes.is_empty() and not board_init and arrived.is_empty()
 
 
 ## 存档：字典的键排好序（同一份状态逐字节相同）
@@ -97,6 +99,7 @@ func to_dict() -> Dictionary:
 		"pins": pins.duplicate(),
 		"note_seq": note_seq,
 		"board_init": board_init,
+		"arrived": _sorted(arrived),
 	}
 
 
@@ -154,5 +157,8 @@ static func from_dict(d: Variant) -> CommissionBook:
 		b.pins.append(String(x) if x != null else "")
 	b.note_seq = int(src.get("note_seq", 0))
 	b.board_init = bool(src.get("board_init", false))
+	if src.get("arrived", null) is Dictionary:
+		for k in src["arrived"]:
+			b.arrived[String(k)] = int(src["arrived"][k])
 	Commissions.active = b
 	return b

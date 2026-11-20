@@ -19,17 +19,18 @@ display_name = "两条回路"
 display_names = {
 "en": "Two Ways Back"
 }
-faction = &"legion"
-order = 3
-tier = &"inquiry"
-requires = Array[StringName]([&"legion_permit"])
+faction = &"cartographers"
+order = 2
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"cartographers_redraw"])
 stages = Array[ExtResource("2_r6oyw")]([SubResource("Resource_ohtil")])
 funds = 60
 quote = "去的时候路都好走。替我看看，回来还能走哪条。"
 quotes = {
 "en": "Every road is easy on the way in. Find out which ones still lead back."
 }
-client = "军需官"
+client = "协会绘图员"
 clients = {
-"en": "Quartermaster"
+"en": "Society draughtsman"
 }

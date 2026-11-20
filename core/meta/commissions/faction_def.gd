@@ -13,6 +13,8 @@ extends Resource
 @export var order: int = 0
 ## 委托簿里列不列出来。首版只列军团、协会、灰灯，另两方等 W3（不放「待开放」）
 @export var listed: bool = true
+## 342 B3：什么时候来营地（空 = 一开始就在；`first_run` = 教程后第一次正式探索结算时，[method Commissions.arrive]）
+@export var arrives: StringName = &""
 ## 五档的声望门槛（初识、熟面、受托、信赖、代言），从小到大、第一个是 0（342 B2：原来四档 0 / 2 / 5 / 9）
 @export var thresholds: Array[int] = [0, 10, 25, 50, 100]
 ## 每级开放的服务：服务 id → 第几级（0 起）。服务随各方结案批次做，W0 只记表

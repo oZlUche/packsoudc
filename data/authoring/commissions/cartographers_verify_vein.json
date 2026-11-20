@@ -1,0 +1,30 @@
+{
+  "id": "cartographers_verify_vein",
+  "display_name": "核实矿脉",
+  "display_names": {
+    "en": "Verify the Vein"
+  },
+  "faction": "cartographers",
+  "order": 3,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "cartographers_redraw"
+  ],
+  "stages": [
+    {
+      "goal": "visit_nodes",
+      "params": {
+        "search_kind": "mine"
+      },
+      "text": "走到一处矿点",
+      "texts": {
+        "en": "Reach a mine"
+      }
+    }
+  ],
+  "client": "协会绘图员",
+  "clients": {
+    "en": "Society draughtsman"
+  }
+}

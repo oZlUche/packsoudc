@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="FactionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/faction_def.gd" id="1_3i74v"]
+
+[resource]
+script = ExtResource("1_3i74v")
+id = &"cartographers"
+display_name = "地图协会"
+display_names = {
+"en": "Cartographers' Society"
+}
+order = 4
+arrives = &"first_run"
+facilities = {
+"bias": "cartographers_redraw"
+}
+permit = &"cartographers_permit"
+regular = Array[Dictionary]([{
+"goal": "visit_nodes",
+"name": "勘点",
+"names": {
+"en": "Survey"
+},
+"params": {
+"type": "search"
+},
+"text": "到访 {n} 处搜索点",
+"texts": {
+"en": "Visit search points: {n}"
+},
+"u": 15
+}, {
+"goal": "hand_in",
+"name": "收石料",
+"names": {
+"en": "Stone Wanted"
+},
+"params": {
+"material": "stone"
+},
+"text": "交 {n} 件石料",
+"texts": {
+"en": "Hand in stone materials: {n}"
+},
+"u": 8
+}, {
+"goal": "defeat_enemies",
+"name": "清路",
+"names": {
+"en": "Clear the Way"
+},
+"params": {
+"kind": "normal"
+},
+"text": "打赢 {n} 场普通的仗",
+"texts": {
+"en": "Win battles against ordinary enemies: {n}"
+},
+"u": 10
+}])

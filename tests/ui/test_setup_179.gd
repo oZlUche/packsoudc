@@ -50,7 +50,7 @@ static func frame_character_page(t: TestCase, root: Window) -> void:
 	for g in setup._grooves:     # 选人页 B：三栏都是浅底墨字（棋盘栏直接在浅色大厅上）
 		t.eq(UiTheme.tone_at(g), UiTheme.TONE_LIGHT, "板里是浅底")
 	# 作者 2026-10-17 08:02：大厅只给第一页，第二页木板拼接 / 仓库，第三页桌上的军用地图 —— 翻页换画；没图纯色底、标题白字
-	t.eq(setup.PAGE_ART, [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG], "三页三幅画")
+	t.eq(setup.PAGE_ART, [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG, UiTheme.ART_SETUP_MAP_BG], "三页三幅画（342 B3 第四页「本次准备」先借地图那幅）")
 	for page in [1, 2, 0]:
 		setup.show_page(page)
 		var art_name: String = setup.PAGE_ART[page]

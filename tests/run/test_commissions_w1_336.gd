@@ -25,6 +25,9 @@ static func unlock(book: CommissionBook) -> void:
 		book.entries[String(id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": 1, "pick": "", "seq": 0}
 	for fid in ["legion", "society", "greylamp"]:
 		book.rep[fid] = 10
+	book.arrived["cartographers"] = 1     # 342 B3：《两条回路》改给地图协会 —— 协会到了、首单办成
+	book.entries["cartographers_redraw"] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": 1, "pick": "", "seq": 0}
+	book.rep["cartographers"] = 10
 
 
 static func _extracts(run: RunState, free_only: bool = false) -> Array[MapNode]:
@@ -126,7 +129,7 @@ static func run_loop(t: TestCase) -> void:
 	f._settled = false
 	f._settle_run()
 	t.check(book.is_done(TWO), "军团：两处查完办成")
-	t.eq(book.rep_of(&"legion"), 12, "军团声望 +2")
+	t.eq(book.rep_of(&"cartographers"), 15, "地图协会声望 +5（342 B3：《两条回路》改给地图协会）")
 
 
 static func run_event_options(t: TestCase) -> void:

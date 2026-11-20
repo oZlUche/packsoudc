@@ -26,6 +26,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v4_to_v5(d)
 			5:
 				d = _v5_to_v6(d)
+			6:
+				d = _v6_to_v7(d)
 			_:
 				break     # 没有这一步的迁移：停在这一版，下面照实报
 		v += 1
@@ -141,4 +143,11 @@ static func _v1_to_v2(d: Dictionary) -> Dictionary:
 		mods["node_storage"] = ns
 		d.erase("node_storages")
 	d["modules"] = mods
+	return d
+
+
+## v6 → v7（342 B3）：加这一局的材料倾向 —— 老档出征时没有这一项，按无倾向
+static func _v6_to_v7(d: Dictionary) -> Dictionary:
+	if not d.has("material_bias"):
+		d["material_bias"] = ""
 	return d

@@ -142,8 +142,14 @@ var _enter_btn: Button
 var _back_btn: Button
 ## 161：三页（0 选角色、1 配道具、2 选地图与难度）与现在是哪页
 ## 221 F1：每页的标题（UiText 键，用时按当前语言取）
-const PAGE_TITLES: Array[String] = ["setup.page_1", "setup.page_2", "setup.page_3"]
+const PAGE_TITLES: Array[String] = ["setup.page_1", "setup.page_2", "setup.page_3", "setup.page_4"]
 const PAGE_MAP := 2
+## 342 B3：第四页「本次准备」（材料倾向）—— 什么准备项都没开时整页跳过，第三页就是最后一页（[method last_page]）
+const PAGE_PREP := 3
+## 342 B3：这一局的材料倾向（[MaterialBias]），每次进开局屏都是无倾向
+var bias_id: StringName = &""
+var _bias_box: VBoxContainer = null
+var _bias_btns: Dictionary = {}
 ## 180：规模那一列缩进多少
 const SCALE_INDENT := 20
 ## 180 补二：仓库框给滚动条留多宽；底下「返回」的字号（按钮按档放大，仍比「出发」小）
@@ -227,7 +233,7 @@ const STAT_SEALS: Array[String] = ["seal_hp", "seal_vigor", "seal_stamina", "sea
 ## 255：没解锁的角色在左栏压到 60%
 const LOCKED_ALPHA := 0.6
 ## 三页各自的整屏画（作者 2026-10-17）：选角色 = 选人场地，带装备 = 木板拼接 / 仓库，选地图 = 桌上的军用地图
-const PAGE_ART: Array[String] = [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG]
+const PAGE_ART: Array[String] = [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG, UiTheme.ART_SETUP_MAP_BG]
 
 
 func open(_payload: Dictionary) -> void:
@@ -252,7 +258,7 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(title_row)
 	_chapters = map_chapters()
 	_pages.clear()
-	for build in [_build_character_page, _build_kit_page, _build_map_page]:
+	for build in [_build_character_page, _build_kit_page, _build_map_page, _build_prep_page]:
 		var page_: Control = build.call()
 		page_.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if page_ is PanelContainer else Control.SIZE_EXPAND_FILL     # 179：凹槽板按内容高，不压到右下角的按钮
 		col.add_child(page_)
@@ -661,6 +667,77 @@ func _build_map_page() -> Control:
 	return row
 
 
+#region 342 B3：第四页「本次准备」
+## 有没有第四页：材料倾向开了（办成地图协会的《把路画回来》）
+func prep_open() -> bool:
+	return flow.bias_open()
+
+
+## 最后一页：有第四页就是它，否则第三页
+func last_page() -> int:
+	return PAGE_PREP if prep_open() else PAGE_MAP
+
+
+## 占位排版（样张请 UI设计 出）：一张羊皮纸，一列方向；这一章不能选的压灰，悬浮窗写原因
+func _build_prep_page() -> Control:
+	var center := CenterContainer.new()
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 36, 24, 36, 24)
+	UiTheme.set_tone(paper, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
+	center.add_child(paper)
+	var col := _vbox(10)
+	col.custom_minimum_size.x = 360
+	paper.add_child(col)
+	col.add_child(_label(UiText.t("bias.title"), 22, UiPalette.FG))
+	_bias_box = _vbox(6)
+	col.add_child(_bias_box)
+	return center
+
+
+## 按这一章重排方向键；选着的这一章不能选了就回到无倾向
+func _sync_bias() -> void:
+	if _bias_box == null:
+		return
+	var opts := flow.bias_options(chapter())
+	if not opts.any(func(o: Dictionary) -> bool: return StringName(o["id"]) == bias_id and String(o["why"]) == ""):
+		bias_id = MaterialBias.NONE
+	for c in _bias_box.get_children():
+		_bias_box.remove_child(c)
+		c.queue_free()
+	_bias_btns.clear()
+	for o in opts:
+		var dir := StringName(o["id"])
+		var b := _button(UiText.t("bias.dir_" + (String(dir) if dir != MaterialBias.NONE else "none")), func(): choose_bias(dir), 18)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, MAP_SUB_H)
+		b.toggle_mode = true
+		b.disabled = String(o["why"]) != ""
+		if b.disabled:
+			b.tooltip_text = UiText.t("bias.why_" + String(o["why"]))
+		b.set_pressed_no_signal(dir == bias_id)
+		_bias_btns[dir] = b
+		_bias_box.add_child(b)
+
+
+## 选一个方向（这一章不能选的不认）。返回选上没有
+func choose_bias(dir: StringName) -> bool:
+	if not flow.bias_allowed(chapter(), dir):
+		return false
+	bias_id = dir
+	for k in _bias_btns:
+		(_bias_btns[k] as Button).set_pressed_no_signal(k == bias_id)
+	return true
+
+
+## 出发时交给这一局的方向（第四页没开 = 无倾向）
+func chosen_bias() -> StringName:
+	return bias_id if prep_open() and flow.bias_allowed(chapter(), bias_id) else MaterialBias.NONE
+
+
+func bias_buttons() -> Dictionary:
+	return _bias_btns
+#endregion
+
+
 #region 161：翻页
 func page() -> int:
 	return _page
@@ -677,13 +754,15 @@ func _preset_hint() -> void:
 ## 换到第 [param i] 页（0..2）：只显示那一页，标题与右下角按钮跟着变
 func show_page(i: int) -> void:
 	var was := _page
-	_page = clampi(i, 0, PAGE_TITLES.size() - 1)
+	_page = clampi(i, 0, last_page())
 	if _page == PAGE_MAP and was != PAGE_MAP:
 		_reroll_seed()     # 180：种子玩家看不见，每次进这一页随机取（调试台指定了就用那个）
 	if _page != PAGE_MAP:
 		close_hint()
 	for k in _pages.size():
 		_pages[k].visible = k == _page
+	if _page == PAGE_PREP:
+		_sync_bias()     # 342 B3：换过章节，方向重新校验
 	if _page == 1:
 		_fit_warehouse()     # 作者 10-31 木架：框的边距要等进了树、主题生效才算得出来，翻到这页再量一次
 		_preset_hint()
@@ -693,7 +772,7 @@ func show_page(i: int) -> void:
 	if _title != null:
 		_title.text = UiText.t(PAGE_TITLES[_page])
 	if _enter_btn != null:
-		_enter_btn.text = UiText.t("setup.depart") if _page == PAGE_TITLES.size() - 1 else UiText.t("menu.continue")
+		_enter_btn.text = UiText.t("setup.depart") if _page == last_page() else UiText.t("menu.continue")
 	if _back_btn != null:
 		_back_btn.text = UiText.t("setup.back")     # 264 §五（作者 10-29 16:20）：三页都写「返回」，第一页回基地
 	for b in [_enter_btn, _back_btn]:
@@ -705,8 +784,10 @@ func show_page(i: int) -> void:
 
 ## 继续（最后一页 = 出发）。第一页没角色走不了
 func next_page() -> bool:
-	if _page >= PAGE_TITLES.size() - 1:
+	if _page >= last_page():
 		return depart()
+	if _page == PAGE_MAP and needs_spawn():
+		return false
 	if _page == 0 and character() == null:
 		return false
 	show_page(_page + 1)
@@ -1612,7 +1693,7 @@ func _go_now() -> bool:
 	flow.map_reveal = reveal_payload()
 	_record_carry()
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board, _supply_uids), difficulty(), scale_id, carry_value(), spawn_id, carry_funds,
-			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"", preset(), chosen_faith())
+			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"", preset(), chosen_faith(), chosen_bias())
 	flow.map_reveal = {}
 	if run == null:
 		warn(UiText.t("setup.no_map") % (c.map_source.last_error if c.map_source != null else UiText.t("setup.no_map_source")))
@@ -2151,7 +2232,7 @@ func _refresh() -> void:
 	if _preset_box != null and _presets_signature(_preset_list()) != _preset_sig:
 		_rebuild_presets.call_deferred()     # 285：仓库变了，高级预设缺几件跟着变（挂牌可能正在发信号，晚一拍重做）
 	if _enter_btn != null:
-		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and (needs_spawn() or preset_poor()))     # 182：没挑出生点「出发」灰着；285：收费预设付不起
+		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and (needs_spawn() or preset_poor())) or (_page == PAGE_PREP and preset_poor())     # 182：没挑出生点「出发」灰着；285：收费预设付不起
 	var why := can_depart()
 	var hint := UiText.t("setup.unarmed") if _page > 0 and unarmed() else ""
 	_set_status(why if why != "" and (not carried().is_empty() or preset_poor()) else _note + hint)     # 225：「军需官发的」在前

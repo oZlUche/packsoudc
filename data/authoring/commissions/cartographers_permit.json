@@ -1,0 +1,29 @@
+{
+  "id": "cartographers_permit",
+  "display_name": "提交路标",
+  "display_names": {
+    "en": "Set the Waymarks"
+  },
+  "faction": "cartographers",
+  "order": 4,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "legion_two_routes",
+    "cartographers_verify_vein"
+  ],
+  "stages": [
+    {
+      "goal": "visit_nodes",
+      "count": 5,
+      "text": "走过五处地方",
+      "texts": {
+        "en": "Pass through five places"
+      }
+    }
+  ],
+  "client": "协会绘图员",
+  "clients": {
+    "en": "Society draughtsman"
+  }
+}
