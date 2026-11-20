@@ -762,9 +762,9 @@ func _draw_spawn_mask(pos: Dictionary, grow: Dictionary = {}) -> void:
 		if not pos.has(id):
 			continue
 		var sp := to_screen(pos[id])
-		draw_circle(sp, NODE_RADIUS + 18.0, Color(UiPalette.HEAL, (0.10 + 0.08 * sin(_pulse * 2.0)) * k))
+		draw_circle(sp, NODE_RADIUS + 18.0, Color(UiPalette.GOOD, (0.10 + 0.08 * sin(_pulse * 2.0)) * k))
 		_draw_node(graph.get_node(id), sp)
-		draw_arc(sp, NODE_RADIUS + 10.0 + 2.0 * sin(_pulse * 2.0), 0.0, TAU, 40, Color(UiPalette.HEAL, k), 2.0, true)
+		draw_arc(sp, NODE_RADIUS + 10.0 + 2.0 * sin(_pulse * 2.0), 0.0, TAU, 40, Color(UiPalette.GOOD, k), 2.0, true)
 	# 226 批二：蒙层上那句「挑一个出生点」删了（告示层会说）
 
 
@@ -850,7 +850,7 @@ func _draw_node(n: MapNode, p: Vector2) -> void:
 	draw_circle(p, NODE_RADIUS, color.darkened(0.55))
 	draw_arc(p, NODE_RADIUS, 0.0, TAU, 32, color, 2.0, true)
 	if graph.entry_ids.has(n.id):
-		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.HEAL, 2.0, true)
+		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.GOOD, 2.0, true)
 	if graph.goal_ids.has(n.id):
 		draw_arc(p, NODE_RADIUS + 4.0, 0.0, TAU, 32, UiPalette.STAMINA, 2.0, true)
 	# 184：可走的点由墨路与墨环说明、玩家由棋子说明（原来的细环、脉动环、三角标都撤了）；选中 / 悬停环是操作反馈，留着

@@ -558,7 +558,7 @@ func _draw() -> void:
 			var badge := String(badges[item.uid])
 			var box := item.def.shape.size_rotated(item.rotation)
 			var at := anchor + Vector2(box.x * cell_px - 18.0, 4.0)
-			draw_rect(Rect2(at, Vector2(16, 16)), UiPalette.HEAL, true)
+			draw_rect(Rect2(at, Vector2(16, 16)), UiPalette.GOOD, true)
 			draw_string(font, at + Vector2(2.0, 13.0), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("101216"))
 
 	if footprints:

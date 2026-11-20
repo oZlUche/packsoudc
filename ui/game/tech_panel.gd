@@ -296,7 +296,7 @@ func _refresh() -> void:
 		_effect.add_child(UiTheme.make_wrapped(TextTemplate.plain(desc, {}), BODY_SIZE, UiPalette.FG, TEXT_WIDTH))
 	if def.effect != null:
 		if lv >= 1:
-			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.now") % def.effect.describe_level(lv, _flow.buff_defs), LINE_SIZE, UiPalette.HEAL, TEXT_WIDTH))
+			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.now") % def.effect.describe_level(lv, _flow.buff_defs), LINE_SIZE, UiPalette.GOOD, TEXT_WIDTH))
 		if tier != null:
 			_effect.add_child(UiTheme.make_wrapped(UiText.t("tech.next") % def.effect.describe_level(lv + 1, _flow.buff_defs), LINE_SIZE, UiPalette.FG, TEXT_WIDTH))
 			if def.effect.applies_next_run():     # 319：开局才定的效果，买了下一局才看得到
@@ -304,7 +304,7 @@ func _refresh() -> void:
 
 	# 费用：账目行
 	if tier == null:
-		_cost.add_child(UiTheme.make_label(UiText.t("tech.maxed"), BODY_SIZE, UiPalette.HEAL))
+		_cost.add_child(UiTheme.make_label(UiText.t("tech.maxed"), BODY_SIZE, UiPalette.GOOD))
 		_action.visible = false
 		return
 	var missing := TechService.missing_prereqs(_meta, def, _flow.tech_defs)
@@ -363,7 +363,7 @@ func _ledger_row(label: String, number: String, own: String, done: bool, tip: St
 	var ls := LabelSettings.new()     # 账单那套数字：Cinzel Bold（缺的字落到思源宋体 Bold）
 	ls.font = UiPalette.numeral_font()
 	ls.font_size = UiTheme.sz(NUM_SIZE)
-	ls.font_color = UiPalette.HEAL.darkened(0.35) if done else UiTheme.INK
+	ls.font_color = UiPalette.GOOD.darkened(0.35) if done else UiTheme.INK
 	n.label_settings = ls
 	n.custom_minimum_size.x = NUM_W
 	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

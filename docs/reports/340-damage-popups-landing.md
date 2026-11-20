@@ -42,3 +42,14 @@
 ## 下一步
 
 游戏测试线程按 339 第四节验收走一遍。
+
+## 补记（2026-11-20，v6.64）：作者在 339 样张上选了 1B 和 2C
+
+- **治疗改青绿（1B）**：`text_colors.json` 的 `styles.heal` 深版 `#4fd8b0`、浅版 `#17695a`；`UiPalette.HEAL` 跟着改。毒色不动。
+  原来拿 `UiPalette.HEAL` 当「好 / 成了」用的地方（科技已满、撤离记录、成就已办成、地图上的可去节点、编辑器里的正数等）改用新常量 `UiPalette.GOOD`（原来的 `#5cb85c`），`styles.good` 也指它，这些地方颜色不变。
+- **暴击「!」染金（2C）**：数字仍是类型色（反应打的仍是渐变），末尾的「!」拆成数字那条字的一个子节点，染 `UiPalette.CRIT`；跟着飘、淡出、放大，不吃渐变。跳字只画在深底上，浅版金（`#725600`）这次用不上。
+- 截图（深底面板上，火、冰、雷暴击，最右是火冰反应打的暴击，下面一行是普通伤害）：
+
+![暴击飘字](340-shots/crits.png)
+
+截图脚本：[340-shots/crit_shot.gd](340-shots/crit_shot.gd)（`xvfb-run godot --path . --rendering-driver opengl3 --script res://docs/reports/340-shots/crit_shot.gd`，`SHOT_OUT` 指定输出）。

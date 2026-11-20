@@ -392,7 +392,7 @@ func _revalidate() -> void:
 	var blocking: MapValidation = result["blocking"]
 	var advisory: Array = result["advisory"]
 	if blocking.ok() and advisory.is_empty():
-		_report.push_color(UiPalette.HEAL)
+		_report.push_color(UiPalette.GOOD)
 		_report.add_text("✓ 全部校验通过")
 		_report.pop()
 		return

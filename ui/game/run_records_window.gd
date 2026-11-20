@@ -6,7 +6,7 @@ extends VBoxContainer
 const ROW_H := 44.0
 const STAR_W := 52.0
 const FONT_SIZE := 15
-const WIN := UiPalette.HEAL
+const WIN := UiPalette.GOOD
 const LOSS := UiPalette.HP
 
 var flow: GameFlow = null
