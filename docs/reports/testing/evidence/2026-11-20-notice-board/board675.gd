@@ -191,6 +191,7 @@ func _process(_d: float) -> bool:
 			_click(_named("Sub_regular")); _wait = 20; _st = 4
 		4:
 			L("真点「常规」：%s" % _labels_under(_panel()).left(1500))
+			L("　　排版：%s" % _overflow(_panel()))
 			shot("board_first")
 			_st = 5
 		5:
@@ -201,6 +202,7 @@ func _process(_d: float) -> bool:
 				L("手头满 3：剩下的【接下】%s" % str(dis))
 				L("　　%s" % _board())
 				L("　　页上：%s" % _labels_under(_panel()).left(1500))
+				L("　　排版：%s" % _overflow(_panel()))
 				shot("hand_full")
 				_snap = _snapshot()
 				_flow.save_meta(); _flow.to_main_menu(); _wait = 30; _st = 7
@@ -251,6 +253,7 @@ func _process(_d: float) -> bool:
 			_click(_named("Sub_regular")); _wait = 20; _st = 32
 		32:
 			L("第一局回营的常规页：%s" % _labels_under(_panel()).left(1500))
+			L("　　排版：%s" % _overflow(_panel()))
 			shot("after_run1")
 			var ab := _all_named("Abandon_note_*")
 			if ab.is_empty(): L("没有【放弃】"); _st = 34; return false
@@ -306,6 +309,7 @@ func _process(_d: float) -> bool:
 				str(_rep_before["rep"]), str(bk.rep), str(bk.receipts.slice(0, 1))])
 			L("　　回执文字：%s" % CommissionPanelScript.receipt_text(bk.receipts[0]) if not bk.receipts.is_empty() else "（无回执）")
 			L("　　%s" % _board())
+			L("　　排版：%s" % _overflow(_panel()))
 			shot("handin_after")
 			_st = 20
 		50:
@@ -318,6 +322,7 @@ func _process(_d: float) -> bool:
 			_click(_named("Sub_regular")); _wait = 20; _st = 62
 		62:
 			L("四局后的常规页：%s" % _labels_under(_panel()).left(1500))
+			L("　　排版：%s" % _overflow(_panel()))
 			shot("after_run4")
 			_st = 99
 		_:
@@ -326,3 +331,24 @@ func _process(_d: float) -> bool:
 
 
 const CommissionPanelScript := preload("res://ui/game/commission_panel.gd")
+
+
+## 排版溢出：可见的字落在它最近的 PanelContainer 外，或者不换行的字比自己的框宽
+func _overflow(top: Node) -> String:
+	if top == null: return "（无）"
+	var bad := []
+	var n_checked := 0
+	for l in top.find_children("*", "", true, false):
+		if not (l is Label or l is Button or l is RichTextLabel) or not (l as Control).is_visible_in_tree(): continue
+		var c := l as Control
+		n_checked += 1
+		var r := c.get_global_rect()
+		var p := c.get_parent()
+		while p != null and not (p is PanelContainer): p = p.get_parent()
+		var t: String = (l as RichTextLabel).get_parsed_text() if l is RichTextLabel else ((l as Button).text if l is Button else (l as Label).text)
+		t = t.strip_edges().replace("\n", " ").left(24)
+		if p != null and p != c and not (p as Control).get_global_rect().grow(2).encloses(r):
+			bad.append("「%s」出 %s 框（字 %s，框 %s）" % [t, p.name, str(r), str((p as Control).get_global_rect())])
+		elif l is Label and (l as Label).autowrap_mode == TextServer.AUTOWRAP_OFF and (l as Label).text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING and c.get_minimum_size().x > c.size.x + 1:
+			bad.append("「%s」比自己的框宽（%d > %d）" % [t, int(c.get_minimum_size().x), int(c.size.x)])
+	return "查 %d 处，溢出 %d：%s" % [n_checked, bad.size(), "；".join(bad.slice(0, 8))]

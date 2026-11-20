@@ -152,6 +152,7 @@ func _process(_d: float) -> bool:
 				if (n as Control).is_visible_in_tree(): _reports.append(String(n.name))
 			L("　　【办理】键（这一方）：%s" % str(_reports))
 			_reports = ["Report_legion_forge_token", "Report_society_first_survey", "Report_greylamp_check_scale"]
+			L("　　排版：%s" % _overflow(_panel()))
 			shot("story")
 			if mode == "new":
 				_tab("tech"); _wait = 20; _st = 5
@@ -161,6 +162,7 @@ func _process(_d: float) -> bool:
 			var lp = _ms().locked_page()
 			L("真点「科技」：落在 %s；说明板 %s：%s" % [_ms().tab(), "看得见" if lp != null and lp.is_visible_in_tree() else "看不见", _labels_under(lp)])
 			L("　　右列仓库 %s" % ("露着" if _ms()._right != null and _ms()._right.is_visible_in_tree() else "收起"))
+			L("　　排版：%s" % _overflow(_ms().locked_page()))
 			shot("tech_locked")
 			var go := _named("LockedGo")
 			if go == null: L("　　没有直达键"); _st = 6; return false
@@ -173,6 +175,7 @@ func _process(_d: float) -> bool:
 			var lp = _ms().locked_page()
 			L("真点「后勤」（%s）：说明板 %s：%s" % [_ms()._sub, "看得见" if lp != null and lp.is_visible_in_tree() else "看不见", _labels_under(lp)])
 			L("　　右列仓库 %s" % ("露着" if _ms()._right != null and _ms()._right.is_visible_in_tree() else "收起"))
+			L("　　排版：%s" % _overflow(_ms().locked_page()))
 			shot("logistics_locked")
 			var other: String = "smithy" if _ms()._sub == "market" else "market"
 			_click(_ms().sub_tab_buttons("logistics")[other]); _wait = 20; _st = 70
@@ -204,10 +207,12 @@ func _process(_d: float) -> bool:
 			_click(_named("Sub_regular")); _wait = 20; _st = 11
 		11:
 			L("委托页·常规：%s" % _labels_under(_panel()).left(700))
+			L("　　排版：%s" % _overflow(_panel()))
 			shot("regular")
 			_click(_named("Sub_reputation")); _wait = 20; _st = 12
 		12:
 			L("委托页·声望：%s" % _labels_under(_panel()).left(900))
+			L("　　排版：%s" % _overflow(_panel()))
 			shot("reputation")
 			_tab("tech"); _wait = 25; _st = 13
 		13:
@@ -236,6 +241,7 @@ func _process(_d: float) -> bool:
 		# ---------- v6.74：营地交货（真点【办理】）----------
 		40:
 			L("开放单办完后的剧情页：%s" % _labels_under(_panel()).left(1200))
+			L("　　排版：%s" % _overflow(_panel()))
 			shot("story_after_openers")
 			_dl = [
 				["society_identify_ore", ["mist_crystal"], "仓库只有一块雾晶（要两块）"],
@@ -301,3 +307,24 @@ func _wh(id: String) -> int:
 	for it in _flow.meta.warehouse.items():
 		if String((it as ItemInstance).def.id) == id: n += 1
 	return n
+
+
+## 排版溢出：可见的字落在它最近的 PanelContainer 外，或者不换行的字比自己的框宽
+func _overflow(top: Node) -> String:
+	if top == null: return "（无）"
+	var bad := []
+	var n_checked := 0
+	for l in top.find_children("*", "", true, false):
+		if not (l is Label or l is Button or l is RichTextLabel) or not (l as Control).is_visible_in_tree(): continue
+		var c := l as Control
+		n_checked += 1
+		var r := c.get_global_rect()
+		var p := c.get_parent()
+		while p != null and not (p is PanelContainer): p = p.get_parent()
+		var t: String = (l as RichTextLabel).get_parsed_text() if l is RichTextLabel else ((l as Button).text if l is Button else (l as Label).text)
+		t = t.strip_edges().replace("\n", " ").left(24)
+		if p != null and p != c and not (p as Control).get_global_rect().grow(2).encloses(r):
+			bad.append("「%s」出 %s 框（字 %s，框 %s）" % [t, p.name, str(r), str((p as Control).get_global_rect())])
+		elif l is Label and (l as Label).autowrap_mode == TextServer.AUTOWRAP_OFF and (l as Label).text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING and c.get_minimum_size().x > c.size.x + 1:
+			bad.append("「%s」比自己的框宽（%d > %d）" % [t, int(c.get_minimum_size().x), int(c.size.x)])
+	return "查 %d 处，溢出 %d：%s" % [n_checked, bad.size(), "；".join(bad.slice(0, 8))]
