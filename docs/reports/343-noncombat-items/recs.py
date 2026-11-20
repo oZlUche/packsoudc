@@ -24,7 +24,7 @@ PLACEHOLDER = {
     'barbarian_necklace', 'beast_tail', 'beast_tusk_root', 'clay_bowls', 'clay_pot', 'copper_ore', 'datura_flower',
     'dense_basalt', 'fire_gland', 'frost_gland', 'glazed_vase', 'granite_mortar', 'gravestone_shard', 'honey_jar',
     'mint_bundle', 'pine_resin', 'seasoned_timber', 'shock_sac', 'silk_bolt', 'straight_ash_branch', 'tapestry',
-    'wolf_heart', 'wool_cloth', 'sealed_wine_jar', 'douxing',
+    'wolf_heart', 'wool_cloth', 'sealed_wine_jar',
 }
 
 _BOUNTY = '精英 / 核心首领的额外奖励（科技开启后）'
@@ -45,7 +45,7 @@ EXTRA_SOURCES = {
     'forge_token': ['休息点铸炉：三件道具铸成'],
     'commission_letter': ['委托「无人署名的信」接单时发'],
     'poxiao_token': ['铁匠特殊对话（破晓不在任何地方时）'],
-    'douxing': ['无任何来源'],
+    'douxing': ['彩蛋道具（作者定）'],
 }
 EXTRA_USES = {
     'charm_brute': ['信仰锚点（蛮神）'], 'charm_earth': ['信仰锚点（大地之神）'], 'charm_hunt': ['信仰锚点（狩猎之神）'],
@@ -160,6 +160,6 @@ REC = {
     'charm_brute': '保持现状', 'charm_earth': '保持现状', 'charm_nature': '保持现状', 'charm_sun': '保持现状',
     'thorn_seed': '【苗圃】首单「试种种苗」可直接发它', 'moonherb_seed': '【苗圃】信赖档种苗候选',
     'ironwood_sapling': '【苗圃】代言档第二畦候选',
-    'spyglass': '保持现状', 'douxing': '请作者定（无来源、无用途）',
+    'spyglass': '保持现状', 'douxing': '彩蛋道具（作者定），不算材料，保持现状',
     'ticket_standard': '保持现状', 'ticket_elite': '保持现状', 'forge_token': '保持现状', 'commission_letter': '保持现状',
 }
