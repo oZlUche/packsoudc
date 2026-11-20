@@ -1,0 +1,28 @@
+{
+  "id": "growers_first_harvest",
+  "display_name": "收获",
+  "display_names": {
+    "en": "First Harvest"
+  },
+  "faction": "growers",
+  "order": 3,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "growers_trial_sow"
+  ],
+  "stages": [
+    {
+      "goal": "nursery_harvest",
+      "where": "camp",
+      "text": "从苗圃收一畦",
+      "texts": {
+        "en": "Harvest a bed in the nursery"
+      }
+    }
+  ],
+  "client": "垦户社的老农",
+  "clients": {
+    "en": "Old grower"
+  }
+}

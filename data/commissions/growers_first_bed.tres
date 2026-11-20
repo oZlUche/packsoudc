@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_l8uik"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_qxhxh"]
+
+[sub_resource type="Resource" id="Resource_0g6dj"]
+script = ExtResource("2_qxhxh")
+goal = &"camp_report"
+where = &"camp"
+text = "到河滩领一包试种种苗，划出一畦地"
+texts = {
+"en": "Collect a packet of trial seedlings at the riverbank and mark out a bed"
+}
+
+[resource]
+script = ExtResource("1_l8uik")
+id = &"growers_first_bed"
+display_name = "第一畦"
+display_names = {
+"en": "The First Bed"
+}
+faction = &"growers"
+reputation = 10
+stages = Array[ExtResource("2_qxhxh")]([SubResource("Resource_0g6dj")])
+opens = &"nursery"
+client = "垦户社的老农"
+clients = {
+"en": "Old grower"
+}

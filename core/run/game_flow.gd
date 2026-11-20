@@ -1038,6 +1038,47 @@ func formal_run() -> bool:
 	return commissions_visible() and run != null and result != null and not tutorial_chapters().has(run.chapter) and result.steps > 0
 
 
+## 342 B3：苗圃播种（后勤「苗圃」页）。返回原因（空 = 种上了，存档）
+func sow_crop(plot: int, crop: StringName) -> String:
+	if not facility_open(&"nursery"):
+		return Nursery.WHY_UNKNOWN
+	var why := Nursery.sow(meta, plot, crop)
+	if why == "":
+		_credit_nursery(&"nursery_plant", crop)
+		save_meta()
+	return why
+
+
+## 342 B3：苗圃收获：全进仓库才收。返回 [method Nursery.harvest] 的结果（收了存档）
+func harvest_crop(plot: int) -> Dictionary:
+	if not facility_open(&"nursery"):
+		return {"why": Nursery.WHY_UNKNOWN, "crop": "", "items": 0}
+	var got := Nursery.harvest(meta, plot, items)
+	if String(got["why"]) == "":
+		_credit_nursery(&"nursery_harvest", StringName(String(got["crop"])))
+		save_meta()
+	return got
+
+
+## 342 B3：苗圃里种了 / 收了一畦 —— 正停在这一步的剧情记一次（流水号去重）
+func _credit_nursery(goal: StringName, crop: StringName) -> void:
+	for cid in meta.commissions.taken():
+		var d := Commissions.def(cid)
+		var s := Commissions.current_stage(meta.commissions, cid)
+		if d == null or s < 0 or s >= d.stages.size() or d.stages[s].goal != goal:
+			continue
+		var want := String(d.stages[s].params.get("crop", ""))
+		if want != "" and want != String(crop):
+			continue
+		Commissions.credit(meta, d, s, "nursery:%d" % meta.nursery.seq, items)
+	sync_commissions()
+
+
+## 342 B3：苗圃里有熟了的（后勤页签挂「可收获」）
+func nursery_ripe() -> bool:
+	return facility_open(&"nursery") and meta.nursery.ripe_count() > 0
+
+
 ## 342 B3：材料倾向开了没有（办成地图协会的《把路画回来》）
 func bias_open() -> bool:
 	return facility_open(&"bias")
@@ -1714,6 +1755,8 @@ func _settle_run() -> void:
 		_merge_commissions()     # 336：委托进度和这一局同一次结算
 		if formal_run():
 			Commissions.arrive(meta.commissions, meta.runs)     # 342 B3：教程后第一次正式探索结算，后来的几方来营地
+			if facility_open(&"nursery"):
+				Nursery.advance(meta, result.run_id)     # 342 B3：苗圃推进一格（同一局只推一次）
 		if commissions_visible():
 			NoticeBoard.refresh(meta)     # 342 B2：告示栏扣时限、补位
 		after_run_market()     # 251：一局一换货（撤离、战败都换）

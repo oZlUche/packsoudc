@@ -1,0 +1,24 @@
+{
+  "id": "growers_first_bed",
+  "display_name": "第一畦",
+  "display_names": {
+    "en": "The First Bed"
+  },
+  "faction": "growers",
+  "reputation": 10,
+  "stages": [
+    {
+      "goal": "camp_report",
+      "where": "camp",
+      "text": "到河滩领一包试种种苗，划出一畦地",
+      "texts": {
+        "en": "Collect a packet of trial seedlings at the riverbank and mark out a bed"
+      }
+    }
+  ],
+  "opens": "nursery",
+  "client": "垦户社的老农",
+  "clients": {
+    "en": "Old grower"
+  }
+}
