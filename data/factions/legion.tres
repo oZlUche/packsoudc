@@ -25,7 +25,7 @@ regular = Array[Dictionary]([{
 },
 "text": "打赢 {n} 场普通的仗",
 "texts": {
-"en": "Win {n} battles against ordinary enemies"
+"en": "Win battles against ordinary enemies: {n}"
 },
 "u": 10
 }, {
@@ -39,7 +39,7 @@ regular = Array[Dictionary]([{
 },
 "text": "交 {n} 件金属材料",
 "texts": {
-"en": "Hand in {n} metal materials"
+"en": "Hand in metal materials: {n}"
 },
 "u": 8
 }, {
@@ -53,7 +53,7 @@ regular = Array[Dictionary]([{
 },
 "text": "交 {n} 件木材",
 "texts": {
-"en": "Hand in {n} wood materials"
+"en": "Hand in wood materials: {n}"
 },
 "u": 8
 }])

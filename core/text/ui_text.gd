@@ -170,7 +170,7 @@ const TEXT := {
 	"commission.task": {"zh": "做什么", "en": "Task"},
 	"commission.where": {"zh": "在哪完成", "en": "Done at"},
 	"commission.where_camp": {"zh": "营地当场", "en": "At camp"},
-	"commission.where_field": {"zh": "局内现场，交了就算", "en": "In the field, counts once handed over"},
+	"commission.where_field": {"zh": "局内现场，做到就算", "en": "In the field, counts as soon as it is done"},
 	"commission.where_carry": {"zh": "要带回营地", "en": "Bring it back to camp"},
 	"commission.reward": {"zh": "报酬", "en": "Reward"},
 	"commission.reward_rep": {"zh": "声望 +%d", "en": "Standing +%d"},
