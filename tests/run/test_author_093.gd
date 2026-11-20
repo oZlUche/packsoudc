@@ -231,7 +231,7 @@ static func run_faith_call(t: TestCase) -> void:
 		for o in near.outcomes:
 			if o is NextEventRandom:
 				rnd = o
-		t.check(rnd != null and rnd.events.size() == 4, "靠近 → 从四位神里随机接一个")
+		t.check(rnd != null and rnd.events.size() == 6, "靠近 → 从六位神里随机接一个（作者 2026-11-20：狩猎、技巧补上）")
 		var ctx := EventContext.new()
 		ctx.rng = RandomNumberGenerator.new()
 		ctx.rng.seed = 11
@@ -241,7 +241,7 @@ static func run_faith_call(t: TestCase) -> void:
 		ctx.next_event = &""
 		rnd.apply(ctx)
 		t.check(String(first).begins_with("faith_call_") and ctx.next_event == first, "同一个随机数同一位神（%s）" % first)
-	for fid in ["brute", "sun", "nature", "earth"]:
+	for fid in ["brute", "sun", "nature", "earth", "hunt", "skill"]:
 		var ev: EventDef = events.get(StringName("faith_call_" + fid), null)
 		t.check(ev != null and ev.options.size() == 2, "有 faith_call_%s：拿 / 不拿" % fid)
 		if ev != null:

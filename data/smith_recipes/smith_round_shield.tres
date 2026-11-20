@@ -7,8 +7,12 @@ script = ExtResource("1_jmuu8")
 id = &"smith_round_shield"
 output = &"round_shield"
 inputs = {
-"copper_ingot": 1,
-"hardwood_plank": 1
+"copper_ingot": 1
 }
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "wood",
+"min": 1
+}])
 funds = 40
 group = "shield"

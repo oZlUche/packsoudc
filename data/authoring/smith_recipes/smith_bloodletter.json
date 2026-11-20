@@ -3,9 +3,15 @@
   "output": "bloodletter",
   "inputs": {
     "bone_charm_bits": 1,
-    "steel_ingot": 1,
-    "whetstone": 1
+    "steel_ingot": 1
   },
+  "material_slots": [
+    {
+      "material": "stone",
+      "min": 1,
+      "count": 1
+    }
+  ],
   "funds": 90,
   "group": "blade",
   "level": 2

@@ -7,8 +7,12 @@ script = ExtResource("1_4y1aj")
 id = &"smith_leather_armor"
 output = &"leather_armor"
 inputs = {
-"beast_hide": 1,
 "tanned_leather": 2
 }
+material_slots = Array[Dictionary]([{
+"count": 1,
+"material": "leather",
+"min": 1
+}])
 funds = 40
 group = "armor"

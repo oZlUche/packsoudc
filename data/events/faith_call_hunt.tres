@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EventDef" format=3]
+
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_yfaoc"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_vini0"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_item.gd" id="3_ctusp"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="4_aekq4"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="5_ysgdf"]
+
+[sub_resource type="Resource" id="Resource_i0jiu"]
+script = ExtResource("3_ctusp")
+item = &"charm_hunt"
+
+[sub_resource type="Resource" id="Resource_66pq5"]
+script = ExtResource("1_yfaoc")
+label = "拿起护符"
+labels = {
+"en": "Take the charm"
+}
+tags = Array[StringName]([&"offering"])
+outcomes = Array[ExtResource("2_vini0")]([SubResource("Resource_i0jiu")])
+
+[sub_resource type="Resource" id="Resource_ldnh3"]
+script = ExtResource("1_yfaoc")
+label = "不拿，离开"
+labels = {
+"en": "Leave it and go"
+}
+
+[resource]
+script = ExtResource("5_ysgdf")
+id = &"faith_call_hunt"
+title = "狩猎之神的祭坛"
+titles = {
+"en": "Altar of the God of the Hunt"
+}
+options = Array[ExtResource("1_yfaoc")]([SubResource("Resource_66pq5"), SubResource("Resource_ldnh3")])
