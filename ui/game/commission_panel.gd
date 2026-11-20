@@ -27,6 +27,11 @@ const PAD_X := 26
 const PAD_Y := 14
 const INK := Color("2e2219")
 const INK_DIM := Color("5a4a3a")
+## 深木板上的浅字（UI设计 v6.77 复看）
+const LIGHT := Color("f1e3c2")
+## 钉子：图 18×22，钉子中心落在纸上沿往下 PIN_DIP 处，盖住纸边
+const PIN_SIZE := Vector2(18, 22)
+const PIN_DIP := 8.0
 ## 回执最多列几条
 const RECEIPTS_SHOWN := 6
 ## 342 B2：三个子页（键、字表键）
@@ -74,18 +79,12 @@ func setup(p_flow: GameFlow) -> void:
 	inner.add_child(subs)
 	for pair in SUBS:
 		var key: String = pair[0]
-		var tag := UiTheme.vbox(0)
-		var pin := TextureRect.new()
-		pin.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-		pin.custom_minimum_size = Vector2(18, 22)
-		pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_sub_pins[key] = pin
-		tag.add_child(pin)
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_sub(key), false, KEY_SIZE, KEY_FONT)
 		b.toggle_mode = true
 		b.name = "Sub_" + key
 		_sub_btns[key] = b
-		tag.add_child(b)
+		var tag := _pinned(b, "pin_empty")
+		_sub_pins[key] = tag.pin
 		subs.add_child(tag)
 	_keys = UiTheme.vbox(8)     # 342 B2 A 告示板：阵营列表去掉，留一个空列给旧引用
 	_keys.visible = false
@@ -139,16 +138,44 @@ static func pips(lv: int) -> HBoxContainer:
 	return row
 
 
-## 钉在纸条上沿正中：钉子 + 纸条（纸条名字照旧，测试按它找）
-static func _pinned(paper: Control, pin: String) -> VBoxContainer:
-	var v := UiTheme.vbox(0)
+## 钉在纸条上沿正中：钉子盖住纸边（纸条名字照旧，测试按它找）
+static func _pinned(paper: Control, pin: String) -> PinBox:
+	var v := PinBox.new()
 	v.name = "Pinned_" + String(paper.name)
 	v.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	var p := _pic(pin, Vector2(18, 22))
-	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	v.add_child(p)
 	v.add_child(paper)
+	v.pin = _pic(pin, PIN_SIZE)
+	v.add_child(v.pin)
 	return v
+
+
+## 纸条在下、钉子叠在纸上沿正中（钉子最后加，画在纸上面）
+class PinBox extends Container:
+	var pin: TextureRect = null
+
+	func _top() -> float:
+		return maxf(0.0, PIN_SIZE.y * 0.5 - PIN_DIP)
+
+	func _paper() -> Control:
+		for c in get_children():
+			if c != pin and c is Control and (c as Control).visible:
+				return c as Control
+		return null
+
+	func _get_minimum_size() -> Vector2:
+		var p := _paper()
+		var m := p.get_combined_minimum_size() if p != null else Vector2.ZERO
+		return Vector2(maxf(m.x, PIN_SIZE.x), m.y + _top())
+
+	func _notification(what: int) -> void:
+		if what != NOTIFICATION_SORT_CHILDREN:
+			return
+		var top := _top()
+		var p := _paper()
+		if p != null:
+			fit_child_in_rect(p, Rect2(0, top, size.x, size.y - top))
+		if pin != null:
+			fit_child_in_rect(pin, Rect2((size.x - PIN_SIZE.x) * 0.5, top + PIN_DIP - PIN_SIZE.y * 0.5, PIN_SIZE.x, PIN_SIZE.y))
 
 
 func show_faction(id: StringName) -> void:
@@ -226,7 +253,7 @@ func shown(d: CommissionDef) -> bool:
 func _build_regular() -> void:
 	var book := flow.meta.commissions
 	var hand := book.taken().filter(func(id: StringName) -> bool: return NoticeBoard.is_note(id))
-	var head := UiTheme.make_label(UiText.t("commission.hand") % [hand.size(), Commissions.SLOTS], 18, UiPalette.FG)
+	var head := UiTheme.make_label(UiText.t("commission.hand") % [hand.size(), Commissions.SLOTS], 18, LIGHT)
 	head.name = "Hand"
 	_cards.add_child(head)
 	var hand_row := HFlowContainer.new()     # 手头的（接下的纸条）
@@ -265,7 +292,7 @@ func _build_regular() -> void:
 		pins.add_child(_pinned(p, "pin_empty"))
 	var notes := NoticeBoard.posted(book)
 	if notes.is_empty() and not NoticeBoard.open_factions(book).is_empty():
-		_cards.add_child(UiTheme.make_label(UiText.t("commission.regular_soon"), 16, UiPalette.FG))
+		_cards.add_child(UiTheme.make_label(UiText.t("commission.regular_soon"), 16, LIGHT))
 	for nid in notes:     # 栏上没接的纸条
 		var d := Commissions.def(StringName(nid))
 		if d != null:

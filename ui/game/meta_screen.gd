@@ -564,11 +564,16 @@ func _fill_locked(facility: StringName) -> void:
 		c.queue_free()
 	var d := Commissions.opener_of(facility)
 	var fac := Commissions.faction(d.faction) if d != null else null
+	var wood := UiTheme.art(CommissionPanelScript.ART + "board_dark")     # 和委托页一样铺深木板，纸钉在板上
+	if wood != null:
+		_locked.add_child(UiTheme.nine_rect(wood, 14))
 	var center := CenterContainer.new()
+	UiTheme.set_tone(center, UiTheme.TONE_DARK)
 	_locked.add_child(center)
 	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 30, 20, 30, 20)
+	paper.name = "LockedPaper"
 	UiTheme.set_tone(paper, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
-	center.add_child(paper)
+	center.add_child(CommissionPanelScript._pinned(paper, "pin_" + String(fac.id) if fac != null else "pin_empty"))
 	var col := UiTheme.vbox(14)
 	paper.add_child(col)
 	var fname := UiText.t(String(CommissionPanelScript.FACILITY_TEXT.get(facility, String(facility))))
