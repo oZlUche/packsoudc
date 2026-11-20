@@ -1,6 +1,7 @@
 {
   "cell": 60,
   "items": [
+    "amethyst_pillar",
     "antidote_kit",
     "antidote_satchel",
     "antler",
@@ -171,6 +172,7 @@
     "mainspring",
     "meteor_maul",
     "mint_bundle",
+    "mist_crystal",
     "mithril_ingot",
     "mithril_sword",
     "moonherb_seed",
@@ -190,6 +192,7 @@
     "poxiao",
     "poxiao_lesser",
     "poxiao_token",
+    "prism_crystal",
     "quartz_cluster",
     "quenched_dagger",
     "quiver",
@@ -222,6 +225,7 @@
     "silver_nugget",
     "silver_ore",
     "smoked_fish",
+    "smoky_crystal",
     "spiked_club",
     "spyglass",
     "steam_vent",
