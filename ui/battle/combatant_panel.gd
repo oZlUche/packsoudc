@@ -434,49 +434,123 @@ func _set_pop(p: float) -> void:
 	queue_redraw()
 
 
+## 339：飘字的时长按回放倍速缩短（[param time_scale] = 1 / 倍速），有下限，再短就看不清
+const POPUP_SEC := 0.9
+const POPUP_MIN_SEC := 0.3
+const POPUP_FADE_AT := 0.25 / 0.9
+const REACTION_SEC := 1.2
+const REACTION_MIN_SEC := 0.5
+## 339：暴击出现时先放大再弹回
+const CRIT_PUNCH := 1.3
+const CRIT_PUNCH_SEC := 0.12
+const GRADIENT_SHADER := preload("res://ui/battle/popup_gradient.gdshader")
+## 339：场上还在飘的字的补间（回放停住时一起停）
+var _popup_tweens: Array[Tween] = []
+var _popups_paused := false
+
+
 ## 飘字。伤害为正、治疗为负，颜色按伤害类型。
-func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false) -> void:
+## 339：暴击仍是类型色，靠大一号、描边加粗、出现时放大一下来分；[param mix] 是反应的两种元素色（有两种才用渐变）
+func popup(amount: int, type: StringName, heal: bool = false, crit: bool = false, time_scale: float = 1.0, mix: Array = []) -> Label:
 	var l := Label.new()
 	l.text = ("+%d" % amount) if heal else (("-%d!" if crit else "-%d") % amount)
-	# 104：暴击的飘字大一号、换色
-	l.add_theme_font_size_override("font_size", UiTheme.sz((28 if crit else 20) if amount >= 10 else (22 if crit else 16)))
-	# 121 特例：飘字（字号按数大小、颜色按伤害类型 / 暴击 / 治疗），画布那一类，不进主题
-	l.add_theme_color_override("font_color", UiPalette.HEAL if heal else (UiPalette.CRIT if crit else UiPalette.damage_color(type)))
+	var color := UiPalette.HEAL if heal else UiPalette.damage_color(type)
+	# 104：暴击的飘字大一号；339：描边细一层，暴击两倍
+	l.label_settings = _popup_settings(UiTheme.sz((28 if crit else 20) if amount >= 10 else (22 if crit else 16)), color, UiTheme.OUTLINE_SIZE * (2 if crit else 1))
 	l.set_meta(&"exempt_bare_text", "effect")     # 226 守门：战斗飘字是画面效果，不是一行字
 	l.position = Vector2(
 		PAD + randf_range(0.0, size.x - PAD * 2 - 40), size.y * 0.45 + randf_range(-8.0, 8.0)
 	)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(l)
+	l.reset_size()
+	if not heal:
+		_apply_gradient(l, mix)
 
-	var tw := create_tween()
+	var span := maxf(POPUP_MIN_SEC, POPUP_SEC * time_scale)
+	var tw := _track(create_tween())
+	l.set_meta(&"tween", tw)
 	tw.set_parallel(true)
-	tw.tween_property(l, "position:y", l.position.y - 42.0, 0.9)
-	tw.tween_property(l, "modulate:a", 0.0, 0.9).set_delay(0.25)
+	tw.tween_property(l, "position:y", l.position.y - 42.0, span)
+	tw.tween_property(l, "modulate:a", 0.0, span * (1.0 - POPUP_FADE_AT)).set_delay(span * POPUP_FADE_AT)
+	if crit:
+		var half := CRIT_PUNCH_SEC * minf(1.0, time_scale) * 0.5
+		l.pivot_offset = l.size * 0.5
+		tw.tween_property(l, "scale", Vector2.ONE * CRIT_PUNCH, half)
+		tw.tween_property(l, "scale", Vector2.ONE, half).set_delay(half)
 	tw.chain().tween_callback(l.queue_free)
+	return l
 
 
-## 175：反应弹字 —— 反应名、描边（170 的描边），颜色按两种元素里的第一种；比伤害飘字大一号、停得久一点，从面板中线往上飘
-func popup_text(text: String, color: Color, time_scale: float = 1.0) -> Label:
+## 175：反应弹字 —— 反应名、描边（170 的描边）；比伤害飘字大一号、停得久一点，从面板中线往上飘
+## 339：两种元素色从左到右渐变（[param mix]），没有两种色就用 [param color]
+func popup_text(text: String, color: Color, time_scale: float = 1.0, mix: Array = []) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", UiTheme.sz(26))
-	l.add_theme_color_override("font_color", color)
-	l.add_theme_color_override("font_outline_color", UiTheme.OUTLINE_COLOR)
-	l.add_theme_constant_override("outline_size", UiTheme.OUTLINE_SIZE * 3)
+	l.label_settings = _popup_settings(UiTheme.sz(26), color, UiTheme.OUTLINE_SIZE * 3)
 	l.set_meta(&"exempt_bare_text", "effect")     # 226 守门：战斗飘字是画面效果，不是一行字
 	l.position = Vector2(size.x * 0.5 - 30.0, size.y * 0.3)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(l)
 	l.reset_size()
-	var span := 1.2 * time_scale
-	var tw := create_tween()
+	_apply_gradient(l, mix)
+	var span := maxf(REACTION_MIN_SEC, REACTION_SEC * time_scale)
+	var tw := _track(create_tween())
 	l.set_meta(&"tween", tw)     # 309：回放停住时，反应讲解指着的这条字跟着停
 	tw.set_parallel(true)
 	tw.tween_property(l, "position:y", l.position.y - 36.0, span)
 	tw.tween_property(l, "modulate:a", 0.0, span * 0.6).set_delay(span * 0.4)
 	tw.chain().tween_callback(l.queue_free)
 	return l
+
+
+## 339：回放停住 / 接着放时，场上所有飘字一起停 / 接着飘
+func pause_popups(paused: bool) -> void:
+	_popups_paused = paused
+	var live: Array[Tween] = []
+	for tw in _popup_tweens:
+		if tw != null and tw.is_valid():
+			if paused:
+				tw.pause()
+			else:
+				tw.play()
+			live.append(tw)
+	_popup_tweens = live
+
+
+func popups_paused() -> bool:
+	return _popups_paused
+
+
+func _track(tw: Tween) -> Tween:
+	_popup_tweens.append(tw)
+	if _popups_paused:
+		tw.pause()
+	return tw
+
+
+## 121 特例：飘字的字号、颜色、描边按数大小 / 类型 / 暴击变，画布那一类 —— 用 LabelSettings，不走主题覆写
+static func _popup_settings(font_size: int, color: Color, outline: int) -> LabelSettings:
+	var ls := LabelSettings.new()
+	ls.font = UiPalette.cjk_font()
+	ls.font_size = font_size
+	ls.font_color = color
+	ls.outline_size = outline
+	ls.outline_color = UiTheme.OUTLINE_COLOR
+	return ls
+
+
+## 339：有两种色才挂渐变（字改成白色，着色器按横向位置乘上两色之间的颜色）；否则不动，保持单色
+static func _apply_gradient(l: Label, mix: Array) -> void:
+	if mix.size() < 2 or GRADIENT_SHADER == null:
+		return
+	var m := ShaderMaterial.new()
+	m.shader = GRADIENT_SHADER
+	m.set_shader_parameter(&"color_a", mix[0])
+	m.set_shader_parameter(&"color_b", mix[1])
+	m.set_shader_parameter(&"width", maxf(1.0, l.size.x))
+	l.material = m
+	l.label_settings.font_color = Color.WHITE
 #endregion
 
 

@@ -57,6 +57,8 @@ const DAMAGE_COLORS := {
 	"bleed": Color("e05c7a"),
 	"reflect": Color("c9a0ff"),
 	"drain": Color("9aa3b2"),
+	"ice": Color("7fd0ff"),     # 339 初值，作者挑定前先用
+	"lightning": Color("f2e36b"),
 }
 
 
