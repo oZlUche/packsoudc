@@ -47,7 +47,7 @@ const SUB_TAB_SIZE := Vector2(170, 44)
 const SUB_TAB_FONT := 17
 const SUB_TAB_INDENT := 28
 ## 178：这几页不显示右半边的仓库，中列吃满。264：出征页也收起 —— 碑 + 560 宽的两块木牌要 1308 宽的中列（露着仓库中列只剩 508）
-const NO_SHELF_TABS := ["shelf", "expedition", "commissions", "tech"]
+const NO_SHELF_TABS := ["shelf", "expedition", "commissions", "tech", "locked"]
 ## 261（作者 14:13）：「图鉴」页签改「书架」—— 两层三格，点开各一扇窗；补充一（作者 16:37）：上 图鉴 / 对局记录 / 特殊道具，
 ## 下 成就 / 旧背包静物（342 B1：科技搬回一级页签）/ 油灯静物（墨水瓶去掉）
 const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "", ""]
@@ -586,10 +586,10 @@ func locked_page() -> PanelContainer:
 	return _locked
 
 
-## 【办理】办成：告示卷轴说一句「X 开放了」
+## 【办理】办成：告示卷轴说一句「X 开放了」（老档设施一直开着，不说）
 func _on_reported(got: Dictionary) -> void:
 	var fac := StringName(String((got.get("got", {}) as Dictionary).get("opens", "")))
-	if fac != &"":
+	if fac != &"" and flow.meta.commissions.gated:
 		say(UiText.t("commission.opened") % UiText.t(String(CommissionPanelScript.FACILITY_TEXT.get(fac, String(fac)))))
 #endregion
 

@@ -14,3 +14,46 @@ facilities = {
 "smithy": "legion_forge_token"
 }
 permit = &"legion_permit"
+regular = Array[Dictionary]([{
+"goal": "defeat_enemies",
+"name": "巡路",
+"names": {
+"en": "Road Patrol"
+},
+"params": {
+"kind": "normal"
+},
+"text": "打赢 {n} 场普通的仗",
+"texts": {
+"en": "Win {n} battles against ordinary enemies"
+},
+"u": 10
+}, {
+"goal": "hand_in",
+"name": "收金属",
+"names": {
+"en": "Metal Wanted"
+},
+"params": {
+"material": "metal"
+},
+"text": "交 {n} 件金属材料",
+"texts": {
+"en": "Hand in {n} metal materials"
+},
+"u": 8
+}, {
+"goal": "hand_in",
+"name": "收木料",
+"names": {
+"en": "Timber Wanted"
+},
+"params": {
+"material": "wood"
+},
+"text": "交 {n} 件木材",
+"texts": {
+"en": "Hand in {n} wood materials"
+},
+"u": 8
+}])

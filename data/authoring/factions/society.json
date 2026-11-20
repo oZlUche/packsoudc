@@ -15,5 +15,52 @@
   "facilities": {
     "tech": "society_first_survey"
   },
-  "permit": "society_permit"
+  "permit": "society_permit",
+  "regular": [
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "gem"
+      },
+      "u": 20,
+      "name": "收晶石",
+      "names": {
+        "en": "Crystals Wanted"
+      },
+      "text": "交 {n} 块晶石",
+      "texts": {
+        "en": "Hand in {n} crystals"
+      }
+    },
+    {
+      "goal": "visit_nodes",
+      "params": {
+        "type": "search"
+      },
+      "u": 15,
+      "name": "勘察",
+      "names": {
+        "en": "Survey"
+      },
+      "text": "到访 {n} 处搜索点",
+      "texts": {
+        "en": "Visit {n} search points"
+      }
+    },
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "herb"
+      },
+      "u": 8,
+      "name": "收草药",
+      "names": {
+        "en": "Herbs Wanted"
+      },
+      "text": "交 {n} 件草药",
+      "texts": {
+        "en": "Hand in {n} herbs"
+      }
+    }
+  ]
 }

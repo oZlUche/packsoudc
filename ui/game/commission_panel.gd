@@ -160,8 +160,18 @@ func shown(d: CommissionDef) -> bool:
 
 func _build_regular() -> void:
 	var book := flow.meta.commissions
+	var hand := book.taken().filter(func(id: StringName) -> bool: return NoticeBoard.is_note(id))
+	var head := UiTheme.make_label(UiText.t("commission.hand") % [hand.size(), Commissions.SLOTS], 18, INK)
+	head.name = "Hand"
+	_cards.add_child(head)
+	for id in hand:     # 手头的（接下的纸条）
+		var d := Commissions.def(id)
+		if d != null:
+			_cards.add_child(_card(d))
 	for f in Commissions.listed_factions():
-		var p := _paper()
+		if Commissions.regular_open(book, f):
+			continue
+		var p := _paper()     # 没开的那方写明差什么
 		p.name = "Regular_" + String(f.id)
 		var col := UiTheme.vbox(4)
 		p.add_child(col)
@@ -169,12 +179,15 @@ func _build_regular() -> void:
 		title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
 		col.add_child(title)
 		var permit := Commissions.def(f.permit)
-		var text := UiText.t("commission.regular_soon") if Commissions.regular_open(book, f) \
-			else UiText.t("commission.regular_locked") % [f.thresholds[Commissions.REGULAR_TIER], Names.of(permit) if permit != null else "—"]
-		col.add_child(UiTheme.make_wrapped(text, 16, INK_DIM, CARD_W - 2.0 * PAD_X))
+		col.add_child(UiTheme.make_wrapped(UiText.t("commission.regular_locked") % [f.thresholds[Commissions.REGULAR_TIER], Names.of(permit) if permit != null else "—"],
+			16, INK_DIM, CARD_W - 2.0 * PAD_X))
 		_cards.add_child(p)
-	for d in Commissions.defs():
-		if not Commissions.is_story(d) and Commissions.why_not(book, d) != Commissions.WHY_HIDDEN:
+	var notes := NoticeBoard.posted(book)
+	if notes.is_empty() and not NoticeBoard.open_factions(book).is_empty():
+		_cards.add_child(UiTheme.make_label(UiText.t("commission.regular_soon"), 16, INK_DIM))
+	for nid in notes:     # 栏上没接的纸条
+		var d := Commissions.def(StringName(nid))
+		if d != null:
 			_cards.add_child(_card(d))
 
 
@@ -286,9 +299,12 @@ func _card(d: CommissionDef) -> PanelContainer:
 				var rb := ScrollKey.make(UiText.t("commission.report"), func(): report(d.id))
 				rb.name = "Report_" + String(d.id)
 				keys.add_child(rb)
-			if not Commissions.is_story(d):     # 342 B2：剧情常驻，不暂缓、不放弃
-				keys.add_child(ScrollKey.make(UiText.t("commission.pause"), func(): _do(flow.pause_commission(d.id))))
-				keys.add_child(ScrollKey.make(UiText.t("commission.abandon"), func(): _do(flow.abandon_commission(d.id))))
+			if not Commissions.is_story(d):     # 342 B2：剧情常驻，不暂缓、不放弃；纸条全带进局，不暂缓
+				if not NoticeBoard.is_note(d.id):
+					keys.add_child(ScrollKey.make(UiText.t("commission.pause"), func(): _do(flow.pause_commission(d.id))))
+				var ab := ScrollKey.make(UiText.t("commission.abandon"), func(): _do(flow.abandon_commission(d.id)))
+				ab.name = "Abandon_" + String(d.id)
+				keys.add_child(ab)
 		CommissionBook.PAUSED:
 			keys.add_child(UiTheme.make_label(UiText.t("commission.state_paused"), 16, INK))
 			_add_take(keys, d, UiText.t("commission.resume"))
@@ -300,6 +316,8 @@ func _card(d: CommissionDef) -> PanelContainer:
 				if Commissions.needs_pick(d):
 					_add_pick(keys, d)
 				_add_take(keys, d, UiText.t("commission.take"))
+				if NoticeBoard.is_note(d.id):
+					keys.add_child(UiTheme.make_label(UiText.t("commission.left") % int((book.notes.get(String(d.id), {}) as Dictionary).get("left", 0)), 16, INK_DIM))
 	return p
 
 
@@ -396,4 +414,4 @@ func _receipts() -> PanelContainer:
 
 static func receipt_text(r: Dictionary) -> String:
 	var d := Commissions.def(StringName(String(r.get("id", ""))))
-	return UiText.t("commission.rcpt_" + String(r.get("kind", "done"))) % Names.of(d)
+	return UiText.t("commission.rcpt_" + String(r.get("kind", "done"))) % (Names.of(d) if d != null else String(r.get("name", "")))

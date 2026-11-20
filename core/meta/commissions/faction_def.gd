@@ -23,3 +23,5 @@ extends Resource
 @export var contact: StringName = &""
 ## 342 B2：许可单（办完它、又到了受托，常规委托才开；空 = 只看声望）
 @export var permit: StringName = &""
+## 342 B2：告示栏上这一方的数量模板 [{"goal", "params", "u": 单份酬值, "name": 纸条名, "text": 做什么（{n} = 件数）}]（[NoticeBoard]）
+@export var regular: Array[Dictionary] = []

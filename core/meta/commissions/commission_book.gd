@@ -29,6 +29,18 @@ var grants: Dictionary = {}
 ## 342 B2：这份进度从新档开始（建档时设，[method GameFlow.new_meta]）—— 只有它，教程走完后铁匠铺、科技、集市才要剧情开放；
 ## 老档、测试直接建的局外都是假：设施一直开着
 var gated := false
+## 342 B2 告示栏（[NoticeBoard]）：纸条 id → 纸条（阵营、目标、件数、档、酬金、还剩几局）
+var notes: Dictionary = {}
+## 钉位：每格一张没接的纸条 id，空串 = 空着
+var pins: Array = []
+## 纸条编号
+var note_seq := 0
+## 贴过第一批没有
+var board_init := false
+
+
+func _init() -> void:
+	Commissions.active = self
 
 
 func rep_of(faction: StringName) -> int:
@@ -67,7 +79,7 @@ func add_receipt(row: Dictionary) -> void:
 
 
 func is_empty() -> bool:
-	return rep.is_empty() and entries.is_empty() and receipts.is_empty() and clues.is_empty() and grants.is_empty() and not gated
+	return rep.is_empty() and entries.is_empty() and receipts.is_empty() and clues.is_empty() and grants.is_empty() and not gated and notes.is_empty() and not board_init
 
 
 ## 存档：字典的键排好序（同一份状态逐字节相同）
@@ -81,6 +93,10 @@ func to_dict() -> Dictionary:
 		"clues": clues.duplicate(true),
 		"grants": _sorted(grants),
 		"gated": gated,
+		"notes": _sorted(notes),
+		"pins": pins.duplicate(),
+		"note_seq": note_seq,
+		"board_init": board_init,
 	}
 
 
@@ -131,4 +147,12 @@ static func from_dict(d: Variant) -> CommissionBook:
 		if bool(src["grants"][k]):
 			b.grants[String(k)] = true
 	b.gated = bool(src.get("gated", false))
+	for k in src.get("notes", {}):
+		if src["notes"][k] is Dictionary:
+			b.notes[String(k)] = MapGraph.normalize(src["notes"][k])
+	for x in src.get("pins", []):
+		b.pins.append(String(x) if x != null else "")
+	b.note_seq = int(src.get("note_seq", 0))
+	b.board_init = bool(src.get("board_init", false))
+	Commissions.active = b
 	return b

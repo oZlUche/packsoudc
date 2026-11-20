@@ -89,7 +89,7 @@ static func run_tiers(t: TestCase) -> void:
 
 
 static func run_take_rules(t: TestCase) -> void:
-	t.begin("336 W0 / 342 B2：接取 —— 常规（模板）同时两份；档位不够、前置没做、互斥组被结、做完的具名单、没选配方都不能接；暂缓不占位，放弃清进度")
+	t.begin("336 W0 / 342 B2：接取 —— 常规（模板）同时三份（342 B2：手头 3）；档位不够、前置没做、互斥组被结、做完的具名单、没选配方都不能接；暂缓不占位，放弃清进度")
 	var book := CommissionBook.new()
 	var a := _def(&"t_a", &"legion", CommissionDef.TEMPLATE)
 	var b := _def(&"t_b", &"society", CommissionDef.TEMPLATE)
@@ -98,12 +98,13 @@ static func run_take_rules(t: TestCase) -> void:
 	var hidden := _def(&"t_hidden", &"envoy", CommissionDef.INTRO)
 	t.eq(Commissions.why_not(book, hidden), Commissions.WHY_HIDDEN, "没列出来的阵营不能接")
 	t.eq(Commissions.why_not(book, deep), Commissions.WHY_TIER, "调查要熟面")
-	t.check(Commissions.take(book, a) and Commissions.take(book, b), "接两份")
-	t.eq(Commissions.why_not(book, c), Commissions.WHY_SLOTS, "第三份没位")
+	var z := _def(&"t_z", &"legion", CommissionDef.TEMPLATE)
+	t.check(Commissions.take(book, z) and Commissions.take(book, a) and Commissions.take(book, b), "接三份")
+	t.eq(Commissions.why_not(book, c), Commissions.WHY_SLOTS, "第四份没位")
 	t.eq(Commissions.why_not(book, a), Commissions.WHY_TAKEN, "接着的不能再接")
 	t.check(Commissions.pause(book, &"t_b"), "暂缓一份")
-	t.eq(book.taken(), [&"t_a"] as Array[StringName], "暂缓的不占位")
-	t.check(Commissions.take(book, c), "空出的位接第三份")
+	t.eq(book.taken(), [&"t_z", &"t_a"] as Array[StringName], "暂缓的不占位")
+	t.check(Commissions.take(book, c), "空出的位接第四份")
 	t.eq(Commissions.why_not(book, b), Commissions.WHY_SLOTS, "位满了，暂缓的也接不回来")
 	t.check(Commissions.abandon(book, &"t_c"), "放弃一份")
 	t.eq(book.state_of(&"t_c"), "", "放弃的没留下进度")
@@ -134,7 +135,7 @@ static func run_take_rules(t: TestCase) -> void:
 
 
 static func run_credit(t: TestCase) -> void:
-	t.begin("336 W0：记账 —— 同一处只记一次；做够了进下一步；最后一步结案给声望、酬金、回执；具名单做完不能再接；模板最多推到熟面")
+	t.begin("336 W0：记账 —— 同一处只记一次；做够了进下一步；最后一步结案给声望、酬金、回执；具名单做完不能再接；模板最多推到信赖")
 	var m := _meta()
 	var d := _def(&"t_two", &"legion", CommissionDef.INQUIRY)
 	d.min_tier = 0
@@ -152,6 +153,7 @@ static func run_credit(t: TestCase) -> void:
 	t.eq(Commissions.why_not(m.commissions, d), Commissions.WHY_DONE, "具名单做完不能再接")
 	var tpl := _def(&"t_tpl", &"society", CommissionDef.TEMPLATE)
 	tpl.reputation = 4
+	m.commissions.rep["society"] = 40     # 342 B2：上限是信赖（50）
 	for i in 4:
 		t.check(Commissions.take(m.commissions, tpl), "模板第 %d 次能接" % (i + 1))
 		Commissions.credit(m, tpl, 0, "k%d" % i)

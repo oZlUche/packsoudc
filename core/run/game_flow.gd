@@ -972,6 +972,7 @@ func commission_snapshot(chapter: ChapterDef) -> Array:
 	var out: Array = []
 	if not commissions_visible() or tutorial_chapters().has(chapter):
 		return out
+	Commissions.active = meta.commissions
 	for cid in meta.commissions.taken():
 		var d := Commissions.def(cid)
 		if d == null or (not d.chapters.is_empty() and chapter != null and not d.chapters.has(chapter.id)):
@@ -1034,8 +1035,10 @@ func facility_open(facility: StringName) -> bool:
 func sync_commissions() -> Array[StringName]:
 	if not commissions_visible():
 		return [] as Array[StringName]
+	Commissions.active = meta.commissions
 	var got := Commissions.auto_take(meta.commissions)
-	if not got.is_empty():
+	var posted := NoticeBoard.first_fill(meta)     # 342 B2：第一次有一方开放常规，告示栏贴第一批
+	if not got.is_empty() or posted > 0:
 		save_meta()
 	return got
 
@@ -1673,6 +1676,8 @@ func _settle_run() -> void:
 				RunSave.remove(save_path)
 			return
 		_merge_commissions()     # 336：委托进度和这一局同一次结算
+		if commissions_visible():
+			NoticeBoard.refresh(meta)     # 342 B2：告示栏扣时限、补位
 		after_run_market()     # 251：一局一换货（撤离、战败都换）
 		# 083：撤离成功给这一章许诺的局外解锁（序章通关开下一张 / 自由模式）
 		if result.is_extracted() and run != null and run.chapter != null and run.chapter.grants_unlock != &"":
