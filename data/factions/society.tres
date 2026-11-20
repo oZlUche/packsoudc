@@ -5,8 +5,11 @@
 [resource]
 script = ExtResource("1_vshel")
 id = &"society"
-display_name = "魔法师协会边境考据所"
+display_name = "魔法师协会"
 display_names = {
-"en": "Mages' Society Frontier Archive"
+"en": "Mages' Society"
 }
 order = 2
+facilities = {
+"tech": "society_first_survey"
+}

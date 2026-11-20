@@ -133,6 +133,7 @@ var _shelf_title: HeaderTag = null
 func open(payload: Dictionary) -> void:
 	var m := flow.meta
 	flow.ensure_market()     # 251：有集市却没货（老档、开发区改了级数）先上一次
+	flow.sync_commissions()     # 342 B2：够格的剧情自动接上（教程刚走完的三份引导单就在这里接）
 	_home_bg_name = backdrop_of("expedition")     # 271：进基地第一眼就是出征页 —— 起始底图直接铺它，不要每次进来淡一次
 	_home_bg = UiTheme.dress_backdrop(_backdrop(), _home_bg_name, "HomeBackdrop", true)     # 每次回基地都要它：留着不重读（重读一张整屏图约 50 ms）
 	_margin = MarginContainer.new()
@@ -296,10 +297,16 @@ func open(payload: Dictionary) -> void:
 		_commissions = CommissionPanelScript.new()
 		_commissions.setup(flow)
 		_commissions.changed.connect(_refresh)
+		_commissions.facility_requested.connect(func(fac: StringName): show_tab(String(fac)))
+		_commissions.reported.connect(_on_reported)
 		cm_page.add_child(_commissions)
 		_pages["commissions"] = cm_page
 	# 图鉴页、成就页（091）
 	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
+	# 342 B2：没开放的设施点进来看到的说明板（集市 / 铁匠铺 / 科技共用一块）
+	_locked = _cloth()
+	_locked.name = "LockedFacility"
+	_pages["locked"] = _locked
 	# 342 B1：科技页 —— 页签头一回打开才建（[method _ensure_tech]）
 	_tech_cloth = _cloth()
 	_tech_cloth.name = "TechPage"
@@ -535,9 +542,56 @@ func middle_width(p_screen: Vector2) -> float:
 	return p_screen.x - 2.0 * MARGIN - LEFT_W - _right.custom_minimum_size.x - 2.0 * COL_GAP
 
 
-## 178（待定 2 选 A）：进基地落哪一页 —— 从结算屏回来、带回来的背包还没清空 → 「仓库」页；否则家
+## 178（待定 2 选 A）：进基地落哪一页 —— 从结算屏回来、带回来的背包还没清空 → 「仓库」页；否则家。
+## 342 B2：教程刚走完、还有设施没开 → 委托页的剧情（先去把三份引导单办了）
 func initial_tab(payload: Dictionary) -> String:
-	return "warehouse" if payload.has("result") and flow.meta.has_pending_board() else "expedition"
+	if payload.has("result") and flow.meta.has_pending_board():
+		return "warehouse"
+	if _commissions != null and Commissions.FACILITIES.any(func(fac: StringName) -> bool: return not flow.facility_open(fac)):
+		_commissions.show_sub("story")
+		return "commissions"
+	return "expedition"
+
+
+#region 342 B2：没开放的设施
+var _locked: PanelContainer = null
+
+
+## 说明板：「X 还没开放，去委托页办成某方的《某单》」+ 一颗键直达那份剧情
+func _fill_locked(facility: StringName) -> void:
+	for c in _locked.get_children():
+		_locked.remove_child(c)
+		c.queue_free()
+	var d := Commissions.opener_of(facility)
+	var fac := Commissions.faction(d.faction) if d != null else null
+	var center := CenterContainer.new()
+	_locked.add_child(center)
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 30, 20, 30, 20)
+	UiTheme.set_tone(paper, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
+	center.add_child(paper)
+	var col := UiTheme.vbox(14)
+	paper.add_child(col)
+	var fname := UiText.t(String(CommissionPanelScript.FACILITY_TEXT.get(facility, String(facility))))
+	col.add_child(UiTheme.make_wrapped(UiText.t("commission.facility_board") % [fname, Names.of(fac) if fac != null else "", Names.of(d) if d != null else ""], 20, CommissionPanelScript.INK, 560.0))
+	if d != null and _commissions != null:
+		var fid := d.faction
+		var b := ScrollKey.make(UiText.t("commission.go_story"), func():
+			show_tab("commissions")
+			_commissions.show_story(fid))
+		b.name = "LockedGo"
+		col.add_child(b)
+
+
+func locked_page() -> PanelContainer:
+	return _locked
+
+
+## 【办理】办成：告示卷轴说一句「X 开放了」
+func _on_reported(got: Dictionary) -> void:
+	var fac := StringName(String((got.get("got", {}) as Dictionary).get("opens", "")))
+	if fac != &"":
+		say(UiText.t("commission.opened") % UiText.t(String(CommissionPanelScript.FACILITY_TEXT.get(fac, String(fac)))))
+#endregion
 
 
 ## 木架框的左右、上下内边距之和
@@ -1350,6 +1404,9 @@ func show_tab(p_name: String) -> void:
 	if not (_pages.has(p_name) or p_name == "logistics"):
 		p_name = "expedition"
 	var shown := _sub if p_name == "logistics" else p_name
+	if Commissions.FACILITIES.has(StringName(shown)) and not flow.facility_open(StringName(shown)):
+		_fill_locked(StringName(shown))     # 342 B2：没开放 —— 入口照常，页里换成说明板
+		shown = "locked"
 	if shown == "tech":
 		_ensure_tech()
 	if _tab != "" and shown != was:

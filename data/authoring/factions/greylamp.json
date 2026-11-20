@@ -7,8 +7,12 @@
   "order": 3,
   "thresholds": [
     0,
-    2,
-    5,
-    9
-  ]
+    10,
+    25,
+    50,
+    100
+  ],
+  "facilities": {
+    "market": "greylamp_check_scale"
+  }
 }

@@ -10,3 +10,6 @@ display_names = {
 "en": "Grey Lamp Mutual Aid"
 }
 order = 3
+facilities = {
+"market": "greylamp_check_scale"
+}

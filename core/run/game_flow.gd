@@ -149,7 +149,7 @@ func use_slot(n: int) -> void:
 		meta_backup = String(opened["backup"])     # 界面上说一句，玩家知道老档还在
 	_repair_text = ""
 	var loaded := opened["meta"] as MetaState
-	meta = loaded if loaded != null else MetaState.new(meta_rules)
+	meta = loaded if loaded != null else new_meta(meta_rules)
 	_open_legacy_slice()
 	_migrate_tutorial_ledger()
 	derive_techs()
@@ -338,6 +338,13 @@ func load_slot(n: int) -> bool:
 	return continue_game()
 
 
+## 342 B2：一份新档的局外 —— 记下「新档开始」，教程走完后设施要剧情开放
+static func new_meta(rules: MetaRules) -> MetaState:
+	var m := MetaState.new(rules)
+	m.commissions.gated = true
+	return m
+
+
 ## 删第 n 位。删的是当前位就换成一份空的局外
 func delete_slot(n: int) -> void:
 	if slots == null:
@@ -345,7 +352,7 @@ func delete_slot(n: int) -> void:
 	slots.remove(n)
 	if n == slot:
 		newer_slot = 0
-		meta = MetaState.new(meta_rules)
+		meta = new_meta(meta_rules)
 		_reset_run()
 
 
@@ -1013,6 +1020,37 @@ func take_commission(id: StringName, pick: StringName = &"") -> String:
 		save_meta()
 		meta.changed.emit()
 	return why
+
+
+## 342 B2：基地设施（`smithy` / `tech` / `market`）开没开。试玩切片、教程没走完、不是新档开始的进度（老档）都开着；
+## 其余要办成开它的那份剧情（[member CommissionDef.opens]）
+func facility_open(facility: StringName) -> bool:
+	if meta == null or profile == SliceProfile.SLICE or not tutorials_done() or not meta.commissions.gated:
+		return true
+	return meta.commissions.grants.has(String(facility))
+
+
+## 342 B2：够格的剧情自动接上（进基地时调）。接上了存档
+func sync_commissions() -> Array[StringName]:
+	if not commissions_visible():
+		return [] as Array[StringName]
+	var got := Commissions.auto_take(meta.commissions)
+	if not got.is_empty():
+		save_meta()
+	return got
+
+
+## 342 B2：委托卡上的【办理】（营地当场的那一步）。返回 [method Commissions.credit] 的结果，办成了存档
+func report_commission(id: StringName) -> Dictionary:
+	var d := Commissions.def(id)
+	if not commissions_visible() or d == null:
+		return {"ok": false, "step": false, "done": false}
+	var got := Commissions.report(meta, d, items)
+	if bool(got["ok"]):
+		sync_commissions()
+		save_meta()
+		meta.changed.emit()
+	return got
 
 
 func pause_commission(id: StringName) -> bool:

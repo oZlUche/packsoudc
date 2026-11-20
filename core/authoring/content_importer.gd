@@ -1021,19 +1021,22 @@ static func import_market_stall(data: Dictionary, ctx: Context, report: ImportRe
 	return def
 
 
-## 336：阵营 —— 门槛四个、第一个 0、从小到大；服务的级数在 0..3
+## 336：阵营 —— 门槛五个（342 B2）、第一个 0、从小到大；服务的级数在 0..4；开放的设施认得
 static func import_faction(data: Dictionary, ctx: Context, report: ImportReport) -> FactionDef:
 	var def := FactionDef.new()
 	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "阵营", report)
-	if def.thresholds.size() != 4 or def.thresholds[0] != 0:
-		report.error("thresholds", "门槛要四个（陌生 / 熟面 / 受托 / 代言），第一个是 0")
+	if def.thresholds.size() != Commissions.TIERS or def.thresholds[0] != 0:
+		report.error("thresholds", "门槛要五个（初识 / 熟面 / 受托 / 信赖 / 代言），第一个是 0")
 	for i in range(1, def.thresholds.size()):
 		if def.thresholds[i] <= def.thresholds[i - 1]:
 			report.error("thresholds", "门槛要从小到大")
 	for k in def.services:
-		if int(def.services[k]) < 0 or int(def.services[k]) > 3:
-			report.error("services", "服务 %s 的级数要在 0..3" % k)
+		if int(def.services[k]) < 0 or int(def.services[k]) >= Commissions.TIERS:
+			report.error("services", "服务 %s 的级数要在 0..%d" % [k, Commissions.TIERS - 1])
+	for k in def.facilities:
+		if not Commissions.FACILITIES.has(StringName(String(k))):
+			report.error("facilities", "不认识的设施 '%s'（只认 %s）" % [k, ", ".join(Commissions.FACILITIES)])
 	ctx.register_faction(def)
 	return def
 
@@ -1076,6 +1079,8 @@ static func import_commission(data: Dictionary, ctx: Context, report: ImportRepo
 			report.error("items", "找不到道具 '%s'" % id)
 	if def.reputation < 0:
 		report.error("reputation", "声望不能是负数")
+	if def.opens != &"" and (not Commissions.FACILITIES.has(def.opens) or def.tier == CommissionDef.TEMPLATE):
+		report.error("opens", "只有剧情委托能开设施，设施只认 %s" % ", ".join(Commissions.FACILITIES))
 	if def.tier == CommissionDef.TEMPLATE and def.reputation > 1:
 		report.warn("reputation", "模板一次最多给 1 点（重复刷不该冲级）")
 	ctx.register_commission(def)

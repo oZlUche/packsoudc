@@ -17,7 +17,8 @@ extends RefCounted
 ## 110：v3 多了局外科技的等级与上交记录（[member tech_levels] / [member tech_deposits]）
 ## 262：v4 科技「集市」「铁匠铺」改义为「高级货物」「高级配方」，最多两级（[MetaMigrations] 把 3 压到 2）
 ## 319：v5 科技分成数值树与机制树、机制树只花见识；幸运科技删了（退钱退材料）、讨价并成一级，见 [MetaMigrations]
-const SAVE_VERSION := 5
+## 342 B2：v6 委托声望改五档（旧值折算），老档的铁匠铺、科技、集市一直开着
+const SAVE_VERSION := 6     # 342 B2：五档声望折算 + 老档设施照开（[method MetaMigrations._v5_to_v6]）
 ## 319：记住最近结算过的几局（[member settled_runs]），重复结算不再发东西
 const SETTLED_MAX := 64
 ## 262（作者 14:19）：集市、铁匠铺默认就有 —— 没点科技也是 1 级，科技每点一级铺子再升一级

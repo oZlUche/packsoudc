@@ -16,7 +16,7 @@ static func _keys_text(n: Node, out: Array[String]) -> Array[String]:
 
 
 static func frame_commission_tab(t: TestCase, root: Window) -> void:
-	t.begin("336 W1 · 委托页：三方三颗键；军团页有《两条回路》的卡，按「接下」后卡上是「暂缓」「放弃」；字不裸")
+	t.begin("336 W1 · 委托页：三方三颗键；军团页有《两条回路》的卡（342 B2：自动接上、不能暂缓放弃）；字不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	t.check(f.commissions_visible(), "没有教程章：委托页露出来")
@@ -33,10 +33,9 @@ static func frame_commission_tab(t: TestCase, root: Window) -> void:
 	p.show_faction(&"legion")
 	var card: Node = p.find_child("Card_legion_two_routes", true, false)
 	t.not_null(card, "军团页有《两条回路》")
-	t.eq(p.take(&"legion_two_routes"), "", "按「接下」接了")
-	card = p.find_child("Card_legion_two_routes", true, false)
+	t.eq(f.meta.commissions.state_of(&"legion_two_routes"), CommissionBook.TAKEN, "342 B2：剧情进基地就自动接上")
 	var keys := _keys_text(card, [] as Array[String]) if card != null else [] as Array[String]
-	t.check(keys.has(UiText.t("commission.pause")) and keys.has(UiText.t("commission.abandon")), "卡上换成「暂缓」「放弃」")
+	t.check(not keys.has(UiText.t("commission.pause")) and not keys.has(UiText.t("commission.abandon")), "342 B2：剧情卡没有「暂缓」「放弃」")
 	p.show_faction(&"society")
 	var take: Button = p.find_child("Take_society_copy_recipe", true, false) as Button
 	t.check(take != null and take.disabled, "配方实验没选配方：「接下」灰着")
