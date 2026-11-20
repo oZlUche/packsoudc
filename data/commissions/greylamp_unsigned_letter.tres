@@ -24,6 +24,9 @@ display_names = {
 }
 faction = &"greylamp"
 order = 2
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"greylamp_check_scale"])
 stages = Array[ExtResource("2_tb81y")]([SubResource("Resource_alh45")])
 funds = 30
 client = "不留名的寄信人"

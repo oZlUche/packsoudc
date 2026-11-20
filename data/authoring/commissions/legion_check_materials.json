@@ -1,0 +1,32 @@
+{
+  "id": "legion_check_materials",
+  "display_name": "查验材料",
+  "display_names": {
+    "en": "Check the Supplies"
+  },
+  "faction": "legion",
+  "order": 2,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "legion_forge_token"
+  ],
+  "stages": [
+    {
+      "goal": "hand_in",
+      "where": "camp",
+      "count": 3,
+      "params": {
+        "material": "metal"
+      },
+      "text": "把三件金属材料交给军需员查验",
+      "texts": {
+        "en": "Hand three metal materials to the quartermaster for checking"
+      }
+    }
+  ],
+  "client": "军需员",
+  "clients": {
+    "en": "Quartermaster"
+  }
+}

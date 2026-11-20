@@ -1,0 +1,29 @@
+{
+  "id": "legion_permit",
+  "display_name": "后勤通行证",
+  "display_names": {
+    "en": "Logistics Pass"
+  },
+  "faction": "legion",
+  "order": 4,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "legion_check_materials",
+    "legion_clear_road"
+  ],
+  "stages": [
+    {
+      "goal": "inspect_extracts",
+      "count": 2,
+      "text": "在两处不同的撤离点各查验一次",
+      "texts": {
+        "en": "Inspect two different extraction points"
+      }
+    }
+  ],
+  "client": "后勤部队的文书",
+  "clients": {
+    "en": "Logistics clerk"
+  }
+}

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_xmtf7"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_026du"]
+
+[sub_resource type="Resource" id="Resource_8ulkt"]
+script = ExtResource("2_026du")
+goal = &"inspect_extracts"
+count = 2
+text = "在两处不同的撤离点各查验一次"
+texts = {
+"en": "Inspect two different extraction points"
+}
+
+[resource]
+script = ExtResource("1_xmtf7")
+id = &"legion_permit"
+display_name = "后勤通行证"
+display_names = {
+"en": "Logistics Pass"
+}
+faction = &"legion"
+order = 4
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"legion_check_materials", &"legion_clear_road"])
+stages = Array[ExtResource("2_026du")]([SubResource("Resource_8ulkt")])
+client = "后勤部队的文书"
+clients = {
+"en": "Logistics clerk"
+}

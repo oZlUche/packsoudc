@@ -17,8 +17,13 @@
     }
   ],
   "funds": 40,
-  "client": "考据所研究员",
+  "client": "协会研究员",
   "clients": {
-    "en": "Archive researcher"
-  }
+    "en": "Society researcher"
+  },
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "society_first_survey"
+  ]
 }

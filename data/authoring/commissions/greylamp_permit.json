@@ -1,0 +1,32 @@
+{
+  "id": "greylamp_permit",
+  "display_name": "灰灯会牌",
+  "display_names": {
+    "en": "Greylamp Token"
+  },
+  "faction": "greylamp",
+  "order": 4,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "greylamp_unsigned_letter",
+    "greylamp_check_medkits"
+  ],
+  "stages": [
+    {
+      "goal": "visit_nodes",
+      "count": 2,
+      "params": {
+        "type": "rest"
+      },
+      "text": "探望沿途两处休息点",
+      "texts": {
+        "en": "Look in on two rest points along the way"
+      }
+    }
+  ],
+  "client": "灰灯的老会员",
+  "clients": {
+    "en": "Greylamp old-timer"
+  }
+}

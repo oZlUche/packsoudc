@@ -1,0 +1,31 @@
+{
+  "id": "legion_clear_road",
+  "display_name": "清出一条路",
+  "display_names": {
+    "en": "Clear the Road"
+  },
+  "faction": "legion",
+  "order": 3,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "legion_forge_token"
+  ],
+  "stages": [
+    {
+      "goal": "defeat_enemies",
+      "count": 3,
+      "params": {
+        "kind": "normal"
+      },
+      "text": "打赢三场普通的仗",
+      "texts": {
+        "en": "Win three battles against ordinary enemies"
+      }
+    }
+  ],
+  "client": "巡路队长",
+  "clients": {
+    "en": "Patrol captain"
+  }
+}

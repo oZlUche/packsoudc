@@ -26,8 +26,6 @@ const INK_DIM := Color("5a4a3a")
 const RECEIPTS_SHOWN := 6
 ## 342 B2：三个子页（键、字表键）
 const SUBS := [["story", "commission.sub_story"], ["regular", "commission.sub_regular"], ["reputation", "commission.sub_reputation"]]
-## 常规委托从第几档开（受托）
-const REGULAR_TIER := 2
 ## 设施 → 字表键
 const FACILITY_TEXT := {&"smithy": "smithy.title", &"tech": "meta.tab_tech", &"market": "market.title"}
 
@@ -170,8 +168,9 @@ func _build_regular() -> void:
 		var title := UiTheme.make_label(Names.of(f), 20, INK)
 		title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
 		col.add_child(title)
-		var open := Commissions.tier_of(book, f) >= REGULAR_TIER
-		var text := UiText.t("commission.regular_soon") if open else UiText.t("commission.regular_locked") % f.thresholds[REGULAR_TIER]
+		var permit := Commissions.def(f.permit)
+		var text := UiText.t("commission.regular_soon") if Commissions.regular_open(book, f) \
+			else UiText.t("commission.regular_locked") % [f.thresholds[Commissions.REGULAR_TIER], Names.of(permit) if permit != null else "—"]
 		col.add_child(UiTheme.make_wrapped(text, 16, INK_DIM, CARD_W - 2.0 * PAD_X))
 		_cards.add_child(p)
 	for d in Commissions.defs():
@@ -281,12 +280,12 @@ func _card(d: CommissionDef) -> PanelContainer:
 		CommissionBook.TAKEN:
 			var s := Commissions.current_stage(book, d.id)
 			var need := maxi(1, d.stages[s].count) if s >= 0 and s < d.stages.size() else 1
-			if Commissions.can_report(book, d):     # 342 B2：营地当场办一次
+			if need > 1 or not Commissions.can_report(book, d, flow.meta):
+				keys.add_child(UiTheme.make_label("%s　%s" % [UiText.t("commission.state_taken"), UiText.t("commission.progress") % [int(book.entry(d.id).get("progress", 0)), need]], 16, INK))
+			if Commissions.can_report(book, d, flow.meta):     # 342 B2：营地当场办一次 / 交货
 				var rb := ScrollKey.make(UiText.t("commission.report"), func(): report(d.id))
 				rb.name = "Report_" + String(d.id)
 				keys.add_child(rb)
-			else:
-				keys.add_child(UiTheme.make_label("%s　%s" % [UiText.t("commission.state_taken"), UiText.t("commission.progress") % [int(book.entry(d.id).get("progress", 0)), need]], 16, INK))
 			if not Commissions.is_story(d):     # 342 B2：剧情常驻，不暂缓、不放弃
 				keys.add_child(ScrollKey.make(UiText.t("commission.pause"), func(): _do(flow.pause_commission(d.id))))
 				keys.add_child(ScrollKey.make(UiText.t("commission.abandon"), func(): _do(flow.abandon_commission(d.id))))

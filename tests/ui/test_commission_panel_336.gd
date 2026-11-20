@@ -2,6 +2,8 @@
 ## 结算屏的委托段落写一句
 extends RefCounted
 
+const W1 := preload("res://tests/run/test_commissions_w1_336.gd")
+
 const W178 := preload("res://tests/ui/test_base_warehouse_178.gd")
 const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
 const ResultScreenScript := preload("res://ui/game/result_screen.gd")
@@ -19,6 +21,7 @@ static func frame_commission_tab(t: TestCase, root: Window) -> void:
 	t.begin("336 W1 · 委托页：三方三颗键；军团页有《两条回路》的卡（342 B2：自动接上、不能暂缓放弃）；字不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
+	W1.unlock(f.meta.commissions)     # 342 B2：原型单前面的剧情记成办成
 	t.check(f.commissions_visible(), "没有教程章：委托页露出来")
 	var s: Control = W178._screen(f, root)
 	t.check((s._tab_btns as Dictionary).has("commissions"), "有「委托」页签")
