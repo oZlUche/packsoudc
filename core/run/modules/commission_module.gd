@@ -220,7 +220,7 @@ func on_battle(node: MapNode, won: bool, battle: Dictionary) -> Array:
 	return out
 
 
-## 342 B2：走进一个点 —— 带着的到访委托（类型对得上的）各记一处；同一局同一处只记一次
+## 342 B2：走进一个点 —— 带着的到访委托（类型对得上的；342 B3：`params.search_kind` 认材料点那一种）各记一处；同一局同一处只记一次
 func on_visit(node: MapNode) -> Array:
 	var out: Array = []
 	if node == null or _run == null:
@@ -231,6 +231,9 @@ func on_visit(node: MapNode) -> Array:
 		var s := int(pair[1])
 		var want := String(d.stages[s].params.get("type", ""))
 		if want != "" and String(NodeEvents.effective_type(node)) != want and String(node.type) != want:
+			continue
+		var kind := String(d.stages[s].params.get("search_kind", ""))     # 342 B3：材料点（矿点、林地……）
+		if kind != "" and String(node.content.get("search_kind", "")) != kind:
 			continue
 		if not _has_row(d.id, s, "%s/%s" % [_run.run_id, key]):
 			out.append(_add(d, s, key, "self"))

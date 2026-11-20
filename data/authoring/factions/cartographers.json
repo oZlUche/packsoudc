@@ -1,0 +1,67 @@
+{
+  "id": "cartographers",
+  "display_name": "地图协会",
+  "display_names": {
+    "en": "Cartographers' Society"
+  },
+  "order": 4,
+  "arrives": "first_run",
+  "thresholds": [
+    0,
+    10,
+    25,
+    50,
+    100
+  ],
+  "facilities": {
+    "bias": "cartographers_redraw"
+  },
+  "permit": "cartographers_permit",
+  "regular": [
+    {
+      "goal": "visit_nodes",
+      "params": {
+        "type": "search"
+      },
+      "u": 15,
+      "name": "勘点",
+      "names": {
+        "en": "Survey"
+      },
+      "text": "到访 {n} 处搜索点",
+      "texts": {
+        "en": "Visit search points: {n}"
+      }
+    },
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "stone"
+      },
+      "u": 8,
+      "name": "收石料",
+      "names": {
+        "en": "Stone Wanted"
+      },
+      "text": "交 {n} 件石料",
+      "texts": {
+        "en": "Hand in stone materials: {n}"
+      }
+    },
+    {
+      "goal": "defeat_enemies",
+      "params": {
+        "kind": "normal"
+      },
+      "u": 10,
+      "name": "清路",
+      "names": {
+        "en": "Clear the Way"
+      },
+      "text": "打赢 {n} 场普通的仗",
+      "texts": {
+        "en": "Win battles against ordinary enemies: {n}"
+      }
+    }
+  ]
+}

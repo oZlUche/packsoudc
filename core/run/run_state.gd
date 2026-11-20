@@ -11,7 +11,7 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
@@ -126,6 +126,8 @@ var carry_rule: CarryRule = null
 ## 209：这一章的包池（[member ChapterDef.bag_pool]）；null = 不掷包
 var bag_pool: BagPool = null
 var node_rules: NodeRules = null
+## 342 B3：这一局的材料倾向（[MaterialBias]，空 = 无倾向）。出征时定（[method set_material_bias]），到本局结束不变
+var material_bias: StringName = &""
 var economy: EconomyRules = null
 ## 129：负重规则（章节引用；空 = 这一章不算负重）
 var encumbrance: EncumbranceRules = null
@@ -1199,6 +1201,13 @@ func stamp_enemy_hp() -> void:
 		EnemyKit.stamp_hp(map.get_node(id).content, k)
 
 
+## 342 B3：定这一局的材料倾向（出征那一刻；不认识的方向当无倾向）
+func set_material_bias(dir: StringName) -> void:
+	material_bias = dir if MaterialBias.DIRECTIONS.has(dir) else MaterialBias.NONE
+	if events != null:
+		events.material_bias = material_bias
+
+
 func _wire_events() -> void:
 	events = NodeEvents.new(map)
 	events.vitality = vitality
@@ -1213,6 +1222,7 @@ func _wire_events() -> void:
 	events.boss_ticket = chapter.boss_ticket if chapter != null else &""     # 285
 	events.difficulty_def = difficulty
 	events.enemy_hp_mult = enemy_hp_mult()
+	events.material_bias = material_bias     # 342 B3
 	events.chapter_id = chapter.id if chapter != null else &""     # 事件方案 2026-11-11：主题奖励池按章节筛
 	events.wallet = wallet
 	events.economy = economy
@@ -1423,6 +1433,7 @@ func to_dict() -> Dictionary:
 		"chapter": String(chapter.id),
 		"character": String(character_id),
 		"map_scale": String(map_scale),
+		"material_bias": String(material_bias),
 		"difficulty": String(difficulty_id),
 		"difficulty_rules": difficulty_rules,
 		"hunters": hunters.to_dict() if hunters != null else {},
@@ -1521,6 +1532,7 @@ static func from_dict(
 	s.chapter = p_chapter
 	s.character_id = StringName(String(d.get("character", "")))
 	s.map_scale = StringName(String(d.get("map_scale", "")))
+	s.material_bias = StringName(String(d.get("material_bias", "")))     # 342 B3：老档没有 = 无倾向
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
 	s.difficulty_rules = String(d.get("difficulty_rules", ""))
 	s.hunters_saved = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}

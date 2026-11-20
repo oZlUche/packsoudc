@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_3vd7f"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_7ryiq"]
+
+[sub_resource type="Resource" id="Resource_mocxo"]
+script = ExtResource("2_7ryiq")
+goal = &"visit_nodes"
+params = {
+"search_kind": "mine"
+}
+text = "走到一处矿点"
+texts = {
+"en": "Reach a mine"
+}
+
+[resource]
+script = ExtResource("1_3vd7f")
+id = &"cartographers_verify_vein"
+display_name = "核实矿脉"
+display_names = {
+"en": "Verify the Vein"
+}
+faction = &"cartographers"
+order = 3
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"cartographers_redraw"])
+stages = Array[ExtResource("2_7ryiq")]([SubResource("Resource_mocxo")])
+client = "协会绘图员"
+clients = {
+"en": "Society draughtsman"
+}

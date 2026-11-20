@@ -18,7 +18,7 @@ static func _keys_text(n: Node, out: Array[String]) -> Array[String]:
 
 
 static func frame_commission_tab(t: TestCase, root: Window) -> void:
-	t.begin("336 W1 · 委托页：三方三颗键；军团页有《两条回路》的卡（342 B2：自动接上、不能暂缓放弃）；字不裸")
+	t.begin("336 W1 · 委托页：三方三颗键（342 B3：地图协会来了是四颗）；协会页有《两条回路》的卡（342 B2：自动接上、不能暂缓放弃）；字不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	W1.unlock(f.meta.commissions)     # 342 B2：原型单前面的剧情记成办成
@@ -32,10 +32,10 @@ static func frame_commission_tab(t: TestCase, root: Window) -> void:
 		s.queue_free()
 		W178._cleanup()
 		return
-	t.eq((p._key_btns as Dictionary).size(), 3, "三方三颗键（使者、猎人不列）")
-	p.show_faction(&"legion")
+	t.eq((p._key_btns as Dictionary).size(), 4, "四方四颗键（使者、猎人不列）")
+	p.show_faction(&"cartographers")
 	var card: Node = p.find_child("Card_legion_two_routes", true, false)
-	t.not_null(card, "军团页有《两条回路》")
+	t.not_null(card, "地图协会页有《两条回路》")
 	t.eq(f.meta.commissions.state_of(&"legion_two_routes"), CommissionBook.TAKEN, "342 B2：剧情进基地就自动接上")
 	var keys := _keys_text(card, [] as Array[String]) if card != null else [] as Array[String]
 	t.check(not keys.has(UiText.t("commission.pause")) and not keys.has(UiText.t("commission.abandon")), "342 B2：剧情卡没有「暂缓」「放弃」")

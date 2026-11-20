@@ -91,11 +91,11 @@ static func run_draw_items(t: TestCase) -> void:
 
 
 static func run_session_kind(t: TestCase) -> void:
-	t.begin("267 §2.4 / 283 · 搜索会话拿到产物与种类；出征倾向删了：存档不再写，老档写了也照读")
+	t.begin("267 §2.4 / 283 · 搜索会话拿到产物与种类；342 B3：倾向回来了，存档写着（没选 = 空串），读得回来")
 	var c := TestSupport.load_content("free_mode")
 	var s := RunState.start(c.chapter, 5, c.items, c.enemies, c.sets)
 	var d := s.to_dict()
-	t.check(not d.has("material_bias"), "存档没有倾向")
+	t.eq(String(d.get("material_bias", "?")), "", "342 B3：没选倾向 = 空串")
 	d["material_bias"] = "magic"
 	t.not_null(RunState.from_dict(JSON.parse_string(JSON.stringify(d)), c.chapter, c.items, c.enemies, c.sets), "老档带着倾向：读得回来")
 	var kind_node: MapNode = null

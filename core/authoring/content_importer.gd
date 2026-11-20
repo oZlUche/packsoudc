@@ -1035,8 +1035,8 @@ static func import_faction(data: Dictionary, ctx: Context, report: ImportReport)
 		if int(def.services[k]) < 0 or int(def.services[k]) >= Commissions.TIERS:
 			report.error("services", "服务 %s 的级数要在 0..%d" % [k, Commissions.TIERS - 1])
 	for k in def.facilities:
-		if not Commissions.FACILITIES.has(StringName(String(k))):
-			report.error("facilities", "不认识的设施 '%s'（只认 %s）" % [k, ", ".join(Commissions.FACILITIES)])
+		if not Commissions.opens_known(StringName(String(k))):
+			report.error("facilities", "不认识的设施 '%s'（只认 %s）" % [k, ", ".join(Commissions.FACILITIES + Commissions.FEATURES)])
 	for i in def.regular.size():     # 342 B2：告示栏模板 —— 目标认得、单份酬值为正、有名字和说明（{n} = 件数）
 		var r := def.regular[i]
 		if not NoticeBoard.BANDS.has(StringName(String(r.get("goal", "")))):
@@ -1091,8 +1091,8 @@ static func import_commission(data: Dictionary, ctx: Context, report: ImportRepo
 			report.error("items", "找不到道具 '%s'" % id)
 	if def.reputation < 0:
 		report.error("reputation", "声望不能是负数")
-	if def.opens != &"" and (not Commissions.FACILITIES.has(def.opens) or def.tier == CommissionDef.TEMPLATE):
-		report.error("opens", "只有剧情委托能开设施，设施只认 %s" % ", ".join(Commissions.FACILITIES))
+	if def.opens != &"" and (not Commissions.opens_known(def.opens) or def.tier == CommissionDef.TEMPLATE):
+		report.error("opens", "只有剧情委托能开设施，设施只认 %s" % ", ".join(Commissions.FACILITIES + Commissions.FEATURES))
 	if def.tier == CommissionDef.TEMPLATE and def.reputation > 1:
 		report.warn("reputation", "模板一次最多给 1 点（重复刷不该冲级）")
 	ctx.register_commission(def)

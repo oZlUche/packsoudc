@@ -17,6 +17,10 @@ const TEMPLATE_CAP := 50
 const TIERS := 5
 ## 342 B2：能由剧情开放的基地设施
 const FACILITIES: Array[StringName] = [&"smithy", &"tech", &"market"]
+## 342 B3：后来几方剧情开的功能（材料倾向、种地）—— 老档也要办成才开（不像 [constant FACILITIES] 那样老档照开）
+const FEATURES: Array[StringName] = [&"bias", &"nursery"]
+## 342 B3：阵营什么时候来营地（[member FactionDef.arrives]）：教程后第一次正式探索结算时
+const ARRIVES_FIRST_RUN := &"first_run"
 ## 去重键：委托 id | 第几步 | 那一处
 const KEY_FMT := "%s|%d|%s"
 
@@ -59,9 +63,31 @@ static func factions() -> Array[FactionDef]:
 	return _factions
 
 
-## 委托簿里列出来的几方
+## 委托簿里列出来的几方（342 B3：还没来营地的不列，[method present]）
 static func listed_factions() -> Array[FactionDef]:
-	return factions().filter(func(f: FactionDef) -> bool: return f.listed)
+	return factions().filter(func(f: FactionDef) -> bool: return f.listed and present(active, f))
+
+
+## 342 B3：这一方到营地了没有（一开始就在的、或已经按 [member FactionDef.arrives] 来了）
+static func present(book: CommissionBook, f: FactionDef) -> bool:
+	return f != null and (f.arrives == &"" or (book != null and book.arrived.has(String(f.id))))
+
+
+## 342 B3：一次正式探索结算完 —— 约好这时来的几方到营地（记第几局到的）。返回这回来了哪几方
+static func arrive(book: CommissionBook, run_no: int) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if book == null:
+		return out
+	for f in factions():
+		if f.listed and f.arrives == ARRIVES_FIRST_RUN and not book.arrived.has(String(f.id)):
+			book.arrived[String(f.id)] = run_no
+			out.append(f.id)
+	return out
+
+
+## 342 B3：剧情能开的全部（设施 + 功能）
+static func opens_known(id: StringName) -> bool:
+	return FACILITIES.has(id) or FEATURES.has(id)
 
 
 static func faction(id: StringName) -> FactionDef:
@@ -164,7 +190,7 @@ static func rep_to_next(book: CommissionBook, f: FactionDef) -> int:
 ## 能不能接：空串 = 能；否则是原因（[constant WHY_HIDDEN] 这些）。[param pick] = 接单时要选的（配方 id），[param picks] = 现在能选的
 static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &"", picks: Array = []) -> String:
 	var f := faction(d.faction) if d != null else null
-	if d == null or f == null or not f.listed:
+	if d == null or f == null or not f.listed or not present(book, f):
 		return WHY_HIDDEN
 	var st := book.state_of(d.id)
 	if st == CommissionBook.TAKEN:

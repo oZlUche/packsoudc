@@ -1026,9 +1026,43 @@ func take_commission(id: StringName, pick: StringName = &"") -> String:
 ## 342 B2：基地设施（`smithy` / `tech` / `market`）开没开。试玩切片、教程没走完、不是新档开始的进度（老档）都开着；
 ## 其余要办成开它的那份剧情（[member CommissionDef.opens]）
 func facility_open(facility: StringName) -> bool:
+	if Commissions.FEATURES.has(facility):     # 342 B3：材料倾向、种地 —— 老档也要办成才开，切片没有
+		return meta != null and commissions_visible() and meta.commissions.grants.has(String(facility))
 	if meta == null or profile == SliceProfile.SLICE or not tutorials_done() or not meta.commissions.gated:
 		return true
 	return meta.commissions.grants.has(String(facility))
+
+
+## 342 B3：刚结算的这一局算不算「有实际探索的正式出征」：委托簿露着、不是教程章、真走出了起点
+func formal_run() -> bool:
+	return commissions_visible() and run != null and result != null and not tutorial_chapters().has(run.chapter) and result.steps > 0
+
+
+## 342 B3：材料倾向开了没有（办成地图协会的《把路画回来》）
+func bias_open() -> bool:
+	return facility_open(&"bias")
+
+
+## 342 B3：这一章的材料倾向选项 [{"id", "why": 不能选的原因（空 = 能选）}]，无倾向在最前；倾向没开 = 空
+func bias_options(chapter: ChapterDef) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if not bias_open() or chapter == null:
+		return out
+	var nr := ContentPaths.load_asset("node_rules", String(chapter.node_rules)) as NodeRules if chapter.node_rules != &"" else null
+	var sr: SearchRules = nr.search if nr != null else null
+	for dir in MaterialBias.ORDER:
+		out.append({"id": dir, "why": MaterialBias.why_not(dir, sr, items)})
+	return out
+
+
+## 342 B3：[param dir] 这一章能不能选（无倾向总能选）
+func bias_allowed(chapter: ChapterDef, dir: StringName) -> bool:
+	if dir == MaterialBias.NONE:
+		return true
+	for o in bias_options(chapter):
+		if StringName(o["id"]) == dir:
+			return String(o["why"]) == ""
+	return false
 
 
 ## 342 B2：够格的剧情自动接上（进基地时调）。接上了存档
@@ -1267,7 +1301,7 @@ func save_settings() -> bool:
 func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse: Array[int] = [] as Array[int],
 		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0,
 		spawn_id: int = -1, carry_funds: int = 0, preset_cost: int = 0, preset_ticket: StringName = &"", preset: LoadoutDef = null,
-		faith: StringName = &"") -> RunState:
+		faith: StringName = &"", bias: StringName = &"") -> RunState:
 	var refused := start_refusal(chapter, layout, preset)
 	if refused != "":
 		push_warning("GameFlow.begin：%s" % refused)
@@ -1331,6 +1365,8 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 		save_meta()
 	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
+	if bias_allowed(chapter, bias) and not tutorial_chapters().has(chapter):
+		state.set_material_bias(bias)     # 342 B3：材料倾向（没开、这一章不能选的当无倾向）
 	state.choose_starting_faith(faith)     # 信仰重构 A：开局屏显式选的神（没选 = 不奉神；不按载入顺序猜）
 	JimiePath.plant(state)     # 281：局外状态接上了才看得见仓库里有没有那颗元素之核
 	_issue_commission_items(state)     # 336：任务信这类发进背包
@@ -1676,6 +1712,8 @@ func _settle_run() -> void:
 				RunSave.remove(save_path)
 			return
 		_merge_commissions()     # 336：委托进度和这一局同一次结算
+		if formal_run():
+			Commissions.arrive(meta.commissions, meta.runs)     # 342 B3：教程后第一次正式探索结算，后来的几方来营地
 		if commissions_visible():
 			NoticeBoard.refresh(meta)     # 342 B2：告示栏扣时限、补位
 		after_run_market()     # 251：一局一换货（撤离、战败都换）
