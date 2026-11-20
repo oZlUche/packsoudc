@@ -18,7 +18,7 @@ static func _keys_text(n: Node, out: Array[String]) -> Array[String]:
 
 
 static func frame_commission_tab(t: TestCase, root: Window) -> void:
-	t.begin("336 W1 · 委托页：三方三颗键；军团页有《两条回路》的卡（342 B2：自动接上、不能暂缓放弃）；字不裸")
+	t.begin("336 W1 · 委托页：三方剧情单一起钉在板上；有《两条回路》的卡（342 B2：自动接上、不能暂缓放弃）；字不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	W1.unlock(f.meta.commissions)     # 342 B2：原型单前面的剧情记成办成
@@ -32,7 +32,8 @@ static func frame_commission_tab(t: TestCase, root: Window) -> void:
 		s.queue_free()
 		W178._cleanup()
 		return
-	t.eq((p._key_btns as Dictionary).size(), 3, "三方三颗键（使者、猎人不列）")
+	t.not_null(p.find_child("StoryGrid", true, false), "342 B2 A 告示板：三方剧情单一起钉在板上（不再有阵营键）")
+	t.check(p.find_child("Card_greylamp_unsigned_letter", true, false) != null and p.find_child("Card_society_copy_recipe", true, false) != null, "几方的剧情单都在这一页")
 	p.show_faction(&"legion")
 	var card: Node = p.find_child("Card_legion_two_routes", true, false)
 	t.not_null(card, "军团页有《两条回路》")
