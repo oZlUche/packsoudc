@@ -1,0 +1,13 @@
+# 报告 343 出处探针：复制成 .gd 后  godot --headless --path . --script <路径> -- <输出.json>
+extends SceneTree
+func _init() -> void:
+	var items := ItemDatabase.new()
+	items.load_dir()
+	var enemies := EnemyDatabase.new()
+	enemies.load_all()
+	var ext := MaterialSupplyAudit.external_sources(items, enemies, [&"free_mode", &"clockwork_hourglass", &"slice_ruins"])
+	var f := FileAccess.open(OS.get_cmdline_user_args()[0], FileAccess.WRITE)
+	f.store_string(JSON.stringify(ext, "  "))
+	f.close()
+	print("done ", ext.size())
+	quit()
