@@ -59,6 +59,9 @@ extends Resource
 @export var boss_speed_percent: int = 0
 ## A8：和猎手战斗失败多扣几点体力
 @export var hunter_loss_extra: int = 0
+## 360 A11：敌情可视距离 —— 只看得见离脚下这么多步以内的敌人具体是谁（走近揭示，揭示过的保持可见；侦察距离叠加上去）。
+## 远处的点照常显示是普通战、精英战还是首领战。0 = 不限
+@export var intel_range: int = 0
 ## 360 A10：首领强化版 —— 敌人 id → {"title": 名牌上的名字, "titles": {"en": ...}, "item": 多带的独有道具 id}（[method DifficultyMap.upgrade_bosses]）
 @export var boss_upgrades: Dictionary = {}
 ## 320 A1：普通敌人（猎手以外，精英、核心也算）最大生命多几成（百分数，10 = ×1.10）—— 绝对值，不随档位连乘；0 = 不改。

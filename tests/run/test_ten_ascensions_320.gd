@@ -430,7 +430,7 @@ static func run_ladder_e(t: TestCase) -> void:
 	t.check(nine != null and ten != null, "进阶九、十都在")
 	if nine == null or ten == null:
 		return
-	t.eq([ten.level, ten.requires_unlock, ten.grants_unlock], [10, &"ascension_10", &""], "第 10 档、进阶九撤离开、最后一级")
+	t.eq([ten.level, ten.requires_unlock, ten.grants_unlock], [10, &"ascension_10", &"ascension_11"], "第 10 档、进阶九撤离开、撤离开进阶十一（360 A11）")
 	t.eq(ten.hunter_chase_percent, 10, "追击 +10%")
 	t.eq(nine.hunter_chase_percent, 0, "进阶九不追击")
 	var changed: Array[String] = []

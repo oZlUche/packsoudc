@@ -58,6 +58,8 @@ static func default_for(cat: String) -> String:
 
 ## 渲染好的浮窗文字（BBCode）
 static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> String:
+	if hides_enemy(run, node):     # 360 A11：远处只说是什么点，不说是谁
+		return _countdown_line(run, node, TextTemplate.render(UiText.t("node.tip.unknown_enemy"), TextTemplate.context_for(run, null)))
 	var template := template_for(chapter, node)
 	var kind_key := "node.hint.search_%s" % String(node.content.get("search_kind", "")) if node != null and node.type == &"search" else ""
 	if category_of(node) == "search" and UiText.TEXT.has(kind_key) and template == default_for("search"):
@@ -130,6 +132,11 @@ static func stash_text(run: RunState, node: MapNode) -> String:
 	return "[color=#f0ad4e]%s[/color]%s" % [UiText.tn("node.stash", items.size()) % items.size(), UiText.t("node.stash_sep").join(parts)]
 
 
-## 浮窗里要不要画对手的棋盘：没用过的战斗点、内容里有敌人
-static func shows_board(node: MapNode) -> bool:
-	return node != null and category_of(node) == "battle" and EnemyKit.has_enemy(node.content)
+## 浮窗里要不要画对手的棋盘：没用过的战斗点、内容里有敌人；360 A11：敌情看不见的不画
+static func shows_board(node: MapNode, run: RunState = null) -> bool:
+	return node != null and category_of(node) == "battle" and EnemyKit.has_enemy(node.content) and not hides_enemy(run, node)
+
+
+## 360 A11：这个点有敌人、但敌情还没揭示
+static func hides_enemy(run: RunState, node: MapNode) -> bool:
+	return run != null and node != null and EnemyKit.has_enemy(node.content) and not run.intel_visible(node.id)

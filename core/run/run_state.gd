@@ -65,6 +65,9 @@ var difficulty: DifficultyDef = null
 ## 320（方案 §7）：开局那一刻这一档难度的完整规则（[ResourceSnapshot]，序列化成一行字串存档）。读档按它重建，
 ## 改了难度数据也不影响进行中的这一局；旧档没有 = 空，读档时按 id 用现在的
 var difficulty_rules: String = ""
+## 360 A11：揭示过敌情的点（id → true，跟着存档走）；[method intel_visible]
+var intel_seen: Dictionary = {}
+var _intel_at := -2
 ## 320 A4：开局换了哪些点（诊断用，不进存档）
 var advanced_report: Dictionary = {}
 ## 101 第 0 刀：这一局装了哪些模块（id → [RunModule]）。**本类不认识任何具体模块** —— 加一种玩法不用改这里。
@@ -1211,6 +1214,27 @@ func difficulty_from_snapshot() -> DifficultyDef:
 	return def if def != null and def.id == difficulty_id else null
 
 
+## 360 A11：这个点的敌人具体是谁现在看不看得见。没开这一条（或有档案的章）一律看得见；
+## 开了：离脚下 [member DifficultyDef.intel_range] + 侦察距离步以内的看得见，揭示过的一直看得见。还没站上出生点时都看不见
+func intel_visible(id: int) -> bool:
+	if difficulty == null or difficulty.intel_range <= 0 or (chapter != null and chapter.profile != &""):
+		return true
+	_reveal_intel()
+	return intel_seen.has(id)
+
+
+## 360 A11：站的点变了才重算一遍（揭示只增不减）
+func _reveal_intel() -> void:
+	if travel == null or map == null or travel.current_id < 0 or travel.current_id == _intel_at:
+		return
+	_intel_at = travel.current_id
+	var reach := difficulty.intel_range + int(floor(hooks.run_context().scout_range))
+	var dist := MapNavigator.distance_map(map, travel.current_id)
+	for id in dist:
+		if int(dist[id]) <= reach:
+			intel_seen[int(id)] = true
+
+
 ## 320 A1：这一局普通敌人的生命倍率（有档案的章不吃）
 func enemy_hp_mult() -> float:
 	if difficulty == null or (chapter != null and chapter.profile != &""):
@@ -1483,6 +1507,7 @@ func to_dict() -> Dictionary:
 		"material_bias": String(material_bias),
 		"difficulty": String(difficulty_id),
 		"difficulty_rules": difficulty_rules,
+		"intel_seen": intel_seen.keys(),
 		"hunters": hunters.to_dict() if hunters != null else {},
 		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null else {},
 		"phase": phase,
@@ -1582,6 +1607,8 @@ static func from_dict(
 	s.material_bias = StringName(String(d.get("material_bias", "")))     # 342 B3：老档没有 = 无倾向
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
 	s.difficulty_rules = String(d.get("difficulty_rules", ""))
+	for raw in d.get("intel_seen", []):     # 360 A11；旧档没有 = 空（开局之后走一步就补上）
+		s.intel_seen[int(raw)] = true
 	s.hunters_saved = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}
 	s.erosion_saved = d.get("erosion", {}) if d.get("erosion", {}) is Dictionary else {}
 	s.items = p_items
