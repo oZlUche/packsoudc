@@ -189,7 +189,7 @@ static func run_gems(t: TestCase) -> void:
 		t.check(d.adjacency != null and d.adjacency.has_feed() and is_equal_approx((d.adjacency.feed_mods[0] as StatModifier).amount, feed), "%s 供给 +%s" % [id, feed])
 		t.eq(d.wear.max_charges if d.wear != null else -1, 27, "%s 能供给 27 场（246 乙：三场一级）" % id)
 	t.eq(ItemValue.of(items.get_def(&"quartz_cluster")), 320, "清明魔晶石 320")
-	t.eq(ItemValue.of(items.get_def(&"crystal_shards")), 30, "碎晶 30")
+	t.eq(ItemValue.of(items.get_def(&"crystal_shards")), 5, "碎晶 5（作者 11-21 降价，按稀有度）")
 	t.check(items.get_def(&"quartz_cluster").adjacency.feed_rules.is_empty(), "清明魔晶石不带属性")
 	ItemInstance.reset_uid_counter()
 	var staff := ItemInstance.create(items.get_def(&"magic_staff"))
