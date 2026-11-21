@@ -1989,8 +1989,12 @@ func _reopen_entry() -> Dictionary:
 	if run.pending_loot != null:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
 	var here := run.current_node()
-	if here != null and bool(here.content.get("revisit_event", false)):
+	var exit_here := here != null and NodeEvents.effective_type(here) == &"extract"
+	var exit_closed := exit_here and run.hooks.extract_closed(here)     # 反馈 11-21：关了的撤离点不再弹（地图屏说已关闭）
+	if here != null and bool(here.content.get("revisit_event", false)) and not exit_closed:
 		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 10-22：「先回地图」的点，点节点 / 放大镜就再弹
+	if exit_here and not exit_closed:
+		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 11-21：没撤的撤离点，只要没关就能再打开
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开

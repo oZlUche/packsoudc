@@ -36,6 +36,7 @@ func install(run: RunState) -> void:
 		PaidExtracts.mark_closing(run.map, limit())
 	if not run.stepped.is_connected(_on_stepped):
 		run.stepped.connect(_on_stepped)
+	run.hooks.register(&"extract_closed", extract_closed)     # 反馈 11-21：撤离点事件的「撤离」看它灰掉
 
 
 #region 这一局的数

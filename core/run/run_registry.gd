@@ -64,6 +64,7 @@ const RUN_MODULES := {
 const EVENT_CONDITIONS := {
 	&"commission_ready": "res://core/run/events/conditions/commission_ready.gd",     # 336
 	&"entrust_ready": "res://core/run/events/conditions/entrust_ready.gd",     # 287
+	&"extract_open": "res://core/run/events/conditions/extract_open.gd",     # 反馈 11-21
 	&"has_buff_tag": "res://core/run/events/conditions/has_buff_tag.gd",
 	&"has_map_buff": "res://core/run/events/conditions/has_map_buff.gd",
 	&"can_afford": "res://core/run/events/conditions/can_afford.gd",
