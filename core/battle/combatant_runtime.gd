@@ -41,6 +41,9 @@ var axes: Dictionary = {}
 var block_layers: Array[Dictionary] = []
 ## 210：免疫的状态 id（[member CombatantSpec.immune_buffs]）
 var immune_buffs: Array[StringName] = []
+## 355：灰灯食堂水果的每秒回血（定点）：固定值、按生命上限的比例（0.01 = 1%）。不进属性表，[method settle_regen] 直接加
+var meal_regen_hp: int = 0
+var meal_regen_hp_pct: int = 0
 ## 281：只受这一种伤害（[member CombatantSpec.only_damage_type]）
 var only_damage_type: StringName = &""
 
@@ -98,6 +101,8 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 		return int(a["value"]) > int(b["value"]) or (int(a["value"]) == int(b["value"]) and int(a["uid"]) < int(b["uid"])))
 	rt.undying_sec = StatMath.from_float(spec.undying_sec)     # 093：蛮神 4 级
 	rt.immune_buffs = spec.immune_buffs.duplicate()     # 210
+	rt.meal_regen_hp = StatMath.from_float(spec.meal_regen_hp)     # 355：水果的每秒回血（独立一项）
+	rt.meal_regen_hp_pct = StatMath.from_float(spec.meal_regen_hp_pct / 100.0)
 	rt.only_damage_type = spec.only_damage_type     # 281
 	# 105：编译期带来的轴层数种进**系统层**（103 第 6 条：常驻加成不是 buff、不走净化）
 	for axis in spec.axes:
@@ -290,12 +295,21 @@ func _sync_resource_maxes() -> void:
 func settle_regen(now: int) -> void:
 	for key in resources.keys():
 		var rate := stat(BattleStats.regen_of_resource(key), 0)
-		if rate > 0 and key == BattleStats.RES_HP:
+		var meal := meal_hp_rate() if key == BattleStats.RES_HP else 0
+		if (rate > 0 or meal > 0) and key == BattleStats.RES_HP:
 			# 175：燃血 / 菌血期间回血也打折；打到 0 也要结算一下，把起点推到现在（否则到期后会把这段补回来）
-			resources.settle_regen(key, StatMath.mul(rate, heal_kept()), now)
+			# 355：水果那份独立，不打折、不吃加成
+			resources.settle_regen(key, (StatMath.mul(rate, heal_kept()) if rate > 0 else 0) + meal, now)
 			continue
 		if rate > 0:
 			resources.settle_regen(key, StatMath.mul(rate, regen_kept(key)), now)
+
+
+## 355：水果那份每秒回血（定点）：固定值 + 生命上限 × 比例
+func meal_hp_rate() -> int:
+	if meal_regen_hp <= 0 and meal_regen_hp_pct <= 0:
+		return 0
+	return meal_regen_hp + StatMath.mul(stat(BattleStats.MAX_HP), meal_regen_hp_pct)
 
 
 ## 某件物品通过增益／受益格连结到的其他物品 uid

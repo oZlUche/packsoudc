@@ -1,0 +1,21 @@
+{
+  "id": "bitter_endive",
+  "display_name": "苦苣",
+  "display_names": {
+    "en": "Bitter Endive"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

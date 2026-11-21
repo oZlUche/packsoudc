@@ -1,0 +1,20 @@
+{
+  "id": "wild_berry",
+  "display_name": "野莓",
+  "display_names": {
+    "en": "Wild Berries"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "fowl_wing",
+  "display_name": "禽翅",
+  "display_names": {
+    "en": "Fowl Wing"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature"
+  ],
+  "material": "flesh"
+}

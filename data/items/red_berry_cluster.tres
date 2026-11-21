@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_n3fk6"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_7jytf"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_0sec8"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_t8jh3"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_gr7fn"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_2q52c"]
+
+[sub_resource type="Resource" id="Resource_ikyoy"]
+script = ExtResource("6_2q52c")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_gr7fn")
+id = &"red_berry_cluster"
+display_name = "红果串"
+display_names = {
+"en": "Red Berry Cluster"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_ikyoy")
+tags = Array[StringName]([&"ingredient", &"nature", &"plant"])
+material = "herb"

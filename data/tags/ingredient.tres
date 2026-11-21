@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_ett7h"]
+
+[resource]
+script = ExtResource("1_ett7h")
+id = &"ingredient"
+display_name = "食材"
+display_names = {
+"en": "Ingredient"
+}
+description = "灰灯食堂下锅用的生料，局里不能直接吃。"
+descriptions = {
+"en": "Raw fare for the Grey Lamp canteen pot; can't be eaten on an expedition."
+}
+tip = false
+category = "kind"

@@ -241,6 +241,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 		return import_score_rules(data, ctx, report)     # 269
 	if kind == "base_rules" and String(data.get("id", "")) == String(AlchemyRules.ID):
 		return import_alchemy_rules(data, ctx, report)     # 354
+	if kind == "base_rules" and String(data.get("id", "")) == String(CanteenRules.ID):
+		return import_canteen_rules(data, ctx, report)     # 355
 	var importer: Callable = _importers().get(kind, Callable())
 	if not importer.is_valid():
 		report.error("", "不认识的内容种类 '%s'（登记在 ContentPaths.KINDS，并在 ContentImporter.import_of 接一臂）" % kind)
@@ -1149,6 +1151,49 @@ static func import_alchemy_rules(data: Dictionary, ctx: Context, report: ImportR
 	for i in rules.loss_by_tier.size():
 		if rules.loss_by_tier[i] < 0.2 or rules.loss_by_tier[i] > 0.5:
 			report.error("loss_by_tier[%d]" % i, "折损得在 0.2 到 0.5 之间")
+	return rules
+
+
+## 355：灰灯食堂的规矩 —— 每条食材：认得的道具、带「食材」标签、四类之一、固定值和百分比只写一样且是正数、饱腹不是负数；
+## 带「食材」标签的道具都得在表里（不然下了锅什么也不给）；锅和仓库的边长是正数
+static func import_canteen_rules(data: Dictionary, ctx: Context, report: ImportReport) -> CanteenRules:
+	var rules := CanteenRules.new()
+	_fill(rules, data, "", ctx, report)
+	_require_id(rules.id, "食堂规矩", report)
+	for field in ["pot_side", "store_w", "store_h"]:
+		var arr: Array = rules.get(field)
+		if arr.is_empty():
+			report.error(field, "至少一档")
+		for i in arr.size():
+			if int(arr[i]) <= 0:
+				report.error("%s[%d]" % [field, i], "得是正数")
+	for key in rules.entries:
+		var at := "entries.%s" % key
+		var e: Variant = rules.entries[key]
+		if not (e is Dictionary):
+			report.error(at, "得是一张表")
+			continue
+		var row := e as Dictionary
+		if not CanteenRules.CATEGORIES.has(StringName(String(row.get("category", "")))):
+			report.error(at + ".category", "得是 staple / meat / veg / fruit 之一")
+		var has_flat := row.has("flat")
+		var has_pct := row.has("pct")
+		if has_flat == has_pct:
+			report.error(at, "固定值 flat 和百分比 pct 只写一样")
+		elif float(row.get("flat", row.get("pct", 0))) <= 0.0:
+			report.error(at, "加成得是正数")
+		if int(row.get("satiety", 0)) < 0:
+			report.error(at + ".satiety", "不能是负数")
+		if not ctx.items.is_empty():
+			var def: ItemDef = ctx.items.get(StringName(String(key)), null)
+			if def == null:
+				report.error(at, "找不到道具 '%s'" % key)
+			elif not def.tags.has(Canteen.TAG):
+				report.error(at, "'%s' 没有「食材」标签" % key)
+	for id in ctx.items:
+		var d := ctx.items[id] as ItemDef
+		if d != null and d.tags.has(Canteen.TAG) and not rules.entries.has(String(id)):
+			report.error("entries", "带「食材」标签的 '%s' 不在食材表里" % id)
 	return rules
 
 

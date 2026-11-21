@@ -15,7 +15,7 @@ static func frame_full_tabs(t: TestCase, root: Window) -> void:
 	Shops._levels(f, 1, 1)
 	f.meta.funds = 100000
 	var s: Control = W178._screen(f, root)
-	t.eq(s.FULL_TABS, ["market", "smithy"], "整页的两页")
+	t.eq(s.FULL_TABS, ["market", "smithy", "canteen"], "整页的三页（355：食堂页自己带两块盘）")
 	var scr := Vector2(1600, 1000)
 	for tab in ["market", "smithy"]:
 		s.show_tab(tab)

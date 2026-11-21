@@ -133,9 +133,12 @@ static func harvest(meta: MetaState, i: int, items: ItemDatabase) -> Dictionary:
 	for _k in int(spec["count"]):
 		var inst := ItemInstance.create(def, 0)
 		inst.uid = meta.allocate_uid()
-		if not meta.warehouse.try_add(inst):
+		if not meta.stash_item(inst):     # 355：食材先进食材仓库
 			for a in added:
-				meta.warehouse.remove(a.uid)
+				if meta.canteen.store.has_item(a.uid):
+					meta.canteen.store.remove(a.uid)
+				else:
+					meta.warehouse.remove(a.uid)
 			out["why"] = WHY_FULL
 			return out
 		added.append(inst)

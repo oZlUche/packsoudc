@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_6mppj"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_n2hpf"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_2hnn2"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_e7drl"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_kriu7"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_cvacx"]
+
+[sub_resource type="Resource" id="Resource_kqxfd"]
+script = ExtResource("6_cvacx")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_kriu7")
+id = &"fowl_leg"
+display_name = "禽腿"
+display_names = {
+"en": "Fowl Leg"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_kqxfd")
+tags = Array[StringName]([&"ingredient", &"nature"])
+material = "flesh"

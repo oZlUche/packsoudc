@@ -19,13 +19,17 @@ static func encode(spec: CombatantSpec, rules: Array[AbilityRule], index: Dictio
 			"rules": _rule_ids(it.rules, rules, index), "linked": it.linked_uids.duplicate(), "attached": it.attached.duplicate(true),
 			"loaded": it.loaded.duplicate(true), "power_mult": it.power_mult,
 		})
-	return {
+	var out := {
 		"format": FORMAT, "max_hp": spec.max_hp, "undying_sec": spec.undying_sec, "immune_buffs": spec.immune_buffs.duplicate(),
 		"only_damage_type": spec.only_damage_type, "axes": spec.axes.duplicate(true), "faith": String(spec.faith),
 		"baseline": (stats_to(spec.baseline) as Variant) if spec.baseline != null else null,
 		"items": items, "set_rules": _rule_ids(spec.set_rules, rules, index),
 		"fed_uids": spec.fed_uids.duplicate(), "loads": spec.loads.duplicate(true),
 	}
+	if spec.meal_regen_hp != 0.0 or spec.meal_regen_hp_pct != 0.0:     # 355：没吃饭的局字节不变
+		out["meal_regen_hp"] = spec.meal_regen_hp
+		out["meal_regen_hp_pct"] = spec.meal_regen_hp_pct
+	return out
 
 
 ## 解一方。[param rules] 是编的时候那张规则表
@@ -33,6 +37,8 @@ static func decode(d: Dictionary, rules: Array[AbilityRule]) -> CombatantSpec:
 	var spec := CombatantSpec.new()
 	spec.max_hp = int(d.get("max_hp", 0))
 	spec.undying_sec = float(d.get("undying_sec", 0.0))
+	spec.meal_regen_hp = float(d.get("meal_regen_hp", 0.0))     # 355
+	spec.meal_regen_hp_pct = float(d.get("meal_regen_hp_pct", 0.0))
 	for b in d.get("immune_buffs", []):
 		spec.immune_buffs.append(StringName(b))
 	spec.only_damage_type = StringName(d.get("only_damage_type", &""))

@@ -2,7 +2,7 @@
 
 > 依据：[360 落地说明](360-difficulty-a0-a12-exec-spec.md)、作者的难度设计表 `balance/difficulty/2026-11-20-difficulty-and-drops.xlsx`。每批落地后在这里追加一节。
 
-## 第一批：掉落与搜索（v7.27）
+## 第一批：掉落与搜索（v7.30）
 
 ### 改了什么
 

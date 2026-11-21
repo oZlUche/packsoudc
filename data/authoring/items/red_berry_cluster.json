@@ -1,0 +1,21 @@
+{
+  "id": "red_berry_cluster",
+  "display_name": "红果串",
+  "display_names": {
+    "en": "Red Berry Cluster"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}
