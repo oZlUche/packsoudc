@@ -39,6 +39,9 @@ const DevGateScript := preload("res://core/dev_gate.gd")
 ## 158：后台导新素材的进程（-1 = 没在导）；导完不重开，只撤掉右上角那行小字
 var _asset_import_pid: int = -1
 var _asset_note: Label = null
+## 后台扫描素材导入状态的任务（WorkerThreadPool 任务号；-1 = 没在扫）与扫出来的结果
+var _asset_scan_task: int = -1
+var _asset_todo: Array[String] = []
 ## 115：重建时的全屏遮罩
 var _rebuild_cover: Control = null
 
@@ -67,6 +70,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_poll_asset_scan()
 	if _asset_import_pid > 0 and not OS.is_process_running(_asset_import_pid):
 		_asset_import_pid = -1     # 158：新素材导完了，下次启动生效
 		if _asset_note != null:
@@ -198,10 +202,40 @@ func rewrite_cache() -> bool:
 
 
 ## 158：有没导入的素材（别人加了图）→ 后台导入，不盖板、不重开；这一次游戏里那几张图走占位，下次启动生效
+## 2026-11-21：扫描本身放到工作线程 —— 要读全项目约 1600 份 `.import` 再查目标在不在，
+## 作者的项目在 HDD 硬盘上，重启后冷缓存一次要 80 多秒，原来在主线程里跑，第一帧前窗口就「无响应」
 func _check_assets() -> void:
-	var todo := ImportCheck.missing()
-	if todo.is_empty():
+	_asset_scan_task = WorkerThreadPool.add_task(_scan_assets, false, "DevNav 素材导入检查")
+
+
+## 工作线程里跑：只碰文件，不碰节点。作者 2026-11-21：只在版本（Git 提交号）变了才扫，扫完一个不缺记下提交号
+func _scan_assets() -> void:
+	if not ImportCheck.needs_scan():
+		_asset_todo = []
 		return
+	_asset_todo = ImportCheck.missing()
+	if _asset_todo.is_empty():
+		ImportCheck.remember_clean()
+
+
+## 主线程：扫描完了再决定要不要起后台导入
+func _poll_asset_scan() -> void:
+	if _asset_scan_task < 0 or not WorkerThreadPool.is_task_completed(_asset_scan_task):
+		return
+	WorkerThreadPool.wait_for_task_completion(_asset_scan_task)
+	_asset_scan_task = -1
+	if _asset_todo.is_empty():
+		return
+	_start_asset_import()
+
+
+func _exit_tree() -> void:
+	if _asset_scan_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_asset_scan_task)
+		_asset_scan_task = -1
+
+
+func _start_asset_import() -> void:
 	var root := ProjectSettings.globalize_path("res://")
 	var pid := OS.create_process(OS.get_executable_path(), import_args(root))
 	if pid <= 0:
