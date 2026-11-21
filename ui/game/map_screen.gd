@@ -1031,7 +1031,7 @@ func _update_tooltip(id: int) -> void:
 			_tip.show_text(stash, get_global_mouse_position(), null)
 		return
 	var extra: Control = null
-	if NodeTooltip.shows_board(node):
+	if NodeTooltip.shows_board(node, _run):
 		var v := InventoryView.make(EnemyKit.board_of(node.content, flow.items), font, true)
 		v.cell_px = ENEMY_TIP_CELL
 		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1073,6 +1073,8 @@ func enemy_preview(id: int) -> String:
 	var content := _run.map.get_node(id).content
 	if not EnemyKit.has_enemy(content):
 		return ""
+	if not _run.intel_visible(id):
+		return UiText.t("node.unknown_enemy")     # 360 A11
 	var line := EnemyKit.summary(content, flow.enemies, _run.pool, flow.items)
 	if _run.drop_rule != null and GameSettings.dev_build():     # 期望掉落是调数值的读数，只在开发版显示
 		var ctx := LootContext.new()
