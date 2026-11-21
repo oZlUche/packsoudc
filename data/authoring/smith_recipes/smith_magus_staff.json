@@ -2,7 +2,6 @@
   "id": "smith_magus_staff",
   "output": "magus_staff",
   "inputs": {
-    "prism_crystal": 2,
     "ironwood_branch": 1,
     "mithril_ingot": 1
   },
@@ -10,5 +9,12 @@
   "group": "staff",
   "level": 3,
   "tech": "staffcraft",
-  "tech_level": 3
+  "tech_level": 3,
+  "material_slots": [
+    {
+      "material": "gem",
+      "min": 2,
+      "count": 2
+    }
+  ]
 }

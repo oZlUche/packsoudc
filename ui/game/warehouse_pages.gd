@@ -368,6 +368,14 @@ func clear_selection() -> void:
 	_changed_selection()
 
 
+## 354 第七节：勾选换成正好这几件（一键炼金）
+func select_only(uids: Array) -> void:
+	selected.clear()
+	for uid in uids:
+		selected[int(uid)] = true
+	_changed_selection()
+
+
 ## 勾了的卖多少钱
 func selected_value(ratio: float) -> int:
 	var n := 0

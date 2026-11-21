@@ -46,8 +46,7 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages) -> WarehouseTools:
 	UiTheme.dress_wood_option(tag_pick, FONT)
 	fcol.add_child(tag_pick)
 	rarity_pick = OptionButton.new()
-	for i in RARITIES.size():
-		rarity_pick.add_item(UiText.t(String(RARITIES[i][0])), i)
+	fill_rarities(rarity_pick)
 	rarity_pick.item_selected.connect(func(i: int): set_filter(shelf.filter_tag, int(RARITIES[i][1])))
 	UiTheme.dress_wood_option(rarity_pick, FONT)
 	fcol.add_child(rarity_pick)
@@ -66,6 +65,9 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages) -> WarehouseTools:
 	add_child(quick_btn)
 	meta.warehouse.changed.connect(refresh)
 	meta.changed.connect(refresh)
+	shelf.filter_changed.connect(func():     # 354 第七节：炼金页也改得了筛选
+		_sync_picks()
+		_refresh_clear())
 	refresh()
 	return self
 
@@ -105,28 +107,45 @@ func refresh() -> void:
 		shelf.set_filter(&"", shelf.filter_rarity)
 	elif shelf.filter_fav:
 		shelf.set_filter(shelf.filter_tag, shelf.filter_rarity, true)     # 265：收藏变了，页签上的匹配数重算
-	tag_pick.clear()
-	tag_pick.add_item(UiText.t("meta.sell_any_tag"))
-	tag_pick.set_item_metadata(0, "")
-	var last_rank := -1
-	for t in tags:
-		var rank := TagRegistry.category_rank(t)
-		if last_rank >= 0 and rank != last_rank:
-			tag_pick.add_separator()
-		last_rank = rank
-		tag_pick.add_item(Glossary.tag_name(t))
-		tag_pick.set_item_metadata(tag_pick.item_count - 1, String(t))
+	fill_tags(tag_pick, tags)
 	_sync_picks()
 	_refresh_clear()
 
 
-func _sync_picks() -> void:
-	for i in tag_pick.item_count:
-		if not tag_pick.is_item_separator(i) and String(tag_pick.get_item_metadata(i)) == String(shelf.filter_tag):
-			tag_pick.select(i)
+## 标签下拉：第一项「不限标签」，按大类分组、组间一条分隔（354 第七节炼金页的筛选也用）
+static func fill_tags(pick: OptionButton, tags: Array) -> void:
+	pick.clear()
+	pick.add_item(UiText.t("meta.sell_any_tag"))
+	pick.set_item_metadata(0, "")
+	var last_rank := -1
+	for t in tags:
+		var rank := TagRegistry.category_rank(t)
+		if last_rank >= 0 and rank != last_rank:
+			pick.add_separator()
+		last_rank = rank
+		pick.add_item(Glossary.tag_name(t))
+		pick.set_item_metadata(pick.item_count - 1, String(t))
+
+
+## 稀有度下拉（[constant RARITIES]）
+static func fill_rarities(pick: OptionButton) -> void:
+	pick.clear()
 	for i in RARITIES.size():
-		if int(RARITIES[i][1]) == shelf.filter_rarity:
-			rarity_pick.select(i)
+		pick.add_item(UiText.t(String(RARITIES[i][0])), i)
+
+
+## 两个下拉选中 [param p_shelf] 现在的筛选
+static func sync_picks(p_shelf: WarehousePages, tags: OptionButton, rarities: OptionButton) -> void:
+	for i in tags.item_count:
+		if not tags.is_item_separator(i) and String(tags.get_item_metadata(i)) == String(p_shelf.filter_tag):
+			tags.select(i)
+	for i in RARITIES.size():
+		if int(RARITIES[i][1]) == p_shelf.filter_rarity:
+			rarities.select(i)
+
+
+func _sync_picks() -> void:
+	sync_picks(shelf, tag_pick, rarity_pick)
 	fav_btn.set_pressed_no_signal(shelf.filter_fav)
 
 

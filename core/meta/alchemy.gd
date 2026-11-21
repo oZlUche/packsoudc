@@ -1,7 +1,8 @@
 ## 354：炼金术 —— 魔法师协会信赖档加剧情《万物可分》开放（后勤「炼金」页）。纯逻辑，存盘由 [GameFlow] 做。
 ##
-## - 分解：仓库里的素材（[member AlchemyRules.accept_tag]，不带 [member AlchemyRules.excluded_tags]、没锁）丢进去换万物之尘（[member MetaState.dust]）。
-##   每件的尘值 = 它的基础价（[method ItemValue.of]，作者 2026-11-21「让尘的出率和价值挂钩」）；
+## - 分解：仓库里的道具丢进去换万物之尘（[member MetaState.dust]）。第七节（作者 2026-11-21 11:39「所有东西都可以炼金」）：每一件都能丢，
+##   只有锁定的拒绝；剧情独有、手上委托要交的（[method guarded]）手动要危险确认、一键炼金（[method auto_picks]）跳过。
+##   每件的尘值 = 它的价值，和出售同一个数（[method ItemValue.of_instance]，作者 2026-11-21「让尘的出率和价值挂钩」）；
 ##   一次丢的几件合起来 × (1 − 折损) 向下取整，每件至少 1。折损按协会声望档（[method AlchemyRules.loss_at]）。
 ## - 补料（第二批）：会打、且用真材料打造过的铁匠配方，缺的料按全额尘值补
 class_name Alchemy
@@ -10,7 +11,11 @@ extends RefCounted
 const ID := &"alchemy"
 ## 不能丢的原因（字表键 `alchemy.why_<原因>`）
 const WHY_LOCKED := "locked"
-const WHY_KIND := "kind"
+## 一键炼金跳过的原因（[method auto_picks]）
+const SKIP_LOCKED := "locked"
+const SKIP_FAVORITE := "favorite"
+const SKIP_GUARDED := "guarded"
+const SKIP_CARRY := "carry"
 
 static var _rules: AlchemyRules = null
 
@@ -23,24 +28,100 @@ static func load_rules() -> AlchemyRules:
 	return _rules
 
 
-## 一件的尘值（= 基础价）
+## 一种道具的尘值（= 基础价；补料按它收）
 static func dust_value(def: ItemDef) -> int:
 	return ItemValue.of(def)
 
 
-## 这件能不能丢进去：空串 = 能
-static func why_not(inst: ItemInstance, rules: AlchemyRules = null) -> String:
-	var r := rules if rules != null else load_rules()
-	if inst == null or inst.def == null or not inst.def.tags.has(r.accept_tag) or r.excluded_ids.has(inst.def.id) \
-			or inst.def.tags.any(func(t: StringName) -> bool: return r.excluded_tags.has(t)):
-		return WHY_KIND
-	if inst.is_locked_by_player():
+## 第七节：仓库里这一件丢进去的尘值 = 它的价值，和出售同一个数（用坏了照出售打折）
+static func dust_value_of(inst: ItemInstance) -> int:
+	return ItemValue.of_instance(inst)
+
+
+## 这件能不能丢进去：空串 = 能。第七节：只有锁定的不能（锁定 = 防手滑，和出售一样）
+static func why_not(inst: ItemInstance, _r: AlchemyRules = null) -> String:
+	if inst == null or inst.def == null or inst.is_locked_by_player():
 		return WHY_LOCKED
 	return ""
 
 
 static func can_dissolve(inst: ItemInstance, rules: AlchemyRules = null) -> bool:
 	return why_not(inst, rules) == ""
+
+
+## 第七节：这件是不是要危险确认（「这件拿不回来」）、一键跳过的 —— 剧情独有一类（[member AlchemyRules.guard_tags] / [member AlchemyRules.guard_ids]），
+## 或者手上委托这一步要交的（[method Commissions.hand_in_picks]）。[param hand_in] = [method hand_in_uids] 算好的（一次看很多件时传进来省得重算）
+static func guarded(meta: MetaState, inst: ItemInstance, rules: AlchemyRules = null, hand_in: Dictionary = {}) -> bool:
+	var r := rules if rules != null else load_rules()
+	if inst == null or inst.def == null:
+		return false
+	if r.guard_ids.has(inst.def.id) or inst.def.tags.any(func(t: StringName) -> bool: return r.guard_tags.has(t)):
+		return true
+	var picks := hand_in if not hand_in.is_empty() else hand_in_uids(meta)
+	return picks.has(inst.uid)
+
+
+## 第七节：手上委托这一步要交的仓库道具 uid → true
+static func hand_in_uids(meta: MetaState) -> Dictionary:
+	var out := {}
+	if meta == null or meta.commissions == null:
+		return out
+	for id in meta.commissions.taken():
+		var d := Commissions.def(id)
+		var st := Commissions.current_stage(meta.commissions, id)
+		if d == null or st < 0 or st >= d.stages.size() or d.stages[st].goal != &"hand_in":
+			continue
+		for it in Commissions.hand_in_picks(meta, d, st):
+			out[it.uid] = true
+	return out
+
+
+## 第七节：这几件（uid）里要危险确认的
+static func guarded_of(meta: MetaState, uids: Array, rules: AlchemyRules = null) -> Array[ItemInstance]:
+	var r := rules if rules != null else load_rules()
+	var out: Array[ItemInstance] = []
+	if meta == null:
+		return out
+	var hand_in := hand_in_uids(meta)
+	for inst in _picks(meta, uids, r):
+		if guarded(meta, inst, r, hand_in):
+			out.append(inst)
+	return out
+
+
+## 第七节：一键炼金 —— [param pool]（合筛选的仓库道具）里挑哪些炼，跳过锁定的、收藏的、要危险确认的（[method guarded]）、
+## 出征携带里摆着的（[member MetaState.last_carry]，按件数：照上回带要带几件就留几件）。
+## 返回 {"uids": 要炼的, "skipped": 跳过几件, "why": {原因: 件数}}
+static func auto_picks(meta: MetaState, pool: Array, rules: AlchemyRules = null) -> Dictionary:
+	var r := rules if rules != null else load_rules()
+	var out := {"uids": [], "skipped": 0, "why": {}}
+	if meta == null:
+		return out
+	var carry := {}
+	for e in meta.last_carry:
+		var id := String((e as Dictionary).get("id", ""))
+		carry[id] = int(carry.get(id, 0)) + 1
+	var hand_in := hand_in_uids(meta)
+	for raw in pool:
+		var inst := raw as ItemInstance
+		if inst == null or inst.def == null:
+			continue
+		var why := ""
+		if inst.is_locked_by_player():
+			why = SKIP_LOCKED
+		elif meta.is_favorite(inst.def.id):
+			why = SKIP_FAVORITE
+		elif guarded(meta, inst, r, hand_in):
+			why = SKIP_GUARDED
+		elif int(carry.get(String(inst.def.id), 0)) > 0:
+			carry[String(inst.def.id)] = int(carry[String(inst.def.id)]) - 1
+			why = SKIP_CARRY
+		if why == "":
+			(out["uids"] as Array).append(inst.uid)
+		else:
+			out["skipped"] = int(out["skipped"]) + 1
+			out["why"][why] = int((out["why"] as Dictionary).get(why, 0)) + 1
+	return out
 
 
 ## 协会现在几档（决定折损）
@@ -70,7 +151,7 @@ static func preview(meta: MetaState, uids: Array, sell_ratio: float = 0.5, rules
 		return out
 	for inst in _picks(meta, uids, r):
 		out["count"] = int(out["count"]) + 1
-		out["value"] = int(out["value"]) + dust_value(inst.def)
+		out["value"] = int(out["value"]) + dust_value_of(inst)
 		out["funds"] = int(out["funds"]) + MetaState.sell_price_of(inst, sell_ratio)
 	out["dust"] = yield_of(int(out["value"]), int(out["count"]), loss(meta, r))
 	return out

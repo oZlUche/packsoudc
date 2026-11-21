@@ -39,7 +39,7 @@ static func run_content(t: TestCase) -> void:
 
 
 static func run_rules(t: TestCase) -> void:
-	t.begin("354 · 能丢什么：素材能；武器、剧情独有、珍宝、锁住的不能；尘值 = 基础价")
+	t.begin("354 第七节 · 能丢什么：什么都能（素材、武器、剧情独有、珍宝、贵重品）；只有锁住的不能；尘值 = 价值（和出售同一个数）")
 	ItemInstance.reset_uid_counter()
 	var db := T110._db()
 	var m := T110._meta()
@@ -50,11 +50,43 @@ static func run_rules(t: TestCase) -> void:
 	t.eq(Alchemy.why_not(ore), "", "铁矿石：能")
 	t.eq(Alchemy.dust_value(ore.def), ItemValue.of(ore.def), "尘值 = 基础价")
 	t.eq(Alchemy.dust_value(ore.def), 24, "铁矿石 24")
-	t.eq(Alchemy.why_not(knife), Alchemy.WHY_KIND, "武器：不能")
-	t.eq(Alchemy.why_not(core), Alchemy.WHY_KIND, "火之核（剧情独有）：不能")
-	t.eq(Alchemy.why_not(shard), Alchemy.WHY_KIND, "灰白色的金属碎片（珍宝）：不能")
+	t.eq(Alchemy.why_not(knife), "", "武器：能")
+	t.eq(Alchemy.why_not(core), "", "火之核（剧情独有）：能")
+	t.eq(Alchemy.why_not(shard), "", "灰白色的金属碎片（珍宝）：能")
+	for id in [&"antidote_kit", &"bitter_root", &"wooden_idol", &"ticket_standard"]:
+		var x := T110._add(m, db, id)
+		t.check(x != null and Alchemy.can_dissolve(x), "%s：能" % id)
+	t.check(not Alchemy.guarded(m, ore) and not Alchemy.guarded(m, knife), "铁矿石、刀：不用危险确认")
+	t.check(Alchemy.guarded(m, core) and Alchemy.guarded(m, shard), "火之核、碎片：要危险确认")
+	t.eq(Alchemy.dust_value_of(knife), ItemValue.of_instance(knife), "尘值 = 这一件的价值")
+	knife.state["value"] = 3
+	t.eq(Alchemy.dust_value_of(knife), 3, "价值记在这一件上：照它")
 	ore.set_locked(true)
 	t.eq(Alchemy.why_not(ore), Alchemy.WHY_LOCKED, "锁住的：不能")
+
+
+static func run_auto(t: TestCase) -> void:
+	t.begin("354 第七节 · 一键炼金：跳过锁定、收藏、剧情独有、委托这一步要交的、出征携带（按件数）；预览数和实得一致")
+	ItemInstance.reset_uid_counter()
+	var db := T110._db()
+	var m := T110._meta()
+	var pool: Array = []
+	for id in [&"iron_ore", &"iron_ore", &"iron_ore", &"knife", &"knife", &"jimie_core_fire", &"dried_herbs", &"dried_herbs", &"dried_herbs", &"oak_log"]:
+		pool.append(T110._add(m, db, id))
+	(pool[0] as ItemInstance).set_locked(true)
+	m.toggle_favorite(&"oak_log")
+	m.last_carry = [{"id": "knife", "origin": [0, 0], "rot": 0}]
+	m.commissions.entries["greylamp_check_medkits"] = {"state": CommissionBook.TAKEN, "stage": 0, "progress": 0, "keys": [], "times": 0, "pick": "", "seq": 1}
+	t.eq(Alchemy.hand_in_uids(m).size(), 2, "核对药包要两件草药：两件挡着")
+	var plan := Alchemy.auto_picks(m, pool)
+	t.eq(int(plan["skipped"]), 6, "跳过 6 件")
+	t.eq(plan["why"], {Alchemy.SKIP_LOCKED: 1, Alchemy.SKIP_FAVORITE: 1, Alchemy.SKIP_GUARDED: 3, Alchemy.SKIP_CARRY: 1}, "锁定 1、收藏 1、独有 + 委托 3、携带 1")
+	t.eq((plan["uids"] as Array).size(), 4, "炼 4 件：两件铁矿石、一把刀、一件草药")
+	var p := Alchemy.preview(m, plan["uids"])
+	var got := Alchemy.dissolve(m, plan["uids"])
+	t.eq([int(got["count"]), int(got["dust"])], [int(p["count"]), int(p["dust"])], "实得 = 预览")
+	t.check(m.warehouse.has_item((pool[5] as ItemInstance).uid), "火之核还在")
+	t.eq(Alchemy.guarded_of(m, [(pool[5] as ItemInstance).uid, (pool[0] as ItemInstance).uid]).size(), 1, "手动勾火之核：要危险确认（锁着的不算勾上）")
 
 
 static func run_dissolve(t: TestCase) -> void:
@@ -66,16 +98,17 @@ static func run_dissolve(t: TestCase) -> void:
 	for k in 5:
 		ores.append(T110._add(m, db, &"iron_ore").uid)
 	var knife := T110._add(m, db, &"knife")
+	knife.set_locked(true)
 	t.eq(Alchemy.loss(m), 0.4, "协会初识：40%")
 	var p := Alchemy.preview(m, ores + [knife.uid, ores[0]])
-	t.eq([int(p["count"]), int(p["value"]), int(p["dust"])], [5, 120, 72], "五件铁矿石 120 → 72（重复的、刀不算）")
+	t.eq([int(p["count"]), int(p["value"]), int(p["dust"])], [5, 120, 72], "五件铁矿石 120 → 72（重复的、锁着的刀不算）")
 	t.eq(int(p["funds"]), 5 * MetaState.sell_price_of(m.warehouse.get_item(int(ores[0]))), "顺带写出售价")
 	var got := Alchemy.dissolve(m, ores + [knife.uid])
 	t.eq([int(got["count"]), int(got["dust"])], [5, 72], "实得和预览一样")
 	t.eq(m.dust, 72, "尘 72")
 	t.check(m.warehouse.has_item(knife.uid), "刀还在")
 	t.eq(m.warehouse.items().filter(func(i: ItemInstance) -> bool: return i.def.id == &"iron_ore").size(), 0, "铁矿石都没了")
-	t.eq(Alchemy.dissolve(m, [knife.uid]), {"count": 0, "dust": 0}, "只有刀：什么也不动")
+	t.eq(Alchemy.dissolve(m, [knife.uid]), {"count": 0, "dust": 0}, "只有锁着的刀：什么也不动")
 	t.eq(Alchemy.yield_of(5, 1, 0.4), 3, "一件 5 → 3")
 	t.eq(Alchemy.yield_of(3, 2, 0.4), 2, "两件合 3 → 1.8 取整 1，每件至少 1 → 2")
 	m.commissions.rep["society"] = 100
@@ -141,7 +174,7 @@ static func run_forged_record(t: TestCase) -> void:
 
 
 static func frame_page(t: TestCase, root: Window) -> void:
-	t.begin("354 · 后勤「炼金」：没到信赖不列；到了没办是说明板；开了右边仓库只勾得上素材，【炼化】两步；离开页清勾选；字不裸")
+	t.begin("354 · 后勤「炼金」：没到信赖不列；到了没办是说明板；开了右边仓库什么都勾得上（锁的不行），【炼化】两步；勾了独有件写拿不回来；一键炼金没选标签暗着；离开页清勾选；字不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	Support.pass_tutorials(f)
@@ -166,8 +199,11 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.check(s.alchemy_mode() and not s.sell_mode(), "右边仓库在炼金勾选里（不是出售）")
 	var shelf: WarehousePages = s.shelf()
 	t.check(shelf.toggle_select(ore.uid), "勾上铁矿石")
-	t.check(not shelf.toggle_select(knife.uid), "刀勾不上")
+	knife.set_locked(true)
+	t.check(not shelf.toggle_select(knife.uid), "锁着的刀勾不上")
+	t.check(p.auto_btn.disabled, "没选标签：一键炼金暗着")
 	t.eq(int(p.preview()["dust"]), 14, "预览 14")
+	t.check(not p._band.visible, "铁矿石：不画警告带")
 	t.check(p._center.visible, "勾了：阵心画尘")
 	var more: Array = []
 	for k in 3:
@@ -184,7 +220,31 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.eq(int((p.press_go() as Dictionary).get("dust", 0)), 14, "第二下炼了")
 	t.eq(f.meta.dust, 14, "尘 14")
 	t.check(not f.meta.warehouse.has_item(ore.uid) and f.meta.warehouse.has_item(knife.uid), "铁矿石没了，刀还在")
-	shelf.toggle_select(knife.uid)
+	var core := T110._add(f.meta, f.items, &"jimie_core_fire")
+	t.check(shelf.toggle_select(core.uid), "火之核勾得上")
+	t.check(p._band.visible and p._danger.text == Names.of(core.def), "纸条警告带：火之核")
+	t.check(p._nodes.any(func(n: Control) -> bool: return n.get_node_or_null("GuardRing") != null), "火之核那一角套红圈")
+	t.eq(p._danger_text([core, core]), UiText.t("alchemy.guard") % (Names.of(core.def) + " ×2"), "同名的合成「×2」")
+	var warned: Array = []
+	p.said.connect(func(text: String, is_warn: bool): warned.append([text, is_warn]))
+	p.press_go()
+	t.check(not warned.is_empty() and bool(warned[0][1]), "第一下【炼化】再说一遍（警告）")
+	p._reset_confirm()
+	shelf.clear_selection()
+	for k in 2:
+		T110._add(f.meta, f.items, &"iron_ore")
+	shelf.set_filter(&"material", -1)
+	t.eq(String(p.tag_pick.get_item_metadata(p.tag_pick.selected)), "material", "筛选行跟着")
+	t.check(not p.auto_btn.disabled, "选了标签：一键炼金亮")
+	var plan: Dictionary = p.auto_plan()
+	p.one_click()
+	t.check(shelf.selected.size() == (plan["uids"] as Array).size() and shelf.selected.size() >= 2, "一键：勾上合筛选能炼的（至少两件铁矿石）")
+	t.check(not shelf.selected.has(core.uid), "火之核不在内")
+	t.check(p._skip.visible, "纸条写跳过几件")
+	t.eq(p.auto_btn.text, UiText.t("sell.select_none"), "再点 = 全不选")
+	p.one_click()
+	t.check(shelf.selected.is_empty(), "全不选了")
+	shelf.set_filter(&"", -1)
 	s.show_tab("warehouse")
 	t.check(not shelf.select_mode, "离开炼金页：勾选模式关了")
 	s.queue_free()
