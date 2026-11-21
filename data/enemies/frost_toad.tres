@@ -1,16 +1,17 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_tklrb"]
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_igdwk"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_igdwk"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_h1rxw"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_yuwrl"]
 
-[sub_resource type="Resource" id="Resource_h1rxw"]
-script = ExtResource("1_tklrb")
+[sub_resource type="Resource" id="Resource_k5mhg"]
+script = ExtResource("2_h1rxw")
 school_share = 1.0
 min_weapons = 0
 single_faith = false
 
 [resource]
-script = ExtResource("2_igdwk")
+script = ExtResource("3_yuwrl")
 id = &"frost_toad"
 display_name = "霜蟾"
 display_names = {
@@ -23,7 +24,8 @@ base_stats = {
 }
 signature = Array[StringName]([&"frost_gland", &"frost_gland", &"beast_hide"])
 item_tags = Array[StringName]([&"beast_part"])
-loadout = SubResource("Resource_h1rxw")
+loadout = SubResource("Resource_k5mhg")
 board = Vector2i(4, 3)
 species = &"beast"
 bagless = true
+loot_filler = Array[StringName]([&"meat_scrap", &"game_meat"])

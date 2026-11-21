@@ -338,7 +338,10 @@ static func in_kind(d: ItemDef, only: Array) -> bool:
 
 ## 267：权重多乘几 —— 产物表命中的取最大（不连乘）；没命中 = 1
 static func weight_mult(d: ItemDef, p_produce: Dictionary) -> float:
-	return _best_hit(d, p_produce)
+	var m := _best_hit(d, p_produce)
+	if d.tags.has(Canteen.TAG):
+		m *= Canteen.SEARCH_WEIGHT     # 355：食材进普通搜索，权重低
+	return m
 
 
 static func _best_hit(d: ItemDef, table: Dictionary) -> float:

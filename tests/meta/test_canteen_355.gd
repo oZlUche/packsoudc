@@ -35,7 +35,7 @@ static func run_content(t: TestCase) -> void:
 	t.begin("355 · 内容：食材表导得进来、带「食材」标签的都在表里；成品食物不是食材；锅 4/4/4/5/6、仓库 6×6/8×8/10×8；《开伙》要受托、开食堂")
 	var r := Canteen.load_rules()
 	t.eq(r.id, CanteenRules.ID, "规矩资产导出来了")
-	t.eq(r.entries.size(), 16, "第一批 16 件（每类一格、两格各两件，固定值、百分比各一件）")
+	t.eq(r.entries.size(), 32, "32 件（报告 355 第五节）")
 	var db := T110._db()
 	var tagged: Array = []
 	for id in db.ids(true):
@@ -47,6 +47,7 @@ static func run_content(t: TestCase) -> void:
 	t.eq(tagged, keys, "带「食材」标签的 = 表里的")
 	for id in [&"ration", &"salted_meat", &"field_rations", &"wolf_heart", &"dried_herbs"]:
 		t.check(not Canteen.is_ingredient(db.get_def(id)), "%s 不是食材" % id)
+	var want := {CanteenRules.STAPLE: [4, 4], CanteenRules.MEAT: [6, 5], CanteenRules.VEG: [4, 3], CanteenRules.FRUIT: [3, 3]}
 	for cat in CanteenRules.CATEGORIES:
 		var flat := 0
 		var pct := 0
@@ -56,7 +57,7 @@ static func run_content(t: TestCase) -> void:
 					flat += 1
 				else:
 					pct += 1
-		t.eq([flat, pct], [2, 2], "%s：固定值两件、百分比两件" % cat)
+		t.eq([flat, pct], want[cat], "%s：固定值、百分比各几件照第五节" % cat)
 	t.eq([r.pot_size(2), r.pot_size(3), r.pot_size(4)], [Vector2i(4, 4), Vector2i(5, 5), Vector2i(6, 6)], "锅：受托 4×4、信赖 5×5、代言 6×6")
 	t.eq([r.store_size(2), r.store_size(3), r.store_size(4)], [Vector2i(6, 6), Vector2i(8, 8), Vector2i(10, 8)], "食材仓库：6×6、8×8、10×8")
 	t.eq(float(r.entry(&"wild_berry")["flat"]), 0.5, "野莓每秒 0.5（作者 16:41）")
@@ -193,6 +194,44 @@ static func run_viewer(t: TestCase) -> void:
 	t.check(not ItemTooltip.canteen_line(db.get_def(&"sour_wheat")).contains(Names.of(ch)), "没有负重的角色：主食不写对角色加多少")
 	t.eq(Canteen.final_lines(ch, meal).size(), 1, "终值只列耐力上限")
 	Canteen.viewer = null
+
+
+static func run_sources(t: TestCase) -> void:
+	t.begin("355 第三批 · 食材从哪来：魔兽必掉兽肉（替身，强的掉大块、上等）；粮铺常备几样一格的小件；普通搜索权重低；局内商店不卖")
+	var db := T110._db()
+	var meat := [&"meat_scrap", &"game_meat"]
+	for e in [&"flame_wolf", &"frost_toad", &"pit_viper", &"shock_eel"]:
+		var d := ContentPaths.load_asset("enemies", String(e)) as EnemyDef
+		t.check(d != null and not d.loot_filler.is_empty() and d.loot_filler.all(func(id: StringName) -> bool: return meat.has(id)), "%s 掉小块兽肉、兽肉" % e)
+	var bear := ContentPaths.load_asset("enemies", "cave_bear") as EnemyDef
+	t.check(bear != null and bear.loot_filler.has(&"beast_haunch") and bear.loot_filler.has(&"prime_beast_leg"), "穴熊（强）掉大块、上等")
+	var food := Market.stall(&"food")
+	var listed := Market.catalogue(Market.load_rules(), db, food, 1)
+	for id in [&"sour_wheat", &"black_bean", &"fowl_wing", &"wild_scallion", &"wild_berry"]:
+		t.check(listed.has(id), "粮铺常备 %s" % id)
+	t.check(not listed.has(&"fat_fowl") and not listed.has(&"game_meat"), "粮铺不卖别的食材")
+	t.eq(SearchSession.weight_mult(db.get_def(&"wild_berry"), {}), Canteen.SEARCH_WEIGHT, "搜索里食材权重 × %s" % Canteen.SEARCH_WEIGHT)
+	t.eq(SearchSession.weight_mult(db.get_def(&"iron_ore"), {}), 1.0, "别的照旧")
+	var econ := ContentPaths.load_asset("economy_rules", "standard") as EconomyRules
+	t.check(econ != null and econ.shop_exclude_tags.has(Canteen.TAG), "局内商店不卖食材")
+
+
+static func run_audit(t: TestCase) -> void:
+	t.begin("355 第三批 · 强力搭配记录：每条属性两条线各挑最强一件，三档锅都摆得进、6×6 不比 4×4 少；整锅叠满不溢出；抽样混搭也不到封顶")
+	var db := T110._db()
+	var rows := CanteenAudit.lines(db)
+	t.eq(rows.size(), 8, "四条属性 × 两条线")
+	var best := {}
+	for row in rows:
+		var key := "%s:%s" % [row["stat"], row["line"]]
+		best[key] = float(row["value"][6])
+		t.check(int(row["count"][4]) > 0 and float(row["value"][6]) >= float(row["value"][4]), "%s：4×4 摆得进，6×6 不比它少" % key)
+		t.check(float(row["value"][6]) < (Canteen.CAP_PCT if row["line"] == CanteenAudit.PCT else Canteen.CAP_FLAT), "%s：不到封顶" % key)
+	t.eq(StringName(rows[7]["id"]), &"honey_pomelo", "百分比回血最强：蜜柚")
+	var top := CanteenAudit.samples(db, 6, 60, 7)
+	for key in top:
+		t.check(float(top[key]["value"]) < Canteen.CAP_FLAT, "混搭 %s 不到封顶" % key)
+	t.check(CanteenAudit.report(db, [], 20).contains("表三"), "记录三张表")
 
 
 static func run_module(t: TestCase) -> void:

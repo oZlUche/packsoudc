@@ -1,16 +1,17 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_nbmmy"]
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_o20je"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_o20je"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_kj7pj"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_0gjdi"]
 
-[sub_resource type="Resource" id="Resource_kj7pj"]
-script = ExtResource("1_nbmmy")
+[sub_resource type="Resource" id="Resource_kw6el"]
+script = ExtResource("2_kj7pj")
 school_share = 1.0
 min_weapons = 0
 single_faith = false
 
 [resource]
-script = ExtResource("2_o20je")
+script = ExtResource("3_0gjdi")
 id = &"flame_wolf"
 display_name = "焰狼"
 display_names = {
@@ -24,7 +25,8 @@ base_stats = {
 }
 signature = Array[StringName]([&"beast_fang", &"beast_fang", &"fire_gland", &"beast_hide"])
 item_tags = Array[StringName]([&"beast_part"])
-loadout = SubResource("Resource_kj7pj")
+loadout = SubResource("Resource_kw6el")
 board = Vector2i(4, 3)
 species = &"beast"
 bagless = true
+loot_filler = Array[StringName]([&"meat_scrap", &"game_meat"])

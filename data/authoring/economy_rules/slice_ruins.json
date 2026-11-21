@@ -11,7 +11,8 @@
   "shop_sell_ratio": 0.3,
   "shop_exclude_tags": [
     "treasure",
-    "supply"
+    "supply",
+    "ingredient"
   ],
   "shop_bag_slot_chance": 0.0,
   "bullion_slot_chance": 0.0,
