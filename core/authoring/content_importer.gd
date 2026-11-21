@@ -1752,6 +1752,8 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 			for arr in [hm.hp_from, hm.hp_to]:     # 320 A3：段内生命渐变
 				if arr.size() > hm.bracket_steps.size() or arr.any(func(x: float) -> bool: return x <= 0.0):
 					report.error("mechanics[%d]" % i, "段内生命倍率得是正数、不比段位表长")
+	if def.held_floor_percent < -1 or def.held_floor_percent > 100 or def.elite_rarity < -1 or def.elite_rarity > 5:     # 360 第一批
+		report.error("held_floor_percent", "持有物下限在 0～100（-1 = 沿用掉落规则），精英额外稀有度在 0～5（-1 = 沿用）")
 	if def.enemy_hp_percent <= -100 or def.advanced_percent < 0 or def.advanced_percent > 100 or def.advanced_skip_first < 0:
 		report.error("enemy_hp_percent", "生命多几成得大于 -100，强敌份额在 0～100，开头几场不能为负")
 	for key in ["hunter_hp_percent", "hunter_damage_percent", "faith_threshold_percent", "countdown_percent", "hunter_chase_percent", "hunter_chase_window"]:     # 320 C、E

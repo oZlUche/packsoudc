@@ -924,6 +924,7 @@ func _loot_context() -> LootContext:
 			(e as LootEffect).modify(ctx)
 	RunBuffs.apply_loot(active, ctx)
 	if difficulty != null:
+		ctx.apply_difficulty(difficulty)     # 360：持有物下限、精英额外稀有度
 		for e in difficulty.loot_effects():
 			e.modify(ctx)
 	if character != null:

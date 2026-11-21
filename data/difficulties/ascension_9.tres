@@ -53,6 +53,12 @@ level = 9
 requires_unlock = &"ascension_9"
 grants_unlock = &"ascension_10"
 mechanics = Array[ExtResource("2_k00fv")]([SubResource("Resource_lhri3"), SubResource("Resource_847xk")])
+search_floors = {
+"advanced": [3, 3, 2],
+"normal": [3, 3, 1]
+}
+held_floor_percent = 80
+elite_rarity = 3
 enemy_hp_percent = 10
 advanced_percent = 15
 hunter_hp_percent = 10

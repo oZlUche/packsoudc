@@ -76,7 +76,8 @@ static func treasure_candidates(rule: DropRule, items: ItemDatabase, rarity: int
 
 ## 掷：返回 {"dropped": [敌人自己掉的 id], "treasure": [珍宝 id], "treasure_missing": 中了却没有可掉的珍宝的次数}
 static func roll(
-	content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator, boss: bool = false, elite: bool = false
+	content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator, boss: bool = false, elite: bool = false,
+	regular: bool = false
 ) -> Dictionary:
 	var out := {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName], "treasure_missing": 0}
 	if rule == null or items == null:
@@ -87,9 +88,10 @@ static func roll(
 		var pick := rarity_guarantee(rule.boss_rarity, rule, items, carried, rng)
 		if pick != &"":
 			(out["treasure"] as Array[StringName]).append(pick)
-	# 切片 v6.14 D01：精英点保底一件（[member DropRule.elite_rarity]）
-	if elite and rule.elite_rarity >= 0:
-		var prize := rarity_guarantee(rule.elite_rarity, rule, items, carried, rng)
+	# 切片 v6.14 D01：精英点保底一件（[member DropRule.elite_rarity]）；360：难度写了稀有度就按难度（作者难度表 H 列）
+	var elite_r := elite_rarity_of(rule, ctx)
+	if elite and elite_r >= 0:
+		var prize := rarity_guarantee(elite_r, rule, items, carried, rng)
 		if prize != &"":
 			(out["treasure"] as Array[StringName]).append(prize)
 	# 093（日神 4 级）：必掉额外一件某稀有度的 —— 和 BOSS 保底同一条路，从这一档往低找
@@ -131,6 +133,9 @@ static func roll(
 			var k := rng.randi_range(0, left.size() - 1)
 			dropped_list.append(left[k])
 			left.remove_at(k)
+	# 360 第一批：普通敌人持有物的最低掉落占比 —— 第二轮补足（另行发放的奖励、包不算）
+	if regular:
+		top_up(carried, dropped_list, held_floor_of(rule, ctx), rule, items, rng)
 	var tries := ctx.rolls if ctx != null else 1
 	for i in maxi(0, tries):
 		if rng.randf() >= treasure_chance(rule, ctx):
@@ -149,6 +154,61 @@ static func roll(
 			continue
 		(out["treasure"] as Array[StringName]).append(_pick_weighted(cands, ctx, items, rng))
 	return out
+
+
+## 360：这一场精英额外掉落的稀有度（难度优先，没写用掉落规则）；-1 = 不给
+static func elite_rarity_of(rule: DropRule, ctx: LootContext) -> int:
+	if ctx != null and ctx.elite_rarity >= -1:
+		return ctx.elite_rarity
+	return rule.elite_rarity if rule != null else -1
+
+
+## 360：普通敌人持有物的最低掉落占比（0～1；难度优先，没写用掉落规则）
+static func held_floor_of(rule: DropRule, ctx: LootContext) -> float:
+	if ctx != null and ctx.held_floor >= 0.0:
+		return clampf(ctx.held_floor, 0.0, 1.0)
+	return clampf(float(rule.held_floor_percent) / 100.0, 0.0, 1.0) if rule != null else 0.0
+
+
+## 能参与随机掉落的持有物（作者难度表「来源与读法」：武器、护甲、食物、药品、饰品、材料按件数算；包、红武、劣化版、券、信物不算）
+static func is_droppable(d: ItemDef) -> bool:
+	return d != null and not d.is_bag and not d.is_unique() and not d.is_lesser() and not d.is_ticket() and not d.is_commission()
+
+
+## 360 第一批（作者难度表 G 列的两轮算法）第二轮：持有 M 件可掉的、第一轮掉了 K 件，补抽 max(0, ceil(M × r) − K) 件。
+## 只从没掉的里抽（同 id 有几件按几件算），抽中一件移出一件；权重 = 这件稀有度的基础掉率（越常见越容易补到，高稀有度不因保底变好拿）。
+## 补到的直接追加进 [param dropped]。返回补了几件
+static func top_up(
+	carried: Array[StringName], dropped: Array[StringName], floor_share: float, rule: DropRule, items: ItemDatabase, rng: RandomNumberGenerator
+) -> int:
+	if floor_share <= 0.0 or items == null:
+		return 0
+	var left: Array[StringName] = []
+	for id in carried:
+		if is_droppable(items.get_def(id)):
+			left.append(id)
+	var m := left.size()
+	if m == 0:
+		return 0
+	var k := 0
+	for id in dropped:
+		var at := left.find(id)
+		if at >= 0:
+			left.remove_at(at)
+			k += 1
+	var need := maxi(0, ceili(float(m) * floor_share - 0.000001) - k)
+	var added := 0
+	while added < need and not left.is_empty():
+		var weights: Array[float] = []
+		for id in left:
+			weights.append(maxf(0.0001, rule.base_of(items.get_def(id).rarity) if rule != null else 1.0))
+		var i := MapRng.pick_index(weights, rng)
+		if i < 0:
+			i = 0
+		dropped.append(left[i])
+		left.remove_at(i)
+		added += 1
+	return added
 
 
 ## 某个稀有度的保底一件（087 BOSS 保底与 093 日神的额外掉落共用）：这个稀有度里先挑珍宝，没有挑任何非包道具，
@@ -247,14 +307,14 @@ const EXPECT_SEED := 20261007
 
 ## 期望掉几件（地图屏敌人预览用）。140：就用 [method roll] 掷 [constant EXPECT_SAMPLES] 次取均值（固定种子）——
 ## 保底、BOSS 保底、额外掉落、携带品这些规则改了，预估自己跟上，不再另写一份近似公式
-static func expected_count(content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, boss: bool = false) -> float:
+static func expected_count(content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, boss: bool = false, elite: bool = false, regular: bool = false) -> float:
 	if rule == null or items == null:
 		return 0.0
 	var rng := RandomNumberGenerator.new()
 	rng.seed = EXPECT_SEED
 	var total := 0
 	for i in EXPECT_SAMPLES:
-		var r := roll(content, rule, ctx, items, rng, boss)
+		var r := roll(content, rule, ctx, items, rng, boss, elite, regular)
 		total += (r["dropped"] as Array).size() + (r["treasure"] as Array).size()
 	return float(total) / float(EXPECT_SAMPLES)
 
