@@ -124,3 +124,18 @@
 - 只有美术改动，没有重跑全量测试。
 
 ![中文大字：v6.81 新两方的纹章和图钉](images/v681-new-factions-crest-zh-large.jpg)
+
+## 八、委托信定稿图复测（PR #728，main cd45594a，只有美术）
+
+脚本和日志在 [evidence/2026-11-21-commission-letter/](evidence/2026-11-21-commission-letter/)（`letter728.gd`）。流程：新档拒教程，办完三份开放单，接《无人署名的信》，开自由模式，打开背包，悬停在信上。中文、英文大字、中文大字三组结果相同：
+
+- `commission_letter.png`（60×60）和 `@2x`（160×160）都能载入。
+- 开局后信在背包左上角那一格，画的是绳系信卷（B），封蜡和垂下的绳都看得清。
+- 悬浮窗写「未署名的信 / 普通 / 委托物」，英文是 "Unsigned Letter / Common / Commission item"。说明按规定留空。
+- 没有出框，也没有缺图。
+
+![中文：背包里的信](images/pr728-letter-bag-zh.jpg)
+
+![英文大字：信的悬浮窗](images/pr728-letter-hover-en-large.jpg)
+
+观察：道具叫「未署名的信」，委托单和局内目标叫《无人署名的信》，差两个字。这是 PR #728 之前就有的，要不要统一等作者定。
