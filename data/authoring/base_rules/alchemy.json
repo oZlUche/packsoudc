@@ -8,11 +8,9 @@
     0.4,
     0.25
   ],
-  "excluded_tags": [
+  "guard_tags": [
     "unique",
     "treasure",
-    "valuable",
-    "bullion",
     "keepsake",
     "token",
     "sealed",
