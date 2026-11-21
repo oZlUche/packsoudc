@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_7jbp0"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_dwdax"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_0g7v1"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="4_yge3l"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_q6mxd"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_10f6b"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_qljxw"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_gdigj"]
+
+[sub_resource type="Resource" id="Resource_mvcmq"]
+script = ExtResource("4_yge3l")
+base_stats = {
+"block": 7
+}
+
+[sub_resource type="Resource" id="Resource_xxjia"]
+script = ExtResource("8_gdigj")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("7_qljxw")
+id = &"steel_round_shield"
+display_name = "钢圆盾"
+display_names = {
+"en": "Steel Round Shield"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_xxjia")
+rarity = 2
+tags = Array[StringName]([&"shield", &"imperial"])
+material = "metal"
+combat = SubResource("Resource_mvcmq")
