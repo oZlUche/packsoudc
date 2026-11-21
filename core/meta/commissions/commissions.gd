@@ -195,7 +195,7 @@ static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &
 	if d == null or f == null or not f.listed or not present(book, f):
 		return WHY_HIDDEN
 	var st := book.state_of(d.id)
-	if st == CommissionBook.TAKEN:
+	if st == CommissionBook.TAKEN or st == CommissionBook.READY:
 		return WHY_TAKEN
 	if NoticeBoard.is_note(d.id) and not book.pins.has(String(d.id)):     # 342 B2：纸条只能从栏上接
 		return WHY_HIDDEN
@@ -216,29 +216,49 @@ static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &
 
 
 static func _taken_regular(book: CommissionBook) -> int:
-	return book.taken().filter(func(id: StringName) -> bool: return not is_story(def(id))).size()
+	return book.in_hand().filter(func(id: StringName) -> bool: return not is_story(def(id))).size()
 
 
 ## 342 B2：够格的剧情自动接上（暂缓过的接着做；要先选配方的留给玩家点）。返回这回接上的 id
 static func auto_take(book: CommissionBook) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for d in defs():
-		if not is_story(d) or needs_pick(d) or book.state_of(d.id) == CommissionBook.TAKEN:
+		if not is_story(d) or needs_pick(d) or book.state_of(d.id) == CommissionBook.TAKEN or book.state_of(d.id) == CommissionBook.READY:
 			continue
 		if take(book, d):
 			out.append(d.id)
 	return out
 
 
-## 342 B2：营地「办理」—— 停在 `camp_report` 那一步就记一次；停在 `hand_in` 就把仓库里合格的交上去（够几件交几件）。
-## 返回 [method credit] 的结果（交货另有 `handed` = 交了几件）
+## 342 B2：营地当场办 —— 停在 `camp_report` 那一步：卡上的【完成】，记一次并当场结案；停在 `hand_in`：【交货】，
+## 把仓库里合格的交上去（够几件交几件），交够直接结案。返回 [method credit] 的结果（交货另有 `handed` = 交了几件）
 static func report(meta: MetaState, d: CommissionDef, items: ItemDatabase = null) -> Dictionary:
 	var s := current_stage(meta.commissions, d.id) if meta != null and d != null else -1
 	if s < 0 or s >= d.stages.size() or not CAMP_GOALS.has(d.stages[s].goal):
 		return {"ok": false, "step": false, "done": false}
 	if d.stages[s].goal == &"hand_in":
 		return _hand_in(meta, d, s, items)
-	return credit(meta, d, s, "camp", items)
+	var r := credit(meta, d, s, "camp", items)
+	if bool(r.get("ready", false)):
+		var rcs := meta.commissions.receipts
+		if not rcs.is_empty() and String(rcs[0].get("kind", "")) == "ready" and String(rcs[0].get("id", "")) == String(d.id):
+			rcs.pop_front()     # 当场就结案：「办成了，点完成」那条不留
+		var c := claim(meta, d, items)
+		r["done"] = c["done"]
+		r["got"] = c.get("got", {})
+	return r
+
+
+## 作者 2026-11-21：点【完成】—— 办成了的委托这时才发酬金、开设施（后面的剧情跟着出来）。返回 {"ok", "done", "got"}
+static func claim(meta: MetaState, d: CommissionDef, items: ItemDatabase = null) -> Dictionary:
+	if meta == null or d == null or meta.commissions.state_of(d.id) != CommissionBook.READY:
+		return {"ok": false, "done": false}
+	return {"ok": true, "done": true, "got": _complete(meta, d, items)}
+
+
+## 办成了、等点【完成】
+static func is_ready(book: CommissionBook, id: StringName) -> bool:
+	return book != null and book.state_of(id) == CommissionBook.READY
 
 
 ## 342 B2：现在停在营地能办的那一步（交货要仓库里至少有一件合格的，所以要 [param meta]）
@@ -337,7 +357,7 @@ static func pause(book: CommissionBook, id: StringName) -> bool:
 ## 放弃：进度清掉（完成过几次留着），可以重接
 static func abandon(book: CommissionBook, id: StringName) -> bool:
 	var st := book.state_of(id)
-	if (st != CommissionBook.TAKEN and st != CommissionBook.PAUSED) or is_story(def(id)):     # 342 B2：剧情不放弃
+	if (st != CommissionBook.TAKEN and st != CommissionBook.PAUSED) or is_story(def(id)):     # 342 B2：剧情不放弃；办成了的不放弃
 		return false
 	if NoticeBoard.is_note(id):     # 342 B2：放弃的纸条不回栏上
 		NoticeBoard.discard(book, id)
@@ -358,7 +378,8 @@ static func current_stage(book: CommissionBook, id: StringName) -> int:
 
 
 ## 记一次进度：只认正在做、正停在 [param stage] 这一步的；同一个 [param key] 只记一次。
-## 这一步做够了进下一步，最后一步做完就结案（[method _complete]）。返回 {"ok": 记上没有, "step": 进了下一步, "done": 结案, "got": 结案发的}
+## 这一步做够了进下一步。最后一步做完：交货直接结案（[method _complete]）；别的停在「办成了」，等玩家点【完成】（[method claim]）。
+## 返回 {"ok": 记上没有, "step": 进了下一步, "ready": 办成了等点完成, "done": 结案, "got": 结案发的}
 static func credit(meta: MetaState, d: CommissionDef, stage: int, key: String, items: ItemDatabase = null) -> Dictionary:
 	var out := {"ok": false, "step": false, "done": false}
 	if meta == null or d == null:
@@ -381,8 +402,15 @@ static func credit(meta: MetaState, d: CommissionDef, stage: int, key: String, i
 	if int(e["stage"]) < d.stages.size():
 		book.add_receipt({"id": String(d.id), "kind": "step", "stage": stage, "run": meta.runs})
 		return out
-	out["done"] = true
-	out["got"] = _complete(meta, d, items)
+	if d.stages[stage].goal == &"hand_in":     # 作者 2026-11-21：交货交够直接算完成
+		out["done"] = true
+		out["got"] = _complete(meta, d, items)
+		return out
+	e["state"] = CommissionBook.READY
+	e["stage"] = stage
+	e["progress"] = maxi(1, d.stages[stage].count)
+	out["ready"] = true
+	book.add_receipt({"id": String(d.id), "kind": "ready", "stage": stage, "run": meta.runs})
 	return out
 
 
