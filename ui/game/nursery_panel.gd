@@ -37,9 +37,20 @@ const H := OY + 504.0 + BELOW_H
 ## 熟了的作物缩一点（顶端不贴到页面上沿）
 const RIPE_SCALE := 0.9
 
+## 355：食材作物的小纸条（一排三张）
+const MINI_W := 180.0
+const MINI_H := 250.0
+const MINI_COLS := 3
+const TAB_H := 34.0
+
 var flow: GameFlow = null
 var _stage: Control = null
 var _frame: Control = null
+## 355：看哪一畦、空地纸条看哪一栏（药材 / 主食 / 蔬菜 / 水果）
+var shown_plot := 0
+var group: StringName = Nursery.GROUP_HERB
+## 整幅现在多高（食材那几栏纸条多，往下长）
+var _h := H
 
 
 func setup(p_flow: GameFlow) -> void:
@@ -73,7 +84,7 @@ func _fit() -> void:
 	var k := clampf(_frame.size.x / W, 0.3, 1.0) if _frame.size.x > 0.0 else 1.0
 	_stage.scale = Vector2(k, k)
 	_stage.position = Vector2((_frame.size.x - W * k) * 0.5, 0.0)
-	_frame.custom_minimum_size.y = H * k
+	_frame.custom_minimum_size.y = _h * k
 
 
 func refresh() -> void:
@@ -82,11 +93,60 @@ func refresh() -> void:
 	for c in _stage.get_children():
 		_stage.remove_child(c)
 		c.queue_free()
-	_build_plot(0)     # 现在一畦（第二畦留到 100 档）
+	shown_plot = clampi(shown_plot, 0, flow.meta.nursery.plots.size() - 1)
+	if not groups().has(group):
+		group = Nursery.GROUP_HERB
+	_h = H
+	if flow.meta.nursery.plots.size() > 1:
+		_add_plot_tabs()     # 355：垦户社信赖、代言各多一畦（占位排版，等 UI设计）
+	_build_plot(shown_plot)
+	_stage.size = Vector2(W, _h)
+	_fit()
 
 
-## 作物名
-static func crop_name(crop: StringName) -> String:
+## 355：空地纸条能看哪几栏：药材总有；灰灯食堂开了才有主食、蔬菜、水果
+func groups() -> Array[StringName]:
+	var out: Array[StringName] = [Nursery.GROUP_HERB]
+	if flow != null and flow.meta != null and flow.meta.canteen_open():
+		out.append_array(Nursery.GROUPS.filter(func(g: StringName) -> bool: return g != Nursery.GROUP_HERB))
+	return out
+
+
+func show_plot(i: int) -> void:
+	shown_plot = i
+	refresh()
+
+
+func show_group(g: StringName) -> void:
+	group = g
+	refresh()
+
+
+## 顶上一排畦键（熟了的标「可收获」）
+func _add_plot_tabs() -> void:
+	var row := UiTheme.hbox(8)
+	row.name = "PlotTabs"
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.position = Vector2(0, 10)
+	row.size = Vector2(W, TAB_H)
+	_stage.add_child(row)
+	for k in flow.meta.nursery.plots.size():
+		var idx := k
+		var text := UiText.t("nursery.plot") % (k + 1)
+		if flow.meta.nursery.is_ripe(k):
+			text += " · " + UiText.t("nursery.ripe")
+		var b := UiTheme.make_button(text, func(): show_plot(idx), UiPalette.Tier.SECONDARY, 15)
+		b.name = "Plot_%d" % k
+		UiTheme.mark(b, k == shown_plot)
+		row.add_child(b)
+
+
+## 作物名（355：食材作物就叫收成的名字）
+func crop_name(crop: StringName) -> String:
+	var spec: Dictionary = Nursery.CROPS.get(crop, {})
+	if spec.has("food"):
+		var d := _def(StringName(spec.get("product", &"")))
+		return Names.of(d) if d != null else String(crop)
 	return UiText.t("nursery.crop_" + String(crop))
 
 
@@ -176,9 +236,17 @@ func _build_plot(i: int) -> void:
 		outline.position = Vector2(PLANT_X - 75.0, planter.position.y - 132.0)
 		outline.size = Vector2(150, 124)
 		_stage.add_child(outline)
-	else:
+	elif UiTheme.has_art(ART + "plant_%s_%d" % [String(crop), st]):
 		var p := _pic("plant_%s_%d" % [String(crop), st], plant)
 		p.name = "Plant"
+		_stage.add_child(p)
+	else:     # 355：食材作物还没有作物图，先拿收成的图标顶着，长得越熟越大
+		var k := 0.35 + 0.15 * float(st)
+		var p := _item_icon(StringName((Nursery.CROPS.get(crop, {}) as Dictionary).get("product", &"")), plant.size.x * k)
+		p.name = "Plant"
+		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		p.position = Vector2(PLANT_X - plant.size.x * k * 0.5, planter.position.y - 8.0 - plant.size.x * k)
+		p.size = Vector2.ONE * plant.size.x * k
 		_stage.add_child(p)
 	if st == 3:
 		for s in [[Vector2(PLANT_X + 95, plant.position.y + 40), 22.0], [Vector2(PLANT_X - 105, plant.position.y + 110), 16.0], [Vector2(PLANT_X + 70, plant.position.y + 170), 14.0]]:
@@ -235,16 +303,93 @@ func _add_tag(i: int, crop: StringName, planter: Rect2) -> void:
 	tag.mouse_filter = Control.MOUSE_FILTER_PASS
 
 
-## 空地：木架下钉两张作物纸条
+## 空地：木架下钉作物纸条。药材那一栏是原来的两张大纸条；355：食材开了上面多一排栏键，主食 / 蔬菜 / 水果一排三张小纸条
 func _add_slips(i: int, below: Rect2) -> void:
-	var row := UiTheme.hbox(int(SLIP_GAP))
-	row.name = "Slips"
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.position = below.position + Vector2(0, 26)
-	row.size = Vector2(W, below.size.y - 26)
-	_stage.add_child(row)
-	for c in Nursery.ORDER:
-		row.add_child(_slip(i, c))
+	var gs := groups()
+	var top := 26.0
+	if gs.size() > 1:
+		var tabs := UiTheme.hbox(6)
+		tabs.name = "GroupTabs"
+		tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+		tabs.position = below.position + Vector2(0, 8)
+		tabs.size = Vector2(W, TAB_H)
+		_stage.add_child(tabs)
+		for g in gs:
+			var gg := g
+			var b := UiTheme.make_button(UiText.t("nursery.group_" + String(g)), func(): show_group(gg), UiPalette.Tier.SECONDARY, 15)
+			b.name = "Group_" + String(g)
+			UiTheme.mark(b, g == group)
+			tabs.add_child(b)
+		top = 8.0 + TAB_H + 12.0
+	if group == Nursery.GROUP_HERB:
+		var row := UiTheme.hbox(int(SLIP_GAP))
+		row.name = "Slips"
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.position = below.position + Vector2(0, top)
+		row.size = Vector2(W, below.size.y - 26)
+		_stage.add_child(row)
+		for c in Nursery.crops_in(Nursery.GROUP_HERB):
+			row.add_child(_slip(i, c))
+		_h = maxf(_h, below.position.y + top + below.size.y - 26.0)
+		return
+	var crops := Nursery.crops_in(group)
+	var grid := UiTheme.grid(MINI_COLS, 12)
+	grid.name = "Slips"
+	var rows := ceili(float(crops.size()) / MINI_COLS)
+	var gw := MINI_COLS * MINI_W + (MINI_COLS - 1) * 12.0
+	grid.position = below.position + Vector2((W - gw) * 0.5, top)
+	grid.size = Vector2(gw, rows * MINI_H)
+	_stage.add_child(grid)
+	for c in crops:
+		grid.add_child(_mini_slip(i, c))
+	_h = maxf(_h, below.position.y + top + rows * (MINI_H + 12.0) + 12.0)
+
+
+## 355：食材作物的小纸条 —— 收成图标、名字、送 → 收成 ×N、几局、偶尔多收什么、【种下】
+func _mini_slip(i: int, crop: StringName) -> Control:
+	var spec: Dictionary = Nursery.CROPS.get(crop, {})
+	var p := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 10, 8, 10, 8)
+	UiTheme.set_tone(p, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
+	p.name = "Slip_" + String(crop)
+	p.custom_minimum_size = Vector2(MINI_W, MINI_H)
+	p.tooltip_text = crop_text(crop)
+	var col := UiTheme.vbox(4)
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	p.add_child(col)
+	var pic := _item_icon(StringName(spec.get("product", &"")), 56)
+	pic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(pic)
+	var title := UiTheme.make_label(crop_name(crop), 17, INK)
+	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+	var trade := UiTheme.hbox(4)
+	trade.alignment = BoxContainer.ALIGNMENT_CENTER
+	trade.add_child(CP.emblem(&"growers", 22.0))
+	trade.add_child(UiTheme.make_label("→", 15, INK_DIM))
+	trade.add_child(_item_icon(StringName(spec.get("product", &"")), 22.0))
+	trade.add_child(UiTheme.make_label("×%d" % int(spec.get("count", 0)), 15, INK))
+	col.add_child(trade)
+	var runs := UiTheme.hbox(4)
+	runs.alignment = BoxContainer.ALIGNMENT_CENTER
+	runs.add_child(CP._pic("hourglass", Vector2(14, 18)))
+	runs.add_child(UiTheme.make_label(UiText.t("nursery.runs") % int(spec.get("runs", 0)), 15, INK))
+	col.add_child(runs)
+	var bonus: Dictionary = spec.get("bonus", {})
+	if not bonus.is_empty():
+		var bd := _def(StringName(bonus.get("id", &"")))
+		var bl := UiTheme.make_label(UiText.t("nursery.bonus") % (Names.of(bd) if bd != null else "?"), 13, INK_DIM)
+		bl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(bl)
+	var b := UiTheme.make_home_button(UiText.t("nursery.sow"), func(): sow(i, crop), true, Vector2(96, 34), 16)
+	b.name = "Sow_%d_%s" % [i, String(crop)]
+	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var why := Nursery.why_not_sow(flow.meta, i, crop)
+	b.disabled = why != ""
+	if why != "":
+		b.tooltip_text = UiText.t("nursery.why_" + why)
+	col.add_child(b)
+	return CP._pinned(p, "pin_growers")
 
 
 func _slip(i: int, crop: StringName) -> Control:
