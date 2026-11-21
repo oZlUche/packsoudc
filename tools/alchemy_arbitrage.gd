@@ -1,8 +1,11 @@
-## 354：「买来就炼」核对表（只读）。两张表：
-## 1. 集市卖的每件素材：买价、尘值、两档折损下得尘、每点尘花几枚金币（< 1 = 买来炼比尘的面值便宜，倒挂）；
+## 354：「买来就炼」核对表（只读）。四张表：
+## 1. 集市卖的每件货（第七节起什么都能炼，不只素材）：买价、尘值、两档折损下得尘、每点尘花几枚金币（< 1 = 买来炼比尘的面值便宜，倒挂）；
 ## 2. 每张铁匠配方：全用尘补要几点尘（点名道具按尘值；魔晶石格、传说格不能补），
 ##    （材料格按这一格最便宜的合格品的基础价）能补的那几样直接在集市买最便宜的合格品要几枚金币，和「买集市里每尘最便宜的素材来炼、再补」要几枚金币；后者更便宜 = 倒挂。
 ## 只看「能补的料」：不能补的、集市买不到的不比。
+## 3. 单看一格。
+## 4. 第七节「打造再炼」：每张配方全用尘补要几点尘，对成品炼掉得几点尘（两档折损）；成品得尘 > 补料的尘 = 倒挂（能空转刷尘，只花工钱）。
+##    有不能补的料的配方照列，标「要真料」，不算倒挂（真料本身就是成本）。兜底 = 数据里给成品写基础价，不在代码里特例
 ##
 ##     godot --headless --path . --script res://tools/alchemy_arbitrage.gd -- <输出.md>
 extends CliTool
@@ -21,9 +24,9 @@ func run() -> void:
 		for id in Market.catalogue(mrules, items, st, 99):
 			sold[id] = Market.price_of(mrules, items.get_def(id))
 	var lines: Array[String] = []
-	lines.append("## 表一 · 集市素材买来就炼")
+	lines.append("## 表一 · 集市货物买来就炼")
 	lines.append("")
-	lines.append("| 素材 | 买价 | 尘值 | 得尘 %d%% | 每尘金币 | 得尘 %d%% | 每尘金币 |" % [roundi(losses[0] * 100), roundi(losses[1] * 100)])
+	lines.append("| 货物 | 买价 | 尘值 | 得尘 %d%% | 每尘金币 | 得尘 %d%% | 每尘金币 |" % [roundi(losses[0] * 100), roundi(losses[1] * 100)])
 	lines.append("|---|---|---|---|---|---|---|")
 	var best := [INF, INF]     # 两档里每点尘最便宜要几枚金币
 	var ids: Array = sold.keys()
@@ -31,10 +34,7 @@ func run() -> void:
 	var any_inverted := false
 	for id in ids:
 		var d := items.get_def(id)
-		var inst := ItemInstance.create(d, 0)
-		if not Alchemy.can_dissolve(inst, rules):
-			continue
-		var v := Alchemy.dust_value(d)
+		var v := Alchemy.dust_value_of(ItemInstance.create(d, 0))
 		var row := "| %s | %d | %d" % [Names.of(d), int(sold[id]), v]
 		for k in 2:
 			var got := Alchemy.yield_of(v, 1, losses[k])
@@ -105,7 +105,43 @@ func run() -> void:
 	for h in line_hits:
 		lines.append("- " + h)
 	lines.append("")
-	lines.append("结论：%s" % ("整张配方有倒挂，见表二" if any_inverted else "整张配方没有倒挂") + ("；单格有 %d 处，见表三" % line_hits.size() if not line_hits.is_empty() else "；单格也没有"))
+	lines.append("## 表四 · 用尘打造再炼掉")
+	lines.append("")
+	lines.append("| 配方 | 成品价值 | 补料的尘 | 工钱 | 炼掉得尘 %d%% | 炼掉得尘 %d%% | 倒挂 |" % [roundi(losses[0] * 100), roundi(losses[1] * 100)])
+	lines.append("|---|---|---|---|---|---|---|")
+	var loop_hits: Array[String] = []
+	for r in recipes:
+		var out_def := items.get_def(r.output)
+		if out_def == null:
+			continue
+		var cost := 0
+		var real := false     # 有不能补的料
+		for key in r.inputs:
+			var d := items.get_def(StringName(String(key)))
+			if d == null or not Alchemy.input_dustable(d, rules):
+				real = true
+				continue
+			cost += Alchemy.dust_value(d) * int(r.inputs[key])
+		for slot in r.slots():
+			if not Alchemy.slot_dustable(slot, rules):
+				real = true
+				continue
+			cost += Alchemy.slot_dust(slot, items) * int(slot["count"])
+		var value := Alchemy.dust_value_of(ItemInstance.create(out_def, 0))
+		var got: Array[int] = [Alchemy.yield_of(value, 1, losses[0]), Alchemy.yield_of(value, 1, losses[1])]
+		var loop := not real and (got[0] > cost or got[1] > cost)
+		if loop:
+			var per: Array[String] = []     # 每多得一点尘花几枚工钱；比表一「买来就炼」便宜才真划算
+			for k in 2:
+				per.append("%.2f" % (float(r.funds) / float(got[k] - cost)) if got[k] > cost else "—")
+			loop_hits.append("%s：补料 %d 点尘，炼掉得 %d / %d 点；每多得一点尘花工钱 %s / %s 枚（买来就炼 %.2f / %.2f 枚）" % [Names.of(out_def), cost, got[0], got[1],
+				per[0], per[1], best[0], best[1]])
+		lines.append("| %s | %d | %s | %d | %d | %d | %s |" % [Names.of(out_def), value, str(cost) + ("（要真料）" if real else ""), r.funds, got[0], got[1], "是" if loop else ""])
+	lines.append("")
+	lines.append("结论：%s" % ("整张配方有倒挂，见表二" if any_inverted else "整张配方没有倒挂") + ("；单格有 %d 处，见表三" % line_hits.size() if not line_hits.is_empty() else "；单格也没有")
+		+ ("；打造再炼有 %d 张倒挂，见表四" % loop_hits.size() if not loop_hits.is_empty() else "；打造再炼也没有"))
+	for h in loop_hits:
+		lines.append("- " + h)
 	var text := "\n".join(PackedStringArray(lines)) + "\n"
 	var f := FileAccess.open(out_path, FileAccess.WRITE)
 	f.store_string(text)
