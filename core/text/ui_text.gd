@@ -665,6 +665,7 @@ const TEXT := {
 	"alchemy.auto_tip": {"zh": "先选标签圈范围；跳过锁定、收藏、剧情独有、委托要交的和出征携带的", "en": "Pick a tag first; skips locked, favorites, story items, commission hand-ins and your expedition carry"},
 	"alchemy.skipped": {"zh": "一键跳过 %d 件", "en": "Auto skips %d"},
 	"alchemy.guard": {"zh": "%s 炼了拿不回来", "en": "%s can't be recovered once dissolved"},
+	"alchemy.guard_tail": {"zh": "炼了拿不回来", "en": "can't be recovered"},
 	"alchemy.guard_more": {"zh": " 等 %d 件", "en": " and %d in all"},
 	"nursery.title": {"zh": "苗圃", "en": "Nursery"},
 	"nursery.empty": {"zh": "空着的一畦", "en": "An empty bed"},
