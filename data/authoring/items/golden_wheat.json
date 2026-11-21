@@ -1,0 +1,22 @@
+{
+  "id": "golden_wheat",
+  "display_name": "金穗麦",
+  "display_names": {
+    "en": "Golden Wheat"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

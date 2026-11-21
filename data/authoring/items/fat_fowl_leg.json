@@ -1,0 +1,21 @@
+{
+  "id": "fat_fowl_leg",
+  "display_name": "肥禽腿",
+  "display_names": {
+    "en": "Plump Fowl Leg"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "ingredient",
+    "nature"
+  ],
+  "material": "flesh"
+}

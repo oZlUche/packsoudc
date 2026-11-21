@@ -1,0 +1,21 @@
+{
+  "id": "honeydew",
+  "display_name": "蜜瓜",
+  "display_names": {
+    "en": "Honeydew"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

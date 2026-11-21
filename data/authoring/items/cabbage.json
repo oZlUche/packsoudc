@@ -1,0 +1,21 @@
+{
+  "id": "cabbage",
+  "display_name": "卷心菜",
+  "display_names": {
+    "en": "Cabbage"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

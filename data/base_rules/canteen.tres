@@ -7,6 +7,21 @@ script = ExtResource("1_nwa5x")
 id = &"canteen"
 display_name = "灰灯食堂"
 entries = {
+"beast_haunch": {
+"category": "meat",
+"flat": 7,
+"satiety": 2
+},
+"beast_ribs": {
+"category": "meat",
+"flat": 5,
+"satiety": 1
+},
+"big_pumpkin": {
+"category": "staple",
+"flat": 7,
+"satiety": 24
+},
 "bitter_endive": {
 "category": "veg",
 "pct": 6,
@@ -16,6 +31,26 @@ entries = {
 "category": "staple",
 "pct": 2,
 "satiety": 5
+},
+"cabbage": {
+"category": "veg",
+"pct": 13,
+"satiety": 0
+},
+"coarse_wheat_bundle": {
+"category": "staple",
+"pct": 12,
+"satiety": 24
+},
+"fat_fowl": {
+"category": "meat",
+"pct": 17,
+"satiety": 2
+},
+"fat_fowl_leg": {
+"category": "meat",
+"pct": 7,
+"satiety": 0
 },
 "fowl_leg": {
 "category": "meat",
@@ -37,9 +72,34 @@ entries = {
 "flat": 3,
 "satiety": 0
 },
+"golden_wheat": {
+"category": "staple",
+"flat": 4,
+"satiety": 12
+},
 "honey_jar": {
 "category": "fruit",
 "pct": 1,
+"satiety": 0
+},
+"honey_pomelo": {
+"category": "fruit",
+"pct": 5,
+"satiety": 0
+},
+"honeydew": {
+"category": "fruit",
+"flat": 3,
+"satiety": 0
+},
+"jade_yam": {
+"category": "staple",
+"pct": 7,
+"satiety": 12
+},
+"long_scallion": {
+"category": "veg",
+"flat": 0.4,
 "satiety": 0
 },
 "meat_scrap": {
@@ -62,6 +122,16 @@ entries = {
 "flat": 3,
 "satiety": 11
 },
+"prime_beast_leg": {
+"category": "meat",
+"flat": 10,
+"satiety": 2
+},
+"prime_game_meat": {
+"category": "meat",
+"flat": 4,
+"satiety": 0
+},
 "red_berry_cluster": {
 "category": "fruit",
 "pct": 2,
@@ -76,6 +146,16 @@ entries = {
 "category": "staple",
 "flat": 1,
 "satiety": 5
+},
+"turnip": {
+"category": "veg",
+"flat": 0.6,
+"satiety": 0
+},
+"whole_fowl": {
+"category": "meat",
+"pct": 12,
+"satiety": 2
 },
 "wild_berry": {
 "category": "fruit",

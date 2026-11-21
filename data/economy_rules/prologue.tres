@@ -8,7 +8,7 @@ id = &"prologue"
 display_name = "序章的经济：没有付费撤离点"
 shop_rarity_weights = Array[float]([40.0, 30.0, 20.0, 8.0, 2.0])
 shop_sell_ratio = 0.3
-shop_exclude_tags = Array[StringName]([&"treasure", &"supply"])
+shop_exclude_tags = Array[StringName]([&"treasure", &"supply", &"ingredient"])
 bullion_shallow = {
 "gold_nugget": 1,
 "silver_bar": 1,

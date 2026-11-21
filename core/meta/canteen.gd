@@ -24,6 +24,8 @@ const STATS: Array[StringName] = [CARRY, BattleStats.MAX_STAMINA, BattleStats.RE
 ## 防溢出：每条属性汇总后的上限（固定值、百分数）。整锅放同一件也到不了，只防坏数据
 const CAP_FLAT := 999.0
 const CAP_PCT := 1000.0
+## 355：食材在普通搜索里的权重倍数（报告 355 第八节「权重低」）
+const SEARCH_WEIGHT := 0.25
 
 static var _rules: CanteenRules = null
 ## 提示窗按谁算「对当前角色实际加多少」（食堂页 = 上回出征那位，开局屏 = 选着的那位；空 = 不写）

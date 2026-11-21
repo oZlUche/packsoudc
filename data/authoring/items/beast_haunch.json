@@ -1,0 +1,20 @@
+{
+  "id": "beast_haunch",
+  "display_name": "大块兽肉",
+  "display_names": {
+    "en": "Beast Haunch"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "tags": [
+    "ingredient",
+    "nature"
+  ],
+  "material": "flesh"
+}

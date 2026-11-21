@@ -1,0 +1,22 @@
+{
+  "id": "jade_yam",
+  "display_name": "白玉薯",
+  "display_names": {
+    "en": "Jade Yam"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}
