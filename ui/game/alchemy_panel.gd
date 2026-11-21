@@ -38,6 +38,8 @@ const RING := 96.0
 const BAND_INSET := 22.0
 const BAND_ICON := 26.0
 const BAND_BAR := 4.0
+## 警告带里名字那一栏最宽多少（纸条内宽 − 两边缩进 − 竖线、小图），再长就折行
+const BAND_NAME_W := 200.0
 const BAND_BG := Color(0.604, 0.184, 0.133, 0.08)
 const H := SLIP_Y + SLIP_H + 20.0
 const LIGHT := Color("f1e3c2")
@@ -130,12 +132,16 @@ func _build() -> void:
 	tag_pick = OptionButton.new()
 	tag_pick.name = "AlchemyTag"
 	tag_pick.custom_minimum_size = Vector2(TAG_W, FILTER_H)
+	tag_pick.fit_to_longest_item = false     # 宽定死，字长了缩字号（英文大字不撑出中列）
+	tag_pick.clip_text = true
 	tag_pick.item_selected.connect(func(i: int): shelf.set_filter(StringName(String(tag_pick.get_item_metadata(i))), shelf.filter_rarity))
 	UiTheme.dress_wood_option(tag_pick, 16)
 	filters.add_child(tag_pick)
 	rarity_pick = OptionButton.new()
 	rarity_pick.name = "AlchemyRarity"
 	rarity_pick.custom_minimum_size = Vector2(RARITY_W, FILTER_H)
+	rarity_pick.fit_to_longest_item = false
+	rarity_pick.clip_text = true
 	WarehouseTools.fill_rarities(rarity_pick)
 	rarity_pick.item_selected.connect(func(i: int): shelf.set_filter(shelf.filter_tag, int(WarehouseTools.RARITIES[i][1])))
 	UiTheme.dress_wood_option(rarity_pick, 16)
@@ -332,6 +338,7 @@ func press_go() -> Dictionary:
 	if confirm_left <= 0.0:
 		confirm_left = CONFIRM_SEC
 		go_btn.text = UiText.t("act.confirm")
+		TextFit.shrink_button(go_btn, 12)
 		var risky := Alchemy.guarded_of(flow.meta, shelf.selected.keys())
 		if not risky.is_empty():
 			said.emit(_danger_text(risky), true)     # 第七节：危险确认 —— 第一下再说一遍拿不回来
@@ -362,6 +369,7 @@ func _reset_confirm() -> void:
 	confirm_left = 0.0
 	if go_btn != null:
 		go_btn.text = UiText.t("alchemy.go")
+		TextFit.shrink_button(go_btn, 12)
 
 
 func preview() -> Dictionary:
@@ -409,7 +417,19 @@ func refresh() -> void:
 	go_btn.disabled = shelf.selected.is_empty()
 	if go_btn.disabled:
 		_reset_confirm()
+	_fit_text()
 	_slip.size = Vector2(W - 40.0, 0.0)     # 纸条照内容收高
+
+
+## 定宽的键、下拉、警告带名字：字放不下就缩字号 / 折行，不撑宽（英文大字）
+func _fit_text() -> void:
+	for b in [tag_pick, rarity_pick, auto_btn, go_btn]:
+		TextFit.shrink_button(b as Button, 12)
+	var font := _danger.get_theme_font("font")
+	var px := _danger.get_theme_font_size("font_size")
+	var wide := font.get_string_size(_danger.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x if font != null else 0.0
+	_danger.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wide > BAND_NAME_W else TextServer.AUTOWRAP_OFF
+	_danger.custom_minimum_size.x = minf(wide, BAND_NAME_W) if wide > BAND_NAME_W else 0.0
 
 
 ## 一个角：最新的一件在最上，前面的往左上各错 [constant PEEK]（最多画三件）；两件以上角下写 ×n。

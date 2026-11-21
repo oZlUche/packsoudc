@@ -31,6 +31,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v6_to_v7(d)
 			7:
 				d = _v7_to_v8(d)
+			8:
+				d = _v8_to_v9(d)
 			_:
 				push_warning("MetaMigrations: 没有 v%d → v%d 的迁移，停在 v%d" % [v, v + 1, v])
 				return d
@@ -187,4 +189,16 @@ static func _v7_to_v8(d: Dictionary) -> Dictionary:
 	d["dust"] = maxi(0, int(d.get("dust", 0)))
 	if not (d.get("forged_recipes", null) is Array):
 		d["forged_recipes"] = []
+	return d
+
+
+## 358（游戏测试 v6.99）：v6.91 以前没记「打造过的配方」，老档升上来全空，得先用真料再打一次才能用尘补。
+## 迁移时按图鉴补上：成品在图鉴里亮了的铁匠配方都算打造过（成品也可能是捡来的 —— 宁可多给，不罚老玩家）。之后照常按真打造记
+static func _v8_to_v9(d: Dictionary) -> Dictionary:
+	var codex: Dictionary = d.get("codex", {}) if d.get("codex", null) is Dictionary else {}
+	var forged: Array = (d.get("forged_recipes", []) as Array).duplicate() if d.get("forged_recipes", null) is Array else []
+	for r in SmithRecipeDef.load_all():
+		if int(codex.get(String(r.output), 0)) > 0 and not forged.has(String(r.id)):
+			forged.append(String(r.id))
+	d["forged_recipes"] = forged
 	return d

@@ -19,7 +19,7 @@ extends RefCounted
 ## 319：v5 科技分成数值树与机制树、机制树只花见识；幸运科技删了（退钱退材料）、讨价并成一级，见 [MetaMigrations]
 ## 342 B2：v6 委托声望改五档（旧值折算），老档的铁匠铺、科技、集市一直开着
 ## 342 B3：v7 苗圃；354：v8 万物之尘与「打造过的配方」（[method MetaMigrations._v7_to_v8]）
-const SAVE_VERSION := 8
+const SAVE_VERSION := 9
 ## 319：记住最近结算过的几局（[member settled_runs]），重复结算不再发东西
 const SETTLED_MAX := 64
 ## 262（作者 14:19）：集市、铁匠铺默认就有 —— 没点科技也是 1 级，科技每点一级铺子再升一级
@@ -136,7 +136,7 @@ var commissions: CommissionBook = CommissionBook.new()
 var nursery: Nursery = Nursery.new()
 ## 354：万物之尘（[Alchemy]）—— 一个数，和金币一样不占格；老档 0
 var dust: int = 0
-## 354：用铁匠铺打造过的配方 id（[method Smithy.forge] 记；用尘补料的那次也算）；老档空，不从图鉴反推
+## 354：用铁匠铺打造过的配方 id（[method Smithy.forge] 记；用尘补料的那次也算）。358：v8 以前的老档迁移时按图鉴补（[method MetaMigrations._v8_to_v9]）
 var forged_recipes: Array[StringName] = []
 var _next_uid: int = 1
 
