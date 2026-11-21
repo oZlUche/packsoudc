@@ -1228,6 +1228,7 @@ const TEXT := {
 	"cond.bracket_min": {"zh": "需要段位 ≥ %d", "en": "Needs bracket ≥ %d"},
 	"cond.bracket_max": {"zh": "需要段位 ≤ %d", "en": "Needs bracket ≤ %d"},
 	"cond.bracket_range": {"zh": "需要段位 %d～%d", "en": "Needs bracket %d–%d"},
+	"cond.extract_closed": {"zh": "这个撤离点已经关闭了", "en": "This extraction point has closed"},
 	"cond.coins": {"zh": "需要 %d 币", "en": "Needs %d coins"},
 	"cond.eroded": {"zh": "需要这里已被侵蚀", "en": "Needs this spot to be eroded"},
 	"cond.erosion_min": {"zh": "需要侵蚀深度 ≥ %d", "en": "Needs Erosion depth ≥ %d"},

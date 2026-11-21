@@ -361,7 +361,9 @@ func reopen() -> bool:
 	_view.clear_hover()
 	var ok := flow.reopen_node()
 	if not ok:
-		say(UiText.t("notice.nothing_to_reopen"))
+		var here := _run.current_node() if _run != null else null
+		var closed_exit := here != null and NodeEvents.effective_type(here) == &"extract" and _countdown_closed(here)
+		say(UiText.t("notice.extract_closed" if closed_exit else "notice.nothing_to_reopen"))     # 反馈 11-21
 	return ok
 
 
