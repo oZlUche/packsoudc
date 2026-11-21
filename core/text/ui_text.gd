@@ -649,6 +649,11 @@ const TEXT := {
 	"setup.page_4": {"zh": "本次准备", "en": "Preparations"},     # 342 B3
 	"bias.title": {"zh": "材料倾向", "en": "Material Focus"},
 	"alchemy.title": {"zh": "炼金", "en": "Alchemy"},
+	"smithy.dust_not_forged": {"zh": "先用真材料打造一次，才能用尘补", "en": "Forge it once with real materials before using Omnires"},
+	"smithy.dust_no": {"zh": "这样东西不能用尘补", "en": "This can't be replaced with Omnires"},
+	"smithy.no_dust": {"zh": "万物之尘不够", "en": "Not enough Omnires"},
+	"smithy.dust_tip": {"zh": "点一下用尘补（每件 %d）", "en": "Click to use Omnires (%d each)"},
+	"smithy.dust_on_tip": {"zh": "用尘补 %d 件，再点一下取消", "en": "Using Omnires for %d; click again to cancel"},
 	"alchemy.dust": {"zh": "万物之尘", "en": "Omnires"},
 	"alchemy.or_sell": {"zh": "卖掉", "en": "or sell for"},
 	"alchemy.go": {"zh": "炼化", "en": "Dissolve"},

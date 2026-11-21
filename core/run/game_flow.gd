@@ -945,13 +945,13 @@ func _output_rarity(r: SmithRecipeDef) -> int:
 	return d.rarity if d != null else 0
 
 
-## 打一张配方；返回空串 = 打了（存盘），否则是原因
-func forge(id: StringName) -> String:
+## 打一张配方；返回空串 = 打了（存盘），否则是原因。354：[param dust] 见 [method Smithy.can_forge]
+func forge(id: StringName, dust: Dictionary = {}) -> String:
 	var r := SmithRecipeDef.find(smith_recipes, id)
-	var why := Smithy.can_forge(meta, r, items)
+	var why := Smithy.can_forge(meta, r, items, dust)
 	var made: ItemInstance = null
 	if why == "":
-		made = Smithy.forge(meta, r, items)
+		made = Smithy.forge(meta, r, items, dust)
 		if made == null:
 			why = UiText.t("smithy.full")
 	if why == "":

@@ -1,7 +1,7 @@
 ## 354：「买来就炼」核对表（只读）。两张表：
 ## 1. 集市卖的每件素材：买价、尘值、两档折损下得尘、每点尘花几枚金币（< 1 = 买来炼比尘的面值便宜，倒挂）；
-## 2. 每张铁匠配方：全用尘补要几点尘（点名道具按尘值、材料格按门槛稀有度一格的默认单价；魔晶石格、传说格不能补），
-##    能补的那几样直接在集市买最便宜的合格品要几枚金币，和「买集市里每尘最便宜的素材来炼、再补」要几枚金币；后者更便宜 = 倒挂。
+## 2. 每张铁匠配方：全用尘补要几点尘（点名道具按尘值；魔晶石格、传说格不能补），
+##    （材料格按这一格最便宜的合格品的基础价）能补的那几样直接在集市买最便宜的合格品要几枚金币，和「买集市里每尘最便宜的素材来炼、再补」要几枚金币；后者更便宜 = 倒挂。
 ## 只看「能补的料」：不能补的、集市买不到的不比。
 ##
 ##     godot --headless --path . --script res://tools/alchemy_arbitrage.gd -- <输出.md>
@@ -73,7 +73,7 @@ func run() -> void:
 			if not Alchemy.slot_dustable(slot, rules):
 				continue
 			var n := int(slot["count"])
-			dust += Alchemy.slot_dust(slot) * n
+			dust += Alchemy.slot_dust(slot, items) * n
 			parts.append("%s≥%d×%d" % [String(slot["material"]), int(slot["min"]), n])
 			var cheapest := -1
 			for id in sold:
@@ -84,10 +84,10 @@ func run() -> void:
 			else:
 				buy += cheapest * n
 				for k in 2:
-					var via_line := ceili(float(Alchemy.slot_dust(slot)) * best[k])
+					var via_line := ceili(float(Alchemy.slot_dust(slot, items)) * best[k])
 					if via_line < cheapest:
 						line_hits.append("%s 的「%s ≥%d」一格：尘 %d，折损 %d%% 下买来炼再补约 %d 枚金币，直接买最便宜的合格品 %d 枚" % [Names.of(items.get_def(r.output)),
-							String(slot["material"]), int(slot["min"]), Alchemy.slot_dust(slot), roundi(losses[k] * 100), via_line, cheapest])
+							String(slot["material"]), int(slot["min"]), Alchemy.slot_dust(slot, items), roundi(losses[k] * 100), via_line, cheapest])
 		if dust == 0:
 			continue
 		var via: Array[int] = []
