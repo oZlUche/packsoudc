@@ -1759,6 +1759,17 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 		report.error("held_floor_percent", "持有物下限在 0～100（-1 = 沿用掉落规则），精英额外稀有度在 0～5（-1 = 沿用）")
 	if def.enemy_hp_percent <= -100 or def.advanced_percent < 0 or def.advanced_percent > 100 or def.advanced_skip_first < 0:
 		report.error("enemy_hp_percent", "生命多几成得大于 -100，强敌份额在 0～100，开头几场不能为负")
+	for key in ["gear_cap_battle", "gear_cap_elite", "elite_extra_items", "enemy_weapon_quality", "boss_hp_percent", "hunter_loss_extra"]:     # 360 第二批
+		if int(def.get(key)) < 0:
+			report.error(key, "进阶只加不减：不能是负数")
+	if def.rest_keep_percent < 0 or def.rest_keep_percent > 100 or def.boss_speed_percent < 0 or def.boss_speed_percent >= 100:
+		report.error("rest_keep_percent", "休息点留下的份额在 0～100，首领加速在 0～99")
+	for eid in def.boss_upgrades:     # 360 A10：敌人 id → {title, titles, item}
+		var up: Variant = def.boss_upgrades[eid]
+		if not (up is Dictionary) or String((up as Dictionary).get("title", "")) == "":
+			report.error("boss_upgrades.%s" % eid, "要写成 {\"title\": 名字, \"item\": 道具 id}")
+		elif not ctx.enemies.is_empty() and not ctx.enemies.has(StringName(String(eid))):
+			report.error("boss_upgrades.%s" % eid, "没有敌人 '%s'" % eid)
 	for key in ["hunter_hp_percent", "hunter_damage_percent", "faith_threshold_percent", "countdown_percent", "hunter_chase_percent", "hunter_chase_window"]:     # 320 C、E
 		if int(def.get(key)) < 0:
 			report.error(key, "进阶只加不减：不能是负数")

@@ -4,13 +4,13 @@
   "display_names": {
     "en": "Ascension V"
   },
-  "description": "进阶四的一切，再加：猎手最大生命再 +{hunter_hp_percent}%。在进阶四撤离一次后解锁。",
+  "description": "进阶四的一切，再加：休息点减半，只剩一个会在半途关闭的撤离点。在进阶四撤离一次后解锁。",
   "descriptions": {
-    "en": "Everything in Ascension IV, and hunters have +{hunter_hp_percent}% max HP. Unlocked by extracting once on Ascension IV."
+    "en": "Everything in Ascension IV, and half the rest spots are gone; only one exit remains, and it closes partway through. Unlocked by extracting once on Ascension IV."
   },
-  "challenge": "猎手更耐打",
+  "challenge": "撤离更难",
   "challenges": {
-    "en": "Hunters are tougher"
+    "en": "Fewer ways out"
   },
   "level": 5,
   "requires_unlock": "ascension_5",
@@ -70,7 +70,10 @@
   },
   "held_floor_percent": 50,
   "elite_rarity": 2,
-  "enemy_hp_percent": 10,
-  "advanced_percent": 15,
-  "hunter_hp_percent": 10
+  "gear_cap_battle": 2,
+  "gear_cap_elite": 1,
+  "elite_extra_items": 1,
+  "allow_true_damage": true,
+  "rest_keep_percent": 50,
+  "no_paid_extract": true
 }

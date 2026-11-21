@@ -36,13 +36,13 @@ display_name = "进阶八"
 display_names = {
 "en": "Ascension VIII"
 }
-description = "进阶七的一切，再加：猎手直接攻击伤害 +{hunter_damage_percent}%。在进阶七撤离一次后解锁。"
+description = "进阶七的一切，再加：输给猎手多扣 {hunter_loss_extra} 点体力；所有敌人的武器品质高一级。在进阶七撤离一次后解锁。"
 descriptions = {
-"en": "Everything in Ascension VII, and hunters deal +{hunter_damage_percent}% direct attack damage. Unlocked by extracting once on Ascension VII."
+"en": "Everything in Ascension VII, and losing to a hunter costs {hunter_loss_extra} more Vitality; every enemy's weapons are one quality higher. Unlocked by extracting once on Ascension VII."
 }
-challenge = "猎手下手更重"
+challenge = "输给猎手更痛"
 challenges = {
-"en": "Hunters hit harder"
+"en": "Hunters hurt more"
 }
 level = 8
 requires_unlock = &"ascension_8"
@@ -54,9 +54,14 @@ search_floors = {
 }
 held_floor_percent = 80
 elite_rarity = 3
-enemy_hp_percent = 10
-advanced_percent = 15
-hunter_hp_percent = 10
-hunter_damage_percent = 10
-faith_threshold_percent = 10
+gear_cap_battle = 2
+gear_cap_elite = 1
+elite_extra_items = 1
+allow_true_damage = true
+enemy_weapon_quality = 1
+rest_keep_percent = 50
+no_paid_extract = true
+boss_hp_percent = 25
+boss_speed_percent = 20
+hunter_loss_extra = 1
 countdown_percent = 10

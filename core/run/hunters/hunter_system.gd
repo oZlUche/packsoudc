@@ -413,7 +413,7 @@ func fight(node: MapNode, uid: int, _ctx: EventContext) -> bool:
 	var loot_ctx := run._loot_context()
 	loot_ctx.drop_mult *= def.drop_mult
 	last_loss_id = &""
-	var won := run.events.fight_content(node, TYPE, content, loot_ctx, def.loss_cost)
+	var won := run.events.fight_content(node, TYPE, content, loot_ctx, loss_cost_of(def))
 	if won:
 		h.alive = false
 	else:
@@ -449,6 +449,16 @@ func flee(node: MapNode, uid: int, ctx: EventContext) -> bool:
 	return escaped
 
 
+
+## 360 第二批 A8：和猎手打输扣的体力 = 猎手定义的 + 难度多扣的（必死、不扣的不加）
+func loss_cost_of(def: HunterDef) -> int:
+	var base := def.loss_cost if def != null else NodeEvents.LOSS_DEFAULT
+	if base == NodeEvents.LOSS_DEFAULT:
+		base = run.events.rules.loss_cost_of(TYPE) if run != null and run.events != null and run.events.rules != null else 1
+	var extra := run.difficulty.hunter_loss_extra if run != null and run.difficulty != null else 0
+	return base + extra if base > 0 and extra > 0 else base
+
+
 ## 猎手的敌人内容：从它指定的池（或这一章的池）按强度规则现造，探索度就是现在的
 func build_content(h: Hunter, node: MapNode) -> Dictionary:
 	var def := def_of(h)
@@ -462,7 +472,8 @@ func build_content(h: Hunter, node: MapNode) -> Dictionary:
 	var entry := EnemyPlacer.pick(pool, run.enemies, view, wanted, r)
 	if entry == null:
 		return {}
-	var built := EnemyPlacer.build_content(run.enemies.enemy(entry.enemy), pool, run.items, wanted, r)
+	var boost := {"quality": run.difficulty.enemy_weapon_quality} if run.difficulty != null and run.difficulty.enemy_weapon_quality > 0 else {}     # 360 第二批：A8 起
+	var built := EnemyPlacer.build_content(run.enemies.enemy(entry.enemy), pool, run.items, wanted, r, null, null, boost)
 	var content: Dictionary = built.get("content", {})     # build_content 的回报是 {content, dropped}，和 NodeEvents._enemy_for 一样只取内容
 	EnemyKit.stamp_hp(content, hp_mult())
 	EnemyKit.stamp_damage(content, run.difficulty.hunter_damage_mult() if run.difficulty != null else 1.0)     # 320 A8
