@@ -1,39 +1,47 @@
-## 342 B3：河滩垦户社的苗圃 —— 局外的几畦地（[member MetaState.nursery]），后勤里播种、收获。
+## 342 B3：河滩垦户社的苗圃 —— 局外的几片地（[member MetaState.nursery]），后勤里播种、收获。
+##
+## 作者 2026-11-21 19:07：每片地是一块棋盘（[member fields]），作物照收成的形状一株一株摆进去，摆得下几株就种几株；
+## 每种作物自己的成熟局数（[constant CROPS] 的 runs），每株各长各的（[member growth]）。以后田里还能摆增产、催熟相邻作物的特殊道具。
 ##
 ## - 一次有实际探索的正式出征结算推进一格（胜败都算，[method advance]，和这一局的其他结果同一次并入，按局号防重复）；
 ##   重载、没走出起点的空跑、教程局、试玩切片不推进。
-## - 成熟了留在地里；仓库放得下才收（[method harvest]）：扣种、入库、清畦一次做完，放不下整体退回，不多给也不吞。
-## - 作物（[constant CROPS]）是初值：苦叶草用一束干草药留种、两局收两束；绳麻的种苗垦户社给、三局收一卷麻绳
+## - 播种一次种一株（[method sow]），种苗按株扣（苦叶草一株一束干草药，别的垦户社给）。
+## - 熟了留在地里；收获（[method harvest]）一次收这一片熟了的全部：仓库放得下才收，放不下整体退回，不多给也不吞。
+## - 作物是初值：苦叶草一株收两束干草药，别的一株收一件收成（食材作物偶尔多收一件优良的）
 class_name Nursery
 extends RefCounted
 
-## 几畦：垦户社熟面开一畦；355：信赖开第二畦、代言开第三畦（[method plots_for]）。老档读回来至少一畦
+## 几片：垦户社熟面开一片；355：信赖开第二片、代言开第三片（[method plots_for]）。老档读回来至少一片
 const PLOTS := 1
 const MAX_PLOTS := 3
-## 第几档开到几畦：[熟面及以下, 信赖, 代言]
+## 第几档开到几片：[信赖, 代言]
 const PLOT_TIERS: Array[int] = [3, 4]
-## 作物 → {"product": 收什么, "count": 几件, "runs": 几局成熟, "seed": {道具 id: 件数}（播种时从仓库扣）}；
-## 355：食材作物另带 "food": 类别（灰灯食堂开了才能种），"bonus": {"id": 少量额外收成, "chance": 每件的概率}
+## 每片地多大
+const FIELD := Vector2i(4, 4)
+## 地的格子盘编号（第 i 片 = FIELD_ID + i）
+const FIELD_ID := 110
+## 作物 → {"product": 收什么（也是摆在地里的形状）, "yield": 一株收几件, "runs": 几局成熟, "seed": {道具 id: 一株扣几件}（播种时从仓库扣）}；
+## 355：食材作物另带 "food": 类别（灰灯食堂开了才能种），"bonus": {"id": 少量额外收成, "chance": 一株多收一件的概率}
 const CROPS := {
-	&"bitter_leaf": {"product": &"dried_herbs", "count": 2, "runs": 2, "seed": {&"dried_herbs": 1}},
-	&"rope_hemp": {"product": &"rope_coil", "count": 1, "runs": 3, "seed": {}},
-	&"sour_wheat": {"product": &"sour_wheat", "count": 4, "runs": 2, "seed": {}, "food": &"staple", "bonus": {"id": &"golden_wheat", "chance": 0.15}},
-	&"black_bean": {"product": &"black_bean", "count": 4, "runs": 2, "seed": {}, "food": &"staple"},
-	&"mountain_yam": {"product": &"mountain_yam", "count": 3, "runs": 2, "seed": {}, "food": &"staple", "bonus": {"id": &"jade_yam", "chance": 0.15}},
-	&"rice_sack": {"product": &"rice_sack", "count": 3, "runs": 2, "seed": {}, "food": &"staple"},
-	&"big_pumpkin": {"product": &"big_pumpkin", "count": 2, "runs": 3, "seed": {}, "food": &"staple"},
-	&"coarse_wheat_bundle": {"product": &"coarse_wheat_bundle", "count": 2, "runs": 3, "seed": {}, "food": &"staple", "bonus": {"id": &"golden_wheat", "chance": 0.25}},
-	&"wild_scallion": {"product": &"wild_scallion", "count": 4, "runs": 2, "seed": {}, "food": &"veg"},
-	&"fragrant_root": {"product": &"fragrant_root", "count": 3, "runs": 2, "seed": {}, "food": &"veg"},
-	&"long_scallion": {"product": &"long_scallion", "count": 3, "runs": 3, "seed": {}, "food": &"veg"},
-	&"turnip": {"product": &"turnip", "count": 2, "runs": 3, "seed": {}, "food": &"veg"},
-	&"bitter_endive": {"product": &"bitter_endive", "count": 3, "runs": 2, "seed": {}, "food": &"veg"},
-	&"cabbage": {"product": &"cabbage", "count": 2, "runs": 3, "seed": {}, "food": &"veg"},
-	&"wild_berry": {"product": &"wild_berry", "count": 4, "runs": 2, "seed": {}, "food": &"fruit"},
-	&"mountain_pear": {"product": &"mountain_pear", "count": 3, "runs": 2, "seed": {}, "food": &"fruit"},
-	&"honeydew": {"product": &"honeydew", "count": 2, "runs": 3, "seed": {}, "food": &"fruit"},
-	&"red_berry_cluster": {"product": &"red_berry_cluster", "count": 3, "runs": 2, "seed": {}, "food": &"fruit"},
-	&"honey_pomelo": {"product": &"honey_pomelo", "count": 2, "runs": 3, "seed": {}, "food": &"fruit"},
+	&"bitter_leaf": {"product": &"dried_herbs", "yield": 2, "runs": 2, "seed": {&"dried_herbs": 1}},
+	&"rope_hemp": {"product": &"rope_coil", "yield": 1, "runs": 3, "seed": {}},
+	&"sour_wheat": {"product": &"sour_wheat", "yield": 1, "runs": 2, "seed": {}, "food": &"staple", "bonus": {"id": &"golden_wheat", "chance": 0.15}},
+	&"black_bean": {"product": &"black_bean", "yield": 1, "runs": 3, "seed": {}, "food": &"staple"},
+	&"mountain_yam": {"product": &"mountain_yam", "yield": 1, "runs": 3, "seed": {}, "food": &"staple", "bonus": {"id": &"jade_yam", "chance": 0.15}},
+	&"rice_sack": {"product": &"rice_sack", "yield": 1, "runs": 4, "seed": {}, "food": &"staple"},
+	&"big_pumpkin": {"product": &"big_pumpkin", "yield": 1, "runs": 5, "seed": {}, "food": &"staple"},
+	&"coarse_wheat_bundle": {"product": &"coarse_wheat_bundle", "yield": 1, "runs": 4, "seed": {}, "food": &"staple", "bonus": {"id": &"golden_wheat", "chance": 0.25}},
+	&"wild_scallion": {"product": &"wild_scallion", "yield": 1, "runs": 1, "seed": {}, "food": &"veg"},
+	&"fragrant_root": {"product": &"fragrant_root", "yield": 1, "runs": 2, "seed": {}, "food": &"veg"},
+	&"long_scallion": {"product": &"long_scallion", "yield": 1, "runs": 3, "seed": {}, "food": &"veg"},
+	&"turnip": {"product": &"turnip", "yield": 1, "runs": 4, "seed": {}, "food": &"veg"},
+	&"bitter_endive": {"product": &"bitter_endive", "yield": 1, "runs": 2, "seed": {}, "food": &"veg"},
+	&"cabbage": {"product": &"cabbage", "yield": 1, "runs": 5, "seed": {}, "food": &"veg"},
+	&"wild_berry": {"product": &"wild_berry", "yield": 1, "runs": 2, "seed": {}, "food": &"fruit"},
+	&"mountain_pear": {"product": &"mountain_pear", "yield": 1, "runs": 3, "seed": {}, "food": &"fruit"},
+	&"honeydew": {"product": &"honeydew", "yield": 1, "runs": 5, "seed": {}, "food": &"fruit"},
+	&"red_berry_cluster": {"product": &"red_berry_cluster", "yield": 1, "runs": 3, "seed": {}, "food": &"fruit"},
+	&"honey_pomelo": {"product": &"honey_pomelo", "yield": 1, "runs": 6, "seed": {}, "food": &"fruit"},
 }
 const ORDER: Array[StringName] = [&"bitter_leaf", &"rope_hemp",
 	&"sour_wheat", &"black_bean", &"mountain_yam", &"rice_sack", &"big_pumpkin", &"coarse_wheat_bundle",
@@ -43,7 +51,7 @@ const ORDER: Array[StringName] = [&"bitter_leaf", &"rope_hemp",
 const GROUP_HERB := &"herb"
 const GROUPS: Array[StringName] = [&"herb", &"staple", &"veg", &"fruit"]
 ## 种不了 / 收不了的原因（字表键 `nursery.why_<原因>`）
-const WHY_BUSY := "busy"
+const WHY_ROOM := "room"
 const WHY_SEED := "seed"
 const WHY_UNRIPE := "unripe"
 const WHY_FULL := "full"
@@ -51,20 +59,32 @@ const WHY_UNKNOWN := "unknown"
 ## 355：食材作物要灰灯食堂开了才种
 const WHY_CANTEEN := "canteen"
 
-## 每畦：{"crop": 作物（空 = 空地）, "sown_run": 播种时是第几局, "left": 还差几局}
-var plots: Array[Dictionary] = []
+## 每片地一块棋盘：种下的每一株是一件收成道具（照它的形状占格）
+var fields: Array[GridInventory] = []
+## 每株长到哪：uid → {"crop": 作物, "left": 还差几局}
+var growth: Dictionary = {}
 ## 最后推进过的那一局（[member RunResult.run_id]），同一局不推进两次
 var last_run := ""
-## 播种、收获的流水号（委托的去重键用）
+## 播种、收获的流水号（委托的去重键、额外收成的随机数用）
 var seq := 0
+## 老档（一畦一种）读回来还没摆进棋盘的：[{"field", "crop", "left"}]，[method adopt_legacy] 摆
+var _legacy: Array[Dictionary] = []
 
 
 func _init() -> void:
-	while plots.size() < PLOTS:
-		plots.append(_empty())
+	while fields.size() < PLOTS:
+		fields.append(_field(fields.size()))
 
 
-## 355：垦户社第 [param tier] 档有几畦
+static func _field(i: int) -> GridInventory:
+	return GridInventory.new(FIELD, FIELD_ID + i, false)
+
+
+func field(i: int) -> GridInventory:
+	return fields[i] if i >= 0 and i < fields.size() else null
+
+
+## 355：垦户社第 [param tier] 档有几片
 static func plots_for(tier: int) -> int:
 	var n := PLOTS
 	for t in PLOT_TIERS:
@@ -77,8 +97,8 @@ static func plots_for(tier: int) -> int:
 func fit(tier: int) -> bool:
 	var want := plots_for(tier)
 	var grew := false
-	while plots.size() < want:
-		plots.append(_empty())
+	while fields.size() < want:
+		fields.append(_field(fields.size()))
 		grew = true
 	return grew
 
@@ -97,29 +117,63 @@ static func crops_in(group: StringName) -> Array[StringName]:
 	return out
 
 
-static func _empty() -> Dictionary:
-	return {"crop": "", "sown_run": 0, "left": 0}
+#region 一株
+func crop_of(uid: int) -> StringName:
+	return StringName(String((growth.get(uid, {}) as Dictionary).get("crop", "")))
 
 
-func plot(i: int) -> Dictionary:
-	return plots[i] if i >= 0 and i < plots.size() else {}
+## 还差几局（不是地里的 = -1）
+func left_of(uid: int) -> int:
+	return int((growth.get(uid, {}) as Dictionary).get("left", -1))
 
 
+func unit_ripe(uid: int) -> bool:
+	return growth.has(uid) and left_of(uid) <= 0
+
+
+## 第 [param i] 片熟了的那几株
+func ripe_units(i: int) -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	var g := field(i)
+	if g == null:
+		return out
+	for inst in g.items():
+		if unit_ripe((inst as ItemInstance).uid):
+			out.append(inst)
+	return out
+
+
+## 第 [param i] 片有熟了的
 func is_ripe(i: int) -> bool:
-	var p := plot(i)
-	return String(p.get("crop", "")) != "" and int(p.get("left", 0)) <= 0
+	return not ripe_units(i).is_empty()
 
 
-## 有几畦可以收
+## 熟了的一共几株
 func ripe_count() -> int:
 	var n := 0
-	for i in plots.size():
-		if is_ripe(i):
-			n += 1
+	for i in fields.size():
+		n += ripe_units(i).size()
 	return n
 
 
-## 仓库里能当种苗的那几件（没锁的、便宜的先用）；不够 = 空
+## 第 [param i] 片种着的那几株
+func plants(i: int) -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	var g := field(i)
+	if g != null:
+		for inst in g.items():
+			out.append(inst as ItemInstance)
+	return out
+
+
+## 第 [param i] 片一株也没种
+func is_empty(i: int) -> bool:
+	var g := field(i)
+	return g == null or g.item_count() == 0
+#endregion
+
+
+## 仓库里能当种苗的那几件（没锁的）；不够 = 空
 static func seed_picks(meta: MetaState, crop: StringName) -> Array[ItemInstance]:
 	var out: Array[ItemInstance] = []
 	var need: Dictionary = (CROPS.get(crop, {}) as Dictionary).get("seed", {})
@@ -135,75 +189,107 @@ static func seed_picks(meta: MetaState, crop: StringName) -> Array[ItemInstance]
 	return out
 
 
-## 能不能在第 [param i] 畦种 [param crop]：空串 = 能
-static func why_not_sow(meta: MetaState, i: int, crop: StringName) -> String:
+## 一株摆在哪：[param at] 给了（不是 -1）就那里、那个朝向；否则第一个摆得下的地方。摆不下 = {"found": false}
+static func spot(g: GridInventory, def: ItemDef, at: Vector2i = Vector2i(-1, -1), rot: int = 0) -> Dictionary:
+	if g == null or def == null:
+		return {"found": false}
+	if at.x >= 0:
+		return {"found": g.can_place_def(def, at, rot), "origin": at, "rotation": rot}
+	return g.find_first_fit(def, true)
+
+
+## 能不能在第 [param i] 片种一株 [param crop]（[param at] 见 [method spot]）：空串 = 能
+static func why_not_sow(meta: MetaState, i: int, crop: StringName, items: ItemDatabase = null, at: Vector2i = Vector2i(-1, -1), rot: int = 0) -> String:
 	if meta == null or not CROPS.has(crop):
 		return WHY_UNKNOWN
-	var p := meta.nursery.plot(i)
-	if p.is_empty():
+	var g := meta.nursery.field(i)
+	if g == null:
 		return WHY_UNKNOWN
-	if String(p["crop"]) != "":
-		return WHY_BUSY
 	if (CROPS[crop] as Dictionary).has("food") and not meta.canteen_open():
 		return WHY_CANTEEN
+	var def := _product(crop, items)
+	if def == null:
+		return WHY_UNKNOWN
+	if not bool(spot(g, def, at, rot)["found"]):
+		return WHY_ROOM
 	var need: Dictionary = CROPS[crop]["seed"]
 	if not need.is_empty() and seed_picks(meta, crop).is_empty():
 		return WHY_SEED
 	return ""
 
 
-## 播种：扣种苗、记下第几局种的。返回原因（空 = 种上了）
-static func sow(meta: MetaState, i: int, crop: StringName) -> String:
-	var why := why_not_sow(meta, i, crop)
+static func _product(crop: StringName, items: ItemDatabase) -> ItemDef:
+	var id := StringName((CROPS.get(crop, {}) as Dictionary).get("product", &""))
+	if id == &"":
+		return null
+	if items != null:
+		return items.get_def(id)
+	return ContentPaths.load_asset("items", String(id)) as ItemDef
+
+
+## 播种一株：扣种苗、摆进地里、记下还差几局。返回原因（空 = 种上了）
+static func sow(meta: MetaState, i: int, crop: StringName, items: ItemDatabase = null, at: Vector2i = Vector2i(-1, -1), rot: int = 0) -> String:
+	var why := why_not_sow(meta, i, crop, items, at, rot)
 	if why != "":
 		return why
+	var def := _product(crop, items)
+	var g := meta.nursery.field(i)
+	var where := spot(g, def, at, rot)
 	for it in seed_picks(meta, crop):
 		meta.warehouse.remove(it.uid)
+	var inst := ItemInstance.create(def, int(where["rotation"]))
+	inst.uid = meta.allocate_uid()
+	g.place(inst, where["origin"], int(where["rotation"]))
 	var n := meta.nursery
-	n.plots[i] = {"crop": String(crop), "sown_run": meta.runs, "left": int(CROPS[crop]["runs"])}
+	n.growth[inst.uid] = {"crop": String(crop), "left": int(CROPS[crop]["runs"])}
 	n.seq += 1
 	meta.changed.emit()
 	return ""
 
 
-## 一局正式探索结算完：每畦还没熟的近一格。同一局（[param run_id]）只推进一次。返回这回推进了没有
+## 一局正式探索结算完：每株还没熟的近一格。同一局（[param run_id]）只推进一次。返回这回推进了没有
 static func advance(meta: MetaState, run_id: String) -> bool:
 	if meta == null or run_id == "" or meta.nursery.last_run == run_id:
 		return false
 	var n := meta.nursery
 	n.last_run = run_id
-	for p in n.plots:
-		if String(p["crop"]) != "" and int(p["left"]) > 0:
-			p["left"] = int(p["left"]) - 1
+	for uid in n.growth:
+		var g: Dictionary = n.growth[uid]
+		if int(g["left"]) > 0:
+			g["left"] = int(g["left"]) - 1
 	return true
 
 
-## 收获第 [param i] 畦：全部放进仓库才算，放不下整体退回、地里照旧。返回 {"why": 原因（空 = 收了）, "crop", "items": 几件}
+## 收获第 [param i] 片熟了的全部：都放进仓库才算，放不下整体退回、地里照旧。
+## 返回 {"why": 原因（空 = 收了）, "crop": 收的第一种作物, "crops": {作物: 几株}, "items": 几件}
 static func harvest(meta: MetaState, i: int, items: ItemDatabase) -> Dictionary:
-	var out := {"why": "", "crop": "", "items": 0}
-	if meta == null or items == null or meta.nursery.plot(i).is_empty():
+	var out := {"why": "", "crop": "", "crops": {}, "items": 0}
+	if meta == null or items == null or meta.nursery.field(i) == null:
 		out["why"] = WHY_UNKNOWN
 		return out
-	if not meta.nursery.is_ripe(i):
+	var n := meta.nursery
+	var ripe := n.ripe_units(i)
+	if ripe.is_empty():
 		out["why"] = WHY_UNRIPE
 		return out
-	var crop := StringName(String(meta.nursery.plots[i]["crop"]))
-	var spec: Dictionary = CROPS.get(crop, {})
-	var def := items.get_def(StringName(spec.get("product", &"")))
-	if def == null:
-		out["why"] = WHY_UNKNOWN
-		return out
-	var added: Array[ItemInstance] = []
+	var rng := RandomNumberGenerator.new()     # 355：少量额外收成，按流水号定（同一档读回来收一样多）
+	rng.seed = hash([n.seq, i, "bonus"])
 	var defs: Array[ItemDef] = []
-	for _k in int(spec["count"]):
-		defs.append(def)
-	var bonus: Dictionary = spec.get("bonus", {})
-	if not bonus.is_empty() and items.get_def(StringName(bonus.get("id", &""))) != null:
-		var rng := RandomNumberGenerator.new()     # 355：少量额外收成，按流水号定（同一档读回来收一样多）
-		rng.seed = hash([meta.nursery.seq, i, String(crop), "bonus"])
-		for _k in int(spec["count"]):
-			if rng.randf() < float(bonus.get("chance", 0.0)):
-				defs.append(items.get_def(StringName(bonus["id"])))
+	var crops := {}
+	var first := ""
+	for unit in ripe:
+		var crop := n.crop_of(unit.uid)
+		if first == "":
+			first = String(crop)
+		var spec: Dictionary = CROPS.get(crop, {})
+		crops[String(crop)] = int(crops.get(String(crop), 0)) + 1
+		for _k in int(spec.get("yield", 1)):
+			defs.append(unit.def)
+		var bonus: Dictionary = spec.get("bonus", {})
+		var bd := items.get_def(StringName(bonus.get("id", &""))) if not bonus.is_empty() else null
+		if bd != null and rng.randf() < float(bonus.get("chance", 0.0)):
+			defs.append(bd)
+	var added: Array[ItemInstance] = []
 	for d in defs:
 		var inst := ItemInstance.create(d, 0)
 		inst.uid = meta.allocate_uid()
@@ -216,32 +302,84 @@ static func harvest(meta: MetaState, i: int, items: ItemDatabase) -> Dictionary:
 			out["why"] = WHY_FULL
 			return out
 		added.append(inst)
-	meta.nursery.plots[i] = _empty()
-	meta.nursery.seq += 1
-	out["crop"] = String(crop)
+	var g := n.field(i)
+	for unit in ripe:
+		g.remove(unit.uid)
+		n.growth.erase(unit.uid)
+	n.seq += 1
+	out["crop"] = first
+	out["crops"] = crops
 	out["items"] = added.size()
 	meta.changed.emit()
 	return out
 
 
+#region 存档
 func to_dict() -> Dictionary:
-	return {"plots": plots.duplicate(true), "last_run": last_run, "seq": seq}
+	var fs: Array = []
+	for g in fields:
+		fs.append(g.to_dict())
+	var gr := {}
+	for uid in growth:
+		gr[str(uid)] = (growth[uid] as Dictionary).duplicate()
+	return {"fields": fs, "growth": gr, "last_run": last_run, "seq": seq}
 
 
-static func from_dict(d: Variant) -> Nursery:
+## 读回来。老档（`plots`：一畦一种）记下来，等 [method adopt_legacy] 每畦摆一株进对应的那片地
+static func from_dict(d: Variant, items: ItemDatabase = null) -> Nursery:
 	var n := Nursery.new()
 	if not (d is Dictionary):
 		return n
 	var src := d as Dictionary
+	var raw_fields: Variant = src.get("fields", null)
+	if raw_fields is Array and items != null:
+		n.fields.clear()
+		for k in mini((raw_fields as Array).size(), MAX_PLOTS):
+			var raw_g: Variant = (raw_fields as Array)[k]
+			var g := GridInventory.from_dict(raw_g as Dictionary, items) if raw_g is Dictionary else _field(k)
+			g.id = FIELD_ID + k
+			n.fields.append(g)
+		if n.fields.is_empty():
+			n.fields.append(_field(0))
+		var gr: Dictionary = src.get("growth", {}) if src.get("growth", null) is Dictionary else {}
+		for g in n.fields:
+			for inst in g.items():
+				var it := inst as ItemInstance
+				var e: Variant = gr.get(str(it.uid), null)
+				var crop := StringName(String((e as Dictionary).get("crop", ""))) if e is Dictionary else &""
+				if crop == &"" or not CROPS.has(crop):
+					g.remove(it.uid)     # 认不得的作物（退役了）当空地
+					continue
+				n.growth[it.uid] = {"crop": String(crop), "left": maxi(0, int((e as Dictionary).get("left", 0)))}
 	var raw: Array = src.get("plots", []) if src.get("plots", null) is Array else []
-	while n.plots.size() < mini(raw.size(), MAX_PLOTS):
-		n.plots.append(_empty())
-	for i in mini(raw.size(), MAX_PLOTS):
-		if raw[i] is Dictionary:
-			var crop := String(raw[i].get("crop", ""))
-			if crop != "" and not CROPS.has(StringName(crop)):
-				crop = ""     # 认不得的作物（退役了）当空地
-			n.plots[i] = {"crop": crop, "sown_run": int(raw[i].get("sown_run", 0)), "left": maxi(0, int(raw[i].get("left", 0))) if crop != "" else 0}
+	while n.fields.size() < mini(raw.size(), MAX_PLOTS):
+		n.fields.append(_field(n.fields.size()))
+	for k in mini(raw.size(), MAX_PLOTS):
+		if raw[k] is Dictionary:
+			var crop := String(raw[k].get("crop", ""))
+			if crop != "" and CROPS.has(StringName(crop)):
+				n._legacy.append({"field": k, "crop": crop, "left": maxi(0, int(raw[k].get("left", 0)))})
 	n.last_run = String(src.get("last_run", ""))
 	n.seq = int(src.get("seq", 0))
 	return n
+
+
+## 老档那几畦：每畦种着的摆一株进对应那片地，还差几局照旧（读档时 [MetaState] 定好 uid 起点之后调）
+func adopt_legacy(meta: MetaState, items: ItemDatabase) -> void:
+	for e in _legacy:
+		var g := field(int(e["field"]))
+		var def := _product(StringName(String(e["crop"])), items)
+		var where := spot(g, def)
+		if g == null or not bool(where["found"]):
+			continue
+		var inst := ItemInstance.create(def, int(where["rotation"]))
+		inst.uid = meta.allocate_uid()
+		g.place(inst, where["origin"], int(where["rotation"]))
+		growth[inst.uid] = {"crop": String(e["crop"]), "left": int(e["left"])}
+	_legacy.clear()
+
+
+## 老档读回来还有几畦等着摆（测试用）
+func legacy_count() -> int:
+	return _legacy.size()
+#endregion
