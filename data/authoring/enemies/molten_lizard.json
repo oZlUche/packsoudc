@@ -1,0 +1,34 @@
+{
+  "id": "molten_lizard",
+  "display_name": "熔鳞蜥",
+  "display_names": {
+    "en": "Molten Lizard"
+  },
+  "strength": 3,
+  "schools": [
+    "fire"
+  ],
+  "base_stats": {
+    "max_hp": 70
+  },
+  "signature": [
+    "fire_gland",
+    "fire_gland",
+    "beast_claw",
+    "beast_hide"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    6,
+    4
+  ],
+  "species": "beast",
+  "bagless": true
+}

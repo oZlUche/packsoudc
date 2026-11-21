@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_u4x2e"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_v2302"]
+
+[resource]
+script = ExtResource("2_v2302")
+id = &"centurion"
+display_name = "百夫长"
+display_names = {
+"en": "Centurion"
+}
+strength = 3
+schools = Array[StringName]([&"burst", &"rapid"])
+base_stats = {
+"block": 2,
+"max_hp": 70
+}
+signature = Array[StringName]([&"shortsword", &"round_shield"])
+item_tags = Array[StringName]([&"imperial", &"shield", &"armor", &"remedy"])

@@ -22,7 +22,8 @@ static func _ids(content: Dictionary) -> Array[StringName]:
 	return out
 
 
-const BEASTS: Array[StringName] = [&"flame_wolf", &"frost_toad", &"shock_eel", &"pit_viper", &"cave_bear"]
+const BEASTS: Array[StringName] = [&"flame_wolf", &"frost_toad", &"shock_eel", &"pit_viper", &"cave_bear",
+	&"molten_lizard", &"frost_mane", &"thunder_vulture", &"miasma_spider", &"tusk_boar"]
 
 
 static func run_defs(t: TestCase) -> void:

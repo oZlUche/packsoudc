@@ -1,0 +1,26 @@
+{
+  "id": "centurion",
+  "display_name": "百夫长",
+  "display_names": {
+    "en": "Centurion"
+  },
+  "strength": 3,
+  "schools": [
+    "burst",
+    "rapid"
+  ],
+  "base_stats": {
+    "max_hp": 70,
+    "block": 2
+  },
+  "signature": [
+    "shortsword",
+    "round_shield"
+  ],
+  "item_tags": [
+    "imperial",
+    "shield",
+    "armor",
+    "remedy"
+  ]
+}

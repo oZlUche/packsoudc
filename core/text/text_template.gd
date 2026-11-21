@@ -433,7 +433,7 @@ static func _enemy_into(ctx: Dictionary, content: Dictionary, run: RunState) -> 
 	var def := run.enemies.enemy(StringName(String(content.get("enemy", ""))))
 	if def == null:
 		return
-	ctx["enemy_name"] = Names.of(def)
+	ctx["enemy_name"] = EnemyKit.title_of(content, def)     # 360 A10：强化版首领换名
 	ctx["enemy_strength"] = int(content.get("strength", 0))
 	var spec := EnemyKit.spec_of(content, run.enemies, run.pool, run.items)
 	var names: Array[String] = []

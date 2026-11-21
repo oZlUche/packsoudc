@@ -302,6 +302,8 @@ const TEXT := {
 	"node.hint.search_runes": {"zh": "几块立着的符文石，附近翻出来的多半是魔晶和魔法材料。", "en": "A few standing rune stones. Most of what turns up nearby is crystal and magic material."},
 	"node.hint.produce": {"zh": "这一带多翻出【%s】。", "en": "This area turns up more %s."},
 	# core/run/node_tooltip.gd：节点浮窗的内置模板（BBCode + 占位符，见 docs/text-placeholders.md）
+	"node.tip.unknown_enemy": {"zh": "{c:danger}敌情不明{/c}", "en": "{c:danger}Unknown foe{/c}"},
+	"node.unknown_enemy": {"zh": "敌情不明", "en": "Unknown foe"},
 	"node.tip.battle": {"zh": "{c:danger}{enemy_name}{/c}\n生命 {enemy_hp}\n带着 {enemy_count} 件：{enemy_items}", "en": "{c:danger}{enemy_name}{/c}\nHealth {enemy_hp}\nCarrying {enemy_count} items: {enemy_items}"},
 	"node.tip.visited": {"zh": "{c:dim}这里已经没东西了。{/c}", "en": "{c:dim}Nothing left here.{/c}"},
 	"node.tip.search": {"zh": "这里有值得搜索的东西，但翻得越久越可能惊动附近的人。", "en": "There's something worth searching here, but the longer you dig, the more likely you'll draw attention."},
@@ -610,6 +612,9 @@ const TEXT := {
 	"battle.log_tip": {"zh": "战记\n收起或展开这一场的逐条记录", "en": "Battle log\nShow or hide the blow-by-blow record of this fight"},
 	# ui/game/game_screen.gd（"我" 用 battle.me，"我方" 用 battle.side_mine）
 	"screen.enemy": {"zh": "敌人", "en": "Enemy"},
+	"enemy.rank_prefix.bronze": {"zh": "幼年", "en": "Young "},
+	"enemy.rank_prefix.silver": {"zh": "成年", "en": "Adult "},
+	"enemy.rank_prefix.gold": {"zh": "精英", "en": "Elite "},
 	# ui/game/prebattle_screen.gd
 	"pre.fight": {"zh": "开战", "en": "Fight"},
 	"pre.no_battle": {"zh": "没有等着开打的一场", "en": "There's no battle waiting"},

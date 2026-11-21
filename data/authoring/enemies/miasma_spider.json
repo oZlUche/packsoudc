@@ -1,0 +1,35 @@
+{
+  "id": "miasma_spider",
+  "display_name": "瘴蛛母",
+  "display_names": {
+    "en": "Miasma Spider"
+  },
+  "strength": 3,
+  "schools": [
+    "poison"
+  ],
+  "base_stats": {
+    "max_hp": 80
+  },
+  "signature": [
+    "viper_gland",
+    "viper_gland",
+    "beast_claw",
+    "beast_fang",
+    "beast_hide"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    6,
+    4
+  ],
+  "species": "beast",
+  "bagless": true
+}

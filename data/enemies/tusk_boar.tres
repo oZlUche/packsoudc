@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_yxxst"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_308qb"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_km7qm"]
+
+[sub_resource type="Resource" id="Resource_wg6ve"]
+script = ExtResource("2_308qb")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("3_km7qm")
+id = &"tusk_boar"
+display_name = "獠牙野猪"
+display_names = {
+"en": "Tusk Boar"
+}
+strength = 1
+schools = Array[StringName]([&"bleed"])
+base_stats = {
+"max_hp": 40
+}
+signature = Array[StringName]([&"beast_claw", &"beast_fang", &"beast_hide"])
+item_tags = Array[StringName]([&"beast_part"])
+loadout = SubResource("Resource_wg6ve")
+board = Vector2i(5, 3)
+species = &"beast"
+bagless = true

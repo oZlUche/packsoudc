@@ -41,6 +41,24 @@
       "enemy": "clock_keeper",
       "weight": 1.5,
       "min_danger": 1
+    },
+    {
+      "enemy": "condenser_automaton",
+      "weight": 1.5,
+      "node_types": [
+        "battle",
+        "elite"
+      ],
+      "min_danger": 1
+    },
+    {
+      "enemy": "arc_coil",
+      "weight": 1.5,
+      "node_types": [
+        "battle",
+        "elite"
+      ],
+      "min_danger": 1
     }
   ],
   "tiers": [

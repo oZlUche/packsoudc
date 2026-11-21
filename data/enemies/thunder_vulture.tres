@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_ies87"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_cbix4"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_dajuy"]
+
+[sub_resource type="Resource" id="Resource_3lqr6"]
+script = ExtResource("2_cbix4")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("3_dajuy")
+id = &"thunder_vulture"
+display_name = "雷羽鹫"
+display_names = {
+"en": "Thunder Vulture"
+}
+strength = 3
+schools = Array[StringName]([&"lightning"])
+base_stats = {
+"max_hp": 85,
+"regen_stamina": 8
+}
+signature = Array[StringName]([&"shock_sac", &"shock_sac", &"shock_sac", &"beast_claw", &"beast_claw"])
+item_tags = Array[StringName]([&"beast_part"])
+loadout = SubResource("Resource_3lqr6")
+board = Vector2i(6, 4)
+species = &"beast"
+bagless = true

@@ -1,0 +1,36 @@
+{
+  "id": "thunder_vulture",
+  "display_name": "雷羽鹫",
+  "display_names": {
+    "en": "Thunder Vulture"
+  },
+  "strength": 3,
+  "schools": [
+    "lightning"
+  ],
+  "base_stats": {
+    "max_hp": 85,
+    "regen_stamina": 8
+  },
+  "signature": [
+    "shock_sac",
+    "shock_sac",
+    "shock_sac",
+    "beast_claw",
+    "beast_claw"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    6,
+    4
+  ],
+  "species": "beast",
+  "bagless": true
+}
