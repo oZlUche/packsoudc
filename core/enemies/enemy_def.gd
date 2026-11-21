@@ -41,6 +41,9 @@ extends Resource
 ## 和 [member signature] 一起算招牌。神射手：0 档短弓、1 档长弓、2 档赐福的长弓
 @export var signature_by_strength: Dictionary = {}
 
+## 365: extra signature carried at gold rank ([EnemyRank], difficulty A4+ or boss); beasts carry their legendary material here
+@export var gold_signature: Array[StringName] = []
+
 
 ## 这一档的招牌：signature + signature_by_strength 里 ≤ strength 的最高一档
 func signature_at(p_strength: int) -> Array[StringName]:
