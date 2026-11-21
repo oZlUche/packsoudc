@@ -239,6 +239,8 @@ static func _importers() -> Dictionary:
 static func import_of(kind: String, data: Dictionary, ctx: Context, report: ImportReport) -> Resource:
 	if kind == "base_rules" and String(data.get("id", "")) == String(ScoreRules.ID):
 		return import_score_rules(data, ctx, report)     # 269
+	if kind == "base_rules" and String(data.get("id", "")) == String(AlchemyRules.ID):
+		return import_alchemy_rules(data, ctx, report)     # 354
 	var importer: Callable = _importers().get(kind, Callable())
 	if not importer.is_valid():
 		report.error("", "不认识的内容种类 '%s'（登记在 ContentPaths.KINDS，并在 ContentImporter.import_of 接一臂）" % kind)
@@ -1137,6 +1139,21 @@ static func import_npc(data: Dictionary, ctx: Context, report: ImportReport) -> 
 
 
 ## 269：计分规矩 —— 击败 / 探索的分不能是负数，难度每档加的不能是负数
+## 354：炼金术的规矩 —— 折损每档都在 20% 到 50% 之间（作者 2026-11-21），至少一档；收的标签不能空
+static func import_alchemy_rules(data: Dictionary, ctx: Context, report: ImportReport) -> AlchemyRules:
+	var rules := AlchemyRules.new()
+	_fill(rules, data, "", ctx, report)
+	_require_id(rules.id, "炼金术规矩", report)
+	if rules.loss_by_tier.is_empty():
+		report.error("loss_by_tier", "至少一档")
+	for i in rules.loss_by_tier.size():
+		if rules.loss_by_tier[i] < 0.2 or rules.loss_by_tier[i] > 0.5:
+			report.error("loss_by_tier[%d]" % i, "折损得在 0.2 到 0.5 之间")
+	if rules.accept_tag == &"":
+		report.error("accept_tag", "得写收哪一类")
+	return rules
+
+
 static func import_score_rules(data: Dictionary, ctx: Context, report: ImportReport) -> ScoreRules:
 	var rules := ScoreRules.new()
 	_fill(rules, data, "", ctx, report)

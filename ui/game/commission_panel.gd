@@ -43,7 +43,7 @@ const RECEIPTS_SHOWN := 6
 ## 342 B2：三个子页（键、字表键）
 const SUBS := [["story", "commission.sub_story"], ["regular", "commission.sub_regular"], ["reputation", "commission.sub_reputation"]]
 ## 设施 → 字表键
-const FACILITY_TEXT := {&"smithy": "smithy.title", &"tech": "meta.tab_tech", &"market": "market.title", &"bias": "bias.title", &"nursery": "nursery.title"}
+const FACILITY_TEXT := {&"smithy": "smithy.title", &"tech": "meta.tab_tech", &"market": "market.title", &"bias": "bias.title", &"nursery": "nursery.title", &"alchemy": "alchemy.title"}
 
 ## 上次看的子页（这一趟游戏里记着）
 static var last_sub := "story"

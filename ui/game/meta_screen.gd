@@ -15,6 +15,7 @@ const MarketPanelScript := preload("res://ui/game/market_panel.gd")     # 251
 const SmithyPanelScript := preload("res://ui/game/smithy_panel.gd")     # 251
 const CommissionPanelScript := preload("res://ui/game/commission_panel.gd")     # 336
 const NurseryPanelScript := preload("res://ui/game/nursery_panel.gd")     # 342 B3
+const AlchemyPanelScript := preload("res://ui/game/alchemy_panel.gd")     # 354
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -41,7 +42,7 @@ const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_wa
 ## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
-	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"]],
+	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"], ["alchemy", "alchemy.title"]],
 	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"]],
 }
 const SUB_TAB_SIZE := Vector2(170, 44)
@@ -333,6 +334,18 @@ func open(payload: Dictionary) -> void:
 				say(text))
 		ns_page.add_child(_nursery)
 		_pages["nursery"] = ns_page
+	if _sub_btns.has("alchemy"):     # 354：炼金页（占位，等 UI设计 样张）—— 右边仓库进勾选模式
+		var al_page := _cloth()
+		_alchemy = AlchemyPanelScript.new()
+		_alchemy.setup(flow, _shelf)
+		_alchemy.changed.connect(_refresh)
+		_alchemy.said.connect(func(text: String, is_warn: bool):
+			if is_warn:
+				warn(text)
+			else:
+				say(text))
+		al_page.add_child(_alchemy)
+		_pages["alchemy"] = al_page
 	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
 		cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
@@ -398,7 +411,7 @@ func set_sell_mode(on: bool) -> void:
 
 
 func sell_mode() -> bool:
-	return _shelf != null and _shelf.select_mode
+	return _shelf != null and _shelf.select_mode and not _shelf.select_rule.is_valid()
 
 
 func sell_strip() -> SellStrip:
@@ -407,6 +420,9 @@ func sell_strip() -> SellStrip:
 
 ## 点了一件勾不上的：告示说为什么
 func _on_pick_refused(item: ItemInstance) -> void:
+	if alchemy_mode():     # 354
+		say(UiText.t("alchemy.why_" + Alchemy.why_not(item)) % Names.of(item.def))
+		return
 	say(UiText.t("sell.no_locked" if item.is_locked_by_player() else "sell.no_fav") % Names.of(item.def))
 #endregion
 
@@ -837,10 +853,21 @@ func _build_smithy(root: Control) -> Control:
 var _commissions = null
 ## 342 B3：苗圃页（垦户社没来 = null）
 var _nursery = null
+## 354：炼金页（协会没到信赖 = null）
+var _alchemy = null
 
 
 func nursery_panel():
 	return _nursery
+
+
+func alchemy_panel():
+	return _alchemy
+
+
+## 354：右边仓库正在炼金的勾选里
+func alchemy_mode() -> bool:
+	return _shelf != null and _shelf.select_mode and _shelf.select_rule.is_valid()
 
 
 ## 342 B3：苗圃里有熟的 —— 后勤页签（26）与苗圃小键（20）的字后面挂一个「可收获」小图（作者 2026-11-21 选 2 芽加金星），
@@ -917,6 +944,8 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 		var key: String = pair[0]
 		if key == "nursery" and not _growers_here():
 			continue     # 342 B3：垦户社还没来营地，不列
+		if key == "alchemy" and not flow.alchemy_listed():
+			continue     # 354：协会到信赖前不列
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
 		b.toggle_mode = true
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -1499,6 +1528,8 @@ func show_tab(p_name: String) -> void:
 	if Commissions.opens_known(StringName(shown)) and not flow.facility_open(StringName(shown)):
 		_fill_locked(StringName(shown))     # 342 B2：没开放 —— 入口照常，页里换成说明板
 		shown = "locked"
+	if _shelf != null and _alchemy != null and (shown == "alchemy") != alchemy_mode():     # 354：进炼金页勾素材，离开清掉
+		_shelf.set_select_mode(shown == "alchemy", AlchemyPanelScript.rule() if shown == "alchemy" else Callable())
 	if shown == "tech":
 		_ensure_tech()
 	if _tab != "" and shown != was:
@@ -1599,5 +1630,7 @@ func _refresh() -> void:
 	if _tab_btns.has("warehouse"):
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗
 	_sync_ripe_mark()     # 342 B3
+	if _alchemy != null:
+		_alchemy.refresh()     # 354
 	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
 		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))
