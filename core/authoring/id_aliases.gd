@@ -79,6 +79,10 @@ const RESHAPED := {
 	&"plate_cuirass_earth": "366：跟板甲一起 10 格 → 8 格",
 	&"plate_cuirass_nature": "366：跟板甲一起 10 格 → 8 格",
 	&"plate_cuirass_sun": "366：跟板甲一起 10 格 → 8 格",
+	&"leather_armor": "v7.55 测试：4×2 → 3×2（6 格不变），护甲都要能放进一个 3×3 包",
+	&"leather_armor_earth": "跟皮甲一起 4×2 → 3×2",
+	&"leather_armor_nature": "跟皮甲一起 4×2 → 3×2",
+	&"leather_armor_sun": "跟皮甲一起 4×2 → 3×2",
 }
 
 ## 173：道具 `state` 里改过名的键：旧 → 新（对账时统一改，未知键原样留着）
