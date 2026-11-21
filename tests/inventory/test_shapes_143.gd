@@ -9,7 +9,8 @@ const BEFORE := {
 	&"leather_armor": [4, 20], &"plate_cuirass": [9, 45], &"blessed_shield": [4, 6],
 }
 ## 作者（2026-10-12）把这两件改成了笔直的长条（1×3、1×4）：仍守「每格强度不变」，但不再要求是异形
-const STRAIGHT := [&"shortsword", &"longsword"]
+## v7.55：皮甲收成 3×2 整块（护甲都要能放进一个 3×3 包），也不再要求异形
+const STRAIGHT := [&"shortsword", &"longsword", &"leather_armor"]
 const MAIN_STATS := [&"damage", &"max_armor", &"block"]
 ## 279 重新定过数的（短剑降白 7、战锤 36、弓改装填后只打四成基础）：形状照查，数值不再按 143 的格数比
 ## 366：板甲收到 8 格、护甲 50 不变（高稀有度的护甲更「密」）

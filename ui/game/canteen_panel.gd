@@ -11,6 +11,8 @@ const INK := Color("2e2219")
 ## 缺料那几格：浅红底 + 朱红细框（占位，等 UI设计）
 const GAP_FILL := Color(0.80, 0.25, 0.18, 0.18)
 const GAP_LINE := Color("c0392b")
+## 收藏夹最多这么高，再多就在框里滚（收满 8 份也不出屏幕）
+const MENUS_MAX_H := 330.0
 
 var flow: GameFlow = null
 var drag: DragLayer = null
@@ -28,6 +30,7 @@ var _finals: VBoxContainer = null
 var _pot_name: Label = null
 var _save_btn: Button = null
 var _menu_box: VBoxContainer = null
+var _menu_scroll: ScrollContainer = null
 var _gap_layer: Control = null
 ## 正在改名的那一份（-1 = 没在改）
 var _renaming := -1
@@ -69,12 +72,17 @@ func setup(p_flow: GameFlow, p_drag: DragLayer, p_font: Font) -> void:
 	_pot_name = UiTheme.make_label("", 17, INK)
 	_pot_name.name = "PotName"
 	col.add_child(_pot_name)
-	_save_btn = UiTheme.make_button(UiText.t("canteen.menu_save"), func(): save_menu(), UiPalette.Tier.SECONDARY, 16)
+	_save_btn = UiTheme.make_button(UiText.t("canteen.menu_save"), func(): save_menu(), UiPalette.Tier.MINOR, 12)
 	_save_btn.name = "SaveMenu"
 	col.add_child(_save_btn)
+	_menu_scroll = UiTheme.vscroll()
+	_menu_scroll.name = "MenuScroll"
+	_menu_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	col.add_child(_menu_scroll)
 	_menu_box = UiTheme.vbox(4)
 	_menu_box.name = "Menus"
-	col.add_child(_menu_box)
+	_menu_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_menu_scroll.add_child(_menu_box)
 	if drag != null:
 		drag.drag_finished.connect(func(_uid: int, _dropped: bool): _save_if_dirty())
 	refresh()
@@ -187,6 +195,7 @@ func _fill_menus() -> void:
 		ch.queue_free()
 	for i in c.menus.size():
 		_menu_box.add_child(_menu_row(i, String(c.menus[i].get("name", "")), i == c.active))
+	_menu_scroll.custom_minimum_size.y = minf(_menu_box.get_minimum_size().y, MENUS_MAX_H)
 
 
 func _menu_row(i: int, title: String, lit: bool) -> Control:
@@ -203,17 +212,17 @@ func _menu_row(i: int, title: String, lit: bool) -> Control:
 		row.add_child(edit)
 		(func(): if edit.is_inside_tree(): edit.grab_focus()).call_deferred()
 		return row
-	var pick := UiTheme.make_button(title, func(): load_menu(i), UiPalette.Tier.SECONDARY, 15)
+	var pick := UiTheme.make_button(title, func(): load_menu(i), UiPalette.Tier.MINOR, 11)
 	pick.name = "Load"
 	pick.tooltip_text = UiText.t("canteen.menu_load_tip")
 	pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pick.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	UiTheme.mark(pick, lit)
 	row.add_child(pick)
-	var ren := UiTheme.make_button(UiText.t("canteen.menu_rename"), func(): start_rename(i), UiPalette.Tier.SECONDARY, 13)
+	var ren := UiTheme.make_button(UiText.t("canteen.menu_rename"), func(): start_rename(i), UiPalette.Tier.MINOR, 10)
 	ren.name = "Rename"
 	row.add_child(ren)
-	var del := UiTheme.make_button(UiText.t("canteen.menu_delete"), func(): delete_menu(i), UiPalette.Tier.SECONDARY, 13)
+	var del := UiTheme.make_button(UiText.t("canteen.menu_delete"), func(): delete_menu(i), UiPalette.Tier.MINOR, 10)
 	del.name = "Delete"
 	row.add_child(del)
 	return row
