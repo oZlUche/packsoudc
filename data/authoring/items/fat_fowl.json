@@ -1,0 +1,21 @@
+{
+  "id": "fat_fowl",
+  "display_name": "肥禽",
+  "display_names": {
+    "en": "Plump Fowl"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "ingredient",
+    "nature"
+  ],
+  "material": "flesh"
+}

@@ -13,10 +13,12 @@ static func _build(c: TestSupport.Content, enemy: StringName, strength: int, p_s
 	return EnemyPlacer.build_content(c.enemies.enemy(enemy), c.pool, c.items, strength, rng, carry)
 
 
+## 355：魔兽必带的肉（替身，标 carried）不算 —— 这里只看招牌与战斗道具
 static func _ids(content: Dictionary) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for raw in content.get("items", []):
-		out.append(StringName(String((raw as Dictionary).get("id", ""))))
+		if not bool((raw as Dictionary).get("carried", false)):
+			out.append(StringName(String((raw as Dictionary).get("id", ""))))
 	return out
 
 
@@ -68,7 +70,7 @@ static func run_assembly(t: TestCase) -> void:
 
 
 static func run_no_carry(t: TestCase) -> void:
-	t.begin("212 · ⑦ 魔兽不揣携带品（126）；人照旧揣")
+	t.begin("212 · ⑦ 魔兽不揣携带品（126）；人照旧揣；355：魔兽身上必掉的只有替身的肉")
 	var c := _content()
 	if c.carry == null:
 		t.check(false, "自由模式没有携带规则")
@@ -77,9 +79,9 @@ static func run_no_carry(t: TestCase) -> void:
 	for seed_ in 30:
 		for id in BEASTS:
 			for raw in (_build(c, id, c.enemies.enemy(id).strength, 300 + seed_, c.carry)["content"] as Dictionary)["items"]:
-				if bool((raw as Dictionary).get("carried", false)):
+				if bool((raw as Dictionary).get("carried", false)) and not c.enemies.enemy(id).loot_filler.has(StringName(String((raw as Dictionary).get("id", "")))):
 					carried += 1
-	t.eq(carried, 0, "五种魔兽 × 30 个种子：一件携带品都没有")
+	t.eq(carried, 0, "五种魔兽 × 30 个种子：除了替身的肉，一件携带品都没有")
 
 
 static func run_spec(t: TestCase) -> void:

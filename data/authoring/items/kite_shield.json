@@ -1,0 +1,28 @@
+{
+  "id": "kite_shield",
+  "display_name": "鸢盾",
+  "display_names": {
+    "en": "Kite Shield"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "shield",
+    "heavy",
+    "imperial"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "block": 9
+    }
+  }
+}

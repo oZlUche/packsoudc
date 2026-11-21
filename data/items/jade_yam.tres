@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_4ykd7"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_cvq5d"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_ux17i"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_8nd6b"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_6obpp"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_c0c0q"]
+
+[sub_resource type="Resource" id="Resource_88e2x"]
+script = ExtResource("6_c0c0q")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_6obpp")
+id = &"jade_yam"
+display_name = "白玉薯"
+display_names = {
+"en": "Jade Yam"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_88e2x")
+rarity = 1
+tags = Array[StringName]([&"ingredient", &"nature", &"plant"])
+material = "herb"

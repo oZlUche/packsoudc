@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_x0g6l"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_sv6s8"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_iprg5"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_o8wyu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_2iv17"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_s1p0k"]
+
+[sub_resource type="Resource" id="Resource_niuni"]
+script = ExtResource("6_s1p0k")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_2iv17")
+id = &"prime_game_meat"
+display_name = "上等兽肉"
+display_names = {
+"en": "Prime Game Meat"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_niuni")
+rarity = 1
+tags = Array[StringName]([&"ingredient", &"nature"])
+material = "flesh"

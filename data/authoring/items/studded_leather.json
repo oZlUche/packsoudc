@@ -1,0 +1,40 @@
+{
+  "id": "studded_leather",
+  "display_name": "镶钉皮甲",
+  "display_names": {
+    "en": "Studded Leather"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "armor",
+    "barbarian"
+  ],
+  "material": "leather",
+  "combat": {
+    "base_stats": {
+      "max_armor": 25
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_before_damage"
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "reflect_damage",
+            "percent": 10
+          }
+        ]
+      }
+    ]
+  }
+}

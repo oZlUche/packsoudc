@@ -40,7 +40,7 @@ const LABELS := {
 	"heal_cut_tags": "只截这些标签道具的治疗", "regen_cut": "每秒回复少几成（%）", "regen_cut_below": "低于上限百分之几才生效",     # 255
 	"seconds_per_stack": "每层持续几秒（按层计时）", "decay_halve_on": "层数减半的时机", "per_stack_percent": "每层百分之几", "damage_taken_by_type": "受到某类伤害每层加成（%）",
 	"pure": "真实伤害", "overflow_to": "满了溢出到", "guard": "保底层数",     # 175 补充四
-	"family": "伤害大类", "applies": "造成伤害后施加", "landed_only": "只认打中的", "applies_buff": "附带施加的状态", "applies_stacks": "施加几层",     # 175 补充五
+	"family": "伤害大类", "applies": "造成伤害后施加", "landed_only": "只认打中的", "blocked_only": "只认格挡挡下的", "applies_buff": "附带施加的状态", "applies_stacks": "施加几层",     # 175 补充五
 	"elements": "两种元素", "scaling": "随反应量变的数",     # 175
 	"is_debuff": "是减益", "refresh_on_restack": "再叠刷新时长", "on_apply": "施加时", "on_expire": "到期时", "mods": "属性加成", "consume": "消耗掉",
 	"grant_cells": "增益格", "receive_cells": "受益格", "grant_mods": "给邻居的加成", "grant_rules": "给邻居挂的规则", "receive_mods": "邻居给的加成", "grant_filter": "只给", "receive_filter": "只收",

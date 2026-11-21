@@ -32,5 +32,11 @@
     4
   ],
   "species": "beast",
-  "bagless": true
+  "bagless": true,
+  "loot_filler": [
+    "beast_haunch",
+    "beast_ribs",
+    "prime_game_meat",
+    "prime_beast_leg"
+  ]
 }

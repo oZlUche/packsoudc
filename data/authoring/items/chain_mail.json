@@ -1,0 +1,43 @@
+{
+  "id": "chain_mail",
+  "display_name": "锁子甲",
+  "display_names": {
+    "en": "Chain Mail"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111"
+  ],
+  "rarity": 2,
+  "tags": [
+    "armor",
+    "imperial"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "max_armor": 40
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_status_applied",
+          "buff_id": "bleed",
+          "on_self": true,
+          "by_self": false
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "remove_status",
+            "buff_id": "bleed"
+          }
+        ]
+      }
+    ]
+  }
+}

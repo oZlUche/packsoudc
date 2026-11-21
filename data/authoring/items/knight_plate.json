@@ -1,0 +1,29 @@
+{
+  "id": "knight_plate",
+  "display_name": "骑士板甲",
+  "display_names": {
+    "en": "Knight Plate"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111",
+    "101"
+  ],
+  "rarity": 3,
+  "tags": [
+    "armor",
+    "heavy",
+    "imperial"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "max_armor": 75,
+      "regen_stamina": -1
+    }
+  }
+}

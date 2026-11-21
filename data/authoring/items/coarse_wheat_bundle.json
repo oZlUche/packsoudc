@@ -1,0 +1,21 @@
+{
+  "id": "coarse_wheat_bundle",
+  "display_name": "粗麦捆",
+  "display_names": {
+    "en": "Coarse Wheat Sheaf"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

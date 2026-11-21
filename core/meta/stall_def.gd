@@ -15,5 +15,7 @@ extends Resource
 @export var fixed: bool = true
 ## 带其中一个标签就进这个摊的货单（散货摊不看，看 [member MarketRules.battle_tags]）
 @export var tags: Array[StringName] = []
+## 355：点名常备、不看标签的几件（粮铺常备几样一格的小食材）
+@export var extra_ids: Array[StringName] = []
 ## 点名不进这个摊（集市整体的排除在 [member MarketRules.excluded_ids]）
 @export var excluded_ids: Array[StringName] = []

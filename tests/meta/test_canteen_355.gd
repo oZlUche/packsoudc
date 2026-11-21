@@ -8,6 +8,7 @@ const Support := preload("res://tests/run/flow_support.gd")
 const W178 := preload("res://tests/ui/test_base_warehouse_178.gd")
 const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
+const CS := preload("res://tests/run/test_character_setup.gd")
 const PREFIX := "canteen_355"
 
 
@@ -34,7 +35,7 @@ static func run_content(t: TestCase) -> void:
 	t.begin("355 · 内容：食材表导得进来、带「食材」标签的都在表里；成品食物不是食材；锅 4/4/4/5/6、仓库 6×6/8×8/10×8；《开伙》要受托、开食堂")
 	var r := Canteen.load_rules()
 	t.eq(r.id, CanteenRules.ID, "规矩资产导出来了")
-	t.eq(r.entries.size(), 16, "第一批 16 件（每类一格、两格各两件，固定值、百分比各一件）")
+	t.eq(r.entries.size(), 32, "32 件（报告 355 第五节）")
 	var db := T110._db()
 	var tagged: Array = []
 	for id in db.ids(true):
@@ -46,6 +47,7 @@ static func run_content(t: TestCase) -> void:
 	t.eq(tagged, keys, "带「食材」标签的 = 表里的")
 	for id in [&"ration", &"salted_meat", &"field_rations", &"wolf_heart", &"dried_herbs"]:
 		t.check(not Canteen.is_ingredient(db.get_def(id)), "%s 不是食材" % id)
+	var want := {CanteenRules.STAPLE: [4, 4], CanteenRules.MEAT: [6, 5], CanteenRules.VEG: [4, 3], CanteenRules.FRUIT: [3, 3]}
 	for cat in CanteenRules.CATEGORIES:
 		var flat := 0
 		var pct := 0
@@ -55,7 +57,7 @@ static func run_content(t: TestCase) -> void:
 					flat += 1
 				else:
 					pct += 1
-		t.eq([flat, pct], [2, 2], "%s：固定值两件、百分比两件" % cat)
+		t.eq([flat, pct], want[cat], "%s：固定值、百分比各几件照第五节" % cat)
 	t.eq([r.pot_size(2), r.pot_size(3), r.pot_size(4)], [Vector2i(4, 4), Vector2i(5, 5), Vector2i(6, 6)], "锅：受托 4×4、信赖 5×5、代言 6×6")
 	t.eq([r.store_size(2), r.store_size(3), r.store_size(4)], [Vector2i(6, 6), Vector2i(8, 8), Vector2i(10, 8)], "食材仓库：6×6、8×8、10×8")
 	t.eq(float(r.entry(&"wild_berry")["flat"]), 0.5, "野莓每秒 0.5（作者 16:41）")
@@ -116,6 +118,120 @@ static func run_store(t: TestCase) -> void:
 	old.erase("canteen")
 	var b2 := MetaState.from_dict(old, db, GameFlow.load_meta_rules())
 	t.check(b2 != null and b2.canteen.pot.item_count() == 0 and b2.canteen.store.size == Vector2i(6, 6), "老档：空的")
+
+
+static func run_menus(t: TestCase) -> void:
+	t.begin("355 第二批 · 收藏菜单：收的是种类和摆法；一键重做从食材仓库按原样取料，缺料的格标出来；改名、删除；最多 8 份；存档读回来一样")
+	var db := T110._db()
+	var c := Canteen.new()
+	t.eq(c.save_menu(), -1, "空锅收藏不了")
+	c.pot.place(_inst(db, &"mountain_yam", 1), Vector2i(0, 0), 0)
+	c.pot.place(_inst(db, &"wild_berry", 2), Vector2i(2, 0), 0)
+	c.pot.place(_inst(db, &"wild_berry", 3), Vector2i(3, 0), 0)
+	t.eq(c.save_menu("  "), 0, "收藏第一份")
+	t.eq(c.menu_name(), UiText.t("canteen.menu_default") % 1, "空名 = 「菜单 1」")
+	t.eq(c.gaps(), [] as Array[Dictionary], "刚收藏：没缺")
+	t.check(c.rename_menu(0, "进山饭这个名字很长很长很长"), "改名")
+	t.eq(c.menu_name().length(), Canteen.NAME_MAX, "名字截到 %d 个字" % Canteen.NAME_MAX)
+	t.check(not c.rename_menu(0, "   "), "空名不认")
+	# 吃掉一锅（锅清空），仓库里只剩一个山薯、一个野莓
+	c.pot.clear()
+	t.eq(c.gaps().size(), 3, "锅空了：三格都缺")
+	c.store.try_add(_inst(db, &"wild_berry", 4))
+	c.store.try_add(_inst(db, &"mountain_yam", 5))
+	c.store.try_add(_inst(db, &"sour_wheat", 6))
+	var gaps := c.load_menu(0)
+	t.eq(gaps.size(), 1, "一键重做：缺一个野莓")
+	t.eq(c.pot.get_item(5).origin if c.pot.has_item(5) else Vector2i(-1, -1), Vector2i(0, 0), "山薯按原样摆在 (0, 0)")
+	t.check(c.pot.has_item(4) and c.store.has_item(6), "野莓取进锅、酸麦留在仓库")
+	t.eq(c.gaps().size(), 1, "锅上标一格缺料")
+	# 换一样：锅里多放的酸麦回仓库；原位的留着
+	c.store.remove(6)
+	var wheat := _inst(db, &"sour_wheat", 6)
+	c.pot.place(wheat, Vector2i(0, 3), 0)
+	c.store.try_add(_inst(db, &"wild_berry", 7))
+	t.eq(c.load_menu(0).size(), 0, "补了料再重做：不缺了")
+	t.check(c.store.has_item(6) and c.pot.has_item(5) and c.pot.has_item(4), "多放的酸麦回仓库，原位的没挪")
+	var ids: Dictionary = c.current_meal()["ids"]
+	t.eq([ids.size(), int(ids.get("mountain_yam", 0)), int(ids.get("wild_berry", 0))], [2, 1, 2], "锅里正好是收藏的那一锅")
+	for i in Canteen.MAX_MENUS - 1:
+		c.save_menu()
+	t.eq(c.menus.size(), Canteen.MAX_MENUS, "8 份")
+	t.eq(c.save_menu(), -1, "满了收藏不了")
+	t.eq(c.menus[1]["name"], UiText.t("canteen.menu_default") % 1, "默认名取最小的空号")
+	var m := T110._meta()
+	m.canteen = c
+	var back := MetaState.from_dict(m.to_dict(), db, GameFlow.load_meta_rules())
+	t.eq(back.canteen.menus, c.menus, "存档读回来，收藏一样")
+	t.eq(back.canteen.active, c.active, "照哪份一样")
+	t.check(c.delete_menu(c.active), "删掉锅照的那份")
+	t.eq([c.active, c.menu_name(), c.gaps().size()], [-1, "", 0], "锅不再算照收藏")
+	t.check(c.delete_menu(0) and c.menus.size() == Canteen.MAX_MENUS - 2, "再删一份")
+	t.check(not c.delete_menu(99), "没有的不删")
+
+
+static func run_viewer(t: TestCase) -> void:
+	t.begin("355 第二批 · 按当前角色算：终值、单件食材加多少（固定值和百分比哪个划算一眼看出）；提示窗写出来；没有负重的角色不写负重")
+	var db := T110._db()
+	var ch := CharacterDef.new()
+	ch.id = &"cook_test"
+	ch.display_name = "试吃"
+	ch.base_stats = {"max_stamina": 80.0, "max_hp": 200.0}
+	ch.weight_capacity = 20
+	var scrap := Canteen.single_meal(db.get_def(&"meat_scrap"))
+	var wing := Canteen.single_meal(db.get_def(&"fowl_wing"))
+	t.eq(Canteen.gain_for(ch, scrap, BattleStats.MAX_STAMINA), 1.0, "兽肉碎：+1")
+	t.check(is_equal_approx(Canteen.gain_for(ch, wing, BattleStats.MAX_STAMINA), 1.6), "禽翅 2%：80 的角色 +1.6，比兽肉碎划算")
+	t.eq(Canteen.gain_for(ch, Canteen.single_meal(db.get_def(&"honey_jar")), BattleStats.REGEN_HP), 2.0, "蜂蜜罐：生命 200 的 1% = 每秒 2")
+	var meal := Canteen.meal_of([_inst(db, &"mountain_yam", 1), _inst(db, &"fowl_leg", 2)])
+	t.eq(Canteen.final_lines(ch, meal), [
+		UiText.t("canteen.final") % [UiText.t("canteen.stat_carry"), "20", "23"],
+		UiText.t("canteen.final") % [UiText.t("canteen.stat_max_stamina"), "80", "84"],
+	] as Array[String], "终值两行：负重 20 → 23、耐力上限 80 → 84")
+	Canteen.viewer = ch
+	t.check(ItemTooltip.canteen_line(db.get_def(&"fowl_wing")).contains(UiText.t("canteen.tip_for") % [Names.of(ch), UiText.t("canteen.stat_max_stamina"), "1.6"]), "提示窗：试吃 耐力上限 +1.6")
+	ch.weight_capacity = 0
+	t.check(not ItemTooltip.canteen_line(db.get_def(&"sour_wheat")).contains(Names.of(ch)), "没有负重的角色：主食不写对角色加多少")
+	t.eq(Canteen.final_lines(ch, meal).size(), 1, "终值只列耐力上限")
+	Canteen.viewer = null
+
+
+static func run_sources(t: TestCase) -> void:
+	t.begin("355 第三批 · 食材从哪来：魔兽必掉兽肉（替身，强的掉大块、上等）；粮铺常备几样一格的小件；普通搜索权重低；局内商店不卖")
+	var db := T110._db()
+	var meat := [&"meat_scrap", &"game_meat"]
+	for e in [&"flame_wolf", &"frost_toad", &"pit_viper", &"shock_eel"]:
+		var d := ContentPaths.load_asset("enemies", String(e)) as EnemyDef
+		t.check(d != null and not d.loot_filler.is_empty() and d.loot_filler.all(func(id: StringName) -> bool: return meat.has(id)), "%s 掉小块兽肉、兽肉" % e)
+	var bear := ContentPaths.load_asset("enemies", "cave_bear") as EnemyDef
+	t.check(bear != null and bear.loot_filler.has(&"beast_haunch") and bear.loot_filler.has(&"prime_beast_leg"), "穴熊（强）掉大块、上等")
+	var food := Market.stall(&"food")
+	var listed := Market.catalogue(Market.load_rules(), db, food, 1)
+	for id in [&"sour_wheat", &"black_bean", &"fowl_wing", &"wild_scallion", &"wild_berry"]:
+		t.check(listed.has(id), "粮铺常备 %s" % id)
+	t.check(not listed.has(&"fat_fowl") and not listed.has(&"game_meat"), "粮铺不卖别的食材")
+	t.eq(SearchSession.weight_mult(db.get_def(&"wild_berry"), {}), Canteen.SEARCH_WEIGHT, "搜索里食材权重 × %s" % Canteen.SEARCH_WEIGHT)
+	t.eq(SearchSession.weight_mult(db.get_def(&"iron_ore"), {}), 1.0, "别的照旧")
+	var econ := ContentPaths.load_asset("economy_rules", "standard") as EconomyRules
+	t.check(econ != null and econ.shop_exclude_tags.has(Canteen.TAG), "局内商店不卖食材")
+
+
+static func run_audit(t: TestCase) -> void:
+	t.begin("355 第三批 · 强力搭配记录：每条属性两条线各挑最强一件，三档锅都摆得进、6×6 不比 4×4 少；整锅叠满不溢出；抽样混搭也不到封顶")
+	var db := T110._db()
+	var rows := CanteenAudit.lines(db)
+	t.eq(rows.size(), 8, "四条属性 × 两条线")
+	var best := {}
+	for row in rows:
+		var key := "%s:%s" % [row["stat"], row["line"]]
+		best[key] = float(row["value"][6])
+		t.check(int(row["count"][4]) > 0 and float(row["value"][6]) >= float(row["value"][4]), "%s：4×4 摆得进，6×6 不比它少" % key)
+		t.check(float(row["value"][6]) < (Canteen.CAP_PCT if row["line"] == CanteenAudit.PCT else Canteen.CAP_FLAT), "%s：不到封顶" % key)
+	t.eq(StringName(rows[7]["id"]), &"honey_pomelo", "百分比回血最强：蜜柚")
+	var top := CanteenAudit.samples(db, 6, 60, 7)
+	for key in top:
+		t.check(float(top[key]["value"]) < Canteen.CAP_FLAT, "混搭 %s 不到封顶" % key)
+	t.check(CanteenAudit.report(db, [], 20).contains("表三"), "记录三张表")
 
 
 static func run_module(t: TestCase) -> void:
@@ -249,5 +365,75 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.eq(p._satiety.text, UiText.t("canteen.satiety") % 11, "饱腹 11")
 	t.eq(p._lines.get_child_count(), 1, "一条：负重上限")
 	t.eq(Bare.audit(p, "canteen355"), [] as Array[String], "字不裸")
+	# 第二批：收藏夹
+	t.eq(p._pot_name.text, UiText.t("canteen.unnamed"), "没收藏：「没收藏的一锅」")
+	t.check(not p._save_btn.disabled, "锅里有东西：能收藏")
+	t.eq(p.save_menu(), 0, "【收藏】")
+	t.eq(p._menu_box.get_child_count(), 1, "一块菜单牌")
+	t.eq(p._pot_name.text, UiText.t("canteen.menu_default") % 1, "锅叫「菜单 1」")
+	p.start_rename(0)
+	t.check(p._menu_box.get_child(0).get_node_or_null("NameEdit") != null, "改名：换成输入框")
+	t.check(p.rename_menu(0, "山薯饭"), "改成「山薯饭」")
+	t.eq(f.meta.canteen.menu_name(), "山薯饭", "名字改了")
+	f.meta.canteen.pot.clear()     # 吃掉了
+	p.refresh()
+	t.eq(p._pot_name.text, "山薯饭  " + UiText.t("canteen.gaps") % 1, "锅空了：缺 1 样")
+	t.eq(p.load_menu(0).size(), 1, "仓库里没有山薯：重做还缺")
+	f.meta.canteen.store.try_add(_inst(f.items, &"mountain_yam", f.meta.allocate_uid()))
+	t.eq(p.load_menu(0).size(), 0, "进了山薯：重做齐了")
+	t.eq(f.meta.canteen.pot.item_count(), 1, "山薯下锅")
+	t.eq(Bare.audit(p, "canteen355_menu"), [] as Array[String], "收藏夹的字不裸")
+	t.check(p.delete_menu(0) and p._menu_box.get_child_count() == 0, "删除")
 	s.queue_free()
 	W178._cleanup()
+
+
+## 开局屏第四页「本次准备」：食堂开了就有这一页（倾向没开只放这一锅）；写这一锅的名字、效果、饱腹，能换一份收藏；出发吃的是换上的那一锅
+static func frame_prep(t: TestCase, root: Window) -> void:
+	t.begin("355 第二批 · 开局屏「本次准备」：食堂开了就有第四页；写这一锅（名字、效果、饱腹）；换一份收藏 = 从食材仓库重做；出发吃的是这一锅")
+	Support.cleanup("char")
+	var game = load(CS.GAME).instantiate()
+	game.save_path = CS.SAVE
+	game.meta_path = CS.META
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	Support.pass_tutorials(flow)
+	for gch in flow.chapters:
+		if gch.grants_unlock != &"":
+			flow.meta.grant_unlock(gch.grants_unlock)
+	_open(flow)
+	var cn := flow.meta.canteen
+	for id in [&"mountain_yam", &"fowl_leg", &"sour_wheat"]:
+		cn.store.try_add(_inst(flow.items, id, flow.meta.allocate_uid()))
+	var yam := cn.store.items().filter(func(i: ItemInstance) -> bool: return i.def.id == &"mountain_yam")[0] as ItemInstance
+	cn.store.remove(yam.uid)
+	cn.pot.place(yam, Vector2i(0, 0), 0)
+	cn.save_menu("山薯")
+	cn.load_menu(0)
+	var wheat := cn.store.items().filter(func(i: ItemInstance) -> bool: return i.def.id == &"sour_wheat")[0] as ItemInstance
+	cn.store.remove(wheat.uid)
+	cn.pot.place(wheat, Vector2i(3, 3), 0)
+	cn.active = -1
+	cn.save_menu("酸麦")
+	flow.new_run()
+	var setup = game.base()
+	t.eq(setup.last_page(), 3, "倾向没开、食堂开了：有第四页")
+	setup.show_page(3)
+	t.check(not setup._bias_box.get_parent().visible and setup._meal_box.visible, "只放这一锅")
+	t.eq((setup._meal_box.get_node("PotName") as Label).text, "酸麦", "名字：酸麦")
+	t.eq(setup.meal_buttons().size(), 2, "两份收藏可换")
+	t.eq(Bare.audit(setup._meal_box, "canteen355_prep"), [] as Array[String], "字不裸")
+	t.eq(setup.choose_menu(0).size(), 0, "换成「山薯」")
+	t.eq((setup._meal_box.get_node("PotName") as Label).text, "山薯", "名字跟着换")
+	t.check(cn.pot.has_item(yam.uid) and cn.store.has_item(wheat.uid), "酸麦回仓库、山薯下锅")
+	setup.show_page(2)
+	setup._sync_preview()
+	var entries: Array = setup.preview().entry_ids()
+	if not entries.is_empty():
+		setup.pick_spawn(int(entries[0]))
+	t.check(setup.next_page() and setup.page() == 3, "第三页「继续」到第四页")
+	t.check(Support.depart(setup), "出发")
+	var mod := MealModule.of(flow.run) if flow.run != null else null
+	t.check(mod != null and mod.satiety == 11, "吃的是山薯这一锅：饱腹 11")
+	game.queue_free()
+	Support.cleanup("char")

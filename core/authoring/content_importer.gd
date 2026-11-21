@@ -1022,6 +1022,9 @@ static func import_market_stall(data: Dictionary, ctx: Context, report: ImportRe
 	for id in def.excluded_ids:
 		if not ctx.items.is_empty() and not ctx.items.has(id):
 			report.error("excluded_ids", "找不到道具 '%s'" % id)
+	for id in def.extra_ids:
+		if not ctx.items.is_empty() and not ctx.items.has(id):
+			report.error("extra_ids", "找不到道具 '%s'" % id)
 	return def
 
 
