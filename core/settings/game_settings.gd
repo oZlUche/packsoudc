@@ -65,8 +65,8 @@ var stele_roman: bool = true
 var battle_log_open: bool = true
 ## 局内界面布局方案 §4.1：日晷上一直刻着剩余数（默认关 = 剩得少时才刻，平时停上去看悬浮窗）
 var dial_number_always: bool = false
-## 局内界面布局方案 §4.3：地图左下的图例展开着（默认收起：只有图标）
-var legend_open: bool = false
+## 作者 2026-11-21：地图左下的图例放下着（默认放下；点「图例」像卷轴一样卷起）
+var legend_open: bool = true
 ## 作者 2026-11-19：离开一个点时地上还有东西就先问一句（默认开；问的时候勾「不再提醒」或在设置里关）
 var leave_ground_warn: bool = true
 
