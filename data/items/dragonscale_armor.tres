@@ -1,0 +1,96 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_3l6p6"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_7grch"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_gx06h"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_3mgmg"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_uk65p"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_qp5ff"]
+[ext_resource type="Script" path="res://core/battle/effects/modify_damage.gd" id="7_8w6oi"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_before_damage.gd" id="8_80hfc"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_0tw2h"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_wtti0"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_qa3v7"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_ecqef"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_fb4dj"]
+
+[sub_resource type="Resource" id="Resource_rkbkd"]
+script = ExtResource("4_3mgmg")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_fxckt"]
+script = ExtResource("7_8w6oi")
+percent = -10
+
+[sub_resource type="Resource" id="Resource_itvfn"]
+script = ExtResource("8_80hfc")
+damage_type = &"fire"
+
+[sub_resource type="Resource" id="Resource_5kx06"]
+script = ExtResource("3_gx06h")
+trigger = SubResource("Resource_itvfn")
+cadence = SubResource("Resource_rkbkd")
+effects = Array[ExtResource("6_qp5ff")]([SubResource("Resource_fxckt")])
+
+[sub_resource type="Resource" id="Resource_8hw40"]
+script = ExtResource("4_3mgmg")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_hmlin"]
+script = ExtResource("7_8w6oi")
+percent = -10
+
+[sub_resource type="Resource" id="Resource_jd4yr"]
+script = ExtResource("8_80hfc")
+damage_type = &"ice"
+
+[sub_resource type="Resource" id="Resource_3d43t"]
+script = ExtResource("3_gx06h")
+trigger = SubResource("Resource_jd4yr")
+cadence = SubResource("Resource_8hw40")
+effects = Array[ExtResource("6_qp5ff")]([SubResource("Resource_hmlin")])
+
+[sub_resource type="Resource" id="Resource_j47tv"]
+script = ExtResource("4_3mgmg")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_usuuw"]
+script = ExtResource("7_8w6oi")
+percent = -10
+
+[sub_resource type="Resource" id="Resource_3fhhb"]
+script = ExtResource("8_80hfc")
+damage_type = &"lightning"
+
+[sub_resource type="Resource" id="Resource_xmj6g"]
+script = ExtResource("3_gx06h")
+trigger = SubResource("Resource_3fhhb")
+cadence = SubResource("Resource_j47tv")
+effects = Array[ExtResource("6_qp5ff")]([SubResource("Resource_usuuw")])
+
+[sub_resource type="Resource" id="Resource_kp516"]
+script = ExtResource("9_0tw2h")
+base_stats = {
+"max_armor": 55
+}
+rules = Array[ExtResource("3_gx06h")]([SubResource("Resource_5kx06"), SubResource("Resource_3d43t"), SubResource("Resource_xmj6g")])
+
+[sub_resource type="Resource" id="Resource_okt74"]
+script = ExtResource("13_fb4dj")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1)])
+
+[resource]
+script = ExtResource("12_ecqef")
+id = &"dragonscale_armor"
+display_name = "龙鳞甲"
+display_names = {
+"en": "Dragonscale Armor"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_okt74")
+rarity = 3
+tags = Array[StringName]([&"armor", &"barbarian"])
+material = "leather"
+combat = SubResource("Resource_kp516")

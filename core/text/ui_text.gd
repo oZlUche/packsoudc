@@ -1372,6 +1372,7 @@ const TEXT := {
 	"trig.type_dealt_before": {"zh": "造成%s伤害前", "en": "Before dealing %s damage"},
 	"trig.type_crit_taken": {"zh": "受到%s暴击时", "en": "When taking %s damage from a Crit"},
 	"trig.type_crit_dealt": {"zh": "造成%s暴击时", "en": "When dealing %s damage with a Crit"},
+	"trig.blocked": {"zh": "格挡挡下攻击时", "en": "When you block an attack"},
 	"trig.own_only": {"zh": "%s（只算这件）", "en": "%s (this item only)"},
 	"trig.min_amount": {"zh": "（单次至少 %s 点）", "en": " (at least %s per hit)"},
 	"trig.stacks_self": {"zh": "你的%s达到 %d 层时", "en": "When your %s stacks reach %d"},
