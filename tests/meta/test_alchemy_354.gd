@@ -143,7 +143,7 @@ static func run_flow(t: TestCase) -> void:
 
 
 static func run_forged_record(t: TestCase) -> void:
-	t.begin("354 · 「打造过的配方」：打一次记下（不重复）；存档往返；老档 v7 → v8 尘 0、记录空")
+	t.begin("354 · 「打造过的配方」：打一次记下（不重复）；存档往返；老档 v7 → 尘 0、记录空；358：v8 → v9 按图鉴补打造过")
 	ItemInstance.reset_uid_counter()
 	var db := T110._db()
 	var m := T110._meta()
@@ -168,7 +168,16 @@ static func run_forged_record(t: TestCase) -> void:
 	var src: Dictionary = JSON.parse_string(raw)
 	t.eq(int(src.get("version", 0)), 7, "冻结样本是 v7")
 	var up := MetaMigrations.upgrade(src)
-	t.eq([int(up["version"]), int(up["dust"]), (up["forged_recipes"] as Array).size()], [MetaState.SAVE_VERSION, 0, 0], "升到 v8：尘 0、记录空")
+	t.eq([int(up["version"]), int(up["dust"]), (up["forged_recipes"] as Array).size()], [MetaState.SAVE_VERSION, 0, 0], "升到当前版：尘 0、记录空（图鉴空）")
+	var v8: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/meta_v8.json"))
+	t.eq(int(v8.get("version", 0)), 8, "冻结样本是 v8")
+	var up8 := MetaMigrations.upgrade(v8)
+	t.eq(int(up8["version"]), MetaState.SAVE_VERSION, "v8 升到当前版")
+	t.check((up8["forged_recipes"] as Array).has("smith_warhammer"), "358：图鉴里亮了战锤 —— 战锤算打造过")
+	t.check((up8["forged_recipes"] as Array).has("smith_leather_armor"), "原来记着的皮甲还在")
+	t.eq(int(up8["dust"]), 5, "尘不动")
+	var m8 := MetaSave.from_text(FileAccess.get_file_as_string("res://tests/fixtures/meta_v8.json"), db, GameFlow.load_meta_rules(), GameFlow.load_techs())
+	t.check(m8 != null and m8.has_forged(&"smith_warhammer"), "读档：战锤能用尘补")
 	var old := MetaSave.from_text(raw, db, GameFlow.load_meta_rules(), GameFlow.load_techs())
 	t.check(old != null and old.dust == 0 and old.forged_recipes.is_empty() and String(old.nursery.plot(0)["crop"]) == "rope_hemp", "老档读得回来，苗圃照旧")
 
