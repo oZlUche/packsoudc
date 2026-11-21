@@ -20,6 +20,9 @@
   "item_tags": [
     "beast_part"
   ],
+  "gold_signature": [
+    "undying_ember"
+  ],
   "loadout": {
     "school_share": 1.0,
     "min_weapons": 0,

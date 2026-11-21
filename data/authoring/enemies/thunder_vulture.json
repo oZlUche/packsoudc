@@ -22,6 +22,9 @@
   "item_tags": [
     "beast_part"
   ],
+  "gold_signature": [
+    "thunder_marrow"
+  ],
   "loadout": {
     "school_share": 1.0,
     "min_weapons": 0,
