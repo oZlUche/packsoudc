@@ -1,0 +1,13 @@
+{
+  "id": "ingredient",
+  "display_name": "食材",
+  "display_names": {
+    "en": "Ingredient"
+  },
+  "description": "灰灯食堂下锅用的生料，局里不能直接吃。",
+  "descriptions": {
+    "en": "Raw fare for the Grey Lamp canteen pot; can't be eaten on an expedition."
+  },
+  "tip": false,
+  "category": "kind"
+}

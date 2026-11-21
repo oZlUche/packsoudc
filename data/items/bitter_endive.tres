@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_ngk5r"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_c4ybw"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_l24gb"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_y2bek"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_aep7e"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_oi1p6"]
+
+[sub_resource type="Resource" id="Resource_l1dc0"]
+script = ExtResource("6_oi1p6")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_aep7e")
+id = &"bitter_endive"
+display_name = "苦苣"
+display_names = {
+"en": "Bitter Endive"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_l1dc0")
+tags = Array[StringName]([&"ingredient", &"nature", &"plant"])
+material = "herb"

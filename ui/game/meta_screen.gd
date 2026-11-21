@@ -16,6 +16,7 @@ const SmithyPanelScript := preload("res://ui/game/smithy_panel.gd")     # 251
 const CommissionPanelScript := preload("res://ui/game/commission_panel.gd")     # 336
 const NurseryPanelScript := preload("res://ui/game/nursery_panel.gd")     # 342 B3
 const AlchemyPanelScript := preload("res://ui/game/alchemy_panel.gd")     # 354
+const CanteenPanelScript := preload("res://ui/game/canteen_panel.gd")     # 355
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -42,7 +43,7 @@ const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_wa
 ## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
-	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"], ["alchemy", "alchemy.title"]],
+	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"], ["alchemy", "alchemy.title"], ["canteen", "canteen.title"]],
 	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"]],
 }
 const SUB_TAB_SIZE := Vector2(170, 44)
@@ -56,7 +57,7 @@ const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "", ""]
 const SHELF_WIN := Vector2(1100, 820)
 ## 251 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要」）：整页的两页 —— 右列（仓库木架 + 挂牌）收起、中列吃满。
 ## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
-const FULL_TABS := ["market", "smithy"]
+const FULL_TABS := ["market", "smithy", "canteen"]     # 355：食堂页自己带两块盘，右边仓库收起
 ## 264 §三（作者 17:01 定稿）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地底图；换时淡入淡出 [constant SCENE_FADE] 秒。
 ## 有场景图的页不垫粗布
 const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
@@ -354,6 +355,13 @@ func open(payload: Dictionary) -> void:
 				say(text))
 		al_page.add_child(_alchemy)
 		_pages["alchemy"] = al_page
+	if _sub_btns.has("canteen"):     # 355：食堂页（占位，等 UI设计 样张）—— 食材仓库与锅两块盘，整屏那一层拖拽
+		var ct_page := _cloth()
+		_canteen = CanteenPanelScript.new()
+		_canteen.setup(flow, _drag, font)
+		_canteen.changed.connect(_refresh)
+		ct_page.add_child(_canteen)
+		_pages["canteen"] = ct_page
 	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
 		cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
@@ -863,6 +871,7 @@ var _commissions = null
 var _nursery = null
 ## 354：炼金页（协会没到信赖 = null）
 var _alchemy = null
+var _canteen = null
 
 
 func nursery_panel():
@@ -871,6 +880,10 @@ func nursery_panel():
 
 func alchemy_panel():
 	return _alchemy
+
+
+func canteen_panel():
+	return _canteen
 
 
 ## 354：右边仓库正在炼金的勾选里
@@ -954,6 +967,8 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 			continue     # 342 B3：垦户社还没来营地，不列
 		if key == "alchemy" and not flow.alchemy_listed():
 			continue     # 354：协会到信赖前不列
+		if key == "canteen" and not flow.canteen_listed():
+			continue     # 355：灰灯不在营地（教程、切片）不列
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
 		b.toggle_mode = true
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -1640,5 +1655,7 @@ func _refresh() -> void:
 	_sync_ripe_mark()     # 342 B3
 	if _alchemy != null:
 		_alchemy.refresh()     # 354
+	if _canteen != null:
+		_canteen.refresh()     # 355
 	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
 		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))

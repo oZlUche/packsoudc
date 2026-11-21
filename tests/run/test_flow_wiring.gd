@@ -18,6 +18,7 @@ const NO_LISTENER_OK := {
 	&"grown": "207：升阶走 board.changed 刷新（前缀、扎根、悬浮窗都读实例）；这条留给测试与将来的升阶动画 / 音效",
 	&"ransom_settled": "256：天平了结走 GameFlow 的 pay_ransom / refuse_ransom 自己 save + _flush；这条留给测试与将来的音效",
 	&"ranked_up": "256：军功牌升阶走 board.changed 刷新（前缀、圈、角标都读实例）；这条留给测试与将来的升阶动画 / 音效",
+	&"satiety_changed": "355：饱腹模块的读数；顶端栏读数（meal_widget）从 HudWidget.watch() 交出去，由 HudWidget 统一 connect",
 	&"progressed": "336：委托模块的进度；局内小牌（commissions_widget）从 HudWidget.watch() 交出去，由 HudWidget 统一 connect，源码里没有字面的 progressed.connect(",
 	&"worn": "148：棋盘上的耐久变化走 board.changed 刷新（晶石名字前缀、悬浮窗都读实例）；这条留给测试与将来的「碎了」提示",
 }

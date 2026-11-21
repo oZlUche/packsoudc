@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_qpklp"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_b6v4v"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_31g7y"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_whhq3"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_rgcmp"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_p2pcu"]
+
+[sub_resource type="Resource" id="Resource_s4gll"]
+script = ExtResource("6_p2pcu")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_rgcmp")
+id = &"rice_sack"
+display_name = "糙米袋"
+display_names = {
+"en": "Sack of Brown Rice"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_s4gll")
+tags = Array[StringName]([&"ingredient", &"nature", &"plant"])
+material = "cloth"

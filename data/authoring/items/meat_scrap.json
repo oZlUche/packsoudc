@@ -1,0 +1,19 @@
+{
+  "id": "meat_scrap",
+  "display_name": "小块兽肉",
+  "display_names": {
+    "en": "Meat Scrap"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature"
+  ],
+  "material": "flesh"
+}

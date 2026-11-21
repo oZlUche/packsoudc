@@ -746,6 +746,10 @@ func _adopt() -> void:
 			_hud_host.notice(UiText.t("notice.expelled"), true)
 			_view.current_id = to
 			_after_move())
+	var meal := MealModule.of(_run)     # 355：饱腹快没了提醒一次；没了说一句（加成失效）
+	if meal != null:
+		meal.warned.connect(func(left: int): _hud_host.notice(UiText.t("notice.meal_warn") % left, true))
+		meal.ended.connect(func(): _hud_host.notice(UiText.t("notice.meal_end"), true))
 	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色。直接接侵蚀场
 	var field := _run.travel.erosion
 	if field != null:
