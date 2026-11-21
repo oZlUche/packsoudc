@@ -134,7 +134,7 @@ descriptions = {
 "en": ""
 }
 shape = SubResource("Resource_q2k1p")
-rarity = 3
+rarity = 2
 tags = Array[StringName]([&"material", &"reagent", &"nature", &"poison", &"beast_part"])
 material = "flesh"
 combat = SubResource("Resource_iwtek")

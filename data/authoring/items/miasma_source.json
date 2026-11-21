@@ -1,0 +1,68 @@
+{
+  "id": "miasma_source",
+  "display_name": "万瘴之源",
+  "display_names": {
+    "en": "Miasma Source"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 4,
+  "tags": [
+    "material",
+    "reagent",
+    "nature",
+    "poison",
+    "beast_part"
+  ],
+  "material": "flesh",
+  "combat": {
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_status_applied",
+          "buff_id": "poison"
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "apply_status",
+            "buff": "virulent"
+          }
+        ]
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 6
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown"
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "poison",
+      "stacks": 4
+    }
+  ]
+}

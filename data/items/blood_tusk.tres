@@ -1,0 +1,118 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_nuysa"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_nm5gp"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="3_gcdqa"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="4_xkfjm"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="5_alqn7"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="6_h2uyu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="7_uhe40"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="8_glc5v"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="9_q67jl"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="10_xoqsw"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="11_mco5g"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="12_34oqm"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="13_nxk1n"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="14_35pjw"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="15_vj4xi"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="16_2kntg"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="17_48hu3"]
+
+[sub_resource type="Resource" id="Resource_odfb5"]
+script = ExtResource("1_nuysa")
+stat = &"crit_chance"
+amount = 0.05
+
+[sub_resource type="Resource" id="Resource_a0n2i"]
+script = ExtResource("3_gcdqa")
+grant_cells = Array[Vector2i]([Vector2i(-1, 0), Vector2i(1, 0)])
+grant_filter = Array[StringName]([&"weapon"])
+grant_mods = Array[ExtResource("1_nuysa")]([SubResource("Resource_odfb5")])
+
+[sub_resource type="Resource" id="Resource_1of6c"]
+script = ExtResource("8_glc5v")
+
+[sub_resource type="Resource" id="Resource_755tp"]
+script = ExtResource("9_q67jl")
+seconds = 1.2
+
+[sub_resource type="Resource" id="Resource_ujc3d"]
+script = ExtResource("11_mco5g")
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_fkcd0"]
+script = ExtResource("13_nxk1n")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_snas2"]
+script = ExtResource("14_35pjw")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_2tj2l"]
+script = ExtResource("2_nm5gp")
+trigger = SubResource("Resource_snas2")
+cadence = SubResource("Resource_755tp")
+costs = Array[ExtResource("10_xoqsw")]([SubResource("Resource_ujc3d")])
+effects = Array[ExtResource("12_34oqm")]([SubResource("Resource_fkcd0")])
+
+[sub_resource type="Resource" id="Resource_ioxn0"]
+script = ExtResource("15_vj4xi")
+base_stats = {
+"damage": 4
+}
+rules = Array[ExtResource("2_nm5gp")]([SubResource("Resource_2tj2l")])
+
+[sub_resource type="Resource" id="Resource_imdws"]
+script = ExtResource("9_q67jl")
+seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_psjp1"]
+script = ExtResource("13_nxk1n")
+target = 1
+damage_type = &"bleed"
+amount = 1.0
+damage_stat = &""
+per_stack = true
+
+[sub_resource type="Resource" id="Resource_iuh5t"]
+script = ExtResource("14_35pjw")
+
+[sub_resource type="Resource" id="Resource_dohsk"]
+script = ExtResource("2_nm5gp")
+trigger = SubResource("Resource_iuh5t")
+cadence = SubResource("Resource_imdws")
+effects = Array[ExtResource("12_34oqm")]([SubResource("Resource_psjp1")])
+
+[sub_resource type="Resource" id="Resource_505co"]
+script = ExtResource("17_48hu3")
+id = &"bleed"
+display_name = "流血"
+display_names = {
+"en": "Bleed"
+}
+is_debuff = true
+decay_halve_on = &"tick"
+rules = Array[ExtResource("2_nm5gp")]([SubResource("Resource_dohsk")])
+element = &"bleed"
+
+[sub_resource type="Resource" id="Resource_gk2e2"]
+script = ExtResource("4_xkfjm")
+buff = SubResource("Resource_505co")
+
+[resource]
+script = ExtResource("7_uhe40")
+id = &"blood_tusk"
+display_name = "血獠牙"
+display_names = {
+"en": "Blood Tusk"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_1of6c")
+rarity = 2
+tags = Array[StringName]([&"material", &"nature", &"bleed", &"beast_part"])
+material = "bone"
+adjacency = SubResource("Resource_a0n2i")
+wild = SubResource("Resource_ioxn0")
+wild_applies = Array[ExtResource("4_xkfjm")]([SubResource("Resource_gk2e2")])

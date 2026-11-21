@@ -1,0 +1,127 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_b7smo"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_lx4ar"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_703pg"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_u7mpo"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_k65cg"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="6_j8wo7"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="7_jw5hp"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="8_dcmoa"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="9_bv0cq"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="10_p2n6x"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="11_rkto6"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="12_e251t"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="13_lvuw0"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="14_yp0ng"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="15_y85q0"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="16_a88mq"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="17_8741p"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="18_2o66y"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="19_776uy"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="20_m15er"]
+
+[sub_resource type="Resource" id="Resource_swa5y"]
+script = ExtResource("3_703pg")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_i77re"]
+script = ExtResource("7_jw5hp")
+id = &"numb"
+display_name = "麻痹"
+display_names = {
+"en": "Paralysis"
+}
+is_debuff = true
+decay_halve_on = &"stamina_paid"
+element = &"lightning"
+per_stack_percent = 10.0
+
+[sub_resource type="Resource" id="Resource_cy4up"]
+script = ExtResource("8_dcmoa")
+buff = SubResource("Resource_i77re")
+metadata/part_ref = &"apply_status_numb"
+
+[sub_resource type="Resource" id="Resource_2yj0k"]
+script = ExtResource("9_bv0cq")
+metadata/part_ref = &"on_item_fired"
+
+[sub_resource type="Resource" id="Resource_r7jae"]
+script = ExtResource("2_lx4ar")
+trigger = SubResource("Resource_2yj0k")
+cadence = SubResource("Resource_swa5y")
+effects = Array[ExtResource("5_k65cg")]([SubResource("Resource_cy4up")])
+
+[sub_resource type="Resource" id="Resource_b60aw"]
+script = ExtResource("10_p2n6x")
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1)])
+grant_filter = Array[StringName]([&"weapon"])
+grant_rules = Array[ExtResource("2_lx4ar")]([SubResource("Resource_r7jae")])
+
+[sub_resource type="Resource" id="Resource_xv6mh"]
+script = ExtResource("15_y85q0")
+
+[sub_resource type="Resource" id="Resource_bgr8p"]
+script = ExtResource("16_a88mq")
+seconds = 1.2
+
+[sub_resource type="Resource" id="Resource_b7yfy"]
+script = ExtResource("17_8741p")
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_1jab7"]
+script = ExtResource("18_2o66y")
+damage_type = &"lightning"
+
+[sub_resource type="Resource" id="Resource_wcdlo"]
+script = ExtResource("19_776uy")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_htig1"]
+script = ExtResource("2_lx4ar")
+trigger = SubResource("Resource_wcdlo")
+cadence = SubResource("Resource_bgr8p")
+costs = Array[ExtResource("4_u7mpo")]([SubResource("Resource_b7yfy")])
+effects = Array[ExtResource("5_k65cg")]([SubResource("Resource_1jab7")])
+
+[sub_resource type="Resource" id="Resource_ay2ti"]
+script = ExtResource("20_m15er")
+base_stats = {
+"damage": 4
+}
+rules = Array[ExtResource("2_lx4ar")]([SubResource("Resource_htig1")])
+
+[sub_resource type="Resource" id="Resource_olu5x"]
+script = ExtResource("7_jw5hp")
+id = &"numb"
+display_name = "麻痹"
+display_names = {
+"en": "Paralysis"
+}
+is_debuff = true
+decay_halve_on = &"stamina_paid"
+element = &"lightning"
+per_stack_percent = 10.0
+
+[sub_resource type="Resource" id="Resource_kll1h"]
+script = ExtResource("11_rkto6")
+buff = SubResource("Resource_olu5x")
+stacks = 3
+
+[resource]
+script = ExtResource("14_yp0ng")
+id = &"thunder_marrow"
+display_name = "惊雷之髓"
+display_names = {
+"en": "Thunder Marrow"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_xv6mh")
+rarity = 4
+tags = Array[StringName]([&"material", &"reagent", &"nature", &"lightning", &"beast_part"])
+material = "flesh"
+adjacency = SubResource("Resource_b60aw")
+wild = SubResource("Resource_ay2ti")
+wild_applies = Array[ExtResource("11_rkto6")]([SubResource("Resource_kll1h")])
