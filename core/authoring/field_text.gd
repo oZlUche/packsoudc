@@ -112,7 +112,7 @@ const TYPE_LABELS := {
 	"give_item": "给道具", "give_random_item": "给随机道具", "restore_vitality": "回体力", "spend_vitality": "扣体力", "change_money": "钱加减",
 	"grant_map_buff": "给地图增益", "remove_map_buff": "去掉地图增益", "start_battle": "开战", "open_search": "开搜索", "open_shop": "开商店", "next_event": "接下一个事件",
 	"say": "说一句", "hunter_fight": "迎战猎手", "hunter_flee": "逃离猎手", "flee_encounter": "逃跑（几成）", "teleport": "传送", "change_node_type": "改点的类型", "proceed": "照常发生", "extract": "撤离",
-	"pass_time": "原地耗时", "lose_item": "失去道具", "set_flag": "立局外旗标", "commission_ready": "委托这一步能办", "commission_act": "办委托这一步", "entrust_ready": "能托付", "open_safe": "打开托付",     # 336
+	"pass_time": "原地耗时", "lose_item": "失去道具", "set_flag": "立局外旗标", "commission_ready": "委托这一步能办", "commission_act": "办委托这一步", "entrust_ready": "能托付", "extract_open": "撤离点没关", "open_safe": "打开托付",     # 336
 	# 093 信仰流派
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",
 	"item_acquired": "获得道具", "distinct_items_fired": "不同名字的道具出手", "first_place": "每局首次置入一种道具",

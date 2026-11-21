@@ -6,9 +6,12 @@
 script = ExtResource("1_pkgpm")
 id = &"forge_flame_bonesteel_spear"
 output = &"flame_bonesteel_spear"
+inputs = {
+"fire_gland": 2
+}
 material_slots = Array[Dictionary]([{
 "count": 1,
-"material": "crystal:fire",
+"material": "gem",
 "min": 3
 }, {
 "count": 2,

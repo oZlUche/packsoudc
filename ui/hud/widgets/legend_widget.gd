@@ -4,8 +4,9 @@
 ## 267：材料节点（矿脉 / 林地 / 遗骸 / 符文堆）各算一行（图上有才列，排在「搜索」后面）；
 ## 最下面一段「产物」：由外到内每种环一行，写产物表里倍率 ≥ 1.5 的标签名
 ##
-## 局内界面布局方案 §4.3：默认收起 —— 一列图标（地图上的那一枚），名字和产物段藏着；点旗展开 / 收起，
-## 记在设置里（[member GameSettings.legend_open]）。教程要指名字时可以 [method set_expanded] 临时展开
+## 作者 2026-11-21：像卷轴一样收起 —— 挂杆下第一行写「图例」，点一下整幅卷起（只剩挂杆、「图例」和旗尾），再点放下；
+## 卷起 / 放下约 0.2 秒（关了动效就直接切）。默认放下，记在设置里（[member GameSettings.legend_open]）。
+## 教程要指名字时可以 [method set_expanded] 临时放下
 extends HudWidget
 
 const ICON := 24.0
@@ -14,10 +15,17 @@ const TEXT_GAP := 8.0
 ## 232（作者 19:23 选 10）：图例的底是一面双尾旗（`hud/legend_pennant` 九宫格，钉子、绳、横杆都在图里），白字；最窄这么宽，英文长名往宽撑
 const PENNANT := "hud/legend_pennant"
 const MIN_WIDTH := 158.0
+## 卷起 / 放下的时长
+const SCROLL_SEC := 0.2
 
 static var _dark_theme: Theme = null
 
 var _rows: VBoxContainer
+## 挂杆下的「图例」
+var _title: Label
+## 卷起来的那一截：裁掉露在高度外的行
+var _clip: Control
+var _scroll_tw: Tween = null
 ## §4.3：名字和产物段展开着没有
 var _expanded: bool = false
 ## §4.3：临时展开（教程用；不写进设置）
@@ -29,9 +37,24 @@ func _init() -> void:
 	theme = _legend_theme()     # 深底（tone dark）：不挂墨色字，自己的底和白字
 	set_meta(&"tone", UiTheme.TONE_DARK)     # 169：里面的字按深底取版（HudWidget 默认挂的是凹槽的浅）
 	_text.visible = false
+	var body := UiTheme.vbox(int(ROW_GAP))
+	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(body)
+	_title = Label.new()
+	_title.name = "Title"
+	_title.theme_type_variation = UiTheme.LABEL_HUD
+	_title.text = UiText.t("hud.legend")
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(_title)
+	_clip = Control.new()
+	_clip.name = "Scroll"
+	_clip.clip_contents = true
+	_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(_clip)
 	_rows = UiTheme.vbox(int(ROW_GAP))
 	_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_rows)
+	_clip.add_child(_rows)
 
 
 func title() -> String:
@@ -39,7 +62,7 @@ func title() -> String:
 
 
 func _idle_mouse_filter() -> Control.MouseFilter:
-	return Control.MOUSE_FILTER_STOP     # §4.3：点旗展开 / 收起
+	return Control.MOUSE_FILTER_STOP     # 点旗卷起 / 放下
 
 
 func _ready() -> void:
@@ -65,7 +88,7 @@ func toggle_expanded() -> void:
 	if f != null and f.settings != null:
 		f.settings.legend_open = _expanded
 		f.save_settings()
-	_apply_expanded()
+	_apply_expanded(true)
 
 
 ## §4.3：教程临时展开（[param on] 假 = 回到玩家自己选的样子）
@@ -74,19 +97,34 @@ func set_expanded(on: bool) -> void:
 	_apply_expanded()
 
 
-func _apply_expanded() -> void:
+func _apply_expanded(animate: bool = false) -> void:
 	if _rows == null:
 		return
 	var open := expanded()
-	for row in _rows.get_children():
-		var name_ := row.get_child(row.get_child_count() - 1) as Label
-		var marked := row.get_child_count() > 1
-		row.visible = open or marked     # 产物段（没有图标的行）收起时整行藏
-		if name_ != null:
-			name_.visible = open
-	custom_minimum_size.x = MIN_WIDTH if open else 0.0
-	tooltip_text = "" if open else text_of()     # 收起时停上去照样读得到每个图标叫什么
+	var full := _rows.get_combined_minimum_size()
+	_rows.size = full
+	custom_minimum_size.x = MIN_WIDTH
+	tooltip_text = "" if open else text_of()     # 卷起时停上去照样读得到图上有哪些
+	if _scroll_tw != null:
+		_scroll_tw.kill()
+		_scroll_tw = null
+	var to := full.y if open else 0.0
+	if animate and _motion() and is_inside_tree():
+		_scroll_tw = create_tween()
+		_scroll_tw.tween_method(_set_open_h.bind(full.x), _clip.custom_minimum_size.y, to, SCROLL_SEC).set_trans(Tween.TRANS_SINE)
+	else:
+		_set_open_h(to, full.x)
+
+
+## 露出来的行有多高（0 = 卷起）
+func _set_open_h(h: float, w: float) -> void:
+	_clip.custom_minimum_size = Vector2(w, h)     # 卷起也留着宽，挂杆不缩
 	reset_size()
+
+
+## 卷着没有（测试看；动画走完才算）
+func rolled_up() -> bool:
+	return _clip != null and _clip.custom_minimum_size.y < 0.5
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -225,6 +263,9 @@ static func _legend_theme() -> Theme:
 	t.set_type_variation(UiTheme.LABEL_HUD, "Label")
 	t.set_color("font_color", UiTheme.LABEL_HUD, Color.WHITE)
 	t.set_color("font_color", "Label", Color.WHITE)
+	# 提示框还是浅羊皮纸底：TooltipLabel 往上找会先碰到这里的白字 Label，得单独钉回墨色（测试 v7.14：卷起悬停白字看不清）
+	t.set_type_variation("TooltipLabel", "Label")
+	t.set_color("font_color", "TooltipLabel", UiTheme.INK)
 	_dark_theme = t
 	return t
 
