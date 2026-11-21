@@ -949,6 +949,7 @@ const TEXT := {
 	"hud.buff_sep": {"zh": "、", "en": ", "},
 	"hud.belt_used": {"zh": "用了「%s」", "en": "Used %s"},
 	"hud.you": {"zh": "你", "en": "You"},
+	"hud.legend": {"zh": "图例", "en": "Legend"},
 	"hud.produce": {"zh": "产物", "en": "Yields"},
 	"hud.produce_ring.outer": {"zh": "外", "en": "Outer"},
 	"hud.produce_ring.middle": {"zh": "中", "en": "Mid"},     # 复测 v4.77：英文大号字「Middle: Crafted, Mineral」顶到旗边

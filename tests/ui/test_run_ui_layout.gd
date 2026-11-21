@@ -69,24 +69,34 @@ static func frame_map_parts(t: TestCase, root: Window) -> void:
 		run.travel.clock.total = 0
 	var back := GameSettings.from_dict({"version": GameSettings.SAVE_VERSION, "dial_number_always": true, "legend_open": true})
 	t.check(back.dial_number_always and back.legend_open, "两个新设置读得回来")
-	t.check(not GameSettings.new().dial_number_always and not GameSettings.new().legend_open, "默认：危险时才刻数、图例收起")
+	t.check(not GameSettings.new().dial_number_always and GameSettings.new().legend_open, "默认：危险时才刻数、图例放下")
 	t.eq(GameSettings.from_dict(back.to_dict()).to_dict(), back.to_dict(), "设置往返一致")
-	# §4.3 图例
+	# 图例（作者 2026-11-21：卷轴式收起，顶上写「图例」）
 	var legend = host.widget(&"legend") if host != null else null
 	if legend != null:
 		legend.refresh()
-		t.check(not legend.expanded(), "图例默认收起")
+		t.check(legend.expanded() and not legend.rolled_up(), "图例默认放下")
+		var title_ := legend.find_child("Title", true, false) as Label
+		t.check(title_ != null and title_.visible and title_.text == UiText.t("hud.legend"), "挂杆下第一行写「图例」")
 		var names_before: Array[String] = legend.row_names()
-		t.check(not names_before.is_empty(), "行照样在（%d 行）" % names_before.size())
-		t.check(legend.tooltip_text != "", "收起时停上去读得到名字")
+		t.check(not names_before.is_empty(), "行都在（%d 行）" % names_before.size())
+		var open_h: float = legend.get_combined_minimum_size().y
+		var open_w: float = legend.size.x
 		legend.toggle_expanded()
-		t.check(legend.expanded() and flow.settings.legend_open, "点开：展开、记进设置")
-		t.eq(legend.row_names(), names_before, "展开前后同一份行")
-		legend.toggle_expanded()
+		legend._apply_expanded()     # 跳过 0.2 秒的卷起动画
+		t.check(not legend.expanded() and not flow.settings.legend_open, "点一下：卷起、记进设置")
+		t.check(legend.rolled_up() and title_.visible, "卷起后只剩「图例」那一行")
+		t.check(legend.get_combined_minimum_size().y < open_h - 100.0, "卷起后矮了（%.0f → %.0f）" % [open_h, legend.get_combined_minimum_size().y])
+		t.eq(legend.size.x, open_w, "卷起不改宽")
+		t.check(legend.tooltip_text != "", "卷起时停上去读得到图上有哪些")
+		t.eq(legend.row_names(), names_before, "卷起前后同一份行")
 		legend.set_expanded(true)
-		t.check(legend.expanded() and not flow.settings.legend_open, "教程临时展开不写设置")
+		t.check(legend.expanded() and not flow.settings.legend_open, "教程临时放下不写设置")
 		legend.set_expanded(false)
 		t.check(not legend.expanded(), "教程收起回到玩家选的样子")
+		legend.toggle_expanded()
+		legend._apply_expanded()
+		t.check(legend.expanded() and not legend.rolled_up() and flow.settings.legend_open, "再点一下放下")
 	# §4.3 腰带
 	var belt = host.widget(&"belt") if host != null else null
 	if belt != null and belt.slots != null:
