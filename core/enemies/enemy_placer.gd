@@ -22,7 +22,7 @@ extends RefCounted
 ## "dropped": 补完之后总共还差几件, "short": [差了件的点：{id, enemy, strength, missing}]}
 static func fill(
 	graph: MapGraph, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
-	difficulty: int = 0, scale_id: StringName = &"", carry: CarryRule = null, bag_pool: BagPool = null
+	difficulty: int = 0, scale_id: StringName = &"", carry: CarryRule = null, bag_pool: BagPool = null, gear: DifficultyDef = null
 ) -> Dictionary:
 	var out := {"placed": 0, "skipped": [] as Array[int], "dropped": 0, "short": [] as Array[Dictionary]}
 	if graph == null or pool == null or enemies == null or items == null:
@@ -34,7 +34,7 @@ static func fill(
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = n.content_seed
-		var built := place_one(n, pool, enemies, items, float(depth.get(id, 0.0)), difficulty, scale_id, rng, {}, carry, bag_pool)
+		var built := place_one(n, pool, enemies, items, float(depth.get(id, 0.0)), difficulty, scale_id, rng, {}, carry, bag_pool, gear)
 		if built.is_empty():
 			(out["skipped"] as Array[int]).append(id)
 			continue
@@ -53,13 +53,14 @@ static func fill(
 static func place_one(
 	node: MapNode, pool: EnemyPool, enemies: EnemyDatabase, items: ItemDatabase,
 	depth: float, difficulty: int, scale_id: StringName, rng: RandomNumberGenerator,
-	exploration: Dictionary = {}, carry: CarryRule = null, bag_pool: BagPool = null
+	exploration: Dictionary = {}, carry: CarryRule = null, bag_pool: BagPool = null, gear: DifficultyDef = null
 ) -> Dictionary:
 	var wanted := wanted_strength(pool, node, depth, difficulty, scale_id, exploration)
 	var entry := pick(pool, enemies, node, wanted, rng)
 	if entry == null:
 		return {}
-	return build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng, carry, bag_pool)
+	var boost := gear.gear_boost(node.type) if gear != null else {}     # 360 第二批：难度让配装变好（A1、A4、A8）
+	return build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng, carry, bag_pool, boost)
 
 
 ## 每个点的深度 0～1：tier 在全图 tier 范围里的位置。形态无关 —— 环形图、手绘图都只看 tier
@@ -132,9 +133,9 @@ const REFILL_TRIES := 24
 ## "ungrouped": 165 摆不开、拆成散件的组数}
 static func build_content(
 	def: EnemyDef, pool: EnemyPool, items: ItemDatabase, strength: int, rng: RandomNumberGenerator,
-	carry: CarryRule = null, bag_pool: BagPool = null
+	carry: CarryRule = null, bag_pool: BagPool = null, boost: Dictionary = {}
 ) -> Dictionary:
-	var tier := pool.tier_of(strength)
+	var tier := boosted_tier(pool.tier_of(strength), boost)
 	var rule := def.loadout if def.loadout != null else pool.loadout
 	if rule == null:
 		rule = EnemyLoadout.new()
@@ -268,6 +269,7 @@ static func build_content(
 	if build != null:
 		fixed.append_array(build.items)
 	roll_crystals(placed, items, xrng, fixed, cap)
+	stamp_weapon_quality(placed, items, int(boost.get("quality", 0)))
 	ItemInstance._next_uid = uid_mark
 	var content := {
 		"enemy": String(def.id),
@@ -605,6 +607,49 @@ static func _sort_big_first(picks: Array[StringName], items: ItemDatabase) -> vo
 		var ca := items.get_def(a).shape.cell_count()
 		var cb := items.get_def(b).shape.cell_count()
 		return ca > cb if ca != cb else String(a) < String(b))
+
+
+## 360 第二批：难度给配装的加成（[method DifficultyDef.gear_boost]）落到档位的一份副本上 —— 道具 / 武器稀有度上限各抬 `cap` 档
+## （不限的仍不限，抬完封顶 [constant GEAR_CAP_MAX] 史诗：作者 367 裁定敌人随机池不拿传说及以上）、件数 +`items`、`true_ok` 放开「不背真实伤害武器」。
+## 加成为空原样返回（不复制）
+const GEAR_CAP_MAX := 3
+
+
+static func boosted_tier(tier: StrengthTier, boost: Dictionary) -> StrengthTier:
+	if tier == null or boost.is_empty():
+		return tier
+	var cap := int(boost.get("cap", 0))
+	var more := int(boost.get("items", 0))
+	var true_ok := bool(boost.get("true_ok", false))
+	if cap <= 0 and more <= 0 and not true_ok:
+		return tier
+	var t := tier.duplicate() as StrengthTier
+	if cap > 0:
+		t.rarity_cap = _bump_cap(tier.rarity_cap, cap)
+		t.weapon_rarity_cap = _bump_cap(tier.weapon_rarity_cap if tier.weapon_rarity_cap >= 0 else tier.rarity_cap, cap)
+	if more > 0:
+		t.item_count = tier.item_count + Vector2i(more, more)
+	if true_ok:
+		t.weapon_no_true_damage = false
+	return t
+
+
+## 上限抬几档：-1（不限）仍不限；抬完封顶史诗，原来就高于史诗的不往下压
+static func _bump_cap(c: int, n: int) -> int:
+	if c < 0:
+		return c
+	return maxi(c, mini(GEAR_CAP_MAX, c + n))
+
+
+## 360 第二批（367 裁定，A8 起）：身上的武器记品质（[method ItemInstance.set_quality]，编译时加数）；[method EnemyKit.board_of] 照它恢复，掉下来的也是这一把
+static func stamp_weapon_quality(placed: Array, items: ItemDatabase, q: int) -> void:
+	if q <= 0:
+		return
+	for raw in placed:
+		var e := raw as Dictionary
+		var d := items.get_def(StringName(String(e.get("id", ""))))
+		if d != null and d.tags.has(&"weapon") and not bool(e.get("carried", false)):
+			e[ItemInstance.QUALITY_KEY] = maxi(q, int(e.get(ItemInstance.QUALITY_KEY, 0)))
 
 
 ## 实际生效的稀有度上限：组装规则与档位各给一个，取小；都不限就是 -1

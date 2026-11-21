@@ -358,7 +358,7 @@ static func _restore_charges(board: GridInventory, content: Dictionary) -> void:
 	var left := {}
 	for raw in content.get("items", []):
 		var e := raw as Dictionary
-		if e.has(CrystalRoll.CHARGES):
+		if e.has(CrystalRoll.CHARGES) or e.has(ItemInstance.QUALITY_KEY):     # 360 第二批：武器的品质同样跟着这一把
 			var id := String(e.get("id", ""))
 			(left.get_or_add(id, []) as Array).append(e)
 	if left.is_empty() or board == null:
@@ -367,7 +367,9 @@ static func _restore_charges(board: GridInventory, content: Dictionary) -> void:
 		var inst := raw as ItemInstance
 		var queue: Array = left.get(String(inst.def.id), [])
 		if not queue.is_empty():
-			CrystalRoll.restore(inst, queue.pop_front())
+			var e: Dictionary = queue.pop_front()
+			CrystalRoll.restore(inst, e)
+			inst.set_quality(int(e.get(ItemInstance.QUALITY_KEY, 0)))
 
 
 ## 209：第二段 —— 掉下来的东西（[param rolled] 的 dropped + treasure）要几个包装：要装的格数 = 东西的格数 / [member BagPool.fill_target]，
