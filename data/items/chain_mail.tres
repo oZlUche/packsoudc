@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_vxxla"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_hr5qi"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_mhbt5"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_b5wxu"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_4qqb5"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_6r7pu"]
+[ext_resource type="Script" path="res://core/battle/effects/remove_status.gd" id="7_1tueb"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_status_applied.gd" id="8_ffcew"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_sa2jj"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_iaioi"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_e1oml"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_ido7h"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_jtxuo"]
+
+[sub_resource type="Resource" id="Resource_eu0pq"]
+script = ExtResource("4_b5wxu")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_81atc"]
+script = ExtResource("7_1tueb")
+buff_id = &"bleed"
+
+[sub_resource type="Resource" id="Resource_mc42f"]
+script = ExtResource("8_ffcew")
+buff_id = &"bleed"
+on_self = true
+by_self = false
+
+[sub_resource type="Resource" id="Resource_bir8n"]
+script = ExtResource("3_mhbt5")
+trigger = SubResource("Resource_mc42f")
+cadence = SubResource("Resource_eu0pq")
+effects = Array[ExtResource("6_6r7pu")]([SubResource("Resource_81atc")])
+
+[sub_resource type="Resource" id="Resource_k33hh"]
+script = ExtResource("9_sa2jj")
+base_stats = {
+"max_armor": 40
+}
+rules = Array[ExtResource("3_mhbt5")]([SubResource("Resource_bir8n")])
+
+[sub_resource type="Resource" id="Resource_ditq5"]
+script = ExtResource("13_jtxuo")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1)])
+
+[resource]
+script = ExtResource("12_ido7h")
+id = &"chain_mail"
+display_name = "锁子甲"
+display_names = {
+"en": "Chain Mail"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_ditq5")
+rarity = 2
+tags = Array[StringName]([&"armor", &"imperial"])
+material = "metal"
+combat = SubResource("Resource_k33hh")

@@ -35,6 +35,8 @@ enum Direction {
 ## 175 补充五：只认**打中了**的那一下 —— 被受伤前效果整个取消的包（damage 事件带 `cancelled`）不算。
 ## 道具的「造成伤害后施加」（[member ItemDef.applies]）、晶石的施加元素靠它：没打中不施加
 @export var landed_only: bool = false
+## 366：只认被格挡减掉了至少 1 点的直接攻击（伤害事件的 `block` > 0 且 `direct`）—— 反击小盾、守誓徽记用。只对「受到」有意义
+@export var blocked_only: bool = false
 
 
 ## 伤害事件的 side 是【承受方】，source_side 是【施加方】。两个子类只差订阅哪条事件（与 [OnDamage] 的暴击筛选）
@@ -52,6 +54,8 @@ func matches(ctx: RuleContext, event: BattleEvent) -> bool:
 		return false
 	if landed_only and event.get_bool(&"cancelled", false):
 		return false
+	if blocked_only and (event.get_int(&"block") <= 0 or not event.get_bool(&"direct")):
+		return false
 	if damage_type != &"":
 		if event.get_name(&"type") != damage_type:
 			return false
@@ -68,6 +72,8 @@ func describe() -> String:
 		line = _hit_line(taken)
 	else:
 		line = _type_line(taken) % Glossary.damage_type_name(damage_type)
+	if blocked_only:
+		line = UiText.t("trig.blocked")
 	if own_only:
 		line = UiText.t("trig.own_only") % line
 	if min_amount > 0.0:

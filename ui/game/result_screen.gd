@@ -325,7 +325,9 @@ static func commission_lines(got: Dictionary, meta: MetaState) -> Array[String]:
 		var before := int((t as Dictionary).get("stage", 0))
 		var redo := meta.commissions.receipts.any(func(r: Dictionary) -> bool: return String(r.get("id", "")) == String(cid) and String(r.get("kind", "")) == "redo" and int(r.get("run", -1)) == meta.runs)
 		var mine := rows.filter(func(r: Dictionary) -> bool: return String(r.get("id", "")) == String(cid))
-		if meta.commissions.state_of(cid) != CommissionBook.TAKEN and meta.commissions.is_done(cid) and not mine.is_empty():
+		if Commissions.is_ready(meta.commissions, cid) and not mine.is_empty():     # 作者 2026-11-21：办成了，回委托页点【完成】
+			out.append(UiText.t("commission.rcpt_ready") % cname)
+		elif meta.commissions.state_of(cid) != CommissionBook.TAKEN and meta.commissions.is_done(cid) and not mine.is_empty():
 			out.append(UiText.t("commission.rcpt_done") % cname)
 		elif redo:
 			out.append(UiText.t("commission.rcpt_redo") % cname)

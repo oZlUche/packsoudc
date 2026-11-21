@@ -1,0 +1,26 @@
+{
+  "id": "steel_round_shield",
+  "display_name": "钢圆盾",
+  "display_names": {
+    "en": "Steel Round Shield"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 2,
+  "tags": [
+    "shield",
+    "imperial"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "block": 7
+    }
+  }
+}
