@@ -1,0 +1,44 @@
+B675 办完开放单：Logistics Corps 10、Mages' Society 10、Grey Lamp Mutual Aid 10、Cartographers' Society 0、Senate Frontier Envoys 0、Riverbank Growers 0、Northern Hunters' League 0；栏 局数 0；钉位 ；栏上没接 0：；手头 0：
+B675 其余剧情记办成后：Logistics Corps 20、Mages' Society 20、Grey Lamp Mutual Aid 20、Cartographers' Society 20、Senate Frontier Envoys 0、Riverbank Growers 20、Northern Hunters' League 0；栏 局数 0；钉位 ；栏上没接 0：；手头 0：
+B675 三方声望补到 25：Logistics Corps 25、Mages' Society 25、Grey Lamp Mutual Aid 25、Cartographers' Society 25、Senate Frontier Envoys 25、Riverbank Growers 25、Northern Hunters' League 25；常规开放 [false, false, false, false, true, false, true]；栏 局数 0；钉位 ；栏上没接 0：；手头 0：
+B675 三份许可单办成、sync 后：Logistics Corps 30、Mages' Society 30、Grey Lamp Mutual Aid 30、Cartographers' Society 30、Senate Frontier Envoys 25、Riverbank Growers 30、Northern Hunters' League 25；常规开放 [true, true, true, true, true, true, true]
+B675 　　局数 0；钉位 note_1 note_2 note_3 note_4 · ·；栏上没接 4：note_1「Short · Check-in」greylamp×1 档0 酬15 剩3 局 ；note_2「Long · Survey」society×3 档2 酬50 剩3 局 ；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 ；note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩3 局 ；手头 0：
+B675 真点「常规」：[Story] / [Regular] / [Standing] / Short · Check-in / Visit rest points: 1 / Standing +1 / [Accept] / 3 runs left / Long · Survey / Visit search points: 3 / Standing +1 / [Accept] / 3 runs left / Long · Metal Wanted / Hand in metal materials: 8 / Standing +1 / [Accept] / 3 runs left / Standard · Herbs Wanted / Hand in herbs: 4 / Standing +1 / [Accept] / 3 runs left / In hand 0 / 3
+B675 　　排版：查 24 处，溢出 0：
+B675 　　托盘：木牌「In hand 0 / 3」字在牌里；托盘 0 空 (370.0, 150.0)；托盘 1 空 (370.0, 150.0)；托盘 2 空 (370.0, 150.0)；空钉位 2
+B675 真点 Take_note_1（note_1「Short · Check-in」greylamp×1 档0 酬15 剩3 局 ）
+B675 真点 Take_note_2（note_2「Long · Survey」society×3 档2 酬50 剩3 局 ）
+B675 真点 Take_note_3（note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 ）
+B675 手头满 3：剩下的【接下】["Take_note_4 灰 true「Your hands are full」"]
+B675 　　局数 0；钉位 · · · note_4 · ·；栏上没接 1：note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩3 局 ；手头 3：note_1「Short · Check-in」greylamp×1 档0 酬15 剩3 局 taken；note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 　　页上：[Story] / [Regular] / [Standing] / Standard · Herbs Wanted / Hand in herbs: 4 / Standing +1 / [Accept] / 3 runs left / In hand 3 / 3 / Short · Check-in / Visit rest points: 1 / Standing +1 / [Abandon] / Long · Survey / Visit search points: 3 / Standing +1 / [Abandon] / Long · Metal Wanted / Hand in metal materials: 8 / 0 / 8 / Standing +1 / [Abandon]
+B675 　　排版：查 22 处，溢出 0：
+B675 　　托盘：木牌「In hand 3 / 3」字在牌里；托盘 0：note_1 在盘里 true；托盘 1：note_2 在盘里 true；托盘 2：note_3 在盘里 true；空钉位 5
+B675 回主菜单再继续：栏 不变
+B675 第 1 局（种子 31）进图，测试辅助撤离：true
+B675 第 1 局回营前：局数 0；钉位 · · · note_4 · ·；栏上没接 1：note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩3 局 ；手头 3：note_1「Short · Check-in」greylamp×1 档0 酬15 剩3 局 taken；note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 　　回营后：局数 1；钉位 note_5 note_6 · note_4 · ·；栏上没接 3：note_5「Standard · Metal Wanted」legion×3 档1 酬25 剩3 局 ；note_6「Short · Escort」greylamp×2 档0 酬20 剩3 局 ；note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩2 局 ；手头 3：note_1「Short · Check-in」greylamp×1 档0 酬15 剩3 局 taken；note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 第一局回营的常规页：[Story] / [Regular] / [Standing] / Standard · Metal Wanted / Hand in metal materials: 3 / Standing +1 / [Accept] / 3 runs left / Short · Escort / Win battles against ordinary enemies: 2 / Standing +1 / [Accept] / 3 runs left / Standard · Herbs Wanted / Hand in herbs: 4 / Standing +1 / [Accept] / 2 runs left / In hand 3 / 3 / Short · Check-in / Visit rest points: 1 / Standing +1 / [Abandon] / Long · Survey / Visit search points: 3 / Standing +1 / [Abandon] / Long · Metal Wanted / Hand in metal materials: 8 / 0 / 8 / Standing +1 / [Abandon]
+B675 　　排版：查 32 处，溢出 0：
+B675 真点 Abandon_note_1（note_1「Short · Check-in」greylamp×1 档0 酬15 剩3 局 taken）
+B675 　　放弃后：纸条还在簿里 false；在钉位 false；声望 { "legion": 30, "society": 30, "greylamp": 30, "cartographers": 30, "growers": 30, "envoy": 25, "hunters": 25 }（之前 { "legion": 30, "society": 30, "greylamp": 30, "cartographers": 30, "growers": 30, "envoy": 25, "hunters": 25 }）
+B675 　　局数 1；钉位 note_5 note_6 · note_4 · ·；栏上没接 3：note_5「Standard · Metal Wanted」legion×3 档1 酬25 剩3 局 ；note_6「Short · Escort」greylamp×2 档0 酬20 剩3 局 ；note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩2 局 ；手头 2：note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 真点 Take_note_5（note_5「Standard · Metal Wanted」legion×3 档1 酬25 剩3 局 ）
+B675 测试辅助：仓库放 3 件 copper_ore（合格的有 [&"copper_ore", &"copper_ingot", &"gear_arm", &"iron_ore", &"nail_keg", &"oil_lamp"]）
+B675 交货单页：Standard · Metal Wanted / Hand in metal materials: 3 / Standing +1 / [Settle it] / [Abandon]
+B675 　　真点【办理】后：状态 done；金币 580 → 605；声望 { "legion": 30, "society": 30, "greylamp": 30, "cartographers": 30, "growers": 30, "envoy": 25, "hunters": 25 } → { "legion": 31, "society": 30, "greylamp": 30, "cartographers": 30, "growers": 30, "envoy": 25, "hunters": 25 }；回执末条 [{ "id": "note_5", "kind": "done", "stage": 0, "run": 1, "name": "Standard · Metal Wanted" }]
+B675 　　回执文字：Standard · Metal Wanted: done
+B675 　　局数 1；钉位 · note_6 · note_4 · ·；栏上没接 2：note_6「Short · Escort」greylamp×2 档0 酬20 剩3 局 ；note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩2 局 ；手头 2：note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 　　排版：查 23 处，溢出 0：
+B675 第 2 局（种子 32）进图，测试辅助撤离：true
+B675 第 2 局回营前：局数 1；钉位 · note_6 · note_4 · ·；栏上没接 2：note_6「Short · Escort」greylamp×2 档0 酬20 剩3 局 ；note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩2 局 ；手头 2：note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 　　回营后：局数 2；钉位 note_7 note_6 · note_4 · ·；栏上没接 3：note_7「Long · Metal Wanted」legion×7 档2 酬62 剩3 局 ；note_6「Short · Escort」greylamp×2 档0 酬20 剩2 局 ；note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩1 局 ；手头 2：note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 办成那张下一局结算后：簿里还有 false；回执文字 ["Standard · Metal Wanted: done", "Register the Seed Stock: done", "Set the Waymarks: done"]
+B675 第 3 局（种子 33）进图，测试辅助撤离：true
+B675 第 3 局回营前：局数 2；钉位 note_7 note_6 · note_4 · ·；栏上没接 3：note_7「Long · Metal Wanted」legion×7 档2 酬62 剩3 局 ；note_6「Short · Escort」greylamp×2 档0 酬20 剩2 局 ；note_4「Standard · Herbs Wanted」society×4 档1 酬34 剩1 局 ；手头 2：note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 　　回营后：局数 3；钉位 note_7 note_6 note_8 note_9 · ·；栏上没接 4：note_7「Long · Metal Wanted」legion×7 档2 酬62 剩2 局 ；note_6「Short · Escort」greylamp×2 档0 酬20 剩1 局 ；note_8「Long · Crystals Wanted」society×7 档2 酬154 剩3 局 ；note_9「Short · Cloth Wanted」greylamp×1 档0 酬8 剩3 局 ；手头 2：note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 第 4 局（种子 34）进图，测试辅助撤离：true
+B675 第 4 局回营前：局数 3；钉位 note_7 note_6 note_8 note_9 · ·；栏上没接 4：note_7「Long · Metal Wanted」legion×7 档2 酬62 剩2 局 ；note_6「Short · Escort」greylamp×2 档0 酬20 剩1 局 ；note_8「Long · Crystals Wanted」society×7 档2 酬154 剩3 局 ；note_9「Short · Cloth Wanted」greylamp×1 档0 酬8 剩3 局 ；手头 2：note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 　　回营后：局数 4；钉位 note_7 · note_8 note_9 · ·；栏上没接 3：note_7「Long · Metal Wanted」legion×7 档2 酬62 剩1 局 ；note_8「Long · Crystals Wanted」society×7 档2 酬154 剩2 局 ；note_9「Short · Cloth Wanted」greylamp×1 档0 酬8 剩2 局 ；手头 2：note_2「Long · Survey」society×3 档2 酬50 剩3 局 taken；note_3「Long · Metal Wanted」legion×8 档2 酬70 剩3 局 taken
+B675 四局后的常规页：[Story] / [Regular] / [Standing] / Long · Metal Wanted / Hand in metal materials: 7 / Standing +1 / [Accept] / 1 runs left / Long · Crystals Wanted / Hand in crystals: 7 / Standing +1 / [Accept] / 2 runs left / Short · Cloth Wanted / Hand in cloth materials: 1 / Standing +1 / [Accept] / 2 runs left / In hand 2 / 3 / Long · Survey / Visit search points: 3 / Standing +1 / [Abandon] / Long · Metal Wanted / Hand in metal materials: 8 / 0 / 8 / Standing +1 / [Abandon]
+B675 　　排版：查 28 处，溢出 0：
