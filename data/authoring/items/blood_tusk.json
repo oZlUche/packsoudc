@@ -1,0 +1,71 @@
+{
+  "id": "blood_tusk",
+  "display_name": "血獠牙",
+  "display_names": {
+    "en": "Blood Tusk"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "nature",
+    "bleed",
+    "beast_part"
+  ],
+  "material": "bone",
+  "adjacency": {
+    "grant_cells": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_mods": [
+      {
+        "stat": "crit_chance",
+        "amount": 5.0
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 4
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.2
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "bleed"
+    }
+  ]
+}

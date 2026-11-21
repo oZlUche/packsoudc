@@ -1,0 +1,79 @@
+{
+  "id": "thunder_marrow",
+  "display_name": "惊雷之髓",
+  "display_names": {
+    "en": "Thunder Marrow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 4,
+  "tags": [
+    "material",
+    "reagent",
+    "nature",
+    "lightning",
+    "beast_part"
+  ],
+  "material": "flesh",
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_rules": [
+      {
+        "trigger": "@on_item_fired",
+        "cadence": "@always",
+        "effects": [
+          "@apply_status_numb"
+        ]
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 4
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.2
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 3.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage",
+            "damage_type": "lightning"
+          }
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "numb",
+      "stacks": 3
+    }
+  ]
+}

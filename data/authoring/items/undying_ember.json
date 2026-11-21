@@ -1,0 +1,79 @@
+{
+  "id": "undying_ember",
+  "display_name": "不熄余烬",
+  "display_names": {
+    "en": "Undying Ember"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 4,
+  "tags": [
+    "material",
+    "reagent",
+    "nature",
+    "fire",
+    "beast_part"
+  ],
+  "material": "flesh",
+  "adjacency": {
+    "grant_cells": [
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "grant_filter": [
+      "weapon"
+    ],
+    "grant_rules": [
+      {
+        "trigger": "@on_item_fired",
+        "cadence": "@always",
+        "effects": [
+          "@apply_status_scorch"
+        ]
+      }
+    ]
+  },
+  "wild": {
+    "base_stats": {
+      "damage": 8
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.5
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4.0
+          }
+        ],
+        "effects": [
+          {
+            "type": "deal_damage",
+            "damage_type": "fire"
+          }
+        ]
+      }
+    ]
+  },
+  "wild_applies": [
+    {
+      "buff": "scorch",
+      "stacks": 3
+    }
+  ]
+}
