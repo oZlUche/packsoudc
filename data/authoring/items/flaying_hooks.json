@@ -1,0 +1,52 @@
+{
+  "id": "flaying_hooks",
+  "display_name": "剥皮双钩",
+  "display_names": {
+    "en": "Flaying Hooks"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 5
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "axis": "damage_taken",
+            "target": "OPPONENT"
+          },
+          "@deal_damage"
+        ]
+      }
+    ]
+  }
+}

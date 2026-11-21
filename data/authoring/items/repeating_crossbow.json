@@ -1,0 +1,70 @@
+{
+  "id": "repeating_crossbow",
+  "display_name": "连珠弩",
+  "display_names": {
+    "en": "Repeating Crossbow"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "ranged",
+    "rapid"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 9
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.0,
+          "step_seconds": 1.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 6
+          }
+        ],
+        "effects": [
+          {
+            "type": "fire_loaded",
+            "ammo": true
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_item_fired",
+          "self_only": true
+        },
+        "cadence": "@always",
+        "effects": [
+          "@deal_damage"
+        ]
+      }
+    ]
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "load_filter": [
+      "ammo"
+    ]
+  }
+}
