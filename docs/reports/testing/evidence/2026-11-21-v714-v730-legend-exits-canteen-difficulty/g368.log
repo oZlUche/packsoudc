@@ -1,0 +1,34 @@
+G368 fire_gland：火焰腺；稀有度 2；标签 [&"material", &"reagent", &"nature", &"fire", &"beast_part"]；值 30
+G368 frost_gland：霜腺；稀有度 2；标签 [&"material", &"reagent", &"nature", &"ice", &"beast_part"]；值 30
+G368 shock_sac：电囊；稀有度 2；标签 [&"material", &"reagent", &"nature", &"lightning", &"beast_part"]；值 30
+G368 魔晶石类（id 带 crystal、有 crystal 标签）9 种：[&"fire_crystal", &"fire_crystal_high", &"fire_crystal_low", &"ice_crystal", &"ice_crystal_high", &"ice_crystal_low", &"lightning_crystal", &"lightning_crystal_high", &"lightning_crystal_low"]
+G368 forge_flame_berserker_twin_axes → flame_berserker_twin_axes：料 { "fire_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 fire_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_flame_bonesteel_broadsword → flame_bonesteel_broadsword：料 { "fire_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 fire_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_flame_bonesteel_spear → flame_bonesteel_spear：料 { "fire_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 fire_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_flame_composite_bow → flame_composite_bow：料 { "fire_gland": 2 }；格 ["gem≥3×1", "bone≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 fire_gland=30, slot:0(gem≥3)=150, slot:1(bone≥2)=30
+G368 forge_flame_execution_blade → flame_execution_blade：料 { "fire_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 fire_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_flame_executioner_axe → flame_executioner_axe：料 { "fire_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 fire_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_flame_meteor_maul → flame_meteor_maul：料 { "fire_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 fire_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_frost_bloodoath_axe → frost_bloodoath_axe：料 { "frost_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 frost_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_frost_bonesteel_greatsword → frost_bonesteel_greatsword：料 { "frost_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 frost_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_frost_dragoon_lance → frost_dragoon_lance：料 { "frost_gland": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 frost_gland=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_thunder_bloodthirst_twin_blades → thunder_bloodthirst_twin_blades：料 { "shock_sac": 2 }；格 ["gem≥3×1", "bone≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 shock_sac=30, slot:0(gem≥3)=150, slot:1(bone≥2)=30
+G368 forge_thunder_boneiron_club → thunder_boneiron_club：料 { "shock_sac": 2 }；格 ["gem≥3×1", "bone≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 shock_sac=30, slot:0(gem≥3)=150, slot:1(bone≥2)=30
+G368 forge_thunder_horse_halberd → thunder_horse_halberd：料 { "shock_sac": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 shock_sac=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 forge_thunder_siege_spear → thunder_siege_spear：料 { "shock_sac": 2 }；格 ["gem≥3×1", "metal≥2×2"]；魔晶石 无；魔晶石放得进 无；尘价 shock_sac=30, slot:0(gem≥3)=150, slot:1(metal≥2)=30
+G368 smith_mithril_sword → mithril_sword：料 { "fire_gland": 1, "mithril_ingot": 2 }；格 ["gem≥2×1", "metal≥1×1"]；魔晶石 无；魔晶石放得进 无；尘价 fire_gland=30, mithril_ingot=150, slot:0(gem≥2)=30, slot:1(metal≥1)=24
+G368 金武 + 秘银剑共 15 张
+G368 全部 35 张铁匠配方 + 拼合配方里还用魔晶石的：没有
+G368 拼合 fuse_flame_fang：[&"bloodbone_spike", &"fire_gland"] → flame_fang
+G368 拼合 fuse_frost_fang：[&"bloodbone_spike", &"frost_gland"] → frost_fang
+G368 拼合 fuse_thunder_heavy_crossbow：[&"heavy_crossbow", &"shock_sac"] → thunder_heavy_crossbow
+G368 敌人 flame_wolf 带 fire_gland
+G368 敌人 frost_toad 带 frost_gland
+G368 敌人 shock_eel 带 shock_sac
+G368 集市摊 remedy 3 级：货单 8 种；腺体 []；价 []
+G368 集市摊 food 3 级：货单 16 种；腺体 []；价 []
+G368 集市摊 arms 3 级：货单 64 种；腺体 []；价 []
+G368 集市摊 armor 3 级：货单 5 种；腺体 []；价 []
+G368 集市摊 goods 3 级：货单 55 种；腺体 [&"fire_gland", &"frost_gland", &"shock_sac"]；价 [30, 30, 30]
+G368 集市摊 loose 3 级：货单 0 种；腺体 []；价 []
+G368 协会鉴定委托 society_identify_ore：<null>
