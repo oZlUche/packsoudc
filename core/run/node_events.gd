@@ -454,7 +454,12 @@ func choose(i: int) -> bool:
 		_visited(node)
 		if hooks.request_extract():
 			return true
-		event_resolved.emit(node, StringName(UiText.t("node.short.extract")), {"log": [UiText.t("node.extract_unaffordable") % CoinShort.coin(PaidExtracts.fee_of(node))]})
+		# 反馈 11-21：关了就说关了（别说钱不够）；没关的（付不起）留着再弹，挣够了站着再开
+		var closed := hooks.extract_closed(node)
+		if not closed:
+			node.content["revisit_event"] = true
+		var why := UiText.t("notice.extract_closed") if closed else UiText.t("node.extract_unaffordable") % CoinShort.coin(PaidExtracts.fee_of(node))
+		event_resolved.emit(node, StringName(UiText.t("node.short.extract")), {"log": [why]})
 		return true
 	# 287：撤离点上选了「托付」：开托付屏，点不算用过（关了站着点 / 走开回来都再弹撤离）
 	if ctx.open_safe:
