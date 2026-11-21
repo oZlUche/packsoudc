@@ -183,6 +183,9 @@ static func run_shop_refresh_keeps_bag_bullion(t: TestCase) -> void:
 	var bag := ItemInstance.create(db.get_def(&"bag_leather"))
 	var s2 := Shop._shop(db, Wallet.new(500), Shop._node(4))
 	s2.refreshes = 1
+	var stock: Array = s2.board.items()     # 355：货多了摊上可能摆满，先腾一块地方（这条只看换货动不动包）
+	while not s2.board.can_admit(bag.def) and not stock.is_empty():
+		s2.board.remove((stock.pop_back() as ItemInstance).uid)
 	t.check(s2.board.try_add(bag), "摊上摆一个包")
 	s2._commit_owned()
 	t.check(s2.refresh(), "换了")

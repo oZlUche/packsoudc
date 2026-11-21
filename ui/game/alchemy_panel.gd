@@ -298,7 +298,10 @@ static func rule() -> Callable:
 
 ## 第七节：一键炼金看的范围 = 仓库里合筛选的
 func auto_pool() -> Array:
-	return flow.meta.warehouse.items().filter(func(it) -> bool: return shelf.matches(it as ItemInstance))
+	var pool: Array = flow.meta.warehouse.items()
+	if flow.meta.canteen_open():
+		pool.append_array(flow.meta.canteen.store.items())     # 355：食材仓库里的也算（筛「食材」一键炼）
+	return pool.filter(func(it) -> bool: return shelf.matches(it as ItemInstance))
 
 
 ## 第七节：一键炼金会勾哪些、跳过几件（[method Alchemy.auto_picks]）；没选标签 = 不圈范围，什么都不勾
@@ -327,7 +330,10 @@ func one_click() -> void:
 func _refresh_tags() -> void:
 	if tag_pick == null or flow == null or flow.meta == null:
 		return
-	WarehouseTools.fill_tags(tag_pick, flow.meta.sell_tags())
+	var tags := flow.meta.sell_tags()
+	if flow.meta.canteen_open() and flow.meta.canteen.store.item_count() > 0 and not tags.has(Canteen.TAG):
+		tags.append(Canteen.TAG)     # 355：食材仓库里有东西就能筛「食材」
+	WarehouseTools.fill_tags(tag_pick, tags)
 	WarehouseTools.sync_picks(shelf, tag_pick, rarity_pick)
 
 
@@ -381,7 +387,7 @@ func corners() -> Array:
 	var out: Array = [[], [], []]
 	var k := 0
 	for uid in shelf.selected:
-		var it := flow.meta.warehouse.get_item(int(uid))
+		var it := Alchemy.held(flow.meta, int(uid))
 		if it == null:
 			continue
 		(out[k % 3] as Array).append(it)

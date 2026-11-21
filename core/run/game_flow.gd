@@ -1076,6 +1076,17 @@ func _credit_nursery(goal: StringName, crop: StringName) -> void:
 	sync_commissions()
 
 
+## 355：苗圃按垦户社的档补地（只加不减）。返回动没动（动了存档）
+func sync_nursery() -> bool:
+	if meta == null or not facility_open(&"nursery"):
+		return false
+	var f := Commissions.faction(&"growers")
+	if f == null or not meta.nursery.fit(Commissions.tier_of(meta.commissions, f)):
+		return false
+	save_meta()
+	return true
+
+
 ## 342 B3：苗圃里有熟了的（后勤页签挂「可收获」）
 func nursery_ripe() -> bool:
 	return facility_open(&"nursery") and meta.nursery.ripe_count() > 0
@@ -1251,6 +1262,7 @@ func sync_commissions() -> Array[StringName]:
 	if not got.is_empty() or posted > 0:
 		save_meta()
 	sync_canteen()     # 355：刚开的食堂（或灰灯升了档）调锅和仓库
+	sync_nursery()     # 355：垦户社信赖、代言各多一畦
 	return got
 
 
