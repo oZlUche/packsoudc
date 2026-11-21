@@ -15,7 +15,7 @@
     {
       "goal": "nursery_plant",
       "where": "camp",
-      "text": "在苗圃种下一畦",
+      "text": "在苗圃种下一株",
       "texts": {
         "en": "Sow a bed in the nursery"
       }

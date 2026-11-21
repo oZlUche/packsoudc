@@ -179,7 +179,7 @@ static func run_forged_record(t: TestCase) -> void:
 	var m8 := MetaSave.from_text(FileAccess.get_file_as_string("res://tests/fixtures/meta_v8.json"), db, GameFlow.load_meta_rules(), GameFlow.load_techs())
 	t.check(m8 != null and m8.has_forged(&"smith_warhammer"), "读档：战锤能用尘补")
 	var old := MetaSave.from_text(raw, db, GameFlow.load_meta_rules(), GameFlow.load_techs())
-	t.check(old != null and old.dust == 0 and old.forged_recipes.is_empty() and String(old.nursery.plot(0)["crop"]) == "rope_hemp", "老档读得回来，苗圃照旧")
+	t.check(old != null and old.dust == 0 and old.forged_recipes.is_empty() and old.nursery.plants(0).size() == 1 and old.nursery.crop_of(old.nursery.plants(0)[0].uid) == &"rope_hemp", "老档读得回来，苗圃照旧")
 
 
 static func frame_page(t: TestCase, root: Window) -> void:

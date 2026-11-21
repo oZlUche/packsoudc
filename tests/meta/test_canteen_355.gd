@@ -236,34 +236,44 @@ static func run_audit(t: TestCase) -> void:
 
 
 static func run_nursery(t: TestCase) -> void:
-	t.begin("355 第三批 · 苗圃：垦户社信赖开第二畦、代言开第三畦；主食蔬菜水果灰灯食堂开了才种、种苗白给；收成进食材仓库、偶尔多收优良的；三畦存读一样")
-	t.eq([Nursery.plots_for(1), Nursery.plots_for(2), Nursery.plots_for(3), Nursery.plots_for(4)], [1, 1, 2, 3], "熟面 / 受托一畦、信赖两畦、代言三畦")
+	t.begin("355 第三批 · 苗圃：垦户社信赖开第二片、代言开第三片；每片 4×4 棋盘按形状摆；各作物成熟局数不同；主食蔬菜水果灰灯食堂开了才种、种苗白给；收成进食材仓库、偶尔多收优良的；三片存读一样")
+	t.eq([Nursery.plots_for(1), Nursery.plots_for(2), Nursery.plots_for(3), Nursery.plots_for(4)], [1, 1, 2, 3], "熟面 / 受托一片、信赖两片、代言三片")
 	var c := TestSupport.load_content("free_mode")
 	var f := Support.flow(c, PREFIX)
 	Support.pass_tutorials(f)
 	G342._open(f)
-	t.eq(f.meta.nursery.plots.size(), 1, "刚开：一畦")
+	t.eq(f.meta.nursery.fields.size(), 1, "刚开：一片")
+	t.eq(f.meta.nursery.field(0).size, Nursery.FIELD, "一片是 4×4")
 	t.eq(f.sow_crop(0, &"sour_wheat"), Nursery.WHY_CANTEEN, "食堂没开：主食种不了")
 	f.meta.commissions.rep["growers"] = 50
 	f.sync_commissions()
-	t.eq(f.meta.nursery.plots.size(), 2, "信赖：两畦")
+	t.eq(f.meta.nursery.fields.size(), 2, "信赖：两片")
 	_open(f)
-	t.eq(f.sow_crop(1, &"sour_wheat"), "", "食堂开了：第二畦种酸麦（种苗白给）")
-	t.eq(f.sow_crop(0, &"honey_pomelo"), "", "第一畦种蜜柚")
-	for k in 3:
+	for k in 4:
+		t.eq(f.sow_crop(1, &"sour_wheat"), "", "食堂开了：第二片种酸麦（种苗白给）#%d" % k)
+	t.eq(f.sow_crop(0, &"honey_pomelo", Vector2i(0, 0)), "", "第一片左上角种蜜柚（2×2）")
+	t.eq(f.sow_crop(0, &"honey_pomelo", Vector2i(1, 1)), Nursery.WHY_ROOM, "压着别的那株：摆不下")
+	t.eq(f.sow_crop(0, &"honey_pomelo", Vector2i(2, 2)), "", "右下角再种一株")
+	t.check(int(Nursery.CROPS[&"sour_wheat"]["runs"]) != int(Nursery.CROPS[&"honey_pomelo"]["runs"]), "酸麦和蜜柚熟得不一样快")
+	for k in int(Nursery.CROPS[&"sour_wheat"]["runs"]):
 		Nursery.advance(f.meta, "r%d" % k)
+	t.check(f.meta.nursery.is_ripe(1) and not f.meta.nursery.is_ripe(0), "酸麦熟了，蜜柚还没")
 	var got := f.harvest_crop(1)
 	t.eq(String(got["why"]), "", "收酸麦")
-	t.check(int(got["items"]) >= 4, "至少四件（偶尔多收金穗麦）")
+	t.check(int(got["items"]) >= 4, "四株至少四件（偶尔多收金穗麦）")
 	var wheat := f.meta.canteen.store.items().filter(func(i: ItemInstance) -> bool: return i.def.id == &"sour_wheat").size()
 	t.eq(wheat, 4, "四件酸麦进食材仓库")
+	t.check(f.meta.nursery.is_empty(1), "第二片空了")
 	var bonus := 0
-	var n := Nursery.new()
 	var m := T110._meta()
-	m.nursery = n
 	m.commissions.grants[String(Canteen.ID)] = true
 	for k in 40:
-		n.plots[0] = {"crop": "sour_wheat", "sown_run": 0, "left": 0}
+		m.nursery = Nursery.new()
+		m.nursery.seq = k
+		for j in 4:
+			Nursery.sow(m, 0, &"sour_wheat", c.items)
+		for g in m.nursery.growth.values():
+			g["left"] = 0
 		m.canteen.store.clear()
 		var r := Nursery.harvest(m, 0, c.items)
 		bonus += int(r["items"]) - 4
@@ -271,11 +281,14 @@ static func run_nursery(t: TestCase) -> void:
 	f.meta.commissions.rep["growers"] = 100
 	f.meta.commissions.signed["growers"] = true
 	f.sync_commissions()
-	t.eq(f.meta.nursery.plots.size(), 3, "代言：三畦")
-	var back := Nursery.from_dict(f.meta.nursery.to_dict())
-	t.eq(back.plots.size(), 3, "三畦存读回来还是三畦")
-	t.eq(String(back.plot(0)["crop"]), "honey_pomelo", "第一畦的蜜柚还在")
-	t.eq(Nursery.from_dict({"plots": [{"crop": "", "sown_run": 0, "left": 0}]}).plots.size(), 1, "老档一畦")
+	t.eq(f.meta.nursery.fields.size(), 3, "代言：三片")
+	var back := Nursery.from_dict(f.meta.nursery.to_dict(), c.items)
+	t.eq(back.fields.size(), 3, "三片存读回来还是三片")
+	t.eq(back.to_dict(), f.meta.nursery.to_dict(), "存读一样")
+	var ps := back.plants(0)
+	t.check(ps.size() == 2 and back.crop_of(ps[0].uid) == &"honey_pomelo", "第一片的两株蜜柚还在")
+	var old := Nursery.from_dict({"plots": [{"crop": "sour_wheat", "sown_run": 0, "left": 1}]})
+	t.eq([old.fields.size(), old.legacy_count()], [1, 1], "老档一畦 → 一片，等着摆一株")
 	Support.cleanup(PREFIX)
 
 
@@ -446,9 +459,9 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	W178._cleanup()
 
 
-## 355 第三批：苗圃页 —— 两畦以上顶上一排畦键；食堂开了空地纸条多一排栏键（药材 / 主食 / 蔬菜 / 水果），食材一栏一排三张小纸条；字不裸
+## 355 第三批：苗圃页 —— 两片以上顶上一排片键；食堂开了空地纸条多一排栏键（药材 / 主食 / 蔬菜 / 水果），食材一栏一排三张小纸条；字不裸
 static func frame_nursery(t: TestCase, root: Window) -> void:
-	t.begin("355 第三批 · 苗圃页：两畦有畦键；食堂开了能翻到主食、蔬菜、水果；小纸条点【种下】种上；字不裸")
+	t.begin("355 第三批 · 苗圃页：两片有片键；食堂开了能翻到主食、蔬菜、水果；小纸条点【种下】种上，【选中】再点格子种在那格；字不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
 	Support.pass_tutorials(f)
@@ -456,7 +469,7 @@ static func frame_nursery(t: TestCase, root: Window) -> void:
 	var s: Control = W178._screen(f, root)
 	s.show_tab("nursery")
 	var p = s.nursery_panel()
-	t.check(p.find_child("PlotTabs", true, false) == null and p.find_child("GroupTabs", true, false) == null, "一畦、食堂没开：和原来一样")
+	t.check(p.find_child("PlotTabs", true, false) == null and p.find_child("GroupTabs", true, false) == null, "一片、食堂没开：和原来一样")
 	t.check(p.find_child("Slip_bitter_leaf", true, false) != null, "药材纸条在")
 	s.queue_free()
 	f.meta.commissions.rep["growers"] = 50
@@ -464,15 +477,21 @@ static func frame_nursery(t: TestCase, root: Window) -> void:
 	s = W178._screen(f, root)
 	s.show_tab("nursery")
 	p = s.nursery_panel()
-	t.check(p.find_child("PlotTabs", true, false) != null, "两畦：有畦键")
+	t.check(p.find_child("PlotTabs", true, false) != null, "两片：有片键")
 	t.check(p.find_child("GroupTabs", true, false) != null, "食堂开了：有栏键")
 	p.show_group(&"fruit")
 	t.check(p.find_child("Slip_honey_pomelo", true, false) != null and p.find_child("Slip_bitter_leaf", true, false) == null, "水果一栏：蜜柚的小纸条")
 	t.eq(Bare.audit(p, "nursery355"), [] as Array[String], "字不裸")
 	p.show_plot(1)
-	t.eq(p.sow(1, &"honey_pomelo"), "", "第二畦种蜜柚")
-	t.eq(String(f.meta.nursery.plot(1)["crop"]), "honey_pomelo", "种上了")
-	t.check(p.find_child("Plant", true, false) != null, "长着：先拿蜜柚图标顶着")
+	t.eq(p.sow(1, &"honey_pomelo"), "", "第二片种蜜柚")
+	var ps: Array[ItemInstance] = f.meta.nursery.plants(1)
+	t.check(ps.size() == 1 and f.meta.nursery.crop_of(ps[0].uid) == &"honey_pomelo", "种上了")
+	t.check(p.find_child("FieldView", true, false) != null, "地是一块棋盘")
+	p.pick(&"honey_pomelo")
+	t.check(p.find_child("PlaceHint", true, false) != null, "选中了：提示点格子")
+	t.eq(p.sow_at(1, &"honey_pomelo", Vector2i(2, 2)), "", "点右下角的格子：种在那里")
+	t.eq(f.meta.nursery.plants(1).size(), 2, "两株了")
+	t.eq(Bare.audit(p, "nursery355b"), [] as Array[String], "棋盘页字不裸")
 	s.queue_free()
 	W178._cleanup()
 
