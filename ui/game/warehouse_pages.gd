@@ -58,6 +58,8 @@ var filter_fav := false
 ## 268：快速出售的勾选模式 —— 单击格子勾 / 取消（[member selected]，uid → true，跨页）；锁定 / 收藏的压灰、勾不上
 var select_mode := false
 var selected: Dictionary = {}
+## 354：勾选模式里哪些能勾（炼金只勾素材）；空 = [method can_select]（出售的规矩）
+var select_rule: Callable = Callable()
 
 
 ## [param plan] 见 [method TechWarehousePages.plan_of]（空 = 只列已有的页）
@@ -269,7 +271,7 @@ func set_filter(tag: StringName, rarity_max: int, fav_only: bool = filter_fav) -
 func _apply_dim() -> void:
 	if view == null:
 		return
-	view.dim_filter = (func(it: ItemInstance) -> bool: return matches(it) and can_select(it)) if select_mode else (matches if filtering() else Callable())
+	view.dim_filter = (func(it: ItemInstance) -> bool: return matches(it) and pickable(it)) if select_mode else (matches if filtering() else Callable())
 	view.queue_redraw()
 
 
@@ -294,9 +296,10 @@ func match_count(i: int) -> int:
 
 
 #region 268 快速出售的勾选
-## 开 / 关勾选模式（关了勾选全清）
-func set_select_mode(on: bool) -> void:
+## 开 / 关勾选模式（关了勾选全清）。[param rule] 见 [member select_rule]
+func set_select_mode(on: bool, rule: Callable = Callable()) -> void:
 	select_mode = on
+	select_rule = rule if on else Callable()
 	if not on:
 		selected.clear()
 	if view != null:
@@ -311,6 +314,11 @@ static func can_select(item: ItemInstance) -> bool:
 	return item != null and not item.is_locked_by_player() and not ItemFavorites.has(item.def.id)
 
 
+## 354：这件在现在的勾选模式里能不能勾
+func pickable(item: ItemInstance) -> bool:
+	return bool(select_rule.call(item)) if select_rule.is_valid() else can_select(item)
+
+
 ## 勾 / 取消一件；勾不上（不在仓库、锁着、收藏）返回 false（持有方说原因）
 func toggle_select(uid: int) -> bool:
 	var it := warehouse.get_item(uid) if warehouse != null else null
@@ -318,7 +326,7 @@ func toggle_select(uid: int) -> bool:
 		return false
 	if selected.has(uid):
 		selected.erase(uid)
-	elif can_select(it):
+	elif pickable(it):
 		selected[uid] = true
 	else:
 		refused.emit(it)
@@ -330,7 +338,7 @@ func toggle_select(uid: int) -> bool:
 ## 全选：所有页里合筛选、能勾的全勾上（筛选外已勾的留着，测试 v4.81）；返回现在一共勾了几件
 func select_matching() -> int:
 	for it in warehouse.items():
-		if matches(it as ItemInstance) and can_select(it as ItemInstance):
+		if matches(it as ItemInstance) and pickable(it as ItemInstance):
 			selected[(it as ItemInstance).uid] = true
 	_changed_selection()
 	return selected.size()
@@ -340,7 +348,7 @@ func select_matching() -> int:
 func all_matching_selected() -> bool:
 	var any := false
 	for it in warehouse.items():
-		if matches(it as ItemInstance) and can_select(it as ItemInstance):
+		if matches(it as ItemInstance) and pickable(it as ItemInstance):
 			any = true
 			if not selected.has((it as ItemInstance).uid):
 				return false
@@ -357,6 +365,14 @@ func deselect_matching() -> void:
 
 func clear_selection() -> void:
 	selected.clear()
+	_changed_selection()
+
+
+## 354 第七节：勾选换成正好这几件（一键炼金）
+func select_only(uids: Array) -> void:
+	selected.clear()
+	for uid in uids:
+		selected[int(uid)] = true
 	_changed_selection()
 
 
@@ -399,7 +415,7 @@ func _prune_selection() -> void:
 	var gone := false
 	for uid in selected.keys():
 		var it := warehouse.get_item(int(uid))
-		if it == null or not can_select(it):
+		if it == null or not pickable(it):
 			selected.erase(uid)
 			gone = true
 	if gone:

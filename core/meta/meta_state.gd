@@ -18,7 +18,8 @@ extends RefCounted
 ## 262：v4 科技「集市」「铁匠铺」改义为「高级货物」「高级配方」，最多两级（[MetaMigrations] 把 3 压到 2）
 ## 319：v5 科技分成数值树与机制树、机制树只花见识；幸运科技删了（退钱退材料）、讨价并成一级，见 [MetaMigrations]
 ## 342 B2：v6 委托声望改五档（旧值折算），老档的铁匠铺、科技、集市一直开着
-const SAVE_VERSION := 7     # 342 B3：苗圃（[method MetaMigrations._v6_to_v7]）
+## 342 B3：v7 苗圃；354：v8 万物之尘与「打造过的配方」（[method MetaMigrations._v7_to_v8]）
+const SAVE_VERSION := 9
 ## 319：记住最近结算过的几局（[member settled_runs]），重复结算不再发东西
 const SETTLED_MAX := 64
 ## 262（作者 14:19）：集市、铁匠铺默认就有 —— 没点科技也是 1 级，科技每点一级铺子再升一级
@@ -133,6 +134,10 @@ var reward_pending: Array[ItemInstance] = []
 var commissions: CommissionBook = CommissionBook.new()
 ## 342 B3：河滩垦户社的苗圃（几畦地、最后推进过的那一局）
 var nursery: Nursery = Nursery.new()
+## 354：万物之尘（[Alchemy]）—— 一个数，和金币一样不占格；老档 0
+var dust: int = 0
+## 354：用铁匠铺打造过的配方 id（[method Smithy.forge] 记；用尘补料的那次也算）。358：v8 以前的老档迁移时按图鉴补（[method MetaMigrations._v8_to_v9]）
+var forged_recipes: Array[StringName] = []
 var _next_uid: int = 1
 
 
@@ -495,6 +500,17 @@ func _record_codex(inst: ItemInstance, got: Dictionary) -> void:
 	if int(codex.get(key, 0)) == 0:
 		got["lit"] = int(got["lit"]) + 1
 	codex[key] = int(codex.get(key, 0)) + 1
+
+
+## 354：这张铁匠配方打造过没有（[member forged_recipes]）
+func has_forged(recipe_id: StringName) -> bool:
+	return forged_recipes.has(recipe_id)
+
+
+## 354：记下打造过这张配方（重复的不记）
+func mark_forged(recipe_id: StringName) -> void:
+	if recipe_id != &"" and not forged_recipes.has(recipe_id):
+		forged_recipes.append(recipe_id)
 
 
 ## 251：铁匠铺打出来的一件也点亮图鉴（和带出来同一套计数）
@@ -897,6 +913,7 @@ func to_dict() -> Dictionary:
 		"reward_pending": reward_pending.map(func(i: ItemInstance) -> Dictionary: return i.to_dict()),
 		"commissions": commissions.to_dict(),     # 336
 		"nursery": nursery.to_dict(),     # 342 B3
+		"dust": dust, "forged_recipes": _names_of(forged_recipes),     # 354
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -960,7 +977,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		if m.board.item_count() == 0:
 			m.board = null
 	# 原样读回的字段（存档的键 = 字段名）：id 列表、字符串 → 数的表、单个数
-	for key in ["active_buffs", "unlocks", "keepsakes", "bag_grants", "seen_rules", "briefing_seen", "reactions_seen"]:
+	for key in ["active_buffs", "unlocks", "keepsakes", "bag_grants", "seen_rules", "briefing_seen", "reactions_seen", "forged_recipes"]:
 		for id in d.get(key, []):
 			(m.get(key) as Array).append(StringName(String(id)))
 	for key in ["codex", "achievements", "chapter_extractions", "flags"]:
@@ -1039,6 +1056,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 			m._next_uid = maxi(m._next_uid, inst.uid + 1)
 	m.commissions = CommissionBook.from_dict(d.get("commissions", null))     # 336：老档没有 = 全空
 	m.nursery = Nursery.from_dict(d.get("nursery", null))     # 342 B3
+	m.dust = maxi(0, int(d.get("dust", 0)))     # 354
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
 	if said is Dictionary:
 		for k in said:

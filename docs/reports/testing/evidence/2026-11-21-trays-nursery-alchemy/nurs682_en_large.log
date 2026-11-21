@@ -1,0 +1,36 @@
+N682 新档进基地：后勤小键 ["market", "smithy"]；苗圃开 false；局外存档版本 7；畦 [{ "crop": "", "sown_run": 0, "left": 0 }]；last_run「」；seq 0；熟了 0 畦；可收获标记 false
+N682 　　这一局：正式；走了 1 步；正式探索 true；run_id run-1a1fd747000-b2cae462
+N682 第一局正式探索回营：列出的几方 ["Logistics Corps", "Mages\' Society", "Grey Lamp Mutual Aid", "Cartographers\' Society", "Riverbank Growers"]；arrived { "cartographers": 1, "growers": 1 }；接着的 [&"greylamp_check_scale", &"legion_forge_token", &"society_first_survey", &"cartographers_redraw", &"growers_first_bed"]；倾向开 false；后勤小键 ["market", "smithy", "nursery"]；垦户社声望 0；growers_first_bed taken 0；growers_trial_sow  -；growers_first_harvest  -；growers_permit  -
+N682 真点「苗圃」（没办《第一畦》）：落在 nursery；说明板 看得见：Nursery / Riverbank Growers / Opens once The First Bed is done
+N682 　　排版：查 4 处，溢出 0：
+N682 真点【办理】《第一畦》后：苗圃开 true；垦户社声望 10；growers_first_bed done 0；growers_trial_sow taken 0；growers_first_harvest  -；growers_permit  -；告示 ["Nursery is now open", "Pick a starting point"]
+N682 苗圃页：Bitterleaf / ×1 / → / ×2 / 2 runs / Rope hemp / free / → / ×1 / 3 runs
+N682 　　右列仓库 露着；排版：查 12 处，溢出 0：
+N682 　　版面：右列 [P: (1015.0, 24.0), S: (738.0, 952.0)] 在屏里 true；仓库格 [P: (1052.0, 76.0), S: (92.0, 92.0)] 在屏里 true；仓库格 [P: (1274.0, 100.0), S: (450.0, 360.0)] 在屏里 true；苗圃页 [P: (292.0, 24.0), S: (699.0, 952.0)]；Stage [P: (342.5, 24.0), S: (598.0, 854.0)]
+N682 　　【种下】苦叶草：灰 true「No seedlings in the warehouse」（仓库干草药 0）
+N682 真点【种下】绳麻：畦 [{ "crop": "rope_hemp", "sown_run": 1, "left": 3 }]；last_run「」；seq 1；熟了 0 畦；可收获标记 false；垦户社声望 15；growers_first_bed done 0；growers_trial_sow done 0；growers_first_harvest taken 0；growers_permit  -
+N682 　　苗圃页：Rope hemp / ×1
+N682 　　版面（nursery_sown）：右列 [P: (1015.0, 24.0), S: (738.0, 952.0)] 在屏里 true；仓库格 [P: (1052.0, 76.0), S: (92.0, 92.0)] 在屏里 true；仓库格 [P: (1274.0, 100.0), S: (450.0, 360.0)] 在屏里 true；苗圃页 [P: (292.0, 24.0), S: (699.0, 952.0)]；Stage [P: (342.5, 24.0), S: (598.0, 854.0)]；作物 [P: (456.5, 2.0), S: (370.0, 370.0)] 顶离页上沿 -22、离屏上沿 2
+N682 　　这一局：空跑；走了 0 步；正式探索 false；run_id run-1a1fd74b548-38e2543c
+N682 空跑一局后：畦 [{ "crop": "rope_hemp", "sown_run": 1, "left": 3 }]；last_run「」；seq 1；熟了 0 畦；可收获标记 false
+N682 　　这一局：正式；走了 4 步；正式探索 true；run_id run-1a1fd74cede-2211be59
+N682 正式一局后：畦 [{ "crop": "rope_hemp", "sown_run": 1, "left": 2 }]；last_run「run-1a1fd74cede-2211be59」；seq 1；熟了 0 畦；可收获标记 false
+N682 　　测试辅助：同一局 run-1a1fd74cede-2211be59 再推进一次 → false；畦 [{ "crop": "rope_hemp", "sown_run": 1, "left": 2 }]；last_run「run-1a1fd74cede-2211be59」；seq 1；熟了 0 畦；可收获标记 false
+N682 存档回主菜单再继续：畦 [{ "crop": "rope_hemp", "sown_run": 1, "left": 2 }]；last_run「run-1a1fd74cede-2211be59」；seq 1；熟了 0 畦；可收获标记 false
+N682 　　这一局：正式；走了 1 步；正式探索 true；run_id run-1a1fd751391-6473aff1
+N682 正式第二局后：畦 [{ "crop": "rope_hemp", "sown_run": 1, "left": 1 }]；last_run「run-1a1fd751391-6473aff1」；seq 1；熟了 0 畦；可收获标记 false；后勤页签「Logistics」［小图 隐藏，[P: (232.0, 311.0), S: (26.0, 26.0)]，在键里 true］
+N682 　　这一局：正式；走了 7 步；正式探索 true；run_id run-1a1fd752f56-6fc1c46e
+N682 正式第三局后：畦 [{ "crop": "rope_hemp", "sown_run": 1, "left": 0 }]；last_run「run-1a1fd752f56-6fc1c46e」；seq 1；熟了 1 畦；可收获标记 true；后勤页签「Logistics」［小图 显示，[P: (232.0, 311.0), S: (26.0, 26.0)]，在键里 true］；悬浮「Ripe」
+N682 熟了的苗圃页：Rope hemp / ×1；小键「Nursery」［小图 显示，[P: (185.0, 483.5), S: (20.0, 20.0)]，在键里 true］ 悬浮「Ripe」
+N682 　　排版：查 3 处，溢出 0：；左列小键排版：查 4 处，溢出 0：
+N682 　　版面：右列 [P: (1015.0, 24.0), S: (738.0, 952.0)] 在屏里 true；仓库格 [P: (1052.0, 76.0), S: (92.0, 92.0)] 在屏里 true；仓库格 [P: (1274.0, 100.0), S: (450.0, 360.0)] 在屏里 true；苗圃页 [P: (292.0, 24.0), S: (699.0, 952.0)]；Stage [P: (342.5, 24.0), S: (598.0, 854.0)]；作物 [P: (475.0, 39.0), S: (333.0, 333.0)] 顶离页上沿 15、离屏上沿 39
+N682 测试辅助：仓库塞干草药 63 束直到放不下（11 → 74 件）
+N682 仓库满时真点【收获】：仓库 74 件（之前 74）；麻绳卷 0；畦 [{ "crop": "rope_hemp", "sown_run": 1, "left": 0 }]；last_run「run-1a1fd752f56-6fc1c46e」；seq 1；熟了 1 畦；可收获标记 true；告示 ["No room in the warehouse; it stays in the ground"]
+N682 　　版面（harvest_full）：右列 [P: (1015.0, 24.0), S: (738.0, 952.0)] 在屏里 true；仓库格 [P: (1052.0, 76.0), S: (92.0, 92.0)] 在屏里 true；仓库格 [P: (1274.0, 100.0), S: (450.0, 360.0)] 在屏里 true；苗圃页 [P: (292.0, 24.0), S: (699.0, 952.0)]；Stage [P: (342.5, 24.0), S: (598.0, 854.0)]；作物 [P: (475.0, 39.0), S: (333.0, 333.0)] 顶离页上沿 15、离屏上沿 39
+N682 测试辅助：拿掉 3 束干草药
+N682 再真点【收获】：麻绳卷 1；畦 [{ "crop": "", "sown_run": 0, "left": 0 }]；last_run「run-1a1fd752f56-6fc1c46e」；seq 2；熟了 0 畦；可收获标记 false；垦户社声望 20；growers_first_bed done 0；growers_trial_sow done 0；growers_first_harvest done 0；growers_permit taken 0；后勤页签「Logistics」［小图 隐藏，[P: (232.0, 311.0), S: (26.0, 26.0)]，在键里 true］；小键［小图 隐藏，[P: (185.0, 483.5), S: (20.0, 20.0)]，在键里 true］；排版：查 12 处，溢出 0：
+N682 　　版面（harvested）：右列 [P: (1015.0, 24.0), S: (738.0, 952.0)] 在屏里 true；仓库格 [P: (1052.0, 76.0), S: (92.0, 92.0)] 在屏里 true；仓库格 [P: (1274.0, 100.0), S: (450.0, 360.0)] 在屏里 true；苗圃页 [P: (292.0, 24.0), S: (699.0, 952.0)]；Stage [P: (342.5, 24.0), S: (598.0, 854.0)]
+N682 测试辅助：清掉塞的干草药，放一束（仓库干草药 1）
+N682 【种下】苦叶草：灰 false
+N682 真点【种下】苦叶草后：仓库干草药 0；畦 [{ "crop": "bitter_leaf", "sown_run": 5, "left": 2 }]；last_run「run-1a1fd752f56-6fc1c46e」；seq 3；熟了 0 畦；可收获标记 false；垦户社声望 25；growers_first_bed done 0；growers_trial_sow done 0；growers_first_harvest done 0；growers_permit done 0；排版：查 2 处，溢出 0：
+N682 　　版面（bitter_sown）：右列 [P: (1015.0, 24.0), S: (738.0, 952.0)] 在屏里 true；仓库格 [P: (1052.0, 76.0), S: (92.0, 92.0)] 在屏里 true；仓库格 [P: (1274.0, 100.0), S: (450.0, 360.0)] 在屏里 true；苗圃页 [P: (292.0, 24.0), S: (699.0, 952.0)]；Stage [P: (342.5, 24.0), S: (598.0, 854.0)]；作物 [P: (456.5, 2.0), S: (370.0, 370.0)] 顶离页上沿 -22、离屏上沿 2

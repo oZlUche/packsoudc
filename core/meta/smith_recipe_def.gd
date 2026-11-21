@@ -69,8 +69,9 @@ func slots() -> Array[Dictionary]:
 
 
 ## 310：这件能不能顶那一格（[method slots] 里的一条）
+## 独一的（首领核等）不顶任何格：只有写死在 [member inputs] 里才吃
 static func slot_fits(slot: Dictionary, def: ItemDef) -> bool:
-	if def == null or def.rarity < int(slot.get("min", 0)):
+	if def == null or def.rarity < int(slot.get("min", 0)) or def.is_unique():
 		return false
 	var material := String(slot.get("material", ""))
 	if is_crystal_key(material):

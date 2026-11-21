@@ -1,0 +1,20 @@
+{
+ "_doc": "354 alchemy page, author pick C 炼成阵 + dust icon C (2026-11-21). Samples https://claude.ai/artifact/2Jva7zA4bXrzoCPWRSjJsK (C). Coordinates in the middle column of a 1600x1000 capture (column 392 wide); scale with the column like the nursery page.",
+ "top": "plaque with dust.png (42px) + current dust count, bold 30, centred, y 24; reuse the light home plaque (PANEL_HOME_PLAQUE_SMALL is fine)",
+ "circle": {
+  "file": "circle.png",
+  "size": 340,
+  "centre_y": 330,
+  "note": "floor sigil; the three corners of the triangle sit at radius 136 from the centre, angles -90 / 30 / 150 deg"
+ },
+ "nodes": {
+  "file": "node.png",
+  "size": 76,
+  "at": "each triangle corner",
+  "item_icon": 60,
+  "more_than_three": "deal ticked items round-robin onto the 3 corners; a corner with 2+ items shows the newest icon with the others peeking behind (offset 6px up-left each, max 3 drawn) plus a small light ×n under the node"
+ },
+ "centre": "dust.png 70px over center_glow.png (128) at the circle centre; hide both when nothing is ticked",
+ "slip": "torn parchment slip (commission slip style) at y 590, width column-40, height 232: line 1 bold 32 '→ [dust 44] +N'; line 2 18 dim '卖掉 [coin] N · 折损 N%' (percent in red #9a2f22); keys 全选 / 炼化 (primary) at the bottom",
+ "empty": "nothing ticked: nodes empty, no centre dust, slip line 1 shows +0 and 炼化 disabled"
+}

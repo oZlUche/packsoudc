@@ -55,6 +55,31 @@ static func run(t: TestCase) -> void:
 	_put(TMP + "assets/new.png", "")
 	t.eq(ImportCheck.missing(TMP + "assets"), [TMP + "assets/new.png", TMP + "assets/x.png"] as Array[String], "两件都算没导")
 
+	t.begin("作者 2026-11-21 · 只在版本变了才扫：读 Git 提交号（普通检出、工作树、packed-refs、游离 HEAD），和上次扫完一个不缺时记下的一样就不扫")
+	var repo := TMP + "repo/"
+	DirAccess.make_dir_recursive_absolute(repo + ".git/refs/heads")
+	_put(repo + ".git/HEAD", "ref: refs/heads/main\n")
+	_put(repo + ".git/refs/heads/main", "aaa111\n")
+	t.eq(ImportCheck.git_head(repo), "aaa111", "普通检出：HEAD → refs/heads/main")
+	DirAccess.make_dir_recursive_absolute(repo + ".git/worktrees/wt")
+	DirAccess.make_dir_recursive_absolute(TMP + "wt")
+	_put(TMP + "wt/.git", "gitdir: " + ProjectSettings.globalize_path(repo + ".git/worktrees/wt") + "\n")
+	_put(repo + ".git/worktrees/wt/HEAD", "ref: refs/heads/side\n")
+	_put(repo + ".git/worktrees/wt/commondir", "../..\n")
+	_put(repo + ".git/packed-refs", "# pack-refs with: peeled\nbbb222 refs/heads/side\n")
+	t.eq(ImportCheck.git_head(TMP + "wt"), "bbb222", "工作树：分支引用在公共目录的 packed-refs 里")
+	_put(repo + ".git/worktrees/wt/HEAD", "ccc333\n")
+	t.eq(ImportCheck.git_head(TMP + "wt"), "ccc333", "游离 HEAD：直接是提交号")
+	t.eq(ImportCheck.git_head(TMP + "assets"), "", "不是 Git 检出：空")
+	var stamp := TMP + "head_stamp"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(stamp))     # leftover from an earlier run on this machine
+	t.check(ImportCheck.needs_scan(repo, stamp), "没记过：要扫")
+	ImportCheck.remember_clean(repo, stamp)
+	t.check(not ImportCheck.needs_scan(repo, stamp), "同一提交号：不扫")
+	_put(repo + ".git/refs/heads/main", "ddd444\n")
+	t.check(ImportCheck.needs_scan(repo, stamp), "提交号变了：要扫")
+	t.check(ImportCheck.needs_scan(TMP + "assets", stamp), "读不出提交号：每次都扫")
+
 
 static func _put(path: String, text: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)

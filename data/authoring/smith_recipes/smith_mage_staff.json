@@ -2,20 +2,19 @@
   "id": "smith_mage_staff",
   "output": "mage_staff",
   "inputs": {
-    "fire_crystal_low": 1,
     "silver_ingot": 1,
     "wooden_stick": 1
   },
-  "material_slots": [
-    {
-      "material": "gem",
-      "min": 1,
-      "count": 1
-    }
-  ],
   "funds": 90,
   "group": "staff",
   "level": 2,
   "tech": "staffcraft",
-  "tech_level": 2
+  "tech_level": 2,
+  "material_slots": [
+    {
+      "material": "gem",
+      "min": 1,
+      "count": 2
+    }
+  ]
 }

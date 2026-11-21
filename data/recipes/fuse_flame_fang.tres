@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_62hwm")
 id = &"fuse_flame_fang"
-inputs = Array[StringName]([&"bloodbone_spike", &"fire_crystal"])
+inputs = Array[StringName]([&"bloodbone_spike", &"fire_gland"])
 output = &"flame_fang"
 adjacent = true

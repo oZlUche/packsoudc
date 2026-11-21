@@ -7,7 +7,6 @@ script = ExtResource("1_rvrdj")
 id = &"smith_grand_magus_staff"
 output = &"grand_magus_staff"
 inputs = {
-"fire_crystal_high": 1,
 "mithril_ingot": 2
 }
 material_slots = Array[Dictionary]([{

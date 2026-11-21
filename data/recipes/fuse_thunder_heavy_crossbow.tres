@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_mrbky")
 id = &"fuse_thunder_heavy_crossbow"
-inputs = Array[StringName]([&"heavy_crossbow", &"lightning_crystal"])
+inputs = Array[StringName]([&"heavy_crossbow", &"shock_sac"])
 output = &"thunder_heavy_crossbow"
 adjacent = true

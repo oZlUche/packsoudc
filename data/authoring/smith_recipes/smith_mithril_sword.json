@@ -2,10 +2,15 @@
   "id": "smith_mithril_sword",
   "output": "mithril_sword",
   "inputs": {
-    "fire_crystal_low": 1,
+    "fire_gland": 1,
     "mithril_ingot": 2
   },
   "material_slots": [
+    {
+      "material": "gem",
+      "min": 2,
+      "count": 1
+    },
     {
       "material": "metal",
       "min": 1,

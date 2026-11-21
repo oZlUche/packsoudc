@@ -2,7 +2,7 @@
   "id": "fuse_frost_fang",
   "inputs": [
     "bloodbone_spike",
-    "ice_crystal"
+    "frost_gland"
   ],
   "output": "frost_fang",
   "adjacent": true

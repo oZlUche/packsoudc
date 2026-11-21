@@ -32,12 +32,18 @@ const LIGHT := Color("f1e3c2")
 ## 钉子：图 18×22，钉子中心落在纸上沿往下 PIN_DIP 处，盖住纸边
 const PIN_SIZE := Vector2(18, 22)
 const PIN_DIP := 8.0
+## 报告 350 C 托盘：告示栏三列；空钉位格子高；托盘高、间距、九宫格边（左、上、右、下，下沿是托盘口）
+const BOARD_COLS := 3
+const EMPTY_PIN_H := 120.0
+const TRAY_H := 150.0
+const TRAY_GAP := 16
+const TRAY_EDGES := [12, 12, 12, 18]
 ## 回执最多列几条
 const RECEIPTS_SHOWN := 6
 ## 342 B2：三个子页（键、字表键）
 const SUBS := [["story", "commission.sub_story"], ["regular", "commission.sub_regular"], ["reputation", "commission.sub_reputation"]]
 ## 设施 → 字表键
-const FACILITY_TEXT := {&"smithy": "smithy.title", &"tech": "meta.tab_tech", &"market": "market.title", &"bias": "bias.title", &"nursery": "nursery.title"}
+const FACILITY_TEXT := {&"smithy": "smithy.title", &"tech": "meta.tab_tech", &"market": "market.title", &"bias": "bias.title", &"nursery": "nursery.title", &"alchemy": "alchemy.title"}
 
 ## 上次看的子页（这一趟游戏里记着）
 static var last_sub := "story"
@@ -250,24 +256,13 @@ func shown(d: CommissionDef) -> bool:
 	return why == "" or why == Commissions.WHY_PICK
 
 
+## 报告 350 常规页（作者 2026-11-21 选 C 托盘）：上面告示栏 6 个钉位排两行三列（空钉位只留钉孔）；
+## 下面一块浅木牌「手头 n / 3」，牌下横排三只木托盘，手头的纸条放进托盘
 func _build_regular() -> void:
 	var book := flow.meta.commissions
-	var hand := book.taken().filter(func(id: StringName) -> bool: return NoticeBoard.is_note(id))
-	var head := UiTheme.make_label(UiText.t("commission.hand") % [hand.size(), Commissions.SLOTS], 18, LIGHT)
-	head.name = "Hand"
-	_cards.add_child(head)
-	var hand_row := HFlowContainer.new()     # 手头的（接下的纸条）
-	hand_row.name = "HandRow"
-	_cards.add_child(hand_row)
-	for id in hand:
-		var d := Commissions.def(id)
-		if d != null:
-			hand_row.add_child(_card(d, STORY_W))
-	var sep := HSeparator.new()     # 手头和栏上分开（手头放法等作者挑 A / B / C）
-	sep.name = "HandSep"
-	_cards.add_child(sep)
-	var pins := HFlowContainer.new()
+	var pins := GridContainer.new()
 	pins.name = "BoardRow"
+	pins.columns = BOARD_COLS
 	_cards.add_child(pins)
 	for f in Commissions.listed_factions():
 		if Commissions.regular_open(book, f):
@@ -291,12 +286,140 @@ func _build_regular() -> void:
 		col.add_child(pips(Commissions.tier_of(book, f)))
 		pins.add_child(_pinned(p, "pin_empty"))
 	var notes := NoticeBoard.posted(book)
-	if notes.is_empty() and not NoticeBoard.open_factions(book).is_empty():
-		_cards.add_child(UiTheme.make_label(UiText.t("commission.regular_soon"), 16, LIGHT))
 	for nid in notes:     # 栏上没接的纸条
 		var d := Commissions.def(StringName(nid))
 		if d != null:
 			pins.add_child(_card(d, STORY_W))
+	var k := 0
+	while pins.get_child_count() < NoticeBoard.PINS:     # 空钉位：只一个钉孔
+		var hole := _pic("pin_empty", PIN_SIZE)
+		var cell := CenterContainer.new()
+		cell.name = "EmptyPin_%d" % k
+		cell.use_top_left = false
+		cell.custom_minimum_size = Vector2(STORY_W, EMPTY_PIN_H)
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_child(hole)
+		pins.add_child(cell)
+		k += 1
+	if notes.is_empty() and not NoticeBoard.open_factions(book).is_empty():
+		_cards.add_child(UiTheme.make_label(UiText.t("commission.regular_soon"), 16, LIGHT))
+	var hand := book.taken().filter(func(id: StringName) -> bool: return NoticeBoard.is_note(id))
+	var plank := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_PLAQUE_SMALL, 28, 10, 28, 10)
+	plank.name = "HandPlank"
+	plank.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	UiTheme.set_tone(plank, UiTheme.TONE_LIGHT)
+	var head := UiTheme.make_label(UiText.t("commission.hand") % [hand.size(), Commissions.SLOTS], 18, INK)
+	head.name = "Hand"
+	plank.add_child(head)
+	_cards.add_child(plank)
+	var trays := UiTheme.hbox(TRAY_GAP)
+	trays.name = "HandRow"
+	_cards.add_child(trays)
+	for i in Commissions.SLOTS:
+		var d: CommissionDef = Commissions.def(hand[i]) if i < hand.size() else null
+		trays.add_child(_tray(i, d))
+
+
+## 一只木托盘（九宫格，下沿是托盘口）；有纸条就放进去，空的只画托盘
+func _tray(i: int, d: CommissionDef) -> Control:
+	var tray := MarginContainer.new()
+	tray.name = "Tray_%d" % i
+	tray.custom_minimum_size = Vector2(STORY_W, TRAY_H)
+	UiTheme.set_tone(tray, UiTheme.TONE_DARK)
+	var art := UiTheme.art(ART + "hand_tray")
+	if art != null:
+		tray.add_child(UiTheme.nine_rect(art, TRAY_EDGES))
+	if d == null:
+		return tray
+	var v := UiTheme.vbox(0)
+	tray.add_child(v)
+	v.add_child(_gap(Vector2(0, TRAY_EDGES[1])))
+	var h := UiTheme.hbox(0)
+	h.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	v.add_child(h)
+	h.add_child(_gap(Vector2(TRAY_EDGES[0], 0)))
+	var slip := _slip(d, STORY_W - TRAY_EDGES[0] - TRAY_EDGES[2])
+	slip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slip.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	h.add_child(slip)
+	h.add_child(_gap(Vector2(TRAY_EDGES[2], 0)))
+	v.add_child(_gap(Vector2(0, TRAY_EDGES[3])))
+	return tray
+
+
+## 托盘里的纸条：纹章、名字；要做的事 + 进度方框；金币、声望、【交货】/【放弃】
+func _slip(d: CommissionDef, w: float) -> PanelContainer:
+	var book := flow.meta.commissions
+	var p := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 16, 10, 16, 10)
+	UiTheme.set_tone(p, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
+	p.name = "Card_" + String(d.id)
+	var col := UiTheme.vbox(4)
+	p.add_child(col)
+	var top := UiTheme.hbox(8)
+	top.add_child(emblem(d.faction, 32))
+	var title := UiTheme.make_label(Names.of(d), 18, INK)
+	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	top.add_child(title)
+	col.add_child(top)
+	var s := Commissions.current_stage(book, d.id)
+	var need := maxi(1, d.stages[s].count) if s >= 0 and s < d.stages.size() else 1
+	var got := int(book.entry(d.id).get("progress", 0))
+	var task := UiTheme.hbox(8)
+	task.add_child(UiTheme.make_wrapped(task_text(d), 16, INK, w - 32.0 - Ticks.side_for(need)))
+	if need <= Ticks.MAX_BOXES:
+		task.add_child(Ticks.make(got, need))
+	else:
+		task.add_child(UiTheme.make_label(UiText.t("commission.progress") % [got, need], 16, INK))
+	col.add_child(task)
+	var row := UiTheme.hbox(10)
+	col.add_child(row)
+	if d.funds > 0:
+		row.add_child(CoinLabel.make(d.funds, 16, INK))
+	row.add_child(UiTheme.make_label(UiText.t("commission.reward_rep") % Commissions.reputation_of(d), 16, INK))
+	var fill := Control.new()
+	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(fill)
+	if Commissions.can_report(book, d, flow.meta):
+		var rb := ScrollKey.make(UiText.t("commission.report"), func(): report(d.id))
+		rb.name = "Report_" + String(d.id)
+		row.add_child(rb)
+	var ab := ScrollKey.make(UiText.t("commission.abandon"), func(): _do(flow.abandon_commission(d.id)))
+	ab.name = "Abandon_" + String(d.id)
+	row.add_child(ab)
+	return p
+
+
+## 进度方框：做到几个就勾几个（墨线小方框，勾用朱褐）
+class Ticks extends Control:
+	const MAX_BOXES := 6
+	const SIDE := 13.0
+	const GAP := 4.0
+	var got := 0
+	var need := 1
+
+	static func side_for(n: int) -> float:
+		return mini(n, MAX_BOXES) * (SIDE + GAP)
+
+	static func make(p_got: int, p_need: int) -> Ticks:
+		var t := Ticks.new()
+		t.name = "Ticks"
+		t.got = p_got
+		t.need = p_need
+		t.custom_minimum_size = Vector2(side_for(p_need), SIDE + 4.0)
+		t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return t
+
+	func _draw() -> void:
+		for i in need:
+			var r := Rect2(i * (SIDE + GAP), 2.0, SIDE, SIDE)
+			draw_rect(r, INK, false, 1.5)
+			if i < got:
+				var a := r.position + Vector2(2.5, SIDE * 0.55)
+				var b := r.position + Vector2(SIDE * 0.42, SIDE - 2.5)
+				var c := r.position + Vector2(SIDE - 2.0, 2.5)
+				draw_polyline(PackedVector2Array([a, b, c]), RED, 2.0)
 
 
 func _build_reputation() -> void:
@@ -414,11 +537,16 @@ func _card(d: CommissionDef, w: float = CARD_W) -> Control:
 	var quote := Names.pick(d.quotes, d.quote)
 	if quote != "":
 		col.add_child(UiTheme.make_wrapped("「%s」" % quote, 16, INK_DIM, w - 2.0 * PAD_X))
-	_row(col, "commission.client", Names.pick(d.clients, d.client), w)
-	_row(col, "commission.task", task_text(d), w)
-	_row(col, "commission.where", where_text(d), w)
+	var note := NoticeBoard.is_note(d.id)     # 报告 350 C：栏上的纸条只写做什么、金币和声望
+	if note:
+		col.add_child(UiTheme.make_wrapped(task_text(d), 16, INK, w - 2.0 * PAD_X))
+	else:
+		_row(col, "commission.client", Names.pick(d.clients, d.client), w)
+		_row(col, "commission.task", task_text(d), w)
+		_row(col, "commission.where", where_text(d), w)
 	var reward := UiTheme.hbox(10)
-	reward.add_child(UiTheme.make_label(UiText.t("commission.reward") + "：", 16, INK))
+	if not note:
+		reward.add_child(UiTheme.make_label(UiText.t("commission.reward") + "：", 16, INK))
 	if d.funds > 0:
 		reward.add_child(CoinLabel.make(d.funds, 16, INK))
 	reward.add_child(UiTheme.make_label(UiText.t("commission.reward_rep") % Commissions.reputation_of(d), 16, INK))
@@ -428,6 +556,8 @@ func _card(d: CommissionDef, w: float = CARD_W) -> Control:
 	col.add_child(keys)
 	match st:
 		CommissionBook.TAKEN:
+			if Commissions.needs_pick(d):     # 作者 2026-11-21 选 A：接下以后写明照哪张配方、现在还差什么
+				_pick_line(col, d, w)
 			var s := Commissions.current_stage(book, d.id)
 			var need := maxi(1, d.stages[s].count) if s >= 0 and s < d.stages.size() else 1
 			if need > 1 or not Commissions.can_report(book, d, flow.meta):
@@ -476,7 +606,22 @@ func _add_take(row: Container, d: CommissionDef, text: String) -> void:
 	row.add_child(b)
 
 
-## 配方实验：现在能打的铁匠配方下拉（没有就灰着写原因）
+## 配方实验接下以后：照哪张配方；现在打不出就写差什么（素材不够、钱不够……）
+func _pick_line(col: VBoxContainer, d: CommissionDef, w: float) -> void:
+	var r := SmithRecipeDef.find(flow.smith_recipes, StringName(String(flow.meta.commissions.entry(d.id).get("pick", ""))))
+	if r == null:
+		return
+	var out := flow.items.get_def(r.output) if flow.items != null else null
+	var line := UiText.t("commission.pick_for") % (Names.of(out) if out != null else String(r.id))
+	var why := Smithy.can_forge(flow.meta, r, flow.items)
+	if why != "":
+		line += "　" + why
+	var l := UiTheme.make_wrapped(line, 16, INK_DIM, w - 2.0 * PAD_X)
+	l.name = "PickFor"
+	col.add_child(l)
+
+
+## 配方实验：学会了的铁匠配方下拉（没有就灰着写原因）
 func _add_pick(row: Container, d: CommissionDef) -> void:
 	var picks := flow.commission_picks()
 	var opt := OptionButton.new()

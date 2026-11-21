@@ -14,6 +14,11 @@
       "labels": {
         "en": "Extract"
       },
+      "requires": [
+        {
+          "type": "extract_open"
+        }
+      ],
       "outcomes": [
         {
           "type": "extract"

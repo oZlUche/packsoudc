@@ -62,7 +62,7 @@ static func run_content(t: TestCase) -> void:
 		var r := SmithRecipeDef.find(all, id)
 		t.check(r != null and r.tech == want[id][0] and r.tech_level == want[id][1], "%s 要 %s %d 级" % [id, want[id][0], want[id][1]])
 	var sword := SmithRecipeDef.find(all, &"smith_mithril_sword")
-	t.check(sword != null and int(sword.inputs.get("mithril_ingot", 0)) == 2 and not sword.inputs.has("longsword") and sword.slots().size() == 1, "秘银剑：秘银锭 ×2 + 一件绿金属（310：不再吃长剑）")
+	t.check(sword != null and int(sword.inputs.get("mithril_ingot", 0)) == 2 and int(sword.inputs.get("fire_gland", 0)) == 1 and not sword.inputs.has("fire_crystal_low") and not sword.inputs.has("longsword") and sword.slots().size() == 2, "秘银剑：秘银锭 ×2 + 火焰腺 + 晶石素材 ≥稀有 + 一件绿金属（310：不再吃长剑；359：不要火焰晶石）")
 
 
 ## 会打：科技点到了、铺子级数也够
@@ -107,19 +107,28 @@ static func run_describe(t: TestCase) -> void:
 
 
 static func run_forge_eats_crystal(t: TestCase) -> void:
-	t.begin("252 §3.3：打法师杖 —— 木棍、下品火晶石、银锭、晶 ≥优良（347）各吃一件，扣 90 币，法师杖进仓库")
+	t.begin("252 §3.3：打法师杖 —— 木棍、银锭各一件、雾晶两件（作者 11-21：不要特定属性晶石），扣 90 币，法师杖进仓库")
 	ItemInstance.reset_uid_counter()
 	var db := T110._db()
 	var m := _meta(2, {"staffcraft": 2})
 	m.funds = 100
-	for id in [&"wooden_stick", &"fire_crystal_low", &"silver_ingot", &"mist_crystal"]:
+	for id in [&"wooden_stick", &"mist_crystal", &"silver_ingot", &"mist_crystal"]:
 		T110._add(m, db, id)
 	var r := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"smith_mage_staff")
 	t.eq(Smithy.can_forge(m, r, db), "", "齐了")
 	var got := Smithy.forge(m, r, db)
 	t.check(got != null and got.def.id == &"mage_staff" and m.warehouse.has_item(got.uid), "法师杖进了仓库")
 	t.eq(m.funds, 10, "扣了 90 币")
-	t.eq(m.warehouse.items().filter(func(i) -> bool: return (i as ItemInstance).def.id in [&"wooden_stick", &"fire_crystal_low", &"silver_ingot", &"mist_crystal"]).size(), 0, "四样料都吃掉了（晶石也算料）")
+	t.eq(m.warehouse.items().filter(func(i) -> bool: return (i as ItemInstance).def.id in [&"wooden_stick", &"silver_ingot", &"mist_crystal"]).size(), 0, "四件料都吃掉了")
+	var gem: Dictionary = r.slots().filter(func(x: Dictionary) -> bool: return String(x["material"]) == "gem")[0]
+	t.check(SmithRecipeDef.slot_fits(gem, db.get_def(&"smoky_crystal")), "烟晶也能顶（作者 11-21：按稀有度对应）")
+	t.check(not SmithRecipeDef.slot_fits(gem, db.get_def(&"fire_crystal_low")), "火焰晶石不收")
+	var grand := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"smith_grand_magus_staff")
+	var epic: Dictionary = grand.slots().filter(func(x: Dictionary) -> bool: return String(x["material"]) == "gem")[0]
+	for core in [&"jimie_core_fire", &"jimie_core_ice", &"jimie_core_lightning", &"jimie_core_poison"]:
+		var cd := db.get_def(core)
+		t.check(cd == null or not SmithRecipeDef.slot_fits(epic, cd), "%s：独一的首领核不顶史诗晶石格" % core)
+	t.check(SmithRecipeDef.slot_fits(epic, db.get_def(&"amethyst_pillar")), "紫晶柱照样能顶")
 
 
 static func run_import_checks(t: TestCase) -> void:

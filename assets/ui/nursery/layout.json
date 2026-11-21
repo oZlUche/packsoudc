@@ -1,0 +1,53 @@
+{
+ "_doc": "353 nursery page, author pick B 花槽 (2026-11-21). Coordinates are for the content area of the left panel (598x850 at a 1600x900 capture; scale with the panel). Samples: https://claude.ai/artifact/55hVsaAb37Bz96sjwmvoFC (B row).",
+ "background": "outdoor farm painting bg_farm.png from 静态美术设计 (author 11-21, Roman villa rustica); until it lands, the wood wall shows through. Text on the background uses the light ink #f1e3c2",
+ "shelf": {
+  "file": "shelf.png",
+  "x": 14,
+  "y": 440,
+  "w": 570,
+  "nine_slice": true
+ },
+ "planter": {
+  "file": "planter.png",
+  "x": 54,
+  "y": 290,
+  "w": 490,
+  "h": 150,
+  "note": "sits on the shelf"
+ },
+ "plant": {
+  "file": "plant_<crop>_<stage>.png",
+  "size": 370,
+  "x_center": 299,
+  "bottom": "planter top - 2",
+  "stage": "0 seed (just sown) / 1 sprout / 2 young / 3 ripe; pick by progress: runs_done/runs -> 0..2, ripe -> 3; empty bed -> none, show a dashed outline only"
+ },
+ "ripe": {
+  "glow": "ripe_glow.png behind the plant, scaled to the plant size",
+  "sparkles": "sparkle.png x3 around the plant (22, 16, 14 px)"
+ },
+ "tag": {
+  "file": "tag.png",
+  "stake": "stake.png",
+  "x": "planter right - 124",
+  "y": "planter top - 92",
+  "w": 112,
+  "h": 64,
+  "rotate_deg": 3,
+  "content": "crop name (bold 19) + one pip per run: pip_grow_on.png for runs done, pip_grow_off.png for runs left",
+  "shown": "only while something grows"
+ },
+ "below_shelf_empty": "two parchment slips (existing commission torn-paper slip style + pin_growers.png), one per crop: plant_<crop>_3 at 110px, name, seed icon x1 (or emblem_growers + 送) -> product icon xN, hourglass + N 局, key 种下 (disabled when no seed)",
+ "below_shelf_growing": {
+  "basket": "basket.png 260x170 centred, top = shelf + 120",
+  "yield": "product icon xN under the basket, 60% opacity while growing"
+ },
+ "below_shelf_ripe": "product icon (80px) sitting in the basket, yield at full opacity, primary key 收获 under it",
+ "ripe_mark": {
+  "file": "ripe_mark.png",
+  "use": "replaces the text 「可收获」 after 后勤 tab (26px) and 苗圃 sub-key (20px); tooltip keeps the text",
+  "pick": "author 2 芽加金星 2026-11-21"
+ },
+ "nursery_locked_board": "add emblem_growers.png beside 河滩垦户社"
+}

@@ -945,13 +945,13 @@ func _output_rarity(r: SmithRecipeDef) -> int:
 	return d.rarity if d != null else 0
 
 
-## 打一张配方；返回空串 = 打了（存盘），否则是原因
-func forge(id: StringName) -> String:
+## 打一张配方；返回空串 = 打了（存盘），否则是原因。354：[param dust] 见 [method Smithy.can_forge]
+func forge(id: StringName, dust: Dictionary = {}) -> String:
 	var r := SmithRecipeDef.find(smith_recipes, id)
-	var why := Smithy.can_forge(meta, r, items)
+	var why := Smithy.can_forge(meta, r, items, dust)
 	var made: ItemInstance = null
 	if why == "":
-		made = Smithy.forge(meta, r, items)
+		made = Smithy.forge(meta, r, items, dust)
 		if made == null:
 			why = UiText.t("smithy.full")
 	if why == "":
@@ -1003,11 +1003,13 @@ func _issue_commission_items(state: RunState) -> void:
 			_notes.append(UiText.t("commission.item_on_ground") % Names.of(def))
 
 
-## 能拿来做配方实验的铁匠配方（已解锁、现在材料与钱都够、仓库放得下）
+## 能拿来做配方实验的铁匠配方：学会了、铁匠铺级数够（作者 2026-11-21 选 A：先接单、后凑料，料够不够不影响接）
 func commission_picks() -> Array[StringName]:
 	var out: Array[StringName] = []
+	if meta == null:
+		return out
 	for r in sorted_smith_recipes():
-		if Smithy.can_forge(meta, r, items) == "":
+		if items != null and items.get_def(r.output) != null and Smithy.knows(meta, r) and r.level <= Smithy.level(meta):
 			out.append(r.id)
 	return out
 
@@ -1077,6 +1079,36 @@ func _credit_nursery(goal: StringName, crop: StringName) -> void:
 ## 342 B3：苗圃里有熟了的（后勤页签挂「可收获」）
 func nursery_ripe() -> bool:
 	return facility_open(&"nursery") and meta.nursery.ripe_count() > 0
+
+
+## 354：炼金开了没有（魔法师协会信赖档的剧情《万物可分》办成）
+func alchemy_open() -> bool:
+	return facility_open(Alchemy.ID)
+
+
+## 354：后勤列不列「炼金」键：委托簿露着，且协会到了开炼金那份剧情要的档（或已经开了）
+func alchemy_listed() -> bool:
+	if not commissions_visible():
+		return false
+	if alchemy_open():
+		return true
+	var d := Commissions.opener_of(Alchemy.ID)
+	return d != null and Alchemy.tier(meta) >= Commissions.required_tier(d)
+
+
+## 354：这几件丢进炼金台会得多少尘（[method Alchemy.preview]）
+func alchemy_preview(uids: Array) -> Dictionary:
+	return Alchemy.preview(meta, uids, sell_ratio())
+
+
+## 354：分解（后勤「炼金」页）。返回 {"count", "dust"}（分了存档；没开 = 什么也不动）
+func dissolve_items(uids: Array) -> Dictionary:
+	if not alchemy_open():
+		return {"count": 0, "dust": 0}
+	var got := Alchemy.dissolve(meta, uids)
+	if int(got["count"]) > 0:
+		save_meta()
+	return got
 
 
 ## 342 B3：材料倾向开了没有（办成地图协会的《把路画回来》）
@@ -1892,8 +1924,12 @@ func _reopen_entry() -> Dictionary:
 	if run.pending_loot != null:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
 	var here := run.current_node()
-	if here != null and bool(here.content.get("revisit_event", false)):
+	var exit_here := here != null and NodeEvents.effective_type(here) == &"extract"
+	var exit_closed := exit_here and run.hooks.extract_closed(here)     # 反馈 11-21：关了的撤离点不再弹（地图屏说已关闭）
+	if here != null and bool(here.content.get("revisit_event", false)) and not exit_closed:
 		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 10-22：「先回地图」的点，点节点 / 放大镜就再弹
+	if exit_here and not exit_closed:
+		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 11-21：没撤的撤离点，只要没关就能再打开
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开

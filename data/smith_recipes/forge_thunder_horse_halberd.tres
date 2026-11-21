@@ -6,9 +6,12 @@
 script = ExtResource("1_fi6lx")
 id = &"forge_thunder_horse_halberd"
 output = &"thunder_horse_halberd"
+inputs = {
+"shock_sac": 2
+}
 material_slots = Array[Dictionary]([{
 "count": 1,
-"material": "crystal:lightning",
+"material": "gem",
 "min": 3
 }, {
 "count": 2,

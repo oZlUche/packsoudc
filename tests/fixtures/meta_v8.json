@@ -1,0 +1,225 @@
+{
+  "achievements": {},
+  "active_buffs": [],
+  "battles_won": 0.0,
+  "best_value": 0.0,
+  "board": null,
+  "boss_kills": 0.0,
+  "chapter_extractions": {},
+  "coach_seen": [],
+  "codex": {
+    "warhammer": 1
+  },
+  "commissions": {
+    "clues": [],
+    "entries": {
+      "greylamp_unsigned_letter": {
+        "keys": [],
+        "pick": "",
+        "progress": 0.0,
+        "seq": 0.0,
+        "stage": 0.0,
+        "state": "done",
+        "times": 1.0
+      },
+      "society_copy_recipe": {
+        "keys": [],
+        "pick": "",
+        "progress": 0.0,
+        "seq": 0.0,
+        "stage": 0.0,
+        "state": "done",
+        "times": 1.0
+      }
+    },
+    "mutex": {},
+    "receipts": [
+      {
+        "id": "greylamp_unsigned_letter",
+        "kind": "done",
+        "run": 3.0,
+        "stage": 0.0
+      }
+    ],
+    "rep": {
+      "greylamp": 50,
+      "legion": 10,
+      "society": 10
+    },
+    "signed": {}
+  },
+  "content_stamp": "synthetic-v4",
+  "deaths": 0.0,
+  "extractions": 0.0,
+  "flags": {},
+  "funds": 3600.0,
+  "history": [],
+  "keepsakes": [],
+  "migration_log": [
+    {
+      "rep": {
+        "greylamp": [
+          9,
+          50
+        ],
+        "legion": [
+          3,
+          10
+        ],
+        "society": [
+          1,
+          10
+        ]
+      },
+      "to": 6
+    }
+  ],
+  "next_uid": 60.0,
+  "nursery": {
+    "plots": [
+      {
+        "crop": "rope_hemp",
+        "sown_run": 3,
+        "left": 1
+      }
+    ],
+    "last_run": "",
+    "seq": 1
+  },
+  "runs": 0.0,
+  "score": 0.0,
+  "seen_rules": [],
+  "tech_deposits": {
+    "warehouse": {
+      "steel_ingot": 1.0
+    }
+  },
+  "tech_levels": {
+    "bargain": 1.0,
+    "market": 2.0,
+    "pack": 1.0,
+    "smithy": 1.0,
+    "warehouse": 2.0
+  },
+  "unlocks": [],
+  "version": 8,
+  "warehouse": {
+    "pages": [
+      {
+        "blocked": [],
+        "id": 200.0,
+        "items": [
+          {
+            "def": "knife",
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "rot": 0.0,
+            "seq": 1.0,
+            "state": {},
+            "uid": 1.0
+          },
+          {
+            "def": "longsword",
+            "origin": [
+              1.0,
+              0.0
+            ],
+            "rot": 0.0,
+            "seq": 2.0,
+            "state": {},
+            "uid": 2.0
+          },
+          {
+            "def": "round_shield",
+            "origin": [
+              2.0,
+              0.0
+            ],
+            "rot": 0.0,
+            "seq": 3.0,
+            "state": {},
+            "uid": 3.0
+          },
+          {
+            "def": "sniper",
+            "origin": [
+              6.0,
+              0.0
+            ],
+            "rot": 0.0,
+            "seq": 50.0,
+            "state": {},
+            "uid": 50.0
+          },
+          {
+            "def": "mana_crystal",
+            "origin": [
+              6.0,
+              3.0
+            ],
+            "rot": 0.0,
+            "seq": 51.0,
+            "state": {},
+            "uid": 51.0
+          },
+          {
+            "def": "ghost_item_removed",
+            "origin": [
+              8.0,
+              0.0
+            ],
+            "rot": 0.0,
+            "seq": 52.0,
+            "state": {},
+            "uid": 52.0
+          },
+          {
+            "def": "strength_sigil",
+            "origin": [
+              8.0,
+              3.0
+            ],
+            "rot": 0.0,
+            "seq": 53.0,
+            "state": {},
+            "uid": 53.0
+          },
+          {
+            "def": "knife",
+            "origin": [
+              9.0,
+              7.0
+            ],
+            "rot": 0.0,
+            "seq": 54.0,
+            "state": {},
+            "uid": 54.0
+          },
+          {
+            "def": "longsword",
+            "origin": [
+              9.0,
+              7.0
+            ],
+            "rot": 0.0,
+            "seq": 55.0,
+            "state": {},
+            "uid": 55.0
+          }
+        ],
+        "place_seq": 3.0,
+        "requires_bag": false,
+        "size": [
+          10.0,
+          8.0
+        ]
+      }
+    ]
+  },
+  "dust": 5,
+  "forged_recipes": [
+    "smith_leather_armor"
+  ]
+}

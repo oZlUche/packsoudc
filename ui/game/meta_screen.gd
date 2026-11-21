@@ -15,6 +15,7 @@ const MarketPanelScript := preload("res://ui/game/market_panel.gd")     # 251
 const SmithyPanelScript := preload("res://ui/game/smithy_panel.gd")     # 251
 const CommissionPanelScript := preload("res://ui/game/commission_panel.gd")     # 336
 const NurseryPanelScript := preload("res://ui/game/nursery_panel.gd")     # 342 B3
+const AlchemyPanelScript := preload("res://ui/game/alchemy_panel.gd")     # 354
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -41,7 +42,7 @@ const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_wa
 ## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
-	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"]],
+	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"], ["alchemy", "alchemy.title"]],
 	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"]],
 }
 const SUB_TAB_SIZE := Vector2(170, 44)
@@ -314,7 +315,15 @@ func open(payload: Dictionary) -> void:
 	_pages["tech"] = _tech_cloth
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
 	if _sub_btns.has("nursery"):     # 342 B3：苗圃页（右边照常露仓库，收获进仓库）
-		var ns_page := _cloth()
+		var ns_page := _cloth()     # 作者 2026-11-21 选 B 花槽：不垫粗布，墙透出来（以后是野外农田背景）
+		ns_page.theme_type_variation = UiTheme.PANEL_BARE
+		var farm := TextureRect.new()     # 静态美术设计 2026-11-21 C 菜畦：铺满中列，按比例裁边
+		farm.name = "FarmBackdrop"
+		farm.texture = UiTheme.art("nursery/bg_farm")
+		farm.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		farm.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		farm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ns_page.add_child(farm)
 		_nursery = NurseryPanelScript.new()
 		_nursery.setup(flow)
 		_nursery.changed.connect(_refresh)
@@ -325,6 +334,26 @@ func open(payload: Dictionary) -> void:
 				say(text))
 		ns_page.add_child(_nursery)
 		_pages["nursery"] = ns_page
+	if _sub_btns.has("alchemy"):     # 354：炼金页（占位，等 UI设计 样张）—— 右边仓库进勾选模式
+		var al_page := _cloth()     # 作者 2026-11-21 选 C 炼成阵：不垫粗布，墙透出来
+		al_page.theme_type_variation = UiTheme.PANEL_BARE
+		var floor_ := TextureRect.new()     # UI设计 2026-11-21：石板地面铺满中列，按比例裁边（同苗圃）
+		floor_.name = "AlchemyFloor"
+		floor_.texture = UiTheme.art("alchemy/bg_floor")
+		floor_.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		floor_.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		floor_.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		al_page.add_child(floor_)
+		_alchemy = AlchemyPanelScript.new()
+		_alchemy.setup(flow, _shelf)
+		_alchemy.changed.connect(_refresh)
+		_alchemy.said.connect(func(text: String, is_warn: bool):
+			if is_warn:
+				warn(text)
+			else:
+				say(text))
+		al_page.add_child(_alchemy)
+		_pages["alchemy"] = al_page
 	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
 		cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
@@ -390,7 +419,7 @@ func set_sell_mode(on: bool) -> void:
 
 
 func sell_mode() -> bool:
-	return _shelf != null and _shelf.select_mode
+	return _shelf != null and _shelf.select_mode and not _shelf.select_rule.is_valid()
 
 
 func sell_strip() -> SellStrip:
@@ -399,6 +428,9 @@ func sell_strip() -> SellStrip:
 
 ## 点了一件勾不上的：告示说为什么
 func _on_pick_refused(item: ItemInstance) -> void:
+	if alchemy_mode():     # 354
+		say(UiText.t("alchemy.why_" + Alchemy.why_not(item)) % Names.of(item.def))
+		return
 	say(UiText.t("sell.no_locked" if item.is_locked_by_player() else "sell.no_fav") % Names.of(item.def))
 #endregion
 
@@ -829,23 +861,61 @@ func _build_smithy(root: Control) -> Control:
 var _commissions = null
 ## 342 B3：苗圃页（垦户社没来 = null）
 var _nursery = null
+## 354：炼金页（协会没到信赖 = null）
+var _alchemy = null
 
 
 func nursery_panel():
 	return _nursery
 
 
-## 342 B3：苗圃里有熟的 —— 后勤页签与苗圃小键的字后面挂「可收获」（占位，标记的图请 UI设计 出），不弹窗
+func alchemy_panel():
+	return _alchemy
+
+
+## 354：右边仓库正在炼金的勾选里
+func alchemy_mode() -> bool:
+	return _shelf != null and _shelf.select_mode and _shelf.select_rule.is_valid()
+
+
+## 342 B3：苗圃里有熟的 —— 后勤页签（26）与苗圃小键（20）的字后面挂一个「可收获」小图（作者 2026-11-21 选 2 芽加金星），
+## 悬停写「可收获」；不弹窗
 func _sync_ripe_mark() -> void:
 	var ripe := flow.nursery_ripe()
 	if _tab_btns.has("logistics"):
-		var b := _tab_btns["logistics"] as Button
-		b.text = UiText.t("meta.tab_logistics") + ("　" + UiText.t("nursery.ripe") if ripe else "")
-		b.tooltip_text = UiText.t("nursery.ripe") if ripe else ""
+		_ripe_mark(_tab_btns["logistics"] as Button, ripe, 26.0)
 	if _sub_btns.has("nursery"):
-		(_sub_btns["nursery"] as Button).text = UiText.t("nursery.title") + ("　" + UiText.t("nursery.ripe") if ripe else "")
+		_ripe_mark(_sub_btns["nursery"] as Button, ripe, 20.0)
 	if _nursery != null:
 		_nursery.refresh()
+
+
+## 键上挂（或摘掉）「可收获」小图：贴在字后面，竖直居中
+func _ripe_mark(b: Button, ripe: bool, side: float) -> void:
+	var m := b.get_node_or_null("RipeMark") as TextureRect
+	if m == null:
+		m = TextureRect.new()
+		m.name = "RipeMark"
+		m.texture = UiTheme.art("nursery/ripe_mark")
+		m.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		m.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		m.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(m)
+	m.visible = ripe
+	b.tooltip_text = UiText.t("nursery.ripe") if ripe else ""
+	var place := func() -> void:
+		var bf := b.get_theme_font("font")
+		var fs := b.get_theme_font_size("font_size")
+		var tw := bf.get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x if bf != null else 0.0
+		var x := minf(b.size.x * 0.5 + tw * 0.5 + 6.0, b.size.x - side - 2.0)
+		if b.icon != null:     # 带图标的页签：字在图标右边那块的正中，挂在键的右沿里
+			x = b.size.x - side - 10.0
+		m.position = Vector2(x, (b.size.y - side) * 0.5)
+		m.size = Vector2(side, side)
+	if not b.has_meta(&"ripe_mark_hooked"):
+		b.set_meta(&"ripe_mark_hooked", true)
+		b.resized.connect(place)
+	place.call()
 
 
 ## 342 B3：垦户社到营地了没有
@@ -882,6 +952,8 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 		var key: String = pair[0]
 		if key == "nursery" and not _growers_here():
 			continue     # 342 B3：垦户社还没来营地，不列
+		if key == "alchemy" and not flow.alchemy_listed():
+			continue     # 354：协会到信赖前不列
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
 		b.toggle_mode = true
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -1464,6 +1536,8 @@ func show_tab(p_name: String) -> void:
 	if Commissions.opens_known(StringName(shown)) and not flow.facility_open(StringName(shown)):
 		_fill_locked(StringName(shown))     # 342 B2：没开放 —— 入口照常，页里换成说明板
 		shown = "locked"
+	if _shelf != null and _alchemy != null and (shown == "alchemy") != alchemy_mode():     # 354：进炼金页勾素材，离开清掉
+		_shelf.set_select_mode(shown == "alchemy", AlchemyPanelScript.rule() if shown == "alchemy" else Callable())
 	if shown == "tech":
 		_ensure_tech()
 	if _tab != "" and shown != was:
@@ -1564,5 +1638,7 @@ func _refresh() -> void:
 	if _tab_btns.has("warehouse"):
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗
 	_sync_ripe_mark()     # 342 B3
+	if _alchemy != null:
+		_alchemy.refresh()     # 354
 	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
 		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))

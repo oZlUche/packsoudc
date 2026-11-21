@@ -1,0 +1,25 @@
+A691 新档：尘 0；打造过 []；仓库 11 件；金币 450；局数 0；协会声望 0（0 档）；炼金列出 false、开 false；铁匠铺开 false；集市开 false；后勤小键 []
+A691 测试辅助：协会剧情和许可单记办成，声望补到《万物可分》要的 3 档：尘 0；打造过 []；仓库 11 件；金币 490；局数 0；协会声望 55（3 档）；炼金列出 true、开 false；铁匠铺开 true；集市开 true；《万物可分》taken「taken」
+A691 存档回主菜单再继续：尘 0；打造过 []；仓库 11 件；金币 490；局数 0；协会声望 55（3 档）；炼金列出 true、开 false；铁匠铺开 true；集市开 true
+A691 真点「后勤」：小键 ["market", "smithy", "alchemy"]
+A691 真点「炼金」（没办《万物可分》）：说明板 看得见：Alchemy / Mages' Society / Opens once All Things Divide is done / [Take it on]
+A691 　　排版：查 4 处，溢出 0：
+A691 剧情页《万物可分》：All Things Divide / Client：Society researcher / Task：Visit the Society's alchemy room and watch a researcher turn ore into dust / Done at：At camp / Reward： / Standing +5 / [Settle it]；【接下】没有
+A691 《万物可分》taken；【办理】有
+A691 真点【办理】后：尘 0；打造过 []；仓库 11 件；金币 490；局数 0；协会声望 60（3 档）；炼金列出 true、开 true；铁匠铺开 true；集市开 true；告示 ["Alchemy is now open"]
+A691 测试辅助放料：碎晶 ×2、雾晶、硬木板、小刀、清明魔晶石；基础价 ["crystal_shards 5 能炼「」", "mist_crystal 12 能炼「」", "hardwood_plank 60 能炼「」", "knife 10 能炼「kind」", "quartz_cluster 320 能炼「kind」"]
+A691 真点「炼金」：页上 0 / → / +0 / or sell for / · / Loss 40% / [Select all] / [Dissolve]；勾选模式 true
+A691 　　排版：查 8 处，溢出 0：
+A691 　　真点仓库里的 Crystal Shards
+A691 　　真点仓库里的 Crystal Shards
+A691 　　真点仓库里的 Mist Crystal
+A691 　　真点仓库里的 Hardwood Plank
+A691 　　真点仓库里的 Knife
+A691 　　真点仓库里的 Clarity Crystal
+A691 勾完：勾了 4 件 ["crystal_shards", "crystal_shards", "mist_crystal", "hardwood_plank"]；预览 { "count": 4, "value": 82, "dust": 49, "funds": 40 }；页上 0 / ×2 / → / +49 / or sell for / · / Loss 40% / [Select all] / [Dissolve]
+A691 　　排版：查 9 处，溢出 0：
+A691 真点【炼化】第一下：键上「Click again」；尘 0
+A691 再点一下：尘 0 → 49；仓库 Crystal Shards -2、Mist Crystal -1、Hardwood Plank -1；告示 ["Dissolved 4 items into 49 Omnires"]
+A691 　　页上 49 / → / +0 / or sell for / · / Loss 40% / [Select all] / [Dissolve]
+A691 测试辅助补料，打一把制式短剑：「」；尘 49；打造过 [&"smith_shortsword"]；仓库 14 件；金币 1450；局数 0；协会声望 60（3 档）；炼金列出 true、开 true；铁匠铺开 true；集市开 true
+A691 存档回主菜单再继续：尘 49；打造过 [&"smith_shortsword"]；仓库 14 件；金币 1450；局数 0；协会声望 60（3 档）；炼金列出 true、开 true；铁匠铺开 true；集市开 true

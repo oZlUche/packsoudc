@@ -1,0 +1,29 @@
+{
+  "id": "society_alchemy",
+  "display_name": "万物可分",
+  "display_names": {
+    "en": "All Things Divide"
+  },
+  "faction": "society",
+  "order": 4,
+  "reputation": 5,
+  "min_tier": 3,
+  "requires": [
+    "society_permit"
+  ],
+  "stages": [
+    {
+      "goal": "camp_report",
+      "where": "camp",
+      "text": "到协会的炼金室，看研究员把一块矿石化成尘",
+      "texts": {
+        "en": "Visit the Society's alchemy room and watch a researcher turn ore into dust"
+      }
+    }
+  ],
+  "opens": "alchemy",
+  "client": "协会研究员",
+  "clients": {
+    "en": "Society researcher"
+  }
+}
