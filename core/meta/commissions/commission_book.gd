@@ -9,6 +9,8 @@ extends RefCounted
 const TAKEN := "taken"
 const PAUSED := "paused"
 const DONE := "done"
+## 作者 2026-11-21：办成了、还没点【完成】—— 留在委托页上，点了才发酬金、开设施、出下一份（交货除外：交够直接结案）
+const READY := "ready"
 ## 回执最多留几条（新的在前）
 const RECEIPTS_MAX := 20
 
@@ -67,6 +69,24 @@ func taken() -> Array[StringName]:
 		var sa := int(entry(a).get("seq", 0))
 		var sb := int(entry(b).get("seq", 0))
 		return sa < sb if sa != sb else String(a) < String(b))
+	return out
+
+
+## 办成了等点【完成】的委托 id，按接单先后
+func ready() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for k in entries:
+		if String((entries[k] as Dictionary).get("state", "")) == READY:
+			out.append(StringName(k))
+	out.sort_custom(func(a: StringName, b: StringName) -> bool: return int(entry(a).get("seq", 0)) < int(entry(b).get("seq", 0)))
+	return out
+
+
+## 手上的：在做的 + 办成了等点【完成】的（委托页、手头托盘列这些）
+func in_hand() -> Array[StringName]:
+	var out := taken()
+	out.append_array(ready())
+	out.sort_custom(func(a: StringName, b: StringName) -> bool: return int(entry(a).get("seq", 0)) < int(entry(b).get("seq", 0)))
 	return out
 
 
