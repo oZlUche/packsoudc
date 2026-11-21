@@ -175,34 +175,37 @@ static func run_event_options(t: TestCase) -> void:
 
 
 static func run_forge_credit(t: TestCase) -> void:
-	t.begin("336 W1 · 《照抄也要做得出》：接单时只能选现在打得出的配方；打的是选的那张才算，成品归玩家，酬金只补劳动")
+	t.begin("336 W1 · 《照抄也要做得出》：作者 2026-11-21 选 A —— 学会的配方都能选、料不够也能接；接下后凑齐料，打的是选的那张才算，成品归玩家，酬金只补劳动")
 	ItemInstance.reset_uid_counter()
 	var c := TestSupport.load_content("free_mode")
 	var f := _flow(c)
 	f.smith_recipes = SmithRecipeDef.load_all()
 	t.eq(f.take_commission(COPY), Commissions.WHY_PICK, "没选配方不能接")
-	f.meta.funds = 100000
 	var picks := f.commission_picks()
-	if picks.is_empty():
-		# 仓库里塞齐第一张配方的料
-		var r0: SmithRecipeDef = f.sorted_smith_recipes()[0] if not f.sorted_smith_recipes().is_empty() else null
-		if r0 != null:
-			for key in r0.inputs:
-				for _i in int(r0.inputs[key]):
-					T110._add(f.meta, c.items, StringName(String(key)))
-		picks = f.commission_picks()
-	t.check(not picks.is_empty(), "有能打的配方（%d 张）" % picks.size())
+	t.check(not picks.is_empty(), "新档空仓库：也有学会的配方可选（%d 张）" % picks.size())
 	if picks.is_empty():
 		return
-	t.eq(f.take_commission(COPY, &"no_such_recipe"), Commissions.WHY_PICK, "选的不在能打的里不能接")
-	t.eq(f.take_commission(COPY, picks[0]), "", "选一张能打的接下")
+	var r0 := SmithRecipeDef.find(f.smith_recipes, picks[0])
+	for id in picks:     # 挑一张只要固定素材的（不要按材料档次填的格）
+		var r := SmithRecipeDef.find(f.smith_recipes, id)
+		if r.slots().is_empty():
+			r0 = r
+			break
+	t.check(Smithy.can_forge(f.meta, r0, f.items) != "", "仓库空：这张现在打不出")
+	t.eq(f.take_commission(COPY, &"no_such_recipe"), Commissions.WHY_PICK, "选的不在学会的里不能接")
+	t.eq(f.take_commission(COPY, r0.id), "", "料不够也接得下")
+	t.eq(String(f.meta.commissions.entry(COPY)["pick"]), String(r0.id), "记下选的配方")
+	f.meta.funds = 100000
+	for key in r0.inputs:     # 接下以后凑料
+		for _i in int(r0.inputs[key]):
+			T110._add(f.meta, c.items, StringName(String(key)))
+	t.eq(Smithy.can_forge(f.meta, r0, f.items), "", "料凑齐了")
 	var funds0 := f.meta.funds
 	var before := f.meta.warehouse.item_count()
-	t.eq(f.forge(picks[0]), "", "照选的那张打一次")
+	t.eq(f.forge(r0.id), "", "照选的那张打一次")
 	t.check(f.meta.commissions.is_done(COPY), "办成")
 	t.eq(f.meta.commissions.rep_of(&"society"), 15, "协会声望 +5（342 B2：后续剧情）")
-	var r := SmithRecipeDef.find(f.smith_recipes, picks[0])
-	t.eq(f.meta.funds - funds0, Commissions.def(COPY).funds - r.funds, "酬金只补劳动（扣掉工钱再加酬金）")
+	t.eq(f.meta.funds - funds0, Commissions.def(COPY).funds - r0.funds, "酬金只补劳动（扣掉工钱再加酬金）")
 	t.check(f.meta.warehouse.item_count() > 0 and before >= 0, "成品进了仓库")
 
 

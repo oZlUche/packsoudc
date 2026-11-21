@@ -171,11 +171,13 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	s.show_tab("nursery")
 	t.check(not s.locked_page().visible and s.nursery_panel().is_visible_in_tree(), "开了：苗圃页")
 	var tab := (s._tab_btns as Dictionary).get("logistics", null) as Button
-	t.check(tab != null and tab.text.contains(UiText.t("nursery.ripe")), "后勤页签挂「可收获」")
+	var mark := tab.get_node_or_null("RipeMark") as TextureRect if tab != null else null
+	t.check(mark != null and mark.visible and mark.texture != null, "后勤页签挂「可收获」小图")
+	t.eq(tab.tooltip_text, UiText.t("nursery.ripe"), "悬停写「可收获」")
 	var p = s.nursery_panel()
 	t.check(p != null and p.find_child("Harvest_0", true, false) != null, "有【收获】")
 	t.eq(Bare.audit(p, "nursery342"), [] as Array[String], "字不裸")
 	p.harvest(0)
-	t.check(not tab.text.contains(UiText.t("nursery.ripe")), "收了：标记没了")
+	t.check(not mark.visible, "收了：标记没了")
 	s.queue_free()
 	W178._cleanup()

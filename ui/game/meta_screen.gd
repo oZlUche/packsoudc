@@ -314,7 +314,15 @@ func open(payload: Dictionary) -> void:
 	_pages["tech"] = _tech_cloth
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
 	if _sub_btns.has("nursery"):     # 342 B3：苗圃页（右边照常露仓库，收获进仓库）
-		var ns_page := _cloth()
+		var ns_page := _cloth()     # 作者 2026-11-21 选 B 花槽：不垫粗布，墙透出来（以后是野外农田背景）
+		ns_page.theme_type_variation = UiTheme.PANEL_BARE
+		var farm := TextureRect.new()     # 静态美术设计 2026-11-21 C 菜畦：铺满中列，按比例裁边
+		farm.name = "FarmBackdrop"
+		farm.texture = UiTheme.art("nursery/bg_farm")
+		farm.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		farm.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		farm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ns_page.add_child(farm)
 		_nursery = NurseryPanelScript.new()
 		_nursery.setup(flow)
 		_nursery.changed.connect(_refresh)
@@ -835,17 +843,44 @@ func nursery_panel():
 	return _nursery
 
 
-## 342 B3：苗圃里有熟的 —— 后勤页签与苗圃小键的字后面挂「可收获」（占位，标记的图请 UI设计 出），不弹窗
+## 342 B3：苗圃里有熟的 —— 后勤页签（26）与苗圃小键（20）的字后面挂一个「可收获」小图（作者 2026-11-21 选 2 芽加金星），
+## 悬停写「可收获」；不弹窗
 func _sync_ripe_mark() -> void:
 	var ripe := flow.nursery_ripe()
 	if _tab_btns.has("logistics"):
-		var b := _tab_btns["logistics"] as Button
-		b.text = UiText.t("meta.tab_logistics") + ("　" + UiText.t("nursery.ripe") if ripe else "")
-		b.tooltip_text = UiText.t("nursery.ripe") if ripe else ""
+		_ripe_mark(_tab_btns["logistics"] as Button, ripe, 26.0)
 	if _sub_btns.has("nursery"):
-		(_sub_btns["nursery"] as Button).text = UiText.t("nursery.title") + ("　" + UiText.t("nursery.ripe") if ripe else "")
+		_ripe_mark(_sub_btns["nursery"] as Button, ripe, 20.0)
 	if _nursery != null:
 		_nursery.refresh()
+
+
+## 键上挂（或摘掉）「可收获」小图：贴在字后面，竖直居中
+func _ripe_mark(b: Button, ripe: bool, side: float) -> void:
+	var m := b.get_node_or_null("RipeMark") as TextureRect
+	if m == null:
+		m = TextureRect.new()
+		m.name = "RipeMark"
+		m.texture = UiTheme.art("nursery/ripe_mark")
+		m.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		m.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		m.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(m)
+	m.visible = ripe
+	b.tooltip_text = UiText.t("nursery.ripe") if ripe else ""
+	var place := func() -> void:
+		var bf := b.get_theme_font("font")
+		var fs := b.get_theme_font_size("font_size")
+		var tw := bf.get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x if bf != null else 0.0
+		var x := minf(b.size.x * 0.5 + tw * 0.5 + 6.0, b.size.x - side - 2.0)
+		if b.icon != null:     # 带图标的页签：字在图标右边那块的正中，挂在键的右沿里
+			x = b.size.x - side - 10.0
+		m.position = Vector2(x, (b.size.y - side) * 0.5)
+		m.size = Vector2(side, side)
+	if not b.has_meta(&"ripe_mark_hooked"):
+		b.set_meta(&"ripe_mark_hooked", true)
+		b.resized.connect(place)
+	place.call()
 
 
 ## 342 B3：垦户社到营地了没有

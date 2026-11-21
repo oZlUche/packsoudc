@@ -1003,11 +1003,13 @@ func _issue_commission_items(state: RunState) -> void:
 			_notes.append(UiText.t("commission.item_on_ground") % Names.of(def))
 
 
-## 能拿来做配方实验的铁匠配方（已解锁、现在材料与钱都够、仓库放得下）
+## 能拿来做配方实验的铁匠配方：学会了、铁匠铺级数够（作者 2026-11-21 选 A：先接单、后凑料，料够不够不影响接）
 func commission_picks() -> Array[StringName]:
 	var out: Array[StringName] = []
+	if meta == null:
+		return out
 	for r in sorted_smith_recipes():
-		if Smithy.can_forge(meta, r, items) == "":
+		if items != null and items.get_def(r.output) != null and Smithy.knows(meta, r) and r.level <= Smithy.level(meta):
 			out.append(r.id)
 	return out
 
