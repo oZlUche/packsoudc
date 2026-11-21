@@ -1,0 +1,54 @@
+{
+  "id": "duelist_rapier",
+  "display_name": "决斗细剑",
+  "display_names": {
+    "en": "Duelist Rapier"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "one_hand"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 12,
+      "crit_chance": 10
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.9
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "axis": "crit_chance",
+            "delta": 3
+          }
+        ]
+      }
+    ]
+  }
+}

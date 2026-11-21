@@ -1,0 +1,75 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_2juyn"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_4jvb6"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_ry204"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_ew628"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_m3bon"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_sn5k8"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_a5td4"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_ggnce"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="9_di6fr"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="10_wq0tq"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="11_308pa"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="12_gho2f"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="13_jrl6l"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="14_oteqq"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="15_5fmrb"]
+
+[sub_resource type="Resource" id="Resource_rhsip"]
+script = ExtResource("4_ew628")
+seconds = 0.8
+
+[sub_resource type="Resource" id="Resource_7uo61"]
+script = ExtResource("6_sn5k8")
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_3sga3"]
+script = ExtResource("8_ggnce")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_7gh1m"]
+script = ExtResource("8_ggnce")
+metadata/part_ref = &"deal_damage"
+
+[sub_resource type="Resource" id="Resource_exbai"]
+script = ExtResource("9_di6fr")
+axis = &"attack_speed"
+
+[sub_resource type="Resource" id="Resource_ahyqm"]
+script = ExtResource("10_wq0tq")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_6qif0"]
+script = ExtResource("3_ry204")
+trigger = SubResource("Resource_ahyqm")
+cadence = SubResource("Resource_rhsip")
+costs = Array[ExtResource("5_m3bon")]([SubResource("Resource_7uo61")])
+effects = Array[ExtResource("7_a5td4")]([SubResource("Resource_3sga3"), SubResource("Resource_7gh1m"), SubResource("Resource_exbai")])
+
+[sub_resource type="Resource" id="Resource_d1b0u"]
+script = ExtResource("11_308pa")
+base_stats = {
+"damage": 6
+}
+rules = Array[ExtResource("3_ry204")]([SubResource("Resource_6qif0")])
+
+[sub_resource type="Resource" id="Resource_r3m4u"]
+script = ExtResource("15_5fmrb")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+
+[resource]
+script = ExtResource("14_oteqq")
+id = &"veteran_twin_blades"
+display_name = "百战双刃"
+display_names = {
+"en": "Veteran Twin Blades"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_r3m4u")
+rarity = 3
+tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"dual"])
+material = "metal"
+combat = SubResource("Resource_d1b0u")

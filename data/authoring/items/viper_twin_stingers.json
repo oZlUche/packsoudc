@@ -1,0 +1,50 @@
+{
+  "id": "viper_twin_stingers",
+  "display_name": "蛇信双刺",
+  "display_names": {
+    "en": "Viper Twin Stingers"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual",
+    "poison"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 3
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@apply_status_poison",
+          "@deal_damage",
+          "@apply_status_poison"
+        ]
+      }
+    ]
+  }
+}
