@@ -1,0 +1,21 @@
+{
+  "id": "mountain_yam",
+  "display_name": "山薯",
+  "display_names": {
+    "en": "Mountain Yam"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

@@ -228,6 +228,10 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var made := made_from_line(def)
 		if made != "":
 			lines.append(made)
+	if Canteen.is_ingredient(def):     # 355：食材下锅给什么（第二批换成按当前角色算好的终值）
+		var cl := canteen_line(def)
+		if cl != "":
+			lines.append(cl)
 	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
 		lines.append(wear_line(inst))
 	if ItemErosion.count(inst) > 0:     # 320 A9：侵蚀层数 —— 坏消息放后面
@@ -780,6 +784,19 @@ static func set_name_of(id: StringName) -> String:
 
 
 ## 148：耐久那一行（「耐久 2 / 3：每供给一场少一次，用完就碎」；碎了写不再供给）。208：写了换成什么就说「用完碎成碎晶」
+## 355：「下锅：耐力上限 +5% · 饱腹 +5」
+static func canteen_line(def: ItemDef) -> String:
+	var e := Canteen.entry_of(def)
+	if e.is_empty():
+		return ""
+	var stat := StringName(e["stat"])
+	var meal := {"flat": {String(stat): e["flat"]} if e.has("flat") else {}, "pct": {String(stat): e["pct"]} if e.has("pct") else {}}
+	var parts: Array[String] = [Canteen.line_of(meal, stat)]
+	if int(e.get("satiety", 0)) > 0:
+		parts.append(UiText.t("canteen.tip_satiety") % int(e["satiety"]))
+	return UiText.t("canteen.tip_line") % " · ".join(parts)
+
+
 static func wear_line(inst: ItemInstance) -> String:
 	var w := inst.def.wear
 	if inst.is_broken():

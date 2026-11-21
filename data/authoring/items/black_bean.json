@@ -1,0 +1,20 @@
+{
+  "id": "black_bean",
+  "display_name": "黑豆",
+  "display_names": {
+    "en": "Black Beans"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

@@ -57,7 +57,7 @@ static func run_layout(t: TestCase) -> void:
 		{"id": "encumbrance", "anchor": "top", "offset": [8, 16], "tier": "double"}]}, gone)
 	t.check(kept != null and gone.is_empty(), "旧布局带着删掉的读数：读得进来、不报错（%s）" % "；".join(gone))
 	if kept != null:
-		t.eq(kept.entries.size(), 2, "删掉的两件不进布局（336：旧布局里没有的委托小牌补上，所以是两件）")
+		t.eq(kept.entries.size(), 3, "删掉的两件不进布局（336 / 355：旧布局里没有的委托小牌、饱腹读数补上，所以是三件）")
 		t.check(not kept.entry_of(&"commissions").is_empty(), "336：委托小牌自动补进旧布局")
 		t.eq(String(kept.entry_of(&"wallet").get("anchor", "")), "left", "别的摆法照用")
 	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "left"}, {"id": "reopen_button", "anchor": "bar_right"}]})

@@ -18,7 +18,7 @@ const TIERS := 5
 ## 342 B2：能由剧情开放的基地设施
 const FACILITIES: Array[StringName] = [&"smithy", &"tech", &"market"]
 ## 342 B3：后来几方剧情开的功能（材料倾向、种地；354 炼金）—— 老档也要办成才开（不像 [constant FACILITIES] 那样老档照开）
-const FEATURES: Array[StringName] = [&"bias", &"nursery", &"alchemy"]
+const FEATURES: Array[StringName] = [&"bias", &"nursery", &"alchemy", &"canteen"]     # 355：灰灯食堂
 ## 342 B3：阵营什么时候来营地（[member FactionDef.arrives]）：教程后第一次正式探索结算时
 const ARRIVES_FIRST_RUN := &"first_run"
 ## 去重键：委托 id | 第几步 | 那一处

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_aecsp"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_m47xf"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_o0xq8"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_y33rh"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_r77t2"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_v2wwk"]
+
+[sub_resource type="Resource" id="Resource_ihkmn"]
+script = ExtResource("6_v2wwk")
+
+[resource]
+script = ExtResource("5_r77t2")
+id = &"meat_scrap"
+display_name = "小块兽肉"
+display_names = {
+"en": "Meat Scrap"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_ihkmn")
+tags = Array[StringName]([&"ingredient", &"nature"])
+material = "flesh"

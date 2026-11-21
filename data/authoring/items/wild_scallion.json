@@ -1,0 +1,20 @@
+{
+  "id": "wild_scallion",
+  "display_name": "野葱",
+  "display_names": {
+    "en": "Wild Scallion"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}
