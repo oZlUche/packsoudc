@@ -1098,14 +1098,14 @@ func alchemy_listed() -> bool:
 
 ## 354：这几件丢进炼金台会得多少尘（[method Alchemy.preview]）
 func alchemy_preview(uids: Array) -> Dictionary:
-	return Alchemy.preview(meta, uids, sell_ratio())
+	return Alchemy.preview(meta, uids, sell_ratio(), null, items)
 
 
 ## 354：分解（后勤「炼金」页）。返回 {"count", "dust"}（分了存档；没开 = 什么也不动）
 func dissolve_items(uids: Array) -> Dictionary:
 	if not alchemy_open():
 		return {"count": 0, "dust": 0}
-	var got := Alchemy.dissolve(meta, uids)
+	var got := Alchemy.dissolve(meta, uids, null, items)
 	if int(got["count"]) > 0:
 		save_meta()
 	return got
