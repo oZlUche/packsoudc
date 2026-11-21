@@ -228,7 +228,7 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var made := made_from_line(def)
 		if made != "":
 			lines.append(made)
-	if Canteen.is_ingredient(def):     # 355：食材下锅给什么（第二批换成按当前角色算好的终值）
+	if Canteen.is_ingredient(def):     # 355：食材下锅给什么，再写对当前角色实际加多少
 		var cl := canteen_line(def)
 		if cl != "":
 			lines.append(cl)
@@ -790,11 +790,15 @@ static func canteen_line(def: ItemDef) -> String:
 	if e.is_empty():
 		return ""
 	var stat := StringName(e["stat"])
-	var meal := {"flat": {String(stat): e["flat"]} if e.has("flat") else {}, "pct": {String(stat): e["pct"]} if e.has("pct") else {}}
+	var meal := Canteen.single_meal(def)
 	var parts: Array[String] = [Canteen.line_of(meal, stat)]
 	if int(e.get("satiety", 0)) > 0:
 		parts.append(UiText.t("canteen.tip_satiety") % int(e["satiety"]))
-	return UiText.t("canteen.tip_line") % " · ".join(parts)
+	var out := UiText.t("canteen.tip_line") % " · ".join(parts)
+	var ch := Canteen.viewer     # 355：对当前角色实际加多少，玩家不用自己算固定值和百分比哪个划算
+	if ch != null and not (stat == Canteen.CARRY and ch.weight_capacity <= 0):
+		out += "\n" + UiText.t("canteen.tip_for") % [Names.of(ch), UiText.t("canteen.stat_" + String(stat)), Canteen.num(Canteen.gain_for(ch, meal, stat))]
+	return out
 
 
 static func wear_line(inst: ItemInstance) -> String:
