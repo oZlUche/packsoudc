@@ -8,9 +8,13 @@ id = &"smith_magus_staff"
 output = &"magus_staff"
 inputs = {
 "ironwood_branch": 1,
-"mithril_ingot": 1,
-"prism_crystal": 2
+"mithril_ingot": 1
 }
+material_slots = Array[Dictionary]([{
+"count": 2,
+"material": "gem",
+"min": 2
+}])
 funds = 200
 group = "staff"
 level = 3
