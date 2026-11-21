@@ -1267,6 +1267,19 @@ func report_commission(id: StringName) -> Dictionary:
 	return got
 
 
+## 作者 2026-11-21：委托页的【完成】—— 办成了的这时才发酬金、开设施，后面的剧情接着出来。返回 [method Commissions.claim] 的结果
+func claim_commission(id: StringName) -> Dictionary:
+	var d := Commissions.def(id)
+	if not commissions_visible() or d == null:
+		return {"ok": false, "done": false}
+	var got := Commissions.claim(meta, d, items)
+	if bool(got["ok"]):
+		sync_commissions()
+		save_meta()
+		meta.changed.emit()
+	return got
+
+
 func pause_commission(id: StringName) -> bool:
 	var ok := Commissions.pause(meta.commissions, id)
 	if ok:
