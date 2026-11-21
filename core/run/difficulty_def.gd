@@ -38,6 +38,29 @@ extends Resource
 @export var held_floor_percent: int = -1
 ## 360 第一批（H 列）：精英点打赢额外掉一件的稀有度（[member DropRule.elite_rarity]）；-1 = 沿用掉落规则
 @export var elite_rarity: int = -1
+## 360 第二批 A1 / A4（作者难度表；武器那一列见报告 367 第二节）：普通战（普通点、随机点、搜索遭遇）敌人配装的稀有度上限抬几档
+## （道具与武器各抬，不限的仍不限，封顶史诗，[method EnemyPlacer.boosted_tier]）
+@export var gear_cap_battle: int = 0
+## A4：精英战敌人配装的稀有度上限抬几档
+@export var gear_cap_elite: int = 0
+## A4：精英身上多带几件
+@export var elite_extra_items: int = 0
+## 367 裁定（A4 起）：放开低档敌人「不背真实伤害武器」的限制
+@export var allow_true_damage: bool = false
+## 367 裁定（A8 起）：所有敌人（含精英、首领、猎手）身上武器的品质（[method ItemInstance.quality]，0 = 不加）
+@export var enemy_weapon_quality: int = 0
+## 360 第二批 A5：休息点留几成（百分数，向下取整、至少留 1 个；100 = 不减）。拿掉的点变成路口
+@export var rest_keep_percent: int = 100
+## A5：不设付费撤离点（只剩倒计时过半关闭的那个；原本付费的撤离点变成路口）
+@export var no_paid_extract: bool = false
+## A6：首领（核心点）最大生命多几成（百分数）
+@export var boss_hp_percent: int = 0
+## A6：首领加速（百分数：行动间隔缩短这么多，冷却和耐力回复一起；20 = 间隔 ×0.8）
+@export var boss_speed_percent: int = 0
+## A8：和猎手战斗失败多扣几点体力
+@export var hunter_loss_extra: int = 0
+## 360 A10：首领强化版 —— 敌人 id → {"title": 名牌上的名字, "titles": {"en": ...}, "item": 多带的独有道具 id}（[method DifficultyMap.upgrade_bosses]）
+@export var boss_upgrades: Dictionary = {}
 ## 320 A1：普通敌人（猎手以外，精英、核心也算）最大生命多几成（百分数，10 = ×1.10）—— 绝对值，不随档位连乘；0 = 不改。
 ## 有档案的章（切片、教程）不吃。写成百分数是为了说明文本能写 {enemy_hp_percent}
 @export var enemy_hp_percent: int = 0
@@ -82,6 +105,35 @@ func hunter_bracket_steps() -> Array[int]:
 		if m is HunterMechanic:
 			return (m as HunterMechanic).bracket_steps.duplicate()
 	return out
+
+
+## 360 第二批：这一类点的敌人配装加成（[method EnemyPlacer.build_content] 的 boost）。空 = 不加
+func gear_boost(node_type: StringName) -> Dictionary:
+	var out := {}
+	var cap := 0
+	if node_type == &"battle" or node_type == &"random" or node_type == &"search":
+		cap = gear_cap_battle
+	elif node_type == &"elite":
+		cap = gear_cap_elite
+		if elite_extra_items > 0:
+			out["items"] = elite_extra_items
+	if cap > 0:
+		out["cap"] = cap
+	if allow_true_damage:
+		out["true_ok"] = true
+	if enemy_weapon_quality > 0:
+		out["quality"] = enemy_weapon_quality
+	return out
+
+
+## A6：首领生命倍率
+func boss_hp_mult() -> float:
+	return 1.0 + float(boss_hp_percent) / 100.0
+
+
+## A6：首领速度倍率（间隔缩短 p% → 速度 ×1 / (1 − p%)）
+func boss_speed_mult() -> float:
+	return 1.0 / maxf(0.05, 1.0 - float(boss_speed_percent) / 100.0)
 
 
 ## 320 A1：普通敌人生命的最终倍率

@@ -6,11 +6,26 @@ const Support := preload("res://tests/run/flow_support.gd")
 const Hunters := preload("res://tests/run/test_hunters.gd")
 
 
+## 360 第二批起，320 的六条机制（敌人生命、换强敌、猎手生命、信仰门槛、猎手伤害、猎手追击）从各档数据里拿掉，代码开关留着。
+## 这里在定义的副本上把 320 的数补回去，接着测那些开关；新档的数据见 test_difficulty_batch2_360
 static func _by_id(id: StringName) -> DifficultyDef:
 	for d in GameFlow.load_difficulties():
 		if (d as DifficultyDef).id == id:
-			return d
+			return _legacy(d)
 	return null
+
+
+static func _legacy(src: DifficultyDef) -> DifficultyDef:
+	var d := src.duplicate() as DifficultyDef
+	var lv := d.level
+	d.enemy_hp_percent = 10 if lv >= 1 else 0
+	d.advanced_percent = 15 if lv >= 4 else 0
+	d.hunter_hp_percent = 10 if lv >= 5 else 0
+	d.faith_threshold_percent = 10 if lv >= 6 else 0
+	d.countdown_percent = 10 if lv >= 7 else 0
+	d.hunter_damage_percent = 10 if lv >= 8 else 0
+	d.hunter_chase_percent = 10 if lv >= 10 else 0
+	return d
 
 
 static func run_hp_stamp(t: TestCase) -> void:
@@ -426,7 +441,8 @@ static func run_ladder_e(t: TestCase) -> void:
 	t.eq(changed, ["hunter_chase_percent"] as Array[String], "只多了追击")
 	t.eq(ResourceSnapshot.dump(ten.mechanics[0]), ResourceSnapshot.dump(nine.mechanics[0]), "侵蚀规则不变")
 	t.eq(ten.hunter_bracket_steps(), nine.hunter_bracket_steps(), "猎手段位表不变")
-	t.check(ten.description.contains("{hunter_chase_percent}"), "说明写的是占位，不写死数字")
+	var digits := RegEx.create_from_string("\\{[a-z_]+\\}").sub(ten.description, "", true)
+	t.check(not RegEx.create_from_string("[0-9]").search(digits), "说明不写死数字（数都写成占位）")
 
 
 ## 只开猎手、追击 [param pct] 的一局；猎手的开打距离改成 [param engage]（副本，不动别的用例）

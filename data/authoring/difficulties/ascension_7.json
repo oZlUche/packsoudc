@@ -4,13 +4,13 @@
   "display_names": {
     "en": "Ascension VII"
   },
-  "description": "进阶六的一切，再加：倒计时多扣 {countdown_percent}%（按走过的总步数算，向下取整）。在进阶六撤离一次后解锁。",
+  "description": "进阶六的一切，再加：侵蚀蔓延更快（倒计时多扣 {countdown_percent}%，按走过的总步数算，向下取整）。在进阶六撤离一次后解锁。",
   "descriptions": {
-    "en": "Everything in Ascension VI, and the countdown runs {countdown_percent}% faster (counted over all actions, rounded down). Unlocked by extracting once on Ascension VI."
+    "en": "Everything in Ascension VI, and erosion spreads faster (the countdown runs {countdown_percent}% faster, counted over all actions, rounded down). Unlocked by extracting once on Ascension VI."
   },
-  "challenge": "倒计时走得更快",
+  "challenge": "侵蚀蔓延更快",
   "challenges": {
-    "en": "The clock runs fast"
+    "en": "Erosion spreads faster"
   },
   "level": 7,
   "requires_unlock": "ascension_7",
@@ -70,9 +70,13 @@
   },
   "held_floor_percent": 70,
   "elite_rarity": 2,
-  "enemy_hp_percent": 10,
-  "advanced_percent": 15,
-  "hunter_hp_percent": 10,
-  "faith_threshold_percent": 10,
+  "gear_cap_battle": 2,
+  "gear_cap_elite": 1,
+  "elite_extra_items": 1,
+  "allow_true_damage": true,
+  "rest_keep_percent": 50,
+  "no_paid_extract": true,
+  "boss_hp_percent": 25,
+  "boss_speed_percent": 20,
   "countdown_percent": 10
 }

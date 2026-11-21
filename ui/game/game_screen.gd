@@ -226,7 +226,7 @@ func _enemy_name(content: Dictionary) -> String:
 	var def := flow.enemies.enemy(StringName(String(content.get("enemy", "")))) if not content.is_empty() else null
 	if def == null:
 		return UiText.t("screen.enemy")
-	return EnemyRank.display_name(def, _enemy_metal(content))
+	return EnemyRank.prefix(def, _enemy_metal(content)) + EnemyKit.title_of(content, def)     # 360 A10 title, 365 age prefix
 
 
 ## 365: this fight's rank (difficulty level + node type; a guard flag in the content is always gold)
@@ -246,7 +246,7 @@ func _enemy_plate(content: Dictionary) -> Nameplate:
 		return Nameplate.new().setup(UiText.t("screen.enemy"), "", null, Nameplate.COMPACT_PORTRAIT)
 	var metal := _enemy_metal(content)
 	var art := Nameplate.enemy_layers(id, metal)
-	return Nameplate.new().setup(EnemyRank.display_name(def, metal), "", art["face"], Nameplate.COMPACT_PORTRAIT, art["frame"], art["overlay"])
+	return Nameplate.new().setup(EnemyRank.prefix(def, metal) + EnemyKit.title_of(content, def), "", art["face"], Nameplate.COMPACT_PORTRAIT, art["frame"], art["overlay"])
 
 
 ## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）

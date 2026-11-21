@@ -7,20 +7,49 @@
 class_name Nursery
 extends RefCounted
 
-## 几畦（垦户社熟面开一畦；第二畦留到以后）
+## 几畦：垦户社熟面开一畦；355：信赖开第二畦、代言开第三畦（[method plots_for]）。老档读回来至少一畦
 const PLOTS := 1
-## 作物 → {"product": 收什么, "count": 几件, "runs": 几局成熟, "seed": {道具 id: 件数}（播种时从仓库扣）}
+const MAX_PLOTS := 3
+## 第几档开到几畦：[熟面及以下, 信赖, 代言]
+const PLOT_TIERS: Array[int] = [3, 4]
+## 作物 → {"product": 收什么, "count": 几件, "runs": 几局成熟, "seed": {道具 id: 件数}（播种时从仓库扣）}；
+## 355：食材作物另带 "food": 类别（灰灯食堂开了才能种），"bonus": {"id": 少量额外收成, "chance": 每件的概率}
 const CROPS := {
 	&"bitter_leaf": {"product": &"dried_herbs", "count": 2, "runs": 2, "seed": {&"dried_herbs": 1}},
 	&"rope_hemp": {"product": &"rope_coil", "count": 1, "runs": 3, "seed": {}},
+	&"sour_wheat": {"product": &"sour_wheat", "count": 4, "runs": 2, "seed": {}, "food": &"staple", "bonus": {"id": &"golden_wheat", "chance": 0.15}},
+	&"black_bean": {"product": &"black_bean", "count": 4, "runs": 2, "seed": {}, "food": &"staple"},
+	&"mountain_yam": {"product": &"mountain_yam", "count": 3, "runs": 2, "seed": {}, "food": &"staple", "bonus": {"id": &"jade_yam", "chance": 0.15}},
+	&"rice_sack": {"product": &"rice_sack", "count": 3, "runs": 2, "seed": {}, "food": &"staple"},
+	&"big_pumpkin": {"product": &"big_pumpkin", "count": 2, "runs": 3, "seed": {}, "food": &"staple"},
+	&"coarse_wheat_bundle": {"product": &"coarse_wheat_bundle", "count": 2, "runs": 3, "seed": {}, "food": &"staple", "bonus": {"id": &"golden_wheat", "chance": 0.25}},
+	&"wild_scallion": {"product": &"wild_scallion", "count": 4, "runs": 2, "seed": {}, "food": &"veg"},
+	&"fragrant_root": {"product": &"fragrant_root", "count": 3, "runs": 2, "seed": {}, "food": &"veg"},
+	&"long_scallion": {"product": &"long_scallion", "count": 3, "runs": 3, "seed": {}, "food": &"veg"},
+	&"turnip": {"product": &"turnip", "count": 2, "runs": 3, "seed": {}, "food": &"veg"},
+	&"bitter_endive": {"product": &"bitter_endive", "count": 3, "runs": 2, "seed": {}, "food": &"veg"},
+	&"cabbage": {"product": &"cabbage", "count": 2, "runs": 3, "seed": {}, "food": &"veg"},
+	&"wild_berry": {"product": &"wild_berry", "count": 4, "runs": 2, "seed": {}, "food": &"fruit"},
+	&"mountain_pear": {"product": &"mountain_pear", "count": 3, "runs": 2, "seed": {}, "food": &"fruit"},
+	&"honeydew": {"product": &"honeydew", "count": 2, "runs": 3, "seed": {}, "food": &"fruit"},
+	&"red_berry_cluster": {"product": &"red_berry_cluster", "count": 3, "runs": 2, "seed": {}, "food": &"fruit"},
+	&"honey_pomelo": {"product": &"honey_pomelo", "count": 2, "runs": 3, "seed": {}, "food": &"fruit"},
 }
-const ORDER: Array[StringName] = [&"bitter_leaf", &"rope_hemp"]
+const ORDER: Array[StringName] = [&"bitter_leaf", &"rope_hemp",
+	&"sour_wheat", &"black_bean", &"mountain_yam", &"rice_sack", &"big_pumpkin", &"coarse_wheat_bundle",
+	&"wild_scallion", &"fragrant_root", &"long_scallion", &"turnip", &"bitter_endive", &"cabbage",
+	&"wild_berry", &"mountain_pear", &"honeydew", &"red_berry_cluster", &"honey_pomelo"]
+## 355：作物分几栏（后勤页一栏一排纸条）：药材（原来那两种）、主食、蔬菜、水果
+const GROUP_HERB := &"herb"
+const GROUPS: Array[StringName] = [&"herb", &"staple", &"veg", &"fruit"]
 ## 种不了 / 收不了的原因（字表键 `nursery.why_<原因>`）
 const WHY_BUSY := "busy"
 const WHY_SEED := "seed"
 const WHY_UNRIPE := "unripe"
 const WHY_FULL := "full"
 const WHY_UNKNOWN := "unknown"
+## 355：食材作物要灰灯食堂开了才种
+const WHY_CANTEEN := "canteen"
 
 ## 每畦：{"crop": 作物（空 = 空地）, "sown_run": 播种时是第几局, "left": 还差几局}
 var plots: Array[Dictionary] = []
@@ -33,6 +62,39 @@ var seq := 0
 func _init() -> void:
 	while plots.size() < PLOTS:
 		plots.append(_empty())
+
+
+## 355：垦户社第 [param tier] 档有几畦
+static func plots_for(tier: int) -> int:
+	var n := PLOTS
+	for t in PLOT_TIERS:
+		if tier >= t:
+			n += 1
+	return mini(n, MAX_PLOTS)
+
+
+## 355：按档补地（只加不减）。返回加了没有
+func fit(tier: int) -> bool:
+	var want := plots_for(tier)
+	var grew := false
+	while plots.size() < want:
+		plots.append(_empty())
+		grew = true
+	return grew
+
+
+## 355：作物在哪一栏
+static func group_of(crop: StringName) -> StringName:
+	return StringName(String((CROPS.get(crop, {}) as Dictionary).get("food", GROUP_HERB)))
+
+
+## 355：这一栏的作物（按 [constant ORDER]）
+static func crops_in(group: StringName) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for c in ORDER:
+		if group_of(c) == group:
+			out.append(c)
+	return out
 
 
 static func _empty() -> Dictionary:
@@ -82,6 +144,8 @@ static func why_not_sow(meta: MetaState, i: int, crop: StringName) -> String:
 		return WHY_UNKNOWN
 	if String(p["crop"]) != "":
 		return WHY_BUSY
+	if (CROPS[crop] as Dictionary).has("food") and not meta.canteen_open():
+		return WHY_CANTEEN
 	var need: Dictionary = CROPS[crop]["seed"]
 	if not need.is_empty() and seed_picks(meta, crop).is_empty():
 		return WHY_SEED
@@ -130,8 +194,18 @@ static func harvest(meta: MetaState, i: int, items: ItemDatabase) -> Dictionary:
 		out["why"] = WHY_UNKNOWN
 		return out
 	var added: Array[ItemInstance] = []
+	var defs: Array[ItemDef] = []
 	for _k in int(spec["count"]):
-		var inst := ItemInstance.create(def, 0)
+		defs.append(def)
+	var bonus: Dictionary = spec.get("bonus", {})
+	if not bonus.is_empty() and items.get_def(StringName(bonus.get("id", &""))) != null:
+		var rng := RandomNumberGenerator.new()     # 355：少量额外收成，按流水号定（同一档读回来收一样多）
+		rng.seed = hash([meta.nursery.seq, i, String(crop), "bonus"])
+		for _k in int(spec["count"]):
+			if rng.randf() < float(bonus.get("chance", 0.0)):
+				defs.append(items.get_def(StringName(bonus["id"])))
+	for d in defs:
+		var inst := ItemInstance.create(d, 0)
 		inst.uid = meta.allocate_uid()
 		if not meta.stash_item(inst):     # 355：食材先进食材仓库
 			for a in added:
@@ -160,7 +234,9 @@ static func from_dict(d: Variant) -> Nursery:
 		return n
 	var src := d as Dictionary
 	var raw: Array = src.get("plots", []) if src.get("plots", null) is Array else []
-	for i in mini(raw.size(), PLOTS):
+	while n.plots.size() < mini(raw.size(), MAX_PLOTS):
+		n.plots.append(_empty())
+	for i in mini(raw.size(), MAX_PLOTS):
 		if raw[i] is Dictionary:
 			var crop := String(raw[i].get("crop", ""))
 			if crop != "" and not CROPS.has(StringName(crop)):

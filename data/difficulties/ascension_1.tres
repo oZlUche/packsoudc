@@ -11,13 +11,13 @@ display_name = "进阶一"
 display_names = {
 "en": "Ascension I"
 }
-description = "普通敌人（猎手以外）最大生命 +{enemy_hp_percent}%。局外解锁后可选。"
+description = "普通敌人带的道具和武器高一档。局外解锁后可选。"
 descriptions = {
-"en": "Regular enemies (not hunters) have +{enemy_hp_percent}% max HP. Selectable once unlocked outside of runs."
+"en": "Regular enemies carry items and weapons one tier better. Selectable once unlocked outside of runs."
 }
-challenge = "敌人更耐打"
+challenge = "敌人装备更好"
 challenges = {
-"en": "Tougher enemies"
+"en": "Better-equipped foes"
 }
 level = 1
 requires_unlock = &"ascension_1"
@@ -28,4 +28,4 @@ search_floors = {
 }
 held_floor_percent = 25
 elite_rarity = 1
-enemy_hp_percent = 10
+gear_cap_battle = 1

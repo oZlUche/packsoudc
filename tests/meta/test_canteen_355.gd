@@ -9,6 +9,7 @@ const W178 := preload("res://tests/ui/test_base_warehouse_178.gd")
 const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
 const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const CS := preload("res://tests/run/test_character_setup.gd")
+const G342 := preload("res://tests/meta/test_growers_342b3.gd")
 const PREFIX := "canteen_355"
 
 
@@ -234,6 +235,63 @@ static func run_audit(t: TestCase) -> void:
 	t.check(CanteenAudit.report(db, [], 20).contains("表三"), "记录三张表")
 
 
+static func run_nursery(t: TestCase) -> void:
+	t.begin("355 第三批 · 苗圃：垦户社信赖开第二畦、代言开第三畦；主食蔬菜水果灰灯食堂开了才种、种苗白给；收成进食材仓库、偶尔多收优良的；三畦存读一样")
+	t.eq([Nursery.plots_for(1), Nursery.plots_for(2), Nursery.plots_for(3), Nursery.plots_for(4)], [1, 1, 2, 3], "熟面 / 受托一畦、信赖两畦、代言三畦")
+	var c := TestSupport.load_content("free_mode")
+	var f := Support.flow(c, PREFIX)
+	Support.pass_tutorials(f)
+	G342._open(f)
+	t.eq(f.meta.nursery.plots.size(), 1, "刚开：一畦")
+	t.eq(f.sow_crop(0, &"sour_wheat"), Nursery.WHY_CANTEEN, "食堂没开：主食种不了")
+	f.meta.commissions.rep["growers"] = 50
+	f.sync_commissions()
+	t.eq(f.meta.nursery.plots.size(), 2, "信赖：两畦")
+	_open(f)
+	t.eq(f.sow_crop(1, &"sour_wheat"), "", "食堂开了：第二畦种酸麦（种苗白给）")
+	t.eq(f.sow_crop(0, &"honey_pomelo"), "", "第一畦种蜜柚")
+	for k in 3:
+		Nursery.advance(f.meta, "r%d" % k)
+	var got := f.harvest_crop(1)
+	t.eq(String(got["why"]), "", "收酸麦")
+	t.check(int(got["items"]) >= 4, "至少四件（偶尔多收金穗麦）")
+	var wheat := f.meta.canteen.store.items().filter(func(i: ItemInstance) -> bool: return i.def.id == &"sour_wheat").size()
+	t.eq(wheat, 4, "四件酸麦进食材仓库")
+	var bonus := 0
+	var n := Nursery.new()
+	var m := T110._meta()
+	m.nursery = n
+	m.commissions.grants[String(Canteen.ID)] = true
+	for k in 40:
+		n.plots[0] = {"crop": "sour_wheat", "sown_run": 0, "left": 0}
+		m.canteen.store.clear()
+		var r := Nursery.harvest(m, 0, c.items)
+		bonus += int(r["items"]) - 4
+	t.check(bonus > 0 and bonus < 40 * 4, "四十回里偶尔多收（%d 件金穗麦）" % bonus)
+	f.meta.commissions.rep["growers"] = 100
+	f.meta.commissions.signed["growers"] = true
+	f.sync_commissions()
+	t.eq(f.meta.nursery.plots.size(), 3, "代言：三畦")
+	var back := Nursery.from_dict(f.meta.nursery.to_dict())
+	t.eq(back.plots.size(), 3, "三畦存读回来还是三畦")
+	t.eq(String(back.plot(0)["crop"]), "honey_pomelo", "第一畦的蜜柚还在")
+	t.eq(Nursery.from_dict({"plots": [{"crop": "", "sown_run": 0, "left": 0}]}).plots.size(), 1, "老档一畦")
+	Support.cleanup(PREFIX)
+
+
+static func run_alchemy_pantry(t: TestCase) -> void:
+	t.begin("355 第三批 · 食材仓库里的东西能直接炼金（报告 354：什么都能炼）")
+	var db := T110._db()
+	var m := T110._meta()
+	m.commissions.grants[String(Canteen.ID)] = true
+	var berry := _inst(db, &"wild_berry", m.allocate_uid())
+	m.canteen.store.try_add(berry)
+	t.eq(Alchemy.held(m, berry.uid), berry, "认得食材仓库里的")
+	var got := Alchemy.dissolve(m, [berry.uid], null, db)
+	t.eq(int(got["count"]), 1, "炼了一件")
+	t.check(not m.canteen.store.has_item(berry.uid), "食材仓库里没了")
+
+
 static func run_module(t: TestCase) -> void:
 	t.begin("355 · 一局：每到新节点饱腹减 1，剩 1 提醒一次；到 0 加成失效，负重那份多留一步；回血独立；存读不重扣")
 	var mod := MealModule.new()
@@ -384,6 +442,37 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.eq(f.meta.canteen.pot.item_count(), 1, "山薯下锅")
 	t.eq(Bare.audit(p, "canteen355_menu"), [] as Array[String], "收藏夹的字不裸")
 	t.check(p.delete_menu(0) and p._menu_box.get_child_count() == 0, "删除")
+	s.queue_free()
+	W178._cleanup()
+
+
+## 355 第三批：苗圃页 —— 两畦以上顶上一排畦键；食堂开了空地纸条多一排栏键（药材 / 主食 / 蔬菜 / 水果），食材一栏一排三张小纸条；字不裸
+static func frame_nursery(t: TestCase, root: Window) -> void:
+	t.begin("355 第三批 · 苗圃页：两畦有畦键；食堂开了能翻到主食、蔬菜、水果；小纸条点【种下】种上；字不裸")
+	ItemInstance.reset_uid_counter()
+	var f := W178._flow()
+	Support.pass_tutorials(f)
+	G342._open(f)
+	var s: Control = W178._screen(f, root)
+	s.show_tab("nursery")
+	var p = s.nursery_panel()
+	t.check(p.find_child("PlotTabs", true, false) == null and p.find_child("GroupTabs", true, false) == null, "一畦、食堂没开：和原来一样")
+	t.check(p.find_child("Slip_bitter_leaf", true, false) != null, "药材纸条在")
+	s.queue_free()
+	f.meta.commissions.rep["growers"] = 50
+	_open(f)
+	s = W178._screen(f, root)
+	s.show_tab("nursery")
+	p = s.nursery_panel()
+	t.check(p.find_child("PlotTabs", true, false) != null, "两畦：有畦键")
+	t.check(p.find_child("GroupTabs", true, false) != null, "食堂开了：有栏键")
+	p.show_group(&"fruit")
+	t.check(p.find_child("Slip_honey_pomelo", true, false) != null and p.find_child("Slip_bitter_leaf", true, false) == null, "水果一栏：蜜柚的小纸条")
+	t.eq(Bare.audit(p, "nursery355"), [] as Array[String], "字不裸")
+	p.show_plot(1)
+	t.eq(p.sow(1, &"honey_pomelo"), "", "第二畦种蜜柚")
+	t.eq(String(f.meta.nursery.plot(1)["crop"]), "honey_pomelo", "种上了")
+	t.check(p.find_child("Plant", true, false) != null, "长着：先拿蜜柚图标顶着")
 	s.queue_free()
 	W178._cleanup()
 
