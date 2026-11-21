@@ -168,6 +168,17 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.check(shelf.toggle_select(ore.uid), "勾上铁矿石")
 	t.check(not shelf.toggle_select(knife.uid), "刀勾不上")
 	t.eq(int(p.preview()["dust"]), 14, "预览 14")
+	t.check(p._center.visible, "勾了：阵心画尘")
+	var more: Array = []
+	for k in 3:
+		var x := T110._add(f.meta, f.items, &"oak_log")
+		shelf.toggle_select(x.uid)
+		more.append(x)
+	var groups: Array = p.corners()
+	t.eq([(groups[0] as Array).size(), (groups[1] as Array).size(), (groups[2] as Array).size()], [2, 1, 1], "四件轮流分到三个角")
+	t.check(p._nodes[0].get_node_or_null("Count") != null, "两件的角下写 ×n")
+	for x in more:
+		shelf.toggle_select((x as ItemInstance).uid)
 	t.eq(Bare.audit(p, "alchemy354"), [] as Array[String], "字不裸")
 	t.check((p.press_go() as Dictionary).is_empty(), "第一下只是「再点一次」")
 	t.eq(int((p.press_go() as Dictionary).get("dust", 0)), 14, "第二下炼了")

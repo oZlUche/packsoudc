@@ -335,7 +335,8 @@ func open(payload: Dictionary) -> void:
 		ns_page.add_child(_nursery)
 		_pages["nursery"] = ns_page
 	if _sub_btns.has("alchemy"):     # 354：炼金页（占位，等 UI设计 样张）—— 右边仓库进勾选模式
-		var al_page := _cloth()
+		var al_page := _cloth()     # 作者 2026-11-21 选 C 炼成阵：不垫粗布，墙透出来
+		al_page.theme_type_variation = UiTheme.PANEL_BARE
 		_alchemy = AlchemyPanelScript.new()
 		_alchemy.setup(flow, _shelf)
 		_alchemy.changed.connect(_refresh)
