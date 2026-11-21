@@ -2,7 +2,7 @@
   "id": "fuse_flame_fang",
   "inputs": [
     "bloodbone_spike",
-    "fire_crystal"
+    "fire_gland"
   ],
   "output": "flame_fang",
   "adjacent": true

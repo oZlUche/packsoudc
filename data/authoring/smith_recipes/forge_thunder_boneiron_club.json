@@ -1,9 +1,12 @@
 {
   "id": "forge_thunder_boneiron_club",
   "output": "thunder_boneiron_club",
+  "inputs": {
+    "shock_sac": 2
+  },
   "material_slots": [
     {
-      "material": "crystal:lightning",
+      "material": "gem",
       "min": 3,
       "count": 1
     },

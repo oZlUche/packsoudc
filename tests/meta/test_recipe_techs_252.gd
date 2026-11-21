@@ -62,7 +62,7 @@ static func run_content(t: TestCase) -> void:
 		var r := SmithRecipeDef.find(all, id)
 		t.check(r != null and r.tech == want[id][0] and r.tech_level == want[id][1], "%s 要 %s %d 级" % [id, want[id][0], want[id][1]])
 	var sword := SmithRecipeDef.find(all, &"smith_mithril_sword")
-	t.check(sword != null and int(sword.inputs.get("mithril_ingot", 0)) == 2 and not sword.inputs.has("longsword") and sword.slots().size() == 1, "秘银剑：秘银锭 ×2 + 一件绿金属（310：不再吃长剑）")
+	t.check(sword != null and int(sword.inputs.get("mithril_ingot", 0)) == 2 and int(sword.inputs.get("fire_gland", 0)) == 1 and not sword.inputs.has("fire_crystal_low") and not sword.inputs.has("longsword") and sword.slots().size() == 2, "秘银剑：秘银锭 ×2 + 火焰腺 + 晶石素材 ≥稀有 + 一件绿金属（310：不再吃长剑；359：不要火焰晶石）")
 
 
 ## 会打：科技点到了、铺子级数也够
