@@ -1,6 +1,6 @@
 {
   "id": "growers_first_bed",
-  "display_name": "第一畦",
+  "display_name": "第一片地",
   "display_names": {
     "en": "The First Bed"
   },
@@ -10,7 +10,7 @@
     {
       "goal": "camp_report",
       "where": "camp",
-      "text": "到河滩领一包试种种苗，划出一畦地",
+      "text": "到河滩领一包试种种苗，划出一片地",
       "texts": {
         "en": "Collect a packet of trial seedlings at the riverbank and mark out a bed"
       }
