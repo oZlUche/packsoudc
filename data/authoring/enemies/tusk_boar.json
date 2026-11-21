@@ -1,0 +1,33 @@
+{
+  "id": "tusk_boar",
+  "display_name": "獠牙野猪",
+  "display_names": {
+    "en": "Tusk Boar"
+  },
+  "strength": 1,
+  "schools": [
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 40
+  },
+  "signature": [
+    "beast_claw",
+    "beast_fang",
+    "beast_hide"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    5,
+    3
+  ],
+  "species": "beast",
+  "bagless": true
+}

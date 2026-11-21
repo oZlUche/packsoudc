@@ -47,10 +47,24 @@ weight = 1.5
 min_danger = 1
 
 [sub_resource type="Resource" id="Resource_qtrhs"]
+script = ExtResource("1_pij0b")
+enemy = &"condenser_automaton"
+weight = 1.5
+node_types = Array[StringName]([&"battle", &"elite"])
+min_danger = 1
+
+[sub_resource type="Resource" id="Resource_2iyd8"]
+script = ExtResource("1_pij0b")
+enemy = &"arc_coil"
+weight = 1.5
+node_types = Array[StringName]([&"battle", &"elite"])
+min_danger = 1
+
+[sub_resource type="Resource" id="Resource_h3ph7"]
 script = ExtResource("2_y5rhg")
 common_tags = Array[StringName]([&"armor", &"shield", &"remedy", &"food", &"part"])
 
-[sub_resource type="Resource" id="Resource_2iyd8"]
+[sub_resource type="Resource" id="Resource_5ko6i"]
 script = ExtResource("4_t6gjh")
 type_bonus = {
 "core": 1,
@@ -59,7 +73,7 @@ type_bonus = {
 steps_per_tier = 10
 searches_per_tier = 4
 
-[sub_resource type="Resource" id="Resource_h3ph7"]
+[sub_resource type="Resource" id="Resource_uggqx"]
 script = ExtResource("5_n0v4i")
 board = Vector2i(5, 3)
 stat_scale = {
@@ -69,7 +83,7 @@ rarity_cap = 1
 weapon_rarity_cap = 0
 weapon_no_true_damage = true
 
-[sub_resource type="Resource" id="Resource_5ko6i"]
+[sub_resource type="Resource" id="Resource_lg8w7"]
 script = ExtResource("5_n0v4i")
 strength = 1
 item_count = Vector2i(3, 4)
@@ -82,7 +96,7 @@ rarity_cap = 2
 weapon_rarity_cap = 1
 weapon_no_true_damage = true
 
-[sub_resource type="Resource" id="Resource_uggqx"]
+[sub_resource type="Resource" id="Resource_q36bb"]
 script = ExtResource("5_n0v4i")
 strength = 2
 item_count = Vector2i(4, 6)
@@ -95,7 +109,7 @@ bag_count = Vector2i(2, 3)
 weapon_rarity_cap = 2
 weapon_no_true_damage = true
 
-[sub_resource type="Resource" id="Resource_lg8w7"]
+[sub_resource type="Resource" id="Resource_8aquc"]
 script = ExtResource("5_n0v4i")
 strength = 3
 item_count = Vector2i(6, 8)
@@ -111,7 +125,7 @@ weapon_rarity_cap = 3
 script = ExtResource("3_pyyio")
 id = &"clockwork"
 display_name = "机关池"
-entries = Array[ExtResource("1_pij0b")]([SubResource("Resource_w6umv"), SubResource("Resource_qebnb"), SubResource("Resource_fjjk7"), SubResource("Resource_j5e1q"), SubResource("Resource_rcyxg"), SubResource("Resource_cslk0"), SubResource("Resource_bknrn")])
-tiers = Array[ExtResource("5_n0v4i")]([SubResource("Resource_h3ph7"), SubResource("Resource_5ko6i"), SubResource("Resource_uggqx"), SubResource("Resource_lg8w7")])
-strength_rule = SubResource("Resource_2iyd8")
-loadout = SubResource("Resource_qtrhs")
+entries = Array[ExtResource("1_pij0b")]([SubResource("Resource_w6umv"), SubResource("Resource_qebnb"), SubResource("Resource_fjjk7"), SubResource("Resource_j5e1q"), SubResource("Resource_rcyxg"), SubResource("Resource_cslk0"), SubResource("Resource_bknrn"), SubResource("Resource_qtrhs"), SubResource("Resource_2iyd8")])
+tiers = Array[ExtResource("5_n0v4i")]([SubResource("Resource_uggqx"), SubResource("Resource_lg8w7"), SubResource("Resource_q36bb"), SubResource("Resource_8aquc")])
+strength_rule = SubResource("Resource_5ko6i")
+loadout = SubResource("Resource_h3ph7")

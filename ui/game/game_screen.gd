@@ -226,7 +226,16 @@ func _enemy_name(content: Dictionary) -> String:
 	var def := flow.enemies.enemy(StringName(String(content.get("enemy", "")))) if not content.is_empty() else null
 	if def == null:
 		return UiText.t("screen.enemy")
-	return Names.of(def)
+	return EnemyRank.display_name(def, _enemy_metal(content))
+
+
+## 365: this fight's rank (difficulty level + node type; a guard flag in the content is always gold)
+func _enemy_metal(content: Dictionary) -> int:
+	var run := flow.run if flow != null else null
+	var level := run.difficulty.level if run != null and run.difficulty != null else 0
+	var node := run.current_node() if run != null else null
+	var node_type: StringName = node.type if node != null else &"battle"
+	return EnemyRank.metal(level, node_type, bool(content.get("guard", false)))
 
 
 ## 157：对手的名牌（战前准备、战斗回放共用）：名字、肖像（有图才画）
@@ -235,7 +244,9 @@ func _enemy_plate(content: Dictionary) -> Nameplate:
 	var def := flow.enemies.enemy(id) if id != &"" else null
 	if def == null:
 		return Nameplate.new().setup(UiText.t("screen.enemy"), "", null, Nameplate.COMPACT_PORTRAIT)
-	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id), Nameplate.COMPACT_PORTRAIT)
+	var metal := _enemy_metal(content)
+	var art := Nameplate.enemy_layers(id, metal)
+	return Nameplate.new().setup(EnemyRank.display_name(def, metal), "", art["face"], Nameplate.COMPACT_PORTRAIT, art["frame"], art["overlay"])
 
 
 ## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_0745g"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_r6tpa"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_tmfrn"]
+
+[sub_resource type="Resource" id="Resource_26pu7"]
+script = ExtResource("2_r6tpa")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("3_tmfrn")
+id = &"frost_mane"
+display_name = "霜鬃兽"
+display_names = {
+"en": "Frost Mane"
+}
+strength = 3
+schools = Array[StringName]([&"ice"])
+base_stats = {
+"block": 3,
+"max_hp": 85
+}
+signature = Array[StringName]([&"frost_gland", &"frost_gland", &"beast_claw", &"beast_claw", &"beast_hide"])
+item_tags = Array[StringName]([&"beast_part"])
+loadout = SubResource("Resource_26pu7")
+board = Vector2i(6, 4)
+species = &"beast"
+bagless = true

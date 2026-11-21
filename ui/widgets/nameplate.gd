@@ -40,13 +40,14 @@ func _init() -> void:
 
 
 ## 填上名字、副行、肖像（[param face] 为 null = 占位剪影）；[param portrait_side] 肖像边长（255：0 = 不要肖像位 —— 选角色屏左边已经有 160 的大头像）。重复调会换掉原来的
-func setup(display_name: String, sub: String, face: Texture2D = null, portrait_side: int = PORTRAIT_SIZE) -> Nameplate:
+func setup(display_name: String, sub: String, face: Texture2D = null, portrait_side: int = PORTRAIT_SIZE,
+		frame_art: String = UiTheme.ART_PORTRAIT_FRAME, overlay: Texture2D = null) -> Nameplate:
 	UiTheme.clear_children(_row)
 	portrait_slot = null
 	portrait = null
 	blurb_label = null
 	if portrait_side > 0:
-		portrait_slot = PortraitSlot.new(portrait_side, face, true)
+		portrait_slot = PortraitSlot.new(portrait_side, face, true, frame_art, overlay)
 		portrait = portrait_slot.picture
 		_row.add_child(portrait_slot)
 	var col := UiTheme.vbox(2)
@@ -77,6 +78,19 @@ func set_blurb(text: String, width: float) -> Nameplate:
 ## 敌人的肖像（没图 null）
 static func enemy_face(enemy_id: StringName) -> Texture2D:
 	return _face("enemies", enemy_id)
+
+
+## 365: an enemy portrait in [param metal] ([EnemyRank]): {face, overlay, frame}. With a relief layer the face is the
+## metal coin and the overlay is the relief; without one it falls back to the single picture (or null) in the metal frame
+static func enemy_layers(enemy_id: StringName, metal: int) -> Dictionary:
+	var m := EnemyRank.metal_name(metal)
+	var out := {"face": enemy_face(enemy_id), "overlay": null, "frame": "portrait_frame_" + m}
+	var relief := _face("enemies/relief", enemy_id)
+	var coin := _face("coins", StringName("coin_" + m))
+	if relief != null and coin != null:
+		out["face"] = coin
+		out["overlay"] = relief
+	return out
 
 
 ## 角色的肖像（没图 null）

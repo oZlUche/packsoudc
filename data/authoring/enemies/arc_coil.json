@@ -1,0 +1,45 @@
+{
+  "id": "arc_coil",
+  "display_name": "电弧线圈",
+  "display_names": {
+    "en": "Arc Coil"
+  },
+  "strength": 2,
+  "schools": [
+    "lightning"
+  ],
+  "base_stats": {
+    "max_hp": 60,
+    "block": 2,
+    "regen_stamina": 6
+  },
+  "signature": [
+    "arc_coil_core",
+    "arc_coil_core",
+    "gear_arm",
+    "brass_plating"
+  ],
+  "item_tags": [
+    "clockwork"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    5,
+    3
+  ],
+  "species": "construct",
+  "bagless": true,
+  "immune_buffs": [
+    "bleed",
+    "poison",
+    "fungal_blood",
+    "scorched_blood"
+  ],
+  "loot_filler": [
+    "brass_gear"
+  ]
+}

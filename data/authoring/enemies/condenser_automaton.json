@@ -1,0 +1,44 @@
+{
+  "id": "condenser_automaton",
+  "display_name": "冷凝机偶",
+  "display_names": {
+    "en": "Condenser Automaton"
+  },
+  "strength": 2,
+  "schools": [
+    "ice"
+  ],
+  "base_stats": {
+    "max_hp": 65,
+    "block": 3
+  },
+  "signature": [
+    "condenser_tube",
+    "condenser_tube",
+    "gear_arm",
+    "brass_plating"
+  ],
+  "item_tags": [
+    "clockwork"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    5,
+    3
+  ],
+  "species": "construct",
+  "bagless": true,
+  "immune_buffs": [
+    "bleed",
+    "poison",
+    "fungal_blood",
+    "scorched_blood"
+  ],
+  "loot_filler": [
+    "brass_gear"
+  ]
+}

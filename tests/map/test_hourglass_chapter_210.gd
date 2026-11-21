@@ -171,7 +171,7 @@ static func run_pool(t: TestCase) -> void:
 			if n.type == &"core":
 				t.eq(e, &"great_clock", "核心是大钟")
 			elif n.type == &"elite":
-				t.check([&"pendulum_warden", &"steam_turret", &"clockwork_sentry", &"tinker_apprentice", &"gear_golem", &"clock_keeper"].has(e) and e != &"great_clock", "精英不是大钟（%s）" % e)
+				t.check([&"pendulum_warden", &"steam_turret", &"clockwork_sentry", &"tinker_apprentice", &"gear_golem", &"clock_keeper", &"condenser_automaton", &"arc_coil"].has(e) and e != &"great_clock", "精英不是大钟（%s）" % e)
 			var row := n.tier     # 281 §六：两头浅、中间深
 			depth_strength[row] = maxi(int(depth_strength.get(row, 0)), int(n.content["strength"]))
 	t.check(seen.has(&"clockwork_sentry") and seen.has(&"great_clock"), "哨兵与大钟都出现了（%s）" % [seen.keys()])

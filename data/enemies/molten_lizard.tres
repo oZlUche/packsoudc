@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_k0r6e"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_7wqhr"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_hvvlp"]
+
+[sub_resource type="Resource" id="Resource_w2cnd"]
+script = ExtResource("2_7wqhr")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("3_hvvlp")
+id = &"molten_lizard"
+display_name = "熔鳞蜥"
+display_names = {
+"en": "Molten Lizard"
+}
+strength = 3
+schools = Array[StringName]([&"fire"])
+base_stats = {
+"max_hp": 70
+}
+signature = Array[StringName]([&"fire_gland", &"fire_gland", &"beast_claw", &"beast_hide"])
+item_tags = Array[StringName]([&"beast_part"])
+loadout = SubResource("Resource_w2cnd")
+board = Vector2i(6, 4)
+species = &"beast"
+bagless = true

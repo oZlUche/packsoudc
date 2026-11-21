@@ -1,0 +1,126 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="1_jmx2y"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="2_2eskl"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="3_h51pg"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="4_meslr"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="5_iuo2x"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="6_usvfa"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="7_a1vce"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="8_564ox"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_item_fired.gd" id="9_tbvqg"]
+[ext_resource type="Script" path="res://core/battle/adjacency_profile.gd" id="10_p65kg"]
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="11_twmfi"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="12_sgx58"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="13_d3qjh"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="14_yuh0q"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="15_upnlv"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="16_y83jn"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="17_huki0"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="18_egw5r"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="19_1uqnv"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="20_u47bc"]
+
+[sub_resource type="Resource" id="Resource_f14ba"]
+script = ExtResource("3_h51pg")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_t14vg"]
+script = ExtResource("7_a1vce")
+id = &"chill"
+display_name = "寒冷"
+display_names = {
+"en": "Chill"
+}
+is_debuff = true
+decay_halve_on = &"weapon_fired"
+element = &"ice"
+per_stack_percent = 10.0
+
+[sub_resource type="Resource" id="Resource_3fymj"]
+script = ExtResource("8_564ox")
+buff = SubResource("Resource_t14vg")
+metadata/part_ref = &"apply_status_chill"
+
+[sub_resource type="Resource" id="Resource_4eorb"]
+script = ExtResource("9_tbvqg")
+metadata/part_ref = &"on_item_fired"
+
+[sub_resource type="Resource" id="Resource_yge5p"]
+script = ExtResource("2_2eskl")
+trigger = SubResource("Resource_4eorb")
+cadence = SubResource("Resource_f14ba")
+effects = Array[ExtResource("5_iuo2x")]([SubResource("Resource_3fymj")])
+
+[sub_resource type="Resource" id="Resource_4s2bx"]
+script = ExtResource("10_p65kg")
+grant_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1)])
+grant_filter = Array[StringName]([&"weapon"])
+grant_rules = Array[ExtResource("2_2eskl")]([SubResource("Resource_yge5p")])
+
+[sub_resource type="Resource" id="Resource_80o2x"]
+script = ExtResource("15_upnlv")
+
+[sub_resource type="Resource" id="Resource_t26q6"]
+script = ExtResource("16_y83jn")
+seconds = 1.8
+
+[sub_resource type="Resource" id="Resource_xo12f"]
+script = ExtResource("17_huki0")
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_0ufxg"]
+script = ExtResource("18_egw5r")
+damage_type = &"ice"
+
+[sub_resource type="Resource" id="Resource_sjtm1"]
+script = ExtResource("19_1uqnv")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_s0fou"]
+script = ExtResource("2_2eskl")
+trigger = SubResource("Resource_sjtm1")
+cadence = SubResource("Resource_t26q6")
+costs = Array[ExtResource("4_meslr")]([SubResource("Resource_xo12f")])
+effects = Array[ExtResource("5_iuo2x")]([SubResource("Resource_0ufxg")])
+
+[sub_resource type="Resource" id="Resource_yiyoo"]
+script = ExtResource("20_u47bc")
+base_stats = {
+"damage": 3
+}
+rules = Array[ExtResource("2_2eskl")]([SubResource("Resource_s0fou")])
+
+[sub_resource type="Resource" id="Resource_sihn0"]
+script = ExtResource("7_a1vce")
+id = &"chill"
+display_name = "寒冷"
+display_names = {
+"en": "Chill"
+}
+is_debuff = true
+decay_halve_on = &"weapon_fired"
+element = &"ice"
+per_stack_percent = 10.0
+
+[sub_resource type="Resource" id="Resource_7a6wr"]
+script = ExtResource("11_twmfi")
+buff = SubResource("Resource_sihn0")
+
+[resource]
+script = ExtResource("14_yuh0q")
+id = &"condenser_tube"
+display_name = "冷凝管"
+display_names = {
+"en": "Condenser Tube"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_80o2x")
+rarity = 2
+tags = Array[StringName]([&"material", &"crafted", &"part", &"clockwork", &"ice"])
+material = "metal"
+adjacency = SubResource("Resource_4s2bx")
+wild = SubResource("Resource_yiyoo")
+wild_applies = Array[ExtResource("11_twmfi")]([SubResource("Resource_7a6wr")])

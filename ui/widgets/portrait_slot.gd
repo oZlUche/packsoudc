@@ -11,13 +11,16 @@ extends Control
 var picture: TextureRect = null
 ## 没图时的占位（肖像位才有：美术的剪影图，或者 null = 自己画）
 var placeholder: TextureRect = null
+## 365: the relief layer over the coin (null when the portrait is one picture)
+var relief: TextureRect = null
 ## 框（美术的框图；没图 null）
 var frame: NinePatchRect = null
 var _silhouette := false
 
 
 ## [param side] 边长；[param face] 这个位子的图（null = 占位）；[param silhouette] 真 = 肖像位（没图画剪影），假 = 徽记位（没图空着）
-func _init(side: int, face: Texture2D = null, silhouette: bool = true) -> void:
+## 365: [param frame_art] which frame art to draw (metal frames); [param overlay] a layer drawn over [param face] (the relief over the coin)
+func _init(side: int, face: Texture2D = null, silhouette: bool = true, frame_art: String = UiTheme.ART_PORTRAIT_FRAME, overlay: Texture2D = null) -> void:
 	custom_minimum_size = Vector2(side, side)
 	# 作者 10-31 17:22「框和硬币为什么对不上」：位子在容器里被同排撑高 / 撑宽时，框（整张拉伸）成了椭圆、硬币（等比居中）还是正圆 —— 位子永远是正方，摆在格子正中
 	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -26,15 +29,19 @@ func _init(side: int, face: Texture2D = null, silhouette: bool = true) -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS     # 子节点（图、占位、框）随它
 	if face != null:
 		picture = _fill(face)
+		if overlay != null:
+			relief = _fill(overlay)
 	elif silhouette:
 		var empty := UiTheme.art(UiTheme.ART_PORTRAIT_EMPTY)
 		if empty != null:
 			placeholder = _fill(empty)
 		else:
 			_silhouette = true
-	var tex := UiTheme.art(UiTheme.ART_PORTRAIT_FRAME)
+	if not UiTheme.has_art(frame_art):
+		frame_art = UiTheme.ART_PORTRAIT_FRAME
+	var tex := UiTheme.art(frame_art)
 	if tex != null:
-		var meta := UiTheme.art_meta(UiTheme.ART_PORTRAIT_FRAME)
+		var meta := UiTheme.art_meta(frame_art)
 		var m: Array = meta.get("margin", [4, 4, 4, 4])
 		var inset := float(meta.get("inset", 4))
 		frame = UiTheme.nine_rect(tex, m if m.size() == 4 else [0, 0, 0, 0])

@@ -24,7 +24,7 @@ title = "还有"
 titles = {
 "en": "There's More"
 }
-text = "翻出一把{item:scimitar}和一个{item:poison_vial}。{item:poison_vial}自己也能下毒，只是慢。{c:good}把它拖到{item:knife}上、确认{/c}，两件合成一把{item:poisoned_knife}：借{item:knife}的快手，一刀一层毒。毒{b}无视格挡和护甲{/b} —— 前面那个守卫举着盾，正好用它。{item:scimitar}也带上：放血和毒碰在一起会起反应，到时候看。
+text = "翻出一把{item:scimitar}和一个{item:poison_vial}。{item:poison_vial}自己也能下毒，只是慢。{c:good}把它拖到{item:knife}上、确认{/c}，两件合成一把{item:poisoned_knife}：借{item:knife}的快手，一刀一层毒。毒{b}无视格挡和护甲{/b} —— 前面那个看守举着盾，正好用它。{item:scimitar}也带上：放血和毒碰在一起会起反应，到时候看。
 
 下面还压着东西，再翻一次。"
 texts = {

@@ -152,6 +152,55 @@
         "elite",
         "core"
       ]
+    },
+    {
+      "enemy": "molten_lizard",
+      "weight": 0.8,
+      "kinds": [
+        "depths",
+        "core_ring"
+      ]
+    },
+    {
+      "enemy": "frost_mane",
+      "weight": 0.8,
+      "kinds": [
+        "depths",
+        "core_ring"
+      ]
+    },
+    {
+      "enemy": "thunder_vulture",
+      "weight": 0.8,
+      "kinds": [
+        "core_ring",
+        "inner"
+      ]
+    },
+    {
+      "enemy": "miasma_spider",
+      "weight": 0.8,
+      "kinds": [
+        "depths",
+        "inner"
+      ]
+    },
+    {
+      "enemy": "tusk_boar",
+      "kinds": [
+        "outskirts",
+        "ruins"
+      ]
+    },
+    {
+      "enemy": "centurion",
+      "kinds": [
+        "core_ring",
+        "inner"
+      ],
+      "node_types": [
+        "elite"
+      ]
     }
   ],
   "tiers": [
