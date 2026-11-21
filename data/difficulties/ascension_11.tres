@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="DifficultyDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_ewrjj"]
+[ext_resource type="Script" path="res://core/run/run_mechanic.gd" id="2_fa50s"]
+[ext_resource type="Script" path="res://core/run/erosion/erosion_effect.gd" id="3_kp48u"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_spend_vitality.gd" id="4_xq3os"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_drain_money.gd" id="5_6i73q"]
+[ext_resource type="Script" path="res://core/run/erosion/effects/erode_item_layer.gd" id="6_lulyr"]
+[ext_resource type="Script" path="res://core/run/mechanics/erosion_mechanic.gd" id="7_pm4v3"]
+[ext_resource type="Script" path="res://core/run/mechanics/hunter_mechanic.gd" id="8_vy60r"]
+[ext_resource type="Script" path="res://core/run/difficulty_def.gd" id="9_guyjp"]
+
+[sub_resource type="Resource" id="Resource_tse6g"]
+script = ExtResource("4_xq3os")
+per_depth = 1
+
+[sub_resource type="Resource" id="Resource_0yh8l"]
+script = ExtResource("5_6i73q")
+amount = 10
+enabled = false
+only_total = true
+
+[sub_resource type="Resource" id="Resource_ypvtn"]
+script = ExtResource("6_lulyr")
+from_depth = 2
+
+[sub_resource type="Resource" id="Resource_mvmlk"]
+script = ExtResource("7_pm4v3")
+effects = Array[ExtResource("3_kp48u")]([SubResource("Resource_tse6g"), SubResource("Resource_0yh8l"), SubResource("Resource_ypvtn")])
+
+[sub_resource type="Resource" id="Resource_lg01e"]
+script = ExtResource("8_vy60r")
+hunter_ids = Array[StringName]([&"hunter_1"])
+hp_from = Array[float]([1.0, 0.6, 0.6, 0.5])
+hp_to = Array[float]([1.4, 1.4, 1.6, 1.0])
+
+[resource]
+script = ExtResource("9_guyjp")
+id = &"ascension_11"
+display_name = "进阶十一"
+display_names = {
+"en": "Ascension XI"
+}
+description = "进阶十的一切，再加：只看得清 {intel_range} 步以内的敌人是谁，远处只知道是什么点；走近看过的一直看得清。在进阶十撤离一次后解锁。"
+descriptions = {
+"en": "Everything in Ascension X, and you only see who the enemies are within {intel_range} steps; farther spots show only what kind of spot they are. Once seen, they stay seen. Unlocked by extracting once on Ascension X."
+}
+challenge = "远处敌情不明"
+challenges = {
+"en": "Foes hidden afar"
+}
+level = 11
+requires_unlock = &"ascension_11"
+mechanics = Array[ExtResource("2_fa50s")]([SubResource("Resource_mvmlk"), SubResource("Resource_lg01e")])
+search_floors = {
+"advanced": [4, 3, 2],
+"normal": [3, 3, 3]
+}
+held_floor_percent = 80
+elite_rarity = 3
+gear_cap_battle = 2
+gear_cap_elite = 1
+elite_extra_items = 1
+allow_true_damage = true
+enemy_weapon_quality = 1
+rest_keep_percent = 50
+no_paid_extract = true
+boss_hp_percent = 25
+boss_speed_percent = 20
+hunter_loss_extra = 1
+intel_range = 2
+boss_upgrades = {
+"core_guardian": {
+"item": "oath_sigil",
+"title": "誓约守卫",
+"titles": {
+"en": "Oathbound Guardian"
+}
+},
+"great_clock": {
+"item": "perpetual_pendulum",
+"title": "永动大钟",
+"titles": {
+"en": "Perpetual Clock"
+}
+}
+}
+countdown_percent = 10

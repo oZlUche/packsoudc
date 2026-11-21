@@ -33,7 +33,7 @@ static func _want(lv: int) -> Dictionary:
 static func run_data(t: TestCase) -> void:
 	t.begin("360 第二批 · 各档数据：新机制按档累计，六条旧机制从数据里拿掉，A10 两个首领有强化版")
 	var defs := _by_level()
-	for lv in range(1, 11):
+	for lv in range(1, 12):
 		var d: DifficultyDef = defs.get(lv, null)
 		t.not_null(d, "A%d 在" % lv)
 		if d == null:
