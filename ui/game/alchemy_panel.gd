@@ -383,14 +383,21 @@ func _fill_node(n: Control, items: Array) -> void:
 		n.add_child(l)
 
 
-## 「拿不回来：A、B、C 等 N 件」
+## 「A ×2、B、C 等 N 件 炼了拿不回来」（同名的合成一条）
 static func _danger_text(risky: Array) -> String:
 	if risky.is_empty():
 		return ""
+	var order: Array[String] = []     # 同名的合成「名字 ×n」
+	var count := {}
+	for it in risky:
+		var n := Names.of((it as ItemInstance).def)
+		if not count.has(n):
+			order.append(n)
+		count[n] = int(count.get(n, 0)) + 1
 	var names := PackedStringArray()
-	for i in mini(3, risky.size()):
-		names.append(Names.of((risky[i] as ItemInstance).def))
+	for i in mini(3, order.size()):
+		names.append(order[i] + (" ×%d" % int(count[order[i]]) if int(count[order[i]]) > 1 else ""))
 	var who := UiText.t("tip.list_sep").join(names)
-	if risky.size() > 3:
+	if order.size() > 3:
 		who += UiText.t("alchemy.guard_more") % risky.size()
 	return UiText.t("alchemy.guard") % who

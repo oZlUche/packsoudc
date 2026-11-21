@@ -223,6 +223,7 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	var core := T110._add(f.meta, f.items, &"jimie_core_fire")
 	t.check(shelf.toggle_select(core.uid), "火之核勾得上")
 	t.check(p._danger.visible and p._danger.text.contains(Names.of(core.def)), "纸条红字：火之核拿不回来")
+	t.eq(p._danger_text([core, core]), UiText.t("alchemy.guard") % (Names.of(core.def) + " ×2"), "同名的合成「×2」")
 	var warned: Array = []
 	p.said.connect(func(text: String, is_warn: bool): warned.append([text, is_warn]))
 	p.press_go()
