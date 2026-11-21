@@ -1072,11 +1072,16 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 			m.reward_pending.append(inst)
 			m._next_uid = maxi(m._next_uid, inst.uid + 1)
 	m.commissions = CommissionBook.from_dict(d.get("commissions", null))     # 336：老档没有 = 全空
-	m.nursery = Nursery.from_dict(d.get("nursery", null))     # 342 B3
+	m.nursery = Nursery.from_dict(d.get("nursery", null), items)     # 342 B3；作者 11-21：每片地是一块棋盘
 	m.dust = maxi(0, int(d.get("dust", 0)))     # 354
 	m.canteen = Canteen.from_dict(d.get("canteen", null), items)     # 355：老档没有 = 空的
 	for inst in m.canteen.store.items() + m.canteen.pot.items():
 		m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)
+	for g in m.nursery.fields:
+		for inst in g.items():
+			m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)
+	if items != null:
+		m.nursery.adopt_legacy(m, items)     # 老档一畦一种：每畦摆一株进棋盘
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
 	if said is Dictionary:
 		for k in said:

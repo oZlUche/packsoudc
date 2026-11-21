@@ -1040,11 +1040,11 @@ func formal_run() -> bool:
 	return commissions_visible() and run != null and result != null and not tutorial_chapters().has(run.chapter) and result.steps > 0
 
 
-## 342 B3：苗圃播种（后勤「苗圃」页）。返回原因（空 = 种上了，存档）
-func sow_crop(plot: int, crop: StringName) -> String:
+## 342 B3：苗圃播种一株（后勤「苗圃」页；[param at] 没给 = 第一个摆得下的地方）。返回原因（空 = 种上了，存档）
+func sow_crop(plot: int, crop: StringName, at: Vector2i = Vector2i(-1, -1), rot: int = 0) -> String:
 	if not facility_open(&"nursery"):
 		return Nursery.WHY_UNKNOWN
-	var why := Nursery.sow(meta, plot, crop)
+	var why := Nursery.sow(meta, plot, crop, items, at, rot)
 	if why == "":
 		_credit_nursery(&"nursery_plant", crop)
 		save_meta()
@@ -1057,7 +1057,8 @@ func harvest_crop(plot: int) -> Dictionary:
 		return {"why": Nursery.WHY_UNKNOWN, "crop": "", "items": 0}
 	var got := Nursery.harvest(meta, plot, items)
 	if String(got["why"]) == "":
-		_credit_nursery(&"nursery_harvest", StringName(String(got["crop"])))
+		for c in got["crops"]:
+			_credit_nursery(&"nursery_harvest", StringName(String(c)))
 		save_meta()
 	return got
 

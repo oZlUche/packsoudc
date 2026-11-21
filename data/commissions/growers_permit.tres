@@ -10,7 +10,7 @@ params = {
 "crop": "bitter_leaf"
 }
 where = &"camp"
-text = "用自己的干草药束留种，种一畦苦叶草"
+text = "用自己的干草药束留种，种一株苦叶草"
 texts = {
 "en": "Keep back a bundle of your own dried herbs and sow a bed of bitterleaf"
 }
