@@ -13,11 +13,11 @@
     "regen_stamina": 8
   },
   "signature": [
-    "shock_sac",
-    "shock_sac",
-    "shock_sac",
+    "thunder_plume",
+    "thunder_plume",
+    "thunder_plume",
     "beast_claw",
-    "beast_claw"
+    "beast_tusk_root"
   ],
   "item_tags": [
     "beast_part"

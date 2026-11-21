@@ -9,14 +9,14 @@
     "ice"
   ],
   "base_stats": {
-    "max_hp": 85,
-    "block": 3
+    "max_hp": 65,
+    "block": 2
   },
   "signature": [
-    "frost_gland",
-    "frost_gland",
+    "permafrost_marrow",
+    "permafrost_marrow",
     "beast_claw",
-    "beast_claw",
+    "beast_hide",
     "beast_hide"
   ],
   "item_tags": [

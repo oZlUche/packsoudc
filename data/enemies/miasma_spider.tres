@@ -22,7 +22,7 @@ schools = Array[StringName]([&"poison"])
 base_stats = {
 "max_hp": 80
 }
-signature = Array[StringName]([&"viper_gland", &"viper_gland", &"beast_claw", &"beast_fang", &"beast_hide"])
+signature = Array[StringName]([&"miasma_sac", &"miasma_sac", &"beast_claw", &"beast_fang", &"beast_hide"])
 item_tags = Array[StringName]([&"beast_part"])
 loadout = SubResource("Resource_mdk3p")
 board = Vector2i(6, 4)
