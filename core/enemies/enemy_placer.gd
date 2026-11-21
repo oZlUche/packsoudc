@@ -672,6 +672,9 @@ static func choose_items(
 	var fixed := picks.size()     # 招牌 + 套路骨架：后面的信仰统一与保底武器都不动它们
 	var school_pool := school_items(def.schools, items, rarity_cap, def, weapon_cap, no_true)
 	var common_pool := common_items(def.schools, rule, items, rarity_cap, def, weapon_cap, no_true)
+	if _has_tag(picks, items, STAFF):     # 367：招牌已有杖就不再抽第二把（晶石只喂一把，另一把是空杖）
+		school_pool = _without_tag(school_pool, items, STAFF)
+		common_pool = _without_tag(common_pool, items, STAFF)
 	var room := maxi(0, count - picks.size())
 	var n_school := 0
 	if not school_pool.is_empty():
@@ -691,6 +694,26 @@ static func choose_items(
 	if build == null or not build.is_bad():
 		_ensure_weapons(picks, fixed, school_pool, common_pool, rule, items, rng)
 	return picks
+
+
+const STAFF := &"staff"
+
+
+static func _has_tag(ids: Array[StringName], items: ItemDatabase, tag: StringName) -> bool:
+	for id in ids:
+		var d := items.get_def(id)
+		if d != null and d.tags.has(tag):
+			return true
+	return false
+
+
+static func _without_tag(ids: Array[StringName], items: ItemDatabase, tag: StringName) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for id in ids:
+		var d := items.get_def(id)
+		if d != null and not d.tags.has(tag):
+			out.append(id)
+	return out
 
 
 ## 一个敌人只信一个神：信仰 = 流派标签里的那个（`faith:xxx`），没有就是招牌 / 抽到的第一件信仰道具的；
