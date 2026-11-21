@@ -1,9 +1,12 @@
 {
   "id": "forge_flame_bonesteel_broadsword",
   "output": "flame_bonesteel_broadsword",
+  "inputs": {
+    "fire_gland": 2
+  },
   "material_slots": [
     {
-      "material": "crystal:fire",
+      "material": "gem",
       "min": 3,
       "count": 1
     },

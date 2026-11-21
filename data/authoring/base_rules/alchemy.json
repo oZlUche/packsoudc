@@ -18,6 +18,9 @@
     "ticket"
   ],
   "no_dust_tags": [
-    "crystal"
+    "crystal",
+    "fire",
+    "ice",
+    "lightning"
   ]
 }

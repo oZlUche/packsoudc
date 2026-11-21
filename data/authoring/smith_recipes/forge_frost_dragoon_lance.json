@@ -1,9 +1,12 @@
 {
   "id": "forge_frost_dragoon_lance",
   "output": "frost_dragoon_lance",
+  "inputs": {
+    "frost_gland": 2
+  },
   "material_slots": [
     {
-      "material": "crystal:frost",
+      "material": "gem",
       "min": 3,
       "count": 1
     },

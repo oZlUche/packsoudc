@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_nyasu")
 id = &"fuse_frost_fang"
-inputs = Array[StringName]([&"bloodbone_spike", &"ice_crystal"])
+inputs = Array[StringName]([&"bloodbone_spike", &"frost_gland"])
 output = &"frost_fang"
 adjacent = true
