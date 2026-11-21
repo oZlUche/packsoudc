@@ -1,0 +1,48 @@
+D693 测试辅助：炼金开 true；铁匠铺 3 级、配方要的科技点满；金币 20490；尘 3000；打造过 []
+D693 === smith_shortsword：料 { "hardwood_plank": 1, "iron_ore": 2 }；格 []；打造过 false
+D693 没打造过、仓库没料：Issue Shortsword / Materials / Fee；能补 {  }（不能补的：[]）；页上尘数牌 true「3000」
+D693 　　可点的料格 0 个
+D693 　　测试辅助硬用尘补 hardwood_plank：「Forge it once with real materials before using Omnires」；尘 3000
+D693 　　测试辅助放真料：hardwood_plank×1、iron_ore×2
+D693 　　【打造】灰 false；真点
+D693 　　打完：仓库 Issue Shortsword +1、Hardwood Plank -1、Iron Ore -2；尘 3000 → 3000；打造过 true
+D693 打造过、仓库没料：Issue Shortsword / Materials / Fee / Not enough materials；能补 { "hardwood_plank": { "cost": 60, "n": 0 }, "iron_ore": { "cost": 24, "n": 0 } }（不能补的：[]）
+D693 　　可点的料格 ["hardwood_plank", "iron_ore"]
+D693 　　真点料格 hardwood_plank
+D693 　　真点料格 iron_ore
+D693 点完：用尘 { "hardwood_plank": 1, "iron_ore": 2 }；页上 Issue Shortsword / Materials / Fee / 108；【打造】灰 false；能打「」
+D693 　　排版：查 5 处，溢出 0：
+D693 真点【打造】前：用尘 { "hardwood_plank": 1, "iron_ore": 2 }，应扣 108；【打造】灰 false
+D693 　　打完：仓库 Issue Shortsword +1；尘 3000 → 2892（扣 108，应扣 108）；告示 ["Forged \"Issue Shortsword\", now in the warehouse"]
+D693 === forge_imperial_sword：料 {  }；格 [{ "material": "metal", "min": 4, "count": 1 }, { "material": "metal", "min": 3, "count": 1 }]；打造过 false
+D693 没打造过、仓库没料：Issue Shortsword / Materials / Fee；能补 {  }（不能补的：["slot:0(metal≥4)"]）；页上尘数牌 true「2892」
+D693 　　可点的料格 2 个
+D693 　　测试辅助硬用尘补 slot:1：「Forge it once with real materials before using Omnires」；尘 2892
+D693 　　测试辅助放真料：slot:0→pale_shard×1、slot:1→gilded_goblet×1
+D693 　　【打造】灰 false；真点
+D693 　　打完：仓库 Pale Metal Shard -1、Gilded Goblet -1、Imperial Sword +1；尘 2892 → 2892；打造过 true
+D693 打造过、仓库没料：Imperial Sword / Materials / Fee / Not enough materials；能补 { "slot:1": { "cost": 75, "n": 0 } }（不能补的：["slot:0(metal≥4)"]）
+D693 　　可点的料格 ["slot:1"]
+D693 　　真点料格 slot:1
+D693 点完：用尘 { "slot:1": 1 }；页上 Imperial Sword / Materials / Fee / 75；【打造】灰 true；能打「Not enough materials」
+D693 　　排版：查 5 处，溢出 0：
+D693 　　测试辅助硬补不能补的 slot:0：「This can't be replaced with Omnires」
+D693 　　测试辅助放不能补的那格真料 pale_shard×1（Pale Metal Shard）
+D693 真点【打造】前：用尘 { "slot:1": 1 }，应扣 75；【打造】灰 false
+D693 　　打完：仓库 Imperial Sword +1、Pale Metal Shard -1；尘 2892 → 2817（扣 75，应扣 75）；告示 ["Forged \"Imperial Sword\", now in the warehouse"]
+D693 === forge_flame_bonesteel_broadsword：料 {  }；格 [{ "material": "crystal:fire", "min": 3, "count": 1 }, { "material": "metal", "min": 2, "count": 2 }]；打造过 false
+D693 没打造过、仓库没料：Flamebrand Bonesteel Broadsword / Materials / Fee；能补 {  }（不能补的：["slot:0(crystal:fire≥3)"]）；页上尘数牌 true「2817」
+D693 　　可点的料格 0 个
+D693 　　测试辅助硬用尘补 slot:1：「Forge it once with real materials before using Omnires」；尘 2817
+D693 　　测试辅助放真料：slot:0→fire_crystal×1、slot:1→brass_gear×2
+D693 　　【打造】灰 false；真点
+D693 　　打完：仓库 Fire Crystal -1、Brass Gear -2、Flamebrand Bonesteel Broadsword +1；尘 2817 → 2817；打造过 true
+D693 打造过、仓库没料：Flamebrand Bonesteel Broadsword / Materials / Fee / Not enough materials；能补 { "slot:1": { "cost": 30, "n": 0 } }（不能补的：["slot:0(crystal:fire≥3)"]）
+D693 　　可点的料格 ["slot:1"]
+D693 　　真点料格 slot:1
+D693 点完：用尘 { "slot:1": 2 }；页上 Flamebrand Bonesteel Broadsword / Materials / Fee / 60；【打造】灰 true；能打「Not enough materials」
+D693 　　排版：查 5 处，溢出 0：
+D693 　　测试辅助硬补不能补的 slot:0：「This can't be replaced with Omnires」
+D693 　　测试辅助放不能补的那格真料 fire_crystal×1（Fire Crystal）
+D693 真点【打造】前：用尘 { "slot:1": 2 }，应扣 60；【打造】灰 false
+D693 　　打完：仓库 Flamebrand Bonesteel Broadsword +1、Fire Crystal -1；尘 2817 → 2757（扣 60，应扣 60）；告示 ["Forged \"Flamebrand Bonesteel Broadsword\", now in the warehouse"]

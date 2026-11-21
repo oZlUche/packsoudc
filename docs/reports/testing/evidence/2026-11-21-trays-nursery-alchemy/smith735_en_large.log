@@ -1,0 +1,23 @@
+S685 碎晶：稀有度 0；基础价 5；卖价 2（比例 0.50）
+S685 配方 smith_magic_staff：料 { "crystal_shards": 2, "wooden_stick": 1 }；自选格 []；工钱 30；铁匠铺 1 级；staffcraft 1 级
+S685 配方 smith_mage_staff：料 { "mist_crystal": 2, "silver_ingot": 1, "wooden_stick": 1 }；自选格 []；工钱 90；铁匠铺 2 级；staffcraft 2 级
+S685 配方 smith_magus_staff：料 { "ironwood_branch": 1, "mithril_ingot": 1, "prism_crystal": 2 }；自选格 []；工钱 200；铁匠铺 3 级；staffcraft 3 级
+S685 配方 smith_grand_magus_staff：料 { "amethyst_pillar": 1, "mithril_ingot": 2 }；自选格 [{ "material": "wood", "min": 2, "count": 2 }]；工钱 400；铁匠铺 3 级；staffcraft 3 级
+S685 测试辅助办完三份开放单：铁匠铺开 true；集市开 true
+S685 测试辅助：铁匠铺 3 级、杖艺 3 级、加 2000 金币、放料（木料 [&"hardwood_plank", &"hardwood_plank"]）；金币 2450
+S685 真点 smith_mage_staff：打造界面 Mage Staff / Materials / Fee
+S685 　　【打造】灰 false「」；能打「」；排版：查 4 处，溢出 0：
+S685 　　真点【打造】后：仓库 Mist Crystal -2、Silver Ingot -1、Wooden Stick -1、Mage Staff +1；金币 2450 → 2360（-90）
+S685 真点 smith_magus_staff：打造界面 Magus Staff / Materials / Fee
+S685 　　【打造】灰 false「」；能打「」；排版：查 4 处，溢出 0：
+S685 　　真点【打造】后：仓库 Prism Crystal -2、Ironwood Branch -1、Mithril Ingot -1、Magus Staff +1；金币 2360 → 2160（-200）
+S685 真点 smith_grand_magus_staff：打造界面 Grand Magus Staff / Materials / Fee
+S685 　　【打造】灰 false「」；能打「」；排版：查 4 处，溢出 0：
+S685 　　真点【打造】后：仓库 Amethyst Column -1、Mithril Ingot -2、Hardwood Plank -2、Grand Magus Staff +1；金币 2160 → 1760（-400）
+S685 仓库页：碎晶 3 件，第一件在 [P: (1118.0, 328.0), S: (76.0, 76.0)]
+S685 悬停碎晶：Crystal Shards Common / 5    2 / [Lock] / [Lock all ×3] / [Sell] / [Sell all ×3]
+S685 真点【Sell】（先挪鼠标过去）
+S685 　　点第一下：键上写「Sell」
+S685 　　第一下后：金币 1760；键上「Click again」
+S685 　　点第二下
+S685 卖后：仓库 Crystal Shards -1；金币 1760 → 1762（+2）

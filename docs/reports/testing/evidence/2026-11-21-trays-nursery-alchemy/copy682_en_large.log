@@ -1,0 +1,15 @@
+C682 新档：仓库 11 件；金币 450；学会的可选配方 [&"smith_shortsword", &"smith_cleaver", &"smith_copper_ingot", &"smith_leather_armor", &"smith_longsword", &"smith_round_shield", &"smith_shortbow", &"smith_warhammer", &"smith_silver_ingot"]
+C682 测试辅助办完三份开放单：《照抄》，没选配方时 why_not「pick」
+C682 真点「剧情」：卡上 Copy It, Then Make It / Client：Society researcher / Task：Forge the chosen recipe once at the smithy. / Done at：At camp / Reward： / Standing +5 / [Pick a recipe] / [Accept]
+C682 　　配方下拉 可选：["Pick a recipe（灰）", "Issue Shortsword", "Cleaver", "Copper Ingot", "Leather Armor", "Longsword", "Round Shield", "Shortbow", "Warhammer", "Silver Ingot"]；【接下】灰 true「Pick a recipe you can forge right now first」
+C682 　　排版：查 48 处，溢出 0：
+C682 真选第 1 项「Issue Shortsword」（smith_shortsword）：现在打不出「Not enough materials」
+C682 选好后【接下】灰 false「」
+C682 真点【接下】后：《照抄》taken；记下的配方「smith_shortsword」
+C682 　　卡上：Copy It, Then Make It / Client：Society researcher / Task：Forge the chosen recipe once at the smithy. / Done at：At camp / Reward： / Standing +5 / Accepted　0 / 1 / Recipe: Issue Shortsword　Not enough materials
+C682 　　照配方一行：「Recipe: Issue Shortsword　Not enough materials」
+C682 　　排版：查 48 处，溢出 0：
+C682 测试辅助补料补钱：现在打得出「」
+C682 补齐后卡上照配方一行：「Recipe: Issue Shortsword」
+C682 测试辅助照这张打一次：「」；《照抄》done
+C682 回委托页：[Story] / [Regular] / [Standing] / Check the Supplies / Client：Quartermaster / Task：Hand three metal materials to the quartermaster for checking / Done at：At camp / Reward： / Standing +5 / Accepted　0 / 3 / Clear the Road / Client：Patrol captain / Task：Win three battles against ordinary enemies / Done at：In the field, counts as soon as it is done / Reward： / Standing +5 / Accepted　0 / 3 / Identify the Samples / Client：Society registrar / Task：Hand two crystals to the Society for identification / Done at：At camp / Reward： / Standing +5 / Accepted　0 / 2 / The Unsigned Letter / Client：An unnamed sender / Task：Hand the letter to the contact at a free extraction point. / Done at：In the field, counts as soon as it is done / Reward： / Standing +5 / Accepted　0 / 1 / Check the Medicine Packs / Clien
