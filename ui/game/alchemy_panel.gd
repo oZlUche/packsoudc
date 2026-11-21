@@ -28,9 +28,17 @@ const CENTER_DUST := 70.0
 const SLIP_Y := 590.0
 const SLIP_H := 260.0
 ## 第七节：筛选那一行
-const FILTER_Y := 96.0
-const FILTER_H := 40.0
+const FILTER_GAP := 8.0
+const TAG_W := 160.0
+const RARITY_W := 138.0
+const FILTER_H := 34.0
 const NOTE_FONT := 15
+## 358（UI设计 A，作者选定）：拿不回来那件的角套红圈；纸条上的警告带
+const RING := 96.0
+const BAND_INSET := 22.0
+const BAND_ICON := 26.0
+const BAND_BAR := 4.0
+const BAND_BG := Color(0.604, 0.184, 0.133, 0.08)
 const H := SLIP_Y + SLIP_H + 20.0
 const LIGHT := Color("f1e3c2")
 const LOSS_RED := Color("9a2f22")
@@ -42,6 +50,9 @@ var auto_btn: Button = null
 var tag_pick: OptionButton = null
 var rarity_pick: OptionButton = null
 var _danger: Label = null
+var _band: Control = null
+var _band_icon: TextureRect = null
+var _slip: PanelContainer = null
 var _skip: Label = null
 var confirm_left := 0.0
 var _frame: Control = null
@@ -110,27 +121,26 @@ func _build() -> void:
 	plaque.mouse_filter = Control.MOUSE_FILTER_PASS
 	_stage.add_child(plaque)
 	plaque.resized.connect(func(): plaque.position = Vector2((W - plaque.size.x) * 0.5, TOP_Y))
-	var plate := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 12, 6, 12, 6)     # 第七节：筛选（和仓库页筛选牌同一个）
-	plate.name = "Filter"
-	UiTheme.set_tone(plate, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
-	plate.position = Vector2(40, FILTER_Y)
-	plate.size = Vector2(W - 80.0, FILTER_H)
-	var filters := UiTheme.hbox(8)
-	plate.add_child(filters)
+	var filters := UiTheme.hbox(8)     # 第七节：筛选（和仓库页筛选牌同一个）；358 A：尘牌正下方两块浅色木签下拉
+	filters.name = "Filter"
+	filters.alignment = BoxContainer.ALIGNMENT_CENTER
+	filters.size = Vector2(W, FILTER_H)
+	UiTheme.set_tone(filters, UiTheme.TONE_LIGHT)
+	plaque.resized.connect(func(): filters.position = Vector2(0, TOP_Y + plaque.size.y + FILTER_GAP))
 	tag_pick = OptionButton.new()
 	tag_pick.name = "AlchemyTag"
-	tag_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tag_pick.custom_minimum_size = Vector2(TAG_W, FILTER_H)
 	tag_pick.item_selected.connect(func(i: int): shelf.set_filter(StringName(String(tag_pick.get_item_metadata(i))), shelf.filter_rarity))
 	UiTheme.dress_wood_option(tag_pick, 16)
 	filters.add_child(tag_pick)
 	rarity_pick = OptionButton.new()
 	rarity_pick.name = "AlchemyRarity"
-	rarity_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rarity_pick.custom_minimum_size = Vector2(RARITY_W, FILTER_H)
 	WarehouseTools.fill_rarities(rarity_pick)
 	rarity_pick.item_selected.connect(func(i: int): shelf.set_filter(shelf.filter_tag, int(WarehouseTools.RARITIES[i][1])))
 	UiTheme.dress_wood_option(rarity_pick, 16)
 	filters.add_child(rarity_pick)
-	_stage.add_child(plate)
+	_stage.add_child(filters)
 	var c := Vector2(W * 0.5, CIRCLE_CY)
 	_stage.add_child(_pic("circle", Rect2(c - Vector2(CIRCLE, CIRCLE) * 0.5, Vector2(CIRCLE, CIRCLE))))
 	for a in ANGLES:
@@ -158,8 +168,9 @@ func _build() -> void:
 	slip.name = "Slip"
 	UiTheme.set_tone(slip, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
 	slip.position = Vector2(20, SLIP_Y)
-	slip.size = Vector2(W - 40.0, SLIP_H)
+	slip.custom_minimum_size.x = W - 40.0
 	_stage.add_child(slip)
+	_slip = slip
 	var col := UiTheme.vbox(10)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	slip.add_child(col)
@@ -184,11 +195,7 @@ func _build() -> void:
 	_loss.mouse_filter = Control.MOUSE_FILTER_PASS
 	line2.add_child(_loss)
 	col.add_child(line2)
-	_danger = UiTheme.make_label("", NOTE_FONT, LOSS_RED)
-	_danger.name = "Danger"
-	_danger.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_danger.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(_danger)
+	col.add_child(_build_band())
 	_skip = UiTheme.make_label("", NOTE_FONT, UiTheme.INK_SOFT)
 	_skip.name = "Skipped"
 	_skip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -204,6 +211,55 @@ func _build() -> void:
 	go_btn.name = "AlchemyGo"
 	row.add_child(go_btn)
 	col.add_child(row)
+
+
+## 358 A：警告带 —— 左右各缩 [constant BAND_INSET]；左边红竖线、淡红底（[Band] 自己画）；里面小图 + 粗体红名字 + 红字「炼了拿不回来」
+func _build_band() -> Control:
+	var row := UiTheme.hbox(0)
+	row.name = "DangerRow"
+	var pad_l := Control.new()
+	pad_l.custom_minimum_size.x = BAND_INSET
+	row.add_child(pad_l)
+	var band := Band.new()
+	band.name = "Band"
+	band.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(band)
+	var pad_r := Control.new()
+	pad_r.custom_minimum_size.x = BAND_INSET
+	row.add_child(pad_r)
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(BAND_BAR + 4.0, BAND_ICON + 12.0)
+	band.add_child(gap)
+	_band_icon = TextureRect.new()
+	_band_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_band_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_band_icon.custom_minimum_size = Vector2(BAND_ICON, BAND_ICON)
+	_band_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	band.add_child(_band_icon)
+	_danger = UiTheme.make_label("", NOTE_FONT, LOSS_RED)
+	_danger.name = "Danger"
+	_danger.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	var words := HFlowContainer.new()     # 名字后面跟「炼了拿不回来」；放不下整句挪到下一行，不从字中间断
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	band.add_child(words)
+	_danger.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	words.add_child(_danger)
+	var tail := UiTheme.make_label(UiText.t("alchemy.guard_tail"), NOTE_FONT - 1, LOSS_RED)
+	tail.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	words.add_child(tail)
+	var end := Control.new()
+	end.custom_minimum_size.x = 4.0
+	band.add_child(end)
+	_band = row
+	return row
+
+
+## 警告带的底：淡红底 + 左边红竖线
+class Band extends HBoxContainer:
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), BAND_BG)
+		draw_rect(Rect2(Vector2.ZERO, Vector2(BAND_BAR, size.y)), LOSS_RED)
 
 
 static func dust_icon(side: float) -> TextureRect:
@@ -330,8 +386,9 @@ func refresh() -> void:
 		return
 	_have.text = str(flow.meta.dust)
 	var groups := corners()
+	var hand_in := Alchemy.hand_in_uids(flow.meta)
 	for i in _nodes.size():
-		_fill_node(_nodes[i], groups[i] as Array)
+		_fill_node(_nodes[i], groups[i] as Array, hand_in)
 	var p := preview()
 	_center.visible = int(p["count"]) > 0
 	_gain.text = "+%d" % int(p["dust"])
@@ -339,8 +396,9 @@ func refresh() -> void:
 	_loss.text = UiText.t("alchemy.loss") % roundi(Alchemy.loss(flow.meta) * 100.0)
 	_loss.tooltip_text = UiText.t("alchemy.loss_tip")
 	var risky := Alchemy.guarded_of(flow.meta, shelf.selected.keys())
-	_danger.text = _danger_text(risky)
-	_danger.visible = not risky.is_empty()
+	_danger.text = _danger_names(risky)
+	_band_icon.texture = ShelfView.item_art((risky[0] as ItemInstance).def) if not risky.is_empty() else null
+	_band.visible = not risky.is_empty()
 	var plan := auto_plan()
 	var on := auto_selected(plan)
 	auto_btn.text = UiText.t("sell.select_none" if on else "alchemy.auto")
@@ -351,13 +409,19 @@ func refresh() -> void:
 	go_btn.disabled = shelf.selected.is_empty()
 	if go_btn.disabled:
 		_reset_confirm()
+	_slip.size = Vector2(W - 40.0, 0.0)     # 纸条照内容收高
 
 
-## 一个角：最新的一件在最上，前面的往左上各错 [constant PEEK]（最多画三件）；两件以上角下写 ×n
-func _fill_node(n: Control, items: Array) -> void:
+## 一个角：最新的一件在最上，前面的往左上各错 [constant PEEK]（最多画三件）；两件以上角下写 ×n。
+## 358 A：其中有一件拿不回来，角上（底图之上、道具之下）套红圈
+func _fill_node(n: Control, items: Array, hand_in: Dictionary = {}) -> void:
 	for c in n.get_children().slice(1):
 		n.remove_child(c)
 		c.queue_free()
+	if items.any(func(it) -> bool: return Alchemy.guarded(flow.meta, it as ItemInstance, null, hand_in)):
+		var ring := _pic("guard_ring", Rect2(Vector2(NODE - RING, NODE - RING) * 0.5, Vector2(RING, RING)))
+		ring.name = "GuardRing"
+		n.add_child(ring)
 	var shown := items.slice(maxi(0, items.size() - 3))
 	for j in shown.size():
 		var it := shown[j] as ItemInstance
@@ -387,6 +451,13 @@ func _fill_node(n: Control, items: Array) -> void:
 static func _danger_text(risky: Array) -> String:
 	if risky.is_empty():
 		return ""
+	return UiText.t("alchemy.guard") % _danger_names(risky)
+
+
+## 「A ×2、B、C 等 N 件」
+static func _danger_names(risky: Array) -> String:
+	if risky.is_empty():
+		return ""
 	var order: Array[String] = []     # 同名的合成「名字 ×n」
 	var count := {}
 	for it in risky:
@@ -400,4 +471,4 @@ static func _danger_text(risky: Array) -> String:
 	var who := UiText.t("tip.list_sep").join(names)
 	if order.size() > 3:
 		who += UiText.t("alchemy.guard_more") % risky.size()
-	return UiText.t("alchemy.guard") % who
+	return who

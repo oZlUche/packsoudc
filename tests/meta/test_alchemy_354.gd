@@ -203,7 +203,7 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.check(not shelf.toggle_select(knife.uid), "锁着的刀勾不上")
 	t.check(p.auto_btn.disabled, "没选标签：一键炼金暗着")
 	t.eq(int(p.preview()["dust"]), 14, "预览 14")
-	t.check(not p._danger.visible, "铁矿石：不写拿不回来")
+	t.check(not p._band.visible, "铁矿石：不画警告带")
 	t.check(p._center.visible, "勾了：阵心画尘")
 	var more: Array = []
 	for k in 3:
@@ -222,7 +222,8 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.check(not f.meta.warehouse.has_item(ore.uid) and f.meta.warehouse.has_item(knife.uid), "铁矿石没了，刀还在")
 	var core := T110._add(f.meta, f.items, &"jimie_core_fire")
 	t.check(shelf.toggle_select(core.uid), "火之核勾得上")
-	t.check(p._danger.visible and p._danger.text.contains(Names.of(core.def)), "纸条红字：火之核拿不回来")
+	t.check(p._band.visible and p._danger.text == Names.of(core.def), "纸条警告带：火之核")
+	t.check(p._nodes.any(func(n: Control) -> bool: return n.get_node_or_null("GuardRing") != null), "火之核那一角套红圈")
 	t.eq(p._danger_text([core, core]), UiText.t("alchemy.guard") % (Names.of(core.def) + " ×2"), "同名的合成「×2」")
 	var warned: Array = []
 	p.said.connect(func(text: String, is_warn: bool): warned.append([text, is_warn]))
