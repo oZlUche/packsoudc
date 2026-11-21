@@ -135,6 +135,7 @@ static func frame_prebattle_and_replay(t: TestCase, root: Window) -> void:
 		var slot := (p as Nameplate).portrait_slot
 		t.check(slot != null and slot.is_inside_tree() and (slot.picture != null or slot.placeholder != null),
 			"肖像位照样在：有图放图（214 头像定稿），没图先放占位（%s）" % (p as Nameplate).name_label.text)
+	t.check(_face_flipped(pre._enemy_plate_node) and not _face_flipped(pre._player_plate_node), "author 11-21: right side (opponent) portrait mirrored, left side not")
 	var moved: Array[int] = []
 	for inst in run.board.items():
 		moved.append((inst as ItemInstance).uid)
@@ -546,3 +547,9 @@ static func frame_replay_ticker_option(t: TestCase, root: Window) -> void:
 	t.check(view.log_box().visible and view.ticker().is_inside_tree(), "开了：战记在树里")
 	t.eq(view.board_scale(), BattleView.BOARD_SCALE, "非铜面板（开发工具）棋盘不缩")
 	view.free()
+
+
+static func _face_flipped(np: Nameplate) -> bool:
+	var s := np.portrait_slot
+	var layer: TextureRect = s.relief if s.relief != null else (s.picture if s.picture != null else s.placeholder)
+	return layer != null and layer.flip_h
