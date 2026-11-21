@@ -1081,6 +1081,36 @@ func nursery_ripe() -> bool:
 	return facility_open(&"nursery") and meta.nursery.ripe_count() > 0
 
 
+## 354：炼金开了没有（魔法师协会信赖档的剧情《万物可分》办成）
+func alchemy_open() -> bool:
+	return facility_open(Alchemy.ID)
+
+
+## 354：后勤列不列「炼金」键：委托簿露着，且协会到了开炼金那份剧情要的档（或已经开了）
+func alchemy_listed() -> bool:
+	if not commissions_visible():
+		return false
+	if alchemy_open():
+		return true
+	var d := Commissions.opener_of(Alchemy.ID)
+	return d != null and Alchemy.tier(meta) >= Commissions.required_tier(d)
+
+
+## 354：这几件丢进炼金台会得多少尘（[method Alchemy.preview]）
+func alchemy_preview(uids: Array) -> Dictionary:
+	return Alchemy.preview(meta, uids, sell_ratio())
+
+
+## 354：分解（后勤「炼金」页）。返回 {"count", "dust"}（分了存档；没开 = 什么也不动）
+func dissolve_items(uids: Array) -> Dictionary:
+	if not alchemy_open():
+		return {"count": 0, "dust": 0}
+	var got := Alchemy.dissolve(meta, uids)
+	if int(got["count"]) > 0:
+		save_meta()
+	return got
+
+
 ## 342 B3：材料倾向开了没有（办成地图协会的《把路画回来》）
 func bias_open() -> bool:
 	return facility_open(&"bias")

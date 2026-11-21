@@ -29,6 +29,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v5_to_v6(d)
 			6:
 				d = _v6_to_v7(d)
+			7:
+				d = _v7_to_v8(d)
 			_:
 				push_warning("MetaMigrations: 没有 v%d → v%d 的迁移，停在 v%d" % [v, v + 1, v])
 				return d
@@ -177,4 +179,12 @@ static func _refund_tier(tier: Dictionary, items: Dictionary) -> int:
 static func _v6_to_v7(d: Dictionary) -> Dictionary:
 	if not (d.get("nursery", null) is Dictionary):
 		d["nursery"] = Nursery.new().to_dict()
+	return d
+
+
+## v7 → v8（354）：万物之尘 0、「打造过的配方」空 —— 图鉴分不出是捡的还是打的，不反推
+static func _v7_to_v8(d: Dictionary) -> Dictionary:
+	d["dust"] = maxi(0, int(d.get("dust", 0)))
+	if not (d.get("forged_recipes", null) is Array):
+		d["forged_recipes"] = []
 	return d

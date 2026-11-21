@@ -149,6 +149,7 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) 
 		return null
 	meta.spend_funds(recipe.funds)
 	meta.light_codex(out.def)
+	meta.mark_forged(recipe.id)     # 354：打造过（以后能用万物之尘补料）
 	meta.changed.emit()
 	return out
 

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_c338t"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_ymfby"]
+
+[sub_resource type="Resource" id="Resource_ytea7"]
+script = ExtResource("2_ymfby")
+goal = &"camp_report"
+where = &"camp"
+text = "到协会的炼金室，看研究员把一块矿石化成尘"
+texts = {
+"en": "Visit the Society's alchemy room and watch a researcher turn ore into dust"
+}
+
+[resource]
+script = ExtResource("1_c338t")
+id = &"society_alchemy"
+display_name = "万物可分"
+display_names = {
+"en": "All Things Divide"
+}
+faction = &"society"
+order = 4
+reputation = 5
+min_tier = 3
+requires = Array[StringName]([&"society_permit"])
+stages = Array[ExtResource("2_ymfby")]([SubResource("Resource_ytea7")])
+opens = &"alchemy"
+client = "协会研究员"
+clients = {
+"en": "Society researcher"
+}
