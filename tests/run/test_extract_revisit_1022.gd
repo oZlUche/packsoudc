@@ -4,6 +4,7 @@ extends RefCounted
 
 const Prologue := preload("res://tests/run/test_prologue.gd")
 const Support := preload("res://tests/run/flow_support.gd")
+const NodeScreens := preload("res://tests/ui/test_node_screens.gd")
 const PREFIX := "extract_revisit_1022"
 
 
@@ -70,3 +71,45 @@ static func run_reopen_on_the_spot(t: TestCase) -> void:
 	t.check(f.choose_event(0), "撤离")
 	t.check(s.is_over(), "这一局结束了")
 	Support.cleanup(PREFIX)
+
+
+static func run_closed_exit_1121(t: TestCase) -> void:
+	t.begin("作者 11-21 · 撤离点：没撤就能再打开（没关之前）；倒计时关了以后「撤离」灰掉、写明已关闭，不再说钱不够")
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	var f := Support.flow(c, PREFIX + "_closed")
+	var run := f.begin(c.chapter, kit, 7)
+	t.not_null(run, "开局")
+	if run == null:
+		return
+	f.pick_spawn(run.map.entry_ids[0])
+	var cd := CountdownModule.of(run)
+	var closing := cd.closing_extract_id() if cd != null else -1
+	t.check(closing >= 0, "有一个会关的免费撤离点")
+	if closing < 0:
+		Support.cleanup(PREFIX + "_closed")
+		return
+	var node := run.map.get_node(closing)
+	run.events.pending = {}
+	run.travel.current_id = closing     # 直接站上去
+	run.events.handle(node)
+	var def := run.events.pending_event()
+	t.check(def != null and def.id == &"extract_default", "到了撤离点：弹撤离")
+	var go := def.options[0] as EventOption if def != null else null
+	t.eq(go.locked_reason(run.events._event_ctx(node)) if go != null else "x", "", "没关：「撤离」能选")
+	t.check(f.choose_event(1), "选「再看看」")
+	t.check(f.can_reopen() and f.reopen_node(), "没关：站着再打开")
+	t.check(run.events.pending_event() != null and run.events.pending_event().id == &"extract_default", "又是撤离事件")
+	t.check(f.choose_event(1), "再选「再看看」")
+	@warning_ignore("integer_division")
+	run.travel.clock.total = cd.limit() - cd.limit() / 2
+	t.check(cd.extract_closed(node), "倒计时过半：关了")
+	t.check(not f.can_reopen(), "关了：放大镜不再亮")
+	t.check(not f.reopen_node(), "关了：点节点打不开")
+	run.events.handle(node)     # 关了以后再走回来
+	def = run.events.pending_event()
+	go = def.options[0] as EventOption if def != null else null
+	t.eq(go.locked_reason(run.events._event_ctx(node)) if go != null else "", UiText.t("cond.extract_closed"), "关了：「撤离」灰掉，写的是已关闭")
+	t.check(not f.choose_event(0), "关了：选不了撤离")
+	t.check(not run.is_over(), "这一局没结束")
+	Support.cleanup(PREFIX + "_closed")
