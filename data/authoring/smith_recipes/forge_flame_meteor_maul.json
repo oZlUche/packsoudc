@@ -1,9 +1,12 @@
 {
   "id": "forge_flame_meteor_maul",
   "output": "flame_meteor_maul",
+  "inputs": {
+    "fire_gland": 2
+  },
   "material_slots": [
     {
-      "material": "crystal:fire",
+      "material": "gem",
       "min": 3,
       "count": 1
     },

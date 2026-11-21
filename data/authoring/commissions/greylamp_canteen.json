@@ -1,0 +1,29 @@
+{
+  "id": "greylamp_canteen",
+  "display_name": "开伙",
+  "display_names": {
+    "en": "Lighting the Stove"
+  },
+  "faction": "greylamp",
+  "order": 5,
+  "reputation": 5,
+  "min_tier": 2,
+  "requires": [
+    "greylamp_permit"
+  ],
+  "stages": [
+    {
+      "goal": "camp_report",
+      "where": "camp",
+      "text": "到灰灯的伙房，帮掌勺的把灶生起来",
+      "texts": {
+        "en": "Visit the Grey Lamp kitchen and help the cook light the stove"
+      }
+    }
+  ],
+  "opens": "canteen",
+  "client": "灰灯的掌勺",
+  "clients": {
+    "en": "Grey Lamp cook"
+  }
+}

@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="CanteenRules" format=3]
+
+[ext_resource type="Script" path="res://core/meta/canteen_rules.gd" id="1_nwa5x"]
+
+[resource]
+script = ExtResource("1_nwa5x")
+id = &"canteen"
+display_name = "灰灯食堂"
+entries = {
+"bitter_endive": {
+"category": "veg",
+"pct": 6,
+"satiety": 0
+},
+"black_bean": {
+"category": "staple",
+"pct": 2,
+"satiety": 5
+},
+"fowl_leg": {
+"category": "meat",
+"pct": 5,
+"satiety": 0
+},
+"fowl_wing": {
+"category": "meat",
+"pct": 2,
+"satiety": 0
+},
+"fragrant_root": {
+"category": "veg",
+"flat": 0.25,
+"satiety": 0
+},
+"game_meat": {
+"category": "meat",
+"flat": 3,
+"satiety": 0
+},
+"honey_jar": {
+"category": "fruit",
+"pct": 1,
+"satiety": 0
+},
+"meat_scrap": {
+"category": "meat",
+"flat": 1,
+"satiety": 0
+},
+"mint_bundle": {
+"category": "veg",
+"pct": 2.5,
+"satiety": 0
+},
+"mountain_pear": {
+"category": "fruit",
+"flat": 1.2,
+"satiety": 0
+},
+"mountain_yam": {
+"category": "staple",
+"flat": 3,
+"satiety": 11
+},
+"red_berry_cluster": {
+"category": "fruit",
+"pct": 2,
+"satiety": 0
+},
+"rice_sack": {
+"category": "staple",
+"pct": 5,
+"satiety": 11
+},
+"sour_wheat": {
+"category": "staple",
+"flat": 1,
+"satiety": 5
+},
+"wild_berry": {
+"category": "fruit",
+"flat": 0.5,
+"satiety": 0
+},
+"wild_scallion": {
+"category": "veg",
+"flat": 0.1,
+"satiety": 0
+}
+}

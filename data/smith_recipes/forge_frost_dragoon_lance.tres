@@ -6,9 +6,12 @@
 script = ExtResource("1_wrgim")
 id = &"forge_frost_dragoon_lance"
 output = &"frost_dragoon_lance"
+inputs = {
+"frost_gland": 2
+}
 material_slots = Array[Dictionary]([{
 "count": 1,
-"material": "crystal:frost",
+"material": "gem",
 "min": 3
 }, {
 "count": 2,

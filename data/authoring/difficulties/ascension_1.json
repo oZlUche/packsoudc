@@ -15,5 +15,18 @@
   "level": 1,
   "requires_unlock": "ascension_1",
   "grants_unlock": "ascension_2",
+  "search_floors": {
+    "normal": [
+      1,
+      0
+    ],
+    "advanced": [
+      1,
+      1,
+      0
+    ]
+  },
+  "held_floor_percent": 25,
+  "elite_rarity": 1,
   "enemy_hp_percent": 10
 }

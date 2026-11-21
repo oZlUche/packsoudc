@@ -1,9 +1,12 @@
 {
   "id": "forge_flame_executioner_axe",
   "output": "flame_executioner_axe",
+  "inputs": {
+    "fire_gland": 2
+  },
   "material_slots": [
     {
-      "material": "crystal:fire",
+      "material": "gem",
       "min": 3,
       "count": 1
     },

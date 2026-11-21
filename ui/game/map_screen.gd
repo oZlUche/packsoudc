@@ -361,7 +361,9 @@ func reopen() -> bool:
 	_view.clear_hover()
 	var ok := flow.reopen_node()
 	if not ok:
-		say(UiText.t("notice.nothing_to_reopen"))
+		var here := _run.current_node() if _run != null else null
+		var closed_exit := here != null and NodeEvents.effective_type(here) == &"extract" and _countdown_closed(here)
+		say(UiText.t("notice.extract_closed" if closed_exit else "notice.nothing_to_reopen"))     # 反馈 11-21
 	return ok
 
 
@@ -746,6 +748,10 @@ func _adopt() -> void:
 			_hud_host.notice(UiText.t("notice.expelled"), true)
 			_view.current_id = to
 			_after_move())
+	var meal := MealModule.of(_run)     # 355：饱腹快没了提醒一次；没了说一句（加成失效）
+	if meal != null:
+		meal.warned.connect(func(left: int): _hud_host.notice(UiText.t("notice.meal_warn") % left, true))
+		meal.ended.connect(func(): _hud_host.notice(UiText.t("notice.meal_end"), true))
 	# 侵蚀（075）：预警、推进、结算了、终局 —— 都写进日志，地图上垫色。直接接侵蚀场
 	var field := _run.travel.erosion
 	if field != null:
@@ -1071,8 +1077,10 @@ func enemy_preview(id: int) -> String:
 	if _run.drop_rule != null and GameSettings.dev_build():     # 期望掉落是调数值的读数，只在开发版显示
 		var ctx := LootContext.new()
 		ctx.difficulty = _run.chapter.difficulty
+		ctx.apply_difficulty(_run.difficulty)
+		var ntype := NodeEvents.effective_type(_run.map.get_node(id))
 		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
-			DropResolver.expected_count(content, _run.drop_rule, ctx, flow.items, _run.map.get_node(id).type == &"core"),
+			DropResolver.expected_count(content, _run.drop_rule, ctx, flow.items, ntype == &"core", ntype == &"elite", NodeEvents.is_regular(ntype)),
 			DropResolver.treasure_chance(_run.drop_rule, ctx) * 100.0]
 	if _run.economy != null:
 		var depth: float = EnemyPlacer.depths_of(_run.map).get(id, 0.0)

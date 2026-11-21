@@ -1,0 +1,20 @@
+{
+  "id": "fowl_leg",
+  "display_name": "禽腿",
+  "display_names": {
+    "en": "Fowl Leg"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature"
+  ],
+  "material": "flesh"
+}

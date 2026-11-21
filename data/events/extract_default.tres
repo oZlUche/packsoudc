@@ -11,9 +11,13 @@
 [ext_resource type="Script" path="res://core/run/events/outcomes/open_safe.gd" id="9_axfa7"]
 [ext_resource type="Script" path="res://core/run/events/conditions/entrust_ready.gd" id="10_4tn1y"]
 [ext_resource type="Script" path="res://core/run/events/event_def.gd" id="11_ochjq"]
+[ext_resource type="Script" path="res://core/run/events/conditions/extract_open.gd" id="12_xopen"]
 
 [sub_resource type="Resource" id="Resource_71wbr"]
 script = ExtResource("3_jfcj4")
+
+[sub_resource type="Resource" id="Resource_xopen"]
+script = ExtResource("12_xopen")
 
 [sub_resource type="Resource" id="Resource_rev5h"]
 script = ExtResource("1_d6uot")
@@ -21,6 +25,7 @@ label = "撤离"
 labels = {
 "en": "Extract"
 }
+requires = Array[ExtResource("4_7e6gq")]([SubResource("Resource_xopen")])
 outcomes = Array[ExtResource("2_vwjvj")]([SubResource("Resource_71wbr")])
 
 [sub_resource type="Resource" id="Resource_mxv4i"]

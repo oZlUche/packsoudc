@@ -68,7 +68,7 @@ const LABELS := {
 	# 规则表
 	"random_weights": "随机点权重", "event_weights": "事件权重", "events_by_type": "各类点的事件表", "event_restore": "事件回体力", "event_item_rarity_cap": "事件道具稀有度上限",
 	"loss_cost": "战败代价", "rest_restore": "休息回体力", "search": "搜索", "reveal_seconds": "揭示秒数", "items_per_search": "每次搜几件", "max_searches": "最多搜几次",
-	"boss_extracts": "打完核心直接撤离", "fail_vitality": "失败扣体力", "fail_buff": "失败背的 buff", "boss_rarity": "核心保底稀有度", "elite_rarity": "精英保底稀有度", "enemy_hp_percent": "敌人生命多几成（百分数）", "difficulty_mults": "各档难度系数", "advanced_percent": "换成强敌的份额（百分数）", "advanced_skip_first": "开头几场不换", "hunter_hp_percent": "猎手生命多几成（百分数）", "hunter_damage_percent": "猎手攻击多几成（百分数）", "faith_threshold_percent": "信仰门槛多几成（百分数）", "countdown_percent": "倒计时多扣几成（百分数）", "hunter_chase_percent": "猎手追击加速（百分数）", "hunter_chase_window": "追击安全窗口（步）", "guarantee_pool": "保底从这些里挑", "bounty_weights": "科技额外奖励（稀有度权重）", "bounty_materials": "额外奖励收的素材", "shop_refresh_price": "商店刷新价", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
+	"boss_extracts": "打完核心直接撤离", "fail_vitality": "失败扣体力", "fail_buff": "失败背的 buff", "boss_rarity": "核心保底稀有度", "elite_rarity": "精英保底稀有度", "held_floor_percent": "持有物最低掉落占比（百分数）", "enemy_hp_percent": "敌人生命多几成（百分数）", "difficulty_mults": "各档难度系数", "advanced_percent": "换成强敌的份额（百分数）", "advanced_skip_first": "开头几场不换", "hunter_hp_percent": "猎手生命多几成（百分数）", "hunter_damage_percent": "猎手攻击多几成（百分数）", "faith_threshold_percent": "信仰门槛多几成（百分数）", "countdown_percent": "倒计时多扣几成（百分数）", "hunter_chase_percent": "猎手追击加速（百分数）", "hunter_chase_window": "追击安全窗口（步）", "guarantee_pool": "保底从这些里挑", "bounty_weights": "科技额外奖励（稀有度权重）", "bounty_materials": "额外奖励收的素材", "shop_refresh_price": "商店刷新价", "base_chance": "基础概率", "treasure_chance": "珍宝概率", "min_drops": "至少掉几件",
 	"bags_always_drop": "包必掉", "rarity_weights": "稀有度权重", "shop_stock": "商店货量", "shop_purse_base": "商人钱袋", "shop_purse_depth": "商人钱袋随深度", "shop_sell_ratio": "出售折价", "shop_price_mult": "商店价格倍率", "times": "次数",
 	"extract_fee": "撤离费", "reward_base": "打赢基础进账", "warehouse_size": "仓库大小", "first_kit": "第一套",
 	# 角色 / 敌人 / 猎手 / 信仰
@@ -112,7 +112,7 @@ const TYPE_LABELS := {
 	"give_item": "给道具", "give_random_item": "给随机道具", "restore_vitality": "回体力", "spend_vitality": "扣体力", "change_money": "钱加减",
 	"grant_map_buff": "给地图增益", "remove_map_buff": "去掉地图增益", "start_battle": "开战", "open_search": "开搜索", "open_shop": "开商店", "next_event": "接下一个事件",
 	"say": "说一句", "hunter_fight": "迎战猎手", "hunter_flee": "逃离猎手", "flee_encounter": "逃跑（几成）", "teleport": "传送", "change_node_type": "改点的类型", "proceed": "照常发生", "extract": "撤离",
-	"pass_time": "原地耗时", "lose_item": "失去道具", "set_flag": "立局外旗标", "commission_ready": "委托这一步能办", "commission_act": "办委托这一步", "entrust_ready": "能托付", "open_safe": "打开托付",     # 336
+	"pass_time": "原地耗时", "lose_item": "失去道具", "set_flag": "立局外旗标", "commission_ready": "委托这一步能办", "commission_act": "办委托这一步", "entrust_ready": "能托付", "extract_open": "撤离点没关", "open_safe": "打开托付",     # 336
 	# 093 信仰流派
 	"damage": "造成 / 受到伤害", "vitality_lost": "失去体力", "item_cycle": "道具成功循环", "heal": "战斗内回血", "item_triggered": "触发某类道具", "enter_node": "进入空白节点",
 	"item_acquired": "获得道具", "distinct_items_fired": "不同名字的道具出手", "first_place": "每局首次置入一种道具",

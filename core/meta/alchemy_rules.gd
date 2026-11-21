@@ -16,7 +16,7 @@ const ID := &"alchemy"
 @export var guard_tags: Array[StringName] = [&"unique", &"treasure", &"keepsake", &"token", &"sealed", &"commission", &"ticket"]
 ## 第七节：点名要危险确认、一键跳过的
 @export var guard_ids: Array[StringName] = []
-## 补料：带其中一个标签的料不能用尘补（魔晶石）
+## 补料：带其中一个标签的料不能用尘补（魔晶石）。「用尘打金武再炼掉」的空转改由成品炼尘封顶堵（[method Alchemy.forged_cap]）
 @export var no_dust_tags: Array[StringName] = [&"crystal"]
 ## 补料：门槛（材料格的最低稀有度 / 点名道具的稀有度）到这一档就不能用尘补（4 = 传说）
 @export var no_dust_rarity: int = 4

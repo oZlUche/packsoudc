@@ -30,8 +30,24 @@ var drop_mult: float = 1.0
 ## 093（日神 4 级）：必掉额外一件这个稀有度的（-1 = 没有）；从道具库里挑，不必是身上有的
 var extra_drop_rarity: int = -1
 
+## 360 第一批：普通敌人持有物的最低掉落占比（0～1，[member DifficultyDef.held_floor_percent]）；负数 = 沿用 [member DropRule.held_floor_percent]
+var held_floor: float = -1.0
+
+## 360 第一批：精英额外掉落一件的稀有度（[member DifficultyDef.elite_rarity]）；-2 = 沿用 [member DropRule.elite_rarity]
+var elite_rarity: int = -2
+
 ## 信仰重构 C：刚打完的这一场记下的事（战斗账的 `mechanic`：机制次数，按 id）—— 狩猎三阶看拆没拆完第二档。不是战斗掉落时为空
 var battle_notes: Dictionary = {}
+
+
+## 360：按难度写下限与精英额外稀有度（难度为空或没写的不动，沿用掉落规则）
+func apply_difficulty(def: DifficultyDef) -> void:
+	if def == null:
+		return
+	if def.held_floor_percent >= 0:
+		held_floor = float(def.held_floor_percent) / 100.0
+	if def.elite_rarity >= 0:
+		elite_rarity = def.elite_rarity
 
 
 func add_rolls(n: int) -> void:

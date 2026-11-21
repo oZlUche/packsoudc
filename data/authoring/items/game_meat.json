@@ -1,0 +1,20 @@
+{
+  "id": "game_meat",
+  "display_name": "兽肉",
+  "display_names": {
+    "en": "Game Meat"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature"
+  ],
+  "material": "flesh"
+}

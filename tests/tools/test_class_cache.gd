@@ -72,7 +72,7 @@ static func run(t: TestCase) -> void:
 	t.eq(ImportCheck.git_head(TMP + "wt"), "ccc333", "游离 HEAD：直接是提交号")
 	t.eq(ImportCheck.git_head(TMP + "assets"), "", "不是 Git 检出：空")
 	var stamp := TMP + "head_stamp"
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(stamp))     # 上一趟留下的记号会让「没记过」不成立
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(stamp))     # leftover from an earlier run on this machine
 	t.check(ImportCheck.needs_scan(repo, stamp), "没记过：要扫")
 	ImportCheck.remember_clean(repo, stamp)
 	t.check(not ImportCheck.needs_scan(repo, stamp), "同一提交号：不扫")

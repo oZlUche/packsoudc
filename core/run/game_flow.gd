@@ -1098,17 +1098,77 @@ func alchemy_listed() -> bool:
 
 ## 354：这几件丢进炼金台会得多少尘（[method Alchemy.preview]）
 func alchemy_preview(uids: Array) -> Dictionary:
-	return Alchemy.preview(meta, uids, sell_ratio())
+	return Alchemy.preview(meta, uids, sell_ratio(), null, items)
 
 
 ## 354：分解（后勤「炼金」页）。返回 {"count", "dust"}（分了存档；没开 = 什么也不动）
 func dissolve_items(uids: Array) -> Dictionary:
 	if not alchemy_open():
 		return {"count": 0, "dust": 0}
-	var got := Alchemy.dissolve(meta, uids)
+	var got := Alchemy.dissolve(meta, uids, null, items)
 	if int(got["count"]) > 0:
 		save_meta()
 	return got
+
+
+## 355：灰灯食堂开了没有（灰灯到受托、办成《开伙》）
+func canteen_open() -> bool:
+	return facility_open(Canteen.ID)
+
+
+## 355：后勤列不列「食堂」键：委托簿露着、灰灯到了开食堂那份剧情要的档（受托；或已经开了），和炼金一样。没办《开伙》点进去是说明板
+func canteen_listed() -> bool:
+	if not commissions_visible():
+		return false
+	if canteen_open():
+		return true
+	var d := Commissions.opener_of(Canteen.ID)
+	return d != null and Canteen.tier(meta) >= Commissions.required_tier(d)
+
+
+## 355：食堂开着时，锅和食材仓库按灰灯的档调大小；旧档里已有的食材（薄荷叶束、蜂蜜罐）从主仓库搬进食材仓库一次。
+## 返回动没动（动了存档）
+func sync_canteen() -> bool:
+	if meta == null or not canteen_open():
+		return false
+	var c := meta.canteen
+	var touched := false
+	var old_store := c.store
+	var old_pot := c.pot
+	for inst in c.fit(Canteen.tier(meta)):
+		if not meta.warehouse.try_add(inst, true):
+			meta.reward_pending.append(inst)     # 不丢：进待入库
+	touched = c.store != old_store or c.pot != old_pot
+	if not c.moved_legacy:
+		c.moved_legacy = true
+		touched = true
+		for inst in meta.warehouse.items():
+			var it := inst as ItemInstance
+			if Canteen.is_ingredient(it.def) and not it.is_locked_by_player() and c.store.can_admit(it.def):
+				var at := it.origin
+				var page := meta.warehouse.page_of(it.uid)
+				var rot := it.rotation
+				meta.warehouse.remove(it.uid)
+				if not c.store.try_add(it, true):     # 食材仓库满了：放回原处
+					if not meta.warehouse.place(it, at, rot, maxi(0, page)) and not meta.warehouse.try_add(it, true):
+						meta.reward_pending.append(it)
+	if touched:
+		save_meta()
+		meta.changed.emit()
+	return touched
+
+
+## 355：锅里现在这一锅的汇总（[method Canteen.meal_of]）
+func canteen_meal() -> Dictionary:
+	return meta.canteen.current_meal() if meta != null else {}
+
+
+## 355：出征带进去的那一锅：食堂开着、不是教程章、锅里有东西。空 = 不吃
+func meal_snapshot(chapter: ChapterDef) -> Dictionary:
+	if not canteen_open() or tutorial_chapters().has(chapter):
+		return {}
+	var meal := meta.canteen.current_meal()
+	return meal if int(meal.get("count", 0)) > 0 else {}
 
 
 ## 342 B3：材料倾向开了没有（办成地图协会的《把路画回来》）
@@ -1147,6 +1207,7 @@ func sync_commissions() -> Array[StringName]:
 	var posted := NoticeBoard.first_fill(meta)     # 342 B2：第一次有一方开放常规，告示栏贴第一批
 	if not got.is_empty() or posted > 0:
 		save_meta()
+	sync_canteen()     # 355：刚开的食堂（或灰灯升了档）调锅和仓库
 	return got
 
 
@@ -1398,7 +1459,8 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	# 101：模块要的运行时输入（保险箱几格来自局外成长、带入价值来自这一次的选择）
 	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value},
 		BeltModule.ID: {"grants": meta.belt_grants.duplicate() if meta != null else {}},     # 160 补一：科技发的随身技能
-		CommissionModule.ID: {"tracked": commission_snapshot(chapter)}}     # 336：接着的委托带进局
+		CommissionModule.ID: {"tracked": commission_snapshot(chapter)},     # 336：接着的委托带进局
+		MealModule.ID: {"meal": meal_snapshot(chapter), "warn_at": Canteen.load_rules().warn_at}}     # 355：这一局吃的那一锅
 	# 2026-10-22（作者定）：这一局带多少现金进来 —— 由开局屏选，从仓库账上扣，死在局内就没了。
 	# 夹在 0 和仓库余额之间：界面本来就按余额封顶，这里是兜底（存档改过、并发调用都不至于扣成负数）
 	# 285：收费预设出发这一刻付钱（钱不够开不了，界面本来就灰着出发键，这里兜底）；带入现金在付完之后的余额里封顶
@@ -1430,11 +1492,14 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 		meta.spend_funds(cost)     # 285：收费预设的钱付给军需官，不进这一局
 	if ticket_uid >= 0:
 		meta.warehouse.remove(ticket_uid)     # 285：券交给军需官，不退
+	var ate := MealModule.of(state) != null and MealModule.of(state).has_meal()
+	if ate:
+		meta.canteen.pot.clear()     # 355：出发成功这一刻吃掉这一锅（取消准备不扣）
 	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的地上规则；不经开局屏的路一样）
 	var lost := meta.has_pending_board()
 	if meta.board != null:
 		meta.discard_board()     # 搬空了的空棋盘（一键置入后留着显示的）一并丢
-	if not taken.is_empty() or character != null or lost or cash > 0 or cost > 0 or ticket_uid >= 0:
+	if not taken.is_empty() or character != null or lost or cash > 0 or cost > 0 or ticket_uid >= 0 or ate:
 		save_meta()
 	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
@@ -1924,8 +1989,12 @@ func _reopen_entry() -> Dictionary:
 	if run.pending_loot != null:
 		return {"screen": Screen.LOOT, "container": run.pending_loot}
 	var here := run.current_node()
-	if here != null and bool(here.content.get("revisit_event", false)):
+	var exit_here := here != null and NodeEvents.effective_type(here) == &"extract"
+	var exit_closed := exit_here and run.hooks.extract_closed(here)     # 反馈 11-21：关了的撤离点不再弹（地图屏说已关闭）
+	if here != null and bool(here.content.get("revisit_event", false)) and not exit_closed:
 		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 10-22：「先回地图」的点，点节点 / 放大镜就再弹
+	if exit_here and not exit_closed:
+		return {"screen": Screen.EVENT, "node": here, "rest": true}     # 作者 11-21：没撤的撤离点，只要没关就能再打开
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开

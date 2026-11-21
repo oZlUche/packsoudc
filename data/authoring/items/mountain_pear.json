@@ -1,0 +1,21 @@
+{
+  "id": "mountain_pear",
+  "display_name": "山梨",
+  "display_names": {
+    "en": "Mountain Pear"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

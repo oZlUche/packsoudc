@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_nkh6p"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_8q6vw"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_atli8"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_1ejjv"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_madhy"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_f40pn"]
+
+[sub_resource type="Resource" id="Resource_xs5cw"]
+script = ExtResource("6_f40pn")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_madhy")
+id = &"fragrant_root"
+display_name = "香根"
+display_names = {
+"en": "Fragrant Root"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_xs5cw")
+tags = Array[StringName]([&"ingredient", &"nature", &"plant"])
+material = "herb"
