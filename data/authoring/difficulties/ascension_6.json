@@ -4,13 +4,13 @@
   "display_names": {
     "en": "Ascension VI"
   },
-  "description": "进阶五的一切，再加：信仰第二阶起的门槛 +{faith_threshold_percent}%（首阶不变）。在进阶五撤离一次后解锁。",
+  "description": "进阶五的一切，再加：首领最大生命 +{boss_hp_percent}%，出手间隔缩短 {boss_speed_percent}%。在进阶五撤离一次后解锁。",
   "descriptions": {
-    "en": "Everything in Ascension V, and faith tiers from the second up need +{faith_threshold_percent}% faith (the first is unchanged). Unlocked by extracting once on Ascension V."
+    "en": "Everything in Ascension V, and bosses have +{boss_hp_percent}% max HP and act {boss_speed_percent}% sooner. Unlocked by extracting once on Ascension V."
   },
-  "challenge": "信仰门槛更高",
+  "challenge": "首领更强",
   "challenges": {
-    "en": "Faith costs more"
+    "en": "Stronger bosses"
   },
   "level": 6,
   "requires_unlock": "ascension_6",
@@ -70,8 +70,12 @@
   },
   "held_floor_percent": 60,
   "elite_rarity": 2,
-  "enemy_hp_percent": 10,
-  "advanced_percent": 15,
-  "hunter_hp_percent": 10,
-  "faith_threshold_percent": 10
+  "gear_cap_battle": 2,
+  "gear_cap_elite": 1,
+  "elite_extra_items": 1,
+  "allow_true_damage": true,
+  "rest_keep_percent": 50,
+  "no_paid_extract": true,
+  "boss_hp_percent": 25,
+  "boss_speed_percent": 20
 }

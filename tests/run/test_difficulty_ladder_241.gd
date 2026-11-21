@@ -33,7 +33,7 @@ static func run_ladder_data(t: TestCase) -> void:
 	t.eq([_kinds(one), _kinds(two), _kinds(three)], [[], ["erosion"], ["erosion", "hunters"]], "Ⅰ 无机制、Ⅱ 侵蚀、Ⅲ 侵蚀 + 猎手")
 	for d: DifficultyDef in [one, two, three]:
 		var fx: Array[RunEffect] = d.run_effects()
-		t.check(fx.is_empty() and d.enemy_hp_percent > 0, "%s：体力上限 −1 换成敌人更耐打（320 B）" % d.id)
+		t.check(fx.is_empty() and d.enemy_hp_percent == 0 and d.gear_cap_battle > 0, "%s：体力上限 −1 不回来；360 起敌人生命 +10%% 换成配装变好" % d.id)
 		t.check(not d.challenge.contains("；") and d.challenge.length() <= 10, "%s：中文一行（%s）" % [d.id, d.challenge])
 		t.check(String(d.challenges.get("en", "")) != "", "%s：有英文" % d.id)
 	t.eq([one.requires_unlock, two.requires_unlock, three.requires_unlock], [&"ascension_1", &"ascension_2", &"ascension_3"], "各要各的解锁")

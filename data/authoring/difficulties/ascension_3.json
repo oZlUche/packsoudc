@@ -4,9 +4,9 @@
   "display_names": {
     "en": "Ascension III"
   },
-  "description": "普通敌人最大生命 +{enemy_hp_percent}%，侵蚀开启（只扣体力），猎手循着脚步追来。在进阶二撤离一次后解锁。",
+  "description": "进阶二的一切，再加：猎手循着脚步追来，走得越久越强。在进阶二撤离一次后解锁。",
   "descriptions": {
-    "en": "Regular enemies +{enemy_hp_percent}% max HP, erosion is on (Vitality only) and hunters follow your footsteps. Unlocked by extracting once on Ascension II."
+    "en": "Everything in Ascension II, and hunters follow your footsteps, growing stronger the longer you walk. Unlocked by extracting once on Ascension II."
   },
   "challenge": "猎手循迹追来",
   "challenges": {
@@ -70,5 +70,5 @@
   },
   "held_floor_percent": 35,
   "elite_rarity": 1,
-  "enemy_hp_percent": 10
+  "gear_cap_battle": 1
 }

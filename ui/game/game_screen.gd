@@ -226,7 +226,7 @@ func _enemy_name(content: Dictionary) -> String:
 	var def := flow.enemies.enemy(StringName(String(content.get("enemy", "")))) if not content.is_empty() else null
 	if def == null:
 		return UiText.t("screen.enemy")
-	return Names.of(def)
+	return EnemyKit.title_of(content, def)     # 360 A10：强化版首领换名
 
 
 ## 157：对手的名牌（战前准备、战斗回放共用）：名字、肖像（有图才画）
@@ -235,7 +235,7 @@ func _enemy_plate(content: Dictionary) -> Nameplate:
 	var def := flow.enemies.enemy(id) if id != &"" else null
 	if def == null:
 		return Nameplate.new().setup(UiText.t("screen.enemy"), "", null, Nameplate.COMPACT_PORTRAIT)
-	return Nameplate.new().setup(Names.of(def), "", Nameplate.enemy_face(id), Nameplate.COMPACT_PORTRAIT)
+	return Nameplate.new().setup(EnemyKit.title_of(content, def), "", Nameplate.enemy_face(id), Nameplate.COMPACT_PORTRAIT)
 
 
 ## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）

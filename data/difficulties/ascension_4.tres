@@ -36,13 +36,13 @@ display_name = "进阶四"
 display_names = {
 "en": "Ascension IV"
 }
-description = "进阶三的一切，再把约 {advanced_percent}% 的普通战斗换成更强的一种敌人（离入口最近的 {advanced_skip_first} 场不换）。在进阶三撤离一次后解锁。"
+description = "进阶三的一切，再加：普通敌人的装备再高一档；精英的装备高一档、多带一件；低档敌人也会拿真实伤害武器。在进阶三撤离一次后解锁。"
 descriptions = {
-"en": "Everything in Ascension III, and about {advanced_percent}% of regular battles get a stronger kind of enemy (never the {advanced_skip_first} nearest the entrance). Unlocked by extracting once on Ascension III."
+"en": "Everything in Ascension III, and regular enemies gear up one more tier; elites gear up one tier and carry one more item; low-tier enemies may carry true-damage weapons. Unlocked by extracting once on Ascension III."
 }
-challenge = "强敌混进战斗"
+challenge = "精英装备更好"
 challenges = {
-"en": "Stronger foes appear"
+"en": "Elites gear up"
 }
 level = 4
 requires_unlock = &"ascension_4"
@@ -54,5 +54,7 @@ search_floors = {
 }
 held_floor_percent = 40
 elite_rarity = 2
-enemy_hp_percent = 10
-advanced_percent = 15
+gear_cap_battle = 2
+gear_cap_elite = 1
+elite_extra_items = 1
+allow_true_damage = true
