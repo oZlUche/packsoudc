@@ -1,9 +1,12 @@
 {
   "id": "forge_thunder_siege_spear",
   "output": "thunder_siege_spear",
+  "inputs": {
+    "shock_sac": 2
+  },
   "material_slots": [
     {
-      "material": "crystal:lightning",
+      "material": "gem",
       "min": 3,
       "count": 1
     },

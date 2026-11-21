@@ -292,8 +292,11 @@ static func run_dust_forge(t: TestCase) -> void:
 	t.eq([m.dust, m.funds], [16, 460], "扣 84 尘、40 币工钱")
 	t.eq(m.warehouse.items().filter(func(i: ItemInstance) -> bool: return i.def.id == &"iron_ore").size(), 0, "那件真铁矿石扣了")
 	var maul := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"forge_flame_meteor_maul")
-	t.eq(Alchemy.line_cost(maul, "slot:0", db), -1, "火系魔晶石格：不能补")
-	t.check(Alchemy.line_cost(maul, "slot:1", db) > 0, "金属格：能补")
+	var crys := SmithRecipeDef.new()     # 359 起配方里没有魔晶石格了，规则仍在
+	crys.material_slots = [{"material": "crystal:fire", "min": 3, "count": 1}] as Array[Dictionary]
+	t.eq(Alchemy.line_cost(crys, "slot:0", db), -1, "火系魔晶石格：不能补")
+	t.check(Alchemy.line_cost(maul, "slot:0", db) > 0 and Alchemy.line_cost(maul, "slot:1", db) > 0, "359：晶石素材格、金属格都能补")
+	t.eq(Alchemy.line_cost(maul, "fire_gland", db), -1, "359：火焰腺（属性素材）不能补")
 	var imperial := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"forge_imperial_sword")
 	t.eq(Alchemy.line_cost(imperial, "slot:0", db), -1, "传说金属格：不能补")
 	var armor := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"smith_leather_armor")

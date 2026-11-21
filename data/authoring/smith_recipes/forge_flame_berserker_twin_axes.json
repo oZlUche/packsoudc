@@ -1,9 +1,12 @@
 {
   "id": "forge_flame_berserker_twin_axes",
   "output": "flame_berserker_twin_axes",
+  "inputs": {
+    "fire_gland": 2
+  },
   "material_slots": [
     {
-      "material": "crystal:fire",
+      "material": "gem",
       "min": 3,
       "count": 1
     },
