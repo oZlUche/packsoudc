@@ -303,7 +303,7 @@ func _build_regular() -> void:
 		k += 1
 	if notes.is_empty() and not NoticeBoard.open_factions(book).is_empty():
 		_cards.add_child(UiTheme.make_label(UiText.t("commission.regular_soon"), 16, LIGHT))
-	var hand := book.taken().filter(func(id: StringName) -> bool: return NoticeBoard.is_note(id))
+	var hand := book.in_hand().filter(func(id: StringName) -> bool: return NoticeBoard.is_note(id))
 	var plank := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_PLAQUE_SMALL, 28, 10, 28, 10)
 	plank.name = "HandPlank"
 	plank.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -380,13 +380,11 @@ func _slip(d: CommissionDef, w: float) -> PanelContainer:
 	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(fill)
-	if Commissions.can_report(book, d, flow.meta):
-		var rb := ScrollKey.make(UiText.t("commission.report"), func(): report(d.id))
-		rb.name = "Report_" + String(d.id)
-		row.add_child(rb)
-	var ab := ScrollKey.make(UiText.t("commission.abandon"), func(): _do(flow.abandon_commission(d.id)))
-	ab.name = "Abandon_" + String(d.id)
-	row.add_child(ab)
+	_add_action(row, d)
+	if not Commissions.is_ready(book, d.id):
+		var ab := ScrollKey.make(UiText.t("commission.abandon"), func(): _do(flow.abandon_commission(d.id)))
+		ab.name = "Abandon_" + String(d.id)
+		row.add_child(ab)
 	return p
 
 
@@ -560,18 +558,17 @@ func _card(d: CommissionDef, w: float = CARD_W) -> Control:
 				_pick_line(col, d, w)
 			var s := Commissions.current_stage(book, d.id)
 			var need := maxi(1, d.stages[s].count) if s >= 0 and s < d.stages.size() else 1
-			if need > 1 or not Commissions.can_report(book, d, flow.meta):
+			if need > 1 or not (_finish_now(d) or (s >= 0 and s < d.stages.size() and GO_TO.has(d.stages[s].goal))):     # 有【完成】/【前往】的单件不再写 0 / 1
 				keys.add_child(UiTheme.make_label("%s　%s" % [UiText.t("commission.state_taken"), UiText.t("commission.progress") % [int(book.entry(d.id).get("progress", 0)), need]], 16, INK))
-			if Commissions.can_report(book, d, flow.meta):     # 342 B2：营地当场办一次 / 交货
-				var rb := ScrollKey.make(UiText.t("commission.report"), func(): report(d.id))
-				rb.name = "Report_" + String(d.id)
-				keys.add_child(rb)
+			_add_action(keys, d)
 			if not Commissions.is_story(d):     # 342 B2：剧情常驻，不暂缓、不放弃；纸条全带进局，不暂缓
 				if not NoticeBoard.is_note(d.id):
 					keys.add_child(ScrollKey.make(UiText.t("commission.pause"), func(): _do(flow.pause_commission(d.id))))
 				var ab := ScrollKey.make(UiText.t("commission.abandon"), func(): _do(flow.abandon_commission(d.id)))
 				ab.name = "Abandon_" + String(d.id)
 				keys.add_child(ab)
+		CommissionBook.READY:
+			_add_action(keys, d)
 		CommissionBook.PAUSED:
 			keys.add_child(UiTheme.make_label(UiText.t("commission.state_paused"), 16, INK))
 			_add_take(keys, d, UiText.t("commission.resume"))
@@ -593,6 +590,57 @@ func _card(d: CommissionDef, w: float = CARD_W) -> Control:
 						lrow.modulate = RED
 					keys.add_child(lrow)
 	return _pinned(p, "pin_" + String(d.faction))
+
+
+## 作者 2026-11-21：在营地别处做的那一步 → 【前往】跳到哪一页
+const GO_TO := {&"smith_forge": &"smithy", &"nursery_plant": &"nursery", &"nursery_harvest": &"nursery"}
+
+
+## 当场就能【完成】：办成了等点的，或停在营地报到那一步的
+func _finish_now(d: CommissionDef) -> bool:
+	var book := flow.meta.commissions
+	if Commissions.is_ready(book, d.id):
+		return true
+	var s := Commissions.current_stage(book, d.id)
+	return s >= 0 and s < d.stages.size() and d.stages[s].goal == &"camp_report"
+
+
+## 作者 2026-11-21：卡上的那颗键 —— 办成了 / 营地报到：【完成】（发酬金，开了设施就跳过去）；交货：【交货】（交够直接结案）；
+## 打造、种地这类在营地别处做的：【前往】那一页。在局里做的没有键，办成了才出【完成】
+func _add_action(row: Container, d: CommissionDef) -> void:
+	var book := flow.meta.commissions
+	if _finish_now(d):
+		var fb := ScrollKey.make(UiText.t("commission.finish"), func(): finish(d.id))
+		fb.name = "Finish_" + String(d.id)
+		row.add_child(fb)
+		return
+	var s := Commissions.current_stage(book, d.id)
+	if s < 0 or s >= d.stages.size():
+		return
+	var goal := d.stages[s].goal
+	if goal == &"hand_in" and Commissions.can_report(book, d, flow.meta):
+		var rb := ScrollKey.make(UiText.t("commission.hand_over"), func(): report(d.id))
+		rb.name = "Report_" + String(d.id)
+		row.add_child(rb)
+	elif GO_TO.has(goal):
+		var dest: StringName = GO_TO[goal]
+		var gb := ScrollKey.make(UiText.t("commission.go"), func(): facility_requested.emit(dest))
+		gb.name = "GoTo_" + String(d.id)
+		row.add_child(gb)
+
+
+## 【完成】：办成了的领酬；停在营地报到的当场办掉。开了设施就跳到那一页（材料倾向在出征页）。返回结果
+func finish(id: StringName) -> Dictionary:
+	var got := flow.claim_commission(id) if Commissions.is_ready(flow.meta.commissions, id) else flow.report_commission(id)
+	rebuild()
+	if not bool(got.get("ok", false)):
+		return got
+	changed.emit()
+	var fac := StringName(String((got.get("got", {}) as Dictionary).get("opens", "")))
+	if fac != &"":
+		facility_requested.emit(&"expedition" if fac == &"bias" else fac)
+	reported.emit(got)     # 跳页会清告示：先跳再说「X 开放了」
+	return got
 
 
 func _add_take(row: Container, d: CommissionDef, text: String) -> void:
@@ -656,7 +704,7 @@ func take(id: StringName) -> String:
 	return why
 
 
-## 342 B2：【办理】（营地当场那一步）。返回 [method GameFlow.report_commission] 的结果
+## 342 B2：营地当场那一步（【交货】；营地报到走 [method finish]）。返回 [method GameFlow.report_commission] 的结果
 func report(id: StringName) -> Dictionary:
 	var got := flow.report_commission(id)
 	if bool(got.get("ok", false)):

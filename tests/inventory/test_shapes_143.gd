@@ -12,7 +12,8 @@ const BEFORE := {
 const STRAIGHT := [&"shortsword", &"longsword"]
 const MAIN_STATS := [&"damage", &"max_armor", &"block"]
 ## 279 重新定过数的（短剑降白 7、战锤 36、弓改装填后只打四成基础）：形状照查，数值不再按 143 的格数比
-const RETUNED := [&"shortsword", &"warhammer", &"shortbow", &"longbow", &"blessed_longbow"]
+## 366：板甲收到 8 格、护甲 50 不变（高稀有度的护甲更「密」）
+const RETUNED := [&"shortsword", &"warhammer", &"shortbow", &"longbow", &"blessed_longbow", &"plate_cuirass"]
 
 
 static func run_scaled_by_cells(t: TestCase) -> void:

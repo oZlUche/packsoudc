@@ -432,7 +432,11 @@ static func run_placement(t: TestCase) -> void:
 				var bdef := items.get_def(StringName(String(raw["id"])))
 				if bdef != null and bdef.is_bag:
 					bag_n += 1
-			var goods := placed.size() - bag_n
+			var filler_n := 0     # 210 / 355：替身（机关的齿轮、魔兽的肉）是另起的必掉件，不算档位件数
+			for raw in placed:
+				if bool((raw as Dictionary).get("carried", false)) and def.loot_filler.has(StringName(String(raw["id"]))):
+					filler_n += 1
+			var goods := placed.size() - bag_n - filler_n
 			var want_bags: Array[StringName] = def.bags if not def.bags.is_empty() else tier.bags
 			if def.bagless:
 				t.eq(bag_n, 0, "点 %d：魔兽 / 机关没有包" % id)     # 212

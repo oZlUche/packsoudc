@@ -1,16 +1,17 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_xjaxi"]
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_e7w4s"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_e7w4s"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_vpcoi"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_f7c2h"]
 
-[sub_resource type="Resource" id="Resource_vpcoi"]
-script = ExtResource("1_xjaxi")
+[sub_resource type="Resource" id="Resource_7bbws"]
+script = ExtResource("2_vpcoi")
 school_share = 1.0
 min_weapons = 0
 single_faith = false
 
 [resource]
-script = ExtResource("2_e7w4s")
+script = ExtResource("3_f7c2h")
 id = &"shock_eel"
 display_name = "电鳗"
 display_names = {
@@ -24,7 +25,8 @@ base_stats = {
 }
 signature = Array[StringName]([&"shock_sac", &"shock_sac", &"beast_tail"])
 item_tags = Array[StringName]([&"beast_part"])
-loadout = SubResource("Resource_vpcoi")
+loadout = SubResource("Resource_7bbws")
 board = Vector2i(5, 3)
 species = &"beast"
 bagless = true
+loot_filler = Array[StringName]([&"game_meat", &"meat_scrap"])

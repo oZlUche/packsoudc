@@ -150,6 +150,9 @@ const PAGE_PREP := 3
 var bias_id: StringName = &""
 var _bias_box: VBoxContainer = null
 var _bias_btns: Dictionary = {}
+## 355 第二批：第四页「这一锅」那一块与收藏菜单的按钮
+var _meal_box: VBoxContainer = null
+var _meal_btns: Array[Button] = []
 ## 180：规模那一列缩进多少
 const SCALE_INDENT := 20
 ## 180 补二：仓库框给滚动条留多宽；底下「返回」的字号（按钮按档放大，仍比「出发」小）
@@ -668,9 +671,9 @@ func _build_map_page() -> Control:
 
 
 #region 342 B3：第四页「本次准备」
-## 有没有第四页：材料倾向开了（办成地图协会的《把路画回来》）
+## 有没有第四页：材料倾向开了（办成地图协会的《把路画回来》），或者食堂开了（355：这一锅写在这页）
 func prep_open() -> bool:
-	return flow.bias_open()
+	return flow.bias_open() or flow.canteen_open()
 
 
 ## 最后一页：有第四页就是它，否则第三页
@@ -687,10 +690,76 @@ func _build_prep_page() -> Control:
 	var col := _vbox(10)
 	col.custom_minimum_size.x = 360
 	paper.add_child(col)
-	col.add_child(_label(UiText.t("bias.title"), 22, UiPalette.FG))
+	var bias_col := _vbox(10)
+	bias_col.name = "BiasBlock"
+	col.add_child(bias_col)
+	bias_col.add_child(_label(UiText.t("bias.title"), 22, UiPalette.FG))
 	_bias_box = _vbox(6)
-	col.add_child(_bias_box)
+	bias_col.add_child(_bias_box)
+	_meal_box = _vbox(6)     # 355 第二批：这一锅
+	_meal_box.name = "MealBlock"
+	col.add_child(_meal_box)
 	return center
+
+
+## 355 第二批：「这一锅」—— 名字（缺几样）、效果汇总（按选着的角色算终值）、饱腹度，下面一排收藏可以换。
+## 配菜在后勤的食堂页做，这里只能换一份收藏
+func _sync_meal() -> void:
+	if _meal_box == null:
+		return
+	_bias_box.get_parent().visible = flow.bias_open()
+	_meal_box.visible = flow.canteen_open()
+	for c in _meal_box.get_children():
+		_meal_box.remove_child(c)
+		c.queue_free()
+	if not _meal_box.visible:
+		return
+	var cn := flow.meta.canteen
+	var meal := flow.canteen_meal()
+	_meal_box.add_child(_label(UiText.t("canteen.prep_title"), 22, UiPalette.FG))
+	var n := cn.menu_name()
+	var miss := cn.gaps().size()
+	var head := _label((n if n != "" else UiText.t("canteen.unnamed")) + ("  " + UiText.t("canteen.gaps") % miss if miss > 0 else ""), 18, UiPalette.FG)
+	head.name = "PotName"
+	_meal_box.add_child(head)
+	if int(meal.get("count", 0)) == 0:
+		_meal_box.add_child(_label(UiText.t("canteen.menu_empty_pot"), 16, UiPalette.DIM))
+	else:
+		var ch := character()
+		var finals := Canteen.final_lines(ch, meal)
+		for stat in Canteen.STATS:
+			var t := Canteen.line_of(meal, stat)
+			if t == "":
+				continue
+			_meal_box.add_child(_label(t, 16, UiPalette.FG))
+		for t in finals:
+			_meal_box.add_child(_label(t, 15, UiPalette.DIM))
+		var sat := _label(UiText.t("canteen.satiety") % int(meal.get("satiety", 0)), 16, UiPalette.FG)
+		sat.tooltip_text = UiText.t("canteen.satiety_tip")
+		sat.mouse_filter = Control.MOUSE_FILTER_PASS
+		_meal_box.add_child(sat)
+	_meal_btns.clear()
+	for k in cn.menus.size():
+		var idx := k
+		var b := _button(String(cn.menus[k].get("name", "")), func(): choose_menu(idx), 16)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, MAP_SUB_H)
+		b.toggle_mode = true
+		b.tooltip_text = UiText.t("canteen.menu_load_tip")
+		b.set_pressed_no_signal(k == cn.active)
+		_meal_btns.append(b)
+		_meal_box.add_child(b)
+
+
+## 换一份收藏：照它从食材仓库重做这一锅。返回缺料的那几格
+func choose_menu(i: int) -> Array[Dictionary]:
+	var gaps := flow.canteen_load_menu(i)
+	_sync_meal()
+	return gaps
+
+
+func meal_buttons() -> Array[Button]:
+	return _meal_btns
 
 
 ## 按这一章重排方向键；选着的这一章不能选了就回到无倾向
@@ -763,6 +832,7 @@ func show_page(i: int) -> void:
 		_pages[k].visible = k == _page
 	if _page == PAGE_PREP:
 		_sync_bias()     # 342 B3：换过章节，方向重新校验
+		_sync_meal()     # 355：换过角色，终值重算
 	if _page == 1:
 		_fit_warehouse()     # 作者 10-31 木架：框的边距要等进了树、主题生效才算得出来，翻到这页再量一次
 		_preset_hint()
@@ -1312,6 +1382,7 @@ func choose_character(i: int) -> void:
 	_rebuild_board()
 	_hold_refresh -= 1
 	_rebuild_card()
+	Canteen.viewer = character()     # 355：食材提示窗按选着的这位算
 	_refresh()
 
 

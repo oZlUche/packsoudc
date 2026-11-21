@@ -1,0 +1,21 @@
+{
+  "id": "big_pumpkin",
+  "display_name": "大南瓜",
+  "display_names": {
+    "en": "Big Pumpkin"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

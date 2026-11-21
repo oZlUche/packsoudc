@@ -1,16 +1,17 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_674sr"]
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_d2vqq"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_d2vqq"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_mf2vi"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_1xv4h"]
 
-[sub_resource type="Resource" id="Resource_mf2vi"]
-script = ExtResource("1_674sr")
+[sub_resource type="Resource" id="Resource_gop3x"]
+script = ExtResource("2_mf2vi")
 school_share = 1.0
 min_weapons = 0
 single_faith = false
 
 [resource]
-script = ExtResource("2_d2vqq")
+script = ExtResource("3_1xv4h")
 id = &"cave_bear"
 display_name = "穴熊"
 display_names = {
@@ -24,7 +25,8 @@ base_stats = {
 }
 signature = Array[StringName]([&"beast_claw", &"beast_claw", &"beast_hide", &"beast_hide", &"beast_tusk_root"])
 item_tags = Array[StringName]([&"beast_part"])
-loadout = SubResource("Resource_mf2vi")
+loadout = SubResource("Resource_gop3x")
 board = Vector2i(6, 4)
 species = &"beast"
 bagless = true
+loot_filler = Array[StringName]([&"beast_haunch", &"beast_ribs", &"prime_game_meat", &"prime_beast_leg"])

@@ -149,7 +149,12 @@ static func run_credit(t: TestCase) -> void:
 	t.check(not bool(Commissions.credit(m, d, 0, "node:4")["ok"]), "同一处再记不算")
 	t.check(not bool(Commissions.credit(m, d, 1, "node:5")["ok"]), "不是当前这一步不算")
 	var r := Commissions.credit(m, d, 0, "node:9")
-	t.check(bool(r["done"]), "第二处：结案")
+	t.check(bool(r["ready"]) and not bool(r["done"]), "第二处：办成了，先不结案（作者 2026-11-21：点【完成】才算）")
+	t.eq([m.commissions.state_of(&"t_two"), m.commissions.rep_of(&"legion"), m.funds - funds0], [CommissionBook.READY, 0, 0], "还没点完成：留在手上、没给声望和酬金")
+	t.eq(m.commissions.receipts[0]["kind"], "ready", "回执：办成了")
+	t.eq(Commissions.why_not(m.commissions, d), Commissions.WHY_TAKEN, "办成没点完成：不能再接")
+	t.check(bool(Commissions.claim(m, d)["done"]), "点【完成】：结案")
+	t.check(not bool(Commissions.claim(m, d)["ok"]), "再点不算")
 	t.eq([m.commissions.rep_of(&"legion"), m.funds - funds0], [2, 60], "声望 +2（没写就按档位默认）、酬金 60")
 	t.eq(m.commissions.receipts[0]["kind"], "done", "回执：结案")
 	t.eq(Commissions.why_not(m.commissions, d), Commissions.WHY_DONE, "具名单做完不能再接")
@@ -159,6 +164,7 @@ static func run_credit(t: TestCase) -> void:
 	for i in 4:
 		t.check(Commissions.take(m.commissions, tpl), "模板第 %d 次能接" % (i + 1))
 		Commissions.credit(m, tpl, 0, "k%d" % i)
+		Commissions.claim(m, tpl)
 	t.eq(m.commissions.rep_of(&"society"), Commissions.TEMPLATE_CAP, "模板做四次，声望停在上限")
 	t.eq(int(m.commissions.entry(&"t_tpl")["times"]), 4, "完成次数照记")
 	var fin := _def(&"t_fin", &"greylamp", CommissionDef.FINALE)
@@ -166,6 +172,7 @@ static func run_credit(t: TestCase) -> void:
 	fin.mutex = &"roll"
 	Commissions.take(m.commissions, fin)
 	Commissions.credit(m, fin, 0, "x")
+	Commissions.claim(m, fin)
 	t.check(m.commissions.signed.has("greylamp"), "结案署名")
 	t.eq(m.commissions.mutex.get("roll", ""), "t_fin", "互斥组记下归属")
 
@@ -188,6 +195,8 @@ static func run_merge_run(t: TestCase) -> void:
 	var via := [{"id": "t_mix", "stage": 1, "key": "uid:8", "via": "entrust"}]
 	t.eq(Commissions.merge_run(m, via, false, false)["credited"], 0, "托付没成不算")
 	t.eq(Commissions.merge_run(m, via, false, true)["credited"], 1, "托付成功且写明托付算：算")
+	t.check(Commissions.is_ready(m.commissions, &"t_mix"), "办成了，等点【完成】")
+	Commissions.claim(m, d)
 	t.check(m.commissions.is_done(&"t_mix"), "结案")
 	var m2 := _meta()
 	Commissions.take(m2.commissions, d)

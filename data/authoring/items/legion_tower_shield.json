@@ -1,0 +1,29 @@
+{
+  "id": "legion_tower_shield",
+  "display_name": "军团塔盾",
+  "display_names": {
+    "en": "Legion Tower Shield"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11",
+    "11",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "shield",
+    "heavy",
+    "imperial"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "block": 12
+    }
+  }
+}
