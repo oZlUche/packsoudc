@@ -191,7 +191,7 @@ const TEXT := {
 	"commission.why_tier": {"zh": "声望不够", "en": "Not enough standing"},
 	"commission.why_requires": {"zh": "要先办完前一份", "en": "Finish the earlier one first"},
 	"commission.why_mutex": {"zh": "这件事已经交给了别人", "en": "Someone else already has this"},
-	"commission.why_pick": {"zh": "要先选一张现在能打的配方", "en": "Pick a recipe you can forge right now first"},
+	"commission.why_pick": {"zh": "先选一张学会的配方", "en": "Pick a recipe you have learned first"},
 	"commission.no_pick": {"zh": "还没学会能打的配方", "en": "No recipe learned yet"},
 	"commission.receipts": {"zh": "回执", "en": "Receipts"},
 	"commission.rcpt_done": {"zh": "%s：办成了", "en": "%s: done"},
