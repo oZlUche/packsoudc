@@ -992,7 +992,7 @@ func refuse_ransom() -> bool:
 func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null) -> void:
 	var ctx := loot_ctx if loot_ctx != null else _loot_ctx()
 	# 087：核心点的 BOSS 保底一件金色（DropRule.boss_rarity）
-	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core", type == &"elite") \
+	var rolled := DropResolver.roll(content, drop_rule, ctx, items, _rng_for(node, "loot"), type == &"core", type == &"elite", is_regular(type)) \
 		if drop_rule != null else {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName]}
 	hooks.red_drop(node, content, rolled)     # 281
 	var bounty := bounty_drop(node, type)     # 319：科技的额外奖励另起一件，随机数另起一条（不挪别的掉落）
@@ -1012,6 +1012,11 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	_pay_battle_reward(node, content)
 	if type == &"core":
 		boss_defeated.emit(node)
+
+
+## 360：普通敌人的一场（普通战、搜索遭遇）—— 持有物最低掉落占比只管这些；精英、核心、猎手不管
+static func is_regular(type: StringName) -> bool:
+	return type == &"battle" or type == &"search"
 
 
 ## 319：这个点打赢了科技给不给额外一件、给哪件（没点科技、不是精英 / BOSS 返回空）。同一个点同一局每次算出来一样
@@ -1296,6 +1301,7 @@ func _loot_ctx() -> LootContext:
 		return from_hook
 	var ctx := LootContext.new()
 	ctx.difficulty = difficulty
+	ctx.apply_difficulty(difficulty_def)
 	return ctx
 
 

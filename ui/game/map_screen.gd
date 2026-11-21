@@ -1071,8 +1071,10 @@ func enemy_preview(id: int) -> String:
 	if _run.drop_rule != null and GameSettings.dev_build():     # 期望掉落是调数值的读数，只在开发版显示
 		var ctx := LootContext.new()
 		ctx.difficulty = _run.chapter.difficulty
+		ctx.apply_difficulty(_run.difficulty)
+		var ntype := NodeEvents.effective_type(_run.map.get_node(id))
 		line += "　预计掉 %.1f 件，珍宝 %.0f%%" % [
-			DropResolver.expected_count(content, _run.drop_rule, ctx, flow.items, _run.map.get_node(id).type == &"core"),
+			DropResolver.expected_count(content, _run.drop_rule, ctx, flow.items, ntype == &"core", ntype == &"elite", NodeEvents.is_regular(ntype)),
 			DropResolver.treasure_chance(_run.drop_rule, ctx) * 100.0]
 	if _run.economy != null:
 		var depth: float = EnemyPlacer.depths_of(_run.map).get(id, 0.0)

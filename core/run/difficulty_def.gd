@@ -34,6 +34,10 @@ extends Resource
 ## 127：这一档的搜索保底和阶梯表（[member SearchRules.search_floors]）不一样时写这里（绝对值）：
 ## `{"normal": [...], "advanced": [...]}`，没写的那种沿用阶梯
 @export var search_floors: Dictionary = {}
+## 360 第一批（作者难度表 G 列）：普通敌人持有物的最低掉落占比（百分数，[member DropRule.held_floor_percent]）；-1 = 沿用掉落规则
+@export var held_floor_percent: int = -1
+## 360 第一批（H 列）：精英点打赢额外掉一件的稀有度（[member DropRule.elite_rarity]）；-1 = 沿用掉落规则
+@export var elite_rarity: int = -1
 ## 320 A1：普通敌人（猎手以外，精英、核心也算）最大生命多几成（百分数，10 = ×1.10）—— 绝对值，不随档位连乘；0 = 不改。
 ## 有档案的章（切片、教程）不吃。写成百分数是为了说明文本能写 {enemy_hp_percent}
 @export var enemy_hp_percent: int = 0
