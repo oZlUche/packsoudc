@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_vlsuv"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_21pq6"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_3r3tk"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_e6meu"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_h5fdk"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_5bjj2"]
+
+[sub_resource type="Resource" id="Resource_0y7re"]
+script = ExtResource("6_5bjj2")
+
+[resource]
+script = ExtResource("5_h5fdk")
+id = &"sour_wheat"
+display_name = "酸麦"
+display_names = {
+"en": "Sour Wheat"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_0y7re")
+tags = Array[StringName]([&"ingredient", &"nature", &"plant"])
+material = "herb"

@@ -143,24 +143,79 @@ static func yield_of(value: int, count: int, p_loss: float) -> int:
 	return maxi(count, floori(float(value) * (1.0 - p_loss) + 0.0001))
 
 
-## 仓库里这几件（uid）丢进去：{"count": 能丢的件数, "value": 尘值合计, "dust": 得几点尘, "funds": 卖掉能得多少金币}。不能丢的不算
-static func preview(meta: MetaState, uids: Array, sell_ratio: float = 0.5, rules: AlchemyRules = null) -> Dictionary:
+## 作者 2026-11-21 17:38：打造出来的成品炼掉，得尘不超过「料的价值合计」再往上凑整（不到 100 凑到 10，100 起凑到 50）——
+## 工钱只换来凑整那一点，「用尘打造再炼掉」不再有多出的尘。不是铁匠配方的成品 = -1（不封顶）。几张配方出同一件取最小的
+static func forged_cap(def: ItemDef, items: ItemDatabase) -> int:
+	if def == null or items == null:
+		return -1
+	if _cap_db != items:
+		_cap_db = items
+		_caps.clear()
+		for rec in SmithRecipeDef.load_all():
+			var c := round_cap(recipe_value(rec, items))
+			var prev := int(_caps.get(rec.output, -1))
+			_caps[rec.output] = c if prev < 0 else mini(prev, c)
+	return int(_caps.get(def.id, -1))
+
+
+## 一张配方的料按尘算合计（点名的按基础价，材料格按 [method slot_dust]）
+static func recipe_value(rec: SmithRecipeDef, items: ItemDatabase) -> int:
+	var total := 0
+	for key in rec.inputs:
+		var d := items.get_def(StringName(String(key)))
+		if d != null:
+			total += dust_value(d) * int(rec.inputs[key])
+	for slot in rec.slots():
+		total += slot_dust(slot, items) * int(slot.get("count", 1))
+	return total
+
+
+static func round_cap(v: int) -> int:
+	var step := 10 if v < 100 else 50
+	return ceili(float(v) / float(step)) * step
+
+
+static var _caps: Dictionary = {}
+static var _cap_db: ItemDatabase = null
+
+
+## 一件单独丢进去得几点尘（成品按 [method forged_cap] 封顶）
+static func dust_of_one(inst: ItemInstance, p_loss: float, items: ItemDatabase = null) -> int:
+	var got := yield_of(dust_value_of(inst), 1, p_loss)
+	var cap := forged_cap(inst.def, items) if inst != null else -1
+	return mini(got, cap) if cap >= 0 else got
+
+
+## 仓库里这几件（uid）丢进去：{"count": 能丢的件数, "value": 尘值合计, "dust": 得几点尘, "funds": 卖掉能得多少金币}。不能丢的不算。
+## 封顶的成品（[method forged_cap]，要传 [param items]）单算、直接按顶加，其余的照旧合起来折
+static func preview(meta: MetaState, uids: Array, sell_ratio: float = 0.5, rules: AlchemyRules = null, items: ItemDatabase = null) -> Dictionary:
 	var r := rules if rules != null else load_rules()
 	var out := {"count": 0, "value": 0, "dust": 0, "funds": 0}
 	if meta == null:
 		return out
+	var p_loss := loss(meta, r)
+	var free_value := 0
+	var free_count := 0
+	var capped := 0
 	for inst in _picks(meta, uids, r):
 		out["count"] = int(out["count"]) + 1
-		out["value"] = int(out["value"]) + dust_value_of(inst)
+		var v := dust_value_of(inst)
+		out["value"] = int(out["value"]) + v
 		out["funds"] = int(out["funds"]) + MetaState.sell_price_of(inst, sell_ratio)
-	out["dust"] = yield_of(int(out["value"]), int(out["count"]), loss(meta, r))
+		var cap := forged_cap(inst.def, items)
+		if cap >= 0 and yield_of(v, 1, p_loss) > cap:
+			capped += cap
+		else:
+			free_value += v
+			free_count += 1
+	out["dust"] = yield_of(free_value, free_count, p_loss) + capped
 	return out
 
 
 ## 分解：扣这几件、加尘（和 [method preview] 同一个数）。返回 {"count", "dust"}（一件都不能丢 = 0、什么也不动）
-static func dissolve(meta: MetaState, uids: Array, rules: AlchemyRules = null) -> Dictionary:
+static func dissolve(meta: MetaState, uids: Array, rules: AlchemyRules = null, items: ItemDatabase = null) -> Dictionary:
 	var r := rules if rules != null else load_rules()
-	var got := preview(meta, uids, 0.5, r)
+	var got := preview(meta, uids, 0.5, r, items)
 	if int(got["count"]) <= 0:
 		return {"count": 0, "dust": 0}
 	meta.warehouse.begin_batch()

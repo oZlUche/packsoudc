@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_wyicg"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_rn776"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_ddxxy"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_fxyvm"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_t0ldb"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_yxlsb"]
+
+[sub_resource type="Resource" id="Resource_5ujgs"]
+script = ExtResource("6_yxlsb")
+
+[resource]
+script = ExtResource("5_t0ldb")
+id = &"black_bean"
+display_name = "黑豆"
+display_names = {
+"en": "Black Beans"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_5ujgs")
+tags = Array[StringName]([&"ingredient", &"nature", &"plant"])
+material = "herb"

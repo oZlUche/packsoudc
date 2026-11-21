@@ -1,0 +1,20 @@
+{
+  "id": "sour_wheat",
+  "display_name": "酸麦",
+  "display_names": {
+    "en": "Sour Wheat"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

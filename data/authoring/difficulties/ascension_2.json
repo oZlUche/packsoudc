@@ -32,5 +32,19 @@
       ]
     }
   ],
+  "search_floors": {
+    "normal": [
+      1,
+      1,
+      0
+    ],
+    "advanced": [
+      2,
+      1,
+      1
+    ]
+  },
+  "held_floor_percent": 30,
+  "elite_rarity": 1,
   "enemy_hp_percent": 10
 }

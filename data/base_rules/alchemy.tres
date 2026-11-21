@@ -6,4 +6,3 @@
 script = ExtResource("1_rhg8c")
 id = &"alchemy"
 display_name = "炼金术"
-no_dust_tags = Array[StringName]([&"crystal", &"fire", &"ice", &"lightning"])

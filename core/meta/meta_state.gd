@@ -138,6 +138,8 @@ var nursery: Nursery = Nursery.new()
 var dust: int = 0
 ## 354：用铁匠铺打造过的配方 id（[method Smithy.forge] 记；用尘补料的那次也算）。358：v8 以前的老档迁移时按图鉴补（[method MetaMigrations._v8_to_v9]）
 var forged_recipes: Array[StringName] = []
+## 355：灰灯食堂 —— 食材仓库与锅（[Canteen]；没开放时空着，开放后 [method GameFlow.sync_canteen] 按档调大小）
+var canteen: Canteen = Canteen.new()
 var _next_uid: int = 1
 
 
@@ -558,6 +560,8 @@ func store_all() -> Dictionary:
 			board.remove(item.uid)
 			rack.insert(item)     # 225：包进包架
 			out["moved"] = int(out["moved"]) + 1
+		elif canteen_open() and Canteen.is_ingredient(item.def) and InventoryService.transfer_auto(board, item.uid, canteen.store):
+			out["moved"] = int(out["moved"]) + 1     # 355：食材先进食材仓库，满了才进主仓库
 		elif InventoryService.transfer_auto(board, item.uid, warehouse):
 			out["moved"] = int(out["moved"]) + 1
 		else:
@@ -570,6 +574,18 @@ func store_all() -> Dictionary:
 	# 作者 2026-10-13（一键置入后左边的棋盘消失、仓库跳到左边）：搬空了棋盘也留着（空的），离开结算屏才丢（[method drop_empty_board]）
 	changed.emit()
 	return out
+
+
+## 355：灰灯食堂开了没有（办成《开伙》）
+func canteen_open() -> bool:
+	return commissions != null and commissions.grants.has(String(Canteen.ID))
+
+
+## 355：收一件进局外 —— 食堂开着、是食材就先进食材仓库，放不下（或不是食材）进主仓库。返回放没放下
+func stash_item(inst: ItemInstance) -> bool:
+	if canteen_open() and canteen.stash(inst):
+		return true
+	return warehouse.try_add(inst, true)
 
 
 ## 离开结算屏：带回来的棋盘搬空了就丢掉（还有东西的留着，局外屏照旧提示置入）
@@ -914,6 +930,7 @@ func to_dict() -> Dictionary:
 		"commissions": commissions.to_dict(),     # 336
 		"nursery": nursery.to_dict(),     # 342 B3
 		"dust": dust, "forged_recipes": _names_of(forged_recipes),     # 354
+		"canteen": canteen.to_dict(),     # 355：只加带默认值的字段，不升版
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -1057,6 +1074,9 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.commissions = CommissionBook.from_dict(d.get("commissions", null))     # 336：老档没有 = 全空
 	m.nursery = Nursery.from_dict(d.get("nursery", null))     # 342 B3
 	m.dust = maxi(0, int(d.get("dust", 0)))     # 354
+	m.canteen = Canteen.from_dict(d.get("canteen", null), items)     # 355：老档没有 = 空的
+	for inst in m.canteen.store.items() + m.canteen.pot.items():
+		m._next_uid = maxi(m._next_uid, (inst as ItemInstance).uid + 1)
 	var said = d.get("npc_said", {})     # 282：老档没有 = 都没说过
 	if said is Dictionary:
 		for k in said:

@@ -551,6 +551,9 @@ func buff_context() -> RunContext:
 	if character != null:
 		for e in character.run_effects():
 			e.modify(ctx)
+	var meal := MealModule.of(self)     # 355：灰灯食堂的那一锅（饱腹没了就不加）
+	if meal != null:
+		meal.modify(ctx)
 	return ctx
 
 
@@ -635,6 +638,11 @@ func compile_player() -> CombatantSpec:
 	input.faith = FaithTags.tag_of(active_faith_id())     # 信仰重构 A：有效信仰显式进编译输入
 	var spec := BattleCompiler.compile(board, input)
 	spec.passives = BattlePassives.of(self)     # 103：常驻加成也进 buff 栏
+	var meal := MealModule.of(self)     # 355：水果的每秒回血 —— 独立一项，不进别的算式
+	if meal != null:
+		var hp := meal.regen_hp()
+		spec.meal_regen_hp = hp.x
+		spec.meal_regen_hp_pct = hp.y
 	return spec
 
 
@@ -916,6 +924,7 @@ func _loot_context() -> LootContext:
 			(e as LootEffect).modify(ctx)
 	RunBuffs.apply_loot(active, ctx)
 	if difficulty != null:
+		ctx.apply_difficulty(difficulty)     # 360：持有物下限、精英额外稀有度
 		for e in difficulty.loot_effects():
 			e.modify(ctx)
 	if character != null:

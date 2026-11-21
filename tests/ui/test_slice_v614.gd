@@ -374,4 +374,4 @@ static func run_elite_prize(t: TestCase) -> void:
 		t.eq((plain["treasure"] as Array).size(), 0, "%d 号当普通仗打：不给" % nid)
 	t.eq(by_id[7]["content"]["search_finds"], [["poison_vial", "round_shield"]], "搜索二不动")
 	var formal := ContentPaths.load_asset("drop_rules", "standard") as DropRule
-	t.check(formal == null or formal.elite_rarity < 0, "正式版不保底")
+	t.check(formal != null and formal.elite_rarity == 1, "正式版：360 起 A0 精英额外一件优良（作者难度表 H 列）")

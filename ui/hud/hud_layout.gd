@@ -46,7 +46,7 @@ static func default_for(p_screen: String) -> HudLayout:
 		l.entries.append(entry(&"hud_bar", "top", Vector2.ZERO))
 		for id in [&"vitality", &"wallet", &"faith"]:
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 0, "double"))
-		for id in [&"buffs", &"erosion"]:
+		for id in [&"buffs", &"erosion", &"meal"]:     # 355：饱腹度跟在侵蚀后面（没吃饭不显示）
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small"))
 		l.entries.append(entry(&"countdown", "bar_center", Vector2.ZERO, 0, "large"))
 		for id in BAR_RIGHT:
@@ -73,7 +73,7 @@ const BELT_OFFSET := Vector2(-8, -8)
 ## 336：委托小牌在左上（顶端栏下面）
 const COMMISSIONS_OFFSET := Vector2(16, 16)
 ## 336：后来才加的件 —— 旧布局文件里没有就按默认补上（不升 [constant VERSION]，玩家摆过的别的件照旧）
-const ADDED_LATER: Array[StringName] = [&"commissions"]
+const ADDED_LATER: Array[StringName] = [&"commissions", &"meal"]
 const CORNER_OFFSET := Vector2(16, -16)     # 作者 2026-10-13：图例往右上挪一点，说明文字不贴边框
 
 

@@ -1,0 +1,21 @@
+{
+  "id": "fragrant_root",
+  "display_name": "香根",
+  "display_names": {
+    "en": "Fragrant Root"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "ingredient",
+    "nature",
+    "plant"
+  ],
+  "material": "herb"
+}

@@ -39,6 +39,9 @@ extends Resource
 @export var boss_rarity: int = 4
 ## 切片 v6.14 D01（作者 2026-11-14）：打赢精英点额外保底掉一件这个稀有度的道具（挑法同 [member boss_rarity]，这一档没有往低找）；-1 = 不保底
 @export var elite_rarity: int = -1
+## 360 第一批（作者难度表 G 列，A0 的默认）：普通敌人（普通战、搜索遭遇）持有物的最低掉落占比（百分数）。
+## 第一轮逐件掷完掉了 K 件、可掉的有 M 件，再补抽 max(0, ceil(M × 占比) − K) 件（[method DropResolver.top_up]）；0 = 不补。难度写了就用难度的
+@export var held_floor_percent: int = 0
 ## 保底那件只从这些道具里挑（切片：允许清单里的）；空 = 不限
 @export var guarantee_pool: Array[StringName] = []
 
