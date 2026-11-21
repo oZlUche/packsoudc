@@ -1,0 +1,27 @@
+A697 新档：尘 0；打造过 []；仓库 11 件；金币 450；局数 0；协会声望 0（0 档）；炼金列出 false、开 false；铁匠铺开 false；集市开 false；后勤小键 []
+A697 测试辅助：协会剧情和许可单记办成，声望补到《万物可分》要的 3 档：尘 0；打造过 []；仓库 11 件；金币 490；局数 0；协会声望 55（3 档）；炼金列出 true、开 false；铁匠铺开 true；集市开 true；《万物可分》taken「taken」
+A697 存档回主菜单再继续：尘 0；打造过 []；仓库 11 件；金币 490；局数 0；协会声望 55（3 档）；炼金列出 true、开 false；铁匠铺开 true；集市开 true
+A697 真点「后勤」：小键 ["market", "smithy", "alchemy"]
+A697 真点「炼金」（没办《万物可分》）：说明板 看得见：Alchemy / Mages' Society / Opens once All Things Divide is done / [Take it on]
+A697 　　排版：查 4 处，溢出 0：
+A697 剧情页《万物可分》：All Things Divide / Client：Society researcher / Task：Visit the Society's alchemy room and watch a researcher turn ore into dust / Done at：At camp / Reward： / Standing +5 / [Settle it]；【接下】没有
+A697 《万物可分》taken；【办理】有
+A697 真点【办理】后：尘 0；打造过 []；仓库 11 件；金币 490；局数 0；协会声望 60（3 档）；炼金列出 true、开 true；铁匠铺开 true；集市开 true；告示 ["Alchemy is now open"]
+A697 测试辅助放料：碎晶 ×3（锁一件、出征携带记一件）、雾晶 ×2（收藏）、硬木板、匕首、清明魔晶石、火之核（独一）
+A697 真点「炼金」：页上 0 / [Any tag] / [All] / → / +0 / or sell for / · / Loss 40% / [Auto-dissolve] / [Dissolve]；勾选模式 true；【一键炼金】灰 true「Pick a tag first; skips locked, favorites, story items, commission hand-ins and your expedition carry」
+A697 　　排版：查 10 处，溢出 0：
+A697 　　真点仓库里的 Knife → 勾上 ?；告示 ["Alchemy is now open"]
+A697 　　真点仓库里的 Clarity Crystal → 勾上 ?；告示 ["Alchemy is now open"]
+A697 　　真点仓库里的 Core of Fire → 勾上 ?；告示 ["Alchemy is now open"]
+A697 　　真点仓库里的 Crystal Shards（锁着） → 勾上 ?；告示 ["Alchemy is now open"]
+A697 手动勾完：勾了 ["knife", "quartz_cluster", "jimie_core_fire"]；预览 { "count": 3, "value": 530, "dust": 318, "funds": 425 }；页上 0 / [Any tag] / [All] / → / +318 / or sell for / · / Loss 40% / Core of Fire can't be recovered once dissolved / [Auto-dissolve] / [Dissolve]
+A697 　　排版：查 11 处，溢出 0：
+A697 真点【炼化】第一下：键上「Click again」；尘 0；告示 ["Core of Fire can\'t be recovered once dissolved"]
+A697 再点一下：尘 0 → 318；仓库 Knife -1、Clarity Crystal -1、Core of Fire -1
+A697 筛选下拉 16 项；真选「Material」
+A697 选了标签：一键计划 { "uids": [9, 14, 17], "skipped": 4, "why": { "locked": 1, "carry": 1, "favorite": 2 } }；【一键炼金】灰 false
+A697 真点【一键炼金】：勾了 ["whetstone", "crystal_shards", "hardwood_plank"]；预览 { "count": 3, "value": 89, "dust": 53, "funds": 44 }；页上 318 / [Material] / [All] / → / +53 / or sell for / · / Loss 40% / Auto skips 4 / [Select none] / Pick a tag first; skips locked, favorites, story items, commission hand-ins and your expedition carry / [Dissolve]
+A697 　　排版：查 12 处，溢出 1：「Pick a tag first; skips 」出 Slip 框（字 [P: (18.0, 9.0), S: (614.0, 71.0)]，框 [P: (311.949, 612.4949), S: (369.0561, 259.3367)]）
+A697 真点【炼化】两下：尘 318 → 371；仓库 Whetstone -1、Crystal Shards -1、Hardwood Plank -1；留下的碎晶 2 件、雾晶 2 件
+A697 测试辅助补料，打一把制式短剑：「」；尘 371；打造过 [&"smith_shortsword"]；仓库 15 件；金币 1450；局数 0；协会声望 60（3 档）；炼金列出 true、开 true；铁匠铺开 true；集市开 true
+A697 存档回主菜单再继续：尘 371；打造过 [&"smith_shortsword"]；仓库 15 件；金币 1450；局数 0；协会声望 60（3 档）；炼金列出 true、开 true；铁匠铺开 true；集市开 true

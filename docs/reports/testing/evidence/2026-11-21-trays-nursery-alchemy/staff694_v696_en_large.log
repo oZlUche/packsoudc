@@ -1,0 +1,38 @@
+S694 碎晶：稀有度 0；基础价 5；卖价 2（比例 0.50）
+S694 配方 smith_magic_staff：料 { "crystal_shards": 2, "wooden_stick": 1 }；自选格 []；工钱 30；铁匠铺 1 级；staffcraft 1 级
+S694 配方 smith_mage_staff：料 { "silver_ingot": 1, "wooden_stick": 1 }；自选格 [{ "material": "gem", "min": 1, "count": 2 }]；工钱 90；铁匠铺 2 级；staffcraft 2 级
+S694 配方 smith_magus_staff：料 { "ironwood_branch": 1, "mithril_ingot": 1 }；自选格 [{ "material": "gem", "min": 2, "count": 2 }]；工钱 200；铁匠铺 3 级；staffcraft 3 级
+S694 配方 smith_grand_magus_staff：料 { "mithril_ingot": 2 }；自选格 [{ "material": "wood", "min": 2, "count": 2 }, { "material": "gem", "min": 3, "count": 1 }]；工钱 400；铁匠铺 3 级；staffcraft 3 级
+S694 测试辅助办完三份开放单：铁匠铺开 true；集市开 true
+S694 测试辅助：铁匠铺 3 级、杖艺 3 级、加 2000 金币、放料（木料 []）；金币 2450
+S694 === smith_mage_staff：正好两块雾晶（旁边放着四种火焰 / 清明魔晶石）；仓库里的晶石 ["charm_sun", "fire_crystal_low", "fire_crystal", "fire_crystal_high", "quartz_cluster", "crystal_shards", "mist_crystal", "mist_crystal"]
+S694 真点 smith_mage_staff：打造界面 Mage Staff / Materials / Fee
+S694 　　【打造】灰 false「」；能打「」；排版：查 4 处，溢出 0：
+S694 　　会用哪几件：[["mist_crystal(1)", "mist_crystal(1)"]]
+S694 　　真点【打造】后：仓库 Silver Ingot -1、Wooden Stick -1、Mist Crystal -2、Mage Staff +1；金币 2450 → 2360（-90）
+S694 === smith_magus_staff：正好两块棱晶；仓库里的晶石 ["charm_sun", "fire_crystal_low", "fire_crystal", "fire_crystal_high", "quartz_cluster", "crystal_shards", "prism_crystal", "prism_crystal"]
+S694 真点 smith_magus_staff：打造界面 Magus Staff / Materials / Fee
+S694 　　【打造】灰 false「」；能打「」；排版：查 4 处，溢出 0：
+S694 　　会用哪几件：[["prism_crystal(2)", "prism_crystal(2)"]]
+S694 　　真点【打造】后：仓库 Ironwood Branch -1、Mithril Ingot -1、Prism Crystal -2、Magus Staff +1；金币 2360 → 2160（-200）
+S694 === smith_grand_magus_staff：正好一根紫晶柱；仓库里的晶石 ["charm_sun", "fire_crystal_low", "fire_crystal", "fire_crystal_high", "quartz_cluster", "crystal_shards", "amethyst_pillar"]
+S694 真点 smith_grand_magus_staff：打造界面 Grand Magus Staff / Materials / Fee
+S694 　　【打造】灰 false「」；能打「」；排版：查 4 处，溢出 0：
+S694 　　会用哪几件：[["hardwood_plank(2)", "hardwood_plank(2)"], ["amethyst_pillar(3)"]]
+S694 　　真点【打造】后：仓库 Mithril Ingot -2、Hardwood Plank -2、Amethyst Column -1、Grand Magus Staff +1；金币 2160 → 1760（-400）
+S694 === smith_mage_staff：雾晶、烟晶、紫晶柱各一（看先用哪两块）；仓库里的晶石 ["charm_sun", "fire_crystal_low", "fire_crystal", "fire_crystal_high", "quartz_cluster", "crystal_shards", "mist_crystal", "smoky_crystal", "amethyst_pillar"]
+S694 真点 smith_mage_staff：打造界面 Mage Staff / Materials / Fee
+S694 　　【打造】灰 false「」；能打「」；排版：查 4 处，溢出 0：
+S694 　　会用哪几件：[["mist_crystal(1)", "smoky_crystal(1)"]]
+S694 　　真点【打造】后：仓库 Mage Staff +1、Silver Ingot -1、Wooden Stick -1、Mist Crystal -1、Smoky Crystal -1；金币 1760 → 1670（-90）
+S694 　　收走这一轮没用上的：["amethyst_pillar"]
+S694 === smith_magus_staff：一块雾晶一块棱晶（雾晶不够格）；仓库里的晶石 ["charm_sun", "fire_crystal_low", "fire_crystal", "fire_crystal_high", "quartz_cluster", "crystal_shards", "mist_crystal", "prism_crystal"]
+S694 真点 smith_magus_staff：打造界面 Magus Staff / Materials / Fee
+S694 　　【打造】灰 true「Not enough materials」；能打「Not enough materials」；排版：查 4 处，溢出 0：
+S694 　　会用哪几件：[["prism_crystal(2)"]]
+S694 　　收走这一轮没用上的：["ironwood_branch", "mithril_ingot", "mist_crystal", "prism_crystal"]
+S694 === smith_grand_magus_staff：没有紫晶柱，只有一颗独一的火之核（看会不会被吃掉）；仓库里的晶石 ["charm_sun", "fire_crystal_low", "fire_crystal", "fire_crystal_high", "quartz_cluster", "crystal_shards", "jimie_core_fire"]
+S694 真点 smith_grand_magus_staff：打造界面 Grand Magus Staff / Materials / Fee
+S694 　　【打造】灰 true「Not enough materials」；能打「Not enough materials」；排版：查 4 处，溢出 0：
+S694 　　会用哪几件：[["hardwood_plank(2)", "hardwood_plank(2)"], []]
+S694 　　收走这一轮没用上的：["mithril_ingot", "mithril_ingot", "hardwood_plank", "hardwood_plank", "jimie_core_fire"]
