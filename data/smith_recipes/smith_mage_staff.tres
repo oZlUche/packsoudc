@@ -7,15 +7,10 @@ script = ExtResource("1_k60xo")
 id = &"smith_mage_staff"
 output = &"mage_staff"
 inputs = {
-"fire_crystal_low": 1,
+"mist_crystal": 2,
 "silver_ingot": 1,
 "wooden_stick": 1
 }
-material_slots = Array[Dictionary]([{
-"count": 1,
-"material": "gem",
-"min": 1
-}])
 funds = 90
 group = "staff"
 level = 2
