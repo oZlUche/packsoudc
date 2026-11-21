@@ -76,3 +76,4 @@ ERROR: SceneShaderGLES3: Program linking failed:
 - 定位：`DevNav._ready` 里 `_check_assets()` 同步调 `ImportCheck.missing()`，要遍历全项目、读约 1600 份 `.import`、逐个查 `.godot/imported/` 里的目标在不在。项目在 G 盘（ST2000LM015，机械硬盘），重启后冷缓存实测 **83.9 秒**；缓存热了以后 1.4 秒。这段在主线程、第一帧之前，所以窗口一直无响应。
 - 修（v7.04）：扫描放到 `WorkerThreadPool`，`_process` 里看任务完了再决定起不起后台 `--import`；`_exit_tree` 等任务收尾。实测 `_check_assets()` 0 ms 返回，扫描在后台 986 ms 完成（热缓存）。
 - 遗留观察：冷缓存时导演 `_ready` 读内容（约 1000 次资源载入）在机械硬盘上也会让窗口无响应二十秒上下，缓存热了以后整段 1.6 秒、窗口一直有响应。这一段是 176 定下的「导演内容加载仍在主线程」，没在这次改；要彻底消掉得把内容加载也挪进载入屏的后台线程，或者把项目放到固态盘（C 盘是 NVMe）。
+- 作者追加（15:10）：只在版本变更后才扫。扫完一个不缺时记下 Git 提交号（`.godot/devnav_import_head`），提交号没变就跳过；有缺的不记，后台导入跑完前下次还会再看。`tests/tools/test_class_cache.gd` 加了普通检出、工作树 + packed-refs、游离 HEAD、非 Git 目录四种读法和「记过 / 变了」的判定。

@@ -203,14 +203,19 @@ func rewrite_cache() -> bool:
 
 ## 158：有没导入的素材（别人加了图）→ 后台导入，不盖板、不重开；这一次游戏里那几张图走占位，下次启动生效
 ## 2026-11-21：扫描本身放到工作线程 —— 要读全项目约 1600 份 `.import` 再查目标在不在，
-## 作者的项目在机械硬盘上，重启后冷缓存一次要 80 多秒，原来在主线程里跑，第一帧前窗口就「无响应」
+## 作者的项目在 HDD 硬盘上，重启后冷缓存一次要 80 多秒，原来在主线程里跑，第一帧前窗口就「无响应」
 func _check_assets() -> void:
 	_asset_scan_task = WorkerThreadPool.add_task(_scan_assets, false, "DevNav 素材导入检查")
 
 
-## 工作线程里跑：只碰文件，不碰节点
+## 工作线程里跑：只碰文件，不碰节点。作者 2026-11-21：只在版本（Git 提交号）变了才扫，扫完一个不缺记下提交号
 func _scan_assets() -> void:
+	if not ImportCheck.needs_scan():
+		_asset_todo = []
+		return
 	_asset_todo = ImportCheck.missing()
+	if _asset_todo.is_empty():
+		ImportCheck.remember_clean()
 
 
 ## 主线程：扫描完了再决定要不要起后台导入
