@@ -189,3 +189,71 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.check(not shelf.select_mode, "离开炼金页：勾选模式关了")
 	s.queue_free()
 	W178._cleanup()
+
+
+static func run_dust_forge(t: TestCase) -> void:
+	t.begin("354 第二批 · 以尘代料：没打造过不能补；只补缺的；尘按尘值全额扣、工钱照付；尘不够不打；魔晶石格、传说格不能补；材料格按最便宜的合格品收")
+	ItemInstance.reset_uid_counter()
+	var db := T110._db()
+	var m := T110._meta()
+	m.facility_levels[Smithy.ID] = 1
+	m.funds = 500
+	m.dust = 100
+	var r := SmithRecipeDef.new()
+	r.id = &"t_shortsword"
+	r.output = &"shortsword"
+	r.inputs = {"iron_ore": 2, "hardwood_plank": 1}
+	r.funds = 40
+	r.level = 1
+	T110._add(m, db, &"iron_ore")
+	var full := {"iron_ore": 1, "hardwood_plank": 1}
+	t.eq(Smithy.can_forge(m, r, db, full), UiText.t("smithy.dust_not_forged"), "没打造过：不能补")
+	t.eq(Smithy.can_forge(m, r, db), UiText.t("smithy.missing"), "不补：缺素材")
+	m.mark_forged(r.id)
+	t.eq(Alchemy.line_cost(r, "iron_ore", db), 24, "铁矿石一件 24 尘")
+	t.eq(Alchemy.line_cost(r, "hardwood_plank", db), 60, "硬木板一件 60 尘")
+	t.eq(Smithy.can_forge(m, r, db, {"iron_ore": 2, "hardwood_plank": 1}), UiText.t("smithy.dust_no"), "有一件铁矿石：只能补一件")
+	t.eq(Smithy.can_forge(m, r, db, {"iron_ore": 1}), UiText.t("smithy.missing"), "只补铁矿石：还缺硬木板")
+	m.dust = 83
+	t.eq(Smithy.can_forge(m, r, db, full), UiText.t("smithy.no_dust"), "84 尘，只有 83：不打")
+	m.dust = 100
+	t.eq(Smithy.can_forge(m, r, db, full), "", "补齐了")
+	var got := Smithy.forge(m, r, db, full)
+	t.check(got != null and got.def.id == &"shortsword", "打出来了")
+	t.eq([m.dust, m.funds], [16, 460], "扣 84 尘、40 币工钱")
+	t.eq(m.warehouse.items().filter(func(i: ItemInstance) -> bool: return i.def.id == &"iron_ore").size(), 0, "那件真铁矿石扣了")
+	var maul := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"forge_flame_meteor_maul")
+	t.eq(Alchemy.line_cost(maul, "slot:0", db), -1, "火系魔晶石格：不能补")
+	t.check(Alchemy.line_cost(maul, "slot:1", db) > 0, "金属格：能补")
+	var imperial := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"forge_imperial_sword")
+	t.eq(Alchemy.line_cost(imperial, "slot:0", db), -1, "传说金属格：不能补")
+	var armor := SmithRecipeDef.find(SmithRecipeDef.load_all(), &"smith_leather_armor")
+	t.eq(Alchemy.line_cost(armor, "slot:0", db), 24, "皮革 ≥优良：按最便宜的合格品（熟皮革 24），不按一格 12")
+
+
+static func frame_smithy_dust(t: TestCase, root: Window) -> void:
+	t.begin("354 第二批 · 铁匠铺：钱牌下露尘数；打造过的配方点一样缺的素材切换用尘补，数牌写「有几+补几 / 要几」、工钱下写尘；打了扣尘")
+	ItemInstance.reset_uid_counter()
+	var f := W178._flow()
+	Support.pass_tutorials(f)
+	_open(f)
+	f.meta.dust = 100
+	f.meta.funds = 200
+	f.meta.mark_forged(&"smith_warhammer")
+	f.smith_recipes = SmithRecipeDef.load_all()
+	var s: Control = W178._screen(f, root)
+	s.show_tab("smithy")
+	var sp = s.smithy_panel()
+	sp.open_recipe(&"smith_warhammer")
+	t.check(sp._dust_have.visible and sp._dust_have_label.text == "100", "钱牌下：尘 100")
+	sp.toggle_dust("iron_ore")
+	sp.toggle_dust("oak_log")
+	t.eq(sp.dust_choice(), {"iron_ore": 2, "oak_log": 1}, "缺的全用尘补")
+	var lines: Array[String] = sp.recipe_scroll().material_lines()
+	t.check(lines.has("0+2 / 2") and lines.has("0+1 / 1"), "数牌写「有几+补几 / 要几」")
+	t.check(sp.recipe_scroll()._dust_row.visible and sp.recipe_scroll()._dust_label.text == "63", "工钱下：尘 63")
+	t.eq(sp.forge(&"smith_warhammer"), "", "打了")
+	t.eq(f.meta.dust, 37, "扣了 63 尘")
+	t.check(sp.dust_choice().is_empty(), "打完清掉")
+	s.queue_free()
+	W178._cleanup()

@@ -104,9 +104,82 @@ static func slot_dustable(slot: Dictionary, rules: AlchemyRules = null) -> bool:
 	return int(slot.get("min", 0)) < r.no_dust_rarity and not r.no_dust_tags.has(StringName(kind))
 
 
-## 补料：材料格补一件要几点尘 = 门槛稀有度、占一格的默认单价
-static func slot_dust(slot: Dictionary) -> int:
-	return ItemValue.BASE_PER_CELL[clampi(int(slot.get("min", 0)), 0, ItemValue.BASE_PER_CELL.size() - 1)]
+## 补料：材料格补一件要几点尘 = 这一格最便宜的合格品的基础价（报告 356 核对表：按「门槛一格的默认单价」收，
+## 最便宜的合格品占两格时买来炼再补比直接买便宜，第二批改成这样）；道具库里一件合格的都没有就按门槛一格的默认单价
+static func slot_dust(slot: Dictionary, items: ItemDatabase = null) -> int:
+	var fallback: int = ItemValue.BASE_PER_CELL[clampi(int(slot.get("min", 0)), 0, ItemValue.BASE_PER_CELL.size() - 1)]
+	if items == null:
+		return fallback
+	var key := "%s|%d" % [String(slot.get("material", "")), int(slot.get("min", 0))]
+	if _slot_cache.has(key) and _slot_cache_db == items:
+		return int(_slot_cache[key])
+	if _slot_cache_db != items:
+		_slot_cache.clear()
+		_slot_cache_db = items
+	var best := -1
+	for id in items.ids(true):
+		var d := items.get_def(id)
+		if SmithRecipeDef.slot_fits(slot, d) and (best < 0 or ItemValue.of(d) < best):
+			best = ItemValue.of(d)
+	_slot_cache[key] = best if best > 0 else fallback
+	return int(_slot_cache[key])
+
+
+static var _slot_cache: Dictionary = {}
+static var _slot_cache_db: ItemDatabase = null
+
+
+## 补料：这张配方能不能用尘补 —— 会打（科技、铁匠铺级数）且用真材料打造过
+static func dust_open(meta: MetaState, recipe: SmithRecipeDef) -> bool:
+	return meta != null and recipe != null and meta.has_forged(recipe.id) and Smithy.knows(meta, recipe) and recipe.level <= Smithy.level(meta)
+
+
+## 补料：这一项（键同 [method Smithy.have]：道具 id / `slot:<序号>`）补一件要几点尘；不能补 = -1
+static func line_cost(recipe: SmithRecipeDef, key: String, items: ItemDatabase, rules: AlchemyRules = null) -> int:
+	var r := rules if rules != null else load_rules()
+	if key.begins_with("slot:"):
+		var slots := recipe.slots()
+		var i := int(key.substr(5))
+		if i < 0 or i >= slots.size() or not slot_dustable(slots[i], r):
+			return -1
+		return slot_dust(slots[i], items)
+	var d := items.get_def(StringName(key)) if items != null else null
+	if d == null or not recipe.inputs.has(key) and not recipe.inputs.has(StringName(key)):
+		return -1
+	return dust_value(d) if input_dustable(d, r) else -1
+
+
+## 补料：[param dust]（键 → 件数）一共要几点尘（不能补的项不算）
+static func dust_cost(recipe: SmithRecipeDef, items: ItemDatabase, dust: Dictionary) -> int:
+	var n := 0
+	for key in dust:
+		var c := line_cost(recipe, String(key), items)
+		if c > 0:
+			n += c * maxi(0, int(dust[key]))
+	return n
+
+
+## 补料能不能这样补：空串 = 能；否则是说给玩家听的那一句。[param got] = [method Smithy.have]。
+## 只补缺的（每项最多补到够），没打造过、这项不能补、尘不够都不行
+static func why_not_dust(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase, dust: Dictionary, got: Dictionary) -> String:
+	if dust.is_empty():
+		return ""
+	if not dust_open(meta, recipe):
+		return UiText.t("smithy.dust_not_forged")
+	var slots := recipe.slots()
+	for key in dust:
+		var k := String(key)
+		var n := int(dust[key])
+		if n <= 0:
+			continue
+		if line_cost(recipe, k, items) < 0:
+			return UiText.t("smithy.dust_no")
+		var need := int(slots[int(k.substr(5))]["count"]) if k.begins_with("slot:") else int(recipe.inputs.get(k, recipe.inputs.get(StringName(k), 0)))
+		if n > need - int(got.get(k, 0)):
+			return UiText.t("smithy.dust_no")
+	if dust_cost(recipe, items, dust) > meta.dust:
+		return UiText.t("smithy.no_dust")
+	return ""
 
 
 static func _picks(meta: MetaState, uids: Array, r: AlchemyRules) -> Array[ItemInstance]:

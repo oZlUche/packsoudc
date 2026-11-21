@@ -8,6 +8,8 @@
 ## 补图（UI替换美术 10-25 15:14）：格子区是深铁框里固定 5 列 × 2 行铺满（[RecipeCell]，不到 10 张补空格），多于 10 张按整行竖着滚
 extends VBoxContainer
 
+const AlchemyPanelScript := preload("res://ui/game/alchemy_panel.gd")     # 354：尘图
+
 signal changed()
 
 const LAYOUT := "smithy/layout"
@@ -39,6 +41,11 @@ var _cells: Dictionary = {}
 var _group := ""
 ## 打造界面上的那张（空 = 收着）
 var _open: StringName = &""
+## 354：打开的这张哪几项用尘补：键（同 [method Smithy.have]）→ 件数
+var _dust: Dictionary = {}
+## 354：钱牌下面的现有尘数（炼金开了才露）
+var _dust_have: PanelContainer = null
+var _dust_have_label: Label = null
 ## 格子按哪个缩放 / 多大搭的（变了才重搭）
 var _cell_k := 1.0
 var _cell_px := Vector2.ZERO
@@ -81,6 +88,17 @@ func setup(p_flow: GameFlow, p_font: Font) -> void:
 	_empty.add_child(l)
 	_stage.add_child(_empty)     # 这一类还没有配方：一块签压在空格子区正中
 	_scroll = RecipeScroll.make(font, func(): forge(_open))
+	_scroll.on_dust_toggle = toggle_dust
+	_dust_have = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 10, 2, 10, 2)     # 354
+	_dust_have.name = "DustHave"
+	UiTheme.set_tone(_dust_have, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
+	var dh := UiTheme.hbox(6)
+	dh.add_child(AlchemyPanelScript.dust_icon(26.0))
+	_dust_have_label = UiTheme.make_label("", 18, UiTheme.INK)
+	dh.add_child(_dust_have_label)
+	_dust_have.add_child(dh)
+	_dust_have.tooltip_text = UiText.t("alchemy.dust")
+	_stage.add_child(_dust_have)
 	_stage.add_child(_scroll)     # 后加 = 压在格子区上（砧顶小尖盖住格子区下沿）
 	npc = NpcBadge.make(NpcDef.BLACKSMITH, flow.meta, flow.items)     # 282
 	npc.on_given = _say_given
@@ -114,6 +132,7 @@ func open_recipe(id: StringName) -> void:
 	if r != null and r.group != _group:
 		_group = r.group
 	_open = &"" if _open == id else id
+	_dust.clear()
 	rebuild()
 
 
@@ -184,6 +203,9 @@ func rebuild() -> void:
 	_empty.visible = shown == 0
 	if open_recipe_def == null:
 		_open = &""
+		_dust.clear()
+	_dust_have.visible = flow.alchemy_open()
+	_dust_have_label.text = str(flow.meta.dust)
 	_scroll.visible = open_recipe_def != null
 	if open_recipe_def != null:
 		var mat_defs := {}     # 279：材料格画仓库里会被扣的那件（310：格序号 → ItemDef）
@@ -191,7 +213,10 @@ func rebuild() -> void:
 		for i in picks.size():
 			if not (picks[i] as Array).is_empty():
 				mat_defs[i] = ((picks[i] as Array)[0] as ItemInstance).def
-		_scroll.show_recipe(open_recipe_def, flow.items, Smithy.have(flow.meta, open_recipe_def), Smithy.can_forge(flow.meta, open_recipe_def, flow.items), mat_defs)
+		var got := Smithy.have(flow.meta, open_recipe_def)
+		var lines := dust_lines(open_recipe_def, got)
+		_scroll.show_recipe(open_recipe_def, flow.items, got, Smithy.can_forge(flow.meta, open_recipe_def, flow.items, _dust), mat_defs,
+			lines, Alchemy.dust_cost(open_recipe_def, flow.items, _dust))
 	_aim_pointer.call_deferred()
 
 
@@ -205,6 +230,8 @@ func _place() -> void:
 	_funds.position = fr.position
 	_funds.size = fr.size
 	_funds.font_size = maxi(12, roundi(fr.size.y * FUNDS_FONT))
+	_dust_have.reset_size()
+	_dust_have.position = Vector2(fr.get_center().x - _dust_have.size.x * 0.5, fr.end.y + 4.0)     # 354：钱牌正下方
 	if npc != null and lay.has("npc"):
 		npc.fit(_stage.to_local_rect(lay["npc"]))
 	var kr := _stage.to_local_rect(lay.get("keys", {}))
@@ -248,11 +275,54 @@ func _aim_pointer() -> void:
 	_scroll.pointer_x = c.get_global_rect().get_center().x - _scroll.get_global_rect().position.x
 
 
+## 354：能用尘补的几项（会打且打造过、这项缺、能补）：键 → {"cost", "n"}；顺手把 [member _dust] 里不再缺的去掉、多的压到缺几件
+func dust_lines(r: SmithRecipeDef, got: Dictionary) -> Dictionary:
+	var out := {}
+	if not flow.alchemy_open() or not Alchemy.dust_open(flow.meta, r):
+		_dust.clear()
+		return out
+	var need := {}
+	for key in r.inputs:
+		need[String(key)] = int(r.inputs[key])
+	var slots := r.slots()
+	for i in slots.size():
+		need[Smithy.SLOT_KEY % i] = int(slots[i]["count"])
+	for key in need:
+		var short := int(need[key]) - int(got.get(key, 0))
+		var cost := Alchemy.line_cost(r, key, flow.items)
+		if short <= 0 or cost <= 0:
+			_dust.erase(key)
+			continue
+		if _dust.has(key):
+			_dust[key] = mini(int(_dust[key]), short)
+		out[key] = {"cost": cost, "n": int(_dust.get(key, 0))}
+	return out
+
+
+## 354：点一样素材：没补就把缺的全用尘补，补了就取消
+func toggle_dust(key: String) -> void:
+	if _open == &"":
+		return
+	var r := SmithRecipeDef.find(flow.smith_recipes, _open)
+	if _dust.has(key):
+		_dust.erase(key)
+	elif r != null:
+		var need := int(r.slots()[int(key.substr(5))]["count"]) if key.begins_with("slot:") else int(r.inputs.get(key, r.inputs.get(StringName(key), 0)))
+		_dust[key] = need - int(Smithy.have(flow.meta, r).get(key, 0))
+	rebuild()
+
+
+func dust_choice() -> Dictionary:
+	return _dust
+
+
 ## 打这一张；返回空串 = 打了，否则是原因（说一句）
 func forge(id: StringName) -> String:
 	var r := SmithRecipeDef.find(flow.smith_recipes, id)
 	var def := flow.items.get_def(r.output) if r != null else null
-	var why := flow.forge(id)
+	var why := flow.forge(id, _dust if id == _open else {})
+	if why == "":
+		_dust.clear()
 	var name_ := Names.of(def) if def != null else String(id)
 	NoticeLayer.post(self, UiText.t("smithy.forged") % name_ if why == "" else UiText.t("smithy.cant") % [name_, why])
 	if why == "":

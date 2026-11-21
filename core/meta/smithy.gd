@@ -97,8 +97,9 @@ static func _augment(u: int, units: Array[int], slots: Array[Dictionary], pool: 
 	return false
 
 
-## 能不能打：空串 = 行；否则是说给玩家听的那一句（科技没点 / 级不够 / 缺素材 / 钱不够 / 仓库放不下）
-static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) -> String:
+## 能不能打：空串 = 行；否则是说给玩家听的那一句（科技没点 / 级不够 / 缺素材 / 钱不够 / 仓库放不下）。
+## 354：[param dust] = 哪几项用万物之尘补几件（键同 [method have]；[method Alchemy.why_not_dust] 管能不能这样补），不给就是原来的行为
+static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase, dust: Dictionary = {}) -> String:
 	if meta == null or recipe == null or items == null or items.get_def(recipe.output) == null:
 		return UiText.t("smithy.no_recipe")
 	if not knows(meta, recipe):
@@ -106,12 +107,15 @@ static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDataba
 	if recipe.level > level(meta):
 		return UiText.t("smithy.need_level") % recipe.level
 	var got := have(meta, recipe)
+	var dust_why := Alchemy.why_not_dust(meta, recipe, items, dust, got)
+	if dust_why != "":
+		return dust_why
 	for key in recipe.inputs:
-		if int(got.get(String(key), 0)) < int(recipe.inputs[key]):
+		if int(got.get(String(key), 0)) + int(dust.get(String(key), 0)) < int(recipe.inputs[key]):
 			return UiText.t("smithy.missing")
 	var slots := recipe.slots()
 	for i in slots.size():
-		if int(got.get(SLOT_KEY % i, 0)) < int(slots[i]["count"]):
+		if int(got.get(SLOT_KEY % i, 0)) + int(dust.get(SLOT_KEY % i, 0)) < int(slots[i]["count"]):
 			return UiText.t("smithy.missing")
 	if meta.funds < recipe.funds:
 		return UiText.t("smithy.no_funds")
@@ -120,9 +124,10 @@ static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDataba
 	return ""
 
 
-## 打一件：扣素材（仓库顺序在前的先扣）、扣钱、产物进仓库、图鉴点亮。不能打返回 null，什么也不动
-static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) -> ItemInstance:
-	if can_forge(meta, recipe, items) != "":
+## 打一件：扣素材（仓库顺序在前的先扣）、扣钱、产物进仓库、图鉴点亮。不能打返回 null，什么也不动。
+## 354：[param dust] 那几项先用尘补（只补缺的，真材料有几件扣几件），尘和钱、料同一次扣；补的那一格不升品质
+static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase, dust: Dictionary = {}) -> ItemInstance:
+	if can_forge(meta, recipe, items, dust) != "":
 		return null
 	var out := ItemInstance.create(items.get_def(recipe.output), 0)
 	out.uid = meta.allocate_uid()
@@ -133,7 +138,7 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) 
 			meta.warehouse.remove((inst as ItemInstance).uid)
 	var left := {}
 	for key in recipe.inputs:
-		left[String(key)] = int(recipe.inputs[key])
+		left[String(key)] = int(recipe.inputs[key]) - maxi(0, int(dust.get(String(key), 0)))
 	for inst in meta.warehouse.items():
 		var it := inst as ItemInstance
 		var key := String(it.def.id)
@@ -148,6 +153,7 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase) 
 		push_warning("Smithy.forge: %s 放不进仓库（can_forge 查过，不该到这里）" % recipe.output)
 		return null
 	meta.spend_funds(recipe.funds)
+	meta.dust -= Alchemy.dust_cost(recipe, items, dust)
 	meta.light_codex(out.def)
 	meta.mark_forged(recipe.id)     # 354：打造过（以后能用万物之尘补料）
 	meta.changed.emit()

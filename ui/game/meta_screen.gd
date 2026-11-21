@@ -337,6 +337,13 @@ func open(payload: Dictionary) -> void:
 	if _sub_btns.has("alchemy"):     # 354：炼金页（占位，等 UI设计 样张）—— 右边仓库进勾选模式
 		var al_page := _cloth()     # 作者 2026-11-21 选 C 炼成阵：不垫粗布，墙透出来
 		al_page.theme_type_variation = UiTheme.PANEL_BARE
+		var floor_ := TextureRect.new()     # UI设计 2026-11-21：石板地面铺满中列，按比例裁边（同苗圃）
+		floor_.name = "AlchemyFloor"
+		floor_.texture = UiTheme.art("alchemy/bg_floor")
+		floor_.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		floor_.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		floor_.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		al_page.add_child(floor_)
 		_alchemy = AlchemyPanelScript.new()
 		_alchemy.setup(flow, _shelf)
 		_alchemy.changed.connect(_refresh)

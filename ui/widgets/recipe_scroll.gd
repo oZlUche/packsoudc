@@ -45,6 +45,12 @@ var _wage_label: Label = null
 var _groove: PanelContainer = null
 var _mats: HBoxContainer = null
 var _wage: CoinLabel = null
+## 354：这次要花的万物之尘（尘图 + 数，用尘补了才露）
+var _dust_row: HBoxContainer = null
+var _dust_icon: TextureRect = null
+var _dust_label: Label = null
+## 354：点一样素材切换「用尘补」（参数是那一项的键，同 [method Smithy.have]）
+var on_dust_toggle: Callable = Callable()
 var _font: Font = null
 var _ink := UiPalette.ANVIL_INK
 var _short := UiPalette.WARN_ON_DARK
@@ -107,6 +113,19 @@ func _build(on_forge: Callable) -> void:
 	wage_row.add_child(_wage_label)
 	_wage = CoinLabel.make(0, TEXT_SIZE, _ink)
 	wage_row.add_child(_wage)
+	_dust_row = UiTheme.hbox(4)     # 354：工钱下面一行「尘 N」
+	_dust_row.name = "DustCost"
+	_dust_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_dust_icon = TextureRect.new()
+	_dust_icon.texture = UiTheme.art("alchemy/dust")
+	_dust_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_dust_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_dust_icon.tooltip_text = UiText.t("alchemy.dust")
+	_dust_row.add_child(_dust_icon)
+	_dust_label = Label.new()
+	_dust_row.add_child(_dust_label)
+	_dust_row.visible = false
+	side.add_child(_dust_row)
 	forge_key = IconButton.make_art(KEY_DIR, KEY_ID, UiText.t("smithy.forge"), "", on_forge)
 	var km := UiTheme.art_meta(KEY_META)
 	var kr: Dictionary = km.get("key_rect", {})
@@ -141,7 +160,8 @@ func fit(k: float) -> void:
 	box.content_margin_bottom = (sh - face.end.y) * _k
 	add_theme_stylebox_override("panel", box)
 	var ts := maxi(11, roundi(UiTheme.sz(TEXT_SIZE) * _k))     # 258：按字号档
-	for l in [_need, _wage_label]:
+	_dust_icon.custom_minimum_size = Vector2(ts, ts) * 1.3
+	for l in [_need, _wage_label, _dust_label]:
 		(l as Label).add_theme_font_size_override("font_size", ts)
 	_name.add_theme_font_size_override("font_size", maxi(14, roundi(UiTheme.sz(NAME_SIZE) * _k)))
 	_wage.font_size = ts
@@ -163,9 +183,10 @@ func fit(k: float) -> void:
 
 
 ## 换成这一张：产物、名字、每样素材有几 / 要几、工钱；[param why] 空 = 能打（打造键亮）
-## 279：材料格画 [param shown] 里给的那件（仓库里会被扣的那件；310：格序号 → ItemDef）；没给就画这格最便宜的一件
-func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: String, shown: Dictionary = {}) -> void:
-	_last = [r, items, got, why, shown]
+## 279：材料格画 [param shown] 里给的那件（仓库里会被扣的那件；310：格序号 → ItemDef）；没给就画这格最便宜的一件。
+## 354：[param dust] = 能用尘补的几项：键 → {"cost": 每件几点尘, "n": 现在补几件（0 = 没补）}；[param dust_total] = 一共花几点尘
+func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: String, shown: Dictionary = {}, dust: Dictionary = {}, dust_total: int = 0) -> void:
+	_last = [r, items, got, why, shown, dust, dust_total]
 	UiTheme.clear_children(_product)
 	var def := items.get_def(r.output)
 	var size_ := def.shape.size_rotated(0) if def != null and def.shape != null else Vector2i.ONE
@@ -185,27 +206,36 @@ func show_recipe(r: SmithRecipeDef, items: ItemDatabase, got: Dictionary, why: S
 	keys.sort()
 	for key in keys:
 		var d := items.get_def(StringName(String(key)))
-		_mats.add_child(_mat(d, int(got.get(String(key), 0)), int(r.inputs[key])))
+		_mats.add_child(_mat(d, int(got.get(String(key), 0)), int(r.inputs[key]), String(key), dust))
 	var slots := r.slots()
 	for i in slots.size():
 		var md: ItemDef = shown.get(i) if shown.get(i) != null else SmithRecipeDef.slot_sample(slots[i], items)
-		_mats.add_child(_mat(md, int(got.get(Smithy.SLOT_KEY % i, 0)), int(slots[i]["count"])))
+		_mats.add_child(_mat(md, int(got.get(Smithy.SLOT_KEY % i, 0)), int(slots[i]["count"]), Smithy.SLOT_KEY % i, dust))
 	var n := _mats.get_child_count()
 	for i in n:
 		(_mats.get_child(i) as MatSlot).line_right = i < n - 1
 	_wage.amount = r.funds
 	_wage.short = CoinShort.has(why)     # 「金币不够」：工钱那枚金币变红、斜划一道，不写字
+	_dust_row.visible = dust_total > 0
+	_dust_label.text = str(dust_total)
 	forge_key.disabled = why != ""
 	forge_key.tooltip_text = CoinShort.strip(why)
 	forge_key.sync_art()
 
 
-## 一样素材：凹槽里一格（图 + 「有几 / 要几」数牌，不够的暖红）
-func _mat(d: ItemDef, have: int, need: int) -> Control:
+## 一样素材：凹槽里一格（图 + 「有几 / 要几」数牌，不够的暖红）。354：能用尘补的左上角一小堆尘（没补淡着），补了写「有几+补几 / 要几」
+func _mat(d: ItemDef, have: int, need: int, key: String = "", dust: Dictionary = {}) -> Control:
 	var slot := MatSlot.new()
 	slot.def = d
-	slot.text = "%d / %d" % [have, need]
-	slot.color = _ink if have >= need else _short
+	var line: Dictionary = dust.get(key, {})
+	var n := int(line.get("n", 0))
+	slot.text = "%d+%d / %d" % [have, n, need] if n > 0 else "%d / %d" % [have, need]
+	slot.color = _ink if have + n >= need else _short
+	if not line.is_empty():
+		slot.key = key
+		slot.dust_n = n
+		slot.on_toggle = on_dust_toggle
+		slot.dust_tip = UiText.t("smithy.dust_on_tip") % n if n > 0 else UiText.t("smithy.dust_tip") % int(line.get("cost", 0))
 	slot.k = _k
 	slot.custom_minimum_size = Vector2(MAT_W, MAT_ICON + MAT_PLATE_H + 14.0) * _k
 	slot.mouse_filter = Control.MOUSE_FILTER_STOP     # 265：停上去出这一种道具的悬浮窗（[method MatSlot.hover]），可收藏
@@ -261,8 +291,22 @@ class MatSlot extends Control:
 	var color := Color.WHITE
 	var k := 1.0
 	var line_right := true
+	## 354：能用尘补的这一项的键（空 = 不能补）、补了几件、点一下切换、悬停多写的一句
+	var key := ""
+	var dust_n := 0
+	var on_toggle: Callable = Callable()
+	var dust_tip := ""
+
+	func _gui_input(event: InputEvent) -> void:
+		var mb := event as InputEventMouseButton
+		if key != "" and on_toggle.is_valid() and mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			on_toggle.call(key)
+			accept_event()
 
 	func _ready() -> void:
+		if key != "":
+			tooltip_text = dust_tip
+			mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		add_to_group(ItemFavorites.GROUP)
 		mouse_entered.connect(hover)
 		mouse_exited.connect(unhover)
@@ -298,6 +342,11 @@ class MatSlot extends Control:
 			draw_texture_rect(tex, r, false)
 		else:
 			draw_rect(ir.grow(-icon * 0.15), ItemPainter.body_color(def) if def != null else Color.GRAY)
+		if key != "":     # 354：左上角一小堆尘（没补淡着）
+			var dt := UiTheme.art_cached("alchemy/dust")
+			if dt != null:
+				var ds := 20.0 * k
+				draw_texture_rect(dt, Rect2(Vector2(pad, pad), Vector2(ds, ds)), false, Color(1, 1, 1, 1.0 if dust_n > 0 else 0.45))
 		if def != null and ItemFavorites.has(def.id):
 			var side := ItemPainter.LOCK_SIDE * k
 			ItemPainter.draw_favorite_badge(self, Rect2(Vector2(ir.end.x - side, ir.position.y), Vector2(side, side)))
