@@ -120,6 +120,9 @@ static func run_forge_eats_crystal(t: TestCase) -> void:
 	t.check(got != null and got.def.id == &"mage_staff" and m.warehouse.has_item(got.uid), "法师杖进了仓库")
 	t.eq(m.funds, 10, "扣了 90 币")
 	t.eq(m.warehouse.items().filter(func(i) -> bool: return (i as ItemInstance).def.id in [&"wooden_stick", &"silver_ingot", &"mist_crystal"]).size(), 0, "四件料都吃掉了")
+	var gem: Dictionary = r.slots().filter(func(x: Dictionary) -> bool: return String(x["material"]) == "gem")[0]
+	t.check(SmithRecipeDef.slot_fits(gem, db.get_def(&"smoky_crystal")), "烟晶也能顶（作者 11-21：按稀有度对应）")
+	t.check(not SmithRecipeDef.slot_fits(gem, db.get_def(&"fire_crystal_low")), "火焰晶石不收")
 
 
 static func run_import_checks(t: TestCase) -> void:

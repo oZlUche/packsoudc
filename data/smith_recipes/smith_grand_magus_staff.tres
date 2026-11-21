@@ -7,13 +7,16 @@ script = ExtResource("1_rvrdj")
 id = &"smith_grand_magus_staff"
 output = &"grand_magus_staff"
 inputs = {
-"amethyst_pillar": 1,
 "mithril_ingot": 2
 }
 material_slots = Array[Dictionary]([{
 "count": 2,
 "material": "wood",
 "min": 2
+}, {
+"count": 1,
+"material": "gem",
+"min": 3
 }])
 funds = 400
 group = "staff"
