@@ -718,6 +718,13 @@ const TEXT := {
 	"nursery.why_unripe": {"zh": "还没熟", "en": "Not ripe yet"},
 	"nursery.why_full": {"zh": "仓库放不下，先留在地里", "en": "No room in the warehouse; it stays in the ground"},
 	"nursery.why_unknown": {"zh": "现在种不了", "en": "Not possible right now"},
+	"nursery.why_canteen": {"zh": "灰灯食堂开了才种", "en": "Opens with the Grey Lamp canteen"},     # 355
+	"nursery.plot": {"zh": "第 %d 畦", "en": "Bed %d"},
+	"nursery.group_herb": {"zh": "药材", "en": "Herbs"},
+	"nursery.group_staple": {"zh": "主食", "en": "Staples"},
+	"nursery.group_veg": {"zh": "蔬菜", "en": "Vegetables"},
+	"nursery.group_fruit": {"zh": "水果", "en": "Fruit"},
+	"nursery.bonus": {"zh": "偶尔多收 %s", "en": "Sometimes also %s"},
 	"bias.dir_none": {"zh": "无倾向", "en": "No focus"},
 	"bias.dir_mineral": {"zh": "矿物", "en": "Minerals"},
 	"bias.dir_plant": {"zh": "草木", "en": "Plants"},
