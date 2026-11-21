@@ -117,7 +117,7 @@ outcomes = Array[ExtResource("2_xotvq")]([SubResource("Resource_acw1e")])
 [resource]
 script = ExtResource("11_ejimk")
 id = &"tut_elite"
-title = "守卫"
+title = "看守"
 titles = {
 "en": "The Guard"
 }

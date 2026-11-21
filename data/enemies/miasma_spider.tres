@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_gw1tw"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_34hgn"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_ywhrx"]
+
+[sub_resource type="Resource" id="Resource_mdk3p"]
+script = ExtResource("2_34hgn")
+school_share = 1.0
+min_weapons = 0
+single_faith = false
+
+[resource]
+script = ExtResource("3_ywhrx")
+id = &"miasma_spider"
+display_name = "瘴蛛母"
+display_names = {
+"en": "Miasma Spider"
+}
+strength = 3
+schools = Array[StringName]([&"poison"])
+base_stats = {
+"max_hp": 80
+}
+signature = Array[StringName]([&"viper_gland", &"viper_gland", &"beast_claw", &"beast_fang", &"beast_hide"])
+item_tags = Array[StringName]([&"beast_part"])
+loadout = SubResource("Resource_mdk3p")
+board = Vector2i(6, 4)
+species = &"beast"
+bagless = true

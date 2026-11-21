@@ -1,0 +1,36 @@
+{
+  "id": "frost_mane",
+  "display_name": "霜鬃兽",
+  "display_names": {
+    "en": "Frost Mane"
+  },
+  "strength": 3,
+  "schools": [
+    "ice"
+  ],
+  "base_stats": {
+    "max_hp": 85,
+    "block": 3
+  },
+  "signature": [
+    "frost_gland",
+    "frost_gland",
+    "beast_claw",
+    "beast_claw",
+    "beast_hide"
+  ],
+  "item_tags": [
+    "beast_part"
+  ],
+  "loadout": {
+    "school_share": 1.0,
+    "min_weapons": 0,
+    "single_faith": false
+  },
+  "board": [
+    6,
+    4
+  ],
+  "species": "beast",
+  "bagless": true
+}

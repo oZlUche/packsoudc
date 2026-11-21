@@ -612,6 +612,9 @@ const TEXT := {
 	"battle.log_tip": {"zh": "战记\n收起或展开这一场的逐条记录", "en": "Battle log\nShow or hide the blow-by-blow record of this fight"},
 	# ui/game/game_screen.gd（"我" 用 battle.me，"我方" 用 battle.side_mine）
 	"screen.enemy": {"zh": "敌人", "en": "Enemy"},
+	"enemy.rank_prefix.bronze": {"zh": "幼年", "en": "Young "},
+	"enemy.rank_prefix.silver": {"zh": "成年", "en": "Adult "},
+	"enemy.rank_prefix.gold": {"zh": "精英", "en": "Elite "},
 	# ui/game/prebattle_screen.gd
 	"pre.fight": {"zh": "开战", "en": "Fight"},
 	"pre.no_battle": {"zh": "没有等着开打的一场", "en": "There's no battle waiting"},
