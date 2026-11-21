@@ -243,10 +243,14 @@ func _enemy_plate(content: Dictionary) -> Nameplate:
 	var id := StringName(String(content.get("enemy", ""))) if not content.is_empty() else &""
 	var def := flow.enemies.enemy(id) if id != &"" else null
 	if def == null:
-		return Nameplate.new().setup(UiText.t("screen.enemy"), "", null, Nameplate.COMPACT_PORTRAIT)
+		var blank := Nameplate.new().setup(UiText.t("screen.enemy"), "", null, Nameplate.COMPACT_PORTRAIT)
+		blank.portrait_slot.set_mirrored(true)
+		return blank
 	var metal := _enemy_metal(content)
 	var art := Nameplate.enemy_layers(id, metal)
-	return Nameplate.new().setup(EnemyRank.prefix(def, metal) + EnemyKit.title_of(content, def), "", art["face"], Nameplate.COMPACT_PORTRAIT, art["frame"], art["overlay"])
+	var plate := Nameplate.new().setup(EnemyRank.prefix(def, metal) + EnemyKit.title_of(content, def), "", art["face"], Nameplate.COMPACT_PORTRAIT, art["frame"], art["overlay"])
+	plate.portrait_slot.set_mirrored(true)     # author 2026-11-21: the opponent stands on the right, so it faces left
+	return plate
 
 
 ## 157：自己的名牌：角色名（没选角色写「我」）、肖像（有图才画）

@@ -15,7 +15,7 @@
     {
       "goal": "nursery_harvest",
       "where": "camp",
-      "text": "从苗圃收一畦",
+      "text": "从苗圃收一次",
       "texts": {
         "en": "Harvest a bed in the nursery"
       }

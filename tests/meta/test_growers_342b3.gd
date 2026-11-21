@@ -1,6 +1,6 @@
 ## 342 B3 第二步：河滩垦户社与苗圃 —— 和地图协会同一次来营地；《第一畦》营地办理 +10、开苗圃；《试种》《收获》《登记留种》到 25。
 ## 苗圃：一次有实际探索的正式出征结算推进一格（胜败都算，同一局不推两次）；熟了留在地里，仓库放得下才收，放不下整体退回；
-## 局外存档 v7，老档一畦空地
+## 局外存档 v7，老档一片空地
 extends RefCounted
 
 const Support := preload("res://tests/run/flow_support.gd")
@@ -27,10 +27,10 @@ static func _count(m: MetaState, id: StringName) -> int:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("342 B3 · 垦户社：和地图协会同一次来；首单开苗圃 +10；四份加起来 25；许可单要用自家干草药种一畦苦叶草")
+	t.begin("342 B3 · 垦户社：和地图协会同一次来；首单开苗圃 +10；四份加起来 25；许可单要用自家干草药种一株苦叶草")
 	var f := Commissions.faction(&"growers")
 	t.check(f != null and f.arrives == Commissions.ARRIVES_FIRST_RUN, "第一次正式探索结算时来")
-	t.eq(Commissions.opener_of(&"nursery").id, &"growers_first_bed", "苗圃由《第一畦》开")
+	t.eq(Commissions.opener_of(&"nursery").id, &"growers_first_bed", "苗圃由《第一片地》开")
 	var total := 0
 	for c in Commissions.of_faction(&"growers"):
 		total += Commissions.reputation_of(c)
@@ -46,7 +46,7 @@ static func run_cycle(t: TestCase) -> void:
 	var f := Support.flow(c, PREFIX)
 	t.eq(f.sow_crop(0, &"rope_hemp"), Nursery.WHY_UNKNOWN, "没开：种不了")
 	_open(f)
-	t.check(f.facility_open(&"nursery"), "办成《第一畦》：苗圃开了")
+	t.check(f.facility_open(&"nursery"), "办成《第一片地》：苗圃开了")
 	t.eq(f.meta.commissions.rep_of(&"growers"), 10, "+10")
 	t.eq(f.meta.commissions.state_of(&"growers_trial_sow"), CommissionBook.TAKEN, "《试种》自动接上")
 	t.eq(f.sow_crop(0, &"bitter_leaf"), Nursery.WHY_SEED, "苦叶草要一束干草药，仓库没有")
@@ -56,7 +56,8 @@ static func run_cycle(t: TestCase) -> void:
 	f.claim_commission(&"growers_trial_sow")
 	t.check(f.meta.commissions.is_done(&"growers_trial_sow"), "点【完成】结案")
 	t.eq(f.meta.commissions.state_of(&"growers_first_harvest"), CommissionBook.TAKEN, "完成一个出现下一个：《收获》接上")
-	t.eq(f.sow_crop(0, &"rope_hemp"), Nursery.WHY_BUSY, "这一畦种着")
+	t.eq(f.sow_crop(0, &"rope_hemp"), "", "这一片还摆得下：再种一株绳麻")
+	t.eq(f.meta.nursery.plants(0).size(), 2, "地里两株")
 	t.check(Nursery.advance(f.meta, "r1"), "一局")
 	t.check(not Nursery.advance(f.meta, "r1"), "同一局不推第二次")
 	Nursery.advance(f.meta, "r2")
@@ -65,9 +66,9 @@ static func run_cycle(t: TestCase) -> void:
 	Nursery.advance(f.meta, "r3")
 	t.check(f.nursery_ripe(), "三局：熟了")
 	var got := f.harvest_crop(0)
-	t.eq([String(got["why"]), int(got["items"])], ["", 1], "收了一件")
-	t.eq(_count(f.meta, &"rope_coil"), 1, "仓库里一卷麻绳")
-	t.eq(String(f.meta.nursery.plot(0)["crop"]), "", "地空了")
+	t.eq([String(got["why"]), int(got["items"])], ["", 2], "两株各收一件")
+	t.eq(_count(f.meta, &"rope_coil"), 2, "仓库里两卷麻绳")
+	t.check(f.meta.nursery.is_empty(0), "地空了")
 	f.claim_commission(&"growers_first_harvest")
 	t.check(f.meta.commissions.is_done(&"growers_first_harvest"), "《收获》办成")
 	var herb := ItemInstance.create(c.items.get_def(&"dried_herbs"))
@@ -125,7 +126,7 @@ static func run_settle(t: TestCase) -> void:
 	var s := f.begin_direct(c.chapter, 31)
 	s.fail(&"time_out")
 	f._settle_run()
-	t.eq(int(f.meta.nursery.plot(0)["left"]), 3, "空跑：不推")
+	t.eq(_left(f.meta), 3, "空跑：不推")
 	f.result = null
 	f._settled = false
 	var s2 := f.begin_direct(c.chapter, 32)
@@ -135,22 +136,22 @@ static func run_settle(t: TestCase) -> void:
 	t.check(not moves.is_empty() and s2.travel.step_to(moves[0]), "走了一步")
 	s2.fail(&"time_out")
 	f._settle_run()
-	t.eq(int(f.meta.nursery.plot(0)["left"]), 2, "败退也推一格")
+	t.eq(_left(f.meta), 2, "败退也推一格")
 	f._settled = false
 	f._settle_run()
-	t.eq(int(f.meta.nursery.plot(0)["left"]), 2, "重复结算：不推")
+	t.eq(_left(f.meta), 2, "重复结算：不推")
 	Support.cleanup(PREFIX)
 
 
 static func run_migration(t: TestCase) -> void:
-	t.begin("342 B3 · 局外 v6 → v7：老档一畦空地；认不得的作物当空地")
+	t.begin("342 B3 · 局外 v6 → v7：老档一片空地；认不得的作物当空地")
 	var raw := FileAccess.get_file_as_string("res://tests/fixtures/meta_v6.json")
 	var src: Dictionary = JSON.parse_string(raw)
 	t.eq(int(src.get("version", 0)), 6, "冻结样本是 v6")
 	var m := MetaSave.from_text(raw, W178._flow().items, GameFlow.load_meta_rules(), GameFlow.load_techs())
-	t.check(m != null and m.nursery.plots.size() == Nursery.PLOTS and String(m.nursery.plot(0)["crop"]) == "", "一畦空地")
+	t.check(m != null and m.nursery.fields.size() == Nursery.PLOTS and m.nursery.is_empty(0), "一片空地")
 	var n := Nursery.from_dict({"plots": [{"crop": "no_such_crop", "left": 2}]})
-	t.eq(String(n.plot(0)["crop"]), "", "认不得的作物：空地")
+	t.check(n.fields.size() == 1 and n.legacy_count() == 0, "认不得的作物：空地")
 	W178._cleanup()
 
 
@@ -200,7 +201,7 @@ static func frame_commission_keys(t: TestCase, root: Window) -> void:
 	s.show_tab("commissions")
 	var cp = s.commission_panel()
 	cp.show_faction(&"growers")
-	t.not_null(cp.find_child("Finish_growers_first_bed", true, false), "《第一畦》卡上是【完成】")
+	t.not_null(cp.find_child("Finish_growers_first_bed", true, false), "《第一片地》卡上是【完成】")
 	t.check(bool(cp.finish(&"growers_first_bed")["done"]), "点【完成】办成")
 	t.check(s.nursery_panel() != null and s.nursery_panel().is_visible_in_tree(), "直接跳到苗圃页")
 	s.show_tab("commissions")
@@ -223,3 +224,9 @@ static func frame_commission_keys(t: TestCase, root: Window) -> void:
 	t.eq(f.meta.commissions.rep_of(&"growers"), 15, "声望点完成才加")
 	s.queue_free()
 	W178._cleanup()
+
+
+## 第一片地里第一株还差几局（没种 = -1）
+static func _left(meta: MetaState) -> int:
+	var ps := meta.nursery.plants(0)
+	return meta.nursery.left_of(ps[0].uid) if not ps.is_empty() else -1

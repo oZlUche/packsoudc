@@ -23,7 +23,7 @@ base_stats = {
 "max_hp": 85,
 "regen_stamina": 8
 }
-signature = Array[StringName]([&"shock_sac", &"shock_sac", &"shock_sac", &"beast_claw", &"beast_claw"])
+signature = Array[StringName]([&"thunder_plume", &"thunder_plume", &"thunder_plume", &"beast_claw", &"beast_tusk_root"])
 item_tags = Array[StringName]([&"beast_part"])
 loadout = SubResource("Resource_3lqr6")
 board = Vector2i(6, 4)

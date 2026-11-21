@@ -53,6 +53,16 @@ func _init(side: int, face: Texture2D = null, silhouette: bool = true, frame_art
 		add_child(frame)
 
 
+## Author 2026-11-21: the combatant on the right side of a battle faces left, so its face is mirrored.
+## Only the face layer flips (the relief when there is one); the coin base and the frame stay as drawn.
+func set_mirrored(on: bool) -> PortraitSlot:
+	var face_layer := relief if relief != null else picture
+	for r: TextureRect in [face_layer, placeholder]:
+		if r != null:
+			r.flip_h = on
+	return self
+
+
 func _fill(tex: Texture2D) -> TextureRect:
 	var r := TextureRect.new()
 	r.texture = tex
