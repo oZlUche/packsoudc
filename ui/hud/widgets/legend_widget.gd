@@ -263,6 +263,9 @@ static func _legend_theme() -> Theme:
 	t.set_type_variation(UiTheme.LABEL_HUD, "Label")
 	t.set_color("font_color", UiTheme.LABEL_HUD, Color.WHITE)
 	t.set_color("font_color", "Label", Color.WHITE)
+	# 提示框还是浅羊皮纸底：TooltipLabel 往上找会先碰到这里的白字 Label，得单独钉回墨色（测试 v7.14：卷起悬停白字看不清）
+	t.set_type_variation("TooltipLabel", "Label")
+	t.set_color("font_color", "TooltipLabel", UiTheme.INK)
 	_dark_theme = t
 	return t
 
