@@ -12,8 +12,8 @@
     "max_hp": 40
   },
   "signature": [
+    "blood_tusk",
     "beast_claw",
-    "beast_fang",
     "beast_hide"
   ],
   "item_tags": [

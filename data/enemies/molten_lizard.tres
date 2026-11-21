@@ -22,7 +22,7 @@ schools = Array[StringName]([&"fire"])
 base_stats = {
 "max_hp": 70
 }
-signature = Array[StringName]([&"fire_gland", &"fire_gland", &"beast_claw", &"beast_hide"])
+signature = Array[StringName]([&"molten_scale", &"molten_scale", &"beast_claw", &"beast_hide"])
 item_tags = Array[StringName]([&"beast_part"])
 loadout = SubResource("Resource_w2cnd")
 board = Vector2i(6, 4)

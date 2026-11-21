@@ -20,10 +20,10 @@ display_names = {
 strength = 3
 schools = Array[StringName]([&"ice"])
 base_stats = {
-"block": 3,
-"max_hp": 85
+"block": 2,
+"max_hp": 65
 }
-signature = Array[StringName]([&"frost_gland", &"frost_gland", &"beast_claw", &"beast_claw", &"beast_hide"])
+signature = Array[StringName]([&"permafrost_marrow", &"permafrost_marrow", &"beast_claw", &"beast_hide", &"beast_hide"])
 item_tags = Array[StringName]([&"beast_part"])
 loadout = SubResource("Resource_26pu7")
 board = Vector2i(6, 4)

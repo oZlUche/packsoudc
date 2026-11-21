@@ -23,7 +23,7 @@ base_stats = {
 "block": 2,
 "max_hp": 90
 }
-signature = Array[StringName]([&"beast_claw", &"beast_claw", &"beast_hide", &"beast_hide", &"beast_tusk_root"])
+signature = Array[StringName]([&"bonesplit_claw", &"beast_claw", &"beast_hide", &"beast_hide", &"beast_tusk_root"])
 item_tags = Array[StringName]([&"beast_part"])
 loadout = SubResource("Resource_gop3x")
 board = Vector2i(6, 4)
