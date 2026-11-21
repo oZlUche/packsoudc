@@ -32,9 +32,14 @@ const BELOW_H := 290.0
 const SLIP_W := 250.0
 const SLIP_GAP := 24.0
 const ICON := 30.0
+## 整幅高（设计尺寸）
+const H := OY + 504.0 + BELOW_H
+## 熟了的作物缩一点（顶端不贴到页面上沿）
+const RIPE_SCALE := 0.9
 
 var flow: GameFlow = null
 var _stage: Control = null
+var _frame: Control = null
 
 
 func setup(p_flow: GameFlow) -> void:
@@ -47,17 +52,28 @@ func setup(p_flow: GameFlow) -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(scroll)
-	var center := CenterContainer.new()
-	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	center.use_top_left = false
-	scroll.add_child(center)
+	_frame = Control.new()     # 中列多宽就按多宽缩（不撑宽中列，右边仓库不被挤出屏）
+	_frame.name = "StageFrame"
+	_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_frame.custom_minimum_size = Vector2(0, H)
+	scroll.add_child(_frame)
 	_stage = Control.new()
 	_stage.name = "Stage"
-	_stage.custom_minimum_size = Vector2(W, OY + SHELF.end.y + BELOW_H)
+	_stage.size = Vector2(W, H)
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiTheme.set_tone(_stage, UiTheme.TONE_DARK)
-	center.add_child(_stage)
+	_frame.add_child(_stage)
+	_frame.resized.connect(_fit)
 	refresh()
+
+
+## 版面按中列宽等比缩（最大 1 倍），横向居中
+func _fit() -> void:
+	var k := clampf(_frame.size.x / W, 0.3, 1.0) if _frame.size.x > 0.0 else 1.0
+	_stage.scale = Vector2(k, k)
+	_stage.position = Vector2((_frame.size.x - W * k) * 0.5, 0.0)
+	_frame.custom_minimum_size.y = H * k
 
 
 func refresh() -> void:
@@ -148,7 +164,8 @@ func _build_plot(i: int) -> void:
 	var crop := StringName(String(flow.meta.nursery.plot(i).get("crop", "")))
 	var planter := PLANTER
 	planter.position.y += OY
-	var plant := Rect2(PLANT_X - PLANT * 0.5, planter.position.y - 2.0 - PLANT, PLANT, PLANT)
+	var side := PLANT * (RIPE_SCALE if st == 3 else 1.0)
+	var plant := Rect2(PLANT_X - side * 0.5, planter.position.y - 2.0 - side, side, side)
 	if st == 3:
 		var glow := _pic("ripe_glow", plant)
 		glow.name = "RipeGlow"
