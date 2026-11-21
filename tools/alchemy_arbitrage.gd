@@ -128,7 +128,8 @@ func run() -> void:
 				continue
 			cost += Alchemy.slot_dust(slot, items) * int(slot["count"])
 		var value := Alchemy.dust_value_of(ItemInstance.create(out_def, 0))
-		var got: Array[int] = [Alchemy.yield_of(value, 1, losses[0]), Alchemy.yield_of(value, 1, losses[1])]
+		var one := ItemInstance.create(out_def, 0)
+		var got: Array[int] = [Alchemy.dust_of_one(one, losses[0], items), Alchemy.dust_of_one(one, losses[1], items)]
 		var loop := not real and (got[0] > cost or got[1] > cost)
 		if loop:
 			var per: Array[String] = []     # 每多得一点尘花几枚工钱；比表一「买来就炼」便宜才真划算
