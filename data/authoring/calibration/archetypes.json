@@ -314,7 +314,7 @@
         "rot": 0
       },
       {
-        "id": "smoked_fish",
+        "id": "leather_armor",
         "origin": [
           0,
           1
@@ -334,7 +334,7 @@
     "picked": [
       "steel_spear",
       "hand_crossbow",
-      "smoked_fish"
+      "leather_armor"
     ],
     "left": [],
     "hp": 55.0,
@@ -397,7 +397,7 @@
         "rot": 0
       },
       {
-        "id": "warding_charm",
+        "id": "steam_vent",
         "origin": [
           3,
           1
@@ -418,7 +418,7 @@
       "steel_spear",
       "pendulum_blade",
       "envenomed_gauntlet",
-      "warding_charm"
+      "steam_vent"
     ],
     "left": [],
     "hp": 55.0,
@@ -465,6 +465,14 @@
         "rot": 1
       },
       {
+        "id": "sack",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
         "id": "spiked_club",
         "origin": [
           0,
@@ -481,12 +489,12 @@
         "rot": 1
       },
       {
-        "id": "bitter_root",
+        "id": "chain_mail",
         "origin": [
-          2,
-          1
+          6,
+          0
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -497,12 +505,13 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_long"
+      "bag_long",
+      "sack"
     ],
     "picked": [
       "spiked_club",
       "short_spear",
-      "bitter_root"
+      "chain_mail"
     ],
     "left": [],
     "hp": 55.0,
@@ -565,7 +574,7 @@
         "rot": 0
       },
       {
-        "id": "steel_round_shield",
+        "id": "arc_coil_core",
         "origin": [
           3,
           0
@@ -573,9 +582,9 @@
         "rot": 0
       },
       {
-        "id": "envenomed_gauntlet",
+        "id": "bandage",
         "origin": [
-          5,
+          4,
           0
         ],
         "rot": 0
@@ -594,8 +603,8 @@
     "picked": [
       "light_crossbow",
       "ironwood_broadsword",
-      "steel_round_shield",
-      "envenomed_gauntlet"
+      "arc_coil_core",
+      "bandage"
     ],
     "left": [],
     "hp": 55.0,
@@ -666,7 +675,7 @@
         "rot": 1
       },
       {
-        "id": "chain_mail",
+        "id": "dragonscale_armor",
         "origin": [
           5,
           0
@@ -674,7 +683,7 @@
         "rot": 0
       },
       {
-        "id": "steel_round_shield",
+        "id": "round_shield",
         "origin": [
           3,
           2
@@ -682,12 +691,12 @@
         "rot": 0
       },
       {
-        "id": "bloodhound_sigil",
+        "id": "healing_draught",
         "origin": [
-          2,
+          5,
           2
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -705,9 +714,9 @@
       "bone_great_club",
       "siege_hammer",
       "bonesteel_spear",
-      "chain_mail",
-      "steel_round_shield",
-      "bloodhound_sigil"
+      "dragonscale_armor",
+      "round_shield",
+      "healing_draught"
     ],
     "left": [
       "bonesteel_spear"
@@ -780,9 +789,17 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "blight_censer",
         "origin": [
           2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "quartz_cluster",
+        "origin": [
+          3,
           1
         ],
         "rot": 0,
@@ -791,20 +808,12 @@
         }
       },
       {
-        "id": "healing_draught",
-        "origin": [
-          4,
-          1
-        ],
-        "rot": 1
-      },
-      {
-        "id": "riposte_buckler",
+        "id": "salve",
         "origin": [
           5,
-          2
+          1
         ],
-        "rot": 1
+        "rot": 0
       }
     ],
     "baseline": {
@@ -821,9 +830,9 @@
       "felling_axe",
       "iron_spear",
       "steel_crossbow",
-      "fire_crystal",
-      "healing_draught",
-      "riposte_buckler"
+      "blight_censer",
+      "quartz_cluster",
+      "salve"
     ],
     "left": [],
     "hp": 55.0,
@@ -870,7 +879,7 @@
         "rot": 0
       },
       {
-        "id": "bag_small",
+        "id": "fanny_pack",
         "origin": [
           3,
           2
@@ -910,15 +919,18 @@
         "rot": 0
       },
       {
-        "id": "steel_round_shield",
+        "id": "lightning_crystal_high",
         "origin": [
           3,
           2
         ],
-        "rot": 0
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
       },
       {
-        "id": "smoked_fish",
+        "id": "styptic_dressing",
         "origin": [
           0,
           3
@@ -926,7 +938,7 @@
         "rot": 1
       },
       {
-        "id": "bitter_root",
+        "id": "arc_coil_core",
         "origin": [
           5,
           2
@@ -943,19 +955,19 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "bag_small",
+      "fanny_pack",
       "fanny_pack"
     ],
     "picked": [
       "meteor_maul",
       "bone_greatsword",
       "club",
-      "steel_round_shield",
-      "smoked_fish",
-      "bitter_root"
+      "lightning_crystal_high",
+      "styptic_dressing",
+      "arc_coil_core"
     ],
     "left": [],
-    "hp": 55.0,
+    "hp": 65.0,
     "dps": 49.2,
     "steps": [
       20,
@@ -1031,7 +1043,7 @@
         "rot": 0
       },
       {
-        "id": "sealed_wine_jar",
+        "id": "studded_leather",
         "origin": [
           5,
           0
@@ -1039,23 +1051,23 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal_high",
+        "id": "gear_arm",
         "origin": [
           7,
           0
         ],
-        "rot": 1,
+        "rot": 0
+      },
+      {
+        "id": "raw_amber",
+        "origin": [
+          2,
+          2
+        ],
+        "rot": 0,
         "state": {
           "charges": 27
         }
-      },
-      {
-        "id": "smoked_fish",
-        "origin": [
-          5,
-          2
-        ],
-        "rot": 1
       }
     ],
     "baseline": {
@@ -1073,9 +1085,9 @@
       "bone_great_club",
       "club",
       "oathkeeper_sword",
-      "sealed_wine_jar",
-      "fire_crystal_high",
-      "smoked_fish"
+      "studded_leather",
+      "gear_arm",
+      "raw_amber"
     ],
     "left": [],
     "hp": 55.0,
@@ -1130,14 +1142,6 @@
         "rot": 0
       },
       {
-        "id": "fanny_pack",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "bone_great_axe",
         "origin": [
           0,
@@ -1170,26 +1174,7 @@
         "rot": 0
       },
       {
-        "id": "blight_censer",
-        "origin": [
-          2,
-          2
-        ],
-        "rot": 1
-      },
-      {
-        "id": "ice_crystal_high",
-        "origin": [
-          4,
-          2
-        ],
-        "rot": 0,
-        "state": {
-          "charges": 27
-        }
-      },
-      {
-        "id": "antidote_satchel",
+        "id": "bandage_roll",
         "origin": [
           7,
           0
@@ -1199,8 +1184,24 @@
       {
         "id": "bloodlust_bracer",
         "origin": [
-          0,
-          3
+          2,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "salted_meat",
+        "origin": [
+          5,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warding_charm",
+        "origin": [
+          3,
+          2
         ],
         "rot": 0
       }
@@ -1214,7 +1215,6 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "fanny_pack",
       "fanny_pack"
     ],
     "picked": [
@@ -1222,10 +1222,10 @@
       "dragoon_lance",
       "halberd",
       "steel_crossbow",
-      "blight_censer",
-      "ice_crystal_high",
-      "antidote_satchel",
-      "bloodlust_bracer"
+      "bandage_roll",
+      "bloodlust_bracer",
+      "salted_meat",
+      "warding_charm"
     ],
     "left": [],
     "hp": 55.0,
@@ -1480,6 +1480,14 @@
         "rot": 0
       },
       {
+        "id": "bag_leather",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
         "id": "shortbow",
         "origin": [
           0,
@@ -1496,9 +1504,9 @@
         "rot": 0
       },
       {
-        "id": "antidote_satchel",
+        "id": "plate_cuirass",
         "origin": [
-          2,
+          5,
           0
         ],
         "rot": 0
@@ -1511,12 +1519,13 @@
     },
     "bags": [
       "bag_leather",
-      "bag_small"
+      "bag_small",
+      "bag_leather"
     ],
     "picked": [
       "shortbow",
       "barbarian_scimitar",
-      "antidote_satchel"
+      "plate_cuirass"
     ],
     "left": [],
     "hp": 55.0,
@@ -1571,7 +1580,7 @@
         "rot": 0
       },
       {
-        "id": "steel_round_shield",
+        "id": "round_shield",
         "origin": [
           3,
           0
@@ -1591,7 +1600,7 @@
     "picked": [
       "bone_twin_axes",
       "quenched_dagger",
-      "steel_round_shield"
+      "round_shield"
     ],
     "left": [],
     "hp": 55.0,
@@ -1646,18 +1655,15 @@
         "rot": 0
       },
       {
-        "id": "ice_crystal_low",
+        "id": "smoked_fish",
         "origin": [
           4,
           0
         ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       },
       {
-        "id": "salted_meat",
+        "id": "salve",
         "origin": [
           1,
           1
@@ -1677,8 +1683,8 @@
     "picked": [
       "horn_bow",
       "twin_blades",
-      "ice_crystal_low",
-      "salted_meat"
+      "smoked_fish",
+      "salve"
     ],
     "left": [],
     "hp": 55.0,
@@ -1725,14 +1731,6 @@
         "rot": 0
       },
       {
-        "id": "war_pack",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "steel_bow",
         "origin": [
           0,
@@ -1757,23 +1755,23 @@
         "rot": 1
       },
       {
-        "id": "tower_shield",
-        "origin": [
-          0,
-          2
-        ],
-        "rot": 0
-      },
-      {
-        "id": "field_rations",
+        "id": "gear_arm",
         "origin": [
           1,
           1
         ],
-        "rot": 1
+        "rot": 0
       },
       {
-        "id": "steam_vent",
+        "id": "bloodhound_sigil",
+        "origin": [
+          2,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "mainspring",
         "origin": [
           4,
           1
@@ -1789,20 +1787,19 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather",
-      "war_pack"
+      "bag_leather"
     ],
     "picked": [
       "steel_bow",
       "barbarian_scimitar",
       "bonefang_dagger",
-      "tower_shield",
-      "field_rations",
-      "steam_vent"
+      "gear_arm",
+      "bloodhound_sigil",
+      "mainspring"
     ],
     "left": [],
-    "hp": 60.0,
-    "dps": 34.2083334878639,
+    "hp": 55.0,
+    "dps": 34.7916671766176,
     "steps": [
       10,
       19
@@ -1869,15 +1866,18 @@
         "rot": 0
       },
       {
-        "id": "steel_round_shield",
+        "id": "lightning_crystal_low",
         "origin": [
           4,
           0
         ],
-        "rot": 0
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
       },
       {
-        "id": "healing_draught",
+        "id": "smoked_fish",
         "origin": [
           6,
           0
@@ -1885,7 +1885,7 @@
         "rot": 0
       },
       {
-        "id": "panacea",
+        "id": "bandage_roll",
         "origin": [
           7,
           0
@@ -1907,9 +1907,9 @@
       "crude_bow",
       "battle_axe",
       "quenched_dagger",
-      "steel_round_shield",
-      "healing_draught",
-      "panacea"
+      "lightning_crystal_low",
+      "smoked_fish",
+      "bandage_roll"
     ],
     "left": [],
     "hp": 55.0,
@@ -1956,6 +1956,14 @@
         "rot": 0
       },
       {
+        "id": "war_pack",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
         "id": "bone_twin_axes",
         "origin": [
           0,
@@ -1980,17 +1988,17 @@
         "rot": 0
       },
       {
-        "id": "brass_plating",
+        "id": "leather_armor",
         "origin": [
-          5,
-          0
+          0,
+          2
         ],
-        "rot": 0
+        "rot": 1
       },
       {
-        "id": "bandage",
+        "id": "bloodhound_sigil",
         "origin": [
-          6,
+          5,
           0
         ],
         "rot": 0
@@ -2004,14 +2012,15 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather"
+      "bag_leather",
+      "war_pack"
     ],
     "picked": [
       "bone_twin_axes",
       "twin_axes",
       "bonefang_dagger",
-      "brass_plating",
-      "bandage"
+      "leather_armor",
+      "bloodhound_sigil"
     ],
     "left": [],
     "hp": 55.0,
@@ -2098,15 +2107,18 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "lightning_crystal",
         "origin": [
           2,
           1
         ],
-        "rot": 0
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
       },
       {
-        "id": "bandage",
+        "id": "bandage_roll",
         "origin": [
           0,
           2
@@ -2114,7 +2126,7 @@
         "rot": 0
       },
       {
-        "id": "envenomed_gauntlet",
+        "id": "mainspring",
         "origin": [
           5,
           2
@@ -2138,12 +2150,12 @@
       "hand_axe",
       "bonefang_dagger",
       "blight_censer",
-      "field_rations",
-      "bandage",
-      "envenomed_gauntlet"
+      "lightning_crystal",
+      "bandage_roll",
+      "mainspring"
     ],
     "left": [],
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 45.9166668211972,
     "steps": [
       20,
@@ -2187,14 +2199,6 @@
         "rot": 0
       },
       {
-        "id": "fanny_pack",
-        "origin": [
-          3,
-          2
-        ],
-        "rot": 0
-      },
-      {
         "id": "horn_bow",
         "origin": [
           0,
@@ -2227,26 +2231,18 @@
         "rot": 0
       },
       {
-        "id": "steel_round_shield",
-        "origin": [
-          5,
-          1
-        ],
-        "rot": 0
-      },
-      {
-        "id": "ice_crystal",
+        "id": "fire_crystal",
         "origin": [
           4,
           1
         ],
-        "rot": 1,
+        "rot": 0,
         "state": {
           "charges": 27
         }
       },
       {
-        "id": "strong_salve",
+        "id": "bandage_roll",
         "origin": [
           1,
           1
@@ -2254,7 +2250,15 @@
         "rot": 0
       },
       {
-        "id": "warding_charm",
+        "id": "steam_vent",
+        "origin": [
+          6,
+          1
+        ],
+        "rot": 0
+      },
+      {
+        "id": "strong_salve",
         "origin": [
           2,
           2
@@ -2270,18 +2274,17 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather",
-      "fanny_pack"
+      "bag_leather"
     ],
     "picked": [
       "horn_bow",
       "flaying_hooks",
       "shortsword",
       "throat_cutter",
-      "steel_round_shield",
-      "ice_crystal",
-      "strong_salve",
-      "warding_charm"
+      "fire_crystal",
+      "bandage_roll",
+      "steam_vent",
+      "strong_salve"
     ],
     "left": [],
     "hp": 55.0,
@@ -2336,15 +2339,7 @@
         "rot": 1
       },
       {
-        "id": "war_pack",
-        "origin": [
-          4,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "hunting_bag",
+        "id": "sack",
         "origin": [
           0,
           3
@@ -2384,20 +2379,31 @@
         "rot": 0
       },
       {
-        "id": "legion_tower_shield",
-        "origin": [
-          5,
-          2
-        ],
-        "rot": 0
-      },
-      {
-        "id": "dragonscale_armor",
+        "id": "kite_shield",
         "origin": [
           0,
           3
         ],
-        "rot": 1
+        "rot": 0
+      },
+      {
+        "id": "gear_arm",
+        "origin": [
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "lightning_crystal_high",
+        "origin": [
+          5,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
       }
     ],
     "baseline": {
@@ -2410,23 +2416,20 @@
       "bag_small",
       "bag_leather",
       "bag_long",
-      "war_pack",
-      "hunting_bag"
+      "sack"
     ],
     "picked": [
       "bloodsipper_scimitar",
       "steel_bow",
       "bloodoath_axe",
       "silent_blade",
-      "legion_tower_shield",
-      "dragonscale_armor",
-      "kite_shield"
+      "kite_shield",
+      "gear_arm",
+      "lightning_crystal_high"
     ],
-    "left": [
-      "kite_shield"
-    ],
+    "left": [],
     "hp": 55.0,
-    "dps": 53.4000001545306,
+    "dps": 54.8666668211972,
     "steps": [
       20,
       -1
@@ -2707,6 +2710,14 @@
         "rot": 0
       },
       {
+        "id": "sack",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
+      },
+      {
         "id": "barbarian_scimitar",
         "origin": [
           0,
@@ -2723,12 +2734,12 @@
         "rot": 0
       },
       {
-        "id": "ration",
+        "id": "kite_shield",
         "origin": [
-          0,
+          4,
           0
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -2738,12 +2749,13 @@
     },
     "bags": [
       "bag_leather",
-      "bag_small"
+      "bag_small",
+      "sack"
     ],
     "picked": [
       "barbarian_scimitar",
       "bonefang_twin_blades",
-      "ration"
+      "kite_shield"
     ],
     "left": [],
     "hp": 55.0,
@@ -2782,15 +2794,7 @@
         "rot": 0
       },
       {
-        "id": "bloodletter",
-        "origin": [
-          0,
-          0
-        ],
-        "rot": 1
-      },
-      {
-        "id": "bitter_root",
+        "id": "steel_twin_axes",
         "origin": [
           0,
           0
@@ -2798,7 +2802,7 @@
         "rot": 0
       },
       {
-        "id": "bloodhound_sigil",
+        "id": "bonefang_dagger",
         "origin": [
           2,
           0
@@ -2806,9 +2810,17 @@
         "rot": 0
       },
       {
-        "id": "bloodlust_bracer",
+        "id": "gear_arm",
         "origin": [
           3,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warding_charm",
+        "origin": [
+          4,
           0
         ],
         "rot": 0
@@ -2824,14 +2836,14 @@
       "bag_small"
     ],
     "picked": [
-      "bloodletter",
-      "bitter_root",
-      "bloodhound_sigil",
-      "bloodlust_bracer"
+      "steel_twin_axes",
+      "bonefang_dagger",
+      "gear_arm",
+      "warding_charm"
     ],
     "left": [],
     "hp": 55.0,
-    "dps": 14.3181818181818,
+    "dps": 33.8486111111111,
     "steps": [
       5,
       9
@@ -2866,7 +2878,23 @@
         "rot": 0
       },
       {
-        "id": "great_axe",
+        "id": "bag_long",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bag_leather",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bone_great_axe",
         "origin": [
           0,
           0
@@ -2874,29 +2902,26 @@
         "rot": 0
       },
       {
-        "id": "twin_axes",
+        "id": "pole_axe",
         "origin": [
           2,
           0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "plate_cuirass",
+        "origin": [
+          0,
+          3
         ],
         "rot": 0
       },
       {
-        "id": "ice_crystal_low",
-        "origin": [
-          4,
-          0
-        ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
-      },
-      {
-        "id": "mainspring",
+        "id": "strong_salve",
         "origin": [
           2,
-          2
+          1
         ],
         "rot": 0
       }
@@ -2908,17 +2933,19 @@
     },
     "bags": [
       "bag_leather",
-      "bag_small"
+      "bag_small",
+      "bag_long",
+      "bag_leather"
     ],
     "picked": [
-      "great_axe",
-      "twin_axes",
-      "ice_crystal_low",
-      "mainspring"
+      "bone_great_axe",
+      "pole_axe",
+      "plate_cuirass",
+      "strong_salve"
     ],
     "left": [],
     "hp": 55.0,
-    "dps": 20.3636363636364,
+    "dps": 28.4318181818182,
     "steps": [
       5,
       9
@@ -2961,7 +2988,7 @@
         "rot": 0
       },
       {
-        "id": "bonesteel_spear",
+        "id": "bloodoath_scimitar",
         "origin": [
           0,
           0
@@ -2969,28 +2996,28 @@
         "rot": 1
       },
       {
-        "id": "steel_axe",
+        "id": "barbarian_scimitar",
         "origin": [
-          5,
+          3,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "kite_shield",
+        "origin": [
+          6,
           0
         ],
         "rot": 0
       },
       {
-        "id": "chain_mail",
-        "origin": [
-          6,
-          0
-        ],
-        "rot": 1
-      },
-      {
-        "id": "ice_crystal_high",
+        "id": "ice_crystal",
         "origin": [
           0,
           1
         ],
-        "rot": 0,
+        "rot": 1,
         "state": {
           "charges": 27
         }
@@ -3007,14 +3034,14 @@
       "bag_leather"
     ],
     "picked": [
-      "bonesteel_spear",
-      "steel_axe",
-      "chain_mail",
-      "ice_crystal_high"
+      "bloodoath_scimitar",
+      "barbarian_scimitar",
+      "kite_shield",
+      "ice_crystal"
     ],
     "left": [],
     "hp": 55.0,
-    "dps": 36.6623931623932,
+    "dps": 29.4318181818182,
     "steps": [
       10,
       19
@@ -3057,7 +3084,7 @@
         "rot": 0
       },
       {
-        "id": "bag_leather",
+        "id": "war_pack",
         "origin": [
           0,
           3
@@ -3073,7 +3100,7 @@
         "rot": 0
       },
       {
-        "id": "steel_axe",
+        "id": "scimitar",
         "origin": [
           3,
           0
@@ -3081,20 +3108,20 @@
         "rot": 1
       },
       {
-        "id": "plate_cuirass",
+        "id": "blessed_shield",
         "origin": [
           0,
           3
         ],
-        "rot": 0
+        "rot": 1
       },
       {
-        "id": "bandage",
+        "id": "knight_plate",
         "origin": [
-          6,
+          5,
           0
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -3106,17 +3133,17 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "bag_leather"
+      "war_pack"
     ],
     "picked": [
       "executioner_axe",
-      "steel_axe",
-      "plate_cuirass",
-      "bandage"
+      "scimitar",
+      "blessed_shield",
+      "knight_plate"
     ],
     "left": [],
     "hp": 55.0,
-    "dps": 38.7550505050505,
+    "dps": 29.3522727272727,
     "steps": [
       10,
       19
@@ -3159,15 +3186,7 @@
         "rot": 0
       },
       {
-        "id": "sack",
-        "origin": [
-          3,
-          2
-        ],
-        "rot": 0
-      },
-      {
-        "id": "felling_axe",
+        "id": "bloodthirst_twin_blades",
         "origin": [
           0,
           0
@@ -3175,34 +3194,34 @@
         "rot": 0
       },
       {
-        "id": "great_axe",
+        "id": "bone_twin_axes",
         "origin": [
           2,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "legion_tower_shield",
+        "origin": [
+          4,
           0
         ],
         "rot": 1
       },
       {
-        "id": "bone_twin_axes",
+        "id": "healing_draught",
         "origin": [
-          5,
-          0
-        ],
-        "rot": 0
-      },
-      {
-        "id": "kite_shield",
-        "origin": [
-          3,
+          0,
           2
         ],
-        "rot": 0
+        "rot": 1
       },
       {
-        "id": "brass_plating",
+        "id": "unclotting_blood",
         "origin": [
-          7,
-          0
+          2,
+          2
         ],
         "rot": 0
       }
@@ -3215,19 +3234,18 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather",
-      "sack"
+      "bag_leather"
     ],
     "picked": [
-      "felling_axe",
-      "great_axe",
+      "bloodthirst_twin_blades",
       "bone_twin_axes",
-      "kite_shield",
-      "brass_plating"
+      "legion_tower_shield",
+      "healing_draught",
+      "unclotting_blood"
     ],
     "left": [],
     "hp": 55.0,
-    "dps": 27.5227272727273,
+    "dps": 25.125,
     "steps": [
       10,
       19
@@ -3270,23 +3288,31 @@
         "rot": 0
       },
       {
-        "id": "composite_bow",
+        "id": "fanny_pack",
         "origin": [
-          0,
-          0
+          3,
+          2
         ],
-        "rot": 1
+        "rot": 0
       },
       {
-        "id": "steel_twin_axes",
+        "id": "bone_great_axe",
         "origin": [
-          4,
+          0,
           0
         ],
         "rot": 0
       },
       {
-        "id": "battle_axe",
+        "id": "bone_spear",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bonefang_twin_blades",
         "origin": [
           6,
           0
@@ -3294,17 +3320,17 @@
         "rot": 0
       },
       {
-        "id": "bonefang_dagger",
+        "id": "blight_censer",
         "origin": [
-          7,
-          0
+          2,
+          1
         ],
         "rot": 0
       },
       {
         "id": "fire_crystal_high",
         "origin": [
-          1,
+          3,
           1
         ],
         "rot": 0,
@@ -3313,28 +3339,28 @@
         }
       },
       {
-        "id": "ice_crystal_high",
+        "id": "lightning_crystal",
         "origin": [
-          0,
-          2
+          5,
+          1
         ],
-        "rot": 0,
+        "rot": 1,
         "state": {
           "charges": 27
         }
       },
       {
-        "id": "antidote_kit",
+        "id": "riposte_buckler",
         "origin": [
-          2,
+          6,
           2
         ],
-        "rot": 0
+        "rot": 1
       },
       {
-        "id": "antidote_satchel",
+        "id": "bloodhound_sigil",
         "origin": [
-          5,
+          3,
           2
         ],
         "rot": 0
@@ -3348,21 +3374,22 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather"
+      "bag_leather",
+      "fanny_pack"
     ],
     "picked": [
-      "composite_bow",
-      "steel_twin_axes",
-      "battle_axe",
-      "bonefang_dagger",
+      "bone_great_axe",
+      "bone_spear",
+      "bonefang_twin_blades",
+      "blight_censer",
       "fire_crystal_high",
-      "ice_crystal_high",
-      "antidote_kit",
-      "antidote_satchel"
+      "lightning_crystal",
+      "riposte_buckler",
+      "bloodhound_sigil"
     ],
     "left": [],
     "hp": 55.0,
-    "dps": 53.3819442684245,
+    "dps": 51.7106643356643,
     "steps": [
       20,
       -1
@@ -3405,7 +3432,7 @@
         "rot": 0
       },
       {
-        "id": "bone_great_club",
+        "id": "bone_twin_axes",
         "origin": [
           0,
           0
@@ -3413,26 +3440,34 @@
         "rot": 0
       },
       {
-        "id": "steel_axe",
+        "id": "halberd",
         "origin": [
           2,
           0
         ],
-        "rot": 0
+        "rot": 1
       },
       {
-        "id": "knight_plate",
+        "id": "bone_battle_axe",
         "origin": [
-          5,
+          6,
           0
         ],
         "rot": 0
       },
       {
-        "id": "ice_crystal",
+        "id": "blight_censer",
         "origin": [
-          3,
+          7,
           0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "ice_crystal_high",
+        "origin": [
+          2,
+          1
         ],
         "rot": 0,
         "state": {
@@ -3440,20 +3475,12 @@
         }
       },
       {
-        "id": "antidote_kit",
-        "origin": [
-          3,
-          1
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bloodhound_sigil",
+        "id": "smoked_fish",
         "origin": [
           4,
           1
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -3467,16 +3494,16 @@
       "bag_leather"
     ],
     "picked": [
-      "bone_great_club",
-      "steel_axe",
-      "knight_plate",
-      "ice_crystal",
-      "antidote_kit",
-      "bloodhound_sigil"
+      "bone_twin_axes",
+      "halberd",
+      "bone_battle_axe",
+      "blight_censer",
+      "ice_crystal_high",
+      "smoked_fish"
     ],
     "left": [],
     "hp": 55.0,
-    "dps": 33.9027777777778,
+    "dps": 24.9166666666667,
     "steps": [
       20,
       -1
@@ -3527,28 +3554,12 @@
         "rot": 0
       },
       {
-        "id": "bag_small",
-        "origin": [
-          4,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "steel_great_axe",
+        "id": "bone_pole_axe",
         "origin": [
           0,
           0
         ],
-        "rot": 0
-      },
-      {
-        "id": "berserker_twin_axes",
-        "origin": [
-          2,
-          0
-        ],
-        "rot": 0
+        "rot": 1
       },
       {
         "id": "bonefang_twin_blades",
@@ -3559,7 +3570,7 @@
         "rot": 0
       },
       {
-        "id": "hand_axe",
+        "id": "twin_axes",
         "origin": [
           6,
           0
@@ -3567,26 +3578,37 @@
         "rot": 0
       },
       {
-        "id": "leather_armor",
+        "id": "bone_battle_axe",
         "origin": [
-          1,
-          2
+          0,
+          1
         ],
         "rot": 1
       },
       {
-        "id": "studded_leather",
+        "id": "blessed_shield",
         "origin": [
-          3,
-          3
+          0,
+          2
         ],
         "rot": 0
       },
       {
-        "id": "quartz_cluster",
+        "id": "fire_crystal",
         "origin": [
-          7,
-          0
+          5,
+          2
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "lightning_crystal",
+        "origin": [
+          3,
+          3
         ],
         "rot": 1,
         "state": {
@@ -3603,21 +3625,20 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "war_pack",
-      "bag_small"
+      "war_pack"
     ],
     "picked": [
-      "steel_great_axe",
-      "berserker_twin_axes",
+      "bone_pole_axe",
       "bonefang_twin_blades",
-      "hand_axe",
-      "leather_armor",
-      "studded_leather",
-      "quartz_cluster"
+      "twin_axes",
+      "bone_battle_axe",
+      "blessed_shield",
+      "fire_crystal",
+      "lightning_crystal"
     ],
     "left": [],
     "hp": 55.0,
-    "dps": 67.7638888888889,
+    "dps": 49.2916666666667,
     "steps": [
       20,
       -1
@@ -4033,7 +4054,7 @@
         "rot": 0
       },
       {
-        "id": "bandage_roll",
+        "id": "bandage",
         "origin": [
           0,
           2
@@ -4054,7 +4075,7 @@
       "bonefang_dagger",
       "kite_shield",
       "steel_round_shield",
-      "bandage_roll"
+      "bandage"
     ],
     "left": [],
     "hp": 55.0,
@@ -4133,7 +4154,7 @@
         "rot": 0
       },
       {
-        "id": "raw_amber",
+        "id": "fire_crystal",
         "origin": [
           6,
           0
@@ -4159,7 +4180,7 @@
       "steel_bow",
       "tower_shield",
       "steel_round_shield",
-      "raw_amber"
+      "fire_crystal"
     ],
     "left": [],
     "hp": 55.0,
@@ -4214,25 +4235,25 @@
         "rot": 1
       },
       {
-        "id": "leather_armor",
-        "origin": [
-          4,
-          0
-        ],
-        "rot": 2
-      },
-      {
         "id": "steel_round_shield",
         "origin": [
-          0,
-          1
+          5,
+          0
         ],
         "rot": 0
       },
       {
         "id": "riposte_buckler",
         "origin": [
-          2,
+          7,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "warding_charm",
+        "origin": [
+          0,
           1
         ],
         "rot": 0
@@ -4250,9 +4271,9 @@
     ],
     "picked": [
       "bonesteel_spear",
-      "leather_armor",
       "steel_round_shield",
-      "riposte_buckler"
+      "riposte_buckler",
+      "warding_charm"
     ],
     "left": [],
     "hp": 55.0,
@@ -4307,7 +4328,7 @@
         "rot": 0
       },
       {
-        "id": "steel_round_shield",
+        "id": "leather_armor",
         "origin": [
           2,
           0
@@ -4315,18 +4336,18 @@
         "rot": 0
       },
       {
-        "id": "brass_plating",
+        "id": "steel_round_shield",
         "origin": [
-          4,
+          6,
           0
         ],
         "rot": 0
       },
       {
-        "id": "gear_arm",
+        "id": "brass_plating",
         "origin": [
-          5,
-          0
+          2,
+          1
         ],
         "rot": 0
       }
@@ -4343,9 +4364,9 @@
     ],
     "picked": [
       "berserker_twin_axes",
+      "leather_armor",
       "steel_round_shield",
-      "brass_plating",
-      "gear_arm"
+      "brass_plating"
     ],
     "left": [],
     "hp": 55.0,
@@ -4432,20 +4453,23 @@
         "rot": 0
       },
       {
-        "id": "bitter_root",
-        "origin": [
-          3,
-          1
-        ],
-        "rot": 0
-      },
-      {
-        "id": "raw_amber",
+        "id": "lightning_crystal_low",
         "origin": [
           5,
           2
         ],
         "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "quartz_cluster",
+        "origin": [
+          3,
+          3
+        ],
+        "rot": 1,
         "state": {
           "charges": 27
         }
@@ -4467,8 +4491,8 @@
       "tower_shield",
       "round_shield",
       "steel_round_shield",
-      "bitter_root",
-      "raw_amber"
+      "lightning_crystal_low",
+      "quartz_cluster"
     ],
     "left": [],
     "hp": 55.0,
@@ -4515,7 +4539,7 @@
         "rot": 0
       },
       {
-        "id": "hunting_bag",
+        "id": "sack",
         "origin": [
           3,
           2
@@ -4523,17 +4547,9 @@
         "rot": 0
       },
       {
-        "id": "sack",
+        "id": "fanny_pack",
         "origin": [
           0,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_small",
-        "origin": [
-          5,
           3
         ],
         "rot": 0
@@ -4563,28 +4579,31 @@
         "rot": 1
       },
       {
-        "id": "dragonscale_armor",
+        "id": "kite_shield",
         "origin": [
           2,
           0
-        ],
-        "rot": 1
-      },
-      {
-        "id": "kite_shield",
-        "origin": [
-          0,
-          3
         ],
         "rot": 0
       },
       {
         "id": "steel_round_shield",
         "origin": [
-          5,
+          3,
           3
         ],
         "rot": 0
+      },
+      {
+        "id": "fire_crystal_low",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
       },
       {
         "id": "riposte_buckler",
@@ -4595,7 +4614,7 @@
         "rot": 0
       },
       {
-        "id": "bloodlust_bracer",
+        "id": "bitter_root",
         "origin": [
           4,
           0
@@ -4612,19 +4631,18 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "hunting_bag",
       "sack",
-      "bag_small",
+      "fanny_pack",
       "fanny_pack"
     ],
     "picked": [
       "greatsword",
       "blessed_shield",
-      "dragonscale_armor",
       "kite_shield",
       "steel_round_shield",
+      "fire_crystal_low",
       "riposte_buckler",
-      "bloodlust_bracer"
+      "bitter_root"
     ],
     "left": [],
     "hp": 55.0,
@@ -4679,6 +4697,14 @@
         "rot": 0
       },
       {
+        "id": "bag_small",
+        "origin": [
+          0,
+          3
+        ],
+        "rot": 0
+      },
+      {
         "id": "cleaver",
         "origin": [
           0,
@@ -4711,15 +4737,7 @@
         "rot": 0
       },
       {
-        "id": "brass_plating",
-        "origin": [
-          1,
-          1
-        ],
-        "rot": 0
-      },
-      {
-        "id": "mainspring",
+        "id": "sealed_wine_jar",
         "origin": [
           0,
           2
@@ -4727,10 +4745,18 @@
         "rot": 0
       },
       {
-        "id": "ration",
+        "id": "brass_plating",
         "origin": [
-          2,
-          2
+          0,
+          4
+        ],
+        "rot": 1
+      },
+      {
+        "id": "bandage_roll",
+        "origin": [
+          1,
+          1
         ],
         "rot": 0
       }
@@ -4744,6 +4770,7 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
+      "bag_small",
       "bag_small"
     ],
     "picked": [
@@ -4751,9 +4778,9 @@
       "legion_tower_shield",
       "kite_shield",
       "round_shield",
+      "sealed_wine_jar",
       "brass_plating",
-      "mainspring",
-      "ration"
+      "bandage_roll"
     ],
     "left": [],
     "hp": 55.0,
@@ -5085,12 +5112,12 @@
         "rot": 0
       },
       {
-        "id": "mainspring",
+        "id": "brass_plating",
         "origin": [
-          0,
-          0
+          1,
+          2
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -5107,7 +5134,7 @@
       "barbarian_scimitar",
       "chain_mail",
       "studded_leather",
-      "mainspring"
+      "brass_plating"
     ],
     "left": [],
     "hp": 55.0,
@@ -5364,12 +5391,15 @@
         "rot": 0
       },
       {
-        "id": "strong_salve",
+        "id": "fire_crystal",
         "origin": [
           2,
           1
         ],
-        "rot": 0
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
       }
     ],
     "baseline": {
@@ -5386,7 +5416,7 @@
       "horse_halberd",
       "knight_plate",
       "studded_leather",
-      "strong_salve"
+      "fire_crystal"
     ],
     "left": [],
     "hp": 55.0,
@@ -5481,7 +5511,7 @@
         "rot": 1
       },
       {
-        "id": "sealed_wine_jar",
+        "id": "steel_round_shield",
         "origin": [
           3,
           3
@@ -5489,12 +5519,15 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "ice_crystal",
         "origin": [
           0,
           3
         ],
-        "rot": 0
+        "rot": 1,
+        "state": {
+          "charges": 27
+        }
       }
     ],
     "baseline": {
@@ -5514,11 +5547,11 @@
       "plate_cuirass",
       "dragonscale_armor",
       "leather_armor",
-      "sealed_wine_jar",
-      "field_rations"
+      "steel_round_shield",
+      "ice_crystal"
     ],
     "left": [],
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 18.9,
     "steps": [
       10,
@@ -5562,14 +5595,6 @@
         "rot": 0
       },
       {
-        "id": "bag_small",
-        "origin": [
-          3,
-          2
-        ],
-        "rot": 0
-      },
-      {
         "id": "bloodbone_spike",
         "origin": [
           0,
@@ -5578,17 +5603,9 @@
         "rot": 0
       },
       {
-        "id": "legion_tower_shield",
-        "origin": [
-          1,
-          0
-        ],
-        "rot": 1
-      },
-      {
         "id": "chain_mail",
         "origin": [
-          5,
+          1,
           0
         ],
         "rot": 0
@@ -5596,10 +5613,21 @@
       {
         "id": "studded_leather",
         "origin": [
-          3,
-          2
+          4,
+          0
         ],
         "rot": 0
+      },
+      {
+        "id": "ice_crystal",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
       }
     ],
     "baseline": {
@@ -5610,14 +5638,13 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather",
-      "bag_small"
+      "bag_leather"
     ],
     "picked": [
       "bloodbone_spike",
-      "legion_tower_shield",
       "chain_mail",
-      "studded_leather"
+      "studded_leather",
+      "ice_crystal"
     ],
     "left": [],
     "hp": 55.0,
@@ -5672,17 +5699,9 @@
         "rot": 0
       },
       {
-        "id": "sack",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "bag_small",
         "origin": [
-          5,
+          0,
           3
         ],
         "rot": 0
@@ -5720,7 +5739,7 @@
         "rot": 1
       },
       {
-        "id": "kite_shield",
+        "id": "studded_leather",
         "origin": [
           0,
           2
@@ -5728,17 +5747,28 @@
         "rot": 0
       },
       {
-        "id": "steel_round_shield",
+        "id": "fire_crystal",
         "origin": [
-          5,
-          3
+          0,
+          4
+        ],
+        "rot": 0,
+        "state": {
+          "charges": 27
+        }
+      },
+      {
+        "id": "antidote_satchel",
+        "origin": [
+          2,
+          2
         ],
         "rot": 0
       },
       {
-        "id": "mainspring",
+        "id": "warding_charm",
         "origin": [
-          2,
+          6,
           2
         ],
         "rot": 0
@@ -5754,7 +5784,6 @@
       "bag_small",
       "bag_leather",
       "hunting_bag",
-      "sack",
       "bag_small"
     ],
     "picked": [
@@ -5762,14 +5791,12 @@
       "knight_plate",
       "chain_mail",
       "dragonscale_armor",
-      "kite_shield",
-      "steel_round_shield",
       "studded_leather",
-      "mainspring"
+      "fire_crystal",
+      "antidote_satchel",
+      "warding_charm"
     ],
-    "left": [
-      "studded_leather"
-    ],
+    "left": [],
     "hp": 55.0,
     "dps": 7.0,
     "steps": [
@@ -5822,14 +5849,6 @@
         "rot": 0
       },
       {
-        "id": "fanny_pack",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "berserker_twin_axes",
         "origin": [
           0,
@@ -5862,7 +5881,7 @@
         "rot": 1
       },
       {
-        "id": "ice_crystal",
+        "id": "fire_crystal_high",
         "origin": [
           0,
           2
@@ -5873,12 +5892,12 @@
         }
       },
       {
-        "id": "riposte_buckler",
+        "id": "steam_vent",
         "origin": [
-          0,
-          3
+          2,
+          2
         ],
-        "rot": 1
+        "rot": 0
       }
     ],
     "baseline": {
@@ -5890,16 +5909,15 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "hunting_bag",
-      "fanny_pack"
+      "hunting_bag"
     ],
     "picked": [
       "berserker_twin_axes",
       "plate_cuirass",
       "chain_mail",
       "dragonscale_armor",
-      "ice_crystal",
-      "riposte_buckler"
+      "fire_crystal_high",
+      "steam_vent"
     ],
     "left": [],
     "hp": 55.0,
@@ -6002,7 +6020,7 @@
         "rot": 1
       },
       {
-        "id": "fire_crystal_low",
+        "id": "lightning_crystal",
         "origin": [
           4,
           0
@@ -6013,7 +6031,7 @@
         }
       },
       {
-        "id": "strong_salve",
+        "id": "arc_coil_core",
         "origin": [
           3,
           1
@@ -6039,8 +6057,8 @@
       "plate_cuirass",
       "chain_mail",
       "leather_armor",
-      "fire_crystal_low",
-      "strong_salve"
+      "lightning_crystal",
+      "arc_coil_core"
     ],
     "left": [],
     "hp": 55.0,
@@ -6314,9 +6332,9 @@
         "rot": 0
       },
       {
-        "id": "steam_vent",
+        "id": "field_rations",
         "origin": [
-          2,
+          4,
           0
         ],
         "rot": 0
@@ -6334,11 +6352,11 @@
     "picked": [
       "spiked_club",
       "barbarian_scimitar",
-      "steam_vent"
+      "field_rations"
     ],
     "left": [],
     "group": "blade",
-    "hp": 55.0,
+    "hp": 60.0,
     "dps": 29.625,
     "steps": [
       5,
@@ -6382,6 +6400,14 @@
         "rot": 1
       },
       {
+        "id": "sack",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
         "id": "tibia_violence",
         "origin": [
           0,
@@ -6398,18 +6424,18 @@
         "rot": 0
       },
       {
-        "id": "bitter_root",
+        "id": "kite_shield",
         "origin": [
-          4,
+          6,
           0
         ],
         "rot": 0
       },
       {
-        "id": "salted_meat",
+        "id": "antidote_satchel",
         "origin": [
-          0,
-          1
+          4,
+          0
         ],
         "rot": 0
       }
@@ -6422,13 +6448,14 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_long"
+      "bag_long",
+      "sack"
     ],
     "picked": [
       "tibia_violence",
       "hardwood_spear",
-      "bitter_root",
-      "salted_meat"
+      "kite_shield",
+      "antidote_satchel"
     ],
     "left": [],
     "group": "blade",
@@ -6492,7 +6519,7 @@
         "rot": 1
       },
       {
-        "id": "salted_meat",
+        "id": "bitter_root",
         "origin": [
           2,
           2
@@ -6500,7 +6527,7 @@
         "rot": 0
       },
       {
-        "id": "steam_vent",
+        "id": "ration",
         "origin": [
           5,
           0
@@ -6521,8 +6548,8 @@
     "picked": [
       "bone_great_club",
       "great_club",
-      "salted_meat",
-      "steam_vent"
+      "bitter_root",
+      "ration"
     ],
     "left": [],
     "group": "blade",
@@ -6586,18 +6613,15 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "bitter_root",
         "origin": [
           7,
           0
         ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       },
       {
-        "id": "strong_salve",
+        "id": "ration",
         "origin": [
           0,
           1
@@ -6618,8 +6642,8 @@
     "picked": [
       "horse_halberd",
       "steel_twin_blades",
-      "fire_crystal",
-      "strong_salve"
+      "bitter_root",
+      "ration"
     ],
     "left": [],
     "group": "blade",
@@ -6699,26 +6723,20 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal_low",
+        "id": "sealed_wine_jar",
         "origin": [
           5,
           0
         ],
-        "rot": 0,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       },
       {
-        "id": "lightning_crystal",
+        "id": "panacea",
         "origin": [
           7,
           0
         ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       }
     ],
     "baseline": {
@@ -6736,8 +6754,8 @@
       "great_club",
       "stone_maul",
       "longsword",
-      "fire_crystal_low",
-      "lightning_crystal"
+      "sealed_wine_jar",
+      "panacea"
     ],
     "left": [],
     "group": "blade",
@@ -6825,7 +6843,7 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "smoked_fish",
         "origin": [
           7,
           0
@@ -6833,7 +6851,7 @@
         "rot": 0
       },
       {
-        "id": "antidote_satchel",
+        "id": "warding_charm",
         "origin": [
           5,
           2
@@ -6857,12 +6875,12 @@
       "stone_maul",
       "pendulum_blade",
       "plate_cuirass",
-      "field_rations",
-      "antidote_satchel"
+      "smoked_fish",
+      "warding_charm"
     ],
     "left": [],
     "group": "blade",
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 44.9003496503496,
     "steps": [
       10,
@@ -6906,14 +6924,6 @@
         "rot": 0
       },
       {
-        "id": "bag_leather",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "great_axe",
         "origin": [
           0,
@@ -6946,15 +6956,7 @@
         "rot": 0
       },
       {
-        "id": "plate_cuirass",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "healing_draught",
+        "id": "field_rations",
         "origin": [
           2,
           1
@@ -6962,7 +6964,7 @@
         "rot": 0
       },
       {
-        "id": "lightning_crystal_low",
+        "id": "lightning_crystal",
         "origin": [
           3,
           1
@@ -6971,6 +6973,14 @@
         "state": {
           "charges": 27
         }
+      },
+      {
+        "id": "arc_coil_core",
+        "origin": [
+          5,
+          2
+        ],
+        "rot": 0
       }
     ],
     "baseline": {
@@ -6981,7 +6991,6 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather",
       "bag_leather"
     ],
     "picked": [
@@ -6989,13 +6998,13 @@
       "bone_spear",
       "cleaver",
       "shortsword",
-      "plate_cuirass",
-      "healing_draught",
-      "lightning_crystal_low"
+      "field_rations",
+      "lightning_crystal",
+      "arc_coil_core"
     ],
     "left": [],
     "group": "blade",
-    "hp": 55.0,
+    "hp": 60.0,
     "dps": 45.2674825174825,
     "steps": [
       20,
@@ -7039,6 +7048,14 @@
         "rot": 0
       },
       {
+        "id": "fanny_pack",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
         "id": "flaying_hooks",
         "origin": [
           0,
@@ -7071,7 +7088,7 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "fire_crystal_low",
         "origin": [
           7,
           0
@@ -7082,7 +7099,7 @@
         }
       },
       {
-        "id": "styptic_dressing",
+        "id": "gear_arm",
         "origin": [
           0,
           2
@@ -7090,17 +7107,17 @@
         "rot": 1
       },
       {
-        "id": "bitter_root",
+        "id": "styptic_dressing",
         "origin": [
           2,
           2
         ],
-        "rot": 0
+        "rot": 1
       },
       {
-        "id": "bloodhound_sigil",
+        "id": "salve",
         "origin": [
-          5,
+          4,
           2
         ],
         "rot": 0
@@ -7114,22 +7131,23 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather"
+      "bag_leather",
+      "fanny_pack"
     ],
     "picked": [
       "flaying_hooks",
       "steel_twin_axes",
       "viper_twin_stingers",
       "battle_axe",
-      "fire_crystal",
+      "fire_crystal_low",
+      "gear_arm",
       "styptic_dressing",
-      "bitter_root",
-      "bloodhound_sigil"
+      "salve"
     ],
     "left": [],
     "group": "blade",
     "hp": 65.0,
-    "dps": 44.9861111111111,
+    "dps": 46.1527777777778,
     "steps": [
       20,
       -1
@@ -7220,7 +7238,7 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "riposte_buckler",
         "origin": [
           3,
           1
@@ -7228,7 +7246,7 @@
         "rot": 1
       },
       {
-        "id": "riposte_buckler",
+        "id": "smoked_fish",
         "origin": [
           0,
           4
@@ -7236,7 +7254,7 @@
         "rot": 0
       },
       {
-        "id": "bitter_root",
+        "id": "bandage_roll",
         "origin": [
           7,
           2
@@ -7261,13 +7279,13 @@
       "bone_twin_axes",
       "bonefang_dagger",
       "leather_armor",
-      "field_rations",
       "riposte_buckler",
-      "bitter_root"
+      "smoked_fish",
+      "bandage_roll"
     ],
     "left": [],
     "group": "blade",
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 62.3413461538462,
     "steps": [
       20,
@@ -7580,9 +7598,9 @@
         "rot": 0
       },
       {
-        "id": "steam_vent",
+        "id": "field_rations",
         "origin": [
-          2,
+          4,
           0
         ],
         "rot": 0
@@ -7600,7 +7618,7 @@
     "picked": [
       "spiked_club",
       "barbarian_scimitar",
-      "steam_vent"
+      "field_rations"
     ],
     "left": [],
     "group": "blade",
@@ -7618,7 +7636,7 @@
         ]
       }
     ],
-    "hp": 55.0,
+    "hp": 60.0,
     "dps": 29.625,
     "steps": [
       5,
@@ -7662,6 +7680,14 @@
         "rot": 1
       },
       {
+        "id": "sack",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
         "id": "tibia_violence",
         "origin": [
           0,
@@ -7678,18 +7704,18 @@
         "rot": 0
       },
       {
-        "id": "bitter_root",
+        "id": "kite_shield",
         "origin": [
-          4,
+          6,
           0
         ],
         "rot": 0
       },
       {
-        "id": "salted_meat",
+        "id": "antidote_satchel",
         "origin": [
-          0,
-          1
+          4,
+          0
         ],
         "rot": 0
       }
@@ -7702,13 +7728,14 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_long"
+      "bag_long",
+      "sack"
     ],
     "picked": [
       "tibia_violence",
       "hardwood_spear",
-      "bitter_root",
-      "salted_meat"
+      "kite_shield",
+      "antidote_satchel"
     ],
     "left": [],
     "group": "blade",
@@ -7786,7 +7813,7 @@
         "rot": 1
       },
       {
-        "id": "salted_meat",
+        "id": "bitter_root",
         "origin": [
           2,
           2
@@ -7794,7 +7821,7 @@
         "rot": 0
       },
       {
-        "id": "steam_vent",
+        "id": "ration",
         "origin": [
           5,
           0
@@ -7815,8 +7842,8 @@
     "picked": [
       "bone_great_club",
       "great_club",
-      "salted_meat",
-      "steam_vent"
+      "bitter_root",
+      "ration"
     ],
     "left": [],
     "group": "blade",
@@ -7894,18 +7921,15 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "bitter_root",
         "origin": [
           7,
           0
         ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       },
       {
-        "id": "strong_salve",
+        "id": "ration",
         "origin": [
           0,
           1
@@ -7926,8 +7950,8 @@
     "picked": [
       "horse_halberd",
       "steel_twin_blades",
-      "fire_crystal",
-      "strong_salve"
+      "bitter_root",
+      "ration"
     ],
     "left": [],
     "group": "blade",
@@ -8021,26 +8045,20 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal_low",
+        "id": "sealed_wine_jar",
         "origin": [
           5,
           0
         ],
-        "rot": 0,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       },
       {
-        "id": "lightning_crystal",
+        "id": "panacea",
         "origin": [
           7,
           0
         ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       }
     ],
     "baseline": {
@@ -8058,8 +8076,8 @@
       "great_club",
       "stone_maul",
       "longsword",
-      "fire_crystal_low",
-      "lightning_crystal"
+      "sealed_wine_jar",
+      "panacea"
     ],
     "left": [],
     "group": "blade",
@@ -8161,7 +8179,7 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "smoked_fish",
         "origin": [
           7,
           0
@@ -8169,7 +8187,7 @@
         "rot": 0
       },
       {
-        "id": "antidote_satchel",
+        "id": "warding_charm",
         "origin": [
           5,
           2
@@ -8193,8 +8211,8 @@
       "stone_maul",
       "pendulum_blade",
       "plate_cuirass",
-      "field_rations",
-      "antidote_satchel"
+      "smoked_fish",
+      "warding_charm"
     ],
     "left": [],
     "group": "blade",
@@ -8212,7 +8230,7 @@
         ]
       }
     ],
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 44.9003496503496,
     "steps": [
       10,
@@ -8256,14 +8274,6 @@
         "rot": 0
       },
       {
-        "id": "bag_leather",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "great_axe",
         "origin": [
           0,
@@ -8296,15 +8306,7 @@
         "rot": 0
       },
       {
-        "id": "plate_cuirass",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "healing_draught",
+        "id": "field_rations",
         "origin": [
           2,
           1
@@ -8312,7 +8314,7 @@
         "rot": 0
       },
       {
-        "id": "lightning_crystal_low",
+        "id": "lightning_crystal",
         "origin": [
           3,
           1
@@ -8321,6 +8323,14 @@
         "state": {
           "charges": 27
         }
+      },
+      {
+        "id": "arc_coil_core",
+        "origin": [
+          5,
+          2
+        ],
+        "rot": 0
       }
     ],
     "baseline": {
@@ -8331,7 +8341,6 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather",
       "bag_leather"
     ],
     "picked": [
@@ -8339,9 +8348,9 @@
       "bone_spear",
       "cleaver",
       "shortsword",
-      "plate_cuirass",
-      "healing_draught",
-      "lightning_crystal_low"
+      "field_rations",
+      "lightning_crystal",
+      "arc_coil_core"
     ],
     "left": [],
     "group": "blade",
@@ -8359,7 +8368,7 @@
         ]
       }
     ],
-    "hp": 55.0,
+    "hp": 60.0,
     "dps": 45.2674825174825,
     "steps": [
       20,
@@ -8403,6 +8412,14 @@
         "rot": 0
       },
       {
+        "id": "fanny_pack",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
         "id": "flaying_hooks",
         "origin": [
           0,
@@ -8435,7 +8452,7 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "fire_crystal_low",
         "origin": [
           7,
           0
@@ -8446,7 +8463,7 @@
         }
       },
       {
-        "id": "styptic_dressing",
+        "id": "gear_arm",
         "origin": [
           0,
           2
@@ -8454,17 +8471,17 @@
         "rot": 1
       },
       {
-        "id": "bitter_root",
+        "id": "styptic_dressing",
         "origin": [
           2,
           2
         ],
-        "rot": 0
+        "rot": 1
       },
       {
-        "id": "bloodhound_sigil",
+        "id": "salve",
         "origin": [
-          5,
+          4,
           2
         ],
         "rot": 0
@@ -8478,17 +8495,18 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather"
+      "bag_leather",
+      "fanny_pack"
     ],
     "picked": [
       "flaying_hooks",
       "steel_twin_axes",
       "viper_twin_stingers",
       "battle_axe",
-      "fire_crystal",
+      "fire_crystal_low",
+      "gear_arm",
       "styptic_dressing",
-      "bitter_root",
-      "bloodhound_sigil"
+      "salve"
     ],
     "left": [],
     "group": "blade",
@@ -8507,7 +8525,7 @@
       }
     ],
     "hp": 65.0,
-    "dps": 44.9861111111111,
+    "dps": 46.1527777777778,
     "steps": [
       20,
       -1
@@ -8598,7 +8616,7 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "riposte_buckler",
         "origin": [
           3,
           1
@@ -8606,7 +8624,7 @@
         "rot": 1
       },
       {
-        "id": "riposte_buckler",
+        "id": "smoked_fish",
         "origin": [
           0,
           4
@@ -8614,7 +8632,7 @@
         "rot": 0
       },
       {
-        "id": "bitter_root",
+        "id": "bandage_roll",
         "origin": [
           7,
           2
@@ -8639,9 +8657,9 @@
       "bone_twin_axes",
       "bonefang_dagger",
       "leather_armor",
-      "field_rations",
       "riposte_buckler",
-      "bitter_root"
+      "smoked_fish",
+      "bandage_roll"
     ],
     "left": [],
     "group": "blade",
@@ -8659,7 +8677,7 @@
         ]
       }
     ],
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 62.3413461538462,
     "steps": [
       20,
@@ -9036,12 +9054,12 @@
         "rot": 1
       },
       {
-        "id": "steam_vent",
+        "id": "field_rations",
         "origin": [
-          0,
+          3,
           1
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -9057,7 +9075,7 @@
     "picked": [
       "spiked_club",
       "barbarian_scimitar",
-      "steam_vent"
+      "field_rations"
     ],
     "left": [],
     "group": "blade",
@@ -9075,7 +9093,7 @@
         ]
       }
     ],
-    "hp": 55.0,
+    "hp": 60.0,
     "dps": 32.1975,
     "steps": [
       5,
@@ -9119,6 +9137,14 @@
         "rot": 0
       },
       {
+        "id": "sack",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
         "id": "legion_phalera",
         "origin": [
           3,
@@ -9149,18 +9175,18 @@
         "rot": 1
       },
       {
-        "id": "bitter_root",
+        "id": "kite_shield",
         "origin": [
-          4,
-          1
+          6,
+          0
         ],
         "rot": 0
       },
       {
-        "id": "salted_meat",
+        "id": "antidote_satchel",
         "origin": [
-          2,
-          2
+          4,
+          1
         ],
         "rot": 0
       }
@@ -9173,13 +9199,14 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_long"
+      "bag_long",
+      "sack"
     ],
     "picked": [
       "tibia_violence",
       "hardwood_spear",
-      "bitter_root",
-      "salted_meat"
+      "kite_shield",
+      "antidote_satchel"
     ],
     "left": [],
     "group": "blade",
@@ -9279,7 +9306,7 @@
         "rot": 0
       },
       {
-        "id": "salted_meat",
+        "id": "bitter_root",
         "origin": [
           2,
           1
@@ -9287,7 +9314,7 @@
         "rot": 0
       },
       {
-        "id": "steam_vent",
+        "id": "ration",
         "origin": [
           3,
           1
@@ -9309,8 +9336,8 @@
     "picked": [
       "bone_great_club",
       "great_club",
-      "salted_meat",
-      "steam_vent"
+      "bitter_root",
+      "ration"
     ],
     "left": [],
     "group": "blade",
@@ -9402,20 +9429,17 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "bitter_root",
         "origin": [
           0,
           0
         ],
-        "rot": 0,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       },
       {
-        "id": "strong_salve",
+        "id": "ration",
         "origin": [
-          7,
+          1,
           0
         ],
         "rot": 0
@@ -9434,8 +9458,8 @@
     "picked": [
       "horse_halberd",
       "steel_twin_blades",
-      "fire_crystal",
-      "strong_salve"
+      "bitter_root",
+      "ration"
     ],
     "left": [],
     "group": "blade",
@@ -9505,6 +9529,14 @@
         "rot": 0
       },
       {
+        "id": "bag_small",
+        "origin": [
+          5,
+          3
+        ],
+        "rot": 0
+      },
+      {
         "id": "legion_phalera",
         "origin": [
           3,
@@ -9543,26 +9575,20 @@
         "rot": 1
       },
       {
-        "id": "fire_crystal_low",
+        "id": "sealed_wine_jar",
+        "origin": [
+          5,
+          3
+        ],
+        "rot": 0
+      },
+      {
+        "id": "panacea",
         "origin": [
           5,
           0
         ],
-        "rot": 0,
-        "state": {
-          "charges": 27
-        }
-      },
-      {
-        "id": "lightning_crystal",
-        "origin": [
-          7,
-          0
-        ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
+        "rot": 1
       }
     ],
     "baseline": {
@@ -9574,14 +9600,15 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "sack"
+      "sack",
+      "bag_small"
     ],
     "picked": [
       "great_club",
       "stone_maul",
       "longsword",
-      "fire_crystal_low",
-      "lightning_crystal"
+      "sealed_wine_jar",
+      "panacea"
     ],
     "left": [],
     "group": "blade",
@@ -9705,7 +9732,7 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "smoked_fish",
         "origin": [
           3,
           1
@@ -9713,7 +9740,7 @@
         "rot": 1
       },
       {
-        "id": "antidote_satchel",
+        "id": "warding_charm",
         "origin": [
           4,
           2
@@ -9738,8 +9765,8 @@
       "stone_maul",
       "pendulum_blade",
       "plate_cuirass",
-      "field_rations",
-      "antidote_satchel"
+      "smoked_fish",
+      "warding_charm"
     ],
     "left": [],
     "group": "blade",
@@ -9757,7 +9784,7 @@
         ]
       }
     ],
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 47.4445804195804,
     "steps": [
       10,
@@ -9797,14 +9824,6 @@
         "origin": [
           5,
           0
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_leather",
-        "origin": [
-          5,
-          3
         ],
         "rot": 0
       },
@@ -9863,15 +9882,7 @@
         "rot": 1
       },
       {
-        "id": "plate_cuirass",
-        "origin": [
-          5,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "healing_draught",
+        "id": "field_rations",
         "origin": [
           0,
           0
@@ -9879,7 +9890,7 @@
         "rot": 1
       },
       {
-        "id": "lightning_crystal_low",
+        "id": "lightning_crystal",
         "origin": [
           2,
           0
@@ -9888,6 +9899,14 @@
         "state": {
           "charges": 27
         }
+      },
+      {
+        "id": "arc_coil_core",
+        "origin": [
+          5,
+          0
+        ],
+        "rot": 0
       }
     ],
     "baseline": {
@@ -9899,7 +9918,6 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "bag_leather",
       "fanny_pack"
     ],
     "picked": [
@@ -9907,9 +9925,9 @@
       "bone_spear",
       "cleaver",
       "shortsword",
-      "plate_cuirass",
-      "healing_draught",
-      "lightning_crystal_low"
+      "field_rations",
+      "lightning_crystal",
+      "arc_coil_core"
     ],
     "left": [],
     "group": "blade",
@@ -9927,7 +9945,7 @@
         ]
       }
     ],
-    "hp": 55.0,
+    "hp": 60.0,
     "dps": 53.0096538461538,
     "steps": [
       20,
@@ -9966,6 +9984,14 @@
         "id": "bag_leather",
         "origin": [
           5,
+          0
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fanny_pack",
+        "origin": [
+          2,
           0
         ],
         "rot": 0
@@ -10017,7 +10043,7 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "fire_crystal_low",
         "origin": [
           6,
           2
@@ -10028,7 +10054,7 @@
         }
       },
       {
-        "id": "styptic_dressing",
+        "id": "gear_arm",
         "origin": [
           3,
           3
@@ -10036,18 +10062,18 @@
         "rot": 1
       },
       {
-        "id": "bitter_root",
+        "id": "styptic_dressing",
+        "origin": [
+          2,
+          0
+        ],
+        "rot": 1
+      },
+      {
+        "id": "salve",
         "origin": [
           5,
           0
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bloodhound_sigil",
-        "origin": [
-          3,
-          1
         ],
         "rot": 0
       }
@@ -10060,17 +10086,18 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather"
+      "bag_leather",
+      "fanny_pack"
     ],
     "picked": [
       "flaying_hooks",
       "steel_twin_axes",
       "viper_twin_stingers",
       "battle_axe",
-      "fire_crystal",
+      "fire_crystal_low",
+      "gear_arm",
       "styptic_dressing",
-      "bitter_root",
-      "bloodhound_sigil"
+      "salve"
     ],
     "left": [],
     "group": "blade",
@@ -10089,7 +10116,7 @@
       }
     ],
     "hp": 65.0,
-    "dps": 49.3961111111111,
+    "dps": 50.6794444444444,
     "steps": [
       20,
       -1
@@ -10210,7 +10237,7 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "riposte_buckler",
         "origin": [
           0,
           0
@@ -10218,7 +10245,7 @@
         "rot": 1
       },
       {
-        "id": "riposte_buckler",
+        "id": "smoked_fish",
         "origin": [
           2,
           2
@@ -10226,7 +10253,7 @@
         "rot": 0
       },
       {
-        "id": "bitter_root",
+        "id": "bandage_roll",
         "origin": [
           3,
           3
@@ -10253,9 +10280,9 @@
       "bone_twin_axes",
       "bonefang_dagger",
       "leather_armor",
-      "field_rations",
       "riposte_buckler",
-      "bitter_root"
+      "smoked_fish",
+      "bandage_roll"
     ],
     "left": [],
     "group": "blade",
@@ -10273,7 +10300,7 @@
         ]
       }
     ],
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 69.1199038461538,
     "steps": [
       20,
@@ -10547,9 +10574,9 @@
         "rot": 0
       },
       {
-        "id": "steam_vent",
+        "id": "field_rations",
         "origin": [
-          2,
+          4,
           0
         ],
         "rot": 0
@@ -10567,12 +10594,12 @@
     "picked": [
       "spiked_club",
       "barbarian_scimitar",
-      "steam_vent"
+      "field_rations"
     ],
     "left": [],
     "group": "blade",
     "axes": {},
-    "hp": 55.0,
+    "hp": 60.0,
     "dps": 29.625,
     "steps": [
       5,
@@ -10616,6 +10643,14 @@
         "rot": 1
       },
       {
+        "id": "sack",
+        "origin": [
+          6,
+          0
+        ],
+        "rot": 0
+      },
+      {
         "id": "tibia_violence",
         "origin": [
           0,
@@ -10632,18 +10667,18 @@
         "rot": 0
       },
       {
-        "id": "bitter_root",
+        "id": "kite_shield",
         "origin": [
-          4,
+          6,
           0
         ],
         "rot": 0
       },
       {
-        "id": "salted_meat",
+        "id": "antidote_satchel",
         "origin": [
-          0,
-          1
+          4,
+          0
         ],
         "rot": 0
       }
@@ -10656,13 +10691,14 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_long"
+      "bag_long",
+      "sack"
     ],
     "picked": [
       "tibia_violence",
       "hardwood_spear",
-      "bitter_root",
-      "salted_meat"
+      "kite_shield",
+      "antidote_satchel"
     ],
     "left": [],
     "group": "blade",
@@ -10727,7 +10763,7 @@
         "rot": 1
       },
       {
-        "id": "salted_meat",
+        "id": "bitter_root",
         "origin": [
           2,
           2
@@ -10735,7 +10771,7 @@
         "rot": 0
       },
       {
-        "id": "steam_vent",
+        "id": "ration",
         "origin": [
           5,
           0
@@ -10756,8 +10792,8 @@
     "picked": [
       "bone_great_club",
       "great_club",
-      "salted_meat",
-      "steam_vent"
+      "bitter_root",
+      "ration"
     ],
     "left": [],
     "group": "blade",
@@ -10822,18 +10858,15 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "bitter_root",
         "origin": [
           7,
           0
         ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       },
       {
-        "id": "strong_salve",
+        "id": "ration",
         "origin": [
           0,
           1
@@ -10854,8 +10887,8 @@
     "picked": [
       "horse_halberd",
       "steel_twin_blades",
-      "fire_crystal",
-      "strong_salve"
+      "bitter_root",
+      "ration"
     ],
     "left": [],
     "group": "blade",
@@ -10936,26 +10969,20 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal_low",
+        "id": "sealed_wine_jar",
         "origin": [
           5,
           0
         ],
-        "rot": 0,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       },
       {
-        "id": "lightning_crystal",
+        "id": "panacea",
         "origin": [
           7,
           0
         ],
-        "rot": 1,
-        "state": {
-          "charges": 27
-        }
+        "rot": 0
       }
     ],
     "baseline": {
@@ -10973,8 +11000,8 @@
       "great_club",
       "stone_maul",
       "longsword",
-      "fire_crystal_low",
-      "lightning_crystal"
+      "sealed_wine_jar",
+      "panacea"
     ],
     "left": [],
     "group": "blade",
@@ -11063,7 +11090,7 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "smoked_fish",
         "origin": [
           7,
           0
@@ -11071,7 +11098,7 @@
         "rot": 0
       },
       {
-        "id": "antidote_satchel",
+        "id": "warding_charm",
         "origin": [
           5,
           2
@@ -11095,13 +11122,13 @@
       "stone_maul",
       "pendulum_blade",
       "plate_cuirass",
-      "field_rations",
-      "antidote_satchel"
+      "smoked_fish",
+      "warding_charm"
     ],
     "left": [],
     "group": "blade",
     "axes": {},
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 44.9003496503496,
     "steps": [
       10,
@@ -11145,14 +11172,6 @@
         "rot": 0
       },
       {
-        "id": "bag_leather",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "great_axe",
         "origin": [
           0,
@@ -11185,15 +11204,7 @@
         "rot": 0
       },
       {
-        "id": "plate_cuirass",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "healing_draught",
+        "id": "field_rations",
         "origin": [
           2,
           1
@@ -11201,7 +11212,7 @@
         "rot": 0
       },
       {
-        "id": "lightning_crystal_low",
+        "id": "lightning_crystal",
         "origin": [
           3,
           1
@@ -11210,6 +11221,14 @@
         "state": {
           "charges": 27
         }
+      },
+      {
+        "id": "arc_coil_core",
+        "origin": [
+          5,
+          2
+        ],
+        "rot": 0
       }
     ],
     "baseline": {
@@ -11220,7 +11239,6 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather",
       "bag_leather"
     ],
     "picked": [
@@ -11228,14 +11246,14 @@
       "bone_spear",
       "cleaver",
       "shortsword",
-      "plate_cuirass",
-      "healing_draught",
-      "lightning_crystal_low"
+      "field_rations",
+      "lightning_crystal",
+      "arc_coil_core"
     ],
     "left": [],
     "group": "blade",
     "axes": {},
-    "hp": 55.0,
+    "hp": 60.0,
     "dps": 45.2674825174825,
     "steps": [
       20,
@@ -11279,6 +11297,14 @@
         "rot": 0
       },
       {
+        "id": "fanny_pack",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
         "id": "flaying_hooks",
         "origin": [
           0,
@@ -11311,7 +11337,7 @@
         "rot": 0
       },
       {
-        "id": "fire_crystal",
+        "id": "fire_crystal_low",
         "origin": [
           7,
           0
@@ -11322,7 +11348,7 @@
         }
       },
       {
-        "id": "styptic_dressing",
+        "id": "gear_arm",
         "origin": [
           0,
           2
@@ -11330,17 +11356,17 @@
         "rot": 1
       },
       {
-        "id": "bitter_root",
+        "id": "styptic_dressing",
         "origin": [
           2,
           2
         ],
-        "rot": 0
+        "rot": 1
       },
       {
-        "id": "bloodhound_sigil",
+        "id": "salve",
         "origin": [
-          5,
+          4,
           2
         ],
         "rot": 0
@@ -11354,23 +11380,24 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather"
+      "bag_leather",
+      "fanny_pack"
     ],
     "picked": [
       "flaying_hooks",
       "steel_twin_axes",
       "viper_twin_stingers",
       "battle_axe",
-      "fire_crystal",
+      "fire_crystal_low",
+      "gear_arm",
       "styptic_dressing",
-      "bitter_root",
-      "bloodhound_sigil"
+      "salve"
     ],
     "left": [],
     "group": "blade",
     "axes": {},
     "hp": 65.0,
-    "dps": 44.9861111111111,
+    "dps": 46.1527777777778,
     "steps": [
       20,
       -1
@@ -11461,7 +11488,7 @@
         "rot": 0
       },
       {
-        "id": "field_rations",
+        "id": "riposte_buckler",
         "origin": [
           3,
           1
@@ -11469,7 +11496,7 @@
         "rot": 1
       },
       {
-        "id": "riposte_buckler",
+        "id": "smoked_fish",
         "origin": [
           0,
           4
@@ -11477,7 +11504,7 @@
         "rot": 0
       },
       {
-        "id": "bitter_root",
+        "id": "bandage_roll",
         "origin": [
           7,
           2
@@ -11502,14 +11529,14 @@
       "bone_twin_axes",
       "bonefang_dagger",
       "leather_armor",
-      "field_rations",
       "riposte_buckler",
-      "bitter_root"
+      "smoked_fish",
+      "bandage_roll"
     ],
     "left": [],
     "group": "blade",
     "axes": {},
-    "hp": 60.0,
+    "hp": 55.0,
     "dps": 62.3413461538462,
     "steps": [
       20,
