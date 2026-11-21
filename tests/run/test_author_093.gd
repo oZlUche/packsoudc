@@ -47,7 +47,8 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(_grade(db.get_def(&"knife")), "小", "匕首 2 格：小")
 	t.eq(_grade(db.get_def(&"shortsword")), "小", "短剑 3 格：小")
 	t.eq(_grade(db.get_def(&"warhammer")), "中", "战锤 5 格：中")
-	t.eq(_grade(db.get_def(&"plate_cuirass")), "大", "板甲 9 格：大")
+	t.eq(_grade(db.get_def(&"plate_cuirass")), "中", "板甲 8 格（366 收小）：中")
+	t.eq(_grade(db.get_def(&"tower_shield")), "大", "塔盾 12 格：大")
 	t.eq(ItemVolume.grade_name(ItemVolume.grade_of_cells(13)), "极大", "13 格：极大")
 	# 献祭规矩：一件满足几条算几次；2^稀有度 × 倍率（104：倍率照神明总表）
 	var sword := db.get_def(&"shortsword")     # 稀有度 0（279 待定 5）、武器、金属
@@ -59,7 +60,8 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(sun.offering_value(db.get_def(&"warhammer")), 10, "日神：战锤稀有度 1、体积正好为中 → 只算一条：2 × 5 = 10")
 	t.eq(sun.offering_value(db.get_def(&"fire_crystal")), 40, "日神：火晶石是魔晶石 → 2^3 × 5 = 40")
 	var earth: FaithDef = defs[&"earth"]
-	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 4 * 5 * 10, "大地：板甲稀有度 2 → 2^2 × 5 × 10 格 = 200（143：板甲 10 格）")
+	t.eq(earth.offering_value(db.get_def(&"plate_cuirass")), 0, "大地：板甲 366 收到 8 格，不到 9 格不收")
+	t.eq(earth.offering_value(db.get_def(&"tower_shield")), 2 * 5 * 12, "大地：塔盾稀有度 1 → 2 × 5 × 12 格 = 120")
 	t.eq(earth.offering_value(sword), 0, "大地不收小东西")
 	var nature: FaithDef = defs[&"nature"]
 	t.eq(nature.offering_value(db.get_def(&"ration")), 5 + 5, "自然：口粮既是自然又是食物 → 两条各 1 × 5")

@@ -48,6 +48,7 @@ static func board_of(content: Dictionary, items: ItemDatabase, find_room: bool =
 		var entry: Dictionary = pair[1]
 		var inst := ItemInstance.create(def, int(entry.get("rot", 0)))
 		CrystalRoll.restore(inst, entry)     # 246 补充二：魔晶石剩几次跟着内容
+		inst.set_quality(int(entry.get(ItemInstance.QUALITY_KEY, 0)))     # 360 第二批：A8 起敌人武器带品质
 		if not entry.has("at"):
 			if not board.try_add(inst):
 				push_warning("敌人的道具摆不下：%s（棋盘 %s）" % [def.id, size])
@@ -134,6 +135,7 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	var spec := BattleCompiler.compile(board, inp)
 	scale_hp(spec, content)
 	scale_damage(spec, content)
+	scale_speed(spec, content)
 	return spec
 
 
@@ -172,10 +174,43 @@ static func scale_damage(spec: CombatantSpec, content: Dictionary) -> void:
 			entry["damage"] = StatMath.mul(int(entry.get("damage", 0)), f)
 
 
+## 360 A6：首领加速 —— 速度倍率（每件的触发速度 haste 与耐力回复一起乘，等于行动间隔除以它）。写的是最终值，1 不写
+const SPEED_MULT := "speed_mult"
+
+
+static func stamp_speed(content: Dictionary, k: float) -> void:
+	if k > 0.0 and k != 1.0 and has_enemy(content):
+		content[SPEED_MULT] = k
+
+
+static func scale_speed(spec: CombatantSpec, content: Dictionary) -> void:
+	var k := float(content.get(SPEED_MULT, 1.0))
+	if spec == null or k <= 0.0 or k == 1.0:
+		return
+	var f := StatMath.from_float(k)
+	for it in spec.items:
+		if it.stats != null and it.stats.has(BattleStats.HASTE):
+			var v := it.stats.ensure(BattleStats.HASTE)
+			v.base = StatMath.mul(v.base, f)
+			v.flat = StatMath.mul(v.flat, f)
+	if spec.baseline != null and spec.baseline.has(BattleStats.REGEN_STAMINA):
+		var r := spec.baseline.ensure(BattleStats.REGEN_STAMINA)
+		r.base = StatMath.mul(r.base, f)
+		r.flat = StatMath.mul(r.flat, f)
+
+
 static func scale_hp(spec: CombatantSpec, content: Dictionary) -> void:
 	var k := float(content.get(HP_MULT, 1.0))
 	if spec != null and k > 0.0 and k != 1.0:
 		spec.max_hp = roundi(float(spec.max_hp) * k)
+
+
+## 360 A10：名牌上的名字 —— 强化版首领的内容里写了 `title`（别的语言 `titles`）就用它，否则用敌人定义的名字
+static func title_of(content: Dictionary, def: EnemyDef) -> String:
+	if String(content.get("title", "")) != "":
+		var titles: Variant = content.get("titles", {})
+		return Names.pick(titles as Dictionary if titles is Dictionary else {}, String(content["title"]))
+	return Names.of(def) if def != null else ""
 
 
 ## 一行给人看的摘要：名字、生命、几件、都是什么（2026-10-17：档位、流派键、DPS 是内部读数，不给玩家看）
@@ -191,7 +226,7 @@ static func summary(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 			carried += 1
 		var idef := items.get_def(StringName(String((raw as Dictionary).get("id", ""))))
 		names.append(Names.of(idef) if idef != null else String((raw as Dictionary).get("id", "?")))
-	var line := UiText.tn("enemy.summary", names.size()) % [Names.of(def), spec.max_hp_int(), names.size(), UiText.t("hud.buff_sep").join(names)]
+	var line := UiText.tn("enemy.summary", names.size()) % [title_of(content, def), spec.max_hp_int(), names.size(), UiText.t("hud.buff_sep").join(names)]
 	# 126：身上带的非战斗道具（必掉）
 	if carried > 0:
 		line += UiText.t("enemy.carried") % carried

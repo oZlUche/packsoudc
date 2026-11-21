@@ -71,7 +71,7 @@ static func catalogue(rules: MarketRules, items: ItemDatabase, st: StallDef, lv:
 	var above: Array[ItemDef] = []
 	for id in items.ids():
 		var d := items.get_def(id)
-		if not _sellable(rules, d) or st.excluded_ids.has(d.id) or not d.tags.any(func(t: StringName) -> bool: return st.tags.has(t)):
+		if not _sellable(rules, d) or st.excluded_ids.has(d.id) or not (st.extra_ids.has(d.id) or d.tags.any(func(t: StringName) -> bool: return st.tags.has(t))):
 			continue
 		(listed if d.rarity <= cap else above).append(d)
 	var by := func(a: ItemDef, b: ItemDef) -> bool:

@@ -1,0 +1,21 @@
+{
+  "id": "prime_beast_leg",
+  "display_name": "上等兽腿",
+  "display_names": {
+    "en": "Prime Beast Leg"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 1,
+  "tags": [
+    "ingredient",
+    "nature"
+  ],
+  "material": "flesh"
+}

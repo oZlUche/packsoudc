@@ -88,9 +88,13 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 		W178._cleanup()
 		return
 	p.show_faction(&"legion")
-	var rb := p.find_child("Report_legion_forge_token", true, false) as Button
-	t.not_null(rb, "《领炉牌》卡上有【办理】")
-	t.check(bool(p.report(&"legion_forge_token")["done"]), "按【办理】办成")
+	var rb := p.find_child("Finish_legion_forge_token", true, false) as Button
+	t.not_null(rb, "《领炉牌》卡上有【完成】（作者 2026-11-21：不再叫【办理】）")
+	t.eq(rb.text if rb != null else "", UiText.t("commission.finish"), "键上写「完成」")
+	var jumped: Array = []
+	p.facility_requested.connect(func(fac: StringName): jumped.append(fac))
+	t.check(bool(p.finish(&"legion_forge_token")["done"]), "按【完成】办成")
+	t.eq(jumped, [&"smithy"], "办成直接跳到铁匠铺")
 	t.check(f.facility_open(&"smithy"), "铁匠铺开了")
 	t.eq(s.notice_layer().current_text(), UiText.t("commission.opened") % UiText.t("smithy.title"), "新档：说一句「铁匠铺开放了」")
 	p.show_sub("reputation")
@@ -229,7 +233,10 @@ static func run_field_goals(t: TestCase) -> void:
 	s.fail(&"time_out")
 	f._settle_run()
 	t.eq(int(book.entry(road)["progress"]), 2, "败退：打赢的两场照记")
-	t.check(book.is_done(reg), "败退：两处到访照记，《协会登记证》办成")
+	t.check(Commissions.is_ready(book, reg), "败退：两处到访照记，《协会登记证》办成了（等点【完成】）")
+	t.eq(book.rep_of(&"society"), 20, "没点【完成】：声望先不加")
+	f.claim_commission(reg)
+	t.check(book.is_done(reg), "点【完成】结案")
 	t.eq(book.rep_of(&"society"), 25, "魔法师协会到受托")
 	t.check(Commissions.regular_open(book, Commissions.faction(&"society")), "协会的常规委托开了")
 	Support.cleanup(PREFIX)

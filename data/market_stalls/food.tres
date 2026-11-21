@@ -11,3 +11,4 @@ display_names = {
 }
 order = 1
 tags = Array[StringName]([&"food", &"supply"])
+extra_ids = Array[StringName]([&"sour_wheat", &"black_bean", &"fowl_wing", &"wild_scallion", &"wild_berry"])

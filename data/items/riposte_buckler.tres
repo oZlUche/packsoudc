@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_pr3f3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_urid0"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_w8cgx"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_g2l4u"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_72mai"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="6_yyy77"]
+[ext_resource type="Script" path="res://core/battle/effects/shift_axis.gd" id="7_1mm60"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_damage.gd" id="8_j5f04"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="9_5qdlt"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="10_vi7op"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="11_dr6hs"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="12_l7f48"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="13_fi8rf"]
+
+[sub_resource type="Resource" id="Resource_l3anc"]
+script = ExtResource("4_g2l4u")
+
+[sub_resource type="Resource" id="Resource_iu4xa"]
+script = ExtResource("7_1mm60")
+axis = &"damage_dealt"
+
+[sub_resource type="Resource" id="Resource_3wumu"]
+script = ExtResource("8_j5f04")
+blocked_only = true
+
+[sub_resource type="Resource" id="Resource_nxfl6"]
+script = ExtResource("3_w8cgx")
+trigger = SubResource("Resource_3wumu")
+cadence = SubResource("Resource_l3anc")
+effects = Array[ExtResource("6_yyy77")]([SubResource("Resource_iu4xa")])
+
+[sub_resource type="Resource" id="Resource_mrn5u"]
+script = ExtResource("9_5qdlt")
+base_stats = {
+"block": 4
+}
+rules = Array[ExtResource("3_w8cgx")]([SubResource("Resource_nxfl6")])
+
+[sub_resource type="Resource" id="Resource_5c0ut"]
+script = ExtResource("13_fi8rf")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("12_l7f48")
+id = &"riposte_buckler"
+display_name = "反击小盾"
+display_names = {
+"en": "Riposte Buckler"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_5c0ut")
+rarity = 3
+tags = Array[StringName]([&"shield", &"imperial"])
+material = "metal"
+combat = SubResource("Resource_mrn5u")

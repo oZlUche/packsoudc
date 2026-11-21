@@ -8,5 +8,12 @@
   "tags": [
     "food",
     "supply"
+  ],
+  "extra_ids": [
+    "sour_wheat",
+    "black_bean",
+    "fowl_wing",
+    "wild_scallion",
+    "wild_berry"
   ]
 }

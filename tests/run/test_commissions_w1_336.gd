@@ -98,13 +98,16 @@ static func run_loop(t: TestCase) -> void:
 	s.fail(&"time_out")
 	f._settle_run()
 	var book := f.meta.commissions
-	t.check(book.is_done(LETTER), "灰灯：交了就算，败退也办成")
-	t.eq(book.rep_of(&"greylamp"), 15, "灰灯声望 +5（342 B2：后续剧情）")
+	t.check(Commissions.is_ready(book, LETTER), "灰灯：交了就算，败退也办成（等点【完成】）")
+	t.eq(book.rep_of(&"greylamp"), 10, "作者 2026-11-21：没点【完成】先不给声望")
 	t.eq(book.state_of(TWO), CommissionBook.TAKEN, "军团：还接着")
 	t.eq(int(book.entry(TWO)["progress"]), 1, "军团：记了一处")
 	var lines: Array[String] = ResultScreenScript.commission_lines(f.last_commissions, f.meta)
 	t.eq(lines.size(), 2, "结算两句")
-	t.check(lines.has(UiText.t("commission.rcpt_done") % Names.of(Commissions.def(LETTER))), "写「无人署名的信：办成了」")
+	t.check(lines.has(UiText.t("commission.rcpt_ready") % Names.of(Commissions.def(LETTER))), "写「无人署名的信：办成了，回委托页点【完成】」")
+	t.check(bool(f.claim_commission(LETTER)["done"]), "点【完成】")
+	t.check(book.is_done(LETTER), "灰灯：结案")
+	t.eq(book.rep_of(&"greylamp"), 15, "灰灯声望 +5（342 B2：后续剧情）")
 	t.check(lines.has(UiText.t("commission.res_left") % [Names.of(Commissions.def(TWO)), 1]), "写「两条回路：还差 1 处」")
 	f._settle_run()
 	t.eq(int(book.entry(TWO)["progress"]), 1, "重复结算不重复记账")
@@ -128,7 +131,9 @@ static func run_loop(t: TestCase) -> void:
 	f.result = null
 	f._settled = false
 	f._settle_run()
-	t.check(book.is_done(TWO), "军团：两处查完办成")
+	t.check(Commissions.is_ready(book, TWO), "两处查完：办成了")
+	f.claim_commission(TWO)
+	t.check(book.is_done(TWO), "点【完成】结案")
 	t.eq(book.rep_of(&"cartographers"), 15, "地图协会声望 +5（342 B3：《两条回路》改给地图协会）")
 
 
@@ -203,7 +208,9 @@ static func run_forge_credit(t: TestCase) -> void:
 	var funds0 := f.meta.funds
 	var before := f.meta.warehouse.item_count()
 	t.eq(f.forge(r0.id), "", "照选的那张打一次")
-	t.check(f.meta.commissions.is_done(COPY), "办成")
+	t.check(Commissions.is_ready(f.meta.commissions, COPY), "办成了，等点【完成】")
+	f.claim_commission(COPY)
+	t.check(f.meta.commissions.is_done(COPY), "点【完成】结案")
 	t.eq(f.meta.commissions.rep_of(&"society"), 15, "协会声望 +5（342 B2：后续剧情）")
 	t.eq(f.meta.funds - funds0, Commissions.def(COPY).funds - r0.funds, "酬金只补劳动（扣掉工钱再加酬金）")
 	t.check(f.meta.warehouse.item_count() > 0 and before >= 0, "成品进了仓库")

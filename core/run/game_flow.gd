@@ -1076,6 +1076,17 @@ func _credit_nursery(goal: StringName, crop: StringName) -> void:
 	sync_commissions()
 
 
+## 355：苗圃按垦户社的档补地（只加不减）。返回动没动（动了存档）
+func sync_nursery() -> bool:
+	if meta == null or not facility_open(&"nursery"):
+		return false
+	var f := Commissions.faction(&"growers")
+	if f == null or not meta.nursery.fit(Commissions.tier_of(meta.commissions, f)):
+		return false
+	save_meta()
+	return true
+
+
 ## 342 B3：苗圃里有熟了的（后勤页签挂「可收获」）
 func nursery_ripe() -> bool:
 	return facility_open(&"nursery") and meta.nursery.ripe_count() > 0
@@ -1163,6 +1174,49 @@ func canteen_meal() -> Dictionary:
 	return meta.canteen.current_meal() if meta != null else {}
 
 
+## 355：提示窗、食堂页按谁算终值：上回出征的那位，没有就名单第一位
+func canteen_viewer() -> CharacterDef:
+	var ch := character_of(meta.last_character) if meta != null and meta.last_character != &"" else null
+	if ch == null and not characters.is_empty():
+		ch = characters[0] as CharacterDef
+	return ch
+
+
+## 355 第二批：收藏菜单的四个动作（食堂页、开局屏第四页共用），动了就存档
+## 收藏锅里这一锅：成了返回第几份，满了 / 锅空 = -1
+func canteen_save_menu(p_name: String = "") -> int:
+	if not canteen_open():
+		return -1
+	var i := meta.canteen.save_menu(p_name)
+	if i >= 0:
+		save_meta()
+	return i
+
+
+## 一键重做第 [param i] 份：返回缺料的那几格
+func canteen_load_menu(i: int) -> Array[Dictionary]:
+	var gaps: Array[Dictionary] = []
+	if not canteen_open() or i < 0 or i >= meta.canteen.menus.size():
+		return gaps
+	gaps = meta.canteen.load_menu(i)
+	save_meta()
+	return gaps
+
+
+func canteen_rename_menu(i: int, p_name: String) -> bool:
+	if not canteen_open() or not meta.canteen.rename_menu(i, p_name):
+		return false
+	save_meta()
+	return true
+
+
+func canteen_delete_menu(i: int) -> bool:
+	if not canteen_open() or not meta.canteen.delete_menu(i):
+		return false
+	save_meta()
+	return true
+
+
 ## 355：出征带进去的那一锅：食堂开着、不是教程章、锅里有东西。空 = 不吃
 func meal_snapshot(chapter: ChapterDef) -> Dictionary:
 	if not canteen_open() or tutorial_chapters().has(chapter):
@@ -1208,6 +1262,7 @@ func sync_commissions() -> Array[StringName]:
 	if not got.is_empty() or posted > 0:
 		save_meta()
 	sync_canteen()     # 355：刚开的食堂（或灰灯升了档）调锅和仓库
+	sync_nursery()     # 355：垦户社信赖、代言各多一畦
 	return got
 
 
@@ -1217,6 +1272,19 @@ func report_commission(id: StringName) -> Dictionary:
 	if not commissions_visible() or d == null:
 		return {"ok": false, "step": false, "done": false}
 	var got := Commissions.report(meta, d, items)
+	if bool(got["ok"]):
+		sync_commissions()
+		save_meta()
+		meta.changed.emit()
+	return got
+
+
+## 作者 2026-11-21：委托页的【完成】—— 办成了的这时才发酬金、开设施，后面的剧情接着出来。返回 [method Commissions.claim] 的结果
+func claim_commission(id: StringName) -> Dictionary:
+	var d := Commissions.def(id)
+	if not commissions_visible() or d == null:
+		return {"ok": false, "done": false}
+	var got := Commissions.claim(meta, d, items)
 	if bool(got["ok"]):
 		sync_commissions()
 		save_meta()

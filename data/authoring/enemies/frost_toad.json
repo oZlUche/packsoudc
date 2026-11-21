@@ -29,5 +29,9 @@
     3
   ],
   "species": "beast",
-  "bagless": true
+  "bagless": true,
+  "loot_filler": [
+    "meat_scrap",
+    "game_meat"
+  ]
 }

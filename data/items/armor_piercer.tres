@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_lky1l"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_4650s"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_kwpls"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_deg84"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_jaate"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_lc5hy"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_i8acj"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_2jtyi"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_iw5y4"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_4kkg0"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_h1jeq"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_kmso6"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_x8kba"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_rk1gi"]
+
+[sub_resource type="Resource" id="Resource_wpg3i"]
+script = ExtResource("4_deg84")
+seconds = 0.7
+
+[sub_resource type="Resource" id="Resource_sevu7"]
+script = ExtResource("6_lc5hy")
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_xbcrc"]
+script = ExtResource("8_2jtyi")
+penetration = true
+
+[sub_resource type="Resource" id="Resource_82bin"]
+script = ExtResource("9_iw5y4")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_qh817"]
+script = ExtResource("3_kwpls")
+trigger = SubResource("Resource_82bin")
+cadence = SubResource("Resource_wpg3i")
+costs = Array[ExtResource("5_jaate")]([SubResource("Resource_sevu7")])
+effects = Array[ExtResource("7_i8acj")]([SubResource("Resource_xbcrc")])
+
+[sub_resource type="Resource" id="Resource_sbea1"]
+script = ExtResource("10_4kkg0")
+base_stats = {
+"damage": 9
+}
+rules = Array[ExtResource("3_kwpls")]([SubResource("Resource_qh817")])
+
+[sub_resource type="Resource" id="Resource_xting"]
+script = ExtResource("14_rk1gi")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("13_x8kba")
+id = &"armor_piercer"
+display_name = "穿甲锥"
+display_names = {
+"en": "Armor Piercer"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_xting")
+rarity = 3
+tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"dagger"])
+material = "metal"
+combat = SubResource("Resource_sbea1")

@@ -65,6 +65,9 @@ var difficulty: DifficultyDef = null
 ## 320（方案 §7）：开局那一刻这一档难度的完整规则（[ResourceSnapshot]，序列化成一行字串存档）。读档按它重建，
 ## 改了难度数据也不影响进行中的这一局；旧档没有 = 空，读档时按 id 用现在的
 var difficulty_rules: String = ""
+## 360 A11：揭示过敌情的点（id → true，跟着存档走）；[method intel_visible]
+var intel_seen: Dictionary = {}
+var _intel_at := -2
 ## 320 A4：开局换了哪些点（诊断用，不进存档）
 var advanced_report: Dictionary = {}
 ## 101 第 0 刀：这一局装了哪些模块（id → [RunModule]）。**本类不认识任何具体模块** —— 加一种玩法不用改这里。
@@ -197,10 +200,16 @@ static func start(
 		return null
 	ItemInstance.reset_uid_counter()
 	if s.pool != null:
-		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule, s.bag_pool)
+		EnemyPlacer.fill(s.map, s.pool, p_enemies, p_items, p_chapter.difficulty, s.scale_id(), s.carry_rule, s.bag_pool,
+			p_difficulty if p_chapter.profile == &"" else null)     # 360 第二批：A1 / A4 / A8 配装变好（有档案的章不吃）
+		if p_chapter.profile == &"":
+			DifficultyMap.upgrade_bosses(s.map, p_difficulty, p_items)     # 360 A10：首领强化版
 		s.advanced_report = s.place_advanced(p_difficulty)     # 320 A4：在事件、宝箱之前，换的点只有敌人内容
 	EnemyPlacer.arrange_map(s.map, p_items)     # 165：预设图里没写位置的敌人道具（与相邻组）在这里摆一次、记进内容
-	PaidExtracts.mark(s.map, s.economy)
+	if not (p_difficulty != null and p_difficulty.no_paid_extract and p_chapter.profile == &""):
+		PaidExtracts.mark(s.map, s.economy)     # 360 A5：不设付费撤离点
+	if p_difficulty != null and p_chapter.profile == &"":
+		DifficultyMap.trim_rests(s.map, p_difficulty.rest_keep_percent, p_seed)     # 360 A5：休息点变少
 	EventPlacer.fill(s.map, s.node_rules)
 	ChestPlacer.roll(s.map, s.node_rules.chest if s.node_rules != null else null, p_chapter.chest_skin)     # 154：宝箱的稀有度与皮肤生成时就定
 	s.rng = RunRNG.new(p_seed)
@@ -245,9 +254,18 @@ static func start(
 	s.install_modules()     # 模块要接的东西（旅程、节点事件）都造好了才装
 	s._seed_owned()     # 104：带进来的不算「获得」
 	# 084：章节说了「默认已经站在出生点上」（序章只有一个出生点，没什么可挑的）就直接站上去
+	if not bool(s.map.layout_meta.get("two_sided", false)):
+		s._trim_extracts()     # 360 A5（两头出生的图挑定出生点后在 _remark_extracts 里做）
 	if p_chapter.auto_spawn and not s.map.entry_ids.is_empty():
 		s.pick_spawn(s.map.entry_ids[0])
 	return s
+
+
+## 360 A5：只剩一个半途关闭的撤离点 —— 别的撤离点变成路口（有档案的章、没开这一条不动）
+func _trim_extracts() -> void:
+	if difficulty == null or not difficulty.no_paid_extract or (chapter != null and chapter.profile != &""):
+		return
+	DifficultyMap.keep_one_extract(map)
 
 
 ## 站到出生点上开局。返回 false = 不是出生点，或不在挑出生点阶段
@@ -269,10 +287,12 @@ func _remark_extracts() -> void:
 		if n.type == &"extract":
 			n.content.erase("fee")
 			n.content.erase("closes_at")
-	PaidExtracts.mark(map, economy)
+	if difficulty == null or not difficulty.no_paid_extract or (chapter != null and chapter.profile != &""):
+		PaidExtracts.mark(map, economy)
 	var cd := CountdownModule.of(self)
 	if cd != null and chapter != null and chapter.closing_extract:
 		PaidExtracts.mark_closing(map, cd.limit())
+	_trim_extracts()
 
 
 ## 走一步。开着的商店 / 搜索先关掉（随时可以离开）；没拿的战利品、地上的东西都留在这个点上（3.4 / 084：离开就是清的时机）；
@@ -1194,6 +1214,27 @@ func difficulty_from_snapshot() -> DifficultyDef:
 	return def if def != null and def.id == difficulty_id else null
 
 
+## 360 A11：这个点的敌人具体是谁现在看不看得见。没开这一条（或有档案的章）一律看得见；
+## 开了：离脚下 [member DifficultyDef.intel_range] + 侦察距离步以内的看得见，揭示过的一直看得见。还没站上出生点时都看不见
+func intel_visible(id: int) -> bool:
+	if difficulty == null or difficulty.intel_range <= 0 or (chapter != null and chapter.profile != &""):
+		return true
+	_reveal_intel()
+	return intel_seen.has(id)
+
+
+## 360 A11：站的点变了才重算一遍（揭示只增不减）
+func _reveal_intel() -> void:
+	if travel == null or map == null or travel.current_id < 0 or travel.current_id == _intel_at:
+		return
+	_intel_at = travel.current_id
+	var reach := difficulty.intel_range + int(floor(hooks.run_context().scout_range))
+	var dist := MapNavigator.distance_map(map, travel.current_id)
+	for id in dist:
+		if int(dist[id]) <= reach:
+			intel_seen[int(id)] = true
+
+
 ## 320 A1：这一局普通敌人的生命倍率（有档案的章不吃）
 func enemy_hp_mult() -> float:
 	if difficulty == null or (chapter != null and chapter.profile != &""):
@@ -1201,13 +1242,31 @@ func enemy_hp_mult() -> float:
 	return difficulty.enemy_hp_mult()
 
 
-## 图上已经放好的敌人都写上倍率（开局一次；之后现造的由 [NodeEvents] 写）
+## 360 A6：首领（核心点）的生命倍率与速度倍率（有档案的章不吃）
+func boss_hp_mult() -> float:
+	if difficulty == null or (chapter != null and chapter.profile != &""):
+		return 1.0
+	return difficulty.boss_hp_mult()
+
+
+func boss_speed_mult() -> float:
+	if difficulty == null or (chapter != null and chapter.profile != &""):
+		return 1.0
+	return difficulty.boss_speed_mult()
+
+
+## 图上已经放好的敌人都写上倍率（开局一次；之后现造的由 [NodeEvents] 写）。核心点再乘首领的（360 A6）
 func stamp_enemy_hp() -> void:
 	var k := enemy_hp_mult()
-	if map == null or k == 1.0:
+	if map == null:
 		return
 	for id in map.node_ids():
-		EnemyKit.stamp_hp(map.get_node(id).content, k)
+		var n := map.get_node(id)
+		if n.type == &"core":
+			EnemyKit.stamp_hp(n.content, k * boss_hp_mult())
+			EnemyKit.stamp_speed(n.content, boss_speed_mult())
+		elif k != 1.0:
+			EnemyKit.stamp_hp(n.content, k)
 
 
 ## 342 B3：定这一局的材料倾向（出征那一刻；不认识的方向当无倾向）
@@ -1231,6 +1290,9 @@ func _wire_events() -> void:
 	events.boss_ticket = chapter.boss_ticket if chapter != null else &""     # 285
 	events.difficulty_def = difficulty
 	events.enemy_hp_mult = enemy_hp_mult()
+	events.boss_hp_mult = boss_hp_mult()     # 360 A6
+	events.boss_speed_mult = boss_speed_mult()
+	events.gear_difficulty = difficulty if chapter == null or chapter.profile == &"" else null     # 360 第二批：现造的敌人配装
 	events.material_bias = material_bias     # 342 B3
 	events.chapter_id = chapter.id if chapter != null else &""     # 事件方案 2026-11-11：主题奖励池按章节筛
 	events.wallet = wallet
@@ -1445,6 +1507,7 @@ func to_dict() -> Dictionary:
 		"material_bias": String(material_bias),
 		"difficulty": String(difficulty_id),
 		"difficulty_rules": difficulty_rules,
+		"intel_seen": intel_seen.keys(),
 		"hunters": hunters.to_dict() if hunters != null else {},
 		"erosion": travel.erosion.to_dict() if travel != null and travel.erosion != null else {},
 		"phase": phase,
@@ -1544,6 +1607,8 @@ static func from_dict(
 	s.material_bias = StringName(String(d.get("material_bias", "")))     # 342 B3：老档没有 = 无倾向
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
 	s.difficulty_rules = String(d.get("difficulty_rules", ""))
+	for raw in d.get("intel_seen", []):     # 360 A11；旧档没有 = 空（开局之后走一步就补上）
+		s.intel_seen[int(raw)] = true
 	s.hunters_saved = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}
 	s.erosion_saved = d.get("erosion", {}) if d.get("erosion", {}) is Dictionary else {}
 	s.items = p_items

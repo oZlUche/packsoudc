@@ -4,16 +4,17 @@
   "display_names": {
     "en": "Ascension X"
   },
-  "description": "进阶九的一切，再加：猎手追得更快，平均每走十步多追一步（追击 +{hunter_chase_percent}%）；刚撞上过的猎手不会立刻再追上来。在进阶九撤离一次后解锁。",
+  "description": "进阶九的一切，再加：首领换成强化版，多带一件独有道具，打赢必掉。在进阶九撤离一次后解锁。",
   "descriptions": {
-    "en": "Everything in Ascension IX, and hunters chase faster: about one extra step for every ten (+{hunter_chase_percent}% chase). A hunter you just ran into will not catch up again right away. Unlocked by extracting once on Ascension IX."
+    "en": "Everything in Ascension IX, and bosses become empowered versions carrying a unique item they always drop. Unlocked by extracting once on Ascension IX."
   },
-  "challenge": "猎手追得更快",
+  "challenge": "首领变成强化版",
   "challenges": {
-    "en": "Hunters move faster"
+    "en": "Bosses empowered"
   },
   "level": 10,
   "requires_unlock": "ascension_10",
+  "grants_unlock": "ascension_11",
   "mechanics": [
     {
       "type": "erosion",
@@ -73,11 +74,31 @@
   },
   "held_floor_percent": 80,
   "elite_rarity": 3,
-  "enemy_hp_percent": 10,
-  "advanced_percent": 15,
-  "hunter_hp_percent": 10,
-  "hunter_damage_percent": 10,
-  "faith_threshold_percent": 10,
-  "countdown_percent": 10,
-  "hunter_chase_percent": 10
+  "gear_cap_battle": 2,
+  "gear_cap_elite": 1,
+  "elite_extra_items": 1,
+  "allow_true_damage": true,
+  "enemy_weapon_quality": 1,
+  "rest_keep_percent": 50,
+  "no_paid_extract": true,
+  "boss_hp_percent": 25,
+  "boss_speed_percent": 20,
+  "hunter_loss_extra": 1,
+  "boss_upgrades": {
+    "core_guardian": {
+      "title": "誓约守卫",
+      "titles": {
+        "en": "Oathbound Guardian"
+      },
+      "item": "oath_sigil"
+    },
+    "great_clock": {
+      "title": "永动大钟",
+      "titles": {
+        "en": "Perpetual Clock"
+      },
+      "item": "perpetual_pendulum"
+    }
+  },
+  "countdown_percent": 10
 }

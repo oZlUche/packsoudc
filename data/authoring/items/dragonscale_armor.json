@@ -1,0 +1,67 @@
+{
+  "id": "dragonscale_armor",
+  "display_name": "龙鳞甲",
+  "display_names": {
+    "en": "Dragonscale Armor"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "111",
+    "111"
+  ],
+  "rarity": 3,
+  "tags": [
+    "armor",
+    "barbarian"
+  ],
+  "material": "leather",
+  "combat": {
+    "base_stats": {
+      "max_armor": 55
+    },
+    "rules": [
+      {
+        "trigger": {
+          "type": "on_before_damage",
+          "damage_type": "fire"
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "modify_damage",
+            "percent": -10
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_before_damage",
+          "damage_type": "ice"
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "modify_damage",
+            "percent": -10
+          }
+        ]
+      },
+      {
+        "trigger": {
+          "type": "on_before_damage",
+          "damage_type": "lightning"
+        },
+        "cadence": "@always",
+        "effects": [
+          {
+            "type": "modify_damage",
+            "percent": -10
+          }
+        ]
+      }
+    ]
+  }
+}

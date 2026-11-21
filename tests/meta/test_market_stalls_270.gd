@@ -43,7 +43,7 @@ static func run_catalogue(t: TestCase) -> void:
 			var want: Array[StringName] = []
 			for id in db.ids():
 				var d := db.get_def(id)
-				if d.rarity <= rules.rarity_cap_at(lv) and d.tags.any(func(tg: StringName) -> bool: return st.tags.has(tg)) and Market._sellable(rules, d):
+				if d.rarity <= rules.rarity_cap_at(lv) and (st.extra_ids.has(d.id) or d.tags.any(func(tg: StringName) -> bool: return st.tags.has(tg))) and Market._sellable(rules, d):
 					want.append(id)
 			var head := got.slice(0, want.size())
 			head.sort()

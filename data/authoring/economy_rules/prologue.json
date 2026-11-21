@@ -11,7 +11,8 @@
   "shop_sell_ratio": 0.3,
   "shop_exclude_tags": [
     "treasure",
-    "supply"
+    "supply",
+    "ingredient"
   ],
   "bullion_shallow": {
     "silver_nugget": 1,
