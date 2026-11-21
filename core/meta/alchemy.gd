@@ -218,9 +218,17 @@ static func dissolve(meta: MetaState, uids: Array, rules: AlchemyRules = null, i
 	var got := preview(meta, uids, 0.5, r, items)
 	if int(got["count"]) <= 0:
 		return {"count": 0, "dust": 0}
+	var pantry: GridInventory = meta.canteen.store if meta.canteen != null else null
 	meta.warehouse.begin_batch()
+	if pantry != null:
+		pantry.begin_batch()
 	for inst in _picks(meta, uids, r):
-		meta.warehouse.remove(inst.uid)
+		if meta.warehouse.has_item(inst.uid):
+			meta.warehouse.remove(inst.uid)
+		elif pantry != null:
+			pantry.remove(inst.uid)     # 355：食材仓库里的也能炼
+	if pantry != null:
+		pantry.end_batch()
 	meta.warehouse.end_batch()
 	meta.dust += int(got["dust"])
 	meta.changed.emit()
@@ -318,6 +326,14 @@ static func why_not_dust(meta: MetaState, recipe: SmithRecipeDef, items: ItemDat
 	return ""
 
 
+## 355：炼金能动的一件 —— 主仓库里的，或者食材仓库里的
+static func held(meta: MetaState, uid: int) -> ItemInstance:
+	var inst := meta.warehouse.get_item(uid)
+	if inst == null and meta.canteen != null:
+		inst = meta.canteen.store.get_item(uid)
+	return inst
+
+
 static func _picks(meta: MetaState, uids: Array, r: AlchemyRules) -> Array[ItemInstance]:
 	var out: Array[ItemInstance] = []
 	var seen := {}
@@ -326,7 +342,7 @@ static func _picks(meta: MetaState, uids: Array, r: AlchemyRules) -> Array[ItemI
 		if seen.has(uid):
 			continue
 		seen[uid] = true
-		var inst := meta.warehouse.get_item(uid)
+		var inst := held(meta, uid)
 		if inst != null and can_dissolve(inst, r):
 			out.append(inst)
 	return out
