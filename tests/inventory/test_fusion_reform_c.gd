@@ -2,9 +2,9 @@
 extends RefCounted
 
 const NEW := {
-	&"fuse_flame_fang": [&"bloodbone_spike", &"fire_crystal", &"flame_fang"],
-	&"fuse_frost_fang": [&"bloodbone_spike", &"ice_crystal", &"frost_fang"],
-	&"fuse_thunder_heavy_crossbow": [&"heavy_crossbow", &"lightning_crystal", &"thunder_heavy_crossbow"],
+	&"fuse_flame_fang": [&"bloodbone_spike", &"fire_gland", &"flame_fang"],
+	&"fuse_frost_fang": [&"bloodbone_spike", &"frost_gland", &"frost_fang"],
+	&"fuse_thunder_heavy_crossbow": [&"heavy_crossbow", &"shock_sac", &"thunder_heavy_crossbow"],
 	&"fuse_bloodletter": [&"cleaver", &"beast_fang", &"bloodletter"],
 	&"fuse_horn_bow": [&"shortbow", &"antler", &"horn_bow"],
 	&"fuse_heavy_crossbow": [&"steel_crossbow", &"hardwood_plank", &"heavy_crossbow"],

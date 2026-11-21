@@ -6,9 +6,12 @@
 script = ExtResource("1_a4auy")
 id = &"forge_frost_bloodoath_axe"
 output = &"frost_bloodoath_axe"
+inputs = {
+"frost_gland": 2
+}
 material_slots = Array[Dictionary]([{
 "count": 1,
-"material": "crystal:frost",
+"material": "gem",
 "min": 3
 }, {
 "count": 2,

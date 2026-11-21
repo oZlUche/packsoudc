@@ -89,6 +89,7 @@ static func frame_map_parts(t: TestCase, root: Window) -> void:
 		t.check(legend.get_combined_minimum_size().y < open_h - 100.0, "卷起后矮了（%.0f → %.0f）" % [open_h, legend.get_combined_minimum_size().y])
 		t.eq(legend.size.x, open_w, "卷起不改宽")
 		t.check(legend.tooltip_text != "", "卷起时停上去读得到图上有哪些")
+		t.eq(legend.get_theme_color(&"font_color", &"TooltipLabel"), UiTheme.INK, "悬停提示是墨色字（浅底上看得清）")
 		t.eq(legend.row_names(), names_before, "卷起前后同一份行")
 		legend.set_expanded(true)
 		t.check(legend.expanded() and not flow.settings.legend_open, "教程临时放下不写设置")

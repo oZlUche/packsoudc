@@ -3,6 +3,8 @@
 ## 15 件金武的 forge_* 打造配方；秘银剑、大魔导杖不再吃上一把武器
 extends RefCounted
 
+## 359：元素金武的属性素材
+const GLANDS := {"flame": &"fire_gland", "frost": &"frost_gland", "thunder": &"shock_sac"}
 const T110 := preload("res://tests/meta/test_tech.gd")
 const T251 := preload("res://tests/meta/test_smithy_251.gd")
 
@@ -101,7 +103,13 @@ static func run_content(t: TestCase) -> void:
 		t.check(r != null and r.output == out, "forge_%s 在" % out)
 		if r == null:
 			continue
-		t.check(r.inputs.is_empty() and r.material_inputs.is_empty() and not r.material_slots.is_empty(), "%s：只用材料格" % out)
+		var gland := GLANDS.get(String(out).get_slice("_", 0), &"") as StringName
+		if gland == &"":
+			t.check(r.inputs.is_empty() and r.material_inputs.is_empty() and not r.material_slots.is_empty(), "%s：只用材料格" % out)
+		else:
+			t.check(r.inputs.size() == 1 and int(r.inputs.get(String(gland), 0)) == 2 and r.material_inputs.is_empty() and not r.material_slots.is_empty(), "%s：材料格 + 对应腺体 ×2（359）" % out)
+			t.check(r.slots().any(func(s: Dictionary) -> bool: return s["material"] == "gem" and int(s["min"]) == 3), "%s：晶石素材 ≥史诗一格（359）" % out)
+		t.check(r.slots().all(func(s: Dictionary) -> bool: return not SmithRecipeDef.is_crystal_key(String(s["material"]))), "%s：不要魔晶石（359）" % out)
 		t.check(r.level == 3 and r.funds == (750 if HEAVY.has(out) else 300), "%s：3 级、%d" % [out, r.funds])
 		for s in r.slots():
 			t.not_null(SmithRecipeDef.slot_sample(s, db), "%s：%s ≥%d 有能顶的" % [out, s["material"], int(s["min"])])

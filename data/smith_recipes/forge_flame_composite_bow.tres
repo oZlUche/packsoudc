@@ -6,9 +6,12 @@
 script = ExtResource("1_jm6q8")
 id = &"forge_flame_composite_bow"
 output = &"flame_composite_bow"
+inputs = {
+"fire_gland": 2
+}
 material_slots = Array[Dictionary]([{
 "count": 1,
-"material": "crystal:fire",
+"material": "gem",
 "min": 3
 }, {
 "count": 2,

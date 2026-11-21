@@ -1,9 +1,12 @@
 {
   "id": "forge_frost_bloodoath_axe",
   "output": "frost_bloodoath_axe",
+  "inputs": {
+    "frost_gland": 2
+  },
   "material_slots": [
     {
-      "material": "crystal:frost",
+      "material": "gem",
       "min": 3,
       "count": 1
     },
