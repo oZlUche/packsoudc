@@ -1,0 +1,51 @@
+{
+  "id": "bloodsipper_scimitar",
+  "display_name": "饮血弯刀",
+  "display_names": {
+    "en": "Bloodsipper Scimitar"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "one_hand"
+  ],
+  "material": "bone",
+  "combat": {
+    "base_stats": {
+      "damage": 18
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 1.0
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 5
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "axis": "regen_hp"
+          }
+        ]
+      }
+    ]
+  }
+}

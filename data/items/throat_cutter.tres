@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_drkff"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_1wad1"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_482ac"]
+[ext_resource type="Script" path="res://core/battle/cadences/cooldown_cadence.gd" id="4_85dye"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_akoq6"]
+[ext_resource type="Script" path="res://core/battle/costs/resource_cost.gd" id="6_t83ld"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_4fs2e"]
+[ext_resource type="Script" path="res://core/battle/effects/deal_damage.gd" id="8_4uk4m"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="9_0ocxc"]
+[ext_resource type="Script" path="res://core/battle/combat_profile.gd" id="10_q7qo8"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="11_3uv0y"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="12_y77pd"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="13_pw3jg"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="14_2o1em"]
+
+[sub_resource type="Resource" id="Resource_7p4dv"]
+script = ExtResource("4_85dye")
+seconds = 0.6
+
+[sub_resource type="Resource" id="Resource_x7ekq"]
+script = ExtResource("6_t83ld")
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_qm7f6"]
+script = ExtResource("8_4uk4m")
+percent_of = &"missing_hp"
+percent = 6
+
+[sub_resource type="Resource" id="Resource_wky3w"]
+script = ExtResource("9_0ocxc")
+metadata/part_ref = &"on_schedule"
+
+[sub_resource type="Resource" id="Resource_8rqno"]
+script = ExtResource("3_482ac")
+trigger = SubResource("Resource_wky3w")
+cadence = SubResource("Resource_7p4dv")
+costs = Array[ExtResource("5_akoq6")]([SubResource("Resource_x7ekq")])
+effects = Array[ExtResource("7_4fs2e")]([SubResource("Resource_qm7f6")])
+
+[sub_resource type="Resource" id="Resource_j2otm"]
+script = ExtResource("10_q7qo8")
+base_stats = {
+"damage": 7
+}
+rules = Array[ExtResource("3_482ac")]([SubResource("Resource_8rqno")])
+
+[sub_resource type="Resource" id="Resource_l3q2b"]
+script = ExtResource("14_2o1em")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("13_pw3jg")
+id = &"throat_cutter"
+display_name = "割喉刀"
+display_names = {
+"en": "Throat Cutter"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_l3q2b")
+rarity = 3
+tags = Array[StringName]([&"weapon", &"melee", &"rapid", &"dagger"])
+material = "bone"
+combat = SubResource("Resource_j2otm")

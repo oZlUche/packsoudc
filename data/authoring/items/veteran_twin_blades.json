@@ -1,0 +1,51 @@
+{
+  "id": "veteran_twin_blades",
+  "display_name": "百战双刃",
+  "display_names": {
+    "en": "Veteran Twin Blades"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "rapid",
+    "dual"
+  ],
+  "material": "metal",
+  "combat": {
+    "base_stats": {
+      "damage": 6
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cooldown",
+          "seconds": 0.8
+        },
+        "costs": [
+          {
+            "type": "resource",
+            "amount": 4
+          }
+        ],
+        "effects": [
+          "@deal_damage",
+          "@deal_damage",
+          {
+            "type": "shift_axis",
+            "axis": "attack_speed"
+          }
+        ]
+      }
+    ]
+  }
+}

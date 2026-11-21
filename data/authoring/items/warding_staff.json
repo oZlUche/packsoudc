@@ -1,0 +1,68 @@
+{
+  "id": "warding_staff",
+  "display_name": "守心杖",
+  "display_names": {
+    "en": "Warding Staff"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "weapon",
+    "melee",
+    "staff",
+    "magic"
+  ],
+  "material": "wood",
+  "combat": {
+    "base_stats": {
+      "damage": 9
+    },
+    "rules": [
+      {
+        "trigger": "@on_schedule",
+        "cadence": {
+          "type": "cycle",
+          "seconds": 1.0
+        },
+        "costs": [
+          "@resource_5"
+        ],
+        "free_when_loaded": true,
+        "effects": [
+          {
+            "type": "fire_loaded"
+          },
+          {
+            "type": "shift_axis",
+            "axis": "regen_stamina"
+          }
+        ]
+      }
+    ],
+    "power_mult": 1.3
+  },
+  "adjacency": {
+    "load_cells": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        -1
+      ]
+    ]
+  }
+}
