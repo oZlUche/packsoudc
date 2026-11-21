@@ -1,0 +1,28 @@
+{
+  "id": "growers_trial_sow",
+  "display_name": "试种",
+  "display_names": {
+    "en": "Trial Sowing"
+  },
+  "faction": "growers",
+  "order": 2,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "growers_first_bed"
+  ],
+  "stages": [
+    {
+      "goal": "nursery_plant",
+      "where": "camp",
+      "text": "在苗圃种下一畦",
+      "texts": {
+        "en": "Sow a bed in the nursery"
+      }
+    }
+  ],
+  "client": "垦户社的老农",
+  "clients": {
+    "en": "Old grower"
+  }
+}

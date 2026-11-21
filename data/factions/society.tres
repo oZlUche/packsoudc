@@ -5,8 +5,55 @@
 [resource]
 script = ExtResource("1_vshel")
 id = &"society"
-display_name = "魔法师协会边境考据所"
+display_name = "魔法师协会"
 display_names = {
-"en": "Mages' Society Frontier Archive"
+"en": "Mages' Society"
 }
 order = 2
+facilities = {
+"tech": "society_first_survey"
+}
+permit = &"society_permit"
+regular = Array[Dictionary]([{
+"goal": "hand_in",
+"name": "收晶石",
+"names": {
+"en": "Crystals Wanted"
+},
+"params": {
+"material": "gem"
+},
+"text": "交 {n} 块晶石",
+"texts": {
+"en": "Hand in crystals: {n}"
+},
+"u": 20
+}, {
+"goal": "visit_nodes",
+"name": "勘察",
+"names": {
+"en": "Survey"
+},
+"params": {
+"type": "search"
+},
+"text": "到访 {n} 处搜索点",
+"texts": {
+"en": "Visit search points: {n}"
+},
+"u": 15
+}, {
+"goal": "hand_in",
+"name": "收草药",
+"names": {
+"en": "Herbs Wanted"
+},
+"params": {
+"material": "herb"
+},
+"text": "交 {n} 件草药",
+"texts": {
+"en": "Hand in herbs: {n}"
+},
+"u": 8
+}])

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_ojv2p"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_dtequ"]
+
+[sub_resource type="Resource" id="Resource_f4k6s"]
+script = ExtResource("2_dtequ")
+goal = &"nursery_plant"
+where = &"camp"
+text = "在苗圃种下一畦"
+texts = {
+"en": "Sow a bed in the nursery"
+}
+
+[resource]
+script = ExtResource("1_ojv2p")
+id = &"growers_trial_sow"
+display_name = "试种"
+display_names = {
+"en": "Trial Sowing"
+}
+faction = &"growers"
+order = 2
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"growers_first_bed"])
+stages = Array[ExtResource("2_dtequ")]([SubResource("Resource_f4k6s")])
+client = "垦户社的老农"
+clients = {
+"en": "Old grower"
+}

@@ -318,6 +318,7 @@ static func frame_event_harvest(t: TestCase, root: Window) -> void:
 	for r in rich:
 		said += (r as RichTextLabel).text
 	t.check(not said.contains("得到："), "文字里不再写道具名")
+	t.check(not said.contains(UiText.t("event.nothing")), "有收获就不写「什么也没发生」（狩猎、技巧祭坛拿起护符）")
 	var uid: int = row.shown()[0]
 	row.item_double_clicked.emit(row, uid)
 	row = screen.harvest_row()

@@ -4,10 +4,13 @@
   "display_names": {
     "en": "Two Ways Back"
   },
-  "faction": "legion",
-  "order": 3,
-  "tier": "inquiry",
-  "min_tier": 0,
+  "faction": "cartographers",
+  "order": 2,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "cartographers_redraw"
+  ],
   "stages": [
     {
       "goal": "inspect_extracts",
@@ -23,8 +26,8 @@
   "quotes": {
     "en": "Every road is easy on the way in. Find out which ones still lead back."
   },
-  "client": "军需官",
+  "client": "协会绘图员",
   "clients": {
-    "en": "Quartermaster"
+    "en": "Society draughtsman"
   }
 }

@@ -1,0 +1,32 @@
+{
+  "id": "society_permit",
+  "display_name": "协会登记证",
+  "display_names": {
+    "en": "Society Registration"
+  },
+  "faction": "society",
+  "order": 3,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "society_copy_recipe",
+    "society_identify_ore"
+  ],
+  "stages": [
+    {
+      "goal": "visit_nodes",
+      "count": 2,
+      "params": {
+        "type": "search"
+      },
+      "text": "替协会登记两处搜索点",
+      "texts": {
+        "en": "Register two search points for the Society"
+      }
+    }
+  ],
+  "client": "协会登记员",
+  "clients": {
+    "en": "Society registrar"
+  }
+}

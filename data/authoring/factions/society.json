@@ -1,14 +1,66 @@
 {
   "id": "society",
-  "display_name": "魔法师协会边境考据所",
+  "display_name": "魔法师协会",
   "display_names": {
-    "en": "Mages' Society Frontier Archive"
+    "en": "Mages' Society"
   },
   "order": 2,
   "thresholds": [
     0,
-    2,
-    5,
-    9
+    10,
+    25,
+    50,
+    100
+  ],
+  "facilities": {
+    "tech": "society_first_survey"
+  },
+  "permit": "society_permit",
+  "regular": [
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "gem"
+      },
+      "u": 20,
+      "name": "收晶石",
+      "names": {
+        "en": "Crystals Wanted"
+      },
+      "text": "交 {n} 块晶石",
+      "texts": {
+        "en": "Hand in crystals: {n}"
+      }
+    },
+    {
+      "goal": "visit_nodes",
+      "params": {
+        "type": "search"
+      },
+      "u": 15,
+      "name": "勘察",
+      "names": {
+        "en": "Survey"
+      },
+      "text": "到访 {n} 处搜索点",
+      "texts": {
+        "en": "Visit search points: {n}"
+      }
+    },
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "herb"
+      },
+      "u": 8,
+      "name": "收草药",
+      "names": {
+        "en": "Herbs Wanted"
+      },
+      "text": "交 {n} 件草药",
+      "texts": {
+        "en": "Hand in herbs: {n}"
+      }
+    }
   ]
 }

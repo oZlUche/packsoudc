@@ -15,7 +15,19 @@ const COPY := &"society_copy_recipe"
 static func _flow(c: TestSupport.Content) -> GameFlow:
 	var f := Support.flow(c, PREFIX)
 	f.chapters = [c.chapter] as Array[ChapterDef]
+	unlock(f.meta.commissions)
 	return f
+
+
+## 342 B2：三张原型单前面多了剧情 —— 把前置记成办成、三方各 10 点（熟面）
+static func unlock(book: CommissionBook) -> void:
+	for id in [&"legion_forge_token", &"society_first_survey", &"greylamp_check_scale", &"legion_check_materials", &"legion_clear_road", &"legion_permit"]:
+		book.entries[String(id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": 1, "pick": "", "seq": 0}
+	for fid in ["legion", "society", "greylamp"]:
+		book.rep[fid] = 10
+	book.arrived["cartographers"] = 1     # 342 B3：《两条回路》改给地图协会 —— 协会到了、首单办成
+	book.entries["cartographers_redraw"] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": 1, "pick": "", "seq": 0}
+	book.rep["cartographers"] = 10
 
 
 static func _extracts(run: RunState, free_only: bool = false) -> Array[MapNode]:
@@ -42,7 +54,7 @@ static func run_loop(t: TestCase) -> void:
 	t.check(f.commissions_visible(), "没有教程章、不是切片：委托簿露出来")
 	t.eq(f.take_commission(TWO), "", "接《两条回路》")
 	t.eq(f.take_commission(LETTER), "", "接《无人署名的信》")
-	t.eq(f.take_commission(COPY, &"x"), Commissions.WHY_SLOTS, "第三份没位")
+	t.eq(f.take_commission(COPY, &"x"), Commissions.WHY_PICK, "342 B2：剧情不占位，第三份只差选配方")
 	var s := f.begin_direct(c.chapter, 23)
 	t.not_null(s, "开局")
 	if s == null:
@@ -87,7 +99,7 @@ static func run_loop(t: TestCase) -> void:
 	f._settle_run()
 	var book := f.meta.commissions
 	t.check(book.is_done(LETTER), "灰灯：交了就算，败退也办成")
-	t.eq(book.rep_of(&"greylamp"), 1, "灰灯声望 +1")
+	t.eq(book.rep_of(&"greylamp"), 15, "灰灯声望 +5（342 B2：后续剧情）")
 	t.eq(book.state_of(TWO), CommissionBook.TAKEN, "军团：还接着")
 	t.eq(int(book.entry(TWO)["progress"]), 1, "军团：记了一处")
 	var lines: Array[String] = ResultScreenScript.commission_lines(f.last_commissions, f.meta)
@@ -117,7 +129,7 @@ static func run_loop(t: TestCase) -> void:
 	f._settled = false
 	f._settle_run()
 	t.check(book.is_done(TWO), "军团：两处查完办成")
-	t.eq(book.rep_of(&"legion"), 2, "军团声望 +2")
+	t.eq(book.rep_of(&"cartographers"), 15, "地图协会声望 +5（342 B3：《两条回路》改给地图协会）")
 
 
 static func run_event_options(t: TestCase) -> void:
@@ -188,7 +200,7 @@ static func run_forge_credit(t: TestCase) -> void:
 	var before := f.meta.warehouse.item_count()
 	t.eq(f.forge(picks[0]), "", "照选的那张打一次")
 	t.check(f.meta.commissions.is_done(COPY), "办成")
-	t.eq(f.meta.commissions.rep_of(&"society"), 1, "协会声望 +1")
+	t.eq(f.meta.commissions.rep_of(&"society"), 15, "协会声望 +5（342 B2：后续剧情）")
 	var r := SmithRecipeDef.find(f.smith_recipes, picks[0])
 	t.eq(f.meta.funds - funds0, Commissions.def(COPY).funds - r.funds, "酬金只补劳动（扣掉工钱再加酬金）")
 	t.check(f.meta.warehouse.item_count() > 0 and before >= 0, "成品进了仓库")

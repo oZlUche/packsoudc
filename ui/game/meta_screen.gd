@@ -14,6 +14,7 @@ const TechPanelScript := preload("res://ui/game/tech_panel.gd")
 const MarketPanelScript := preload("res://ui/game/market_panel.gd")     # 251
 const SmithyPanelScript := preload("res://ui/game/smithy_panel.gd")     # 251
 const CommissionPanelScript := preload("res://ui/game/commission_panel.gd")     # 336
+const NurseryPanelScript := preload("res://ui/game/nursery_panel.gd")     # 342 B3
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -40,14 +41,14 @@ const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_wa
 ## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
-	"logistics": [["market", "market.title"], ["smithy", "smithy.title"]],
+	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"]],
 	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"]],
 }
 const SUB_TAB_SIZE := Vector2(170, 44)
 const SUB_TAB_FONT := 17
 const SUB_TAB_INDENT := 28
 ## 178：这几页不显示右半边的仓库，中列吃满。264：出征页也收起 —— 碑 + 560 宽的两块木牌要 1308 宽的中列（露着仓库中列只剩 508）
-const NO_SHELF_TABS := ["shelf", "expedition", "commissions", "tech"]
+const NO_SHELF_TABS := ["shelf", "expedition", "commissions", "tech", "locked"]
 ## 261（作者 14:13）：「图鉴」页签改「书架」—— 两层三格，点开各一扇窗；补充一（作者 16:37）：上 图鉴 / 对局记录 / 特殊道具，
 ## 下 成就 / 旧背包静物（342 B1：科技搬回一级页签）/ 油灯静物（墨水瓶去掉）
 const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "", ""]
@@ -133,6 +134,7 @@ var _shelf_title: HeaderTag = null
 func open(payload: Dictionary) -> void:
 	var m := flow.meta
 	flow.ensure_market()     # 251：有集市却没货（老档、开发区改了级数）先上一次
+	flow.sync_commissions()     # 342 B2：够格的剧情自动接上（教程刚走完的三份引导单就在这里接）
 	_home_bg_name = backdrop_of("expedition")     # 271：进基地第一眼就是出征页 —— 起始底图直接铺它，不要每次进来淡一次
 	_home_bg = UiTheme.dress_backdrop(_backdrop(), _home_bg_name, "HomeBackdrop", true)     # 每次回基地都要它：留着不重读（重读一张整屏图约 50 ms）
 	_margin = MarginContainer.new()
@@ -296,15 +298,33 @@ func open(payload: Dictionary) -> void:
 		_commissions = CommissionPanelScript.new()
 		_commissions.setup(flow)
 		_commissions.changed.connect(_refresh)
+		_commissions.facility_requested.connect(func(fac: StringName): show_tab(String(fac)))
+		_commissions.reported.connect(_on_reported)
 		cm_page.add_child(_commissions)
 		_pages["commissions"] = cm_page
 	# 图鉴页、成就页（091）
 	# 164：中列的页都垫一块粗布（浅底墨字）—— 直接写在背景上，炉火那块亮处看不清
+	# 342 B2：没开放的设施点进来看到的说明板（集市 / 铁匠铺 / 科技共用一块）
+	_locked = _cloth()
+	_locked.name = "LockedFacility"
+	_pages["locked"] = _locked
 	# 342 B1：科技页 —— 页签头一回打开才建（[method _ensure_tech]）
 	_tech_cloth = _cloth()
 	_tech_cloth.name = "TechPage"
 	_pages["tech"] = _tech_cloth
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
+	if _sub_btns.has("nursery"):     # 342 B3：苗圃页（右边照常露仓库，收获进仓库）
+		var ns_page := _cloth()
+		_nursery = NurseryPanelScript.new()
+		_nursery.setup(flow)
+		_nursery.changed.connect(_refresh)
+		_nursery.said.connect(func(text: String, is_warn: bool):
+			if is_warn:
+				warn(text)
+			else:
+				say(text))
+		ns_page.add_child(_nursery)
+		_pages["nursery"] = ns_page
 	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
 		cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
@@ -535,9 +555,74 @@ func middle_width(p_screen: Vector2) -> float:
 	return p_screen.x - 2.0 * MARGIN - LEFT_W - _right.custom_minimum_size.x - 2.0 * COL_GAP
 
 
-## 178（待定 2 选 A）：进基地落哪一页 —— 从结算屏回来、带回来的背包还没清空 → 「仓库」页；否则家
+## 178（待定 2 选 A）：进基地落哪一页 —— 从结算屏回来、带回来的背包还没清空 → 「仓库」页；否则家。
+## 342 B2：教程刚走完、还有设施没开 → 委托页的剧情（先去把三份引导单办了）
 func initial_tab(payload: Dictionary) -> String:
-	return "warehouse" if payload.has("result") and flow.meta.has_pending_board() else "expedition"
+	if payload.has("result") and flow.meta.has_pending_board():
+		return "warehouse"
+	if _commissions != null and Commissions.FACILITIES.any(func(fac: StringName) -> bool: return not flow.facility_open(fac)):
+		_commissions.show_sub("story")
+		return "commissions"
+	return "expedition"
+
+
+#region 342 B2：没开放的设施
+var _locked: PanelContainer = null
+
+
+## 说明板：「X 还没开放，去委托页办成某方的《某单》」+ 一颗键直达那份剧情
+func _fill_locked(facility: StringName) -> void:
+	for c in _locked.get_children():
+		_locked.remove_child(c)
+		c.queue_free()
+	var d := Commissions.opener_of(facility)
+	var fac := Commissions.faction(d.faction) if d != null else null
+	var wood := UiTheme.art(CommissionPanelScript.ART + "board_dark")     # 和委托页一样铺深木板，纸钉在板上
+	if wood != null:
+		_locked.add_child(UiTheme.nine_rect(wood, 14))
+	var center := CenterContainer.new()
+	UiTheme.set_tone(center, UiTheme.TONE_DARK)
+	_locked.add_child(center)
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 30, 20, 30, 20)
+	paper.name = "LockedPaper"
+	UiTheme.set_tone(paper, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
+	center.add_child(CommissionPanelScript._pinned(paper, "pin_" + String(fac.id) if fac != null else "pin_empty"))
+	var col := UiTheme.vbox(14)
+	paper.add_child(col)
+	var fname := UiText.t(String(CommissionPanelScript.FACILITY_TEXT.get(facility, String(facility))))
+	if fac != null:     # 342 B2 A 告示板：纹章 96、锁 + 设施名（大字）、阵营名、一句怎么开
+		var em := CommissionPanelScript.emblem(fac.id, 96)
+		em.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		col.add_child(em)
+	var head := UiTheme.hbox(8)
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_child(CommissionPanelScript._pic("lock", Vector2(28, 28)))
+	var big := UiTheme.make_label(fname, 30, CommissionPanelScript.INK)
+	big.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	head.add_child(big)
+	col.add_child(head)
+	if fac != null:
+		col.add_child(UiTheme.make_label(Names.of(fac), 18, CommissionPanelScript.INK_DIM))
+	col.add_child(UiTheme.make_wrapped(UiText.t("commission.facility_how") % (Names.of(d) if d != null else ""), 18, CommissionPanelScript.INK, 420.0))
+	if d != null and _commissions != null:
+		var fid := d.faction
+		var b := ScrollKey.make(UiText.t("commission.go_story"), func():
+			show_tab("commissions")
+			_commissions.show_story(fid))
+		b.name = "LockedGo"
+		col.add_child(b)
+
+
+func locked_page() -> PanelContainer:
+	return _locked
+
+
+## 【办理】办成：告示卷轴说一句「X 开放了」（老档设施一直开着，不说）
+func _on_reported(got: Dictionary) -> void:
+	var fac := StringName(String((got.get("got", {}) as Dictionary).get("opens", "")))
+	if fac != &"" and flow.meta.commissions.gated:
+		say(UiText.t("commission.opened") % UiText.t(String(CommissionPanelScript.FACILITY_TEXT.get(fac, String(fac)))))
+#endregion
 
 
 ## 木架框的左右、上下内边距之和
@@ -742,6 +827,30 @@ func _build_smithy(root: Control) -> Control:
 
 ## 336：委托页（没列这一页 = null）
 var _commissions = null
+## 342 B3：苗圃页（垦户社没来 = null）
+var _nursery = null
+
+
+func nursery_panel():
+	return _nursery
+
+
+## 342 B3：苗圃里有熟的 —— 后勤页签与苗圃小键的字后面挂「可收获」（占位，标记的图请 UI设计 出），不弹窗
+func _sync_ripe_mark() -> void:
+	var ripe := flow.nursery_ripe()
+	if _tab_btns.has("logistics"):
+		var b := _tab_btns["logistics"] as Button
+		b.text = UiText.t("meta.tab_logistics") + ("　" + UiText.t("nursery.ripe") if ripe else "")
+		b.tooltip_text = UiText.t("nursery.ripe") if ripe else ""
+	if _sub_btns.has("nursery"):
+		(_sub_btns["nursery"] as Button).text = UiText.t("nursery.title") + ("　" + UiText.t("nursery.ripe") if ripe else "")
+	if _nursery != null:
+		_nursery.refresh()
+
+
+## 342 B3：垦户社到营地了没有
+func _growers_here() -> bool:
+	return flow.commissions_visible() and Commissions.present(flow.meta.commissions, Commissions.faction(&"growers"))
 
 
 func commission_panel():
@@ -771,6 +880,8 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 	var btns := _sub_btns if tab_key == "logistics" else _shelf_sub_btns
 	for pair in SUB_TABS[tab_key]:
 		var key: String = pair[0]
+		if key == "nursery" and not _growers_here():
+			continue     # 342 B3：垦户社还没来营地，不列
 		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
 		b.toggle_mode = true
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -1350,6 +1461,9 @@ func show_tab(p_name: String) -> void:
 	if not (_pages.has(p_name) or p_name == "logistics"):
 		p_name = "expedition"
 	var shown := _sub if p_name == "logistics" else p_name
+	if Commissions.opens_known(StringName(shown)) and not flow.facility_open(StringName(shown)):
+		_fill_locked(StringName(shown))     # 342 B2：没开放 —— 入口照常，页里换成说明板
+		shown = "locked"
 	if shown == "tech":
 		_ensure_tech()
 	if _tab != "" and shown != was:
@@ -1449,5 +1563,6 @@ func _refresh() -> void:
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
 	if _tab_btns.has("warehouse"):
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗
+	_sync_ripe_mark()     # 342 B3
 	for id in _tech_spins:     # 119：科技页点亮 / 升级了，开发区的数字框跟上
 		(_tech_spins[id] as SpinBox).set_value_no_signal(TechService.level(flow.meta, id))

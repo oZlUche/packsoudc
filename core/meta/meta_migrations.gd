@@ -25,6 +25,10 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v3_to_v4(d)
 			4:
 				d = _v4_to_v5(d)
+			5:
+				d = _v5_to_v6(d)
+			6:
+				d = _v6_to_v7(d)
 			_:
 				push_warning("MetaMigrations: 没有 v%d → v%d 的迁移，停在 v%d" % [v, v + 1, v])
 				return d
@@ -113,7 +117,64 @@ static func _v4_to_v5(d: Dictionary) -> Dictionary:
 	return d
 
 
+## v5 → v6（342 B2，五档声望与设施开放）：
+## - 声望按旧档折算：0 → 0，2 ～ 4 → 10，5 ～ 8 → 25，9 及以上 → 50；这一方办成过委托的至少 10。只升不降；
+## - 老档不带 `gated`：铁匠铺、科技、集市一直开着；首次回营照样补上三份引导剧情，办了拿声望；
+## - 历史回执不重发奖。做了什么记进 `migration_log`
+static func _v5_to_v6(d: Dictionary) -> Dictionary:
+	var book: Dictionary = d.get("commissions", {}) if d.get("commissions", null) is Dictionary else {}
+	var rep: Dictionary = book.get("rep", {}) if book.get("rep", null) is Dictionary else {}
+	var done_by := {}
+	var entries: Dictionary = book.get("entries", {}) if book.get("entries", null) is Dictionary else {}
+	for cid in entries:
+		var e = entries[cid]
+		if e is Dictionary and int((e as Dictionary).get("times", 0)) > 0:
+			var f := _faction_of_v5(String(cid))
+			if f != "":
+				done_by[f] = true
+	var changed := {}
+	var keys: Array = rep.keys()
+	for f in done_by:
+		if not keys.has(f):
+			keys.append(f)
+	for f in keys:
+		var old := int(rep.get(f, 0))
+		var now := maxi(V6_REP_FLOOR if done_by.has(f) else 0, old if old >= 10 else 0)     # 已经是新刻度的数不往下压
+		for step in V6_REP_STEPS:
+			if old >= int(step[0]):
+				now = maxi(now, int(step[1]))
+		if now != old:
+			changed[String(f)] = [old, now]
+		rep[String(f)] = now
+	book["rep"] = rep
+	d["commissions"] = book
+	if not changed.is_empty():     # 没改什么就不记
+		var log_: Array = d.get("migration_log", []) if d.get("migration_log", null) is Array else []
+		log_.append({"to": 6, "rep": changed})
+		d["migration_log"] = log_
+	return d
+
+
+## v5 声望折算：[旧值下限, 新值]
+const V6_REP_STEPS := [[2, 10], [5, 25], [9, 50]]
+## 办成过这一方的委托：至少给到这么多
+const V6_REP_FLOOR := 10
+## v5 时的委托 → 阵营（定义可能改挂了别家，折算按当时的归属）
+const V5_FACTIONS := {"legion_two_routes": "legion", "society_copy_recipe": "society", "greylamp_unsigned_letter": "greylamp"}
+
+
+static func _faction_of_v5(cid: String) -> String:
+	return String(V5_FACTIONS.get(cid, ""))
+
+
 static func _refund_tier(tier: Dictionary, items: Dictionary) -> int:
 	for item in tier.get("items", {}):
 		items[String(item)] = int(items.get(String(item), 0)) + int(tier["items"][item])
 	return int(tier.get("funds", 0))
+
+
+## v6 → v7（342 B3）：加苗圃 —— 老档一畦空地，没推进过
+static func _v6_to_v7(d: Dictionary) -> Dictionary:
+	if not (d.get("nursery", null) is Dictionary):
+		d["nursery"] = Nursery.new().to_dict()
+	return d

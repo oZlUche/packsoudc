@@ -1021,19 +1021,28 @@ static func import_market_stall(data: Dictionary, ctx: Context, report: ImportRe
 	return def
 
 
-## 336：阵营 —— 门槛四个、第一个 0、从小到大；服务的级数在 0..3
+## 336：阵营 —— 门槛五个（342 B2）、第一个 0、从小到大；服务的级数在 0..4；开放的设施认得
 static func import_faction(data: Dictionary, ctx: Context, report: ImportReport) -> FactionDef:
 	var def := FactionDef.new()
 	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "阵营", report)
-	if def.thresholds.size() != 4 or def.thresholds[0] != 0:
-		report.error("thresholds", "门槛要四个（陌生 / 熟面 / 受托 / 代言），第一个是 0")
+	if def.thresholds.size() != Commissions.TIERS or def.thresholds[0] != 0:
+		report.error("thresholds", "门槛要五个（初识 / 熟面 / 受托 / 信赖 / 代言），第一个是 0")
 	for i in range(1, def.thresholds.size()):
 		if def.thresholds[i] <= def.thresholds[i - 1]:
 			report.error("thresholds", "门槛要从小到大")
 	for k in def.services:
-		if int(def.services[k]) < 0 or int(def.services[k]) > 3:
-			report.error("services", "服务 %s 的级数要在 0..3" % k)
+		if int(def.services[k]) < 0 or int(def.services[k]) >= Commissions.TIERS:
+			report.error("services", "服务 %s 的级数要在 0..%d" % [k, Commissions.TIERS - 1])
+	for k in def.facilities:
+		if not Commissions.opens_known(StringName(String(k))):
+			report.error("facilities", "不认识的设施 '%s'（只认 %s）" % [k, ", ".join(Commissions.FACILITIES + Commissions.FEATURES)])
+	for i in def.regular.size():     # 342 B2：告示栏模板 —— 目标认得、单份酬值为正、有名字和说明（{n} = 件数）
+		var r := def.regular[i]
+		if not NoticeBoard.BANDS.has(StringName(String(r.get("goal", "")))):
+			report.error("regular[%d].goal" % i, "告示栏只认 %s" % ", ".join(NoticeBoard.BANDS.keys()))
+		if int(r.get("u", 0)) <= 0 or String(r.get("name", "")) == "" or not String(r.get("text", "")).contains("{n}"):
+			report.error("regular[%d]" % i, "要写 u（正数）、name、text（含 {n}）")
 	ctx.register_faction(def)
 	return def
 
@@ -1061,6 +1070,12 @@ static func import_commission(data: Dictionary, ctx: Context, report: ImportRepo
 			report.error(at + ".where", "完成地点只认 camp / field / carry")
 		if s.count < 1:
 			report.error(at + ".count", "至少做一次")
+		if s.goal == &"hand_in":     # 342 B2：交货要么点名一样（id），要么一类材质（material，可带 min 稀有度）
+			var want := StringName(String(s.params.get("id", "")))
+			if want == &"" and String(s.params.get("material", "")) == "":
+				report.error(at + ".params", "交货要写 id 或 material")
+			elif want != &"" and not ctx.items.is_empty() and not ctx.items.has(want):
+				report.error(at + ".params", "找不到道具 '%s'" % want)
 		if s.entrust_ok and s.where != CommissionStage.CARRY:
 			report.error(at + ".entrust_ok", "只有带回的步骤才谈得上托付算不算")
 		if s.item != &"" and not ctx.items.is_empty():
@@ -1076,6 +1091,8 @@ static func import_commission(data: Dictionary, ctx: Context, report: ImportRepo
 			report.error("items", "找不到道具 '%s'" % id)
 	if def.reputation < 0:
 		report.error("reputation", "声望不能是负数")
+	if def.opens != &"" and (not Commissions.opens_known(def.opens) or def.tier == CommissionDef.TEMPLATE):
+		report.error("opens", "只有剧情委托能开设施，设施只认 %s" % ", ".join(Commissions.FACILITIES + Commissions.FEATURES))
 	if def.tier == CommissionDef.TEMPLATE and def.reputation > 1:
 		report.warn("reputation", "模板一次最多给 1 点（重复刷不该冲级）")
 	ctx.register_commission(def)

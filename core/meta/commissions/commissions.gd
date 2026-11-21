@@ -1,16 +1,26 @@
 ## 336（阵营与委托 W0，报告 335）：委托与声望的规则 —— 纯逻辑，状态在 [CommissionBook]（局外存档），定义在 [CommissionDef] / [FactionDef]。
 ##
 ## 规则（方案「接取、交付与声望」，数值是候选）：
-## - 每方四级，门槛 0 / 2 / 5 / 9；代言另要做完这一方的结案（[member CommissionBook.signed]）。
-## - 入门陌生就能接、调查要熟面、结案要受托且前置委托齐备；模板最多把一方推到熟面（[constant TEMPLATE_CAP]）。
-## - 同时最多接 [constant SLOTS] 份；暂缓不占位，进度保留；放弃清掉进度，可以重接。剧情单不设现实倒计时。
+## - 342 B2：每方五档，门槛 0 / 10 / 25 / 50 / 100（初识 / 熟面 / 受托 / 信赖 / 代言）；代言另要做完这一方的结案（[member CommissionBook.signed]）。
+## - 剧情（不是模板的委托）：够格就自动接上（[method auto_take]），常驻到办成，不占位、不能暂缓或放弃；办成开放写在 [member CommissionDef.opens] 的设施。
+## - 常规（模板）：同时最多接 [constant SLOTS] 份；暂缓不占位，进度保留；放弃清掉进度，可以重接。模板最多把一方推到 [constant TEMPLATE_CAP] 点。
 ## - 正常战败不扣声望。现场交付的步骤失败也算；带回的步骤只在撤离成功（或写明托付算数时托付成功）才算（[method merge_run]）。
 ## - 同一委托、同一步、同一处（节点 id / 实例 uid）只记一次（去重键），读档重进、反复进同一节点不重复记账。
 class_name Commissions
 extends RefCounted
 
-const SLOTS := 2
-const TEMPLATE_CAP := 2
+## 342 B2：手头（接下的常规纸条）最多几份（报告 341 第 3.1 节）
+const SLOTS := 3
+## 342 B2：常规纸条最多把一方推到多少声望（信赖；代言要靠结案）
+const TEMPLATE_CAP := 50
+## 声望五档
+const TIERS := 5
+## 342 B2：能由剧情开放的基地设施
+const FACILITIES: Array[StringName] = [&"smithy", &"tech", &"market"]
+## 342 B3：后来几方剧情开的功能（材料倾向、种地）—— 老档也要办成才开（不像 [constant FACILITIES] 那样老档照开）
+const FEATURES: Array[StringName] = [&"bias", &"nursery"]
+## 342 B3：阵营什么时候来营地（[member FactionDef.arrives]）：教程后第一次正式探索结算时
+const ARRIVES_FIRST_RUN := &"first_run"
 ## 去重键：委托 id | 第几步 | 那一处
 const KEY_FMT := "%s|%d|%s"
 
@@ -19,7 +29,17 @@ const GOALS := {
 	&"inspect_extracts": [CommissionStage.FIELD],     # 撤离点上的「查验」：不同的撤离点 N 处
 	&"smith_forge": [CommissionStage.CAMP],     # 接单后在铁匠铺真的打一次（接单时选的那张配方）
 	&"deliver_letter": [CommissionStage.FIELD],     # 撤离点上的「交信」：把任务信交出去
+	&"camp_report": [CommissionStage.CAMP],     # 342 B2：营地里找对应的人办一次（委托页卡上的【办理】）
+	&"hand_in": [CommissionStage.CAMP],     # 342 B2：营地交货 —— 仓库里合格的几件（`params` 的 material / min，或 id），可以分批
+	&"defeat_enemies": [CommissionStage.FIELD],     # 342 B2：打赢 N 场（`params.kind` = normal 只认普通敌人；`params.enemy` 认一种）
+	&"visit_nodes": [CommissionStage.FIELD],
+	&"nursery_plant": [CommissionStage.CAMP],     # 342 B3：苗圃里种下一畦（`params.crop` 认一种）
+	&"nursery_harvest": [CommissionStage.CAMP],     # 342 B3：苗圃里收一畦     # 342 B2：到访 N 处（`params.type` = 节点类型），同一局同一处只记一次
 }
+## 342 B2：营地当场能办的目标（卡上有【办理】）
+const CAMP_GOALS: Array[StringName] = [&"camp_report", &"hand_in"]
+## 342 B2：常规委托从第几档开（受托），还要办完这一方的许可单（[member FactionDef.permit]）
+const REGULAR_TIER := 2
 
 ## 不能接的原因（字表键 `commission.why_<原因>`）
 const WHY_HIDDEN := "hidden"
@@ -33,6 +53,8 @@ const WHY_PICK := "pick"
 
 static var _factions: Array[FactionDef] = []
 static var _defs: Array[CommissionDef] = []
+## 342 B2：现在用着的委托簿（告示栏的纸条按它查，[method def]）。建簿、读档时设
+static var active: CommissionBook = null
 
 
 #region 定义
@@ -43,9 +65,31 @@ static func factions() -> Array[FactionDef]:
 	return _factions
 
 
-## 委托簿里列出来的几方
+## 委托簿里列出来的几方（342 B3：还没来营地的不列，[method present]）
 static func listed_factions() -> Array[FactionDef]:
-	return factions().filter(func(f: FactionDef) -> bool: return f.listed)
+	return factions().filter(func(f: FactionDef) -> bool: return f.listed and present(active, f))
+
+
+## 342 B3：这一方到营地了没有（一开始就在的、或已经按 [member FactionDef.arrives] 来了）
+static func present(book: CommissionBook, f: FactionDef) -> bool:
+	return f != null and (f.arrives == &"" or (book != null and book.arrived.has(String(f.id))))
+
+
+## 342 B3：一次正式探索结算完 —— 约好这时来的几方到营地（记第几局到的）。返回这回来了哪几方
+static func arrive(book: CommissionBook, run_no: int) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if book == null:
+		return out
+	for f in factions():
+		if f.listed and f.arrives == ARRIVES_FIRST_RUN and not book.arrived.has(String(f.id)):
+			book.arrived[String(f.id)] = run_no
+			out.append(f.id)
+	return out
+
+
+## 342 B3：剧情能开的全部（设施 + 功能）
+static func opens_known(id: StringName) -> bool:
+	return FACILITIES.has(id) or FEATURES.has(id)
 
 
 static func faction(id: StringName) -> FactionDef:
@@ -66,6 +110,8 @@ static func def(id: StringName) -> CommissionDef:
 	for d in defs():
 		if d.id == id:
 			return d
+	if NoticeBoard.is_note(id) and active != null and active.notes.has(String(id)):     # 342 B2：告示栏的纸条
+		return NoticeBoard.def_of(String(id), active.notes[String(id)])
 	return null
 
 
@@ -106,7 +152,7 @@ static func required_tier(d: CommissionDef) -> int:
 	return 0
 
 
-## 这一方现在几级（0..3）。到了第四档门槛但没署名结案，停在受托
+## 这一方现在几档（0..4）。到了代言门槛但没署名结案，停在信赖
 static func tier_of(book: CommissionBook, f: FactionDef) -> int:
 	if f == null:
 		return 0
@@ -115,9 +161,22 @@ static func tier_of(book: CommissionBook, f: FactionDef) -> int:
 	for i in f.thresholds.size():
 		if r >= f.thresholds[i]:
 			lv = i
-	if lv >= 3 and not (book != null and book.signed.has(String(f.id))):
-		lv = 2
+	if lv >= TIERS - 1 and not (book != null and book.signed.has(String(f.id))):
+		lv = TIERS - 2
 	return lv
+
+
+## 342 B2：剧情委托（不是模板）
+static func is_story(d: CommissionDef) -> bool:
+	return d != null and d.tier != CommissionDef.TEMPLATE
+
+
+## 342 B2：开 [param facility] 的那份剧情（没有 = null）
+static func opener_of(facility: StringName) -> CommissionDef:
+	for d in defs():
+		if d.opens == facility:
+			return d
+	return null
 
 
 ## 下一级还差几点（满级 = 0）
@@ -133,11 +192,13 @@ static func rep_to_next(book: CommissionBook, f: FactionDef) -> int:
 ## 能不能接：空串 = 能；否则是原因（[constant WHY_HIDDEN] 这些）。[param pick] = 接单时要选的（配方 id），[param picks] = 现在能选的
 static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &"", picks: Array = []) -> String:
 	var f := faction(d.faction) if d != null else null
-	if d == null or f == null or not f.listed:
+	if d == null or f == null or not f.listed or not present(book, f):
 		return WHY_HIDDEN
 	var st := book.state_of(d.id)
 	if st == CommissionBook.TAKEN:
 		return WHY_TAKEN
+	if NoticeBoard.is_note(d.id) and not book.pins.has(String(d.id)):     # 342 B2：纸条只能从栏上接
+		return WHY_HIDDEN
 	if book.is_done(d.id) and d.tier != CommissionDef.TEMPLATE:
 		return WHY_DONE
 	if d.mutex != &"" and book.mutex.has(String(d.mutex)):
@@ -147,11 +208,92 @@ static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &
 	for r in d.requires:
 		if not book.is_done(r):
 			return WHY_REQUIRES
-	if book.taken().size() >= SLOTS:
+	if not is_story(d) and _taken_regular(book) >= SLOTS:
 		return WHY_SLOTS
 	if needs_pick(d) and st != CommissionBook.PAUSED and (pick == &"" or not picks.has(pick)):
 		return WHY_PICK
 	return ""
+
+
+static func _taken_regular(book: CommissionBook) -> int:
+	return book.taken().filter(func(id: StringName) -> bool: return not is_story(def(id))).size()
+
+
+## 342 B2：够格的剧情自动接上（暂缓过的接着做；要先选配方的留给玩家点）。返回这回接上的 id
+static func auto_take(book: CommissionBook) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for d in defs():
+		if not is_story(d) or needs_pick(d) or book.state_of(d.id) == CommissionBook.TAKEN:
+			continue
+		if take(book, d):
+			out.append(d.id)
+	return out
+
+
+## 342 B2：营地「办理」—— 停在 `camp_report` 那一步就记一次；停在 `hand_in` 就把仓库里合格的交上去（够几件交几件）。
+## 返回 [method credit] 的结果（交货另有 `handed` = 交了几件）
+static func report(meta: MetaState, d: CommissionDef, items: ItemDatabase = null) -> Dictionary:
+	var s := current_stage(meta.commissions, d.id) if meta != null and d != null else -1
+	if s < 0 or s >= d.stages.size() or not CAMP_GOALS.has(d.stages[s].goal):
+		return {"ok": false, "step": false, "done": false}
+	if d.stages[s].goal == &"hand_in":
+		return _hand_in(meta, d, s, items)
+	return credit(meta, d, s, "camp", items)
+
+
+## 342 B2：现在停在营地能办的那一步（交货要仓库里至少有一件合格的，所以要 [param meta]）
+static func can_report(book: CommissionBook, d: CommissionDef, meta: MetaState = null) -> bool:
+	var s := current_stage(book, d.id) if d != null else -1
+	if s < 0 or s >= d.stages.size() or not CAMP_GOALS.has(d.stages[s].goal):
+		return false
+	return d.stages[s].goal != &"hand_in" or not hand_in_picks(meta, d, s).is_empty()
+
+
+## 342 B2：这一步能收这件吗（任务物不收）
+static func hand_in_fits(stage: CommissionStage, item: ItemDef) -> bool:
+	if stage == null or item == null or item.tags.has(&"commission"):
+		return false
+	var want := String(stage.params.get("id", ""))
+	if want != "":
+		return String(item.id) == want
+	return SmithRecipeDef.slot_fits({"material": String(stage.params.get("material", "")), "min": int(stage.params.get("min", 0))}, item)
+
+
+## 342 B2：交货会交仓库里哪几件：合格、没锁的，稀有度低的先交，最多交到这一步还差的件数
+static func hand_in_picks(meta: MetaState, d: CommissionDef, stage: int) -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	if meta == null or meta.warehouse == null or d == null or stage < 0 or stage >= d.stages.size():
+		return out
+	var st := d.stages[stage]
+	for inst in meta.warehouse.items():
+		var it := inst as ItemInstance
+		if not it.is_locked_by_player() and hand_in_fits(st, it.def):
+			out.append(it)
+	out.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool: return a.def.rarity < b.def.rarity)
+	var need := maxi(1, st.count) - int(meta.commissions.entry(d.id).get("progress", 0))
+	return out.slice(0, maxi(0, need))
+
+
+static func _hand_in(meta: MetaState, d: CommissionDef, stage: int, items: ItemDatabase) -> Dictionary:
+	var out := {"ok": false, "step": false, "done": false, "handed": 0}
+	for it in hand_in_picks(meta, d, stage):
+		if meta.warehouse.remove(it.uid) == null:
+			continue
+		var r := credit(meta, d, stage, "uid:%d" % it.uid, items)
+		if not bool(r["ok"]):
+			continue
+		out["ok"] = true
+		out["handed"] = int(out["handed"]) + 1
+		out["step"] = bool(out["step"]) or bool(r["step"])
+		if bool(r["done"]):
+			out["done"] = true
+			out["got"] = r["got"]
+	return out
+
+
+## 342 B2：这一方的常规委托开了没有：到受托，且办完了这一方的许可单
+static func regular_open(book: CommissionBook, f: FactionDef) -> bool:
+	return f != null and tier_of(book, f) >= REGULAR_TIER and (f.permit == &"" or book.is_done(f.permit))
 
 
 ## 接单时要不要先选一样（配方实验）
@@ -173,6 +315,7 @@ static func take(book: CommissionBook, d: CommissionDef, pick: StringName = &"",
 	e["times"] = int(e.get("times", 0))
 	e["seq"] = _next_seq(book)
 	book.entries[String(d.id)] = e
+	NoticeBoard.on_taken(book, d.id)
 	return true
 
 
@@ -185,7 +328,7 @@ static func _next_seq(book: CommissionBook) -> int:
 
 ## 暂缓：不占位，进度保留
 static func pause(book: CommissionBook, id: StringName) -> bool:
-	if book.state_of(id) != CommissionBook.TAKEN:
+	if book.state_of(id) != CommissionBook.TAKEN or is_story(def(id)) or NoticeBoard.is_note(id):     # 342 B2：剧情常驻、纸条全带进局，都不暂缓
 		return false
 	book.entries[String(id)]["state"] = CommissionBook.PAUSED
 	return true
@@ -194,8 +337,11 @@ static func pause(book: CommissionBook, id: StringName) -> bool:
 ## 放弃：进度清掉（完成过几次留着），可以重接
 static func abandon(book: CommissionBook, id: StringName) -> bool:
 	var st := book.state_of(id)
-	if st != CommissionBook.TAKEN and st != CommissionBook.PAUSED:
+	if (st != CommissionBook.TAKEN and st != CommissionBook.PAUSED) or is_story(def(id)):     # 342 B2：剧情不放弃
 		return false
+	if NoticeBoard.is_note(id):     # 342 B2：放弃的纸条不回栏上
+		NoticeBoard.discard(book, id)
+		return true
 	var times := int(book.entry(id).get("times", 0))
 	if times > 0:
 		book.entries[String(id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": times, "pick": "", "seq": 0}
@@ -252,9 +398,11 @@ static func _complete(meta: MetaState, d: CommissionDef, items: ItemDatabase) ->
 		book.signed[fid] = true
 	if d.mutex != &"":
 		book.mutex[String(d.mutex)] = String(d.id)
+	if d.opens != &"":
+		book.grants[String(d.opens)] = true
 	var times := int(book.entry(d.id).get("times", 0)) + 1
 	book.entries[String(d.id)] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": times, "pick": "", "seq": 0}
-	var got := {"rep": gain, "funds": maxi(0, d.funds), "items": 0}
+	var got := {"rep": gain, "funds": maxi(0, d.funds), "items": 0, "faction": fid, "opens": String(d.opens)}
 	meta.funds += maxi(0, d.funds)
 	if not d.items.is_empty() and items != null:
 		var gifts: Array = []
@@ -264,7 +412,11 @@ static func _complete(meta: MetaState, d: CommissionDef, items: ItemDatabase) ->
 				if item != null:
 					gifts.append(item)
 		got["items"] = int(meta.grant_lossless(gifts)["stored"])
-	book.add_receipt({"id": String(d.id), "kind": "done", "stage": d.stages.size() - 1, "run": meta.runs})
+	var rc := {"id": String(d.id), "kind": "done", "stage": d.stages.size() - 1, "run": meta.runs}
+	if NoticeBoard.is_note(d.id):     # 342 B2：纸条下一局结算时清掉，回执自己记名字
+		rc["name"] = Names.of(d)
+		(book.notes[String(d.id)] as Dictionary)["done_run"] = meta.runs
+	book.add_receipt(rc)
 	return got
 
 
@@ -317,6 +469,9 @@ static func validate_all(pool: Array, faction_pool: Array) -> Array[String]:
 				problems.append("%s：前置 %s 不是同一方" % [d.id, r])
 		if _cycles(d.id, by_id, {}):
 			problems.append("%s：前置成环" % d.id)
+	for f: FactionDef in faction_pool:     # 342 B2：许可单得是这一方的剧情
+		if f.permit != &"" and (not by_id.has(f.permit) or (by_id[f.permit] as CommissionDef).faction != f.id or not is_story(by_id[f.permit])):
+			problems.append("%s：许可单 %s 不是这一方的剧情" % [f.id, f.permit])
 	return problems
 
 

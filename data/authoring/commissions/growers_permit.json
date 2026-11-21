@@ -1,0 +1,31 @@
+{
+  "id": "growers_permit",
+  "display_name": "登记留种",
+  "display_names": {
+    "en": "Register the Seed Stock"
+  },
+  "faction": "growers",
+  "order": 4,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "growers_first_harvest"
+  ],
+  "stages": [
+    {
+      "goal": "nursery_plant",
+      "params": {
+        "crop": "bitter_leaf"
+      },
+      "where": "camp",
+      "text": "用自己的干草药束留种，种一畦苦叶草",
+      "texts": {
+        "en": "Keep back a bundle of your own dried herbs and sow a bed of bitterleaf"
+      }
+    }
+  ],
+  "client": "垦户社的老农",
+  "clients": {
+    "en": "Old grower"
+  }
+}

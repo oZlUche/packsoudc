@@ -1,0 +1,67 @@
+{
+  "id": "growers",
+  "display_name": "河滩垦户社",
+  "display_names": {
+    "en": "Riverbank Growers"
+  },
+  "order": 5,
+  "arrives": "first_run",
+  "thresholds": [
+    0,
+    10,
+    25,
+    50,
+    100
+  ],
+  "facilities": {
+    "nursery": "growers_first_bed"
+  },
+  "permit": "growers_permit",
+  "regular": [
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "herb"
+      },
+      "u": 8,
+      "name": "收草药",
+      "names": {
+        "en": "Herbs Wanted"
+      },
+      "text": "交 {n} 件草药",
+      "texts": {
+        "en": "Hand in herbs: {n}"
+      }
+    },
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "wood"
+      },
+      "u": 8,
+      "name": "收篱木",
+      "names": {
+        "en": "Fence Timber"
+      },
+      "text": "交 {n} 件木材",
+      "texts": {
+        "en": "Hand in wood materials: {n}"
+      }
+    },
+    {
+      "goal": "defeat_enemies",
+      "params": {
+        "kind": "normal"
+      },
+      "u": 10,
+      "name": "护田",
+      "names": {
+        "en": "Guard the Fields"
+      },
+      "text": "打赢 {n} 场普通的仗",
+      "texts": {
+        "en": "Win battles against ordinary enemies: {n}"
+      }
+    }
+  ]
+}

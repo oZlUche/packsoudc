@@ -115,7 +115,7 @@ func _open_result(payload: Dictionary) -> void:
 		lines.append(UiText.t("event.type_changed") % MapNodeStyle.of(StringName(String(detail["type_changed"])))["label"])
 	if int(detail.get("teleported", -1)) >= 0:
 		lines.append(UiText.t("event.teleported"))
-	if lines.is_empty():
+	if lines.is_empty() and harvest.is_empty():     # 有收获行（护符落在地上）就不写「什么也没发生」
 		lines.append(UiText.t("event.nothing"))
 	# 结果页配图沿用这个点的事件（结果只是同一件事的下一页）；老路的事件点没有定义，画占位
 	var image := ""

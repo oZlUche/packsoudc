@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_8fspa"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_nwvgy"]
+
+[sub_resource type="Resource" id="Resource_6v57b"]
+script = ExtResource("2_nwvgy")
+goal = &"visit_nodes"
+count = 2
+params = {
+"type": "rest"
+}
+text = "探望沿途两处休息点"
+texts = {
+"en": "Look in on two rest points along the way"
+}
+
+[resource]
+script = ExtResource("1_8fspa")
+id = &"greylamp_permit"
+display_name = "灰灯会牌"
+display_names = {
+"en": "Greylamp Token"
+}
+faction = &"greylamp"
+order = 4
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"greylamp_unsigned_letter", &"greylamp_check_medkits"])
+stages = Array[ExtResource("2_nwvgy")]([SubResource("Resource_6v57b")])
+client = "灰灯的老会员"
+clients = {
+"en": "Greylamp old-timer"
+}

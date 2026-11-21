@@ -23,5 +23,10 @@
   "client": "不留名的寄信人",
   "clients": {
     "en": "An unnamed sender"
-  }
+  },
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "greylamp_check_scale"
+  ]
 }

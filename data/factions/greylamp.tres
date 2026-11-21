@@ -10,3 +10,50 @@ display_names = {
 "en": "Grey Lamp Mutual Aid"
 }
 order = 3
+facilities = {
+"market": "greylamp_check_scale"
+}
+permit = &"greylamp_permit"
+regular = Array[Dictionary]([{
+"goal": "visit_nodes",
+"name": "探望",
+"names": {
+"en": "Check-in"
+},
+"params": {
+"type": "rest"
+},
+"text": "到访 {n} 处休息点",
+"texts": {
+"en": "Visit rest points: {n}"
+},
+"u": 15
+}, {
+"goal": "hand_in",
+"name": "收布料",
+"names": {
+"en": "Cloth Wanted"
+},
+"params": {
+"material": "cloth"
+},
+"text": "交 {n} 件布料",
+"texts": {
+"en": "Hand in cloth materials: {n}"
+},
+"u": 8
+}, {
+"goal": "defeat_enemies",
+"name": "护送",
+"names": {
+"en": "Escort"
+},
+"params": {
+"kind": "normal"
+},
+"text": "打赢 {n} 场普通的仗",
+"texts": {
+"en": "Win battles against ordinary enemies: {n}"
+},
+"u": 10
+}])

@@ -7,8 +7,60 @@
   "order": 3,
   "thresholds": [
     0,
-    2,
-    5,
-    9
+    10,
+    25,
+    50,
+    100
+  ],
+  "facilities": {
+    "market": "greylamp_check_scale"
+  },
+  "permit": "greylamp_permit",
+  "regular": [
+    {
+      "goal": "visit_nodes",
+      "params": {
+        "type": "rest"
+      },
+      "u": 15,
+      "name": "探望",
+      "names": {
+        "en": "Check-in"
+      },
+      "text": "到访 {n} 处休息点",
+      "texts": {
+        "en": "Visit rest points: {n}"
+      }
+    },
+    {
+      "goal": "hand_in",
+      "params": {
+        "material": "cloth"
+      },
+      "u": 8,
+      "name": "收布料",
+      "names": {
+        "en": "Cloth Wanted"
+      },
+      "text": "交 {n} 件布料",
+      "texts": {
+        "en": "Hand in cloth materials: {n}"
+      }
+    },
+    {
+      "goal": "defeat_enemies",
+      "params": {
+        "kind": "normal"
+      },
+      "u": 10,
+      "name": "护送",
+      "names": {
+        "en": "Escort"
+      },
+      "text": "打赢 {n} 场普通的仗",
+      "texts": {
+        "en": "Win battles against ordinary enemies: {n}"
+      }
+    }
   ]
 }

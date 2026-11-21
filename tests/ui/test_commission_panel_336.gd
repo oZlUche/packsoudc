@@ -2,6 +2,8 @@
 ## 结算屏的委托段落写一句
 extends RefCounted
 
+const W1 := preload("res://tests/run/test_commissions_w1_336.gd")
+
 const W178 := preload("res://tests/ui/test_base_warehouse_178.gd")
 const Bare := preload("res://tests/ui/test_no_bare_text_226.gd")
 const ResultScreenScript := preload("res://ui/game/result_screen.gd")
@@ -16,9 +18,10 @@ static func _keys_text(n: Node, out: Array[String]) -> Array[String]:
 
 
 static func frame_commission_tab(t: TestCase, root: Window) -> void:
-	t.begin("336 W1 · 委托页：三方三颗键；军团页有《两条回路》的卡，按「接下」后卡上是「暂缓」「放弃」；字不裸")
+	t.begin("336 W1 · 委托页：三方剧情单一起钉在板上；有《两条回路》（342 B3：地图协会的）的卡（342 B2：自动接上、不能暂缓放弃）；字不裸")
 	ItemInstance.reset_uid_counter()
 	var f := W178._flow()
+	W1.unlock(f.meta.commissions)     # 342 B2：原型单前面的剧情记成办成
 	t.check(f.commissions_visible(), "没有教程章：委托页露出来")
 	var s: Control = W178._screen(f, root)
 	t.check((s._tab_btns as Dictionary).has("commissions"), "有「委托」页签")
@@ -29,14 +32,14 @@ static func frame_commission_tab(t: TestCase, root: Window) -> void:
 		s.queue_free()
 		W178._cleanup()
 		return
-	t.eq((p._key_btns as Dictionary).size(), 3, "三方三颗键（使者、猎人不列）")
+	t.not_null(p.find_child("StoryGrid", true, false), "342 B2 A 告示板：三方剧情单一起钉在板上（不再有阵营键）")
+	t.check(p.find_child("Card_greylamp_unsigned_letter", true, false) != null and p.find_child("Card_society_copy_recipe", true, false) != null, "几方的剧情单都在这一页")
 	p.show_faction(&"legion")
 	var card: Node = p.find_child("Card_legion_two_routes", true, false)
-	t.not_null(card, "军团页有《两条回路》")
-	t.eq(p.take(&"legion_two_routes"), "", "按「接下」接了")
-	card = p.find_child("Card_legion_two_routes", true, false)
+	t.not_null(card, "地图协会页有《两条回路》")
+	t.eq(f.meta.commissions.state_of(&"legion_two_routes"), CommissionBook.TAKEN, "342 B2：剧情进基地就自动接上")
 	var keys := _keys_text(card, [] as Array[String]) if card != null else [] as Array[String]
-	t.check(keys.has(UiText.t("commission.pause")) and keys.has(UiText.t("commission.abandon")), "卡上换成「暂缓」「放弃」")
+	t.check(not keys.has(UiText.t("commission.pause")) and not keys.has(UiText.t("commission.abandon")), "342 B2：剧情卡没有「暂缓」「放弃」")
 	p.show_faction(&"society")
 	var take: Button = p.find_child("Take_society_copy_recipe", true, false) as Button
 	t.check(take != null and take.disabled, "配方实验没选配方：「接下」灰着")

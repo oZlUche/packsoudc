@@ -1,0 +1,24 @@
+{
+  "id": "greylamp_check_scale",
+  "display_name": "认一认秤",
+  "display_names": {
+    "en": "Know the Scales"
+  },
+  "faction": "greylamp",
+  "reputation": 10,
+  "opens": "market",
+  "stages": [
+    {
+      "goal": "camp_report",
+      "where": "camp",
+      "text": "和摊主核对样货，签收",
+      "texts": {
+        "en": "Check the sample goods with the stallholder and sign for them"
+      }
+    }
+  ],
+  "client": "灰灯引荐的摊主",
+  "clients": {
+    "en": "A stallholder sent by the Grey Lamp"
+  }
+}

@@ -21,9 +21,12 @@ display_names = {
 }
 faction = &"society"
 order = 1
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"society_first_survey"])
 stages = Array[ExtResource("2_ljx0d")]([SubResource("Resource_3yoya")])
 funds = 40
-client = "考据所研究员"
+client = "协会研究员"
 clients = {
-"en": "Archive researcher"
+"en": "Society researcher"
 }

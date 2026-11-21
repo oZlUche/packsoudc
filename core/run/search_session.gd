@@ -41,6 +41,9 @@ var produce: Dictionary = {}
 ## 267：材料节点只出带这些标签的材料（`NodeRules.search_kinds`）；每件有 [member other_share] 的机会从普通池抽。空 = 普通搜索点
 var only_tags: Array = []
 var other_share: float = 0.0
+## 342 B3：这一局的材料倾向（[MaterialBias]）—— 只在普通搜索点（[member only_tags] 空）重分材料的权重
+var bias_tags: Array = []
+var bias_mult: float = 1.0
 
 
 func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: RandomNumberGenerator, p_depth: float = 0.0) -> void:
@@ -105,7 +108,8 @@ func search() -> Dictionary:
 		# 246 补充二：抽来的魔晶石换品、抽次数 —— 随机数另起一条（由主随机数派生、不消耗它），剧本给的不动
 		var crng: RandomNumberGenerator = null
 		if got.is_empty():
-			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng, -1, search_floor, produce, only_tags, other_share)
+			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng, -1, search_floor, produce, only_tags, other_share,
+					bias_tags, bias_mult)
 			if substitute.is_valid():
 				got = substitute.call(got)
 			crng = RandomNumberGenerator.new()
@@ -259,7 +263,7 @@ static func floor_text(p_floor: Array[int]) -> String:
 static func draw_items(
 	p_rules: SearchRules, p_items: ItemDatabase, p_depth: float, danger: int, p_rng: RandomNumberGenerator,
 	rarity_cap: int = -1, p_floor: Array[int] = [], p_produce: Dictionary = {},
-	p_only: Array = [], p_other_share: float = 0.0
+	p_only: Array = [], p_other_share: float = 0.0, p_bias: Array = [], p_bias_mult: float = 1.0
 ) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if p_rules == null or p_items == null:
@@ -271,6 +275,8 @@ static func draw_items(
 	for id in cands:
 		var d := p_items.get_def(id)
 		weights.append(p_rules.rarity_weight(d.rarity, p_depth, danger) * weight_mult(d, p_produce))
+	if p_only.is_empty():
+		MaterialBias.apply(cands, weights, p_items, p_bias, p_bias_mult)     # 342 B3
 	# 267 C：材料节点的那一类（过滤后空了就当普通点，别让节点空手）
 	var kind_c: Array[StringName] = []
 	var kind_w: Array[float] = []

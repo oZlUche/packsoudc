@@ -1,0 +1,24 @@
+{
+  "id": "cartographers_redraw",
+  "display_name": "把路画回来",
+  "display_names": {
+    "en": "Draw the Road Back"
+  },
+  "faction": "cartographers",
+  "reputation": 10,
+  "stages": [
+    {
+      "goal": "camp_report",
+      "where": "camp",
+      "text": "把这一趟到过的一处地形登记到协会的图上",
+      "texts": {
+        "en": "Register one stretch of ground you walked this trip on the Society's map"
+      }
+    }
+  ],
+  "opens": "bias",
+  "client": "协会绘图员",
+  "clients": {
+    "en": "Society draughtsman"
+  }
+}

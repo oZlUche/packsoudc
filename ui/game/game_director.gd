@@ -86,7 +86,7 @@ func _ready() -> void:
 	var techs := SliceBase.techs(GameFlow.load_techs(), SliceProfile.current())     # 120：读档先按科技算仓库容量，再装仓库；统一教程 D2：切片只开清单里的几项
 	var meta := MetaSave.read(items, meta_path, rules, techs)
 	if meta == null:
-		meta = MetaState.new(rules)
+		meta = GameFlow.new_meta(rules)
 	flow = GameFlow.new(items, enemies, sets, meta)
 	flow.meta_rules = rules
 	flow.buff_defs = RunBuffs.load_all()

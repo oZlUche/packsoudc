@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_ojsfy"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_w41fs"]
+
+[sub_resource type="Resource" id="Resource_w48tc"]
+script = ExtResource("2_w41fs")
+goal = &"visit_nodes"
+count = 5
+text = "走过五处地方"
+texts = {
+"en": "Pass through five places"
+}
+
+[resource]
+script = ExtResource("1_ojsfy")
+id = &"cartographers_permit"
+display_name = "提交路标"
+display_names = {
+"en": "Set the Waymarks"
+}
+faction = &"cartographers"
+order = 4
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"legion_two_routes", &"cartographers_verify_vein"])
+stages = Array[ExtResource("2_w41fs")]([SubResource("Resource_w48tc")])
+client = "协会绘图员"
+clients = {
+"en": "Society draughtsman"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "society_first_survey",
+  "display_name": "第一份勘察记录",
+  "display_names": {
+    "en": "The First Survey Record"
+  },
+  "faction": "society",
+  "reputation": 10,
+  "opens": "tech",
+  "stages": [
+    {
+      "goal": "camp_report",
+      "where": "camp",
+      "text": "把你这几趟的探索记录交给协会登记",
+      "texts": {
+        "en": "Register your expedition records with the Society"
+      }
+    }
+  ],
+  "client": "协会登记员",
+  "clients": {
+    "en": "Society registrar"
+  }
+}

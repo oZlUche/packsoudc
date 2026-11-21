@@ -1,7 +1,7 @@
 ## 336（W0，报告 335 第三节）：一份具名委托或一种可重复模板。
 ##
 ## 档位（[member tier]）定接取要几级声望、给多少声望（[method Commissions.required_tier]、[method Commissions.default_reputation]）：
-## 入门 +1（陌生就能接）、调查 +2（熟面）、结案 +3（受托，且前置齐备）；模板最多把一方推到熟面。
+## 入门 +1（陌生就能接）、调查 +2（熟面）、结案 +3（受托，且前置齐备）；模板（告示栏纸条）最多把一方推到信赖。
 ##
 ## 走内容管线：`data/authoring/commissions/*.json` → `data/commissions/*.tres`（[method Commissions.defs]）
 class_name CommissionDef
@@ -36,6 +36,8 @@ const TIERS: Array[StringName] = [INTRO, INQUIRY, FINALE, TEMPLATE]
 ## 完成时的酬金（金币）与实物（道具 id → 件数）。数值是候选
 @export var funds: int = 0
 @export var items: Dictionary = {}
+## 342 B2：办成后开放的基地设施（`smithy` / `tech` / `market`；342 B3 加 `bias` / `nursery`；空 = 不开）。剧情委托（[member tier] 不是模板）才用
+@export var opens: StringName = &""
 ## 互斥组：同组只能有一份结案（空 = 不互斥）
 @export var mutex: StringName = &""
 ## 委托人原话（方案里加了引号的原样用）

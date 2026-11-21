@@ -81,6 +81,8 @@ var economy: EconomyRules = null
 var difficulty: int = 0
 ## 事件方案 2026-11-11 §8.4：这一章的 id（主题奖励池按章节筛候选）；池本身第一次用时读盘（[method RewardPool.load_all]）
 var chapter_id: StringName = &""
+## 342 B3：这一局的材料倾向（[MaterialBias]，空 = 无倾向），开搜索会话时交给它
+var material_bias: StringName = &""
 var reward_pools: Dictionary = {}
 var scale_id: StringName = &""
 ## 285：这一章核心 BOSS 必掉的券（[member ChapterDef.boss_ticket]）；空 = 不掉
@@ -1034,6 +1036,8 @@ func _open_search(node: MapNode, auto: bool = false) -> void:
 		var kind := search_kind_of(node)     # 267 C
 		session.only_tags = kind.get("tags", [])
 		session.other_share = float(kind.get("other_share", 0.0))
+		session.bias_tags = MaterialBias.tags_of(material_bias)     # 342 B3
+		session.bias_mult = MaterialBias.MULT
 		# 237：闭包里只拿会话的弱引用 —— 会话自己的信号回调 / encounter_builder 抓着自己就成了环，一局里每个搜索点的会话都放不掉
 		var wr: WeakRef = weakref(session)
 		var sr := rules.search

@@ -1,7 +1,8 @@
 ## 336 W1（阵营与委托，报告 335 第三、四节）：一局里带着的委托 —— 出征时把接着的至多两份拍个快照带进局（[member tracked]），
 ## 撤离确认框上的「查验」「交信」记进度（[member rows]），一局结束和其他结果同一次并进局外（[method Commissions.merge_run]）。
 ##
-## 只认真实发生的事：查验 = 人站在撤离点上按了【查验】；交信 = 人站在开着的免费撤离点上、任务信还在身上。
+## 只认真实发生的事：查验 = 人站在撤离点上按了【查验】；交信 = 人站在开着的免费撤离点上、任务信还在身上；
+## 342 B2：击败 = 打赢一场（[signal NodeEvents.battle_finished]）；到访 = 真的走进那个点（[signal MapTravel.moved]）。
 ## 同一处只记一次（行的去重键 = 节点 id / 实例 uid），读档重进、反复进同一个点都不重复。
 ## 进度跟这一局的存档走（`modules.commission`）；没带委托的局什么也不做。取它用 [method of]
 class_name CommissionModule
@@ -19,6 +20,8 @@ signal progressed(id: StringName, stage: int, step_done: bool)
 var tracked: Array[Dictionary] = []
 ## 这一局记下的进度：[{"id", "stage", "key", "via"}]（[method Commissions.merge_run] 读）
 var rows: Array[Dictionary] = []
+## 接过信号的那一局（install 会调两次，信号只接一次）
+var _wired: RunState = null
 
 
 static func of(run: RunState) -> CommissionModule:
@@ -37,6 +40,12 @@ func install(run: RunState) -> void:
 		return can_inspect(node) if action == INSPECT else (can_deliver(node) if action == DELIVER else false))
 	run.hooks.register(&"commission_act", func(action: StringName, node: MapNode) -> Array:
 		return inspect(node) if action == INSPECT else (deliver(node) if action == DELIVER else []))
+	if _wired != run:
+		_wired = run
+		if run.events != null:
+			run.events.battle_finished.connect(func(n: MapNode, _r: BattleResult, won: bool): on_battle(n, won, run.events.last_battle))
+		if run.travel != null:
+			run.travel.moved.connect(func(i: MoveIntent, _first: bool): on_visit(run.map.get_node(i.to_id) if run.map != null and run.map.has_node(i.to_id) else null))
 	if tracked.is_empty():
 		for raw in run.module_input(ID).get("tracked", []):
 			if raw is Dictionary:
@@ -186,6 +195,48 @@ func deliver(node: MapNode) -> Array:
 				c.remove(letter.uid)
 				break
 		out.append(_add(d, s, "uid:%d" % letter.uid, "self"))
+	return out
+
+
+## 342 B2：打赢一场 —— 带着的击败委托各记一场。[param battle] = [member NodeEvents.last_battle]（类型、敌人、这一场的 id）
+func on_battle(node: MapNode, won: bool, battle: Dictionary) -> Array:
+	var out: Array = []
+	if not won or node == null or _run == null:
+		return out
+	var type := String(battle.get("type", ""))
+	var content: Dictionary = battle.get("content", {}) if battle.get("content", null) is Dictionary else {}
+	var enemy := String(content.get("enemy", ""))
+	var key := "battle:%d:%s:%s" % [node.id, String(battle.get("battle_id", "smite")), enemy]
+	for pair in waiting(&"defeat_enemies"):
+		var d := pair[0] as CommissionDef
+		var s := int(pair[1])
+		var p := d.stages[s].params
+		if String(p.get("kind", "")) == "normal" and type in ["elite", "core", String(HunterSystem.TYPE)]:
+			continue
+		if String(p.get("enemy", "")) != "" and String(p.get("enemy", "")) != enemy:
+			continue
+		if not _has_row(d.id, s, "%s/%s" % [_run.run_id, key]):
+			out.append(_add(d, s, key, "self"))
+	return out
+
+
+## 342 B2：走进一个点 —— 带着的到访委托（类型对得上的；342 B3：`params.search_kind` 认材料点那一种）各记一处；同一局同一处只记一次
+func on_visit(node: MapNode) -> Array:
+	var out: Array = []
+	if node == null or _run == null:
+		return out
+	var key := "node:%d" % node.id
+	for pair in waiting(&"visit_nodes"):
+		var d := pair[0] as CommissionDef
+		var s := int(pair[1])
+		var want := String(d.stages[s].params.get("type", ""))
+		if want != "" and String(NodeEvents.effective_type(node)) != want and String(node.type) != want:
+			continue
+		var kind := String(d.stages[s].params.get("search_kind", ""))     # 342 B3：材料点（矿点、林地……）
+		if kind != "" and String(node.content.get("search_kind", "")) != kind:
+			continue
+		if not _has_row(d.id, s, "%s/%s" % [_run.run_id, key]):
+			out.append(_add(d, s, key, "self"))
 	return out
 
 

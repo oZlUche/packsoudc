@@ -1,8 +1,9 @@
-## 336（阵营与委托 W0，报告 335）：定义表能导、能查；声望四级与代言要署名；接取规则（两个位、档位、前置、互斥、要选配方）；
+## 336（阵营与委托 W0，报告 335）：定义表能导、能查；声望五档（342 B2）与代言要署名；接取规则（两个位、档位、前置、互斥、要选配方）；
 ## 记账去重与分步；一局并进局外时现场交付失败也算、带回的只在撤离或托付成功时算；存读往返；老档没有委托
 extends RefCounted
 
 const T110 := preload("res://tests/meta/test_tech.gd")
+const W1 := preload("res://tests/run/test_commissions_w1_336.gd")
 
 
 static func _meta() -> MetaState:
@@ -27,9 +28,10 @@ static func _def(id: StringName, faction: StringName, tier: StringName, wheres: 
 static func run_content(t: TestCase) -> void:
 	t.begin("336 W0：五方按顺序（军团 / 协会 / 灰灯 / 使团 / 猎盟），首版只列前三方；三张原型单导得进来、前置与阵营查得过")
 	var fs := Commissions.factions()
-	t.eq(fs.map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp", "envoy", "hunters"], "五方、顺序对")
-	t.eq(Commissions.listed_factions().map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp"], "只列三方")
-	t.check(fs.all(func(f: FactionDef) -> bool: return f.thresholds == ([0, 2, 5, 9] as Array[int])), "门槛 0 / 2 / 5 / 9")
+	t.eq(fs.map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp", "cartographers", "envoy", "growers", "hunters"], "七方、顺序对（342 B3 加地图协会、垦户社）")
+	Commissions.active = CommissionBook.new()
+	t.eq(Commissions.listed_factions().map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp"], "只列三方（地图协会第一次正式探索结算后才来）")
+	t.check(fs.all(func(f: FactionDef) -> bool: return f.thresholds == ([0, 10, 25, 50, 100] as Array[int])), "门槛 0 / 10 / 25 / 50 / 100（342 B2）")
 	t.check(fs.all(func(f: FactionDef) -> bool: return Names.of(f, "en") != f.display_name), "都有英文名")
 	var ids := Commissions.defs().map(func(d: CommissionDef) -> String: return String(d.id))
 	for id in ["legion_two_routes", "society_copy_recipe", "greylamp_unsigned_letter"]:
@@ -37,8 +39,8 @@ static func run_content(t: TestCase) -> void:
 	t.eq(Commissions.validate_all(Commissions.defs(), Commissions.factions()), [] as Array[String], "前置、阵营都查得过")
 	var two := Commissions.def(&"legion_two_routes")
 	t.eq(two.quote, "去的时候路都好走。替我看看，回来还能走哪条。", "方案的原话原样用")
-	t.eq([two.tier, Commissions.reputation_of(two), Commissions.required_tier(two)], [CommissionDef.INQUIRY, 2, 0], "两条回路：调查 +2，原型期陌生可接")
-	t.eq(Commissions.required_tier(Commissions.def(&"society_copy_recipe")), 0, "入门陌生可接")
+	t.eq([two.faction, Commissions.reputation_of(two), Commissions.required_tier(two)], [&"cartographers", 5, 1], "两条回路：342 B3 改给地图协会，+5，熟面")
+	t.eq(Commissions.required_tier(Commissions.def(&"society_copy_recipe")), 1, "342 B2：配方实验成了协会的基础剧情，熟面可接")
 	t.check(Commissions.needs_pick(Commissions.def(&"society_copy_recipe")), "配方实验要先选配方")
 
 
@@ -75,39 +77,46 @@ static func run_import_checks(t: TestCase) -> void:
 
 
 static func run_tiers(t: TestCase) -> void:
-	t.begin("336 W0：声望四级 —— 0 陌生、2 熟面、5 受托；到 9 没署名结案停在受托，署名了才是代言")
+	t.begin("342 B2：声望五档 —— 0 初识、10 熟面、25 受托、50 信赖；到 100 没署名结案停在信赖，署名了才是代言")
 	var book := CommissionBook.new()
 	var f := Commissions.faction(&"legion")
 	var lv := func(r: int) -> int:
 		book.rep["legion"] = r
 		return Commissions.tier_of(book, f)
-	t.eq([lv.call(0), lv.call(1), lv.call(2), lv.call(4), lv.call(5), lv.call(9), lv.call(12)], [0, 0, 1, 1, 2, 2, 2], "没署名最多受托")
+	t.eq([lv.call(0), lv.call(9), lv.call(10), lv.call(24), lv.call(25), lv.call(50), lv.call(120)], [0, 0, 1, 1, 2, 3, 3], "没署名最多信赖")
 	book.signed["legion"] = true
-	t.eq(lv.call(9), 3, "署名后代言")
-	book.rep["legion"] = 3
-	t.eq(Commissions.rep_to_next(book, f), 2, "熟面到受托还差 2")
+	t.eq(lv.call(100), 4, "署名后代言")
+	book.rep["legion"] = 18
+	t.eq(Commissions.rep_to_next(book, f), 7, "熟面到受托还差 7")
 
 
 static func run_take_rules(t: TestCase) -> void:
-	t.begin("336 W0：接取 —— 同时两份；档位不够、前置没做、互斥组被结、做完的具名单、没选配方都不能接；暂缓不占位，放弃清进度")
+	t.begin("336 W0 / 342 B2：接取 —— 常规（模板）同时三份（342 B2：手头 3）；档位不够、前置没做、互斥组被结、做完的具名单、没选配方都不能接；暂缓不占位，放弃清进度")
 	var book := CommissionBook.new()
-	var a := _def(&"t_a", &"legion", CommissionDef.INTRO)
-	var b := _def(&"t_b", &"society", CommissionDef.INTRO)
-	var c := _def(&"t_c", &"greylamp", CommissionDef.INTRO)
+	var a := _def(&"t_a", &"legion", CommissionDef.TEMPLATE)
+	var b := _def(&"t_b", &"society", CommissionDef.TEMPLATE)
+	var c := _def(&"t_c", &"greylamp", CommissionDef.TEMPLATE)
 	var deep := _def(&"t_deep", &"legion", CommissionDef.INQUIRY)
 	var hidden := _def(&"t_hidden", &"envoy", CommissionDef.INTRO)
 	t.eq(Commissions.why_not(book, hidden), Commissions.WHY_HIDDEN, "没列出来的阵营不能接")
 	t.eq(Commissions.why_not(book, deep), Commissions.WHY_TIER, "调查要熟面")
-	t.check(Commissions.take(book, a) and Commissions.take(book, b), "接两份")
-	t.eq(Commissions.why_not(book, c), Commissions.WHY_SLOTS, "第三份没位")
+	var z := _def(&"t_z", &"legion", CommissionDef.TEMPLATE)
+	t.check(Commissions.take(book, z) and Commissions.take(book, a) and Commissions.take(book, b), "接三份")
+	t.eq(Commissions.why_not(book, c), Commissions.WHY_SLOTS, "第四份没位")
 	t.eq(Commissions.why_not(book, a), Commissions.WHY_TAKEN, "接着的不能再接")
 	t.check(Commissions.pause(book, &"t_b"), "暂缓一份")
-	t.eq(book.taken(), [&"t_a"] as Array[StringName], "暂缓的不占位")
-	t.check(Commissions.take(book, c), "空出的位接第三份")
+	t.eq(book.taken(), [&"t_z", &"t_a"] as Array[StringName], "暂缓的不占位")
+	t.check(Commissions.take(book, c), "空出的位接第四份")
 	t.eq(Commissions.why_not(book, b), Commissions.WHY_SLOTS, "位满了，暂缓的也接不回来")
 	t.check(Commissions.abandon(book, &"t_c"), "放弃一份")
 	t.eq(book.state_of(&"t_c"), "", "放弃的没留下进度")
 	t.check(Commissions.take(book, b), "暂缓的接回来")
+	var story := _def(&"t_story", &"legion", CommissionDef.INTRO)
+	t.eq(Commissions.why_not(book, story), "", "342 B2：剧情不占位（常规满了照样接）")
+	Commissions.take(book, story)
+	Commissions.defs().append(story)     # pause / abandon 按 id 查定义
+	t.check(not Commissions.pause(book, &"t_story") and not Commissions.abandon(book, &"t_story"), "342 B2：剧情不暂缓、不放弃")
+	Commissions.defs().erase(story)
 	var after := _def(&"t_after", &"legion", CommissionDef.INTRO)
 	after.requires = [&"t_x"] as Array[StringName]
 	t.eq(Commissions.why_not(CommissionBook.new(), after), Commissions.WHY_REQUIRES, "前置没做不能接")
@@ -117,15 +126,18 @@ static func run_take_rules(t: TestCase) -> void:
 	b2.mutex["roll"] = "t_m0"
 	t.eq(Commissions.why_not(b2, m1), Commissions.WHY_MUTEX, "互斥组被别人结了")
 	var copy := Commissions.def(&"society_copy_recipe")
-	t.eq(Commissions.why_not(CommissionBook.new(), copy, &"", [&"iron_sword"]), Commissions.WHY_PICK, "没选配方不能接")
-	t.eq(Commissions.why_not(CommissionBook.new(), copy, &"bogus", [&"iron_sword"]), Commissions.WHY_PICK, "选的不在可选里不能接")
-	var b3 := CommissionBook.new()
+	var b0 := CommissionBook.new()     # 342 B2：前面那份开放单办完、熟面
+	b0.entries["society_first_survey"] = {"state": CommissionBook.DONE, "stage": 0, "progress": 0, "keys": [], "times": 1, "pick": "", "seq": 0}
+	b0.rep["society"] = 10
+	t.eq(Commissions.why_not(b0, copy, &"", [&"iron_sword"]), Commissions.WHY_PICK, "没选配方不能接")
+	t.eq(Commissions.why_not(b0, copy, &"bogus", [&"iron_sword"]), Commissions.WHY_PICK, "选的不在可选里不能接")
+	var b3 := CommissionBook.from_dict(b0.to_dict())
 	t.check(Commissions.take(b3, copy, &"iron_sword", [&"iron_sword"]), "选了能做的配方就能接")
 	t.eq(String(b3.entry(copy.id)["pick"]), "iron_sword", "记下选的配方")
 
 
 static func run_credit(t: TestCase) -> void:
-	t.begin("336 W0：记账 —— 同一处只记一次；做够了进下一步；最后一步结案给声望、酬金、回执；具名单做完不能再接；模板最多推到熟面")
+	t.begin("336 W0：记账 —— 同一处只记一次；做够了进下一步；最后一步结案给声望、酬金、回执；具名单做完不能再接；模板最多推到信赖")
 	var m := _meta()
 	var d := _def(&"t_two", &"legion", CommissionDef.INQUIRY)
 	d.min_tier = 0
@@ -138,14 +150,16 @@ static func run_credit(t: TestCase) -> void:
 	t.check(not bool(Commissions.credit(m, d, 1, "node:5")["ok"]), "不是当前这一步不算")
 	var r := Commissions.credit(m, d, 0, "node:9")
 	t.check(bool(r["done"]), "第二处：结案")
-	t.eq([m.commissions.rep_of(&"legion"), m.funds - funds0], [2, 60], "声望 +2、酬金 60")
+	t.eq([m.commissions.rep_of(&"legion"), m.funds - funds0], [2, 60], "声望 +2（没写就按档位默认）、酬金 60")
 	t.eq(m.commissions.receipts[0]["kind"], "done", "回执：结案")
 	t.eq(Commissions.why_not(m.commissions, d), Commissions.WHY_DONE, "具名单做完不能再接")
 	var tpl := _def(&"t_tpl", &"society", CommissionDef.TEMPLATE)
+	tpl.reputation = 4
+	m.commissions.rep["society"] = 40     # 342 B2：上限是信赖（50）
 	for i in 4:
 		t.check(Commissions.take(m.commissions, tpl), "模板第 %d 次能接" % (i + 1))
 		Commissions.credit(m, tpl, 0, "k%d" % i)
-	t.eq(m.commissions.rep_of(&"society"), Commissions.TEMPLATE_CAP, "模板做四次，声望停在熟面")
+	t.eq(m.commissions.rep_of(&"society"), Commissions.TEMPLATE_CAP, "模板做四次，声望停在上限")
 	t.eq(int(m.commissions.entry(&"t_tpl")["times"]), 4, "完成次数照记")
 	var fin := _def(&"t_fin", &"greylamp", CommissionDef.FINALE)
 	fin.min_tier = 0
@@ -187,7 +201,8 @@ static func run_save(t: TestCase) -> void:
 	var db := T110._db()
 	var m := _meta()
 	var d := Commissions.def(&"legion_two_routes")
-	Commissions.take(m.commissions, d)
+	W1.unlock(m.commissions)     # 342 B3：排在地图协会首单后
+	t.check(Commissions.take(m.commissions, d), "接上《两条回路》")
 	Commissions.credit(m, d, 0, "node:2")
 	m.commissions.rep["greylamp"] = 1
 	var text := MetaSave.to_text(m)
@@ -203,6 +218,7 @@ static func run_save(t: TestCase) -> void:
 	t.not_null(old, "老档读得回来")
 	if old == null:
 		return
-	t.check(old.commissions.is_empty(), "老档没有委托")
+	t.check(old.commissions.entries.is_empty() and old.commissions.rep.is_empty(), "老档没有委托")
+	t.check(not old.commissions.gated, "342 B2：老档不受设施门控")
 	var src: Dictionary = JSON.parse_string(raw)
 	t.eq(old.codex.size(), (src.get("codex", {}) as Dictionary).size(), "图鉴条目数不变")
