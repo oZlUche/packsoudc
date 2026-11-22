@@ -1,0 +1,50 @@
+{
+  "id": "executioner",
+  "display_name": "处刑人",
+  "display_names": {
+    "en": "Executioner"
+  },
+  "strength": 3,
+  "schools": [
+    "burst",
+    "bleed"
+  ],
+  "base_stats": {
+    "max_hp": 55
+  },
+  "signature": [
+    "executioner_axe"
+  ],
+  "item_tags": [
+    "heavy",
+    "armor",
+    "remedy"
+  ],
+  "loadout": {
+    "common_tags": [
+      "armor",
+      "remedy",
+      "food",
+      "tool"
+    ],
+    "school_share": 0.15,
+    "min_school": 0,
+    "rarity_cap": 1,
+    "min_weapons": 0,
+    "build_chance": 1.0
+  },
+  "builds": [
+    {
+      "id": "headsman",
+      "strength": [
+        2,
+        3
+      ],
+      "items": [
+        "chain_mail",
+        "bandage_roll"
+      ],
+      "note": "刽子手巨斧 + 锁子甲 + 绷带卷"
+    }
+  ]
+}
