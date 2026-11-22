@@ -230,3 +230,31 @@ static func frame_commission_keys(t: TestCase, root: Window) -> void:
 static func _left(meta: MetaState) -> int:
 	var ps := meta.nursery.plants(0)
 	return meta.nursery.left_of(ps[0].uid) if not ps.is_empty() else -1
+
+
+static func frame_late_facility(t: TestCase, root: Window) -> void:
+	t.begin("测试 v7.55 · 营地里刚来的一方、刚开的设施：后勤键和页当场补上，【完成】跳得过去；苗圃熟了不换页【收获】也亮")
+	ItemInstance.reset_uid_counter()
+	var f := W178._flow()
+	Support.pass_tutorials(f)
+	var s: Control = W178._screen(f, root)
+	t.check(not (s.sub_tab_buttons() as Dictionary).has("nursery"), "垦户社没来：没有苗圃键")
+	f.meta.commissions.arrived["growers"] = 1
+	f.sync_commissions()
+	f.meta.changed.emit()
+	t.check((s.sub_tab_buttons() as Dictionary).has("nursery"), "来了：苗圃键当场补上")
+	var keys: Array = (s.sub_tab_buttons() as Dictionary).keys()
+	t.check(keys.find("nursery") > keys.find("smithy"), "插在铁匠铺后面")
+	s.show_tab("commissions")
+	var cp = s.commission_panel()
+	cp.show_faction(&"growers")
+	cp.finish(&"growers_first_bed")
+	t.check(s.nursery_panel() != null and s.nursery_panel().is_visible_in_tree(), "【完成】跳到苗圃页（不再落到出征页）")
+	f.sow_crop(0, &"rope_hemp")
+	for k in 3:
+		Nursery.advance(f.meta, "late%d" % k)
+	f.meta.changed.emit()
+	var hb := s.nursery_panel().find_child("Harvest_0", true, false) as Button
+	t.check(hb != null and not hb.disabled, "熟了：【收获】亮着")
+	s.queue_free()
+	W178._cleanup()

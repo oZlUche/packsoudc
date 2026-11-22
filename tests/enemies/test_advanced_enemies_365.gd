@@ -48,3 +48,36 @@ static func run_roster(t: TestCase) -> void:
 	if in_ruins.has(&"centurion"):
 		t.check((in_ruins[&"centurion"] as EnemyPoolEntry).node_types.size() == 1 and (in_ruins[&"centurion"] as EnemyPoolEntry).node_types[0] == &"elite", "centurion only at elite nodes")
 	t.check(enemies.enemy(&"warden").display_name == "看守", "warden is now 看守")
+
+
+static func run_gold_signature(t: TestCase) -> void:
+	t.begin("365: gold rank beasts (A4+) carry their legendary material")
+	var enemies := EnemyDatabase.new()
+	enemies.load_all()
+	var items := ItemDatabase.new()
+	items.load_dir()
+	var pool := ContentPaths.load_asset("enemy_pools", "standard_ruins") as EnemyPool
+	var pairs := {&"molten_lizard": &"undying_ember", &"frost_mane": &"frigid_tear", &"thunder_vulture": &"thunder_marrow",
+		&"miasma_spider": &"miasma_source", &"cave_bear": &"unclotting_blood"}
+	for id in pairs:
+		var def := enemies.enemy(id)
+		t.check(def != null and def.gold_signature.has(pairs[id]), "%s gold signature" % id)
+		if def == null:
+			continue
+		for strength in [2, 3]:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 7 + strength
+			var with_gold: Dictionary = EnemyPlacer.build_content(def, pool, items, strength, rng, null, null, {}, def.gold_signature).get("content", {})
+			var rng2 := RandomNumberGenerator.new()
+			rng2.seed = 7 + strength
+			var plain: Dictionary = EnemyPlacer.build_content(def, pool, items, strength, rng2).get("content", {})
+			t.check(_has(with_gold, pairs[id]), "%s tier %d carries %s at gold" % [id, strength, pairs[id]])
+			if strength < 3:     # tier 3 random fills may roll a legendary on their own
+				t.check(not _has(plain, pairs[id]), "%s tier %d does not carry it below gold" % [id, strength])
+
+
+static func _has(content: Dictionary, item: StringName) -> bool:
+	for raw in content.get("items", []):
+		if StringName(String((raw as Dictionary).get("id", ""))) == item:
+			return true
+	return false

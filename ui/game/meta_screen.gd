@@ -315,53 +315,9 @@ func open(payload: Dictionary) -> void:
 	_tech_cloth.name = "TechPage"
 	_pages["tech"] = _tech_cloth
 	_pages["shelf"] = _build_shelf(_middle)     # 261 补充二：石砌壁龛直接立在墙上（透明处是墙），不垫粗布
-	if _sub_btns.has("nursery"):     # 342 B3：苗圃页（右边照常露仓库，收获进仓库）
-		var ns_page := _cloth()     # 作者 2026-11-21 选 B 花槽：不垫粗布，墙透出来（以后是野外农田背景）
-		ns_page.theme_type_variation = UiTheme.PANEL_BARE
-		var farm := TextureRect.new()     # 静态美术设计 2026-11-21 C 菜畦：铺满中列，按比例裁边
-		farm.name = "FarmBackdrop"
-		farm.texture = UiTheme.art("nursery/bg_farm")
-		farm.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		farm.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		farm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		ns_page.add_child(farm)
-		_nursery = NurseryPanelScript.new()
-		_nursery.setup(flow)
-		_nursery.changed.connect(_refresh)
-		_nursery.said.connect(func(text: String, is_warn: bool):
-			if is_warn:
-				warn(text)
-			else:
-				say(text))
-		ns_page.add_child(_nursery)
-		_pages["nursery"] = ns_page
-	if _sub_btns.has("alchemy"):     # 354：炼金页（占位，等 UI设计 样张）—— 右边仓库进勾选模式
-		var al_page := _cloth()     # 作者 2026-11-21 选 C 炼成阵：不垫粗布，墙透出来
-		al_page.theme_type_variation = UiTheme.PANEL_BARE
-		var floor_ := TextureRect.new()     # UI设计 2026-11-21：石板地面铺满中列，按比例裁边（同苗圃）
-		floor_.name = "AlchemyFloor"
-		floor_.texture = UiTheme.art("alchemy/bg_floor")
-		floor_.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		floor_.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		floor_.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		al_page.add_child(floor_)
-		_alchemy = AlchemyPanelScript.new()
-		_alchemy.setup(flow, _shelf)
-		_alchemy.changed.connect(_refresh)
-		_alchemy.said.connect(func(text: String, is_warn: bool):
-			if is_warn:
-				warn(text)
-			else:
-				say(text))
-		al_page.add_child(_alchemy)
-		_pages["alchemy"] = al_page
-	if _sub_btns.has("canteen"):     # 355：食堂页（占位，等 UI设计 样张）—— 食材仓库与锅两块盘，整屏那一层拖拽
-		var ct_page := _cloth()
-		_canteen = CanteenPanelScript.new()
-		_canteen.setup(flow, _drag, font)
-		_canteen.changed.connect(_refresh)
-		ct_page.add_child(_canteen)
-		_pages["canteen"] = ct_page
+	_sync_sub_pages()     # 苗圃 / 炼金 / 食堂：开了才建（营地里新开的也补建，测试 v7.55）
+	if flow.meta != null and not flow.meta.changed.is_connected(_on_meta_changed):
+		flow.meta.changed.connect(_on_meta_changed)     # 测试 v7.55：局外一变（苗圃熟了、委托结案开了设施），页跟着刷
 	for pair in [["market", _build_market], ["smithy", _build_smithy]]:
 		var cloth := _cloth()
 		cloth.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # 264 §三：场景图上不垫粗布
@@ -386,6 +342,81 @@ func open(payload: Dictionary) -> void:
 
 #region 三列与仓库的大小（164）
 ## 中列一页的底：一块粗布，占满中列
+func _build_nursery_page() -> void:     # 342 B3：苗圃页（右边照常露仓库，收获进仓库）
+	var ns_page := _cloth()     # 作者 2026-11-21 选 B 花槽：不垫粗布，墙透出来（以后是野外农田背景）
+	ns_page.theme_type_variation = UiTheme.PANEL_BARE
+	var farm := TextureRect.new()     # 静态美术设计 2026-11-21 C 菜畦：铺满中列，按比例裁边
+	farm.name = "FarmBackdrop"
+	farm.texture = UiTheme.art("nursery/bg_farm")
+	farm.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	farm.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	farm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ns_page.add_child(farm)
+	_nursery = NurseryPanelScript.new()
+	_nursery.setup(flow)
+	_nursery.changed.connect(_refresh)
+	_nursery.said.connect(func(text: String, is_warn: bool):
+		if is_warn:
+			warn(text)
+		else:
+			say(text))
+	ns_page.add_child(_nursery)
+	_pages["nursery"] = ns_page
+
+
+func _build_alchemy_page() -> void:     # 354：炼金页 —— 右边仓库进勾选模式
+	var al_page := _cloth()     # 作者 2026-11-21 选 C 炼成阵：不垫粗布，墙透出来
+	al_page.theme_type_variation = UiTheme.PANEL_BARE
+	var floor_ := TextureRect.new()     # UI设计 2026-11-21：石板地面铺满中列，按比例裁边（同苗圃）
+	floor_.name = "AlchemyFloor"
+	floor_.texture = UiTheme.art("alchemy/bg_floor")
+	floor_.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	floor_.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	floor_.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	al_page.add_child(floor_)
+	_alchemy = AlchemyPanelScript.new()
+	_alchemy.setup(flow, _shelf)
+	_alchemy.changed.connect(_refresh)
+	_alchemy.said.connect(func(text: String, is_warn: bool):
+		if is_warn:
+			warn(text)
+		else:
+			say(text))
+	al_page.add_child(_alchemy)
+	_pages["alchemy"] = al_page
+
+
+func _build_canteen_page() -> void:     # 355：食堂页 —— 食材仓库与锅两块盘，整屏那一层拖拽
+	var ct_page := _cloth()
+	_canteen = CanteenPanelScript.new()
+	_canteen.setup(flow, _drag, font)
+	_canteen.changed.connect(_refresh)
+	ct_page.add_child(_canteen)
+	_pages["canteen"] = ct_page
+
+
+## 测试 v7.55：后勤里苗圃 / 炼金 / 食堂的小键和页 —— 建屏时没开、营地里刚开的，这里补上（键按 [constant SUB_TABS] 的顺序插）
+const LATE_PAGES := ["nursery", "alchemy", "canteen"]
+
+
+func _sync_sub_pages() -> void:
+	if _sub_box != null:
+		for pair in SUB_TABS["logistics"]:
+			var key: String = pair[0]
+			if not _sub_btns.has(key) and _sub_listed(key):
+				_add_sub_btn(key, pair[1])
+	for key in LATE_PAGES:
+		if _sub_btns.has(key) and not _pages.has(key):
+			match key:
+				"nursery":
+					_build_nursery_page()
+				"alchemy":
+					_build_alchemy_page()
+				"canteen":
+					_build_canteen_page()
+			(_pages[key] as Control).visible = false
+
+
 func _cloth() -> PanelContainer:
 	var cloth := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)
 	cloth.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -963,15 +994,9 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 	var btns := _sub_btns if tab_key == "logistics" else _shelf_sub_btns
 	for pair in SUB_TABS[tab_key]:
 		var key: String = pair[0]
-		if key == "nursery" and not _growers_here():
-			continue     # 342 B3：垦户社还没来营地，不列
-		if key == "alchemy" and not flow.alchemy_listed():
-			continue     # 354：协会到信赖前不列
-		if key == "canteen" and not flow.canteen_listed():
-			continue     # 355：灰灯不在营地（教程、切片）不列
-		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
-		b.toggle_mode = true
-		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		if tab_key == "logistics" and not _sub_listed(key):
+			continue
+		var b := _sub_btn(key, pair[1])
 		btns[key] = b
 		box.add_child(b)
 	row.visible = false
@@ -979,6 +1004,39 @@ func _build_sub_tabs(left: VBoxContainer, tab_key: String) -> void:
 		_sub_box = box
 	else:
 		_shelf_sub_box = box
+
+
+## 后勤这一格现在列不列
+func _sub_listed(key: String) -> bool:
+	match key:
+		"nursery":
+			return _growers_here()     # 342 B3：垦户社还没来营地，不列
+		"alchemy":
+			return flow.alchemy_listed()     # 354：协会到信赖前不列
+		"canteen":
+			return flow.canteen_listed()     # 355：灰灯不在营地（教程、切片）不列
+	return true
+
+
+func _sub_btn(key: String, text_key: String) -> Button:
+	var b := UiTheme.make_home_button(UiText.t(text_key), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
+	b.toggle_mode = true
+	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	return b
+
+
+## 补一颗后勤小键，插在 [constant SUB_TABS] 里它该在的位置
+func _add_sub_btn(key: String, text_key: String) -> void:
+	var b := _sub_btn(key, text_key)
+	var at := 0
+	for pair in SUB_TABS["logistics"]:
+		if pair[0] == key:
+			break
+		if _sub_btns.has(pair[0]):
+			at += 1
+	_sub_box.add_child(b)
+	_sub_box.move_child(b, at)
+	_sub_btns[key] = b
 
 
 ## 测试看：后勤（264：或书架）的分页小键
@@ -1542,6 +1600,7 @@ func show_tab(p_name: String) -> void:
 		p_name = "warehouse"
 	if p_name != "warehouse" and sell_mode():
 		set_sell_mode(false)     # 268：离开仓库页就退出售模式
+	_sync_sub_pages()     # 测试 v7.55：营地里刚开的设施，键和页补上再切
 	if _sub_btns.has(p_name):
 		_sub = p_name
 		p_name = "logistics"
@@ -1646,13 +1705,21 @@ func toggle_unlock(id: StringName) -> bool:
 	return on
 
 
+## 只在看得见时跟着刷（藏着的、要拆的不刷，回来时 open 会再刷一次）
+func _on_meta_changed() -> void:
+	if is_queued_for_deletion() or not is_visible_in_tree():
+		return
+	_refresh()
+
+
 func _refresh() -> void:
 	_refresh_shelf_labels()
 	_fit_wh_cloth()
 	# 090：带回来的没清不再拦，只提示（开局屏里到地上，出发就没了）
 	if _tab_btns.has("warehouse"):
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗
-	_sync_ripe_mark()     # 342 B3
+	_sync_sub_pages()     # 测试 v7.55
+	_sync_ripe_mark()     # 342 B3（苗圃页也一起刷：熟了【收获】跟着亮）
 	if _alchemy != null:
 		_alchemy.refresh()     # 354
 	if _canteen != null:

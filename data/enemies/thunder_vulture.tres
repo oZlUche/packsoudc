@@ -25,6 +25,7 @@ base_stats = {
 }
 signature = Array[StringName]([&"thunder_plume", &"thunder_plume", &"thunder_plume", &"beast_claw", &"beast_tusk_root"])
 item_tags = Array[StringName]([&"beast_part"])
+gold_signature = Array[StringName]([&"thunder_marrow"])
 loadout = SubResource("Resource_3lqr6")
 board = Vector2i(6, 4)
 species = &"beast"

@@ -2486,6 +2486,8 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 			continue
 		for raw in list:
 			sigs.append(["signature_by_strength.%s" % String(key), StringName(String(raw))])
+	for sid in def.gold_signature:     # 365
+		sigs.append(["gold_signature", sid])
 	for fid in def.loot_filler:     # 210
 		if not ctx.items.has(fid):
 			report.error("loot_filler", "找不到道具 '%s'" % fid)

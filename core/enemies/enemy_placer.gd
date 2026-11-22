@@ -60,7 +60,11 @@ static func place_one(
 	if entry == null:
 		return {}
 	var boost := gear.gear_boost(node.type) if gear != null else {}     # 360 第二批：难度让配装变好（A1、A4、A8）
-	return build_content(enemies.enemy(entry.enemy), pool, items, wanted, rng, carry, bag_pool, boost)
+	var def := enemies.enemy(entry.enemy)
+	var extra: Array[StringName] = []
+	if gear != null and def != null and EnemyRank.metal(gear.level, node.type) == EnemyRank.GOLD:
+		extra = def.gold_signature     # 365: gold rank (A4+) carries its extra signature
+	return build_content(def, pool, items, wanted, rng, carry, bag_pool, boost, extra)
 
 
 ## 每个点的深度 0～1：tier 在全图 tier 范围里的位置。形态无关 —— 环形图、手绘图都只看 tier
@@ -133,7 +137,7 @@ const REFILL_TRIES := 24
 ## "ungrouped": 165 摆不开、拆成散件的组数}
 static func build_content(
 	def: EnemyDef, pool: EnemyPool, items: ItemDatabase, strength: int, rng: RandomNumberGenerator,
-	carry: CarryRule = null, bag_pool: BagPool = null, boost: Dictionary = {}
+	carry: CarryRule = null, bag_pool: BagPool = null, boost: Dictionary = {}, extra_sig: Array[StringName] = []
 ) -> Dictionary:
 	var tier := boosted_tier(pool.tier_of(strength), boost)
 	var rule := def.loadout if def.loadout != null else pool.loadout
@@ -142,12 +146,13 @@ static func build_content(
 	var size := def.board if def.board != Vector2i.ZERO else (tier.board if tier != null else Vector2i(4, 3))
 	var count := rng.randi_range(tier.item_count.x, tier.item_count.y) if tier != null else 2
 	if def.is_wild():
-		count = maxi(count, def.signature_at(strength).size())     # 212：魔兽的招牌是它的器官，一件不少；档位多出来的再补
+		count = maxi(count, def.signature_at(strength).size() + extra_sig.size())     # 212：魔兽的招牌是它的器官，一件不少；档位多出来的再补
 	var cap := rarity_cap_of(rule, tier)
 	var wcap := weapon_cap_of(rule, tier)
 	var no_true := tier != null and tier.weapon_no_true_damage
 	var build := pick_build(def, rule, strength, rng)
 	var picks := choose_items(def, rule, items, count, rng, cap, strength, build, wcap, no_true)
+	picks.append_array(extra_sig)     # 365: rank signature (gold beasts carry a legendary material)
 	count = maxi(count, picks.size())     # 211：套路是设计者写的，比档位件数长也全带上
 	_sort_big_first(picks, items)
 	# 摆的是草稿实例（内容只记 id 与位置），uid 计数原样还回去 —— 摆几次、重来几次都不影响之后的编号
@@ -171,6 +176,7 @@ static func build_content(
 	var first: Array[StringName] = []
 	var later: Array[StringName] = []
 	var sig := def.signature_at(strength)
+	sig.append_array(extra_sig)
 	var bone: Array[StringName] = []
 	if build != null:
 		bone.assign(build.items)

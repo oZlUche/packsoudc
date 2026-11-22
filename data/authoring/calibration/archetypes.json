@@ -204,18 +204,10 @@
         "rot": 1
       },
       {
-        "id": "bag_long",
+        "id": "sack",
         "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_long",
-        "origin": [
-          0,
-          4
+          6,
+          0
         ],
         "rot": 0
       },
@@ -238,10 +230,10 @@
       {
         "id": "leather_armor",
         "origin": [
-          0,
-          3
+          6,
+          0
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -253,8 +245,7 @@
       "bag_leather",
       "bag_small",
       "bag_long",
-      "bag_long",
-      "bag_long"
+      "sack"
     ],
     "picked": [
       "great_club",
@@ -1396,22 +1387,6 @@
         "rot": 0
       },
       {
-        "id": "bag_long",
-        "origin": [
-          3,
-          2
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_long",
-        "origin": [
-          3,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "twin_blades",
         "origin": [
           0,
@@ -1422,8 +1397,8 @@
       {
         "id": "leather_armor",
         "origin": [
-          3,
-          2
+          2,
+          0
         ],
         "rot": 0
       }
@@ -1435,9 +1410,7 @@
     },
     "bags": [
       "bag_leather",
-      "bag_small",
-      "bag_long",
-      "bag_long"
+      "bag_small"
     ],
     "picked": [
       "twin_blades",
@@ -1956,14 +1929,6 @@
         "rot": 0
       },
       {
-        "id": "war_pack",
-        "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
         "id": "bone_twin_axes",
         "origin": [
           0,
@@ -1990,16 +1955,16 @@
       {
         "id": "leather_armor",
         "origin": [
-          0,
-          2
+          5,
+          0
         ],
-        "rot": 1
+        "rot": 0
       },
       {
         "id": "bloodhound_sigil",
         "origin": [
-          5,
-          0
+          0,
+          2
         ],
         "rot": 0
       }
@@ -2012,8 +1977,7 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_leather",
-      "war_pack"
+      "bag_leather"
     ],
     "picked": [
       "bone_twin_axes",
@@ -4338,7 +4302,7 @@
       {
         "id": "steel_round_shield",
         "origin": [
-          6,
+          5,
           0
         ],
         "rot": 0
@@ -4346,8 +4310,8 @@
       {
         "id": "brass_plating",
         "origin": [
-          2,
-          1
+          7,
+          0
         ],
         "rot": 0
       }
@@ -4885,34 +4849,10 @@
         "rot": 0
       },
       {
-        "id": "bag_long",
+        "id": "sack",
         "origin": [
-          3,
-          2
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_long",
-        "origin": [
-          3,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_long",
-        "origin": [
-          0,
-          4
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_long",
-        "origin": [
-          0,
-          5
+          5,
+          0
         ],
         "rot": 0
       },
@@ -4927,18 +4867,18 @@
       {
         "id": "leather_armor",
         "origin": [
-          3,
-          2
+          2,
+          0
         ],
         "rot": 0
       },
       {
         "id": "leather_armor",
         "origin": [
-          0,
-          4
+          5,
+          0
         ],
-        "rot": 0
+        "rot": 1
       }
     ],
     "baseline": {
@@ -4949,10 +4889,7 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_long",
-      "bag_long",
-      "bag_long",
-      "bag_long"
+      "sack"
     ],
     "picked": [
       "twin_blades",
@@ -4996,18 +4933,10 @@
         "rot": 0
       },
       {
-        "id": "bag_long",
+        "id": "sack",
         "origin": [
-          3,
-          2
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_long",
-        "origin": [
-          3,
-          3
+          5,
+          0
         ],
         "rot": 0
       },
@@ -5023,7 +4952,7 @@
         "id": "leather_armor",
         "origin": [
           3,
-          2
+          0
         ],
         "rot": 0
       }
@@ -5036,8 +4965,7 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_long",
-      "bag_long"
+      "sack"
     ],
     "picked": [
       "warhammer",
@@ -5199,7 +5127,7 @@
       {
         "id": "studded_leather",
         "origin": [
-          5,
+          4,
           0
         ],
         "rot": 0
@@ -5207,8 +5135,8 @@
       {
         "id": "salve",
         "origin": [
-          1,
-          1
+          6,
+          0
         ],
         "rot": 0
       }
@@ -5266,18 +5194,10 @@
         "rot": 0
       },
       {
-        "id": "bag_long",
+        "id": "bag_small",
         "origin": [
-          3,
-          2
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_long",
-        "origin": [
-          3,
-          3
+          5,
+          0
         ],
         "rot": 0
       },
@@ -5292,15 +5212,15 @@
       {
         "id": "leather_armor",
         "origin": [
-          3,
-          2
+          2,
+          0
         ],
         "rot": 0
       },
       {
         "id": "studded_leather",
         "origin": [
-          2,
+          5,
           0
         ],
         "rot": 0
@@ -5314,8 +5234,7 @@
     "bags": [
       "bag_leather",
       "bag_small",
-      "bag_long",
-      "bag_long"
+      "bag_small"
     ],
     "picked": [
       "bone_greatsword",
@@ -5463,7 +5382,15 @@
         "rot": 0
       },
       {
-        "id": "war_pack",
+        "id": "hunting_bag",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "bag_small",
         "origin": [
           0,
           3
@@ -5471,12 +5398,12 @@
         "rot": 0
       },
       {
-        "id": "bag_small",
+        "id": "fanny_pack",
         "origin": [
-          4,
+          2,
           3
         ],
-        "rot": 0
+        "rot": 1
       },
       {
         "id": "bloodsipper_scimitar",
@@ -5505,7 +5432,7 @@
       {
         "id": "leather_armor",
         "origin": [
-          1,
+          3,
           2
         ],
         "rot": 1
@@ -5513,7 +5440,7 @@
       {
         "id": "steel_round_shield",
         "origin": [
-          3,
+          0,
           3
         ],
         "rot": 0
@@ -5521,8 +5448,8 @@
       {
         "id": "ice_crystal",
         "origin": [
-          0,
-          3
+          2,
+          2
         ],
         "rot": 1,
         "state": {
@@ -5539,8 +5466,9 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "war_pack",
-      "bag_small"
+      "hunting_bag",
+      "bag_small",
+      "fanny_pack"
     ],
     "picked": [
       "bloodsipper_scimitar",
@@ -5972,9 +5900,17 @@
         "rot": 0
       },
       {
-        "id": "war_pack",
+        "id": "hunting_bag",
         "origin": [
           3,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fanny_pack",
+        "origin": [
+          5,
           3
         ],
         "rot": 0
@@ -6014,16 +5950,16 @@
       {
         "id": "leather_armor",
         "origin": [
-          5,
-          2
+          3,
+          1
         ],
         "rot": 1
       },
       {
         "id": "lightning_crystal",
         "origin": [
-          4,
-          0
+          6,
+          2
         ],
         "rot": 1,
         "state": {
@@ -6033,8 +5969,8 @@
       {
         "id": "arc_coil_core",
         "origin": [
-          3,
-          1
+          4,
+          0
         ],
         "rot": 0
       }
@@ -6049,7 +5985,8 @@
       "bag_small",
       "bag_leather",
       "bag_leather",
-      "war_pack"
+      "hunting_bag",
+      "fanny_pack"
     ],
     "picked": [
       "bone_pole_axe",
@@ -7190,7 +7127,15 @@
         "rot": 0
       },
       {
-        "id": "war_pack",
+        "id": "hunting_bag",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fanny_pack",
         "origin": [
           0,
           3
@@ -7232,26 +7177,26 @@
       {
         "id": "leather_armor",
         "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "riposte_buckler",
-        "origin": [
           3,
           1
         ],
         "rot": 1
       },
       {
-        "id": "smoked_fish",
+        "id": "riposte_buckler",
         "origin": [
           0,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "smoked_fish",
+        "origin": [
+          3,
           4
         ],
-        "rot": 0
+        "rot": 1
       },
       {
         "id": "bandage_roll",
@@ -7271,7 +7216,8 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "war_pack"
+      "hunting_bag",
+      "fanny_pack"
     ],
     "picked": [
       "boneiron_club",
@@ -8568,7 +8514,15 @@
         "rot": 0
       },
       {
-        "id": "war_pack",
+        "id": "hunting_bag",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fanny_pack",
         "origin": [
           0,
           3
@@ -8610,26 +8564,26 @@
       {
         "id": "leather_armor",
         "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "riposte_buckler",
-        "origin": [
           3,
           1
         ],
         "rot": 1
       },
       {
-        "id": "smoked_fish",
+        "id": "riposte_buckler",
         "origin": [
           0,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "smoked_fish",
+        "origin": [
+          3,
           4
         ],
-        "rot": 0
+        "rot": 1
       },
       {
         "id": "bandage_roll",
@@ -8649,7 +8603,8 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "war_pack"
+      "hunting_bag",
+      "fanny_pack"
     ],
     "picked": [
       "boneiron_club",
@@ -10167,18 +10122,10 @@
         "rot": 0
       },
       {
-        "id": "bag_long",
+        "id": "hunting_bag",
         "origin": [
-          0,
-          4
-        ],
-        "rot": 0
-      },
-      {
-        "id": "bag_long",
-        "origin": [
-          0,
-          5
+          5,
+          3
         ],
         "rot": 0
       },
@@ -10231,10 +10178,10 @@
       {
         "id": "leather_armor",
         "origin": [
-          0,
-          4
+          5,
+          3
         ],
-        "rot": 0
+        "rot": 1
       },
       {
         "id": "riposte_buckler",
@@ -10271,8 +10218,7 @@
       "bag_small",
       "bag_leather",
       "bag_small",
-      "bag_long",
-      "bag_long"
+      "hunting_bag"
     ],
     "picked": [
       "boneiron_club",
@@ -11440,7 +11386,15 @@
         "rot": 0
       },
       {
-        "id": "war_pack",
+        "id": "hunting_bag",
+        "origin": [
+          3,
+          2
+        ],
+        "rot": 0
+      },
+      {
+        "id": "fanny_pack",
         "origin": [
           0,
           3
@@ -11482,26 +11436,26 @@
       {
         "id": "leather_armor",
         "origin": [
-          0,
-          3
-        ],
-        "rot": 0
-      },
-      {
-        "id": "riposte_buckler",
-        "origin": [
           3,
           1
         ],
         "rot": 1
       },
       {
-        "id": "smoked_fish",
+        "id": "riposte_buckler",
         "origin": [
           0,
+          3
+        ],
+        "rot": 1
+      },
+      {
+        "id": "smoked_fish",
+        "origin": [
+          3,
           4
         ],
-        "rot": 0
+        "rot": 1
       },
       {
         "id": "bandage_roll",
@@ -11521,7 +11475,8 @@
       "bag_leather",
       "bag_small",
       "bag_leather",
-      "war_pack"
+      "hunting_bag",
+      "fanny_pack"
     ],
     "picked": [
       "boneiron_club",

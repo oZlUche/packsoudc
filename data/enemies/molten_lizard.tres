@@ -24,6 +24,7 @@ base_stats = {
 }
 signature = Array[StringName]([&"molten_scale", &"molten_scale", &"beast_claw", &"beast_hide"])
 item_tags = Array[StringName]([&"beast_part"])
+gold_signature = Array[StringName]([&"undying_ember"])
 loadout = SubResource("Resource_w2cnd")
 board = Vector2i(6, 4)
 species = &"beast"
