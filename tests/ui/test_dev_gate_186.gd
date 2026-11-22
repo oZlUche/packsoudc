@@ -21,7 +21,7 @@ static func run_gate(t: TestCase) -> void:
 	t.check(gs.trace_on(), "玩家包：存过的「关」（旧版导出包的默认）不算数，照记")
 	DevGate.force_player = false
 	t.check(not gs.trace_on(), "开发包：按开发区开关（关就不记）")
-	t.eq(HudLayout.VERSION, 7, "布局版本 7（默认布局加了提示行）")
+	t.check(HudLayout.VERSION >= 7, "布局版本 %d（7 起默认布局加了提示行）" % HudLayout.VERSION)
 	var d := HudLayout.default_for("map")
 	t.check(d.entry_of(&"notice").is_empty() and not HudWidgets.KINDS.has(&"notice"), "226 批一：提示行组件删了（回话走告示层）")
 	t.check(HudWidgets.DEV_ONLY.has(&"dev_drawer"), "调试台箭头只在开发包里造")

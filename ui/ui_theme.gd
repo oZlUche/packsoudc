@@ -189,6 +189,16 @@ const ART_SLAB_BAR := "slab_bar"
 ## 235：石刻顶端栏里那几格的浅色凹槽
 const ART_HUD_WELL := "hud/topbar/well"
 const ART_INSET := "inset"
+## 385（作者定局内统一石刻）：状态界面的浅石窗框（里面浅石底）、深石板（属性卡、名牌、图例、腰带框）、页签两态、悬浮窗（深石板黄铜边）。
+## 九宫格边距与深浅都在同名 json
+const ART_STONE_FRAME := "stone/frame"
+const ART_STONE_SLATE := "stone/slate"
+const ART_STONE_TAB := "stone/tab"
+const ART_STONE_TAB_ON := "stone/tab_on"
+const ART_STONE_TIP := "stone/tooltip"
+## 385：石刻里的黄铜（选中线、肖像外圈、等级星）与墨色叉
+const STONE_BRASS := Color("c9a04e")
+const STONE_INK := Color("2e2219")
 ## 石板顶边：标题条下沿到板边九宫格上边距之间留给刻线的那一段
 const TITLE_LINE_GAP := 6.0
 ## 157 补充二：名牌底、肖像框（中间透明，画在肖像位外扩 json `inset` 处；徽记位同一张拉大）、没肖像时的占位
@@ -1178,6 +1188,44 @@ static func art_panel(p: PanelContainer, name: String, content: int) -> void:
 		p.add_theme_stylebox_override("panel", box)
 
 
+## 385：面板换一块石刻底（[constant ART_STONE_FRAME] / [constant ART_STONE_SLATE] 等；内边距 [param content]，-1 = 按图边），
+## 字色按图 json 的 `tone` 挂。没图不动、返回 false
+static func stone(p: PanelContainer, art_name: String, content: int = -1) -> bool:
+	var box := _art_box(art_name, false, content)
+	if box == null:
+		return false
+	p.add_theme_stylebox_override("panel", box)
+	var tone := art_tone(art_name)
+	set_tone(p, tone)
+	if tone == TONE_DARK:
+		p.theme = bright_text_theme()     # 深石板常放在浅石框里：不继承外面的墨字
+	return true
+
+
+## 385：浅石小格的键（关闭键：顶端栏那种凹槽 + 墨色叉，代码画）。边长 [param side]；悬停叉加深、按下往下压 1
+static func well_close_key(side: float, tip: String, on_press: Callable) -> Button:
+	var b := Button.new()
+	b.name = "Close"
+	b.focus_mode = Control.FOCUS_NONE
+	b.tooltip_text = tip
+	b.custom_minimum_size = Vector2(side, side)
+	var well: StyleBox = art_box(ART_HUD_WELL)
+	if well == null:
+		well = StyleBoxEmpty.new()
+	for st in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		b.add_theme_stylebox_override(st, well)
+	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	set_tone(b, TONE_LIGHT)
+	b.draw.connect(func():
+		var c := b.size * 0.5 + (Vector2(0, 1) if UiDraw.button_state(b) == "pressed" else Vector2.ZERO)
+		var r := side * 0.2
+		var ink := STONE_INK if UiDraw.button_state(b) != "normal" else Color(STONE_INK, 0.8)
+		b.draw_line(c - Vector2(r, r), c + Vector2(r, r), ink, 3.0, true)
+		b.draw_line(c + Vector2(-r, r), c + Vector2(r, -r), ink, 3.0, true))
+	b.pressed.connect(on_press)
+	return b
+
+
 ## 306：面板换一块现成的底（纸条这类按摆法换图的，九宫格参数由调用方从 json 读好）；null 不动
 static func box_panel(p: PanelContainer, box: StyleBox) -> void:
 	if box != null:
@@ -1289,7 +1337,9 @@ static func _fill(t: Theme, bg: Color) -> void:
 	t.set_font_size("font_size", LABEL_TENT_SIGN, TENT_SIGN_SIZE)
 	t.set_font("font", LABEL_TENT_SIGN, UiPalette.cjk_font_bold())
 	t.set_color("font_color", LABEL_TENT_SIGN, TENT_SIGN_INK)
-	_panel_variation(t, PANEL_TOOLTIP, layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY))
+	# 385：悬浮窗换深石板黄铜边（一张九宫格）；没图退回 170 的两层皮革
+	var stone_tip: StyleBox = _art_box(ART_STONE_TIP, false, TOOLTIP_MARGIN + 4)
+	_panel_variation(t, PANEL_TOOLTIP, stone_tip if stone_tip != null else layered_box(ART_TOOLTIP, ART_TOOLTIP_BODY))
 	# 悬停小提示 B（作者 10-31 16:05）：控件自带的 tooltip_text（火漆、负重小牌、钱牌、按钮）= 木框小牌（同图例小签 home/plaque_chip）、墨字 18 粗；
 	# 道具 / 节点悬浮窗（[constant PANEL_TOOLTIP]）还是上面那块深皮，不动。摆在哪见 [TipAnchor]
 	var tip_box: StyleBox = _art_box(ART_HOME_CHIP)

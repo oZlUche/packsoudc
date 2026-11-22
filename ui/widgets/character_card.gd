@@ -3,7 +3,8 @@
 ## 381（作者 21:27「5~6 先按推荐」）：列全部属性，分生存、攻击、探索三组，每组一个小组名；没有加成的照样列（白字）。
 ## 数是这一局此刻的有效值（局外加成、信仰、难度、角色被动、这一局的牌都算进去）。基础的写纯白，这一局拿到的（地图 buff、升级的牌）
 ## 抬过的写金黄。停在一行上：第一行写属性说明，第二行写「基础 + 加算 + 百分比」，基础白字、加成黄字。
-## 两条被动缩成卡底的小签，停上去看说明。画法读 `assets/ui/stats_panel/`（`card_wax` 九宫底板）
+## 两条被动缩成卡底的小签，停上去看说明。画法读 `assets/ui/stats_panel/`（`card_wax` 九宫底板）。
+## 385（作者定局内石刻）：底换深石板（`stone/slate`），被动小签换浅石小格（顶端栏那种凹槽）墨字
 class_name CharacterCard
 extends Control
 
@@ -256,9 +257,13 @@ func _color(key: String, fallback: Color) -> Color:
 
 
 func _draw() -> void:
+	var slate := UiTheme.art_box(UiTheme.ART_STONE_SLATE)     # 385：深石板；没图退回蜡板
 	var bg := UiTheme.art_cached(ART + "card_" + STYLE)
-	if bg != null:
+	if slate != null:
+		draw_style_box(slate, Rect2(Vector2.ZERO, size))
+	elif bg != null:
 		draw_style_box(UiTheme.nine_box(bg, [16, 16, 16, 16]), Rect2(Vector2.ZERO, size))
+	var well := UiTheme.art_box(UiTheme.ART_HUD_WELL)
 	var regular := UiPalette.cjk_font()
 	var bold := UiPalette.cjk_font_bold()
 	var label := _color("label", UiTheme.INK)
@@ -281,6 +286,12 @@ func _draw() -> void:
 		var p: Dictionary = _passives[i]
 		var rect: Rect2 = p["rect"]
 		var hot := i + _rows.size() == _hover
+		if well != null:     # 385：浅石小格、墨字；停上去提亮一点
+			draw_style_box(well, rect)
+			if hot:
+				draw_rect(rect.grow(-2.0), Color(1, 1, 1, 0.18))
+			draw_string(bold, rect.position + Vector2(CHIP_PAD, 16.0), String(p["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, GROUP_PX, UiTheme.STONE_INK)
+			continue
 		draw_rect(rect, Color(1, 1, 1, 0.12 if hot else 0.06))
 		draw_rect(rect, Color(BASE_COLOR, 0.55), false, 1.0)
 		draw_string(bold, rect.position + Vector2(CHIP_PAD, 16.0), String(p["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, GROUP_PX, BASE_COLOR)

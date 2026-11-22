@@ -1,11 +1,11 @@
-## 232（作者 19:23 选 2、6）：背包窗换成一只背包（四件皮料随窗宽摆、翻盖整块是把手、夹边算进凸出），腰带 1–6 格换弯皮带（圆心读表，超过 6 格退回直圆槽）
+## 232（作者 19:23 选 2、6）：背包窗换成一只背包（385 又换成浅石框），腰带 1–6 格换弯皮带（圆心读表，超过 6 格退回直圆槽）
 extends RefCounted
 
 const CS := preload("res://tests/run/test_character_skills.gd")
 
 
 static func frame_satchel(t: TestCase, root: Window) -> void:
-	t.begin("232 · 背包窗：包身 / 翻盖 / 提手徽 / 侧环按 W 摆；翻盖就是拖动把手；窗夹边时提手和侧环不出屏；收起钮在翻盖上")
+	t.begin("385 · 背包窗换石刻：一整块浅石框跟窗一样大、在画布底下；标题行是拖动把手；不凸出窗外；名牌深石板、页签石页签、收起键浅石小格")
 	var c := CS._content()
 	var run := CS._start(c, CS._character(c, &"marcus"))
 	if run == null:
@@ -17,33 +17,24 @@ static func frame_satchel(t: TestCase, root: Window) -> void:
 	var win := BagWindow.new()
 	host.add_child(win)
 	win.setup_bag(run, UiPalette.cjk_font(), func(): pass)
-	t.not_null(win.get_node_or_null("Satchel"), "换上了背包皮")
 	var w := win.window_size()
-	var body := win.get_node("Satchel/Body") as Control
-	t.eq(body.position, Vector2(-30, -18), "包身左上 (-30, -18)")
-	t.eq(body.size, w + Vector2(60, 50), "包身大小 W + 60, H + 50")
-	var flap := win.get_node("Satchel/Flap") as Control
-	t.eq(flap.position, Vector2(-40, -46), "翻盖左上 (-40, -46)")
-	t.eq(flap.size.x, w.x + 80.0, "翻盖宽 W + 80")
-	var crest := win.get_node("Satchel/Crest") as Control
-	t.eq(crest.position, Vector2(w.x / 2.0 - 150.0, -100.0), "提手徽居中、拱到窗顶上")
-	t.eq((win.get_node("Satchel/TabLeft") as Control).position, Vector2(-50, 92), "左侧环")
-	var right := win.get_node("Satchel/TabRight") as TextureRect
-	t.check(right.position == Vector2(w.x - 6.0, 92.0) and right.flip_h, "右侧环翻转、在 W - 6")
-	t.eq(win.get_node("Satchel").get_index() < win._canvas.get_index(), true, "皮料在画布底下")
-	t.eq(Rect2(win._header.position, win._header.size), Rect2(flap.position, flap.size), "拖动把手 = 整块翻盖")
-	t.eq(win.close_button.position, Vector2(914, -6) + Vector2(w.x - 984.0, 0.0), "收起钮在翻盖上")
-	# 窗变宽：皮料跟着
-	win._layout_back(Vector2(1100, 700))
-	t.eq(crest.position.x, 400.0, "窗宽 1100：提手徽 x 400")
-	t.eq(right.position.x, 1094.0, "窗宽 1100：右侧环 x 1094")
-	win._layout_back(w)
-	# 夹边算凸出
-	t.eq(win.outset, Rect2(50, 100, 50, 32), "凸出 左 50 上 100 右 50 下 32")
+	var stone := win.get_node_or_null("Stone") as NinePatchRect
+	t.check(stone != null and stone.texture != null, "换上了浅石框")
+	if stone != null:
+		t.eq(Rect2(stone.position, stone.size), Rect2(Vector2.ZERO, w), "石框跟窗一样大")
+		t.check(stone.get_index() < win._canvas.get_index(), "石框在画布底下")
+	t.eq(UiTheme.tone_at(win.card), UiTheme.TONE_DARK, "角色卡是深底（白字）")
+	t.eq(UiTheme.tone_at(win), UiTheme.TONE_LIGHT, "窗里是浅底（墨字）")
+	t.eq(Rect2(win._header.position, win._header.size), Rect2(0, 0, w.x, 52), "拖动把手 = 窗顶标题行")
+	t.eq(win.outset, Rect2(), "不凸出窗外")
+	var plate_box := win.nameplate.get_theme_stylebox("panel") as StyleBoxTexture
+	t.check(plate_box != null and plate_box.texture == UiTheme.art_cached(UiTheme.ART_STONE_SLATE), "名牌底是深石板")
+	var tab := win.views.get_child(0) as StoneChip
+	t.check(tab != null and (tab.get_theme_stylebox("normal") as StyleBoxTexture).texture == UiTheme.art_cached(UiTheme.ART_STONE_TAB)
+		and (tab.get_theme_stylebox("pressed") as StyleBoxTexture).texture == UiTheme.art_cached(UiTheme.ART_STONE_TAB_ON), "页签：浅石 / 选中深石板")
+	t.check((win.close_button.get_theme_stylebox("normal") as StyleBoxTexture).texture == UiTheme.art_cached(UiTheme.ART_HUD_WELL), "收起键是浅石小格")
 	win.move_to(Vector2(-500, -500))
-	t.eq(win.position, Vector2(50, 100), "往左上拖出屏：提手、左侧环还在屏里")
-	win.move_to(Vector2(5000, 5000))
-	t.eq(win.position, host.size - win.size - Vector2(50, 32), "往右下拖出屏：右侧环、包底还在屏里")
+	t.eq(win.position, Vector2.ZERO, "往左上拖出屏：贴屏边")
 	host.free()
 
 

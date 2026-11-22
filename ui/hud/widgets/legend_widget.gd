@@ -14,6 +14,8 @@ const ROW_GAP := 4.0
 const TEXT_GAP := 8.0
 ## 232（作者 19:23 选 10）：图例的底是一面双尾旗（`hud/legend_pennant` 九宫格，钉子、绳、横杆都在图里），白字；最窄这么宽，英文长名往宽撑
 const PENNANT := "hud/legend_pennant"
+## 385：深石板底的内边距
+const SLATE_PAD := 16.0
 const MIN_WIDTH := 158.0
 ## 卷起 / 放下的时长
 const SCROLL_SEC := 0.2
@@ -270,8 +272,12 @@ static func _legend_theme() -> Theme:
 	return t
 
 
-## 旗的九宫格（边距读 `legend_pennant.json`）
+## 旗的九宫格（边距读 `legend_pennant.json`）。385（作者定局内石刻）：有深石板就换深石板
 static func pennant_box() -> StyleBox:
+	var slate := UiTheme.art_box(UiTheme.ART_STONE_SLATE)
+	if slate != null:
+		slate.set_content_margin_all(SLATE_PAD)
+		return slate
 	var meta := UiTheme.art_meta(PENNANT)
 	var tm: Array = meta.get("texture_margin", [44, 52, 44, 58])
 	var cm: Array = meta.get("content_margin", [34, 54, 34, 50])
