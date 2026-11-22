@@ -83,6 +83,7 @@
   "boss_hp_percent": 25,
   "boss_speed_percent": 20,
   "hunter_loss_extra": 1,
+  "intel_range": 2,
   "boss_upgrades": {
     "core_guardian": {
       "title": "誓约守卫",
@@ -99,8 +100,6 @@
       "item": "perpetual_pendulum"
     }
   },
-  "countdown_percent": 10,
-  "intel_range": 2,
   "guard_core": {
     "pools": {
       "clockwork": "spare_mainspring",
@@ -117,5 +116,6 @@
         "poison": "guard_pact_poison"
       }
     }
-  }
+  },
+  "countdown_percent": 10
 }
