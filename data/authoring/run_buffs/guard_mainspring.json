@@ -1,0 +1,31 @@
+{
+  "id": "guard_mainspring",
+  "display_name": "守卫增援：备用发条",
+  "display_names": {
+    "en": "Guard Reinforcement: Spare Mainspring"
+  },
+  "tags": [
+    "guard_reinforce"
+  ],
+  "rules": [
+    {
+      "trigger": {
+        "type": "on_resource_below",
+        "percent": 50
+      },
+      "cadence": "@always",
+      "costs": [
+        {
+          "type": "uses"
+        }
+      ],
+      "effects": [
+        {
+          "type": "apply_status",
+          "target": "SELF",
+          "buff": "guard_aegis"
+        }
+      ]
+    }
+  ]
+}

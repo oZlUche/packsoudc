@@ -1,0 +1,23 @@
+{
+  "id": "guard_pact_ice",
+  "display_name": "守卫增援：兽王之契",
+  "display_names": {
+    "en": "Guard Reinforcement: Beast King Pact"
+  },
+  "tags": [
+    "guard_reinforce"
+  ],
+  "rules": [
+    {
+      "trigger": "@on_battle_start",
+      "cadence": "@always",
+      "effects": [
+        {
+          "type": "apply_status",
+          "buff": "chill",
+          "stacks": 4
+        }
+      ]
+    }
+  ]
+}

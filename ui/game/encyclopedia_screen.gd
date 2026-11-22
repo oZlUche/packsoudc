@@ -24,6 +24,7 @@ var _search: LineEdit
 var _toc: VBoxContainer
 var _title: Label
 var _body: RichTextLabel
+var _shots: VBoxContainer = null
 ## 226 批四：页底下垫的那张纸
 var _paper: PanelContainer = null
 var _prev_btn: Button
@@ -71,10 +72,16 @@ func open(payload: Dictionary) -> void:
 	sheet.add_child(HSeparator.new())
 	var page_scroll := UiTheme.vscroll()
 	sheet.add_child(page_scroll)
+	var page_col := _vbox(10)
+	page_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	page_scroll.add_child(page_col)
+	_shots = _vbox(8)     # 377：页头截图（这一页写了 shots 才有）
+	_shots.name = "Shots"
+	page_col.add_child(_shots)
 	_body = UiTheme.rich_block(PAGE_WIDTH - 20 - 2 * PAPER_PAD, UiTheme.RICH_BODY_SIZE)     # 121：正文档（现 20 号、行距 8）
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.meta_clicked.connect(func(meta: Variant): open_page(String(meta)))
-	page_scroll.add_child(_body)
+	page_col.add_child(_body)
 
 	_fill_toc()
 	var first := String(payload.get("page", ""))
@@ -93,11 +100,41 @@ func open_page(id: String, remember: bool = true) -> bool:
 	_current = id
 	_title.text = String(book.page(id)["title"])
 	UiTheme.set_rich(_body, book.render(id, _ctx))     # 169：颜色名按所在的底取版
+	_fill_shots(id)
 	_prev_btn.disabled = _history.is_empty()
 	for c in _toc.get_children():
 		if c is Button and c.has_meta("page"):
 			(c as Button).set_pressed_no_signal(String(c.get_meta("page")) == id)
 	return true
+
+
+## 377：这一页的截图（当前语言那一套），按页宽缩
+func _fill_shots(id: String) -> void:
+	for c in _shots.get_children():
+		_shots.remove_child(c)
+		c.queue_free()
+	var def := flow.help_page(StringName(id)) if flow != null else null
+	if def == null:
+		_shots.visible = false
+		return
+	var w := PAGE_WIDTH - 20 - 2 * PAPER_PAD
+	for p in def.shot_paths():
+		var tex := load(p) as Texture2D if ResourceLoader.exists(p) else null
+		if tex == null:
+			continue
+		var pic := TextureRect.new()
+		pic.name = "Shot"
+		pic.texture = tex
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pic.custom_minimum_size = Vector2(w, w * tex.get_height() / maxf(1.0, tex.get_width()))
+		_shots.add_child(pic)
+	_shots.visible = _shots.get_child_count() > 0
+
+
+## 测试看：这一页现在挂着几张截图
+func shot_count() -> int:
+	return _shots.get_child_count() if _shots.visible else 0
 
 
 ## 回到上一页（浏览栈弹一页）。没有上一页返回 false

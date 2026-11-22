@@ -316,7 +316,7 @@ static func run_backgrounds(t: TestCase) -> void:
 		var meta := skin.background_meta()
 		t.eq(StringName(String(meta.get("tone", ""))), want[id], "%s 的深浅" % id)
 		t.check(float(meta.get("chest_foot_y", 0.0)) > 0.0, "%s 写了落地线" % id)
-	var by_chapter := {"prologue": &"ruins", "prologue_2": &"north_woods", "prologue_3": &"cursed_depths", "free_mode": &"imperial_camp", "clockwork_hourglass": &"clockwork"}
+	var by_chapter := {"prologue": &"ruins", "prologue_2": &"north_woods", "free_mode": &"imperial_camp", "clockwork_hourglass": &"clockwork"}
 	for ch in by_chapter:
 		var def := ContentPaths.load_asset("chapters", ch) as ChapterDef
 		t.check(def != null and def.chest_skin == by_chapter[ch], "%s 的宝箱用 %s" % [ch, by_chapter[ch]])

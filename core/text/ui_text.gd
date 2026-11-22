@@ -218,7 +218,7 @@ const TEXT := {
 	"map.rules_title": {"zh": "本图规则　%s", "en": "Map rules · %s"},
 	"map.rules_ok": {"zh": "知道了（Esc）", "en": "Got it (Esc)"},
 	"tut_ask.title": {"zh": "要带你走一遍吗？", "en": "Want a walkthrough?"},     # 240：开场一问
-	"tut_ask.body": {"zh": "序章三张图手把手教你搜、打、撤，每段打完回基地整理。老手可以跳过：每段的固定奖励（金币和道具）照样补进仓库。", "en": "The three prologue runs teach you to search, fight and get out, with a stop at the base after each. If you know the drill, skip them: each run's fixed reward (coins and items) still goes into your storeroom."},
+	"tut_ask.body": {"zh": "序章两张图手把手教你搜、打、撤，每段打完回基地整理。老手可以跳过：每段的固定奖励（金币和道具）照样补进仓库。", "en": "The two prologue runs teach you to search, fight and get out, with a stop at the base after each. If you know the drill, skip them: each run's fixed reward (coins and items) still goes into your storeroom."},
 	"tut_ask.yes": {"zh": "需要", "en": "Yes"},
 	"tut_ask.no": {"zh": "不需要", "en": "No need"},
 	"map.hunter_loss": {"zh": "　输了会怎样 —— %s", "en": " · If you lose: %s"},
@@ -304,6 +304,8 @@ const TEXT := {
 	# core/run/node_tooltip.gd：节点浮窗的内置模板（BBCode + 占位符，见 docs/text-placeholders.md）
 	"node.tip.unknown_enemy": {"zh": "{c:danger}敌情不明{/c}", "en": "{c:danger}Unknown foe{/c}"},
 	"node.unknown_enemy": {"zh": "敌情不明", "en": "Unknown foe"},
+	"node.guard": {"zh": "{c:warn}守卫{/c}：带着【{guard_link}】，打倒它，首领的增援就撤掉", "en": "{c:warn}Guard{/c}: carries [{guard_link}]; defeat it to strip the boss's reinforcement"},     # 360 A12
+	"node.reinforced": {"zh": "{c:danger}守卫增援{/c}：【{guard_link}】", "en": "{c:danger}Reinforced{/c}: [{guard_link}]"},
 	"node.tip.battle": {"zh": "{c:danger}{enemy_name}{/c}\n生命 {enemy_hp}\n带着 {enemy_count} 件：{enemy_items}", "en": "{c:danger}{enemy_name}{/c}\nHealth {enemy_hp}\nCarrying {enemy_count} items: {enemy_items}"},
 	"node.tip.visited": {"zh": "{c:dim}这里已经没东西了。{/c}", "en": "{c:dim}Nothing left here.{/c}"},
 	"node.tip.search": {"zh": "这里有值得搜索的东西，但翻得越久越可能惊动附近的人。", "en": "There's something worth searching here, but the longer you dig, the more likely you'll draw attention."},

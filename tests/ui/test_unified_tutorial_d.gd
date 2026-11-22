@@ -14,14 +14,14 @@ static func _flow(p_profile: StringName = &"") -> GameFlow:
 
 
 static func frame_expedition_card(t: TestCase, root: Window) -> void:
-	t.begin("统一教程 D · 出征页：教程木牌写下一段与「教程 1/3」；跳过先确认，取消不动，确认补奖励、留在基地、木牌换回「上回出征」")
+	t.begin("统一教程 D · 出征页：教程木牌写下一段与「教程 1/2」；跳过先确认，取消不动，确认补奖励、留在基地、木牌换回「上回出征」")
 	for p in [&"", SliceProfile.SLICE]:
 		var f := _flow(p)
 		var s: Control = W178._screen(f, root)
 		var board: ExpeditionBoard = s.expedition_board()
 		t.check(board.tutorial_plate != null and board.last_plate == null, "%s：教程木牌顶替上回出征" % p)
 		var texts: Array = board.tutorial_plate.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
-		t.check(texts.has(UiText.t("meta.tutorial_step") % [1, 3]), "%s：写着第一段（%s）" % [p, texts])
+		t.check(texts.has(UiText.t("meta.tutorial_step") % [1, 2]), "%s：写着第一段（%s）" % [p, texts])
 		board.skip_btn.pressed.emit()
 		t.check(s.skip_tutorial_open(), "%s：点跳过先弹确认页" % p)
 		t.not_null(s.find_child("TutorialReward", true, false), "%s：确认页列出要补的奖励" % p)
@@ -29,7 +29,7 @@ static func frame_expedition_card(t: TestCase, root: Window) -> void:
 		t.check(not s.skip_tutorial_open() and f.tutorial_gate() != null and f.meta.funds == 0, "%s：取消什么也不动" % p)
 		board.skip_btn.pressed.emit()
 		s.confirm_skip_tutorial()
-		t.check(f.tutorials_done() and f.meta.funds == 450, "%s：确认：三段都通了，补了 450" % p)
+		t.check(f.tutorials_done() and f.meta.funds == 250, "%s：确认：两段都通了，补了 250" % p)
 		t.eq(f.screen, GameFlow.Screen.META, "%s：留在基地" % p)
 		t.is_null(f.run, "%s：没开局" % p)
 		s.queue_free()
@@ -41,16 +41,16 @@ static func frame_expedition_card(t: TestCase, root: Window) -> void:
 
 
 static func frame_second_step(t: TestCase, root: Window) -> void:
-	t.begin("统一教程 D · 第一段通了：木牌写「教程 2/3」，跳过只补剩下的 350")
+	t.begin("统一教程 D · 第一段通了：木牌写「教程 2/2」，跳过只补剩下的 150")
 	var f := _flow()
 	f.meta.grant_unlock(&"prologue_done")
 	TutorialRewards.mark(f.meta, &"prologue", TutorialRewards.COMPLETED)
 	var s: Control = W178._screen(f, root)
 	var board: ExpeditionBoard = s.expedition_board()
 	var texts: Array = board.tutorial_plate.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
-	t.check(texts.has(UiText.t("meta.tutorial_step") % [2, 3]), "写着第二段")
+	t.check(texts.has(UiText.t("meta.tutorial_step") % [2, 2]), "写着第二段")
 	t.check(texts.has(Names.of(f.chapter_of(&"prologue_2"))), "写着第二段的图名")
-	t.eq(int(f.skip_preview()["funds"]), 350, "跳过补 350")
+	t.eq(int(f.skip_preview()["funds"]), 150, "跳过补 150")
 	s.queue_free()
 	W178._cleanup()
 
@@ -79,11 +79,11 @@ static func frame_skip_after_first_run(t: TestCase, root: Window) -> void:
 	t.check(f.run != null and not f.in_run(), "打完的那一局还留着，但不算在局里")
 	var funds := f.meta.funds
 	var s: Control = W178._screen(f, root)
-	t.eq(s.expedition_board().tutorial_plate.find_children("*", "Label", true, false).filter(func(l: Label) -> bool: return l.text == UiText.t("meta.tutorial_step") % [2, 3]).size(), 1, "木牌写着第二段")
+	t.eq(s.expedition_board().tutorial_plate.find_children("*", "Label", true, false).filter(func(l: Label) -> bool: return l.text == UiText.t("meta.tutorial_step") % [2, 2]).size(), 1, "木牌写着第二段")
 	s.show_skip_tutorial()
 	s.confirm_skip_tutorial()
-	t.check(f.tutorials_done(), "跳过成了：三段都通了")
-	t.eq(f.meta.funds, funds + 350, "补了剩下两段的 350")
+	t.check(f.tutorials_done(), "跳过成了：两段都通了")
+	t.eq(f.meta.funds, funds + 150, "补了剩下一段的 150")
 	t.check(s.expedition_board().tutorial_plate == null and s.expedition_board().last_plate != null, "出征页当场换回上回出征")
 	t.check(s.expedition_board().skip_btn == null, "跳过键没了")
 	s.queue_free()

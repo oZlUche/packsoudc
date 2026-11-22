@@ -136,7 +136,29 @@ static func spec_of(content: Dictionary, enemies: EnemyDatabase, pool: EnemyPool
 	scale_hp(spec, content)
 	scale_damage(spec, content)
 	scale_speed(spec, content)
+	apply_reinforce(spec, content)
 	return spec
+
+
+## 360 A12：守卫还活着，首领带着增援 —— 那份一局的 buff 的战斗规则并到首领身上（和套装规则同一条路）。打赢守卫时内容里的这一条就撤了
+const REINFORCE_KEY := "reinforce"
+
+
+static func apply_reinforce(spec: CombatantSpec, content: Dictionary) -> void:
+	var r: Variant = content.get(REINFORCE_KEY, null)
+	if spec == null or not (r is Dictionary):
+		return
+	var def := reinforce_buff(r as Dictionary)
+	if def != null:
+		spec.set_rules.append_array(def.rules)
+
+
+static func reinforce_buff(r: Dictionary) -> RunBuffDef:
+	var id := String(r.get("buff", ""))
+	var path := ContentPaths.asset_file("run_buffs", id) if id != "" else ""
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	return load(path) as RunBuffDef
 
 
 ## 320（十档进阶 A1 / A5）：节点内容带的最大生命倍率 —— 编译完（道具加的生命也在内）乘一次。写的是最终值，重复写不会叠

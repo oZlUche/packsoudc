@@ -17,5 +17,6 @@
   ],
   "see_items": [
     "charm_earth"
-  ]
+  ],
+  "needs_faith": true
 }

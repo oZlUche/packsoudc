@@ -1769,6 +1769,36 @@ static func import_character(data: Dictionary, ctx: Context, report: ImportRepor
 
 
 ## 进阶难度（069）：档位非负；机制不能是空的；effects 只放掉落或一局规则的效果（和 buff 一样）
+## 360 A12：守卫核心 —— {"pools": {敌人池: 联动道具}, "beast": 联动道具, "reinforce": {联动道具: 增援 buff，或 {属性: 增援 buff}}}；道具、buff 要在
+static func _validate_guard_core(def: DifficultyDef, ctx: Context, report: ImportReport) -> void:
+	if def.guard_core.is_empty():
+		return
+	var links: Array = []
+	var pools: Variant = def.guard_core.get("pools", {})
+	if not (pools is Dictionary):
+		report.error("guard_core.pools", "要写成 {敌人池 id: 联动道具 id}")
+	else:
+		links.append_array((pools as Dictionary).values())
+	if String(def.guard_core.get("beast", "")) != "":
+		links.append(def.guard_core["beast"])
+	var table: Variant = def.guard_core.get("reinforce", {})
+	if not (table is Dictionary):
+		report.error("guard_core.reinforce", "要写成 {联动道具 id: 增援 buff id}")
+		return
+	for link in links:
+		var lid := StringName(String(link))
+		if not ctx.items.is_empty() and not ctx.items.has(lid):
+			report.error("guard_core", "没有道具 '%s'" % lid)
+		if not (table as Dictionary).has(String(lid)):
+			report.error("guard_core.reinforce", "联动道具 '%s' 没写增援" % lid)
+	for link in table:
+		var v: Variant = table[link]
+		var ids: Array = (v as Dictionary).values() if v is Dictionary else [v]
+		for b in ids:
+			if not ctx.run_buffs.is_empty() and not ctx.run_buffs.has(StringName(String(b))):
+				report.error("guard_core.reinforce.%s" % link, "没有这份一局的 buff（data/authoring/run_buffs/%s.json）" % b)
+
+
 static func import_difficulty(data: Dictionary, ctx: Context, report: ImportReport) -> DifficultyDef:
 	var def := DifficultyDef.new()
 	_fill(def, data, "", ctx, report)
@@ -1823,6 +1853,7 @@ static func import_difficulty(data: Dictionary, ctx: Context, report: ImportRepo
 			report.error("boss_upgrades.%s" % eid, "要写成 {\"title\": 名字, \"item\": 道具 id}")
 		elif not ctx.enemies.is_empty() and not ctx.enemies.has(StringName(String(eid))):
 			report.error("boss_upgrades.%s" % eid, "没有敌人 '%s'" % eid)
+	_validate_guard_core(def, ctx, report)     # 360 A12
 	for key in ["hunter_hp_percent", "hunter_damage_percent", "faith_threshold_percent", "countdown_percent", "hunter_chase_percent", "hunter_chase_window"]:     # 320 C、E
 		if int(def.get(key)) < 0:
 			report.error(key, "进阶只加不减：不能是负数")
@@ -2002,6 +2033,10 @@ static func import_help_page(data: Dictionary, ctx: Context, report: ImportRepor
 	check_text_refs(def.text, "text", ctx, report)
 	for lang in def.texts:
 		check_text_refs(String(def.texts[lang]), "texts.%s" % lang, ctx, report)
+	for i in def.shots.size():     # 377：截图中英各一套（tools/help_shots.gd 出）
+		for lang in ["zh", "en"]:
+			if not ResourceLoader.exists(def.shot_paths(lang)[i]) or not def.shot_paths(lang)[i].contains("/%s/" % lang):
+				report.error("shots[%d]" % i, "缺 %s 的截图 %s%s/%s.png（跑 tools/help_shots.gd）" % [lang, HelpPageDef.SHOT_DIR, lang, def.shots[i]])
 	ctx.register_help_page(def)
 	return def
 

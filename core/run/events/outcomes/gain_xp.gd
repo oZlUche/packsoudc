@@ -1,4 +1,4 @@
-## 后果（372）：直接给 [member amount] 点经验值（照乘难度系数，记来源 `event`）。序章三用它把阶补到教学要的那一档
+## 后果（372）：直接给 [member amount] 点经验值（照乘难度系数，记来源 `event`）。事件拿它直接补经验
 class_name GainXp
 extends EventOutcome
 

@@ -10,7 +10,7 @@ const PREFIX := "extract_revisit_1022"
 
 static func run_extract_events_revisit(t: TestCase) -> void:
 	t.begin("作者 10-22 · 四张图的撤离事件：「先不撤」那一项回来再弹")
-	for id in ["extract_default", "tut_extract", "tut2_extract", "tut3_extract"]:
+	for id in ["extract_default", "tut_extract", "tut2_extract"]:
 		var def := load("res://data/events/%s.tres" % id) as EventDef
 		t.not_null(def, id)
 		if def == null:

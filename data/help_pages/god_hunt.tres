@@ -21,3 +21,4 @@ Following this god lets you Dismantle: at the start of battle you mark the foe's
 }
 related = Array[String](["faith_power_and_tiers", "altar_offering", "hunters"])
 see_items = Array[StringName]([&"charm_hunt"])
+needs_faith = true

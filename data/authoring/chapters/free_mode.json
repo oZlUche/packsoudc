@@ -505,7 +505,7 @@
   },
   "economy_rules": "standard",
   "order": 3,
-  "requires_unlock": "prologue3_done",
+  "requires_unlock": "prologue2_done",
   "boss_ticket": "ticket_standard",
   "coaches": {
     "map": "free_mode_map"

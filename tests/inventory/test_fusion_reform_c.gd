@@ -49,7 +49,8 @@ static func run_no_random_source(t: TestCase) -> void:
 	t.eq(hits, [] as Array[String], "别处没点名")
 
 
-const _ALLOWED_DIRS := ["items", "recipes", "smith_recipes", "tags"]
+## 360 A12：难度表按敌人池点名守卫带的联动道具（只给那一名守卫，不是随机来源）
+const _ALLOWED_DIRS := ["items", "recipes", "smith_recipes", "tags", "difficulties"]
 
 
 static func _scan(dir_path: String, ids: Array[String], hits: Array[String]) -> void:

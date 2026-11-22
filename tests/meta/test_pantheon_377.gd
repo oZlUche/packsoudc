@@ -269,3 +269,149 @@ static func run_pick_panel(t: TestCase) -> void:
 	pick.free()
 	view.free()
 	Support.cleanup(PREFIX)
+
+
+## 第二批：序章三删了 —— 教程只剩两段，常规图接序章二
+static func run_prologue3_gone(t: TestCase) -> void:
+	t.begin("377 第二批 · 序章三删了：教程两段、自由模式 / 切片 / 机关沙漏都要序章二通关；切片基地清单没有信物；教程章没有信仰")
+	var chs := GameFlow.load_chapters()
+	t.check(not chs.any(func(ch: ChapterDef) -> bool: return ch.id == &"prologue_3"), "没有序章三")
+	for id in [&"free_mode", &"clockwork_hourglass"]:
+		var ch: ChapterDef = load(ContentPaths.asset_file("chapters", String(id)))
+		t.eq(ch.requires_unlock, &"prologue2_done", "%s 要序章二通关" % id)
+	var p2: ChapterDef = load(ContentPaths.asset_file("chapters", "prologue_2"))
+	t.eq(p2.next_chapter, &"", "序章二后面没有教程了")
+	var slice := FileAccess.get_file_as_string("res://data/manifests/slice_base.json")
+	t.check(not slice.contains("charm_"), "切片基地清单没有信物")
+	var c := TestSupport.load_content("prologue", PackedStringArray(["faiths", "characters"]))
+	var f := Support.flow(c, PREFIX)
+	f.meta = GameFlow.new_meta(f.meta_rules)
+	f.chapters = GameFlow.load_chapters()
+	var s := f.begin_direct(f.chapter_of(&"prologue"), 3)
+	t.check(s != null and not s.faith_enabled, "新档的序章一没有信仰（万神院没来）")
+	Support.cleanup(PREFIX)
+
+
+## 第二批：信仰没开时百科不列讲神 / 信物 / 祭坛的页；开了列，「万神院与选神」配中英两套截图
+static func run_help_gate(t: TestCase) -> void:
+	t.begin("377 第二批 · 百科：万神院没来不列神、信物、祭坛那几页（经验值与等级照列）；来了列，选神那页有截图，中英各一套")
+	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths"]))
+	var f := _new_flow(c)
+	f.help_pages = GameFlow.load_help_pages()
+	t.check(not f.faith_open(), "新档：信仰没开")
+	var book := f.encyclopedia()
+	t.check(not book.has_page("god_brute") and not book.has_page("pantheon_choose") and not book.has_page("altar_offering"), "不列神、选神、神坛献祭")
+	t.check(book.has_page("faith_power_and_tiers"), "经验值与等级照列")
+	f.meta.commissions.arrived[String(Pantheon.FACTION)] = 0
+	book = f.encyclopedia()
+	t.check(book.has_page("god_brute") and book.has_page("pantheon_choose"), "万神院来了：列出来（百科重造）")
+	var page := f.help_page(&"pantheon_choose")
+	t.check(page != null and page.needs_faith and Array(page.shots) == ["pantheon_pick"], "选神那页挂一张截图")
+	for lang in ["zh", "en"]:
+		var paths := page.shot_paths(lang) if page != null else [] as Array[String]
+		t.check(paths.size() == 1 and paths[0].contains("/%s/" % lang) and ResourceLoader.exists(paths[0]), "%s 的截图在（%s）" % [lang, str(paths)])
+	Support.cleanup(PREFIX)
+
+
+## 第二批：图鉴在信仰没开时不列信物这类归神的道具
+static func frame_codex_gate(t: TestCase, root: Window) -> void:
+	t.begin("377 第二批 · 图鉴：万神院没来不列信物（赐福版也不进异体）；来了列")
+	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths"]))
+	var f := _new_flow(c)
+	var W178: GDScript = load("res://tests/ui/test_base_warehouse_178.gd")
+	for arrived in [false, true]:
+		if arrived:
+			f.meta.commissions.arrived[String(Pantheon.FACTION)] = 0
+		var screen: Control = W178._screen(f, root)
+		screen.show_tab("codex")
+		var ids: Array = screen.codex_tiles().map(func(tl): return (tl as CodexTile).def.id)
+		var variants: Array = []
+		for tl in screen.codex_tiles():
+			for v in (tl as CodexTile).variants:
+				if (v as ItemDef).has_faith():
+					variants.append((v as ItemDef).id)
+		if arrived:
+			t.check(ids.has(&"charm_brute"), "来了：列信物")
+		else:
+			t.check(not ids.is_empty() and not ids.has(&"charm_brute") and not ids.has(&"charm_sun"), "没来：不列信物")
+			t.check(variants.is_empty(), "没来：异体里没有归神的（%d）" % variants.size())
+		screen.queue_free()
+	Support.cleanup(PREFIX)
+
+
+## 第二批：第一次跳到选神界面 —— 先翻开「万神院与选神」，合上后教练层指三处，看完记住；第二次不再放
+static func frame_first_god_pick(t: TestCase, root: Window) -> void:
+	t.begin("377 第二批 · 第一次选神：先翻开选神那页（带截图），合上放教练层（神龛、无信者、奉祂），看完记住，第二次直接选")
+	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths"]))
+	var f := _new_flow(c)
+	f.help_pages = GameFlow.load_help_pages()
+	f.meta.commissions.arrived[String(Pantheon.FACTION)] = 0
+	f.meta.set_flag(StringName("arrival_seen_" + String(Pantheon.FACTION)))
+	var W178: GDScript = load("res://tests/ui/test_base_warehouse_178.gd")
+	var screen: Control = W178._screen(f, root)
+	screen.show_god_pick()
+	var book = screen.god_book()
+	t.check(book != null and book.current_page() == "pantheon_choose", "翻开的是选神那页")
+	t.check(book != null and book.shot_count() == 1, "页头一张截图")
+	t.check(screen.escape() and screen.god_book() == null and screen.god_pick() != null, "Esc 先合上书，选神界面还在")
+	screen._show_god_coach()
+	var coach: CoachOverlay = screen.god_coach()
+	t.check(coach != null and coach.steps.size() == 3, "教练层三步")
+	if coach != null:
+		for i in 3:
+			t.check(screen._god_target(screen._god_shrines, StringName(String((coach.steps[i] as Dictionary).get("target", "")))) is Rect2, "第 %d 步有目标" % (i + 1))
+		for i in 3:
+			coach.next()
+	t.check(f.meta.coach_seen.has("god_pick"), "看完记住")
+	screen.close_god_pick()
+	screen.show_god_pick()
+	t.check(screen.god_book() == null, "第二次不再翻书")
+	screen._show_god_coach()
+	t.is_null(screen.god_coach(), "也不再放教练层")
+	screen.queue_free()
+	Support.cleanup(PREFIX)
+
+
+## 第二批：第一次升级弹牌时讲一遍三选一（三张、换牌、剔牌），看完记住
+static func frame_first_level_pick(t: TestCase, root: Window) -> void:
+	t.begin("377 第二批 · 第一次升级：选牌窗上放教练层（三张牌、换牌、剔牌），看完记住，再升级不放")
+	var NodeScreens: GDScript = load("res://tests/ui/test_node_screens.gd")
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	Support.cleanup("pantheon_lv")
+	var game = (load("res://ui/game/game.tscn") as PackedScene).instantiate()
+	game.save_path = String(Support.paths("pantheon_lv")["run"])
+	game.meta_path = String(Support.paths("pantheon_lv")["meta"])
+	game.settings_path = String(Support.paths("pantheon_lv")["settings"])
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	flow.chapters = [c.chapter] as Array[ChapterDef]
+	var run := flow.begin(c.chapter, kit, 5)
+	if run == null:
+		t.check(false, "开局")
+		game.queue_free()
+		Support.cleanup("pantheon_lv")
+		return
+	if run.phase == RunState.Phase.PICK_SPAWN:
+		flow.pick_spawn(run.map.entry_ids[0])
+	var lv := LevelModule.of(run)
+	lv.gain(500.0, &"test")
+	var map = game.base()
+	t.check(lv.pending() > 0 and map.has_method("show_level_pick"), "欠着选牌（%d）" % lv.pending())
+	if not map.level_pick_open():
+		map.show_level_pick()
+	t.check(CoachOverlay.due(flow, &"level_pick"), "还没讲过")
+	map._show_level_coach()
+	var coach: CoachOverlay = map.coach()
+	t.check(coach != null and coach.steps.size() == 3, "教练层三步")
+	var panel: LevelPickPanel = map.level_pick_panel()
+	t.check(panel != null and panel.coach_rect(&"nothing") == Rect2(), "不认得的目标给空矩形")
+	if coach != null:
+		for i in 3:
+			coach.next()
+	t.check(flow.meta.coach_seen.has("level_pick") and map.coach() == null, "看完记住、收掉")
+	t.check(map.level_pick_open(), "选牌窗还开着")
+	map._show_level_coach()
+	t.is_null(map.coach(), "第二次不放")
+	game.queue_free()
+	Support.cleanup("pantheon_lv")
