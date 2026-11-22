@@ -1486,7 +1486,22 @@ func show_level_pick() -> bool:
 	panel.done.connect(func():
 		_level_pick_dismissed = 0
 		_drop_level_pick())
+	if CoachOverlay.due(flow, LEVEL_COACH):
+		_show_level_coach.call_deferred()     # 377：第一次升级讲一遍三选一（等这一帧排好版再指）
 	return true
+
+
+## 377（作者 11-22：序章三删了，升级靠第一次弹牌时的讲解教）：三张挑一张、换牌、剔牌各指一下；看完记进 coach_seen
+const LEVEL_COACH := &"level_pick"
+
+
+func _show_level_coach() -> void:
+	if _level_pick_panel == null or _coach != null or not CoachOverlay.due(flow, LEVEL_COACH):
+		return
+	var panel := _level_pick_panel
+	_coach = CoachOverlay.run_on(self, LEVEL_COACH, flow, font, func(id: StringName) -> Rect2: return panel.coach_rect(id) if is_instance_valid(panel) else Rect2())
+	if _coach != null:
+		_coach.closed.connect(func(): _coach = null)
 
 
 func close_level_pick() -> void:

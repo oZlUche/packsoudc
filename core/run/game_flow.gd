@@ -50,6 +50,7 @@ var tech_defs: Array[TechDef] = []
 var help_pages: Array[HelpPageDef] = []
 var _encyclopedia: Encyclopedia = null
 var _encyclopedia_lang: String = ""
+var _encyclopedia_faith := true
 ## 101 第 4 刀：成就与解锁的逻辑在这个服务里（纯逻辑：看局外与内容算结果，不碰存盘与转屏）。
 ## 内容与「全部解锁」开关由 [method _sync_achievements] 同步过去
 var achievements: Achievements = Achievements.new()
@@ -1518,12 +1519,33 @@ func show_encyclopedia(page: String = "") -> void:
 
 ## 114：这本百科（第一次用时按手写页 + 当前内容造；「相关道具」按图鉴遮名字）
 func encyclopedia() -> Encyclopedia:
-	if _encyclopedia == null or _encyclopedia_lang != UiText.lang:     # 221 F4：标题、正文、链接都按语言，切了语言重造
-		_encyclopedia = Encyclopedia.build(help_pages, items, recipes)
+	var faith := faith_open()
+	if _encyclopedia == null or _encyclopedia_lang != UiText.lang or _encyclopedia_faith != faith:     # 221 F4：标题、正文、链接都按语言，切了语言重造
+		_encyclopedia = Encyclopedia.build(visible_help_pages(), items, recipes)
 		_encyclopedia_lang = UiText.lang
+		_encyclopedia_faith = faith
 	_encyclopedia.lit = func(id: StringName) -> bool: return names_revealed() or meta == null or meta.codex_lit(id)
 	_encyclopedia.reaction_lit = func(id: StringName) -> bool: return names_revealed() or meta == null or meta.reaction_seen(id)     # 175
 	return _encyclopedia
+
+
+## 377：百科里列的手写页 —— 万神院没来时讲神、信物、祭坛的页（[member HelpPageDef.needs_faith]）不列
+func visible_help_pages() -> Array[HelpPageDef]:
+	if faith_open():
+		return help_pages
+	var out: Array[HelpPageDef] = []
+	for h in help_pages:
+		if h != null and not h.needs_faith:
+			out.append(h)
+	return out
+
+
+## 377：手写的百科页（按 id；没有 null）
+func help_page(id: StringName) -> HelpPageDef:
+	for h in help_pages:
+		if h != null and h.id == id:
+			return h
+	return null
 
 
 ## 2026-10-22（作者）：设置里「名字全显」开着吗 —— 开着时百科不再把没点亮的名字遮成「？」
@@ -1553,13 +1575,13 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
-	# 377：这一局的信仰 —— 教程章照旧；万神院没来没有信仰；来了按万神院里选的神，信物出征时自动进背包
+	# 377：这一局的信仰 —— 万神院没来没有信仰（序章三删了以后教程章也一样）；来了按万神院里选的神，信物出征时自动进背包（教程章不发）
 	var access := Pantheon.full_access()
-	if not tutorial_chapters().has(chapter):
-		if not faith_open():
-			access = {"enabled": false, "bless": false, "xp_bonus": 0.0}
-			faith = &""
-		elif Pantheon.arrived(meta):
+	if not faith_open():
+		access = {"enabled": false, "bless": false, "xp_bonus": 0.0}
+		faith = &""
+	elif not tutorial_chapters().has(chapter):
+		if Pantheon.arrived(meta):
 			access = Pantheon.access(meta)
 			faith = Pantheon.choice(meta)
 			var charm := Pantheon.charm_of(items, faith)

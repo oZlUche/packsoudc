@@ -20,3 +20,4 @@ Once you do, that god's items unlock their effects by Rank, and other gods' item
 }
 related = Array[String](["anchor_and_right_click", "switch_and_dormant", "faith_power_and_tiers"])
 see_items = Array[StringName]([&"charm_brute", &"charm_sun", &"charm_nature", &"charm_earth"])
+needs_faith = true

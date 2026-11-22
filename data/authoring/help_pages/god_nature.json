@@ -18,5 +18,6 @@
   "see_items": [
     "charm_nature",
     "ration"
-  ]
+  ],
+  "needs_faith": true
 }

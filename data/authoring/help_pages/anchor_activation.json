@@ -19,5 +19,6 @@
     "charm_sun",
     "charm_nature",
     "charm_earth"
-  ]
+  ],
+  "needs_faith": true
 }

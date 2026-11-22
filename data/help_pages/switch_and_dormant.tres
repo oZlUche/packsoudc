@@ -20,3 +20,4 @@ texts = {
 Dormant items are greyed out on the board and marked Dormant. XP is one pool for the whole run: switching doesn't reset it, and the god you switch to reads its Rank from the same pool. The gods naturally exclude one another, so carrying several Anchors really means carrying several builds you can switch between at any time, at the cost of only the cells they take up."
 }
 related = Array[String](["anchor_and_right_click", "anchor_activation"])
+needs_faith = true

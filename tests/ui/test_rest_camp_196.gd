@@ -27,11 +27,7 @@ static func run_mapping(t: TestCase) -> void:
 	t.eq(rest.scene, EventDef.SCENE_REST_CAMP, "rest_default 演成营地")
 	t.eq(_pieces_of(rest), [&"fire", &"tent", &"altar", &"", &"altar", &"forge", &"sign"], "篝火 / 帐篷 / 祭坛（信仰；281 没信仰时寂灭的献祭）/ 祷告（372：还没有造物，屏下方一个按钮）/ 铁炉 / 路标")
 	t.eq(Camp.variant_for([&"fire", &"tent", &"altar", &"forge", &"sign"]), &"full", "四件全有：full")
-	for id in [&"tut3_rest_1", &"tut3_rest_2"]:
-		var tut: EventDef = c.events.get(id, null)
-		t.check(tut != null and tut.scene == EventDef.SCENE_REST_CAMP, "%s 也是营地" % id)
-		if tut != null:
-			t.eq(Camp.variant_for(_pieces_of(tut)), &"tutorial_fire_tent_altar", "%s 落「篝火 + 帐篷 + 祭坛」那一档（加了扎营，待定 3 A）" % id)
+	t.eq(Camp.variant_for([&"fire", &"tent", &"altar", &"sign"]), &"tutorial_fire_tent_altar", "篝火 + 帐篷 + 祭坛（待定 3 A）")
 	t.eq(Camp.variant_for([&"fire", &"sign"]), &"tutorial_fire", "只有篝火")
 	t.eq(Camp.variant_for([&"fire", &"tent", &"sign"]), &"tutorial_fire_tent", "篝火 + 帐篷")
 	t.eq(GameDirector.script_for(GameFlow.Screen.EVENT, {"def": rest}), GameDirector.CAMP_SCRIPT, "营地事件 → 营地屏")
@@ -156,7 +152,7 @@ static func frame_text_board(t: TestCase, root: Window) -> void:
 	t.begin("196 补充一 · 事件有正文才出字板（教程的神坛教献祭）：正文照事件屏替换，× 收起成卷轴、同一个点里记住；rest_default 没字板")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)
-	for case in [[&"tut3_rest_1", true], [&"rest_default", false]]:
+	for case in [[&"tut_rest", true], [&"rest_default", false]]:
 		Support.cleanup("camp196_board")
 		var game = (load(GAME) as PackedScene).instantiate()
 		game.save_path = String(Support.paths("camp196_board")["run"])
@@ -177,7 +173,7 @@ static func frame_text_board(t: TestCase, root: Window) -> void:
 		if screen != null and screen.has_method("board_shown"):
 			if case[1]:
 				t.check(screen.board_shown(), "教程：有字板")
-				t.check(screen.board_text().contains("骨骰子") and not screen.board_text().contains("{"), "{item:bone_dice} 换成了名字（%s）" % screen.board_text().left(60))
+				t.check(screen.board_text().contains("体力") and not screen.board_text().contains("{"), "占位符都换掉了（%s）" % screen.board_text().left(60))
 				screen.fold_board(true)
 				t.check(not screen.board_shown() and screen._scroll.visible, "× 收起：只剩卷轴")
 				screen._reopen(screen._payload)

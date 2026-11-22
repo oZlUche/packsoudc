@@ -20,3 +20,4 @@ texts = {
 Once you perform a special rite, this rest spot's Altar closes and you can no longer make an Offering either; if you want both, you have to find the next rest spot. Some rites ask you to pick an option first, such as choosing what the Brute's offering of max Health is traded for. Whatever a special rite changes lasts for this run only and does not carry into the next."
 }
 related = Array[String](["altar_offering", "god_brute", "god_sun", "god_earth"])
+needs_faith = true

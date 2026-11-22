@@ -13,5 +13,6 @@
   "related": [
     "anchor_and_right_click",
     "anchor_activation"
-  ]
+  ],
+  "needs_faith": true
 }

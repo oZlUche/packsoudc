@@ -17,31 +17,31 @@ class Content:
 	var enemies: EnemyDatabase
 	## 套装库（除 test_carry 外全部；多装一份不碍事）
 	var sets: SetDatabase
-	## 主章节：默认自由模式；test_prologue3 / test_tutorial2 要自己的序章
+	## 主章节：默认自由模式；test_tutorial2 要自己的序章
 	var chapter: ChapterDef
 	## 主章节的敌人池（test_text_and_tooltips / test_carry）
 	var pool: EnemyPool
 	## 序章一（test_node_screens / test_tutorial2 / test_prologue）
 	var prologue: ChapterDef
-	## 序章二（test_prologue3）
+	## 序章二
 	var prologue2: ChapterDef
-	## 自由模式，序章套件拿来验「通关解锁第一章」（test_prologue / test_tutorial2 / test_prologue3）
+	## 自由模式，序章套件拿来验「通关解锁第一章」（test_prologue / test_tutorial2）
 	var chapter1: ChapterDef
 	## 开局装备（test_node_screens / test_meta_grid / test_event_layer / test_node_storage / test_character_setup /
 	## test_game_flow / test_author_087 / test_run_buffs / test_calibration）
 	var loadouts: Array[LoadoutDef]
-	## 事件表（test_node_screens / test_event_layer / test_prologue3 / test_author_087 / test_tutorial2 / test_prologue /
+	## 事件表（test_node_screens / test_event_layer / test_author_087 / test_tutorial2 / test_prologue /
 	## test_event_constructs）
 	var events: Dictionary
 	## 一局 buff 表（test_event_layer / test_encumbrance / test_run_buffs）
 	var buffs: Dictionary
-	## 信仰表（test_prologue3 / test_prologue）
+	## 信仰表（test_prologue）
 	var faiths: Dictionary
 	## 配方（test_tutorial2）
 	var recipes: Array[RecipeDef]
 	## 角色（test_character_setup / test_prologue / test_character_skills）
 	var characters: Array[CharacterDef]
-	## 布鲁图斯一个人（test_prologue3 / test_tutorial2）
+	## 布鲁图斯一个人（test_tutorial2）
 	var brutus: CharacterDef
 	## 猎手表（test_hunters / test_character_skills / test_calibration —— 后者原来叫 hunters）
 	var hunter_defs: Dictionary
