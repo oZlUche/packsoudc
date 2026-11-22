@@ -40,7 +40,7 @@ static func run_no_random_source(t: TestCase) -> void:
 		var d := db.get_def(id)
 		if d.is_no_random_source() and not d.is_blessed():
 			ids.append(String(id))
-	t.eq(ids.size(), 18, "18 件（3 件局内限定 + 15 件材料打造）")
+	t.eq(ids.size(), 24, "24 件（3 件局内限定 + 15 件材料打造 + 366 的 3 件守卫联动道具和它们的失效版）")
 	var pool := db.ids()
 	var codex := db.ids(true)
 	t.check(ids.all(func(id: String) -> bool: return not pool.has(StringName(id)) and codex.has(StringName(id))), "生成池里没有、图鉴照列")
