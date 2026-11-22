@@ -304,6 +304,8 @@ const TEXT := {
 	# core/run/node_tooltip.gd：节点浮窗的内置模板（BBCode + 占位符，见 docs/text-placeholders.md）
 	"node.tip.unknown_enemy": {"zh": "{c:danger}敌情不明{/c}", "en": "{c:danger}Unknown foe{/c}"},
 	"node.unknown_enemy": {"zh": "敌情不明", "en": "Unknown foe"},
+	"node.guard": {"zh": "{c:warn}守卫{/c}：带着【{guard_link}】，打倒它，首领的增援就撤掉", "en": "{c:warn}Guard{/c}: carries [{guard_link}]; defeat it to strip the boss's reinforcement"},     # 360 A12
+	"node.reinforced": {"zh": "{c:danger}守卫增援{/c}：【{guard_link}】", "en": "{c:danger}Reinforced{/c}: [{guard_link}]"},
 	"node.tip.battle": {"zh": "{c:danger}{enemy_name}{/c}\n生命 {enemy_hp}\n带着 {enemy_count} 件：{enemy_items}", "en": "{c:danger}{enemy_name}{/c}\nHealth {enemy_hp}\nCarrying {enemy_count} items: {enemy_items}"},
 	"node.tip.visited": {"zh": "{c:dim}这里已经没东西了。{/c}", "en": "{c:dim}Nothing left here.{/c}"},
 	"node.tip.search": {"zh": "这里有值得搜索的东西，但翻得越久越可能惊动附近的人。", "en": "There's something worth searching here, but the longer you dig, the more likely you'll draw attention."},

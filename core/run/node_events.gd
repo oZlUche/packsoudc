@@ -1017,6 +1017,7 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 		var dropped: Array = rolled.get("dropped", [])
 		dropped.append(boss_ticket)
 		rolled["dropped"] = dropped
+	_guard_won(node, content, rolled)     # 360 A12
 	_bless_rolled(node, rolled)
 	# 209：第二段 —— 按包池掷「用哪些包装这些东西」（没有包的魔兽 / 机关不掉包；随机数另起一条）
 	rolled["bags"] = DropResolver.bags_for(rolled, content, enemies, pool, bag_pool, items, _rng_for(node, "loot_bags"), type == &"core")
@@ -1024,6 +1025,16 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	_pay_battle_reward(node, content)
 	if type == &"core":
 		boss_defeated.emit(node)
+
+
+## 360 A12：打赢守卫 —— 首领的增援撤掉，联动道具的失效版另起一件给（一件能卖能炼的贵重品，不带战斗效果）
+func _guard_won(node: MapNode, content: Dictionary, rolled: Dictionary) -> void:
+	if node == null or not bool(content.get(DifficultyMap.GUARD_KEY, false)):
+		return
+	DifficultyMap.guard_down(graph, node.id)
+	var spent := StringName(String(content.get(DifficultyMap.LINK_KEY, "")) + DifficultyMap.SPENT_SUFFIX)
+	if items != null and items.get_def(spent) != null:
+		(rolled["treasure"] as Array).append(spent)
 
 
 ## 360：普通敌人的一场（普通战、搜索遭遇）—— 持有物最低掉落占比只管这些；精英、核心、猎手不管

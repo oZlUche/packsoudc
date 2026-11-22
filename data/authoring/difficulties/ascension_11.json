@@ -14,6 +14,7 @@
   },
   "level": 11,
   "requires_unlock": "ascension_11",
+  "grants_unlock": "ascension_12",
   "mechanics": [
     {
       "type": "erosion",
@@ -83,7 +84,6 @@
   "boss_hp_percent": 25,
   "boss_speed_percent": 20,
   "hunter_loss_extra": 1,
-  "intel_range": 2,
   "boss_upgrades": {
     "core_guardian": {
       "title": "誓约守卫",
@@ -100,5 +100,6 @@
       "item": "perpetual_pendulum"
     }
   },
-  "countdown_percent": 10
+  "countdown_percent": 10,
+  "intel_range": 2
 }

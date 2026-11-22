@@ -1,0 +1,121 @@
+{
+  "id": "ascension_12",
+  "display_name": "进阶十二",
+  "display_names": {
+    "en": "Ascension XII"
+  },
+  "description": "进阶十一的一切，再加：每局有一名精英当守卫，守卫活着首领就带着增援；打倒守卫增援就撤掉，还能拿到一件保底的传说。在进阶十一撤离一次后解锁。",
+  "descriptions": {
+    "en": "Everything in Ascension XI, and each run one elite stands guard: while it lives, the boss fights with a reinforcement. Defeat the guard to strip it, and claim a guaranteed legendary. Unlocked by extracting once on Ascension XI."
+  },
+  "challenge": "守卫核心",
+  "challenges": {
+    "en": "Guarded core"
+  },
+  "level": 12,
+  "requires_unlock": "ascension_12",
+  "mechanics": [
+    {
+      "type": "erosion",
+      "effects": [
+        {
+          "type": "spend_vitality",
+          "per_depth": 1
+        },
+        {
+          "type": "drain_money",
+          "amount": 10,
+          "enabled": false,
+          "only_total": true
+        },
+        {
+          "type": "item_layer",
+          "from_depth": 2
+        }
+      ]
+    },
+    {
+      "type": "hunters",
+      "hunter_ids": [
+        "hunter_1"
+      ],
+      "bracket_steps": [
+        0,
+        5,
+        10,
+        20
+      ],
+      "hp_from": [
+        1.0,
+        0.6,
+        0.6,
+        0.5
+      ],
+      "hp_to": [
+        1.4,
+        1.4,
+        1.6,
+        1.0
+      ]
+    }
+  ],
+  "search_floors": {
+    "normal": [
+      3,
+      3,
+      3
+    ],
+    "advanced": [
+      4,
+      3,
+      3
+    ]
+  },
+  "held_floor_percent": 80,
+  "elite_rarity": 4,
+  "gear_cap_battle": 2,
+  "gear_cap_elite": 1,
+  "elite_extra_items": 1,
+  "allow_true_damage": true,
+  "enemy_weapon_quality": 1,
+  "rest_keep_percent": 50,
+  "no_paid_extract": true,
+  "boss_hp_percent": 25,
+  "boss_speed_percent": 20,
+  "hunter_loss_extra": 1,
+  "boss_upgrades": {
+    "core_guardian": {
+      "title": "誓约守卫",
+      "titles": {
+        "en": "Oathbound Guardian"
+      },
+      "item": "oath_sigil"
+    },
+    "great_clock": {
+      "title": "永动大钟",
+      "titles": {
+        "en": "Perpetual Clock"
+      },
+      "item": "perpetual_pendulum"
+    }
+  },
+  "countdown_percent": 10,
+  "intel_range": 2,
+  "guard_core": {
+    "pools": {
+      "clockwork": "spare_mainspring",
+      "standard_ruins": "rally_horn"
+    },
+    "beast": "beast_king_pact",
+    "reinforce": {
+      "spare_mainspring": "guard_mainspring",
+      "rally_horn": "guard_horn",
+      "beast_king_pact": {
+        "fire": "guard_pact_fire",
+        "ice": "guard_pact_ice",
+        "lightning": "guard_pact_lightning",
+        "poison": "guard_pact_poison"
+      }
+    }
+  }
+}

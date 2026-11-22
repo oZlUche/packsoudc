@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_vybdh"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_i2uhl"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_l2pm7"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_sxnxb"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_1odih"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="6_cuorc"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_aekgx"]
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="8_oswts"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_yx5on"]
+[ext_resource type="Script" path="res://core/battle/effects/apply_status.gd" id="10_h7doc"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="11_o46tg"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="12_3wgjr"]
+
+[sub_resource type="Resource" id="Resource_a46ql"]
+script = ExtResource("4_sxnxb")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_dg0ha"]
+script = ExtResource("6_cuorc")
+
+[sub_resource type="Resource" id="Resource_0kiaf"]
+script = ExtResource("2_i2uhl")
+stat = &"max_armor"
+amount = 60.0
+
+[sub_resource type="Resource" id="Resource_0tg5w"]
+script = ExtResource("9_yx5on")
+id = &"guard_aegis"
+display_name = "发条护盾"
+display_names = {
+"en": "Mainspring Aegis"
+}
+stackable = false
+duration_sec = 8.0
+mods = Array[ExtResource("2_i2uhl")]([SubResource("Resource_0kiaf")])
+
+[sub_resource type="Resource" id="Resource_ksfbe"]
+script = ExtResource("10_h7doc")
+target = 1
+buff = SubResource("Resource_0tg5w")
+
+[sub_resource type="Resource" id="Resource_0bcqw"]
+script = ExtResource("11_o46tg")
+percent = 50
+
+[sub_resource type="Resource" id="Resource_lrptj"]
+script = ExtResource("3_l2pm7")
+trigger = SubResource("Resource_0bcqw")
+cadence = SubResource("Resource_a46ql")
+costs = Array[ExtResource("5_1odih")]([SubResource("Resource_dg0ha")])
+effects = Array[ExtResource("7_aekgx")]([SubResource("Resource_ksfbe")])
+
+[resource]
+script = ExtResource("12_3wgjr")
+id = &"guard_mainspring"
+display_name = "守卫增援：备用发条"
+display_names = {
+"en": "Guard Reinforcement: Spare Mainspring"
+}
+tags = Array[StringName]([&"guard_reinforce"])
+rules = Array[ExtResource("3_l2pm7")]([SubResource("Resource_lrptj")])
