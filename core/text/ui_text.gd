@@ -479,7 +479,7 @@ const TEXT := {
 	"level.pick_of": {"zh": "这一张是第 %d 级的", "en": "This pick is for level %d"},
 	"level.left": {"zh": "还要选 %d 次", "en": "%d more to pick"},
 	"level.extra": {"zh": "以人为本：这一级再选一张", "en": "Humans First: pick one more this level"},
-	"level.have": {"zh": "已有 %d 张", "en": "Have %d"},
+	"level.layer": {"zh": "第 %d 层", "en": "Stack %d"},
 	"level.reroll": {"zh": "换牌 %d", "en": "Reroll %d"},
 	"level.reroll_tip": {"zh": "三张一起换一批", "en": "Swap all three for a new set"},
 	"level.remove": {"zh": "剔牌 %d", "en": "Cull %d"},
