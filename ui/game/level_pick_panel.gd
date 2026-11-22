@@ -1,6 +1,6 @@
 ## 372：升级选牌 —— 地图屏上叠一层（不是单独一屏）：三张牌挑一张，下面「刷新」「删除」两个键写着还剩几次。
 ## 挑完还有待选（一次升了几级、以人为本多给的一次）就接着出下一批；都挑完自己收起。
-## 牌面是作者定的 A 羊皮纸（`assets/ui/level/`）：上沿正中压一条类别缎带，圆章里放牌的图标，下面牌名、效果，底部写拿了是第几层
+## 牌面是作者定的 A 羊皮纸（`assets/ui/level/`）：上沿正中压一条类别条，圆章里放牌的图标，下面牌名、效果，底部写拿了是第几层
 class_name LevelPickPanel
 extends VBoxContainer
 
@@ -10,7 +10,7 @@ const CARD_W := 220.0
 const CARD_H := 240.0
 const ART_CARD := "level/card_parchment"
 const ART_MEDALLION := "level/medallion"
-## 缎带 72 × 24，往上探出牌面 12
+## 类别条 72 × 24，往上探出牌面 12
 const RIBBON := Vector2(72, 24)
 const RIBBON_OUT := 12.0
 const MEDALLION := 72.0
@@ -142,7 +142,7 @@ func _card(i: int, cid: StringName) -> Control:
 	layer.position = Vector2(0, CARD_H - LAYER_BOTTOM - 18)
 	layer.size = Vector2(CARD_W, 18)
 	btn.add_child(layer)
-	# 类别缎带：压在上沿正中，往上探出
+	# 类别条：压在上沿正中，往上探出
 	var kind := String(level.rules().kind_of(cid))
 	var ribbon := PanelContainer.new()
 	ribbon.name = "Ribbon"
@@ -154,7 +154,7 @@ func _card(i: int, cid: StringName) -> Control:
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	if tag.has_meta(&"dark_color"):
-		tag.remove_meta(&"dark_color")     # 缎带是深底：白字，不跟选牌窗的浅底换墨色
+		tag.remove_meta(&"dark_color")     # 类别条是深底：白字，不跟选牌窗的浅底换墨色
 	tag.add_theme_color_override("font_color", Color.WHITE)
 	ribbon.add_child(tag)
 	btn.add_child(ribbon)
@@ -163,7 +163,7 @@ func _card(i: int, cid: StringName) -> Control:
 	return btn
 
 
-## 类别 → 缎带图（属性 / 武器 / 探索）
+## 类别 → 类别条图（属性 / 武器 / 探索）
 static func _ribbon_of(kind: String) -> String:
 	match kind:
 		"weapon":
