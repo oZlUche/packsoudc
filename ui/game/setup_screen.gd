@@ -291,6 +291,8 @@ func open(_payload: Dictionary) -> void:
 	_restore_last()
 	_sync_bars()
 	show_page(0)
+	if bar_shown(BAR_FAITH) and CoachOverlay.due(flow, GOD_COACH):
+		open_bar(BAR_FAITH)     # 383 §5：万神院刚到来后的第一次出征，信仰横条自己展开一次
 
 
 ## 180 定稿：第三页的东西直接摆在地图纸上（没有板，左右让开纸的毛边 [constant PAPER_INSET]）
@@ -775,6 +777,8 @@ func _on_bar_toggled(id: StringName, on: bool) -> void:
 		BAR_FAITH:
 			if on:
 				_sync_faith()
+				if CoachOverlay.due(flow, GOD_COACH):
+					_open_god_book()     # 377 / 383：第一次展开信仰横条 —— 先翻开「万神院与选神」那页，合上再用教练层指一遍
 
 
 ## 三条的显隐与头上的大致信息
@@ -892,6 +896,73 @@ func choose_god(fid: StringName) -> bool:
 
 func faith_panel():
 	return _faith_panel
+
+
+## 377：第一次选神的讲解（看完记进 coach_seen）与它先翻开的百科页（383：从出征时跳出的选神弹窗挪到信仰横条）
+const GOD_COACH := &"god_pick"
+const GOD_PAGE := "pantheon_choose"
+const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
+var _god_book: GameScreen = null
+var _god_coach: CoachOverlay = null
+
+
+func _open_god_book() -> void:
+	if _god_book != null or not flow.encyclopedia().has_page(GOD_PAGE):
+		_show_god_coach.call_deferred()
+		return
+	var book = EncyclopediaScreenScript.new()
+	book.screen = GameFlow.Screen.ENCYCLOPEDIA
+	book.flow = flow
+	book.font = font
+	book.back = close_god_book
+	book.z_index = 10
+	_god_book = book
+	add_child(book)
+	book.open({"page": GOD_PAGE})
+
+
+## 合上翻开的那页，接着放教练层
+func close_god_book() -> void:
+	if _god_book == null:
+		return
+	_god_book.queue_free()
+	_god_book = null
+	_show_god_coach.call_deferred()
+
+
+func god_book() -> GameScreen:
+	return _god_book
+
+
+func god_coach() -> CoachOverlay:
+	return _god_coach
+
+
+func _show_god_coach() -> void:
+	if not is_inside_tree() or _god_coach != null or _faith_panel == null or not CoachOverlay.due(flow, GOD_COACH):
+		return
+	var shrines: Node = _faith_panel
+	_god_coach = CoachOverlay.run_on(self, GOD_COACH, flow, font, func(id: StringName) -> Rect2: return god_target(shrines, id))
+	if _god_coach != null:
+		_god_coach.closed.connect(func(): _god_coach = null)
+
+
+## 教练层指的地方：`shrines` 一排神龛、`none` 无信者那座、`choose` 第一个点得动的【奉祂】
+static func god_target(shrines: Node, id: StringName) -> Rect2:
+	if shrines == null or not is_instance_valid(shrines):
+		return Rect2()
+	var n: Control = null
+	match id:
+		&"shrines":
+			n = shrines.find_child("Shrines", true, false) as Control
+		&"none":
+			n = shrines.find_child("Shrine_none", true, false) as Control
+		&"choose":
+			for b in shrines.find_children("Choose_*", "Button", true, false):
+				if not (b as Button).disabled and b.name != "Choose_none":
+					n = b as Control
+					break
+	return n.get_global_rect() if n != null else Rect2()
 
 
 ## 355 第二批：「这一锅」—— 名字（缺几样）、效果汇总（按选着的角色算终值）、饱腹度，下面一排收藏可以换。
@@ -1093,6 +1164,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
 		return
+	if _god_book != null or _god_coach != null:
+		return     # 383：翻着书、讲着教练层时回车不翻页
 	if key.keycode == KEY_ENTER or key.keycode == KEY_KP_ENTER:
 		next_page()
 		get_viewport().set_input_as_handled()
@@ -2124,6 +2197,11 @@ func cancel() -> void:
 
 ## 090：Esc = 第一页回基地（同「返回」按钮）。161：第二、三页的 Esc = 回上一页
 func escape() -> bool:
+	if _god_book != null:     # 377：选神前翻开的那页先合上
+		close_god_book()
+		return true
+	if _god_coach != null:
+		return true     # 教练层自己认 Esc
 	prev_page()
 	return true
 #endregion
