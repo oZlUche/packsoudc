@@ -1,0 +1,28 @@
+{
+  "id": "pantheon_offering",
+  "display_name": "供奉",
+  "display_names": {
+    "en": "Tribute"
+  },
+  "faction": "pantheon",
+  "order": 2,
+  "reputation": 5,
+  "min_tier": 1,
+  "requires": [
+    "pantheon_first_rite"
+  ],
+  "stages": [
+    {
+      "goal": "altar_offer",
+      "count": 2,
+      "text": "在两座神坛献祭",
+      "texts": {
+        "en": "Make an Offering at two altars"
+      }
+    }
+  ],
+  "client": "万神院的老祭司",
+  "clients": {
+    "en": "Elder priest of the Senatus"
+  }
+}

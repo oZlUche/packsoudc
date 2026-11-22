@@ -125,6 +125,9 @@ func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 		if line != "":
 			(out["log"] as Array[String]).append(line)
 	noted.emit(UiText.t("log.list_sep").join(out["log"]))
+	var cm := CommissionModule.of(_run)
+	if cm != null:
+		cm.on_offer(at)     # 377：万神院的「献祭」
 	_use()     # 反馈：献祭和特殊操作只能做一个 —— 献了就关
 	return out
 
@@ -133,6 +136,8 @@ func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 func actions() -> Array[FaithPerk]:
 	var out: Array[FaithPerk] = []
 	for p in perks():
+		if p is AltarBlessPerk and _run != null and not _run.faith_bless:
+			continue     # 377：赐福是万神院四档才开的神坛选项
 		if (p as FaithPerk).altar_label() != "":
 			out.append(p)
 	return out
@@ -140,7 +145,7 @@ func actions() -> Array[FaithPerk]:
 
 ## 做一个神坛特殊操作：这一次机会用掉（这个点上不能再献祭 / 再操作）。返回给日志的一句；空 = 没做
 func special(p: FaithPerk, at_node: MapNode, option: StringName = &"") -> String:
-	if p == null or not is_open() or p.altar_available(_run, at_node) != "":
+	if p == null or not is_open() or not actions().has(p) or p.altar_available(_run, at_node) != "":
 		return ""
 	var line := p.altar_apply(_run, at_node, option)
 	if line == "":
@@ -163,7 +168,7 @@ func _use() -> void:
 #region 赐福（095）
 ## 095：战利品 / 搜索翻到的普通道具按概率换成赐福版（激活了信仰只换那位神的，没激活随机一位有赐福版的神）
 func bless_substitute(ids: Array[StringName], chance_idle: float, chance_active: float, rng: RandomNumberGenerator) -> Array[StringName]:
-	if _run == null:
+	if _run == null or not _run.faith_enabled:     # 377：信仰没开的局不换赐福版
 		return ids
 	return Blessings.substitute(ids, _run.items, _run.active_faith_id(), _run.faith_defs.keys(), chance_idle, chance_active, rng)
 

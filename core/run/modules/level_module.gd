@@ -131,10 +131,13 @@ func progress() -> Vector2i:
 	return Vector2i(int(xp + 0.0001) - r.total_for(lv), r.cost_at(lv))
 
 
-## 难度系数（这一局的难度档）
+## 难度系数（这一局的难度档）；377：万神院三档起，奉着神的时候再乘 1 + [member RunState.faith_xp_bonus]（无信者不加）
 func mult() -> float:
 	var tier := _run.difficulty.level if _run != null and _run.difficulty != null else 0
-	return rules().mult(tier)
+	var m := rules().mult(tier)
+	if _run != null and _run.faith_xp_bonus > 0.0 and not _humanist():
+		m *= 1.0 + _run.faith_xp_bonus
+	return m
 
 
 ## 加经验值：[param raw] 是没乘难度系数的数。返回实际加了多少（乘过的）
@@ -164,6 +167,9 @@ func _on_level(lv: int) -> void:
 	if every > 0 and lv % every == 0 and _humanist():
 		bonus_levels.append(lv)
 		bonus_picks = bonus_levels.size()     # 【无信者】：这一级连选两次
+	var cm := CommissionModule.of(_run)
+	if cm != null and not _humanist():
+		cm.on_faith_level(lv)     # 377：万神院的「修行」
 	leveled.emit(lv)
 
 
@@ -467,7 +473,7 @@ func echo_def() -> RunBuffDef:
 #region 神坛祷告
 ## 这座神坛还能祷告几次
 func prayers_left(node: MapNode) -> int:
-	if node == null:
+	if node == null or (_run != null and not _run.faith_enabled):     # 377：万神院来之前休息点没有神坛
 		return 0
 	return maxi(0, rules().prayers_per_altar - int(node.content.get("altar_prayers", 0)))
 

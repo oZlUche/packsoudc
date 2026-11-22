@@ -90,6 +90,8 @@ var last_absorbed: Dictionary = {}
 var last_tutorial_reward: Dictionary = {}
 ## 336：这一局并进局外的委托（[method Commissions.merge_run] 的返回 + `rows`：这一局记下的每条），结算屏的「委托」段读它
 var last_commissions: Dictionary = {}
+## 377：刚结算的这一局有哪几方来了营地（基地据此放到来的那一页）
+var last_arrived: Array[StringName] = []
 var screen: int = Screen.MAIN_MENU
 var last_payload: Dictionary = {}
 ## 待拾取里已经在搜索屏亮过的 uid（6.2 的揭示只做一次）。拾取完清空
@@ -152,6 +154,7 @@ func use_slot(n: int) -> void:
 	meta = loaded if loaded != null else new_meta(meta_rules)
 	_open_legacy_slice()
 	_migrate_tutorial_ledger()
+	_migrate_pantheon()
 	derive_techs()
 	_reset_run()
 	if settings != null and settings.save_slot != n:
@@ -250,6 +253,17 @@ func skip_preview() -> Dictionary:
 
 ## 统一教程 B（方案 §12.1）：统一教程之前的档 —— 已经打通（或跳过）的段当时按老规矩发过，记成 [constant TutorialRewards.LEGACY]、不补新奖励；
 ## 出过远征或仓库里有东西的，开局那套也算领过。新档什么也不记
+## 377：老档的万神院迁移（只做一次，[method Pantheon.migrate_legacy]）；做了就存
+func _migrate_pantheon() -> void:
+	if meta == null or meta.flag(Pantheon.MIGRATED) != 0:
+		return
+	var got := Pantheon.migrate_legacy(meta, items)
+	if int(got.get("refund", 0)) > 0 or bool(got.get("arrived", false)) or not (got.get("gods", []) as Array).is_empty():
+		meta.migration_log.append({"kind": "pantheon", "gods": (got["gods"] as Array).map(func(x): return String(x)), "refund": int(got["refund"])})
+	if writable():
+		save_meta()
+
+
 func _migrate_tutorial_ledger() -> void:
 	if meta == null:
 		return
@@ -342,6 +356,7 @@ func load_slot(n: int) -> bool:
 static func new_meta(rules: MetaRules) -> MetaState:
 	var m := MetaState.new(rules)
 	m.commissions.gated = true
+	m.set_flag(Pantheon.MIGRATED)     # 377：新档不用做老档的万神院迁移
 	return m
 
 
@@ -686,6 +701,12 @@ func locked_item_ids() -> Array:
 ## 把锁着的道具设进道具库（搜索 / 掉落 / 商店 / 敌人的池都从 ids() 拿）。开局前调；设置改了也调
 func apply_item_locks() -> void:
 	_sync_achievements().apply_item_locks()
+	if items != null and meta != null and not faith_open():     # 377：没有信仰的存档，随机来源里不出信物与赐福道具
+		var locked: Array = _sync_achievements().locked_item_ids()
+		for id in items.ids_where(func(d: ItemDef) -> bool: return d.has_faith()):
+			if not locked.has(id):
+				locked.append(id)
+		items.set_locked(locked)
 
 
 ## 091：老手的「全部解锁」开关。返回现在开没开
@@ -1033,6 +1054,26 @@ func facility_open(facility: StringName) -> bool:
 	if meta == null or profile == SliceProfile.SLICE or not tutorials_done() or not meta.commissions.gated:
 		return true
 	return meta.commissions.grants.has(String(facility))
+
+
+## 377：这份存档有没有信仰（万神院到了营地；试玩切片没有）。测试直接建、没走过迁移的老式局外照旧有
+func faith_open() -> bool:
+	if meta == null or profile == SliceProfile.SLICE:
+		return false
+	return Pantheon.arrived(meta) or (not meta.commissions.gated and meta.flag(Pantheon.MIGRATED) == 0)
+
+
+## 377：万神院在不在营地（后勤里那一页列不列）
+func pantheon_listed() -> bool:
+	return profile != SliceProfile.SLICE and Pantheon.arrived(meta)
+
+
+## 377：在万神院选下一局奉谁（空 = 以人为本）。返回选没选上（选上就存）
+func choose_god(faith_id: StringName) -> bool:
+	if not pantheon_listed() or not Pantheon.choose(meta, faith_id):
+		return false
+	save_meta()
+	return true
 
 
 ## 342 B3：刚结算的这一局算不算「有实际探索的正式出征」：委托簿露着、不是教程章、真走出了起点
@@ -1512,6 +1553,20 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	var kit: Array[StringName] = []
 	if loadout != null:
 		kit = loadout.items.duplicate()
+	# 377：这一局的信仰 —— 教程章照旧；万神院没来没有信仰；来了按万神院里选的神，信物出征时自动进背包
+	var access := Pantheon.full_access()
+	if not tutorial_chapters().has(chapter):
+		if not faith_open():
+			access = {"enabled": false, "bless": false, "xp_bonus": 0.0}
+			faith = &""
+		elif Pantheon.arrived(meta):
+			access = Pantheon.access(meta)
+			faith = Pantheon.choice(meta)
+			var charm := Pantheon.charm_of(items, faith)
+			if charm != null:
+				kit.append(charm.id)
+			else:
+				faith = &""
 	var taken: Array[ItemInstance] = []
 	for uid in from_warehouse:
 		var inst := meta.warehouse.get_item(uid)
@@ -1529,7 +1584,8 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	var inputs := {SafeModule.ID: {"size": safe_size()}, CountdownModule.ID: {"carry_value": value},
 		BeltModule.ID: {"grants": meta.belt_grants.duplicate() if meta != null else {}},     # 160 补一：科技发的随身技能
 		CommissionModule.ID: {"tracked": commission_snapshot(chapter)},     # 336：接着的委托带进局
-		MealModule.ID: {"meal": meal_snapshot(chapter), "warn_at": Canteen.load_rules().warn_at}}     # 355：这一局吃的那一锅
+		MealModule.ID: {"meal": meal_snapshot(chapter), "warn_at": Canteen.load_rules().warn_at},     # 355：这一局吃的那一锅
+		RunState.FAITH_INPUT: access}     # 377：信仰开关
 	# 2026-10-22（作者定）：这一局带多少现金进来 —— 由开局屏选，从仓库账上扣，死在局内就没了。
 	# 夹在 0 和仓库余额之间：界面本来就按余额封顶，这里是兜底（存档改过、并发调用都不至于扣成负数）
 	# 285：收费预设出发这一刻付钱（钱不够开不了，界面本来就灰着出发键，这里兜底）；带入现金在付完之后的余额里封顶
@@ -1574,7 +1630,10 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	_adopt(state)
 	if bias_allowed(chapter, bias) and not tutorial_chapters().has(chapter):
 		state.set_material_bias(bias)     # 342 B3：材料倾向（没开、这一章不能选的当无倾向）
-	state.choose_starting_faith(faith)     # 信仰重构 A：开局屏显式选的神（没选 = 不奉神；不按载入顺序猜）
+	state.choose_starting_faith(faith)     # 信仰重构 A：开局屏显式选的神（没选 = 不奉神；不按载入顺序猜）；377：万神院里选的
+	if state.selected_faith != &"" and Pantheon.arrived(meta):
+		Pantheon.note_worship(meta, state.selected_faith)
+		save_meta()
 	JimiePath.plant(state)     # 281：局外状态接上了才看得见仓库里有没有那颗元素之核
 	_issue_commission_items(state)     # 336：任务信这类发进背包
 	_grant_keepsakes(chapter)
@@ -1911,6 +1970,7 @@ func _settle_run() -> void:
 		_settled = true
 		last_tutorial_reward = {}
 		last_commissions = {}
+		last_arrived = []
 		# 2026-10-22（作者定）：行囊给的「战败保住几成钱」由 absorb 在战败分支里兑现
 		# 319：见识按总分阶梯发（试玩切片不发）；这一局结算过（重复结算）absorb 什么也不动
 		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0)     # 统一教程 D2：切片也按阶梯发见识
@@ -1920,7 +1980,9 @@ func _settle_run() -> void:
 			return
 		_merge_commissions()     # 336：委托进度和这一局同一次结算
 		if formal_run():
-			Commissions.arrive(meta.commissions, meta.runs)     # 342 B3：教程后第一次正式探索结算，后来的几方来营地
+			if result.is_extracted():
+				meta.commissions.formal_extractions += 1     # 377：万神院按成功撤离的局数来
+			last_arrived = Commissions.arrive(meta.commissions, meta.runs)     # 342 B3：教程后第一次正式探索结算，后来的几方来营地
 			if facility_open(&"nursery"):
 				Nursery.advance(meta, result.run_id)     # 342 B3：苗圃推进一格（同一局只推一次）
 		if commissions_visible():

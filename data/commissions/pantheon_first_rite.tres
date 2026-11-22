@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_lmbtd"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_2ykxt"]
+
+[sub_resource type="Resource" id="Resource_f0lxw"]
+script = ExtResource("2_2ykxt")
+goal = &"faith_levels"
+count = 3
+where = &"carry"
+text = "在万神院选一位神出征，奉着祂升三级并撤离"
+texts = {
+"en": "Choose a god at the Senatus, gain three levels while following that god, and extract"
+}
+
+[resource]
+script = ExtResource("1_lmbtd")
+id = &"pantheon_first_rite"
+display_name = "初次奉神"
+display_names = {
+"en": "The First Rite"
+}
+faction = &"pantheon"
+reputation = 10
+stages = Array[ExtResource("2_2ykxt")]([SubResource("Resource_f0lxw")])
+client = "万神院的老祭司"
+clients = {
+"en": "Elder priest of the Senatus"
+}

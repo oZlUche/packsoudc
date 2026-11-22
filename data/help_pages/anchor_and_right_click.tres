@@ -15,7 +15,7 @@ text = "信物是带着某位神印记的那类道具，护符就是；赐福版
 
 改信不花钱：右键棋盘上的信物，点说明窗下的「奉为主信仰」；已经奉了这位神，同一个键就是「不再奉神」。拿起放下、整理、交易、合成都不会改信；事件当中、商店结账之前不能改信。改信本身不给经验值；经验值是这一局一池，换了神照样算数。"
 texts = {
-"en": "An Anchor is an item that carries a god's mark; Charms are Anchors. Blessed weapons and armor carry a mark but are not Anchors. You choose which god you follow, and other gods' Faith items go dormant: in battle they don't act and neither give nor receive adjacency bonuses, but they still take up their cells. Following no god makes you Faithless.
+"en": "An Anchor is an item that carries a god's mark; Charms are Anchors. Blessed weapons and armor carry a mark but are not Anchors. You choose which god you follow, and other gods' Faith items go dormant: in battle they don't act and neither give nor receive adjacency bonuses, but they still take up their cells. Following no god makes you the Faithless.
 
 Changing Faith costs nothing: right-click an Anchor on the board and press Make main faith under its tooltip; if you already follow that god, the same button reads Renounce faith. Picking items up and putting them down, tidying, trading and crafting never change your Faith, and you can't change it in the middle of an event or before a Shop deal is settled. Changing Faith itself earns no XP; XP is one pool for the whole run and still counts after you switch."
 }
