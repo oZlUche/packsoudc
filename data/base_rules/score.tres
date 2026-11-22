@@ -18,7 +18,7 @@ explore = {
 "visited": 2
 }
 difficulty_step = 0.25
-difficulty_mults = Array[float]([1.0, 1.05, 1.15, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.8])
+difficulty_mults = Array[float]([1.0, 1.05, 1.15, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.8, 1.9])
 per_level = 30
 version = 2
 insight_ladder = Array[int]([1000, 2000, 5000])

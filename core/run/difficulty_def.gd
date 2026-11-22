@@ -64,6 +64,11 @@ extends Resource
 @export var intel_range: int = 0
 ## 360 A10：首领强化版 —— 敌人 id → {"title": 名牌上的名字, "titles": {"en": ...}, "item": 多带的独有道具 id}（[method DifficultyMap.upgrade_bosses]）
 @export var boss_upgrades: Dictionary = {}
+## 360 A12（作者难度表「守卫核心」）：每局在绕得开的支路上挑一名精英当守卫，守卫活着首领就带增援（[method DifficultyMap.place_guard]）。
+## 带哪件联动道具：`pools` 按敌人池 id 给（机关池、标准废墟），属性兽当守卫时改用 `beast`。
+## 增援是哪份一局的 buff（`run_buffs`，它的战斗规则并到首领身上）：`reinforce` 按联动道具 id 给；值是字典时再按那只兽的属性挑。
+## 空 = 不设守卫
+@export var guard_core: Dictionary = {}
 ## 320 A1：普通敌人（猎手以外，精英、核心也算）最大生命多几成（百分数，10 = ×1.10）—— 绝对值，不随档位连乘；0 = 不改。
 ## 有档案的章（切片、教程）不吃。写成百分数是为了说明文本能写 {enemy_hp_percent}
 @export var enemy_hp_percent: int = 0

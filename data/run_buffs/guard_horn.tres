@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_clde0"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_j6qmu"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_7iuq5"]
+[ext_resource type="Script" path="res://core/battle/cadences/always.gd" id="4_ou7t2"]
+[ext_resource type="Script" path="res://core/battle/cost.gd" id="5_w7c6s"]
+[ext_resource type="Script" path="res://core/battle/costs/uses_cost.gd" id="6_8cosq"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="7_jyno1"]
+[ext_resource type="Script" path="res://core/battle/effects/change_resource.gd" id="8_7rbbi"]
+[ext_resource type="Script" path="res://core/battle/triggers/on_resource_below.gd" id="9_n3mae"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="10_iteai"]
+
+[sub_resource type="Resource" id="Resource_6wj3t"]
+script = ExtResource("4_ou7t2")
+metadata/part_ref = &"always"
+
+[sub_resource type="Resource" id="Resource_cx5iq"]
+script = ExtResource("6_8cosq")
+
+[sub_resource type="Resource" id="Resource_ismbh"]
+script = ExtResource("8_7rbbi")
+amount = 60.0
+
+[sub_resource type="Resource" id="Resource_lrlav"]
+script = ExtResource("9_n3mae")
+percent = 50
+
+[sub_resource type="Resource" id="Resource_y53po"]
+script = ExtResource("3_7iuq5")
+trigger = SubResource("Resource_lrlav")
+cadence = SubResource("Resource_6wj3t")
+costs = Array[ExtResource("5_w7c6s")]([SubResource("Resource_cx5iq")])
+effects = Array[ExtResource("7_jyno1")]([SubResource("Resource_ismbh")])
+
+[resource]
+script = ExtResource("10_iteai")
+id = &"guard_horn"
+display_name = "守卫增援：求援号角"
+display_names = {
+"en": "Guard Reinforcement: Rally Horn"
+}
+tags = Array[StringName]([&"guard_reinforce"])
+rules = Array[ExtResource("3_7iuq5")]([SubResource("Resource_y53po")])

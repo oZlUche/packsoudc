@@ -215,6 +215,8 @@ static func start(
 		if p_chapter.profile == &"":
 			DifficultyMap.upgrade_bosses(s.map, p_difficulty, p_items)     # 360 A10：首领强化版
 		s.advanced_report = s.place_advanced(p_difficulty)     # 320 A4：在事件、宝箱之前，换的点只有敌人内容
+		if p_chapter.profile == &"":
+			DifficultyMap.place_guard(s.map, p_difficulty, s.pool, p_enemies, p_items, p_seed)     # 360 A12：守卫核心
 	EnemyPlacer.arrange_map(s.map, p_items)     # 165：预设图里没写位置的敌人道具（与相邻组）在这里摆一次、记进内容
 	if not (p_difficulty != null and p_difficulty.no_paid_extract and p_chapter.profile == &""):
 		PaidExtracts.mark(s.map, s.economy)     # 360 A5：不设付费撤离点
