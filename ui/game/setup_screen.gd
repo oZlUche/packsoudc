@@ -167,7 +167,7 @@ const PantheonPanelScript := preload("res://ui/game/pantheon_panel.gd")
 const HEAD_PORTRAIT := 48
 ## 342 B3：这一局的材料倾向（[MaterialBias]），每次进开局屏都是无倾向
 var bias_id: StringName = &""
-var _bias_box: GridContainer = null
+var _bias_box: VBoxContainer = null
 var _bias_btns: Dictionary = {}
 ## 355 第二批：第四页「这一锅」那一块与收藏菜单的按钮
 var _meal_box: VBoxContainer = null
@@ -1031,10 +1031,7 @@ func _build_bias_block(parent: Container) -> void:
 	bias_col.name = "BiasBlock"
 	parent.add_child(bias_col)
 	bias_col.add_child(_label(UiText.t("bias.title"), 18, UiPalette.FG))
-	_bias_box = GridContainer.new()     # 两列小签（同规模那一档的皮），六个方向三行，不顶出纸
-	_bias_box.columns = 2
-	_bias_box.add_theme_constant_override("h_separation", 6)
-	_bias_box.add_theme_constant_override("v_separation", 4)
+	_bias_box = _vbox(4)     # 两列小签（同规模那一档的皮），六个方向三行，不顶出纸
 	bias_col.add_child(_bias_box)
 
 
@@ -1062,7 +1059,9 @@ func _sync_bias() -> void:
 			b.tooltip_text = UiText.t("bias.why_" + String(o["why"]))
 		b.set_pressed_no_signal(dir == bias_id)
 		_bias_btns[dir] = b
-		_bias_box.add_child(b)
+		if _bias_box.get_child_count() == 0 or (_bias_box.get_child(-1) as HBoxContainer).get_child_count() >= 2:
+			_bias_box.add_child(_hbox(6))
+		(_bias_box.get_child(-1) as HBoxContainer).add_child(b)
 
 
 ## 选一个方向（这一章不能选的不认）。返回选上没有

@@ -2,7 +2,7 @@
 ## 点一下展开下面的详细内容（可以查看、编辑、切换），再点一下收起。头上的大致信息由调用方摆进 [member summary]。
 ## 占位排版，等 UI设计 的样张（「只有角色一条」「三条都折叠」「展开其中一条」）。
 class_name FoldBar
-extends VBoxContainer
+extends MarginContainer
 
 signal toggled(open: bool)
 
@@ -24,14 +24,15 @@ var _arrow: Chevron = null
 func setup(p_id: StringName, p_body: Control) -> FoldBar:
 	id = p_id
 	name = "Bar_" + String(p_id)
-	add_theme_constant_override("separation", BODY_GAP)
+	var col := UiTheme.vbox(BODY_GAP)
+	add_child(col)
 	head = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_HOME_PLAQUE_SMALL, 18, 8, 18, 8)
 	head.name = "Head"
 	head.custom_minimum_size.y = HEAD_H
 	head.mouse_filter = Control.MOUSE_FILTER_STOP
 	head.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	head.gui_input.connect(_on_head_input)
-	add_child(head)
+	col.add_child(head)
 	var row := UiTheme.hbox(14)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	head.add_child(row)
@@ -47,7 +48,7 @@ func setup(p_id: StringName, p_body: Control) -> FoldBar:
 	row.add_child(_arrow)
 	body = p_body
 	body.visible = false
-	add_child(body)
+	col.add_child(body)
 	return self
 
 

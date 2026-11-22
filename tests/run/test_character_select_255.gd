@@ -267,6 +267,7 @@ static func frame_select_screen(t: TestCase, root: Window) -> void:
 			flow.meta.grant_unlock(gch.grants_unlock)
 	flow.new_run()
 	var setup = game.base()
+	setup.open_bar(setup.BAR_CHARACTER)     # 383：角色那条默认折叠，点开才是三栏
 	_lay_out(game)
 	var rects: Array = []
 	var widths := {}

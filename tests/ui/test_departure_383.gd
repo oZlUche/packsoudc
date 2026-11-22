@@ -16,6 +16,7 @@ static func _game(root: Window):
 	root.add_child(game)
 	var flow: GameFlow = game.flow
 	Support.pass_tutorials(flow)
+	flow.meta.coach_seen.append("god_pick")     # 第一次选神的翻书和教练层另有用例（test_pantheon_377）
 	for gch in flow.chapters:
 		if gch.grants_unlock != &"":
 			flow.meta.grant_unlock(gch.grants_unlock)
