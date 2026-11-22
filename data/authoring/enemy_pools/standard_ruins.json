@@ -201,6 +201,16 @@
       "node_types": [
         "elite"
       ]
+    },
+    {
+      "enemy": "executioner",
+      "kinds": [
+        "core_ring",
+        "inner"
+      ],
+      "node_types": [
+        "elite"
+      ]
     }
   ],
   "tiers": [

@@ -9,10 +9,11 @@
     "lightning"
   ],
   "base_stats": {
-    "max_hp": 85,
-    "regen_stamina": 8
+    "max_hp": 110,
+    "regen_stamina": 12
   },
   "signature": [
+    "thunder_plume",
     "thunder_plume",
     "thunder_plume",
     "thunder_plume",
