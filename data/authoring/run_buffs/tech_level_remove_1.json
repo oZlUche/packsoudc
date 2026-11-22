@@ -4,7 +4,7 @@
   "display_names": {
     "en": "Cull (Tech)"
   },
-  "description": "升级选牌可删除 {level_removals_times} 次",
+  "description": "升级选牌可剔牌 {level_removals_times} 次",
   "scope": "META",
   "effects": [
     {

@@ -17,6 +17,6 @@ display_name = "剔牌（科技）"
 display_names = {
 "en": "Cull (Tech)"
 }
-description = "升级选牌可删除 {level_removals_times} 次"
+description = "升级选牌可剔牌 {level_removals_times} 次"
 scope = 0
 effects = Array[ExtResource("1_ksfi8")]([SubResource("Resource_3yeyc")])
