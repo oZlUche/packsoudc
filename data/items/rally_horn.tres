@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_qwlq5"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_pcfxa"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_01mjp"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_gvx3r"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_fxf7t"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_amv4c"]
+
+[sub_resource type="Resource" id="Resource_prwi1"]
+script = ExtResource("6_amv4c")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[resource]
+script = ExtResource("5_fxf7t")
+id = &"rally_horn"
+display_name = "求援号角"
+display_names = {
+"en": "Rally Horn"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_prwi1")
+rarity = 3
+tags = Array[StringName]([&"valuable", &"nature", &"treasure", &"no_random_source"])
+material = "bone"

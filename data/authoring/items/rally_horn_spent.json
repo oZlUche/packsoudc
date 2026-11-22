@@ -1,0 +1,22 @@
+{
+  "id": "rally_horn_spent",
+  "display_name": "求援号角（失效）",
+  "display_names": {
+    "en": "Rally Horn (Spent)"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "valuable",
+    "nature",
+    "treasure",
+    "no_random_source"
+  ],
+  "material": "bone"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "rally_horn",
+  "display_name": "求援号角",
+  "display_names": {
+    "en": "Rally Horn"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "valuable",
+    "nature",
+    "treasure",
+    "no_random_source"
+  ],
+  "material": "bone"
+}
