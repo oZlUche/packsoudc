@@ -7,10 +7,10 @@
 class_name RingLayoutBase
 extends MapLayout
 
-const MARGIN := 60.0
+const MARGIN := 80.0
 ## 相邻两层之间隔多远（像素）。**固定的**：不管几环，环与环之间就是这么宽 ——
 ## 六环的图画布就比四环大一圈，而不是六环挤在四环的地方
-const RING_STEP := 110.0
+const RING_STEP := 145.0
 ## 切向弧每多少弧度采一个点
 const ARC_STEP := 0.05
 
