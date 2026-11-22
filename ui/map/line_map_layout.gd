@@ -4,10 +4,10 @@
 class_name LineMapLayout
 extends MapLayout
 
-const STEP := 150.0
-const ROW_STEP := 130.0
-const MARGIN := 90.0
-const HEIGHT := 360.0
+const STEP := 195.0
+const ROW_STEP := 170.0
+const MARGIN := 115.0
+const HEIGHT := 470.0
 
 
 func canvas_size(graph: MapGraph) -> Vector2:
