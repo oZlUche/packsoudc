@@ -23,6 +23,10 @@
 ## **预设装备**（096，作者定）：角色之下一栏「预设装备」—— 不带 / 强攻（伤害高）/ 坚守（防御高）……（`LoadoutDef.preset`，数据里加一份就多一套）。
 ## 挑一套就把它的道具免费放进初始包：不从仓库拿、不算带入预算与件数上限、拖不进仓库 / 地上（只能在棋盘上挪），出发时带着走。
 ## 预设是底线（094）：仓库空也有一套能打的
+##
+## **383（作者 2026-11-22 23:49 定）**：还是三屏、顺序照旧 —— 一 出征准备（选人、吃饭、选神三条折叠横条 [FoldBar]，进来都折叠、
+## 沿用上一局的选择，同一时间只展开一条）→ 二 配道具（多了科技每局发的随身技能，原在基地军需牌上）→ 三 地图、难度、材料倾向
+##（材料倾向从原第四页「本次准备」挪来，仍跟着选中的地图变）。原第四页取消；科技的局外加成并进角色卡的数字，悬停看来源
 extends GameScreen
 
 ## 地上容器的 id（局外的 100 / 101 之外）
@@ -142,13 +146,28 @@ var _enter_btn: Button
 var _back_btn: Button
 ## 161：三页（0 选角色、1 配道具、2 选地图与难度）与现在是哪页
 ## 221 F1：每页的标题（UiText 键，用时按当前语言取）
-const PAGE_TITLES: Array[String] = ["setup.page_1", "setup.page_2", "setup.page_3", "setup.page_4"]
+const PAGE_TITLES: Array[String] = ["setup.page_1", "setup.page_2", "setup.page_3"]
 const PAGE_MAP := 2
-## 342 B3：第四页「本次准备」（材料倾向）—— 什么准备项都没开时整页跳过，第三页就是最后一页（[method last_page]）
-const PAGE_PREP := 3
+## 383：上回选的材料倾向（[constant MaterialBias.ORDER] 里第几个 + 1；0 = 没记）
+const FLAG_LAST_BIAS := &"last_bias"
+## 383：第一屏的三条折叠横条（id → [FoldBar]）与它们所在的那一列
+const BAR_CHARACTER := &"character"
+const BAR_MEAL := &"meal"
+const BAR_FAITH := &"faith"
+const BAR_GAP := 10
+var _bars: Dictionary = {}
+var _bar_col: VBoxContainer = null
+## 角色那条展开后的三栏（原第一页）
+var _char_row: HBoxContainer = null
+var _faith_box: VBoxContainer = null
+var _faith_panel = null
+## 配道具页棋盘板里那一行随身技能
+var _belt_row: HBoxContainer = null
+const PantheonPanelScript := preload("res://ui/game/pantheon_panel.gd")
+const HEAD_PORTRAIT := 48
 ## 342 B3：这一局的材料倾向（[MaterialBias]），每次进开局屏都是无倾向
 var bias_id: StringName = &""
-var _bias_box: VBoxContainer = null
+var _bias_box: GridContainer = null
 var _bias_btns: Dictionary = {}
 ## 355 第二批：第四页「这一锅」那一块与收藏菜单的按钮
 var _meal_box: VBoxContainer = null
@@ -222,6 +241,8 @@ const RACK_COLUMNS := 9
 const CARD_H := 760     # 选人页 B：铭牌并进属性、那排蜡板删了
 ## 255 补充一：右栏（棋盘预览）定高 —— 六行棋盘、题字、图例、首次赠包签都在时那么高（七行以上的棋盘才再长）；258：按大档字号算（原 560）
 const PREVIEW_H := 576
+## 383：棋盘预览缩格子最小到几
+const PREVIEW_MIN_CELL := 36.0
 ## 255：角色卡里的几样尺寸 —— 小牌间 10；小牌 ≤ 180 宽；条目行间 8
 const STAT_GAP := 10
 const TILE_MAX_W := 180.0
@@ -236,7 +257,7 @@ const STAT_SEALS: Array[String] = ["seal_hp", "seal_vigor", "seal_stamina", "sea
 ## 255：没解锁的角色在左栏压到 60%
 const LOCKED_ALPHA := 0.6
 ## 三页各自的整屏画（作者 2026-10-17）：选角色 = 选人场地，带装备 = 木板拼接 / 仓库，选地图 = 桌上的军用地图
-const PAGE_ART: Array[String] = [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG, UiTheme.ART_SETUP_MAP_BG]
+const PAGE_ART: Array[String] = [UiTheme.ART_SETUP_BG, UiTheme.ART_SETUP_KIT_BG, UiTheme.ART_SETUP_MAP_BG]
 
 
 func open(_payload: Dictionary) -> void:
@@ -261,13 +282,14 @@ func open(_payload: Dictionary) -> void:
 	col.add_child(title_row)
 	_chapters = map_chapters()
 	_pages.clear()
-	for build in [_build_character_page, _build_kit_page, _build_map_page, _build_prep_page]:
+	for build in [_build_character_page, _build_kit_page, _build_map_page]:
 		var page_: Control = build.call()
 		page_.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if page_ is PanelContainer else Control.SIZE_EXPAND_FILL     # 179：凹槽板按内容高，不压到右下角的按钮
 		col.add_child(page_)
 		_pages.append(page_)
 	_build_nav()
 	_restore_last()
+	_sync_bars()
 	show_page(0)
 
 
@@ -299,7 +321,7 @@ static func _hall_board(inset: int) -> PanelContainer:
 
 ## 161 第一页：角色列表 | 角色卡 | 棋盘预览（只看不拖）。
 ## 179：三栏各坐一块凹槽板、间距 36；中栏撑满左右两栏之间，右栏（棋盘）贴右边
-func _build_character_page() -> Control:
+func _build_char_row() -> HBoxContainer:
 	var row := _hbox(COL_GAP)
 	_grooves.clear()
 	var left_board := _hall_board(HALL_INSET)     # 选人页 B（作者 10-31 11:56）：三栏都是基地木框羊皮纸，不再垫皮
@@ -327,6 +349,39 @@ func _build_character_page() -> Control:
 	right_board.add_child(_preview_host)
 	_grooves.append_array([left_board, mid_board, right_board])
 	return row
+
+
+## 383 第一屏：三条折叠横条 —— 角色（总有）、食物（食堂开了才有）、信仰（万神院到了才有）；进来都折叠，同一时间只展开一条
+func _build_character_page() -> Control:
+	_bar_col = _vbox(BAR_GAP)
+	_bar_col.name = "Bars"
+	_bars.clear()
+	_char_row = _build_char_row()
+	_add_bar(BAR_CHARACTER, _char_row)
+	_meal_box = _vbox(6)     # 355 第二批：这一锅（原第四页）
+	_meal_box.name = "MealBlock"
+	_add_bar(BAR_MEAL, _bar_paper(_meal_box))
+	_faith_box = _vbox(10)
+	_faith_box.name = "FaithBlock"
+	_add_bar(BAR_FAITH, _faith_box)
+	return _bar_col
+
+
+func _add_bar(id: StringName, body: Control) -> FoldBar:
+	var bar := FoldBar.new().setup(id, body)
+	bar.toggled.connect(func(on: bool): _on_bar_toggled(id, on))
+	_bar_col.add_child(bar)
+	_bars[id] = bar
+	return bar
+
+
+## 展开内容垫一张羊皮纸（浅底墨字），按内容宽
+func _bar_paper(inner: Control) -> Control:
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 28, 18, 28, 18)
+	UiTheme.set_tone(paper, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
+	paper.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	paper.add_child(inner)
+	return paper
 
 
 
@@ -362,6 +417,13 @@ func _build_kit_page() -> Control:
 	_rack_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_rack_view = BagRackView.view_in(_rack_box)
 	left.add_child(_rack_box)
+	_belt_row = _hbox(12)     # 383：科技每局发的随身技能（原在基地军需牌上），棋盘与包架下面一行；没有就不出
+	_belt_row.name = "BeltGrants"
+	_belt_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	for pair in BeltGrantSlot.grants_of(flow.meta):
+		_belt_row.add_child(BeltGrantSlot.new(BeltSkillDef.find(pair[0]), int(pair[1])))
+	_belt_row.visible = _belt_row.get_child_count() > 0
+	left.add_child(_belt_row)
 
 	# 作者 10-31「仓库的界面背景不该是纯黑色的，应该和基地里的仓库一样」：不再垫铁角黑框，格子套基地那副木架（PANEL_SHELF）、棕底；
 	# 「右边的仓库棋盘应该右对齐」：整块贴页面右边
@@ -631,6 +693,7 @@ func _build_map_page() -> Control:
 	left_board.add_child(left)
 	_map_list = _vbox(6)     # 226 批二：小标题「地图」与缺数据那句删了
 	left.add_child(_map_list)
+	_build_bias_block(left)     # 383：材料倾向从原第四页挪来，仍跟着选中的地图变
 
 	_preview = MapPreview.new()
 	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -670,36 +733,165 @@ func _build_map_page() -> Control:
 	return row
 
 
-#region 342 B3：第四页「本次准备」
-## 有没有第四页：材料倾向开了（办成地图协会的《把路画回来》），或者食堂开了（355：这一锅写在这页）
-func prep_open() -> bool:
-	return flow.bias_open() or flow.canteen_open()
-
-
-## 最后一页：有第四页就是它，否则第三页
+#region 383：第一屏三条折叠横条；第三屏的材料倾向
+## 最后一页（383 起固定三页：第三页）
 func last_page() -> int:
-	return PAGE_PREP if prep_open() else PAGE_MAP
+	return PAGE_MAP
 
 
-## 占位排版（样张请 UI设计 出）：一张羊皮纸，一列方向；这一章不能选的压灰，悬浮窗写原因
-func _build_prep_page() -> Control:
-	var center := CenterContainer.new()
-	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 36, 24, 36, 24)
-	UiTheme.set_tone(paper, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
-	center.add_child(paper)
-	var col := _vbox(10)
-	col.custom_minimum_size.x = 360
-	paper.add_child(col)
-	var bias_col := _vbox(10)
-	bias_col.name = "BiasBlock"
-	col.add_child(bias_col)
-	bias_col.add_child(_label(UiText.t("bias.title"), 22, UiPalette.FG))
-	_bias_box = _vbox(6)
-	bias_col.add_child(_bias_box)
-	_meal_box = _vbox(6)     # 355 第二批：这一锅
-	_meal_box.name = "MealBlock"
-	col.add_child(_meal_box)
-	return center
+## 第一屏有哪几条：角色总有；食堂开了有食物；万神院到了有信仰
+func bar_shown(id: StringName) -> bool:
+	match id:
+		BAR_MEAL:
+			return flow.canteen_open()
+		BAR_FAITH:
+			return flow.pantheon_listed()
+	return true
+
+
+func bar(id: StringName) -> FoldBar:
+	return _bars.get(id, null) as FoldBar
+
+
+## 点开 / 收起一条（测试与教练层用；同点木牌头）
+func open_bar(id: StringName, on: bool = true) -> bool:
+	var b := bar(id)
+	if b == null or not b.visible:
+		return false
+	b.set_open(on)
+	return true
+
+
+## 同一时间只展开一条（初值）：点开一条，别的收起
+func _on_bar_toggled(id: StringName, on: bool) -> void:
+	if on:
+		for k in _bars:
+			if k != id:
+				(_bars[k] as FoldBar).set_open(false)
+	match id:
+		BAR_MEAL:
+			if on:
+				_sync_meal()
+		BAR_FAITH:
+			if on:
+				_sync_faith()
+
+
+## 三条的显隐与头上的大致信息
+func _sync_bars() -> void:
+	for id in _bars:
+		var b := _bars[id] as FoldBar
+		b.visible = bar_shown(id)
+		if not b.visible:
+			b.set_open(false)
+	_sync_bar_heads()
+
+
+func _sync_bar_heads() -> void:
+	if _bars.is_empty():
+		return
+	_fill_character_head()
+	if bar(BAR_MEAL).visible:
+		_fill_meal_head()
+		if bar(BAR_MEAL).open:
+			_sync_meal()
+	if bar(BAR_FAITH).visible:
+		_fill_faith_head()
+
+
+func _clear_head(id: StringName) -> HBoxContainer:
+	var s := bar(id).summary
+	UiTheme.clear_children(s)
+	return s
+
+
+## 角色那条：头像 + 角色名
+func _fill_character_head() -> void:
+	var s := _clear_head(BAR_CHARACTER)
+	var ch := character()
+	if ch == null:
+		return
+	s.add_child(PortraitSlot.new(HEAD_PORTRAIT, Nameplate.character_face(ch.id)))
+	var n := UiTheme.make_label(Names.of(ch), 22, UiTheme.INK)
+	n.name = "HeadText"
+	n.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	s.add_child(n)
+
+
+## 食物那条：这一锅的效果（锅空就写空锅）
+func _fill_meal_head() -> void:
+	var s := _clear_head(BAR_MEAL)
+	var t := UiTheme.make_label(meal_head_text(), 18, UiTheme.INK)
+	t.name = "HeadText"
+	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	s.add_child(t)
+
+
+## 食物那条头上写的那一行（测试看）
+func meal_head_text() -> String:
+	var meal := flow.canteen_meal()
+	if int(meal.get("count", 0)) == 0:
+		return UiText.t("canteen.menu_empty_pot")
+	var parts: Array[String] = []
+	for stat in Canteen.STATS:
+		var t := Canteen.line_of(meal, stat)
+		if t != "":
+			parts.append(t)
+	var miss := flow.meta.canteen.gaps().size()
+	var out := UiText.t("setup.list_sep").join(parts)
+	return out + ("  " + UiText.t("canteen.gaps") % miss if miss > 0 else "")
+
+
+## 信仰那条：所奉的神的徽记和名字，或【无信者】
+func _fill_faith_head() -> void:
+	var s := _clear_head(BAR_FAITH)
+	var fid := Pantheon.choice(flow.meta)
+	var pic := TextureRect.new()
+	pic.texture = UiTheme.art_cached("faith/%s" % fid) if fid != &"" else null
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.custom_minimum_size = Vector2.ONE * HEAD_PORTRAIT
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pic.visible = pic.texture != null
+	s.add_child(pic)
+	var t := UiTheme.make_label(faith_head_text(), 22, UiTheme.INK)
+	t.name = "HeadText"
+	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	s.add_child(t)
+
+
+func faith_head_text() -> String:
+	var fid := Pantheon.choice(flow.meta)
+	if fid == &"":
+		return UiText.t("pantheon.humanist")
+	var def := flow.faith_defs.get(fid, null) as FaithDef
+	return Names.of(def) if def != null else String(fid)
+
+
+## 信仰那条展开：万神院的神龛一排（无信者在前，没解锁的「？？？？」），点一位就是这一局奉祂
+func _sync_faith() -> void:
+	if _faith_box == null:
+		return
+	if _faith_panel == null:
+		_faith_panel = PantheonPanelScript.new()
+		_faith_panel.setup(flow, PantheonPanelScript.PICK)
+		_faith_panel.picked.connect(func(_fid: StringName): _sync_bar_heads())
+		_faith_box.add_child(_faith_panel)
+	else:
+		_faith_panel.refresh()
+
+
+## 选这一局奉谁（空 = 无信者）；万神院没到不认
+func choose_god(fid: StringName) -> bool:
+	if _faith_panel == null:
+		_sync_faith()
+	return _faith_panel.choose(fid)
+
+
+func faith_panel():
+	return _faith_panel
 
 
 ## 355 第二批：「这一锅」—— 名字（缺几样）、效果汇总（按选着的角色算终值）、饱腹度，下面一排收藏可以换。
@@ -707,19 +899,17 @@ func _build_prep_page() -> Control:
 func _sync_meal() -> void:
 	if _meal_box == null:
 		return
-	_bias_box.get_parent().visible = flow.bias_open()
-	_meal_box.visible = flow.canteen_open()
 	for c in _meal_box.get_children():
 		_meal_box.remove_child(c)
 		c.queue_free()
-	if not _meal_box.visible:
+	_meal_btns.clear()
+	if not flow.canteen_open():
 		return
 	var cn := flow.meta.canteen
 	var meal := flow.canteen_meal()
-	_meal_box.add_child(_label(UiText.t("canteen.prep_title"), 22, UiPalette.FG))
 	var n := cn.menu_name()
 	var miss := cn.gaps().size()
-	var head := _label((n if n != "" else UiText.t("canteen.unnamed")) + ("  " + UiText.t("canteen.gaps") % miss if miss > 0 else ""), 18, UiPalette.FG)
+	var head := _label((n if n != "" else UiText.t("canteen.unnamed")) + ("  " + UiText.t("canteen.gaps") % miss if miss > 0 else ""), 20, UiPalette.FG)
 	head.name = "PotName"
 	_meal_box.add_child(head)
 	if int(meal.get("count", 0)) == 0:
@@ -738,23 +928,25 @@ func _sync_meal() -> void:
 		sat.tooltip_text = UiText.t("canteen.satiety_tip")
 		sat.mouse_filter = Control.MOUSE_FILTER_PASS
 		_meal_box.add_child(sat)
-	_meal_btns.clear()
+	var menus := _hbox(8)
+	menus.name = "Menus"
+	_meal_box.add_child(menus)
 	for k in cn.menus.size():
 		var idx := k
 		var b := _button(String(cn.menus[k].get("name", "")), func(): choose_menu(idx), 16)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, MAP_SUB_H)
 		b.toggle_mode = true
 		b.tooltip_text = UiText.t("canteen.menu_load_tip")
 		b.set_pressed_no_signal(k == cn.active)
 		_meal_btns.append(b)
-		_meal_box.add_child(b)
+		menus.add_child(b)
 
 
 ## 换一份收藏：照它从食材仓库重做这一锅。返回缺料的那几格
 func choose_menu(i: int) -> Array[Dictionary]:
 	var gaps := flow.canteen_load_menu(i)
 	_sync_meal()
+	_fill_meal_head()
 	return gaps
 
 
@@ -762,10 +954,24 @@ func meal_buttons() -> Array[Button]:
 	return _meal_btns
 
 
+## 第三屏左栏地图列表下面的「材料倾向」（办成地图协会的《把路画回来》才有）
+func _build_bias_block(parent: Container) -> void:
+	var bias_col := _vbox(8)
+	bias_col.name = "BiasBlock"
+	parent.add_child(bias_col)
+	bias_col.add_child(_label(UiText.t("bias.title"), 18, UiPalette.FG))
+	_bias_box = GridContainer.new()     # 两列小签（同规模那一档的皮），六个方向三行，不顶出纸
+	_bias_box.columns = 2
+	_bias_box.add_theme_constant_override("h_separation", 6)
+	_bias_box.add_theme_constant_override("v_separation", 4)
+	bias_col.add_child(_bias_box)
+
+
 ## 按这一章重排方向键；选着的这一章不能选了就回到无倾向
 func _sync_bias() -> void:
 	if _bias_box == null:
 		return
+	_bias_box.get_parent().visible = flow.bias_open()
 	var opts := flow.bias_options(chapter())
 	if not opts.any(func(o: Dictionary) -> bool: return StringName(o["id"]) == bias_id and String(o["why"]) == ""):
 		bias_id = MaterialBias.NONE
@@ -775,9 +981,10 @@ func _sync_bias() -> void:
 	_bias_btns.clear()
 	for o in opts:
 		var dir := StringName(o["id"])
-		var b := _button(UiText.t("bias.dir_" + (String(dir) if dir != MaterialBias.NONE else "none")), func(): choose_bias(dir), 18)
+		var b := _button(UiText.t("bias.dir_" + (String(dir) if dir != MaterialBias.NONE else "none")), func(): choose_bias(dir), 14)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, MAP_SUB_H)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_skin_entry(b, UiTheme.BUTTON_MAP_SUB, MAP_SUB_H)
 		b.toggle_mode = true
 		b.disabled = String(o["why"]) != ""
 		if b.disabled:
@@ -797,13 +1004,22 @@ func choose_bias(dir: StringName) -> bool:
 	return true
 
 
-## 出发时交给这一局的方向（第四页没开 = 无倾向）
+## 出发时交给这一局的方向（倾向没开 = 无倾向）
 func chosen_bias() -> StringName:
-	return bias_id if prep_open() and flow.bias_allowed(chapter(), bias_id) else MaterialBias.NONE
+	return bias_id if flow.bias_open() and flow.bias_allowed(chapter(), bias_id) else MaterialBias.NONE
 
 
 func bias_buttons() -> Dictionary:
 	return _bias_btns
+
+
+## 配道具页的随身技能圆槽（测试看）
+func belt_slots() -> Array[BeltGrantSlot]:
+	var out: Array[BeltGrantSlot] = []
+	if _belt_row != null:
+		for c in _belt_row.get_children():
+			out.append(c as BeltGrantSlot)
+	return out
 #endregion
 
 
@@ -830,9 +1046,10 @@ func show_page(i: int) -> void:
 		close_hint()
 	for k in _pages.size():
 		_pages[k].visible = k == _page
-	if _page == PAGE_PREP:
+	if _page == PAGE_MAP:
 		_sync_bias()     # 342 B3：换过章节，方向重新校验
-		_sync_meal()     # 355：换过角色，终值重算
+	if _page == 0:
+		_sync_bar_heads()     # 383：换过角色，这一锅的终值、头上的名字跟着变
 	if _page == 1:
 		_fit_warehouse()     # 作者 10-31 木架：框的边距要等进了树、主题生效才算得出来，翻到这页再量一次
 		_preset_hint()
@@ -962,6 +1179,7 @@ func choose_chapter(i: int) -> void:
 	var keep := character()
 	_rebuild_characters()
 	_rebuild_scales()
+	_sync_bias()     # 383：材料倾向在第三屏，跟着这一章变
 	_sync_presets()     # 285：序章只列免费的
 	_hold_refresh += 1
 	_apply_supply()     # 切片 v6.14 U02：换了章节，补给跟着换
@@ -1142,7 +1360,13 @@ func _restore_last() -> void:
 	for i in _chapters.size():
 		if _chapters[i].order == want:
 			at = i
+	var last_dir := flow.meta.flag(FLAG_LAST_BIAS) - 1     # 383：上回的材料倾向（这一章不能选就回到无倾向）
+	if last_dir >= 0 and last_dir < MaterialBias.ORDER.size():
+		bias_id = MaterialBias.ORDER[last_dir]
 	choose_chapter(at)
+	var last_ch := _characters.map(func(c: CharacterDef) -> StringName: return c.id).find(flow.meta.last_character)     # 383：沿用上回的角色
+	if last_ch > 0 and lock_reason(_characters[last_ch]) == "":
+		choose_character(last_ch)
 	var level := flow.meta.flag(FLAG_LAST_DIFFICULTY)
 	var idx := 0
 	var ladder := flow.available_difficulties()
@@ -1383,6 +1607,7 @@ func choose_character(i: int) -> void:
 	_hold_refresh -= 1
 	_rebuild_card()
 	Canteen.viewer = character()     # 355：食材提示窗按选着的这位算
+	_sync_bar_heads()     # 383：角色那条头上的名字、这一锅的终值
 	_refresh()
 
 
@@ -1886,6 +2111,8 @@ func _remember_last(c: ChapterDef) -> void:
 	flow.meta.set_flag(FLAG_LAST_SCALE, at + 1)
 	var d := difficulty()
 	flow.meta.set_flag(FLAG_LAST_DIFFICULTY, d.level if d != null else 0)
+	if flow.bias_open():
+		flow.meta.set_flag(FLAG_LAST_BIAS, MaterialBias.ORDER.find(chosen_bias()) + 1)     # 383
 
 
 ## 不开了：带上的放回仓库，回基地（264 §五，作者 10-29 16:20「【返回】用于回到基地页面，而不是主菜单」；从主菜单进来的也回基地）。
@@ -2047,14 +2274,14 @@ func _rebuild_card() -> void:
 	_portrait = PortraitSlot.new(CARD_PORTRAIT, Nameplate.character_face(ch.id), true)
 	head.add_child(_portrait)
 	# 选人页 B（作者 11:29）：铭牌只写名字 + 火漆属性（「角色」与角色说明删了，那排蜡板也并进来）
-	_stat_plate = StatSealPlate.new().setup(Names.of(ch), stat_plaques(ch))
+	_stat_plate = StatSealPlate.new().setup(Names.of(ch), stat_plaques(ch, meta_context()))
 	_stat_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_stat_plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(_stat_plate)
 	# 179：图标牌；255：带入上限也并成牌，每块 ≤ 180
 	var tiles := _hbox(STAT_GAP)
 	_card.add_child(tiles)
-	var caps := cap_tiles(ch)
+	var caps := cap_tiles(ch, meta_context())
 	var tw := minf(TILE_MAX_W, floorf((inner - STAT_GAP * (caps.size() - 1)) / maxf(1.0, caps.size())))
 	for cap in caps:
 		var tile := CapTile.new().setup(cap[0], cap[1], cap[2])
@@ -2084,11 +2311,28 @@ func _rebuild_card() -> void:
 	_build_preview(ch)
 
 
+## 383：第一屏角色那条展开后三栏能有多高 —— 设计高减页边、标题、右下按钮的位置、各条木牌头与间距；放得下就照原来的 [constant CARD_H]
+func body_room() -> float:
+	var design_h := float(ProjectSettings.get_setting("display/window/size/viewport_height", 1000))
+	var title_h: float = _title.get_parent().get_combined_minimum_size().y if _title != null and _title.get_parent() != null else 0.0
+	var bars := 0
+	for id in [BAR_CHARACTER, BAR_MEAL, BAR_FAITH]:
+		if bar_shown(id):
+			bars += 1
+	return design_h - PAGE_MARGIN - NAV_ROOM - title_h - PAGE_SEP - bars * FoldBar.HEAD_H - (bars - 1) * BAR_GAP - FoldBar.BODY_GAP
+
+
+## 角色卡（中栏）定高：原来的 [constant CARD_H]，第一屏条数多了按 [method body_room] 收
+func card_h() -> float:
+	return minf(CARD_H, body_room())
+
+
 ## 258：字号放大后英文最长的卡（马库斯）顶过定高 —— 说明句、功能句、末尾小字一起一号一号缩，最小缩回小档；中文放得下不动
 func _fit_card() -> void:
 	var board_: Control = _grooves[1]
 	var shrunk := true
-	while shrunk and board_.get_minimum_size().y > CARD_H:
+	board_.custom_minimum_size.y = card_h()
+	while shrunk and board_.get_minimum_size().y > card_h():
 		shrunk = false
 		for pair in _fit_labels:
 			shrunk = TextFit.step_down(pair[0], pair[1]) or shrunk
@@ -2121,6 +2365,7 @@ func _entry_row(icon: EntryIcon, title: String, text: String, tail: String, iron
 ## 255：右栏 —— 只画形状的棋盘（缺格 + 随身之物，不画包），居中；下面题字、图例、首次赠包小签
 func _build_preview(ch: CharacterDef) -> void:
 	_grooves[2].custom_minimum_size.x = right_width()
+	_grooves[2].custom_minimum_size.y = minf(PREVIEW_H, body_room())     # 383：第一屏条数多了跟着收
 	_preview_board = GridInventory.new(ch.board_size, RunState.BOARD_ID, true)
 	ch.shape_board(_preview_board, flow.items, Callable(), false)
 	_preview_view = InventoryView.make(_preview_board, font)
@@ -2144,6 +2389,8 @@ func _build_preview(ch: CharacterDef) -> void:
 		_gift_tag = GiftTag.make(gift, right_width() - 2.0 * RIGHT_PAD)
 		_gift_tag.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		_preview_host.add_child(_gift_tag)
+	while _grooves[2].get_combined_minimum_size().y > body_room() and _preview_view.cell_px > PREVIEW_MIN_CELL:
+		_preview_view.cell_px -= 4.0     # 383：第一屏条数多了，只看的棋盘格子缩一点（不缩字）
 
 
 ## 255：图例一枚小签（色块 + 字），坐在小牌底上
@@ -2178,29 +2425,63 @@ func first_gift_text(ch: CharacterDef) -> String:
 	return UiText.t("setup.first_gift") % UiText.t("setup.list_sep").join(parts) if not parts.is_empty() else ""
 
 
-## 255：面板项 [名, 数, 火漆图名]：生命 / 耐力 / 耐力回复 / 体力必有（各有火漆，[constant STAT_SEALS]）；别的面板项角色在 base_stats 里改过才出，没有专属火漆
-static func stat_plaques(ch: CharacterDef) -> Array:
+## 255：面板项 [名, 数, 火漆图名, 来源]：生命 / 耐力 / 耐力回复 / 体力必有（各有火漆，[constant STAT_SEALS]）；别的面板项角色在 base_stats 里改过才出，没有专属火漆。
+## 383（作者定 A）：科技给的局外加成并进数字（[param ctx] = [method meta_context]），第四项是悬停里的来源（「基础 N · 局外加成 +M」，没加成空）
+static func stat_plaques(ch: CharacterDef, ctx: RunContext = null) -> Array:
 	var base := ch.baseline()
-	var out: Array = [
-		[UiText.t("setup.stat_hp"), _num(base.value_of(&"max_hp")), STAT_SEALS[0]],
-		[UiText.t("setup.stat_stamina"), _num(base.value_of(&"max_stamina")), STAT_SEALS[1]],
-		[UiText.t("setup.stat_regen"), UiText.t("setup.per_sec") % _num(base.value_of(&"regen_stamina")), STAT_SEALS[2]],
-		[UiText.t("setup.stat_vitality"), str(ch.vitality_max), STAT_SEALS[3]],
-	]
+	var out: Array = []
+	var rows := [[UiText.t("setup.stat_hp"), &"max_hp", STAT_SEALS[0]], [UiText.t("setup.stat_stamina"), &"max_stamina", STAT_SEALS[1]],
+		[UiText.t("setup.stat_regen"), &"regen_stamina", STAT_SEALS[2]]]
 	for key in ch.base_stats:
 		var k := StringName(String(key))
-		if k in [&"max_hp", &"max_stamina", &"regen_stamina"]:
-			continue
-		out.append([Glossary.stat_name(k), _num(base.value_of(k)), ""])
+		if not k in [&"max_hp", &"max_stamina", &"regen_stamina"]:
+			rows.append([Glossary.stat_name(k), k, ""])
+	for r in rows:
+		var k: StringName = r[1]
+		var v0 := base.value_of(k)
+		var v := boosted(v0, k, ctx)
+		var shown := _num(v)
+		if k == &"regen_stamina":
+			shown = UiText.t("setup.per_sec") % shown
+		out.append([r[0], shown, r[2], _source(v0, v)])
+	var vit := ctx.vitality_max_of(ch.vitality_max) if ctx != null else ch.vitality_max
+	out.insert(3, [UiText.t("setup.stat_vitality"), str(vit), STAT_SEALS[3], _source(ch.vitality_max, vit)])
 	return out
 
 
+## 383：面板项 [param key] 加上局外加成以后（同 [method RunState.effective_baseline]：先乘 Σ%、再加固定值）
+static func boosted(v: float, key: StringName, ctx: RunContext) -> float:
+	if ctx == null:
+		return v
+	var out := v * (1.0 + float(ctx.stat_mult.get(key, 0.0)) / 100.0) + float(ctx.stat_bonus.get(key, 0.0))
+	return roundf(out * 10.0) / 10.0
+
+
+## 悬停里的来源一行；没加成空
+static func _source(base_v: float, v: float) -> String:
+	if is_equal_approx(base_v, v):
+		return ""
+	return UiText.t("setup.stat_source") % [_num(base_v), ("+" if v > base_v else "") + _num(v - base_v)]
+
+
+## 383：开局带的局外加成（开发开关 + 科技，[method GameFlow.meta_buffs]）算成的上下文 —— 角色卡、负重读数按它算
+func meta_context() -> RunContext:
+	var defs: Array = []
+	for id in flow.meta_buffs():
+		if flow.buff_defs.has(id):
+			defs.append(flow.buff_defs[id])
+	return RunBuffs.context(defs)
+
+
 ## 179：图标牌 [id, 数字, 说明]：负重上限（有才有）、棋盘；255：缺格写进棋盘那块的说明，带入件数 / 稀有度上限有才有
-## 2026-10-22（作者定）：**开局金币那块不再显示** —— 钱改成玩家自己从仓库带了，角色身上这个数不再有任何作用
-static func cap_tiles(ch: CharacterDef) -> Array:
+## 2026-10-22（作者定）：**开局金币那块不再显示** —— 钱改成玩家自己从仓库带了，角色身上这个数不再有任何作用。
+## 383：负重上限并进局外加成（科技「扛重」），说明后面接来源
+static func cap_tiles(ch: CharacterDef, ctx: RunContext = null) -> Array:
 	var out: Array = []
 	if ch.weight_capacity > 0:
-		out.append([&"weight", str(ch.weight_capacity), UiText.t("setup.cap_load")])
+		var cap := ctx.carry_capacity_of(ch.weight_capacity) if ctx != null else ch.weight_capacity
+		var src := _source(ch.weight_capacity, cap)
+		out.append([&"weight", str(cap), UiText.t("setup.cap_load") + ("\n" + src if src != "" else "")])
 	out.append([&"board", "%d × %d" % [ch.board_size.x, ch.board_size.y],
 		UiText.t("setup.cap_board_missing") % ch.board_mask.size() if not ch.board_mask.is_empty() else UiText.t("setup.cap_board")])
 	if ch.carry_max_items >= 0:
@@ -2303,7 +2584,7 @@ func _refresh() -> void:
 	if _preset_box != null and _presets_signature(_preset_list()) != _preset_sig:
 		_rebuild_presets.call_deferred()     # 285：仓库变了，高级预设缺几件跟着变（挂牌可能正在发信号，晚一拍重做）
 	if _enter_btn != null:
-		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and (needs_spawn() or preset_poor())) or (_page == PAGE_PREP and preset_poor())     # 182：没挑出生点「出发」灰着；285：收费预设付不起
+		_enter_btn.disabled = (_page == 0 and ch == null) or (_page == PAGE_MAP and (needs_spawn() or preset_poor()))     # 182：没挑出生点「出发」灰着；285：收费预设付不起
 	var why := can_depart()
 	var hint := UiText.t("setup.unarmed") if _page > 0 and unarmed() else ""
 	_set_status(why if why != "" and (not carried().is_empty() or preset_poor()) else _note + hint)     # 225：「军需官发的」在前

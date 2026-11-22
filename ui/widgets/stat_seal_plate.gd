@@ -18,7 +18,7 @@ var name_label: Label = null
 var cells: Array = []
 
 
-## [param stats] = [[项名, 数, 火漆图名（空 = 没有）], …]
+## [param stats] = [[项名, 数, 火漆图名（空 = 没有）, 来源（可省；383 局外加成，写进悬停第二行）], …]
 func setup(title: String, stats: Array) -> StatSealPlate:
 	UiTheme.panel_margins(self, UiTheme.PANEL_HOME_PLAQUE_SMALL, 22, 16, 22, 18)
 	set_meta(TipAnchor.META, true)     # 游戏测试 v4.91：下排格的提示摆在整块铭牌上方，别盖住上排的数
@@ -40,7 +40,8 @@ func setup(title: String, stats: Array) -> StatSealPlate:
 	for spec in stats:
 		var cell := UiTheme.hbox(SEAL_GAP)
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cell.tooltip_text = String(spec[0])
+		var src := String(spec[3]) if spec.size() > 3 else ""     # 383：局外加成的来源（「基础 N · 局外加成 +M」）
+		cell.tooltip_text = String(spec[0]) + ("\n" + src if src != "" else "")
 		cell.mouse_filter = Control.MOUSE_FILTER_STOP
 		grid.add_child(cell)
 		var tex: Texture2D = UiTheme.art_cached("stats_strip/" + String(spec[2])) if String(spec[2]) != "" else null
@@ -65,7 +66,7 @@ func setup(title: String, stats: Array) -> StatSealPlate:
 
 
 func captions() -> Array:
-	return cells.map(func(c: Array) -> String: return (c[0] as Control).tooltip_text)
+	return cells.map(func(c: Array) -> String: return (c[0] as Control).tooltip_text.get_slice("\n", 0))
 
 
 func values() -> Array:

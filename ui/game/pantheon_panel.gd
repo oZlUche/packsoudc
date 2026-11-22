@@ -1,5 +1,5 @@
 ## 报告 377（作者 2026-11-22 22:53 改）：万神院的神龛一排，两种用法 ——
-## - [constant PICK]：点【开始探索】时跳出的选神界面（万神院到了营地才有这一步）。第一项是【无信者】（不奉神，只是一个选项），
+## - [constant PICK]：出征第一屏信仰横条展开后的内容（383：不再是【开始探索】时跳出的弹窗；万神院到了营地才有这一条）。第一项是【无信者】（不奉神，只是一个选项），
 ##   再按档位列六位神；没解锁的神写「？？？？」、不露神像，点不了。点一位就是这一局奉祂（[signal picked]）。
 ## - [constant VIEW]：营地后勤里的万神院页，只看：已解锁的神、没解锁的「？？？？」与第几档开（初值，不是作者裁定）。
 ## 占位排版，等 UI设计 的样张 B（大理石）。
@@ -118,7 +118,11 @@ func _shrine(fid: StringName) -> Control:
 			func(): choose(fid), true, Vector2(110, 34), 16)
 		b.name = "Choose_" + (String(fid) if fid != &"" else "none")
 		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		b.disabled = not open
+		var chosen := open and fid == Pantheon.choice(flow.meta)     # 383：这一局奉着的那位（默认沿用上回）
+		if chosen:
+			b.text = UiText.t("pantheon.chosen")
+			p.theme_type_variation = UiTheme.PANEL_HOME_PLAQUE_SMALL
+		b.disabled = not open or chosen
 		col.add_child(b)
 	return p
 
@@ -127,5 +131,6 @@ func _shrine(fid: StringName) -> Control:
 func choose(fid: StringName) -> bool:
 	if mode != PICK or not flow.choose_god(fid):
 		return false
+	refresh()
 	picked.emit(fid)
 	return true

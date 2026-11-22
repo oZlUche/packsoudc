@@ -1,5 +1,6 @@
 ## 264 §二（作者 16:43「按推荐来」= 线框 1-A）：基地「出征」页碑右边那一列 —— 「上回出征」木牌（角色肖像小框 + 名、地图 · 规模、难度）、
-## 「军需」木牌（每局开局随身带的技能圆槽 + 数量角标、科技给的局外加成小牌；都没有写「尚无」）、右下【开始探索】主档木牌（原左下「再来一局」）。
+## 右下【开始探索】主档木牌（原左下「再来一局」）。383（作者 2026-11-22 22:57）：「军需」木牌删了 —— 随身技能挪到开局第二屏配道具，
+## 局外加成并进第一屏角色卡的数字；选神也不在这里跳，改成开局第一屏的信仰横条。
 ## 木牌定稿（UI替换美术 plaque264）：大木牌 [constant UiTheme.PANEL_HOME_PLAQUE]，标题是挂牌 [method HeaderTag.hanging] 挂在木牌左上（x + 18、高出 34）；
 ## 局外加成与难度写在平的浅羊皮小签上（[constant UiTheme.PANEL_HOME_CHIP]）。不做「沿用上回直接出发」（待定 2）
 class_name ExpeditionBoard
@@ -7,15 +8,11 @@ extends VBoxContainer
 
 const WIDTH := 560.0
 const LAST_H := 200.0
-const SUPPLY_H := 260.0
 const START := Vector2(360, 96)
 const START_FONT := 30
 const PORTRAIT := 72
 const NAME_FONT := 22
 const LINE_FONT := 17
-const SLOT := 56.0
-const BADGE_FONT := 14
-const INK_SLOT := Color("5a4433")
 ## 挂牌摆法：左边让多少、高出木牌上沿多少（挂牌 46 高，压进木牌 12）
 const TAG_X := 18
 const TAG_RISE := 34.0
@@ -23,8 +20,6 @@ const CHIP_FONT := 15
 
 ## 统一教程 D（方案 §8.1 / §8.2）：教程还没全通时点了「跳过剩余教程」（基地弹确认页，[method MetaScreen.show_skip_tutorial]）
 signal skip_asked()
-## 377：万神院到了营地 —— 【开始探索】先跳出选神界面（基地屏接这个信号）
-signal god_pick_asked()
 
 var flow: GameFlow = null
 var start_btn: Button = null
@@ -32,12 +27,8 @@ var last_plate: PanelContainer = null
 ## 教程木牌（教程还没全通才有，顶替「上回出征」）
 var tutorial_plate: PanelContainer = null
 var skip_btn: Button = null
-var supply_plate: PanelContainer = null
 ## 「上回出征」三行写的字（测试看）；没出征过是空
 var _last_lines: Array[String] = []
-## 军需：[[随身技能 id, 个数], …] 与局外加成 id
-var _belt: Array = []
-var _buffs: Array[StringName] = []
 
 
 func setup(p_flow: GameFlow) -> ExpeditionBoard:
@@ -53,23 +44,11 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 		_fill_last(_col(last_plate))
 		if flow.legacy_tutorial() != null:
 			_fill_try(_col(last_plate))
-	supply_plate = _plate(SUPPLY_H, "meta.supplies")
-	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
-	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
-	_fill_supplies(_col(supply_plate))
-	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), _on_start, true, START, START_FONT)
+	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true, START, START_FONT)
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	add_child(start_btn)
 	return self
-
-
-## 【开始探索】：万神院在营地就先选神（教程还没通的那一下直接开教程章，不选）
-func _on_start() -> void:
-	if flow.pantheon_listed() and flow.new_run_target() == null and god_pick_asked.get_connections().size() > 0:
-		god_pick_asked.emit()
-	else:
-		flow.new_run()
 
 
 ## 一块大木牌连它的挂牌：挂牌在上（画在木牌上面），木牌往上收 12 压住挂牌下沿；返回木牌，[method _col] 取里面那一列
@@ -189,78 +168,9 @@ func _last_difficulty() -> DifficultyDef:
 	return null
 
 
-## 军需：一行随身技能圆槽（科技每局发的，[member MetaState.belt_grants]），一行局外加成小牌（[method GameFlow.meta_buffs]）
-func _fill_supplies(col: VBoxContainer) -> void:
-	var grants: Dictionary = flow.meta.belt_grants
-	var ids := grants.keys()
-	ids.sort()
-	for id in ids:
-		if int(grants[id]) > 0:
-			_belt.append([StringName(String(id)), int(grants[id])])
-	_buffs = flow.meta_buffs()
-	if _belt.is_empty() and _buffs.is_empty():
-		col.add_child(_line(UiText.t("meta.none_yet")))
-		return
-	if not _belt.is_empty():
-		var row := UiTheme.hbox(12)
-		col.add_child(row)
-		for pair in _belt:
-			row.add_child(BeltSlot.new(BeltSkillDef.find(pair[0]), int(pair[1])))
-	if not _buffs.is_empty():
-		var flow_row := HFlowContainer.new()
-		flow_row.add_theme_constant_override("h_separation", 8)
-		flow_row.add_theme_constant_override("v_separation", 8)
-		col.add_child(flow_row)
-		for id in _buffs:
-			var def: RunBuffDef = flow.buff_defs.get(id, null)
-			var chip := _chip(Names.of(def) if def != null else String(id))
-			chip.tooltip_text = Names.description_of(def) if def != null else ""
-			chip.mouse_filter = Control.MOUSE_FILTER_PASS
-			flow_row.add_child(chip)
-
-
 func _line(text: String) -> Label:
 	return UiTheme.make_label(text, LINE_FONT, UiTheme.INK)
 
 
 func last_lines() -> Array[String]:
 	return _last_lines
-
-
-func belt_supplies() -> Array:
-	return _belt
-
-
-func buff_supplies() -> Array[StringName]:
-	return _buffs
-
-
-## 随身技能圆槽：一圈深色槽、技能图标、右下角数量（字画在槽上，不是散字）；悬停写技能名
-class BeltSlot extends Control:
-	var def: BeltSkillDef = null
-	var count := 0
-	var _icon: Texture2D = null
-
-	func _init(p_def: BeltSkillDef, p_count: int) -> void:
-		def = p_def
-		count = p_count
-		_icon = def.icon() if def != null else null     # 留住引用（184）
-		custom_minimum_size = Vector2.ONE * SLOT
-		tooltip_text = Names.of(def) if def != null else ""
-		mouse_filter = Control.MOUSE_FILTER_PASS
-
-	func _draw() -> void:
-		var c := size * 0.5
-		var r := minf(size.x, size.y) * 0.5
-		draw_circle(c, r, INK_SLOT)
-		draw_circle(c, r - 3.0, Color("e9dcc0"))
-		if _icon != null:
-			var s := (r - 6.0) * 2.0
-			draw_texture_rect(_icon, Rect2(c - Vector2.ONE * s * 0.5, Vector2.ONE * s), false)
-		var font := UiPalette.cjk_font_bold()
-		var px := UiTheme.sz(BADGE_FONT)
-		var text := "×%d" % count     # 右下角一枚小签：深底浅字
-		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		var tag := Rect2(size.x - w - 8.0, size.y - px - 4.0, w + 8.0, px + 4.0)
-		draw_rect(tag, INK_SLOT)
-		draw_string(font, Vector2(tag.position.x + 4.0, tag.end.y - 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, Color("f1ece2"))

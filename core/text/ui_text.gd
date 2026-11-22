@@ -689,10 +689,10 @@ const TEXT := {
 	"ransom.paid": {"zh": "成交：这一回不扣体力", "en": "Deal: no Vitality lost"},
 	# —— 221 F1：screens ——
 	# ui/game/setup_screen.gd
-	"setup.page_1": {"zh": "角色选择", "en": "Character Select"},
+	"setup.page_1": {"zh": "出征准备", "en": "Preparations"},     # 383：选人、吃饭、选神三条折叠横条
 	"setup.page_2": {"zh": "配道具", "en": "Pack Your Gear"},
 	"setup.page_3": {"zh": "选地图与难度", "en": "Map & Difficulty"},
-	"setup.page_4": {"zh": "本次准备", "en": "Preparations"},     # 342 B3
+	"setup.stat_source": {"zh": "基础 %s · 局外加成 %s", "en": "Base %s · Lasting bonus %s"},     # 383：角色卡数字的来源
 	"bias.title": {"zh": "材料倾向", "en": "Material Focus"},
 	"alchemy.title": {"zh": "炼金", "en": "Alchemy"},
 	"smithy.dust_not_forged": {"zh": "先用真材料打造一次，才能用尘补", "en": "Forge it once with real materials before using Omnires"},
@@ -747,6 +747,7 @@ const TEXT := {
 	"pantheon.title": {"zh": "万神院", "en": "Senatus Panthei"},     # 377
 	"pantheon.humanist": {"zh": "无信者", "en": "Faithless"},
 	"pantheon.choose": {"zh": "奉祂", "en": "Follow"},
+	"pantheon.chosen": {"zh": "奉着", "en": "Following"},     # 383
 	"pantheon.unknown": {"zh": "？？？？", "en": "????"},
 	"pantheon.tier_short": {"zh": "信赖 %d", "en": "Standing %d"},
 	"pantheon.pick_title": {"zh": "这一局奉哪位神", "en": "Which god will you follow this run?"},
@@ -1708,9 +1709,7 @@ const TEXT := {
 	"skip_tut.yes": {"zh": "跳过", "en": "Skip"},
 	"skip_tut.no": {"zh": "接着学", "en": "Keep learning"},
 	"skip_tut.in_run": {"zh": "这一局身上的东西不会带出来，直接回基地。", "en": "Nothing you carry in this run comes out with you. You go straight to base."},
-	"meta.supplies": {"zh": "军需", "en": "Supplies"},
 	"meta.none_yet": {"zh": "尚无", "en": "None yet"},
-	"meta.supplies_tip": {"zh": "每局开局随身带的，与科技给的局外加成", "en": "Belt skills granted each run, and lasting bonuses from tech"},
 	"meta.sub_codex": {"zh": "图鉴", "en": "Collection"},
 	"meta.sub_records": {"zh": "对局记录", "en": "Run records"},
 	"meta.sub_keepsakes": {"zh": "特殊道具", "en": "Keepsakes"},

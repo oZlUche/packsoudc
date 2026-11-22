@@ -28,7 +28,8 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	t.eq(board.start_btn.text, "开始探索", "【开始探索】")
 	t.eq(board.start_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "主档木牌")
 	t.check(board.start_btn.custom_minimum_size == ExpeditionBoard.START, "360 × 96")
-	t.check(board.last_plate.custom_minimum_size == Vector2(560, 200) and board.supply_plate.custom_minimum_size == Vector2(560, 260), "两块木牌 560 × 200、560 × 260")
+	t.check(board.last_plate.custom_minimum_size == Vector2(560, 200), "上回出征木牌 560 × 200")
+	t.check(board.find_children("*", "HeaderTag", true, false).all(func(h): return (h as HeaderTag).text != "军需"), "383：军需牌删了")
 	var left: Control = (screen._tab_btns["expedition"] as Button).get_parent()
 	var keys: Array = left.find_children("*", "Button", true, false).filter(func(b): return (b as Button).is_visible_in_tree()).map(func(b): return (b as Button).text)
 	t.check(not keys.has("再来一局") and not keys.has("开始探索") and not keys.has("回主菜单"), "左列只剩页签（%s）" % [keys])
@@ -43,9 +44,9 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	screen.toggle_tab("expedition")
 	t.eq(screen.tab(), "expedition", "再点选中的不动")
 	# 木牌定稿（plaque264）：大木牌 + 挂牌标题、浅羊皮小签；都是浅底
-	t.check(board.last_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE and board.supply_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE, "两块大木牌")
+	t.check(board.last_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE, "大木牌")
 	var hangs: Array = board.find_children("*", "HeaderTag", true, false).filter(func(h): return (h as HeaderTag).hang)
-	t.eq(hangs.size(), 2, "标题是两枚挂牌（283 删了 267 的「倾向」）")
+	t.eq(hangs.size(), 1, "标题是一枚挂牌（283 删了 267 的「倾向」，383 删了「军需」）")
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_HOME_PLAQUE), UiTheme.TONE_LIGHT, "木牌浅底")
 	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回基地底图；这两页不垫粗布
 	var exp_bg := "home/scene_expedition" if UiTheme.art("home/scene_expedition") != null else UiTheme.ART_HOME_BG
@@ -70,7 +71,7 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 
 
 static func frame_last_and_supplies(t: TestCase, root: Window) -> void:
-	t.begin("264 §二 · 上回出征（角色肖像 + 名、地图 · 规模、难度）与军需（随身技能圆槽 + 数量、局外加成小牌）；没有写「尚无」")
+	t.begin("264 §二 · 上回出征（角色肖像 + 名、地图 · 规模、难度）；383：军需牌删了，随身技能挪到开局配道具页")
 	var f := _flow()
 	var ch: CharacterDef = f.characters[0]
 	var chapter: ChapterDef = f.chapters[0]
@@ -104,13 +105,7 @@ static func frame_last_and_supplies(t: TestCase, root: Window) -> void:
 		t.check(lines[1].ends_with(String(opts[0]["display_name"])), "· 规模")
 	if hard != null:
 		t.check(lines.size() > 2 and lines[2].begins_with(Names.of(hard)), "第三行：难度（%s）" % [lines[2] if lines.size() > 2 else ""])
-	t.eq(board.belt_supplies(), [[&"smoke_bomb", 2]], "军需：随身技能 × 2")
-	var slots: Array = board.supply_plate.find_children("*", "", true, false).filter(func(n): return n is ExpeditionBoard.BeltSlot)
-	t.check(slots.size() == 1 and (slots[0] as ExpeditionBoard.BeltSlot)._icon != null, "一枚圆槽，画定稿图标")
-	if buff != null:
-		t.check(board.buff_supplies().has(buff.id), "局外加成列出来")
-		var tags: Array = board.supply_plate.find_children("*", "Label", true, false).map(func(h): return (h as Label).text)
-		t.check(tags.has(Names.of(buff)), "加成小牌写名字（%s）" % [tags])
+	t.check(board.find_children("*", "", true, false).filter(func(n): return n is BeltGrantSlot).is_empty(), "383：出征页不再列随身技能圆槽")
 	t.eq(Bare.audit(screen._pages["expedition"], "expedition"), [] as Array[String], "没有裸字")
 	screen.free()
 	Records._cleanup()

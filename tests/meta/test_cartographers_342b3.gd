@@ -201,7 +201,7 @@ static func run_vein_goal(t: TestCase) -> void:
 
 
 static func frame_prep_page(t: TestCase, root: Window) -> void:
-	t.begin("342 B3 · 开局屏第四页：倾向没开整页跳过；开了第三页「继续」到「本次准备」，默认无倾向，选矿物出发")
+	t.begin("342 B3 / 383 · 材料倾向在第三屏：没开不露；开了在地图列表下面，默认无倾向，选矿物出发；下回默认矿物")
 	Support.cleanup("char")
 	var game = load(CS.GAME).instantiate()
 	game.save_path = CS.SAVE
@@ -214,12 +214,14 @@ static func frame_prep_page(t: TestCase, root: Window) -> void:
 			flow.meta.grant_unlock(gch.grants_unlock)
 	flow.new_run()
 	var setup = game.base()
-	t.eq(setup.last_page(), 2, "倾向没开：第三页就是最后一页")
+	t.eq(setup.last_page(), 2, "第三页就是最后一页")
+	setup.show_page(2)
+	t.check(not setup._bias_box.get_parent().visible, "倾向没开：第三屏没有方向那一块")
 	setup.queue_free()
 	flow.meta.commissions.grants["bias"] = true
 	flow.new_run()
 	setup = game.base()
-	t.eq(setup.last_page(), 3, "开了：多一页")
+	t.eq(setup.last_page(), 2, "383：开了也还是三页")
 	var at := -1
 	for i in setup._chapters.size():
 		if setup._chapters[i].id == &"free_mode":
@@ -235,12 +237,12 @@ static func frame_prep_page(t: TestCase, root: Window) -> void:
 	var entries: Array = setup.preview().entry_ids()
 	if not entries.is_empty():
 		setup.pick_spawn(int(entries[0]))
-	t.check(setup.next_page(), "第三页「继续」")
-	t.eq(setup.page(), 3, "到第四页")
+	t.check(setup._bias_box.get_parent().is_visible_in_tree(), "开了：第三屏有方向那一块")
 	t.eq(setup.bias_id, MaterialBias.NONE, "默认无倾向")
 	t.check((setup.bias_buttons() as Dictionary).size() == MaterialBias.ORDER.size(), "六个选项")
 	t.check(setup.choose_bias(&"mineral"), "选矿物")
 	t.check(Support.depart(setup), "出发")
 	t.eq(flow.run.material_bias if flow.run != null else &"?", &"mineral", "这一局是矿物倾向")
+	t.eq(flow.meta.flag(setup.FLAG_LAST_BIAS), MaterialBias.ORDER.find(&"mineral") + 1, "383：记下这回的方向，下回默认它")
 	game.queue_free()
 	Support.cleanup("char")
