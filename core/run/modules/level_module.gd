@@ -3,7 +3,7 @@
 ## - **经验值**只涨不花（原来的信力，作者 22:02 改名）。通用来源在这里接：打赢战斗（普通 / 精英 / 猎手 / 首领各给各的，秒杀不算打了一场）、
 ##   第一次到达更深一环、神坛祷告（[method pray]）；神坛献祭由 [AltarModule] 记、各位神的事由 [FaithPower] 记，都经 [method gain]。
 ##   所有途径都乘难度系数（[method LevelRules.mult]）。
-## - **等级**按累计经验值算（[method LevelRules.level_of]），封顶 30。每升一级欠一次选牌；**不奉神（【以人为本】）的人逢 5 级多欠一次**
+## - **等级**按累计经验值算（[method LevelRules.level_of]），封顶 30。每升一级欠一次选牌；**不奉神（【无信者】）的人逢 5 级多欠一次**
 ##   （到那一级时看有效信仰，记在 [member bonus_picks]）。
 ## - **选牌**：回到地图时界面按 [method pending] 弹出，三张一起出（[method offer]），挑一张（[method pick]）。同一张可以重复拿，拿几次就叠几层；
 ##   「拿过就不再出」的（元素回响本体）拿过就换成两张后续牌。**刷新**（三张一起换）、**删除**（这一局不再出，空位当场补一张）的次数
@@ -38,13 +38,13 @@ signal picked(card_id: StringName)
 var xp: float = 0.0
 ## 已经选过几次牌
 var picks_done: int = 0
-## 【以人为本】逢 5 级多欠的那几次
+## 【无信者】逢 5 级多欠的那几次
 var bonus_picks: int = 0
-## 哪几级给过以人为本的那一次（升序；[member bonus_picks] = 它的长度）。判断「这一张是不是多给的那次」用它
+## 哪几级给过无信者的那一次（升序；[member bonus_picks] = 它的长度）。判断「这一张是不是多给的那次」用它
 var bonus_levels: Array[int] = []
 ## 已经结算到第几级（多欠的那一次只在跨过那一级时给一回）
 var level_seen: int = 1
-## v7 → v8 迁移来的档：以人为本那几次还没补（装上时看有效信仰补，补完就清）
+## v7 → v8 迁移来的档：无信者那几次还没补（装上时看有效信仰补，补完就清）
 var _backfill_bonus := false
 ## 拿过的牌：id → 几张
 var taken: Dictionary = {}
@@ -105,7 +105,7 @@ func install(run: RunState) -> void:
 		_fill_bonus_levels()
 
 
-## 迁移来的档：跨过的逢 n 级按此刻的有效信仰补以人为本那一次（和 [method _on_level] 同一个判断）
+## 迁移来的档：跨过的逢 n 级按此刻的有效信仰补无信者那一次（和 [method _on_level] 同一个判断）
 func _fill_bonus_levels() -> void:
 	var every := rules().extra_pick_every
 	if every <= 0 or not _humanist():
@@ -163,11 +163,11 @@ func _on_level(lv: int) -> void:
 	var every := rules().extra_pick_every
 	if every > 0 and lv % every == 0 and _humanist():
 		bonus_levels.append(lv)
-		bonus_picks = bonus_levels.size()     # 【以人为本】：这一级连选两次
+		bonus_picks = bonus_levels.size()     # 【无信者】：这一级连选两次
 	leveled.emit(lv)
 
 
-## 【以人为本】：此刻没有有效信仰
+## 【无信者】：此刻没有有效信仰
 func _humanist() -> bool:
 	return _run == null or _run.active_faith_id() == &""
 
@@ -183,7 +183,7 @@ func pending() -> int:
 	return maxi(0, level() - 1 + bonus_picks - picks_done)
 
 
-## 选牌按级排队：每级一次，以人为本的那一级紧跟着多一次。返回现在这一张是第几级的、是不是多给的那次
+## 选牌按级排队：每级一次，无信者的那一级紧跟着多一次。返回现在这一张是第几级的、是不是多给的那次
 ## （{level, extra}；不欠选牌 = {}）
 func current_pick() -> Dictionary:
 	if pending() <= 0:

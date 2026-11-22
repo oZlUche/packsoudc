@@ -45,7 +45,7 @@ const ONESHOT_SEARCH := &"search"
 @export var prayers_per_altar: int = 3
 ## 每级出几张牌
 @export var choices: int = 3
-## 【以人为本】（不奉神）逢这个数的倍数级多选一次通用牌（作者 18:30）
+## 【无信者】（不奉神）逢这个数的倍数级多选一次通用牌（作者 18:30）
 @export var extra_pick_every: int = 5
 ## 元素回响（作者 18:53）：本体每 [member echo_seconds] 秒一次、多 1 层；「间隔减少」每张减 1 秒，到 [member echo_min_seconds] 为止；「层数增加」每张多 1 层
 @export var echo_seconds: int = 8

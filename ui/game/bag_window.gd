@@ -41,11 +41,15 @@ var frame: NinePatchRect = null
 ## 223：右栏的名牌与角色卡
 var nameplate: Nameplate = null
 var card: CharacterCard = null
-## 局内界面布局方案 §6：角色卡下面那排查看方式（普通 / 联动 / 风险）
-var views: HFlowContainer = null     # 英文 / 大字号一行放不下就折到第二行（方案 §11：换行，不压字号）
+## 局内界面布局方案 §6：查看方式（普通 / 联动 / 风险）。381（作者 21:27）：管的是棋盘，所以贴在棋盘框左上角当三个小页签
+var views: HBoxContainer = null
 var _view_btns: Dictionary = {}
-## §6：查看方式那排在角色卡下面隔多远
-const VIEWS_GAP := 14.0
+## 381：页签离棋盘框左边多远、压进框上沿多少
+const VIEWS_INSET := 18.0
+const VIEWS_OVERLAP := 4.0
+## 381：名牌缩到原来的 72%，下面的角色卡列全属性；名牌和卡之间隔多远
+const PLATE_SCALE := 0.72
+const CARD_GAP := 10.0
 ## 218 补充一：开着的背包窗教程（没开 null）
 var coach: CoachOverlay = null
 var _canvas: Control
@@ -278,16 +282,15 @@ func _layout() -> void:
 	var plate: Dictionary = col.get("nameplate", {})
 	nameplate.position = Vector2(col_x, float(plate.get("y", 78)))
 	# 名牌自己最矮是 96 肖像 + 上下边；精修稿要 272×112 —— 整块等比缩到那么高，宽按缩后撑到 272
-	var want_plate := _vec(plate.get("size", [272, 112]))
+	var want_plate := _vec(plate.get("size", [272, 112])) * PLATE_SCALE
 	var k := minf(1.0, want_plate.y / maxf(1.0, nameplate.get_combined_minimum_size().y))
 	nameplate.scale = Vector2(k, k)
 	nameplate.custom_minimum_size = Vector2(want_plate.x / k, 0.0)
 	nameplate.size = Vector2(want_plate.x / k, want_plate.y / k)
-	card.position = Vector2(col_x, float((col.get("card", {}) as Dictionary).get("y", 202)))
+	card.position = Vector2(col_x, float(plate.get("y", 78)) + want_plate.y + CARD_GAP)
 	if views != null:
-		var card_size := _vec((col.get("card", {}) as Dictionary).get("size", [272, 228]))
-		views.position = Vector2(col_x, card.position.y + maxf(card_size.y, card.size.y) + VIEWS_GAP)
-		views.size = Vector2(float(col.get("width", 272)), 0.0)
+		views.reset_size()
+		views.position = Vector2(frame.position.x + VIEWS_INSET, frame.position.y - views.size.y + VIEWS_OVERLAP)
 	var ms: Dictionary = _spec["minimize"]
 	var at: Array = (_satchel.get("minimize", {}) as Dictionary).get("topleft_rel_window", ms.get("topleft_rel_window", [918, 13]))
 	close_button.position = _vec(at) + Vector2(grow.x, 0.0)
@@ -297,9 +300,9 @@ func _layout() -> void:
 
 ## §6：三种查看方式（一排小签，同一时间按下一个）。切换只改棋盘怎么画
 func _build_views() -> void:
-	views = HFlowContainer.new()
+	views = HBoxContainer.new()
 	views.name = "Views"
-	views.alignment = FlowContainer.ALIGNMENT_CENTER
+	views.add_theme_constant_override("separation", 4)
 	_canvas.add_child(views)
 	var group := ButtonGroup.new()
 	# 游戏测试 v6.51：英文大字号折成两行时，下一行签的悬浮说明盖住上一行、点不到。签名自己就说清了，不配说明
@@ -307,7 +310,6 @@ func _build_views() -> void:
 		var mode: StringName = pair[0]
 		var b := StoneChip.make(UiText.t(pair[1]), func(): set_view(mode))
 		b.button_group = group
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_view_btns[mode] = b
 		views.add_child(b)
 	set_view(InventoryView.VIEW_NORMAL)

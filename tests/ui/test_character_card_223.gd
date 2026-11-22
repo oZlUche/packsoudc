@@ -11,51 +11,56 @@ static func _run(c: TestSupport.Content, buffs: Array[StringName]) -> RunState:
 
 
 static func frame_card(t: TestCase, root: Window) -> void:
-	t.begin("223 · 角色卡：身体三行 = effective_baseline（生命 / 耐力取整、耐力回复一位小数），没加成不写 ▲▼；局外筋骨 +10% 生命后 ▲ 与来源；被动两条；英文无汉字")
+	t.begin("223 / 381 · 角色卡：全属性分生存、攻击、探索三组；数 = 有效值（生命 / 耐力取整、回复一位小数），没加成白字；悬浮窗「说明 + 基础 + 加算 + 百分比」；局外筋骨不算这一局的（不黄）；升级的牌算（黄）；被动两枚小签；英文无汉字")
 	var c := Buffs._content()
 	var run := _run(c, [] as Array[StringName])
 	var card := CharacterCard.new()
 	root.add_child(card)
 	card.refresh(run)
 	var eff := run.effective_baseline()
-	t.eq(String(card.row(0)["value"]), str(roundi(float(eff.base_stats.get(BattleStats.MAX_HP, 0.0)))), "生命上限 = 有效基线")
-	t.eq(String(card.row(1)["value"]), str(roundi(float(eff.base_stats.get(BattleStats.MAX_STAMINA, BattleStats.default_value(BattleStats.MAX_STAMINA))))), "耐力上限 = 有效基线")
-	t.eq(String(card.row(2)["value"]), "%.1f" % float(eff.base_stats.get(BattleStats.REGEN_STAMINA, BattleStats.default_value(BattleStats.REGEN_STAMINA))), "耐力回复一位小数")
-	t.eq(String(card.row(2)["label"]), "耐力恢复/秒", "作者 10-25：第三行叫「耐力恢复/秒」")
-	t.eq(String(card.row(2)["unit"]), "", "「每秒」并进名字，不再另写小字")
-	for i in 3:
-		t.eq(float(card.row(i)["delta"]), 0.0, "第 %d 行没加成：不写 ▲▼" % i)
+	t.eq(card.group_labels(), ["生存", "攻击", "探索"] as Array[String], "三组")
+	t.eq(String(card.row_of(&"max_hp")["value"]), str(roundi(float(eff.base_stats.get(BattleStats.MAX_HP, 0.0)))), "生命上限 = 有效基线")
+	t.eq(String(card.row_of(&"max_stamina")["value"]), str(roundi(float(eff.base_stats.get(BattleStats.MAX_STAMINA, BattleStats.default_value(BattleStats.MAX_STAMINA))))), "耐力上限 = 有效基线")
+	t.eq(String(card.row_of(&"regen_stamina")["value"]), "%.1f" % float(eff.base_stats.get(BattleStats.REGEN_STAMINA, BattleStats.default_value(BattleStats.REGEN_STAMINA))), "耐力回复一位小数")
+	t.eq(String(card.row_of(&"regen_stamina")["label"]), "耐力恢复/秒", "作者 10-25：叫「耐力恢复/秒」")
+	t.eq(String(card.row_of(&"crit_chance")["value"]), "%d%%" % roundi(float(eff.base_stats.get(BattleStats.CRIT_CHANCE, BattleStats.default_value(BattleStats.CRIT_CHANCE))) * 100.0), "暴击率按百分数")
+	t.eq(String(card.row_of(&"weapon_damage")["value"]), "+0%", "没加成的武器伤害也列：+0%")
+	t.check(card.row_count() >= 10, "属性行都在（%d 行）" % card.row_count())
+	for i in card.row_count():
+		t.check(not bool(card.row(i)["boosted"]), "开局没拿东西：第 %d 行白字" % i)
 	var skills := run.character.skill_entries()
 	t.eq(card.passive_names(), skills.map(func(e): return String(e["name"])), "被动 = 角色的被动（主动藏着不列）")
-	t.eq(card.passive_names().size(), 2, "两条")
-	t.check(card.tip_text(3).contains(String(skills[0]["text"])), "被动停上去写全文")
-	t.eq(card.row_at(Vector2(100, 20)), 0, "第一行在卡上沿 12..42")
-	t.eq(card.row_at(Vector2(100, 120)), 3, "第一条被动在 111 起")
+	t.eq(card.passive_names().size(), 2, "两枚小签")
+	t.check(card.tip_text(card.row_count()).contains(String(skills[0]["text"])), "小签停上去写全文")
+	t.eq(card.row_at(card.passive_rect(0).get_center()), card.row_count(), "停在第一枚小签上")
+	t.eq(card.row_at(Vector2(100, float(card.row(0)["top"]) + 5.0)), 0, "停在第一行上")
+	t.check(card.tip_text(0).begins_with("生命归零"), "悬浮窗第一行是说明：%s" % card.tip_text(0))
 
 	var buffed := _run(c, [&"tech_sinew_1"] as Array[StringName])
 	card.refresh(buffed)
 	var own := float(buffed.player_baseline.base_stats.get(BattleStats.MAX_HP, 0.0))
 	var hp := float(buffed.effective_baseline().base_stats.get(BattleStats.MAX_HP, 0.0))
 	t.check(hp > own, "筋骨让生命上限变高（%.0f → %.0f）" % [own, hp])
-	t.eq(float(card.row(0)["delta"]), float(roundi(hp) - roundi(own)), "▲N = 有效 − 角色本身")
-	t.check(String(card.row(0)["tip"]).contains("筋骨"), "悬浮窗写是谁给的：%s" % String(card.row(0)["tip"]))
-	var src := CharacterCard.sources(buffed, BattleStats.MAX_HP)
-	t.eq(src.size(), 1, "生命只有一个来源")
-	if src.size() == 1:
-		t.eq(roundi(float(src[0]["delta"])), roundi(hp - own), "来源的数 = 加出来的数")
-	t.eq(float(card.row(1)["delta"]), 0.0, "耐力没变")
+	t.eq(String(card.row_of(&"max_hp")["value"]), str(roundi(hp)), "数 = 有效值")
+	t.check(not bool(card.row_of(&"max_hp")["boosted"]), "局外科技不是这一局拿的：白字")
+	var tip := String(card.row_of(&"max_hp")["tip"])
+	t.check(tip.contains("%d[/color]" % roundi(own)) and tip.contains("%"), "第二行写基础与百分比：%s" % tip)
+	t.check(tip.contains(CharacterCard.BOOST_COLOR.to_html(false)), "加成黄字")
+
+	var lv := LevelModule.of(buffed)
+	if lv != null:
+		lv.taken[&"card_hp_flat"] = 1
+		card.refresh(buffed)
+		t.check(bool(card.row_of(&"max_hp")["boosted"]), "拿了体魄：生命上限黄字")
+		t.check(not bool(card.row_of(&"max_stamina")["boosted"]), "耐力没动：白字")
 
 	UiText.lang = "en"
 	card.refresh(buffed)
 	var han := RegEx.create_from_string("[\\x{4e00}-\\x{9fff}]")
-	for i in 5:
-		var text := card.tip_text(i) + (String(card.row(i).get("label", "")) + String(card.row(i).get("unit", "")) if i < 3 else "")
+	for i in card.row_count() + card.passive_names().size():
+		var text := card.tip_text(i) + (String(card.row(i).get("label", "")) if i < card.row_count() else "")
 		t.check(han.search(text) == null, "英文：第 %d 行没有汉字（%s）" % [i, text])
-	for i in card.passive_names().size():
-		var lines := card.passive_lines(i)
-		var whole := String(buffed.character.skill_entries()[i]["text"])
-		t.eq(" ".join(lines), whole, "游戏测试 v3.81：英文被动写全文、只在空格处折行（%d 行）" % lines.size())
-	t.check(card.size.y >= CharacterCard.SIZE.y and card.size.y <= 400.0, "卡跟着说明长高，仍在背包窗里（%.0f）" % card.size.y)
+	t.check(card.size.y >= CharacterCard.SIZE.y and card.size.y <= 400.0, "卡放得进背包窗右栏（%.0f）" % card.size.y)
 	var f := UiPalette.cjk_font()
 	t.eq(CharacterCard.wrap_lines("Erosion takes 1 less Vitality", f, 13, f.get_string_size("Erosion takes 1", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 2.0, 6),
 		["Erosion takes 1", "less Vitality"] as Array[String], "按词断，不拆 Erosion")
