@@ -19,4 +19,5 @@ func modify(ctx: RunContext) -> void:
 func describe() -> String:
 	var names := {"max_hp": "bonus.stat_max_hp", "max_stamina": "bonus.stat_max_stamina", "regen_stamina": "bonus.stat_regen_stamina"}
 	var what: String = UiText.t(names[String(stat)]) if names.has(String(stat)) else String(stat)
-	return "%s %+.0f%%" % [what, amount] if mode == Mode.MULT else "%s %+.0f" % [what, amount]
+	var num := ("%+d" % roundi(amount)) if is_equal_approx(amount, roundf(amount)) else ("%+.1f" % amount)     # 372：调息 +0.3 不能取整成 +0
+	return "%s %s%%" % [what, num] if mode == Mode.MULT else "%s %s" % [what, num]

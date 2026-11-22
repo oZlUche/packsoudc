@@ -40,6 +40,8 @@ var xp: float = 0.0
 var picks_done: int = 0
 ## 【以人为本】逢 5 级多欠的那几次
 var bonus_picks: int = 0
+## 哪几级给过以人为本的那一次（升序；[member bonus_picks] = 它的长度）。判断「这一张是不是多给的那次」用它
+var bonus_levels: Array[int] = []
 ## 已经结算到第几级（多欠的那一次只在跨过那一级时给一回）
 var level_seen: int = 1
 ## 拿过的牌：id → 几张
@@ -143,7 +145,8 @@ func _on_level(lv: int) -> void:
 	level_seen = lv
 	var every := rules().extra_pick_every
 	if every > 0 and lv % every == 0 and _humanist():
-		bonus_picks += 1     # 【以人为本】：这一级连选两次
+		bonus_levels.append(lv)
+		bonus_picks = bonus_levels.size()     # 【以人为本】：这一级连选两次
 	leveled.emit(lv)
 
 
@@ -161,6 +164,21 @@ func is_humanist() -> bool:
 ## 还欠几次选牌
 func pending() -> int:
 	return maxi(0, level() - 1 + bonus_picks - picks_done)
+
+
+## 选牌按级排队：每级一次，以人为本的那一级紧跟着多一次。返回现在这一张是第几级的、是不是多给的那次
+## （{level, extra}；不欠选牌 = {}）
+func current_pick() -> Dictionary:
+	if pending() <= 0:
+		return {}
+	var n := 0
+	for lv in range(2, level() + 1):
+		var times := 1 + bonus_levels.count(lv)
+		for k in times:
+			if n == picks_done:
+				return {"level": lv, "extra": k > 0}
+			n += 1
+	return {"level": level(), "extra": false}
 
 
 func rerolls_left() -> int:
@@ -487,7 +505,7 @@ func _on_search_opened(_n: MapNode, session: SearchSession) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"xp": xp, "picks_done": picks_done, "bonus_picks": bonus_picks, "level_seen": level_seen,
+	return {"xp": xp, "picks_done": picks_done, "bonus_picks": bonus_picks, "bonus_levels": bonus_levels.duplicate(), "level_seen": level_seen,
 		"taken": taken.duplicate(), "removed": removed.duplicate(), "offer": offer_ids.duplicate(), "draws": draws,
 		"rerolls_used": rerolls_used, "removals_used": removals_used, "depth_reached": depth_reached,
 		"pending_searches": pending_searches, "history": history.duplicate(true)}
@@ -497,6 +515,15 @@ func restore(d: Dictionary) -> void:
 	xp = maxf(0.0, float(d.get("xp", 0.0)))
 	picks_done = maxi(0, int(d.get("picks_done", 0)))
 	bonus_picks = maxi(0, int(d.get("bonus_picks", 0)))
+	bonus_levels.clear()
+	for v in d.get("bonus_levels", []):
+		bonus_levels.append(int(v))
+	if bonus_levels.size() < bonus_picks:     # 早一点的档只记了次数：按逢 n 级补上是哪几级
+		var every := maxi(1, rules().extra_pick_every)
+		bonus_levels.clear()
+		for k in bonus_picks:
+			bonus_levels.append(every * (k + 1))
+	bonus_picks = bonus_levels.size()
 	level_seen = maxi(1, int(d.get("level_seen", rules().level_of(xp))))
 	taken.clear()
 	var t: Variant = d.get("taken", {})

@@ -476,13 +476,14 @@ const TEXT := {
 	"card.card_n": {"zh": "%s ×%d", "en": "%s ×%d"},
 	# ui/game/level_up_panel.gd、ui/hud/widgets/level_widget.gd（372）
 	"level.title": {"zh": "升到 %d 级", "en": "Level %d"},
+	"level.pick_of": {"zh": "这一张是第 %d 级的", "en": "This pick is for level %d"},
 	"level.left": {"zh": "还要选 %d 次", "en": "%d more to pick"},
 	"level.extra": {"zh": "以人为本：这一级再选一张", "en": "Humans First: pick one more this level"},
 	"level.have": {"zh": "已有 %d 张", "en": "Have %d"},
-	"level.reroll": {"zh": "刷新 %d", "en": "Reroll %d"},
+	"level.reroll": {"zh": "换牌 %d", "en": "Reroll %d"},
 	"level.reroll_tip": {"zh": "三张一起换一批", "en": "Swap all three for a new set"},
-	"level.remove": {"zh": "删除 %d", "en": "Remove %d"},
-	"level.remove_tip": {"zh": "再点一张牌删掉它：这一局不再出，空位补一张", "en": "Then click a card to remove it: it won't show again this run, and the slot is refilled"},
+	"level.remove": {"zh": "剔牌 %d", "en": "Cull %d"},
+	"level.remove_tip": {"zh": "再点一张牌剔掉它：这一局不再出，空位补一张", "en": "Then click a card to cull it: it won't show again this run, and the slot is refilled"},
 	"level.none_left": {"zh": "次数用完了（局外科技可以加）", "en": "None left (camp techs add more)"},
 	"level.kind_stat": {"zh": "属性", "en": "Stats"},
 	"level.kind_weapon": {"zh": "武器", "en": "Weapons"},
@@ -1611,8 +1612,8 @@ const TEXT := {
 	"bonus.rest": {"zh": "休息多回 %d 点体力", "en": "Resting restores %d more Vitality"},
 	"bonus.scout": {"zh": "侦察 %.0f", "en": "Scouting %.0f"},
 	"bonus.shop_price": {"zh": "商店买价 ×%.2f", "en": "Shop buying prices ×%.2f"},
-	"bonus.level_rerolls": {"zh": "升级选牌可刷新 %d 次", "en": "Level-up rerolls: %d"},     # 372
-	"bonus.level_removals": {"zh": "升级选牌可删除 %d 次", "en": "Level-up removals: %d"},     # 372
+	"bonus.level_rerolls": {"zh": "升级选牌可换牌 %d 次", "en": "Level-up rerolls: %d"},     # 372
+	"bonus.level_removals": {"zh": "升级选牌可剔牌 %d 次", "en": "Level-up culls: %d"},     # 372
 	"bonus.shop_refresh": {"zh": "每家商店可付钱换货 %d 次", "en": "Paid restocks per shop: %d"},
 	"bonus.bounty_elite": {"zh": "打赢精英额外掉一件稀有及以上", "en": "Elites drop one extra Rare-or-better item"},
 	"bonus.bounty_core": {"zh": "打赢 BOSS 额外掉一件史诗及以上", "en": "Bosses drop one extra Epic-or-better item"},

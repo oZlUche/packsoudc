@@ -190,3 +190,30 @@ static func run_score(t: TestCase) -> void:
 	t.check(rules.per_level > 0, "每级给分")
 	t.eq(rules.growth_points(1), 0, "1 级 0 分")
 	t.eq(rules.growth_points(4), 3 * rules.per_level, "4 级 = 3 份")
+
+
+static func run_fixes_v773(t: TestCase) -> void:
+	t.begin("372 复测（v7.73）：调息牌面写小数；以人为本只在多给的那一次提示；不奉神的老档迁移补上跨过的逢 5 级")
+	var run := _start(11)
+	var lv := LevelModule.of(run)
+	t.check(lv.card_text(&"card_regen").contains("+0.3"), "调息写 +0.3：%s" % lv.card_text(&"card_regen"))
+	t.check(lv.card_text(&"card_hp_flat").contains("+3") and not lv.card_text(&"card_hp_flat").contains("+3.0"), "整数照旧写整数：%s" % lv.card_text(&"card_hp_flat"))
+	var r := lv.rules()
+	lv.gain(float(r.total_for(11)), LevelModule.SRC_BATTLE)
+	t.eq(lv.bonus_levels, [5, 10] as Array[int], "5、10 级各多一次")
+	var seen: Array[String] = []
+	while lv.pending() > 0:
+		var cur := lv.current_pick()
+		seen.append("%d%s" % [int(cur["level"]), "+" if bool(cur["extra"]) else ""])
+		lv.pick(0)
+	t.eq(seen, ["2", "3", "4", "5", "5+", "6", "7", "8", "9", "10", "10+", "11"] as Array[String], "按级排队，多给的那次紧跟在那一级后面")
+	run.dispose()
+	var xp := float(r.total_for(11)) + 1.0
+	var v7 := {"version": 7, "chapter": "chapter_01", "faith_progress": {"brute": {"devotion": xp / RunMigrations.XP_PER_DEVOTION, "prayer": 0}}}
+	var row: Dictionary = (RunMigrations.upgrade(v7)["modules"] as Dictionary)["level"]
+	t.eq(int(row.get("bonus_picks", 0)), 2, "不奉神：迁移到 11 级补两次")
+	var c := LevelModule.new()
+	c.restore(row)
+	t.eq(c.pending(), 10 + 2, "迁移后欠 10 + 2 次")
+	var v7f := {"version": 7, "chapter": "chapter_01", "faith_selection": {"selected_id": "brute"}, "faith_progress": {"brute": {"devotion": xp / RunMigrations.XP_PER_DEVOTION, "prayer": 0}}}
+	t.eq(int(((RunMigrations.upgrade(v7f)["modules"] as Dictionary)["level"] as Dictionary).get("bonus_picks", 0)), 0, "奉了神：不补")

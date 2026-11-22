@@ -50,12 +50,14 @@ func rebuild() -> void:
 		c.queue_free()
 	if level == null or level.pending() <= 0:
 		return
-	_title.text = UiText.t("level.title") % level.level()
+	var cur := level.current_pick()
+	_title.text = UiText.t("level.pick_of") % int(cur.get("level", level.level()))
+	_title.visible = level.pending() > 1 or bool(cur.get("extra", false))     # 窗的标题条写着升到几级；只欠一次时不重复写
 	var left := level.pending()
 	var notes: Array[String] = []
 	if left > 1:
 		notes.append(UiText.t("level.left") % left)
-	if level.is_humanist() and level.bonus_picks > 0 and left <= level.bonus_picks:
+	if bool(cur.get("extra", false)):
 		notes.append(UiText.t("level.extra"))
 	if removing:
 		notes.append(UiText.t("level.remove_tip"))

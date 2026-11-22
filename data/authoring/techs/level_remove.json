@@ -8,9 +8,9 @@
     "level_reroll"
   ],
   "column": 3,
-  "description": "升级选牌时可以删掉一张，这一局不再出现，空位当场补一张。",
+  "description": "升级选牌时可以剔掉一张，这一局不再出现，空位当场补一张。",
   "descriptions": {
-    "en": "When you level up, remove one card: it won't show again this run, and the slot is refilled."
+    "en": "When you level up, cull one card: it won't show again this run, and the slot is refilled."
   },
   "tree": "mechanism",
   "effect": {
