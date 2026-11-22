@@ -17,5 +17,6 @@
   ],
   "see_items": [
     "charm_sun"
-  ]
+  ],
+  "needs_faith": true
 }

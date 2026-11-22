@@ -21,3 +21,5 @@ When something is on the table, \"Offer\" lights up and first previews how much 
 }
 related = Array[String](["special_rites", "rest_point", "faith_power_and_tiers"])
 see_items = Array[StringName]([&"bone_dice", &"bone_charm_bits"])
+needs_faith = true
+shots = Array[String](["altar_camp"])

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="HelpPageDef" format=3]
+
+[ext_resource type="Script" path="res://core/text/help_page_def.gd" id="1_bk644"]
+
+[resource]
+script = ExtResource("1_bk644")
+id = &"pantheon_choose"
+display_name = "万神院与选神"
+display_names = {
+"en": "The Senatus Panthei"
+}
+category = &"faith"
+order = 11
+text = "万神院到了营地以后，每次点【开始探索】都会先跳出选神界面：选一位神，这一局就奉祂；不想奉神就选【无信者】。没解锁的神写着？？？？，营地里万神院的信赖到了那一档才开。
+
+奉了神，祂的信物出征时自动放进背包，局结束后不带回仓库。这一局的地图上会有神的低语和神坛：在休息点的神坛上献祭道具换经验值，升级时也会出这位神的牌。"
+texts = {
+"en": "Once the Senatus Panthei has come to camp, every time you click Set out the god screen pops up first: pick a god to follow for this run, or pick Faithless to follow none. Locked gods show ????; they open as your Standing with the Senatus Panthei reaches their tier.
+
+The god you follow puts their Charm into your bag when you set out, and it does not come back to the storeroom when the run ends. That run's map has the god's Whispers and Altars: offer items at a rest point's Altar for XP, and level-ups also offer that god's cards."
+}
+related = Array[String](["altar_offering", "faith_power_and_tiers", "anchor_activation"])
+needs_faith = true
+shots = Array[String](["pantheon_pick"])

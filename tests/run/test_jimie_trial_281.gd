@@ -73,7 +73,7 @@ static func run_plant(t: TestCase) -> void:
 	var hid := JimiePath.plant(hg)
 	t.check(hid >= 0 and String(hg.map.get_node(hid).content[JimiePath.ONLY_KEY]) == "lightning", "机关沙漏 = 雷")
 	t.eq(JimiePath.plant(_run("free_mode", 49)), -1, "49 次的法杖：不埋")
-	t.eq(JimiePath.plant(_run("prologue_3")), -1, "没配元素的图：不埋")
+	t.eq(JimiePath.plant(_run("prologue_2")), -1, "没配元素的图：不埋")
 	var owned := _run()
 	owned.meta.warehouse.try_add(ItemInstance.create(owned.items.get_def(&"jimie_core_fire")), true)
 	t.eq(JimiePath.plant(owned), -1, "仓库里有火之核：不埋")

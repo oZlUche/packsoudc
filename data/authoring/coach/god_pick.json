@@ -1,0 +1,8 @@
+{
+  "id": "god_pick",
+  "steps": [
+    {"target": "shrines", "text": "万神院里的神。没解锁的写着？？？？，信赖到了那一档才开。", "texts": {"en": "The gods of the Senatus Panthei. Locked ones show ????; they open once your Trust reaches their tier."}},
+    {"target": "none", "text": "不想奉神就选无信者，升级只出通用牌。", "texts": {"en": "Choose Faithless to follow no god; level-ups then offer only general cards."}},
+    {"target": "choose", "text": "点【奉祂】定下这一局奉谁。祂的信物出征时自动放进背包，局后不带回仓库。", "texts": {"en": "Click Follow to choose this run's god. The god's Charm goes into your bag when you set out, and does not come back to the storeroom."}}
+  ]
+}

@@ -18,6 +18,7 @@ const NurseryPanelScript := preload("res://ui/game/nursery_panel.gd")     # 342 
 const AlchemyPanelScript := preload("res://ui/game/alchemy_panel.gd")     # 354
 const CanteenPanelScript := preload("res://ui/game/canteen_panel.gd")     # 355
 const PantheonPanelScript := preload("res://ui/game/pantheon_panel.gd")     # 377
+const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -564,13 +565,85 @@ func show_god_pick() -> Control:
 	keys.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(keys)
 	keys.add_child(ScrollKey.make(UiText.t("pantheon.back"), close_god_pick))
+	_god_shrines = shrines
+	if CoachOverlay.due(flow, GOD_COACH):
+		_open_god_book()     # 377：第一次跳到选神界面 —— 先翻开「万神院与选神」那页，合上再用教练层指一遍
 	return _god_pick
+
+
+## 377：第一次选神的讲解（看完记进 coach_seen）与它先翻开的百科页
+const GOD_COACH := &"god_pick"
+const GOD_PAGE := "pantheon_choose"
+var _god_shrines: Node = null
+var _god_book: GameScreen = null
+var _god_coach: CoachOverlay = null
+
+
+func _open_god_book() -> void:
+	if _god_pick == null or _god_book != null or not flow.encyclopedia().has_page(GOD_PAGE):
+		_show_god_coach.call_deferred()
+		return
+	var book = EncyclopediaScreenScript.new()
+	book.screen = GameFlow.Screen.ENCYCLOPEDIA
+	book.flow = flow
+	book.font = font
+	book.back = close_god_book
+	_god_book = book
+	_god_pick.add_child(book)
+	book.open({"page": GOD_PAGE})
+
+
+## 合上选神前翻开的那页，接着放教练层
+func close_god_book() -> void:
+	if _god_book == null:
+		return
+	_god_book.queue_free()
+	_god_book = null
+	_show_god_coach.call_deferred()
+
+
+func god_book() -> GameScreen:
+	return _god_book
+
+
+func god_coach() -> CoachOverlay:
+	return _god_coach
+
+
+func _show_god_coach() -> void:
+	if _god_pick == null or _god_coach != null or _god_shrines == null or not CoachOverlay.due(flow, GOD_COACH):
+		return
+	var shrines: Node = _god_shrines
+	_god_coach = CoachOverlay.run_on(_god_pick, GOD_COACH, flow, font, func(id: StringName) -> Rect2: return _god_target(shrines, id))
+	if _god_coach != null:
+		_god_coach.closed.connect(func(): _god_coach = null)
+
+
+## 教练层指的地方：`shrines` 一排神龛、`none` 无信者那座、`choose` 第一个点得动的【奉祂】
+static func _god_target(shrines: Node, id: StringName) -> Rect2:
+	if shrines == null or not is_instance_valid(shrines):
+		return Rect2()
+	var n: Control = null
+	match id:
+		&"shrines":
+			n = shrines.find_child("Shrines", true, false) as Control
+		&"none":
+			n = shrines.find_child("Shrine_none", true, false) as Control
+		&"choose":
+			for b in shrines.find_children("Choose_*", "Button", true, false):
+				if not (b as Button).disabled and b.name != "Choose_none":
+					n = b as Control
+					break
+	return n.get_global_rect() if n != null else Rect2()
 
 
 func close_god_pick() -> void:
 	if _god_pick != null:
 		_god_pick.queue_free()
 		_god_pick = null
+		_god_book = null
+		_god_coach = null
+		_god_shrines = null
 
 
 func god_pick() -> Control:
@@ -1300,6 +1373,8 @@ func _build_codex(root: Control) -> Control:
 	page_.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(page_)
 	var ids: Array = flow.items.ids(true)     # 091：锁着的也列（灰的，写着怎么解锁）
+	if not flow.faith_open():     # 377：万神院没来，图鉴不列信物、赐福版这类信仰道具
+		ids = ids.filter(func(i: StringName) -> bool: return not flow.items.get_def(i).has_faith())
 	ids.sort_custom(func(a: StringName, b: StringName) -> bool:
 		var da := flow.items.get_def(a)
 		var db := flow.items.get_def(b)
@@ -1402,9 +1477,11 @@ func codex_columns() -> int:
 func _codex_tile_for(def: ItemDef) -> CodexTile:
 	var m := flow.meta
 	var variants: Array[ItemDef] = [def]
+	var faith := flow.faith_open()
 	for vid in flow.items.variants_of(def.id):
-		if vid != def.id:
-			variants.append(flow.items.get_def(vid))
+		var v := flow.items.get_def(vid)
+		if vid != def.id and v != null and (faith or not v.has_faith()):
+			variants.append(v)
 	var any_lit := false
 	var tile := CodexTile.new(def, m.codex_lit(def.id), m.codex_count(def.id), font)
 	for v in variants:
@@ -1783,6 +1860,14 @@ func page() -> String:
 
 ## 090：Esc = 返回上一级 —— 在别的页先回出征页（264 前是家），出征页再回主菜单
 func escape() -> bool:
+	if _god_book != null:     # 377：选神前翻开的那页先合上
+		close_god_book()
+		return true
+	if _god_coach != null:
+		return true     # 教练层自己认 Esc
+	if _god_pick != null:
+		close_god_pick()
+		return true
 	if sell_mode():     # 268：先退出售模式
 		set_sell_mode(false)
 		return true

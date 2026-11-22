@@ -32,7 +32,6 @@ starting_items = Array[StringName]([&"knife"])
 starting_keepsakes = Array[StringName]([&"spyglass"])
 tutorial_funds = 150
 tutorial_items = Array[StringName]([&"shortsword", &"whetstone"])
-next_chapter = &"prologue_3"
 allow_carry_in = false
 auto_spawn = true
 skip_setup = true

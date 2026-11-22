@@ -240,5 +240,17 @@ func _after() -> void:
 
 
 ## 测试读：现在摆着的几张
+## 377：教练层指的地方（全局坐标）：`cards` 三张牌、`reroll` 换牌、`remove` 剔牌；别的空矩形
+func coach_rect(id: StringName) -> Rect2:
+	match id:
+		&"cards":
+			return _cards.get_global_rect()
+		&"reroll":
+			return _reroll.get_global_rect()
+		&"remove":
+			return _remove.get_global_rect()
+	return Rect2()
+
+
 func offered() -> Array[StringName]:
 	return level.offer() if level != null else ([] as Array[StringName])

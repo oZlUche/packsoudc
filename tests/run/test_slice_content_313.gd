@@ -37,7 +37,7 @@ static func run_chapter(t: TestCase) -> void:
 	t.check(GameFlow.load_chapters().all(func(c: ChapterDef) -> bool: return c.id != &"slice_ruins"), "正式版的章节表里没有它")
 	var only := GameFlow.load_chapters(&"slice")
 	t.eq(only.filter(func(c: ChapterDef) -> bool: return c.profile == &"slice").map(func(c: ChapterDef) -> StringName: return c.id), [&"slice_ruins"], "切片自己的章只有它（统一教程的三段另算）")
-	t.eq(ch.requires_unlock, &"prologue3_done", "统一教程：三段教程通了（或跳过）才开")
+	t.eq(ch.requires_unlock, &"prologue2_done", "统一教程：两段教程通了（或跳过）才开（377 删了序章三）")
 	t.eq(ch.characters, [&"andreus"] as Array[StringName], "只有安德烈乌斯")
 	t.eq(ch.starting_items, [&"knife", &"bandage", &"ration"] as Array[StringName], "开局道具")
 	t.check(not ch.allow_carry_in and ch.step_limit == 20 and not ch.closing_extract, "不带东西进、倒计时 20、撤离点不随时间关")

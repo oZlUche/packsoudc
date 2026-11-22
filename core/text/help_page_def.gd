@@ -31,6 +31,22 @@ const CATEGORY_NAMES := {
 @export var related: Array[String] = []
 ## 「相关道具」：道具 id（图鉴没点亮的写「？」）
 @export var see_items: Array[StringName] = []
+## 377：这一页讲的是神、信物、祭坛 —— 万神院到营地之前百科不列（[method GameFlow.visible_help_pages]）
+@export var needs_faith: bool = false
+## 377：页头的截图（名字；图在 [constant SHOT_DIR]`<语言>/<名字>.png`，中英各一套，`tools/help_shots.gd` 出）
+@export var shots: Array[String] = []
+
+const SHOT_DIR := "res://assets/help/shots/"
+
+
+## 这一页的截图在当前语言下的路径（没有那一语言的图就用中文的）
+func shot_paths(lang: String = "") -> Array[String]:
+	var l := lang if lang != "" else UiText.lang
+	var out: Array[String] = []
+	for n in shots:
+		var p := "%s%s/%s.png" % [SHOT_DIR, l, n]
+		out.append(p if ResourceLoader.exists(p) else "%szh/%s.png" % [SHOT_DIR, n])
+	return out
 
 
 func text_for(lang: String = "") -> String:

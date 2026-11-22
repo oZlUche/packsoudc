@@ -16,5 +16,6 @@
   ],
   "see_items": [
     "charm_skill"
-  ]
+  ],
+  "needs_faith": true
 }
