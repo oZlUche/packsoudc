@@ -184,17 +184,9 @@ static func _v7_to_v8(d: Dictionary) -> Dictionary:
 			break
 		best = maxi(best, p)
 	var xp := float(best) * XP_PER_DEVOTION
-	var level_row := {"xp": xp}
-	if sel == "":     # 不奉神（以人为本）：迁移跨过的逢 n 级照样各多一次（[LevelModule] 只在升级那一下记）
-		var rules := LevelRules.load_rules()
-		var lv := rules.level_of(xp)
-		var levels: Array = []
-		if rules.extra_pick_every > 0:
-			for l in range(rules.extra_pick_every, lv + 1, rules.extra_pick_every):
-				levels.append(l)
-		level_row["level_seen"] = lv
-		level_row["bonus_levels"] = levels
-		level_row["bonus_picks"] = levels.size()
+	# 不奉神（以人为本）迁移跨过的逢 n 级照样各多一次 —— 有没有有效信仰要看棋盘上的信物，迁移看不到，
+	# 所以只标一句，[method LevelModule.install] 在棋盘恢复之后按和升级时同一个判断补
+	var level_row := {"xp": xp, "backfill_bonus": true}
 	mods["level"] = level_row
 	d["modules"] = mods
 	return d

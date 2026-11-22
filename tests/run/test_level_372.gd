@@ -211,9 +211,23 @@ static func run_fixes_v773(t: TestCase) -> void:
 	var xp := float(r.total_for(11)) + 1.0
 	var v7 := {"version": 7, "chapter": "chapter_01", "faith_progress": {"brute": {"devotion": xp / RunMigrations.XP_PER_DEVOTION, "prayer": 0}}}
 	var row: Dictionary = (RunMigrations.upgrade(v7)["modules"] as Dictionary)["level"]
-	t.eq(int(row.get("bonus_picks", 0)), 2, "不奉神：迁移到 11 级补两次")
-	var c := LevelModule.new()
-	c.restore(row)
-	t.eq(c.pending(), 10 + 2, "迁移后欠 10 + 2 次")
-	var v7f := {"version": 7, "chapter": "chapter_01", "faith_selection": {"selected_id": "brute"}, "faith_progress": {"brute": {"devotion": xp / RunMigrations.XP_PER_DEVOTION, "prayer": 0}}}
-	t.eq(int(((RunMigrations.upgrade(v7f)["modules"] as Dictionary)["level"] as Dictionary).get("bonus_picks", 0)), 0, "奉了神：不补")
+	t.check(bool(row.get("backfill_bonus", false)), "迁移只标一句，装上时再按有效信仰补")
+	# 补不补看装上那一刻的有效信仰（和升级时同一个判断）：不奉神 / 奉了但信物不在棋盘 → 补；信物在棋盘 → 不补
+	for case in [["none", 2], ["missing", 2], ["active", 0]]:
+		var host := _start(13)
+		if String(case[0]) != "none":
+			host.selected_faith = &"brute"
+		if String(case[0]) == "active":
+			for id in host.items.ids():
+				var d := host.items.get_def(id)
+				if d.is_anchor() and FaithTags.id_of_tag(d.faith_tag()) == &"brute":
+					TestSupport.put(host.board, d)
+					break
+		var c := LevelModule.new()
+		c.restore(row)
+		c.install(host)
+		t.eq(c.bonus_picks, int(case[1]), "迁移到 11 级（%s）：补 %d 次" % [case[0], case[1]])
+		t.eq(c.pending(), 10 + int(case[1]), "迁移后欠 10 + %d 次（%s）" % [case[1], case[0]])
+		c.install(host)
+		t.eq(c.bonus_picks, int(case[1]), "再装一次不重复补（%s）" % case[0])
+		host.dispose()
