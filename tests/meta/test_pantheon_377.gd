@@ -244,3 +244,28 @@ static func run_legacy(t: TestCase) -> void:
 	t.check(not bool(Pantheon.migrate_legacy(fresh, c.items)["arrived"]), "什么都没有的老档不来")
 	var nm := GameFlow.new_meta(GameFlow.load_meta_rules())
 	t.eq(nm.flag(Pantheon.MIGRATED), 1, "新档建档就标过")
+
+
+static func run_pick_panel(t: TestCase) -> void:
+	t.begin("377（作者 22:53 改）· 出征时的选神界面：第一项是无信者，没解锁的神写「？？？？」、不露神像、点不了；营地那一页只看、没有无信者")
+	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths"]))
+	var f := _new_flow(c)
+	f.meta.commissions.arrived[String(Pantheon.FACTION)] = 0
+	var PP: GDScript = load("res://ui/game/pantheon_panel.gd")
+	var pick = PP.new()
+	pick.setup(f, PP.PICK)
+	var got: Array = []
+	pick.picked.connect(func(fid: StringName): got.append(fid))
+	t.not_null(pick.find_child("Shrine_none", true, false), "选神界面有无信者")
+	var nature: Control = pick.find_child("Shrine_nature", true, false)
+	t.check(nature != null and (nature.find_child("Name", true, false) as Label).text == UiText.t("pantheon.unknown"), "没解锁的写？？？？")
+	t.check(nature != null and (nature.find_child("Image", true, false) as TextureRect).texture == null, "不露神像")
+	t.check(not pick.choose(&"nature") and got.is_empty(), "点不了")
+	t.check(pick.choose(&"skill") and got == [&"skill"] and f.meta.pantheon_choice == &"skill", "选技巧之神")
+	t.check(pick.choose(&"") and f.meta.pantheon_choice == &"", "选无信者")
+	var view = PP.new()
+	view.setup(f)
+	t.check(view.find_child("Shrine_none", true, false) == null and view.find_child("Choose_skill", true, false) == null, "营地那一页：没有无信者、没有选的键")
+	pick.free()
+	view.free()
+	Support.cleanup(PREFIX)

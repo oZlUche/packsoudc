@@ -266,6 +266,7 @@ func open(payload: Dictionary) -> void:
 	board_col.add_child(_expedition)
 	_expedition.setup(flow)
 	_expedition.skip_asked.connect(show_skip_tutorial)     # 统一教程 D
+	_expedition.god_pick_asked.connect(show_god_pick)     # 377
 	_new_run_btn = _expedition.start_btn
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
 	var wh_page := _cloth()
@@ -388,16 +389,10 @@ func _build_alchemy_page() -> void:     # 354：炼金页 —— 右边仓库进
 	_pages["alchemy"] = al_page
 
 
-func _build_pantheon_page() -> void:     # 377：万神院页（占位：粗布上一排神龛，等 UI设计 的样张）
+func _build_pantheon_page() -> void:     # 377：万神院页（只看：已解锁的神、各档；占位，等 UI设计 的样张 B）
 	var pt_page := _cloth()
 	_pantheon = PantheonPanelScript.new()
 	_pantheon.setup(flow)
-	_pantheon.changed.connect(_refresh)
-	_pantheon.said.connect(func(text: String, is_warn: bool):
-		if is_warn:
-			warn(text)
-		else:
-			say(text))
 	pt_page.add_child(_pantheon)
 	_pages["pantheon"] = pt_page
 
@@ -531,6 +526,7 @@ func _rebuild_home() -> void:
 	_expedition = board
 	_expedition.setup(flow)
 	_expedition.skip_asked.connect(show_skip_tutorial)
+	_expedition.god_pick_asked.connect(show_god_pick)     # 377
 	_new_run_btn = _expedition.start_btn
 
 
@@ -541,57 +537,104 @@ func close_skip_tutorial() -> void:
 #endregion
 
 
-#region 377：万神院到营地的那一页（占位：一页文字 + 【去万神院】；过场美术等 UI设计 的样张）
-const PANTHEON_INTRO := &"pantheon_intro_seen"
+#region 377：出征时的选神界面；阵营到营地的通知（作者选 B「牌子亮起」，以后别的阵营、功能解锁也用这一种；占位等 UI设计 的正式图）
+const ARRIVAL_SEEN := "arrival_seen_"
 var _arrival: Control = null
+var _god_pick: Control = null
 
 
-func pantheon_arrival_due() -> bool:
-	return flow.pantheon_listed() and flow.meta.flag(PANTHEON_INTRO) == 0 and not tour_due()
-
-
-func _maybe_pantheon_arrival() -> void:
-	if pantheon_arrival_due():
-		show_pantheon_arrival()
-
-
-func show_pantheon_arrival() -> Control:
-	if _arrival != null:
-		return _arrival
-	_arrival = _shade(0.72, true)
-	_arrival.name = "PantheonArrival"
-	_arrival.z_index = 10
-	var panel := _modal_panel(UiText.t("pantheon.arrive_title"), 28)
-	_arrival.get_child(0).add_child(panel)
+## 【开始探索】：万神院到了营地，先跳出选神界面，选完再进后面的出征流程
+func show_god_pick() -> Control:
+	if _god_pick != null:
+		return _god_pick
+	_god_pick = _shade(0.72, true)
+	_god_pick.name = "GodPick"
+	_god_pick.z_index = 10
+	var panel := _modal_panel(UiText.t("pantheon.pick_title"), 24)
+	_god_pick.get_child(0).add_child(panel)
 	var col := _vbox(16)
 	panel.content.add_child(col)
-	var head := UiTheme.hbox(12)
-	head.alignment = BoxContainer.ALIGNMENT_CENTER
-	head.add_child(load("res://ui/game/commission_panel.gd").emblem(Pantheon.FACTION, 72))
-	col.add_child(head)
-	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 24, 16, 24, 16)
-	col.add_child(paper)
-	paper.add_child(UiTheme.rich_block(520, 16, UiText.t("pantheon.arrive_body")))
+	var shrines = PantheonPanelScript.new()
+	shrines.setup(flow, PantheonPanelScript.PICK)
+	shrines.picked.connect(func(_fid: StringName):
+		close_god_pick()
+		flow.new_run())
+	col.add_child(shrines)
 	var keys := _hbox(24)
 	keys.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(keys)
-	keys.add_child(ScrollKey.primary(UiText.t("pantheon.arrive_go"), func(): close_pantheon_arrival(true)))
-	keys.add_child(ScrollKey.make(UiText.t("pantheon.arrive_later"), func(): close_pantheon_arrival(false)))
+	keys.add_child(ScrollKey.make(UiText.t("pantheon.back"), close_god_pick))
+	return _god_pick
+
+
+func close_god_pick() -> void:
+	if _god_pick != null:
+		_god_pick.queue_free()
+		_god_pick = null
+
+
+func god_pick() -> Control:
+	return _god_pick
+
+
+## 有没有还没通知过的到营地的阵营（现在只有万神院写了通知的字）
+func arrival_due() -> StringName:
+	if tour_due():
+		return &""
+	if flow.pantheon_listed() and flow.meta.flag(StringName(ARRIVAL_SEEN + String(Pantheon.FACTION))) == 0:
+		return Pantheon.FACTION
+	return &""
+
+
+func _maybe_pantheon_arrival() -> void:
+	var fid := arrival_due()
+	if fid != &"":
+		show_arrival(fid)
+
+
+## 一方阵营到了营地：它的牌子（徽 + 名字）亮起，下面一句说明，【知道了】
+func show_arrival(faction_id: StringName) -> Control:
+	if _arrival != null:
+		return _arrival
+	var f := Commissions.faction(faction_id)
+	_arrival = _shade(0.72, true)
+	_arrival.name = "Arrival"
+	_arrival.z_index = 10
+	var col := _vbox(16)
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	_arrival.get_child(0).add_child(col)
+	var plate := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 24, 12, 24, 12)
+	plate.name = "Plate"
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(plate)
+	var head := UiTheme.hbox(12)
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	plate.add_child(head)
+	head.add_child(load("res://ui/game/commission_panel.gd").emblem(faction_id, 72))
+	var title := UiTheme.make_label(Names.of(f) if f != null else String(faction_id), 28, UiTheme.INK)
+	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	head.add_child(title)
+	UiMotion.fade(plate, UiMotion.enabled(flow.settings), 0.0, 1.0, 0.4)     # 牌子亮起
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 24, 16, 24, 16)
+	col.add_child(paper)
+	paper.add_child(UiTheme.rich_block(520, 16, UiText.t("arrive." + String(faction_id))))
+	var keys := _hbox(24)
+	keys.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(keys)
+	keys.add_child(ScrollKey.primary(UiText.t("arrive.ok"), func(): close_arrival(faction_id)))
 	return _arrival
 
 
-## 关掉到来那一页（[param go] = 直接去万神院页）；这份存档以后不再放
-func close_pantheon_arrival(go: bool) -> void:
+## 关掉通知；这份存档这一方以后不再通知
+func close_arrival(faction_id: StringName) -> void:
 	if _arrival != null:
 		_arrival.queue_free()
 		_arrival = null
-	flow.meta.set_flag(PANTHEON_INTRO)
+	flow.meta.set_flag(StringName(ARRIVAL_SEEN + String(faction_id)))
 	flow.save_meta()
-	if go:
-		show_tab("pantheon")
 
 
-func pantheon_arrival() -> Control:
+func arrival() -> Control:
 	return _arrival
 #endregion
 

@@ -23,6 +23,8 @@ const CHIP_FONT := 15
 
 ## 统一教程 D（方案 §8.1 / §8.2）：教程还没全通时点了「跳过剩余教程」（基地弹确认页，[method MetaScreen.show_skip_tutorial]）
 signal skip_asked()
+## 377：万神院到了营地 —— 【开始探索】先跳出选神界面（基地屏接这个信号）
+signal god_pick_asked()
 
 var flow: GameFlow = null
 var start_btn: Button = null
@@ -31,8 +33,6 @@ var last_plate: PanelContainer = null
 var tutorial_plate: PanelContainer = null
 var skip_btn: Button = null
 var supply_plate: PanelContainer = null
-## 377：「这一局奉：…」小签（万神院在营地才有）
-var god_chip: PanelContainer = null
 ## 「上回出征」三行写的字（测试看）；没出征过是空
 var _last_lines: Array[String] = []
 ## 军需：[[随身技能 id, 个数], …] 与局外加成 id
@@ -57,11 +57,19 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
 	_fill_supplies(_col(supply_plate))
-	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true, START, START_FONT)
+	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), _on_start, true, START, START_FONT)
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	add_child(start_btn)
 	return self
+
+
+## 【开始探索】：万神院在营地就先选神（教程还没通的那一下直接开教程章，不选）
+func _on_start() -> void:
+	if flow.pantheon_listed() and flow.new_run_target() == null and god_pick_asked.get_connections().size() > 0:
+		god_pick_asked.emit()
+	else:
+		flow.new_run()
 
 
 ## 一块大木牌连它的挂牌：挂牌在上（画在木牌上面），木牌往上收 12 压住挂牌下沿；返回木牌，[method _col] 取里面那一列
@@ -183,12 +191,6 @@ func _last_difficulty() -> DifficultyDef:
 
 ## 军需：一行随身技能圆槽（科技每局发的，[member MetaState.belt_grants]），一行局外加成小牌（[method GameFlow.meta_buffs]）
 func _fill_supplies(col: VBoxContainer) -> void:
-	if flow.pantheon_listed():     # 377：这一局奉的神（万神院里选的；没选是以人为本）
-		var fid := Pantheon.choice(flow.meta)
-		var def := flow.faith_defs.get(fid, null) as FaithDef
-		god_chip = _chip(UiText.t("meta.pantheon_choice") % (Names.of(def) if def != null else UiText.t("pantheon.humanist")))
-		god_chip.name = "GodChip"
-		col.add_child(god_chip)
 	var grants: Dictionary = flow.meta.belt_grants
 	var ids := grants.keys()
 	ids.sort()
@@ -196,7 +198,7 @@ func _fill_supplies(col: VBoxContainer) -> void:
 		if int(grants[id]) > 0:
 			_belt.append([StringName(String(id)), int(grants[id])])
 	_buffs = flow.meta_buffs()
-	if _belt.is_empty() and _buffs.is_empty() and god_chip == null:
+	if _belt.is_empty() and _buffs.is_empty():
 		col.add_child(_line(UiText.t("meta.none_yet")))
 		return
 	if not _belt.is_empty():
