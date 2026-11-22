@@ -21,3 +21,4 @@ Following this god grants Finesse: acting with a different kind of action (melee
 }
 related = Array[String](["faith_power_and_tiers", "altar_offering"])
 see_items = Array[StringName]([&"charm_skill"])
+needs_faith = true

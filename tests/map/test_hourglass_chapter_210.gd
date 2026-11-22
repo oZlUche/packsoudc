@@ -25,7 +25,7 @@ static func run_chapter(t: TestCase) -> void:
 	t.eq(c.map_source.generator_id, &"hourglass", "沙漏生成器")
 	t.check(c.map_source.generator_config is HourglassMapConfig, "配置是沙漏的")
 	t.eq(c.enemy_pool, &"clockwork", "机关池")
-	t.eq(c.requires_unlock, &"prologue3_done", "序章三通关解锁")
+	t.eq(c.requires_unlock, &"prologue2_done", "序章二通关解锁（377 删了序章三）")
 	t.eq(c.step_limit, 40, "兜底倒计时 40 步")
 	t.eq(c.map_skin, &"clockwork", "底图 clockwork")
 	t.check(MapSkin.texture(c.map_skin) != null, "底图在")

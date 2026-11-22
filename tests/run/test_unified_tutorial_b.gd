@@ -1,5 +1,5 @@
 ## 统一教程 B 批（方案 docs/plans/2026-11-18-unified-tutorial-and-base-return.md §9 / §12.1）：
-## 三段教程的固定奖励走同一本账 —— 跳过补未领的、正常撤离领自己那段；重复点、读档都不重复发；放不下的记着不丢；老档不追发
+## 两段教程（377 删了序章三）的固定奖励走同一本账 —— 跳过补未领的、正常撤离领自己那段；重复点、读档都不重复发；放不下的记着不丢；老档不追发
 extends RefCounted
 
 const Support := preload("res://tests/run/flow_support.gd")
@@ -30,44 +30,45 @@ static func _owed_ids(f: GameFlow) -> Array:
 
 
 static func run_table(t: TestCase) -> void:
-	t.begin("统一教程 B · 奖励表：三段 100 / 150 / 200 金币，道具都在道具库里；两档同一张表")
+	t.begin("统一教程 B · 奖励表：两段 100 / 150 金币，道具都在道具库里；两档同一张表（377 删了序章三）")
 	var c := TestSupport.load_content("free_mode", ["loadouts", "meta_rules"])
 	for p in [&"", SliceProfile.SLICE]:
 		var f := _flow(c, p)
 		var tuts := f.tutorial_chapters()
-		t.eq(tuts.map(func(ch: ChapterDef) -> int: return ch.tutorial_funds), [100, 150, 200], "%s：三段金币" % p)
+		t.eq(tuts.map(func(ch: ChapterDef) -> int: return ch.tutorial_funds), [100, 150], "%s：两段金币" % p)
 		for ch in tuts:
 			for id in ch.tutorial_items:
 				t.not_null(c.items.get_def(id), "%s 的奖励 %s 在道具库里" % [ch.id, id])
-		t.check(tuts[2].tutorial_items_carried and not tuts[0].tutorial_items_carried, "只有第三段的信物按带回来的抵")
+		t.check(not tuts.any(func(ch: ChapterDef) -> bool: return ch.tutorial_items_carried), "没有按带回来的抵名额的段了（原来是序章三的信物）")
 
 
 static func run_skip_fresh(t: TestCase) -> void:
-	t.begin("统一教程 B · 新档跳过：开局那套 + 三段 450 金币 + 七件道具；再跳一次、读档再跳都不重复发")
+	t.begin("统一教程 B · 新档跳过：开局那套 + 两段 250 金币 + 教程道具；再跳一次、读档再跳都不重复发")
 	var c := TestSupport.load_content("free_mode", ["loadouts", "meta_rules"])
 	var f := _flow(c)
 	var pre := f.skip_preview()
-	t.eq(int(pre["funds"]), 450, "清单：补 450 金币")
-	t.eq((pre["items"] as Array).size(), _owed_ids(f).size(), "清单：三段的道具都在")
+	t.eq(int(pre["funds"]), 250, "清单：补 250 金币")
+	t.eq((pre["items"] as Array).size(), _owed_ids(f).size(), "清单：两段的道具都在")
 	t.check(f.skip_prologue(), "跳过并存了盘")
-	t.eq(f.meta.funds, 450, "金币进了余额")
-	for id in [&"knife", &"whetstone", &"charm_brute", &"charm_sun"]:
+	t.eq(f.meta.funds, 250, "金币进了余额")
+	for id in [&"knife", &"whetstone", &"shortsword"]:
 		t.check(_count(f.meta, id) >= 1, "仓库里有 %s" % id)
 	for ch in f.tutorial_chapters():
 		t.eq(TutorialRewards.state_of(f.meta, ch.id), TutorialRewards.SKIPPED, "%s 记成跳过" % ch.id)
 	t.check(TutorialRewards.claimed(f.meta, TutorialRewards.START), "开局那套也记了账")
 	var held := f.meta.warehouse.item_count()
 	f.skip_prologue()
-	t.eq(f.meta.funds, 450, "再跳一次：金币不变")
+	t.eq(f.meta.funds, 250, "再跳一次：金币不变")
 	t.eq(f.meta.warehouse.item_count(), held, "再跳一次：道具不变")
 	t.eq(int(f.skip_preview()["funds"]), 0, "清单空了")
 	# 花掉、卖掉之后也不补
-	f.meta.spend_funds(400)
-	var charm := -1
+	f.meta.spend_funds(200)
+	var whet := -1
 	for inst in f.meta.warehouse.items():
-		if (inst as ItemInstance).def.id == &"charm_sun":
-			charm = (inst as ItemInstance).uid
-	f.meta.sell_item(charm)
+		if (inst as ItemInstance).def.id == &"whetstone":
+			whet = (inst as ItemInstance).uid
+	var whets := _count(f.meta, &"whetstone")
+	f.meta.sell_item(whet)
 	var back := MetaSave.read(c.items, f.meta_path, c.meta_rules, f.tech_defs)
 	t.not_null(back, "读得回来")
 	if back != null:
@@ -83,12 +84,12 @@ static func run_skip_fresh(t: TestCase) -> void:
 	var again := _flow(c)
 	again.meta = f.meta
 	again.skip_prologue()
-	t.eq(_count(f.meta, &"charm_sun"), 0, "卖掉的信物不补第二次")
+	t.eq(_count(f.meta, &"whetstone"), whets - 1, "卖掉的磨刀石不补第二次")
 	Support.cleanup(PREFIX)
 
 
 static func run_partial(t: TestCase) -> void:
-	t.begin("统一教程 B · 第一段打通后跳过：只补第二、三段的 350 金币和它们的道具；第三段带回的信物抵名额")
+	t.begin("统一教程 B · 第一段打通后跳过：只补第二段的 150 金币和它的道具；带回来的同名道具抵名额（按章节开关）")
 	var c := TestSupport.load_content("free_mode", ["loadouts", "meta_rules"])
 	var f := _flow(c)
 	var tuts := f.tutorial_chapters()
@@ -96,33 +97,37 @@ static func run_partial(t: TestCase) -> void:
 	t.eq(int(got["funds"]), 100, "第一段正常领 100")
 	t.eq(TutorialRewards.claim(f.meta, tuts[0], c.items, TutorialRewards.COMPLETED), {}, "同一段再领：什么也不发")
 	var pre := f.skip_preview()
-	t.eq(int(pre["funds"]), 350, "清单：只剩 350")
+	t.eq(int(pre["funds"]), 150, "清单：只剩 150")
 	t.check((pre["claimed"] as Array).size() == 1 and (pre["claimed"] as Array).has(&"prologue"), "清单：第一段标已领")
 	f.skip_prologue()
-	t.eq(f.meta.funds, 450, "合计 450（100 + 350）")
+	t.eq(f.meta.funds, 250, "合计 250（100 + 150）")
 	t.eq(TutorialRewards.state_of(f.meta, &"prologue"), TutorialRewards.COMPLETED, "第一段还是正常完成，没被改成跳过")
-	# 第三段：带回来一枚蛮神信物 —— 只补日神那枚
+	# 开了 tutorial_items_carried 的段：带回来一块磨刀石 —— 只补短剑（现在没有章开它，原来是序章三的信物；机制留着）
 	var h := _flow(c)
-	var brute := ItemInstance.create(c.items.get_def(&"charm_brute"), 0)
-	var res := TutorialRewards.claim(h.meta, h.tutorial_chapters()[2], c.items, TutorialRewards.COMPLETED, [brute])
-	t.eq(res["items"], ["charm_sun"], "带回了蛮神的：只补日神的")
+	var ch := ChapterDef.new()
+	ch.id = &"carried_probe"
+	ch.tutorial_funds = 200
+	ch.tutorial_items = [&"shortsword", &"whetstone"] as Array[StringName]
+	ch.tutorial_items_carried = true
+	var whet := ItemInstance.create(c.items.get_def(&"whetstone"), 0)
+	var res := TutorialRewards.claim(h.meta, ch, c.items, TutorialRewards.COMPLETED, [whet])
+	t.eq(res["items"], ["shortsword"], "带回了磨刀石：只补短剑")
 	t.eq(int(res["funds"]), 200, "金币照发")
 	Support.cleanup(PREFIX)
 
 
 static func run_started_then_skip(t: TestCase) -> void:
-	t.begin("统一教程 B · 第三段打到一半跳过：账本从「进行中」变成跳过，奖励全补（局里拿的没带回来）")
+	t.begin("统一教程 B · 第二段打到一半跳过：账本从「进行中」变成跳过，奖励全补（局里拿的没带回来）")
 	var c := TestSupport.load_content("free_mode", ["loadouts", "meta_rules"])
 	var f := _flow(c)
 	var tuts := f.tutorial_chapters()
 	TutorialRewards.mark(f.meta, tuts[0].id, TutorialRewards.COMPLETED)
-	TutorialRewards.mark(f.meta, tuts[1].id, TutorialRewards.COMPLETED)
-	TutorialRewards.mark(f.meta, tuts[2].id, TutorialRewards.STARTED)
-	t.check(not TutorialRewards.claimed(f.meta, tuts[2].id), "进行中不算领过")
+	TutorialRewards.mark(f.meta, tuts[1].id, TutorialRewards.STARTED)
+	t.check(not TutorialRewards.claimed(f.meta, tuts[1].id), "进行中不算领过")
 	f.skip_prologue()
-	t.eq(TutorialRewards.state_of(f.meta, tuts[2].id), TutorialRewards.SKIPPED, "记成跳过")
-	t.check(_count(f.meta, &"charm_brute") == 1 and _count(f.meta, &"charm_sun") == 1, "两枚信物都补了")
-	t.eq(f.meta.funds, 200, "只补第三段的 200")
+	t.eq(TutorialRewards.state_of(f.meta, tuts[1].id), TutorialRewards.SKIPPED, "记成跳过")
+	t.check(_count(f.meta, &"shortsword") >= 1 and _count(f.meta, &"whetstone") >= 1, "第二段的道具都补了")
+	t.eq(f.meta.funds, 150, "只补第二段的 150")
 	Support.cleanup(PREFIX)
 
 
@@ -149,7 +154,7 @@ static func run_legacy(t: TestCase) -> void:
 	t.eq(TutorialRewards.state_of(f.meta, &"prologue"), TutorialRewards.LEGACY, "第一段：老档领过")
 	t.eq(TutorialRewards.state_of(f.meta, &"prologue_2"), "", "第二段：还没开始")
 	t.eq(f.grant_first_kit(), 0, "开局那套不补")
-	t.eq(int(f.skip_preview()["funds"]), 350, "跳过只补没打的两段")
+	t.eq(int(f.skip_preview()["funds"]), 150, "跳过只补没打的第二段")
 
 
 static func run_lossless(t: TestCase) -> void:

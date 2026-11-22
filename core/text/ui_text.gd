@@ -218,7 +218,7 @@ const TEXT := {
 	"map.rules_title": {"zh": "本图规则　%s", "en": "Map rules · %s"},
 	"map.rules_ok": {"zh": "知道了（Esc）", "en": "Got it (Esc)"},
 	"tut_ask.title": {"zh": "要带你走一遍吗？", "en": "Want a walkthrough?"},     # 240：开场一问
-	"tut_ask.body": {"zh": "序章三张图手把手教你搜、打、撤，每段打完回基地整理。老手可以跳过：每段的固定奖励（金币和道具）照样补进仓库。", "en": "The three prologue runs teach you to search, fight and get out, with a stop at the base after each. If you know the drill, skip them: each run's fixed reward (coins and items) still goes into your storeroom."},
+	"tut_ask.body": {"zh": "序章两张图手把手教你搜、打、撤，每段打完回基地整理。老手可以跳过：每段的固定奖励（金币和道具）照样补进仓库。", "en": "The two prologue runs teach you to search, fight and get out, with a stop at the base after each. If you know the drill, skip them: each run's fixed reward (coins and items) still goes into your storeroom."},
 	"tut_ask.yes": {"zh": "需要", "en": "Yes"},
 	"tut_ask.no": {"zh": "不需要", "en": "No need"},
 	"map.hunter_loss": {"zh": "　输了会怎样 —— %s", "en": " · If you lose: %s"},

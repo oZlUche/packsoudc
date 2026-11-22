@@ -52,7 +52,7 @@ static func run_numbers(t: TestCase) -> void:
 		meta.warehouse.try_add(inst, true)
 		t.check(meta.sell_item(inst.uid) > 0, "%s：能卖" % id)
 	t.check(RedSources.chapter_ok(load(ContentPaths.asset_file("chapters", "free_mode"))), "自由模式出红武")
-	t.check(not RedSources.chapter_ok(load(ContentPaths.asset_file("chapters", "prologue_3"))), "序章不出")
+	t.check(not RedSources.chapter_ok(load(ContentPaths.asset_file("chapters", "prologue_2"))), "序章不出")
 
 
 static func run_hold(t: TestCase) -> void:
@@ -77,7 +77,7 @@ static func run_hold(t: TestCase) -> void:
 	run.meta.warehouse.try_add(ItemInstance.create(run.items.get_def(&"chana_lesser")), true)
 	t.check(RedSources.arm(c, run, _rng(), 0.0) != &"", "不互斥：仓库里有红武、劣化版也照样持有")
 
-	var pro := _run("prologue_3")
+	var pro := _run("prologue_2")
 	c = _content()
 	t.eq(RedSources.arm(c, pro, _rng(), 0.0), &"", "序章：不持有")
 

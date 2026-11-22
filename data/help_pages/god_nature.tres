@@ -21,3 +21,4 @@ Following this god, you restore a little Health every {faith_perk:nature:nature_
 }
 related = Array[String](["special_rites", "faith_power_and_tiers", "altar_offering"])
 see_items = Array[StringName]([&"charm_nature", &"ration"])
+needs_faith = true

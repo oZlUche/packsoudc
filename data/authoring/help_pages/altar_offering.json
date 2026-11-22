@@ -18,5 +18,9 @@
   "see_items": [
     "bone_dice",
     "bone_charm_bits"
+  ],
+  "needs_faith": true,
+  "shots": [
+    "altar_camp"
   ]
 }

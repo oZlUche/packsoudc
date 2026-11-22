@@ -2033,6 +2033,10 @@ static func import_help_page(data: Dictionary, ctx: Context, report: ImportRepor
 	check_text_refs(def.text, "text", ctx, report)
 	for lang in def.texts:
 		check_text_refs(String(def.texts[lang]), "texts.%s" % lang, ctx, report)
+	for i in def.shots.size():     # 377：截图中英各一套（tools/help_shots.gd 出）
+		for lang in ["zh", "en"]:
+			if not ResourceLoader.exists(def.shot_paths(lang)[i]) or not def.shot_paths(lang)[i].contains("/%s/" % lang):
+				report.error("shots[%d]" % i, "缺 %s 的截图 %s%s/%s.png（跑 tools/help_shots.gd）" % [lang, HelpPageDef.SHOT_DIR, lang, def.shots[i]])
 	ctx.register_help_page(def)
 	return def
 

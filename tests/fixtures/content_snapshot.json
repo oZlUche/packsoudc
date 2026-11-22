@@ -1,5 +1,5 @@
 {
-  "chapters": ["clockwork_hourglass","free_mode","prologue","prologue_2","prologue_3","slice_ruins"],
+  "chapters": ["clockwork_hourglass","free_mode","prologue","prologue_2","slice_ruins"],
   "enemies": ["adept_mage","apothecary","apprentice_mage","arc_coil","assassin","berserker","bruiser","brute","butcher","cave_bear","centurion","clock_keeper","clockwork_sentry","condenser_automaton","core_guardian","executioner","flame_wolf","frost_mane","frost_toad","gear_golem","grand_magus","great_clock","magus","marksman","miasma_spider","molten_lizard","pendulum_warden","pit_viper","ragpicker","raider","shield_wall","shieldbearer","shock_eel","skirmisher","smuggler","steam_turret","thunder_vulture","tinker_apprentice","tracker","tusk_boar","warden","witch_doctor"],
   "faiths": ["brute","church","earth","hunt","nature","skill","sun"],
   "items": {

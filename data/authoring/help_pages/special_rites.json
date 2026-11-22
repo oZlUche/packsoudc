@@ -15,5 +15,6 @@
     "god_brute",
     "god_sun",
     "god_earth"
-  ]
+  ],
+  "needs_faith": true
 }

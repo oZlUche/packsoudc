@@ -21,3 +21,4 @@ Following this god lets large items be Supported: an item that takes many cells 
 }
 related = Array[String](["special_rites", "faith_power_and_tiers", "altar_offering"])
 see_items = Array[StringName]([&"charm_earth"])
+needs_faith = true

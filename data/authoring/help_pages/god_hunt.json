@@ -17,5 +17,6 @@
   ],
   "see_items": [
     "charm_hunt"
-  ]
+  ],
+  "needs_faith": true
 }

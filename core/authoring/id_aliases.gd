@@ -94,7 +94,7 @@ const RETIRED := {
 	"tags": [&"gear", &"gear_plug", &"tool", &"bow", &"gun", &"sigil", &"faith", &"faith_anchor", &"relic", &"trophy", &"blessed", &"enchanted",
 		&"node_tooltips", &"metal", &"wood", &"leather", &"cloth", &"bone", &"stone", &"gem", &"clay", &"flesh", &"herb"],
 	"faiths": [],
-	"chapters": [],
+	"chapters": [&"prologue_3"],     # 377（作者 11-22）：序章三删了，解锁链改接序章二
 	"enemies": [],
 }
 

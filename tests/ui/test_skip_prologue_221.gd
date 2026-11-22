@@ -102,7 +102,7 @@ static func frame_accept(t: TestCase, root: Window) -> void:
 
 
 static func _check_meta(t: TestCase, _flow: GameFlow, m: MetaState, when: String) -> void:
-	for u in [&"prologue_done", &"prologue2_done", &"prologue3_done"]:
+	for u in [&"prologue_done", &"prologue2_done"]:
 		t.check(m.has_unlock(u), "%s：解锁 %s" % [when, u])
 	t.check(m.has_keepsake(&"spyglass"), "%s：望远镜" % when)
 	var charms := {}
@@ -113,7 +113,7 @@ static func _check_meta(t: TestCase, _flow: GameFlow, m: MetaState, when: String
 			charms[id] = int(charms.get(id, 0)) + 1
 		else:
 			kit += 1
-	t.eq(charms, {"charm_brute": 1, "charm_sun": 1}, "%s：仓库里恰好两枚信物" % when)
+	t.eq(charms, {}, "%s：仓库里没有信物（377：序章三删了，信物出征时才发）" % when)
 	t.check(kit > 0, "%s：开局那套也在仓库（%d 件）" % [when, kit])
 	t.check(m.briefing_seen.is_empty(), "%s：交代没看过（第一次出发前照弹）" % when)
 	t.check(not m.coach_seen.has("free_mode_map"), "%s：自由模式教练照旧会来" % when)

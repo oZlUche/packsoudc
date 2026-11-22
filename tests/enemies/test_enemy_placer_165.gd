@@ -212,7 +212,7 @@ static func run_preset_arrange(t: TestCase) -> void:
 static func run_tutorials(t: TestCase) -> void:
 	t.begin("165 · 序章二 / 三的六个敌人不写位置：开局摆一次，全部摆上、同一张图永远一样、数值不变")
 	var c := _content()
-	for preset in ["tutorial2", "tutorial3"]:
+	for preset in ["tutorial2"]:
 		var raw := MapPreset.load_graph(MapPreset.path_for(preset))
 		var n_enemy := 0
 		for id in raw.node_ids():
