@@ -17,6 +17,7 @@ const CommissionPanelScript := preload("res://ui/game/commission_panel.gd")     
 const NurseryPanelScript := preload("res://ui/game/nursery_panel.gd")     # 342 B3
 const AlchemyPanelScript := preload("res://ui/game/alchemy_panel.gd")     # 354
 const CanteenPanelScript := preload("res://ui/game/canteen_panel.gd")     # 355
+const PantheonPanelScript := preload("res://ui/game/pantheon_panel.gd")     # 377
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -43,7 +44,7 @@ const TABS := [["expedition", "meta.tab_expedition"], ["warehouse", "meta.tab_wa
 ## 262（待定 1 选 A 左列折叠）：「后勤」选中时页签底下滑出缩进的小键（268：出售页删了，只剩集市 / 铁匠铺两颗）（分页名、字）；三页本身一个像素不动。
 ## 264 §四：「书架」也一样滑出五颗（书架格的顺序，油灯那格没有键）—— 点一颗 = 书架页 + 开那扇窗，窗开着那颗按下
 const SUB_TABS := {
-	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"], ["alchemy", "alchemy.title"], ["canteen", "canteen.title"]],
+	"logistics": [["market", "market.title"], ["smithy", "smithy.title"], ["nursery", "nursery.title"], ["alchemy", "alchemy.title"], ["canteen", "canteen.title"], ["pantheon", "pantheon.title"]],
 	"shelf": [["codex", "meta.sub_codex"], ["records", "meta.sub_records"], ["keepsakes", "meta.sub_keepsakes"], ["achievements", "meta.sub_achievements"]],
 }
 const SUB_TAB_SIZE := Vector2(170, 44)
@@ -57,7 +58,7 @@ const SHELF_CELLS := ["codex", "records", "keepsakes", "achievements", "", ""]
 const SHELF_WIN := Vector2(1100, 820)
 ## 251 补充二 §12.1（作者 10-25 14:20「集市里不需要显示仓库，铁匠铺里也不需要」）：整页的两页 —— 右列（仓库木架 + 挂牌）收起、中列吃满。
 ## 只是藏：仓库视图照旧在，买下 / 打好的照样进仓库
-const FULL_TABS := ["market", "smithy", "canteen"]     # 355：食堂页自己带两块盘，右边仓库收起
+const FULL_TABS := ["market", "smithy", "canteen", "pantheon"]     # 355：食堂页自己带两块盘，右边仓库收起；377：万神院页不露仓库
 ## 264 §三（作者 17:01 定稿）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地底图；换时淡入淡出 [constant SCENE_FADE] 秒。
 ## 有场景图的页不垫粗布
 const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
@@ -338,6 +339,7 @@ func open(payload: Dictionary) -> void:
 	_refresh_shelf_title()
 	layout()
 	_maybe_tour()
+	_maybe_pantheon_arrival()
 
 
 #region 三列与仓库的大小（164）
@@ -386,6 +388,20 @@ func _build_alchemy_page() -> void:     # 354：炼金页 —— 右边仓库进
 	_pages["alchemy"] = al_page
 
 
+func _build_pantheon_page() -> void:     # 377：万神院页（占位：粗布上一排神龛，等 UI设计 的样张）
+	var pt_page := _cloth()
+	_pantheon = PantheonPanelScript.new()
+	_pantheon.setup(flow)
+	_pantheon.changed.connect(_refresh)
+	_pantheon.said.connect(func(text: String, is_warn: bool):
+		if is_warn:
+			warn(text)
+		else:
+			say(text))
+	pt_page.add_child(_pantheon)
+	_pages["pantheon"] = pt_page
+
+
 func _build_canteen_page() -> void:     # 355：食堂页 —— 食材仓库与锅两块盘，整屏那一层拖拽
 	var ct_page := _cloth()
 	_canteen = CanteenPanelScript.new()
@@ -396,7 +412,7 @@ func _build_canteen_page() -> void:     # 355：食堂页 —— 食材仓库与
 
 
 ## 测试 v7.55：后勤里苗圃 / 炼金 / 食堂的小键和页 —— 建屏时没开、营地里刚开的，这里补上（键按 [constant SUB_TABS] 的顺序插）
-const LATE_PAGES := ["nursery", "alchemy", "canteen"]
+const LATE_PAGES := ["nursery", "alchemy", "canteen", "pantheon"]
 
 
 func _sync_sub_pages() -> void:
@@ -414,6 +430,8 @@ func _sync_sub_pages() -> void:
 					_build_alchemy_page()
 				"canteen":
 					_build_canteen_page()
+				"pantheon":
+					_build_pantheon_page()
 			(_pages[key] as Control).visible = false
 
 
@@ -520,6 +538,61 @@ func close_skip_tutorial() -> void:
 	if _skip != null:
 		_skip.queue_free()
 		_skip = null
+#endregion
+
+
+#region 377：万神院到营地的那一页（占位：一页文字 + 【去万神院】；过场美术等 UI设计 的样张）
+const PANTHEON_INTRO := &"pantheon_intro_seen"
+var _arrival: Control = null
+
+
+func pantheon_arrival_due() -> bool:
+	return flow.pantheon_listed() and flow.meta.flag(PANTHEON_INTRO) == 0 and not tour_due()
+
+
+func _maybe_pantheon_arrival() -> void:
+	if pantheon_arrival_due():
+		show_pantheon_arrival()
+
+
+func show_pantheon_arrival() -> Control:
+	if _arrival != null:
+		return _arrival
+	_arrival = _shade(0.72, true)
+	_arrival.name = "PantheonArrival"
+	_arrival.z_index = 10
+	var panel := _modal_panel(UiText.t("pantheon.arrive_title"), 28)
+	_arrival.get_child(0).add_child(panel)
+	var col := _vbox(16)
+	panel.content.add_child(col)
+	var head := UiTheme.hbox(12)
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_child(load("res://ui/game/commission_panel.gd").emblem(Pantheon.FACTION, 72))
+	col.add_child(head)
+	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 24, 16, 24, 16)
+	col.add_child(paper)
+	paper.add_child(UiTheme.rich_block(520, 16, UiText.t("pantheon.arrive_body")))
+	var keys := _hbox(24)
+	keys.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(keys)
+	keys.add_child(ScrollKey.primary(UiText.t("pantheon.arrive_go"), func(): close_pantheon_arrival(true)))
+	keys.add_child(ScrollKey.make(UiText.t("pantheon.arrive_later"), func(): close_pantheon_arrival(false)))
+	return _arrival
+
+
+## 关掉到来那一页（[param go] = 直接去万神院页）；这份存档以后不再放
+func close_pantheon_arrival(go: bool) -> void:
+	if _arrival != null:
+		_arrival.queue_free()
+		_arrival = null
+	flow.meta.set_flag(PANTHEON_INTRO)
+	flow.save_meta()
+	if go:
+		show_tab("pantheon")
+
+
+func pantheon_arrival() -> Control:
+	return _arrival
 #endregion
 
 
@@ -903,6 +976,7 @@ var _nursery = null
 ## 354：炼金页（协会没到信赖 = null）
 var _alchemy = null
 var _canteen = null
+var _pantheon = null
 
 
 func nursery_panel():
@@ -915,6 +989,10 @@ func alchemy_panel():
 
 func canteen_panel():
 	return _canteen
+
+
+func pantheon_panel():
+	return _pantheon
 
 
 ## 354：右边仓库正在炼金的勾选里
@@ -932,6 +1010,8 @@ func _sync_ripe_mark() -> void:
 		_ripe_mark(_sub_btns["nursery"] as Button, ripe, 20.0)
 	if _nursery != null:
 		_nursery.refresh()
+	if _pantheon != null:
+		_pantheon.refresh()     # 377
 
 
 ## 键上挂（或摘掉）「可收获」小图：贴在字后面，竖直居中
@@ -1015,6 +1095,8 @@ func _sub_listed(key: String) -> bool:
 			return flow.alchemy_listed()     # 354：协会到信赖前不列
 		"canteen":
 			return flow.canteen_listed()     # 355：灰灯不在营地（教程、切片）不列
+		"pantheon":
+			return flow.pantheon_listed()     # 377：万神院还没来营地，不列
 	return true
 
 

@@ -240,6 +240,34 @@ func on_visit(node: MapNode) -> Array:
 	return out
 
 
+## 377：在神坛献祭了一次 —— 带着的献祭委托各记一处（同一座神坛只记一次）
+func on_offer(node: MapNode) -> Array:
+	var out: Array = []
+	if _run == null:
+		return out
+	var key := "altar:%d" % (node.id if node != null else -1)
+	for pair in waiting(&"altar_offer"):
+		var d := pair[0] as CommissionDef
+		var s := int(pair[1])
+		if not _has_row(d.id, s, "%s/%s" % [_run.run_id, key]):
+			out.append(_add(d, s, key, "self"))
+	return out
+
+
+## 377：奉着神升到了 [param level] 级 —— 带着的修行委托各记一次（同一级只记一次；撤离才算，[constant CommissionStage.CARRY]）
+func on_faith_level(level: int) -> Array:
+	var out: Array = []
+	if _run == null:
+		return out
+	var key := "level:%d" % level
+	for pair in waiting(&"faith_levels"):
+		var d := pair[0] as CommissionDef
+		var s := int(pair[1])
+		if not _has_row(d.id, s, "%s/%s" % [_run.run_id, key]):
+			out.append(_add(d, s, key, "self"))
+	return out
+
+
 ## 去重键带上这一局的 id：uid 每局从 1 重来，别的局的同号不是同一件
 func _add(d: CommissionDef, stage: int, key: String, via: String) -> Dictionary:
 	rows.append({"id": String(d.id), "stage": stage, "key": "%s/%s" % [_run.run_id, key], "via": via})

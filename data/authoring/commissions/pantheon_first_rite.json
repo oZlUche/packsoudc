@@ -1,0 +1,24 @@
+{
+  "id": "pantheon_first_rite",
+  "display_name": "初次奉神",
+  "display_names": {
+    "en": "The First Rite"
+  },
+  "faction": "pantheon",
+  "reputation": 10,
+  "stages": [
+    {
+      "goal": "faith_levels",
+      "count": 3,
+      "where": "carry",
+      "text": "在万神院选一位神出征，奉着祂升三级并撤离",
+      "texts": {
+        "en": "Choose a god at the Senatus, gain three levels while following that god, and extract"
+      }
+    }
+  ],
+  "client": "万神院的老祭司",
+  "clients": {
+    "en": "Elder priest of the Senatus"
+  }
+}

@@ -31,6 +31,8 @@ var last_plate: PanelContainer = null
 var tutorial_plate: PanelContainer = null
 var skip_btn: Button = null
 var supply_plate: PanelContainer = null
+## 377：「这一局奉：…」小签（万神院在营地才有）
+var god_chip: PanelContainer = null
 ## 「上回出征」三行写的字（测试看）；没出征过是空
 var _last_lines: Array[String] = []
 ## 军需：[[随身技能 id, 个数], …] 与局外加成 id
@@ -181,6 +183,12 @@ func _last_difficulty() -> DifficultyDef:
 
 ## 军需：一行随身技能圆槽（科技每局发的，[member MetaState.belt_grants]），一行局外加成小牌（[method GameFlow.meta_buffs]）
 func _fill_supplies(col: VBoxContainer) -> void:
+	if flow.pantheon_listed():     # 377：这一局奉的神（万神院里选的；没选是以人为本）
+		var fid := Pantheon.choice(flow.meta)
+		var def := flow.faith_defs.get(fid, null) as FaithDef
+		god_chip = _chip(UiText.t("meta.pantheon_choice") % (Names.of(def) if def != null else UiText.t("pantheon.humanist")))
+		god_chip.name = "GodChip"
+		col.add_child(god_chip)
 	var grants: Dictionary = flow.meta.belt_grants
 	var ids := grants.keys()
 	ids.sort()
@@ -188,7 +196,7 @@ func _fill_supplies(col: VBoxContainer) -> void:
 		if int(grants[id]) > 0:
 			_belt.append([StringName(String(id)), int(grants[id])])
 	_buffs = flow.meta_buffs()
-	if _belt.is_empty() and _buffs.is_empty():
+	if _belt.is_empty() and _buffs.is_empty() and god_chip == null:
 		col.add_child(_line(UiText.t("meta.none_yet")))
 		return
 	if not _belt.is_empty():

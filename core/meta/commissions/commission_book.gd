@@ -41,6 +41,8 @@ var note_seq := 0
 var board_init := false
 ## 342 B3：后来的几方到营地的那一局，阵营 id → 第几局（[method Commissions.arrive]）
 var arrived: Dictionary = {}
+## 377：教程之后成功撤离过几局正式探索（万神院按它来营地，[member FactionDef.arrive_after]）
+var formal_extractions := 0
 
 
 func _init() -> void:
@@ -120,6 +122,7 @@ func to_dict() -> Dictionary:
 		"note_seq": note_seq,
 		"board_init": board_init,
 		"arrived": _sorted(arrived),
+		"formal_extractions": formal_extractions,
 	}
 
 
@@ -180,5 +183,6 @@ static func from_dict(d: Variant) -> CommissionBook:
 	if src.get("arrived", null) is Dictionary:
 		for k in src["arrived"]:
 			b.arrived[String(k)] = int(src["arrived"][k])
+	b.formal_extractions = maxi(0, int(src.get("formal_extractions", 0)))     # 377：老档没有 = 0
 	Commissions.active = b
 	return b

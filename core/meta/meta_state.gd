@@ -107,6 +107,10 @@ var best_value: int = 0
 var best_run: Dictionary = {}
 ## 264 §2.4：上回出征的角色（开局屏出发时和 last_map / last_scale / last_difficulty 旗标一起写）；没出发过 = 空。出征页「上回出征」木牌读它
 var last_character: StringName = &""
+## 377：万神院里为下一局选的神（空 = 以人为本）；出征时照它发信物、定这一局的神（[Pantheon]）
+var pantheon_choice: StringName = &""
+## 377：这份存档奉过的神（出征时选过的；老档迁移按以前的记录补）。奉过的神在万神院里不论档位都能选
+var gods_worshipped: Array[StringName] = []
 ## 277 第 2 条：上回出发时从仓库带进去的道具 [{id, origin: [x, y], rot}] 与带入的现金（开局屏「照上回带」读它）；没出发过 = 空 / 0
 var last_carry: Array = []
 var last_carry_funds: int = 0
@@ -527,6 +531,9 @@ func light_codex(def: ItemDef) -> void:
 func _adopt(inst: ItemInstance) -> bool:
 	if not keeps(inst.def) and not BagRack.holds(inst.def):
 		return false
+	if Pantheon.is_charm(inst.def):
+		return false     # 377：信物是万神院出征时发的，局结束不带回仓库
+
 	GrowthProfile.on_leave(inst)     # 207：带回基地 = 离开了作战棋盘，长到哪一阶都清零（reset_on_leave）
 	inst.set_benched(false)     # 244：「不参战」是这一局的事，回了基地就摘掉
 	inst.close_run()     # 281：带进去过的法杖回了基地（撤离或保险箱）算一次完整进出
@@ -931,6 +938,7 @@ func to_dict() -> Dictionary:
 		"nursery": nursery.to_dict(),     # 342 B3
 		"dust": dust, "forged_recipes": _names_of(forged_recipes),     # 354
 		"canteen": canteen.to_dict(),     # 355：只加带默认值的字段，不升版
+		"pantheon_choice": String(pantheon_choice), "gods_worshipped": _names_of(gods_worshipped),     # 377：同上，不升版
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -994,7 +1002,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		if m.board.item_count() == 0:
 			m.board = null
 	# 原样读回的字段（存档的键 = 字段名）：id 列表、字符串 → 数的表、单个数
-	for key in ["active_buffs", "unlocks", "keepsakes", "bag_grants", "seen_rules", "briefing_seen", "reactions_seen", "forged_recipes"]:
+	for key in ["active_buffs", "unlocks", "keepsakes", "bag_grants", "seen_rules", "briefing_seen", "reactions_seen", "forged_recipes", "gods_worshipped"]:
 		for id in d.get(key, []):
 			(m.get(key) as Array).append(StringName(String(id)))
 	for key in ["codex", "achievements", "chapter_extractions", "flags"]:
@@ -1027,6 +1035,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 			report.refund((inst as ItemInstance).def.id, value, "warehouse")
 	m.best_run = MapGraph.normalize(d.get("best_run", {})) if d.get("best_run", {}) is Dictionary else {}
 	m.last_character = StringName(String(d.get("last_character", "")))
+	m.pantheon_choice = StringName(String(d.get("pantheon_choice", "")))     # 377
 	for e in d.get("last_carry", []):     # 277
 		if e is Dictionary and (e as Dictionary).has("id"):
 			var o: Array = (e as Dictionary).get("origin", [0, 0])
