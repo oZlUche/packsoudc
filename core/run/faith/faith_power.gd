@@ -1,27 +1,21 @@
-## 信力（作者定，报告 082）：获得信仰道具（= 激活了一个信仰）之后，完成那个信仰指定的行为攒点数；点数过了几道阈值，
-## 信仰道具就多出额外的功能（道具上的 [ItemDef.faith_bonuses]，按阶解锁，编译器读 [method tiers]）。
+## 经验值（原来的信力，作者 2026-11-21 22:02 改名；报告 372 把信仰和升级合成一个系统）：一局里做了所奉之神指定的事，
+## 这位神的行为构件说给几点，记进**这一局唯一的那一池经验值**（[LevelModule]，所有途径都乘难度系数）。
+## 神的阶仍然按这一池算（[FaithDef.thresholds]，第一批暂按第 5、10、15 级的累计经验值），第二批改成逢 5 级的质变三选一。
 ##
-## 每个信仰一个池子，只有**此刻激活的信仰**收点；行为与阈值都是信仰文件里的数据（[FaithDef.deeds] / [FaithDef.thresholds]）。
-## 一局里的事由 [RunState] 接线喂进来（[method credit]），本类不碰任何系统、不认具体的神。跟着存档走。
-## 切换信仰不清别的池子（作者：切换没有代价，甚至可以继承 —— 继承还没做，先各池各记）。
+## 只有**此刻有效的信仰**收点；行为是信仰文件里的数据（[FaithDef.deeds]）。一局里的事由 [RunState] 接线喂进来（[method credit]），
+## 本类不碰任何系统、不认具体的神。祈愿删掉了（作者 18:30）。
+## 没装局内成长模块的沙盒（测试的半截局）退回老办法：每位神一池，记在 [member points]
 class_name FaithPower
 extends RefCounted
 
-## 某个信仰的点数变了（tier 是现在第几阶）。信仰重构 B：信力或祈愿任一变了都发（points 是信力）
+## 经验值变了（tier 是这位神现在第几阶）
 signal changed(faith_id: StringName, points: int, tier: int)
 
-## 信仰重构 B（交接方案 §3）：祈愿上限没配时的默认值（候选，[member FaithDef.prayer_cap] 可按神改）
-const PRAYER_CAP_DEFAULT := 100
-## 信仰重构 B：一场有效战斗完成给这位神多少祈愿（候选；秒杀不算打了一场，不给）
-const PRAYER_PER_BATTLE := 8
-
 var run: RunState = null
-## faith id（String）→ **信力**（devotion：累计成长，只增不减，阶只看它；信仰重构 B 起不再用于支付）
+## 没有 [LevelModule] 时的后备：faith id（String）→ 点数
 var points: Dictionary = {}
-## 信仰重构 B：faith id（String）→ **祈愿**（prayer：可花的余额，不超过这位神的上限；花它不降阶）
-var prayer: Dictionary = {}
-## 104 信力节奏的量尺：每次加点记一条 {step, node_type, faith, event, gained, total, tier}（献祭的 event 是 `offering`）。
-## 跟着存档（RunState 的 `faith_history`），结算屏与开发模式的 CSV 读它 —— 作者打几局就能对着表调阈值与给点
+## 104 节奏的量尺：每次加点记一条 {step, node_type, faith, event, gained, total, tier}（献祭的 event 是 `offering`）。
+## 跟着存档（RunState 的 `faith_history`），结算屏与开发模式的 CSV 读它
 var history: Array[Dictionary] = []
 
 
@@ -34,7 +28,16 @@ func dispose() -> void:
 	run = null
 
 
+## 这一局的经验值池（没装 = null，走 [member points]）
+func _level() -> LevelModule:
+	return LevelModule.of(run) if run != null else null
+
+
+## 这位神现在按多少点算阶：装了局内成长就是这一局的经验值（只算所奉的那一位），没装按各自的池
 func points_of(id: StringName) -> int:
+	var lv := _level()
+	if lv != null:
+		return int(lv.xp + 0.0001) if id != &"" else 0     # 一局一池：哪位神都按这一池算阶（换神不丢）
 	return int(points.get(String(id), 0))
 
 
@@ -47,11 +50,22 @@ func tier_of(id: StringName) -> int:
 ## 给编译器：信仰对象标签 → 现在第几阶（只列有点数的）
 func tiers() -> Dictionary:
 	var out := {}
-	for key in points:
-		var id := StringName(String(key))
+	for id in _ids():
 		var tier := tier_of(id)
 		if tier > 0:
 			out[StringName(FaithTags.PREFIX + String(id))] = tier
+	return out
+
+
+## 有点数的那几位（装了局内成长 = 所奉的那一位）
+func _ids() -> Array[StringName]:
+	var out: Array[StringName] = []
+	if _level() != null:
+		if run.selected_faith != &"":
+			out.append(run.selected_faith)
+		return out
+	for key in points:
+		out.append(StringName(String(key)))
 	return out
 
 
@@ -70,71 +84,46 @@ func credit(event: StringName, payload: Dictionary = {}, faith_id: StringName = 
 			gained += maxi(0, deed.gain(event, payload))
 	if gained <= 0:
 		return 0
-	var key := String(def.id)
-	points[key] = points_of(def.id) + gained
-	_record(def.id, event, gained)
-	changed.emit(def.id, points_of(def.id), tier_of(def.id))
+	_add(def.id, gained, event)
 	return gained
+
+
+## 记一笔：装了局内成长进那一池（乘难度系数），没装进这位神自己的池
+func _add(id: StringName, n: int, event: StringName) -> void:
+	var lv := _level()
+	if lv != null:
+		lv.gain(n, LevelModule.SRC_FAITH if event != &"offering" else LevelModule.SRC_OFFERING, "%s:%s" % [id, event])
+	else:
+		points[String(id)] = int(points.get(String(id), 0)) + n
+	_record(id, event, n)
+	changed.emit(id, points_of(id), tier_of(id))
 
 
 ## 095：给编译器：信仰对象标签 → 点数
 func points_by_tag() -> Dictionary:
 	var out := {}
-	for key in points:
-		out[StringName(FaithTags.PREFIX + String(key))] = int(points[key])
+	for id in _ids():
+		out[StringName(FaithTags.PREFIX + String(id))] = points_of(id)
 	return out
 
 
-## 信仰重构 B：这位神现在有多少祈愿
-func prayer_of(id: StringName) -> int:
-	return int(prayer.get(String(id), 0))
-
-
-## 这位神的祈愿上限
-func prayer_cap(id: StringName) -> int:
-	var def: FaithDef = run.faith_defs.get(id, null) if run != null else null
-	return def.prayer_cap if def != null and def.prayer_cap > 0 else PRAYER_CAP_DEFAULT
-
-
-## 祈愿还能进多少
-func prayer_room(id: StringName) -> int:
-	return maxi(0, prayer_cap(id) - prayer_of(id))
-
-
-## 信仰重构 B：加祈愿（封顶）。返回实际加了多少
-func add_prayer(id: StringName, n: int, event: StringName = &"prayer") -> int:
-	if n <= 0 or id == &"":
-		return 0
-	var got := mini(n, prayer_room(id))
-	if got <= 0:
-		return 0
-	prayer[String(id)] = prayer_of(id) + got
-	_record(id, event, 0, got)
-	changed.emit(id, points_of(id), tier_of(id))
-	return got
-
-
-## 信仰重构 B：花祈愿（神坛的祈求赐福、蛮神秒杀）。不够 false、一点不扣。**信力不动，阶不变**
-func spend_prayer(id: StringName, n: int) -> bool:
-	if n <= 0 or id == &"" or prayer_of(id) < n:
-		return false
-	prayer[String(id)] = prayer_of(id) - n
-	_record(id, &"spend", 0, -n)
-	changed.emit(id, points_of(id), tier_of(id))
-	return true
-
-
-## 093：直接加点（献祭）。返回加完之后第几阶
+## 093：直接加点（献祭、献祭生命上限）。返回加完之后第几阶
 func add_points(id: StringName, n: int) -> int:
 	if n <= 0 or id == &"":
 		return tier_of(id)
-	points[String(id)] = points_of(id) + n
-	_record(id, &"offering", n)
-	changed.emit(id, points_of(id), tier_of(id))
+	_add(id, n, &"offering")
 	return tier_of(id)
 
 
-func _record(id: StringName, event: StringName, gained: int, prayer_delta: int = 0) -> void:
+## 外面已经把点数记进了经验值池（神坛献祭按每座的上限记，[method LevelModule.offer_at]）：这里只记节奏、发信号
+func note(id: StringName, n: int, event: StringName = &"offering") -> void:
+	if id == &"" or n <= 0:
+		return
+	_record(id, event, n)
+	changed.emit(id, points_of(id), tier_of(id))
+
+
+func _record(id: StringName, event: StringName, gained: int) -> void:
 	var step := 0
 	var node_type := ""
 	if run != null:
@@ -143,9 +132,6 @@ func _record(id: StringName, event: StringName, gained: int, prayer_delta: int =
 		node_type = String(node.type) if node != null else ""
 	var row := {"step": step, "node_type": node_type, "faith": String(id), "event": String(event),
 		"gained": gained, "total": points_of(id), "tier": tier_of(id)}
-	if prayer_delta != 0:
-		row["prayer"] = prayer_delta     # 信仰重构 B：这一笔祈愿的进出（校准看收入 / 支出）
-		row["prayer_total"] = prayer_of(id)
 	history.append(row)
 
 
@@ -180,7 +166,7 @@ static func pace_line(p_history: Array, defs: Dictionary = {}) -> String:
 		for i in steps.size():
 			bits.append("第 %d 步到 %d 阶" % [steps[i], i + 1])
 		parts.append("%s %s" % [name, "、".join(bits)])
-	return ("信力节奏：" + "；".join(parts)) if not parts.is_empty() else ""
+	return (UiText.t("faith.pace") + "；".join(parts)) if not parts.is_empty() else ""
 
 
 ## 104：开发模式导出的 CSV（一行一次加点）
@@ -205,46 +191,28 @@ func restore_history(raw: Variant) -> void:
 				history.append((e as Dictionary).duplicate())
 
 
-## 给界面的一句：「蛮神 Lv.1　35 / 100」；没激活信仰返回空
+## 给界面的一句：「蛮神 1 阶」；没激活信仰返回空（经验值看顶端栏下面那根管子）
 func line() -> String:
 	var def := run.active_faith() if run != null else null
 	if def == null:
 		return ""
-	var p := points_of(def.id)
-	var tier := def.tier_of(p)
-	var next := def.next_threshold(p)
-	return UiText.t("faith.line") % [Names.of(def), tier, p, (" / %d" % next) if next >= 0 else UiText.t("faith.max_rank")] \
-		+ UiText.t("faith.prayer_line") % prayer_of(def.id)
+	return UiText.t("faith.line") % [Names.of(def), def.tier_of(points_of(def.id))]
 
 
 func to_dict() -> Dictionary:
 	return points.duplicate()
 
 
-## 信仰重构 B：每位神 {devotion, prayer}（存档的 `faith_progress`）
-func progress_to_dict() -> Dictionary:
-	var out := {}
-	for key in points:
-		out[String(key)] = {"devotion": int(points[key]), "prayer": int(prayer.get(key, 0))}
-	for key in prayer:
-		if not out.has(String(key)):
-			out[String(key)] = {"devotion": 0, "prayer": int(prayer[key])}
-	return out
-
-
-## 信仰重构 B：读 `faith_progress`（别名规范化、负数清成 0、非法类型跳过）
+## 372：读老档的 `faith_progress`（{神: {devotion, prayer}}）—— 只在没装局内成长的沙盒里用（迁移已经把它折成经验值）
 func restore_progress(d: Dictionary) -> void:
 	points.clear()
-	prayer.clear()
 	for key in d:
 		var row: Variant = d[key]
 		if not (row is Dictionary):
 			continue
 		var id := String(IdAliases.faith(StringName(String(key))))
 		var dv: Variant = (row as Dictionary).get("devotion", 0)
-		var pv: Variant = (row as Dictionary).get("prayer", 0)
 		points[id] = int(points.get(id, 0)) + maxi(0, int(dv) if (dv is int or dv is float) else 0)
-		prayer[id] = int(prayer.get(id, 0)) + maxi(0, int(pv) if (pv is int or pv is float) else 0)
 
 
 ## 098：读档时旧信仰 id 并进新池子（093 的 violence → brute、sunfire → sun），两边都有就加起来 ——

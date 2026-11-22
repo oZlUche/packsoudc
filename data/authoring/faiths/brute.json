@@ -13,16 +13,11 @@
     "en": "A concept of nature (a falling stone is violence too). Worshipped by the northern barbarians and by most of the Empire's border provinces; one of the Empire's gods, but of low standing."
   },
   "thresholds": [
-    20,
-    60,
-    120
+    42,
+    117,
+    217
   ],
   "deeds": [
-    {
-      "type": "battle",
-      "won_only": true,
-      "amount": 6
-    },
     {
       "type": "mechanic",
       "key": "brute_strike",

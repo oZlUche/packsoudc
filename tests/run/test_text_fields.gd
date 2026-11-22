@@ -51,11 +51,11 @@ static func run_notes(t: TestCase) -> void:
 	m.amount = 1.0
 	fb.mods.append(m)
 	var a := fb.describe()
-	t.check(a.contains("每 50 信力一份") and a.contains("最多 6 份") and a.contains("+1"), "主句按字段：%s" % a)
+	t.check(a.contains("每 50 经验值一份") and a.contains("最多 6 份") and a.contains("+1"), "主句按字段：%s" % a)
 	fb.per_points = 40
-	t.check(fb.describe().contains("每 40 信力一份"), "改 per_points：%s" % fb.describe())
+	t.check(fb.describe().contains("每 40 经验值一份"), "改 per_points：%s" % fb.describe())
 	fb.note = "满 {max_shares} 份封顶"
-	t.check(fb.describe().ends_with("满 6 份封顶") and fb.describe().contains("每 40 信力"), "note 接在后面、也读字段：%s" % fb.describe())
+	t.check(fb.describe().ends_with("满 6 份封顶") and fb.describe().contains("每 40 经验值"), "note 接在后面、也读字段：%s" % fb.describe())
 	fb.mode = "tier"
 	fb.tier = 2
 	t.check(fb.describe().begins_with("Lv.2"), "阶统一写 Lv.n：%s" % fb.describe())

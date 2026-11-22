@@ -1,0 +1,31 @@
+{
+  "id": "level_remove",
+  "display_name": "剔牌",
+  "display_names": {
+    "en": "Cull"
+  },
+  "requires": [
+    "level_reroll"
+  ],
+  "column": 3,
+  "description": "升级选牌时可以删掉一张，这一局不再出现，空位当场补一张。",
+  "descriptions": {
+    "en": "When you level up, remove one card: it won't show again this run, and the slot is refilled."
+  },
+  "tree": "mechanism",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_level_remove_1",
+      "tech_level_remove_2"
+    ]
+  },
+  "tiers": [
+    {
+      "insight": 2
+    },
+    {
+      "insight": 3
+    }
+  ]
+}

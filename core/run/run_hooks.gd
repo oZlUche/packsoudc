@@ -42,6 +42,9 @@ const NAMES := {
 	&"red_drop": "RunState：打赢了掷持有的劣化版掉不掉（281）",
 	&"commission_can": "CommissionModule：这个撤离点能不能查验 / 交信（336）",
 	&"commission_act": "CommissionModule：查验 / 交信，返回记上的那几份（336）",
+	&"level_pray": "LevelModule：在这座神坛前祷告一次，返回加了几点经验值（372）",
+	&"level_prayers_left": "LevelModule：这座神坛还能祷告几次（372）",
+	&"level_gain": "LevelModule：事件直接给经验值，返回实际加了几点（372）",
 }
 
 var _fns: Dictionary = {}
@@ -115,6 +118,19 @@ func relocate(intent: MoveIntent) -> bool:
 ## 305：这件独一的道具哪儿已经有了（本局地上、托付、待拾取…与局外，[method UniqueItems.owned]）。没人接 = false
 func unique_owned(id: StringName) -> bool:
 	return bool(_at(&"unique_owned").call(id)) if has(&"unique_owned") else false
+
+
+## 372：神坛祷告（没人接 = 不能祷告）
+func level_pray(node: MapNode) -> int:
+	return int(_at(&"level_pray").call(node)) if has(&"level_pray") else 0
+
+
+func level_gain(amount: int) -> int:
+	return int(_at(&"level_gain").call(amount)) if has(&"level_gain") else 0
+
+
+func level_prayers_left(node: MapNode) -> int:
+	return int(_at(&"level_prayers_left").call(node)) if has(&"level_prayers_left") else 0
 
 
 func faith_tier() -> int:

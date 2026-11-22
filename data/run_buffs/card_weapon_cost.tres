@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_8hdpy"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_tub1i"]
+[ext_resource type="Script" path="res://core/run/effects/tag_mods.gd" id="3_i71bj"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_chfqo"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_8353u"]
+
+[sub_resource type="Resource" id="Resource_674e6"]
+script = ExtResource("2_tub1i")
+stat = &"stamina_cost"
+mode = 1
+amount = -3.0
+
+[sub_resource type="Resource" id="Resource_t7qjj"]
+script = ExtResource("3_i71bj")
+tags = Array[StringName]([&"weapon"])
+mods = Array[ExtResource("2_tub1i")]([SubResource("Resource_674e6")])
+
+[resource]
+script = ExtResource("5_8353u")
+id = &"card_weapon_cost"
+display_name = "省力"
+display_names = {
+"en": "Economy"
+}
+effects = Array[ExtResource("1_8hdpy")]([SubResource("Resource_t7qjj")])

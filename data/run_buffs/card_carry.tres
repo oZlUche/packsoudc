@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_cj071"]
+[ext_resource type="Script" path="res://core/run/effects/carry_capacity_bonus.gd" id="2_slnm2"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_7xloh"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_5r7fv"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_m4kbe"]
+
+[sub_resource type="Resource" id="Resource_wprhe"]
+script = ExtResource("2_slnm2")
+amount = 3
+
+[resource]
+script = ExtResource("5_m4kbe")
+id = &"card_carry"
+display_name = "背负"
+display_names = {
+"en": "Pack Mule"
+}
+effects = Array[ExtResource("1_cj071")]([SubResource("Resource_wprhe")])

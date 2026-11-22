@@ -122,18 +122,18 @@ static func run_run_chain(t: TestCase) -> void:
 	t.check(not (((RunMigrations.upgrade(v2_none)["modules"] as Dictionary)["altar"] as Dictionary).has("axis_bonus")),
 		"没祈祷过的老档不凭空多出一条轴")
 	t.eq(int(v2["version"]), 2, "不改入参")
-	# 信仰重构 B：v5 → v6 一个池子拆成信力（照搬）与祈愿（min(P, 上限)）；已经拆过的不再补
+	# 信仰重构 B 的 v5 → v6 一路升到 v8（372）：信力 × 2 进经验值（选的那位神，没选取最多的），祈愿删掉
 	var v5 := {"version": 5, "chapter": "chapter_01", "faith_power": {"brute": 260, "sun": 40, "bad": "x"}}
-	var up6 := RunMigrations.upgrade(v5)
-	t.eq(int(up6["version"]), RunState.SAVE_VERSION, "v5 升到了当前版本")
-	t.check(not up6.has("faith_power"), "旧的单池键删掉了（不留两处）")
-	var prog: Dictionary = up6["faith_progress"]
-	t.eq(prog["brute"], {"devotion": 260, "prayer": FaithPower.PRAYER_CAP_DEFAULT}, "260 → 信力 260、祈愿封顶 %d" % FaithPower.PRAYER_CAP_DEFAULT)
-	t.eq(prog["sun"], {"devotion": 40, "prayer": 40}, "40 → 两样都是 40")
-	t.eq(prog["bad"], {"devotion": 0, "prayer": 0}, "坏值清成 0")
-	var spent := {"version": 5, "chapter": "chapter_01", "faith_progress": {"brute": {"devotion": 260, "prayer": 3}}, "faith_power": {"brute": 260}}
-	t.eq((RunMigrations.upgrade(spent)["faith_progress"] as Dictionary)["brute"], {"devotion": 260, "prayer": 3}, "已经有 faith_progress：不动（花掉的不补）")
-
+	var up5 := RunMigrations.upgrade(v5)
+	t.eq(int(up5["version"]), RunState.SAVE_VERSION, "v5 升到了当前版本")
+	t.check(not up5.has("faith_progress") and not up5.has("faith_power"), "旧的两种池子键都不留")
+	t.eq(float(((up5["modules"] as Dictionary)["level"] as Dictionary)["xp"]), 520.0, "没选神：最多的 260 → 经验值 520")
+	var v7 := {"version": 7, "chapter": "chapter_01", "faith_selection": {"selected_id": "sun"},
+		"faith_progress": {"brute": {"devotion": 260, "prayer": 3}, "sun": {"devotion": 40, "prayer": 40}}}
+	var up8 := RunMigrations.upgrade(v7)
+	t.eq(float(((up8["modules"] as Dictionary)["level"] as Dictionary)["xp"]), 80.0, "选了太阳神：按它的 40 → 80")
+	var has_level := {"version": 7, "chapter": "chapter_01", "faith_progress": {"brute": {"devotion": 99, "prayer": 0}}, "modules": {"level": {"xp": 7.0}}}
+	t.eq(float(((RunMigrations.upgrade(has_level)["modules"] as Dictionary)["level"] as Dictionary)["xp"]), 7.0, "已经有经验值的不动")
 
 static func run_backup_instead_of_overwrite(t: TestCase) -> void:
 	t.begin("098（作者定）· 读不出来先备份再从零开始：老文件改名成 .bak 留着，界面上写一句，不会被下一次存盘盖掉")

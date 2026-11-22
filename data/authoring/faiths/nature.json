@@ -13,16 +13,11 @@
     "en": "Closely bound to life. One of the Empire's gods, with followers almost everywhere, many rites and great influence."
   },
   "thresholds": [
-    20,
-    60,
-    120
+    42,
+    117,
+    217
   ],
   "deeds": [
-    {
-      "type": "battle",
-      "won_only": true,
-      "amount": 6
-    },
     {
       "type": "mechanic",
       "key": "nature_heal",

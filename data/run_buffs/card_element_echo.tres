@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_k0xy6"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ggh3m"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_olwyy"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="4_26402"]
+
+[resource]
+script = ExtResource("4_26402")
+id = &"card_element_echo"
+display_name = "回响"
+display_names = {
+"en": "Echo"
+}

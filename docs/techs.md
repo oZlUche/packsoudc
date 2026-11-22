@@ -24,6 +24,8 @@
 | shop_refresh | 换货 | Restock | 机制 | 1 | 0 | 1 | bargain | 每家局内商店可以付钱让商人换一批货，一家一次。 | Pay a shop to restock its goods, once per shop. | tech_run_buff | {"effect": "shop_refresh"} | 每家商店可付钱换货 {shop_refresh_times} 次 |
 | elite_bounty | 精英奖励 | Elite Bounty | 机制 | 0 | 0 | 3 |  | 打赢精英额外掉一件稀有及以上的东西。 | Elites drop one extra Rare-or-better item. | tech_run_buff | {"effect": "loot_bounty"} | 打赢精英额外掉一件稀有及以上 |
 | boss_bounty | 首领奖励 | Boss Bounty | 机制 | 0 | 0 | 0 | elite_bounty | 打赢 BOSS 额外掉一件史诗及以上的东西。 | Bosses drop one extra Epic-or-better item. | tech_run_buff | {"effect": "loot_bounty"} | 打赢 BOSS 额外掉一件史诗及以上 |
+| level_reroll | 换牌 | Reroll | 机制 | 3 | 0 | 0 |  | 升级选牌时可以把三张牌一起换一批，级数越高一局能换越多次。 | When you level up, swap all three cards for a new set; higher levels allow more swaps per run. | tech_run_buff | {"effect": "level_rerolls"} | 升级选牌可刷新 {level_rerolls_times} 次 |
+| level_remove | 剔牌 | Cull | 机制 | 3 | 0 | 0 | level_reroll | 升级选牌时可以删掉一张，这一局不再出现，空位当场补一张。 | When you level up, remove one card: it won't show again this run, and the slot is refilled. | tech_run_buff | {"effect": "level_removals"} | 升级选牌可删除 {level_removals_times} 次 |
 
 ## 等级
 
@@ -64,3 +66,8 @@
 | shop_refresh | 1 | 0 | 2 |  | {"times": 1} |
 | elite_bounty | 1 | 0 | 2 |  | {"node_type": "elite"} |
 | boss_bounty | 1 | 0 | 3 |  | {"node_type": "core"} |
+| level_reroll | 1 | 0 | 1 |  | {"times": 1} |
+| level_reroll | 2 | 0 | 2 |  | {"times": 2} |
+| level_reroll | 3 | 0 | 3 |  | {"times": 3} |
+| level_remove | 1 | 0 | 2 |  | {"times": 1} |
+| level_remove | 2 | 0 | 3 |  | {"times": 2} |

@@ -4,9 +4,9 @@
   "titles": {
     "en": "Whispers of the Sun God"
   },
-  "text": "另一座祭坛，烧得正旺。一枚{item:charm_sun}摆在火边。\n\n拿了放进包里，{b}不会自动换神{/b}：点它说明窗下的「奉为主信仰」，你信的才换成{faith:sun}，{faith:brute}那几行字会变灰（休眠），顶端栏的徽记换成{faith:sun}的。{b}两位神的信力各记各的，不会丢{/b}。\n\n想换回来：{b}右键{/b}{item:charm_brute}，同样点「奉为主信仰」。换神没有代价。",
+  "text": "另一座祭坛，烧得正旺。一枚{item:charm_sun}摆在火边。\n\n拿了放进包里，{b}不会自动换神{/b}：点它说明窗下的「奉为主信仰」，你信的才换成{faith:sun}，{faith:brute}那几行字会变灰（休眠），顶端栏的徽记换成{faith:sun}的。{b}经验值是这一局一池，换神不会丢{/b}。火边的余烬也给了你一大块经验值，够你升到第二阶。\n\n想换回来：{b}右键{/b}{item:charm_brute}，同样点「奉为主信仰」。换神没有代价。",
   "texts": {
-    "en": "Another altar, burning hot. A {item:charm_sun} lies by the fire.\n\nPutting it in your bag {b}doesn't switch gods by itself{/b}: press Make main faith under its tooltip and you follow {faith:sun} instead. The lines tied to {faith:brute} turn grey (dormant), and the emblem in the top bar becomes the one for {faith:sun}. {b}Each god keeps its own Faith. You lose nothing.{/b}\n\nWant to switch back? {b}Right-click{/b} the {item:charm_brute} and press Make main faith again. Switching gods costs nothing."
+    "en": "Another altar, burning hot. A {item:charm_sun} lies by the fire.\n\nPutting it in your bag {b}doesn't switch gods by itself{/b}: press Make main faith under its tooltip and you follow {faith:sun} instead. The lines tied to {faith:brute} turn grey (dormant), and the emblem in the top bar becomes the one for {faith:sun}. {b}XP is one pool for the run. You lose nothing.{/b} The embers by the fire also give you a large chunk of XP, enough to reach Rank two.\n\nWant to switch back? {b}Right-click{/b} the {item:charm_brute} and press Make main faith again. Switching gods costs nothing."
   },
   "options": [
     {
@@ -21,6 +21,10 @@
         {
           "type": "give_item",
           "item": "charm_sun"
+        },
+        {
+          "type": "gain_xp",
+          "amount": 65
         },
         {
           "type": "say",

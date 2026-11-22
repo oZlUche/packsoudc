@@ -13,16 +13,11 @@
     "en": "Constancy (the recurring cycle), which humans pushed onto the sun before stealing its fire; one of the Empire's gods, and the Sun God's people hold high standing."
   },
   "thresholds": [
-    20,
-    60,
-    120
+    42,
+    117,
+    217
   ],
   "deeds": [
-    {
-      "type": "battle",
-      "won_only": true,
-      "amount": 6
-    },
     {
       "type": "mechanic",
       "key": "sun_window",

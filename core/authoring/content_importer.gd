@@ -243,6 +243,8 @@ static func import_of(kind: String, data: Dictionary, ctx: Context, report: Impo
 		return import_alchemy_rules(data, ctx, report)     # 354
 	if kind == "base_rules" and String(data.get("id", "")) == String(CanteenRules.ID):
 		return import_canteen_rules(data, ctx, report)     # 355
+	if kind == "base_rules" and String(data.get("id", "")) == String(LevelRules.ID):
+		return import_level_rules(data, ctx, report)     # 372
 	var importer: Callable = _importers().get(kind, Callable())
 	if not importer.is_valid():
 		report.error("", "不认识的内容种类 '%s'（登记在 ContentPaths.KINDS，并在 ContentImporter.import_of 接一臂）" % kind)
@@ -1141,6 +1143,57 @@ static func import_npc(data: Dictionary, ctx: Context, report: ImportReport) -> 
 			elif not (ctx.items[sp.give] as ItemDef).is_unique():
 				report.error("specials[%d].give" % i, "'%s' 不是独一道具（专属对话只给一辈子一件的东西）" % sp.give)
 	return def
+
+
+## 372：局内成长的规矩 —— 等级上限与每级的点数是正数；每张牌在三类里、权重不是负数、出牌条件认得、后续牌接的是池里的牌，
+## 牌的 id 得是一份一局的 buff（`run_buffs`，scope MAP）
+static func import_level_rules(data: Dictionary, ctx: Context, report: ImportReport) -> LevelRules:
+	var rules := LevelRules.new()
+	_fill(rules, data, "", ctx, report)
+	_require_id(rules.id, "局内成长规矩", report)
+	if rules.level_cap < 2:
+		report.error("level_cap", "至少 2 级")
+	if rules.cost_base + rules.cost_step < 1:
+		report.error("cost_base", "升一级至少要 1 点")
+	if rules.difficulty_step < 0.0:
+		report.error("difficulty_step", "不能是负数")
+	if rules.choices < 1:
+		report.error("choices", "每级至少出一张牌")
+	for key in rules.battle:
+		if typeof(rules.battle[key]) not in [TYPE_INT, TYPE_FLOAT] or float(rules.battle[key]) < 0.0:
+			report.error("battle.%s" % key, "得是不小于 0 的数")
+		else:
+			rules.battle[key] = int(rules.battle[key])
+	for key in rules.cards:
+		var at := "cards.%s" % key
+		var row: Variant = rules.cards[key]
+		if not (row is Dictionary):
+			report.error(at, "得是一张表")
+			continue
+		var r := row as Dictionary
+		if not LevelRules.KINDS.has(StringName(String(r.get("kind", "")))):
+			report.error(at + ".kind", "得是 stat / weapon / explore 之一")
+		if float(r.get("weight", 1.0)) < 0.0:
+			report.error(at + ".weight", "不能是负数")
+		var req := String(r.get("requires", ""))
+		if req != "" and not [String(LevelRules.REQ_WEAPON), String(LevelRules.REQ_ELEMENT)].has(req) and not ctx.tags.is_empty() and not ctx.tags.has(StringName(req)):
+			report.error(at + ".requires", "认不得的出牌条件 '%s'（weapon / element / 一个标签）" % req)
+		var after := String(r.get("after", ""))
+		if after != "" and not rules.cards.has(after):
+			report.error(at + ".after", "接的牌 '%s' 不在池里" % after)
+		var echo := String(r.get("echo", ""))
+		if echo != "" and not [String(LevelRules.ECHO_BODY), String(LevelRules.ECHO_FASTER), String(LevelRules.ECHO_STACKS)].has(echo):
+			report.error(at + ".echo", "得是 body / faster / stacks 之一")
+		var oneshot := String(r.get("oneshot", ""))
+		if oneshot != "" and oneshot != String(LevelRules.ONESHOT_SEARCH):
+			report.error(at + ".oneshot", "只认 search")
+		if not ctx.run_buffs.is_empty():
+			var b: RunBuffDef = ctx.run_buffs.get(StringName(String(key)), null)
+			if b == null:
+				report.error(at, "没有这份一局的 buff（data/authoring/run_buffs/%s.json）" % key)
+			elif not b.is_map():
+				report.error(at, "'%s' 得是一局里的 buff（scope MAP）" % key)
+	return rules
 
 
 ## 269：计分规矩 —— 击败 / 探索的分不能是负数，难度每档加的不能是负数

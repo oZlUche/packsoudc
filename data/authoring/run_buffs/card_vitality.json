@@ -1,0 +1,12 @@
+{
+  "id": "card_vitality",
+  "display_name": "耐行",
+  "display_names": {
+    "en": "Long Road"
+  },
+  "effects": [
+    {
+      "type": "vitality_max_bonus"
+    }
+  ]
+}

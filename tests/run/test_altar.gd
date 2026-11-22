@@ -31,13 +31,14 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var altar := AltarModule.of(run)     # 101：神坛与信仰级效果是一局的模块
 	t.not_null(altar, "默认清单里有神坛")
 	t.check(altar.perks().all(func(p): return p is BruteRagePerk), "0 级只有奉神即有的怒气（信仰重构 D）")
-	# 战斗的账喂进去（信仰重构 D：打赢 6 + 反击 2 + 低血打赢 2）
+	# 战斗的账喂进去（信仰重构 D：反击 2 + 低血打赢 2；372 起打赢那一份是通用经验值，不在神的账上）
+	var bdef := run.active_faith()
 	var got := run.faith_power.credit(&"battle", {"won": true, "dealt": {"physical": 60.0}, "taken": {"physical": 60.0}, "mechanic": {"brute_strike": 2, "low_hp_won": 1}})
-	t.eq(got, 10, "打赢 6 + 反击 2 + 低血打赢 2 = 10")
+	t.eq(got, 4, "反击 2 + 低血打赢 2 = 4")
 	t.eq(run.faith_power.credit(&"vitality_change", {"delta": -1}), 0, "掉体力不再给（信仰重构 D）")
-	run.faith_power.add_points(&"brute", 10)
-	t.eq(run.active_faith_tier(), 1, "20 点：Lv.1")
-	t.check(run.faith_power.line().begins_with("蛮神 Lv.1"), "HUD 一句：%s" % run.faith_power.line())
+	run.faith_power.add_points(&"brute", bdef.thresholds[0] - run.faith_power.points_of(&"brute"))
+	t.eq(run.active_faith_tier(), 1, "到第一道门槛：Lv.1")
+	t.check(run.faith_power.line().begins_with("蛮神 1 阶"), "HUD 一句：%s" % run.faith_power.line())
 	t.check(altar.perk(&"brute_rage") != null, "怒气生效")
 	var spec := run.compile_player()
 	var has_rule := false
@@ -47,8 +48,8 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 				has_rule = true
 	t.check(has_rule, "编译出来的玩家带着一阶的怒气规则")
 	# 2 级：神坛献祭生命上限
-	run.faith_power.add_points(&"brute", 40)
-	t.eq(run.active_faith_tier(), 2, "60 点：Lv.2")
+	run.faith_power.add_points(&"brute", bdef.thresholds[1] - run.faith_power.points_of(&"brute"))
+	t.eq(run.active_faith_tier(), 2, "到第二道门槛：Lv.2")
 	var actions: Array[FaithPerk] = []
 	for p in altar.actions():
 		if p is AltarSacrificeHpPerk:
@@ -89,15 +90,15 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	altar.node = run.travel.current_id
 	var pts0 := run.faith_power.points_of(&"brute")
 	var fl := altar.special(actions[0], run.current_node(), AltarSacrificeHpPerk.FAITH)
-	t.check(fl.contains("信力 +20"), "换信力：%s" % fl)
-	t.eq(run.faith_power.points_of(&"brute"), pts0 + 20, "信力 +20")
+	t.check(fl.contains("经验值 +20"), "换经验值：%s" % fl)
+	t.eq(run.faith_power.points_of(&"brute"), pts0 + 20, "经验值 +20")
 	t.eq(run.effective_baseline().value_of(BattleStats.MAX_HP, 0.0), hp0 - 10.0, "两回都扣生命上限")
 	t.eq(AltarSacrificeHpPerk.buff_times(run), 1, "换信力不叠「能力」")
 	# 3 级：立即击败
-	run.faith_power.add_points(&"brute", 60)
+	run.faith_power.add_points(&"brute", bdef.thresholds[2] - run.faith_power.points_of(&"brute"))
 	t.eq(run.active_faith_tier(), 3, "Lv.3")
 	var smite := altar.perk(&"smite")
-	t.check(smite != null and smite.prebattle_actions(run, &"elite").size() == 2 and smite.prebattle_actions(run, &"battle").size() == 2 and smite.prebattle_actions(run, &"boss").is_empty(), "立即击败：普通与精英都能（耗体力 / 耗祈愿两个按钮），首领不能")
+	t.check(smite != null and smite.prebattle_actions(run, &"elite").size() == 1 and smite.prebattle_actions(run, &"battle").size() == 1 and smite.prebattle_actions(run, &"boss").is_empty(), "立即击败：普通与精英都能（372 起只有耗体力一个按钮），首领不能")
 	# 献祭（AltarModule.offer：换信力；祭品由献的那一方拿走）
 	var sword: ItemInstance = null
 	for inst in run.board.items():
@@ -112,7 +113,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 		var res := altar.offer([sword], run.current_node())
 		run.board.remove(sword.uid)
 		t.eq(int(res["count"]), 1, "献祭了一件")
-		t.eq(run.faith_power.points_of(&"brute"), p0 + val, "信力 +%d（2^稀有度 × 3）" % val)
+		t.eq(run.faith_power.points_of(&"brute"), p0 + mini(val, LevelRules.load_rules().offering_cap), "经验值 +%d（2^稀有度 × 3，每座神坛封顶）" % val)
 		t.check(not altar.is_open() and altar.used.has(altar.node), "反馈：献祭和特殊操作二选一 —— 献了就关")
 	# 日神：附魔 + 祈祷
 	var defs := FaithDef.load_all()
@@ -294,7 +295,7 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 		game.queue_free()
 		Support.cleanup("altar")
 		return
-	t.check(screen.head_text().contains("蛮神") and screen.head_text().contains("Lv.0"), "抬头：信仰与等级（%s）" % screen.head_text())
+	t.check(screen.head_text().contains("蛮神") and screen.head_text().contains("0 阶"), "抬头：信仰与阶（%s）" % screen.head_text())
 	t.check(screen._offer_btn.disabled and screen.preview_text().contains("拖上台"), "台上没东西：献祭灰着")
 	var sword: ItemInstance = null
 	var nope: ItemInstance = null
@@ -340,7 +341,7 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	t.check(flow.can_reopen() and flow.reopen_node(), "重开神坛")
 	t.eq(flow.screen, GameFlow.Screen.ALTAR, "→ 神坛屏")
 	# 升到 2 级：特殊操作出现；做了就关
-	run.faith_power.add_points(&"brute", 100)
+	run.faith_power.add_points(&"brute", 120)     # 372：第二道门槛 117
 	screen = game.overlay()
 	t.check(screen != null and screen._action_btns.size() == 2, "Lv.2：特殊操作按钮随等级刷出来（祈求赐福 + 献祭生命上限，不用重开）")
 	if screen != null and screen._action_btns.size() == 2:

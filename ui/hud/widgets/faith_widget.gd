@@ -1,7 +1,7 @@
-## 150：信仰 + 信力 + 阶（087 / 082）；停上去开悬浮窗（具体效果、信力怎么涨），用所在屏的那个悬浮窗。
-## 166（作者定）：有信仰时画这个信仰的徽记（`assets/ui/faith/<id>.png`，32 px）+ 阶与信力的小字；**没信仰时留一个空槽**（固定宽、不写字）。
+## 150：信仰 + 阶（087 / 082；372 起经验值在等级管上）；停上去开悬浮窗（具体效果、经验值怎么涨），用所在屏的那个悬浮窗。
+## 166（作者定）：有信仰时画这个信仰的徽记（`assets/ui/faith/<id>.png`，32 px）+ 阶的小字；**没信仰时留一个空槽**（固定宽、不写字）。
 ## 缺图时退回原来那行字（「信仰：暴力之神　…」）
-## 信仰重构 A：三态 —— 不奉神（空槽）/ 联系正常（徽记 + 阶 + 信力）/ 联系中断（选的那位神的徽记压暗 + 「联系中断」，悬浮窗写原因）
+## 信仰重构 A：三态 —— 不奉神（空槽）/ 联系正常（徽记 + 阶）/ 联系中断（选的那位神的徽记压暗 + 「联系中断」，悬浮窗写原因）
 extends HudWidget
 
 const ICON := 32.0
@@ -52,7 +52,7 @@ func text_of() -> String:
 	return text_at(run.faith_power.points_of(id_))
 
 
-## 231 补充二：信力滚数（有徽记那种写法才滚）
+## 231 补充二：滚数（有徽记那种写法才滚）
 func roll_value() -> int:
 	var id_ := run.active_faith_id()
 	if id_ == &"" or art_of(id_) == null or run.active_faith() == null or run.faith_power == null:
@@ -60,12 +60,12 @@ func roll_value() -> int:
 	return run.faith_power.points_of(id_)
 
 
+## 372：只写阶（经验值和等级在顶端栏下面那根管子上）
 func text_at(p: int) -> String:
 	var def := run.active_faith()
 	if def == null:
 		return text_of()
-	var next := def.next_threshold(p)
-	return UiText.t("hud.faith_level") % [def.tier_of(p), p, (" / %d" % next) if next >= 0 else ""]
+	return UiText.t("hud.faith_level") % def.tier_of(p)
 
 
 func _paint() -> void:

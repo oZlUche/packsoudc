@@ -13,16 +13,11 @@
     "en": "Forging, combat technique and every craft. The god of dwarves, thieves and artisans; one of the gods in the Empire's rites."
   },
   "thresholds": [
-    20,
-    60,
-    120
+    42,
+    117,
+    217
   ],
   "deeds": [
-    {
-      "type": "battle",
-      "won_only": true,
-      "amount": 6
-    },
     {
       "type": "mechanic",
       "key": "skill_momentum",

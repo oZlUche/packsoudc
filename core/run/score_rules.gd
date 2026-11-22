@@ -20,6 +20,8 @@ const ID := &"score"
 ## 320：按档写死的难度系数（下标 = 档，0 = 普通）。写了就按它，超出表长按最后一项；空 = 按 [member difficulty_step] 线性。
 ## 进阶四以后暂时和进阶三一样（实验对照值，不是正式奖励）
 @export var difficulty_mults: Array[float] = []
+## 372（作者 18:30：等级算进点数）：「成长」一级记几分（1 级不算；战败也保留）
+@export var per_level: int = 0
 ## 撤离额外记几分（A 不用，0）
 @export var extract_bonus: int = 0
 ## 带出价值算不算分（A 算）
@@ -56,9 +58,14 @@ func mult(level: int) -> float:
 	return 1.0 + difficulty_step * float(maxi(0, level))
 
 
-## 三项加起来乘系数，向下取整
-func total(loot: int, battle: int, explore_sum: int, level: int) -> int:
-	return floori(float(loot + battle + explore_sum) * mult(level) + 0.0001)
+## 几项加起来乘系数，向下取整（372：[param growth] 是「成长」那一项）
+func total(loot: int, battle: int, explore_sum: int, level: int, growth: int = 0) -> int:
+	return floori(float(loot + battle + explore_sum + growth) * mult(level) + 0.0001)
+
+
+## 372：到了第 [param run_level] 级记几分
+func growth_points(run_level: int) -> int:
+	return maxi(0, run_level - 1) * maxi(0, per_level)
 
 
 ## 319：总分 [param s] 领几点见识（达到的档数）

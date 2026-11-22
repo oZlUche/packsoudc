@@ -75,6 +75,8 @@ var items_lost: Array[String] = []
 ## 这次从池里发的：奖励 key → 道具 id（[Say] 的 `{reward_name}` 用）
 var reward_names: Dictionary = {}
 var restored: int = 0
+## 372：这一次加的经验值（祷告）
+var xp_gained: int = 0
 var spent: int = 0
 var money: int = 0
 var buffs_granted: Array[String] = []
@@ -128,6 +130,8 @@ func detail() -> Dictionary:
 		d["items_lost"] = items_lost.duplicate()
 	if restored != 0:
 		d["restored"] = restored
+	if xp_gained != 0:
+		d["xp"] = xp_gained
 	if spent != 0:
 		d["spent"] = spent
 	if money != 0:

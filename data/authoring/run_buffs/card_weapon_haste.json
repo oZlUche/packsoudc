@@ -1,0 +1,22 @@
+{
+  "id": "card_weapon_haste",
+  "display_name": "迅捷",
+  "display_names": {
+    "en": "Quick Hands"
+  },
+  "effects": [
+    {
+      "type": "tag_mods",
+      "tags": [
+        "weapon"
+      ],
+      "mods": [
+        {
+          "stat": "haste",
+          "mode": "MULT",
+          "amount": 3.0
+        }
+      ]
+    }
+  ]
+}

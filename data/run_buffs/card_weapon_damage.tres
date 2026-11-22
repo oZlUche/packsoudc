@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_nek1w"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_7bsf6"]
+[ext_resource type="Script" path="res://core/run/effects/tag_mods.gd" id="3_44dpu"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ksfbj"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_5lu7f"]
+
+[sub_resource type="Resource" id="Resource_ci05k"]
+script = ExtResource("2_7bsf6")
+mode = 1
+amount = 4.0
+
+[sub_resource type="Resource" id="Resource_hr4nj"]
+script = ExtResource("3_44dpu")
+tags = Array[StringName]([&"weapon"])
+mods = Array[ExtResource("2_7bsf6")]([SubResource("Resource_ci05k")])
+
+[resource]
+script = ExtResource("5_5lu7f")
+id = &"card_weapon_damage"
+display_name = "锋锐"
+display_names = {
+"en": "Keen Edge"
+}
+effects = Array[ExtResource("1_nek1w")]([SubResource("Resource_hr4nj")])

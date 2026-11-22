@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_3o0nl"]
+[ext_resource type="Script" path="res://core/run/effects/stat_bonus.gd" id="2_4dkqj"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_dhg6b"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_2670p"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_41mg2"]
+
+[sub_resource type="Resource" id="Resource_rb48a"]
+script = ExtResource("2_4dkqj")
+amount = 3.0
+
+[resource]
+script = ExtResource("5_41mg2")
+id = &"card_hp_flat"
+display_name = "体魄"
+display_names = {
+"en": "Brawn"
+}
+effects = Array[ExtResource("1_3o0nl")]([SubResource("Resource_rb48a")])

@@ -193,6 +193,8 @@ func _state(i: int, p: StringName) -> Dictionary:
 func _extra_option(i: int, ctx: Dictionary) -> void:
 	var opt := _def.options[i] as EventOption
 	var state := _state(i, &"")
+	if opt.hide_when_locked and not bool(state["ok"]):
+		return     # 372：锁着就藏的（神坛祷告用完了）不出按钮
 	var b := ScrollKey.make(TextTemplate.plain(opt.label_for(), TextTemplate.option_context(ctx, opt)), func(): choose(i))
 	b.disabled = not bool(state["ok"])
 	_extra_btns.append(b)
@@ -316,9 +318,10 @@ func _show_rest_note() -> void:
 	if flow.camp_rest.is_empty() or _node == null or int(flow.camp_rest.get("node", -1)) != _node.id:
 		return
 	var n := int(flow.camp_rest.get("restored", 0))
+	var xp := int(flow.camp_rest.get("xp", 0))
 	flow.camp_rest = {}
 	var v := flow.run.vitality
-	_note_text = UiText.t("camp.rest_note") % [n, v.current, v.maximum]
+	_note_text = UiText.t("camp.rest_note") % [n, v.current, v.maximum] if n > 0 or xp <= 0 else UiText.t("camp.pray_note") % xp     # 372：祷告冒经验值
 	var panel := PanelContainer.new()
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0.05, 0.06, 0.08, 0.85)

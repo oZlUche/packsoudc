@@ -1,0 +1,13 @@
+{
+  "id": "card_carry",
+  "display_name": "背负",
+  "display_names": {
+    "en": "Pack Mule"
+  },
+  "effects": [
+    {
+      "type": "carry_capacity_bonus",
+      "amount": 3
+    }
+  ]
+}

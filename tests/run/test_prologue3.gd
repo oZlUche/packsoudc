@@ -174,7 +174,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.eq(s.active_faith().id, &"brute", "放进包里不自动换神：还是蛮神")
 	t.eq(s.select_faith(&"sun"), "", "点日神护符的「奉为主信仰」")
 	t.eq(s.active_faith().id, &"sun", "换成日神")
-	t.eq(s.faith_power.points_of(&"brute"), p2, "蛮神的信力还记着（%d）" % p2)
+	t.check(s.faith_power.points_of(&"brute") >= p2, "经验值一局一池：换神不丢（%d ≥ %d；接日神护符那一下还多给了一块）" % [s.faith_power.points_of(&"brute"), p2])
 	# 6 战斗 2：门禁要蛮神
 	t.check(s.step_to(6), "走到第二场")
 	ev = s.events.pending_event()
@@ -186,7 +186,7 @@ static func run_walkthrough(t: TestCase) -> void:
 	t.check(bool(s.events.option_state(go)["ok"]), "现在能打")
 	t.check(s.events.choose(go), "开打")
 	var p3 := s.faith_power.points_of(&"brute")
-	t.check(s.active_faith_tier() >= 2, "第二场打完过了 2 阶（信力 %d，阈值 %d）" % [p3, c.faiths[&"brute"].thresholds[1]])
+	t.check(s.active_faith_tier() >= 2, "第二场打完过了 2 阶（经验值 %d，阈值 %d；%s）" % [p3, c.faiths[&"brute"].thresholds[1], str(LevelModule.of(s).history)])
 	# 116：留余量，防下次改武器 / 数值又贴着线（曲线 102～118）
 	t.check(p3 >= c.faiths[&"brute"].thresholds[1] + 2, "第二场打完离 2 阶还留着余量（%d ≥ %d + 2）" % [p3, c.faiths[&"brute"].thresholds[1]])
 	if s.pending_loot != null:
@@ -251,11 +251,11 @@ static func run_faith_placeholders(t: TestCase) -> void:
 	var brute := c.faiths[&"brute"] as FaithDef
 	t.eq(TextTemplate.render("{faith:brute}", ctx), "[color=@faith][b]%s[/b][/color]" % Names.of(brute), "{faith:}：信仰名、faith 色")
 	t.eq(TextTemplate.plain("{faith_threshold:brute:2}", ctx), str(brute.thresholds[1]), "第二阶阈值")
-	# 信仰重构 D：蛮神的行为换成「打赢 6」+ 机制次数
-	t.eq(TextTemplate.plain("{faith_deed:brute:battle:amount}", ctx), "6", "打赢一场的信力")
+	# 372：蛮神的「打赢一场」改成通用经验值，只剩机制次数
+	t.eq(TextTemplate.plain("{faith_deed:brute:battle:amount}", ctx), "{faith_deed:brute:battle:amount}", "打赢那一条删了：原样保留")
 	t.eq(TextTemplate.plain("{faith_deed:brute:mechanic:at_least}", ctx), "1", "机制行为的门槛（默认值也读得到）")
 	t.eq(TextTemplate.plain("{faith_offer:brute:beast_part:multiplier}", ctx), "5", "兽材的献祭倍数（250：骨并进兽材）")
-	t.eq(TextTemplate.plain("{faith_perk:brute:altar_bless:cost}", ctx), "40", "祈求赐福花的信力")
+	t.eq(TextTemplate.plain("{faith_perk:brute:altar_sacrifice_hp:faith_gain}", ctx), "20", "献祭生命上限换的经验值（372：祈求赐福不再花东西）")
 	t.eq(TextTemplate.plain("{faith_threshold:brute:9}", ctx), "{faith_threshold:brute:9}", "没有这一阶：原样保留")
 	t.eq(TextTemplate.plain("{faith:nobody}", ctx), "{faith:nobody}", "没有这位神：原样保留")
 	t.eq(TextTemplate.refs("{faith:brute}{faith_perk:sun:x:y}").size(), 2, "refs 认信仰引用")

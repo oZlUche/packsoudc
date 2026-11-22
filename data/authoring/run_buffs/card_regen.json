@@ -1,0 +1,14 @@
+{
+  "id": "card_regen",
+  "display_name": "调息",
+  "display_names": {
+    "en": "Steady Breath"
+  },
+  "effects": [
+    {
+      "type": "stat_bonus",
+      "stat": "regen_stamina",
+      "amount": 0.3
+    }
+  ]
+}

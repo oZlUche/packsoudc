@@ -1,77 +1,71 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_4pf53"]
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="2_cjt5o"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="3_jvie7"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="4_qj5uc"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/item_acquired_deed.gd" id="5_euvoa"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="6_vjyer"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="7_padec"]
-[ext_resource type="Script" path="res://core/run/faith/perks/skill_momentum_perk.gd" id="8_oirgc"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="9_diunh"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_h8ube"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="2_4pf53"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="3_cjt5o"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/item_acquired_deed.gd" id="4_jvie7"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="5_qj5uc"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="6_euvoa"]
+[ext_resource type="Script" path="res://core/run/faith/perks/skill_momentum_perk.gd" id="7_vjyer"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="8_padec"]
 
-[sub_resource type="Resource" id="Resource_5wnkl"]
-script = ExtResource("3_jvie7")
-won_only = true
-amount = 6
-
-[sub_resource type="Resource" id="Resource_n4w8t"]
-script = ExtResource("4_qj5uc")
+[sub_resource type="Resource" id="Resource_oirgc"]
+script = ExtResource("3_cjt5o")
 key = &"skill_momentum"
 amount = 2
 
-[sub_resource type="Resource" id="Resource_g4lgm"]
-script = ExtResource("4_qj5uc")
+[sub_resource type="Resource" id="Resource_diunh"]
+script = ExtResource("3_cjt5o")
 key = &"skill_momentum"
 at_least = 3
 amount = 2
 
-[sub_resource type="Resource" id="Resource_841d8"]
-script = ExtResource("5_euvoa")
+[sub_resource type="Resource" id="Resource_5wnkl"]
+script = ExtResource("4_jvie7")
 tag = &"crafted"
 first_kind_only = true
 amount = 3
 
-[sub_resource type="Resource" id="Resource_p7b2c"]
-script = ExtResource("6_vjyer")
+[sub_resource type="Resource" id="Resource_n4w8t"]
+script = ExtResource("5_qj5uc")
 tags = Array[StringName]([&"weapon"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_km7l0"]
-script = ExtResource("6_vjyer")
+[sub_resource type="Resource" id="Resource_g4lgm"]
+script = ExtResource("5_qj5uc")
 tags = Array[StringName]([&"armor", &"shield"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_w32tr"]
-script = ExtResource("6_vjyer")
+[sub_resource type="Resource" id="Resource_841d8"]
+script = ExtResource("5_qj5uc")
 has_stat = &"crit_chance"
 multiplier = 8.0
 
-[sub_resource type="Resource" id="Resource_exdft"]
-script = ExtResource("6_vjyer")
+[sub_resource type="Resource" id="Resource_p7b2c"]
+script = ExtResource("5_qj5uc")
 tags = Array[StringName]([&"crafted"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_kbb32"]
-script = ExtResource("8_oirgc")
+[sub_resource type="Resource" id="Resource_km7l0"]
+script = ExtResource("7_vjyer")
 tier = 0
 
-[sub_resource type="Resource" id="Resource_qhqcm"]
-script = ExtResource("8_oirgc")
+[sub_resource type="Resource" id="Resource_w32tr"]
+script = ExtResource("7_vjyer")
 part = 1
 
-[sub_resource type="Resource" id="Resource_ks0gt"]
-script = ExtResource("8_oirgc")
+[sub_resource type="Resource" id="Resource_exdft"]
+script = ExtResource("7_vjyer")
 part = 2
 tier = 2
 
-[sub_resource type="Resource" id="Resource_jr3e6"]
-script = ExtResource("8_oirgc")
+[sub_resource type="Resource" id="Resource_kbb32"]
+script = ExtResource("7_vjyer")
 part = 3
 tier = 3
 
 [resource]
-script = ExtResource("9_diunh")
+script = ExtResource("8_padec")
 id = &"skill"
 display_name = "技巧之神"
 display_names = {
@@ -85,7 +79,7 @@ description = "锻造、战斗技巧和各种手艺，是矮人族和盗贼以�
 descriptions = {
 "en": "Forging, combat technique and every craft. The god of dwarves, thieves and artisans; one of the gods in the Empire's rites."
 }
-thresholds = Array[int]([20, 60, 120])
-deeds = Array[ExtResource("2_cjt5o")]([SubResource("Resource_5wnkl"), SubResource("Resource_n4w8t"), SubResource("Resource_g4lgm"), SubResource("Resource_841d8")])
-offerings = Array[ExtResource("6_vjyer")]([SubResource("Resource_p7b2c"), SubResource("Resource_km7l0"), SubResource("Resource_w32tr"), SubResource("Resource_exdft")])
-perks = Array[ExtResource("7_padec")]([SubResource("Resource_kbb32"), SubResource("Resource_qhqcm"), SubResource("Resource_ks0gt"), SubResource("Resource_jr3e6")])
+thresholds = Array[int]([42, 117, 217])
+deeds = Array[ExtResource("2_4pf53")]([SubResource("Resource_oirgc"), SubResource("Resource_diunh"), SubResource("Resource_5wnkl")])
+offerings = Array[ExtResource("5_qj5uc")]([SubResource("Resource_n4w8t"), SubResource("Resource_g4lgm"), SubResource("Resource_841d8"), SubResource("Resource_p7b2c")])
+perks = Array[ExtResource("6_euvoa")]([SubResource("Resource_km7l0"), SubResource("Resource_w32tr"), SubResource("Resource_exdft"), SubResource("Resource_kbb32")])

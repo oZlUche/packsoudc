@@ -1,34 +1,39 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_thog3"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_84bc3"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/give_item.gd" id="3_5pej1"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="4_o8gnc"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="5_45bk5"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="6_h1qe8"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_84bc3"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_5pej1"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/give_item.gd" id="3_o8gnc"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/gain_xp.gd" id="4_45bk5"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/say.gd" id="5_h1qe8"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="6_be2eq"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="7_xidqa"]
 
-[sub_resource type="Resource" id="Resource_be2eq"]
-script = ExtResource("3_5pej1")
+[sub_resource type="Resource" id="Resource_gwmy6"]
+script = ExtResource("3_o8gnc")
 item = &"charm_sun"
 
-[sub_resource type="Resource" id="Resource_xidqa"]
-script = ExtResource("4_o8gnc")
+[sub_resource type="Resource" id="Resource_t80rx"]
+script = ExtResource("4_45bk5")
+amount = 65
+
+[sub_resource type="Resource" id="Resource_iwfa2"]
+script = ExtResource("5_h1qe8")
 text = "两枚护符，两位神。奉哪位，你自己点。"
 texts = {
 "en": "Two charms, two gods. You choose which one to follow."
 }
 
-[sub_resource type="Resource" id="Resource_gwmy6"]
-script = ExtResource("1_thog3")
+[sub_resource type="Resource" id="Resource_nlycl"]
+script = ExtResource("1_84bc3")
 label = "接过日神的护符"
 labels = {
 "en": "Take the Sun God's charm"
 }
 tags = Array[StringName]([&"offering"])
-outcomes = Array[ExtResource("2_84bc3")]([SubResource("Resource_be2eq"), SubResource("Resource_xidqa")])
+outcomes = Array[ExtResource("2_5pej1")]([SubResource("Resource_gwmy6"), SubResource("Resource_t80rx"), SubResource("Resource_iwfa2")])
 
 [resource]
-script = ExtResource("6_h1qe8")
+script = ExtResource("7_xidqa")
 id = &"tut3_faith_call_sun"
 title = "日神的低语"
 titles = {
@@ -36,14 +41,14 @@ titles = {
 }
 text = "另一座祭坛，烧得正旺。一枚{item:charm_sun}摆在火边。
 
-拿了放进包里，{b}不会自动换神{/b}：点它说明窗下的「奉为主信仰」，你信的才换成{faith:sun}，{faith:brute}那几行字会变灰（休眠），顶端栏的徽记换成{faith:sun}的。{b}两位神的信力各记各的，不会丢{/b}。
+拿了放进包里，{b}不会自动换神{/b}：点它说明窗下的「奉为主信仰」，你信的才换成{faith:sun}，{faith:brute}那几行字会变灰（休眠），顶端栏的徽记换成{faith:sun}的。{b}经验值是这一局一池，换神不会丢{/b}。火边的余烬也给了你一大块经验值，够你升到第二阶。
 
 想换回来：{b}右键{/b}{item:charm_brute}，同样点「奉为主信仰」。换神没有代价。"
 texts = {
 "en": "Another altar, burning hot. A {item:charm_sun} lies by the fire.
 
-Putting it in your bag {b}doesn't switch gods by itself{/b}: press Make main faith under its tooltip and you follow {faith:sun} instead. The lines tied to {faith:brute} turn grey (dormant), and the emblem in the top bar becomes the one for {faith:sun}. {b}Each god keeps its own Faith. You lose nothing.{/b}
+Putting it in your bag {b}doesn't switch gods by itself{/b}: press Make main faith under its tooltip and you follow {faith:sun} instead. The lines tied to {faith:brute} turn grey (dormant), and the emblem in the top bar becomes the one for {faith:sun}. {b}XP is one pool for the run. You lose nothing.{/b} The embers by the fire also give you a large chunk of XP, enough to reach Rank two.
 
 Want to switch back? {b}Right-click{/b} the {item:charm_brute} and press Make main faith again. Switching gods costs nothing."
 }
-options = Array[ExtResource("1_thog3")]([SubResource("Resource_gwmy6")])
+options = Array[ExtResource("1_84bc3")]([SubResource("Resource_nlycl")])

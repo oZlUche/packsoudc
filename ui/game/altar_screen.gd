@@ -1,7 +1,7 @@
 ## 神坛屏（093，作者定）：休息处的「神坛」选项打开（只在激活了信仰时才有）。
 ##
-## 上面一眼看到当前信仰、等级与信力；中间是祭品台（把道具拖上来；至少满足一条献祭规矩的才收），
-## 「献祭」按钮在台上有东西时亮起并预览信力增长与等级变化；
+## 上面一眼看到当前信仰与阶；中间是祭品台（把道具拖上来；至少满足一条献祭规矩的才收），
+## 「献祭」按钮在台上有东西时亮起并预览经验值增长与阶的变化；
 ## 到了等级解锁的特殊操作在右边一列按钮。反馈：**献祭和特殊操作二选一**，做了哪个这个休息处的神坛都关了；
 ## 神坛和休息是两份独立的机会，互不占用。「返回」= 回地图；没用过就还能再开。
 extends GameScreen
@@ -126,7 +126,7 @@ func put_on_table(uid: int) -> bool:
 	return InventoryService.transfer_auto(from, uid, _table)
 
 
-## 台上献祭的预览：{"points"（信力）, "prayer"（实际能进的祈愿）, "tier_after"}
+## 台上献祭的预览：{"points"（这一批按规矩算的点数）, "xp"（实际能进的经验值：每座神坛有上限，乘难度系数）, "tier_after"}
 func preview() -> Dictionary:
 	var run := flow.run
 	var def := run.active_faith()
@@ -135,12 +135,18 @@ func preview() -> Dictionary:
 		return out
 	for inst in _table.items():
 		out["points"] = int(out["points"]) + def.offering_value((inst as ItemInstance).def)
-	out["tier_after"] = def.tier_of(run.faith_power.points_of(def.id) + int(out["points"]))
-	out["prayer"] = mini(2 * int(out["points"]), run.faith_power.prayer_room(def.id))     # 信仰重构 B：和 AltarModule.offer 同一条式子，满了照实写 0
+	var lv := LevelModule.of(run)
+	var room := int(out["points"])
+	if lv != null:
+		room = mini(room, maxi(0, lv.rules().offering_cap - int(_node.content.get("altar_offered", 0)) if _node != null else lv.rules().offering_cap))
+		out["xp"] = roundi(float(room) * lv.mult())
+	else:
+		out["xp"] = room
+	out["tier_after"] = def.tier_of(run.faith_power.points_of(def.id) + int(out["xp"]))     # 372：和 AltarModule.offer 同一条式子
 	return out
 
 
-## 按「献祭」：台上的全部销毁换信力
+## 按「献祭」：台上的全部销毁换经验值
 func offer() -> Dictionary:
 	var insts: Array = _table.items().duplicate()
 	if insts.is_empty() or not _altar_open():
@@ -254,8 +260,8 @@ func _refresh() -> void:
 	elif int(p["count"]) == 0:
 		_preview = UiText.t("altar.drag_hint")
 	else:
-		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"]), int(p.get("prayer", 0))]
-		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p["points"]), int(p["tier_before"]), int(p["tier_after"])]
+		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p.get("xp", 0)), int(p["tier_before"]), int(p["tier_after"])]
+		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p.get("xp", 0)), int(p["tier_before"]), int(p["tier_after"])]
 	ScrollKey.show_sub(_offer_btn, UiText.t("altar.offer"), line)
 	for b in _action_btns:
 		(b as Button).disabled = (b as Button).disabled or not open_

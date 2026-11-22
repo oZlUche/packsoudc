@@ -1,0 +1,32 @@
+{
+  "id": "level_reroll",
+  "display_name": "换牌",
+  "display_names": {
+    "en": "Reroll"
+  },
+  "column": 3,
+  "description": "升级选牌时可以把三张牌一起换一批，级数越高一局能换越多次。",
+  "descriptions": {
+    "en": "When you level up, swap all three cards for a new set; higher levels allow more swaps per run."
+  },
+  "tree": "mechanism",
+  "effect": {
+    "type": "tech_run_buff",
+    "buffs": [
+      "tech_level_reroll_1",
+      "tech_level_reroll_2",
+      "tech_level_reroll_3"
+    ]
+  },
+  "tiers": [
+    {
+      "insight": 1
+    },
+    {
+      "insight": 2
+    },
+    {
+      "insight": 3
+    }
+  ]
+}

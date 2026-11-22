@@ -20,18 +20,18 @@ static func run_faith_layout(t: TestCase) -> void:
 		return
 	var full := FaithTooltip.describe_full(brute, _power(&"brute", 45))
 	var head := Glossary.strip_bbcode(String(full["head"]))
-	t.check(head.contains("蛮神") and head.contains("Lv.1") and head.contains("45 / 60"), "名字行与信力行（%s）" % head)
+	t.check(head.contains("蛮神") and head.contains("Lv.1") and head.contains("45 / %d" % brute.thresholds[1]), "名字行与经验值行（%s）" % head)
 	var text := Glossary.strip_bbcode(String(full["text"]))
 	for word in ["阈值", "暴力与杀戮", "帝国", "这个信仰的道具", "休眠，只保留", "右键信物", "信力怎么涨"]:
 		t.check(not text.contains(word), "不写「%s」" % word)
-	t.check(full["bar"]["thresholds"] == [20, 60, 120] and int(full["bar"]["points"]) == 45, "进度条：各级阈值与现在的信力（%s）" % str(full["bar"]))
+	t.check(full["bar"]["thresholds"] == brute.thresholds and int(full["bar"]["points"]) == 45, "进度条：各级阈值与现在的信力（%s）" % str(full["bar"]))
 	var sections: Array = full["sections"]
 	t.check(sections.size() == 3, "三段：各阶效果、信力来源、献祭（%d）" % sections.size())
 	var perks := String(sections[0])
 	var lv2_dim := RegEx.create_from_string("\\[color=@dim\\]\\[font_size=\\d+\\]Lv\\.2").search(perks) != null
 	var lv1_dim := RegEx.create_from_string("\\[color=@dim\\]\\[font_size=\\d+\\]Lv\\.1").search(perks) != null
 	t.check(lv2_dim and not lv1_dim, "Lv.2 整行暗、Lv.1 亮")
-	t.check(Glossary.strip_bbcode(String(sections[1])).begins_with("信力来源"), "第二段信力来源")
+	t.check(Glossary.strip_bbcode(String(sections[1])).begins_with("经验值来源"), "第二段经验值来源")
 	t.check(Glossary.strip_bbcode(String(sections[2])).begins_with("献祭"), "第三段献祭")
 	t.check(String(full["head"]).contains("[color=@faith]") and String(full["head"]).contains("[color=@faith]45[/color]") and String(full["head"]).contains("[color=@faith]Lv.1[/color]"), "神名、信力数与 Lv 都是信仰色（257）")
 	var hex := RegEx.create_from_string("\\[color=#")
@@ -45,7 +45,7 @@ static func run_faith_layout(t: TestCase) -> void:
 	t.check(leaks.is_empty(), "没有写死的十六进制色、满阶也给进度条（补充一）：%s" % "，".join(leaks))
 	var hunt: FaithDef = defs.get(&"hunt", null)
 	if hunt != null and hunt.perks.is_empty():
-		t.check(Glossary.strip_bbcode(String(FaithTooltip.describe_full(hunt)["sections"][0])).begins_with("信力来源"), "没有阶效果的狩猎之神：第一段就是信力来源")
+		t.check(Glossary.strip_bbcode(String(FaithTooltip.describe_full(hunt)["sections"][0])).begins_with("经验值来源"), "没有阶效果的狩猎之神：第一段就是经验值来源")
 	t.check(FaithTooltip.describe_full(null).is_empty(), "没有信仰：不开窗")
 
 
@@ -64,11 +64,12 @@ static func frame_faith_window(t: TestCase, root: Window) -> void:
 		var segs: Array[Vector2] = bar.segments(HoverTip.MAX_WIDTH)
 		t.eq(segs.size(), 3, "三段（信仰重构 D：蛮神三阶 20 / 60 / 120）")
 		if segs.size() == 3:
-			var unit := segs[0].y / 20.0
-			var ok := absf(segs[1].y - 40.0 * unit) <= 1.0 and absf(segs[2].y - 60.0 * unit) <= 1.0
-			t.check(ok, "三段宽度 20:40:60（容差 1 px）：%s" % str(segs))
+			var th := brute.thresholds
+			var unit := segs[0].y / float(th[0])
+			var ok := absf(segs[1].y - float(th[1] - th[0]) * unit) <= 1.0 and absf(segs[2].y - float(th[2] - th[1]) * unit) <= 1.0
+			t.check(ok, "三段宽度按每阶要的经验值（容差 1 px）：%s" % str(segs))
 			t.check(segs[1].x > segs[0].x + segs[0].y, "段与段之间有缝")
-		t.check(absf(float(bar.fill_of(0)) - 1.0) < 0.001 and absf(float(bar.fill_of(1)) - 25.0 / 40.0) < 0.001 and float(bar.fill_of(2)) == 0.0, "45 点：第一段满、第二段 25/40、后面空")
+		t.check(absf(float(bar.fill_of(0)) - 1.0) < 0.001 and absf(float(bar.fill_of(1)) - float(45 - brute.thresholds[0]) / float(brute.thresholds[1] - brute.thresholds[0])) < 0.001 and float(bar.fill_of(2)) == 0.0, "45 点：第一段满、第二段按比例、后面空")
 		t.check(bar.get_index() == tip._panel.head.get_index() + 1, "在名字行下面")
 	t.eq(tip._faith_parts.size(), 1 + 2 * 2, "进度条 + 两段（各一条虚线）")
 	tip._refit()

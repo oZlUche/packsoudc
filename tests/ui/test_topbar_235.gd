@@ -85,7 +85,7 @@ static func frame_skin(t: TestCase, root: Window) -> void:
 	left._set_down(false)
 	left._set_hover(false)
 	t.check(normal != null and hover != null and pressed != null and normal != hover and hover != pressed and left.icon == normal, "三态：常态 / 悬停 / 按下各一张")
-	t.check(left.tooltip_text.begins_with("本局菜单（Esc）") and right.tooltip_text.begins_with("背包（B）"), "悬浮窗：本局菜单 / 背包")
+	t.check(left.tooltip_text.begins_with("本局菜单（Esc）") and right.tooltip_text.begins_with("状态（B）"), "悬浮窗：本局菜单 / 状态（372：背包界面改叫状态界面）")
 	left.pressed.emit()
 	right.pressed.emit()
 	t.eq(screen.ends, [&"left", &"right"] as Array[StringName], "按下：交给所在屏的 hud_end")

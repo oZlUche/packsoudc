@@ -5,22 +5,22 @@
 [resource]
 script = ExtResource("1_4t7vs")
 id = &"faith_power_and_tiers"
-display_name = "信力与阶"
+display_name = "经验值与等级"
 display_names = {
-"en": "Faith Points and Ranks"
+"en": "XP and Levels"
 }
 category = &"faith"
 order = 1
-text = "信力是按信仰要求的行为攒的点数，只给此刻激活的信仰记。每位神都看赢下战斗，再看这位神的战斗机制在这一场里真的发生了没有；有的还看置入或获得某类道具。输了不给打赢那份，已经做到的照给。按场计的行为有每场上限。信力过了一道阈值就升一阶，阈值一道比一道高。
+text = "经验值是这一局的成长：打赢战斗（精英、猎手、首领给得多）、第一次走进更深的一环、在神坛献祭和祷告都会涨；奉了神，做这位神喜欢的事再多给。难度越高，所有途径涨得越快。经验值只涨不花，够了升一级，最高 {level:cap} 级；撤离或阵亡后清零，下一局重来。
 
-阶决定两样东西：信仰道具上写的按阶功能，与这位神的等级效果，到了的亮、没到的灰。有些加成不按阶而按信力累计，每攒够一截多一份、有上限。信了之后顶端栏有一枚这位神的徽记，鼠标停上去看信力、阶和增长方式。各神的池子各自记，切换不清零。
+每升一级，回到地图时从三张牌里挑一张：属性、武器、探索三类，同一张可以重复拿，拿几张叠几层。局外的科技能给刷新（三张一起换）和删除（这一局不再出）的次数。不奉神就是【以人为本】：逢 {level:every} 的倍数级多选一次。
 
-祈愿是另一笔，专门拿来花：打完一场战斗、献祭都会进，有上限。神坛的祈求赐福、蛮神的立即击败花的都是祈愿。花祈愿不扣信力，阶不会掉。"
+奉了神，这位神的阶也按这一局的经验值算：过一道门槛升一阶，阶决定信仰道具上写的按阶功能与这位神的等级效果，到了的亮、没到的灰。顶端栏下面那根管子是经验值和等级，停上去看怎么涨。"
 texts = {
-"en": "Faith points are earned by doing what your Faith asks, and only the currently active Faith keeps count. Every god counts battles won, plus whether that god's battle mechanic actually happened in the battle; some also count placing or gaining certain kinds of items. A defeat gives no win bonus, but deeds already done still count. Deeds counted per battle have a per-battle cap. When your Faith points pass a threshold, you rise one Rank, and each threshold is higher than the last.
+"en": "XP is this run's growth: winning battles (elites, hunters and bosses give more), stepping into a deeper ring for the first time, and offering or praying at Altars all add to it; follow a god and doing what that god likes adds more. Higher difficulties make every source grow faster. XP is never spent; when you have enough you gain a level, up to {level:cap}. It resets when you extract or fall, and the next run starts over.
 
-Rank decides two things: the Rank-based effects written on Faith items, and the god's tier effects. Those you have reached light up; the rest stay grey. Some bonuses scale with total Faith points rather than Rank, adding one more share for each chunk you collect, up to a cap. Once you follow a god, their emblem appears in the top bar; hover over it to see your Faith points, Rank and how to earn more. Each god's pool is tracked separately, and switching doesn't reset it.
+Each level, pick one of three cards when you're back on the map: Stats, Weapons or Exploration. The same card can be taken again, and each copy stacks. Camp techs grant rerolls (swap all three) and removals (that card won't show again this run). Following no god is Humans First: every {level:every} levels you pick one more.
 
-Prayer is a separate pool, meant for spending: you gain it from finishing battles and from Offerings, up to a cap. Praying for a Blessing at an Altar and the Brute's instant defeat both spend Prayer. Spending Prayer never takes away Faith points, so your Rank never drops."
+If you follow a god, that god's Rank also counts this run's XP: pass a threshold to rise a Rank. Rank decides the Rank-based effects written on Faith items and the god's tier effects; those you have reached light up, the rest stay grey. The tube under the top bar shows your XP and level; hover over it to see how to earn more."
 }
-related = Array[String](["anchor_activation", "altar_offering", "信力"])
+related = Array[String](["anchor_activation", "altar_offering", "经验值"])

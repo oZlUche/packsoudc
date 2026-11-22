@@ -1,11 +1,11 @@
-## 神坛与信仰级效果（093 / 095，作者定）：站在开着神坛的点上可以**献祭**（销毁道具换信力）或者做一次
+## 神坛与信仰级效果（093 / 095，作者定）：站在开着神坛的点上可以**献祭**（销毁道具换经验值）或者做一次
 ## **特殊操作**（蛮神献祭生命上限、日神祈祷……）—— 两者二选一，共用这个点上的一次机会，用掉就关；走开也关。
 ## 神坛和休息是休息点上两份独立的机会（见 [method NodeEvents.settle_rest]）：神坛用掉了记到节点上，两份都用完点才变灰。
 ## 激活信仰到了阶的效果（[FaithPerk]）在这里取：编译战斗单位、算战利品、踩点、献祭之后各有一处回调。
 ## 095 的赐福也在这里：走一步时棋盘上的东西可能受赐福，战利品 / 搜索翻到的普通道具按概率换成赐福版。
 ##
 ## 101 第 1 刀：神坛的状态（开在哪个点、哪些点用过）、仪式的账（次数、改过的基线）、存档、接线全在这里，
-## [RunState] 不认识神坛。信仰本身（[FaithState] / [FaithPower]：谁激活、几阶、多少信力）仍然在 [RunState] 上。
+## [RunState] 不认识神坛。信仰本身（[FaithState] / [FaithPower]：谁激活、几阶）仍然在 [RunState] 上。
 ## 取它用 [method of]。
 class_name AltarModule
 extends RunModule
@@ -85,12 +85,12 @@ func is_open() -> bool:
 	return node >= 0 and _run.travel.current_id == node and not used.has(node) and _run.active_faith() != null
 
 
-## 献祭：这些道具（从棋盘 / 地上 / 祭品台拿来的实例）销毁换信力与祈愿。
-## 返回 {"points"（信力）, "prayer"（实际进的祈愿）, "tier_before", "tier_after", "log", "count"}；不能献的跳过
+## 献祭：这些道具（从棋盘 / 地上 / 祭品台拿来的实例）销毁换经验值（372：每座神坛有上限，祈愿删了）。
+## 返回 {"points"（按献祭规矩算的点数）, "xp"（实际进的经验值，乘过难度系数）, "tier_before", "tier_after", "log", "count"}；不能献的跳过
 func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 	var def := _run.active_faith() if _run != null else null
 	var tier := _run.active_faith_tier() if _run != null else -1
-	var out := {"points": 0, "prayer": 0, "tier_before": tier, "tier_after": tier, "log": [] as Array[String], "count": 0}
+	var out := {"points": 0, "xp": 0, "tier_before": tier, "tier_after": tier, "log": [] as Array[String], "count": 0}
 	if def == null:
 		return out
 	var defs: Array = []
@@ -106,12 +106,18 @@ func offer(insts: Array, at_node: MapNode = null) -> Dictionary:
 		defs.append(it.def)
 	if int(out["points"]) <= 0:
 		return out
-	out["tier_after"] = _run.faith_power.add_points(def.id, int(out["points"]))
-	# 信仰重构 B（交接方案 §3.3 候选）：献祭同时进祈愿 min(2V, 余量)；实际进多少写在结果里，界面照写
-	out["prayer"] = _run.faith_power.add_prayer(def.id, 2 * int(out["points"]), &"offering")
-	(out["log"] as Array[String]).append(UiText.tn("log.offered", int(out["count"])) % [int(out["count"]), Names.of(def), int(out["points"])])
-	if int(out["prayer"]) > 0:
-		(out["log"] as Array[String]).append(UiText.t("log.offered_prayer") % int(out["prayer"]))
+	# 372：献祭换的经验值每座神坛有上限（[member LevelRules.offering_cap]，没乘系数的数），超出的照献、不再涨
+	var lv := LevelModule.of(_run)
+	var at := at_node if at_node != null else (_run.map.get_node(node) if _run.map != null and node >= 0 and _run.map.has_node(node) else null)
+	if lv != null:
+		var raw := int(out["points"])
+		out["xp"] = roundi(lv.offer_at(at, raw))
+		_run.faith_power.note(def.id, raw)
+	else:
+		_run.faith_power.add_points(def.id, int(out["points"]))
+		out["xp"] = int(out["points"])
+	out["tier_after"] = _run.active_faith_tier()
+	(out["log"] as Array[String]).append(UiText.tn("log.offered", int(out["count"])) % [int(out["count"]), Names.of(def), int(out["xp"])])
 	if int(out["tier_after"]) > int(out["tier_before"]):
 		(out["log"] as Array[String]).append(UiText.t("log.faith_tier_up") % [Names.of(def), int(out["tier_after"])])
 	for p in perks():

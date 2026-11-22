@@ -11,11 +11,11 @@ display_names = {
 }
 category = &"faith"
 order = 8
-text = "{faith:earth}管结构、秩序、体积与空间，信徒不多。信力看的是打赢战斗，有大件受承托再多给。献祭只收大块的东西，换的信力还要乘格子数。大地之神赐福中体积以上的道具，赐福版激活即加耐力上限。
+text = "{faith:earth}管结构、秩序、体积与空间，信徒不多。奉祂时，有大件受承托，经验值再多给。献祭只收大块的东西，换的经验值还要乘格子数。大地之神赐福中体积以上的道具，赐福版激活即加耐力上限。
 
 奉了祂，大件就能受【承托】：占格多的道具，每有一件道具贴着它的边就多一层，角碰角不算，最多 {faith_perk:earth:earth_support:max_layers} 层。武器每层省耐力，盾和防具每层多一截格挡或护甲上限。一阶起中件也能受承托；二阶可以在神坛上锻炼，棋盘每次加一行；三阶开战时按受承托的大件给护甲。大地的护符本身是一只一格的空心石匣，能装一件小东西。"
 texts = {
-"en": "{faith:earth} governs structure, order, volume and space, and has few followers. Faith points come from winning battles, with extra when large items are Supported. This god accepts only large items as Offerings, and the Faith points they give are multiplied by their cell count. The God of the Earth blesses medium-size and larger items: a Blessed version raises max Stamina on activation.
+"en": "{faith:earth} governs structure, order, volume and space, and has few followers. While you follow this god, you gain extra XP when large items are Supported. This god accepts only large items as Offerings, and the XP they give is multiplied by their cell count. The God of the Earth blesses medium-size and larger items: a Blessed version raises max Stamina on activation.
 
 Following this god lets large items be Supported: an item that takes many cells gains one layer for each item touching its edge, corners don't count, up to {faith_perk:earth:earth_support:max_layers}. Weapons cost less Stamina per layer; shields and armor gain Block or max Armor per layer. From Rank one, medium items can be Supported too. At Rank two you can train at an Altar to add one row to the Board each time. At Rank three you start battle with Armor for each Supported large item. The Earth's Charm is itself a hollow one-cell stone box that can hold one small item."
 }

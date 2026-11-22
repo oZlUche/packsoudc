@@ -88,14 +88,14 @@ static func run_tiers(t: TestCase) -> void:
 
 
 static func run_ledger(t: TestCase) -> void:
-	t.begin("信仰重构 D · 日神的信力：打赢 6；有追加的窗口每个 +2、最多 4；三阶 20 / 60 / 120")
+	t.begin("信仰重构 D · 日神的经验值：有追加的窗口每个 +2、最多 4（372：打赢那一份改成通用经验值）；三阶 42 / 117 / 217")
 	var def := load("res://data/faiths/sun.tres") as FaithDef
 	var sum := func(mech: Dictionary, won: bool) -> int:
 		var n := 0
 		for d in def.deeds:
 			n += (d as FaithDeed).gain(&"battle", {"won": won, "mechanic": mech, "dealt": {}, "taken": {}, "fired_items": []})
 		return n
-	t.eq(sum.call({"sun_window": 1}, true), 8, "一个窗口：6 + 2")
-	t.eq(sum.call({"sun_window": 5}, true), 10, "五个窗口：封顶 4")
+	t.eq(sum.call({"sun_window": 1}, true), 2, "一个窗口：+2")
+	t.eq(sum.call({"sun_window": 5}, true), 4, "五个窗口：封顶 4")
 	t.eq(sum.call({"sun_window": 2}, false), 4, "输了保留已经做到的")
-	t.eq(def.thresholds, [20, 60, 120] as Array[int], "三阶")
+	t.eq(def.thresholds, [42, 117, 217] as Array[int], "三阶 = 升 5 / 10 / 15 级的经验值")

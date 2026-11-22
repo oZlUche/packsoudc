@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_if8h4"]
+[ext_resource type="Script" path="res://core/run/effects/level_removals.gd" id="2_e13ju"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_mi36c"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_7civv"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_3nnfv"]
+
+[sub_resource type="Resource" id="Resource_2k58q"]
+script = ExtResource("2_e13ju")
+
+[resource]
+script = ExtResource("5_3nnfv")
+id = &"tech_level_remove_1"
+display_name = "剔牌（科技）"
+display_names = {
+"en": "Cull (Tech)"
+}
+description = "升级选牌可删除 {level_removals_times} 次"
+scope = 0
+effects = Array[ExtResource("1_if8h4")]([SubResource("Resource_2k58q")])

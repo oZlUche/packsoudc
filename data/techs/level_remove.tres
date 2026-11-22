@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_ksvsp"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_gagnl"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_g0evm"]
+
+[sub_resource type="Resource" id="Resource_m3blx"]
+script = ExtResource("1_ksvsp")
+buffs = Array[StringName]([&"tech_level_remove_1", &"tech_level_remove_2"])
+
+[sub_resource type="Resource" id="Resource_xw587"]
+script = ExtResource("3_g0evm")
+insight = 2
+
+[sub_resource type="Resource" id="Resource_lm4d3"]
+script = ExtResource("3_g0evm")
+insight = 3
+
+[resource]
+script = ExtResource("2_gagnl")
+id = &"level_remove"
+display_name = "剔牌"
+display_names = {
+"en": "Cull"
+}
+requires = Array[StringName]([&"level_reroll"])
+column = 3
+description = "升级选牌时可以删掉一张，这一局不再出现，空位当场补一张。"
+descriptions = {
+"en": "When you level up, remove one card: it won't show again this run, and the slot is refilled."
+}
+tree = &"mechanism"
+effect = SubResource("Resource_m3blx")
+tiers = Array[ExtResource("3_g0evm")]([SubResource("Resource_xw587"), SubResource("Resource_lm4d3")])

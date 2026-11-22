@@ -1,0 +1,14 @@
+{
+  "id": "card_hp_pct",
+  "display_name": "强健",
+  "display_names": {
+    "en": "Vigor"
+  },
+  "effects": [
+    {
+      "type": "stat_bonus",
+      "mode": "MULT",
+      "amount": 5.0
+    }
+  ]
+}

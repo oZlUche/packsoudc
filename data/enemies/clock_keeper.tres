@@ -1,9 +1,10 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="1_8h8hb"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_igmgu"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_cfi6w"]
 
 [resource]
-script = ExtResource("1_8h8hb")
+script = ExtResource("2_cfi6w")
 id = &"clock_keeper"
 display_name = "守钟人"
 display_names = {

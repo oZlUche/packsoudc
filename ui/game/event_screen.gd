@@ -94,6 +94,8 @@ func _open_result(payload: Dictionary) -> void:
 		lines.append(UiText.t("event.vitality_up") % int(detail["restored"]))
 	if int(detail.get("spent", 0)) != 0:
 		lines.append(UiText.t("event.vitality_down") % int(detail["spent"]))
+	if int(detail.get("xp", 0)) > 0:
+		lines.append(UiText.t("event.xp_up") % int(detail["xp"]))     # 372：神坛祷告
 	if int(detail.get("money", 0)) != 0:
 		lines.append(UiText.t("event.money") % int(detail["money"]))
 	for id in detail.get("buffs", []):

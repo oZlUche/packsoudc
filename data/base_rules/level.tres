@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="LevelRules" format=3]
+
+[ext_resource type="Script" path="res://core/run/level/level_rules.gd" id="1_sf0wj"]
+
+[resource]
+script = ExtResource("1_sf0wj")
+id = &"level"
+display_name = "局内成长"
+battle = {
+"battle": 10,
+"core": 40,
+"elite": 25,
+"hunter": 20
+}
+cards = {
+"card_carry": {
+"kind": "explore"
+},
+"card_echo_faster": {
+"after": "card_element_echo",
+"echo": "faster",
+"kind": "weapon"
+},
+"card_echo_stacks": {
+"after": "card_element_echo",
+"echo": "stacks",
+"kind": "weapon",
+"weight": 0.25
+},
+"card_element_echo": {
+"echo": "body",
+"kind": "weapon",
+"once": true,
+"requires": "element"
+},
+"card_hp_flat": {
+"kind": "stat"
+},
+"card_hp_pct": {
+"kind": "stat"
+},
+"card_next_search": {
+"kind": "explore",
+"oneshot": "search"
+},
+"card_regen": {
+"kind": "stat"
+},
+"card_rest": {
+"kind": "explore"
+},
+"card_stamina_flat": {
+"kind": "stat"
+},
+"card_stamina_pct": {
+"kind": "stat"
+},
+"card_vitality": {
+"kind": "explore"
+},
+"card_weapon_cost": {
+"kind": "weapon",
+"requires": "weapon"
+},
+"card_weapon_damage": {
+"kind": "weapon",
+"requires": "weapon"
+},
+"card_weapon_haste": {
+"kind": "weapon",
+"requires": "weapon"
+}
+}

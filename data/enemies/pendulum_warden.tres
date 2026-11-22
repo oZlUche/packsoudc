@@ -1,16 +1,17 @@
 [gd_resource type="Resource" script_class="EnemyDef" format=3]
 
-[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="1_sc702"]
-[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="2_yx66t"]
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_yx66t"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_fp67t"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_lai8l"]
 
-[sub_resource type="Resource" id="Resource_fp67t"]
-script = ExtResource("1_sc702")
+[sub_resource type="Resource" id="Resource_8f5d5"]
+script = ExtResource("2_fp67t")
 school_share = 1.0
 min_weapons = 0
 single_faith = false
 
 [resource]
-script = ExtResource("2_yx66t")
+script = ExtResource("3_lai8l")
 id = &"pendulum_warden"
 display_name = "钟摆卫士"
 display_names = {
@@ -24,7 +25,7 @@ base_stats = {
 }
 signature = Array[StringName]([&"pendulum_blade", &"brass_plating", &"brass_plating", &"mainspring"])
 item_tags = Array[StringName]([&"clockwork"])
-loadout = SubResource("Resource_fp67t")
+loadout = SubResource("Resource_8f5d5")
 board = Vector2i(6, 4)
 species = &"construct"
 bagless = true

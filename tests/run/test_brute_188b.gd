@@ -44,7 +44,7 @@ static func run_perk_lines(t: TestCase) -> void:
 	for i in range(2, 4):
 		t.check(String(rows[i]["raw"]).begins_with("[color=@dim]"), "Lv.%d 没到：整行灰" % i)
 	t.check(String(rows[2]["text"]).contains("可以在祭坛献祭生命上限换取能力"), "Lv.2：%s" % rows[2]["text"])
-	t.check(String(rows[3]["text"]).contains("可消耗 1 体力或 30 祈愿立即击败非首领敌人"), "Lv.3：%s" % rows[3]["text"])
+	t.check(String(rows[3]["text"]).contains("可消耗 1 体力立即击败非首领敌人"), "Lv.3：%s" % rows[3]["text"])
 	t.check(String(rows[3]["text"]).contains("持续战斗 3 秒"), "Lv.3 不屈 3 秒：%s" % rows[3]["text"])
 	var top := _rows(brute, 400)
 	t.check(top.size() == 4 and String(top[3]["text"]).contains("持续战斗 3 秒") and not String(top[3]["raw"]).begins_with("[color=@dim]"), "400 信力：Lv.3 亮，还是 3 秒")
@@ -82,7 +82,7 @@ static func run_sacrifice_and_smite(t: TestCase) -> void:
 	var run := f.begin(c.chapter, kit, int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
 	Support.activate(run, &"charm_brute")
-	run.faith_power.add_points(&"brute", 100)
+	run.faith_power.add_points(&"brute", 120)     # 372：第二道门槛 117
 	var altar := AltarModule.of(run)
 	var hp_perk := altar.perk(&"altar_sacrifice_hp") as AltarSacrificeHpPerk
 	t.not_null(hp_perk, "Lv.2 有献祭生命上限")
@@ -90,10 +90,10 @@ static func run_sacrifice_and_smite(t: TestCase) -> void:
 		Support.cleanup("188b")
 		return
 	t.eq(hp_perk.altar_options(), [AltarSacrificeHpPerk.FAITH, AltarSacrificeHpPerk.BUFF] as Array[StringName], "两个选项")
-	t.check(hp_perk.altar_option_label(AltarSacrificeHpPerk.FAITH).contains("+20 信力") and hp_perk.altar_option_label(AltarSacrificeHpPerk.BUFF).contains("造成伤害 +5%、急速 +5%"), "选项写清楚换什么")
+	t.check(hp_perk.altar_option_label(AltarSacrificeHpPerk.FAITH).contains("经验值 +20") and hp_perk.altar_option_label(AltarSacrificeHpPerk.BUFF).contains("造成伤害 +5%、急速 +5%"), "选项写清楚换什么")
 	var p0 := run.faith_power.points_of(&"brute")
 	hp_perk.altar_apply(run, null, AltarSacrificeHpPerk.FAITH)
-	t.eq(run.faith_power.points_of(&"brute"), p0 + 20, "换信力 +20")
+	t.eq(run.faith_power.points_of(&"brute"), p0 + 20, "换经验值 +20")
 	var cin := CompileInput.new()
 	hp_perk.compile_into(cin, run.board, run)
 	t.check(cin.mods.is_empty(), "只换了信力：没有加成")
@@ -113,39 +113,14 @@ static func run_sacrifice_and_smite(t: TestCase) -> void:
 	var smite := altar.perk(&"smite")
 	t.check(f.step_to(int(found["next"])) and f.screen == GameFlow.Screen.PREBATTLE, "走上普通战斗点 → 战前准备")
 	var acts: Array[Dictionary] = smite.prebattle_actions(run, &"battle") if smite != null else [] as Array[Dictionary]
-	t.eq(acts.size(), 2, "普通战斗：两个按钮")
+	t.eq(acts.size(), 1, "普通战斗：一个按钮（372 起只花体力）")
 	t.check(smite != null and smite.prebattle_actions(run, &"core").is_empty(), "首领点：没有")
-	# 信仰重构 B：秒杀花祈愿（不花信力、不掉阶）。祈愿不够那一档
-	run.faith_power.add_prayer(&"brute", 29)
-	acts = smite.prebattle_actions(run, &"battle")
-	t.check(acts.size() == 2 and String(acts[0]["why"]) == "" and String(acts[1]["why"]).contains("祈愿不够"), "祈愿 29：祈愿那个灰、写原因（%s）" % acts[1]["why"])
-	run.faith_power.add_prayer(&"brute", 100)
+	# 372：秒杀只花体力（祈愿删了）
 	var vit_keep := run.vitality.current
 	run.vitality.current = 1
-	var screen = load("res://ui/game/prebattle_screen.gd").new()
-	screen.flow = f
-	screen.font = UiPalette.cjk_font()
-	Engine.get_main_loop().root.add_child(screen)
-	screen.open(f.last_payload)
-	var btns := {}
-	for n in screen.find_children("*", "Button", true, false):
-		if (n as Button).has_meta("perk_option"):
-			btns[(n as Button).get_meta("perk_option")] = n
-	var vb: Button = btns.get(SmitePerk.VITALITY, null)
-	var fb: Button = btns.get(SmitePerk.FAITH, null)
-	t.check(btns.size() == 2 and vb != null and fb != null, "屏上两个按钮")
-	if vb != null and fb != null:
-		t.check(vb.disabled and vb.tooltip_text.contains("体力不够"), "体力 1：体力那个灰，停上去写原因")
-		t.check(not fb.disabled and fb.text.contains("30 祈愿"), "祈愿那个能点：%s" % fb.text)
-	screen.queue_free()
+	acts = smite.prebattle_actions(run, &"battle")
+	t.check(acts.size() == 1 and String(acts[0]["why"]).contains("体力不够"), "体力 1：只有体力那个，灰着写原因（%s）" % (acts[0]["why"] if not acts.is_empty() else ""))
 	t.check(not f.smite(SmitePerk.VITALITY), "体力不够：点不动")
-	var before := run.faith_power.prayer_of(&"brute")
-	var dev := run.faith_power.points_of(&"brute")
-	t.check(f.smite(SmitePerk.FAITH), "耗祈愿立即击败")
-	t.eq(run.faith_power.prayer_of(&"brute"), before - 30, "祈愿 −30")
-	t.eq(run.faith_power.points_of(&"brute"), dev, "信力不扣")
-	t.eq(run.vitality.current, 1, "体力没动")
-	t.check(run.events.pending_battle.is_empty() and f.screen != GameFlow.Screen.PREBATTLE, "这一场算打过了")
 	run.vitality.current = vit_keep
 	Support.cleanup("188b")
 

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_mj4do"]
+[ext_resource type="Script" path="res://core/run/effects/rest_bonus.gd" id="2_j5lks"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_vlqp8"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_0fjd0"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_54jon"]
+
+[sub_resource type="Resource" id="Resource_drtcp"]
+script = ExtResource("2_j5lks")
+
+[resource]
+script = ExtResource("5_54jon")
+id = &"card_rest"
+display_name = "安歇"
+display_names = {
+"en": "Sound Sleep"
+}
+effects = Array[ExtResource("1_mj4do")]([SubResource("Resource_drtcp")])

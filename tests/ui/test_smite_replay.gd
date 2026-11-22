@@ -7,9 +7,9 @@ const PREFIX := "smite_replay"
 
 
 static func frame_smite_replay(t: TestCase, root: Window) -> void:
-	t.begin("蛮神秒杀：普通/精英 × 体力/信力 × 动效开/关，空回放结束后能领取战利品")
+	t.begin("蛮神秒杀：普通/精英 × 体力 × 动效开/关，空回放结束后能领取战利品")
 	for type in [&"battle", &"elite"]:
-		for option in [SmitePerk.VITALITY, SmitePerk.FAITH]:
+		for option in [SmitePerk.VITALITY]:     # 372：秒杀只花体力
 			for motion in [false, true]:
 				_case(t, root, type, option, motion)
 
@@ -37,8 +37,7 @@ static func _case(t: TestCase, root: Window, type: StringName, option: StringNam
 	f.begin(ch, kit, int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
 	Support.activate(f.run, &"charm_brute")
-	f.run.faith_power.add_points(&"brute", 200)
-	f.run.faith_power.add_prayer(&"brute", 100)     # 信仰重构 B：秒杀花祈愿
+	f.run.faith_power.add_points(&"brute", 300)     # 372：阈值改成升 5/10/15 级要的经验值
 	t.check(f.step_to(int(found["next"])), label + "：到战前准备")
 	var pre = game.overlay()
 	GameDirector.fades_allowed = motion

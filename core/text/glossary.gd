@@ -31,7 +31,8 @@ const TERMS := {
 	"冷却": {"text": "两次出手之间的间隔（秒），急速会缩短它。", "tip": false, "en": {"name": "Cooldown", "text": "The time between two uses, in seconds. Haste shortens it."}},
 	"耐力": {"text": "出手要花的资源，每秒按回复速度补回；冷却到点时不够就跳过这一次，冷却重走。", "tip": false, "en": {"name": "Stamina", "text": "What using an item costs. It refills every second at your regen rate. If you don't have enough when the cooldown ends, that use is skipped and the cooldown starts over."}},
 	"耗耐力": {"text": "这一下出手要花的耐力。", "tip": false, "en": {"name": "Stamina cost", "text": "How much Stamina this use costs."}},
-	"信力": {"text": "按信仰要求的行为攒的点数；过了阈值，这个信仰的道具解锁更多功能。", "tip": false, "en": {"name": "Faith", "text": "Points earned by doing what a Faith asks. Past each threshold, that Faith's items unlock more."}},
+	# 372：信力改名经验值（作者 2026-11-21），一局一池
+	"经验值": {"text": "这一局的成长：打赢战斗、走进更深一环、神坛献祭与祷告都涨，奉了神做祂喜欢的事再多给；够数升一级，每级挑一张牌。奉神时也按它算阶。撤离或阵亡后清零。", "tip": false, "en": {"name": "XP", "text": "This run's growth: winning battles, reaching a deeper ring and offering or praying at Altars all add to it, and following a god adds more for what that god likes. Enough of it gains a level and a card pick, and a followed god's Rank reads it too. It resets when the run ends."}},
 	# 129：负重
 	"负重": {"text": "作战棋盘上所有东西的重量之和，包本身不算重；地上、托付出去的、仓库里的不算。超过角色负重上限的 {load:1} 倍就开始吃力。", "en": {"name": "Load", "text": "The total weight of everything on your battle Board; bags themselves weigh nothing. Things on the Ground, entrusted or in the Warehouse don't count. Go over {load:1} times your character's Load limit and you start to struggle."}},
 	"吃力": {"text": "负重超过上限的 {load:1} 倍：急速 −10%、耐力回复 −10%。", "en": {"name": "Burdened", "text": "Load over {load:1} times the limit: Haste −10%, Stamina regen −10%."}},
@@ -287,7 +288,7 @@ static func faith_numbers(text: String) -> String:
 static func bonus_numbers(text: String) -> String:
 	if _bonus_re == null:
 		_bonus_re = RegEx.create_from_string(
-			"(?<faith>\\d+(?=\\s?(?:信力|Faith)))"
+			"(?<faith>\\d+(?=\\s?(?:经验值|XP|信力|Faith)))"
 			+ "|(?<![\\d.])(?:[+\\-−×]\\s?\\d+(?:\\.\\d+)?%?"
 			+ "|(?<=提高 |降低 |increased by |reduced by )\\d+(?:\\.\\d+)?%?"
 			+ "|\\d+(?:\\.\\d+)?(?=\\s?(?:层|stacks?\\b)))")

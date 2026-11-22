@@ -47,18 +47,11 @@ static func scaled(points: int, base: float, step: int, per: float, cap: float) 
 	return minf(v, cap) if cap > 0.0 else v
 
 
-## 这一局现在激活的信仰的信力（没有 0）
+## 这一局现在激活的信仰按多少经验值算阶（没有 0）
 static func points_now(run: RunState) -> int:
 	if run == null or run.faith_power == null or run.active_faith_id() == &"":
 		return 0
 	return run.faith_power.points_of(run.active_faith_id())
-
-
-## 信仰重构 B：这一局有效信仰现在的祈愿（没有 0）—— 花的都花它
-static func prayer_now(run: RunState) -> int:
-	if run == null or run.faith_power == null or run.active_faith_id() == &"":
-		return 0
-	return run.faith_power.prayer_of(run.active_faith_id())
 
 
 ## [member note] 的占位符：自己的数值字段（[TextParams]）

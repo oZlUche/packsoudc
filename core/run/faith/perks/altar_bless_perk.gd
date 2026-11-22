@@ -1,20 +1,18 @@
-## 神坛特殊操作（095，各神都有）：花 [member cost] 祈愿（信仰重构 B：不再扣信力、不降阶），赐福包里能被赐福的最值钱的一件（棋盘优先，其次地上）
+## 神坛特殊操作（095，各神都有）：赐福包里能被赐福的最值钱的一件（棋盘优先，其次地上）。
+## 372：祈愿删了，不再花什么 —— 它占的是这座神坛的那一次机会（献祭和特殊操作二选一），所以就是「每座神坛一次」（报告 377 的初值）。
+## 报告 377：以后改成万神院四档解锁的祭坛选项
 class_name AltarBlessPerk
 extends FaithPerk
 
-@export var cost: int = 40
-
 
 func altar_label() -> String:
-	return UiText.t("perk.bless_label") % cost
+	return UiText.t("perk.bless_label")
 
 
 func altar_available(run: RunState, _node: MapNode) -> String:
 	var def := run.active_faith() if run != null else null
 	if def == null:
 		return UiText.t("perk.no_active_faith")
-	if run.faith_power.prayer_of(def.id) < cost:
-		return UiText.t("perk.prayer_short") % cost
 	if Blessings.best_candidate(run.board, run.items, def.id) == null and Blessings.best_candidate(run.storage, run.items, def.id) == null:
 		return UiText.t("perk.bless_none")
 	return ""
@@ -33,15 +31,14 @@ func altar_apply(run: RunState, _node: MapNode, _option: StringName = &"") -> St
 	var v := Blessings.bless_instance(inst, run.items, def.id)
 	if v == null:
 		return ""
-	run.faith_power.spend_prayer(def.id, cost)
 	where.changed.emit()
 	var altar := AltarModule.of(run)
 	if altar != null:
 		altar.item_blessed.emit(inst, def.id)
-	return UiText.t("perk.bless_done") % [cost, was, Names.of(v)]
+	return UiText.t("perk.bless_done") % [was, Names.of(v)]
 
 
-## 188 补充一（作者原话「可以在祭坛赐福武器」）：花多少祈愿只在神坛按钮上写
+## 188 补充一（作者原话「可以在祭坛赐福武器」）
 func _summary() -> String:
 	return UiText.t("perk.bless_summary") % UiText.t("perk.items")
 
