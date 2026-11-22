@@ -101,6 +101,15 @@ var faith_defs: Dictionary = {}
 ## 信仰重构 A：玩家**显式选择**的信仰 id（空 = 不奉神）。只有 [method select_faith] 改它；拾取、移动、整理、交易、合成都不改。
 ## 跟着存档（`faith_selection`）。有效信仰是纯查询（[method active_faith_id]），不存
 var selected_faith: StringName = &""
+## 报告 377：这一局有没有信仰（万神院到了营地才有；教程章照旧有）。没有 = 不铺无名祭坛（faith_call）、掉落不出信物和赐福道具、战利品不换赐福版。
+## 开局由 [method GameFlow.begin] 经模块输入 [constant FAITH_INPUT] 给；老档、测试直接开的局默认有
+var faith_enabled := true
+## 报告 377 万神院四档：神坛上有没有「赐福」这一项（老档、测试默认有）
+var faith_bless := true
+## 报告 377 万神院三档：奉神的局经验值多给几成（0.1 = +10%；不奉神的局不加，[method LevelModule.mult]）
+var faith_xp_bonus := 0.0
+## 报告 377：开局模块输入里信仰开关那一格的键（`{"enabled", "bless", "xp_bonus"}`）
+const FAITH_INPUT := &"faith_access"
 ## 上一次通知时的 [选择, 有效信仰]（只为判断要不要发 [signal faith_changed]）
 var _faith_seen: Array = [&"", &""]
 ## 局内技能的账（082）：定义在角色上，这里记次数、冷却、旗子；没角色也有一份空的
@@ -194,6 +203,7 @@ static func start(
 	s.sets = p_sets
 	s.map_scale = p_scale
 	s.module_inputs = p_module_inputs.duplicate(true)
+	s._read_faith_access(p_module_inputs.get(FAITH_INPUT, {}))
 	s._resolve_rules()
 	s.map = p_chapter.map_source.resolve(p_seed, p_scale)
 	if s.map == null:
@@ -210,7 +220,7 @@ static func start(
 		PaidExtracts.mark(s.map, s.economy)     # 360 A5：不设付费撤离点
 	if p_difficulty != null and p_chapter.profile == &"":
 		DifficultyMap.trim_rests(s.map, p_difficulty.rest_keep_percent, p_seed)     # 360 A5：休息点变少
-	EventPlacer.fill(s.map, s.node_rules)
+	EventPlacer.fill(s.map, s.node_rules, s.faith_enabled)     # 377：信仰没开不铺无名祭坛
 	ChestPlacer.roll(s.map, s.node_rules.chest if s.node_rules != null else null, p_chapter.chest_skin)     # 154：宝箱的稀有度与皮肤生成时就定
 	s.rng = RunRNG.new(p_seed)
 	# 局外 buff 在开局那一刻定下来：体力上限、开局钱按它们改（一局里的规则见 buff_context）
@@ -1278,8 +1288,17 @@ func set_material_bias(dir: StringName) -> void:
 		events.material_bias = material_bias
 
 
+## 377：信仰开关（开局输入、存档同一个形状；缺的键按老规矩：有信仰、有赐福、不加经验）
+func _read_faith_access(raw: Variant) -> void:
+	var fa: Dictionary = raw if raw is Dictionary else {}
+	faith_enabled = bool(fa.get("enabled", true))
+	faith_bless = bool(fa.get("bless", true))
+	faith_xp_bonus = maxf(0.0, float(fa.get("xp_bonus", 0.0)))
+
+
 func _wire_events() -> void:
 	events = NodeEvents.new(map)
+	events.faith_enabled = faith_enabled     # 377
 	events.vitality = vitality
 	events.rules = node_rules
 	events.chest_skin = chapter.chest_skin if chapter != null else &"ruins"     # 154
@@ -1525,6 +1544,7 @@ func to_dict() -> Dictionary:
 			"search_haul": search_haul},
 		"skills": skills.to_dict(),
 		"faith_selection": {"selected_id": String(selected_faith)},     # 信仰重构 A：只存选择，有效信仰读档后由棋盘重建
+		"faith_access": {"enabled": faith_enabled, "bless": faith_bless, "xp_bonus": faith_xp_bonus},     # 377：只加带默认值的字段，不升版
 		"faith_power": faith_power.to_dict(),     # 372：经验值在局内成长模块里（`modules.level`）；这里只剩没装模块时的后备池
 		"faith_history": faith_power.history_to_array(),     # 104
 		"owned_uids": owned_uids.keys(),
@@ -1607,6 +1627,7 @@ static func from_dict(
 	s.material_bias = StringName(String(d.get("material_bias", "")))     # 342 B3：老档没有 = 无倾向
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
 	s.difficulty_rules = String(d.get("difficulty_rules", ""))
+	s._read_faith_access(d.get("faith_access", {}))     # 377：老档没有 = 照旧有信仰、有赐福
 	for raw in d.get("intel_seen", []):     # 360 A11；旧档没有 = 空（开局之后走一步就补上）
 		s.intel_seen[int(raw)] = true
 	s.hunters_saved = d.get("hunters", {}) if d.get("hunters", {}) is Dictionary else {}

@@ -21,6 +21,8 @@ const FACILITIES: Array[StringName] = [&"smithy", &"tech", &"market"]
 const FEATURES: Array[StringName] = [&"bias", &"nursery", &"alchemy", &"canteen"]     # 355：灰灯食堂
 ## 342 B3：阵营什么时候来营地（[member FactionDef.arrives]）：教程后第一次正式探索结算时
 const ARRIVES_FIRST_RUN := &"first_run"
+## 377：教程后第 N 次成功撤离结算时（N = [member FactionDef.arrive_after]，万神院）
+const ARRIVES_EXTRACTIONS := &"extractions"
 ## 去重键：委托 id | 第几步 | 那一处
 const KEY_FMT := "%s|%d|%s"
 
@@ -35,6 +37,8 @@ const GOALS := {
 	&"visit_nodes": [CommissionStage.FIELD],
 	&"nursery_plant": [CommissionStage.CAMP],     # 342 B3：苗圃里种下一畦（`params.crop` 认一种）
 	&"nursery_harvest": [CommissionStage.CAMP],     # 342 B3：苗圃里收一畦     # 342 B2：到访 N 处（`params.type` = 节点类型），同一局同一处只记一次
+	&"altar_offer": [CommissionStage.FIELD],     # 377：在休息点的神坛献祭（每座神坛记一次）
+	&"faith_levels": [CommissionStage.CARRY],     # 377：奉着神的时候升级（每升一级记一次），撤离才算
 }
 ## 342 B2：营地当场能办的目标（卡上有【办理】）
 const CAMP_GOALS: Array[StringName] = [&"camp_report", &"hand_in"]
@@ -75,13 +79,15 @@ static func present(book: CommissionBook, f: FactionDef) -> bool:
 	return f != null and (f.arrives == &"" or (book != null and book.arrived.has(String(f.id))))
 
 
-## 342 B3：一次正式探索结算完 —— 约好这时来的几方到营地（记第几局到的）。返回这回来了哪几方
+## 342 B3：一次正式探索结算完 —— 约好这时来的几方到营地（377：按成功撤离局数来的，看 [member CommissionBook.formal_extractions]）（记第几局到的）。返回这回来了哪几方
 static func arrive(book: CommissionBook, run_no: int) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if book == null:
 		return out
 	for f in factions():
-		if f.listed and f.arrives == ARRIVES_FIRST_RUN and not book.arrived.has(String(f.id)):
+		if not f.listed or book.arrived.has(String(f.id)):
+			continue
+		if f.arrives == ARRIVES_FIRST_RUN or (f.arrives == ARRIVES_EXTRACTIONS and book.formal_extractions >= maxi(1, f.arrive_after)):
 			book.arrived[String(f.id)] = run_no
 			out.append(f.id)
 	return out

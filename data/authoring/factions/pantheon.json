@@ -1,0 +1,70 @@
+{
+  "id": "pantheon",
+  "display_name": "万神院",
+  "display_names": {
+    "en": "Senatus Panthei"
+  },
+  "order": 6,
+  "arrives": "extractions",
+  "arrive_after": 3,
+  "thresholds": [
+    0,
+    10,
+    25,
+    50,
+    100
+  ],
+  "services": {
+    "god_brute": 0,
+    "god_sun": 0,
+    "god_skill": 0,
+    "god_hunt": 1,
+    "god_earth": 1,
+    "god_nature": 1,
+    "faith_xp": 2,
+    "altar_bless": 3,
+    "opening_pick": 4
+  },
+  "permit": "pantheon_permit",
+  "regular": [
+    {
+      "goal": "altar_offer",
+      "u": 12,
+      "name": "献祭",
+      "names": {
+        "en": "Offerings"
+      },
+      "text": "在 {n} 座神坛献祭",
+      "texts": {
+        "en": "Make an Offering at altars: {n}"
+      }
+    },
+    {
+      "goal": "faith_levels",
+      "u": 6,
+      "name": "修行",
+      "names": {
+        "en": "Devotion"
+      },
+      "text": "奉着神升 {n} 级（要撤离）",
+      "texts": {
+        "en": "Gain levels while following a god: {n} (extract to count)"
+      }
+    },
+    {
+      "goal": "defeat_enemies",
+      "params": {
+        "kind": "normal"
+      },
+      "u": 10,
+      "name": "护道",
+      "names": {
+        "en": "Guard the Pilgrims"
+      },
+      "text": "打赢 {n} 场普通的仗",
+      "texts": {
+        "en": "Win battles against ordinary enemies: {n}"
+      }
+    }
+  ]
+}

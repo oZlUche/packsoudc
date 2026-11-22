@@ -23,6 +23,8 @@ const CHIP_FONT := 15
 
 ## 统一教程 D（方案 §8.1 / §8.2）：教程还没全通时点了「跳过剩余教程」（基地弹确认页，[method MetaScreen.show_skip_tutorial]）
 signal skip_asked()
+## 377：万神院到了营地 —— 【开始探索】先跳出选神界面（基地屏接这个信号）
+signal god_pick_asked()
 
 var flow: GameFlow = null
 var start_btn: Button = null
@@ -55,11 +57,19 @@ func setup(p_flow: GameFlow) -> ExpeditionBoard:
 	supply_plate.tooltip_text = UiText.t("meta.supplies_tip")
 	supply_plate.mouse_filter = Control.MOUSE_FILTER_PASS
 	_fill_supplies(_col(supply_plate))
-	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), flow.new_run, true, START, START_FONT)
+	start_btn = UiTheme.make_home_button(UiText.t("meta.new_run"), _on_start, true, START, START_FONT)
 	start_btn.name = "StartButton"
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	add_child(start_btn)
 	return self
+
+
+## 【开始探索】：万神院在营地就先选神（教程还没通的那一下直接开教程章，不选）
+func _on_start() -> void:
+	if flow.pantheon_listed() and flow.new_run_target() == null and god_pick_asked.get_connections().size() > 0:
+		god_pick_asked.emit()
+	else:
+		flow.new_run()
 
 
 ## 一块大木牌连它的挂牌：挂牌在上（画在木牌上面），木牌往上收 12 压住挂牌下沿；返回木牌，[method _col] 取里面那一列
