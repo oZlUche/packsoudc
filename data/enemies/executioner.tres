@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="EnemyDef" format=3]
+
+[ext_resource type="Script" path="res://core/enemies/enemy_build.gd" id="1_12u4i"]
+[ext_resource type="Script" path="res://core/enemies/enemy_loadout.gd" id="2_ky001"]
+[ext_resource type="Script" path="res://core/enemies/enemy_def.gd" id="3_s0of2"]
+
+[sub_resource type="Resource" id="Resource_h0atr"]
+script = ExtResource("1_12u4i")
+id = &"headsman"
+strength = Vector2i(2, 3)
+items = Array[StringName]([&"chain_mail", &"bandage_roll"])
+note = "刽子手巨斧 + 锁子甲 + 绷带卷"
+
+[sub_resource type="Resource" id="Resource_87qry"]
+script = ExtResource("2_ky001")
+common_tags = Array[StringName]([&"armor", &"remedy", &"food", &"tool"])
+school_share = 0.15
+min_school = 0
+rarity_cap = 1
+min_weapons = 0
+build_chance = 1.0
+
+[resource]
+script = ExtResource("3_s0of2")
+id = &"executioner"
+display_name = "处刑人"
+display_names = {
+"en": "Executioner"
+}
+strength = 3
+schools = Array[StringName]([&"burst", &"bleed"])
+base_stats = {
+"max_hp": 55
+}
+signature = Array[StringName]([&"executioner_axe"])
+item_tags = Array[StringName]([&"heavy", &"armor", &"remedy"])
+loadout = SubResource("Resource_87qry")
+builds = Array[ExtResource("1_12u4i")]([SubResource("Resource_h0atr")])

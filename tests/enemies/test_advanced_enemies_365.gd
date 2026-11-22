@@ -41,12 +41,16 @@ static func run_roster(t: TestCase) -> void:
 	var in_clock := {}
 	for e in clock.entries:
 		in_clock[e.enemy] = e
-	for id in [&"molten_lizard", &"frost_mane", &"thunder_vulture", &"miasma_spider", &"tusk_boar", &"centurion"]:
+	for id in [&"molten_lizard", &"frost_mane", &"thunder_vulture", &"miasma_spider", &"tusk_boar", &"centurion", &"executioner"]:
 		t.check(in_ruins.has(id), "%s in standard_ruins" % id)
 	for id in [&"condenser_automaton", &"arc_coil"]:
 		t.check(in_clock.has(id), "%s in clockwork" % id)
-	if in_ruins.has(&"centurion"):
-		t.check((in_ruins[&"centurion"] as EnemyPoolEntry).node_types.size() == 1 and (in_ruins[&"centurion"] as EnemyPoolEntry).node_types[0] == &"elite", "centurion only at elite nodes")
+	for id in [&"centurion", &"executioner"]:
+		if in_ruins.has(id):
+			var nt := (in_ruins[id] as EnemyPoolEntry).node_types
+			t.check(nt.size() == 1 and nt[0] == &"elite", "%s only at elite nodes" % id)
+	var ex := enemies.enemy(&"executioner")
+	t.check(ex != null and ex.signature.has(&"executioner_axe"), "executioner carries the executioner axe (bonus hit on low-HP targets)")
 	t.check(enemies.enemy(&"warden").display_name == "看守", "warden is now 看守")
 
 
