@@ -44,6 +44,8 @@ var bonus_picks: int = 0
 var bonus_levels: Array[int] = []
 ## 已经结算到第几级（多欠的那一次只在跨过那一级时给一回）
 var level_seen: int = 1
+## v7 → v8 迁移来的档：以人为本那几次还没补（装上时看有效信仰补，补完就清）
+var _backfill_bonus := false
 ## 拿过的牌：id → 几张
 var taken: Dictionary = {}
 ## 这一局删掉的牌（不再出）
@@ -98,6 +100,21 @@ func install(run: RunState) -> void:
 	if depth_reached < 0:
 		var here := run.current_node() if run.map != null and run.travel != null else null
 		depth_reached = here.tier if here != null else 0
+	if _backfill_bonus:
+		_backfill_bonus = false
+		_fill_bonus_levels()
+
+
+## 迁移来的档：跨过的逢 n 级按此刻的有效信仰补以人为本那一次（和 [method _on_level] 同一个判断）
+func _fill_bonus_levels() -> void:
+	var every := rules().extra_pick_every
+	if every <= 0 or not _humanist():
+		return
+	for lv in range(every, level() + 1, every):
+		if not bonus_levels.has(lv):
+			bonus_levels.append(lv)
+	bonus_levels.sort()
+	bonus_picks = bonus_levels.size()
 
 
 #region 经验值与等级
@@ -525,6 +542,7 @@ func restore(d: Dictionary) -> void:
 			bonus_levels.append(every * (k + 1))
 	bonus_picks = bonus_levels.size()
 	level_seen = maxi(1, int(d.get("level_seen", rules().level_of(xp))))
+	_backfill_bonus = bool(d.get("backfill_bonus", false))
 	taken.clear()
 	var t: Variant = d.get("taken", {})
 	if t is Dictionary:
