@@ -1,0 +1,19 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+G844 spare_mainspring「备用发条」/「Spare Mainspring」：史；2 格；价值 150；材质 metal；说明「|」；图 无（占位）；标签 [&"valuable", &"crafted", &"clockwork", &"treasure", &"no_random_source"]；不进随机来源 true；战斗规则 无
+G844 spare_mainspring_spent「备用发条（失效）」/「Spare Mainspring (Spent)」：史；2 格；价值 150；材质 metal；说明「|」；图 无（占位）；标签 [&"valuable", &"crafted", &"clockwork", &"treasure", &"no_random_source"]；不进随机来源 true；战斗规则 无
+G844 rally_horn「求援号角」/「Rally Horn」：史；2 格；价值 150；材质 bone；说明「|」；图 无（占位）；标签 [&"valuable", &"nature", &"treasure", &"no_random_source"]；不进随机来源 true；战斗规则 无
+G844 rally_horn_spent「求援号角（失效）」/「Rally Horn (Spent)」：史；2 格；价值 150；材质 bone；说明「|」；图 无（占位）；标签 [&"valuable", &"nature", &"treasure", &"no_random_source"]；不进随机来源 true；战斗规则 无
+G844 beast_king_pact「兽王之契」/「Beast King's Pact」：史；1 格；价值 75；材质 bone；说明「|」；图 无（占位）；标签 [&"valuable", &"nature", &"treasure", &"no_random_source"]；不进随机来源 true；战斗规则 无
+G844 beast_king_pact_spent「兽王之契（失效）」/「Beast King's Pact (Spent)」：史；1 格；价值 75；材质 bone；说明「|」；图 无（占位）；标签 [&"valuable", &"nature", &"treasure", &"no_random_source"]；不进随机来源 true；战斗规则 无
+G844 all_ids（随机候选，不含锁定 / 不进随机来源）里有没有：["spare_mainspring", "spare_mainspring_spent", "rally_horn", "rally_horn_spent", "beast_king_pact", "beast_king_pact_spent"]
+G844 A0（有定义）：954 个点、240 场战斗；6 件出现 {  }
+G844 A4（有定义）：954 个点、240 场战斗；6 件出现 {  }
+G844 A8（有定义）：954 个点、240 场战斗；6 件出现 {  }
+G844 A12（无定义）：954 个点、240 场战斗；6 件出现 {  }
+WARNING: 23489 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 3552 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+G844 图鉴（ids(true)）里有没有：["spare_mainspring", "spare_mainspring_spent", "rally_horn", "rally_horn_spent", "beast_king_pact", "beast_king_pact_spent"]
+G844 随机候选 ids() 里有没有：[]
