@@ -1,5 +1,5 @@
 ## 372：升级选牌 —— 地图屏上叠一层（不是单独一屏）：三张牌挑一张，下面「刷新」「删除」两个键写着还剩几次。
-## 挑完还有待选（一次升了几级、以人为本多给的一次）就接着出下一批；都挑完自己收起。
+## 挑完还有待选（一次升了几级、无信者多给的一次）就接着出下一批；都挑完自己收起。
 ## 牌面是作者定的 A 羊皮纸（`assets/ui/level/`）：上沿正中压一条类别条，圆章里放牌的图标，下面牌名、效果，底部写拿了是第几层
 class_name LevelPickPanel
 extends VBoxContainer
@@ -85,7 +85,7 @@ func rebuild() -> void:
 	_remove.text = UiText.t("level.remove") % level.removals_left()
 	_remove.disabled = level.removals_left() <= 0
 	_remove.tooltip_text = UiText.t("level.remove_tip") if level.removals_left() > 0 else UiText.t("level.none_left")
-	_remove.add_theme_color_override("font_color", UiTheme.INK if removing else UiTheme.INK_SOFT)
+	_remove.modulate = Color(1.0, 0.86, 0.7) if removing else Color.WHITE     # 等着点一张：键染暖色
 
 
 func _card(i: int, cid: StringName) -> Control:
@@ -158,6 +158,7 @@ func _card(i: int, cid: StringName) -> Control:
 	tag.add_theme_color_override("font_color", Color.WHITE)
 	ribbon.add_child(tag)
 	btn.add_child(ribbon)
+	ribbon.resized.connect(func(): ribbon.position.x = (CARD_W - ribbon.size.x) / 2.0)     # 复测 v7.90：英文大字号的字比 72 宽，条撑宽后仍居中
 	for c in [medal, col, layer, ribbon, tag, title, body]:
 		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return btn
@@ -173,10 +174,13 @@ static func _ribbon_of(kind: String) -> String:
 	return "attr"
 
 
-## 牌的图标：先用它第一条属性加成的那根轴的图（`effects/axis_<stat>_pos`）；没有就空着，圆章照画
+## 牌的图标：先找这张牌自己的图（`level/card_<id>`，美术出），再退回它第一条属性加成的那根轴的图（`effects/axis_<stat>_pos`）；都没有就空着，圆章照画
 static func _icon_of_def(def: RunBuffDef) -> Texture2D:
 	if def == null:
 		return null
+	var own := "level/" + String(def.id)
+	if UiTheme.has_art(own):
+		return UiTheme.art_cached(own)
 	for e in def.effects:
 		if e is StatBonus:
 			var path := "effects/axis_%s_pos" % String((e as StatBonus).stat)
