@@ -85,7 +85,7 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 		var spec := BagWindow.spec()
 		var labels: Array = win.find_children("*", "Label", true, false).filter(func(l): return (l as Label).text in ["背包", "按住标题拖动"])
 		t.eq(labels.size(), 0, "标题行不写字")
-		t.check(win.close_button is IconButton, "收起是圆钮")
+		t.check(win.close_button is Button and win.close_button.text == "", "收起是浅石小格（385：墨色叉是画的，不写字）")
 		t.eq(win.close_button.tooltip_text, "收起（B）", "停上去写收起（B）")
 		var side := 56.0 * float(spec["minimize"]["scale"])
 		t.check(absf(win.close_button.custom_minimum_size.x - side) < 0.5, "按 %.2f 画" % float(spec["minimize"]["scale"]))
