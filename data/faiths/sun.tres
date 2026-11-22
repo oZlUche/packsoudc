@@ -1,102 +1,96 @@
 [gd_resource type="Resource" script_class="FaithDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_vo2x3"]
-[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="2_wrt77"]
-[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_umxob"]
-[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_vxfes"]
-[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="5_368f3"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/battle_deed.gd" id="6_d5eql"]
-[ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="7_8yila"]
-[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="8_l2ro3"]
-[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="9_87kt2"]
-[ext_resource type="Script" path="res://core/run/faith/perks/sun_cycle_perk.gd" id="10_sqqvu"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="11_fcqfh"]
-[ext_resource type="Script" path="res://core/run/faith/perks/altar_pray_fire_perk.gd" id="12_sftoe"]
-[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="13_0jkdj"]
+[ext_resource type="Script" path="res://core/run/faith/blessing.gd" id="1_yq77j"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="2_vo2x3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_wrt77"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_umxob"]
+[ext_resource type="Script" path="res://core/run/faith/faith_deed.gd" id="5_vxfes"]
+[ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="6_368f3"]
+[ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="7_d5eql"]
+[ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="8_8yila"]
+[ext_resource type="Script" path="res://core/run/faith/perks/sun_cycle_perk.gd" id="9_l2ro3"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="10_87kt2"]
+[ext_resource type="Script" path="res://core/run/faith/perks/altar_pray_fire_perk.gd" id="11_sqqvu"]
+[ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="12_fcqfh"]
 
-[sub_resource type="Resource" id="Resource_mdkyw"]
-script = ExtResource("3_umxob")
+[sub_resource type="Resource" id="Resource_sftoe"]
+script = ExtResource("3_wrt77")
 stat = &"haste"
 mode = 1
 amount = 5.0
 
-[sub_resource type="Resource" id="Resource_8gk88"]
-script = ExtResource("2_wrt77")
+[sub_resource type="Resource" id="Resource_0jkdj"]
+script = ExtResource("2_vo2x3")
 mode = "active"
-mods = Array[ExtResource("3_umxob")]([SubResource("Resource_mdkyw")])
+mods = Array[ExtResource("3_wrt77")]([SubResource("Resource_sftoe")])
 
-[sub_resource type="Resource" id="Resource_binyk"]
-script = ExtResource("3_umxob")
+[sub_resource type="Resource" id="Resource_mdkyw"]
+script = ExtResource("3_wrt77")
 stat = &"stamina_cost"
 mode = 1
 amount = -10.0
 
-[sub_resource type="Resource" id="Resource_nxral"]
-script = ExtResource("2_wrt77")
+[sub_resource type="Resource" id="Resource_8gk88"]
+script = ExtResource("2_vo2x3")
 tier = 2
-mods = Array[ExtResource("3_umxob")]([SubResource("Resource_binyk")])
+mods = Array[ExtResource("3_wrt77")]([SubResource("Resource_mdkyw")])
 
-[sub_resource type="Resource" id="Resource_t1fft"]
-script = ExtResource("1_vo2x3")
+[sub_resource type="Resource" id="Resource_binyk"]
+script = ExtResource("1_yq77j")
 tags = Array[StringName]([&"weapon", &"armor", &"shield"])
 name_prefix = "日神赐福的"
 name_prefix_en = "Sun-blessed "
-faith_bonuses = Array[ExtResource("2_wrt77")]([SubResource("Resource_8gk88"), SubResource("Resource_nxral")])
+faith_bonuses = Array[ExtResource("2_vo2x3")]([SubResource("Resource_0jkdj"), SubResource("Resource_8gk88")])
 
-[sub_resource type="Resource" id="Resource_r2xcc"]
-script = ExtResource("6_d5eql")
-won_only = true
-amount = 6
-
-[sub_resource type="Resource" id="Resource_gdva3"]
-script = ExtResource("7_8yila")
+[sub_resource type="Resource" id="Resource_nxral"]
+script = ExtResource("6_368f3")
 key = &"sun_window"
 per_count = true
 cap = 4
 amount = 2
 
-[sub_resource type="Resource" id="Resource_fmsvn"]
-script = ExtResource("8_l2ro3")
+[sub_resource type="Resource" id="Resource_t1fft"]
+script = ExtResource("7_d5eql")
 tags = Array[StringName]([&"crystal"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_72xeb"]
-script = ExtResource("8_l2ro3")
+[sub_resource type="Resource" id="Resource_r2xcc"]
+script = ExtResource("7_d5eql")
 tags = Array[StringName]([&"fire"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_shyoi"]
-script = ExtResource("8_l2ro3")
+[sub_resource type="Resource" id="Resource_gdva3"]
+script = ExtResource("7_d5eql")
 tags = Array[StringName]([&"valuable"])
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_5bfhi"]
-script = ExtResource("8_l2ro3")
+[sub_resource type="Resource" id="Resource_fmsvn"]
+script = ExtResource("7_d5eql")
 exact_grade = 2
 multiplier = 5.0
 
-[sub_resource type="Resource" id="Resource_vaeam"]
-script = ExtResource("10_sqqvu")
+[sub_resource type="Resource" id="Resource_72xeb"]
+script = ExtResource("9_l2ro3")
 tier = 0
 
-[sub_resource type="Resource" id="Resource_65qkw"]
-script = ExtResource("11_fcqfh")
+[sub_resource type="Resource" id="Resource_shyoi"]
+script = ExtResource("10_87kt2")
 
-[sub_resource type="Resource" id="Resource_kclds"]
-script = ExtResource("10_sqqvu")
+[sub_resource type="Resource" id="Resource_5bfhi"]
+script = ExtResource("9_l2ro3")
 part = 1
 
-[sub_resource type="Resource" id="Resource_xrgrx"]
-script = ExtResource("12_sftoe")
+[sub_resource type="Resource" id="Resource_vaeam"]
+script = ExtResource("11_sqqvu")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_fi3sj"]
-script = ExtResource("10_sqqvu")
+[sub_resource type="Resource" id="Resource_65qkw"]
+script = ExtResource("9_l2ro3")
 part = 3
 tier = 3
 
 [resource]
-script = ExtResource("13_0jkdj")
+script = ExtResource("12_fcqfh")
 id = &"sun"
 display_name = "日神"
 display_names = {
@@ -110,8 +104,8 @@ description = "恒常（周期循环）被人类推向太阳、又夺了火；�
 descriptions = {
 "en": "Constancy (the recurring cycle), which humans pushed onto the sun before stealing its fire; one of the Empire's gods, and the Sun God's people hold high standing."
 }
-thresholds = Array[int]([20, 60, 120])
-deeds = Array[ExtResource("5_368f3")]([SubResource("Resource_r2xcc"), SubResource("Resource_gdva3")])
-offerings = Array[ExtResource("8_l2ro3")]([SubResource("Resource_fmsvn"), SubResource("Resource_72xeb"), SubResource("Resource_shyoi"), SubResource("Resource_5bfhi")])
-perks = Array[ExtResource("9_87kt2")]([SubResource("Resource_vaeam"), SubResource("Resource_65qkw"), SubResource("Resource_kclds"), SubResource("Resource_xrgrx"), SubResource("Resource_fi3sj")])
-blessings = Array[ExtResource("1_vo2x3")]([SubResource("Resource_t1fft")])
+thresholds = Array[int]([42, 117, 217])
+deeds = Array[ExtResource("5_vxfes")]([SubResource("Resource_nxral")])
+offerings = Array[ExtResource("7_d5eql")]([SubResource("Resource_t1fft"), SubResource("Resource_r2xcc"), SubResource("Resource_gdva3"), SubResource("Resource_fmsvn")])
+perks = Array[ExtResource("8_8yila")]([SubResource("Resource_72xeb"), SubResource("Resource_shyoi"), SubResource("Resource_5bfhi"), SubResource("Resource_vaeam"), SubResource("Resource_65qkw")])
+blessings = Array[ExtResource("1_yq77j")]([SubResource("Resource_binyk")])

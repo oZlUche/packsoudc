@@ -52,6 +52,9 @@ var ransom_mult: float = 0.0
 var belt_slots_bonus: int = 0
 ## 160 补一：开局往腰带里发的随身技能（id → 几个；角色能力 / 局外 buff 的 [StartingBelt]）
 var belt_start: Dictionary = {}
+## 372：局内升级选牌的刷新、删除次数（局外科技给，[LevelModule] 读）
+var level_rerolls: int = 0
+var level_removals: int = 0
 
 
 ## 149：基数按百分比放大再加固定值：roundi(基数 ×（100 + Σ%）/ 100) + Σ加算。整数算，避免 40 × 1.15 落成 45.999…

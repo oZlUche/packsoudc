@@ -21,6 +21,9 @@ var ended_at: int = 0
 ## 261：地图规模（对局记录的详情写）；信力最高的那位神与到达的信力 {id, power}（没信仰空）
 var scale_id: StringName = &""
 var faith_top: Dictionary = {}
+## 372：这一局到了第几级、拿了哪些牌 [{id, count}]（结算页列出来；「成长」分按等级算）
+var run_level: int = 1
+var cards: Array[Dictionary] = []
 ## 行动点总数、踩过的点数、打赢 / 打输几场
 var steps: int = 0
 var visited: int = 0
@@ -118,6 +121,12 @@ static func _count(state: RunState, extracted: bool) -> RunResult:
 	r.board_size = state.board.size if state.board != null else Vector2i.ZERO
 	r.boss_cleared = state.boss_cleared
 	r.scale_id = state.scale_id()
+	var lv := LevelModule.of(state)
+	if lv != null:
+		r.run_level = lv.level()
+		r.cards = lv.taken_list()
+		if state.selected_faith != &"":
+			r.faith_top = {"id": String(state.selected_faith), "power": int(lv.xp)}
 	if state.faith_power != null:
 		for id in state.faith_power.points:
 			if int(state.faith_power.points[id]) > int(r.faith_top.get("power", 0)):
@@ -162,8 +171,11 @@ func compute_score(lit: int = 0, rules: ScoreRules = null) -> int:
 		+ crafts * rules.explore_points("craft") + maxi(0, lit) * rules.explore_points("lit")
 	if is_extracted():
 		explore += rules.extract_bonus
+	var growth := rules.growth_points(run_level)     # 372：等级算进点数，战败也保留
 	score_parts = {"loot": loot, "battle": battle, "explore": explore, "mult": MapGraph.normalize(rules.mult(difficulty_level))}     # 1.0 存成 1：存读往返逐字节相同
-	score = rules.total(loot, battle, explore, difficulty_level)
+	if growth > 0:
+		score_parts["growth"] = growth     # 没升过级的局字节不变
+	score = rules.total(loot, battle, explore, difficulty_level, growth)
 	return score
 
 
@@ -199,6 +211,8 @@ func to_dict() -> Dictionary:
 		"faith": faith_top, "score": score, "score_parts": score_parts.duplicate(),
 		"score_v": ScoreRules.load_rules().version, "insight": insight, "run_id": run_id,     # 319
 	}
+	if run_level > 1:
+		d["level"] = run_level     # 372
 	if bounty > 0:
 		d["bounty"] = bounty
 	if shop_refreshes > 0:

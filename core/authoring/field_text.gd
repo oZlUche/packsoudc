@@ -125,6 +125,7 @@ const TYPE_LABELS := {
 	"nothing": "没事", "kill": "击杀", "vanish": "消失", "retreat": "撤退", "expel_and_guard": "驱逐并守卫", "expel": "驱逐（退回上一步）", "random": "按权重随机", "fixed": "固定一档",
 	"damage_item": "损坏道具", "item_layer": "道具侵蚀层数", "drain_money": "掉钱",
 	"warehouse_pages": "仓库加页",     # 110 / 163：局外科技的效果
+	"level_rerolls": "升级选牌可刷新次数", "level_removals": "升级选牌可删除次数", "prayers_left": "神坛还能祷告", "altar_pray": "神坛祷告", "gain_xp": "给经验值",     # 372
 	"belt_slots_bonus": "腰带扩格", "smoke_escape": "烟雾：这一场不打", "mend_vitality": "回体力（随身）",     # 147
 	"starting_belt": "开局发随身技能", "tech_belt_grant": "开局发随身技能（科技）", "grant_belt": "给随身技能",     # 160 补一
 	"tech_run_buff": "每级给一条局外 buff", "tech_safe_size": "托付格子扩格",     # 118

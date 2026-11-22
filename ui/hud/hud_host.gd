@@ -157,6 +157,8 @@ func top_inset() -> float:
 	for e in (layout.entries if layout != null else []):
 		var w: HudWidget = widgets.get(StringName(e["id"]), null)
 		var a := String(e["anchor"])
+		if HudLayout.FLOATS.has(StringName(e["id"])):
+			continue     # 372：经验值管浮在地图上面，不挤地图
 		if w != null and w.visible and (a.begins_with("top") or HudLayout.in_bar(a)) and not on_right(a):
 			bottom = maxf(bottom, w.position.y + w.size.y)
 	return bottom

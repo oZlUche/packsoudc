@@ -8,6 +8,11 @@
 class_name RunMigrations
 extends RefCounted
 
+## v6 那一版祈愿的默认上限（372 起祈愿删了，只有迁移还认它）
+const PRAYER_CAP_V6 := 100
+## 372 v7 → v8：老信力折成经验值的倍数（老门槛 20 / 60 / 120 ≈ 新的第 5 / 10 / 15 级 42 / 117 / 217 点）
+const XP_PER_DEVOTION := 2.0
+
 
 ## 尽量升到 [constant RunState.SAVE_VERSION]。不改入参（深拷一份）。
 ## 升不上去就把能升到哪算哪，版本号照实写在 `version` 里，调用方按「不认识」处理
@@ -28,6 +33,8 @@ static func upgrade(src: Dictionary) -> Dictionary:
 				d = _v5_to_v6(d)
 			6:
 				d = _v6_to_v7(d)
+			7:
+				d = _v7_to_v8(d)
 			_:
 				break     # 没有这一步的迁移：停在这一版，下面照实报
 		v += 1
@@ -39,7 +46,7 @@ static func upgrade(src: Dictionary) -> Dictionary:
 
 ## v5 → v6（信仰重构 B，交接方案 §8.2 第 3、4 条）：一个池子的信力 P 拆成信力（成长）与祈愿（消费）：
 ## devotion = P，prayer = min(P, 上限)。这是一次明确的兼容补偿：不恢复历史上花掉的，不从日志猜总收益。
-## 上限按默认值（[constant FaithPower.PRAYER_CAP_DEFAULT]；迁移看不到信仰定义）。已经有 `faith_progress` 的档不动 ——
+## 上限按当时的默认值（[constant PRAYER_CAP_V6]；迁移看不到信仰定义）。已经有 `faith_progress` 的档不动 ——
 ## 重复迁移不会因为祈愿花掉了再补齐
 static func _v5_to_v6(d: Dictionary) -> Dictionary:
 	if d.get("faith_progress", null) is Dictionary:
@@ -50,7 +57,7 @@ static func _v5_to_v6(d: Dictionary) -> Dictionary:
 	for key in old:
 		var raw: Variant = old[key]
 		var p := maxi(0, int(raw)) if (raw is int or raw is float) else 0
-		out[String(key)] = {"devotion": p, "prayer": mini(p, FaithPower.PRAYER_CAP_DEFAULT)}
+		out[String(key)] = {"devotion": p, "prayer": mini(p, PRAYER_CAP_V6)}
 	d["faith_progress"] = out
 	d.erase("faith_power")
 	return d
@@ -150,4 +157,32 @@ static func _v1_to_v2(d: Dictionary) -> Dictionary:
 static func _v6_to_v7(d: Dictionary) -> Dictionary:
 	if not d.has("material_bias"):
 		d["material_bias"] = ""
+	return d
+
+
+## v7 → v8（372，2026-11-22）：信仰和升级合成一个系统。每位神 {devotion 信力, prayer 祈愿} → 这一局一池经验值（`modules.level.xp`）：
+## 取所奉那一位的信力（没奉神取最多的那一位），乘 [constant XP_PER_DEVOTION]；祈愿整个丢掉（作者 18:30：祈愿删掉）。
+## 折出来的等级当欠着的选牌，回到地图就选。已经有 `modules.level` 的档不动
+static func _v7_to_v8(d: Dictionary) -> Dictionary:
+	var mods: Dictionary = d.get("modules", {}) if d.get("modules", {}) is Dictionary else {}
+	var prog: Dictionary = d.get("faith_progress", {}) if d.get("faith_progress", {}) is Dictionary else {}
+	d.erase("faith_progress")
+	if mods.get("level", null) is Dictionary:
+		d["modules"] = mods
+		return d
+	var sel := ""
+	var fs: Variant = d.get("faith_selection", null)
+	if fs is Dictionary:
+		sel = String((fs as Dictionary).get("selected_id", ""))
+	var best := 0
+	for key in prog:
+		var row: Variant = prog[key]
+		var dv: Variant = (row as Dictionary).get("devotion", 0) if row is Dictionary else 0
+		var p := maxi(0, int(dv)) if (dv is int or dv is float) else 0
+		if sel != "" and String(key) == sel:
+			best = p
+			break
+		best = maxi(best, p)
+	mods["level"] = {"xp": float(best) * XP_PER_DEVOTION}
+	d["modules"] = mods
 	return d

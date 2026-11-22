@@ -32,8 +32,6 @@ enum Camp { GODS, CHURCH }
 ## 095（作者定）：赐福模板 —— 哪些道具能被这位神赐福、赐福版长什么样（加载时派生成真实道具 `<id>_<神>`）
 @export var blessings: Array[Blessing] = []
 ## 095：激活这个信仰时每走一步，包里每件能被赐福的道具独立掷一次变成赐福版的概率（+ 每级 convert_per_tier）；0 = 不转化
-## 信仰重构 B：祈愿上限（候选 100；0 = 用 [constant FaithPower.PRAYER_CAP_DEFAULT]）
-@export var prayer_cap: int = 0
 @export var convert_chance: float = 0.03
 @export var convert_per_tier: float = 0.01
 

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_yp0pn"]
+[ext_resource type="Script" path="res://core/run/effects/stat_bonus.gd" id="2_pdlio"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_obk3f"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_tywlk"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_hae7q"]
+
+[sub_resource type="Resource" id="Resource_pgmoo"]
+script = ExtResource("2_pdlio")
+stat = &"max_stamina"
+mode = 1
+amount = 4.0
+
+[resource]
+script = ExtResource("5_hae7q")
+id = &"card_stamina_pct"
+display_name = "绵长"
+display_names = {
+"en": "Endurance"
+}
+effects = Array[ExtResource("1_yp0pn")]([SubResource("Resource_pgmoo")])

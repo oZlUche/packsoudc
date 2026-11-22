@@ -15,6 +15,7 @@ const KINDS := {
 	&"legend": "res://ui/hud/widgets/legend_widget.gd",
 	&"commissions": "res://ui/hud/widgets/commissions_widget.gd",     # 336
 	&"meal": "res://ui/hud/widgets/meal_widget.gd",     # 355
+	&"level": "res://ui/hud/widgets/level_widget.gd",     # 372：经验值管
 	&"dev_drawer": PART,
 	&"reopen_button": PART,
 	&"skills": PART,

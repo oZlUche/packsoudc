@@ -2301,8 +2301,10 @@ func _adopt(state: RunState) -> void:
 	ev.option_chosen.connect(func(_n: MapNode, option: EventOption): _chosen_option = option)
 	ev.event_resolved.connect(func(node: MapNode, outcome: StringName, detail: Dictionary):
 		# 196：营地里只回了体力、扣了倒计时（扎营）不弹结果页 —— 营地里冒一行字说回了几点
-		if _camp_choice and detail.keys().all(func(k): return k in ["restored", "waited"]):
+		if _camp_choice and detail.keys().all(func(k): return k in ["restored", "waited", "xp"]):
 			_camp_extra += int(detail.get("restored", 0))
+			if int(detail.get("xp", 0)) > 0:     # 372：神坛祷告 —— 营地重开、冒一行经验值，不弹结果页
+				camp_rest = {"node": node.id, "restored": int(camp_rest.get("restored", 0)), "xp": int(camp_rest.get("xp", 0)) + int(detail["xp"])}
 			return
 		# 作者 10-27「每次搜索也会增加倒计时」：搜一次只扣了倒计时，直接进容器屏，不先弹结果页
 		if detail.keys() == ["waited"] and _chosen_option != null and _chosen_option.outcomes.any(func(o): return o is OpenSearch):

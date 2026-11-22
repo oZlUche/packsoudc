@@ -12,6 +12,8 @@ extends RefCounted
 ## 一局的规则（059 的 buff 骨架）：体力上限、多搜几次、商店价、幸运。**不依赖扳机，激活即生效。**
 const RUN_EFFECTS := {
 	&"vitality_max_bonus": "res://core/run/effects/vitality_max_bonus.gd",
+	&"level_rerolls": "res://core/run/effects/level_rerolls.gd",     # 372
+	&"level_removals": "res://core/run/effects/level_removals.gd",     # 372
 	&"keep_on_death": "res://core/run/effects/keep_on_death.gd",
 	&"extra_searches": "res://core/run/effects/extra_searches.gd",
 	&"shop_price_mult": "res://core/run/effects/shop_price_mult.gd",
@@ -77,6 +79,7 @@ const EVENT_CONDITIONS := {
 	&"has_flag": "res://core/run/events/conditions/has_flag.gd",
 	&"faith_active": "res://core/run/events/conditions/faith_active.gd",
 	&"rest_part_unused": "res://core/run/events/conditions/rest_part_unused.gd",
+	&"prayers_left": "res://core/run/events/conditions/prayers_left.gd",     # 372
 	&"forge_unused": "res://core/run/events/conditions/forge_unused.gd",     # 194
 	&"jimie_ready": "res://core/run/events/conditions/jimie_ready.gd",     # 281
 	&"facility_at_least": "res://core/run/events/conditions/facility_at_least.gd",     # 282
@@ -111,6 +114,8 @@ const EVENT_OUTCOMES := {
 	&"lose_item": "res://core/run/events/outcomes/lose_item.gd",
 	&"set_flag": "res://core/run/events/outcomes/set_flag.gd",
 	&"open_altar": "res://core/run/events/outcomes/open_altar.gd",
+	&"gain_xp": "res://core/run/events/outcomes/gain_xp.gd",     # 372
+	&"altar_pray": "res://core/run/events/outcomes/altar_pray.gd",     # 372
 	&"open_forge": "res://core/run/events/outcomes/open_forge.gd",     # 194
 	&"open_safe": "res://core/run/events/outcomes/open_safe.gd",     # 287
 	&"next_event_random": "res://core/run/events/outcomes/next_event_random.gd",

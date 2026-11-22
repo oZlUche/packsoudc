@@ -226,8 +226,8 @@ const TEXT := {
 	"map.lens_tip": {"zh": "放大镜（N）\n%s", "en": "Magnifier (N)\n%s"},
 	"map.reopen_hint": {"zh": "再看一眼脚下这个点：没拿完的战利品、还开着的搜索或商店。点地图上的当前节点也行", "en": "Take another look at this spot: unclaimed loot, or a search or shop still open. Clicking your current node works too"},
 	"map.reopen_none": {"zh": "这里没有可重开的界面", "en": "Nothing here to reopen"},
-	"map.bag": {"zh": "背包", "en": "Pack"},
-	"map.bag_hint": {"zh": "整理棋盘上的东西，打架前先排好", "en": "Arrange what's on your Board. Sort it before a fight"},
+	"map.bag": {"zh": "状态", "en": "Status"},
+	"map.bag_hint": {"zh": "整理棋盘上的东西、看人物属性和这一局拿的牌", "en": "Arrange your Board, check your stats and this run's cards"},
 	"map.menu_end": {"zh": "本局菜单", "en": "Run menu"},
 	"map.menu_end_hint": {"zh": "继续、设置、百科、回主菜单", "en": "Resume, settings, encyclopedia, main menu"},
 	"map.enemy_reward": {"zh": "　打赢 +%d 币", "en": " · Win: +%d coins"},
@@ -466,6 +466,37 @@ const TEXT := {
 	"card.tip_base": {"zh": "角色本身 %s", "en": "Character base %s"},
 	"card.tip_source": {"zh": "%s　%s", "en": "%s  %s"},
 	"card.src_faith": {"zh": "信仰", "en": "Faith"},
+	"card.src_level": {"zh": "这一局的牌", "en": "This run's cards"},     # 372
+	"card.carry": {"zh": "负重上限", "en": "Load limit"},
+	"card.vitality": {"zh": "体力上限", "en": "Max vitality"},
+	"card.weapon_damage": {"zh": "武器伤害", "en": "Weapon damage"},
+	"card.weapon_haste": {"zh": "出手速度", "en": "Attack speed"},
+	"card.weapon_cost": {"zh": "耐力消耗", "en": "Stamina cost"},
+	"card.cards": {"zh": "这一局的牌", "en": "This run's cards"},
+	"card.card_n": {"zh": "%s ×%d", "en": "%s ×%d"},
+	# ui/game/level_up_panel.gd、ui/hud/widgets/level_widget.gd（372）
+	"level.title": {"zh": "升到 %d 级", "en": "Level %d"},
+	"level.left": {"zh": "还要选 %d 次", "en": "%d more to pick"},
+	"level.extra": {"zh": "以人为本：这一级再选一张", "en": "Humans First: pick one more this level"},
+	"level.have": {"zh": "已有 %d 张", "en": "Have %d"},
+	"level.reroll": {"zh": "刷新 %d", "en": "Reroll %d"},
+	"level.reroll_tip": {"zh": "三张一起换一批", "en": "Swap all three for a new set"},
+	"level.remove": {"zh": "删除 %d", "en": "Remove %d"},
+	"level.remove_tip": {"zh": "再点一张牌删掉它：这一局不再出，空位补一张", "en": "Then click a card to remove it: it won't show again this run, and the slot is refilled"},
+	"level.none_left": {"zh": "次数用完了（局外科技可以加）", "en": "None left (camp techs add more)"},
+	"level.kind_stat": {"zh": "属性", "en": "Stats"},
+	"level.kind_weapon": {"zh": "武器", "en": "Weapons"},
+	"level.kind_explore": {"zh": "探索", "en": "Exploration"},
+	"level.echo_body": {"zh": "施加元素时，同一种元素印再多 %d 层（每 %d 秒一次）", "en": "When you apply an element, add %d more of it (once every %d s)"},
+	"level.echo_faster": {"zh": "元素回响间隔 −1 秒，最短 %d 秒（现在 %d 秒）", "en": "Element echo interval −1 s, down to %d s (now %d s)"},
+	"level.echo_stacks": {"zh": "元素回响多 1 层（现在 %d 层）", "en": "Element echo adds 1 more (now %d)"},
+	"level.next_search": {"zh": "下一个搜索点多搜 1 次", "en": "Your next search spot gives 1 extra search"},
+	"hud.level": {"zh": "Lv.%d", "en": "Lv.%d"},
+	"hud.level_xp": {"zh": "经验值 %d / %d", "en": "XP %d / %d"},
+	"hud.level_max": {"zh": "满级", "en": "Max level"},
+	"hud.level_pending": {"zh": "待选 %d", "en": "%d to pick"},
+	"hud.level_tip": {"zh": "打赢战斗、第一次进更深一环、神坛献祭和祷告都涨经验值；越难涨得越快。够了升一级，回到地图时三选一，同一张可以重复拿。", "en": "Winning battles, reaching a deeper ring for the first time, and offering or praying at altars all give XP; harder difficulties give more. Each level, pick one of three cards when you're back on the map; the same card can be taken again."},
+	"faith.pace": {"zh": "经验值节奏：", "en": "XP pace: "},
 	# ui/widgets/belt_slots.gd
 	"belt.empty_slot": {"zh": "这一格是空的", "en": "This slot is empty"},
 	"belt.flash": {"zh": "%s：%s", "en": "%s: %s"},
@@ -488,21 +519,19 @@ const TEXT := {
 	"bag.displaced_many": {"zh": "顶出了 %d 件（%s），都放在地上了", "en": "Pushed out %d items (%s): all on the Ground"},
 	# core/run/faith/faith_tooltip.gd
 	"faith.blessed": {"zh": "赐福的道具", "en": "Blessed items"},
-	"faith.sources": {"zh": "信力来源", "en": "Faith sources"},
+	"faith.sources": {"zh": "经验值来源", "en": "XP sources"},
 	"faith.dormant": {"zh": "%d 件休眠", "en": "%d dormant"},
 	"faith.broken": {"zh": "联系中断", "en": "Connection lost"},
 	"faith.broken_missing": {"zh": "信物不在棋盘上", "en": "Anchor not on your board"},
 	"faith.broken_benched": {"zh": "信物标了不参战", "en": "Anchor is benched"},
-	"faith.points": {"zh": "信力 %s%s", "en": "Faith %s%s"},
-	"faith.prayer": {"zh": "祈愿 %s / %s", "en": "Prayer %s / %s"},
-	"faith.prayer_line": {"zh": "　祈愿 %d", "en": " · Prayer %d"},
+	"faith.points": {"zh": "经验值 %s%s", "en": "XP %s%s"},
 	"faith.max_rank": {"zh": "（满阶）", "en": " (max Rank)"},
 	"faith.perk_sep": {"zh": "；", "en": "; "},
 	"faith.offering": {"zh": "献祭", "en": "Offering"},
 	"faith.perks": {"zh": "神赐", "en": "Gifts"},     # 257：信仰窗四段的节名
 	"faith.items": {"zh": "赐福之物", "en": "Blessed items"},
 	"faith.offer_mult": {"zh": "×%s", "en": "×%s"},
-	"faith.share": {"zh": "，%s", "en": ", %s"},     # 257：赐福之物按信力算份数的那半句
+	"faith.share": {"zh": "，%s", "en": ", %s"},     # 257：赐福之物按经验值算份数的那半句
 	"faith.convert_when": {"zh": "每走一步", "en": "Each step"},
 	"faith.convert_gain": {"zh": "包里的道具各 %s%% 转为赐福版", "en": "each item in your pack: %s%% to turn blessed"},
 	# core/battle/stat_axes.gd（轴名不在这里：TABLE 的 pos_en / neg_en）
@@ -835,6 +864,9 @@ const TEXT := {
 	"ledger.coins": {"zh": "带出金币", "en": "Coins carried out"},
 	"ledger.total": {"zh": "总分", "en": "Score"},
 	"ledger.score_parts": {"zh": "战利 %d · 战绩 %d · 探索 %d", "en": "Loot %d · Battles %d · Exploration %d"},
+	"ledger.level": {"zh": "等级", "en": "Level"},     # 372
+	"ledger.level_fmt": {"zh": "Lv.%d", "en": "Lv.%d"},
+	"ledger.score_growth": {"zh": " · 成长 %d", "en": " · Growth %d"},
 	"ledger.score_mult": {"zh": " · 难度 ×%s", "en": " · Difficulty ×%s"},
 	"ledger.dot": {"zh": "%d · %d", "en": "%d · %d"},
 	"ledger.items": {"zh": "%d 件", "en": "%d items"},
@@ -847,6 +879,8 @@ const TEXT := {
 	"event.sort_pack": {"zh": "整理背包（B）", "en": "Sort pack (B)"},
 	"event.got_items": {"zh": "得到：%s（已放到地上）", "en": "Got: %s (left on the Ground)"},
 	"event.vitality_up": {"zh": "体力 +%d", "en": "Vitality +%d"},
+	"event.xp_up": {"zh": "经验值 +%d", "en": "XP +%d"},     # 372
+	"event.pray": {"zh": "祷告", "en": "Pray"},     # 372
 	"event.vitality_down": {"zh": "体力 -%d", "en": "Vitality -%d"},
 	"event.money": {"zh": "钱 %+d", "en": "Coins %+d"},
 	"event.buff_gained": {"zh": "获得「%s」", "en": "Gained \"%s\""},
@@ -876,6 +910,7 @@ const TEXT := {
 	"camp.unavailable": {"zh": "用不了", "en": "Not available"},
 	"camp.fold": {"zh": "收起", "en": "Hide"},
 	"camp.unfold": {"zh": "展开", "en": "Show"},
+	"camp.pray_note": {"zh": "经验值 +%d", "en": "XP +%d"},     # 372 祷告
 	"camp.rest_note": {"zh": "体力 +%d，现在 %d / %d", "en": "Vitality +%d, now %d / %d"},
 	# ui/game/container_screen.gd
 	"loot.take_all": {"zh": "全部拾取", "en": "Take all"},
@@ -888,7 +923,7 @@ const TEXT := {
 	# ui/game/loot_view.gd
 	"loot.next": {"zh": "下一件", "en": "Next"},
 	# ui/game/altar_screen.gd
-	"altar.intro": {"zh": "神坛：把道具拖到祭品台上献祭换信力（至少满足一条献祭规矩的才收，一件满足几条算几次）。献祭（一次献一批）和特殊操作只能做一个，做了神坛就关了；不占休息。", "en": "Altar: drag items onto the offering table to trade them for Faith (an item must meet at least one offering rule, and counts once for each rule it meets). You get one offering (a whole batch at once) or one special action, not both; after that the altar closes. It doesn't use up your rest."},
+	"altar.intro": {"zh": "神坛：把道具拖到祭品台上献祭换经验值（至少满足一条献祭规矩的才收，一件满足几条算几次；每座神坛换的经验值有上限）。献祭（一次献一批）和特殊操作只能做一个，做了神坛就关了；不占休息。", "en": "Altar: drag items onto the offering table to trade them for XP (an item must meet at least one offering rule, and counts once for each rule it meets; each altar gives only so much XP). You get one offering (a whole batch at once) or one special action, not both; after that the altar closes. It doesn't use up your rest."},
 	"altar.offerings": {"zh": "\n献祭品：%s", "en": "\nOfferings: %s"},
 	"altar.table": {"zh": "祭品台", "en": "Offering table"},
 	"altar.offer": {"zh": "献祭", "en": "Offer"},
@@ -900,10 +935,10 @@ const TEXT := {
 	"altar.used": {"zh": "这个休息处的神坛已经用过了，关了", "en": "This altar has been used and is now closed"},
 	"altar.drag_hint": {"zh": "把祭品拖上台来", "en": "Drag offerings onto the table"},
 	"altar.used_short": {"zh": "用过了", "en": "Used"},
-	"altar.offer_line": {"zh": "%d 件 · 信力 +%d（Lv.%d → Lv.%d）", "en": "%d items · Faith +%d (Lv.%d → Lv.%d)"},
-	"altar.offer_line_one": {"zh": "%d 件 · 信力 +%d（Lv.%d → Lv.%d）", "en": "%d item · Faith +%d (Lv.%d → Lv.%d)"},
-	"altar.preview": {"zh": "献祭 %d 件：信力 +%d（Lv.%d → Lv.%d），祈愿 +%d", "en": "Offer %d items: Faith +%d (Lv.%d → Lv.%d), Prayer +%d"},
-	"altar.preview_one": {"zh": "献祭 %d 件：信力 +%d（Lv.%d → Lv.%d），祈愿 +%d", "en": "Offer %d item: Faith +%d (Lv.%d → Lv.%d), Prayer +%d"},
+	"altar.offer_line": {"zh": "%d 件 · 经验值 +%d（%d 阶 → %d 阶）", "en": "%d items · XP +%d (Rank %d → %d)"},
+	"altar.offer_line_one": {"zh": "%d 件 · 经验值 +%d（%d 阶 → %d 阶）", "en": "%d item · XP +%d (Rank %d → %d)"},
+	"altar.preview": {"zh": "献祭 %d 件：经验值 +%d（%d 阶 → %d 阶）", "en": "Offer %d items: XP +%d (Rank %d → %d)"},
+	"altar.preview_one": {"zh": "献祭 %d 件：经验值 +%d（%d 阶 → %d 阶）", "en": "Offer %d item: XP +%d (Rank %d → %d)"},
 	# ui/game/chest_screen.gd
 	"chest.idle": {"zh": "点击宝箱开锁", "en": "Click the chest to pick the lock"},
 	"chest.back": {"zh": "回地图", "en": "Back to map"},
@@ -926,7 +961,7 @@ const TEXT := {
 	# core/run/run_state.gd
 	"log.load_line": {"zh": "负重 %d / %d　%s", "en": "Load %d / %d · %s"},
 	"log.not_on_map": {"zh": "不在图上", "en": "You're not on the map"},
-	"log.faith_none": {"zh": "信仰：无", "en": "Faith: none"},
+	"log.faith_none": {"zh": "信仰：以人为本", "en": "Faith: Humans First"},
 	"log.faith_line": {"zh": "信仰：%s", "en": "Faith: %s"},
 	# core/run/game_flow.gd
 	"log.keepsake": {"zh": "获得特殊道具【%s】：不占背包，图鉴里点亮%s", "en": "Got a Keepsake, %s: it takes no pack space and is now lit in your Collection%s"},
@@ -940,9 +975,8 @@ const TEXT := {
 	"log.not_prebattle": {"zh": "开战前用不了", "en": "Can't use this right before a battle"},
 	"log.prebattle_only": {"zh": "只能在开战前用", "en": "Only usable right before a battle"},
 	# core/run/modules/altar_module.gd
-	"log.offered": {"zh": "献祭 %d 件，%s +%d 信力", "en": "Offered %d items, %s +%d Faith"},
-	"log.offered_prayer": {"zh": "祈愿 +%d", "en": "Prayer +%d"},
-	"log.offered_one": {"zh": "献祭 %d 件，%s +%d 信力", "en": "Offered %d item, %s +%d Faith"},
+	"log.offered": {"zh": "献祭 %d 件，%s：经验值 +%d", "en": "Offered %d items to %s: XP +%d"},
+	"log.offered_one": {"zh": "献祭 %d 件，%s：经验值 +%d", "en": "Offered %d item to %s: XP +%d"},
 	"log.faith_tier_up": {"zh": "%s升到 Lv.%d", "en": "%s rose to Lv.%d"},
 	"log.list_sep": {"zh": "、", "en": ", "},
 	"log.blessed": {"zh": "%s的目光落在「%s」上：它成了「%s」", "en": "%s's gaze falls on %s: it is now %s"},
@@ -1048,11 +1082,10 @@ const TEXT := {
 	"codex.unknown": {"zh": "？", "en": "?"},
 	# —— 221 F1：faith perks ——
 	"perk.no_active_faith": {"zh": "没有激活的信仰", "en": "No active Faith"},
-	"perk.prayer_short": {"zh": "祈愿不够（要 %d）", "en": "Not enough Prayer (need %d)"},
 	"perk.items": {"zh": "道具", "en": "items"},
-	"perk.bless_label": {"zh": "祈求赐福（花 %d 祈愿，赐福最值钱的一件）", "en": "Pray for a Blessing (%d Prayer: bless your most valuable item)"},
+	"perk.bless_label": {"zh": "祈求赐福（赐福最值钱的一件）", "en": "Pray for a Blessing (bless your most valuable item)"},
 	"perk.bless_none": {"zh": "包里没有能被赐福的东西", "en": "Nothing in your bags can be blessed"},
-	"perk.bless_done": {"zh": "花 %d 祈愿：「%s」成了「%s」", "en": "Spent %d Prayer: \"%s\" became \"%s\""},
+	"perk.bless_done": {"zh": "「%s」成了「%s」", "en": "\"%s\" became \"%s\""},
 	"perk.bless_summary": {"zh": "可以在祭坛赐福%s", "en": "You can bless %s at the Altar"},
 	"perk.offer_food_done": {"zh": "献祭食物：体力 +%d", "en": "Offered food: Vitality +%d"},
 	"perk.offer_food_summary": {"zh": "神坛献祭食物回体力（每件 +%d，每个休息处最多 %d，一次）", "en": "Offer food at the Altar to restore Vitality (+%d each, up to %d per rest stop, once)"},
@@ -1066,10 +1099,10 @@ const TEXT := {
 	"perk.reshape_done": {"zh": "大地之神改造了这个点：变成%s点", "en": "The Earth God reshaped this spot into: %s"},
 	"perk.reshape_summary": {"zh": "神坛：把当前的点改成别的类型（核心 / 撤离以外），不限次数", "en": "Altar: change the current spot to another type (not the core or an extraction point), any number of times"},
 	"perk.sacrifice_label": {"zh": "献祭 %.0f 生命上限", "en": "Offer %.0f Max Health"},
-	"perk.sacrifice_opt_faith": {"zh": "→ +%d 信力", "en": "→ +%d Faith points"},
+	"perk.sacrifice_opt_faith": {"zh": "→ 经验值 +%d", "en": "→ XP +%d"},
 	"perk.sacrifice_opt_buff": {"zh": "→ 这局造成伤害 +%d%%、急速 +%d%%", "en": "→ Damage dealt +%d%%, Haste +%d%% for this run"},
 	"perk.sacrifice_floor": {"zh": "生命上限不能再低了", "en": "Max Health can't go any lower"},
-	"perk.sacrifice_done_faith": {"zh": "献祭了 %.0f 点生命上限：信力 +%d", "en": "Offered %.0f Max Health: Faith points +%d"},
+	"perk.sacrifice_done_faith": {"zh": "献祭了 %.0f 点生命上限：经验值 +%d", "en": "Offered %.0f Max Health: XP +%d"},
 	"perk.sacrifice_done_buff": {"zh": "献祭了 %.0f 点生命上限：这局造成伤害 +%d%%、急速 +%d%%（共 %d 次）", "en": "Offered %.0f Max Health: Damage dealt +%d%%, Haste +%d%% for this run (%d times in all)"},
 	"perk.sacrifice_summary": {"zh": "可以在祭坛献祭生命上限换取能力", "en": "You can offer Max Health at the Altar for power"},
 	"perk.sacrifice_note": {"zh": "献祭生命上限：造成伤害 +%d%%、急速 +%d%%", "en": "Max Health offered: Damage dealt +%d%%, Haste +%d%%"},
@@ -1132,8 +1165,7 @@ const TEXT := {
 	"perk.overtime_regen": {"zh": "加时开始后回春：每秒回血 +%d", "en": "Renewal once Overtime starts: +%d Health per second"},
 	"perk.smite_vitality": {"zh": "立即击败（耗 %d 体力）", "en": "Defeat now (costs %d Vitality)"},
 	"perk.smite_vitality_short": {"zh": "体力不够（要留 1 点）", "en": "Not enough Vitality (you must keep one)"},
-	"perk.smite_faith": {"zh": "立即击败（耗 %d 祈愿）", "en": "Defeat now (costs %d Prayer)"},
-	"perk.smite_summary": {"zh": "可消耗 %d 体力或 %d 祈愿立即击败非首领敌人", "en": "Spend %d Vitality or %d Prayer to defeat a non-boss enemy at once"},
+	"perk.smite_summary": {"zh": "可消耗 %d 体力立即击败非首领敌人", "en": "Spend %d Vitality to defeat a non-boss enemy at once"},
 	"perk.at_battle_start": {"zh": "开战时%s", "en": "At battle start: %s"},
 	"perk.items_tagged": {"zh": "带「%s」的道具", "en": "Items with \"%s\""},
 	"perk.each_item": {"zh": "每件道具", "en": "Each item"},
@@ -1172,7 +1204,7 @@ const TEXT := {
 	"gloss.no_effect": {"zh": "（没有效果）", "en": "(no effect)"},
 	# —— 221 F5a：hud widgets ——
 	"hud.belt": {"zh": "腰带", "en": "Belt"},
-	"hud.faith_level": {"zh": "Lv.%d　%d%s", "en": "Lv.%d  %d%s"},     # faith widget: rank, points, " / next"
+	"hud.faith_level": {"zh": "%d 阶", "en": "Rank %d"},     # faith widget: rank, points, " / next"
 	"hud.notice_extract_closed": {"zh": "有一个撤离点关闭了", "en": "An extraction point has closed"},     # countdown_module notice
 	# —— 221 F5a：encumbrance ——
 	"run.load_light": {"zh": "轻装", "en": "Light"},     # load level 0
@@ -1298,6 +1330,7 @@ const TEXT := {
 	"cond.lacks_item": {"zh": "身上没有%s%s", "en": "Only if you don't have %s%s"},
 	"cond.needs_item": {"zh": "需要%s ×%d%s", "en": "Needs %s ×%d%s"},
 	"cond.node_type": {"zh": "需要这是%s点", "en": "Only at a %s spot"},     # the types are joined with " / "
+	"cond.prayers_used": {"zh": "这座神坛祷告够了", "en": "You've prayed enough at this altar"},     # 372
 	"cond.altar_used": {"zh": "这里的神坛已经用过了", "en": "This altar has already been used"},
 	"cond.rested": {"zh": "这里已经休息过了", "en": "You've already rested here"},
 	"cond.skill_not_ready": {"zh": "这个技能现在用不了", "en": "That skill can't be used right now"},
@@ -1315,11 +1348,11 @@ const TEXT := {
 	"outcome.belt_full": {"zh": "腰带满了，%s没放进去", "en": "Your Belt is full: %s didn't fit"},
 	"outcome.blessed": {"zh": "「%s」受了赐福，成了「%s」", "en": "\"%s\" was blessed and became \"%s\""},
 	# —— 221 F5a：faith ——
-	"faith.line": {"zh": "%s Lv.%d　%d%s", "en": "%s Lv.%d · %d%s"},     # HUD / altar: name, level, points, " / next" or max
+	"faith.line": {"zh": "%s %d 阶", "en": "%s · Rank %d"},     # HUD / altar: name, level, points, " / next" or max
 	"faith.perk_note": {"zh": "%s　%s", "en": "%s %s"},     # perk sentence + author note
 	# —— 221 F5a：faith_deeds ——
 	"deed.cap": {"zh": "（每场最多 %d）", "en": " (max %d per battle)"},
-	"deed.dmg_both_ev": {"zh": "造成和受到的%s", "en": "%s dealt and taken"},     # 257：信力来源两列的「事」
+	"deed.dmg_both_ev": {"zh": "造成和受到的%s", "en": "%s dealt and taken"},     # 257：经验值来源两列的「事」
 	"deed.dmg_dealt_ev": {"zh": "造成的%s", "en": "%s dealt"},
 	"deed.dmg_taken_ev": {"zh": "受到的%s", "en": "%s taken"},
 	"deed.dmg_gain": {"zh": "+%s%%%s", "en": "+%s%%%s"},
@@ -1341,9 +1374,9 @@ const TEXT := {
 	"deed.event_choice_tagged": {"zh": "事件里选带「%s」的选项 +%d", "en": "Pick an event option with \"%s\" +%d"},
 	"deed.event_choice": {"zh": "事件里做选择 +%d", "en": "Make a choice in an event +%d"},
 	"deed.explore": {"zh": "搜一次 +%d", "en": "Each search +%d"},
-	"deed.first_place_pow_tagged": {"zh": "每局头一回置入一种「%s」：获得信力，越稀有越多", "en": "The first time each run you place a new kind of \"%s\": gain Faith, more for rarer ones"},
+	"deed.first_place_pow_tagged": {"zh": "每局头一回置入一种「%s」：获得经验值，越稀有越多", "en": "The first time each run you place a new kind of \"%s\": gain XP, more for rarer ones"},
 	"deed.first_place_tagged": {"zh": "每局头一回置入一种「%s」 +%s%s", "en": "The first time each run you place a new kind of \"%s\" +%s%s"},
-	"deed.first_place_pow": {"zh": "每局头一回置入一种道具：获得信力，越稀有越多", "en": "The first time each run you place a new kind of item: gain Faith, more for rarer ones"},
+	"deed.first_place_pow": {"zh": "每局头一回置入一种道具：获得经验值，越稀有越多", "en": "The first time each run you place a new kind of item: gain XP, more for rarer ones"},
 	"deed.first_place": {"zh": "每局头一回置入一种道具 +%s%s", "en": "The first time each run you place a new kind of item +%s%s"},
 	"deed.heal": {"zh": "战斗里每回 1 点血 +%s%s", "en": "Each Health healed in battle +%s%s"},
 	"deed.per_cell": {"zh": "× 格子数", "en": " × cells"},
@@ -1437,6 +1470,7 @@ const TEXT := {
 	"trig.removed_opp": {"zh": "对手的%s掉光时", "en": "When the opponent's %s runs out"},
 	# —— 221 F5a：rule effects ——
 	"fx.apply_unknown": {"zh": "施加 ?", "en": "apply ?"},
+	"fx.echo": {"zh": "刚施加的元素印再多 %d 层", "en": "the element mark just applied gains %d more"},     # 372 元素回响
 	"fx.apply": {"zh": "施加 %d 层%s", "en": "apply %d %s"},
 	"fx.gain": {"zh": "获得 %d 层%s", "en": "gain %d %s"},
 	"fx.restore": {"zh": "回复 %.0f 点%s", "en": "restore %.0f %s"},
@@ -1555,7 +1589,7 @@ const TEXT := {
 	"stamina.rest": {"zh": "其余 %d 件　%.1f / 秒", "en": "%d more  %.1f/s"},
 	"stat.no_regen": {"zh": "（不回复）", "en": " (no regen)"},
 	"bonus.gate_active": {"zh": "激活即", "en": "When active"},
-	"bonus.gate_scaled": {"zh": "每 %d 信力一份%s", "en": "One share per %d Faith%s"},
+	"bonus.gate_scaled": {"zh": "每 %d 经验值一份%s", "en": "One share per %d XP%s"},
 	"bonus.gate_cap": {"zh": "，最多 %d 份", "en": ", max %d"},
 	# —— 221 F5a：run effects (core/run/effects) ——
 	"bonus.battle_reward": {"zh": "打赢的钱 ×%s", "en": "Coins from wins ×%s"},
@@ -1577,6 +1611,8 @@ const TEXT := {
 	"bonus.rest": {"zh": "休息多回 %d 点体力", "en": "Resting restores %d more Vitality"},
 	"bonus.scout": {"zh": "侦察 %.0f", "en": "Scouting %.0f"},
 	"bonus.shop_price": {"zh": "商店买价 ×%.2f", "en": "Shop buying prices ×%.2f"},
+	"bonus.level_rerolls": {"zh": "升级选牌可刷新 %d 次", "en": "Level-up rerolls: %d"},     # 372
+	"bonus.level_removals": {"zh": "升级选牌可删除 %d 次", "en": "Level-up removals: %d"},     # 372
 	"bonus.shop_refresh": {"zh": "每家商店可付钱换货 %d 次", "en": "Paid restocks per shop: %d"},
 	"bonus.bounty_elite": {"zh": "打赢精英额外掉一件稀有及以上", "en": "Elites drop one extra Rare-or-better item"},
 	"bonus.bounty_core": {"zh": "打赢 BOSS 额外掉一件史诗及以上", "en": "Bosses drop one extra Epic-or-better item"},
@@ -1699,7 +1735,7 @@ const TEXT := {
 	"records.detail_fights": {"zh": "战斗", "en": "Battles"},
 	"records.detail_fights_v": {"zh": "赢 %d · 输 %d · 精英 %d · 核心 %d", "en": "won %d · lost %d · elites %d · cores %d"},
 	"records.detail_faith": {"zh": "信仰", "en": "Faith"},
-	"records.detail_faith_v": {"zh": "%s · 信力 %d", "en": "%s · faith %d"},
+	"records.detail_faith_v": {"zh": "%s · 经验值 %d", "en": "%s · XP %d"},
 	"records.none": {"zh": "——", "en": "——"},
 	"records.seed": {"zh": "种子", "en": "Seed"},
 	"records.seed_v": {"zh": "%d · %s", "en": "%d · %s"},

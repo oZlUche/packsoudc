@@ -1,132 +1,153 @@
 [gd_resource type="Resource" script_class="EventDef" format=3]
 
-[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_wcnx5"]
-[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_vey5p"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="3_1p6xl"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="4_vjav7"]
-[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="5_146qw"]
-[ext_resource type="Script" path="res://core/run/events/conditions/rest_part_unused.gd" id="6_n64np"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="7_0sn4r"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/open_altar.gd" id="8_u8irx"]
-[ext_resource type="Script" path="res://core/run/events/conditions/faith_active.gd" id="9_xkvak"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/jimie_sacrifice.gd" id="10_ye14d"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/next_event.gd" id="11_upvsa"]
-[ext_resource type="Script" path="res://core/run/events/conditions/jimie_ready.gd" id="12_anxhh"]
-[ext_resource type="Script" path="res://core/run/events/outcomes/open_forge.gd" id="13_oxytg"]
-[ext_resource type="Script" path="res://core/run/events/conditions/forge_unused.gd" id="14_y42ju"]
-[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="15_qc75h"]
+[ext_resource type="Script" path="res://core/run/events/event_option.gd" id="1_1p6xl"]
+[ext_resource type="Script" path="res://core/run/events/event_outcome.gd" id="2_vjav7"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/pass_time.gd" id="3_146qw"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/proceed.gd" id="4_n64np"]
+[ext_resource type="Script" path="res://core/run/events/event_condition.gd" id="5_0sn4r"]
+[ext_resource type="Script" path="res://core/run/events/conditions/rest_part_unused.gd" id="6_u8irx"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/restore_vitality.gd" id="7_xkvak"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_altar.gd" id="8_ye14d"]
+[ext_resource type="Script" path="res://core/run/events/conditions/faith_active.gd" id="9_upvsa"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/altar_pray.gd" id="10_anxhh"]
+[ext_resource type="Script" path="res://core/run/events/conditions/prayers_left.gd" id="11_oxytg"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/jimie_sacrifice.gd" id="12_y42ju"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/next_event.gd" id="13_qc75h"]
+[ext_resource type="Script" path="res://core/run/events/conditions/jimie_ready.gd" id="14_7r3ws"]
+[ext_resource type="Script" path="res://core/run/events/outcomes/open_forge.gd" id="15_spppq"]
+[ext_resource type="Script" path="res://core/run/events/conditions/forge_unused.gd" id="16_7wd84"]
+[ext_resource type="Script" path="res://core/run/events/event_def.gd" id="17_pvksp"]
 
-[sub_resource type="Resource" id="Resource_7r3ws"]
-script = ExtResource("3_1p6xl")
+[sub_resource type="Resource" id="Resource_lp1md"]
+script = ExtResource("3_146qw")
 
-[sub_resource type="Resource" id="Resource_spppq"]
-script = ExtResource("4_vjav7")
+[sub_resource type="Resource" id="Resource_trsnw"]
+script = ExtResource("4_n64np")
 
-[sub_resource type="Resource" id="Resource_7wd84"]
-script = ExtResource("6_n64np")
+[sub_resource type="Resource" id="Resource_e61ae"]
+script = ExtResource("6_u8irx")
 
-[sub_resource type="Resource" id="Resource_pvksp"]
-script = ExtResource("1_wcnx5")
+[sub_resource type="Resource" id="Resource_vqmjx"]
+script = ExtResource("1_1p6xl")
 label = "倒计时 −{pass_time_actions}，回 {rest_restore} 点体力"
 labels = {
 "en": "Countdown −{pass_time_actions}, restore {rest_restore} Vitality"
 }
 hide_when_locked = true
-requires = Array[ExtResource("5_146qw")]([SubResource("Resource_7wd84")])
-outcomes = Array[ExtResource("2_vey5p")]([SubResource("Resource_7r3ws"), SubResource("Resource_spppq")])
-
-[sub_resource type="Resource" id="Resource_lp1md"]
-script = ExtResource("3_1p6xl")
-actions = 2
-
-[sub_resource type="Resource" id="Resource_trsnw"]
-script = ExtResource("4_vjav7")
-
-[sub_resource type="Resource" id="Resource_e61ae"]
-script = ExtResource("7_0sn4r")
-
-[sub_resource type="Resource" id="Resource_vqmjx"]
-script = ExtResource("6_n64np")
+requires = Array[ExtResource("5_0sn4r")]([SubResource("Resource_e61ae")])
+outcomes = Array[ExtResource("2_vjav7")]([SubResource("Resource_lp1md"), SubResource("Resource_trsnw")])
 
 [sub_resource type="Resource" id="Resource_5la2b"]
-script = ExtResource("1_wcnx5")
+script = ExtResource("3_146qw")
+actions = 2
+
+[sub_resource type="Resource" id="Resource_f48da"]
+script = ExtResource("4_n64np")
+
+[sub_resource type="Resource" id="Resource_ljry6"]
+script = ExtResource("7_xkvak")
+
+[sub_resource type="Resource" id="Resource_w630a"]
+script = ExtResource("6_u8irx")
+
+[sub_resource type="Resource" id="Resource_yd1n5"]
+script = ExtResource("1_1p6xl")
 label = "倒计时 −{pass_time_actions}，回 {rest_total} 点体力"
 labels = {
 "en": "Countdown −{pass_time_actions}, restore {rest_total} Vitality"
 }
 hide_when_locked = true
-requires = Array[ExtResource("5_146qw")]([SubResource("Resource_vqmjx")])
-outcomes = Array[ExtResource("2_vey5p")]([SubResource("Resource_lp1md"), SubResource("Resource_trsnw"), SubResource("Resource_e61ae")])
+requires = Array[ExtResource("5_0sn4r")]([SubResource("Resource_w630a")])
+outcomes = Array[ExtResource("2_vjav7")]([SubResource("Resource_5la2b"), SubResource("Resource_f48da"), SubResource("Resource_ljry6")])
 
-[sub_resource type="Resource" id="Resource_f48da"]
-script = ExtResource("8_u8irx")
+[sub_resource type="Resource" id="Resource_iwx8e"]
+script = ExtResource("8_ye14d")
 
-[sub_resource type="Resource" id="Resource_ljry6"]
-script = ExtResource("9_xkvak")
+[sub_resource type="Resource" id="Resource_pyyvh"]
+script = ExtResource("9_upvsa")
 
-[sub_resource type="Resource" id="Resource_w630a"]
-script = ExtResource("6_n64np")
+[sub_resource type="Resource" id="Resource_vtgo5"]
+script = ExtResource("6_u8irx")
 part = &"altar"
 
-[sub_resource type="Resource" id="Resource_yd1n5"]
-script = ExtResource("1_wcnx5")
+[sub_resource type="Resource" id="Resource_v14yk"]
+script = ExtResource("1_1p6xl")
 label = "献祭或特殊操作，二选一"
 labels = {
 "en": "Offering or special action, pick one"
 }
 hide_when_locked = true
-requires = Array[ExtResource("5_146qw")]([SubResource("Resource_ljry6"), SubResource("Resource_w630a")])
-outcomes = Array[ExtResource("2_vey5p")]([SubResource("Resource_f48da")])
+requires = Array[ExtResource("5_0sn4r")]([SubResource("Resource_pyyvh"), SubResource("Resource_vtgo5")])
+outcomes = Array[ExtResource("2_vjav7")]([SubResource("Resource_iwx8e")])
 
-[sub_resource type="Resource" id="Resource_iwx8e"]
-script = ExtResource("10_ye14d")
+[sub_resource type="Resource" id="Resource_mmbm3"]
+script = ExtResource("3_146qw")
 
-[sub_resource type="Resource" id="Resource_pyyvh"]
-script = ExtResource("11_upvsa")
+[sub_resource type="Resource" id="Resource_orwxy"]
+script = ExtResource("10_anxhh")
+
+[sub_resource type="Resource" id="Resource_4s4y3"]
+script = ExtResource("11_oxytg")
+
+[sub_resource type="Resource" id="Resource_urubi"]
+script = ExtResource("1_1p6xl")
+label = "倒计时 −{pass_time_actions}，在神坛前祷告，得一点经验值"
+labels = {
+"en": "Countdown −{pass_time_actions}, pray at the altar for a little XP"
+}
+hide_when_locked = true
+requires = Array[ExtResource("5_0sn4r")]([SubResource("Resource_4s4y3")])
+outcomes = Array[ExtResource("2_vjav7")]([SubResource("Resource_mmbm3"), SubResource("Resource_orwxy")])
+
+[sub_resource type="Resource" id="Resource_3bc8h"]
+script = ExtResource("12_y42ju")
+
+[sub_resource type="Resource" id="Resource_blknj"]
+script = ExtResource("13_qc75h")
 event = &"event_jimie_god"
 
-[sub_resource type="Resource" id="Resource_vtgo5"]
-script = ExtResource("12_anxhh")
+[sub_resource type="Resource" id="Resource_gvfnv"]
+script = ExtResource("14_7r3ws")
 
-[sub_resource type="Resource" id="Resource_v14yk"]
-script = ExtResource("1_wcnx5")
+[sub_resource type="Resource" id="Resource_8syby"]
+script = ExtResource("1_1p6xl")
 label = "献祭"
 labels = {
 "en": "Sacrifice"
 }
 hide_when_locked = true
-requires = Array[ExtResource("5_146qw")]([SubResource("Resource_vtgo5")])
-outcomes = Array[ExtResource("2_vey5p")]([SubResource("Resource_iwx8e"), SubResource("Resource_pyyvh")])
+requires = Array[ExtResource("5_0sn4r")]([SubResource("Resource_gvfnv")])
+outcomes = Array[ExtResource("2_vjav7")]([SubResource("Resource_3bc8h"), SubResource("Resource_blknj")])
 
-[sub_resource type="Resource" id="Resource_mmbm3"]
-script = ExtResource("13_oxytg")
+[sub_resource type="Resource" id="Resource_whabm"]
+script = ExtResource("15_spppq")
 
-[sub_resource type="Resource" id="Resource_orwxy"]
-script = ExtResource("14_y42ju")
+[sub_resource type="Resource" id="Resource_jfnct"]
+script = ExtResource("16_7wd84")
 
-[sub_resource type="Resource" id="Resource_4s4y3"]
-script = ExtResource("1_wcnx5")
+[sub_resource type="Resource" id="Resource_33l4a"]
+script = ExtResource("1_1p6xl")
 label = "三件道具熔成一枚铸牌"
 labels = {
 "en": "Melt three items into one Forge Token"
 }
 hide_when_locked = true
-requires = Array[ExtResource("5_146qw")]([SubResource("Resource_orwxy")])
-outcomes = Array[ExtResource("2_vey5p")]([SubResource("Resource_mmbm3")])
+requires = Array[ExtResource("5_0sn4r")]([SubResource("Resource_jfnct")])
+outcomes = Array[ExtResource("2_vjav7")]([SubResource("Resource_whabm")])
 
-[sub_resource type="Resource" id="Resource_urubi"]
-script = ExtResource("1_wcnx5")
+[sub_resource type="Resource" id="Resource_oey7f"]
+script = ExtResource("1_1p6xl")
 label = "不算用掉"
 labels = {
 "en": "Not now"
 }
 
 [resource]
-script = ExtResource("15_qc75h")
+script = ExtResource("17_pvksp")
 id = &"rest_default"
 title = "休息点"
 titles = {
 "en": "Rest Spot"
 }
-options = Array[ExtResource("1_wcnx5")]([SubResource("Resource_pvksp"), SubResource("Resource_5la2b"), SubResource("Resource_yd1n5"), SubResource("Resource_v14yk"), SubResource("Resource_4s4y3"), SubResource("Resource_urubi")])
+options = Array[ExtResource("1_1p6xl")]([SubResource("Resource_vqmjx"), SubResource("Resource_yd1n5"), SubResource("Resource_v14yk"), SubResource("Resource_urubi"), SubResource("Resource_8syby"), SubResource("Resource_33l4a"), SubResource("Resource_oey7f")])
 scene = &"rest_camp"

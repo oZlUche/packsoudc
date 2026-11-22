@@ -1,0 +1,14 @@
+{
+  "id": "card_stamina_flat",
+  "display_name": "坚韧",
+  "display_names": {
+    "en": "Grit"
+  },
+  "effects": [
+    {
+      "type": "stat_bonus",
+      "stat": "max_stamina",
+      "amount": 3.0
+    }
+  ]
+}

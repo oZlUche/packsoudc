@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_5g1o2"]
+[ext_resource type="Script" path="res://core/run/effects/vitality_max_bonus.gd" id="2_d7wcm"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_xbtk2"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_votg1"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_k3iqg"]
+
+[sub_resource type="Resource" id="Resource_bif8y"]
+script = ExtResource("2_d7wcm")
+
+[resource]
+script = ExtResource("5_k3iqg")
+id = &"card_vitality"
+display_name = "耐行"
+display_names = {
+"en": "Long Road"
+}
+effects = Array[ExtResource("1_5g1o2")]([SubResource("Resource_bif8y")])

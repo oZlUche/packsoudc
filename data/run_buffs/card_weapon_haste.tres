@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_5f70b"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_3htq0"]
+[ext_resource type="Script" path="res://core/run/effects/tag_mods.gd" id="3_5bge8"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ye837"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_vmpdl"]
+
+[sub_resource type="Resource" id="Resource_ibpus"]
+script = ExtResource("2_3htq0")
+stat = &"haste"
+mode = 1
+amount = 3.0
+
+[sub_resource type="Resource" id="Resource_t10w1"]
+script = ExtResource("3_5bge8")
+tags = Array[StringName]([&"weapon"])
+mods = Array[ExtResource("2_3htq0")]([SubResource("Resource_ibpus")])
+
+[resource]
+script = ExtResource("5_vmpdl")
+id = &"card_weapon_haste"
+display_name = "迅捷"
+display_names = {
+"en": "Quick Hands"
+}
+effects = Array[ExtResource("1_5f70b")]([SubResource("Resource_t10w1")])

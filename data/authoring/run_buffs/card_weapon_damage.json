@@ -1,0 +1,21 @@
+{
+  "id": "card_weapon_damage",
+  "display_name": "锋锐",
+  "display_names": {
+    "en": "Keen Edge"
+  },
+  "effects": [
+    {
+      "type": "tag_mods",
+      "tags": [
+        "weapon"
+      ],
+      "mods": [
+        {
+          "mode": "MULT",
+          "amount": 4.0
+        }
+      ]
+    }
+  ]
+}

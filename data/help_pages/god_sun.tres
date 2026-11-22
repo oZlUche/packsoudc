@@ -11,11 +11,11 @@ display_names = {
 }
 category = &"faith"
 order = 6
-text = "{faith:sun}掌太阳、火与周期性的重复，西方蛮族信祂。信力看的是打赢战斗，一场里每借烈日追加一次火焰再多给，有上限。献祭爱魔晶石、火焰、贵重品，以及体积正好为中的道具。日神赐福武器、防具与盾牌，赐福版激活即有急速，到了阶还省耐力。
+text = "{faith:sun}掌太阳、火与周期性的重复，西方蛮族信祂。奉祂时，一场里每借烈日追加一次火焰，经验值再多给，有上限。献祭爱魔晶石、火焰、贵重品，以及体积正好为中的道具。日神赐福武器、防具与盾牌，赐福版激活即有急速，到了阶还省耐力。
 
 奉了祂，战斗里每隔 {faith_perk:sun:sun_cycle:every_sec} 秒升起一次【烈日】，持续 {faith_perk:sun:sun_cycle:window_sec} 秒；烈日里每件武器打中的头一下，再追加这一下 {faith_perk:sun:sun_cycle:fire_percent}% 的火焰伤害。快的武器容易赶上，慢的武器一下更值。一阶起烈日外的出手给下一次烈日蓄力，追加更多；二阶可以在神坛上祈祷，攒局内永久的火焰加成；三阶每隔几次烈日，那一次的追加更强。"
 texts = {
-"en": "{faith:sun} rules the sun, fire and cyclical repetition, and the western barbarians worship this god. Faith points come from winning battles, with extra each time you add Fire in the Blazing Sun, up to a cap per battle. Offerings favor magic crystals, fire, valuables, and items exactly medium in size. The Sun God blesses weapons, armor and shields: a Blessed version grants Haste on activation and saves Stamina at higher Ranks.
+"en": "{faith:sun} rules the sun, fire and cyclical repetition, and the western barbarians worship this god. While you follow this god, you gain extra XP each time you add Fire in the Blazing Sun, up to a cap per battle. Offerings favor magic crystals, fire, valuables, and items exactly medium in size. The Sun God blesses weapons, armor and shields: a Blessed version grants Haste on activation and saves Stamina at higher Ranks.
 
 Following this god, a Blazing Sun rises every {faith_perk:sun:sun_cycle:every_sec} seconds in battle and lasts {faith_perk:sun:sun_cycle:window_sec} seconds; each weapon's first hit in it adds {faith_perk:sun:sun_cycle:fire_percent}% of that hit as Fire damage. Fast weapons catch it easily, slow weapons gain more per hit. From Rank one, attacks outside the Blazing Sun charge the next one for a bigger bonus. At Rank two you can pray at an Altar to build a permanent Fire bonus for the run. At Rank three, every few Blazing Suns one comes stronger."
 }

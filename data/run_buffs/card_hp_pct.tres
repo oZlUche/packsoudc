@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_2u7ft"]
+[ext_resource type="Script" path="res://core/run/effects/stat_bonus.gd" id="2_6wqf4"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_u0e5x"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_65ylc"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_01kgo"]
+
+[sub_resource type="Resource" id="Resource_hvbkm"]
+script = ExtResource("2_6wqf4")
+mode = 1
+amount = 5.0
+
+[resource]
+script = ExtResource("5_01kgo")
+id = &"card_hp_pct"
+display_name = "强健"
+display_names = {
+"en": "Vigor"
+}
+effects = Array[ExtResource("1_2u7ft")]([SubResource("Resource_hvbkm")])

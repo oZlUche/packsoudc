@@ -55,6 +55,7 @@ static func default_for(p_screen: String) -> HudLayout:
 		l.entries.append(entry(&"legend", "bottom_left", CORNER_OFFSET, 1))
 		l.entries.append(entry(&"belt", "bottom_right", BELT_OFFSET))     # 160：腰带常驻右下角
 		l.entries.append(entry(&"commissions", "top_left", COMMISSIONS_OFFSET))     # 336：委托小牌（没带委托不显示）
+		l.entries.append(entry(&"level", "top", LEVEL_OFFSET))     # 372：经验值管（顶端栏下面居中）
 	return l
 
 
@@ -73,7 +74,11 @@ const BELT_OFFSET := Vector2(-8, -8)
 ## 336：委托小牌在左上（顶端栏下面）
 const COMMISSIONS_OFFSET := Vector2(16, 16)
 ## 336：后来才加的件 —— 旧布局文件里没有就按默认补上（不升 [constant VERSION]，玩家摆过的别的件照旧）
-const ADDED_LATER: Array[StringName] = [&"commissions", &"meal"]
+const ADDED_LATER: Array[StringName] = [&"commissions", &"meal", &"level"]
+## 372：经验值管在顶端栏正下方
+const LEVEL_OFFSET := Vector2(0, 6)
+## 372：浮在地图上面的件：不算进地图要躲开的上边（[method HudHost.top_inset]）
+const FLOATS: Array[StringName] = [&"level"]
 const CORNER_OFFSET := Vector2(16, -16)     # 作者 2026-10-13：图例往右上挪一点，说明文字不贴边框
 
 

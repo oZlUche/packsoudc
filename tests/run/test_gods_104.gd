@@ -91,15 +91,14 @@ static func run_deeds(t: TestCase) -> void:
 	t.eq(_gain(hunt, &"place_item", {"tags": ["beast_part"], "rarity": 3, "first_in_run": true}), 9, "首次置入稀有度 3 的兽材 +9（250：战利品并进兽材）")
 	t.eq(_gain(hunt, &"place_item", {"tags": ["beast_part"], "rarity": 3, "first_in_run": false}), 0, "再置入同种不给")
 	t.eq(_gain(hunt, &"place_item", {"tags": ["weapon"], "rarity": 3, "first_in_run": true}), 0, "不是兽材不给")
-	# 信仰重构 C 的新数据：打赢 6、输了不给；机制次数另给
+	# 372：打赢那一份改成通用经验值（不在神的账上）；机制次数照给
 	var defs := FaithDef.load_all()
 	for fid in [&"skill", &"hunt", &"earth"]:
 		var d: FaithDef = defs[fid]
-		t.eq(_gain(d, &"battle", {"won": true, "node_type": "battle", "mechanic": {}}), 6, "%s：打赢 +6" % fid)
-		t.eq(_gain(d, &"battle", {"won": false, "node_type": "elite", "mechanic": {}}), 0, "%s：输了不给胜利分" % fid)
+		t.eq(_gain(d, &"battle", {"won": true, "node_type": "battle", "mechanic": {}}), 0, "%s：光打赢不记神的账" % fid)
 	t.eq(_gain(defs[&"skill"], &"battle", {"won": false, "mechanic": {"skill_momentum": 3}}), 4, "技巧：输了也保留攒到的巧劲 +2 +2")
-	t.eq(_gain(defs[&"hunt"], &"battle", {"won": true, "mechanic": {"hunt_stage1": 1}}), 8, "狩猎：打赢 6 + 拆到第一档 2")
-	t.eq(_gain(defs[&"earth"], &"battle", {"won": true, "mechanic": {"earth_support": 2}}), 10, "大地：打赢 6 + 两件受承托 2 + 2")
+	t.eq(_gain(defs[&"hunt"], &"battle", {"won": true, "mechanic": {"hunt_stage1": 1}}), 2, "狩猎：拆到第一档 2")
+	t.eq(_gain(defs[&"earth"], &"battle", {"won": true, "mechanic": {"earth_support": 2}}), 4, "大地：两件受承托 2 + 2")
 	# 往返
 	var text := ContentExporter.to_json(ContentExporter.dump(defs[&"skill"]))
 	var back := ContentImporter.import_faith(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())
@@ -361,7 +360,7 @@ static func run_gods_table(t: TestCase) -> void:
 	var table := GodsTable.fields(sheets, problems)
 	t.check(problems.is_empty(), "表里没有看不懂的：%s" % "；".join(problems))
 	t.eq(table.size(), 7, "七位神")
-	t.eq((table.get("skill", {}) as Dictionary).get("thresholds", []), [20, 60, 120], "技巧之神三阶 20 / 60 / 120（信仰重构 C）")
+	t.eq((table.get("skill", {}) as Dictionary).get("thresholds", []), [42, 117, 217], "技巧之神三阶 42 / 117 / 217（372）")
 	var check := GodsTable.check()
 	t.check(check.is_empty(), "表与 JSON 一致：%s" % "；".join(check))
 	# 改一处就红

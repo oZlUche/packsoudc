@@ -13,16 +13,11 @@
     "en": "Not worshipped in the Empire's rites, but common hunters follow this god."
   },
   "thresholds": [
-    20,
-    60,
-    120
+    42,
+    117,
+    217
   ],
   "deeds": [
-    {
-      "type": "battle",
-      "won_only": true,
-      "amount": 6
-    },
     {
       "type": "first_place",
       "tag": "beast_part",

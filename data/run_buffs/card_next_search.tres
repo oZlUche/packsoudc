@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_cp76u"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_1vkyf"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_fqpvr"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="4_fk3n4"]
+
+[resource]
+script = ExtResource("4_fk3n4")
+id = &"card_next_search"
+display_name = "细翻"
+display_names = {
+"en": "Rummage"
+}

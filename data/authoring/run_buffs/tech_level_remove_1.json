@@ -1,0 +1,14 @@
+{
+  "id": "tech_level_remove_1",
+  "display_name": "剔牌（科技）",
+  "display_names": {
+    "en": "Cull (Tech)"
+  },
+  "description": "升级选牌可删除 {level_removals_times} 次",
+  "scope": "META",
+  "effects": [
+    {
+      "type": "level_removals"
+    }
+  ]
+}

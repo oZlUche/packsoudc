@@ -100,7 +100,7 @@ static func run_tiers(t: TestCase) -> void:
 
 
 static func run_ledger(t: TestCase) -> void:
-	t.begin("信仰重构 D · 蛮神的战斗账：低血打赢记一笔、没打赢不记；打赢 6 + 反击 2 + 低血 2")
+	t.begin("信仰重构 D · 蛮神的战斗账：低血打赢记一笔、没打赢不记；反击 2 + 低血 2（372：打赢那一份改成通用经验值）")
 	var r := BattleResult.new()
 	var hp := BattleEvent.make(BattleEvent.RESOURCE_CHANGED, 100, 0, {"key": "hp", "delta": -10, "reason": "damage", "current": StatMath.from_float(20.0), "max": StatMath.from_float(100.0)})
 	var strike := BattleEvent.make(BattleEvent.EFFECT_RESOLVED, 50, 0, {"effect": SkillMomentum.MECHANIC, "key": "brute_strike", "count": 3})
@@ -112,5 +112,5 @@ static func run_ledger(t: TestCase) -> void:
 	var sum := 0
 	for d in def.deeds:
 		sum += (d as FaithDeed).gain(&"battle", won)
-	t.eq(sum, 10, "打赢 6 + 反击 2 + 低血打赢 2 = 每场上限 10")
-	t.eq(def.thresholds, [20, 60, 120] as Array[int], "三阶 20 / 60 / 120")
+	t.eq(sum, 4, "反击 2 + 低血打赢 2 = 每场上限 4")
+	t.eq(def.thresholds, [42, 117, 217] as Array[int], "三阶 42 / 117 / 217")

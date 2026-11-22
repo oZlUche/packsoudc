@@ -118,9 +118,9 @@ static func frame_altar_stele(t: TestCase, root: Window) -> void:
 	screen.say("一")
 	t.check(screen.notice_layer()._col.offset_left > 186.0, "卷从碑顶右沿外起排")
 	UiText.lang = "en"
-	t.eq(UiText.tn("log.offered", 1) % [1, "X", 4], "Offered 1 item, X +4 Faith", "英文单数")
+	t.eq(UiText.tn("log.offered", 1) % [1, "X", 4], "Offered 1 item to X: XP +4", "英文单数")
 	UiText.lang = "zh"
-	f.run.faith_power.add_points(&"brute", 100)
+	f.run.faith_power.add_points(&"brute", 120)     # 372：第二道门槛 117
 	for b: Button in screen._action_btns:
 		t.eq((b as StoneChip)._colors["disabled"], screen.STELE_DISABLED_INK, "碑面上的灰签用浅字")
 	screen.free()

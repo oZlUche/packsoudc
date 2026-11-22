@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_3ysh5"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ymxaa"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="3_w2is1"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="4_fts4y"]
+
+[resource]
+script = ExtResource("4_fts4y")
+id = &"card_echo_faster"
+display_name = "回响·疾"
+display_names = {
+"en": "Swift Echo"
+}

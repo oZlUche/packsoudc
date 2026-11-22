@@ -36,8 +36,8 @@ static func run_faith_files(t: TestCase) -> void:
 	var brute: FaithDef = defs.get(&"brute", null)
 	if brute == null:
 		return
-	t.eq(brute.thresholds, [20, 60, 120] as Array[int], "蛮神阈值 20 / 60 / 120（信仰重构 D）")
-	t.eq(brute.deeds.size(), 3, "三条增长方式（信仰重构 D：打赢、反击、低血打赢）")
+	t.eq(brute.thresholds, [42, 117, 217] as Array[int], "蛮神阈值 42 / 117 / 217（372：升 5 / 10 / 15 级的经验值）")
+	t.eq(brute.deeds.size(), 2, "两条增长方式（反击、低血打赢；372 起打赢是通用经验值）")
 	t.eq(brute.offerings.size(), 3, "三条献祭规矩（250：骨与血肉并成兽材）")
 	t.eq(brute.perks.size(), 7, "七条效果（信仰重构 D：怒气一阶一行 4 条，加祈求赐福、献祭生命上限、秒杀）")
 	var db := ItemDatabase.new()

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_pm1qt"]
+[ext_resource type="Script" path="res://core/run/effects/level_rerolls.gd" id="2_y08r2"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_ui0ou"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_f1q26"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_hoyvp"]
+
+[sub_resource type="Resource" id="Resource_xlosu"]
+script = ExtResource("2_y08r2")
+
+[resource]
+script = ExtResource("5_hoyvp")
+id = &"tech_level_reroll_1"
+display_name = "换牌（科技）"
+display_names = {
+"en": "Reroll (Tech)"
+}
+description = "升级选牌可刷新 {level_rerolls_times} 次"
+scope = 0
+effects = Array[ExtResource("1_pm1qt")]([SubResource("Resource_xlosu")])

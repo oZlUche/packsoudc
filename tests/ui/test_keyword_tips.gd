@@ -7,7 +7,7 @@ extends RefCounted
 const NS := preload("res://tests/ui/test_node_screens.gd")
 
 ## 作者点名不弹的固定词条
-const QUIET_TERMS: Array[String] = ["自发", "开战时", "出手时", "受伤时", "层数够时", "资源低于时", "冷却", "耐力", "耗耐力", "信力"]
+const QUIET_TERMS: Array[String] = ["自发", "开战时", "出手时", "受伤时", "层数够时", "资源低于时", "冷却", "耐力", "耗耐力", "经验值"]     # 372：信力改名经验值
 ## 带规则、照弹的固定词条
 const LOUD_TERMS: Array[String] = ["急速", "格挡", "护甲", "直接伤害", "永续", "叠层", "合成", "增益槽", "受益槽", "中毒", "流血"]
 ## 作者点名不弹的标签

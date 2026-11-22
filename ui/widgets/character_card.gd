@@ -2,6 +2,7 @@
 ##
 ## 身体三行（生命上限 / 耐力上限 / 耐力恢复/秒）= [method RunState.effective_baseline]（局外加成、信仰、难度、角色被动乘完之后的数），
 ## 比角色本身的基线多或少就在数后面写 ▲N / ▼N，停上去看是谁给的；下面两条被动（名字 + 现成的一句说明，写全文：英文按词折行，卡跟着长高）。
+## 372：这一局拿到的（地图 buff、升级的牌）抬高了的数写成黄字（基础的白字）；最下面列这一局的牌（名字 ×张数）。
 ## 画法读 `assets/ui/stats_panel/`（`card_wax` 九宫底板、`layout.json` 的卡内坐标与字色，美术设计出）；行间刻线由代码画
 class_name CharacterCard
 extends Control
@@ -38,6 +39,9 @@ var _rows: Array[Dictionary] = []
 var _passives: Array[Dictionary] = []
 var _style: Dictionary = {}
 var _hover := -1
+## 372：这一局的牌（折好的行；没拿牌是空的）与那一节的顶
+var _card_lines: Array[String] = []
+var _cards_top := 0.0
 
 
 func _init() -> void:
@@ -67,6 +71,17 @@ func refresh(run: RunState) -> void:
 		p["top"] = top
 		p["height"] = PASSIVE_HEAD + SUMMARY_LINE_H * (p["lines"] as Array).size() + PASSIVE_PAD
 		top += float(p["height"])
+	_card_lines.clear()
+	_cards_top = top
+	var lv := LevelModule.of(run) if run != null else null
+	if lv != null and not lv.taken_list().is_empty():
+		var names: Array[String] = []
+		for t in lv.taken_list():
+			var def: RunBuffDef = run.buff_defs.get(t["id"], null)
+			var n := Names.of(def) if def != null else String(t["id"])
+			names.append(UiText.t("card.card_n") % [n, int(t["count"])] if int(t["count"]) > 1 else n)
+		_card_lines = wrap_lines(UiText.t("hud.buff_sep").join(names), UiPalette.cjk_font(), SUMMARY_SIZE, SUMMARY_W, SUMMARY_LINES)
+		top += PASSIVE_HEAD + SUMMARY_LINE_H * _card_lines.size() + PASSIVE_PAD
 	custom_minimum_size = Vector2(SIZE.x, maxf(SIZE.y, top + BOTTOM_PAD))
 	size = custom_minimum_size
 	queue_redraw()
@@ -75,6 +90,11 @@ func refresh(run: RunState) -> void:
 ## 测试看：第 i 行 {"value", "delta", "tip"}、被动名
 func row(i: int) -> Dictionary:
 	return _rows[i] if i >= 0 and i < _rows.size() else {}
+
+
+## 测试看：这一局的牌那几行
+func card_lines() -> Array[String]:
+	return _card_lines
 
 
 func passive_names() -> Array[String]:
@@ -120,7 +140,7 @@ static func sources(run: RunState, stat: StringName) -> Array[Dictionary]:
 	var own := run.player_baseline if run.player_baseline != null else CombatantBaseline.default_baseline()
 	var base := _stat(own, stat)
 	for d in run.active_buff_defs():
-		_add_source(out, Names.of(d), _delta(base, RunBuffs.context([d]), stat))
+		_add_source(out, Names.of(d), _delta(base, RunBuffs.context([d]), stat), (d as RunBuffDef).is_map())
 	if run.difficulty != null:
 		var ctx := RunContext.new()
 		for e in run.difficulty.run_effects():
@@ -139,9 +159,15 @@ static func sources(run: RunState, stat: StringName) -> Array[Dictionary]:
 	return out
 
 
-static func _add_source(out: Array[Dictionary], p_name: String, delta: float) -> void:
-	if not is_zero_approx(delta):
-		out.append({"name": p_name, "delta": delta})
+## [param in_run]：这一局里拿到的（地图 buff、升级的牌），数上黄字
+static func _add_source(out: Array[Dictionary], p_name: String, delta: float, in_run: bool = false) -> void:
+	if is_zero_approx(delta):
+		return
+	for s in out:
+		if String(s["name"]) == p_name and bool(s.get("in_run", false)) == in_run:
+			s["delta"] = float(s["delta"]) + delta     # 同一张牌拿了几张：合成一行
+			return
+	out.append({"name": p_name, "delta": delta, "in_run": in_run})
 
 
 ## 一份 [RunContext] 给这项加了多少（倍率按角色基线算，再加平加）
@@ -166,10 +192,13 @@ func _row(run: RunState, stat: StringName, value: float, own: float) -> Dictiona
 	var delta := snappedf(value - own, 0.1) if regen else float(roundi(value) - roundi(own))
 	var lines: Array[String] = [UiText.t("card.tip_line") % [UiText.t(ROW_KEYS[stat]), _num(shown, regen)],
 		UiText.t("card.tip_base") % _num(snappedf(own, 0.1) if regen else float(roundi(own)), regen)]
+	var boosted := 0.0
 	for s in sources(run, stat):
+		if bool(s.get("in_run", false)):
+			boosted += float(s["delta"])
 		lines.append(UiText.t("card.tip_source") % [String(s["name"]), _signed(snappedf(float(s["delta"]), 0.1) if regen else float(roundi(float(s["delta"]))), regen)])
 	return {"label": UiText.t(ROW_KEYS[stat]), "unit": "", "value": _num(shown, regen),
-		"delta": delta, "regen": regen, "tip": "\n".join(lines)}
+		"delta": delta, "regen": regen, "boosted": boosted > 0.0, "tip": "\n".join(lines)}
 
 
 static func _num(v: float, decimal: bool) -> String:
@@ -209,7 +238,7 @@ func _draw() -> void:
 			x -= 4.0
 		var vs := String(r["value"])
 		x -= bold.get_string_size(vs, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-		draw_string(bold, Vector2(x, base_y), vs, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, value)
+		draw_string(bold, Vector2(x, base_y), vs, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, _color("boosted", UiPalette.VAL) if bool(r.get("boosted", false)) else value)
 	for y in DIVIDER_Y:
 		_rule(y)
 	for i in _passives.size():
@@ -221,6 +250,11 @@ func _draw() -> void:
 		var lines: Array = p["lines"]
 		for j in lines.size():
 			draw_string(regular, Vector2(LABEL_X, top + PASSIVE_HEAD + 9.0 + SUMMARY_LINE_H * j), String(lines[j]), HORIZONTAL_ALIGNMENT_LEFT, -1, SUMMARY_SIZE, dim)
+	if not _card_lines.is_empty():
+		_rule(_cards_top)
+		draw_string(bold, Vector2(LABEL_X, _cards_top + 18.0), UiText.t("card.cards"), HORIZONTAL_ALIGNMENT_LEFT, SUMMARY_W, 15, value)
+		for j in _card_lines.size():
+			draw_string(regular, Vector2(LABEL_X, _cards_top + PASSIVE_HEAD + 9.0 + SUMMARY_LINE_H * j), _card_lines[j], HORIZONTAL_ALIGNMENT_LEFT, -1, SUMMARY_SIZE, _color("boosted", UiPalette.VAL))
 
 
 ## 行间刻线：`styles.<材质>.rule` 的几条 1 px 横线叠出来

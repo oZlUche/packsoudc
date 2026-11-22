@@ -74,6 +74,8 @@ static func rows_for(r: RunResult, lit: int) -> Array[Dictionary]:
 	out.append(_num_row("lost", [r.battles_lost]))
 	out.append(_num_row("search_craft", [r.searches, r.crafts], "ledger.dot"))
 	out.append(_num_row("lit", [lit]))
+	if r.run_level > 1:
+		out.append(_num_row("level", [r.run_level], "ledger.level_fmt"))     # 372：这一局到了几级（1 级不写，老账单行数不变）
 	var carried := r.carried.size() if extracted else 0
 	var safe := r.safe_items.size()
 	if extracted and safe > 0:
@@ -106,6 +108,8 @@ static func rows_for(r: RunResult, lit: int) -> Array[Dictionary]:
 static func score_parts_text(r: RunResult) -> String:
 	var p := r.score_parts
 	var text := UiText.t("ledger.score_parts") % [int(p.get("loot", 0)), int(p.get("battle", 0)), int(p.get("explore", 0))]
+	if int(p.get("growth", 0)) > 0:
+		text += UiText.t("ledger.score_growth") % int(p["growth"])     # 372
 	var mult := float(p.get("mult", 1.0))
 	if mult != 1.0:
 		text += UiText.t("ledger.score_mult") % String.num(mult, 2).rstrip("0").rstrip(".")

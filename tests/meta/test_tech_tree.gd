@@ -194,7 +194,7 @@ static func run_first_tree(t: TestCase) -> void:
 	t.begin("118 / 319 · 两棵树：数值树六个节点两列、机制树十一个节点三列（幸运删了；C 批加换货、精英 / 首领奖励）；两树之间没有前置；每个 tech_run_buff 的 buff 都在且是局外的；两棵树都装得进羊皮内框")
 	var defs := GameFlow.load_techs()
 	var buffs := RunBuffs.load_all()
-	t.eq(defs.size(), 17, "十七个节点（319：幸运删了，C 批加三个）")
+	t.eq(defs.size(), 19, "十九个节点（319：幸运删了，C 批加三个；372 加换牌、剔牌）")
 	t.is_null(TechService.find(defs, &"luck"), "319：没有幸运")
 	for def in defs:
 		if def.effect is TechRunBuff:
@@ -207,7 +207,7 @@ static func run_first_tree(t: TestCase) -> void:
 	var stat := TechService.of_tree(defs, TechDef.TREE_STAT)
 	var mech := TechService.of_tree(defs, TechDef.TREE_MECHANISM)
 	t.eq(stat.size(), 6, "数值树：仓库、背囊、耐久、筋骨、扛重、不屈")
-	t.eq(mech.size(), 11, "机制树：行囊、细搜、侦察、精英 / 首领奖励、讨价、换货、高级货物、高级配方、秘银、法杖")
+	t.eq(mech.size(), 13, "机制树：行囊、细搜、侦察、精英 / 首领奖励、讨价、换货、高级货物、高级配方、秘银、法杖、换牌、剔牌")
 	var lay := TechService.layout(defs)
 	t.eq(lay[&"warehouse"], Vector2i(0, 0), "仓库扩建：数值树第 0 列根")
 	t.eq(lay[&"undaunted"], Vector2i(1, 2), "不屈 ← 筋骨：第 1 列第 2 层")

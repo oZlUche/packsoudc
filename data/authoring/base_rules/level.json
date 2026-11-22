@@ -1,0 +1,69 @@
+{
+  "id": "level",
+  "display_name": "局内成长",
+  "battle": {
+    "battle": 10,
+    "elite": 25,
+    "hunter": 20,
+    "core": 40
+  },
+  "cards": {
+    "card_stamina_flat": {
+      "kind": "stat"
+    },
+    "card_stamina_pct": {
+      "kind": "stat"
+    },
+    "card_hp_flat": {
+      "kind": "stat"
+    },
+    "card_hp_pct": {
+      "kind": "stat"
+    },
+    "card_regen": {
+      "kind": "stat"
+    },
+    "card_weapon_damage": {
+      "kind": "weapon",
+      "requires": "weapon"
+    },
+    "card_weapon_haste": {
+      "kind": "weapon",
+      "requires": "weapon"
+    },
+    "card_weapon_cost": {
+      "kind": "weapon",
+      "requires": "weapon"
+    },
+    "card_element_echo": {
+      "kind": "weapon",
+      "requires": "element",
+      "once": true,
+      "echo": "body"
+    },
+    "card_echo_faster": {
+      "kind": "weapon",
+      "after": "card_element_echo",
+      "echo": "faster"
+    },
+    "card_echo_stacks": {
+      "kind": "weapon",
+      "after": "card_element_echo",
+      "echo": "stacks",
+      "weight": 0.25
+    },
+    "card_carry": {
+      "kind": "explore"
+    },
+    "card_vitality": {
+      "kind": "explore"
+    },
+    "card_next_search": {
+      "kind": "explore",
+      "oneshot": "search"
+    },
+    "card_rest": {
+      "kind": "explore"
+    }
+  }
+}

@@ -10,11 +10,11 @@
 [ext_resource type="Script" path="res://core/battle/triggers/on_schedule.gd" id="8_2ds32"]
 [ext_resource type="Script" path="res://core/battle/buff_def.gd" id="9_do4c6"]
 
-[sub_resource type="Resource" id="Resource_o7qgq"]
+[sub_resource type="Resource" id="Resource_0d28e"]
 script = ExtResource("5_dgiig")
 seconds = 1.0
 
-[sub_resource type="Resource" id="Resource_01y6v"]
+[sub_resource type="Resource" id="Resource_1tqh6"]
 script = ExtResource("7_ljabf")
 target = 1
 damage_type = &"fire"
@@ -22,14 +22,14 @@ amount = 1.0
 damage_stat = &""
 per_stack = true
 
-[sub_resource type="Resource" id="Resource_mbwiu"]
+[sub_resource type="Resource" id="Resource_2gfi1"]
 script = ExtResource("8_2ds32")
 
-[sub_resource type="Resource" id="Resource_4wbuu"]
+[sub_resource type="Resource" id="Resource_guw7f"]
 script = ExtResource("4_guw7f")
-trigger = SubResource("Resource_mbwiu")
-cadence = SubResource("Resource_o7qgq")
-effects = Array[ExtResource("3_2gfi1")]([SubResource("Resource_01y6v")])
+trigger = SubResource("Resource_2gfi1")
+cadence = SubResource("Resource_0d28e")
+effects = Array[ExtResource("3_2gfi1")]([SubResource("Resource_1tqh6")])
 
 [resource]
 script = ExtResource("9_do4c6")
@@ -40,5 +40,5 @@ display_names = {
 }
 is_debuff = true
 seconds_per_stack = 1
-rules = Array[ExtResource("4_guw7f")]([SubResource("Resource_4wbuu")])
+rules = Array[ExtResource("4_guw7f")]([SubResource("Resource_guw7f")])
 heal_cut = 100

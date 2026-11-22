@@ -93,6 +93,7 @@ func _after_open() -> void:
 	if flow.rules_card_pending():
 		show_rules(true)     # 091：第一次进这一章：本图规则卡
 	_maybe_coach.call_deferred()     # 166：开场没有事件压着就直接放
+	_maybe_level_pick.call_deferred()     # 372：欠着选牌就弹
 
 
 func refresh() -> void:
@@ -382,6 +383,9 @@ func escape() -> bool:
 		return true
 	if _ask != null:
 		return true     # 240：开场一问得二选一，Esc 不替玩家选
+	if _level_pick != null:
+		close_level_pick()     # 372：先收起来，点经验值管再开
+		return true
 	if _skip != null:
 		close_skip_tutorial()     # 跳过确认页：Esc = 接着学
 		return true
@@ -693,6 +697,9 @@ func _adopt() -> void:
 		_note("　原地等待：%s −%d" % [Glossary.COUNTDOWN_WORD, actions])
 		_after_move())
 	_run.travel.refused.connect(_on_refused)
+	var lvm := LevelModule.of(_run)
+	if lvm != null:
+		lvm.leveled.connect(func(_lv: int): _maybe_level_pick.call_deferred())     # 372：在地图上升了级（走进更深一环）
 	var problems: Array[String] = []
 	_hud_host.debug = debug_mode()     # 150 补 2
 	_hud_host.setup(_run, self, HudLayout.load_for("map", problems))     # 150
@@ -923,6 +930,7 @@ func _after_move() -> void:
 	_view.queue_redraw()
 	_refresh_hud()
 	_refresh_hunter_marks()
+	_maybe_level_pick()     # 372：走进更深一环升了级
 	_reopen_btn.disabled = not flow.can_reopen()
 	_reopen_btn.tooltip_text = UiText.t("map.lens_tip") % UiText.t("map.reopen_hint" if flow.can_reopen() else "map.reopen_none")
 
@@ -1444,6 +1452,68 @@ func coach_steps() -> Array:
 
 
 ## 第一次露出地图（开场事件关掉、规则卡收起、地图在最上面）时放一次；放过了记在局外（[member MetaState.coach_seen]）
+#region 372：升级选牌（叠在地图上，不是单独一屏）
+var _level_pick: Control = null
+var _level_pick_panel: LevelPickPanel = null
+## 玩家按 Esc 收起时欠着几次：再升级（欠得更多）才自己弹
+var _level_pick_dismissed := 0
+
+
+func _maybe_level_pick() -> void:
+	var lv := LevelModule.of(_run)
+	if lv == null or lv.pending() <= 0 or _level_pick != null or lv.pending() <= _level_pick_dismissed:
+		return
+	if flow.screen != GameFlow.Screen.MAP or _coach != null or _rules != null or _ask != null or _pause != null or _confirm != null or revealing():
+		return
+	if not is_visible_in_tree():
+		return
+	show_level_pick()
+
+
+## 打开选牌（经验值管点一下也走这里）。不欠选牌返回 false
+func show_level_pick() -> bool:
+	var lv := LevelModule.of(_run)
+	if lv == null or lv.pending() <= 0 or _level_pick != null:
+		return false
+	_level_pick_dismissed = 0
+	_level_pick = _shade(0.72, true)
+	_level_pick.name = "LevelPick"
+	var frame := _modal_panel(UiText.t("level.title") % lv.level(), 28)
+	_level_pick.get_child(0).add_child(frame)
+	var panel := LevelPickPanel.new(lv)
+	_level_pick_panel = panel
+	frame.content.add_child(panel)
+	panel.done.connect(func():
+		_level_pick_dismissed = 0
+		_drop_level_pick())
+	return true
+
+
+func close_level_pick() -> void:
+	var lv := LevelModule.of(_run)
+	_level_pick_dismissed = lv.pending() if lv != null else 0
+	_drop_level_pick()
+
+
+func _drop_level_pick() -> void:
+	if _level_pick == null:
+		return
+	_level_pick.queue_free()
+	_level_pick = null
+	_level_pick_panel = null
+	_refresh_hud()
+
+
+func level_pick_open() -> bool:
+	return _level_pick != null
+
+
+## 测试用：选牌那块
+func level_pick_panel() -> LevelPickPanel:
+	return _level_pick_panel
+#endregion
+
+
 func _maybe_coach() -> void:
 	if _coach != null or _run == null or _run.chapter == null or _run.chapter.coach_for(&"map") == &"":
 		return

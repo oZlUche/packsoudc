@@ -113,10 +113,10 @@ static func run_food_and_guard(t: TestCase) -> void:
 
 
 static func run_ledger(t: TestCase) -> void:
-	t.begin("信仰重构 D · 自然的信力：打赢 6；治疗够数 +2；放出过生息 +2；三阶 20 / 60 / 120")
+	t.begin("信仰重构 D · 自然的经验值：治疗够数 +2；放出过生息 +2（372：打赢那一份改成通用经验值）；三阶 42 / 117 / 217")
 	var def := load("res://data/faiths/nature.tres") as FaithDef
 	var n := 0
 	for d in def.deeds:
 		n += (d as FaithDeed).gain(&"battle", {"won": true, "mechanic": {"nature_heal": 1, "nature_release": 2}, "dealt": {}, "taken": {}, "fired_items": [], "healed": 0.0})
-	t.eq(n, 10, "6 + 2 + 2")
-	t.eq(def.thresholds, [20, 60, 120] as Array[int], "三阶")
+	t.eq(n, 4, "2 + 2")
+	t.eq(def.thresholds, [42, 117, 217] as Array[int], "三阶")

@@ -1,0 +1,15 @@
+{
+  "id": "card_stamina_pct",
+  "display_name": "绵长",
+  "display_names": {
+    "en": "Endurance"
+  },
+  "effects": [
+    {
+      "type": "stat_bonus",
+      "stat": "max_stamina",
+      "mode": "MULT",
+      "amount": 4.0
+    }
+  ]
+}

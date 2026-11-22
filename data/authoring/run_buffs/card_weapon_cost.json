@@ -1,0 +1,22 @@
+{
+  "id": "card_weapon_cost",
+  "display_name": "省力",
+  "display_names": {
+    "en": "Economy"
+  },
+  "effects": [
+    {
+      "type": "tag_mods",
+      "tags": [
+        "weapon"
+      ],
+      "mods": [
+        {
+          "stat": "stamina_cost",
+          "mode": "MULT",
+          "amount": -3.0
+        }
+      ]
+    }
+  ]
+}

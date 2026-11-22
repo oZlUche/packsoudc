@@ -234,7 +234,8 @@ static func run_compiler_tiers(t: TestCase) -> void:
 	t.check(s.equip(mine.uid), "放上棋盘")
 	var r0 := s.compile_player().item_of(mine.uid).rules.size()
 	if not def.thresholds.is_empty():
-		s.faith_power.points[String(fid)] = def.thresholds[-1]
+		s.selected_faith = fid     # 372：阶读这一局的经验值，只认选了的那位神
+		LevelModule.of(s).xp = float(def.thresholds[-1])
 		t.eq(s.faith_power.tiers().get(tag, 0), def.thresholds.size(), "tiers() 报最高阶")
 		var r1 := s.compile_player().item_of(mine.uid).rules.size()
 		var extra := 0

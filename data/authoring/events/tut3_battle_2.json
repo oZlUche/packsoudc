@@ -4,9 +4,9 @@
   "titles": {
     "en": "{enemy:brute}"
   },
-  "text": "一个{enemy:brute}挡在路上，皮糙肉厚。\n\n你现在信{faith}，第 {faith_tier} 阶，信力 {faith_points}。到了第一阶，血掉得越多，你打得越狠，留意回放里的数字。打完看看顶端栏的徽记涨了多少。",
+  "text": "一个{enemy:brute}挡在路上，皮糙肉厚。\n\n你现在信{faith}，第 {faith_tier} 阶，经验值 {faith_points}。到了第一阶，血掉得越多，你打得越狠，留意回放里的数字。打完看看顶端栏的徽记涨了多少。",
   "texts": {
-    "en": "A {enemy:brute} blocks the road. Thick hide.\n\nYou follow {faith}: Rank {faith_tier}, {faith_points} Faith. From Rank one, the more Health you lose, the harder you hit. Watch the numbers in the replay. Afterwards, check the emblem in the top bar to see how much you gained."
+    "en": "A {enemy:brute} blocks the road. Thick hide.\n\nYou follow {faith}: Rank {faith_tier}, {faith_points} XP. From Rank one, the more Health you lose, the harder you hit. Watch the numbers in the replay. Afterwards, check the emblem in the top bar to see how much you gained."
   },
   "options": [
     {

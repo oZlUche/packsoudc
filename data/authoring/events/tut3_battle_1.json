@@ -4,9 +4,9 @@
   "titles": {
     "en": "{enemy:raider}"
   },
-  "text": "前面有个{enemy:raider}，一把小刀，不难对付。\n\n信力是这样涨的：{faith:brute}看你打赢，赢一场 {faith_deed:brute:battle:amount} 信力；挨了打再用【怒气】打回去、低血打赢，各再多给一点 —— 输了没有打赢那份，已经做到的照给。\n\n打完把鼠标停到顶端栏的徽记上看看。",
+  "text": "前面有个{enemy:raider}，一把小刀，不难对付。\n\n经验值是这样涨的：打赢一场就涨；奉了{faith:brute}，挨了打再用【怒气】打回去、低血打赢，各再多给一点 —— 输了没有打赢那份，已经做到的照给。\n\n打完把鼠标停到顶端栏的徽记上看看。",
   "texts": {
-    "en": "A {enemy:raider} up ahead. One small knife. Not much trouble.\n\nHere's how Faith grows. {faith:brute} watches you win: {faith_deed:brute:battle:amount} Faith per battle won. Taking hits and striking back with Rage, or winning at low Health, each add a little more. A loss gives no win bonus, but what you did still counts.\n\nAfter the fight, hover over the emblem in the top bar and have a look."
+    "en": "A {enemy:raider} up ahead. One small knife. Not much trouble.\n\nHere's how XP grows. Every battle won adds some. While you follow {faith:brute}, taking hits and striking back with Rage, or winning at low Health, each add a little more. A loss gives no win bonus, but what you did still counts.\n\nAfter the fight, hover over the emblem in the top bar and have a look."
   },
   "options": [
     {

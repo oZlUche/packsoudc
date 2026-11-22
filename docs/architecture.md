@@ -487,12 +487,12 @@ func move(from: GridInventory, uid: int, to: GridInventory,
 - `FaithPower`（`run.faith_power`）每个信仰一个池子，只给此刻激活的信仰记；`RunState` 接线把一局里的事喂进去（`GridInventory.placed`、`Wallet.changed`、`battle_finished`、`travel.moved`、搜索会话的 `searched`、`NodeEvents.option_chosen`）。跟着存档走。
 - 道具的额外功能写在道具上：`ItemDef.faith_bonuses`（`FaithBonus`：`tier`、`mods`、`rules`），只许信仰道具有；`BattleCompiler.compile` 多两个参数 `faith_tiers`（标签 → 阶）与 `faith_points`（标签 → 点数，095 的 scaled 模式用），tier ≤ 现在的并进那件道具 —— 仍是纯函数。
   编译之后 `RunState.compile_player` 还会套一次 `FaithPerk`（093，编译期钩子改 spec），所以战斗单位 = 编译器输出 + perk；这一层在 097 里列为待收口。
-- **信力与祈愿分开**（信仰重构 B，报告 330）：`FaithPower.points` 是信力（devotion，只增不减，阶只看它），`FaithPower.prayer` 是祈愿（可花，`prayer_cap` 封顶，默认 `PRAYER_CAP_DEFAULT` = 100）。
+- **经验值与等级**（报告 372 第一批，379）：信力改名经验值，一局一池，存在 `LevelModule`（`modules.level`，`core/run/modules/level_module.gd`），规则在 `LevelRules`（`base_rules/level`：8 + n 的等级表、上限 30、各来源点数、难度系数、15 张牌的牌池）。来源：`battle_finished` 打赢按类别、`travel.moved` 第一次到更深一环、神坛献祭（`offer_at` 每座封顶）、神坛祷告（`AltarPray` 后果 + `PrayersLeft` 条件，钩子 `level_pray` / `level_prayers_left`）、事件 `GainXp`、各神行为（`FaithPower._add` 转进来）。`FaithPower.points_of` 有等级模块时读这一池（哪位神都读它），阶与神的阈值照旧比。每级三选一：`offer / pick / reroll / remove`，抽牌种子 `run_seed:level_cards:draws`；拿到的牌由 `defs()` 交给 `RunState.active_buff_defs()`，元素回响拼成一条代码造的战斗规则（`EchoStatus`）。刷新 / 删除次数是 `RunContext.level_rerolls / level_removals`（科技换牌、剔牌）。地图屏的选牌是叠层（`LevelPickPanel`），经验值管是读数组件 `level`（浮在地图上，不算进 `top_inset`）。
+- ~~信力与祈愿分开~~（信仰重构 B，报告 330；372 起祈愿整个删掉，一局档 v7 → v8 把选的那位神的信力 × 2 记成经验值）：`FaithPower.points` 只在没有等级模块时用。
 - **单位级信仰机制**（信仰重构 C，报告 331）：一位神的整套战斗机制是一条规则 —— 扳机 `FaithMechanicTrigger`（订阅几条事件、全部放行），效果按事件名分流（`SkillMomentum` / `HuntDismantle` / `EarthSupport`，`core/battle/faith/`），状态在 `RuleContext.state()`。perk 按 `part` 一阶一行，只有 part 0 编译。大地承托编译期按摆放算（`EarthSupport.layers`，纯函数），修饰按 uid 放 `CompileInput.item_mods`，编译器按 uid 升序并入。战记 `EFFECT_RESOLVED{effect: faith_mechanic}`，战斗账 `battle_summary.mechanic` 喂 `MechanicDeed`；`RunState.last_mechanic` 交给紧接着的掉落（`LootContext.battle_notes`）。
   信仰重构 D（报告 332）：扳机多了 `pulse`，频率层用 `FaithPulseCadence`（事件总放行，另按战斗时间轴整格自发一次，`event` 为空），日神窗口与自然周期治疗靠它；效果 `BruteRage` / `SunCycle` / `NatureRegrowth`。`MechanicDeed.per_count / cap` 按次给并封顶；`battle_summary.mechanic.low_hp_won`；秒杀不记战斗信力。
   信仰重构 E（报告 333）：六神对照台架 `tools/faith_bench.gd`（同一批流派木桩只差奉哪位神、几阶，对敌人池每档固定种子打，记胜率、时长、机制首触发与次数、每场信力）；各 perk 有按阶直接编的入口（`rule_at` / `compile_at`），台架与测试不必造一局。
-  祈愿来源：`battle_finished` 有效战斗 `PRAYER_PER_BATTLE`（秒杀不给）、`AltarModule.offer` min(2V, 余量)。只有 `spend_prayer` 能花（祈求赐福、秒杀），不再有扣信力的路径。
-  存档键 `faith_progress` {神: {devotion, prayer}}（一局档 v6；v5 → v6 拆成 devotion = P、prayer = min(P, 100)）。节奏表的行多 `prayer` / `prayer_total`。
+  372 起没有祈愿：祈求赐福不花东西（神坛二选一，每座最多一次），秒杀只花体力。存档键 `faith_power`（一局档 v8；v7 的 `faith_progress` 迁进 `modules.level.xp`）。
 - 切换信仰不清别的池子；继承（作者说可以）还没做。不信者、新教留空（作者定）。
 - **信物里必然有一枚 1 格护符**（104，作者定）：每位诸神至少一件 1 格、带 `faith_anchor` 的道具（新教是占位，不查）；导入器批量导入完了守（`ContentImporter.validate_faith_charms`）。
 - 104：「首次」「获得」这类判断**不放在行为构件里**（构件是共享的 Resource，不能记状态）：`RunState` 记 `owned_uids`（对过账的实例）/ `acquired_ids` / `placed_ids`（种类），

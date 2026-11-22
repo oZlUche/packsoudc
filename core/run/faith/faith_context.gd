@@ -11,10 +11,8 @@ var effective: StringName = &""
 var connection: StringName = FaithState.NONE
 ## 有效信仰现在第几阶；没有有效信仰 = -1
 var tier: int = -1
-## 选的那位神现在多少信力（联系中断时也照写，界面要看）
+## 选的那位神现在按多少经验值算阶（联系中断时也照写，界面要看）
 var points: int = 0
-## 信仰重构 B：选的那位神现在多少祈愿（可花的余额）
-var prayer: int = 0
 
 
 ## 联系中断：选了神，但棋盘上没有它的有效信物

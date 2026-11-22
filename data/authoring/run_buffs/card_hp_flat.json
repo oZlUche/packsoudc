@@ -1,0 +1,13 @@
+{
+  "id": "card_hp_flat",
+  "display_name": "体魄",
+  "display_names": {
+    "en": "Brawn"
+  },
+  "effects": [
+    {
+      "type": "stat_bonus",
+      "amount": 3.0
+    }
+  ]
+}

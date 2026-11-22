@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="TechDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/techs/tech_run_buff.gd" id="1_qudi7"]
+[ext_resource type="Script" path="res://core/meta/tech_def.gd" id="2_0jqs3"]
+[ext_resource type="Script" path="res://core/meta/tech_tier.gd" id="3_nj14p"]
+
+[sub_resource type="Resource" id="Resource_p7i1x"]
+script = ExtResource("1_qudi7")
+buffs = Array[StringName]([&"tech_level_reroll_1", &"tech_level_reroll_2", &"tech_level_reroll_3"])
+
+[sub_resource type="Resource" id="Resource_qh5ye"]
+script = ExtResource("3_nj14p")
+insight = 1
+
+[sub_resource type="Resource" id="Resource_e43j4"]
+script = ExtResource("3_nj14p")
+insight = 2
+
+[sub_resource type="Resource" id="Resource_astk6"]
+script = ExtResource("3_nj14p")
+insight = 3
+
+[resource]
+script = ExtResource("2_0jqs3")
+id = &"level_reroll"
+display_name = "换牌"
+display_names = {
+"en": "Reroll"
+}
+column = 3
+description = "升级选牌时可以把三张牌一起换一批，级数越高一局能换越多次。"
+descriptions = {
+"en": "When you level up, swap all three cards for a new set; higher levels allow more swaps per run."
+}
+tree = &"mechanism"
+effect = SubResource("Resource_p7i1x")
+tiers = Array[ExtResource("3_nj14p")]([SubResource("Resource_qh5ye"), SubResource("Resource_e43j4"), SubResource("Resource_astk6")])

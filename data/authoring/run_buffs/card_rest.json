@@ -1,0 +1,12 @@
+{
+  "id": "card_rest",
+  "display_name": "安歇",
+  "display_names": {
+    "en": "Sound Sleep"
+  },
+  "effects": [
+    {
+      "type": "rest_bonus"
+    }
+  ]
+}

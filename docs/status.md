@@ -23,7 +23,7 @@
 | 开局预设 | 第二页中栏竖排挂牌：免费（强攻 / 坚守）→ 收费（游猎 / 枪盾 / 双刃，出发时按清单定价之和付钱、算带入预算）→ 高级（制式 / 精锐，出发时消耗一张对应的券）；序章只列免费；核心 BOSS 打赢必掉一张券（魔法废墟制式、机关沙漏精锐） | `GameFlow.presets / preset_price / begin`、`LoadoutDef.tier` | 285（v5.33、v5.44） |
 | NPC | 局内商店店主（哈基姆）、散货摊主（德米特里）、铁匠（布伦努斯）；点头像出纸条，每人六句提示 + 通用三句（按键名走 `[key=…]` 引用）；铁匠铺 3 级后铁匠给【破晓的信物】，之后留白 | `NpcChatter`（`core/meta/npcs/npc_chatter.gd`）、`NpcBadge`、`InputKeys` | 282（v5.29、v5.32）、284（v5.36、v5.45） |
 | 地图 | 魔法废墟：环形生成，三档规模；机关沙漏：分层格阵，一左一右两个出生点、核心在中轴、钟房在其下；每章自带材料节点（出征「倾向」已删）；高危区画成一片 | `RingMapGenerator`、`LatticeMapGenerator`、`DangerZones` | 078、278（v5.03）、281 §六（v5.26）、283（v5.28～v5.31） |
-| 一局 | 体力、倒计时、负重、搜索揭示、猎手、侵蚀、信仰与信力、局内技能、事件层（条件 / 后果构件） | `RunState`、`GameFlow`、`NodeEvents`、`ErosionField`、`HunterDef` | 063、069～075、081、082、129 |
+| 一局 | 体力、倒计时、负重、搜索揭示、猎手、侵蚀、信仰、经验值与升级选牌（379）、局内技能、事件层（条件 / 后果构件） | `RunState`、`LevelModule`、`GameFlow`、`NodeEvents`、`ErosionField`、`HunterDef` | 063、069～075、081、082、129 |
 | 局外 | 三个存档位、仓库格子、图鉴、两棵科技树（数值 / 机制，17 项，319）、见识、集市（五个固定摊 + 散货摊）、铁匠铺、成就 | `MetaState`、`TechService`、`Market`、`Smithy`、`Achievements` | 089、118、252、262、270 |
 | 平衡工具 | 流派木桩、扫表、单件台架、猎手胜率表、对局记录（玩家版也记）、导出平衡数据 zip | `tools/build_archetypes.gd`、`bench_matrix.gd`、`bench_battle.gd`、`bench_hunters.gd`、`build_dummies.gd`、`assumptions_report.gd` | 073、151、242（v4.23、v4.24）、279 台架 |
 | 语言与音频 | 中英界面与内容名字；字号三档；界面音效（cue 表）；**配乐没有**（`play_music` 有，曲表空） | `UiText`、`Names`、`ui/audio.gd`、`data/authoring/audio/` | 204、221、258 |

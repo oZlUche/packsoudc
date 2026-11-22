@@ -11,7 +11,7 @@ class_name RunState
 extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
@@ -558,6 +558,9 @@ func active_buff_defs() -> Array:
 	var buff := BuffModule.of(self)     # 101：一局里拿到的 buff 在模块里
 	if buff != null:
 		out.append_array(buff.defs())
+	var lv := LevelModule.of(self)     # 372：升级拿的牌（一张一份）
+	if lv != null:
+		out.append_array(lv.defs())
 	return out
 
 
@@ -890,7 +893,6 @@ func faith_context() -> FaithContext:
 	c.effective = selected_faith if c.connection == FaithState.OK else &""
 	c.tier = faith_power.tier_of(c.effective) if faith_power != null and c.effective != &"" else -1
 	c.points = faith_power.points_of(selected_faith) if faith_power != null and selected_faith != &"" else 0
-	c.prayer = faith_power.prayer_of(selected_faith) if faith_power != null and selected_faith != &"" else 0
 	return c
 
 
@@ -1392,12 +1394,10 @@ func _wire_faith_power() -> void:
 		var snap := FaithTags.id_of_tag(me.faith) if me != null else active_faith_id()
 		var summary := battle_summary(r, won, board, t)
 		last_mechanic = summary["mechanic"]     # 信仰重构 C：给紧接着的掉落看（狩猎三阶）；不存档
-		# 信仰重构 B / D：秒杀不算打了一场 —— 不给祈愿，也不记战斗信力（不能拿跳过战斗换「打赢」那份）
+		# 信仰重构 D：秒杀不算打了一场 —— 不记战斗的经验值（不能拿跳过战斗换「打赢」那份）；372：祈愿删了
 		if bool(events.last_battle.get("smite", false)):
 			return
-		faith_power.credit(&"battle", summary, snap)
-		if snap != &"":
-			faith_power.add_prayer(snap, FaithPower.PRAYER_PER_BATTLE, &"battle"))
+		faith_power.credit(&"battle", summary, snap))
 	travel.moved.connect(func(i: MoveIntent, first: bool):
 		var n := map.get_node(i.to_id) if map != null and map.has_node(i.to_id) else null
 		faith_power.credit(&"travel", {"steps": travel.clock.total, "first_visit": first, "node_type": String(n.type) if n != null else ""}))
@@ -1525,7 +1525,7 @@ func to_dict() -> Dictionary:
 			"search_haul": search_haul},
 		"skills": skills.to_dict(),
 		"faith_selection": {"selected_id": String(selected_faith)},     # 信仰重构 A：只存选择，有效信仰读档后由棋盘重建
-		"faith_progress": faith_power.progress_to_dict(),     # 信仰重构 B：每位神 {devotion 信力, prayer 祈愿}
+		"faith_power": faith_power.to_dict(),     # 372：经验值在局内成长模块里（`modules.level`）；这里只剩没装模块时的后备池
 		"faith_history": faith_power.history_to_array(),     # 104
 		"owned_uids": owned_uids.keys(),
 		"acquired_ids": acquired_ids.keys(),
@@ -1645,9 +1645,9 @@ static func from_dict(
 	s.events.losses_forgiven = int(ev.get("losses_forgiven", 0))
 	s.skills_saved = d.get("skills", {}) if d.get("skills", {}) is Dictionary else {}
 	if d.get("faith_progress", null) is Dictionary:
-		s.faith_power.restore_progress(d["faith_progress"])
+		s.faith_power.restore_progress(d["faith_progress"])     # 没走迁移的手造档
 	else:
-		s.faith_power.restore(d.get("faith_power", {}) if d.get("faith_power", {}) is Dictionary else {})     # 没走迁移的手造档：只有信力
+		s.faith_power.restore(d.get("faith_power", {}) if d.get("faith_power", {}) is Dictionary else {})
 	var pending = ev.get("pending", {})
 	if pending is Dictionary and not (pending as Dictionary).is_empty():
 		s.events.pending = {"node": int(pending.get("node", -1)), "event": String(pending.get("event", "")), "type": String(pending.get("type", ""))}
