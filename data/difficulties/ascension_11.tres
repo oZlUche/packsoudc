@@ -51,6 +51,7 @@ challenges = {
 }
 level = 11
 requires_unlock = &"ascension_11"
+grants_unlock = &"ascension_12"
 mechanics = Array[ExtResource("2_fa50s")]([SubResource("Resource_mvmlk"), SubResource("Resource_lg01e")])
 search_floors = {
 "advanced": [4, 3, 2],

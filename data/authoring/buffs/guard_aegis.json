@@ -1,0 +1,15 @@
+{
+  "id": "guard_aegis",
+  "display_name": "发条护盾",
+  "display_names": {
+    "en": "Mainspring Aegis"
+  },
+  "stackable": false,
+  "duration_sec": 8.0,
+  "mods": [
+    {
+      "stat": "max_armor",
+      "amount": 60.0
+    }
+  ]
+}

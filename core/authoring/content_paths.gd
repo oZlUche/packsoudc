@@ -57,7 +57,7 @@ const COMMISSIONS := "res://data/commissions"     # 336
 ## 146：buff → 规则构件 → 道具（构件里的施加状态可以按 id 引用 buff；buff 自己的规则不能引用构件，所以没有环）
 ## 175：元素反应在 buff 之后（效果里按 id 施加 buff）；铸炉映射表在构件之后、道具之前（表里引用 buff 与构件，道具的预置附魔查表）
 ## 160 补一：随身技能排在前面（局外 buff、角色、事件、经济规则、章节、科技按 id 引用它）
-const ORDER := ["tags", "damage_types", "belt_skills", "run_buffs", "faiths", "buffs", "reactions", "rule_parts", "forge", "items", "recipes", "smith_recipes", "loadouts", "characters", "difficulties", "reward_pools", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "bag_pools", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "base_rules", "market_stalls", "chest_skins", "chapters", "achievements", "techs", "help_pages", "npcs", "factions", "commissions"]
+const ORDER := ["tags", "damage_types", "belt_skills", "faiths", "buffs", "reactions", "rule_parts", "run_buffs", "forge", "items", "recipes", "smith_recipes", "loadouts", "characters", "difficulties", "reward_pools", "events", "enemies", "enemy_pools", "hunters", "drop_rules", "carry_rules", "bag_pools", "encumbrance_rules", "node_rules", "economy_rules", "meta_rules", "base_rules", "market_stalls", "chest_skins", "chapters", "achievements", "techs", "help_pages", "npcs", "factions", "commissions"]
 
 
 ## 种类 → [作者数据目录, 资产目录]，种类与顺序都照 [constant ORDER]。

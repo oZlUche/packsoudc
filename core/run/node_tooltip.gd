@@ -59,7 +59,7 @@ static func default_for(cat: String) -> String:
 ## 渲染好的浮窗文字（BBCode）
 static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> String:
 	if hides_enemy(run, node):     # 360 A11：远处只说是什么点，不说是谁
-		return _countdown_line(run, node, TextTemplate.render(UiText.t("node.tip.unknown_enemy"), TextTemplate.context_for(run, null)))
+		return _countdown_line(run, node, _guard_line(run, node, TextTemplate.render(UiText.t("node.tip.unknown_enemy"), TextTemplate.context_for(run, null))))
 	var template := template_for(chapter, node)
 	var kind_key := "node.hint.search_%s" % String(node.content.get("search_kind", "")) if node != null and node.type == &"search" else ""
 	if category_of(node) == "search" and UiText.TEXT.has(kind_key) and template == default_for("search"):
@@ -77,7 +77,25 @@ static func text_for(run: RunState, chapter: ChapterDef, node: MapNode) -> Strin
 		var p_floor := SearchSession.floor_for(node, run.node_rules.search if run != null and run.node_rules != null else null, run.difficulty if run != null else null)
 		if not p_floor.is_empty():
 			text += "\n" + TextTemplate.render(UiText.t("node.search_floor_line"), {"search_floor_count": p_floor.size(), "search_floor_text": SearchSession.floor_text(p_floor)})
-	return _countdown_line(run, node, text)
+	return _countdown_line(run, node, _guard_line(run, node, text))
+
+
+## 360 A12：守卫那一点说它带着哪件联动道具；首领那一点在守卫还活着时说带着增援（敌情看不见也说：守卫在哪是要让人看见的）
+static func _guard_line(run: RunState, node: MapNode, text: String) -> String:
+	if node == null or not EnemyKit.has_enemy(node.content):
+		return text
+	var link := ""
+	var key := ""
+	if bool(node.content.get(DifficultyMap.GUARD_KEY, false)):
+		link = String(node.content.get(DifficultyMap.LINK_KEY, ""))
+		key = "node.guard"
+	elif DifficultyMap.reinforced(run.map if run != null else null, node.content):
+		link = String((node.content[DifficultyMap.REINFORCE_KEY] as Dictionary).get("link", ""))
+		key = "node.reinforced"
+	if key == "":
+		return text
+	var def := run.items.get_def(StringName(link)) if run != null and run.items != null else null
+	return text + "\n" + TextTemplate.render(UiText.t(key), {"guard_link": Names.of(def) if def != null else link})
 
 
 ## 267 B：「这一带多翻出【草木】」—— 这个点的产物表里倍率最高的那个标签（倍率 > 1 才说）；没有是空
