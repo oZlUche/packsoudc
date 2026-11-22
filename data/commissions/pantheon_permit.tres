@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_6a5pi"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_xn8b1"]
+
+[sub_resource type="Resource" id="Resource_heiwa"]
+script = ExtResource("2_xn8b1")
+goal = &"faith_levels"
+count = 8
+where = &"carry"
+text = "奉着神再升八级并撤离"
+texts = {
+"en": "Gain eight more levels while following a god, and extract"
+}
+
+[resource]
+script = ExtResource("1_6a5pi")
+id = &"pantheon_permit"
+display_name = "入院登记"
+display_names = {
+"en": "Enter the Rolls"
+}
+faction = &"pantheon"
+order = 3
+reputation = 10
+min_tier = 1
+requires = Array[StringName]([&"pantheon_offering"])
+stages = Array[ExtResource("2_xn8b1")]([SubResource("Resource_heiwa")])
+client = "万神院的老祭司"
+clients = {
+"en": "Elder priest of the Senatus"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "pantheon_permit",
+  "display_name": "入院登记",
+  "display_names": {
+    "en": "Enter the Rolls"
+  },
+  "faction": "pantheon",
+  "order": 3,
+  "reputation": 10,
+  "min_tier": 1,
+  "requires": [
+    "pantheon_offering"
+  ],
+  "stages": [
+    {
+      "goal": "faith_levels",
+      "count": 8,
+      "where": "carry",
+      "text": "奉着神再升八级并撤离",
+      "texts": {
+        "en": "Gain eight more levels while following a god, and extract"
+      }
+    }
+  ],
+  "client": "万神院的老祭司",
+  "clients": {
+    "en": "Elder priest of the Senatus"
+  }
+}

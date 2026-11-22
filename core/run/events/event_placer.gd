@@ -6,12 +6,16 @@
 class_name EventPlacer
 extends RefCounted
 
+## 377：无名祭坛（faith_call）那一组（[member NodeRules.event_groups] 里的组名）—— 信仰没开的局不铺
+const FAITH_GROUP := "faith_call"
+
 
 ## 全图铺一遍。返回定了事件的节点数。093：成组限量的事件（[NodeRules.event_groups]）先铺 —— 每张图最多几个、偏前期
-static func fill(graph: MapGraph, rules: NodeRules) -> int:
+## 377：[param faith] 假 = 这一局没有信仰（万神院还没到营地），无名祭坛那一组（[constant FAITH_GROUP]）不铺
+static func fill(graph: MapGraph, rules: NodeRules, faith: bool = true) -> int:
 	if graph == null or rules == null:
 		return 0
-	var n := fill_groups(graph, rules)
+	var n := fill_groups(graph, rules, faith)
 	var used := used_counts(graph)
 	for id in graph.node_ids():
 		var node := graph.get_node(id)
@@ -39,7 +43,7 @@ static func used_counts(graph: MapGraph) -> Dictionary:
 
 ## 093：成组限量的事件。每组：在还没配事件的**事件点**里挑 max_per_map 个（early = 越浅的点权重越高：(1 − 深度)² + 0.05），
 ## 各抽一个组内事件写进去。可复现：随机数按「组名 + 图上第一个点的 content_seed」派生。返回放了几个
-static func fill_groups(graph: MapGraph, rules: NodeRules) -> int:
+static func fill_groups(graph: MapGraph, rules: NodeRules, faith: bool = true) -> int:
 	var placed := 0
 	if rules.event_groups.is_empty():
 		return 0
@@ -50,6 +54,8 @@ static func fill_groups(graph: MapGraph, rules: NodeRules) -> int:
 	var groups: Array = rules.event_groups.keys()
 	Ids.sort(groups)
 	for gname in groups:
+		if not faith and String(gname) == FAITH_GROUP:
+			continue
 		var g = rules.event_groups[gname]
 		if not (g is Dictionary):
 			continue

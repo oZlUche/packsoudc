@@ -1,5 +1,5 @@
 ## 372 第一批：局内成长 —— 经验值（原信力）只涨不花、8 + n 的等级表、难度系数、打赢 / 更深一环 / 神坛祷告 / 献祭封顶、
-## 每级三选一（同一局同一种子抽到的一样）、刷新 / 删除的次数来自局外科技、以人为本每 5 级多选一次、存档往返、点数里的成长分。
+## 每级三选一（同一局同一种子抽到的一样）、刷新 / 删除的次数来自局外科技、无信者每 5 级多选一次、存档往返、点数里的成长分。
 ## 期望从数据推：等级表、来源点数都读 `base_rules/level`
 extends RefCounted
 
@@ -94,7 +94,7 @@ static func run_sources(t: TestCase) -> void:
 
 
 static func run_picks(t: TestCase) -> void:
-	t.begin("372 · 每级三选一：同一种子抽到的一样；拿了的牌进 buff；欠几次选几次；以人为本逢 5 级多一次")
+	t.begin("372 · 每级三选一：同一种子抽到的一样；拿了的牌进 buff；欠几次选几次；无信者逢 5 级多一次")
 	var a := _start(7)
 	var b := _start(7)
 	var la := LevelModule.of(a)
@@ -120,7 +120,7 @@ static func run_picks(t: TestCase) -> void:
 	if String(row.get("echo", "")) == "" and String(row.get("oneshot", "")) == "":
 		t.check(a.active_buff_defs().has(a.buff_defs[picked]), "拿到的牌进这一局的 buff")
 	t.check(la.card_text(picked) != "", "牌面有一行效果")
-	# 以人为本：没奉神，到 5 级多一次
+	# 无信者：没奉神，到 5 级多一次
 	t.eq(a.active_faith_id(), &"", "没奉神")
 	la.gain(float(r.total_for(5)), LevelModule.SRC_BATTLE)
 	t.eq(la.bonus_picks, 1, "逢 5 级多一次")
@@ -193,7 +193,7 @@ static func run_score(t: TestCase) -> void:
 
 
 static func run_fixes_v773(t: TestCase) -> void:
-	t.begin("372 复测（v7.73）：调息牌面写小数；以人为本只在多给的那一次提示；不奉神的老档迁移补上跨过的逢 5 级")
+	t.begin("372 复测（v7.73）：调息牌面写小数；无信者只在多给的那一次提示；不奉神的老档迁移补上跨过的逢 5 级")
 	var run := _start(11)
 	var lv := LevelModule.of(run)
 	t.check(lv.card_text(&"card_regen").contains("+0.3"), "调息写 +0.3：%s" % lv.card_text(&"card_regen"))
@@ -231,3 +231,26 @@ static func run_fixes_v773(t: TestCase) -> void:
 		c.install(host)
 		t.eq(c.bonus_picks, int(case[1]), "再装一次不重复补（%s）" % case[0])
 		host.dispose()
+
+
+static func frame_pick_cards(t: TestCase, root: Window) -> void:
+	t.begin("372 选牌窗（v7.86 正式图）：每张牌的圆章里都有图标；英文大字号下类别条撑宽了也居中（复测 v7.90）")
+	var run := _start(17)
+	var lv := LevelModule.of(run)
+	for cid in lv.rules().card_ids():
+		t.check(LevelPickPanel._icon_of_def(run.buff_defs.get(cid, null)) != null, "%s 有图标" % cid)
+	var keep_lang := UiText.lang
+	var keep_scale := UiTheme.text_scale
+	UiText.lang = "en"
+	UiTheme.text_scale = 1.3
+	lv.gain(float(lv.rules().total_for(4)), LevelModule.SRC_BATTLE)
+	var panel := LevelPickPanel.new(lv)
+	root.add_child(panel)
+	for i in 3:
+		var ribbon := panel.find_child("Card%d" % i, true, false).get_node("Ribbon") as Control
+		ribbon.size = ribbon.get_combined_minimum_size()     # 进树后字宽才定：这里先撑一下（游戏里下一帧自己撑）
+		t.check(absf(ribbon.position.x + ribbon.size.x * 0.5 - LevelPickPanel.CARD_W * 0.5) < 1.0, "第 %d 张的类别条居中（x %.1f，宽 %.1f）" % [i, ribbon.position.x, ribbon.size.x])
+	panel.queue_free()
+	UiText.lang = keep_lang
+	UiTheme.text_scale = keep_scale
+	run.dispose()

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_bxiv6"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_oqui0"]
+
+[sub_resource type="Resource" id="Resource_50pvx"]
+script = ExtResource("2_oqui0")
+goal = &"altar_offer"
+count = 2
+text = "在两座神坛献祭"
+texts = {
+"en": "Make an Offering at two altars"
+}
+
+[resource]
+script = ExtResource("1_bxiv6")
+id = &"pantheon_offering"
+display_name = "供奉"
+display_names = {
+"en": "Tribute"
+}
+faction = &"pantheon"
+order = 2
+reputation = 5
+min_tier = 1
+requires = Array[StringName]([&"pantheon_first_rite"])
+stages = Array[ExtResource("2_oqui0")]([SubResource("Resource_50pvx")])
+client = "万神院的老祭司"
+clients = {
+"en": "Elder priest of the Senatus"
+}

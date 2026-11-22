@@ -95,6 +95,8 @@ var boss_ticket: StringName = &""
 ## 101 第 3 刀：一局的能力都走这张带类型的表（编译玩家、掉落上下文、地图 buff、撤离、传送、保险箱、赐福、猎手……）。
 ## 默认那一份全是「没人接」的默认值，所以沙盒与测试不接也能跑；正式一局由 [RunState] 换成它自己的那份
 var hooks: RunHooks = RunHooks.new()
+## 377：这一局有没有信仰（[member RunState.faith_enabled]）。没有 = 战利品里不出信物与赐福道具（敌人照样带着用）
+var faith_enabled := true
 ## 117：战斗的内部日志与回放存档。空 = 不记；[GameFlow] 按设置填 `{dir, run_seed, chapter}`（沙盒与测试不填）
 var trace_info: Dictionary = {}
 
@@ -832,6 +834,21 @@ func _bless_rolled(node: MapNode, rolled: Dictionary) -> void:
 	rolled["dropped"] = out
 
 
+## 377：信仰没开的局，掉落里拿掉归某位神的东西（信物、赐福版、手写的赐福道具）
+func _strip_faith(rolled: Dictionary) -> void:
+	if items == null:
+		return
+	for key in ["dropped", "treasure", "bounty"]:
+		if not rolled.has(key):
+			continue
+		var kept: Array[StringName] = []
+		for id in rolled.get(key, []):
+			var d := items.get_def(StringName(String(id)))
+			if d == null or not d.has_faith():
+				kept.append(StringName(String(id)))
+		rolled[key] = kept
+
+
 ## 打一场（猎手系统也走这条路：给它自己的掉落上下文与自己的战败代价）。返回赢没赢
 func fight_content(node: MapNode, type: StringName, content: Dictionary, loot_ctx: LootContext = null, loss_cost: int = LOSS_DEFAULT) -> bool:
 	return _fight(node, type, content, loot_ctx, loss_cost)
@@ -1019,6 +1036,8 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 		rolled["dropped"] = dropped
 	_guard_won(node, content, rolled)     # 360 A12
 	_bless_rolled(node, rolled)
+	if not faith_enabled:
+		_strip_faith(rolled)
 	# 209：第二段 —— 按包池掷「用哪些包装这些东西」（没有包的魔兽 / 机关不掉包；随机数另起一条）
 	rolled["bags"] = DropResolver.bags_for(rolled, content, enemies, pool, bag_pool, items, _rng_for(node, "loot_bags"), type == &"core")
 	loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
