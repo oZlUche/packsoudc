@@ -1,0 +1,5 @@
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4720 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+EXIT=0
+EXIT 0
