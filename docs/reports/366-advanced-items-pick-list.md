@@ -196,3 +196,7 @@
 ## 12. 第一批落地（护甲 4 件、盾 4 件）
 
 `chain_mail` 锁子甲、`studded_leather` 镶钉皮甲、`knight_plate` 骑士板甲、`dragonscale_armor` 龙鳞甲、`steel_round_shield` 钢圆盾、`kite_shield` 鸢盾、`legion_tower_shield` 军团塔盾、`riposte_buckler` 反击小盾。说明全部留空，图先用占位。敌人配装（`loadout.common_tags` 的 `armor` / `shield`）和标准掉落都按稀有度自动取到；打造配方等 364 的史诗素材定了再补。新字「鳞」「鸢」进了字集，字体子集重裁。
+
+## 13. 守卫联动道具入库（2026-11-22，v7.91）
+
+`spare_mainspring` 备用发条（机关池）、`rally_horn` 求援号角（标准废墟）、`beast_king_pact` 兽王之契（属性兽当守卫），各带一件 `_spent` 失效版。六件都是贵重品（`valuable` + `treasure`），标 `no_random_source`，不带战斗规则。守卫身上带本体，击败后掉失效版。给首领的增援由「落实难度 A0 到 A12」第四批按本局守卫带的道具 id 查表实现。图先用占位。

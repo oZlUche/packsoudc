@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_6ub1c"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_sgvxb"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_hch1q"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_0kw54"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_3rspq"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_2g5mm"]
+
+[sub_resource type="Resource" id="Resource_4gfbn"]
+script = ExtResource("6_2g5mm")
+
+[resource]
+script = ExtResource("5_3rspq")
+id = &"beast_king_pact"
+display_name = "兽王之契"
+display_names = {
+"en": "Beast King's Pact"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_4gfbn")
+rarity = 3
+tags = Array[StringName]([&"valuable", &"nature", &"treasure", &"no_random_source"])
+material = "bone"

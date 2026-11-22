@@ -48,3 +48,17 @@ static func run_batch_one_items(t: TestCase) -> void:
 	var buckler := load("res://data/items/riposte_buckler.tres") as ItemDef
 	var rule: AbilityRule = buckler.combat.rules[0]
 	t.check(rule.trigger is OnDamage and (rule.trigger as OnDamage).blocked_only, "反击小盾：格挡挡下攻击时")
+
+
+static func run_guard_link_items(t: TestCase) -> void:
+	t.begin("366 · 守卫联动道具与失效版：贵重品，不进随机来源，没有战斗效果，说明留空")
+	for id in ["spare_mainspring", "rally_horn", "beast_king_pact"]:
+		for v in [id, id + "_spent"]:
+			var def := load("res://data/items/%s.tres" % v) as ItemDef
+			t.check(def != null, "%s 存在" % v)
+			if def == null:
+				continue
+			t.check(def.has_tag(ItemDef.NO_RANDOM_SOURCE), "%s 不进随机来源" % v)
+			t.check(def.has_tag(&"valuable"), "%s 是贵重品" % v)
+			t.check(def.combat == null or def.combat.rules.is_empty(), "%s 不带战斗规则（增援由难度那边的钩子做）" % v)
+			t.eq(String(def.descriptions.get("en", "")), "", "%s 说明留空" % v)

@@ -1,0 +1,2 @@
+ICON 有图标 3：["card_hp_flat[stat][\"max_hp\"]", "card_hp_pct[stat][\"max_hp\"]", "card_regen[stat][\"regen_stamina\"]"]
+ICON 空圆章 12：["card_carry[explore][\"Resource\"]", "card_echo_faster[weapon][]", "card_echo_stacks[weapon][]", "card_element_echo[weapon][]", "card_next_search[explore][]", "card_rest[explore][\"Resource\"]", "card_stamina_flat[stat][\"max_stamina\"]", "card_stamina_pct[stat][\"max_stamina\"]", "card_vitality[explore][\"Resource\"]", "card_weapon_cost[weapon][\"Resource\"]", "card_weapon_damage[weapon][\"Resource\"]", "card_weapon_haste[weapon][\"Resource\"]"]

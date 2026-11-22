@@ -1,0 +1,23 @@
+{
+  "id": "spare_mainspring",
+  "display_name": "备用发条",
+  "display_names": {
+    "en": "Spare Mainspring"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "valuable",
+    "crafted",
+    "clockwork",
+    "treasure",
+    "no_random_source"
+  ],
+  "material": "metal"
+}

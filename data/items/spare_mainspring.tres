@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_ydn7b"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_k6n1j"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_qh4aj"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_aqt0i"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_23i4o"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_qynfw"]
+
+[sub_resource type="Resource" id="Resource_34edg"]
+script = ExtResource("6_qynfw")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+
+[resource]
+script = ExtResource("5_23i4o")
+id = &"spare_mainspring"
+display_name = "备用发条"
+display_names = {
+"en": "Spare Mainspring"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_34edg")
+rarity = 3
+tags = Array[StringName]([&"valuable", &"crafted", &"clockwork", &"treasure", &"no_random_source"])
+material = "metal"

@@ -1,0 +1,22 @@
+{
+  "id": "beast_king_pact_spent",
+  "display_name": "兽王之契（失效）",
+  "display_names": {
+    "en": "Beast King's Pact (Spent)"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 3,
+  "tags": [
+    "valuable",
+    "nature",
+    "treasure",
+    "no_random_source"
+  ],
+  "material": "bone"
+}

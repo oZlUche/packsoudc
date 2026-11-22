@@ -1,0 +1,23 @@
+{
+  "id": "spare_mainspring_spent",
+  "display_name": "备用发条（失效）",
+  "display_names": {
+    "en": "Spare Mainspring (Spent)"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11"
+  ],
+  "rarity": 3,
+  "tags": [
+    "valuable",
+    "crafted",
+    "clockwork",
+    "treasure",
+    "no_random_source"
+  ],
+  "material": "metal"
+}
