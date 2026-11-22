@@ -19,7 +19,7 @@ static func run_tables_cover_everything(t: TestCase) -> void:
 		var tex := MapNodeStyle.icon(type)
 		t.check(tex != null and tex.get_size() == Vector2(64, 64), "类型 %s 有 64 px 的图标" % type)
 	t.is_null(MapNodeStyle.icon(&"__no_such_type"), "没有图的类型返回空（画字）")
-	t.eq(MapView.NODE_RADIUS, 16.0, "节点半径 13 → 16（155 待定 2）")
+	t.eq(MapView.NODE_RADIUS, 21.0, "节点半径 13 → 16（155 待定 2）→ 21（作者 2026-11-22：地图整体放大）")
 
 	# 每个登记过的生成器：给得出默认配置的，生成出来的图得有对应的布局可画
 	for id in MapGeneratorRegistry.ids():

@@ -187,3 +187,24 @@ static func run_in_run(t: TestCase) -> void:
 	for id in plain.map.node_ids():
 		any = any or plain.map.get_node(id).content.has("guard") or plain.map.get_node(id).content.has(EnemyKit.REINFORCE_KEY)
 	t.check(not any, "普通难度：没有守卫")
+
+
+static func run_map_marks(t: TestCase) -> void:
+	t.begin("360 A12 · 地图（作者 11-22 选 B 小旗）：守卫和首领各插一面同图案的旗、中间一条红虚线；守卫倒下都撤掉")
+	var c = NodeScreens._content()
+	var d := _twelve()
+	if d == null:
+		t.check(false, "进阶十二在")
+		return
+	for link in MapView.GUARD_FLAGS:
+		t.not_null(UiTheme.art_cached(MapView.guard_flag_art(String(link))), "%s 有旗子图" % link)
+	var ruins := EnemyPool.new()
+	ruins.id = &"standard_ruins"
+	var g := _graph("brute")
+	DifficultyMap.place_guard(g, d, ruins, c.enemies, c.items, 1)
+	var view := MapView.new()
+	view.graph = g
+	t.eq(view.guard_pairs(), [[3, 2, "rally_horn"]], "一对：守卫 3、首领 2、号角")
+	DifficultyMap.guard_down(g, 3)
+	t.eq(view.guard_pairs(), [], "守卫倒下：旗和虚线都没了")
+	view.free()

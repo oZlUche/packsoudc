@@ -3,10 +3,10 @@
 class_name LatticeMapLayout
 extends MapLayout
 
-const MARGIN := 70.0
-const COL_STEP := 96.0
+const MARGIN := 90.0
+const COL_STEP := 125.0
 ## 和同心环的环距一样宽：猎手的绝对距离度量按它换算，两种形态一把尺
-const ROW_STEP := 110.0
+const ROW_STEP := 145.0
 
 
 static func rows_of(graph: MapGraph) -> int:
