@@ -266,7 +266,6 @@ func open(payload: Dictionary) -> void:
 	board_col.add_child(_expedition)
 	_expedition.setup(flow)
 	_expedition.skip_asked.connect(show_skip_tutorial)     # 统一教程 D
-	_expedition.god_pick_asked.connect(show_god_pick)     # 377
 	_new_run_btn = _expedition.start_btn
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
 	var wh_page := _cloth()
@@ -526,7 +525,6 @@ func _rebuild_home() -> void:
 	_expedition = board
 	_expedition.setup(flow)
 	_expedition.skip_asked.connect(show_skip_tutorial)
-	_expedition.god_pick_asked.connect(show_god_pick)     # 377
 	_new_run_btn = _expedition.start_btn
 
 

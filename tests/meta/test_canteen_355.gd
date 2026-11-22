@@ -496,7 +496,7 @@ static func frame_nursery(t: TestCase, root: Window) -> void:
 	W178._cleanup()
 
 
-## 开局屏第四页「本次准备」：食堂开了就有这一页（倾向没开只放这一锅）；写这一锅的名字、效果、饱腹，能换一份收藏；出发吃的是换上的那一锅
+## 383：开局第一屏的食物横条（原第四页「本次准备」）：写这一锅的名字、效果、饱腹，能换一份收藏；出发吃的是换上的那一锅
 static func frame_prep(t: TestCase, root: Window) -> void:
 	t.begin("355 第二批 / 383 · 开局第一屏的食物横条：食堂开了才有；折叠时写这一锅的效果，展开写名字、效果、饱腹；换一份收藏 = 从食材仓库重做；出发吃的是这一锅")
 	Support.cleanup("char")
