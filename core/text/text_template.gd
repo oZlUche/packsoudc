@@ -153,7 +153,7 @@ static func _typed(token: String, ctx: Dictionary) -> Variant:
 			if n == null:
 				return null
 			return _paint(String(n), String(TYPED_STYLES["item_stat"]))
-		"level":     # 372：`{level:cap}` 等级上限、`{level:every}` 以人为本每几级多选一次
+		"level":     # 372：`{level:cap}` 等级上限、`{level:every}` 无信者每几级多选一次
 			var lr := LevelRules.load_rules()
 			var lv: Variant = {"cap": lr.level_cap, "every": lr.extra_pick_every}.get(arg, null)
 			if lv == null:

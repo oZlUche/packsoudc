@@ -224,7 +224,7 @@ static func run_run_and_save(t: TestCase) -> void:
 	s.faith_defs = faiths
 	s.pick_spawn(s.map.entry_ids[0])
 	t.eq(s.active_faith_id(), &"", "新局默认不奉神（带着护符也不偷选）")
-	t.eq(s.faith_line(), "信仰：无信者", "HUD 的那一句：以人为本（372）")
+	t.eq(s.faith_line(), "信仰：无信者", "HUD 的那一句：无信者（372）")
 	t.eq(s.select_faith(&"hunt"), UiText.t("act.faith_no_anchor"), "棋盘上没有狩猎之神的信物：奉不了")
 	t.eq(s.select_faith(&"brute"), "", "显式奉蛮神")
 	t.eq(s.active_faith_id(), &"brute", "有效信仰：蛮神")
@@ -261,7 +261,7 @@ static func run_run_and_save(t: TestCase) -> void:
 	RunSave.remove(SAVE)
 	var empty := RunState.start(chapter, 5, db, enemies, sets, [&"bag_leather", &"shortsword", &"salve"] as Array[StringName])
 	if empty != null:
-		t.eq(empty.faith_line(), "信仰：无信者", "只带凡物：以人为本")
+		t.eq(empty.faith_line(), "信仰：无信者", "只带凡物：无信者")
 
 	# 敌人：组装出来的每个敌人至多一个信仰、至少一件武器（EnemyLoadout 的两条数据）
 	var pool := enemies.pool(chapter.enemy_pool)
