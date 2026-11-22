@@ -1,24 +1,26 @@
-## 372：经验值管 —— 顶端栏下面横着一根管子，按这一级攒到的比例灌满；管上写「Lv.N　经验值 a / b」（满级写满级）。
-## 停上去开悬浮窗：经验值怎么涨。管子是占位画法（圆角底 + 填充 + 高光），样张定了换图
+## 382 A（作者定）：顶端栏日晷右边的等级格 —— 黄铜星 + 等级数；欠着选牌时右上角挂红点写张数（超过 9 写「9+」），点它打开选牌。
+## 停上去开悬浮窗：这一级的经验值与怎么涨。经验值本身画在栏下沿的透明条上（[code]xp_bar_widget.gd[/code]）
 extends HudWidget
 
-const TUBE := Vector2(360, 22)
-const RADIUS := 10.0
-const GLASS := Color(1, 1, 1, 0.08)
-const EDGE := Color(1, 1, 1, 0.35)
-const SHINE := Color(1, 1, 1, 0.18)
+const STAR := 26.0
+const BRASS := Color("c9a04e")
+const DOT := 18.0
+const DOT_RED := Color("c8302a")
+
+var _star: Control
 
 
 func _init() -> void:
 	super()
-	custom_minimum_size = TUBE
-	_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	self_modulate.a = 0.0     # 不画通用凹槽：管子自己画
+	_star = Control.new()
+	_star.custom_minimum_size = Vector2.ONE * STAR
+	_star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_star.draw.connect(_draw_star)
+	_prepend_icon(_star)
 
 
 func title() -> String:
-	return "经验值"
+	return "等级"
 
 
 func _module() -> LevelModule:
@@ -32,14 +34,18 @@ func watch() -> Array[Signal]:
 
 func text_of() -> String:
 	var lv := _module()
-	if lv == null:
-		return ""
-	var p := lv.progress()
-	var head := UiText.t("hud.level") % lv.level()
-	var tail := UiText.t("tip.gap") + UiText.t("hud.level_pending") % lv.pending() if lv.pending() > 0 else ""
-	if p.y <= 0:
-		return head + UiText.t("tip.gap") + UiText.t("hud.level_max") + tail
-	return head + UiText.t("tip.gap") + UiText.t("hud.level_xp") % [p.x, p.y] + tail
+	return str(lv.level()) if lv != null else ""
+
+
+## 欠着几次选牌（红点上写的数）
+func pending() -> int:
+	var lv := _module()
+	return lv.pending() if lv != null else 0
+
+
+## 红点上的字：超过 9 写「9+」
+static func dot_text(n: int) -> String:
+	return "9+" if n > 9 else str(n)
 
 
 ## 这一级灌了几成（满级 = 满）
@@ -51,30 +57,45 @@ func fill() -> float:
 	return 1.0 if p.y <= 0 else clampf(float(p.x) / float(p.y), 0.0, 1.0)
 
 
-func set_tier(t: Tier) -> void:
-	super(t)
-	_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+## 悬浮窗：第一行「Lv.N　经验值 a / b」（满级写满级），下面是怎么涨
+func tip_text() -> String:
+	var lv := _module()
+	if lv == null:
+		return ""
+	var p := lv.progress()
+	var head := UiText.t("hud.level") % lv.level() + UiText.t("tip.gap") + (UiText.t("hud.level_max") if p.y <= 0 else UiText.t("hud.level_xp") % [p.x, p.y])
+	if lv.pending() > 0:
+		head += UiText.t("tip.gap") + UiText.t("hud.level_pending") % lv.pending()
+	return head + "\n" + UiText.t("hud.level_tip")
+
+
+func refresh() -> void:
+	super()
+	queue_redraw()
+
+
+func _draw_star() -> void:
+	var c := Vector2.ONE * STAR * 0.5
+	var pts := PackedVector2Array()
+	for i in 10:
+		var r := STAR * (0.5 if i % 2 == 0 else 0.22)
+		var a := -PI / 2.0 + PI * float(i) / 5.0
+		pts.append(c + Vector2(cos(a), sin(a)) * r)
+	_star.draw_colored_polygon(pts, BRASS)
 
 
 func _draw() -> void:
-	var r := Rect2(Vector2.ZERO, size)
-	draw_style_box(_box(GLASS, EDGE), r)
-	var f := fill()
-	if f > 0.0:
-		var w := maxf(RADIUS * 2.0, r.size.x * f)
-		draw_style_box(_box(Color(UiPalette.FAITH, 0.85), Color(0, 0, 0, 0)), Rect2(r.position, Vector2(w, r.size.y)).grow(-2))
-	draw_style_box(_box(SHINE, Color(0, 0, 0, 0)), Rect2(r.position + Vector2(RADIUS, 3), Vector2(r.size.x - RADIUS * 2.0, 3)))
 	super()
-
-
-func _box(bg: Color, edge: Color) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.set_corner_radius_all(int(RADIUS))
-	if edge.a > 0.0:
-		sb.border_color = edge
-		sb.set_border_width_all(1)
-	return sb
+	var n := pending()
+	if n <= 0 or editing:
+		return
+	var center := Vector2(size.x - DOT * 0.35, DOT * 0.35)
+	draw_circle(center, DOT * 0.5, DOT_RED)
+	var f := UiPalette.cjk_font_bold()
+	var s := dot_text(n)
+	var px := 12 if s.length() == 1 else 10
+	var w := f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	draw_string(f, center + Vector2(-w * 0.5, px * 0.36), s, HORIZONTAL_ALIGNMENT_LEFT, -1, px, Color.WHITE)
 
 
 func _idle_mouse_filter() -> Control.MouseFilter:
@@ -97,7 +118,7 @@ func _ready() -> void:
 	mouse_entered.connect(func():
 		var tip: HoverTip = screen.get("_tip") if screen != null else null
 		if tip != null and run != null and not editing:
-			tip.show_text(UiText.t("hud.level_tip"), global_position + Vector2(0, size.y)))
+			tip.show_text(tip_text(), global_position + Vector2(0, size.y)))
 	mouse_exited.connect(func():
 		var tip: HoverTip = screen.get("_tip") if screen != null else null
 		if tip != null:

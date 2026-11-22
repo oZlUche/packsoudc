@@ -16,6 +16,7 @@ func setup(p_run: RunState, p_screen: Control) -> void:
 	if slots == null and belt != null:
 		_text.visible = false
 		slots = BeltSlots.new()
+		slots.flat = UiTheme.has_art(UiTheme.ART_STONE_SLATE)     # 385：深石板外框里一排圆槽
 		slots.font = p_screen.get("font") if p_screen != null else null
 		slots.on_use = use
 		add_child(slots)
@@ -25,8 +26,14 @@ func setup(p_run: RunState, p_screen: Control) -> void:
 	super.setup(p_run, p_screen)
 
 
-## 232：弯皮带自己就是底 —— 不要 HUD 凹槽（栏里栏外都空底）；退回直圆槽时还给凹槽
+## 232：弯皮带自己就是底 —— 不要 HUD 凹槽（栏里栏外都空底）；退回直圆槽时还给凹槽。
+## 385：有深石板就一直是石板框（不跟着进出栏换凹槽）
 func _sync_skin() -> void:
+	if slots != null and slots.flat:
+		if theme_type_variation != UiTheme.PANEL_BARE:
+			theme_type_variation = UiTheme.PANEL_BARE
+			UiTheme.stone(self, UiTheme.ART_STONE_SLATE)
+		return
 	var bent := slots != null and slots.curved()
 	if bent and theme_type_variation != UiTheme.PANEL_BARE:
 		theme_type_variation = UiTheme.PANEL_BARE

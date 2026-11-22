@@ -137,6 +137,15 @@ static func frame_dial(t: TestCase, root: Window) -> void:
 	cd.open_tip()
 	t.check((screen._tip as HoverTip).is_showing(), "停上去：开悬浮窗")
 	cd.close_tip()
+	# 382 A：等级格紧挨日晷右沿往右排；经验值条全屏宽、贴在栏下沿
+	var lw := host.widget(&"level")
+	var cd_right := host.rect_of(&"countdown").end.x
+	t.check(lw.visible and lw.in_bar and lw.position.x >= cd_right and lw.position.x <= cd_right + HudHost.GROWTH_GAP + 1.0,
+		"等级格在日晷右边（%.0f，日晷右沿 %.0f）" % [lw.position.x, cd_right])
+	var xp := host.widget(HudLayout.XP_BAR)
+	t.check(xp.visible and is_equal_approx(xp.size.x, HOST_SIZE.x) and xp.position.x == 0.0, "经验值条全屏宽（%s）" % xp.size)
+	t.check(xp.position.y > 0.0 and xp.position.y <= bar.size.y, "经验值条贴在栏下沿（y %.0f，栏高 %.0f）" % [xp.position.y, bar.size.y])
+	t.check(xp.get_index() < bar.get_index() and xp.get_index() < cd.get_index(), "栏皮（日晷底座）与日晷都压在经验值条上面")
 	host.layout.entry_of(&"countdown")["anchor"] = "top_left"
 	host.layout.entry_of(&"countdown")["offset"] = Vector2(0, 100)
 	host.arrange()

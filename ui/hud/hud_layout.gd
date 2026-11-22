@@ -19,12 +19,15 @@ const ANCHORS := {
 	"bottom_left": Vector2(0, 1), "bottom": Vector2(0.5, 1), "bottom_right": Vector2(1, 1),
 }
 ## 166：顶端栏的三个槽 → 槽里一组的对齐支点（横向：左 / 中 / 右；竖向在栏里居中）
-const BAR_ANCHORS := {"bar_left": Vector2(0, 0.5), "bar_center": Vector2(0.5, 0.5), "bar_right": Vector2(1, 0.5)}
+const BAR_ANCHORS := {"bar_left": Vector2(0, 0.5), "bar_center": Vector2(0.5, 0.5), "bar_right": Vector2(1, 0.5), "bar_growth": Vector2(0, 0.5)}
+## 382 A（作者定）：日晷右边那一组 —— 紧挨着中槽右沿往右排（等级、信仰徽记 + 神赐小图标）
+const BAR_GROWTH := "bar_growth"
 const TIERS := {"large": HudWidget.Tier.LARGE, "small": HudWidget.Tier.SMALL, "double": HudWidget.Tier.DOUBLE}
 ## 布局文件的版本：默认布局改了就加一，旧版本存的那份不用（回默认）。2 = 作者 2026-10-12：提示行进调试台、去掉行动点与距离、顶栏 200%；
 ## 3 = 160：腰带挪到右下角；4 = 166：顶端栏三个槽、右列取消（撤离 / 回主菜单删掉，日志与地上件数进调试台）、左下图例；
-## 6 = 179：「行动点」读数删掉（玩家面前只说步，倒计时就是它）；7 = 186：顶端栏正下方居中的提示行
-const VERSION := 7
+## 6 = 179：「行动点」读数删掉（玩家面前只说步，倒计时就是它）；7 = 186：顶端栏正下方居中的提示行；
+## 8 = 382 A：饱腹收进栏左槽第一行，等级与信仰挪到日晷右边（`bar_growth`），栏下沿一根全屏宽的经验值条
+const VERSION := 8
 ## 「摆读数」松手时吸附的网格
 const GRID := 8
 const DEV_DIR := "res://data/authoring/ui_layouts"
@@ -44,18 +47,20 @@ static func default_for(p_screen: String) -> HudLayout:
 	l.screen = p_screen
 	if p_screen == "map":
 		l.entries.append(entry(&"hud_bar", "top", Vector2.ZERO))
-		for id in [&"vitality", &"wallet", &"faith"]:
+		for id in [&"vitality", &"wallet", &"meal"]:     # 382：饱腹收进栏里（没吃饭不显示）
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 0, "double"))
-		for id in [&"buffs", &"erosion", &"meal"]:     # 355：饱腹度跟在侵蚀后面（没吃饭不显示）
+		for id in [&"buffs", &"erosion"]:
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small"))
 		l.entries.append(entry(&"countdown", "bar_center", Vector2.ZERO, 0, "large"))
+		for id in [&"level", &"faith"]:     # 382 A：成长一组紧挨日晷右边
+			l.entries.append(entry(id, BAR_GROWTH, Vector2.ZERO, 0, "double"))
 		for id in BAR_RIGHT:
 			l.entries.append(entry(id, "bar_right", Vector2.ZERO, 0, "small", not hidden_by_default(id)))
 		l.entries.append(entry(&"routes", "bottom_left", CORNER_OFFSET, 0))
 		l.entries.append(entry(&"legend", "bottom_left", CORNER_OFFSET, 1))
 		l.entries.append(entry(&"belt", "bottom_right", BELT_OFFSET))     # 160：腰带常驻右下角
 		l.entries.append(entry(&"commissions", "top_left", COMMISSIONS_OFFSET))     # 336：委托小牌（没带委托不显示）
-		l.entries.append(entry(&"level", "top", LEVEL_OFFSET))     # 372：经验值管（顶端栏下面居中）
+		l.entries.append(entry(&"xp_bar", "top", Vector2.ZERO))     # 381 / 382：栏下沿全屏宽的经验值条（宿主贴着栏摆）
 	return l
 
 
@@ -74,11 +79,10 @@ const BELT_OFFSET := Vector2(-8, -8)
 ## 336：委托小牌在左上（顶端栏下面）
 const COMMISSIONS_OFFSET := Vector2(16, 16)
 ## 336：后来才加的件 —— 旧布局文件里没有就按默认补上（不升 [constant VERSION]，玩家摆过的别的件照旧）
-const ADDED_LATER: Array[StringName] = [&"commissions", &"meal", &"level"]
-## 372：经验值管在顶端栏正下方
-const LEVEL_OFFSET := Vector2(0, 6)
-## 372：浮在地图上面的件：不算进地图要躲开的上边（[method HudHost.top_inset]）
-const FLOATS: Array[StringName] = [&"level"]
+const ADDED_LATER: Array[StringName] = [&"commissions", &"meal", &"level", &"xp_bar"]
+## 浮在地图上面的件：不算进地图要躲开的上边（[method HudHost.top_inset]）。382：经验值条贴着栏下沿，宿主自己摆（不进组）
+const FLOATS: Array[StringName] = [&"xp_bar"]
+const XP_BAR := &"xp_bar"
 const CORNER_OFFSET := Vector2(16, -16)     # 作者 2026-10-13：图例往右上挪一点，说明文字不贴边框
 
 
