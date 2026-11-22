@@ -44,6 +44,10 @@ const NAME_MAX := 10
 var menus: Array[Dictionary] = []
 ## 锅里这一锅是照哪份收藏摆的（-1 = 没照收藏）。之后再改锅也还算这一份，缺的位置见 [method gaps]
 var active := -1
+## 383（作者 2026-11-22 23:49；做法是初值）：固定配方 = 收藏里第几份（-1 = 没设，同一时间只有一份）。进出征第一屏时照它从食材仓库配这一锅；没设就是空锅
+var fixed := -1
+## 383：这一锅在食堂按【开饭】吃下了 —— 出征第一屏的食物横条只能看、不能换，锅也不能再动；出发吃掉以后清掉
+var eaten := false
 
 
 func _init(store_size: Vector2i = Vector2i(6, 6), pot_size: Vector2i = Vector2i(4, 4)) -> void:
@@ -293,7 +297,53 @@ func delete_menu(i: int) -> bool:
 		active = -1
 	elif active > i:
 		active -= 1
+	if fixed == i:
+		fixed = -1
+	elif fixed > i:
+		fixed -= 1
 	return true
+
+
+## 383：把第 [param i] 份设为固定配方（-1 = 不设；同一时间只有一份，设别的就换掉原来那份）
+func set_fixed(i: int) -> bool:
+	if i < -1 or i >= menus.size():
+		return false
+	fixed = i
+	return true
+
+
+## 383：【开饭】—— 锅里这一锅算吃下了（锅空不认）
+func eat() -> bool:
+	if pot.item_count() == 0 or eaten:
+		return false
+	eaten = true
+	return true
+
+
+## 383：进出征第一屏时配这一锅 —— 已吃过不动；设了固定配方照它重做（返回缺料的那几格）；没设就把锅倒回食材仓库，空锅出征。
+## 锅里回不去仓库的（仓库满了）留在锅里，不丢
+func prepare() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if eaten:
+		return out
+	if fixed >= 0 and fixed < menus.size():
+		return load_menu(fixed)
+	empty_pot()
+	return out
+
+
+## 锅倒回食材仓库（回不去的留着）
+func empty_pot() -> void:
+	pot.begin_batch()
+	store.begin_batch()
+	for inst in pot.items():
+		var it := inst as ItemInstance
+		pot.remove(it.uid)
+		if not store.try_add(it, true):
+			pot.place(it, it.origin, it.rotation)
+	store.end_batch()
+	pot.end_batch()
+	active = -1
 
 
 ## 锅现在的名字：照收藏摆的 = 那份的名字；否则空串
@@ -383,7 +433,8 @@ func gaps() -> Array[Dictionary]:
 
 #region 存档
 func to_dict() -> Dictionary:
-	return {"store": store.to_dict(), "pot": pot.to_dict(), "moved_legacy": moved_legacy, "menus": menus.duplicate(true), "active": active}
+	return {"store": store.to_dict(), "pot": pot.to_dict(), "moved_legacy": moved_legacy, "menus": menus.duplicate(true), "active": active,
+		"fixed": fixed, "eaten": eaten}     # 383：不升版 —— 旧档没有这两项就是没设固定、没吃过
 
 
 ## 读回来；格子盘按存档里的大小建（档位由 [method fit] 之后再调）。认不得的道具由 [method GridInventory.from_dict] 告警丢弃
@@ -413,5 +464,9 @@ static func from_dict(d: Variant, items: ItemDatabase) -> Canteen:
 	c.active = int(src.get("active", -1))
 	if c.active >= c.menus.size():
 		c.active = -1
+	c.fixed = int(src.get("fixed", -1))     # 383
+	if c.fixed < -1 or c.fixed >= c.menus.size():
+		c.fixed = -1
+	c.eaten = bool(src.get("eaten", false)) and c.pot.item_count() > 0
 	return c
 #endregion

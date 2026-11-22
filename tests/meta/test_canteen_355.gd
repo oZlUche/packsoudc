@@ -523,6 +523,7 @@ static func frame_prep(t: TestCase, root: Window) -> void:
 	cn.pot.place(wheat, Vector2i(3, 3), 0)
 	cn.active = -1
 	cn.save_menu("酸麦")
+	cn.set_fixed(1)     # 383：没设固定配方的话进开局屏是空锅
 	flow.new_run()
 	var setup = game.base()
 	t.eq(setup.last_page(), 2, "383：还是三页")

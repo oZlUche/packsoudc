@@ -152,3 +152,88 @@ static func frame_card_numbers_and_belt(t: TestCase, root: Window) -> void:
 	t.check(slots.size() == 1 and slots[0].is_visible_in_tree(), "看得见")
 	game.queue_free()
 	Support.cleanup("char")
+
+
+static func _two_menus(flow: GameFlow) -> Canteen:
+	C355._open(flow)
+	var cn := flow.meta.canteen
+	for id in [&"mountain_yam", &"fowl_leg", &"sour_wheat", &"sour_wheat"]:
+		cn.store.try_add(C355._inst(flow.items, id, flow.meta.allocate_uid()))
+	for pair in [[&"mountain_yam", "山薯"], [&"sour_wheat", "酸麦"]]:
+		var it := cn.store.items().filter(func(i: ItemInstance) -> bool: return i.def.id == pair[0])[0] as ItemInstance
+		cn.store.remove(it.uid)
+		cn.pot.place(it, Vector2i(0, 0), 0)
+		cn.active = -1
+		cn.save_menu(String(pair[1]))
+		cn.empty_pot()
+	return cn
+
+
+static func run_canteen_fixed_and_eaten(t: TestCase) -> void:
+	t.begin("383 第二批 · 食堂：固定配方同一时间一份、删收藏跟着挪；【开饭】锅空不认；存档带着两项，旧档算没设没吃")
+	var cn := Canteen.new()
+	t.check(not cn.eat(), "锅空不能开饭")
+	cn.menus = [{"name": "a", "cells": []}, {"name": "b", "cells": []}, {"name": "c", "cells": []}] as Array[Dictionary]
+	t.check(cn.set_fixed(2) and cn.fixed == 2, "设第三份")
+	t.check(cn.set_fixed(0) and cn.fixed == 0, "设第一份就换掉原来那份")
+	t.check(not cn.set_fixed(3), "越界不认")
+	cn.set_fixed(2)
+	cn.delete_menu(0)
+	t.eq(cn.fixed, 1, "删了前面那份，固定的跟着往前挪")
+	cn.delete_menu(1)
+	t.eq(cn.fixed, -1, "删了固定的那份就没有固定")
+	var d := cn.to_dict()
+	t.check(d.has("fixed") and d.has("eaten"), "存档带 fixed、eaten")
+	var old := {"store": cn.store.to_dict(), "pot": cn.pot.to_dict(), "menus": [], "active": -1}
+	var back := Canteen.from_dict(old, ItemDatabase.new())
+	t.check(back.fixed == -1 and not back.eaten, "旧档：没设固定、没吃过")
+
+
+static func frame_meal_bar_fixed_and_eaten(t: TestCase, root: Window) -> void:
+	t.begin("383 第二批 · 食物横条：没设固定配方是空锅；设了就照它配；食堂【开饭】以后横条只能看、带「已吃过」，出发吃掉后清掉")
+	var game = _game(root)
+	var flow: GameFlow = game.flow
+	var cn := _two_menus(flow)
+	var yam := cn.store.items().filter(func(i: ItemInstance) -> bool: return i.def.id == &"mountain_yam")[0] as ItemInstance
+	cn.store.remove(yam.uid)
+	cn.pot.place(yam, Vector2i(0, 0), 0)
+	flow.new_run()
+	var setup = game.base()
+	t.eq(cn.pot.item_count(), 0, "没设固定配方：进来锅倒回仓库")
+	t.eq(setup.meal_head_text(), UiText.t("canteen.menu_empty_pot"), "横条写空锅")
+	setup.cancel()
+	t.check(flow.canteen_set_fixed(1), "设「酸麦」为固定配方")
+	flow.new_run()
+	setup = game.base()
+	t.eq(cn.menu_name(), "酸麦", "进来照固定配方配好")
+	t.check(cn.pot.item_count() == 1 and setup.meal_head_text() != UiText.t("canteen.menu_empty_pot"), "横条写这一锅的效果（%s）" % setup.meal_head_text())
+	t.check(setup.open_bar(setup.BAR_MEAL) and setup.meal_buttons().size() == 2, "没吃过：展开能换收藏")
+	setup.cancel()
+	# 食堂页：【固定】【开饭】
+	var panel = load("res://ui/game/canteen_panel.gd").new()
+	var drag := DragLayer.new()
+	root.add_child(drag)
+	root.add_child(panel)
+	panel.setup(flow, drag, ThemeDB.fallback_font)
+	t.check(panel.find_children("Fix", "Button", true, false).size() == 2, "每份收藏一颗【固定】")
+	t.check(panel.toggle_fixed(1) and cn.fixed == -1, "再点取消固定")
+	panel.toggle_fixed(1)
+	t.check(panel.eat() and cn.eaten, "【开饭】")
+	t.check(not drag._views.has(panel.pot_view), "吃过了：锅拖不动")
+	t.check((panel.find_child("Eat", true, false) as Button).disabled, "【开饭】灰掉")
+	panel.free()
+	drag.free()
+	flow.new_run()
+	setup = game.base()
+	t.eq(cn.menu_name(), "酸麦", "吃过了：进来不动这一锅")
+	t.check(setup.meal_head_text().contains(UiText.t("canteen.eaten_mark")), "横条带「已吃过」（%s）" % setup.meal_head_text())
+	setup.open_bar(setup.BAR_MEAL)
+	t.check(setup.meal_buttons().is_empty() and setup._meal_box.get_node_or_null(^"EatenNote") != null, "展开只能看、不能换")
+	t.eq(flow.canteen_load_menu(0).size(), 0, "换不了")
+	t.eq(cn.menu_name(), "酸麦", "还是酸麦")
+	t.check(_free_mode(setup) and Support.depart(setup), "出发")
+	var mod := MealModule.of(flow.run) if flow.run != null else null
+	t.check(mod != null and mod.has_meal(), "吃的是这一锅")
+	t.check(not cn.eaten and cn.pot.item_count() == 0, "出发吃掉：锅空、吃过的标记清掉")
+	game.queue_free()
+	Support.cleanup("char")
