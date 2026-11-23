@@ -208,3 +208,23 @@ static func run_map_marks(t: TestCase) -> void:
 	DifficultyMap.guard_down(g, 3)
 	t.eq(view.guard_pairs(), [], "守卫倒下：旗和虚线都没了")
 	view.free()
+
+
+static func run_flag_zoom(t: TestCase) -> void:
+	t.begin("复测 v8.05 · 地图缩到最小：守卫小旗跟着缩，不压旁边的点；开局视图正常大小")
+	var c = NodeScreens._content()
+	var d := _twelve()
+	if d == null:
+		t.check(false, "进阶十二在")
+		return
+	var run := RunState.start(c.chapter, 3, c.items, c.enemies, c.sets, [] as Array[StringName], {}, [] as Array[StringName], null, [], d)
+	var view := MapView.new()
+	view.size = Vector2(1280, 720)
+	view.graph = run.map
+	t.check(view.shortest_edge() > 0.0 and not view.guard_pairs().is_empty(), "图上有守卫")
+	view.zoom = MapView.START_GAP / maxf(1.0, view.shortest_edge())
+	t.eq(view.guard_flag_scale(), 1.0, "点隔得够开：原大")
+	view.zoom = MapView.ZOOM_MIN
+	var k := view.guard_flag_scale()
+	t.check(k < 1.0 and k >= MapView.FLAG_SCALE_MIN, "缩到最小：旗子跟着缩（%.2f）" % k)
+	view.free()
