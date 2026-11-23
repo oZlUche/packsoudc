@@ -62,3 +62,7 @@ static func run_guard_link_items(t: TestCase) -> void:
 			t.check(def.has_tag(&"valuable"), "%s 是贵重品" % v)
 			t.check(def.combat == null or def.combat.rules.is_empty(), "%s 不带战斗规则（增援由难度那边的钩子做）" % v)
 			t.eq(String(def.descriptions.get("en", "")), "", "%s 说明留空" % v)
+		var base := load("res://data/items/%s.tres" % id) as ItemDef
+		var spent := load("res://data/items/%s_spent.tres" % id) as ItemDef
+		if base != null and spent != null:
+			t.eq(ItemValue.of(spent), roundi(ItemValue.of(base) / 2.0), "%s 失效版按本体一半定价（作者 11-23）" % id)
