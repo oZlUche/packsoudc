@@ -34,9 +34,9 @@
 | 第 3 局后 | 第一批的「常规单 · 收草药」到 0 局，被撤下。补 2 张，栏上没接的 4 张 |
 | 第 4 局后 | 第 1 局补上的「短单 · 护送」到期撤下，没补新的。栏上没接的还有 3 张，没低于保底 2 张。手头两张一直没扣时限 |
 
-![手头 3 / 3，第四张【接下】变灰](images/v675-board-hand-full-zh.jpg)
+![手头 3 / 3，第四张【接下】变灰](images/v675-board-hand-full-zh.webp)
 
-![英文大字：第 1 局回营后的常规页](images/v675-board-after-run1-en-large.jpg)
+![英文大字：第 1 局回营后的常规页](images/v675-board-after-run1-en-large.webp)
 
 ## 三、两处修复复测（`gate672.gd old / new`，三组相同）
 
@@ -47,7 +47,7 @@
 | 新档点「科技」、后勤的「集市」「铁匠铺」 | 说明板居中，右列仓库收起（三处都检查了） |
 | 老档迁移 | 和上一轮一致：后勤 0 → 10、灰灯 6 → 25、协会 9 → 50，金币、科技、仓库不变 |
 
-![中文大字：科技说明板，右边不再露仓库](images/v675-locked-no-warehouse-zh-large.jpg)
+![中文大字：科技说明板，右边不再露仓库](images/v675-locked-no-warehouse-zh-large.webp)
 
 ## 四、观察（不算问题，请作者看看）
 
@@ -67,4 +67,4 @@
   - 营地交货类仍写「营地当场」。
 - 观察 1、2 是占位界面的问题，照旧。
 
-![英文大字：v6.76 的纸条文字](images/v676-board-texts-en-large.jpg)
+![英文大字：v6.76 的纸条文字](images/v676-board-texts-en-large.webp)

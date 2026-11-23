@@ -32,4 +32,6 @@ python3 tools/font_charset.py                  # 重写 charset.txt
 tools/subset_fonts.sh [原始字体目录]           # 默认 /mnt/project-files/art/fonts/chosen
 ```
 
-提交四个子集与 `charset.txt`。导入参数（`.import`）：灰度抗锯齿、轻微 hinting、子像素定位、不用 MSDF、随窗口缩放。
+提交四个子集与 `charset.txt`。
+
+**一个 PR 只裁一次**（报告 387，作者 2026-11-23）：每次重裁提交会在 git 历史里永久多出约 0.5 MB（到 2026-11-23 已提交 79 次、累计 38 MB）。覆盖用例会逼着加了新字的 PR 重裁，这躲不掉；能省的是同一个 PR 里改文案改到最后再裁一次、只提交一次子集，不要每个提交都裁。几个小 PR 要连着合时，最好把文案集中到一个里。

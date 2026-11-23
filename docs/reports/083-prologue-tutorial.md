@@ -7,7 +7,7 @@
 
 ## 一、序章长什么样
 
-![序章：一条线的预设图，只有布鲁图斯](images/083-prologue.png)
+![序章：一条线的预设图，只有布鲁图斯](images/083-prologue.webp)
 
 `data/maps/prologue.json`（一张手写的 `MapGraph`，新布局 `line`）：**生 → 搜 → 战 → 搜 → 精 → 撤**，六个点五条边，每个点最多两条边。
 

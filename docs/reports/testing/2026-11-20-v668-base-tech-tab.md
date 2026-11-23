@@ -55,7 +55,7 @@
 - 第 4 步书架写的是「图鉴、对局记录、特殊道具和成就」，不再提科技。
 - 看完后回主菜单再进基地，导览不再放。
 
-![导览第 2 步指科技页签](images/v668-tour-tech-step-zh.jpg)
+![导览第 2 步指科技页签](images/v668-tour-tech-step-zh.webp)
 
 ### 3. 科技页
 
@@ -71,7 +71,7 @@
 - 真点机制树页签能换过去。升行囊花了 1 点见识，见识 10 → 9。
 - 回主菜单再进：仓库扩建 1 级、行囊 1 级、追踪项都还在。
 
-![科技页（英文大字号）](images/v668-tech-page-en-large.jpg)
+![科技页（英文大字号）](images/v668-tech-page-en-large.webp)
 
 ### 4. 书架
 
@@ -79,7 +79,7 @@
 - 能点的格也是这四格。第五格空着，没有图也没有小牌；第六格是油灯。
 - 旧入口 `show_tab("tech")` 落到科技页签，不开书架窗。
 
-![书架四格 + 空格（中文大字号）](images/v668-shelf-four-cells-zh-large.jpg)
+![书架四格 + 空格（中文大字号）](images/v668-shelf-four-cells-zh-large.webp)
 
 ## 四、复现
 

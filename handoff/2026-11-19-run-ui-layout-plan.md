@@ -38,17 +38,17 @@
 
 **地图与四周部件，2026-11-13：**
 
-![历史截图：地图、顶栏、图例与腰带](../docs/reports/testing/evidence/2026-11-13-v614-v618/04-zh-map-coach-f-key.jpg)
+![历史截图：地图、顶栏、图例与腰带](../docs/reports/testing/evidence/2026-11-13-v614-v618/04-zh-map-coach-f-key.webp)
 
 **战利品与背包读数，2026-11-14：**
 
-![历史截图：战利品来源、背包、耐力负担、DPS和负重](../docs/reports/testing/evidence/2026-11-14-v620-v626/11-zh-bounty-notice-on-loot-v633.jpg)
+![历史截图：战利品来源、背包、耐力负担、DPS和负重](../docs/reports/testing/evidence/2026-11-14-v620-v626/11-zh-bounty-notice-on-loot-v633.webp)
 
 **商店与交易区域，2026-11-12：**
 
-![历史截图：商店双棋盘、天秤与钱袋](../docs/reports/testing/evidence/2026-11-12-v593-retest/03-zh-shop-first-visit.jpg)
+![历史截图：商店双棋盘、天秤与钱袋](../docs/reports/testing/evidence/2026-11-12-v593-retest/03-zh-shop-first-visit.webp)
 
-另已查看：[战斗转场通知](../docs/reports/testing/evidence/2026-11-14-v620-v626/10-zh-bounty-notice-at-battle-start.jpg)、[事件书页](../docs/reports/testing/evidence/2026-11-12-v593-retest/01-zh-guard-gate-before-craft.jpg)。转场截图未显示完整实战布局，战斗规划仍需实装时运行核验。
+另已查看：[战斗转场通知](../docs/reports/testing/evidence/2026-11-14-v620-v626/10-zh-bounty-notice-at-battle-start.webp)、[事件书页](../docs/reports/testing/evidence/2026-11-12-v593-retest/01-zh-guard-gate-before-craft.webp)。转场截图未显示完整实战布局，战斗规划仍需实装时运行核验。
 
 ## 3. 总体布局与阅读优先级
 

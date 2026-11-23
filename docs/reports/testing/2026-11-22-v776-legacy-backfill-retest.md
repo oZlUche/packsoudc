@@ -28,7 +28,7 @@
 
 两种老档再存档、再读回来，欠选次数都没变（6 次、9 次）。新存档的 `modules.level` 里也没有 `backfill_bonus`，说明补完就清掉了，不会重复补。
 
-![选了神但信物不在棋盘上的老档读回来](images/v776-legacy-sun-no-charm-pick.png)
+![选了神但信物不在棋盘上的老档读回来](images/v776-legacy-sun-no-charm-pick.webp)
 
 第三种情况是「选了神、信物也在棋盘上」，这种老档应该不补。实机走查没有摆信物，这种情况由单元测试 `test_level_372.gd` 的 `run_fixes_v773` 覆盖，它分别测了 none / missing / active 三种，而且检查了装两次不会重复补。全量测试里这一项是过的。
 

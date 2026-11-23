@@ -69,7 +69,7 @@
 
 都是细描边（2）。冰、雷和其它几种分得开，治疗青绿和毒绿也分得开了。
 
-![八种伤害和治疗（最后一个 +12 是治疗）](images/v664-damage-types-zh.jpg)
+![八种伤害和治疗（最后一个 +12 是治疗）](images/v664-damage-types-zh.webp)
 
 ### 4. 火属性暴击
 
@@ -78,7 +78,7 @@
 - 暴击打在反应上（火 + 冰）：数字是火 → 冰的渐变，「!」仍是纯金色，不吃渐变。
 - 放大一下没截到，见第一节。
 
-![普通、火暴击、火冰反应的暴击](images/v664-crit-gold-mark-zh.jpg)
+![普通、火暴击、火冰反应的暴击](images/v664-crit-gold-mark-zh.webp)
 
 ### 5. 十种反应
 
@@ -99,8 +99,8 @@
 - 英文长名（"Superconduct"、"Fungal Blood"）也是从左到右渐变。
 - 同一面板上的普通火伤害没挂材质，是单色 `#ff9d4d`。
 
-![十种反应（英文大字号）](images/v664-reactions-en-large.jpg)
-![十种反应（中文大字号）](images/v664-reactions-zh-large.jpg)
+![十种反应（英文大字号）](images/v664-reactions-en-large.webp)
+![十种反应（中文大字号）](images/v664-reactions-zh-large.webp)
 
 ## 四、观察（交作者判断）
 
@@ -112,7 +112,7 @@
 
 下图是跳字在原位停住时的样子，从左到右依次是物理、火、雷、冰、毒、火暴击：
 
-![跳字原位](images/v664-popups-natural-position.jpg)
+![跳字原位](images/v664-popups-natural-position.webp)
 
 ## 五、复现
 

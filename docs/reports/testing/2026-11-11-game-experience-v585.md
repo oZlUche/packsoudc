@@ -62,7 +62,7 @@
 
 **实测：**第一战取得 `knife_brute`（蛮神赐福的匕首）；第二次搜索取得毒药瓶。按教学把毒药拖向匕首不会合成，发生物品挤出。守卫教学仍提示“先把毒药瓶拖到匕首上面合成涂毒匕首”，主选项不可用，却提供“手里没有匕首，就这么上”。背包里实际有异体匕首。最后通过备用选项打完守卫，结算合成 0。
 
-**根因证据：**[RecipeDef.matches](../../../core/inventory/recipe_def.gd) 精确匹配输入 ID；普通 `knife + poison_vial` 查得到配方，`knife_brute + poison_vial` 在直接拖拽与相邻拼接两种查询下都为 false。教学事件也只检查普通匕首与涂毒匕首。见[探针输出](evidence/2026-11-11-game-experience/recipe-probe.log)、[探针脚本](evidence/2026-11-11-game-experience/probe_recipe.gd)和[现场截图](images/2026-11-11-eval-09-crafting-gate.jpg)。
+**根因证据：**[RecipeDef.matches](../../../core/inventory/recipe_def.gd) 精确匹配输入 ID；普通 `knife + poison_vial` 查得到配方，`knife_brute + poison_vial` 在直接拖拽与相邻拼接两种查询下都为 false。教学事件也只检查普通匕首与涂毒匕首。见[探针输出](evidence/2026-11-11-game-experience/recipe-probe.log)、[探针脚本](evidence/2026-11-11-game-experience/probe_recipe.gd)和[现场截图](images/2026-11-11-eval-09-crafting-gate.webp)。
 
 **复现：**使用本报告版本和[合成前存档](evidence/2026-11-11-game-experience/tutorial-before-craft.json)，在隔离测试槽中恢复为 `run.json`，继续第二次搜索取得毒药瓶；确认棋盘已有 `knife_brute`，按教学尝试合成，再进入守卫事件。该文件保留种子及第一战后的棋盘；应在相同版本、隔离用户目录复核，不覆盖正常存档。
 
@@ -72,7 +72,7 @@
 
 ### E02 · P2 信息问题：护甲、格挡与教学叙述没有对齐
 
-首战我方装备皮甲、没有盾牌，回放把敌人的 5 点物理攻击描述为“被抵挡了 5 伤害，最终伤害为 0”。源码确实把护甲吸收与格挡相加；只有两者同时存在时才分别叙述，单独护甲也落到通用“抵挡”文本。见[日志截图](images/2026-11-11-eval-06-defense-log.jpg)及 `core/battle/battle_narrator.gd` 的 `stopped` 分支。
+首战我方装备皮甲、没有盾牌，回放把敌人的 5 点物理攻击描述为“被抵挡了 5 伤害，最终伤害为 0”。源码确实把护甲吸收与格挡相加；只有两者同时存在时才分别叙述，单独护甲也落到通用“抵挡”文本。见[日志截图](images/2026-11-11-eval-06-defense-log.webp)及 `core/battle/battle_narrator.gd` 的 `stopped` 分支。
 
 另一方面，[守卫教学](../../../data/authoring/events/tut_elite.json)写“披着甲……每下都要被削掉一截”，实际该守卫携带的是格挡 5 的圆盾。v5.84 已把护甲改为有限吸收池，继续用这句话教盾牌会混淆两种防御。
 
@@ -80,7 +80,7 @@
 
 ### E03 · P2 教学呈现：反应说明出现时，目标区尚未显示对应反应
 
-序章守卫约第 5 秒触发菌血教学。界面稳定后，说明在讲毒与流血，高亮区域却只看见蓝色盾牌数字 5；关闭教学后才看到毒、流血状态。见[截图](images/2026-11-11-eval-10-reaction-coach.jpg)。代码把教学目标设为敌方整个状态行，并非某个确定的反应图标。
+序章守卫约第 5 秒触发菌血教学。界面稳定后，说明在讲毒与流血，高亮区域却只看见蓝色盾牌数字 5；关闭教学后才看到毒、流血状态。见[截图](images/2026-11-11-eval-10-reaction-coach.webp)。代码把教学目标设为敌方整个状态行，并非某个确定的反应图标。
 
 **建议：**等待状态 UI 更新后暂停，指向实际相关状态；首句先说“毒 + 流血触发菌血”，计算细节保留在后续说明。需要在相同战斗回放中再核对刷新顺序；本次不能断言底层反应计算错误。
 
@@ -117,9 +117,9 @@
 
 | 画面 | 用途 |
 |---|---|
-| [强攻预设](images/2026-11-11-eval-13-assault-preset.jpg) | 现有负重、耐力收支与输出提示 |
-| [敌人预览](images/2026-11-11-eval-14-enemy-preview.jpg) | 路线选择前的信息 |
-| [祭坛效果](images/2026-11-11-eval-16-altar-effect.jpg) | 现有增益说明 |
-| [商店成交](images/2026-11-11-eval-18-shop-complete.jpg) | 真实完成购买、货币扣除 |
-| [撤离费用](images/2026-11-11-eval-20-extract-cost.jpg) | 50 币撤离与物品去向说明 |
-| [序章结算](images/2026-11-11-eval-11-prologue-result.jpg) / [自由局结算](images/2026-11-11-eval-21-free-result.jpg) | 两条完整循环的结果 |
+| [强攻预设](images/2026-11-11-eval-13-assault-preset.webp) | 现有负重、耐力收支与输出提示 |
+| [敌人预览](images/2026-11-11-eval-14-enemy-preview.webp) | 路线选择前的信息 |
+| [祭坛效果](images/2026-11-11-eval-16-altar-effect.webp) | 现有增益说明 |
+| [商店成交](images/2026-11-11-eval-18-shop-complete.webp) | 真实完成购买、货币扣除 |
+| [撤离费用](images/2026-11-11-eval-20-extract-cost.webp) | 50 币撤离与物品去向说明 |
+| [序章结算](images/2026-11-11-eval-11-prologue-result.webp) / [自由局结算](images/2026-11-11-eval-21-free-result.webp) | 两条完整循环的结果 |

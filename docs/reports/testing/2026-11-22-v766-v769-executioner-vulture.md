@@ -34,9 +34,9 @@
   - A4、A8：雷纹羽 14 根；传说 6 件（v7.60 的「A4 起金档兽多带一件传说素材」也照常生效）。
 - 名牌：三档分别叫「幼年 / 成年 / 精英雷羽鹫」，英文大字下是「Young / Adult / Elite Thunder Vulture」，名字都完整显示在名牌里，没有截断。
 
-![处刑人（占位剪影）和雷羽鹫三档名牌](images/v769-executioner-vulture-plates-zh.jpg)
+![处刑人（占位剪影）和雷羽鹫三档名牌](images/v769-executioner-vulture-plates-zh.webp)
 
-![英文大字](images/v769-executioner-vulture-plates-en-large.jpg)
+![英文大字](images/v769-executioner-vulture-plates-en-large.webp)
 
 ## 四、实机走查
 

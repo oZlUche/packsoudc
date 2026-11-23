@@ -4,7 +4,7 @@
 
 作者的要求：做一个事件生成器，能输入文本、导入图片；要不要做成 Godot 之外的独立 exe，按性价比定。
 
-![事件编辑器](images/064-event-editor.png)
+![事件编辑器](images/064-event-editor.webp)
 
 ## 性价比：放在 Godot 里
 

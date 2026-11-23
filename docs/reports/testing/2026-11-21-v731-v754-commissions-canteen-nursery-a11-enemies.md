@@ -35,7 +35,7 @@
 - 告示栏：接一张纸条，办成后托盘还占着。点【完成】后托盘腾出来。
 - 排版检查没有发现溢出。
 
-![办成后等玩家点【完成】](images/v735-commission-ready-card-zh.jpg)
+![办成后等玩家点【完成】](images/v735-commission-ready-card-zh.webp)
 
 ## 三、食堂收藏（v7.33，#786）
 
@@ -64,7 +64,7 @@
 - 影响：玩家在营地里办成开设施的委托后，看不到新设施的入口，【完成】也跳错了页。
 - 建议：设施开放（或委托结案）时重建后勤小键和对应页面；或者在 `show_page` 遇到刚开的设施时补建。
 
-![真点《开伙》【完成】后跳到了出征页，后勤里没有「食堂」](images/v733-canteen-finish-jumps-expedition-zh.jpg)
+![真点《开伙》【完成】后跳到了出征页，后勤里没有「食堂」](images/v733-canteen-finish-jumps-expedition-zh.webp)
 
 **排版：收满 8 份时**
 
@@ -72,7 +72,7 @@
 - 「收藏满了，先删一份」这句话超出了 MealNote 框。
 - 菜单键是深色默认样式。这部分还是占位，等 UI 样张。
 
-![收满 8 份](images/v733-canteen-8-menus-zh.jpg)
+![收满 8 份](images/v733-canteen-8-menus-zh.webp)
 
 ## 四、苗圃棋盘（v7.42 #795、v7.51 #805）
 
@@ -104,7 +104,7 @@
 - 老档那一步：把 meta.json 改写成旧的 `plots` 格式后，读回来仍然是新格式，可能是游戏先存了盘。所以老档迁移这一项要靠单元测试 `adopt_legacy`，实机没验证。
 - 炼金筛「食材」：因为【收获】是灰的，食材仓库是空的，所以筛选里按设计不出「食材」这一项。
 
-![苗圃种满 16 格](images/v751-nursery-board-full-zh.jpg)
+![苗圃种满 16 格](images/v751-nursery-board-full-zh.webp)
 
 ## 五、新装备、食材、材料（#784、#789、#791、#802、#803、#806、#807）
 
@@ -158,9 +158,9 @@
   - warden 显示成「看守」。
 - 真开局到 A4，走到相邻的普通战，战前屏右边的神射手是**金**底、金框，肖像面朝左（镜像）。左边我方肖像没有镜像。
 
-![名牌墙：三档前缀和金属](images/v749-enemy-plate-wall-zh.jpg)
+![名牌墙：三档前缀和金属](images/v749-enemy-plate-wall-zh.webp)
 
-![A4 战前屏：右边对手金框、面朝左](images/v752-prebattle-a4-mirrored-zh.jpg)
+![A4 战前屏：右边对手金框、面朝左](images/v752-prebattle-a4-mirrored-zh.webp)
 
 ## 八、要作者或其他线程看的
 
