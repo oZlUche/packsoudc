@@ -30,6 +30,8 @@ const SUITE_ROOT := "res://tests"
 const NOT_SUITES := ["test_case.gd"]
 
 var _suites: Array = []
+## 383：frame_ 用例跑到第几个套件（一帧一个）
+var _frame_at := 0
 
 
 ## 扫出所有套件脚本（含子目录；路径排序 —— 要先后关系就按文件名排）
@@ -123,13 +125,18 @@ func _process(_delta: float) -> bool:
 		quit(2)
 		return true
 
-	# 需要场景树的用例：到这里 _ready 才派发得了
-	for suite in _suites:
+	# 需要场景树的用例：到这里 _ready 才派发得了。
+	# 383：一帧只跑一个套件 —— 原来全塞在一帧里，各屏建控件排进消息队列的延迟调用要等这一帧结束才清，
+	# 套件一多就把消息队列（默认 32 MB）撑爆，进程在退出时崩掉（断言其实都过了）。分帧以后每帧末清一次
+	if _frame_at < _suites.size():
+		var suite = _suites[_frame_at]
+		_frame_at += 1
 		for m in suite.get_script_method_list():
 			var n: String = m["name"]
 			if n.begins_with("frame_") and m["args"].size() == 2:
 				ItemFavorites.attach(null)
 				suite.call(n, _case, root)
+		return false
 
 	_report()
 	return true

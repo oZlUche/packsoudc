@@ -3,7 +3,7 @@
 ##
 ##     xvfb-run -a -s "-screen 0 1600x1000x24" godot --path . --rendering-driver opengl3 --script res://tools/help_shots.gd
 ##
-## 截两张：`pantheon_pick` 出征时的选神界面（一档信赖：三位神开着，三位写？？？？）；`altar_camp` 奉蛮神的一局里休息点的营地（有神坛）。
+## 截两张：`pantheon_pick` 开局第一屏展开的信仰横条（383；一档信赖：三位神开着，三位写？？？？）；`altar_camp` 奉蛮神的一局里休息点的营地（有神坛）。
 ## 存档写在 `user://help_shots/`，不碰玩家的存档位。
 extends SceneTree
 
@@ -106,16 +106,23 @@ func _process(_delta: float) -> bool:
 			_st = 1
 		1:
 			var base = _game.base()
-			if base == null or not base.has_method("show_god_pick"):
+			if base == null or not base.has_method("expedition_board"):
 				return false
-			var pick: Control = base.show_god_pick()
-			pick.get_child(0).get_child(0).name = "PickFrame"
+			_flow.new_run()     # 383：选神是开局第一屏的信仰横条
 			_wait = SETTLE
 			_st = 2
 		2:
-			var frame := root.find_child("PickFrame", true, false) as Control
+			var setup = _game.base()
+			if setup == null or not setup.has_method("open_bar"):
+				return false
+			setup.open_bar(&"faith")
+			_wait = SETTLE
+			_st = 3
+		3:
+			var setup = _game.base()
+			var frame: Control = setup.bar(&"faith")
 			_shot("pantheon_pick", frame.get_global_rect().grow(8) if frame != null else Rect2())
-			_game.base().close_god_pick()
+			setup.cancel()
 			_flow.choose_god(&"brute")
 			var ch := _flow.chapter_of(&"free_mode")
 			var chars := _flow.characters_for(ch)
@@ -142,8 +149,8 @@ func _process(_delta: float) -> bool:
 				return _done()
 			L("奉的是 %s（选的 %s）" % [String(run.active_faith_id()), String(run.selected_faith)])
 			_wait = SETTLE * 2
-			_st = 3
-		3:
+			_st = 4
+		4:
 			_shot("altar_camp")
 			return _next_lang()
 	return false

@@ -125,6 +125,8 @@ static func frame_spawn_view(t: TestCase, root: Window) -> void:
 
 static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
 	t.begin("作者 2026-10-16 → 10-27 · 鼠标移开道具：没钉住当场收，宽限取消（往哪走都一样）")
+	var probe := ItemTooltip.recipe_probe
+	ItemTooltip.recipe_probe = func(_id: StringName) -> bool: return false     # 383：不认任何配方 —— 别让上一个套件留下的探针（或没有探针 = 全认）给道具窗加配方词，窗就不会「被配方词留住」
 	var c := TestSupport.load_content()
 	var host := Control.new()
 	host.size = Vector2(800, 600)
@@ -151,6 +153,7 @@ static func frame_tip_leave_fast(t: TestCase, root: Window) -> void:
 	view.gui_input.emit(empty)
 	t.check(not tip.is_showing(), "移到空格：当场收")
 	host.queue_free()
+	ItemTooltip.recipe_probe = probe
 
 
 static func run_window_and_nameplate_art(t: TestCase) -> void:

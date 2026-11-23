@@ -18,7 +18,6 @@ const NurseryPanelScript := preload("res://ui/game/nursery_panel.gd")     # 342 
 const AlchemyPanelScript := preload("res://ui/game/alchemy_panel.gd")     # 354
 const CanteenPanelScript := preload("res://ui/game/canteen_panel.gd")     # 355
 const PantheonPanelScript := preload("res://ui/game/pantheon_panel.gd")     # 377
-const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 ## 图鉴缩略图之间的空隙；一行几个按宽度算（139）
 const CODEX_GAP := 8
 ## 左列宽、整屏外边距、三列之间的空
@@ -267,7 +266,6 @@ func open(payload: Dictionary) -> void:
 	board_col.add_child(_expedition)
 	_expedition.setup(flow)
 	_expedition.skip_asked.connect(show_skip_tutorial)     # 统一教程 D
-	_expedition.god_pick_asked.connect(show_god_pick)     # 377
 	_new_run_btn = _expedition.start_btn
 	# 178：「仓库」页 —— 带回来的背包（一键置入 / 整理 / 提示行）；没有带回来的就一行字（整理照旧管右边当前页）
 	var wh_page := _cloth()
@@ -527,7 +525,6 @@ func _rebuild_home() -> void:
 	_expedition = board
 	_expedition.setup(flow)
 	_expedition.skip_asked.connect(show_skip_tutorial)
-	_expedition.god_pick_asked.connect(show_god_pick)     # 377
 	_new_run_btn = _expedition.start_btn
 
 
@@ -538,116 +535,9 @@ func close_skip_tutorial() -> void:
 #endregion
 
 
-#region 377：出征时的选神界面；阵营到营地的通知（作者选 B「牌子亮起」，以后别的阵营、功能解锁也用这一种；占位等 UI设计 的正式图）
+#region 377：阵营到营地的通知（作者选 B「牌子亮起」，以后别的阵营、功能解锁也用这一种；占位等 UI设计 的正式图）
 const ARRIVAL_SEEN := "arrival_seen_"
 var _arrival: Control = null
-var _god_pick: Control = null
-
-
-## 【开始探索】：万神院到了营地，先跳出选神界面，选完再进后面的出征流程
-func show_god_pick() -> Control:
-	if _god_pick != null:
-		return _god_pick
-	_god_pick = _shade(0.72, true)
-	_god_pick.name = "GodPick"
-	_god_pick.z_index = 10
-	var panel := _modal_panel(UiText.t("pantheon.pick_title"), 24)
-	_god_pick.get_child(0).add_child(panel)
-	var col := _vbox(16)
-	panel.content.add_child(col)
-	var shrines = PantheonPanelScript.new()
-	shrines.setup(flow, PantheonPanelScript.PICK)
-	shrines.picked.connect(func(_fid: StringName):
-		close_god_pick()
-		flow.new_run())
-	col.add_child(shrines)
-	var keys := _hbox(24)
-	keys.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_child(keys)
-	keys.add_child(ScrollKey.make(UiText.t("pantheon.back"), close_god_pick))
-	_god_shrines = shrines
-	if CoachOverlay.due(flow, GOD_COACH):
-		_open_god_book()     # 377：第一次跳到选神界面 —— 先翻开「万神院与选神」那页，合上再用教练层指一遍
-	return _god_pick
-
-
-## 377：第一次选神的讲解（看完记进 coach_seen）与它先翻开的百科页
-const GOD_COACH := &"god_pick"
-const GOD_PAGE := "pantheon_choose"
-var _god_shrines: Node = null
-var _god_book: GameScreen = null
-var _god_coach: CoachOverlay = null
-
-
-func _open_god_book() -> void:
-	if _god_pick == null or _god_book != null or not flow.encyclopedia().has_page(GOD_PAGE):
-		_show_god_coach.call_deferred()
-		return
-	var book = EncyclopediaScreenScript.new()
-	book.screen = GameFlow.Screen.ENCYCLOPEDIA
-	book.flow = flow
-	book.font = font
-	book.back = close_god_book
-	_god_book = book
-	_god_pick.add_child(book)
-	book.open({"page": GOD_PAGE})
-
-
-## 合上选神前翻开的那页，接着放教练层
-func close_god_book() -> void:
-	if _god_book == null:
-		return
-	_god_book.queue_free()
-	_god_book = null
-	_show_god_coach.call_deferred()
-
-
-func god_book() -> GameScreen:
-	return _god_book
-
-
-func god_coach() -> CoachOverlay:
-	return _god_coach
-
-
-func _show_god_coach() -> void:
-	if _god_pick == null or _god_coach != null or _god_shrines == null or not CoachOverlay.due(flow, GOD_COACH):
-		return
-	var shrines: Node = _god_shrines
-	_god_coach = CoachOverlay.run_on(_god_pick, GOD_COACH, flow, font, func(id: StringName) -> Rect2: return _god_target(shrines, id))
-	if _god_coach != null:
-		_god_coach.closed.connect(func(): _god_coach = null)
-
-
-## 教练层指的地方：`shrines` 一排神龛、`none` 无信者那座、`choose` 第一个点得动的【奉祂】
-static func _god_target(shrines: Node, id: StringName) -> Rect2:
-	if shrines == null or not is_instance_valid(shrines):
-		return Rect2()
-	var n: Control = null
-	match id:
-		&"shrines":
-			n = shrines.find_child("Shrines", true, false) as Control
-		&"none":
-			n = shrines.find_child("Shrine_none", true, false) as Control
-		&"choose":
-			for b in shrines.find_children("Choose_*", "Button", true, false):
-				if not (b as Button).disabled and b.name != "Choose_none":
-					n = b as Control
-					break
-	return n.get_global_rect() if n != null else Rect2()
-
-
-func close_god_pick() -> void:
-	if _god_pick != null:
-		_god_pick.queue_free()
-		_god_pick = null
-		_god_book = null
-		_god_coach = null
-		_god_shrines = null
-
-
-func god_pick() -> Control:
-	return _god_pick
 
 
 ## 有没有还没通知过的到营地的阵营（现在只有万神院写了通知的字）
@@ -1860,14 +1750,6 @@ func page() -> String:
 
 ## 090：Esc = 返回上一级 —— 在别的页先回出征页（264 前是家），出征页再回主菜单
 func escape() -> bool:
-	if _god_book != null:     # 377：选神前翻开的那页先合上
-		close_god_book()
-		return true
-	if _god_coach != null:
-		return true     # 教练层自己认 Esc
-	if _god_pick != null:
-		close_god_pick()
-		return true
 	if sell_mode():     # 268：先退出售模式
 		set_sell_mode(false)
 		return true

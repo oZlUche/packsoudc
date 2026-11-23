@@ -203,6 +203,8 @@ static func run_drag_last_item(t: TestCase) -> void:
 
 static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	t.begin("084 · 悬浮窗控件：鼠标在视图里动到一件道具上就显示它的说明，移到空格 / 出视图就藏；can_show 能拦")
+	var probe := ItemTooltip.recipe_probe
+	ItemTooltip.recipe_probe = func(_id: StringName) -> bool: return false     # 383：不认任何配方 —— 别让上一个套件留下的探针（或没有探针 = 全认）给道具窗加配方词，窗就不会「被配方词留住」
 	var c := _content()
 	var host := Control.new()
 	host.size = Vector2(800, 600)
@@ -278,6 +280,7 @@ static func frame_hover_tip(t: TestCase, root: Window) -> void:
 	t.check(tip3._panel.size.y <= want + 0.5, "排版后主窗高度 = 内容高度（%.0f ≤ %.0f），不留空白" % [tip3._panel.size.y, want])
 	t.check(tip3._panel.size.y < tall, "比长文 + 棋盘那次矮（%.0f < %.0f）" % [tip3._panel.size.y, tall])
 	host3.queue_free()
+	ItemTooltip.recipe_probe = probe
 
 
 static func run_min_drops(t: TestCase) -> void:

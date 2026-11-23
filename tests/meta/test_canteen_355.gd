@@ -496,9 +496,9 @@ static func frame_nursery(t: TestCase, root: Window) -> void:
 	W178._cleanup()
 
 
-## 开局屏第四页「本次准备」：食堂开了就有这一页（倾向没开只放这一锅）；写这一锅的名字、效果、饱腹，能换一份收藏；出发吃的是换上的那一锅
+## 383：开局第一屏的食物横条（原第四页「本次准备」）：写这一锅的名字、效果、饱腹，能换一份收藏；出发吃的是换上的那一锅
 static func frame_prep(t: TestCase, root: Window) -> void:
-	t.begin("355 第二批 · 开局屏「本次准备」：食堂开了就有第四页；写这一锅（名字、效果、饱腹）；换一份收藏 = 从食材仓库重做；出发吃的是这一锅")
+	t.begin("355 第二批 / 383 · 开局第一屏的食物横条：食堂开了才有；折叠时写这一锅的效果，展开写名字、效果、饱腹；换一份收藏 = 从食材仓库重做；出发吃的是这一锅")
 	Support.cleanup("char")
 	var game = load(CS.GAME).instantiate()
 	game.save_path = CS.SAVE
@@ -525,9 +525,10 @@ static func frame_prep(t: TestCase, root: Window) -> void:
 	cn.save_menu("酸麦")
 	flow.new_run()
 	var setup = game.base()
-	t.eq(setup.last_page(), 3, "倾向没开、食堂开了：有第四页")
-	setup.show_page(3)
-	t.check(not setup._bias_box.get_parent().visible and setup._meal_box.visible, "只放这一锅")
+	t.eq(setup.last_page(), 2, "383：还是三页")
+	t.check(setup.bar(setup.BAR_MEAL).visible and not setup.bar(setup.BAR_MEAL).open, "食物横条在、默认折叠")
+	t.check(setup.meal_head_text() != "" and setup.meal_head_text() != UiText.t("canteen.menu_empty_pot"), "折叠时写这一锅的效果：%s" % setup.meal_head_text())
+	t.check(setup.open_bar(setup.BAR_MEAL) and setup._meal_box.is_visible_in_tree(), "点开")
 	t.eq((setup._meal_box.get_node("PotName") as Label).text, "酸麦", "名字：酸麦")
 	t.eq(setup.meal_buttons().size(), 2, "两份收藏可换")
 	t.eq(Bare.audit(setup._meal_box, "canteen355_prep"), [] as Array[String], "字不裸")
@@ -539,7 +540,6 @@ static func frame_prep(t: TestCase, root: Window) -> void:
 	var entries: Array = setup.preview().entry_ids()
 	if not entries.is_empty():
 		setup.pick_spawn(int(entries[0]))
-	t.check(setup.next_page() and setup.page() == 3, "第三页「继续」到第四页")
 	t.check(Support.depart(setup), "出发")
 	var mod := MealModule.of(flow.run) if flow.run != null else null
 	t.check(mod != null and mod.satiety == 11, "吃的是山薯这一锅：饱腹 11")
