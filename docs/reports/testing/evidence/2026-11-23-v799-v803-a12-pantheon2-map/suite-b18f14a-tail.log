@@ -1,0 +1,4 @@
+ERROR: 4713 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+EXIT=0
+EXIT=0
