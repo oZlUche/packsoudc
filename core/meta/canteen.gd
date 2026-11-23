@@ -486,7 +486,8 @@ func plan_menu(i: int, rules: CanteenRules = null) -> Dictionary:
 	if i < 0 or i >= menus.size():
 		return {}
 	var cov := coverage(menus[i].get("cells", []))
-	return {"state": PLAN_MENU, "name": String(menus[i].get("name", "")), "cells": cov["ok"], "meal": meal_of(cov["items"], rules),
+	var st := PLAN_MENU_SHORT if (cov["ok"] as Array).is_empty() else PLAN_MENU     # 一样都凑不出 = 仍是【食材不足】（测试 v8.17）
+	return {"state": st, "name": String(menus[i].get("name", "")), "cells": cov["ok"], "meal": meal_of(cov["items"], rules),
 		"gaps": (cov["gaps"] as Array).size()}
 
 
