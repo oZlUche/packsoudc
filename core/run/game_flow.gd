@@ -1239,10 +1239,38 @@ func canteen_save_menu(p_name: String = "") -> int:
 ## 一键重做第 [param i] 份：返回缺料的那几格
 func canteen_load_menu(i: int) -> Array[Dictionary]:
 	var gaps: Array[Dictionary] = []
-	if not canteen_open() or i < 0 or i >= meta.canteen.menus.size():
+	if not canteen_open() or i < 0 or i >= meta.canteen.menus.size() or meta.canteen.eaten:     # 383：吃过了不能换
 		return gaps
 	gaps = meta.canteen.load_menu(i)
 	save_meta()
+	return gaps
+
+
+## 383：设 / 取消固定配方（[param i] = -1 取消）
+func canteen_set_fixed(i: int) -> bool:
+	if not canteen_open() or not meta.canteen.set_fixed(i):
+		return false
+	save_meta()
+	return true
+
+
+## 383：食堂页的【开饭】：这一锅算吃下了，留到下一次出征
+func canteen_eat() -> bool:
+	if not canteen_open() or not meta.canteen.eat():
+		return false
+	save_meta()
+	return true
+
+
+## 383：进出征第一屏时配这一锅（[method Canteen.prepare]）。返回缺料的那几格；动了就存
+func canteen_prepare() -> Array[Dictionary]:
+	var gaps: Array[Dictionary] = []
+	if not canteen_open():
+		return gaps
+	var before := JSON.stringify(meta.canteen.to_dict())
+	gaps = meta.canteen.prepare()
+	if JSON.stringify(meta.canteen.to_dict()) != before:
+		save_meta()
 	return gaps
 
 
@@ -1642,6 +1670,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	var ate := MealModule.of(state) != null and MealModule.of(state).has_meal()
 	if ate:
 		meta.canteen.pot.clear()     # 355：出发成功这一刻吃掉这一锅（取消准备不扣）
+		meta.canteen.eaten = false     # 383：吃过的标记跟着这一锅清掉
 	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的地上规则；不经开局屏的路一样）
 	var lost := meta.has_pending_board()
 	if meta.board != null:

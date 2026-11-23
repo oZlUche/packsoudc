@@ -1,7 +1,9 @@
 ## 355：后勤「食堂」页（[Canteen]）—— 第一批占位，等 UI设计 的样张：
 ## 左边食材仓库的格子盘，中间锅的格子盘，食材在两块盘之间拖（整屏那一层拖拽，和仓库 → 背包同一套操作）；
 ## 右边一张纸条：这一锅每条属性固定值、百分比分开列，按当前角色算好的终值，下面饱腹度；
-## 第二批：纸条下面是收藏夹 —— 【收藏】锅里这一锅，一排菜单牌点一下照它重做（缺料的位置在锅上标出来），可改名、删除。两块盘都画外框和格线
+## 第二批：纸条下面是收藏夹 —— 【收藏】锅里这一锅，一排菜单牌点一下照它重做（缺料的位置在锅上标出来），可改名、删除。两块盘都画外框和格线。
+## 383：每份收藏多一颗【固定】（固定配方，同一时间一份：出征第一屏照它配锅）；纸条上多一颗【开饭】（这一锅现在吃下，留到下一次出征），
+## 吃过以后锅拖不动、收藏换不了，出发吃掉才解开
 extends HBoxContainer
 
 signal changed()
@@ -29,6 +31,7 @@ var _finals_head: Label = null
 var _finals: VBoxContainer = null
 var _pot_name: Label = null
 var _save_btn: Button = null
+var _eat_btn: Button = null
 var _menu_box: VBoxContainer = null
 var _menu_scroll: ScrollContainer = null
 var _gap_layer: Control = null
@@ -75,6 +78,9 @@ func setup(p_flow: GameFlow, p_drag: DragLayer, p_font: Font) -> void:
 	_save_btn = UiTheme.make_button(UiText.t("canteen.menu_save"), func(): save_menu(), UiPalette.Tier.MINOR, 12)
 	_save_btn.name = "SaveMenu"
 	col.add_child(_save_btn)
+	_eat_btn = UiTheme.make_button(UiText.t("canteen.eat"), func(): eat(), UiPalette.Tier.MINOR, 12)
+	_eat_btn.name = "Eat"
+	col.add_child(_eat_btn)
 	_menu_scroll = UiTheme.vscroll()
 	_menu_scroll.name = "MenuScroll"
 	_menu_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -184,6 +190,10 @@ func _fill_menus() -> void:
 	var miss := c.gaps().size()
 	_pot_name.text = (n if n != "" else UiText.t("canteen.unnamed")) + ("  " + UiText.t("canteen.gaps") % miss if miss > 0 else "")
 	_save_btn.disabled = c.menus.size() >= Canteen.MAX_MENUS or c.pot.item_count() == 0
+	_eat_btn.disabled = c.eaten or c.pot.item_count() == 0     # 383
+	_eat_btn.text = UiText.t("canteen.eaten_mark") if c.eaten else UiText.t("canteen.eat")
+	_eat_btn.tooltip_text = UiText.t("canteen.eaten_note") if c.eaten else (UiText.t("canteen.menu_empty_pot") if c.pot.item_count() == 0 else UiText.t("canteen.eat_tip"))
+	_lock_pot(c.eaten)
 	if c.menus.size() >= Canteen.MAX_MENUS:
 		_save_btn.tooltip_text = UiText.t("canteen.menu_full")
 	elif c.pot.item_count() == 0:
@@ -217,8 +227,15 @@ func _menu_row(i: int, title: String, lit: bool) -> Control:
 	pick.tooltip_text = UiText.t("canteen.menu_load_tip")
 	pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pick.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	pick.disabled = flow.meta.canteen.eaten     # 383：吃过了不能换
 	UiTheme.mark(pick, lit)
 	row.add_child(pick)
+	var is_fixed := flow.meta.canteen.fixed == i
+	var fix := UiTheme.make_button(UiText.t("canteen.unfix" if is_fixed else "canteen.fix"), func(): toggle_fixed(i), UiPalette.Tier.MINOR, 10)
+	fix.name = "Fix"
+	fix.tooltip_text = UiText.t("canteen.fixed_tip")
+	UiTheme.mark(fix, is_fixed)
+	row.add_child(fix)
 	var ren := UiTheme.make_button(UiText.t("canteen.menu_rename"), func(): start_rename(i), UiPalette.Tier.MINOR, 10)
 	ren.name = "Rename"
 	row.add_child(ren)
@@ -240,6 +257,30 @@ func load_menu(i: int) -> Array[Dictionary]:
 	var gaps := flow.canteen_load_menu(i)
 	_after_menu()
 	return gaps
+
+
+## 383：设 / 取消这份为固定配方
+func toggle_fixed(i: int) -> bool:
+	var ok := flow.canteen_set_fixed(-1 if flow.meta.canteen.fixed == i else i)
+	_after_menu()
+	return ok
+
+
+## 383：【开饭】
+func eat() -> bool:
+	var ok := flow.canteen_eat()
+	_after_menu()
+	return ok
+
+
+## 吃过了：锅不进拖拽层（拿不出、放不进）
+func _lock_pot(on: bool) -> void:
+	if drag == null or pot_view == null:
+		return
+	if on:
+		drag.unregister_view(pot_view)
+	else:
+		drag.register_view(pot_view)     # 登记过的不重复登记
 
 
 func start_rename(i: int) -> void:

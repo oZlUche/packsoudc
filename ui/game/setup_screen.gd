@@ -264,6 +264,7 @@ func open(_payload: Dictionary) -> void:
 	_backdrop()
 	_reroll_seed()
 	carry_funds = 0     # 2026-10-22：每次进开局屏都是「不带钱」，由玩家自己加
+	flow.canteen_prepare()     # 383：这一锅 —— 吃过了不动；设了固定配方照它配；没设就是空锅
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top"]:
@@ -845,6 +846,8 @@ func meal_head_text() -> String:
 			parts.append(t)
 	var miss := flow.meta.canteen.gaps().size()
 	var out := UiText.t("setup.list_sep").join(parts)
+	if flow.meta.canteen.eaten:
+		out += "  " + UiText.t("canteen.eaten_mark")     # 383：在食堂吃过了
 	return out + ("  " + UiText.t("canteen.gaps") % miss if miss > 0 else "")
 
 
@@ -999,6 +1002,11 @@ func _sync_meal() -> void:
 		sat.tooltip_text = UiText.t("canteen.satiety_tip")
 		sat.mouse_filter = Control.MOUSE_FILTER_PASS
 		_meal_box.add_child(sat)
+	if cn.eaten:     # 383：在食堂吃过了：只能看、不能换
+		var note := _label(UiText.t("canteen.eaten_note"), 15, UiPalette.DIM)
+		note.name = "EatenNote"
+		_meal_box.add_child(note)
+		return
 	var menus := _hbox(8)
 	menus.name = "Menus"
 	_meal_box.add_child(menus)
@@ -1009,11 +1017,13 @@ func _sync_meal() -> void:
 		b.toggle_mode = true
 		b.tooltip_text = UiText.t("canteen.menu_load_tip")
 		b.set_pressed_no_signal(k == cn.active)
+		if k == cn.fixed:
+			b.tooltip_text = UiText.t("canteen.fixed_tip") + "\n" + b.tooltip_text
 		_meal_btns.append(b)
 		menus.add_child(b)
 
 
-## 换一份收藏：照它从食材仓库重做这一锅。返回缺料的那几格
+## 换一份收藏：照它从食材仓库重做这一锅。返回缺料的那几格（383：在食堂吃过了不能换，返回空）
 func choose_menu(i: int) -> Array[Dictionary]:
 	var gaps := flow.canteen_load_menu(i)
 	_sync_meal()

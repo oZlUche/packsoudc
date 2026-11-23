@@ -742,6 +742,13 @@ const TEXT := {
 	"canteen.final": {"zh": "%s %s → %s", "en": "%s %s → %s"},
 	"canteen.tip_for": {"zh": "%s：%s +%s", "en": "%s: %s +%s"},
 	"canteen.prep_title": {"zh": "这一锅", "en": "This pot"},
+	"canteen.eaten_mark": {"zh": "已吃过", "en": "Eaten"},     # 383
+	"canteen.eaten_note": {"zh": "在食堂吃过了，这一锅不能再换", "en": "You already ate at the canteen; this pot can't be changed"},
+	"canteen.fixed_tip": {"zh": "固定配方：每次出征都照这份配锅", "en": "Fixed recipe: every expedition cooks this one"},
+	"canteen.fix": {"zh": "固定", "en": "Fix"},
+	"canteen.unfix": {"zh": "取消固定", "en": "Unfix"},
+	"canteen.eat": {"zh": "开饭", "en": "Eat"},
+	"canteen.eat_tip": {"zh": "这一锅现在就吃下，效果留到下一次出征；吃了就不能再换", "en": "Eat this pot now; it lasts until your next expedition and can't be changed after"},
 	"hud.meal": {"zh": "饱腹 %d", "en": "Satiety %d"},
 	"hud.meal_hungry": {"zh": "饿了", "en": "Hungry"},
 	"notice.meal_warn": {"zh": "饱腹只剩 %d：再到一个新节点，这锅饭就失效了", "en": "Satiety %d: one more new node and the meal wears off"},
