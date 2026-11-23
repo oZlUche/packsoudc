@@ -342,6 +342,8 @@ static func frame_meal_leave_and_eat(t: TestCase, root: Window) -> void:
 	t.eq(setup.choose_menu(1), 1, "应用「酸麦」：缺 1 样")
 	t.check(setup._notice_up(), "弹「食材不足」")
 	setup.meal_notice.keys[0].pressed.emit()
+	t.eq(setup.meal_state(), Canteen.PLAN_MENU_SHORT, "一样都凑不出：横条仍是【食材不足】（测试 v8.17）")
+	t.check(setup.meal_head_text().contains(UiText.t("canteen.short_mark")), "头上写【食材不足】（%s）" % setup.meal_head_text())
 	t.eq(setup.choose_menu(0), 0, "应用「山薯」：够")
 	t.eq(setup.meal_state(), Canteen.PLAN_MENU, "横条照「山薯」")
 	setup.cancel()
