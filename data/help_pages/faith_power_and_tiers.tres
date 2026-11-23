@@ -24,3 +24,4 @@ Each level, pick one of three cards when you're back on the map: Stats, Weapons 
 If you follow a god, that god's Rank also counts this run's XP: pass a threshold to rise a Rank. Rank decides the Rank-based effects written on Faith items and the god's tier effects; those you have reached light up, the rest stay grey. The tube under the top bar shows your XP and level; hover over it to see how to earn more."
 }
 related = Array[String](["anchor_activation", "altar_offering", "经验值"])
+needs_faith = true
