@@ -140,6 +140,8 @@ var bag_pool: BagPool = null
 var node_rules: NodeRules = null
 ## 342 B3：这一局的材料倾向（[MaterialBias]，空 = 无倾向）。出征时定（[method set_material_bias]），到本局结束不变
 var material_bias: StringName = &""
+## 383 第七节：这张图的出生点各偏哪一系 {出生点 id: 方向}（[method GameFlow.begin] 填；倾向没开 = 空）。挑出生点那一刻定下 [member material_bias]
+var spawn_bias: Dictionary = {}
 var economy: EconomyRules = null
 ## 129：负重规则（章节引用；空 = 这一章不算负重）
 var encumbrance: EncumbranceRules = null
@@ -284,6 +286,8 @@ func _trim_extracts() -> void:
 func pick_spawn(id: int) -> bool:
 	if phase != Phase.PICK_SPAWN or map == null or not map.entry_ids.has(id):
 		return false
+	if spawn_bias.has(id):
+		set_material_bias(spawn_bias[id])     # 383：挑了哪个出生点，这一局就偏它那一系
 	map.demote_entries(id)     # 182：没挑的入口变普通搜索点、路线只留这一条
 	if bool(map.layout_meta.get("two_sided", false)):
 		_remark_extracts()     # 281 §六：同侧撤离点没了，付费点与倒计时关的那个点在对侧重标
@@ -1284,6 +1288,13 @@ func stamp_enemy_hp() -> void:
 
 
 ## 342 B3：定这一局的材料倾向（出征那一刻；不认识的方向当无倾向）
+func _spawn_bias_dict() -> Dictionary:
+	var out := {}
+	for k in spawn_bias:
+		out[str(k)] = String(spawn_bias[k])
+	return out
+
+
 func set_material_bias(dir: StringName) -> void:
 	material_bias = dir if MaterialBias.DIRECTIONS.has(dir) else MaterialBias.NONE
 	if events != null:
@@ -1526,6 +1537,7 @@ func to_dict() -> Dictionary:
 		"character": String(character_id),
 		"map_scale": String(map_scale),
 		"material_bias": String(material_bias),
+		"spawn_bias": _spawn_bias_dict(),
 		"difficulty": String(difficulty_id),
 		"difficulty_rules": difficulty_rules,
 		"intel_seen": intel_seen.keys(),
@@ -1627,6 +1639,10 @@ static func from_dict(
 	s.character_id = StringName(String(d.get("character", "")))
 	s.map_scale = StringName(String(d.get("map_scale", "")))
 	s.material_bias = StringName(String(d.get("material_bias", "")))     # 342 B3：老档没有 = 无倾向
+	var sb: Variant = d.get("spawn_bias", {})     # 383：老档没有 = 空（还没挑出生点的老档就不带偏向）
+	if sb is Dictionary:
+		for k in (sb as Dictionary):
+			s.spawn_bias[int(k)] = StringName(String((sb as Dictionary)[k]))
 	s.difficulty_id = StringName(String(d.get("difficulty", "")))
 	s.difficulty_rules = String(d.get("difficulty_rules", ""))
 	s._read_faith_access(d.get("faith_access", {}))     # 377：老档没有 = 照旧有信仰、有赐福

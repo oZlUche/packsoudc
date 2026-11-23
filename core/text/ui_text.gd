@@ -806,6 +806,8 @@ const TEXT := {
 	"nursery.place_hint": {"zh": "点地里的空格种%s", "en": "Click an empty cell to plant %s"},
 	"nursery.pick": {"zh": "选中", "en": "Pick"},
 	"nursery.pick_tip": {"zh": "选中后点地里的空格，种在那里", "en": "Pick, then click an empty cell to plant it there"},
+	"bias.spawn_title": {"zh": "%s · 偏%s", "en": "%s · %s"},     # 383 第七节
+	"bias.spawn_line": {"zh": "这一局搜索更容易出%s", "en": "Searches this run turn up more %s"},
 	"bias.dir_none": {"zh": "无倾向", "en": "No focus"},
 	"bias.dir_mineral": {"zh": "矿物", "en": "Minerals"},
 	"bias.dir_plant": {"zh": "草木", "en": "Plants"},
