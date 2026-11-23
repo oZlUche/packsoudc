@@ -21,3 +21,4 @@ Changing Faith costs nothing: right-click an Anchor on the board and press Make 
 }
 related = Array[String](["anchor_activation", "switch_and_dormant", "drag_and_rotate", "item_actions"])
 see_items = Array[StringName]([&"charm_brute", &"charm_sun", &"charm_nature", &"charm_earth"])
+needs_faith = true

@@ -294,14 +294,15 @@ static func run_prologue3_gone(t: TestCase) -> void:
 
 ## 第二批：信仰没开时百科不列讲神 / 信物 / 祭坛的页；开了列，「万神院与选神」配中英两套截图
 static func run_help_gate(t: TestCase) -> void:
-	t.begin("377 第二批 · 百科：万神院没来不列神、信物、祭坛那几页（经验值与等级照列）；来了列，选神那页有截图，中英各一套")
+	t.begin("377 第二批 · 百科：万神院没来不列神、信物、祭坛、经验值与等级、信物与右键那几页；来了列，选神那页有截图，中英各一套")
 	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths"]))
 	var f := _new_flow(c)
 	f.help_pages = GameFlow.load_help_pages()
 	t.check(not f.faith_open(), "新档：信仰没开")
 	var book := f.encyclopedia()
 	t.check(not book.has_page("god_brute") and not book.has_page("pantheon_choose") and not book.has_page("altar_offering"), "不列神、选神、神坛献祭")
-	t.check(book.has_page("faith_power_and_tiers"), "经验值与等级照列")
+	t.check(not book.has_page("faith_power_and_tiers") and not book.has_page("anchor_and_right_click"), "经验值与等级、信物与右键也不列（作者 11-23 第 10 条 A）")
+	t.check(book.has_page("bags"), "别的页照列")
 	f.meta.commissions.arrived[String(Pantheon.FACTION)] = 0
 	book = f.encyclopedia()
 	t.check(book.has_page("god_brute") and book.has_page("pantheon_choose"), "万神院来了：列出来（百科重造）")
