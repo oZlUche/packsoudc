@@ -2,7 +2,7 @@
 
 > 规格：[383-departure-flow-consolidation.md](383-departure-flow-consolidation.md) 第三、四节（作者 2026-11-22 23:49 定稿）。分两批落地。
 
-## 第一批：三屏、折叠横条、删军需牌（VERSION_B1）
+## 第一批：三屏、折叠横条、删军需牌（v8.04）
 
 ### 目标
 
@@ -23,6 +23,8 @@
 | `tools/help_shots.gd`、`assets/help/shots/*/pantheon_pick.png` | 截图改截展开的信仰横条，中英重出 |
 | `data/authoring/help_pages/pantheon_choose.json` | 帮助页第一句改成「出征第一屏多一条信仰横条……不改就沿用上一局」（中英） |
 | `core/text/ui_text.gd` | 第一页标题「出征准备」；删「本次准备」「军需」；加「奉着」和来源那一行 |
+| `tests/run_tests.gd` | frame_ 用例改成一帧跑一个套件。原来全部塞在一帧里，各屏建控件排进消息队列的延迟调用要到这一帧结束才清；main 已经贴着上限（退出时泄漏 187 万个对象），这批多出的开局屏节点把消息队列（默认 32 MB）撑爆，断言全过但进程退出时崩（退出码 134）。分帧以后每帧末清一次 |
+| `tests/ui/test_feedback_1012.gd`、`tests/ui/test_text_and_tooltips.gd` | 分帧以后上一个套件的游戏真被释放了，道具窗的「认不认这个配方」探针变成空（= 全认），纱布的窗多出配方词、被「配方词留住」不收。两个用例自己固定探针为「一个都不认」，用完放回 |
 | 测试 | 新套件 `tests/ui/test_departure_383.gd`；改 `test_base_five_264`、`test_cartographers_342b3`、`test_canteen_355`、`test_pantheon_377`、`test_setup_179`、`test_setup_pages_161` |
 
 ### 关键决策
@@ -35,7 +37,7 @@
 ### 验证
 
 - 新套件 `tests/ui/test_departure_383.gd`：三屏、横条默认折叠、头上写的东西、展开 / 收起、同一时间只展开一条、三条都在时展开哪一条都放得下、信仰横条选神出发、沿用上回的角色与神、角色卡数字带局外加成和来源、配道具页的随身技能圆槽。
-- 全套：FULL_RESULT
+- 全套：`bash tools/test.sh` 通过 45265 项断言、357 个套件，退出码 0（合并 main v8.03 后重跑）
 - 截图（1600 × 1000 设计尺寸，xvfb 渲染）：
 
 | 三条都折叠 | 展开角色 | 展开信仰 | 展开食物 | 第三屏材料倾向 |
