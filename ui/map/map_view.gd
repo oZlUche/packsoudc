@@ -719,11 +719,12 @@ func _draw() -> void:
 		var hid := int((mark as Dictionary).get("node", -1))
 		if pos.has(hid) and float(grow.get(hid, 1.0)) >= 1.0:
 			_draw_hunter(to_screen(pos[hid]), String((mark as Dictionary).get("label", "")))
+	var flag_k := guard_flag_scale() if not guards.is_empty() else 1.0
 	for pair in guards:     # 守卫点、首领点插同一面旗（旗杆脚在节点圆的右上沿）
 		for k in 2:
 			var nid := int(pair[k])
 			if pos.has(nid) and float(grow.get(nid, 1.0)) >= 1.0:
-				_draw_guard_flag(to_screen(pos[nid]), guard_flag_art(String(pair[2])))
+				_draw_guard_flag(to_screen(pos[nid]), guard_flag_art(String(pair[2])), flag_k)
 	_draw_player_layer(pos, grow, rect)
 	for q in _tag_queue:
 		_draw_tag(String(q[0]), q[1], _node_tags, q[2])
@@ -880,14 +881,23 @@ static func guard_flag_art(link: String) -> String:
 
 
 ## 旗子按 json 的逻辑尺寸画（屏幕定长），`anchor`（旗杆脚）对准节点圆右上沿
-func _draw_guard_flag(p: Vector2, art: String) -> void:
+func _draw_guard_flag(p: Vector2, art: String, k: float = 1.0) -> void:
 	var tex := UiTheme.art_cached(art)
 	if tex == null:
 		return
 	var foot := p + Vector2(1.0, -1.0).normalized() * NODE_RADIUS
 	var meta := UiTheme.art_meta(art)
 	var sz: Array = meta.get("size", [tex.get_width(), tex.get_height()])
-	draw_texture_rect(tex, pawn_rect(foot, float(sz[1]), 1.0, art), false)
+	draw_texture_rect(tex, pawn_rect(foot, float(sz[1]) * k, 1.0, art), false)
+
+
+## 复测 v8.05：缩小看全图时点挤在一起，旗子按屏幕上最短那条边相对 [constant START_GAP] 缩小（开局视图正常大小），最小缩到 [constant FLAG_SCALE_MIN]
+const FLAG_SCALE_MIN := 0.35
+
+
+func guard_flag_scale() -> float:
+	var gap := shortest_edge() * zoom
+	return 1.0 if gap <= 0.0 else clampf(gap / START_GAP, FLAG_SCALE_MIN, 1.0)
 
 
 func _draw_hunter(p: Vector2, label: String) -> void:
