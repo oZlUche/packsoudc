@@ -1,0 +1,26 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+WARNING: All audio drivers failed, falling back to the dummy driver.
+
+H866 新档：信仰开 false；百科共 135 页；神相关 []；有「经验值与等级」false、「信物与右键」false；「道具按钮与锁定」结尾： item. Lock all and Sell all act on every item with the same name in the same container. /  / See also: [url=quick_place]Double-Click to Place[/url] · [url=shop]Shop[/url] · [url=warehouse]Warehouse[/url]
+H866 　　搜「经验值」命中 
+H866 百科屏（新档）：Encyclopedia / [Map and Steps] / [Search Spots] / [Battle and Pre-battle] / [Ground] / [Extraction and Defeat] / [Vitality] / [Results and Warehouse] / [The Three Characters] / [Keys] / [Drag and Rotate] / [Bags] / [Double-Click to Place] / [Sort] / [Crafting] / [Grant and Receive Slots] / [Item Buttons and Locking] / [Load] / [Belt and Carried Tools] / [Crystals and Loading] / [Growth and Rooting] / [How Auto Battle Works] / [Direct Damage and Block] / [Armor] / [Buffs and Stacks] / [Stamina and Cooldown] / [Haste] / [Multipliers] / [Elements and Reactions] / [Three Kinds of Enemies] / [Node Types] / [Random Nodes] / [Shop] / [Rest Spots] / [Entrusting] / [Countdown and Closing Extractions] / [Hunters] / [Erosion] / [Teleporters] / [Forge] / [Warehouse] / [Tech] / [Collection] / [Achievements] / [Save Slots] / [Market] / [Automatic] / [At battle start] / [On use] / [When hit] / [At stac
+H866 测试辅助：万神院到来 → 信仰开 true；百科共 148 页；神相关 ["anchor_and_right_click", "anchor_activation", "faith_power_and_tiers", "altar_offering", "switch_and_dormant", "god_brute", "god_sun", "god_nature", "god_earth", "god_skill", "god_hunt", "pantheon_choose"]；有「经验值与等级」true、「信物与右键」true；「道具按钮与锁定」结尾： name in the same container. /  / See also: [url=quick_place]Double-Click to Place[/url] · [url=anchor_and_right_click]Anchors and Right-Click[/url] · [url=shop]Shop[/url] · [url=warehouse]Warehouse[/url]
+H866 A12 说明（中）：进阶十一的一切，再加：每局有一名精英当守卫，守卫活着首领就带着增援；打倒守卫增援就撤掉。在进阶十一撤离一次后解锁。
+H866 A12 说明（英）：Everything in Ascension XI, and each run one elite stands guard: while it lives, the boss fights with a reinforcement. Defeat the guard to strip it. Unlocked by extracting once on Ascension XI.
+H866 spare_mainspring 本体 150 → 失效版 75（一半 75）
+H866 rally_horn 本体 150 → 失效版 75（一半 75）
+H866 beast_king_pact 本体 75 → 失效版 38（一半 38）
+ERROR: Texture with GL ID of 73: leaked 5460 bytes.
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+ERROR: Texture with GL ID of 76: leaked 5460 bytes.
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+WARNING: 9465 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+ERROR: 4477 resources still in use at exit (run with --verbose for details).
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
