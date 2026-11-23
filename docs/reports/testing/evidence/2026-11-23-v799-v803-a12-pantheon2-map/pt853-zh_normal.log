@@ -1,0 +1,90 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+PT853 ♥ f 250 st 2 屏 9 wait 22
+PT853 新档进营地：百科神相关页 2 ["anchor_and_right_click", "faith_power_and_tiers"]；仓库信物 []、金币 250、prologue3_done false；万神院到了 false、档 -1、信赖 0、成功撤离 0 局、信仰开 false、奉过 []、后勤小键 ["market", "smithy"]
+PT853 第 1 局开局（没经过选神）：信仰开 false、赐福 false、经验加成 0.00、奉 「」、有效「」、背包里的信物 []、图上无名祭坛 {  }
+PT853 　　走到相邻的 11（shop）
+PT853 ♥ f 500 st 6 屏 7 wait 34
+PT853 测试辅助：走了一步后直接撤离（force_extract）
+PT853 第 1 局结算：撤离 true；成功撤离计数 1；这一局来营地的 [&"cartographers", &"growers"]
+PT853 回营地（第 1 局后）：百科神相关页 2 ["anchor_and_right_click", "faith_power_and_tiers"]；仓库信物 []、金币 250、prologue3_done false；万神院到了 false、档 -1、信赖 0、成功撤离 1 局、信仰开 false、奉过 []、后勤小键 ["market", "smithy", "nursery"]；到来通知 没有
+PT853 ♥ f 750 st 5 屏 1 wait 11
+PT853 第 2 局开局（没经过选神）：信仰开 false、赐福 false、经验加成 0.00、奉 「」、有效「」、背包里的信物 []、图上无名祭坛 {  }
+PT853 　　走到相邻的 1（rest）
+PT853 测试辅助：走了一步后直接撤离（force_extract）
+PT853 第 2 局结算：撤离 true；成功撤离计数 2；这一局来营地的 []
+PT853 回营地（第 2 局后）：百科神相关页 2 ["anchor_and_right_click", "faith_power_and_tiers"]；仓库信物 []、金币 250、prologue3_done false；万神院到了 false、档 -1、信赖 0、成功撤离 2 局、信仰开 false、奉过 []、后勤小键 ["market", "smithy", "nursery"]；到来通知 没有
+PT853 ♥ f 1000 st 4 屏 9 wait 19
+PT853 第 3 局开局（没经过选神）：信仰开 false、赐福 false、经验加成 0.00、奉 「」、有效「」、背包里的信物 []、图上无名祭坛 {  }
+PT853 　　走到相邻的 2（search）
+PT853 测试辅助：走了一步后直接撤离（force_extract）
+PT853 ♥ f 1250 st 7 屏 8 wait 7
+PT853 第 3 局结算：撤离 true；成功撤离计数 3；这一局来营地的 [&"pantheon"]
+PT853 回营地（第 3 局后）：百科神相关页 11 ["anchor_and_right_click", "anchor_activation", "faith_power_and_tiers", "altar_offering", "god_brute", "god_sun", "god_nature", "god_earth", "god_skill", "god_hunt", "pantheon_choose"]；仓库信物 []、金币 250、prologue3_done false；万神院到了 true、档 0、信赖 0、成功撤离 3 局、信仰开 true、奉过 []、后勤小键 ["market", "smithy", "nursery", "pantheon"]；到来通知 「万神院 / 诸神的祭司们在营地边上立起了万神院。从现在起，每次出征前可以选这一局奉哪位神：信物出征时自动放进背包，休息点的神坛、废墟里的无名祭坛也会出现。不选就是无信者。 / [知道了]」
+PT853 到来通知的键：知道了
+PT853 点了【知道了】：通知还在 false；百科神相关页 11 ["anchor_and_right_click", "anchor_activation", "faith_power_and_tiers", "altar_offering", "god_brute", "god_sun", "god_nature", "god_earth", "god_skill", "god_hunt", "pantheon_choose"]；仓库信物 []、金币 250、prologue3_done false；万神院到了 true、档 0、信赖 0、成功撤离 3 局、信仰开 true、奉过 []、后勤小键 ["market", "smithy", "nursery", "pantheon"]
+PT853 万神院页：万神院 / 蛮神 / 技巧之神 / 日神 / ？？？？ / ？？？？ / ？？？？
+PT853 　　排版：查了 7 处，没有溢出
+PT853 ♥ f 1500 st 15 屏 9 wait 40
+PT853 第一次选神先翻开的百科页：百科 / [地图与走步] / [搜索点] / [战斗与战前准备] / [地上] / [撤离与失败] / [体力] / [结算与仓库] / [三个角色] / [按键一览] / [拖放与旋转] / [包] / [双击快速置入] / [整理] / [合成] / [增益槽与受益槽] / [信物与右键] / [道具按钮与锁定] / [负重] / [腰带与随身技能] / [魔晶石与装载] / [生长与扎根] / [自动战斗怎么跑] / [直接伤害与格挡] / [护甲] / [buff 与叠层] / [耐力与冷却] / [急速] / [乘区] / [元素与反应] / [敌人的三类] / [信物与激活] / [经验值与等级] / [神坛献祭] / [特殊操作] / [切换与休眠] / [蛮神] / [日神] / [自然之神] / [大地之神] / [技巧之神] / [狩猎之神] / [万神院与选神] / [节点类型] / [随机点] / [商店] / [休息点] / [托付] / [倒计时与撤离点关闭] / [猎手] / [侵蚀] / [传送点] / [铸炉] / [仓库] / [科技] / [图鉴]
+PT853 选神教练层第 1 步：万神院里的神。没解锁的写着？？？？，信赖到了那一档才开。　1/3 / [收起] / [知道了]
+PT853 选神教练层第 2 步：不想奉神就选无信者，升级只出通用牌。　2/3 / [收起] / [上一步] / [知道了]
+PT853 选神教练层第 3 步：点【奉祂】定下这一局奉谁。祂的信物出征时自动放进背包，局后不带回仓库。　3/3 / [收起] / [上一步] / [知道了]
+PT853 选神界面：这一局奉哪位神 / 无信者 / [奉祂] / 蛮神 / [奉祂] / 技巧之神 / [奉祂] / 日神 / [奉祂] / ？？？？ / [信赖 2] / ？？？？ / [信赖 2] / ？？？？ / [信赖 2] / [返回]
+PT853 　　键：["none「奉祂」", "brute「奉祂」", "skill「奉祂」", "sun「奉祂」", "earth「信赖 2」（灰）", "hunt「信赖 2」（灰）", "nature「信赖 2」（灰）"]
+PT853 　　排版：查了 16 处，没有溢出
+PT853 点灰着的狩猎之神：选神界面还在 true；选的 
+PT853 ♥ f 1750 st 17 屏 2 wait 5
+PT853 奉日神开局：信仰开 true、赐福 false、经验加成 0.00、奉 「sun」、有效「sun」、背包里的信物 ["charm_sun"]、图上无名祭坛 { "faith_call": 2 }；局外 百科神相关页 11 ["anchor_and_right_click", "anchor_activation", "faith_power_and_tiers", "altar_offering", "god_brute", "god_sun", "god_nature", "god_earth", "god_skill", "god_hunt", "pantheon_choose"]；仓库信物 []、金币 250、prologue3_done false；万神院到了 true、档 0、信赖 0、成功撤离 3 局、信仰开 true、奉过 [&"sun"]、后勤小键 -
+PT853 测试辅助：加 20 点经验（实得 20.0，有三档前没有加成）→ Lv.3 欠选 2
+PT853 升级教练层第 1 步：升级了：三张牌挑一张。同一张以后还会再出，拿几次就叠几层。　1/3 / [收起] / [知道了]
+PT853 升级教练层第 2 步：都不想要就换牌：三张一起换一批，次数有限。　2/3 / [收起] / [上一步] / [知道了]
+PT853 升级教练层第 3 步：剔牌：点它再点一张牌，这一局那张不再出，空位补一张。　3/3 / [收起] / [上一步] / [知道了]
+PT853 教练层走完（3 步）；选牌窗 true
+PT853 测试辅助：信赖补到 10：档 1；可选的神 ["brute", "sun", "skill", "hunt", "earth", "nature"]；经验加成服务 false；赐福服务 false；access { "enabled": true, "bless": false, "xp_bonus": 0.0 }
+PT853 测试辅助：信赖补到 25：档 2；可选的神 ["brute", "sun", "skill", "hunt", "earth", "nature"]；经验加成服务 true；赐福服务 false；access { "enabled": true, "bless": false, "xp_bonus": 0.1 }
+PT853 测试辅助：信赖补到 50：档 3；可选的神 ["brute", "sun", "skill", "hunt", "earth", "nature"]；经验加成服务 true；赐福服务 true；access { "enabled": true, "bless": true, "xp_bonus": 0.1 }
+PT853 存档退出：true
+PT853 读回这一局：信仰开 true、赐福 false、经验加成 0.00、奉 「sun」、有效「sun」、背包里的信物 ["charm_sun"]、图上无名祭坛 { "faith_call": 2 }
+PT853 ♥ f 2000 st 31 屏 8 wait 20
+PT853 奉日神这一局撤离：仓库里的信物 []（应该没有：信物不带回）
+PT853 回营地后仓库里的信物 []；百科神相关页 11 ["anchor_and_right_click", "anchor_activation", "faith_power_and_tiers", "altar_offering", "god_brute", "god_sun", "god_nature", "god_earth", "god_skill", "god_hunt", "pantheon_choose"]；仓库信物 []、金币 250、prologue3_done false；万神院到了 true、档 3、信赖 50、成功撤离 3 局、信仰开 true、奉过 [&"sun"]、后勤小键 ["market", "smithy", "nursery", "pantheon"]
+PT853 测试辅助（模拟老档）：清掉迁移标记、万神院没来、信赖清零、奉过的神清空；仓库放一枚 charm_brute；对局记录加一行奉过狩猎之神；金币 250
+PT853 重开存档位（迁移）：万神院到了 true、档 0、奉过 [&"hunt", &"sun"]、可选 ["brute", "sun", "skill", "hunt"]；仓库信物 []；金币 250 → 450；迁移标记 1；迁移记录 [{ "kind": "pantheon", "gods": ["hunt", "sun"], "refund": 200 }]
+PT853 再开一次（不重复迁移）：金币 450；迁移记录条数 1
+ERROR: Texture with GL ID of 73: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 76: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9496 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4478 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.

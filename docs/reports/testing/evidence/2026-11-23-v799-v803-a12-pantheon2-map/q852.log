@@ -1,0 +1,12 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+Q852 A12 定义：ascension_12；要解锁 ascension_12；精英额外稀有度 4；说明「进阶十一的一切，再加：每局有一名精英当守卫，守卫活着首领就带着增援；打倒守卫增援就撤掉，还能拿到一件保底的传说。在进阶十一撤离一次后解锁。」；挑战「守卫核心」
+Q852 A11：40 局里 { "有守卫": 0, "多于一名": 0, "绕得开": 0, "首领带增援": 0, "没守卫但首领带增援": 0 }；守卫是 {  }；带 {  }
+Q852 种子 26：守卫点 31「adept_mage」带 rally_horn；守卫浮窗「[color=@danger]敌情不明[/color] / [color=@warn]守卫[/color]：带着【求援号角】，打倒它，首领的增援就撤掉」
+Q852 　　首领浮窗「[color=@danger]敌情不明[/color] / [color=@danger]守卫增援[/color]：【求援号角】」；首领增援 { "guard": 31, "buff": "guard_horn", "link": "rally_horn" }
+Q852 　　打赢守卫（_guard_won）：掉 [&"rally_horn_spent"]；首领增援还在 false；首领浮窗「[color=@danger]敌情不明[/color]」
+Q852 A12：40 局里 { "有守卫": 40, "多于一名": 0, "绕得开": 40, "首领带增援": 40, "没守卫但首领带增援": 0 }；守卫是 { "adept_mage/elite": 4, "witch_doctor/elite": 4, "marksman/elite": 2, "berserker/elite": 2, "shield_wall/elite": 2, "pit_viper/elite": 3, "grand_magus/elite": 2, "centurion/elite": 1, "shock_eel/elite": 2, "cave_bear/elite": 1, "brute/elite": 1, "assassin/elite": 2, "executioner/elite": 1, "ragpicker/elite": 2, "magus/elite": 2, "butcher/elite": 1, "warden/elite": 3, "apprentice_mage/elite": 2, "smuggler/elite": 1, "miasma_spider/elite": 1, "raider/elite": 1 }；带 { "rally_horn": 34, "beast_king_pact": 6 }
+WARNING: 23575 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 3554 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
