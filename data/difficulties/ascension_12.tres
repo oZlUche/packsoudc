@@ -41,9 +41,9 @@ display_name = "进阶十二"
 display_names = {
 "en": "Ascension XII"
 }
-description = "进阶十一的一切，再加：每局有一名精英当守卫，守卫活着首领就带着增援；打倒守卫增援就撤掉，还能拿到一件保底的传说。在进阶十一撤离一次后解锁。"
+description = "进阶十一的一切，再加：每局有一名精英当守卫，守卫活着首领就带着增援；打倒守卫增援就撤掉。在进阶十一撤离一次后解锁。"
 descriptions = {
-"en": "Everything in Ascension XI, and each run one elite stands guard: while it lives, the boss fights with a reinforcement. Defeat the guard to strip it, and claim a guaranteed legendary. Unlocked by extracting once on Ascension XI."
+"en": "Everything in Ascension XI, and each run one elite stands guard: while it lives, the boss fights with a reinforcement. Defeat the guard to strip it. Unlocked by extracting once on Ascension XI."
 }
 challenge = "守卫核心"
 challenges = {
