@@ -14,5 +14,6 @@
     "anchor_activation",
     "altar_offering",
     "经验值"
-  ]
+  ],
+  "needs_faith": true
 }
