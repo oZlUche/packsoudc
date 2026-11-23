@@ -172,6 +172,17 @@ var _bias_btns: Dictionary = {}
 ## 355 第二批：第四页「这一锅」那一块与收藏菜单的按钮
 var _meal_box: VBoxContainer = null
 var _meal_btns: Array[Button] = []
+## 383：食物横条现在这一锅（[method GameFlow.canteen_plan] / [method GameFlow.canteen_plan_menu]）
+var _meal: Dictionary = {}
+## 「食物尚未确认」那一锅在横条里确认了
+var _meal_confirmed := false
+## 食物横条展开后右边配方列的宽、每份【应用】的高
+const MEAL_LIST_W := 520.0
+const MEAL_APPLY_H := 34.0
+## 食物横条头上那行小字
+const MEAL_SUB_INK := Color("7a6650")
+## 最近一次弹窗（「食材不足」「食物还没确认」；测试用）
+var meal_notice: NoticeModal = null
 ## 180：规模那一列缩进多少
 const SCALE_INDENT := 20
 ## 180 补二：仓库框给滚动条留多宽；底下「返回」的字号（按钮按档放大，仍比「出发」小）
@@ -264,7 +275,8 @@ func open(_payload: Dictionary) -> void:
 	_backdrop()
 	_reroll_seed()
 	carry_funds = 0     # 2026-10-22：每次进开局屏都是「不带钱」，由玩家自己加
-	flow.canteen_prepare()     # 383：这一锅 —— 吃过了不动；设了固定配方照它配；没设就是空锅
+	_meal = flow.canteen_plan()     # 383（作者 2026-11-23）：食物横条进来时是哪一种（七种，见 [method Canteen.plan]）
+	_meal_confirmed = false
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top"]:
@@ -823,32 +835,104 @@ func _fill_character_head() -> void:
 	s.add_child(n)
 
 
-## 食物那条：这一锅的效果（锅空就写空锅）
+## 383（作者 2026-11-23）：食物横条现在是哪一种 —— [constant Canteen.PLAN_EATEN] 等七种；在横条里确认了没开饭的那一锅算 &"confirmed"
+func meal_state() -> StringName:
+	var st: StringName = _meal.get("state", Canteen.PLAN_EMPTY)
+	if st == Canteen.PLAN_UNCONFIRMED and _meal_confirmed:
+		return &"confirmed"
+	return st
+
+
+## 这一局会吃到的效果（[method Canteen.meal_of] 的格式；吃不到 = 空）
+func meal_effect() -> Dictionary:
+	match meal_state():
+		Canteen.PLAN_MENU_SHORT, Canteen.PLAN_EMPTY:
+			return {}
+	return _meal.get("meal", {})
+
+
+## 离开第一屏前要不要弹「食物还没确认」
+func meal_unconfirmed() -> bool:
+	return bar_shown(BAR_MEAL) and meal_state() == Canteen.PLAN_UNCONFIRMED
+
+
+## 食物那条头上：名字 + 一行小字（配方 · 饱腹 / 已开饭 · 饱腹 / 缺料的提醒）+ 效果小牌 + 状态牌（样张 s383-departure/v2-1）
 func _fill_meal_head() -> void:
 	var s := _clear_head(BAR_MEAL)
-	var t := UiTheme.make_label(meal_head_text(), 18, UiTheme.INK)
-	t.name = "HeadText"
-	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	s.add_child(t)
-
-
-## 食物那条头上写的那一行（测试看）
-func meal_head_text() -> String:
-	var meal := flow.canteen_meal()
-	if int(meal.get("count", 0)) == 0:
-		return UiText.t("canteen.menu_empty_pot")
-	var parts: Array[String] = []
+	var st := meal_state()
+	var meal := meal_effect()
+	var b := bar(BAR_MEAL)
+	b.set_locked(st == Canteen.PLAN_EATEN)
+	if st == Canteen.PLAN_EMPTY:
+		s.add_child(MealChip.make(UiText.t("canteen.empty_chip"), MealChip.EMPTY))
+		return
+	var names := _vbox(0)
+	names.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	names.custom_minimum_size.x = 200
+	s.add_child(names)
+	var title := UiTheme.make_label(meal_title(), 22, UiTheme.INK)
+	title.name = "HeadText"
+	names.add_child(title)
+	var sub := meal_sub_text()
+	if sub != "":
+		var red := st == Canteen.PLAN_FREE_SHORT
+		var sl := UiTheme.make_label(sub, 14, Color("b8432f") if red else MEAL_SUB_INK)
+		sl.name = "HeadSub"
+		names.add_child(sl)
+	if st == Canteen.PLAN_MENU_SHORT:
+		s.add_child(MealChip.make(UiText.t("canteen.short_mark"), MealChip.SHORT))
+		var n := UiTheme.make_label(UiText.t("canteen.short_note"), 15, MEAL_SUB_INK)
+		n.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		s.add_child(n)
+		return
 	for stat in Canteen.STATS:
 		var t := Canteen.line_of(meal, stat)
 		if t != "":
-			parts.append(t)
-	var miss := flow.meta.canteen.gaps().size()
-	var out := UiText.t("setup.list_sep").join(parts)
-	if flow.meta.canteen.eaten:
-		out += "  " + UiText.t("canteen.eaten_mark")     # 383：在食堂吃过了
-	return out + ("  " + UiText.t("canteen.gaps") % miss if miss > 0 else "")
+			s.add_child(MealChip.make(t))
+	if st == Canteen.PLAN_UNCONFIRMED:
+		s.add_child(MealChip.make(UiText.t("canteen.unconfirmed"), MealChip.PENDING))
+
+
+## 横条头上的大名：配方名，没照配方就是【自由组合】
+func meal_title() -> String:
+	var n := String(_meal.get("name", ""))
+	return n if n != "" else UiText.t("canteen.unnamed")
+
+
+## 名字下面那一行小字
+func meal_sub_text() -> String:
+	var st := meal_state()
+	var sat := UiText.t("canteen.satiety") % int(meal_effect().get("satiety", 0))
+	match st:
+		Canteen.PLAN_EATEN:
+			return UiText.t("canteen.sub_join") % [UiText.t("canteen.eaten_mark"), sat]
+		Canteen.PLAN_MENU_SHORT:
+			return UiText.t("canteen.recipe_sub")
+		Canteen.PLAN_FREE_SHORT:
+			return UiText.t("canteen.free_short_note")
+		Canteen.PLAN_EMPTY:
+			return ""
+	if String(_meal.get("name", "")) != "":
+		return UiText.t("canteen.sub_join") % [UiText.t("canteen.recipe_sub"), sat]
+	return sat
+
+
+## 食物那条头上写的那一行（测试看）：名字、小字、各条效果、状态，空格隔开
+func meal_head_text() -> String:
+	var st := meal_state()
+	if st == Canteen.PLAN_EMPTY:
+		return UiText.t("canteen.empty_chip")
+	var parts: Array[String] = [meal_title(), meal_sub_text()]
+	if st == Canteen.PLAN_MENU_SHORT:
+		parts.append(UiText.t("canteen.short_mark"))
+	else:
+		for stat in Canteen.STATS:
+			var t := Canteen.line_of(meal_effect(), stat)
+			if t != "":
+				parts.append(t)
+	if st == Canteen.PLAN_UNCONFIRMED:
+		parts.append(UiText.t("canteen.unconfirmed"))
+	return "  ".join(parts.filter(func(x: String) -> bool: return x != ""))
 
 
 ## 信仰那条：所奉的神的徽记和名字，或【无信者】
@@ -968,8 +1052,8 @@ static func god_target(shrines: Node, id: StringName) -> Rect2:
 	return n.get_global_rect() if n != null else Rect2()
 
 
-## 355 第二批：「这一锅」—— 名字（缺几样）、效果汇总（按选着的角色算终值）、饱腹度，下面一排收藏可以换。
-## 配菜在后勤的食堂页做，这里只能换一份收藏
+## 383（作者 2026-11-23）：食物横条展开 —— 左边「这一锅」（效果按选着的角色算终值、饱腹；没确认的那一锅有【确认这一锅】），
+## 右边一列配方，每份【应用】（缺料标「缺 N 样」）。开过饭只能看。样张 s383-departure/v2-2、v2-4
 func _sync_meal() -> void:
 	if _meal_box == null:
 		return
@@ -980,59 +1064,104 @@ func _sync_meal() -> void:
 	if not flow.canteen_open():
 		return
 	var cn := flow.meta.canteen
-	var meal := flow.canteen_meal()
-	var n := cn.menu_name()
-	var miss := cn.gaps().size()
-	var head := _label((n if n != "" else UiText.t("canteen.unnamed")) + ("  " + UiText.t("canteen.gaps") % miss if miss > 0 else ""), 20, UiPalette.FG)
+	var st := meal_state()
+	var meal := meal_effect()
+	var row := _hbox(20)
+	_meal_box.add_child(row)
+	var pot := _vbox(6)
+	pot.name = "ThisPot"
+	pot.custom_minimum_size.x = 320
+	row.add_child(pot)
+	var head := _label(UiText.t("canteen.this_pot") % meal_title(), 18, UiPalette.FG)
 	head.name = "PotName"
-	_meal_box.add_child(head)
+	pot.add_child(head)
 	if int(meal.get("count", 0)) == 0:
-		_meal_box.add_child(_label(UiText.t("canteen.menu_empty_pot"), 16, UiPalette.DIM))
+		pot.add_child(_label(UiText.t("canteen.short_note") if st == Canteen.PLAN_MENU_SHORT else UiText.t("canteen.menu_empty_pot"), 16, UiPalette.DIM))
 	else:
-		var ch := character()
-		var finals := Canteen.final_lines(ch, meal)
-		for stat in Canteen.STATS:
-			var t := Canteen.line_of(meal, stat)
-			if t == "":
-				continue
-			_meal_box.add_child(_label(t, 16, UiPalette.FG))
-		for t in finals:
-			_meal_box.add_child(_label(t, 15, UiPalette.DIM))
+		for t in Canteen.final_lines(character(), meal):
+			pot.add_child(_label(t, 16, UiPalette.FG))
 		var sat := _label(UiText.t("canteen.satiety") % int(meal.get("satiety", 0)), 16, UiPalette.FG)
 		sat.tooltip_text = UiText.t("canteen.satiety_tip")
 		sat.mouse_filter = Control.MOUSE_FILTER_PASS
-		_meal_box.add_child(sat)
-	if cn.eaten:     # 383：在食堂吃过了：只能看、不能换
+		pot.add_child(sat)
+	if st == Canteen.PLAN_FREE_SHORT:
+		pot.add_child(_label(UiText.t("canteen.free_short_note"), 15, Color("e07a5f")))
+	if st == Canteen.PLAN_EATEN:     # 在食堂开过饭：只能看、不能换
 		var note := _label(UiText.t("canteen.eaten_note"), 15, UiPalette.DIM)
 		note.name = "EatenNote"
-		_meal_box.add_child(note)
+		pot.add_child(note)
 		return
-	var menus := _hbox(8)
-	menus.name = "Menus"
-	_meal_box.add_child(menus)
+	if st == Canteen.PLAN_UNCONFIRMED:
+		var ok := _button(UiText.t("canteen.confirm"), func(): confirm_meal(), 16)
+		_skin_entry(ok, UiTheme.BUTTON_MAP_ENTRY, MAP_SUB_H)
+		ok.name = "ConfirmMeal"
+		pot.add_child(ok)
+	var list := _vbox(6)
+	list.name = "Menus"
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.custom_minimum_size.x = MEAL_LIST_W
+	row.add_child(list)
+	list.add_child(_label(UiText.t("canteen.recipes"), 15, UiPalette.DIM))
 	for k in cn.menus.size():
 		var idx := k
-		var b := _button(String(cn.menus[k].get("name", "")), func(): choose_menu(idx), 16)
-		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, MAP_SUB_H)
-		b.toggle_mode = true
+		var line := _hbox(10)
+		list.add_child(line)
+		var nm := _label(String(cn.menus[k].get("name", "")), 16, UiPalette.FG)
+		nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		line.add_child(nm)
+		var miss := (cn.coverage(cn.menus[k].get("cells", []))["gaps"] as Array).size()
+		if miss > 0:
+			line.add_child(MealChip.make(UiText.t("canteen.gaps") % miss, MealChip.SHORT, 13))
+		var b := _button(UiText.t("canteen.apply"), func(): choose_menu(idx), 14)
+		_skin_entry(b, UiTheme.BUTTON_MAP_ENTRY, MEAL_APPLY_H)
+		b.name = "Apply%d" % k
 		b.tooltip_text = UiText.t("canteen.menu_load_tip")
-		b.set_pressed_no_signal(k == cn.active)
-		if k == cn.fixed:
-			b.tooltip_text = UiText.t("canteen.fixed_tip") + "\n" + b.tooltip_text
 		_meal_btns.append(b)
-		menus.add_child(b)
+		line.add_child(b)
 
 
-## 换一份收藏：照它从食材仓库重做这一锅。返回缺料的那几格（383：在食堂吃过了不能换，返回空）
-func choose_menu(i: int) -> Array[Dictionary]:
-	var gaps := flow.canteen_load_menu(i)
+## 应用第 [param i] 份配方（不动锅：出发那一刻才从食材仓库摆、才吃）。缺料照摆够的那部分，弹「食材不足」。
+## 返回缺几格；开过饭不能换（返回 -1）
+func choose_menu(i: int) -> int:
+	if meal_state() == Canteen.PLAN_EATEN:
+		return -1
+	var p := flow.canteen_plan_menu(i)
+	if p.is_empty():
+		return -1
+	_meal = p
+	_meal_confirmed = false
 	_sync_meal()
 	_fill_meal_head()
-	return gaps
+	var miss := int(p.get("gaps", 0))
+	if miss > 0:
+		meal_notice = NoticeModal.open(self, UiText.t("canteen.short_title"), UiText.t("canteen.short_body"), [[UiText.t("coach.ok"), Callable(), true]])
+	return miss
+
+
+## 【确认这一锅】：食堂里摆了没开饭的那一锅，开局照常吃
+func confirm_meal() -> void:
+	_meal_confirmed = true
+	_sync_meal()
+	_fill_meal_head()
 
 
 func meal_buttons() -> Array[Button]:
 	return _meal_btns
+
+
+## 出发前告诉 [GameFlow] 这一局吃什么（[constant GameFlow.MEAL_POT] 等）
+func _hand_meal() -> void:
+	flow.meal_cells = []
+	flow.meal_menu = ""
+	match meal_state():
+		Canteen.PLAN_EATEN, &"confirmed":
+			flow.meal_mode = GameFlow.MEAL_POT
+		Canteen.PLAN_MENU, Canteen.PLAN_FREE, Canteen.PLAN_FREE_SHORT:
+			flow.meal_mode = GameFlow.MEAL_CELLS
+			flow.meal_cells = (_meal.get("cells", []) as Array).duplicate(true)
+			flow.meal_menu = String(_meal.get("name", ""))
+		_:
+			flow.meal_mode = GameFlow.MEAL_NONE if flow.canteen_open() else GameFlow.MEAL_POT
 
 
 ## 第三屏左栏地图列表下面的「材料倾向」（办成地图协会的《把路画回来》才有）
@@ -1157,8 +1286,29 @@ func next_page() -> bool:
 		return false
 	if _page == 0 and character() == null:
 		return false
+	if _page == 0 and meal_unconfirmed() and not _notice_up():     # 383：食物还没确认 —— 继续离开 / 留下确认
+		meal_notice = NoticeModal.open(self, UiText.t("canteen.leave_title"), UiText.t("canteen.leave_body"), [
+			[UiText.t("canteen.leave_go"), func(): _leave_unconfirmed()], [UiText.t("canteen.leave_stay"), func(): _stay_confirm(), true]])
+		return false
 	show_page(_page + 1)
 	return true
+
+
+func _notice_up() -> bool:
+	return meal_notice != null and is_instance_valid(meal_notice) and meal_notice.is_inside_tree()
+
+
+## 弹窗选「继续离开」：这一局没有食物效果，锅原样留着
+func _leave_unconfirmed() -> void:
+	meal_notice = null
+	if _page == 0:
+		show_page(1)
+
+
+## 弹窗选「留下确认」：展开食物横条
+func _stay_confirm() -> void:
+	meal_notice = null
+	open_bar(BAR_MEAL)
 
 
 ## 返回（第一页 = 回基地）
@@ -1173,8 +1323,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
 		return
-	if _god_book != null or _god_coach != null:
-		return     # 383：翻着书、讲着教练层时回车不翻页
+	if _god_book != null or _god_coach != null or _notice_up():
+		return     # 383：翻着书、讲着教练层、弹着窗时回车不翻页
 	if key.keycode == KEY_ENTER or key.keycode == KEY_KP_ENTER:
 		next_page()
 		get_viewport().set_input_as_handled()
@@ -2070,6 +2220,7 @@ func _go_now() -> bool:
 	var ch := character()
 	flow.map_reveal = reveal_payload()
 	_record_carry()
+	_hand_meal()     # 383
 	var run := flow.begin(c, null, run_seed, [] as Array[int], ch, RunState.layout_of(board, _supply_uids), difficulty(), scale_id, carry_value(), spawn_id, carry_funds,
 			flow.preset_price(preset()), preset().ticket if preset() != null and preset().is_advanced() else &"", preset(), chosen_faith(), chosen_bias())
 	flow.map_reveal = {}
@@ -2206,6 +2357,10 @@ func cancel() -> void:
 
 ## 090：Esc = 第一页回基地（同「返回」按钮）。161：第二、三页的 Esc = 回上一页
 func escape() -> bool:
+	if _notice_up():     # 383：弹着的窗先关（「食物还没确认」= 留下）
+		meal_notice.close()
+		meal_notice = null
+		return true
 	if _god_book != null:     # 377：选神前翻开的那页先合上
 		close_god_book()
 		return true

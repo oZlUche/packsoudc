@@ -2,8 +2,8 @@
 ## 左边食材仓库的格子盘，中间锅的格子盘，食材在两块盘之间拖（整屏那一层拖拽，和仓库 → 背包同一套操作）；
 ## 右边一张纸条：这一锅每条属性固定值、百分比分开列，按当前角色算好的终值，下面饱腹度；
 ## 第二批：纸条下面是收藏夹 —— 【收藏】锅里这一锅，一排菜单牌点一下照它重做（缺料的位置在锅上标出来），可改名、删除。两块盘都画外框和格线。
-## 383：每份收藏多一颗【固定】（固定配方，同一时间一份：出征第一屏照它配锅）；纸条上多一颗【开饭】（这一锅现在吃下，留到下一次出征），
-## 吃过以后锅拖不动、收藏换不了，出发吃掉才解开
+## 383（作者 2026-11-23）：收藏改叫【配方】；应用配方时食材不够也照摆够的那部分，弹窗「食材不足，配方效果无法完整复现」。
+## 纸条上多一颗【开饭】（确认这一锅，留到下一次出征），开过饭锅拖不动、配方换不了，出发吃掉才解开
 extends HBoxContainer
 
 signal changed()
@@ -230,12 +230,6 @@ func _menu_row(i: int, title: String, lit: bool) -> Control:
 	pick.disabled = flow.meta.canteen.eaten     # 383：吃过了不能换
 	UiTheme.mark(pick, lit)
 	row.add_child(pick)
-	var is_fixed := flow.meta.canteen.fixed == i
-	var fix := UiTheme.make_button(UiText.t("canteen.unfix" if is_fixed else "canteen.fix"), func(): toggle_fixed(i), UiPalette.Tier.MINOR, 10)
-	fix.name = "Fix"
-	fix.tooltip_text = UiText.t("canteen.fixed_tip")
-	UiTheme.mark(fix, is_fixed)
-	row.add_child(fix)
 	var ren := UiTheme.make_button(UiText.t("canteen.menu_rename"), func(): start_rename(i), UiPalette.Tier.MINOR, 10)
 	ren.name = "Rename"
 	row.add_child(ren)
@@ -252,18 +246,17 @@ func save_menu(p_name: String = "") -> int:
 	return i
 
 
-## 点菜单牌：照这份重做（缺料的格在锅上标出来）
+## 点配方：照这份重做（缺料的格在锅上标出来）；缺料时弹窗提示（383，作者 2026-11-23）
 func load_menu(i: int) -> Array[Dictionary]:
 	var gaps := flow.canteen_load_menu(i)
 	_after_menu()
+	if not gaps.is_empty():
+		short_notice = NoticeModal.open(self, UiText.t("canteen.short_title"), UiText.t("canteen.short_body"), [[UiText.t("coach.ok"), Callable(), true]])
 	return gaps
 
 
-## 383：设 / 取消这份为固定配方
-func toggle_fixed(i: int) -> bool:
-	var ok := flow.canteen_set_fixed(-1 if flow.meta.canteen.fixed == i else i)
-	_after_menu()
-	return ok
+## 最近一次「食材不足」的弹窗（测试用）
+var short_notice: NoticeModal = null
 
 
 ## 383：【开饭】
