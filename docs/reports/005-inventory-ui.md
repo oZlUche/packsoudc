@@ -17,7 +17,7 @@
 | `tools/capture_scene.gd` | 渲染若干帧后截图存盘的验证工具 |
 | `tests/test_drag_layer.gd` | 拖拽逻辑测试套件 |
 
-![沙盒运行截图](images/005-sandbox.png)
+![沙盒运行截图](images/005-sandbox.webp)
 
 截图由 `tools/capture_scene.gd` 实机渲染产出，不是示意图。
 

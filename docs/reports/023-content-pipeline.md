@@ -4,7 +4,7 @@
 **测试**：927 项断言 / 14 个套件，全绿
 **场景**：`ui/editor/content_editor.tscn`
 
-![道具编辑器](images/023-content-editor.png)
+![道具编辑器](images/023-content-editor.webp)
 
 左边选道具，中间是**按反射生成**的表单，右边画形状、看实时校验、看 JSON。
 

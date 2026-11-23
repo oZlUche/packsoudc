@@ -4,7 +4,7 @@
 
 作者：事件展示的窗口设计得更大一些，左边完全是图片区域，参考杀戮尖塔。
 
-![事件屏](images/065-event-screen.png)
+![事件屏](images/065-event-screen.webp)
 
 ## 改了什么
 
