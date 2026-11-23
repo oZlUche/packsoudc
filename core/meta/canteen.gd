@@ -44,10 +44,22 @@ const NAME_MAX := 10
 var menus: Array[Dictionary] = []
 ## 锅里这一锅是照哪份收藏摆的（-1 = 没照收藏）。之后再改锅也还算这一份，缺的位置见 [method gaps]
 var active := -1
-## 383（作者 2026-11-22 23:49；做法是初值）：固定配方 = 收藏里第几份（-1 = 没设，同一时间只有一份）。进出征第一屏时照它从食材仓库配这一锅；没设就是空锅
-var fixed := -1
-## 383：这一锅在食堂按【开饭】吃下了 —— 出征第一屏的食物横条只能看、不能换，锅也不能再动；出发吃掉以后清掉
+## 383：这一锅在食堂按【开饭】确认了 —— 出征第一屏的食物横条只能看、不能换，锅也不能再动；出发吃掉以后清掉
 var eaten := false
+## 383（作者 2026-11-23）：上一局实际吃下去的那一锅 {"kind": "menu"（照配方）/ "free"（自由组合）, "name": 配方名, "cells": 摆法}。
+## 上一局没吃 = 空，下次出征食物横条也是空的
+var last: Dictionary = {}
+const LAST_MENU := "menu"
+const LAST_FREE := "free"
+
+## 出征第一屏食物横条的七种情况（[method plan]，报告 383 第三节第 2 条的表）
+const PLAN_EATEN := &"eaten"
+const PLAN_UNCONFIRMED := &"unconfirmed"
+const PLAN_MENU := &"menu"
+const PLAN_MENU_SHORT := &"menu_short"
+const PLAN_FREE := &"free"
+const PLAN_FREE_SHORT := &"free_short"
+const PLAN_EMPTY := &"empty"
 
 
 func _init(store_size: Vector2i = Vector2i(6, 6), pot_size: Vector2i = Vector2i(4, 4)) -> void:
@@ -297,18 +309,6 @@ func delete_menu(i: int) -> bool:
 		active = -1
 	elif active > i:
 		active -= 1
-	if fixed == i:
-		fixed = -1
-	elif fixed > i:
-		fixed -= 1
-	return true
-
-
-## 383：把第 [param i] 份设为固定配方（-1 = 不设；同一时间只有一份，设别的就换掉原来那份）
-func set_fixed(i: int) -> bool:
-	if i < -1 or i >= menus.size():
-		return false
-	fixed = i
 	return true
 
 
@@ -318,18 +318,6 @@ func eat() -> bool:
 		return false
 	eaten = true
 	return true
-
-
-## 383：进出征第一屏时配这一锅 —— 已吃过不动；设了固定配方照它重做（返回缺料的那几格）；没设就把锅倒回食材仓库，空锅出征。
-## 锅里回不去仓库的（仓库满了）留在锅里，不丢
-func prepare() -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	if eaten:
-		return out
-	if fixed >= 0 and fixed < menus.size():
-		return load_menu(fixed)
-	empty_pot()
-	return out
 
 
 ## 锅倒回食材仓库（回不去的留着）
@@ -354,10 +342,16 @@ func menu_name() -> String:
 ## 一键重做：锅里已经在原位的那几件留着，别的回食材仓库；再从食材仓库按原样取料摆好。
 ## 返回缺料（或位置被占）的那几格 [{"id", "x", "y", "rot"}]。锅里的东西回不去仓库的（仓库满了）留在锅里，不丢
 func load_menu(i: int) -> Array[Dictionary]:
-	var gaps_out: Array[Dictionary] = []
 	if i < 0 or i >= menus.size():
-		return gaps_out
-	var cells: Array = menus[i].get("cells", [])
+		return [] as Array[Dictionary]
+	var gaps_out := load_cells(menus[i].get("cells", []))
+	active = i
+	return gaps_out
+
+
+## 383：照一份摆法重做这一锅（配方或上次的组合；做法同 [method load_menu]，锅不再算照哪份配方）。返回缺料的那几格
+func load_cells(cells: Array) -> Array[Dictionary]:
+	var gaps_out: Array[Dictionary] = []
 	var keep := {}
 	var todo: Array = []
 	for c in cells:
@@ -383,7 +377,7 @@ func load_menu(i: int) -> Array[Dictionary]:
 			gaps_out.append(c)
 	store.end_batch()
 	pot.end_batch()
-	active = i
+	active = -1
 	return gaps_out
 
 
@@ -431,10 +425,86 @@ func gaps() -> Array[Dictionary]:
 #endregion
 
 
+#region 383：出征第一屏的食物横条（作者 2026-11-23）
+## 名字找配方（找不到 = -1）
+func menu_index(p_name: String) -> int:
+	for k in menus.size():
+		if String(menus[k].get("name", "")) == p_name:
+			return k
+	return -1
+
+
+## 食材仓库加锅里能凑出 [param cells] 里的哪几格（不动东西）：{"ok": [凑得出的格], "gaps": [缺料的格], "items": [对应的那几件，算效果用]}。
+## 玩家锁着的不算
+func coverage(cells: Array) -> Dictionary:
+	var pool := {}
+	for inst in store.items() + pot.items():     # 锅里摆着的出发时也能用（[method load_cells] 先把它们倒回仓库再取）
+		var it := inst as ItemInstance
+		if it.is_locked_by_player():
+			continue
+		var k := String(it.def.id)
+		if not pool.has(k):
+			pool[k] = []
+		(pool[k] as Array).append(it)
+	var ok: Array[Dictionary] = []
+	var miss: Array[Dictionary] = []
+	var got: Array = []
+	for c in cells:
+		var k := String((c as Dictionary).get("id", ""))
+		var left: Array = pool.get(k, [])
+		if left.is_empty():
+			miss.append(c)
+		else:
+			got.append(left.pop_back())
+			ok.append(c)
+	return {"ok": ok, "gaps": miss, "items": got}
+
+
+## 进出征第一屏时食物横条是哪一种：{"state": PLAN_*, "name": 配方名, "cells": 出发时要摆的格（空 = 不摆）, "meal": 这一锅的效果, "gaps": 缺几格}。
+## 顺序照报告的表：开过饭 → 锅里摆着没确认 → 上次配方（够 / 不够）→ 上次组合（够 / 不够，缺的去掉）→ 空
+func plan(rules: CanteenRules = null) -> Dictionary:
+	if pot.item_count() > 0:
+		var st := PLAN_EATEN if eaten else PLAN_UNCONFIRMED
+		return {"state": st, "name": menu_name(), "cells": [], "meal": current_meal(rules), "gaps": gaps().size()}
+	var cells: Array = last.get("cells", []) if last is Dictionary else []
+	if cells.is_empty():
+		return {"state": PLAN_EMPTY, "name": "", "cells": [], "meal": {}, "gaps": 0}
+	var cov := coverage(cells)
+	var miss := (cov["gaps"] as Array).size()
+	var nm := String(last.get("name", ""))
+	if String(last.get("kind", "")) == LAST_MENU:
+		if miss > 0:
+			return {"state": PLAN_MENU_SHORT, "name": nm, "cells": [], "meal": {}, "gaps": miss}
+		return {"state": PLAN_MENU, "name": nm, "cells": cells, "meal": meal_of(cov["items"], rules), "gaps": 0}
+	if (cov["ok"] as Array).is_empty():
+		return {"state": PLAN_EMPTY, "name": "", "cells": [], "meal": {}, "gaps": miss}
+	return {"state": PLAN_FREE_SHORT if miss > 0 else PLAN_FREE, "name": "", "cells": cov["ok"], "meal": meal_of(cov["items"], rules), "gaps": miss}
+
+
+## 应用第 [param i] 份配方（出征第一屏用，不动锅）：{"cells", "meal", "gaps"}，缺的那几格去掉
+func plan_menu(i: int, rules: CanteenRules = null) -> Dictionary:
+	if i < 0 or i >= menus.size():
+		return {}
+	var cov := coverage(menus[i].get("cells", []))
+	return {"state": PLAN_MENU, "name": String(menus[i].get("name", "")), "cells": cov["ok"], "meal": meal_of(cov["items"], rules),
+		"gaps": (cov["gaps"] as Array).size()}
+
+
+## 出发吃下锅里这一锅时记下来（锅空 = 上一局没吃，记成空）。照配方摆的记配方名和配方的摆法，否则记锅的摆法
+func record_eaten() -> void:
+	if pot.item_count() == 0:
+		last = {}
+	elif active >= 0 and active < menus.size():
+		last = {"kind": LAST_MENU, "name": String(menus[active].get("name", "")), "cells": (menus[active].get("cells", []) as Array).duplicate(true)}
+	else:
+		last = {"kind": LAST_FREE, "name": "", "cells": layout_of(pot)}
+#endregion
+
+
 #region 存档
 func to_dict() -> Dictionary:
 	return {"store": store.to_dict(), "pot": pot.to_dict(), "moved_legacy": moved_legacy, "menus": menus.duplicate(true), "active": active,
-		"fixed": fixed, "eaten": eaten}     # 383：不升版 —— 旧档没有这两项就是没设固定、没吃过
+		"eaten": eaten, "last": last.duplicate(true)}     # 383：不升版 —— 旧档没有就是没开饭、上次没吃（v8.07 的 fixed 不再读）
 
 
 ## 读回来；格子盘按存档里的大小建（档位由 [method fit] 之后再调）。认不得的道具由 [method GridInventory.from_dict] 告警丢弃
@@ -464,9 +534,16 @@ static func from_dict(d: Variant, items: ItemDatabase) -> Canteen:
 	c.active = int(src.get("active", -1))
 	if c.active >= c.menus.size():
 		c.active = -1
-	c.fixed = int(src.get("fixed", -1))     # 383
-	if c.fixed < -1 or c.fixed >= c.menus.size():
-		c.fixed = -1
+	var raw_last: Variant = src.get("last", {})     # 383
+	if raw_last is Dictionary and (raw_last as Dictionary).get("cells", []) is Array:
+		var l := raw_last as Dictionary
+		var lc: Array[Dictionary] = []
+		for cell in l.get("cells", []):
+			if cell is Dictionary:
+				var cd := cell as Dictionary
+				lc.append({"id": String(cd.get("id", "")), "x": int(cd.get("x", 0)), "y": int(cd.get("y", 0)), "rot": int(cd.get("rot", 0))})
+		if not lc.is_empty():
+			c.last = {"kind": LAST_MENU if String(l.get("kind", "")) == LAST_MENU else LAST_FREE, "name": String(l.get("name", "")), "cells": lc}
 	c.eaten = bool(src.get("eaten", false)) and c.pot.item_count() > 0
 	return c
 #endregion

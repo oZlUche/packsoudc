@@ -74,13 +74,24 @@ func set_open(v: bool) -> void:
 	toggled.emit(v)
 
 
-## 头右端的小三角：折叠朝右、展开朝下（画出来的，不是字）
+## 383：头右端换成一把小锁（只能看、不能改，如食堂开过饭的那一锅）
+func set_locked(v: bool) -> void:
+	_arrow.locked = v
+	_arrow.queue_redraw()
+
+
+## 头右端的小三角：折叠朝右、展开朝下（画出来的，不是字）；锁着画一把小锁
 class Chevron extends Control:
 	var open := false
+	var locked := false
 
 	func _draw() -> void:
 		var s := size
 		var ink := Color("5a4433")
+		if locked:
+			draw_arc(Vector2(s.x * 0.5, s.y * 0.42), s.x * 0.22, PI, TAU, 12, ink, 2.0)
+			draw_rect(Rect2(s.x * 0.2, s.y * 0.42, s.x * 0.6, s.y * 0.45), ink)
+			return
 		var pts: PackedVector2Array
 		if open:
 			pts = PackedVector2Array([Vector2(s.x * 0.15, s.y * 0.3), Vector2(s.x * 0.85, s.y * 0.3), Vector2(s.x * 0.5, s.y * 0.75)])

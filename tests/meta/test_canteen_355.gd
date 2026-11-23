@@ -523,19 +523,20 @@ static func frame_prep(t: TestCase, root: Window) -> void:
 	cn.pot.place(wheat, Vector2i(3, 3), 0)
 	cn.active = -1
 	cn.save_menu("酸麦")
-	cn.set_fixed(1)     # 383：没设固定配方的话进开局屏是空锅
+	cn.empty_pot()     # 383（作者 2026-11-23）：上一局吃的是「酸麦」配方、食材够 → 进开局屏自动复用
+	cn.last = {"kind": Canteen.LAST_MENU, "name": "酸麦", "cells": (cn.menus[1]["cells"] as Array).duplicate(true)}
 	flow.new_run()
 	var setup = game.base()
 	t.eq(setup.last_page(), 2, "383：还是三页")
 	t.check(setup.bar(setup.BAR_MEAL).visible and not setup.bar(setup.BAR_MEAL).open, "食物横条在、默认折叠")
-	t.check(setup.meal_head_text() != "" and setup.meal_head_text() != UiText.t("canteen.menu_empty_pot"), "折叠时写这一锅的效果：%s" % setup.meal_head_text())
+	t.check(setup.meal_head_text() != "" and setup.meal_head_text() != UiText.t("canteen.empty_chip"), "折叠时写这一锅的效果：%s" % setup.meal_head_text())
 	t.check(setup.open_bar(setup.BAR_MEAL) and setup._meal_box.is_visible_in_tree(), "点开")
-	t.eq((setup._meal_box.get_node("PotName") as Label).text, "酸麦", "名字：酸麦")
-	t.eq(setup.meal_buttons().size(), 2, "两份收藏可换")
+	t.eq((setup._meal_box.find_child("PotName", true, false) as Label).text, UiText.t("canteen.this_pot") % "酸麦", "名字：酸麦")
+	t.eq(setup.meal_buttons().size(), 2, "两份配方可换")
 	t.eq(Bare.audit(setup._meal_box, "canteen355_prep"), [] as Array[String], "字不裸")
-	t.eq(setup.choose_menu(0).size(), 0, "换成「山薯」")
-	t.eq((setup._meal_box.get_node("PotName") as Label).text, "山薯", "名字跟着换")
-	t.check(cn.pot.has_item(yam.uid) and cn.store.has_item(wheat.uid), "酸麦回仓库、山薯下锅")
+	t.eq(setup.choose_menu(0), 0, "换成「山薯」")
+	t.eq((setup._meal_box.find_child("PotName", true, false) as Label).text, UiText.t("canteen.this_pot") % "山薯", "名字跟着换")
+	t.check(cn.pot.item_count() == 0 and cn.store.has_item(yam.uid), "383：出发前不动锅和仓库")
 	setup.show_page(2)
 	setup._sync_preview()
 	var entries: Array = setup.preview().entry_ids()
@@ -544,5 +545,7 @@ static func frame_prep(t: TestCase, root: Window) -> void:
 	t.check(Support.depart(setup), "出发")
 	var mod := MealModule.of(flow.run) if flow.run != null else null
 	t.check(mod != null and mod.satiety == 11, "吃的是山薯这一锅：饱腹 11")
+	t.check(not cn.store.has_item(yam.uid) and cn.store.has_item(wheat.uid) and cn.pot.item_count() == 0, "383：出发那一刻才吃掉山薯，酸麦留在仓库")
+	t.eq(String(cn.last.get("name", "")), "山薯", "383：记下这一局是「山薯」配方")
 	game.queue_free()
 	Support.cleanup("char")

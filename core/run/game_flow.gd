@@ -1246,14 +1246,6 @@ func canteen_load_menu(i: int) -> Array[Dictionary]:
 	return gaps
 
 
-## 383：设 / 取消固定配方（[param i] = -1 取消）
-func canteen_set_fixed(i: int) -> bool:
-	if not canteen_open() or not meta.canteen.set_fixed(i):
-		return false
-	save_meta()
-	return true
-
-
 ## 383：食堂页的【开饭】：这一锅算吃下了，留到下一次出征
 func canteen_eat() -> bool:
 	if not canteen_open() or not meta.canteen.eat():
@@ -1262,16 +1254,28 @@ func canteen_eat() -> bool:
 	return true
 
 
-## 383：进出征第一屏时配这一锅（[method Canteen.prepare]）。返回缺料的那几格；动了就存
-func canteen_prepare() -> Array[Dictionary]:
-	var gaps: Array[Dictionary] = []
+## 383（作者 2026-11-23）：出征第一屏食物横条进来时是哪一种（[method Canteen.plan]）
+func canteen_plan() -> Dictionary:
 	if not canteen_open():
-		return gaps
-	var before := JSON.stringify(meta.canteen.to_dict())
-	gaps = meta.canteen.prepare()
-	if JSON.stringify(meta.canteen.to_dict()) != before:
-		save_meta()
-	return gaps
+		return {"state": Canteen.PLAN_EMPTY, "name": "", "cells": [], "meal": {}, "gaps": 0}
+	return meta.canteen.plan()
+
+
+## 383：出征第一屏里应用第 [param i] 份配方（不动锅，出发那一刻才摆、才吃）
+func canteen_plan_menu(i: int) -> Dictionary:
+	return meta.canteen.plan_menu(i) if canteen_open() else {}
+
+
+## 383：这一局吃什么，由开局屏在 [method begin] 之前设，开完局回到 [constant MEAL_POT]：
+## [constant MEAL_POT] = 锅里摆着的这一锅（老路、测试、开过饭、在横条里确认了）；[constant MEAL_NONE] = 不吃（锅原样留着）；
+## [constant MEAL_CELLS] = 出发那一刻从食材仓库照 [member meal_cells] 摆一锅再吃（自动复用、在横条里应用了配方），缺的那几格跳过
+const MEAL_POT := &"pot"
+const MEAL_NONE := &"none"
+const MEAL_CELLS := &"cells"
+var meal_mode: StringName = MEAL_POT
+var meal_cells: Array = []
+## 照哪份配方摆的（配方名；空 = 自由组合），出发时记成「上一局」
+var meal_menu := ""
 
 
 func canteen_rename_menu(i: int, p_name: String) -> bool:
@@ -1292,7 +1296,14 @@ func canteen_delete_menu(i: int) -> bool:
 func meal_snapshot(chapter: ChapterDef) -> Dictionary:
 	if not canteen_open() or tutorial_chapters().has(chapter):
 		return {}
-	var meal := meta.canteen.current_meal()
+	var meal := {}
+	match meal_mode:
+		MEAL_NONE:
+			return {}
+		MEAL_CELLS:
+			meal = Canteen.meal_of(meta.canteen.coverage(meal_cells)["items"])
+		_:
+			meal = meta.canteen.current_meal()
 	return meal if int(meal.get("count", 0)) > 0 else {}
 
 
@@ -1668,14 +1679,25 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	if ticket_uid >= 0:
 		meta.warehouse.remove(ticket_uid)     # 285：券交给军需官，不退
 	var ate := MealModule.of(state) != null and MealModule.of(state).has_meal()
+	if ate and meal_mode == MEAL_CELLS:
+		meta.canteen.load_cells(meal_cells)     # 383：自动复用 / 应用配方 —— 这一刻才从食材仓库摆进锅
+		meta.canteen.active = meta.canteen.menu_index(meal_menu) if meal_menu != "" else -1
+	var fed := canteen_open() and not tutorial_chapters().has(chapter)
+	if fed and ate:
+		meta.canteen.record_eaten()     # 383：记下这一局吃的是哪种
+	elif fed:
+		meta.canteen.last.clear()     # 383：这一局没吃，下次出征食物横条是空的
 	if ate:
 		meta.canteen.pot.clear()     # 355：出发成功这一刻吃掉这一锅（取消准备不扣）
-		meta.canteen.eaten = false     # 383：吃过的标记跟着这一锅清掉
+		meta.canteen.eaten = false     # 383：开过饭的标记跟着这一锅清掉
+	meal_mode = MEAL_POT
+	meal_cells = []
+	meal_menu = ""
 	# 090：进了游戏，上一局带回来还没清的就没了（开局屏的地上规则；不经开局屏的路一样）
 	var lost := meta.has_pending_board()
 	if meta.board != null:
 		meta.discard_board()     # 搬空了的空棋盘（一键置入后留着显示的）一并丢
-	if not taken.is_empty() or character != null or lost or cash > 0 or cost > 0 or ticket_uid >= 0 or ate:
+	if not taken.is_empty() or character != null or lost or cash > 0 or cost > 0 or ticket_uid >= 0 or ate or fed:
 		save_meta()
 	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
