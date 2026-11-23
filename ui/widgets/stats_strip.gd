@@ -62,6 +62,8 @@ var _layout: Dictionary = {}
 var _width := 0.0
 ## "" = 羊皮纸签（216，背包窗）；"wide" = 铜面板宽嵌槽（战利品 / 搜索）；"narrow" = 铜面板窄嵌槽（战前准备）
 var _inlay := ""
+## 385：状态界面里换浅石小格（[method use_stone]）
+var _stone := false
 var _bronze: Dictionary = {}
 var _row: Dictionary = {}
 ## 上一次 [method refresh] 的参数（换嵌槽后按新字色重算）
@@ -104,6 +106,13 @@ func use_inlay(narrow: bool, kinds: Array[StringName] = []) -> void:
 		refresh(_spec, _run)
 	else:
 		_relayout()
+
+
+## 385（作者定局内石刻）：纸签换浅石小格（顶端栏那种凹槽），火漆照旧、墨字照旧
+func use_stone() -> void:
+	_stone = true
+	for tag in _tags.values():
+		(tag as Control).queue_redraw()
 
 
 ## 只摆这几张（羊皮纸签；作者 11-11 配装备页只要耐力那张）
@@ -276,7 +285,10 @@ func _draw_tag(tag: Control, kind: StringName) -> void:
 		_draw_inlay(tag, UiTheme.art_cached(BRONZE + "tag_inlay_wide"), false)
 	else:
 		var bg := UiTheme.art_cached(ART + "tag")
-		if bg != null:
+		var well := UiTheme.art_box(UiTheme.ART_HUD_WELL) if _stone else null
+		if well != null:
+			tag.draw_style_box(well, Rect2(Vector2.ZERO, tag.size))
+		elif bg != null:
 			tag.draw_texture(bg, _vec((pieces.get("tag", {}) as Dictionary).get("origin_in_tag", [16, -6])))
 		var seal_piece: Dictionary = pieces.get(SEAL_ART[kind], pieces.get("seal", {}))
 		center = _vec(seal_piece.get("center_in_tag", [20, 23]))

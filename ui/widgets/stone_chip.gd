@@ -83,6 +83,30 @@ func set_state_ink(state: String, ink: Color) -> void:
 	queue_redraw()
 
 
+## 385（作者定局内石刻）：换一套底 —— [param art] 平时 / 悬停 / 停用，[param on_art] 选中（九宫格边距读同名 json）；
+## 字色按两张图 json 的 `tone`（浅底墨字、深底浅字）。缺图不动
+func restone(art: String, on_art: String) -> void:
+	var tex := UiTheme.art_cached(art)
+	var on_tex := UiTheme.art_cached(on_art)
+	if tex == null or on_tex == null:
+		return
+	for state in _boxes:
+		var name_ := on_art if state == "on" else art
+		var m: Array = UiTheme.art_meta(name_).get("margin", [10, 10, 10, 10])
+		var box := _boxes[state] as StyleBoxTexture
+		box.texture = on_tex if state == "on" else tex
+		box.texture_margin_left = float(m[0])
+		box.texture_margin_top = float(m[1])
+		box.texture_margin_right = float(m[2])
+		box.texture_margin_bottom = float(m[3])
+		box.set_expand_margin_all(0.0)
+		var light := UiTheme.art_tone(name_) == UiTheme.TONE_LIGHT
+		_colors[state] = UiTheme.STONE_INK if light else UiTheme.TENT_SIGN_INK
+	_colors["hover"] = Color(UiTheme.STONE_INK, 0.85)
+	_colors["disabled"] = Color(UiTheme.STONE_INK, 0.45)
+	queue_redraw()
+
+
 ## 258：按字号档放大（签高不变，40 高放得下大档 23 号）
 func _font_size() -> int:
 	return UiTheme.sz(ENTRY_FONT if is_entry else FONT_SIZE)

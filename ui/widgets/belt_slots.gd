@@ -26,6 +26,8 @@ static var _belt_layouts: Dictionary = {}
 static var _belt_loaded := false
 
 var module: BeltModule = null
+## 385（作者定局内石刻）：不画弯皮带，一律一排直圆槽（地图上的腰带外面是深石板框）
+var flat := false
 ## 用一个：`func(skill_id) -> String`（空串 = 用了，否则是原因）。没接 = 直接调模块
 var on_use: Callable = Callable()
 var font: Font = null
@@ -95,14 +97,14 @@ func slot_at(local: Vector2) -> int:
 	return -1
 
 
-## 232：现在是不是弯皮带
+## 232：现在是不是弯皮带（385：[member flat] 时不是）
 func curved() -> bool:
 	return not _layout().is_empty()
 
 
-## 这个格数的弯皮带摆位 {file, size, centers}；没有（超过 6 格）空
+## 这个格数的弯皮带摆位 {file, size, centers}；没有（超过 6 格、[member flat]）空
 func _layout() -> Dictionary:
-	return belt_layouts().get(str(slot_count()), {})
+	return {} if flat else belt_layouts().get(str(slot_count()), {})
 
 
 ## `belt/layout.json` 的 layouts（读一次）
@@ -157,7 +159,7 @@ func _draw() -> void:
 	var f := font if font != null else get_theme_default_font()
 	var r := SLOT * 0.5
 	var lay := _layout()
-	var bent := not lay.is_empty()
+	var bent := curved()
 	var belt := UiTheme.art_cached(BELT_DIR + String(lay["file"]).get_basename()) if bent else null
 	if belt != null:
 		draw_texture(belt, Vector2.ZERO)

@@ -58,17 +58,16 @@ static func run_keywords(t: TestCase) -> void:
 
 
 static func run_italic_theme(t: TestCase) -> void:
-	t.begin("170 · 主题：富文本的斜体是正文字体斜切；悬浮窗底是深底（定稿：深皮革平铺 + 黄铜边框九宫格两层，tone: dark）")
+	t.begin("170 · 主题：富文本的斜体是正文字体斜切；悬浮窗底是深底（385：深石板黄铜边，tone: dark）")
 	var th := UiTheme.build()
 	var it := th.get_font("italics_font", "RichTextLabel")
 	t.check(it is FontVariation and absf((it as FontVariation).variation_transform.x.y - UiTheme.ITALIC_SLANT) < 0.001, "斜体 = 斜切 %.1f" % UiTheme.ITALIC_SLANT)
 	t.eq(UiTheme.tone_of(UiTheme.PANEL_TOOLTIP), UiTheme.TONE_DARK, "悬浮窗是深底")
-	t.not_null(UiTheme.art(UiTheme.ART_TOOLTIP), "黄铜边框在")
-	t.not_null(UiTheme.art(UiTheme.ART_TOOLTIP_BODY), "皮革板身在")
+	# 385（作者定局内石刻）：换一张深石板黄铜边的九宫格
+	t.not_null(UiTheme.art(UiTheme.ART_STONE_TIP), "石刻悬浮窗图在")
+	t.eq(String(UiTheme.art_meta(UiTheme.ART_STONE_TIP).get("tone", "")), "dark", "json 写了 tone: dark")
 	var box := th.get_stylebox("panel", UiTheme.PANEL_TOOLTIP)
-	t.check(box is SlabStyle and (box as SlabStyle).body != null and (box as SlabStyle).edge != null, "两层画（板身 + 边框）")
-	if box is SlabStyle:
-		t.eq((box as SlabStyle).body.axis_stretch_horizontal, StyleBoxTexture.AXIS_STRETCH_MODE_TILE, "板身平铺不拉伸")
+	t.check(box is StyleBoxTexture and (box as StyleBoxTexture).texture == UiTheme.art_cached(UiTheme.ART_STONE_TIP), "悬浮窗底是深石板")
 	for c in ["tip_fg", "tip_meta", "tip_desc"]:
 		t.check((UiPalette.text_colors()["styles"] as Dictionary).has(c), "字色模板有 %s" % c)
 

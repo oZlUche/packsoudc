@@ -19,11 +19,13 @@ signal empty_pressed
 ## 玩家滚轮缩放了（游戏屏记进设置，下次进图沿用）
 signal zoom_changed(zoom: float)
 
-const NODE_RADIUS := 16.0     # 155：13 → 16，图标放大（作者：图案再大一点），外圈与命中都跟着它
+const NODE_RADIUS := 21.0     # 155：13 → 16，图标放大（作者：图案再大一点），外圈与命中都跟着它；作者 2026-11-22：地图整体放大，16 → 21
 ## 155：图标的边长 = 节点半径 × 它（圆里留一圈边）
 const ICON_SCALE := 1.6
 const SLOT_RADIUS := 5.0
 const EDGE_PICK := 6.0
+## 作者 2026-11-22：地图整体放大，连线 1.5 → 2.4（路线 ×2、加粗 ×4）
+const EDGE_W := 2.4
 
 ## 这一章的手绘底图（[MapSkin]；空 = 照旧石板 / 纯色底）。设了就按它的深浅换字色
 ## 布局的底纹（同心环布局的整圈辅助圆、格子布局的网格）画不画。作者 2026-10-17：局内只画路，不画不是路的圆弧；地图编辑器打开
@@ -662,11 +664,11 @@ func _draw() -> void:
 		if f <= 0.0:
 			continue
 		var color := _ink(UiPalette.DIM).darkened(0.25)
-		var width := 1.5
+		var width := EDGE_W
 		if route_of_edge.has(key):
 			var ri: int = route_of_edge[key]
 			color = Color(MapNodeStyle.route_color(ri), 0.9 if ri == bold_route else 0.7)
-			width = 6.0 if ri == bold_route else 3.0
+			width = EDGE_W * 4.0 if ri == bold_route else EDGE_W * 2.0
 		color.a *= f
 		if e.is_portal():
 			if f < 1.0:
@@ -681,6 +683,13 @@ func _draw() -> void:
 			f = minf(f, float(grow.get(int(id), 1.0)))
 		if f > 0.0:
 			_draw_junction(clique, pos, route_of_edge, f)
+
+	var guards := guard_pairs()
+	for pair in guards:     # 360 A12（报告 385 第三节）：守卫到首领一条直的红虚线，不沿路走
+		var gid := int(pair[0])
+		var cid := int(pair[1])
+		if pos.has(gid) and pos.has(cid) and float(grow.get(gid, 1.0)) >= 1.0 and float(grow.get(cid, 1.0)) >= 1.0:
+			_dashes(pos[gid], pos[cid], GUARD_LINE_COLOR, EDGE_W * 1.5, GUARD_DASH, GUARD_GAP)
 
 	if show_free_slots:
 		for slot in _layout.free_slots(graph, rect):
@@ -710,6 +719,11 @@ func _draw() -> void:
 		var hid := int((mark as Dictionary).get("node", -1))
 		if pos.has(hid) and float(grow.get(hid, 1.0)) >= 1.0:
 			_draw_hunter(to_screen(pos[hid]), String((mark as Dictionary).get("label", "")))
+	for pair in guards:     # 守卫点、首领点插同一面旗（旗杆脚在节点圆的右上沿）
+		for k in 2:
+			var nid := int(pair[k])
+			if pos.has(nid) and float(grow.get(nid, 1.0)) >= 1.0:
+				_draw_guard_flag(to_screen(pos[nid]), guard_flag_art(String(pair[2])))
 	_draw_player_layer(pos, grow, rect)
 	for q in _tag_queue:
 		_draw_tag(String(q[0]), q[1], _node_tags, q[2])
@@ -820,15 +834,62 @@ func _draw_junction(clique: Array, pos: Dictionary, route_of_edge: Dictionary, f
 			if other != id and route_of_edge.has(key):
 				route = int(route_of_edge[key])
 		if route >= 0:
-			draw_line(center_, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85 * fade), 3.0, true)
+			draw_line(center_, pos[int(id)], Color(MapNodeStyle.route_color(route), 0.85 * fade), EDGE_W * 2.0, true)
 		else:
 			var c := _ink(UiPalette.DIM).darkened(0.25)
-			draw_line(center_, pos[int(id)], Color(c, c.a * fade), 1.5, true)
+			draw_line(center_, pos[int(id)], Color(c, c.a * fade), EDGE_W, true)
 	var dot := _ink(UiPalette.DIM)
-	draw_circle(center_, 3.0, Color(dot, dot.a * fade))
+	draw_circle(center_, EDGE_W * 2.0, Color(dot, dot.a * fade))
 
 
 ## 猎手：节点外一圈红环 + 名字（占位画法）
+## 360 A12：守卫和它增援的首领 [[守卫点, 首领点, 联动道具 id], ...]；守卫倒下（首领的 `reinforce` 撤了）就没有
+func guard_pairs() -> Array:
+	var out: Array = []
+	if graph == null:
+		return out
+	for id in graph.node_ids():
+		var c := graph.get_node(id).content
+		if DifficultyMap.reinforced(graph, c):
+			var r: Dictionary = c[DifficultyMap.REINFORCE_KEY]
+			out.append([int(r.get("guard", -1)), id, String(r.get("link", ""))])
+	return out
+
+
+## 联动道具 → 旗子图（报告 385：发条钥匙、号角、兽爪）
+const GUARD_FLAGS := {"spare_mainspring": "map/guard_flag_clockwork", "rally_horn": "map/guard_flag_horn", "beast_king_pact": "map/guard_flag_beast"}
+const GUARD_LINE_COLOR := Color("#C8302A")
+const GUARD_DASH := 6.0
+const GUARD_GAP := 5.0
+
+
+## 一条直虚线：每段 [param dash]、间隔 [param gap]（画布坐标）
+func _dashes(a: Vector2, b: Vector2, color: Color, width: float, dash: float, gap: float) -> void:
+	var length := a.distance_to(b)
+	if length <= 0.0:
+		return
+	var dir := (b - a) / length
+	var t := 0.0
+	while t < length:
+		draw_line(a + dir * t, a + dir * minf(t + dash, length), color, width, true)
+		t += dash + gap
+
+
+static func guard_flag_art(link: String) -> String:
+	return String(GUARD_FLAGS.get(link, GUARD_FLAGS["rally_horn"]))
+
+
+## 旗子按 json 的逻辑尺寸画（屏幕定长），`anchor`（旗杆脚）对准节点圆右上沿
+func _draw_guard_flag(p: Vector2, art: String) -> void:
+	var tex := UiTheme.art_cached(art)
+	if tex == null:
+		return
+	var foot := p + Vector2(1.0, -1.0).normalized() * NODE_RADIUS
+	var meta := UiTheme.art_meta(art)
+	var sz: Array = meta.get("size", [tex.get_width(), tex.get_height()])
+	draw_texture_rect(tex, pawn_rect(foot, float(sz[1]), 1.0, art), false)
+
+
 func _draw_hunter(p: Vector2, label: String) -> void:
 	draw_arc(p, NODE_RADIUS + 7.0, 0.0, TAU, 32, UiPalette.HP, 3.0, true)
 	if label != "":     # 226 批三：名字写在纸签上（原来是红字直接写在地图纸上）

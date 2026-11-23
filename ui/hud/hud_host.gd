@@ -27,7 +27,9 @@ const BAR_HEIGHT := 88.0
 const GROUP := &"hud_host"
 const BAR_PAD := 4.0
 ## 没有栏时三个槽退回哪个锚点
-const BAR_FALLBACK := {"bar_left": "top_left", "bar_center": "top", "bar_right": "top_right"}
+const BAR_FALLBACK := {"bar_left": "top_left", "bar_center": "top", "bar_right": "top_right", "bar_growth": "top"}
+## 382：日晷右边那一组离日晷多远
+const GROWTH_GAP := 14.0
 const HudBarScript := preload("res://ui/hud/widgets/hud_bar.gd")
 
 var layout: HudLayout = null
@@ -268,8 +270,8 @@ func arrange() -> void:
 	var bar := _bar()
 	for e in layout.entries:
 		var w: HudWidget = widgets.get(StringName(e["id"]), null)
-		if w == null or not w.visible or w == bar:
-			continue
+		if w == null or not w.visible or w == bar or StringName(e["id"]) == HudLayout.XP_BAR:
+			continue     # 382：经验值条不进组，栏摆好后贴着栏下沿摆
 		var anchor := String(e["anchor"])
 		var offset: Vector2 = e["offset"]
 		if HudLayout.in_bar(anchor):
@@ -295,10 +297,23 @@ func arrange() -> void:
 				_bar_h = maxf(_bar_h, (_rows(groups[key])[1] as Vector2).y + maxf(BAR_PAD, m.x) + maxf(BAR_PAD, m.y))
 		bar.position = Vector2.ZERO
 		bar.size = Vector2(size.x, _bar_h)
+		var center_right := -1.0
 		for key in order:
 			var a := String(groups[key]["anchor"])
-			if HudLayout.in_bar(a):
+			if HudLayout.in_bar(a) and a != HudLayout.BAR_GROWTH:
 				_place_group(groups[key], _bar_frame(), HudLayout.BAR_ANCHORS[a])
+				if a == "bar_center":
+					for ln in groups[key]["lines"]:
+						for w in groups[key]["lines"][ln]:
+							center_right = maxf(center_right, (w as HudWidget).position.x + (w as HudWidget).size.x)
+		# 382 A：成长一组从日晷右沿往右排（没有日晷就从栏的正中起）
+		var bf := _bar_frame()
+		var from_x := (center_right if center_right >= 0.0 else bf.get_center().x) + GROWTH_GAP
+		var growth := Rect2(from_x, bf.position.y, maxf(0.0, bf.end.x - from_x), bf.size.y)
+		for key in order:
+			if String(groups[key]["anchor"]) == HudLayout.BAR_GROWTH:
+				_place_group(groups[key], growth, HudLayout.BAR_ANCHORS[HudLayout.BAR_GROWTH])
+	_place_xp_bar()
 	# 再摆右边那一条，量出它占多宽；其余的在剩下那块里摆
 	_right = 0.0
 	for key in order:
@@ -313,6 +328,20 @@ func arrange() -> void:
 		if not on_right(a) and not HudLayout.in_bar(a):
 			_place_group(groups[key], _frame(a), HudLayout.ANCHORS.get(a, Vector2.ZERO))
 	arranged.emit()
+
+
+## 382：经验值条横贯全屏，贴在顶端栏石板的下沿（没栏就贴顶）；排在栏底下一层，日晷压在它上面
+func _place_xp_bar() -> void:
+	var xp: HudWidget = widgets.get(HudLayout.XP_BAR, null)
+	if xp == null or not xp.visible:
+		return
+	var y := _bar_h - _bar_margins().y if _bar() != null else 0.0
+	xp.custom_minimum_size.x = size.x
+	xp.position = Vector2(0.0, y)
+	xp.size = Vector2(size.x, xp.get_combined_minimum_size().y)
+	var bar := _bar()
+	if bar != null and xp.get_index() > bar.get_index():
+		move_child(xp, bar.get_index())     # 排在栏底下：日晷底座（栏皮画的）压在条上
 
 
 ## 一组的行（按 line 排好）与整组多大

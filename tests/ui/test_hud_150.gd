@@ -17,14 +17,18 @@ static func run_layout(t: TestCase) -> void:
 	t.begin("150 / 166 · 布局：默认是顶端栏三个槽；字典往返一致；坏 id / 锚点 / 档位 / 偏移 / 重复都报；文件存取与重置")
 	var d := HudLayout.default_for("map")
 	t.eq(d.entries.size(), HudWidgets.KINDS.size(), "默认布局把每一种都摆上了")
-	t.eq(HudLayout.VERSION, 7, "186：布局版本 7（旧的回默认）")
+	t.eq(HudLayout.VERSION, 8, "382：布局版本 8（旧的回默认）")
 	t.eq(String(d.entry_of(&"hud_bar")["anchor"]), "top", "顶端栏横在顶上")
 	t.eq(String(d.entry_of(&"countdown")["anchor"]), "bar_center", "倒计时在栏中间")
 	t.eq(String(d.entry_of(&"countdown")["tier"]), "large", "倒计时是大档")
-	for id in [&"vitality", &"wallet", &"faith"]:
+	for id in [&"vitality", &"wallet", &"meal"]:
 		t.eq(String(d.entry_of(id)["anchor"]), "bar_left", "%s 在栏左槽" % id)
 		t.eq(int(d.entry_of(id)["line"]), 0, "%s 在左槽第一行" % id)
 		t.eq(String(d.entry_of(id)["tier"]), "double", "%s 是 200%% 档（作者 2026-10-12）" % id)
+	for id in [&"level", &"faith"]:
+		t.eq(String(d.entry_of(id)["anchor"]), HudLayout.BAR_GROWTH, "382：%s 在日晷右边那一组" % id)
+		t.eq(String(d.entry_of(id)["tier"]), "double", "%s 是 200%% 档" % id)
+	t.eq(String(d.entry_of(HudLayout.XP_BAR)["anchor"]), "top", "382：经验值条贴顶（宿主排在栏下沿）")
 	for id in [&"buffs", &"erosion"]:
 		t.eq(int(d.entry_of(id)["line"]), 1, "%s 在左槽第二行（小字）" % id)
 		t.check(bool(d.entry_of(id)["visible"]), "%s 默认显示" % id)
@@ -57,7 +61,7 @@ static func run_layout(t: TestCase) -> void:
 		{"id": "encumbrance", "anchor": "top", "offset": [8, 16], "tier": "double"}]}, gone)
 	t.check(kept != null and gone.is_empty(), "旧布局带着删掉的读数：读得进来、不报错（%s）" % "；".join(gone))
 	if kept != null:
-		t.eq(kept.entries.size(), 4, "删掉的两件不进布局（336 / 355 / 372：旧布局里没有的委托小牌、饱腹读数、经验值管补上，所以是四件）")
+		t.eq(kept.entries.size(), 5, "删掉的两件不进布局（336 / 355 / 372 / 382：旧布局里没有的委托小牌、饱腹读数、等级格、经验值条补上，所以是五件）")
 		t.check(not kept.entry_of(&"commissions").is_empty(), "336：委托小牌自动补进旧布局")
 		t.eq(String(kept.entry_of(&"wallet").get("anchor", "")), "left", "别的摆法照用")
 	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "left"}, {"id": "reopen_button", "anchor": "bar_right"}]})

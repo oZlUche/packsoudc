@@ -7,7 +7,8 @@
 ## 223（作者 16:07 选蜡板、甲 角色卡）：窗加宽到 984，原来整扇 660 一字不动；x 660 一条竖分隔线，右栏（`col`）放名牌和 [CharacterCard]，
 ## 棋盘变宽时竖线和右栏整体右移同样的量。
 ## 232（作者 19:23 选 2）：石板窗换成一只背包 —— 四件皮料（包身九宫格、翻盖、提手徽、两只侧环，`assets/ui/bag/layout.json`）
-## 垫在画布底下（[member _back]），翻盖整块是拖动把手、盖住标题行（横分隔线不画了），提手与侧环凸出窗外、夹边时算进去（[member FloatingWindow.outset]）
+## 垫在画布底下（[member _back]）。385（作者定局内石刻）：背包皮换成一整块浅石框（`assets/ui/stone/frame`，里面浅石底），
+## 窗顶标题行是拖动把手，不再凸出窗外；名牌、角色卡换深石板，查看方式换石页签，收起键是浅石小格 + 墨色叉
 class_name BagWindow
 extends FloatingWindow
 
@@ -15,11 +16,8 @@ const InventoryPanelScript := preload("res://ui/game/inventory_panel.gd")
 const ART_DIR := "res://assets/ui/stats_strip/"
 const LAYOUT := ART_DIR + "layout.json"
 ## 收起钮用战利品屏那枚（56 的切图按 `minimize.scale` 画）
-const MINIMIZE_DIR := "res://assets/ui/board/"
-const MINIMIZE_ART := "btn_minimize"
 const MINIMIZE_SIDE := 56.0
 ## 232：背包皮的图与摆位
-const SATCHEL_DIR := "bag/"
 const DIVIDER_COLOR := Color("786e64")
 const DIVIDER_W := 1.2
 ## 没有 `layout.json` 时的摆位（和精修稿同一份）
@@ -50,14 +48,15 @@ const VIEWS_OVERLAP := 4.0
 ## 381：名牌缩到原来的 72%，下面的角色卡列全属性；名牌和卡之间隔多远
 const PLATE_SCALE := 0.72
 const CARD_GAP := 10.0
+## 385：名牌头像外圈黄铜
+const PLATE_FRAME := "portrait_frame_gold"
 ## 218 补充一：开着的背包窗教程（没开 null）
 var coach: CoachOverlay = null
 var _canvas: Control
 var _font: Font = null
 var _spec: Dictionary = {}
-## 232：背包皮（包身 / 侧环 / 翻盖 / 提手徽，画在 [member _canvas] 底下）；没图 null
-var _back: Control = null
-var _satchel: Dictionary = {}
+## 385：石框（画在 [member _canvas] 底下）；没图 null
+var _back: NinePatchRect = null
 
 
 ## 搭好整块窗并返回里面的面板。[param drag] 同 [method InventoryPanelScript.setup]；[param hint_sink] 是面板回话的去处
@@ -65,12 +64,10 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	key = "bag"
 	_font = font
 	_spec = spec()
-	_satchel = satchel()
 	UiTheme.panel(self, 0, UiTheme.PANEL_BARE)     # 内边距 0：子节点按窗左上的设计像素摆
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	center_shift = _vec(_spec["window_center"]) - DESIGN * 0.5
-	if not _satchel.is_empty():
-		_build_back()
+	_build_back()
 
 	_canvas = Control.new()
 	_canvas.name = "Canvas"
@@ -92,11 +89,15 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	panel.hint_sink = hint_sink
 	panel.setup(run, font, drag)
 	BoardFrame.mark(panel.board_view, frame, BoardFrame.brown_seams())     # 227：外框是上面那张 72 px 皮带框；作者 10-27：内垫统一战斗那块棕
+	if panel.strip != null:
+		panel.strip.use_stone()     # 385：三枚属性签换浅石小格
 	panel.hold_nine()     # 255 补充一：棋盘坐进九格宽的位子，窗不随棋盘宽窄变
 	_canvas.add_child(panel)
 
 	var ch := run.character
-	nameplate = Nameplate.new().setup(Names.of(ch) if ch != null else UiText.t("battle.me"), "", Nameplate.character_face(ch.id) if ch != null else null)
+	nameplate = Nameplate.new().setup(Names.of(ch) if ch != null else UiText.t("battle.me"), "", Nameplate.character_face(ch.id) if ch != null else null,
+		Nameplate.PORTRAIT_SIZE, PLATE_FRAME)
+	UiTheme.stone(nameplate, UiTheme.ART_STONE_SLATE)     # 385：深石板、头像外圈黄铜
 	_canvas.add_child(nameplate)
 	card = CharacterCard.new()
 	card.tip = panel.tip
@@ -111,8 +112,7 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 
 	var ms: Dictionary = _spec["minimize"]
 	var side := MINIMIZE_SIDE * float(ms.get("scale", 0.72))
-	var b := IconButton.make_art(MINIMIZE_DIR, MINIMIZE_ART, "－", (String(ms.get("tooltip", UiText.t("bag.minimize"))) if UiText.lang == "zh" else UiText.t("bag.minimize")), on_close)
-	b.custom_minimum_size = Vector2(side, side)
+	var b := UiTheme.well_close_key(side, String(ms.get("tooltip", UiText.t("bag.minimize"))) if UiText.lang == "zh" else UiText.t("bag.minimize"), on_close)     # 385：浅石小格 + 墨色叉
 	b.size = b.custom_minimum_size
 	close_button = b
 	_canvas.add_child(b)
@@ -160,75 +160,27 @@ func control_rect(id: StringName) -> Rect2:
 	return strip.get_global_transform() * strip.tag_rect(kind)
 
 
-## 232：背包皮的摆位表（`bag/layout.json`）
-static func satchel() -> Dictionary:
-	return UiTheme.art_meta(SATCHEL_DIR + "layout")
-
-
-## 四件皮料（叠放：包身 → 侧环 → 翻盖 → 提手徽）；位置在 [method _layout] 里随窗宽摆
+## 385（作者定局内石刻）：窗框换浅石框（里面浅石底），跟窗一样大、画在 [member _canvas] 底下；没图不画
 func _build_back() -> void:
-	_back = Control.new()
-	_back.name = "Satchel"
-	_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_back)
-	_back.add_child(_patch("Body", "body", true))
-	for side in ["TabLeft", "TabRight"]:
-		var tab := TextureRect.new()
-		tab.name = side
-		tab.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tab.texture = UiTheme.art_cached(SATCHEL_DIR + String((_satchel["tab"] as Dictionary)["file"]).get_basename())
-		tab.flip_h = side == "TabRight" and bool((_satchel["tab"] as Dictionary).get("right_flip_h", true))
-		_back.add_child(tab)
-	_back.add_child(_patch("Flap", "flap", false))
-	var crest := TextureRect.new()
-	crest.name = "Crest"
-	crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	crest.texture = UiTheme.art_cached(SATCHEL_DIR + String((_satchel["crest"] as Dictionary)["file"]).get_basename())
-	_back.add_child(crest)
-	var o: Dictionary = _satchel.get("outset", {})
-	outset = Rect2(float(o.get("left", 0)), float(o.get("top", 0)), float(o.get("right", 0)), float(o.get("bottom", 0)))
-
-
-## 一件九宫格皮料（[param stretch] 拉伸；否则平铺）
-func _patch(node_name: String, p_key: String, stretch: bool) -> NinePatchRect:
-	var d: Dictionary = _satchel[p_key]
-	var mode := NinePatchRect.AXIS_STRETCH_MODE_STRETCH if stretch else NinePatchRect.AXIS_STRETCH_MODE_TILE_FIT
-	var n := UiTheme.nine_rect(UiTheme.art_cached(SATCHEL_DIR + String(d["file"]).get_basename()), d.get("patch_margin", [0, 0, 0, 0]), mode)
-	n.name = node_name
-	return n
-
-
-## 皮料随窗大小摆（W、H = [method window_size]）
-func _layout_back(want: Vector2) -> void:
-	if _back == null:
+	var tex := UiTheme.art_cached(UiTheme.ART_STONE_FRAME)
+	if tex == null:
 		return
-	var body_: Dictionary = _satchel["body"]
-	var b := _back.get_node("Body") as Control
-	b.position = _vec(body_["at"])
-	b.size = want + _vec(body_["grow"])
-	var flap: Dictionary = _satchel["flap"]
-	var f := _back.get_node("Flap") as Control
-	f.position = _vec(flap["at"])
-	f.size = Vector2(want.x + float(flap.get("grow_x", 80)), _vec(flap["size"]).y)
-	var crest := _back.get_node("Crest") as Control
-	crest.size = _vec((_satchel["crest"] as Dictionary)["size"])
-	crest.position = Vector2(want.x * 0.5 - crest.size.x * 0.5, float(((_satchel["crest"] as Dictionary)["at"] as Array)[1]))
-	var tab: Dictionary = _satchel["tab"]
-	var left := _back.get_node("TabLeft") as Control
-	left.size = _vec(tab["size"])
-	left.position = _vec(tab["left_at"])
-	var right := _back.get_node("TabRight") as Control
-	right.size = left.size
-	var right_at: Array = tab["right_at"]
-	right.position = Vector2(want.x + float(String(right_at[0]).trim_prefix("W").replace(" ", "").replace("+-", "-")), float(right_at[1]))
+	_back = UiTheme.nine_rect(tex, UiTheme.art_meta(UiTheme.ART_STONE_FRAME).get("margin", [24, 24, 24, 24]))
+	_back.name = "Stone"
+	add_child(_back)
+	UiTheme.set_tone(self, UiTheme.art_tone(UiTheme.ART_STONE_FRAME))
 
 
-## 翻盖的矩形（窗里的坐标；拖动把手就是它）
+## 窗框随窗大小（W、H = [method window_size]）
+func _layout_back(want: Vector2) -> void:
+	if _back != null:
+		_back.position = Vector2.ZERO
+		_back.size = want
+
+
+## 拖动把手：窗顶标题行（精修稿 `header_h` 高，整行空着）
 func grip_rect() -> Rect2:
-	if _back == null:
-		return Rect2()
-	var f := _back.get_node("Flap") as Control
-	return Rect2(f.position, f.size)
+	return Rect2(Vector2.ZERO, Vector2(window_size().x, float(_spec.get("header_h", 52))))
 
 
 ## 精修稿的 `bag_window`（缺的键按 [constant DEFAULTS]）
@@ -292,7 +244,7 @@ func _layout() -> void:
 		views.reset_size()
 		views.position = Vector2(frame.position.x + VIEWS_INSET, frame.position.y - views.size.y + VIEWS_OVERLAP)
 	var ms: Dictionary = _spec["minimize"]
-	var at: Array = (_satchel.get("minimize", {}) as Dictionary).get("topleft_rel_window", ms.get("topleft_rel_window", [918, 13]))
+	var at: Array = ms.get("topleft_rel_window", [918, 13])
 	close_button.position = _vec(at) + Vector2(grow.x, 0.0)
 	_canvas.queue_redraw()
 	reset_size()
@@ -309,6 +261,7 @@ func _build_views() -> void:
 	for pair in [[InventoryView.VIEW_NORMAL, "inv.view_normal"], [InventoryView.VIEW_LINKS, "inv.view_links"], [InventoryView.VIEW_RISK, "inv.view_risk"]]:
 		var mode: StringName = pair[0]
 		var b := StoneChip.make(UiText.t(pair[1]), func(): set_view(mode))
+		(b as StoneChip).restone(UiTheme.ART_STONE_TAB, UiTheme.ART_STONE_TAB_ON)     # 385：浅石页签；选中的是深石板加黄铜线
 		b.button_group = group
 		_view_btns[mode] = b
 		views.add_child(b)

@@ -85,7 +85,7 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 		var spec := BagWindow.spec()
 		var labels: Array = win.find_children("*", "Label", true, false).filter(func(l): return (l as Label).text in ["背包", "按住标题拖动"])
 		t.eq(labels.size(), 0, "标题行不写字")
-		t.check(win.close_button is IconButton, "收起是圆钮")
+		t.check(win.close_button is Button and win.close_button.text == "", "收起是浅石小格（385：墨色叉是画的，不写字）")
 		t.eq(win.close_button.tooltip_text, "收起（B）", "停上去写收起（B）")
 		var side := 56.0 * float(spec["minimize"]["scale"])
 		t.check(absf(win.close_button.custom_minimum_size.x - side) < 0.5, "按 %.2f 画" % float(spec["minimize"]["scale"]))
@@ -101,8 +101,7 @@ static func frame_bag_window(t: TestCase, root: Window) -> void:
 		t.eq(win.frame.position, inv.position + shift - Vector2(off, off), "外框比格子外扩 %d（棋盘在九格位子里居中）" % int(off))
 		t.eq(win.frame.size, Vector2(inv.board_view.inventory.size) * cell + Vector2(off, off) * 2.0, "外框包住整块棋盘")
 		t.not_null(win.frame.texture, "外框切图在")
-		var mini_: Array = (BagWindow.satchel().get("minimize", {}) as Dictionary).get("topleft_rel_window", spec["minimize"]["topleft_rel_window"])
-		t.eq(win.close_button.position, BagWindow._vec(mini_) + Vector2(extra.x, 0.0), "圆钮在右上（232：背包皮时在翻盖上）")
+		t.eq(win.close_button.position, BagWindow._vec(spec["minimize"]["topleft_rel_window"]) + Vector2(extra.x, 0.0), "收起键在右上（385：石框里）")
 		t.check(not inv.board_view.seams.is_empty(), "格缝按棋盘美术画")
 		# 223：窗加宽 984，竖线在原窗右沿 660，右栏名牌 + 角色卡（都跟着棋盘右移）
 		t.eq(BagWindow._vec(spec["window_size"]), Vector2(984, 620), "223：窗 984×620")
