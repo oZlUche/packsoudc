@@ -38,9 +38,9 @@
 
 G03 修后（英文、大字号、1280 × 800，同云端报告的窗口）：
 
-![G03 修后](testing/evidence/2026-11-10-fixes/g03-warehouse-title-en-large-after.png)
+![G03 修后](testing/evidence/2026-11-10-fixes/g03-warehouse-title-en-large-after.webp)
 
-修前见云端报告 [english-large-warehouse-title.png](testing/evidence/2026-11-10-debug/english-large-warehouse-title.png)。
+修前见云端报告 [english-large-warehouse-title.png](testing/evidence/2026-11-10-debug/english-large-warehouse-title.webp)。
 
 ## 四、待作者决定
 

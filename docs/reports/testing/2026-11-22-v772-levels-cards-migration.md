@@ -31,11 +31,11 @@
    - 继续游戏，读档成功：经验值 = 日神信力 30 × 2 = 60，即 Lv.6、5 / 14，欠选 5 次，祈愿丢掉。
    - 回到地图后当场弹出选牌。
 
-![升级选牌](images/v772-level-pick-zh.jpg)
+![升级选牌](images/v772-level-pick-zh.webp)
 
-![英文大字](images/v772-level-pick-en-large.jpg)
+![英文大字](images/v772-level-pick-en-large.webp)
 
-![状态界面](images/v772-status-screen-zh.jpg)
+![状态界面](images/v772-status-screen-zh.webp)
 
 ## 三、问题
 

@@ -4,7 +4,7 @@
 **测试**：855 项断言 / 13 个套件，全绿
 **场景**：`ui/battle/battle_sandbox.tscn`
 
-![战斗沙盒](images/022-battle-view.png)
+![战斗沙盒](images/022-battle-view.webp)
 
 左边摆背包，右边看回放。拖动一件装备就重新编译，预估 DPS 与套装进度实时跟着变。
 

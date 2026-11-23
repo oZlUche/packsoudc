@@ -474,7 +474,7 @@ A 批已经把损坏道具拆了，这一批只换说明文字：侵蚀只扣体
 - 十档都能在开局屏选，卷轴最上面是最新一档，早的几档藏在底卷轴后面、滚轮一格一行（原设计）。
 - 英文挑战行原来逐字母折行（「faste / r」），改成按词折行；并把五条英文挑战缩短，现在每条一行。
 
-![中文](testing/evidence/2026-11-14-320f/scroll-zh.png) ![English](testing/evidence/2026-11-14-320f/scroll-en.png)
+![中文](testing/evidence/2026-11-14-320f/scroll-zh.webp) ![English](testing/evidence/2026-11-14-320f/scroll-en.webp)
 
 ### F.5 没做的
 

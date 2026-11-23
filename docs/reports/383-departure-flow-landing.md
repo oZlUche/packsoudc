@@ -42,7 +42,7 @@
 
 | 三条都折叠 | 展开角色 | 展开信仰 | 展开食物 | 第三屏材料倾向 |
 |---|---|---|---|---|
-| ![](383-shots/all-folded.jpg) | ![](383-shots/character-open.jpg) | ![](383-shots/faith-open.jpg) | ![](383-shots/meal-open.jpg) | ![](383-shots/map-bias.jpg) |
+| ![](383-shots/all-folded.webp) | ![](383-shots/character-open.webp) | ![](383-shots/faith-open.webp) | ![](383-shots/meal-open.webp) | ![](383-shots/map-bias.webp) |
 
 ### 遗留
 
@@ -77,4 +77,4 @@
 
 - 新用例：固定配方同一时间一份、删收藏跟着挪、锅空不能开饭、存档带两项且旧档算没设没吃；没设固定进来空锅；设了照它配；食堂页【固定】【开饭】、吃过锅拖不动；吃过后横条带「已吃过」只能看、换不了；出发吃的就是这一锅，锅空、标记清掉。
 - 全套：45299 项断言，只有一项没过：新截图旁缺 `.import`（素材导入检查）；补导后该套件 24 项全过。v8.06 并入的只是地图小旗与 A12 测试，不碰这批文件。
-- 食堂页：![](383-shots/canteen-fix-eat.jpg)
+- 食堂页：![](383-shots/canteen-fix-eat.webp)

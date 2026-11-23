@@ -33,7 +33,7 @@
 | `tests/test_drag_layer.gd` | 新增 `run_bag_drag` 套件 |
 | `tests/test_item_assets.gd` | 覆盖包体资产与棋盘上的完整流程 |
 
-![棋盘与包体](images/007-board-bags.png)
+![棋盘与包体](images/007-board-bags.webp)
 
 截图说明：棋盘上大片深色是**尚未被任何包覆盖**的不可用区；可用格 13 = 皮革包 6 + 长条包 4 + 药水带 3。
 暂存区与战利品里的「皮革包」「小背包」作为普通物品躺着，**不提供格子** —— 包只有放上棋盘才作为包生效。
