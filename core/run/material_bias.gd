@@ -1,4 +1,5 @@
-## 342 B3：地图协会的材料倾向 —— 出征前选一个方向，这一局普通搜索抽到材料时，那一系的材料更容易出。
+## 342 B3：地图协会的材料倾向 —— 这一局普通搜索抽到材料时，那一系的材料更容易出。
+## 383 第七节（作者 2026-11-23 19:02 选 B）：不再单独选，跟着出生点走 —— 每个出生点带一种偏向（[method spawn_biases]），挑了哪个出生点就是哪一系。
 ##
 ## 只在普通搜索里、只在材料类之内重分权重（[method apply]）：目标系乘 [constant MULT]，其他保持 1，
 ## 再按稀有度逐档缩放回原来的总权重 —— 材料总出现率、每档稀有度的份额、件数都不变。
@@ -75,3 +76,24 @@ static func why_not(dir: StringName, rules: SearchRules, items: ItemDatabase) ->
 	if hit == 0:
 		return WHY_EMPTY
 	return WHY_ALL if miss == 0 else ""
+
+
+## 383：给一张图的出生点各配一种偏向（[param dirs] 是这一章能选的方向，不含无倾向）。按种子定、同一张图上各不相同；
+## 出生点比方向多时才会重复。返回 {出生点 id: 方向}；[param dirs] 空 = 空
+static func spawn_biases(dirs: Array, entry_ids: Array, p_seed: int) -> Dictionary:
+	var out := {}
+	if dirs.is_empty() or entry_ids.is_empty():
+		return out
+	var ids: Array = entry_ids.duplicate()
+	ids.sort()
+	var pool: Array = dirs.duplicate()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d:spawn_bias" % p_seed)
+	for i in range(pool.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp: Variant = pool[i]
+		pool[i] = pool[j]
+		pool[j] = tmp
+	for k in ids.size():
+		out[int(ids[k])] = StringName(String(pool[k % pool.size()]))
+	return out

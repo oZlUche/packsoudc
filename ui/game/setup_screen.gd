@@ -149,7 +149,6 @@ var _back_btn: Button
 const PAGE_TITLES: Array[String] = ["setup.page_1", "setup.page_2", "setup.page_3"]
 const PAGE_MAP := 2
 ## 383：上回选的材料倾向（[constant MaterialBias.ORDER] 里第几个 + 1；0 = 没记）
-const FLAG_LAST_BIAS := &"last_bias"
 ## 383：第一屏的三条折叠横条（id → [FoldBar]）与它们所在的那一列
 const BAR_CHARACTER := &"character"
 const BAR_MEAL := &"meal"
@@ -166,9 +165,8 @@ var _belt_row: HBoxContainer = null
 const PantheonPanelScript := preload("res://ui/game/pantheon_panel.gd")
 const HEAD_PORTRAIT := 48
 ## 342 B3：这一局的材料倾向（[MaterialBias]），每次进开局屏都是无倾向
-var bias_id: StringName = &""
-var _bias_box: VBoxContainer = null
-var _bias_btns: Dictionary = {}
+## 383 第七节：预览这张图的出生点偏向 {出生点 id: 方向}（[method GameFlow.spawn_biases]）
+var _spawn_bias: Dictionary = {}
 ## 355 第二批：第四页「这一锅」那一块与收藏菜单的按钮
 var _meal_box: VBoxContainer = null
 var _meal_btns: Array[Button] = []
@@ -708,7 +706,6 @@ func _build_map_page() -> Control:
 	left_board.add_child(left)
 	_map_list = _vbox(6)     # 226 批二：小标题「地图」与缺数据那句删了
 	left.add_child(_map_list)
-	_build_bias_block(left)     # 383：材料倾向从原第四页挪来，仍跟着选中的地图变
 
 	_preview = MapPreview.new()
 	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1164,62 +1161,14 @@ func _hand_meal() -> void:
 			flow.meal_mode = GameFlow.MEAL_NONE if flow.canteen_open() else GameFlow.MEAL_POT
 
 
-## 第三屏左栏地图列表下面的「材料倾向」（办成地图协会的《把路画回来》才有）
-func _build_bias_block(parent: Container) -> void:
-	var bias_col := _vbox(8)
-	bias_col.name = "BiasBlock"
-	parent.add_child(bias_col)
-	bias_col.add_child(_label(UiText.t("bias.title"), 18, UiPalette.FG))
-	_bias_box = _vbox(4)     # 两列小签（同规模那一档的皮），六个方向三行，不顶出纸
-	bias_col.add_child(_bias_box)
-
-
-## 按这一章重排方向键；选着的这一章不能选了就回到无倾向
-func _sync_bias() -> void:
-	if _bias_box == null:
-		return
-	_bias_box.get_parent().visible = flow.bias_open()
-	var opts := flow.bias_options(chapter())
-	if not opts.any(func(o: Dictionary) -> bool: return StringName(o["id"]) == bias_id and String(o["why"]) == ""):
-		bias_id = MaterialBias.NONE
-	for c in _bias_box.get_children():
-		_bias_box.remove_child(c)
-		c.queue_free()
-	_bias_btns.clear()
-	for o in opts:
-		var dir := StringName(o["id"])
-		var b := _button(UiText.t("bias.dir_" + (String(dir) if dir != MaterialBias.NONE else "none")), func(): choose_bias(dir), 14)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_skin_entry(b, UiTheme.BUTTON_MAP_SUB, MAP_SUB_H)
-		b.toggle_mode = true
-		b.disabled = String(o["why"]) != ""
-		if b.disabled:
-			b.tooltip_text = UiText.t("bias.why_" + String(o["why"]))
-		b.set_pressed_no_signal(dir == bias_id)
-		_bias_btns[dir] = b
-		if _bias_box.get_child_count() == 0 or (_bias_box.get_child(-1) as HBoxContainer).get_child_count() >= 2:
-			_bias_box.add_child(_hbox(6))
-		(_bias_box.get_child(-1) as HBoxContainer).add_child(b)
-
-
-## 选一个方向（这一章不能选的不认）。返回选上没有
-func choose_bias(dir: StringName) -> bool:
-	if not flow.bias_allowed(chapter(), dir):
-		return false
-	bias_id = dir
-	for k in _bias_btns:
-		(_bias_btns[k] as Button).set_pressed_no_signal(k == bias_id)
-	return true
-
-
-## 出发时交给这一局的方向（倾向没开 = 无倾向）
+## 383 第七节（作者 2026-11-23 选 B）：这一局的材料倾向 = 挑的出生点的偏向（没挑、倾向没开 = 无倾向）
 func chosen_bias() -> StringName:
-	return bias_id if flow.bias_open() and flow.bias_allowed(chapter(), bias_id) else MaterialBias.NONE
+	return StringName(String(_spawn_bias.get(spawn_id, MaterialBias.NONE))) if spawn_id >= 0 else MaterialBias.NONE
 
 
-func bias_buttons() -> Dictionary:
-	return _bias_btns
+## 预览上这张图的出生点各偏哪一系 {id: 方向}
+func spawn_biases() -> Dictionary:
+	return _spawn_bias
 
 
 ## 配道具页的随身技能圆槽（测试看）
@@ -1255,8 +1204,6 @@ func show_page(i: int) -> void:
 		close_hint()
 	for k in _pages.size():
 		_pages[k].visible = k == _page
-	if _page == PAGE_MAP:
-		_sync_bias()     # 342 B3：换过章节，方向重新校验
 	if _page == 0:
 		_sync_bar_heads()     # 383：换过角色，这一锅的终值、头上的名字跟着变
 	if _page == 1:
@@ -1411,7 +1358,6 @@ func choose_chapter(i: int) -> void:
 	var keep := character()
 	_rebuild_characters()
 	_rebuild_scales()
-	_sync_bias()     # 383：材料倾向在第三屏，跟着这一章变
 	_sync_presets()     # 285：序章只列免费的
 	_hold_refresh += 1
 	_apply_supply()     # 切片 v6.14 U02：换了章节，补给跟着换
@@ -1572,7 +1518,10 @@ func _sync_preview() -> void:
 	_preview.show_graph(c.map_skin, preview_graph(c, scale_id), scale_id, animate)     # 213：同心环、格阵都按图本身
 	# 182：换了图（换图、换规模、重取种子）—— 入口换成新图的、挑的清掉（「出发」重新灰）；自己会站上出生点的章不画入口
 	_forget_spawn()
-	_preview.set_entries(preview_graph(c, scale_id) if not c.auto_spawn else null)
+	var g := preview_graph(c, scale_id)
+	_preview.set_entries(g if not c.auto_spawn else null)
+	_spawn_bias = flow.spawn_biases(c, g.entry_ids, run_seed) if g != null else {}     # 383 第七节：和开局算出来的一样（同一个种子）
+	_preview.biases = _spawn_bias
 
 
 func preview() -> MapPreview:
@@ -1592,9 +1541,6 @@ func _restore_last() -> void:
 	for i in _chapters.size():
 		if _chapters[i].order == want:
 			at = i
-	var last_dir := flow.meta.flag(FLAG_LAST_BIAS) - 1     # 383：上回的材料倾向（这一章不能选就回到无倾向）
-	if last_dir >= 0 and last_dir < MaterialBias.ORDER.size():
-		bias_id = MaterialBias.ORDER[last_dir]
 	choose_chapter(at)
 	var last_ch := _characters.map(func(c: CharacterDef) -> StringName: return c.id).find(flow.meta.last_character)     # 383：沿用上回的角色
 	if last_ch > 0 and lock_reason(_characters[last_ch]) == "":
@@ -2294,7 +2240,12 @@ func _show_hint(id: int) -> void:
 	var type: StringName = g.get_node(id).type if g != null and g.has_node(id) else &"spawn"
 	var route := _route_text(g, id)
 	var title := "%s·%s" % [NodeText.label_of(type), route["name"]] if not route.is_empty() else ""
-	_hint.show_for(id, type, NodeHintCard.hint_for(chapter(), type), String(route.get("text", "")), UiText.t("setup.hint_elsewhere"), _animations_on(), title)
+	var dir: StringName = _spawn_bias.get(id, MaterialBias.NONE)
+	var extra := String(route.get("text", ""))
+	if dir != MaterialBias.NONE:     # 383 第七节：「出生点 · 偏矿物」「这一局搜索更容易出矿物材料」
+		title = UiText.t("bias.spawn_title") % [NodeText.label_of(type), UiText.t("bias.dir_" + String(dir))]
+		extra = UiText.t("bias.spawn_line") % UiText.t("bias.dir_" + String(dir)) + ("\n" + extra if extra != "" else "")
+	_hint.show_for(id, type, NodeHintCard.hint_for(chapter(), type), extra, UiText.t("setup.hint_elsewhere"), _animations_on(), title)
 
 
 ## 提示窗第三行：这个入口的路线。作者 2026-10-17 已把路线卡（风险 / 收益）对玩家藏起来（地图屏的 `SHOW_ROUTES`），跟着它藏
@@ -2344,8 +2295,6 @@ func _remember_last(c: ChapterDef) -> void:
 	flow.meta.set_flag(FLAG_LAST_SCALE, at + 1)
 	var d := difficulty()
 	flow.meta.set_flag(FLAG_LAST_DIFFICULTY, d.level if d != null else 0)
-	if flow.bias_open():
-		flow.meta.set_flag(FLAG_LAST_BIAS, MaterialBias.ORDER.find(chosen_bias()) + 1)     # 383
 
 
 ## 不开了：带上的放回仓库，回基地（264 §五，作者 10-29 16:20「【返回】用于回到基地页面，而不是主菜单」；从主菜单进来的也回基地）。

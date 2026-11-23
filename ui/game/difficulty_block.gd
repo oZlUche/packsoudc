@@ -17,7 +17,7 @@ signal step_pressed(delta: int)
 signal open_pressed
 
 ## 块多宽、收起时多高（定稿铜牌 304 × 104）、按钮面 / 铜牌多大
-const WIDTH := 304.0
+const WIDTH := 400.0     # 383 第七节（作者 11-23「可以加宽」；UI设计 v2-5 约 400）：三行挑战每行一句
 const CLOSED_H := 104.0
 const FACE_SIZE := Vector2(304, 104)
 ## 铜牌两头是铜扣，字只能写在中间这么宽（占牌面宽的几成）

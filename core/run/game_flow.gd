@@ -1324,6 +1324,22 @@ func bias_options(chapter: ChapterDef) -> Array[Dictionary]:
 	return out
 
 
+## 383 第七节：出生点能带的偏向 —— 这一章能选的方向（不含无倾向）；倾向没开、教程章 = 空
+func spawn_dirs(chapter: ChapterDef) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if chapter == null or tutorial_chapters().has(chapter):
+		return out
+	for o in bias_options(chapter):
+		if StringName(o["id"]) != MaterialBias.NONE and String(o["why"]) == "":
+			out.append(StringName(o["id"]))
+	return out
+
+
+## 383 第七节：这张图的出生点各偏哪一系 {出生点 id: 方向}（开局屏的预览和 [method begin] 用同一个种子，算出来一样）
+func spawn_biases(chapter: ChapterDef, entry_ids: Array, p_seed: int) -> Dictionary:
+	return MaterialBias.spawn_biases(spawn_dirs(chapter), entry_ids, p_seed)
+
+
 ## 342 B3：[param dir] 这一章能不能选（无倾向总能选）
 func bias_allowed(chapter: ChapterDef, dir: StringName) -> bool:
 	if dir == MaterialBias.NONE:
@@ -1606,7 +1622,7 @@ func save_settings() -> bool:
 func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse: Array[int] = [] as Array[int],
 		character: CharacterDef = null, layout: Array = [], difficulty: DifficultyDef = null, scale: StringName = &"", carry_value: int = 0,
 		spawn_id: int = -1, carry_funds: int = 0, preset_cost: int = 0, preset_ticket: StringName = &"", preset: LoadoutDef = null,
-		faith: StringName = &"", bias: StringName = &"") -> RunState:
+		faith: StringName = &"", _bias: StringName = &"") -> RunState:
 	var refused := start_refusal(chapter, layout, preset)
 	if refused != "":
 		push_warning("GameFlow.begin：%s" % refused)
@@ -1667,6 +1683,7 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 	var state := RunState.start(chapter, p_seed, items, enemies, sets, kit, buff_defs, meta_buffs(), character, layout, difficulty, hunter_defs, scale, inputs, cash)
 	if state == null:
 		return null
+	var spawn_entries: Array = state.map.entry_ids.duplicate()     # 383：挑出生点之前的入口（挑了以后别的入口变普通点）
 	# 182：开局第三页挑好了出生点 —— 直接站上去（和章节的 auto_spawn 同一条路），新的一局不再进挑出生点阶段
 	if spawn_id >= 0 and state.phase == RunState.Phase.PICK_SPAWN:
 		state.pick_spawn(spawn_id)
@@ -1701,8 +1718,11 @@ func begin(chapter: ChapterDef, loadout: LoadoutDef, p_seed: int, from_warehouse
 		save_meta()
 	seen_loot.clear()     # 237：新的一局 uid 从 1 重排（RunState.start 清了计数器），上一局记的「亮过」不能算到这一局的东西头上
 	_adopt(state)
-	if bias_allowed(chapter, bias) and not tutorial_chapters().has(chapter):
-		state.set_material_bias(bias)     # 342 B3：材料倾向（没开、这一章不能选的当无倾向）
+	# 383 第七节（作者 11-23 选 B）：材料倾向跟着出生点走 —— [param bias] 不再用；挑了哪个出生点就是它的偏向，还没挑的在 [method RunState.pick_spawn] 里定
+	state.spawn_bias = spawn_biases(chapter, spawn_entries, state.run_seed)
+	var at: int = spawn_id if spawn_id >= 0 else (int(spawn_entries[0]) if spawn_entries.size() == 1 and state.phase != RunState.Phase.PICK_SPAWN else -1)
+	if at >= 0 and state.spawn_bias.has(at):
+		state.set_material_bias(state.spawn_bias[at])
 	state.choose_starting_faith(faith)     # 信仰重构 A：开局屏显式选的神（没选 = 不奉神；不按载入顺序猜）；377：万神院里选的
 	if state.selected_faith != &"" and Pantheon.arrived(meta):
 		Pantheon.note_worship(meta, state.selected_faith)

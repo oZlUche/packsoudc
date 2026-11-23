@@ -67,6 +67,17 @@ const ZOOM_SEC := 0.25
 ## 纸色（深底图上的圈 / 层线）
 const MARK_PAPER := Color("efe6cf")
 
+## 383 第七节：出生点的材料偏向 {出生点 id: 方向}（开局屏填）；旗子右边挂这一系的标签图，选中的加一圈黄铜边（UI设计 v2-5）
+var biases: Dictionary = {}:
+	set(v):
+		biases = v
+		_redraw_marks()
+const BIAS_ICON := 28.0
+const BIAS_RING := Color("b08d3c")
+const BIAS_DISC := Color("efe6cf")
+## 方向 → 现成的材料标签图（assets/ui/tags/）
+const BIAS_TAG := {&"mineral": "stone", &"plant": "herb", &"crafted": "crafted", &"beast": "beast_part", &"magic": "crystal"}
+
 ## 182：入口 —— {id, rel（离圆心几个环距的向量，和尺寸无关）, route（路线下标）}
 var entries: Array[Dictionary] = []
 ## 挑中的、鼠标底下的入口（-1 = 没有）
@@ -404,6 +415,23 @@ func _draw_marks() -> void:
 		if tex != null:
 			var half := Vector2(MARK_SIZE, MARK_SIZE) * 0.5
 			_marks.draw_texture_rect(tex, Rect2(p - half, half * 2.0), false, Color(1, 1, 1, a))
+		_draw_bias(id, p, a)
+
+
+## 383：旗子右边那枚偏向图标（浅纸底圆片 + 标签图；选中加黄铜圈）
+func _draw_bias(id: int, p: Vector2, a: float) -> void:
+	var dir: StringName = biases.get(id, &"")
+	if dir == &"" or not BIAS_TAG.has(dir):
+		return
+	var c := p + Vector2(MARK_SIZE * 0.5 + BIAS_ICON * 0.35, -MARK_SIZE * 0.1)
+	var r := BIAS_ICON * 0.5
+	_marks.draw_circle(c, r, Color(BIAS_DISC, a))
+	if id == selected:
+		_marks.draw_arc(c, r + 1.5, 0.0, TAU, 32, Color(BIAS_RING, a), 3.0, true)
+	var icon := UiTheme.art_cached("tags/" + String(BIAS_TAG[dir]))
+	if icon != null:
+		var h := Vector2(r, r) * 0.8
+		_marks.draw_texture_rect(icon, Rect2(c - h, h * 2.0), false, Color(1, 1, 1, a))
 #endregion
 
 

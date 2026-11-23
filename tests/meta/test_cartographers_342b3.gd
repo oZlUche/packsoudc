@@ -148,23 +148,39 @@ static func run_weights(t: TestCase) -> void:
 
 
 static func run_run_save(t: TestCase) -> void:
-	t.begin("342 B3 · 出征：倾向没开 / 这一章不能选的当无倾向；开了就跟这一局走，存档往返，v6 档迁上来 = 无倾向")
+	t.begin("342 B3 / 383 第七节 · 出征：倾向没开出生点不带偏向；开了每个出生点各偏一系（同图各不相同、按种子定），挑了哪个就偏哪个；存档往返，v6 档迁上来 = 无倾向")
 	ItemInstance.reset_uid_counter()
 	var c := TestSupport.load_content("free_mode")
 	var f := Support.flow(c, PREFIX)
 	var ch := f.characters_for(c.chapter)
-	var s := f.begin(c.chapter, null, 3, [] as Array[int], ch[0] if not ch.is_empty() else null, [], null, &"", 0, -1, 0, 0, &"", null, &"", &"mineral")
-	t.check(s != null and s.material_bias == MaterialBias.NONE, "倾向没开：无倾向")
+	var s := f.begin(c.chapter, null, 3, [] as Array[int], ch[0] if not ch.is_empty() else null, [], null, &"", 0, -1)
+	t.check(s != null and s.spawn_bias.is_empty() and s.material_bias == MaterialBias.NONE, "倾向没开：出生点不带偏向、无倾向")
 	f.run = null
 	f.meta.commissions.grants["bias"] = true
-	s = f.begin(c.chapter, null, 4, [] as Array[int], ch[0] if not ch.is_empty() else null, [], null, &"", 0, -1, 0, 0, &"", null, &"", &"mineral")
-	t.check(s != null and s.material_bias == &"mineral", "开了：矿物")
+	s = f.begin(c.chapter, null, 4, [] as Array[int], ch[0] if not ch.is_empty() else null, [], null, &"", 0, -1)
 	if s == null:
+		t.check(false, "开得了局")
 		Support.cleanup(PREFIX)
 		return
-	t.eq(s.events.material_bias, &"mineral", "交给了节点事件")
+	var entries: Array = s.map.entry_ids.duplicate()
+	var dirs: Array = s.spawn_bias.values()
+	t.eq(s.spawn_bias.size(), entries.size(), "每个出生点都带一种偏向（不留空的）")
+	var uniq := {}
+	for d in dirs:
+		uniq[d] = true
+	t.eq(uniq.size(), mini(entries.size(), f.spawn_dirs(c.chapter).size()), "同一张图上各不相同")
+	t.check(dirs.all(func(d) -> bool: return f.spawn_dirs(c.chapter).has(d)), "只从这一章能选的方向里出")
+	t.eq(f.spawn_biases(c.chapter, entries, 4), s.spawn_bias, "按种子定：开局屏预览算出来的一样")
+	var other := MaterialBias.spawn_biases(f.spawn_dirs(c.chapter), entries, 5)
+	t.check(other.size() == entries.size(), "换个种子也都带")
+	t.eq(MaterialBias.spawn_biases([&"mineral"], [7], 1), {7: &"mineral"}, "只有一个出生点也带一种")
+	var pick := int(entries[0])
+	t.check(s.pick_spawn(pick), "挑第一个出生点")
+	t.eq(s.material_bias, s.spawn_bias[pick], "这一局偏它那一系")
+	t.eq(s.events.material_bias, s.material_bias, "交给了节点事件")
 	var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies)
-	t.check(back != null and back.material_bias == &"mineral" and back.events.material_bias == &"mineral", "存档往返")
+	t.check(back != null and back.material_bias == s.material_bias and back.events.material_bias == s.material_bias, "存档往返")
+	t.check(back != null and back.spawn_bias == s.spawn_bias, "出生点偏向也存着")
 	var old := s.to_dict()
 	old["version"] = 6
 	old.erase("material_bias")
@@ -201,7 +217,7 @@ static func run_vein_goal(t: TestCase) -> void:
 
 
 static func frame_prep_page(t: TestCase, root: Window) -> void:
-	t.begin("342 B3 / 383 · 材料倾向在第三屏：没开不露；开了在地图列表下面，默认无倾向，选矿物出发；下回默认矿物")
+	t.begin("342 B3 / 383 第七节 · 第三屏没有方向那一块；开了以后预览上每个出生点挂一种偏向，挑了哪个出征就偏哪个；提示窗写「出生点 · 偏X」")
 	Support.cleanup("char")
 	var game = load(CS.GAME).instantiate()
 	game.save_path = CS.SAVE
@@ -215,13 +231,6 @@ static func frame_prep_page(t: TestCase, root: Window) -> void:
 	flow.new_run()
 	var setup = game.base()
 	t.eq(setup.last_page(), 2, "第三页就是最后一页")
-	setup.show_page(2)
-	t.check(not setup._bias_box.get_parent().visible, "倾向没开：第三屏没有方向那一块")
-	setup.queue_free()
-	flow.meta.commissions.grants["bias"] = true
-	flow.new_run()
-	setup = game.base()
-	t.eq(setup.last_page(), 2, "383：开了也还是三页")
 	var at := -1
 	for i in setup._chapters.size():
 		if setup._chapters[i].id == &"free_mode":
@@ -234,15 +243,28 @@ static func frame_prep_page(t: TestCase, root: Window) -> void:
 	setup.show_page(2)
 	setup.choose_chapter(at)
 	setup._sync_preview()
+	t.check(setup.find_child("BiasBlock", true, false) == null, "第三屏没有方向那一块")
+	t.check(setup.spawn_biases().is_empty() and setup.preview().biases.is_empty(), "倾向没开：出生点不带偏向")
+	flow.meta.commissions.grants["bias"] = true
+	setup._preview_key = ""     # 同一张图重算（倾向刚开）
+	setup._sync_preview()
 	var entries: Array = setup.preview().entry_ids()
-	if not entries.is_empty():
-		setup.pick_spawn(int(entries[0]))
-	t.check(setup._bias_box.get_parent().is_visible_in_tree(), "开了：第三屏有方向那一块")
-	t.eq(setup.bias_id, MaterialBias.NONE, "默认无倾向")
-	t.check((setup.bias_buttons() as Dictionary).size() == MaterialBias.ORDER.size(), "六个选项")
-	t.check(setup.choose_bias(&"mineral"), "选矿物")
+	var sb: Dictionary = setup.spawn_biases()
+	t.check(not entries.is_empty() and entries.all(func(e) -> bool: return sb.has(e)), "预览上每个出生点都带偏向（%d 个）" % entries.size())
+	t.eq(setup.preview().biases, sb, "预览画着这些偏向")
+	t.check(setup.find_child("BiasBlock", true, false) == null, "开了也没有单独的方向组件")
+	if entries.is_empty():
+		game.queue_free()
+		Support.cleanup("char")
+		return
+	var pick := int(entries[-1])
+	setup.pick_spawn(pick)
+	var want: StringName = sb[pick]
+	t.eq(setup.chosen_bias(), want, "挑了这个出生点 = 偏它那一系")
+	t.check(setup.hint_card().find_children("*", "Label", true, false).any(func(l: Label) -> bool: return l.text.contains(UiText.t("bias.dir_" + String(want)))) \
+		or setup.hint_card().find_children("*", "RichTextLabel", true, false).any(func(l: RichTextLabel) -> bool: return l.text.contains(UiText.t("bias.dir_" + String(want)))), "提示窗写了偏向")
 	t.check(Support.depart(setup), "出发")
-	t.eq(flow.run.material_bias if flow.run != null else &"?", &"mineral", "这一局是矿物倾向")
-	t.eq(flow.meta.flag(setup.FLAG_LAST_BIAS), MaterialBias.ORDER.find(&"mineral") + 1, "383：记下这回的方向，下回默认它")
+	t.eq(flow.run.material_bias if flow.run != null else &"?", want, "这一局就是这个方向")
+	t.eq(flow.meta.flag(&"last_bias"), 0, "「上回的选择」不再记材料倾向")
 	game.queue_free()
 	Support.cleanup("char")
