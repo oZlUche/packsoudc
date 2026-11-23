@@ -32,11 +32,11 @@
 | 「换牌 / 剔牌」键 | 平的浅底，用完变灰：「剔牌 0」是灰底 | 同上 |
 | 只欠一次时（没有副标题） | 类别条上沿贴着标题栏的下沿，没有压住 | 同左 |
 
-![中文：属性牌带图标，探索牌圆章空着](images/v786-pick-zh.png)
+![中文：属性牌带图标，探索牌圆章空着](images/v786-pick-zh.webp)
 
-![中文：三张属性牌，「绵长」的圆章空着](images/v786-pick-zh-stats.png)
+![中文：三张属性牌，「绵长」的圆章空着](images/v786-pick-zh-stats.webp)
 
-![英文大字号：「Exploration」类别条偏右](images/v786-pick-en-large.png)
+![英文大字号：「Exploration」类别条偏右](images/v786-pick-en-large.webp)
 
 ## 实际游戏问题
 

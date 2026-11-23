@@ -42,15 +42,15 @@ v8.04 起，测试器的 frame_ 用例改成一帧只跑一个套件。这一轮
 | 出发 | 奉日神，日神信物在背包里，有效信仰是日神 |
 | 再进开局屏 | 三条都折叠，头上写布鲁图斯 / 锅是空的 / 日神。不再翻百科，也不再放教练层，角色沿用上回的 |
 
-![信仰条第一次展开，教练层第 1 步](images/v804-faith-coach.png)
+![信仰条第一次展开，教练层第 1 步](images/v804-faith-coach.webp)
 
-![首次展开先翻的百科页](images/v804-god-book.png)
+![首次展开先翻的百科页](images/v804-god-book.webp)
 
-![英文大字号，展开角色条](images/v804-character-open-en.png)
+![英文大字号，展开角色条](images/v804-character-open-en.webp)
 
-![配道具页的随身技能圆槽](images/v804-kit-belt.png)
+![配道具页的随身技能圆槽](images/v804-kit-belt.webp)
 
-![第三屏材料倾向，沿用上回的「晶石」](images/v804-bias-remembered.png)
+![第三屏材料倾向，沿用上回的「晶石」](images/v804-bias-remembered.webp)
 
 ## 守卫小旗缩放（v8.06）
 
@@ -63,7 +63,7 @@ v8.04 起，测试器的 frame_ 用例改成一帧只跑一个套件。这一轮
 
 顶端栏满载（30 级、99999 金币）中英两套都没有溢出。上一轮欠的英文大字号这次补上了。
 
-![英文大字号缩到最小，核心旁的守卫小旗（放大 3 倍裁图）](images/v806-flag-min-zoom.png)
+![英文大字号缩到最小，核心旁的守卫小旗（放大 3 倍裁图）](images/v806-flag-min-zoom.webp)
 
 ## 食堂固定配方与开饭（v8.07）
 
@@ -83,9 +83,9 @@ v8.04 起，测试器的 frame_ 用例改成一帧只跑一个套件。这一轮
 | 出发 | 吃的就是这一锅。锅空了，吃过的标记清掉，固定配方留着 |
 | 旧档 | 测试辅助把存档里的 `fixed`、`eaten` 两项删掉再读回：固定 -1、吃过 false。进开局屏是空锅 |
 
-![食堂页吃过以后（英文大字号）](images/v807-canteen-eaten-en.png)
+![食堂页吃过以后（英文大字号）](images/v807-canteen-eaten-en.webp)
 
-![吃过以后出征第一屏的食物条只能看](images/v807-meal-eaten.png)
+![吃过以后出征第一屏的食物条只能看](images/v807-meal-eaten.webp)
 
 ## 观察（低优先级，不算问题）
 

@@ -38,9 +38,9 @@
 - 抽到哪位神由种子决定，脚本会换种子，直到抽到要看的那位。
 - 六位神的分布：真游戏开局 40 个种子里，狩猎 10、技巧 10、蛮神 9、日神 6、大地 5、自然 0。按测试用的开局抽 300 张图，每位 43–58 次，接近各 1/6。
 
-![技巧之神的祭坛（英文大字号）：正文空着](images/v670-altar-skill-en-large.jpg)
-![v6.70：拿起后写「Nothing happened.」](images/v670-altar-nothing-happened-en-large.jpg)
-![v6.74：同一步不再写这句](images/v674-altar-after-take-fixed-zh.jpg)
+![技巧之神的祭坛（英文大字号）：正文空着](images/v670-altar-skill-en-large.webp)
+![v6.70：拿起后写「Nothing happened.」](images/v670-altar-nothing-happened-en-large.webp)
+![v6.74：同一步不再写这句](images/v674-altar-after-take-fixed-zh.webp)
 
 ### 2. 铁匠铺
 
@@ -80,7 +80,7 @@
   - 说明都空着。
   - 图是 v6.73 的定稿图。
 
-![紫晶柱悬停](images/v671-amethyst-hover-zh.jpg)
+![紫晶柱悬停](images/v671-amethyst-hover-zh.webp)
 
 ### 2. 法杖配方的晶石格
 
@@ -96,7 +96,7 @@
 | 大魔导杖 | 火焰魔晶核 + 秘银锭 ×2 + 硬木板 ×2 + 棱晶 | 0 / 1 | 不能。棱晶不够史诗 |
 | | 再加紫晶柱 | 1 / 1 | 能。打完扣紫晶柱 |
 
-![大魔导杖：紫晶柱顶上晶石格](images/v671-grand-magus-staff-zh.jpg)
+![大魔导杖：紫晶柱顶上晶石格](images/v671-grand-magus-staff-zh.webp)
 
 ### 3. 旧存档读入（v6.71 做的 v5 档）
 
@@ -117,7 +117,7 @@
 - 回主菜单再继续，以上各项不变。
 - 三组设置结果一样。英文里两方的新名字是 Logistics Corps、Mages' Society。
 
-![旧档读入后的声望页（中文大字号）](images/v672-old-save-reputation-zh-large.jpg)
+![旧档读入后的声望页（中文大字号）](images/v672-old-save-reputation-zh-large.webp)
 
 ### 4. 新存档：三份开放剧情开放设施
 
@@ -145,7 +145,7 @@
   - 回主菜单再继续：落在出征页，三处还开着。
 - 三组设置结果一样。英文的【办理】是 "Settle it"，【去办】是 "Take it on"。
 
-![未开放的科技页：说明板 + 去办](images/v672-tech-locked-board-zh.jpg)
+![未开放的科技页：说明板 + 去办](images/v672-tech-locked-board-zh.webp)
 
 ### 5. 营地交货（v6.74）
 
@@ -161,7 +161,7 @@
 - 中文默认三份都走通了。
 - 英文大字号、中文大字号下，魔法师协会那页的卡片多，【办理】在滚动区下面。脚本没有滚动，所以《辨认矿样》没点到。这是脚本没滚动，不是游戏的问题。另外两份结果和中文默认一样。
 
-![交完货以后的声望页](images/v674-reputation-after-handins-zh.jpg)
+![交完货以后的声望页](images/v674-reputation-after-handins-zh.webp)
 
 ### 6. 一局里的击败敌人、到访节点（v6.74，中文默认）
 

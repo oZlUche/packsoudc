@@ -23,5 +23,6 @@ descriptions = {
 }
 shape = SubResource("Resource_j5bm1")
 rarity = 3
+value = 75
 tags = Array[StringName]([&"valuable", &"nature", &"treasure", &"no_random_source"])
 material = "bone"

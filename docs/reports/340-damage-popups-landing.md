@@ -50,6 +50,6 @@
 - **暴击「!」染金（2C）**：数字仍是类型色（反应打的仍是渐变），末尾的「!」拆成数字那条字的一个子节点，染 `UiPalette.CRIT`；跟着飘、淡出、放大，不吃渐变。跳字只画在深底上，浅版金（`#725600`）这次用不上。
 - 截图（深底面板上，火、冰、雷暴击，最右是火冰反应打的暴击，下面一行是普通伤害）：
 
-![暴击飘字](340-shots/crits.png)
+![暴击飘字](340-shots/crits.webp)
 
 截图脚本：[340-shots/crit_shot.gd](340-shots/crit_shot.gd)（`xvfb-run godot --path . --rendering-driver opengl3 --script res://docs/reports/340-shots/crit_shot.gd`，`SHOT_OUT` 指定输出）。
