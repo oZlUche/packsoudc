@@ -1,0 +1,231 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+WARNING: All audio drivers failed, falling back to the dummy driver.
+
+SB874 倾向没开：章「free_mode」规模 small、种子 19514；出生点 [1, 4, 6]；偏向 {  }（0 种不同）；预览 biases 同 true；选中 -1 → ；难度块宽 400；方向组件 false；last_bias 标记 false
+SB874 测试辅助：开材料倾向
+SB874 倾向开了：章「free_mode」规模 small、种子 715382；出生点 [2, 5, 7]；偏向 { 2: &"crafted", 5: &"beast", 7: &"mineral" }（3 种不同）；预览 biases 同 true；选中 -1 → ；难度块宽 400；方向组件 false；last_bias 标记 false
+SB874 　　第三页排版：查了 14 处，溢出 2：「」出 @PanelContainer@1831 框；「」出 @PanelContainer@1831 框
+SB874 挑出生点 2：选着的偏向 crafted；提示窗：出生点 · 偏工艺 / 从这里进图。挑一个入口，这一局就从它开始走。 / 这一局搜索更容易出工艺 沿途多是战斗和精英，最危险，战利品也最多。 / 点别处可以换一个
+SB874 改挑出生点 5：选着的偏向 beast；提示窗：出生点 · 偏兽材 / 从这里进图。挑一个入口，这一局就从它开始走。 / 这一局搜索更容易出兽材 沿途大多是搜索点，战斗很少，危险低，收获也少。 / 点别处可以换一个
+SB874 各章：free_mode：[&"crafted", &"beast", &"mineral"]；clockwork_hourglass：[&"crafted", &"beast"]
+SB874 返回再进（新种子）：章「free_mode」规模 small、种子 813814；出生点 [1, 6, 9]；偏向 { 1: &"magic", 6: &"crafted", 9: &"beast" }（3 种不同）；预览 biases 同 true；选中 -1 → ；难度块宽 400；方向组件 false；last_bias 标记 false
+SB874 挑出生点 9（偏 beast）后出发
+SB874 开局：这一局倾向 beast（应是 beast）；spawn_bias { 1: &"magic", 6: &"crafted", 9: &"beast" }；出生点 -1
+SB874 存档退出：true
+SB874 继续游戏：倾向 beast；spawn_bias { 1: &"magic", 6: &"crafted", 9: &"beast" }
+ERROR: 1 shaders of type CanvasShaderGLES3 were never freed
+ERROR: Texture with GL ID of 22: leaked 21844 bytes.
+ERROR: Texture with GL ID of 23: leaked 196600 bytes.
+ERROR: Texture with GL ID of 24: leaked 349524 bytes.
+ERROR: Texture with GL ID of 25: leaked 12280 bytes.
+ERROR: Texture with GL ID of 26: leaked 8188 bytes.
+ERROR: Texture with GL ID of 27: leaked 81912 bytes.
+ERROR: Texture with GL ID of 28: leaked 87380 bytes.
+ERROR: Texture with GL ID of 29: leaked 87380 bytes.
+ERROR: Texture with GL ID of 30: leaked 49144 bytes.
+ERROR: Texture with GL ID of 31: leaked 87380 bytes.
+ERROR: Texture with GL ID of 32: leaked 170628 bytes.
+ERROR: Texture with GL ID of 33: leaked 90108 bytes.
+ERROR: Texture with GL ID of 34: leaked 36976 bytes.
+ERROR: Texture with GL ID of 35: leaked 36976 bytes.
+ERROR: Texture with GL ID of 36: leaked 36976 bytes.
+ERROR: Texture with GL ID of 37: leaked 36976 bytes.
+ERROR: Texture with GL ID of 38: leaked 36976 bytes.
+ERROR: Texture with GL ID of 39: leaked 36976 bytes.
+ERROR: Texture with GL ID of 40: leaked 36976 bytes.
+ERROR: Texture with GL ID of 41: leaked 36976 bytes.
+ERROR: Texture with GL ID of 42: leaked 168552 bytes.
+ERROR: Texture with GL ID of 43: leaked 168552 bytes.
+ERROR: Texture with GL ID of 44: leaked 168552 bytes.
+ERROR: Texture with GL ID of 45: leaked 168552 bytes.
+ERROR: Texture with GL ID of 46: leaked 46836 bytes.
+ERROR: Texture with GL ID of 47: leaked 136520 bytes.
+ERROR: Texture with GL ID of 48: leaked 136520 bytes.
+ERROR: Texture with GL ID of 49: leaked 127924 bytes.
+ERROR: Texture with GL ID of 50: leaked 16588 bytes.
+ERROR: Texture with GL ID of 51: leaked 16588 bytes.
+ERROR: Texture with GL ID of 52: leaked 16588 bytes.
+ERROR: Texture with GL ID of 53: leaked 63884 bytes.
+ERROR: Texture with GL ID of 54: leaked 63884 bytes.
+ERROR: Texture with GL ID of 55: leaked 63884 bytes.
+ERROR: Texture with GL ID of 56: leaked 46836 bytes.
+ERROR: Texture with GL ID of 57: leaked 46836 bytes.
+ERROR: Texture with GL ID of 58: leaked 46836 bytes.
+ERROR: Texture with GL ID of 59: leaked 24568 bytes.
+ERROR: Texture with GL ID of 60: leaked 24568 bytes.
+ERROR: Texture with GL ID of 61: leaked 24568 bytes.
+ERROR: Texture with GL ID of 62: leaked 24568 bytes.
+ERROR: Texture with GL ID of 63: leaked 24568 bytes.
+ERROR: Texture with GL ID of 64: leaked 21844 bytes.
+ERROR: Texture with GL ID of 65: leaked 18204 bytes.
+ERROR: Texture with GL ID of 66: leaked 9928 bytes.
+ERROR: Texture with GL ID of 67: leaked 9928 bytes.
+ERROR: Texture with GL ID of 68: leaked 9928 bytes.
+ERROR: Texture with GL ID of 69: leaked 18204 bytes.
+ERROR: Texture with GL ID of 70: leaked 9928 bytes.
+ERROR: Texture with GL ID of 71: leaked 9928 bytes.
+ERROR: Texture with GL ID of 72: leaked 9928 bytes.
+ERROR: Texture with GL ID of 73: leaked 5460 bytes.
+ERROR: Texture with GL ID of 74: leaked 5460 bytes.
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+ERROR: Texture with GL ID of 76: leaked 5460 bytes.
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+ERROR: Texture with GL ID of 78: leaked 31924 bytes.
+ERROR: Texture with GL ID of 79: leaked 9360 bytes.
+ERROR: Texture with GL ID of 80: leaked 10284 bytes.
+ERROR: Texture with GL ID of 84: leaked 7379052 bytes.
+ERROR: Texture with GL ID of 88: leaked 524288 bytes.
+ERROR: Texture with GL ID of 89: leaked 524288 bytes.
+ERROR: Texture with GL ID of 90: leaked 131072 bytes.
+ERROR: Texture with GL ID of 91: leaked 131072 bytes.
+ERROR: Texture with GL ID of 92: leaked 131072 bytes.
+ERROR: Texture with GL ID of 93: leaked 131072 bytes.
+ERROR: Texture with GL ID of 94: leaked 131072 bytes.
+ERROR: Texture with GL ID of 95: leaked 131072 bytes.
+ERROR: Texture with GL ID of 96: leaked 131072 bytes.
+ERROR: Texture with GL ID of 97: leaked 131072 bytes.
+ERROR: Texture with GL ID of 98: leaked 131072 bytes.
+ERROR: Texture with GL ID of 99: leaked 131072 bytes.
+ERROR: Texture with GL ID of 100: leaked 131072 bytes.
+ERROR: Texture with GL ID of 101: leaked 131072 bytes.
+ERROR: Texture with GL ID of 102: leaked 131072 bytes.
+ERROR: Texture with GL ID of 103: leaked 131072 bytes.
+ERROR: Texture with GL ID of 104: leaked 131072 bytes.
+ERROR: Texture with GL ID of 105: leaked 131072 bytes.
+ERROR: Texture with GL ID of 106: leaked 131072 bytes.
+ERROR: Texture with GL ID of 107: leaked 131072 bytes.
+ERROR: Texture with GL ID of 109: leaked 131072 bytes.
+ERROR: Texture with GL ID of 111: leaked 131072 bytes.
+ERROR: Texture with GL ID of 113: leaked 131072 bytes.
+ERROR: Texture with GL ID of 115: leaked 131072 bytes.
+ERROR: Texture with GL ID of 117: leaked 131072 bytes.
+ERROR: Texture with GL ID of 119: leaked 131072 bytes.
+ERROR: Texture with GL ID of 120: leaked 3072896 bytes.
+ERROR: Texture with GL ID of 133: leaked 21844 bytes.
+ERROR: Texture with GL ID of 135: leaked 6524340 bytes.
+ERROR: Texture with GL ID of 136: leaked 47808 bytes.
+ERROR: Texture with GL ID of 137: leaked 47808 bytes.
+ERROR: Texture with GL ID of 138: leaked 47808 bytes.
+ERROR: Texture with GL ID of 139: leaked 47808 bytes.
+ERROR: Texture with GL ID of 140: leaked 1048575 bytes.
+ERROR: Texture with GL ID of 142: leaked 12280 bytes.
+ERROR: Texture with GL ID of 148: leaked 34120 bytes.
+ERROR: Texture with GL ID of 149: leaked 174762 bytes.
+ERROR: Texture with GL ID of 150: leaked 174762 bytes.
+ERROR: Texture with GL ID of 152: leaked 175880 bytes.
+ERROR: Texture with GL ID of 153: leaked 204348 bytes.
+ERROR: Texture with GL ID of 154: leaked 131072 bytes.
+ERROR: Texture with GL ID of 155: leaked 12280 bytes.
+ERROR: Texture with GL ID of 156: leaked 131072 bytes.
+ERROR: Texture with GL ID of 157: leaked 524288 bytes.
+ERROR: Texture with GL ID of 158: leaked 131072 bytes.
+ERROR: Texture with GL ID of 159: leaked 131072 bytes.
+ERROR: Texture with GL ID of 160: leaked 131072 bytes.
+ERROR: Texture with GL ID of 81: leaked 8293965 bytes.
+ERROR: Texture with GL ID of 82: leaked 6888 bytes.
+ERROR: Texture with GL ID of 83: leaked 6888 bytes.
+ERROR: Texture with GL ID of 161: leaked 6888 bytes.
+ERROR: Texture with GL ID of 162: leaked 6888 bytes.
+ERROR: Texture with GL ID of 163: leaked 6888 bytes.
+ERROR: Texture with GL ID of 164: leaked 6888 bytes.
+ERROR: Texture with GL ID of 165: leaked 8520 bytes.
+ERROR: Texture with GL ID of 166: leaked 8520 bytes.
+ERROR: Texture with GL ID of 167: leaked 8520 bytes.
+ERROR: Texture with GL ID of 168: leaked 8520 bytes.
+ERROR: Texture with GL ID of 169: leaked 8520 bytes.
+ERROR: Texture with GL ID of 170: leaked 8520 bytes.
+ERROR: Texture with GL ID of 172: leaked 5460 bytes.
+ERROR: Texture with GL ID of 173: leaked 90752 bytes.
+ERROR: Texture with GL ID of 174: leaked 29452 bytes.
+ERROR: Texture with GL ID of 175: leaked 5460 bytes.
+ERROR: Texture with GL ID of 189: leaked 21672 bytes.
+ERROR: Texture with GL ID of 190: leaked 63252 bytes.
+ERROR: Texture with GL ID of 191: leaked 63252 bytes.
+ERROR: Texture with GL ID of 192: leaked 63252 bytes.
+ERROR: Texture with GL ID of 193: leaked 63252 bytes.
+ERROR: Texture with GL ID of 194: leaked 63252 bytes.
+ERROR: Texture with GL ID of 195: leaked 49832 bytes.
+ERROR: Texture with GL ID of 196: leaked 49832 bytes.
+ERROR: Texture with GL ID of 197: leaked 49832 bytes.
+ERROR: Texture with GL ID of 198: leaked 49832 bytes.
+ERROR: Texture with GL ID of 201: leaked 74476 bytes.
+ERROR: Texture with GL ID of 202: leaked 6584792 bytes.
+ERROR: Texture with GL ID of 203: leaked 76736 bytes.
+ERROR: Texture with GL ID of 209: leaked 2278256 bytes.
+ERROR: Texture with GL ID of 211: leaked 6584792 bytes.
+ERROR: Texture with GL ID of 214: leaked 131072 bytes.
+ERROR: Texture with GL ID of 215: leaked 131072 bytes.
+ERROR: Texture with GL ID of 216: leaked 131072 bytes.
+ERROR: Texture with GL ID of 121: leaked 172828 bytes.
+ERROR: Texture with GL ID of 125: leaked 1642188 bytes.
+ERROR: Texture with GL ID of 126: leaked 313152 bytes.
+ERROR: Texture with GL ID of 127: leaked 57644 bytes.
+ERROR: Texture with GL ID of 128: leaked 41260 bytes.
+ERROR: Texture with GL ID of 129: leaked 41260 bytes.
+ERROR: Texture with GL ID of 130: leaked 5668 bytes.
+ERROR: Texture with GL ID of 131: leaked 41260 bytes.
+ERROR: Texture with GL ID of 132: leaked 116996 bytes.
+ERROR: Texture with GL ID of 134: leaked 144996 bytes.
+ERROR: Texture with GL ID of 212: leaked 22484 bytes.
+ERROR: Texture with GL ID of 217: leaked 6888 bytes.
+ERROR: Texture with GL ID of 218: leaked 18308 bytes.
+ERROR: Texture with GL ID of 219: leaked 524288 bytes.
+ERROR: Texture with GL ID of 220: leaked 174762 bytes.
+ERROR: Texture with GL ID of 221: leaked 131072 bytes.
+ERROR: Texture with GL ID of 222: leaked 131072 bytes.
+ERROR: Texture with GL ID of 223: leaked 39072 bytes.
+ERROR: Texture with GL ID of 224: leaked 131072 bytes.
+ERROR: Texture with GL ID of 225: leaked 131072 bytes.
+ERROR: Texture with GL ID of 227: leaked 19136 bytes.
+ERROR: Texture with GL ID of 228: leaked 19136 bytes.
+ERROR: Texture with GL ID of 229: leaked 2120 bytes.
+ERROR: Texture with GL ID of 230: leaked 54244 bytes.
+ERROR: Texture with GL ID of 231: leaked 54244 bytes.
+ERROR: Texture with GL ID of 232: leaked 36544 bytes.
+ERROR: Texture with GL ID of 233: leaked 36544 bytes.
+ERROR: Texture with GL ID of 234: leaked 36544 bytes.
+ERROR: Texture with GL ID of 235: leaked 36544 bytes.
+ERROR: Texture with GL ID of 236: leaked 36544 bytes.
+ERROR: Texture with GL ID of 243: leaked 16700 bytes.
+ERROR: Texture with GL ID of 244: leaked 16700 bytes.
+ERROR: Texture with GL ID of 245: leaked 16700 bytes.
+ERROR: Texture with GL ID of 246: leaked 16700 bytes.
+ERROR: Texture with GL ID of 251: leaked 65632 bytes.
+ERROR: Texture with GL ID of 252: leaked 729680 bytes.
+ERROR: Texture with GL ID of 253: leaked 524288 bytes.
+ERROR: Texture with GL ID of 237: leaked 524288 bytes.
+ERROR: Texture with GL ID of 255: leaked 131072 bytes.
+ERROR: Texture with GL ID of 182: leaked 131072 bytes.
+ERROR: Texture with GL ID of 183: leaked 131072 bytes.
+ERROR: Texture with GL ID of 184: leaked 21672 bytes.
+ERROR: Texture with GL ID of 185: leaked 5132 bytes.
+ERROR: Texture with GL ID of 186: leaked 8520 bytes.
+ERROR: Texture with GL ID of 188: leaked 12280 bytes.
+ERROR: Texture with GL ID of 199: leaked 12280 bytes.
+ERROR: Texture with GL ID of 204: leaked 12280 bytes.
+ERROR: Texture with GL ID of 205: leaked 8520 bytes.
+ERROR: Texture with GL ID of 206: leaked 131072 bytes.
+ERROR: Texture with GL ID of 207: leaked 3064 bytes.
+ERROR: Texture with GL ID of 210: leaked 12280 bytes.
+ERROR: Texture with GL ID of 268: leaked 6812 bytes.
+ERROR: Texture with GL ID of 269: leaked 131072 bytes.
+ERROR: Texture with GL ID of 270: leaked 28792 bytes.
+ERROR: Texture with GL ID of 271: leaked 28792 bytes.
+ERROR: Texture with GL ID of 272: leaked 28792 bytes.
+ERROR: Texture with GL ID of 273: leaked 28792 bytes.
+ERROR: Texture with GL ID of 274: leaked 28792 bytes.
+ERROR: Texture with GL ID of 275: leaked 11996 bytes.
+ERROR: Texture with GL ID of 276: leaked 4156 bytes.
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+WARNING: 10399 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+ERROR: 4882 resources still in use at exit (run with --verbose for details).
+ERROR: 1 RID allocations of type 'N5GLES36ShaderE' were leaked at exit.
+ERROR: 202 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
+ERROR: 94 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 7 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools11BucketSmallE
