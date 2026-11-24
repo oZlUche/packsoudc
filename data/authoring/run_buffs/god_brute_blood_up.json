@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_blood_up",
+  "display_name": "以血还血（升级）",
+  "display_names": {
+    "en": "Blood for Blood+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "every": 10
+      }
+    }
+  ]
+}

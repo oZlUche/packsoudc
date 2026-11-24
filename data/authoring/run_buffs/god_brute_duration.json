@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_duration",
+  "display_name": "怒意不绝",
+  "display_names": {
+    "en": "Unending Rage"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 1
+      }
+    }
+  ]
+}

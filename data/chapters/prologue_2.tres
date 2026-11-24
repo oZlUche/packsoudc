@@ -36,5 +36,6 @@ allow_carry_in = false
 auto_spawn = true
 skip_setup = true
 intro_event = &"tut2_intro"
+opening_qual_pick = false
 chest_skin = &"north_woods"
 map_skin = &"north_woods"

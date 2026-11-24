@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_linger",
+  "display_name": "余怒",
+  "display_names": {
+    "en": "Smoldering Rage"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 10
+      }
+    }
+  ]
+}

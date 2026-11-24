@@ -2,7 +2,7 @@
 	"faith": "brute",
 	"tier": 3,
 	"max_hp": 900000,
-	"undying_sec": 3.0,
+	"undying_sec": 0.0,
 	"axes": {},
 	"baseline": {
 		"max_hp": {
@@ -27,7 +27,7 @@
 	"set_rules": [
 		[
 			"FaithMechanicTrigger",
-			"Always",
+			"FaithPulseCadence",
 			"BruteRage"
 		]
 	],

@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_break",
+  "display_name": "破甲",
+  "display_names": {
+    "en": "Sunder"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_irate",
+  "display_name": "易怒症",
+  "display_names": {
+    "en": "Short Fuse"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 20
+      }
+    }
+  ]
+}

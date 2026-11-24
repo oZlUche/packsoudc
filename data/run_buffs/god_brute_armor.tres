@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_88smx"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_657hs"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_jy5d3"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ucf6i"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_sn2qa"]
+
+[sub_resource type="Resource" id="Resource_kn7ni"]
+script = ExtResource("2_657hs")
+values = {
+"cd": 10,
+"pct": 50,
+"window": 3
+}
+
+[resource]
+script = ExtResource("5_sn2qa")
+id = &"god_brute_armor"
+display_name = "血甲"
+display_names = {
+"en": "Blood Armor"
+}
+effects = Array[ExtResource("1_88smx")]([SubResource("Resource_kn7ni")])

@@ -60,6 +60,8 @@ var removals_used: int = 0
 var depth_reached: int = -1
 ## 攒着的「下一次搜索多翻一件」
 var pending_searches: int = 0
+## 388：神的牌在一局里要记的数（神罚用掉几次这类），进存档
+var god_state: Dictionary = {}
 ## 每一笔经验值：{step, source, gained, total, level}
 var history: Array[Dictionary] = []
 
@@ -188,8 +190,18 @@ func _regular_left() -> int:
 	return maxi(0, level() - 1 - picks_done)
 
 
+## 388：下一个质变位是第几个（开局那位算第 0 个）。章节关了开局选牌（教程）就从第 1 个算起
+func _slot_index() -> int:
+	return qual_done + (1 if opening_skipped() else 0)
+
+
+## 388（架构设计初值）：这一章不弹开局那次质变选牌（[member ChapterDef.opening_qual_pick]，教程章节关）
+func opening_skipped() -> bool:
+	return rules().qual_opening and _run != null and _run.chapter != null and not _run.chapter.opening_qual_pick
+
+
 func _qual_left() -> int:
-	return maxi(0, rules().qual_slots_at(level()) - qual_done)
+	return maxi(0, rules().qual_slots_at(level()) - _slot_index())
 
 
 ## 选牌按级排队：每级一次普通牌，逢质变位的那一级紧跟着一次质变（开局那次在最前）。返回现在这一张：
@@ -198,7 +210,7 @@ func current_pick() -> Dictionary:
 	if pending() <= 0:
 		return {}
 	var qual := _next_is_qual()
-	var lv := rules().qual_level_of(qual_done) if qual else picks_done + 2
+	var lv := rules().qual_level_of(_slot_index()) if qual else picks_done + 2
 	return {"level": lv, "qual": qual, "generic": qual and not has_qual_pool()}
 
 
@@ -210,7 +222,7 @@ func _next_is_qual() -> bool:
 		return false
 	if _regular_left() <= 0:
 		return true
-	return rules().qual_level_of(qual_done) < picks_done + 2
+	return rules().qual_level_of(_slot_index()) < picks_done + 2
 
 
 ## 这一局奉的神（无信者 &""）
@@ -232,7 +244,7 @@ func has_qual_pool() -> bool:
 ## 这一次摆几张：质变位的开局那一次，万神院五档多一张（[member RunState.opening_extra_choice]）
 func _choices_for(qual: bool) -> int:
 	var n := rules().choices
-	if qual and qual_done == 0 and rules().qual_opening and _run != null and _run.opening_extra_choice:
+	if qual and _slot_index() == 0 and rules().qual_opening and _run != null and _run.opening_extra_choice:
 		n += 1
 	return n
 
@@ -517,7 +529,45 @@ func card_text(card_id: StringName) -> String:
 	if String(row.get("oneshot", "")) == String(LevelRules.ONESHOT_SEARCH):
 		return UiText.t("level.next_search")
 	var def: RunBuffDef = _run.buff_defs.get(card_id, null) if _run != null else null
+	var gc := god_card_of(card_def(card_id))
+	if gc != null:
+		return gc.fill(UiText.t("gcard." + String(card_id)))     # 一张的数（基础牌拿几张由层数角标写）
 	return def.summary() if def != null else ""
+
+
+## 388：[param def] 带的神的牌的数（没有 = null）
+static func god_card_of(def: RunBuffDef) -> GodCard:
+	if def == null:
+		return null
+	for e in def.effects:
+		if e is GodCard:
+			return e as GodCard
+	return null
+
+
+## 388：拿了 [param card_id] 的话，它的数 [param key] 一共是多少（基础牌拿几张乘几）；没拿 = [param fallback]
+func god_value(card_id: StringName, key: String, fallback: float = 0.0) -> float:
+	var n := count_of(card_id)
+	if n <= 0 or _run == null:
+		return fallback
+	var gc := god_card_of(card_def(card_id))
+	if gc == null or not gc.values.has(key):
+		return fallback
+	return float(gc.values[key]) * n
+
+
+## 388：牌的那份 buff —— 这一局的表里没有（测试拼的内容）就按 id 去内容里找
+func card_def(card_id: StringName) -> RunBuffDef:
+	var def: RunBuffDef = _run.buff_defs.get(card_id, null) if _run != null else null
+	if def == null:
+		var path := ContentPaths.asset_file("run_buffs", String(card_id))
+		def = load(path) as RunBuffDef if ResourceLoader.exists(path) else null
+	return def
+
+
+## 388：拿了没有
+func has_card(card_id: StringName) -> bool:
+	return count_of(card_id) > 0
 
 
 ## 元素回响现在每几秒一次
@@ -633,13 +683,14 @@ func to_dict() -> Dictionary:
 	return {"xp": xp, "picks_done": picks_done, "qual_done": qual_done, "level_seen": level_seen,
 		"taken": taken.duplicate(), "removed": removed.duplicate(), "offer": offer_ids.duplicate(), "offer_qual": offer_qual, "draws": draws,
 		"rerolls_used": rerolls_used, "removals_used": removals_used, "depth_reached": depth_reached,
-		"pending_searches": pending_searches, "history": history.duplicate(true)}
+		"pending_searches": pending_searches, "history": history.duplicate(true), "god_state": god_state.duplicate(true)}
 
 
 func restore(d: Dictionary) -> void:
 	xp = maxf(0.0, float(d.get("xp", 0.0)))
 	picks_done = maxi(0, int(d.get("picks_done", 0)))
 	qual_done = maxi(0, int(d.get("qual_done", 0)))
+	god_state = (d.get("god_state", {}) as Dictionary).duplicate(true) if d.get("god_state", {}) is Dictionary else {}
 	if not d.has("qual_done"):     # 388 之前的档：无信者逢 5 级多选的那几次记在 picks_done 里，挪成用掉的质变位
 		var bonus := maxi(int(d.get("bonus_picks", 0)), (d.get("bonus_levels", []) as Array).size())
 		bonus = mini(bonus, picks_done)

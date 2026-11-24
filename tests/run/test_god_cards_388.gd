@@ -22,6 +22,9 @@ const FIXTURE := {
 static func _swap_rules() -> LevelRules:
 	var keep := LevelRules.load_rules()
 	var r := keep.duplicate(true) as LevelRules
+	for k in r.cards.keys():
+		if String((r.cards[k] as Dictionary).get("kind", "")) == "god":
+			r.cards.erase(k)     # 真牌拿掉，只看测试牌
 	for k in FIXTURE:
 		r.cards[k] = (FIXTURE[k] as Dictionary).duplicate(true)
 	LevelRules._rules = r
@@ -227,4 +230,92 @@ static func run_vitality_card_empty(t: TestCase) -> void:
 	lv.pick(0)
 	t.eq(run.vitality.maximum, mx + 1, "上限 +1")
 	t.eq(run.vitality.current, cur, "当前体力没涨")
+	run.dispose()
+
+
+static func run_tutorial_no_opening(t: TestCase) -> void:
+	t.begin("388 · 教程章节关掉开局那次质变选牌（章节开关，架构设计初值）；6 级的质变位照旧")
+	var run := L._start(33)
+	var lv := LevelModule.of(run)
+	if lv == null or run.chapter == null:
+		t.check(false, "开局")
+		return
+	t.eq(lv.pending(), 1, "平常的章节：开局欠一次")
+	var ch := run.chapter.duplicate() as ChapterDef
+	ch.opening_qual_pick = false
+	run.chapter = ch
+	t.eq(lv.pending(), 0, "关掉开局选牌：开局不欠")
+	lv.gain(float(lv.rules().total_for(6)), LevelModule.SRC_BATTLE)
+	t.eq(lv.pending(), 5 + 1, "到 6 级：五次普通 + 6 级的质变位")
+	var seen_qual := 0
+	while lv.pending() > 0:
+		if bool(lv.current_pick()["qual"]):
+			seen_qual += 1
+			t.eq(int(lv.current_pick()["level"]), 6, "质变位是 6 级的")
+		lv.offer()
+		lv.pick(0)
+	t.eq(seen_qual, 1, "只有 6 级那一次质变")
+	for id in [&"prologue", &"prologue_2"]:
+		var path := ContentPaths.asset_file("chapters", String(id))
+		var c := load(path) as ChapterDef if ResourceLoader.exists(path) else null
+		t.check(c != null and not c.opening_qual_pick, "%s 关了开局选牌" % id)
+	run.dispose()
+
+
+static func run_brute_cards(t: TestCase) -> void:
+	t.begin("388 第 1 批 · 蛮神的牌：29 张进牌池（10 质变 + 9 升级 + 11 基础 - 啖肉吮血待做）、拿了几张就把数填进怒气；死斗编进不屈；神罚按牌给次数、升级后精英耗 2 次")
+	var run := _start(41, &"brute")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"brute":
+		t.check(false, "开局奉蛮神")
+		return
+	var r := lv.rules()
+	var quals := 0
+	var bases := 0
+	for cid in r.card_ids():
+		if r.god_of(cid) == &"brute":
+			if r.is_qual(cid):
+				quals += 1
+			else:
+				bases += 1
+	t.eq(quals, 18, "质变 9 张 + 升级 9 张")
+	t.eq(bases, 11, "基础牌 11 张")
+	t.check(lv.card_text(&"god_brute_break").contains("2%"), "牌面按数写：%s" % lv.card_text(&"god_brute_break"))
+	var perk := BruteRagePerk.new()
+	var bare := perk.effect_for(lv)
+	t.eq(bare.cap, 30, "没拿牌：30 层")
+	lv.taken["god_brute_cap"] = 2
+	lv.taken["god_brute_damage"] = 2
+	lv.taken["god_brute_regen"] = 1
+	lv.taken["god_brute_break"] = 1
+	lv.taken["god_brute_break_up"] = 1
+	lv.taken["god_brute_pain"] = 1
+	var e := perk.effect_for(lv)
+	t.eq(e.cap, 50, "怒气磅礴两张：50 层")
+	t.check(is_equal_approx(e.damage_per, 3.0), "气血上涌两张：每层 3%")
+	t.check(is_equal_approx(e.regen_per, 0.2), "不灭：每 5 层 1 点 = 每层 0.2")
+	t.check(is_equal_approx(e.armor_per, 3.0) and is_equal_approx(e.ignore_per, 2.0), "破甲拿了升级：3% 且无视 2%")
+	t.eq(e.defer_percent, 50, "痛觉残留 50%")
+	t.eq(BruteRagePerk.undying_sec(lv), 0.0, "没拿死斗：不屈 0 秒")
+	lv.taken["god_brute_deathfight"] = 1
+	lv.taken["god_brute_undying"] = 2
+	t.check(is_equal_approx(BruteRagePerk.undying_sec(lv), 4.0), "死斗 3 + 不屈 0.5×2 = 4 秒")
+	# 神罚
+	var smite := SmitePerk.new()
+	smite.card = &"god_brute_smite"
+	smite.up_card = &"god_brute_smite_up"
+	smite.more_card = &"god_brute_smite_more"
+	t.eq(smite.prebattle_actions(run, &"battle").size(), 0, "没拿神罚：战前没有按钮")
+	lv.taken["god_brute_smite"] = 1
+	t.eq(smite.uses_total(run), 2, "神罚一局 2 次")
+	t.eq(smite.prebattle_actions(run, &"battle").size(), 1, "普通敌人有按钮")
+	t.eq(smite.prebattle_actions(run, &"elite").size(), 0, "没升级：精英没有")
+	lv.taken["god_brute_smite_up"] = 1
+	lv.taken["god_brute_smite_more"] = 1
+	t.eq(smite.uses_total(run), 5, "升级 +2、再现 +1：5 次")
+	t.eq(smite.cost_for(run, &"elite"), 2, "升级后精英耗 2 次")
+	t.eq(smite.cost_for(run, &"boss"), 0, "首领不行")
+	lv.god_state[SmitePerk.USED_KEY] = 4
+	t.eq(String(smite.prebattle_actions(run, &"elite")[0]["why"]) != "", true, "只剩 1 次：精英灰着")
+	t.eq(lv.to_dict()["god_state"].get(SmitePerk.USED_KEY, 0), 4, "用掉几次进存档")
 	run.dispose()

@@ -66,6 +66,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 3. 计算受伤量 ---
 	var amount := packet.pending()
+	if packet.percent < 0 and packet.ignore_reduction > 0:
+		packet.percent = StatMath.mul(packet.percent, StatMath.from_percent(maxi(0, 100 - packet.ignore_reduction)))     # 388 破甲升级：减伤少算几成
 	if packet.percent != 0:
 		amount = StatMath.mul(amount, StatMath.ONE + packet.percent)
 	amount += packet.flat
@@ -84,6 +86,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 减伤、格挡都按原值算完，扛下来的那部分再乘；治疗不放大
 	if amount > 0 and not pure:
 		var taken := victim.axis_factor(StatAxes.DAMAGE_TAKEN)     # 标准轴（4.3）：易伤为正、坚韧为负，加时在系统层
+		if taken < StatMath.ONE and packet.ignore_reduction > 0:
+			taken = StatMath.ONE - StatMath.mul(StatMath.ONE - taken, StatMath.from_percent(maxi(0, 100 - packet.ignore_reduction)))     # 388 破甲升级
 		taken_factor = taken
 		if taken != StatMath.ONE:
 			amount = maxi(0, StatMath.mul(amount, taken))
@@ -95,11 +99,29 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 4. 护甲吸收（305）：最终伤害先扣护甲，扣到见底；治疗、不吃护甲的类型、真实伤害、穿透都不碰 ---
 	if amount > 0 and td.armor_absorbable and not pure and not packet.penetration and victim.resources.has(BattleStats.RES_ARMOR):
-		var take := mini(victim.resources.current(BattleStats.RES_ARMOR), amount)
+		var boosted := amount
+		if packet.armor_bonus > 0:
+			boosted = StatMath.mul(amount, StatMath.ONE + StatMath.from_percent(packet.armor_bonus))     # 388 破甲：对护甲按放大后的量扣
+		var take := mini(victim.resources.current(BattleStats.RES_ARMOR), boosted)
 		if take > 0:
 			victim.resources.change(BattleStats.RES_ARMOR, -take, BattleEvent.REASON_ABSORBED)
 			packet.absorbed = take
-	var to_hp := amount - packet.absorbed
+		if boosted != amount and take > 0:
+			# 扣掉的护甲折回原值是多少（向下取整，剩下落血的就多一点）
+			@warning_ignore("integer_division")
+			var used := mini(amount, (take * amount) / maxi(1, boosted))
+			var to_hp_b := amount - used
+			return _land(ctx, packet, td, victim, amount, to_hp_b, raw_in, hp_before, taken_factor)
+	return _land(ctx, packet, td, victim, amount, amount - packet.absorbed, raw_in, hp_before, taken_factor)
+
+
+## 第 5、6 步（388 从 [method resolve] 拆出来：破甲要按折回的量落血）
+static func _land(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef, victim: CombatantRuntime, amount: int, to_hp: int,
+		raw_in: int, hp_before: int, taken_factor: int) -> int:
+	# 388 痛觉残留：落血的几成挪走，之后慢慢扣（挨打一方的规则在 damage 事件里接）
+	if to_hp > 0 and packet.defer_percent > 0:
+		packet.deferred = StatMath.mul(to_hp, StatMath.from_percent(clampi(packet.defer_percent, 0, 100)))
+		to_hp -= packet.deferred
 
 	# --- 5. 落血 ---
 	if to_hp > 0:
@@ -161,6 +183,8 @@ static func _notify(ctx: BattleContext, packet: DamagePacket, td: DamageTypeDef)
 		payload["pure"] = true     # 279：真实伤害（战记写「真实」，不写伤害类型）
 	if ctx.reacting > 0 and ctx.reaction != &"" and packet.source_uid == 0:
 		payload["reaction"] = String(ctx.reaction)     # 301：反应打的（来源 = 引发方，不记到哪件道具）
+	if packet.deferred > 0:
+		payload["deferred"] = packet.deferred     # 388 痛觉残留
 	if packet.penetration:
 		payload["penetration"] = true     # 309：穿透（跳过了护甲），战记照写
 	if packet.cancelled:

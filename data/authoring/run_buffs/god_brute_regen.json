@@ -1,0 +1,16 @@
+{
+  "id": "god_brute_regen",
+  "display_name": "不灭",
+  "display_names": {
+    "en": "Undying Flesh"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "per": 5,
+        "regen": 1
+      }
+    }
+  ]
+}

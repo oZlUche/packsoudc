@@ -306,3 +306,39 @@ static func _lay_out(n: Node) -> void:
 		n.notification(Container.NOTIFICATION_SORT_CHILDREN)
 	for c in n.get_children():
 		_lay_out(c)
+
+
+static func frame_opening_pick_before_coach(t: TestCase, root: Window) -> void:
+	t.begin("388 · 自由模式第一次进地图：开局质变选牌窗开着时地图讲解先不放；选完（或收起）才讲（测试 v8.30）")
+	var p := Support.paths(PREFIX + "q")
+	Support.cleanup(PREFIX + "q")
+	var game = load(GAME).instantiate()
+	game.save_path = p["run"]
+	game.meta_path = p["meta"]
+	game.settings_path = p["settings"]
+	root.add_child(game)
+	var flow: GameFlow = game.flow
+	var free: ChapterDef = null
+	for ch in flow.chapters:
+		if ch.id == &"prologue":
+			free = ch.duplicate() as ChapterDef     # 借序章的地图讲解，打开开局选牌 = 自由模式第一次进图的样子
+			free.opening_qual_pick = true
+	t.not_null(free, "有序章一")
+	if free == null:
+		game.queue_free()
+		return
+	flow.begin_direct(free)
+	Support.settle(flow)
+	var map = game.base()
+	if map.has_method("accept_tutorial") and map.tutorial_ask_open():
+		map.accept_tutorial()
+	map.set("_rules", null)
+	map.call("_maybe_level_pick")
+	t.check(map.level_pick_open(), "开局质变选牌窗开着")
+	map.call("_maybe_coach")
+	t.is_null(map.coach(), "选牌窗开着：讲解先不放")
+	map.call("_drop_level_pick")
+	map.call("_maybe_coach")
+	t.not_null(map.coach(), "选牌窗收了：讲解接着放")
+	game.queue_free()
+	Support.cleanup(PREFIX + "q")

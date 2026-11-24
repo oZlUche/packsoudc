@@ -39,7 +39,7 @@ static func run_faith_files(t: TestCase) -> void:
 	t.eq(brute.thresholds, [42, 117, 217] as Array[int], "蛮神阈值 42 / 117 / 217（372：升 5 / 10 / 15 级的经验值）")
 	t.eq(brute.deeds.size(), 2, "两条增长方式（反击、低血打赢；372 起打赢是通用经验值）")
 	t.eq(brute.offerings.size(), 3, "三条献祭规矩（250：骨与血肉并成兽材）")
-	t.eq(brute.perks.size(), 7, "七条效果（信仰重构 D：怒气一阶一行 4 条，加祈求赐福、献祭生命上限、秒杀）")
+	t.eq(brute.perks.size(), 4, "四条效果（388：怒气、祈求赐福、献祭生命上限、按【神罚】牌给次数的秒杀；阶的那几句改成了质变牌）")
 	var db := ItemDatabase.new()
 	db.load_dir()
 	t.eq(db.get_def(&"charm_brute").faith_tag(), &"faith:brute", "蛮神的护符归蛮神")

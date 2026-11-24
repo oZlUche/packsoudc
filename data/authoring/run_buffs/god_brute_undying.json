@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_undying",
+  "display_name": "不屈",
+  "display_names": {
+    "en": "Unbowed"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 0.5
+      }
+    }
+  ]
+}

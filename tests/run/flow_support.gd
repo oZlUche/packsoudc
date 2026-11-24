@@ -145,7 +145,7 @@ static func pass_tutorials(f: GameFlow) -> void:
 static func skip_opening_pick(map: Node, run: RunState) -> void:
 	var lv := LevelModule.of(run)
 	if lv != null:
-		lv.qual_done = maxi(lv.qual_done, lv.rules().qual_slots_at(1))
+		lv.qual_done = maxi(lv.qual_done, lv.rules().qual_slots_at(1) - (1 if lv.opening_skipped() else 0))
 		lv.offer_ids.clear()
 		lv.offer_qual = false
 	if map != null and map.get("_level_pick") != null:

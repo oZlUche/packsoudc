@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_smite_more",
+  "display_name": "神罚再现",
+  "display_names": {
+    "en": "Wrath Returns"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "uses": 1
+      }
+    }
+  ]
+}

@@ -69,5 +69,145 @@ cards = {
 "card_weapon_haste": {
 "kind": "weapon",
 "requires": "weapon"
+},
+"god_brute_armor": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_armor_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_armor"
+},
+"god_brute_blood": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_blood_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_blood"
+},
+"god_brute_break": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_break_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_break"
+},
+"god_brute_burn": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_burn_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_burn"
+},
+"god_brute_cap": {
+"god": "brute",
+"kind": "god"
+},
+"god_brute_cornered": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_cornered_more": {
+"after": "god_brute_cornered",
+"god": "brute",
+"kind": "god",
+"weight": 0.6
+},
+"god_brute_cornered_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_cornered"
+},
+"god_brute_damage": {
+"god": "brute",
+"kind": "god"
+},
+"god_brute_deathfight": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_deathfight_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_deathfight"
+},
+"god_brute_duration": {
+"god": "brute",
+"kind": "god"
+},
+"god_brute_haste": {
+"god": "brute",
+"kind": "god"
+},
+"god_brute_hate": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_hate_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_hate"
+},
+"god_brute_irate": {
+"god": "brute",
+"kind": "god"
+},
+"god_brute_lifesteal": {
+"god": "brute",
+"kind": "god"
+},
+"god_brute_linger": {
+"god": "brute",
+"kind": "god"
+},
+"god_brute_pain": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_pain_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_pain"
+},
+"god_brute_regen": {
+"god": "brute",
+"kind": "god"
+},
+"god_brute_smite": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_smite_more": {
+"after": "god_brute_smite",
+"god": "brute",
+"kind": "god",
+"weight": 0.3
+},
+"god_brute_smite_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_smite"
+},
+"god_brute_undying": {
+"after": "god_brute_deathfight",
+"god": "brute",
+"kind": "god",
+"weight": 0.3
 }
 }
