@@ -71,7 +71,9 @@ func _head() -> Control:
 	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
 	row.add_child(title)
 	if f != null:
-		row.add_child(CP.track(flow.meta.commissions, f, 260.0, flow.faith_defs))     # 389：声望刻度（占位版）
+		var sc := RepScale.make(flow.meta.commissions, f, flow.faith_defs)     # 389：声望刻度（和委托簿声望页同一把尺）
+		sc.custom_minimum_size.x = 420.0
+		row.add_child(sc)
 	return p
 
 

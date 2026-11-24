@@ -38,6 +38,12 @@
       "effect": "nursery_plot"
     }
   ],
+  "gift_every": 25,
+  "gift_pool": [
+    {
+      "funds": 30
+    }
+  ],
   "facilities": {
     "nursery": "growers_first_bed"
   },

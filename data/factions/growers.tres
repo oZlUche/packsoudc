@@ -37,6 +37,10 @@ nodes = Array[Dictionary]([{
 "kind": "open",
 "rep": 100
 }])
+gift_every = 25
+gift_pool = Array[Dictionary]([{
+"funds": 30
+}])
 facilities = {
 "nursery": "growers_first_bed"
 }

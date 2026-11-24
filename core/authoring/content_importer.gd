@@ -1050,6 +1050,13 @@ static func import_faction(data: Dictionary, ctx: Context, report: ImportReport)
 		var eff := StringName(String(n.get("effect", "")))
 		if not (eff == &"" and Commissions.is_placeholder(n)) and not Commissions.EFFECTS.has(eff):
 			report.error(at + ".effect", "不认识的效果 '%s'（只认 %s；空的只给占位节点）" % [eff, ", ".join(Commissions.EFFECTS)])
+	for i in def.gift_pool.size():     # 389 第七节：赠礼一样 = 金币或一种道具
+		var g := def.gift_pool[i]
+		var gid := StringName(String(g.get("item", "")))
+		if int(g.get("funds", 0)) <= 0 and gid == &"":
+			report.error("gift_pool[%d]" % i, "要写 funds 或 item")
+		elif gid != &"" and not ctx.items.is_empty() and not ctx.items.has(gid):
+			report.error("gift_pool[%d].item" % i, "找不到道具 '%s'" % gid)
 	for k in def.facilities:
 		if not Commissions.opens_known(StringName(String(k))):
 			report.error("facilities", "不认识的设施 '%s'（只认 %s）" % [k, ", ".join(Commissions.FACILITIES + Commissions.FEATURES)])

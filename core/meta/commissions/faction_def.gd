@@ -24,6 +24,10 @@ extends Resource
 ## - `effect`：效果 id（[constant Commissions.EFFECTS]），`value`：效果的参数（神 id、委托 id、尺寸、折损……）
 ## - `placeholder`：占位（刻度上看得见、显示「？？？？」，到了也不生效）；`hidden`：没到之前显示「？？？？」
 @export var nodes: Array[Dictionary] = []
+## 报告 389 第七节（作者 11-24 16:49「不要写死」）：这一方声望每攒多少，【赠礼】多一份（现在各方都写 25；0 = 这一方没有赠礼）
+@export var gift_every: int = 0
+## 报告 389 第七节：【赠礼】一份从这几样里随机给一样（作者 11-24 16:49）：每条 `{"funds": 金币}` 或 `{"item": 道具 id, "count": 件数}`。内容等作者挑，现在是占位
+@export var gift_pool: Array[Dictionary] = []
 ## 342 B2：这一方的剧情开放哪些基地设施：设施 id（`smithy` / `tech` / `market`）→ 开它的那份剧情委托 id
 @export var facilities: Dictionary = {}
 ## 联系人 NPC（可空）

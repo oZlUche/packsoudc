@@ -79,6 +79,10 @@ nodes = Array[Dictionary]([{
 "placeholder": true,
 "rep": 100
 }])
+gift_every = 25
+gift_pool = Array[Dictionary]([{
+"funds": 30
+}])
 permit = &"pantheon_permit"
 regular = Array[Dictionary]([{
 "goal": "altar_offer",
