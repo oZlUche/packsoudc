@@ -487,14 +487,14 @@ func rep_row(f: FactionDef) -> PanelContainer:
 	row.add_child(left)
 	var title := UiTheme.make_label(Names.of(f), 28, LIGHT)
 	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
-	title.add_theme_color_override("font_color", LIGHT)
+	UiTheme.fixed_color(title, LIGHT)
 	left.add_child(title)
 	var rep_line := UiTheme.hbox(6)
 	left.add_child(rep_line)
 	rep_line.add_child(UiTheme.make_label(UiText.t("commission.sub_reputation"), 18, LIGHT))
 	var num := UiTheme.make_label(str(flow.meta.commissions.rep_of(f.id)), 28, UiTheme.STONE_GOLD)
 	num.name = "Rep"
-	num.add_theme_color_override("font_color", UiTheme.STONE_GOLD)
+	UiTheme.fixed_color(num, UiTheme.STONE_GOLD)
 	rep_line.add_child(num)
 	var scale_ := RepScale.make(flow.meta.commissions, f, flow.faith_defs)
 	scale_.size_flags_vertical = Control.SIZE_SHRINK_CENTER

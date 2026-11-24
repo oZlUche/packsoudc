@@ -582,7 +582,7 @@ func show_node_news() -> Control:
 	medal.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	mid.add_child(medal)
 	var lab := UiTheme.make_label(UiText.t("commission.rep") % int(n.get("rep", 0)), 28, UiTheme.STONE_GOLD)
-	lab.add_theme_color_override("font_color", UiTheme.STONE_GOLD)
+	UiTheme.fixed_color(lab, UiTheme.STONE_GOLD)
 	mid.add_child(lab)
 	return _stone_notice(f.id if f != null else &"", mid, Commissions.node_text(n, flow.faith_defs, flow.meta.commissions, f),
 		[[UiText.t("arrive.ok"), close_node_news, true]])
@@ -674,7 +674,7 @@ func _stone_notice(faction_id: StringName, mid: Control, text: String, keys: Arr
 	head.add_child(load("res://ui/game/commission_panel.gd").emblem(faction_id, 72))
 	var title := UiTheme.make_label(Names.of(f) if f != null else String(faction_id), 30, UiTheme.STONE_INK)
 	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
-	title.add_theme_color_override("font_color", UiTheme.STONE_INK)
+	UiTheme.fixed_color(title, UiTheme.STONE_INK)
 	head.add_child(title)
 	UiMotion.fade(plate, UiMotion.enabled(flow.settings), 0.0, 1.0, 0.4)     # 牌子亮起
 	if mid != null:
