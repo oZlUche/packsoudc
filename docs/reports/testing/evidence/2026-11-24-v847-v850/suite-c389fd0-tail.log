@@ -1,0 +1,11 @@
+         [1] frame_quiet_lifecycle (res://tests/ui/test_slice_v614.gd:59)
+         [2] _process (res://tests/run_tests.gd:138)
+======================================================
+失败  1 / 46282 项断言未通过：
+------------------------------------------------------
+  ✗ [158 · 有没有没导入的素材：.import 的目标都在 = 导过；目标没了、或新图旁边连 .import 都没有 = 没导] 测试前导过：一个不缺
+      期望: []
+      实际: ["res://assets/ui/effects/nature_rejuv.png"]
+======================================================
+WARNING: 90 RIDs of type "CanvasItem" were leaked.
+EXIT=1
