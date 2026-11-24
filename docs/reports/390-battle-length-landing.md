@@ -1,4 +1,4 @@
-# 389 战斗时长拉到 10~20 秒：落实记录（报告 388 第二节）
+# 390 战斗时长拉到 10~20 秒：落实记录（报告 388 第二节）
 
 > 2026-11-24。落实作者 11-24 第 1 条「提升敌人和角色的基础生命值，保证每场战斗时长大概在 10~20 秒……先设置一个你认为合理的值，然后继续调整」。
 > 方案见 [388 第二节](388-god-cards-landing.md)。这一份记每一轮改了什么、测出来什么、最后定在哪，和还没达标、要作者定的地方。
@@ -95,4 +95,4 @@ godot --headless --path . --script res://tools/bench_matrix.gd -- /tmp/d.json st
 python3 tools/battle_length.py table /tmp/bl/exp-*/cases.jsonl
 ```
 
-每轮的完整表（含 10%~90% 分位、赢的场中位、过 30 秒的比例、敌方耐力打空）在 [balance/2026-11-24-389-battle-length.md](balance/2026-11-24-389-battle-length.md)。
+每轮的完整表（含 10%~90% 分位、赢的场中位、过 30 秒的比例、敌方耐力打空）在 [balance/2026-11-24-390-battle-length.md](balance/2026-11-24-390-battle-length.md)。
