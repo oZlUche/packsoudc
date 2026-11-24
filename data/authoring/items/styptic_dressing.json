@@ -20,7 +20,7 @@
   "material": "cloth",
   "combat": {
     "base_stats": {
-      "max_hp": 10
+      "max_hp": 35
     },
     "rules": [
       {

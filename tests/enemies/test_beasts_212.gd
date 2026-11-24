@@ -102,10 +102,10 @@ static func run_spec(t: TestCase) -> void:
 		if item.def_id == &"beast_hide":
 			hide_hp = StatMath.to_int(item.stats.total_of(BattleStats.MAX_HP))
 	t.check(firing >= 3, "会咬的三件都出手（%d）" % firing)
-	t.eq(hide_hp, 15, "兽皮：生命 +15")
+	t.eq(hide_hp, 50, "兽皮：生命 +50（388 ×3.5）")
 	var tier := c.pool.tier_of(1)
 	var base := EnemyKit.baseline_of(c.enemies.enemy(&"flame_wolf"), tier, content).value_of(BattleStats.MAX_HP, 0.0)
-	t.eq(spec.max_hp_int(), int(round(base)) + 15, "生命 = 基线 + 兽皮")
+	t.eq(spec.max_hp_int(), int(round(base)) + 50, "生命 = 基线 + 兽皮")
 
 
 static func run_tooltip(t: TestCase) -> void:

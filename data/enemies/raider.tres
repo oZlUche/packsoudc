@@ -25,7 +25,7 @@ display_names = {
 }
 schools = Array[StringName]([&"rapid"])
 base_stats = {
-"max_hp": 26
+"max_hp": 90
 }
 item_tags = Array[StringName]([&"rapid", &"melee", &"remedy", &"material"])
 builds = Array[ExtResource("1_up7ch")]([SubResource("Resource_ngug2"), SubResource("Resource_phgom")])

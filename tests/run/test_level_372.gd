@@ -206,8 +206,8 @@ static func run_fixes_v773(t: TestCase) -> void:
 	t.begin("372 复测（v7.73）/ 388：调息牌面写小数；选牌按级排队，质变位（开局、6 级）排在那一级的普通牌后面；388 之前的档把无信者多给的那几次挪成用掉的质变位")
 	var run := _start(11)
 	var lv := LevelModule.of(run)
-	t.check(lv.card_text(&"card_regen").contains("+0.3"), "调息写 +0.3：%s" % lv.card_text(&"card_regen"))
-	t.check(lv.card_text(&"card_hp_flat").contains("+3") and not lv.card_text(&"card_hp_flat").contains("+3.0"), "整数照旧写整数：%s" % lv.card_text(&"card_hp_flat"))
+	t.check(lv.card_text(&"card_regen").contains("+0.6"), "调息写 +0.6：%s" % lv.card_text(&"card_regen"))
+	t.check(lv.card_text(&"card_hp_flat").contains("+10") and not lv.card_text(&"card_hp_flat").contains("+10.0"), "整数照旧写整数：%s" % lv.card_text(&"card_hp_flat"))
 	var r := lv.rules()
 	lv.gain(float(r.total_for(13)), LevelModule.SRC_BATTLE)
 	var seen: Array[String] = []

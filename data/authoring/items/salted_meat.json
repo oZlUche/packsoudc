@@ -19,8 +19,8 @@
   "material": "flesh",
   "combat": {
     "base_stats": {
-      "max_stamina": 60,
-      "regen_stamina": 3
+      "max_stamina": 120,
+      "regen_stamina": 6
     }
   }
 }

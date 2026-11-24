@@ -61,14 +61,14 @@ static func _cost_factor(run: RunState, uid: int) -> float:
 
 ## 256 定稿（作者 15:48，报告 §8.13 / docs/characters.md）：id → [生命, 耐力, 耐力回复, 体力, 棋盘, 负重, 技能 id]
 const FINAL := {
-	&"marcus": [55.0, 65.0, 5.0, 5, Vector2i(8, 6), 48, [&"drill"]],
-	&"brutus": [85.0, 65.0, 4.0, 8, Vector2i(9, 6), 64, []],
-	&"andreus": [45.0, 55.0, 4.0, 3, Vector2i(7, 6), 48, [&"ambush", &"ransom"]],
+	&"marcus": [195.0, 130.0, 10.0, 5, Vector2i(8, 6), 48, [&"drill"]],
+	&"brutus": [300.0, 130.0, 8.0, 8, Vector2i(9, 6), 64, []],
+	&"andreus": [160.0, 110.0, 8.0, 3, Vector2i(7, 6), 48, [&"ambush", &"ransom"]],
 }
 
 
 static func run_panels(t: TestCase) -> void:
-	t.begin("256 定稿 · 三人面板与技能（docs/characters.md）：马库斯 55/65/5、体力 5、8 × 6 / 48、操练；布鲁图斯 85/65/4、体力 8、9 × 6 / 64、没有技能；安德烈乌斯 45/55/4、体力 3、7 × 6 / 48、偷袭 + 求饶")
+	t.begin("256 定稿 · 三人面板与技能（docs/characters.md）：马库斯 195/130/10、体力 5、8 × 6 / 48、操练；布鲁图斯 300/130/8、体力 8、9 × 6 / 64、没有技能；安德烈乌斯 160/110/8、体力 3、7 × 6 / 48、偷袭 + 求饶")
 	var c := _content()
 	for id in FINAL:
 		var ch := CS._character(c, id)

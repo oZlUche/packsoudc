@@ -27,7 +27,7 @@ var stamina_per_cell: float = 2.0
 ## 一点治疗 / 护甲抵几点伤害
 var heal_weight: float = 0.5
 ## 一点耐力（回复、省下的消耗）抵几点伤害
-var stamina_weight: float = 0.25
+var stamina_weight: float = 0.125
 ## 假定对手生命（按最大 / 当前 / 已损失生命比例的伤害按它算）
 var assumed_hp: float = 100.0
 ## 假定对手 DPS（反伤、对手身上增益的价值按它算）
@@ -47,9 +47,9 @@ var status_applied_rate: float = 0.3
 ## 「移除了某 buff 时」假定一秒几次
 var status_removed_rate: float = 0.2
 ## 耐力回复基线（每秒），耐力消耗按它算能持续几成（[method stamina_sustain]）
-var stamina_regen: float = 4.0
+var stamina_regen: float = 8.0
 ## 155 补（作者定）：基础耐力上限（[CombatantBaseline] 的 max_stamina）—— 开场这一池满耐力也算进一场能花的耐力里
-var stamina_max: float = 50.0
+var stamina_max: float = 100.0
 ## 吃层的消耗（轴、buff 层）打几折（吃掉的层本身有价值）
 var stack_cost_factor: float = 0.5
 ## 状态 / 资源 / 轴条件满足的概率（取反 = 一减它）
@@ -66,8 +66,8 @@ var tiers: Array[float] = [0.9, 1.35, 1.9, 2.8]
 ## 推荐价值 = 每格价 × 格数 × (band[0] + band[1] × 档内位置)
 var value_band: Array[float] = [0.8, 0.4]
 ## 作者定（151 补充）：非武器自带的护甲 / 减伤也算价值 —— 道具自带（基础属性）的一点护甲上限、一点格挡各折几点「每秒伤害」。
-## 和武器同一张预算表比，所以按现有防具 / 盾牌的稀有度定（皮甲 30 护甲、圆盾 5 格挡都落在优良）
-var armor_per_point: float = 0.5
+## 和武器同一张预算表比，所以按现有防具 / 盾牌的稀有度定（皮甲 30 护甲、圆盾 5 格挡都落在优良）；388 护甲 ×3.5 后每点 0.5 → 0.143，皮甲 105 折算不变
+var armor_per_point: float = 0.143
 var block_per_point: float = 3.2
 
 

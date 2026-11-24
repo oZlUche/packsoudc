@@ -23,7 +23,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "max_armor": 50
+      "max_armor": 175
     }
   }
 }

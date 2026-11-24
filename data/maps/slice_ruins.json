@@ -55,7 +55,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 20,
+          "max_hp": 70,
           "block": 0
         },
         "guaranteed_drops": [
@@ -116,7 +116,7 @@
             }
           ],
           "base_stats": {
-            "max_hp": 25,
+            "max_hp": 90,
             "block": 0
           }
         }
@@ -159,7 +159,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 30,
+          "max_hp": 105,
           "block": 2
         }
       }
@@ -244,7 +244,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 45,
+          "max_hp": 160,
           "block": 0
         }
       }
@@ -370,7 +370,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 60,
+          "max_hp": 210,
           "block": 0
         }
       }

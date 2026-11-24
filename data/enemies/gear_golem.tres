@@ -21,7 +21,7 @@ strength = 2
 schools = Array[StringName]([&"clockwork"])
 base_stats = {
 "block": 4,
-"max_hp": 70
+"max_hp": 245
 }
 signature = Array[StringName]([&"gear_arm", &"gear_arm", &"brass_plating", &"brass_plating", &"mainspring"])
 item_tags = Array[StringName]([&"clockwork"])

@@ -20,9 +20,9 @@
   "material": "flesh",
   "combat": {
     "base_stats": {
-      "max_stamina": 90,
-      "regen_stamina": 4,
-      "max_hp": 5
+      "max_stamina": 180,
+      "regen_stamina": 8,
+      "max_hp": 20
     }
   }
 }
