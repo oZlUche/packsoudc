@@ -8,7 +8,8 @@
     {
       "type": "god_card",
       "values": {
-        "amount": 25
+        "hp": 90,
+        "stamina": 50
       }
     }
   ]

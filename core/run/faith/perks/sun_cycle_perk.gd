@@ -130,7 +130,9 @@ func effect_for(lv: LevelModule) -> SunCycle:
 	if lv.has_card(CONTRAST):
 		e.ramp = lv.god_value(CONTRAST_UP if lv.has_card(CONTRAST_UP) else CONTRAST, "pct")
 	if lv.has_card(RISE):
-		e.sunrise = lv.god_value(RISE_UP if lv.has_card(RISE_UP) else RISE, "amount")
+		var rise := RISE_UP if lv.has_card(RISE_UP) else RISE
+		e.sunrise = lv.god_value(rise, "hp")
+		e.sunrise_stamina = lv.god_value(rise, "stamina")
 	if lv.has_card(REST):
 		var up := lv.has_card(REST_UP)
 		e.rest_heal = lv.god_value(REST_UP if up else REST, "pct")

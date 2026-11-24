@@ -9,7 +9,8 @@
 [sub_resource type="Resource" id="Resource_cbkw0"]
 script = ExtResource("2_ar5lt")
 values = {
-"amount": 50
+"hp": 175,
+"stamina": 100
 }
 
 [resource]

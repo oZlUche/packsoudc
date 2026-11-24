@@ -45,6 +45,8 @@ const CHILL := &"chill"
 @export var rest_haste: bool = false
 ## 进边
 @export var sunrise: float = 0.0
+## 日出当作：耐力上限加多少（报告 390 起生命 ×3.5、耐力 ×2，两样分开写）
+@export var sunrise_stamina: float = 0.0
 @export var dawn_armor: float = 0.0
 @export var dusk_stamina: float = 0.0
 ## 星移斗转：开战时带着几层、每层几成、拿了没有
@@ -252,9 +254,10 @@ func _enter_day(ctx: RuleContext) -> void:
 		var add := StatMath.from_float(sunrise)
 		res.set_max(BattleStats.RES_HP, res.maximum(BattleStats.RES_HP) + add)
 		res.change(BattleStats.RES_HP, add, BattleEvent.REASON_HEAL)
-		if res.has(BattleStats.RES_STAMINA):
-			res.set_max(BattleStats.RES_STAMINA, res.maximum(BattleStats.RES_STAMINA) + add)
-			res.change(BattleStats.RES_STAMINA, add, BattleEvent.REASON_HEAL)
+	if sunrise_stamina > 0.0 and res.has(BattleStats.RES_STAMINA):
+		var add_st := StatMath.from_float(sunrise_stamina)
+		res.set_max(BattleStats.RES_STAMINA, res.maximum(BattleStats.RES_STAMINA) + add_st)
+		res.change(BattleStats.RES_STAMINA, add_st, BattleEvent.REASON_HEAL)
 	if dawn_armor > 0.0:
 		var gain := StatMath.mul(res.maximum(BattleStats.RES_HP), StatMath.from_float(dawn_armor / 100.0))
 		if gain > 0:
