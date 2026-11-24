@@ -64,7 +64,7 @@ func refresh() -> void:
 	if not groups().has(group):
 		group = Nursery.GROUP_HERB
 	if n.fields.size() > 1:
-		_add_plot_tabs()     # 355：垦户社信赖、代言各多一片
+		_add_plot_tabs()     # 355：垦户社 50、100 声望各多一片
 	_add_field(shown_plot)
 	_add_slips(shown_plot)
 

@@ -555,10 +555,42 @@ func _maybe_pantheon_arrival() -> void:
 	var fid := arrival_due()
 	if fid != &"":
 		show_arrival(fid)
+	elif not node_news_due().is_empty():
+		show_node_news()
 
 
-## 一方阵营到了营地：它的牌子（徽 + 名字）亮起，下面一句说明，【知道了】
-func show_arrival(faction_id: StringName) -> Control:
+## 389：还没通知的声望节点（教程导览、阵营到来先放；没有 = 空）{"faction", "node"}
+func node_news_due() -> Dictionary:
+	if tour_due() or arrival_due() != &"" or flow.meta.commissions.node_news.is_empty():
+		return {}
+	return flow.meta.commissions.node_news[0]
+
+
+## 389：一个声望节点到了：和阵营到来同一种「牌子亮起」（占位，等 UI设计 出样），中间「声望到了 N」，下面一句这个节点给什么
+func show_node_news() -> Control:
+	var row := node_news_due()
+	if _arrival != null or row.is_empty():
+		return _arrival
+	var f := Commissions.faction(StringName(String(row.get("faction", ""))))
+	var n := Commissions.node_of(f, StringName(String(row.get("node", ""))))
+	var text := "%s\n%s" % [UiText.t("node.news_title") % int(n.get("rep", 0)), Commissions.node_text(n, flow.faith_defs, flow.meta.commissions, f)]
+	return show_arrival(f.id if f != null else &"", text, close_node_news)
+
+
+## 389：关掉这一条节点通知，有下一条接着放
+func close_node_news() -> void:
+	if _arrival != null:
+		_arrival.queue_free()
+		_arrival = null
+	if not flow.meta.commissions.node_news.is_empty():
+		flow.meta.commissions.node_news.pop_front()
+	flow.save_meta()
+	if not node_news_due().is_empty():
+		show_node_news()
+
+
+## 一方阵营到了营地：它的牌子（徽 + 名字）亮起，下面一句说明，【知道了】（389：[param text] / [param on_close] 给声望节点通知用）
+func show_arrival(faction_id: StringName, text: String = "", on_close: Callable = Callable()) -> Control:
 	if _arrival != null:
 		return _arrival
 	var f := Commissions.faction(faction_id)
@@ -582,11 +614,11 @@ func show_arrival(faction_id: StringName) -> Control:
 	UiMotion.fade(plate, UiMotion.enabled(flow.settings), 0.0, 1.0, 0.4)     # 牌子亮起
 	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 24, 16, 24, 16)
 	col.add_child(paper)
-	paper.add_child(UiTheme.rich_block(520, 16, UiText.t("arrive." + String(faction_id))))
+	paper.add_child(UiTheme.rich_block(520, 16, text if text != "" else UiText.t("arrive." + String(faction_id))))
 	var keys := _hbox(24)
 	keys.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(keys)
-	keys.add_child(ScrollKey.primary(UiText.t("arrive.ok"), func(): close_arrival(faction_id)))
+	keys.add_child(ScrollKey.primary(UiText.t("arrive.ok"), on_close if on_close.is_valid() else func(): close_arrival(faction_id)))
 	return _arrival
 
 
@@ -597,6 +629,8 @@ func close_arrival(faction_id: StringName) -> void:
 		_arrival = null
 	flow.meta.set_flag(StringName(ARRIVAL_SEEN + String(faction_id)))
 	flow.save_meta()
+	if not node_news_due().is_empty():     # 389：到来之后接着放声望节点
+		show_node_news()
 
 
 func arrival() -> Control:
@@ -978,7 +1012,7 @@ func _build_smithy(root: Control) -> Control:
 var _commissions = null
 ## 342 B3：苗圃页（垦户社没来 = null）
 var _nursery = null
-## 354：炼金页（协会没到信赖 = null）
+## 354：炼金页（协会没到 50 声望 = null）
 var _alchemy = null
 var _canteen = null
 var _pantheon = null
@@ -1097,7 +1131,7 @@ func _sub_listed(key: String) -> bool:
 		"nursery":
 			return _growers_here()     # 342 B3：垦户社还没来营地，不列
 		"alchemy":
-			return flow.alchemy_listed()     # 354：协会到信赖前不列
+			return flow.alchemy_listed()     # 354：协会到 50 声望前不列
 		"canteen":
 			return flow.canteen_listed()     # 355：灰灯不在营地（教程、切片）不列
 		"pantheon":

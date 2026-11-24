@@ -1,7 +1,7 @@
-## 355：灰灯食堂（报告 355，342 的 B4）—— 灰灯到受托并办完《开伙》后，后勤「食堂」页里往锅里摆食材，出征吃掉这一锅。
+## 355：灰灯食堂（报告 355，342 的 B4）—— 灰灯 25 声望并办完《开伙》后，后勤「食堂」页里往锅里摆食材，出征吃掉这一锅。
 ##
 ## - 食材 = 带「食材」标签（[constant TAG]）的生料；成品食物（口粮这一类）不是食材，不能下锅。
-## - 食材仓库（[member store]）和锅（[member pot]）都是格子盘，只收食材；大小按灰灯的声望档（[method CanteenRules.pot_size] / [method CanteenRules.store_size]），只长不缩。
+## - 食材仓库（[member store]）和锅（[member pot]）都是格子盘，只收食材；大小按灰灯的声望节点（[method sizes]），只长不缩。
 ## - 一锅的效果（[method meal_of]）：四类各管一种属性，同一属性固定值相加、百分比相加；主食另外给饱腹。
 ##   负重上限、耐力上限、耐力回复和科技同一条算式（[method RunContext.scaled]：基数 ×（1 + Σ%）+ Σ固定）；
 ##   战斗中每秒回血是独立的一项，只在水果之间相加，不吃别的治疗、回复加成（[member CombatantSpec.meal_regen_hp]）。
@@ -85,20 +85,31 @@ static func is_ingredient(def: ItemDef) -> bool:
 	return def != null and def.tags.has(TAG)
 
 
-## 灰灯现在第几档
-static func tier(meta: MetaState, rules: CanteenRules = null) -> int:
+## 报告 389：锅和食材仓库现在该多大 {"pot", "store"}：起始大小，和灰灯到了的 `canteen_pot` / `canteen_store` 节点里最大的
+static func sizes(meta: MetaState, rules: CanteenRules = null) -> Dictionary:
 	var r := rules if rules != null else load_rules()
-	return Commissions.tier_of(meta.commissions if meta != null else null, Commissions.faction(r.faction))
+	var f := Commissions.faction(r.faction)
+	var book := meta.commissions if meta != null else null
+	return {"pot": _biggest(r.pot_size(), Commissions.reached_with(book, f, &"canteen_pot")),
+		"store": _biggest(r.store_size(), Commissions.reached_with(book, f, &"canteen_store"))}
 
 
-## 按 [param tier] 档把锅和食材仓库调到该有的大小（只长不缩）。换了格子盘返回放不回去的那几件（正常是空），由调用方安置
-func fit(p_tier: int, rules: CanteenRules = null) -> Array[ItemInstance]:
-	var r := rules if rules != null else load_rules()
+static func _biggest(base: Vector2i, nodes: Array[Dictionary]) -> Vector2i:
+	var out := base
+	for n in nodes:
+		var v: Variant = n.get("value", [])
+		if v is Array and (v as Array).size() >= 2:
+			out = Vector2i(maxi(out.x, int(v[0])), maxi(out.y, int(v[1])))
+	return out
+
+
+## 把锅和食材仓库调到 [param want]（[method sizes]）那么大（只长不缩）。换了格子盘返回放不回去的那几件（正常是空），由调用方安置
+func fit(want: Dictionary) -> Array[ItemInstance]:
 	var left: Array[ItemInstance] = []
-	var ws := r.store_size(p_tier)
+	var ws: Vector2i = want.get("store", store.size)
 	if ws.x > store.size.x or ws.y > store.size.y:
 		store = _regrid(store, Vector2i(maxi(ws.x, store.size.x), maxi(ws.y, store.size.y)), left)
-	var wp := r.pot_size(p_tier)
+	var wp: Vector2i = want.get("pot", pot.size)
 	if wp.x > pot.size.x or wp.y > pot.size.y:
 		pot = _regrid(pot, Vector2i(maxi(wp.x, pot.size.x), maxi(wp.y, pot.size.y)), left)
 	return left

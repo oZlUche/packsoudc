@@ -7,7 +7,7 @@
   "faction": "legion",
   "order": 4,
   "reputation": 5,
-  "min_tier": 1,
+  "min_rep": 10,
   "requires": [
     "legion_check_materials",
     "legion_clear_road"

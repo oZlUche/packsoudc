@@ -3,20 +3,21 @@
 ##
 ## 规则（作者 2026-11-22 定方向，数值是初值）：
 ## - 新档开始时不在营地；教程之后第 3 次成功撤离结算时来（[member FactionDef.arrive_after]）。没来之前这一局没有信仰（[method faith_open]）。
-## - 五档信赖：一档蛮神、日神、技巧之神可选；二档其余三位；三档奉神的局经验值 +10%；四档神坛上有「赐福」；
-##   五档：报告 388 起人人开局都选一张质变牌，五档先留空（作者 11-24 拿掉了开局四选一；开关 `opening_pick` 留着，写进 `services` 才开）。哪一档开什么写在阵营数据的 `services` 里（服务 id → 第几档，0 起）。
-## - 老档奉过的神不论档位都能选（[member MetaState.gods_worshipped]）。
+## - 报告 389（作者 2026-11-24）：没有档位，按万神院的声望节点（[member FactionDef.nodes]）：0 蛮神、10 自然之神、20 日神；25 奉神的局经验值 +10%；
+##   50 神坛上有「赐福」。技巧、狩猎、大地在 40 / 60 / 80 占位（刻度上看得见、显示「？？？？」，到了也不能选，等各自的牌表写好）；100 留空。
+## - 老档奉过的神不看声望也能选（[member MetaState.gods_worshipped]），占位的三位除外。
 ## - 选神不要代价；出征时这位神的信物自动放进背包，局结束后不带回仓库。
 class_name Pantheon
 extends RefCounted
 
 const FACTION := &"pantheon"
-## 服务 id：`god_<神>` 这位神能选；下面三个是三、四、五档
-const SERVICE_GOD := "god_"
+## 节点效果（[constant Commissions.EFFECTS]）：`god`（参数 = 神 id）这位神能选；下面两项是经验加成和赐福
+const EFFECT_GOD := &"god"
 const SERVICE_XP := &"faith_xp"
 const SERVICE_BLESS := &"altar_bless"
+## 原来第五档的「开局质变那一次多一张」：作者 2026-11-24 定第五层先留空，现在没有节点开它（逻辑留着，[member RunState.opening_extra_choice]）
 const SERVICE_OPENING := &"opening_pick"
-## 三档：奉神的局经验值多给几成（初值）
+## 奉神的局经验值多给几成（节点没写 `value` 时用这个）
 const XP_BONUS := 0.10
 ## 局外旗标：老档的万神院迁移做过了（新档建档时就标上）
 const MIGRATED := &"pantheon_migrated"
@@ -32,52 +33,55 @@ static func arrived(meta: MetaState) -> bool:
 	return meta != null and f != null and Commissions.present(meta.commissions, f)
 
 
-## 信赖第几档（0 起；没来 = -1）
-static func tier(meta: MetaState) -> int:
+## 万神院的声望（没来 = -1）
+static func rep(meta: MetaState) -> int:
 	if not arrived(meta):
 		return -1
-	return Commissions.tier_of(meta.commissions, faction())
+	return meta.commissions.rep_of(FACTION)
 
 
-## 这一档开没开某项服务
+## 某项服务（节点效果）到了没有：万神院到了、带这个效果的节点有一个到了
 static func has_service(meta: MetaState, service: StringName) -> bool:
-	var f := faction()
-	if f == null or not f.services.has(String(service)):
-		return false
-	return tier(meta) >= int(f.services[String(service)])
+	return arrived(meta) and Commissions.has_effect(meta.commissions, faction(), service)
 
 
-## 这位神现在能不能选：到了档位，或者这份存档奉过祂
+## 这位神的那个节点（没有 = 空）
+static func god_node(faith_id: StringName) -> Dictionary:
+	return Commissions.node_with(faction(), EFFECT_GOD, faith_id)
+
+
+## 这位神要多少声望才开（不在刻度上 = -1）
+static func god_rep(faith_id: StringName) -> int:
+	var n := god_node(faith_id)
+	return int(n.get("rep", -1)) if not n.is_empty() else -1
+
+
+## 这位神现在只是占位（刻度上看得见、到了也不能选）
+static func god_placeholder(faith_id: StringName) -> bool:
+	return Commissions.is_placeholder(god_node(faith_id))
+
+
+## 这位神现在能不能选：节点到了，或者这份存档奉过祂；占位的一律不能选
 static func god_open(meta: MetaState, faith_id: StringName) -> bool:
 	if not arrived(meta) or faith_id == &"":
 		return false
-	return meta.gods_worshipped.has(faith_id) or has_service(meta, StringName(SERVICE_GOD + String(faith_id)))
+	var n := god_node(faith_id)
+	if n.is_empty() or Commissions.is_placeholder(n):
+		return false
+	return meta.gods_worshipped.has(faith_id) or Commissions.reached(meta.commissions, faction(), n)
 
 
-## 万神院里列出的神（按服务表的先后：先一档再二档，同档按 id）；[param faith_defs] 是信仰表（id → [FaithDef]），新教这类不是神的不列
+## 万神院里列出的神（按刻度的先后，占位的也列）；[param faith_defs] 是信仰表（id → [FaithDef]），新教这类不是神的不列
 static func gods(faith_defs: Dictionary) -> Array[StringName]:
 	var out: Array[StringName] = []
-	var f := faction()
-	if f == null:
-		return out
-	var rows: Array = []
-	for k in f.services:
-		var key := String(k)
-		if key.begins_with(SERVICE_GOD):
-			var fid := StringName(key.substr(SERVICE_GOD.length()))
-			var def := faith_defs.get(fid, null) as FaithDef
-			if faith_defs.is_empty() or (def != null and def.camp == FaithDef.Camp.GODS):
-				rows.append([int(f.services[k]), String(fid)])
-	rows.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0] if a[0] != b[0] else a[1] < b[1])
-	for r in rows:
-		out.append(StringName(r[1]))
+	for n in Commissions.nodes_of(faction()):
+		if StringName(String(n.get("effect", ""))) != EFFECT_GOD:
+			continue
+		var fid := StringName(String(n.get("value", "")))
+		var def := faith_defs.get(fid, null) as FaithDef
+		if fid != &"" and not out.has(fid) and (faith_defs.is_empty() or (def != null and def.camp == FaithDef.Camp.GODS)):
+			out.append(fid)
 	return out
-
-
-## 这位神要到第几档才开（0 起；不在表里 -1）
-static func god_tier(faith_id: StringName) -> int:
-	var f := faction()
-	return int(f.services.get(SERVICE_GOD + String(faith_id), -1)) if f != null else -1
 
 
 ## 选好下一局奉谁（空 = 以人为本）。不能选的返回 false、不改
@@ -116,10 +120,14 @@ static func charm_of(items: ItemDatabase, faith_id: StringName) -> ItemDef:
 	return items.get_def(ids[0]) if not ids.is_empty() else null
 
 
-## 这一局的信仰开关（[member RunState.FAITH_INPUT]）：万神院到了才有信仰；三档加经验、四档有赐福
+## 这一局的信仰开关（[member RunState.FAITH_INPUT]）：万神院到了才有信仰；经验加成、赐福看节点
 static func access(meta: MetaState) -> Dictionary:
 	var on := arrived(meta)
-	return {"enabled": on, "bless": on and has_service(meta, SERVICE_BLESS), "xp_bonus": XP_BONUS if on and has_service(meta, SERVICE_XP) else 0.0,
+	var xp := 0.0
+	if on:
+		for n in Commissions.reached_with(meta.commissions, faction(), SERVICE_XP):
+			xp = maxf(xp, float(n.get("value", XP_BONUS)))
+	return {"enabled": on, "bless": on and has_service(meta, SERVICE_BLESS), "xp_bonus": xp,
 		"opening_extra": on and has_service(meta, SERVICE_OPENING)}
 
 
@@ -134,7 +142,7 @@ static func note_worship(meta: MetaState, faith_id: StringName) -> void:
 		meta.gods_worshipped.append(faith_id)
 
 
-## 老档（报告 377 第四节第 7 条）：通过过序章三、仓库里有信物、或者奉过神 —— 直接算万神院已到来（信赖从一档起），
+## 老档（报告 377 第四节第 7 条）：通过过序章三、仓库里有信物、或者奉过神 —— 直接算万神院已到来（声望从 0 起），
 ## 奉过的神（对局记录里奉过的、图鉴里点亮过信物的）全部能选；仓库与带回来的棋盘里的信物按价值折成金币。
 ## 只做一次（[constant MIGRATED]）。返回 {"arrived": 这回算到了没有, "gods": 补进来的神, "refund": 折了多少钱}
 static func migrate_legacy(meta: MetaState, items: ItemDatabase, legacy_unlock: StringName = &"prologue3_done") -> Dictionary:

@@ -56,7 +56,7 @@ func refresh() -> void:
 		row.add_child(_shrine(fid))
 
 
-## 顶上的牌：徽、名字、信赖档（只在营地那一页）
+## 顶上的牌：徽、名字、声望刻度（只在营地那一页）
 func _head() -> Control:
 	var p := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 14, 8, 14, 8)
 	UiTheme.set_tone(p, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
@@ -70,10 +70,8 @@ func _head() -> Control:
 	var title := UiTheme.make_label(Names.of(f) if f != null else UiText.t("pantheon.title"), 22, INK)
 	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
 	row.add_child(title)
-	var lv := maxi(0, Pantheon.tier(flow.meta))
-	var pips := CP.pips(lv)
-	pips.tooltip_text = UiText.t("commission.tier_%d" % lv)
-	row.add_child(pips)
+	if f != null:
+		row.add_child(CP.track(flow.meta.commissions, f, 260.0, flow.faith_defs))     # 389：声望刻度（占位版）
 	return p
 
 
@@ -87,7 +85,7 @@ func _shrine(fid: StringName) -> Control:
 	p.custom_minimum_size = Vector2(SHRINE_W, SHRINE_H)
 	if not open:
 		p.modulate = DIM
-		p.tooltip_text = UiText.t("pantheon.locked") % (Pantheon.god_tier(fid) + 1)
+		p.tooltip_text = UiText.t("pantheon.placeholder") if Pantheon.god_placeholder(fid) else UiText.t("pantheon.locked") % Pantheon.god_rep(fid)
 	elif def != null:
 		p.tooltip_text = Names.description_of(def)
 	var col := UiTheme.vbox(6)
@@ -114,7 +112,7 @@ func _shrine(fid: StringName) -> Control:
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(nm)
 	if mode == PICK:
-		var b := UiTheme.make_stone_button(UiText.t("pantheon.choose") if open else UiText.t("pantheon.tier_short") % (Pantheon.god_tier(fid) + 1),
+		var b := UiTheme.make_stone_button(UiText.t("pantheon.choose") if open else (UiText.t("pantheon.unknown") if Pantheon.god_placeholder(fid) else UiText.t("pantheon.tier_short") % Pantheon.god_rep(fid)),
 			func(): choose(fid), true, Vector2(110, 34), 16)
 		b.name = "Choose_" + (String(fid) if fid != &"" else "none")
 		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

@@ -1030,19 +1030,26 @@ static func import_market_stall(data: Dictionary, ctx: Context, report: ImportRe
 	return def
 
 
-## 336：阵营 —— 门槛五个（342 B2）、第一个 0、从小到大；服务的级数在 0..4；开放的设施认得
+## 336：阵营 —— 389：声望节点（id 不重复、声望不是负数、种类和效果认得）；开放的设施认得
 static func import_faction(data: Dictionary, ctx: Context, report: ImportReport) -> FactionDef:
 	var def := FactionDef.new()
 	_fill(def, data, "", ctx, report)
 	_require_id(def.id, "阵营", report)
-	if def.thresholds.size() != Commissions.TIERS or def.thresholds[0] != 0:
-		report.error("thresholds", "门槛要五个（初识 / 熟面 / 受托 / 信赖 / 代言），第一个是 0")
-	for i in range(1, def.thresholds.size()):
-		if def.thresholds[i] <= def.thresholds[i - 1]:
-			report.error("thresholds", "门槛要从小到大")
-	for k in def.services:
-		if int(def.services[k]) < 0 or int(def.services[k]) >= Commissions.TIERS:
-			report.error("services", "服务 %s 的级数要在 0..%d" % [k, Commissions.TIERS - 1])
+	var seen := {}
+	for i in def.nodes.size():
+		var n := def.nodes[i]
+		var at := "nodes[%d]" % i
+		var nid := String(n.get("id", ""))
+		if nid == "" or seen.has(nid):
+			report.error(at + ".id", "节点要有 id，同一方里不重复")
+		seen[nid] = true
+		if not (n.get("rep", null) is int or n.get("rep", null) is float) or int(n.get("rep", 0)) < 0:
+			report.error(at + ".rep", "声望要写，不能是负数")
+		if not Commissions.KINDS.has(StringName(String(n.get("kind", "")))):
+			report.error(at + ".kind", "种类只认 %s" % ", ".join(Commissions.KINDS))
+		var eff := StringName(String(n.get("effect", "")))
+		if not (eff == &"" and Commissions.is_placeholder(n)) and not Commissions.EFFECTS.has(eff):
+			report.error(at + ".effect", "不认识的效果 '%s'（只认 %s；空的只给占位节点）" % [eff, ", ".join(Commissions.EFFECTS)])
 	for k in def.facilities:
 		if not Commissions.opens_known(StringName(String(k))):
 			report.error("facilities", "不认识的设施 '%s'（只认 %s）" % [k, ", ".join(Commissions.FACILITIES + Commissions.FEATURES)])
@@ -1212,16 +1219,13 @@ static func import_level_rules(data: Dictionary, ctx: Context, report: ImportRep
 
 
 ## 269：计分规矩 —— 击败 / 探索的分不能是负数，难度每档加的不能是负数
-## 354：炼金术的规矩 —— 折损每档都在 20% 到 50% 之间（作者 2026-11-21），至少一档
+## 354：炼金术的规矩 —— 起始折损在 20% 到 50% 之间（作者 2026-11-21）；389 起降折损写在协会的声望节点上
 static func import_alchemy_rules(data: Dictionary, ctx: Context, report: ImportReport) -> AlchemyRules:
 	var rules := AlchemyRules.new()
 	_fill(rules, data, "", ctx, report)
 	_require_id(rules.id, "炼金术规矩", report)
-	if rules.loss_by_tier.is_empty():
-		report.error("loss_by_tier", "至少一档")
-	for i in rules.loss_by_tier.size():
-		if rules.loss_by_tier[i] < 0.2 or rules.loss_by_tier[i] > 0.5:
-			report.error("loss_by_tier[%d]" % i, "折损得在 0.2 到 0.5 之间")
+	if rules.loss < 0.2 or rules.loss > 0.5:
+		report.error("loss", "折损得在 0.2 到 0.5 之间")
 	return rules
 
 
@@ -1231,13 +1235,9 @@ static func import_canteen_rules(data: Dictionary, ctx: Context, report: ImportR
 	var rules := CanteenRules.new()
 	_fill(rules, data, "", ctx, report)
 	_require_id(rules.id, "食堂规矩", report)
-	for field in ["pot_side", "store_w", "store_h"]:
-		var arr: Array = rules.get(field)
-		if arr.is_empty():
-			report.error(field, "至少一档")
-		for i in arr.size():
-			if int(arr[i]) <= 0:
-				report.error("%s[%d]" % [field, i], "得是正数")
+	for field in ["pot_side", "store_w", "store_h"]:     # 389：起始大小；变大写在灰灯的声望节点上
+		if int(rules.get(field)) <= 0:
+			report.error(field, "得是正数")
 	for key in rules.entries:
 		var at := "entries.%s" % key
 		var e: Variant = rules.entries[key]

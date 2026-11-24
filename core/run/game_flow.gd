@@ -1119,12 +1119,11 @@ func _credit_nursery(goal: StringName, crop: StringName) -> void:
 	sync_commissions()
 
 
-## 355：苗圃按垦户社的档补地（只加不减）。返回动没动（动了存档）
+## 355：苗圃按垦户社的声望节点补地（只加不减）。返回动没动（动了存档）
 func sync_nursery() -> bool:
 	if meta == null or not facility_open(&"nursery"):
 		return false
-	var f := Commissions.faction(&"growers")
-	if f == null or not meta.nursery.fit(Commissions.tier_of(meta.commissions, f)):
+	if not meta.nursery.fit(Nursery.plots_for(meta.commissions)):
 		return false
 	save_meta()
 	return true
@@ -1135,19 +1134,19 @@ func nursery_ripe() -> bool:
 	return facility_open(&"nursery") and meta.nursery.ripe_count() > 0
 
 
-## 354：炼金开了没有（魔法师协会信赖档的剧情《万物可分》办成）
+## 354：炼金开了没有（魔法师协会 50 声望的剧情《万物可分》办成）
 func alchemy_open() -> bool:
 	return facility_open(Alchemy.ID)
 
 
-## 354：后勤列不列「炼金」键：委托簿露着，且协会到了开炼金那份剧情要的档（或已经开了）
+## 354：后勤列不列「炼金」键：委托簿露着，且协会到了开炼金那份剧情要的声望（或已经开了）
 func alchemy_listed() -> bool:
 	if not commissions_visible():
 		return false
 	if alchemy_open():
 		return true
 	var d := Commissions.opener_of(Alchemy.ID)
-	return d != null and Alchemy.tier(meta) >= Commissions.required_tier(d)
+	return d != null and meta.commissions.rep_of(d.faction) >= Commissions.required_rep(d)
 
 
 ## 354：这几件丢进炼金台会得多少尘（[method Alchemy.preview]）
@@ -1165,22 +1164,22 @@ func dissolve_items(uids: Array) -> Dictionary:
 	return got
 
 
-## 355：灰灯食堂开了没有（灰灯到受托、办成《开伙》）
+## 355：灰灯食堂开了没有（灰灯 25 声望、办成《开伙》）
 func canteen_open() -> bool:
 	return facility_open(Canteen.ID)
 
 
-## 355：后勤列不列「食堂」键：委托簿露着、灰灯到了开食堂那份剧情要的档（受托；或已经开了），和炼金一样。没办《开伙》点进去是说明板
+## 355：后勤列不列「食堂」键：委托簿露着、灰灯到了开食堂那份剧情要的声望（或已经开了），和炼金一样。没办《开伙》点进去是说明板
 func canteen_listed() -> bool:
 	if not commissions_visible():
 		return false
 	if canteen_open():
 		return true
 	var d := Commissions.opener_of(Canteen.ID)
-	return d != null and Canteen.tier(meta) >= Commissions.required_tier(d)
+	return d != null and meta.commissions.rep_of(d.faction) >= Commissions.required_rep(d)
 
 
-## 355：食堂开着时，锅和食材仓库按灰灯的档调大小；旧档里已有的食材（薄荷叶束、蜂蜜罐）从主仓库搬进食材仓库一次。
+## 355：食堂开着时，锅和食材仓库按灰灯的声望节点调大小；旧档里已有的食材（薄荷叶束、蜂蜜罐）从主仓库搬进食材仓库一次。
 ## 返回动没动（动了存档）
 func sync_canteen() -> bool:
 	if meta == null or not canteen_open():
@@ -1189,7 +1188,7 @@ func sync_canteen() -> bool:
 	var touched := false
 	var old_store := c.store
 	var old_pot := c.pot
-	for inst in c.fit(Canteen.tier(meta)):
+	for inst in c.fit(Canteen.sizes(meta)):
 		if not meta.warehouse.try_add(inst, true):
 			meta.reward_pending.append(inst)     # 不丢：进待入库
 	touched = c.store != old_store or c.pot != old_pot
@@ -1360,7 +1359,7 @@ func sync_commissions() -> Array[StringName]:
 	if not got.is_empty() or posted > 0:
 		save_meta()
 	sync_canteen()     # 355：刚开的食堂（或灰灯升了档）调锅和仓库
-	sync_nursery()     # 355：垦户社信赖、代言各多一畦
+	sync_nursery()     # 355：垦户社 50、100 声望各多一片
 	return got
 
 

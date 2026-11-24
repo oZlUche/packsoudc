@@ -11,6 +11,17 @@ display_names = {
 }
 order = 4
 arrives = &"first_run"
+nodes = Array[Dictionary]([{
+"effect": "inquiry",
+"id": "inquiry",
+"kind": "open",
+"rep": 10
+}, {
+"effect": "finale",
+"id": "finale",
+"kind": "open",
+"rep": 25
+}])
 facilities = {
 "bias": "cartographers_redraw"
 }

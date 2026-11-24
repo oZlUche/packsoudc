@@ -5,12 +5,33 @@
     "en": "Mages' Society"
   },
   "order": 2,
-  "thresholds": [
-    0,
-    10,
-    25,
-    50,
-    100
+  "nodes": [
+    {
+      "id": "inquiry",
+      "rep": 10,
+      "kind": "open",
+      "effect": "inquiry"
+    },
+    {
+      "id": "finale",
+      "rep": 25,
+      "kind": "open",
+      "effect": "finale"
+    },
+    {
+      "id": "alchemy",
+      "rep": 50,
+      "kind": "open",
+      "effect": "commission",
+      "value": "society_alchemy"
+    },
+    {
+      "id": "alchemy_loss",
+      "rep": 100,
+      "kind": "boost",
+      "effect": "alchemy_loss",
+      "value": 0.25
+    }
   ],
   "facilities": {
     "tech": "society_first_survey"

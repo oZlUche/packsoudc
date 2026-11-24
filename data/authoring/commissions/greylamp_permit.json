@@ -7,7 +7,7 @@
   "faction": "greylamp",
   "order": 4,
   "reputation": 5,
-  "min_tier": 1,
+  "min_rep": 10,
   "requires": [
     "greylamp_unsigned_letter",
     "greylamp_check_medkits"

@@ -18,7 +18,8 @@ func run() -> void:
 	items.load_dir()
 	var rules := Alchemy.load_rules()
 	var mrules := Market.load_rules()
-	var losses: Array[float] = [rules.loss_at(3), rules.loss_at(4)]
+	var top := Commissions.node_with(Commissions.faction(rules.faction), &"alchemy_loss")     # 389：起始折损和协会降折损那个节点
+	var losses: Array[float] = [rules.loss, float(top.get("value", rules.loss))]
 	var sold := {}     # 集市满级会卖的：id → 买价
 	for st in Market.stalls():
 		for id in Market.catalogue(mrules, items, st, 99):

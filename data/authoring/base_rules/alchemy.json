@@ -1,13 +1,6 @@
 {
   "id": "alchemy",
   "display_name": "炼金术",
-  "loss_by_tier": [
-    0.4,
-    0.4,
-    0.4,
-    0.4,
-    0.25
-  ],
   "guard_tags": [
     "unique",
     "treasure",
