@@ -33,6 +33,26 @@ static func _seed_with(c: TestSupport.Content, type: StringName, kit: Array[Stri
 	return {}
 
 
+## 388：同上，但要第一场能打赢（开局屏默认第一位角色、带上这套装备）—— 战斗拉长以后第一个有战斗的种子不一定赢，
+## 后面还要接着走的流程测试用这个
+static func _seed_with_win(c: TestSupport.Content, kit: Array[StringName] = [] as Array[StringName]) -> Dictionary:
+	var chars := GameFlow.load_characters()
+	var ch: CharacterDef = chars[0] if not chars.is_empty() else null
+	for seed_ in range(1, 200):
+		var s := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit, {}, [] as Array[StringName], ch)
+		if s == null:
+			continue
+		for entry in s.map.entry_ids:
+			for nid in s.map.neighbors(entry):
+				var node := s.map.get_node(nid)
+				if node.type == &"battle":
+					var probe := RunState.start(c.chapter, seed_, c.items, c.enemies, c.sets, kit, {}, [] as Array[StringName], ch)
+					var pn := probe.map.get_node(nid)
+					if probe.events.fight_content(pn, &"battle", pn.content):
+						return {"seed": seed_, "entry": entry, "next": nid}
+	return {}
+
+
 ## 把叠层都看完：战斗 / 事件 / 休息按继续，战利品全拿，搜索与商店离开。返回看过的屏
 static func _settle_overlays(f: GameFlow) -> Array[int]:
 	var seen: Array[int] = []
@@ -436,7 +456,7 @@ static func frame_director(t: TestCase, root: Window) -> void:
 
 	var c := _content()
 	var kit := _loadout(c, &"standard")
-	var found := _seed_with(c, &"battle", kit.items)
+	var found := _seed_with_win(c, kit.items)
 	var game = load(GAME).instantiate()
 	game.save_path = SAVE
 	game.meta_path = META
