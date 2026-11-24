@@ -1,0 +1,7 @@
+         [2] _process (res://tests/run_tests.gd:138)
+======================================================
+通过  46346 项断言，360 个套件，耗时 991170 ms
+======================================================
+WARNING: 90 RIDs of type "CanvasItem" were leaked.
+   at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2735)
+EXIT=0

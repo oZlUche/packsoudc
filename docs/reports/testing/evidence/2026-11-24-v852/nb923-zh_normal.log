@@ -1,0 +1,356 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+NB923 ♥ f 250 st 2 屏 9 wait 22
+NB923 　　选牌前的教练层第 1 步：升级了：三张牌挑一张。同一张以后还会再出，拿几次就叠几层。　1/3 / [收起] / [知道了]（选牌窗 开着）
+NB923 　　选牌前的教练层第 2 步：都不想要就换牌：三张一起换一批，次数有限。　2/3 / [收起] / [上一步] / [知道了]（选牌窗 开着）
+NB923 　　选牌前的教练层第 3 步：剔牌：点它再点一张牌，这一局那张不再出，空位补一张。　3/3 / [收起] / [上一步] / [知道了]（选牌窗 开着）
+NB923 ♥ f 500 st 30 屏 2 wait 4
+NB923 　　章节 free_mode
+NB923 第 1 局进地图：奉「」，1 级，欠选牌 1，选牌窗 开着，教练层走了 3 步
+NB923 　　现在这张 { "level": 1, "qual": true, "generic": true }；窗里的字：进入对局：选一张质变牌 / 无信者：这一次改为多选一张通用牌 / 坚韧 / 耐力 +6 / 第 1 层 / 属性 / 安歇 / 休息多回 1 点体力 / 第 1 层 / 探索 / 体魄 / 生命 +10 / 第 1 层 / 属性 / [换牌 0] / [剔牌 0]
+NB923 　　摆出 3 张 [&"card_stamina_flat", &"card_rest", &"card_hp_flat"]；换牌 0、剔牌 0；排版：查了 19 处，没有溢出
+NB923 　　选完以后的教练层：这是日晷，就是倒计时：每走一步走一格，走完这一趟就算失败。停上去看还剩几步、最近的免费出口几步后关。　1/3 / [收起] / [知道了]（选牌窗 没开）
+NB923 　　选完以后的教练层：这一趟开始算负重。棋盘上的东西压过你的上限就吃力：出手慢、耐力回得慢。背包窗底下的负重签一直写着当前 / 上限。　2/3 / [收起] / [上一步] / [知（选牌窗 没开）
+NB923 　　选完以后的教练层：腰带：随身技能放这儿，双击用一个。商店里买得到。　3/3 / [收起] / [上一步] / [知道了]（选牌窗 没开）
+NB923 　　选完以后教练层都走完了
+NB923 真点第一张后：欠选牌 0，质变 []，拿过 { "card_stamina_flat": 1 }，选牌窗 收了
+NB923 测试辅助：万神院到来、声望 100；开局多一张 false
+NB923 ♥ f 750 st 5 屏 1 wait 25
+NB923 开局屏奉自然之神：true
+NB923 　　章节 free_mode
+NB923 第 2 局进地图：奉「nature」，1 级，欠选牌 1，选牌窗 开着，教练层走了 0 步
+NB923 　　现在这张 { "level": 1, "qual": true, "generic": false }；窗里的字：进入对局：选一张质变牌 / 动物交谈 / 遭遇野兽时可以不战斗，改为获得一件随机自然系道具 / 质变 / 枯荣 / 战斗结束时，获得敌人枯萎层数 10% 的随机增益（每 20 点 1 层，至少 1 层；整局有效） / 质变 / 轮回 / 自身每获得 5 层新生，使敌人获得 1 层枯萎；敌人每获得 5 层枯萎，使自身获得 1 层新生 / 质变 / [换牌 0] / [剔牌 0]
+NB923 　　摆出 3 张 [&"god_nature_talk", &"god_nature_wane", &"god_nature_cycle"]；换牌 0、剔牌 0；排版：查了 18 处，没有溢出
+NB923 　　牌 god_nature_decay：eligible=true
+NB923 　　牌 god_nature_reap：eligible=true
+NB923 　　牌 god_nature_guard：eligible=true
+NB923 　　牌 god_nature_bounty：eligible=true
+NB923 　　牌 god_nature_cycle：eligible=true
+NB923 　　牌 god_nature_grow：eligible=true
+NB923 　　牌 god_nature_decay_up：eligible=false
+NB923 ♥ f 1000 st 40 屏 2 wait 36
+NB923 　　选完以后教练层都走完了
+NB923 真点第一张后：欠选牌 0，质变 [{ "id": &"god_nature_talk", "upgraded": false, "shown": &"god_nature_talk" }]，拿过 { "god_nature_talk": 1 }，选牌窗 收了
+NB923 测试辅助加经验值 1100000：30 级，欠选牌 34
+NB923 　　体力 3 / 3（下面遇到【耐行】就选它）
+NB923 BATCH lv=2 qual=false taken_before=["god_nature_talk"] offered=["god_nature_survive","god_nature_herb","card_vitality"]
+NB923 PICK god_nature_survive
+NB923 BATCH lv=3 qual=false taken_before=["god_nature_talk","god_nature_survive"] offered=["card_vitality","god_nature_strong","god_nature_food"]
+NB923 PICK god_nature_strong
+NB923 BATCH lv=4 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong"] offered=["card_hp_flat","god_nature_strong","card_carry"]
+NB923 PICK god_nature_strong
+NB923 BATCH lv=5 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong"] offered=["god_nature_herb","card_regen","god_nature_poison"]
+NB923 PICK god_nature_herb
+NB923 BATCH lv=6 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb"] offered=["card_stamina_pct","card_hp_pct","god_nature_herb_sense"]
+NB923 PICK god_nature_herb_sense
+NB923 　　拿 god_nature_herb_sense 后：多了 ["dried_herbs(干草药束,r0)×1"]；体力 3/3 → 3/3；地图上的野兽战斗点 1 → 1
+NB923 BATCH lv=6 qual=true taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense"] offered=["god_nature_seed","god_nature_reap","god_nature_wane"]
+NB923 6 级质变位：窗里的字 第 6 级：选一张质变牌 / 还要选 29 次 / 初种 / 累积获得 100 点新生后进化（可以跨多场战斗累积，战斗结算后进化） / 质变 / 收割 / 10 秒后，敌人获得枯萎 50% 层数的【收割】，敌人生命值降至【收割】层数以下时立即死亡 / 质变 / 枯荣 / 战斗结束时，获得敌人枯萎层数 10% 的随机增益（每 20 点 1 层，至少 1 层；整局有效） / 质变 / [换牌 0] / [剔牌 0]；排版 查了 19 处，没有溢出
+NB923 PICK god_nature_seed
+NB923 BATCH lv=7 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed"] offered=["card_stamina_flat","card_next_search","god_nature_poison"]
+NB923 PICK god_nature_poison
+NB923 BATCH lv=8 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison"] offered=["card_hp_pct","god_nature_poison","card_rest"]
+NB923 PICK god_nature_poison
+NB923 BATCH lv=9 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison"] offered=["god_nature_food_sense","card_stamina_pct","god_nature_rejuv"]
+NB923 PICK god_nature_food_sense
+NB923 　　拿 god_nature_food_sense 后：多了 ["fat_fowl(肥禽,r1)×1"]；体力 3/3 → 3/3；地图上的野兽战斗点 1 → 1
+NB923 BATCH lv=10 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense"] offered=["card_next_search","card_rest","god_nature_food"]
+NB923 PICK god_nature_food
+NB923 BATCH lv=11 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food"] offered=["card_vitality","god_nature_poison","god_nature_sow"]
+NB923 PICK god_nature_sow
+NB923 　　拿 god_nature_sow 后：多了 ["ironwood_sapling(铁木苗,r2)×1"]；体力 3/3 → 3/3；地图上的野兽战斗点 1 → 1
+NB923 BATCH lv=12 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow"] offered=["god_nature_strong","god_nature_food_sense","card_rest"]
+NB923 PICK god_nature_food_sense
+NB923 　　拿 god_nature_food_sense 后：多了 ["golden_wheat(金穗麦,r1)×1"]；体力 3/3 → 3/3；地图上的野兽战斗点 1 → 1
+NB923 BATCH lv=12 qual=true taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow"] offered=["god_nature_decay","god_nature_talk_up","god_nature_bounty"]
+NB923 PICK god_nature_talk_up
+NB923 　　拿 god_nature_talk_up 后：多了 []；体力 3/3 → 3/3；地图上的野兽战斗点 1 → 2
+NB923 BATCH lv=13 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up"] offered=["god_nature_survive","god_nature_rejuv","card_vitality"]
+NB923 PICK god_nature_rejuv
+NB923 BATCH lv=14 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv"] offered=["card_hp_pct","god_nature_strong","card_stamina_pct"]
+NB923 PICK god_nature_strong
+NB923 BATCH lv=15 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv"] offered=["god_nature_food","card_carry","god_nature_tough"]
+NB923 PICK god_nature_tough
+NB923 　　拿 god_nature_tough 后：多了 []；体力 3/3 → 4/4；地图上的野兽战斗点 2 → 2
+NB923 BATCH lv=16 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough"] offered=["card_next_search","card_hp_flat","god_nature_sow"]
+NB923 PICK god_nature_sow
+NB923 　　拿 god_nature_sow 后：多了 ["ironwood_sapling(铁木苗,r2)×1"]；体力 4/4 → 4/4；地图上的野兽战斗点 2 → 2
+NB923 BATCH lv=17 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough"] offered=["god_nature_herb_sense","card_hp_flat","god_nature_rejuv"]
+NB923 PICK god_nature_herb_sense
+NB923 　　拿 god_nature_herb_sense 后：多了 ["dried_herbs(干草药束,r0)×1"]；体力 4/4 → 4/4；地图上的野兽战斗点 2 → 2
+NB923 BATCH lv=18 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough"] offered=["god_nature_rejuv","god_nature_strong","card_carry"]
+NB923 PICK god_nature_rejuv
+NB923 BATCH lv=18 qual=true taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough"] offered=["god_nature_reap","god_nature_near","god_nature_cycle"]
+NB923 PICK god_nature_near
+NB923 BATCH lv=19 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near"] offered=["card_stamina_flat","card_regen","god_nature_herb"]
+NB923 PICK god_nature_herb
+NB923 BATCH lv=20 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near"] offered=["god_nature_rejuv","card_hp_flat","card_carry"]
+NB923 PICK god_nature_rejuv
+NB923 BATCH lv=21 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near"] offered=["god_nature_tough","card_rest","god_nature_strong"]
+NB923 PICK god_nature_tough
+NB923 　　拿 god_nature_tough 后：多了 []；体力 4/4 → 5/5；地图上的野兽战斗点 2 → 2
+NB923 BATCH lv=22 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near"] offered=["god_nature_rejuv","god_nature_strong","god_nature_herb"]
+NB923 PICK god_nature_rejuv
+NB923 BATCH lv=23 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near"] offered=["card_stamina_flat","god_nature_food","god_nature_tough"]
+NB923 PICK god_nature_tough
+NB923 　　拿 god_nature_tough 后：多了 []；体力 5/5 → 6/6；地图上的野兽战斗点 2 → 2
+NB923 BATCH lv=24 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near"] offered=["card_hp_flat","card_stamina_flat","god_nature_rejuv"]
+NB923 PICK god_nature_rejuv
+NB923 BATCH lv=24 qual=true taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near"] offered=["god_nature_cycle","god_nature_breed","god_nature_reap"]
+NB923 PICK god_nature_breed
+NB923 BATCH lv=25 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near","god_nature_breed"] offered=["god_nature_tough","card_hp_pct","god_nature_herb"]
+NB923 PICK god_nature_tough
+NB923 　　拿 god_nature_tough 后：多了 []；体力 6/6 → 7/7；地图上的野兽战斗点 2 → 2
+NB923 BATCH lv=26 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near","god_nature_breed"] offered=["card_hp_flat","god_nature_survive","card_next_search"]
+NB923 PICK god_nature_survive
+NB923 BATCH lv=27 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near","god_nature_breed"] offered=["card_hp_flat","card_hp_pct","god_nature_food"]
+NB923 PICK god_nature_food
+NB923 BATCH lv=28 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near","god_nature_breed"] offered=["card_regen","god_nature_herb_sense","god_nature_food"]
+NB923 PICK god_nature_herb_sense
+NB923 　　拿 god_nature_herb_sense 后：多了 ["dried_herbs(干草药束,r0)×1"]；体力 7/7 → 7/7；地图上的野兽战斗点 2 → 2
+NB923 BATCH lv=29 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near","god_nature_breed"] offered=["card_rest","god_nature_food_sense","god_nature_tough"]
+NB923 PICK god_nature_tough
+NB923 　　拿 god_nature_tough 后：多了 []；体力 7/7 → 8/8；地图上的野兽战斗点 2 → 2
+NB923 ♥ f 1250 st 32 屏 2 wait 0
+NB923 BATCH lv=30 qual=false taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near","god_nature_breed"] offered=["god_nature_sow","god_nature_food","god_nature_tough"]
+NB923 PICK god_nature_tough
+NB923 　　拿 god_nature_tough 后：多了 []；体力 8/8 → 9/9；地图上的野兽战斗点 2 → 2
+NB923 BATCH lv=30 qual=true taken_before=["god_nature_talk","god_nature_survive","god_nature_strong","god_nature_herb","god_nature_herb_sense","god_nature_seed","god_nature_poison","god_nature_food_sense","god_nature_food","god_nature_sow","god_nature_talk_up","god_nature_rejuv","god_nature_tough","god_nature_near","god_nature_breed"] offered=["god_nature_reap","god_nature_breed_up","god_nature_harvest"]
+NB923 PICK god_nature_harvest
+NB923 选完：2×3 3×3 4×3 5×3 6×3 6Q×3 7×3 8×3 9×3 10×3 11×3 12×3 12Q×3 13×3 14×3 15×3 16×3 17×3 18×3 18Q×3 19×3 20×3 21×3 22×3 23×3 24×3 24Q×3 25×3 26×3 27×3 28×3 29×3 30×3 30Q×3
+NB923 　　质变 [{ "id": &"god_nature_talk", "upgraded": true, "shown": &"god_nature_talk_up" }, { "id": &"god_nature_seed", "upgraded": false, "shown": &"god_nature_seed" }, { "id": &"god_nature_near", "upgraded": false, "shown": &"god_nature_near" }, { "id": &"god_nature_breed", "upgraded": false, "shown": &"god_nature_breed" }, { "id": &"god_nature_harvest", "upgraded": false, "shown": &"god_nature_harvest" }]；拿过 16 种；【耐行】0 张，体力 9 / 9
+NB923 顶端栏信仰徽记：在；质变小图标 [&"god_nature_talk_up", &"god_nature_seed", &"god_nature_near", &"god_nature_breed", &"god_nature_harvest"]，多出来的「」
+NB923 背包（状态界面）：神恩栏 true；栏里 [&"god_nature_talk_up", &"god_nature_seed", &"god_nature_near", &"god_nature_breed", &"god_nature_harvest", &"god_nature_survive", &"god_nature_strong", &"god_nature_herb", &"god_nature_herb_sense", &"god_nature_poison", &"god_nature_food_sense", &"god_nature_food", &"god_nature_sow", &"god_nature_rejuv", &"god_nature_tough"]；窗宽 1376；排版 查了 5 处，没有溢出
+NB923 　　第 1 格悬浮：动物交谈 / 交谈得到的道具至少是稀有；拿到时，部分深处的战斗点换成野兽
+NB923 　　第 2 格悬浮：初种 / 累积获得 100 点新生后进化（可以跨多场战斗累积，战斗结算后进化）
+NB923 　　第 3 格悬浮：亲近自然 / 进入非战斗节点时，下次进入战斗时获得 35 点临时生命上限，可叠加
+NB923 　　第 4 格悬浮：育种 / 背包内的种子道具生长速度翻倍
+NB923 　　第 5 格悬浮：收获 / 战斗结束时，自身每有 [color=@val]40[/color] 层新生，地面上随机掉落一个自然系道具
+NB923 　　第 6 格悬浮：求生本能  ×2 / 首次生命值低于生命上限 50% 时，立即恢复生命上限 10% 的生命值
+NB923 　　第 7 格悬浮：强壮  ×3 / 负重上限 [color=@val]+4[/color]
+NB923 　　第 8 格悬浮：药补  ×2 / 进入战斗时，每格药品或药材提供 2 点耐力上限
+NB923 　　第 9 格悬浮：药材感知  ×3 / 获得一个随机药材，下次通过此牌获得的药材稀有度可能更高
+NB923 　　第 10 格悬浮：毒气  ×2 / 战斗中，每 2 秒对敌人施加 [color=@val]1[/color] 层中毒
+NB923 　　第 11 格悬浮：食材感知  ×2 / 获得一个随机食材，下次通过此牌获得的食材稀有度可能更高
+NB923 　　第 12 格悬浮：食补  ×2 / 进入战斗时，每格食物或食材提供 3.5 点生命上限
+NB923 　　第 13 格悬浮：培育  ×2 / 获得一颗随机种子
+NB923 　　第 14 格悬浮：回春  ×5 / 战斗中，每 2 秒对自身施加 [color=@val]1[/color] 层回春
+NB923 　　第 15 格悬浮：坚韧  ×6 / 恢复 1 点体力，若已满增加 1 点上限
+NB923 第 0 步：相邻 ["search", "battle", "extract"]；亲近自然攒的 0.0；拿着亲近自然 true
+NB923 　　走到 2（search）
+NB923 　　这个点有守卫，进了战前屏；亲近自然攒的 35.0
+NB923 战前屏：对手 assassin（human）；键 [← 主界面　F1] [] [] [（灰）] [◂] [] []；动物交谈键 没有
+NB923 模拟对手：max_hp=1207500
+NB923 测试辅助：背包放 game_meat：true
+NB923 测试辅助：背包放 bandage：true
+NB923 测试辅助：背包放 ration：true
+NB923 测试辅助：背包放 field_rations：false
+NB923 　　背包里 皮革包：9 格，标签 []，有战斗数据 false，算不算 false
+NB923 　　背包里 皮革包：9 格，标签 []，有战斗数据 false，算不算 false
+NB923 　　背包里 自然之神的护符：1 格，标签 [&"trinket", &"treasure", &"faith:nature", &"nature"]，有战斗数据 false，算不算 false
+NB923 　　背包里 干草药束：1 格，标签 [&"material", &"nature", &"plant"]，有战斗数据 false，算不算 false
+NB923 　　背包里 肥禽：4 格，标签 [&"ingredient", &"nature"]，有战斗数据 false，算不算 false
+NB923 　　背包里 铁木苗：2 格，标签 [&"trinket", &"faith:nature", &"nature", &"seed"]，有战斗数据 false，算不算 false
+NB923 　　背包里 金穗麦：2 格，标签 [&"ingredient", &"nature", &"plant"]，有战斗数据 false，算不算 false
+NB923 　　背包里 铁木苗：2 格，标签 [&"trinket", &"faith:nature", &"nature", &"seed"]，有战斗数据 false，算不算 false
+NB923 　　背包里 干草药束：1 格，标签 [&"material", &"nature", &"plant"]，有战斗数据 false，算不算 false
+NB923 　　背包里 干草药束：1 格，标签 [&"material", &"nature", &"plant"]，有战斗数据 false，算不算 false
+NB923 　　背包里 兽肉：2 格，标签 [&"ingredient", &"nature"]，有战斗数据 false，算不算 false
+NB923 　　背包里 纱布：1 格，标签 [&"remedy", &"nature"]，有战斗数据 true，算不算 true
+NB923 　　背包里 口粮：1 格，标签 [&"food", &"nature"]，有战斗数据 true，算不算 true
+NB923 SIM2 []：max_hp=1950000；耐力上限 1100000；负重上限 48；背包里食物/食材 9 格、药剂 1 格
+NB923 SIM2 ["god_nature_food"]：max_hp=2265000；耐力上限 1100000；负重上限 48；背包里食物/食材 9 格、药剂 1 格
+NB923 SIM2 ["god_nature_herb"]：max_hp=1950000；耐力上限 1180000；负重上限 48；背包里食物/食材 9 格、药剂 1 格
+NB923 SIM2 ["god_nature_strong"]：max_hp=1950000；耐力上限 1100000；负重上限 52；背包里食物/食材 9 格、药剂 1 格
+NB923 SIM 求生本能（没武器）：机制记号 { "nature_heal": 1 }
+NB923 NARR 求生本能（没武器）：原文键 0 行 []；机制那几行 ["11.0s  我这一场的治疗够数了"]
+NB923 测试辅助：拿走 6 件不参战的杂物
+NB923 测试辅助：背包放武器 broadsword：true
+NB923 SIM []：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [189, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1 }
+NB923 NARR []：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了"]
+NB923 SIM ["god_nature_decay"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [189, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 81], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1 }
+NB923 NARR ["god_nature_decay"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了"]
+NB923 SIM ["god_nature_decay", "god_nature_decay_up"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [189, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 61], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1 }
+NB923 NARR ["god_nature_decay", "god_nature_decay_up"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了"]
+NB923 SIM ["god_nature_guard"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [189, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1 }
+NB923 NARR ["god_nature_guard"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了"]
+NB923 SIM ["god_nature_guard", "god_nature_guard_up"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [189, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1 }
+NB923 NARR ["god_nature_guard", "god_nature_guard_up"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了"]
+NB923 SIM ["god_nature_reap"]：我方 max_hp=1950000；胜者 0，时长 100000；敌方失去 121，我方失去 35
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [195, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [100, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1, "nature_reap": 1 }
+NB923 NARR ["god_nature_reap"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了", "10.0s  我收割了对手"]
+NB923 SIM ["god_nature_reap", "god_nature_reap_up"]：我方 max_hp=1950000；胜者 0，时长 100000；敌方失去 121，我方失去 35
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [195, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [100, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1, "nature_reap": 1 }
+NB923 NARR ["god_nature_reap", "god_nature_reap_up"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了", "10.0s  我收割了对手"]
+NB923 SIM ["god_nature_bounty"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [189, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1 }
+NB923 NARR ["god_nature_bounty"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了"]
+NB923 SIM ["god_nature_cycle"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [189, 230], &"stamina": [185, 190] }；buff { "nature_renewal": 24 }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1, "nature_heal": 1 }
+NB923 NARR ["god_nature_cycle"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了", "10.0s  我这一场的治疗够数了"]
+NB923 SIM ["god_nature_cycle", "god_nature_cycle_up"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [189, 230], &"stamina": [185, 190] }；buff { "nature_renewal": 48 }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1, "nature_heal": 1 }
+NB923 NARR ["god_nature_cycle", "god_nature_cycle_up"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了", "6.0s  我这一场的治疗够数了"]
+NB923 SIM ["god_nature_rejuv"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 41
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [213, 230], &"stamina": [185, 190] }；buff { "nature_renewal": 24 }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1, "nature_heal": 1 }
+NB923 NARR ["god_nature_rejuv"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了", "10.8s  我这一场的治疗够数了"]
+NB923 SIM ["god_nature_poison"]：我方 max_hp=1950000；胜者 0，时长 90000；敌方失去 121，我方失去 29
+NB923 　　我方 资源 { &"armor": [0, 16], &"hp": [201, 230], &"stamina": [185, 190] }；buff {  }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [100, 100] }；buff { "nature_wither": 111, "poison": 4 }
+NB923 　　机制记号 { "nature_wither": 1 }
+NB923 NARR ["god_nature_poison"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了"]
+NB923 SIM ["god_nature_guard", "god_nature_rejuv"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 35
+NB923 　　我方 资源 { &"armor": [4, 26], &"hp": [219, 230], &"stamina": [185, 190] }；buff { "nature_renewal": 5 }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1, "nature_guard_armor": 1, "nature_heal": 1 }
+NB923 NARR ["god_nature_guard", "god_nature_rejuv"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了", "10.0s  我的护佑把 19 层新生化作护甲", "10.8s  我这一场的治疗够数了"]
+NB923 SIM ["god_nature_guard", "god_nature_guard_up", "god_nature_rejuv"]：我方 max_hp=1950000；胜者 0，时长 110000；敌方失去 121，我方失去 30
+NB923 　　我方 资源 { &"armor": [0, 27], &"hp": [224, 230], &"stamina": [185, 190] }；buff { "nature_renewal": 13 }
+NB923 　　敌方 资源 { &"hp": [0, 121], &"stamina": [99, 100] }；buff { "nature_wither": 120 }
+NB923 　　机制记号 { "nature_wither": 1, "nature_guard_armor": 1, "nature_heal": 1 }
+NB923 NARR ["god_nature_guard", "god_nature_guard_up", "god_nature_rejuv"]：原文键 0 行 []；机制那几行 ["2.0s  我让对手的枯萎够数了", "8.0s  我的护佑把 11 层新生化作护甲", "10.8s  我这一场的治疗够数了"]
+NB923 测试辅助：初种攒到 99；初种阶 0
+NB923 真打一场：测试辅助拿 ["god_nature_talk", "god_nature_survive", "god_nature_strong", "god_nature_herb", "god_nature_herb_sense", "god_nature_seed", "god_nature_poison", "god_nature_food_sense", "god_nature_food", "god_nature_sow", "god_nature_talk_up", "god_nature_rejuv", "god_nature_tough", "god_nature_near", "god_nature_breed", "god_nature_harvest", "god_nature_wane", "god_nature_grow", "god_nature_bounty", "god_nature_bounty_up"]；开战前生命上限 160.0，当前体力 9
+NB923 ♥ f 1500 st 54 屏 3 wait 0
+NB923 　　战斗中（第 300 帧）：10 / 30 / 3 阶 / [◂] / 图例 / 你 / 战斗 / 精英 / 事件 / 搜索 / 矿脉 / 遗骸 / 符文堆 / 商店 / 休息 / 撤离 / 核心 / 出生 / 产物 / 外：草木、兽材 / 中：工艺、矿物 / 内：晶石、魔法 / 初次奉神　已办成
+NB923 ♥ f 1750 st 54 屏 3 wait 0
+NB923 　　战斗打完：安德烈乌斯 / 我方 / 刺客 / 0.6s  刺客使用匕首造成了 3 物理伤害（护甲吸收 3，生命未受损） 1.0s  安德烈乌斯使用阔剑造成了 11 物理伤害 1.0s  安德烈乌斯让对手的枯萎够数了 1.0s  　　又给刺客施加了 11 层【枯萎】（共 11 层） 1.2s  暴击！刺客使用匕首造成了 5 物理伤害（护甲吸收 5，生命未受损） 1.8s  刺客使用匕首造成了 3 物理伤害（护甲吸收 3，生命未受损） 2.0s  安德烈乌斯使用阔剑造成了 13 物理伤害 2.0s  　　又给刺客施加了 13 层【枯萎】（共 24 层） 2.0s  安德烈乌斯 回春 +3 层 → 3 2.0s  　　又给刺客施加了 2 层【中毒】（共 2 层） 2.4s  暴击！刺客使用匕首造成了 5 物理伤害（护甲吸收 5，生命未受损） 3.0s  安德烈乌斯使用阔剑造成了 11 物理伤害 3.0s  　　又给刺客施加了 11 层【枯萎】（共 35 层） 3.0s  　　又获得了 9 层【丰饶】（共 9 层） 3.0s  刺客使用匕首造成了 3 物理伤害（护甲吸收 1，生命 −2） 3.0s  刺客因【中毒】受到 2 毒素伤害 3.0s  　　又获得了 2 层【枯萎】（共 37 层） 3.6s  安德烈乌斯身上叠了 1 层【新生】（共 1 层） 3.6s  刺客使用匕首造成了 3 物理伤害 4.0s  安德烈乌斯身上叠了 2 层【新生】（共 3 层） 4.0s  安德烈乌斯使用阔剑造成了 13 物理伤害 4.0s  　　又给刺客施加了 13 层【枯萎】（共 50 层） 4.0s  安德烈乌
+NB923 战斗结束，屏 4；战斗帧 400
+NB923 　　战利品屏：放弃战利品
+NB923 ♥ f 2000 st 55 屏 5 wait 0
+NB923 ♥ f 2250 st 55 屏 5 wait 0
+NB923 ♥ f 2500 st 55 屏 5 wait 0
+NB923 ♥ f 2750 st 55 屏 5 wait 0
+NB923 ♥ f 3000 st 55 屏 5 wait 0
+NB923 ♥ f 3250 st 55 屏 5 wait 0
+NB923 ♥ f 3500 st 55 屏 5 wait 0
+NB923 ♥ f 3750 st 55 屏 5 wait 0
+NB923 ♥ f 4000 st 55 屏 5 wait 0
+NB923 ♥ f 4250 st 55 屏 5 wait 0
+NB923 ♥ f 4500 st 55 屏 5 wait 0
+NB923 ♥ f 4750 st 55 屏 5 wait 0
+NB923 ♥ f 5000 st 55 屏 5 wait 0
+NB923 ♥ f 5250 st 55 屏 5 wait 0
+NB923 ♥ f 5500 st 55 屏 5 wait 0
+NB923 ♥ f 5750 st 55 屏 5 wait 0
+NB923 ♥ f 6000 st 55 屏 5 wait 0
+NB923 ♥ f 6250 st 55 屏 5 wait 0
+NB923 ♥ f 6500 st 55 屏 5 wait 0
+NB923 ♥ f 6750 st 55 屏 5 wait 0
+NB923 ♥ f 7000 st 55 屏 5 wait 0
+NB923 ♥ f 7250 st 55 屏 5 wait 0
+NB923 ♥ f 7500 st 55 屏 5 wait 0
+NB923 ♥ f 7750 st 55 屏 5 wait 0
+NB923 ♥ f 8000 st 55 屏 5 wait 0
+NB923 ♥ f 8250 st 55 屏 5 wait 0
+NB923 ♥ f 8500 st 55 屏 5 wait 0
+NB923 ♥ f 8750 st 55 屏 5 wait 0
+NB923 ♥ f 9000 st 55 屏 5 wait 0
+NB923 ♥ f 9250 st 55 屏 5 wait 0
+NB923 ♥ f 9500 st 55 屏 5 wait 0
+NB923 ♥ f 9750 st 55 屏 5 wait 0
+NB923 ♥ f 10000 st 55 屏 5 wait 0
+NB923 ♥ f 10250 st 55 屏 5 wait 0
+NB923 ♥ f 10500 st 55 屏 5 wait 0
+NB923 ♥ f 10750 st 55 屏 5 wait 0
+NB923 ♥ f 11000 st 55 屏 5 wait 0
+NB923 ♥ f 11250 st 55 屏 5 wait 0
+NB923 ♥ f 11500 st 55 屏 5 wait 0
+NB923 ♥ f 11750 st 55 屏 5 wait 0
+NB923 ♥ f 12000 st 55 屏 5 wait 0
+NB923 ♥ f 12250 st 55 屏 5 wait 0
+NB923 ♥ f 12500 st 55 屏 5 wait 0
+NB923 ♥ f 12750 st 55 屏 5 wait 0
+NB923 ♥ f 13000 st 55 屏 5 wait 0
+NB923 ♥ f 13250 st 55 屏 5 wait 0
+NB923 ♥ f 13500 st 55 屏 5 wait 0
+NB923 ♥ f 13750 st 55 屏 5 wait 0
+NB923 ♥ f 14000 st 55 屏 5 wait 0
+NB923 ♥ f 14250 st 55 屏 5 wait 0
+NB923 ♥ f 14500 st 55 屏 5 wait 0
+NB923 ♥ f 14750 st 55 屏 5 wait 0
+NB923 ♥ f 15000 st 55 屏 5 wait 0
+NB923 ♥ f 15250 st 55 屏 5 wait 0
+NB923 ♥ f 15500 st 55 屏 5 wait 0
+NB923 ♥ f 15750 st 55 屏 5 wait 0
+NB923 ♥ f 16000 st 55 屏 5 wait 0
+NB923 ♥ f 16250 st 55 屏 5 wait 0
+NB923 ♥ f 16500 st 55 屏 5 wait 0
+NB923 ♥ f 16750 st 55 屏 5 wait 0
+NB923 ♥ f 17000 st 55 屏 5 wait 0
+NB923 ♥ f 17250 st 55 屏 5 wait 0
+NB923 ♥ f 17500 st 55 屏 5 wait 0
+NB923 ♥ f 17750 st 55 屏 5 wait 0
+NB923 ♥ f 18000 st 55 屏 5 wait 0
+NB923 ♥ f 18250 st 55 屏 5 wait 0
+NB923 ♥ f 18500 st 55 屏 5 wait 0
+NB923 ♥ f 18750 st 55 屏 5 wait 0
+NB923 ♥ f 19000 st 55 屏 5 wait 0
+NB923 ♥ f 19250 st 55 屏 5 wait 0
+NB923 ♥ f 19500 st 55 屏 5 wait 0
+NB923 ♥ f 19750 st 55 屏 5 wait 0
+NB923 ♥ f 20000 st 55 屏 5 wait 0
+NB923 超时 st 55 屏 5
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9956 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4811 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
