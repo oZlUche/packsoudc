@@ -294,6 +294,16 @@ static func run_brute_cards(t: TestCase) -> void:
 	t.eq(e.cap, 50, "怒气磅礴两张：50 层")
 	t.check(is_equal_approx(e.damage_per, 3.0), "气血上涌两张：每层 3%")
 	t.check(is_equal_approx(e.regen_per, 0.2), "不灭：每 5 层 1 点 = 每层 0.2")
+	var regen_card := LevelModule.god_card_of(lv.card_def(&"god_brute_regen"))
+	t.check(regen_card != null and regen_card.values.has("step") and float(regen_card.values["step"]) == 0.0, "不灭的开关 step 默认关（按层平摊）")
+	if regen_card != null:
+		regen_card.values["step"] = 1
+		var stepped := perk.effect_for(lv)
+		t.check(stepped.regen_step == 5 and is_equal_approx(stepped.regen_step_amount, 1.0) and stepped.regen_per == 0.0, "开：每满 5 层才 +1")
+		regen_card.values["step"] = 0
+	for pair in [["god_brute_break_up", "block"], ["god_brute_hate_up", "halving"]]:
+		var c := LevelModule.god_card_of(lv.card_def(StringName(pair[0])))
+		t.check(c != null and float(c.values.get(pair[1], -1)) == 0.0, "%s 的开关 %s 默认关" % pair)
 	t.check(is_equal_approx(e.armor_per, 3.0) and is_equal_approx(e.ignore_per, 2.0), "破甲拿了升级：3% 且无视 2%")
 	t.eq(e.defer_percent, 50, "痛觉残留 50%")
 	t.eq(BruteRagePerk.undying_sec(lv), 0.0, "没拿死斗：不屈 0 秒")

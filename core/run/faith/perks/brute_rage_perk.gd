@@ -60,7 +60,7 @@ static func undying_sec(lv: LevelModule) -> float:
 ## 拿着 [param lv] 里这些牌的那条规则（[param lv] 空 = 只有核心；测试与台架直接拿）
 func rule_for(lv: LevelModule) -> AbilityRule:
 	var trig := FaithMechanicTrigger.new()
-	trig.events = [BattleEvent.BEFORE_DAMAGE, BattleEvent.DAMAGE, BattleEvent.STATUS_APPLIED] as Array[StringName]
+	trig.events = [BattleEvent.BEFORE_DAMAGE, BattleEvent.DAMAGE, BattleEvent.STATUS_APPLIED, BattleEvent.STATUS_UNSTACKED] as Array[StringName]
 	trig.pulse = true
 	var cad := FaithPulseCadence.new()
 	cad.every_sec = BruteRage.STEP
@@ -86,7 +86,13 @@ func effect_for(lv: LevelModule) -> BruteRage:
 	e.damage_per += lv.god_value(DAMAGE, "pct")
 	e.haste_per = lv.god_value(HASTE, "pct")
 	if lv.has_card(REGEN):
-		e.regen_per = lv.god_value(REGEN, "regen") / maxf(1.0, lv.god_value(REGEN, "per") / lv.count_of(REGEN))
+		var per := maxf(1.0, lv.god_value(REGEN, "per") / lv.count_of(REGEN))
+		if lv.god_value(REGEN, "step") > 0.0:
+			# 开关 step（作者待定）：满整段才加，不按层平摊
+			e.regen_step = roundi(per)
+			e.regen_step_amount = lv.god_value(REGEN, "regen")
+		else:
+			e.regen_per = lv.god_value(REGEN, "regen") / per
 	e.gain_bonus = roundi(lv.god_value(IRATE, "pct"))
 	if lv.has_card(CORNERED):
 		e.low_percent = roundi(lv.god_value(CORNERED, "below", 50.0))
@@ -95,6 +101,7 @@ func effect_for(lv: LevelModule) -> BruteRage:
 	if lv.has_card(BREAK):
 		e.armor_per = lv.god_value(BREAK_UP, "pct") if lv.has_card(BREAK_UP) else lv.god_value(BREAK, "pct")
 		e.ignore_per = lv.god_value(BREAK_UP, "ignore")
+		e.ignore_block = lv.god_value(BREAK_UP, "block") > 0.0     # 开关（作者待定）：无视减伤也算格挡
 	if lv.has_card(BURN):
 		var up := lv.has_card(BURN_UP)
 		e.scorch_every = roundi(lv.god_value(BURN, "every", 10.0))
@@ -107,6 +114,7 @@ func effect_for(lv: LevelModule) -> BruteRage:
 		e.strike_every = roundi(lv.god_value(BLOOD_UP, "every") if lv.has_card(BLOOD_UP) else lv.god_value(BLOOD, "every"))
 	if lv.has_card(HATE):
 		e.hate = 2 if lv.has_card(HATE_UP) else 1
+		e.hate_halving = lv.god_value(HATE_UP, "halving") > 0.0     # 开关（作者待定）：寒冷、麻痹减半也算触发
 	if lv.has_card(ARMOR):
 		e.armor_window = lv.god_value(ARMOR, "window", 3.0)
 		e.armor_cd = lv.god_value(ARMOR, "cd", 10.0)

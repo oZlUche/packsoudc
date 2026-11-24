@@ -9,7 +9,8 @@
       "type": "god_card",
       "values": {
         "pct": 3,
-        "ignore": 2
+        "ignore": 2,
+        "block": 0
       }
     }
   ]
