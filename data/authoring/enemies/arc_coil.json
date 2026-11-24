@@ -9,9 +9,9 @@
     "lightning"
   ],
   "base_stats": {
-    "max_hp": 150,
+    "max_hp": 210,
     "block": 2,
-    "regen_stamina": 6
+    "regen_stamina": 12
   },
   "signature": [
     "arc_coil_core",

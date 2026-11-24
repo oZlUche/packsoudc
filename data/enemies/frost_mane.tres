@@ -21,7 +21,7 @@ strength = 3
 schools = Array[StringName]([&"ice"])
 base_stats = {
 "block": 2,
-"max_hp": 165
+"max_hp": 230
 }
 signature = Array[StringName]([&"permafrost_marrow", &"permafrost_marrow", &"beast_claw", &"beast_hide", &"beast_hide"])
 item_tags = Array[StringName]([&"beast_part"])

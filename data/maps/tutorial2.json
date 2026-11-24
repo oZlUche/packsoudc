@@ -87,9 +87,9 @@
           }
         ],
         "base_stats": {
-          "max_hp": 175,
-          "max_stamina": 60,
-          "regen_stamina": 8
+          "max_hp": 245,
+          "max_stamina": 120,
+          "regen_stamina": 16
         },
         "event": "tut2_battle_swarm",
         "tooltip": "{battle_data}\n{c:dim}出手快、每一下都轻。{/c}"
@@ -129,8 +129,8 @@
           }
         ],
         "base_stats": {
-          "max_hp": 40,
-          "regen_stamina": 10
+          "max_hp": 55,
+          "regen_stamina": 20
         },
         "event": "tut2_battle_heavy",
         "tooltip": "{battle_data}\n{c:dim}出手慢、每一下都重。{/c}"
@@ -237,7 +237,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 100,
+          "max_hp": 140,
           "block": 12
         },
         "event": "tut2_battle_ward",
@@ -281,7 +281,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 115,
+          "max_hp": 160,
           "block": 3
         },
         "event": "tut2_battle_cure",

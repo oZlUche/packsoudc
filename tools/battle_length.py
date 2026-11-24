@@ -78,6 +78,8 @@ def summarize(rows):
         d = [float(r["duration"]) for r in rs]
         wins = [r for r in rs if r.get("outcome") == "win"]
         sk = [r for r in rs if (r["metrics"].get("skipped") or [0, 0])[0] > 0]
+        foe_sk = [r for r in rs if (r["metrics"].get("skipped") or [0, 0])[1] > 0]
+        won_d = [float(r["duration"]) for r in wins]
         fs = [float(r["metrics"]["first_skip"][0]) for r in sk if r["metrics"].get("first_skip", [None])[0] is not None]
         return {
             "n": len(rs), "win": len(wins) / len(rs) if rs else 0.0,
@@ -85,6 +87,8 @@ def summarize(rows):
             "p10": pct(d, 0.1), "p90": pct(d, 0.9),
             "overtime": sum(1 for x in d if x > OVERTIME) / len(d) if d else 0.0,
             "skip_share": len(sk) / len(rs) if rs else 0.0,
+            "foe_skip_share": len(foe_sk) / len(rs) if rs else 0.0,
+            "win_median": statistics.median(won_d) if won_d else 0.0,
             "skips": statistics.fmean([(r["metrics"].get("skipped") or [0, 0])[0] for r in rs]) if rs else 0.0,
             "first_skip": statistics.median(fs) if fs else None,
             "hp_left": statistics.fmean([float(r["hp_end"][0]) for r in wins]) if wins else 0.0,
@@ -100,16 +104,15 @@ def summarize(rows):
 def table(path, label, json_out):
     s = summarize(load(path))
     print("### %s\n" % label)
-    print("| 节点 | 场数 | 胜率 | 平均时长 | 中位 | 10%~90% | 过 30 秒 | 耐力打空的场 | 每场没出手次数 | 第一次打空（中位） | 赢时余血 |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|")
+    print("| 节点 | 场数 | 胜率 | 平均时长 | 中位 | 10%~90% | 赢的场中位 | 过 30 秒 | 我方耐力打空 | 敌方耐力打空 | 我方每场没出手 | 赢时余血 |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for t in ["battle", "elite", "core"]:
         if t not in s["type"]:
             continue
         x = s["type"][t]
-        fs = "%.1f 秒" % x["first_skip"] if x["first_skip"] is not None else "—"
-        print("| %s | %d | %.0f%% | %.1f 秒 | %.1f 秒 | %.1f~%.1f | %.0f%% | %.0f%% | %.1f | %s | %.0f%% |" % (
-            NAMES[t], x["n"], x["win"] * 100, x["mean"], x["median"], x["p10"], x["p90"], x["overtime"] * 100,
-            x["skip_share"] * 100, x["skips"], fs, x["hp_left"] * 100))
+        print("| %s | %d | %.0f%% | %.1f 秒 | %.1f 秒 | %.1f~%.1f | %.1f 秒 | %.0f%% | %.0f%% | %.0f%% | %.1f | %.0f%% |" % (
+            NAMES[t], x["n"], x["win"] * 100, x["mean"], x["median"], x["p10"], x["p90"], x["win_median"], x["overtime"] * 100,
+            x["skip_share"] * 100, x["foe_skip_share"] * 100, x["skips"], x["hp_left"] * 100))
     print("\n| 角色 | 普通胜率 | 精英胜率 | 首领胜率 | 全部胜率 | 平均时长 | 耐力打空的场 |")
     print("|---|---|---|---|---|---|---|")
     for c in CHARS:

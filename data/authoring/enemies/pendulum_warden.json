@@ -9,7 +9,7 @@
     "burst"
   ],
   "base_stats": {
-    "max_hp": 200,
+    "max_hp": 280,
     "block": 5
   },
   "signature": [

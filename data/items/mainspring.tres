@@ -12,7 +12,7 @@
 [sub_resource type="Resource" id="Resource_a73qx"]
 script = ExtResource("4_7861x")
 base_stats = {
-"max_stamina": 10
+"max_stamina": 20
 }
 
 [sub_resource type="Resource" id="Resource_g7axs"]
@@ -21,7 +21,7 @@ script = ExtResource("8_g8owe")
 [sub_resource type="Resource" id="Resource_7go1y"]
 script = ExtResource("4_7861x")
 base_stats = {
-"regen_stamina": 2
+"regen_stamina": 4
 }
 
 [resource]
