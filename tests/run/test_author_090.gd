@@ -184,6 +184,7 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 
 	flow.begin(c.chapter, kit, int(found["seed"]))
 	var map = game.base()
+	Support.skip_opening_pick(map, flow.run)
 	t.eq(map.screen, GameFlow.Screen.MAP, "→ 地图")
 	# 218（作者定）：自由模式不再弹「本图规则」卡，第一次露出地图放教程（日晷、负重、腰带），Esc 一下一步
 	t.check(c.chapter.rules.is_empty() and not map.rules_open(), "218：自由模式没有规则卡")

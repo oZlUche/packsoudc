@@ -1478,7 +1478,7 @@ func show_level_pick() -> bool:
 	_level_pick_dismissed = 0
 	_level_pick = _shade(0.72, true)
 	_level_pick.name = "LevelPick"
-	var frame := _modal_panel(UiText.t("level.title") % lv.level(), 28)
+	var frame := _modal_panel(UiText.t("level.title") % lv.level() if lv.level() > 1 else UiText.t("level.title_opening"), 28)     # 388：开局那次质变
 	_level_pick.get_child(0).add_child(frame)
 	var panel := LevelPickPanel.new(lv)
 	_level_pick_panel = panel

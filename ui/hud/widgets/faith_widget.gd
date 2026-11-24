@@ -2,18 +2,38 @@
 ## 166（作者定）：有信仰时画这个信仰的徽记（`assets/ui/faith/<id>.png`，32 px）+ 阶的小字；**没信仰时留一个空槽**（固定宽、不写字）。
 ## 缺图时退回原来那行字（「信仰：暴力之神　…」）
 ## 信仰重构 A：三态 —— 不奉神（空槽）/ 联系正常（徽记 + 阶）/ 联系中断（选的那位神的徽记压暗 + 「联系中断」，悬浮窗写原因）
+## 382 / 385 / 388：徽记右边一排神恩小图标 —— 拿到的质变牌按先后排，30 一格，超过 9 个写「+N」；停在一枚上看那张牌
 extends HudWidget
+
+const FAVOR := 30.0
+const FAVOR_MAX := 9
 
 const ICON := 32.0
 const ART_DIR := "res://assets/ui/faith/"
 
 var icon: HudIcon
+## 388：神恩小图标那一排
+var favor: Control
+var _favor_ids: Array[StringName] = []
+var _favor_hover := -1
 
 
 func _init() -> void:
 	super()
 	icon = HudIcon.make(ICON)
 	_prepend_icon(icon)
+	favor = Control.new()
+	favor.name = "Favor"
+	favor.mouse_filter = Control.MOUSE_FILTER_STOP
+	favor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	favor.draw.connect(_draw_favor)
+	favor.gui_input.connect(_favor_input)
+	favor.mouse_exited.connect(func():
+		_favor_hover = -1
+		var tip: HoverTip = screen.get("_tip") if screen != null else null
+		if tip != null:
+			tip.release())
+	_text.get_parent().add_child(favor)
 
 
 func title() -> String:
@@ -24,6 +44,9 @@ func watch() -> Array[Signal]:
 	var out: Array[Signal] = [run.faith_changed]
 	if run.faith_power != null:
 		out.append(run.faith_power.changed)
+	var lv := LevelModule.of(run)
+	if lv != null:
+		out.append(lv.level_changed)     # 388：拿了质变牌，小图标跟着
 	return out
 
 
@@ -73,6 +96,70 @@ func _paint() -> void:
 	icon.visible = icon.texture != null or run == null or run.selected_faith == &""     # 缺图退回文字时不占那一格
 	icon.modulate = Color(1, 1, 1, 0.4) if _broken() else Color.WHITE
 	_sync_empty()
+	_sync_favor()
+
+
+## 388：拿到的质变牌（联系正常才画）
+func favor_ids() -> Array[StringName]:
+	return _favor_ids
+
+
+func _sync_favor() -> void:
+	_favor_ids.clear()
+	var lv := LevelModule.of(run) if run != null else null
+	if lv != null and run.active_faith_id() != &"":
+		for q in lv.quals():
+			_favor_ids.append(StringName(q["shown"]))
+	var n := mini(_favor_ids.size(), FAVOR_MAX)
+	var w := n * FAVOR + (FAVOR if _favor_ids.size() > FAVOR_MAX else 0.0)
+	favor.custom_minimum_size = Vector2(w, FAVOR if n > 0 else 0.0)
+	favor.visible = n > 0
+	favor.queue_redraw()
+
+
+## 超过 [constant FAVOR_MAX] 个时最后一格写「+N」
+func favor_more_text() -> String:
+	return "+%d" % (_favor_ids.size() - FAVOR_MAX) if _favor_ids.size() > FAVOR_MAX else ""
+
+
+func _draw_favor() -> void:
+	var lv := LevelModule.of(run) if run != null else null
+	if lv == null:
+		return
+	for i in mini(_favor_ids.size(), FAVOR_MAX):
+		var r := Rect2(Vector2(i * FAVOR, 0), Vector2(FAVOR, FAVOR)).grow(-2.0)
+		favor.draw_rect(r, UiTheme.STONE_BRASS, false, 1.0)
+		var tex := LevelPickPanel.card_icon(lv, _favor_ids[i])
+		if tex != null:
+			favor.draw_texture_rect(tex, r.grow(-3.0), false, UiTheme.STONE_INK)
+	var more := favor_more_text()
+	if more != "":
+		var f := UiPalette.cjk_font_bold()
+		var x := FAVOR_MAX * FAVOR
+		var w := f.get_string_size(more, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		favor.draw_string(f, Vector2(x + (FAVOR - w) * 0.5, FAVOR * 0.5 + 5.0), more, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UiTheme.STONE_INK)
+
+
+func _favor_input(event: InputEvent) -> void:
+	var mm := event as InputEventMouseMotion
+	if mm == null or editing:
+		return
+	var i := int(mm.position.x / FAVOR)
+	if i >= mini(_favor_ids.size(), FAVOR_MAX):
+		i = -1
+	if i == _favor_hover:
+		return
+	_favor_hover = i
+	var tip: HoverTip = screen.get("_tip") if screen != null else null
+	var lv := LevelModule.of(run) if run != null else null
+	if tip == null or lv == null:
+		return
+	if i < 0:
+		tip.release()
+		return
+	var def: RunBuffDef = run.buff_defs.get(_favor_ids[i], null)
+	tip.show_text((Names.of(def) if def != null else String(_favor_ids[i])) + "\n" + Glossary.bonus_numbers(lv.card_text(_favor_ids[i])),
+		favor.global_position + Vector2(i * FAVOR, FAVOR + 6.0))
 
 
 ## 没信仰：位置留着，底也不画（真的空着；摆读数时照常画出来好拖）

@@ -27,6 +27,7 @@ static func frame_pause_skip(t: TestCase, root: Window) -> void:
 		return
 	t.not_null(flow.begin_direct(first), "开了第一段")
 	var map = game.base()
+	Support.skip_opening_pick(map, flow.run)
 	var runs := flow.meta.runs
 	var funds := flow.meta.funds
 	t.check(map.can_skip_tutorial(), "教程局里能跳")

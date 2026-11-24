@@ -21,6 +21,9 @@ enum Camp { GODS, CHURCH }
 @export var gods: Dictionary = {}
 @export_multiline var description: String = ""
 @export var descriptions: Dictionary = {}
+## 388：核心机制的一句话（神恩区神像行写它；作者牌表顶上那一行）与别的语言（{"en": …}）。空 = 不写
+@export var core_line: String = ""
+@export var core_lines: Dictionary = {}
 ## 信力（报告 082）：过了几道阈值就是第几阶（非递减、正数）；信仰道具上按阶解锁的功能见 [ItemDef.faith_bonuses]
 @export var thresholds: Array[int] = []
 ## 攒信力的行为（[FaithDeed] 构件）：这个信仰认哪些事、各给几点
@@ -106,3 +109,8 @@ static func load_all() -> Dictionary:
 		if res is FaithDef and (res as FaithDef).id != &"":
 			out[(res as FaithDef).id] = res
 	return out
+
+
+## 388：核心机制那句话（当前语言）
+func core_text(lang: String = "") -> String:
+	return Names.pick(core_lines, core_line, lang)

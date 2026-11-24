@@ -9,6 +9,7 @@ signal done()
 const CARD_W := 220.0
 const CARD_H := 240.0
 const ART_CARD := "level/card_parchment"
+const ART_CARD_GOD := "level/card_parchment_god"
 const ART_MEDALLION := "level/medallion"
 ## 类别条 72 × 24，往上探出牌面 12
 const RIBBON := Vector2(72, 24)
@@ -38,10 +39,10 @@ func _init(p_level: LevelModule) -> void:
 	add_theme_constant_override("separation", 14)
 	_title = UiTheme.make_label("", 22)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_title)
-	_note = UiTheme.make_label("", 15, UiPalette.DIM)
+	add_child(_plate(_title))
+	_note = UiTheme.make_label("", 15, UiTheme.INK_SOFT)
 	_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_note)
+	add_child(_plate(_note))
 	_cards = UiTheme.hbox(16)
 	_cards.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(_cards)
@@ -57,6 +58,18 @@ func _init(p_level: LevelModule) -> void:
 	rebuild()
 
 
+## 388：标题和提示坐在浅石小格上（不是裸字，报告 385 的石刻）；字藏了格跟着藏
+static func _plate(label: Label) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.theme_type_variation = UiTheme.PANEL_HUD_WELL
+	UiTheme.apply_tone(p, UiTheme.PANEL_HUD_WELL)
+	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(label)
+	label.visibility_changed.connect(func(): p.visible = label.visible)
+	return p
+
+
 func rebuild() -> void:
 	for c in _cards.get_children():
 		_cards.remove_child(c)
@@ -64,14 +77,19 @@ func rebuild() -> void:
 	if level == null or level.pending() <= 0:
 		return
 	var cur := level.current_pick()
-	_title.text = UiText.t("level.pick_of") % int(cur.get("level", level.level()))
-	_title.visible = level.pending() > 1 or bool(cur.get("extra", false))     # 窗的标题条写着升到几级；只欠一次时不重复写
+	var lv := int(cur.get("level", level.level()))
+	var qual := bool(cur.get("qual", false))
+	if qual:     # 388：质变位写清是开局那一次还是第几级的
+		_title.text = UiText.t("level.qual_opening") if lv <= 1 else UiText.t("level.qual_of") % lv
+	else:
+		_title.text = UiText.t("level.pick_of") % lv
+	_title.visible = qual or level.pending() > 1     # 窗的标题条写着升到几级；只欠一次普通牌时不重复写
 	var left := level.pending()
 	var notes: Array[String] = []
 	if left > 1:
 		notes.append(UiText.t("level.left") % left)
-	if bool(cur.get("extra", false)):
-		notes.append(UiText.t("level.extra"))
+	if bool(cur.get("generic", false)):
+		notes.append(UiText.t("level.qual_faithless") if level.is_humanist() else UiText.t("level.qual_none"))
 	if removing:
 		notes.append(UiText.t("level.remove_tip"))
 	_note.text = UiText.t("tip.gap").join(notes)
@@ -95,9 +113,10 @@ func _card(i: int, cid: StringName) -> Control:
 	btn.flat = true
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.pressed.connect(choose.bind(i))
+	var godly := level.rules().god_of(cid) != &""
 	var face := PanelContainer.new()
 	face.name = "Face"
-	UiTheme.box_panel(face, UiTheme.art_box(ART_CARD))
+	UiTheme.box_panel(face, UiTheme.art_box(ART_CARD_GOD if godly and UiTheme.has_art(ART_CARD_GOD) else ART_CARD))     # 388：神的牌换神牌底
 	UiTheme.set_tone(face, UiTheme.TONE_LIGHT)
 	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	face.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -135,8 +154,11 @@ func _card(i: int, cid: StringName) -> Control:
 	col.add_child(title)
 	var body := UiTheme.rich_block(CARD_W - 28, 15, "[center]%s[/center]" % Glossary.bonus_numbers(level.card_text(cid)))
 	col.add_child(body)
-	# 底部：拿了是第几层
-	var layer := UiTheme.make_label(UiText.t("level.layer") % (level.count_of(cid) + 1), 13, LAYER_INK)
+	# 底部：拿了是第几层（388：质变牌只能拿一次，升级版写「升级」，原牌不写）
+	var layer_text := UiText.t("level.layer") % (level.count_of(cid) + 1)
+	if level.rules().is_qual(cid):
+		layer_text = UiText.t("level.upgrade") if String(level.rules().card(cid).get("upgrade_of", "")) != "" else ""
+	var layer := UiTheme.make_label(layer_text, 13, LAYER_INK)
 	layer.name = "Layer"
 	layer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layer.position = Vector2(0, CARD_H - LAYER_BOTTOM - 18)
@@ -150,7 +172,7 @@ func _card(i: int, cid: StringName) -> Control:
 	ribbon.position = Vector2((CARD_W - RIBBON.x) / 2.0, -RIBBON_OUT)
 	ribbon.custom_minimum_size = RIBBON
 	ribbon.size = RIBBON
-	var tag := UiTheme.make_label(UiText.t("level.kind_" + kind), 14, Color.WHITE)
+	var tag := UiTheme.make_label(ribbon_text(level, cid), 14, Color.WHITE)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	if tag.has_meta(&"dark_color"):
@@ -162,6 +184,18 @@ func _card(i: int, cid: StringName) -> Control:
 	for c in [medal, col, layer, ribbon, tag, title, body]:
 		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return btn
+
+
+## 类别条上的字：通用牌写类别；388 神的基础牌写神名，质变牌写「质变」
+static func ribbon_text(p_level: LevelModule, cid: StringName) -> String:
+	var r := p_level.rules()
+	if r.is_qual(cid):
+		return UiText.t("level.kind_qual")
+	var g := r.god_of(cid)
+	if g != &"":
+		var fd: FaithDef = p_level.run_state().faith_defs.get(g, null) if p_level.run_state() != null else null
+		return Names.of(fd) if fd != null else String(g)
+	return UiText.t("level.kind_" + String(r.kind_of(cid)))
 
 
 ## 类别 → 类别条图（属性 / 武器 / 探索）
@@ -190,7 +224,18 @@ static func _icon_of_def(def: RunBuffDef) -> Texture2D:
 
 
 func _icon_of(cid: StringName) -> Texture2D:
-	return _icon_of_def(level.run_state().buff_defs.get(cid, null) if level.run_state() != null else null)
+	return card_icon(level, cid)
+
+
+## 388：一张牌的图标（神恩区、顶端栏小图标也用）—— 自己的图 / 属性轴的图；神的牌都没有就用这位神的徽记（`faith/<神>`）
+static func card_icon(p_level: LevelModule, cid: StringName) -> Texture2D:
+	var run := p_level.run_state() if p_level != null else null
+	var tex := _icon_of_def(run.buff_defs.get(cid, null) if run != null else null)
+	if tex == null and p_level != null:
+		var g := p_level.rules().god_of(cid)
+		if g != &"" and UiTheme.has_art("faith/" + String(g)):
+			tex = UiTheme.art_cached("faith/" + String(g))
+	return tex
 
 
 ## 平的浅底按钮（作者 21:17：刷新、删除两个键用平的浅底）
