@@ -12,7 +12,7 @@
 [sub_resource type="Resource" id="Resource_val86"]
 script = ExtResource("4_5ws4c")
 base_stats = {
-"max_armor": 50
+"max_armor": 175
 }
 
 [sub_resource type="Resource" id="Resource_8dyru"]

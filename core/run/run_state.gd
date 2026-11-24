@@ -12,6 +12,11 @@ extends RefCounted
 
 ## 存档从第一天就写版本号（7.2）
 const SAVE_VERSION := 8
+## 388（战斗拉到 10~20 秒）：敌我基础生命 ×3.5、耐力上限与回复 ×2。存档里写死的敌人数值（预设图的 `base_stats`、
+## 停在战前屏的那一场）是按旧数写的，读老档时照同样的倍数换算（[method _rescale_battle_numbers]）
+const BATTLE_SCALE := 388
+const LEGACY_HP_SCALE := 3.5
+const LEGACY_STAMINA_SCALE := 2.0
 ## 作战棋盘的尺寸（3.2：棋盘 + 包体）。占位，等角色系统
 const BOARD_SIZE := Vector2i(8, 6)
 const BOARD_ID := 1
@@ -1573,6 +1578,7 @@ func to_dict() -> Dictionary:
 		"tally": tally.duplicate(),
 		"searched_nodes": searched_nodes.keys(),     # 224
 		"buffs": {"meta": meta_buff_ids()},     # 一局里拿到的在 modules.buff 下（101）
+		"battle_scale": BATTLE_SCALE,     # 388：战斗时长拉长那一版的数值；老档没有这个键 = 写死的敌人数值还是旧的
 		"modules": _modules_to_dict(),     # 101：每个模块自己的状态；加模块 = 新键、带默认值，不升版
 	}
 
@@ -1595,6 +1601,29 @@ func rehome(inst: ItemInstance, home: GridInventory, from: String) -> void:
 		wallet.earn(value, &"save_repair")
 	if repair != null:
 		repair.refund(inst.def.id, value, from)
+
+
+## 388：老档图上每个点的写死敌人数值按新倍数换算
+static func _rescale_battle_numbers(p_map: MapGraph) -> void:
+	if p_map == null:
+		return
+	for id in p_map.node_ids():
+		var node := p_map.get_node(id)
+		if node != null:
+			rescale_content(node.content)
+
+
+## 388：一份节点内容里写死的 `base_stats`：生命上限 ×[constant LEGACY_HP_SCALE]（取整到 5），耐力上限与回复 ×[constant LEGACY_STAMINA_SCALE]
+static func rescale_content(content: Dictionary) -> void:
+	var over = content.get("base_stats", null)
+	if not (over is Dictionary):
+		return
+	var b := over as Dictionary
+	if b.has("max_hp"):
+		b["max_hp"] = maxf(5.0, 5.0 * floorf(float(b["max_hp"]) * LEGACY_HP_SCALE / 5.0 + 0.5))
+	for key in ["max_stamina", "regen_stamina"]:
+		if b.has(key):
+			b[key] = float(b[key]) * LEGACY_STAMINA_SCALE
 
 
 func _modules_to_dict() -> Dictionary:
@@ -1658,6 +1687,8 @@ static func from_dict(
 	s.sets = p_sets
 	s._resolve_rules()
 	s.map = MapGraph.from_dict(d.get("map", {}))
+	if int(d.get("battle_scale", 0)) < BATTLE_SCALE:
+		_rescale_battle_numbers(s.map)
 	_reserve_shop_uids(s.map)     # 290：开过的店，棋盘上的道具存在节点里 —— 之后新建的 uid 别和它们撞号
 	s.travel = MapTravel.from_dict(d.get("travel", {}), s.map)
 	s.vitality = Vitality.from_dict(d.get("vitality", {}))
@@ -1713,6 +1744,10 @@ static func from_dict(
 		var rc = pr.get("content", {})
 		s.events.pending_ransom = {"node": int(pr["node"]), "type": String(pr.get("type", "battle")),
 			"content": (rc as Dictionary).duplicate(true) if rc is Dictionary else {}, "cost": int(pr.get("cost", 1)), "price": int(pr.get("price", 0))}
+	if int(d.get("battle_scale", 0)) < BATTLE_SCALE:
+		for held in [s.events.pending_battle, s.events.pending_ransom]:
+			if (held as Dictionary).get("content", null) is Dictionary:
+				rescale_content(held["content"])
 		if pr.has("defeat"):
 			s.events.pending_ransom["defeat"] = String(pr["defeat"])
 		var more = pr.get("more", [])

@@ -16,7 +16,7 @@ cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
 [sub_resource type="Resource" id="Resource_xd88t"]
 script = ExtResource("8_vlhym")
 base_stats = {
-"max_armor": 6
+"max_armor": 20
 }
 
 [resource]

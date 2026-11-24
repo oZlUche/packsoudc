@@ -9,7 +9,7 @@
     "poison"
   ],
   "base_stats": {
-    "max_hp": 80
+    "max_hp": 280
   },
   "signature": [
     "miasma_sac",

@@ -22,8 +22,8 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "max_armor": 75,
-      "regen_stamina": -1
+      "max_armor": 265,
+      "regen_stamina": -2
     }
   }
 }

@@ -41,7 +41,7 @@ effects = Array[ExtResource("6_fydot")]([SubResource("Resource_kca66"), SubResou
 [sub_resource type="Resource" id="Resource_3wchy"]
 script = ExtResource("10_vo06o")
 base_stats = {
-"max_hp": 10
+"max_hp": 35
 }
 rules = Array[ExtResource("3_mqy6c")]([SubResource("Resource_wo21h")])
 

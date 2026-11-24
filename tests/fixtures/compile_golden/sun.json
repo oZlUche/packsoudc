@@ -12,14 +12,14 @@
 			"percent": 0
 		},
 		"max_stamina": {
-			"total": 500000,
-			"base": 500000,
+			"total": 1000000,
+			"base": 1000000,
 			"flat": 0,
 			"percent": 0
 		},
 		"regen_stamina": {
-			"total": 40000,
-			"base": 40000,
+			"total": 80000,
+			"base": 80000,
 			"flat": 0,
 			"percent": 0
 		}
@@ -68,14 +68,14 @@
 					"percent": 0
 				},
 				"max_stamina": {
-					"total": 400000,
-					"base": 400000,
+					"total": 800000,
+					"base": 800000,
 					"flat": 0,
 					"percent": 0
 				},
 				"regen_stamina": {
-					"total": 20000,
-					"base": 20000,
+					"total": 40000,
+					"base": 40000,
 					"flat": 0,
 					"percent": 0
 				}
