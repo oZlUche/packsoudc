@@ -1,0 +1,19 @@
+{
+  "id": "god_nature_talk",
+  "display_name": "动物交谈",
+  "display_names": {
+    "en": "Beast Speech"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "w0": 50,
+        "w1": 35,
+        "w2": 10,
+        "w3": 5,
+        "w4": 1
+      }
+    }
+  ]
+}

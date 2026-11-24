@@ -1,0 +1,16 @@
+{
+  "id": "god_nature_seed_3",
+  "display_name": "新蕊",
+  "display_names": {
+    "en": "Budding"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "need": 500,
+        "pick": 3
+      }
+    }
+  ]
+}

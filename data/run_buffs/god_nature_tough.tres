@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_esj1c"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_2ku62"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_0lfl0"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_cxkwn"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_uaqyd"]
+
+[sub_resource type="Resource" id="Resource_nj1yv"]
+script = ExtResource("2_2ku62")
+values = {
+"amount": 1
+}
+
+[resource]
+script = ExtResource("5_uaqyd")
+id = &"god_nature_tough"
+display_name = "坚韧"
+display_names = {
+"en": "Hardiness"
+}
+effects = Array[ExtResource("1_esj1c")]([SubResource("Resource_nj1yv")])

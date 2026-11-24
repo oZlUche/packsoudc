@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_breed_up",
+  "display_name": "育种",
+  "display_names": {
+    "en": "Breeding"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "haste": 50
+      }
+    }
+  ]
+}

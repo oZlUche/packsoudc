@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_seed_4",
+  "display_name": "硕果",
+  "display_names": {
+    "en": "Bountiful Fruit"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pick": 4
+      }
+    }
+  ]
+}

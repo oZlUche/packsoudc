@@ -83,7 +83,7 @@ func _on_advanced(_total: int, delta: int) -> void:
 	_sync()
 	var any := false
 	for inst in growing():
-		if GrowthProfile.grow(inst, delta, _run.run_seed):
+		if GrowthProfile.grow(inst, delta * NatureCyclePerk.seed_speed(_run, inst), _run.run_seed):     # 388 育种：种子长得快
 			any = true
 			grown.emit(inst.uid, GrowthProfile.stage_of(inst))
 		elif inst.def.growth.stages.size() > GrowthProfile.stage_of(inst):

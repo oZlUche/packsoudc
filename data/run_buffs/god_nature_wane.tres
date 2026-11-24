@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_sdtcx"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_gk3y3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_bkn8h"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_1hcnj"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_kbarn"]
+
+[sub_resource type="Resource" id="Resource_nr30k"]
+script = ExtResource("2_gk3y3")
+values = {
+"pct": 10,
+"per": 20
+}
+
+[resource]
+script = ExtResource("5_kbarn")
+id = &"god_nature_wane"
+display_name = "枯荣"
+display_names = {
+"en": "Wax and Wane"
+}
+effects = Array[ExtResource("1_sdtcx")]([SubResource("Resource_nr30k")])

@@ -1,0 +1,12 @@
+{
+  "id": "god_nature_seed_keep",
+  "display_name": "继续培育",
+  "display_names": {
+    "en": "Keep Tending"
+  },
+  "effects": [
+    {
+      "type": "god_card"
+    }
+  ]
+}

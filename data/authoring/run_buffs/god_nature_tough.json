@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_tough",
+  "display_name": "坚韧",
+  "display_names": {
+    "en": "Hardiness"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "amount": 1
+      }
+    }
+  ]
+}

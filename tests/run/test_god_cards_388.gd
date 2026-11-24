@@ -446,14 +446,18 @@ static func run_nature_cards(t: TestCase) -> void:
 	var r := lv.rules()
 	var quals := 0
 	var bases := 0
+	var hidden := 0
 	for cid in r.card_ids():
 		if r.god_of(cid) == &"nature":
-			if r.is_qual(cid):
+			if bool(r.card(cid).get("hidden", false)):
+				hidden += 1
+			elif r.is_qual(cid):
 				quals += 1
 			else:
 				bases += 1
-	t.eq(quals, 12, "这一批 6 张质变 + 6 张升级")
-	t.eq(bases, 6, "基础牌 6 张（回春、毒气、食补、药补、求生本能、强壮）")
+	t.eq(quals, 23, "12 张质变 + 11 张升级（初种没有升级，靠新生进化）")
+	t.eq(bases, 10, "基础牌 10 张")
+	t.eq(hidden, 5, "不进池的 5 张：幼芽、新蕊、硕果、继续培育、采摘")
 	var perk := NatureCyclePerk.new()
 	t.eq(perk.effect_for(lv).decay_percent, 0.0, "没拿凋零")
 	lv.taken["god_nature_decay"] = 1
@@ -484,3 +488,146 @@ static func run_nature_cards(t: TestCase) -> void:
 	t.check(is_equal_approx(add, 3.5 * cells), "食补：%d 格 × 3.5 = %.1f" % [cells, add])
 	t.check(lv.card_text(&"god_nature_strong").contains("4"), "强壮：负重 +4（%s）" % lv.card_text(&"god_nature_strong"))
 	run.dispose()
+
+
+static func _renewal_log(n: int) -> BattleResult:
+	var res := BattleResult.new()
+	res.final = {"sides": [{"buffs": {}}, {"buffs": {}}]}
+	res.log.append(BattleEvent.make(BattleEvent.STATUS_STACKED, 0, 0, {"buff": NatureCycle.RENEWAL, "delta": n}))
+	return res
+
+
+static func run_nature_run(t: TestCase) -> void:
+	t.begin("388 第 3 批 B · 自然之神局内的牌：枯荣攒标准轴、亲近自然、坚韧、药材 / 食材感知、培育、收获、初种进化与采摘、育种、药补算药材")
+	var run := _start(62, &"nature")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"nature":
+		t.check(false, "开局奉自然之神")
+		return
+	var perk := NatureCyclePerk.new()
+	# 枯荣：敌人 400 层枯萎 × 10% = 40 点，每 20 点一层 → 2 层
+	lv.taken["god_nature_wane"] = 1
+	var res := BattleResult.new()
+	res.final = {"sides": [{"buffs": {}}, {"buffs": {String(NatureCycle.WITHER): 400}}]}
+	NatureCyclePerk.settle(lv, res)
+	var axes: Dictionary = lv.god_state.get(NatureCyclePerk.AXES_KEY, {})
+	var total := 0
+	for k in axes:
+		total += absi(int(axes[k]))
+		t.check(int(axes[k]) * int(NatureCyclePerk.BENEFIT[StringName(k)]) > 0, "%s 是对自己有利的方向" % k)
+	t.eq(total, 2, "枯荣：400 × 10% ÷ 20 = 2 层")
+	res.final = {"sides": [{"buffs": {}}, {"buffs": {String(NatureCycle.WITHER): 30}}]}
+	NatureCyclePerk.settle(lv, res)
+	total = 0
+	for k in lv.god_state[NatureCyclePerk.AXES_KEY]:
+		total += absi(int(lv.god_state[NatureCyclePerk.AXES_KEY][k]))
+	t.eq(total, 3, "不足 20 点也给 1 层")
+	var input := CompileInput.of(run.effective_baseline())
+	perk.compile_into(input, run.board, run)
+	var shifted := 0
+	for k in input.axes:
+		shifted += absi(int(input.axes[k]))
+	t.check(shifted >= 3, "开战就带着这几层（%d）" % shifted)
+	# 亲近自然：第一次进非战斗的点，下一场 +35，打完清掉
+	lv.taken["god_nature_near"] = 1
+	var shop := MapNode.new()
+	shop.type = &"shop"
+	t.check(perk.on_node_entered(run, shop, true) != "", "进商店：记一笔")
+	t.eq(perk.on_node_entered(run, shop, false), "", "再进一次不算")
+	var fight := MapNode.new()
+	fight.type = &"battle"
+	t.eq(perk.on_node_entered(run, fight, true), "", "战斗点不算")
+	t.check(is_equal_approx(float(lv.god_state.get(NatureCyclePerk.NEAR_KEY, 0.0)), 35.0), "临时生命上限 35（按报告 390 放大）")
+	res.final = {"sides": [{"buffs": {}}, {"buffs": {}}]}
+	lv.god_state[NatureCyclePerk.NEAR_KEY] = 35.0
+	NatureCyclePerk.settle(lv, res)
+	t.check(not lv.god_state.has(NatureCyclePerk.NEAR_KEY), "打完一场：用掉了")
+	# 坚韧：没满回 1 点，满了上限 +1
+	if run.vitality != null:
+		run.vitality.set_max(run.vitality.maximum, &"t", true)
+		var m0 := run.vitality.maximum
+		lv.taken["god_nature_tough"] = 1
+		NatureCyclePerk.on_pick(lv, &"god_nature_tough")
+		t.eq(run.vitality.maximum, m0 + 1, "满了：上限 +1")
+		t.check(run.vitality.is_full(), "加的那一格是满的")
+		run.vitality.spend(2, &"t")
+		var c0 := run.vitality.current
+		NatureCyclePerk.on_pick(lv, &"god_nature_tough")
+		t.eq(run.vitality.current, c0 + 1, "没满：回 1 点")
+	# 药材感知 / 食材感知 / 培育：给一件，放进背包或地上
+	var herbs := NatureGifts.pool(run, &"herb")
+	t.check(not herbs.is_empty() and herbs.all(func(d: ItemDef) -> bool: return NatureGifts.is_herb(d)), "药材池 = 草药素材（%d 件）" % herbs.size())
+	lv.taken["god_nature_herb_sense"] = 1
+	NatureCyclePerk.on_pick(lv, &"god_nature_herb_sense")
+	var got := run.items.get_def(StringName(String(lv.god_state.get("sense_last", ""))))
+	t.check(NatureGifts.is_herb(got), "药材感知：给了一件药材（%s）" % String(lv.god_state.get("sense_last", "")))
+	lv.taken["god_nature_herb_sense"] = 3
+	var w := NatureCyclePerk.sense_weights(lv, &"god_nature_herb_sense")
+	t.check(w[3] / w[0] > 5.0 / 50.0, "拿过几次：史诗的权重相对变大")
+	lv.taken["god_nature_food_sense"] = 1
+	NatureCyclePerk.on_pick(lv, &"god_nature_food_sense")
+	got = run.items.get_def(StringName(String(lv.god_state.get("sense_last", ""))))
+	t.check(got != null and got.has_tag(&"ingredient"), "食材感知：给了一件食材")
+	lv.taken["god_nature_sow"] = 1
+	NatureCyclePerk.on_pick(lv, &"god_nature_sow")
+	got = run.items.get_def(StringName(String(lv.god_state.get("sow_last", ""))))
+	t.check(got != null and got.has_tag(&"seed") and got.growth != null, "培育：给了一颗会长的种子")
+	# 抽稀有度：那一档没有就往下取（药材），种子只在有的几档里分
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var only_epic: Array[float] = [0.0, 0.0, 0.0, 1.0, 0.0]
+	var d2 := NatureGifts.roll(herbs, only_epic, rng)
+	t.check(d2 != null and d2.rarity <= 3, "药材抽到史诗档、没有就往下（%s）" % (String(d2.id) if d2 != null else "无"))
+	var only_common: Array[float] = [1.0, 0.0, 0.0, 0.0, 0.0]
+	var seeds := NatureGifts.pool(run, &"seed")
+	t.eq(seeds.size(), 3, "种子三件")
+	t.check(NatureGifts.roll(seeds, only_common, rng, 0, true) != null, "种子：普通档没有也照样给")
+	# 收获：每 40 层新生掉一件在地上
+	lv.taken["god_nature_harvest"] = 1
+	var ground0 := run.storage.item_count()
+	res.final = {"sides": [{"buffs": {String(NatureCycle.RENEWAL): 85}}, {"buffs": {}}]}
+	NatureCyclePerk.settle(lv, res)
+	t.eq(run.storage.item_count(), ground0 + 2, "85 层：地上 2 件")
+	# 初种：攒到 100 进幼芽，选「采摘」得稀有，放回池子
+	lv.taken["god_nature_seed"] = 1
+	t.eq(NatureCyclePerk.seed_stage(lv), 0, "初种")
+	NatureCyclePerk.settle(lv, _renewal_log(60))
+	t.eq(NatureCyclePerk.seed_stage(lv), 0, "60 点：还没长")
+	NatureCyclePerk.settle(lv, _renewal_log(50))
+	t.eq(NatureCyclePerk.seed_stage(lv), 1, "跨两场攒到 110：幼芽")
+	t.check(NatureCyclePerk.choice_due(lv), "等着选")
+	var before := lv.pending()
+	var offer := lv.offer()
+	t.eq(offer, [NatureCyclePerk.SEED_KEEP, NatureCyclePerk.SEED_PICK] as Array[StringName], "选牌窗摆的是继续培育 / 采摘")
+	t.check(not lv.reroll(), "这一次不能刷新")
+	t.eq(lv.quals().filter(func(q: Dictionary) -> bool: return q["id"] == NatureCyclePerk.SEED)[0]["shown"], &"god_nature_seed_2", "神恩区显示幼芽")
+	lv.pick(0)
+	t.eq(lv.pending(), before - 1, "选完少欠一次")
+	t.eq(NatureCyclePerk.seed_stage(lv), 1, "继续培育：还在幼芽")
+	NatureCyclePerk.settle(lv, _renewal_log(210))
+	t.eq(NatureCyclePerk.seed_stage(lv), 2, "再攒 200：新蕊")
+	lv.offer()
+	lv.pick(1)
+	got = run.items.get_def(StringName(String(lv.god_state.get("seed_last", ""))))
+	t.check(got != null and got.has_tag(&"nature") and got.rarity == 3, "采摘新蕊：一件史诗自然道具（%s）" % (String(got.id) if got != null else "无"))
+	t.eq(lv.count_of(NatureCyclePerk.SEED), 0, "初种放回池子")
+	t.check(lv.eligible(NatureCyclePerk.SEED), "又能抽到了")
+	t.check(not lv.eligible(&"god_nature_seed_2") and not lv.eligible(NatureCyclePerk.SEED_PICK), "后几阶和选项不进池")
+	# 育种：种子长得快一倍；升级：长过一阶的出手快 50%
+	var seed_def := run.items.get_def(&"thorn_seed")
+	var sprout := ItemInstance.create(seed_def)
+	t.eq(NatureCyclePerk.seed_speed(run, sprout), 1, "没拿育种：一步一步")
+	lv.taken["god_nature_breed"] = 1
+	t.eq(NatureCyclePerk.seed_speed(run, sprout), 2, "育种：一步算两步")
+	t.eq(r_requires(lv), "seed", "育种要棋盘上有种子才进池")
+	# 药补：药品和药材都算
+	var herb_def := run.items.get_def(&"dried_herbs")
+	t.check(NatureGifts.is_herb(herb_def), "干草药束是药材")
+	var cells0 := NatureCyclePerk.cells_of(run.board, [&"remedy"], true)
+	TestSupport.put(run.board, herb_def)
+	t.eq(NatureCyclePerk.cells_of(run.board, [&"remedy"], true), cells0 + herb_def.cell_count(), "放一束干草药：药补多算它的格子")
+	run.dispose()
+
+
+static func r_requires(lv: LevelModule) -> String:
+	return String(lv.rules().card(&"god_nature_breed").get("requires", ""))

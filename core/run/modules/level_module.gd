@@ -185,7 +185,12 @@ func is_humanist() -> bool:
 #region 选牌
 ## 还欠几次选牌（普通 + 质变位）
 func pending() -> int:
-	return _regular_left() + _qual_left()
+	return _regular_left() + _qual_left() + (1 if NatureCyclePerk.choice_due(self) else 0)
+
+
+## 388 自然之神【初种】：选牌窗正摆着「继续培育 / 采摘」
+func seed_offer() -> bool:
+	return bool(god_state.get(NatureCyclePerk.SEED_OFFER, false)) and not offer_ids.is_empty()
 
 
 func _regular_left() -> int:
@@ -211,6 +216,8 @@ func _qual_left() -> int:
 func current_pick() -> Dictionary:
 	if pending() <= 0:
 		return {}
+	if seed_offer() or (offer_ids.is_empty() and NatureCyclePerk.choice_due(self)):
+		return {"level": level(), "qual": false, "seed": true}
 	var qual := _next_is_qual()
 	var lv := rules().qual_level_of(_slot_index()) if qual else picks_done + 2
 	return {"level": lv, "qual": qual, "generic": qual and not has_qual_pool()}
@@ -267,7 +274,12 @@ func offer() -> Array[StringName]:
 		if not offer_ids.is_empty():
 			offer_ids.clear()
 		return [] as Array[StringName]
+	if offer_ids.is_empty() and NatureCyclePerk.choice_due(self):
+		offer_qual = false
+		offer_ids = [String(NatureCyclePerk.SEED_KEEP), String(NatureCyclePerk.SEED_PICK)] as Array[String]     # 初种长到一阶：两张选一
+		god_state[NatureCyclePerk.SEED_OFFER] = true
 	if offer_ids.is_empty():
+		god_state.erase(NatureCyclePerk.SEED_OFFER)
 		offer_qual = _next_is_qual()
 		offer_ids = _draw(_choices_for(offer_qual), [], offer_qual)
 	var out: Array[StringName] = []
@@ -282,6 +294,13 @@ func pick(i: int) -> StringName:
 	if i < 0 or i >= cards.size():
 		return &""
 	var cid := cards[i]
+	if seed_offer():
+		god_state.erase(NatureCyclePerk.SEED_OFFER)
+		offer_ids.clear()
+		NatureCyclePerk.seed_choose(self, cid == NatureCyclePerk.SEED_KEEP)
+		picked.emit(cid)
+		level_changed.emit()
+		return cid
 	taken[String(cid)] = count_of(cid) + 1
 	if offer_qual:
 		qual_done += 1
@@ -298,7 +317,7 @@ func pick(i: int) -> StringName:
 ## 刷新：三张一起换一批（尽量不和这三张重样）。次数不够返回 false
 func reroll() -> bool:
 	var cards := offer()
-	if cards.is_empty() or rerolls_left() <= 0:
+	if cards.is_empty() or rerolls_left() <= 0 or seed_offer():
 		return false
 	rerolls_used += 1
 	var avoid: Array[String] = offer_ids.duplicate()
@@ -310,7 +329,7 @@ func reroll() -> bool:
 ## 删除第 [param i] 张：这一局不再出，空位当场补一张（这一级照常选）。次数不够返回 false
 func remove(i: int) -> bool:
 	var cards := offer()
-	if i < 0 or i >= cards.size() or removals_left() <= 0:
+	if i < 0 or i >= cards.size() or removals_left() <= 0 or seed_offer():
 		return false
 	removals_used += 1
 	var gone := offer_ids[i]
@@ -340,6 +359,10 @@ func quals() -> Array[Dictionary]:
 			continue
 		var up := _upgrade_of(cid)
 		var has_up := up != &"" and count_of(up) > 0
+		if cid == NatureCyclePerk.SEED:     # 初种按长到第几阶显示
+			var shown := NatureCyclePerk.seed_shown(self)
+			out.append({"id": cid, "upgraded": shown != cid, "shown": shown})
+			continue
 		out.append({"id": cid, "upgraded": has_up, "shown": up if has_up else cid})
 	return out
 
@@ -378,8 +401,8 @@ func taken_list() -> Array[Dictionary]:
 func eligible(card_id: StringName) -> bool:
 	var r := rules()
 	var row := r.card(card_id)
-	if row.is_empty() or removed.has(String(card_id)):
-		return false
+	if row.is_empty() or removed.has(String(card_id)) or bool(row.get("hidden", false)):
+		return false     # hidden：不进牌池（初种的后几阶、继续培育 / 采摘）
 	if _run != null and not _run.buff_defs.is_empty() and not _run.buff_defs.has(card_id):
 		return false
 	if (bool(row.get("once", false)) or r.is_qual(card_id)) and count_of(card_id) > 0:
@@ -491,6 +514,8 @@ func _apply_now(cid: StringName) -> void:
 		pending_searches += 1
 	if String(row.get("oneshot", "")) == String(LevelRules.ONESHOT_MIRACLE):
 		god_state["miracle_last"] = Miracle.apply(_run)     # 388 日神【奇迹】
+	if god() == &"nature":
+		NatureCyclePerk.on_pick(self, cid)     # 388 自然：坚韧、感知、培育、动物交谈升级
 	var def: RunBuffDef = _run.buff_defs.get(cid, null) if _run != null else null
 	if def == null or _run.vitality == null:
 		return
@@ -566,6 +591,14 @@ func god_value(card_id: StringName, key: String, fallback: float = 0.0) -> float
 	if gc == null or not gc.values.has(key):
 		return fallback
 	return float(gc.values[key]) * n
+
+
+## 388：牌 [param card_id] 上写的数 [param key]（不管拿没拿、不乘张数）；没写 = [param fallback]
+func card_value(card_id: StringName, key: String, fallback: float = 0.0) -> float:
+	var gc := god_card_of(card_def(card_id))
+	if gc == null or not gc.values.has(key):
+		return fallback
+	return float(gc.values[key])
 
 
 ## 388：牌的那份 buff —— 这一局的表里没有（测试拼的内容）就按 id 去内容里找

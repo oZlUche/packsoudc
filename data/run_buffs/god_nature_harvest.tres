@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_icee4"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_t6v2f"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_6p5p0"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_aw5d0"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_0b4l4"]
+
+[sub_resource type="Resource" id="Resource_40ixk"]
+script = ExtResource("2_t6v2f")
+values = {
+"every": 40
+}
+
+[resource]
+script = ExtResource("5_0b4l4")
+id = &"god_nature_harvest"
+display_name = "收获"
+display_names = {
+"en": "Harvest"
+}
+effects = Array[ExtResource("1_icee4")]([SubResource("Resource_40ixk")])

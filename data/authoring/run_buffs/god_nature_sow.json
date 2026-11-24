@@ -1,0 +1,18 @@
+{
+  "id": "god_nature_sow",
+  "display_name": "培育",
+  "display_names": {
+    "en": "Sowing"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "w0": 50,
+        "w1": 35,
+        "w2": 10,
+        "w3": 5
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_near_up",
+  "display_name": "亲近自然",
+  "display_names": {
+    "en": "Close to Nature"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "hp": 70
+      }
+    }
+  ]
+}

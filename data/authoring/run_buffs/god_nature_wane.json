@@ -1,0 +1,16 @@
+{
+  "id": "god_nature_wane",
+  "display_name": "枯荣",
+  "display_names": {
+    "en": "Wax and Wane"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 10,
+        "per": 20
+      }
+    }
+  ]
+}

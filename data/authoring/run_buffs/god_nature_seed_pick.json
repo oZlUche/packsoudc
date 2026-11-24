@@ -1,0 +1,12 @@
+{
+  "id": "god_nature_seed_pick",
+  "display_name": "采摘",
+  "display_names": {
+    "en": "Pick"
+  },
+  "effects": [
+    {
+      "type": "god_card"
+    }
+  ]
+}

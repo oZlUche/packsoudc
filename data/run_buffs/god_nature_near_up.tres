@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_ovs1p"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_2vym4"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_y3lne"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_2tutg"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_tutuh"]
+
+[sub_resource type="Resource" id="Resource_nin6a"]
+script = ExtResource("2_2vym4")
+values = {
+"hp": 70
+}
+
+[resource]
+script = ExtResource("5_tutuh")
+id = &"god_nature_near_up"
+display_name = "亲近自然"
+display_names = {
+"en": "Close to Nature"
+}
+effects = Array[ExtResource("1_ovs1p")]([SubResource("Resource_nin6a")])
