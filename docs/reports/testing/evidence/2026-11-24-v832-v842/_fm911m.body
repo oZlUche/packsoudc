@@ -1,0 +1,138 @@
+extends SceneTree
+## 游戏测试 v8.40（PR #911，报告 389 / 391）：阵营声望节点 —— 老存档迁移。参数 <outdir> <mode>
+## make（在 v8.40 以前的版本跑）：新档拒教程 → 测试辅助：各方到营地、声望设成几档不同的数（有的签约有的没签）、下一局奉狩猎之神、奉过狩猎之神 → 存档退出
+## check（v8.40）：主菜单【继续】进基地 → 记声望、到了哪些节点、万神院各神能不能选、下一局奉谁 → 委托页真点接一份 → 出征页开局屏看信仰条
+const TAG := "FM911M"
+var _n0 := 0
+##HEAD##
+var _mode := ""
+const REP := {"legion": 100, "greylamp": 100, "society": 55, "pantheon": 30, "growers": 12, "cartographers": 25, "hunters": 0, "envoy": 50}
+const SIGNED := ["greylamp", "envoy"]
+const GODS := ["brute", "nature", "sun", "skill", "hunt", "earth", "church"]
+
+
+func _old_line() -> String:
+	var bk := _flow.meta.commissions
+	var o := []
+	for f in Commissions.factions():
+		var t = Commissions.tier_of(bk, f)
+		o.append("%s 声望 %d 档 %s" % [String(f.id), bk.rep_of(f.id), str(t)])
+	return "；".join(o)
+
+
+func _new_line() -> String:
+	return ""
+
+
+func _gods_line() -> String:
+	var o := []
+	for g in GODS:
+		var gid := StringName(g)
+		o.append("%s %s" % [g, ("能选" if Pantheon.god_open(_flow.meta, gid) else "不能")])
+	return "，".join(o)
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _flow == null:
+		_flow = _game.flow
+		var a := OS.get_cmdline_user_args()
+		_mode = a[1] if a.size() > 1 else "check"
+		return false
+	if _f > 8000:
+		L("超时 st %d 屏 %d" % [_st, _flow.screen]); shot("timeout"); quit(1); return true
+	if _wait > 0:
+		_wait -= 1
+		return false
+	var scr := _flow.screen
+	if _mode == "make":
+		if _st < 3:
+			if _boot(): _st = 3
+			return false
+		match _st:
+			3:
+				var bk := _flow.meta.commissions
+				for f in Commissions.factions(): bk.arrived[String(f.id)] = 0
+				for k in REP: bk.rep[k] = REP[k]
+				for k in SIGNED: bk.signed[k] = 1
+				_flow.meta.pantheon_choice = &"hunt"
+				if not _flow.meta.gods_worshipped.has(&"hunt"): _flow.meta.gods_worshipped.append(&"hunt")
+				_flow.sync_commissions(); _flow.save_meta(); _flow.meta.changed.emit()
+				L("老版本：%s" % _old_line())
+				L("　　万神院：%s；下一局奉「%s」；奉过 %s；access %s" % [_gods_line(), String(_flow.meta.pantheon_choice), str(_flow.meta.gods_worshipped), str(Pantheon.access(_flow.meta))])
+				L("　　已接 %s" % str(bk.taken()))
+				_wait = 30; _st = 99
+			99:
+				L("完 err=0"); quit(0); return true
+		return false
+	match _st:
+		0:
+			if _f < 90: return false
+			L("主菜单【继续】：%s" % str(_flow.continue_game())); _wait = 90; _st = 1
+		1:
+			if scr != GameFlow.Screen.META: L("（没进基地，屏 %d）" % scr); _st = 99; return false
+			var arr: Control = _ms().arrival()
+			if arr != null:
+				L("营地弹了通知：%s" % _labels_under(arr).left(200)); shot("notice")
+				for b in arr.find_children("*", "Button", true, false):
+					if (b as Button).is_visible_in_tree(): _click(b); break
+				_wait = 30; return false
+			L("读进来：\n　　%s" % _new_line())
+			L("　　万神院：%s；下一局奉「%s」；奉过 %s；access %s" % [_gods_line(), String(Pantheon.choice(_flow.meta)), str(_flow.meta.gods_worshipped), str(Pantheon.access(_flow.meta))])
+			L("　　已接 %s" % str(_flow.meta.commissions.taken()))
+			_tab("commissions"); _wait = 40; _st = 2
+		2:
+			var cp: Control = _ms().commission_panel()
+			L("委托页：%s" % _labels_under(cp).left(900))
+			L("　　排版：%s" % _overflow(cp))
+			shot("commissions")
+			var take: Button = null
+			for b in cp.find_children("*", "Button", true, false):
+				var bb := b as Button
+				if bb.is_visible_in_tree() and not bb.disabled and (bb.text.contains("接") or bb.text.to_lower().contains("accept") or bb.text.to_lower().contains("take")): take = bb; break
+			if take == null: L("　　没找到能点的接取键"); _st = 4; return false
+			_n0 = _flow.meta.commissions.taken().size()
+			L("　　真点【%s】" % take.text); _click(take); _wait = 30; _st = 3
+		3:
+			L("　　接了以后：已接 %d → %d：%s" % [_n0, _flow.meta.commissions.taken().size(), str(_flow.meta.commissions.taken())])
+			shot("after_take")
+			_st = 4
+		4:
+			_tab("logistics"); _wait = 25; _st = 5
+		5:
+			if _ms()._sub_btns.has("pantheon"): _click(_ms()._sub_btns["pantheon"]); _wait = 30; _st = 6
+			else: L("后勤没有万神院"); _st = 7
+		6:
+			var p = _ms().pantheon_panel()
+			L("万神院页：%s；排版 %s" % [_labels_under(p).left(500), _overflow(p)])
+			shot("pantheon")
+			_st = 7
+		7:
+			_tab("expedition"); _wait = 30; _st = 8
+		8:
+			var sb: Button = _ms().get("_new_run_btn")
+			sb.pressed.emit(); _wait = 60; _st = 9
+		9:
+			if scr != GameFlow.Screen.SETUP: L("（没进开局屏，屏 %d）" % scr); _st = 99; return false
+			var sp: Node = null
+			for n in root.find_children("*", "", true, false):
+				if n.has_method("step_difficulty") and n.has_method("depart"): sp = n; break
+			if sp.god_book() != null: sp.close_god_book(); _wait = 20; return false
+			for c in root.find_children("*", "CoachOverlay", true, false):
+				(c as CoachOverlay).next(); _wait = 10; return false
+			sp.open_bar(sp.BAR_FAITH); _wait = 20; _st = 10
+		10:
+			var sp: Node = null
+			for n in root.find_children("*", "", true, false):
+				if n.has_method("step_difficulty") and n.has_method("depart"): sp = n; break
+			if sp.god_book() != null: sp.close_god_book(); _wait = 20; return false
+			for c in root.find_children("*", "CoachOverlay", true, false):
+				(c as CoachOverlay).next(); _wait = 10; return false
+			L("开局屏信仰条：头上「%s」；展开：%s" % [sp.faith_head_text() if sp.has_method("faith_head_text") else "-", _labels_under(sp.faith_panel()).left(400)])
+			L("　　真点狩猎之神（老档信过、现在是占位）：%s；下一局奉「%s」" % [str(sp.choose_god(&"hunt")), String(Pantheon.choice(_flow.meta))])
+			L("　　真点自然之神（声望 30 ≥ 10）：%s；下一局奉「%s」" % [str(sp.choose_god(&"nature")), String(Pantheon.choice(_flow.meta))])
+			shot("faith_bar")
+			_st = 99
+		99:
+			L("完 err=0"); quit(0); return true
+	return false

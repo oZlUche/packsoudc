@@ -1,0 +1,53 @@
+extends SceneTree
+## 游戏测试 v8.32（PR #902）：教程章节不弹开局质变选牌。新档 → 接受教程 → 进序章地图，看欠不欠选牌、选牌窗开没开。参数 <outdir>
+const TAG := "TU902"
+##HEAD##
+var _n := 0
+
+
+
+func _ev() -> void:
+	if bool(_flow.last_payload.get("briefing", false)): _flow.close_briefing(); return
+	var top = _game.overlay() if _game.overlay() != null else _game.base()
+	if top != null and top.has_method("choose_event"): top.choose_event(0)
+	elif top != null and top.has_method("proceed"): top.proceed()
+	else: _flow.resume()
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _flow == null:
+		_flow = _game.flow
+		return false
+	if _f > 6000:
+		L("超时 st %d 屏 %d" % [_st, _flow.screen]); shot("timeout"); quit(1); return true
+	if _wait > 0:
+		_wait -= 1
+		return false
+	match _st:
+		0:
+			if _f < 60: return false
+			_flow.start_new_game(); _st = 1
+		1:
+			var b = _game.base()
+			if b != null and b.has_method("tutorial_ask_open") and b.tutorial_ask_open():
+				L("教程询问开着，真点接受")
+				b.accept_tutorial(); _wait = 120; _st = 2
+			elif _f > 300:
+				L("（没看到教程询问，直接 accept_tutorial）"); _flow.accept_tutorial(); _wait = 120; _st = 2
+		2:
+			if _flow.screen == GameFlow.Screen.EVENT:
+				_ev()
+				_wait = 20; return false
+			if _flow.screen != GameFlow.Screen.MAP or _flow.run == null: return false
+			var lv := LevelModule.of(_flow.run)
+			var b = _game.base()
+			var p = b.get("_level_pick_panel")
+			var coach := root.find_children("*", "CoachOverlay", true, false)
+			L("第 %d 次看：章节 %s，开局质变开关 %s，%d 级，欠选牌 %d，现在这张 %s，选牌窗 %s，教练层 %s" % [_n + 1, String(_flow.run.chapter.id), str(_flow.run.chapter.opening_qual_pick), lv.level() if lv != null else -1, lv.pending() if lv != null else -1, str(lv.current_pick()) if lv != null else "-", "开着" if p != null else "没开", _labels_under(coach[0]).left(80) if not coach.is_empty() else "没有"])
+			if _n == 0: shot("tutorial_map")
+			_n += 1
+			if _n >= 3: _st = 99; return false
+			_wait = 120
+		99:
+			L("完 err=0"); quit(0); return true
+	return false
