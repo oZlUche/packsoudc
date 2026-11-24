@@ -432,6 +432,90 @@
       "kind": "god",
       "god": "sun",
       "oneshot": "miracle"
+    },
+    "god_nature_decay": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_decay_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_decay"
+    },
+    "god_nature_grow": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_grow_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_grow"
+    },
+    "god_nature_guard": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_guard_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_guard"
+    },
+    "god_nature_reap": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_reap_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_reap"
+    },
+    "god_nature_bounty": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_bounty_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_bounty"
+    },
+    "god_nature_cycle": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_cycle_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_cycle"
+    },
+    "god_nature_rejuv": {
+      "kind": "god",
+      "god": "nature"
+    },
+    "god_nature_poison": {
+      "kind": "god",
+      "god": "nature"
+    },
+    "god_nature_food": {
+      "kind": "god",
+      "god": "nature"
+    },
+    "god_nature_herb": {
+      "kind": "god",
+      "god": "nature"
+    },
+    "god_nature_survive": {
+      "kind": "god",
+      "god": "nature"
+    },
+    "god_nature_strong": {
+      "kind": "god",
+      "god": "nature"
     }
   }
 }

@@ -25,7 +25,7 @@
     },
     {
       "type": "mechanic",
-      "key": "nature_release",
+      "key": "nature_wither",
       "amount": 2
     }
   ],
@@ -52,29 +52,15 @@
   ],
   "perks": [
     {
-      "type": "nature_regrowth",
+      "type": "nature_cycle",
       "tier": 0
     },
     {
       "type": "altar_bless"
     },
     {
-      "type": "nature_regrowth",
-      "part": 1
-    },
-    {
-      "type": "nature_regrowth",
-      "part": 2,
-      "tier": 2
-    },
-    {
       "type": "altar_food_vitality",
       "tier": 2
-    },
-    {
-      "type": "nature_regrowth",
-      "part": 3,
-      "tier": 3
     }
   ],
   "blessings": [
@@ -135,5 +121,9 @@
         }
       ]
     }
-  ]
+  ],
+  "core_line": "枯萎 / 新生：敌人每失去 1 点生命积 1 层枯萎，你每恢复 1 点生命积 1 层新生，持续伤害、持续恢复也算",
+  "core_lines": {
+    "en": "Wither / Rebirth: each point of Health the enemy loses builds 1 Wither, each point you restore builds 1 Rebirth; damage and healing over time count"
+  }
 }

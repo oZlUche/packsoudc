@@ -59,6 +59,9 @@ static func of(run: RunState) -> Array[PassiveNote]:
 	var altar_bonus: Dictionary = AltarModule.of(run).stat_bonus if AltarModule.of(run) != null else {}
 	for k in altar_bonus:
 		bonus[k] = float(bonus.get(k, 0.0)) + float(altar_bonus[k])
+	var god_bonus := run.god_stat_bonus()     # 388：神的牌攒下的
+	for k in god_bonus:
+		bonus[k] = float(bonus.get(k, 0.0)) + float(god_bonus[k])
 	if not bonus.is_empty() or not mult.is_empty():
 		var mods2: Array = []
 		var mkeys := mult.keys()

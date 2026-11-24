@@ -1,0 +1,8 @@
+{
+  "id": "nature_wither",
+  "display_name": "枯萎",
+  "display_names": {
+    "en": "Wither"
+  },
+  "is_debuff": true
+}

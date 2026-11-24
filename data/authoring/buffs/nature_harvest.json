@@ -1,0 +1,8 @@
+{
+  "id": "nature_harvest",
+  "display_name": "收割",
+  "display_names": {
+    "en": "Reaping"
+  },
+  "is_debuff": true
+}

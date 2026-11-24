@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_survive",
+  "display_name": "求生本能",
+  "display_names": {
+    "en": "Will to Live"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 10
+      }
+    }
+  ]
+}

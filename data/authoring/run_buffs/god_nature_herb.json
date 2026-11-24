@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_herb",
+  "display_name": "药补",
+  "display_names": {
+    "en": "Herbal Tonic"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stamina": 2
+      }
+    }
+  ]
+}

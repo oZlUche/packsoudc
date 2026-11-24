@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_spe3a"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_vkq73"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_ub504"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_fy7xe"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_0qb76"]
+
+[sub_resource type="Resource" id="Resource_rvnda"]
+script = ExtResource("2_vkq73")
+values = {
+"keep": 50
+}
+
+[resource]
+script = ExtResource("5_0qb76")
+id = &"god_nature_bounty_up"
+display_name = "丰饶（升级）"
+display_names = {
+"en": "Bounty+"
+}
+effects = Array[ExtResource("1_spe3a")]([SubResource("Resource_rvnda")])

@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_rejuv",
+  "display_name": "回春",
+  "display_names": {
+    "en": "Rejuvenation"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 1
+      }
+    }
+  ]
+}

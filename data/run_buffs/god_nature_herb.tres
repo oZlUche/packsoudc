@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_3lxxd"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_gmxmq"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_oo8v3"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_mlqjv"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_5f55u"]
+
+[sub_resource type="Resource" id="Resource_37dyt"]
+script = ExtResource("2_gmxmq")
+values = {
+"stamina": 2
+}
+
+[resource]
+script = ExtResource("5_5f55u")
+id = &"god_nature_herb"
+display_name = "药补"
+display_names = {
+"en": "Herbal Tonic"
+}
+effects = Array[ExtResource("1_3lxxd")]([SubResource("Resource_37dyt")])

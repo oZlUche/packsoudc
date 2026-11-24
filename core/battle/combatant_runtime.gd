@@ -270,13 +270,29 @@ static func _scale_final(p_set: StatSet, key: StringName, f: int) -> void:
 #endregion
 
 
+## 388：战斗里直接加减的上限（日出当作、凋零、丰饶、血甲……），资源 key → 定点差额。属性重算时照样算上（不然重算一次就没了）
+var max_bonus: Dictionary = {}
+
+
+## 388：资源 [param res] 的上限在这一场里加 [param delta]（定点，可负），不低于 [param at_least]。上限加了当前值同量加（[method ResourcePool.set_max]）
+func add_max(res: StringName, delta: int, at_least: int = 0) -> void:
+	if delta == 0:
+		return
+	var before := resources.maximum(res) if resources.has(res) else 0
+	var after := maxi(at_least, before + delta)
+	max_bonus[res] = int(max_bonus.get(res, 0)) + after - before
+	if not resources.has(res):
+		resources.define(res, 0)
+	resources.set_max(res, after)
+
+
 ## 资源由 max_* 属性自动派生：有 max_armor 就有 shield 资源。
 func _sync_resource_maxes() -> void:
 	for key in _merged.keys():
 		var res := BattleStats.resource_of_max(key)
 		if res == &"":
 			continue
-		var cap := _merged.total_of(key)
+		var cap := maxi(0, _merged.total_of(key) + int(max_bonus.get(res, 0)))
 		if resources.has(res):
 			resources.set_max(res, cap)
 		else:

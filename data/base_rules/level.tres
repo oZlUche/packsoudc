@@ -220,6 +220,90 @@ cards = {
 "kind": "god",
 "weight": 0.3
 },
+"god_nature_bounty": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_bounty_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_bounty"
+},
+"god_nature_cycle": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_cycle_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_cycle"
+},
+"god_nature_decay": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_decay_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_decay"
+},
+"god_nature_food": {
+"god": "nature",
+"kind": "god"
+},
+"god_nature_grow": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_grow_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_grow"
+},
+"god_nature_guard": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_guard_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_guard"
+},
+"god_nature_herb": {
+"god": "nature",
+"kind": "god"
+},
+"god_nature_poison": {
+"god": "nature",
+"kind": "god"
+},
+"god_nature_reap": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_reap_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_reap"
+},
+"god_nature_rejuv": {
+"god": "nature",
+"kind": "god"
+},
+"god_nature_strong": {
+"god": "nature",
+"kind": "god"
+},
+"god_nature_survive": {
+"god": "nature",
+"kind": "god"
+},
 "god_sun_blaze": {
 "god": "sun",
 "kind": "god",

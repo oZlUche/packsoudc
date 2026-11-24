@@ -1,0 +1,16 @@
+{
+  "id": "god_nature_guard_up",
+  "display_name": "护佑（升级）",
+  "display_names": {
+    "en": "Sheltering Bark+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 8,
+        "pct": 100
+      }
+    }
+  ]
+}

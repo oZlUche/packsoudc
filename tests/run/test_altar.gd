@@ -161,7 +161,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var regen0 := plain4.baseline.total_of(BattleStats.REGEN_HP)
 	var shield0 := plain4.baseline.total_of(BattleStats.MAX_ARMOR)
 	# 信仰重构 D：自然换成「生息」，回血、食物护甲、翻倍、加时回春不再挂在自然身上；构件本身照旧验
-	t.check(nature.perks_at(0).any(func(p): return p is NatureRegrowthPerk), "自然奉神即有生息")
+	t.check(nature.perks_at(0).any(func(p): return p is NatureCyclePerk), "自然奉神即有枯萎与新生（388）")
 	t.check(not nature.perks.any(func(p): return p is OvertimeRegenPerk or p is FoodArmorPerk or p is FoodDoublePerk), "旧的加时回春、食物护甲、翻倍摘掉了")
 	var input4 := CompileInput.of(run.effective_baseline())
 	FoodArmorPerk.new().compile_into(input4, run.board, run)

@@ -388,10 +388,7 @@ func _tick_armor(ctx: RuleContext, st: Dictionary, now: int) -> void:
 	st["armor_sum"] = 0
 	if gain <= 0:
 		return
-	var res := ctx.owner.resources
-	if not res.has(BattleStats.RES_ARMOR):
-		res.define(BattleStats.RES_ARMOR, 0)
-	res.set_max(BattleStats.RES_ARMOR, res.maximum(BattleStats.RES_ARMOR) + gain)     # 上限加多少当前值同量加（同大地承托）
+	ctx.owner.add_max(BattleStats.RES_ARMOR, gain)     # 上限加多少当前值同量加；属性重算也留着
 	if armor_heal_percent > 0:
 		st["armor_pool"] = int(st.get("armor_pool", 0)) + gain
 	ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, ctx.owner.side, {"effect": SkillMomentum.MECHANIC, "key": "brute_blood_armor", "count": 1})

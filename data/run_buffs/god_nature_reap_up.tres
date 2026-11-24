@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_rb53p"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_vw3s3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_q68bx"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_tb8tg"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_77kc2"]
+
+[sub_resource type="Resource" id="Resource_tuxav"]
+script = ExtResource("2_vw3s3")
+values = {
+"pct": 100,
+"sec": 10
+}
+
+[resource]
+script = ExtResource("5_77kc2")
+id = &"god_nature_reap_up"
+display_name = "收割（升级）"
+display_names = {
+"en": "Reaping+"
+}
+effects = Array[ExtResource("1_rb53p")]([SubResource("Resource_tuxav")])

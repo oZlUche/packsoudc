@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_grow",
+  "display_name": "生长",
+  "display_names": {
+    "en": "Growth"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 10
+      }
+    }
+  ]
+}

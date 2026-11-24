@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_food",
+  "display_name": "食补",
+  "display_names": {
+    "en": "Hearty Meals"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "hp": 3.5
+      }
+    }
+  ]
+}
