@@ -293,7 +293,7 @@ static func gifts_due(meta: MetaState, f: FactionDef) -> int:
 	var every := gift_every(f)
 	if meta == null or f == null or every <= 0:
 		return 0
-	return maxi(0, meta.commissions.rep_of(f.id) / every - int(meta.commissions.gifts_claimed.get(String(f.id), 0)))
+	return maxi(0, floori(float(meta.commissions.rep_of(f.id)) / float(every)) - int(meta.commissions.gifts_claimed.get(String(f.id), 0)))
 
 
 ## 委托簿里列出的各方加起来还有几份没领（委托簿入口的红点）
@@ -329,7 +329,7 @@ static func claim_gift(meta: MetaState, f: FactionDef, items: ItemDatabase = nul
 		return out
 	meta.commissions.gifts_claimed[String(f.id)] = int(meta.commissions.gifts_claimed.get(String(f.id), 0)) + 1
 	out["ok"] = true
-	var defs: Array = []
+	var gave: Array = []
 	var pool := gift_contents(f)
 	var picked: Array[Dictionary] = []
 	if not pool.is_empty():
@@ -345,10 +345,10 @@ static func claim_gift(meta: MetaState, f: FactionDef, items: ItemDatabase = nul
 		var id := StringName(String(g.get("item", "")))
 		if id != &"" and items != null and items.get_def(id) != null:
 			for _i in maxi(1, int(g.get("count", 1))):
-				defs.append(items.get_def(id))
+				gave.append(items.get_def(id))
 			out["item"] = String(id)
-	if not defs.is_empty():
-		out["items"] = int(meta.grant_lossless(defs)["stored"])
+	if not gave.is_empty():
+		out["items"] = int(meta.grant_lossless(gave)["stored"])
 	meta.changed.emit()
 	return out
 

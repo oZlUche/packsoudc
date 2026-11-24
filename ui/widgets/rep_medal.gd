@@ -61,8 +61,8 @@ func _draw() -> void:
 		var font := get_theme_default_font()
 		if font != null:
 			var fs := int(r * 1.1)
-			var w := font.get_string_size("?", HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
-			draw_string(font, c + Vector2(-w.x * 0.5, fs * 0.35), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, HID_RING)
+			var qs := font.get_string_size("?", HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+			draw_string(font, c + Vector2(-qs.x * 0.5, fs * 0.35), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, HID_RING)
 		return
 	draw_circle(c, r, LIT_BG if lit else DIM_BG)
 	draw_arc(c, r - 1.0, 0.0, TAU, 40, LIT_RING if lit else DIM_RING, 2.0)
