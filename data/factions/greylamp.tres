@@ -51,6 +51,10 @@ nodes = Array[Dictionary]([{
 "rep": 100,
 "value": [10, 8]
 }])
+gift_every = 25
+gift_pool = Array[Dictionary]([{
+"funds": 30
+}])
 facilities = {
 "market": "greylamp_check_scale"
 }

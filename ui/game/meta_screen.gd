@@ -305,6 +305,7 @@ func open(payload: Dictionary) -> void:
 		_commissions.changed.connect(_refresh)
 		_commissions.facility_requested.connect(func(fac: StringName): show_tab(String(fac)))
 		_commissions.reported.connect(_on_reported)
+		_commissions.gift_requested.connect(func(fid: StringName): show_gift(fid))     # 389 第七节
 		cm_page.add_child(_commissions)
 		_pages["commissions"] = cm_page
 	# 图鉴页、成就页（091）
@@ -566,15 +567,25 @@ func node_news_due() -> Dictionary:
 	return flow.meta.commissions.node_news[0]
 
 
-## 389：一个声望节点到了：和阵营到来同一种「牌子亮起」（占位，等 UI设计 出样），中间「声望到了 N」，下面一句这个节点给什么
+## 389 定稿：一个声望节点到了 —— 和阵营到来同一张石刻：阵营牌，下面节点圆章（64，黄铜外发光）加「声望 N」，深石板一句效果，【知道了】
 func show_node_news() -> Control:
 	var row := node_news_due()
 	if _arrival != null or row.is_empty():
 		return _arrival
 	var f := Commissions.faction(StringName(String(row.get("faction", ""))))
 	var n := Commissions.node_of(f, StringName(String(row.get("node", ""))))
-	var text := "%s\n%s" % [UiText.t("node.news_title") % int(n.get("rep", 0)), Commissions.node_text(n, flow.faith_defs, flow.meta.commissions, f)]
-	return show_arrival(f.id if f != null else &"", text, close_node_news)
+	var mid := _hbox(12)
+	mid.alignment = BoxContainer.ALIGNMENT_CENTER
+	var medal := RepMedal.make(n, true, flow.faith_defs)
+	medal.custom_minimum_size = Vector2(64, 64)
+	medal.glow = true
+	medal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mid.add_child(medal)
+	var lab := UiTheme.make_label(UiText.t("commission.rep") % int(n.get("rep", 0)), 28, UiTheme.STONE_GOLD)
+	UiTheme.fixed_color(lab, UiTheme.STONE_GOLD)
+	mid.add_child(lab)
+	return _stone_notice(f.id if f != null else &"", mid, Commissions.node_text(n, flow.faith_defs, flow.meta.commissions, f),
+		[[UiText.t("arrive.ok"), close_node_news, true]])
 
 
 ## 389：关掉这一条节点通知，有下一条接着放
@@ -589,10 +600,62 @@ func close_node_news() -> void:
 		show_node_news()
 
 
-## 一方阵营到了营地：它的牌子（徽 + 名字）亮起，下面一句说明，【知道了】（389：[param text] / [param on_close] 给声望节点通知用）
-func show_arrival(faction_id: StringName, text: String = "", on_close: Callable = Callable()) -> Control:
+## 389 第七节（作者 11-24 16:47）：点某一方的【赠礼】—— 同一张石刻：阵营牌，深石板列这一份里有什么（还可领几份），【领取】【关闭】。
+## 领完一份还有就留着窗、刷新份数；领完了关掉
+func show_gift(faction_id: StringName) -> Control:
 	if _arrival != null:
 		return _arrival
+	var f := Commissions.faction(faction_id)
+	if f == null:
+		return null
+	var lines: PackedStringArray = [UiText.t("gift.head")]
+	for g in Commissions.gift_contents(f):
+		if int(g.get("funds", 0)) > 0:
+			lines.append(UiText.t("gift.funds") % int(g["funds"]))
+		var id := StringName(String(g.get("item", "")))
+		if id != &"":
+			var d := flow.items.get_def(id) if flow.items != null else null
+			lines.append(UiText.t("gift.item") % [Names.of(d) if d != null else String(id), maxi(1, int(g.get("count", 1)))])
+	if lines.size() == 1:
+		lines.append(UiText.t("gift.empty"))
+	lines.append(UiText.t("gift.left") % Commissions.gifts_due(flow.meta, f))
+	var keys: Array = [[UiText.t("gift.claim"), func(): claim_gift(faction_id), true], [UiText.t("gift.close"), close_gift, false]]
+	_stone_notice(faction_id, null, "\n".join(lines), keys)
+	_arrival.name = "GiftNotice"
+	var claim := _arrival.find_child("Key_0", true, false) as Button
+	if claim != null:
+		claim.disabled = Commissions.gifts_due(flow.meta, f) <= 0
+	return _arrival
+
+
+## 点【领取】：领一份（存档、刷新红点）。返回 [method Commissions.claim_gift] 的结果
+func claim_gift(faction_id: StringName) -> Dictionary:
+	var f := Commissions.faction(faction_id)
+	var got := Commissions.claim_gift(flow.meta, f, flow.items)
+	if bool(got["ok"]):
+		flow.save_meta()
+	close_gift()
+	_refresh()
+	if f != null and Commissions.gifts_due(flow.meta, f) > 0:
+		show_gift(faction_id)
+	return got
+
+
+func close_gift() -> void:
+	if _arrival != null:
+		_arrival.queue_free()
+		_arrival = null
+
+
+## 389 定稿：「委托」导航键右上的红点 —— 各方可领赠礼的合计（[RedDot]）
+func _sync_gift_dot() -> void:
+	if _tab_btns.has("commissions"):
+		RedDot.attach(_tab_btns["commissions"] as Button, Commissions.gifts_due_total(flow.meta))
+
+
+## 营地的石刻通知（389 定稿：阵营到来、节点到了、赠礼共用）：暗幕 → 浅石格里纹章 72 + 阵营名 30 → [param mid]（可空）
+## → 深石板一段字（宽 520）→ 一排键 [[字, 回调, 主键?], ...]（键名 `Key_<序号>`）
+func _stone_notice(faction_id: StringName, mid: Control, text: String, keys: Array) -> Control:
 	var f := Commissions.faction(faction_id)
 	_arrival = _shade(0.72, true)
 	_arrival.name = "Arrival"
@@ -600,26 +663,44 @@ func show_arrival(faction_id: StringName, text: String = "", on_close: Callable 
 	var col := _vbox(16)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	_arrival.get_child(0).add_child(col)
-	var plate := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 24, 12, 24, 12)
+	var plate := PanelContainer.new()
 	plate.name = "Plate"
+	UiTheme.stone(plate, UiTheme.ART_HUD_WELL, 16)
 	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(plate)
 	var head := UiTheme.hbox(12)
 	head.alignment = BoxContainer.ALIGNMENT_CENTER
 	plate.add_child(head)
 	head.add_child(load("res://ui/game/commission_panel.gd").emblem(faction_id, 72))
-	var title := UiTheme.make_label(Names.of(f) if f != null else String(faction_id), 28, UiTheme.INK)
+	var title := UiTheme.make_label(Names.of(f) if f != null else String(faction_id), 30, UiTheme.STONE_INK)
 	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	UiTheme.fixed_color(title, UiTheme.STONE_INK)
 	head.add_child(title)
 	UiMotion.fade(plate, UiMotion.enabled(flow.settings), 0.0, 1.0, 0.4)     # 牌子亮起
-	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 24, 16, 24, 16)
-	col.add_child(paper)
-	paper.add_child(UiTheme.rich_block(520, 16, text if text != "" else UiText.t("arrive." + String(faction_id))))
-	var keys := _hbox(24)
-	keys.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_child(keys)
-	keys.add_child(ScrollKey.primary(UiText.t("arrive.ok"), on_close if on_close.is_valid() else func(): close_arrival(faction_id)))
+	if mid != null:
+		col.add_child(mid)
+	var slate := PanelContainer.new()
+	slate.name = "Slate"
+	UiTheme.stone(slate, UiTheme.ART_STONE_SLATE, 20)
+	slate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(slate)
+	slate.add_child(UiTheme.rich_block(520, 16, text))
+	var row := _hbox(24)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(row)
+	for i in keys.size():
+		var k: Array = keys[i]
+		var b := UiTheme.make_stone_button(String(k[0]), k[1] as Callable, bool(k[2]), Vector2(150, 50), 20)
+		b.name = "Key_%d" % i
+		row.add_child(b)
 	return _arrival
+
+
+## 一方阵营到了营地：它的牌子（徽 + 名字）亮起，下面一句说明，【知道了】（389 定稿：换成石刻，[method _stone_notice]）
+func show_arrival(faction_id: StringName) -> Control:
+	if _arrival != null:
+		return _arrival
+	return _stone_notice(faction_id, null, UiText.t("arrive." + String(faction_id)), [[UiText.t("arrive.ok"), func(): close_arrival(faction_id), true]])
 
 
 ## 关掉通知；这份存档这一方以后不再通知
@@ -1846,6 +1927,7 @@ func _refresh() -> void:
 		(_tab_btns["warehouse"] as Button).tooltip_text = pending_text()     # 226 批二：那句提示挪进页签的悬浮窗
 	_sync_sub_pages()     # 测试 v7.55
 	_sync_ripe_mark()     # 342 B3（苗圃页也一起刷：熟了【收获】跟着亮）
+	_sync_gift_dot()     # 389 第七节
 	if _alchemy != null:
 		_alchemy.refresh()     # 354
 	if _canteen != null:

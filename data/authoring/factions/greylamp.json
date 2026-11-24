@@ -66,6 +66,12 @@
       ]
     }
   ],
+  "gift_every": 25,
+  "gift_pool": [
+    {
+      "funds": 30
+    }
+  ],
   "facilities": {
     "market": "greylamp_check_scale"
   },

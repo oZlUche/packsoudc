@@ -116,6 +116,49 @@ static func run_node_news(t: TestCase) -> void:
 	t.check(not m.commissions.node_news.any(func(r: Dictionary) -> bool: return String(r["node"]) == "god_skill"), "跨过 40 的技巧之神占位：不通知")
 
 
+static func run_gifts(t: TestCase) -> void:
+	t.begin("389 第七节：【赠礼】—— 声望每攒 gift_every（各方 25，可改）多一份、一直累积；点【领取】一次领一份、随机给一样；领过的进存档；老档从 0 算起补发")
+	var m := _meta()
+	var f := Commissions.faction(&"legion")
+	t.eq(Commissions.gift_every(f), 25, "后勤部队每 25 一份")
+	t.check(Commissions.factions().all(func(x: FactionDef) -> bool: return x.gift_every == 25), "各方都写 25")
+	t.eq(Commissions.gifts_due(m, f), 0, "0 声望：没有")
+	m.commissions.rep["legion"] = 60
+	t.eq(Commissions.gifts_due(m, f), 2, "60：两份")
+	t.eq(Commissions.rep_to_next_gift(m, f), 15, "下一份还差 15")
+	var funds := m.funds
+	var got := Commissions.claim_gift(m, f)
+	t.check(bool(got["ok"]) and Commissions.gifts_due(m, f) == 1, "领一份，剩一份")
+	t.eq(m.funds - funds, int(got["funds"]), "给的钱进了账")
+	Commissions.claim_gift(m, f)
+	t.check(not bool(Commissions.claim_gift(m, f)["ok"]) and Commissions.gifts_due(m, f) == 0, "领完了再点不给")
+	m.commissions.rep["legion"] = 75
+	t.eq(Commissions.gifts_due(m, f), 1, "再攒到 75：又一份（领过的照算）")
+	var back := CommissionBook.from_dict(m.commissions.to_dict())
+	t.eq(int(back.gifts_claimed.get("legion", 0)), 2, "领过几份进存档")
+	var d := m.commissions.to_dict()
+	d.erase("gifts_claimed")
+	var m2 := _meta()
+	m2.commissions = CommissionBook.from_dict(d)
+	t.eq(Commissions.gifts_due(m2, f), 3, "老档没有这一键：75 声望从 0 补发三份")
+	var pf := FactionDef.new()
+	pf.id = &"t_pool"
+	pf.gift_every = 10
+	pf.gift_pool.assign([{"funds": 7}, {"funds": 9}])
+	var m3 := _meta()
+	m3.commissions.rep["t_pool"] = 40
+	var seen := {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	for _i in 4:
+		seen[int(Commissions.claim_gift(m3, pf, null, rng)["funds"])] = true
+	t.check(seen.keys().all(func(k: int) -> bool: return k == 7 or k == 9), "每份从那一小组里随机给一样（%s）" % str(seen.keys()))
+	var nogift := FactionDef.new()
+	nogift.id = &"t_none"
+	m3.commissions.rep["t_none"] = 100
+	t.eq(Commissions.gifts_due(m3, nogift), 0, "gift_every = 0：这一方没有赠礼")
+
+
 static func run_take_rules(t: TestCase) -> void:
 	t.begin("336 W0 / 342 B2：接取 —— 常规（模板）同时三份（342 B2：手头 3）；档位不够、前置没做、互斥组被结、做完的具名单、没选配方都不能接；暂缓不占位，放弃清进度")
 	var book := CommissionBook.new()

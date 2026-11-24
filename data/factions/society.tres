@@ -33,6 +33,10 @@ nodes = Array[Dictionary]([{
 "rep": 100,
 "value": 0.25
 }])
+gift_every = 25
+gift_pool = Array[Dictionary]([{
+"funds": 30
+}])
 facilities = {
 "tech": "society_first_survey"
 }

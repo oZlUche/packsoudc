@@ -19,6 +19,12 @@
       "effect": "finale"
     }
   ],
+  "gift_every": 25,
+  "gift_pool": [
+    {
+      "funds": 30
+    }
+  ],
   "facilities": {
     "smithy": "legion_forge_token"
   },

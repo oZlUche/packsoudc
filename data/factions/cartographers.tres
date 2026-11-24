@@ -22,6 +22,10 @@ nodes = Array[Dictionary]([{
 "kind": "open",
 "rep": 25
 }])
+gift_every = 25
+gift_pool = Array[Dictionary]([{
+"funds": 30
+}])
 facilities = {
 "bias": "cartographers_redraw"
 }

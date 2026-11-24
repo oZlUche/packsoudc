@@ -993,6 +993,14 @@ static func retone(r: RichTextLabel) -> void:
 
 
 ## 169：[method label] 覆写过语义色的标签按现在的底换版本
+## 391：石刻牌上的字色是定的（深石板金字、浅石牌墨字），不随底重算
+static func fixed_color(l: Label, color: Color) -> Label:
+	if l.has_meta(&"dark_color"):
+		l.remove_meta(&"dark_color")
+	l.add_theme_color_override("font_color", color)
+	return l
+
+
 static func retone_label(l: Label) -> void:
 	if l.has_meta(&"dark_color"):
 		l.add_theme_color_override("font_color", UiPalette.for_tone(l.get_meta(&"dark_color"), tone_at(l)))

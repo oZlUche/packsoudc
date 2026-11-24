@@ -19,5 +19,11 @@
       "kind": "open",
       "effect": "finale"
     }
+  ],
+  "gift_every": 25,
+  "gift_pool": [
+    {
+      "funds": 30
+    }
   ]
 }
