@@ -20,7 +20,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "max_armor": 40
+      "max_armor": 140
     },
     "rules": [
       {

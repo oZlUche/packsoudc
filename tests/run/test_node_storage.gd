@@ -8,6 +8,7 @@ const SAVE := "user://test_storage_run.json"
 const META := "user://test_storage_meta.json"
 const SETTINGS := "user://test_storage_settings.json"
 const Support := preload("res://tests/run/flow_support.gd")
+const GF := preload("res://tests/run/test_game_flow.gd")
 
 
 static func _content() -> TestSupport.Content:
@@ -198,7 +199,7 @@ static func frame_map_prompt(t: TestCase, root: Window) -> void:
 
 	var c := _content()
 	var kit := _kit(c)
-	var found := _seed_with(c, &"battle", kit.items)
+	var found := GF._seed_with_win(c, kit.items)     # 388：后面要接着走，第一场得打赢
 	if found.is_empty():
 		t.check(false, "找不到种子")
 		return

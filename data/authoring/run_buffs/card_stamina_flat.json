@@ -8,7 +8,7 @@
     {
       "type": "stat_bonus",
       "stat": "max_stamina",
-      "amount": 3.0
+      "amount": 6.0
     }
   ]
 }

@@ -9,9 +9,9 @@
     "en": "A slave explorer who is good at surviving. Health {max_hp}, Vitality {vitality_max}, the widest board and the heaviest load: he takes the hits and recovers."
   },
   "base_stats": {
-    "max_hp": 85,
-    "max_stamina": 65,
-    "regen_stamina": 4
+    "max_hp": 300,
+    "max_stamina": 130,
+    "regen_stamina": 8
   },
   "vitality_max": 8,
   "board_size": [

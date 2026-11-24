@@ -5,8 +5,8 @@ extends RefCounted
 const B211 := preload("res://tests/enemies/test_builds_211.gd")
 const C148 := preload("res://tests/run/test_crystal_148.gd")
 
-const MAGES := [[&"apprentice_mage", "魔法学徒", "Apprentice Mage", 2, 32], [&"adept_mage", "熟练的魔法师", "Adept Mage", 3, 44],
-	[&"magus", "魔导师", "Magus", 3, 56], [&"grand_magus", "大魔导师", "Grand Magus", 3, 72]]
+const MAGES := [[&"apprentice_mage", "魔法学徒", "Apprentice Mage", 2, 110], [&"adept_mage", "熟练的魔法师", "Adept Mage", 3, 155],
+	[&"magus", "魔导师", "Magus", 3, 195], [&"grand_magus", "大魔导师", "Grand Magus", 3, 250]]
 
 
 static func _tier_of(id: StringName) -> String:

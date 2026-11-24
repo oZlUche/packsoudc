@@ -306,15 +306,15 @@ static func run_155(t: TestCase) -> void:
 	t.eq(e_free.sustain, 1.0, "不耗耐力：不打折")
 	var hungry := _weapon(10.0, 1.0, 4)
 	var cost := ResourceCost.new()
-	cost.amount = 16.0
+	cost.amount = 24.0
 	hungry.combat.rules[0].costs.append(cost)
 	var e_hungry := PowerEstimate.estimate(hungry, w)
-	var expect := (w.stamina_max + w.stamina_regen * w.fight_sec) / (16.0 * w.fight_sec)
-	t.check(absf(e_hungry.sustain - expect) < 0.001, "155 补：一秒耗 16，一场能花「上限 50 + 回 4 × 12 秒」= 98，要 192：撑得住 %.2f（%.2f）" % [expect, e_hungry.sustain])
+	var expect := (w.stamina_max + w.stamina_regen * w.fight_sec) / (24.0 * w.fight_sec)
+	t.check(absf(e_hungry.sustain - expect) < 0.001, "155 补（388 耐力 ×2）：一秒耗 24，一场能花「上限 100 + 回 8 × 12 秒」= 196，要 288：撑得住 %.2f（%.2f）" % [expect, e_hungry.sustain])
 	t.check(absf(e_hungry.base - e_free.base * expect) < 0.001, "直伤 B 跟着打折")
 	cost.amount = 8.0
-	t.eq(PowerEstimate.estimate(hungry, w).sustain, 1.0, "一秒耗 8：一场 96 < 98，撑得住，不打折（只看回复会打对折）")
-	t.eq(w.stamina_max, 50.0, "基础耐力上限 50（和 CombatantBaseline 一样）")
+	t.eq(PowerEstimate.estimate(hungry, w).sustain, 1.0, "一秒耗 8：一场 96 < 196，撑得住，不打折（只看回复会打对折）")
+	t.eq(w.stamina_max, 100.0, "基础耐力上限 100（和 CombatantBaseline 一样）")
 	t.eq(w.stamina_max, float(CombatantBaseline.DEFAULT_STATS["max_stamina"]), "和基线对得上")
 	# b：把手
 	t.eq(PowerEstimate.estimate(_weapon(2.0, 1.0, 1), w).default_power, 4.0, "一格武器的预算 = 2 ×（1 + 1）")

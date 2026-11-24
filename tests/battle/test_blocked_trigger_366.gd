@@ -31,8 +31,8 @@ static func run_blocked_only(t: TestCase) -> void:
 static func run_batch_one_items(t: TestCase) -> void:
 	t.begin("366 · 第一批护甲 4 件、盾 4 件入库，说明留空")
 	var ids := {
-		"chain_mail": [2, "max_armor", 40], "studded_leather": [2, "max_armor", 25],
-		"knight_plate": [3, "max_armor", 75], "dragonscale_armor": [3, "max_armor", 55],
+		"chain_mail": [2, "max_armor", 140], "studded_leather": [2, "max_armor", 90],
+		"knight_plate": [3, "max_armor", 265], "dragonscale_armor": [3, "max_armor", 195],
 		"steel_round_shield": [2, "block", 7], "kite_shield": [2, "block", 9],
 		"legion_tower_shield": [3, "block", 12], "riposte_buckler": [3, "block", 4],
 	}

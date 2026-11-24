@@ -9,9 +9,9 @@
     "fire"
   ],
   "base_stats": {
-    "max_hp": 34,
+    "max_hp": 120,
     "block": 3,
-    "regen_stamina": 6
+    "regen_stamina": 12
   },
   "signature": [
     "steam_vent",

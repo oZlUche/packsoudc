@@ -6,7 +6,7 @@ const BEFORE := {
 	&"shortsword": [2, 5], &"cleaver": [2, 5], &"bloodletter": [2, 6], &"scimitar": [3, 7], &"festering_blade": [3, 9],
 	&"longsword": [3, 12], &"mithril_sword": [3, 16], &"tibia_violence": [4, 15], &"warhammer": [3, 30],
 	&"shortbow": [3, 6], &"longbow": [4, 8], &"blessed_longbow": [4, 10],
-	&"leather_armor": [4, 20], &"plate_cuirass": [9, 45], &"blessed_shield": [4, 6],
+	&"leather_armor": [4, 70], &"plate_cuirass": [9, 157.5], &"blessed_shield": [4, 6],     # 388：护甲上限 ×3.5（每格强度照旧比）
 }
 ## 作者（2026-10-12）把这两件改成了笔直的长条（1×3、1×4）：仍守「每格强度不变」，但不再要求是异形
 ## v7.55：皮甲收成 3×2 整块（护甲都要能放进一个 3×3 包），也不再要求异形
