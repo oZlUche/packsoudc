@@ -157,7 +157,7 @@ static func run_cards(t: TestCase) -> void:
 	# 夜幕：黑夜受到的伤害少
 	var plain := _taken(BattleSim.run(_me({"day_sec": 0.0}), _hitter(20.0), _rng(4), 6.0))
 	var veil := _taken(BattleSim.run(_me({"day_sec": 0.0, "veil": 50.0}), _hitter(20.0), _rng(4), 6.0))
-	t.check(plain > 0 and veil * 2 <= plain + 10, "夜幕 50%：一直黑夜时受到的少一半（%d / %d）" % [veil, plain])
+	t.check(plain > 0 and veil * 2 <= plain + 10, "夜幕 50%%：一直黑夜时受到的少一半（%d / %d）" % [veil, plain])
 	var humble := _taken(BattleSim.run(_me({"day_sec": 0.0, "humble": 20.0}), _hitter(20.0), _rng(4), 6.0))
 	t.check(humble < plain, "谦卑：受到的也少（%d / %d）" % [humble, plain])
 	# 黄昏：进黑夜回耐力；日落当息：黑夜回血、武器停表
