@@ -1,0 +1,11 @@
+         [0] fold (res://ui/tip_anchor.gd:75)
+         [1] _place (res://ui/tip_anchor.gd:99)
+======================================================
+通过  46283 项断言，359 个套件，耗时 1047580 ms
+======================================================
+WARNING: 90 RIDs of type "CanvasItem" were leaked.
+   at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2735)
+WARNING: 1870223 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4930 resources still in use at exit (run with --verbose for details).
+EXIT=0
