@@ -26,9 +26,9 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	t.check(page.is_ancestor_of(screen._stele) and page.is_ancestor_of(board), "碑与木牌都在出征页")
 	t.check(page is HBoxContainer and screen._stele.get_parent().get_index() < board.get_parent().get_index(), "碑在左、木牌在右（一行）")
 	t.eq(board.start_btn.text, "开始探索", "【开始探索】")
-	t.eq(board.start_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "主档木牌")
-	t.check(board.start_btn.custom_minimum_size == ExpeditionBoard.START, "360 × 96")
-	t.check(board.last_plate.custom_minimum_size == Vector2(560, 200), "上回出征木牌 560 × 200")
+	t.eq(board.start_btn.theme_type_variation, UiTheme.BUTTON_STONE_PRIMARY, "主档（石刻深石板）")
+	t.check(board.start_btn.custom_minimum_size == ExpeditionBoard.START, "和框一样宽 560 × 96")
+	t.check(board.last_plate.custom_minimum_size == Vector2(560, ExpeditionBoard.LAST_H), "上回出征框 560 宽")
 	t.check(board.find_children("*", "HeaderTag", true, false).all(func(h): return (h as HeaderTag).text != "军需"), "383：军需牌删了")
 	var left: Control = (screen._tab_btns["expedition"] as Button).get_parent()
 	var keys: Array = left.find_children("*", "Button", true, false).filter(func(b): return (b as Button).is_visible_in_tree()).map(func(b): return (b as Button).text)
@@ -43,11 +43,16 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	t.eq(Bare.audit(page, "expedition"), [] as Array[String], "出征页没有裸字")
 	screen.toggle_tab("expedition")
 	t.eq(screen.tab(), "expedition", "再点选中的不动")
-	# 木牌定稿（plaque264）：大木牌 + 挂牌标题、浅羊皮小签；都是浅底
-	t.check(board.last_plate.theme_type_variation == UiTheme.PANEL_HOME_PLAQUE, "大木牌")
-	var hangs: Array = board.find_children("*", "HeaderTag", true, false).filter(func(h): return (h as HeaderTag).hang)
-	t.eq(hangs.size(), 1, "标题是一枚挂牌（283 删了 267 的「倾向」，383 删了「军需」）")
-	t.eq(UiTheme.tone_of(UiTheme.PANEL_HOME_PLAQUE), UiTheme.TONE_LIGHT, "木牌浅底")
+	var on_icon := UiTheme.art_cached("home/tabs/tab_expedition_on")
+	t.check(on_icon != null and (screen._tab_btns["expedition"] as Button).icon == on_icon, "作者 11-23 选 B：选中的页签（深石板）换金色图标")
+	t.eq((screen._tab_btns["warehouse"] as Button).icon, UiTheme.art_cached("home/tabs/tab_warehouse"), "没选中的照旧墨色图标")
+	# 作者 11-23 选 B（UI设计 基地例图 1）：浅石框 + 一枚浅石小签「上回出征」+ 深石板卡
+	var frame_box := board.last_plate.get_theme_stylebox("panel") as StyleBoxTexture
+	t.check(frame_box != null and frame_box.texture == UiTheme.art_cached(UiTheme.ART_STONE_FRAME), "浅石框")
+	var tags: Array = board.find_children("StoneTag", "PanelContainer", true, false)
+	t.check(tags.size() == 1 and ((tags[0] as Node).get_node("Text") as Label).text == "上回出征", "标题是一枚浅石小签")
+	var card := board.last_plate.find_child("Card", true, false) as PanelContainer
+	t.check(card != null and (card.get_theme_stylebox("panel") as StyleBoxTexture).texture == UiTheme.art_cached(UiTheme.ART_STONE_SLATE), "里面一块深石板卡")
 	# 264 §三：集市 / 铁匠铺换整屏背景，别的页回基地底图；这两页不垫粗布
 	var exp_bg := "home/scene_expedition" if UiTheme.art("home/scene_expedition") != null else UiTheme.ART_HOME_BG
 	t.eq(screen.backdrop_name(), exp_bg, "271：出征页铺自己的场景图（图在时；缺图回基地底图）：%s" % exp_bg)
@@ -158,7 +163,7 @@ static func frame_warehouse_tools(t: TestCase, root: Window) -> void:
 	t.check(screen._wh._rack_col.is_ancestor_of(tools) and not screen._wh._rack_col.is_ancestor_of(screen._wh.rack_box()), "268 补充二：筛选牌那一列在中列，包架挪去右边仓库旁")
 	t.eq(tools.filter_plate.custom_minimum_size, Vector2(228, 150), "筛选牌 228 × 150")
 	t.check(not tools.find_children("*", "HeaderTag", true, false).any(func(h): return h.text == "账目" or h.text == "Ledger"), "作者 10-31：没有账目栏")
-	t.eq(tools.filter_plate.theme_type_variation, UiTheme.PANEL_HOME_PLAQUE_SMALL, "小木牌")
+	t.eq((tools.filter_plate.get_theme_stylebox("panel") as StyleBoxTexture).texture, UiTheme.art_cached(UiTheme.ART_STONE_FRAME), "作者 11-23 选 B：浅石框")
 	var shelf: WarehousePages = screen.shelf()
 	t.check(not shelf.filtering() and tools.clear_btn.disabled, "起手不筛，「清除」灰")
 	var ore_tag: StringName = &""

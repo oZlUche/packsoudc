@@ -3,18 +3,23 @@
 ## 右边一张纸条：这一锅每条属性固定值、百分比分开列，按当前角色算好的终值，下面饱腹度；
 ## 第二批：纸条下面是收藏夹 —— 【收藏】锅里这一锅，一排菜单牌点一下照它重做（缺料的位置在锅上标出来），可改名、删除。两块盘都画外框和格线。
 ## 383（作者 2026-11-23）：收藏改叫【配方】；应用配方时食材不够也照摆够的那部分，弹窗「食材不足，配方效果无法完整复现」。
-## 纸条上多一颗【开饭】（确认这一锅，留到下一次出征），开过饭锅拖不动、配方换不了，出发吃掉才解开
+## 纸条上多一颗【开饭】（确认这一锅，留到下一次出征），开过饭锅拖不动、配方换不了，出发吃掉才解开。
+## 作者 2026-11-23 18:02 选 B 换石刻（UI设计 基地例图 2）：两块盘头上浅石小签、盘框深色；右边两块深石板 ——
+## 「这一锅」（每条属性左名右数、饱腹，【记为配方】浅键 +【开饭】深键）与「配方」（每份一条浅石，名、缺几样朱红小牌、改名 / 删除、【应用】）
 extends HBoxContainer
 
 signal changed()
 
 const CELL := 44.0
-const INK := Color("2e2219")
 ## 缺料那几格：浅红底 + 朱红细框（占位，等 UI设计）
 const GAP_FILL := Color(0.80, 0.25, 0.18, 0.18)
 const GAP_LINE := Color("c0392b")
 ## 收藏夹最多这么高，再多就在框里滚（收满 8 份也不出屏幕）
 const MENUS_MAX_H := 330.0
+## 右边那一列（两块深石板）的宽、【记为配方】【开饭】两颗键
+const SIDE_W := 440.0
+const KEY_SIZE := Vector2(150, 48)
+const ROW_H := 48.0
 
 var flow: GameFlow = null
 var drag: DragLayer = null
@@ -34,6 +39,7 @@ var _save_btn: Button = null
 var _eat_btn: Button = null
 var _menu_box: VBoxContainer = null
 var _menu_scroll: ScrollContainer = null
+var _menus_card: PanelContainer = null
 var _gap_layer: Control = null
 ## 正在改名的那一份（-1 = 没在改）
 var _renaming := -1
@@ -52,40 +58,50 @@ func setup(p_flow: GameFlow, p_drag: DragLayer, p_font: Font) -> void:
 	add_child(_store_box)
 	_pot_box = UiTheme.vbox(8)
 	add_child(_pot_box)
-	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 20, 16, 20, 16)
-	paper.name = "MealNote"
-	UiTheme.set_tone(paper, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
-	paper.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	paper.custom_minimum_size.x = 240
-	add_child(paper)
-	var col := UiTheme.vbox(10)
-	paper.add_child(col)
-	_lines = UiTheme.vbox(6)
+	var side := UiTheme.vbox(18)
+	side.name = "Side"
+	side.custom_minimum_size.x = SIDE_W
+	add_child(side)
+	var note := StoneKit.slate(20)
+	note.name = "MealNote"
+	note.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	side.add_child(note)
+	var col := UiTheme.vbox(8)
+	note.add_child(col)
+	col.add_child(StoneKit.head(UiText.t("canteen.prep_title")))
+	_lines = UiTheme.vbox(4)
 	col.add_child(_lines)
-	_satiety = UiTheme.make_label("", 18, INK)
+	_satiety = UiTheme.make_label("", 17, StoneKit.TEXT)
 	_satiety.name = "Satiety"
 	_satiety.tooltip_text = UiText.t("canteen.satiety_tip")
 	_satiety.mouse_filter = Control.MOUSE_FILTER_PASS
 	col.add_child(_satiety)
-	_finals_head = UiTheme.make_label("", 15, INK)
+	_finals_head = UiTheme.make_label("", 15, StoneKit.BRASS)
 	col.add_child(_finals_head)
 	_finals = UiTheme.vbox(4)
 	col.add_child(_finals)
-	col.add_child(HSeparator.new())
-	_pot_name = UiTheme.make_label("", 17, INK)
+	_pot_name = UiTheme.make_label("", 16, StoneKit.DIM)
 	_pot_name.name = "PotName"
 	col.add_child(_pot_name)
-	_save_btn = UiTheme.make_button(UiText.t("canteen.menu_save"), func(): save_menu(), UiPalette.Tier.MINOR, 12)
+	var keys := UiTheme.hbox(12)
+	col.add_child(keys)
+	_save_btn = UiTheme.make_stone_button(UiText.t("canteen.menu_save"), func(): save_menu(), false, KEY_SIZE, 18)
 	_save_btn.name = "SaveMenu"
-	col.add_child(_save_btn)
-	_eat_btn = UiTheme.make_button(UiText.t("canteen.eat"), func(): eat(), UiPalette.Tier.MINOR, 12)
+	keys.add_child(_save_btn)
+	_eat_btn = UiTheme.make_stone_button(UiText.t("canteen.eat"), func(): eat(), true, KEY_SIZE, 20)
 	_eat_btn.name = "Eat"
-	col.add_child(_eat_btn)
+	keys.add_child(_eat_btn)
+	_menus_card = StoneKit.slate(20)
+	_menus_card.name = "Recipes"
+	side.add_child(_menus_card)
+	var mcol := UiTheme.vbox(10)
+	_menus_card.add_child(mcol)
+	mcol.add_child(StoneKit.head(UiText.t("canteen.recipes")))
 	_menu_scroll = UiTheme.vscroll()
 	_menu_scroll.name = "MenuScroll"
 	_menu_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	col.add_child(_menu_scroll)
-	_menu_box = UiTheme.vbox(4)
+	mcol.add_child(_menu_scroll)
+	_menu_box = UiTheme.vbox(8)
 	_menu_box.name = "Menus"
 	_menu_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_menu_scroll.add_child(_menu_box)
@@ -127,13 +143,13 @@ func _rebuild(c: Canteen) -> void:
 
 
 func _board(box: VBoxContainer, grid: GridInventory, head: String, view_name: String) -> InventoryView:
-	box.add_child(HeaderTag.new(UiText.t(head)))
+	box.add_child(StoneKit.tag(UiText.t(head)))
 	var v := InventoryView.make(grid, font)
 	v.name = view_name
 	v.cell_px = CELL
 	v.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	box.add_child(v)
-	BoardFrame.wrap(v)     # 所有棋盘都画外框和格线
+	BoardFrame.wrap(v, "", true)     # 所有棋盘都画外框和格线（石刻：深框）
 	if drag != null:
 		drag.register_view(v)
 	return v
@@ -165,7 +181,7 @@ func _fill_note() -> void:
 	for stat in Canteen.STATS:
 		var text := Canteen.line_of(meal, stat)
 		if text != "":
-			_lines.add_child(UiTheme.make_label(text, 17, INK))
+			_lines.add_child(_stat_row(text))
 	_satiety.text = UiText.t("canteen.satiety") % int(meal.get("satiety", 0))
 	var ch := flow.canteen_viewer()
 	Canteen.viewer = ch
@@ -176,7 +192,7 @@ func _fill_note() -> void:
 	_finals_head.text = UiText.t("canteen.for") % Names.of(ch) if ch != null and not finals.is_empty() else ""
 	_finals_head.visible = _finals_head.text != ""
 	for t in finals:
-		_finals.add_child(UiTheme.make_label(t, 15, INK))
+		_finals.add_child(UiTheme.make_label(t, 15, StoneKit.TEXT))
 	_fill_menus()
 	if _gap_layer != null:
 		_gap_layer.queue_redraw()
@@ -206,11 +222,22 @@ func _fill_menus() -> void:
 	for i in c.menus.size():
 		_menu_box.add_child(_menu_row(i, String(c.menus[i].get("name", "")), i == c.active))
 	_menu_scroll.custom_minimum_size.y = minf(_menu_box.get_minimum_size().y, MENUS_MAX_H)
+	_menus_card.visible = not c.menus.is_empty()
 
 
+## 「负重上限 +3」拆成左名右数（金色）；拆不开就整句一行
+func _stat_row(text: String) -> Control:
+	var cut := text.rfind(" ")
+	if cut <= 0:
+		return UiTheme.make_label(text, 17, StoneKit.TEXT)
+	return StoneKit.row(text.substr(0, cut), text.substr(cut + 1), StoneKit.GOLD, 17)
+
+
+## 一份配方一条浅石：名字、缺料朱红小牌、改名 / 删除、【应用】（选中的那份字金色）
 func _menu_row(i: int, title: String, lit: bool) -> Control:
-	var row := UiTheme.hbox(4)
+	var row := StoneKit.strip([16, 6, 8, 6])
 	row.name = "Menu%d" % i
+	row.custom_minimum_size.y = ROW_H
 	if _renaming == i:
 		var edit := LineEdit.new()
 		edit.name = "NameEdit"
@@ -222,21 +249,34 @@ func _menu_row(i: int, title: String, lit: bool) -> Control:
 		row.add_child(edit)
 		(func(): if edit.is_inside_tree(): edit.grab_focus()).call_deferred()
 		return row
-	var pick := UiTheme.make_button(title, func(): load_menu(i), UiPalette.Tier.MINOR, 11)
+	var c := flow.meta.canteen
+	var line := UiTheme.hbox(8)
+	row.add_child(line)
+	var name_ := UiTheme.make_label(title, 18, LIT_INK if lit else UiTheme.STONE_INK)
+	name_.name = "Title"
+	name_.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.add_child(name_)
+	var cov := c.coverage(c.menus[i].get("cells", []) as Array)
+	var miss := (cov.get("gaps", []) as Array).size()
+	if miss > 0:
+		line.add_child(MealChip.make(UiText.t("canteen.gaps") % miss, MealChip.SHORT, 13))
+	var ren := UiTheme.make_stone_button(UiText.t("canteen.menu_rename"), func(): start_rename(i), false, SMALL_KEY, 14)
+	ren.name = "Rename"
+	line.add_child(ren)
+	var del := UiTheme.make_stone_button(UiText.t("canteen.menu_delete"), func(): delete_menu(i), false, SMALL_KEY, 14)
+	del.name = "Delete"
+	line.add_child(del)
+	var pick := UiTheme.make_stone_button(UiText.t("canteen.apply"), func(): load_menu(i), true, SMALL_KEY, 15)
 	pick.name = "Load"
 	pick.tooltip_text = UiText.t("canteen.menu_load_tip")
-	pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	pick.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	pick.disabled = flow.meta.canteen.eaten     # 383：吃过了不能换
-	UiTheme.mark(pick, lit)
-	row.add_child(pick)
-	var ren := UiTheme.make_button(UiText.t("canteen.menu_rename"), func(): start_rename(i), UiPalette.Tier.MINOR, 10)
-	ren.name = "Rename"
-	row.add_child(ren)
-	var del := UiTheme.make_button(UiText.t("canteen.menu_delete"), func(): delete_menu(i), UiPalette.Tier.MINOR, 10)
-	del.name = "Delete"
-	row.add_child(del)
+	pick.disabled = c.eaten     # 383：吃过了不能换
+	line.add_child(pick)
 	return row
+
+
+const SMALL_KEY := Vector2(58, 34)
+## 锅里正照着的那份：名字换深琥珀
+const LIT_INK := Color("8a5a1c")
 
 
 ## 【收藏】：成了返回第几份

@@ -49,8 +49,8 @@ static func frame_layout(t: TestCase, root: Window) -> void:
 	t.check(col is VBoxContainer, "页签竖排")
 	for k in keys:
 		t.eq((screen._tab_btns[k] as Button).get_parent(), col, "%s 在左列" % k)
-		t.eq((screen._tab_btns[k] as Button).theme_type_variation, UiTheme.BUTTON_HOME, "%s 是木牌按钮" % k)
-	t.eq(screen._new_run_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "【开始探索】是主档木牌")
+		t.eq((screen._tab_btns[k] as Button).theme_type_variation, UiTheme.BUTTON_STONE, "%s 是石刻键（作者 11-23 选 B）" % k)
+	t.eq(screen._new_run_btn.theme_type_variation, UiTheme.BUTTON_STONE_PRIMARY, "【开始探索】是主档")
 	t.eq(screen._new_run_btn.text, "开始探索", "264：文案「开始探索」")
 	t.check((screen._pages["expedition"] as Control).is_ancestor_of(screen._new_run_btn), "264：在出征页里，不在左列")
 	t.check(not col.is_ancestor_of(screen._new_run_btn), "左列没有它了")

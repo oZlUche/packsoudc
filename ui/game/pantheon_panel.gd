@@ -114,7 +114,7 @@ func _shrine(fid: StringName) -> Control:
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(nm)
 	if mode == PICK:
-		var b := UiTheme.make_home_button(UiText.t("pantheon.choose") if open else UiText.t("pantheon.tier_short") % (Pantheon.god_tier(fid) + 1),
+		var b := UiTheme.make_stone_button(UiText.t("pantheon.choose") if open else UiText.t("pantheon.tier_short") % (Pantheon.god_tier(fid) + 1),
 			func(): choose(fid), true, Vector2(110, 34), 16)
 		b.name = "Choose_" + (String(fid) if fid != &"" else "none")
 		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

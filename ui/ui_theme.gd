@@ -54,6 +54,9 @@ const PANEL_WINDOW := &"PanelWindow"
 ## 164：基地的「家」套件 —— 木牌按钮（左列页签与两颗大按钮；主档是「再来一局」）、粗布文本框（中列读数）、木架（右半边仓库的框）
 const BUTTON_HOME := &"ButtonHome"
 const BUTTON_HOME_PRIMARY := &"ButtonHomePrimary"
+## 作者 2026-11-23 18:02 选 B：基地各页的键换石刻 —— 浅石签墨字（[constant BUTTON_STONE]），按下 / 主档深石板金字（[constant BUTTON_STONE_PRIMARY]）
+const BUTTON_STONE := &"ButtonStone"
+const BUTTON_STONE_PRIMARY := &"ButtonStonePrimary"
 const PANEL_HOME_BOX := &"PanelHomeBox"
 ## 264（UI替换美术 定稿 `plaque264`）：基地的木牌 —— 橡木框 + 羊皮面九宫格（浅底墨字）：大的（上回出征、军需）、小的（筛选牌、账牌）、
 ## 平的浅羊皮小签（军需里的局外加成、上回出征的难度）
@@ -134,7 +137,7 @@ const BUTTON_MENU_FOOT := &"ButtonMenuFoot"
 ## 全部变体（测试看齐全）
 const VARIATIONS := [BUTTON_PRIMARY, BUTTON_SECONDARY, BUTTON_DIM, LABEL_TITLE, LABEL_DIM, LABEL_WARN,
 	PANEL_DARK, PANEL_LINE, RICH_BODY, RICH_SMALL, PANEL_HUD, PANEL_HUD_WELL, LABEL_HUD, LABEL_HUD_LARGE, LABEL_HUD_DOUBLE,
-	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, LABEL_TENT_SIGN, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
+	PANEL_OVERLAY, LABEL_OVERLAY_TITLE, LABEL_TENT_SIGN, PANEL_TOOLTIP, PANEL_NAMEPLATE, BUTTON_HOME, BUTTON_HOME_PRIMARY, BUTTON_STONE, BUTTON_STONE_PRIMARY, PANEL_HOME_BOX, PANEL_SHELF,
 	PANEL_HOME_PLAQUE, PANEL_HOME_PLAQUE_SMALL, PANEL_HOME_CHIP,
 	PANEL_HUD_BAR, BUTTON_ICON, LABEL_DISPLAY, BUTTON_ART, PANEL_WINDOW, PANEL_CAP_TILE, LABEL_CAP_VALUE,
 	LABEL_SKILL_NAME, LABEL_SKILL_TEXT, PANEL_FLIP_COUNTER, LABEL_FLIP_NUM, PANEL_PARCHMENT, BUTTON_STEP, BUTTON_DIFF_PLATE,
@@ -198,6 +201,7 @@ const ART_STONE_TAB_ON := "stone/tab_on"
 const ART_STONE_TIP := "stone/tooltip"
 ## 385：石刻里的黄铜（选中线、肖像外圈、等级星）与墨色叉
 const STONE_BRASS := Color("c9a04e")
+const STONE_GOLD := Color("ffc928")     # 深石板上的金字（主键、选中的页签）
 const STONE_INK := Color("2e2219")
 ## 石板顶边：标题条下沿到板边九宫格上边距之间留给刻线的那一段
 const TITLE_LINE_GAP := 6.0
@@ -209,7 +213,7 @@ const ART_PORTRAIT_EMPTY := "portrait_empty"
 const ART_HOME_BG := "home/bg_home"
 const ART_HOME_BTN := "home/btn_wood"
 const ART_HOME_BTN_PRIMARY := "home/btn_wood_primary"
-const ART_HOME_BOX := "home/panel_cloth"
+const ART_HOME_BOX := "stone/frame"     # 作者 11-23 选 B：基地中列的底换浅石框（原粗布 home/panel_cloth）
 const ART_HOME_PLAQUE := "home/plaque"
 const ART_HOME_PLAQUE_SMALL := "home/plaque_small"
 const ART_HOME_CHIP := "home/plaque_chip"
@@ -561,16 +565,23 @@ static func make_home_button(text: String, handler: Callable, primary: bool = fa
 	return b
 
 
-## 乙 石刻：基地出售页的下拉框 —— 框用家的木牌四态（[constant BUTTON_HOME]），箭头 `kit/drop_arrow`，字左对齐墨色；
+## 基地的石刻键（[constant BUTTON_STONE] / 主档 [constant BUTTON_STONE_PRIMARY]），参数同 [method make_home_button]
+static func make_stone_button(text: String, handler: Callable, primary: bool = false, min_size: Vector2 = Vector2.ZERO, font_size: int = 0) -> Button:
+	var b := make_home_button(text, handler, false, min_size, font_size)
+	b.theme_type_variation = BUTTON_STONE_PRIMARY if primary else BUTTON_STONE
+	return b
+
+
+## 乙 石刻：基地出售页的下拉框 —— 框用基地的石刻键四态（[constant BUTTON_STONE]，作者 11-23 选 B 起），箭头 `kit/drop_arrow`，字左对齐墨色；
 ## 弹出单 `kit/popup`（九宫格 16）、悬停行 `kit/popup_hover`（12 / 10 / 10 / 10）、墨字。缺图照旧
 const WOOD_OPTION_INK := Color("3e2818")
 static func dress_wood_option(ob: OptionButton, font_size: int = 16) -> void:
-	if art_cached(ART_HOME_BTN) == null:
+	if art_cached(ART_STONE_TAB) == null:
 		return
-	ob.theme_type_variation = BUTTON_HOME
+	ob.theme_type_variation = BUTTON_STONE
 	_dress_drop(ob, font_size, WOOD_OPTION_INK)
 	for c in ["font_pressed_color", "font_hover_pressed_color"]:
-		ob.add_theme_color_override(c, HOME_PRESSED_INK)     # 弹出单开着 = 按下（深底）
+		ob.add_theme_color_override(c, STONE_GOLD)     # 弹出单开着 = 按下（深石板）
 	var up := art_cached("kit/drop_arrow")
 	var down := art_cached("kit/drop_arrow_pressed")     # 同形浅色箭头：开着换上，合上换回（合上时一点不变）
 	if up != null and down != null:
@@ -1372,6 +1383,7 @@ static func _fill(t: Theme, bg: Color) -> void:
 	_panel_variation(t, PANEL_PARCHMENT, parchment)
 	_difficulty_buttons(t)
 	_home_buttons(t)
+	_stone_buttons(t)
 	_menu_styles(t)
 	# 150：读数组件（原来地图屏那条 HUD 的无边窄底，搬成变体）
 	_panel_variation(t, PANEL_HUD, _art_box(ART_INSET, false, HUD_MARGIN))     # 157 补充三：读数是刻在板里的凹槽
@@ -1527,6 +1539,42 @@ static func _home_buttons(t: Theme) -> void:
 			t.set_color(state, name, HOME_PRESSED_INK)     # 按下 A（作者 10-30 18:07）：深色木底，字改浅
 		t.set_color("font_disabled_color", name, INK_SOFT)
 		t.set_constant("h_separation", name, 6)     # 基地页签字左边的图标与字隔 6
+
+
+## 作者 2026-11-23 18:02 选 B：基地的键 —— 常态浅石签（stone/tab），按下 / 主档深石板（stone/slate，黄铜边）金字；字号同家的木牌
+static func _stone_buttons(t: Theme) -> void:
+	for pair in [[BUTTON_STONE, HOME_BUTTON_SIZE], [BUTTON_STONE_PRIMARY, HOME_PRIMARY_SIZE]]:
+		var name: StringName = pair[0]
+		var primary: bool = name == BUTTON_STONE_PRIMARY
+		t.set_type_variation(name, "Button")
+		t.set_stylebox("focus", name, StyleBoxEmpty.new())
+		t.set_font_size("font_size", name, pair[1])
+		t.set_constant("h_separation", name, 6)
+		var light := _art_box(ART_STONE_TAB)
+		var dark := _art_box(ART_STONE_SLATE)
+		if light == null or dark == null:
+			continue
+		var lit := light.duplicate() as StyleBoxTexture
+		lit.modulate_color = Color(1.06, 1.06, 1.06)
+		var dark_lit := dark.duplicate() as StyleBoxTexture
+		dark_lit.modulate_color = Color(1.15, 1.15, 1.15)
+		var dim := (dark if primary else light).duplicate() as StyleBoxTexture
+		dim.modulate_color = Color(0.85, 0.85, 0.85, 0.6)
+		var pad := Vector2i(int(round(pair[1] * 0.9)), int(round(pair[1] * 0.4)))
+		var states := {"normal": dark if primary else light, "hover": dark_lit if primary else lit, "pressed": dark,
+			"hover_pressed": dark_lit, "disabled": dim}
+		for state in states:
+			var box: StyleBoxTexture = states[state]
+			box.content_margin_left = pad.x
+			box.content_margin_right = pad.x
+			box.content_margin_top = pad.y
+			box.content_margin_bottom = pad.y
+			t.set_stylebox(state, name, box)
+		for state in ["font_color", "font_hover_color", "font_focus_color"]:
+			t.set_color(state, name, STONE_GOLD if primary else STONE_INK)
+		for state in ["font_pressed_color", "font_hover_pressed_color"]:
+			t.set_color(state, name, STONE_GOLD)
+		t.set_color("font_disabled_color", name, Color(STONE_GOLD, 0.5) if primary else INK_SOFT)
 
 
 ## 197 补充一 / 三：游戏名与主菜单的几行字、小字链接

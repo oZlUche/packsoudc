@@ -32,7 +32,7 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages, say: Callable = Callable()
 	flow = p_flow
 	shelf = p_shelf
 	_say = say
-	UiTheme.panel(self, -1, UiTheme.PANEL_HOME_PLAQUE_SMALL)
+	UiTheme.stone(self, UiTheme.ART_STONE_FRAME, 18)     # 作者 11-23 选 B：小木牌换浅石框
 	custom_minimum_size.x = WIDTH
 	var col := UiTheme.vbox(8)
 	add_child(col)
@@ -48,14 +48,14 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages, say: Callable = Callable()
 	_skipped = UiTheme.make_label("", SMALL_FONT, UiTheme.INK_SOFT)
 	_skipped.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(_skipped)
-	all_btn = UiTheme.make_home_button(UiText.t("sell.select_all"), toggle_all, false, Vector2(0, ALL_H), FONT)
+	all_btn = UiTheme.make_stone_button(UiText.t("sell.select_all"), toggle_all, false, Vector2(0, ALL_H), FONT)
 	col.add_child(all_btn)
 	var row3 := UiTheme.hbox(8)
 	col.add_child(row3)
-	sell_btn = UiTheme.make_home_button(UiText.t("sell.go"), press_sell, true, Vector2(0, SELL_H), FONT + 2)
+	sell_btn = UiTheme.make_stone_button(UiText.t("sell.go"), press_sell, true, Vector2(0, SELL_H), FONT + 2)
 	sell_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row3.add_child(sell_btn)
-	cancel_btn = UiTheme.make_home_button(UiText.t("sell.cancel"), func(): cancelled.emit(), false, Vector2(CANCEL_W, SELL_H), FONT)
+	cancel_btn = UiTheme.make_stone_button(UiText.t("sell.cancel"), func(): cancelled.emit(), false, Vector2(CANCEL_W, SELL_H), FONT)
 	row3.add_child(cancel_btn)
 	shelf.selection_changed.connect(refresh)
 	shelf.filter_changed.connect(refresh)

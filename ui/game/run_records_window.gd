@@ -49,7 +49,7 @@ func show_list() -> void:
 	for i in m.history.size():
 		var line := UiTheme.hbox(6)
 		_list.add_child(line)
-		var star := UiTheme.make_home_button("", toggle_pin.bind(i), false, Vector2(STAR_W, ROW_H), FONT_SIZE)
+		var star := UiTheme.make_stone_button("", toggle_pin.bind(i), false, Vector2(STAR_W, ROW_H), FONT_SIZE)
 		star.toggle_mode = true
 		star.tooltip_text = UiText.t("records.pin_tip")
 		line.add_child(star)
@@ -122,7 +122,7 @@ func show_detail(i: int) -> void:
 	var h: Dictionary = flow.meta.history[i]
 	var top := UiTheme.hbox(12)
 	add_child(top)
-	_back_btn = UiTheme.make_home_button(UiText.t("records.back"), show_list, false, Vector2.ZERO, FONT_SIZE)
+	_back_btn = UiTheme.make_stone_button(UiText.t("records.back"), show_list, false, Vector2.ZERO, FONT_SIZE)
 	top.add_child(_back_btn)
 	top.add_child(HeaderTag.new("%s · %s · %s" % [UiText.t("records.run_no") % int(h.get("run_no", 0)), _when(h), _outcome(h)]))
 	var cols := UiTheme.hbox(24)
@@ -158,7 +158,7 @@ func show_detail(i: int) -> void:
 		var seed_rows := LedgerRows.new()
 		dev.add_child(seed_rows)
 		_add(seed_rows, "records.seed", UiText.t("records.seed_v") % [int(h.get("seed", 0)), " / ".join([String(h.get("chapter", "")), String(h.get("scale", ""))].filter(func(s: String) -> bool: return s != ""))])     # 261 前的局没记规模：不留半截「/」
-		_copy_btn = UiTheme.make_home_button(UiText.t("records.copy_seed"), func(): DisplayServer.clipboard_set(str(int(h.get("seed", 0)))), false, Vector2.ZERO, FONT_SIZE)
+		_copy_btn = UiTheme.make_stone_button(UiText.t("records.copy_seed"), func(): DisplayServer.clipboard_set(str(int(h.get("seed", 0)))), false, Vector2.ZERO, FONT_SIZE)
 		dev.add_child(_copy_btn)
 
 

@@ -148,7 +148,7 @@ func _build() -> void:
 func _small_button(text: String, handler: Callable) -> Button:
 	if art_buttons:
 		return UiTheme.make_home_button(text, handler, false, RESULT_BUTTON_SIZE, RESULT_BUTTON_FONT_EN if UiText.lang == "en" else RESULT_BUTTON_FONT)
-	return UiTheme.make_home_button(text, handler)
+	return UiTheme.make_stone_button(text, handler)     # 基地「仓库」页：作者 11-23 选 B 换石刻
 
 
 ## 226 批一：回话 —— 告示卷轴（本地那行字删了）
