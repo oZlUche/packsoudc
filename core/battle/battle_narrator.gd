@@ -136,7 +136,7 @@ class _Narration:
 					var body := UiText.t("log." + String(e.payload.get("key", "")))
 					if e.payload.has("arg"):
 						_alone(i, e, body % [_who(e.side), UiText.t(String(e.payload["arg"]))])
-					elif e.payload.has("count"):
+					elif e.payload.has("count") and body.contains("%d"):     # 只有字里写了数才填（以血还血、血甲的 count 只是记次数）
 						_alone(i, e, body % [_who(e.side), int(e.payload["count"])])
 					else:
 						_alone(i, e, body % _who(e.side))
