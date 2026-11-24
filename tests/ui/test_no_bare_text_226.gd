@@ -11,7 +11,7 @@ const PREFIX := "bare226"
 
 ## 自己就是一块字件的类（字画在它的底上）
 const TEXT_WIDGETS := ["Button", "HeaderTag", "TitlePlate", "PriceTag", "NoticeScroll", "NoticeLayer", "StatsStrip",
-	"HoverTip", "ItemTooltip", "CapTile", "GiftTag", "HudHost", "DevDrawer", "LedgerView"]
+	"HoverTip", "ItemTooltip", "CapTile", "GiftTag", "HudHost", "DevDrawer", "LedgerView", "StonePanel"]
 
 
 static func _class_of(n: Node) -> String:

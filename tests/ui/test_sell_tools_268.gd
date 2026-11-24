@@ -26,7 +26,7 @@ static func frame_quick_sell(t: TestCase, root: Window) -> void:
 	var key := tools.quick_btn
 	t.not_null(key, "工具列有【快速出售】")
 	t.eq(key.get_index(), tools.filter_plate.get_index() + 1, "接在筛选牌下面")
-	t.eq(key.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "主档木牌")
+	t.eq(key.theme_type_variation, UiTheme.BUTTON_STONE_PRIMARY, "主档（作者 11-23 选 B：石刻）")
 	t.eq(key.custom_minimum_size, WarehouseTools.QUICK_SIZE, "228 × 56")
 	t.check(key.toggle_mode and not key.button_pressed, "可按下，起初抬着")
 	var strip: SellStrip = screen.sell_strip()

@@ -176,7 +176,7 @@ func _add_field(i: int) -> void:
 	side.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(side)
 	var ripe := flow.meta.nursery.ripe_units(i).size()
-	var b := UiTheme.make_home_button(UiText.t("nursery.harvest"), func(): harvest(i), true, Vector2(150, 44), 20)
+	var b := UiTheme.make_stone_button(UiText.t("nursery.harvest"), func(): harvest(i), true, Vector2(150, 44), 20)
 	b.name = "Harvest_%d" % i
 	b.disabled = ripe == 0
 	b.tooltip_text = UiText.t("nursery.ripe_n") % ripe if ripe > 0 else UiText.t("nursery.why_unripe")
@@ -317,7 +317,7 @@ func _slip(i: int, crop: StringName) -> Control:
 	UiTheme.mark(sel, picked == crop)
 	sel.disabled = why != "" and why != Nursery.WHY_ROOM
 	btns.add_child(sel)
-	var b := UiTheme.make_home_button(UiText.t("nursery.sow"), func(): sow(i, crop), true, Vector2(80, 34), 16)
+	var b := UiTheme.make_stone_button(UiText.t("nursery.sow"), func(): sow(i, crop), true, Vector2(80, 34), 16)
 	b.name = "Sow_%d_%s" % [i, String(crop)]
 	b.disabled = why != ""
 	if why != "":

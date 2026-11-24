@@ -114,14 +114,14 @@ static func frame_storeroom_plank_en_large(t: TestCase, root: Window) -> void:
 
 
 static func frame_base_warehouse_wood(t: TestCase, root: Window) -> void:
-	t.begin("228 · 基地「仓库」页的「一键置入」「整理」也是木牌（home 原尺寸），不再是平按钮")
+	t.begin("228 · 基地「仓库」页的「一键置入」「整理」是石刻键（作者 11-23 选 B，原尺寸），不是平按钮")
 	var c = NodeScreens._content()
 	var f := Support.flow(c, PREFIX + "b", 10000.0)
 	var wh = WarehousePanel.new()
 	root.add_child(wh)
 	wh.setup(f, UiPalette.cjk_font())
 	for b: Button in [wh._store_btn, wh._tidy_btn]:
-		t.check(_home(b) and b.custom_minimum_size == Vector2.ZERO, "「%s」木牌、原尺寸" % b.text)
+		t.check(b != null and b.theme_type_variation == UiTheme.BUTTON_STONE and b.custom_minimum_size == Vector2.ZERO, "「%s」石刻键、原尺寸" % b.text)
 	t.eq(wh.shelf().tab_variation, &"", "面板自带的分页签照旧（基地那副由基地屏换成挂牌木签）")
 	wh.free()
 	Support.cleanup(PREFIX + "b")

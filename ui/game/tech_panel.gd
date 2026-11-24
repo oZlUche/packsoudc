@@ -97,7 +97,7 @@ func _build() -> void:
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
 	left.add_child(tabs)
 	for tree_id in TechDef.TREES:
-		var tab := UiTheme.make_home_button("", show_tree.bind(tree_id), false, Vector2.ZERO, 18)
+		var tab := UiTheme.make_stone_button("", show_tree.bind(tree_id), false, Vector2.ZERO, 18)
 		tabs.add_child(tab)
 		_tabs[tree_id] = tab
 	_area = TreeArea.new()
@@ -137,10 +137,10 @@ func _build() -> void:
 	var keys := UiTheme.hbox(8)
 	keys.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_child(keys)
-	_action = UiTheme.make_home_button("", func(): upgrade(_selected), true)     # 乙 石刻：升级 = 主档木牌
+	_action = UiTheme.make_stone_button("", func(): upgrade(_selected), true)     # 乙 石刻：升级 = 主档木牌
 	_action.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	keys.add_child(_action)
-	_track = UiTheme.make_home_button("", func(): track(_selected), false, Vector2.ZERO, 16)     # 319 D：追踪 = 次档木牌
+	_track = UiTheme.make_stone_button("", func(): track(_selected), false, Vector2.ZERO, 16)     # 319 D：追踪 = 次档木牌
 	_track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	keys.add_child(_track)
 
@@ -270,7 +270,7 @@ func _refresh() -> void:
 		if tree_id == TechDef.TREE_MECHANISM:
 			tab.text += "　" + UiText.t("tech.insight_have") % _meta.insight
 			tab.tooltip_text = UiText.t("tech.insight_how")
-		tab.theme_type_variation = UiTheme.BUTTON_HOME_PRIMARY if tree_id == _tree_id else UiTheme.BUTTON_HOME
+		tab.theme_type_variation = UiTheme.BUTTON_STONE_PRIMARY if tree_id == _tree_id else UiTheme.BUTTON_STONE
 	_tree.rebuild()     # 等级变了节点样子跟着变；选中的那圈边 rebuild 时照旧画
 	UiTheme.clear_children(_effect)
 	UiTheme.clear_children(_cost)
@@ -339,7 +339,7 @@ func _refresh() -> void:
 			UiText.t("tech.owned") % own, have >= need, UiText.t("tech.material_tip") % [name_, have, need])
 		var k := mini(maxi(0, need - have), own)
 		if open and k > 0:
-			var btn := UiTheme.make_home_button(UiText.t("tech.submit_k") % k, submit_many.bind(id, k), false, Vector2.ZERO, 16)     # 乙 石刻：木牌
+			var btn := UiTheme.make_stone_button(UiText.t("tech.submit_k") % k, submit_many.bind(id, k), false, Vector2.ZERO, 16)     # 乙 石刻：木牌
 			btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			row.add_child(btn)
 			_submit_buttons[String(key)] = btn

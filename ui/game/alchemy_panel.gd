@@ -209,11 +209,11 @@ func _build() -> void:
 	col.add_child(_skip)
 	var row := UiTheme.hbox(12)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	auto_btn = UiTheme.make_home_button(UiText.t("alchemy.auto"), one_click, false, Vector2(132, 48), 18)
+	auto_btn = UiTheme.make_stone_button(UiText.t("alchemy.auto"), one_click, false, Vector2(132, 48), 18)
 	auto_btn.name = "AlchemyAuto"
 	auto_btn.tooltip_text = UiText.t("alchemy.auto_tip")
 	row.add_child(auto_btn)
-	go_btn = UiTheme.make_home_button(UiText.t("alchemy.go"), press_go, true, Vector2(140, 52), 20)
+	go_btn = UiTheme.make_stone_button(UiText.t("alchemy.go"), press_go, true, Vector2(140, 52), 20)
 	go_btn.name = "AlchemyGo"
 	row.add_child(go_btn)
 	col.add_child(row)

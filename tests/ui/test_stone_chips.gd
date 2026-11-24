@@ -56,17 +56,17 @@ static func frame_base_stone(t: TestCase, root: Window) -> void:
 	screen.open({})
 	var tools: WarehouseTools = screen.warehouse_tools()     # 268：出售页删了，一键出售在仓库页工具列（两个下拉 = 筛选牌那对）
 	for ob: OptionButton in [tools.rarity_pick, tools.tag_pick]:
-		t.check(ob.theme_type_variation == UiTheme.BUTTON_HOME and ob.get_theme_icon("arrow") == UiTheme.art_cached("kit/drop_arrow"), "下拉：木牌框 + 石刻箭头")
+		t.check(ob.theme_type_variation == UiTheme.BUTTON_STONE and ob.get_theme_icon("arrow") == UiTheme.art_cached("kit/drop_arrow"), "下拉：浅石框 + 石刻箭头")
 		var panel := ob.get_popup().get_theme_stylebox("panel") as StyleBoxTexture
 		t.check(panel != null and panel.texture == UiTheme.art_cached("kit/popup"), "弹出单是浅纸")
-	t.eq(tools.quick_btn.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "268：快速出售 = 主档木牌")
+	t.eq(tools.quick_btn.theme_type_variation, UiTheme.BUTTON_STONE_PRIMARY, "268：快速出售 = 主档")
 	t.eq(screen._shelf.tab_variation, UiTheme.BUTTON_SETUP_TAB, "仓库分页签是开局那款挂牌木签")
 	t.eq(screen._shelf._tabs[0].custom_minimum_size.y, 60.0, "挂牌高 60")
 	t.eq(screen._shelf._tabs[0].get_theme_color("font_disabled_color"), UiTheme.SETUP_TAB_LOCKED_INK, "锁着的页名提亮")
 	screen.open_shelf("achievements")
 	t.eq(screen._ach_filter_btns.size(), 3, "成就窗开了才建：三块筛选木牌")
 	for b: Button in screen._ach_filter_btns.values():
-		t.check(b.theme_type_variation == UiTheme.BUTTON_HOME and b.toggle_mode, "成就筛选「%s」是木牌、可切换" % b.text)
+		t.check(b.theme_type_variation == UiTheme.BUTTON_STONE and b.toggle_mode, "成就筛选「%s」是石刻键、可切换" % b.text)
 	var tree := TechTreeView.new()
 	root.add_child(tree)
 	var defs: Array[TechDef] = [TechTree._tech("a"), TechTree._tech("b", ["a"])]
@@ -78,7 +78,7 @@ static func frame_base_stone(t: TestCase, root: Window) -> void:
 	t.check(locked != null and locked.texture == UiTheme.art_cached("home/btn_wood_disabled"), "锁住的是灰木牌")
 	t.check(tree.find_child("SelRing", false, false) != null, "选中圈那层在最上面")
 	tree.free()
-	t.eq(screen.tech_panel()._action.theme_type_variation, UiTheme.BUTTON_HOME_PRIMARY, "升级 = 主档木牌")
+	t.eq(screen.tech_panel()._action.theme_type_variation, UiTheme.BUTTON_STONE_PRIMARY, "升级 = 主档")
 	screen.show_tab("codex")
 	t.check(not screen.codex_tiles().is_empty() and CodexTile._box(CodexTile.CELL_ART, 16.0).texture != null, "图鉴格有浅亚麻格底")
 	screen.free()

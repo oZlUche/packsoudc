@@ -52,14 +52,14 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages) -> WarehouseTools:
 	fcol.add_child(rarity_pick)
 	var keys := UiTheme.hbox(8)
 	fcol.add_child(keys)
-	fav_btn = UiTheme.make_home_button(UiText.t("meta.filter_fav"), func(): set_filter(shelf.filter_tag, shelf.filter_rarity, fav_btn.button_pressed), false, Vector2(0, CLEAR_SIZE.y), FONT)
+	fav_btn = UiTheme.make_stone_button(UiText.t("meta.filter_fav"), func(): set_filter(shelf.filter_tag, shelf.filter_rarity, fav_btn.button_pressed), false, Vector2(0, CLEAR_SIZE.y), FONT)
 	fav_btn.toggle_mode = true
 	fav_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	keys.add_child(fav_btn)
-	clear_btn = UiTheme.make_home_button(UiText.t("meta.filter_clear"), clear, false, CLEAR_SIZE, FONT)
+	clear_btn = UiTheme.make_stone_button(UiText.t("meta.filter_clear"), clear, false, CLEAR_SIZE, FONT)
 	clear_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	keys.add_child(clear_btn)
-	quick_btn = UiTheme.make_home_button(UiText.t("wh.quick_sell"), func(): sell_mode_toggled.emit(quick_btn.button_pressed), true, QUICK_SIZE, QUICK_FONT)
+	quick_btn = UiTheme.make_stone_button(UiText.t("wh.quick_sell"), func(): sell_mode_toggled.emit(quick_btn.button_pressed), true, QUICK_SIZE, QUICK_FONT)
 	quick_btn.toggle_mode = true
 	quick_btn.tooltip_text = UiText.t("wh.quick_sell_tip")
 	add_child(quick_btn)
@@ -74,7 +74,7 @@ func setup(p_flow: GameFlow, p_shelf: WarehousePages) -> WarehouseTools:
 
 ## 一块小木牌（内边距是九宫格的框宽）；返回牌，[method _col] 取里面那一列
 func _plate(h: float) -> PanelContainer:
-	var p := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_PLAQUE_SMALL)
+	var p := StoneKit.frame(18)     # 作者 11-23 选 B：小木牌换浅石框
 	p.custom_minimum_size = Vector2(WIDTH, h)
 	add_child(p)
 	p.add_child(UiTheme.vbox(6))

@@ -161,7 +161,7 @@ func open(payload: Dictionary) -> void:
 			continue     # 313：试玩切片的基地只留出征、仓库
 		if key == "commissions" and not flow.commissions_visible():
 			continue     # 336：教程没走完不列
-		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): toggle_tab(key))
+		var b := UiTheme.make_stone_button(UiText.t(pair[1]), func(): toggle_tab(key))
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -169,6 +169,8 @@ func open(payload: Dictionary) -> void:
 		if icon != null:
 			b.icon = icon
 			b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			var lit := UiTheme.art_cached(TAB_ICON_ART + key + "_on")     # 选中 = 深石板：换金色那枚
+			b.toggled.connect(func(on: bool): b.icon = lit if on and lit != null else icon)
 		_tab_btns[key] = b
 		left.add_child(b)
 		if SUB_TABS.has(key):
@@ -185,7 +187,7 @@ func open(payload: Dictionary) -> void:
 	# 226 批二：左下「带回来的背包还有 N 件……」那句删了（[method pending_text] 留给「仓库」页签的悬浮窗）
 	# 264：左下「再来一局」搬进出征页改叫【开始探索】
 	# 280 B：「回主菜单」钉在屏幕右下 —— 和开局屏「返回」、结算「继续」同一个角
-	var menu_btn := UiTheme.make_home_button(UiText.t("setup.main_menu"), flow.to_main_menu)
+	var menu_btn := UiTheme.make_stone_button(UiText.t("setup.main_menu"), flow.to_main_menu)
 	menu_btn.name = "MainMenuButton"
 	menu_btn.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
 	var menu_size := menu_btn.get_combined_minimum_size()
@@ -727,11 +729,8 @@ func _fill_locked(facility: StringName) -> void:
 		c.queue_free()
 	var d := Commissions.opener_of(facility)
 	var fac := Commissions.faction(d.faction) if d != null else null
-	var wood := UiTheme.art(CommissionPanelScript.ART + "board_dark")     # 和委托页一样铺深木板，纸钉在板上
-	if wood != null:
-		_locked.add_child(UiTheme.nine_rect(wood, 14))
-	var center := CenterContainer.new()
-	UiTheme.set_tone(center, UiTheme.TONE_DARK)
+	var center := CenterContainer.new()     # 作者 11-23 选 B：底是浅石框，不再铺深木板，纸直接钉在石框上
+	UiTheme.set_tone(center, UiTheme.TONE_LIGHT)
 	_locked.add_child(center)
 	var paper := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 30, 20, 30, 20)
 	paper.name = "LockedPaper"
@@ -1107,7 +1106,7 @@ func _sub_listed(key: String) -> bool:
 
 
 func _sub_btn(key: String, text_key: String) -> Button:
-	var b := UiTheme.make_home_button(UiText.t(text_key), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
+	var b := UiTheme.make_stone_button(UiText.t(text_key), func(): show_tab(key), false, SUB_TAB_SIZE, SUB_TAB_FONT)
 	b.toggle_mode = true
 	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	return b
@@ -1165,7 +1164,7 @@ func _build_achievements(root: Control) -> Control:
 	page_.add_child(head)
 	for pair in [["all", "meta.all"], ["done", "meta.ach_filter_done"], ["todo", "meta.ach_filter_todo"]]:
 		var key: String = pair[0]
-		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_achievement_filter(key), false, Vector2.ZERO, ACH_FILTER_FONT)     # 乙 石刻：木牌，选中 = 按下的那块
+		var b := UiTheme.make_stone_button(UiText.t(pair[1]), func(): show_achievement_filter(key), false, Vector2.ZERO, ACH_FILTER_FONT)     # 乙 石刻：木牌，选中 = 按下的那块
 		b.toggle_mode = true
 		_ach_filter_btns[key] = b
 		head.add_child(b)
@@ -1276,7 +1275,7 @@ func _build_codex(root: Control) -> Control:
 	page_.add_child(head)
 	for pair in [["all", "meta.all"], ["fav", "meta.codex_fav"]]:
 		var key: String = pair[0]
-		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_codex_filter(key), false, Vector2.ZERO, ACH_FILTER_FONT)
+		var b := UiTheme.make_stone_button(UiText.t(pair[1]), func(): show_codex_filter(key), false, Vector2.ZERO, ACH_FILTER_FONT)
 		b.toggle_mode = true
 		_codex_filter_btns[key] = b
 		head.add_child(b)
@@ -1574,7 +1573,7 @@ func _build_shelf_windows() -> void:
 		var frame := OverlayFrame.new(16)
 		frame.custom_minimum_size = SHELF_WIN
 		frame.set_title(UiText.t("shelf.title_" + key))
-		frame.add_slot(UiTheme.make_home_button(UiText.t("meta.close"), close_shelf))
+		frame.add_slot(UiTheme.make_stone_button(UiText.t("meta.close"), close_shelf))
 		center.add_child(frame)
 		var cloth := UiTheme.panel(PanelContainer.new(), -1, UiTheme.PANEL_HOME_BOX)     # 窗里垫原来那块粗布（浅底墨字），内容照旧
 		cloth.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1716,7 +1715,8 @@ func show_tab(p_name: String) -> void:
 		_right.visible = not (NO_SHELF_TABS.has(shown) or FULL_TABS.has(shown))     # 262：后勤的集市 / 铁匠铺收起
 	for key in _tab_btns:
 		var b := _tab_btns[key] as Button
-		b.set_pressed_no_signal(key == p_name)
+		if b.button_pressed != (key == p_name):
+			b.button_pressed = key == p_name     # 发 toggled：图标跟着换（按键本身没连 toggled 之外的回调）
 	if _sub_box != null:
 		_sub_box.get_parent().visible = p_name == "logistics"
 		for key in _sub_btns:
@@ -1729,7 +1729,7 @@ func show_tab(p_name: String) -> void:
 ## 164：点左列一个页签。264：页签单选 —— 再点选中的不动（没有「家」了），只把按下态补回来
 func toggle_tab(key: String) -> void:
 	if _tab == key:
-		(_tab_btns[key] as Button).set_pressed_no_signal(true)
+		(_tab_btns[key] as Button).button_pressed = true
 		return
 	show_tab(key)
 

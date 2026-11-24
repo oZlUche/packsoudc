@@ -85,7 +85,7 @@ func setup(p_flow: GameFlow) -> void:
 	inner.add_child(subs)
 	for pair in SUBS:
 		var key: String = pair[0]
-		var b := UiTheme.make_home_button(UiText.t(pair[1]), func(): show_sub(key), false, KEY_SIZE, KEY_FONT)
+		var b := UiTheme.make_stone_button(UiText.t(pair[1]), func(): show_sub(key), false, KEY_SIZE, KEY_FONT)
 		b.toggle_mode = true
 		b.name = "Sub_" + key
 		_sub_btns[key] = b

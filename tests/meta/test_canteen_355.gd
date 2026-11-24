@@ -441,6 +441,11 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.check(not p._save_btn.disabled, "锅里有东西：能收藏")
 	t.eq(p.save_menu(), 0, "【收藏】")
 	t.eq(p._menu_box.get_child_count(), 1, "一块菜单牌")
+	var slate_tex := UiTheme.art_cached(UiTheme.ART_STONE_SLATE)
+	t.check((p.find_child("MealNote", true, false) as Control).get_theme_stylebox("panel").texture == slate_tex and (p.find_child("Recipes", true, false) as Control).get_theme_stylebox("panel").texture == slate_tex, "作者 11-23 选 B：「这一锅」「配方」两块深石板")
+	var apply_btn := p._menu_box.get_child(0).find_child("Load", true, false) as Button
+	t.check(apply_btn != null and apply_btn.text == UiText.t("canteen.apply") and apply_btn.theme_type_variation == UiTheme.BUTTON_STONE_PRIMARY, "每份配方一颗深石板【应用】")
+	t.eq(p._eat_btn.theme_type_variation, UiTheme.BUTTON_STONE_PRIMARY, "【开饭】深石板主键")
 	t.eq(p._pot_name.text, UiText.t("canteen.menu_default") % 1, "锅叫「菜单 1」")
 	p.start_rename(0)
 	t.check(p._menu_box.get_child(0).get_node_or_null("NameEdit") != null, "改名：换成输入框")

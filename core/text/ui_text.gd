@@ -1725,6 +1725,12 @@ const TEXT := {
 	"meta.new_run": {"zh": "开始探索", "en": "Set out"},     # 264：出征页的主档木牌（原左下「再来一局」）
 	"meta.tab_expedition": {"zh": "出征", "en": "Expedition"},
 	"meta.last_expedition": {"zh": "上回出征", "en": "Last expedition"},
+	"meta.last_result": {"zh": "结果", "en": "Result"},     # 作者 11-23 选 B：出征页石刻卡的「结果」段
+	"meta.last_value": {"zh": "值 %d", "en": "Worth %d"},
+	"meta.last_won": {"zh": "打赢", "en": "Fights won"},
+	"meta.last_won_v": {"zh": "%d 场", "en": "%d"},
+	"meta.last_brought": {"zh": "带回", "en": "Brought back"},
+	"meta.last_brought_v": {"zh": "%d 件", "en": "%d"},
 	"meta.tutorial": {"zh": "教程", "en": "Tutorial"},     # 统一教程 D：出征页的教程木牌
 	"meta.tutorial_step": {"zh": "教程 %d/%d", "en": "Tutorial %d/%d"},
 	"meta.tutorial_skip": {"zh": "跳过剩余教程", "en": "Skip the rest"},
