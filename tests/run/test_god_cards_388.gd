@@ -263,7 +263,7 @@ static func run_tutorial_no_opening(t: TestCase) -> void:
 
 
 static func run_brute_cards(t: TestCase) -> void:
-	t.begin("388 第 1 批 · 蛮神的牌：29 张进牌池（10 质变 + 9 升级 + 11 基础 - 啖肉吮血待做）、拿了几张就把数填进怒气；死斗编进不屈；神罚按牌给次数、升级后精英耗 2 次")
+	t.begin("388 第 1 批 · 蛮神的牌：31 张进牌池（10 质变 + 10 升级 + 11 基础）、拿了几张就把数填进怒气；死斗编进不屈；神罚按牌给次数、升级后精英耗 2 次")
 	var run := _start(41, &"brute")
 	var lv := LevelModule.of(run)
 	if lv == null or run.active_faith_id() != &"brute":
@@ -278,7 +278,7 @@ static func run_brute_cards(t: TestCase) -> void:
 				quals += 1
 			else:
 				bases += 1
-	t.eq(quals, 18, "质变 9 张 + 升级 9 张")
+	t.eq(quals, 20, "质变 10 张 + 升级 10 张（啖肉吮血第 1 批补）")
 	t.eq(bases, 11, "基础牌 11 张")
 	t.check(lv.card_text(&"god_brute_break").contains("2%"), "牌面按数写：%s" % lv.card_text(&"god_brute_break"))
 	var perk := BruteRagePerk.new()
@@ -328,6 +328,28 @@ static func run_brute_cards(t: TestCase) -> void:
 	lv.god_state[SmitePerk.USED_KEY] = 4
 	t.eq(String(smite.prebattle_actions(run, &"elite")[0]["why"]) != "", true, "只剩 1 次：精英灰着")
 	t.eq(lv.to_dict()["god_state"].get(SmitePerk.USED_KEY, 0), 4, "用掉几次进存档")
+	# 啖肉吮血：【血肉】吃下去，按稀有度和格子给整局生命上限；升级再给一半的耐力上限（以前吃的也补）
+	var flesh := ItemInstance.create(run.items.get_def(&"blood_flesh"))
+	t.check(run.board.try_add(flesh), "背包里放一块血肉")
+	t.check(not BruteRagePerk.can_eat(run, flesh), "没拿啖肉吮血：不能吃（只是普通兽材）")
+	var hp0 := float(run.effective_baseline().base_stats.get(&"max_hp", 0.0))
+	var st0 := float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0))
+	lv.taken["god_brute_eat"] = 1
+	t.check(BruteRagePerk.can_eat(run, flesh), "拿了：能吃")
+	var ate := BruteRagePerk.eat(run, flesh)
+	t.check(is_equal_approx(float(ate.get("hp", 0.0)), 20.0), "血肉（稀有度 1、2 格）：5 × 2 × 2 = 20（%s）" % str(ate))
+	t.eq(run.board.get_item(flesh.uid), null, "吃掉了：背包里没了")
+	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_hp", 0.0)), hp0 + 20.0), "生命上限 +20")
+	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0)), st0), "没升级：耐力上限不变")
+	lv.taken["god_brute_eat_up"] = 1
+	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0)), st0 + 10.0), "升级：以前吃的补一半耐力上限 +10")
+	var scrap := ItemInstance.create(run.items.get_def(&"blood_flesh_scrap"))
+	run.board.try_add(scrap)
+	var ate2 := BruteRagePerk.eat(run, scrap)
+	t.check(is_equal_approx(float(ate2.get("hp", 0.0)), 5.0) and is_equal_approx(float(ate2.get("stamina", 0.0)), 2.5), "碎血肉：生命 +5、耐力 +2.5")
+	var back := LevelModule.new()
+	back.restore(lv.to_dict())
+	t.check(is_equal_approx(float(back.god_state.get(BruteRagePerk.FLESH_KEY, 0.0)), 25.0), "吃下的进存档")
 	run.dispose()
 
 

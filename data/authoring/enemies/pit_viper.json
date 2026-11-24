@@ -32,5 +32,8 @@
   "bagless": true,
   "loot_filler": [
     "meat_scrap"
+  ],
+  "loot_bonus": [
+    "blood_flesh_scrap"
   ]
 }

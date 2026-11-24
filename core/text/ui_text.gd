@@ -1261,6 +1261,8 @@ const TEXT := {
 	"gcard.god_brute_hate_up": {"zh": "被施加负面效果时，以及负面效果触发时，立刻获得 {stacks} 层不计入上限的怒气", "en": "When a negative effect is applied to you or triggers, gain {stacks} Rage that ignores the cap"},
 	"gcard.god_brute_armor": {"zh": "受到伤害后，记录 {window} 秒内受到的所有伤害，时间结束后获得等于 {pct}% 的护甲，有 {cd} 秒冷却", "en": "After taking damage, record all damage taken for {window} seconds, then gain Armor equal to {pct}% of it; {cd} second cooldown"},
 	"gcard.god_brute_armor_up": {"zh": "现在还会记录造成的伤害；此技能获得的护甲被打穿后，恢复其 {heal}% 的生命值", "en": "Damage you deal is recorded too; when this Armor is broken, restore Health equal to {heal}% of it"},
+	"gcard.god_brute_eat": {"zh": "可以进食【血肉】，按稀有度和格子获得持续整局的额外生命上限（每格 {per_cell} × (稀有度 + 1)）", "en": "You can eat Raw Flesh for extra Max Health for the rest of the run, by rarity and size ({per_cell} per cell × (rarity + 1))"},
+	"gcard.god_brute_eat_up": {"zh": "可以进食【血肉】，按稀有度和格子获得持续整局的额外生命上限（每格 {per_cell} × (稀有度 + 1)），以及一半的耐力上限", "en": "You can eat Raw Flesh for extra Max Health for the rest of the run ({per_cell} per cell × (rarity + 1)), and half as much Max Stamina"},
 	"gcard.god_brute_duration": {"zh": "怒气持续时间 +{sec} 秒", "en": "Rage lasts {sec} second longer"},
 	"gcard.god_brute_cap": {"zh": "怒气上限 +{stacks} 层", "en": "Rage cap +{stacks}"},
 	"gcard.god_brute_haste": {"zh": "每层怒气额外 +{pct}% 急速", "en": "+{pct}% Haste per Rage stack"},
@@ -2070,6 +2072,9 @@ const TEXT := {
 	"act.pinned": {"zh": "随身之物", "en": "Part of your kit"},     # 255：随身之物的按钮全灰，理由
 	"act.confirm": {"zh": "再点一次", "en": "Click again"},
 	"act.drop": {"zh": "放到地上", "en": "Drop"},
+	"act.eat": {"zh": "进食", "en": "Eat"},     # 388 啖肉吮血
+	"bag.ate": {"zh": "吃下%s：生命上限 +%s", "en": "Ate %s: Max Health +%s"},
+	"bag.ate_stamina": {"zh": "吃下%s：生命上限 +%s，耐力上限 +%s", "en": "Ate %s: Max Health +%s, Max Stamina +%s"},
 	"act.to_pack": {"zh": "放进背包", "en": "Into pack"},
 	"act.take": {"zh": "拾取", "en": "Take"},
 	"act.take_all": {"zh": "全部拾取 ×%d", "en": "Take all ×%d"},     # 277 第 6 条：地上一件的按钮

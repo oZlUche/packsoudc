@@ -41,5 +41,8 @@
     "beast_ribs",
     "prime_game_meat",
     "prime_beast_leg"
+  ],
+  "loot_bonus": [
+    "blood_flesh_prime"
   ]
 }

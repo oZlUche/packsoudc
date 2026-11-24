@@ -38,6 +38,11 @@ const LIFESTEAL := &"god_brute_lifesteal"
 const LINGER := &"god_brute_linger"
 const CORNERED_MORE := &"god_brute_cornered_more"
 const IRATE := &"god_brute_irate"
+const EAT := &"god_brute_eat"
+const EAT_UP := &"god_brute_eat_up"
+## 【血肉】：能进食的那类（标签）；吃下去攒的生命上限记在 [member LevelModule.god_state] 这一格
+const FLESH_TAG := &"blood_flesh"
+const FLESH_KEY := "brute_flesh_hp"
 
 
 func compile_into(input: CompileInput, _board: GridInventory, run: RunState) -> void:
@@ -55,6 +60,48 @@ static func undying_sec(lv: LevelModule) -> float:
 	if lv == null or not lv.has_card(DEATHFIGHT):
 		return 0.0
 	return lv.god_value(DEATHFIGHT, "sec") + lv.god_value(DEATHFIGHT_UP, "sec") + lv.god_value(UNDYING, "sec")
+
+
+#region 啖肉吮血（第 1 批补）
+## 这件能不能吃：拿了啖肉吮血、是【血肉】
+static func can_eat(run: RunState, inst: ItemInstance) -> bool:
+	var lv := LevelModule.of(run)
+	return lv != null and inst != null and inst.def != null and inst.def.has_tag(FLESH_TAG) and lv.has_card(EAT)
+
+
+## 吃下 [param def] 加几点生命上限：每格 × (稀有度 + 1)
+static func flesh_gain(lv: LevelModule, def: ItemDef) -> float:
+	if lv == null or def == null:
+		return 0.0
+	var per := lv.god_value(EAT_UP if lv.has_card(EAT_UP) else EAT, "per_cell")
+	return per * def.cell_count() * (def.rarity + 1)
+
+
+## 整局的加成：{max_hp, max_stamina}（没拿 = 空）。升级版的耐力上限按攒下的生命上限算，拿到升级时以前吃的也补上
+static func flesh_bonus(lv: LevelModule) -> Dictionary:
+	if lv == null or not lv.has_card(EAT):
+		return {}
+	var hp := float(lv.god_state.get(FLESH_KEY, 0.0))
+	if hp <= 0.0:
+		return {}
+	var out := {&"max_hp": hp}
+	if lv.has_card(EAT_UP):
+		out[&"max_stamina"] = hp * lv.god_value(EAT_UP, "stamina", 50.0) / 100.0
+	return out
+
+
+## 进食：从背包拿走这件、记下生命上限。返回 {hp, stamina}（吃不了 = 空）
+static func eat(run: RunState, inst: ItemInstance) -> Dictionary:
+	if not can_eat(run, inst) or run.board == null or run.board.get_item(inst.uid) == null:
+		return {}
+	var lv := LevelModule.of(run)
+	var before := flesh_bonus(lv)
+	var gain := flesh_gain(lv, inst.def)
+	run.board.remove(inst.uid)
+	lv.god_state[FLESH_KEY] = float(lv.god_state.get(FLESH_KEY, 0.0)) + gain
+	var after := flesh_bonus(lv)
+	return {"hp": gain, "stamina": float(after.get(&"max_stamina", 0.0)) - float(before.get(&"max_stamina", 0.0))}
+#endregion
 
 
 ## 拿着 [param lv] 里这些牌的那条规则（[param lv] 空 = 只有核心；测试与台架直接拿）

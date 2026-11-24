@@ -127,6 +127,8 @@ func build_of(build_id: StringName) -> EnemyBuild:
 @export var immune_buffs: Array[StringName] = []
 ## 210：不是人的不揣携带品，改为招牌之外必带 1～2 件这里头的（机关掉齿轮）；计入件数、标 carried 必掉
 @export var loot_filler: Array[StringName] = []
+## 388：除替身之外另外必掉的（魔兽的【血肉】）；每个 id 一件，计入件数、标 carried 必掉
+@export var loot_bonus: Array[StringName] = []
 
 const SPECIES: Array[StringName] = [&"human", &"beast", &"construct"]
 

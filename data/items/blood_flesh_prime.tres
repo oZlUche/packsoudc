@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_k08qb"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_fv24e"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_pkfwb"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_hrngi"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_3027w"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_3d5sr"]
+
+[sub_resource type="Resource" id="Resource_7pxhf"]
+script = ExtResource("6_3d5sr")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_3027w")
+id = &"blood_flesh_prime"
+display_name = "上等血肉"
+display_names = {
+"en": "Prime Raw Flesh"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_7pxhf")
+rarity = 2
+tags = Array[StringName]([&"material", &"nature", &"beast_part", &"blood_flesh"])
+material = "flesh"

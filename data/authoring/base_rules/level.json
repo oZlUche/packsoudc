@@ -162,6 +162,16 @@
       "god": "brute",
       "upgrade_of": "god_brute_armor"
     },
+    "god_brute_eat": {
+      "kind": "god",
+      "god": "brute",
+      "qual": true
+    },
+    "god_brute_eat_up": {
+      "kind": "god",
+      "god": "brute",
+      "upgrade_of": "god_brute_eat"
+    },
     "god_brute_duration": {
       "kind": "god",
       "god": "brute"

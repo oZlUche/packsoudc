@@ -1,0 +1,21 @@
+{
+  "id": "blood_flesh_scrap",
+  "display_name": "碎血肉",
+  "display_names": {
+    "en": "Flesh Scrap"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "material",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

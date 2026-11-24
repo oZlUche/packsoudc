@@ -1,0 +1,23 @@
+{
+  "id": "blood_flesh",
+  "display_name": "血肉",
+  "display_names": {
+    "en": "Raw Flesh"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

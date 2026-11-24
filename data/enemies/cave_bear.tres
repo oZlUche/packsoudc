@@ -31,3 +31,4 @@ board = Vector2i(6, 4)
 species = &"beast"
 bagless = true
 loot_filler = Array[StringName]([&"beast_haunch", &"beast_ribs", &"prime_game_meat", &"prime_beast_leg"])
+loot_bonus = Array[StringName]([&"blood_flesh_prime"])

@@ -35,5 +35,8 @@
   "loot_filler": [
     "meat_scrap",
     "game_meat"
+  ],
+  "loot_bonus": [
+    "blood_flesh_scrap"
   ]
 }

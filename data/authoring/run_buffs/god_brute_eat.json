@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_eat",
+  "display_name": "啖肉吮血",
+  "display_names": {
+    "en": "Feast on Flesh"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "per_cell": 5
+      }
+    }
+  ]
+}
