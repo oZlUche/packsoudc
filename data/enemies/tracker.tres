@@ -28,7 +28,7 @@ display_names = {
 strength = 1
 schools = Array[StringName]([&"ranged", &"bleed"])
 base_stats = {
-"max_hp": 34
+"max_hp": 120
 }
 item_tags = Array[StringName]([&"ranged", &"ammo", &"bleed", &"remedy", &"beast_part"])
 signature_by_strength = {

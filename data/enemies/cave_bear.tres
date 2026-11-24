@@ -21,7 +21,7 @@ strength = 3
 schools = Array[StringName]([&"bleed"])
 base_stats = {
 "block": 2,
-"max_hp": 90
+"max_hp": 315
 }
 signature = Array[StringName]([&"bonesplit_claw", &"beast_claw", &"beast_hide", &"beast_hide", &"beast_tusk_root"])
 item_tags = Array[StringName]([&"beast_part"])

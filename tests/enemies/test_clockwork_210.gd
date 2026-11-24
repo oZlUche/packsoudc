@@ -113,7 +113,7 @@ static func run_parts(t: TestCase) -> void:
 	var vent := db.get_def(&"steam_vent")
 	t.check(vent.wild_applies.size() == 1 and String(vent.wild_applies[0].buff.id) == "scorch", "蒸汽阀：机关面施加灼伤")
 	t.check(vent.tags.has(&"crafted") and not vent.tags.has(&"nature") and not vent.tags.has(&"magic"), "零件是【工艺】")
-	t.eq(db.get_def(&"mainspring").wild.base_stats.get("regen_stamina", 0.0), 2.0, "主发条：机关面回耐力")
+	t.eq(db.get_def(&"mainspring").wild.base_stats.get("regen_stamina", 0.0), 4.0, "主发条：机关面回耐力")
 
 
 static func run_loot(t: TestCase) -> void:

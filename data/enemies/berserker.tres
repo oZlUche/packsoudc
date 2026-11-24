@@ -29,8 +29,8 @@ display_names = {
 strength = 1
 schools = Array[StringName]([&"burst"])
 base_stats = {
-"max_hp": 60,
-"max_stamina": 55
+"max_hp": 210,
+"max_stamina": 110
 }
 signature = Array[StringName]([&"scimitar"])
 item_tags = Array[StringName]([&"barbarian", &"burst", &"melee", &"armor", &"shield", &"food"])

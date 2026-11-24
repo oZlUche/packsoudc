@@ -22,6 +22,8 @@ static func of(result: BattleResult, limit_sec: float, specs: Array = []) -> Dic
 	var out := {"outcome": outcome_of(result, limit_sec), "duration": dur}
 	out["hp_end"] = [hp_ratio(result, 0), hp_ratio(result, 1)]
 	var fires := [{}, {}]
+	var skipped := [0, 0]     # 388：冷却走了、付不起消耗（耐力 / 法力）没出手的次数
+	var first_skip: Array = [null, null]
 	var first_damage: Array = [null, null]     # 这一方第一次真打出伤害的时刻
 	var damage := [{"direct": 0.0, "indirect": 0.0, "true": 0.0, "unknown": 0.0}, {"direct": 0.0, "indirect": 0.0, "true": 0.0, "unknown": 0.0}]
 	var by_item := [{}, {}]
@@ -37,6 +39,11 @@ static func of(result: BattleResult, limit_sec: float, specs: Array = []) -> Dic
 				if e.side == 0 or e.side == 1:
 					var uid := e.get_int(&"uid")
 					fires[e.side][uid] = int(fires[e.side].get(uid, 0)) + 1
+			BattleEvent.ITEM_SKIPPED:
+				if e.side == 0 or e.side == 1:
+					skipped[e.side] += 1
+					if first_skip[e.side] == null:
+						first_skip[e.side] = t
 			BattleEvent.DAMAGE:
 				if e.payload.get("cancelled", false):
 					continue
@@ -75,6 +82,8 @@ static func of(result: BattleResult, limit_sec: float, specs: Array = []) -> Dic
 			low_time[s] += dur - float(low_since[s])
 	out["fires"] = [_sum(fires[0]), _sum(fires[1])]
 	out["items_fired"] = [fires[0].size(), fires[1].size()]
+	out["skipped"] = skipped
+	out["first_skip"] = first_skip
 	out["first_damage"] = first_damage
 	out["damage"] = damage
 	out["damage_by_item"] = [_keyed(by_item[0], _names(specs, 0)), _keyed(by_item[1], _names(specs, 1))]

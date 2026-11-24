@@ -21,7 +21,7 @@ display_names = {
 strength = 2
 schools = Array[StringName]([&"rapid", &"burst"])
 base_stats = {
-"max_hp": 46
+"max_hp": 160
 }
 signature = Array[StringName]([&"round_shield"])
 item_tags = Array[StringName]([&"imperial", &"shield", &"armor", &"remedy"])

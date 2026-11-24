@@ -359,13 +359,13 @@ static func run_baseline(t: TestCase) -> void:
 	# 玩家开局捡到枪却因为没有耐力一发打不出，是只有做成属性表才修得掉的坑。
 	var spec := BattleCompiler.compile_board(_board())
 	t.eq(spec.max_hp_int(), 25, "默认基线的生命上限")
-	t.eq(StatMath.to_int(spec.baseline.total_of(BattleStats.MAX_STAMINA)), 50,
+	t.eq(StatMath.to_int(spec.baseline.total_of(BattleStats.MAX_STAMINA)), 100,
 		"**耐力有基线**，不必靠道具提供")
 
 	# 空棋盘也该拿到基线，否则「什么都没装」会变成没有耐力
 	var rt := CombatantRuntime.from_spec(spec, 0)
 	t.check(rt.resources.has(BattleStats.RES_STAMINA), "空棋盘照样有耐力资源")
-	t.eq(StatMath.to_int(rt.resources.current(BattleStats.RES_STAMINA)), 50, "并且是满的")
+	t.eq(StatMath.to_int(rt.resources.current(BattleStats.RES_STAMINA)), 100, "并且是满的")
 
 	# 道具在基线之上叠加
 	var bag := _bag("bag", ["1111", "1111"])
@@ -380,8 +380,8 @@ static func run_baseline(t: TestCase) -> void:
 	var spec2 := BattleCompiler.compile_board(board)
 	t.eq(spec2.max_hp_int(), 35, "25 基线 + 10 道具")
 	var rt2 := CombatantRuntime.from_spec(spec2, 0)
-	t.eq(StatMath.to_int(rt2.resources.maximum(BattleStats.RES_STAMINA)), 90,
-		"50 基线 + 40 道具")
+	t.eq(StatMath.to_int(rt2.resources.maximum(BattleStats.RES_STAMINA)), 140,
+		"100 基线 + 40 道具")
 
 	# 自定义基线：角色系统落地后由角色定义提供，编译器不用改
 	var tanky := CombatantBaseline.new()

@@ -10,8 +10,8 @@
     "bleed"
   ],
   "base_stats": {
-    "max_hp": 30,
-    "regen_stamina": 5
+    "max_hp": 105,
+    "regen_stamina": 10
   },
   "signature": [
     "knife"

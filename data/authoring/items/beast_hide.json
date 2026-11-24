@@ -22,7 +22,7 @@
   "material": "leather",
   "wild": {
     "base_stats": {
-      "max_hp": 15
+      "max_hp": 50
     }
   }
 }
