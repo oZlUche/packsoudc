@@ -1,7 +1,8 @@
 ## 336（阵营与委托 W0，报告 335）：委托与声望的规则 —— 纯逻辑，状态在 [CommissionBook]（局外存档），定义在 [CommissionDef] / [FactionDef]。
 ##
 ## 规则（方案「接取、交付与声望」，数值是候选）：
-## - 342 B2：每方五档，门槛 0 / 10 / 25 / 50 / 100（初识 / 熟面 / 受托 / 信赖 / 代言）；代言另要做完这一方的结案（[member CommissionBook.signed]）。
+## - 报告 389（作者 2026-11-24）：没有档位了，每方一串声望节点（[member FactionDef.nodes]）：声望到了那个数，效果就生效（开放、提升）。
+##   节点只看声望（不再要求先做完结案）；最后一个节点之后声望照涨，不再给东西。
 ## - 剧情（不是模板的委托）：够格就自动接上（[method auto_take]），常驻到办成，不占位、不能暂缓或放弃；办成开放写在 [member CommissionDef.opens] 的设施。
 ## - 常规（模板）：同时最多接 [constant SLOTS] 份；暂缓不占位，进度保留；放弃清掉进度，可以重接。模板最多把一方推到 [constant TEMPLATE_CAP] 点。
 ## - 正常战败不扣声望。现场交付的步骤失败也算；带回的步骤只在撤离成功（或写明托付算数时托付成功）才算（[method merge_run]）。
@@ -11,10 +12,20 @@ extends RefCounted
 
 ## 342 B2：手头（接下的常规纸条）最多几份（报告 341 第 3.1 节）
 const SLOTS := 3
-## 342 B2：常规纸条最多把一方推到多少声望（信赖；代言要靠结案）
+## 342 B2：常规纸条最多把一方推到多少声望（再往上靠剧情）
 const TEMPLATE_CAP := 50
-## 声望五档
-const TIERS := 5
+## 报告 389：节点的两种（[member FactionDef.nodes] 的 `kind`）。赠礼不做成节点（作者 11-24 16:44：单独一个【赠礼】键，声望每攒一定数量 +1 份，规则等报告 389 改）
+const KIND_OPEN := &"open"
+const KIND_BOOST := &"boost"
+const KINDS: Array[StringName] = [KIND_OPEN, KIND_BOOST]
+## 报告 389：认得的效果（`effect`）。空串只给占位节点用
+const EFFECT_INQUIRY := &"inquiry"     # 调查委托和许可单（委托自己的 min_rep 是真门槛，这一条给刻度显示）
+const EFFECT_FINALE := &"finale"     # 结案委托；办完许可单后告示栏出这一方的常规委托（[method regular_open]）
+const EFFECTS: Array[StringName] = [EFFECT_INQUIRY, EFFECT_FINALE, &"commission", &"god", &"faith_xp", &"altar_bless",
+	&"alchemy_loss", &"canteen_pot", &"canteen_store", &"nursery_plot"]
+## 没写 min_rep 的委托按档位默认要多少声望：调查要到 [constant EFFECT_INQUIRY] 那个节点、结案要到 [constant EFFECT_FINALE]（这一方没写就用这两个数）
+const INQUIRY_REP := 10
+const FINALE_REP := 25
 ## 342 B2：能由剧情开放的基地设施
 const FACILITIES: Array[StringName] = [&"smithy", &"tech", &"market"]
 ## 342 B3：后来几方剧情开的功能（材料倾向、种地；354 炼金）—— 老档也要办成才开（不像 [constant FACILITIES] 那样老档照开）
@@ -42,15 +53,13 @@ const GOALS := {
 }
 ## 342 B2：营地当场能办的目标（卡上有【办理】）
 const CAMP_GOALS: Array[StringName] = [&"camp_report", &"hand_in"]
-## 342 B2：常规委托从第几档开（受托），还要办完这一方的许可单（[member FactionDef.permit]）
-const REGULAR_TIER := 2
 
 ## 不能接的原因（字表键 `commission.why_<原因>`）
 const WHY_HIDDEN := "hidden"
 const WHY_DONE := "done"
 const WHY_TAKEN := "taken"
 const WHY_SLOTS := "slots"
-const WHY_TIER := "tier"
+const WHY_REP := "rep"
 const WHY_REQUIRES := "requires"
 const WHY_MUTEX := "mutex"
 const WHY_PICK := "pick"
@@ -131,7 +140,7 @@ static func of_faction(id: StringName, pool: Array = []) -> Array[CommissionDef]
 #endregion
 
 
-#region 档位与声望
+#region 声望
 ## 档位的默认声望：入门 1、调查 2、结案 3、模板 1
 static func default_reputation(tier: StringName) -> int:
 	match tier:
@@ -146,30 +155,132 @@ static func reputation_of(d: CommissionDef) -> int:
 	return d.reputation if d.reputation > 0 else default_reputation(d.tier)
 
 
-## 接这一档要几级（0 陌生、1 熟面、2 受托）
-static func required_tier(d: CommissionDef) -> int:
-	if d.min_tier >= 0:
-		return d.min_tier
+## 报告 389：接这一份要多少声望（[member CommissionDef.min_rep]；没写按档位：调查、结案各到这一方那个节点的数）
+static func required_rep(d: CommissionDef) -> int:
+	if d.min_rep >= 0:
+		return d.min_rep
 	match d.tier:
 		CommissionDef.INQUIRY:
-			return 1
+			return effect_rep(faction(d.faction), EFFECT_INQUIRY, INQUIRY_REP)
 		CommissionDef.FINALE:
-			return 2
+			return effect_rep(faction(d.faction), EFFECT_FINALE, FINALE_REP)
 	return 0
+#endregion
 
 
-## 这一方现在几档（0..4）。到了代言门槛但没署名结案，停在信赖
-static func tier_of(book: CommissionBook, f: FactionDef) -> int:
+#region 声望节点（报告 389）
+## 这一方的节点，按声望从小到大（同一个数按表里的先后）
+static func nodes_of(f: FactionDef) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	if f == null:
+		return out
+	for i in f.nodes.size():
+		out.append(f.nodes[i])
+	var order := {}
+	for i in out.size():
+		order[out[i]] = i
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ra := int(a.get("rep", 0))
+		var rb := int(b.get("rep", 0))
+		return ra < rb if ra != rb else int(order[a]) < int(order[b]))
+	return out
+
+
+static func node_of(f: FactionDef, node_id: StringName) -> Dictionary:
+	if f != null:
+		for n in f.nodes:
+			if String(n.get("id", "")) == String(node_id):
+				return n
+	return {}
+
+
+static func is_placeholder(n: Dictionary) -> bool:
+	return bool(n.get("placeholder", false))
+
+
+## 这个节点到了没有（占位的永远不算到）
+static func reached(book: CommissionBook, f: FactionDef, n: Dictionary) -> bool:
+	if f == null or n.is_empty() or is_placeholder(n):
+		return false
+	return (book.rep_of(f.id) if book != null else 0) >= int(n.get("rep", 0))
+
+
+## 到了的、带这个效果的节点（按声望排）
+static func reached_with(book: CommissionBook, f: FactionDef, effect: StringName) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for n in nodes_of(f):
+		if StringName(String(n.get("effect", ""))) == effect and reached(book, f, n):
+			out.append(n)
+	return out
+
+
+## 带这个效果的节点有没有到一个
+static func has_effect(book: CommissionBook, f: FactionDef, effect: StringName) -> bool:
+	return not reached_with(book, f, effect).is_empty()
+
+
+## 带这个效果、参数是 [param value] 的第一个节点（没有 = 空）
+static func node_with(f: FactionDef, effect: StringName, value: Variant = null) -> Dictionary:
+	for n in nodes_of(f):
+		if StringName(String(n.get("effect", ""))) == effect and (value == null or String(n.get("value", "")) == String(value)):
+			return n
+	return {}
+
+
+## 带这个效果的第一个节点要多少声望（没有 = [param fallback]）
+static func effect_rep(f: FactionDef, effect: StringName, fallback: int = -1) -> int:
+	var n := node_with(f, effect)
+	return int(n.get("rep", fallback)) if not n.is_empty() else fallback
+
+
+## 下一个还没到的节点（占位的也算，刻度上看得见）；都到了 = 空
+static func next_node(book: CommissionBook, f: FactionDef) -> Dictionary:
+	var r := book.rep_of(f.id) if book != null and f != null else 0
+	for n in nodes_of(f):
+		if int(n.get("rep", 0)) > r:
+			return n
+	return {}
+
+
+## 到下一个节点还差几点（都到了 = 0）
+static func rep_to_next(book: CommissionBook, f: FactionDef) -> int:
+	var n := next_node(book, f)
+	if n.is_empty():
 		return 0
-	var r := book.rep_of(f.id) if book != null else 0
-	var lv := 0
-	for i in f.thresholds.size():
-		if r >= f.thresholds[i]:
-			lv = i
-	if lv >= TIERS - 1 and not (book != null and book.signed.has(String(f.id))):
-		lv = TIERS - 2
-	return lv
+	return maxi(0, int(n.get("rep", 0)) - (book.rep_of(f.id) if book != null else 0))
+
+
+## 声望从 [param before] 涨到 [param after] 这一下跨过的节点（占位的不算）
+static func crossed(f: FactionDef, before: int, after: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for n in nodes_of(f):
+		var at := int(n.get("rep", 0))
+		if not is_placeholder(n) and at > before and at <= after:
+			out.append(n)
+	return out
+
+
+## 一个节点给什么（刻度悬停、通知用；占位和没到的隐藏节点 = 「？？？？」）。[param faith_defs] 给神的名字（id → [FaithDef]）
+static func node_text(n: Dictionary, faith_defs: Dictionary = {}, book: CommissionBook = null, f: FactionDef = null) -> String:
+	if n.is_empty() or is_placeholder(n) or (bool(n.get("hidden", false)) and not reached(book, f, n)):
+		return UiText.t("node.unknown")
+	var eff := String(n.get("effect", ""))
+	var v: Variant = n.get("value", null)
+	match eff:
+		"commission":
+			var d := def(StringName(String(v)))
+			return UiText.t("node.effect_commission") % (Names.of(d) if d != null else String(v))
+		"god":
+			var fd := faith_defs.get(StringName(String(v)), null) as FaithDef
+			return UiText.t("node.effect_god") % (Names.of(fd) if fd != null else String(v))
+		"faith_xp":
+			return UiText.t("node.effect_faith_xp") % roundi(float(v if v != null else 0.1) * 100.0)
+		"alchemy_loss":
+			return UiText.t("node.effect_alchemy_loss") % roundi(float(v if v != null else 0.0) * 100.0)
+		"canteen_pot", "canteen_store":
+			var a: Array = v if v is Array and (v as Array).size() >= 2 else [0, 0]
+			return UiText.t("node.effect_" + eff) % [int(a[0]), int(a[1])]
+	return UiText.t("node.effect_" + eff)
 
 
 ## 342 B2：剧情委托（不是模板）
@@ -185,12 +296,6 @@ static func opener_of(facility: StringName) -> CommissionDef:
 	return null
 
 
-## 下一级还差几点（满级 = 0）
-static func rep_to_next(book: CommissionBook, f: FactionDef) -> int:
-	var lv := tier_of(book, f)
-	if f == null or lv + 1 >= f.thresholds.size():
-		return 0
-	return maxi(0, f.thresholds[lv + 1] - book.rep_of(f.id))
 #endregion
 
 
@@ -209,8 +314,8 @@ static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &
 		return WHY_DONE
 	if d.mutex != &"" and book.mutex.has(String(d.mutex)):
 		return WHY_MUTEX
-	if tier_of(book, f) < required_tier(d):
-		return WHY_TIER
+	if (book.rep_of(f.id) if book != null else 0) < required_rep(d):
+		return WHY_REP
 	for r in d.requires:
 		if not book.is_done(r):
 			return WHY_REQUIRES
@@ -317,9 +422,9 @@ static func _hand_in(meta: MetaState, d: CommissionDef, stage: int, items: ItemD
 	return out
 
 
-## 342 B2：这一方的常规委托开了没有：到受托，且办完了这一方的许可单
+## 342 B2：这一方的常规委托开了没有：到了结案那个节点（报告 389），且办完了这一方的许可单
 static func regular_open(book: CommissionBook, f: FactionDef) -> bool:
-	return f != null and tier_of(book, f) >= REGULAR_TIER and (f.permit == &"" or book.is_done(f.permit))
+	return f != null and has_effect(book, f, EFFECT_FINALE) and (f.permit == &"" or book.is_done(f.permit))
 
 
 ## 接单时要不要先选一样（配方实验）
@@ -420,16 +525,19 @@ static func credit(meta: MetaState, d: CommissionDef, stage: int, key: String, i
 	return out
 
 
-## 结案：声望（模板封顶熟面）、署名、互斥、酬金，写回执。返回发了什么 {"rep", "funds", "items"}
+## 结案：声望（模板封顶 [constant TEMPLATE_CAP]）、署名、互斥、酬金，写回执。返回发了什么 {"rep", "funds", "items"}
 static func _complete(meta: MetaState, d: CommissionDef, items: ItemDatabase) -> Dictionary:
 	var book := meta.commissions
 	var fid := String(d.faction)
 	var gain := reputation_of(d)
 	if d.tier == CommissionDef.TEMPLATE:
 		gain = clampi(TEMPLATE_CAP - book.rep_of(d.faction), 0, gain)
-	book.rep[fid] = book.rep_of(d.faction) + gain
+	var before := book.rep_of(d.faction)
+	book.rep[fid] = before + gain
 	if d.tier == CommissionDef.FINALE:
-		book.signed[fid] = true
+		book.signed[fid] = true     # 389 起不再影响什么，只是记一笔
+	for n in crossed(faction(d.faction), before, before + gain):     # 389：跨过的节点进通知
+		book.node_news.append({"faction": fid, "node": String(n.get("id", ""))})
 	if d.mutex != &"":
 		book.mutex[String(d.mutex)] = String(d.id)
 	if d.opens != &"":
@@ -506,6 +614,13 @@ static func validate_all(pool: Array, faction_pool: Array) -> Array[String]:
 	for f: FactionDef in faction_pool:     # 342 B2：许可单得是这一方的剧情
 		if f.permit != &"" and (not by_id.has(f.permit) or (by_id[f.permit] as CommissionDef).faction != f.id or not is_story(by_id[f.permit])):
 			problems.append("%s：许可单 %s 不是这一方的剧情" % [f.id, f.permit])
+		for n in f.nodes:     # 389：「开放某份委托」的节点和那份委托要的声望得是同一个数
+			if String(n.get("effect", "")) == "commission":
+				var cid := StringName(String(n.get("value", "")))
+				if not by_id.has(cid) or (by_id[cid] as CommissionDef).faction != f.id:
+					problems.append("%s：节点 %s 开的委托 %s 不是这一方的" % [f.id, n.get("id", ""), cid])
+				elif required_rep(by_id[cid]) != int(n.get("rep", 0)):
+					problems.append("%s：节点 %s 在 %d，委托 %s 要 %d" % [f.id, n.get("id", ""), int(n.get("rep", 0)), cid, required_rep(by_id[cid])])
 	return problems
 
 

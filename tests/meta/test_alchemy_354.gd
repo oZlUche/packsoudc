@@ -24,17 +24,18 @@ static func _open(f: GameFlow) -> void:
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("354 · 内容：炼金规矩导得进来、折损都在 20% 到 50%；《万物可分》要信赖、开炼金")
+	t.begin("354 / 389 · 内容：炼金规矩导得进来、起始折损在 20% 到 50%；协会 100 声望的节点降到 25%；《万物可分》要 50 声望、开炼金")
 	var r := Alchemy.load_rules()
 	t.eq(r.id, AlchemyRules.ID, "规矩资产导出来了")
-	t.eq([r.loss_at(3), r.loss_at(4)], [0.4, 0.25], "信赖 40%、代言 25%")
-	t.check(r.loss_by_tier.all(func(x: float) -> bool: return x >= 0.2 and x <= 0.5), "都在作者说的范围里")
+	t.eq(r.loss, 0.4, "起始 40%")
+	var node := Commissions.node_with(Commissions.faction(r.faction), &"alchemy_loss")
+	t.eq([int(node.get("rep", -1)), float(node.get("value", 0.0))], [100, 0.25], "协会 100 声望：25%")
 	var bad := ImportReport.new()
-	ContentImporter.import_alchemy_rules({"id": "alchemy", "loss_by_tier": [0.6]}, ContentImporter.Context.new(), bad)
+	ContentImporter.import_alchemy_rules({"id": "alchemy", "loss": 0.6}, ContentImporter.Context.new(), bad)
 	t.check(not bad.ok(), "折损 60%：导入报错")
 	var d := Commissions.opener_of(Alchemy.ID)
 	t.eq(d.id if d != null else &"", &"society_alchemy", "炼金由《万物可分》开")
-	t.eq(Commissions.required_tier(d), 3, "要信赖")
+	t.eq(Commissions.required_rep(d), 50, "要 50 声望")
 	t.eq(Commissions.validate_all(Commissions.defs(), Commissions.factions()), [] as Array[String], "前置、阵营查得过")
 
 
@@ -99,7 +100,7 @@ static func run_dissolve(t: TestCase) -> void:
 		ores.append(T110._add(m, db, &"iron_ore").uid)
 	var knife := T110._add(m, db, &"knife")
 	knife.set_locked(true)
-	t.eq(Alchemy.loss(m), 0.4, "协会初识：40%")
+	t.eq(Alchemy.loss(m), 0.4, "协会 0 声望：40%")
 	var p := Alchemy.preview(m, ores + [knife.uid, ores[0]])
 	t.eq([int(p["count"]), int(p["value"]), int(p["dust"])], [5, 120, 72], "五件铁矿石 120 → 72（重复的、锁着的刀不算）")
 	t.eq(int(p["funds"]), 5 * MetaState.sell_price_of(m.warehouse.get_item(int(ores[0]))), "顺带写出售价")
@@ -111,9 +112,10 @@ static func run_dissolve(t: TestCase) -> void:
 	t.eq(Alchemy.dissolve(m, [knife.uid]), {"count": 0, "dust": 0}, "只有锁着的刀：什么也不动")
 	t.eq(Alchemy.yield_of(5, 1, 0.4), 3, "一件 5 → 3")
 	t.eq(Alchemy.yield_of(3, 2, 0.4), 2, "两件合 3 → 1.8 取整 1，每件至少 1 → 2")
+	m.commissions.rep["society"] = 99
+	t.eq(Alchemy.loss(m), 0.4, "99：还是 40%")
 	m.commissions.rep["society"] = 100
-	m.commissions.signed["society"] = true
-	t.eq(Alchemy.loss(m), 0.25, "代言：25%")
+	t.eq(Alchemy.loss(m), 0.25, "100（389 起不用先做完结案）：25%")
 	var w := T110._add(m, db, &"iron_ore")
 	t.eq(int(Alchemy.dissolve(m, [w.uid])["dust"]), 18, "24 → 18")
 

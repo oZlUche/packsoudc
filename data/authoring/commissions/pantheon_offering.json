@@ -7,7 +7,7 @@
   "faction": "pantheon",
   "order": 2,
   "reputation": 5,
-  "min_tier": 1,
+  "min_rep": 10,
   "requires": [
     "pantheon_first_rite"
   ],

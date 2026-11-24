@@ -12,17 +12,73 @@ display_names = {
 order = 6
 arrives = &"extractions"
 arrive_after = 3
-services = {
-"altar_bless": 3,
-"faith_xp": 2,
-"god_brute": 0,
-"god_earth": 1,
-"god_hunt": 1,
-"god_nature": 1,
-"god_skill": 0,
-"god_sun": 0,
-"opening_pick": 4
-}
+nodes = Array[Dictionary]([{
+"effect": "god",
+"id": "god_brute",
+"kind": "open",
+"rep": 0,
+"value": "brute"
+}, {
+"effect": "inquiry",
+"id": "inquiry",
+"kind": "open",
+"rep": 10
+}, {
+"effect": "god",
+"id": "god_nature",
+"kind": "open",
+"rep": 10,
+"value": "nature"
+}, {
+"effect": "god",
+"id": "god_sun",
+"kind": "open",
+"rep": 20,
+"value": "sun"
+}, {
+"effect": "finale",
+"id": "finale",
+"kind": "open",
+"rep": 25
+}, {
+"effect": "faith_xp",
+"id": "faith_xp",
+"kind": "boost",
+"rep": 25,
+"value": 0.1
+}, {
+"effect": "god",
+"id": "god_skill",
+"kind": "open",
+"placeholder": true,
+"rep": 40,
+"value": "skill"
+}, {
+"effect": "altar_bless",
+"id": "altar_bless",
+"kind": "open",
+"rep": 50
+}, {
+"effect": "god",
+"id": "god_hunt",
+"kind": "open",
+"placeholder": true,
+"rep": 60,
+"value": "hunt"
+}, {
+"effect": "god",
+"id": "god_earth",
+"kind": "open",
+"placeholder": true,
+"rep": 80,
+"value": "earth"
+}, {
+"effect": "",
+"id": "rank_100",
+"kind": "open",
+"placeholder": true,
+"rep": 100
+}])
 permit = &"pantheon_permit"
 regular = Array[Dictionary]([{
 "goal": "altar_offer",

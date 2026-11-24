@@ -1,9 +1,9 @@
-## 354：炼金术 —— 魔法师协会信赖档加剧情《万物可分》开放（后勤「炼金」页）。纯逻辑，存盘由 [GameFlow] 做。
+## 354：炼金术 —— 魔法师协会 50 声望的剧情《万物可分》开放（后勤「炼金」页）。纯逻辑，存盘由 [GameFlow] 做。
 ##
 ## - 分解：仓库里的道具丢进去换万物之尘（[member MetaState.dust]）。第七节（作者 2026-11-21 11:39「所有东西都可以炼金」）：每一件都能丢，
 ##   只有锁定的拒绝；剧情独有、手上委托要交的（[method guarded]）手动要危险确认、一键炼金（[method auto_picks]）跳过。
 ##   每件的尘值 = 它的价值，和出售同一个数（[method ItemValue.of_instance]，作者 2026-11-21「让尘的出率和价值挂钩」）；
-##   一次丢的几件合起来 × (1 − 折损) 向下取整，每件至少 1。折损按协会声望档（[method AlchemyRules.loss_at]）。
+##   一次丢的几件合起来 × (1 − 折损) 向下取整，每件至少 1。折损按协会的声望节点（[method loss]）。
 ## - 补料（第二批）：会打、且用真材料打造过的铁匠配方，缺的料按全额尘值补
 class_name Alchemy
 extends RefCounted
@@ -124,16 +124,13 @@ static func auto_picks(meta: MetaState, pool: Array, rules: AlchemyRules = null)
 	return out
 
 
-## 协会现在几档（决定折损）
-static func tier(meta: MetaState, rules: AlchemyRules = null) -> int:
-	var r := rules if rules != null else load_rules()
-	return Commissions.tier_of(meta.commissions if meta != null else null, Commissions.faction(r.faction))
-
-
-## 现在的折损（0.4 = 四成）
+## 现在的折损（0.4 = 四成）：起始折损和协会到了的 `alchemy_loss` 节点里最低的那个（报告 389）
 static func loss(meta: MetaState, rules: AlchemyRules = null) -> float:
 	var r := rules if rules != null else load_rules()
-	return r.loss_at(tier(meta, r))
+	var out := r.loss
+	for n in Commissions.reached_with(meta.commissions if meta != null else null, Commissions.faction(r.faction), &"alchemy_loss"):
+		out = minf(out, float(n.get("value", out)))
+	return out
 
 
 ## 尘值合计 [param value]、[param count] 件，在折损 [param p_loss] 下得几点尘

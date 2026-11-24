@@ -11,6 +11,32 @@ display_names = {
 }
 order = 5
 arrives = &"first_run"
+nodes = Array[Dictionary]([{
+"effect": "inquiry",
+"id": "inquiry",
+"kind": "open",
+"rep": 10
+}, {
+"effect": "nursery_plot",
+"id": "plot_1",
+"kind": "open",
+"rep": 10
+}, {
+"effect": "finale",
+"id": "finale",
+"kind": "open",
+"rep": 25
+}, {
+"effect": "nursery_plot",
+"id": "plot_2",
+"kind": "open",
+"rep": 50
+}, {
+"effect": "nursery_plot",
+"id": "plot_3",
+"kind": "open",
+"rep": 100
+}])
 facilities = {
 "nursery": "growers_first_bed"
 }

@@ -34,7 +34,7 @@ static func def_of(id: String, note: Dictionary) -> CommissionDef:
 	d.id = StringName(id)
 	d.faction = StringName(String(note.get("faction", "")))
 	d.tier = CommissionDef.TEMPLATE
-	d.min_tier = 0
+	d.min_rep = 0
 	d.funds = int(note.get("funds", 0))
 	var band := clampi(int(note.get("band", 0)), 0, 2)
 	var nm := Names.pick(note.get("names", {}) if note.get("names", null) is Dictionary else {}, String(note.get("name", "")))

@@ -6,9 +6,9 @@
   },
   "category": "faith",
   "order": 11,
-  "text": "万神院到了营地以后，出征第一屏多一条信仰横条：点开它选一位神，这一局就奉祂；不想奉神就选【无信者】。不改就沿用上一局奉的神。没解锁的神写着？？？？，营地里万神院的信赖到了那一档才开。\n\n奉了神，祂的信物出征时自动放进背包，局结束后不带回仓库。这一局的地图上会有神的低语和神坛：在休息点的神坛上献祭道具换经验值，升级时也会出这位神的牌。",
+  "text": "万神院到了营地以后，出征第一屏多一条信仰横条：点开它选一位神，这一局就奉祂；不想奉神就选【无信者】。不改就沿用上一局奉的神。没解锁的神写着？？？？，万神院的声望到了祂那个节点才开。\n\n奉了神，祂的信物出征时自动放进背包，局结束后不带回仓库。这一局的地图上会有神的低语和神坛：在休息点的神坛上献祭道具换经验值，升级时也会出这位神的牌。",
   "texts": {
-    "en": "Once the Senatus Panthei has come to camp, the first expedition screen gets a Faith bar: open it and pick a god to follow for this run, or pick Faithless to follow none. Leave it alone and you keep last run's god. Locked gods show ????; they open as your Standing with the Senatus Panthei reaches their tier.\n\nThe god you follow puts their Charm into your bag when you set out, and it does not come back to the storeroom when the run ends. That run's map has the god's Whispers and Altars: offer items at a rest point's Altar for XP, and level-ups also offer that god's cards."
+    "en": "Once the Senatus Panthei has come to camp, the first expedition screen gets a Faith bar: open it and pick a god to follow for this run, or pick Faithless to follow none. Leave it alone and you keep last run's god. Locked gods show ????; each opens when your Standing with the Senatus Panthei reaches their milestone.\n\nThe god you follow puts their Charm into your bag when you set out, and it does not come back to the storeroom when the run ends. That run's map has the god's Whispers and Altars: offer items at a rest point's Altar for XP, and level-ups also offer that god's cards."
   },
   "related": [
     "altar_offering",

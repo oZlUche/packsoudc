@@ -7,7 +7,7 @@
   "faction": "growers",
   "order": 3,
   "reputation": 5,
-  "min_tier": 1,
+  "min_rep": 10,
   "requires": [
     "growers_trial_sow"
   ],

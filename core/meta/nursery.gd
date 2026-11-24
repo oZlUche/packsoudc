@@ -11,11 +11,9 @@
 class_name Nursery
 extends RefCounted
 
-## 几片：垦户社熟面开一片；355：信赖开第二片、代言开第三片（[method plots_for]）。老档读回来至少一片
+## 几片：389 起按垦户社到了几个 `nursery_plot` 节点（10 / 50 / 100，[method plots_for]）。老档读回来至少一片
 const PLOTS := 1
 const MAX_PLOTS := 3
-## 第几档开到几片：[信赖, 代言]
-const PLOT_TIERS: Array[int] = [3, 4]
 ## 每片地多大
 const FIELD := Vector2i(4, 4)
 ## 地的格子盘编号（第 i 片 = FIELD_ID + i）
@@ -84,20 +82,16 @@ func field(i: int) -> GridInventory:
 	return fields[i] if i >= 0 and i < fields.size() else null
 
 
-## 355：垦户社第 [param tier] 档有几片
-static func plots_for(tier: int) -> int:
-	var n := PLOTS
-	for t in PLOT_TIERS:
-		if tier >= t:
-			n += 1
-	return mini(n, MAX_PLOTS)
+## 389：垦户社现在该有几片（到了几个 `nursery_plot` 节点，至少 [constant PLOTS]、最多 [constant MAX_PLOTS]）
+static func plots_for(book: CommissionBook) -> int:
+	var n := Commissions.reached_with(book, Commissions.faction(&"growers"), &"nursery_plot").size()
+	return clampi(n, PLOTS, MAX_PLOTS)
 
 
-## 355：按档补地（只加不减）。返回加了没有
-func fit(tier: int) -> bool:
-	var want := plots_for(tier)
+## 355：补到 [param want] 片（只加不减）。返回加了没有
+func fit(want: int) -> bool:
 	var grew := false
-	while fields.size() < want:
+	while fields.size() < mini(want, MAX_PLOTS):
 		fields.append(_field(fields.size()))
 		grew = true
 	return grew

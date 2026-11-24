@@ -10,6 +10,47 @@ display_names = {
 "en": "Grey Lamp Mutual Aid"
 }
 order = 3
+nodes = Array[Dictionary]([{
+"effect": "inquiry",
+"id": "inquiry",
+"kind": "open",
+"rep": 10
+}, {
+"effect": "finale",
+"id": "finale",
+"kind": "open",
+"rep": 25
+}, {
+"effect": "commission",
+"id": "canteen",
+"kind": "open",
+"rep": 25,
+"value": "greylamp_canteen"
+}, {
+"effect": "canteen_pot",
+"id": "pot_5",
+"kind": "boost",
+"rep": 50,
+"value": [5, 5]
+}, {
+"effect": "canteen_store",
+"id": "store_8",
+"kind": "boost",
+"rep": 50,
+"value": [8, 8]
+}, {
+"effect": "canteen_pot",
+"id": "pot_6",
+"kind": "boost",
+"rep": 100,
+"value": [6, 6]
+}, {
+"effect": "canteen_store",
+"id": "store_10",
+"kind": "boost",
+"rep": 100,
+"value": [10, 8]
+}])
 facilities = {
 "market": "greylamp_check_scale"
 }
