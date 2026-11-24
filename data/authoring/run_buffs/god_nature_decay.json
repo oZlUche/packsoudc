@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_decay",
+  "display_name": "凋零",
+  "display_names": {
+    "en": "Withering Blight"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 33
+      }
+    }
+  ]
+}

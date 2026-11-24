@@ -341,6 +341,8 @@ static func run_brute_cards(t: TestCase) -> void:
 	t.eq(run.board.get_item(flesh.uid), null, "吃掉了：背包里没了")
 	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_hp", 0.0)), hp0 + 60.0), "生命上限 +60")
 	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0)), st0), "没升级：耐力上限不变")
+	var row := CharacterCard.stat_row(run, &"max_hp")
+	t.check(is_equal_approx(float(row.get("raw", 0.0)), float(run.effective_baseline().base_stats.get(&"max_hp", 0.0))), "状态界面的生命上限也算上血肉（%s）" % str(row.get("raw", 0.0)))
 	lv.taken["god_brute_eat_up"] = 1
 	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0)), st0 + 30.0), "升级：以前吃的补一半耐力上限 +30")
 	var scrap := ItemInstance.create(run.items.get_def(&"blood_flesh_scrap"))
@@ -431,4 +433,54 @@ static func run_miracle(t: TestCase) -> void:
 		t.eq(Miracle.class_of(to), Miracle.class_of(from), "同类")
 		t.eq(run.board.items().size(), keep + 1, "件数不变")
 		t.check(run.board.items().any(func(x): return (x as ItemInstance).def.id == to.id), "新的一件在背包里")
+	run.dispose()
+
+
+static func run_nature_cards(t: TestCase) -> void:
+	t.begin("388 第 3 批 A · 自然之神战斗里的牌：进牌池、按牌填进枯萎 / 新生；战后生长、丰饶升级攒进整局生命上限；食补按格子加上限")
+	var run := _start(61, &"nature")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"nature":
+		t.check(false, "开局奉自然之神")
+		return
+	var r := lv.rules()
+	var quals := 0
+	var bases := 0
+	for cid in r.card_ids():
+		if r.god_of(cid) == &"nature":
+			if r.is_qual(cid):
+				quals += 1
+			else:
+				bases += 1
+	t.eq(quals, 12, "这一批 6 张质变 + 6 张升级")
+	t.eq(bases, 6, "基础牌 6 张（回春、毒气、食补、药补、求生本能、强壮）")
+	var perk := NatureCyclePerk.new()
+	t.eq(perk.effect_for(lv).decay_percent, 0.0, "没拿凋零")
+	lv.taken["god_nature_decay"] = 1
+	lv.taken["god_nature_reap"] = 1
+	lv.taken["god_nature_poison"] = 2
+	var e := perk.effect_for(lv)
+	t.check(is_equal_approx(e.decay_percent, 33.0), "凋零 33%")
+	t.check(is_equal_approx(e.harvest_at, 10.0) and is_equal_approx(e.harvest_percent, 50.0), "收割：第 10 秒、50%（作者定 10 秒）")
+	t.eq(e.poison, 2, "毒气两张：每次 2 层")
+	# 战后：生长按新生、丰饶升级按丰饶
+	lv.taken["god_nature_grow"] = 1
+	lv.taken["god_nature_bounty"] = 1
+	lv.taken["god_nature_bounty_up"] = 1
+	var res := BattleResult.new()
+	res.final = {"sides": [{"buffs": {String(NatureCycle.RENEWAL): 100, String(NatureCycle.BOUNTY): 40}}, {"buffs": {}}]}
+	var hp0 := float(run.effective_baseline().base_stats.get(&"max_hp", 0.0))
+	t.check(is_equal_approx(NatureCyclePerk.settle(lv, res), 30.0), "新生 100 × 10% + 丰饶 40 × 50% = 30")
+	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_hp", 0.0)), hp0 + 30.0), "整局生命上限 +30")
+	# 食补：棋盘上每格食物 / 食材
+	lv.taken["god_nature_food"] = 1
+	var cells := NatureCyclePerk.cells_of(run.board, [&"food", &"ingredient"])
+	var input := CompileInput.of(run.effective_baseline())
+	perk.compile_into(input, run.board, run)
+	var add := 0.0
+	for m in input.baseline_mods:
+		if (m as StatModifier).stat == BattleStats.MAX_HP:
+			add += (m as StatModifier).amount
+	t.check(is_equal_approx(add, 3.5 * cells), "食补：%d 格 × 3.5 = %.1f" % [cells, add])
+	t.check(lv.card_text(&"god_nature_strong").contains("4"), "强壮：负重 +4（%s）" % lv.card_text(&"god_nature_strong"))
 	run.dispose()

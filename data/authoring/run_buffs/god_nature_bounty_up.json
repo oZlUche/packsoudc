@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_bounty_up",
+  "display_name": "丰饶（升级）",
+  "display_names": {
+    "en": "Bounty+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "keep": 50
+      }
+    }
+  ]
+}

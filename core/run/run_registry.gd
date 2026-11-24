@@ -185,6 +185,7 @@ const FAITH_PERKS := {
 	&"brute_rage": "res://core/run/faith/perks/brute_rage_perk.gd",     # 信仰重构 D
 	&"sun_cycle": "res://core/run/faith/perks/sun_cycle_perk.gd",
 	&"nature_regrowth": "res://core/run/faith/perks/nature_regrowth_perk.gd",
+	&"nature_cycle": "res://core/run/faith/perks/nature_cycle_perk.gd",     # 388 第 3 批
 }
 
 ## 猎手（069 / 071）：行动逻辑与战败后果

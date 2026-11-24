@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_qqsn6"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_kbcsb"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_au82p"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_dmeht"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_24g8n"]
+
+[resource]
+script = ExtResource("5_24g8n")
+id = &"nature_renewal"
+display_name = "新生"
+display_names = {
+"en": "Rebirth"
+}

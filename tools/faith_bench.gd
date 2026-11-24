@@ -16,7 +16,7 @@ const GODS: Array[StringName] = [&"", &"skill", &"hunt", &"earth", &"brute", &"s
 const TIERS: Array[int] = [0, 3]
 ## 开战那一刻就有、不算「触发」的战记
 const OPENING_KEYS: Array[String] = ["hunt_mark", "sun_open", "sun_close", "earth_support"]
-const BUFFS := {&"skill": &"skill_momentum", &"hunt": &"hunt_dismantle", &"brute": &"brute_rage", &"nature": &"nature_regrowth"}
+const BUFFS := {&"skill": &"skill_momentum", &"hunt": &"hunt_dismantle", &"brute": &"brute_rage", &"nature": &"nature_renewal"}
 
 
 func run() -> void:
@@ -135,7 +135,7 @@ static func _spec(snap: Dictionary, items: ItemDatabase, god: StringName, tier: 
 		&"sun":
 			input.rules.append(SunCyclePerk.new().rule_for(null))     # 388：核心；牌在局里拿
 		&"nature":
-			input.rules.append(NatureRegrowthPerk.new().rule_at(tier, NatureRegrowthPerk.food_on(board)))
+			input.rules.append(NatureCyclePerk.new().rule_for(null))     # 388：核心；牌在局里拿
 	return BattleCompiler.compile(board, input)
 
 

@@ -1,0 +1,16 @@
+{
+  "id": "god_nature_reap_up",
+  "display_name": "收割（升级）",
+  "display_names": {
+    "en": "Reaping+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 10,
+        "pct": 100
+      }
+    }
+  ]
+}

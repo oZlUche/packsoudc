@@ -1,10 +1,9 @@
-## 信仰重构 D（交接方案 §6.3；E 批缩短）：自然之神「恢复存量」—— 第 2 秒起每 4 秒回 2% 生命；实际回的 20% 存进生息（上限 15%）；满血不存；
-## 一阶低血放出（隔 6 秒，放出的不再存）；二阶食物加容量（最多 3 件）；三阶进加时给守护
+## 388 第 3 批：自然之神【枯萎】/【新生】—— 敌人每失去 1 点生命 +1 层枯萎、我每回 1 点生命 +1 层新生；
+## 自然之神的牌在战斗里的那一半（凋零、护佑、收割、丰饶、轮回、回春、毒气、求生本能）
 extends RefCounted
 
 const Comp := preload("res://tests/battle/test_compiler.gd")
 const FX := preload("res://tests/battle/test_effect_system.gd")
-const ID := NatureRegrowth.BUFF_ID
 
 
 static func _rng(s: int) -> RandomNumberGenerator:
@@ -13,110 +12,113 @@ static func _rng(s: int) -> RandomNumberGenerator:
 	return r
 
 
-static func _me(tier: int, hp: float = 1000.0) -> CombatantSpec:
+## 带自然核心的我：[param tune] 改效果上的数；[param regen] 每秒回血；[param hp_now] 开战时的生命（空 = 满）
+static func _me(tune: Dictionary = {}, regen: float = 0.0, hp: float = 1000.0, dmg: float = 10.0) -> CombatantSpec:
 	var b := GridInventory.new(Vector2i(4, 4), 1, false)
-	b.place(ItemInstance.create(Comp._weapon("t_stick", ["1"], 1.0, 2.0, ["weapon", "melee"])), Vector2i(0, 0), 0)
-	var rules: Array[AbilityRule] = [NatureRegrowthPerk.new().rule_at(tier)]
-	return BattleCompiler.compile_board(b, CombatantBaseline.with_hp(hp), [] as Array[StatModifier], rules)
+	b.place(ItemInstance.create(Comp._weapon("t_blade", ["1"], dmg, 1.0, ["weapon", "melee"])), Vector2i(0, 0), 0)
+	var rule := NatureCyclePerk.new().rule_for(null)
+	var e := rule.effects[0] as NatureCycle
+	for k in tune:
+		e.set(k, tune[k])
+	var base := CombatantBaseline.with_hp(hp)
+	if regen > 0.0:
+		base.base_stats["regen_hp"] = regen
+	var rules: Array[AbilityRule] = [rule]
+	return BattleCompiler.compile_board(b, base, [] as Array[StatModifier], rules)
 
 
-static func _hitter(dmg: float) -> CombatantSpec:
+static func _hitter(dmg: float, cd: float = 1.0) -> CombatantSpec:
 	var b := GridInventory.new(Vector2i(4, 4), 1, false)
-	b.place(ItemInstance.create(Comp._weapon("t_foe", ["1"], dmg, 1.0, ["weapon", "melee"])), Vector2i(0, 0), 0)
+	b.place(ItemInstance.create(Comp._weapon("t_foe", ["1"], dmg, cd, ["weapon", "melee"])), Vector2i(0, 0), 0)
 	return BattleCompiler.compile_board(b, CombatantBaseline.with_hp(50000.0))
 
 
-static func _mech(res: BattleResult, key: String) -> Array:
-	var out: Array = []
+static func _final(res: BattleResult, side: int, id: StringName) -> int:
+	return int((((res.final.get("sides", [{}, {}]) as Array)[side] as Dictionary).get("buffs", {}) as Dictionary).get(String(id), 0))
+
+
+static func _max_hp(res: BattleResult, side: int) -> float:
+	var r: Dictionary = (((res.final.get("sides", [{}, {}]) as Array)[side] as Dictionary).get("resources", {}))
+	var hp = r.get(String(BattleStats.RES_HP), r.get(BattleStats.RES_HP, {}))
+	if hp is Array:
+		return float((hp as Array)[1])     # 快照里是整点
+	return 0.0
+
+
+static func _lost(res: BattleResult, side: int) -> float:
+	var n := 0.0
+	for raw in res.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.DAMAGE and e.side == side:
+			n += StatMath.to_float(maxi(0, e.get_int(&"amount")))
+	return n
+
+
+static func _mech(res: BattleResult, key: String) -> int:
+	var n := 0
 	for raw in res.log:
 		var e := raw as BattleEvent
 		if e.name == BattleEvent.EFFECT_RESOLVED and String(e.payload.get("effect", "")) == SkillMomentum.MECHANIC and String(e.payload.get("key", "")) == key:
-			out.append(e)
-	return out
+			n += 1
+	return n
 
 
-static func _top(res: BattleResult) -> int:
-	var top := 0
-	for raw in res.log:
-		var e := raw as BattleEvent
-		if (e.name == BattleEvent.STATUS_STACKED or e.name == BattleEvent.STATUS_UNSTACKED) and e.side == 0 and e.get_name(&"buff") == ID:
-			top = maxi(top, e.get_int(&"stacks"))
-	return top
-
-
-static func run_store(t: TestCase) -> void:
-	t.begin("信仰重构 D · 生息：周期治疗回 2%、实际回的 20% 存进去、满血不存、存量封顶")
-	var r := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 7.0)
-	var heals := 0
-	for raw in r.log:
-		var e := raw as BattleEvent
-		if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "hp" and String(e.payload.get("reason", "")) == "heal" and e.get_int(&"delta") > 0:
-			heals += 1
-	t.eq(heals, 2, "7 秒里周期治疗两次（2、6）")
-	t.eq(_top(r), 8, "两次各回 20，存 20% = 8 点生息")
-	var full := BattleSim.run(_me(0), FX._spec(50000.0, []), _rng(1), 7.0)
-	t.eq(_top(full), 0, "一直满血：治疗没回上来，也就不存")
-	t.eq(_mech(r, "nature_pulse").size(), 2, "游戏测试 11-19：没满血的每次节拍都写一句战记")
-	t.eq(_mech(full, "nature_pulse").size(), 0, "满血的节拍不写")
-	var said := ""
-	for line in BattleNarrator.lines(r, ["我", "敌"]):
-		said += BattleNarrator.plain(line) + "\n"
-	t.check(said.contains("借自然之力恢复"), "战记里看得到自然：%s" % said.left(200))
-	var long := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 120.0)
-	t.check(_top(long) <= 150, "存量不超过最大生命的 15%%（%d）" % _top(long))
-	var again := BattleSim.run(_me(0), _hitter(30.0), _rng(1), 7.0)
+static func run_core(t: TestCase) -> void:
+	t.begin("388 · 枯萎 / 新生：敌人失去几点生命就几层枯萎（整点），我回几点就几层新生（每秒回复也算）")
+	var r := BattleSim.run(_me({}, 3.0, 1000.0), _hitter(5.0), _rng(1), 6.0)
+	var lost := _lost(r, 1)
+	t.check(lost > 0.0, "敌人掉了血（%.1f）" % lost)
+	t.eq(_final(r, 1, NatureCycle.WITHER), floori(lost), "枯萎 = 敌人失去的整点生命")
+	t.check(_final(r, 0, NatureCycle.RENEWAL) > 0, "回血积了新生（%d）" % _final(r, 0, NatureCycle.RENEWAL))
+	t.check(_mech(r, "nature_heal") <= 1 and _mech(r, "nature_wither") <= 1, "经验值的记号一场最多一次")
+	var again := BattleSim.run(_me({}, 3.0, 1000.0), _hitter(5.0), _rng(1), 6.0)
 	t.eq(again.log.size(), r.log.size(), "同种子同结果")
 
 
-static func run_release(t: TestCase) -> void:
-	t.begin("信仰重构 D · 生息：基础不放；一阶低血放出、两次至少隔 6 秒、放出的不再存")
-	var zero := BattleSim.run(_me(0, 300.0), _hitter(25.0), _rng(2), 30.0)
-	t.eq(_mech(zero, "nature_release").size(), 0, "基础：不放")
-	var one := BattleSim.run(_me(1, 300.0), _hitter(25.0), _rng(2), 30.0)
-	var rel := _mech(one, "nature_release")
-	t.check(not rel.is_empty(), "一阶：低血放出生息（%d 次）" % rel.size())
-	var gap_ok := true
-	for i in range(1, rel.size()):
-		if (rel[i] as BattleEvent).time - (rel[i - 1] as BattleEvent).time < StatMath.from_float(6.0):
-			gap_ok = false
-	t.check(gap_ok, "两次至少隔 6 秒")
-	t.check(not UiText.t("log.nature_release").is_empty() and UiText.t("log.nature_release") != "log.nature_release", "战记那句在字表里")
-
-
-static func run_food_and_guard(t: TestCase) -> void:
-	t.begin("信仰重构 D · 生息：二阶食物加容量（最多 3 件）；棋盘数食物不数不参战的；三阶进加时给守护")
-	var b := GridInventory.new(Vector2i(6, 4), 1, false)
-	for i in 4:
-		b.place(ItemInstance.create(Comp._weapon("t_food%d" % i, ["1"], 0.0, 9.0, ["food"])), Vector2i(i, 0), 0)
-	t.eq(NatureRegrowthPerk.food_on(b), 4, "棋盘上 4 件食物")
-	(b.items()[0] as ItemInstance).set_benched(true)
-	t.eq(NatureRegrowthPerk.food_on(b), 3, "标了不参战的不算")
-	var spec := FX._spec(1000.0, [])
-	var rt := CombatantRuntime.from_spec(spec, 0)
-	var eff := NatureRegrowth.new()
-	eff.food = 5
-	eff.tier = 1
-	var c1 := eff.capacity(rt)
-	t.eq(c1, StatMath.from_float(150.0), "一阶：容量 15%")
-	eff.tier = 2
-	t.eq(eff.capacity(rt), c1 + StatMath.from_float(60.0), "二阶：5 件按 3 件算，+6%")
-	var guard := BattleSim.run(_me(3), FX._spec(500000.0, []), _rng(3), 32.0)
-	var got := false
-	for raw in guard.log:
+static func run_cards(t: TestCase) -> void:
+	t.begin("388 · 自然之神的牌（战斗里）：凋零扣敌人上限、护佑把新生换成护甲、收割斩杀、丰饶溢出加上限、轮回互给、回春、毒气、求生本能")
+	# 凋零
+	var plain := BattleSim.run(_me(), FX._spec(500.0, []), _rng(2), 5.0)
+	var decay := BattleSim.run(_me({"decay_percent": 50.0}), FX._spec(500.0, []), _rng(2), 5.0)
+	var w := _final(decay, 1, NatureCycle.WITHER)
+	t.check(w > 0, "敌人有枯萎（%d）" % w)
+	t.check(is_equal_approx(_max_hp(decay, 1), _max_hp(plain, 1) - w * 0.5) or _max_hp(decay, 1) < _max_hp(plain, 1), "凋零 50%%：敌人上限少了（%.1f < %.1f）" % [_max_hp(decay, 1), _max_hp(plain, 1)])
+	# 护佑：第 10 秒新生清零、给护甲
+	var guard := BattleSim.run(_me({"guard_every": 10.0, "guard_percent": 100.0}, 5.0, 1000.0), _hitter(8.0), _rng(3), 10.5)
+	t.eq(_mech(guard, "nature_guard_armor"), 1, "第 10 秒换了一次护甲")
+	t.check(_final(guard, 0, NatureCycle.RENEWAL) < 5, "新生清零后只剩半秒积的（%d）" % _final(guard, 0, NatureCycle.RENEWAL))
+	# 收割：第 10 秒按枯萎给收割，敌人生命不高于它就死
+	var reap := BattleSim.run(_me({"harvest_at": 10.0, "harvest_percent": 100.0}, 0.0, 1000.0, 40.0), FX._spec(500.0, []), _rng(4), 20.0)
+	t.eq(_mech(reap, "nature_reap"), 1, "收割斩了一次")
+	t.eq(reap.winner, 0, "敌人死了")
+	var no_reap := BattleSim.run(_me({}, 0.0, 1000.0, 40.0), FX._spec(500.0, []), _rng(4), 20.0)
+	t.check(no_reap.duration > reap.duration, "比不拿收割早结束（%.1f < %.1f）" % [StatMath.to_float(reap.duration), StatMath.to_float(no_reap.duration)])
+	# 丰饶：满血时回复溢出 → 上限加等量
+	var bounty := BattleSim.run(_me({"bounty": true}, 5.0, 1000.0), FX._spec(50000.0, []), _rng(5), 4.0)
+	t.check(_final(bounty, 0, NatureCycle.BOUNTY) >= 15, "满血 4 秒溢出约 20 点：【丰饶】%d 层" % _final(bounty, 0, NatureCycle.BOUNTY))
+	t.check(_max_hp(bounty, 0) > 1000.0, "上限涨了（%.1f）" % _max_hp(bounty, 0))
+	# 轮回：敌人每 5 层枯萎给我 1 层新生
+	var cyc := BattleSim.run(_me({"cycle_stacks": 1}), FX._spec(5000.0, []), _rng(6), 6.0)
+	t.check(_final(cyc, 0, NatureCycle.RENEWAL) > 0, "没回血也有新生（轮回给的 %d）" % _final(cyc, 0, NatureCycle.RENEWAL))
+	t.eq(_final(cyc, 0, NatureCycle.RENEWAL), floori(_final(cyc, 1, NatureCycle.WITHER) / 5.0), "每 5 层枯萎 1 层新生（给的新生不再回给枯萎）")
+	# 毒气：每 2 秒给敌人 1 层中毒
+	var gas := BattleSim.run(_me({"poison": 1}), FX._spec(5000.0, []), _rng(7), 4.5)
+	var poisoned := 0
+	for raw in gas.log:
 		var e := raw as BattleEvent
-		if e.name == BattleEvent.STATUS_STACKED and e.side == 0 and e.get_name(&"buff") == NatureRegrowth.GUARD_ID:
-			got = e.time >= StatMath.from_float(30.0)
-	t.check(got, "进加时（30 秒）得到守护")
-	t.eq(_mech(guard, "nature_guard").size(), 1, "一场一次")
-	var two := BattleSim.run(_me(2), FX._spec(500000.0, []), _rng(3), 32.0)
-	t.eq(_mech(two, "nature_guard").size(), 0, "二阶没有")
+		if e.name == BattleEvent.STATUS_STACKED and e.side == 1 and e.get_name(&"buff") == &"poison" and e.get_int(&"delta") > 0:
+			poisoned += e.get_int(&"delta")
+	t.eq(poisoned, 2, "第 2、4 秒各一层")
+	# 求生本能：第一次低于一半回一成
+	var hurt := BattleSim.run(_me({"survive_percent": 10.0}, 0.0, 100.0), _hitter(30.0), _rng(8), 3.5)
+	t.eq(_mech(hurt, "nature_survive"), 1, "低于一半时触发一次")
 
 
 static func run_ledger(t: TestCase) -> void:
-	t.begin("信仰重构 D · 自然的经验值：治疗够数 +2；放出过生息 +2（372：打赢那一份改成通用经验值）；三阶 42 / 117 / 217")
+	t.begin("388 · 自然的经验值：新生到最大生命一成 +2、枯萎到敌人最大生命一成 +2；三阶 42 / 117 / 217")
 	var def := load("res://data/faiths/nature.tres") as FaithDef
 	var n := 0
 	for d in def.deeds:
-		n += (d as FaithDeed).gain(&"battle", {"won": true, "mechanic": {"nature_heal": 1, "nature_release": 2}, "dealt": {}, "taken": {}, "fired_items": [], "healed": 0.0})
+		n += (d as FaithDeed).gain(&"battle", {"won": true, "mechanic": {"nature_heal": 1, "nature_wither": 1}, "dealt": {}, "taken": {}, "fired_items": [], "healed": 0.0})
 	t.eq(n, 4, "2 + 2")
 	t.eq(def.thresholds, [42, 117, 217] as Array[int], "三阶")

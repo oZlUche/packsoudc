@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="6_f54du"]
 [ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="7_af1s0"]
 [ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="8_lkjbr"]
-[ext_resource type="Script" path="res://core/run/faith/perks/nature_regrowth_perk.gd" id="9_y45hm"]
+[ext_resource type="Script" path="res://core/run/faith/perks/nature_cycle_perk.gd" id="9_y45hm"]
 [ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="10_id2kt"]
 [ext_resource type="Script" path="res://core/run/faith/perks/altar_food_vitality_perk.gd" id="11_ieyfc"]
 [ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="12_7tdnj"]
@@ -76,7 +76,7 @@ amount = 2
 
 [sub_resource type="Resource" id="Resource_b4lvr"]
 script = ExtResource("6_f54du")
-key = &"nature_release"
+key = &"nature_wither"
 amount = 2
 
 [sub_resource type="Resource" id="Resource_pdjtl"]
@@ -102,22 +102,8 @@ tier = 0
 script = ExtResource("10_id2kt")
 
 [sub_resource type="Resource" id="Resource_crdnu"]
-script = ExtResource("9_y45hm")
-part = 1
-
-[sub_resource type="Resource" id="Resource_iwddf"]
-script = ExtResource("9_y45hm")
-part = 2
-tier = 2
-
-[sub_resource type="Resource" id="Resource_y2185"]
 script = ExtResource("11_ieyfc")
 tier = 2
-
-[sub_resource type="Resource" id="Resource_rvx17"]
-script = ExtResource("9_y45hm")
-part = 3
-tier = 3
 
 [resource]
 script = ExtResource("12_7tdnj")
@@ -134,8 +120,12 @@ description = "和生命密切相关，帝国诸神之一，信徒分布极为�
 descriptions = {
 "en": "Closely bound to life. One of the Empire's gods, with followers almost everywhere, many rites and great influence."
 }
+core_line = "枯萎 / 新生：敌人每失去 1 点生命积 1 层枯萎，你每恢复 1 点生命积 1 层新生，持续伤害、持续恢复也算"
+core_lines = {
+"en": "Wither / Rebirth: each point of Health the enemy loses builds 1 Wither, each point you restore builds 1 Rebirth; damage and healing over time count"
+}
 thresholds = Array[int]([42, 117, 217])
 deeds = Array[ExtResource("5_umqo0")]([SubResource("Resource_2gm7o"), SubResource("Resource_b4lvr")])
 offerings = Array[ExtResource("7_af1s0")]([SubResource("Resource_pdjtl"), SubResource("Resource_iyhxd"), SubResource("Resource_rc0lb")])
-perks = Array[ExtResource("8_lkjbr")]([SubResource("Resource_4tdp6"), SubResource("Resource_j1itm"), SubResource("Resource_crdnu"), SubResource("Resource_iwddf"), SubResource("Resource_y2185"), SubResource("Resource_rvx17")])
+perks = Array[ExtResource("8_lkjbr")]([SubResource("Resource_4tdp6"), SubResource("Resource_j1itm"), SubResource("Resource_crdnu")])
 blessings = Array[ExtResource("1_f3akg")]([SubResource("Resource_2c21y"), SubResource("Resource_evm5s")])

@@ -1,0 +1,13 @@
+{
+  "id": "god_nature_strong",
+  "display_name": "强壮",
+  "display_names": {
+    "en": "Sturdy Back"
+  },
+  "effects": [
+    {
+      "type": "carry_capacity_bonus",
+      "amount": 4
+    }
+  ]
+}

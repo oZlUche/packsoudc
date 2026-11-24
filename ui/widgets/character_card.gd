@@ -165,6 +165,10 @@ static func _parts(run: RunState, key: StringName, ctx: RunContext, with_altar: 
 			for k in altar.stat_bonus:
 				if String(k) == String(key):
 					flat2 += float(altar.stat_bonus[k])
+		var god := run.god_stat_bonus()     # 388：吃下的血肉、生长 / 丰饶
+		for k in god:
+			if String(k) == String(key):
+				flat2 += float(god[k])
 	return {"base": base, "flat": flat2, "pct": pct2}
 
 

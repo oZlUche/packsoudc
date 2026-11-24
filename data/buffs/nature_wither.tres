@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_oan2d"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_ybrbg"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_ik0s3"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_3rdq5"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_4yk3v"]
+
+[resource]
+script = ExtResource("5_4yk3v")
+id = &"nature_wither"
+display_name = "枯萎"
+display_names = {
+"en": "Wither"
+}
+is_debuff = true

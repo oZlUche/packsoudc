@@ -230,8 +230,7 @@ func _per_second(ctx: RuleContext, st: Dictionary, s: Vector2i) -> void:
 	if eternal_night > 0.0 and s.y == 1 and eternal_night_hp > 0:
 		for who in [me, foe]:
 			if who != null and not (who as CombatantRuntime).dead:
-				var res := (who as CombatantRuntime).resources
-				res.set_max(BattleStats.RES_HP, maxi(1, res.maximum(BattleStats.RES_HP) - StatMath.from_float(eternal_night_hp)))
+				(who as CombatantRuntime).add_max(BattleStats.RES_HP, -StatMath.from_float(eternal_night_hp), StatMath.ONE)
 
 
 func _give(ctx: RuleContext, who: CombatantRuntime, id: StringName, n: int) -> void:
@@ -252,18 +251,14 @@ func _enter_day(ctx: RuleContext) -> void:
 	var res := me.resources
 	if sunrise > 0.0:
 		var add := StatMath.from_float(sunrise)
-		res.set_max(BattleStats.RES_HP, res.maximum(BattleStats.RES_HP) + add)
-		res.change(BattleStats.RES_HP, add, BattleEvent.REASON_HEAL)
+		me.add_max(BattleStats.RES_HP, add)
 	if sunrise_stamina > 0.0 and res.has(BattleStats.RES_STAMINA):
 		var add_st := StatMath.from_float(sunrise_stamina)
-		res.set_max(BattleStats.RES_STAMINA, res.maximum(BattleStats.RES_STAMINA) + add_st)
-		res.change(BattleStats.RES_STAMINA, add_st, BattleEvent.REASON_HEAL)
+		me.add_max(BattleStats.RES_STAMINA, add_st)
 	if dawn_armor > 0.0:
 		var gain := StatMath.mul(res.maximum(BattleStats.RES_HP), StatMath.from_float(dawn_armor / 100.0))
 		if gain > 0:
-			if not res.has(BattleStats.RES_ARMOR):
-				res.define(BattleStats.RES_ARMOR, 0)
-			res.set_max(BattleStats.RES_ARMOR, res.maximum(BattleStats.RES_ARMOR) + gain)
+			me.add_max(BattleStats.RES_ARMOR, gain)
 
 
 func _enter_night(ctx: RuleContext, now: int) -> void:

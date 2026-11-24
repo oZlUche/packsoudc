@@ -20,6 +20,8 @@ var _max: Dictionary = {}      # StringName -> int
 ## 回复不走定时器：推进器到达某个时刻时，才按「距这里过了多久」一次性补上。
 ## 事件驱动的模拟里没有「每秒」这回事，硬造一个每秒事件等于把帧又请回来了。
 var _regen_at: Dictionary = {}  # StringName -> int
+## 388 丰饶：治疗 / 回复溢出（已经满了还要加的那部分），累计定点值；StringName -> int
+var overflow: Dictionary = {}
 
 
 func define(key: StringName, max_value: int) -> void:
@@ -50,6 +52,8 @@ func change(key: StringName, delta: int, reason: StringName) -> int:
 	var before := int(_current[key])
 	var after := clampi(before + delta, 0, int(_max[key]))
 	var actual := after - before
+	if delta > actual and delta > 0 and (reason == BattleEvent.REASON_HEAL or reason == BattleEvent.REASON_REGEN):
+		overflow[key] = int(overflow.get(key, 0)) + delta - actual
 	if actual == 0:
 		return 0
 	_current[key] = after

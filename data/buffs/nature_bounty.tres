@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_seoo6"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_i5b0o"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_cdkaq"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_vavqi"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_4mymm"]
+
+[resource]
+script = ExtResource("5_4mymm")
+id = &"nature_bounty"
+display_name = "丰饶"
+display_names = {
+"en": "Bounty"
+}

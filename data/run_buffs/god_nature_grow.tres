@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_no5uc"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_cmba1"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_qwkqn"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_y7ufl"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_5ydfk"]
+
+[sub_resource type="Resource" id="Resource_laqt6"]
+script = ExtResource("2_cmba1")
+values = {
+"pct": 10
+}
+
+[resource]
+script = ExtResource("5_5ydfk")
+id = &"god_nature_grow"
+display_name = "生长"
+display_names = {
+"en": "Growth"
+}
+effects = Array[ExtResource("1_no5uc")]([SubResource("Resource_laqt6")])

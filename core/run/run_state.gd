@@ -757,13 +757,24 @@ func active_faith_tier() -> int:
 #endregion
 
 
+## 388：神的牌攒下的整局基线加成（啖肉吮血吃下的血肉、生长 / 丰饶战后攒的），属性键 → 加算值。
+## 战斗基线（[method effective_baseline]）、状态界面、战斗里的常驻加成栏都读这一份
+func god_stat_bonus() -> Dictionary:
+	var lv := LevelModule.of(self)
+	var out := BruteRagePerk.flesh_bonus(lv).duplicate()
+	var grown := NatureCyclePerk.run_bonus(lv)
+	for k in grown:
+		out[k] = float(out.get(k, 0.0)) + float(grown[k])
+	return out
+
+
 ## 角色基线 + 技能 / buff 的基线加成。没有加成就是原来那份。
 ## 149：133 的公式 —— 角色面板 ×（1 + Σ乘算%）+ Σ加算（科技 / 技能的 stat_bonus，再加神坛的）；乘算之间相加不相乘
 func effective_baseline() -> CombatantBaseline:
 	var ctx := buff_context()
 	var altar := AltarModule.of(self)
 	var faith_stat_bonus: Dictionary = altar.stat_bonus if altar != null else {}
-	var flesh := BruteRagePerk.flesh_bonus(LevelModule.of(self))     # 388 啖肉吮血：吃下的血肉
+	var flesh := god_stat_bonus()
 	if not flesh.is_empty():
 		faith_stat_bonus = faith_stat_bonus.duplicate()
 		for k in flesh:

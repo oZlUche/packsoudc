@@ -1,0 +1,16 @@
+{
+  "id": "god_nature_cycle",
+  "display_name": "轮回",
+  "display_names": {
+    "en": "Cycle"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "every": 5,
+        "stacks": 1
+      }
+    }
+  ]
+}
