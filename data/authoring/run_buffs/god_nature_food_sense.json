@@ -1,0 +1,19 @@
+{
+  "id": "god_nature_food_sense",
+  "display_name": "食材感知",
+  "display_names": {
+    "en": "Forager's Nose"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "w0": 50,
+        "w1": 35,
+        "w2": 10,
+        "w3": 5,
+        "gain": 0.5
+      }
+    }
+  ]
+}

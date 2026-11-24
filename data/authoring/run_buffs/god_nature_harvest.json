@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_harvest",
+  "display_name": "收获",
+  "display_names": {
+    "en": "Harvest"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "every": 40
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_nature_seed",
+  "display_name": "初种",
+  "display_names": {
+    "en": "First Seed"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "need": 100
+      }
+    }
+  ]
+}

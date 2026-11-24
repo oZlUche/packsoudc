@@ -516,6 +516,103 @@
     "god_nature_strong": {
       "kind": "god",
       "god": "nature"
+    },
+    "god_nature_wane": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_wane_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_wane"
+    },
+    "god_nature_seed": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_near": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_near_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_near"
+    },
+    "god_nature_breed": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true,
+      "requires": "seed"
+    },
+    "god_nature_breed_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_breed"
+    },
+    "god_nature_talk": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_talk_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_talk"
+    },
+    "god_nature_harvest": {
+      "kind": "god",
+      "god": "nature",
+      "qual": true
+    },
+    "god_nature_harvest_up": {
+      "kind": "god",
+      "god": "nature",
+      "upgrade_of": "god_nature_harvest"
+    },
+    "god_nature_seed_2": {
+      "kind": "god",
+      "god": "nature",
+      "hidden": true
+    },
+    "god_nature_seed_3": {
+      "kind": "god",
+      "god": "nature",
+      "hidden": true
+    },
+    "god_nature_seed_4": {
+      "kind": "god",
+      "god": "nature",
+      "hidden": true
+    },
+    "god_nature_seed_keep": {
+      "kind": "god",
+      "god": "nature",
+      "hidden": true
+    },
+    "god_nature_seed_pick": {
+      "kind": "god",
+      "god": "nature",
+      "hidden": true
+    },
+    "god_nature_herb_sense": {
+      "kind": "god",
+      "god": "nature"
+    },
+    "god_nature_food_sense": {
+      "kind": "god",
+      "god": "nature"
+    },
+    "god_nature_tough": {
+      "kind": "god",
+      "god": "nature"
+    },
+    "god_nature_sow": {
+      "kind": "god",
+      "god": "nature"
     }
   }
 }

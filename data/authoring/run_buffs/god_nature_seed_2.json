@@ -1,0 +1,16 @@
+{
+  "id": "god_nature_seed_2",
+  "display_name": "幼芽",
+  "display_names": {
+    "en": "Sprout"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "need": 200,
+        "pick": 2
+      }
+    }
+  ]
+}

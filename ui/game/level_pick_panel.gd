@@ -79,11 +79,14 @@ func rebuild() -> void:
 	var cur := level.current_pick()
 	var lv := int(cur.get("level", level.level()))
 	var qual := bool(cur.get("qual", false))
-	if qual:     # 388：质变位写清是开局那一次还是第几级的
+	var seed_pick := bool(cur.get("seed", false))
+	if seed_pick:     # 388 自然【初种】长了一阶：继续培育还是采摘
+		_title.text = UiText.t("level.seed_choice")
+	elif qual:     # 388：质变位写清是开局那一次还是第几级的
 		_title.text = UiText.t("level.qual_opening") if lv <= 1 else UiText.t("level.qual_of") % lv
 	else:
 		_title.text = UiText.t("level.pick_of") % lv
-	_title.visible = qual or level.pending() > 1     # 窗的标题条写着升到几级；只欠一次普通牌时不重复写
+	_title.visible = seed_pick or qual or level.pending() > 1     # 窗的标题条写着升到几级；只欠一次普通牌时不重复写
 	var left := level.pending()
 	var notes: Array[String] = []
 	if left > 1:
@@ -98,10 +101,10 @@ func rebuild() -> void:
 	for i in ids.size():
 		_cards.add_child(_card(i, ids[i]))
 	_reroll.text = UiText.t("level.reroll") % level.rerolls_left()
-	_reroll.disabled = level.rerolls_left() <= 0
+	_reroll.disabled = level.rerolls_left() <= 0 or seed_pick
 	_reroll.tooltip_text = UiText.t("level.reroll_tip") if level.rerolls_left() > 0 else UiText.t("level.none_left")
 	_remove.text = UiText.t("level.remove") % level.removals_left()
-	_remove.disabled = level.removals_left() <= 0
+	_remove.disabled = level.removals_left() <= 0 or seed_pick
 	_remove.tooltip_text = UiText.t("level.remove_tip") if level.removals_left() > 0 else UiText.t("level.none_left")
 	_remove.modulate = Color(1.0, 0.86, 0.7) if removing else Color.WHITE     # 等着点一张：键染暖色
 

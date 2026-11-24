@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_07jrt"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_nwvsx"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_yns3x"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_xifir"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_21nrj"]
+
+[sub_resource type="Resource" id="Resource_lgkia"]
+script = ExtResource("2_nwvsx")
+values = {
+"gain": 0.5,
+"w0": 50,
+"w1": 35,
+"w2": 10,
+"w3": 5
+}
+
+[resource]
+script = ExtResource("5_21nrj")
+id = &"god_nature_food_sense"
+display_name = "食材感知"
+display_names = {
+"en": "Forager's Nose"
+}
+effects = Array[ExtResource("1_07jrt")]([SubResource("Resource_lgkia")])

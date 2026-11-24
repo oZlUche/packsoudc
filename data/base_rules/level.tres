@@ -230,6 +230,17 @@ cards = {
 "kind": "god",
 "upgrade_of": "god_nature_bounty"
 },
+"god_nature_breed": {
+"god": "nature",
+"kind": "god",
+"qual": true,
+"requires": "seed"
+},
+"god_nature_breed_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_breed"
+},
 "god_nature_cycle": {
 "god": "nature",
 "kind": "god",
@@ -254,6 +265,10 @@ cards = {
 "god": "nature",
 "kind": "god"
 },
+"god_nature_food_sense": {
+"god": "nature",
+"kind": "god"
+},
 "god_nature_grow": {
 "god": "nature",
 "kind": "god",
@@ -274,9 +289,33 @@ cards = {
 "kind": "god",
 "upgrade_of": "god_nature_guard"
 },
+"god_nature_harvest": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_harvest_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_harvest"
+},
 "god_nature_herb": {
 "god": "nature",
 "kind": "god"
+},
+"god_nature_herb_sense": {
+"god": "nature",
+"kind": "god"
+},
+"god_nature_near": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_near_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_near"
 },
 "god_nature_poison": {
 "god": "nature",
@@ -296,6 +335,40 @@ cards = {
 "god": "nature",
 "kind": "god"
 },
+"god_nature_seed": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_seed_2": {
+"god": "nature",
+"hidden": true,
+"kind": "god"
+},
+"god_nature_seed_3": {
+"god": "nature",
+"hidden": true,
+"kind": "god"
+},
+"god_nature_seed_4": {
+"god": "nature",
+"hidden": true,
+"kind": "god"
+},
+"god_nature_seed_keep": {
+"god": "nature",
+"hidden": true,
+"kind": "god"
+},
+"god_nature_seed_pick": {
+"god": "nature",
+"hidden": true,
+"kind": "god"
+},
+"god_nature_sow": {
+"god": "nature",
+"kind": "god"
+},
 "god_nature_strong": {
 "god": "nature",
 "kind": "god"
@@ -303,6 +376,30 @@ cards = {
 "god_nature_survive": {
 "god": "nature",
 "kind": "god"
+},
+"god_nature_talk": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_talk_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_talk"
+},
+"god_nature_tough": {
+"god": "nature",
+"kind": "god"
+},
+"god_nature_wane": {
+"god": "nature",
+"kind": "god",
+"qual": true
+},
+"god_nature_wane_up": {
+"god": "nature",
+"kind": "god",
+"upgrade_of": "god_nature_wane"
 },
 "god_sun_blaze": {
 "god": "sun",

@@ -2006,11 +2006,18 @@ func smite(option: StringName = SmitePerk.VITALITY) -> bool:
 	if run == null:
 		return false
 	var altar := AltarModule.of(run)     # 101：信仰级效果在神坛模块里取
-	var perk := altar.perk(&"smite") if altar != null else null
-	if perk == null or not perk.prebattle_apply(run, option):     # 188 补充一：耗体力还是耗信力
+	if altar == null:
 		return false
-	_flush()
-	return true
+	var type := StringName(String(run.events.pending_battle.get("type", "battle")))
+	for p in altar.perks():     # 388：哪条效果给的这个按钮就交给它（神罚、自然的动物交谈）
+		var perk := p as FaithPerk
+		if not perk.prebattle_actions(run, type).any(func(a: Dictionary) -> bool: return a["option"] == option):
+			continue
+		if not perk.prebattle_apply(run, option):     # 188 补充一：耗体力还是耗信力
+			return false
+		_flush()
+		return true
+	return false
 
 
 ## 092（作者定）：保险箱几格（局外规则，初始 3×3）

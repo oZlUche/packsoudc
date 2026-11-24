@@ -1,0 +1,19 @@
+{
+  "id": "god_nature_herb_sense",
+  "display_name": "药材感知",
+  "display_names": {
+    "en": "Herb Sense"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "w0": 50,
+        "w1": 35,
+        "w2": 10,
+        "w3": 5,
+        "gain": 0.5
+      }
+    }
+  ]
+}

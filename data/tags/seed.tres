@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_026dt"]
+
+[resource]
+script = ExtResource("1_026dt")
+id = &"seed"
+display_name = "种子"
+display_names = {
+"en": "Seed"
+}
+descriptions = {
+"en": ""
+}
+tip = false
+category = "affiliation"

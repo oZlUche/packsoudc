@@ -1,0 +1,12 @@
+{
+  "id": "seed",
+  "display_name": "种子",
+  "display_names": {
+    "en": "Seed"
+  },
+  "descriptions": {
+    "en": ""
+  },
+  "tip": false,
+  "category": "affiliation"
+}
