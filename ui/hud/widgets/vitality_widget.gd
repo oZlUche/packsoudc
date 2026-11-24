@@ -1,5 +1,6 @@
 ## 150：体力。补 4（作者定）：画成 N 颗心 —— 上限几点就几颗，前「当前」颗红、其余黑（掉一点体力就黑一颗）。
-## 上限变了（科技、章节加成、149 的百分比）颗数跟着变；一行放不下（[constant PER_ROW]）折成两行。
+## 上限变了（科技、章节加成、149 的百分比）颗数跟着变；一行放不下（[constant PER_ROW]）折行，行数不限。
+## 作者 11-24「体力上限够多时换成两排甚至多排」：两行照原大；三行起心变小，叠起来不高过两行（[constant FULL_ROWS]，顶端栏的石格装得下）
 ## 大档大心、小档小心；停上去的提示仍写「体力 当前 / 上限」（[method text_of]，测试也读它）
 extends HudWidget
 
@@ -9,6 +10,8 @@ const PER_ROW := 10
 const HEART_SMALL := 14.0
 const HEART_LARGE := 28.0
 const HEART_GAP := 3.0
+## 照原大能叠几行；再多就把心缩到叠起来不高过这几行
+const FULL_ROWS := 2
 
 
 func _init() -> void:
@@ -49,6 +52,15 @@ func heart_size() -> float:
 	return HEART_SMALL
 
 
+## 这一刻每颗心画多大：[constant FULL_ROWS] 行以内照档位的大小，再多就缩到总高不变
+func cell_size() -> float:
+	var s := heart_size()
+	var rows := grid().y
+	if rows <= FULL_ROWS:
+		return s
+	return (FULL_ROWS * s - (rows - FULL_ROWS) * HEART_GAP) / rows
+
+
 ## 心排成几行几列
 func grid() -> Vector2i:
 	var n := hearts().x
@@ -60,7 +72,7 @@ func _paint() -> void:
 	_hearts = Vector2i(run.vitality.maximum, mini(run.vitality.maximum, run.vitality.current + HeartBreak.owed)) if run != null else Vector2i.ZERO
 	tooltip_text = _text.text
 	var g := grid()
-	var s := heart_size()
+	var s := cell_size()
 	var box := get_theme_stylebox("panel") if has_theme_stylebox("panel") else null
 	custom_minimum_size = Vector2(g.x * s + maxi(0, g.x - 1) * HEART_GAP, g.y * s + maxi(0, g.y - 1) * HEART_GAP) \
 		+ (box.get_minimum_size() if box != null else Vector2.ZERO)     # 自定最小尺寸是连底框边距在内的
@@ -68,20 +80,20 @@ func _paint() -> void:
 
 ## 第 [param i] 颗心的框（屏幕坐标；劈心动画落在这儿）
 func heart_rect(i: int) -> Rect2:
-	var s := heart_size()
+	var s := cell_size()
 	var xf := get_global_transform()
 	return Rect2(xf * _heart_at(i), xf.basis_xform(Vector2(s, s)))
 
 
 func _heart_at(i: int) -> Vector2:
 	var margin := get_theme_stylebox("panel").get_offset() if has_theme_stylebox("panel") else Vector2.ZERO
-	return margin + Vector2(i % PER_ROW, floori(float(i) / PER_ROW)) * (heart_size() + HEART_GAP)
+	return margin + Vector2(i % PER_ROW, floori(float(i) / PER_ROW)) * (cell_size() + HEART_GAP)
 
 
 func _draw() -> void:
 	super()
 	var h := hearts()
-	var s := heart_size()
+	var s := cell_size()
 	for i in h.x:
 		var at := _heart_at(i)
 		UiPalette.draw_heart(self, at, s, UiPalette.HP if i < h.y else UiPalette.HEART_LOST)     # 161：和开局屏角色卡同一颗心
