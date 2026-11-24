@@ -381,11 +381,11 @@ func _build_character_page() -> Control:
 
 
 func _add_bar(id: StringName, body: Control) -> FoldBar:
-	var bar := FoldBar.new().setup(id, body)
-	bar.toggled.connect(func(on: bool): _on_bar_toggled(id, on))
-	_bar_col.add_child(bar)
-	_bars[id] = bar
-	return bar
+	var fb := FoldBar.new().setup(id, body)
+	fb.toggled.connect(func(on: bool): _on_bar_toggled(id, on))
+	_bar_col.add_child(fb)
+	_bars[id] = fb
+	return fb
 
 
 ## 展开内容垫一张羊皮纸（浅底墨字），按内容宽
@@ -1621,8 +1621,8 @@ func _rebuild_presets() -> void:
 		_preset_btns[k].pressed.connect(choose_preset.bind(k - 1))     # 第 0 个是「不带」
 		_preset_box.add_child(_preset_btns[k])
 	var rows := mini(_preset_btns.size(), PRESET_ROWS)
-	var bar := 12.0 if _preset_btns.size() > PRESET_ROWS else 0.0     # 多了竖着滚：给滚动条留位，不缩牌
-	_preset_scroll.custom_minimum_size = Vector2(PresetTag.W + bar, rows * PresetTag.H + (rows - 1) * PRESET_TAG_GAP)
+	var scroll_w := 12.0 if _preset_btns.size() > PRESET_ROWS else 0.0     # 多了竖着滚：给滚动条留位，不缩牌
+	_preset_scroll.custom_minimum_size = Vector2(PresetTag.W + scroll_w, rows * PresetTag.H + (rows - 1) * PRESET_TAG_GAP)
 	_color_presets()
 
 
