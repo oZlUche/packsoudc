@@ -12,6 +12,7 @@ extends RefCounted
 ## 一局的规则（059 的 buff 骨架）：体力上限、多搜几次、商店价、幸运。**不依赖扳机，激活即生效。**
 const RUN_EFFECTS := {
 	&"vitality_max_bonus": "res://core/run/effects/vitality_max_bonus.gd",
+	&"god_card": "res://core/run/effects/god_card.gd",     # 388
 	&"level_rerolls": "res://core/run/effects/level_rerolls.gd",     # 372
 	&"level_removals": "res://core/run/effects/level_removals.gd",     # 372
 	&"keep_on_death": "res://core/run/effects/keep_on_death.gd",

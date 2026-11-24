@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_4oauv"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_f1umq"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_7wol3"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_7rdy4"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_5a04b"]
+
+[sub_resource type="Resource" id="Resource_6iu2s"]
+script = ExtResource("2_f1umq")
+values = {
+"pct": 90,
+"sec": 6
+}
+
+[resource]
+script = ExtResource("5_5a04b")
+id = &"god_brute_pain_up"
+display_name = "痛觉残留（升级）"
+display_names = {
+"en": "Lingering Pain+"
+}
+effects = Array[ExtResource("1_4oauv")]([SubResource("Resource_6iu2s")])

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_0clvf"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_daj4m"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_ttkys"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_wsv8h"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_0t5oh"]
+
+[sub_resource type="Resource" id="Resource_tujg5"]
+script = ExtResource("2_daj4m")
+values = {
+"heal": 50
+}
+
+[resource]
+script = ExtResource("5_0t5oh")
+id = &"god_brute_armor_up"
+display_name = "血甲（升级）"
+display_names = {
+"en": "Blood Armor+"
+}
+effects = Array[ExtResource("1_0clvf")]([SubResource("Resource_tujg5")])

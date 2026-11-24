@@ -34,5 +34,6 @@
     "battle": "prologue_battle",
     "bag": "prologue_bag",
     "prebattle": "prologue_prebattle"
-  }
+  },
+  "opening_qual_pick": false
 }

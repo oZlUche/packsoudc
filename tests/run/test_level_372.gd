@@ -35,10 +35,13 @@ static func run_table(t: TestCase) -> void:
 	t.eq(r.level_of(1.0e9), r.level_cap, "封顶")
 	t.check(is_equal_approx(r.mult(0), 1.0) and is_equal_approx(r.mult(12), 1.0 + 12.0 * r.difficulty_step), "A0 = 1、A12 = 1 + 12 档")
 	var kinds := {}
+	var generic := 0
 	for cid in r.card_ids():
 		kinds[r.kind_of(cid)] = true
-	t.eq(r.card_ids().size(), 15, "牌池 15 张")
-	t.eq(kinds.size(), 3, "三类都有")
+		if r.god_of(cid) == &"":
+			generic += 1
+	t.eq(generic, 15, "通用牌 15 张（神的牌另算，388）")
+	t.eq(kinds.size(), 4, "三类通用 + 神的牌")
 	var buffs := RunBuffs.load_all()
 	var missing: Array[String] = []
 	for cid in r.card_ids():
@@ -228,7 +231,7 @@ static func frame_pick_cards(t: TestCase, root: Window) -> void:
 	var run := _start(17)
 	var lv := LevelModule.of(run)
 	for cid in lv.rules().card_ids():
-		t.check(LevelPickPanel._icon_of_def(run.buff_defs.get(cid, null)) != null, "%s 有图标" % cid)
+		t.check(LevelPickPanel.card_icon(lv, cid) != null, "%s 有图标（神的牌先用神的徽记）" % cid)
 	var keep_lang := UiText.lang
 	var keep_scale := UiTheme.text_scale
 	UiText.lang = "en"

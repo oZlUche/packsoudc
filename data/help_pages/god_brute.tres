@@ -11,13 +11,13 @@ display_names = {
 }
 category = &"faith"
 order = 5
-text = "{faith:brute}是暴力与杀戮本身，石头砸下来也是暴力，北境蛮族信祂。奉祂时，一场里挨了打又用怒气打回去、低血打赢，经验值各再多给。献祭爱兽材、武器和大块的东西，兽材的倍率尤其高。蛮神赐福武器，赐福版激活即增伤，再按经验值累计加攻击。
+text = "{faith:brute}是暴力与杀戮本身，石头砸下来也是暴力，北境蛮族信祂。奉祂时，一场里挨了打积起怒气、低血打赢，经验值各再多给。献祭爱兽材、武器和大块的东西，兽材的倍率尤其高。蛮神赐福武器，赐福版激活即增伤，再按经验值累计加攻击。
 
-奉了祂就有【怒气】：受到对手的伤害按掉的血积怒气，最多 {faith_perk:brute:brute_rage:cap} 层；下一次武器打出伤害时一口气用掉，每层造成伤害提高 {faith_perk:brute:brute_rage:damage_per}%。一阶起一次用掉的怒气够多，那一下穿透护甲；二阶生命值低于 {faith_perk:brute:brute_rage:low_percent}% 时怒气积得更快；二阶还可以在神坛上献祭生命上限，换经验值或这局的造成伤害与急速；三阶在战斗中首次生命值归零后还能坚持几秒，一场一次，战前准备屏也能花体力立即击败非首领敌人，但那一场不算打赢。"
+奉了祂就有【怒气】：受到对手的伤害按掉的血积怒气，每一笔各自持续 {faith_perk:brute:brute_rage:duration_sec} 秒，最多 {faith_perk:brute:brute_rage:cap} 层，每层造成伤害提高 {faith_perk:brute:brute_rage:damage_per}%。进入对局和 {level:qual} 级各选一张蛮神的质变牌（破甲、困兽、死斗、神罚、怒火中烧、痛觉残留、以血还血、恨意、血甲……），升级时还会出蛮神的基础牌，让怒气更长、更多、更凶。二阶还可以在神坛上献祭生命上限，换经验值或这局的造成伤害与急速。"
 texts = {
-"en": "{faith:brute} is violence and slaughter itself; even a falling stone is violence. The northern barbarians worship this god. While you follow this god, striking back with Rage after taking hits and winning at low Health each give extra XP. The Brute favors Offerings of beast parts, weapons and large things, with beast parts earning especially high multipliers. The Brute blesses weapons: a Blessed version deals extra damage on activation and gains more attack as your XP builds up.
+"en": "{faith:brute} is violence and slaughter itself; even a falling stone is violence. The northern barbarians worship this god. While you follow this god, building Rage from the hits you take and winning at low Health each give extra XP. The Brute favors Offerings of beast parts, weapons and large things, with beast parts earning especially high multipliers. The Brute blesses weapons: a Blessed version deals extra damage on activation and gains more attack as your XP builds up.
 
-Following this god grants Rage: damage from the foe builds Rage by the Health you lose, up to {faith_perk:brute:brute_rage:cap} stacks, and your next weapon hit spends it all for {faith_perk:brute:brute_rage:damage_per}% more damage per stack. From Rank one, spending enough Rage at once makes that hit pierce Armor. At Rank two, Rage builds faster while your Health is below {faith_perk:brute:brute_rage:low_percent}%, and you can offer up max Health at an Altar for XP or for extra damage and Haste this run. At Rank three, the first time your Health hits zero in a battle you keep fighting for a few seconds, once per battle, and on the Pre-battle screen you can spend Vitality to defeat a non-boss enemy instantly, though that does not count as a win."
+Following this god grants Rage: damage from the foe builds Rage by the Health you lose; each batch lasts {faith_perk:brute:brute_rage:duration_sec} seconds on its own, up to {faith_perk:brute:brute_rage:cap} stacks, and each stack raises your damage by {faith_perk:brute:brute_rage:damage_per}%. At the start of a run and at levels {level:qual} you pick one of the Brute's Transformations (Sunder, Cornered Beast, Last Stand, Divine Wrath, Seething Fury, Lingering Pain, Blood for Blood, Spite, Blood Armor and more), and level-ups also offer the Brute's base cards that make Rage last longer, stack higher and hit harder. At Rank two you can also offer up max Health at an Altar for XP or for extra damage and Haste this run."
 }
 related = Array[String](["special_rites", "faith_power_and_tiers", "altar_offering"])
 see_items = Array[StringName]([&"charm_brute", &"tibia_violence"])

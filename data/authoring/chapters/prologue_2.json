@@ -37,5 +37,6 @@
   "skip_setup": true,
   "intro_event": "tut2_intro",
   "chest_skin": "north_woods",
-  "map_skin": "north_woods"
+  "map_skin": "north_woods",
+  "opening_qual_pick": false
 }

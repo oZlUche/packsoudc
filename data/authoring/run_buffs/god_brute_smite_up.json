@@ -1,0 +1,16 @@
+{
+  "id": "god_brute_smite_up",
+  "display_name": "神罚（升级）",
+  "display_names": {
+    "en": "Divine Wrath+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "uses": 2,
+        "cost": 2
+      }
+    }
+  ]
+}

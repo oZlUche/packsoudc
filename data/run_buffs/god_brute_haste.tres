@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_a4bhk"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_aattl"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_rpgjd"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_hbpkm"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ygard"]
+
+[sub_resource type="Resource" id="Resource_eeud5"]
+script = ExtResource("2_aattl")
+values = {
+"pct": 0.5
+}
+
+[resource]
+script = ExtResource("5_ygard")
+id = &"god_brute_haste"
+display_name = "狂热"
+display_names = {
+"en": "Frenzy"
+}
+effects = Array[ExtResource("1_a4bhk")]([SubResource("Resource_eeud5")])

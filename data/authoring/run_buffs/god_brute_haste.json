@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_haste",
+  "display_name": "狂热",
+  "display_names": {
+    "en": "Frenzy"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 0.5
+      }
+    }
+  ]
+}

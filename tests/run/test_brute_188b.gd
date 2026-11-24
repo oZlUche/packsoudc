@@ -28,49 +28,27 @@ static func _rows(def: FaithDef, points: int) -> Array[Dictionary]:
 
 
 static func run_perk_lines(t: TestCase) -> void:
-	t.begin("188 补充一 · 蛮神信仰窗（信仰重构 D 起三阶 + 基础）：一级一行；45 信力 Lv.0、Lv.1 亮，Lv.2、Lv.3 灰；不屈定 3 秒，不随信力涨")
+	t.begin("188 补充一 · 蛮神信仰窗（388 起：怒气 + 一阶赐福 + 二阶献祭；穿透、低血、不屈、立即击败改成了质变牌）：一级一行；45 信力 Lv.0、Lv.1 亮，Lv.2 灰")
 	var brute: FaithDef = FaithDef.load_all().get(&"brute", null)
 	t.not_null(brute, "蛮神")
 	if brute == null:
 		return
 	var rows := _rows(brute, 45)
-	t.eq(rows.size(), 4, "四组（基础 + Lv.1～Lv.3）")
-	if rows.size() != 4:
+	t.eq(rows.size(), 3, "三组（基础 + Lv.1、Lv.2）")
+	if rows.size() != 3:
 		return
 	t.check(String(rows[0]["lv"]) == "Lv.0" and String(rows[0]["text"]).contains("怒气"), "基础：怒气（%s）" % rows[0]["text"])
 	var lv1 := String(rows[1]["text"])
-	t.check(lv1.contains("可以在祭坛赐福武器") and lv1.contains("穿透护甲") and lv1.split("\n").size() == 2, "Lv.1 一组两句、一条一行（257）：%s" % lv1)
+	t.check(lv1.contains("可以在祭坛赐福武器") and not lv1.contains("穿透护甲"), "Lv.1 只有赐福（穿甲改成了【破甲】牌）：%s" % lv1)
 	t.check(not String(rows[1]["raw"]).begins_with("[color=@dim]"), "Lv.1 到了：不灰")
-	for i in range(2, 4):
-		t.check(String(rows[i]["raw"]).begins_with("[color=@dim]"), "Lv.%d 没到：整行灰" % i)
+	t.check(String(rows[2]["raw"]).begins_with("[color=@dim]"), "Lv.2 没到：整行灰")
 	t.check(String(rows[2]["text"]).contains("可以在祭坛献祭生命上限换取能力"), "Lv.2：%s" % rows[2]["text"])
-	t.check(String(rows[3]["text"]).contains("可消耗 1 体力立即击败非首领敌人"), "Lv.3：%s" % rows[3]["text"])
-	t.check(String(rows[3]["text"]).contains("持续战斗 3 秒"), "Lv.3 不屈 3 秒：%s" % rows[3]["text"])
-	var top := _rows(brute, 400)
-	t.check(top.size() == 4 and String(top[3]["text"]).contains("持续战斗 3 秒") and not String(top[3]["raw"]).begins_with("[color=@dim]"), "400 信力：Lv.3 亮，还是 3 秒")
-
-
-static func run_low_hp_threshold(t: TestCase) -> void:
-	t.begin("188 补充一 · 低血增伤是门槛式：生命 29% 时造成伤害 +10%，31% 时不加")
-	var rng := RandomNumberGenerator.new()
-	var b := BattleCompiler.compile_board(null, CombatantBaseline.with_hp(100.0))
-	for case in [[29, true], [31, false]]:
-		var me := CombatantRuntime.from_spec(b, 0)
-		var ctx := BattleContext.create(me, CombatantRuntime.from_spec(b, 1), rng)
-		var mx := me.resources.maximum(BattleStats.RES_HP)
-		@warning_ignore("integer_division")
-		me.resources.change(BattleStats.RES_HP, mx * int(case[0]) / 100 - me.resources.current(BattleStats.RES_HP), BattleEvent.REASON_DAMAGE)
-		var packet := DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(10.0), ctx.sides[1], 0, 0)
-		ctx._damage_stack.append(packet)
-		var fx := LowHpEmpower.new()
-		fx.hp_percent = 30
-		fx.percent = 10
-		fx.apply(RuleContext.create(ctx, me, RuleRuntime.create(null, 0, null, 0)))
-		t.eq(packet.percent, StatMath.from_percent(10) if bool(case[1]) else 0, "生命 %d%%：%s" % [case[0], "+10%" if case[1] else "不加"])
+	for r in rows:
+		t.check(not String(r["text"]).contains("体力立即击败") and not String(r["text"]).contains("持续战斗"), "没有旧的三阶那两句：%s" % r["lv"])
 
 
 static func run_sacrifice_and_smite(t: TestCase) -> void:
-	t.begin("188 补充一 · 神坛二级：换信力 +20 / 换能力（每件道具造成伤害、急速 MULT +5，再做一次 +10）；三级：普通战斗也有两个按钮，不够的灰着写原因、点了花对的那样（体力 1 灰；祈愿 29 灰只在构件上验）")
+	t.begin("188 补充一 · 神坛二级：换信力 +20 / 换能力（每件道具造成伤害、急速 MULT +5，再做一次 +10）；388 起立即击败按【神罚】牌给次数：没拿没按钮，用完灰着，点了记次数、不花体力")
 	var c = NodeScreens._content()
 	var kit = NodeScreens._kit(c)
 	var found: Dictionary = NodeScreens._seed_with(c, &"battle", kit.items)
@@ -108,20 +86,23 @@ static func run_sacrifice_and_smite(t: TestCase) -> void:
 				got[sm.stat] = sm.amount
 		t.check(float(got.get(BattleStats.DAMAGE, 0.0)) == 5.0 * n and float(got.get(BattleStats.HASTE, 0.0)) == 5.0 * n, "换了 %d 次能力：造成伤害、急速各 MULT +%d" % [n, 5 * n])
 	t.check(hp_perk.battle_note(run).contains("+10%"), "常驻格写合计：%s" % hp_perk.battle_note(run))
-	# 三级：立即击败
-	run.faith_power.add_points(&"brute", 200)
-	var smite := altar.perk(&"smite")
+	# 388：立即击败改成质变牌【神罚】：一局几次，不花体力
+	var smite := altar.perk(&"smite") as SmitePerk
 	t.check(f.step_to(int(found["next"])) and f.screen == GameFlow.Screen.PREBATTLE, "走上普通战斗点 → 战前准备")
-	var acts: Array[Dictionary] = smite.prebattle_actions(run, &"battle") if smite != null else [] as Array[Dictionary]
-	t.eq(acts.size(), 1, "普通战斗：一个按钮（372 起只花体力）")
-	t.check(smite != null and smite.prebattle_actions(run, &"core").is_empty(), "首领点：没有")
-	# 372：秒杀只花体力（祈愿删了）
-	var vit_keep := run.vitality.current
-	run.vitality.current = 1
+	t.check(smite != null and smite.prebattle_actions(run, &"battle").is_empty(), "没拿【神罚】：没有按钮")
+	LevelModule.of(run).taken["god_brute_smite"] = 1
+	var acts: Array[Dictionary] = smite.prebattle_actions(run, &"battle")
+	t.check(acts.size() == 1 and String(acts[0]["why"]) == "", "拿了【神罚】：一个按钮，能点")
+	t.check(smite.prebattle_actions(run, &"core").is_empty(), "首领点：没有")
+	LevelModule.of(run).god_state[SmitePerk.USED_KEY] = 2
 	acts = smite.prebattle_actions(run, &"battle")
-	t.check(acts.size() == 1 and String(acts[0]["why"]).contains("体力不够"), "体力 1：只有体力那个，灰着写原因（%s）" % (acts[0]["why"] if not acts.is_empty() else ""))
-	t.check(not f.smite(SmitePerk.VITALITY), "体力不够：点不动")
-	run.vitality.current = vit_keep
+	t.check(acts.size() == 1 and String(acts[0]["why"]) != "", "两次用完：灰着写原因（%s）" % (acts[0]["why"] if not acts.is_empty() else ""))
+	t.check(not f.smite(SmitePerk.USES), "次数不够：点不动")
+	LevelModule.of(run).god_state[SmitePerk.USED_KEY] = 1
+	var vit := run.vitality.current
+	t.check(f.smite(SmitePerk.USES), "还剩一次：点了就击败")
+	t.eq(run.vitality.current, vit, "不花体力")
+	t.eq(int(LevelModule.of(run).god_state[SmitePerk.USED_KEY]), 2, "用掉的次数记上")
 	Support.cleanup("188b")
 
 

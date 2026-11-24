@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_cornered_more",
+  "display_name": "困兽犹斗",
+  "display_names": {
+    "en": "Fight to the End"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "bonus": 25
+      }
+    }
+  ]
+}

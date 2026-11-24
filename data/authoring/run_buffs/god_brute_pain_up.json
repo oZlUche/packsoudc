@@ -1,0 +1,16 @@
+{
+  "id": "god_brute_pain_up",
+  "display_name": "痛觉残留（升级）",
+  "display_names": {
+    "en": "Lingering Pain+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 90,
+        "sec": 6
+      }
+    }
+  ]
+}

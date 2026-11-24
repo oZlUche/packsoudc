@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_hate",
+  "display_name": "恨意",
+  "display_names": {
+    "en": "Spite"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 1
+      }
+    }
+  ]
+}

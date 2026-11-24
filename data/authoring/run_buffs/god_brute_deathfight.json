@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_deathfight",
+  "display_name": "死斗",
+  "display_names": {
+    "en": "Last Stand"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 3
+      }
+    }
+  ]
+}

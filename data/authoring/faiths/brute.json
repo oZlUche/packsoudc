@@ -56,30 +56,19 @@
       "type": "altar_bless"
     },
     {
-      "type": "brute_rage",
-      "part": 1
-    },
-    {
-      "type": "brute_rage",
-      "part": 2,
-      "tier": 2
-    },
-    {
       "type": "altar_sacrifice_hp",
       "tier": 2
     },
     {
-      "type": "brute_rage",
-      "part": 3,
-      "tier": 3
-    },
-    {
       "type": "smite",
+      "tier": 0,
       "types": [
         "battle",
         "elite"
       ],
-      "tier": 3
+      "card": "god_brute_smite",
+      "up_card": "god_brute_smite_up",
+      "more_card": "god_brute_smite_more"
     }
   ],
   "blessings": [
@@ -110,5 +99,9 @@
         }
       ]
     }
-  ]
+  ],
+  "core_line": "怒气：受到伤害按失去的生命值叠层，每一笔各自持续 4 秒，每层伤害 +2%，最多 30 层",
+  "core_lines": {
+    "en": "Rage: taking damage builds stacks by the Health you lose; each batch lasts 4 seconds on its own; +2% damage per stack, up to 30"
+  }
 }

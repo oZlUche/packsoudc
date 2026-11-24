@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_m8s26"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_rww8f"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_olifj"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_qy488"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_oxpen"]
+
+[sub_resource type="Resource" id="Resource_frard"]
+script = ExtResource("2_rww8f")
+values = {
+"sec": 0.5
+}
+
+[resource]
+script = ExtResource("5_oxpen")
+id = &"god_brute_undying"
+display_name = "不屈"
+display_names = {
+"en": "Unbowed"
+}
+effects = Array[ExtResource("1_m8s26")]([SubResource("Resource_frard")])

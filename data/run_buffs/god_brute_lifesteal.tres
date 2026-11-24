@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_8sgt5"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_msr41"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_u1aui"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_inkvv"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_20vnq"]
+
+[sub_resource type="Resource" id="Resource_82dul"]
+script = ExtResource("2_msr41")
+values = {
+"pct": 2.5
+}
+
+[resource]
+script = ExtResource("5_20vnq")
+id = &"god_brute_lifesteal"
+display_name = "嗜血"
+display_names = {
+"en": "Bloodthirst"
+}
+effects = Array[ExtResource("1_8sgt5")]([SubResource("Resource_82dul")])

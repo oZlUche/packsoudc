@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_lifesteal",
+  "display_name": "嗜血",
+  "display_names": {
+    "en": "Bloodthirst"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 2.5
+      }
+    }
+  ]
+}

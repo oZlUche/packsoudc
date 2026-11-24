@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_l56iu"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_6dk74"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_7xor1"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ru0e5"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_wwmtj"]
+
+[sub_resource type="Resource" id="Resource_s5blx"]
+script = ExtResource("2_6dk74")
+values = {
+"uses": 2
+}
+
+[resource]
+script = ExtResource("5_wwmtj")
+id = &"god_brute_smite"
+display_name = "神罚"
+display_names = {
+"en": "Divine Wrath"
+}
+effects = Array[ExtResource("1_l56iu")]([SubResource("Resource_s5blx")])

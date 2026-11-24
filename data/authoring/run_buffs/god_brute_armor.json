@@ -1,0 +1,17 @@
+{
+  "id": "god_brute_armor",
+  "display_name": "血甲",
+  "display_names": {
+    "en": "Blood Armor"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "window": 3,
+        "pct": 50,
+        "cd": 10
+      }
+    }
+  ]
+}

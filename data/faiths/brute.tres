@@ -74,26 +74,15 @@ tier = 0
 script = ExtResource("10_yf1t8")
 
 [sub_resource type="Resource" id="Resource_47mtk"]
-script = ExtResource("9_bswie")
-part = 1
-
-[sub_resource type="Resource" id="Resource_d5och"]
-script = ExtResource("9_bswie")
-part = 2
-tier = 2
-
-[sub_resource type="Resource" id="Resource_ffrn5"]
 script = ExtResource("11_c5kw4")
 tier = 2
 
-[sub_resource type="Resource" id="Resource_erbkk"]
-script = ExtResource("9_bswie")
-part = 3
-tier = 3
-
-[sub_resource type="Resource" id="Resource_d7f50"]
+[sub_resource type="Resource" id="Resource_d5och"]
 script = ExtResource("12_ymc0b")
-tier = 3
+card = &"god_brute_smite"
+up_card = &"god_brute_smite_up"
+more_card = &"god_brute_smite_more"
+tier = 0
 
 [resource]
 script = ExtResource("13_h1qlm")
@@ -110,8 +99,12 @@ description = "自然的概念（石头砸下也是暴力）；北境蛮族信�
 descriptions = {
 "en": "A concept of nature (a falling stone is violence too). Worshipped by the northern barbarians and by most of the Empire's border provinces; one of the Empire's gods, but of low standing."
 }
+core_line = "怒气：受到伤害按失去的生命值叠层，每一笔各自持续 4 秒，每层伤害 +2%，最多 30 层"
+core_lines = {
+"en": "Rage: taking damage builds stacks by the Health you lose; each batch lasts 4 seconds on its own; +2% damage per stack, up to 30"
+}
 thresholds = Array[int]([42, 117, 217])
 deeds = Array[ExtResource("5_thvtn")]([SubResource("Resource_w6b0e"), SubResource("Resource_umwjh")])
 offerings = Array[ExtResource("7_7cvah")]([SubResource("Resource_qgcs4"), SubResource("Resource_dwbhk"), SubResource("Resource_dyeg3")])
-perks = Array[ExtResource("8_ywd2h")]([SubResource("Resource_6l0tu"), SubResource("Resource_ogl8n"), SubResource("Resource_47mtk"), SubResource("Resource_d5och"), SubResource("Resource_ffrn5"), SubResource("Resource_erbkk"), SubResource("Resource_d7f50")])
+perks = Array[ExtResource("8_ywd2h")]([SubResource("Resource_6l0tu"), SubResource("Resource_ogl8n"), SubResource("Resource_47mtk"), SubResource("Resource_d5och")])
 blessings = Array[ExtResource("1_s4x4y")]([SubResource("Resource_1868r")])
