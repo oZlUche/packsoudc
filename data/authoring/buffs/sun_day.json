@@ -1,0 +1,8 @@
+{
+  "id": "sun_day",
+  "display_name": "白昼",
+  "display_names": {
+    "en": "Day"
+  },
+  "stackable": false
+}

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_703e5"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_ad4x2"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_bsy3l"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_nwo38"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_nq3ja"]
+
+[sub_resource type="Resource" id="Resource_qtf3n"]
+script = ExtResource("2_ad4x2")
+values = {
+"mult": 1.25
+}
+
+[resource]
+script = ExtResource("5_nq3ja")
+id = &"god_sun_slower"
+display_name = "永恒"
+display_names = {
+"en": "Eternity"
+}
+effects = Array[ExtResource("1_703e5")]([SubResource("Resource_qtf3n")])

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_74wdv"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_anfvb"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_knh1b"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_04eja"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_bt4go"]
+
+[sub_resource type="Resource" id="Resource_4rbnn"]
+script = ExtResource("2_anfvb")
+values = {
+"hp": 10,
+"pct": 99
+}
+
+[resource]
+script = ExtResource("5_bt4go")
+id = &"god_sun_eternal_night_up"
+display_name = "永夜难明（升级）"
+display_names = {
+"en": "Endless Night+"
+}
+effects = Array[ExtResource("1_74wdv")]([SubResource("Resource_4rbnn")])

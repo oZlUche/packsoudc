@@ -133,7 +133,7 @@ static func _spec(snap: Dictionary, items: ItemDatabase, god: StringName, tier: 
 		&"brute":
 			input.rules.append(BruteRagePerk.new().rule_for(null))     # 388：核心；牌在局里拿
 		&"sun":
-			input.rules.append(SunCyclePerk.new().rule_at(tier))
+			input.rules.append(SunCyclePerk.new().rule_for(null))     # 388：核心；牌在局里拿
 		&"nature":
 			input.rules.append(NatureRegrowthPerk.new().rule_at(tier, NatureRegrowthPerk.food_on(board)))
 	return BattleCompiler.compile(board, input)

@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_longnight",
+  "display_name": "长夜促昼",
+  "display_names": {
+    "en": "Long Nights"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 20
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_dusk",
+  "display_name": "残阳",
+  "display_names": {
+    "en": "Afterglow"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 1
+      }
+    }
+  ]
+}

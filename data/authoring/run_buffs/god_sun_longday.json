@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_longday",
+  "display_name": "日长夜短",
+  "display_names": {
+    "en": "Long Days"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 20
+      }
+    }
+  ]
+}

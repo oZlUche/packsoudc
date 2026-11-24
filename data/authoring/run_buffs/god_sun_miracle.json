@@ -1,0 +1,12 @@
+{
+  "id": "god_sun_miracle",
+  "display_name": "奇迹",
+  "display_names": {
+    "en": "Miracle"
+  },
+  "effects": [
+    {
+      "type": "god_card"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_frost",
+  "display_name": "微月澹澹",
+  "display_names": {
+    "en": "Pale Moon"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 1
+      }
+    }
+  ]
+}

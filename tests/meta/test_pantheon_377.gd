@@ -41,7 +41,8 @@ static func run_content(t: TestCase) -> void:
 	t.eq([f.arrives, f.arrive_after], [Commissions.ARRIVES_EXTRACTIONS, 3], "教程后第 3 次成功撤离")
 	t.eq(Pantheon.gods(FaithDef.load_all()), [&"brute", &"skill", &"sun", &"earth", &"hunt", &"nature"] as Array[StringName], "先一档再二档，新教不列")
 	t.eq([Pantheon.god_tier(&"sun"), Pantheon.god_tier(&"nature")], [0, 1], "日神一档、自然二档")
-	t.eq([int(f.services[String(Pantheon.SERVICE_XP)]), int(f.services[String(Pantheon.SERVICE_BLESS)]), int(f.services[String(Pantheon.SERVICE_OPENING)])], [2, 3, 4], "三四五档")
+	t.eq([int(f.services[String(Pantheon.SERVICE_XP)]), int(f.services[String(Pantheon.SERVICE_BLESS)])], [2, 3], "三四档")
+	t.check(not f.services.has(String(Pantheon.SERVICE_OPENING)), "第五档先留空（作者 11-24：开局四选一拿掉，开关留着）")
 	var total := 0
 	for d in Commissions.of_faction(Pantheon.FACTION):
 		total += Commissions.reputation_of(d)

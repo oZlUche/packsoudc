@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_xyn0c"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_6qmox"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_yii1c"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_gac86"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_4rff2"]
+
+[sub_resource type="Resource" id="Resource_ibc8f"]
+script = ExtResource("2_6qmox")
+values = {
+"pct": 1000,
+"scorch": 20
+}
+
+[resource]
+script = ExtResource("5_4rff2")
+id = &"god_sun_eternal_day_up"
+display_name = "永日不落（升级）"
+display_names = {
+"en": "Endless Day+"
+}
+effects = Array[ExtResource("1_xyn0c")]([SubResource("Resource_ibc8f")])

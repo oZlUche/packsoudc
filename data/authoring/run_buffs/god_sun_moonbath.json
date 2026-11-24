@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_moonbath",
+  "display_name": "月光浴",
+  "display_names": {
+    "en": "Moonbathing"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 1
+      }
+    }
+  ]
+}

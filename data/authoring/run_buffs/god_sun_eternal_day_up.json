@@ -1,0 +1,16 @@
+{
+  "id": "god_sun_eternal_day_up",
+  "display_name": "永日不落（升级）",
+  "display_names": {
+    "en": "Endless Day+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 1000,
+        "scorch": 20
+      }
+    }
+  ]
+}

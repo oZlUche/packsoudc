@@ -22,8 +22,7 @@
     "god_earth": 1,
     "god_nature": 1,
     "faith_xp": 2,
-    "altar_bless": 3,
-    "opening_pick": 4
+    "altar_bless": 3
   },
   "permit": "pantheon_permit",
   "regular": [

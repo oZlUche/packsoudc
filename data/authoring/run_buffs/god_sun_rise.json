@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_rise",
+  "display_name": "日出当作",
+  "display_names": {
+    "en": "Work at Sunrise"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "amount": 25
+      }
+    }
+  ]
+}

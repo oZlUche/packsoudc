@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_lunar_up",
+  "display_name": "月蚀（升级）",
+  "display_names": {
+    "en": "Lunar Eclipse+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 15
+      }
+    }
+  ]
+}

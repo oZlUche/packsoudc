@@ -1,0 +1,12 @@
+{
+  "id": "god_sun_eclipse",
+  "display_name": "日蚀",
+  "display_names": {
+    "en": "Solar Eclipse"
+  },
+  "effects": [
+    {
+      "type": "god_card"
+    }
+  ]
+}

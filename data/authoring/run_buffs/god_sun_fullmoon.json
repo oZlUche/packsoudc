@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_fullmoon",
+  "display_name": "满月",
+  "display_names": {
+    "en": "Full Moon"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 5
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_blaze_up",
+  "display_name": "大日炎炎（升级）",
+  "display_names": {
+    "en": "Blazing Sun+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 2
+      }
+    }
+  ]
+}

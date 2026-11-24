@@ -1,0 +1,16 @@
+{
+  "id": "god_sun_eternal_night",
+  "display_name": "永夜难明",
+  "display_names": {
+    "en": "Endless Night"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 50,
+        "hp": 1
+      }
+    }
+  ]
+}

@@ -209,5 +209,202 @@ cards = {
 "god": "brute",
 "kind": "god",
 "weight": 0.3
+},
+"god_sun_blaze": {
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_blaze_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_blaze"
+},
+"god_sun_contrast": {
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_contrast_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_contrast"
+},
+"god_sun_dawn": {
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_dawn_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_dawn"
+},
+"god_sun_dawnlight": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_dusk": {
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_dusk_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_dusk"
+},
+"god_sun_dusklight": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_eclipse": {
+"excludes": ["god_sun_lunar"],
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_eclipse_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_eclipse"
+},
+"god_sun_eternal_day": {
+"forces_next": true,
+"god": "sun",
+"kind": "god",
+"qual": true,
+"removes": ["god_sun_longday", "god_sun_longnight"],
+"when": "sun_night_zero"
+},
+"god_sun_eternal_day_up": {
+"god": "sun",
+"kind": "god",
+"solo": true,
+"upgrade_of": "god_sun_eternal_day"
+},
+"god_sun_eternal_night": {
+"forces_next": true,
+"god": "sun",
+"kind": "god",
+"qual": true,
+"removes": ["god_sun_longday", "god_sun_longnight"],
+"when": "sun_day_zero"
+},
+"god_sun_eternal_night_up": {
+"god": "sun",
+"kind": "god",
+"solo": true,
+"upgrade_of": "god_sun_eternal_night"
+},
+"god_sun_faster": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_frost": {
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_frost_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_frost"
+},
+"god_sun_fullmoon": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_humble": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_longday": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_longnight": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_lunar": {
+"excludes": ["god_sun_eclipse"],
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_lunar_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_lunar"
+},
+"god_sun_miracle": {
+"god": "sun",
+"kind": "god",
+"oneshot": "miracle"
+},
+"god_sun_moonbath": {
+"excludes": ["god_sun_sunbath"],
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_moonbath_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_moonbath"
+},
+"god_sun_noon": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_rest": {
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_rest_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_rest"
+},
+"god_sun_rise": {
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_rise_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_rise"
+},
+"god_sun_shift": {
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_shift_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_shift"
+},
+"god_sun_slower": {
+"god": "sun",
+"kind": "god"
+},
+"god_sun_sunbath": {
+"excludes": ["god_sun_moonbath"],
+"god": "sun",
+"kind": "god",
+"qual": true
+},
+"god_sun_sunbath_up": {
+"god": "sun",
+"kind": "god",
+"upgrade_of": "god_sun_sunbath"
+},
+"god_sun_veil": {
+"god": "sun",
+"kind": "god"
 }
 }

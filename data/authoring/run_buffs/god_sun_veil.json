@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_veil",
+  "display_name": "夜幕",
+  "display_names": {
+    "en": "Nightfall"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 8
+      }
+    }
+  ]
+}

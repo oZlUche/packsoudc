@@ -319,3 +319,81 @@ static func run_brute_cards(t: TestCase) -> void:
 	t.eq(String(smite.prebattle_actions(run, &"elite")[0]["why"]) != "", true, "只剩 1 次：精英灰着")
 	t.eq(lv.to_dict()["god_state"].get(SmitePerk.USED_KEY, 0), 4, "用掉几次进存档")
 	run.dispose()
+
+
+static func run_sun_cards(t: TestCase) -> void:
+	t.begin("388 第 2 批 · 日神的牌：39 张进牌池；日长夜短 / 长夜促昼每张挪基础时长 20%、第五张把一边减到 0 才出永恒；永恒拿了下一张质变必是升级、拿掉日长夜短；升级独占；按牌填进日月")
+	var run := _start(51, &"sun")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"sun":
+		t.check(false, "开局奉日神")
+		return
+	var r := lv.rules()
+	var quals := 0
+	var bases := 0
+	for cid in r.card_ids():
+		if r.god_of(cid) == &"sun":
+			if r.is_qual(cid):
+				quals += 1
+			else:
+				bases += 1
+	t.eq(quals, 28, "质变 14 张 + 升级 14 张")
+	t.eq(bases, 11, "基础牌 11 张")
+	var perk := SunCyclePerk.new()
+	t.eq(SunCyclePerk.durations(lv, perk), Vector2(6.0, 6.0), "没拿牌：各 6 秒")
+	lv.taken["god_sun_longday"] = 2
+	t.check(SunCyclePerk.durations(lv, perk).is_equal_approx(Vector2(8.4, 3.6)), "日长夜短两张：白昼 8.4、黑夜 3.6（%s）" % SunCyclePerk.durations(lv, perk))
+	t.check(not lv.eligible(&"god_sun_eternal_day"), "黑夜还没到 0：永日不出")
+	lv.taken["god_sun_longday"] = 5
+	t.eq(SunCyclePerk.durations(lv, perk).y, 0.0, "第五张：黑夜 0 秒")
+	t.check(GodWhen.met(&"sun_night_zero", lv), "条件满足")
+	lv.taken["god_sun_faster"] = 1
+	t.check(is_equal_approx(SunCyclePerk.durations(lv, perk).x, 9.6), "更迭：白昼 12 × 0.8 = 9.6，黑夜照旧 0")
+	lv.taken.erase("god_sun_faster")
+	lv.taken["god_sun_eternal_day"] = 1
+	t.eq(lv.forced_next(), &"god_sun_eternal_day_up", "永日：下一张质变必是它的升级")
+	t.check(not lv.eligible(&"god_sun_longday"), "永日拿掉日长夜短")
+	var e := perk.effect_for(lv)
+	t.check(is_equal_approx(e.eternal_day, 100.0) and e.eternal_day_scorch == 5, "永日的数填进去")
+	lv.taken["god_sun_sunbath"] = 1
+	t.eq(perk.effect_for(lv).sun_light, 1, "日光浴：每秒 1 层")
+	lv.taken["god_sun_eternal_day_up"] = 1
+	t.eq(lv.solo_card(), &"god_sun_eternal_day_up", "永日升级独占")
+	t.check(not lv.has_card(&"god_sun_sunbath") and lv.has_card(&"god_sun_eternal_day"), "独占：别的质变不再生效，永日本身照算")
+	t.eq(perk.effect_for(lv).sun_light, 0, "日光浴不填了")
+	t.check(not lv.eligible(&"god_sun_dusk"), "独占：别的质变不再出")
+	lv.taken["god_sun_veil"] = 2
+	t.check(is_equal_approx(perk.effect_for(lv).veil, (1.0 - 0.92 * 0.92) * 100.0), "夜幕两张：连乘")
+	t.check(lv.card_text(&"god_sun_veil").contains("8"), "牌面按数写：%s" % lv.card_text(&"god_sun_veil"))
+	run.dispose()
+
+
+static func run_miracle(t: TestCase) -> void:
+	t.begin("388 第 2 批 · 奇迹：拿到那一刻，背包里随机一件材料换成同类、高一档稀有度的")
+	var run := _start(53, &"sun")
+	var lv := LevelModule.of(run)
+	if lv == null:
+		t.check(false, "开局")
+		return
+	var pick: ItemDef = null
+	for id in run.items.ids():
+		var d := run.items.get_def(id)
+		if Miracle._ok(d) and d.rarity == 0 and d.cell_count() <= 2:
+			pick = d
+			break
+	if pick == null:
+		t.check(false, "找得到一件 0 档材料")
+		run.dispose()
+		return
+	var keep := run.board.items().size()
+	t.check(run.board.try_add(ItemInstance.create(pick)), "放一件 %s" % pick.id)
+	var got := Miracle.apply(run)
+	t.check(not got.is_empty(), "换了一件：%s" % str(got))
+	if not got.is_empty():
+		var from := run.items.get_def(StringName(got["from"]))
+		var to := run.items.get_def(StringName(got["to"]))
+		t.eq(to.rarity, from.rarity + 1, "稀有度 +1")
+		t.eq(Miracle.class_of(to), Miracle.class_of(from), "同类")
+		t.eq(run.board.items().size(), keep + 1, "件数不变")
+		t.check(run.board.items().any(func(x): return (x as ItemInstance).def.id == to.id), "新的一件在背包里")
+	run.dispose()

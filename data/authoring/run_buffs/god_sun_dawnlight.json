@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_dawnlight",
+  "display_name": "黎明",
+  "display_names": {
+    "en": "Daybreak"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 8
+      }
+    }
+  ]
+}

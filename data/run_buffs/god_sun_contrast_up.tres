@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_0e1gj"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_pt77s"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_qe6qw"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_14u56"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_j3qic"]
+
+[sub_resource type="Resource" id="Resource_v7kun"]
+script = ExtResource("2_pt77s")
+values = {
+"pct": 6
+}
+
+[resource]
+script = ExtResource("5_j3qic")
+id = &"god_sun_contrast_up"
+display_name = "非黑即白（升级）"
+display_names = {
+"en": "Black or White+"
+}
+effects = Array[ExtResource("1_0e1gj")]([SubResource("Resource_v7kun")])

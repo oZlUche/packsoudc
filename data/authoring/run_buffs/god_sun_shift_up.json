@@ -1,0 +1,16 @@
+{
+  "id": "god_sun_shift_up",
+  "display_name": "星移斗转（升级）",
+  "display_names": {
+    "en": "Shifting Stars+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 1,
+        "shrink": 1
+      }
+    }
+  ]
+}

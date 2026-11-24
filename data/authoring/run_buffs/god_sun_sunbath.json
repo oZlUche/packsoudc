@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_sunbath",
+  "display_name": "日光浴",
+  "display_names": {
+    "en": "Sunbathing"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 1
+      }
+    }
+  ]
+}
