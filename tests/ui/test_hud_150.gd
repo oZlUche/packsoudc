@@ -178,6 +178,19 @@ static func frame_host(t: TestCase, root: Window) -> void:
 	vit.set_tier(HudWidget.Tier.LARGE)
 	vit.refresh()
 	t.check(vit.get_combined_minimum_size().x > small.x, "大档的心更大")
+	# 作者 11-24：两排甚至多排 —— 两行照原大，三行起心变小、总高不过两行（顶端栏的石格装得下）
+	vit.set_tier(HudWidget.Tier.DOUBLE)
+	vit.refresh()
+	var two_rows: float = vit.get_combined_minimum_size().y
+	t.eq(vit.call("cell_size"), vit.call("heart_size"), "两行：心照原大")
+	for n in [25, 40]:
+		run.vitality.set_max(n)
+		vit.refresh()
+		t.eq(vit.call("grid"), Vector2i(10, ceili(n / 10.0)), "%d 颗：每行 10 颗，%d 行" % [n, ceili(n / 10.0)])
+		t.check(float(vit.call("cell_size")) < float(vit.call("heart_size")), "%d 颗：心变小" % n)
+		t.check(absf(vit.get_combined_minimum_size().y - two_rows) < 0.5, "%d 颗：总高还是两行那么高（%.1f）" % [n, vit.get_combined_minimum_size().y])
+		var last: Rect2 = vit.call("heart_rect", n - 1)
+		t.check(last.end.y <= vit.get_global_rect().end.y + 0.5, "%d 颗：最后一颗没出框" % n)
 	vit.set_tier(HudWidget.Tier.SMALL)
 	run.vitality.set_max(max0)
 	vit.refresh()
