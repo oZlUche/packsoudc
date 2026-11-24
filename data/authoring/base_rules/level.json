@@ -211,6 +211,217 @@
     "god_brute_irate": {
       "kind": "god",
       "god": "brute"
+    },
+    "god_sun_sunbath": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true,
+      "excludes": [
+        "god_sun_moonbath"
+      ]
+    },
+    "god_sun_sunbath_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_sunbath"
+    },
+    "god_sun_moonbath": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true,
+      "excludes": [
+        "god_sun_sunbath"
+      ]
+    },
+    "god_sun_moonbath_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_moonbath"
+    },
+    "god_sun_eclipse": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true,
+      "excludes": [
+        "god_sun_lunar"
+      ]
+    },
+    "god_sun_eclipse_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_eclipse"
+    },
+    "god_sun_lunar": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true,
+      "excludes": [
+        "god_sun_eclipse"
+      ]
+    },
+    "god_sun_lunar_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_lunar"
+    },
+    "god_sun_dusk": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true
+    },
+    "god_sun_dusk_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_dusk"
+    },
+    "god_sun_dawn": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true
+    },
+    "god_sun_dawn_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_dawn"
+    },
+    "god_sun_shift": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true
+    },
+    "god_sun_shift_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_shift"
+    },
+    "god_sun_blaze": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true
+    },
+    "god_sun_blaze_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_blaze"
+    },
+    "god_sun_frost": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true
+    },
+    "god_sun_frost_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_frost"
+    },
+    "god_sun_contrast": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true
+    },
+    "god_sun_contrast_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_contrast"
+    },
+    "god_sun_rise": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true
+    },
+    "god_sun_rise_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_rise"
+    },
+    "god_sun_rest": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true
+    },
+    "god_sun_rest_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_rest"
+    },
+    "god_sun_eternal_day": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true,
+      "when": "sun_night_zero",
+      "forces_next": true,
+      "removes": [
+        "god_sun_longday",
+        "god_sun_longnight"
+      ]
+    },
+    "god_sun_eternal_day_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_eternal_day",
+      "solo": true
+    },
+    "god_sun_eternal_night": {
+      "kind": "god",
+      "god": "sun",
+      "qual": true,
+      "when": "sun_day_zero",
+      "forces_next": true,
+      "removes": [
+        "god_sun_longday",
+        "god_sun_longnight"
+      ]
+    },
+    "god_sun_eternal_night_up": {
+      "kind": "god",
+      "god": "sun",
+      "upgrade_of": "god_sun_eternal_night",
+      "solo": true
+    },
+    "god_sun_longday": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_longnight": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_faster": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_slower": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_fullmoon": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_dawnlight": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_dusklight": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_noon": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_veil": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_humble": {
+      "kind": "god",
+      "god": "sun"
+    },
+    "god_sun_miracle": {
+      "kind": "god",
+      "god": "sun",
+      "oneshot": "miracle"
     }
   }
 }

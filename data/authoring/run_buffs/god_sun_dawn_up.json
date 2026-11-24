@@ -1,0 +1,16 @@
+{
+  "id": "god_sun_dawn_up",
+  "display_name": "斜月（升级）",
+  "display_names": {
+    "en": "Setting Moon+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 2,
+        "ramp": 5
+      }
+    }
+  ]
+}

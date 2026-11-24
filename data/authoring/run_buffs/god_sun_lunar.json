@@ -1,0 +1,12 @@
+{
+  "id": "god_sun_lunar",
+  "display_name": "月蚀",
+  "display_names": {
+    "en": "Lunar Eclipse"
+  },
+  "effects": [
+    {
+      "type": "god_card"
+    }
+  ]
+}

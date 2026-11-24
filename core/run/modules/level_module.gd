@@ -115,7 +115,9 @@ func _when_met(key: String) -> bool:
 	if key == "":
 		return true
 	var c: Callable = _when.get(key, Callable())
-	return c.is_valid() and bool(c.call(_run))
+	if not c.is_valid():
+		return GodWhen.met(StringName(key), self)     # 388：各位神写死在代码里的条件（日神：黑夜 / 白昼时长到 0）
+	return bool(c.call(_run))
 
 
 #region 经验值与等级
@@ -394,6 +396,11 @@ func eligible(card_id: StringName) -> bool:
 	for x in row.get("excludes", []):
 		if count_of(StringName(String(x))) > 0:
 			return false
+	if _removed_by_taken(card_id):
+		return false     # 388：拿了某张就让这张不再出（永日不落 / 永夜难明 → 日长夜短、长夜促昼）
+	var solo := solo_card()
+	if solo != &"" and r.is_qual(card_id):
+		return false     # 388：永日 / 永夜的升级版：别的质变牌失效、也拿不到
 	if not _when_met(String(row.get("when", ""))):
 		return false
 	if String(row.get("echo", "")) == String(LevelRules.ECHO_FASTER) and echo_seconds() <= r.echo_min_seconds:
@@ -428,6 +435,9 @@ func _draw(n: int, avoid: Array[String], qual: bool = false) -> Array[String]:
 	var r := rules()
 	var use_quals := qual and has_qual_pool()
 	var generic_only := qual and not use_quals
+	if use_quals and forced_next() != &"":
+		draws += 1
+		return [String(forced_next())] as Array[String]     # 388：只有那一张
 	var pool: Array[String] = []
 	var spare: Array[String] = []
 	var gods: Array[String] = []
@@ -479,6 +489,8 @@ func _apply_now(cid: StringName) -> void:
 	var row := rules().card(cid)
 	if String(row.get("oneshot", "")) == String(LevelRules.ONESHOT_SEARCH):
 		pending_searches += 1
+	if String(row.get("oneshot", "")) == String(LevelRules.ONESHOT_MIRACLE):
+		god_state["miracle_last"] = Miracle.apply(_run)     # 388 日神【奇迹】
 	var def: RunBuffDef = _run.buff_defs.get(cid, null) if _run != null else null
 	if def == null or _run.vitality == null:
 		return
@@ -565,9 +577,42 @@ func card_def(card_id: StringName) -> RunBuffDef:
 	return def
 
 
-## 388：拿了没有
+## 388：拿了没有（拿了「独占」的质变牌后，别的质变牌算没拿）
 func has_card(card_id: StringName) -> bool:
-	return count_of(card_id) > 0
+	if count_of(card_id) <= 0:
+		return false
+	var solo := solo_card()
+	if solo == &"" or not rules().is_qual(card_id):
+		return true
+	return card_id == solo or String(rules().card(solo).get("upgrade_of", "")) == String(card_id)
+
+
+## 388：拿了的「独占」牌（牌表 `solo`）；没有 = 空
+func solo_card() -> StringName:
+	var r := rules()
+	for k in taken:
+		if bool(r.card(StringName(k)).get("solo", false)):
+			return StringName(k)
+	return &""
+
+
+func _removed_by_taken(card_id: StringName) -> bool:
+	var r := rules()
+	for k in taken:
+		if (r.card(StringName(k)).get("removes", []) as Array).has(String(card_id)):
+			return true
+	return false
+
+
+## 388：拿了「下一张质变牌必定是它的升级」（牌表 `forces_next`）、升级还没拿 → 那张升级；没有 = 空
+func forced_next() -> StringName:
+	var r := rules()
+	for k in taken:
+		if bool(r.card(StringName(k)).get("forces_next", false)):
+			var up := _upgrade_of(StringName(k))
+			if up != &"" and count_of(up) <= 0:
+				return up
+	return &""
 
 
 ## 元素回响现在每几秒一次
@@ -653,6 +698,13 @@ func offer_at(node: MapNode, raw: int) -> float:
 
 
 func _on_battle(_n: MapNode, _r: BattleResult, won: bool) -> void:
+	if _r != null and has_card(&"god_sun_shift"):
+		var shifts := 0
+		for raw in _r.log:
+			var e := raw as BattleEvent
+			if e.name == BattleEvent.EFFECT_RESOLVED and e.side == 0 and String(e.payload.get("key", "")) == "sun_window":
+				shifts += 1
+		god_state["sun_shifts"] = int(god_state.get("sun_shifts", 0)) + shifts     # 388 星移斗转：一局里留着
 	if not won or _run == null or _run.events == null:
 		return
 	var last: Dictionary = _run.events.last_battle

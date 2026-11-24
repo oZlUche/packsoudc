@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_2r2ln"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_ywudp"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_tmn10"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_dbmti"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_5q65y"]
+
+[sub_resource type="Resource" id="Resource_42ax6"]
+script = ExtResource("2_ywudp")
+
+[resource]
+script = ExtResource("5_5q65y")
+id = &"god_sun_miracle"
+display_name = "奇迹"
+display_names = {
+"en": "Miracle"
+}
+effects = Array[ExtResource("1_2r2ln")]([SubResource("Resource_42ax6")])

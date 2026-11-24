@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_contrast_up",
+  "display_name": "非黑即白（升级）",
+  "display_names": {
+    "en": "Black or White+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 6
+      }
+    }
+  ]
+}

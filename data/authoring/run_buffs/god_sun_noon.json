@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_noon",
+  "display_name": "正午",
+  "display_names": {
+    "en": "High Noon"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 5
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_rvxy0"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_y6p7f"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_is0cd"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_tigdg"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_eyi7l"]
+
+[sub_resource type="Resource" id="Resource_unscq"]
+script = ExtResource("2_y6p7f")
+
+[resource]
+script = ExtResource("5_eyi7l")
+id = &"god_sun_eclipse"
+display_name = "日蚀"
+display_names = {
+"en": "Solar Eclipse"
+}
+effects = Array[ExtResource("1_rvxy0")]([SubResource("Resource_unscq")])

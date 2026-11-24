@@ -27,7 +27,7 @@
 	"set_rules": [
 		[
 			"FaithMechanicTrigger",
-			"FaithPulseCadence",
+			"SunCadence",
 			"SunCycle"
 		]
 	],

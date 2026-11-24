@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_contrast",
+  "display_name": "非黑即白",
+  "display_names": {
+    "en": "Black or White"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 3
+      }
+    }
+  ]
+}

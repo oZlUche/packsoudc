@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_faster",
+  "display_name": "更迭",
+  "display_names": {
+    "en": "Quickening"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "mult": 0.8
+      }
+    }
+  ]
+}

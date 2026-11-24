@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_8ca7a"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_sse72"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_rsed6"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_dd3qi"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_fwnw6"]
+
+[sub_resource type="Resource" id="Resource_ax6t7"]
+script = ExtResource("2_sse72")
+values = {
+"stacks": 1
+}
+
+[resource]
+script = ExtResource("5_fwnw6")
+id = &"god_sun_moonbath"
+display_name = "月光浴"
+display_names = {
+"en": "Moonbathing"
+}
+effects = Array[ExtResource("1_8ca7a")]([SubResource("Resource_ax6t7")])

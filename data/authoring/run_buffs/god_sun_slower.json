@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_slower",
+  "display_name": "永恒",
+  "display_names": {
+    "en": "Eternity"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "mult": 1.25
+      }
+    }
+  ]
+}

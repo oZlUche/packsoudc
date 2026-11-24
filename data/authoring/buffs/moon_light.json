@@ -1,0 +1,18 @@
+{
+  "id": "moon_light",
+  "display_name": "月光",
+  "display_names": {
+    "en": "Moonlight"
+  },
+  "mods": [
+    {
+      "stat": "haste",
+      "mode": "MULT",
+      "amount": 2.0
+    },
+    {
+      "stat": "regen_stamina",
+      "amount": 2.0
+    }
+  ]
+}

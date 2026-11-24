@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_so58c"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_33hk1"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_xoa2q"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_cbpj7"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_yec0m"]
+
+[sub_resource type="Resource" id="Resource_so58c"]
+script = ExtResource("2_33hk1")
+mode = 1
+amount = 2.0
+
+[sub_resource type="Resource" id="Resource_33hk1"]
+script = ExtResource("2_33hk1")
+stat = &"regen_hp"
+amount = 1.0
+
+[resource]
+script = ExtResource("5_yec0m")
+id = &"sun_light"
+display_name = "日光"
+display_names = {
+"en": "Sunlight"
+}
+mods = Array[ExtResource("2_33hk1")]([SubResource("Resource_so58c"), SubResource("Resource_33hk1")])

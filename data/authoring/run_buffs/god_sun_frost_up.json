@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_frost_up",
+  "display_name": "微月澹澹（升级）",
+  "display_names": {
+    "en": "Pale Moon+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 2
+      }
+    }
+  ]
+}

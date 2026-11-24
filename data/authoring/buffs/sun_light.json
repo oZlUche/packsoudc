@@ -1,0 +1,17 @@
+{
+  "id": "sun_light",
+  "display_name": "日光",
+  "display_names": {
+    "en": "Sunlight"
+  },
+  "mods": [
+    {
+      "mode": "MULT",
+      "amount": 2.0
+    },
+    {
+      "stat": "regen_hp",
+      "amount": 1.0
+    }
+  ]
+}

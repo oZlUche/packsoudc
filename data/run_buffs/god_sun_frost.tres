@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_t2ifm"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_024u4"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_uutuo"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_nnh4u"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_rg1rl"]
+
+[sub_resource type="Resource" id="Resource_tnn3v"]
+script = ExtResource("2_024u4")
+values = {
+"stacks": 1
+}
+
+[resource]
+script = ExtResource("5_rg1rl")
+id = &"god_sun_frost"
+display_name = "微月澹澹"
+display_names = {
+"en": "Pale Moon"
+}
+effects = Array[ExtResource("1_t2ifm")]([SubResource("Resource_tnn3v")])

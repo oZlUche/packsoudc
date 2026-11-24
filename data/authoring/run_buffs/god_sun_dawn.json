@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_dawn",
+  "display_name": "斜月",
+  "display_names": {
+    "en": "Setting Moon"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 1
+      }
+    }
+  ]
+}

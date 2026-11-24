@@ -1,0 +1,16 @@
+{
+  "id": "god_sun_eternal_night_up",
+  "display_name": "永夜难明（升级）",
+  "display_names": {
+    "en": "Endless Night+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 99,
+        "hp": 10
+      }
+    }
+  ]
+}

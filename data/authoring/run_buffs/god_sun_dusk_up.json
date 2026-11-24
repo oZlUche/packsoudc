@@ -1,0 +1,16 @@
+{
+  "id": "god_sun_dusk_up",
+  "display_name": "残阳（升级）",
+  "display_names": {
+    "en": "Afterglow+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 2,
+        "ramp": 5
+      }
+    }
+  ]
+}

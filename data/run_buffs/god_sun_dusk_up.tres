@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_hwwtm"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_btvix"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_tryk5"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_kadta"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_1rq44"]
+
+[sub_resource type="Resource" id="Resource_t6gx4"]
+script = ExtResource("2_btvix")
+values = {
+"ramp": 5,
+"sec": 2
+}
+
+[resource]
+script = ExtResource("5_1rq44")
+id = &"god_sun_dusk_up"
+display_name = "残阳（升级）"
+display_names = {
+"en": "Afterglow+"
+}
+effects = Array[ExtResource("1_hwwtm")]([SubResource("Resource_t6gx4")])

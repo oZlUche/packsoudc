@@ -77,17 +77,8 @@ tier = 0
 script = ExtResource("10_87kt2")
 
 [sub_resource type="Resource" id="Resource_5bfhi"]
-script = ExtResource("9_l2ro3")
-part = 1
-
-[sub_resource type="Resource" id="Resource_vaeam"]
 script = ExtResource("11_sqqvu")
 tier = 2
-
-[sub_resource type="Resource" id="Resource_65qkw"]
-script = ExtResource("9_l2ro3")
-part = 3
-tier = 3
 
 [resource]
 script = ExtResource("12_fcqfh")
@@ -104,8 +95,12 @@ description = "恒常（周期循环）被人类推向太阳、又夺了火；�
 descriptions = {
 "en": "Constancy (the recurring cycle), which humans pushed onto the sun before stealing its fire; one of the Empire's gods, and the Sun God's people hold high standing."
 }
+core_line = "日月：进入战斗时为白昼，6 秒后换成黑夜，之后每 6 秒一换；白昼伤害 +15%，黑夜急速 +15%"
+core_lines = {
+"en": "Sun and Moon: battles start in Day, which turns to Night after 6 seconds and alternates every 6 seconds; Day +15% damage, Night +15% Haste"
+}
 thresholds = Array[int]([42, 117, 217])
 deeds = Array[ExtResource("5_vxfes")]([SubResource("Resource_nxral")])
 offerings = Array[ExtResource("7_d5eql")]([SubResource("Resource_t1fft"), SubResource("Resource_r2xcc"), SubResource("Resource_gdva3"), SubResource("Resource_fmsvn")])
-perks = Array[ExtResource("8_8yila")]([SubResource("Resource_72xeb"), SubResource("Resource_shyoi"), SubResource("Resource_5bfhi"), SubResource("Resource_vaeam"), SubResource("Resource_65qkw")])
+perks = Array[ExtResource("8_8yila")]([SubResource("Resource_72xeb"), SubResource("Resource_shyoi"), SubResource("Resource_5bfhi")])
 blessings = Array[ExtResource("1_yq77j")]([SubResource("Resource_binyk")])

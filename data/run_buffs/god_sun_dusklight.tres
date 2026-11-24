@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_p3elv"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_earu3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_2ynqt"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_0r7h7"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ajj4f"]
+
+[sub_resource type="Resource" id="Resource_u4exr"]
+script = ExtResource("2_earu3")
+values = {
+"pct": 8
+}
+
+[resource]
+script = ExtResource("5_ajj4f")
+id = &"god_sun_dusklight"
+display_name = "黄昏"
+display_names = {
+"en": "Twilight"
+}
+effects = Array[ExtResource("1_p3elv")]([SubResource("Resource_u4exr")])

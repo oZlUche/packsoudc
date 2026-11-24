@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_myowx"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_831kr"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_g1k42"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_wqg1i"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_qkoj6"]
+
+[sub_resource type="Resource" id="Resource_3pihc"]
+script = ExtResource("2_831kr")
+values = {
+"sec": 1
+}
+
+[resource]
+script = ExtResource("5_qkoj6")
+id = &"god_sun_dusk"
+display_name = "残阳"
+display_names = {
+"en": "Afterglow"
+}
+effects = Array[ExtResource("1_myowx")]([SubResource("Resource_3pihc")])

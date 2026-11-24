@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_rest",
+  "display_name": "日落当息",
+  "display_names": {
+    "en": "Rest at Sunset"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 2
+      }
+    }
+  ]
+}

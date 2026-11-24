@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_ibukd"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_ar5lt"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_70kdn"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_mwce4"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_4jdu8"]
+
+[sub_resource type="Resource" id="Resource_cbkw0"]
+script = ExtResource("2_ar5lt")
+values = {
+"amount": 50
+}
+
+[resource]
+script = ExtResource("5_4jdu8")
+id = &"god_sun_rise_up"
+display_name = "日出当作（升级）"
+display_names = {
+"en": "Work at Sunrise+"
+}
+effects = Array[ExtResource("1_ibukd")]([SubResource("Resource_cbkw0")])

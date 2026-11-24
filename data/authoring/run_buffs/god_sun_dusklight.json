@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_dusklight",
+  "display_name": "黄昏",
+  "display_names": {
+    "en": "Twilight"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 8
+      }
+    }
+  ]
+}

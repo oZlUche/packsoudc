@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_mmw4r"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_3eskt"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_vjboq"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ibkwj"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_t4fgf"]
+
+[sub_resource type="Resource" id="Resource_njmsd"]
+script = ExtResource("2_3eskt")
+values = {
+"pct": 5
+}
+
+[resource]
+script = ExtResource("5_t4fgf")
+id = &"god_sun_fullmoon"
+display_name = "满月"
+display_names = {
+"en": "Full Moon"
+}
+effects = Array[ExtResource("1_mmw4r")]([SubResource("Resource_njmsd")])

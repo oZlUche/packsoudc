@@ -26,6 +26,8 @@ const ECHO_FASTER := &"faster"
 const ECHO_STACKS := &"stacks"
 ## 一次性的「下一次搜索多翻一件」（`oneshot` 那一格）
 const ONESHOT_SEARCH := &"search"
+## 388 日神【奇迹】：拿到当场把一件素材换成同类更高稀有度的（[Miracle]）
+const ONESHOT_MIRACLE := &"miracle"
 
 @export var id: StringName = &""
 @export var display_name: String = ""

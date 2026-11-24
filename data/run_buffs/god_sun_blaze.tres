@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_7tvrd"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_6smfa"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_me4mg"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_0wii4"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ucl62"]
+
+[sub_resource type="Resource" id="Resource_gyyu4"]
+script = ExtResource("2_6smfa")
+values = {
+"stacks": 1
+}
+
+[resource]
+script = ExtResource("5_ucl62")
+id = &"god_sun_blaze"
+display_name = "大日炎炎"
+display_names = {
+"en": "Blazing Sun"
+}
+effects = Array[ExtResource("1_7tvrd")]([SubResource("Resource_gyyu4")])

@@ -59,17 +59,8 @@
       "type": "altar_bless"
     },
     {
-      "type": "sun_cycle",
-      "part": 1
-    },
-    {
       "type": "altar_pray_fire",
       "tier": 2
-    },
-    {
-      "type": "sun_cycle",
-      "part": 3,
-      "tier": 3
     }
   ],
   "blessings": [
@@ -104,5 +95,9 @@
         }
       ]
     }
-  ]
+  ],
+  "core_line": "日月：进入战斗时为白昼，6 秒后换成黑夜，之后每 6 秒一换；白昼伤害 +15%，黑夜急速 +15%",
+  "core_lines": {
+    "en": "Sun and Moon: battles start in Day, which turns to Night after 6 seconds and alternates every 6 seconds; Day +15% damage, Night +15% Haste"
+  }
 }
