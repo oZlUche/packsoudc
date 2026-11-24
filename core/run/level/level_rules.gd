@@ -14,7 +14,9 @@ const ID := &"level"
 const KIND_STAT := &"stat"
 const KIND_WEAPON := &"weapon"
 const KIND_EXPLORE := &"explore"
-const KINDS: Array[StringName] = [KIND_STAT, KIND_WEAPON, KIND_EXPLORE]
+## 388：神的牌（质变牌和基础牌都是这一类，类别条写神的名字）
+const KIND_GOD := &"god"
+const KINDS: Array[StringName] = [KIND_STAT, KIND_WEAPON, KIND_EXPLORE, KIND_GOD]
 ## 出牌条件（[member cards] 的 `requires`）：背包里得有武器 / 得有会施加元素的道具
 const REQ_WEAPON := &"weapon"
 const REQ_ELEMENT := &"element"
@@ -45,13 +47,18 @@ const ONESHOT_SEARCH := &"search"
 @export var prayers_per_altar: int = 3
 ## 每级出几张牌
 @export var choices: int = 3
-## 【无信者】（不奉神）逢这个数的倍数级多选一次通用牌（作者 18:30）
-@export var extra_pick_every: int = 5
+## 388（作者 11-24）：质变牌的时机 —— 进入对局时先选一张（[member qual_opening]），之后这几级各选一张（在这一级的普通选牌之后）。
+## 所有神通用；没有质变牌池的（【无信者】、还没写牌的神）这几次改成多选一张通用牌（初值，等作者定）
+@export var qual_opening: bool = true
+@export var qual_levels: Array[int] = [6, 12, 18, 24, 30]
 ## 元素回响（作者 18:53）：本体每 [member echo_seconds] 秒一次、多 1 层；「间隔减少」每张减 1 秒，到 [member echo_min_seconds] 为止；「层数增加」每张多 1 层
 @export var echo_seconds: int = 8
 @export var echo_min_seconds: int = 3
 ## 牌池：牌的 id（= `run_buffs` 里那份 buff 的 id）→ {kind: 三类之一, weight: 出牌权重（默认 1）, requires: 出牌条件（可空）,
-## after: 拿过这张之后才进池, once: 拿过就不再出, echo: 元素回响的哪一张, oneshot: 一次性效果}
+## after: 拿过这张之后才进池, once: 拿过就不再出, echo: 元素回响的哪一张, oneshot: 一次性效果}。
+## 388 神的牌另有：god: 哪位神的（只在奉这位神时进池）、qual: 质变牌（只在质变位出，拿过就不再出）、
+## upgrade_of: 这是哪张质变牌的升级版（拿过原牌才进池）、excludes: 互斥的牌（拿过其中一张就不出）、
+## when: 满足条件才入池（条件由各位神的代码登记，[method LevelModule.register_when]）
 @export var cards: Dictionary = {}
 
 static var _rules: LevelRules = null
@@ -114,6 +121,34 @@ func card_ids() -> Array[StringName]:
 	for k in keys:
 		out.append(StringName(String(k)))
 	return out
+
+
+## 388：从开局到第 [param level] 级一共有几个质变位
+func qual_slots_at(level: int) -> int:
+	var n := 1 if qual_opening else 0
+	for lv in qual_levels:
+		if lv <= level:
+			n += 1
+	return n
+
+
+## 388：第 [param k] 个质变位在第几级（开局那一次是 1 级；没有这一位 -1）
+func qual_level_of(k: int) -> int:
+	var lvs: Array[int] = []
+	if qual_opening:
+		lvs.append(1)
+	var rest := qual_levels.duplicate()
+	rest.sort()
+	lvs.append_array(rest)
+	return lvs[k] if k >= 0 and k < lvs.size() else -1
+
+
+func god_of(card_id: StringName) -> StringName:
+	return StringName(String(card(card_id).get("god", "")))
+
+
+func is_qual(card_id: StringName) -> bool:
+	return bool(card(card_id).get("qual", false)) or String(card(card_id).get("upgrade_of", "")) != ""
 
 
 func kind_of(card_id: StringName) -> StringName:

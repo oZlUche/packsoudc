@@ -7,6 +7,13 @@
     "hunter": 20,
     "core": 40
   },
+  "qual_levels": [
+    6,
+    12,
+    18,
+    24,
+    30
+  ],
   "cards": {
     "card_stamina_flat": {
       "kind": "stat"

@@ -1159,6 +1159,9 @@ static func import_level_rules(data: Dictionary, ctx: Context, report: ImportRep
 		report.error("difficulty_step", "不能是负数")
 	if rules.choices < 1:
 		report.error("choices", "每级至少出一张牌")
+	for lv in rules.qual_levels:
+		if lv < 2 or lv > rules.level_cap:
+			report.error("qual_levels", "质变位的级数得在 2 到 %d 之间（开局那一次是 qual_opening）" % rules.level_cap)
 	for key in rules.battle:
 		if typeof(rules.battle[key]) not in [TYPE_INT, TYPE_FLOAT] or float(rules.battle[key]) < 0.0:
 			report.error("battle.%s" % key, "得是不小于 0 的数")
@@ -1172,7 +1175,16 @@ static func import_level_rules(data: Dictionary, ctx: Context, report: ImportRep
 			continue
 		var r := row as Dictionary
 		if not LevelRules.KINDS.has(StringName(String(r.get("kind", "")))):
-			report.error(at + ".kind", "得是 stat / weapon / explore 之一")
+			report.error(at + ".kind", "得是 stat / weapon / explore / god 之一")
+		var god := String(r.get("god", ""))
+		if (god != "") != (String(r.get("kind", "")) == String(LevelRules.KIND_GOD)):
+			report.error(at + ".god", "神的牌（kind god）要写 god，别的不写")
+		var up := String(r.get("upgrade_of", ""))
+		if up != "" and (not rules.cards.has(up) or not bool((rules.cards[up] as Dictionary).get("qual", false))):
+			report.error(at + ".upgrade_of", "'%s' 不是池里的质变牌" % up)
+		for x in r.get("excludes", []):
+			if not rules.cards.has(String(x)):
+				report.error(at + ".excludes", "互斥的牌 '%s' 不在池里" % x)
 		if float(r.get("weight", 1.0)) < 0.0:
 			report.error(at + ".weight", "不能是负数")
 		var req := String(r.get("requires", ""))

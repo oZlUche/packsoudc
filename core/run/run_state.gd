@@ -108,6 +108,8 @@ var faith_enabled := true
 var faith_bless := true
 ## 报告 377 万神院三档：奉神的局经验值多给几成（0.1 = +10%；不奉神的局不加，[method LevelModule.mult]）
 var faith_xp_bonus := 0.0
+## 388：万神院五档 —— 开局那次质变选牌多出一张（初值，等作者定）
+var opening_extra_choice := false
 ## 报告 377：开局模块输入里信仰开关那一格的键（`{"enabled", "bless", "xp_bonus"}`）
 const FAITH_INPUT := &"faith_access"
 ## 上一次通知时的 [选择, 有效信仰]（只为判断要不要发 [signal faith_changed]）
@@ -1307,6 +1309,7 @@ func _read_faith_access(raw: Variant) -> void:
 	faith_enabled = bool(fa.get("enabled", true))
 	faith_bless = bool(fa.get("bless", true))
 	faith_xp_bonus = maxf(0.0, float(fa.get("xp_bonus", 0.0)))
+	opening_extra_choice = bool(fa.get("opening_extra", false))
 
 
 func _wire_events() -> void:
@@ -1558,7 +1561,7 @@ func to_dict() -> Dictionary:
 			"search_haul": search_haul},
 		"skills": skills.to_dict(),
 		"faith_selection": {"selected_id": String(selected_faith)},     # 信仰重构 A：只存选择，有效信仰读档后由棋盘重建
-		"faith_access": {"enabled": faith_enabled, "bless": faith_bless, "xp_bonus": faith_xp_bonus},     # 377：只加带默认值的字段，不升版
+		"faith_access": {"enabled": faith_enabled, "bless": faith_bless, "xp_bonus": faith_xp_bonus, "opening_extra": opening_extra_choice},     # 377：只加带默认值的字段，不升版
 		"faith_power": faith_power.to_dict(),     # 372：经验值在局内成长模块里（`modules.level`）；这里只剩没装模块时的后备池
 		"faith_history": faith_power.history_to_array(),     # 104
 		"owned_uids": owned_uids.keys(),

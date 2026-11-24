@@ -294,6 +294,7 @@ static func frame_map_screen(t: TestCase, root: Window) -> void:
 	var map = game.base()
 	var run: RunState = flow.run
 	map.pick_spawn(run.map.entry_ids[0])
+	Support.skip_opening_pick(map, run)
 	var host: HudHost = map.hud()
 	t.not_null(host, "地图屏有读数层")
 	if host != null:
