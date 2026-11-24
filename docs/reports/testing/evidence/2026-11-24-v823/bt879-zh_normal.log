@@ -1,0 +1,87 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+BT879 ♥ f 250 st 2 屏 9 wait 22
+BT879 测试辅助：各方到营地 ["legion", "society", "greylamp", "cartographers", "envoy", "growers", "hunters", "pantheon"]；开了 ["bias", "nursery", "alchemy", "canteen"]；食堂配方 2 份；金币 750
+BT879 ♥ f 500 st 5 屏 7 wait 13
+BT879 走了一局：走一步后测试辅助 force_extract
+BT879 ♥ f 750 st 8 屏 9 wait 23
+BT879 回营地。后勤小键 ["market", "smithy", "nursery", "alchemy", "canteen", "pantheon"]；书架小键 ["codex", "records", "keepsakes", "achievements"]
+BT879 【tab_expedition】排版：查了 19 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / 上回出征 / 安德烈乌斯 / 魔法废墟　小型　普通 / 结果 / 撤离 / 值 90 / 打赢 / 0 场 / 带回 / 2 件 / [开始探索] / [回主菜单] / [◂]
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] fold (res://ui/tip_anchor.gd:75)
+         [1] _place (res://ui/tip_anchor.gd:99)
+BT879 【tab_warehouse】排版：查了 22 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / [不限标签] / [全部] / [只看收藏] / [清除] / [快速出售] / [一键置入] / [整理] / [一 9件] / [二 　] / [三 　] / [四 　] / [五 　] / [六 　] / [七 　] / [回主菜单] / [◂]
+BT879 【tab_tech】排版：查了 12 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / 科技 / 魔法师协会 / 办成《第一份勘察记录》开放 / [去办] / [回主菜单] / [◂]
+BT879 【tab_commissions】排版：查了 46 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / [剧情] / [常规] / [声望] / 领炉牌 / 委托人：军需员 / 做什么：到军需员那里核对领用单，领一块炉牌 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 第一份勘察记录 / 委托人：协会登记员 / 做什么：把你这几趟的探索记录交给协会登记 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 把路画回来 / 委托人：协会绘图员 / 做什么：把这一趟到过的一处地形登记到协会的图上 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 第一片地 / 委托人：垦户社的老农 / 做什么：到河滩领一包试种种苗，划出一片地 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 初次奉神 / 委托人：万神院的老祭司 / 做什么：在万神院选一位神出征，奉着祂升三级并撤离 / 在哪完成：要带回营地 / 报酬： / 声望 +10 / 已接　0 / 3 / [回主菜单] / [◂]
+BT879 ♥ f 1000 st 12 屏 9 wait 17
+BT879 【tab_logistics】排版：查了 18 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [集市] / [铁匠铺] / [苗圃] / [炼金] / [食堂] / [万神院] / [书架] / 集市 / 灰灯互助会 / 办成《认一认秤》开放 / [去办] / [回主菜单] / [◂]
+BT879 【sub_market】排版：查了 18 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [集市] / [铁匠铺] / [苗圃] / [炼金] / [食堂] / [万神院] / [书架] / 集市 / 灰灯互助会 / 办成《认一认秤》开放 / [去办] / [回主菜单] / [◂]
+BT879 【sub_smithy】排版：查了 18 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [集市] / [铁匠铺] / [苗圃] / [炼金] / [食堂] / [万神院] / [书架] / 铁匠铺 / 后勤部队 / 办成《领炉牌》开放 / [去办] / [回主菜单] / [◂]
+BT879 【sub_nursery】排版：查了 39 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [集市] / [铁匠铺] / [苗圃] / [炼金] / [食堂] / [万神院] / [书架] / [收获] / [药材] / [主食] / [蔬菜] / [水果] / 苦叶草 / ×1 / → / ×2 / 2 局 / [选中] / [种下] / 绳麻 / → / ×1 / 3 局 / [选中] / [种下] / [一 9件] / [二 　] / [三 　] / [四 　] / [五 　] / [六 　] / [七 　] / [回主菜单] / [◂]
+BT879 ♥ f 1250 st 11 屏 9 wait 0
+BT879 【sub_alchemy】排版：查了 31 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [集市] / [铁匠铺] / [苗圃] / [炼金] / [食堂] / [万神院] / [书架] / 0 / [不限标签] / [全部] / → / +0 / 卖掉 / · / 折损 40% / [一键炼金] / [炼化] / [一 0/9] / [二 　] / [三 　] / [四 　] / [五 　] / [六 　] / [七 　] / [回主菜单] / [◂]
+BT879 【sub_canteen】排版：查了 30 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [集市] / [铁匠铺] / [苗圃] / [炼金] / [食堂] / [万神院] / [书架] / 食材仓库 / 锅 / 这一锅 / 饱腹 0 / 自由组合 / [记为配方] / [开饭] / 配方 / 山薯 / [改名] / [删除] / [应用] / 酸麦 / [改名] / [删除] / [应用] / [回主菜单] / [◂]
+BT879 【sub_pantheon】排版：查了 21 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [集市] / [铁匠铺] / [苗圃] / [炼金] / [食堂] / [万神院] / [书架] / 万神院 / 蛮神 / 技巧之神 / 日神 / ？？？？ / ？？？？ / ？？？？ / [回主菜单] / [◂]
+BT879 【tab_shelf】排版：查了 16 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / [图鉴] / [对局记录] / [特殊道具] / [成就] / [回主菜单] / [◂]
+BT879 【shelf_codex】排版：查了 20 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / [图鉴] / [对局记录] / [特殊道具] / [成就] / [回主菜单] / [◂] / 图鉴 / [关闭] / [全部] / [收藏]
+BT879 ♥ f 1500 st 11 屏 9 wait 15
+BT879 　　对局记录窗：开着
+BT879 【shelf_records】排版：查了 20 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / [图鉴] / [对局记录] / [特殊道具] / [成就] / [回主菜单] / [◂] / 对局记录 / [关闭]
+BT879 【shelf_keepsakes】排版：查了 18 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / [图鉴] / [对局记录] / [特殊道具] / [成就] / [回主菜单] / [◂] / 特殊道具 / [关闭]
+BT879 【shelf_achievements】排版：查了 49 处，没有溢出
+BT879 　　字：[出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / [图鉴] / [对局记录] / [特殊道具] / [成就] / [回主菜单] / [◂] / 成就 / [关闭] / [全部　2 / 7] / [已解锁] / [未解锁] / 第一次回来 / ✓ 已完成　2026-11-24 / 途径：从诅咒之地撤离一次。 / 解锁：道具「战锤」、道具「蛮神赐福的战锤」、道具「大地之神赐福的战锤」、道具「日神赐福的战锤」 / 老手 / 未完成　进度 1 / 3 / 途径：撤离三次。 / 解锁：道具「秘银附魔长剑」、道具「蛮神赐福的秘银附魔长剑」、道具「大地之神赐福的秘银附魔长剑」、道具「日神赐福的秘银附魔长剑」 / 满载而归 / 未完成　进度 90 / 300 / 途径：一局背出价值 300 币以上的东西。解锁进阶难度。 / 解锁：难度「进阶一」 / 直捣核心 / 未完成　进度 0 / 1 / 途径：击败一次核心（BOSS）。 / 解锁：道具「灰白色的金属碎片」 / 收藏家 / 未完成　进度 1 / 10 / 途径：图鉴点亮 10 种道具（撤离成功时背包里的会点亮）。 
+BT879 完 err=0
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9685 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4588 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
