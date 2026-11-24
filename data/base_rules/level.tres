@@ -148,6 +148,16 @@ cards = {
 "god": "brute",
 "kind": "god"
 },
+"god_brute_eat": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
+"god_brute_eat_up": {
+"god": "brute",
+"kind": "god",
+"upgrade_of": "god_brute_eat"
+},
 "god_brute_haste": {
 "god": "brute",
 "kind": "god"

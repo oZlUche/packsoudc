@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_dlswy"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_ecq7k"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_0bjqi"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_58anv"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_3qb00"]
+
+[sub_resource type="Resource" id="Resource_l5ol1"]
+script = ExtResource("2_ecq7k")
+values = {
+"per_cell": 5,
+"stamina": 50
+}
+
+[resource]
+script = ExtResource("5_3qb00")
+id = &"god_brute_eat_up"
+display_name = "啖肉吮血（升级）"
+display_names = {
+"en": "Feast on Flesh+"
+}
+effects = Array[ExtResource("1_dlswy")]([SubResource("Resource_l5ol1")])

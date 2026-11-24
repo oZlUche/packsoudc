@@ -8,7 +8,8 @@
     {
       "type": "god_card",
       "values": {
-        "stacks": 1
+        "stacks": 1,
+        "halving": 0
       }
     }
   ]

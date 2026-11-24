@@ -1,0 +1,23 @@
+{
+  "id": "blood_flesh_prime",
+  "display_name": "上等血肉",
+  "display_names": {
+    "en": "Prime Raw Flesh"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "10"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

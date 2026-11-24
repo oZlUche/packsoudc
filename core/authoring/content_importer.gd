@@ -2601,6 +2601,9 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 	for fid in def.loot_filler:     # 210
 		if not ctx.items.has(fid):
 			report.error("loot_filler", "找不到道具 '%s'" % fid)
+	for bid in def.loot_bonus:     # 388
+		if not ctx.items.has(bid):
+			report.error("loot_bonus", "找不到道具 '%s'" % bid)
 	for pair in sigs:
 		var at: String = pair[0]
 		var sid: StringName = pair[1]

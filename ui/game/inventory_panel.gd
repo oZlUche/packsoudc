@@ -284,6 +284,8 @@ func board_actions(uid: int) -> Array:
 	out.append(ItemActions.lock(inst, _run.board))
 	if inst.def.is_anchor():
 		out.append(ItemActions.anchor(inst, _run.board, select_faith, _run.faith_switch_refusal()))
+	if BruteRagePerk.can_eat(_run, inst):
+		out.append(ItemActions.make(&"eat", UiText.t("act.eat"), func(): eat(inst)))     # 388 啖肉吮血：没拿这张牌就没有这一项
 	if can_bench(inst):
 		out.append(ItemActions.bench(inst, _run.board))     # 2026-10-22：不参战（战前整备用）
 	if extra_actions.is_valid():
@@ -295,6 +297,21 @@ func board_actions(uid: int) -> Array:
 ## 信物不算：标了它会把信仰一起熄掉，那是另一件事，不该藏在「不参战」这个按钮里
 static func can_bench(inst: ItemInstance) -> bool:
 	return inst != null and inst.def != null and inst.def.combat != null and not inst.def.is_anchor() and not inst.is_pinned()     # 255：随身之物不能标
+
+
+## 388 啖肉吮血：吃下一件【血肉】，提示加了多少
+func eat(inst: ItemInstance) -> bool:
+	var got := BruteRagePerk.eat(_run, inst)
+	if got.is_empty():
+		return false
+	var hp := TextTemplate.num(float(got["hp"]))
+	if float(got["stamina"]) > 0.0:
+		_hint_text(UiText.t("bag.ate_stamina") % [Names.of(inst.def), hp, TextTemplate.num(float(got["stamina"]))])
+	else:
+		_hint_text(UiText.t("bag.ate") % [Names.of(inst.def), hp])
+	if board_view != null:
+		board_view.queue_redraw()
+	return true
 
 
 ## 信仰重构 A：奉 [param faith_id] 为主信仰（空 = 不再奉神），走 [method RunState.select_faith]。返回改没改

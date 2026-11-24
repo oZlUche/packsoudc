@@ -9,6 +9,7 @@
 [sub_resource type="Resource" id="Resource_q4k77"]
 script = ExtResource("2_57hie")
 values = {
+"halving": 0,
 "stacks": 1
 }
 

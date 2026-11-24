@@ -1,0 +1,12 @@
+{
+  "id": "blood_flesh",
+  "display_name": "血肉",
+  "display_names": {
+    "en": "Raw Flesh"
+  },
+  "descriptions": {
+    "en": ""
+  },
+  "tip": false,
+  "category": "affiliation"
+}

@@ -26,6 +26,9 @@ const STEP := 0.2
 @export var damage_per: float = 2.0
 @export var haste_per: float = 0.0
 @export var regen_per: float = 0.0
+## 不灭按整段给：每满几层才加一次（0 = 按层平摊，[member regen_per] 每层）；整段时每段加 [member regen_step_amount]
+@export var regen_step: int = 0
+@export var regen_step_amount: float = 0.0
 ## 积怒气多几成（易怒症，百分数）
 @export var gain_bonus: int = 0
 ## 困兽：生命低于这条线（百分数）
@@ -38,6 +41,8 @@ const STEP := 0.2
 @export var armor_per: float = 0.0
 ## 破甲升级：每层无视几成减伤（百分数）
 @export var ignore_per: float = 0.0
+## 破甲升级：无视的那几成也算格挡（作者待定，默认不算）
+@export var ignore_block: bool = false
 ## 怒火中烧：每几层附一次、一次几层灼伤（0 = 没拿）
 @export var scorch_every: int = 10
 @export var scorch_stacks: int = 0
@@ -48,6 +53,8 @@ const STEP := 0.2
 @export var strike_every: int = 0
 ## 恨意：0 = 没拿，1 = 被施加负面状态时，2 = 另外负面状态每跳一下
 @export var hate: int = 0
+## 恨意升级：寒冷、麻痹减半那一下也算「触发」（作者待定，默认只算跳伤害）
+@export var hate_halving: bool = false
 ## 血甲（armor_window 0 = 没拿）
 @export var armor_window: float = 0.0
 @export var armor_cd: float = 10.0
@@ -80,7 +87,7 @@ func rage_def() -> BuffDef:
 			mods.append(StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, damage_per))
 		if haste_per != 0.0:
 			mods.append(StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, haste_per))
-		if regen_per != 0.0:
+		if regen_per != 0.0 or regen_step > 0:
 			mods.append(StatModifier.make(BattleStats.REGEN_HP, StatModifier.Mode.ADD, regen_per))
 		_def.mods = mods
 	return _def
@@ -101,6 +108,19 @@ func apply(ctx: RuleContext) -> void:
 		BattleEvent.STATUS_APPLIED:
 			if hate >= 1 and e.side == ctx.owner.side and _is_debuff(ctx.owner, e.get_name(&"buff")):
 				_add(ctx, 1, true)
+		BattleEvent.STATUS_UNSTACKED:
+			if hate >= 2 and hate_halving and e.side == ctx.owner.side and String(e.payload.get("reason", "")) == "decay" and _halves_on_act(ctx.owner, e.get_name(&"buff")):
+				_add(ctx, 1, true)
+
+
+## 寒冷（出手）/ 麻痹（付耐力）这类按动作减半的负面状态
+static func _halves_on_act(me: CombatantRuntime, id: StringName) -> bool:
+	var b := me.find_buff(id)
+	if b == null:
+		var path := ContentPaths.asset_file("buffs", String(id))
+		var d := load(path) as BuffDef if ResourceLoader.exists(path) else null
+		return d != null and d.is_debuff and d.decay_halve_on in [BuffDef.HALVE_WEAPON_FIRED, BuffDef.HALVE_STAMINA_PAID]
+	return b.def.is_debuff and b.def.decay_halve_on in [BuffDef.HALVE_WEAPON_FIRED, BuffDef.HALVE_STAMINA_PAID]
 
 
 static func _is_debuff(me: CombatantRuntime, id: StringName) -> bool:
@@ -154,6 +174,14 @@ func _sync(ctx: RuleContext) -> void:
 	var me := ctx.owner
 	var want := stacks(ctx.state())
 	var have := me.stacks_of(BUFF_ID)
+	if regen_step > 0 and want != have and rage_def() != null:
+		# 不灭按整段：每层的量 = 满了几段 × 每段 ÷ 层数（层数变了就重算）
+		@warning_ignore("integer_division")
+		var per := regen_step_amount * float(want / regen_step) / float(maxi(1, want))
+		for m in rage_def().mods:
+			if (m as StatModifier).stat == BattleStats.REGEN_HP:
+				(m as StatModifier).amount = per
+		me.mark_dirty()
 	if want > have:
 		ApplyStatus.give(ctx, me, rage_def(), want - have)
 	elif want < have:
@@ -207,6 +235,7 @@ func _before(ctx: RuleContext) -> void:
 			p.armor_bonus += roundi(armor_per * n)
 		if n > 0 and ignore_per > 0.0:
 			p.ignore_reduction = mini(100, p.ignore_reduction + roundi(ignore_per * n))
+			p.ignore_block = p.ignore_block or ignore_block
 	elif p.victim == me and defer_percent > 0 and p.raw > 0:
 		p.defer_percent = maxi(p.defer_percent, defer_percent)
 

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TagDef" format=3]
+
+[ext_resource type="Script" path="res://core/inventory/tag_def.gd" id="1_ja8pr"]
+
+[resource]
+script = ExtResource("1_ja8pr")
+id = &"blood_flesh"
+display_name = "血肉"
+display_names = {
+"en": "Raw Flesh"
+}
+descriptions = {
+"en": ""
+}
+tip = false
+category = "affiliation"

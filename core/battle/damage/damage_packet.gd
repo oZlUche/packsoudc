@@ -33,6 +33,8 @@ var penetration: bool = false
 var armor_bonus: int = 0
 ## 388 蛮神【破甲】升级：无视守方减伤的几成（百分数；只削减伤，不碰易伤）
 var ignore_reduction: int = 0
+## 388 破甲升级：[member ignore_reduction] 也让格挡少算几成（开关，作者待定）
+var ignore_block: bool = false
 ## 388 蛮神【痛觉残留】：这一下落血的几成改成之后慢慢扣（百分数；受伤前由挨打一方写）
 var defer_percent: int = 0
 #endregion

@@ -226,3 +226,26 @@ static func run_ledger(t: TestCase) -> void:
 		sum += (d as FaithDeed).gain(&"battle", won)
 	t.eq(sum, 4, "反击 2 + 低血打赢 2 = 每场上限 4")
 	t.eq(def.thresholds, [42, 117, 217] as Array[int], "三阶 42 / 117 / 217")
+
+
+static func run_switches(t: TestCase) -> void:
+	t.begin("388 · 作者待定的三处做成开关（牌的 values 里写 1 打开）：破甲升级算不算格挡、恨意升级算不算减半、不灭按层平摊还是整段")
+	# 破甲升级：无视减伤也算格挡
+	for on in [false, true]:
+		var ctx := FX._battle(Pipe._attacker(10.0), Pipe._defender({"block": 10.0}))
+		Pipe._start(ctx)
+		var p := DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(20.0), ctx.sides[1], 0, 0, true)
+		p.ignore_reduction = 50
+		p.ignore_block = on
+		DamageResolver.resolve(ctx, p)
+		t.eq(Pipe._hp(ctx, 1), 85 if on else 90, "格挡 10、无视 50%%：%s" % ("开：只挡 5" if on else "关（默认）：照挡 10"))
+	# 恨意升级：寒冷减半也给一层
+	var off := int(_gained(BattleSim.run(_me({"hate": 2, "cap": 1}, 1000.0), _hitter(1.0, 1.0, &"chill"), _rng(8), 8.0))[0])
+	var on2 := int(_gained(BattleSim.run(_me({"hate": 2, "cap": 1, "hate_halving": true}, 1000.0), _hitter(1.0, 1.0, &"chill"), _rng(8), 8.0))[0])
+	t.check(on2 > off, "开：我方出手让寒冷减半时多一层（%d > %d）" % [on2, off])
+	# 不灭：整段
+	var rule := BruteRagePerk.new().rule_for(null)
+	var e := rule.effects[0] as BruteRage
+	e.regen_step = 5
+	e.regen_step_amount = 1.0
+	t.eq(e.rage_def().mods.filter(func(m): return (m as StatModifier).stat == BattleStats.REGEN_HP).size(), 1, "整段也挂生命回复那一条")

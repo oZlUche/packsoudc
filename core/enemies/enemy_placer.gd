@@ -267,6 +267,14 @@ static func build_content(
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
 			else:
 				carry_short += 1
+	if def.is_wild() and not def.loot_bonus.is_empty():
+		var lrng := RandomNumberGenerator.new()
+		lrng.seed = hash([rng.state, String(def.id), strength, "bonus"])
+		for bid in def.loot_bonus:
+			if _place_random(board, items.get_def(bid), placed, lrng):
+				(placed[placed.size() - 1] as Dictionary)["carried"] = true
+			else:
+				carry_short += 1
 	# 246 补充二：身上的魔晶石换品、抽剩余次数（掉下来就是这一颗；随机数另起一条）。套路与招牌里写的不换品
 	# （247：法师的阶就是晶石的品），次数照抽
 	var xrng := RandomNumberGenerator.new()

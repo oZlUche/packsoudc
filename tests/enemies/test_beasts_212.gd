@@ -79,9 +79,9 @@ static func run_no_carry(t: TestCase) -> void:
 	for seed_ in 30:
 		for id in BEASTS:
 			for raw in (_build(c, id, c.enemies.enemy(id).strength, 300 + seed_, c.carry)["content"] as Dictionary)["items"]:
-				if bool((raw as Dictionary).get("carried", false)) and not c.enemies.enemy(id).loot_filler.has(StringName(String((raw as Dictionary).get("id", "")))):
+				if bool((raw as Dictionary).get("carried", false)) and not c.enemies.enemy(id).loot_filler.has(StringName(String((raw as Dictionary).get("id", "")))) and not c.enemies.enemy(id).loot_bonus.has(StringName(String((raw as Dictionary).get("id", "")))):
 					carried += 1
-	t.eq(carried, 0, "五种魔兽 × 30 个种子：除了替身的肉，一件携带品都没有")
+	t.eq(carried, 0, "五种魔兽 × 30 个种子：除了替身的肉和 388 的【血肉】，一件携带品都没有")
 
 
 static func run_spec(t: TestCase) -> void:

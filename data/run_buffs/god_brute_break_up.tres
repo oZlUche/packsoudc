@@ -9,6 +9,7 @@
 [sub_resource type="Resource" id="Resource_dvn8p"]
 script = ExtResource("2_1vsn3")
 values = {
+"block": 0,
 "ignore": 2,
 "pct": 3
 }

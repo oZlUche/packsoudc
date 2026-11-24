@@ -763,6 +763,11 @@ func effective_baseline() -> CombatantBaseline:
 	var ctx := buff_context()
 	var altar := AltarModule.of(self)
 	var faith_stat_bonus: Dictionary = altar.stat_bonus if altar != null else {}
+	var flesh := BruteRagePerk.flesh_bonus(LevelModule.of(self))     # 388 啖肉吮血：吃下的血肉
+	if not flesh.is_empty():
+		faith_stat_bonus = faith_stat_bonus.duplicate()
+		for k in flesh:
+			faith_stat_bonus[k] = float(faith_stat_bonus.get(k, 0.0)) + float(flesh[k])
 	if ctx.stat_bonus.is_empty() and ctx.stat_mult.is_empty() and faith_stat_bonus.is_empty():
 		return player_baseline
 	var base := player_baseline if player_baseline != null else CombatantBaseline.default_baseline()

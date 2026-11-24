@@ -81,6 +81,8 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	# 153：这里读到的已经是「最高那面盾 + 加固 / 破绽」（[CombatantRuntime]），几面盾不相加
 	if amount > 0 and packet.direct and not pure:
 		var block := victim.stat(BattleStats.BLOCK, 0)
+		if block > 0 and packet.ignore_block and packet.ignore_reduction > 0:
+			block = StatMath.mul(block, StatMath.from_percent(maxi(0, 100 - packet.ignore_reduction)))     # 388 破甲升级（开关）
 		packet.block = mini(block, amount) if block > 0 else block
 		amount = maxi(0, amount - packet.block)
 	# 103（作者定）：加时放大的是角色受到的「最终伤害」—— 减伤、格挡都按原值算完，扛下来的那部分再乘；治疗不放大
