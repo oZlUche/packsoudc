@@ -159,6 +159,7 @@ static func frame_entries(t: TestCase, root: Window) -> void:
 
 	flow.begin(c.chapter, kit, 7)
 	var map = game.base()
+	Support.skip_opening_pick(map, flow.run)
 	if map.rules_open():
 		map.close_rules()
 	map.toggle_pause()

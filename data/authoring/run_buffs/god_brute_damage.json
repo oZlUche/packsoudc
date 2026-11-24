@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_damage",
+  "display_name": "气血上涌",
+  "display_names": {
+    "en": "Surging Blood"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 0.5
+      }
+    }
+  ]
+}

@@ -30,7 +30,7 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.eq(run.active_faith_tier(), 0, "0 级")
 	var altar := AltarModule.of(run)     # 101：神坛与信仰级效果是一局的模块
 	t.not_null(altar, "默认清单里有神坛")
-	t.check(altar.perks().all(func(p): return p is BruteRagePerk), "0 级只有奉神即有的怒气（信仰重构 D）")
+	t.check(altar.perks().all(func(p): return p is BruteRagePerk or (p is SmitePerk and (p as SmitePerk).card != &"")), "0 级只有奉神即有的怒气和按牌给的神罚（388）")
 	# 战斗的账喂进去（信仰重构 D：反击 2 + 低血打赢 2；372 起打赢那一份是通用经验值，不在神的账上）
 	var bdef := run.active_faith()
 	var got := run.faith_power.credit(&"battle", {"won": true, "dealt": {"physical": 60.0}, "taken": {"physical": 60.0}, "mechanic": {"brute_strike": 2, "low_hp_won": 1}})
@@ -44,9 +44,9 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	var has_rule := false
 	for rule in spec.set_rules:
 		for e in (rule as AbilityRule).effects:
-			if e is BruteRage and (e as BruteRage).tier == 1:
+			if e is BruteRage:
 				has_rule = true
-	t.check(has_rule, "编译出来的玩家带着一阶的怒气规则")
+	t.check(has_rule, "编译出来的玩家带着怒气规则")
 	# 2 级：神坛献祭生命上限
 	run.faith_power.add_points(&"brute", bdef.thresholds[1] - run.faith_power.points_of(&"brute"))
 	t.eq(run.active_faith_tier(), 2, "到第二道门槛：Lv.2")
@@ -94,11 +94,14 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	t.eq(run.faith_power.points_of(&"brute"), pts0 + 20, "经验值 +20")
 	t.eq(run.effective_baseline().value_of(BattleStats.MAX_HP, 0.0), hp0 - 10.0, "两回都扣生命上限")
 	t.eq(AltarSacrificeHpPerk.buff_times(run), 1, "换信力不叠「能力」")
-	# 3 级：立即击败
+	# 388：立即击败改成质变牌【神罚】给次数（不再是 3 级）
 	run.faith_power.add_points(&"brute", bdef.thresholds[2] - run.faith_power.points_of(&"brute"))
 	t.eq(run.active_faith_tier(), 3, "Lv.3")
 	var smite := altar.perk(&"smite")
-	t.check(smite != null and smite.prebattle_actions(run, &"elite").size() == 1 and smite.prebattle_actions(run, &"battle").size() == 1 and smite.prebattle_actions(run, &"boss").is_empty(), "立即击败：普通与精英都能（372 起只有耗体力一个按钮），首领不能")
+	t.check(smite != null and smite.prebattle_actions(run, &"battle").is_empty(), "没拿【神罚】：3 级也没有立即击败")
+	LevelModule.of(run).taken["god_brute_smite"] = 1
+	t.check(smite.prebattle_actions(run, &"battle").size() == 1 and smite.prebattle_actions(run, &"elite").is_empty() and smite.prebattle_actions(run, &"boss").is_empty(), "拿了【神罚】：普通敌人能，精英、首领不能")
+	LevelModule.of(run).taken.erase("god_brute_smite")
 	# 献祭（AltarModule.offer：换信力；祭品由献的那一方拿走）
 	var sword: ItemInstance = null
 	for inst in run.board.items():

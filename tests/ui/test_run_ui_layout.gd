@@ -28,6 +28,7 @@ static func _map(root: Window) -> Array:
 	var map = game.base()
 	if flow.run != null and flow.run.phase == RunState.Phase.PICK_SPAWN:
 		map.pick_spawn(flow.run.map.entry_ids[0])
+	Support.skip_opening_pick(map, flow.run)
 	return [game, flow, map]
 
 

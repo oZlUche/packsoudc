@@ -7,9 +7,9 @@ const PREFIX := "smite_replay"
 
 
 static func frame_smite_replay(t: TestCase, root: Window) -> void:
-	t.begin("蛮神秒杀：普通/精英 × 体力 × 动效开/关，空回放结束后能领取战利品")
+	t.begin("蛮神秒杀（388：【神罚】次数）：普通/精英 × 动效开/关，空回放结束后能领取战利品")
 	for type in [&"battle", &"elite"]:
-		for option in [SmitePerk.VITALITY]:     # 372：秒杀只花体力
+		for option in [SmitePerk.USES]:     # 388：秒杀按【神罚】牌给的次数
 			for motion in [false, true]:
 				_case(t, root, type, option, motion)
 
@@ -37,7 +37,10 @@ static func _case(t: TestCase, root: Window, type: StringName, option: StringNam
 	f.begin(ch, kit, int(found["seed"]))
 	f.pick_spawn(int(found["entry"]))
 	Support.activate(f.run, &"charm_brute")
-	f.run.faith_power.add_points(&"brute", 300)     # 372：阈值改成升 5/10/15 级要的经验值
+	var lv := LevelModule.of(f.run)
+	lv.taken["god_brute_smite"] = 1     # 388：立即击败是质变牌【神罚】
+	if type == &"elite":
+		lv.taken["god_brute_smite_up"] = 1     # 升级后精英也能（一次耗 2）
 	t.check(f.step_to(int(found["next"])), label + "：到战前准备")
 	var pre = game.overlay()
 	GameDirector.fades_allowed = motion

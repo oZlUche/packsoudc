@@ -3,8 +3,10 @@
 ## - **经验值**只涨不花（原来的信力，作者 22:02 改名）。通用来源在这里接：打赢战斗（普通 / 精英 / 猎手 / 首领各给各的，秒杀不算打了一场）、
 ##   第一次到达更深一环、神坛祷告（[method pray]）；神坛献祭由 [AltarModule] 记、各位神的事由 [FaithPower] 记，都经 [method gain]。
 ##   所有途径都乘难度系数（[method LevelRules.mult]）。
-## - **等级**按累计经验值算（[method LevelRules.level_of]），封顶 30。每升一级欠一次选牌；**不奉神（【无信者】）的人逢 5 级多欠一次**
-##   （到那一级时看有效信仰，记在 [member bonus_picks]）。
+## - **等级**按累计经验值算（[method LevelRules.level_of]），封顶 30。每升一级欠一次选牌。
+## - **质变位**（388，作者 11-24）：进入对局时先欠一次，之后 6 / 12 / 18 / 24 / 30 级各欠一次（排在这一级的普通选牌后面），所有神通用。
+##   奉的神有质变牌就从这位神的质变牌里出（拿过一张后它的升级版进池）；【无信者】和还没写牌的神改为多选一张通用牌（初值）。
+## - **普通选牌**奉神时从通用牌 + 这位神的基础牌一个池子里加权抽，至少一张是神的（作者 11-22）；无信者全是通用牌。
 ## - **选牌**：回到地图时界面按 [method pending] 弹出，三张一起出（[method offer]），挑一张（[method pick]）。同一张可以重复拿，拿几次就叠几层；
 ##   「拿过就不再出」的（元素回响本体）拿过就换成两张后续牌。**刷新**（三张一起换）、**删除**（这一局不再出，空位当场补一张）的次数
 ##   由局外科技给（[member RunContext.level_rerolls] / [member RunContext.level_removals]），一局用完为止。
@@ -12,7 +14,7 @@
 ## - 拿到的牌是一局的 buff（[method defs]，[method RunState.active_buff_defs] 并进去）：战斗属性、按件修饰、负重、休息都走原来那条路。
 ##   体力上限当场加（开局才算一次的那个数）；「下一次搜索多翻一件」攒着、下一个搜索点用掉；元素回响按拿过几张现拼一条战斗规则。
 ##
-## 第一批（报告 372 §六）：只有通用池，奉不奉神三张都是通用牌；神的牌池、逢 5 级的质变三选一在第二批
+## 出牌条件：after（拿过某张才出）、excludes（互斥）、when（满足条件才入池，各位神的代码用 [method register_when] 登记）、upgrade_of（升级版）
 class_name LevelModule
 extends RunModule
 
@@ -36,22 +38,20 @@ signal picked(card_id: StringName)
 
 ## 累计经验值（乘过难度系数；小数照留，界面取整）
 var xp: float = 0.0
-## 已经选过几次牌
+## 已经选过几次普通牌（每升一级一次）
 var picks_done: int = 0
-## 【无信者】逢 5 级多欠的那几次
-var bonus_picks: int = 0
-## 哪几级给过无信者的那一次（升序；[member bonus_picks] = 它的长度）。判断「这一张是不是多给的那次」用它
-var bonus_levels: Array[int] = []
-## 已经结算到第几级（多欠的那一次只在跨过那一级时给一回）
+## 388：已经用掉几个质变位（开局 + 6 / 12 / … 级）
+var qual_done: int = 0
+## 已经结算到第几级
 var level_seen: int = 1
-## v7 → v8 迁移来的档：无信者那几次还没补（装上时看有效信仰补，补完就清）
-var _backfill_bonus := false
 ## 拿过的牌：id → 几张
 var taken: Dictionary = {}
 ## 这一局删掉的牌（不再出）
 var removed: Array[String] = []
 ## 现在摆着的三张（空 = 没在选，或者还没抽）
 var offer_ids: Array[String] = []
+## 388：摆着的这一批是不是质变位的
+var offer_qual := false
 ## 一共抽过几次（种子的一部分）
 var draws: int = 0
 var rerolls_used: int = 0
@@ -60,11 +60,15 @@ var removals_used: int = 0
 var depth_reached: int = -1
 ## 攒着的「下一次搜索多翻一件」
 var pending_searches: int = 0
+## 388：神的牌在一局里要记的数（神罚用掉几次这类），进存档
+var god_state: Dictionary = {}
 ## 每一笔经验值：{step, source, gained, total, level}
 var history: Array[Dictionary] = []
 
 var _echo: RunBuffDef = null
 var _echo_key := ""
+## 388：「满足条件才入池」的条件：key → func(run) -> bool（各位神装上时登记，不进存档）
+var _when: Dictionary = {}
 
 
 static func of(run: RunState) -> LevelModule:
@@ -100,21 +104,18 @@ func install(run: RunState) -> void:
 	if depth_reached < 0:
 		var here := run.current_node() if run.map != null and run.travel != null else null
 		depth_reached = here.tier if here != null else 0
-	if _backfill_bonus:
-		_backfill_bonus = false
-		_fill_bonus_levels()
 
 
-## 迁移来的档：跨过的逢 n 级按此刻的有效信仰补无信者那一次（和 [method _on_level] 同一个判断）
-func _fill_bonus_levels() -> void:
-	var every := rules().extra_pick_every
-	if every <= 0 or not _humanist():
-		return
-	for lv in range(every, level() + 1, every):
-		if not bonus_levels.has(lv):
-			bonus_levels.append(lv)
-	bonus_levels.sort()
-	bonus_picks = bonus_levels.size()
+## 388：登记一个「满足条件才入池」的条件（牌表的 `when`）。[param check] 是 func(run: RunState) -> bool
+func register_when(key: StringName, check: Callable) -> void:
+	_when[String(key)] = check
+
+
+func _when_met(key: String) -> bool:
+	if key == "":
+		return true
+	var c: Callable = _when.get(key, Callable())
+	return c.is_valid() and bool(c.call(_run))
 
 
 #region 经验值与等级
@@ -163,10 +164,6 @@ func _on_level(lv: int) -> void:
 	if lv <= level_seen:
 		return
 	level_seen = lv
-	var every := rules().extra_pick_every
-	if every > 0 and lv % every == 0 and _humanist():
-		bonus_levels.append(lv)
-		bonus_picks = bonus_levels.size()     # 【无信者】：这一级连选两次
 	var cm := CommissionModule.of(_run)
 	if cm != null and not _humanist():
 		cm.on_faith_level(lv)     # 377：万神院的「修行」
@@ -184,24 +181,72 @@ func is_humanist() -> bool:
 
 
 #region 选牌
-## 还欠几次选牌
+## 还欠几次选牌（普通 + 质变位）
 func pending() -> int:
-	return maxi(0, level() - 1 + bonus_picks - picks_done)
+	return _regular_left() + _qual_left()
 
 
-## 选牌按级排队：每级一次，无信者的那一级紧跟着多一次。返回现在这一张是第几级的、是不是多给的那次
-## （{level, extra}；不欠选牌 = {}）
+func _regular_left() -> int:
+	return maxi(0, level() - 1 - picks_done)
+
+
+## 388：下一个质变位是第几个（开局那位算第 0 个）。章节关了开局选牌（教程）就从第 1 个算起
+func _slot_index() -> int:
+	return qual_done + (1 if opening_skipped() else 0)
+
+
+## 388（架构设计初值）：这一章不弹开局那次质变选牌（[member ChapterDef.opening_qual_pick]，教程章节关）
+func opening_skipped() -> bool:
+	return rules().qual_opening and _run != null and _run.chapter != null and not _run.chapter.opening_qual_pick
+
+
+func _qual_left() -> int:
+	return maxi(0, rules().qual_slots_at(level()) - _slot_index())
+
+
+## 选牌按级排队：每级一次普通牌，逢质变位的那一级紧跟着一次质变（开局那次在最前）。返回现在这一张：
+## {level: 第几级的, qual: 是不是质变位, generic: 质变位但没有质变牌池（多选一张通用牌）}；不欠选牌 = {}
 func current_pick() -> Dictionary:
 	if pending() <= 0:
 		return {}
-	var n := 0
-	for lv in range(2, level() + 1):
-		var times := 1 + bonus_levels.count(lv)
-		for k in times:
-			if n == picks_done:
-				return {"level": lv, "extra": k > 0}
-			n += 1
-	return {"level": level(), "extra": false}
+	var qual := _next_is_qual()
+	var lv := rules().qual_level_of(_slot_index()) if qual else picks_done + 2
+	return {"level": lv, "qual": qual, "generic": qual and not has_qual_pool()}
+
+
+## 下一张是不是质变位：两种都欠时，按级数先后（同一级普通牌在前）
+func _next_is_qual() -> bool:
+	if not offer_ids.is_empty():
+		return offer_qual     # 已经摆出来的那一批不变
+	if _qual_left() <= 0:
+		return false
+	if _regular_left() <= 0:
+		return true
+	return rules().qual_level_of(_slot_index()) < picks_done + 2
+
+
+## 这一局奉的神（无信者 &""）
+func god() -> StringName:
+	return _run.active_faith_id() if _run != null else &""
+
+
+## 388：奉的神此刻有没有能出的质变牌（没写牌、都拿完了 = 质变位改为多选一张通用牌）
+func has_qual_pool() -> bool:
+	if god() == &"":
+		return false
+	var r := rules()
+	for cid in r.card_ids():
+		if r.is_qual(cid) and eligible(cid):
+			return true
+	return false
+
+
+## 这一次摆几张：质变位的开局那一次，万神院五档多一张（[member RunState.opening_extra_choice]）
+func _choices_for(qual: bool) -> int:
+	var n := rules().choices
+	if qual and _slot_index() == 0 and rules().qual_opening and _run != null and _run.opening_extra_choice:
+		n += 1
+	return n
 
 
 func rerolls_left() -> int:
@@ -221,7 +266,8 @@ func offer() -> Array[StringName]:
 			offer_ids.clear()
 		return [] as Array[StringName]
 	if offer_ids.is_empty():
-		offer_ids = _draw(rules().choices, [])
+		offer_qual = _next_is_qual()
+		offer_ids = _draw(_choices_for(offer_qual), [], offer_qual)
 	var out: Array[StringName] = []
 	for s in offer_ids:
 		out.append(StringName(s))
@@ -235,8 +281,12 @@ func pick(i: int) -> StringName:
 		return &""
 	var cid := cards[i]
 	taken[String(cid)] = count_of(cid) + 1
-	picks_done += 1
+	if offer_qual:
+		qual_done += 1
+	else:
+		picks_done += 1
 	offer_ids.clear()
+	offer_qual = false
 	_apply_now(cid)
 	picked.emit(cid)
 	level_changed.emit()
@@ -250,7 +300,7 @@ func reroll() -> bool:
 		return false
 	rerolls_used += 1
 	var avoid: Array[String] = offer_ids.duplicate()
-	offer_ids = _draw(rules().choices, avoid)
+	offer_ids = _draw(offer_ids.size(), avoid, offer_qual)
 	level_changed.emit()
 	return true
 
@@ -265,7 +315,7 @@ func remove(i: int) -> bool:
 	removed.append(gone)
 	var keep: Array[String] = offer_ids.duplicate()
 	keep.remove_at(i)
-	var fill := _draw(1, keep)
+	var fill := _draw(1, keep, offer_qual)
 	if fill.is_empty() or keep.has(fill[0]):     # 池里没别的了：空着，不和留下的重样
 		offer_ids.remove_at(i)
 	else:
@@ -276,6 +326,40 @@ func remove(i: int) -> bool:
 
 func count_of(card_id: StringName) -> int:
 	return int(taken.get(String(card_id), 0))
+
+
+## 388：拿到的质变牌，按拿的先后：[{id: 原牌, upgraded: 拿了升级版没有, shown: 显示哪一张（升级了就是升级版）}]。神恩区、顶端栏小图标读它
+func quals() -> Array[Dictionary]:
+	var r := rules()
+	var out: Array[Dictionary] = []
+	for k in taken:
+		var cid := StringName(String(k))
+		if not r.is_qual(cid) or String(r.card(cid).get("upgrade_of", "")) != "":
+			continue
+		var up := _upgrade_of(cid)
+		var has_up := up != &"" and count_of(up) > 0
+		out.append({"id": cid, "upgraded": has_up, "shown": up if has_up else cid})
+	return out
+
+
+## 质变牌 [param cid] 的升级版（没有 &""）
+func _upgrade_of(cid: StringName) -> StringName:
+	var r := rules()
+	for other in r.card_ids():
+		if String(r.card(other).get("upgrade_of", "")) == String(cid):
+			return other
+	return &""
+
+
+## 388：拿到的神的基础牌（每张一格、写层数），按拿的先后：[{id, count}]
+func god_cards() -> Array[Dictionary]:
+	var r := rules()
+	var out: Array[Dictionary] = []
+	for k in taken:
+		var cid := StringName(String(k))
+		if r.god_of(cid) != &"" and not r.is_qual(cid):
+			out.append({"id": cid, "count": count_of(cid)})
+	return out
 
 
 ## 拿过的牌（按拿的张数从多到少，同样多按 id）：[{id, count}]
@@ -296,10 +380,21 @@ func eligible(card_id: StringName) -> bool:
 		return false
 	if _run != null and not _run.buff_defs.is_empty() and not _run.buff_defs.has(card_id):
 		return false
-	if bool(row.get("once", false)) and count_of(card_id) > 0:
+	if (bool(row.get("once", false)) or r.is_qual(card_id)) and count_of(card_id) > 0:
+		return false
+	var g := r.god_of(card_id)
+	if g != &"" and g != god():
 		return false
 	var after := String(row.get("after", ""))
 	if after != "" and count_of(StringName(after)) <= 0:
+		return false
+	var up := String(row.get("upgrade_of", ""))
+	if up != "" and count_of(StringName(up)) <= 0:
+		return false
+	for x in row.get("excludes", []):
+		if count_of(StringName(String(x))) > 0:
+			return false
+	if not _when_met(String(row.get("when", ""))):
 		return false
 	if String(row.get("echo", "")) == String(LevelRules.ECHO_FASTER) and echo_seconds() <= r.echo_min_seconds:
 		return false     # 间隔到下限了，再出就是白拿
@@ -326,18 +421,28 @@ func _requires_met(req: StringName) -> bool:
 	return false
 
 
-## 抽 [param n] 张不重样的（不抽 [param avoid] 里的；能出的不够就有几张给几张，避开的也拿来补）
-func _draw(n: int, avoid: Array[String]) -> Array[String]:
+## 抽 [param n] 张不重样的（不抽 [param avoid] 里的；能出的不够就有几张给几张，避开的也拿来补）。
+## [param qual] 质变位：奉的神有质变牌就只从它的质变牌里抽，否则当普通选牌（只出通用牌）。
+## 普通选牌奉神时通用牌 + 这位神的基础牌一个池子，抽出来一张神的都没有就把最后一张换成神的（保底一张，作者 11-22）
+func _draw(n: int, avoid: Array[String], qual: bool = false) -> Array[String]:
 	var r := rules()
+	var use_quals := qual and has_qual_pool()
+	var generic_only := qual and not use_quals
 	var pool: Array[String] = []
 	var spare: Array[String] = []
+	var gods: Array[String] = []
 	for cid in r.card_ids():
-		if not eligible(cid):
+		if not eligible(cid) or r.is_qual(cid) != use_quals:
+			continue
+		var godly := r.god_of(cid) != &""
+		if generic_only and godly:
 			continue
 		if avoid.has(String(cid)):
 			spare.append(String(cid))
 		else:
 			pool.append(String(cid))
+			if godly:
+				gods.append(String(cid))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d:level_cards:%d" % [_run.run_seed if _run != null else 0, draws])
 	draws += 1
@@ -345,19 +450,28 @@ func _draw(n: int, avoid: Array[String]) -> Array[String]:
 	for src in [pool, spare]:
 		var left: Array[String] = (src as Array[String]).duplicate()
 		while out.size() < n and not left.is_empty():
-			var total := 0.0
-			for cid in left:
-				total += maxf(0.0, r.weight_of(StringName(cid)))
-			var roll := rng.randf() * total
-			var at := left.size() - 1
-			for j in left.size():
-				roll -= maxf(0.0, r.weight_of(StringName(left[j])))
-				if roll < 0.0:
-					at = j
-					break
+			var at := _weighted(left, rng)
 			out.append(left[at])
 			left.remove_at(at)
+	if not use_quals and not generic_only and not gods.is_empty() and not out.is_empty() and not out.any(func(c: String) -> bool: return gods.has(c)):
+		var left_gods: Array[String] = gods.filter(func(c: String) -> bool: return not out.has(c))
+		if not left_gods.is_empty():
+			out[out.size() - 1] = left_gods[_weighted(left_gods, rng)]
 	return out
+
+
+## 按权重挑一张的下标
+func _weighted(left: Array[String], rng: RandomNumberGenerator) -> int:
+	var r := rules()
+	var total := 0.0
+	for cid in left:
+		total += maxf(0.0, r.weight_of(StringName(cid)))
+	var roll := rng.randf() * total
+	for j in left.size():
+		roll -= maxf(0.0, r.weight_of(StringName(left[j])))
+		if roll < 0.0:
+			return j
+	return left.size() - 1
 
 
 ## 拿牌那一下就要算的：体力上限（开局算一次的数）、攒「下一次搜索」
@@ -372,7 +486,7 @@ func _apply_now(cid: StringName) -> void:
 		if e is VitalityMaxBonus:
 			var add := (e as VitalityMaxBonus).amount
 			if add > 0:
-				_run.vitality.set_max(_run.vitality.maximum + add, &"level_card")
+				_run.vitality.set_max(_run.vitality.maximum + add, &"level_card", false)     # 作者 11-24：空的体力容器，不回体力
 #endregion
 
 
@@ -415,7 +529,45 @@ func card_text(card_id: StringName) -> String:
 	if String(row.get("oneshot", "")) == String(LevelRules.ONESHOT_SEARCH):
 		return UiText.t("level.next_search")
 	var def: RunBuffDef = _run.buff_defs.get(card_id, null) if _run != null else null
+	var gc := god_card_of(card_def(card_id))
+	if gc != null:
+		return gc.fill(UiText.t("gcard." + String(card_id)))     # 一张的数（基础牌拿几张由层数角标写）
 	return def.summary() if def != null else ""
+
+
+## 388：[param def] 带的神的牌的数（没有 = null）
+static func god_card_of(def: RunBuffDef) -> GodCard:
+	if def == null:
+		return null
+	for e in def.effects:
+		if e is GodCard:
+			return e as GodCard
+	return null
+
+
+## 388：拿了 [param card_id] 的话，它的数 [param key] 一共是多少（基础牌拿几张乘几）；没拿 = [param fallback]
+func god_value(card_id: StringName, key: String, fallback: float = 0.0) -> float:
+	var n := count_of(card_id)
+	if n <= 0 or _run == null:
+		return fallback
+	var gc := god_card_of(card_def(card_id))
+	if gc == null or not gc.values.has(key):
+		return fallback
+	return float(gc.values[key]) * n
+
+
+## 388：牌的那份 buff —— 这一局的表里没有（测试拼的内容）就按 id 去内容里找
+func card_def(card_id: StringName) -> RunBuffDef:
+	var def: RunBuffDef = _run.buff_defs.get(card_id, null) if _run != null else null
+	if def == null:
+		var path := ContentPaths.asset_file("run_buffs", String(card_id))
+		def = load(path) as RunBuffDef if ResourceLoader.exists(path) else null
+	return def
+
+
+## 388：拿了没有
+func has_card(card_id: StringName) -> bool:
+	return count_of(card_id) > 0
 
 
 ## 元素回响现在每几秒一次
@@ -528,27 +680,23 @@ func _on_search_opened(_n: MapNode, session: SearchSession) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"xp": xp, "picks_done": picks_done, "bonus_picks": bonus_picks, "bonus_levels": bonus_levels.duplicate(), "level_seen": level_seen,
-		"taken": taken.duplicate(), "removed": removed.duplicate(), "offer": offer_ids.duplicate(), "draws": draws,
+	return {"xp": xp, "picks_done": picks_done, "qual_done": qual_done, "level_seen": level_seen,
+		"taken": taken.duplicate(), "removed": removed.duplicate(), "offer": offer_ids.duplicate(), "offer_qual": offer_qual, "draws": draws,
 		"rerolls_used": rerolls_used, "removals_used": removals_used, "depth_reached": depth_reached,
-		"pending_searches": pending_searches, "history": history.duplicate(true)}
+		"pending_searches": pending_searches, "history": history.duplicate(true), "god_state": god_state.duplicate(true)}
 
 
 func restore(d: Dictionary) -> void:
 	xp = maxf(0.0, float(d.get("xp", 0.0)))
 	picks_done = maxi(0, int(d.get("picks_done", 0)))
-	bonus_picks = maxi(0, int(d.get("bonus_picks", 0)))
-	bonus_levels.clear()
-	for v in d.get("bonus_levels", []):
-		bonus_levels.append(int(v))
-	if bonus_levels.size() < bonus_picks:     # 早一点的档只记了次数：按逢 n 级补上是哪几级
-		var every := maxi(1, rules().extra_pick_every)
-		bonus_levels.clear()
-		for k in bonus_picks:
-			bonus_levels.append(every * (k + 1))
-	bonus_picks = bonus_levels.size()
+	qual_done = maxi(0, int(d.get("qual_done", 0)))
+	god_state = (d.get("god_state", {}) as Dictionary).duplicate(true) if d.get("god_state", {}) is Dictionary else {}
+	if not d.has("qual_done"):     # 388 之前的档：无信者逢 5 级多选的那几次记在 picks_done 里，挪成用掉的质变位
+		var bonus := maxi(int(d.get("bonus_picks", 0)), (d.get("bonus_levels", []) as Array).size())
+		bonus = mini(bonus, picks_done)
+		picks_done -= bonus
+		qual_done = bonus
 	level_seen = maxi(1, int(d.get("level_seen", rules().level_of(xp))))
-	_backfill_bonus = bool(d.get("backfill_bonus", false))
 	taken.clear()
 	var t: Variant = d.get("taken", {})
 	if t is Dictionary:
@@ -561,6 +709,7 @@ func restore(d: Dictionary) -> void:
 	offer_ids.clear()
 	for s in d.get("offer", []):
 		offer_ids.append(String(s))
+	offer_qual = bool(d.get("offer_qual", false))
 	draws = maxi(0, int(d.get("draws", 0)))
 	rerolls_used = maxi(0, int(d.get("rerolls_used", 0)))
 	removals_used = maxi(0, int(d.get("removals_used", 0)))

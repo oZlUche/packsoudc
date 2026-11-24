@@ -92,8 +92,8 @@ func open(payload: Dictionary) -> void:
 func _after_open() -> void:
 	if flow.rules_card_pending():
 		show_rules(true)     # 091：第一次进这一章：本图规则卡
+	_maybe_level_pick.call_deferred()     # 372：欠着选牌就弹（388：开局那次质变先选，选完再讲地图）
 	_maybe_coach.call_deferred()     # 166：开场没有事件压着就直接放
-	_maybe_level_pick.call_deferred()     # 372：欠着选牌就弹
 
 
 func refresh() -> void:
@@ -1478,7 +1478,7 @@ func show_level_pick() -> bool:
 	_level_pick_dismissed = 0
 	_level_pick = _shade(0.72, true)
 	_level_pick.name = "LevelPick"
-	var frame := _modal_panel(UiText.t("level.title") % lv.level(), 28)
+	var frame := _modal_panel(UiText.t("level.title") % lv.level() if lv.level() > 1 else UiText.t("level.title_opening"), 28)     # 388：开局那次质变
 	_level_pick.get_child(0).add_child(frame)
 	var panel := LevelPickPanel.new(lv)
 	_level_pick_panel = panel
@@ -1517,6 +1517,7 @@ func _drop_level_pick() -> void:
 	_level_pick = null
 	_level_pick_panel = null
 	_refresh_hud()
+	_maybe_coach.call_deferred()     # 388：选完（或收起）才轮到地图讲解
 
 
 func level_pick_open() -> bool:
@@ -1532,8 +1533,8 @@ func level_pick_panel() -> LevelPickPanel:
 func _maybe_coach() -> void:
 	if _coach != null or _run == null or _run.chapter == null or _run.chapter.coach_for(&"map") == &"":
 		return
-	if flow.screen != GameFlow.Screen.MAP or _rules != null or _ask != null or _pause != null or not is_visible_in_tree():
-		return
+	if flow.screen != GameFlow.Screen.MAP or _rules != null or _ask != null or _pause != null or _level_pick != null or not is_visible_in_tree():
+		return     # 388：选牌窗开着先不讲（测试 v8.30：讲解叠在开局质变窗上）
 	if flow.meta != null and flow.meta.coach_seen.has(String(_run.chapter.coach_for(&"map"))):
 		return
 	show_coach()

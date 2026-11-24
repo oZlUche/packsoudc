@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_smite",
+  "display_name": "神罚",
+  "display_names": {
+    "en": "Divine Wrath"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "uses": 2
+      }
+    }
+  ]
+}

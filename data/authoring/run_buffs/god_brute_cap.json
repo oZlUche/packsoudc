@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_cap",
+  "display_name": "怒气磅礴",
+  "display_names": {
+    "en": "Boundless Rage"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 10
+      }
+    }
+  ]
+}

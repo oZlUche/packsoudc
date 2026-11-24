@@ -38,3 +38,4 @@ coaches = {
 "map": "prologue_map",
 "prebattle": "prologue_prebattle"
 }
+opening_qual_pick = false

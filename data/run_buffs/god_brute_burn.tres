@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_kbnfj"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_d1v24"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_p2yq7"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_o25xd"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_68uqr"]
+
+[sub_resource type="Resource" id="Resource_j26i7"]
+script = ExtResource("2_d1v24")
+values = {
+"every": 10,
+"stacks": 1
+}
+
+[resource]
+script = ExtResource("5_68uqr")
+id = &"god_brute_burn"
+display_name = "怒火中烧"
+display_names = {
+"en": "Seething Fury"
+}
+effects = Array[ExtResource("1_kbnfj")]([SubResource("Resource_j26i7")])

@@ -139,3 +139,14 @@ static func depart(setup) -> bool:
 static func pass_tutorials(f: GameFlow) -> void:
 	for c in f.tutorial_chapters():
 		f.meta.grant_unlock(c.hidden_by_unlock)
+
+
+## 388：开局那一次质变选牌会在地图一露面就弹出来；只看别的东西的测试先把它选掉（关掉已经弹出的那层）
+static func skip_opening_pick(map: Node, run: RunState) -> void:
+	var lv := LevelModule.of(run)
+	if lv != null:
+		lv.qual_done = maxi(lv.qual_done, lv.rules().qual_slots_at(1) - (1 if lv.opening_skipped() else 0))
+		lv.offer_ids.clear()
+		lv.offer_qual = false
+	if map != null and map.get("_level_pick") != null:
+		map.call("_drop_level_pick")

@@ -1,5 +1,5 @@
 ## 372 第一批：局内成长 —— 经验值（原信力）只涨不花、8 + n 的等级表、难度系数、打赢 / 更深一环 / 神坛祷告 / 献祭封顶、
-## 每级三选一（同一局同一种子抽到的一样）、刷新 / 删除的次数来自局外科技、无信者每 5 级多选一次、存档往返、点数里的成长分。
+## 每级三选一（同一局同一种子抽到的一样）、刷新 / 删除的次数来自局外科技、388 质变位（开局、6 / 12 / … 级；无信者多选一张通用牌）、存档往返、点数里的成长分。
 ## 期望从数据推：等级表、来源点数都读 `base_rules/level`
 extends RefCounted
 
@@ -35,10 +35,13 @@ static func run_table(t: TestCase) -> void:
 	t.eq(r.level_of(1.0e9), r.level_cap, "封顶")
 	t.check(is_equal_approx(r.mult(0), 1.0) and is_equal_approx(r.mult(12), 1.0 + 12.0 * r.difficulty_step), "A0 = 1、A12 = 1 + 12 档")
 	var kinds := {}
+	var generic := 0
 	for cid in r.card_ids():
 		kinds[r.kind_of(cid)] = true
-	t.eq(r.card_ids().size(), 15, "牌池 15 张")
-	t.eq(kinds.size(), 3, "三类都有")
+		if r.god_of(cid) == &"":
+			generic += 1
+	t.eq(generic, 15, "通用牌 15 张（神的牌另算，388）")
+	t.eq(kinds.size(), 4, "三类通用 + 神的牌")
 	var buffs := RunBuffs.load_all()
 	var missing: Array[String] = []
 	for cid in r.card_ids():
@@ -60,7 +63,7 @@ static func run_sources(t: TestCase) -> void:
 		return
 	var r := lv.rules()
 	t.eq(lv.level(), 1, "开局 1 级")
-	t.eq(lv.pending(), 0, "不欠选牌")
+	t.eq(lv.pending(), 1 if lv.rules().qual_opening else 0, "388：开局只欠那一次质变位")
 	var x0 := lv.xp
 	run.events.last_battle = {"type": "elite"}
 	lv._on_battle(null, null, true)
@@ -103,6 +106,12 @@ static func run_picks(t: TestCase) -> void:
 	la.gain(float(r.total_for(2)), LevelModule.SRC_BATTLE)
 	lb.gain(float(r.total_for(2)), LevelModule.SRC_BATTLE)
 	t.eq(la.level(), 2, "升到 2 级")
+	if r.qual_opening:     # 388：开局那一次质变位先选掉（无信者 = 多选一张通用牌）
+		t.check(la.current_pick().get("qual", false) and la.current_pick().get("generic", false), "开局那一次排在最前，无信者是通用牌")
+		la.offer()
+		lb.offer()
+		la.pick(0)
+		lb.pick(0)
 	t.eq(la.pending(), 1, "欠一次")
 	var offer := la.offer()
 	t.eq(offer.size(), r.choices, "摆出三张")
@@ -113,18 +122,17 @@ static func run_picks(t: TestCase) -> void:
 	t.eq(uniq.size(), offer.size(), "不重样")
 	var picked := la.pick(0)
 	t.eq(picked, offer[0], "拿第一张")
-	t.eq(la.count_of(picked), 1, "记一张")
+	t.check(la.count_of(picked) >= 1, "记下了")
 	t.eq(la.pending(), 0, "选完了")
 	t.check(la.offer().is_empty(), "不欠就不摆")
 	var row := r.card(picked)
 	if String(row.get("echo", "")) == "" and String(row.get("oneshot", "")) == "":
 		t.check(a.active_buff_defs().has(a.buff_defs[picked]), "拿到的牌进这一局的 buff")
 	t.check(la.card_text(picked) != "", "牌面有一行效果")
-	# 无信者：没奉神，到 5 级多一次
+	# 388：质变位 6 级那一次（无信者多选一张通用牌）
 	t.eq(a.active_faith_id(), &"", "没奉神")
-	la.gain(float(r.total_for(5)), LevelModule.SRC_BATTLE)
-	t.eq(la.bonus_picks, 1, "逢 5 级多一次")
-	t.eq(la.pending(), 3 + 1, "2→5 级三次 + 多的一次")
+	la.gain(float(r.total_for(6)), LevelModule.SRC_BATTLE)
+	t.eq(la.pending(), 4 + 1, "2→6 级四次 + 6 级的质变位")
 	# 没有科技：刷新、删除都是 0
 	t.eq(la.rerolls_left(), 0, "没科技不能刷新")
 	t.check(not la.reroll(), "刷新不动")
@@ -133,7 +141,7 @@ static func run_picks(t: TestCase) -> void:
 	var d := la.to_dict()
 	var c := LevelModule.new()
 	c.restore(d)
-	t.check(is_equal_approx(c.xp, la.xp) and c.picks_done == la.picks_done and c.bonus_picks == la.bonus_picks and c.count_of(picked) == 1, "存档往返")
+	t.check(is_equal_approx(c.xp, la.xp) and c.picks_done == la.picks_done and c.qual_done == la.qual_done and c.count_of(picked) == la.count_of(picked), "存档往返")
 	a.dispose()
 	b.dispose()
 
@@ -149,6 +157,8 @@ static func run_reroll_remove(t: TestCase) -> void:
 	t.eq(lv.rerolls_left(), 1, "刷新 1 次")
 	t.eq(lv.removals_left(), 1, "删除 1 次")
 	lv.gain(float(lv.rules().total_for(3)), LevelModule.SRC_BATTLE)
+	if lv.current_pick().get("qual", false):
+		lv.qual_done += 1     # 388：跳过开局那一次，下面看普通选牌
 	var before := lv.offer()
 	t.check(lv.reroll(), "刷新")
 	t.eq(lv.rerolls_left(), 0, "用掉了")
@@ -193,44 +203,27 @@ static func run_score(t: TestCase) -> void:
 
 
 static func run_fixes_v773(t: TestCase) -> void:
-	t.begin("372 复测（v7.73）：调息牌面写小数；无信者只在多给的那一次提示；不奉神的老档迁移补上跨过的逢 5 级")
+	t.begin("372 复测（v7.73）/ 388：调息牌面写小数；选牌按级排队，质变位（开局、6 级）排在那一级的普通牌后面；388 之前的档把无信者多给的那几次挪成用掉的质变位")
 	var run := _start(11)
 	var lv := LevelModule.of(run)
 	t.check(lv.card_text(&"card_regen").contains("+0.6"), "调息写 +0.6：%s" % lv.card_text(&"card_regen"))
 	t.check(lv.card_text(&"card_hp_flat").contains("+10") and not lv.card_text(&"card_hp_flat").contains("+10.0"), "整数照旧写整数：%s" % lv.card_text(&"card_hp_flat"))
 	var r := lv.rules()
-	lv.gain(float(r.total_for(11)), LevelModule.SRC_BATTLE)
-	t.eq(lv.bonus_levels, [5, 10] as Array[int], "5、10 级各多一次")
+	lv.gain(float(r.total_for(13)), LevelModule.SRC_BATTLE)
 	var seen: Array[String] = []
 	while lv.pending() > 0:
 		var cur := lv.current_pick()
-		seen.append("%d%s" % [int(cur["level"]), "+" if bool(cur["extra"]) else ""])
+		seen.append("%d%s" % [int(cur["level"]), "q" if bool(cur["qual"]) else ""])
+		lv.offer()
 		lv.pick(0)
-	t.eq(seen, ["2", "3", "4", "5", "5+", "6", "7", "8", "9", "10", "10+", "11"] as Array[String], "按级排队，多给的那次紧跟在那一级后面")
+	t.eq(seen, ["1q", "2", "3", "4", "5", "6", "6q", "7", "8", "9", "10", "11", "12", "12q", "13"] as Array[String], "按级排队：开局一次，6、12 级普通牌之后各一次质变位")
 	run.dispose()
-	var xp := float(r.total_for(11)) + 1.0
-	var v7 := {"version": 7, "chapter": "chapter_01", "faith_progress": {"brute": {"devotion": xp / RunMigrations.XP_PER_DEVOTION, "prayer": 0}}}
-	var row: Dictionary = (RunMigrations.upgrade(v7)["modules"] as Dictionary)["level"]
-	t.check(bool(row.get("backfill_bonus", false)), "迁移只标一句，装上时再按有效信仰补")
-	# 补不补看装上那一刻的有效信仰（和升级时同一个判断）：不奉神 / 奉了但信物不在棋盘 → 补；信物在棋盘 → 不补
-	for case in [["none", 2], ["missing", 2], ["active", 0]]:
-		var host := _start(13)
-		if String(case[0]) != "none":
-			host.selected_faith = &"brute"
-		if String(case[0]) == "active":
-			for id in host.items.ids():
-				var d := host.items.get_def(id)
-				if d.is_anchor() and FaithTags.id_of_tag(d.faith_tag()) == &"brute":
-					TestSupport.put(host.board, d)
-					break
-		var c := LevelModule.new()
-		c.restore(row)
-		c.install(host)
-		t.eq(c.bonus_picks, int(case[1]), "迁移到 11 级（%s）：补 %d 次" % [case[0], case[1]])
-		t.eq(c.pending(), 10 + int(case[1]), "迁移后欠 10 + %d 次（%s）" % [case[1], case[0]])
-		c.install(host)
-		t.eq(c.bonus_picks, int(case[1]), "再装一次不重复补（%s）" % case[0])
-		host.dispose()
+	# 老档：11 级、无信者多给过两次（5、10 级），picks_done 记的是 12
+	var old := {"xp": float(r.total_for(11)) + 1.0, "picks_done": 12, "bonus_picks": 2, "bonus_levels": [5, 10]}
+	var c := LevelModule.new()
+	c.restore(old)
+	t.eq([c.picks_done, c.qual_done], [10, 2], "挪成 10 次普通牌 + 2 个用掉的质变位")
+	t.eq(c.pending(), 0, "11 级的质变位（开局、6 级）正好用完，不多欠")
 
 
 static func frame_pick_cards(t: TestCase, root: Window) -> void:
@@ -238,7 +231,7 @@ static func frame_pick_cards(t: TestCase, root: Window) -> void:
 	var run := _start(17)
 	var lv := LevelModule.of(run)
 	for cid in lv.rules().card_ids():
-		t.check(LevelPickPanel._icon_of_def(run.buff_defs.get(cid, null)) != null, "%s 有图标" % cid)
+		t.check(LevelPickPanel.card_icon(lv, cid) != null, "%s 有图标（神的牌先用神的徽记）" % cid)
 	var keep_lang := UiText.lang
 	var keep_scale := UiTheme.text_scale
 	UiText.lang = "en"

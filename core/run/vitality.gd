@@ -87,14 +87,15 @@ func restore(amount: int, reason: StringName = &"") -> int:
 ## 与 [method ResourcePool.set_max] 保持一致：**上限增加时当前值同量增加**
 ## （多一格体力立刻能用，反馈即时），上限降低时当前值按新上限截断。
 ## 连带的当前值变化以 [param reason] 发出，好和「挨了一下」区分开。
-func set_max(new_max: int, reason: StringName = &"max_changed") -> void:
+## 388（作者 11-24）：[param fill] false = 加的是空容器，当前体力不跟着涨（通用牌【耐行】）
+func set_max(new_max: int, reason: StringName = &"max_changed", fill: bool = true) -> void:
 	var value := maxi(0, new_max)
 	if value == maximum:
 		return
 	var grew := value - maximum
 	var before := current
 	maximum = value
-	current = clampi(current + maxi(0, grew), 0, maximum)
+	current = clampi(current + (maxi(0, grew) if fill else 0), 0, maximum)
 	if current != before:
 		changed.emit(current, maximum, current - before, reason)
 #endregion

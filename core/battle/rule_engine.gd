@@ -122,6 +122,22 @@ static func _settle(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime
 	return true
 
 
+## 388 蛮神【以血还血】：这条（武器的）规则立即放一次 —— 不付消耗、不动它的冷却（排定的下一次照旧），照常发出手事件。返回放了没有
+static func fire_free(ctx: BattleContext, owner: CombatantRuntime, rt: RuleRuntime) -> bool:
+	if rt == null or rt.rule == null or not rt.rule.is_valid() or owner == null or owner.dead or not owner.owns_rule(rt):
+		return false
+	var rc := RuleContext.create(ctx, owner, rt)
+	if ctx.trace != null:
+		_trace(ctx, rt, rc, BattleTrace.RULE_FIRE, {"costs": [], "free": true})
+	if rt.source_uid != 0:
+		var payload := _fired_payload(rt, rc)
+		payload["free"] = true
+		ctx.emit(BattleEvent.ITEM_FIRED, owner.side, payload)
+	for effect in rt.rule.effects:
+		(effect as Effect).apply(rc)
+	return true
+
+
 ## 292：连带出手事件带上这一串的根（最先那一下出手事件的 seq）；自发的那一下不带
 const CHAIN := &"chain"
 ## [method _claim] 的返回：这件在这一串里已经出过手了

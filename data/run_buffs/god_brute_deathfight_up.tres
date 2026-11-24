@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_tbuho"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_ov8hn"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_lhmor"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_t2ics"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_6e3kw"]
+
+[sub_resource type="Resource" id="Resource_25t7u"]
+script = ExtResource("2_ov8hn")
+values = {
+"sec": 3
+}
+
+[resource]
+script = ExtResource("5_6e3kw")
+id = &"god_brute_deathfight_up"
+display_name = "死斗（升级）"
+display_names = {
+"en": "Last Stand+"
+}
+effects = Array[ExtResource("1_tbuho")]([SubResource("Resource_25t7u")])

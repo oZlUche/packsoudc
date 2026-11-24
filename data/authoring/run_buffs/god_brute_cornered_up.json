@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_cornered_up",
+  "display_name": "困兽（升级）",
+  "display_names": {
+    "en": "Cornered Beast+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "below": 50
+      }
+    }
+  ]
+}

@@ -131,7 +131,7 @@ static func _spec(snap: Dictionary, items: ItemDatabase, god: StringName, tier: 
 		&"earth":
 			EarthSupportPerk.new().compile_at(input, board, tier)
 		&"brute":
-			BruteRagePerk.new().compile_at(input, tier)
+			input.rules.append(BruteRagePerk.new().rule_for(null))     # 388：核心；牌在局里拿
 		&"sun":
 			input.rules.append(SunCyclePerk.new().rule_at(tier))
 		&"nature":

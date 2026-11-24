@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_5vqni"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_k8aad"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_28unj"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_jpdme"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ndg1b"]
+
+[sub_resource type="Resource" id="Resource_mhijh"]
+script = ExtResource("2_k8aad")
+values = {
+"uses": 1
+}
+
+[resource]
+script = ExtResource("5_ndg1b")
+id = &"god_brute_smite_more"
+display_name = "神罚再现"
+display_names = {
+"en": "Wrath Returns"
+}
+effects = Array[ExtResource("1_5vqni")]([SubResource("Resource_mhijh")])

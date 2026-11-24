@@ -29,6 +29,12 @@ var direct: bool = false
 var pure: bool = false
 ## 305（作者 2026-11-11 17:12）：穿透 —— 只跳过护甲吸收；火焰加成、受伤前效果、减伤、格挡、易伤照算
 var penetration: bool = false
+## 388 蛮神【破甲】：这一下对护甲额外增效几成（百分数）——护甲按放大后的量扣，扣完剩下的按原比例落血（先算增效，对出手方有利）
+var armor_bonus: int = 0
+## 388 蛮神【破甲】升级：无视守方减伤的几成（百分数；只削减伤，不碰易伤）
+var ignore_reduction: int = 0
+## 388 蛮神【痛觉残留】：这一下落血的几成改成之后慢慢扣（百分数；受伤前由挨打一方写）
+var defer_percent: int = 0
 #endregion
 
 #region 管线中途写入
@@ -48,6 +54,8 @@ var block: int = 0
 var final: int = 0
 ## 落到资源上的实际变化量（可能被上限或归零截断）
 var applied: int = 0
+## 388：[member defer_percent] 挪走、没当场落血的量
+var deferred: int = 0
 #endregion
 
 

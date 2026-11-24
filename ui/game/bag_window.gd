@@ -38,6 +38,8 @@ var panel: InventoryPanelScript = null
 var frame: NinePatchRect = null
 ## 223：右栏的名牌与角色卡
 var nameplate: Nameplate = null
+## 388：神恩栏（奉神时才有，窗跟着加宽）
+var favor: FavorPanel = null
 var card: CharacterCard = null
 ## 局内界面布局方案 §6：查看方式（普通 / 联动 / 风险）。381（作者 21:27）：管的是棋盘，所以贴在棋盘框左上角当三个小页签
 var views: HBoxContainer = null
@@ -48,6 +50,8 @@ const VIEWS_OVERLAP := 4.0
 ## 381：名牌缩到原来的 72%，下面的角色卡列全属性；名牌和卡之间隔多远
 const PLATE_SCALE := 0.72
 const CARD_GAP := 10.0
+## 388：神恩栏离角色卡那一栏多远
+const FAVOR_GAP := 20.0
 ## 385：名牌头像外圈黄铜
 const PLATE_FRAME := "portrait_frame_gold"
 ## 218 补充一：开着的背包窗教程（没开 null）
@@ -104,9 +108,19 @@ func setup_bag(run: RunState, font: Font, on_close: Callable, drag: DragLayer = 
 	_canvas.add_child(card)
 	card.refresh(run)
 	run.board.changed.connect(card.refresh.bind(run))     # 局外 / 一局里的加成跟包无关，但开着窗时便宜地跟一下
+	favor = FavorPanel.new()     # 388：奉神时右边加一栏神恩
+	favor.name = "Favor"
+	favor.tip = panel.tip
+	_canvas.add_child(favor)
+	_refresh_favor(run)
+	run.board.changed.connect(_refresh_favor.bind(run))     # 信物拿下来 = 联系中断，神恩栏跟着藏
+	var lvm := LevelModule.of(run)
+	if lvm != null:
+		lvm.level_changed.connect(_refresh_favor.bind(run))
 	visibility_changed.connect(func():
 		if visible:
-			card.refresh(run))
+			card.refresh(run)
+			_refresh_favor(run))
 
 	_build_views()
 
@@ -193,11 +207,24 @@ static func spec() -> Dictionary:
 	return out
 
 
-## 窗多大：精修稿是 8×6 棋盘的尺寸，按 [method board_slot] 比它多出的格子数 × 一格
+## 窗多大：精修稿是 8×6 棋盘的尺寸，按 [method board_slot] 比它多出的格子数 × 一格；388：有神恩栏再加它那么宽
 func window_size() -> Vector2:
 	var cell := float(_spec["cell"])
 	var drawn: Vector2 = _vec(_spec["board"]) * cell
-	return _vec(_spec["window_size"]) + (Vector2(board_slot()) * cell - drawn)
+	var w := _vec(_spec["window_size"]) + (Vector2(board_slot()) * cell - drawn)
+	if favor != null and favor.visible:
+		w.x += FavorPanel.W + FAVOR_GAP
+	return w
+
+
+## 388：神恩栏重算；出现 / 藏起来时窗宽跟着变
+func _refresh_favor(run: RunState) -> void:
+	if favor == null:
+		return
+	var was := favor.visible
+	favor.refresh(run)
+	if was != favor.visible and panel != null and close_button != null:
+		_layout()
 
 
 ## 255 补充一（作者 10:51）：棋盘那块位子按几格算 —— 宽永远九格（窄的棋盘居中），高照棋盘行数（神坛训练会加行）
@@ -229,6 +256,8 @@ func _layout() -> void:
 	frame.size = cells_size + Vector2(off, off) * 2.0
 	panel.position = cells     # 棋盘的九格位子在面板左上
 	var grow := want - _vec(_spec["window_size"])     # 棋盘比精修稿大多出来的
+	if favor != null and favor.visible:
+		grow.x -= FavorPanel.W + FAVOR_GAP     # 神恩栏加的宽不挪右栏，只挪收起键
 	var col: Dictionary = _spec["col"]
 	var col_x := float(col.get("x", 686)) + grow.x
 	var plate: Dictionary = col.get("nameplate", {})
@@ -240,12 +269,15 @@ func _layout() -> void:
 	nameplate.custom_minimum_size = Vector2(want_plate.x / k, 0.0)
 	nameplate.size = Vector2(want_plate.x / k, want_plate.y / k)
 	card.position = Vector2(col_x, float(plate.get("y", 78)) + want_plate.y + CARD_GAP)
+	if favor != null:
+		favor.position = Vector2(col_x + float(col.get("width", 272)) + FAVOR_GAP, float(plate.get("y", 78)))
+		favor.size = Vector2(FavorPanel.W, maxf(favor.custom_minimum_size.y, want.y - favor.position.y - 30.0))
 	if views != null:
 		views.reset_size()
 		views.position = Vector2(frame.position.x + VIEWS_INSET, frame.position.y - views.size.y + VIEWS_OVERLAP)
 	var ms: Dictionary = _spec["minimize"]
 	var at: Array = ms.get("topleft_rel_window", [918, 13])
-	close_button.position = _vec(at) + Vector2(grow.x, 0.0)
+	close_button.position = _vec(at) + Vector2(want.x - _vec(_spec["window_size"]).x, 0.0)     # 贴着窗右上（含神恩栏）
 	_canvas.queue_redraw()
 	reset_size()
 
@@ -291,6 +323,8 @@ func _draw_divider() -> void:
 func divider_v() -> Array[Vector2]:
 	var dv: Dictionary = _spec["divider_v"]
 	var grow := window_size() - _vec(_spec["window_size"])
+	if favor != null and favor.visible:
+		grow.x -= FavorPanel.W + FAVOR_GAP     # 388：神恩栏加的宽不挪竖线
 	var x := float(dv.get("x", 660)) + grow.x
 	return [Vector2(x, float(dv.get("y0", 66))), Vector2(x, float(dv.get("y1", 606)) + grow.y)] as Array[Vector2]
 

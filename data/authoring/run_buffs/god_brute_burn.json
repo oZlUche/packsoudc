@@ -1,0 +1,16 @@
+{
+  "id": "god_brute_burn",
+  "display_name": "怒火中烧",
+  "display_names": {
+    "en": "Seething Fury"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "every": 10,
+        "stacks": 1
+      }
+    }
+  ]
+}

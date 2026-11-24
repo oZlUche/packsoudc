@@ -1,0 +1,16 @@
+{
+  "id": "god_brute_break_up",
+  "display_name": "破甲（升级）",
+  "display_names": {
+    "en": "Sunder+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 3,
+        "ignore": 2
+      }
+    }
+  ]
+}

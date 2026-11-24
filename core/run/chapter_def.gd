@@ -102,6 +102,8 @@ const SHARED := &"shared"
 @export var coaches: Dictionary = {}
 ## 218 补充一（作者定）：开局屏第一次按「出发」之前弹的一屏交代（`data/events/` 里的 id；[member MetaState.briefing_seen] 按事件 id 记一次）。空 = 不弹
 @export var departure_event: StringName = &""
+## 388（架构设计初值）：进入对局时先选一张质变牌；教程章节关掉（升级选牌的讲解挂在第一次升级上，开局先弹会抢在前面）
+@export var opening_qual_pick: bool = true
 
 @export_group("一局的模块（101）")
 ## 101 第 0 刀：这一局装哪些**本体模块**（[RunModule] 构件，各带参数）。空 = 用默认清单（[method RunModules.standard]）。

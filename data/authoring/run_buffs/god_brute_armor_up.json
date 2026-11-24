@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_armor_up",
+  "display_name": "血甲（升级）",
+  "display_names": {
+    "en": "Blood Armor+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "heal": 50
+      }
+    }
+  ]
+}

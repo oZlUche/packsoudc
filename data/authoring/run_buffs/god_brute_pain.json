@@ -1,0 +1,16 @@
+{
+  "id": "god_brute_pain",
+  "display_name": "痛觉残留",
+  "display_names": {
+    "en": "Lingering Pain"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 50,
+        "sec": 5
+      }
+    }
+  ]
+}

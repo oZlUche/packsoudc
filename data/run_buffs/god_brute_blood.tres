@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_j4w4f"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_g8cgr"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_rm4m5"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_82hsj"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_cdknh"]
+
+[sub_resource type="Resource" id="Resource_7jn3c"]
+script = ExtResource("2_g8cgr")
+values = {
+"every": 20
+}
+
+[resource]
+script = ExtResource("5_cdknh")
+id = &"god_brute_blood"
+display_name = "以血还血"
+display_names = {
+"en": "Blood for Blood"
+}
+effects = Array[ExtResource("1_j4w4f")]([SubResource("Resource_7jn3c")])
