@@ -38,7 +38,7 @@ static func run_content(t: TestCase) -> void:
 		t.check(d != null and d.id == OPENERS[fac], "%s 由《%s》开放" % [fac, Names.of(d) if d != null else "?"])
 		if d == null:
 			continue
-		t.check(Commissions.is_story(d) and Commissions.reputation_of(d) == 10 and Commissions.required_tier(d) == 0, "剧情、+10、初识就能接")
+		t.check(Commissions.is_story(d) and Commissions.reputation_of(d) == 10 and Commissions.required_rep(d) == 0, "剧情、+10、0 声望就能接")
 		t.check(d.stages.size() == 1 and d.stages[0].goal == &"camp_report" and d.stages[0].where == CommissionStage.CAMP, "营地一步")
 		var f := Commissions.faction(d.faction)
 		t.check(f != null and StringName(String(f.facilities.get(String(fac), ""))) == d.id, "阵营上记着这处设施")
@@ -65,7 +65,7 @@ static func run_gating(t: TestCase) -> void:
 	t.check(bool(r["done"]), "办理一次就办成")
 	t.check(f.facility_open(&"smithy") and not f.facility_open(&"market"), "铁匠铺开了，集市还关着")
 	t.eq(f.meta.commissions.rep_of(&"legion"), 10, "后勤部队 +10")
-	t.eq(Commissions.tier_of(f.meta.commissions, Commissions.faction(&"legion")), 1, "到熟面")
+	t.check(Commissions.has_effect(f.meta.commissions, Commissions.faction(&"legion"), Commissions.EFFECT_INQUIRY), "到 10（调查委托开了）")
 	t.check(not bool(f.report_commission(&"legion_forge_token")["ok"]), "办成的不能再办")
 	var old := W178._flow()
 	t.check(OPENERS.keys().all(func(fac: StringName) -> bool: return old.facility_open(fac)), "老档（不是新档开始的）三处都开着")
@@ -139,7 +139,7 @@ static func run_followups(t: TestCase) -> void:
 			var d := Commissions.def(r)
 			total += Commissions.reputation_of(d) if d != null else 0
 		total += Commissions.reputation_of(permit)
-		t.eq(total, f.thresholds[Commissions.REGULAR_TIER], "%s 的剧情加起来正好到受托" % Names.of(f))
+		t.eq(total, Commissions.effect_rep(f, Commissions.EFFECT_FINALE), "%s 的剧情加起来正好到结案那个节点（25）" % Names.of(f))
 	var book := CommissionBook.new()
 	var legion := Commissions.faction(&"legion")
 	book.rep["legion"] = 25

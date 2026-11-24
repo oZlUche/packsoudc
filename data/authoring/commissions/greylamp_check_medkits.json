@@ -7,7 +7,7 @@
   "faction": "greylamp",
   "order": 3,
   "reputation": 5,
-  "min_tier": 1,
+  "min_rep": 10,
   "requires": [
     "greylamp_check_scale"
   ],

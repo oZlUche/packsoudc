@@ -22,7 +22,7 @@
     "en": "Society researcher"
   },
   "reputation": 5,
-  "min_tier": 1,
+  "min_rep": 10,
   "requires": [
     "society_first_survey"
   ]

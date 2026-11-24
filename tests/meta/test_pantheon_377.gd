@@ -1,6 +1,6 @@
 ## 报告 377 第一批：万神院 —— 新档教程后第 3 次成功撤离结算时来营地；没来之前这一局没有信仰（不铺神召、没有神坛祷告、
 ## 掉落不出信物与赐福道具、随机来源锁上信物）；来了以后在万神院选神，出征时信物自动进背包、定这一局的神，局结束信物不带回仓库；
-## 一档三位神、二档全开、三档奉神经验 +10%、四档神坛有赐福；献祭 / 修行两种新目标；老档迁移只做一次（算已到来、奉过的神都能选、信物折钱）
+## 389：声望节点 0 蛮神、10 自然之神、20 日神（技巧 / 狩猎 / 大地 40 / 60 / 80 占位）、25 奉神经验 +10%、50 神坛有赐福；献祭 / 修行两种新目标；老档迁移只做一次（算已到来、奉过的神都能选、信物折钱）
 extends RefCounted
 
 const Support := preload("res://tests/run/flow_support.gd")
@@ -33,15 +33,18 @@ static func _extract_once(f: GameFlow, c: TestSupport.Content, seed_: int) -> Ru
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("377 · 万神院的数据：第 3 次撤离来、两档各三位神、三四五档的服务、三份剧情到 25、许可单")
+	t.begin("377 / 389 · 万神院的数据：第 3 次撤离来、按声望节点开神（三位占位）、经验和赐福的节点、第五层留空、三份剧情到 25、许可单")
 	var f := Pantheon.faction()
 	t.not_null(f, "有万神院")
 	if f == null:
 		return
 	t.eq([f.arrives, f.arrive_after], [Commissions.ARRIVES_EXTRACTIONS, 3], "教程后第 3 次成功撤离")
-	t.eq(Pantheon.gods(FaithDef.load_all()), [&"brute", &"skill", &"sun", &"earth", &"hunt", &"nature"] as Array[StringName], "先一档再二档，新教不列")
-	t.eq([Pantheon.god_tier(&"sun"), Pantheon.god_tier(&"nature")], [0, 1], "日神一档、自然二档")
-	t.eq([int(f.services[String(Pantheon.SERVICE_XP)]), int(f.services[String(Pantheon.SERVICE_BLESS)]), int(f.services[String(Pantheon.SERVICE_OPENING)])], [2, 3, 4], "三四五档")
+	t.eq(Pantheon.gods(FaithDef.load_all()), [&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"] as Array[StringName], "按刻度先后，新教不列")
+	t.eq([Pantheon.god_rep(&"brute"), Pantheon.god_rep(&"nature"), Pantheon.god_rep(&"sun"), Pantheon.god_rep(&"skill"), Pantheon.god_rep(&"hunt"), Pantheon.god_rep(&"earth")], [0, 10, 20, 40, 60, 80], "0 蛮神、10 自然、20 日神；40 / 60 / 80 占位")
+	t.eq([&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"].map(func(g: StringName) -> bool: return Pantheon.god_placeholder(g)), [false, false, false, true, true, true], "技巧、狩猎、大地是占位")
+	t.eq([Commissions.effect_rep(f, Pantheon.SERVICE_XP), Commissions.effect_rep(f, Pantheon.SERVICE_BLESS), Commissions.effect_rep(f, Pantheon.SERVICE_OPENING)], [25, 50, -1], "经验 25、赐福 50；开局多一张没有节点（第五层留空）")
+	var top := Commissions.nodes_of(f)[-1]
+	t.check(int(top["rep"]) == 100 and Commissions.is_placeholder(top), "100 留空占位")
 	var total := 0
 	for d in Commissions.of_faction(Pantheon.FACTION):
 		total += Commissions.reputation_of(d)
@@ -77,7 +80,8 @@ static func run_arrival(t: TestCase) -> void:
 	t.check(Pantheon.arrived(f.meta), "第三次：来了")
 	t.check(f.last_arrived.has(Pantheon.FACTION), "这一回到的里面有万神院")
 	t.check(f.faith_open() and f.pantheon_listed(), "有信仰了，后勤列出万神院")
-	t.eq(Pantheon.tier(f.meta), 0, "信赖一档")
+	t.eq(Pantheon.rep(f.meta), 0, "声望 0")
+	t.check(Pantheon.god_open(f.meta, &"brute") and not Pantheon.god_open(f.meta, &"sun"), "0 点：只有蛮神")
 	f.sync_commissions()
 	t.eq(f.meta.commissions.state_of(&"pantheon_first_rite"), CommissionBook.TAKEN, "首单自动接上")
 	var back := MetaState.from_dict(f.meta.to_dict(), c.items, GameFlow.load_meta_rules())
@@ -86,14 +90,16 @@ static func run_arrival(t: TestCase) -> void:
 
 
 static func run_choose_and_depart(t: TestCase) -> void:
-	t.begin("377 · 选神：一档只开三位；出征时信物进背包、定这一局的神；局结束信物不回仓库；记下奉过")
+	t.begin("377 / 389 · 选神：0 点只开蛮神；出征时信物进背包、定这一局的神；局结束信物不回仓库；记下奉过")
 	ItemInstance.reset_uid_counter()
 	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths", "characters"]))
 	var f := _new_flow(c)
 	f.meta.commissions.arrived[String(Pantheon.FACTION)] = 0
-	t.check(not f.choose_god(&"nature"), "自然之神二档才开")
-	t.check(f.choose_god(&"sun"), "日神一档就能选")
-	t.eq(f.meta.pantheon_choice, &"sun", "记下了")
+	t.check(not f.choose_god(&"nature"), "自然之神 10 点才开")
+	t.check(not f.choose_god(&"sun"), "日神 20 点才开")
+	t.check(not f.choose_god(&"skill"), "技巧之神占位，不能选")
+	t.check(f.choose_god(&"brute"), "蛮神 0 点就能选")
+	t.eq(f.meta.pantheon_choice, &"brute", "记下了")
 	f.result = null
 	f._settled = false
 	var s := f.begin_direct(c.chapter, 41)
@@ -102,12 +108,12 @@ static func run_choose_and_depart(t: TestCase) -> void:
 		Support.cleanup(PREFIX)
 		return
 	t.check(s.faith_enabled, "有信仰")
-	t.check(not s.faith_bless, "一档：神坛上还没有赐福")
-	t.eq(s.faith_xp_bonus, 0.0, "一档：不加经验")
-	var charm := Pantheon.charm_of(c.items, &"sun")
-	t.check(s.board.items().any(func(i: ItemInstance) -> bool: return i.def == charm), "日神的信物在背包里")
-	t.eq(s.selected_faith, &"sun", "这一局奉日神")
-	t.check(f.meta.gods_worshipped.has(&"sun"), "记下奉过日神")
+	t.check(not s.faith_bless, "0 点：神坛上还没有赐福")
+	t.eq(s.faith_xp_bonus, 0.0, "0 点：不加经验")
+	var charm := Pantheon.charm_of(c.items, &"brute")
+	t.check(s.board.items().any(func(i: ItemInstance) -> bool: return i.def == charm), "蛮神的信物在背包里")
+	t.eq(s.selected_faith, &"brute", "这一局奉蛮神")
+	t.check(f.meta.gods_worshipped.has(&"brute"), "记下奉过蛮神")
 	if s.phase == RunState.Phase.PICK_SPAWN:
 		f.pick_spawn(s.map.entry_ids[0])
 	s.force_extract()
@@ -124,21 +130,26 @@ static func run_choose_and_depart(t: TestCase) -> void:
 
 
 static func run_tiers(t: TestCase) -> void:
-	t.begin("377 · 信赖：二档全部神可选；三档奉神经验 ×1.1（以人为本不加）；四档神坛上有赐福")
+	t.begin("377 / 389 · 声望节点：10 自然、20 日神；占位的到了也不能选；25 奉神经验 ×1.1（以人为本不加）；50 神坛上有赐福")
 	ItemInstance.reset_uid_counter()
 	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths", "characters"]))
 	var f := _new_flow(c)
 	var book := f.meta.commissions
 	book.arrived[String(Pantheon.FACTION)] = 0
 	book.rep[String(Pantheon.FACTION)] = 10
-	t.check(Pantheon.god_open(f.meta, &"nature"), "二档：自然之神能选")
-	t.eq(Pantheon.access(f.meta)["xp_bonus"], 0.0, "二档还不加经验")
+	t.check(Pantheon.god_open(f.meta, &"nature") and not Pantheon.god_open(f.meta, &"sun"), "10 点：自然之神能选，日神还不行")
+	t.eq(Pantheon.access(f.meta)["xp_bonus"], 0.0, "10 点还不加经验")
 	book.rep[String(Pantheon.FACTION)] = 25
-	t.eq(Pantheon.access(f.meta)["xp_bonus"], Pantheon.XP_BONUS, "三档加 10%")
-	t.check(not bool(Pantheon.access(f.meta)["bless"]), "三档还没有赐福")
-	book.rep[String(Pantheon.FACTION)] = 50
-	t.check(bool(Pantheon.access(f.meta)["bless"]), "四档有赐福")
-	f.choose_god(&"earth")
+	t.check(Pantheon.god_open(f.meta, &"sun"), "20 点以上：日神能选")
+	t.eq(Pantheon.access(f.meta)["xp_bonus"], Pantheon.XP_BONUS, "25 点加 10%")
+	t.check(not bool(Pantheon.access(f.meta)["bless"]), "25 点还没有赐福")
+	book.rep[String(Pantheon.FACTION)] = 100
+	t.check(bool(Pantheon.access(f.meta)["bless"]), "50 点以上有赐福")
+	t.check(not bool(Pantheon.access(f.meta)["opening_extra"]), "100 点：第五层留空，开局不多一张")
+	t.check([&"skill", &"hunt", &"earth"].all(func(g: StringName) -> bool: return not Pantheon.god_open(f.meta, g)), "占位的三位 100 点也不能选")
+	f.meta.gods_worshipped.append(&"skill")
+	t.check(not Pantheon.god_open(f.meta, &"skill"), "老档奉过技巧之神也不能选")
+	f.choose_god(&"nature")
 	f.result = null
 	f._settled = false
 	var s := f.begin_direct(c.chapter, 51)
@@ -148,16 +159,16 @@ static func run_tiers(t: TestCase) -> void:
 		return
 	var lv := LevelModule.of(s)
 	var base := lv.rules().mult(s.difficulty.level if s.difficulty != null else 0)
-	t.check(s.active_faith_id() == &"earth" and is_equal_approx(lv.mult(), base * (1.0 + Pantheon.XP_BONUS)), "奉神：经验系数 ×1.1")
+	t.check(s.active_faith_id() == &"nature" and is_equal_approx(lv.mult(), base * (1.0 + Pantheon.XP_BONUS)), "奉神：经验系数 ×1.1")
 	s.selected_faith = &""
 	t.check(is_equal_approx(lv.mult(), base), "以人为本：不加")
 	s.faith_bless = false
-	s.selected_faith = &"earth"
+	s.selected_faith = &"nature"
 	var altar := AltarModule.of(s)
-	t.check(not altar.actions().any(func(p: FaithPerk) -> bool: return p is AltarBlessPerk), "四档以下：神坛上没有赐福这一项")
+	t.check(not altar.actions().any(func(p: FaithPerk) -> bool: return p is AltarBlessPerk), "50 点以下：神坛上没有赐福这一项")
 	s.faith_bless = true
 	var has_bless_perk := s.active_faith().perks_at(s.active_faith_tier()).any(func(p: FaithPerk) -> bool: return p is AltarBlessPerk)
-	t.eq(altar.actions().any(func(p: FaithPerk) -> bool: return p is AltarBlessPerk), has_bless_perk, "四档：有就列")
+	t.eq(altar.actions().any(func(p: FaithPerk) -> bool: return p is AltarBlessPerk), has_bless_perk, "50 点以上：有就列")
 	var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies, c.sets)
 	t.check(back != null and back.faith_enabled and back.faith_bless and is_equal_approx(back.faith_xp_bonus, Pantheon.XP_BONUS), "局内存档带着信仰开关")
 	Support.cleanup(PREFIX)
@@ -218,8 +229,8 @@ static func run_goals(t: TestCase) -> void:
 	t.eq(f.meta.commissions.state_of(&"pantheon_first_rite"), CommissionBook.READY, "撤离：可以交了")
 	f.claim_commission(&"pantheon_first_rite")
 	t.eq(f.meta.commissions.state_of(&"pantheon_first_rite"), CommissionBook.DONE, "点【完成】：办成")
-	t.eq(f.meta.commissions.rep_of(Pantheon.FACTION), 10, "+10 到二档")
-	t.check(Pantheon.god_open(f.meta, &"hunt"), "二档：狩猎之神能选")
+	t.eq(f.meta.commissions.rep_of(Pantheon.FACTION), 10, "+10")
+	t.check(Pantheon.god_open(f.meta, &"nature") and not Pantheon.god_open(f.meta, &"hunt"), "10 点：自然之神能选，狩猎之神占位不能选")
 	Support.cleanup(PREFIX)
 
 
@@ -236,7 +247,8 @@ static func run_legacy(t: TestCase) -> void:
 	var got := Pantheon.migrate_legacy(m, c.items)
 	t.check(bool(got["arrived"]) and Pantheon.arrived(m), "算已到来")
 	t.check(m.gods_worshipped.has(&"nature") and m.gods_worshipped.has(&"hunt"), "奉过的、点亮过信物的神都记上")
-	t.check(Pantheon.god_open(m, &"nature"), "一档也能选二档的自然之神（奉过）")
+	t.check(Pantheon.god_open(m, &"nature"), "0 点也能选 10 点的自然之神（奉过）")
+	t.check(not Pantheon.god_open(m, &"hunt"), "389：奉过狩猎之神也不能选（占位，等牌表）")
 	t.eq(m.funds - funds, ItemValue.of(charm.def), "仓库里的信物折成金币")
 	t.check(not m.warehouse.items().any(func(i: ItemInstance) -> bool: return i.def.is_anchor()), "仓库里不再有信物")
 	t.eq(Pantheon.migrate_legacy(m, c.items)["refund"], 0, "只做一次")
@@ -261,11 +273,14 @@ static func run_pick_panel(t: TestCase) -> void:
 	t.check(nature != null and (nature.find_child("Name", true, false) as Label).text == UiText.t("pantheon.unknown"), "没解锁的写？？？？")
 	t.check(nature != null and (nature.find_child("Image", true, false) as TextureRect).texture == null, "不露神像")
 	t.check(not pick.choose(&"nature") and got.is_empty(), "点不了")
-	t.check(pick.choose(&"skill") and got == [&"skill"] and f.meta.pantheon_choice == &"skill", "选技巧之神")
+	t.check(not pick.choose(&"skill") and got.is_empty(), "389：技巧之神占位，点不了")
+	var skill: Control = pick.find_child("Shrine_skill", true, false)
+	t.check(skill != null and (skill.find_child("Name", true, false) as Label).text == UiText.t("pantheon.unknown"), "占位的也写？？？？")
+	t.check(pick.choose(&"brute") and got == [&"brute"] and f.meta.pantheon_choice == &"brute", "选蛮神")
 	t.check(pick.choose(&"") and f.meta.pantheon_choice == &"", "选无信者")
 	var view = PP.new()
 	view.setup(f)
-	t.check(view.find_child("Shrine_none", true, false) == null and view.find_child("Choose_skill", true, false) == null, "营地那一页：没有无信者、没有选的键")
+	t.check(view.find_child("Shrine_none", true, false) == null and view.find_child("Choose_brute", true, false) == null, "营地那一页：没有无信者、没有选的键")
 	pick.free()
 	view.free()
 	Support.cleanup(PREFIX)

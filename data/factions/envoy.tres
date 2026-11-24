@@ -11,3 +11,14 @@ display_names = {
 }
 order = 4
 listed = false
+nodes = Array[Dictionary]([{
+"effect": "inquiry",
+"id": "inquiry",
+"kind": "open",
+"rep": 10
+}, {
+"effect": "finale",
+"id": "finale",
+"kind": "open",
+"rep": 25
+}])

@@ -10,6 +10,17 @@ display_names = {
 "en": "Logistics Corps"
 }
 order = 1
+nodes = Array[Dictionary]([{
+"effect": "inquiry",
+"id": "inquiry",
+"kind": "open",
+"rep": 10
+}, {
+"effect": "finale",
+"id": "finale",
+"kind": "open",
+"rep": 25
+}])
 facilities = {
 "smithy": "legion_forge_token"
 }

@@ -16,7 +16,7 @@ const RECEIPTS_MAX := 20
 
 ## 阵营 id → 声望
 var rep: Dictionary = {}
-## 做完了结案（署名）的阵营 id → true（代言要它）
+## 做完了结案（署名）的阵营 id → true（报告 389 起节点只看声望，这一项只是记一笔）
 var signed: Dictionary = {}
 ## 委托 id → {"state", "stage": 第几步（0 起）, "progress": 这一步做了几次, "keys": 记过账的去重键, "times": 完成过几次, "pick": 接单时选的（配方 id）}
 var entries: Dictionary = {}
@@ -43,6 +43,8 @@ var board_init := false
 var arrived: Dictionary = {}
 ## 377：教程之后成功撤离过几局正式探索（万神院按它来营地，[member FactionDef.arrive_after]）
 var formal_extractions := 0
+## 报告 389：刚跨过、还没通知玩家的节点 [{"faction", "node"}]，先到的在前（营地里一条一条亮出来）
+var node_news: Array[Dictionary] = []
 
 
 func _init() -> void:
@@ -103,7 +105,7 @@ func add_receipt(row: Dictionary) -> void:
 
 
 func is_empty() -> bool:
-	return rep.is_empty() and entries.is_empty() and receipts.is_empty() and clues.is_empty() and grants.is_empty() and not gated and notes.is_empty() and not board_init and arrived.is_empty()
+	return rep.is_empty() and entries.is_empty() and receipts.is_empty() and clues.is_empty() and grants.is_empty() and not gated and notes.is_empty() and not board_init and arrived.is_empty() and node_news.is_empty()
 
 
 ## 存档：字典的键排好序（同一份状态逐字节相同）
@@ -123,6 +125,7 @@ func to_dict() -> Dictionary:
 		"board_init": board_init,
 		"arrived": _sorted(arrived),
 		"formal_extractions": formal_extractions,
+		"node_news": node_news.duplicate(true),
 	}
 
 
@@ -184,5 +187,8 @@ static func from_dict(d: Variant) -> CommissionBook:
 		for k in src["arrived"]:
 			b.arrived[String(k)] = int(src["arrived"][k])
 	b.formal_extractions = maxi(0, int(src.get("formal_extractions", 0)))     # 377：老档没有 = 0
+	for row in src.get("node_news", []):
+		if row is Dictionary:
+			b.node_news.append({"faction": String(row.get("faction", "")), "node": String(row.get("node", ""))})
 	Commissions.active = b
 	return b

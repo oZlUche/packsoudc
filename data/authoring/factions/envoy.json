@@ -6,11 +6,18 @@
   },
   "order": 4,
   "listed": false,
-  "thresholds": [
-    0,
-    10,
-    25,
-    50,
-    100
+  "nodes": [
+    {
+      "id": "inquiry",
+      "rep": 10,
+      "kind": "open",
+      "effect": "inquiry"
+    },
+    {
+      "id": "finale",
+      "rep": 25,
+      "kind": "open",
+      "effect": "finale"
+    }
   ]
 }

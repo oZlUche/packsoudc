@@ -59,15 +59,17 @@ static func run_content(t: TestCase) -> void:
 				else:
 					pct += 1
 		t.eq([flat, pct], want[cat], "%s：固定值、百分比各几件照第五节" % cat)
-	t.eq([r.pot_size(2), r.pot_size(3), r.pot_size(4)], [Vector2i(4, 4), Vector2i(5, 5), Vector2i(6, 6)], "锅：受托 4×4、信赖 5×5、代言 6×6")
-	t.eq([r.store_size(2), r.store_size(3), r.store_size(4)], [Vector2i(6, 6), Vector2i(8, 8), Vector2i(10, 8)], "食材仓库：6×6、8×8、10×8")
+	t.eq([r.pot_size(), r.store_size()], [Vector2i(4, 4), Vector2i(6, 6)], "开放时锅 4×4、食材仓库 6×6")
+	var gl := Commissions.faction(r.faction)
+	t.eq(Commissions.nodes_of(gl).filter(func(n: Dictionary) -> bool: return String(n.get("effect", "")).begins_with("canteen_")).map(func(n: Dictionary) -> Array: return [int(n["rep"]), String(n["effect"]), [int(n["value"][0]), int(n["value"][1])]]),
+		[[50, "canteen_pot", [5, 5]], [50, "canteen_store", [8, 8]], [100, "canteen_pot", [6, 6]], [100, "canteen_store", [10, 8]]], "389：50 锅 5×5、仓库 8×8；100 锅 6×6、仓库 10×8")
 	t.eq(float(r.entry(&"wild_berry")["flat"]), 0.5, "野莓每秒 0.5（作者 16:41）")
 	var bad := ImportReport.new()
 	ContentImporter.import_canteen_rules({"id": "canteen", "entries": {"x": {"category": "soup", "flat": 1, "pct": 2}}}, ContentImporter.Context.new(), bad)
 	t.check(not bad.ok(), "不认识的类别、固定值百分比都写：导入报错")
 	var d := Commissions.opener_of(Canteen.ID)
 	t.eq(d.id if d != null else &"", &"greylamp_canteen", "食堂由《开伙》开")
-	t.eq(Commissions.required_tier(d), 2, "要受托")
+	t.eq(Commissions.required_rep(d), 25, "要 25 声望")
 	t.eq(Commissions.validate_all(Commissions.defs(), Commissions.factions()), [] as Array[String], "前置、阵营查得过")
 
 
@@ -103,12 +105,19 @@ static func run_store(t: TestCase) -> void:
 	var yam := _inst(db, &"mountain_yam", 3)
 	t.check(c.pot.place(yam, Vector2i(3, 2)), "山薯摆在锅的右下角")
 	t.check(c.store.try_add(_inst(db, &"sour_wheat", 4)), "酸麦进食材仓库")
-	t.check(c.fit(2).is_empty() and c.pot.size == Vector2i(4, 4), "受托：4×4 不动")
-	t.check(c.fit(4).is_empty(), "代言：没有放不下的")
+	var m0 := T110._meta()
+	m0.commissions.rep["greylamp"] = 49
+	t.eq(Canteen.sizes(m0), {"pot": Vector2i(4, 4), "store": Vector2i(6, 6)}, "49：锅 4×4、仓库 6×6")
+	m0.commissions.rep["greylamp"] = 50
+	t.eq(Canteen.sizes(m0), {"pot": Vector2i(5, 5), "store": Vector2i(8, 8)}, "50：锅 5×5、仓库 8×8")
+	m0.commissions.rep["greylamp"] = 25
+	t.check(c.fit(Canteen.sizes(m0)).is_empty() and c.pot.size == Vector2i(4, 4), "25：4×4 不动")
+	m0.commissions.rep["greylamp"] = 100
+	t.check(c.fit(Canteen.sizes(m0)).is_empty(), "100（不用先做完结案）：没有放不下的")
 	t.eq([c.pot.size, c.store.size], [Vector2i(6, 6), Vector2i(10, 8)], "锅 6×6、仓库 10×8")
 	t.eq(c.pot.get_item(3).origin, Vector2i(3, 2), "山薯原位")
-	c.fit(1)
-	t.eq(c.pot.size, Vector2i(6, 6), "掉档不缩")
+	c.fit({"pot": Vector2i(4, 4), "store": Vector2i(6, 6)})
+	t.eq(c.pot.size, Vector2i(6, 6), "给小的不缩")
 	var m := T110._meta()
 	m.canteen = c
 	var back := MetaState.from_dict(m.to_dict(), db, GameFlow.load_meta_rules())
@@ -236,8 +245,12 @@ static func run_audit(t: TestCase) -> void:
 
 
 static func run_nursery(t: TestCase) -> void:
-	t.begin("355 第三批 · 苗圃：垦户社信赖开第二片、代言开第三片；每片 4×4 棋盘按形状摆；各作物成熟局数不同；主食蔬菜水果灰灯食堂开了才种、种苗白给；收成进食材仓库、偶尔多收优良的；三片存读一样")
-	t.eq([Nursery.plots_for(1), Nursery.plots_for(2), Nursery.plots_for(3), Nursery.plots_for(4)], [1, 1, 2, 3], "熟面 / 受托一片、信赖两片、代言三片")
+	t.begin("355 第三批 / 389 · 苗圃：垦户社 50 声望开第二片、100 开第三片；每片 4×4 棋盘按形状摆；各作物成熟局数不同；主食蔬菜水果灰灯食堂开了才种、种苗白给；收成进食材仓库、偶尔多收优良的；三片存读一样")
+	var pb := CommissionBook.new()
+	var plots := func(r: int) -> int:
+		pb.rep["growers"] = r
+		return Nursery.plots_for(pb)
+	t.eq([plots.call(0), plots.call(10), plots.call(49), plots.call(50), plots.call(99), plots.call(100)], [1, 1, 1, 2, 2, 3], "10 一片、50 两片、100 三片")
 	var c := TestSupport.load_content("free_mode")
 	var f := Support.flow(c, PREFIX)
 	Support.pass_tutorials(f)
@@ -279,9 +292,8 @@ static func run_nursery(t: TestCase) -> void:
 		bonus += int(r["items"]) - 4
 	t.check(bonus > 0 and bonus < 40 * 4, "四十回里偶尔多收（%d 件金穗麦）" % bonus)
 	f.meta.commissions.rep["growers"] = 100
-	f.meta.commissions.signed["growers"] = true
 	f.sync_commissions()
-	t.eq(f.meta.nursery.fields.size(), 3, "代言：三片")
+	t.eq(f.meta.nursery.fields.size(), 3, "100：三片")
 	var back := Nursery.from_dict(f.meta.nursery.to_dict(), c.items)
 	t.eq(back.fields.size(), 3, "三片存读回来还是三片")
 	t.eq(back.to_dict(), f.meta.nursery.to_dict(), "存读一样")

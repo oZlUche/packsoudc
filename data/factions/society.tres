@@ -10,6 +10,29 @@ display_names = {
 "en": "Mages' Society"
 }
 order = 2
+nodes = Array[Dictionary]([{
+"effect": "inquiry",
+"id": "inquiry",
+"kind": "open",
+"rep": 10
+}, {
+"effect": "finale",
+"id": "finale",
+"kind": "open",
+"rep": 25
+}, {
+"effect": "commission",
+"id": "alchemy",
+"kind": "open",
+"rep": 50,
+"value": "society_alchemy"
+}, {
+"effect": "alchemy_loss",
+"id": "alchemy_loss",
+"kind": "boost",
+"rep": 100,
+"value": 0.25
+}])
 facilities = {
 "tech": "society_first_survey"
 }

@@ -7,24 +7,85 @@
   "order": 6,
   "arrives": "extractions",
   "arrive_after": 3,
-  "thresholds": [
-    0,
-    10,
-    25,
-    50,
-    100
+  "nodes": [
+    {
+      "id": "god_brute",
+      "rep": 0,
+      "kind": "open",
+      "effect": "god",
+      "value": "brute"
+    },
+    {
+      "id": "inquiry",
+      "rep": 10,
+      "kind": "open",
+      "effect": "inquiry"
+    },
+    {
+      "id": "god_nature",
+      "rep": 10,
+      "kind": "open",
+      "effect": "god",
+      "value": "nature"
+    },
+    {
+      "id": "god_sun",
+      "rep": 20,
+      "kind": "open",
+      "effect": "god",
+      "value": "sun"
+    },
+    {
+      "id": "finale",
+      "rep": 25,
+      "kind": "open",
+      "effect": "finale"
+    },
+    {
+      "id": "faith_xp",
+      "rep": 25,
+      "kind": "boost",
+      "effect": "faith_xp",
+      "value": 0.1
+    },
+    {
+      "id": "god_skill",
+      "rep": 40,
+      "kind": "open",
+      "effect": "god",
+      "value": "skill",
+      "placeholder": true
+    },
+    {
+      "id": "altar_bless",
+      "rep": 50,
+      "kind": "open",
+      "effect": "altar_bless"
+    },
+    {
+      "id": "god_hunt",
+      "rep": 60,
+      "kind": "open",
+      "effect": "god",
+      "value": "hunt",
+      "placeholder": true
+    },
+    {
+      "id": "god_earth",
+      "rep": 80,
+      "kind": "open",
+      "effect": "god",
+      "value": "earth",
+      "placeholder": true
+    },
+    {
+      "id": "rank_100",
+      "rep": 100,
+      "kind": "open",
+      "effect": "",
+      "placeholder": true
+    }
   ],
-  "services": {
-    "god_brute": 0,
-    "god_sun": 0,
-    "god_skill": 0,
-    "god_hunt": 1,
-    "god_earth": 1,
-    "god_nature": 1,
-    "faith_xp": 2,
-    "altar_bless": 3,
-    "opening_pick": 4
-  },
   "permit": "pantheon_permit",
   "regular": [
     {

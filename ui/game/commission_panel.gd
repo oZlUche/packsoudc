@@ -135,12 +135,60 @@ static func emblem(faction_id: StringName, side: float) -> TextureRect:
 	return r
 
 
-## 五颗菱点：亮几颗 = 第几档（初识 1 … 代言 5）
-static func pips(lv: int) -> HBoxContainer:
-	var row := UiTheme.hbox(2)
-	row.name = "Pips"
-	for i in Commissions.TIERS:
-		row.add_child(_pic("pip_on" if i <= lv else "pip_off", Vector2(16, 16)))
+## 报告 389：声望刻度（占位版，正式样子等 UI设计 出样、作者挑）：一条横槽按声望填充，节点按声望数排在槽上，
+## 到了的亮、没到的暗；同一个数上的几个节点合成一颗，悬停列出每个节点给什么、还差几点。右边写现在的声望
+static func track(book: CommissionBook, f: FactionDef, w: float, faith_defs: Dictionary = {}) -> HBoxContainer:
+	var row := UiTheme.hbox(8)
+	row.name = "RepTrack"
+	var r := book.rep_of(f.id) if book != null and f != null else 0
+	var nodes := Commissions.nodes_of(f)
+	var top := r
+	for n in nodes:
+		top = maxi(top, int(n.get("rep", 0)))
+	top = maxi(1, top)
+	var bar := Control.new()
+	bar.name = "Bar"
+	bar.custom_minimum_size = Vector2(w, 22)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(bar)
+	var groove := ColorRect.new()
+	groove.color = Color(INK_DIM, 0.25)
+	groove.position = Vector2(0, 8)
+	groove.size = Vector2(w, 6)
+	groove.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_child(groove)
+	var fill := ColorRect.new()
+	fill.name = "Fill"
+	fill.color = INK
+	fill.position = Vector2(0, 8)
+	fill.size = Vector2(w * clampf(float(r) / float(top), 0.0, 1.0), 6)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_child(fill)
+	var at := {}     # 声望数 → 那几个节点
+	var order: Array[int] = []
+	for n in nodes:
+		var k := int(n.get("rep", 0))
+		if not at.has(k):
+			at[k] = []
+			order.append(k)
+		(at[k] as Array).append(n)
+	for k in order:
+		var lines: PackedStringArray = []
+		var lit := false
+		for n in at[k]:
+			var on := Commissions.reached(book, f, n)
+			lit = lit or on
+			lines.append(UiText.t("node.at") % [k, Commissions.node_text(n, faith_defs, book, f)])
+		lines.append(UiText.t("node.reached") if r >= k else UiText.t("node.need") % (k - r))
+		var pip := _pic("pip_on" if lit else "pip_off", Vector2(16, 16))
+		pip.name = "Node_%d" % k
+		pip.position = Vector2(clampf(w * float(k) / float(top) - 8.0, 0.0, w - 16.0), 3)
+		pip.mouse_filter = Control.MOUSE_FILTER_STOP
+		pip.tooltip_text = "\n".join(lines)
+		bar.add_child(pip)
+	var num := UiTheme.make_label(UiText.t("commission.rep") % r, 16, INK)
+	num.name = "Rep"
+	row.add_child(num)
 	return row
 
 
@@ -280,10 +328,10 @@ func _build_regular() -> void:
 		var lock_row := UiTheme.hbox(6)
 		lock_row.add_child(_pic("lock", Vector2(20, 20)))
 		var permit := Commissions.def(f.permit)
-		lock_row.add_child(UiTheme.make_wrapped(UiText.t("commission.regular_locked") % [f.thresholds[Commissions.REGULAR_TIER], Names.of(permit) if permit != null else "—"],
+		lock_row.add_child(UiTheme.make_wrapped(UiText.t("commission.regular_locked") % [Commissions.effect_rep(f, Commissions.EFFECT_FINALE, Commissions.FINALE_REP), Names.of(permit) if permit != null else "—"],
 			16, INK_DIM, STORY_W - 2.0 * PAD_X - 26.0))
 		col.add_child(lock_row)
-		col.add_child(pips(Commissions.tier_of(book, f)))
+		col.add_child(track(book, f, STORY_W - 2.0 * PAD_X - 90.0, flow.faith_defs))
 		pins.add_child(_pinned(p, "pin_empty"))
 	var notes := NoticeBoard.posted(book)
 	for nid in notes:     # 栏上没接的纸条
@@ -460,14 +508,13 @@ func _paper(w: float = CARD_W) -> PanelContainer:
 	return p
 
 
-## 这一方的牌头：纹章 72、名字、档名 + 五菱点、到下一档的细条（悬停写累计和还差几点）
+## 这一方的牌头：纹章 72、名字、声望刻度（报告 389）
 func _head(f: FactionDef) -> PanelContainer:
 	var p := _paper(STORY_W)
 	p.name = "FactionHead"
 	var col := UiTheme.vbox(6)
 	p.add_child(col)
 	var book := flow.meta.commissions
-	var lv := Commissions.tier_of(book, f)
 	var top := UiTheme.hbox(12)
 	col.add_child(top)
 	top.add_child(emblem(f.id, 72))
@@ -476,24 +523,7 @@ func _head(f: FactionDef) -> PanelContainer:
 	var title := UiTheme.make_label(Names.of(f), 22, INK)
 	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
 	right.add_child(title)
-	var tier := UiTheme.hbox(8)
-	tier.add_child(UiTheme.make_label(UiText.t("commission.tier_%d" % lv), 16, INK))
-	tier.add_child(pips(lv))
-	right.add_child(tier)
-	var gap := Commissions.rep_to_next(book, f)
-	var lo := f.thresholds[lv] if lv < f.thresholds.size() else 0
-	var hi := f.thresholds[lv + 1] if lv + 1 < f.thresholds.size() else lo
-	var bar := ColorRect.new()     # 到下一档的细条：底 + 进度
-	bar.name = "RepBar"
-	bar.color = Color(INK_DIM, 0.25)
-	bar.custom_minimum_size = Vector2(STORY_W - 2.0 * PAD_X - 90.0, 6)
-	bar.tooltip_text = UiText.t("commission.rep_next") % [book.rep_of(f.id), gap] if gap > 0 else UiText.t("commission.rep") % book.rep_of(f.id)
-	var fill := ColorRect.new()
-	fill.color = INK
-	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fill.custom_minimum_size = Vector2(bar.custom_minimum_size.x * (1.0 if hi <= lo else clampf(float(book.rep_of(f.id) - lo) / float(hi - lo), 0.0, 1.0)), 6)
-	bar.add_child(fill)
-	right.add_child(bar)
+	right.add_child(track(book, f, STORY_W - 2.0 * PAD_X - 170.0, flow.faith_defs))
 	return p
 
 

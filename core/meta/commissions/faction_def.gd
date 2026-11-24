@@ -1,5 +1,5 @@
 ## 336（阵营与委托 W0，报告 335 第三节）：营地委托簿里的一方（军团接应队、协会考据所、灰灯互助会、元老院使团、北境猎盟）。
-## 342 B2：声望五档（初识 / 熟面 / 受托 / 信赖 / 代言）的名字各方相同，在字表里（`commission.tier_<n>`）；这里只放每方自己的东西。
+## 报告 389（作者 2026-11-24）：不再有五档，每一方一串自己的声望节点（[member nodes]）：声望到了那个数，触发那个效果。
 ##
 ## 走内容管线：`data/authoring/factions/*.json` → `data/factions/*.tres`（[method Commissions.factions]）
 class_name FactionDef
@@ -17,15 +17,18 @@ extends Resource
 @export var arrives: StringName = &""
 ## 377：`arrives` = `extractions` 时，教程之后第几次成功撤离（正式探索）结算时来
 @export var arrive_after: int = 0
-## 五档的声望门槛（初识、熟面、受托、信赖、代言），从小到大、第一个是 0（342 B2：原来四档 0 / 2 / 5 / 9）
-@export var thresholds: Array[int] = [0, 10, 25, 50, 100]
-## 每级开放的服务：服务 id → 第几级（0 起）。服务随各方结案批次做，W0 只记表
-@export var services: Dictionary = {}
+## 报告 389：声望节点，一个节点 = 一个声望数 + 一个效果（[method Commissions.nodes_of] 按声望排好）。每个节点：
+## - `id`：这一方里不重复（通知按它记，[member CommissionBook.node_news]）
+## - `rep`：要多少声望
+## - `kind`：`open` 开放 / `boost` 提升
+## - `effect`：效果 id（[constant Commissions.EFFECTS]），`value`：效果的参数（神 id、委托 id、尺寸、折损……）
+## - `placeholder`：占位（刻度上看得见、显示「？？？？」，到了也不生效）；`hidden`：没到之前显示「？？？？」
+@export var nodes: Array[Dictionary] = []
 ## 342 B2：这一方的剧情开放哪些基地设施：设施 id（`smithy` / `tech` / `market`）→ 开它的那份剧情委托 id
 @export var facilities: Dictionary = {}
 ## 联系人 NPC（可空）
 @export var contact: StringName = &""
-## 342 B2：许可单（办完它、又到了受托，常规委托才开；空 = 只看声望）
+## 342 B2：许可单（办完它、又到了结案那个节点，常规委托才开；空 = 只看声望）
 @export var permit: StringName = &""
 ## 342 B2：告示栏上这一方的数量模板 [{"goal", "params", "u": 单份酬值, "name": 纸条名, "text": 做什么（{n} = 件数）}]（[NoticeBoard]）
 @export var regular: Array[Dictionary] = []

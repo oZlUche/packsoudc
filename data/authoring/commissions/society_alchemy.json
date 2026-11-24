@@ -7,7 +7,7 @@
   "faction": "society",
   "order": 4,
   "reputation": 5,
-  "min_tier": 3,
+  "min_rep": 50,
   "requires": [
     "society_permit"
   ],
