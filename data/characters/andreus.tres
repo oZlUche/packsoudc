@@ -52,7 +52,7 @@ descriptions = {
 "en": "A slave explorer who avoids fights. He strikes first from hiding and buys his life back when he loses. Lowest Health {max_hp} and Vitality {vitality_max}."
 }
 base_stats = {
-"max_hp": 45,
+"max_hp": 115,
 "max_stamina": 55,
 "regen_stamina": 4
 }

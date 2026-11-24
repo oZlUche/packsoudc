@@ -10,7 +10,7 @@
     "bleed"
   ],
   "base_stats": {
-    "max_hp": 30,
+    "max_hp": 75,
     "regen_stamina": 5
   },
   "signature": [

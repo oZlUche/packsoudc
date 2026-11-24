@@ -9,7 +9,7 @@
     "lightning"
   ],
   "base_stats": {
-    "max_hp": 110,
+    "max_hp": 275,
     "regen_stamina": 12
   },
   "signature": [

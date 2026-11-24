@@ -9,7 +9,7 @@
     "en": "A legion soldier who is good at fighting. The phalera on his chest counts every win, and the weapons beside it hit harder and harder. Stamina {max_stamina} and the fastest Stamina Regen."
   },
   "base_stats": {
-    "max_hp": 55,
+    "max_hp": 140,
     "max_stamina": 65,
     "regen_stamina": 5
   },

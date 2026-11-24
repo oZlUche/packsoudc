@@ -20,7 +20,7 @@ strength = 3
 schools = Array[StringName]([&"burst", &"bleed", &"rapid"])
 base_stats = {
 "block": 5,
-"max_hp": 80
+"max_hp": 200
 }
 signature = Array[StringName]([&"mithril_sword"])
 item_tags = Array[StringName]([&"imperial", &"heavy", &"shield", &"part", &"remedy"])

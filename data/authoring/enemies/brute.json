@@ -10,7 +10,7 @@
     "bleed"
   ],
   "base_stats": {
-    "max_hp": 50,
+    "max_hp": 125,
     "block": 3
   },
   "item_tags": [

@@ -9,7 +9,7 @@
     "poison"
   ],
   "base_stats": {
-    "max_hp": 30
+    "max_hp": 75
   },
   "signature": [
     "viper_gland",

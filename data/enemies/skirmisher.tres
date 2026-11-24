@@ -19,7 +19,7 @@ display_names = {
 strength = 1
 schools = Array[StringName]([&"rapid"])
 base_stats = {
-"max_hp": 50
+"max_hp": 125
 }
 item_tags = Array[StringName]([&"rapid", &"melee"])
 builds = Array[ExtResource("1_qpgh2")]([SubResource("Resource_a82cs")])

@@ -87,7 +87,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 70,
+          "max_hp": 175,
           "max_stamina": 60,
           "regen_stamina": 8
         },
@@ -129,7 +129,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 15,
+          "max_hp": 40,
           "regen_stamina": 10
         },
         "event": "tut2_battle_heavy",
@@ -237,7 +237,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 40,
+          "max_hp": 100,
           "block": 12
         },
         "event": "tut2_battle_ward",
@@ -281,7 +281,7 @@
           }
         ],
         "base_stats": {
-          "max_hp": 45,
+          "max_hp": 115,
           "block": 3
         },
         "event": "tut2_battle_cure",

@@ -20,7 +20,7 @@ display_names = {
 strength = 3
 schools = Array[StringName]([&"lightning"])
 base_stats = {
-"max_hp": 110,
+"max_hp": 275,
 "regen_stamina": 12
 }
 signature = Array[StringName]([&"thunder_plume", &"thunder_plume", &"thunder_plume", &"thunder_plume", &"beast_claw", &"beast_tusk_root"])
