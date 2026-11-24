@@ -1,0 +1,72 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+FM911 主菜单【继续】：true
+FM911 营地弹了通知：万神院 / 诸神的祭司们在营地边上立起了万神院。从现在起，每次出征前可以选这一局奉哪位神：信物出征时自动放进背包，休息点的神坛、废墟里的无名祭坛也会出现。不选就是无信者。 / [知道了]
+FM911 读进来：
+　　legion 声望 100 到了 ["inquiry@10", "finale@25"]
+　　society 声望 55 到了 ["inquiry@10", "finale@25", "alchemy@50"]
+　　greylamp 声望 100 到了 ["inquiry@10", "finale@25", "canteen@25", "pot_5@50", "store_8@50", "pot_6@100", "store_10@100"]
+　　cartographers 声望 25 到了 ["inquiry@10", "finale@25"]
+　　envoy 声望 50 到了 ["inquiry@10", "finale@25"]
+　　growers 声望 12 到了 ["inquiry@10", "plot_1@10"]
+　　hunters 声望 0 到了 []
+　　pantheon 声望 30 到了 ["god_brute@0", "inquiry@10", "god_nature@10", "god_sun@20", "finale@25", "faith_xp@25"]
+FM911 　　万神院：brute 能选，nature 能选，sun 能选，skill 不能（占位），hunt 不能（占位），earth 不能（占位），church 不能；下一局奉「」；奉过 [&"hunt"]；access { "enabled": true, "bless": false, "xp_bonus": 0.1, "opening_extra": false }
+FM911 　　已接 [&"greylamp_check_scale", &"legion_forge_token", &"society_first_survey", &"cartographers_redraw", &"growers_first_bed", &"pantheon_first_rite"]
+FM911 测试辅助：后勤部队的剧情办到《后勤通行证》：声望 105；已接 [&"greylamp_check_scale", &"legion_forge_token", &"society_first_survey", &"cartographers_redraw", &"growers_first_bed", &"pantheon_first_rite"]
+FM911 委托页：[剧情] / [常规] / [声望] / 领炉牌 / 委托人：军需员 / 做什么：到军需员那里核对领用单，领一块炉牌 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 第一份勘察记录 / 委托人：协会登记员 / 做什么：把你这几趟的探索记录交给协会登记 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 认一认秤 / 委托人：灰灯引荐的摊主 / 做什么：和摊主核对样货，签收 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 把路画回来 / 委托人：协会绘图员 / 做什么：把这一趟到过的一处地形登记到协会的图上 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 第一片地 / 委托人：垦户社的老农 / 做什么：到河滩领一包试种种苗，划出一片地 / 在哪完成：营地当场 / 报酬： / 声望 +10 / [完成] / 初次奉神 / 委托人：万神院的老祭司 / 做什么：在万神院选一位神出征，奉着祂升三级并撤离 / 在哪完成：要带回营地 / 报酬： / 声望 +10 / 已接　0 / 3 / 铁匠铺：办成《领炉牌》后开放 / [去办] / 科技：办成《第一份勘察记录》后开放 / [去办] / 集市：办成《认一认秤》后开放 / [去办] / 材料倾向：办成《把路画回来》后开放 / [去办] / 苗圃：办成《第一片地》后开放 / [去办] / 回执 / 后勤通行证：办成了
+FM911 　　排版：查了 57 处，没有溢出
+FM911 　　剧情页没有【接下】，真点【常规】
+FM911 委托页：[剧情] / [常规] / [声望] / 魔法师协会 / 声望到 25、办完《协会登记证》后，这一方的常规委托才会贴出来 / 声望 55 / 灰灯互助会 / 声望到 25、办完《灰灯会牌》后，这一方的常规委托才会贴出来 / 声望 100 / 地图协会 / 声望到 25、办完《提交路标》后，这一方的常规委托才会贴出来 / 声望 25 / 河滩垦户社 / 声望到 25、办完《登记留种》后，这一方的常规委托才会贴出来 / 声望 12 / 万神院 / 声望到 25、办完《入院登记》后，这一方的常规委托才会贴出来 / 声望 30 / 短单 · 收木料 / 交 2 件木材 / 声望 +1 / [接下] / 还剩 3 局 / 常规单 · 巡路 / 打赢 4 场普通的仗 / 声望 +1 / [接下] / 还剩 3 局 / 常规单 · 收木料 / 交 5 件木材 / 声望 +1 / [接下] / 还剩 3 局 / 常规单 · 收金属 / 交 4 件金属材料 / 声望 +1 / [接下] / 还剩 3 局 / 手头 0 / 3
+FM911 　　排版：查了 39 处，没有溢出
+FM911 　　真点【接下】
+FM911 　　接了以后：已接 6 → 7：[&"greylamp_check_scale", &"legion_forge_token", &"society_first_survey", &"cartographers_redraw", &"growers_first_bed", &"pantheon_first_rite", &"note_1"]
+FM911 声望页：[剧情] / [常规] / [声望] / 后勤部队 / 声望 / 105 / [赠礼] / 魔法师协会 / 声望 / 55 / [赠礼] / 灰灯互助会 / 声望 / 100 / [赠礼] / 地图协会 / 声望 / 25 / [赠礼] / 河滩垦户社 / 声望 / 12 / [赠礼] / 万神院 / 声望 / 30 / [赠礼]；排版 查了 27 处，没有溢出
+FM911 可领赠礼（老档补发）：legion 4，society 2，greylamp 4，cartographers 1，envoy 2，growers 0，hunters 0，pantheon 1；合计 12；领过 {  }
+FM911 　　【赠礼】键 6 颗：亮 亮 亮 亮 灰 亮
+FM911 　　第一颗亮的悬浮：赠礼 · 可领 4 份 / 声望每攒 25 点多一份 / 下一份还差 20 点
+FM911 　　赠礼窗：[← 主界面　F1] / [出征] / [仓库] / [科技] / [委托] / [后勤] / [书架] / [剧情] / [常规] / [声望] / 后勤部队 / 声望 / 105 / [赠礼] / 魔法师协会 / 声望 / 55 / [赠礼] / 灰灯互助会 / 声望 / 100 / [赠礼] / 地图协会 / 声望 / 25 / [赠礼] / 河滩垦户社 / 声望 / 12 / [赠礼] / 万神院 / 声望 / 30 / [赠礼] / [回主菜单] / [◂] / 后勤部队 / 每一份从下面随机给一样： 30 金币 还可领 4 份 / [领取] / [关闭]；排版 查了 40 处，没有溢出
+FM911 　　真点【领取】：金币 250 → 280；领过 { "legion": 1 }；这一方还可领 3；合计 11
+FM911 　　领完窗 又开着（还可领就接着弹）
+FM911 存档 meta.json 里：gifts_claimed": {       "legion": 1     }   },   "nursery": {     "fields": [       {         "id": 110,         "size":
+FM911 万神院页：万神院 / 蛮神 / 自然之神 / 日神 / ？？？？ / ？？？？ / ？？？？；排版 查了 7 处，没有溢出
+FM911 开局屏信仰条：头上「无信者」；展开：无信者 / [奉着] / 蛮神 / [奉祂] / 自然之神 / [奉祂] / 日神 / [奉祂] / ？？？？ / [？？？？] / ？？？？ / [？？？？] / ？？？？ / [？？？？]
+FM911 　　真点狩猎之神（老档信过、现在是占位）：false；下一局奉「」
+FM911 　　真点自然之神（声望 30 ≥ 10）：true；下一局奉「nature」
+FM911 完 err=0
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9597 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4609 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
