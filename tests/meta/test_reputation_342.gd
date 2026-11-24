@@ -97,9 +97,17 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 	t.eq(jumped, [&"smithy"], "办成直接跳到铁匠铺")
 	t.check(f.facility_open(&"smithy"), "铁匠铺开了")
 	t.eq(s.notice_layer().current_text(), UiText.t("commission.opened") % UiText.t("smithy.title"), "新档：说一句「铁匠铺开放了」")
+	t.not_null(p.find_child("Go_smithy", true, false), "389 定稿：设施挪到剧情页 —— 铁匠铺开了，有「去看看」")
+	t.not_null(p.find_child("Story_market", true, false), "剧情页：集市没开，有「去办」")
 	p.show_sub("reputation")
-	t.not_null(p.find_child("Go_smithy", true, false), "声望页：铁匠铺开了，有「去看看」")
-	t.not_null(p.find_child("Story_market", true, false), "声望页：集市没开，有「去办」")
+	t.check(p.find_child("Go_smithy", true, false) == null, "声望页不再放设施")
+	var row: Control = p.find_child("Rep_legion", true, false)
+	t.check(row != null and row.find_child("RepScale", true, false) != null and row.find_child("Gift_legion", true, false) != null, "389 定稿：每方一行，刻度 + 【赠礼】")
+	var gift := p.find_child("Gift_legion", true, false) as Button
+	var due := Commissions.gifts_due(f.meta, Commissions.faction(&"legion"))
+	t.check(gift != null and gift.disabled == (due <= 0), "【赠礼】没有可领就灰着（可领 %d）" % due)
+	var medal := p.find_child("Node_finale", true, false) as Control
+	t.check(medal != null and medal.tooltip_text.contains("25"), "节点圆章：悬停写声望数")
 	t.eq(Bare.audit(p, "rep342"), [] as Array[String], "声望页字不裸")
 	p.show_sub("regular")
 	t.not_null(p.find_child("Regular_legion", true, false), "常规页每方一块")
@@ -117,6 +125,38 @@ static func frame_panel(t: TestCase, root: Window) -> void:
 	s.queue_free()
 	W178._cleanup()
 
+
+
+static func frame_rep_notices(t: TestCase, root: Window) -> void:
+	t.begin("389 定稿 · 营地：跨过的节点一条一条弹石刻通知（圆章 + 声望 N + 效果、【知道了】）；赠礼红点挂在「委托」导航和「声望」页签；点【赠礼】弹窗列内容、【领取】领一份")
+	ItemInstance.reset_uid_counter()
+	var f := W178._flow()
+	f.meta.commissions.rep["legion"] = 55
+	f.meta.commissions.node_news.assign([{"faction": "legion", "node": "inquiry"}, {"faction": "legion", "node": "finale"}])
+	var s: Control = W178._screen(f, root)
+	var pop: Control = s.arrival()
+	t.check(pop != null and pop.find_child("Plate", true, false) != null and pop.find_child("Slate", true, false) != null, "节点通知：浅石牌 + 深石板")
+	t.check(pop != null and pop.find_child("Node_inquiry", true, false) != null, "第一条：调查委托那颗圆章")
+	var ok := pop.find_child("Key_0", true, false) as Button if pop != null else null
+	if ok != null:
+		ok.pressed.emit()
+	pop = s.arrival()
+	t.check(pop != null and pop.find_child("Node_finale", true, false) != null, "关掉接着放第二条")
+	s.close_node_news()
+	t.check(s.arrival() == null and f.meta.commissions.node_news.is_empty(), "放完了，清空")
+	var nav := s._tab_btns.get("commissions", null) as Button
+	var dot := nav.get_node_or_null("RedDot") as Control if nav != null else null
+	t.check(dot != null and dot.visible and int(dot.get("count")) == 2, "「委托」导航红点：后勤部队 55 声望两份")
+	var funds := f.meta.funds
+	var g: Control = s.show_gift(&"legion")
+	t.check(g != null and g.name == "GiftNotice" and (g.find_child("Key_0", true, false) as Button) != null, "点【赠礼】：弹窗有【领取】")
+	s.claim_gift(&"legion")
+	t.check(f.meta.funds > funds and Commissions.gifts_due(f.meta, Commissions.faction(&"legion")) == 1, "领一份")
+	t.check(s.arrival() != null, "还有一份：窗留着")
+	s.claim_gift(&"legion")
+	t.check(s.arrival() == null and not (nav.get_node("RedDot") as Control).visible, "领完关窗，红点灭")
+	s.queue_free()
+	W178._cleanup()
 
 
 static func _done(book: CommissionBook, ids: Array) -> void:

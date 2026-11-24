@@ -13,6 +13,8 @@ signal changed()
 signal facility_requested(facility: StringName)
 ## 342 B2：【办理】办成了一份（[method Commissions.credit] 的结果，`got` 里有声望与开放的设施）
 signal reported(got: Dictionary)
+## 389 第七节：点了某一方的【赠礼】（营地弹窗列出这一份里有什么、【领取】【关闭】）
+signal gift_requested(faction_id: StringName)
 
 const KEY_SIZE := Vector2(182, 46)
 const KEY_FONT := 18
@@ -40,6 +42,9 @@ const TRAY_GAP := 16
 const TRAY_EDGES := [12, 12, 12, 18]
 ## 回执最多列几条
 const RECEIPTS_SHOWN := 6
+## 389 定稿：声望页每行高、【赠礼】键大小
+const ROW_H := 168.0
+const GIFT_KEY := Vector2(100, 56)
 ## 342 B2：三个子页（键、字表键）
 const SUBS := [["story", "commission.sub_story"], ["regular", "commission.sub_regular"], ["reputation", "commission.sub_reputation"]]
 ## 设施 → 字表键
@@ -135,63 +140,6 @@ static func emblem(faction_id: StringName, side: float) -> TextureRect:
 	return r
 
 
-## 报告 389：声望刻度（占位版，正式样子等 UI设计 出样、作者挑）：一条横槽按声望填充，节点按声望数排在槽上，
-## 到了的亮、没到的暗；同一个数上的几个节点合成一颗，悬停列出每个节点给什么、还差几点。右边写现在的声望
-static func track(book: CommissionBook, f: FactionDef, w: float, faith_defs: Dictionary = {}) -> HBoxContainer:
-	var row := UiTheme.hbox(8)
-	row.name = "RepTrack"
-	var r := book.rep_of(f.id) if book != null and f != null else 0
-	var nodes := Commissions.nodes_of(f)
-	var top := r
-	for n in nodes:
-		top = maxi(top, int(n.get("rep", 0)))
-	top = maxi(1, top)
-	var bar := Control.new()
-	bar.name = "Bar"
-	bar.custom_minimum_size = Vector2(w, 22)
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(bar)
-	var groove := ColorRect.new()
-	groove.color = Color(INK_DIM, 0.25)
-	groove.position = Vector2(0, 8)
-	groove.size = Vector2(w, 6)
-	groove.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_child(groove)
-	var fill := ColorRect.new()
-	fill.name = "Fill"
-	fill.color = INK
-	fill.position = Vector2(0, 8)
-	fill.size = Vector2(w * clampf(float(r) / float(top), 0.0, 1.0), 6)
-	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_child(fill)
-	var at := {}     # 声望数 → 那几个节点
-	var order: Array[int] = []
-	for n in nodes:
-		var k := int(n.get("rep", 0))
-		if not at.has(k):
-			at[k] = []
-			order.append(k)
-		(at[k] as Array).append(n)
-	for k in order:
-		var lines: PackedStringArray = []
-		var lit := false
-		for n in at[k]:
-			var on := Commissions.reached(book, f, n)
-			lit = lit or on
-			lines.append(UiText.t("node.at") % [k, Commissions.node_text(n, faith_defs, book, f)])
-		lines.append(UiText.t("node.reached") if r >= k else UiText.t("node.need") % (k - r))
-		var pip := _pic("pip_on" if lit else "pip_off", Vector2(16, 16))
-		pip.name = "Node_%d" % k
-		pip.position = Vector2(clampf(w * float(k) / float(top) - 8.0, 0.0, w - 16.0), 3)
-		pip.mouse_filter = Control.MOUSE_FILTER_STOP
-		pip.tooltip_text = "\n".join(lines)
-		bar.add_child(pip)
-	var num := UiTheme.make_label(UiText.t("commission.rep") % r, 16, INK)
-	num.name = "Rep"
-	row.add_child(num)
-	return row
-
-
 ## 钉在纸条上沿正中：钉子盖住纸边（纸条名字照旧，测试按它找）
 static func _pinned(paper: Control, pin: String) -> PinBox:
 	var v := PinBox.new()
@@ -271,6 +219,8 @@ func rebuild() -> void:
 	for c in _cards.get_children():
 		_cards.remove_child(c)
 		c.queue_free()
+	if _sub_btns.has("reputation"):     # 389 定稿：「声望」页签右上红点 = 各方可领赠礼合计
+		RedDot.attach(_sub_btns["reputation"] as Button, Commissions.gifts_due_total(flow.meta))
 	match _sub:
 		"regular":
 			_build_regular()
@@ -289,9 +239,49 @@ func _build_story() -> void:
 		for d in Commissions.of_faction(f.id):
 			if Commissions.is_story(d) and shown(d) and not (flow.meta.commissions.is_done(d.id) and flow.meta.commissions.state_of(d.id) != CommissionBook.TAKEN):
 				grid.add_child(_card(d, STORY_W))
+	var fac := _facilities()
+	if fac != null:
+		_cards.add_child(fac)
 	var rc := _receipts()
 	if rc != null:
 		_cards.add_child(rc)
+
+
+## 389 定稿：设施那几行（开了【去看看】；没开写办成哪份开、【去办】）从声望页挪到剧情页，一张纸列各方的
+func _facilities() -> PanelContainer:
+	var rows: Array = []
+	for f in Commissions.listed_factions():
+		var facs: Array = f.facilities.keys()
+		facs.sort()
+		for fac in facs:
+			rows.append([f, StringName(String(fac))])
+	if rows.is_empty():
+		return null
+	var p := _paper()
+	p.name = "Facilities"
+	var col := UiTheme.vbox(6)
+	p.add_child(col)
+	for pair in rows:
+		var f: FactionDef = pair[0]
+		var key: StringName = pair[1]
+		var row := UiTheme.hbox(8)
+		col.add_child(row)
+		row.add_child(emblem(f.id, 28))
+		var fname := UiText.t(String(FACILITY_TEXT.get(key, String(key))))
+		if flow.facility_open(key):
+			row.add_child(UiTheme.make_label(UiText.t("commission.facility_open") % fname, 16, INK))
+			var b := ScrollKey.make(UiText.t("commission.go_facility"), func(): facility_requested.emit(key))
+			b.name = "Go_" + String(key)
+			row.add_child(b)
+		else:
+			row.add_child(_pic("lock", Vector2(20, 20)))
+			var d := Commissions.def(StringName(String(f.facilities[key])))
+			row.add_child(UiTheme.make_wrapped(UiText.t("commission.facility_locked") % [fname, Names.of(d) if d != null else ""], 16, INK_DIM, CARD_W - 2.0 * PAD_X - 180.0))
+			var fid := f.id
+			var b := ScrollKey.make(UiText.t("commission.go_story"), func(): show_story(fid))
+			b.name = "Story_" + String(key)
+			row.add_child(b)
+	return p
 
 
 ## 剧情卡露不露：接着的、办成过的、现在就能接的（要先选配方的那种）才露；还够不着的不露
@@ -331,7 +321,7 @@ func _build_regular() -> void:
 		lock_row.add_child(UiTheme.make_wrapped(UiText.t("commission.regular_locked") % [Commissions.effect_rep(f, Commissions.EFFECT_FINALE, Commissions.FINALE_REP), Names.of(permit) if permit != null else "—"],
 			16, INK_DIM, STORY_W - 2.0 * PAD_X - 26.0))
 		col.add_child(lock_row)
-		col.add_child(track(book, f, STORY_W - 2.0 * PAD_X - 90.0, flow.faith_defs))
+		col.add_child(UiTheme.make_label(UiText.t("commission.rep") % book.rep_of(f.id), 16, INK))
 		pins.add_child(_pinned(p, "pin_empty"))
 	var notes := NoticeBoard.posted(book)
 	for nid in notes:     # 栏上没接的纸条
@@ -468,36 +458,66 @@ class Ticks extends Control:
 				draw_polyline(PackedVector2Array([a, b, c]), RED, 2.0)
 
 
+## 389 定稿（作者 11-24 15:43 选 A）：每个阵营占一整行深石板（高 168），竖着排、整页滚动：左边纹章 72、名字、「声望 N」；
+## 中间声望刻度（[RepScale]）；最右【赠礼】键（[method gift_key]）
 func _build_reputation() -> void:
-	var flow_row := HFlowContainer.new()
-	flow_row.name = "RepRow"
-	_cards.add_child(flow_row)
+	var col := UiTheme.vbox(8)
+	col.name = "RepRow"
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cards.add_child(col)
 	for f in Commissions.listed_factions():
-		var p := _head(f)
-		p.name = "Rep_" + String(f.id)
-		var col := p.get_child(0) as VBoxContainer
-		col.add_child(HSeparator.new())
-		var facs: Array = f.facilities.keys()
-		facs.sort()
-		for fac in facs:
-			var key := StringName(String(fac))
-			var row := UiTheme.hbox(8)
-			col.add_child(row)
-			var fname := UiText.t(String(FACILITY_TEXT.get(key, String(key))))
-			if flow.facility_open(key):
-				row.add_child(UiTheme.make_label(UiText.t("commission.facility_open") % fname, 16, INK))
-				var b := ScrollKey.make(UiText.t("commission.go_facility"), func(): facility_requested.emit(key))
-				b.name = "Go_" + String(key)
-				row.add_child(b)
-			else:
-				row.add_child(_pic("lock", Vector2(20, 20)))
-				var d := Commissions.def(StringName(String(f.facilities[fac])))
-				row.add_child(UiTheme.make_wrapped(UiText.t("commission.facility_locked") % [fname, Names.of(d) if d != null else ""], 16, INK_DIM, STORY_W - 2.0 * PAD_X - 140.0))
-				var fid := f.id
-				var b := ScrollKey.make(UiText.t("commission.go_story"), func(): show_story(fid))
-				b.name = "Story_" + String(key)
-				row.add_child(b)
-		flow_row.add_child(_pinned(p, "pin_" + String(f.id)))
+		col.add_child(rep_row(f))
+
+
+func rep_row(f: FactionDef) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.name = "Rep_" + String(f.id)
+	UiTheme.stone(p, UiTheme.ART_STONE_SLATE, 12)
+	p.custom_minimum_size.y = ROW_H
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var row := UiTheme.hbox(16)
+	p.add_child(row)
+	row.add_child(_gap(Vector2(8, 0)))
+	var em := emblem(f.id, 72)
+	em.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(em)
+	var left := UiTheme.vbox(4)
+	left.alignment = BoxContainer.ALIGNMENT_CENTER
+	left.custom_minimum_size.x = 200
+	row.add_child(left)
+	var title := UiTheme.make_label(Names.of(f), 28, LIGHT)
+	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	title.add_theme_color_override("font_color", LIGHT)
+	left.add_child(title)
+	var rep_line := UiTheme.hbox(6)
+	left.add_child(rep_line)
+	rep_line.add_child(UiTheme.make_label(UiText.t("commission.sub_reputation"), 18, LIGHT))
+	var num := UiTheme.make_label(str(flow.meta.commissions.rep_of(f.id)), 28, UiTheme.STONE_GOLD)
+	num.name = "Rep"
+	num.add_theme_color_override("font_color", UiTheme.STONE_GOLD)
+	rep_line.add_child(num)
+	var scale_ := RepScale.make(flow.meta.commissions, f, flow.faith_defs)
+	scale_.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(scale_)
+	var gk := gift_key(f)
+	gk.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(gk)
+	row.add_child(_gap(Vector2(8, 0)))
+	return p
+
+
+## 389 第七节：这一方的【赠礼】键（约 100×56）：有可领的是主键（深底黄铜边金字）、右上红点（多于一份写份数）；没有的灰着，照样能悬停
+func gift_key(f: FactionDef) -> Button:
+	var due := Commissions.gifts_due(flow.meta, f)
+	var fid := f.id
+	var b := UiTheme.make_stone_button(UiText.t("gift.key"), func(): gift_requested.emit(fid), due > 0, GIFT_KEY, 18)
+	b.name = "Gift_" + String(f.id)
+	b.disabled = due <= 0
+	b.mouse_filter = Control.MOUSE_FILTER_STOP
+	b.tooltip_text = "\n".join([UiText.t("gift.tip_due") % due, UiText.t("gift.tip_every") % Commissions.gift_every(f),
+		UiText.t("gift.tip_next") % Commissions.rep_to_next_gift(flow.meta, f)])
+	RedDot.attach(b, due)
+	return b
 
 
 func _paper(w: float = CARD_W) -> PanelContainer:
@@ -505,25 +525,6 @@ func _paper(w: float = CARD_W) -> PanelContainer:
 	UiTheme.set_tone(p, UiTheme.tone_of(UiTheme.PANEL_PARCHMENT))
 	p.custom_minimum_size.x = w
 	p.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	return p
-
-
-## 这一方的牌头：纹章 72、名字、声望刻度（报告 389）
-func _head(f: FactionDef) -> PanelContainer:
-	var p := _paper(STORY_W)
-	p.name = "FactionHead"
-	var col := UiTheme.vbox(6)
-	p.add_child(col)
-	var book := flow.meta.commissions
-	var top := UiTheme.hbox(12)
-	col.add_child(top)
-	top.add_child(emblem(f.id, 72))
-	var right := UiTheme.vbox(4)
-	top.add_child(right)
-	var title := UiTheme.make_label(Names.of(f), 22, INK)
-	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
-	right.add_child(title)
-	right.add_child(track(book, f, STORY_W - 2.0 * PAD_X - 170.0, flow.faith_defs))
 	return p
 
 

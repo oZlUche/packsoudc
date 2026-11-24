@@ -20,6 +20,12 @@
       "effect": "finale"
     }
   ],
+  "gift_every": 25,
+  "gift_pool": [
+    {
+      "funds": 30
+    }
+  ],
   "facilities": {
     "bias": "cartographers_redraw"
   },

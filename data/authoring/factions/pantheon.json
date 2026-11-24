@@ -86,6 +86,12 @@
       "placeholder": true
     }
   ],
+  "gift_every": 25,
+  "gift_pool": [
+    {
+      "funds": 30
+    }
+  ],
   "permit": "pantheon_permit",
   "regular": [
     {

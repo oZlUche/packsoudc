@@ -283,6 +283,76 @@ static func node_text(n: Dictionary, faith_defs: Dictionary = {}, book: Commissi
 	return UiText.t("node.effect_" + eff)
 
 
+## 报告 389 第七节：这一方声望每攒多少多一份赠礼（[member FactionDef.gift_every]，0 = 没有赠礼）
+static func gift_every(f: FactionDef) -> int:
+	return maxi(0, f.gift_every) if f != null else 0
+
+
+## 这一方攒下、还没领的赠礼份数（声望 / [method gift_every] − 领过的）
+static func gifts_due(meta: MetaState, f: FactionDef) -> int:
+	var every := gift_every(f)
+	if meta == null or f == null or every <= 0:
+		return 0
+	return maxi(0, meta.commissions.rep_of(f.id) / every - int(meta.commissions.gifts_claimed.get(String(f.id), 0)))
+
+
+## 委托簿里列出的各方加起来还有几份没领（委托簿入口的红点）
+static func gifts_due_total(meta: MetaState) -> int:
+	var n := 0
+	for f in listed_factions():
+		n += gifts_due(meta, f)
+	return n
+
+
+## 下一份还差几点声望
+static func rep_to_next_gift(meta: MetaState, f: FactionDef) -> int:
+	var every := gift_every(f)
+	if meta == null or f == null or every <= 0:
+		return 0
+	return every - meta.commissions.rep_of(f.id) % every
+
+
+## 一份赠礼可能给的那几样（[member FactionDef.gift_pool]；作者 11-24 16:49：领的时候随机给一样；点【赠礼】弹窗列出来）
+static func gift_contents(f: FactionDef) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if f != null:
+		for g in f.gift_pool:
+			out.append(g)
+	return out
+
+
+## 点【领取】领一份：从 [method gift_contents] 里随机给一样 —— 金币直接加，道具进仓库（放不下进待入库）。
+## 返回 {"ok", "funds", "item": 道具 id, "items": 进了几件}
+static func claim_gift(meta: MetaState, f: FactionDef, items: ItemDatabase = null, rng: RandomNumberGenerator = null) -> Dictionary:
+	var out := {"ok": false, "funds": 0, "item": "", "items": 0}
+	if gifts_due(meta, f) <= 0:
+		return out
+	meta.commissions.gifts_claimed[String(f.id)] = int(meta.commissions.gifts_claimed.get(String(f.id), 0)) + 1
+	out["ok"] = true
+	var defs: Array = []
+	var pool := gift_contents(f)
+	var picked: Array[Dictionary] = []
+	if not pool.is_empty():
+		var r := rng
+		if r == null:
+			r = RandomNumberGenerator.new()
+			r.randomize()
+		picked.append(pool[r.randi_range(0, pool.size() - 1)])
+	for g in picked:
+		var funds := maxi(0, int(g.get("funds", 0)))
+		meta.funds += funds
+		out["funds"] = int(out["funds"]) + funds
+		var id := StringName(String(g.get("item", "")))
+		if id != &"" and items != null and items.get_def(id) != null:
+			for _i in maxi(1, int(g.get("count", 1))):
+				defs.append(items.get_def(id))
+			out["item"] = String(id)
+	if not defs.is_empty():
+		out["items"] = int(meta.grant_lossless(defs)["stored"])
+	meta.changed.emit()
+	return out
+
+
 ## 342 B2：剧情委托（不是模板）
 static func is_story(d: CommissionDef) -> bool:
 	return d != null and d.tier != CommissionDef.TEMPLATE
