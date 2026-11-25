@@ -40,7 +40,7 @@ static func run_content(t: TestCase) -> void:
 		return
 	t.eq([f.arrives, f.arrive_after, f.start_rep], [Commissions.ARRIVES_EXTRACTIONS, 3, 5], "教程后第 3 次成功撤离；到来时 5 点")
 	t.eq(Pantheon.gods(FaithDef.load_all()), [&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"] as Array[StringName], "六座神殿，新教不列")
-	t.eq([&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"].map(func(g: StringName) -> bool: return Pantheon.temple_ready(g)), [true, true, true, false, false, false], "牌表写好的三位能解锁；技巧、狩猎、大地还没落成")
+	t.eq([&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"].map(func(g: StringName) -> bool: return Pantheon.temple_ready(g)), [true, true, true, true, false, false], "牌表写好的四位能解锁；狩猎、大地还没落成")
 	t.eq([Pantheon.blurb(&"brute"), Pantheon.blurb(&"sun"), Pantheon.blurb(&"nature")], ["热衷战斗、牺牲与鲜血之神", "祂掌管昼与夜，构筑天地的秩序", ""], "悬浮窗：作者给的两句，其余留空")
 	t.eq(Commissions.nodes_of(f).filter(func(n: Dictionary) -> bool: return StringName(String(n.get("effect", ""))) == Pantheon.EFFECT_TEMPLE).map(func(n: Dictionary) -> int: return int(n["rep"])), [0], "直接给解锁机会的节点只有 0 点")
 	var grants := Commissions.of_faction(Pantheon.FACTION).filter(func(d: CommissionDef) -> bool: return d.grants == Pantheon.GRANT_TEMPLE)
@@ -156,7 +156,7 @@ static func run_tiers(t: TestCase) -> void:
 	book.entries["pantheon_temple_25"] = {"state": CommissionBook.DONE, "times": 1}
 	t.eq(Pantheon.chances(f.meta), 1, "做完 25 的委托：多一次")
 	t.check(Pantheon.can_unlock_any(f.meta), "有机会、有落成的：能解锁")
-	t.check(not Pantheon.can_unlock(f.meta, &"skill"), "技巧之神没落成：不能解锁")
+	t.check(not Pantheon.can_unlock(f.meta, &"hunt"), "狩猎之神没落成：不能解锁")
 	t.check(Pantheon.unlock(f.meta, &"nature"), "解锁自然之神")
 	t.check(not bool(Pantheon.access(f.meta)["convert"]), "30 点还不能改信")
 	t.eq([Pantheon.access(f.meta)["rerolls"], Pantheon.access(f.meta)["skips"]], [0, 0], "30 点：没有重选、跳过")
@@ -173,9 +173,13 @@ static func run_tiers(t: TestCase) -> void:
 		book.entries[cid] = {"state": CommissionBook.DONE, "times": 1}
 	t.eq(Pantheon.chances(f.meta), 3, "做完 100 / 125 / 150 的委托：三次（50 的委托没做）")
 	t.check(Pantheon.unlock(f.meta, &"brute"), "解锁蛮神")
-	t.check([&"skill", &"hunt", &"earth"].all(func(g: StringName) -> bool: return not Pantheon.can_unlock(f.meta, g)), "没落成的三位有机会也不能解锁")
+	t.check([&"hunt", &"earth"].all(func(g: StringName) -> bool: return not Pantheon.can_unlock(f.meta, g)), "没落成的两位有机会也不能解锁")
 	t.eq(Pantheon.chances(f.meta), 2, "机会留着")
+	t.check(Pantheon.can_unlock(f.meta, &"skill") and Pantheon.can_unlock_any(f.meta), "技巧之神落成了：还能解锁")
+	var held := f.meta.temples.duplicate()
+	f.meta.temples.append(&"skill")
 	t.check(not Pantheon.can_unlock_any(f.meta), "只剩没落成的神殿：没有能解锁的（营地不挂红点）")
+	f.meta.temples = held
 	var saved := MetaState.from_dict(f.meta.to_dict(), c.items, GameFlow.load_meta_rules())
 	t.eq(saved.temples if saved != null else [] as Array[StringName], [&"sun", &"nature", &"brute"] as Array[StringName], "存档带着解锁的先后")
 	f.choose_god(&"nature")
@@ -331,7 +335,7 @@ static func run_pick_panel(t: TestCase) -> void:
 	t.check(nature != null and (nature.find_child("Name", true, false) as Label).text == UiText.t("pantheon.unknown"), "没解锁的写？？？？")
 	t.check(nature != null and (nature.find_child("Image", true, false) as TextureRect).texture == null, "不露神像")
 	t.check(not pick.choose(&"nature") and got.is_empty(), "点不了")
-	t.check(not pick.choose(&"skill") and got.is_empty(), "技巧之神没落成，点不了")
+	t.check(not pick.choose(&"skill") and got.is_empty(), "技巧之神没解锁，点不了")
 	t.check(pick.choose(&"brute") and got == [&"brute"] and f.meta.pantheon_choice == &"brute", "选蛮神")
 	t.check(pick.choose(&"") and f.meta.pantheon_choice == &"", "选无信者")
 	var view = PP.new()
@@ -348,9 +352,9 @@ static func run_pick_panel(t: TestCase) -> void:
 	t.check(unlock_key != null and unlock_key.disabled, "没有机会：【确认解锁】灰着")
 	f.meta.commissions.rep[String(Pantheon.FACTION)] = 100
 	f.meta.commissions.entries["pantheon_temple_100"] = {"state": CommissionBook.DONE, "times": 1}     # 100 点的机会走引导委托
-	view.select(&"skill")
+	view.select(&"hunt")
 	unlock_key = view.find_child("Unlock", true, false)
-	t.check(unlock_key.disabled and (view.find_child("Chances", true, false) as Label).text == UiText.t("pantheon.not_built"), "选中没落成的技巧之神：写「神殿尚未落成」、不能确认")
+	t.check(unlock_key.disabled and (view.find_child("Chances", true, false) as Label).text == UiText.t("pantheon.not_built"), "选中没落成的狩猎之神：写「神殿尚未落成」、不能确认")
 	view.select(&"nature")
 	unlock_key = view.find_child("Unlock", true, false)
 	t.check(not unlock_key.disabled, "选中自然之神：能确认")

@@ -526,6 +526,7 @@ const TEXT := {
 	"level.title": {"zh": "升到 %d 级", "en": "Level %d"},
 	"level.title_opening": {"zh": "进入对局", "en": "Run start"},
 	"level.pick_of": {"zh": "这一张是第 %d 级的", "en": "This pick is for level %d"},
+	"level.convert_pick": {"zh": "改信重选：还剩 %d 次", "en": "Conversion repick: %d left"},
 	"level.left": {"zh": "还要选 %d 次", "en": "%d more to pick"},
 	"level.qual_opening": {"zh": "进入对局：选一张质变牌", "en": "Run start: pick a Transformation"},
 	"level.qual_of": {"zh": "第 %d 级：选一张质变牌", "en": "Level %d: pick a Transformation"},

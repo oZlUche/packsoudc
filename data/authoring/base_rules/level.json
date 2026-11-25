@@ -776,8 +776,5 @@
       "kind": "god",
       "god": "nature"
     }
-  },
-  "closed_gods": [
-    "skill"
-  ]
+  }
 }
