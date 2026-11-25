@@ -268,7 +268,7 @@ static func frame_pick_cards(t: TestCase, root: Window) -> void:
 		var col := (c.find_child("Body", true, false) as Control).get_parent() as Control
 		if col.get_combined_minimum_size().x > LevelPickPanel.CARD_W - 28 + 0.5:
 			wide.append("%s %.0f" % [cid, col.get_combined_minimum_size().x])
-		c.free()
+		c.queue_free()
 	t.eq(wide, [] as Array[String], "每张牌的牌名和说明都不比卡里宽")
 	panel.queue_free()
 	UiText.lang = keep_lang
