@@ -9,7 +9,6 @@ display_name = "灰灯食堂"
 entries = {
 "bear_liver": {
 "category": "meat",
-"flat": 6,
 "satiety": 0
 },
 "bear_paw": {
@@ -72,6 +71,10 @@ entries = {
 "pct": 7,
 "satiety": 0
 },
+"fire_gland": {
+"category": "meat",
+"satiety": 0
+},
 "fowl_leg": {
 "category": "meat",
 "pct": 5,
@@ -85,6 +88,10 @@ entries = {
 "fragrant_root": {
 "category": "veg",
 "flat": 0.25,
+"satiety": 0
+},
+"frost_gland": {
+"category": "meat",
 "satiety": 0
 },
 "game_meat": {
@@ -199,7 +206,10 @@ entries = {
 },
 "viper_gall": {
 "category": "meat",
-"flat": 2,
+"satiety": 0
+},
+"viper_gland": {
+"category": "meat",
 "satiety": 0
 },
 "vulture_breast": {
@@ -224,7 +234,6 @@ entries = {
 },
 "wolf_heart": {
 "category": "meat",
-"flat": 3,
 "satiety": 0
 },
 "wolf_shank": {

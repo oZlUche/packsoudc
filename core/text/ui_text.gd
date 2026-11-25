@@ -2131,6 +2131,20 @@ const TEXT := {
 	"act.eat": {"zh": "进食", "en": "Eat"},     # 388 啖肉吮血
 	"bag.ate": {"zh": "吃下%s：生命上限 +%s", "en": "Ate %s: Max Health +%s"},
 	"bag.ate_stamina": {"zh": "吃下%s：生命上限 +%s，耐力上限 +%s", "en": "Ate %s: Max Health +%s, Max Stamina +%s"},
+	"bag.ate_organ": {"zh": "吃下%s：%s", "en": "Ate %s: %s"},     # 395 器官
+	"bag.eat_tip": {"zh": "生命上限 +%s", "en": "Max Health +%s"},
+	"trait.sep": {"zh": "，", "en": ", "},
+	"trait.damage": {"zh": "造成的伤害 %s%%", "en": "Damage dealt %s%%"},
+	"trait.haste": {"zh": "急速 %s%%", "en": "Haste %s%%"},
+	"trait.max_hp": {"zh": "生命上限 %s", "en": "Max Health %s"},
+	"trait.regen_hp": {"zh": "战斗中每秒回复生命 %s", "en": "Health regen in battle %s/s"},
+	"trait.taken": {"zh": "受到的伤害 %s%%", "en": "Damage taken %s%%"},
+	"trait.regen_stamina": {"zh": "耐力回复 %s%%", "en": "Stamina regen %s%%"},
+	"trait.fire_hit": {"zh": "每次攻击额外火焰伤害 %s", "en": "Extra fire damage per attack %s"},
+	"trait.poison_chance": {"zh": "每次攻击施加 1 层中毒的几率 %s%%", "en": "Chance per attack to apply 1 Poison %s%%"},
+	"trait.heal": {"zh": "受到的治疗 %s%%", "en": "Healing received %s%%"},
+	"canteen.traits": {"zh": "整局：%s", "en": "All run: %s"},     # 395
+	"card.organs": {"zh": "器官的特性：%s", "en": "Organ traits: %s"},
 	"act.to_pack": {"zh": "放进背包", "en": "Into pack"},
 	"act.take": {"zh": "拾取", "en": "Take"},
 	"act.take_all": {"zh": "全部拾取 ×%d", "en": "Take all ×%d"},     # 277 第 6 条：地上一件的按钮

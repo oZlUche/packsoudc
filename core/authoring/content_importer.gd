@@ -724,6 +724,13 @@ static func import_item(data: Dictionary, ctx: Context, report: ImportReport) ->
 	_validate_power(def, ctx, report)
 	_validate_block(def, report)
 	_validate_wild(def, report)
+	for k in def.eat_trait:     # 395：器官的特性
+		if not OrganTraits.KEYS.has(StringName(String(k))):
+			report.error("eat_trait.%s" % k, "认不得的特性（%s）" % " / ".join(OrganTraits.KEYS))
+		elif not (def.eat_trait[k] is float or def.eat_trait[k] is int):
+			report.error("eat_trait.%s" % k, "得是数")
+	if not def.eat_trait.is_empty() and not def.tags.has(BruteRagePerk.FLESH_TAG):
+		report.error("eat_trait", "只有【血肉】能进食，带特性的得有血肉标签")
 	ctx.register_item(def)
 	return def
 
@@ -1274,7 +1281,11 @@ static func import_canteen_rules(data: Dictionary, ctx: Context, report: ImportR
 			report.error(at + ".category", "得是 staple / meat / veg / fruit 之一")
 		var has_flat := row.has("flat")
 		var has_pct := row.has("pct")
-		if has_flat == has_pct:
+		var organ: ItemDef = ctx.items.get(StringName(String(key)), null) if not ctx.items.is_empty() else null
+		if organ != null and BruteRagePerk.is_organ(organ):     # 395：器官下锅给特性（写在道具上），不写 flat / pct
+			if has_flat or has_pct:
+				report.error(at, "器官下锅给的是特性（道具的 eat_trait），别写 flat / pct")
+		elif has_flat == has_pct:
 			report.error(at, "固定值 flat 和百分比 pct 只写一样")
 		elif float(row.get("flat", row.get("pct", 0))) <= 0.0:
 			report.error(at, "加成得是正数")

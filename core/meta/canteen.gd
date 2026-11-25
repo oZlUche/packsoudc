@@ -144,11 +144,19 @@ static func meal_of(items: Array, rules: CanteenRules = null) -> Dictionary:
 	var satiety := 0
 	var count := 0
 	var ids := {}
+	var organs := {}
 	for inst in items:
 		var it := inst as ItemInstance
 		if it == null or not is_ingredient(it.def):
 			continue
 		var e := r.entry(it.def.id)
+		if OrganTraits.is_organ(it.def):     # 395：器官下锅给特性，放几件叠几次
+			count += 1
+			ids[String(it.def.id)] = int(ids.get(String(it.def.id), 0)) + 1
+			for k in it.def.eat_trait:
+				organs[String(k)] = float(organs.get(String(k), 0.0)) + float(it.def.eat_trait[k])
+			satiety += maxi(0, int(e.get("satiety", 0)))
+			continue
 		var stat: StringName = STAT_OF.get(StringName(String(e.get("category", ""))), &"")
 		if stat == &"":
 			continue
@@ -164,7 +172,12 @@ static func meal_of(items: Array, rules: CanteenRules = null) -> Dictionary:
 		flat[k] = clampf(float(flat[k]), 0.0, CAP_FLAT)
 	for k in pct:
 		pct[k] = clampf(float(pct[k]), 0.0, CAP_PCT)
-	return {"flat": flat, "pct": pct, "satiety": satiety, "count": count, "ids": ids}
+	var out := {"flat": flat, "pct": pct, "satiety": satiety, "count": count, "ids": ids}
+	if not organs.is_empty():
+		for k in organs:     # 防溢出（同上，只防坏数据）：特性本身不设上限；键用 String，存档读回来一样
+			organs[k] = clampf(float(organs[k]), -CAP_PCT, CAP_PCT)
+		out["traits"] = organs
+	return out
 
 
 ## 锅里这一锅
@@ -252,6 +265,9 @@ static func final_lines(ch: CharacterDef, meal: Dictionary) -> Array[String]:
 			continue
 		var b := base_of(ch, stat)
 		out.append(UiText.t("canteen.final") % [UiText.t("canteen.stat_" + String(stat)), num(b), num(b + gain_for(ch, meal, stat))])
+	var traits: Variant = meal.get("traits", {})
+	if traits is Dictionary and not (traits as Dictionary).is_empty():     # 395：器官的特性（好处在前），整局有效
+		out.append(UiText.t("canteen.traits") % OrganTraits.line(traits))
 	return out
 
 

@@ -25,5 +25,9 @@
     "base_stats": {
       "regen_hp": 1
     }
+  },
+  "eat_trait": {
+    "damage": 8,
+    "taken": 4
   }
 }

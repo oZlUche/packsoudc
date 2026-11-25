@@ -36,10 +36,8 @@
     "meat_scrap",
     "game_meat"
   ],
-  "loot_bonus": [
-    "wolf_shank"
-  ],
   "loot_chance": {
+    "wolf_shank": 0.5,
     "wolf_heart": 0.3
   }
 }

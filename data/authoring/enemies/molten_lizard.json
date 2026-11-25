@@ -34,7 +34,7 @@
   ],
   "species": "beast",
   "bagless": true,
-  "loot_bonus": [
-    "lizard_tail"
-  ]
+  "loot_chance": {
+    "lizard_tail": 0.5
+  }
 }
