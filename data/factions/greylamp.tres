@@ -52,6 +52,7 @@ nodes = Array[Dictionary]([{
 "value": [10, 8]
 }])
 gift_every = 25
+note_rep = 3
 gift_pool = Array[Dictionary]([{
 "funds": 30
 }])

@@ -4,7 +4,7 @@
 ## - 没接的纸条贴出时带 [constant LIFE] 局；每结算一局减 1，到 0 撤下。接下之后不再到期，进「手头」（[constant Commissions.SLOTS] 份）。
 ## - 每局回营：先扣时限，再给每个空钉位掷一次（[constant REFILL_CHANCE]），补完栏上没接的少于 [constant FLOOR] 张就补到够。
 ## - 抽什么：开放了常规的几方轮着来（优先栏上还没有的那方）；目标取自这一方的 [member FactionDef.regular]，
-##   再掷短 / 常规 / 长单（[constant BANDS]），数量在那一档里掷。酬金 = 件数 × 单份酬值 × 档系数（[constant BAND_MULT]），声望 +1。
+##   再掷短 / 常规 / 长单（[constant BANDS]），数量在那一档里掷。酬金 = 件数 × 单份酬值 × 档系数（[constant BAND_MULT]），声望按这一方的 [member FactionDef.note_rep]（389 第八节）。
 ## - 全用「市场种子 + 第几局」定死：读档重进刷不出别的。
 ## 纸条存在 [member CommissionBook.notes]（id → 纸条），[method Commissions.def] 认它（[method def_of]）。
 class_name NoticeBoard
@@ -35,6 +35,8 @@ static func def_of(id: String, note: Dictionary) -> CommissionDef:
 	d.faction = StringName(String(note.get("faction", "")))
 	d.tier = CommissionDef.TEMPLATE
 	d.min_rep = 0
+	var f := Commissions.faction(d.faction)
+	d.reputation = maxi(1, f.note_rep) if f != null else 1
 	d.funds = int(note.get("funds", 0))
 	var band := clampi(int(note.get("band", 0)), 0, 2)
 	var nm := Names.pick(note.get("names", {}) if note.get("names", null) is Dictionary else {}, String(note.get("name", "")))

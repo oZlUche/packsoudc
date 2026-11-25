@@ -339,7 +339,7 @@ static func run_board(t: TestCase) -> void:
 
 
 static func run_board_hand_in(t: TestCase) -> void:
-	t.begin("342 B2 · 告示栏交货单：接下、营地交够办成；声望 +1、酬金；这一局办成的纸条留到下一局结算才清掉")
+	t.begin("342 B2 · 告示栏交货单：接下、营地交够办成；声望按这一方 note_rep（389 第八节，现在 3）、酬金；这一局办成的纸条留到下一局结算才清掉")
 	ItemInstance.reset_uid_counter()
 	var c := TestSupport.load_content("free_mode")
 	var f := Support.flow(c, PREFIX)
@@ -358,7 +358,8 @@ static func run_board_hand_in(t: TestCase) -> void:
 	var funds0 := f.meta.funds
 	var r := f.report_commission(&"note_1")
 	t.check(bool(r["done"]), "交够办成")
-	t.eq(book.rep_of(&"legion"), 26, "声望 +1")
+	t.eq(Commissions.reputation_of(d), Commissions.faction(&"legion").note_rep, "纸条的声望取这一方的 note_rep")
+	t.eq(book.rep_of(&"legion"), 28, "声望 +3")
 	t.eq(f.meta.funds - funds0, 17, "酬金")
 	t.check(book.notes.has("note_1"), "这一局还留着（结算屏要写名字）")
 	t.eq(String(book.receipts[0].get("name", "")), Names.of(d), "回执记了名字")
