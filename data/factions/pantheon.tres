@@ -12,79 +12,112 @@ display_names = {
 order = 6
 arrives = &"extractions"
 arrive_after = 3
+start_rep = 5
 nodes = Array[Dictionary]([{
-"effect": "god",
-"id": "god_brute",
+"effect": "temple",
+"id": "temple_1",
+"kind": "open",
+"rep": 0
+}, {
+"effect": "commission",
+"id": "rite",
 "kind": "open",
 "rep": 0,
-"value": "brute"
+"value": "pantheon_first_rite"
 }, {
-"effect": "inquiry",
-"id": "inquiry",
-"kind": "open",
-"rep": 10
-}, {
-"effect": "god",
-"id": "god_nature",
-"kind": "open",
-"rep": 10,
-"value": "nature"
-}, {
-"effect": "god",
-"id": "god_sun",
-"kind": "open",
-"rep": 20,
-"value": "sun"
-}, {
-"effect": "finale",
-"id": "finale",
+"effect": "regular",
+"id": "regular",
 "kind": "open",
 "rep": 25
+}, {
+"effect": "commission",
+"id": "temple_rite_25",
+"kind": "open",
+"rep": 25,
+"value": "pantheon_temple_25"
+}, {
+"effect": "pick_aids",
+"id": "reroll",
+"kind": "open",
+"rep": 40,
+"value": [1, 0]
+}, {
+"effect": "commission",
+"id": "temple_rite_50",
+"kind": "open",
+"rep": 50,
+"value": "pantheon_temple_50"
 }, {
 "effect": "faith_xp",
 "id": "faith_xp",
 "kind": "boost",
-"rep": 25,
-"value": 0.1
+"rep": 50,
+"value": 0.2
 }, {
-"effect": "god",
-"id": "god_skill",
+"effect": "pick_aids",
+"id": "skip",
 "kind": "open",
-"placeholder": true,
-"rep": 40,
-"value": "skill"
+"rep": 60,
+"value": [0, 1]
+}, {
+"effect": "pick_aids",
+"id": "aids_70",
+"kind": "boost",
+"rep": 70,
+"value": [1, 1]
 }, {
 "effect": "altar_bless",
 "id": "altar_bless",
 "kind": "open",
-"rep": 50
+"rep": 75
 }, {
-"effect": "god",
-"id": "god_hunt",
-"kind": "open",
-"placeholder": true,
-"rep": 60,
-"value": "hunt"
+"effect": "pick_aids",
+"id": "aids_90",
+"kind": "boost",
+"rep": 90,
+"value": [2, 2]
 }, {
-"effect": "god",
-"id": "god_earth",
+"effect": "temple",
+"id": "temple_4",
 "kind": "open",
-"placeholder": true,
-"rep": 80,
-"value": "earth"
-}, {
-"effect": "",
-"id": "rank_100",
-"kind": "open",
-"placeholder": true,
 "rep": 100
+}, {
+"effect": "temple",
+"id": "temple_5",
+"kind": "open",
+"rep": 125
+}, {
+"effect": "temple",
+"id": "temple_6",
+"kind": "open",
+"rep": 150
 }])
 gift_every = 25
 note_rep = 3
 gift_pool = Array[Dictionary]([{
 "funds": 30
 }])
-permit = &"pantheon_permit"
+temples = Array[Dictionary]([{
+"blurb": "热衷战斗、牺牲与鲜血之神",
+"blurbs": {
+"en": "God of battle, sacrifice and blood"
+},
+"god": "brute"
+}, {
+"god": "nature"
+}, {
+"blurb": "祂掌管昼与夜，构筑天地的秩序",
+"blurbs": {
+"en": "Keeper of day and night, who sets the order of heaven and earth"
+},
+"god": "sun"
+}, {
+"god": "skill"
+}, {
+"god": "hunt"
+}, {
+"god": "earth"
+}])
 regular = Array[Dictionary]([{
 "goal": "altar_offer",
 "name": "献祭",

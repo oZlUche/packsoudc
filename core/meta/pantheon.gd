@@ -3,16 +3,16 @@
 ##
 ## 规则（作者 2026-11-22 定方向，数值是初值）：
 ## - 新档开始时不在营地；教程之后第 3 次成功撤离结算时来（[member FactionDef.arrive_after]）。没来之前这一局没有信仰（[method faith_open]）。
-## - 报告 389（作者 2026-11-24）：没有档位，按万神院的声望节点（[member FactionDef.nodes]）：0 蛮神、10 自然之神、20 日神；25 奉神的局经验值 +10%；
-##   50 神坛上有「赐福」。技巧、狩猎、大地在 40 / 60 / 80 占位（刻度上看得见、显示「？？？？」，到了也不能选，等各自的牌表写好）；100 留空。
-## - 老档奉过的神不看声望也能选（[member MetaState.gods_worshipped]），占位的三位除外。
+## - 报告 396（作者 2026-11-25 19:25）：神殿自选解锁。六座神殿（[member FactionDef.temples]）；声望节点和两份引导委托给「解锁一座神殿」的机会
+##   （0、25 和 50 的委托、100、125、150），玩家点一座、【确认解锁】（[method unlock]）。牌表没写好的神（[method temple_ready]）看得见、不能解锁。
+##   其余节点：40【重选】、60【跳过】（70 / 90 加次数）、50 经验 +20%、75 神坛「赐福」；到来时声望 5（[member FactionDef.start_rep]）。
+## - 老档：原来能选的神直接算解锁（[method migrate_temples]）。
 ## - 选神不要代价；出征时这位神的信物自动放进背包，局结束后不带回仓库。
 class_name Pantheon
 extends RefCounted
 
 const FACTION := &"pantheon"
-## 节点效果（[constant Commissions.EFFECTS]）：`god`（参数 = 神 id）这位神能选；下面两项是经验加成和赐福
-const EFFECT_GOD := &"god"
+## 节点效果（[constant Commissions.EFFECTS]）：经验加成和赐福（396 起神不再挂在节点上，改成自选解锁神殿）
 const SERVICE_XP := &"faith_xp"
 const SERVICE_BLESS := &"altar_bless"
 ## 原来第五档的「开局质变那一次多一张」：作者 2026-11-24 定第五层先留空，现在没有节点开它（逻辑留着，[member RunState.opening_extra_choice]）
@@ -21,6 +21,13 @@ const SERVICE_OPENING := &"opening_pick"
 const XP_BONUS := 0.10
 ## 局外旗标：老档的万神院迁移做过了（新档建档时就标上）
 const MIGRATED := &"pantheon_migrated"
+## 396：老档的神殿迁移做过了（新档建档时就标上）
+const TEMPLES_MIGRATED := &"pantheon_temples_migrated"
+## 396：节点效果「多一次解锁神殿的机会」；委托上写 `grants: temple` 也算一次
+const EFFECT_TEMPLE := &"temple"
+const GRANT_TEMPLE := &"temple"
+## 396：节点效果「重选 / 跳过」（`value` = [重选次数, 跳过次数]，到了的几个相加）
+const EFFECT_PICK_AIDS := &"pick_aids"
 
 
 static func faction() -> FactionDef:
@@ -45,41 +52,101 @@ static func has_service(meta: MetaState, service: StringName) -> bool:
 	return arrived(meta) and Commissions.has_effect(meta.commissions, faction(), service)
 
 
-## 这位神的那个节点（没有 = 空）
-static func god_node(faith_id: StringName) -> Dictionary:
-	return Commissions.node_with(faction(), EFFECT_GOD, faith_id)
+## 396：神殿 —— 页上的排法（[member FactionDef.temples]）。[param faith_defs] 给了就只列「神」那一类
+static func gods(faith_defs: Dictionary = {}) -> Array[StringName]:
+	var out: Array[StringName] = []
+	var f := faction()
+	if f == null:
+		return out
+	for t in f.temples:
+		var fid := StringName(String((t as Dictionary).get("god", "")))
+		var def := faith_defs.get(fid, null) as FaithDef
+		if fid != &"" and not out.has(fid) and (faith_defs.is_empty() or (def != null and def.camp == FaithDef.Camp.GODS)):
+			out.append(fid)
+	return out
 
 
-## 这位神要多少声望才开（不在刻度上 = -1）
-static func god_rep(faith_id: StringName) -> int:
-	var n := god_node(faith_id)
-	return int(n.get("rep", -1)) if not n.is_empty() else -1
+## 这座神殿悬浮窗那一句（作者写；没写 = 空）
+static func blurb(faith_id: StringName) -> String:
+	var f := faction()
+	if f == null:
+		return ""
+	for t in f.temples:
+		var row := t as Dictionary
+		if StringName(String(row.get("god", ""))) == faith_id:
+			return Names.pick(row.get("blurbs", {}) if row.get("blurbs", null) is Dictionary else {}, String(row.get("blurb", "")))
+	return ""
 
 
-## 这位神现在只是占位（刻度上看得见、到了也不能选）
-static func god_placeholder(faith_id: StringName) -> bool:
-	return Commissions.is_placeholder(god_node(faith_id))
+## 这位神的牌表写好了没有（升级选牌里有祂的牌）：没写好的神殿看得见、不能解锁（「神殿尚未落成」）
+static func temple_ready(faith_id: StringName) -> bool:
+	if faith_id == &"":
+		return false
+	var r := LevelRules.load_rules()
+	for cid in r.card_ids():
+		if r.god_of(cid) == faith_id:
+			return true
+	return false
 
 
-## 这位神现在能不能选：节点到了，或者这份存档奉过祂；占位的一律不能选
+## 一共挣到几次解锁机会：到了的「解锁一座神殿」节点 + 办成的、写着 `grants: temple` 的委托
+static func chances_earned(meta: MetaState) -> int:
+	if not arrived(meta):
+		return 0
+	var n := Commissions.reached_with(meta.commissions, faction(), EFFECT_TEMPLE).size()
+	for d in Commissions.defs():
+		if d.faction == FACTION and d.grants == GRANT_TEMPLE and meta.commissions.is_done(d.id):
+			n += 1
+	return n
+
+
+## 手里还有几次没用（老档先解锁的可能比挣到的多，算 0）
+static func chances(meta: MetaState) -> int:
+	if meta == null:
+		return 0
+	return maxi(0, chances_earned(meta) - meta.temples.size())
+
+
+## 这座神殿现在能不能点【确认解锁】：有机会、牌表写好了、还没解锁
+static func can_unlock(meta: MetaState, faith_id: StringName) -> bool:
+	return chances(meta) > 0 and gods().has(faith_id) and temple_ready(faith_id) and not meta.temples.has(faith_id)
+
+
+## 【确认解锁】。返回解锁成了没有
+static func unlock(meta: MetaState, faith_id: StringName) -> bool:
+	if not can_unlock(meta, faith_id):
+		return false
+	meta.temples.append(faith_id)
+	meta.changed.emit()
+	return true
+
+
+## 这位神现在能不能奉：万神院到了、神殿解锁了、牌表写好了
 static func god_open(meta: MetaState, faith_id: StringName) -> bool:
 	if not arrived(meta) or faith_id == &"":
 		return false
-	var n := god_node(faith_id)
-	if n.is_empty() or Commissions.is_placeholder(n):
-		return false
-	return meta.gods_worshipped.has(faith_id) or Commissions.reached(meta.commissions, faction(), n)
+	return meta.temples.has(faith_id) and temple_ready(faith_id)
 
 
-## 万神院里列出的神（按刻度的先后，占位的也列）；[param faith_defs] 是信仰表（id → [FaithDef]），新教这类不是神的不列
-static func gods(faith_defs: Dictionary) -> Array[StringName]:
+## 396 老档：在节点开神的那一版能选的神（奉过的、声望到了 0 蛮神 / 10 自然 / 20 日神），直接算解锁了。只做一次（[constant TEMPLES_MIGRATED]）
+static func migrate_temples(meta: MetaState) -> Array[StringName]:
 	var out: Array[StringName] = []
-	for n in Commissions.nodes_of(faction()):
-		if StringName(String(n.get("effect", ""))) != EFFECT_GOD:
-			continue
-		var fid := StringName(String(n.get("value", "")))
-		var def := faith_defs.get(fid, null) as FaithDef
-		if fid != &"" and not out.has(fid) and (faith_defs.is_empty() or (def != null and def.camp == FaithDef.Camp.GODS)):
+	if meta == null or meta.flag(TEMPLES_MIGRATED) != 0:
+		return out
+	meta.set_flag(TEMPLES_MIGRATED)
+	if not arrived(meta):
+		return out
+	var r := meta.commissions.rep_of(FACTION)
+	var f := faction()
+	if f != null and r < f.start_rep:
+		meta.commissions.rep[String(FACTION)] = f.start_rep
+	var was := meta.gods_worshipped.duplicate()
+	for pair in [[&"brute", 0], [&"nature", 10], [&"sun", 20]]:
+		if r >= int(pair[1]):
+			was.append(pair[0])
+	for fid in gods():
+		if was.has(fid) and temple_ready(fid) and not meta.temples.has(fid):
+			meta.temples.append(fid)
 			out.append(fid)
 	return out
 
@@ -124,16 +191,22 @@ static func charm_of(items: ItemDatabase, faith_id: StringName) -> ItemDef:
 static func access(meta: MetaState) -> Dictionary:
 	var on := arrived(meta)
 	var xp := 0.0
+	var aids := [0, 0]
 	if on:
 		for n in Commissions.reached_with(meta.commissions, faction(), SERVICE_XP):
 			xp = maxf(xp, float(n.get("value", XP_BONUS)))
+		for n in Commissions.reached_with(meta.commissions, faction(), EFFECT_PICK_AIDS):
+			var v: Variant = n.get("value", [])
+			if v is Array and (v as Array).size() >= 2:
+				aids[0] += int(v[0])
+				aids[1] += int(v[1])
 	return {"enabled": on, "bless": on and has_service(meta, SERVICE_BLESS), "xp_bonus": xp,
-		"opening_extra": on and has_service(meta, SERVICE_OPENING)}
+		"opening_extra": on and has_service(meta, SERVICE_OPENING), "rerolls": aids[0], "skips": aids[1]}
 
 
 ## 不受限制的开关（教程章、老规矩）
 static func full_access() -> Dictionary:
-	return {"enabled": true, "bless": true, "xp_bonus": 0.0, "opening_extra": false}
+	return {"enabled": true, "bless": true, "xp_bonus": 0.0, "opening_extra": false, "rerolls": 0, "skips": 0}
 
 
 ## 出征了，记下奉的是哪位神

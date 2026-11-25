@@ -1,5 +1,5 @@
 ## 报告 389 定稿：声望刻度上的一颗节点圆章（直径 40；通知里 64）。图标按种类用代码画（以后要正式小图再找美术）：
-## 委托门槛 = 信封、开放 = 钥匙、提升 = 双上箭头、开放某位神 = 那位神的信仰徽记（`faith/<神>`）；留空 = 虚线圈加「?」。
+## 委托门槛 = 信封、开放 = 钥匙、解锁神殿 = 小神殿（396）、提升 = 双上箭头、开放某位神 = 那位神的信仰徽记（`faith/<神>`）；留空 = 虚线圈加「?」。
 ## 到了：深底黄铜圈亮图标；没到：灰底灰圈灰图标，神的徽记 35% 不透明
 class_name RepMedal
 extends Control
@@ -33,13 +33,15 @@ static func make(n: Dictionary, p_lit: bool, _faith_defs: Dictionary = {}) -> Re
 	return m
 
 
-## 图标种类：hidden / god / letter（委托门槛）/ key（开放）/ up（提升）
+## 图标种类：hidden / god / temple（396 解锁神殿）/ letter（委托门槛）/ key（开放）/ up（提升）
 static func icon_of(n: Dictionary) -> String:
 	if Commissions.is_placeholder(n):
 		return "hidden"
 	var eff := String(n.get("effect", ""))
 	if eff == "god":
 		return "god"
+	if eff == "temple":     # 396：多一次解锁神殿的机会
+		return "temple"
 	if eff == "inquiry" or eff == "finale":
 		return "letter"
 	return "up" if String(n.get("kind", "")) == String(Commissions.KIND_BOOST) else "key"
@@ -74,6 +76,11 @@ func _draw() -> void:
 			if _god != null:
 				var side := r * 1.5
 				draw_texture_rect(_god, Rect2(c - Vector2(side, side) * 0.5, Vector2(side, side)), false, Color(1, 1, 1, 1.0 if lit else 0.35))
+		"temple":     # 三角山墙 + 三根柱 + 台基
+			draw_polyline(PackedVector2Array([c + Vector2(-s, -s * 0.35), c + Vector2(0, -s * 0.9), c + Vector2(s, -s * 0.35), c + Vector2(-s, -s * 0.35)]), ink, w)
+			for dx in [-s * 0.65, 0.0, s * 0.65]:
+				draw_line(c + Vector2(dx, -s * 0.2), c + Vector2(dx, s * 0.6), ink, w)
+			draw_line(c + Vector2(-s, s * 0.8), c + Vector2(s, s * 0.8), ink, w)
 		"letter":
 			var box := Rect2(c + Vector2(-s, -s * 0.66), Vector2(2.0 * s, 1.33 * s))
 			draw_rect(box, ink, false, w)

@@ -96,6 +96,7 @@ static func frame_faith_bar(t: TestCase, root: Window) -> void:
 	var game = _game(root)
 	var flow: GameFlow = game.flow
 	flow.meta.commissions.arrived[String(Pantheon.FACTION)] = 0
+	t.check(Pantheon.unlock(flow.meta, &"brute"), "396：先在万神院解锁蛮神的神殿")
 	flow.new_run()
 	var setup = game.base()
 	var fb: FoldBar = setup.bar(setup.BAR_FAITH)
@@ -109,7 +110,7 @@ static func frame_faith_bar(t: TestCase, root: Window) -> void:
 			open_god = g
 		elif not Pantheon.god_open(flow.meta, g) and locked_god == &"":
 			locked_god = g
-	t.check(open_god != &"", "一档有能选的神")
+	t.check(open_god != &"", "解锁了的神能选")
 	if locked_god != &"":
 		t.check(not setup.choose_god(locked_god), "没解锁的选不了")
 	t.check(setup.choose_god(open_god), "选 %s" % open_god)
