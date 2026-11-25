@@ -1,0 +1,23 @@
+{
+  "id": "viper_cut",
+  "display_name": "蛇段",
+  "display_names": {
+    "en": "Viper Cut"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "material",
+    "ingredient",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

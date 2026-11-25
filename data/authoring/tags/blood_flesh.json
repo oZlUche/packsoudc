@@ -8,5 +8,9 @@
     "en": ""
   },
   "tip": false,
-  "category": "affiliation"
+  "category": "affiliation",
+  "parents": [
+    "material",
+    "ingredient"
+  ]
 }

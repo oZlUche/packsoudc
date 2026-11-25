@@ -28,7 +28,7 @@
   },
   "board": [
     4,
-    3
+    4
   ],
   "species": "beast",
   "bagless": true,
@@ -37,6 +37,9 @@
     "game_meat"
   ],
   "loot_bonus": [
-    "blood_flesh_scrap"
-  ]
+    "wolf_shank"
+  ],
+  "loot_chance": {
+    "wolf_heart": 0.3
+  }
 }

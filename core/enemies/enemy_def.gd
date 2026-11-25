@@ -129,6 +129,8 @@ func build_of(build_id: StringName) -> EnemyBuild:
 @export var loot_filler: Array[StringName] = []
 ## 388：除替身之外另外必掉的（魔兽的【血肉】）；每个 id 一件，计入件数、标 carried 必掉
 @export var loot_bonus: Array[StringName] = []
+## 394：魔兽可能掉的（器官）：{道具 id: 几率 0～1}；掉了同样计入件数、标 carried 必掉
+@export var loot_chance: Dictionary = {}
 
 const SPECIES: Array[StringName] = [&"human", &"beast", &"construct"]
 

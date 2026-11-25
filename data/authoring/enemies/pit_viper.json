@@ -34,6 +34,9 @@
     "meat_scrap"
   ],
   "loot_bonus": [
-    "blood_flesh_scrap"
-  ]
+    "viper_cut"
+  ],
+  "loot_chance": {
+    "viper_gall": 0.3
+  }
 }

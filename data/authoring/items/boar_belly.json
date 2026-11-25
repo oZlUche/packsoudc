@@ -1,0 +1,23 @@
+{
+  "id": "boar_belly",
+  "display_name": "野猪腩",
+  "display_names": {
+    "en": "Boar Belly"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "tags": [
+    "material",
+    "ingredient",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

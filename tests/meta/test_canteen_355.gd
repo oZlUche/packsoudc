@@ -36,7 +36,7 @@ static func run_content(t: TestCase) -> void:
 	t.begin("355 · 内容：食材表导得进来、带「食材」标签的都在表里；成品食物不是食材；锅 4/4/4/5/6、仓库 6×6/8×8/10×8；《开伙》要受托、开食堂")
 	var r := Canteen.load_rules()
 	t.eq(r.id, CanteenRules.ID, "规矩资产导出来了")
-	t.eq(r.entries.size(), 32, "32 件（报告 355 第五节）")
+	t.eq(r.entries.size(), 45, "45 件（报告 355 第五节 32 件 + 报告 394 的 12 件肉和狼心）")
 	var db := T110._db()
 	var tagged: Array = []
 	for id in db.ids(true):
@@ -46,9 +46,9 @@ static func run_content(t: TestCase) -> void:
 	var keys: Array = r.entries.keys()
 	keys.sort()
 	t.eq(tagged, keys, "带「食材」标签的 = 表里的")
-	for id in [&"ration", &"salted_meat", &"field_rations", &"wolf_heart", &"dried_herbs"]:
+	for id in [&"ration", &"salted_meat", &"field_rations", &"dried_herbs"]:
 		t.check(not Canteen.is_ingredient(db.get_def(id)), "%s 不是食材" % id)
-	var want := {CanteenRules.STAPLE: [4, 4], CanteenRules.MEAT: [6, 5], CanteenRules.VEG: [4, 3], CanteenRules.FRUIT: [3, 3]}
+	var want := {CanteenRules.STAPLE: [4, 4], CanteenRules.MEAT: [18, 6], CanteenRules.VEG: [4, 3], CanteenRules.FRUIT: [3, 3]}
 	for cat in CanteenRules.CATEGORIES:
 		var flat := 0
 		var pct := 0

@@ -793,6 +793,12 @@ static func _validate_item_tags(def: ItemDef, ctx: Context, report: ImportReport
 			sources.append(String(t))
 	# 250（作者定）：类别恰好一个（包、铸牌免）
 	var kinds = _kind_tags(def, ctx)
+	var implied := _implied_tags(def, ctx)     # 394：子类标签的上级（血肉 → 素材 + 食材）
+	for t in implied:
+		if not def.tags.has(t):
+			report.error("tags", "带了子类标签就得带它的上级 '%s'" % t)
+	if kinds != null and not implied.is_empty() and kinds.size() > 1 and kinds.all(func(k: String) -> bool: return implied.has(StringName(k))):
+		kinds = [kinds[0]]
 	if kinds != null and not def.is_bag and not def.is_token() and kinds.size() != 1:
 		report.error("tags", "类别（%s）得恰好带一个，现在带了 %d 个%s" % [" / ".join(PackedStringArray(_category_tags(ctx, TagRegistry.KIND))),
 			kinds.size(), ("：" + " / ".join(PackedStringArray(kinds))) if not kinds.is_empty() else ""])
@@ -822,6 +828,18 @@ static func _kind_tags(def: ItemDef, ctx: Context):
 			return null
 		if (tag as TagDef).category == TagRegistry.KIND:
 			out.append(String(t))
+	return out
+
+
+## 394：道具身上的子类标签要求的上级标签（[member TagDef.parents]）
+static func _implied_tags(def: ItemDef, ctx: Context) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for t in def.tags:
+		var tag = ctx.tags.get(t, null)
+		if tag is TagDef:
+			for p in (tag as TagDef).parents:
+				if not out.has(p):
+					out.append(p)
 	return out
 
 
@@ -2604,6 +2622,12 @@ static func _validate_enemy(def: EnemyDef, ctx: Context, report: ImportReport) -
 	for bid in def.loot_bonus:     # 388
 		if not ctx.items.has(bid):
 			report.error("loot_bonus", "找不到道具 '%s'" % bid)
+	for oid in def.loot_chance:     # 394
+		if not ctx.items.has(StringName(String(oid))):
+			report.error("loot_chance", "找不到道具 '%s'" % oid)
+		var ch: Variant = def.loot_chance[oid]
+		if not (ch is float or ch is int) or float(ch) <= 0.0 or float(ch) > 1.0:
+			report.error("loot_chance.%s" % oid, "几率得在 0～1 之间（不含 0）")
 	for pair in sigs:
 		var at: String = pair[0]
 		var sid: StringName = pair[1]
