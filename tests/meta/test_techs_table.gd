@@ -34,11 +34,11 @@ static func run(t: TestCase) -> void:
 	var problems: Array[String] = []
 	var f := TechsTable.fields(_sheets(), problems)
 	t.eq(problems.size(), 0, "表里没问题：%s" % "；".join(PackedStringArray(problems)))
-	t.eq(f.size(), 19, "十九个节点（319：幸运删了，C 批加三个；372 加换牌、剔牌）")
+	t.eq(f.size(), 19, "十九个节点（319：幸运删了，C 批加三个；372 加换牌、禁用）")
 	var levels := 0
 	for id in f:
 		levels += (f[id]["tiers"] as Array).size()
-	t.eq(levels, 40, "四十级（319：幸运三级删了、讨价并成一级，C 批加三级；372 换牌三级、剔牌两级）")
+	t.eq(levels, 40, "四十级（319：幸运三级删了、讨价并成一级，C 批加三级；372 换牌三级、禁用两级）")
 	t.eq(f["scouting"]["requires"], ["thorough_search"], "319：侦察的前置是细搜")
 	t.eq(f["scouting"]["tree"], "机制", "319：侦察在机制树")
 	t.eq(f["scouting"]["tiers"][0]["insight"], 2, "319：侦察花两点见识")

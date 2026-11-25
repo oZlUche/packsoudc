@@ -1,4 +1,4 @@
-## 372：升级选牌 —— 地图屏上叠一层（不是单独一屏）：三张牌挑一张，下面「重选」「剔牌」（396 起万神院还给「跳过」）几个键写着还剩几次。
+## 372：升级选牌 —— 地图屏上叠一层（不是单独一屏）：三张牌挑一张，下面「重选」「禁用」（396 起万神院还给「跳过」）几个键写着还剩几次。
 ## 挑完还有待选（一次升了几级、无信者多给的一次）就接着出下一批；都挑完自己收起。
 ## 牌面是作者定的 A 羊皮纸（`assets/ui/level/`）：上沿正中压一条类别条，圆章里放牌的图标，下面牌名、效果，底部写拿了是第几层
 class_name LevelPickPanel
@@ -103,8 +103,6 @@ func rebuild() -> void:
 		notes.append(UiText.t("level.left") % left)
 	if bool(cur.get("generic", false)):
 		notes.append(UiText.t("level.qual_faithless") if level.is_humanist() else UiText.t("level.qual_none"))
-	if level.skip_bonus > 0 and not seed_pick:
-		notes.append(UiText.t("level.skip_bonus"))
 	if removing:
 		notes.append(UiText.t("level.remove_tip"))
 	_note.text = UiText.t("tip.gap").join(notes)
@@ -337,7 +335,7 @@ func _after() -> void:
 
 
 ## 测试读：现在摆着的几张
-## 377：教练层指的地方（全局坐标）：`cards` 三张牌、`reroll` 换牌、`remove` 剔牌；别的空矩形
+## 377：教练层指的地方（全局坐标）：`cards` 三张牌、`reroll` 换牌、`remove` 禁用；别的空矩形
 func coach_rect(id: StringName) -> Rect2:
 	match id:
 		&"cards":

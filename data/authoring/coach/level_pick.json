@@ -3,6 +3,6 @@
   "steps": [
     {"target": "cards", "text": "升级了：三张牌挑一张。同一张以后还会再出，拿几次就叠几层。", "texts": {"en": "Level up: pick one of three cards. The same card can show up again later; each pick adds another stack."}},
     {"target": "reroll", "text": "都不想要就重选：三张一起换一批，次数有限。", "texts": {"en": "Don't like any of them? Reroll swaps all three for a new set. Rerolls are limited."}},
-    {"target": "remove", "text": "剔牌：点它再点一张牌，这一局那张不再出，空位补一张。", "texts": {"en": "Cull: click it, then click a card. That card won't show again this run, and the slot is refilled."}}
+    {"target": "remove", "text": "禁用：点它再点一张牌，这一局那张不再出，空位补一张。", "texts": {"en": "Ban: click it, then click a card. That card won't show again this run, and the slot is refilled."}}
   ]
 }

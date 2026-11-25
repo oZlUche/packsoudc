@@ -62,7 +62,6 @@ var draws: int = 0
 var rerolls_used: int = 0
 ## 396：【跳过】用了几次；上一次跳过了，下一次摆牌多一张（用掉就清）
 var skips_used: int = 0
-var skip_bonus: int = 0
 var removals_used: int = 0
 ## 到过的最深一环（-1 = 还没记开局那一环）
 var depth_reached: int = -1
@@ -211,7 +210,7 @@ func _repick_mode() -> String:
 
 
 ## 396【改信】（[method AltarModule] 那边换好信物、[member RunState.selected_faith] 已是新神后调）：拿掉 [param old_god] 的质变牌和基础牌，
-## 跟着旧神走的整局累积（[member god_state]）一起清掉；按原来的张数排队重选 —— 几张质变（升级版算在本体里，献祭换来的也算）就从新神的质变里选几次，
+## 跟着旧神走的整局累积（[member god_state]）一起清掉；按原来的张数排队重选 —— 几张质变（升级版也算一张，作者 11-26 选 A；献祭换来的也算）就从新神的质变里选几次，
 ## 几张基础牌就从新神的基础牌里选几次，三选一连着选完。等级、经验、通用牌不动，已经给到手的道具不收回
 func convert_faith(old_god: StringName, _new_god: StringName) -> void:
 	var r := rules()
@@ -222,8 +221,7 @@ func convert_faith(old_god: StringName, _new_god: StringName) -> void:
 		if old_god == &"" or r.god_of(cid) != old_god:
 			continue
 		if r.is_qual(cid):
-			if String(r.card(cid).get("upgrade_of", "")) == "":
-				quals_n += 1
+			quals_n += 1     # 作者 11-26 00:18（A）：升级版也还一次重选
 		else:
 			bases_n += count_of(cid)
 		taken.erase(k)
@@ -234,7 +232,6 @@ func convert_faith(old_god: StringName, _new_god: StringName) -> void:
 		god_state[REPICK_BASE] = bases_n
 	offer_ids.clear()
 	offer_qual = false
-	skip_bonus = 0
 	level_changed.emit()
 
 
@@ -327,7 +324,7 @@ func has_qual_pool() -> bool:
 
 ## 这一次摆几张：质变位的开局那一次，万神院五档多一张（[member RunState.opening_extra_choice]）
 func _choices_for(qual: bool) -> int:
-	var n := rules().choices + skip_bonus
+	var n := rules().choices
 	if qual and _slot_index() == 0 and rules().qual_opening and _run != null and _run.opening_extra_choice:
 		n += 1
 	return n
@@ -386,7 +383,6 @@ func pick(i: int) -> StringName:
 		level_changed.emit()
 		return cid
 	taken[String(cid)] = count_of(cid) + 1
-	skip_bonus = 0     # 396：跳过多出的那一张只管这一批
 	_consume(offer_qual)
 	offer_ids.clear()
 	offer_qual = false
@@ -396,7 +392,7 @@ func pick(i: int) -> StringName:
 	return cid
 
 
-## 396【跳过】：这一次不选（这一级照样算选过），下一次摆牌多一张。次数不够、正摆着【初种】返回 false
+## 396【跳过】：这一次不选（这一级照样算选过），没有补偿（作者 11-26 00:08：「就是不要这次选择」）。次数不够、正摆着【初种】返回 false
 func skip() -> bool:
 	var cards := offer()
 	if cards.is_empty() or skips_left() <= 0 or seed_offer():
@@ -405,7 +401,6 @@ func skip() -> bool:
 	_consume(offer_qual)     # 跳过献祭换来的 / 改信重选的那一次：这次就算用掉了
 	offer_ids.clear()
 	offer_qual = false
-	skip_bonus = 1
 	level_changed.emit()
 	return true
 
@@ -895,7 +890,7 @@ func _on_search_opened(_n: MapNode, session: SearchSession) -> void:
 func to_dict() -> Dictionary:
 	return {"xp": xp, "picks_done": picks_done, "qual_done": qual_done, "level_seen": level_seen,
 		"taken": taken.duplicate(), "removed": removed.duplicate(), "offer": offer_ids.duplicate(), "offer_qual": offer_qual, "draws": draws,
-		"rerolls_used": rerolls_used, "removals_used": removals_used, "skips_used": skips_used, "skip_bonus": skip_bonus, "depth_reached": depth_reached,
+		"rerolls_used": rerolls_used, "removals_used": removals_used, "skips_used": skips_used, "depth_reached": depth_reached,
 		"pending_searches": pending_searches, "history": history.duplicate(true), "god_state": god_state.duplicate(true)}
 
 
@@ -926,7 +921,6 @@ func restore(d: Dictionary) -> void:
 	draws = maxi(0, int(d.get("draws", 0)))
 	rerolls_used = maxi(0, int(d.get("rerolls_used", 0)))
 	skips_used = maxi(0, int(d.get("skips_used", 0)))     # 396
-	skip_bonus = clampi(int(d.get("skip_bonus", 0)), 0, 1)
 	removals_used = maxi(0, int(d.get("removals_used", 0)))
 	depth_reached = int(d.get("depth_reached", -1))
 	pending_searches = maxi(0, int(d.get("pending_searches", 0)))
