@@ -21,6 +21,7 @@
     }
   ],
   "gift_every": 25,
+  "note_rep": 3,
   "gift_pool": [
     {
       "funds": 30
