@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_ftxqv"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_3yitu"]
+
+[sub_resource type="Resource" id="Resource_tmacv"]
+script = ExtResource("2_3yitu")
+goal = &"altar_offer"
+count = 3
+text = "在三座神坛献祭"
+texts = {
+"en": "Make an Offering at three altars"
+}
+
+[resource]
+script = ExtResource("1_ftxqv")
+id = &"pantheon_temple_25"
+display_name = "新殿立基"
+display_names = {
+"en": "Laying a Temple Stone"
+}
+faction = &"pantheon"
+order = 3
+reputation = 5
+min_rep = 25
+stages = Array[ExtResource("2_3yitu")]([SubResource("Resource_tmacv")])
+grants = &"temple"
+client = "万神院的老祭司"
+clients = {
+"en": "Elder priest of the Senatus"
+}

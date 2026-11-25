@@ -12,10 +12,10 @@ script = ExtResource("2_y08r2")
 [resource]
 script = ExtResource("5_hoyvp")
 id = &"tech_level_reroll_1"
-display_name = "换牌（科技）"
+display_name = "重选（科技）"
 display_names = {
 "en": "Reroll (Tech)"
 }
-description = "升级选牌可换牌 {level_rerolls_times} 次"
+description = "升级选牌可重选 {level_rerolls_times} 次"
 scope = 0
 effects = Array[ExtResource("1_pm1qt")]([SubResource("Resource_xlosu")])

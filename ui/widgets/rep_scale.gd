@@ -1,7 +1,7 @@
 ## 报告 389（作者 11-24 15:43 定稿 A，规格 `art/ui/s389-rep/规格.md`）：一方阵营的声望刻度 —— 0–100 等比（各方同一把尺），
 ## 深色槽、黄铜填充、填充头一根亮线；每 10 一根刻度线（50 的倍数长一点），槽下只写 0 / 50 / 100。
 ## 节点是槽上方的圆章（[RepMedal]），圆心对准它的声望数；同一个数上的几个往上叠，最下面一个用细竖线接到槽。
-## 声望过了 100：填满，数照写（在牌头）
+## 声望过了刻度的头：填满，数照写（在牌头）。396：节点过了 100 的一方（万神院到 150）刻度跟着拉长到下一个 50 的倍数
 class_name RepScale
 extends Control
 
@@ -25,6 +25,8 @@ var book: CommissionBook = null
 var faction: FactionDef = null
 var faith_defs: Dictionary = {}
 var _medals: Array[RepMedal] = []
+## 刻度的头（至少 [constant SCALE]）
+var scale_top := SCALE
 
 
 static func make(p_book: CommissionBook, f: FactionDef, p_faith_defs: Dictionary = {}) -> RepScale:
@@ -33,6 +35,8 @@ static func make(p_book: CommissionBook, f: FactionDef, p_faith_defs: Dictionary
 	s.book = p_book
 	s.faction = f
 	s.faith_defs = p_faith_defs
+	for n in Commissions.nodes_of(f):
+		s.scale_top = maxi(s.scale_top, ceili(float(int(n.get("rep", 0))) / 50.0) * 50)
 	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	s.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	s.custom_minimum_size = Vector2(240, BELOW + MEDAL + 14.0 + (MEDAL + STACK_GAP) * float(maxi(0, s._max_stack() - 1)))
@@ -48,7 +52,7 @@ func rep() -> int:
 ## 声望数 → 槽上的 x
 func x_of(v: int) -> float:
 	var pad := MEDAL * 0.5
-	return pad + (size.x - 2.0 * pad) * clampf(float(v) / float(SCALE), 0.0, 1.0)
+	return pad + (size.x - 2.0 * pad) * clampf(float(v) / float(scale_top), 0.0, 1.0)
 
 
 func groove_y() -> float:
@@ -106,7 +110,7 @@ func _place() -> void:
 func _draw() -> void:
 	var gy := groove_y()
 	var x0 := x_of(0)
-	var x1 := x_of(SCALE)
+	var x1 := x_of(scale_top)
 	var font := get_theme_default_font()
 	for m in _medals:     # 竖线：最下面那颗接到槽
 		if m.stack == 0:
@@ -120,7 +124,7 @@ func _draw() -> void:
 		draw_rect(top, FILL_TOP)
 		draw_rect(Rect2(x0 - 2.0, gy + FILL_H / 6.0, fx - x0 + 2.0, FILL_H / 3.0), FILL_LOW)
 	draw_rect(Rect2(fx - 1.5, gy - 9.0, 3.0, 18.0), HEAD)
-	for v in range(0, SCALE + 1, 10):
+	for v in range(0, scale_top + 1, 10):
 		var x := x_of(v)
 		draw_line(Vector2(x, gy + 7.0), Vector2(x, gy + 7.0 + (6.0 if v % 50 == 0 else 4.0)), TICK, 1.0)
 	if font != null:

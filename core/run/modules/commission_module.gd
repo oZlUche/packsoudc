@@ -268,6 +268,19 @@ func on_faith_level(level: int) -> Array:
 	return out
 
 
+## 396：奉着神撤离了 —— 带着的「奉神出征」委托各记一次（一局只记一次）。结算前由 [method GameFlow._merge_commissions] 调
+func on_faith_run() -> Array:
+	var out: Array = []
+	if _run == null:
+		return out
+	for pair in waiting(&"faith_runs"):
+		var d := pair[0] as CommissionDef
+		var s := int(pair[1])
+		if not _has_row(d.id, s, "%s/%s" % [_run.run_id, "run"]):
+			out.append(_add(d, s, "run", "self"))
+	return out
+
+
 ## 去重键带上这一局的 id：uid 每局从 1 重来，别的局的同号不是同一件
 func _add(d: CommissionDef, stage: int, key: String, via: String) -> Dictionary:
 	rows.append({"id": String(d.id), "stage": stage, "key": "%s/%s" % [_run.run_id, key], "via": via})

@@ -1,10 +1,10 @@
 {
   "id": "tech_level_reroll_2",
-  "display_name": "换牌（科技）",
+  "display_name": "重选（科技）",
   "display_names": {
     "en": "Reroll (Tech)"
   },
-  "description": "升级选牌可换牌 {level_rerolls_times} 次",
+  "description": "升级选牌可重选 {level_rerolls_times} 次",
   "scope": "META",
   "effects": [
     {

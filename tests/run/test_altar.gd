@@ -254,7 +254,7 @@ static func frame_altar_screen(t: TestCase, root: Window) -> void:
 	root.add_child(game)
 	var flow: GameFlow = game.flow
 	flow.meta.commissions.arrived[String(Pantheon.FACTION)] = 0     # 377：万神院在营地、信赖四档（神坛上有赐福）
-	flow.meta.commissions.rep[String(Pantheon.FACTION)] = 50
+	flow.meta.commissions.rep[String(Pantheon.FACTION)] = 75     # 396：赐福挪到 75
 	flow.chapters = [c.chapter] as Array[ChapterDef]
 	flow.player_baseline = CombatantBaseline.with_hp(10000.0)
 	# 先不激活信仰：休息点没有「神坛」

@@ -31,7 +31,8 @@ static func run_content(t: TestCase) -> void:
 	t.eq(fs.map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp", "cartographers", "envoy", "growers", "hunters", "pantheon"], "八方、顺序对（342 B3 加地图协会、垦户社；377 加万神院）")
 	Commissions.active = CommissionBook.new()
 	t.eq(Commissions.listed_factions().map(func(f: FactionDef) -> String: return String(f.id)), ["legion", "society", "greylamp"], "只列三方（地图协会第一次正式探索结算后才来）")
-	t.check(fs.all(func(f: FactionDef) -> bool: return Commissions.effect_rep(f, Commissions.EFFECT_INQUIRY) == 10 and Commissions.effect_rep(f, Commissions.EFFECT_FINALE) == 25), "389：每方都有 10 调查、25 结案两个节点")
+	t.check(fs.all(func(f: FactionDef) -> bool: return f.id == &"pantheon" or (Commissions.effect_rep(f, Commissions.EFFECT_INQUIRY) == 10 and Commissions.effect_rep(f, Commissions.EFFECT_FINALE) == 25)), "389：万神院以外每方都有 10 调查、25 结案两个节点")
+	t.eq(Commissions.effect_rep(Commissions.faction(&"pantheon"), Commissions.EFFECT_REGULAR), 25, "396：万神院不走调查 / 结案，25 直接开日常委托")
 	t.check(fs.all(func(f: FactionDef) -> bool: return Names.of(f, "en") != f.display_name), "都有英文名")
 	var ids := Commissions.defs().map(func(d: CommissionDef) -> String: return String(d.id))
 	for id in ["legion_two_routes", "society_copy_recipe", "greylamp_unsigned_letter"]:
@@ -93,27 +94,29 @@ static func run_tiers(t: TestCase) -> void:
 	book.rep["legion"] = 30
 	t.eq(Commissions.rep_to_next(book, f), 0, "后勤部队过了最后一个节点：0（389 第 2 条：之后照涨，不给东西）")
 	t.eq(Commissions.crossed(f, 5, 30).map(func(n: Dictionary) -> String: return String(n["id"])), ["inquiry", "finale"], "从 5 涨到 30 跨过两个")
-	var p := Commissions.faction(&"pantheon")
-	book.rep["pantheon"] = 100
-	var skill := Commissions.node_of(p, &"god_skill")
-	t.check(not skill.is_empty() and int(skill["rep"]) == 40 and not Commissions.reached(book, p, skill), "技巧之神占位在 40：到了也不算")
-	t.check(not Commissions.crossed(p, 0, 100).any(func(n: Dictionary) -> bool: return Commissions.is_placeholder(n)), "跨过的不含占位")
-	t.eq(Commissions.node_text(skill), UiText.t("node.unknown"), "占位显示？？？？")
+	var p := FactionDef.new()     # 396 起数据里没有占位节点了：拿一份现搭的查
+	p.id = &"t_ph"
+	var ph := {"id": "ph", "rep": 40, "kind": "open", "effect": "", "placeholder": true}
+	p.nodes = [ph] as Array[Dictionary]
+	book.rep["t_ph"] = 100
+	t.check(not Commissions.reached(book, p, ph), "占位在 40：到了也不算")
+	t.check(Commissions.crossed(p, 0, 100).is_empty(), "跨过的不含占位")
+	t.eq(Commissions.node_text(ph), UiText.t("node.unknown"), "占位显示？？？？")
 
 
 static func run_node_news(t: TestCase) -> void:
 	t.begin("389：办成委托涨声望跨过节点 —— 记进通知（营地一条一条放），存档带着；占位的不通知")
 	var m := _meta()
 	var d := _def(&"t_news", &"pantheon", CommissionDef.INTRO)
-	d.reputation = 22
+	d.reputation = 30
 	Commissions._complete(m, d, null)
-	t.eq(m.commissions.node_news.map(func(r: Dictionary) -> String: return String(r["node"])), ["inquiry", "god_nature", "god_sun"], "0 → 22：调查、自然之神、日神三条")
+	t.eq(m.commissions.node_news.map(func(r: Dictionary) -> String: return String(r["node"])), ["regular", "temple_rite_25"], "396：0 → 30：日常委托、25 的引导委托两条")
 	var back := CommissionBook.from_dict(m.commissions.to_dict())
 	t.eq(back.node_news, m.commissions.node_news, "存档带着")
 	m.commissions.node_news.clear()
 	d.reputation = 30
 	Commissions._complete(m, d, null)
-	t.check(not m.commissions.node_news.any(func(r: Dictionary) -> bool: return String(r["node"]) == "god_skill"), "跨过 40 的技巧之神占位：不通知")
+	t.eq(m.commissions.node_news.map(func(r: Dictionary) -> String: return String(r["node"])), ["reroll", "temple_rite_50", "faith_xp", "skip"], "30 → 60：重选、50 的引导委托、经验、跳过")
 
 
 static func run_gifts(t: TestCase) -> void:

@@ -111,6 +111,8 @@ var last_character: StringName = &""
 var pantheon_choice: StringName = &""
 ## 377：这份存档奉过的神（出征时选过的；老档迁移按以前的记录补）。奉过的神在万神院里不论档位都能选
 var gods_worshipped: Array[StringName] = []
+## 396：万神院里解锁了的神殿（玩家自己选的先后；[method Pantheon.unlock]）。只有解锁了的神能奉
+var temples: Array[StringName] = []
 ## 277 第 2 条：上回出发时从仓库带进去的道具 [{id, origin: [x, y], rot}] 与带入的现金（开局屏「照上回带」读它）；没出发过 = 空 / 0
 var last_carry: Array = []
 var last_carry_funds: int = 0
@@ -939,6 +941,7 @@ func to_dict() -> Dictionary:
 		"dust": dust, "forged_recipes": _names_of(forged_recipes),     # 354
 		"canteen": canteen.to_dict(),     # 355：只加带默认值的字段，不升版
 		"pantheon_choice": String(pantheon_choice), "gods_worshipped": _names_of(gods_worshipped),     # 377：同上，不升版
+		"temples": _names_of(temples),     # 396：同上
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -1002,7 +1005,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 		if m.board.item_count() == 0:
 			m.board = null
 	# 原样读回的字段（存档的键 = 字段名）：id 列表、字符串 → 数的表、单个数
-	for key in ["active_buffs", "unlocks", "keepsakes", "bag_grants", "seen_rules", "briefing_seen", "reactions_seen", "forged_recipes", "gods_worshipped"]:
+	for key in ["active_buffs", "unlocks", "keepsakes", "bag_grants", "seen_rules", "briefing_seen", "reactions_seen", "forged_recipes", "gods_worshipped", "temples"]:
 		for id in d.get(key, []):
 			(m.get(key) as Array).append(StringName(String(id)))
 	for key in ["codex", "achievements", "chapter_extractions", "flags"]:

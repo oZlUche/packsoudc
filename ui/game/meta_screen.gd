@@ -395,6 +395,7 @@ func _build_pantheon_page() -> void:     # 377：万神院页（只看：已解�
 	var pt_page := _cloth()
 	_pantheon = PantheonPanelScript.new()
 	_pantheon.setup(flow)
+	_pantheon.unlocked.connect(_refresh)     # 396：解锁了一座，红点跟着变
 	pt_page.add_child(_pantheon)
 	_pages["pantheon"] = pt_page
 
@@ -651,6 +652,15 @@ func close_gift() -> void:
 func _sync_gift_dot() -> void:
 	if _tab_btns.has("commissions"):
 		RedDot.attach(_tab_btns["commissions"] as Button, Commissions.gifts_due_total(flow.meta))
+
+
+## 396：手里有解锁神殿的机会没用 —— 「后勤」导航和「万神院」子页签挂红点（份数）
+func _sync_temple_dot() -> void:
+	var n := Pantheon.chances(flow.meta) if Pantheon.arrived(flow.meta) else 0
+	if _tab_btns.has("logistics"):
+		RedDot.attach(_tab_btns["logistics"] as Button, n)
+	if _sub_btns.has("pantheon"):
+		RedDot.attach(_sub_btns["pantheon"] as Button, n)
 
 
 ## 营地的石刻通知（389 定稿：阵营到来、节点到了、赠礼共用）：暗幕 → 浅石格里纹章 72 + 阵营名 30 → [param mid]（可空）
@@ -1928,6 +1938,7 @@ func _refresh() -> void:
 	_sync_sub_pages()     # 测试 v7.55
 	_sync_ripe_mark()     # 342 B3（苗圃页也一起刷：熟了【收获】跟着亮）
 	_sync_gift_dot()     # 389 第七节
+	_sync_temple_dot()     # 396
 	if _alchemy != null:
 		_alchemy.refresh()     # 354
 	if _canteen != null:

@@ -8,12 +8,12 @@
   "reputation": 10,
   "stages": [
     {
-      "goal": "faith_levels",
-      "count": 3,
+      "goal": "faith_runs",
+      "count": 1,
       "where": "carry",
-      "text": "在万神院选一位神出征，奉着祂升三级并撤离",
+      "text": "在万神院选一位神，奉着祂出征并撤离",
       "texts": {
-        "en": "Choose a god at the Senatus, gain three levels while following that god, and extract"
+        "en": "Choose a god at the Senatus, follow that god on a run, and extract"
       }
     }
   ],

@@ -38,6 +38,8 @@ const TIERS: Array[StringName] = [INTRO, INQUIRY, FINALE, TEMPLATE]
 @export var items: Dictionary = {}
 ## 342 B2：办成后开放的基地设施（`smithy` / `tech` / `market`；342 B3 加 `bias` / `nursery`，354 加 `alchemy`；空 = 不开）。剧情委托（[member tier] 不是模板）才用
 @export var opens: StringName = &""
+## 396：办成还给什么局外的东西（`temple` = 多一次解锁神殿的机会，[method Pantheon.chances_earned]）
+@export var grants: StringName = &""
 ## 互斥组：同组只能有一份结案（空 = 不互斥）
 @export var mutex: StringName = &""
 ## 委托人原话（方案里加了引号的原样用）
