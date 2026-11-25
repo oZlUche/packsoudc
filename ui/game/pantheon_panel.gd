@@ -66,7 +66,7 @@ func refresh() -> void:
 		c.queue_free()
 	if mode == VIEW:
 		_body.add_child(_head())
-		if not Pantheon.gods().has(selected) or flow.meta.temples.has(selected):
+		if not Pantheon.gods().has(selected) or flow.meta.temples.has(selected) or flow.meta.visiting == selected:
 			selected = &""
 	var row := UiTheme.hbox(14)
 	row.name = "Shrines"
@@ -142,7 +142,7 @@ func _shrine(fid: StringName) -> Control:
 		if chosen:
 			b.text = UiText.t("pantheon.chosen")
 			p.theme_type_variation = UiTheme.PANEL_HOME_PLAQUE_SMALL
-		b.disabled = not open or chosen
+		b.disabled = not open or chosen or (flow.meta.visiting != &"" and fid != flow.meta.visiting)     # 396 第十节：拜访着的那一局锁定奉祂
 		col.add_child(b)
 	return p
 
@@ -205,6 +205,8 @@ func _temple(fid: StringName) -> Control:
 
 ## 一座神殿的悬浮窗：解锁了只写那一句；没解锁第一行「？？？？」、第二行那一句，没落成再加「神殿尚未落成」
 func temple_tip(fid: StringName) -> String:
+	if flow.meta.visiting == fid:
+		return UiText.t("pantheon.visiting_tip")
 	if Pantheon.god_open(flow.meta, fid):
 		return Pantheon.blurb(fid)
 	var lines := PackedStringArray([UiText.t("pantheon.unknown")])
@@ -216,7 +218,8 @@ func temple_tip(fid: StringName) -> String:
 
 
 ## 396 定稿：底下的深石板 —— 左边「还可以拜访 N 次神殿」（作者 11-25 23:18；N 金色大字，是手里的解锁机会数），
-## 右边【确认解锁】；选中没落成的神殿时键灰着、键左边写「神殿尚未落成」
+## 右边【确认拜访】（396 第十节：拜访 → 下一局奉祂 → 打完永久解锁）；选中没落成的神殿时键灰着、键左边写「神殿尚未落成」；
+## 拜访着的时候左边换成「正在拜访某神」那一句
 func _unlock_bar() -> Control:
 	var p := PanelContainer.new()
 	p.name = "UnlockBar"
@@ -230,6 +233,12 @@ func _unlock_bar() -> Control:
 	pad.add_child(row)
 	var parts := UiText.t("pantheon.visits").split("%d")
 	var n := Pantheon.chances(flow.meta)
+	if flow.meta.visiting != &"":
+		var d := flow.faith_defs.get(flow.meta.visiting, null) as FaithDef
+		var vis := UiTheme.fixed_color(UiTheme.make_label(UiText.t("pantheon.visiting") % (Names.of(d) if d != null else String(flow.meta.visiting)), 20, UiTheme.STONE_GOLD), UiTheme.STONE_GOLD)
+		vis.name = "Visiting"
+		row.add_child(vis)
+		parts = PackedStringArray()
 	for i in parts.size():
 		if parts[i].strip_edges() != "":
 			row.add_child(UiTheme.fixed_color(UiTheme.make_label(parts[i].strip_edges(), 20, UiTheme.STONE_GOLD), BAR_INK))
@@ -253,17 +262,17 @@ func _unlock_bar() -> Control:
 	return p
 
 
-## 396：点一座神殿（解锁了的点了不选中）
+## 396：点一座神殿（解锁了的、拜访着的点了不选中）
 func select(fid: StringName) -> void:
 	if mode != VIEW:
 		return
-	selected = &"" if flow.meta.temples.has(fid) or selected == fid else fid
+	selected = &"" if flow.meta.temples.has(fid) or flow.meta.visiting == fid or selected == fid else fid
 	refresh()
 
 
-## 396【确认解锁】。返回解锁成了没有
+## 396 第十节【确认拜访】：用掉一次机会，下一局出征锁定奉这位神，打完永久解锁。返回拜访成了没有
 func confirm() -> bool:
-	if mode != VIEW or selected == &"" or not Pantheon.unlock(flow.meta, selected):
+	if mode != VIEW or selected == &"" or not Pantheon.visit(flow.meta, selected):
 		return false
 	selected = &""
 	flow.save()

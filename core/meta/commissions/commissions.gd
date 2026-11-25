@@ -53,6 +53,7 @@ const GOALS := {
 	&"altar_offer": [CommissionStage.FIELD],     # 377：在休息点的神坛献祭（每座神坛记一次）
 	&"faith_levels": [CommissionStage.CARRY],     # 377：奉着神的时候升级（每升一级记一次），撤离才算
 	&"faith_runs": [CommissionStage.FIELD],     # 396：奉着神出征（一局记一次）；第九节作者选 B：战败也算
+	&"temple_visit": [CommissionStage.CAMP],     # 396 第十节：在万神院拜访一座神殿，奉着祂打一局（胜负都算），打完记一次（[method Pantheon.finish_visit]）
 	&"extract_runs": [CommissionStage.CARRY],     # 396 第九节：撤离一次（万神院到来的剧情委托「接应远道而来的万神院代表」）
 }
 ## 342 B2：营地当场能办的目标（卡上有【办理】）

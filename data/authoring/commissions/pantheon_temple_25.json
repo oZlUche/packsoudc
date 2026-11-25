@@ -11,11 +11,11 @@
   "grants": "temple",
   "stages": [
     {
-      "goal": "altar_offer",
-      "count": 3,
-      "text": "在三座神坛献祭",
+      "goal": "temple_visit",
+      "where": "camp",
+      "text": "在万神院选一座神殿拜访，下一局奉着这位神出征，胜负都算",
       "texts": {
-        "en": "Make an Offering at three altars"
+        "en": "Visit a temple at the Senatus, then follow that god on your next run; win or lose, it counts"
       }
     }
   ],

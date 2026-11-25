@@ -113,6 +113,8 @@ var pantheon_choice: StringName = &""
 var gods_worshipped: Array[StringName] = []
 ## 396：万神院里解锁了的神殿（玩家自己选的先后；[method Pantheon.unlock]）。只有解锁了的神能奉
 var temples: Array[StringName] = []
+## 396 第十节：正在拜访的神殿（空 = 没有）。拜访用掉一次机会；下一局出征锁定奉这位神，那一局打完（胜负都算）就永久解锁（[method Pantheon.finish_visit]）
+var visiting: StringName = &""
 ## 277 第 2 条：上回出发时从仓库带进去的道具 [{id, origin: [x, y], rot}] 与带入的现金（开局屏「照上回带」读它）；没出发过 = 空 / 0
 var last_carry: Array = []
 var last_carry_funds: int = 0
@@ -942,6 +944,7 @@ func to_dict() -> Dictionary:
 		"canteen": canteen.to_dict(),     # 355：只加带默认值的字段，不升版
 		"pantheon_choice": String(pantheon_choice), "gods_worshipped": _names_of(gods_worshipped),     # 377：同上，不升版
 		"temples": _names_of(temples),     # 396：同上
+		"visiting": String(visiting),     # 396 第十节：同上
 		# 120：tech_buffs、safe_bonus 和仓库页数（163）都由 tech_levels 推算，不入档（字段去掉、不升版本，098）
 	}
 
@@ -1039,6 +1042,7 @@ static func from_dict(d: Dictionary, items: ItemDatabase, p_rules: MetaRules = n
 	m.best_run = MapGraph.normalize(d.get("best_run", {})) if d.get("best_run", {}) is Dictionary else {}
 	m.last_character = StringName(String(d.get("last_character", "")))
 	m.pantheon_choice = StringName(String(d.get("pantheon_choice", "")))     # 377
+	m.visiting = StringName(String(d.get("visiting", "")))     # 396 第十节
 	for e in d.get("last_carry", []):     # 277
 		if e is Dictionary and (e as Dictionary).has("id"):
 			var o: Array = (e as Dictionary).get("origin", [0, 0])

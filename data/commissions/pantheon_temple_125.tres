@@ -5,11 +5,11 @@
 
 [sub_resource type="Resource" id="Resource_kf7yh"]
 script = ExtResource("2_ioi2q")
-goal = &"faith_runs"
-count = 3
-text = "奉着神再出征三次，战败也算"
+goal = &"temple_visit"
+where = &"camp"
+text = "在万神院选一座神殿拜访，下一局奉着这位神出征，胜负都算"
 texts = {
-"en": "Follow a god on three more runs; defeats count too"
+"en": "Visit a temple at the Senatus, then follow that god on your next run; win or lose, it counts"
 }
 
 [resource]

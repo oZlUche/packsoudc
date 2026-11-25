@@ -93,6 +93,8 @@ var last_tutorial_reward: Dictionary = {}
 var last_commissions: Dictionary = {}
 ## 377：刚结算的这一局有哪几方来了营地（基地据此放到来的那一页）
 var last_arrived: Array[StringName] = []
+## 396 第十节：这一局结算时拜访完、永久解锁的神（空 = 没有）
+var last_visited: StringName = &""
 var screen: int = Screen.MAIN_MENU
 var last_payload: Dictionary = {}
 ## 待拾取里已经在搜索屏亮过的 uid（6.2 的揭示只做一次）。拾取完清空
@@ -2081,6 +2083,7 @@ func _settle_run() -> void:
 		last_tutorial_reward = {}
 		last_commissions = {}
 		last_arrived = []
+		last_visited = &""
 		# 2026-10-22（作者定）：行囊给的「战败保住几成钱」由 absorb 在战败分支里兑现
 		# 319：见识按总分阶梯发（试玩切片不发）；这一局结算过（重复结算）absorb 什么也不动
 		last_absorbed = meta.absorb(result, run.buff_context().death_refund_percent if run != null else 0)     # 统一教程 D2：切片也按阶梯发见识
@@ -2092,6 +2095,8 @@ func _settle_run() -> void:
 		if formal_run():
 			if result.is_extracted():
 				meta.commissions.formal_extractions += 1     # 377：万神院按成功撤离的局数来
+			if meta.visiting != &"" and run != null and run.faith_enabled:
+				last_visited = Pantheon.finish_visit(meta)     # 396 第十节：拜访的那一局打完（胜负都算），这位神永久解锁
 			last_arrived = Commissions.arrive(meta.commissions, meta.runs)     # 342 B3：教程后第一次正式探索结算，后来的几方来营地
 			if facility_open(&"nursery"):
 				Nursery.advance(meta, result.run_id)     # 342 B3：苗圃推进一格（同一局只推一次）

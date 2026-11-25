@@ -11,12 +11,11 @@
   "grants": "temple",
   "stages": [
     {
-      "goal": "faith_levels",
-      "count": 20,
-      "where": "carry",
-      "text": "奉着神升二十级并撤离",
+      "goal": "temple_visit",
+      "where": "camp",
+      "text": "在万神院选一座神殿拜访，下一局奉着这位神出征，胜负都算",
       "texts": {
-        "en": "Gain twenty levels while following a god, and extract"
+        "en": "Visit a temple at the Senatus, then follow that god on your next run; win or lose, it counts"
       }
     }
   ],

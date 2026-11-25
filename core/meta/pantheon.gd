@@ -27,6 +27,8 @@ const TEMPLES_MIGRATED := &"pantheon_temples_migrated"
 ## 396：节点效果「多一次解锁神殿的机会」；委托上写 `grants: temple` 也算一次
 const EFFECT_TEMPLE := &"temple"
 const GRANT_TEMPLE := &"temple"
+## 396 第十节：引导委托的那一步「拜访一座神殿、奉着祂打一局」（[method finish_visit] 记）
+const GOAL_VISIT := &"temple_visit"
 ## 396：节点效果「重选 / 跳过」（`value` = [重选次数, 跳过次数]，到了的几个相加）
 const EFFECT_PICK_AIDS := &"pick_aids"
 ## 396 第五节：节点效果「每局一次在神坛改信」
@@ -94,35 +96,36 @@ static func temple_ready(faith_id: StringName) -> bool:
 	return false
 
 
-## 一共挣到几次解锁机会：到了的「解锁一座神殿」节点 + 办成的、写着 `grants: temple` 的委托
+## 一共挣到几次解锁机会：到了的「解锁一座神殿」节点 + 写着 `grants: temple` 的引导委托（396 第十节：到了声望、接上了就算 ——
+## 委托本身就是「拜访一座、奉着祂打一局」，打完那一局才办成）
 static func chances_earned(meta: MetaState) -> int:
 	if not arrived(meta):
 		return 0
 	var n := Commissions.reached_with(meta.commissions, faction(), EFFECT_TEMPLE).size()
 	for d in Commissions.defs():
-		if d.faction == FACTION and d.grants == GRANT_TEMPLE and meta.commissions.is_done(d.id):
+		if d.faction == FACTION and d.grants == GRANT_TEMPLE and (meta.commissions.is_done(d.id) or meta.commissions.state_of(d.id) != ""):
 			n += 1
 	return n
 
 
-## 手里还有几次没用（老档先解锁的可能比挣到的多，算 0）
+## 手里还有几次没用（拜访中的那座也算用掉了；老档先解锁的可能比挣到的多，算 0）
 static func chances(meta: MetaState) -> int:
 	if meta == null:
 		return 0
-	return maxi(0, chances_earned(meta) - meta.temples.size())
+	return maxi(0, chances_earned(meta) - meta.temples.size() - (1 if meta.visiting != &"" else 0))
 
 
-## 这座神殿现在能不能点【确认解锁】：有机会、牌表写好了、还没解锁
+## 396 第十节：这座神殿现在能不能【确认拜访】：有机会、牌表写好了、还没解锁、手上没有别的拜访（一次只拜访一座）
 static func can_unlock(meta: MetaState, faith_id: StringName) -> bool:
-	return chances(meta) > 0 and gods().has(faith_id) and temple_ready(faith_id) and not meta.temples.has(faith_id)
+	return meta.visiting == &"" and chances(meta) > 0 and gods().has(faith_id) and temple_ready(faith_id) and not meta.temples.has(faith_id)
 
 
-## 现在有没有能点【确认解锁】的神殿（有机会，且有落成了、还没解锁的）—— 营地红点看它；只剩没落成的就不挂（机会照留）
+## 现在有没有能点【确认拜访】的神殿（有机会，且有落成了、还没解锁的）—— 营地红点看它；只剩没落成的就不挂（机会照留）
 static func can_unlock_any(meta: MetaState) -> bool:
 	return chances(meta) > 0 and gods().any(func(g: StringName) -> bool: return can_unlock(meta, g))
 
 
-## 【确认解锁】。返回解锁成了没有
+## 直接永久解锁一座（用掉一次机会；老档迁移、测试用。玩家走的是 [method visit] → 打一局 → [method finish_visit]）。返回解锁成了没有
 static func unlock(meta: MetaState, faith_id: StringName) -> bool:
 	if not can_unlock(meta, faith_id):
 		return false
@@ -131,11 +134,40 @@ static func unlock(meta: MetaState, faith_id: StringName) -> bool:
 	return true
 
 
-## 这位神现在能不能奉：万神院到了、神殿解锁了、牌表写好了
+## 396 第十节【确认拜访】（作者 11-26 00:18）：用掉一次机会，下一局出征锁定奉这位神。返回拜访成了没有
+static func visit(meta: MetaState, faith_id: StringName) -> bool:
+	if not can_unlock(meta, faith_id):
+		return false
+	meta.visiting = faith_id
+	meta.pantheon_choice = faith_id
+	meta.changed.emit()
+	return true
+
+
+## 396 第十节：拜访的那一局打完了（撤离、战败都算）—— 这位神永久解锁，最早接上、还没办成的那份引导委托算办成（点【完成】领声望）。
+## 返回解锁的神（没在拜访 = 空）
+static func finish_visit(meta: MetaState) -> StringName:
+	if meta == null or meta.visiting == &"":
+		return &""
+	var god := meta.visiting
+	meta.visiting = &""
+	if not meta.temples.has(god):
+		meta.temples.append(god)
+	for d in Commissions.defs():
+		if d.faction == FACTION and d.grants == GRANT_TEMPLE and meta.commissions.state_of(d.id) == CommissionBook.TAKEN:
+			var s := Commissions.current_stage(meta.commissions, d.id)
+			if s >= 0 and s < d.stages.size() and d.stages[s].goal == GOAL_VISIT:
+				Commissions.credit(meta, d, s, "visit/%s" % god)
+				break
+	meta.changed.emit()
+	return god
+
+
+## 这位神现在能不能奉：万神院到了、神殿解锁了（或正在拜访）、牌表写好了
 static func god_open(meta: MetaState, faith_id: StringName) -> bool:
 	if not arrived(meta) or faith_id == &"":
 		return false
-	return meta.temples.has(faith_id) and temple_ready(faith_id)
+	return (meta.temples.has(faith_id) or meta.visiting == faith_id) and temple_ready(faith_id)
 
 
 ## 396 老档：在节点开神的那一版能选的神（奉过的、声望到了 0 蛮神 / 10 自然 / 20 日神），直接算解锁了。只做一次（[constant TEMPLES_MIGRATED]）
@@ -165,6 +197,8 @@ static func migrate_temples(meta: MetaState) -> Array[StringName]:
 static func choose(meta: MetaState, faith_id: StringName) -> bool:
 	if meta == null:
 		return false
+	if meta.visiting != &"" and faith_id != meta.visiting:
+		return false     # 396 第十节：拜访着的那一局锁定奉祂
 	if faith_id != &"" and not god_open(meta, faith_id):
 		return false
 	meta.pantheon_choice = faith_id
@@ -174,6 +208,8 @@ static func choose(meta: MetaState, faith_id: StringName) -> bool:
 
 ## 下一局奉谁：选过、而且现在还能选（老档的选择不在表里了就当以人为本）
 static func choice(meta: MetaState) -> StringName:
+	if meta != null and meta.visiting != &"" and god_open(meta, meta.visiting):
+		return meta.visiting     # 396 第十节：拜访着的那一局锁定奉祂
 	if meta == null or not god_open(meta, meta.pantheon_choice):
 		return &""
 	return meta.pantheon_choice
