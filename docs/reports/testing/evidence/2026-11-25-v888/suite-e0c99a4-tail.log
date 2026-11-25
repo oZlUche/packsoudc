@@ -1,0 +1,40 @@
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_badge_and_ground (res://tests/ui/test_shop_keys.gd:161)
+         [1] _process (res://tests/run_tests.gd:138)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_tent (res://tests/ui/test_shop_tent_233.gd:52)
+         [1] _process (res://tests/run_tests.gd:138)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_tent (res://tests/ui/test_shop_tent_233.gd:60)
+         [1] _process (res://tests/run_tests.gd:138)
+WARNING: HoverTip：登记「不弹」条件的对象已释放却没撤销（211946537975146）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] is_quiet (res://ui/inventory/hover_tip.gd:1358)
+         [1] frame_quiet_lifecycle (res://tests/ui/test_slice_v614.gd:59)
+         [2] _process (res://tests/run_tests.gd:138)
+======================================================
+通过  48097 项断言，361 个套件，耗时 666162 ms
+======================================================
+
+!! 日志中有意料之外的 ERROR（负向用例故意造的错要登记在 tools/expected_errors.txt），判为失败
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+ERROR: Error calling deferred method: 'VBoxContainer(level_pick_panel.gd)::_fit_body': Cannot convert argument 1 from Object to Object.
+EXIT=1
+EXIT=1
