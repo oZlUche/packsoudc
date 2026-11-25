@@ -1,8 +1,8 @@
 {
   "id": "card_weapon_cost",
-  "display_name": "省力",
+  "display_name": "熟练",
   "display_names": {
-    "en": "Economy"
+    "en": "Practiced"
   },
   "effects": [
     {

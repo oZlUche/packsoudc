@@ -20,8 +20,8 @@ mods = Array[ExtResource("2_tub1i")]([SubResource("Resource_674e6")])
 [resource]
 script = ExtResource("5_8353u")
 id = &"card_weapon_cost"
-display_name = "省力"
+display_name = "熟练"
 display_names = {
-"en": "Economy"
+"en": "Practiced"
 }
 effects = Array[ExtResource("1_8hdpy")]([SubResource("Resource_t7qjj")])

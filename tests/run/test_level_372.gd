@@ -40,7 +40,7 @@ static func run_table(t: TestCase) -> void:
 		kinds[r.kind_of(cid)] = true
 		if r.god_of(cid) == &"":
 			generic += 1
-	t.eq(generic, 15, "通用牌 15 张（神的牌另算，388）")
+	t.eq(generic, 17, "通用牌 17 张（372 补加精准、狠辣；神的牌另算，388）")
 	t.eq(kinds.size(), 4, "三类通用 + 神的牌")
 	var buffs := RunBuffs.load_all()
 	var missing: Array[String] = []
@@ -207,6 +207,9 @@ static func run_fixes_v773(t: TestCase) -> void:
 	var run := _start(11)
 	var lv := LevelModule.of(run)
 	t.check(lv.card_text(&"card_regen").contains("+0.6"), "调息写 +0.6：%s" % lv.card_text(&"card_regen"))
+	t.check(lv.card_text(&"card_crit_chance").contains("2%"), "精准写暴击率 +2%%：%s" % lv.card_text(&"card_crit_chance"))
+	t.check(lv.card_text(&"card_crit_damage").contains("10%"), "狠辣写暴击伤害 +10%%：%s" % lv.card_text(&"card_crit_damage"))
+	t.eq(Names.of(run.buff_defs[&"card_weapon_cost"]), "熟练", "省力改名熟练")
 	t.check(lv.card_text(&"card_hp_flat").contains("+10") and not lv.card_text(&"card_hp_flat").contains("+10.0"), "整数照旧写整数：%s" % lv.card_text(&"card_hp_flat"))
 	var r := lv.rules()
 	lv.gain(float(r.total_for(13)), LevelModule.SRC_BATTLE)
@@ -246,4 +249,23 @@ static func frame_pick_cards(t: TestCase, root: Window) -> void:
 	panel.queue_free()
 	UiText.lang = keep_lang
 	UiTheme.text_scale = keep_scale
+	run.dispose()
+
+
+static func run_crit_cards(t: TestCase) -> void:
+	t.begin("372 补（作者 11-25 19:14）· 精准 / 狠辣：按「武器」标签加暴击率 +2%、暴击伤害 +10%，可反复拿相加；状态界面那两行跟着变")
+	var run := _start(19)
+	var lv := LevelModule.of(run)
+	TestSupport.put(run.board, run.items.get_def(&"iron_spear"))
+	var base := run.compile_player()
+	var w0: CompiledItem = base.items.filter(func(it: CompiledItem) -> bool: return it.tags.has(&"weapon"))[0]
+	var c0 := StatMath.to_float(w0.stats.total_of(BattleStats.CRIT_CHANCE))
+	var d0 := StatMath.to_float(w0.stats.total_of(BattleStats.CRIT_DAMAGE))
+	lv.taken["card_crit_chance"] = 2
+	lv.taken["card_crit_damage"] = 1
+	var spec := run.compile_player()
+	var w: CompiledItem = spec.items.filter(func(it: CompiledItem) -> bool: return it.tags.has(&"weapon"))[0]
+	t.check(is_equal_approx(StatMath.to_float(w.stats.total_of(BattleStats.CRIT_CHANCE)), c0 + 0.04), "两张精准：暴击率 +4%%（%.3f → %.3f）" % [c0, StatMath.to_float(w.stats.total_of(BattleStats.CRIT_CHANCE))])
+	t.check(is_equal_approx(StatMath.to_float(w.stats.total_of(BattleStats.CRIT_DAMAGE)), d0 + 0.1), "一张狠辣：暴击伤害 +10%")
+	t.check(is_equal_approx(float(CharacterCard.stat_row(run, &"crit_chance").get("flat", 0.0)), 0.04), "状态界面暴击率 +4%")
 	run.dispose()

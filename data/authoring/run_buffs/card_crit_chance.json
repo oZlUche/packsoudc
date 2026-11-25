@@ -1,0 +1,21 @@
+{
+  "id": "card_crit_chance",
+  "display_name": "精准",
+  "display_names": {
+    "en": "Precision"
+  },
+  "effects": [
+    {
+      "type": "tag_mods",
+      "tags": [
+        "weapon"
+      ],
+      "mods": [
+        {
+          "stat": "crit_chance",
+          "amount": 2.0
+        }
+      ]
+    }
+  ]
+}
