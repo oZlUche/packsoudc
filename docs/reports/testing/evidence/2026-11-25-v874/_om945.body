@@ -1,0 +1,65 @@
+extends SceneTree
+## 游戏测试 v8.74（PR #945）：老存档的万神院 → 神殿自选。参数 <outdir> <mode> <rep> <worshipped,逗号分隔>
+## make（v8.73）：新档拒教程 → 测试辅助：万神院到了、声望设成 rep、奉过的神 → 存档退出
+## check（v8.74）：主菜单【继续】→ 看解锁的神殿、声望、解锁机会、红点 → 后勤万神院页 → 出征屏信仰条
+const TAG := "OM945"
+##HEAD##
+var _mode := ""
+var _P: Variant = Pantheon
+var _rep := 0
+var _was: Array = []
+const GODS := ["brute", "sun", "nature", "skill", "hunt", "earth"]
+
+
+func _dot(b: Control) -> String:
+	if b == null: return "-"
+	var d := b.get_node_or_null("RedDot") as RedDot
+	return "无" if d == null or not d.visible else str(d.count)
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _flow == null:
+		_flow = _game.flow
+		var a := OS.get_cmdline_user_args()
+		_mode = a[1] if a.size() > 1 else "check"
+		_rep = int(a[2]) if a.size() > 2 else 0
+		_was = Array(a[3].split(",", false)) if a.size() > 3 else []
+		return false
+	if _f > 8000: L("超时 st %d" % _st); quit(1); return true
+	if _wait > 0: _wait -= 1; return false
+	var m := _flow.meta if _flow != null else null
+	if _mode == "make":
+		if _st < 3:
+			if _boot(): _st = 3
+			return false
+		if _st == 3:
+			m.commissions.arrived[String(Pantheon.FACTION)] = 1
+			m.commissions.rep[String(Pantheon.FACTION)] = _rep
+			for g in _was: m.gods_worshipped.append(StringName(g))
+			_flow.save_meta()
+			L("老版本：万神院到了 %s、声望 %d、奉过 %s；能奉 %s" % [str(Pantheon.arrived(m)), m.commissions.rep_of(Pantheon.FACTION), str(m.gods_worshipped), str(GODS.filter(func(x): return Pantheon.god_open(m, StringName(x))))])
+			_wait = 30; _st = 99; return false
+		L("完 err=0"); quit(0); return true
+	match _st:
+		0:
+			if _f < 90: return false
+			L("主菜单【继续】：%s" % str(_flow.continue_game())); _wait = 90; _st = 1
+		1:
+			L("读进来：声望 %d、解锁的神殿 %s、挣到 %d 次、还剩 %d 次、能奉 %s、迁移标记 %d；红点 后勤 %s" % [m.commissions.rep_of(Pantheon.FACTION), str(m.get("temples")), _P.call("chances_earned", m), _P.call("chances", m), str(GODS.filter(func(x): return Pantheon.god_open(m, StringName(x)))), m.flag(&"pantheon_temples_migrated"), _dot(_ms()._tab_btns.get("logistics", null))])
+			_tab("logistics"); _wait = 30; _st = 2
+		2:
+			if _ms()._sub_btns.has("pantheon"): _click(_ms()._sub_btns["pantheon"])
+			_wait = 30; _st = 3
+		3:
+			L("万神院页：%s" % _labels_under(_ms().pantheon_panel()).left(400))
+			shot("pantheon")
+			_flow.save_meta(); _st = 4; _wait = 10
+		4:
+			var p := OS.get_user_data_dir() + "/slots/1/meta.json"
+			var j = JSON.parse_string(FileAccess.get_file_as_string(p))
+			L("存档里：temples %s、flags 里有迁移标记 %s" % [str(j.get("temples", "?")) if j is Dictionary else "?", str((j.get("flags", {}) as Dictionary).has(String(&"pantheon_temples_migrated"))) if j is Dictionary else "?"])
+			_st = 99
+		99:
+			L("完 err=0"); quit(0); return true
+	return false
