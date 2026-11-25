@@ -1,0 +1,24 @@
+{
+  "id": "vulture_breast",
+  "display_name": "鹫胸肉",
+  "display_names": {
+    "en": "Vulture Breast"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "ingredient",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

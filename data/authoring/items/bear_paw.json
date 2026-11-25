@@ -1,0 +1,24 @@
+{
+  "id": "bear_paw",
+  "display_name": "熊掌",
+  "display_names": {
+    "en": "Bear Paw"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "11",
+    "10"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "ingredient",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

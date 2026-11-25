@@ -44,6 +44,18 @@ static func get_def(id: StringName) -> TagDef:
 
 
 ## 107 后续：内部标签（玩家看不到）。没登记的标签不算内部 —— 界面照原词显示；171：内部类也算
+## 394：这些标签里的子类标签要求的上级（[member TagDef.parents]，血肉 → 素材 + 食材）
+static func implied(tags: Array) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for t in tags:
+		var d := get_def(StringName(String(t)))
+		if d != null:
+			for p in d.parents:
+				if not out.has(p):
+					out.append(p)
+	return out
+
+
 static func is_internal(id: StringName) -> bool:
 	var def := get_def(id)
 	return def != null and (def.internal or def.category == "internal")

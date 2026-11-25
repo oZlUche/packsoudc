@@ -31,6 +31,9 @@ const RETIRED_ITEMS := {
 	&"sniper": {"refund": true, "value": 300},     # 155：狙击枪删了
 	&"mana_crystal": {"refund": true, "value": 24},     # 148：换成三色魔晶石
 	&"mana_shard": {"refund": true, "value": 8},     # 同上
+	&"blood_flesh_scrap": {"replace": "toad_leg"},     # 394：三件【血肉】占位换成按野兽分的肉
+	&"blood_flesh": {"replace": "eel_cut"},     # 同上
+	&"blood_flesh_prime": {"replace": "bear_paw"},     # 同上
 	&"quartz_cluster_nature": {"replace": "quartz_cluster"},     # 244 补充一：两块宝石去了【自然】、并入魔晶石，自然之神的赐福版跟着没了，换回原件
 	&"raw_amber_nature": {"replace": "raw_amber"},     # 同上
 	# 250（作者定）：现代道具全删（原本封存，只有老存档里可能还有）

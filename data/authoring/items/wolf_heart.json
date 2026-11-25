@@ -14,9 +14,11 @@
   "rarity": 2,
   "tags": [
     "material",
+    "ingredient",
     "reagent",
     "nature",
-    "beast_part"
+    "beast_part",
+    "blood_flesh"
   ],
   "material": "flesh",
   "wild": {

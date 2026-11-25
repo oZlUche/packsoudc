@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_j8fpu"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_xutpj"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_8th34"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_lv2pf"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_bd4c5"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_01t0f"]
+
+[sub_resource type="Resource" id="Resource_t5wan"]
+script = ExtResource("6_01t0f")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_bd4c5")
+id = &"bear_liver"
+display_name = "熊肝"
+display_names = {
+"en": "Bear Liver"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_t5wan")
+rarity = 2
+tags = Array[StringName]([&"material", &"ingredient", &"nature", &"beast_part", &"blood_flesh"])
+material = "flesh"

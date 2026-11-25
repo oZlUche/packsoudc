@@ -22,5 +22,5 @@ descriptions = {
 "en": ""
 }
 shape = SubResource("Resource_x3ai8")
-tags = Array[StringName]([&"ingredient", &"nature"])
+tags = Array[StringName]([&"material", &"ingredient", &"nature", &"blood_flesh"])
 material = "flesh"

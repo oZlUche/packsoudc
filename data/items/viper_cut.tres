@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_okegu"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_lw1bp"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_i8wta"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_3bdsw"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_8c0l5"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_0a75m"]
+
+[sub_resource type="Resource" id="Resource_qiael"]
+script = ExtResource("6_0a75m")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_8c0l5")
+id = &"viper_cut"
+display_name = "蛇段"
+display_names = {
+"en": "Viper Cut"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_qiael")
+tags = Array[StringName]([&"material", &"ingredient", &"nature", &"beast_part", &"blood_flesh"])
+material = "flesh"

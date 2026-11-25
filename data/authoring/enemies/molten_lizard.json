@@ -30,8 +30,11 @@
   },
   "board": [
     6,
-    4
+    5
   ],
   "species": "beast",
-  "bagless": true
+  "bagless": true,
+  "loot_bonus": [
+    "lizard_tail"
+  ]
 }

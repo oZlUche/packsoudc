@@ -26,8 +26,11 @@
   },
   "board": [
     5,
-    3
+    4
   ],
   "species": "beast",
-  "bagless": true
+  "bagless": true,
+  "loot_bonus": [
+    "boar_belly"
+  ]
 }

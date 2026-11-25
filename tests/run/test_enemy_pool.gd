@@ -450,7 +450,7 @@ static func run_placement(t: TestCase) -> void:
 					if bd != null and bd.is_bag:
 						t.check(tier.rarity_cap < 0 or bd.rarity <= tier.rarity_cap, "点 %d：包 %s 的稀有度不超档位上限" % [id, bd.id])
 			var most := maxi(tier.item_count.y, sig.size()) if def.is_wild() else tier.item_count.y     # 212：魔兽的招牌一件不少
-			most += def.loot_bonus.size()     # 388：魔兽另外必掉的【血肉】不占档位件数
+			most += def.loot_bonus.size() + def.loot_chance.size()     # 388 / 394：魔兽自己的肉、按几率掉的器官不占档位件数
 			# 211：套路是设计者写的，招牌 + 骨架超了档位件数也照样带（刺客「四把轻刀」在档位 0 就是 4 件；259 改图后种子 5 抽到它）
 			var built := def.build_of(StringName(String(c.get("build", "")))) if c.has("build") else null
 			if built != null:

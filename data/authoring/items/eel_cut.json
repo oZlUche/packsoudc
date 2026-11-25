@@ -1,0 +1,24 @@
+{
+  "id": "eel_cut",
+  "display_name": "鳗段",
+  "display_names": {
+    "en": "Eel Cut"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "ingredient",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

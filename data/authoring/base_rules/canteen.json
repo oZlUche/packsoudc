@@ -2,6 +2,16 @@
   "id": "canteen",
   "display_name": "灰灯食堂",
   "entries": {
+    "bear_liver": {
+      "category": "meat",
+      "flat": 6,
+      "satiety": 0
+    },
+    "bear_paw": {
+      "category": "meat",
+      "flat": 7,
+      "satiety": 1
+    },
     "beast_haunch": {
       "category": "meat",
       "flat": 7,
@@ -27,6 +37,11 @@
       "pct": 2,
       "satiety": 5
     },
+    "boar_belly": {
+      "category": "meat",
+      "flat": 3,
+      "satiety": 0
+    },
     "cabbage": {
       "category": "veg",
       "pct": 13,
@@ -36,6 +51,11 @@
       "category": "staple",
       "pct": 12,
       "satiety": 24
+    },
+    "eel_cut": {
+      "category": "meat",
+      "flat": 4,
+      "satiety": 0
     },
     "fat_fowl": {
       "category": "meat",
@@ -92,10 +112,20 @@
       "pct": 7,
       "satiety": 12
     },
+    "lizard_tail": {
+      "category": "meat",
+      "flat": 7,
+      "satiety": 1
+    },
     "long_scallion": {
       "category": "veg",
       "flat": 0.4,
       "satiety": 0
+    },
+    "mane_loin": {
+      "category": "meat",
+      "flat": 7,
+      "satiety": 1
     },
     "meat_scrap": {
       "category": "meat",
@@ -142,9 +172,34 @@
       "flat": 1,
       "satiety": 5
     },
+    "spider_leg_meat": {
+      "category": "meat",
+      "flat": 6,
+      "satiety": 0
+    },
+    "toad_leg": {
+      "category": "meat",
+      "flat": 1,
+      "satiety": 0
+    },
     "turnip": {
       "category": "veg",
       "flat": 0.6,
+      "satiety": 0
+    },
+    "viper_cut": {
+      "category": "meat",
+      "flat": 3,
+      "satiety": 0
+    },
+    "viper_gall": {
+      "category": "meat",
+      "flat": 2,
+      "satiety": 0
+    },
+    "vulture_breast": {
+      "category": "meat",
+      "pct": 9,
       "satiety": 0
     },
     "whole_fowl": {
@@ -160,6 +215,16 @@
     "wild_scallion": {
       "category": "veg",
       "flat": 0.1,
+      "satiety": 0
+    },
+    "wolf_heart": {
+      "category": "meat",
+      "flat": 3,
+      "satiety": 0
+    },
+    "wolf_shank": {
+      "category": "meat",
+      "flat": 3,
       "satiety": 0
     }
   }
