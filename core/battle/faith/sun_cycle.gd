@@ -98,6 +98,72 @@ func _defs() -> void:
 
 
 #region 时间轴（纯函数：只看时刻）
+const CLOCK := "sun_clock"
+const CLOCK_KEYS: Array[String] = ["day_sec", "night_sec", "dusk_sec", "dawn_sec", "day_damage", "night_haste"]
+
+
+## 开战那一下记进日志的时间轴参数（回放用 [method from_clock] 还原，不用再找规则）
+func clock_payload() -> Dictionary:
+	var out := {"effect": CLOCK, "eclipse_sun": eclipse_sun, "eclipse_moon": eclipse_moon}
+	for k in CLOCK_KEYS:
+		out[k] = float(get(k))
+	return out
+
+
+## 从日志里那一条还原出只用来算时间轴的一份
+static func from_clock(payload: Dictionary) -> SunCycle:
+	var c := SunCycle.new()
+	for k in CLOCK_KEYS:
+		if payload.has(k):
+			c.set(k, float(payload[k]))
+	c.eclipse_sun = bool(payload.get("eclipse_sun", false))
+	c.eclipse_moon = bool(payload.get("eclipse_moon", false))
+	return c
+
+
+## 回放里找开战记下的那一条（没奉日神 = null）
+static func clock_of(result: BattleResult) -> SunCycle:
+	if result == null:
+		return null
+	for raw in result.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.EFFECT_RESOLVED and e.side == 0 and String(e.payload.get("effect", "")) == CLOCK:
+			return from_clock(e.payload)
+		if e.time > 0:
+			break
+	return null
+
+
+## [param segs]（[method segments] 算到 [param cap] 秒）里 [param t] 秒那一段：{day, night, left: 离下一次变还有几秒（-1 = 不会变）, span: 这一段多长}
+static func clock_at(segs: Array, t: float, cap: float) -> Dictionary:
+	for seg in segs:
+		if t < float(seg[1]) or seg == segs[-1]:
+			var open_end := float(seg[1]) >= cap - 0.001
+			return {"day": bool(seg[2]), "night": bool(seg[3]), "left": -1.0 if open_end else maxf(0.0, float(seg[1]) - t),
+				"span": float(seg[1]) - float(seg[0])}
+	return {"day": true, "night": false, "left": -1.0, "span": 0.0}
+
+
+## 算多远才够看出「会不会变」：整场再加一个日夜来回
+func horizon(duration: float) -> float:
+	return duration + maxf(0.0, day_sec) + maxf(0.0, night_sec) + 1.0
+
+
+## [0, [param until]] 秒里的各段：[[起, 止, 白昼?, 黑夜?], ...]（相邻同状态并成一段）
+func segments(until: float) -> Array:
+	var out: Array = []
+	var end := StatMath.from_float(until)
+	var t := 0
+	while t < end:
+		var nxt := mini(next_boundary(t), end)
+		var s := states_at(t)
+		if not out.is_empty() and bool(out[-1][2]) == (s.x == 1) and bool(out[-1][3]) == (s.y == 1):
+			out[-1][1] = StatMath.to_float(nxt)
+		else:
+			out.append([StatMath.to_float(t), StatMath.to_float(nxt), s.x == 1, s.y == 1])
+		t = nxt
+	return out
+
 ## [param t]（定点）时在第几个阶段、是不是白昼阶段、进这个阶段多久了、这个阶段几时结束（-1 = 不会结束）
 func phase_at(t: int) -> Dictionary:
 	var d := StatMath.from_float(maxf(0.0, day_sec))
@@ -163,6 +229,7 @@ func apply(ctx: RuleContext) -> void:
 	elif e.name == BattleEvent.BEFORE_DAMAGE:
 		_before(ctx)
 	elif e.name == BattleEvent.BATTLE_START:
+		ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, ctx.owner.side, clock_payload())     # 回放的日月盘、色带照它重算时间轴
 		_tick(ctx)
 
 

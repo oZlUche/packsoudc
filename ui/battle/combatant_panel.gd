@@ -96,6 +96,8 @@ var _hover_id: String = ""
 var _resources: Dictionary = {}
 ## buff id -> 层数
 var _stacks: Dictionary = {}
+## 388：不挂进效果栏的状态（有日月盘时的【白昼】【黑夜】）
+var hidden_ids: Array[String] = []
 ## 175 补充四：buff id -> 保底层数（凝毒 / 冻疮；status_stacked 的 guard 键）
 var guards: Dictionary = {}
 ## 185（作者 2026-10-17 16:24）：限时状态的计时 —— id → {"end": 到期时刻（回放秒）, "total": 这一轮的总长}；图标上画计时环、悬浮窗写还剩几秒
@@ -300,6 +302,8 @@ func set_stacks(buff: String, p_stacks: int) -> void:
 
 
 func _set_chip(id: String, p_stacks: int, present: bool) -> void:
+	if present and hidden_ids.has(id):
+		return     # 388：日月盘显示着的【白昼】【黑夜】不进栏
 	if not present:
 		_stacks.erase(id)
 		_arrival.erase(id)
