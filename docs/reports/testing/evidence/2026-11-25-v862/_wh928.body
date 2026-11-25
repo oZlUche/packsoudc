@@ -1,0 +1,59 @@
+extends SceneTree
+## 游戏测试 v8.62（PR #928）：匕首暴伤在界面里怎么写。参数 <outdir>
+## 新档拒教程 → 测试辅助往仓库放匕首、淬火匕首、钢刺、无声短刃、焰牙、刹那 → 仓库页逐件真悬停，记悬浮窗里的字、截图
+const TAG := "WH928"
+##HEAD##
+const IDS := ["knife", "quenched_dagger", "steel_stiletto", "silent_blade", "flame_fang", "chana"]
+var _insts := []
+var _i := 0
+
+
+func _view_of(inst: ItemInstance) -> InventoryView:
+	for n in root.find_children("*", "InventoryView", true, false):
+		var v := n as InventoryView
+		if v.is_visible_in_tree() and v.inventory != null and v.inventory.get_item(inst.uid) != null: return v
+	return null
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _flow == null:
+		_flow = _game.flow
+		return false
+	if _f > 6000: L("超时 st %d" % _st); shot("timeout"); quit(1); return true
+	if _wait > 0: _wait -= 1; return false
+	if _st < 3:
+		if _boot(): _st = 3
+		return false
+	match _st:
+		3:
+			var defs := []
+			for id in IDS: defs.append(_flow.items.get_def(StringName(id)))
+			L("测试辅助：仓库放 %s：%s" % [str(IDS), str(_flow.meta.grant_lossless(defs))])
+			for it in _flow.meta.warehouse.items():
+				if String((it as ItemInstance).def.id) in IDS: _insts.append(it)
+			_flow.save_meta(); _flow.meta.changed.emit()
+			_tab("warehouse"); _wait = 40; _st = 4
+		4:
+			if _i >= _insts.size(): _st = 99; return false
+			var inst: ItemInstance = _insts[_i]
+			var v := _view_of(inst)
+			if v == null: L("%s：仓库页上没看到（可能在别的页）" % Names.of(inst.def)); _i += 1; return false
+			var c0: Vector2i = inst.cells()[0]
+			var at := v.get_global_transform() * (v.cell_origin_px(inst.origin + c0) + Vector2.ONE * v.cell_px * 0.5)
+			_hover_at(Vector2(5, 5)); _hover_at(at); _wait = 40; _st = 5
+		5:
+			var inst: ItemInstance = _insts[_i]
+			var v := _view_of(inst)
+			var tip := HoverTip.host_for(v) if v != null else null
+			var txt := _labels_under(tip).replace("\n", " / ") if tip != null else "-"
+			var lines := []
+			for part in txt.split(" / "):
+				if part.contains("暴击") or part.to_lower().contains("crit"): lines.append(part)
+			L("%s（稀有度 %d）悬停：暴击那几行 %s；排版 %s" % [Names.of(inst.def), inst.def.rarity, str(lines), _overflow(tip) if tip != null else "-"])
+			L("　　整个悬浮窗：%s" % txt.left(500))
+			shot("tip_%s" % String(inst.def.id))
+			_i += 1; _st = 4
+		99:
+			L("完 err=0"); quit(0); return true
+	return false

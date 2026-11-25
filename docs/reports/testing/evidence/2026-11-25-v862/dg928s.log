@@ -1,0 +1,8 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+DG928S knife（匕首）：暴击 5 下 { "4.80": 5 }；普通 45 下 { "3.00": 45 }；事件 ["battle_start", "resource_changed", "item_fired", "damage", "overtime_stacked", "axis_shifted", "battle_end"]
+DG928S quenched_dagger（淬火匕首）：暴击 9 下 { "10.20": 9 }；普通 41 下 { "6.00": 41 }；事件 ["battle_start", "resource_changed", "item_fired", "damage", "overtime_stacked", "axis_shifted", "battle_end"]
+DG928S steel_stiletto（钢刺）：暴击 9 下 { "9.00": 9 }；普通 91 下 { "4.00": 50, "5.00": 41 }；事件 ["battle_start", "resource_changed", "item_fired", "damage", "overtime_stacked", "axis_shifted", "battle_end"]
+DG928S silent_blade（无声短刃）：暴击 12 下 { "15.20": 12 }；普通 40 下 { "8.00": 40 }；事件 ["battle_start", "item_fired", "resource_changed", "damage", "overtime_stacked", "axis_shifted", "battle_end"]
+DG928S flame_fang（焰牙）：暴击 9 下 { "16.00": 9 }；普通 148 下 { "4.00": 51, "2.00": 10, "8.00": 41, "7.00": 1, "9.00": 1, "3.00": 18, "10.00": 1, "12.00": 1, "14.00": 1, "15.00": 1, "17.00": 1, "19.00": 1, "20.00": 1, "22.00": 1, "24.00": 1, "25.00": 1, "27.00": 1, "29.00": 1, "30.00": 1, "32.00": 1, "34.00": 1, "35.00": 1, "37.00": 1, "39.00": 1, "40.00": 1, "42.00": 1, "44.00": 1, "45.00": 1, "47.00": 1, "49.00": 1, "50.00": 1, "52.00": 1 }；事件 ["battle_start", "item_fired", "status_stacked", "resource_changed", "damage", "status_unstacked", "effect_resolved", "overtime_stacked", "axis_shifted", "battle_end"]
+DG928S chana（刹那）：暴击 6 下 { "417.90": 6 }；普通 79 下 { "199.00": 50, "6.00": 3, "7.00": 22, "5.00": 3, "4.00": 1 }；事件 ["battle_start", "resource_changed", "item_fired", "damage", "status_stacked", "status_unstacked", "item_skipped", "overtime_stacked", "axis_shifted", "battle_end"]
