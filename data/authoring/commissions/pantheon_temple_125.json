@@ -1,0 +1,27 @@
+{
+  "id": "pantheon_temple_125",
+  "display_name": "新殿迎神",
+  "display_names": {
+    "en": "Welcoming the God"
+  },
+  "faction": "pantheon",
+  "order": 6,
+  "reputation": 5,
+  "min_rep": 125,
+  "grants": "temple",
+  "stages": [
+    {
+      "goal": "faith_runs",
+      "count": 3,
+      "where": "carry",
+      "text": "奉着神再出征三次，都要撤离",
+      "texts": {
+        "en": "Follow a god on three more runs, extracting each time"
+      }
+    }
+  ],
+  "client": "万神院的老祭司",
+  "clients": {
+    "en": "Elder priest of the Senatus"
+  }
+}

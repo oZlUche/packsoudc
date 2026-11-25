@@ -125,3 +125,39 @@ static func frame_altar_stele(t: TestCase, root: Window) -> void:
 		t.eq((b as StoneChip)._colors["disabled"], screen.STELE_DISABLED_INK, "碑面上的灰签用浅字")
 	screen.free()
 	Support.cleanup(PREFIX + "a")
+
+
+static func frame_altar_convert(t: TestCase, root: Window) -> void:
+	t.begin("396 神坛上的【改信】：开了才有这一行；下拉里是解锁了的另几位神；改完神徽跟着换、一局只能一次")
+	var c = NodeScreens._content()
+	var kit: LoadoutDef = NodeScreens._kit(c)
+	var f := Support.flow(c, PREFIX + "c")
+	if f.faith_defs.is_empty():
+		f.faith_defs = FaithDef.load_all()
+	f.begin(c.chapter, kit, 1)
+	f.pick_spawn(f.run.map.entry_ids[0])
+	Support.activate(f.run, &"charm_brute")
+	var screen = load("res://ui/game/altar_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	root.add_child(screen)
+	screen.open({"node": f.run.current_node()})
+	t.check(screen.find_child("Convert", true, false) == null, "没开改信：不列")
+	screen.free()
+	f.run.faith_convert = true
+	f.run.faith_temples = [&"brute", &"sun"] as Array[StringName]
+	screen = load("res://ui/game/altar_screen.gd").new()
+	screen.flow = f
+	screen.font = UiPalette.cjk_font()
+	root.add_child(screen)
+	screen.open({"node": f.run.current_node()})
+	var key: Button = screen.find_child("Convert", true, false)
+	var pick: OptionButton = screen.find_child("ConvertPick", true, false)
+	t.check(key != null and not key.disabled, "改信的石签亮着")
+	t.check(pick != null and pick.item_count == 1 and pick.get_item_text(0) == Names.of(f.faith_defs[&"sun"]), "下拉里只有日神")
+	t.check(screen.convert_to() != "" and f.run.selected_faith == &"sun", "改奉日神")
+	t.eq(screen.overlay_frame().emblem, UiTheme.art_cached("faith/sun"), "神徽换成日神的")
+	key = screen.find_child("Convert", true, false)
+	t.check(key != null and key.disabled and key.tooltip_text == UiText.t("altar.convert_used"), "改过了：灰着，写一局一次")
+	screen.free()
+	Support.cleanup(PREFIX + "c")

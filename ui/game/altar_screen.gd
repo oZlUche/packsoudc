@@ -22,6 +22,7 @@ var _action_btns: Array = []
 var _actions_box: VBoxContainer = null
 var _actions_tier: int = -99
 var _inv: InventoryPanelScript = null
+var _convert_pick: OptionButton = null
 
 
 func open(payload: Dictionary) -> void:
@@ -182,6 +183,27 @@ func special(perk: FaithPerk) -> String:
 	return line
 
 
+## 396【改信】：改奉另一位解锁了的神（下拉里选的那位；不给就取下拉当前项）。不关神坛
+func convert_to(god: StringName = &"") -> String:
+	var altar := AltarModule.of(flow.run)
+	if altar == null:
+		return ""
+	if god == &"" and _convert_pick != null and _convert_pick.get_selected() >= 0:
+		var opts: Array = _convert_pick.get_meta("options")
+		god = opts[_convert_pick.get_selected()]
+	var line := altar.convert_faith(god)
+	if line == "":
+		return ""
+	say(line)
+	flow.save()
+	var def := flow.run.active_faith()
+	if def != null and _overlay_frame != null:
+		_overlay_frame.emblem = UiTheme.art_cached("faith/%s" % def.id)
+	_actions_tier = -99     # 牌和信物都换了，特殊操作那一列按新神重画
+	_refresh()
+	return line
+
+
 ## 返回：台上的东西先回背包
 func to_map() -> bool:
 	for inst in _table.items().duplicate():
@@ -209,9 +231,10 @@ func _rebuild_actions() -> void:
 	UiTheme.clear_children(_actions_box)
 	_action_btns.clear()
 	var actions := (AltarModule.of(run).actions() if AltarModule.of(run) != null else [])
-	if actions.is_empty():
+	if actions.is_empty() and not run.faith_convert:
 		return
 	_actions_box.add_child(HSeparator.new())
+	_add_convert_row()
 	for p in actions:
 		var perk := p as FaithPerk
 		var arow := _hbox(6)
@@ -239,6 +262,39 @@ func _rebuild_actions() -> void:
 		_actions_box.add_child(arow)
 
 
+## 【改信】那一行：石签 + 能改成的神（下拉）；不能改时灰着，悬浮窗写原因
+func _add_convert_row() -> void:
+	var run := flow.run
+	_convert_pick = null
+	if not run.faith_convert:
+		return
+	var altar := AltarModule.of(run)
+	var why := altar.convert_refusal() if altar != null else UiText.t("altar.convert_none")
+	var arow := _hbox(6)
+	arow.name = "ConvertRow"
+	var b := StoneChip.make(UiText.t("altar.convert"), func(): convert_to())
+	b.name = "Convert"
+	b.toggle_mode = false
+	if b is StoneChip:
+		(b as StoneChip).set_state_ink("disabled", STELE_DISABLED_INK)
+	b.disabled = why != ""
+	b.tooltip_text = why if why != "" else UiText.t("altar.convert_tip")
+	arow.add_child(b)
+	var targets := altar.convert_targets() if altar != null else ([] as Array[StringName])
+	if not targets.is_empty():
+		var pick := OptionButton.new()
+		pick.name = "ConvertPick"
+		for i in targets.size():
+			var d := run.faith_defs.get(targets[i], null) as FaithDef
+			pick.add_item(Names.of(d) if d != null else String(targets[i]), i)
+		pick.set_meta("options", targets)
+		pick.disabled = why != ""
+		UiTheme.dress_chip_option(pick, 16, STELE_DISABLED_INK)
+		arow.add_child(pick)
+		_convert_pick = pick
+	_actions_box.add_child(arow)
+
+
 func _refresh() -> void:
 	var run := flow.run
 	var def := run.active_faith()
@@ -264,7 +320,7 @@ func _refresh() -> void:
 		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p.get("xp", 0)), int(p["tier_before"]), int(p["tier_after"])]
 	ScrollKey.show_sub(_offer_btn, UiText.t("altar.offer"), line)
 	for b in _action_btns:
-		(b as Button).disabled = (b as Button).disabled or not open_
+		(b as Button).disabled = (b as Button).disabled or not open_     # 【改信】不在这里面：用过的神坛也能改
 
 
 ## 101：神坛是一局的模块（没装 = 这一局没有神坛）

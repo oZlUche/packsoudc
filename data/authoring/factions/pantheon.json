@@ -53,11 +53,10 @@
       "value": "pantheon_temple_50"
     },
     {
-      "id": "faith_xp",
+      "id": "convert",
       "rep": 50,
-      "kind": "boost",
-      "effect": "faith_xp",
-      "value": 0.2
+      "kind": "open",
+      "effect": "convert"
     },
     {
       "id": "skip",
@@ -96,22 +95,25 @@
       ]
     },
     {
-      "id": "temple_4",
+      "id": "temple_rite_100",
       "rep": 100,
       "kind": "open",
-      "effect": "temple"
+      "effect": "commission",
+      "value": "pantheon_temple_100"
     },
     {
-      "id": "temple_5",
+      "id": "temple_rite_125",
       "rep": 125,
       "kind": "open",
-      "effect": "temple"
+      "effect": "commission",
+      "value": "pantheon_temple_125"
     },
     {
-      "id": "temple_6",
+      "id": "temple_rite_150",
       "rep": 150,
       "kind": "open",
-      "effect": "temple"
+      "effect": "commission",
+      "value": "pantheon_temple_150"
     }
   ],
   "gift_every": 25,

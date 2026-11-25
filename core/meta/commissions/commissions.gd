@@ -22,7 +22,7 @@ const EFFECT_FINALE := &"finale"     # 结案委托；办完许可单后告示�
 ## 396：不走调查 / 许可单 / 结案那条线的一方（万神院），这个节点直接开告示栏的常规委托
 const EFFECT_REGULAR := &"regular"
 const EFFECTS: Array[StringName] = [EFFECT_INQUIRY, EFFECT_FINALE, EFFECT_REGULAR, &"commission", &"god", &"faith_xp", &"altar_bless",
-	&"alchemy_loss", &"canteen_pot", &"canteen_store", &"nursery_plot", &"temple", &"pick_aids"]
+	&"alchemy_loss", &"canteen_pot", &"canteen_store", &"nursery_plot", &"temple", &"pick_aids", &"convert"]
 ## 没写 min_rep 的委托按档位默认要多少声望：调查要到 [constant EFFECT_INQUIRY] 那个节点、结案要到 [constant EFFECT_FINALE]（这一方没写就用这两个数）
 const INQUIRY_REP := 10
 const FINALE_REP := 25

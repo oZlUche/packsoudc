@@ -1,6 +1,6 @@
 ## 报告 377 第一批：万神院 —— 新档教程后第 3 次成功撤离结算时来营地；没来之前这一局没有信仰（不铺神召、没有神坛祷告、
 ## 掉落不出信物与赐福道具、随机来源锁上信物）；来了以后在万神院选神，出征时信物自动进背包、定这一局的神，局结束信物不带回仓库；
-## 396：神殿自选解锁（0 / 100 / 125 / 150 节点、25 / 50 委托各给一次机会），50 经验 +20%、75 赐福、40 / 60 / 70 / 90 重选跳过；奉神出征的引导委托；老档迁移只做一次
+## 396：神殿自选解锁（0 点节点、25 / 50 / 100 / 125 / 150 委托各给一次机会），50【改信】、75 赐福、40 / 60 / 70 / 90 重选跳过；奉神出征的引导委托；老档迁移只做一次
 extends RefCounted
 
 const Support := preload("res://tests/run/flow_support.gd")
@@ -33,7 +33,7 @@ static func _extract_once(f: GameFlow, c: TestSupport.Content, seed_: int) -> Ru
 
 
 static func run_content(t: TestCase) -> void:
-	t.begin("377 / 396 · 万神院的数据：第 3 次撤离来、起始声望 5；六座神殿；解锁机会 0 / 100 / 125 / 150 加 25、50 两份委托；重选、跳过、经验、赐福的节点；没有许可单")
+	t.begin("377 / 396 · 万神院的数据：第 3 次撤离来、起始声望 5；六座神殿；解锁机会 0 点一次加 25 / 50 / 100 / 125 / 150 五份委托；重选、跳过、改信、赐福的节点，没有加经验的；没有许可单")
 	var f := Pantheon.faction()
 	t.not_null(f, "有万神院")
 	if f == null:
@@ -42,11 +42,10 @@ static func run_content(t: TestCase) -> void:
 	t.eq(Pantheon.gods(FaithDef.load_all()), [&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"] as Array[StringName], "六座神殿，新教不列")
 	t.eq([&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"].map(func(g: StringName) -> bool: return Pantheon.temple_ready(g)), [true, true, true, false, false, false], "牌表写好的三位能解锁；技巧、狩猎、大地还没落成")
 	t.eq([Pantheon.blurb(&"brute"), Pantheon.blurb(&"sun"), Pantheon.blurb(&"nature")], ["热衷战斗、牺牲与鲜血之神", "祂掌管昼与夜，构筑天地的秩序", ""], "悬浮窗：作者给的两句，其余留空")
-	t.eq(Commissions.nodes_of(f).filter(func(n: Dictionary) -> bool: return StringName(String(n.get("effect", ""))) == Pantheon.EFFECT_TEMPLE).map(func(n: Dictionary) -> int: return int(n["rep"])), [0, 100, 125, 150], "解锁神殿的节点")
+	t.eq(Commissions.nodes_of(f).filter(func(n: Dictionary) -> bool: return StringName(String(n.get("effect", ""))) == Pantheon.EFFECT_TEMPLE).map(func(n: Dictionary) -> int: return int(n["rep"])), [0], "直接给解锁机会的节点只有 0 点")
 	var grants := Commissions.of_faction(Pantheon.FACTION).filter(func(d: CommissionDef) -> bool: return d.grants == Pantheon.GRANT_TEMPLE)
-	t.eq(grants.map(func(d: CommissionDef) -> int: return Commissions.required_rep(d)), [25, 50], "25、50 各一份给解锁机会的委托")
-	t.eq([Commissions.effect_rep(f, Pantheon.SERVICE_XP), Commissions.effect_rep(f, Pantheon.SERVICE_BLESS), Commissions.effect_rep(f, Commissions.EFFECT_REGULAR), Commissions.effect_rep(f, Pantheon.SERVICE_OPENING)], [50, 75, 25, -1], "经验 50、赐福 75、日常委托 25；开局多一张没有节点")
-	t.eq(float(Commissions.node_of(f, &"faith_xp").get("value", 0.0)), 0.2, "经验 +20%")
+	t.eq(grants.map(func(d: CommissionDef) -> int: return Commissions.required_rep(d)), [25, 50, 100, 125, 150], "25 / 50 / 100 / 125 / 150 各一份给解锁机会的委托")
+	t.eq([Commissions.effect_rep(f, Pantheon.SERVICE_XP), Commissions.effect_rep(f, Pantheon.EFFECT_CONVERT), Commissions.effect_rep(f, Pantheon.SERVICE_BLESS), Commissions.effect_rep(f, Commissions.EFFECT_REGULAR), Commissions.effect_rep(f, Pantheon.SERVICE_OPENING)], [-1, 50, 75, 25, -1], "没有加经验的节点；改信 50、赐福 75、日常委托 25；开局多一张没有节点")
 	var aids := func(r: int) -> Array:
 		var a := [0, 0]
 		for n in Commissions.nodes_of(f):
@@ -55,7 +54,7 @@ static func run_content(t: TestCase) -> void:
 				a[1] += int(n["value"][1])
 		return a
 	t.eq([aids.call(39), aids.call(40), aids.call(60), aids.call(70), aids.call(90)], [[0, 0], [1, 0], [1, 1], [2, 2], [4, 4]], "40 重选、60 跳过、70 各 +1、90 各 +2")
-	var guide := Commissions.of_faction(Pantheon.FACTION).filter(func(d: CommissionDef) -> bool: return d.stages.any(func(st: CommissionStage) -> bool: return st.goal == &"faith_runs"))
+	var guide := Commissions.of_faction(Pantheon.FACTION).filter(func(d: CommissionDef) -> bool: return Commissions.required_rep(d) == 0 and d.stages.any(func(st: CommissionStage) -> bool: return st.goal == &"faith_runs"))
 	t.eq(guide.map(func(d: CommissionDef) -> Array: return [Commissions.required_rep(d), Commissions.reputation_of(d), d.stages[0].count]), [[0, 10, 1], [0, 10, 2]], "0 点两份引导委托：奉神撤离一次 / 两次，各 +10")
 	t.eq(f.permit, &"", "没有许可单那条线")
 	for nm in ["emblem_pantheon", "pin_pantheon"]:
@@ -140,7 +139,7 @@ static func run_choose_and_depart(t: TestCase) -> void:
 
 
 static func run_tiers(t: TestCase) -> void:
-	t.begin("396 · 神殿自选解锁：0 点一次机会、25 / 50 的委托各一次、100 / 125 / 150 各一次；没落成的不能解锁；50 经验 ×1.2、75 赐福；40 / 60 / 70 / 90 重选、跳过")
+	t.begin("396 · 神殿自选解锁：0 点一次机会、25 / 50 的委托各一次、100 / 125 / 150 的委托各一次；没落成的不能解锁；50 改信、75 赐福；40 / 60 / 70 / 90 重选、跳过")
 	ItemInstance.reset_uid_counter()
 	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths", "characters"]))
 	var f := _new_flow(c)
@@ -159,16 +158,20 @@ static func run_tiers(t: TestCase) -> void:
 	t.check(Pantheon.can_unlock_any(f.meta), "有机会、有落成的：能解锁")
 	t.check(not Pantheon.can_unlock(f.meta, &"skill"), "技巧之神没落成：不能解锁")
 	t.check(Pantheon.unlock(f.meta, &"nature"), "解锁自然之神")
-	t.eq(Pantheon.access(f.meta)["xp_bonus"], 0.0, "30 点还不加经验")
+	t.check(not bool(Pantheon.access(f.meta)["convert"]), "30 点还不能改信")
 	t.eq([Pantheon.access(f.meta)["rerolls"], Pantheon.access(f.meta)["skips"]], [0, 0], "30 点：没有重选、跳过")
 	book.rep[String(Pantheon.FACTION)] = 60
-	t.eq(Pantheon.access(f.meta)["xp_bonus"], 0.2, "50 点加 20%")
+	t.check(bool(Pantheon.access(f.meta)["convert"]) and Pantheon.access(f.meta)["xp_bonus"] == 0.0, "50 点能改信，经验不加")
+	t.eq(Pantheon.access(f.meta)["temples"], ["sun", "nature"], "这一局能改成的：解锁了的神")
 	t.check(not bool(Pantheon.access(f.meta)["bless"]), "60 点还没有赐福")
 	t.eq([Pantheon.access(f.meta)["rerolls"], Pantheon.access(f.meta)["skips"]], [1, 1], "60 点：重选 1、跳过 1")
 	book.rep[String(Pantheon.FACTION)] = 150
 	t.check(bool(Pantheon.access(f.meta)["bless"]), "75 点以上有赐福")
 	t.eq([Pantheon.access(f.meta)["rerolls"], Pantheon.access(f.meta)["skips"]], [4, 4], "90 点以上：重选 4、跳过 4")
-	t.eq(Pantheon.chances(f.meta), 3, "150 点：100 / 125 / 150 三次（50 的委托没做）")
+	t.eq(Pantheon.chances(f.meta), 0, "150 点光有声望不给机会")
+	for cid in ["pantheon_temple_100", "pantheon_temple_125", "pantheon_temple_150"]:
+		book.entries[cid] = {"state": CommissionBook.DONE, "times": 1}
+	t.eq(Pantheon.chances(f.meta), 3, "做完 100 / 125 / 150 的委托：三次（50 的委托没做）")
 	t.check(Pantheon.unlock(f.meta, &"brute"), "解锁蛮神")
 	t.check([&"skill", &"hunt", &"earth"].all(func(g: StringName) -> bool: return not Pantheon.can_unlock(f.meta, g)), "没落成的三位有机会也不能解锁")
 	t.eq(Pantheon.chances(f.meta), 2, "机会留着")
@@ -185,10 +188,8 @@ static func run_tiers(t: TestCase) -> void:
 		return
 	var lv := LevelModule.of(s)
 	var base := lv.rules().mult(s.difficulty.level if s.difficulty != null else 0)
-	t.check(s.active_faith_id() == &"nature" and is_equal_approx(lv.mult(), base * 1.2), "奉神：经验系数 ×1.2")
+	t.check(s.active_faith_id() == &"nature" and is_equal_approx(lv.mult(), base), "奉神：经验系数不再加")
 	t.eq([s.faith_rerolls, s.faith_skips, lv.rerolls_left() - s.buff_context().level_rerolls, lv.skips_left()], [4, 4, 4, 4], "这一局带着重选 4（和科技的相加）、跳过 4")
-	s.selected_faith = &""
-	t.check(is_equal_approx(lv.mult(), base), "以人为本：不加")
 	s.faith_bless = false
 	s.selected_faith = &"nature"
 	var altar := AltarModule.of(s)
@@ -204,9 +205,25 @@ static func run_tiers(t: TestCase) -> void:
 	t.check(lv.skip_bonus == 1, "记着多一张")
 	lv.pick(0)
 	t.check(lv.skip_bonus == 0 and lv.offer().size() <= n0, "挑过一张：多的那张只管那一批")
+	if s.phase == RunState.Phase.PICK_SPAWN:
+		f.pick_spawn(s.map.entry_ids[0])
+	# 396【改信】：每局一次，只改成解锁了的另一位神；信物原地换掉；不占神坛的机会
+	t.eq(altar.convert_targets(), [&"sun", &"brute"] as Array[StringName], "能改成解锁了的另两位")
+	t.eq(altar.convert_refusal(), "", "50 点以上、在地图上：能改")
+	t.check(altar.convert_faith(&"skill") == "", "没解锁的不能改")
+	var used_before := altar.used.duplicate()
+	var line := altar.convert_faith(&"sun")
+	t.check(line != "" and s.selected_faith == &"sun" and s.active_faith_id() == &"sun", "改奉日神")
+	var sun_charm := Pantheon.charm_of(c.items, &"sun")
+	var nature_charm := Pantheon.charm_of(c.items, &"nature")
+	t.check(s.board.items().any(func(i: ItemInstance) -> bool: return i.def == sun_charm) and not s.board.items().any(func(i: ItemInstance) -> bool: return i.def == nature_charm), "信物换成日神的")
+	t.check(s.faith_converted and altar.used == used_before, "记上改过；神坛的机会没动")
+	t.eq(altar.convert_refusal(), UiText.t("altar.convert_used"), "一局只能改一次")
+	t.check(altar.convert_faith(&"brute") == "" and s.selected_faith == &"sun", "第二次不改")
 	var back := RunState.from_dict(s.to_dict(), c.chapter, c.items, c.enemies, c.sets)
+	t.check(back != null and back.faith_converted, "存档记着改过信")
 
-	t.check(back != null and back.faith_enabled and back.faith_bless and is_equal_approx(back.faith_xp_bonus, 0.2) and back.faith_rerolls == 4 and back.faith_skips == 4, "局内存档带着信仰开关、重选和跳过")
+	t.check(back != null and back.faith_enabled and back.faith_bless and back.faith_xp_bonus == 0.0 and back.faith_rerolls == 4 and back.faith_skips == 4 and back.faith_convert and back.faith_temples == s.faith_temples, "局内存档带着信仰开关、重选、跳过和改信")
 	Support.cleanup(PREFIX)
 
 
@@ -330,6 +347,7 @@ static func run_pick_panel(t: TestCase) -> void:
 	var unlock_key: Button = view.find_child("Unlock", true, false)
 	t.check(unlock_key != null and unlock_key.disabled, "没有机会：【确认解锁】灰着")
 	f.meta.commissions.rep[String(Pantheon.FACTION)] = 100
+	f.meta.commissions.entries["pantheon_temple_100"] = {"state": CommissionBook.DONE, "times": 1}     # 100 点的机会走引导委托
 	view.select(&"skill")
 	unlock_key = view.find_child("Unlock", true, false)
 	t.check(unlock_key.disabled and (view.find_child("Chances", true, false) as Label).text == UiText.t("pantheon.not_built"), "选中没落成的技巧之神：写「神殿尚未落成」、不能确认")
