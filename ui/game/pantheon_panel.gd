@@ -14,13 +14,14 @@ const CP := preload("res://ui/game/commission_panel.gd")
 const INK := Color("2e2219")
 const SHRINE_W := 150.0
 const SHRINE_H := 200.0
-## 396 定稿：营地那一页的神殿（美术正式图 190 × 250，资源是 2 倍图）
+## 396 定稿：营地那一页的神殿（美术正式图 190 × 250）
 const TEMPLE_W := 190.0
 const TEMPLE_H := 250.0
 const NAME_H := 34.0
-## 神徽：32，嵌在山墙的圆槽里（图上坐标；确切数等美术给，空键是默认）
-const MEDAL := 32.0
-const MEDAL_AT := {&"": Vector2(95.0, 77.0)}
+## 神徽嵌在山墙的圆位里（美术给的数：190 × 250 图上的圆心，圆位内径 30）
+const MEDAL := 30.0
+const MEDAL_AT := {&"": Vector2(95.0, 77.0), &"brute": Vector2(95.0, 77.0), &"nature": Vector2(95.0, 76.0), &"sun": Vector2(95.0, 77.0),
+	&"skill": Vector2(95.0, 78.0), &"hunt": Vector2(95.0, 77.0), &"earth": Vector2(95.0, 81.0)}
 ## 选中的光：3 像素描边 + 12 像素 #FFD776 发光
 const HALO := Color("ffd776")
 const NAME_INK := Color("3c3426")
@@ -88,9 +89,9 @@ func _head() -> Control:
 	var row := UiTheme.hbox(12)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	p.add_child(row)
-	row.add_child(CP.emblem(Pantheon.FACTION, 48))
+	row.add_child(CP.emblem(Pantheon.FACTION, 50))
 	var f := Pantheon.faction()
-	var title := UiTheme.make_label(Names.of(f) if f != null else UiText.t("pantheon.title"), 22, INK)
+	var title := UiTheme.make_label(Names.of(f) if f != null else UiText.t("pantheon.title"), 28, INK)
 	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
 	row.add_child(title)
 	return p     # 396 样张：声望刻度只在委托簿的声望页
@@ -222,9 +223,11 @@ func _unlock_bar() -> Control:
 	UiTheme.stone(p, UiTheme.ART_STONE_SLATE)
 	p.custom_minimum_size = Vector2(940, 96)
 	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var pad := UiTheme.margins(MarginContainer.new(), 40, 10, 40, 10)
+	p.add_child(pad)
 	var row := UiTheme.hbox(10)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	p.add_child(row)
+	pad.add_child(row)
 	var parts := UiText.t("pantheon.visits").split("%d")
 	var n := Pantheon.chances(flow.meta)
 	for i in parts.size():

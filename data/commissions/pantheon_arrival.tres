@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_txkbt"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_nqxes"]
+
+[sub_resource type="Resource" id="Resource_4dhop"]
+script = ExtResource("2_nqxes")
+goal = &"extract_runs"
+where = &"carry"
+text = "在中途撤离点撤离"
+texts = {
+"en": "Extract at a midway extraction point"
+}
+
+[resource]
+script = ExtResource("1_txkbt")
+id = &"pantheon_arrival"
+display_name = "远道而来"
+display_names = {
+"en": "From Afar"
+}
+faction = &"pantheon"
+stages = Array[ExtResource("2_nqxes")]([SubResource("Resource_4dhop")])
+quote = "接应远道而来的万神院代表"
+quotes = {
+"en": "Meet the envoy of the Senatus Panthei, come from afar"
+}
+client = "万神院的代表"
+clients = {
+"en": "Envoy of the Senatus"
+}
