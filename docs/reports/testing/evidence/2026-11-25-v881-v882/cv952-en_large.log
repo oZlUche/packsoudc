@@ -1,0 +1,88 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+CV952 声望 49：改信 false、能改成 ["brute", "sun", "nature"]、经验加成 0.0；挣到解锁机会 1
+CV952 声望 50：改信 true、能改成 ["brute", "sun", "nature"]、经验加成 0.0；挣到解锁机会 1
+CV952 测试辅助：万神院到了、解锁 [&"brute", &"sun", &"nature"]、声望 150；挣到解锁机会 1、剩 0
+CV952 　　节点 50：Commission "Consecrating a Temple" opens
+CV952 　　节点 50：Once per run, change faith at an altar (keep your level, redraw that god's cards)
+CV952 　　节点 100：Commission "Raising the Idol" opens
+CV952 　　节点 125：Commission "Welcoming the God" opens
+CV952 　　节点 150：Commission "The Temple Complete" opens
+CV952 声望页：排版 查了 19 处，没有溢出
+CV952 剧情页万神院的键：[]；排版 查了 72 处，没有溢出
+CV952 《pantheon_temple_100》的【接】不在页上（why_not「taken」）
+CV952 剧情页万神院的键：[]；排版 查了 72 处，没有溢出
+CV952 《pantheon_temple_125》的【接】不在页上（why_not「taken」）
+CV952 剧情页万神院的键：[]；排版 查了 72 处，没有溢出
+CV952 《pantheon_temple_150》的【接】不在页上（why_not「taken」）
+CV952 剧情页万神院的键：[]；排版 查了 72 处，没有溢出
+CV952 接完：100《Raising the Idol》{ "stage": 0, "progress": 0, "keys": [], "pick": "", "state": "taken", "times": 0, "seq": 7 } 能交 false；125《Welcoming the God》{ "stage": 0, "progress": 0, "keys": [], "pick": "", "state": "taken", "times": 0, "seq": 8 } 能交 false；150《The Temple Complete》{ "stage": 0, "progress": 0, "keys": [], "pick": "", "state": "taken", "times": 0, "seq": 9 } 能交 false
+CV952 　　已接 [&"greylamp_check_scale", &"legion_forge_token", &"society_first_survey", &"pantheon_first_rite", &"pantheon_temple_25", &"pantheon_temple_50", &"pantheon_temple_100", &"pantheon_temple_125", &"pantheon_temple_150"]
+CV952 出征屏奉蛮神：true
+CV952 开局：奉「brute」；改信 true、能改成 [&"brute", &"sun", &"nature"]、改过 false；经验加成 0.0；信物 ["charm_brute@(0, 0)"]
+CV952 测试辅助加经验：Lv.6 欠选 7
+CV952 挑完（尽量挑神牌）：Lv.6、经验 55.0；神牌 5 种 ["god_brute_pain×1", "god_brute_irate×2", "god_brute_duration×1", "god_brute_damage×2", "god_brute_persist×1"]；通用牌 0 种
+CV952 　　神坛开着 true；屏 2
+CV952 神坛屏：Altar · The Brute · Rank 1；改信一行 【Convert】亮，悬浮「Follow another unlocked god: level, XP and general cards stay; the old god's car」；下拉 ["The Sun God", "God of Nature"]；排版 查了 6 处，没有溢出
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] fold (res://ui/tip_anchor.gd:75)
+         [1] _place (res://ui/tip_anchor.gd:99)
+CV952 下拉选「The Sun God」
+CV952 台上放 bag_leather：true
+CV952 献祭：{ "points": 10, "xp": 10, "tier_before": 1, "tier_after": 1, "log": ["Offered 1 item to The Brute: XP +10"], "count": 1 }；带着的委托 100《Raising the Idol》{ "stage": 0, "progress": 0, "keys": [], "pick": "", "state": "taken", "times": 0, "seq": 7 } 能交 false；125《Welcoming the God》{ "stage": 0, "progress": 0, "keys": [], "pick": "", "state": "taken", "times": 0, "seq": 8 } 能交 false；150《The Temple Complete》{ "stage": 0, "progress": 0, "keys": [], "pick": "", "state": "taken", "times": 0, "seq": 9 } 能交 false
+CV952 献祭以后：【Convert】亮，悬浮「Follow another unlocked god: level, XP and general cards stay; the old god's car」；下拉 ["The Sun God", "God of Nature"]
+CV952 真点【改信】：奉「sun」（有效 sun）、改过 true；信物 ["charm_sun@(0, 0)"]；Lv.6（改前 6）、欠选 7；神牌 0 种 []；神坛机会 { 2: true } → { 2: true }
+CV952 　　神坛屏：Altar · The Sun God · Rank 1；神徽 res://assets/ui/faith/sun.png；改信一行 【Convert】灰，悬浮「Already converted this run」；下拉 ["The Brute", "God of Nature"]（灰）；排版 查了 7 处，溢出 1：「Nothing in your bags can」出 @PanelContainer@2382 框
+CV952 重选的一批：[&"god_sun_lunar", &"god_sun_shift", &"god_sun_rise"]（神牌 [&"god_sun_lunar", &"god_sun_shift", &"god_sun_rise"]）；质变 true；排版 查了 20 处，没有溢出
+CV952 重选的一批：[&"god_sun_dusk", &"god_sun_sunbath", &"god_sun_rest"]（神牌 [&"god_sun_dusk", &"god_sun_sunbath", &"god_sun_rest"]）；质变 true；排版 查了 20 处，没有溢出
+CV952 重选的一批：[&"god_sun_dusklight", &"god_sun_noon", &"god_sun_faster"]（神牌 [&"god_sun_dusklight", &"god_sun_noon", &"god_sun_faster"]）；质变 false；排版 查了 20 处，没有溢出
+CV952 重选的一批：[&"god_sun_dawnlight", &"god_sun_dusklight", &"god_sun_veil"]（神牌 [&"god_sun_dawnlight", &"god_sun_dusklight", &"god_sun_veil"]）；质变 false；排版 查了 20 处，没有溢出
+CV952 重选的一批：[&"god_sun_humble", &"god_sun_dawnlight", &"god_sun_noon"]（神牌 [&"god_sun_humble", &"god_sun_dawnlight", &"god_sun_noon"]）；质变 false；排版 查了 20 处，没有溢出
+CV952 重选的一批：[&"god_sun_miracle", &"god_sun_longnight", &"god_sun_veil"]（神牌 [&"god_sun_miracle", &"god_sun_longnight", &"god_sun_veil"]）；质变 false；排版 查了 20 处，没有溢出
+CV952 重选的一批：[&"god_sun_fullmoon", &"god_sun_faster", &"god_sun_dawnlight"]（神牌 [&"god_sun_fullmoon", &"god_sun_faster", &"god_sun_dawnlight"]）；质变 false；排版 查了 18 处，没有溢出
+CV952 重选挑完：Lv.6；神牌 7 种 ["god_sun_lunar×1", "god_sun_dusk×1", "god_sun_dusklight×1", "god_sun_dawnlight×1", "god_sun_humble×1", "god_sun_miracle×1", "god_sun_fullmoon×1"]；欠选 0
+CV952 存档退出再继续：奉「sun」、改过 true；信物 ["charm_sun@(0, 0)"]；Lv.6；神牌 7 种 ["god_sun_lunar×1", "god_sun_dusk×1", "god_sun_dusklight×1", "god_sun_dawnlight×1", "god_sun_humble×1", "god_sun_miracle×1", "god_sun_fullmoon×1"]
+CV952 再开神坛：【Convert】灰，悬浮「Already converted this run」；下拉 ["The Brute", "God of Nature"]（灰）
+CV952 撤离结算屏：Extracted / [Continue]
+CV952 回营地：100《Raising the Idol》{ "stage": 0, "progress": 1, "keys": ["pantheon_temple_100|0|run-1a2147fcc11-4fbb3474/altar:2"], "pick": "", "state": "t 能交 false；125《Welcoming the God》{ "stage": 0, "progress": 1, "keys": ["pantheon_temple_125|0|run-1a2147fcc11-4fbb3474/run"], "pick": "", "state": "taken 能交 false；150《The Temple Complete》{ "stage": 0, "progress": 5, "keys": ["pantheon_temple_150|0|run-1a2147fcc11-4fbb3474/level:2", "pantheon_temple_150|0|r 能交 false
+CV952 剧情页三份委托：100：；125：；150：
+CV952 完 err=0
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9946 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4832 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.

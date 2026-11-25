@@ -1,0 +1,199 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+EF942 　　选牌前的教练层第 1 步：升级了：三张牌挑一张。同一张以后还会再出，拿几次就叠几层。　1/3 / [收起] / [知道了]（选牌窗 开着）
+EF942 　　选牌前的教练层第 2 步：都不想要就重选：三张一起换一批，次数有限。　2/3 / [收起] / [上一步] / [知道了]（选牌窗 开着）
+EF942 　　选牌前的教练层第 3 步：剔牌：点它再点一张牌，这一局那张不再出，空位补一张。　3/3 / [收起] / [上一步] / [知道了]（选牌窗 开着）
+EF942 　　章节 free_mode
+EF942 第 1 局进地图：奉「」，1 级，欠选牌 1，选牌窗 开着，教练层走了 3 步
+EF942 　　现在这张 { "level": 1, "qual": true, "generic": true }；窗里的字：进入对局：选一张质变牌 / 无信者：这一次改为多选一张通用牌 / 背负 / 负重上限 +3 / 第 1 层 / 探索 / 调息 / 耐力回复 +0.6 / 第 1 层 / 属性 / 绵长 / 耐力 +4% / 第 1 层 / 属性 / [重选 0] / [剔牌 0]
+EF942 　　摆出 3 张 [&"card_carry", &"card_regen", &"card_stamina_pct"]；换牌 0、剔牌 0；排版：查了 19 处，没有溢出
+EF942 　　开局质变位里有没有【啖肉吮血】：false；eligible=false
+EF942 　　选完以后的教练层：这是日晷，就是倒计时：每走一步走一格，走完这一趟就算失败。停上去看还剩几步、最近的免费出口几步后关。　1/3 / [收起] / [知道了]（选牌窗 没开）
+EF942 　　选完以后的教练层：这一趟开始算负重。棋盘上的东西压过你的上限就吃力：出手慢、耐力回得慢。背包窗底下的负重签一直写着当前 / 上限。　2/3 / [收起] / [上一步] / [知（选牌窗 没开）
+EF942 　　选完以后的教练层：腰带：随身技能放这儿，双击用一个。商店里买得到。　3/3 / [收起] / [上一步] / [知道了]（选牌窗 没开）
+EF942 　　选完以后教练层都走完了
+EF942 真点第一张后：欠选牌 0，质变 []，拿过 { "card_carry": 1 }，选牌窗 收了
+EF942 测试辅助加经验值 1000000：30 级，欠选牌 34
+EF942 　　体力 3 / 3（下面遇到【耐行】就选它）
+EF942 BATCH lv=2 qual=false taken_before=["card_carry"] offered=["card_stamina_flat","card_vitality","card_rest"]
+EF942 PICK card_stamina_flat
+EF942 BATCH lv=3 qual=false taken_before=["card_carry","card_stamina_flat"] offered=["card_carry","card_next_search","card_vitality"]
+EF942 PICK card_carry
+EF942 BATCH lv=4 qual=false taken_before=["card_carry","card_stamina_flat"] offered=["card_next_search","card_hp_flat","card_stamina_flat"]
+EF942 PICK card_next_search
+EF942 BATCH lv=5 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search"] offered=["card_carry","card_stamina_flat","card_hp_pct"]
+EF942 PICK card_carry
+EF942 BATCH lv=6 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search"] offered=["card_next_search","card_carry","card_stamina_flat"]
+EF942 PICK card_next_search
+EF942 BATCH lv=6 qual=true taken_before=["card_carry","card_stamina_flat","card_next_search"] offered=["card_vitality","card_rest","card_stamina_flat"]
+EF942 6 级质变位：窗里的字 第 6 级：选一张质变牌 / 还要选 29 次　无信者：这一次改为多选一张通用牌 / 耐行 / 体力上限 +1 / 第 1 层 / 探索 / 安歇 / 休息多回 1 点体力 / 第 1 层 / 探索 / 坚韧 / 耐力 +6 / 第 2 层 / 属性 / [重选 0] / [剔牌 0]；排版 查了 19 处，没有溢出
+EF942 PICK card_vitality
+EF942 BATCH lv=7 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality"] offered=["card_hp_pct","card_hp_flat","card_stamina_flat"]
+EF942 PICK card_hp_pct
+EF942 BATCH lv=8 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct"] offered=["card_hp_flat","card_stamina_pct","card_next_search"]
+EF942 PICK card_hp_flat
+EF942 BATCH lv=9 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat"] offered=["card_regen","card_stamina_flat","card_stamina_pct"]
+EF942 PICK card_regen
+EF942 BATCH lv=10 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen"] offered=["card_stamina_flat","card_hp_flat","card_hp_pct"]
+EF942 PICK card_stamina_flat
+EF942 BATCH lv=11 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen"] offered=["card_next_search","card_rest","card_hp_flat"]
+EF942 PICK card_next_search
+EF942 BATCH lv=12 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen"] offered=["card_stamina_pct","card_stamina_flat","card_carry"]
+EF942 PICK card_stamina_pct
+EF942 BATCH lv=12 qual=true taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_regen","card_vitality","card_hp_pct"]
+EF942 PICK card_regen
+EF942 BATCH lv=13 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_hp_flat","card_carry","card_next_search"]
+EF942 PICK card_hp_flat
+EF942 BATCH lv=14 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_hp_pct","card_hp_flat","card_carry"]
+EF942 PICK card_hp_pct
+EF942 BATCH lv=15 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_next_search","card_carry","card_stamina_pct"]
+EF942 PICK card_next_search
+EF942 BATCH lv=16 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_regen","card_hp_pct","card_stamina_flat"]
+EF942 PICK card_regen
+EF942 BATCH lv=17 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_carry","card_vitality","card_hp_pct"]
+EF942 PICK card_carry
+EF942 BATCH lv=18 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_stamina_pct","card_carry","card_rest"]
+EF942 PICK card_stamina_pct
+EF942 BATCH lv=18 qual=true taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_regen","card_hp_pct","card_stamina_pct"]
+EF942 PICK card_regen
+EF942 BATCH lv=19 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_regen","card_hp_pct","card_next_search"]
+EF942 PICK card_regen
+EF942 BATCH lv=20 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_hp_flat","card_next_search","card_regen"]
+EF942 PICK card_hp_flat
+EF942 BATCH lv=21 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_hp_flat","card_stamina_flat","card_hp_pct"]
+EF942 PICK card_hp_flat
+EF942 BATCH lv=22 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_stamina_pct","card_next_search","card_carry"]
+EF942 PICK card_stamina_pct
+EF942 BATCH lv=23 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct"] offered=["card_rest","card_next_search","card_vitality"]
+EF942 PICK card_rest
+EF942 BATCH lv=24 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_stamina_pct","card_hp_pct","card_next_search"]
+EF942 PICK card_stamina_pct
+EF942 BATCH lv=24 qual=true taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_next_search","card_regen","card_stamina_flat"]
+EF942 PICK card_next_search
+EF942 BATCH lv=25 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_hp_flat","card_vitality","card_rest"]
+EF942 PICK card_hp_flat
+EF942 BATCH lv=26 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_vitality","card_next_search","card_stamina_flat"]
+EF942 PICK card_vitality
+EF942 BATCH lv=27 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_carry","card_hp_pct","card_next_search"]
+EF942 PICK card_carry
+EF942 BATCH lv=28 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_carry","card_rest","card_stamina_pct"]
+EF942 PICK card_carry
+EF942 BATCH lv=29 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_regen","card_stamina_flat","card_stamina_pct"]
+EF942 PICK card_regen
+EF942 BATCH lv=30 qual=false taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_next_search","card_stamina_flat","card_hp_pct"]
+EF942 PICK card_next_search
+EF942 BATCH lv=30 qual=true taken_before=["card_carry","card_stamina_flat","card_next_search","card_vitality","card_hp_pct","card_hp_flat","card_regen","card_stamina_pct","card_rest"] offered=["card_stamina_flat","card_regen","card_next_search"]
+EF942 PICK card_stamina_flat
+EF942 选完：2×3 3×3 4×3 5×3 6×3 6Q通×3 7×3 8×3 9×3 10×3 11×3 12×3 12Q通×3 13×3 14×3 15×3 16×3 17×3 18×3 18Q通×3 19×3 20×3 21×3 22×3 23×3 24×3 24Q通×3 25×3 26×3 27×3 28×3 29×3 30×3 30Q通×3
+EF942 　　质变 []；拿过 9 种；【耐行】2 张，体力 3 / 5
+EF942 顶端栏信仰徽记：在；质变小图标 []，多出来的「」
+EF942 背包（状态界面）：神恩栏 false；栏里 []；窗宽 1056；排版 查了 5 处，没有溢出
+EF942 测试辅助：万神院到来、声望 100；开局多一张 false
+EF942 开局屏奉蛮神：true
+EF942 　　章节 free_mode
+EF942 第 2 局进地图：奉「brute」，1 级，欠选牌 1，选牌窗 开着，教练层走了 0 步
+EF942 　　现在这张 { "level": 1, "qual": true, "generic": false }；窗里的字：进入对局：选一张质变牌 / 恨意 / 被施加负面效果时，立刻获得 1 层怒气 / 质变 / 啖肉吮血 / 吞噬【血肉】获得整局增益 / 质变 / 死斗 / 一场一次，生命首次归零后再撑 3 秒 / 质变 / [重选 4] / [剔牌 0] / [跳过 4]
+EF942 　　摆出 3 张 [&"god_brute_hate", &"god_brute_eat", &"god_brute_deathfight"]；换牌 4、剔牌 0；排版：查了 19 处，没有溢出
+EF942 　　开局质变位里有没有【啖肉吮血】：true；eligible=true
+EF942 　　选完以后教练层都走完了
+EF942 开局选完：质变 ["god_brute_hate"]
+EF942 　　牌面 god_brute_eat：吞噬【血肉】获得整局增益
+EF942 　　牌面 god_brute_eat_up：可以进食【血肉】，按稀有度和格子获得持续整局的额外生命上限（每格 8 × (稀有度 + 1)），以及一半的耐力上限
+EF942 　　牌面 god_sun_rise：进入白昼时，获得 90 生命上限和 50 耐力上限（当前值同量增加），一场战斗内可无限叠加
+EF942 　　牌面 god_sun_rise_up：进入白昼时，获得 175 生命上限和 100 耐力上限（当前值同量增加），一场战斗内可无限叠加
+EF942 测试辅助：背包放一件 toad_leg（蟾腿，1 格，稀有度 0）：true
+EF942 测试辅助：背包放一件 wolf_shank（狼腿肉，2 格，稀有度 0）：true
+EF942 测试辅助：背包放一件 bear_paw（熊掌，3 格，稀有度 2）：true
+EF942 测试辅助：背包放一件 fire_gland（火焰腺，1 格，稀有度 2）：true
+EF942 测试辅助：背包放一件 frost_gland（霜腺，1 格，稀有度 2）：true
+EF942 测试辅助：背包放一件 viper_gland（蝰蛇毒腺，1 格，稀有度 2）：true
+EF942 　蟾腿 右键钉住（窗里是 蟾腿 普通 / 下锅：耐力上限 +1 安德烈乌斯：耐力上限 ），键：quick[放到地上] lock[锁定]
+EF942 　狼腿肉 右键钉住（窗里是 狼腿肉 普通 / 下锅：耐力上限 +3 安德烈乌斯：耐力上限），键：quick[放到地上] lock[锁定]
+EF942 　熊掌 右键钉住（窗里是 熊掌 稀有 / 下锅：耐力上限 +7 · 饱腹 +1 安德烈），键：quick[放到地上] lock[锁定]
+EF942 　火焰腺 右键钉住（窗里是 火焰腺 稀有 / 下锅：每次攻击，敌我各加 1 层灼伤  武），键：quick[放到地上] lock[锁定]
+EF942 　霜腺 右键钉住（窗里是 霜腺 稀有 / 下锅：每次攻击，敌我各加 1 层寒冷  武器），键：quick[放到地上] lock[锁定]
+EF942 　蝰蛇毒腺 右键钉住（窗里是 蝰蛇毒腺 稀有 / [你给对手施加中毒时] 施加 1 层剧毒），键：quick[放到地上] lock[锁定] bench[不参战]
+EF942 测试辅助：拿【啖肉吮血】。生命上限 160，耐力上限 110.0
+EF942 　蟾腿 右键钉住（窗里是 蟾腿 普通 / 下锅：耐力上限 +1 安德烈乌斯：耐力上限 ），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　真点【进食】：提示「吃下蟾腿：生命上限 +8」；生命上限 160.0 → 168.0；耐力上限 110.0 → 110.0；背包件数 9 → 8；这件还在 false
+EF942 　　　　吃完器官合计 {  }
+EF942 　狼腿肉 右键钉住（窗里是 狼腿肉 普通 / 下锅：耐力上限 +3 安德烈乌斯：耐力上限），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　悬浮窗排版：查了 7 处，没有溢出
+EF942 　　真点【进食】：提示「吃下狼腿肉：生命上限 +16」；生命上限 168.0 → 184.0；耐力上限 110.0 → 110.0；背包件数 8 → 7；这件还在 false
+EF942 　　　　吃完器官合计 {  }
+EF942 　熊掌 右键钉住（窗里是 熊掌 稀有 / 下锅：耐力上限 +7 · 饱腹 +1 安德烈），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　真点【进食】：提示「吃下熊掌：生命上限 +72」；生命上限 184.0 → 256.0；耐力上限 110.0 → 110.0；背包件数 7 → 6；这件还在 false
+EF942 　　　　吃完器官合计 {  }
+EF942 　火焰腺 右键钉住（窗里是 火焰腺 稀有 / 下锅：每次攻击，敌我各加 1 层灼伤  武），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　真点【进食】：提示「吃下火焰腺：每次攻击，敌我各加 1 层灼伤」；生命上限 256.0 → 256.0；耐力上限 110.0 → 110.0；背包件数 6 → 5；这件还在 false
+EF942 　　　　吃完器官合计 { &"scorch": 1.0 }
+EF942 　霜腺 右键钉住（窗里是 霜腺 稀有 / 下锅：每次攻击，敌我各加 1 层寒冷  武器），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　真点【进食】：提示「吃下霜腺：每次攻击，敌我各加 1 层寒冷」；生命上限 256.0 → 256.0；耐力上限 110.0 → 110.0；背包件数 5 → 4；这件还在 false
+EF942 　　　　吃完器官合计 { &"scorch": 1.0, &"chill": 1.0 }
+EF942 　蝰蛇毒腺 右键钉住（窗里是 蝰蛇毒腺 稀有 / [你给对手施加中毒时] 施加 1 层剧毒），键：quick[放到地上] lock[锁定] eat[进食] bench[不参战]
+EF942 　　真点【进食】：提示「吃下蝰蛇毒腺：每次攻击，敌我各加 1 层中毒」；生命上限 256.0 → 256.0；耐力上限 110.0 → 110.0；背包件数 4 → 3；这件还在 false
+EF942 　　　　吃完器官合计 { &"scorch": 1.0, &"chill": 1.0, &"poison": 1.0 }
+EF942 测试辅助：拿【啖肉吮血·升级】。生命上限 256.0 → 256.0，耐力上限 110.0 → 158.0（以前吃的补一半）
+EF942 　蜥尾肉 右键钉住（窗里是 蜥尾肉 稀有 / 下锅：耐力上限 +7 · 饱腹 +1 安德），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　真点【进食】：提示「吃下蜥尾肉：生命上限 +72，耐力上限 +36」；生命上限 256.0 → 328.0；耐力上限 158.0 → 194.0；背包件数 8 → 7；这件还在 false
+EF942 　　　　吃完器官合计 { &"scorch": 1.0, &"chill": 1.0, &"poison": 1.0 }
+EF942 　熊肝 右键钉住（窗里是 熊肝 稀有 / 下锅：战斗中每秒回复生命 +3，急速 -4%），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　真点【进食】：提示「吃下熊肝：战斗中每秒回复生命 +3，急速 -4%」；生命上限 328.0 → 328.0；耐力上限 194.0 → 194.0；背包件数 7 → 6；这件还在 false
+EF942 　　　　吃完器官合计 { &"haste": -4.0, &"regen_hp": 3.0, &"scorch": 1.0, &"chill": 1.0, &"poison": 1.0 }
+EF942 　霜腺 右键钉住（窗里是 霜腺 稀有 / 下锅：每次攻击，敌我各加 1 层寒冷  武器），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　真点【进食】：提示「吃下霜腺：每次攻击，敌我各加 1 层寒冷」；生命上限 328.0 → 328.0；耐力上限 194.0 → 194.0；背包件数 6 → 5；这件还在 false
+EF942 　　　　吃完器官合计 { &"haste": -4.0, &"regen_hp": 3.0, &"scorch": 1.0, &"chill": 2.0, &"poison": 1.0 }
+EF942 　蝰蛇毒腺 右键钉住（窗里是 蝰蛇毒腺 稀有 / [你给对手施加中毒时] 施加 1 层剧毒），键：quick[放到地上] lock[锁定] eat[进食] bench[不参战]
+EF942 　　真点【进食】：提示「吃下蝰蛇毒腺：每次攻击，敌我各加 1 层中毒」；生命上限 328.0 → 328.0；耐力上限 194.0 → 194.0；背包件数 5 → 4；这件还在 false
+EF942 　　　　吃完器官合计 { &"haste": -4.0, &"regen_hp": 3.0, &"scorch": 1.0, &"chill": 2.0, &"poison": 2.0 }
+EF942 　狼心 右键钉住（窗里是 狼心 稀有 / 下锅：造成的伤害 +8%，受到的伤害 +4%），键：quick[放到地上] lock[锁定] eat[进食]
+EF942 　　真点【进食】：提示「吃下狼心：造成的伤害 +8%，受到的伤害 +4%」；生命上限 328.0 → 328.0；耐力上限 194.0 → 194.0；背包件数 4 → 3；这件还在 false
+EF942 　　　　吃完器官合计 { &"haste": -4.0, &"regen_hp": 3.0, &"scorch": 1.0, &"chill": 2.0, &"poison": 2.0, &"damage": 8.0, &"taken": 4.0 }
+EF942 背包排版：查了 5 处，没有溢出
+EF942 神恩栏 [&"god_brute_hate", &"god_brute_eat_up"]
+EF942 　　第 1 格悬浮：恨意 / 被施加负面效果时，立刻获得 [color=@val]1[/color] 层怒气
+EF942 　　第 2 格悬浮：啖肉吮血（升级） / 可以进食【血肉】，按稀有度和格子获得持续整局的额外生命上限（每格 8 × (稀有度 [color=@val]+ 1[/color])），以及一半的耐力上限
+EF942 编进战斗的我方：max_hp=3280000
+EF942 　　器官合计 { &"haste": -4.0, &"regen_hp": 3.0, &"scorch": 1.0, &"chill": 2.0, &"poison": 2.0, &"damage": 8.0, &"taken": 4.0 }；蛮神直接吃的 { &"haste": -4.0, &"regen_hp": 3.0, &"scorch": 1.0, &"chill": 2.0, &"poison": 2.0, &"damage": 8.0, &"taken": 4.0 }；状态界面那行的特性 ["造成的伤害 +8%", "战斗中每秒回复生命 +3", "每次攻击，敌我各加 1 层灼伤", "每次攻击，敌我各加 2 层寒冷", "每次攻击，敌我各加 2 层中毒", "急速 -4%", "受到的伤害 +4%"]
+EF942 god_state 攒下的生命上限 168.0
+EF942 存档退出后屏 0；继续
+EF942 读回：god_state 攒下的生命上限 168.0；生命上限 328.0；耐力上限 194.0；拿过 啖肉吮血 1、升级 1
+EF942 读回后重开状态界面：生命上限一行 { "key": &"max_hp", "label": "生命上限", "value": "328", "raw": 328.0, "base": 160.0, "flat": 168.0, "pct": 0.0, "boosted": false, "tip": "生命归零就输掉这一场。\n[color=#ffff；耐力上限一行 { "key": &"max_stamina", "label": "耐力上限", "value": "194", "raw": 194.0, "base": 110.0, "flat": 84.0, "pct": 0.0, "boosted": false, "tip": "出手要花耐力，耐力不够就出不了手。\n[c
+EF942 相邻没有普通战斗点：["chest", "extract", "rest"]
+EF942 完 err=0
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9885 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4772 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
