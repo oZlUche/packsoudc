@@ -12,7 +12,6 @@ extends RefCounted
 
 ## 342 B2：手头（接下的常规纸条）最多几份（报告 341 第 3.1 节）
 const SLOTS := 3
-## 342 B2：常规纸条最多把一方推到多少声望（再往上靠剧情）
 ## 报告 389：节点的两种（[member FactionDef.nodes] 的 `kind`）。赠礼不做成节点（作者 11-24 16:44：单独一个【赠礼】键，声望每攒一定数量 +1 份，规则等报告 389 改）
 const KIND_OPEN := &"open"
 const KIND_BOOST := &"boost"
@@ -20,8 +19,10 @@ const KINDS: Array[StringName] = [KIND_OPEN, KIND_BOOST]
 ## 报告 389：认得的效果（`effect`）。空串只给占位节点用
 const EFFECT_INQUIRY := &"inquiry"     # 调查委托和许可单（委托自己的 min_rep 是真门槛，这一条给刻度显示）
 const EFFECT_FINALE := &"finale"     # 结案委托；办完许可单后告示栏出这一方的常规委托（[method regular_open]）
-const EFFECTS: Array[StringName] = [EFFECT_INQUIRY, EFFECT_FINALE, &"commission", &"god", &"faith_xp", &"altar_bless",
-	&"alchemy_loss", &"canteen_pot", &"canteen_store", &"nursery_plot"]
+## 396：不走调查 / 许可单 / 结案那条线的一方（万神院），这个节点直接开告示栏的常规委托
+const EFFECT_REGULAR := &"regular"
+const EFFECTS: Array[StringName] = [EFFECT_INQUIRY, EFFECT_FINALE, EFFECT_REGULAR, &"commission", &"god", &"faith_xp", &"altar_bless",
+	&"alchemy_loss", &"canteen_pot", &"canteen_store", &"nursery_plot", &"temple", &"pick_aids"]
 ## 没写 min_rep 的委托按档位默认要多少声望：调查要到 [constant EFFECT_INQUIRY] 那个节点、结案要到 [constant EFFECT_FINALE]（这一方没写就用这两个数）
 const INQUIRY_REP := 10
 const FINALE_REP := 25
@@ -49,6 +50,7 @@ const GOALS := {
 	&"nursery_harvest": [CommissionStage.CAMP],     # 342 B3：苗圃里收一畦     # 342 B2：到访 N 处（`params.type` = 节点类型），同一局同一处只记一次
 	&"altar_offer": [CommissionStage.FIELD],     # 377：在休息点的神坛献祭（每座神坛记一次）
 	&"faith_levels": [CommissionStage.CARRY],     # 377：奉着神的时候升级（每升一级记一次），撤离才算
+	&"faith_runs": [CommissionStage.CARRY],     # 396：奉着神出征（一局记一次），撤离才算
 }
 ## 342 B2：营地当场能办的目标（卡上有【办理】）
 const CAMP_GOALS: Array[StringName] = [&"camp_report", &"hand_in"]
@@ -97,6 +99,8 @@ static func arrive(book: CommissionBook, run_no: int) -> Array[StringName]:
 			continue
 		if f.arrives == ARRIVES_FIRST_RUN or (f.arrives == ARRIVES_EXTRACTIONS and book.formal_extractions >= maxi(1, f.arrive_after)):
 			book.arrived[String(f.id)] = run_no
+			if f.start_rep > book.rep_of(f.id):
+				book.rep[String(f.id)] = f.start_rep     # 396：到来时的起始声望（万神院 5）
 			out.append(f.id)
 	return out
 
@@ -274,6 +278,14 @@ static func node_text(n: Dictionary, faith_defs: Dictionary = {}, book: Commissi
 			return UiText.t("node.effect_god") % (Names.of(fd) if fd != null else String(v))
 		"faith_xp":
 			return UiText.t("node.effect_faith_xp") % roundi(float(v if v != null else 0.1) * 100.0)
+		"pick_aids":     # 396：[重选次数, 跳过次数]；种类是「开放」的写「开启」，「提升」的写「+N」
+			var a: Array = v if v is Array and (v as Array).size() >= 2 else [0, 0]
+			var bits: PackedStringArray = []
+			var opening := StringName(String(n.get("kind", ""))) == KIND_OPEN
+			for i in 2:
+				if int(a[i]) > 0:
+					bits.append(UiText.t("node.aid_open_%d" % i) % int(a[i]) if opening else UiText.t("node.aid_more_%d" % i) % int(a[i]))
+			return UiText.t("node.aid_join").join(bits)
 		"alchemy_loss":
 			return UiText.t("node.effect_alchemy_loss") % roundi(float(v if v != null else 0.0) * 100.0)
 		"canteen_pot", "canteen_store":
@@ -493,6 +505,8 @@ static func _hand_in(meta: MetaState, d: CommissionDef, stage: int, items: ItemD
 
 ## 342 B2：这一方的常规委托开了没有：到了结案那个节点（报告 389），且办完了这一方的许可单
 static func regular_open(book: CommissionBook, f: FactionDef) -> bool:
+	if f != null and has_effect(book, f, EFFECT_REGULAR):
+		return true
 	return f != null and has_effect(book, f, EFFECT_FINALE) and (f.permit == &"" or book.is_done(f.permit))
 
 

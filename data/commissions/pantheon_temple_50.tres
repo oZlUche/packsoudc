@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_223ue"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_e73ti"]
+
+[sub_resource type="Resource" id="Resource_ux7oi"]
+script = ExtResource("2_e73ti")
+goal = &"faith_levels"
+count = 10
+where = &"carry"
+text = "奉着神升十级并撤离"
+texts = {
+"en": "Gain ten levels while following a god, and extract"
+}
+
+[resource]
+script = ExtResource("1_223ue")
+id = &"pantheon_temple_50"
+display_name = "新殿开光"
+display_names = {
+"en": "Consecrating a Temple"
+}
+faction = &"pantheon"
+order = 4
+reputation = 5
+min_rep = 50
+stages = Array[ExtResource("2_e73ti")]([SubResource("Resource_ux7oi")])
+grants = &"temple"
+client = "万神院的老祭司"
+clients = {
+"en": "Elder priest of the Senatus"
+}

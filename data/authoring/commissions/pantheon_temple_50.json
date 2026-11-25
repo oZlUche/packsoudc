@@ -1,0 +1,27 @@
+{
+  "id": "pantheon_temple_50",
+  "display_name": "新殿开光",
+  "display_names": {
+    "en": "Consecrating a Temple"
+  },
+  "faction": "pantheon",
+  "order": 4,
+  "reputation": 5,
+  "min_rep": 50,
+  "grants": "temple",
+  "stages": [
+    {
+      "goal": "faith_levels",
+      "count": 10,
+      "where": "carry",
+      "text": "奉着神升十级并撤离",
+      "texts": {
+        "en": "Gain ten levels while following a god, and extract"
+      }
+    }
+  ],
+  "client": "万神院的老祭司",
+  "clients": {
+    "en": "Elder priest of the Senatus"
+  }
+}

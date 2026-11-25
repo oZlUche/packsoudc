@@ -17,6 +17,8 @@ extends Resource
 @export var arrives: StringName = &""
 ## 377：`arrives` = `extractions` 时，教程之后第几次成功撤离（正式探索）结算时来
 @export var arrive_after: int = 0
+## 396：到营地那一刻的起始声望（万神院 5）
+@export var start_rep: int = 0
 ## 报告 389：声望节点，一个节点 = 一个声望数 + 一个效果（[method Commissions.nodes_of] 按声望排好）。每个节点：
 ## - `id`：这一方里不重复（通知按它记，[member CommissionBook.node_news]）
 ## - `rep`：要多少声望
@@ -30,6 +32,9 @@ extends Resource
 @export var note_rep: int = 1
 ## 报告 389 第七节：【赠礼】一份从这几样里随机给一样（作者 11-24 16:49）：每条 `{"funds": 金币}` 或 `{"item": 道具 id, "count": 件数}`。内容等作者挑，现在是占位
 @export var gift_pool: Array[Dictionary] = []
+## 396（万神院）：神殿，按页上的排法。每条 `{"god": 神 id, "blurb": 悬浮窗一句, "blurbs": {"en": …}}`；
+## 一句没写就空着（作者写）。牌表没写好的神照样列，只是不能解锁（[method Pantheon.temple_ready]）
+@export var temples: Array[Dictionary] = []
 ## 342 B2：这一方的剧情开放哪些基地设施：设施 id（`smithy` / `tech` / `market`）→ 开它的那份剧情委托 id
 @export var facilities: Dictionary = {}
 ## 联系人 NPC（可空）

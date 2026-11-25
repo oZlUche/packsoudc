@@ -1,4 +1,4 @@
-## 372：升级选牌 —— 地图屏上叠一层（不是单独一屏）：三张牌挑一张，下面「刷新」「删除」两个键写着还剩几次。
+## 372：升级选牌 —— 地图屏上叠一层（不是单独一屏）：三张牌挑一张，下面「重选」「剔牌」（396 起万神院还给「跳过」）几个键写着还剩几次。
 ## 挑完还有待选（一次升了几级、无信者多给的一次）就接着出下一批；都挑完自己收起。
 ## 牌面是作者定的 A 羊皮纸（`assets/ui/level/`）：上沿正中压一条类别条，圆章里放牌的图标，下面牌名、效果，底部写拿了是第几层
 class_name LevelPickPanel
@@ -34,6 +34,7 @@ var _title: Label
 var _cards: HBoxContainer
 var _reroll: Button
 var _remove: Button
+var _skip: Button
 var _note: Label
 
 
@@ -58,6 +59,9 @@ func _init(p_level: LevelModule) -> void:
 	_remove = _key(toggle_remove)
 	_remove.name = "Remove"
 	keys.add_child(_remove)
+	_skip = _key(skip)     # 396：万神院 60 起才有
+	_skip.name = "Skip"
+	keys.add_child(_skip)
 	rebuild()
 
 
@@ -96,6 +100,8 @@ func rebuild() -> void:
 		notes.append(UiText.t("level.left") % left)
 	if bool(cur.get("generic", false)):
 		notes.append(UiText.t("level.qual_faithless") if level.is_humanist() else UiText.t("level.qual_none"))
+	if level.skip_bonus > 0 and not seed_pick:
+		notes.append(UiText.t("level.skip_bonus"))
 	if removing:
 		notes.append(UiText.t("level.remove_tip"))
 	_note.text = UiText.t("tip.gap").join(notes)
@@ -110,6 +116,10 @@ func rebuild() -> void:
 	_remove.disabled = level.removals_left() <= 0 or seed_pick
 	_remove.tooltip_text = UiText.t("level.remove_tip") if level.removals_left() > 0 else UiText.t("level.none_left")
 	_remove.modulate = Color(1.0, 0.86, 0.7) if removing else Color.WHITE     # 等着点一张：键染暖色
+	_skip.visible = level.skips_total() > 0
+	_skip.text = UiText.t("level.skip") % level.skips_left()
+	_skip.disabled = level.skips_left() <= 0 or seed_pick
+	_skip.tooltip_text = UiText.t("level.skip_tip") if level.skips_left() > 0 else UiText.t("level.none_left")
 
 
 ## 说明放不下（英文、大字号）就一号一号缩小，直到不压到下沿的层数那一行；缩到最小还不够就把卡片加高（测试报告 v8.73）
@@ -298,6 +308,12 @@ func choose(i: int) -> void:
 
 func reroll() -> void:
 	if level != null and level.reroll():
+		removing = false
+		_after()
+
+
+func skip() -> void:
+	if level != null and level.skip():
 		removing = false
 		_after()
 

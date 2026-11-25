@@ -256,12 +256,18 @@ func skip_preview() -> Dictionary:
 ## 出过远征或仓库里有东西的，开局那套也算领过。新档什么也不记
 ## 377：老档的万神院迁移（只做一次，[method Pantheon.migrate_legacy]）；做了就存
 func _migrate_pantheon() -> void:
-	if meta == null or meta.flag(Pantheon.MIGRATED) != 0:
+	if meta == null:
 		return
-	var got := Pantheon.migrate_legacy(meta, items)
-	if int(got.get("refund", 0)) > 0 or bool(got.get("arrived", false)) or not (got.get("gods", []) as Array).is_empty():
-		meta.migration_log.append({"kind": "pantheon", "gods": (got["gods"] as Array).map(func(x): return String(x)), "refund": int(got["refund"])})
-	if writable():
+	var dirty := false
+	if meta.flag(Pantheon.MIGRATED) == 0:
+		var got := Pantheon.migrate_legacy(meta, items)
+		if int(got.get("refund", 0)) > 0 or bool(got.get("arrived", false)) or not (got.get("gods", []) as Array).is_empty():
+			meta.migration_log.append({"kind": "pantheon", "gods": (got["gods"] as Array).map(func(x): return String(x)), "refund": int(got["refund"])})
+		dirty = true
+	if meta.flag(Pantheon.TEMPLES_MIGRATED) == 0:     # 396：节点开神那一版能选的神算解锁了
+		Pantheon.migrate_temples(meta)
+		dirty = true
+	if dirty and writable():
 		save_meta()
 
 
@@ -358,6 +364,7 @@ static func new_meta(rules: MetaRules) -> MetaState:
 	var m := MetaState.new(rules)
 	m.commissions.gated = true
 	m.set_flag(Pantheon.MIGRATED)     # 377：新档不用做老档的万神院迁移
+	m.set_flag(Pantheon.TEMPLES_MIGRATED)     # 396：同上
 	return m
 
 
@@ -1448,6 +1455,8 @@ func _merge_commissions() -> void:
 		return
 	var safe := SafeModule.of(run)
 	var entrusted := safe != null and not safe.sealed.is_empty()
+	if result.is_extracted() and run.selected_faith != &"":
+		mod.on_faith_run()     # 396：万神院的引导委托「奉着神出征并撤离」
 	last_commissions = Commissions.merge_run(meta, mod.rows, result.is_extracted(), entrusted, items)
 	last_commissions["rows"] = mod.rows.duplicate(true)
 	last_commissions["tracked"] = mod.tracked.duplicate(true)

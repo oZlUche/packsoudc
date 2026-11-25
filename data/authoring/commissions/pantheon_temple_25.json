@@ -1,0 +1,26 @@
+{
+  "id": "pantheon_temple_25",
+  "display_name": "新殿立基",
+  "display_names": {
+    "en": "Laying a Temple Stone"
+  },
+  "faction": "pantheon",
+  "order": 3,
+  "reputation": 5,
+  "min_rep": 25,
+  "grants": "temple",
+  "stages": [
+    {
+      "goal": "altar_offer",
+      "count": 3,
+      "text": "在三座神坛献祭",
+      "texts": {
+        "en": "Make an Offering at three altars"
+      }
+    }
+  ],
+  "client": "万神院的老祭司",
+  "clients": {
+    "en": "Elder priest of the Senatus"
+  }
+}

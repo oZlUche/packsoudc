@@ -1,16 +1,24 @@
 ## 报告 377（作者 2026-11-22 22:53 改）：万神院的神龛一排，两种用法 ——
 ## - [constant PICK]：出征第一屏信仰横条展开后的内容（383：不再是【开始探索】时跳出的弹窗；万神院到了营地才有这一条）。第一项是【无信者】（不奉神，只是一个选项），
 ##   再按档位列六位神；没解锁的神写「？？？？」、不露神像，点不了。点一位就是这一局奉祂（[signal picked]）。
-## - [constant VIEW]：营地后勤里的万神院页，只看：已解锁的神、没解锁的「？？？？」与第几档开（初值，不是作者裁定）。
-## 占位排版，等 UI设计 的样张 B（大理石）。
+## - [constant VIEW]：营地后勤里的万神院页（396，作者 11-25 19:25）：六座神殿，没解锁的是黑色剪影、名字「？？？？」，悬浮窗写一句神的样子；
+##   手里有解锁机会时点一座选中，底下深石板右边【确认解锁】（[method confirm]）。牌表没写好的神选中了也解锁不了，左边写「神殿尚未落成」。
+## 占位排版按 UI设计 s396 样张的摆位（顶上浅石牌、六座一排、底下深石板），作者挑定后换正式的。
 extends VBoxContainer
 
 signal picked(faith_id: StringName)
+## 396：营地页解锁了一座神殿（营地刷新红点）
+signal unlocked()
 
 const CP := preload("res://ui/game/commission_panel.gd")
 const INK := Color("2e2219")
 const SHRINE_W := 150.0
 const SHRINE_H := 200.0
+## 396：营地那一页的神殿大一些（样张 190 × 250）
+const TEMPLE_W := 190.0
+const TEMPLE_H := 250.0
+const SILHOUETTE := Color(0, 0, 0, 0.85)
+const NOT_BUILT := Color("e8a08a")
 const ICON := 72.0
 const DIM := Color(1, 1, 1, 0.45)
 const PICK := &"pick"
@@ -19,6 +27,8 @@ const VIEW := &"view"
 var flow: GameFlow = null
 var mode := VIEW
 var _body: VBoxContainer = null
+## 396：营地页上点中的那座（还没确认）
+var selected: StringName = &""
 
 
 func setup(p_flow: GameFlow, p_mode: StringName = VIEW) -> void:
@@ -46,6 +56,8 @@ func refresh() -> void:
 		c.queue_free()
 	if mode == VIEW:
 		_body.add_child(_head())
+		if not Pantheon.gods().has(selected) or flow.meta.temples.has(selected):
+			selected = &""
 	var row := UiTheme.hbox(14)
 	row.name = "Shrines"
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -53,7 +65,9 @@ func refresh() -> void:
 	if mode == PICK:
 		row.add_child(_shrine(&""))
 	for fid in Pantheon.gods(flow.faith_defs):
-		row.add_child(_shrine(fid))
+		row.add_child(_shrine(fid) if mode == PICK else _temple(fid))
+	if mode == VIEW:
+		_body.add_child(_unlock_bar())
 
 
 ## 顶上的牌：徽、名字、声望刻度（只在营地那一页）
@@ -70,11 +84,7 @@ func _head() -> Control:
 	var title := UiTheme.make_label(Names.of(f) if f != null else UiText.t("pantheon.title"), 22, INK)
 	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
 	row.add_child(title)
-	if f != null:
-		var sc := RepScale.make(flow.meta.commissions, f, flow.faith_defs)     # 389：声望刻度（和委托簿声望页同一把尺）
-		sc.custom_minimum_size.x = 420.0
-		row.add_child(sc)
-	return p
+	return p     # 396 样张：声望刻度只在委托簿的声望页
 
 
 ## 一座神龛（[param fid] 空 = 无信者，只在选神界面）
@@ -87,7 +97,7 @@ func _shrine(fid: StringName) -> Control:
 	p.custom_minimum_size = Vector2(SHRINE_W, SHRINE_H)
 	if not open:
 		p.modulate = DIM
-		p.tooltip_text = UiText.t("pantheon.placeholder") if Pantheon.god_placeholder(fid) else UiText.t("pantheon.locked") % Pantheon.god_rep(fid)
+		p.tooltip_text = UiText.t("pantheon.locked") if Pantheon.temple_ready(fid) else UiText.t("pantheon.not_built")
 	elif def != null:
 		p.tooltip_text = Names.description_of(def)
 	var col := UiTheme.vbox(6)
@@ -114,7 +124,7 @@ func _shrine(fid: StringName) -> Control:
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(nm)
 	if mode == PICK:
-		var b := UiTheme.make_stone_button(UiText.t("pantheon.choose") if open else (UiText.t("pantheon.unknown") if Pantheon.god_placeholder(fid) else UiText.t("pantheon.tier_short") % Pantheon.god_rep(fid)),
+		var b := UiTheme.make_stone_button(UiText.t("pantheon.choose") if open else UiText.t("pantheon.unknown"),
 			func(): choose(fid), true, Vector2(110, 34), 16)
 		b.name = "Choose_" + (String(fid) if fid != &"" else "none")
 		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -125,6 +135,97 @@ func _shrine(fid: StringName) -> Control:
 		b.disabled = not open or chosen
 		col.add_child(b)
 	return p
+
+
+## 396：营地页的一座神殿：解锁了 = 神像亮着、写名字；没解锁 = 黑色剪影、「？？？？」。悬浮窗一句神的样子（作者写，没写就不弹）。
+## 点一下选中（[method select]）
+func _temple(fid: StringName) -> Control:
+	var open := Pantheon.god_open(flow.meta, fid)
+	var def := flow.faith_defs.get(fid, null) as FaithDef
+	var b := Button.new()
+	b.name = "Temple_" + String(fid)
+	b.flat = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(TEMPLE_W, TEMPLE_H)
+	b.tooltip_text = Pantheon.blurb(fid)
+	b.pressed.connect(select.bind(fid))
+	var look := UiTheme.PANEL_HOME_PLAQUE_SMALL if fid == selected else UiTheme.PANEL_PARCHMENT     # 选中：换黄铜牌底（占位，等样张）
+	var p := UiTheme.panel_margins(PanelContainer.new(), look, 10, 12, 10, 10)
+	UiTheme.set_tone(p, UiTheme.tone_of(look))
+	p.set_anchors_preset(Control.PRESET_FULL_RECT)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(p)
+	var col := UiTheme.vbox(8)
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(col)
+	var pic := TextureRect.new()
+	pic.name = "Image"
+	pic.texture = UiTheme.art_cached("faith/%s" % fid)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.custom_minimum_size = Vector2(120, 140)
+	pic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if not open:
+		pic.modulate = SILHOUETTE     # 黑色剪影
+	col.add_child(pic)
+	var nm := UiTheme.make_label(Names.of(def) if open and def != null else UiText.t("pantheon.unknown"), 20, INK)
+	nm.name = "Name"
+	nm.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(nm)
+	return b
+
+
+## 396：底下的深石板 —— 左边「还有 N 次解锁机会」（选中没落成的神殿时换成「神殿尚未落成」），右边【确认解锁】
+func _unlock_bar() -> Control:
+	var p := PanelContainer.new()
+	p.name = "UnlockBar"
+	UiTheme.stone(p, UiTheme.ART_STONE_SLATE)
+	p.custom_minimum_size = Vector2(940, 96)
+	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var row := UiTheme.hbox(16)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	p.add_child(row)
+	var n := Pantheon.chances(flow.meta)
+	var built := selected == &"" or Pantheon.temple_ready(selected)
+	var text := UiText.t("pantheon.chances") % n
+	if n <= 0:
+		text = UiText.t("pantheon.no_chance")
+	elif not built:
+		text = UiText.t("pantheon.not_built")
+	elif selected == &"":
+		text += UiText.t("tip.gap") + UiText.t("pantheon.pick_temple")
+	var lab := UiTheme.fixed_color(UiTheme.make_label(text, 20, UiTheme.STONE_GOLD), NOT_BUILT if not built else UiTheme.STONE_GOLD)
+	lab.name = "Chances"
+	lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(lab)
+	var b := UiTheme.make_stone_button(UiText.t("pantheon.unlock"), confirm, true, Vector2(160, 48), 18)
+	b.name = "Unlock"
+	b.disabled = selected == &"" or not Pantheon.can_unlock(flow.meta, selected)
+	row.add_child(b)
+	return p
+
+
+## 396：点一座神殿（解锁了的点了不选中）
+func select(fid: StringName) -> void:
+	if mode != VIEW:
+		return
+	selected = &"" if flow.meta.temples.has(fid) or selected == fid else fid
+	refresh()
+
+
+## 396【确认解锁】。返回解锁成了没有
+func confirm() -> bool:
+	if mode != VIEW or selected == &"" or not Pantheon.unlock(flow.meta, selected):
+		return false
+	selected = &""
+	flow.save()
+	refresh()
+	unlocked.emit()
+	return true
 
 
 ## 选神界面：这一局奉 [param fid]（空 = 无信者）。返回选没选上

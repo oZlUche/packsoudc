@@ -1,23 +1,23 @@
 {
   "id": "pantheon_offering",
-  "display_name": "供奉",
+  "display_name": "再奉",
   "display_names": {
-    "en": "Tribute"
+    "en": "Steadfast"
   },
   "faction": "pantheon",
   "order": 2,
-  "reputation": 5,
-  "min_rep": 10,
+  "reputation": 10,
   "requires": [
     "pantheon_first_rite"
   ],
   "stages": [
     {
-      "goal": "altar_offer",
+      "goal": "faith_runs",
       "count": 2,
-      "text": "在两座神坛献祭",
+      "where": "carry",
+      "text": "奉着神再出征两次，都要撤离",
       "texts": {
-        "en": "Make an Offering at two altars"
+        "en": "Follow a god on two more runs, extracting both times"
       }
     }
   ],

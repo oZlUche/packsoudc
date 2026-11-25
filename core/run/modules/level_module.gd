@@ -57,6 +57,9 @@ var offer_qual := false
 ## 一共抽过几次（种子的一部分）
 var draws: int = 0
 var rerolls_used: int = 0
+## 396：【跳过】用了几次；上一次跳过了，下一次摆牌多一张（用掉就清）
+var skips_used: int = 0
+var skip_bonus: int = 0
 var removals_used: int = 0
 ## 到过的最深一环（-1 = 还没记开局那一环）
 var depth_reached: int = -1
@@ -261,7 +264,7 @@ func has_qual_pool() -> bool:
 
 ## 这一次摆几张：质变位的开局那一次，万神院五档多一张（[member RunState.opening_extra_choice]）
 func _choices_for(qual: bool) -> int:
-	var n := rules().choices
+	var n := rules().choices + skip_bonus
 	if qual and _slot_index() == 0 and rules().qual_opening and _run != null and _run.opening_extra_choice:
 		n += 1
 	return n
@@ -269,7 +272,16 @@ func _choices_for(qual: bool) -> int:
 
 func rerolls_left() -> int:
 	var ctx := _run.buff_context() if _run != null else RunContext.new()
-	return maxi(0, ctx.level_rerolls - rerolls_used)
+	return maxi(0, ctx.level_rerolls + (_run.faith_rerolls if _run != null else 0) - rerolls_used)
+
+
+## 396：这一局一共能【跳过】几次（万神院给的；0 = 没开，界面不摆这个键）
+func skips_total() -> int:
+	return _run.faith_skips if _run != null else 0
+
+
+func skips_left() -> int:
+	return maxi(0, skips_total() - skips_used)
 
 
 func removals_left() -> int:
@@ -311,6 +323,7 @@ func pick(i: int) -> StringName:
 		level_changed.emit()
 		return cid
 	taken[String(cid)] = count_of(cid) + 1
+	skip_bonus = 0     # 396：跳过多出的那一张只管这一批
 	if offer_qual and sacrifice_due() > 0:
 		god_state[SACRIFICE_DUE] = sacrifice_due() - 1
 	elif offer_qual:
@@ -323,6 +336,25 @@ func pick(i: int) -> StringName:
 	picked.emit(cid)
 	level_changed.emit()
 	return cid
+
+
+## 396【跳过】：这一次不选（这一级照样算选过），下一次摆牌多一张。次数不够、正摆着【初种】返回 false
+func skip() -> bool:
+	var cards := offer()
+	if cards.is_empty() or skips_left() <= 0 or seed_offer():
+		return false
+	skips_used += 1
+	if offer_qual and sacrifice_due() > 0:
+		god_state[SACRIFICE_DUE] = sacrifice_due() - 1     # 跳过献祭换来的那次质变：这次就算用掉了
+	elif offer_qual:
+		qual_done += 1
+	else:
+		picks_done += 1
+	offer_ids.clear()
+	offer_qual = false
+	skip_bonus = 1
+	level_changed.emit()
+	return true
 
 
 ## 刷新：三张一起换一批（尽量不和这三张重样）。次数不够返回 false
@@ -782,7 +814,7 @@ func _on_search_opened(_n: MapNode, session: SearchSession) -> void:
 func to_dict() -> Dictionary:
 	return {"xp": xp, "picks_done": picks_done, "qual_done": qual_done, "level_seen": level_seen,
 		"taken": taken.duplicate(), "removed": removed.duplicate(), "offer": offer_ids.duplicate(), "offer_qual": offer_qual, "draws": draws,
-		"rerolls_used": rerolls_used, "removals_used": removals_used, "depth_reached": depth_reached,
+		"rerolls_used": rerolls_used, "removals_used": removals_used, "skips_used": skips_used, "skip_bonus": skip_bonus, "depth_reached": depth_reached,
 		"pending_searches": pending_searches, "history": history.duplicate(true), "god_state": god_state.duplicate(true)}
 
 
@@ -812,6 +844,8 @@ func restore(d: Dictionary) -> void:
 	offer_qual = bool(d.get("offer_qual", false))
 	draws = maxi(0, int(d.get("draws", 0)))
 	rerolls_used = maxi(0, int(d.get("rerolls_used", 0)))
+	skips_used = maxi(0, int(d.get("skips_used", 0)))     # 396
+	skip_bonus = clampi(int(d.get("skip_bonus", 0)), 0, 1)
 	removals_used = maxi(0, int(d.get("removals_used", 0)))
 	depth_reached = int(d.get("depth_reached", -1))
 	pending_searches = maxi(0, int(d.get("pending_searches", 0)))

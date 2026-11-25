@@ -170,6 +170,7 @@ const TEXT := {
 	"node.kind_key": {"zh": "开放", "en": "Opens"},
 	"node.kind_up": {"zh": "提升", "en": "Upgrade"},
 	"node.kind_god": {"zh": "神", "en": "God"},
+	"node.kind_temple": {"zh": "神殿", "en": "Temple"},
 	"gift.key": {"zh": "赠礼", "en": "Gift"},     # 389 第七节：各阵营的【赠礼】
 	"gift.tip_due": {"zh": "赠礼 · 可领 %d 份", "en": "Gift · %d to claim"},
 	"gift.tip_every": {"zh": "声望每攒 %d 点多一份", "en": "One more for every %d standing"},
@@ -193,6 +194,13 @@ const TEXT := {
 	"node.effect_canteen_pot": {"zh": "食堂的锅变成 %d×%d", "en": "Canteen pot grows to %d×%d"},
 	"node.effect_canteen_store": {"zh": "食材仓库变成 %d×%d", "en": "Ingredient store grows to %d×%d"},
 	"node.effect_nursery_plot": {"zh": "苗圃多一片地", "en": "One more nursery field"},
+	"node.effect_regular": {"zh": "开放日常委托：告示栏会贴这一方的纸条", "en": "Daily commissions open: their notices go up on the board"},
+	"node.effect_temple": {"zh": "多一次解锁神殿的机会", "en": "One more temple to unlock"},
+	"node.aid_open_0": {"zh": "开启【重选】，每局 %d 次", "en": "Reroll unlocked: %d per run"},
+	"node.aid_open_1": {"zh": "开启【跳过】，每局 %d 次", "en": "Skip unlocked: %d per run"},
+	"node.aid_more_0": {"zh": "【重选】+%d", "en": "Reroll +%d"},
+	"node.aid_more_1": {"zh": "【跳过】+%d", "en": "Skip +%d"},
+	"node.aid_join": {"zh": "，", "en": ", "},
 	"commission.client": {"zh": "委托人", "en": "Client"},
 	"commission.task": {"zh": "做什么", "en": "Task"},
 	"commission.where": {"zh": "在哪完成", "en": "Done at"},
@@ -524,8 +532,11 @@ const TEXT := {
 	"favor.cards": {"zh": "神的牌", "en": "God cards"},
 	"favor.none": {"zh": "还没有质变牌", "en": "No Transformations yet"},
 	"level.layer": {"zh": "第 %d 层", "en": "Stack %d"},
-	"level.reroll": {"zh": "换牌 %d", "en": "Reroll %d"},
+	"level.reroll": {"zh": "重选 %d", "en": "Reroll %d"},     # 396：原来叫「换牌」
 	"level.reroll_tip": {"zh": "三张一起换一批", "en": "Swap all three for a new set"},
+	"level.skip": {"zh": "跳过 %d", "en": "Skip %d"},     # 396
+	"level.skip_tip": {"zh": "这次不选；下一次选牌多出一张可选", "en": "Pass on this pick; the next pick offers one more card"},
+	"level.skip_bonus": {"zh": "上次跳过了：这次多一张", "en": "You skipped last time: one more card this time"},
 	"level.remove": {"zh": "剔牌 %d", "en": "Cull %d"},
 	"level.remove_tip": {"zh": "再点一张牌剔掉它：这一局不再出，空位补一张", "en": "Then click a card to cull it: it won't show again this run, and the slot is refilled"},
 	"level.none_left": {"zh": "次数用完了（局外科技可以加）", "en": "None left (camp techs add more)"},
@@ -820,13 +831,17 @@ const TEXT := {
 	"pantheon.choose": {"zh": "奉祂", "en": "Follow"},
 	"pantheon.chosen": {"zh": "奉着", "en": "Following"},     # 383
 	"pantheon.unknown": {"zh": "？？？？", "en": "????"},
-	"pantheon.tier_short": {"zh": "声望 %d", "en": "Standing %d"},
 	"pantheon.pick_title": {"zh": "这一局奉哪位神", "en": "Which god will you follow this run?"},
 	"pantheon.back": {"zh": "返回", "en": "Back"},
 	"arrive.ok": {"zh": "知道了", "en": "Got it"},
-	"arrive.pantheon": {"zh": "诸神的祭司们在营地边上立起了万神院。从现在起，每次出征前可以选这一局奉哪位神：信物出征时自动放进背包，休息点的神坛、废墟里的无名祭坛也会出现。不选就是无信者。", "en": "The priests of the gods have raised the Senatus Panthei at the edge of camp. From now on, before each expedition you can choose which god to follow this run: the god's Charm goes into your pack when you set out, and Altars at rest spots and nameless altars in the ruins begin to appear. Choose none and you go as the Faithless."},
-	"pantheon.locked": {"zh": "万神院声望到 %d 开", "en": "Opens at Senatus standing %d"},
-	"pantheon.placeholder": {"zh": "以后开放", "en": "Opens later"},
+	"arrive.pantheon": {"zh": "诸神的祭司们在营地边上立起了万神院。先到后勤的万神院页解锁一座神殿；之后每次出征前可以选这一局奉哪位神：信物出征时自动放进背包，休息点的神坛、废墟里的无名祭坛也会出现。不选就是无信者。", "en": "The priests of the gods have raised the Senatus Panthei at the edge of camp. First unlock a temple on the Senatus page under Logistics; then, before each expedition, you can choose which god to follow this run: the god's Charm goes into your pack when you set out, and Altars at rest spots and nameless altars in the ruins begin to appear. Choose none and you go as the Faithless."},
+	"pantheon.locked": {"zh": "在营地的万神院解锁这座神殿", "en": "Unlock this temple at the Senatus in camp"},
+	"pantheon.chances": {"zh": "还有 %d 次解锁机会", "en": "Temples you can unlock: %d"},     # 396
+	"pantheon.unlock": {"zh": "确认解锁", "en": "Unlock"},
+	"pantheon.not_built": {"zh": "神殿尚未落成", "en": "This temple is not yet built"},
+	"pantheon.pick_temple": {"zh": "点一座神殿", "en": "Pick a temple"},
+	"pantheon.no_chance": {"zh": "声望再高一些，或做完万神院的委托，就能再解锁一座", "en": "Gain more standing, or finish Senatus commissions, to unlock another"},
+	"pantheon.unlocked": {"zh": "解锁了%s的神殿", "en": "Unlocked the temple of %s"},
 	"nursery.title": {"zh": "苗圃", "en": "Nursery"},
 	"nursery.empty": {"zh": "空着的一片地", "en": "An empty field"},
 	"nursery.crop_bitter_leaf": {"zh": "苦叶草", "en": "Bitterleaf"},
@@ -1817,7 +1832,7 @@ const TEXT := {
 	"bonus.rest": {"zh": "休息多回 %d 点体力", "en": "Resting restores %d more Vitality"},
 	"bonus.scout": {"zh": "侦察 %.0f", "en": "Scouting %.0f"},
 	"bonus.shop_price": {"zh": "商店买价 ×%.2f", "en": "Shop buying prices ×%.2f"},
-	"bonus.level_rerolls": {"zh": "升级选牌可换牌 %d 次", "en": "Level-up rerolls: %d"},     # 372
+	"bonus.level_rerolls": {"zh": "升级选牌可重选 %d 次", "en": "Level-up rerolls: %d"},     # 372
 	"bonus.level_removals": {"zh": "升级选牌可剔牌 %d 次", "en": "Level-up culls: %d"},     # 372
 	"bonus.shop_refresh": {"zh": "每家商店可付钱换货 %d 次", "en": "Paid restocks per shop: %d"},
 	"bonus.bounty_elite": {"zh": "打赢精英额外掉一件稀有及以上", "en": "Elites drop one extra Rare-or-better item"},
