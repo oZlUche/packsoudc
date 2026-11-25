@@ -1,0 +1,16 @@
+GD942A cave_bear（穴熊，棋盘 (7, 5)）2000 场：bear_liver 表 30% 掷中 31.6% 实掉 31.6%；bear_paw 表 50% 掷中 52.0% 实掉 52.0%；战利品摆在它棋盘上 0 件；战斗道具没摆下 672 件
+GD942A flame_wolf（焰狼，棋盘 (4, 4)）2000 场：wolf_heart 表 30% 掷中 26.6% 实掉 26.6%；wolf_shank 表 50% 掷中 50.1% 实掉 50.1%；战利品摆在它棋盘上 0 件；战斗道具没摆下 1 件
+GD942A pit_viper（坑蝰，棋盘 (4, 3)）2000 场：viper_cut 表 50% 掷中 48.9% 实掉 48.9%；viper_gall 表 30% 掷中 30.6% 实掉 30.6%；战利品摆在它棋盘上 0 件；战斗道具没摆下 0 件
+GD942A frost_toad（霜蟾，棋盘 (4, 4)）2000 场：toad_leg 表 50% 掷中 49.5% 实掉 49.5%；战利品摆在它棋盘上 0 件；战斗道具没摆下 2 件
+GD942A tusk_boar（獠牙野猪，棋盘 (5, 4)）2000 场：boar_belly 表 50% 掷中 49.6% 实掉 49.6%；战利品摆在它棋盘上 0 件；战斗道具没摆下 0 件
+GD942A shock_eel（电鳗，棋盘 (5, 3)）2000 场：eel_cut 表 50% 掷中 50.5% 实掉 50.5%；战利品摆在它棋盘上 0 件；战斗道具没摆下 4 件
+GD942A frost_mane（霜鬃兽，棋盘 (7, 5)）2000 场：mane_loin 表 50% 掷中 49.5% 实掉 49.5%；战利品摆在它棋盘上 0 件；战斗道具没摆下 0 件
+GD942A molten_lizard（熔鳞蜥，棋盘 (6, 5)）2000 场：lizard_tail 表 50% 掷中 50.8% 实掉 50.8%；战利品摆在它棋盘上 0 件；战斗道具没摆下 0 件
+GD942A thunder_vulture（雷羽鹫，棋盘 (6, 4)）2000 场：vulture_breast 表 50% 掷中 50.4% 实掉 50.4%；战利品摆在它棋盘上 0 件；战斗道具没摆下 0 件
+GD942A miasma_spider（瘴蛛母，棋盘 (6, 4)）2000 场：spider_leg_meat 表 50% 掷中 51.4% 实掉 51.4%；战利品摆在它棋盘上 0 件；战斗道具没摆下 0 件
+GD942B 特性 {  }：10 秒我方武器出手 16 次；叠上去的层数 {  }；反应事件 0；前几条 []；受到伤害 我 0.0 敌 49.8；特性一行 []；事件 { "battle_start": 1, "resource_changed": 47, "item_fired": 16, "damage": 16, "battle_end": 1 }
+GD942B 特性 { &"scorch": 1 }：10 秒我方武器出手 16 次；叠上去的层数 { "scorch@我": 16, "scorch@敌": 16 }；反应事件 0；前几条 ["0.60s scorch@我 +1=1", "0.60s scorch@敌 +1=1", "1.20s scorch@我 +1=2", "1.20s scorch@敌 +1=2"]；受到伤害 我 81.0 敌 130.8；特性一行 ["每次攻击，敌我各加 1 层灼伤"]；事件 { "battle_start": 1, "resource_changed": 68, "item_fired": 16, "damage": 34, "status_stacked": 32, "battle_end": 1 }
+GD942B 特性 { &"chill": 1 }：10 秒我方武器出手 15 次；叠上去的层数 { "chill@我": 15, "chill@敌": 15 }；反应事件 0；前几条 ["0.60s chill@我 +1=1", "0.60s chill@敌 +1=1", "1.20s chill@我 +1=1", "1.20s chill@敌 +1=2"]；受到伤害 我 0.0 敌 46.8；特性一行 ["每次攻击，敌我各加 1 层寒冷"]；事件 { "battle_start": 1, "resource_changed": 44, "item_fired": 15, "damage": 15, "status_stacked": 30, "status_unstacked": 14, "battle_end": 1 }
+GD942B 特性 { &"poison": 1 }：10 秒我方武器出手 16 次；叠上去的层数 { "poison@我": 16, "poison@敌": 16 }；反应事件 0；前几条 ["0.60s poison@我 +1=1", "0.60s poison@敌 +1=1", "1.20s poison@我 +1=2", "1.20s poison@敌 +1=2"]；受到伤害 我 81.0 敌 130.8；特性一行 ["每次攻击，敌我各加 1 层中毒"]；事件 { "battle_start": 1, "resource_changed": 68, "item_fired": 16, "damage": 34, "status_stacked": 32, "battle_end": 1 }
+GD942B 特性 { &"poison": 2 }：10 秒我方武器出手 16 次；叠上去的层数 { "poison@我": 32, "poison@敌": 32 }；反应事件 0；前几条 ["0.60s poison@我 +2=2", "0.60s poison@敌 +2=2", "1.20s poison@我 +2=4", "1.20s poison@敌 +2=4"]；受到伤害 我 162.0 敌 211.8；特性一行 ["每次攻击，敌我各加 2 层中毒"]；事件 { "battle_start": 1, "resource_changed": 68, "item_fired": 16, "damage": 34, "status_stacked": 32, "battle_end": 1 }
+GD942B 特性 { &"scorch": 1, &"chill": 1 }：10 秒我方武器出手 16 次；叠上去的层数 { "scorch@我": 16, "scorch@敌": 16 }；反应事件 0；前几条 ["0.60s scorch@我 +1=1", "0.60s scorch@敌 +1=1", "1.20s scorch@我 +1=1", "1.20s scorch@敌 +1=1"]；受到伤害 我 0.0 敌 49.8；特性一行 ["每次攻击，敌我各加 1 层灼伤", "每次攻击，敌我各加 1 层寒冷"]；事件 { "battle_start": 1, "resource_changed": 48, "item_fired": 16, "damage": 16, "status_stacked": 32, "status_unstacked": 32, "effect_resolved": 32, "battle_end": 1 }
