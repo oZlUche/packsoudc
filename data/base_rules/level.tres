@@ -761,4 +761,3 @@ cards = {
 "kind": "god"
 }
 }
-closed_gods = Array[StringName]([&"skill"])

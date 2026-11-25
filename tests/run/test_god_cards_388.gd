@@ -485,7 +485,7 @@ static func run_skill_cards(t: TestCase) -> void:
 	t.eq(quals, 22, "质变 11 张 + 升级 11 张")
 	t.eq(bases, 9, "基础牌 9 张")
 	t.check(lv.has_qual_pool(), "开局质变位出技巧之神的牌")
-	t.check(not Pantheon.temple_ready(&"skill"), "万神院：神殿尚未落成（先不开放）")
+	t.check(Pantheon.temple_ready(&"skill"), "万神院：技巧之神的神殿可以解锁")
 	t.check(Pantheon.temple_ready(&"brute"), "蛮神照常")
 	var perk := SkillMomentumPerk.new()
 	t.check(is_equal_approx(perk.effect_for(lv).haste_per, 1.0), "核心每层急速 1%")

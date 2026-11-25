@@ -87,13 +87,16 @@ func rebuild() -> void:
 	var lv := int(cur.get("level", level.level()))
 	var qual := bool(cur.get("qual", false))
 	var seed_pick := bool(cur.get("seed", false))
-	if seed_pick:     # 388 自然【初种】长了一阶：继续培育还是采摘
+	var convert := bool(cur.get("convert", false))
+	if convert:     # 396【改信】：连着弹的是换神后的重选
+		_title.text = UiText.t("level.convert_pick") % level.repicks_left()
+	elif seed_pick:     # 388 自然【初种】长了一阶：继续培育还是采摘
 		_title.text = UiText.t("level.seed_choice")
 	elif qual:     # 388：质变位写清是开局那一次还是第几级的
 		_title.text = UiText.t("level.qual_opening") if lv <= 1 else UiText.t("level.qual_of") % lv
 	else:
 		_title.text = UiText.t("level.pick_of") % lv
-	_title.visible = seed_pick or qual or level.pending() > 1     # 窗的标题条写着升到几级；只欠一次普通牌时不重复写
+	_title.visible = convert or seed_pick or qual or level.pending() > 1     # 窗的标题条写着升到几级；只欠一次普通牌时不重复写
 	var left := level.pending()
 	var notes: Array[String] = []
 	if left > 1:
