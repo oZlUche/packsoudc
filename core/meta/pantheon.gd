@@ -112,6 +112,11 @@ static func can_unlock(meta: MetaState, faith_id: StringName) -> bool:
 	return chances(meta) > 0 and gods().has(faith_id) and temple_ready(faith_id) and not meta.temples.has(faith_id)
 
 
+## 现在有没有能点【确认解锁】的神殿（有机会，且有落成了、还没解锁的）—— 营地红点看它；只剩没落成的就不挂（机会照留）
+static func can_unlock_any(meta: MetaState) -> bool:
+	return chances(meta) > 0 and gods().any(func(g: StringName) -> bool: return can_unlock(meta, g))
+
+
 ## 【确认解锁】。返回解锁成了没有
 static func unlock(meta: MetaState, faith_id: StringName) -> bool:
 	if not can_unlock(meta, faith_id):

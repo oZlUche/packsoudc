@@ -654,9 +654,9 @@ func _sync_gift_dot() -> void:
 		RedDot.attach(_tab_btns["commissions"] as Button, Commissions.gifts_due_total(flow.meta))
 
 
-## 396：手里有解锁神殿的机会没用 —— 「后勤」导航和「万神院」子页签挂红点（份数）
+## 396：手里有解锁神殿的机会没用、而且有落成了能解锁的 —— 「后勤」导航和「万神院」子页签挂红点（份数）
 func _sync_temple_dot() -> void:
-	var n := Pantheon.chances(flow.meta) if Pantheon.arrived(flow.meta) else 0
+	var n := Pantheon.chances(flow.meta) if Pantheon.arrived(flow.meta) and Pantheon.can_unlock_any(flow.meta) else 0     # v8.75 测试：机会只能用在没落成的神殿上时不挂
 	if _tab_btns.has("logistics"):
 		RedDot.attach(_tab_btns["logistics"] as Button, n)
 	if _sub_btns.has("pantheon"):
