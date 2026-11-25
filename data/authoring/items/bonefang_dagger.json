@@ -23,8 +23,9 @@
   "material": "bone",
   "combat": {
     "base_stats": {
-      "damage": 9.0,
-      "crit_chance": 15.0
+      "damage": 9,
+      "crit_chance": 15,
+      "crit_damage": 180
     },
     "rules": [
       {

@@ -26,7 +26,8 @@
   "combat": {
     "base_stats": {
       "damage": 8,
-      "crit_chance": 15
+      "crit_chance": 15,
+      "crit_damage": 200
     },
     "rules": [
       {
