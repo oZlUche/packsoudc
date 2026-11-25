@@ -4,7 +4,7 @@
 ## - 报告 389（作者 2026-11-24）：没有档位了，每方一串声望节点（[member FactionDef.nodes]）：声望到了那个数，效果就生效（开放、提升）。
 ##   节点只看声望（不再要求先做完结案）；最后一个节点之后声望照涨，不再给东西。
 ## - 剧情（不是模板的委托）：够格就自动接上（[method auto_take]），常驻到办成，不占位、不能暂缓或放弃；办成开放写在 [member CommissionDef.opens] 的设施。
-## - 常规（模板）：同时最多接 [constant SLOTS] 份；暂缓不占位，进度保留；放弃清掉进度，可以重接。模板最多把一方推到 [constant TEMPLATE_CAP] 点。
+## - 常规（模板）：同时最多接 [constant SLOTS] 份；暂缓不占位，进度保留；放弃清掉进度，可以重接。模板给的声望不封顶（391：作者 11-25 去掉原来的 50 上限）。
 ## - 正常战败不扣声望。现场交付的步骤失败也算；带回的步骤只在撤离成功（或写明托付算数时托付成功）才算（[method merge_run]）。
 ## - 同一委托、同一步、同一处（节点 id / 实例 uid）只记一次（去重键），读档重进、反复进同一节点不重复记账。
 class_name Commissions
@@ -13,7 +13,6 @@ extends RefCounted
 ## 342 B2：手头（接下的常规纸条）最多几份（报告 341 第 3.1 节）
 const SLOTS := 3
 ## 342 B2：常规纸条最多把一方推到多少声望（再往上靠剧情）
-const TEMPLATE_CAP := 50
 ## 报告 389：节点的两种（[member FactionDef.nodes] 的 `kind`）。赠礼不做成节点（作者 11-24 16:44：单独一个【赠礼】键，声望每攒一定数量 +1 份，规则等报告 389 改）
 const KIND_OPEN := &"open"
 const KIND_BOOST := &"boost"
@@ -595,13 +594,11 @@ static func credit(meta: MetaState, d: CommissionDef, stage: int, key: String, i
 	return out
 
 
-## 结案：声望（模板封顶 [constant TEMPLATE_CAP]）、署名、互斥、酬金，写回执。返回发了什么 {"rep", "funds", "items"}
+## 结案：声望、署名、互斥、酬金，写回执。返回发了什么 {"rep", "funds", "items"}
 static func _complete(meta: MetaState, d: CommissionDef, items: ItemDatabase) -> Dictionary:
 	var book := meta.commissions
 	var fid := String(d.faction)
 	var gain := reputation_of(d)
-	if d.tier == CommissionDef.TEMPLATE:
-		gain = clampi(TEMPLATE_CAP - book.rep_of(d.faction), 0, gain)
 	var before := book.rep_of(d.faction)
 	book.rep[fid] = before + gain
 	if d.tier == CommissionDef.FINALE:
