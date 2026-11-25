@@ -3,6 +3,14 @@
 ## 摆在左上：右边那一条会把地图往左让（[HudHost]），悬停浮窗跟着节点走，两边不打架
 extends HudWidget
 
+## 名字最多几个字，长了截断加「…」：英文大字号下长名字会把小牌撑宽、进度被窗盖住（测试报告 v8.81–v8.82）
+const NAME_MAX := 16
+
+
+## 截短的名字（不超过 [constant NAME_MAX] 个字，含「…」）
+static func short_name(n: String) -> String:
+	return n if n.length() <= NAME_MAX else n.left(NAME_MAX - 1).strip_edges() + "…"
+
 
 func title() -> String:
 	return "委托"
@@ -24,5 +32,5 @@ func text_of() -> String:
 	var out: PackedStringArray = []
 	for row in mod.lines():
 		var state := UiText.t("commission.state_done") if bool(row["finished"]) else UiText.t("commission.progress") % [int(row["done"]), int(row["need"])]
-		out.append("%s　%s" % [String(row["name"]), state])
+		out.append("%s　%s" % [short_name(String(row["name"])), state])
 	return "\n".join(out)
