@@ -12,6 +12,8 @@ extends Control
 signal seek_requested(t: float)
 signal scrub_started
 signal scrub_ended
+## 游标挪了（回放走、拖动、跳到头都发；日月盘跟着它）
+signal cursor_moved(t: float)
 
 const HEIGHT := 34.0
 ## 167：贴图（[method UiTheme.art] 的名字）、槽的半高（刻度从槽边起）、倒下的刻度放大、没播到的透明度
@@ -31,6 +33,7 @@ var cursor: float = 0.0:
 	set(v):
 		cursor = v
 		queue_redraw()
+		cursor_moved.emit(v)
 var _scrubbing := false
 ## 167：贴图（缺一样就整条不画）
 var _groove: StyleBoxTexture = null
@@ -38,6 +41,14 @@ var _fill: StyleBoxTexture = null
 var _cursor_tex: Texture2D = null
 var _cursor_pivot := Vector2.ZERO
 var _tick_tex: Array[Texture2D] = []
+## 388 日神：日夜色带的各段 [[起, 止, 白昼?, 黑夜?], ...]（空 = 不画）。只画到游标为止（作者 11-25：随进度露出来）
+var sun_segments: Array = []
+const SUN_H := 9.0
+const SUN_GAP := 2.0
+const SUN_ICON := 16.0
+const SUN_DAY: Array[Color] = [Color("#FFE39A"), Color("#D9A945")]
+const SUN_NIGHT: Array[Color] = [Color("#7D8BD6"), Color("#3A4378")]
+var _sun_icons: Dictionary = {}
 
 
 func _init() -> void:
@@ -73,6 +84,14 @@ func pad() -> float:
 func load_result(result: BattleResult) -> void:
 	duration = result.duration_sec() if result != null else 0.0
 	ticks = ticks_of(result)
+	var clock := SunCycle.clock_of(result)
+	sun_segments = clock.segments(duration) if clock != null else []
+	custom_minimum_size.y = HEIGHT + (SUN_H + SUN_ICON + 4.0 if not sun_segments.is_empty() else 0.0)
+	if not sun_segments.is_empty() and _sun_icons.is_empty():
+		for k in ["sun_day", "sun_night"]:
+			var path := "res://assets/ui/effects/%s.png" % k
+			if ResourceLoader.exists(path):
+				_sun_icons[k] = load(path)
 	cursor = 0.0
 
 
@@ -123,7 +142,7 @@ func _gui_input(event: InputEvent) -> void:
 func _draw() -> void:
 	if _groove == null:
 		return
-	var mid := size.y * 0.5
+	var mid := HEIGHT * 0.5 if not sun_segments.is_empty() else size.y * 0.5
 	var band := Rect2(0.0, mid - HEIGHT * 0.5, size.x, HEIGHT)
 	_groove.draw(get_canvas_item(), band)
 	var cx := x_of(cursor)
@@ -138,4 +157,50 @@ func _draw() -> void:
 		var y := mid - ART_BAR_HALF - sz.y if bool(t[1]) else mid + ART_BAR_HALF
 		var alpha := 1.0 if float(t[0]) <= cursor else UNPLAYED_ALPHA
 		draw_texture_rect(tex, Rect2(Vector2(x - sz.x * 0.5, y), sz), false, Color(1, 1, 1, alpha))
+	_draw_sun(mid + ART_BAR_HALF + 1.0)
 	draw_texture(_cursor_tex, Vector2(cx, mid) - _cursor_pivot)
+
+
+## 388：回放条下沿的日夜色带 —— 白昼金、黑夜靛、两边都算的斜条纹；段间空 2；每段起头下面一个小太阳 / 月亮。只画到游标
+func _draw_sun(top: float) -> void:
+	for seg in sun_segments:
+		var t0 := float(seg[0])
+		if t0 >= cursor:
+			break
+		var t1 := minf(float(seg[1]), cursor)
+		var x0 := x_of(t0) + (SUN_GAP * 0.5 if t0 > 0.0 else 0.0)
+		var x1 := x_of(t1) - (SUN_GAP * 0.5 if t1 >= float(seg[1]) and t1 < duration else 0.0)
+		if x1 <= x0:
+			continue
+		var day := bool(seg[2])
+		var night := bool(seg[3])
+		var r := Rect2(x0, top, x1 - x0, SUN_H)
+		if day and night:
+			_stripes(r)
+		else:
+			var g: Array[Color] = SUN_DAY if day else SUN_NIGHT
+			var box := StyleBoxFlat.new()
+			box.bg_color = g[1]
+			box.set_corner_radius_all(4)
+			draw_style_box(box, r)
+			var hi := StyleBoxFlat.new()
+			hi.bg_color = g[0]
+			hi.set_corner_radius_all(4)
+			draw_style_box(hi, Rect2(r.position, Vector2(r.size.x, r.size.y * 0.5)))
+		var tex: Texture2D = _sun_icons.get("sun_night" if night and not day else "sun_day", null)
+		if tex != null:
+			draw_texture_rect(tex, Rect2(Vector2(x0, top + SUN_H + 2.0), Vector2(SUN_ICON, SUN_ICON)), false,
+				SUN_NIGHT[0] if night and not day else SUN_DAY[1])
+
+
+## 两边都算的那几秒：金、靛斜条纹
+func _stripes(r: Rect2) -> void:
+	draw_rect(r, SUN_NIGHT[1])
+	var step := 6.0
+	var x := r.position.x - r.size.y
+	while x < r.end.x:
+		var pts := PackedVector2Array()
+		for p in [Vector2(x, r.end.y), Vector2(x + r.size.y, r.position.y), Vector2(x + r.size.y + step * 0.5, r.position.y), Vector2(x + step * 0.5, r.end.y)]:
+			pts.append(Vector2(clampf(p.x, r.position.x, r.end.x), p.y))
+		draw_colored_polygon(pts, SUN_DAY[1])
+		x += step
