@@ -32,8 +32,10 @@ const FACILITIES: Array[StringName] = [&"smithy", &"tech", &"market"]
 const FEATURES: Array[StringName] = [&"bias", &"nursery", &"alchemy", &"canteen"]     # 355：灰灯食堂
 ## 342 B3：阵营什么时候来营地（[member FactionDef.arrives]）：教程后第一次正式探索结算时
 const ARRIVES_FIRST_RUN := &"first_run"
-## 377：教程后第 N 次成功撤离结算时（N = [member FactionDef.arrive_after]，万神院）
+## 377：教程后第 N 次成功撤离结算时（N = [member FactionDef.arrive_after]）。万神院 396 第九节起改走 [constant ARRIVES_HERALD]
 const ARRIVES_EXTRACTIONS := &"extractions"
+## 396 第九节（作者 11-26 00:08）：第 N 次成功撤离后告示栏出一份剧情委托（[member FactionDef.herald]），办成了才来（万神院）
+const ARRIVES_HERALD := &"herald"
 ## 去重键：委托 id | 第几步 | 那一处
 const KEY_FMT := "%s|%d|%s"
 
@@ -50,7 +52,8 @@ const GOALS := {
 	&"nursery_harvest": [CommissionStage.CAMP],     # 342 B3：苗圃里收一畦     # 342 B2：到访 N 处（`params.type` = 节点类型），同一局同一处只记一次
 	&"altar_offer": [CommissionStage.FIELD],     # 377：在休息点的神坛献祭（每座神坛记一次）
 	&"faith_levels": [CommissionStage.CARRY],     # 377：奉着神的时候升级（每升一级记一次），撤离才算
-	&"faith_runs": [CommissionStage.CARRY],     # 396：奉着神出征（一局记一次），撤离才算
+	&"faith_runs": [CommissionStage.FIELD],     # 396：奉着神出征（一局记一次）；第九节作者选 B：战败也算
+	&"extract_runs": [CommissionStage.CARRY],     # 396 第九节：撤离一次（万神院到来的剧情委托「接应远道而来的万神院代表」）
 }
 ## 342 B2：营地当场能办的目标（卡上有【办理】）
 const CAMP_GOALS: Array[StringName] = [&"camp_report", &"hand_in"]
@@ -84,6 +87,17 @@ static func listed_factions() -> Array[FactionDef]:
 	return factions().filter(func(f: FactionDef) -> bool: return f.listed and present(active, f))
 
 
+## 396 第九节：剧情页上列的几方 = 在营地的，加上剧情委托已经上了告示栏、人还没来的（[method heralding]）
+static func story_factions() -> Array[FactionDef]:
+	return factions().filter(func(f: FactionDef) -> bool: return f.listed and (present(active, f) or heralding(active, f)))
+
+
+## 396 第九节：这一方还没来，但「接应」它的那份剧情委托已经该上告示栏了
+static func heralding(book: CommissionBook, f: FactionDef) -> bool:
+	return f != null and book != null and f.arrives == ARRIVES_HERALD and f.herald != &"" and not present(book, f) \
+		and book.formal_extractions >= maxi(1, f.arrive_after)
+
+
 ## 342 B3：这一方到营地了没有（一开始就在的、或已经按 [member FactionDef.arrives] 来了）
 static func present(book: CommissionBook, f: FactionDef) -> bool:
 	return f != null and (f.arrives == &"" or (book != null and book.arrived.has(String(f.id))))
@@ -97,7 +111,8 @@ static func arrive(book: CommissionBook, run_no: int) -> Array[StringName]:
 	for f in factions():
 		if not f.listed or book.arrived.has(String(f.id)):
 			continue
-		if f.arrives == ARRIVES_FIRST_RUN or (f.arrives == ARRIVES_EXTRACTIONS and book.formal_extractions >= maxi(1, f.arrive_after)):
+		var herald_done := f.arrives == ARRIVES_HERALD and f.herald != &"" and (book.state_of(f.herald) == CommissionBook.READY or book.is_done(f.herald))
+		if f.arrives == ARRIVES_FIRST_RUN or herald_done or (f.arrives == ARRIVES_EXTRACTIONS and book.formal_extractions >= maxi(1, f.arrive_after)):
 			book.arrived[String(f.id)] = run_no
 			if f.start_rep > book.rep_of(f.id):
 				book.rep[String(f.id)] = f.start_rep     # 396：到来时的起始声望（万神院 5）
@@ -384,8 +399,8 @@ static func opener_of(facility: StringName) -> CommissionDef:
 ## 能不能接：空串 = 能；否则是原因（[constant WHY_HIDDEN] 这些）。[param pick] = 接单时要选的（配方 id），[param picks] = 现在能选的
 static func why_not(book: CommissionBook, d: CommissionDef, pick: StringName = &"", picks: Array = []) -> String:
 	var f := faction(d.faction) if d != null else null
-	if d == null or f == null or not f.listed or not present(book, f):
-		return WHY_HIDDEN
+	if d == null or f == null or not f.listed or not (present(book, f) or (heralding(book, f) and d.id == f.herald)):
+		return WHY_HIDDEN     # 396 第九节：人没来之前只露那份接应的剧情委托
 	var st := book.state_of(d.id)
 	if st == CommissionBook.TAKEN or st == CommissionBook.READY:
 		return WHY_TAKEN
@@ -695,6 +710,8 @@ static func validate_all(pool: Array, faction_pool: Array) -> Array[String]:
 	for f: FactionDef in faction_pool:     # 342 B2：许可单得是这一方的剧情
 		if f.permit != &"" and (not by_id.has(f.permit) or (by_id[f.permit] as CommissionDef).faction != f.id or not is_story(by_id[f.permit])):
 			problems.append("%s：许可单 %s 不是这一方的剧情" % [f.id, f.permit])
+		if f.arrives == ARRIVES_HERALD and (not by_id.has(f.herald) or (by_id[f.herald] as CommissionDef).faction != f.id or not is_story(by_id[f.herald])):
+			problems.append("%s：接应的剧情委托 %s 不是这一方的剧情" % [f.id, f.herald])     # 396 第九节
 		for n in f.nodes:     # 389：「开放某份委托」的节点和那份委托要的声望得是同一个数
 			if String(n.get("effect", "")) == "commission":
 				var cid := StringName(String(n.get("value", "")))

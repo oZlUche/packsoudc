@@ -338,6 +338,39 @@ static func run_board(t: TestCase) -> void:
 	t.eq(JSON.stringify(back.to_dict()), JSON.stringify(book.to_dict()), "存档往返相同")
 
 
+static func run_board_floor(t: TestCase) -> void:
+	t.begin("396 第九节 · 告示栏保底：开了常规委托的每一方，每次刷新栏上至少一张自己的纸条；钉位满了顶掉多的那方最快到期的一张")
+	var m := MetaState.new(GameFlow.load_meta_rules())
+	m.market_seed = 11
+	var book := m.commissions
+	var was := Commissions.active
+	Commissions.active = book
+	_open_legion(book)
+	NoticeBoard.first_fill(m)
+	book.arrived["pantheon"] = 0
+	book.rep["pantheon"] = 30     # 25 点开日常委托
+	var pan := Commissions.faction(&"pantheon")
+	t.check(Commissions.regular_open(book, pan), "万神院开了日常委托")
+	var of := func(fid: String) -> int: return NoticeBoard.posted(book).filter(func(nid: String) -> bool: return String(book.notes[nid]["faction"]) == fid).size()
+	for i in 3:
+		m.runs += 1
+		NoticeBoard.refresh(m)
+		t.check(of.call("pantheon") >= 1 and of.call("legion") >= 1, "第 %d 局后两方各至少一张" % (i + 1))
+	for nid in NoticeBoard.posted(book):     # 栏上换成清一色后勤部队，钉位填满
+		if String(book.notes[nid]["faction"]) == "pantheon":
+			NoticeBoard.discard(book, StringName(nid))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	while book.pins.has(""):
+		if not NoticeBoard._post(book, rng, Commissions.faction(&"legion")):
+			break
+	t.eq([of.call("pantheon"), book.pins.has("")], [0, false], "钉位满、万神院一张都没有")
+	m.runs += 1
+	NoticeBoard.refresh(m)
+	t.check(of.call("pantheon") >= 1, "刷新后顶掉一张后勤部队的，贴上万神院的")
+	Commissions.active = was
+
+
 static func run_board_hand_in(t: TestCase) -> void:
 	t.begin("342 B2 · 告示栏交货单：接下、营地交够办成；声望按这一方 note_rep（389 第八节，现在 3）、酬金；这一局办成的纸条留到下一局结算才清掉")
 	ItemInstance.reset_uid_counter()

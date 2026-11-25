@@ -842,7 +842,7 @@ const TEXT := {
 	"arrive.ok": {"zh": "知道了", "en": "Got it"},
 	"arrive.pantheon": {"zh": "诸神的祭司们在营地边上立起了万神院。先到后勤的万神院页解锁一座神殿；之后每次出征前可以选这一局奉哪位神：信物出征时自动放进背包，休息点的神坛、废墟里的无名祭坛也会出现。不选就是无信者。", "en": "The priests of the gods have raised the Senatus Panthei at the edge of camp. First unlock a temple on the Senatus page under Logistics; then, before each expedition, you can choose which god to follow this run: the god's Charm goes into your pack when you set out, and Altars at rest spots and nameless altars in the ruins begin to appear. Choose none and you go as the Faithless."},
 	"pantheon.locked": {"zh": "在营地的万神院解锁这座神殿", "en": "Unlock this temple at the Senatus in camp"},
-	"pantheon.chances": {"zh": "还有 %d 次解锁机会", "en": "Temples you can unlock: %d"},     # 396
+	"pantheon.visits": {"zh": "还可以拜访 %d 次神殿", "en": "Temple visits left: %d"},     # 396 定稿（作者 11-25 23:18）
 	"pantheon.unlock": {"zh": "确认解锁", "en": "Unlock"},
 	"pantheon.not_built": {"zh": "神殿尚未落成", "en": "This temple is not yet built"},
 	"pantheon.pick_temple": {"zh": "点一座神殿", "en": "Pick a temple"},

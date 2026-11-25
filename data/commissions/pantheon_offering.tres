@@ -7,10 +7,9 @@
 script = ExtResource("2_oqui0")
 goal = &"faith_runs"
 count = 2
-where = &"carry"
-text = "奉着神再出征两次，都要撤离"
+text = "奉着神再出征两次，战败也算"
 texts = {
-"en": "Follow a god on two more runs, extracting both times"
+"en": "Follow a god on two more runs; defeats count too"
 }
 
 [resource]
