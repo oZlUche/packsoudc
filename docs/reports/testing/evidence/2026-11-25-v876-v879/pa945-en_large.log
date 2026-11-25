@@ -1,0 +1,90 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+PA945 新档进营地：到了 false、声望 0、挣到 0 次、解锁了 []、还剩 0 次、能奉 []；红点 后勤 无 万神院 -
+PA945 第 1 局：走一步后测试辅助撤离；成功撤离 1 局
+PA945 第 2 局：走一步后测试辅助撤离；成功撤离 2 局
+PA945 第 3 局：走一步后测试辅助撤离；成功撤离 3 局
+PA945 第 3 局后回营地：到来通知 「Senatus Panthei / The priests of the gods have raised the Senatus Panthei at the edge of camp. First unlock a temple on the Senatus page under Logistics; then, before each expedition, you can choose w」；到了 true、声望 5、挣到 1 次、解锁了 []、还剩 1 次、能奉 []；红点 后勤 1 万神院 1
+PA945 点了【知道了】：到了 true、声望 5、挣到 1 次、解锁了 []、还剩 1 次、能奉 []；红点 后勤 1 万神院 1
+PA945 后勤页：到了 true、声望 5、挣到 1 次、解锁了 []、还剩 1 次、能奉 []；红点 后勤 1 万神院 1
+PA945 万神院页：Senatus Panthei / ???? / ???? / ???? / ???? / ???? / ???? / Temples you can unlock: 1  Pick a temple / [Unlock]
+PA945 　　神殿：brute「????」剪影 sun「????」剪影 nature「????」剪影 skill「????」剪影 hunt「????」剪影 earth「????」剪影；底栏「Temples you can unlock: 1  Pick a temple」【Unlock】灰
+PA945 　　排版：查了 15 处，没有溢出
+PA945 　　悬停 brute：tooltip_text「God of battle, sacrifice and blood」；屏上的悬浮 ["God of battle, sacrifice and blood"]
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] fold (res://ui/tip_anchor.gd:75)
+         [1] _place (res://ui/tip_anchor.gd:99)
+PA945 　　悬停 sun：tooltip_text「Keeper of day and night, who sets the order of heaven and earth」；屏上的悬浮 ["Keeper of day and night, who sets the order of heaven and earth"]
+PA945 　　悬停 nature：tooltip_text「」；屏上的悬浮 []
+PA945 　　悬停 skill：tooltip_text「」；屏上的悬浮 []
+PA945 　　悬停 hunt：tooltip_text「」；屏上的悬浮 []
+PA945 　　悬停 earth：tooltip_text「」；屏上的悬浮 []
+PA945 点狩猎（没落成）：brute「????」剪影 sun「????」剪影 nature「????」剪影 skill「????」剪影 hunt「????」剪影 earth「????」剪影；底栏「This temple is not yet built」【Unlock】灰
+PA945 　　灰着的【确认解锁】也点一下：到了 true、声望 5、挣到 1 次、解锁了 []、还剩 1 次、能奉 []；红点 后勤 1 万神院 1
+PA945 点蛮神：brute「????」剪影 sun「????」剪影 nature「????」剪影 skill「????」剪影 hunt「????」剪影 earth「????」剪影；底栏「Temples you can unlock: 1」【Unlock】亮
+PA945 真点【确认解锁】：到了 true、声望 5、挣到 1 次、解锁了 [&"brute"]、还剩 0 次、能奉 ["brute"]；红点 后勤 无 万神院 无
+PA945 　　神殿：brute「The Brute」亮 sun「????」剪影 nature「????」剪影 skill「????」剪影 hunt「????」剪影 earth「????」剪影；底栏「Gain more standing, or finish Senatus commissions, to unlock another」【Unlock】灰；排版 查了 15 处，没有溢出
+PA945 测试辅助：声望补到 150：到了 true、声望 150、挣到 4 次、解锁了 [&"brute"]、还剩 3 次、能奉 ["brute"]；红点 后勤 3 万神院 3
+PA945 　　神殿：brute「The Brute」亮 sun「????」剪影 nature「????」剪影 skill「????」剪影 hunt「????」剪影 earth「????」剪影；底栏「Temples you can unlock: 3  Pick a temple」【Unlock】灰
+PA945 真点日神【确认解锁】：到了 true、声望 150、挣到 4 次、解锁了 [&"brute", &"sun"]、还剩 2 次、能奉 ["brute", "sun"]；红点 后勤 2 万神院 2
+PA945 真点自然【确认解锁】：到了 true、声望 150、挣到 4 次、解锁了 [&"brute", &"sun", &"nature"]、还剩 1 次、能奉 ["brute", "sun", "nature"]；红点 后勤 无 万神院 无
+PA945 　　神殿：brute「The Brute」亮 sun「The Sun God」亮 nature「God of Nature」亮 skill「????」剪影 hunt「????」剪影 earth「????」剪影；底栏「Temples you can unlock: 1  Pick a temple」【Unlock】灰；排版 查了 15 处，没有溢出
+PA945 点技巧（没落成）：brute「The Brute」亮 sun「The Sun God」亮 nature「God of Nature」亮 skill「????」剪影 hunt「????」剪影 earth「????」剪影；底栏「This temple is not yet built」【Unlock】灰
+PA945 出征屏先翻开了百科页
+PA945 出征屏信仰条：键 ["none「Following」（灰）", "brute「Follow」", "nature「Follow」", "sun「Follow」", "skill「????」（灰）", "hunt「????」（灰）", "earth「????」（灰）"]；悬浮 ["brute「A concept of nature (a falling stone is 」", "sun「Constancy (the recurring cycle), which h」", "nature「Closely bound to life. One of the Empire」", "skill「This temple is not yet built」", "hunt「This temple is not yet built」", "earth「This temple is not yet built」"]；排版 查了 14 处，没有溢出
+PA945 出征屏：这一局奉「」；信仰条写「The Brute」
+PA945 奉「brute」开局：万神院给的重选 4、跳过 4；科技给的重选 0
+PA945 测试辅助加经验：Lv.5 欠选 5
+PA945 选牌窗：3 张 [&"god_brute_blood", &"god_brute_persist", &"god_brute_eat"]；键 Reroll「Reroll 4」 Remove「Cull 0」（灰） Skip「Skip 4」；排版 查了 19 处，没有溢出
+PA945 　　这一批是质变 / 初种，先挑第一张
+PA945 选牌窗：3 张 [&"card_hp_pct", &"god_brute_regen", &"card_hp_flat"]；键 Reroll「Reroll 4」 Remove「Cull 0」（灰） Skip「Skip 4」；排版 查了 20 处，没有溢出
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] fold (res://ui/tip_anchor.gd:75)
+         [1] _place (res://ui/tip_anchor.gd:99)
+PA945 真点【跳过】：跳过前 [&"card_hp_pct", &"god_brute_regen", &"card_hp_flat"] → 现在 4 张 [&"card_hp_flat", &"god_brute_irate", &"card_stamina_pct", &"card_next_search"]；跳过用了 1、还剩 3；欠选 3；提示「3 more to pick  You skipped last time: one more card this time」；键 Reroll「Reroll 4」 Remove「Cull 0」（灰） Skip「Skip 3」
+PA945 真点【重选】：[&"card_hp_flat", &"god_brute_irate", &"card_stamina_pct", &"card_next_search"] → 4 张 [&"card_carry", &"card_regen", &"god_brute_haste", &"god_brute_damage"]；重选还剩 3；键 Reroll「Reroll 3」 Remove「Cull 0」（灰） Skip「Skip 3」
+PA945 挑了第一张：拿过 ["god_brute_blood", "card_carry"]；下一批 3 张 [&"card_stamina_pct", &"god_brute_irate", &"card_vitality"]；欠选 2；跳过加成 0
+PA945 存档退出再继续：跳过用了 1、还剩 3；重选还剩 3；解锁的神殿 [&"brute", &"sun", &"nature"]
+PA945 完 err=0
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9876 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4772 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
