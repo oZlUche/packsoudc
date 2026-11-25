@@ -22,8 +22,9 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 5.0,
-      "crit_chance": 15.0
+      "damage": 5,
+      "crit_chance": 15,
+      "crit_damage": 180
     },
     "rules": [
       {
