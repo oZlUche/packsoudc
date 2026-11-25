@@ -14,10 +14,12 @@
   "rarity": 2,
   "tags": [
     "material",
+    "ingredient",
     "reagent",
     "nature",
     "poison",
-    "beast_part"
+    "beast_part",
+    "blood_flesh"
   ],
   "material": "flesh",
   "combat": {
@@ -64,5 +66,9 @@
       "buff": "poison",
       "stacks": 2
     }
-  ]
+  ],
+  "eat_trait": {
+    "poison_chance": 15,
+    "heal": -10
+  }
 }

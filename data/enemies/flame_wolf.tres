@@ -30,7 +30,7 @@ board = Vector2i(4, 4)
 species = &"beast"
 bagless = true
 loot_filler = Array[StringName]([&"meat_scrap", &"game_meat"])
-loot_bonus = Array[StringName]([&"wolf_shank"])
 loot_chance = {
-"wolf_heart": 0.3
+"wolf_heart": 0.3,
+"wolf_shank": 0.5
 }

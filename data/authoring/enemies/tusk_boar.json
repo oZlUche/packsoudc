@@ -30,7 +30,7 @@
   ],
   "species": "beast",
   "bagless": true,
-  "loot_bonus": [
-    "boar_belly"
-  ]
+  "loot_chance": {
+    "boar_belly": 0.5
+  }
 }

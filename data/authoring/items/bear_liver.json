@@ -20,5 +20,9 @@
     "beast_part",
     "blood_flesh"
   ],
-  "material": "flesh"
+  "material": "flesh",
+  "eat_trait": {
+    "regen_hp": 3,
+    "haste": -4
+  }
 }

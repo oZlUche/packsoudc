@@ -37,7 +37,7 @@
   ],
   "species": "beast",
   "bagless": true,
-  "loot_bonus": [
-    "vulture_breast"
-  ]
+  "loot_chance": {
+    "vulture_breast": 0.5
+  }
 }

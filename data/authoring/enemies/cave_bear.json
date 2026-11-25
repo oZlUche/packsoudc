@@ -42,10 +42,8 @@
     "prime_game_meat",
     "prime_beast_leg"
   ],
-  "loot_bonus": [
-    "bear_paw"
-  ],
   "loot_chance": {
+    "bear_paw": 0.5,
     "bear_liver": 0.3
   }
 }

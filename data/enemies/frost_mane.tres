@@ -30,4 +30,6 @@ loadout = SubResource("Resource_26pu7")
 board = Vector2i(7, 5)
 species = &"beast"
 bagless = true
-loot_bonus = Array[StringName]([&"mane_loin"])
+loot_chance = {
+"mane_loin": 0.5
+}

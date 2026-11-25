@@ -135,8 +135,12 @@ descriptions = {
 }
 shape = SubResource("Resource_q2k1p")
 rarity = 2
-tags = Array[StringName]([&"material", &"reagent", &"nature", &"poison", &"beast_part"])
+tags = Array[StringName]([&"material", &"ingredient", &"reagent", &"nature", &"poison", &"beast_part", &"blood_flesh"])
 material = "flesh"
 combat = SubResource("Resource_iwtek")
+eat_trait = {
+"heal": -10,
+"poison_chance": 15
+}
 wild = SubResource("Resource_tr0ul")
 wild_applies = Array[ExtResource("1_yeg7m")]([SubResource("Resource_w4nbq")])

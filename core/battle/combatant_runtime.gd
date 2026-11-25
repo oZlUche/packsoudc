@@ -100,6 +100,8 @@ static func from_spec(spec: CombatantSpec, p_side: int) -> CombatantRuntime:
 	rt.block_layers.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["value"]) > int(b["value"]) or (int(a["value"]) == int(b["value"]) and int(a["uid"]) < int(b["uid"])))
 	rt.undying_sec = StatMath.from_float(spec.undying_sec)     # 093：蛮神 4 级
+	rt.taken_pct = spec.taken_pct     # 395
+	rt.heal_pct = spec.heal_pct
 	rt.immune_buffs = spec.immune_buffs.duplicate()     # 210
 	rt.meal_regen_hp = StatMath.from_float(spec.meal_regen_hp)     # 355：水果的每秒回血（独立一项）
 	rt.meal_regen_hp_pct = StatMath.from_float(spec.meal_regen_hp_pct / 100.0)
@@ -513,7 +515,7 @@ func guard_buff(ctx: BattleContext, def: BuffDef, n: int) -> int:
 
 ## 175 补充四：受到 [param type] 伤害时合计加几成（百分数，[member BuffDef.damage_taken_by_type] × 层数；剧毒）
 func taken_by_type_percent(type: StringName) -> float:
-	var pct := 0.0
+	var pct := taken_pct     # 395：器官的「受到的伤害 +%」不分类型
 	for b in buffs:
 		if not b.def.damage_taken_by_type.is_empty():
 			pct += b.stacks * float(b.def.damage_taken_by_type.get(String(type), b.def.damage_taken_by_type.get(type, 0.0)))
@@ -527,6 +529,8 @@ func taken_by_type_percent(type: StringName) -> float:
 func heal(ctx: BattleContext, amount: int, reason: StringName = BattleEvent.REASON_HEAL, source_tags: Array[StringName] = []) -> int:
 	if amount <= 0 or dead:
 		return 0
+	if heal_pct != 0.0:     # 395
+		amount = maxi(0, StatMath.mul(amount, StatMath.ONE + StatMath.from_float(heal_pct / 100.0)))
 	for b in buffs:
 		if b.def.heal_cut <= 0 or amount <= 0:
 			continue
@@ -550,6 +554,8 @@ func heal(ctx: BattleContext, amount: int, reason: StringName = BattleEvent.REAS
 ## 175：身上的 buff 合计截走几成治疗（定点比例，0..1）—— 每秒回血按它打折（截走的不转伤害：回血是连续的，不是一次次「恢复」）
 func heal_kept() -> int:
 	var kept := StatMath.ONE
+	if heal_pct != 0.0:     # 395：器官的「受到的治疗 ±%」
+		kept = maxi(0, StatMath.ONE + StatMath.from_float(heal_pct / 100.0))
 	for b in buffs:
 		if b.def.heal_cut > 0 and b.def.heal_cut_tags.is_empty():     # 255：只截某类道具治疗的不碰每秒回血
 			kept = StatMath.mul(kept, StatMath.ONE - StatMath.from_percent(clampi(b.def.heal_cut, 0, 100)))
@@ -673,6 +679,10 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 var dead: bool = false
 ## 093（蛮神 4 级）：血归零后还能坚持几秒（定点；0 = 没有这条），只用一次；不死期间 undying_until 是到期时刻
 var undying_sec: int = 0
+## 395：受到的伤害另加百分之几（器官），并进 [method taken_by_type_percent]
+var taken_pct: float = 0.0
+## 395：受到的治疗另加百分之几（器官），[method heal] 与 [method heal_kept] 都按它
+var heal_pct: float = 0.0
 var undying_until: int = -1
 var undying_used: bool = false
 
