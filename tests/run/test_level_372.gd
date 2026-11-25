@@ -246,6 +246,20 @@ static func frame_pick_cards(t: TestCase, root: Window) -> void:
 		var ribbon := panel.find_child("Card%d" % i, true, false).get_node("Ribbon") as Control
 		ribbon.size = ribbon.get_combined_minimum_size()     # 进树后字宽才定：这里先撑一下（游戏里下一帧自己撑）
 		t.check(absf(ribbon.position.x + ribbon.size.x * 0.5 - LevelPickPanel.CARD_W * 0.5) < 1.0, "第 %d 张的类别条居中（x %.1f，宽 %.1f）" % [i, ribbon.position.x, ribbon.size.x])
+	# 测试报告 v8.73：英文大字号下长说明（血甲）溢出卡片下沿 —— 放不下就缩字号
+	var body := panel.find_child("Card0", true, false).find_child("Body", true, false) as RichTextLabel
+	var title := body.get_parent().get_child(0) as Control
+	title.size = title.get_combined_minimum_size()
+	body.size.x = LevelPickPanel.CARD_W - 28
+	UiTheme.set_rich(body, "[center]After taking damage, record all damage taken for 3 seconds, then gain Armor equal to 50% of it; 10 second cooldown[/center]")
+	var room := LevelPickPanel.CARD_H - LevelPickPanel.LAYER_BOTTOM - 18.0 - (LevelPickPanel.MEDALLION_TOP + LevelPickPanel.MEDALLION + 8.0) - title.size.y - 6.0
+	var before := body.get_content_height()
+	panel._fit_body(body, title)
+	var card := panel.find_child("Card0", true, false) as Control
+	var layer := card.get_node("Layer") as Control
+	var grown := card.custom_minimum_size.y - LevelPickPanel.CARD_H
+	t.check(body.get_content_height() < before and body.get_content_height() <= room + grown, "长说明先缩字号、还不够卡片加高（%d → %d，可用 %.0f + 加高 %.0f）" % [before, body.get_content_height(), room, grown])
+	t.check(is_equal_approx(layer.position.y + 18.0 + LevelPickPanel.LAYER_BOTTOM, card.custom_minimum_size.y), "层数那行跟着挪到新的下沿")
 	panel.queue_free()
 	UiText.lang = keep_lang
 	UiTheme.text_scale = keep_scale

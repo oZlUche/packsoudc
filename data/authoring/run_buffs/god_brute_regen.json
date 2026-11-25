@@ -8,7 +8,7 @@
     {
       "type": "god_card",
       "values": {
-        "per": 5,
+        "per": 10,
         "regen": 1,
         "step": 0
       }

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_uatmb"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_jhav7"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_occ5k"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ja707"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_25tl3"]
+
+[resource]
+script = ExtResource("5_25tl3")
+id = &"brute_cornered"
+display_name = "困兽"
+display_names = {
+"en": "Cornered Beast"
+}

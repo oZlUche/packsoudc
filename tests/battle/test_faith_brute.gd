@@ -1,5 +1,5 @@
-## 388 第 1 批：蛮神【怒气】—— 按掉的血积、每一笔各自计时、30 层上限、每层 +2% 伤害；蛮神的牌在战斗里的那一半
-## （破甲、困兽、痛觉残留、以血还血、恨意、血甲、余怒、嗜血、怒火中烧）；低血打赢记进战斗账
+## 388 第 1 批：蛮神【怒气】—— 按掉的血积、每一笔各自计时（396：不封顶、本身不加伤害）；蛮神的牌在战斗里的那一半
+## （破甲、困兽、怒意延绵、痛觉残留、以血还血、恨意、血甲、余怒、嗜血、怒火中烧）；低血打赢记进战斗账
 extends RefCounted
 
 const Comp := preload("res://tests/battle/test_compiler.gd")
@@ -90,15 +90,14 @@ static func _dealt(res: BattleResult) -> float:
 
 
 static func run_core(t: TestCase) -> void:
-	t.begin("388 · 怒气核心：每失去 1% 最大生命一层、最多 30 层；每一笔各自 4 秒后散掉；每层伤害 +2%；不再用掉；木桩不打人就没有")
+	t.begin("388 · 怒气核心：每失去 1% 最大生命一层、不封顶（396）；每一笔各自 4 秒后散掉；怒气本身不加伤害（396）；不再用掉；木桩不打人就没有")
 	var r := BattleSim.run(_me(), _hitter(30.0), _rng(1), 12.0)
 	var g := _gained(r)
 	t.check(int(g[0]) > 0, "挨打积了怒气（%d 层）" % int(g[0]))
 	t.check(int(g[0]) <= floori(_lost(r) / 10.0), "积的层数不超过掉的血 / 1%%（%d ≤ %d）" % [int(g[0]), floori(_lost(r) / 10.0)])
-	t.check(int(g[1]) <= 30, "任何时候不超过 30 层（最多 %d）" % int(g[1]))
 	t.check(not _mech(r, "brute_strike").is_empty(), "积怒气写进战记（经验值按它给）")
 	var big := BattleSim.run(_me(), _hitter(200.0), _rng(1), 12.0)
-	t.eq(int(_gained(big)[1]), 30, "挨得重：封顶 30 层")
+	t.check(int(_gained(big)[1]) > 30, "挨得重：不封顶（最多 %d 层）" % int(_gained(big)[1]))
 	var calm := BattleSim.run(_me(), FX._spec(5000.0, []), _rng(1), 12.0)
 	t.eq(int(_gained(calm)[0]), 0, "对手不打人：没有怒气")
 	# 单独计时：对手 6 秒一下，第一下 6 秒挨，10 秒左右散
@@ -116,24 +115,38 @@ static func run_core(t: TestCase) -> void:
 			left = e.get_int(&"stacks")
 			break
 	t.check(left > 0, "第一笔散了，第二笔还在（剩 %d 层）" % left)
-	# 每层加伤：同一个对手，奉神打得更痛
+	# 怒气本身不加伤害；急躁 / 破甲给的每层加伤才加
 	var plain := BattleSim.run(_me({}, 1000.0, false), _hitter(30.0), _rng(1), 12.0)
-	t.check(_dealt(r) > _dealt(plain), "每层 +2%% 伤害：%.0f > %.0f" % [_dealt(r), _dealt(plain)])
+	t.check(is_equal_approx(_dealt(r), _dealt(plain)), "核心不加伤害：%.0f = %.0f" % [_dealt(r), _dealt(plain)])
+	var hot := BattleSim.run(_me({"damage_per": 2.0}), _hitter(30.0), _rng(1), 12.0)
+	t.check(_dealt(hot) > _dealt(plain), "每层 +2%% 伤害：%.0f > %.0f" % [_dealt(hot), _dealt(plain)])
 	var again := BattleSim.run(_me(), _hitter(30.0), _rng(1), 12.0)
 	t.eq(again.log.size(), r.log.size(), "同种子同结果")
 
 
 static func run_cards(t: TestCase) -> void:
-	t.begin("388 · 蛮神的牌（战斗）：上限、困兽、痛觉残留、以血还血、恨意、血甲、余怒、嗜血、怒火中烧")
+	t.begin("388 · 蛮神的牌（战斗）：上限（数据留着）、困兽、怒意延绵、痛觉残留、以血还血、恨意、血甲、余怒、嗜血、怒火中烧")
 	var capped := BattleSim.run(_me({"cap": 40}), _hitter(200.0), _rng(1), 12.0)
-	t.eq(int(_gained(capped)[1]), 40, "怒气磅礴：上限 40")
-	var low0 := BattleSim.run(_me({"cap": 1000}, 200.0), _hitter(15.0), _rng(4), 12.0)
-	var low1 := BattleSim.run(_me({"low_bonus": 50, "cap": 1000}, 200.0), _hitter(15.0), _rng(4), 12.0)
-	t.check(int(_gained(low1)[0]) > int(_gained(low0)[0]), "困兽：低血积得多（%d > %d）" % [int(_gained(low1)[0]), int(_gained(low0)[0])])
-	var frozen := BattleSim.run(_me({"low_bonus": 50, "low_freeze": true}, 100.0), _hitter(60.0, 6.0), _rng(4), 11.0)
-	t.check(_drops(frozen).is_empty(), "困兽升级：低血时怒气不散")
-	var thawed := BattleSim.run(_me({"low_bonus": 50}, 100.0), _hitter(60.0, 6.0), _rng(4), 11.0)
-	t.check(not _drops(thawed).is_empty(), "没升级：照样 4 秒散")
+	t.eq(int(_gained(capped)[1]), 40, "上限那一格还认（填 40 就封 40）")
+	# 困兽（396）：每失去 1% 生命，伤害、急速各 +几成；层数 = 失去了百分之几
+	var low0 := BattleSim.run(_me({}, 1000.0), _hitter(30.0), _rng(4), 12.0)
+	var low1 := BattleSim.run(_me({"cornered_per": 1.0}, 1000.0), _hitter(30.0), _rng(4), 12.0)
+	var top := 0
+	var end_hp := -1
+	for raw in low1.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.STATUS_STACKED and e.side == 0 and e.get_name(&"buff") == BruteRage.CORNERED_ID:
+			top = maxi(top, e.get_int(&"stacks"))
+		if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "hp":
+			end_hp = e.get_int(&"current")
+	var lost_pct := 100 - roundi(StatMath.to_float(end_hp) / 10.0)
+	t.check(top > 0 and absi(top - lost_pct) <= 1, "困兽层数跟着失去的百分比（%d 层，失去 %d%%）" % [top, lost_pct])
+	t.check(_dealt(low1) > _dealt(low0), "困兽：掉了血打得更痛（%.0f > %.0f）" % [_dealt(low1), _dealt(low0)])
+	# 怒意延绵（396）：持续时间减半，每挨一下全部重新计时
+	var keep := BattleSim.run(_me({"duration_sec": 2.0, "refresh_on_hit": true}), _hitter(20.0, 1.5), _rng(3), 10.0)
+	t.check(_drops(keep).is_empty(), "1.5 秒挨一下、怒气 2 秒：一直重置，不散")
+	var gone := BattleSim.run(_me({"duration_sec": 2.0}), _hitter(20.0, 1.5), _rng(3), 10.0)
+	t.check(not _drops(gone).is_empty(), "不重置：照样到点散")
 	var irate := BattleSim.run(_me({"gain_bonus": 20}), _hitter(30.0), _rng(1), 12.0)
 	t.check(int(_gained(irate)[0]) > int(_gained(BattleSim.run(_me(), _hitter(30.0), _rng(1), 12.0))[0]), "易怒症：积得多")
 	# 痛觉残留：挨的一下有一半挪走，之后按真实伤害慢慢扣，扣的那几下也积怒气
@@ -148,6 +161,15 @@ static func run_cards(t: TestCase) -> void:
 				ticks += 1
 	t.check(deferred > 0, "挨的那一下挪走了一部分")
 	t.check(ticks >= 5, "之后每秒扣一下（%d 下）" % ticks)
+	var lost_all := 0.0
+	for raw in pain.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.DAMAGE and e.side == 0:
+			lost_all += StatMath.to_float(maxi(0, e.get_int(&"amount")))
+	t.check(int(_gained(pain)[0]) >= floori(lost_all / 10.0) - 1, "慢慢扣的那份也积怒气（%d 层，掉了 %.0f）" % [int(_gained(pain)[0]), lost_all])
+	# 396：灼伤这类持续伤害不再积怒气（拿了痛觉残留也不积）
+	var dot := BattleSim.run(_me({"defer_percent": 50, "cap": 0}), _hitter(0.0, 1.0, &"poison"), _rng(5), 8.0)
+	t.eq(int(_gained(dot)[0]), 0, "只挨中毒跳伤害：没有怒气")
 	# 以血还血：每 5 层（测试放低）一把武器立即出手
 	var blood := BattleSim.run(_me({"strike_every": 5}), _hitter(30.0), _rng(6), 10.0)
 	var free := 0
@@ -156,7 +178,7 @@ static func run_cards(t: TestCase) -> void:
 		if e.name == BattleEvent.ITEM_FIRED and e.side == 0 and e.get_bool(&"free"):
 			free += 1
 	t.check(free > 0 and free == _mech(blood, "brute_blood_for_blood").size(), "以血还血：武器立即出手 %d 次" % free)
-	# 恨意：对手的武器挂中毒，每挂一次 +1 层（不计上限）
+	# 恨意：对手的武器挂中毒，每挂一次 +1 层（不计上限那一格还认）
 	var hate := BattleSim.run(_me({"hate": 1, "cap": 1}), _hitter(1.0, 1.0, &"poison"), _rng(7), 6.0)
 	t.check(int(_gained(hate)[1]) > 1, "恨意：不计上限，超过 1 层（%d）" % int(_gained(hate)[1]))
 	# 血甲：挨打 3 秒后给护甲

@@ -1,14 +1,14 @@
 {
-  "id": "god_brute_cap",
-  "display_name": "怒气磅礴",
+  "id": "god_brute_sacrifice",
+  "display_name": "献祭",
   "display_names": {
-    "en": "Boundless Rage"
+    "en": "Sacrifice"
   },
   "effects": [
     {
       "type": "god_card",
       "values": {
-        "stacks": 10
+        "vitality": 2
       }
     }
   ]

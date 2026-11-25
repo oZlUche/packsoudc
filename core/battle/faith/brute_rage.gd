@@ -1,12 +1,13 @@
 ## 388 第 1 批（作者牌表 11-24）：蛮神的【怒气】与蛮神的牌在战斗里的那一半。一条规则（[FaithMechanicTrigger] 听受伤前、伤害、状态施加，
 ## 另按 [member STEP] 秒打节拍）放整套，数由 [BruteRagePerk] 编译时按拿了哪些牌填好。
 ##
-## - 核心：受到对手造成的生命伤害积怒气，每失去最大生命的 [member percent_per_stack]% 一层，上限 [member cap]；
-##   每一笔**单独计时** [member duration_sec] 秒（来源不同各走各的），身上统一显示一个【怒气】，不写倒计时。每层造成伤害 +[member damage_per]%
-##   （【气血上涌】加在这里）、急速 +[member haste_per]%（【狂热】）、生命回复 +[member regen_per]（【不灭】）。怒气不再用掉。
-## - 【易怒症】积得多几成；【困兽】生命低于 [member low_percent]% 时积得多几成（【困兽犹斗】加在上面），升级版低于那条线时计时停住。
-## - 【破甲】每层让这一下对护甲多扣几成，升级版另外每层无视几成减伤（[DamagePacket] 里两格）。
-## - 【怒火中烧】每 10 层，武器打中时附几层【灼伤】。【痛觉残留】受到的伤害挪几成到之后几秒慢慢扣，这时受到的持续伤害也积怒气。
+## - 核心：受到对手造成的生命伤害积怒气，每失去最大生命的 [member percent_per_stack]% 一层（396 起不封顶，[member cap] 0）；
+##   每一笔**单独计时** [member duration_sec] 秒（来源不同各走各的），身上统一显示一个【怒气】，不写倒计时。怒气本身不加属性（396）：
+##   每层造成伤害 +[member damage_per]%（【急躁】【破甲】加在这里）、急速 +[member haste_per]%（【狂热】）、生命回复 +[member regen_per]（【不灭】）。怒气不再用掉。
+## - 【易怒症】积得多几成。【怒意延绵】持续时间减半，每受到一次伤害所有还在的怒气重新计时（[member refresh_on_hit]）。
+## - 【困兽】（396）：每失去 1% 生命，伤害、急速各 +[member cornered_per]%（另一个状态【困兽】，层数 = 失去了百分之几）。
+## - 【破甲】每层让这一下对护甲多扣几成（[member DamagePacket.armor_bonus]）。
+## - 【怒火中烧】每 10 层，武器打中时附几层【灼伤】。【痛觉残留】受到的伤害挪几成到之后几秒慢慢扣（慢慢扣的那份照样积怒气；灼伤这类持续伤害不积，396）。
 ## - 【以血还血】累计积到几层，随机一把武器立即出手一次（不耗耐力、不动冷却，[method RuleEngine.fire_free]）。
 ## - 【恨意】被施加负面状态时 +1 层不计上限的怒气，升级版负面状态每跳一下也 +1。
 ## - 【血甲】受伤后记 [member armor_window] 秒的受伤量，到点给一半的护甲，冷却 [member armor_cd] 秒；升级版也记造成的伤害，这份护甲被打穿时回一半的血。
@@ -16,14 +17,16 @@ class_name BruteRage
 extends CombatEffect
 
 const BUFF_ID := &"brute_rage"
+const CORNERED_ID := &"brute_cornered"
 const SCORCH := &"scorch"
 ## 节拍：怒气到点、持续伤害跳、血甲到点都在节拍上结算
 const STEP := 0.2
 
 @export var percent_per_stack: float = 1.0
-@export var cap: int = 30
+## 上限（0 = 不封顶，396）
+@export var cap: int = 0
 @export var duration_sec: float = 4.0
-@export var damage_per: float = 2.0
+@export var damage_per: float = 0.0
 @export var haste_per: float = 0.0
 @export var regen_per: float = 0.0
 ## 不灭按整段给：每满几层才加一次（0 = 按层平摊，[member regen_per] 每层）；整段时每段加 [member regen_step_amount]
@@ -31,18 +34,12 @@ const STEP := 0.2
 @export var regen_step_amount: float = 0.0
 ## 积怒气多几成（易怒症，百分数）
 @export var gain_bonus: int = 0
-## 困兽：生命低于这条线（百分数）
-@export var low_percent: int = 50
-## 困兽：低血时积怒气多几成（0 = 没拿困兽）
-@export var low_bonus: int = 0
-## 困兽升级：低血时怒气不消失
-@export var low_freeze: bool = false
+## 怒意延绵：每受到一次伤害，所有还在的怒气重新计时
+@export var refresh_on_hit: bool = false
+## 困兽：每失去 1% 生命，伤害、急速各加几成（百分数，0 = 没拿）
+@export var cornered_per: float = 0.0
 ## 破甲：每层对护甲多扣几成（百分数）
 @export var armor_per: float = 0.0
-## 破甲升级：每层无视几成减伤（百分数）
-@export var ignore_per: float = 0.0
-## 破甲升级：无视的那几成也算格挡（作者待定，默认不算）
-@export var ignore_block: bool = false
 ## 怒火中烧：每几层附一次、一次几层灼伤（0 = 没拿）
 @export var scorch_every: int = 10
 @export var scorch_stacks: int = 0
@@ -69,6 +66,7 @@ const STEP := 0.2
 
 static var _base_def: BuffDef = null
 var _def: BuffDef = null
+var _cornered_def: BuffDef = null
 
 
 static func buff_def() -> BuffDef:
@@ -91,6 +89,18 @@ func rage_def() -> BuffDef:
 			mods.append(StatModifier.make(BattleStats.REGEN_HP, StatModifier.Mode.ADD, regen_per))
 		_def.mods = mods
 	return _def
+
+
+## 困兽那份状态（每层伤害、急速各 +[member cornered_per]%）
+func cornered_def() -> BuffDef:
+	if _cornered_def == null and cornered_per > 0.0:
+		var path := ContentPaths.asset_file("buffs", String(CORNERED_ID))
+		var base := load(path) as BuffDef if ResourceLoader.exists(path) else null
+		if base != null:
+			_cornered_def = base.duplicate() as BuffDef
+			_cornered_def.mods = [StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, cornered_per),
+				StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, cornered_per)] as Array[StatModifier]
+	return _cornered_def
 
 
 func apply(ctx: RuleContext) -> void:
@@ -129,7 +139,7 @@ static func _is_debuff(me: CombatantRuntime, id: StringName) -> bool:
 
 
 #region 积与散
-## 现在一共几层（计上限的封顶 + 不计上限的）
+## 现在一共几层（计上限的封顶 + 不计上限的；不封顶就是全加起来）
 func stacks(st: Dictionary) -> int:
 	var normal := 0
 	var extra := 0
@@ -138,7 +148,7 @@ func stacks(st: Dictionary) -> int:
 			extra += int(b[0])
 		else:
 			normal += int(b[0])
-	return mini(cap, normal) + extra
+	return (mini(cap, normal) if cap > 0 else normal) + extra
 
 
 ## 加一笔 [param n] 层（[param uncapped] = 恨意那种不计上限的）。返回实际加了几层
@@ -147,7 +157,7 @@ func _add(ctx: RuleContext, n: int, uncapped: bool = false) -> int:
 		return 0
 	var st := ctx.state()
 	var batches: Array = st.get("batches", [])
-	if not uncapped:
+	if not uncapped and cap > 0:
 		var normal := 0
 		for b in batches:
 			if not bool(b[2]):
@@ -188,17 +198,12 @@ func _sync(ctx: RuleContext) -> void:
 		RemoveStatus.take(ctx, me, BUFF_ID, have - want, "expired")
 
 
-## 节拍：到点的几笔散掉（困兽升级低血时停表）、余怒、持续伤害、血甲
+## 节拍：到点的几笔散掉、余怒、持续伤害、血甲、困兽（回了血层数跟着降）
 func _tick(ctx: RuleContext) -> void:
 	var st := ctx.state()
 	var now := ctx.battle.now
-	var last := int(st.get("last", now))
-	st["last"] = now
 	var batches: Array = st.get("batches", [])
 	if not batches.is_empty():
-		if low_freeze and _low(ctx.owner):
-			for b in batches:
-				b[1] = int(b[1]) + (now - last)
 		var keep: Array = []
 		var gone: Array = []
 		for b in batches:
@@ -214,11 +219,32 @@ func _tick(ctx: RuleContext) -> void:
 					_add(ctx, roundi(int(b[0]) * linger_percent / 100.0))
 	_tick_pain(ctx, st, now)
 	_tick_armor(ctx, st, now)
+	_sync_cornered(ctx)
 
 
-func _low(me: CombatantRuntime) -> bool:
+## 怒意延绵：所有还在的怒气从现在起重新计时
+func _refresh(ctx: RuleContext) -> void:
+	var until := ctx.battle.now + StatMath.from_float(duration_sec)
+	for b in ctx.state().get("batches", []):
+		b[1] = maxi(int(b[1]), until)
+
+
+## 困兽：层数 = 失去了最大生命的百分之几（向下取整）
+func _sync_cornered(ctx: RuleContext) -> void:
+	var d := cornered_def()
+	if d == null:
+		return
+	var me := ctx.owner
 	var hp_max := me.resources.maximum(BattleStats.RES_HP)
-	return hp_max > 0 and me.resources.current(BattleStats.RES_HP) * 100 < hp_max * low_percent
+	if hp_max <= 0:
+		return
+	@warning_ignore("integer_division")
+	var want := clampi((hp_max - me.resources.current(BattleStats.RES_HP)) * 100 / hp_max, 0, 100)
+	var have := me.stacks_of(CORNERED_ID)
+	if want > have:
+		ApplyStatus.give(ctx, me, d, want - have)
+	elif want < have:
+		RemoveStatus.take(ctx, me, CORNERED_ID, have - want, "faded")
 #endregion
 
 
@@ -233,9 +259,6 @@ func _before(ctx: RuleContext) -> void:
 		var n := me.stacks_of(BUFF_ID)
 		if n > 0 and armor_per > 0.0:
 			p.armor_bonus += roundi(armor_per * n)
-		if n > 0 and ignore_per > 0.0:
-			p.ignore_reduction = mini(100, p.ignore_reduction + roundi(ignore_per * n))
-			p.ignore_block = p.ignore_block or ignore_block
 	elif p.victim == me and defer_percent > 0 and p.raw > 0:
 		p.defer_percent = maxi(p.defer_percent, defer_percent)
 
@@ -254,9 +277,12 @@ func _after(ctx: RuleContext, e: BattleEvent) -> void:
 			_defer(st, e.get_int(&"deferred"), ctx.battle.now)
 		if tick and hate >= 2 and not e.get_bool(&"pure"):
 			_add(ctx, 1, true)
-		if (src >= 0 and src != me.side) or (tick and defer_percent > 0):
+		if refresh_on_hit and amount + e.get_int(&"absorbed") > 0:
+			_refresh(ctx)
+		if src >= 0 and src != me.side:
 			_gather(ctx, amount)
 		_hit_armor(ctx, st, amount + e.get_int(&"absorbed"))
+		_sync_cornered(ctx)
 	elif src == me.side and direct and amount > 0:
 		_on_dealt(ctx, e, amount)
 
@@ -268,8 +294,6 @@ func _gather(ctx: RuleContext, lost: int) -> void:
 	if lost <= 0 or hp_max <= 0:
 		return
 	var weight := 100 + gain_bonus
-	if low_bonus > 0 and _low(me):
-		weight += low_bonus
 	var st := ctx.state()
 	var per := StatMath.mul(hp_max, StatMath.from_float(percent_per_stack / 100.0)) * 100
 	if per <= 0:
@@ -356,6 +380,7 @@ func _tick_pain(ctx: RuleContext, st: Dictionary, now: int) -> void:
 		var p := DamagePacket.create(DamageTypes.PHYSICAL, due, ctx.owner, ctx.owner.side, 0, false)
 		p.pure = true     # 减伤、护甲在挨打那一下已经算过了
 		DamageResolver.resolve(ctx.battle, p)
+		_gather(ctx, due)     # 慢慢扣的那份原本就是对手打的，照样积怒气（伤害事件排队派发，在这里直接算）
 #endregion
 
 
@@ -396,4 +421,4 @@ func _tick_armor(ctx: RuleContext, st: Dictionary, now: int) -> void:
 
 
 func describe() -> String:
-	return UiText.t("fx.brute_rage") % [TextTemplate.num(percent_per_stack), cap, TextTemplate.num(duration_sec), TextTemplate.num(damage_per)]
+	return UiText.t("fx.brute_rage") % [TextTemplate.num(percent_per_stack), TextTemplate.num(duration_sec)]

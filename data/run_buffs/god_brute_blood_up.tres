@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_jhm7u"]
 script = ExtResource("2_1mw1n")
 values = {
-"every": 10
+"every": 15
 }
 
 [resource]

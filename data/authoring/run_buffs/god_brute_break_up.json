@@ -8,9 +8,8 @@
     {
       "type": "god_card",
       "values": {
-        "pct": 3,
-        "ignore": 2,
-        "block": 0
+        "pct": 4,
+        "dmg": 2
       }
     }
   ]

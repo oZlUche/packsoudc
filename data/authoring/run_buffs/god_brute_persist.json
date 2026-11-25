@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_persist",
+  "display_name": "怒意延绵",
+  "display_names": {
+    "en": "Smouldering Rage"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 50
+      }
+    }
+  ]
+}

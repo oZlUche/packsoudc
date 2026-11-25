@@ -8,7 +8,7 @@
     {
       "type": "god_card",
       "values": {
-        "below": 50
+        "pct": 1
       }
     }
   ]
