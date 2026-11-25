@@ -53,6 +53,8 @@ static func run_layout(t: TestCase) -> void:
 	for id in HudWidgets.KINDS:
 		t.not_null(HudWidgets.create(id), "%s 造得出来" % id)
 	t.check(HudWidgets.create(&"nope") == null, "不认识的 id：null")
+	var cw = load("res://ui/hud/widgets/commissions_widget.gd")
+	t.eq([cw.short_name("初次奉神"), cw.short_name("Check the Medicine Packs"), cw.short_name("Check the Medicine Packs").length()], ["初次奉神", "Check the Medic…", 16], "委托小牌：长名字截到 16 个字加「…」，短的不动")
 	t.check(not HudWidgets.has(&"bag_button") and d.entry_of(&"bag_button").is_empty(), "235：右槽小背包钮退役（并进栏的右头）")
 	# v5.62：距离与负重两件读数删了 —— 旧布局里还写着它们：静默丢掉、不报错，别的摆法照用（不整份回默认）
 	var gone: Array[String] = []
