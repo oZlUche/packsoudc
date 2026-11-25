@@ -260,6 +260,16 @@ static func frame_pick_cards(t: TestCase, root: Window) -> void:
 	var grown := card.custom_minimum_size.y - LevelPickPanel.CARD_H
 	t.check(body.get_content_height() < before and body.get_content_height() <= room + grown, "长说明先缩字号、还不够卡片加高（%d → %d，可用 %.0f + 加高 %.0f）" % [before, body.get_content_height(), room, grown])
 	t.check(is_equal_approx(layer.position.y + 18.0 + LevelPickPanel.LAYER_BOTTOM, card.custom_minimum_size.y), "层数那行跟着挪到新的下沿")
+	# 测试报告 v8.87：英文大字号下长牌名（Break Momentum+、Work at Sunrise+）横向撑出卡边 —— 牌名折行，这一栏不比卡里的宽
+	var wide: Array[String] = []
+	for cid in lv.rules().card_ids():
+		var c := panel._card(9, cid)
+		panel.add_child(c)
+		var col := (c.find_child("Body", true, false) as Control).get_parent() as Control
+		if col.get_combined_minimum_size().x > LevelPickPanel.CARD_W - 28 + 0.5:
+			wide.append("%s %.0f" % [cid, col.get_combined_minimum_size().x])
+		c.free()
+	t.eq(wide, [] as Array[String], "每张牌的牌名和说明都不比卡里宽")
 	panel.queue_free()
 	UiText.lang = keep_lang
 	UiTheme.text_scale = keep_scale

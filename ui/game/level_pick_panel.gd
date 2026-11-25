@@ -87,8 +87,8 @@ func rebuild() -> void:
 	var lv := int(cur.get("level", level.level()))
 	var qual := bool(cur.get("qual", false))
 	var seed_pick := bool(cur.get("seed", false))
-	var convert := bool(cur.get("convert", false))
-	if convert:     # 396【改信】：连着弹的是换神后的重选
+	var converting := bool(cur.get("convert", false))
+	if converting:     # 396【改信】：连着弹的是换神后的重选
 		_title.text = UiText.t("level.convert_pick") % level.repicks_left()
 	elif seed_pick:     # 388 自然【初种】长了一阶：继续培育还是采摘
 		_title.text = UiText.t("level.seed_choice")
@@ -96,7 +96,7 @@ func rebuild() -> void:
 		_title.text = UiText.t("level.qual_opening") if lv <= 1 else UiText.t("level.qual_of") % lv
 	else:
 		_title.text = UiText.t("level.pick_of") % lv
-	_title.visible = convert or seed_pick or qual or level.pending() > 1     # 窗的标题条写着升到几级；只欠一次普通牌时不重复写
+	_title.visible = converting or seed_pick or qual or level.pending() > 1     # 窗的标题条写着升到几级；只欠一次普通牌时不重复写
 	var left := level.pending()
 	var notes: Array[String] = []
 	if left > 1:
@@ -189,6 +189,8 @@ func _card(i: int, cid: StringName) -> Control:
 	var def: RunBuffDef = level.run_state().buff_defs.get(cid, null) if level.run_state() != null else null
 	var title := UiTheme.make_display(Names.of(def) if def != null else String(cid), 22)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # 测试报告 v8.87：英文大字号的长牌名折行，不把这一栏撑出卡边
+	title.custom_minimum_size.x = CARD_W - 28
 	col.add_child(title)
 	var body := UiTheme.rich_block(CARD_W - 28, BODY_SIZE, "[center]%s[/center]" % Glossary.bonus_numbers(level.card_text(cid)))
 	body.name = "Body"
