@@ -118,6 +118,10 @@ var opening_extra_choice := false
 ## 396：万神院 40 / 60 / 70 / 90 的节点 —— 这一局升级选牌多几次【重选】（和局外科技给的相加）、几次【跳过】
 var faith_rerolls := 0
 var faith_skips := 0
+## 396 第五节：万神院 50 —— 这一局能不能在神坛改信（一次）；能改成哪几位（万神院解锁了的）；改过没有
+var faith_convert := false
+var faith_temples: Array[StringName] = []
+var faith_converted := false
 ## 报告 377：开局模块输入里信仰开关那一格的键（`{"enabled", "bless", "xp_bonus"}`）
 const FAITH_INPUT := &"faith_access"
 ## 上一次通知时的 [选择, 有效信仰]（只为判断要不要发 [signal faith_changed]）
@@ -1340,6 +1344,11 @@ func _read_faith_access(raw: Variant) -> void:
 	opening_extra_choice = bool(fa.get("opening_extra", false))
 	faith_rerolls = maxi(0, int(fa.get("rerolls", 0)))
 	faith_skips = maxi(0, int(fa.get("skips", 0)))
+	faith_convert = bool(fa.get("convert", false))
+	faith_temples.clear()
+	for g in fa.get("temples", []):
+		faith_temples.append(StringName(String(g)))
+	faith_converted = bool(fa.get("converted", false))
 
 
 func _wire_events() -> void:
@@ -1592,7 +1601,8 @@ func to_dict() -> Dictionary:
 		"skills": skills.to_dict(),
 		"faith_selection": {"selected_id": String(selected_faith)},     # 信仰重构 A：只存选择，有效信仰读档后由棋盘重建
 		"faith_access": {"enabled": faith_enabled, "bless": faith_bless, "xp_bonus": faith_xp_bonus, "opening_extra": opening_extra_choice,
-			"rerolls": faith_rerolls, "skips": faith_skips},     # 377：只加带默认值的字段，不升版
+			"rerolls": faith_rerolls, "skips": faith_skips, "convert": faith_convert,
+			"temples": faith_temples.map(func(g: StringName) -> String: return String(g)), "converted": faith_converted},     # 377：只加带默认值的字段，不升版
 		"faith_power": faith_power.to_dict(),     # 372：经验值在局内成长模块里（`modules.level`）；这里只剩没装模块时的后备池
 		"faith_history": faith_power.history_to_array(),     # 104
 		"owned_uids": owned_uids.keys(),

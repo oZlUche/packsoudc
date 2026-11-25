@@ -48,11 +48,10 @@ nodes = Array[Dictionary]([{
 "rep": 50,
 "value": "pantheon_temple_50"
 }, {
-"effect": "faith_xp",
-"id": "faith_xp",
-"kind": "boost",
-"rep": 50,
-"value": 0.2
+"effect": "convert",
+"id": "convert",
+"kind": "open",
+"rep": 50
 }, {
 "effect": "pick_aids",
 "id": "skip",
@@ -77,20 +76,23 @@ nodes = Array[Dictionary]([{
 "rep": 90,
 "value": [2, 2]
 }, {
-"effect": "temple",
-"id": "temple_4",
+"effect": "commission",
+"id": "temple_rite_100",
 "kind": "open",
-"rep": 100
+"rep": 100,
+"value": "pantheon_temple_100"
 }, {
-"effect": "temple",
-"id": "temple_5",
+"effect": "commission",
+"id": "temple_rite_125",
 "kind": "open",
-"rep": 125
+"rep": 125,
+"value": "pantheon_temple_125"
 }, {
-"effect": "temple",
-"id": "temple_6",
+"effect": "commission",
+"id": "temple_rite_150",
 "kind": "open",
-"rep": 150
+"rep": 150,
+"value": "pantheon_temple_150"
 }])
 gift_every = 25
 note_rep = 3

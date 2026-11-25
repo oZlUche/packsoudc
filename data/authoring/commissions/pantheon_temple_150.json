@@ -1,0 +1,27 @@
+{
+  "id": "pantheon_temple_150",
+  "display_name": "新殿落成",
+  "display_names": {
+    "en": "The Temple Complete"
+  },
+  "faction": "pantheon",
+  "order": 7,
+  "reputation": 5,
+  "min_rep": 150,
+  "grants": "temple",
+  "stages": [
+    {
+      "goal": "faith_levels",
+      "count": 20,
+      "where": "carry",
+      "text": "奉着神升二十级并撤离",
+      "texts": {
+        "en": "Gain twenty levels while following a god, and extract"
+      }
+    }
+  ],
+  "client": "万神院的老祭司",
+  "clients": {
+    "en": "Elder priest of the Senatus"
+  }
+}

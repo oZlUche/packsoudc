@@ -116,7 +116,7 @@ static func run_node_news(t: TestCase) -> void:
 	m.commissions.node_news.clear()
 	d.reputation = 30
 	Commissions._complete(m, d, null)
-	t.eq(m.commissions.node_news.map(func(r: Dictionary) -> String: return String(r["node"])), ["reroll", "temple_rite_50", "faith_xp", "skip"], "30 → 60：重选、50 的引导委托、经验、跳过")
+	t.eq(m.commissions.node_news.map(func(r: Dictionary) -> String: return String(r["node"])), ["reroll", "temple_rite_50", "convert", "skip"], "30 → 60：重选、50 的引导委托、改信、跳过")
 
 
 static func run_gifts(t: TestCase) -> void:

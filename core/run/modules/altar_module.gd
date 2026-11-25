@@ -155,6 +155,67 @@ func special(p: FaithPerk, at_node: MapNode, option: StringName = &"") -> String
 	return line
 
 
+## 396 第五节【改信】（万神院 50，每局一次）：能改成哪几位 —— 万神院解锁了的、不是现在奉的、有信物的
+func convert_targets() -> Array[StringName]:
+	var out: Array[StringName] = []
+	if _run == null:
+		return out
+	for g in _run.faith_temples:
+		if g != _run.selected_faith and _run.items != null and Pantheon.charm_of(_run.items, g) != null:
+			out.append(g)
+	return out
+
+
+## 现在能不能改信：能 = 空串，不能 = 原因（没开就不列这一项，界面看 [member RunState.faith_convert]）
+func convert_refusal() -> String:
+	if _run == null or not _run.faith_convert:
+		return UiText.t("altar.convert_none")
+	if _run.faith_converted:
+		return UiText.t("altar.convert_used")
+	if _run.active_faith_id() == &"":
+		return UiText.t("altar.no_faith")
+	if convert_targets().is_empty():
+		return UiText.t("altar.convert_none")
+	return _run.faith_switch_refusal()
+
+
+## 改信：旧神的信物换成新神的（同一格），改奉新神，记上这一局改过；不占这座神坛的那一次机会（用过的神坛也能改）。
+## 牌的部分交给 [LevelModule]（`convert_faith(旧神, 新神)`：拿掉旧神的牌、按张数从新神的牌里重选）。返回给日志的一句；空 = 没改
+func convert_faith(god: StringName) -> String:
+	if convert_refusal() != "" or not convert_targets().has(god):
+		return ""
+	var old := _run.selected_faith
+	var charm := Pantheon.charm_of(_run.items, god)
+	var spot := Vector2i(-1, -1)
+	var rot := 0
+	var old_inst: ItemInstance = null
+	for inst in _run.board.items():
+		var it := inst as ItemInstance
+		if Pantheon.is_charm(it.def) and it.def.faith_tag() == FaithTags.tag_of(old):
+			spot = it.origin
+			rot = it.rotation
+			old_inst = it
+			_run.board.remove(it.uid)
+			break
+	var fresh := ItemInstance.create(charm, 0)
+	var placed := (spot.x >= 0 and _run.board.place(fresh, spot, rot)) or _run.board.try_add(fresh, true)
+	if not placed or _run.select_faith(god) != "":
+		# 放不上 / 奉不成：新信物拿走，旧的放回原处，什么都没变
+		if placed:
+			_run.board.remove(fresh.uid)
+		if old_inst != null:
+			_run.board.place(old_inst, spot, rot)
+		return ""
+	_run.faith_converted = true
+	var lv := LevelModule.of(_run)
+	if lv != null and lv.has_method(&"convert_faith"):
+		lv.call(&"convert_faith", old, god)     # 「落实局内成长与经验值」那边接：拿掉旧神的牌、排队重选
+	var def := _run.faith_defs.get(god, null) as FaithDef
+	var line := UiText.t("altar.converted") % (Names.of(def) if def != null else String(god))
+	noted.emit(line)
+	return line
+
+
 ## 这个神坛这一次机会用掉了（休息那一份不受影响：休息点两份都用完才变灰，见 [method NodeEvents.settle_rest]）
 func _use() -> void:
 	if node < 0:

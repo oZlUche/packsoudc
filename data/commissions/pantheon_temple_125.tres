@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CommissionDef" format=3]
+
+[ext_resource type="Script" path="res://core/meta/commissions/commission_def.gd" id="1_nmcyd"]
+[ext_resource type="Script" path="res://core/meta/commissions/commission_stage.gd" id="2_ioi2q"]
+
+[sub_resource type="Resource" id="Resource_kf7yh"]
+script = ExtResource("2_ioi2q")
+goal = &"faith_runs"
+count = 3
+where = &"carry"
+text = "奉着神再出征三次，都要撤离"
+texts = {
+"en": "Follow a god on three more runs, extracting each time"
+}
+
+[resource]
+script = ExtResource("1_nmcyd")
+id = &"pantheon_temple_125"
+display_name = "新殿迎神"
+display_names = {
+"en": "Welcoming the God"
+}
+faction = &"pantheon"
+order = 6
+reputation = 5
+min_rep = 125
+stages = Array[ExtResource("2_ioi2q")]([SubResource("Resource_kf7yh")])
+grants = &"temple"
+client = "万神院的老祭司"
+clients = {
+"en": "Elder priest of the Senatus"
+}
