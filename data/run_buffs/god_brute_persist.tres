@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_p8sah"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_sulkc"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_pmuqd"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_svuqw"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_64ak4"]
+
+[sub_resource type="Resource" id="Resource_2dp4c"]
+script = ExtResource("2_sulkc")
+values = {
+"pct": 50
+}
+
+[resource]
+script = ExtResource("5_64ak4")
+id = &"god_brute_persist"
+display_name = "怒意延绵"
+display_names = {
+"en": "Smouldering Rage"
+}
+effects = Array[ExtResource("1_p8sah")]([SubResource("Resource_2dp4c")])

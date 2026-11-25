@@ -15,8 +15,8 @@ values = {
 [resource]
 script = ExtResource("5_v7waq")
 id = &"god_brute_damage"
-display_name = "气血上涌"
+display_name = "急躁"
 display_names = {
-"en": "Surging Blood"
+"en": "Hot Temper"
 }
 effects = Array[ExtResource("1_n548q")]([SubResource("Resource_t22jr")])

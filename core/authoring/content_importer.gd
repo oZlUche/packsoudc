@@ -1236,8 +1236,8 @@ static func import_level_rules(data: Dictionary, ctx: Context, report: ImportRep
 		if echo != "" and not [String(LevelRules.ECHO_BODY), String(LevelRules.ECHO_FASTER), String(LevelRules.ECHO_STACKS)].has(echo):
 			report.error(at + ".echo", "得是 body / faster / stacks 之一")
 		var oneshot := String(r.get("oneshot", ""))
-		if oneshot != "" and not [String(LevelRules.ONESHOT_SEARCH), String(LevelRules.ONESHOT_MIRACLE)].has(oneshot):
-			report.error(at + ".oneshot", "只认 search / miracle")
+		if oneshot != "" and not [String(LevelRules.ONESHOT_SEARCH), String(LevelRules.ONESHOT_MIRACLE), String(LevelRules.ONESHOT_SACRIFICE)].has(oneshot):
+			report.error(at + ".oneshot", "只认 search / miracle / sacrifice")
 		for x in r.get("removes", []):
 			if not rules.cards.has(String(x)):
 				report.error(at + ".removes", "要拿掉的牌 '%s' 不在池里" % x)

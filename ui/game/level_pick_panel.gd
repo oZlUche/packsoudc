@@ -17,6 +17,9 @@ const RIBBON_OUT := 12.0
 const MEDALLION := 72.0
 const MEDALLION_TOP := 28.0
 const ICON := 50.0
+## 说明的字号；放不下时最小缩到 [constant BODY_MIN]，再放不下卡片往下长
+const BODY_SIZE := 15
+const BODY_MIN := 12
 const LAYER_BOTTOM := 12.0
 const LAYER_INK := Color("7a5a30")
 const KEY_SIZE := Vector2(120, 40)
@@ -119,6 +122,26 @@ func rebuild() -> void:
 	_skip.tooltip_text = UiText.t("level.skip_tip") if level.skips_left() > 0 else UiText.t("level.none_left")
 
 
+## 说明放不下（英文、大字号）就一号一号缩小，直到不压到下沿的层数那一行；缩到最小还不够就把卡片加高（测试报告 v8.73）
+func _fit_body(body: RichTextLabel, title: Control) -> void:
+	if not is_instance_valid(body) or not body.is_inside_tree():
+		return
+	var room := CARD_H - LAYER_BOTTOM - 18.0 - (MEDALLION_TOP + MEDALLION + 8.0) - title.size.y - 6.0
+	var n := BODY_SIZE
+	while n > BODY_MIN and body.get_content_height() > room:
+		n -= 1
+		for k in UiTheme.RICH_FONT_SIZES:
+			body.add_theme_font_size_override(k, UiTheme.sz(n))
+	var extra := ceilf(body.get_content_height() - room)
+	var btn := body.get_parent().get_parent() as Control
+	if extra > 0.0 and btn != null:
+		# 缩到最小还放不下：卡片往下长（一排三张跟着一样高），层数那行跟着挪，不压到下面的键
+		btn.custom_minimum_size.y = CARD_H + extra
+		var layer := btn.get_node_or_null("Layer") as Control
+		if layer != null:
+			layer.position.y = CARD_H + extra - LAYER_BOTTOM - 18.0
+
+
 func _card(i: int, cid: StringName) -> Control:
 	var btn := Button.new()
 	btn.name = "Card%d" % i
@@ -165,8 +188,10 @@ func _card(i: int, cid: StringName) -> Control:
 	var title := UiTheme.make_display(Names.of(def) if def != null else String(cid), 22)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
-	var body := UiTheme.rich_block(CARD_W - 28, 15, "[center]%s[/center]" % Glossary.bonus_numbers(level.card_text(cid)))
+	var body := UiTheme.rich_block(CARD_W - 28, BODY_SIZE, "[center]%s[/center]" % Glossary.bonus_numbers(level.card_text(cid)))
+	body.name = "Body"
 	col.add_child(body)
+	_fit_body.call_deferred(body, title)
 	# 底部：拿了是第几层（388：质变牌只能拿一次，升级版写「升级」，原牌不写）
 	var layer_text := UiText.t("level.layer") % (level.count_of(cid) + 1)
 	if level.rules().is_qual(cid):

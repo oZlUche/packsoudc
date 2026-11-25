@@ -28,6 +28,8 @@ const ECHO_STACKS := &"stacks"
 const ONESHOT_SEARCH := &"search"
 ## 388 日神【奇迹】：拿到当场把一件素材换成同类更高稀有度的（[Miracle]）
 const ONESHOT_MIRACLE := &"miracle"
+## 396 蛮神【献祭】：拿到当场扣体力、紧接着多一次质变选牌（[method LevelModule.sacrifice_due]）
+const ONESHOT_SACRIFICE := &"sacrifice"
 
 @export var id: StringName = &""
 @export var display_name: String = ""

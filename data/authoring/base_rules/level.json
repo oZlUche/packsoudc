@@ -180,11 +180,12 @@
       "god": "brute",
       "upgrade_of": "god_brute_eat"
     },
-    "god_brute_duration": {
+    "god_brute_persist": {
       "kind": "god",
-      "god": "brute"
+      "god": "brute",
+      "qual": true
     },
-    "god_brute_cap": {
+    "god_brute_duration": {
       "kind": "god",
       "god": "brute"
     },
@@ -229,6 +230,13 @@
     "god_brute_irate": {
       "kind": "god",
       "god": "brute"
+    },
+    "god_brute_sacrifice": {
+      "kind": "god",
+      "god": "brute",
+      "weight": 0.3,
+      "when": "brute_sacrifice",
+      "oneshot": "sacrifice"
     },
     "god_sun_sunbath": {
       "kind": "god",

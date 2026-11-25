@@ -7,9 +7,10 @@ extends FaithPerk
 ## 1.1 之前的档、旧内容还写着 part：只有 0 编译
 @export var part: int = 0
 @export var percent_per_stack: float = 1.0
-@export var cap: int = 30
+## 396（作者表 11-25）：核心不再有上限、不再每层加伤害（0 = 不封顶；数留着给旧内容）
+@export var cap: int = 0
 @export var duration_sec: float = 4.0
-@export var damage_per: float = 2.0
+@export var damage_per: float = 0.0
 
 ## 蛮神的牌（id 与作者表的对应见报告 388 第 1 批的设想对照表）
 const BREAK := &"god_brute_break"
@@ -29,7 +30,6 @@ const HATE_UP := &"god_brute_hate_up"
 const ARMOR := &"god_brute_armor"
 const ARMOR_UP := &"god_brute_armor_up"
 const DURATION := &"god_brute_duration"
-const CAP := &"god_brute_cap"
 const HASTE := &"god_brute_haste"
 const DAMAGE := &"god_brute_damage"
 const REGEN := &"god_brute_regen"
@@ -40,6 +40,9 @@ const CORNERED_MORE := &"god_brute_cornered_more"
 const IRATE := &"god_brute_irate"
 const EAT := &"god_brute_eat"
 const EAT_UP := &"god_brute_eat_up"
+## 396：怒意延绵（质变，没有升级）、献祭（基础牌，一次性）
+const PERSIST := &"god_brute_persist"
+const SACRIFICE := &"god_brute_sacrifice"
 ## 【血肉】：能进食的那类（标签）；吃下去攒的生命上限记在 [member LevelModule.god_state] 这一格
 const FLESH_TAG := &"blood_flesh"
 const FLESH_KEY := "brute_flesh_hp"
@@ -62,6 +65,26 @@ static func undying_sec(lv: LevelModule) -> float:
 	if lv == null or not lv.has_card(DEATHFIGHT):
 		return 0.0
 	return lv.god_value(DEATHFIGHT, "sec") + lv.god_value(DEATHFIGHT_UP, "sec") + lv.god_value(UNDYING, "sec")
+
+
+#region 献祭（396）
+## 献祭能不能进池：剩余体力大于要扣的，且还有质变牌可选
+static func can_sacrifice(lv: LevelModule) -> bool:
+	var run := lv.run_state() if lv != null else null
+	if run == null or run.vitality == null:
+		return false
+	return run.vitality.current > roundi(lv.card_value(SACRIFICE, "vitality", 2.0)) and lv.has_qual_pool()
+
+
+## 拿到献祭：扣体力，欠一次质变选牌（[method LevelModule.sacrifice_due]）
+static func sacrifice(lv: LevelModule, cid: StringName) -> void:
+	var run := lv.run_state()
+	if run == null:
+		return
+	if run.vitality != null:
+		run.vitality.spend(roundi(lv.card_value(cid, "vitality", 2.0)), &"sacrifice")
+	lv.god_state[LevelModule.SACRIFICE_DUE] = lv.sacrifice_due() + 1
+#endregion
 
 
 #region 啖肉吮血（第 1 批补）
@@ -157,8 +180,10 @@ func effect_for(lv: LevelModule) -> BruteRage:
 	e.damage_per = damage_per
 	if lv == null:
 		return e
-	e.cap += roundi(lv.god_value(CAP, "stacks"))
 	e.duration_sec += lv.god_value(DURATION, "sec")
+	if lv.has_card(PERSIST):
+		e.duration_sec *= lv.god_value(PERSIST, "pct", 50.0) / 100.0
+		e.refresh_on_hit = true
 	e.damage_per += lv.god_value(DAMAGE, "pct")
 	e.haste_per = lv.god_value(HASTE, "pct")
 	if lv.has_card(REGEN):
@@ -171,13 +196,13 @@ func effect_for(lv: LevelModule) -> BruteRage:
 			e.regen_per = lv.god_value(REGEN, "regen") / per
 	e.gain_bonus = roundi(lv.god_value(IRATE, "pct"))
 	if lv.has_card(CORNERED):
-		e.low_percent = roundi(lv.god_value(CORNERED, "below", 50.0))
-		e.low_bonus = roundi(lv.god_value(CORNERED, "bonus") + lv.god_value(CORNERED_MORE, "bonus"))
-		e.low_freeze = lv.has_card(CORNERED_UP)
+		# 困兽犹斗：每张让困兽的数 +25%（加算，作者备注）
+		var per := lv.god_value(CORNERED_UP, "pct") if lv.has_card(CORNERED_UP) else lv.god_value(CORNERED, "pct")
+		e.cornered_per = per * (1.0 + lv.god_value(CORNERED_MORE, "bonus") / 100.0)
 	if lv.has_card(BREAK):
-		e.armor_per = lv.god_value(BREAK_UP, "pct") if lv.has_card(BREAK_UP) else lv.god_value(BREAK, "pct")
-		e.ignore_per = lv.god_value(BREAK_UP, "ignore")
-		e.ignore_block = lv.god_value(BREAK_UP, "block") > 0.0     # 开关（作者待定）：无视减伤也算格挡
+		var src := BREAK_UP if lv.has_card(BREAK_UP) else BREAK
+		e.armor_per = lv.god_value(src, "pct")
+		e.damage_per += lv.god_value(src, "dmg")
 	if lv.has_card(BURN):
 		var up := lv.has_card(BURN_UP)
 		e.scorch_every = roundi(lv.god_value(BURN, "every", 10.0))
@@ -203,7 +228,7 @@ func effect_for(lv: LevelModule) -> BruteRage:
 
 
 func _summary() -> String:
-	return UiText.t("perk.brute_rage") % [TextTemplate.num(percent_per_stack), cap, TextTemplate.num(duration_sec), TextTemplate.num(damage_per)]
+	return UiText.t("perk.brute_rage") % [TextTemplate.num(percent_per_stack), TextTemplate.num(duration_sec)]
 
 
 func battle_note(_run: RunState) -> String:

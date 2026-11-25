@@ -28,6 +28,8 @@ const SRC_FAITH := &"faith"
 const SRC_EVENT := &"event"
 ## 元素回响拼出来的那份 buff 的 id（不进内容表，界面按它认）
 const ECHO_BUFF := &"card_element_echo"
+## 396 献祭换来的质变还欠几次（记在 [member god_state]）
+const SACRIFICE_DUE := "sacrifice_due"
 
 ## 经验值、等级、待选的牌、选了牌 —— 有变化就发（界面重画）
 signal level_changed()
@@ -211,7 +213,12 @@ func opening_skipped() -> bool:
 
 
 func _qual_left() -> int:
-	return maxi(0, rules().qual_slots_at(level()) - _slot_index())
+	return maxi(0, rules().qual_slots_at(level()) - _slot_index()) + sacrifice_due()
+
+
+## 396 蛮神【献祭】换来的、还没选的质变（排在最前，不占 6 / 12 / … 级的质变位）
+func sacrifice_due() -> int:
+	return int(god_state.get(SACRIFICE_DUE, 0))
 
 
 ## 选牌按级排队：每级一次普通牌，逢质变位的那一级紧跟着一次质变（开局那次在最前）。返回现在这一张：
@@ -222,7 +229,7 @@ func current_pick() -> Dictionary:
 	if seed_offer() or (offer_ids.is_empty() and NatureCyclePerk.choice_due(self)):
 		return {"level": level(), "qual": false, "seed": true}
 	var qual := _next_is_qual()
-	var lv := rules().qual_level_of(_slot_index()) if qual else picks_done + 2
+	var lv := (level() if sacrifice_due() > 0 else rules().qual_level_of(_slot_index())) if qual else picks_done + 2
 	return {"level": lv, "qual": qual, "generic": qual and not has_qual_pool()}
 
 
@@ -232,6 +239,8 @@ func _next_is_qual() -> bool:
 		return offer_qual     # 已经摆出来的那一批不变
 	if _qual_left() <= 0:
 		return false
+	if sacrifice_due() > 0:
+		return true
 	if _regular_left() <= 0:
 		return true
 	return rules().qual_level_of(_slot_index()) < picks_done + 2
@@ -315,7 +324,9 @@ func pick(i: int) -> StringName:
 		return cid
 	taken[String(cid)] = count_of(cid) + 1
 	skip_bonus = 0     # 396：跳过多出的那一张只管这一批
-	if offer_qual:
+	if offer_qual and sacrifice_due() > 0:
+		god_state[SACRIFICE_DUE] = sacrifice_due() - 1
+	elif offer_qual:
 		qual_done += 1
 	else:
 		picks_done += 1
@@ -333,7 +344,9 @@ func skip() -> bool:
 	if cards.is_empty() or skips_left() <= 0 or seed_offer():
 		return false
 	skips_used += 1
-	if offer_qual:
+	if offer_qual and sacrifice_due() > 0:
+		god_state[SACRIFICE_DUE] = sacrifice_due() - 1     # 跳过献祭换来的那次质变：这次就算用掉了
+	elif offer_qual:
 		qual_done += 1
 	else:
 		picks_done += 1
@@ -544,6 +557,8 @@ func _apply_now(cid: StringName) -> void:
 		pending_searches += 1
 	if String(row.get("oneshot", "")) == String(LevelRules.ONESHOT_MIRACLE):
 		god_state["miracle_last"] = Miracle.apply(_run)     # 388 日神【奇迹】
+	if String(row.get("oneshot", "")) == String(LevelRules.ONESHOT_SACRIFICE):
+		BruteRagePerk.sacrifice(self, cid)     # 396 蛮神【献祭】
 	if god() == &"nature":
 		NatureCyclePerk.on_pick(self, cid)     # 388 自然：坚韧、感知、培育、动物交谈升级
 	var def: RunBuffDef = _run.buff_defs.get(cid, null) if _run != null else null

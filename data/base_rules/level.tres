@@ -118,10 +118,6 @@ cards = {
 "kind": "god",
 "upgrade_of": "god_brute_burn"
 },
-"god_brute_cap": {
-"god": "brute",
-"kind": "god"
-},
 "god_brute_cornered": {
 "god": "brute",
 "kind": "god",
@@ -202,9 +198,21 @@ cards = {
 "kind": "god",
 "upgrade_of": "god_brute_pain"
 },
+"god_brute_persist": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
 "god_brute_regen": {
 "god": "brute",
 "kind": "god"
+},
+"god_brute_sacrifice": {
+"god": "brute",
+"kind": "god",
+"oneshot": "sacrifice",
+"weight": 0.3,
+"when": "brute_sacrifice"
 },
 "god_brute_smite": {
 "god": "brute",

@@ -8,7 +8,8 @@
     {
       "type": "god_card",
       "values": {
-        "pct": 2
+        "pct": 2,
+        "dmg": 1
       }
     }
   ]
