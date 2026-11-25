@@ -281,6 +281,19 @@ func on_faith_run() -> Array:
 	return out
 
 
+## 396 第九节：撤离成功（结算时调）—— 等着「撤离一次」的各记一次
+func on_extracted() -> Array:
+	var out: Array = []
+	if _run == null:
+		return out
+	for pair in waiting(&"extract_runs"):
+		var d := pair[0] as CommissionDef
+		var s := int(pair[1])
+		if not _has_row(d.id, s, "%s/%s" % [_run.run_id, "extract"]):
+			out.append(_add(d, s, "extract", "self"))
+	return out
+
+
 ## 去重键带上这一局的 id：uid 每局从 1 重来，别的局的同号不是同一件
 func _add(d: CommissionDef, stage: int, key: String, via: String) -> Dictionary:
 	rows.append({"id": String(d.id), "stage": stage, "key": "%s/%s" % [_run.run_id, key], "via": via})

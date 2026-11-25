@@ -17,6 +17,8 @@ extends Resource
 @export var arrives: StringName = &""
 ## 377：`arrives` = `extractions` 时，教程之后第几次成功撤离（正式探索）结算时来
 @export var arrive_after: int = 0
+## 396 第九节：`arrives` = `herald` 时那份剧情委托的 id —— 第 [member arrive_after] 次成功撤离后它上告示栏，办成（撤离一次）这一方才来营地
+@export var herald: StringName = &""
 ## 396：到营地那一刻的起始声望（万神院 5）
 @export var start_rep: int = 0
 ## 报告 389：声望节点，一个节点 = 一个声望数 + 一个效果（[method Commissions.nodes_of] 按声望排好）。每个节点：
