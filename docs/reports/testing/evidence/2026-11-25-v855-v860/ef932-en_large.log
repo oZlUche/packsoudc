@@ -1,0 +1,210 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+EF932 ♥ f 250 st 2 屏 9 wait 22
+EF932 　　选牌前的教练层第 1 步：Level up: pick one of three cards. The same card can show up again later; each p（选牌窗 开着）
+EF932 　　选牌前的教练层第 2 步：Don't like any of them? Reroll swaps all three for a new set. Rerolls are limite（选牌窗 开着）
+EF932 　　选牌前的教练层第 3 步：Cull: click it, then click a card. That card won't show again this run, and the （选牌窗 开着）
+EF932 ♥ f 500 st 30 屏 2 wait 4
+EF932 　　章节 free_mode
+EF932 第 1 局进地图：奉「」，1 级，欠选牌 1，选牌窗 开着，教练层走了 3 步
+EF932 　　现在这张 { "level": 1, "qual": true, "generic": true }；窗里的字：Run start: pick a Transformation / Faithless: pick one more general card instead / Long Road / Max Vitality +1 / Stack 1 / Exploration / Pack Mule / Max Load +3 / Stack 1 / Exploration / Brawn / Health +10 / Stack 1 / Stats / [Reroll 0] / [Cull 0]
+EF932 　　摆出 3 张 [&"card_vitality", &"card_carry", &"card_hp_flat"]；换牌 0、剔牌 0；排版：查了 19 处，没有溢出
+EF932 　　开局质变位里有没有【啖肉吮血】：false；eligible=false
+EF932 　　选完以后的教练层：This is the sundial, your Countdown. Every step moves it one notch; when it runs（选牌窗 没开）
+EF932 　　选完以后的教练层：From this run on, Load counts. If what's on the Board weighs more than your limi（选牌窗 没开）
+EF932 　　选完以后的教练层：The Belt: your carried skills go here. Double-click one to use it. You can buy m（选牌窗 没开）
+EF932 　　选完以后教练层都走完了
+EF932 真点第一张后：欠选牌 0，质变 []，拿过 { "card_vitality": 1 }，选牌窗 收了
+EF932 测试辅助加经验值 1000000：30 级，欠选牌 34
+EF932 　　体力 3 / 4（下面遇到【耐行】就选它）
+EF932 BATCH lv=2 qual=false taken_before=["card_vitality"] offered=["card_stamina_pct","card_vitality","card_carry"]
+EF932 PICK card_stamina_pct
+EF932 BATCH lv=3 qual=false taken_before=["card_vitality","card_stamina_pct"] offered=["card_stamina_flat","card_rest","card_stamina_pct"]
+EF932 PICK card_stamina_flat
+EF932 BATCH lv=4 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat"] offered=["card_stamina_flat","card_vitality","card_hp_pct"]
+EF932 PICK card_stamina_flat
+EF932 BATCH lv=5 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat"] offered=["card_vitality","card_carry","card_hp_flat"]
+EF932 PICK card_vitality
+EF932 BATCH lv=6 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat"] offered=["card_carry","card_stamina_pct","card_rest"]
+EF932 PICK card_carry
+EF932 BATCH lv=6 qual=true taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry"] offered=["card_hp_pct","card_hp_flat","card_rest"]
+EF932 6 级质变位：窗里的字 Level 6: pick a Transformation / 29 more to pick  Faithless: pick one more general card instead / Vigor / Health +5% / Stack 1 / Stats / Brawn / Health +10 / Stack 1 / Stats / Sound Sleep / Resting restores 1 more Vitality / Stack 1 / Exploration / [Reroll 0] / [Cull 0]；排版 查了 19 处，没有溢出
+EF932 PICK card_hp_pct
+EF932 BATCH lv=7 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct"] offered=["card_regen","card_hp_pct","card_carry"]
+EF932 PICK card_regen
+EF932 BATCH lv=8 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen"] offered=["card_regen","card_next_search","card_rest"]
+EF932 PICK card_regen
+EF932 BATCH lv=9 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen"] offered=["card_regen","card_hp_pct","card_stamina_flat"]
+EF932 PICK card_regen
+EF932 BATCH lv=10 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen"] offered=["card_vitality","card_stamina_pct","card_hp_pct"]
+EF932 PICK card_vitality
+EF932 BATCH lv=11 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen"] offered=["card_next_search","card_stamina_pct","card_carry"]
+EF932 PICK card_next_search
+EF932 BATCH lv=12 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search"] offered=["card_vitality","card_rest","card_regen"]
+EF932 PICK card_vitality
+EF932 BATCH lv=12 qual=true taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search"] offered=["card_stamina_pct","card_stamina_flat","card_regen"]
+EF932 PICK card_stamina_pct
+EF932 BATCH lv=13 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search"] offered=["card_hp_flat","card_stamina_pct","card_next_search"]
+EF932 PICK card_hp_flat
+EF932 BATCH lv=14 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_stamina_flat","card_rest","card_vitality"]
+EF932 PICK card_stamina_flat
+EF932 BATCH lv=15 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_hp_flat","card_vitality","card_stamina_flat"]
+EF932 PICK card_hp_flat
+EF932 BATCH lv=16 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_hp_flat","card_regen","card_next_search"]
+EF932 PICK card_hp_flat
+EF932 BATCH lv=17 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_stamina_flat","card_carry","card_hp_pct"]
+EF932 PICK card_stamina_flat
+EF932 BATCH lv=18 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_regen","card_hp_flat","card_carry"]
+EF932 PICK card_regen
+EF932 BATCH lv=18 qual=true taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_hp_flat","card_rest","card_carry"]
+EF932 PICK card_hp_flat
+EF932 BATCH lv=19 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_hp_flat","card_carry","card_regen"]
+EF932 PICK card_hp_flat
+EF932 BATCH lv=20 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_hp_pct","card_hp_flat","card_carry"]
+EF932 PICK card_hp_pct
+EF932 BATCH lv=21 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_next_search","card_hp_flat","card_regen"]
+EF932 PICK card_next_search
+EF932 BATCH lv=22 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_hp_pct","card_vitality","card_rest"]
+EF932 PICK card_hp_pct
+EF932 BATCH lv=23 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_stamina_pct","card_hp_pct","card_hp_flat"]
+EF932 PICK card_stamina_pct
+EF932 BATCH lv=24 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat"] offered=["card_rest","card_hp_flat","card_next_search"]
+EF932 PICK card_rest
+EF932 BATCH lv=24 qual=true taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat","card_rest"] offered=["card_carry","card_next_search","card_vitality"]
+EF932 PICK card_carry
+EF932 BATCH lv=25 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat","card_rest"] offered=["card_hp_flat","card_next_search","card_regen"]
+EF932 PICK card_hp_flat
+EF932 BATCH lv=26 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat","card_rest"] offered=["card_stamina_pct","card_stamina_flat","card_hp_pct"]
+EF932 PICK card_stamina_pct
+EF932 BATCH lv=27 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat","card_rest"] offered=["card_stamina_pct","card_hp_flat","card_carry"]
+EF932 PICK card_stamina_pct
+EF932 ♥ f 750 st 32 屏 2 wait 0
+EF932 BATCH lv=28 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat","card_rest"] offered=["card_carry","card_stamina_flat","card_vitality"]
+EF932 PICK card_carry
+EF932 BATCH lv=29 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat","card_rest"] offered=["card_next_search","card_rest","card_hp_pct"]
+EF932 PICK card_next_search
+EF932 BATCH lv=30 qual=false taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat","card_rest"] offered=["card_hp_flat","card_hp_pct","card_regen"]
+EF932 PICK card_hp_flat
+EF932 BATCH lv=30 qual=true taken_before=["card_vitality","card_stamina_pct","card_stamina_flat","card_carry","card_hp_pct","card_regen","card_next_search","card_hp_flat","card_rest"] offered=["card_next_search","card_carry","card_hp_pct"]
+EF932 PICK card_next_search
+EF932 选完：2×3 3×3 4×3 5×3 6×3 6Q通×3 7×3 8×3 9×3 10×3 11×3 12×3 12Q通×3 13×3 14×3 15×3 16×3 17×3 18×3 18Q通×3 19×3 20×3 21×3 22×3 23×3 24×3 24Q通×3 25×3 26×3 27×3 28×3 29×3 30×3 30Q通×3
+EF932 　　质变 []；拿过 9 种；【耐行】4 张，体力 3 / 7
+EF932 顶端栏信仰徽记：在；质变小图标 []，多出来的「」
+EF932 背包（状态界面）：神恩栏 false；栏里 []；窗宽 1056；排版 查了 5 处，没有溢出
+EF932 测试辅助：万神院到来、声望 100；开局多一张 false
+EF932 ♥ f 1000 st 5 屏 1 wait 28
+EF932 开局屏奉蛮神：true
+EF932 　　章节 free_mode
+EF932 第 2 局进地图：奉「brute」，1 级，欠选牌 1，选牌窗 开着，教练层走了 0 步
+EF932 　　现在这张 { "level": 1, "qual": true, "generic": false }；窗里的字：Run start: pick a Transformation / Divine Wrath / Before battle, slay a normal enemy outright; 2 uses per run / Transform / Blood Armor / After taking damage, record all damage taken for 3 seconds, then gain Armor equal to 50% of it; 10 second cooldown / Transform / Lingering Pain / 50% of damage taken is dealt over 5 seconds instead; damage over time you take now builds Rage too / Transform / [Re
+EF932 　　摆出 3 张 [&"god_brute_smite", &"god_brute_armor", &"god_brute_pain"]；换牌 0、剔牌 0；排版：查了 18 处，溢出 1：「After taking damage, rec」出 @PanelContainer@3942 框
+EF932 　　开局质变位里有没有【啖肉吮血】：false；eligible=true
+EF932 ♥ f 1250 st 40 屏 2 wait 39
+EF932 　　选完以后教练层都走完了
+EF932 开局选完：质变 ["god_brute_smite"]
+EF932 　　牌面 god_brute_eat：You can eat Raw Flesh for extra Max Health for the rest of the run, by rarity and size (15 per cell × (rarity + 1))
+EF932 　　牌面 god_brute_eat_up：You can eat Raw Flesh for extra Max Health for the rest of the run (15 per cell × (rarity + 1)), and half as much Max Stamina
+EF932 　　牌面 god_sun_rise：On entering Day, gain 90 max Health and 50 max Stamina (current rises too); stacks without limit in a battle
+EF932 　　牌面 god_sun_rise_up：On entering Day, gain 175 max Health and 100 max Stamina (current rises too); stacks without limit in a battle
+EF932 测试辅助：背包放一件 toad_leg（Toad Leg，1 格，稀有度 0）：true
+EF932 测试辅助：背包放一件 wolf_shank（Wolf Shank，2 格，稀有度 0）：true
+EF932 测试辅助：背包放一件 viper_gall（Viper Gall，1 格，稀有度 1）：true
+EF932 测试辅助：背包放一件 bear_paw（Bear Paw，3 格，稀有度 2）：true
+EF932 测试辅助：背包放一件 wolf_heart（Wolf Heart，1 格，稀有度 2）：true
+EF932 测试辅助：背包放一件 fire_gland（Fire Gland，1 格，稀有度 2）：true
+EF932 　Toad Leg 右键钉住（窗里是 Toad Leg Common / In the pot: ），键：quick[Drop] lock[Lock]
+EF932 　Wolf Shank 右键钉住（窗里是 Wolf Shank Common / In the pot），键：quick[Drop] lock[Lock]
+EF932 　Viper Gall 右键钉住（窗里是 Viper Gall Uncommon / In the p），键：quick[Drop] lock[Lock]
+EF932 　Bear Paw 右键钉住（窗里是 Bear Paw Rare / In the pot: Ma），键：quick[Drop] lock[Lock]
+EF932 　Wolf Heart 右键钉住（窗里是 Wolf Heart Rare / In the pot: ），键：quick[Drop] lock[Lock]
+EF932 　Fire Gland 右键钉住（窗里是 Fire Gland Rare / In the pot: ），键：quick[Drop] lock[Lock]
+EF932 测试辅助：拿【啖肉吮血】。生命上限 160，耐力上限 110.0
+EF932 ♥ f 1500 st 62 屏 2 wait 6
+EF932 　Toad Leg 右键钉住（窗里是 Toad Leg Common / In the pot: ），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Toad Leg: Max Health +15」；生命上限 160.0 → 175.0；耐力上限 110.0 → 110.0；背包件数 9 → 8；这件还在 false
+EF932 　　　　吃完器官合计 {  }
+EF932 　Wolf Shank 右键钉住（窗里是 Wolf Shank Common / In the pot），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　悬浮窗排版：查了 7 处，没有溢出
+EF932 　　真点【进食】：提示「Ate Wolf Shank: Max Health +30」；生命上限 175.0 → 205.0；耐力上限 110.0 → 110.0；背包件数 8 → 7；这件还在 false
+EF932 　　　　吃完器官合计 {  }
+EF932 　Viper Gall 右键钉住（窗里是 Viper Gall Uncommon / In the p），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Viper Gall: Haste +8%, Max Health -20」；生命上限 205.0 → 185.0；耐力上限 110.0 → 110.0；背包件数 7 → 6；这件还在 false
+EF932 　　　　吃完器官合计 { &"haste": 8.0, &"max_hp": -20.0 }
+EF932 　Bear Paw 右键钉住（窗里是 Bear Paw Rare / In the pot: Ma），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Bear Paw: Max Health +135」；生命上限 185.0 → 320.0；耐力上限 110.0 → 110.0；背包件数 6 → 5；这件还在 false
+EF932 　　　　吃完器官合计 { &"haste": 8.0, &"max_hp": -20.0 }
+EF932 　Wolf Heart 右键钉住（窗里是 Wolf Heart Rare / In the pot: ），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Wolf Heart: Damage dealt +8%, Damage taken +4%」；生命上限 320.0 → 320.0；耐力上限 110.0 → 110.0；背包件数 5 → 4；这件还在 false
+EF932 　　　　吃完器官合计 { &"haste": 8.0, &"max_hp": -20.0, &"damage": 8.0, &"taken": 4.0 }
+EF932 　Fire Gland 右键钉住（窗里是 Fire Gland Rare / In the pot: ），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Fire Gland: Extra fire damage per attack +3, Stamina regen -5%」；生命上限 320.0 → 320.0；耐力上限 110.0 → 110.0；背包件数 4 → 3；这件还在 false
+EF932 　　　　吃完器官合计 { &"fire_hit": 3.0, &"regen_stamina": -5.0, &"haste": 8.0, &"max_hp": -20.0, &"damage": 8.0, &"taken": 4.0 }
+EF932 测试辅助：拿【啖肉吮血·升级】。生命上限 320.0 → 320.0，耐力上限 110.0 → 200.0（以前吃的补一半）
+EF932 ♥ f 1750 st 61 屏 2 wait 14
+EF932 　Lizard Tail 右键钉住（窗里是 Lizard Tail Rare / In the pot:），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Lizard Tail: Max Health +135, Max Stamina +67.5」；生命上限 320.0 → 455.0；耐力上限 200.0 → 267.5；背包件数 8 → 7；这件还在 false
+EF932 　　　　吃完器官合计 { &"fire_hit": 3.0, &"regen_stamina": -5.0, &"haste": 8.0, &"max_hp": -20.0, &"damage": 8.0, &"taken": 4.0 }
+EF932 　Bear Liver 右键钉住（窗里是 Bear Liver Rare / In the pot: ），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Bear Liver: Health regen in battle +3/s, Haste -4%」；生命上限 455.0 → 455.0；耐力上限 267.5 → 267.5；背包件数 7 → 6；这件还在 false
+EF932 　　　　吃完器官合计 { &"haste": 4.0, &"regen_hp": 3.0, &"fire_hit": 3.0, &"regen_stamina": -5.0, &"max_hp": -20.0, &"damage": 8.0, &"taken": 4.0 }
+EF932 　Frost Gland 右键钉住（窗里是 Frost Gland Rare / In the pot:），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Frost Gland: Damage taken -6%, Haste -3%」；生命上限 455.0 → 455.0；耐力上限 267.5 → 267.5；背包件数 6 → 5；这件还在 false
+EF932 　　　　吃完器官合计 { &"haste": 1.0, &"regen_hp": 3.0, &"fire_hit": 3.0, &"regen_stamina": -5.0, &"taken": -2.0, &"max_hp": -20.0, &"damage": 8.0 }
+EF932 　Viper Gland 右键钉住（窗里是 Viper Gland Rare / [When you a），键：quick[Drop] lock[Lock] eat[Eat] bench[Sit this one out]
+EF932 　　真点【进食】：提示「Ate Viper Gland: Chance per attack to apply 1 Poison +15%, Healing received -10%」；生命上限 455.0 → 455.0；耐力上限 267.5 → 267.5；背包件数 5 → 4；这件还在 false
+EF932 　　　　吃完器官合计 { &"haste": 1.0, &"regen_hp": 3.0, &"fire_hit": 3.0, &"regen_stamina": -5.0, &"taken": -2.0, &"max_hp": -20.0, &"heal": -10.0, &"poison_chance": 15.0, &"damage": 8.0 }
+EF932 　Wolf Heart 右键钉住（窗里是 Wolf Heart Rare / In the pot: ），键：quick[Drop] lock[Lock] eat[Eat]
+EF932 　　真点【进食】：提示「Ate Wolf Heart: Damage dealt +8%, Damage taken +4%」；生命上限 455.0 → 455.0；耐力上限 267.5 → 267.5；背包件数 4 → 3；这件还在 false
+EF932 　　　　吃完器官合计 { &"haste": 1.0, &"regen_hp": 3.0, &"fire_hit": 3.0, &"regen_stamina": -5.0, &"taken": 2.0, &"max_hp": -20.0, &"heal": -10.0, &"poison_chance": 15.0, &"damage": 16.0 }
+EF932 背包排版：查了 5 处，没有溢出
+EF932 神恩栏 [&"god_brute_smite", &"god_brute_eat_up"]
+EF932 　　第 1 格悬浮：Divine Wrath / Before battle, slay a normal enemy outright; 2 uses per run
+EF932 　　第 2 格悬浮：Feast on Flesh+ / You can eat Raw Flesh for extra Max Health for the rest of the run (15 per cell × (rarity [color=@val]+ 1[/color])), and half as much Max Stamina
+EF932 编进战斗的我方：max_hp=4550000
+EF932 　　器官合计 { &"haste": 1.0, &"regen_hp": 3.0, &"fire_hit": 3.0, &"regen_stamina": -5.0, &"taken": 2.0, &"max_hp": -20.0, &"heal": -10.0, &"poison_chance": 15.0, &"damage": 16.0 }；蛮神直接吃的 { &"haste": 1.0, &"regen_hp": 3.0, &"fire_hit": 3.0, &"regen_stamina": -5.0, &"taken": 2.0, &"max_hp": -20.0, &"heal": -10.0, &"poison_chance": 15.0, &"damage": 16.0 }；状态界面那行的特性 ["Damage dealt +16%", "Haste +1%", "Health regen in battle +3/s", "Extra fire damage per attack +3", "Chance per attack to apply 1 Poison +15%", "Max Health -20", "Stamina regen -5%", "Healing received -10%", "Damage taken +2%"]
+EF932 god_state 攒下的生命上限 315.0
+EF932 ♥ f 2000 st 66 屏 2 wait 7
+EF932 存档退出后屏 0；继续
+EF932 读回：god_state 攒下的生命上限 315.0；生命上限 455.0；耐力上限 267.5；拿过 啖肉吮血 1、升级 1
+EF932 读回后重开状态界面：生命上限一行 { "key": &"max_hp", "label": "Max health", "value": "455", "raw": 455.0, "base": 160.0, "flat": 295.0, "pct": 0.0, "boosted": false, "tip": "Lose the battle whe；耐力上限一行 { "key": &"max_stamina", "label": "Max stamina", "value": "268", "raw": 267.5, "base": 110.0, "flat": 157.5, "pct": 0.0, "boosted": false, "tip": "Attacks cost 
+EF932 走到相邻的普通战斗点 2
+EF932 ♥ f 2250 st 51 屏 11 wait 22
+EF932 战前屏的键：[← 主界面　F1] [] [] [] [◂] [] [] [Divine Wrath: defeat now (uses 1, 2 left)] []
+EF932 　　我方编进战斗：max_hp=4550000
+EF932 完 err=0
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9875 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4764 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.

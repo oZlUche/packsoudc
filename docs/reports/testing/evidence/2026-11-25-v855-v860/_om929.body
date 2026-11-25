@@ -1,0 +1,51 @@
+extends SceneTree
+## 游戏测试 v8.57（PR #929）：老存档里的三件【血肉】占位。参数 <outdir> <mode>
+## make（v8.56）：新档拒教程 → 测试辅助往仓库放碎血肉、血肉、上等血肉各一件 → 存档退出
+## check（v8.57）：主菜单【继续】进基地 → 看仓库里这三件变成了什么
+const TAG := "OM929"
+##HEAD##
+var _mode := ""
+
+
+func _wh_line() -> String:
+	var o := []
+	for it in _flow.meta.warehouse.items():
+		var inst := it as ItemInstance
+		if inst.def.has_tag(&"ingredient") or String(inst.def.id).contains("flesh") or String(inst.def.id) in ["toad_leg", "eel_cut", "bear_paw"]:
+			o.append("%s（%s，%d 格，稀有度 %d，血肉 %s）" % [String(inst.def.id), Names.of(inst.def), inst.def.cell_count(), inst.def.rarity, str(inst.def.has_tag(&"blood_flesh"))])
+	return "，".join(o)
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _flow == null:
+		_flow = _game.flow
+		var a := OS.get_cmdline_user_args()
+		_mode = a[1] if a.size() > 1 else "check"
+		return false
+	if _f > 6000: L("超时 st %d" % _st); quit(1); return true
+	if _wait > 0: _wait -= 1; return false
+	if _mode == "make":
+		if _st < 3:
+			if _boot(): _st = 3
+			return false
+		if _st == 3:
+			var defs := []
+			for id in ["blood_flesh_scrap", "blood_flesh", "blood_flesh_prime"]: defs.append(_flow.items.get_def(StringName(id)))
+			L("老版本：放进仓库 %s" % str(_flow.meta.grant_lossless(defs)))
+			_flow.save_meta()
+			L("　　仓库里：%s" % _wh_line())
+			_wait = 30; _st = 99; return false
+		L("完 err=0"); quit(0); return true
+	match _st:
+		0:
+			if _f < 90: return false
+			L("主菜单【继续】：%s" % str(_flow.continue_game())); _wait = 90; _st = 1
+		1:
+			L("读进来，仓库里：%s" % _wh_line())
+			_tab("warehouse"); _wait = 40; _st = 2
+		2:
+			shot("warehouse"); _st = 99
+		99:
+			L("完 err=0"); quit(0); return true
+	return false

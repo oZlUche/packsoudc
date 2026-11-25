@@ -1,0 +1,97 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+SD927 ♥ f 250 st 2 屏 9 wait 22
+SD927 　　选牌前的教练层第 1 步：Level up: pick one of three cards. The same card can show up again later; each p（选牌窗 开着）
+SD927 　　选牌前的教练层第 2 步：Don't like any of them? Reroll swaps all three for a new set. Rerolls are limite（选牌窗 开着）
+SD927 　　选牌前的教练层第 3 步：Cull: click it, then click a card. That card won't show again this run, and the （选牌窗 开着）
+SD927 ♥ f 500 st 30 屏 2 wait 4
+SD927 　　章节 free_mode
+SD927 第 1 局进地图：奉「」，1 级，欠选牌 1，选牌窗 开着，教练层走了 3 步
+SD927 　　现在这张 { "level": 1, "qual": true, "generic": true }；窗里的字：Run start: pick a Transformation / Faithless: pick one more general card instead / Pack Mule / Max Load +3 / Stack 1 / Exploration / Grit / Stamina +6 / Stack 1 / Stats / Steady Breath / Stamina regen +0.6 / Stack 1 / Stats / [Reroll 0] / [Cull 0]
+SD927 　　摆出 3 张 [&"card_carry", &"card_stamina_flat", &"card_regen"]；换牌 0、剔牌 0；排版：查了 19 处，没有溢出
+SD927 　　选完以后的教练层：This is the sundial, your Countdown. Every step moves it one notch; when it runs（选牌窗 没开）
+SD927 　　选完以后的教练层：From this run on, Load counts. If what's on the Board weighs more than your limi（选牌窗 没开）
+SD927 　　选完以后的教练层：The Belt: your carried skills go here. Double-click one to use it. You can buy m（选牌窗 没开）
+SD927 　　选完以后教练层都走完了
+SD927 真点第一张后：欠选牌 0，质变 []，拿过 { "card_carry": 1 }，选牌窗 收了
+SD927 测试辅助：万神院到来、声望 100；开局多一张 false
+SD927 ♥ f 750 st 5 屏 1 wait 25
+SD927 开局屏奉日神：true
+SD927 　　章节 free_mode
+SD927 第 2 局进地图：奉「sun」，1 级，欠选牌 1，选牌窗 开着，教练层走了 0 步
+SD927 　　现在这张 { "level": 1, "qual": true, "generic": false }；窗里的字：Run start: pick a Transformation / Blazing Sun / During Day, the enemy gains 1 Scorch per second / Transform / Lunar Eclipse / Night now also counts as Day / Transform / Rest at Sunset / During Night, all your attack timers pause and you restore 2% max Health per second / Transform / [Reroll 0] / [Cull 0]
+SD927 　　摆出 3 张 [&"god_sun_blaze", &"god_sun_lunar", &"god_sun_rest"]；换牌 0、剔牌 0；排版：查了 18 处，没有溢出
+SD927 　　牌 god_nature_decay：eligible=false
+SD927 　　牌 god_nature_reap：eligible=false
+SD927 　　牌 god_nature_guard：eligible=false
+SD927 　　牌 god_nature_bounty：eligible=false
+SD927 　　牌 god_nature_cycle：eligible=false
+SD927 　　牌 god_nature_grow：eligible=false
+SD927 　　牌 god_nature_decay_up：eligible=false
+SD927 ♥ f 1000 st 40 屏 2 wait 36
+SD927 　　选完以后教练层都走完了
+SD927 真点第一张后：欠选牌 0，质变 [{ "id": &"god_sun_blaze", "upgraded": false, "shown": &"god_sun_blaze" }]，拿过 { "god_sun_blaze": 1 }，选牌窗 收了
+SD927 （第 2 局不升级，直接走到战斗点）
+SD927 第 0 步：相邻 ["battle", "elite"]；亲近自然攒的 0.0；拿着亲近自然 false
+SD927 　　走到 4（battle）
+SD927 战前屏：对手 butcher（human）；键 [← 主界面　F1] [] [] [] [◂] [] [] []；动物交谈键 没有
+SD927 真打一场：奉「sun」；拿过 { "god_sun_blaze": 1 }
+SD927 （没找到开战键，直接调 start_battle；看得见的键 ["← 主界面　F1", "", "", "", "◂", "", "", ""]；屏 11；带悬浮的 ["@Button@2:", "End_left:Run menu (Esc)\nResum", "End_right:Status (B)\nArrange y", "@Button@2801:Magnifier (N)\nTake a", "@Button@2800:调试台", "@Button@3227:Skip this fight for ", "@Button@3224:", "@Button@3226:The enemy starts the"]）
+SD927 ♥ f 1250 st 54 屏 3 wait 0
+SD927 　　第 200 帧：日月盘 显示，位置 (838.0, 67.0)，大小 (100.0, 100.0)，now 12.6，状态 { "day": true, "night": false, "left": 5.4, "span": 6.0 }；悬浮内容 { "head": "Day  5.4s left", "body": "Damage +15%\n[color=#8b93a1]Day 6s / Night 6s[/color]" }
+SD927 　　　　回放条：游标 12.6 / 12.6 秒；色带 3 段，已露出 3 段，前几段 [[0.0, 6.0, true, false], [6.0, 12.0, false, true], [12.0, 12.6, true, false]]；我方效果栏不挂 ["sun_day", "sun_night"]
+SD927 　　战斗打完：Andreus / Your side / Butcher / 0.0s  Andreus gained 1 Day (1 total) 0.6s  Butcher's Knife dealt 3 Physical damage 0.9s  Butcher's Hand Axe dealt 5 Physical damage 0.9s      then gave Andreus 1 Bleed (1 total) 1.0s  Butcher gained 1 Burn (1 total) 1.2s  Butcher's Knife dealt 3 Physical damage 1.8s  Butcher's Knife dealt 3 Physical damage 1.8s  Butcher's Hand Axe dealt 5 Physical damage 1.8s      then gave Andreus 1 Bleed (2 total) 1.9s  Andreus suffered from Bleed: 2 Bleed damage 2.0s  Butcher gained 1 Burn (2 total) 2.0s  Butcher suffered from Burn: 2 Fire damage 2.4s  Critical! Butcher's Knife dealt 5 Physical damage 2.7s  Butcher's Hand Axe dealt 5 Physical damage 2.7s      then gave Andr
+SD927 　　打完：日月盘 显示，位置 (838.0, 67.0)，大小 (100.0, 100.0)，now 12.6，状态 { "day": true, "night": false, "left": 5.4, "span": 6.0 }；悬浮内容 { "head": "Day  5.4s left", "body": "Damage +15%\n[color=#8b93a1]Day 6s / Night 6s[/color]" }
+SD927 　　　　回放条：游标 12.6 / 12.6 秒；色带 3 段，已露出 3 段，前几段 [[0.0, 6.0, true, false], [6.0, 12.0, false, true], [12.0, 12.6, true, false]]；我方效果栏不挂 ["sun_day", "sun_night"]
+SD927 　　战斗打完：Andreus / Your side / Butcher / 0.0s  Andreus gained 1 Day (1 total) 0.6s  Butcher's Knife dealt 3 Physical damage 0.9s  Butcher's Hand Axe dealt 5 Physical damage 0.9s      then gave Andreus 1 Bleed (1 total) 1.0s  Butcher gained 1 Burn (1 total) 1.2s  Butcher's Knife dealt 3 Physical damage 1.8s  Butcher's Knife dealt 3 Physical damage 1.8s  Butcher's Hand Axe dealt 5 Physical damage 1.8s      then gave Andreus 1 Bleed (2 total) 1.9s  Andreus suffered from Bleed: 2 Bleed damage 2.0s  Butcher gained 1 Burn (2 total) 2.0s  Butcher suffered from Burn: 2 Fire damage 2.4s  Critical! Butcher's Knife dealt 5 Physical damage 2.7s  Butcher's Hand Axe dealt 5 Physical damage 2.7s      then gave Andr
+SD927 　　往回拖到三成：日月盘 显示，位置 (838.0, 67.0)，大小 (100.0, 100.0)，now 3.8，状态 { "day": true, "night": false, "left": 2.22, "span": 6.0 }；悬浮内容 { "head": "Day  2.2s left", "body": "Damage +15%\n[color=#8b93a1]Day 6s / Night 6s[/color]" }
+SD927 　　　　回放条：游标 3.8 / 12.6 秒；色带 3 段，已露出 1 段，前几段 [[0.0, 6.0, true, false], [6.0, 12.0, false, true], [12.0, 12.6, true, false]]；我方效果栏不挂 ["sun_day", "sun_night"]
+SD927 　　战斗打完：Andreus / Your side / Butcher / 0.0s  Andreus gained 1 Day (1 total) 0.6s  Butcher's Knife dealt 3 Physical damage 0.9s  Butcher's Hand Axe dealt 5 Physical damage 0.9s      then gave Andreus 1 Bleed (1 total) 1.0s  Butcher gained 1 Burn (1 total) 1.2s  Butcher's Knife dealt 3 Physical damage 1.8s  Butcher's Knife dealt 3 Physical damage 1.8s  Butcher's Hand Axe dealt 5 Physical damage 1.8s      then gave Andreus 1 Bleed (2 total) 1.9s  Andreus suffered from Bleed: 2 Bleed damage 2.0s  Butcher gained 1 Burn (2 total) 2.0s  Butcher suffered from Burn: 2 Fire damage 2.4s  Critical! Butcher's Knife dealt 5 Physical damage 2.7s  Butcher's Hand Axe dealt 5 Physical damage 2.7s      then gave Andr
+SD927 　　悬停日月盘：悬浮窗 开着：Day  2.2s left / Damage +15% Day 6s / Night 6s
+SD927 　　战斗打完：Andreus / Your side / Butcher / 0.0s  Andreus gained 1 Day (1 total) 0.6s  Butcher's Knife dealt 3 Physical damage 0.9s  Butcher's Hand Axe dealt 5 Physical damage 0.9s      then gave Andreus 1 Bleed (1 total) 1.0s  Butcher gained 1 Burn (1 total) 1.2s  Butcher's Knife dealt 3 Physical damage 1.8s  Butcher's Knife dealt 3 Physical damage 1.8s  Butcher's Hand Axe dealt 5 Physical damage 1.8s      then gave Andreus 1 Bleed (2 total) 1.9s  Andreus suffered from Bleed: 2 Bleed damage 2.0s  Butcher gained 1 Burn (2 total) 2.0s  Butcher suffered from Burn: 2 Fire damage 2.4s  Critical! Butcher's Knife dealt 5 Physical damage 2.7s  Butcher's Hand Axe dealt 5 Physical damage 2.7s      then gave Andr
+SD927 　　再拖到七成：日月盘 显示，位置 (838.0, 67.0)，大小 (100.0, 100.0)，now 8.8，状态 { "day": false, "night": true, "left": 3.18, "span": 6.0 }；悬浮内容 { "head": "Night  3.2s left", "body": "Haste +15%\n[color=#8b93a1]Day 6s / Night 6s[/color]" }
+SD927 　　　　回放条：游标 8.8 / 12.6 秒；色带 3 段，已露出 2 段，前几段 [[0.0, 6.0, true, false], [6.0, 12.0, false, true], [12.0, 12.6, true, false]]；我方效果栏不挂 ["sun_day", "sun_night"]
+SD927 战斗结束，屏 18；战斗帧 203
+SD927 ♥ f 1500 st 55 屏 18 wait 0
+SD927 ♥ f 1750 st 55 屏 18 wait 0
+SD927 ♥ f 2000 st 55 屏 18 wait 0
+SD927 ♥ f 2250 st 55 屏 18 wait 0
+SD927 ♥ f 2500 st 55 屏 18 wait 0
+SD927 ♥ f 2750 st 55 屏 18 wait 0
+SD927 ♥ f 3000 st 55 屏 18 wait 0
+SD927 ♥ f 3250 st 55 屏 18 wait 0
+SD927 ♥ f 3500 st 55 屏 18 wait 0
+SD927 ♥ f 3750 st 55 屏 18 wait 0
+SD927 ♥ f 4000 st 55 屏 18 wait 0
+SD927 ♥ f 4250 st 55 屏 18 wait 0
+SD927 ♥ f 4500 st 55 屏 18 wait 0
+SD927 ♥ f 4750 st 55 屏 18 wait 0
+SD927 ♥ f 5000 st 55 屏 18 wait 0
+SD927 ♥ f 5250 st 55 屏 18 wait 0
+SD927 ♥ f 5500 st 55 屏 18 wait 0
+SD927 ♥ f 5750 st 55 屏 18 wait 0
+SD927 ♥ f 6000 st 55 屏 18 wait 0
+SD927 ♥ f 6250 st 55 屏 18 wait 0
+SD927 ♥ f 6500 st 55 屏 18 wait 0
+SD927 ♥ f 6750 st 55 屏 18 wait 0
+SD927 ♥ f 7000 st 55 屏 18 wait 0
+SD927 ♥ f 7250 st 55 屏 18 wait 0
+SD927 ♥ f 7500 st 55 屏 18 wait 0
+SD927 ♥ f 7750 st 55 屏 18 wait 0
+SD927 ♥ f 8000 st 55 屏 18 wait 0
+SD927 ♥ f 8250 st 55 屏 18 wait 0
