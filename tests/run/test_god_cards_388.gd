@@ -263,7 +263,7 @@ static func run_tutorial_no_opening(t: TestCase) -> void:
 
 
 static func run_brute_cards(t: TestCase) -> void:
-	t.begin("388 第 1 批 · 蛮神的牌：31 张进牌池（10 质变 + 10 升级 + 11 基础）、拿了几张就把数填进怒气；死斗编进不屈；神罚按牌给次数、升级后精英耗 2 次")
+	t.begin("388 第 1 批 · 蛮神的牌：32 张进牌池（11 质变 + 10 升级 + 11 基础，396 改）、拿了几张就把数填进怒气；死斗编进不屈；神罚按牌给次数、升级后精英耗 2 次")
 	var run := _start(41, &"brute")
 	var lv := LevelModule.of(run)
 	if lv == null or run.active_faith_id() != &"brute":
@@ -278,33 +278,43 @@ static func run_brute_cards(t: TestCase) -> void:
 				quals += 1
 			else:
 				bases += 1
-	t.eq(quals, 20, "质变 10 张 + 升级 10 张（啖肉吮血第 1 批补）")
-	t.eq(bases, 11, "基础牌 11 张")
+	t.eq(quals, 21, "质变 11 张 + 升级 10 张（396：怒意延绵没有升级）")
+	t.eq(bases, 11, "基础牌 11 张（396：怒气磅礴删掉、加献祭）")
 	t.check(lv.card_text(&"god_brute_break").contains("2%"), "牌面按数写：%s" % lv.card_text(&"god_brute_break"))
 	var perk := BruteRagePerk.new()
 	var bare := perk.effect_for(lv)
-	t.eq(bare.cap, 30, "没拿牌：30 层")
-	lv.taken["god_brute_cap"] = 2
+	t.eq(bare.cap, 0, "396：核心不封顶")
+	t.check(is_equal_approx(bare.damage_per, 0.0), "396：怒气本身不加伤害")
 	lv.taken["god_brute_damage"] = 2
 	lv.taken["god_brute_regen"] = 1
 	lv.taken["god_brute_break"] = 1
 	lv.taken["god_brute_break_up"] = 1
 	lv.taken["god_brute_pain"] = 1
+	lv.taken["god_brute_duration"] = 2
 	var e := perk.effect_for(lv)
-	t.eq(e.cap, 50, "怒气磅礴两张：50 层")
-	t.check(is_equal_approx(e.damage_per, 3.0), "气血上涌两张：每层 3%")
-	t.check(is_equal_approx(e.regen_per, 0.2), "不灭：每 5 层 1 点 = 每层 0.2")
+	t.check(is_equal_approx(e.damage_per, 3.0), "急躁两张 0.5×2 + 破甲升级每层 2%% = 每层 3%%（%s）" % e.damage_per)
+	t.check(is_equal_approx(e.armor_per, 4.0), "破甲升级：对护甲增效 4%")
+	t.check(is_equal_approx(e.duration_sec, 5.0), "记仇两张：4 + 0.5×2 = 5 秒")
+	t.check(is_equal_approx(e.regen_per, 0.1), "不灭：每 10 层 1 点 = 每层 0.1")
 	var regen_card := LevelModule.god_card_of(lv.card_def(&"god_brute_regen"))
 	t.check(regen_card != null and regen_card.values.has("step") and float(regen_card.values["step"]) == 0.0, "不灭的开关 step 默认关（按层平摊）")
 	if regen_card != null:
 		regen_card.values["step"] = 1
 		var stepped := perk.effect_for(lv)
-		t.check(stepped.regen_step == 5 and is_equal_approx(stepped.regen_step_amount, 1.0) and stepped.regen_per == 0.0, "开：每满 5 层才 +1")
+		t.check(stepped.regen_step == 10 and is_equal_approx(stepped.regen_step_amount, 1.0) and stepped.regen_per == 0.0, "开：每满 10 层才 +1")
 		regen_card.values["step"] = 0
-	for pair in [["god_brute_break_up", "block"], ["god_brute_hate_up", "halving"]]:
-		var c := LevelModule.god_card_of(lv.card_def(StringName(pair[0])))
-		t.check(c != null and float(c.values.get(pair[1], -1)) == 0.0, "%s 的开关 %s 默认关" % pair)
-	t.check(is_equal_approx(e.armor_per, 3.0) and is_equal_approx(e.ignore_per, 2.0), "破甲拿了升级：3% 且无视 2%")
+	var hate_up := LevelModule.god_card_of(lv.card_def(&"god_brute_hate_up"))
+	t.check(hate_up != null and float(hate_up.values.get("halving", -1)) == 0.0, "恨意升级的开关 halving 默认关")
+	lv.taken["god_brute_cornered"] = 1
+	t.check(is_equal_approx(perk.effect_for(lv).cornered_per, 0.5), "困兽：每失去 1% 生命 +0.5%")
+	lv.taken["god_brute_cornered_more"] = 2
+	t.check(is_equal_approx(perk.effect_for(lv).cornered_per, 0.75), "困兽犹斗两张（加算 +25%×2）：0.75%")
+	lv.taken["god_brute_cornered_up"] = 1
+	t.check(is_equal_approx(perk.effect_for(lv).cornered_per, 1.5), "困兽升级 1% × 1.5 = 1.5%")
+	lv.taken["god_brute_persist"] = 1
+	var p := perk.effect_for(lv)
+	t.check(is_equal_approx(p.duration_sec, 2.5) and p.refresh_on_hit, "怒意延绵：5 秒减半 2.5 秒，受伤重置")
+	t.eq(lv.rules().card(&"god_brute_cap"), {}, "怒气磅礴删掉了")
 	t.eq(e.defer_percent, 50, "痛觉残留 50%")
 	t.eq(BruteRagePerk.undying_sec(lv), 0.0, "没拿死斗：不屈 0 秒")
 	lv.taken["god_brute_deathfight"] = 1
@@ -352,6 +362,41 @@ static func run_brute_cards(t: TestCase) -> void:
 	var back := LevelModule.new()
 	back.restore(lv.to_dict())
 	t.check(is_equal_approx(float(back.god_state.get(BruteRagePerk.FLESH_KEY, 0.0)), 40.0), "吃下的进存档")
+	run.dispose()
+
+
+static func run_brute_sacrifice(t: TestCase) -> void:
+	t.begin("396 · 蛮神【献祭】：剩余体力大于 2 且还有质变牌可选才进池；拿了扣 2 点体力、紧接着多一次质变选牌（不占 6 / 12 级的质变位）；可以反复拿")
+	var run := _start(43, &"brute")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"brute" or run.vitality == null:
+		t.check(false, "开局奉蛮神")
+		return
+	var id := BruteRagePerk.SACRIFICE
+	run.vitality.set_max(10, &"test")
+	run.vitality.current = 2
+	t.check(not lv.eligible(id), "体力 2：不进池")
+	run.vitality.current = 5
+	t.check(lv.eligible(id), "体力 5、质变牌还有：进池")
+	var before := lv.pending()
+	var quals_before := lv.qual_done
+	lv.taken[String(id)] = 1
+	lv._apply_now(id)
+	t.eq(run.vitality.current, 3, "扣 2 点体力")
+	t.eq(lv.sacrifice_due(), 1, "欠一次质变")
+	t.eq(lv.pending(), before + 1, "多欠一次选牌")
+	var cur := lv.current_pick()
+	t.check(bool(cur.get("qual", false)) and int(cur.get("level", 0)) == lv.level(), "下一张就是质变，写当前等级（%s）" % str(cur))
+	var offer := lv.offer()
+	t.check(not offer.is_empty() and lv.rules().is_qual(offer[0]), "摆出来的是质变牌")
+	lv.pick(0)
+	t.eq(lv.sacrifice_due(), 0, "选完：不欠了")
+	t.eq(lv.qual_done, quals_before, "不占原来的质变位")
+	t.check(lv.eligible(id), "体力 3、还能再拿")
+	var back := LevelModule.new()
+	back.restore(lv.to_dict())
+	t.eq(back.god_state.get(LevelModule.SACRIFICE_DUE, 0), 0, "进存档")
+	t.check(lv.card_text(id).contains("2"), "牌面：%s" % lv.card_text(id))
 	run.dispose()
 
 

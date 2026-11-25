@@ -9,14 +9,14 @@
 [sub_resource type="Resource" id="Resource_cx06g"]
 script = ExtResource("2_pg1of")
 values = {
-"sec": 1
+"sec": 0.5
 }
 
 [resource]
 script = ExtResource("5_a0nm1")
 id = &"god_brute_duration"
-display_name = "怒意不绝"
+display_name = "记仇"
 display_names = {
-"en": "Unending Rage"
+"en": "Grudge"
 }
 effects = Array[ExtResource("1_6tgj8")]([SubResource("Resource_cx06g")])

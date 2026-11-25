@@ -9,8 +9,7 @@
 [sub_resource type="Resource" id="Resource_u5o7w"]
 script = ExtResource("2_cgdkh")
 values = {
-"below": 50,
-"bonus": 50
+"pct": 0.5
 }
 
 [resource]
