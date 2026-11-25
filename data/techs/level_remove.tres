@@ -19,15 +19,15 @@ insight = 3
 [resource]
 script = ExtResource("2_gagnl")
 id = &"level_remove"
-display_name = "剔牌"
+display_name = "禁用"
 display_names = {
-"en": "Cull"
+"en": "Ban"
 }
 requires = Array[StringName]([&"level_reroll"])
 column = 3
-description = "升级选牌时可以剔掉一张，这一局不再出现，空位当场补一张。"
+description = "升级选牌时可以禁用一张，这一局不再出现，空位当场补一张。"
 descriptions = {
-"en": "When you level up, cull one card: it won't show again this run, and the slot is refilled."
+"en": "When you level up, ban one card: it won't show again this run, and the slot is refilled."
 }
 tree = &"mechanism"
 effect = SubResource("Resource_m3blx")

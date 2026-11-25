@@ -402,7 +402,7 @@ static func run_brute_sacrifice(t: TestCase) -> void:
 
 
 static func run_convert_faith(t: TestCase) -> void:
-	t.begin("396 第五节 · 改信：拿掉旧神的质变（升级版算在本体里、献祭欠的也算）和基础牌，清掉旧神的整局累积；按原张数重选，质变先、基础牌后，基础牌只出新神的；等级、通用牌不动")
+	t.begin("396 第五节 · 改信：拿掉旧神的质变（升级版也还一次，作者 11-26 选 A；献祭欠的也算）和基础牌，清掉旧神的整局累积；按原张数重选，质变先、基础牌后，基础牌只出新神的；等级、通用牌不动")
 	var run := _start(47, &"brute")
 	var lv := LevelModule.of(run)
 	if lv == null or run.active_faith_id() != &"brute":
@@ -434,7 +434,7 @@ static func run_convert_faith(t: TestCase) -> void:
 	t.eq(lv.count_of(&"card_rest"), 1, "通用牌留着")
 	t.eq(lv.god_state.get(BruteRagePerk.FLESH_KEY, 0.0), 0.0, "吃血肉攒的清掉")
 	t.eq(lv.level(), lvl, "等级不变")
-	t.eq(lv.pending(), 6, "重选 3 次质变（破甲含升级算 1、困兽 1、献祭欠的 1）+ 3 次基础牌")
+	t.eq(lv.pending(), 7, "重选 4 次质变（破甲 1、它的升级 1、困兽 1、献祭欠的 1）+ 3 次基础牌")
 	if run.active_faith_id() != &"sun":
 		t.check(false, "换成日神（%s）" % run.active_faith_id())
 		run.dispose()
@@ -458,7 +458,7 @@ static func run_convert_faith(t: TestCase) -> void:
 		if qual:
 			t.check(cards.all(func(c: StringName) -> bool: return lv.rules().god_of(c) == &"sun" and lv.rules().is_qual(c)), "质变出日神的：%s" % str(cards))
 		lv.pick(0)
-	t.eq([quals, bases], [3, 3], "质变 3 次、基础牌 3 次")
+	t.eq([quals, bases], [4, 3], "质变 4 次、基础牌 3 次")
 	t.check(order_ok, "质变先选完再选基础牌")
 	var back := LevelModule.new()
 	back.restore(lv.to_dict())

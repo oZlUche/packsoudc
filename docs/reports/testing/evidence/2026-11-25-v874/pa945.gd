@@ -434,7 +434,7 @@ func _process(_d: float) -> bool:
 			_click(p._cards.get_child(0) as Control); _wait = 30; _st = 31
 		31:
 			var p := _bp(); var lv := LevelModule.of(_flow.run)
-			L("挑了第一张：拿过 %s；下一批 %s；欠选 %d；跳过加成 %d" % [str(lv.taken.keys()), _cards_line(p) if p != null and p.is_visible_in_tree() else "（窗收了）", lv.pending(), lv.skip_bonus])
+			L("挑了第一张：拿过 %s；下一批 %s；欠选 %d；跳过加成 %d" % [str(lv.taken.keys()), _cards_line(p) if p != null and p.is_visible_in_tree() else "（窗收了）", lv.pending(), 0])     # v8.93：跳过不再多一张，skip_bonus 已删
 			_flow.save_and_quit(); _wait = 60; _st = 32
 		32:
 			_flow.continue_game(); _wait = 80; _st = 33

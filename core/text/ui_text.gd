@@ -542,10 +542,9 @@ const TEXT := {
 	"level.reroll": {"zh": "重选 %d", "en": "Reroll %d"},     # 396：原来叫「换牌」
 	"level.reroll_tip": {"zh": "三张一起换一批", "en": "Swap all three for a new set"},
 	"level.skip": {"zh": "跳过 %d", "en": "Skip %d"},     # 396
-	"level.skip_tip": {"zh": "这次不选；下一次选牌多出一张可选", "en": "Pass on this pick; the next pick offers one more card"},
-	"level.skip_bonus": {"zh": "上次跳过了：这次多一张", "en": "You skipped last time: one more card this time"},
-	"level.remove": {"zh": "剔牌 %d", "en": "Cull %d"},
-	"level.remove_tip": {"zh": "再点一张牌剔掉它：这一局不再出，空位补一张", "en": "Then click a card to cull it: it won't show again this run, and the slot is refilled"},
+	"level.skip_tip": {"zh": "这次不选", "en": "Pass on this pick"},
+	"level.remove": {"zh": "禁用 %d", "en": "Ban %d"},
+	"level.remove_tip": {"zh": "再点一张牌禁用它：这一局不再出，空位补一张", "en": "Then click a card to ban it: it won't show again this run, and the slot is refilled"},
 	"level.none_left": {"zh": "次数用完了（局外科技可以加）", "en": "None left (camp techs add more)"},
 	"level.kind_stat": {"zh": "属性", "en": "Stats"},
 	"level.kind_weapon": {"zh": "武器", "en": "Weapons"},
@@ -1258,7 +1257,7 @@ const TEXT := {
 	"perk.earth_1": {"zh": "%d 格的中件也能受承托", "en": "Medium items of %d cells can be Supported too"},
 	"perk.earth_3": {"zh": "开战时每件受承托的大件给最大生命 %d%% 的护甲，最多 %d%%", "en": "At the start of battle, gain Armor equal to %d%% of max Health per Supported item, up to %d%%"},
 	"deed.mech_earth_support": {"zh": "大件受承托（按件）", "en": "have Supported items (each)"},
-	"perk.brute_rage": {"zh": "受到对手的伤害时积【怒气】：每失去最大生命的 %s%% 积一层；每一笔各自持续 %s 秒", "en": "Taking damage from the foe builds Rage: one stack per %s%% of max Health lost; each batch lasts %s seconds on its own"},
+	"perk.brute_rage": {"zh": "受到对手的伤害时积【怒气】：每失去 %s 点生命积一层，不设上限；每一笔各自持续 %s 秒", "en": "Taking damage from the foe builds Rage: one stack per %s Health lost, with no cap; each batch lasts %s seconds on its own"},
 	"deed.mech_brute_strike": {"zh": "用怒气反击", "en": "strike back with Rage"},
 	"deed.mech_low_hp_won": {"zh": "低血打赢", "en": "win at low Health"},
 	"perk.sun_cycle": {"zh": "【日月】：进入战斗时为白昼，之后每 %s 秒换一次边；白昼造成伤害 +%s%%，黑夜急速 +%s%%", "en": "Sun and Moon: battles start in Day and the sides switch every %s seconds; Day +%s%% damage, Night +%s%% Haste"},
@@ -1287,8 +1286,8 @@ const TEXT := {
 	"gcard.god_brute_smite_up": {"zh": "现在可以在战前消耗 {cost} 次使用次数直接击杀非首领敌人，使用次数 +{uses}", "en": "You can now spend {cost} uses before battle to slay any non-boss enemy; +{uses} uses"},
 	"gcard.god_brute_burn": {"zh": "每 {every} 层怒气使攻击附带 {stacks} 层【灼伤】", "en": "Every {every} Rage stacks make attacks apply {stacks} Scorch"},
 	"gcard.god_brute_burn_up": {"zh": "每 {every} 层怒气使攻击附带 {stacks} 层【灼伤】", "en": "Every {every} Rage stacks make attacks apply {stacks} Scorch"},
-	"gcard.god_brute_pain": {"zh": "受到的伤害的 {pct}% 改为在 {sec} 秒内持续生效", "en": "{pct}% of damage taken is dealt over {sec} seconds instead"},
-	"gcard.god_brute_pain_up": {"zh": "受到的伤害的 {pct}% 改为在 {sec} 秒内持续生效", "en": "{pct}% of damage taken is dealt over {sec} seconds instead"},
+	"gcard.god_brute_pain": {"zh": "受到的直接伤害的 {pct}% 改为在 {sec} 秒内持续生效", "en": "{pct}% of direct damage taken is dealt over {sec} seconds instead"},
+	"gcard.god_brute_pain_up": {"zh": "受到的直接伤害的 {pct}% 改为在 {sec} 秒内持续生效", "en": "{pct}% of direct damage taken is dealt over {sec} seconds instead"},
 	"gcard.god_brute_blood": {"zh": "每累积获得 {every} 层怒气，随机一把武器立即发动一次攻击（不耗耐力，不影响出手倒计时）", "en": "Every {every} Rage gained, a random weapon attacks at once (no Stamina, its timer is untouched)"},
 	"gcard.god_brute_blood_up": {"zh": "每累积获得 {every} 层怒气，随机一把武器立即发动一次攻击（不耗耐力，不影响出手倒计时）", "en": "Every {every} Rage gained, a random weapon attacks at once (no Stamina, its timer is untouched)"},
 	"gcard.god_brute_hate": {"zh": "被施加负面效果时，立刻获得 {stacks} 层怒气", "en": "When a negative effect is applied to you, gain {stacks} Rage"},
@@ -1764,7 +1763,7 @@ const TEXT := {
 	"fx.skill_momentum": {"zh": "攻击叠连击（每层急速 +%s%%）", "en": "attacks build Combo (+%s%% Haste per stack)"},
 	"fx.hunt_dismantle": {"zh": "打中给对手攒拆解，到档削弱标记的那项", "en": "hits build Dismantle on the foe, weakening the marked strength at each stage"},
 	"fx.earth_support": {"zh": "大件受承托", "en": "large items are Supported"},
-	"fx.brute_rage": {"zh": "每失去 %s%% 最大生命积一层怒气（每笔 %s 秒）", "en": "builds Rage per %s%% of max Health lost (%s s per batch)"},
+	"fx.brute_rage": {"zh": "每失去 %s 点生命积一层怒气（每笔 %s 秒）", "en": "builds Rage per %s Health lost (%s s per batch)"},
 	"fx.sun_cycle": {"zh": "白昼 %s 秒、黑夜 %s 秒轮换，白昼伤害 +%s%%，黑夜急速 +%s%%", "en": "Day %s s and Night %s s alternate; Day +%s%% damage, Night +%s%% Haste"},
 	"fx.nature_cycle": {"zh": "敌人掉血积枯萎、自己回血积新生", "en": "enemy Health lost builds Wither; Health you restore builds Rebirth"},
 	"fx.nature_regrowth": {"zh": "回上来的生命 %d%% 存进生息（最多最大生命的 %d%%）", "en": "stores %d%% of Health restored as Regrowth (up to %d%% of max Health)"},
@@ -1869,7 +1868,7 @@ const TEXT := {
 	"bonus.scout": {"zh": "侦察 %.0f", "en": "Scouting %.0f"},
 	"bonus.shop_price": {"zh": "商店买价 ×%.2f", "en": "Shop buying prices ×%.2f"},
 	"bonus.level_rerolls": {"zh": "升级选牌可重选 %d 次", "en": "Level-up rerolls: %d"},     # 372
-	"bonus.level_removals": {"zh": "升级选牌可剔牌 %d 次", "en": "Level-up culls: %d"},     # 372
+	"bonus.level_removals": {"zh": "升级选牌可禁用 %d 次", "en": "Level-up bans: %d"},     # 372
 	"bonus.shop_refresh": {"zh": "每家商店可付钱换货 %d 次", "en": "Paid restocks per shop: %d"},
 	"bonus.bounty_elite": {"zh": "打赢精英额外掉一件稀有及以上", "en": "Elites drop one extra Rare-or-better item"},
 	"bonus.bounty_core": {"zh": "打赢 BOSS 额外掉一件史诗及以上", "en": "Bosses drop one extra Epic-or-better item"},

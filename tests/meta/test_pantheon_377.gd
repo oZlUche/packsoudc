@@ -216,10 +216,7 @@ static func run_tiers(t: TestCase) -> void:
 	var owed := lv.pending()
 	var n0 := lv.offer().size()
 	t.check(lv.skip(), "跳过这一次")
-	t.eq([lv.pending(), lv.skips_left(), lv.offer().size()], [owed - 1, 3, n0 + 1], "少欠一次、跳过剩 3、下一批多一张")
-	t.check(lv.skip_bonus == 1, "记着多一张")
-	lv.pick(0)
-	t.check(lv.skip_bonus == 0 and lv.offer().size() <= n0, "挑过一张：多的那张只管那一批")
+	t.eq([lv.pending(), lv.skips_left(), lv.offer().size()], [owed - 1, 3, n0], "少欠一次、跳过剩 3、下一批照常几张（作者 11-26：跳过没有补偿）")
 	if s.phase == RunState.Phase.PICK_SPAWN:
 		f.pick_spawn(s.map.entry_ids[0])
 	# 396【改信】：每局一次，只改成解锁了的另一位神；信物原地换掉；不占神坛的机会
@@ -505,9 +502,9 @@ static func frame_first_god_pick(t: TestCase, root: Window) -> void:
 	Support.cleanup(PREFIX)
 
 
-## 第二批：第一次升级弹牌时讲一遍三选一（三张、换牌、剔牌），看完记住
+## 第二批：第一次升级弹牌时讲一遍三选一（三张、换牌、禁用），看完记住
 static func frame_first_level_pick(t: TestCase, root: Window) -> void:
-	t.begin("377 第二批 · 第一次升级：选牌窗上放教练层（三张牌、换牌、剔牌），看完记住，再升级不放")
+	t.begin("377 第二批 · 第一次升级：选牌窗上放教练层（三张牌、换牌、禁用），看完记住，再升级不放")
 	var NodeScreens: GDScript = load("res://tests/ui/test_node_screens.gd")
 	var c = NodeScreens._content()
 	var kit: LoadoutDef = NodeScreens._kit(c)

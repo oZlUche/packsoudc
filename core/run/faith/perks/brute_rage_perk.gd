@@ -6,7 +6,7 @@ extends FaithPerk
 
 ## 1.1 之前的档、旧内容还写着 part：只有 0 编译
 @export var part: int = 0
-@export var percent_per_stack: float = 1.0
+@export var hp_per_stack: float = 2.0
 ## 396（作者表 11-25）：核心不再有上限、不再每层加伤害（0 = 不封顶；数留着给旧内容）
 @export var cap: int = 0
 @export var duration_sec: float = 4.0
@@ -174,7 +174,7 @@ func rule_for(lv: LevelModule) -> AbilityRule:
 ## 核心的数 + 牌的数
 func effect_for(lv: LevelModule) -> BruteRage:
 	var e := BruteRage.new()
-	e.percent_per_stack = percent_per_stack
+	e.hp_per_stack = hp_per_stack
 	e.cap = cap
 	e.duration_sec = duration_sec
 	e.damage_per = damage_per
@@ -228,7 +228,7 @@ func effect_for(lv: LevelModule) -> BruteRage:
 
 
 func _summary() -> String:
-	return UiText.t("perk.brute_rage") % [TextTemplate.num(percent_per_stack), TextTemplate.num(duration_sec)]
+	return UiText.t("perk.brute_rage") % [TextTemplate.num(hp_per_stack), TextTemplate.num(duration_sec)]
 
 
 func battle_note(_run: RunState) -> String:
