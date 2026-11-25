@@ -400,6 +400,71 @@ static func run_brute_sacrifice(t: TestCase) -> void:
 	run.dispose()
 
 
+static func run_convert_faith(t: TestCase) -> void:
+	t.begin("396 第五节 · 改信：拿掉旧神的质变（升级版算在本体里、献祭欠的也算）和基础牌，清掉旧神的整局累积；按原张数重选，质变先、基础牌后，基础牌只出新神的；等级、通用牌不动")
+	var run := _start(47, &"brute")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"brute":
+		t.check(false, "开局奉蛮神")
+		return
+	lv.gain(float(lv.rules().total_for(4)), LevelModule.SRC_BATTLE)
+	while lv.pending() > 0:
+		lv.offer()
+		lv.pick(0)
+	var lvl := lv.level()
+	lv.taken.clear()
+	lv.taken["god_brute_break"] = 1
+	lv.taken["god_brute_break_up"] = 1
+	lv.taken["god_brute_cornered"] = 1
+	lv.taken["god_brute_damage"] = 2
+	lv.taken["god_brute_regen"] = 1
+	lv.taken["card_rest"] = 1
+	lv.god_state[BruteRagePerk.FLESH_KEY] = 40.0
+	lv.god_state[LevelModule.SACRIFICE_DUE] = 1
+	t.eq(lv.pending(), 1, "献祭欠着一次质变")
+	run.selected_faith = &"sun"
+	for id in run.items.ids():
+		var d := run.items.get_def(id)
+		if d.is_anchor() and FaithTags.id_of_tag(d.faith_tag()) == &"sun":
+			TestSupport.put(run.board, d)
+			break
+	lv.convert_faith(&"brute", &"sun")
+	t.eq(lv.count_of(&"god_brute_break") + lv.count_of(&"god_brute_damage") + lv.count_of(&"god_brute_regen"), 0, "旧神的牌都拿掉了")
+	t.eq(lv.count_of(&"card_rest"), 1, "通用牌留着")
+	t.eq(lv.god_state.get(BruteRagePerk.FLESH_KEY, 0.0), 0.0, "吃血肉攒的清掉")
+	t.eq(lv.level(), lvl, "等级不变")
+	t.eq(lv.pending(), 6, "重选 3 次质变（破甲含升级算 1、困兽 1、献祭欠的 1）+ 3 次基础牌")
+	if run.active_faith_id() != &"sun":
+		t.check(false, "换成日神（%s）" % run.active_faith_id())
+		run.dispose()
+		return
+	var quals := 0
+	var bases := 0
+	var order_ok := true
+	var seen_base := false
+	while lv.pending() > 0:
+		var cur := lv.current_pick()
+		t.check(bool(cur.get("convert", false)), "重选那几次带 convert")
+		var cards := lv.offer()
+		var qual := bool(cur.get("qual", false))
+		if qual:
+			quals += 1
+			order_ok = order_ok and not seen_base
+		else:
+			bases += 1
+			seen_base = true
+			t.check(cards.all(func(c: StringName) -> bool: return lv.rules().god_of(c) == &"sun" and not lv.rules().is_qual(c)), "基础牌只出日神的：%s" % str(cards))
+		if qual:
+			t.check(cards.all(func(c: StringName) -> bool: return lv.rules().god_of(c) == &"sun" and lv.rules().is_qual(c)), "质变出日神的：%s" % str(cards))
+		lv.pick(0)
+	t.eq([quals, bases], [3, 3], "质变 3 次、基础牌 3 次")
+	t.check(order_ok, "质变先选完再选基础牌")
+	var back := LevelModule.new()
+	back.restore(lv.to_dict())
+	t.eq(back.repicks_left(), 0, "进存档：不欠了")
+	run.dispose()
+
+
 static func run_sun_cards(t: TestCase) -> void:
 	t.begin("388 第 2 批 · 日神的牌：39 张进牌池；日长夜短 / 长夜促昼每张挪基础时长 20%、第五张把一边减到 0 才出永恒；永恒拿了下一张质变必是升级、拿掉日长夜短；升级独占；按牌填进日月")
 	var run := _start(51, &"sun")

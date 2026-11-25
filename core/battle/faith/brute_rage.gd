@@ -5,7 +5,7 @@
 ##   每一笔**单独计时** [member duration_sec] 秒（来源不同各走各的），身上统一显示一个【怒气】，不写倒计时。怒气本身不加属性（396）：
 ##   每层造成伤害 +[member damage_per]%（【急躁】【破甲】加在这里）、急速 +[member haste_per]%（【狂热】）、生命回复 +[member regen_per]（【不灭】）。怒气不再用掉。
 ## - 【易怒症】积得多几成。【怒意延绵】持续时间减半，每受到一次伤害所有还在的怒气重新计时（[member refresh_on_hit]）。
-## - 【困兽】（396）：每失去 1% 生命，伤害、急速各 +[member cornered_per]%（另一个状态【困兽】，层数 = 失去了百分之几）。
+## - 【困兽】（396）：每失去 1% 生命，所有属性（[constant BattleStats.ALL_STATS]）各 +[member cornered_per]%（另一个状态【困兽】，层数 = 失去了百分之几）。
 ## - 【破甲】每层让这一下对护甲多扣几成（[member DamagePacket.armor_bonus]）。
 ## - 【怒火中烧】每 10 层，武器打中时附几层【灼伤】。【痛觉残留】受到的伤害挪几成到之后几秒慢慢扣（慢慢扣的那份照样积怒气；灼伤这类持续伤害不积，396）。
 ## - 【以血还血】累计积到几层，随机一把武器立即出手一次（不耗耐力、不动冷却，[method RuleEngine.fire_free]）。
@@ -36,7 +36,7 @@ const STEP := 0.2
 @export var gain_bonus: int = 0
 ## 怒意延绵：每受到一次伤害，所有还在的怒气重新计时
 @export var refresh_on_hit: bool = false
-## 困兽：每失去 1% 生命，伤害、急速各加几成（百分数，0 = 没拿）
+## 困兽：每失去 1% 生命，所有属性各加几成（百分数，0 = 没拿）
 @export var cornered_per: float = 0.0
 ## 破甲：每层对护甲多扣几成（百分数）
 @export var armor_per: float = 0.0
@@ -91,15 +91,14 @@ func rage_def() -> BuffDef:
 	return _def
 
 
-## 困兽那份状态（每层伤害、急速各 +[member cornered_per]%）
+## 困兽那份状态（每层所有属性各 +[member cornered_per]%）
 func cornered_def() -> BuffDef:
 	if _cornered_def == null and cornered_per > 0.0:
 		var path := ContentPaths.asset_file("buffs", String(CORNERED_ID))
 		var base := load(path) as BuffDef if ResourceLoader.exists(path) else null
 		if base != null:
 			_cornered_def = base.duplicate() as BuffDef
-			_cornered_def.mods = [StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, cornered_per),
-				StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, cornered_per)] as Array[StatModifier]
+			_cornered_def.mods = BattleStats.all_stats_mods(cornered_per)     # 396 第五节：所有属性
 	return _cornered_def
 
 
@@ -235,12 +234,14 @@ func _sync_cornered(ctx: RuleContext) -> void:
 	if d == null:
 		return
 	var me := ctx.owner
+	var have := me.stacks_of(CORNERED_ID)
 	var hp_max := me.resources.maximum(BattleStats.RES_HP)
-	if hp_max <= 0:
+	# 困兽自己也加生命上限（加上限时当前值同量加）：缺的血不受它影响，按去掉它那份的上限算百分比，免得层数来回跳
+	var base_max := roundi(float(hp_max) * 100.0 / (100.0 + cornered_per * have))
+	if base_max <= 0:
 		return
 	@warning_ignore("integer_division")
-	var want := clampi((hp_max - me.resources.current(BattleStats.RES_HP)) * 100 / hp_max, 0, 100)
-	var have := me.stacks_of(CORNERED_ID)
+	var want := clampi((hp_max - me.resources.current(BattleStats.RES_HP)) * 100 / base_max, 0, 100)
 	if want > have:
 		ApplyStatus.give(ctx, me, d, want - have)
 	elif want < have:

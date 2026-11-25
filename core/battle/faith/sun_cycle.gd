@@ -92,9 +92,8 @@ func _defs() -> void:
 	_light_def = _load(SUN_LIGHT)
 	_moon_def = _load(MOON_LIGHT)
 	var sp := shift_per
-	_shift_def = _own(SHIFT, [StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, sp), StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, sp),
-		StatModifier.make(BattleStats.MAX_HP, StatModifier.Mode.MULT, sp), StatModifier.make(BattleStats.MAX_STAMINA, StatModifier.Mode.MULT, sp)] as Array[StatModifier])
-	_eternal_def = _own(ETERNAL, [StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 0.0), StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, 0.0)] as Array[StatModifier])
+	_shift_def = _own(SHIFT, BattleStats.all_stats_mods(sp))     # 396 第五节：所有属性
+	_eternal_def = _own(ETERNAL, BattleStats.all_stats_mods(0.0))
 
 
 #region 时间轴（纯函数：只看时刻）
@@ -361,12 +360,12 @@ func _sync(ctx: RuleContext, st: Dictionary, s: Vector2i) -> void:
 	if _eternal_def != null and (eternal_day > 0.0 or eternal_night > 0.0):
 		var foe := ctx.opponent()
 		if eternal_day > 0.0:
-			_eternal_def.mods[0].amount = eternal_day
-			_eternal_def.mods[1].amount = eternal_day
+			for m in _eternal_def.mods:
+				(m as StatModifier).amount = eternal_day
 			_hold(ctx, me, _eternal_def, s.x == 1)
 		elif foe != null:
-			_eternal_def.mods[0].amount = -eternal_night
-			_eternal_def.mods[1].amount = -eternal_night
+			for m in _eternal_def.mods:
+				(m as StatModifier).amount = -eternal_night
 			_hold(ctx, foe, _eternal_def, s.y == 1)
 	me.mark_dirty()
 
