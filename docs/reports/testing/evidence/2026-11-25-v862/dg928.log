@@ -1,0 +1,42 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+DG928 带 dagger 标签的 13 件
+DG928 knife（匕首，稀有度 0）：数据 1.6；编进战斗 暴伤 1.60、暴击率 0.10；该是 1.6 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击伤害 [b]160%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit damage [b]160%[/b]
+DG928 quenched_dagger（淬火匕首，稀有度 1）：数据 1.7；编进战斗 暴伤 1.70、暴击率 0.15；该是 1.7 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击率 [b]15%[/b] / 暴击伤害 [b]170%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit chance [b]15%[/b] / Crit damage [b]170%[/b]
+DG928 bonefang_dagger（骨牙匕首，稀有度 2）：数据 1.8；编进战斗 暴伤 1.80、暴击率 0.15；该是 1.8 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击率 [b]15%[/b] / 暴击伤害 [b]180%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit chance [b]15%[/b] / Crit damage [b]180%[/b]
+DG928 steel_stiletto（钢刺，稀有度 2）：数据 1.8；编进战斗 暴伤 1.80、暴击率 0.15；该是 1.8 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击率 [b]15%[/b] / 暴击伤害 [b]180%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit chance [b]15%[/b] / Crit damage [b]180%[/b]
+DG928 armor_piercer（穿甲锥，稀有度 3）：数据 1.9；编进战斗 暴伤 1.90、暴击率 0.10；该是 1.9 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击伤害 [b]190%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit damage [b]190%[/b]
+DG928 bloodbone_spike（噬血骨刺，稀有度 3）：数据 1.9；编进战斗 暴伤 1.90、暴击率 0.15；该是 1.9 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击率 [b]15%[/b] / 暴击伤害 [b]190%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit chance [b]15%[/b] / Crit damage [b]190%[/b]
+DG928 poisoned_knife（涂毒匕首，稀有度 3）：数据 1.9；编进战斗 暴伤 1.90、暴击率 0.10；该是 1.9 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击伤害 [b]190%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit damage [b]190%[/b]
+DG928 silent_blade（无声短刃，稀有度 3）：数据 1.9；编进战斗 暴伤 1.90、暴击率 0.20；该是 1.9 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击率 [b]20%[/b] / 暴击伤害 [b]190%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit chance [b]20%[/b] / Crit damage [b]190%[/b]
+DG928 throat_cutter（割喉刀，稀有度 3）：数据 1.9；编进战斗 暴伤 1.90、暴击率 0.10；该是 1.9 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击伤害 [b]190%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit damage [b]190%[/b]
+DG928 flame_fang（焰牙，稀有度 4）：数据 2.0；编进战斗 暴伤 2.00、暴击率 0.15；该是 2.0 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击率 [b]15%[/b] / 暴击伤害 [b]200%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit chance [b]15%[/b] / Crit damage [b]200%[/b]
+DG928 frost_fang（霜牙，稀有度 4）：数据 2.0；编进战斗 暴伤 2.00、暴击率 0.15；该是 2.0 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击率 [b]15%[/b] / 暴击伤害 [b]200%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit chance [b]15%[/b] / Crit damage [b]200%[/b]
+DG928 chana（刹那，稀有度 5）：数据 2.1；编进战斗 暴伤 2.10、暴击率 0.10；该是 2.1 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击伤害 [b]210%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit damage [b]210%[/b]
+DG928 chana_lesser（刹那，稀有度 5）：数据 2.1；编进战斗 暴伤 2.10、暴击率 0.10；该是 2.1 → 对
+DG928 　　悬浮 zh：[font_size=16][color=@tip_fg]暴击伤害 [b]210%[/b]
+DG928 　　悬浮 en：[font_size=16][color=@tip_fg]Crit damage [b]210%[/b]
