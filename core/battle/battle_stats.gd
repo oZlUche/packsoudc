@@ -73,6 +73,16 @@ const LOAD_STEPS := &"load_steps"
 ## 279 补充一：箭的供给里「其中 N 点真实伤害」那部分（只写在箭的 feed_mods 上，[method BattleCompiler.loaded_entry_of] 读）
 const TRUE_DAMAGE := &"true_damage"
 const ITEM_ONLY: Array[StringName] = [STEP_COOLDOWN, LOAD_STEPS]
+## 396 第五节（作者 11-25 20:34）：神的牌说「所有属性」时指这几项（暴击率、暴击伤害不算，架构设计初值）
+const ALL_STATS: Array[StringName] = [DAMAGE, HASTE, MAX_HP, MAX_STAMINA, REGEN_STAMINA, REGEN_HP]
+
+
+## 「所有属性 +[param pct]%」那一串修饰（每项一条整单位乘算）
+static func all_stats_mods(pct: float) -> Array[StatModifier]:
+	var out: Array[StatModifier] = []
+	for k in ALL_STATS:
+		out.append(StatModifier.make(k, StatModifier.Mode.MULT, pct))
+	return out
 
 
 ## 属性的默认基础值。

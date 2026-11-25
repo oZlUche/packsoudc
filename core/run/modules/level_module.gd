@@ -30,6 +30,9 @@ const SRC_EVENT := &"event"
 const ECHO_BUFF := &"card_element_echo"
 ## 396 献祭换来的质变还欠几次（记在 [member god_state]）
 const SACRIFICE_DUE := "sacrifice_due"
+## 396 第五节【改信】：拿掉旧神的牌以后，还欠几次重选（质变 / 基础牌，记在 [member god_state]）
+const REPICK_QUAL := "repick_qual"
+const REPICK_BASE := "repick_base"
 
 ## 经验值、等级、待选的牌、选了牌 —— 有变化就发（界面重画）
 signal level_changed()
@@ -190,7 +193,62 @@ func is_humanist() -> bool:
 #region 选牌
 ## 还欠几次选牌（普通 + 质变位）
 func pending() -> int:
-	return _regular_left() + _qual_left() + (1 if NatureCyclePerk.choice_due(self) else 0)
+	return _regular_left() + _qual_left() + repicks_left() + (1 if NatureCyclePerk.choice_due(self) else 0)
+
+
+## 396【改信】：还欠几次重选（质变 + 基础牌）
+func repicks_left() -> int:
+	return int(god_state.get(REPICK_QUAL, 0)) + int(god_state.get(REPICK_BASE, 0))
+
+
+## 正在重选哪一种：质变先选完再选基础牌（不在重选 = 空）
+func _repick_mode() -> String:
+	if int(god_state.get(REPICK_QUAL, 0)) > 0:
+		return REPICK_QUAL
+	if int(god_state.get(REPICK_BASE, 0)) > 0:
+		return REPICK_BASE
+	return ""
+
+
+## 396【改信】（[method AltarModule] 那边换好信物、[member RunState.selected_faith] 已是新神后调）：拿掉 [param old_god] 的质变牌和基础牌，
+## 跟着旧神走的整局累积（[member god_state]）一起清掉；按原来的张数排队重选 —— 几张质变（升级版算在本体里，献祭换来的也算）就从新神的质变里选几次，
+## 几张基础牌就从新神的基础牌里选几次，三选一连着选完。等级、经验、通用牌不动，已经给到手的道具不收回
+func convert_faith(old_god: StringName, _new_god: StringName) -> void:
+	var r := rules()
+	var quals_n := sacrifice_due()
+	var bases_n := 0
+	for k in taken.keys():
+		var cid := StringName(String(k))
+		if old_god == &"" or r.god_of(cid) != old_god:
+			continue
+		if r.is_qual(cid):
+			if String(r.card(cid).get("upgrade_of", "")) == "":
+				quals_n += 1
+		else:
+			bases_n += count_of(cid)
+		taken.erase(k)
+	god_state = {}
+	if quals_n > 0:
+		god_state[REPICK_QUAL] = quals_n
+	if bases_n > 0:
+		god_state[REPICK_BASE] = bases_n
+	offer_ids.clear()
+	offer_qual = false
+	skip_bonus = 0
+	level_changed.emit()
+
+
+## 选完（或跳过）这一批：记到它占的那一格上
+func _consume(qual: bool) -> void:
+	var mode := _repick_mode()
+	if mode != "":
+		god_state[mode] = int(god_state[mode]) - 1
+	elif qual and sacrifice_due() > 0:
+		god_state[SACRIFICE_DUE] = sacrifice_due() - 1
+	elif qual:
+		qual_done += 1
+	else:
+		picks_done += 1
 
 
 ## 388 自然之神【初种】：选牌窗正摆着「继续培育 / 采摘」
@@ -229,6 +287,8 @@ func current_pick() -> Dictionary:
 	if seed_offer() or (offer_ids.is_empty() and NatureCyclePerk.choice_due(self)):
 		return {"level": level(), "qual": false, "seed": true}
 	var qual := _next_is_qual()
+	if _repick_mode() != "":
+		return {"level": level(), "qual": qual, "generic": qual and not has_qual_pool(), "convert": true}
 	var lv := (level() if sacrifice_due() > 0 else rules().qual_level_of(_slot_index())) if qual else picks_done + 2
 	return {"level": lv, "qual": qual, "generic": qual and not has_qual_pool()}
 
@@ -237,6 +297,9 @@ func current_pick() -> Dictionary:
 func _next_is_qual() -> bool:
 	if not offer_ids.is_empty():
 		return offer_qual     # 已经摆出来的那一批不变
+	var mode := _repick_mode()
+	if mode != "":
+		return mode == REPICK_QUAL
 	if _qual_left() <= 0:
 		return false
 	if sacrifice_due() > 0:
@@ -302,7 +365,7 @@ func offer() -> Array[StringName]:
 	if offer_ids.is_empty():
 		god_state.erase(NatureCyclePerk.SEED_OFFER)
 		offer_qual = _next_is_qual()
-		offer_ids = _draw(_choices_for(offer_qual), [], offer_qual)
+		offer_ids = _draw(_choices_for(offer_qual), [], offer_qual, _repick_mode() == REPICK_BASE)
 	var out: Array[StringName] = []
 	for s in offer_ids:
 		out.append(StringName(s))
@@ -324,12 +387,7 @@ func pick(i: int) -> StringName:
 		return cid
 	taken[String(cid)] = count_of(cid) + 1
 	skip_bonus = 0     # 396：跳过多出的那一张只管这一批
-	if offer_qual and sacrifice_due() > 0:
-		god_state[SACRIFICE_DUE] = sacrifice_due() - 1
-	elif offer_qual:
-		qual_done += 1
-	else:
-		picks_done += 1
+	_consume(offer_qual)
 	offer_ids.clear()
 	offer_qual = false
 	_apply_now(cid)
@@ -344,12 +402,7 @@ func skip() -> bool:
 	if cards.is_empty() or skips_left() <= 0 or seed_offer():
 		return false
 	skips_used += 1
-	if offer_qual and sacrifice_due() > 0:
-		god_state[SACRIFICE_DUE] = sacrifice_due() - 1     # 跳过献祭换来的那次质变：这次就算用掉了
-	elif offer_qual:
-		qual_done += 1
-	else:
-		picks_done += 1
+	_consume(offer_qual)     # 跳过献祭换来的 / 改信重选的那一次：这次就算用掉了
 	offer_ids.clear()
 	offer_qual = false
 	skip_bonus = 1
@@ -364,7 +417,7 @@ func reroll() -> bool:
 		return false
 	rerolls_used += 1
 	var avoid: Array[String] = offer_ids.duplicate()
-	offer_ids = _draw(offer_ids.size(), avoid, offer_qual)
+	offer_ids = _draw(offer_ids.size(), avoid, offer_qual, _repick_mode() == REPICK_BASE)
 	level_changed.emit()
 	return true
 
@@ -379,7 +432,7 @@ func remove(i: int) -> bool:
 	removed.append(gone)
 	var keep: Array[String] = offer_ids.duplicate()
 	keep.remove_at(i)
-	var fill := _draw(1, keep, offer_qual)
+	var fill := _draw(1, keep, offer_qual, _repick_mode() == REPICK_BASE)
 	if fill.is_empty() or keep.has(fill[0]):     # 池里没别的了：空着，不和留下的重样
 		offer_ids.remove_at(i)
 	else:
@@ -497,8 +550,12 @@ func _requires_met(req: StringName) -> bool:
 ## 抽 [param n] 张不重样的（不抽 [param avoid] 里的；能出的不够就有几张给几张，避开的也拿来补）。
 ## [param qual] 质变位：奉的神有质变牌就只从它的质变牌里抽，否则当普通选牌（只出通用牌）。
 ## 普通选牌奉神时通用牌 + 这位神的基础牌一个池子，抽出来一张神的都没有就把最后一张换成神的（保底一张，作者 11-22）
-func _draw(n: int, avoid: Array[String], qual: bool = false) -> Array[String]:
+func _draw(n: int, avoid: Array[String], qual: bool = false, god_only: bool = false) -> Array[String]:
 	var r := rules()
+	if god_only and not qual:
+		var got := _draw_god_bases(n, avoid)
+		if not got.is_empty():
+			return got     # 396【改信】重选基础牌：只出新神的基础牌（一张都没有就照常出）
 	var use_quals := qual and has_qual_pool()
 	var generic_only := qual and not use_quals
 	if use_quals and forced_next() != &"":
@@ -533,6 +590,28 @@ func _draw(n: int, avoid: Array[String], qual: bool = false) -> Array[String]:
 		var left_gods: Array[String] = gods.filter(func(c: String) -> bool: return not out.has(c))
 		if not left_gods.is_empty():
 			out[out.size() - 1] = left_gods[_weighted(left_gods, rng)]
+	return out
+
+
+## 396【改信】：只从奉的神的基础牌里抽
+func _draw_god_bases(n: int, avoid: Array[String]) -> Array[String]:
+	var r := rules()
+	var pool: Array[String] = []
+	var spare: Array[String] = []
+	for cid in r.card_ids():
+		if not eligible(cid) or r.is_qual(cid) or r.god_of(cid) == &"":
+			continue
+		(spare if avoid.has(String(cid)) else pool).append(String(cid))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d:level_cards:%d" % [_run.run_seed if _run != null else 0, draws])
+	draws += 1
+	var out: Array[String] = []
+	for src in [pool, spare]:
+		var left: Array[String] = (src as Array[String]).duplicate()
+		while out.size() < n and not left.is_empty():
+			var at := _weighted(left, rng)
+			out.append(left[at])
+			left.remove_at(at)
 	return out
 
 
