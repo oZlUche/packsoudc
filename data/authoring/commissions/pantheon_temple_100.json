@@ -1,0 +1,26 @@
+{
+  "id": "pantheon_temple_100",
+  "display_name": "新殿立像",
+  "display_names": {
+    "en": "Raising the Idol"
+  },
+  "faction": "pantheon",
+  "order": 5,
+  "reputation": 5,
+  "min_rep": 100,
+  "grants": "temple",
+  "stages": [
+    {
+      "goal": "altar_offer",
+      "count": 5,
+      "text": "在五座神坛献祭",
+      "texts": {
+        "en": "Make an Offering at five altars"
+      }
+    }
+  ],
+  "client": "万神院的老祭司",
+  "clients": {
+    "en": "Elder priest of the Senatus"
+  }
+}

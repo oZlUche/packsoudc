@@ -130,8 +130,7 @@ func _fit_body(body: RichTextLabel, title: Control) -> void:
 	var n := BODY_SIZE
 	while n > BODY_MIN and body.get_content_height() > room:
 		n -= 1
-		for k in UiTheme.RICH_FONT_SIZES:
-			body.add_theme_font_size_override(k, UiTheme.sz(n))
+		UiTheme.rich_size(body, n)
 	var extra := ceilf(body.get_content_height() - room)
 	var btn := body.get_parent().get_parent() as Control
 	if extra > 0.0 and btn != null:

@@ -5,7 +5,8 @@
 ## - 新档开始时不在营地；教程之后第 3 次成功撤离结算时来（[member FactionDef.arrive_after]）。没来之前这一局没有信仰（[method faith_open]）。
 ## - 报告 396（作者 2026-11-25 19:25）：神殿自选解锁。六座神殿（[member FactionDef.temples]）；声望节点和两份引导委托给「解锁一座神殿」的机会
 ##   （0、25 和 50 的委托、100、125、150），玩家点一座、【确认解锁】（[method unlock]）。牌表没写好的神（[method temple_ready]）看得见、不能解锁。
-##   其余节点：40【重选】、60【跳过】（70 / 90 加次数）、50 经验 +20%、75 神坛「赐福」；到来时声望 5（[member FactionDef.start_rep]）。
+##   其余节点：40【重选】、60【跳过】（70 / 90 加次数）、50 改信（每局一次，[method AltarModule.convert_faith]）、75 神坛「赐福」；到来时声望 5（[member FactionDef.start_rep]）。
+##   作者 11-25 20:34：解锁机会 0 点直接给，25 / 50 / 100 / 125 / 150 各一份引导委托；信神经验加成没有了。
 ## - 老档：原来能选的神直接算解锁（[method migrate_temples]）。
 ## - 选神不要代价；出征时这位神的信物自动放进背包，局结束后不带回仓库。
 class_name Pantheon
@@ -28,6 +29,8 @@ const EFFECT_TEMPLE := &"temple"
 const GRANT_TEMPLE := &"temple"
 ## 396：节点效果「重选 / 跳过」（`value` = [重选次数, 跳过次数]，到了的几个相加）
 const EFFECT_PICK_AIDS := &"pick_aids"
+## 396 第五节：节点效果「每局一次在神坛改信」
+const EFFECT_CONVERT := &"convert"
 
 
 static func faction() -> FactionDef:
@@ -206,12 +209,14 @@ static func access(meta: MetaState) -> Dictionary:
 				aids[0] += int(v[0])
 				aids[1] += int(v[1])
 	return {"enabled": on, "bless": on and has_service(meta, SERVICE_BLESS), "xp_bonus": xp,
-		"opening_extra": on and has_service(meta, SERVICE_OPENING), "rerolls": aids[0], "skips": aids[1]}
+		"opening_extra": on and has_service(meta, SERVICE_OPENING), "rerolls": aids[0], "skips": aids[1],
+		"convert": on and has_service(meta, EFFECT_CONVERT),
+		"temples": (meta.temples.filter(func(g: StringName) -> bool: return god_open(meta, g)).map(func(g: StringName) -> String: return String(g))) if on else []}
 
 
 ## 不受限制的开关（教程章、老规矩）
 static func full_access() -> Dictionary:
-	return {"enabled": true, "bless": true, "xp_bonus": 0.0, "opening_extra": false, "rerolls": 0, "skips": 0}
+	return {"enabled": true, "bless": true, "xp_bonus": 0.0, "opening_extra": false, "rerolls": 0, "skips": 0, "convert": false, "temples": []}
 
 
 ## 出征了，记下奉的是哪位神
