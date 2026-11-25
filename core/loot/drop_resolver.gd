@@ -116,6 +116,11 @@ static func roll(
 			continue
 		if rng.randf() < owned_chance(rule, ctx, def):
 			(out["dropped"] as Array[StringName]).append(id)
+	# 395 第六节：魔兽的战利品（肉、器官）另记在 `spoils`，不在它的棋盘上，掷中了就掉，不占保底名额
+	for raw in content.get("spoils", []):
+		if items.get_def(StringName(String(raw))) != null:
+			(out["dropped"] as Array[StringName]).append(StringName(String(raw)))
+			forced += 1
 	# 084：节点内容 `guaranteed_drops` 一定掉（教程：遭遇的敌人必掉一个包）。**只能是它身上有的**（作者：敌人不能掉没有的东西）
 	for raw in content.get("guaranteed_drops", []):
 		var gid := StringName(String(raw))

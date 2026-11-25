@@ -229,10 +229,14 @@ static func _icon_of_def(def: RunBuffDef) -> Texture2D:
 	if UiTheme.has_art(own):
 		return UiTheme.art_cached(own)
 	for e in def.effects:
+		var stat := &""
 		if e is StatBonus:
-			var path := "effects/axis_%s_pos" % String((e as StatBonus).stat)
-			if UiTheme.has_art(path):
-				return UiTheme.art_cached(path)
+			stat = (e as StatBonus).stat
+		elif e is TagMods and not (e as TagMods).mods.is_empty():
+			stat = ((e as TagMods).mods[0] as StatModifier).stat     # 372 补：精准 / 狠辣按标签挂暴击
+		var path := "effects/axis_%s_pos" % String(stat)
+		if stat != &"" and UiTheme.has_art(path):
+			return UiTheme.art_cached(path)
 	return null
 
 

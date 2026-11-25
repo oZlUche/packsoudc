@@ -78,7 +78,6 @@
     }
   ],
   "eat_trait": {
-    "fire_hit": 3,
-    "regen_stamina": -5
+    "scorch": 1
   }
 }

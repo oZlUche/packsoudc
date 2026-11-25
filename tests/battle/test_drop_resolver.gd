@@ -370,8 +370,10 @@ static func run_first_chapter(t: TestCase) -> void:
 		fights += 1
 		var r := DropResolver.roll(c, rule, ctx, items, rng)
 		var carried := DropResolver.carried_ids(c)
+		for raw in c.get("spoils", []):     # 395 第六节：魔兽的肉、器官是战利品，不在它的棋盘上
+			carried.append(StringName(String(raw)))
 		for did in r["dropped"]:
-			t.check(carried.has(did), "点 %d 掉的 '%s' 是它背的" % [id, did])
+			t.check(carried.has(did), "点 %d 掉的 '%s' 是它背的（或它的战利品）" % [id, did])
 		t.eq((r["treasure"] as Array).size(), 0, "点 %d：珍宝道具还没定义，掉不出珍宝" % id)
 		total_dropped += (r["dropped"] as Array).size()
 		total_expected += DropResolver.expected_count(c, rule, ctx, items)

@@ -163,6 +163,12 @@ static func _parts(run: RunState, key: StringName, ctx: RunContext, with_altar: 
 	for k in ctx.stat_bonus:
 		if String(k) == String(key):
 			flat2 += float(ctx.stat_bonus[k])
+	if PERCENT.has(key):     # 372 补：精准 / 狠辣按「武器」标签加暴击（暴击按道具读）
+		for sm in ctx.scoped:
+			if (sm as ScopedMod).tags.has(WEAPON_TAG):
+				for m in (sm as ScopedMod).mods:
+					if (m as StatModifier).stat == key and not (m as StatModifier).is_mult():
+						flat2 += (m as StatModifier).amount
 	if with_altar:
 		var altar := AltarModule.of(run)
 		if altar != null:

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_eavjw"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_vv4py"]
+[ext_resource type="Script" path="res://core/run/effects/tag_mods.gd" id="3_q3h5q"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_c174d"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_gnuon"]
+
+[sub_resource type="Resource" id="Resource_jfoej"]
+script = ExtResource("2_vv4py")
+stat = &"crit_chance"
+amount = 0.02
+
+[sub_resource type="Resource" id="Resource_06bo3"]
+script = ExtResource("3_q3h5q")
+tags = Array[StringName]([&"weapon"])
+mods = Array[ExtResource("2_vv4py")]([SubResource("Resource_jfoej")])
+
+[resource]
+script = ExtResource("5_gnuon")
+id = &"card_crit_chance"
+display_name = "精准"
+display_names = {
+"en": "Precision"
+}
+effects = Array[ExtResource("1_eavjw")]([SubResource("Resource_06bo3")])

@@ -16,6 +16,14 @@ cards = {
 "card_carry": {
 "kind": "explore"
 },
+"card_crit_chance": {
+"kind": "stat",
+"requires": "weapon"
+},
+"card_crit_damage": {
+"kind": "stat",
+"requires": "weapon"
+},
 "card_echo_faster": {
 "after": "card_element_echo",
 "echo": "faster",

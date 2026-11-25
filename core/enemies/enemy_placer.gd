@@ -275,18 +275,17 @@ static func build_content(
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
 			else:
 				carry_short += 1
-	if def.is_wild() and not def.loot_chance.is_empty():     # 394：肉和器官是战利品，按几率掉（摆不下就不掉，不挤战斗道具）
+	# 394 / 395 第六节（作者 11-25 19:02「战利品容器和本身的背包容器是两回事」）：肉和器官是战利品，按几率掷、记在 `spoils`，
+	# 不摆上魔兽的棋盘（不占它的格子、不挤战斗道具），打赢照掷中的掉（[method DropResolver.roll]）
+	var spoils: Array[String] = []
+	if def.is_wild() and not def.loot_chance.is_empty():
 		var orng := RandomNumberGenerator.new()
 		orng.seed = hash([rng.state, String(def.id), strength, "chance"])
 		var keys: Array = def.loot_chance.keys()
 		keys.sort()
 		for oid in keys:
-			if orng.randf() >= float(def.loot_chance[oid]):
-				continue
-			if _place_random(board, items.get_def(StringName(String(oid))), placed, orng):
-				(placed[placed.size() - 1] as Dictionary)["carried"] = true
-			else:
-				carry_short += 1
+			if orng.randf() < float(def.loot_chance[oid]) and items.get_def(StringName(String(oid))) != null:
+				spoils.append(String(oid))
 	# 246 补充二：身上的魔晶石换品、抽剩余次数（掉下来就是这一颗；随机数另起一条）。套路与招牌里写的不换品
 	# （247：法师的阶就是晶石的品），次数照抽
 	var xrng := RandomNumberGenerator.new()
@@ -303,6 +302,8 @@ static func build_content(
 		"board": [size.x, size.y],
 		"items": placed,
 	}
+	if not spoils.is_empty():
+		content["spoils"] = spoils
 	if build != null:
 		content["build"] = String(build.id)     # 211：回放 / 测试看得见，不进玩家可见的摘要
 	if def.is_wild():
