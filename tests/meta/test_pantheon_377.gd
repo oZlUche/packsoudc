@@ -150,11 +150,13 @@ static func run_tiers(t: TestCase) -> void:
 	t.eq(Pantheon.chances(f.meta), 1, "到来：一次机会")
 	t.check(Pantheon.unlock(f.meta, &"sun"), "第一次也自选（推荐 A）：先解锁日神")
 	t.check(not Pantheon.unlock(f.meta, &"brute"), "机会用完了")
+	t.check(not Pantheon.can_unlock_any(f.meta), "没机会：没有能解锁的")
 	t.check(Pantheon.god_open(f.meta, &"sun") and not Pantheon.god_open(f.meta, &"brute"), "只有日神能奉")
 	book.rep[String(Pantheon.FACTION)] = 30
 	t.eq(Pantheon.chances(f.meta), 0, "25 点光有声望不给机会，要做完那份委托")
 	book.entries["pantheon_temple_25"] = {"state": CommissionBook.DONE, "times": 1}
 	t.eq(Pantheon.chances(f.meta), 1, "做完 25 的委托：多一次")
+	t.check(Pantheon.can_unlock_any(f.meta), "有机会、有落成的：能解锁")
 	t.check(not Pantheon.can_unlock(f.meta, &"skill"), "技巧之神没落成：不能解锁")
 	t.check(Pantheon.unlock(f.meta, &"nature"), "解锁自然之神")
 	t.eq(Pantheon.access(f.meta)["xp_bonus"], 0.0, "30 点还不加经验")
@@ -170,6 +172,7 @@ static func run_tiers(t: TestCase) -> void:
 	t.check(Pantheon.unlock(f.meta, &"brute"), "解锁蛮神")
 	t.check([&"skill", &"hunt", &"earth"].all(func(g: StringName) -> bool: return not Pantheon.can_unlock(f.meta, g)), "没落成的三位有机会也不能解锁")
 	t.eq(Pantheon.chances(f.meta), 2, "机会留着")
+	t.check(not Pantheon.can_unlock_any(f.meta), "只剩没落成的神殿：没有能解锁的（营地不挂红点）")
 	var saved := MetaState.from_dict(f.meta.to_dict(), c.items, GameFlow.load_meta_rules())
 	t.eq(saved.temples if saved != null else [] as Array[StringName], [&"sun", &"nature", &"brute"] as Array[StringName], "存档带着解锁的先后")
 	f.choose_god(&"nature")
