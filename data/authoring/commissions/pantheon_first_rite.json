@@ -9,7 +9,6 @@
   "stages": [
     {
       "goal": "faith_runs",
-      "count": 1,
       "where": "carry",
       "text": "在万神院选一位神，奉着祂出征并撤离",
       "texts": {
