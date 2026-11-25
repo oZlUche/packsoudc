@@ -52,7 +52,6 @@ static func compile(board: GridInventory, input: CompileInput = null) -> Combata
 	spec.axes = inp.axes.duplicate()
 	spec.undying_sec = inp.undying_sec
 	spec.taken_pct = inp.taken_pct     # 395
-	spec.heal_pct = inp.heal_pct
 	spec.immune_buffs = inp.immune_buffs.duplicate()     # 210
 	spec.only_damage_type = inp.only_damage_type     # 281
 	spec.faith = inp.faith if not inp.wild else &""     # 信仰重构 A：这一场按哪位神编的（战记、战后信力结算读它，不回头看背包）

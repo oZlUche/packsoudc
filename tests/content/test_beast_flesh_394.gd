@@ -39,14 +39,14 @@ static func run_tags(t: TestCase) -> void:
 	t.eq(String(IdAliases.RETIRED_ITEMS[&"blood_flesh_scrap"]["replace"]), "toad_leg", "老存档：碎血肉 → 蟾腿")
 	t.eq(String(IdAliases.RETIRED_ITEMS[&"blood_flesh"]["replace"]), "eel_cut", "血肉 → 鳗段")
 	t.eq(String(IdAliases.RETIRED_ITEMS[&"blood_flesh_prime"]["replace"]), "bear_paw", "上等血肉 → 熊掌")
-	# 进食公式不变：每格 15 ×（稀有度 + 1）
-	for pair in [[&"toad_leg", 15.0], [&"eel_cut", 60.0], [&"bear_paw", 135.0]]:
+	# 进食：每格 8 ×（稀有度 + 1）（395 第六节，作者 19:12 选 A）
+	for pair in [[&"toad_leg", 8.0], [&"eel_cut", 32.0], [&"bear_paw", 72.0]]:     # 395 第六节：每格 8
 		var d2 := db.get_def(pair[0])
-		t.check(d2 != null and is_equal_approx(15.0 * d2.cell_count() * (d2.rarity + 1), pair[1]), "%s 吃下 +%s" % [pair[0], pair[1]])
+		t.check(d2 != null and is_equal_approx(8.0 * d2.cell_count() * (d2.rarity + 1), pair[1]), "%s 吃下 +%s" % [pair[0], pair[1]])
 
 
 static func run_drops(t: TestCase) -> void:
-	t.begin("394（作者 16:01 改）· 掉落：肉和器官都是战利品、按几率掉（肉 50%、器官 30%），摆不下就不掉；不挤战斗道具")
+	t.begin("394 / 395 第六节 · 掉落：肉和器官是战利品，按几率掉（肉 50%、器官 30%），记在 spoils，不上魔兽的棋盘、不因摆不下少掉")
 	var c := TestSupport.load_content("free_mode")
 	for e in BEASTS:
 		var def := c.enemies.enemy(e)
@@ -65,17 +65,22 @@ static func run_drops(t: TestCase) -> void:
 		var def := c.enemies.enemy(e)
 		var meat_n := 0
 		var organ_n := 0
-		for i in 40:
+		for i in 200:
 			var rng := RandomNumberGenerator.new()
 			rng.seed = 394 * 100 + i
-			var items: Array = EnemyPlacer.build_content(def, c.pool, c.items, def.strength, rng)["content"]["items"]
-			var ids: Array = items.filter(func(x: Dictionary) -> bool: return bool(x.get("carried", false))).map(func(x: Dictionary) -> String: return String(x["id"]))
+			var content: Dictionary = EnemyPlacer.build_content(def, c.pool, c.items, def.strength, rng)["content"]
+			var on_board: Array = (content["items"] as Array).map(func(x: Dictionary) -> String: return String(x["id"]))
+			t.check(not on_board.has(String(BEASTS[e][0])) and not on_board.has(String(BEASTS[e][1])), "%s 的肉和器官不摆在棋盘上" % e)
+			var ids: Array = content.get("spoils", [])
+			var drop := DropResolver.roll(content, DropRule.new(), null, c.items, rng)
+			for id in ids:
+				t.check((drop["dropped"] as Array).has(StringName(String(id))), "掷中的 %s 打赢就掉" % id)
 			if ids.has(String(BEASTS[e][0])):
 				meat_n += 1
 			if ids.has(String(BEASTS[e][1])):
 				organ_n += 1
-		t.check(meat_n > 5 and meat_n < 35, "%s 肉 40 场掉了 %d 次" % [e, meat_n])
-		t.check(organ_n > 2 and organ_n < 25, "%s 器官 40 场掉了 %d 次" % [e, organ_n])
+		t.check(meat_n >= 80 and meat_n <= 120, "%s 肉 200 场掉了 %d 次（约 50%%）" % [e, meat_n])
+		t.check(organ_n >= 40 and organ_n <= 80, "%s 器官 200 场掉了 %d 次（约 30%%）" % [e, organ_n])
 
 
 static func run_organs(t: TestCase) -> void:
@@ -90,7 +95,7 @@ static func run_organs(t: TestCase) -> void:
 	var heart := run.items.get_def(&"wolf_heart")
 	t.check(BruteRagePerk.is_organ(heart) and not BruteRagePerk.is_organ(run.items.get_def(&"wolf_shank")), "狼心是器官，狼腿肉不是")
 	t.eq(BruteRagePerk.eat_tip(run, run.items.get_def(&"bear_liver")), "战斗中每秒回复生命 +3，急速 -4%", "进食提示：好处在前、坏处在后")
-	t.eq(BruteRagePerk.eat_tip(run, run.items.get_def(&"toad_leg")), "生命上限 +15", "肉的提示写生命上限")
+	t.eq(BruteRagePerk.eat_tip(run, run.items.get_def(&"toad_leg")), "生命上限 +8", "肉的提示写生命上限")
 	var hp0 := float(run.effective_baseline().base_stats.get(&"max_hp", 0.0))
 	var st0 := float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0))
 	var rg0 := float(run.effective_baseline().base_stats.get(&"regen_hp", 0.0))
@@ -122,19 +127,20 @@ static func run_organs(t: TestCase) -> void:
 
 
 static func run_glands_and_pot(t: TestCase) -> void:
-	t.begin("395 第五节 · 腺体也是器官（带食材、血肉，原有用处不变）；器官下锅给特性、放几件叠几次、整局有效；火焰腺每次攻击 +3 火伤、毒腺 15% 施加中毒、受到的治疗 −10%")
+	t.begin("395 第五 / 六节 · 腺体也是器官（带食材、血肉，原有用处不变）：每次攻击给敌我各加一层对应元素；器官下锅给特性、放几件叠几次、整局有效")
 	var db := ItemDatabase.new()
 	db.load_dir()
-	for id in [&"fire_gland", &"frost_gland", &"viper_gland"]:
-		var d := db.get_def(id)
-		t.check(d != null and d.has_tag(&"ingredient") and d.has_tag(BruteRagePerk.FLESH_TAG) and d.has_tag(&"reagent") and OrganTraits.is_organ(d), "%s 是器官，还是试剂" % id)
-	t.eq(OrganTraits.line(db.get_def(&"viper_gland").eat_trait), "每次攻击施加 1 层中毒的几率 +15%，受到的治疗 -10%", "毒腺：好处在前")
+	for pair in [[&"fire_gland", &"scorch"], [&"frost_gland", &"chill"], [&"viper_gland", &"poison"]]:
+		var d := db.get_def(pair[0])
+		t.check(d != null and d.has_tag(&"ingredient") and d.has_tag(BruteRagePerk.FLESH_TAG) and d.has_tag(&"reagent") and OrganTraits.is_organ(d), "%s 是器官，还是试剂" % pair[0])
+		t.check(d != null and d.eat_trait.size() == 1 and int(d.eat_trait.get(String(pair[1]), 0)) == 1, "%s 只有一条：敌我各 1 层 %s" % pair)
+	t.eq(OrganTraits.line(db.get_def(&"fire_gland").eat_trait), "每次攻击，敌我各加 1 层灼伤", "火焰腺的提示")
 	var pot: Array = []
 	for id in [&"wolf_heart", &"wolf_heart", &"fire_gland", &"wolf_shank"]:
 		pot.append(ItemInstance.create(db.get_def(id)))
 	var meal := Canteen.meal_of(pot)
 	var got: Dictionary = meal.get("traits", {})
-	t.check(is_equal_approx(float(got.get("damage", 0.0)), 16.0) and is_equal_approx(float(got.get("fire_hit", 0.0)), 3.0), "两颗狼心 + 火焰腺下锅：特性叠起来（%s）" % str(got))
+	t.check(is_equal_approx(float(got.get("damage", 0.0)), 16.0) and is_equal_approx(float(got.get("scorch", 0.0)), 1.0), "两颗狼心 + 火焰腺下锅：特性叠起来（%s）" % str(got))
 	t.check(is_equal_approx(float((meal["flat"] as Dictionary).get("max_stamina", 0.0)), 3.0), "狼腿肉照旧按肉类给耐力上限 +3，器官不给（%s）" % str(meal["flat"]))
 	t.check(ItemTooltip.canteen_line(db.get_def(&"wolf_heart")).contains("造成的伤害 +8%，受到的伤害 +4%"), "配菜提示：器官写特性，好处在前")
 	# 进一局：饱腹归零也不失效
@@ -146,11 +152,8 @@ static func run_glands_and_pot(t: TestCase) -> void:
 	var tot := OrganTraits.totals(run)
 	t.check(is_equal_approx(float(tot.get(&"damage", 0.0)), 16.0), "饱腹 0 了，器官的特性还在（整局有效）")
 	var inp := CompileInput.new()
-	OrganTraits.apply_values(inp, {&"fire_hit": 3.0, &"poison_chance": 15.0, &"heal": -10.0, &"regen_stamina": -5.0})
-	t.eq(inp.rules.size(), 2, "火伤、中毒各挂一条单位规则")
-	t.check(is_equal_approx(inp.heal_pct, -10.0), "受到的治疗 −10%")
-	t.check(inp.baseline_mods.any(func(m: StatModifier) -> bool: return m.stat == BattleStats.REGEN_STAMINA and m.mode == StatModifier.Mode.MULT and is_equal_approx(m.amount, -5.0)), "耐力回复 −5%")
-	var rt := CombatantRuntime.new()
-	rt.heal_pct = -10.0
-	t.check(is_equal_approx(StatMath.to_float(rt.heal_kept()), 0.9), "每秒回复也按治疗 −10% 打折")
+	OrganTraits.apply_values(inp, {&"scorch": 2.0, &"poison": 1.0})
+	t.eq(inp.rules.size(), 2, "灼伤、中毒各挂一条单位规则")
+	var ap := inp.rules[0].effects[0] as ApplyStatus
+	t.check(ap != null and ap.target == CombatEffect.Target.BOTH and ap.stacks == 2 and ap.buff.id == &"scorch", "两件火焰腺：每次攻击敌我各 2 层灼伤")
 	run.dispose()
