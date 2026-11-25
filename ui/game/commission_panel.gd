@@ -235,7 +235,7 @@ func _build_story() -> void:
 	grid.name = "StoryGrid"
 	grid.columns = 3
 	_cards.add_child(grid)
-	for f in Commissions.listed_factions():
+	for f in Commissions.story_factions():     # 396 第九节：还没来的万神院，接应它的剧情委托也钉在这里
 		for d in Commissions.of_faction(f.id):
 			if Commissions.is_story(d) and shown(d) and not (flow.meta.commissions.is_done(d.id) and flow.meta.commissions.state_of(d.id) != CommissionBook.TAKEN):
 				grid.add_child(_card(d, STORY_W))

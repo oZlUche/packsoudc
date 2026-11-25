@@ -1,0 +1,26 @@
+{
+  "id": "pantheon_arrival",
+  "display_name": "远道而来",
+  "display_names": {
+    "en": "From Afar"
+  },
+  "faction": "pantheon",
+  "stages": [
+    {
+      "goal": "extract_runs",
+      "where": "carry",
+      "text": "在中途撤离点撤离",
+      "texts": {
+        "en": "Extract at a midway extraction point"
+      }
+    }
+  ],
+  "quote": "接应远道而来的万神院代表",
+  "quotes": {
+    "en": "Meet the envoy of the Senatus Panthei, come from afar"
+  },
+  "client": "万神院的代表",
+  "clients": {
+    "en": "Envoy of the Senatus"
+  }
+}

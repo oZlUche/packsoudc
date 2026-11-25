@@ -3,6 +3,7 @@
 ## - 栏上 [constant PINS] 个钉位；第一次有一方开放常规（[method Commissions.regular_open]）时贴 [constant FIRST_FILL] 张。
 ## - 没接的纸条贴出时带 [constant LIFE] 局；每结算一局减 1，到 0 撤下。接下之后不再到期，进「手头」（[constant Commissions.SLOTS] 份）。
 ## - 每局回营：先扣时限，再给每个空钉位掷一次（[constant REFILL_CHANCE]），补完栏上没接的少于 [constant FLOOR] 张就补到够。
+## - 396 第九节（作者 11-26 00:08 选 A）：每次贴完，开放了常规的每一方栏上至少有一张自己的（没接的）纸条；钉位满了就顶掉一方多出来的那张里最快到期的（[method _floor_each]）。
 ## - 抽什么：开放了常规的几方轮着来（优先栏上还没有的那方）；目标取自这一方的 [member FactionDef.regular]，
 ##   再掷短 / 常规 / 长单（[constant BANDS]），数量在那一档里掷。酬金 = 件数 × 单份酬值 × 档系数（[constant BAND_MULT]），声望按这一方的 [member FactionDef.note_rep]（389 第八节）。
 ## - 全用「市场种子 + 第几局」定死：读档重进刷不出别的。
@@ -92,7 +93,7 @@ static func first_fill(meta: MetaState) -> int:
 	for _i in FIRST_FILL:
 		if _post(book, rng):
 			n += 1
-	return n
+	return n + _floor_each(book, rng)
 
 
 ## 一局结算后：扣时限、撤下到期的、补位、保底。返回 {"expired": 撤下几张, "posted": 补了几张}
@@ -123,13 +124,56 @@ static func refresh(meta: MetaState) -> Dictionary:
 			out["posted"] = int(out["posted"]) + 1
 	while posted(book).size() < FLOOR and book.pins.has("") and _post(book, rng):
 		out["posted"] = int(out["posted"]) + 1
+	out["posted"] = int(out["posted"]) + _floor_each(book, rng)
 	return out
 
 
-## 贴一张到第一个空钉位。没有空位、没有能贴的阵营 / 目标 = false
-static func _post(book: CommissionBook, rng: RandomNumberGenerator) -> bool:
+## 396 第九节：每一方保底一张。栏上没有这一方没接的纸条就给它贴一张；钉位满了，顶掉栏上纸条最多的那方最快到期的一张。返回贴了几张
+static func _floor_each(book: CommissionBook, rng: RandomNumberGenerator) -> int:
+	var n := 0
+	for f in open_factions(book):
+		var mine := posted(book).filter(func(nid: String) -> bool: return _faction_of(book, nid) == String(f.id))
+		if not mine.is_empty():
+			continue
+		if not book.pins.has(""):
+			var spare := _spare_pin(book)
+			if spare < 0:
+				continue
+			book.notes.erase(String(book.pins[spare]))
+			book.pins[spare] = ""
+		if _post(book, rng, f):
+			n += 1
+	return n
+
+
+static func _faction_of(book: CommissionBook, nid: String) -> String:
+	return String((book.notes.get(nid, {}) as Dictionary).get("faction", ""))
+
+
+## 钉位满时能顶掉的一张：栏上没接的纸条里，那一方在栏上多于一张的，挑剩下局数最少的。没有 = -1
+static func _spare_pin(book: CommissionBook) -> int:
+	var count := {}
+	for nid in posted(book):
+		count[_faction_of(book, nid)] = int(count.get(_faction_of(book, nid), 0)) + 1
+	var best := -1
+	var best_left := 1 << 30
+	for i in book.pins.size():
+		var nid := String(book.pins[i])
+		if nid == "" or book.state_of(StringName(nid)) != "" or int(count.get(_faction_of(book, nid), 0)) < 2:
+			continue
+		var left := int((book.notes.get(nid, {}) as Dictionary).get("left", LIFE))
+		if left < best_left:
+			best_left = left
+			best = i
+	return best
+
+
+## 贴一张到第一个空钉位（[param only] 给了就只贴这一方的）。没有空位、没有能贴的阵营 / 目标 = false
+static func _post(book: CommissionBook, rng: RandomNumberGenerator, only: FactionDef = null) -> bool:
 	var slot := book.pins.find("")
 	var factions := open_factions(book)
+	if only != null:
+		factions = factions.filter(func(x: FactionDef) -> bool: return x == only)
 	if slot < 0 or factions.is_empty():
 		return false
 	var on_board := {}

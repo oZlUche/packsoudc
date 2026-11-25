@@ -9,10 +9,9 @@
   "stages": [
     {
       "goal": "faith_runs",
-      "where": "carry",
-      "text": "在万神院选一位神，奉着祂出征并撤离",
+      "text": "在万神院选一位神，奉着祂出征一次，战败也算",
       "texts": {
-        "en": "Choose a god at the Senatus, follow that god on a run, and extract"
+        "en": "Choose a god at the Senatus and follow that god on a run; a defeat counts too"
       }
     }
   ],

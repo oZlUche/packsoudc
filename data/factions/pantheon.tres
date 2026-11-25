@@ -10,8 +10,9 @@ display_names = {
 "en": "Senatus Panthei"
 }
 order = 6
-arrives = &"extractions"
+arrives = &"herald"
 arrive_after = 3
+herald = &"pantheon_arrival"
 start_rep = 5
 nodes = Array[Dictionary]([{
 "effect": "temple",

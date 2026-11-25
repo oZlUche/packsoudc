@@ -2,7 +2,7 @@
 ##（[member MetaState.pantheon_choice]、[member MetaState.gods_worshipped]）与委托簿（到没到、声望）。
 ##
 ## 规则（作者 2026-11-22 定方向，数值是初值）：
-## - 新档开始时不在营地；教程之后第 3 次成功撤离结算时来（[member FactionDef.arrive_after]）。没来之前这一局没有信仰（[method faith_open]）。
+## - 新档开始时不在营地；教程之后第 3 次成功撤离后告示栏出剧情委托《远道而来》（396 第九节：在中途撤离点撤离），办成了才来（[member FactionDef.herald]）。没来之前这一局没有信仰（[method faith_open]）。
 ## - 报告 396（作者 2026-11-25 19:25）：神殿自选解锁。六座神殿（[member FactionDef.temples]）；声望节点和两份引导委托给「解锁一座神殿」的机会
 ##   （0、25 和 50 的委托、100、125、150），玩家点一座、【确认解锁】（[method unlock]）。牌表没写好的神（[method temple_ready]）看得见、不能解锁。
 ##   其余节点：40【重选】、60【跳过】（70 / 90 加次数）、50 改信（每局一次，[method AltarModule.convert_faith]）、75 神坛「赐福」；到来时声望 5（[member FactionDef.start_rep]）。
