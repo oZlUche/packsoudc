@@ -5,11 +5,11 @@
 
 [sub_resource type="Resource" id="Resource_chyh8"]
 script = ExtResource("2_ekb5c")
-goal = &"altar_offer"
-count = 5
-text = "在五座神坛献祭"
+goal = &"temple_visit"
+where = &"camp"
+text = "在万神院选一座神殿拜访，下一局奉着这位神出征，胜负都算"
 texts = {
-"en": "Make an Offering at five altars"
+"en": "Visit a temple at the Senatus, then follow that god on your next run; win or lose, it counts"
 }
 
 [resource]

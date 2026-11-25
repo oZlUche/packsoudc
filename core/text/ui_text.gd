@@ -843,8 +843,10 @@ const TEXT := {
 	"arrive.ok": {"zh": "知道了", "en": "Got it"},
 	"arrive.pantheon": {"zh": "诸神的祭司们在营地边上立起了万神院。先到后勤的万神院页解锁一座神殿；之后每次出征前可以选这一局奉哪位神：信物出征时自动放进背包，休息点的神坛、废墟里的无名祭坛也会出现。不选就是无信者。", "en": "The priests of the gods have raised the Senatus Panthei at the edge of camp. First unlock a temple on the Senatus page under Logistics; then, before each expedition, you can choose which god to follow this run: the god's Charm goes into your pack when you set out, and Altars at rest spots and nameless altars in the ruins begin to appear. Choose none and you go as the Faithless."},
 	"pantheon.locked": {"zh": "在营地的万神院解锁这座神殿", "en": "Unlock this temple at the Senatus in camp"},
+	"pantheon.visiting": {"zh": "正在拜访%s：下一局奉着祂出征，胜负都算，打完就永久解锁", "en": "Visiting %s: follow this god on your next run; win or lose, the temple is then yours for good"},     # 396 第十节
+	"pantheon.visiting_tip": {"zh": "拜访中：下一局奉着这位神出征", "en": "Visiting: follow this god on your next run"},
 	"pantheon.visits": {"zh": "还可以拜访 %d 次神殿", "en": "Temple visits left: %d"},     # 396 定稿（作者 11-25 23:18）
-	"pantheon.unlock": {"zh": "确认解锁", "en": "Unlock"},
+	"pantheon.unlock": {"zh": "确认拜访", "en": "Visit"},     # 396 第十节：原来是「确认解锁」
 	"pantheon.not_built": {"zh": "神殿尚未落成", "en": "This temple is not yet built"},
 	"pantheon.pick_temple": {"zh": "点一座神殿", "en": "Pick a temple"},
 	"pantheon.no_chance": {"zh": "声望再高一些，或做完万神院的委托，就能再解锁一座", "en": "Gain more standing, or finish Senatus commissions, to unlock another"},

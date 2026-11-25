@@ -624,7 +624,7 @@ func _card(d: CommissionDef, w: float = CARD_W) -> Control:
 
 
 ## 作者 2026-11-21：在营地别处做的那一步 → 【前往】跳到哪一页
-const GO_TO := {&"smith_forge": &"smithy", &"nursery_plant": &"nursery", &"nursery_harvest": &"nursery"}
+const GO_TO := {&"smith_forge": &"smithy", &"nursery_plant": &"nursery", &"nursery_harvest": &"nursery", &"temple_visit": &"pantheon"}     # 396 第十节：拜访神殿去万神院页
 
 
 ## 当场就能【完成】：办成了等点的，或停在营地报到那一步的

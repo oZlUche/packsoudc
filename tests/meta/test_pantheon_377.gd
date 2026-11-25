@@ -242,6 +242,49 @@ static func run_tiers(t: TestCase) -> void:
 	Support.cleanup(PREFIX)
 
 
+static func run_visit(t: TestCase) -> void:
+	t.begin("396 第十节 · 拜访神殿：用掉一次机会、下一局锁定奉祂（选神页别的点不了）、那一局打完胜负都算就永久解锁；引导委托到声望接上就给机会，拜访打完算办成")
+	ItemInstance.reset_uid_counter()
+	var c := TestSupport.load_content("free_mode", PackedStringArray(["faiths", "characters"]))
+	var f := _new_flow(c)
+	var book := f.meta.commissions
+	book.arrived[String(Pantheon.FACTION)] = 0
+	book.rep[String(Pantheon.FACTION)] = 5
+	t.eq(Pantheon.chances(f.meta), 1, "0 点：一次机会")
+	t.check(Pantheon.visit(f.meta, &"sun"), "拜访日神")
+	t.eq([f.meta.visiting, Pantheon.chances(f.meta), f.meta.temples.size()], [&"sun", 0, 0], "机会用掉，还没永久解锁")
+	t.check(Pantheon.god_open(f.meta, &"sun") and Pantheon.choice(f.meta) == &"sun", "下一局奉日神")
+	t.check(not Pantheon.choose(f.meta, &"") and Pantheon.choice(f.meta) == &"sun", "拜访着：不能改成无信者")
+	var PP: GDScript = load("res://ui/game/pantheon_panel.gd")
+	var pick = PP.new()
+	pick.setup(f, PP.PICK)
+	var none_key: Button = pick.find_child("Choose_none", true, false)
+	t.check(none_key != null and none_key.disabled, "选神页：无信者灰着")
+	pick.free()
+	var view = PP.new()
+	view.setup(f)
+	t.check(view.find_child("Visiting", true, false) != null and (view.find_child("Unlock", true, false) as Button).disabled, "万神院页：写「正在拜访」，键灰着")
+	view.free()
+	var s := _extract_once(f, c, 81)     # 走一步再撤离（一步没走的不算正式的一局）
+	if s == null:
+		t.check(false, "开局")
+		Support.cleanup(PREFIX)
+		return
+	t.eq(s.selected_faith, &"sun", "这一局奉日神")
+	t.check(f.meta.visiting == &"" and f.meta.temples.has(&"sun") and f.last_visited == &"sun", "打完：日神永久解锁")
+	book.rep[String(Pantheon.FACTION)] = 30
+	f.sync_commissions()
+	t.eq(book.state_of(&"pantheon_temple_25"), CommissionBook.TAKEN, "25 点：引导委托接上")
+	t.eq(Pantheon.chances(f.meta), 1, "接上就多一次机会")
+	t.check(Pantheon.visit(f.meta, &"nature"), "拜访自然之神")
+	t.eq(Pantheon.finish_visit(f.meta), &"nature", "那一局打完（胜负都算）")
+	t.eq(book.state_of(&"pantheon_temple_25"), CommissionBook.READY, "引导委托算办成，点【完成】领")
+	t.check(f.meta.temples.has(&"nature") and Pantheon.chances(f.meta) == 0, "自然之神永久解锁，机会用完")
+	var back := MetaState.from_dict(f.meta.to_dict(), c.items, GameFlow.load_meta_rules())
+	t.eq(back.visiting if back != null else &"?", &"", "存档带着拜访（这时没有）")
+	Support.cleanup(PREFIX)
+
+
 static func run_no_faith_run(t: TestCase) -> void:
 	t.begin("377 · 没有信仰的局：没有神坛祷告、不换赐福版、掉落里拿掉信物与赐福道具、随机来源锁上")
 	ItemInstance.reset_uid_counter()
@@ -379,8 +422,8 @@ static func run_pick_panel(t: TestCase) -> void:
 	view.select(&"nature")
 	unlock_key = view.find_child("Unlock", true, false)
 	t.check(not unlock_key.disabled and view.find_child("NotBuilt", true, false) == null, "选中自然之神：能确认")
-	t.check(view.confirm() and Pantheon.god_open(f.meta, &"nature"), "确认解锁：自然之神能奉了")
-	t.eq((view.find_child("Chances", true, false) as Label).text, "0", "100 点那次用掉了")
+	t.check(view.confirm() and f.meta.visiting == &"nature" and Pantheon.god_open(f.meta, &"nature"), "【确认拜访】：拜访自然之神，下一局能奉祂")
+	t.check(view.find_child("Visiting", true, false) != null and view.find_child("Chances", true, false) == null, "底下换成「正在拜访」那一句")
 	pick.free()
 	view.free()
 	Support.cleanup(PREFIX)
