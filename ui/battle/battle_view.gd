@@ -99,6 +99,10 @@ var _play_btn: IconButton
 var _speed_btn: IconButton
 ## 157：时间轴（可拖）、收尾战报、双方名牌的位置（面板顶上）
 var _timeline: ReplayTimeline
+## 388 日神：框顶正中的日月盘（没奉日神藏着）
+var _dial: SunDial = null
+## 日月盘的盘心在视图顶边上面多少（压在铜框顶的铆钉带上：铜面板留边 40）
+const DIAL_CENTER_Y := -20.0
 var _report: RichTextLabel
 ## 铜面板：底栏（空 · 宿主的「继续」· 空）；战报不显示（作者 19:09）
 var _footer: HBoxContainer = null
@@ -161,6 +165,13 @@ func play(result: BattleResult, names: Array = []) -> void:
 		_ticker.clear()
 	_verdict.text = ""
 	_timeline.load_result(result)
+	_dial.load_result(result)
+	var sunny: Array[String] = []
+	if _dial.visible:
+		sunny = [String(SunCycle.DAY), String(SunCycle.NIGHT)]
+	if not _panels.is_empty():
+		_panels[0].hidden_ids = sunny     # 有日月盘：【白昼】【黑夜】不挂效果栏
+	_place_dial()
 	_report.text = ""
 	_report.visible = false
 	_sync_buttons()
@@ -956,6 +967,21 @@ func _build() -> void:
 	_timeline.scrub_started.connect(_on_scrub_started)
 	_timeline.scrub_ended.connect(_on_scrub_ended)
 	bar.add_child(_timeline)
+	_dial = SunDial.new()
+	_dial.name = "SunDial"
+	_dial.visible = false
+	add_child(_dial)
+	_timeline.cursor_moved.connect(_on_dial_time)
+	_dial.hovered.connect(func(at: Vector2):
+		if _tip != null and _dial.visible:
+			_tip.show_status(_dial.tip_parts(), at)
+			_tip_id = ""
+			_dial_tip = true)
+	_dial.unhovered.connect(func():
+		_dial_tip = false
+		if _tip != null:
+			_tip.release())
+	resized.connect(_place_dial)
 	_speed_btn = IconButton.make_art(ART_DIR, "", "", "", cycle_speed)
 	bar.add_child(_speed_btn)
 	_skip_btn = IconButton.make_art(ART_DIR, "skip", UiText.t("battle.skip"), UiText.t("battle.skip_tip"), skip_to_end)
@@ -975,6 +1001,28 @@ func _build() -> void:
 	_tip = HoverTip.new()
 	add_child(_tip)
 	_sync_buttons()
+
+
+var _dial_tip := false
+
+
+## 回放走到 [param t]：日月盘跟着走，悬浮窗开着就换字（还剩几秒）
+func _on_dial_time(t: float) -> void:
+	_dial.now = t
+	if _dial_tip and _tip != null and _tip.is_showing():
+		_tip.update_status(_dial.tip_parts())
+
+
+## 日月盘：视图顶边正中，盘心压在框顶上
+func _place_dial() -> void:
+	if _dial == null:
+		return
+	_dial.position = Vector2((size.x - SunDial.SIZE) * 0.5, DIAL_CENTER_Y - SunDial.SIZE * 0.5)
+
+
+## 测试看：日月盘
+func sun_dial() -> SunDial:
+	return _dial
 
 
 func _get_minimum_size() -> Vector2:
