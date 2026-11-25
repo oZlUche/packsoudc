@@ -5,6 +5,7 @@
 extends RefCounted
 
 const L := preload("res://tests/run/test_level_372.gd")
+const FX := preload("res://tests/battle/test_effect_system.gd")
 
 const FIXTURE := {
 	"t_q_a": {"kind": "god", "god": "brute", "qual": true},
@@ -462,6 +463,71 @@ static func run_convert_faith(t: TestCase) -> void:
 	var back := LevelModule.new()
 	back.restore(lv.to_dict())
 	t.eq(back.repicks_left(), 0, "进存档：不欠了")
+	run.dispose()
+
+
+static func run_skill_cards(t: TestCase) -> void:
+	t.begin("396 第 B 批 · 技巧之神的牌：31 张进牌池（11 质变 + 11 升级 + 9 基础），拿了几张就把数填进连击；背包里没武器有【拳头】；一气呵成留层数到下一场；万神院先不开放")
+	var run := _start(53, &"skill")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"skill":
+		t.check(false, "开局奉技巧之神")
+		return
+	var r := lv.rules()
+	var quals := 0
+	var bases := 0
+	for cid in r.card_ids():
+		if r.god_of(cid) == &"skill":
+			if r.is_qual(cid):
+				quals += 1
+			else:
+				bases += 1
+	t.eq(quals, 22, "质变 11 张 + 升级 11 张")
+	t.eq(bases, 9, "基础牌 9 张")
+	t.check(lv.has_qual_pool(), "开局质变位出技巧之神的牌")
+	t.check(not Pantheon.temple_ready(&"skill"), "万神院：神殿尚未落成（先不开放）")
+	t.check(Pantheon.temple_ready(&"brute"), "蛮神照常")
+	var perk := SkillMomentumPerk.new()
+	t.check(is_equal_approx(perk.effect_for(lv).haste_per, 1.0), "核心每层急速 1%")
+	lv.taken["god_skill_ready"] = 2
+	lv.taken["god_skill_steady"] = 1
+	lv.taken["god_skill_gap"] = 1
+	lv.taken["god_skill_gap_up"] = 1
+	lv.taken["god_skill_edge"] = 1
+	lv.taken["god_skill_edge_up"] = 1
+	lv.taken["god_skill_poise"] = 2
+	var e := perk.effect_for(lv)
+	t.eq([e.opening, e.keep_on_reset, e.gap_every], [6, 2, 4], "预备两张 6 层、稳手留 2 层、寻隙升级每 4 层")
+	t.check(is_equal_approx(e.gap_pct, 50.0) and is_equal_approx(e.edge_crit, 0.7) and is_equal_approx(e.edge_crit_damage, 1.0), "寻隙升级 +50%、锋芒升级暴击率 0.7% 暴击伤害 1%")
+	t.check(is_equal_approx(e.poise_sec, 3.0) and is_equal_approx(e.poise_pct, 10.0), "蓄势两张：每 3 秒 +10%")
+	t.check(lv.card_text(&"god_skill_press").contains("15"), "牌面按数写：%s" % lv.card_text(&"god_skill_press"))
+	# 徒手大师：背包里没有武器才有拳头
+	lv.taken["god_skill_fist"] = 1
+	for raw in run.board.items():
+		var inst := raw as ItemInstance
+		if inst.def.has_tag(&"weapon"):
+			run.board.remove(inst.uid)
+	var bare := run.compile_player()
+	var fists := bare.items.filter(func(it: CompiledItem) -> bool: return it.def_id == SkillMomentumPerk.FIST_ID)
+	t.eq(fists.size(), 1, "没武器：有一只拳头")
+	if fists.size() == 1:
+		t.check(is_equal_approx(StatMath.to_float(bare.stats_of((fists[0] as CompiledItem).source_uid).total_of(BattleStats.DAMAGE)), 5.0), "拳头伤害 5")
+		var fight := BattleSim.run(bare, FX._spec(5000.0, []), RandomNumberGenerator.new(), 5.0)
+		var punches := 0
+		for raw in fight.log:
+			var ev := raw as BattleEvent
+			if ev.name == BattleEvent.ITEM_FIRED and ev.side == 0 and ev.get_int(&"uid") == (fists[0] as CompiledItem).source_uid:
+				punches += 1
+		t.check(punches >= 3, "拳头每秒打一下（5 秒 %d 下）" % punches)
+	t.check(TestSupport.put(run.board, run.items.get_def(&"knife")) != null, "放一把小刀")
+	t.eq(run.compile_player().items.filter(func(it: CompiledItem) -> bool: return it.def_id == SkillMomentumPerk.FIST_ID).size(), 0, "放回一件武器：拳头没了")
+	# 一气呵成：打完记下最后几层的 33%
+	lv.taken["god_skill_carry"] = 1
+	var res := BattleResult.new()
+	res.log = [BattleEvent.make(BattleEvent.STATUS_STACKED, 100, 0, {"buff": "skill_momentum", "stacks": 30, "delta": 1})]
+	SkillMomentumPerk.after_battle(lv, res)
+	t.eq(lv.god_state.get(SkillMomentumPerk.CARRY_KEY, 0), 9, "30 层留 33%：9 层")
+	t.eq(perk.effect_for(lv).carry_in, 9, "下一场开战给 9 层")
 	run.dispose()
 
 

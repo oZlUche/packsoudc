@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_8iuvp"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_hd7ev"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_bngsb"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_4mi6d"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_avxk5"]
+
+[sub_resource type="Resource" id="Resource_vst0x"]
+script = ExtResource("2_hd7ev")
+values = {
+"crit": 0.7,
+"crit_damage": 1
+}
+
+[resource]
+script = ExtResource("5_avxk5")
+id = &"god_skill_edge_up"
+display_name = "锋芒（升级）"
+display_names = {
+"en": "Keen Edge+"
+}
+effects = Array[ExtResource("1_8iuvp")]([SubResource("Resource_vst0x")])

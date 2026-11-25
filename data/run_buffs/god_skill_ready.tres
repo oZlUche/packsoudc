@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_rudp8"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_1ssh7"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_6gsbb"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_3du3d"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_3xnk1"]
+
+[sub_resource type="Resource" id="Resource_nkxwi"]
+script = ExtResource("2_1ssh7")
+values = {
+"stacks": 3
+}
+
+[resource]
+script = ExtResource("5_3xnk1")
+id = &"god_skill_ready"
+display_name = "预备"
+display_names = {
+"en": "Ready Stance"
+}
+effects = Array[ExtResource("1_rudp8")]([SubResource("Resource_nkxwi")])

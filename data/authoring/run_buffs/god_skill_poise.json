@@ -1,0 +1,16 @@
+{
+  "id": "god_skill_poise",
+  "display_name": "蓄势",
+  "display_names": {
+    "en": "Gather Force"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 3,
+        "pct": 5
+      }
+    }
+  ]
+}

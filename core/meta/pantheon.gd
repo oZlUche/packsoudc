@@ -83,6 +83,8 @@ static func temple_ready(faith_id: StringName) -> bool:
 	if faith_id == &"":
 		return false
 	var r := LevelRules.load_rules()
+	if r.closed_gods.has(faith_id):
+		return false
 	for cid in r.card_ids():
 		if r.god_of(cid) == faith_id:
 			return true

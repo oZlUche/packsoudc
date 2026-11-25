@@ -35,6 +35,8 @@ var armor_bonus: int = 0
 var ignore_reduction: int = 0
 ## 388 破甲升级：[member ignore_reduction] 也让格挡少算几成（开关，作者待定）
 var ignore_block: bool = false
+## 396 技巧之神【识破】：无视几点固定减伤（定点）—— 先抵受伤前的固定减伤，剩下的抵格挡
+var ignore_flat: int = 0
 ## 388 蛮神【痛觉残留】：这一下落血的几成改成之后慢慢扣（百分数；受伤前由挨打一方写）
 var defer_percent: int = 0
 #endregion

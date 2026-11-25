@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_stream",
+  "display_name": "流水",
+  "display_names": {
+    "en": "Flowing Water"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 0.5
+      }
+    }
+  ]
+}

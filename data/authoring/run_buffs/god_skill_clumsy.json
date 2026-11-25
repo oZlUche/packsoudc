@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_clumsy",
+  "display_name": "大巧若拙",
+  "display_names": {
+    "en": "Artless Art"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 50
+      }
+    }
+  ]
+}

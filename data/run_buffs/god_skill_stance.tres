@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_opvqc"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_e8wq5"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_6dcjk"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_qnkkr"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ypun2"]
+
+[sub_resource type="Resource" id="Resource_fe3nk"]
+script = ExtResource("2_e8wq5")
+values = {
+"stacks": 1
+}
+
+[resource]
+script = ExtResource("5_ypun2")
+id = &"god_skill_stance"
+display_name = "架势"
+display_names = {
+"en": "Stance"
+}
+effects = Array[ExtResource("1_opvqc")]([SubResource("Resource_fe3nk")])

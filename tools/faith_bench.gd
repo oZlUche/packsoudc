@@ -125,7 +125,7 @@ static func _spec(snap: Dictionary, items: ItemDatabase, god: StringName, tier: 
 	input.faith = FaithState.assembled_tag(board)
 	match god:
 		&"skill":
-			input.rules.append(SkillMomentumPerk.new().rule_at(tier))
+			input.rules.append(SkillMomentumPerk.new().rule_for(null))     # 396：核心；牌在局里拿
 		&"hunt":
 			input.rules.append(HuntDismantlePerk.new().rule_at(tier))
 		&"earth":

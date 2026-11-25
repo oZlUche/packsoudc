@@ -687,6 +687,8 @@ func compile_player() -> CombatantSpec:
 	OrganTraits.apply(input, self)     # 395：吃下的器官（蛮神直接吃的 + 那顿饭里的）
 	input.faith = FaithTags.tag_of(active_faith_id())     # 信仰重构 A：有效信仰显式进编译输入
 	var spec := BattleCompiler.compile(board, input)
+	if active_faith_id() == &"skill":
+		SkillMomentumPerk.graft_fist(self, spec, input)     # 396 技巧之神【徒手大师】：没有武器就有【拳头】
 	spec.passives = BattlePassives.of(self)     # 103：常驻加成也进 buff 栏
 	var meal := MealModule.of(self)     # 355：水果的每秒回血 —— 独立一项，不进别的算式
 	if meal != null:

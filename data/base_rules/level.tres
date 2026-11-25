@@ -417,6 +417,152 @@ cards = {
 "kind": "god",
 "upgrade_of": "god_nature_wane"
 },
+"god_skill_breath": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_carry": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_carry_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_carry"
+},
+"god_skill_cloud": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_clumsy": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_clumsy_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_clumsy"
+},
+"god_skill_edge": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_edge_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_edge"
+},
+"god_skill_fist": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_fist_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_fist"
+},
+"god_skill_gap": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_gap_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_gap"
+},
+"god_skill_guard": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_guard_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_guard"
+},
+"god_skill_parry": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_poise": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_press": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_press_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_press"
+},
+"god_skill_qigong": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_qigong_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_qigong"
+},
+"god_skill_ready": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_see": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_soft": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_soft_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_soft"
+},
+"god_skill_stance": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_stance_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_stance"
+},
+"god_skill_steady": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_stream": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_vigor": {
+"god": "skill",
+"kind": "god"
+},
+"god_skill_zanshin": {
+"god": "skill",
+"kind": "god",
+"qual": true
+},
+"god_skill_zanshin_up": {
+"god": "skill",
+"kind": "god",
+"upgrade_of": "god_skill_zanshin"
+},
 "god_sun_blaze": {
 "god": "sun",
 "kind": "god",
@@ -615,3 +761,4 @@ cards = {
 "kind": "god"
 }
 }
+closed_gods = Array[StringName]([&"skill"])

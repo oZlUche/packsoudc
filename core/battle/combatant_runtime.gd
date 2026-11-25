@@ -672,6 +672,8 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 ## 087（作者反馈：敌人倒下两次、倒下时血没归零）：**倒下是终局**。血一到 0 就记死，之后的治疗（伤药的「濒死回血」）不再把它救回来，
 ## 也不再发第二次 DIED。回放里看到的「倒下时血没归零」就是同一时刻先倒下、再被治回来、面板停在治疗后的数
 var dead: bool = false
+## 396 技巧之神【化刚为巧】：暴击照掷，但不乘暴击伤害（另打一下由 [SkillMomentum] 给）
+var crit_plain: bool = false
 ## 093（蛮神 4 级）：血归零后还能坚持几秒（定点；0 = 没有这条），只用一次；不死期间 undying_until 是到期时刻
 var undying_sec: int = 0
 ## 395：受到的伤害另加百分之几（器官），并进 [method taken_by_type_percent]

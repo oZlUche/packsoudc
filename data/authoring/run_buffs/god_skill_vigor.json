@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_vigor",
+  "display_name": "气血",
+  "display_names": {
+    "en": "Vital Blood"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "per": 0.2
+      }
+    }
+  ]
+}

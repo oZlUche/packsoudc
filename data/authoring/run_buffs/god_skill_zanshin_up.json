@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_zanshin_up",
+  "display_name": "残心（升级）",
+  "display_names": {
+    "en": "Zanshin+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "weapons": 2
+      }
+    }
+  ]
+}

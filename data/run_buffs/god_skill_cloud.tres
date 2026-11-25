@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_lk8y2"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_3sq3d"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_yhgkj"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_bomi4"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_78c6n"]
+
+[sub_resource type="Resource" id="Resource_5tiy4"]
+script = ExtResource("2_3sq3d")
+values = {
+"at": 10,
+"pct": 5
+}
+
+[resource]
+script = ExtResource("5_78c6n")
+id = &"god_skill_cloud"
+display_name = "行云"
+display_names = {
+"en": "Drifting Cloud"
+}
+effects = Array[ExtResource("1_lk8y2")]([SubResource("Resource_5tiy4")])

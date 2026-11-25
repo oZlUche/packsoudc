@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_edge",
+  "display_name": "锋芒",
+  "display_names": {
+    "en": "Keen Edge"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "crit": 0.5
+      }
+    }
+  ]
+}

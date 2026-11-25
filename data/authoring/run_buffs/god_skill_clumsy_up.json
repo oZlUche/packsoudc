@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_clumsy_up",
+  "display_name": "大巧若拙（升级）",
+  "display_names": {
+    "en": "Artless Art+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 100
+      }
+    }
+  ]
+}

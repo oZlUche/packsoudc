@@ -238,6 +238,152 @@
       "when": "brute_sacrifice",
       "oneshot": "sacrifice"
     },
+    "god_skill_gap": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_gap_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_gap"
+    },
+    "god_skill_stance": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_stance_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_stance"
+    },
+    "god_skill_zanshin": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_zanshin_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_zanshin"
+    },
+    "god_skill_press": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_press_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_press"
+    },
+    "god_skill_fist": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_fist_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_fist"
+    },
+    "god_skill_guard": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_guard_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_guard"
+    },
+    "god_skill_qigong": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_qigong_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_qigong"
+    },
+    "god_skill_edge": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_edge_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_edge"
+    },
+    "god_skill_carry": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_carry_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_carry"
+    },
+    "god_skill_clumsy": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_clumsy_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_clumsy"
+    },
+    "god_skill_soft": {
+      "kind": "god",
+      "god": "skill",
+      "qual": true
+    },
+    "god_skill_soft_up": {
+      "kind": "god",
+      "god": "skill",
+      "upgrade_of": "god_skill_soft"
+    },
+    "god_skill_steady": {
+      "kind": "god",
+      "god": "skill"
+    },
+    "god_skill_ready": {
+      "kind": "god",
+      "god": "skill"
+    },
+    "god_skill_stream": {
+      "kind": "god",
+      "god": "skill"
+    },
+    "god_skill_cloud": {
+      "kind": "god",
+      "god": "skill"
+    },
+    "god_skill_parry": {
+      "kind": "god",
+      "god": "skill"
+    },
+    "god_skill_breath": {
+      "kind": "god",
+      "god": "skill"
+    },
+    "god_skill_vigor": {
+      "kind": "god",
+      "god": "skill"
+    },
+    "god_skill_poise": {
+      "kind": "god",
+      "god": "skill"
+    },
+    "god_skill_see": {
+      "kind": "god",
+      "god": "skill"
+    },
     "god_sun_sunbath": {
       "kind": "god",
       "god": "sun",
@@ -630,5 +776,8 @@
       "kind": "god",
       "god": "nature"
     }
-  }
+  },
+  "closed_gods": [
+    "skill"
+  ]
 }

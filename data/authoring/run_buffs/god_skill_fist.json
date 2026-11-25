@@ -1,0 +1,17 @@
+{
+  "id": "god_skill_fist",
+  "display_name": "徒手大师",
+  "display_names": {
+    "en": "Bare-Handed Master"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "damage": 5,
+        "stamina": 1,
+        "sec": 1
+      }
+    }
+  ]
+}

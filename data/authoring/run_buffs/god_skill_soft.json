@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_soft",
+  "display_name": "化刚为巧",
+  "display_names": {
+    "en": "Force into Finesse"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 33
+      }
+    }
+  ]
+}

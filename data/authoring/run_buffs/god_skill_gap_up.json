@@ -1,0 +1,16 @@
+{
+  "id": "god_skill_gap_up",
+  "display_name": "寻隙（升级）",
+  "display_names": {
+    "en": "Find the Gap+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "every": 4,
+        "pct": 50
+      }
+    }
+  ]
+}

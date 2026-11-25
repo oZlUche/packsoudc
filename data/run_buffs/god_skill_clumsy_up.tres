@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_0brcv"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_kk0fj"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_obj44"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ofg46"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_kh6p1"]
+
+[sub_resource type="Resource" id="Resource_8uhv0"]
+script = ExtResource("2_kk0fj")
+values = {
+"pct": 100
+}
+
+[resource]
+script = ExtResource("5_kh6p1")
+id = &"god_skill_clumsy_up"
+display_name = "大巧若拙（升级）"
+display_names = {
+"en": "Artless Art+"
+}
+effects = Array[ExtResource("1_0brcv")]([SubResource("Resource_8uhv0")])

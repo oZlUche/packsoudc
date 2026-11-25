@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_nko0r"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_fix1q"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_d6w56"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_iodg8"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_jy6gf"]
+
+[sub_resource type="Resource" id="Resource_h6p6s"]
+script = ExtResource("2_fix1q")
+values = {
+"pct": 0.5
+}
+
+[resource]
+script = ExtResource("5_jy6gf")
+id = &"god_skill_stream"
+display_name = "流水"
+display_names = {
+"en": "Flowing Water"
+}
+effects = Array[ExtResource("1_nko0r")]([SubResource("Resource_h6p6s")])

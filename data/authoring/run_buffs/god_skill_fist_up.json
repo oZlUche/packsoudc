@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_fist_up",
+  "display_name": "徒手大师（升级）",
+  "display_names": {
+    "en": "Bare-Handed Master+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "hits": 2
+      }
+    }
+  ]
+}

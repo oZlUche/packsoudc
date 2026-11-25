@@ -460,6 +460,12 @@ static func rich(r: RichTextLabel, font_size: int = FONT_SIZE) -> RichTextLabel:
 	return r
 
 
+## 富文本整套字号直接改成 [param font_size]（按字号档放大；不走变体 —— 放不下逐号缩小时用）
+static func rich_size(r: RichTextLabel, font_size: int) -> void:
+	for k in RICH_FONT_SIZES:
+		r.add_theme_font_size_override(k, sz(font_size))
+
+
 ## 一排互斥按钮里「选中的那个」：字是前景色，其余暗色（开局屏的章节 / 角色 / 难度……）
 static func mark(b: Control, on: bool) -> void:
 	b.add_theme_color_override("font_color", UiPalette.FG if on else UiPalette.DIM)
