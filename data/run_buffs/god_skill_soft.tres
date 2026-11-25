@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_knkrp"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_smqae"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_gh3qh"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_w5ihj"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_3dujm"]
+
+[sub_resource type="Resource" id="Resource_ewcn8"]
+script = ExtResource("2_smqae")
+values = {
+"pct": 33
+}
+
+[resource]
+script = ExtResource("5_3dujm")
+id = &"god_skill_soft"
+display_name = "化刚为巧"
+display_names = {
+"en": "Force into Finesse"
+}
+effects = Array[ExtResource("1_knkrp")]([SubResource("Resource_ewcn8")])

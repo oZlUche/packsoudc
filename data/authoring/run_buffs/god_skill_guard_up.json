@@ -1,0 +1,16 @@
+{
+  "id": "god_skill_guard_up",
+  "display_name": "以攻待守（升级）",
+  "display_names": {
+    "en": "Offense as Defense+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "at": 30,
+        "flat": 20
+      }
+    }
+  ]
+}

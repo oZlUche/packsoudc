@@ -82,7 +82,7 @@ func deal(ctx: RuleContext, type: StringName, extra_raw: int, mult: int = StatMa
 	# 104（作者定）：暴击 —— 只有从属性取伤害的那一包掷（固定值伤害不暴击），造包时掷、在管线之前，
 	# 所以护甲 / 减伤 / 格挡 / 加时看到的都是暴击后的原始值。双方对称。一次出手掷一次，打到几个目标都一样
 	var crit := from_stat and roll_crit(ctx)
-	if crit:
+	if crit and not ctx.owner.crit_plain:     # 396【化刚为巧】：暴击不加伤害
 		raw = StatMath.mul(raw, maxi(0, ctx.item_stat(BattleStats.CRIT_DAMAGE, BattleStats.default_base(BattleStats.CRIT_DAMAGE))))
 
 	var landed := false

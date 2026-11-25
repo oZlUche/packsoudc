@@ -1,0 +1,16 @@
+{
+  "id": "god_skill_parry",
+  "display_name": "招架",
+  "display_names": {
+    "en": "Parry"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "every": 10,
+        "armor": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_ax6oe"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_y2i5u"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_6n4ga"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_xkj5v"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_qja76"]
+
+[sub_resource type="Resource" id="Resource_e6pmg"]
+script = ExtResource("2_y2i5u")
+values = {
+"per": 0.2
+}
+
+[resource]
+script = ExtResource("5_qja76")
+id = &"god_skill_breath"
+display_name = "回气"
+display_names = {
+"en": "Recover Breath"
+}
+effects = Array[ExtResource("1_ax6oe")]([SubResource("Resource_e6pmg")])

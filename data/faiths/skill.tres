@@ -50,20 +50,6 @@ multiplier = 5.0
 script = ExtResource("7_vjyer")
 tier = 0
 
-[sub_resource type="Resource" id="Resource_w32tr"]
-script = ExtResource("7_vjyer")
-part = 1
-
-[sub_resource type="Resource" id="Resource_exdft"]
-script = ExtResource("7_vjyer")
-part = 2
-tier = 2
-
-[sub_resource type="Resource" id="Resource_kbb32"]
-script = ExtResource("7_vjyer")
-part = 3
-tier = 3
-
 [resource]
 script = ExtResource("8_padec")
 id = &"skill"
@@ -79,7 +65,11 @@ description = "锻造、战斗技巧和各种手艺，是矮人族和盗贼以�
 descriptions = {
 "en": "Forging, combat technique and every craft. The god of dwarves, thieves and artisans; one of the gods in the Empire's rites."
 }
+core_line = "连击：攻击一次叠 1 层，每层急速 +1%；有一次攻击因为耐力不够没打出来，清零"
+core_lines = {
+"en": "Combo: each attack builds one stack, +1% Haste per stack; an attack that fails for lack of Stamina resets it"
+}
 thresholds = Array[int]([42, 117, 217])
 deeds = Array[ExtResource("2_4pf53")]([SubResource("Resource_oirgc"), SubResource("Resource_diunh"), SubResource("Resource_5wnkl")])
 offerings = Array[ExtResource("5_qj5uc")]([SubResource("Resource_n4w8t"), SubResource("Resource_g4lgm"), SubResource("Resource_841d8"), SubResource("Resource_p7b2c")])
-perks = Array[ExtResource("6_euvoa")]([SubResource("Resource_km7l0"), SubResource("Resource_w32tr"), SubResource("Resource_exdft"), SubResource("Resource_kbb32")])
+perks = Array[ExtResource("6_euvoa")]([SubResource("Resource_km7l0")])

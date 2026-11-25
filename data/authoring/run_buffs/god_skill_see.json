@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_see",
+  "display_name": "识破",
+  "display_names": {
+    "en": "See Through"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "per": 1
+      }
+    }
+  ]
+}

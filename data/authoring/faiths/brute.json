@@ -100,8 +100,8 @@
       ]
     }
   ],
-  "core_line": "怒气：受到伤害按失去的生命值叠层，每一笔各自持续 4 秒，每层伤害 +2%，最多 30 层",
+  "core_line": "怒气：受到伤害按失去的生命值叠层，每一笔各自持续 4 秒，不设上限",
   "core_lines": {
-    "en": "Rage: taking damage builds stacks by the Health you lose; each batch lasts 4 seconds on its own; +2% damage per stack, up to 30"
+    "en": "Rage: taking damage builds stacks by the Health you lose; each batch lasts 4 seconds on its own, with no cap"
   }
 }

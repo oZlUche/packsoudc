@@ -1,0 +1,16 @@
+{
+  "id": "god_skill_edge_up",
+  "display_name": "锋芒（升级）",
+  "display_names": {
+    "en": "Keen Edge+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "crit": 0.7,
+        "crit_damage": 1
+      }
+    }
+  ]
+}

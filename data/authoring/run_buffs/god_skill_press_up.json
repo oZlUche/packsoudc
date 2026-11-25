@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_press_up",
+  "display_name": "破势（升级）",
+  "display_names": {
+    "en": "Break Momentum+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 30
+      }
+    }
+  ]
+}

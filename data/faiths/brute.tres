@@ -99,9 +99,9 @@ description = "自然的概念（石头砸下也是暴力）；北境蛮族信�
 descriptions = {
 "en": "A concept of nature (a falling stone is violence too). Worshipped by the northern barbarians and by most of the Empire's border provinces; one of the Empire's gods, but of low standing."
 }
-core_line = "怒气：受到伤害按失去的生命值叠层，每一笔各自持续 4 秒，每层伤害 +2%，最多 30 层"
+core_line = "怒气：受到伤害按失去的生命值叠层，每一笔各自持续 4 秒，不设上限"
 core_lines = {
-"en": "Rage: taking damage builds stacks by the Health you lose; each batch lasts 4 seconds on its own; +2% damage per stack, up to 30"
+"en": "Rage: taking damage builds stacks by the Health you lose; each batch lasts 4 seconds on its own, with no cap"
 }
 thresholds = Array[int]([42, 117, 217])
 deeds = Array[ExtResource("5_thvtn")]([SubResource("Resource_w6b0e"), SubResource("Resource_umwjh")])

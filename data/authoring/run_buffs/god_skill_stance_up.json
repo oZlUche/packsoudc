@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_stance_up",
+  "display_name": "架势（升级）",
+  "display_names": {
+    "en": "Stance+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 2
+      }
+    }
+  ]
+}

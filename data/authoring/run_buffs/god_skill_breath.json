@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_breath",
+  "display_name": "回气",
+  "display_names": {
+    "en": "Recover Breath"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "per": 0.2
+      }
+    }
+  ]
+}

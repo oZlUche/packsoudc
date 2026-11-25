@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_carry_up",
+  "display_name": "一气呵成（升级）",
+  "display_names": {
+    "en": "In One Breath+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 66
+      }
+    }
+  ]
+}

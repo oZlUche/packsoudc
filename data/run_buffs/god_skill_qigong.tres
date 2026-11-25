@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_2eexl"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_tk84n"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_h5ib2"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_i4jhf"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ewb8m"]
+
+[sub_resource type="Resource" id="Resource_0llic"]
+script = ExtResource("2_tk84n")
+values = {
+"every": 7,
+"stacks": 1
+}
+
+[resource]
+script = ExtResource("5_ewb8m")
+id = &"god_skill_qigong"
+display_name = "气功"
+display_names = {
+"en": "Qigong"
+}
+effects = Array[ExtResource("1_2eexl")]([SubResource("Resource_0llic")])

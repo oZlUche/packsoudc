@@ -65,20 +65,10 @@
     {
       "type": "skill_momentum",
       "tier": 0
-    },
-    {
-      "type": "skill_momentum",
-      "part": 1
-    },
-    {
-      "type": "skill_momentum",
-      "part": 2,
-      "tier": 2
-    },
-    {
-      "type": "skill_momentum",
-      "part": 3,
-      "tier": 3
     }
-  ]
+  ],
+  "core_line": "连击：攻击一次叠 1 层，每层急速 +1%；有一次攻击因为耐力不够没打出来，清零",
+  "core_lines": {
+    "en": "Combo: each attack builds one stack, +1% Haste per stack; an attack that fails for lack of Stamina resets it"
+  }
 }

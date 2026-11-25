@@ -1,0 +1,16 @@
+{
+  "id": "god_skill_cloud",
+  "display_name": "行云",
+  "display_names": {
+    "en": "Drifting Cloud"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "at": 10,
+        "pct": 5
+      }
+    }
+  ]
+}

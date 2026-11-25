@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_cwv63"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_j832e"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_aeu6b"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_iklgd"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_r3pmx"]
+
+[sub_resource type="Resource" id="Resource_rj7xa"]
+script = ExtResource("2_j832e")
+values = {
+"pct": 66
+}
+
+[resource]
+script = ExtResource("5_r3pmx")
+id = &"god_skill_carry_up"
+display_name = "一气呵成（升级）"
+display_names = {
+"en": "In One Breath+"
+}
+effects = Array[ExtResource("1_cwv63")]([SubResource("Resource_rj7xa")])

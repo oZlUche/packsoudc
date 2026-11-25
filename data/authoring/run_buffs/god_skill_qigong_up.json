@@ -1,0 +1,16 @@
+{
+  "id": "god_skill_qigong_up",
+  "display_name": "气功（升级）",
+  "display_names": {
+    "en": "Qigong+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "every": 5,
+        "stacks": 2
+      }
+    }
+  ]
+}

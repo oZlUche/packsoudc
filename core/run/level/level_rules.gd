@@ -64,6 +64,8 @@ const ONESHOT_SACRIFICE := &"sacrifice"
 ## upgrade_of: 这是哪张质变牌的升级版（拿过原牌才进池）、excludes: 互斥的牌（拿过其中一张就不出）、
 ## when: 满足条件才入池（条件由各位神的代码登记，[method LevelModule.register_when]）
 @export var cards: Dictionary = {}
+## 396：牌写好了但还不开放的神（万神院里当「神殿尚未落成」，[method Pantheon.temple_ready]）—— 架构设计 11-25：技巧之神先不开
+@export var closed_gods: Array[StringName] = []
 
 static var _rules: LevelRules = null
 

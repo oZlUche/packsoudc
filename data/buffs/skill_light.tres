@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_j05yl"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_v33o5"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_cm80b"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_xnk8r"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_xi5r8"]
+
+[resource]
+script = ExtResource("5_xi5r8")
+id = &"skill_light"
+display_name = "行云"
+display_names = {
+"en": "Drifting Cloud"
+}

@@ -9,7 +9,7 @@
 [resource]
 script = ExtResource("5_hgaea")
 id = &"skill_momentum"
-display_name = "巧劲"
+display_name = "连击"
 display_names = {
-"en": "Finesse"
+"en": "Combo"
 }

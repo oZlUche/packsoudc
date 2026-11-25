@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_gtutt"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_fbwhv"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_yn10s"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_2le14"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_4putt"]
+
+[sub_resource type="Resource" id="Resource_lrukt"]
+script = ExtResource("2_fbwhv")
+values = {
+"at": 30,
+"flat": 20
+}
+
+[resource]
+script = ExtResource("5_4putt")
+id = &"god_skill_guard_up"
+display_name = "以攻待守（升级）"
+display_names = {
+"en": "Offense as Defense+"
+}
+effects = Array[ExtResource("1_gtutt")]([SubResource("Resource_lrukt")])

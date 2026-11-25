@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_steady",
+  "display_name": "稳手",
+  "display_names": {
+    "en": "Steady Hand"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "keep": 2
+      }
+    }
+  ]
+}

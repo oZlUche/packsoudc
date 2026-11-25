@@ -864,6 +864,8 @@ func _on_battle(_n: MapNode, _r: BattleResult, won: bool) -> void:
 		god_state["sun_shifts"] = int(god_state.get("sun_shifts", 0)) + shifts     # 388 星移斗转：一局里留着
 	if _r != null and god() == &"nature":
 		NatureCyclePerk.settle(self, _r)     # 388 生长 / 丰饶升级
+	if god() == &"skill":
+		SkillMomentumPerk.after_battle(self, _r)     # 396 一气呵成：留几层到下一场
 	if not won or _run == null or _run.events == null:
 		return
 	var last: Dictionary = _run.events.last_battle

@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_ready",
+  "display_name": "预备",
+  "display_names": {
+    "en": "Ready Stance"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 3
+      }
+    }
+  ]
+}

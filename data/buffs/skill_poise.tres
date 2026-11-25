@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/buff_axis.gd" id="1_ja0te"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_8qaf0"]
+[ext_resource type="Script" path="res://core/battle/combat_effect.gd" id="3_c7yrt"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_u7fnx"]
+[ext_resource type="Script" path="res://core/battle/buff_def.gd" id="5_nkdt2"]
+
+[resource]
+script = ExtResource("5_nkdt2")
+id = &"skill_poise"
+display_name = "蓄势"
+display_names = {
+"en": "Gather Force"
+}

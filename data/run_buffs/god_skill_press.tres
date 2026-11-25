@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_40u1i"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_tj5wc"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_532w0"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_4tlo4"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_j2xqy"]
+
+[sub_resource type="Resource" id="Resource_of8kk"]
+script = ExtResource("2_tj5wc")
+values = {
+"pct": 15
+}
+
+[resource]
+script = ExtResource("5_j2xqy")
+id = &"god_skill_press"
+display_name = "破势"
+display_names = {
+"en": "Break Momentum"
+}
+effects = Array[ExtResource("1_40u1i")]([SubResource("Resource_of8kk")])

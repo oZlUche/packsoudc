@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_zanshin",
+  "display_name": "残心",
+  "display_names": {
+    "en": "Zanshin"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "weapons": 1
+      }
+    }
+  ]
+}
