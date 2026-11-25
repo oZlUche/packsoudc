@@ -28,4 +28,6 @@ loadout = SubResource("Resource_wg6ve")
 board = Vector2i(5, 4)
 species = &"beast"
 bagless = true
-loot_bonus = Array[StringName]([&"boar_belly"])
+loot_chance = {
+"boar_belly": 0.5
+}

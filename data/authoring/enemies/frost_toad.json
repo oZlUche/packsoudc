@@ -34,7 +34,7 @@
     "meat_scrap",
     "game_meat"
   ],
-  "loot_bonus": [
-    "toad_leg"
-  ]
+  "loot_chance": {
+    "toad_leg": 0.5
+  }
 }

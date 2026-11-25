@@ -227,6 +227,10 @@ func faith_tag() -> StringName:
 ## 道具带哪种元素只看它施加什么（[method ReactionResolver.elements_of_item]）
 @export var applies: Array[ElementApply] = []
 
+## 395：器官进食给的特性（拿了蛮神【啖肉吮血】才能吃）—— 不加生命上限，改给这几条整局有效的数，每吃一件叠一次、不设上限。
+## 键：damage（造成的伤害 %）/ haste（急速 %）/ taken（受到的伤害 %）/ max_hp（生命上限）/ regen_hp（战斗中每秒回复生命）。空 = 不是器官（吃了加生命上限）
+@export var eat_trait: Dictionary = {}
+
 @export_group("魔兽持有")
 ## 212：**一件道具两套逻辑** —— 魔兽（[member EnemyDef.species] 不是 human）自己持有这件时用它代替 [member combat]；
 ## 那时 [member adjacency]、[member applies]、[member faith_bonuses] 都不生效（魔兽没有邻接、没有信仰）。

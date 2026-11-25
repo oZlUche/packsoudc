@@ -96,6 +96,11 @@ func _refresh() -> void:
 		_run.refresh_encumbrance()     # 负重上限跟着变
 
 
+## 395：这顿饭里器官的特性合计 {键: 数} —— 整局有效，不随饱腹失效（[OrganTraits]）
+func traits() -> Dictionary:
+	return (meal.get("traits", {}) as Dictionary) if has_meal() and meal.get("traits", {}) is Dictionary else {}
+
+
 func _flat(stat: StringName) -> float:
 	return float((meal.get("flat", {}) as Dictionary).get(String(stat), 0.0))
 

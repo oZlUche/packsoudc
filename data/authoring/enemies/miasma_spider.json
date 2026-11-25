@@ -35,7 +35,7 @@
   ],
   "species": "beast",
   "bagless": true,
-  "loot_bonus": [
-    "spider_leg_meat"
-  ]
+  "loot_chance": {
+    "spider_leg_meat": 0.5
+  }
 }

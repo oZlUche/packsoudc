@@ -159,8 +159,12 @@ descriptions = {
 }
 shape = SubResource("Resource_q322v")
 rarity = 2
-tags = Array[StringName]([&"material", &"reagent", &"nature", &"fire", &"beast_part"])
+tags = Array[StringName]([&"material", &"ingredient", &"reagent", &"nature", &"fire", &"beast_part", &"blood_flesh"])
 material = "flesh"
 adjacency = SubResource("Resource_828i7")
+eat_trait = {
+"fire_hit": 3,
+"regen_stamina": -5
+}
 wild = SubResource("Resource_oqjy3")
 wild_applies = Array[ExtResource("14_nugoo")]([SubResource("Resource_wqvqb")])

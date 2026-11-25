@@ -14,10 +14,12 @@
   "rarity": 2,
   "tags": [
     "material",
+    "ingredient",
     "reagent",
     "nature",
     "ice",
-    "beast_part"
+    "beast_part",
+    "blood_flesh"
   ],
   "material": "flesh",
   "adjacency": {
@@ -73,5 +75,9 @@
     {
       "buff": "chill"
     }
-  ]
+  ],
+  "eat_trait": {
+    "taken": -6,
+    "haste": -3
+  }
 }

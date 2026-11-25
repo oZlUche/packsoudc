@@ -681,6 +681,7 @@ func compile_player() -> CombatantSpec:
 			input.shift_axis(axis, int(bonus[axis]))
 		for p in altar.perks():
 			(p as FaithPerk).compile_into(input, board, self)
+	OrganTraits.apply(input, self)     # 395：吃下的器官（蛮神直接吃的 + 那顿饭里的）
 	input.faith = FaithTags.tag_of(active_faith_id())     # 信仰重构 A：有效信仰显式进编译输入
 	var spec := BattleCompiler.compile(board, input)
 	spec.passives = BattlePassives.of(self)     # 103：常驻加成也进 buff 栏
@@ -762,6 +763,9 @@ func active_faith_tier() -> int:
 func god_stat_bonus() -> Dictionary:
 	var lv := LevelModule.of(self)
 	var out := BruteRagePerk.flesh_bonus(lv).duplicate()
+	var organs := OrganTraits.stat_bonus(self)     # 395：器官的生命上限、每秒回复
+	for k in organs:
+		out[k] = float(out.get(k, 0.0)) + float(organs[k])
 	var grown := NatureCyclePerk.run_bonus(lv)
 	for k in grown:
 		out[k] = float(out.get(k, 0.0)) + float(grown[k])

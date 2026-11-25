@@ -285,7 +285,9 @@ func board_actions(uid: int) -> Array:
 	if inst.def.is_anchor():
 		out.append(ItemActions.anchor(inst, _run.board, select_faith, _run.faith_switch_refusal()))
 	if BruteRagePerk.can_eat(_run, inst):
-		out.append(ItemActions.make(&"eat", UiText.t("act.eat"), func(): eat(inst)))     # 388 啖肉吮血：没拿这张牌就没有这一项
+		var eat_act := ItemActions.make(&"eat", UiText.t("act.eat"), func(): eat(inst))     # 388 啖肉吮血：没拿这张牌就没有这一项
+		eat_act.reason = BruteRagePerk.eat_tip(_run, inst.def)     # 395：悬浮提示写吃了给什么（器官好处在前）
+		out.append(eat_act)
 	if can_bench(inst):
 		out.append(ItemActions.bench(inst, _run.board))     # 2026-10-22：不参战（战前整备用）
 	if extra_actions.is_valid():
@@ -305,7 +307,9 @@ func eat(inst: ItemInstance) -> bool:
 	if got.is_empty():
 		return false
 	var hp := TextTemplate.num(float(got["hp"]))
-	if float(got["stamina"]) > 0.0:
+	if got.has("trait"):
+		_hint_text(UiText.t("bag.ate_organ") % [Names.of(inst.def), OrganTraits.line(got["trait"])])
+	elif float(got["stamina"]) > 0.0:
 		_hint_text(UiText.t("bag.ate_stamina") % [Names.of(inst.def), hp, TextTemplate.num(float(got["stamina"]))])
 	else:
 		_hint_text(UiText.t("bag.ate") % [Names.of(inst.def), hp])

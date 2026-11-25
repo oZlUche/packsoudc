@@ -786,6 +786,8 @@ static func set_name_of(id: StringName) -> String:
 ## 148：耐久那一行（「耐久 2 / 3：每供给一场少一次，用完就碎」；碎了写不再供给）。208：写了换成什么就说「用完碎成碎晶」
 ## 355：「下锅：耐力上限 +5% · 饱腹 +5」
 static func canteen_line(def: ItemDef) -> String:
+	if OrganTraits.is_organ(def) and Canteen.is_ingredient(def):     # 395：器官下锅给特性（好处在前）
+		return UiText.t("canteen.tip_line") % OrganTraits.line(def.eat_trait)
 	var e := Canteen.entry_of(def)
 	if e.is_empty():
 		return ""

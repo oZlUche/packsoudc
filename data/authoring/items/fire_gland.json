@@ -14,10 +14,12 @@
   "rarity": 2,
   "tags": [
     "material",
+    "ingredient",
     "reagent",
     "nature",
     "fire",
-    "beast_part"
+    "beast_part",
+    "blood_flesh"
   ],
   "material": "flesh",
   "adjacency": {
@@ -74,5 +76,9 @@
     {
       "buff": "scorch"
     }
-  ]
+  ],
+  "eat_trait": {
+    "fire_hit": 3,
+    "regen_stamina": -5
+  }
 }

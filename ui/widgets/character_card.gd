@@ -117,6 +117,10 @@ static func stat_row(run: RunState, key: StringName) -> Dictionary:
 	if not is_zero_approx(pct):
 		sum += " [color=#%s]%s[/color]" % [BOOST_COLOR.to_html(false), _with_sign(_pct(pct))]
 	lines.append(sum)
+	if key == BattleStats.MAX_HP:     # 395：吃下的器官特性合计，和吃肉加的生命上限放一处
+		var organs := OrganTraits.lines(OrganTraits.totals(run))
+		if not organs.is_empty():
+			lines.append(UiText.t("card.organs") % UiText.t("trait.sep").join(organs))
 	return {"key": key, "label": label, "value": _fmt(key, value, false), "raw": value, "base": base, "flat": flat, "pct": pct,
 		"boosted": boosted, "tip": "\n".join(lines)}
 

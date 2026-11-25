@@ -24,3 +24,7 @@ shape = SubResource("Resource_07a8g")
 rarity = 1
 tags = Array[StringName]([&"material", &"ingredient", &"nature", &"beast_part", &"blood_flesh"])
 material = "flesh"
+eat_trait = {
+"haste": 8,
+"max_hp": -20
+}

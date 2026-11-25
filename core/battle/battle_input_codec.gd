@@ -29,6 +29,10 @@ static func encode(spec: CombatantSpec, rules: Array[AbilityRule], index: Dictio
 	if spec.meal_regen_hp != 0.0 or spec.meal_regen_hp_pct != 0.0:     # 355：没吃饭的局字节不变
 		out["meal_regen_hp"] = spec.meal_regen_hp
 		out["meal_regen_hp_pct"] = spec.meal_regen_hp_pct
+	if spec.taken_pct != 0.0:     # 395：没吃器官的局字节不变
+		out["taken_pct"] = spec.taken_pct
+	if spec.heal_pct != 0.0:
+		out["heal_pct"] = spec.heal_pct
 	return out
 
 
@@ -39,6 +43,8 @@ static func decode(d: Dictionary, rules: Array[AbilityRule]) -> CombatantSpec:
 	spec.undying_sec = float(d.get("undying_sec", 0.0))
 	spec.meal_regen_hp = float(d.get("meal_regen_hp", 0.0))     # 355
 	spec.meal_regen_hp_pct = float(d.get("meal_regen_hp_pct", 0.0))
+	spec.taken_pct = float(d.get("taken_pct", 0.0))     # 395
+	spec.heal_pct = float(d.get("heal_pct", 0.0))
 	for b in d.get("immune_buffs", []):
 		spec.immune_buffs.append(StringName(b))
 	spec.only_damage_type = StringName(d.get("only_damage_type", &""))

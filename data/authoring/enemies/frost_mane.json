@@ -36,7 +36,7 @@
   ],
   "species": "beast",
   "bagless": true,
-  "loot_bonus": [
-    "mane_loin"
-  ]
+  "loot_chance": {
+    "mane_loin": 0.5
+  }
 }

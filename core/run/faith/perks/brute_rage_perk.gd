@@ -43,6 +43,8 @@ const EAT_UP := &"god_brute_eat_up"
 ## 【血肉】：能进食的那类（标签）；吃下去攒的生命上限记在 [member LevelModule.god_state] 这一格
 const FLESH_TAG := &"blood_flesh"
 const FLESH_KEY := "brute_flesh_hp"
+## 395：吃下的器官 {道具 id: 几件}；特性按道具现在的 [member ItemDef.eat_trait] × 件数算（改表连旧档一起变）
+const ORGANS_KEY := "brute_organs"
 
 
 func compile_into(input: CompileInput, _board: GridInventory, run: RunState) -> void:
@@ -90,11 +92,38 @@ static func flesh_bonus(lv: LevelModule) -> Dictionary:
 	return out
 
 
-## 进食：从背包拿走这件、记下生命上限。返回 {hp, stamina}（吃不了 = 空）
+## 395：器官（带特性的【血肉】）
+static func is_organ(def: ItemDef) -> bool:
+	return OrganTraits.is_organ(def)
+
+
+## 395：蛮神直接吃下的器官合计 {特性键: 数}（没拿啖肉吮血 = 空；食堂那顿饭的在 [OrganTraits]）
+static func organ_totals(run: RunState) -> Dictionary:
+	var lv := LevelModule.of(run)
+	if lv == null or run.items == null or not lv.has_card(EAT):
+		return {}
+	var eaten: Variant = lv.god_state.get(ORGANS_KEY, {})
+	return OrganTraits.sum_of(eaten as Dictionary, run.items) if eaten is Dictionary else {}
+
+
+## 进食键的提示：肉写加多少生命上限，器官写特性（好处在前）
+static func eat_tip(run: RunState, def: ItemDef) -> String:
+	if is_organ(def):
+		return OrganTraits.line(def.eat_trait)
+	return UiText.t("bag.eat_tip") % TextTemplate.num(flesh_gain(LevelModule.of(run), def))
+
+
+## 进食：从背包拿走这件、记下生命上限（器官记一件，给特性）。返回 {hp, stamina}，器官另有 {trait}（吃不了 = 空）
 static func eat(run: RunState, inst: ItemInstance) -> Dictionary:
 	if not can_eat(run, inst) or run.board == null or run.board.get_item(inst.uid) == null:
 		return {}
 	var lv := LevelModule.of(run)
+	if is_organ(inst.def):
+		run.board.remove(inst.uid)
+		var eaten: Dictionary = (lv.god_state.get(ORGANS_KEY, {}) as Dictionary).duplicate() if lv.god_state.get(ORGANS_KEY, {}) is Dictionary else {}
+		eaten[String(inst.def.id)] = int(eaten.get(String(inst.def.id), 0)) + 1
+		lv.god_state[ORGANS_KEY] = eaten
+		return {"hp": 0.0, "stamina": 0.0, "trait": inst.def.eat_trait.duplicate()}
 	var before := flesh_bonus(lv)
 	var gain := flesh_gain(lv, inst.def)
 	run.board.remove(inst.uid)
