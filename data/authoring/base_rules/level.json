@@ -42,6 +42,14 @@
       "kind": "weapon",
       "requires": "weapon"
     },
+    "card_crit_chance": {
+      "kind": "stat",
+      "requires": "weapon"
+    },
+    "card_crit_damage": {
+      "kind": "stat",
+      "requires": "weapon"
+    },
     "card_element_echo": {
       "kind": "weapon",
       "requires": "element",

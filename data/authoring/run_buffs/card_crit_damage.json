@@ -1,0 +1,21 @@
+{
+  "id": "card_crit_damage",
+  "display_name": "狠辣",
+  "display_names": {
+    "en": "Ruthless"
+  },
+  "effects": [
+    {
+      "type": "tag_mods",
+      "tags": [
+        "weapon"
+      ],
+      "mods": [
+        {
+          "stat": "crit_damage",
+          "amount": 10.0
+        }
+      ]
+    }
+  ]
+}

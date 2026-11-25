@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_7rex0"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_flqnh"]
+[ext_resource type="Script" path="res://core/run/effects/tag_mods.gd" id="3_c3ojg"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_gkfo4"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_qwmup"]
+
+[sub_resource type="Resource" id="Resource_o7o2f"]
+script = ExtResource("2_flqnh")
+stat = &"crit_damage"
+amount = 0.1
+
+[sub_resource type="Resource" id="Resource_rconl"]
+script = ExtResource("3_c3ojg")
+tags = Array[StringName]([&"weapon"])
+mods = Array[ExtResource("2_flqnh")]([SubResource("Resource_o7o2f")])
+
+[resource]
+script = ExtResource("5_qwmup")
+id = &"card_crit_damage"
+display_name = "狠辣"
+display_names = {
+"en": "Ruthless"
+}
+effects = Array[ExtResource("1_7rex0")]([SubResource("Resource_rconl")])
