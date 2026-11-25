@@ -229,12 +229,12 @@ static func run_credit(t: TestCase) -> void:
 	t.eq(Commissions.why_not(m.commissions, d), Commissions.WHY_DONE, "具名单做完不能再接")
 	var tpl := _def(&"t_tpl", &"society", CommissionDef.TEMPLATE)
 	tpl.reputation = 4
-	m.commissions.rep["society"] = 40     # 342 B2：上限是信赖（50）
+	m.commissions.rep["society"] = 40     # 391：模板不再封顶在 50
 	for i in 4:
 		t.check(Commissions.take(m.commissions, tpl), "模板第 %d 次能接" % (i + 1))
 		Commissions.credit(m, tpl, 0, "k%d" % i)
 		Commissions.claim(m, tpl)
-	t.eq(m.commissions.rep_of(&"society"), Commissions.TEMPLATE_CAP, "模板做四次，声望停在上限")
+	t.eq(m.commissions.rep_of(&"society"), 56, "模板做四次，声望 40 + 16，过了 50 照涨")
 	t.eq(int(m.commissions.entry(&"t_tpl")["times"]), 4, "完成次数照记")
 	var fin := _def(&"t_fin", &"greylamp", CommissionDef.FINALE)
 	fin.min_rep = 0
