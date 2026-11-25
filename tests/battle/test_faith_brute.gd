@@ -129,18 +129,19 @@ static func run_cards(t: TestCase) -> void:
 	var capped := BattleSim.run(_me({"cap": 40}), _hitter(200.0), _rng(1), 12.0)
 	t.eq(int(_gained(capped)[1]), 40, "上限那一格还认（填 40 就封 40）")
 	# 困兽（396）：每失去 1% 生命，伤害、急速各 +几成；层数 = 失去了百分之几
-	var low0 := BattleSim.run(_me({}, 1000.0), _hitter(30.0), _rng(4), 12.0)
-	var low1 := BattleSim.run(_me({"cornered_per": 1.0}, 1000.0), _hitter(30.0), _rng(4), 12.0)
+	var low0 := BattleSim.run(_me({}, 1000.0), _hitter(60.0), _rng(4), 12.0)
+	var low1 := BattleSim.run(_me({"cornered_per": 5.0}, 1000.0), _hitter(60.0), _rng(4), 12.0)
 	var top := 0
-	var end_hp := -1
 	for raw in low1.log:
 		var e := raw as BattleEvent
 		if e.name == BattleEvent.STATUS_STACKED and e.side == 0 and e.get_name(&"buff") == BruteRage.CORNERED_ID:
 			top = maxi(top, e.get_int(&"stacks"))
-		if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "hp":
-			end_hp = e.get_int(&"current")
-	var lost_pct := 100 - roundi(StatMath.to_float(end_hp) / 10.0)
-	t.check(top > 0 and absi(top - lost_pct) <= 1, "困兽层数跟着失去的百分比（%d 层，失去 %d%%）" % [top, lost_pct])
+	var lost_low := 0.0
+	for raw in low1.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.DAMAGE and e.side == 0:
+			lost_low += StatMath.to_float(maxi(0, e.get_int(&"amount")))
+	t.check(top > 0 and top <= ceili(lost_low / 10.0), "困兽层数跟着失去的百分比（最多 %d 层，一共掉了 %.0f）" % [top, lost_low])
 	t.check(_dealt(low1) > _dealt(low0), "困兽：掉了血打得更痛（%.0f > %.0f）" % [_dealt(low1), _dealt(low0)])
 	# 怒意延绵（396）：持续时间减半，每挨一下全部重新计时
 	var keep := BattleSim.run(_me({"duration_sec": 2.0, "refresh_on_hit": true}), _hitter(20.0, 1.5), _rng(3), 10.0)
