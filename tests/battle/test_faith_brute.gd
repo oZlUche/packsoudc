@@ -90,11 +90,11 @@ static func _dealt(res: BattleResult) -> float:
 
 
 static func run_core(t: TestCase) -> void:
-	t.begin("388 · 怒气核心：每失去 1% 最大生命一层、不封顶（396）；每一笔各自 4 秒后散掉；怒气本身不加伤害（396）；不再用掉；木桩不打人就没有")
+	t.begin("388 · 怒气核心：每失去 2 点生命一层（作者 11-26：按点数）、不封顶（396）；每一笔各自 4 秒后散掉；怒气本身不加伤害（396）；不再用掉；木桩不打人就没有")
 	var r := BattleSim.run(_me(), _hitter(30.0), _rng(1), 12.0)
 	var g := _gained(r)
 	t.check(int(g[0]) > 0, "挨打积了怒气（%d 层）" % int(g[0]))
-	t.check(int(g[0]) <= floori(_lost(r) / 10.0), "积的层数不超过掉的血 / 1%%（%d ≤ %d）" % [int(g[0]), floori(_lost(r) / 10.0)])
+	t.check(int(g[0]) <= floori(_lost(r) / 2.0) and int(g[0]) >= floori(_lost(r) / 2.0) - 1, "层数 = 掉的血 / 2 点（%d ≈ %d）" % [int(g[0]), floori(_lost(r) / 2.0)])
 	t.check(not _mech(r, "brute_strike").is_empty(), "积怒气写进战记（经验值按它给）")
 	var big := BattleSim.run(_me(), _hitter(200.0), _rng(1), 12.0)
 	t.check(int(_gained(big)[1]) > 30, "挨得重：不封顶（最多 %d 层）" % int(_gained(big)[1]))
@@ -167,10 +167,17 @@ static func run_cards(t: TestCase) -> void:
 		var e := raw as BattleEvent
 		if e.name == BattleEvent.DAMAGE and e.side == 0:
 			lost_all += StatMath.to_float(maxi(0, e.get_int(&"amount")))
-	t.check(int(_gained(pain)[0]) >= floori(lost_all / 10.0) - 1, "慢慢扣的那份也积怒气（%d 层，掉了 %.0f）" % [int(_gained(pain)[0]), lost_all])
-	# 396：灼伤这类持续伤害不再积怒气（拿了痛觉残留也不积）
-	var dot := BattleSim.run(_me({"defer_percent": 50, "cap": 0}), _hitter(0.0, 1.0, &"poison"), _rng(5), 8.0)
-	t.eq(int(_gained(dot)[0]), 0, "只挨中毒跳伤害：没有怒气")
+	t.check(int(_gained(pain)[0]) >= floori(lost_all / 2.0) - 1, "慢慢扣的那份也积怒气（%d 层，掉了 %.0f）" % [int(_gained(pain)[0]), lost_all])
+	# 作者 11-26 00:18：中毒、灼伤这类持续伤害照常积怒气（不用拿牌）；痛觉残留只挪直接伤害，跳伤害不经过它
+	var dot := BattleSim.run(_me({"defer_percent": 50}), _hitter(1.0, 1.0, &"poison"), _rng(5), 8.0)
+	var plain := BattleSim.run(_me({"defer_percent": 50}), _hitter(1.0, 1.0), _rng(5), 8.0)
+	var dot_deferred := 0
+	for raw in dot.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.DAMAGE and e.side == 0 and String(e.payload.get("type", "")) == "poison":
+			dot_deferred += e.get_int(&"deferred")
+	t.check(int(_gained(dot)[0]) > int(_gained(plain)[0]), "带中毒的比不带的积得多：中毒跳的伤害也积怒气（%d > %d）" % [int(_gained(dot)[0]), int(_gained(plain)[0])])
+	t.eq(dot_deferred, 0, "痛觉残留不挪中毒跳的伤害")
 	# 以血还血：每 5 层（测试放低）一把武器立即出手
 	var blood := BattleSim.run(_me({"strike_every": 5}), _hitter(30.0), _rng(6), 10.0)
 	var free := 0

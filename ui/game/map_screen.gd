@@ -1491,7 +1491,7 @@ func show_level_pick() -> bool:
 	return true
 
 
-## 377（作者 11-22：序章三删了，升级靠第一次弹牌时的讲解教）：三张挑一张、重选、剔牌各指一下；看完记进 coach_seen
+## 377（作者 11-22：序章三删了，升级靠第一次弹牌时的讲解教）：三张挑一张、重选、禁用各指一下；看完记进 coach_seen
 const LEVEL_COACH := &"level_pick"
 
 

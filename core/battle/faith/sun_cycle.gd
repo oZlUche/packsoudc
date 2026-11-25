@@ -360,12 +360,10 @@ func _sync(ctx: RuleContext, st: Dictionary, s: Vector2i) -> void:
 	if _eternal_def != null and (eternal_day > 0.0 or eternal_night > 0.0):
 		var foe := ctx.opponent()
 		if eternal_day > 0.0:
-			for m in _eternal_def.mods:
-				(m as StatModifier).amount = eternal_day
+			BattleStats.set_all_stats(_eternal_def.mods, eternal_day)
 			_hold(ctx, me, _eternal_def, s.x == 1)
 		elif foe != null:
-			for m in _eternal_def.mods:
-				(m as StatModifier).amount = -eternal_night
+			BattleStats.set_all_stats(_eternal_def.mods, -eternal_night)
 			_hold(ctx, foe, _eternal_def, s.y == 1)
 	me.mark_dirty()
 
