@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_l5ol1"]
 script = ExtResource("2_ecq7k")
 values = {
-"per_cell": 15,
+"per_cell": 8,
 "stamina": 50
 }
 

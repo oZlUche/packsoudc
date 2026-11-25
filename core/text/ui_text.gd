@@ -1276,7 +1276,7 @@ const TEXT := {
 	"gcard.god_brute_hate_up": {"zh": "被施加负面效果时，以及负面效果触发时，立刻获得 {stacks} 层不计入上限的怒气", "en": "When a negative effect is applied to you or triggers, gain {stacks} Rage that ignores the cap"},
 	"gcard.god_brute_armor": {"zh": "受到伤害后，记录 {window} 秒内受到的所有伤害，时间结束后获得等于 {pct}% 的护甲，有 {cd} 秒冷却", "en": "After taking damage, record all damage taken for {window} seconds, then gain Armor equal to {pct}% of it; {cd} second cooldown"},
 	"gcard.god_brute_armor_up": {"zh": "现在还会记录造成的伤害；此技能获得的护甲被打穿后，恢复其 {heal}% 的生命值", "en": "Damage you deal is recorded too; when this Armor is broken, restore Health equal to {heal}% of it"},
-	"gcard.god_brute_eat": {"zh": "可以进食【血肉】，按稀有度和格子获得持续整局的额外生命上限（每格 {per_cell} × (稀有度 + 1)）", "en": "You can eat Raw Flesh for extra Max Health for the rest of the run, by rarity and size ({per_cell} per cell × (rarity + 1))"},
+	"gcard.god_brute_eat": {"zh": "吞噬【血肉】获得整局增益", "en": "Devour Raw Flesh for run-long boons"},     # 395 第六节（作者 11-25 19:02）
 	"gcard.god_brute_eat_up": {"zh": "可以进食【血肉】，按稀有度和格子获得持续整局的额外生命上限（每格 {per_cell} × (稀有度 + 1)），以及一半的耐力上限", "en": "You can eat Raw Flesh for extra Max Health for the rest of the run ({per_cell} per cell × (rarity + 1)), and half as much Max Stamina"},
 	"gcard.god_brute_duration": {"zh": "怒气持续时间 +{sec} 秒", "en": "Rage lasts {sec} second longer"},
 	"gcard.god_brute_cap": {"zh": "怒气上限 +{stacks} 层", "en": "Rage cap +{stacks}"},
@@ -2139,10 +2139,9 @@ const TEXT := {
 	"trait.max_hp": {"zh": "生命上限 %s", "en": "Max Health %s"},
 	"trait.regen_hp": {"zh": "战斗中每秒回复生命 %s", "en": "Health regen in battle %s/s"},
 	"trait.taken": {"zh": "受到的伤害 %s%%", "en": "Damage taken %s%%"},
-	"trait.regen_stamina": {"zh": "耐力回复 %s%%", "en": "Stamina regen %s%%"},
-	"trait.fire_hit": {"zh": "每次攻击额外火焰伤害 %s", "en": "Extra fire damage per attack %s"},
-	"trait.poison_chance": {"zh": "每次攻击施加 1 层中毒的几率 %s%%", "en": "Chance per attack to apply 1 Poison %s%%"},
-	"trait.heal": {"zh": "受到的治疗 %s%%", "en": "Healing received %s%%"},
+	"trait.scorch": {"zh": "每次攻击，敌我各加 %s 层灼伤", "en": "Each attack: %s Scorch on both sides"},
+	"trait.chill": {"zh": "每次攻击，敌我各加 %s 层寒冷", "en": "Each attack: %s Chill on both sides"},
+	"trait.poison": {"zh": "每次攻击，敌我各加 %s 层中毒", "en": "Each attack: %s Poison on both sides"},
 	"canteen.traits": {"zh": "整局：%s", "en": "All run: %s"},     # 395
 	"card.organs": {"zh": "器官的特性：%s", "en": "Organ traits: %s"},
 	"act.to_pack": {"zh": "放进背包", "en": "Into pack"},

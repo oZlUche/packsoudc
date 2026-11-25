@@ -337,21 +337,21 @@ static func run_brute_cards(t: TestCase) -> void:
 	lv.taken["god_brute_eat"] = 1
 	t.check(BruteRagePerk.can_eat(run, flesh), "拿了：能吃")
 	var ate := BruteRagePerk.eat(run, flesh)
-	t.check(is_equal_approx(float(ate.get("hp", 0.0)), 60.0), "鳗段（稀有度 1、2 格）：15 × 2 × 2 = 60（%s）" % str(ate))
+	t.check(is_equal_approx(float(ate.get("hp", 0.0)), 32.0), "鳗段（稀有度 1、2 格）：8 × 2 × 2 = 32（%s）" % str(ate))
 	t.eq(run.board.get_item(flesh.uid), null, "吃掉了：背包里没了")
-	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_hp", 0.0)), hp0 + 60.0), "生命上限 +60")
+	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_hp", 0.0)), hp0 + 32.0), "生命上限 +32")
 	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0)), st0), "没升级：耐力上限不变")
 	var row := CharacterCard.stat_row(run, &"max_hp")
 	t.check(is_equal_approx(float(row.get("raw", 0.0)), float(run.effective_baseline().base_stats.get(&"max_hp", 0.0))), "状态界面的生命上限也算上血肉（%s）" % str(row.get("raw", 0.0)))
 	lv.taken["god_brute_eat_up"] = 1
-	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0)), st0 + 30.0), "升级：以前吃的补一半耐力上限 +30")
+	t.check(is_equal_approx(float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0)), st0 + 16.0), "升级：以前吃的补一半耐力上限 +16")
 	var scrap := ItemInstance.create(run.items.get_def(&"toad_leg"))
 	run.board.try_add(scrap)
 	var ate2 := BruteRagePerk.eat(run, scrap)
-	t.check(is_equal_approx(float(ate2.get("hp", 0.0)), 15.0) and is_equal_approx(float(ate2.get("stamina", 0.0)), 7.5), "蟾腿：生命 +15、耐力 +7.5")
+	t.check(is_equal_approx(float(ate2.get("hp", 0.0)), 8.0) and is_equal_approx(float(ate2.get("stamina", 0.0)), 4.0), "蟾腿：生命 +8、耐力 +4")
 	var back := LevelModule.new()
 	back.restore(lv.to_dict())
-	t.check(is_equal_approx(float(back.god_state.get(BruteRagePerk.FLESH_KEY, 0.0)), 75.0), "吃下的进存档")
+	t.check(is_equal_approx(float(back.god_state.get(BruteRagePerk.FLESH_KEY, 0.0)), 40.0), "吃下的进存档")
 	run.dispose()
 
 

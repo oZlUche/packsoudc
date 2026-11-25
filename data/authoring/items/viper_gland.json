@@ -68,7 +68,6 @@
     }
   ],
   "eat_trait": {
-    "poison_chance": 15,
-    "heal": -10
+    "poison": 1
   }
 }

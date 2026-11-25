@@ -122,8 +122,7 @@ tags = Array[StringName]([&"material", &"ingredient", &"reagent", &"nature", &"i
 material = "flesh"
 adjacency = SubResource("Resource_x7y3w")
 eat_trait = {
-"haste": -3,
-"taken": -6
+"chill": 1
 }
 wild = SubResource("Resource_vrx6w")
 wild_applies = Array[ExtResource("11_crhme")]([SubResource("Resource_chnkh")])

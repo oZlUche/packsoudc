@@ -37,8 +37,6 @@ var axes: Dictionary = {}
 var undying_sec: float = 0.0
 ## 395：受到的伤害另加百分之几（器官的特性）
 var taken_pct: float = 0.0
-## 395：受到的治疗另加百分之几（器官的特性）
-var heal_pct: float = 0.0
 
 ## 212：魔兽的棋盘 —— 道具用 [member ItemDef.wild] 那一面，不跑信仰、邻接、`applies`，跑 `wild_applies`
 var wild: bool = false

@@ -10,8 +10,6 @@ var max_hp: int = 0                  ## 定点
 var undying_sec: float = 0.0
 ## 395：受到的伤害另加百分之几（器官狼心的坏处），在易伤之后和按类型的易伤一起算
 var taken_pct: float = 0.0
-## 395：受到的治疗另加百分之几（负 = 少回；蝰蛇毒腺的坏处），每秒回复也按它
-var heal_pct: float = 0.0
 ## 210：免疫的状态 id —— [method CombatantRuntime.apply_buff] 直接不叠（机关不流血不中毒）
 var immune_buffs: Array[StringName] = []
 ## 281：只受这一种伤害（[DamageResolver] 第 3 步之后判）；空 = 不限

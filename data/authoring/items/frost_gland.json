@@ -77,7 +77,6 @@
     }
   ],
   "eat_trait": {
-    "taken": -6,
-    "haste": -3
+    "chill": 1
   }
 }

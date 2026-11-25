@@ -6,10 +6,12 @@ class_name OrganTraits
 extends RefCounted
 
 ## 特性的键（显示顺序）
-const KEYS: Array[StringName] = [&"damage", &"haste", &"max_hp", &"regen_hp", &"regen_stamina", &"fire_hit", &"poison_chance", &"heal", &"taken"]
+const KEYS: Array[StringName] = [&"damage", &"haste", &"max_hp", &"regen_hp", &"scorch", &"chill", &"poison", &"taken"]
+## 395 第六节（作者 11-25 19:02「三种腺体改成每次攻击对自己和敌人额外附加一层对应元素」）：这几个键是元素印的状态 id，
+## 数 = 己方武器每出手一次给敌我各叠几层
+const MARKS: Array[StringName] = [&"scorch", &"chill", &"poison"]
 ## 1 = 越大越好，-1 = 越小越好（受到的伤害）
-const GOOD := {&"damage": 1, &"haste": 1, &"max_hp": 1, &"regen_hp": 1, &"regen_stamina": 1, &"fire_hit": 1, &"poison_chance": 1, &"heal": 1, &"taken": -1}
-const POISON := &"poison"
+const GOOD := {&"damage": 1, &"haste": 1, &"max_hp": 1, &"regen_hp": 1, &"scorch": 1, &"chill": 1, &"poison": 1, &"taken": -1}
 
 
 static func is_organ(def: ItemDef) -> bool:
@@ -57,8 +59,8 @@ static func stat_bonus(run: RunState) -> Dictionary:
 	return out
 
 
-## 开战编进玩家这一方：造成的伤害、急速整单位乘算；耐力回复基线乘算；受到的伤害、受到的治疗进单位；
-## 每次攻击（己方武器出手）的火焰伤害、施加中毒的几率挂一条单位规则
+## 开战编进玩家这一方：造成的伤害、急速整单位乘算；受到的伤害进单位；
+## 腺体的元素印挂一条单位规则（己方武器每出手一次，敌我各叠几层）
 static func apply(input: CompileInput, run: RunState) -> void:
 	apply_values(input, totals(run))
 
@@ -70,39 +72,27 @@ static func apply_values(input: CompileInput, t: Dictionary) -> void:
 		input.mods.append(StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, float(t[&"damage"])))
 	if float(t.get(&"haste", 0.0)) != 0.0:
 		input.mods.append(StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, float(t[&"haste"])))
-	if float(t.get(&"regen_stamina", 0.0)) != 0.0:
-		input.baseline_mods.append(StatModifier.make(BattleStats.REGEN_STAMINA, StatModifier.Mode.MULT, float(t[&"regen_stamina"])))
 	input.taken_pct += float(t.get(&"taken", 0.0))
-	input.heal_pct += float(t.get(&"heal", 0.0))
-	var fire := float(t.get(&"fire_hit", 0.0))
-	if fire > 0.0:
-		var dmg := DealDamage.new()
-		dmg.damage_type = DamageTypes.FIRE
-		dmg.damage_stat = &""
-		dmg.amount = fire
-		input.rules.append(_on_attack([dmg] as Array[CombatEffect], 100))
-	var chance := roundi(float(t.get(&"poison_chance", 0.0)))
-	var poison: BuffDef = ContentLibrary.buffs().get(POISON, null)
-	if chance > 0 and poison != null:
+	for id in MARKS:
+		var n := roundi(float(t.get(id, 0.0)))
+		var mark: BuffDef = ContentLibrary.buffs().get(id, null)
+		if n <= 0 or mark == null:
+			continue
 		var ap := ApplyStatus.new()
-		ap.target = CombatEffect.Target.OPPONENT
-		ap.buff = poison
-		ap.stacks = 1
-		input.rules.append(_on_attack([ap] as Array[CombatEffect], mini(100, chance)))
+		ap.target = CombatEffect.Target.BOTH     # 敌我各叠
+		ap.buff = mark
+		ap.stacks = n
+		input.rules.append(_on_attack([ap] as Array[CombatEffect]))
 
 
-## 己方武器每出手一次（[param percent] < 100 时按几率）
-static func _on_attack(effects: Array[CombatEffect], percent: int) -> AbilityRule:
+## 己方武器每出手一次
+static func _on_attack(effects: Array[CombatEffect]) -> AbilityRule:
 	var trig := OnItemFired.new()
 	trig.same_side = true
 	trig.source_tags = [&"weapon"] as Array[StringName]
 	var r := AbilityRule.new()
 	r.trigger = trig
 	r.cadence = Always.new()
-	if percent < 100:
-		var c := ChanceCondition.new()
-		c.percent = percent
-		r.costs.append(c)
 	for e in effects:
 		r.effects.append(e)
 	return r
@@ -116,7 +106,8 @@ static func lines(values: Dictionary) -> Array[String]:
 		var v := float(values.get(k, values.get(String(k), 0.0)))
 		if v == 0.0:
 			continue
-		var one := UiText.t("trait." + String(k)) % (("+" if v > 0.0 else "") + TextTemplate.num(v))
+		var signed := ("+" if v > 0.0 and not MARKS.has(k) else "") + TextTemplate.num(v)     # 元素印写层数，不带号
+		var one := UiText.t("trait." + String(k)) % signed
 		if v * float(GOOD[k]) > 0.0:
 			good.append(one)
 		else:
