@@ -1,8 +1,8 @@
 {
-  "id": "blood_flesh",
-  "display_name": "血肉",
+  "id": "wolf_shank",
+  "display_name": "狼腿肉",
   "display_names": {
-    "en": "Raw Flesh"
+    "en": "Wolf Shank"
   },
   "description": "",
   "descriptions": {
@@ -12,9 +12,9 @@
     "1",
     "1"
   ],
-  "rarity": 1,
   "tags": [
     "material",
+    "ingredient",
     "nature",
     "beast_part",
     "blood_flesh"

@@ -14,3 +14,4 @@ descriptions = {
 }
 tip = false
 category = "affiliation"
+parents = Array[StringName]([&"material", &"ingredient"])

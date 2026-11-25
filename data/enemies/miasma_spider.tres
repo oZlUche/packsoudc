@@ -29,3 +29,4 @@ loadout = SubResource("Resource_mdk3p")
 board = Vector2i(6, 4)
 species = &"beast"
 bagless = true
+loot_bonus = Array[StringName]([&"spider_leg_meat"])

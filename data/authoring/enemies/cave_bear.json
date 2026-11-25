@@ -31,8 +31,8 @@
     "single_faith": false
   },
   "board": [
-    6,
-    4
+    7,
+    5
   ],
   "species": "beast",
   "bagless": true,
@@ -43,6 +43,9 @@
     "prime_beast_leg"
   ],
   "loot_bonus": [
-    "blood_flesh_prime"
-  ]
+    "bear_paw"
+  ],
+  "loot_chance": {
+    "bear_liver": 0.3
+  }
 }

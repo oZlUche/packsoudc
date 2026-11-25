@@ -1,0 +1,23 @@
+{
+  "id": "viper_gall",
+  "display_name": "蛇胆",
+  "display_names": {
+    "en": "Viper Gall"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "rarity": 1,
+  "tags": [
+    "material",
+    "ingredient",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "mane_loin",
+  "display_name": "鬃兽脊肉",
+  "display_names": {
+    "en": "Mane Loin"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1",
+    "1",
+    "1"
+  ],
+  "rarity": 2,
+  "tags": [
+    "material",
+    "ingredient",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_1vuri"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_iflvj"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_175p6"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_7ycfl"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_gtncp"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_s66vg"]
+
+[sub_resource type="Resource" id="Resource_07a8g"]
+script = ExtResource("6_s66vg")
+
+[resource]
+script = ExtResource("5_gtncp")
+id = &"viper_gall"
+display_name = "蛇胆"
+display_names = {
+"en": "Viper Gall"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_07a8g")
+rarity = 1
+tags = Array[StringName]([&"material", &"ingredient", &"nature", &"beast_part", &"blood_flesh"])
+material = "flesh"

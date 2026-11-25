@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://core/battle/element_apply.gd" id="1_twhgt"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="2_rvr05"]
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="3_jht5m"]
+[ext_resource type="Script" path="res://core/battle/faith_bonus.gd" id="4_po50j"]
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="5_da02p"]
+[ext_resource type="Script" path="res://core/inventory/item_shape.gd" id="6_kyqx6"]
+
+[sub_resource type="Resource" id="Resource_4phc1"]
+script = ExtResource("6_kyqx6")
+cells = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+
+[resource]
+script = ExtResource("5_da02p")
+id = &"vulture_breast"
+display_name = "鹫胸肉"
+display_names = {
+"en": "Vulture Breast"
+}
+descriptions = {
+"en": ""
+}
+shape = SubResource("Resource_4phc1")
+rarity = 2
+tags = Array[StringName]([&"material", &"ingredient", &"nature", &"beast_part", &"blood_flesh"])
+material = "flesh"

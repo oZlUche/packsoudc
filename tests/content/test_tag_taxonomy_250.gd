@@ -27,6 +27,9 @@ static func run_axes(t: TestCase) -> void:
 		if d.is_blessed():
 			continue
 		var kinds := d.tags.filter(func(tg: StringName) -> bool: return TagRegistry.category_of(tg) == TagRegistry.KIND)
+		var up := TagRegistry.implied(d.tags)     # 394：子类标签的上级都是类别时算一个（血肉 = 素材 + 食材）
+		if kinds.size() > 1 and kinds.all(func(k: StringName) -> bool: return up.has(k)):
+			kinds = [kinds[0]]
 		if not d.is_bag and not d.is_token() and kinds.size() != 1:
 			bad_kind.append("%s %s" % [id, kinds])
 		if d.tags.has(&"weapon") and int(d.tags.has(&"melee")) + int(d.tags.has(&"ranged")) != 1:

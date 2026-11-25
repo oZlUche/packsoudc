@@ -1,0 +1,22 @@
+{
+  "id": "toad_leg",
+  "display_name": "蟾腿",
+  "display_names": {
+    "en": "Toad Leg"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "tags": [
+    "material",
+    "ingredient",
+    "nature",
+    "beast_part",
+    "blood_flesh"
+  ],
+  "material": "flesh"
+}

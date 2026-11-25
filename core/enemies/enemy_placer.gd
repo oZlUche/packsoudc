@@ -229,9 +229,19 @@ static func build_content(
 	count += bag_count     # 包不计入件数：件数说的是包里的东西
 	if build == null or not build.loose:
 		_seat_loads(board, placed)
+	# 394：魔兽自己的肉必掉 —— 招牌摆完、补件之前先占地方（补件只补战斗道具，不算它）
+	var carry_short := 0
+	if def.is_wild() and not def.loot_bonus.is_empty():
+		var lrng := RandomNumberGenerator.new()
+		lrng.seed = hash([rng.state, String(def.id), strength, "bonus"])
+		for bid in def.loot_bonus:
+			if _place_random(board, items.get_def(bid), placed, lrng) or _place_evicting(board, items.get_def(bid), placed, lrng, sig, items):
+				(placed[placed.size() - 1] as Dictionary)["carried"] = true
+			else:
+				carry_short += 1
 	# 放不下就换一件：从同一批候选里按小到大补（同样大的随机排），小件总有地方塞。流派道具不够先补流派的。
 	# 只有棋盘真的满了才会差件数，回报里看得见 —— 那是档位表的棋盘 / 包配小了
-	if placed.size() < count:
+	if placed.size() - _carried_count(placed) < count:
 		var school_pool := school_items(def.schools, items, cap, def, wcap, no_true)
 		var refill: Array[StringName] = []
 		if _school_count(placed, items, def.schools) < rule.min_school:
@@ -241,13 +251,12 @@ static func build_content(
 		refill.append_array(_small_first(general, items, rng))
 		var tries := 0
 		for id in refill:
-			if placed.size() >= count or tries >= REFILL_TRIES:
+			if placed.size() - _carried_count(placed) >= count or tries >= REFILL_TRIES:
 				break
 			tries += 1
 			_place_random(board, items.get_def(id), placed, rng)
 	# 126：战斗道具摆完再摆携带品（非战斗道具，越值钱越少见）—— 同一块棋盘 / 同一些包，小件先摆，放不下的跳过（计入差件）。
 	# 随机数另起一条（由主随机数的当前状态派生、不消耗它）：加不加携带规则，敌人本身与战斗道具都不变
-	var carry_short := 0
 	if carry != null and not def.is_wild():     # 212：魔兽 / 机关不揣金器
 		var crng := RandomNumberGenerator.new()
 		crng.seed = hash([rng.state, String(def.id), strength, "carry"])
@@ -257,7 +266,7 @@ static func build_content(
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
 			else:
 				carry_short += 1
-	elif def.is_wild() and not def.loot_filler.is_empty():
+	if def.is_wild() and not def.loot_filler.is_empty():
 		# 210：机关不揣携带品，改为必带 1～2 件替身（齿轮），同样标 carried 必掉；随机数同样另起一条
 		var frng := RandomNumberGenerator.new()
 		frng.seed = hash([rng.state, String(def.id), strength, "filler"])
@@ -267,11 +276,15 @@ static func build_content(
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
 			else:
 				carry_short += 1
-	if def.is_wild() and not def.loot_bonus.is_empty():
-		var lrng := RandomNumberGenerator.new()
-		lrng.seed = hash([rng.state, String(def.id), strength, "bonus"])
-		for bid in def.loot_bonus:
-			if _place_random(board, items.get_def(bid), placed, lrng):
+	if def.is_wild() and not def.loot_chance.is_empty():     # 394：器官按几率掉
+		var orng := RandomNumberGenerator.new()
+		orng.seed = hash([rng.state, String(def.id), strength, "chance"])
+		var keys: Array = def.loot_chance.keys()
+		keys.sort()
+		for oid in keys:
+			if orng.randf() >= float(def.loot_chance[oid]):
+				continue
+			if _place_random(board, items.get_def(StringName(String(oid))), placed, orng):
 				(placed[placed.size() - 1] as Dictionary)["carried"] = true
 			else:
 				carry_short += 1
@@ -461,6 +474,32 @@ static func _place_random(board: GridInventory, idef: ItemDef, placed: Array, rn
 		return false
 	placed.append(_entry(inst))
 	return true
+
+
+## 394：必掉的肉摆不下 —— 从后往前拿掉招牌之外的战斗道具（招牌多带的同名件也算）（最多 [constant EVICT_TRIES] 件）再摆；拿掉的由后面的补件按小到大补回
+const EVICT_TRIES := 4
+static func _place_evicting(board: GridInventory, idef: ItemDef, placed: Array, rng: RandomNumberGenerator, sig: Array[StringName], items: ItemDatabase) -> bool:
+	if idef == null:
+		return false
+	var left := EVICT_TRIES
+	var i := placed.size() - 1
+	while i >= 0 and left > 0:
+		var e: Dictionary = placed[i]
+		var edef := items.get_def(StringName(String(e["id"])))
+		var extra := edef != null and placed.filter(func(x: Dictionary) -> bool: return String(x["id"]) == String(edef.id)).size() > sig.count(edef.id)
+		if not bool(e.get("carried", false)) and edef != null and not edef.is_bag and extra:
+			var at: Array = e["at"]
+			var o := Vector2i(int(at[0]), int(at[1]))
+			for inst: ItemInstance in board.items():
+				if inst.origin == o and inst.def == edef:
+					board.remove(inst.uid)
+					break
+			placed.remove_at(i)
+			left -= 1
+			if _place_random(board, idef, placed, rng):
+				return true
+		i -= 1
+	return false
 
 
 ## 作者 11-07（法师的杖只打基础伤害）：组拆了（包里挤）晶石就成了散件，多半不在杖的装载格上 ——

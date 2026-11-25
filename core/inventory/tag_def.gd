@@ -35,3 +35,6 @@ extends Resource
 ## 193（作者「未来计划把标签文字换成图标」）：图标 —— `assets/ui/tags/` 下的文件名（不含扩展名）；空 = 用 id。
 ## 文件不在就没图（[method TagRegistry.icon_path] 给空串），界面照旧写字
 @export var icon: String = ""
+## 394（作者 11-25「【血肉】是一个子类标签，属于【素材】-【食材】-【血肉】」）：上级标签 —— 带这个标签的道具得同时带这些。
+## 上级里的类别标签不算「类别恰好一个」的超额（血肉同时是素材和食材）
+@export var parents: Array[StringName] = []

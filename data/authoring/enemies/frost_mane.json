@@ -31,9 +31,12 @@
     "single_faith": false
   },
   "board": [
-    6,
-    4
+    7,
+    5
   ],
   "species": "beast",
-  "bagless": true
+  "bagless": true,
+  "loot_bonus": [
+    "mane_loin"
+  ]
 }

@@ -26,8 +26,11 @@ base_stats = {
 signature = Array[StringName]([&"beast_fang", &"beast_fang", &"fire_gland", &"beast_hide"])
 item_tags = Array[StringName]([&"beast_part"])
 loadout = SubResource("Resource_kw6el")
-board = Vector2i(4, 3)
+board = Vector2i(4, 4)
 species = &"beast"
 bagless = true
 loot_filler = Array[StringName]([&"meat_scrap", &"game_meat"])
-loot_bonus = Array[StringName]([&"blood_flesh_scrap"])
+loot_bonus = Array[StringName]([&"wolf_shank"])
+loot_chance = {
+"wolf_heart": 0.3
+}

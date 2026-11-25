@@ -27,8 +27,11 @@ signature = Array[StringName]([&"bonesplit_claw", &"beast_claw", &"beast_hide", 
 item_tags = Array[StringName]([&"beast_part"])
 gold_signature = Array[StringName]([&"unclotting_blood"])
 loadout = SubResource("Resource_gop3x")
-board = Vector2i(6, 4)
+board = Vector2i(7, 5)
 species = &"beast"
 bagless = true
 loot_filler = Array[StringName]([&"beast_haunch", &"beast_ribs", &"prime_game_meat", &"prime_beast_leg"])
-loot_bonus = Array[StringName]([&"blood_flesh_prime"])
+loot_bonus = Array[StringName]([&"bear_paw"])
+loot_chance = {
+"bear_liver": 0.3
+}
