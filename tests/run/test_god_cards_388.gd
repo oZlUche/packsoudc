@@ -864,4 +864,6 @@ static func run_exclusive_1126(t: TestCase) -> void:
 	lv.taken["god_sun_stars"] = 1
 	lv.god_state[SunCyclePerk.STARS_KEY] = 7
 	t.eq(SunCyclePerk.stars_funds(lv), 14, "众星：7 颗 × 2 = 14 枚")
+	t.check(lv.card_text(&"god_sun_stars").contains("2 枚"), "众星牌面写每颗几枚：%s" % lv.card_text(&"god_sun_stars"))
+	t.check(lv.card_name(&"god_brute_persist", "en") != lv.card_name(&"god_brute_linger", "en") if lv.has_method("card_name") else true, "英文名可区分")
 	run.dispose()

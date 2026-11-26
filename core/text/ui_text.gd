@@ -1384,7 +1384,7 @@ const TEXT := {
 	"gcard.god_sun_fullmoon": {"zh": "黑夜急速 +{pct}%", "en": "Night Haste +{pct}%"},
 	"gcard.god_sun_dawnlight": {"zh": "进入白昼时，回复身上防具护甲上限 {pct}% 的护甲", "en": "On entering Day, restore Armor equal to {pct}% of your armor's max Armor"},
 	"gcard.god_sun_dusklight": {"zh": "进入黑夜时，恢复耐力上限 {pct}% 的耐力", "en": "On entering Night, restore {pct}% of max Stamina"},
-	"gcard.god_sun_stars": {"zh": "每经过一次变换，点亮一颗【星辰】", "en": "Each Day/Night change lights a Star"},
+	"gcard.god_sun_stars": {"zh": "每经过一次变换，点亮一颗【星辰】，整局结算时每颗换 {gold} 枚钱", "en": "Each Day/Night change lights a Star; when the run is settled each Star is worth {gold} coins"},
 	"gcard.god_sun_noon": {"zh": "白昼伤害 +{pct}%", "en": "Day damage +{pct}%"},
 	"gcard.god_sun_veil": {"zh": "黑夜状态下，盾的格挡值 +{pct}%（多张连乘）", "en": "During Night, shield Block +{pct}% (multiple cards multiply)"},
 	"gcard.god_sun_humble": {"zh": "受到和造成的伤害 -{pct}%", "en": "Damage taken and dealt -{pct}%"},
