@@ -158,7 +158,7 @@ func effect_for(lv: LevelModule) -> SunCycle:
 	e.dawn_armor = lv.god_value(DAWN_LIGHT, "pct")
 	e.dusk_stamina = lv.god_value(DUSK_LIGHT, "pct")
 	if lv.has_card(VEIL):
-		e.veil = (1.0 - pow(1.0 - lv.god_value(VEIL, "pct") / lv.count_of(VEIL) / 100.0, lv.count_of(VEIL))) * 100.0     # 夜幕：乘法叠
+		e.veil = (pow(1.0 + lv.god_value(VEIL, "pct") / lv.count_of(VEIL) / 100.0, lv.count_of(VEIL)) - 1.0) * 100.0     # 夜幕：格挡加成，多张照旧连乘
 	e.humble = lv.god_value(HUMBLE, "pct")
 	return e
 

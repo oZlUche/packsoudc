@@ -39,7 +39,8 @@ const ELEMENTS: Array[StringName] = [&"scorch", &"chill", &"poison", &"numb"]
 @export var light_pct: float = 0.0
 ## 招架：每累积几层给几点护甲（0 = 没拿）
 @export var parry_every: int = 10
-@export var parry_armor: float = 0.0
+## 【招架】（作者 11-26 09:54）：回复身上防具护甲上限的百分之几
+@export var parry_pct: float = 0.0
 ## 回气、气血：清零时每层回几点
 @export var breath_per: float = 0.0
 @export var vigor_per: float = 0.0
@@ -188,13 +189,13 @@ func _gain(ctx: RuleContext, n: int) -> void:
 			g = g % gap_every
 			st["gap_armed"] = true
 		st["gap_acc"] = g
-	if parry_armor > 0.0 and parry_every > 0:
+	if parry_pct > 0.0 and parry_every > 0:
 		var p := int(st.get("parry_acc", 0)) + n
 		@warning_ignore("integer_division")
 		var times := p / parry_every
 		st["parry_acc"] = p - times * parry_every
 		if times > 0:
-			me.add_max(BattleStats.RES_ARMOR, StatMath.from_float(parry_armor * times))
+			me.restore_armor(parry_pct * times)
 	if _flow_def != null:
 		ApplyStatus.give(ctx, me, _flow_def, n)
 	_light(ctx)

@@ -58,8 +58,9 @@ const CHILL := &"chill"
 @export var eternal_day_scorch: int = 0
 @export var eternal_night: float = 0.0
 @export var eternal_night_hp: int = 0
-## 受伤前
+## 【夜幕】：黑夜时格挡值 +百分之几（作者 11-26 09:54，取代黑夜减伤）
 @export var veil: float = 0.0
+## 受伤前
 @export var humble: float = 0.0
 
 var _day_def: BuffDef = null
@@ -88,7 +89,10 @@ func _defs() -> void:
 	if _day_def != null:
 		return
 	_day_def = _own(DAY, [StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 0.0), StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, 0.0)] as Array[StatModifier])
-	_night_def = _own(NIGHT, [StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, 0.0), StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 0.0)] as Array[StatModifier])
+	var night_mods: Array[StatModifier] = [StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, 0.0), StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 0.0)]
+	if veil > 0.0:
+		night_mods.append(StatModifier.make(BattleStats.BLOCK, StatModifier.Mode.MULT, veil))     # 【夜幕】（作者 11-26 09:54）：黑夜时盾的格挡值 +几成
+	_night_def = _own(NIGHT, night_mods)
 	_light_def = _load(SUN_LIGHT)
 	_moon_def = _load(MOON_LIGHT)
 	var sp := shift_per
@@ -322,9 +326,7 @@ func _enter_day(ctx: RuleContext) -> void:
 		var add_st := StatMath.from_float(sunrise_stamina)
 		me.add_max(BattleStats.RES_STAMINA, add_st)
 	if dawn_armor > 0.0:
-		var gain := StatMath.mul(res.maximum(BattleStats.RES_HP), StatMath.from_float(dawn_armor / 100.0))
-		if gain > 0:
-			me.add_max(BattleStats.RES_ARMOR, gain)
+		me.restore_armor(dawn_armor)     # 【黎明】（作者 11-26 09:54）：回复身上防具护甲上限的几成，没穿防具就没有
 
 
 func _enter_night(ctx: RuleContext, now: int) -> void:
@@ -387,8 +389,6 @@ func _before(ctx: RuleContext) -> void:
 	var me := ctx.owner
 	if p.victim == me:
 		var pct := humble
-		if veil > 0.0 and int(ctx.state().get("night", 0)) == 1:
-			pct += veil
 		if pct > 0.0:
 			p.add_percent(-StatMath.from_float(minf(100.0, pct) / 100.0))
 	elif p.source_side == me.side and humble > 0.0:

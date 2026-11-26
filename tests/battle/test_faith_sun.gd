@@ -28,6 +28,25 @@ static func _me(tune: Dictionary = {}, cd: float = 1.0, hp: float = 1000.0) -> C
 	return BattleCompiler.compile_board(b, CombatantBaseline.with_hp(hp), [] as Array[StatModifier], rules)
 
 
+## 带一面盾（格挡 10）；[param armor] > 0 再穿一件护甲上限这么多的防具
+static func _shielded(tune: Dictionary = {}, armor: float = 0.0) -> CombatantSpec:
+	var b := GridInventory.new(Vector2i(4, 4), 1, false)
+	b.place(ItemInstance.create(Comp._weapon("t_blade", ["1"], 10.0, 1.0, ["weapon", "melee"])), Vector2i(0, 0), 0)
+	var sh := Comp._item("t_shield", ["1"], ["shield"])
+	var c := CombatProfile.new()
+	c.base_stats = {"block": 10.0}
+	if armor > 0.0:
+		c.base_stats["max_armor"] = armor
+	sh.combat = c
+	b.place(ItemInstance.create(sh), Vector2i(2, 0), 0)
+	var rule := SunCyclePerk.new().rule_for(null)
+	var e := rule.effects[0] as SunCycle
+	for k in tune:
+		e.set(k, tune[k])
+	var rules: Array[AbilityRule] = [rule]
+	return BattleCompiler.compile_board(b, CombatantBaseline.with_hp(1000.0), [] as Array[StatModifier], rules)
+
+
 static func _hitter(dmg: float, cd: float = 1.0) -> CombatantSpec:
 	var b := GridInventory.new(Vector2i(4, 4), 1, false)
 	b.place(ItemInstance.create(Comp._weapon("t_foe", ["1"], dmg, cd, ["weapon", "melee"])), Vector2i(0, 0), 0)
@@ -154,10 +173,23 @@ static func run_cards(t: TestCase) -> void:
 	t.eq(_status_times(blaze, SunCycle.SCORCH, true, 1).size(), 6, "大日炎炎：白昼每秒给敌人一层【灼伤】")
 	var frost := BattleSim.run(_me({"frost": 1}), FX._spec(50000.0, []), _rng(3), 8.0)
 	t.eq(_status_times(frost, SunCycle.CHILL, true, 1).size(), 2, "微月澹澹：黑夜每秒给敌人【寒冷】")
-	# 夜幕：黑夜受到的伤害少
+	# 夜幕（作者 11-26 09:54）：黑夜时盾的格挡值 +几成（取代黑夜减伤）；没有盾就没有
 	var plain := _taken(BattleSim.run(_me({"day_sec": 0.0}), _hitter(20.0), _rng(4), 6.0))
-	var veil := _taken(BattleSim.run(_me({"day_sec": 0.0, "veil": 50.0}), _hitter(20.0), _rng(4), 6.0))
-	t.check(plain > 0 and veil * 2 <= plain + 10, "夜幕 50%%：一直黑夜时受到的少一半（%d / %d）" % [veil, plain])
+	t.eq(_taken(BattleSim.run(_me({"day_sec": 0.0, "veil": 50.0}), _hitter(20.0), _rng(4), 6.0)), plain, "夜幕：没有盾，受到的一样多")
+	var shield_plain := _taken(BattleSim.run(_shielded({"day_sec": 0.0}), _hitter(20.0), _rng(4), 6.0))
+	var shield_veil := _taken(BattleSim.run(_shielded({"day_sec": 0.0, "veil": 50.0}), _hitter(20.0), _rng(4), 6.0))
+	t.check(shield_veil < shield_plain, "夜幕 50%%：盾格挡 10 → 15，一直黑夜时受到的少（%d < %d）" % [shield_veil, shield_plain])
+	# 黎明（作者 11-26 09:54）：进白昼回复防具护甲上限的几成；没穿防具就没有
+	var dawn := BattleSim.run(_shielded({"dawn_armor": 25.0, "day_sec": 2.0, "night_sec": 2.0}, 100.0), _hitter(30.0, 0.5), _rng(4), 9.0)
+	var dawn_bare := BattleSim.run(_me({"dawn_armor": 25.0, "day_sec": 2.0, "night_sec": 2.0}), _hitter(30.0, 0.5), _rng(4), 9.0)
+	var healed := [0, 0]
+	for pair in [[dawn, 0], [dawn_bare, 1]]:
+		for raw in (pair[0] as BattleResult).log:
+			var e := raw as BattleEvent
+			if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "armor" and e.get_int(&"delta") > 0:
+				healed[pair[1]] += e.get_int(&"delta")
+	t.check(healed[0] > 0 and healed[0] <= StatMath.from_float(25.0) * 2, "黎明：穿着 100 护甲，进白昼回护甲（共 %.0f，每次至多 25）" % StatMath.to_float(healed[0]))
+	t.eq(healed[1], 0, "黎明：没穿防具就没有")
 	var humble := _taken(BattleSim.run(_me({"day_sec": 0.0, "humble": 20.0}), _hitter(20.0), _rng(4), 6.0))
 	t.check(humble < plain, "谦卑：受到的也少（%d / %d）" % [humble, plain])
 	# 黄昏：进黑夜回耐力；日落当息：黑夜回血、武器停表

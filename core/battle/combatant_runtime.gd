@@ -287,6 +287,21 @@ func add_max(res: StringName, delta: int, at_least: int = 0) -> void:
 	resources.set_max(res, after)
 
 
+## 396 第十一节（作者 11-26 09:54）：身上防具的护甲上限（max_armor 派生的那份，不算 [method add_max] 另加的）；没穿防具 = 0
+func gear_armor_max() -> int:
+	if not resources.has(BattleStats.RES_ARMOR):
+		return 0
+	return maxi(0, resources.maximum(BattleStats.RES_ARMOR) - int(max_bonus.get(BattleStats.RES_ARMOR, 0)))
+
+
+## 回复防具护甲上限的 [param pct]%（补回护甲池，不超过上限）。返回实际回了多少
+func restore_armor(pct: float) -> int:
+	var amount := StatMath.mul(gear_armor_max(), StatMath.from_float(pct / 100.0))
+	if amount <= 0:
+		return 0
+	return resources.change(BattleStats.RES_ARMOR, amount, BattleEvent.REASON_HEAL)
+
+
 ## 资源由 max_* 属性自动派生：有 max_armor 就有 shield 资源。
 func _sync_resource_maxes() -> void:
 	for key in _merged.keys():

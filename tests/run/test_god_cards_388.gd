@@ -576,8 +576,8 @@ static func run_sun_cards(t: TestCase) -> void:
 	t.eq(perk.effect_for(lv).sun_light, 0, "日光浴不填了")
 	t.check(not lv.eligible(&"god_sun_dusk"), "独占：别的质变不再出")
 	lv.taken["god_sun_veil"] = 2
-	t.check(is_equal_approx(perk.effect_for(lv).veil, (1.0 - 0.92 * 0.92) * 100.0), "夜幕两张：连乘")
-	t.check(lv.card_text(&"god_sun_veil").contains("8"), "牌面按数写：%s" % lv.card_text(&"god_sun_veil"))
+	t.check(is_equal_approx(perk.effect_for(lv).veil, (1.2 * 1.2 - 1.0) * 100.0), "夜幕两张：格挡加成连乘（+44%）")
+	t.check(lv.card_text(&"god_sun_veil").contains("20"), "牌面按数写：%s" % lv.card_text(&"god_sun_veil"))
 	run.dispose()
 
 
@@ -802,6 +802,15 @@ static func run_nature_run(t: TestCase) -> void:
 	var cells0 := NatureCyclePerk.cells_of(run.board, [&"remedy"], true)
 	TestSupport.put(run.board, herb_def)
 	t.eq(NatureCyclePerk.cells_of(run.board, [&"remedy"], true), cells0 + herb_def.cell_count(), "放一束干草药：药补多算它的格子")
+	# 回春（作者 11-26 09:54）：每 2 秒 1 层，背包里每 4 格药品或药材每张再多 1 层
+	var cells := NatureCyclePerk.cells_of(run.board, [&"remedy"], true)
+	for n in [1, 2]:
+		lv.taken["god_nature_rejuv"] = n
+		var rj_in := CompileInput.new()
+		NatureCyclePerk.new().compile_into(rj_in, run.board, run)
+		@warning_ignore("integer_division")
+		t.eq((rj_in.rules[0].effects[0] as NatureCycle).rejuv, n * (1 + cells / 4), "回春 %d 张、药品药材 %d 格：每 2 秒 %d 层" % [n, cells, n * (1 + cells / 4)])
+	lv.taken.erase("god_nature_rejuv")
 	run.dispose()
 
 
