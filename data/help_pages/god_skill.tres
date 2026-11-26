@@ -17,7 +17,7 @@ text = "{faith:skill}管尺度、变形与结构，锻造、战斗技巧和各�
 texts = {
 "en": "{faith:skill} governs measure, transformation and structure. Forging, combat technique and every craft belong to this god, worshipped by dwarves, thieves and artisans. While you follow this god, you gain extra XP when you build Combo, and when you obtain a kind of Crafted item for the first time in a run. Offerings favor weapons, armor and crafted goods, and items with Crit stats earn the highest multiplier.
 
-Following this god grants Combo: each weapon attack, extra attacks included, builds one stack, and each stack raises your Haste by {faith_perk:skill:skill_momentum:haste_per}%, with no cap; when an attack fails for lack of Stamina, Combo resets to zero. At the start of a run and at levels {level:qual} you pick one of this god's Transformations (Find the Gap, Stance, Zanshin, Break Momentum, Offense as Defense, Keen Edge, In One Breath, Artless Art and more): some make a high Combo pay off, others reward the reset. Level-ups also offer this god's base cards."
+Following this god grants Combo: each weapon attack, extra attacks included, builds one stack, and each stack raises your Haste by {faith_perk:skill:skill_momentum:haste_per}%, with no cap; when an attack fails for lack of Stamina, Combo resets to zero. At the start of a run and at levels {level:qual} you pick one of this god's Transformations (Find the Gap, Stance, Zanshin, Break Momentum, Offense as Defense, Cutting Edge, In One Breath, Artless Art and more): some make a high Combo pay off, others reward the reset. Level-ups also offer this god's base cards."
 }
 related = Array[String](["faith_power_and_tiers", "altar_offering"])
 see_items = Array[StringName]([&"charm_skill"])
