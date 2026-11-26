@@ -1,0 +1,16 @@
+{
+  "id": "god_skill_fist_intent",
+  "display_name": "拳意",
+  "display_names": {
+    "en": "Fist Intent"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "crit": 2,
+        "crit_damage": 4
+      }
+    }
+  ]
+}

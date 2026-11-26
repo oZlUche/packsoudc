@@ -517,6 +517,8 @@ func eligible(card_id: StringName) -> bool:
 		return false
 	if (bool(row.get("once", false)) or r.is_qual(card_id)) and count_of(card_id) > 0:
 		return false
+	if int(row.get("max", 0)) > 0 and count_of(card_id) >= int(row["max"]):
+		return false     # 拳势：叠到 100% 就不再出
 	var g := r.god_of(card_id)
 	if g != &"" and g != god():
 		return false
@@ -604,7 +606,20 @@ func _draw(n: int, avoid: Array[String], qual: bool = false, god_only: bool = fa
 		var left_gods: Array[String] = gods.filter(func(c: String) -> bool: return not out.has(c))
 		if not left_gods.is_empty():
 			out[out.size() - 1] = left_gods[_weighted(left_gods, rng)]
+	if not use_quals and not generic_only and not out.is_empty():
+		_ensure_guaranteed(out, pool, rng)
 	return out
+
+
+## 作者 11-26：拿了某张牌（[code]guaranteed_by[/code]，如徒手大师）以后，每次普通选牌至少有一张这类牌（换掉最后一张；这类牌本身是神的牌，神的保底不受影响）
+func _ensure_guaranteed(out: Array[String], pool: Array[String], rng: RandomNumberGenerator) -> void:
+	var r := rules()
+	var want: Array[String] = pool.filter(func(c: String) -> bool:
+		var by := String(r.card(StringName(c)).get("guaranteed_by", ""))
+		return by != "" and count_of(StringName(by)) > 0)
+	if want.is_empty() or out.any(func(c: String) -> bool: return want.has(c)):
+		return
+	out[out.size() - 1] = want[_weighted(want, rng)]
 
 
 ## 396【改信】：只从奉的神的基础牌里抽
@@ -873,13 +888,18 @@ func offer_at(node: MapNode, raw: int) -> float:
 
 
 func _on_battle(_n: MapNode, _r: BattleResult, won: bool) -> void:
-	if _r != null and has_card(&"god_sun_shift"):
+	if _r != null and (has_card(&"god_sun_shift") or has_card(SunCyclePerk.STARS)):
 		var shifts := 0
 		for raw in _r.log:
 			var e := raw as BattleEvent
 			if e.name == BattleEvent.EFFECT_RESOLVED and e.side == 0 and String(e.payload.get("key", "")) == "sun_window":
 				shifts += 1
-		god_state["sun_shifts"] = int(god_state.get("sun_shifts", 0)) + shifts     # 388 星移斗转：一局里留着
+		if has_card(&"god_sun_shift"):
+			god_state["sun_shifts"] = int(god_state.get("sun_shifts", 0)) + shifts     # 388 星移斗转：一局里留着
+		if has_card(SunCyclePerk.STARS):
+			god_state[SunCyclePerk.STARS_KEY] = int(god_state.get(SunCyclePerk.STARS_KEY, 0)) + shifts     # 作者 11-26 众星：每变换一次点亮一颗
+	if won and _r != null:
+		BruteRagePerk.laurel_win(self)     # 作者 11-26 血色桂冠
 	if _r != null and god() == &"nature":
 		NatureCyclePerk.settle(self, _r)     # 388 生长 / 丰饶升级
 	if god() == &"skill":

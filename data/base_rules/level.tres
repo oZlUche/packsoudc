@@ -180,13 +180,19 @@ cards = {
 "god": "brute",
 "kind": "god"
 },
+"god_brute_laurel": {
+"god": "brute",
+"kind": "god",
+"once": true
+},
 "god_brute_lifesteal": {
 "god": "brute",
 "kind": "god"
 },
 "god_brute_linger": {
 "god": "brute",
-"kind": "god"
+"kind": "god",
+"once": true
 },
 "god_brute_pain": {
 "god": "brute",
@@ -201,7 +207,7 @@ cards = {
 "god_brute_persist": {
 "god": "brute",
 "kind": "god",
-"qual": true
+"once": true
 },
 "god_brute_regen": {
 "god": "brute",
@@ -584,23 +590,15 @@ cards = {
 "god": "nature",
 "kind": "god"
 },
-"god_nature_strong": {
-"god": "nature",
-"kind": "god"
-},
 "god_nature_survive": {
 "god": "nature",
-"kind": "god"
+"kind": "god",
+"once": true
 },
 "god_nature_talk": {
 "god": "nature",
 "kind": "god",
-"qual": true
-},
-"god_nature_talk_up": {
-"god": "nature",
-"kind": "god",
-"upgrade_of": "god_nature_talk"
+"once": true
 },
 "god_nature_tough": {
 "god": "nature",
@@ -618,7 +616,8 @@ cards = {
 },
 "god_skill_breath": {
 "god": "skill",
-"kind": "god"
+"kind": "god",
+"once": true
 },
 "god_skill_carry": {
 "god": "skill",
@@ -654,10 +653,40 @@ cards = {
 "kind": "god",
 "upgrade_of": "god_skill_edge"
 },
+"god_skill_finish": {
+"god": "skill",
+"kind": "god",
+"once": true
+},
 "god_skill_fist": {
 "god": "skill",
 "kind": "god",
 "qual": true
+},
+"god_skill_fist_edge": {
+"after": "god_skill_fist",
+"god": "skill",
+"guaranteed_by": "god_skill_fist",
+"kind": "god"
+},
+"god_skill_fist_flow": {
+"after": "god_skill_fist",
+"god": "skill",
+"guaranteed_by": "god_skill_fist",
+"kind": "god",
+"max": 5
+},
+"god_skill_fist_intent": {
+"after": "god_skill_fist",
+"god": "skill",
+"guaranteed_by": "god_skill_fist",
+"kind": "god"
+},
+"god_skill_fist_shadow": {
+"after": "god_skill_fist",
+"god": "skill",
+"guaranteed_by": "god_skill_fist",
+"kind": "god"
 },
 "god_skill_fist_up": {
 "god": "skill",
@@ -750,7 +779,8 @@ cards = {
 },
 "god_skill_vigor": {
 "god": "skill",
-"kind": "god"
+"kind": "god",
+"once": true
 },
 "god_skill_zanshin": {
 "god": "skill",
@@ -794,7 +824,8 @@ cards = {
 },
 "god_sun_dawnlight": {
 "god": "sun",
-"kind": "god"
+"kind": "god",
+"once": true
 },
 "god_sun_dusk": {
 "god": "sun",
@@ -808,7 +839,8 @@ cards = {
 },
 "god_sun_dusklight": {
 "god": "sun",
-"kind": "god"
+"kind": "god",
+"once": true
 },
 "god_sun_eclipse": {
 "excludes": ["god_sun_lunar"],
@@ -943,6 +975,11 @@ cards = {
 "god_sun_slower": {
 "god": "sun",
 "kind": "god"
+},
+"god_sun_stars": {
+"god": "sun",
+"kind": "god",
+"once": true
 },
 "god_sun_sunbath": {
 "excludes": ["god_sun_moonbath"],

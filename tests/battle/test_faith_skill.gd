@@ -172,7 +172,7 @@ static func run_stack_cards(t: TestCase) -> void:
 		var e := raw as BattleEvent
 		if e.name == BattleEvent.STATUS_UNSTACKED and e.side == 0 and e.get_name(&"buff") == SkillMomentum.FLOW_ID:
 			flow_drop = true
-	t.check(int(_combo(flow, SkillMomentum.FLOW_ID)[0]) > 0 and not flow_drop, "流水：叠起来，清零也不掉")
+	t.check(int(_combo(flow, SkillMomentum.FLOW_ID)[0]) > 0 and flow_drop, "流水：叠起来，清零时一起清掉（作者 11-26）")
 	var cloud := BattleSim.run(_me({"light_at": 3, "light_pct": 50.0}, 20.0), _dummy(), _rng(3), 20.0)
 	t.check(int(_combo(cloud)[1]) > int(_combo(BattleSim.run(_me({}, 20.0), _dummy(), _rng(3), 20.0))[1]), "行云：耐力省了，出手更多")
 
@@ -230,3 +230,25 @@ static func run_crit_cards(t: TestCase) -> void:
 		if e.name == BattleEvent.STATUS_STACKED and e.side == 1 and SkillMomentum.ELEMENTS.has(e.get_name(&"buff")):
 			elems += 1
 	t.check(elems > 0, "气功：敌人挂上了元素（%d 次）" % elems)
+
+
+static func run_batch_1126(t: TestCase) -> void:
+	t.begin("作者 11-26：大巧若拙（升级）让中断连击的武器补打一次、不叠连击；收式每 10 秒让下一次攻击按清零结算、层数不丢")
+	var tune := {"clumsy_pct": 100.0}
+	var plain := BattleSim.run(_me(tune, 40.0), _hitter(5.0), _rng(2), 20.0)
+	tune["clumsy_refire"] = true
+	var refire := BattleSim.run(_me(tune, 40.0), _hitter(5.0), _rng(2), 20.0)
+	t.check(_mech(refire, "skill_refire") > 0 and _mech(refire, "skill_refire") == _mech(refire, "skill_reset"), "每次清零补打一次（%d / %d）" % [_mech(refire, "skill_refire"), _mech(refire, "skill_reset")])
+	t.eq(_mech(plain, "skill_refire"), 0, "没升级不补打")
+	var free := 0
+	for raw in refire.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.ITEM_FIRED and e.side == 0 and e.get_bool(&"free"):
+			free += 1
+	t.eq(free, _mech(refire, "skill_refire"), "补的那一下不耗耐力（free）")
+	t.check(int(_combo(refire)[0]) <= int(_combo(plain)[0]) + 1, "补的那一下不叠连击")
+	var fin := BattleSim.run(_me({"finish_sec": 2.0, "zanshin": 1}), _dummy(), _rng(2), 10.0)
+	var zs := _mech(fin, "skill_zanshin")
+	t.check(zs >= 4 and zs <= 5, "收式：10 秒里每 2 秒一次按清零结算（残心 %d 次）" % zs)
+	t.eq(_mech(fin, "skill_reset"), 0, "收式不是真清零")
+	t.check(int(_combo(fin)[0]) >= 10, "层数不丢（最高 %d 层）" % int(_combo(fin)[0]))

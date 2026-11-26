@@ -24,6 +24,8 @@ const MECHANIC := "faith_mechanic"
 const STEP := 0.2
 ## 【以攻待守】那一层格挡的名字（[method CombatantRuntime.set_block_layer]）
 const GUARD_LAYER := &"skill_guard"
+## 【拳头】带的标签（拳势认它）
+const FIST_TAG := &"fist"
 ## 【气功】随机的元素
 const ELEMENTS: Array[StringName] = [&"scorch", &"chill", &"poison", &"numb"]
 
@@ -34,7 +36,7 @@ const ELEMENTS: Array[StringName] = [&"scorch", &"chill", &"poison", &"numb"]
 @export var carry_in: int = 0
 ## 清零时留几层（稳手）
 @export var keep_on_reset: int = 0
-## 流水：每叠一层另给的急速（百分数，0 = 没拿）
+## 流水：每层连击另给的急速（百分数，0 = 没拿）。作者 11-26：跟着当前层数走，清零时一起清掉
 @export var flow_per: float = 0.0
 ## 行云：至少几层时武器耐力消耗降低几成（百分数，0 = 没拿）
 @export var light_at: int = 10
@@ -73,6 +75,12 @@ const ELEMENTS: Array[StringName] = [&"scorch", &"chill", &"poison", &"numb"]
 @export var clumsy_pct: float = 0.0
 ## 化刚为巧：暴击改为再打一下原本伤害的几成（百分数，0 = 没拿）
 @export var soft_pct: float = 0.0
+## 大巧若拙（升级，报告 399 第六节）：清零时让中断连击的那把武器立即额外攻击一次（不耗耐力、不重置倒计时、不叠连击）
+@export var clumsy_refire: bool = false
+## 拳势（作者 11-26）：拳头每次攻击有几成机会多叠一层（百分数，最多 100）
+@export var fist_extra_pct: float = 0.0
+## 收式（作者 11-26 专属牌）：每过几秒，下一次攻击视为清零了连击（0 = 没拿）
+@export var finish_sec: float = 0.0
 
 var _def: BuffDef = null
 var _flow_def: BuffDef = null
@@ -143,10 +151,10 @@ func apply(ctx: RuleContext) -> void:
 			_after(ctx, e)
 		BattleEvent.ITEM_FIRED:
 			if e.side == ctx.owner.side and is_weapon(ctx.owner, e.get_int(&"uid")):
-				_attacked(ctx)
+				_attacked(ctx, e)
 		BattleEvent.ITEM_SKIPPED:
 			if e.side == ctx.owner.side and is_weapon(ctx.owner, e.get_int(&"uid")):
-				_reset(ctx)
+				_reset(ctx, e.get_int(&"uid"))
 
 
 func _start(ctx: RuleContext) -> void:
@@ -155,7 +163,10 @@ func _start(ctx: RuleContext) -> void:
 	var n := opening + carry_in
 	if n > 0:
 		ApplyStatus.give(ctx, ctx.owner, combo_def(), n)
+		_sync_flow(ctx)
 		_light(ctx)
+	if finish_sec > 0.0:
+		ctx.state()["finish_at"] = StatMath.from_float(finish_sec)
 
 
 #region 叠与清
@@ -163,16 +174,26 @@ func stacks(ctx: RuleContext) -> int:
 	return ctx.owner.stacks_of(BUFF_ID)
 
 
-## 一次攻击：叠一层；气功数攻击次数
-func _attacked(ctx: RuleContext) -> void:
+## 一次攻击：叠一层；气功数攻击次数。大巧若拙（升级）补的那一下不叠；拳势有机会多叠一层；收式挂着就按清零结算（层数不丢）
+func _attacked(ctx: RuleContext, e: BattleEvent) -> void:
 	var st := ctx.state()
+	var uid := e.get_int(&"uid")
+	if bool(e.payload.get("free", false)) and int(st.get("refire_uid", 0)) == uid:
+		st.erase("refire_uid")
+		return
+	if bool(st.get("finish_armed", false)):
+		st["finish_armed"] = false
+		_on_reset(ctx, stacks(ctx), uid)
 	if qigong_every > 0:
 		var hits := int(st.get("qigong_n", 0)) + 1
 		if hits >= qigong_every:
 			hits = 0
 			st["qigong_armed"] = true
 		st["qigong_n"] = hits
-	_gain(ctx, 1)
+	var n := 1
+	if fist_extra_pct > 0.0 and ctx.owner.tags_of(uid).has(FIST_TAG) and ctx.roll("skill_fist_flow", 0, 99) < roundi(fist_extra_pct):
+		n += 1
+	_gain(ctx, n)
 
 
 ## 叠 [param n] 层（攻击、架势）：寻隙、招架、流水按累积的层数算
@@ -198,13 +219,24 @@ func _gain(ctx: RuleContext, n: int) -> void:
 		st["parry_acc"] = p - times * parry_every
 		if times > 0:
 			me.restore_armor(parry_pct * times)
-	if _flow_def != null:
-		ApplyStatus.give(ctx, me, _flow_def, n)
+	_sync_flow(ctx)
 	_light(ctx)
 
 
-## 清零（耐力不够没出手）：稳手留几层；残心、大巧若拙、回气、气血按清掉前的层数
-func _reset(ctx: RuleContext) -> void:
+## 流水：层数和连击一样多（作者 11-26：清零时一起清掉）
+func _sync_flow(ctx: RuleContext) -> void:
+	if _flow_def == null:
+		return
+	var me := ctx.owner
+	var d := stacks(ctx) - me.stacks_of(FLOW_ID)
+	if d > 0:
+		ApplyStatus.give(ctx, me, _flow_def, d)
+	elif d < 0:
+		RemoveStatus.take(ctx, me, FLOW_ID, -d, "reset")
+
+
+## 清零（耐力不够没出手，[param uid] 是没打出去的那把）：稳手留几层；残心、大巧若拙、回气、气血按清掉前的层数
+func _reset(ctx: RuleContext, uid: int) -> void:
 	var me := ctx.owner
 	var n := stacks(ctx)
 	if n <= 0:
@@ -213,7 +245,16 @@ func _reset(ctx: RuleContext) -> void:
 	if n - keep > 0:
 		RemoveStatus.take(ctx, me, BUFF_ID, n - keep, "reset")
 	ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, me.side, {"effect": MECHANIC, "key": "skill_reset", "count": n})
+	_sync_flow(ctx)
 	_light(ctx)
+	_on_reset(ctx, n, uid)
+
+
+## 「清零时」的效果，按 [param n] 层算（真清零和【收式】都走这里）；[param uid] = 中断连击的那把（收式 = 这次出手的那把）
+func _on_reset(ctx: RuleContext, n: int, uid: int) -> void:
+	var me := ctx.owner
+	if n <= 0:
+		return
 	if breath_per > 0.0 and me.resources.has(BattleStats.RES_STAMINA):
 		me.resources.change(BattleStats.RES_STAMINA, StatMath.from_float(breath_per * n), BattleEvent.REASON_HEAL)
 	if vigor_per > 0.0:
@@ -225,8 +266,22 @@ func _reset(ctx: RuleContext) -> void:
 			var p := DamagePacket.create(DamageTypes.PHYSICAL, raw, foe, me.side, 0, false)
 			p.pure = true
 			DamageResolver.resolve(ctx.battle, p)
+		if clumsy_refire:
+			_refire(ctx, uid)
 	if zanshin > 0:
 		_zanshin(ctx)
+
+
+## 大巧若拙（升级）：中断连击的那把立即额外攻击一次，不叠连击
+func _refire(ctx: RuleContext, uid: int) -> void:
+	var me := ctx.owner
+	for rt in me.rules:
+		var r := rt as RuleRuntime
+		if r.source_uid == uid and r.buff == null and r.rule != null and r.rule.trigger is OnSchedule:
+			ctx.state()["refire_uid"] = uid
+			ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, me.side, {"effect": MECHANIC, "key": "skill_refire", "count": 1})
+			RuleEngine.fire_free(ctx.battle, me, r)
+			return
 
 
 ## 残心：随机几件（不重样）武器立即出手一次
@@ -258,12 +313,15 @@ func _light(ctx: RuleContext) -> void:
 		RemoveStatus.take(ctx, me, LIGHT_ID, me.stacks_of(LIGHT_ID), "faded")
 
 
-## 节拍：蓄势每几秒一层
+## 节拍：蓄势每几秒一层；收式每几秒给下一次攻击挂上（一次只挂一个）
 func _tick(ctx: RuleContext) -> void:
-	if _poise_def == null:
-		return
 	var st := ctx.state()
 	var now := ctx.battle.now
+	if finish_sec > 0.0 and now >= int(st.get("finish_at", StatMath.from_float(finish_sec))):
+		st["finish_armed"] = true
+		st["finish_at"] = now + StatMath.from_float(finish_sec)
+	if _poise_def == null:
+		return
 	var next := int(st.get("poise_at", StatMath.from_float(poise_sec)))
 	if now >= next:
 		ApplyStatus.give(ctx, ctx.owner, _poise_def, 1)

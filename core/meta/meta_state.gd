@@ -414,6 +414,9 @@ func absorb(result: RunResult, death_refund_percent: int = 0, grant_insight: boo
 		if refund > 0:
 			funds += refund
 			got["funds"] = refund
+	if result.star_funds > 0:     # 作者 11-26 日神【众星】：不论胜负
+		funds += result.star_funds
+		got["funds"] = int(got.get("funds", 0)) + result.star_funds
 	# 092（作者定）：保险箱里的视为已带出 —— 战败也带得出。图鉴各计一次，进带回来的棋盘（没有就新开一块），放不下直接进仓库。
 	# 224 补充二（作者 17:23）：战败没有置入那一页 —— 反过来，直接进仓库（包进包架），放不下的才进待置入的棋盘（基地「仓库」页清）
 	if not result.safe_items.is_empty():

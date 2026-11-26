@@ -40,8 +40,12 @@ const CORNERED_MORE := &"god_brute_cornered_more"
 const IRATE := &"god_brute_irate"
 const EAT := &"god_brute_eat"
 const EAT_UP := &"god_brute_eat_up"
-## 396：怒意延绵（质变，没有升级）、献祭（基础牌，一次性）
+## 396：怒意延绵（作者 11-26 移到专属牌）、献祭（基础牌，一次性）
 const PERSIST := &"god_brute_persist"
+## 作者 11-26 专属牌【血色桂冠】：打赢一场，生命上限或耐力上限（随机一项）+ 基础值的 pct%，整局有效；攒下的记在这两格
+const LAUREL := &"god_brute_laurel"
+const LAUREL_HP_KEY := "brute_laurel_hp"
+const LAUREL_ST_KEY := "brute_laurel_stamina"
 const SACRIFICE := &"god_brute_sacrifice"
 ## 【血肉】：能进食的那类（标签）；吃下去攒的生命上限记在 [member LevelModule.god_state] 这一格
 const FLESH_TAG := &"blood_flesh"
@@ -112,6 +116,33 @@ static func flesh_bonus(lv: LevelModule) -> Dictionary:
 	var out := {&"max_hp": hp}
 	if lv.has_card(EAT_UP):
 		out[&"max_stamina"] = hp * lv.god_value(EAT_UP, "stamina", 50.0) / 100.0
+	return out
+
+
+## 血色桂冠：打赢一场记一笔（[method LevelModule._on_battle] 调）。返回加在哪一项（&"" = 没拿）
+static func laurel_win(lv: LevelModule) -> StringName:
+	if lv == null or not lv.has_card(LAUREL):
+		return &""
+	var run := lv.run_state()
+	var base := run.player_baseline if run != null and run.player_baseline != null else CombatantBaseline.default_baseline()
+	var rng := NatureGifts.rng_for(run, "laurel_%d" % int(lv.god_state.get("brute_laurel_n", 0)))
+	lv.god_state["brute_laurel_n"] = int(lv.god_state.get("brute_laurel_n", 0)) + 1
+	var stat := BattleStats.MAX_HP if rng.randi() % 2 == 0 else BattleStats.MAX_STAMINA
+	var key := LAUREL_HP_KEY if stat == BattleStats.MAX_HP else LAUREL_ST_KEY
+	var add := float(base.base_stats.get(stat, BattleStats.default_value(stat))) * lv.god_value(LAUREL, "pct", 10.0) / 100.0
+	lv.god_state[key] = float(lv.god_state.get(key, 0.0)) + add
+	return stat
+
+
+## 整局的加成：血肉 + 血色桂冠（[method RunState.god_stat_bonus] 读）
+static func run_bonus(lv: LevelModule) -> Dictionary:
+	var out := flesh_bonus(lv).duplicate()
+	if lv == null:
+		return out
+	for pair in [[BattleStats.MAX_HP, LAUREL_HP_KEY], [BattleStats.MAX_STAMINA, LAUREL_ST_KEY]]:
+		var v := float(lv.god_state.get(pair[1], 0.0))
+		if v > 0.0:
+			out[pair[0]] = float(out.get(pair[0], 0.0)) + v
 	return out
 
 

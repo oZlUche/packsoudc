@@ -37,7 +37,6 @@ const NEAR_UP := &"god_nature_near_up"
 const BREED := &"god_nature_breed"
 const BREED_UP := &"god_nature_breed_up"
 const TALK := &"god_nature_talk"
-const TALK_UP := &"god_nature_talk_up"
 const HARVEST := &"god_nature_harvest"
 const HARVEST_UP := &"god_nature_harvest_up"
 const HERB_SENSE := &"god_nature_herb_sense"
@@ -155,6 +154,8 @@ func effect_for(lv: LevelModule) -> NatureCycle:
 		var g := GUARD_UP if lv.has_card(GUARD_UP) else GUARD
 		e.guard_every = lv.god_value(g, "sec")
 		e.guard_percent = lv.god_value(g, "pct")
+		e.guard_share = lv.god_value(g, "share", 100.0)
+		e.guard_per = lv.god_value(g, "per")
 	if lv.has_card(REAP):
 		var r := REAP_UP if lv.has_card(REAP_UP) else REAP
 		e.harvest_at = lv.god_value(r, "sec")
@@ -317,8 +318,6 @@ static func on_pick(lv: LevelModule, cid: StringName) -> void:
 			var got := NatureGifts.give(run, NatureGifts.roll(NatureGifts.pool(run, &"seed"), NatureGifts.weights_of(lv, SOW, NatureGifts.WEIGHTS), NatureGifts.rng_for(run, "sow"), 0, true))
 			if got != null:
 				lv.god_state["sow_last"] = String(got.def.id)
-		TALK_UP:
-			beasts_deep(lv)
 
 
 ## 药材 / 食材感知：初值 50 / 35 / 10 / 5，之前每拿一张，第 r 档 ×（1 + gain × 拿过几张）^ r（越往上涨得越多）
@@ -329,45 +328,6 @@ static func sense_weights(lv: LevelModule, cid: StringName) -> Array[float]:
 	for r in base.size():
 		base[r] *= pow(1.0 + gain * before, r)
 	return base
-
-
-## 动物交谈（升级）：深处（深度不低于 deep）没走过的普通战斗点，按 pct% 换成同档的野兽
-static func beasts_deep(lv: LevelModule) -> int:
-	var run := lv.run_state()
-	var ev := run.events if run != null else null
-	if ev == null or ev.graph == null or ev.pool == null or ev.enemies == null or ev.items == null:
-		return 0
-	var deep := lv.card_value(TALK_UP, "deep", 0.5)
-	var pct := lv.card_value(TALK_UP, "pct", 30.0)
-	var depth := EnemyPlacer.depths_of(ev.graph)
-	var rng := NatureGifts.rng_for(run, "beasts")
-	var n := 0
-	for id in ev.graph.node_ids():
-		var node := ev.graph.get_node(id)
-		if node.type != &"battle" or node.is_visited() or float(depth.get(id, 0.0)) < deep or not EnemyKit.has_enemy(node.content):
-			continue
-		var was := ev.enemies.enemy(StringName(String(node.content.get("enemy", ""))))
-		if was == null or was.species == &"beast" or rng.randf() * 100.0 >= pct:
-			continue
-		var wanted := int(node.content.get("strength", was.strength))
-		var best: EnemyPoolEntry = null
-		var best_d := 1 << 30
-		for e in ev.pool.entries:
-			var d := ev.enemies.enemy(e.enemy) if e != null and e.weight > 0.0 else null
-			if d == null or d.species != &"beast" or not e.fits(node):
-				continue
-			var dist := absi(d.strength - wanted)
-			if dist < best_d:
-				best_d = dist
-				best = e
-		if best == null:
-			continue
-		var built := EnemyPlacer.build_content(ev.enemies.enemy(best.enemy), ev.pool, ev.items, wanted, rng, ev.carry_rule, ev.bag_pool)
-		if built.is_empty():
-			continue
-		node.content = built["content"]
-		n += 1
-	return n
 
 
 ## 亲近自然：第一次走进非战斗的点，下一场临时生命上限 +hp（可叠）
@@ -405,9 +365,8 @@ func prebattle_apply(run: RunState, option: StringName = &"") -> bool:
 	if prebattle_actions(run, type).is_empty():
 		return false
 	var lv := LevelModule.of(run)
-	var src := TALK_UP if lv.has_card(TALK_UP) else TALK
-	var def := NatureGifts.roll(NatureGifts.pool(run, NatureGifts.NATURE), NatureGifts.weights_of(lv, src, NatureGifts.WEIGHTS_WIDE),
-		NatureGifts.rng_for(run, "talk"), roundi(lv.card_value(src, "floor", 0.0)))
+	var def := NatureGifts.roll(NatureGifts.pool(run, NatureGifts.NATURE), NatureGifts.weights_of(lv, TALK, NatureGifts.WEIGHTS_WIDE),
+		NatureGifts.rng_for(run, "talk"))
 	if not run.events.skip_pending_battle():
 		return false
 	var got := NatureGifts.give(run, def)

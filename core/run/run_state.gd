@@ -771,7 +771,7 @@ func active_faith_tier() -> int:
 ## 战斗基线（[method effective_baseline]）、状态界面、战斗里的常驻加成栏都读这一份
 func god_stat_bonus() -> Dictionary:
 	var lv := LevelModule.of(self)
-	var out := BruteRagePerk.flesh_bonus(lv).duplicate()
+	var out := BruteRagePerk.run_bonus(lv)
 	var organs := OrganTraits.stat_bonus(self)     # 395：器官的生命上限、每秒回复
 	for k in organs:
 		out[k] = float(out.get(k, 0.0)) + float(organs[k])

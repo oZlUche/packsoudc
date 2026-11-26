@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_u4exr"]
 script = ExtResource("2_earu3")
 values = {
-"pct": 8
+"pct": 20
 }
 
 [resource]
