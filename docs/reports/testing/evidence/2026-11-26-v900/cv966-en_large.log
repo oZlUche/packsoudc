@@ -1,0 +1,82 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+CV966 新档进营地：到了 false、声望 0、挣到 0 次、解锁了 []、还剩 0 次、能奉 []；红点 后勤 无 万神院 -；撤离 0 局；万神院到了 false；接应中 false；《远道而来》状态「」能接「hidden」；拜访中「」；万神院委托 []
+CV966 第 1 局：走一步后测试辅助撤离；撤离 1 局；万神院到了 false；接应中 false；《远道而来》状态「」能接「hidden」；拜访中「」；万神院委托 []
+CV966 第 2 局：走一步后测试辅助撤离；撤离 2 局；万神院到了 false；接应中 false；《远道而来》状态「」能接「hidden」；拜访中「」；万神院委托 []
+CV966 第 3 局：走一步后测试辅助撤离；撤离 3 局；万神院到了 false；接应中 true；《远道而来》状态「」能接「」；拜访中「」；万神院委托 []
+CV966 第 3 局后回营地：到来通知 没有；到了 false、声望 0、挣到 0 次、解锁了 []、还剩 0 次、能奉 []；红点 后勤 无 万神院 -；撤离 3 局；万神院到了 false；接应中 true；《远道而来》状态「taken」能接「taken」；拜访中「」；万神院委托 ["arrival=taken"]
+CV966 　　后勤小键 ["market", "smithy", "nursery"]
+CV966 委托簿剧情页：Pinned_Card_legion_forge_token：The Forge Token / Client：Quartermaster / Task：Check your requisition slip with the quartermaster and collect a forge token / Done at：At camp / Reward： / Standin ["Finish_legion_forge_token"] ｜ Pinned_Card_society_first_survey：The First Survey Record / Client：Society registrar / Task：Register your expedition records with the Society / Done at：At camp / Reward： / Standing +10 / [Comple ["Finish_society_first_survey"] ｜ Pinned_Card_greylamp_check_scale：Know the Scales / Client：A stallholder sent by the Grey Lamp / Task：Check the sample goods with the stallholder and sign for them / Done at：At camp / Reward： /  ["Finish_greylamp_check_scale"] ｜ Pinned_Card_cartographers_redraw：Draw the Road Back / Client：Society draughtsman / Task：Register one stretch of ground you walked this trip on the Society's map / Done at：At camp / Reward： / St ["Finish_cartographers_redraw"] ｜ Pinned_Card_growers_first_bed：The First Bed / Client：Old grower / Task：Collect a packet of trial seedlings at the riverbank and mark out a bed / Done at：At camp / Reward： / Standing +10 / [C ["Finish_growers_first_bed"] ｜ Pinned_Card_pantheon_arrival：From Afar / 「Meet the envoy of the Senatus Panthei, come from afar」 / Client：Envoy of the Senatus / Task：Extract at a midway extraction point / Done at：Bring it []
+CV966 　　排版：查了 56 处，没有溢出
+CV966 　　《远道而来》没有【接】键
+CV966 真点【接】以后：撤离 3 局；万神院到了 false；接应中 true；《远道而来》状态「taken」能接「taken」；拜访中「」；万神院委托 ["arrival=taken"]；剧情页 Pinned_Card_legion_forge_token：The Forge Token / Client：Quartermaster / Task：Check your requisition slip with the quartermaster and collect a forge token / Done at：At camp / Reward： / Standin ["Finish_legion_forge_token"] ｜ Pinned_Card_society_first_survey：The First Survey Record / Client：Society registrar / Task：Register your expedition records with the Society / Done at：At camp / Reward： / Standing +10 / [Comple ["Finish_society_first_survey"] ｜ Pinned_Card_greylamp_check_scale：Know the Scales / Client：A stallholder sent by the Grey Lamp / Task：Check the sample goods with the stallholder and sign for them / Done at：At camp / Reward： /  ["Finish_greylamp_check_scale"] ｜ Pinned_Card_cartographers_redraw：Draw the Road Back / Client：Society draughtsman / Task：Register one stretch of ground you walked this trip on the Society's map / Done at：At camp / Reward： / St ["Finish_cartographers_redraw"] ｜ Pinned_Card_growers_first_bed：The First Bed / Client：Old grower / Task：Collect a packet of trial seedlings at the riverbank and mark out a bed / Done at：At camp / Reward： / Standing +10 / [C ["Finish_growers_first_bed"] ｜ Pinned_Card_pantheon_arrival：From Afar / 「Meet the envoy of the Senatus Panthei, come from afar」 / Client：Envoy of the Senatus / Task：Extract at a midway extraction point / Done at：Bring it []
+CV966 第 4 局：走一步后测试辅助撤离；撤离 4 局；万神院到了 true；接应中 false；《远道而来》状态「ready」能接「taken」；拜访中「」；万神院委托 ["arrival=ready"]
+CV966 第 4 局（接着《远道而来》撤离）后回营地：到来通知 「Senatus Panthei / The priests of the gods have raised the Senatus Panthei at the edge of camp. First visit a temple on the Senatus page under Logistics and follow that god on your next run; after that run the god is yours for good. Then, before each expedition, you can choose which god to follow thi」；到了 true、声望 5、挣到 1 次、解锁了 []、还剩 1 次、能奉 []；红点 后勤 1 万神院 1；撤离 4 局；万神院到了 true；接应中 false；《远道而来》状态「ready」能接「taken」；拜访中「」；万神院委托 ["arrival=ready", "first_rite=taken"]
+CV966 点了到来通知的键：到了 true、声望 5、挣到 1 次、解锁了 []、还剩 1 次、能奉 []；红点 后勤 1 万神院 1
+CV966 剧情页：Pinned_Card_legion_forge_token：The Forge Token / Client：Quartermaster / Task：Check your requisition slip with the quartermaster and collect a forge token / Done at：At camp / Reward： / Standin ["Finish_legion_forge_token"] ｜ Pinned_Card_society_first_survey：The First Survey Record / Client：Society registrar / Task：Register your expedition records with the Society / Done at：At camp / Reward： / Standing +10 / [Comple ["Finish_society_first_survey"] ｜ Pinned_Card_greylamp_check_scale：Know the Scales / Client：A stallholder sent by the Grey Lamp / Task：Check the sample goods with the stallholder and sign for them / Done at：At camp / Reward： /  ["Finish_greylamp_check_scale"] ｜ Pinned_Card_cartographers_redraw：Draw the Road Back / Client：Society draughtsman / Task：Register one stretch of ground you walked this trip on the Society's map / Done at：At camp / Reward： / St ["Finish_cartographers_redraw"] ｜ Pinned_Card_growers_first_bed：The First Bed / Client：Old grower / Task：Collect a packet of trial seedlings at the riverbank and mark out a bed / Done at：At camp / Reward： / Standing +10 / [C ["Finish_growers_first_bed"] ｜ Pinned_Card_pantheon_arrival：From Afar / 「Meet the envoy of the Senatus Panthei, come from afar」 / Client：Envoy of the Senatus / Task：Extract at a midway extraction point / Done at：Bring it ["Finish_pantheon_arrival"] ｜ Pinned_Card_pantheon_first_rite：The First Rite / Client：Elder priest of the Senatus / Task：Choose a god at the Senatus and follow that god on a run; a defeat counts too / Done at：In the field, []
+CV966 真点《远道而来》【完成】：撤离 4 局；万神院到了 true；接应中 false；《远道而来》状态「done」能接「done」；拜访中「」；万神院委托 ["arrival=done", "first_rite=taken"]；到了 true、声望 6、挣到 1 次、解锁了 []、还剩 1 次、能奉 []；红点 后勤 1 万神院 1
+CV966 万神院页：Senatus Panthei / ???? / ???? / ???? / ???? / ???? / ???? / Temple visits left: / 1 / [Visit]
+CV966 　　神殿：brute「????」亮 sun「????」亮 nature「????」亮 skill「????」亮 hunt「????」亮 earth「????」亮；选中光/神徽 []；底栏「Temple visits left: / 1 / [Visit]」【Visit】灰
+CV966 　　排版：查了 16 处，没有溢出
+CV966 　　brute 悬浮窗「???? / God of battle, sacrifice and blood」
+CV966 　　sun 悬浮窗「???? / Keeper of day and night, who sets the order of heaven and earth」
+CV966 　　nature 悬浮窗「????」
+CV966 　　skill 悬浮窗「????」
+CV966 　　hunt 悬浮窗「???? / This temple is not yet built」
+CV966 　　earth 悬浮窗「???? / This temple is not yet built」
+CV966 点狩猎（没落成）：brute「????」亮 sun「????」亮 nature「????」亮 skill「????」亮 hunt「????」亮 earth「????」亮；选中光/神徽 ["hunt"]；底栏「Temple visits left: / 1 / This temple is not yet built / [Visit]」【Visit】灰
+CV966 点蛮神：brute「????」亮 sun「????」亮 nature「????」亮 skill「????」亮 hunt「????」亮 earth「????」亮；选中光/神徽 ["brute"]；底栏「Temple visits left: / 1 / [Visit]」【Visit】亮
+CV966 真点【确认拜访】：到了 true、声望 6、挣到 1 次、解锁了 []、还剩 0 次、能奉 ["brute"]；红点 后勤 无 万神院 无；撤离 4 局；万神院到了 true；接应中 false；《远道而来》状态「done」能接「done」；拜访中「brute」；万神院委托 ["arrival=done", "first_rite=taken"]
+CV966 　　拜访后再点日神：false
+CV966 　　神殿：brute「The Brute」亮 sun「????」亮 nature「????」亮 skill「????」亮 hunt「????」亮 earth「????」亮；选中光/神徽 ["brute(徽)"]；底栏「Visiting The Brute: follow this god next run; win or lose, the god is then yours / [Visit]」【Visit】灰；排版 查了 15 处，没有溢出
+CV966 测试辅助：各方到营地、许可单办成、声望 100（万神院不动）；告示栏只贴灰灯：开了常规的 ["legion", "society", "greylamp", "cartographers", "growers"]；栏上没接的 6 张，按方 { "greylamp": 6 }；钉位 6 个、空 0
+CV966 　　撤离 4 局；万神院到了 true；接应中 false；《远道而来》状态「done」能接「done」；拜访中「brute」；万神院委托 ["arrival=done", "first_rite=taken"]
+CV966 出征前：撤离 4 局；万神院到了 true；接应中 false；《远道而来》状态「done」能接「done」；拜访中「brute」；万神院委托 ["arrival=done", "first_rite=taken"]
+CV966 出征屏：现在奉「」；信仰条「The Brute」；键 ["none「Follow」（灰）", "brute「Following」（灰）", "nature「????」（灰）", "sun「????」（灰）", "skill「????」（灰）", "hunt「????」（灰）", "earth「????」（灰）"]
+CV966 　　试着改奉日神 choose_god(sun) = false；之后奉「」
+CV966 第 5 局奉「brute」、走了一步（屏 7）；测试辅助判战败 fail = true
+CV966 第 5 局结算（战败）：成功撤离 4 局
+CV966 战败回营地：撤离 4 局；万神院到了 true；接应中 false；《远道而来》状态「done」能接「done」；拜访中「」；万神院委托 ["arrival=done", "first_rite=ready"]；解锁了 [&"brute"]；这一局拜访完的 brute；到了 true、声望 6、挣到 1 次、解锁了 [&"brute"]、还剩 0 次、能奉 ["brute"]；红点 后勤 无 万神院 无
+CV966 　　告示栏刷新以后：开了常规的 ["legion", "society", "greylamp", "cartographers", "growers"]；栏上没接的 6 张，按方 { "legion": 1, "society": 1, "cartographers": 1, "growers": 1, "greylamp": 2 }；钉位 6 个、空 0
+CV966 战败后万神院页：brute「The Brute」亮 sun「????」亮 nature「????」亮 skill「????」亮 hunt「????」亮 earth「????」亮；选中光/神徽 ["brute(徽)"]；底栏「Temple visits left: / 0 / [Visit]」【Visit】灰
+CV966 剧情页：Pinned_Card_legion_forge_token：The Forge Token / Client：Quartermaster / Task：Check your requisition slip with the quartermaster and collect a forge token / Done at：At camp / Reward： / Standin ["Finish_legion_forge_token"] ｜ Pinned_Card_society_first_survey：The First Survey Record / Client：Society registrar / Task：Register your expedition records with the Society / Done at：At camp / Reward： / Standing +10 / [Comple ["Finish_society_first_survey"] ｜ Pinned_Card_society_alchemy：All Things Divide / Client：Society researcher / Task：Visit the Society's alchemy room and watch a researcher turn ore into dust / Done at：At camp / Reward： / St ["Finish_society_alchemy"] ｜ Pinned_Card_greylamp_check_scale：Know the Scales / Client：A stallholder sent by the Grey Lamp / Task：Check the sample goods with the stallholder and sign for them / Done at：At camp / Reward： /  ["Finish_greylamp_check_scale"] ｜ Pinned_Card_greylamp_canteen：Lighting the Stove / Client：Grey Lamp cook / Task：Visit the Grey Lamp kitchen and help the cook light the stove / Done at：At camp / Reward： / Standing +5 / [Com ["Finish_greylamp_canteen"] ｜ Pinned_Card_cartographers_redraw：Draw the Road Back / Client：Society draughtsman / Task：Register one stretch of ground you walked this trip on the Society's map / Done at：At camp / Reward： / St ["Finish_cartographers_redraw"] ｜ Pinned_Card_growers_first_bed：The First Bed / Client：Old grower / Task：Collect a packet of trial seedlings at the riverbank and mark out a bed / Done at：At camp / Reward： / Standing +10 / [C ["Finish_growers_first_bed"] ｜ Pinned_Card_pantheon_first_rite：The First Rite / Client：Elder priest of the Senatus / Task：Choose a god at the Senatus and follow that god on a run; a defeat counts too / Done at：In the field, ["Finish_pantheon_first_rite"]
+CV966 　　真点《初次奉神》【完成】：true
+CV966 　　之后：撤离 4 局；万神院到了 true；接应中 false；《远道而来》状态「done」能接「done」；拜访中「」；万神院委托 ["arrival=done", "first_rite=done", "offering=taken"]；声望 16；还可拜访 0 次
+CV966 常规页排版：查了 37 处，没有溢出
+CV966 完 err=0
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9996 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4888 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
