@@ -22,6 +22,8 @@ const LIGHT_ID := &"skill_light"
 ## 战记里写的那一句（[BattleNarrator] 认 `faith_mechanic` + key）
 const MECHANIC := "faith_mechanic"
 const STEP := 0.2
+## 【以攻待守】那一层格挡的名字（[method CombatantRuntime.set_block_layer]）
+const GUARD_LAYER := &"skill_guard"
 ## 【气功】随机的元素
 const ELEMENTS: Array[StringName] = [&"scorch", &"chill", &"poison", &"numb"]
 
@@ -288,8 +290,10 @@ func _before(ctx: RuleContext) -> void:
 			p.penetration = true
 			p.add_percent(StatMath.from_float(gap_pct / 100.0))
 			ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, me.side, {"effect": MECHANIC, "key": "skill_gap", "count": 1})
-	elif p.victim == me and guard_flat > 0.0 and n >= guard_at and p.raw > 0:
-		p.flat -= StatMath.from_float(guard_flat)     # 作者 11-25 20:34：可以减到 0，减到 0 算挡住（架势认）
+	elif p.victim == me and guard_flat > 0.0:
+		# 【以攻待守】（作者 11-26 17:03）：是一个格挡来源 —— 和盾的格挡取最高、只挡直接的非真实伤害（结算那边管），
+		# 挨打这一刻按层数挂上 / 拿掉这一层；减到 0 照样算挡住（架势认）
+		me.set_block_layer(GUARD_LAYER, StatMath.from_float(guard_flat) if n >= guard_at else 0)
 
 
 func _after(ctx: RuleContext, e: BattleEvent) -> void:

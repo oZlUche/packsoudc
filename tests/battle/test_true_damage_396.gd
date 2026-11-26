@@ -1,4 +1,4 @@
-## 396（作者 11-26 15:07）：【真实伤害】不受任何增幅与衰减、减伤与增伤，也无视护甲（格挡按无视，等作者定）—— 原值直接落血
+## 396（作者 11-26）：【真实伤害】只受来源影响、只有免疫伤害能挡；【格挡】固定减伤，只对直接、非真实伤害，不同来源只取最高
 extends RefCounted
 
 const Pipe := preload("res://tests/battle/test_damage_pipeline.gd")
@@ -53,3 +53,22 @@ static func run_true_damage_immunity(t: TestCase) -> void:
 	p2.pure = true
 	DamageResolver.resolve(ctx2, p2)
 	t.check(p2.cancelled and Pipe._hp(ctx2, 1) == 100, "免疫伤害：真实伤害也免疫")
+
+
+static func run_block_sources(t: TestCase) -> void:
+	t.begin("396 · 格挡（作者 11-26 17:03）：不同来源只取最高（盾 6 + 以攻待守 10 = 10），只挡直接、非真实伤害")
+	var ctx := FX._battle(Pipe._attacker(10.0), Pipe._defender({"block": 6.0}))
+	Pipe._start(ctx)
+	var me: CombatantRuntime = ctx.sides[1]
+	me.set_block_layer(SkillMomentum.GUARD_LAYER, StatMath.from_float(10.0))
+	DamageResolver.resolve(ctx, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(20.0), me, 0, 0, true))
+	t.eq(Pipe._hp(ctx, 1), 90, "20 点直接伤害：格挡取 10（不是 16），落血 10")
+	DamageResolver.resolve(ctx, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(20.0), me, 0, 0, false))
+	t.eq(Pipe._hp(ctx, 1), 70, "非直接伤害不吃格挡：落血 20")
+	var tp := DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(20.0), me, 0, 0, true)
+	tp.pure = true
+	DamageResolver.resolve(ctx, tp)
+	t.eq(Pipe._hp(ctx, 1), 50, "真实伤害不吃格挡：落血 20")
+	me.set_block_layer(SkillMomentum.GUARD_LAYER, 0)
+	DamageResolver.resolve(ctx, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(20.0), me, 0, 0, true))
+	t.eq(Pipe._hp(ctx, 1), 36, "拿掉以攻待守：只剩盾的 6，落血 14")
