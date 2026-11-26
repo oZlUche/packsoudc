@@ -1457,8 +1457,8 @@ func _merge_commissions() -> void:
 		return
 	var safe := SafeModule.of(run)
 	var entrusted := safe != null and not safe.sealed.is_empty()
-	if run.selected_faith != &"":
-		mod.on_faith_run()     # 396：万神院的引导委托「奉着神出征」（第九节：战败也算）
+	if run.selected_faith != &"" and formal_run():
+		mod.on_faith_run()     # 396：万神院的引导委托「奉着神出征」（第九节：战败也算；一步没走的不算，和拜访一样）
 	if result.is_extracted():
 		mod.on_extracted()     # 396 第九节：万神院到来的剧情委托「接应远道而来的万神院代表」
 	last_commissions = Commissions.merge_run(meta, mod.rows, result.is_extracted(), entrusted, items)

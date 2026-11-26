@@ -237,6 +237,9 @@ func _unlock_bar() -> Control:
 		var d := flow.faith_defs.get(flow.meta.visiting, null) as FaithDef
 		var vis := UiTheme.fixed_color(UiTheme.make_label(UiText.t("pantheon.visiting") % (Names.of(d) if d != null else String(flow.meta.visiting)), 20, UiTheme.STONE_GOLD), UiTheme.STONE_GOLD)
 		vis.name = "Visiting"
+		vis.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # v8.99 测试：英文大字号一行放不下，撑出屏幕
+		vis.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vis.custom_minimum_size.x = 520.0
 		row.add_child(vis)
 		parts = PackedStringArray()
 	for i in parts.size():
