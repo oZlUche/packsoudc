@@ -42,7 +42,7 @@ static func run_content(t: TestCase) -> void:
 	var herald := Commissions.def(&"pantheon_arrival")
 	t.check(herald != null and Commissions.is_story(herald) and herald.stages.size() == 1 and herald.stages[0].goal == &"extract_runs" and herald.stages[0].where == CommissionStage.CARRY, "接应：撤离一次（要撤离才算）")
 	t.eq(Pantheon.gods(FaithDef.load_all()), [&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"] as Array[StringName], "六座神殿，新教不列")
-	t.eq([&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"].map(func(g: StringName) -> bool: return Pantheon.temple_ready(g)), [true, true, true, true, false, false], "牌表写好的四位能解锁；狩猎、大地还没落成")
+	t.eq([&"brute", &"nature", &"sun", &"skill", &"hunt", &"earth"].map(func(g: StringName) -> bool: return Pantheon.temple_ready(g)), [true, true, true, true, false, true], "牌表写好的五位能解锁；狩猎还没落成")
 	t.eq([Pantheon.blurb(&"brute"), Pantheon.blurb(&"sun"), Pantheon.blurb(&"nature")], ["热衷战斗、牺牲与鲜血之神", "祂掌管昼与夜，构筑天地的秩序", ""], "悬浮窗：作者给的两句，其余留空")
 	t.eq(Commissions.nodes_of(f).filter(func(n: Dictionary) -> bool: return StringName(String(n.get("effect", ""))) == Pantheon.EFFECT_TEMPLE).map(func(n: Dictionary) -> int: return int(n["rep"])), [0], "直接给解锁机会的节点只有 0 点")
 	var grants := Commissions.of_faction(Pantheon.FACTION).filter(func(d: CommissionDef) -> bool: return d.grants == Pantheon.GRANT_TEMPLE)
@@ -184,11 +184,12 @@ static func run_tiers(t: TestCase) -> void:
 		book.entries[cid] = {"state": CommissionBook.DONE, "times": 1}
 	t.eq(Pantheon.chances(f.meta), 3, "做完 100 / 125 / 150 的委托：三次（50 的委托没做）")
 	t.check(Pantheon.unlock(f.meta, &"brute"), "解锁蛮神")
-	t.check([&"hunt", &"earth"].all(func(g: StringName) -> bool: return not Pantheon.can_unlock(f.meta, g)), "没落成的两位有机会也不能解锁")
+	t.check(not Pantheon.can_unlock(f.meta, &"hunt"), "没落成的狩猎之神有机会也不能解锁")
 	t.eq(Pantheon.chances(f.meta), 2, "机会留着")
 	t.check(Pantheon.can_unlock(f.meta, &"skill") and Pantheon.can_unlock_any(f.meta), "技巧之神落成了：还能解锁")
 	var held := f.meta.temples.duplicate()
 	f.meta.temples.append(&"skill")
+	f.meta.temples.append(&"earth")
 	t.check(not Pantheon.can_unlock_any(f.meta), "只剩没落成的神殿：没有能解锁的（营地不挂红点）")
 	f.meta.temples = held
 	var saved := MetaState.from_dict(f.meta.to_dict(), c.items, GameFlow.load_meta_rules())
