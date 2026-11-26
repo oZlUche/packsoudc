@@ -133,3 +133,88 @@ static func run_myriad_and_rock(t: TestCase) -> void:
 		extra += ItemWeight.of_in(run.board.get_item(uid), run.board) * 0.5
 	t.eq(run.carry_weight(), w0 + roundi(extra), "磐石：大地加重一半（+%d）" % roundi(extra))
 	run.dispose()
+
+
+static func run_batch_two(t: TestCase) -> void:
+	t.begin("大地之神 · 第二批：基石锁住一件大地、按种类给增益；宝石化翻倍价值与重量；甄选三选一；发掘当场给东西；大地共鸣多翻")
+	var run := G._start(74, &"earth")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"earth":
+		t.check(false, "开局奉大地之神")
+		return
+	var perk := EarthHeavenPerk.new()
+	var node := _node(run, &"battle")
+	var grounds := EarthHeaven.uids_of(EarthHeaven.roles(run.board), EarthHeaven.GROUND)
+	lv.taken["god_earth_stone"] = 1
+	perk.on_node_entered(run, node, true)
+	var stones := run.board.items().filter(func(i: ItemInstance) -> bool: return i.is_stone())
+	t.eq(stones.size(), mini(1, grounds.size()), "基石：一件大地成了基石")
+	if not stones.is_empty():
+		var st := stones[0] as ItemInstance
+		t.check(grounds.has(st.uid), "是大地")
+		t.check(run.board.is_locked(st.uid) and run.board.keeps(st.uid) and st.is_locked_by_player(), "动不了、拿不走、不能卖 / 合成")
+		var sb := EarthHeavenPerk.stone_bonus(lv, run.board)
+		var kind := EarthHeavenPerk.stone_kind(st.def)
+		t.check(kind == "" or sb.values().any(func(v: float) -> bool: return v > 0.0), "按种类（%s）给了增益：%s" % [kind, sb])
+		st.close_run()
+		t.check(not st.is_stone(), "回局外就不是基石了")
+		st.set_stone(true)
+	# 宝石化
+	var target: ItemInstance = null
+	for raw in run.board.items():
+		if not run.board.acts_as_bag((raw as ItemInstance).def):
+			target = raw
+			break
+	lv.taken["god_earth_gem"] = 1
+	var before := {}
+	for raw in run.board.items():
+		var inst := raw as ItemInstance
+		before[inst.uid] = [ItemValue.of_instance(inst), ItemWeight.of_in(inst, run.board)]
+	EarthHeavenPerk.on_pick(lv, &"god_earth_gem")
+	var doubled := 0
+	for raw in run.board.items():
+		var inst := raw as ItemInstance
+		if inst.state.has(ItemWeight.WEIGHT_MULT_KEY):
+			doubled += 1
+			t.eq(ItemValue.of_instance(inst), int(before[inst.uid][0]) * 2, "宝石化：价值翻倍")
+			t.eq(ItemWeight.of_in(inst, run.board), int(before[inst.uid][1]) * 2, "重量翻倍")
+	t.eq(doubled, 1 if target != null else 0, "只动一件")
+	# 甄选
+	lv.taken["god_earth_select"] = 1
+	EarthHeavenPerk.on_pick(lv, &"god_earth_select")
+	t.check(EarthHeavenPerk.select_due(lv), "甄选：等着选")
+	var p0 := lv.pending()
+	t.check(p0 >= 1, "选牌窗多欠一次")
+	var offer := lv.offer()
+	while not EarthHeavenPerk.select_offer(lv) and lv.pending() > 0 and not offer.is_empty():
+		lv.pick(0)
+		offer = lv.offer()
+	t.eq(offer.size(), 3, "摆出三件")
+	if offer.size() == 3:
+		var d := EarthHeavenPerk.select_item(lv, offer[1])
+		t.check(d != null and d.rarity >= 2 and SearchSession.is_material(d), "都是稀有以上的材料（%s）" % (Names.of(d) if d != null else "-"))
+		t.check(lv.card_text(offer[1]).contains(Names.of(d)), "牌面写那件道具")
+		t.check(not lv.reroll() and not lv.skip(), "不能刷新、跳过")
+		var n0 := run.board.item_count() + (run.storage.items().size() if run.storage != null else 0)
+		lv.pick(1)
+		t.check(not EarthHeavenPerk.select_due(lv), "选完了")
+		t.eq(run.board.item_count() + (run.storage.items().size() if run.storage != null else 0), n0 + 1, "拿到一件")
+	# 发掘
+	var n1 := run.board.item_count() + (run.storage.items().size() if run.storage != null else 0)
+	EarthHeavenPerk.on_pick(lv, &"god_earth_dig")
+	t.check(run.board.item_count() + (run.storage.items().size() if run.storage != null else 0) > n1, "发掘：当场给了东西（%s）" % lv.god_state.get("earth_dig_last", ""))
+	# 大地共鸣
+	var sn := _node(run, &"search")
+	var session := SearchSession.new(sn, run.events.rules.search, run.items, RandomNumberGenerator.new(), 0.5)
+	session.only_tags = [&"mineral"]
+	EarthHeavenPerk.on_search(lv, session)
+	t.eq(session.bonus_items, 0, "没拿大地共鸣：不多翻")
+	lv.taken["god_earth_echo"] = 1
+	EarthHeavenPerk.on_search(lv, session)
+	t.eq(session.bonus_items, 1, "拿了：多翻一件")
+	var extra := session._bonus_draw(1)
+	t.eq(extra.size(), 1, "多翻的那件")
+	var xp0 := lv.xp
+	session.bonus_cb.call(extra)
+	t.check(lv.xp > xp0, "按稀有度给了经验值")
+	run.dispose()

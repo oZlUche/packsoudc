@@ -465,9 +465,9 @@ func clear() -> void:
 ## 256：可以挪的随身之物（军功牌）不锁 —— 它离不开棋盘由 [method keeps] 管；压着它的包锁住（包一走它就跟着离开棋盘）
 func is_locked(uid: int) -> bool:
 	var inst: ItemInstance = _items.get(uid, null)
-	if inst != null and inst.is_anchored():
-		return true
-	if inst != null and requires_bag and acts_as_bag(inst.def) and holds_pinned(uid):
+	if inst != null and (inst.is_anchored() or inst.is_stone()):
+		return true     # 大地之神【基石】也动不了
+	if inst != null and requires_bag and acts_as_bag(inst.def) and (holds_pinned(uid) or _holds_stone(uid)):
 		return true
 	if not growth_locks:
 		return false
@@ -483,6 +483,15 @@ func is_locked(uid: int) -> bool:
 func keeps(uid: int) -> bool:
 	var inst: ItemInstance = _items.get(uid, null)
 	return is_locked(uid) or (inst != null and inst.is_pinned())
+
+
+## 大地之神【基石】在这个包里：包也跟着动不了
+func _holds_stone(bag_uid: int) -> bool:
+	for uid in contents_of(bag_uid):
+		var inst: ItemInstance = _items.get(uid, null)
+		if inst != null and inst.is_stone():
+			return true
+	return false
 
 
 ## 256：这个包上压着随身之物（可以挪的那种才压得上包）

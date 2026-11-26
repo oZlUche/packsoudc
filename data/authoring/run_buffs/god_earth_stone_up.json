@@ -1,0 +1,21 @@
+{
+  "id": "god_earth_stone_up",
+  "display_name": "基石（升级）",
+  "display_names": {
+    "en": "Cornerstone+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "weapon": 2,
+        "armor": 10,
+        "trinket": 2,
+        "nature": 10,
+        "crafted": 5,
+        "magic": 3,
+        "mult": 2
+      }
+    }
+  ]
+}

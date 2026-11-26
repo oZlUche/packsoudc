@@ -21,10 +21,23 @@ const PRACTICE := &"god_earth_practice"
 const PRACTICE_UP := &"god_earth_practice_up"
 const MYRIAD := &"god_earth_myriad"
 const MYRIAD_UP := &"god_earth_myriad_up"
+const STONE := &"god_earth_stone"
+const STONE_UP := &"god_earth_stone_up"
+const ECHO := &"god_earth_echo"
+const ECHO_UP := &"god_earth_echo_up"
 ## 基础牌
 const GROUNDED := &"god_earth_grounded"
 const VITAL := &"god_earth_vital"
 const STRIVE := &"god_earth_strive"
+const DIG := &"god_earth_dig"
+const SELECT := &"god_earth_select"
+const GEM := &"god_earth_gem"
+## 甄选摆出来的三张（不进牌池，牌面写那件道具）
+const SELECT_SLOTS: Array[StringName] = [&"god_earth_select_0", &"god_earth_select_1", &"god_earth_select_2"]
+const SELECT_KEY := "earth_select"
+const SELECT_OFFER := "earth_select_offer"
+## 大地共鸣：多翻到的那件按稀有度给几点经验值（普通 → 传说）
+const ECHO_XP: Array[int] = [1, 2, 4, 8, 16]
 ## 专属牌
 const RAM := &"god_earth_ram"
 const HEAVY := &"god_earth_heavy"
@@ -87,6 +100,16 @@ func compile_into(input: CompileInput, board: GridInventory, run: RunState) -> v
 	var old := int(lv.god_state.get(OLD_KEY, 0))
 	if lv.has_card(SISYPHUS) and old > 0:
 		_all_stats(input, lv.god_value(SISYPHUS, "pct", 1.0) * old)
+	# 基石：按种类与稀有度的增益（防具的护甲在 [method effect_for]，魔法材料的经验在 [method xp_pct]）
+	var sb := stone_bonus(lv, board)
+	if float(sb["damage"]) > 0.0:
+		input.mods.append(StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, float(sb["damage"])))
+	if float(sb["haste"]) > 0.0:
+		input.mods.append(StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, float(sb["haste"])))
+	if float(sb["hp"]) > 0.0:
+		input.baseline_mods.append(StatModifier.make(BattleStats.MAX_HP, StatModifier.Mode.ADD, float(sb["hp"])))
+	if float(sb["stamina"]) > 0.0:
+		input.baseline_mods.append(StatModifier.make(BattleStats.MAX_STAMINA, StatModifier.Mode.ADD, float(sb["stamina"])))
 	# 举重若轻：武器越重耐力消耗越低（升级另加急速）
 	if lv.has_card(LIGHT):
 		var up := lv.has_card(LIGHT_UP)
@@ -154,6 +177,7 @@ static func effect_for(lv: LevelModule, board: GridInventory, run: RunState = nu
 		var per := _pick(lv, ROCK, ROCK_UP, "armor", 8.0)
 		for uid in EarthHeaven.uids_of(got, EarthHeaven.GROUND):
 			e.armor_gain += roundi(per * board.get_item(uid).def.cell_count())
+	e.armor_gain += roundi(float(stone_bonus(lv, board)["armor"]))
 	if lv.has_card(SKY):
 		var dmg := _pick(lv, SKY, SKY_UP, "damage", 5.0)
 		for uid in EarthHeaven.uids_of(got, EarthHeaven.DOME):
@@ -197,13 +221,17 @@ static func extra_weight(run: RunState) -> int:
 
 #region 经验与金钱（万象）
 ## 万象：经验值多给百分之几（满级时升级版的经验加成有一半挪去金钱）
+## 另加基石里魔法材料的经验加成
 static func xp_pct(lv: LevelModule) -> float:
-	if lv == null or lv.god() != &"earth" or not lv.has_card(MYRIAD):
+	if lv == null or lv.god() != &"earth":
 		return 0.0
+	var stone := float(stone_bonus(lv, lv.run_state().board if lv.run_state() != null else null)["xp"])
+	if not lv.has_card(MYRIAD):
+		return stone
 	var pct := _pick(lv, MYRIAD, MYRIAD_UP, "pct", 10.0) * _types_seen(lv)
 	if lv.has_card(MYRIAD_UP) and lv.level() >= lv.rules().level_cap:
 		pct *= 0.5
-	return pct
+	return pct + stone
 
 
 ## 万象：打赢、事件、苦劳的进账多给百分之几（满级时加上挪过来的那一半经验加成）
@@ -258,6 +286,10 @@ func on_node_entered(run: RunState, node: MapNode, first_visit: bool) -> String:
 			lines.append(UiText.t("perk.earth_train_hp" if key == TRAIN_HP else "perk.earth_train_stamina") % TextTemplate.num(add))
 	if lv.has_card(PRACTICE):
 		lines.append_array(_practice(lv, run))
+	if lv.has_card(STONE) and run.board != null:
+		var made := _make_stone(run, node)
+		if made != null:
+			lines.append(UiText.t("perk.earth_stone") % Names.of(made.def))
 	return "\n".join(lines)
 
 
@@ -278,6 +310,202 @@ static func _practice(lv: LevelModule, run: RunState) -> PackedStringArray:
 		if got > 0.0:
 			out.append(UiText.t("perk.earth_practice") % roundi(got))
 	return out
+
+
+#region 基石
+## 基石：随机一件还不是基石的大地成为基石（锁在棋盘上）。没有大地 = null
+static func _make_stone(run: RunState, node: MapNode) -> ItemInstance:
+	var pool: Array[int] = []
+	var got := EarthHeaven.roles(run.board)
+	for uid in EarthHeaven.uids_of(got, EarthHeaven.GROUND):
+		if not run.board.get_item(uid).is_stone():
+			pool.append(uid)
+	if pool.is_empty():
+		return null
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([run.run_seed, node.id if node != null else 0, "earth_stone"])
+	var inst := run.board.get_item(pool[rng.randi_range(0, pool.size() - 1)])
+	inst.set_stone(true)
+	run.board.changed.emit()
+	return inst
+
+
+## 基石是哪一种（作者备注：武器 / 防具 / 饰品 / 自然、工艺、魔法材料）；都不是 = 空
+static func stone_kind(def: ItemDef) -> String:
+	if def == null:
+		return ""
+	if def.has_tag(&"weapon") or def.has_tag(&"staff"):
+		return "weapon"
+	if def.has_tag(&"armor") or def.has_tag(&"shield"):
+		return "armor"
+	if def.has_tag(&"trinket"):
+		return "trinket"
+	if SearchSession.is_material(def):
+		if def.has_tag(&"magic") or def.has_tag(&"crystal"):
+			return "magic"
+		if def.has_tag(&"crafted"):
+			return "crafted"
+		if def.has_tag(&"nature"):
+			return "nature"
+	return ""
+
+
+## 棋盘上所有基石合起来的增益：{damage 增伤%, armor 开战护甲, haste 急速%, hp 生命上限, stamina 耐力上限, xp 经验%}；
+## 每件 = 这一种的数 ×（稀有度 + 1），升级版翻倍
+static func stone_bonus(lv: LevelModule, board: GridInventory) -> Dictionary:
+	var out := {"damage": 0.0, "armor": 0.0, "haste": 0.0, "hp": 0.0, "stamina": 0.0, "xp": 0.0}
+	if lv == null or board == null or not lv.has_card(STONE):
+		return out
+	var src := STONE_UP if lv.has_card(STONE_UP) else STONE
+	var keys := {"weapon": "damage", "armor": "armor", "trinket": "haste", "nature": "hp", "crafted": "stamina", "magic": "xp"}
+	for raw in board.items():
+		var inst := raw as ItemInstance
+		if not inst.is_stone():
+			continue
+		var kind := stone_kind(inst.def)
+		if kind == "":
+			continue
+		var per := lv.card_value(src, kind, 0.0) * lv.card_value(src, "mult", 1.0)
+		out[keys[kind]] = float(out[keys[kind]]) + per * (inst.rarity() + 1)
+	return out
+#endregion
+
+
+#region 拿牌那一下（宝石化、发掘、甄选）与搜索（大地共鸣）
+## [LevelModule] 拿到一张大地之神的牌时调
+static func on_pick(lv: LevelModule, cid: StringName) -> void:
+	var run := lv.run_state()
+	if run == null:
+		return
+	match cid:
+		GEM:
+			_gem(lv, run)
+		DIG:
+			_dig(lv, run)
+		SELECT:
+			_roll_select(lv, run)
+
+
+## 宝石化：随机一件道具价值和重量翻倍，先挑支柱（不是大地也不是穹顶的）；同一件可以再翻
+static func _gem(lv: LevelModule, run: RunState) -> void:
+	if run.board == null:
+		return
+	var got := EarthHeaven.roles(run.board)
+	var pool := EarthHeaven.uids_of(got, EarthHeaven.PILLAR)
+	if pool.is_empty():
+		for uid in got:
+			pool.append(int(uid))
+		pool.sort()
+	if pool.is_empty():
+		return
+	var rng := NatureGifts.rng_for(run, "earth_gem")
+	var inst := run.board.get_item(pool[rng.randi_range(0, pool.size() - 1)])
+	inst.state["value"] = ItemValue.of_instance(inst) * 2
+	inst.state[ItemWeight.WEIGHT_MULT_KEY] = float(inst.state.get(ItemWeight.WEIGHT_MULT_KEY, 1.0)) * 2.0
+	lv.god_state["earth_gem_last"] = String(inst.def.id)
+	run.board.changed.emit()
+	run.refresh_encumbrance()
+
+
+## 发掘：当场搜一次（不会遇敌）：按这一局的材料倾向只出那一系的材料（没有倾向就是普通搜索），放进背包，放不下放地上
+static func _dig(lv: LevelModule, run: RunState) -> void:
+	var ev := run.events
+	if ev == null or ev.rules == null or ev.rules.search == null or run.items == null:
+		return
+	var node := run.current_node() if run.map != null and run.travel != null else null
+	var rng := NatureGifts.rng_for(run, "earth_dig")
+	var only := MaterialBias.tags_of(run.material_bias)
+	var ids := SearchSession.draw_items(ev.rules.search, run.items, ev._depth_of(node) if node != null else 0.0,
+		node.danger if node != null else 0, rng, -1, [], node.produce if node != null else {}, only, 0.0)
+	var names: PackedStringArray = []
+	for id in ids:
+		var d := run.items.get_def(id)
+		if NatureGifts.give(run, d) != null:
+			names.append(Names.of(d))
+	lv.god_state["earth_dig_last"] = ", ".join(names)
+
+
+## 甄选：抽三件稀有度至少【稀有】的材料（不重样），等着三选一
+static func _roll_select(lv: LevelModule, run: RunState) -> void:
+	var pool: Array[StringName] = []
+	for id in run.items.ids():
+		var d := run.items.get_def(id)
+		if d != null and SearchSession.is_material(d) and d.rarity >= 2 and not d.is_bag and not d.is_unique():
+			pool.append(id)
+	pool.sort()
+	if pool.is_empty():
+		return
+	var rng := NatureGifts.rng_for(run, "earth_select")
+	var picks: Array = []
+	while picks.size() < SELECT_SLOTS.size() and not pool.is_empty():
+		var at := rng.randi_range(0, pool.size() - 1)
+		picks.append(String(pool[at]))
+		pool.remove_at(at)
+	lv.god_state[SELECT_KEY] = picks
+	lv.level_changed.emit()
+
+
+## 甄选等着选
+static func select_due(lv: LevelModule) -> bool:
+	return lv != null and lv.god_state.get(SELECT_KEY, []) is Array and not (lv.god_state.get(SELECT_KEY, []) as Array).is_empty()
+
+
+## 选牌窗正摆着甄选的三件
+static func select_offer(lv: LevelModule) -> bool:
+	return lv != null and bool(lv.god_state.get(SELECT_OFFER, false)) and not lv.offer_ids.is_empty()
+
+
+## 摆出来的那几张（几件就几张）
+static func select_cards(lv: LevelModule) -> Array[String]:
+	var out: Array[String] = []
+	var picks: Array = lv.god_state.get(SELECT_KEY, [])
+	for i in mini(picks.size(), SELECT_SLOTS.size()):
+		out.append(String(SELECT_SLOTS[i]))
+	return out
+
+
+## 第 [param i] 张那件道具（没有 null）
+static func select_item(lv: LevelModule, cid: StringName) -> ItemDef:
+	var i := SELECT_SLOTS.find(cid)
+	var picks: Array = lv.god_state.get(SELECT_KEY, [])
+	var run := lv.run_state()
+	if i < 0 or i >= picks.size() or run == null or run.items == null:
+		return null
+	return run.items.get_def(StringName(String(picks[i])))
+
+
+## 挑了 [param cid]：给那件道具（放进背包，放不下放地上）
+static func select_choose(lv: LevelModule, cid: StringName) -> void:
+	var d := select_item(lv, cid)
+	lv.god_state.erase(SELECT_KEY)
+	lv.god_state.erase(SELECT_OFFER)
+	if d != null:
+		NatureGifts.give(lv.run_state(), d)
+
+
+## 牌面：那件道具的名字和稀有度
+static func select_text(lv: LevelModule, cid: StringName) -> String:
+	var d := select_item(lv, cid)
+	if d == null:
+		return ""
+	return UiText.t("level.earth_select_item") % [Names.of(d), UiText.t("tip.rarity_%d" % d.rarity)]
+
+
+## 大地共鸣：材料节点每搜一次多翻一件（升级两件），翻到的按稀有度给经验值
+static func on_search(lv: LevelModule, session: SearchSession) -> void:
+	if lv == null or session == null or lv.god() != &"earth" or not lv.has_card(ECHO) or session.only_tags.is_empty():
+		return
+	session.bonus_items = roundi(_pick(lv, ECHO, ECHO_UP, "n", 1.0))
+	session.bonus_cb = func(ids: Array[StringName]) -> void:
+		var run := lv.run_state()
+		var xp := 0.0
+		for id in ids:
+			var d := run.items.get_def(id) if run != null and run.items != null else null
+			if d != null:
+				xp += ECHO_XP[clampi(d.rarity, 0, ECHO_XP.size() - 1)]
+		if xp > 0.0:
+			lv.gain(xp, LevelModule.SRC_FAITH, "earth_echo")
+#endregion
 
 
 func _summary() -> String:

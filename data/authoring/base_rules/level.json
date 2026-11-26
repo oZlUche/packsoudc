@@ -908,6 +908,54 @@
       "kind": "god",
       "god": "earth",
       "once": true
+    },
+    "god_earth_stone": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_stone_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_stone"
+    },
+    "god_earth_echo": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_echo_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_echo"
+    },
+    "god_earth_dig": {
+      "kind": "god",
+      "god": "earth"
+    },
+    "god_earth_select": {
+      "kind": "god",
+      "god": "earth"
+    },
+    "god_earth_gem": {
+      "kind": "god",
+      "god": "earth",
+      "weight": 0.35
+    },
+    "god_earth_select_0": {
+      "kind": "god",
+      "god": "earth",
+      "hidden": true
+    },
+    "god_earth_select_1": {
+      "kind": "god",
+      "god": "earth",
+      "hidden": true
+    },
+    "god_earth_select_2": {
+      "kind": "god",
+      "god": "earth",
+      "hidden": true
     }
   },
   "closed_gods": [

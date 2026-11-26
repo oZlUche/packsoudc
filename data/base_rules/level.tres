@@ -236,6 +236,25 @@ cards = {
 "kind": "god",
 "weight": 0.3
 },
+"god_earth_dig": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_echo": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_echo_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_echo"
+},
+"god_earth_gem": {
+"god": "earth",
+"kind": "god",
+"weight": 0.35
+},
 "god_earth_grounded": {
 "god": "earth",
 "kind": "god"
@@ -321,6 +340,25 @@ cards = {
 "kind": "god",
 "upgrade_of": "god_earth_rock"
 },
+"god_earth_select": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_select_0": {
+"god": "earth",
+"hidden": true,
+"kind": "god"
+},
+"god_earth_select_1": {
+"god": "earth",
+"hidden": true,
+"kind": "god"
+},
+"god_earth_select_2": {
+"god": "earth",
+"hidden": true,
+"kind": "god"
+},
 "god_earth_sisyphus": {
 "god": "earth",
 "kind": "god",
@@ -335,6 +373,16 @@ cards = {
 "god": "earth",
 "kind": "god",
 "upgrade_of": "god_earth_sky"
+},
+"god_earth_stone": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_stone_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_stone"
 },
 "god_earth_strive": {
 "god": "earth",

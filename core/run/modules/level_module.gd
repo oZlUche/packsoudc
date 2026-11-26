@@ -198,7 +198,7 @@ func is_humanist() -> bool:
 #region 选牌
 ## 还欠几次选牌（普通 + 质变位）
 func pending() -> int:
-	return _regular_left() + _qual_left() + repicks_left() + (1 if NatureCyclePerk.choice_due(self) else 0)
+	return _regular_left() + _qual_left() + repicks_left() + (1 if NatureCyclePerk.choice_due(self) else 0) + (1 if EarthHeavenPerk.select_due(self) else 0)
 
 
 ## 396【改信】：还欠几次重选（质变 + 基础牌）
@@ -289,6 +289,8 @@ func current_pick() -> Dictionary:
 		return {}
 	if seed_offer() or (offer_ids.is_empty() and NatureCyclePerk.choice_due(self)):
 		return {"level": level(), "qual": false, "seed": true}
+	if EarthHeavenPerk.select_offer(self) or (offer_ids.is_empty() and EarthHeavenPerk.select_due(self)):
+		return {"level": level(), "qual": false, "seed": true, "earth_select": true}     # 大地之神【甄选】：三件材料选一件（和初种一样不能刷新、删除、跳过）
 	var qual := _next_is_qual()
 	if _repick_mode() != "":
 		return {"level": level(), "qual": qual, "generic": qual and not has_qual_pool(), "convert": true}
@@ -365,8 +367,13 @@ func offer() -> Array[StringName]:
 		offer_qual = false
 		offer_ids = [String(NatureCyclePerk.SEED_KEEP), String(NatureCyclePerk.SEED_PICK)] as Array[String]     # 初种长到一阶：两张选一
 		god_state[NatureCyclePerk.SEED_OFFER] = true
+	if offer_ids.is_empty() and EarthHeavenPerk.select_due(self):
+		offer_qual = false
+		offer_ids = EarthHeavenPerk.select_cards(self)     # 大地之神【甄选】
+		god_state[EarthHeavenPerk.SELECT_OFFER] = true
 	if offer_ids.is_empty():
 		god_state.erase(NatureCyclePerk.SEED_OFFER)
+		god_state.erase(EarthHeavenPerk.SELECT_OFFER)
 		offer_qual = _next_is_qual()
 		offer_ids = _draw(_choices_for(offer_qual), [], offer_qual, _repick_mode() == REPICK_BASE)
 	var out: Array[StringName] = []
@@ -388,6 +395,12 @@ func pick(i: int) -> StringName:
 		picked.emit(cid)
 		level_changed.emit()
 		return cid
+	if EarthHeavenPerk.select_offer(self):
+		offer_ids.clear()
+		EarthHeavenPerk.select_choose(self, cid)
+		picked.emit(cid)
+		level_changed.emit()
+		return cid
 	taken[String(cid)] = count_of(cid) + 1
 	_consume(offer_qual)
 	offer_ids.clear()
@@ -401,7 +414,7 @@ func pick(i: int) -> StringName:
 ## 396【跳过】：这一次不选（这一级照样算选过），没有补偿（作者 11-26 00:08：「就是不要这次选择」）。次数不够、正摆着【初种】返回 false
 func skip() -> bool:
 	var cards := offer()
-	if cards.is_empty() or skips_left() <= 0 or seed_offer():
+	if cards.is_empty() or skips_left() <= 0 or seed_offer() or EarthHeavenPerk.select_offer(self):
 		return false
 	skips_used += 1
 	_consume(offer_qual)     # 跳过献祭换来的 / 改信重选的那一次：这次就算用掉了
@@ -414,7 +427,7 @@ func skip() -> bool:
 ## 刷新：三张一起换一批（尽量不和这三张重样）。次数不够返回 false
 func reroll() -> bool:
 	var cards := offer()
-	if cards.is_empty() or rerolls_left() <= 0 or seed_offer():
+	if cards.is_empty() or rerolls_left() <= 0 or seed_offer() or EarthHeavenPerk.select_offer(self):
 		return false
 	rerolls_used += 1
 	var avoid: Array[String] = offer_ids.duplicate()
@@ -426,7 +439,7 @@ func reroll() -> bool:
 ## 删除第 [param i] 张：这一局不再出，空位当场补一张（这一级照常选）。次数不够返回 false
 func remove(i: int) -> bool:
 	var cards := offer()
-	if i < 0 or i >= cards.size() or removals_left() <= 0 or seed_offer():
+	if i < 0 or i >= cards.size() or removals_left() <= 0 or seed_offer() or EarthHeavenPerk.select_offer(self):
 		return false
 	removals_used += 1
 	var gone := offer_ids[i]
@@ -640,7 +653,9 @@ func _apply_now(cid: StringName) -> void:
 	if String(row.get("oneshot", "")) == String(LevelRules.ONESHOT_SACRIFICE):
 		BruteRagePerk.sacrifice(self, cid)     # 396 蛮神【献祭】
 	if god() == &"nature":
-		NatureCyclePerk.on_pick(self, cid)     # 388 自然：坚韧、感知、培育、动物交谈升级
+		NatureCyclePerk.on_pick(self, cid)
+	if god() == &"earth":
+		EarthHeavenPerk.on_pick(self, cid)     # 大地之神：宝石化、发掘、甄选     # 388 自然：坚韧、感知、培育、动物交谈升级
 	var def: RunBuffDef = _run.buff_defs.get(cid, null) if _run != null else null
 	if def == null or _run.vitality == null:
 		return
@@ -679,6 +694,8 @@ func defs() -> Array:
 
 ## 牌面上的那一行：普通牌照 buff 的效果说明；元素回响和一次性的牌效果在这里拼，文案写在代码里
 func card_text(card_id: StringName) -> String:
+	if EarthHeavenPerk.SELECT_SLOTS.has(card_id):
+		return EarthHeavenPerk.select_text(self, card_id)     # 大地之神【甄选】：牌面写那件道具
 	var r := rules()
 	var row := r.card(card_id)
 	match String(row.get("echo", "")):
@@ -887,6 +904,7 @@ func _on_moved(intent: MoveIntent, _first: bool) -> void:
 
 
 func _on_search_opened(_n: MapNode, session: SearchSession) -> void:
+	EarthHeavenPerk.on_search(self, session)     # 大地之神【大地共鸣】
 	if session != null and pending_searches > 0:
 		session.extra_searches += pending_searches
 		pending_searches = 0

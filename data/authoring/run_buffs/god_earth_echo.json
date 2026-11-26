@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_echo",
+  "display_name": "大地共鸣",
+  "display_names": {
+    "en": "Earth Resonance"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

@@ -44,6 +44,9 @@ var other_share: float = 0.0
 ## 342 B3：这一局的材料倾向（[MaterialBias]）—— 只在普通搜索点（[member only_tags] 空）重分材料的权重
 var bias_tags: Array = []
 var bias_mult: float = 1.0
+## 大地之神【大地共鸣】：材料节点每搜一次多翻几件（只从这个点那一类里抽），翻到的交给 [member bonus_cb]（`func(ids: Array[StringName])`，给经验值）
+var bonus_items: int = 0
+var bonus_cb: Callable = Callable()
 
 
 func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: RandomNumberGenerator, p_depth: float = 0.0) -> void:
@@ -110,6 +113,11 @@ func search() -> Dictionary:
 		if got.is_empty():
 			got = draw_items(rules, items, depth, node.danger if node != null else 0, rng, -1, search_floor, produce, only_tags, other_share,
 					bias_tags, bias_mult)
+			if bonus_items > 0 and not only_tags.is_empty():
+				var extra := _bonus_draw(bonus_items)
+				got.append_array(extra)
+				if bonus_cb.is_valid() and not extra.is_empty():
+					bonus_cb.call(extra)
 			if substitute.is_valid():
 				got = substitute.call(got)
 			crng = RandomNumberGenerator.new()
@@ -134,6 +142,18 @@ func search() -> Dictionary:
 		_end(&"encounter")
 	# 搜满了不在这里结束：屏还要把最后一次的收获亮出来给玩家拖，玩家按「离开」才算走（084）
 	return {"found": got, "encounter": met}
+
+
+## 大地共鸣：从这个点那一类里多抽 [param n] 件
+func _bonus_draw(n: int) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for _i in 4:
+		if out.size() >= n:
+			break
+		for id in draw_items(rules, items, depth, node.danger if node != null else 0, rng, -1, [], produce, only_tags, 0.0):
+			if out.size() < n:
+				out.append(id)
+	return out
 
 
 ## 搜满了没有（满了就不能再搜，但还没走）
