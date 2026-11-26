@@ -1,0 +1,63 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+GC987 选牌 brute：30 局 1059 批；god_brute_linger 出现 91 次 / 拿 23 局；god_brute_persist 出现 75 次 / 拿 24 局；god_brute_laurel 出现 54 次 / 拿 29 局
+GC987 选牌 sun：30 局 1050 批；god_sun_dawnlight 出现 83 次 / 拿 25 局；god_sun_dusklight 出现 78 次 / 拿 25 局；god_sun_stars 出现 79 次 / 拿 25 局
+GC987 选牌 nature：30 局 1050 批；god_nature_survive 出现 66 次 / 拿 24 局；god_nature_talk 出现 87 次 / 拿 26 局
+GC987 选牌 skill：30 局 1050 批；god_skill_breath 出现 63 次 / 拿 22 局；god_skill_vigor 出现 73 次 / 拿 23 局；god_skill_finish 出现 68 次 / 拿 24 局
+GC987 选牌 技巧之神（先挑拳头）：30 局，拿了徒手大师以后的普通批 472 批，每批都有拳头牌（不对的另列）；拳势最多拿到 5 张；god_skill_fist 拿 23 次；god_skill_fist_edge 拿 127 次；god_skill_fist_shadow 拿 119 次；god_skill_fist_flow 拿 83 次；god_skill_fist_intent 拿 143 次
+GC987 牌面 zh god_brute_linger【余怒】怒气消散后，重新施加原本层数 33% 的怒气
+GC987 牌面 zh god_brute_persist【怒意延绵】你的怒气持续时间减半，但每次受到伤害都会重置
+GC987 牌面 zh god_brute_laurel【血色桂冠】战斗胜利后，你的生命值上限或耐力上限 +10%
+GC987 牌面 zh god_sun_dawnlight【黎明】进入白昼时，回复身上防具护甲上限 50% 的护甲
+GC987 牌面 zh god_sun_dusklight【黄昏】进入黑夜时，恢复耐力上限 20% 的耐力
+GC987 牌面 zh god_sun_stars【众星】每经过一次变换，点亮一颗【星辰】
+GC987 牌面 zh god_sun_humble【谦恭】受到和造成的伤害 -3%
+GC987 牌面 zh god_nature_survive【求生本能】首次生命值低于生命上限 50% 时，立即恢复生命上限 30% 的生命值
+GC987 牌面 zh god_nature_talk【动物交谈】遭遇野兽时可以不战斗，改为获得一件随机自然系道具
+GC987 牌面 zh god_nature_guard_up【护佑（升级）】每 8 秒，消耗自身一半的新生，每消耗 1 层获得 2 点护甲
+GC987 牌面 zh god_nature_decay_up【凋零（升级）】敌人获得枯萎时，失去层数 66% 的生命上限
+GC987 牌面 zh god_skill_breath【回气】清零时，每层恢复 1 点耐力
+GC987 牌面 zh god_skill_vigor【气血】清零时，每层恢复 1 点生命
+GC987 牌面 zh god_skill_finish【收式】每过 10 秒，下次攻击视为清零了连击层数
+GC987 牌面 zh god_skill_fist_edge【拳锋】拳头基础伤害 +1
+GC987 牌面 zh god_skill_fist_shadow【拳影】拳头基础攻速 +0.1 次/每秒
+GC987 牌面 zh god_skill_fist_flow【拳势】拳头每次攻击有 20% 概率获得一层额外的连击
+GC987 牌面 zh god_skill_fist_intent【拳意】拳头的暴击率 +2%，暴击伤害 +4%
+GC987 牌面 zh god_skill_clumsy_up【大巧若拙（升级）】连击清零时，对敌人造成等同于连击层数 100% 的固定真实伤害，并使连击中断的武器立即额外攻击一次
+GC987 牌面 zh god_skill_stream【流水】每层额外 +0.5% 加速
+GC987 牌面 en god_brute_linger【Smoldering Rage】When Rage fades, regain 33% of those stacks
+GC987 牌面 en god_brute_persist【Smouldering Rage】Your Rage lasts half as long, but every hit you take resets it
+GC987 牌面 en god_brute_laurel【Crimson Laurel】After winning a battle, your Max Health or Max Stamina +10%
+GC987 牌面 en god_sun_dawnlight【Daybreak】On entering Day, restore Armor equal to 50% of your armor's max Armor
+GC987 牌面 en god_sun_dusklight【Twilight】On entering Night, restore 20% of max Stamina
+GC987 牌面 en god_sun_stars【Myriad Stars】Each Day/Night change lights a Star
+GC987 牌面 en god_sun_humble【Humility】Damage taken and dealt -3%
+GC987 牌面 en god_nature_survive【Will to Live】The first time your Health drops below 50%, restore 30% of Max Health
+GC987 牌面 en god_nature_talk【Beast Speech】When you meet a beast you can skip the fight and get a random nature item instead
+GC987 牌面 en god_nature_guard_up【Sheltering Bark+】Every 8s, consume half of your Rebirth and gain 2 Armor per stack consumed
+GC987 牌面 en god_nature_decay_up【Withering Blight+】When the enemy gains Wither, it loses Max Health equal to 66% of the stacks
+GC987 牌面 en god_skill_breath【Recover Breath】When Combo resets, restore 1 Stamina per stack
+GC987 牌面 en god_skill_vigor【Vital Blood】When Combo resets, restore 1 Health per stack
+GC987 牌面 en god_skill_finish【Closing Form】Every 10s, your next attack counts as a Combo reset
+GC987 牌面 en god_skill_fist_edge【Fist Edge】Fist base damage +1
+GC987 牌面 en god_skill_fist_shadow【Fist Shadow】Fist base attack speed +0.1 per second
+GC987 牌面 en god_skill_fist_flow【Fist Momentum】Each Fist attack has a 20% chance to gain an extra Combo stack
+GC987 牌面 en god_skill_fist_intent【Fist Intent】Fist Crit Chance +2%, Crit Damage +4%
+GC987 牌面 en god_skill_clumsy_up【Artless Art+】When Combo resets, deal fixed true damage equal to 100% of it to the enemy, and the weapon that broke the Combo makes an extra attack
+GC987 牌面 en god_skill_stream【Flowing Water】+0.5% extra Haste per Combo stack
+GC987 众星 种子 1：两场换边 5 + 5 次，星辰 10 颗；战败结算 star_funds 20、局外钱 0 → 20
+GC987 众星 种子 2：两场换边 5 + 5 次，星辰 10 颗；战败结算 star_funds 20、局外钱 0 → 20
+GC987 众星 没拿：星辰 0，star_funds 0
+GC987 血色桂冠：赢 6 场、输 1 场 → 记了 6 笔；生命上限 160.0 → 208.0（基础 160），耐力上限 110.0 → 143.0（基础 110）
+GC987 血色桂冠：生命 3 笔、耐力 3 笔
+GC987 收式 种子 1（40 秒）：只有大巧若拙 真清零 32、真实伤害 32 下；加收式 真清零 32、真实伤害 34 下，最高连击 67 / 67
+GC987 不对：收式没多打
+GC987 收式 种子 2（40 秒）：只有大巧若拙 真清零 32、真实伤害 32 下；加收式 真清零 32、真实伤害 34 下，最高连击 67 / 67
+GC987 不对：收式没多打
+GC987 大巧若拙（升级）种子 1：真清零 18 次，补打 18 次，不耗耐力的出手 18 次
+GC987 大巧若拙（升级）种子 2：真清零 18 次，补打 18 次，不耗耐力的出手 18 次
+GC987 流水 种子 1：真清零 43 次，流水被清 43 次；出手 93 次时对照，流水层数 ≠ 连击层数 0 次；流水最高 39 层
+GC987 流水 种子 2：真清零 43 次，流水被清 43 次；出手 93 次时对照，流水层数 ≠ 连击层数 0 次；流水最高 39 层
+GC987 拳头（拳锋 2、拳影、拳势 5、拳意）：20 秒出手 27 次（约每秒 1.35 下），最高连击 52，真清零 0
+GC987 合计不对 2 处
+GC987 完
