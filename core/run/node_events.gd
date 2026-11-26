@@ -178,9 +178,7 @@ func bind(p_travel: MapTravel) -> void:
 func handle(node: MapNode) -> void:
 	if node == null:
 		return
-	var type := node.type
-	if type == &"random":
-		type = reveal(node)
+	var type := reveal(node) if node.type == &"random" else effective_type(node)     # 改过类型的（神坛改造、【扎营】）按改过的算
 	var def := _event_for(node, type)
 	if def != null:
 		last_handled_id = node.id

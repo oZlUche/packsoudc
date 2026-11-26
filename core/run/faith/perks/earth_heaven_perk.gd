@@ -47,6 +47,19 @@ const JADE := &"god_earth_jade"
 const PILLAR_SKY := &"god_earth_pillar_sky"
 const RANGES := &"god_earth_ranges"
 const SISYPHUS := &"god_earth_sisyphus"
+const COMPRESS := &"god_earth_compress"
+## 第三批的基础牌：密道（一次【穿行】）、驻扎（一次【扎营】）、提炼（大地结晶价值、重量 +1，拿了压缩才进池）
+const TUNNEL := &"god_earth_tunnel"
+const CAMP := &"god_earth_camp"
+const REFINE := &"god_earth_refine"
+const WALK_SKILL := &"earth_walk"
+const CAMP_SKILL := &"earth_camp"
+## 【穿行】：攒着的那一次（[member LevelModule.god_state]）、几步之内
+const WALK_KEY := "earth_walk"
+const WALK_RANGE := 3
+## 【压缩】出的道具、每个结晶按几点价值折算
+const CRYSTAL_ID := &"earth_crystal"
+const CRYSTAL_VALUE := 5
 ## 一局里攒的数（[member LevelModule.god_state]）
 const TRAIN_HP := "earth_train_hp"
 const TRAIN_STAMINA := "earth_train_stamina"
@@ -384,6 +397,12 @@ static func on_pick(lv: LevelModule, cid: StringName) -> void:
 			_dig(lv, run)
 		SELECT:
 			_roll_select(lv, run)
+		TUNNEL:
+			_grant_belt(run, WALK_SKILL)
+		CAMP:
+			_grant_belt(run, CAMP_SKILL)
+		REFINE:
+			restamp_crystals(run)
 
 
 ## 宝石化：随机一件道具价值和重量翻倍，先挑支柱（不是大地也不是穹顶的）；同一件可以再翻
@@ -505,6 +524,120 @@ static func on_search(lv: LevelModule, session: SearchSession) -> void:
 				xp += ECHO_XP[clampi(d.rarity, 0, ECHO_XP.size() - 1)]
 		if xp > 0.0:
 			lv.gain(xp, LevelModule.SRC_FAITH, "earth_echo")
+#endregion
+
+
+#region 第三批：穿行、扎营、压缩、提炼
+## 密道 / 驻扎：腰带里放一个（腰带限的是种类：已经有这种就叠上，没有又满了就放不下）
+static func _grant_belt(run: RunState, skill: StringName) -> void:
+	var belt := BeltModule.of(run)
+	if belt != null:
+		belt.add(skill, 1)
+
+
+## 【穿行】攒着没有
+static func walk_armed(run: RunState) -> bool:
+	var lv := LevelModule.of(run)
+	return lv != null and int(lv.god_state.get(WALK_KEY, 0)) > 0
+
+
+static func arm_walk(run: RunState) -> void:
+	var lv := LevelModule.of(run)
+	if lv != null:
+		lv.god_state[WALK_KEY] = 1
+
+
+## 【穿行】能去的点：脚下 [constant WALK_RANGE] 步之内（不含脚下），升序。没攒着是空（[param any] 真 = 不管攒没攒）
+static func walk_targets(run: RunState, any: bool = false) -> Array[int]:
+	var out: Array[int] = []
+	if run == null or run.map == null or run.travel == null or (not any and not walk_armed(run)):
+		return out
+	var here := run.travel.current_id
+	for id in MapNavigator.within_steps(run.map, here, WALK_RANGE):
+		if int(id) != here:
+			out.append(int(id))
+	out.sort()
+	return out
+
+
+## 【穿行】传到 [param id]：计一步（负重的倍数照乘），落地那个点头一回踩就照常发生。走不了返回 false、那一次还留着
+static func walk_to(run: RunState, id: int) -> bool:
+	if run == null or run.phase != RunState.Phase.ON_MAP or run.is_over() or not walk_targets(run).has(id):
+		return false
+	var lv := LevelModule.of(run)
+	lv.god_state.erase(WALK_KEY)
+	var ok := run.relocate(MoveIntent.teleport(run.travel.current_id, id, 1))
+	if not ok:
+		lv.god_state[WALK_KEY] = 1
+	return ok
+
+
+## 【压缩】拿了没有
+static func can_compress_any(run: RunState) -> bool:
+	var lv := LevelModule.of(run)
+	return lv != null and lv.god() == &"earth" and lv.has_card(COMPRESS)
+
+
+## 这一件能不能压：拿了压缩、不是包、不是结晶本身、没被锁 / 不是基石 / 不是委托物
+static func can_compress(run: RunState, inst: ItemInstance) -> bool:
+	if inst == null or inst.def == null or not can_compress_any(run):
+		return false
+	var d := inst.def
+	return not d.is_bag and d.id != CRYSTAL_ID and not d.is_commission() and not inst.is_locked_by_player()
+
+
+## 压出几个：原本价值 ÷ 每个结晶的价值（四舍五入，至少 1）
+static func crystals_for(inst: ItemInstance) -> int:
+	return maxi(1, roundi(float(ItemValue.of_instance(inst)) / float(CRYSTAL_VALUE)))
+
+
+## 压缩：[param insts] 里能压的（调用方已经从原处拿走）换成一摞大地结晶，放进背包（放不下放地上）。返回那一摞（一件没压 null）
+static func compress(run: RunState, insts: Array) -> ItemInstance:
+	if run == null or run.items == null:
+		return null
+	var n := 0
+	for raw in insts:
+		var it := raw as ItemInstance
+		if can_compress(run, it):
+			n += crystals_for(it)
+	var d := run.items.get_def(CRYSTAL_ID)
+	if n <= 0 or d == null:
+		return null
+	var inst := ItemInstance.create(d)
+	inst.set_stack(n)
+	_stamp_crystal(inst, _refine(run))
+	if run.board != null and run.board.try_add(inst):
+		return inst
+	if run.storage != null and run.storage.insert(inst):
+		return inst
+	return null
+
+
+static func _refine(run: RunState) -> int:
+	var lv := LevelModule.of(run)
+	return roundi(lv.god_value(REFINE, "n")) if lv != null else 0
+
+
+## 提炼了几次就每个多几点价值、几点重量（记在实例上，带出这一局也算）
+static func _stamp_crystal(inst: ItemInstance, refine: int) -> void:
+	if refine <= 0:
+		return
+	inst.state["value"] = ItemValue.of(inst.def) + refine
+	inst.state[ItemInstance.WEIGHT_ADD_KEY] = refine
+
+
+## 提炼：背包里、地上的大地结晶按现在的提炼次数重记
+static func restamp_crystals(run: RunState) -> void:
+	var refine := _refine(run)
+	for c in [run.board, run.storage]:
+		var box := c as ItemContainer
+		if box == null:
+			continue
+		for raw in box.items():
+			var it := raw as ItemInstance
+			if it.def != null and it.def.id == CRYSTAL_ID:
+				_stamp_crystal(it, refine)
+		box.touch()
 #endregion
 
 

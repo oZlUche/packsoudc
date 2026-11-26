@@ -236,6 +236,15 @@ cards = {
 "kind": "god",
 "weight": 0.3
 },
+"god_earth_camp": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_compress": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
 "god_earth_dig": {
 "god": "earth",
 "kind": "god"
@@ -330,6 +339,11 @@ cards = {
 "kind": "god",
 "once": true
 },
+"god_earth_refine": {
+"after": "god_earth_compress",
+"god": "earth",
+"kind": "god"
+},
 "god_earth_rock": {
 "god": "earth",
 "kind": "god",
@@ -412,6 +426,10 @@ cards = {
 "god": "earth",
 "kind": "god",
 "upgrade_of": "god_earth_train"
+},
+"god_earth_tunnel": {
+"god": "earth",
+"kind": "god"
 },
 "god_earth_vital": {
 "god": "earth",
@@ -942,4 +960,3 @@ cards = {
 "kind": "god"
 }
 }
-closed_gods = Array[StringName]([&"earth"])

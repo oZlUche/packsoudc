@@ -44,6 +44,8 @@ const RUN_EFFECTS := {
 const BELT_EFFECTS := {
 	&"smoke_escape": "res://core/run/effects/smoke_escape.gd",
 	&"mend_vitality": "res://core/run/effects/mend_vitality.gd",
+	&"earth_walk": "res://core/run/effects/earth_walk.gd",     # 大地之神【密道】
+	&"earth_camp": "res://core/run/effects/earth_camp.gd",     # 大地之神【驻扎】
 }
 
 ## 一局的机制（069）：难度清单里开的那些

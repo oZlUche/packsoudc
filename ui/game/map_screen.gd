@@ -700,6 +700,12 @@ func _adopt() -> void:
 	var lvm := LevelModule.of(_run)
 	if lvm != null:
 		lvm.leveled.connect(func(_lv: int): _maybe_level_pick.call_deferred())     # 372：在地图上升了级（走进更深一环）
+	var belt := BeltModule.of(_run)
+	if belt != null:
+		belt.used.connect(func(sid: StringName):     # 大地之神【穿行】：备好了就把 3 步之内的点标出来
+			if sid == EarthHeavenPerk.WALK_SKILL:
+				_hud_host.notice(UiText.t("map.earth_walk_pick") % EarthHeavenPerk.WALK_RANGE, false)
+			_after_move())
 	var problems: Array[String] = []
 	_hud_host.debug = debug_mode()     # 150 补 2
 	_hud_host.setup(_run, self, HudLayout.load_for("map", problems))     # 150
@@ -922,6 +928,11 @@ func _after_move() -> void:
 			cost[id] = _run.travel.cost_of(intent) if intent != null else 1
 			if intent != null and intent.kind == MoveIntent.TELEPORT:
 				teleport[id] = true
+		for id in EarthHeavenPerk.walk_targets(_run):     # 大地之神【穿行】攒着：3 步之内的都标成能去（传送签）
+			if not reach.has(id):
+				reach[id] = true
+				cost[id] = 1
+				teleport[id] = true
 	_view.reachable = reach
 	_view.reach_cost = cost
 	_view.reach_teleport = teleport
@@ -947,6 +958,8 @@ func _on_node_pressed(id: int, button: int, _shift: bool) -> void:
 		reopen()
 	elif not _walk.is_empty():
 		_walk.clear()     # 277 第 3 条：连走途中再点 = 停下（这一下不另走）
+	elif not _run.travel.available_moves().has(id) and EarthHeavenPerk.walk_targets(_run).has(id):
+		flow.earth_walk(id)     # 大地之神【穿行】：不相邻的直接传过去
 	elif ground_warn_due():
 		open_ground_warn(id)     # 作者 2026-11-19：地上还有东西，先问一句
 	else:

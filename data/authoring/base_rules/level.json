@@ -956,9 +956,24 @@
       "kind": "god",
       "god": "earth",
       "hidden": true
+    },
+    "god_earth_tunnel": {
+      "kind": "god",
+      "god": "earth"
+    },
+    "god_earth_camp": {
+      "kind": "god",
+      "god": "earth"
+    },
+    "god_earth_compress": {
+      "kind": "god",
+      "god": "earth",
+      "once": true
+    },
+    "god_earth_refine": {
+      "kind": "god",
+      "god": "earth",
+      "after": "god_earth_compress"
     }
-  },
-  "closed_gods": [
-    "earth"
-  ]
+  }
 }

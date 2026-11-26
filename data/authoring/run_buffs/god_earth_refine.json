@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_refine",
+  "display_name": "提炼",
+  "display_names": {
+    "en": "Refine"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

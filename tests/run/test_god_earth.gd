@@ -13,6 +13,13 @@ static func _node(run: RunState, type: StringName) -> MapNode:
 	return null
 
 
+## 这一件在背包里还是地上
+static func _home(run: RunState, inst: ItemInstance) -> ItemContainer:
+	if run.board.has_item(inst.uid):
+		return run.board
+	return run.storage
+
+
 static func run_pool(t: TestCase) -> void:
 	t.begin("大地之神 · 牌池：质变 + 升级、基础牌、专属牌（只拿一次）都进牌表；神殿还没落成；有质变牌池")
 	var run := G._start(71, &"earth")
@@ -37,7 +44,7 @@ static func run_pool(t: TestCase) -> void:
 	t.check(bases >= 3, "基础牌（%d 张）" % bases)
 	t.check(once >= 8, "专属牌只拿一次（%d 张）" % once)
 	t.check(lv.has_qual_pool(), "开局质变位出大地之神的牌")
-	t.check(not Pantheon.temple_ready(&"earth"), "万神院：大地之神的神殿还没落成（牌没写齐）")
+	t.check(Pantheon.temple_ready(&"earth"), "万神院：大地之神的神殿落成了（牌写齐了）")
 	t.check(lv.card_text(&"god_earth_rock").contains("8"), "牌面按数写：%s" % lv.card_text(&"god_earth_rock"))
 	var spec := run.compile_player()
 	var found := spec.set_rules.any(func(rr: AbilityRule) -> bool: return not rr.effects.is_empty() and rr.effects[0] is EarthHeaven)
@@ -217,4 +224,80 @@ static func run_batch_two(t: TestCase) -> void:
 	var xp0 := lv.xp
 	session.bonus_cb.call(extra)
 	t.check(lv.xp > xp0, "按稀有度给了经验值")
+	run.dispose()
+
+
+static func run_batch_three(t: TestCase) -> void:
+	t.begin("大地之神 · 第三批：密道给穿行（3 步之内直接去）、驻扎给扎营（脚下变休息点）、压缩成大地结晶（按价值几个、能叠）、提炼加价值和重量")
+	var run := G._start(76, &"earth")
+	var lv := LevelModule.of(run)
+	var belt := BeltModule.of(run)
+	if lv == null or belt == null or run.active_faith_id() != &"earth":
+		t.check(false, "开局奉大地之神、有腰带")
+		return
+	# 扎营：出生点上用
+	lv.taken["god_earth_camp"] = 1
+	EarthHeavenPerk.on_pick(lv, &"god_earth_camp")
+	t.eq(belt.count_of(&"earth_camp"), 1, "驻扎：腰带里多一个扎营")
+	var here := run.current_node()
+	var why := belt.use(&"earth_camp")
+	t.eq(why, "", "能用")
+	t.eq(NodeEvents.effective_type(here), &"rest", "脚下变成休息点")
+	t.check(run.events.pending_event() != null or bool(here.content.get("used_rest", false)), "当场休息（休息点的事 / 已经歇过）")
+	run.events.pending = {}
+	# 穿行
+	lv.taken["god_earth_tunnel"] = 1
+	EarthHeavenPerk.on_pick(lv, &"god_earth_tunnel")
+	t.eq(belt.count_of(&"earth_walk"), 1, "密道：腰带里多一个穿行")
+	t.check(EarthHeavenPerk.walk_targets(run).is_empty(), "没用之前不能直接去")
+	t.eq(belt.use(&"earth_walk"), "", "能用")
+	t.check(EarthHeavenPerk.walk_armed(run), "备好了一次")
+	t.check(belt.can_use(&"earth_walk") != "" , "一次只备一回")
+	var targets := EarthHeavenPerk.walk_targets(run)
+	var dist := MapNavigator.distance_map(run.map, run.travel.current_id)
+	var far := -1
+	for id in targets:
+		t.check(int(dist.get(id, 99)) <= 3, "都在 3 步之内（点 %d：%s 步）" % [id, dist.get(id, "-")])
+		if int(dist.get(id, 0)) >= 2:
+			far = id
+	t.check(far >= 0, "有不相邻的点能去")
+	if far >= 0:
+		t.check(EarthHeavenPerk.walk_to(run, far), "传过去了")
+		t.eq(run.travel.current_id, far, "人在那个点上")
+		t.check(not EarthHeavenPerk.walk_armed(run), "用掉了")
+	# 压缩
+	t.check(not EarthHeavenPerk.can_compress_any(run), "没拿压缩：祭坛上没有这一项")
+	lv.taken["god_earth_compress"] = 1
+	var src: ItemInstance = NatureGifts.give(run, run.items.get_def(&"dense_basalt"))     # 开局棋盘上只有包
+	for raw in [] if src != null else run.board.items():
+		if EarthHeavenPerk.can_compress(run, raw as ItemInstance):
+			src = raw
+			break
+	if src == null:
+		t.check(false, "棋盘上有能压的道具")
+		run.dispose()
+		return
+	var n := EarthHeavenPerk.crystals_for(src)
+	t.eq(n, maxi(1, roundi(ItemValue.of_instance(src) / 5.0)), "按原本价值 %d 折成 %d 个" % [ItemValue.of_instance(src), n])
+	_home(run, src).remove(src.uid)
+	var c := EarthHeavenPerk.compress(run, [src])
+	t.check(c != null and c.def.id == &"earth_crystal", "压出一摞大地结晶")
+	if c == null:
+		run.dispose()
+		return
+	var home := _home(run, c)
+	t.eq([c.stack_count(), ItemValue.of_instance(c), ItemWeight.of_in(c, home)], [n, 5 * n, 5 * n], "一个价值 5、重量 5，一摞乘个数")
+	t.check(not EarthHeavenPerk.can_compress(run, c), "结晶不能再压")
+	# 提炼
+	lv.taken["god_earth_refine"] = 1
+	EarthHeavenPerk.on_pick(lv, &"god_earth_refine")
+	t.eq([ItemValue.of_instance(c), ItemWeight.of_in(c, home)], [6 * n, 6 * n], "提炼：每个价值、重量 +1")
+	# 叠
+	var more := EarthHeavenPerk.compress(run, [ItemInstance.create(src.def)])
+	var more_home := _home(run, more)
+	t.check(ItemStack.can_merge(more, c), "同种、同样提炼过的能叠")
+	t.check(not ItemStack.can_merge(more, ItemInstance.create(src.def)), "别的道具不能叠")
+	t.check(ItemStack.merge(more, more_home, c, home), "叠上了")
+	t.eq(c.stack_count(), n * 2, "个数加起来")
+	t.check(not more_home.has_item(more.uid), "拖过去的那一摞没了")
 	run.dispose()

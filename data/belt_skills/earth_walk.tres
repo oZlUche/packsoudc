@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BeltSkillDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/belt_effect.gd" id="1_lgwr7"]
+[ext_resource type="Script" path="res://core/run/effects/earth_walk.gd" id="2_tg52u"]
+[ext_resource type="Script" path="res://core/inventory/belt_skill_def.gd" id="3_8doh1"]
+
+[sub_resource type="Resource" id="Resource_66jwc"]
+script = ExtResource("2_tg52u")
+
+[resource]
+script = ExtResource("3_8doh1")
+id = &"earth_walk"
+display_name = "穿行"
+display_names = {
+"en": "Passage"
+}
+price = 30
+effects = Array[ExtResource("1_lgwr7")]([SubResource("Resource_66jwc")])

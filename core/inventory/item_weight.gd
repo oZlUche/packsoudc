@@ -97,7 +97,8 @@ static func of_in_scaled(inst: ItemInstance, c: ItemContainer, rules: Array) -> 
 
 ## 209：放在 [param c] 上的这一件有多重 —— 整件在一个包里就乘包的 [member ItemDef.bag_weight_mult]（四舍五入），其余同 [method of]
 static func of_in(inst: ItemInstance, c: ItemContainer) -> int:
-	var w := of(inst.def)
+	var w := of(inst.def) + int(inst.state.get(ItemInstance.WEIGHT_ADD_KEY, 0))     # 大地之神【提炼】
+	w *= inst.stack_count()     # 【压缩】的大地结晶：一摞几个
 	if inst.state.has(WEIGHT_MULT_KEY):
 		w = roundi(w * float(inst.state[WEIGHT_MULT_KEY]))     # 大地之神【宝石化】：这一件的重量翻倍
 	var bag := bag_def_of(inst, c)
