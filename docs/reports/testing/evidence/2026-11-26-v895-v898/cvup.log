@@ -1,0 +1,4 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+CVUP god_skill_gap 质变 true；god_skill_gap_up 质变 true 升级自 god_skill_gap
+CVUP 拿了 质变 1 + 升级版 1 + 基础 5 张，改信以后 god_state { "repick_qual": 2, "repick_base": 5 }；repicks_left 7；剩下的牌 {  }

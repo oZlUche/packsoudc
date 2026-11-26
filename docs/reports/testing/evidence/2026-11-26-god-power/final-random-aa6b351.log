@@ -1,0 +1,1241 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+GP963 策略 random；每组 12 局；每个检查点 4 场；时限 600 秒
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|0|L6|dps 14.0/10.3/14.0|mit 8.3/8.0/8.2|god_d 0.261|god_m 0.034|card_d 0.000|card_m 0.010|gcards 4
+GP963 CP|brute|0|0|L12|dps 14.4/11.5/14.4|mit 11.5/9.9/10.5|god_d 0.196|god_m 0.132|card_d 0.000|card_m 0.082|gcards 6
+GP963 CP|brute|0|0|L18|dps 17.1/12.1/15.7|mit 29.2/21.5/22.5|god_d 0.291|god_m 0.264|card_d 0.076|card_m 0.231|gcards 7
+GP963 CP|brute|0|0|L24|dps 43.0/5.4/7.7|mit 49.0/38.7/38.6|god_d 0.874|god_m 0.211|card_d 0.821|card_m 0.212|gcards 12
+GP963 CP|brute|0|0|L30|dps 43.4/5.9/8.4|mit 40.4/27.6/27.5|god_d 0.864|god_m 0.318|card_d 0.807|card_m 0.318|gcards 15
+GP963 LOO|brute|0|0|god_brute_armor=0.058/0.117;god_brute_regen=0.086/0.126;god_brute_duration=0.000/0.000;god_brute_smite=0.000/0.000;god_brute_damage=0.067/0.031;god_brute_persist=0.030/0.025;god_brute_armor_up=-0.003/0.057;god_brute_sacrifice=0.000/0.000;god_brute_burn=0.219/0.067;god_brute_haste=0.124/0.019;god_brute_lifesteal=0.000/0.011;god_brute_burn_up=0.097/0.033;god_brute_linger=0.000/0.000;god_brute_irate=0.054/0.038;god_brute_break=0.088/0.033
+GP963 RUN|brute|0|0|kit hand_axe,felling_axe,leather_armor,tower_shield|wins 19/20|dps 24.4|mit 27.3|god_d 0.598|god_m 0.329|card_d 0.480|card_m 0.273
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|1|L6|dps 11.0/8.0/10.0|mit 8.1/8.2/8.4|god_d 0.278|god_m -0.020|card_d 0.093|card_m -0.043|gcards 6
+GP963 CP|brute|0|1|L12|dps 13.6/8.5/11.2|mit 14.0/12.5/13.6|god_d 0.376|god_m 0.110|card_d 0.173|card_m 0.032|gcards 8
+GP963 CP|brute|0|1|L18|dps 15.3/8.9/10.4|mit 11.9/9.9/10.4|god_d 0.419|god_m 0.169|card_d 0.316|card_m 0.127|gcards 12
+GP963 CP|brute|0|1|L24|dps 13.7/1.8/3.7|mit 26.1/24.7/24.8|god_d 0.866|god_m 0.055|card_d 0.731|card_m 0.052|gcards 13
+GP963 CP|brute|0|1|L30|dps 45.9/2.4/4.5|mit 41.7/34.2/32.2|god_d 0.948|god_m 0.179|card_d 0.902|card_m 0.227|gcards 14
+GP963 LOO|brute|0|1|god_brute_hate=0.227/0.091;god_brute_haste=0.344/0.095;god_brute_sacrifice=0.000/0.000;god_brute_break=0.323/0.076;god_brute_linger=0.000/0.000;god_brute_hate_up=0.065/0.058;god_brute_lifesteal=0.000/0.024;god_brute_blood=0.110/0.024;god_brute_irate=0.073/0.038;god_brute_damage=0.323/0.076;god_brute_regen=0.091/0.084;god_brute_armor=-0.076/0.123;god_brute_eat=0.000/0.000;god_brute_persist=0.311/0.201
+GP963 RUN|brute|0|1|kit club,knife,leather_armor,tower_shield|wins 15/20|dps 17.9|mit 18.9|god_d 0.611|god_m 0.227|card_d 0.510|card_m 0.175
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|2|L6|dps 13.5/9.5/12.7|mit 11.5/10.1/11.2|god_d 0.297|god_m 0.122|card_d 0.060|card_m 0.032|gcards 3
+GP963 CP|brute|0|2|L12|dps 17.9/10.6/14.0|mit 16.4/15.3/14.6|god_d 0.406|god_m 0.071|card_d 0.218|card_m 0.113|gcards 6
+GP963 CP|brute|0|2|L18|dps 23.9/9.9/13.5|mit 23.6/19.1/19.8|god_d 0.586|god_m 0.190|card_d 0.437|card_m 0.160|gcards 8
+GP963 CP|brute|0|2|L24|dps 24.8/4.5/7.6|mit 12.4/21.6/22.0|god_d 0.817|god_m -0.747|card_d 0.694|card_m -0.782|gcards 11
+GP963 CP|brute|0|2|L30|dps 32.1/5.3/6.8|mit 29.3/33.6/31.0|god_d 0.835|god_m -0.144|card_d 0.787|card_m -0.057|gcards 14
+GP963 LOO|brute|0|2|god_brute_cornered=0.248/-0.068;god_brute_lifesteal=-0.125/0.003;god_brute_eat=0.000/0.000;god_brute_irate=0.088/0.055;god_brute_haste=0.498/0.192;god_brute_cornered_up=-0.344/-0.205;god_brute_duration=0.072/0.032;god_brute_hate=0.089/0.050;god_brute_cornered_more=-0.055/-0.057;god_brute_linger=0.085/0.044;god_brute_eat_up=0.000/0.000;god_brute_damage=0.474/0.194;god_brute_regen=-0.324/-0.015;god_brute_armor=-0.458/-0.029
+GP963 RUN|brute|0|2|kit felling_axe,hand_crossbow,leather_armor,tower_shield|wins 20/20|dps 23.4|mit 18.0|god_d 0.632|god_m 0.023|card_d 0.510|card_m -0.018
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|3|L6|dps 15.2/11.0/14.6|mit 12.6/9.4/9.8|god_d 0.276|god_m 0.254|card_d 0.045|card_m 0.223|gcards 4
+GP963 CP|brute|0|3|L12|dps 14.3/10.5/14.2|mit 16.6/10.1/11.7|god_d 0.267|god_m 0.392|card_d 0.010|card_m 0.297|gcards 6
+GP963 CP|brute|0|3|L18|dps 18.9/11.6/14.9|mit 29.5/14.2/13.8|god_d 0.384|god_m 0.518|card_d 0.212|card_m 0.532|gcards 9
+GP963 CP|brute|0|3|L24|dps 21.6/5.4/8.3|mit 51.5/28.0/28.0|god_d 0.752|god_m 0.457|card_d 0.618|card_m 0.457|gcards 11
+GP963 CP|brute|0|3|L30|dps 17.9/4.0/7.3|mit 39.9/26.1/26.7|god_d 0.777|god_m 0.345|card_d 0.592|card_m 0.330|gcards 14
+GP963 LOO|brute|0|3|god_brute_pain=-0.129/0.395;god_brute_duration=-0.012/-0.024;god_brute_regen=-0.038/-0.017;god_brute_blood=0.462/-0.009;god_brute_linger=0.015/-0.003;god_brute_pain_up=-0.067/0.203;god_brute_lifesteal=0.037/-0.011;god_brute_irate=0.040/-0.018;god_brute_eat=0.000/0.000;god_brute_damage=0.275/-0.002;god_brute_blood_up=0.206/0.022;god_brute_sacrifice=0.000/0.000;god_brute_smite=0.000/0.000;god_brute_eat_up=0.000/0.000
+GP963 RUN|brute|0|3|kit felling_axe,hand_crossbow,leather_armor,brass_plating|wins 10/20|dps 17.3|mit 28.5|god_d 0.446|god_m 0.494|card_d 0.258|card_m 0.457
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|4|L6|dps 13.6/10.3/14.1|mit 11.3/8.9/9.5|god_d 0.241|god_m 0.210|card_d -0.034|card_m 0.159|gcards 3
+GP963 CP|brute|0|4|L12|dps 14.4/10.6/14.4|mit 11.9/9.1/9.8|god_d 0.266|god_m 0.235|card_d 0.000|card_m 0.173|gcards 6
+GP963 CP|brute|0|4|L18|dps 13.8/9.0/12.6|mit 17.9/12.5/12.5|god_d 0.348|god_m 0.298|card_d 0.087|card_m 0.299|gcards 8
+GP963 CP|brute|0|4|L24|dps 14.6/3.1/6.5|mit 25.2/26.3/26.4|god_d 0.791|god_m -0.043|card_d 0.554|card_m -0.046|gcards 12
+GP963 CP|brute|0|4|L30|dps 24.1/1.9/4.6|mit 30.3/25.9/26.2|god_d 0.921|god_m 0.147|card_d 0.808|card_m 0.135|gcards 13
+GP963 LOO|brute|0|4|god_brute_armor=-0.568/-0.025;god_brute_regen=-0.590/0.079;god_brute_eat=0.000/0.000;god_brute_damage=0.509/0.057;god_brute_duration=0.062/0.060;god_brute_armor_up=-0.171/-0.018;god_brute_irate=0.060/0.046;god_brute_deathfight=0.038/-0.009;god_brute_lifesteal=-0.021/0.001;god_brute_sacrifice=0.000/0.000;god_brute_break=0.325/0.050;god_brute_hate=0.055/0.007;god_brute_hate_up=0.028/0.019
+GP963 RUN|brute|0|4|kit shortsword,hand_crossbow,leather_armor,brass_plating|wins 13/20|dps 16.4|mit 21.3|god_d 0.487|god_m 0.366|card_d 0.285|card_m 0.320
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|5|L6|dps 8.7/7.0/8.2|mit 10.2/10.3/9.8|god_d 0.196|god_m -0.004|card_d 0.056|card_m 0.044|gcards 3
+GP963 CP|brute|0|5|L12|dps 9.6/7.3/8.6|mit 13.6/11.6/11.7|god_d 0.234|god_m 0.152|card_d 0.102|card_m 0.145|gcards 5
+GP963 CP|brute|0|5|L18|dps 12.9/6.4/8.4|mit 19.1/14.5/14.2|god_d 0.503|god_m 0.240|card_d 0.348|card_m 0.257|gcards 8
+GP963 CP|brute|0|5|L24|dps 31.6/3.1/5.1|mit 40.6/35.3/32.5|god_d 0.901|god_m 0.132|card_d 0.838|card_m 0.200|gcards 10
+GP963 CP|brute|0|5|L30|dps 40.7/4.0/6.4|mit 47.6/35.9/36.9|god_d 0.902|god_m 0.245|card_d 0.843|card_m 0.225|gcards 12
+GP963 LOO|brute|0|5|god_brute_armor=-0.171/-0.011;god_brute_duration=0.116/0.044;god_brute_break=0.418/0.038;god_brute_linger=0.009/0.005;god_brute_pain=-0.157/0.140;god_brute_lifesteal=0.002/0.039;god_brute_damage=0.266/0.031;god_brute_break_up=0.152/0.030;god_brute_regen=0.011/0.074;god_brute_deathfight=0.205/-0.041;god_brute_haste=0.052/0.014;god_brute_blood=0.188/0.038
+GP963 RUN|brute|0|5|kit hand_crossbow,club,leather_armor,tower_shield|wins 11/20|dps 17.8|mit 22.9|god_d 0.641|god_m 0.308|card_d 0.556|card_m 0.308
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|6|L6|dps 20.2/15.2/20.2|mit 9.3/9.6/9.2|god_d 0.248|god_m -0.036|card_d 0.000|card_m 0.009|gcards 4
+GP963 CP|brute|0|6|L12|dps 20.8/15.3/20.5|mit 20.6/16.4/17.5|god_d 0.263|god_m 0.203|card_d 0.013|card_m 0.152|gcards 7
+GP963 CP|brute|0|6|L18|dps 15.0/10.3/13.0|mit 21.7/16.5/15.8|god_d 0.311|god_m 0.241|card_d 0.130|card_m 0.274|gcards 10
+GP963 CP|brute|0|6|L24|dps 14.8/4.5/7.7|mit 31.3/30.1/31.8|god_d 0.692|god_m 0.038|card_d 0.476|card_m -0.015|gcards 11
+GP963 CP|brute|0|6|L30|dps 44.7/4.1/8.3|mit 51.1/36.4/33.8|god_d 0.907|god_m 0.287|card_d 0.814|card_m 0.338|gcards 12
+GP963 LOO|brute|0|6|god_brute_armor=-0.080/-0.026;god_brute_duration=0.010/0.029;god_brute_regen=0.054/0.180;god_brute_blood=0.082/0.023;god_brute_damage=0.008/0.005;god_brute_haste=0.040/-0.008;god_brute_pain=-0.069/0.099;god_brute_linger=0.000/0.001;god_brute_irate=0.130/0.052;god_brute_smite=0.000/0.000;god_brute_hate=0.111/0.057;god_brute_burn=0.678/0.316
+GP963 RUN|brute|0|6|kit hand_axe,shortsword,leather_armor,round_shield|wins 18/20|dps 19.2|mit 28.4|god_d 0.454|god_m 0.292|card_d 0.282|card_m 0.274
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|7|L6|dps 12.1/9.3/11.3|mit 10.4/9.6/9.4|god_d 0.230|god_m 0.079|card_d 0.067|card_m 0.100|gcards 4
+GP963 CP|brute|0|7|L12|dps 14.2/8.1/10.1|mit 17.3/14.1/14.8|god_d 0.433|god_m 0.180|card_d 0.289|card_m 0.142|gcards 7
+GP963 CP|brute|0|7|L18|dps 18.2/9.5/10.4|mit 24.9/18.1/19.2|god_d 0.478|god_m 0.276|card_d 0.428|card_m 0.231|gcards 8
+GP963 CP|brute|0|7|L24|dps 26.6/5.3/8.3|mit 28.3/37.9/35.4|god_d 0.800|god_m -0.343|card_d 0.688|card_m -0.253|gcards 10
+GP963 CP|brute|0|7|L30|dps 23.6/4.5/5.5|mit 32.1/36.1/36.6|god_d 0.810|god_m -0.124|card_d 0.765|card_m -0.139|gcards 11
+GP963 LOO|brute|0|7|god_brute_deathfight=0.000/0.000;god_brute_regen=-2.315/0.013;god_brute_damage=0.536/0.100;god_brute_cornered=0.153/-0.086;god_brute_duration=0.000/0.000;god_brute_irate=-0.023/0.022;god_brute_blood=0.053/0.003;god_brute_eat=0.000/0.000;god_brute_haste=0.262/0.017;god_brute_hate=0.031/0.024;god_brute_persist=0.151/0.227
+GP963 RUN|brute|0|7|kit crude_bow,felling_axe,leather_armor,round_shield|wins 20/20|dps 20.2|mit 24.3|god_d 0.597|god_m 0.232|card_d 0.516|card_m 0.202
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|8|L6|dps 17.9/13.5/17.9|mit 11.3/11.7/11.3|god_d 0.242|god_m -0.033|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|brute|0|8|L12|dps 18.8/13.7/18.3|mit 18.8/18.9/19.0|god_d 0.273|god_m -0.003|card_d 0.030|card_m -0.007|gcards 7
+GP963 CP|brute|0|8|L18|dps 21.0/11.7/16.1|mit 26.3/19.7/20.7|god_d 0.441|god_m 0.252|card_d 0.232|card_m 0.216|gcards 8
+GP963 CP|brute|0|8|L24|dps 29.0/3.8/6.2|mit 32.8/27.2/25.6|god_d 0.869|god_m 0.172|card_d 0.786|card_m 0.219|gcards 10
+GP963 CP|brute|0|8|L30|dps 41.3/5.4/7.4|mit 42.0/31.1/31.8|god_d 0.869|god_m 0.259|card_d 0.821|card_m 0.242|gcards 11
+GP963 LOO|brute|0|8|god_brute_persist=0.003/0.005;god_brute_regen=-0.011/0.219;god_brute_haste=0.059/-0.010;god_brute_damage=0.071/0.012;god_brute_blood=0.001/-0.001;god_brute_duration=0.000/0.000;god_brute_armor=-0.149/0.065;god_brute_deathfight=0.000/0.000;god_brute_linger=0.000/0.000;god_brute_break=0.147/0.014;god_brute_burn=0.272/0.024
+GP963 RUN|brute|0|8|kit knife,felling_axe,leather_armor,round_shield|wins 20/20|dps 26.4|mit 28.3|god_d 0.616|god_m 0.250|card_d 0.501|card_m 0.225
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|9|L6|dps 13.1/10.1/12.7|mit 10.7/9.9/10.2|god_d 0.231|god_m 0.074|card_d 0.026|card_m 0.044|gcards 5
+GP963 CP|brute|0|9|L12|dps 14.1/10.1/12.6|mit 20.1/16.1/16.2|god_d 0.286|god_m 0.199|card_d 0.102|card_m 0.191|gcards 7
+GP963 CP|brute|0|9|L18|dps 5.8/8.1/10.4|mit 42.1/25.1/25.9|god_d -0.389|god_m 0.405|card_d -0.783|card_m 0.384|gcards 8
+GP963 CP|brute|0|9|L24|dps 12.4/2.9/5.0|mit 55.8/32.0/32.6|god_d 0.769|god_m 0.427|card_d 0.597|card_m 0.416|gcards 11
+GP963 CP|brute|0|9|L30|dps 11.8/4.4/7.8|mit 33.6/28.1/27.7|god_d 0.624|god_m 0.165|card_d 0.339|card_m 0.174|gcards 12
+GP963 LOO|brute|0|9|god_brute_hate=0.051/0.021;god_brute_haste=-0.203/-0.094;god_brute_regen=-0.111/-0.084;god_brute_lifesteal=0.000/0.002;god_brute_smite=0.000/0.000;god_brute_smite_more=0.000/0.000;god_brute_pain=0.008/0.171;god_brute_persist=0.621/-0.009;god_brute_damage=0.801/-0.022;god_brute_duration=0.000/0.000;god_brute_smite_up=0.000/0.000;god_brute_armor=-0.039/-0.031
+GP963 RUN|brute|0|9|kit felling_axe,knife,leather_armor,tower_shield|wins 18/20|dps 10.3|mit 39.3|god_d 0.223|god_m 0.496|card_d -0.016|card_m 0.473
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|10|L6|dps 15.9/12.3/15.1|mit 11.2/10.2/10.7|god_d 0.229|god_m 0.084|card_d 0.052|card_m 0.043|gcards 4
+GP963 CP|brute|0|10|L12|dps 18.2/12.8/16.6|mit 13.2/11.2/12.0|god_d 0.296|god_m 0.155|card_d 0.086|card_m 0.092|gcards 7
+GP963 CP|brute|0|10|L18|dps 25.6/13.0/17.7|mit 18.2/13.4/15.2|god_d 0.491|god_m 0.262|card_d 0.309|card_m 0.166|gcards 10
+GP963 CP|brute|0|10|L24|dps 26.8/8.3/11.7|mit 29.4/29.5/29.3|god_d 0.691|god_m -0.000|card_d 0.564|card_m 0.003|gcards 11
+GP963 CP|brute|0|10|L30|dps 39.7/9.1/12.4|mit 42.8/31.3/32.9|god_d 0.771|god_m 0.269|card_d 0.687|card_m 0.230|gcards 14
+GP963 LOO|brute|0|10|god_brute_break=0.308/-0.000;god_brute_sacrifice=0.000/0.000;god_brute_burn=0.338/0.005;god_brute_persist=0.088/0.001;god_brute_regen=0.332/0.076;god_brute_haste=0.086/0.006;god_brute_burn_up=0.157/0.005;god_brute_linger=0.000/0.000;god_brute_duration=0.000/0.000;god_brute_smite=0.000/0.000;god_brute_eat=0.000/0.000;god_brute_smite_more=0.000/0.000;god_brute_irate=0.169/0.014;god_brute_armor=0.278/0.167
+GP963 RUN|brute|0|10|kit felling_axe,club,leather_armor,brass_plating|wins 12/20|dps 24.0|mit 21.0|god_d 0.508|god_m 0.255|card_d 0.363|card_m 0.176
+GP963 放不下包 bag_leather
+GP963 CP|brute|0|11|L6|dps 11.1/8.6/10.9|mit 7.9/7.9/7.9|god_d 0.226|god_m 0.002|card_d 0.017|card_m -0.006|gcards 3
+GP963 CP|brute|0|11|L12|dps 14.4/8.6/11.3|mit 20.4/18.5/19.8|god_d 0.399|god_m 0.097|card_d 0.211|card_m 0.030|gcards 5
+GP963 CP|brute|0|11|L18|dps 17.2/8.9/12.0|mit 13.6/12.6/13.3|god_d 0.486|god_m 0.077|card_d 0.305|card_m 0.024|gcards 7
+GP963 CP|brute|0|11|L24|dps 12.2/1.7/3.6|mit 29.4/29.8/29.3|god_d 0.862|god_m -0.015|card_d 0.707|card_m 0.001|gcards 8
+GP963 CP|brute|0|11|L30|dps 17.3/1.0/3.0|mit 38.5/36.4/35.8|god_d 0.942|god_m 0.056|card_d 0.826|card_m 0.071|gcards 10
+GP963 LOO|brute|0|11|god_brute_break=0.727/0.000;god_brute_haste=0.296/0.032;god_brute_hate=0.140/0.049;god_brute_irate=0.250/0.001;god_brute_persist=0.095/-0.006;god_brute_linger=0.000/0.000;god_brute_eat=0.000/0.000;god_brute_blood=0.098/0.027;god_brute_regen=0.037/0.045;god_brute_break_up=0.397/0.000
+GP963 RUN|brute|0|11|kit hand_axe,crude_bow,leather_armor,round_shield|wins 9/20|dps 14.2|mit 19.4|god_d 0.507|god_m 0.093|card_d 0.346|card_m 0.035
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|0|L6|dps 34.3/26.0/34.3|mit 11.3/12.0/11.3|god_d 0.244|god_m -0.062|card_d 0.000|card_m 0.003|gcards 4
+GP963 CP|brute|2|0|L12|dps 35.5/26.7/35.1|mit 19.4/17.3/18.7|god_d 0.248|god_m 0.107|card_d 0.012|card_m 0.038|gcards 5
+GP963 CP|brute|2|0|L18|dps 34.6/26.3/32.8|mit 24.2/22.0/22.2|god_d 0.238|god_m 0.091|card_d 0.051|card_m 0.082|gcards 7
+GP963 CP|brute|2|0|L24|dps 39.2/14.0/17.9|mit 45.1/33.8/33.4|god_d 0.642|god_m 0.252|card_d 0.544|card_m 0.261|gcards 9
+GP963 CP|brute|2|0|L30|dps 36.5/11.5/15.6|mit 45.6/28.8/25.9|god_d 0.684|god_m 0.368|card_d 0.572|card_m 0.433|gcards 11
+GP963 LOO|brute|2|0|god_brute_hate=0.127/0.099;god_brute_lifesteal=0.000/-0.000;god_brute_regen=0.000/0.271;god_brute_break=0.472/0.143;god_brute_persist=0.228/0.150;god_brute_irate=0.008/0.013;god_brute_eat=0.000/0.000;god_brute_haste=0.161/0.078;god_brute_deathfight=0.000/0.000;god_brute_linger=0.000/0.000;god_brute_smite=0.000/0.000
+GP963 RUN|brute|2|0|kit halberd,steel_twin_axes,chain_mail,kite_shield|wins 20/20|dps 36.5|mit 33.8|god_d 0.471|god_m 0.267|card_d 0.355|card_m 0.267
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|1|L6|dps 37.1/31.6/37.1|mit 12.0/11.9/12.0|god_d 0.147|god_m 0.009|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|brute|2|1|L12|dps 42.7/32.5/42.7|mit 15.3/15.5/15.3|god_d 0.239|god_m -0.010|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|brute|2|1|L18|dps 43.9/33.4/43.8|mit 22.6/22.1/22.5|god_d 0.238|god_m 0.022|card_d 0.000|card_m 0.004|gcards 6
+GP963 CP|brute|2|1|L24|dps 45.5/23.5/29.9|mit 39.7/28.7/29.5|god_d 0.483|god_m 0.277|card_d 0.344|card_m 0.256|gcards 10
+GP963 CP|brute|2|1|L30|dps 58.6/24.4/32.6|mit 52.9/37.2/36.8|god_d 0.584|god_m 0.297|card_d 0.444|card_m 0.305|gcards 13
+GP963 LOO|brute|2|1|god_brute_blood=0.031/0.007;god_brute_duration=0.000/0.000;god_brute_cornered=0.256/0.159;god_brute_persist=0.009/-0.000;god_brute_lifesteal=-0.082/-0.057;god_brute_smite=0.000/0.000;god_brute_sacrifice=0.000/0.000;god_brute_pain=-0.242/0.133;god_brute_cornered_more=0.017/0.003;god_brute_pain_up=-0.169/-0.001;god_brute_damage=0.033/-0.004;god_brute_linger=0.000/0.000;god_brute_cornered_up=0.052/0.029
+GP963 RUN|brute|2|1|kit steel_axe,steel_crossbow,chain_mail,steel_round_shield|wins 20/20|dps 47.2|mit 34.4|god_d 0.418|god_m 0.246|card_d 0.263|card_m 0.215
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|2|L6|dps 46.7/33.7/46.7|mit 9.2/9.9/9.2|god_d 0.279|god_m -0.080|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|brute|2|2|L12|dps 46.7/33.8/46.7|mit 16.0/16.2/16.0|god_d 0.276|god_m -0.013|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|brute|2|2|L18|dps 49.6/37.4/49.6|mit 29.9/30.8/29.8|god_d 0.246|god_m -0.032|card_d 0.000|card_m 0.003|gcards 11
+GP963 CP|brute|2|2|L24|dps 37.1/21.1/30.7|mit 41.7/35.5/37.0|god_d 0.431|god_m 0.148|card_d 0.173|card_m 0.112|gcards 13
+GP963 CP|brute|2|2|L30|dps 48.1/25.8/35.4|mit 39.2/26.9/30.0|god_d 0.464|god_m 0.314|card_d 0.264|card_m 0.235|gcards 14
+GP963 LOO|brute|2|2|god_brute_armor=-0.076/0.018;god_brute_linger=0.000/0.000;god_brute_damage=0.152/0.052;god_brute_persist=-0.079/-0.039;god_brute_duration=0.000/0.000;god_brute_sacrifice=0.000/0.000;god_brute_hate=0.047/0.024;god_brute_eat=0.000/0.000;god_brute_regen=0.045/0.035;god_brute_irate=-0.027/-0.017;god_brute_eat_up=0.000/0.000;god_brute_lifesteal=0.045/0.036;god_brute_blood=0.124/0.022;god_brute_blood_up=0.038/-0.003
+GP963 RUN|brute|2|2|kit bone_pole_axe,barbarian_scimitar,chain_mail,kite_shield|wins 20/20|dps 43.6|mit 35.1|god_d 0.381|god_m 0.209|card_d 0.149|card_m 0.155
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|3|L6|dps 21.4/21.4/21.4|mit 12.4/12.3/12.4|god_d 0.000|god_m 0.010|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|brute|2|3|L12|dps 27.2/24.4/27.2|mit 18.5/15.1/16.4|god_d 0.102|god_m 0.185|card_d 0.000|card_m 0.115|gcards 8
+GP963 CP|brute|2|3|L18|dps 35.9/23.4/32.7|mit 26.5/27.3/26.8|god_d 0.348|god_m -0.032|card_d 0.090|card_m -0.012|gcards 9
+GP963 CP|brute|2|3|L24|dps 30.4/17.1/21.9|mit 42.7/29.4/29.1|god_d 0.437|god_m 0.313|card_d 0.280|card_m 0.318|gcards 11
+GP963 CP|brute|2|3|L30|dps 54.4/19.3/22.7|mit 52.0/31.5/31.1|god_d 0.645|god_m 0.394|card_d 0.583|card_m 0.403|gcards 13
+GP963 LOO|brute|2|3|god_brute_eat=0.000/0.000;god_brute_haste=0.148/-0.008;god_brute_linger=0.000/0.000;god_brute_damage=0.095/0.008;god_brute_eat_up=0.000/0.000;god_brute_regen=0.006/0.071;god_brute_irate=0.074/0.012;god_brute_armor=-0.098/0.031;god_brute_persist=0.037/0.019;god_brute_duration=0.000/0.000;god_brute_hate=0.227/0.015;god_brute_lifesteal=0.000/0.013;god_brute_burn=0.021/-0.029
+GP963 RUN|brute|2|3|kit decapitator_blade,steel_twin_axes,plate_cuirass,kite_shield|wins 19/20|dps 33.8|mit 34.0|god_d 0.391|god_m 0.252|card_d 0.276|card_m 0.253
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|4|L6|dps 61.3/47.3/61.3|mit 10.0/8.5/10.0|god_d 0.228|god_m 0.144|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|brute|2|4|L12|dps 53.3/40.2/53.3|mit 19.1/18.6/18.8|god_d 0.245|god_m 0.027|card_d 0.000|card_m 0.016|gcards 5
+GP963 CP|brute|2|4|L18|dps 54.5/41.2/54.5|mit 30.4/29.1/29.8|god_d 0.244|god_m 0.043|card_d 0.000|card_m 0.021|gcards 7
+GP963 CP|brute|2|4|L24|dps 58.1/32.8/45.3|mit 45.6/34.1/34.3|god_d 0.435|god_m 0.252|card_d 0.220|card_m 0.250|gcards 10
+GP963 CP|brute|2|4|L30|dps 55.8/28.8/40.9|mit 65.1/44.2/45.5|god_d 0.483|god_m 0.322|card_d 0.268|card_m 0.302|gcards 12
+GP963 LOO|brute|2|4|god_brute_armor=-0.064/0.011;god_brute_lifesteal=0.000/0.017;god_brute_hate=0.076/0.065;god_brute_duration=0.025/0.033;god_brute_blood=0.133/0.028;god_brute_irate=0.023/0.036;god_brute_smite=0.000/0.000;god_brute_regen=0.002/0.143;god_brute_haste=0.225/0.049;god_brute_pain=-0.021/0.089;god_brute_linger=0.001/0.001;god_brute_eat=0.000/0.000
+GP963 RUN|brute|2|4|kit steel_axe,iron_spear,studded_leather,kite_shield|wins 20/20|dps 56.3|mit 42.3|god_d 0.357|god_m 0.276|card_d 0.143|card_m 0.235
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|5|L6|dps 39.0/29.0/39.0|mit 12.3/12.7/12.3|god_d 0.258|god_m -0.031|card_d 0.000|card_m 0.000|gcards 2
+GP963 CP|brute|2|5|L12|dps 36.5/29.8/36.5|mit 22.9/23.5/22.9|god_d 0.183|god_m -0.029|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|brute|2|5|L18|dps 30.2/20.7/24.2|mit 25.2/20.9/22.1|god_d 0.316|god_m 0.172|card_d 0.198|card_m 0.124|gcards 7
+GP963 CP|brute|2|5|L24|dps 19.4/9.5/11.3|mit 33.7/29.3/29.0|god_d 0.511|god_m 0.131|card_d 0.420|card_m 0.140|gcards 9
+GP963 CP|brute|2|5|L30|dps 25.4/16.0/18.7|mit 38.5/30.4/30.4|god_d 0.371|god_m 0.210|card_d 0.261|card_m 0.210|gcards 12
+GP963 LOO|brute|2|5|god_brute_persist=0.069/0.056;god_brute_smite=0.000/0.000;god_brute_lifesteal=0.000/0.011;god_brute_duration=0.000/0.000;god_brute_burn=0.204/0.053;god_brute_regen=0.000/0.063;god_brute_hate=0.024/0.020;god_brute_linger=0.000/0.000;god_brute_armor=-0.079/-0.032;god_brute_irate=0.000/0.015;god_brute_damage=0.025/0.013;god_brute_pain=-0.025/0.042
+GP963 RUN|brute|2|5|kit bone_twin_axes,bloodletter,chain_mail,kite_shield|wins 19/20|dps 26.3|mit 31.5|god_d 0.327|god_m 0.176|card_d 0.216|card_m 0.158
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|6|L6|dps 29.7/26.5/29.7|mit 11.5/10.8/11.4|god_d 0.108|god_m 0.064|card_d 0.001|card_m 0.013|gcards 5
+GP963 CP|brute|2|6|L12|dps 29.1/24.5/29.0|mit 14.9/14.4/14.7|god_d 0.156|god_m 0.030|card_d 0.001|card_m 0.010|gcards 7
+GP963 CP|brute|2|6|L18|dps 35.1/26.4/34.7|mit 30.2/31.8/29.8|god_d 0.249|god_m -0.051|card_d 0.012|card_m 0.012|gcards 11
+GP963 CP|brute|2|6|L24|dps 63.6/15.4/20.5|mit 43.1/30.4/31.6|god_d 0.757|god_m 0.294|card_d 0.677|card_m 0.267|gcards 14
+GP963 CP|brute|2|6|L30|dps 56.2/19.2/22.5|mit 39.7/28.1/29.0|god_d 0.658|god_m 0.293|card_d 0.599|card_m 0.270|gcards 15
+GP963 LOO|brute|2|6|god_brute_blood=0.057/0.022;god_brute_lifesteal=0.000/0.042;god_brute_haste=0.052/0.027;god_brute_duration=0.016/0.007;god_brute_eat=0.000/0.000;god_brute_regen=0.000/0.033;god_brute_break=0.056/0.045;god_brute_irate=-0.002/-0.002;god_brute_sacrifice=0.000/0.000;god_brute_eat_up=0.000/0.000;god_brute_hate=0.222/0.142;god_brute_linger=0.000/0.000;god_brute_damage=0.010/0.009;god_brute_burn=0.152/0.124;god_brute_smite=0.000/0.000
+GP963 RUN|brute|2|6|kit steel_twin_axes,steel_great_axe,chain_mail,kite_shield|wins 20/20|dps 44.1|mit 29.2|god_d 0.521|god_m 0.140|card_d 0.420|card_m 0.125
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|7|L6|dps 38.5/31.1/38.5|mit 10.7/11.3/10.7|god_d 0.192|god_m -0.055|card_d 0.000|card_m 0.000|gcards 2
+GP963 CP|brute|2|7|L12|dps 40.5/28.2/38.9|mit 16.8/15.7/16.5|god_d 0.304|god_m 0.065|card_d 0.039|card_m 0.015|gcards 5
+GP963 CP|brute|2|7|L18|dps 43.0/34.8/40.6|mit 22.8/20.3/21.0|god_d 0.192|god_m 0.112|card_d 0.056|card_m 0.080|gcards 7
+GP963 CP|brute|2|7|L24|dps 69.3/24.5/27.3|mit 42.6/31.8/31.8|god_d 0.647|god_m 0.254|card_d 0.607|card_m 0.254|gcards 10
+GP963 CP|brute|2|7|L30|dps 48.6/23.4/26.4|mit 34.2/25.3/25.5|god_d 0.519|god_m 0.260|card_d 0.456|card_m 0.254|gcards 13
+GP963 LOO|brute|2|7|god_brute_armor=-0.106/0.003;god_brute_cornered=0.138/0.072;god_brute_damage=0.110/0.055;god_brute_linger=0.032/0.007;god_brute_cornered_up=-0.072/-0.032;god_brute_cornered_more=-0.018/-0.011;god_brute_break=0.144/0.079;god_brute_lifesteal=-0.060/0.014;god_brute_duration=0.016/0.000;god_brute_smite=0.000/0.000;god_brute_haste=0.079/0.030;god_brute_regen=-0.208/-0.066;god_brute_deathfight=0.000/0.000
+GP963 RUN|brute|2|7|kit bone_twin_axes,steel_great_axe,studded_leather,kite_shield|wins 20/20|dps 50.1|mit 28.8|god_d 0.463|god_m 0.197|card_d 0.374|card_m 0.169
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|8|L6|dps 34.5/26.7/34.4|mit 15.9/15.9/14.6|god_d 0.226|god_m 0.003|card_d 0.004|card_m 0.083|gcards 5
+GP963 CP|brute|2|8|L12|dps 35.2/31.1/35.2|mit 18.6/18.9/18.1|god_d 0.118|god_m -0.015|card_d 0.000|card_m 0.027|gcards 8
+GP963 CP|brute|2|8|L18|dps 47.4/33.0/42.0|mit 43.7/35.5/38.4|god_d 0.303|god_m 0.189|card_d 0.114|card_m 0.121|gcards 11
+GP963 CP|brute|2|8|L24|dps 47.6/26.9/35.6|mit 46.0/31.3/31.1|god_d 0.436|god_m 0.319|card_d 0.252|card_m 0.324|gcards 12
+GP963 CP|brute|2|8|L30|dps 55.1/24.9/31.6|mit 50.6/34.6/34.1|god_d 0.548|god_m 0.317|card_d 0.427|card_m 0.327|gcards 14
+GP963 LOO|brute|2|8|god_brute_armor=-0.064/-0.028;god_brute_haste=0.045/0.031;god_brute_damage=0.053/0.031;god_brute_lifesteal=0.000/0.058;god_brute_burn=0.089/0.026;god_brute_irate=0.053/0.052;god_brute_linger=0.000/0.000;god_brute_pain=-0.119/0.093;god_brute_sacrifice=0.000/0.000;god_brute_deathfight=0.000/0.000;god_brute_break=0.061/0.038;god_brute_pain_up=-0.067/0.034;god_brute_regen=0.000/0.036;god_brute_smite=0.000/0.000
+GP963 RUN|brute|2|8|kit decapitator_blade,steel_broadsword,studded_leather,kite_shield|wins 20/20|dps 46.0|mit 38.7|god_d 0.388|god_m 0.266|card_d 0.232|card_m 0.253
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|9|L6|dps 51.1/45.6/51.1|mit 7.6/7.5/7.6|god_d 0.107|god_m 0.021|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|brute|2|9|L12|dps 49.5/42.0/49.0|mit 20.5/18.4/19.5|god_d 0.151|god_m 0.101|card_d 0.010|card_m 0.050|gcards 8
+GP963 CP|brute|2|9|L18|dps 53.6/35.8/51.8|mit 31.5/23.3/25.6|god_d 0.332|god_m 0.262|card_d 0.035|card_m 0.188|gcards 9
+GP963 CP|brute|2|9|L24|dps 49.8/28.3/39.0|mit 41.9/33.3/33.9|god_d 0.433|god_m 0.206|card_d 0.217|card_m 0.192|gcards 10
+GP963 CP|brute|2|9|L30|dps 70.5/29.5/40.5|mit 53.4/31.4/31.4|god_d 0.581|god_m 0.412|card_d 0.425|card_m 0.412|gcards 14
+GP963 LOO|brute|2|9|god_brute_eat=0.000/0.000;god_brute_regen=0.000/0.073;god_brute_armor=-0.255/0.130;god_brute_haste=0.110/0.030;god_brute_damage=0.141/0.079;god_brute_duration=0.011/0.001;god_brute_lifesteal=0.000/0.035;god_brute_eat_up=0.000/0.000;god_brute_deathfight=0.000/0.000;god_brute_smite=0.000/0.000;god_brute_sacrifice=0.000/0.000;god_brute_armor_up=-0.082/0.067;god_brute_linger=0.000/0.000;god_brute_break=0.064/0.032
+GP963 RUN|brute|2|9|kit granite_maul,iron_spear,studded_leather,steel_round_shield|wins 20/20|dps 55.7|mit 36.9|god_d 0.378|god_m 0.318|card_d 0.194|card_m 0.281
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|10|L6|dps 32.6/24.6/31.1|mit 10.2/10.4/10.2|god_d 0.246|god_m -0.023|card_d 0.047|card_m -0.003|gcards 3
+GP963 CP|brute|2|10|L12|dps 33.7/26.1/31.5|mit 18.8/18.9/19.0|god_d 0.225|god_m -0.004|card_d 0.063|card_m -0.010|gcards 5
+GP963 CP|brute|2|10|L18|dps 37.4/24.9/33.6|mit 27.6/25.5/24.9|god_d 0.334|god_m 0.076|card_d 0.100|card_m 0.096|gcards 7
+GP963 CP|brute|2|10|L24|dps 57.2/17.1/23.4|mit 43.7/31.5/32.4|god_d 0.701|god_m 0.280|card_d 0.591|card_m 0.260|gcards 11
+GP963 CP|brute|2|10|L30|dps 56.2/15.5/21.8|mit 45.4/30.8/31.7|god_d 0.724|god_m 0.320|card_d 0.611|card_m 0.302|gcards 13
+GP963 LOO|brute|2|10|god_brute_armor=-0.040/0.052;god_brute_lifesteal=0.004/0.030;god_brute_break=0.062/0.021;god_brute_damage=0.063/0.022;god_brute_hate=0.072/0.034;god_brute_duration=0.027/0.008;god_brute_burn=-0.014/0.093;god_brute_irate=0.026/0.007;god_brute_sacrifice=0.000/0.000;god_brute_eat=0.000/0.000;god_brute_cornered=0.163/0.041;god_brute_haste=0.057/0.007;god_brute_eat_up=0.000/0.000
+GP963 RUN|brute|2|10|kit halberd,steel_crossbow,plate_cuirass,steel_round_shield|wins 20/20|dps 45.5|mit 31.8|god_d 0.550|god_m 0.202|card_d 0.413|card_m 0.170
+GP963 放不下包 bag_leather
+GP963 CP|brute|2|11|L6|dps 31.9/23.9/31.9|mit 11.8/11.6/11.8|god_d 0.249|god_m 0.020|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|brute|2|11|L12|dps 26.0/22.0/26.0|mit 15.6/15.1/15.4|god_d 0.155|god_m 0.033|card_d 0.001|card_m 0.008|gcards 9
+GP963 CP|brute|2|11|L18|dps 36.6/30.0/36.6|mit 25.3/23.1/25.0|god_d 0.182|god_m 0.086|card_d 0.001|card_m 0.011|gcards 12
+GP963 CP|brute|2|11|L24|dps 48.4/22.9/28.1|mit 42.2/26.4/28.3|god_d 0.528|god_m 0.375|card_d 0.420|card_m 0.329|gcards 13
+GP963 CP|brute|2|11|L30|dps 55.8/19.7/24.9|mit 34.2/17.4/19.1|god_d 0.647|god_m 0.491|card_d 0.553|card_m 0.440|gcards 15
+GP963 LOO|brute|2|11|god_brute_hate=0.143/0.086;god_brute_damage=0.197/0.072;god_brute_linger=0.000/0.000;god_brute_duration=0.000/0.000;god_brute_pain=-0.046/0.084;god_brute_lifesteal=0.000/0.041;god_brute_regen=0.000/0.084;god_brute_haste=0.023/-0.013;god_brute_deathfight=0.000/0.000;god_brute_sacrifice=0.000/0.000;god_brute_armor=-0.058/0.004;god_brute_eat=0.000/0.000;god_brute_burn=0.159/0.058;god_brute_irate=-0.003/0.007;god_brute_persist=0.142/0.085
+GP963 RUN|brute|2|11|kit steel_stiletto,granite_maul,chain_mail,steel_round_shield|wins 20/20|dps 42.2|mit 28.5|god_d 0.463|god_m 0.325|card_d 0.336|card_m 0.269
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|0|L6|dps 54.3/54.3/54.3|mit 9.3/9.3/9.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|brute|4|0|L12|dps 69.5/53.6/69.5|mit 6.7/6.4/6.7|god_d 0.229|god_m 0.051|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|brute|4|0|L18|dps 92.9/62.4/92.3|mit 24.4/25.7/23.5|god_d 0.328|god_m -0.053|card_d 0.006|card_m 0.039|gcards 8
+GP963 CP|brute|4|0|L24|dps 100.7/75.6/98.0|mit 52.1/47.0/50.7|god_d 0.250|god_m 0.097|card_d 0.027|card_m 0.028|gcards 10
+GP963 CP|brute|4|0|L30|dps 101.5/81.2/98.3|mit 55.6/47.4/46.1|god_d 0.200|god_m 0.147|card_d 0.031|card_m 0.171|gcards 11
+GP963 LOO|brute|4|0|god_brute_persist=0.000/0.000;god_brute_irate=0.001/0.002;god_brute_regen=0.000/0.010;god_brute_burn=-0.051/-0.003;god_brute_lifesteal=0.000/0.041;god_brute_hate=0.015/0.023;god_brute_haste=0.021/-0.041;god_brute_armor=0.003/0.084;god_brute_damage=0.021/0.007;god_brute_armor_up=0.000/0.000;god_brute_deathfight=0.000/0.000
+GP963 RUN|brute|4|0|kit frost_bonesteel_greatsword,frost_fang,knight_plate,riposte_buckler|wins 20/20|dps 88.7|mit 35.5|god_d 0.219|god_m 0.056|card_d 0.009|card_m 0.053
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|1|L6|dps 29.1/24.3/29.0|mit 6.0/6.8/6.0|god_d 0.163|god_m -0.135|card_d 0.001|card_m 0.010|gcards 5
+GP963 CP|brute|4|1|L12|dps 46.3/44.0/46.3|mit 22.0/20.4/21.1|god_d 0.050|god_m 0.073|card_d 0.000|card_m 0.040|gcards 8
+GP963 CP|brute|4|1|L18|dps 40.9/40.9/40.9|mit 28.5/27.5/27.0|god_d 0.001|god_m 0.035|card_d 0.000|card_m 0.053|gcards 10
+GP963 CP|brute|4|1|L24|dps 79.3/75.7/77.7|mit 55.9/54.4/52.0|god_d 0.046|god_m 0.027|card_d 0.020|card_m 0.069|gcards 11
+GP963 CP|brute|4|1|L30|dps 80.9/78.1/80.6|mit 53.0/49.3/50.8|god_d 0.034|god_m 0.070|card_d 0.004|card_m 0.041|gcards 13
+GP963 LOO|brute|4|1|god_brute_eat=0.000/0.000;god_brute_duration=0.000/0.000;god_brute_haste=0.003/0.003;god_brute_regen=-0.001/-0.006;god_brute_persist=0.000/-0.000;god_brute_lifesteal=-0.001/0.023;god_brute_damage=0.000/0.000;god_brute_cornered=0.001/-0.012;god_brute_linger=0.000/0.000;god_brute_burn=0.000/0.000;god_brute_armor=0.000/0.000;god_brute_irate=0.000/0.000;god_brute_break=0.000/0.000
+GP963 RUN|brute|4|1|kit flame_fang,flame_execution_blade,dragonscale_armor,legion_tower_shield|wins 20/20|dps 57.3|mit 35.0|god_d 0.058|god_m 0.060|card_d 0.006|card_m 0.050
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|2|L6|dps 39.7/33.7/39.7|mit 8.1/8.4/7.8|god_d 0.152|god_m -0.034|card_d 0.000|card_m 0.030|gcards 4
+GP963 CP|brute|4|2|L12|dps 45.5/41.0/45.5|mit 24.0/23.3/23.5|god_d 0.100|god_m 0.027|card_d 0.000|card_m 0.019|gcards 7
+GP963 CP|brute|4|2|L18|dps 56.8/46.2/56.8|mit 14.8/13.5/13.7|god_d 0.187|god_m 0.088|card_d 0.000|card_m 0.078|gcards 10
+GP963 CP|brute|4|2|L24|dps 67.9/39.8/58.8|mit 55.2/34.8/43.2|god_d 0.414|god_m 0.369|card_d 0.134|card_m 0.217|gcards 11
+GP963 CP|brute|4|2|L30|dps 80.0/47.5/72.6|mit 48.6/35.3/42.6|god_d 0.405|god_m 0.273|card_d 0.092|card_m 0.123|gcards 13
+GP963 LOO|brute|4|2|god_brute_blood=0.041/0.009;god_brute_duration=0.002/0.008;god_brute_lifesteal=0.000/0.063;god_brute_deathfight=0.000/0.000;god_brute_irate=0.010/0.004;god_brute_undying=0.000/0.000;god_brute_eat=0.000/0.000;god_brute_linger=0.000/0.000;god_brute_regen=0.000/0.072;god_brute_armor=0.000/0.000;god_brute_smite=0.000/0.000;god_brute_haste=0.062/-0.036;god_brute_deathfight_up=0.000/0.000
+GP963 RUN|brute|4|2|kit flame_meteor_maul,frost_fang,knight_plate,riposte_buckler|wins 20/20|dps 61.3|mit 34.9|god_d 0.308|god_m 0.214|card_d 0.061|card_m 0.115
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|3|L6|dps 74.9/71.2/74.9|mit 2.7/4.2/2.7|god_d 0.048|god_m -0.541|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|brute|4|3|L12|dps 99.6/70.0/99.6|mit 29.2/25.4/29.2|god_d 0.297|god_m 0.130|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|brute|4|3|L18|dps 82.2/66.8/82.0|mit 24.4/23.2/23.4|god_d 0.187|god_m 0.046|card_d 0.002|card_m 0.040|gcards 10
+GP963 CP|brute|4|3|L24|dps 131.8/86.4/115.7|mit 52.7/53.6/46.9|god_d 0.344|god_m -0.017|card_d 0.122|card_m 0.110|gcards 11
+GP963 CP|brute|4|3|L30|dps 135.5/93.7/117.5|mit 61.7/57.1/54.9|god_d 0.308|god_m 0.075|card_d 0.133|card_m 0.110|gcards 12
+GP963 LOO|brute|4|3|god_brute_persist=0.000/0.000;god_brute_duration=0.000/0.000;god_brute_irate=0.002/0.002;god_brute_burn=0.019/0.016;god_brute_linger=0.000/0.000;god_brute_haste=0.031/0.026;god_brute_damage=0.045/-0.021;god_brute_armor=0.000/0.000;god_brute_lifesteal=0.000/0.103;god_brute_burn_up=0.000/-0.002;god_brute_pain=0.000/0.000;god_brute_armor_up=0.000/0.000
+GP963 RUN|brute|4|3|kit thunder_bloodthirst_twin_blades,imperial_sword,dragonscale_armor,legion_tower_shield|wins 20/20|dps 110.8|mit 39.9|god_d 0.272|god_m -0.001|card_d 0.071|card_m 0.061
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|4|L6|dps 40.8/31.3/40.8|mit 9.9/10.2/9.9|god_d 0.233|god_m -0.034|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|brute|4|4|L12|dps 47.2/44.2/47.2|mit 13.0/13.0/13.0|god_d 0.065|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|brute|4|4|L18|dps 35.1/34.5/35.1|mit 21.2/20.8/21.2|god_d 0.018|god_m 0.018|card_d 0.000|card_m 0.000|gcards 7
+GP963 CP|brute|4|4|L24|dps 79.5/74.0/74.0|mit 60.7/57.8/57.4|god_d 0.069|god_m 0.049|card_d 0.069|card_m 0.056|gcards 10
+GP963 CP|brute|4|4|L30|dps 82.5/75.9/75.9|mit 62.9/54.6/54.6|god_d 0.079|god_m 0.132|card_d 0.079|card_m 0.132|gcards 12
+GP963 LOO|brute|4|4|god_brute_armor=0.000/0.056;god_brute_haste=0.079/0.024;god_brute_damage=-0.045/0.020;god_brute_hate=0.074/0.028;god_brute_duration=0.000/0.000;god_brute_hate_up=0.063/0.010;god_brute_smite=0.000/0.000;god_brute_lifesteal=0.000/0.031;god_brute_irate=0.060/0.006;god_brute_smite_up=0.000/0.000;god_brute_regen=0.000/0.024;god_brute_armor_up=0.000/0.000
+GP963 RUN|brute|4|4|kit flame_meteor_maul,flame_execution_blade,dragonscale_armor,legion_tower_shield|wins 20/20|dps 58.0|mit 35.2|god_d 0.099|god_m 0.096|card_d 0.042|card_m 0.067
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|5|L6|dps 40.0/40.0/40.0|mit 10.2/10.2/10.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|brute|4|5|L12|dps 53.6/49.1/53.6|mit 15.2/14.4/15.1|god_d 0.084|god_m 0.052|card_d 0.000|card_m 0.007|gcards 8
+GP963 CP|brute|4|5|L18|dps 70.1/51.3/70.0|mit 36.1/38.9/34.9|god_d 0.269|god_m -0.077|card_d 0.001|card_m 0.033|gcards 10
+GP963 CP|brute|4|5|L24|dps 83.5/52.3/65.5|mit 41.3/32.6/34.7|god_d 0.374|god_m 0.212|card_d 0.215|card_m 0.159|gcards 11
+GP963 CP|brute|4|5|L30|dps 85.8/54.5/69.7|mit 44.9/37.3/39.8|god_d 0.365|god_m 0.171|card_d 0.187|card_m 0.115|gcards 13
+GP963 LOO|brute|4|5|god_brute_eat=0.000/0.000;god_brute_irate=0.004/-0.005;god_brute_duration=0.005/0.005;god_brute_haste=0.084/-0.000;god_brute_smite=0.000/0.000;god_brute_damage=0.094/0.000;god_brute_regen=-0.038/0.010;god_brute_armor=0.000/0.000;god_brute_lifesteal=-0.036/0.058;god_brute_eat_up=0.000/0.000;god_brute_cornered=0.004/-0.026;god_brute_linger=0.000/0.000;god_brute_deathfight=0.000/0.000
+GP963 RUN|brute|4|5|kit thunder_boneiron_club,frost_bloodoath_axe,dragonscale_armor,legion_tower_shield|wins 20/20|dps 72.1|mit 33.7|god_d 0.288|god_m 0.093|card_d 0.128|card_m 0.080
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|6|L6|dps 76.2/66.7/76.2|mit 7.0/7.4/7.0|god_d 0.125|god_m -0.053|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|brute|4|6|L12|dps 84.5/61.8/84.5|mit 10.3/10.7/10.0|god_d 0.269|god_m -0.042|card_d 0.000|card_m 0.022|gcards 8
+GP963 CP|brute|4|6|L18|dps 86.9/66.1/86.5|mit 23.3/23.8/22.6|god_d 0.239|god_m -0.020|card_d 0.005|card_m 0.031|gcards 10
+GP963 CP|brute|4|6|L24|dps 79.7/49.0/71.6|mit 46.8/43.2/48.8|god_d 0.386|god_m 0.076|card_d 0.102|card_m -0.043|gcards 14
+GP963 CP|brute|4|6|L30|dps 119.9/63.2/83.1|mit 54.2/42.4/46.6|god_d 0.473|god_m 0.218|card_d 0.307|card_m 0.140|gcards 15
+GP963 LOO|brute|4|6|god_brute_eat=0.000/0.000;god_brute_damage=0.095/-0.035;god_brute_irate=0.027/0.011;god_brute_smite=0.000/0.000;god_brute_lifesteal=0.000/0.039;god_brute_linger=0.000/0.000;god_brute_regen=0.000/0.049;god_brute_break=0.095/-0.035;god_brute_haste=0.103/-0.026;god_brute_persist=0.020/0.004;god_brute_sacrifice=0.000/0.000;god_brute_hate=0.089/0.022;god_brute_smite_more=0.000/0.000;god_brute_eat_up=0.000/0.000;god_brute_smite_up=0.000/0.000
+GP963 RUN|brute|4|6|kit frost_fang,thunder_bloodthirst_twin_blades,knight_plate,legion_tower_shield|wins 20/20|dps 91.9|mit 35.9|god_d 0.358|god_m 0.062|card_d 0.132|card_m -0.005
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|7|L6|dps 48.3/41.6/48.3|mit 8.1/6.8/7.9|god_d 0.138|god_m 0.158|card_d 0.000|card_m 0.023|gcards 5
+GP963 CP|brute|4|7|L12|dps 57.2/45.3/57.2|mit 17.8/16.6/17.0|god_d 0.207|god_m 0.063|card_d 0.000|card_m 0.041|gcards 8
+GP963 CP|brute|4|7|L18|dps 61.5/50.2/60.7|mit 31.3/31.5/30.0|god_d 0.184|god_m -0.004|card_d 0.013|card_m 0.044|gcards 10
+GP963 CP|brute|4|7|L24|dps 54.1/39.5/49.1|mit 59.4/43.6/48.6|god_d 0.270|god_m 0.266|card_d 0.092|card_m 0.182|gcards 12
+GP963 CP|brute|4|7|L30|dps 69.6/36.8/50.5|mit 64.0/50.3/55.7|god_d 0.472|god_m 0.214|card_d 0.275|card_m 0.130|gcards 13
+GP963 LOO|brute|4|7|god_brute_pain=-0.027/0.027;god_brute_duration=0.019/0.003;god_brute_regen=-0.031/0.009;god_brute_lifesteal=-0.031/0.012;god_brute_pain_up=-0.007/0.015;god_brute_linger=0.000/0.000;god_brute_damage=0.088/0.019;god_brute_deathfight=0.000/0.000;god_brute_undying=0.000/0.000;god_brute_blood=0.014/0.005;god_brute_haste=0.045/-0.002;god_brute_break=0.077/0.028;god_brute_cornered=0.061/0.016
+GP963 RUN|brute|4|7|kit grand_magus_staff,flame_fang,dragonscale_armor,legion_tower_shield|wins 20/20|dps 59.1|mit 44.4|god_d 0.297|god_m 0.171|card_d 0.113|card_m 0.100
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|8|L6|dps 90.4/88.0/90.4|mit 9.7/9.4/9.7|god_d 0.026|god_m 0.026|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|brute|4|8|L12|dps 112.7/76.5/112.7|mit 10.8/12.8/10.7|god_d 0.322|god_m -0.186|card_d 0.000|card_m 0.004|gcards 6
+GP963 CP|brute|4|8|L18|dps 109.7/82.6/109.6|mit 20.3/26.6/20.0|god_d 0.247|god_m -0.308|card_d 0.000|card_m 0.014|gcards 9
+GP963 CP|brute|4|8|L24|dps 100.7/62.1/93.6|mit 51.5/45.3/52.2|god_d 0.383|god_m 0.120|card_d 0.071|card_m -0.014|gcards 11
+GP963 CP|brute|4|8|L30|dps 102.2/54.3/86.5|mit 48.6/41.5/41.7|god_d 0.469|god_m 0.145|card_d 0.154|card_m 0.142|gcards 12
+GP963 LOO|brute|4|8|god_brute_burn=0.002/0.003;god_brute_duration=0.000/0.000;god_brute_regen=0.000/0.061;god_brute_blood=0.000/0.000;god_brute_irate=0.005/0.008;god_brute_persist=0.000/0.000;god_brute_haste=0.052/0.042;god_brute_lifesteal=0.000/0.031;god_brute_burn_up=0.002/0.003;god_brute_damage=0.040/0.027;god_brute_deathfight=0.000/0.000;god_brute_smite=0.000/0.000
+GP963 RUN|brute|4|8|kit thunder_horse_halberd,grand_magus_staff,dragonscale_armor,legion_tower_shield|wins 20/20|dps 102.9|mit 37.1|god_d 0.370|god_m 0.041|card_d 0.078|card_m 0.038
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|9|L6|dps 54.4/46.4/54.4|mit 16.0/15.6/16.0|god_d 0.148|god_m 0.027|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|brute|4|9|L12|dps 61.2/48.5/61.2|mit 14.2/14.0/14.2|god_d 0.208|god_m 0.015|card_d -0.000|card_m 0.006|gcards 7
+GP963 CP|brute|4|9|L18|dps 57.7/44.4/56.1|mit 32.6/35.5/31.4|god_d 0.230|god_m -0.090|card_d 0.027|card_m 0.035|gcards 8
+GP963 CP|brute|4|9|L24|dps 64.9/42.9/53.5|mit 41.2/35.6/37.8|god_d 0.339|god_m 0.136|card_d 0.176|card_m 0.082|gcards 11
+GP963 CP|brute|4|9|L30|dps 65.9/42.8/54.4|mit 52.2/44.0/47.4|god_d 0.350|god_m 0.158|card_d 0.174|card_m 0.092|gcards 12
+GP963 LOO|brute|4|9|god_brute_break=0.076/-0.003;god_brute_irate=0.021/0.053;god_brute_duration=0.021/0.014;god_brute_damage=0.069/-0.003;god_brute_eat=0.000/0.000;god_brute_regen=-0.125/0.046;god_brute_pain=0.000/0.000;god_brute_cornered=0.036/-0.019;god_brute_cornered_more=0.002/-0.003;god_brute_linger=0.000/0.000;god_brute_cornered_up=-0.004/-0.012;god_brute_deathfight=0.000/0.000
+GP963 RUN|brute|4|9|kit frost_fang,flame_fang,knight_plate,legion_tower_shield|wins 20/20|dps 62.2|mit 36.6|god_d 0.292|god_m 0.073|card_d 0.114|card_m 0.046
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|10|L6|dps 59.3/41.6/59.3|mit 9.1/8.6/9.1|god_d 0.299|god_m 0.059|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|brute|4|10|L12|dps 48.4/38.0/48.4|mit 18.5/20.9/18.5|god_d 0.215|god_m -0.129|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|brute|4|10|L18|dps 56.0/53.2/56.0|mit 27.5/28.3/27.4|god_d 0.051|god_m -0.029|card_d 0.000|card_m 0.004|gcards 9
+GP963 CP|brute|4|10|L24|dps 88.1/74.1/76.9|mit 62.1/53.3/53.5|god_d 0.158|god_m 0.141|card_d 0.127|card_m 0.139|gcards 12
+GP963 CP|brute|4|10|L30|dps 99.4/98.1/98.1|mit 68.0/51.7/51.5|god_d 0.014|god_m 0.240|card_d 0.014|card_m 0.242|gcards 14
+GP963 LOO|brute|4|10|god_brute_smite=0.000/0.000;god_brute_duration=0.000/0.000;god_brute_armor=0.000/0.086;god_brute_irate=0.000/0.002;god_brute_linger=0.000/0.000;god_brute_pain=0.000/0.014;god_brute_regen=0.000/0.022;god_brute_haste=0.014/0.000;god_brute_eat=0.000/0.000;god_brute_damage=0.014/0.002;god_brute_lifesteal=0.000/0.024;god_brute_eat_up=0.000/0.000;god_brute_smite_more=0.000/0.000;god_brute_hate=0.014/0.006
+GP963 RUN|brute|4|10|kit flame_execution_blade,frost_dragoon_lance,dragonscale_armor,riposte_buckler|wins 20/20|dps 72.2|mit 40.7|god_d 0.150|god_m 0.178|card_d 0.042|card_m 0.143
+GP963 放不下包 bag_leather
+GP963 CP|brute|4|11|L6|dps 255.9/96.0/255.9|mit 0.0/6.6/0.0|god_d 0.625|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|brute|4|11|L12|dps 144.1/97.1/144.0|mit 14.4/14.6/14.4|god_d 0.326|god_m -0.017|card_d 0.001|card_m 0.002|gcards 7
+GP963 CP|brute|4|11|L18|dps 118.4/82.8/118.1|mit 16.7/20.8/16.4|god_d 0.300|god_m -0.244|card_d 0.003|card_m 0.017|gcards 9
+GP963 CP|brute|4|11|L24|dps 121.0/93.6/105.2|mit 47.8/40.3/42.1|god_d 0.227|god_m 0.157|card_d 0.131|card_m 0.121|gcards 11
+GP963 CP|brute|4|11|L30|dps 147.5/107.3/107.6|mit 50.9/52.9/53.0|god_d 0.273|god_m -0.039|card_d 0.270|card_m -0.042|gcards 12
+GP963 LOO|brute|4|11|god_brute_hate=0.203/-0.173;god_brute_haste=0.016/0.015;god_brute_duration=0.000/0.000;god_brute_blood=0.261/-0.215;god_brute_regen=0.000/0.037;god_brute_linger=0.000/0.000;god_brute_armor=0.000/0.000;god_brute_lifesteal=0.000/0.035;god_brute_blood_up=0.165/-0.159;god_brute_irate=0.000/-0.009;god_brute_burn=0.000/-0.000;god_brute_pain=0.000/0.000
+GP963 RUN|brute|4|11|kit flame_bonesteel_spear,flame_execution_blade,dragonscale_armor,riposte_buckler|wins 20/20|dps 136.7|mit 36.5|god_d 0.299|god_m 0.066|card_d 0.138|card_m -0.015
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|0|L6|dps 15.7/12.7/14.2|mit 10.0/8.7/9.1|god_d 0.191|god_m 0.139|card_d 0.095|card_m 0.098|gcards 6
+GP963 CP|sun|0|0|L12|dps 16.3/12.2/13.8|mit 13.0/11.4/11.7|god_d 0.251|god_m 0.122|card_d 0.154|card_m 0.094|gcards 9
+GP963 CP|sun|0|0|L18|dps 17.9/12.9/14.4|mit 18.0/15.4/15.8|god_d 0.281|god_m 0.145|card_d 0.195|card_m 0.126|gcards 11
+GP963 CP|sun|0|0|L24|dps 3.0/1.3/1.8|mit 28.3/27.8/27.8|god_d 0.562|god_m 0.017|card_d 0.390|card_m 0.017|gcards 14
+GP963 CP|sun|0|0|L30|dps 3.1/1.7/2.3|mit 34.2/29.4/29.4|god_d 0.446|god_m 0.139|card_d 0.266|card_m 0.139|gcards 17
+GP963 LOO|sun|0|0|god_sun_contrast=0.029/0.000;god_sun_fullmoon=0.000/0.000;god_sun_slower=-0.013/-0.037;god_sun_longnight=0.000/0.000;god_sun_dawnlight=0.000/0.027;god_sun_dawn=0.000/0.000;god_sun_longday=-0.010/-0.002;god_sun_noon=0.102/0.000;god_sun_shift=0.182/-0.034;god_sun_dusklight=0.000/0.000;god_sun_dusk=0.000/0.000;god_sun_faster=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_dusk_up=0.000/0.000;god_sun_humble=-0.156/0.023;god_sun_veil=0.000/0.000;god_sun_sunbath=0.119/0.031
+GP963 RUN|sun|0|0|kit knife,hand_axe,leather_armor,brass_plating|wins 6/20|dps 12.9|mit 18.1|god_d 0.218|god_m 0.164|card_d 0.128|card_m 0.133
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|1|L6|dps 11.1/9.5/10.4|mit 13.0/12.2/12.7|god_d 0.149|god_m 0.063|card_d 0.067|card_m 0.022|gcards 4
+GP963 CP|sun|0|1|L12|dps 17.8/10.0/11.5|mit 13.1/12.2/12.6|god_d 0.434|god_m 0.069|card_d 0.355|card_m 0.035|gcards 6
+GP963 CP|sun|0|1|L18|dps 19.6/10.0/11.1|mit 20.5/16.0/16.4|god_d 0.491|god_m 0.219|card_d 0.433|card_m 0.196|gcards 9
+GP963 CP|sun|0|1|L24|dps 17.8/5.2/6.1|mit 34.7/33.2/33.2|god_d 0.709|god_m 0.043|card_d 0.657|card_m 0.043|gcards 11
+GP963 CP|sun|0|1|L30|dps 25.4/6.1/7.2|mit 30.1/27.8/26.4|god_d 0.760|god_m 0.076|card_d 0.717|card_m 0.121|gcards 12
+GP963 LOO|sun|0|1|god_sun_frost=-0.123/-0.079;god_sun_dawnlight=0.003/0.006;god_sun_longday=0.008/-0.024;god_sun_shift=0.335/-0.006;god_sun_fullmoon=0.048/-0.002;god_sun_eclipse=0.129/0.011;god_sun_veil=0.010/-0.004;god_sun_dusklight=0.000/0.000;god_sun_blaze=-0.003/0.002;god_sun_miracle=0.000/0.000;god_sun_blaze_up=-0.038/-0.026;god_sun_contrast=0.062/-0.015
+GP963 RUN|sun|0|1|kit club,felling_axe,leather_armor,tower_shield|wins 14/20|dps 18.5|mit 22.9|god_d 0.522|god_m 0.233|card_d 0.466|card_m 0.208
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|2|L6|dps 11.5/8.2/9.4|mit 10.6/9.9/9.7|god_d 0.287|god_m 0.071|card_d 0.181|card_m 0.089|gcards 6
+GP963 CP|sun|0|2|L12|dps 11.4/8.3/10.2|mit 17.2/16.6/16.5|god_d 0.271|god_m 0.033|card_d 0.105|card_m 0.039|gcards 9
+GP963 CP|sun|0|2|L18|dps 5.8/7.4/8.3|mit 21.0/21.6/22.4|god_d -0.281|god_m -0.030|card_d -0.427|card_m -0.065|gcards 12
+GP963 CP|sun|0|2|L24|dps 5.4/3.0/3.5|mit 45.5/43.3/43.3|god_d 0.440|god_m 0.048|card_d 0.348|card_m 0.048|gcards 14
+GP963 CP|sun|0|2|L30|dps 15.3/2.6/2.9|mit 26.5/28.4/28.3|god_d 0.833|god_m -0.074|card_d 0.811|card_m -0.071|gcards 15
+GP963 LOO|sun|0|2|god_sun_contrast=0.000/-0.001;god_sun_fullmoon=0.000/0.000;god_sun_veil=0.041/0.006;god_sun_dawnlight=0.108/0.045;god_sun_dusklight=0.000/0.000;god_sun_dawn=0.000/0.000;god_sun_faster=0.052/-0.007;god_sun_longday=0.049/0.021;god_sun_moonbath=0.000/-0.013;god_sun_noon=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_rest=0.009/0.053;god_sun_humble=0.078/-0.029;god_sun_blaze=1.000/0.140;god_sun_eclipse=0.024/0.073
+GP963 RUN|sun|0|2|kit knife,club,leather_armor,tower_shield|wins 9/20|dps 10.7|mit 21.9|god_d 0.358|god_m 0.119|card_d 0.262|card_m 0.101
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|3|L6|dps 14.3/10.9/12.3|mit 12.1/11.1/11.5|god_d 0.237|god_m 0.076|card_d 0.139|card_m 0.046|gcards 5
+GP963 CP|sun|0|3|L12|dps 16.1/10.3/11.7|mit 13.9/11.3/11.5|god_d 0.358|god_m 0.187|card_d 0.270|card_m 0.174|gcards 7
+GP963 CP|sun|0|3|L18|dps 16.5/10.4/11.3|mit 22.6/18.9/19.7|god_d 0.373|god_m 0.163|card_d 0.318|card_m 0.128|gcards 10
+GP963 CP|sun|0|3|L24|dps 21.3/4.2/5.1|mit 35.6/31.3/30.5|god_d 0.802|god_m 0.121|card_d 0.759|card_m 0.142|gcards 12
+GP963 CP|sun|0|3|L30|dps 0.0/6.0/7.3|mit 26.9/32.1/31.9|god_d 0.000|god_m -0.193|card_d 0.000|card_m -0.186|gcards 15
+GP963 LOO|sun|0|3|god_sun_frost=0.000/0.029;god_sun_slower=0.000/-0.060;god_sun_veil=0.000/-0.052;god_sun_noon=0.000/0.000;god_sun_frost_up=0.000/-0.150;god_sun_longnight=0.000/-0.069;god_sun_sunbath=0.000/-0.097;god_sun_longday=0.000/-0.087;god_sun_fullmoon=0.000/-0.005;god_sun_dawn=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_eclipse=0.000/-0.265;god_sun_humble=0.000/-0.052;god_sun_faster=0.000/-0.007;god_sun_rest=0.000/-0.213
+GP963 RUN|sun|0|3|kit hand_crossbow,felling_axe,leather_armor,round_shield|wins 13/20|dps 11.0|mit 23.5|god_d 0.185|god_m 0.208|card_d 0.086|card_m 0.184
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|4|L6|dps 13.5/9.1/10.2|mit 11.0/9.3/9.6|god_d 0.326|god_m 0.156|card_d 0.248|card_m 0.125|gcards 3
+GP963 CP|sun|0|4|L12|dps 16.7/9.7/11.0|mit 13.1/10.8/11.1|god_d 0.416|god_m 0.175|card_d 0.340|card_m 0.150|gcards 7
+GP963 CP|sun|0|4|L18|dps 15.5/9.1/10.0|mit 12.8/12.8/12.8|god_d 0.417|god_m -0.002|card_d 0.355|card_m -0.006|gcards 10
+GP963 CP|sun|0|4|L24|dps 8.5/4.0/4.8|mit 23.5/24.2/24.2|god_d 0.534|god_m -0.030|card_d 0.428|card_m -0.028|gcards 13
+GP963 CP|sun|0|4|L30|dps 5.2/4.0/4.8|mit 25.3/20.9/20.9|god_d 0.221|god_m 0.173|card_d 0.078|card_m 0.173|gcards 16
+GP963 LOO|sun|0|4|god_sun_blaze=0.376/0.032;god_sun_longnight=-0.291/0.044;god_sun_moonbath=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_longday=0.314/0.007;god_sun_veil=-0.010/0.047;god_sun_lunar=0.253/0.002;god_sun_faster=-0.543/0.093;god_sun_slower=-0.000/0.040;god_sun_contrast=-0.035/0.007;god_sun_dusklight=0.000/0.000;god_sun_humble=-0.042/0.050;god_sun_frost=-0.234/0.000;god_sun_fullmoon=0.000/-0.001;god_sun_dawnlight=-0.010/0.061;god_sun_rest=-0.512/0.009
+GP963 RUN|sun|0|4|kit hand_crossbow,club,leather_armor,brass_plating|wins 7/20|dps 12.6|mit 16.1|god_d 0.360|god_m 0.159|card_d 0.283|card_m 0.135
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|5|L6|dps 5.8/7.7/9.0|mit 12.9/13.2/13.4|god_d -0.328|god_m -0.026|card_d -0.556|card_m -0.035|gcards 6
+GP963 CP|sun|0|5|L12|dps 6.4/6.7/7.8|mit 14.4/14.2/14.9|god_d -0.056|god_m 0.016|card_d -0.217|card_m -0.031|gcards 7
+GP963 CP|sun|0|5|L18|dps 0.0/6.7/7.5|mit 17.4/15.6/15.9|god_d 0.000|god_m 0.104|card_d 0.000|card_m 0.084|gcards 10
+GP963 CP|sun|0|5|L24|dps 0.0/0.4/0.8|mit 24.0/29.0/29.0|god_d 0.000|god_m -0.208|card_d 0.000|card_m -0.208|gcards 12
+GP963 CP|sun|0|5|L30|dps 0.0/0.3/0.7|mit 33.7/28.1/28.2|god_d 0.000|god_m 0.168|card_d 0.000|card_m 0.163|gcards 13
+GP963 LOO|sun|0|5|god_sun_rest=0.000/0.110;god_sun_longday=0.000/-0.000;god_sun_veil=0.000/-0.024;god_sun_noon=0.000/0.000;god_sun_humble=0.000/-0.022;god_sun_frost=0.000/0.005;god_sun_shift=0.000/-0.084;god_sun_longnight=0.000/-0.000;god_sun_faster=0.000/0.017;god_sun_eclipse=0.000/-0.051;god_sun_dawnlight=0.000/-0.012;god_sun_rest_up=0.000/0.089;god_sun_eclipse_up=0.000/-0.018
+GP963 RUN|sun|0|5|kit knife,hand_crossbow,leather_armor,tower_shield|wins 6/20|dps 2.3|mit 21.1|god_d -1.474|god_m 0.183|card_d -1.807|card_m 0.155
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|6|L6|dps 6.1/8.1/9.0|mit 11.7/10.7/10.7|god_d -0.315|god_m 0.090|card_d -0.465|card_m 0.086|gcards 5
+GP963 CP|sun|0|6|L12|dps 5.2/7.7/8.6|mit 17.7/15.9/16.7|god_d -0.472|god_m 0.105|card_d -0.645|card_m 0.060|gcards 8
+GP963 CP|sun|0|6|L18|dps 6.6/7.7/8.7|mit 23.0/19.5/19.3|god_d -0.181|god_m 0.149|card_d -0.319|card_m 0.158|gcards 12
+GP963 CP|sun|0|6|L24|dps 8.2/2.0/2.3|mit 29.0/29.9/30.5|god_d 0.757|god_m -0.031|card_d 0.724|card_m -0.051|gcards 14
+GP963 CP|sun|0|6|L30|dps 3.7/1.3/1.7|mit 38.1/31.4/31.0|god_d 0.648|god_m 0.175|card_d 0.548|card_m 0.188|gcards 15
+GP963 LOO|sun|0|6|god_sun_frost=0.000/0.000;god_sun_slower=0.000/0.001;god_sun_fullmoon=0.000/0.000;god_sun_humble=-0.007/0.060;god_sun_rest=0.000/0.000;god_sun_dawnlight=0.139/0.122;god_sun_dusklight=0.000/0.000;god_sun_rest_up=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_veil=0.000/0.000;god_sun_longday=0.331/0.009;god_sun_moonbath=0.000/0.000;god_sun_longnight=0.000/0.000;god_sun_blaze=0.657/0.000;god_sun_shift=0.000/0.000
+GP963 RUN|sun|0|6|kit hand_axe,crude_bow,leather_armor,tower_shield|wins 5/20|dps 6.1|mit 20.9|god_d -0.022|god_m 0.093|card_d -0.138|card_m 0.073
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|7|L6|dps 16.0/11.8/13.7|mit 14.8/12.3/13.1|god_d 0.265|god_m 0.166|card_d 0.149|card_m 0.114|gcards 5
+GP963 CP|sun|0|7|L12|dps 21.5/13.5/15.4|mit 14.0/14.9/15.0|god_d 0.372|god_m -0.070|card_d 0.283|card_m -0.077|gcards 8
+GP963 CP|sun|0|7|L18|dps 23.8/13.4/14.8|mit 20.0/14.0/14.7|god_d 0.437|god_m 0.297|card_d 0.377|card_m 0.267|gcards 9
+GP963 CP|sun|0|7|L24|dps 19.2/3.5/4.5|mit 35.6/28.2/27.8|god_d 0.820|god_m 0.207|card_d 0.766|card_m 0.218|gcards 10
+GP963 CP|sun|0|7|L30|dps 0.0/1.5/2.1|mit 31.2/28.7/28.9|god_d 0.000|god_m 0.081|card_d 0.000|card_m 0.072|gcards 14
+GP963 LOO|sun|0|7|god_sun_shift=0.000/-0.024;god_sun_slower=0.000/-0.002;god_sun_dawnlight=0.000/-0.010;god_sun_noon=0.000/0.000;god_sun_eclipse=0.000/-0.063;god_sun_humble=0.000/-0.002;god_sun_longday=0.000/-0.017;god_sun_frost=0.000/0.003;god_sun_sunbath=0.000/-0.008;god_sun_frost_up=0.000/0.003;god_sun_veil=0.000/0.025;god_sun_longnight=0.000/-0.062;god_sun_dusklight=0.000/0.000;god_sun_rest=0.000/-0.195
+GP963 RUN|sun|0|7|kit shortsword,hand_axe,leather_armor,tower_shield|wins 12/20|dps 10.2|mit 26.4|god_d 0.024|god_m 0.321|card_d -0.092|card_m 0.294
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|8|L6|dps 14.5/12.0/13.7|mit 9.4/9.2/9.6|god_d 0.177|god_m 0.030|card_d 0.059|card_m -0.019|gcards 5
+GP963 CP|sun|0|8|L12|dps 15.7/12.0/13.7|mit 13.6/10.6/11.5|god_d 0.238|god_m 0.222|card_d 0.129|card_m 0.154|gcards 8
+GP963 CP|sun|0|8|L18|dps 12.8/8.5/9.6|mit 14.1/12.1/12.0|god_d 0.336|god_m 0.138|card_d 0.252|card_m 0.147|gcards 11
+GP963 CP|sun|0|8|L24|dps 5.0/0.9/1.6|mit 30.3/26.6/26.6|god_d 0.824|god_m 0.122|card_d 0.684|card_m 0.122|gcards 14
+GP963 CP|sun|0|8|L30|dps 9.7/1.3/2.0|mit 27.7/24.5/24.5|god_d 0.867|god_m 0.115|card_d 0.799|card_m 0.115|gcards 16
+GP963 LOO|sun|0|8|god_sun_contrast=0.435/-0.014;god_sun_dusklight=0.000/0.000;god_sun_veil=0.084/0.070;god_sun_humble=-0.165/-0.005;god_sun_dusk=0.034/0.000;god_sun_slower=0.186/-0.018;god_sun_faster=-0.148/-0.002;god_sun_eclipse=0.531/0.044;god_sun_dawnlight=-0.033/0.015;god_sun_noon=0.064/0.000;god_sun_shift=0.391/-0.061;god_sun_fullmoon=-0.040/0.004;god_sun_longday=0.190/-0.009;god_sun_shift_up=-0.081/0.002;god_sun_miracle=0.000/0.000;god_sun_contrast_up=0.198/-0.014
+GP963 RUN|sun|0|8|kit shortsword,knife,leather_armor,brass_plating|wins 8/20|dps 12.1|mit 17.8|god_d 0.300|god_m 0.205|card_d 0.212|card_m 0.172
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|9|L6|dps 17.4/10.9/12.1|mit 13.5/12.0/12.3|god_d 0.373|god_m 0.113|card_d 0.304|card_m 0.090|gcards 5
+GP963 CP|sun|0|9|L12|dps 18.7/11.5/13.2|mit 12.7/11.4/12.0|god_d 0.386|god_m 0.101|card_d 0.297|card_m 0.057|gcards 6
+GP963 CP|sun|0|9|L18|dps 19.1/9.6/11.1|mit 17.9/14.6/14.4|god_d 0.495|god_m 0.183|card_d 0.416|card_m 0.194|gcards 9
+GP963 CP|sun|0|9|L24|dps 16.5/4.4/5.3|mit 22.7/28.4/28.8|god_d 0.731|god_m -0.249|card_d 0.679|card_m -0.270|gcards 10
+GP963 CP|sun|0|9|L30|dps 12.7/3.7/4.7|mit 28.0/32.5/32.6|god_d 0.711|god_m -0.160|card_d 0.631|card_m -0.162|gcards 13
+GP963 LOO|sun|0|9|god_sun_blaze=0.339/0.036;god_sun_longday=0.033/-0.008;god_sun_slower=-0.357/0.055;god_sun_veil=0.011/0.003;god_sun_blaze_up=0.259/0.021;god_sun_frost=0.006/0.023;god_sun_dawnlight=0.021/0.040;god_sun_longnight=-0.100/0.022;god_sun_rise=0.167/-0.217;god_sun_frost_up=0.018/0.000;god_sun_noon=0.023/0.001;god_sun_faster=-0.068/0.016;god_sun_dawn=0.000/0.000
+GP963 RUN|sun|0|9|kit felling_axe,hand_axe,leather_armor,tower_shield|wins 12/20|dps 16.9|mit 19.3|god_d 0.467|god_m 0.118|card_d 0.394|card_m 0.093
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|10|L6|dps 12.0/9.2/10.2|mit 7.8/7.2/7.3|god_d 0.230|god_m 0.076|card_d 0.151|card_m 0.061|gcards 4
+GP963 CP|sun|0|10|L12|dps 7.5/8.4/9.4|mit 7.6/6.4/6.8|god_d -0.116|god_m 0.153|card_d -0.256|card_m 0.100|gcards 8
+GP963 CP|sun|0|10|L18|dps 9.3/8.1/9.2|mit 15.9/14.5/14.9|god_d 0.128|god_m 0.088|card_d 0.009|card_m 0.066|gcards 10
+GP963 CP|sun|0|10|L24|dps 6.0/3.5/4.4|mit 23.1/20.6/20.7|god_d 0.413|god_m 0.108|card_d 0.269|card_m 0.106|gcards 11
+GP963 CP|sun|0|10|L30|dps 4.2/2.5/3.0|mit 26.7/23.5/22.6|god_d 0.408|god_m 0.123|card_d 0.285|card_m 0.156|gcards 14
+GP963 LOO|sun|0|10|god_sun_lunar=0.000/0.000;god_sun_dusklight=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_contrast=0.194/0.026;god_sun_humble=-0.072/0.046;god_sun_noon=0.171/0.000;god_sun_longday=0.492/0.044;god_sun_rest=0.113/0.055;god_sun_faster=0.144/0.036;god_sun_dusk=0.000/0.000;god_sun_contrast_up=0.098/0.032;god_sun_longnight=0.020/0.029;god_sun_dawnlight=-0.013/0.051;god_sun_shift=0.006/-0.005
+GP963 RUN|sun|0|10|kit hand_crossbow,club,leather_armor,brass_plating|wins 7/20|dps 8.1|mit 13.2|god_d 0.095|god_m 0.124|card_d -0.012|card_m 0.097
+GP963 放不下包 bag_leather
+GP963 CP|sun|0|11|L6|dps 11.8/10.7/12.3|mit 7.7/8.0/8.0|god_d 0.094|god_m -0.036|card_d -0.036|card_m -0.028|gcards 4
+GP963 CP|sun|0|11|L12|dps 12.7/10.9/12.4|mit 15.8/14.3/14.7|god_d 0.141|god_m 0.093|card_d 0.026|card_m 0.066|gcards 6
+GP963 CP|sun|0|11|L18|dps 14.1/9.1/10.3|mit 15.8/14.0/14.2|god_d 0.358|god_m 0.109|card_d 0.266|card_m 0.101|gcards 9
+GP963 CP|sun|0|11|L24|dps 8.3/1.5/2.4|mit 25.8/28.1/27.9|god_d 0.824|god_m -0.086|card_d 0.716|card_m -0.079|gcards 13
+GP963 CP|sun|0|11|L30|dps 9.6/3.5/5.0|mit 29.5/40.1/40.1|god_d 0.635|god_m -0.360|card_d 0.477|card_m -0.360|gcards 15
+GP963 LOO|sun|0|11|god_sun_frost=-0.379/0.000;god_sun_humble=-0.044/-0.071;god_sun_miracle=0.000/0.000;god_sun_rise=0.108/-0.334;god_sun_veil=0.070/-0.051;god_sun_lunar=0.101/0.268;god_sun_dusklight=0.000/0.000;god_sun_longnight=-0.027/-0.041;god_sun_blaze=0.384/-0.025;god_sun_noon=0.106/0.000;god_sun_faster=-0.044/-0.034;god_sun_slower=-0.036/-0.002;god_sun_dusk=0.000/0.000;god_sun_longday=0.029/0.009;god_sun_shift=0.037/0.013
+GP963 RUN|sun|0|11|kit hand_crossbow,shortsword,leather_armor,round_shield|wins 9/20|dps 11.2|mit 19.5|god_d 0.275|god_m 0.114|card_d 0.172|card_m 0.087
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|0|L6|dps 17.3/18.4/21.0|mit 14.2/12.4/13.1|god_d -0.062|god_m 0.127|card_d -0.213|card_m 0.081|gcards 5
+GP963 CP|sun|2|0|L12|dps 15.1/23.5/24.2|mit 23.0/21.8/20.8|god_d -0.550|god_m 0.054|card_d -0.599|card_m 0.097|gcards 10
+GP963 CP|sun|2|0|L18|dps 17.6/21.3/25.2|mit 25.6/25.1/26.7|god_d -0.211|god_m 0.020|card_d -0.430|card_m -0.044|gcards 11
+GP963 CP|sun|2|0|L24|dps 22.4/17.0/19.3|mit 40.4/34.3/35.6|god_d 0.240|god_m 0.151|card_d 0.140|card_m 0.118|gcards 13
+GP963 CP|sun|2|0|L30|dps 23.4/19.7/22.7|mit 44.1/41.1/41.5|god_d 0.157|god_m 0.068|card_d 0.027|card_m 0.058|gcards 16
+GP963 LOO|sun|2|0|god_sun_rest=-0.314/-0.049;god_sun_fullmoon=0.023/-0.003;god_sun_dawnlight=-0.011/0.006;god_sun_veil=0.000/0.000;god_sun_contrast=0.037/0.039;god_sun_faster=-0.193/-0.030;god_sun_dusklight=0.000/0.000;god_sun_humble=-0.080/-0.006;god_sun_longday=0.149/0.033;god_sun_dawn=-0.027/-0.009;god_sun_blaze=0.190/0.040;god_sun_noon=0.034/0.002;god_sun_blaze_up=0.195/0.052;god_sun_slower=0.171/0.056;god_sun_miracle=0.000/0.000;god_sun_frost=-0.031/0.005
+GP963 RUN|sun|2|0|kit bone_great_club,steel_broadsword,plate_cuirass,kite_shield|wins 16/20|dps 19.6|mit 31.7|god_d -0.002|god_m 0.055|card_d -0.135|card_m 0.023
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|1|L6|dps 28.6/32.7/36.9|mit 11.3/10.1/10.0|god_d -0.146|god_m 0.105|card_d -0.292|card_m 0.120|gcards 4
+GP963 CP|sun|2|1|L12|dps 22.9/34.3/37.5|mit 21.4/20.6/21.6|god_d -0.497|god_m 0.033|card_d -0.641|card_m -0.011|gcards 6
+GP963 CP|sun|2|1|L18|dps 38.2/33.9/37.0|mit 21.9/22.4/21.6|god_d 0.111|god_m -0.023|card_d 0.030|card_m 0.014|gcards 9
+GP963 CP|sun|2|1|L24|dps 28.6/24.4/28.1|mit 29.2/28.0/28.6|god_d 0.148|god_m 0.041|card_d 0.020|card_m 0.022|gcards 11
+GP963 CP|sun|2|1|L30|dps 29.6/23.0/27.9|mit 32.5/34.4/34.4|god_d 0.222|god_m -0.061|card_d 0.059|card_m -0.059|gcards 15
+GP963 LOO|sun|2|1|god_sun_lunar=0.103/0.022;god_sun_fullmoon=-0.009/0.005;god_sun_miracle=0.000/0.000;god_sun_rest=-0.324/-0.118;god_sun_longnight=-0.173/-0.074;god_sun_moonbath=0.004/0.004;god_sun_slower=0.032/-0.047;god_sun_longday=0.091/-0.015;god_sun_dusk=0.000/0.000;god_sun_veil=0.023/-0.061;god_sun_blaze=0.504/0.025;god_sun_dusklight=0.000/0.000;god_sun_humble=-0.011/-0.068;god_sun_faster=-0.094/-0.074;god_sun_blaze_up=0.219/0.025
+GP963 RUN|sun|2|1|kit steel_spear,bone_broadsword,studded_leather,kite_shield|wins 16/20|dps 28.9|mit 25.4|god_d 0.028|god_m 0.017|card_d -0.098|card_m -0.002
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|2|L6|dps 28.2/23.9/28.8|mit 17.1/16.5/16.7|god_d 0.154|god_m 0.035|card_d -0.020|card_m 0.025|gcards 3
+GP963 CP|sun|2|2|L12|dps 28.6/27.6/28.1|mit 19.0/18.8/19.1|god_d 0.035|god_m 0.008|card_d 0.019|card_m -0.008|gcards 6
+GP963 CP|sun|2|2|L18|dps 31.5/24.8/27.6|mit 30.4/27.5/28.7|god_d 0.211|god_m 0.096|card_d 0.123|card_m 0.055|gcards 11
+GP963 CP|sun|2|2|L24|dps 30.9/15.5/19.0|mit 27.9/22.6/22.4|god_d 0.500|god_m 0.192|card_d 0.385|card_m 0.199|gcards 12
+GP963 CP|sun|2|2|L30|dps 41.4/20.2/24.3|mit 34.6/25.3/25.7|god_d 0.512|god_m 0.270|card_d 0.413|card_m 0.259|gcards 14
+GP963 LOO|sun|2|2|god_sun_blaze=0.007/-0.001;god_sun_dusklight=0.000/0.000;god_sun_dawn=0.018/0.007;god_sun_veil=0.000/0.072;god_sun_slower=-0.015/-0.029;god_sun_shift=0.288/0.143;god_sun_faster=0.012/0.015;god_sun_dawnlight=0.000/0.028;god_sun_longnight=-0.017/-0.017;god_sun_fullmoon=0.019/0.009;god_sun_moonbath=0.013/-0.013;god_sun_shift_up=0.012/0.015;god_sun_humble=-0.017/-0.002;god_sun_blaze_up=0.007/-0.001
+GP963 RUN|sun|2|2|kit bone_great_club,barbarian_scimitar,chain_mail,kite_shield|wins 20/20|dps 33.1|mit 27.8|god_d 0.380|god_m 0.158|card_d 0.284|card_m 0.148
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|3|L6|dps 21.4/18.8/20.4|mit 9.3/8.8/8.8|god_d 0.121|god_m 0.051|card_d 0.046|card_m 0.057|gcards 3
+GP963 CP|sun|2|3|L12|dps 10.3/18.5/20.8|mit 19.6/20.7/21.2|god_d -0.794|god_m -0.056|card_d -1.014|card_m -0.084|gcards 8
+GP963 CP|sun|2|3|L18|dps 14.1/20.9/23.3|mit 23.4/21.1/22.4|god_d -0.486|god_m 0.097|card_d -0.655|card_m 0.041|gcards 10
+GP963 CP|sun|2|3|L24|dps 5.6/6.1/7.8|mit 33.0/33.8/35.0|god_d -0.094|god_m -0.025|card_d -0.395|card_m -0.061|gcards 11
+GP963 CP|sun|2|3|L30|dps 5.9/6.2/7.9|mit 28.3/33.8/33.7|god_d -0.054|god_m -0.196|card_d -0.351|card_m -0.190|gcards 13
+GP963 LOO|sun|2|3|god_sun_blaze=0.161/0.062;god_sun_longnight=-0.594/-0.041;god_sun_dusk=0.123/0.022;god_sun_fullmoon=-0.007/0.009;god_sun_noon=0.103/0.023;god_sun_humble=-0.094/0.015;god_sun_longday=0.187/0.011;god_sun_rest=-0.860/-0.031;god_sun_veil=-0.016/0.018;god_sun_contrast=0.025/0.048;god_sun_contrast_up=0.047/0.021;god_sun_dawnlight=-0.009/0.009;god_sun_moonbath=0.091/0.030
+GP963 RUN|sun|2|3|kit horn_bow,steel_spear,plate_cuirass,kite_shield|wins 11/20|dps 9.1|mit 25.3|god_d -0.505|god_m 0.007|card_d -0.691|card_m -0.028
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|4|L6|dps 18.5/17.0/17.0|mit 12.4/11.9/11.9|god_d 0.083|god_m 0.040|card_d 0.083|card_m 0.040|gcards 3
+GP963 CP|sun|2|4|L12|dps 27.9/21.2/23.3|mit 17.6/16.9/17.2|god_d 0.240|god_m 0.038|card_d 0.166|card_m 0.021|gcards 8
+GP963 CP|sun|2|4|L18|dps 29.3/22.7/24.6|mit 23.9/22.6/23.6|god_d 0.224|god_m 0.054|card_d 0.161|card_m 0.016|gcards 9
+GP963 CP|sun|2|4|L24|dps 29.3/19.2/22.2|mit 27.8/27.7/27.4|god_d 0.346|god_m 0.003|card_d 0.242|card_m 0.013|gcards 11
+GP963 CP|sun|2|4|L30|dps 27.5/17.7/20.8|mit 24.0/27.6/27.9|god_d 0.358|god_m -0.150|card_d 0.242|card_m -0.161|gcards 13
+GP963 LOO|sun|2|4|god_sun_eclipse=0.057/0.043;god_sun_faster=-0.017/-0.057;god_sun_dusk=0.040/0.023;god_sun_longday=0.040/0.023;god_sun_fullmoon=-0.003/-0.007;god_sun_longnight=-0.045/-0.018;god_sun_noon=0.024/0.015;god_sun_dawn=0.000/0.000;god_sun_rise=0.078/-0.254;god_sun_veil=0.027/-0.013;god_sun_dusk_up=0.011/0.006;god_sun_dusklight=0.000/0.000;god_sun_rise_up=0.033/-0.117
+GP963 RUN|sun|2|4|kit halberd,pendulum_blade,plate_cuirass,kite_shield|wins 20/20|dps 27.5|mit 23.3|god_d 0.284|god_m -0.000|card_d 0.203|card_m -0.014
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|5|L6|dps 31.1/27.2/30.1|mit 9.8/9.7/9.8|god_d 0.126|god_m 0.014|card_d 0.030|card_m 0.003|gcards 2
+GP963 CP|sun|2|5|L12|dps 32.5/24.8/28.6|mit 14.2/12.9/13.4|god_d 0.236|god_m 0.091|card_d 0.121|card_m 0.055|gcards 6
+GP963 CP|sun|2|5|L18|dps 39.2/30.5/33.9|mit 24.8/24.5/23.9|god_d 0.223|god_m 0.015|card_d 0.135|card_m 0.040|gcards 8
+GP963 CP|sun|2|5|L24|dps 38.8/18.4/22.4|mit 28.9/23.5/23.8|god_d 0.526|god_m 0.189|card_d 0.424|card_m 0.178|gcards 14
+GP963 CP|sun|2|5|L30|dps 43.8/19.7/23.0|mit 41.8/36.5/37.1|god_d 0.550|god_m 0.126|card_d 0.476|card_m 0.112|gcards 15
+GP963 LOO|sun|2|5|god_sun_contrast=0.063/0.016;god_sun_moonbath=0.062/0.018;god_sun_miracle=0.000/0.000;god_sun_slower=-0.006/-0.021;god_sun_longnight=0.033/-0.000;god_sun_contrast_up=0.029/0.009;god_sun_longday=-0.068/-0.051;god_sun_shift=0.311/0.141;god_sun_humble=-0.087/0.007;god_sun_fullmoon=-0.023/-0.023;god_sun_faster=-0.045/-0.006;god_sun_noon=0.042/0.022;god_sun_dawnlight=0.000/0.045;god_sun_rise=-0.013/-0.002;god_sun_moonbath_up=-0.014/-0.024
+GP963 RUN|sun|2|5|kit ironwood_broadsword,halberd,chain_mail,kite_shield|wins 20/20|dps 38.7|mit 28.1|god_d 0.416|god_m 0.142|card_d 0.329|card_m 0.127
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|6|L6|dps 40.5/34.2/40.5|mit 7.9/8.2/7.9|god_d 0.155|god_m -0.042|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|sun|2|6|L12|dps 38.2/34.9/37.8|mit 20.7/19.8/20.5|god_d 0.085|god_m 0.045|card_d 0.011|card_m 0.011|gcards 6
+GP963 CP|sun|2|6|L18|dps 44.3/34.6/39.1|mit 28.9/25.6/28.2|god_d 0.218|god_m 0.116|card_d 0.116|card_m 0.024|gcards 9
+GP963 CP|sun|2|6|L24|dps 33.9/22.2/24.7|mit 30.2/32.4/32.4|god_d 0.344|god_m -0.070|card_d 0.272|card_m -0.071|gcards 10
+GP963 CP|sun|2|6|L30|dps 48.9/27.5/31.5|mit 36.7/32.1/34.2|god_d 0.437|god_m 0.127|card_d 0.355|card_m 0.069|gcards 11
+GP963 LOO|sun|2|6|god_sun_rise=0.021/-0.094;god_sun_faster=0.036/0.022;god_sun_miracle=0.000/0.000;god_sun_rise_up=0.000/0.000;god_sun_noon=0.050/0.012;god_sun_dawn=-0.004/0.002;god_sun_fullmoon=0.049/0.016;god_sun_dusklight=0.000/0.000;god_sun_lunar=0.184/0.093;god_sun_lunar_up=0.077/0.031;god_sun_blaze=0.101/0.050
+GP963 RUN|sun|2|6|kit hardwood_spear,steel_broadsword,chain_mail,kite_shield|wins 20/20|dps 40.0|mit 28.6|god_d 0.289|god_m 0.037|card_d 0.207|card_m -0.010
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|7|L6|dps 22.2/19.0/21.8|mit 12.1/12.4/12.3|god_d 0.148|god_m -0.024|card_d 0.021|card_m -0.015|gcards 3
+GP963 CP|sun|2|7|L12|dps 20.1/16.6/18.4|mit 16.0/14.8/15.3|god_d 0.171|god_m 0.075|card_d 0.083|card_m 0.038|gcards 7
+GP963 CP|sun|2|7|L18|dps 21.4/15.2/17.0|mit 28.8/26.4/27.1|god_d 0.289|god_m 0.081|card_d 0.208|card_m 0.059|gcards 11
+GP963 CP|sun|2|7|L24|dps 27.3/11.3/14.4|mit 25.4/22.7/22.3|god_d 0.585|god_m 0.106|card_d 0.472|card_m 0.120|gcards 13
+GP963 CP|sun|2|7|L30|dps 40.9/11.6/14.5|mit 35.4/29.2/28.9|god_d 0.716|god_m 0.176|card_d 0.645|card_m 0.186|gcards 14
+GP963 LOO|sun|2|7|god_sun_moonbath=0.090/0.025;god_sun_fullmoon=0.048/-0.013;god_sun_dawn=0.055/0.028;god_sun_humble=-0.087/-0.016;god_sun_veil=0.002/0.044;god_sun_dusklight=0.000/0.000;god_sun_shift=0.474/0.112;god_sun_miracle=0.000/0.000;god_sun_longday=-0.108/-0.023;god_sun_longnight=0.094/0.049;god_sun_moonbath_up=0.041/0.006;god_sun_dawnlight=0.000/0.016;god_sun_dawn_up=0.029/0.015;god_sun_contrast=0.076/0.028
+GP963 RUN|sun|2|7|kit halberd,mage_staff,plate_cuirass,kite_shield|wins 18/20|dps 27.2|mit 24.7|god_d 0.476|god_m 0.123|card_d 0.391|card_m 0.111
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|8|L6|dps 35.2/30.7/35.2|mit 14.8/14.5/14.8|god_d 0.130|god_m 0.017|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|sun|2|8|L12|dps 38.4/30.2/34.8|mit 11.8/11.3/11.3|god_d 0.214|god_m 0.044|card_d 0.095|card_m 0.046|gcards 8
+GP963 CP|sun|2|8|L18|dps 38.0/32.1/33.8|mit 17.6/19.1/17.9|god_d 0.156|god_m -0.086|card_d 0.110|card_m -0.021|gcards 10
+GP963 CP|sun|2|8|L24|dps 44.9/24.9/28.4|mit 38.1/26.3/27.7|god_d 0.446|god_m 0.311|card_d 0.368|card_m 0.274|gcards 11
+GP963 CP|sun|2|8|L30|dps 56.1/23.3/27.5|mit 41.1/25.8/27.7|god_d 0.584|god_m 0.372|card_d 0.510|card_m 0.325|gcards 13
+GP963 LOO|sun|2|8|god_sun_blaze=-0.018/0.074;god_sun_dusklight=0.000/0.000;god_sun_longnight=0.100/0.038;god_sun_shift=0.162/0.027;god_sun_noon=0.051/0.023;god_sun_longday=0.006/-0.001;god_sun_dawnlight=0.000/0.031;god_sun_frost=0.161/0.096;god_sun_faster=0.104/0.050;god_sun_lunar=0.014/0.059;god_sun_rise=0.000/0.009;god_sun_veil=0.000/0.016;god_sun_dawn=0.059/0.017
+GP963 RUN|sun|2|8|kit bloodletter,bone_pole_axe,chain_mail,kite_shield|wins 20/20|dps 44.9|mit 29.0|god_d 0.422|god_m 0.203|card_d 0.338|card_m 0.165
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|9|L6|dps 27.2/24.8/27.7|mit 9.1/9.0/8.7|god_d 0.090|god_m 0.011|card_d -0.020|card_m 0.047|gcards 5
+GP963 CP|sun|2|9|L12|dps 30.4/27.3/29.2|mit 14.8/14.7/14.8|god_d 0.103|god_m 0.009|card_d 0.039|card_m -0.001|gcards 7
+GP963 CP|sun|2|9|L18|dps 37.6/32.2/37.0|mit 38.9/37.5/39.5|god_d 0.143|god_m 0.037|card_d 0.015|card_m -0.014|gcards 9
+GP963 CP|sun|2|9|L24|dps 30.5/24.2/27.5|mit 32.3/24.6/27.2|god_d 0.207|god_m 0.238|card_d 0.100|card_m 0.159|gcards 12
+GP963 CP|sun|2|9|L30|dps 31.4/23.9/27.7|mit 35.5/37.3/36.1|god_d 0.239|god_m -0.050|card_d 0.119|card_m -0.017|gcards 14
+GP963 LOO|sun|2|9|god_sun_contrast=0.064/-0.001;god_sun_fullmoon=0.008/0.008;god_sun_dawnlight=0.019/0.040;god_sun_humble=-0.034/0.026;god_sun_dusk=0.020/0.014;god_sun_longday=0.019/0.024;god_sun_dusk_up=0.009/0.009;god_sun_veil=-0.001/0.056;god_sun_rise=0.019/-0.123;god_sun_slower=0.014/-0.004;god_sun_faster=-0.004/0.060;god_sun_blaze=0.021/0.029;god_sun_dusklight=0.000/0.000;god_sun_shift=0.032/0.049
+GP963 RUN|sun|2|9|kit bone_great_club,steel_broadsword,chain_mail,steel_round_shield|wins 18/20|dps 31.4|mit 28.9|god_d 0.172|god_m 0.113|card_d 0.068|card_m 0.071
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|10|L6|dps 29.6/25.8/26.4|mit 9.8/9.5/9.7|god_d 0.126|god_m 0.030|card_d 0.108|card_m 0.010|gcards 5
+GP963 CP|sun|2|10|L12|dps 20.3/25.6/27.9|mit 21.5/19.0/19.9|god_d -0.261|god_m 0.120|card_d -0.372|card_m 0.079|gcards 8
+GP963 CP|sun|2|10|L18|dps 24.9/23.9/27.3|mit 21.1/22.2/22.1|god_d 0.042|god_m -0.048|card_d -0.098|card_m -0.048|gcards 9
+GP963 CP|sun|2|10|L24|dps 0.0/23.9/28.2|mit 26.6/32.5/34.7|god_d 0.000|god_m -0.222|card_d 0.000|card_m -0.304|gcards 12
+GP963 CP|sun|2|10|L30|dps 0.0/24.1/27.1|mit 25.6/32.3/33.2|god_d 0.000|god_m -0.263|card_d 0.000|card_m -0.300|gcards 14
+GP963 LOO|sun|2|10|god_sun_contrast=0.000/0.000;god_sun_slower=0.000/0.000;god_sun_longnight=0.000/0.000;god_sun_noon=0.000/0.000;god_sun_contrast_up=0.000/0.000;god_sun_fullmoon=0.000/0.000;god_sun_faster=0.000/0.000;god_sun_rest=0.000/-0.592;god_sun_moonbath=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_dusklight=0.000/0.000;god_sun_eclipse=0.000/-0.173;god_sun_humble=0.000/-0.004;god_sun_dawn=0.000/0.000
+GP963 RUN|sun|2|10|kit steel_greatsword,steel_great_axe,chain_mail,kite_shield|wins 11/20|dps 6.0|mit 24.2|god_d -3.052|god_m -0.068|card_d -3.556|card_m -0.102
+GP963 放不下包 bag_leather
+GP963 CP|sun|2|11|L6|dps 41.8/36.2/42.6|mit 9.8/9.6/10.0|god_d 0.135|god_m 0.020|card_d -0.020|card_m -0.020|gcards 5
+GP963 CP|sun|2|11|L12|dps 45.2/36.6/41.7|mit 11.4/11.9/10.8|god_d 0.190|god_m -0.050|card_d 0.077|card_m 0.051|gcards 6
+GP963 CP|sun|2|11|L18|dps 49.7/36.5/41.2|mit 30.3/28.6/28.5|god_d 0.266|god_m 0.058|card_d 0.171|card_m 0.060|gcards 11
+GP963 CP|sun|2|11|L24|dps 32.4/20.2/23.1|mit 39.6/35.4/36.2|god_d 0.376|god_m 0.108|card_d 0.289|card_m 0.087|gcards 13
+GP963 CP|sun|2|11|L30|dps 36.6/23.2/25.8|mit 32.7/24.9/26.2|god_d 0.368|god_m 0.241|card_d 0.295|card_m 0.200|gcards 16
+GP963 LOO|sun|2|11|god_sun_frost=0.105/0.042;god_sun_miracle=0.000/0.000;god_sun_humble=-0.017/0.020;god_sun_dawnlight=-0.002/0.029;god_sun_dusk=0.050/0.027;god_sun_eclipse=0.183/0.100;god_sun_fullmoon=0.034/0.008;god_sun_noon=0.042/0.016;god_sun_faster=-0.043/-0.021;god_sun_dusklight=0.000/0.000;god_sun_blaze=0.036/0.053;god_sun_longday=0.052/0.027;god_sun_dawn=0.000/0.000;god_sun_veil=-0.002/0.063;god_sun_slower=0.036/0.034;god_sun_sunbath=0.071/0.119
+GP963 RUN|sun|2|11|kit bone_spear,steel_twin_axes,chain_mail,steel_round_shield|wins 16/20|dps 38.8|mit 30.0|god_d 0.290|god_m 0.145|card_d 0.200|card_m 0.116
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|0|L6|dps 50.1/46.6/48.0|mit 5.6/6.2/6.4|god_d 0.070|god_m -0.108|card_d 0.042|card_m -0.141|gcards 3
+GP963 CP|sun|4|0|L12|dps 46.2/61.1/62.2|mit 11.5/12.6/12.3|god_d -0.321|god_m -0.099|card_d -0.347|card_m -0.073|gcards 9
+GP963 CP|sun|4|0|L18|dps 74.2/54.6/65.6|mit 40.7/39.5/36.9|god_d 0.264|god_m 0.030|card_d 0.115|card_m 0.094|gcards 13
+GP963 CP|sun|4|0|L24|dps 60.8/61.2/63.5|mit 31.9/27.3/28.2|god_d -0.007|god_m 0.146|card_d -0.045|card_m 0.118|gcards 14
+GP963 CP|sun|4|0|L30|dps 74.3/59.3/67.9|mit 47.2/37.0/38.7|god_d 0.202|god_m 0.216|card_d 0.086|card_m 0.180|gcards 15
+GP963 LOO|sun|4|0|god_sun_lunar=0.000/-0.008;god_sun_dusklight=0.000/0.000;god_sun_sunbath=0.115/0.194;god_sun_veil=0.000/0.008;god_sun_slower=0.206/0.035;god_sun_longnight=-0.035/-0.009;god_sun_faster=-0.157/-0.036;god_sun_noon=0.084/0.029;god_sun_rest=-0.157/-0.043;god_sun_dawnlight=0.000/0.047;god_sun_fullmoon=0.000/0.000;god_sun_longday=0.385/0.088;god_sun_contrast=0.035/-0.018;god_sun_sunbath_up=0.084/0.096;god_sun_dusk=0.000/0.000
+GP963 RUN|sun|4|0|kit flame_berserker_twin_axes,flame_meteor_maul,dragonscale_armor,riposte_buckler|wins 20/20|dps 62.0|mit 30.3|god_d 0.066|god_m 0.096|card_d -0.014|card_m 0.096
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|1|L6|dps 44.9/44.9/44.9|mit 8.1/8.1/8.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 2
+GP963 CP|sun|4|1|L12|dps 61.4/47.3/55.4|mit 12.8/12.1/12.3|god_d 0.229|god_m 0.052|card_d 0.097|card_m 0.035|gcards 7
+GP963 CP|sun|4|1|L18|dps 72.3/53.6/64.1|mit 26.7/30.2/27.1|god_d 0.258|god_m -0.132|card_d 0.113|card_m -0.016|gcards 10
+GP963 CP|sun|4|1|L24|dps 86.2/49.6/55.0|mit 49.3/39.1/41.0|god_d 0.425|god_m 0.205|card_d 0.362|card_m 0.168|gcards 13
+GP963 CP|sun|4|1|L30|dps 85.5/52.7/60.5|mit 42.7/36.7/36.9|god_d 0.383|god_m 0.140|card_d 0.292|card_m 0.135|gcards 14
+GP963 LOO|sun|4|1|god_sun_eclipse=0.131/-0.064;god_sun_blaze=-0.017/-0.017;god_sun_longnight=0.000/0.000;god_sun_noon=0.034/0.020;god_sun_veil=0.000/0.000;god_sun_humble=-0.032/-0.019;god_sun_dawn=0.000/0.000;god_sun_fullmoon=0.052/-0.005;god_sun_slower=0.055/-0.011;god_sun_contrast=0.093/-0.129;god_sun_faster=0.000/0.000;god_sun_longday=0.055/-0.011;god_sun_contrast_up=0.064/0.038;god_sun_blaze_up=-0.031/-0.018
+GP963 RUN|sun|4|1|kit flame_meteor_maul,frost_bloodoath_axe,dragonscale_armor,riposte_buckler|wins 20/20|dps 73.2|mit 31.2|god_d 0.314|god_m 0.068|card_d 0.223|card_m 0.057
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|2|L6|dps 43.7/43.7/43.7|mit 6.5/6.5/6.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|sun|4|2|L12|dps 58.8/50.4/58.8|mit 17.1/19.7/17.1|god_d 0.143|god_m -0.154|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|sun|4|2|L18|dps 61.8/51.6/55.9|mit 24.5/23.7/24.6|god_d 0.165|god_m 0.033|card_d 0.096|card_m -0.002|gcards 10
+GP963 CP|sun|4|2|L24|dps 63.9/46.2/52.8|mit 35.3/34.9/34.8|god_d 0.277|god_m 0.011|card_d 0.173|card_m 0.015|gcards 11
+GP963 CP|sun|4|2|L30|dps 68.7/49.9/52.8|mit 58.9/51.0/50.8|god_d 0.273|god_m 0.133|card_d 0.232|card_m 0.138|gcards 13
+GP963 LOO|sun|4|2|god_sun_lunar=0.110/0.026;god_sun_longday=0.000/0.000;god_sun_dusk=0.000/0.000;god_sun_slower=0.000/0.000;god_sun_dusklight=0.000/0.000;god_sun_dawnlight=0.000/0.008;god_sun_veil=0.000/0.000;god_sun_dawn=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_lunar_up=0.110/0.026;god_sun_contrast=0.004/-0.007;god_sun_noon=0.071/0.007;god_sun_contrast_up=0.024/0.018
+GP963 RUN|sun|4|2|kit flame_fang,frost_bonesteel_greatsword,dragonscale_armor,legion_tower_shield|wins 20/20|dps 62.1|mit 34.2|god_d 0.218|god_m 0.024|card_d 0.143|card_m 0.028
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|3|L6|dps 44.1/40.4/40.4|mit 9.9/10.0/10.0|god_d 0.083|god_m -0.012|card_d 0.083|card_m -0.012|gcards 5
+GP963 CP|sun|4|3|L12|dps 54.4/54.4/54.4|mit 8.4/8.4/8.4|god_d 0.000|god_m 0.011|card_d 0.000|card_m 0.011|gcards 7
+GP963 CP|sun|4|3|L18|dps 82.2/65.8/78.8|mit 28.6/28.5/29.2|god_d 0.199|god_m 0.006|card_d 0.041|card_m -0.019|gcards 11
+GP963 CP|sun|4|3|L24|dps 94.8/58.8/64.6|mit 52.4/44.1/47.6|god_d 0.380|god_m 0.158|card_d 0.319|card_m 0.092|gcards 12
+GP963 CP|sun|4|3|L30|dps 86.0/62.0/69.0|mit 71.8/58.2/59.8|god_d 0.279|god_m 0.189|card_d 0.198|card_m 0.167|gcards 14
+GP963 LOO|sun|4|3|god_sun_frost=0.102/-0.001;god_sun_longday=0.013/0.004;god_sun_faster=0.000/0.000;god_sun_veil=0.000/0.048;god_sun_eclipse=0.163/0.110;god_sun_humble=-0.038/0.003;god_sun_frost_up=0.059/0.008;god_sun_noon=0.059/0.024;god_sun_slower=0.013/0.004;god_sun_miracle=0.000/0.000;god_sun_rise=0.000/0.002;god_sun_sunbath=0.059/0.059;god_sun_dusklight=0.000/0.000;god_sun_rise_up=0.000/0.001
+GP963 RUN|sun|4|3|kit thunder_boneiron_club,thunder_bloodthirst_twin_blades,dragonscale_armor,legion_tower_shield|wins 20/20|dps 77.4|mit 42.3|god_d 0.250|god_m 0.097|card_d 0.183|card_m 0.066
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|4|L6|dps 258.9/258.9/258.9|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|sun|4|4|L12|dps 122.2/122.2/122.2|mit 24.8/24.4/24.4|god_d 0.000|god_m 0.014|card_d 0.000|card_m 0.014|gcards 7
+GP963 CP|sun|4|4|L18|dps 182.1/182.1/182.1|mit 22.8/22.5/22.5|god_d 0.000|god_m 0.017|card_d 0.000|card_m 0.017|gcards 10
+GP963 CP|sun|4|4|L24|dps 38.7/81.2/83.4|mit 42.5/53.2/53.3|god_d -1.097|god_m -0.252|card_d -1.153|card_m -0.257|gcards 12
+GP963 CP|sun|4|4|L30|dps 32.1/86.7/90.6|mit 36.3/45.9/46.8|god_d -1.700|god_m -0.262|card_d -1.822|card_m -0.288|gcards 13
+GP963 LOO|sun|4|4|god_sun_sunbath=-0.019/0.058;god_sun_veil=-0.040/0.025;god_sun_miracle=0.000/0.000;god_sun_shift=-0.020/-0.008;god_sun_fullmoon=0.000/0.000;god_sun_dawnlight=-0.041/0.084;god_sun_rest=-1.822/-0.493;god_sun_humble=-0.072/0.030;god_sun_longnight=-1.822/-0.501;god_sun_sunbath_up=0.000/0.037;god_sun_slower=-0.205/-0.094;god_sun_dawn=-0.060/-0.013;god_sun_contrast=0.000/0.001
+GP963 RUN|sun|4|4|kit thunder_siege_spear,flame_meteor_maul,knight_plate,riposte_buckler|wins 18/20|dps 50.1|mit 36.7|god_d -1.062|god_m -0.151|card_d -1.120|card_m -0.157
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|5|L6|dps 52.1/44.0/52.1|mit 14.1/13.6/14.1|god_d 0.155|god_m 0.034|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|sun|4|5|L12|dps 63.8/54.2/65.1|mit 13.6/12.4/12.7|god_d 0.150|god_m 0.084|card_d -0.020|card_m 0.066|gcards 8
+GP963 CP|sun|4|5|L18|dps 56.9/48.8/54.4|mit 25.5/24.0/24.2|god_d 0.143|god_m 0.061|card_d 0.045|card_m 0.051|gcards 11
+GP963 CP|sun|4|5|L24|dps 60.0/44.3/49.4|mit 51.6/48.0/48.3|god_d 0.262|god_m 0.071|card_d 0.176|card_m 0.064|gcards 12
+GP963 CP|sun|4|5|L30|dps 69.0/48.4/52.5|mit 48.0/39.2/40.0|god_d 0.298|god_m 0.183|card_d 0.239|card_m 0.168|gcards 14
+GP963 LOO|sun|4|5|god_sun_moonbath=0.009/-0.002;god_sun_faster=0.019/0.017;god_sun_longnight=0.014/0.019;god_sun_contrast=0.034/-0.033;god_sun_humble=-0.035/0.030;god_sun_dawnlight=0.000/0.033;god_sun_longday=-0.211/0.046;god_sun_shift=0.151/0.017;god_sun_veil=0.000/0.021;god_sun_fullmoon=0.004/0.004;god_sun_moonbath_up=0.004/-0.007;god_sun_dawn=0.000/0.000;god_sun_dusklight=0.000/0.000;god_sun_frost=0.000/0.000
+GP963 RUN|sun|4|5|kit flame_fang,frost_bonesteel_greatsword,knight_plate,riposte_buckler|wins 20/20|dps 61.6|mit 38.4|god_d 0.231|god_m 0.136|card_d 0.139|card_m 0.104
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|6|L6|dps 97.5/97.5/97.5|mit 8.2/8.2/8.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|sun|4|6|L12|dps 133.3/133.3/133.3|mit 10.9/10.9/10.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|sun|4|6|L18|dps 118.7/110.4/118.7|mit 21.8/23.5/21.8|god_d 0.070|god_m -0.074|card_d 0.000|card_m 0.000|gcards 10
+GP963 CP|sun|4|6|L24|dps 124.4/101.2/119.1|mit 46.6/46.2/43.8|god_d 0.186|god_m 0.009|card_d 0.042|card_m 0.060|gcards 11
+GP963 CP|sun|4|6|L30|dps 117.6/93.6/111.6|mit 53.8/48.5/50.2|god_d 0.204|god_m 0.099|card_d 0.050|card_m 0.066|gcards 14
+GP963 LOO|sun|4|6|god_sun_rest=0.000/0.000;god_sun_noon=0.265/0.054;god_sun_veil=0.000/0.000;god_sun_longday=0.361/0.110;god_sun_dawn=0.000/0.000;god_sun_slower=0.240/0.067;god_sun_humble=-0.075/0.051;god_sun_lunar=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_rise=0.000/0.000;god_sun_rise_up=0.000/0.000;god_sun_dusklight=0.000/0.000;god_sun_longnight=0.000/0.000;god_sun_moonbath=0.000/0.000
+GP963 RUN|sun|4|6|kit thunder_horse_halberd,imperial_sword,dragonscale_armor,riposte_buckler|wins 20/20|dps 119.5|mit 38.8|god_d 0.145|god_m 0.029|card_d 0.031|card_m 0.056
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|7|L6|dps 327.8/327.8/327.8|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|sun|4|7|L12|dps 456.2/456.2/456.2|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|sun|4|7|L18|dps 238.4/227.6/227.6|mit 29.4/28.1/28.1|god_d 0.046|god_m 0.046|card_d 0.046|card_m 0.046|gcards 8
+GP963 CP|sun|4|7|L24|dps 212.0/193.1/208.1|mit 58.0/52.5/49.3|god_d 0.089|god_m 0.094|card_d 0.018|card_m 0.149|gcards 10
+GP963 CP|sun|4|7|L30|dps 133.3/134.0/168.5|mit 57.6/57.0/56.7|god_d -0.005|god_m 0.009|card_d -0.264|card_m 0.016|gcards 13
+GP963 LOO|sun|4|7|god_sun_frost=0.000/0.000;god_sun_dusklight=0.000/0.000;god_sun_longnight=-0.030/-0.003;god_sun_moonbath=0.001/0.001;god_sun_fullmoon=0.006/0.008;god_sun_dawn=0.000/0.000;god_sun_humble=-0.199/0.010;god_sun_rise=0.000/0.000;god_sun_dawnlight=0.000/0.000;god_sun_lunar=0.000/0.010;god_sun_longday=-0.050/0.074;god_sun_faster=0.001/0.001;god_sun_dusk=0.000/0.000
+GP963 RUN|sun|4|7|kit thunder_siege_spear,flame_bonesteel_spear,knight_plate,riposte_buckler|wins 20/20|dps 200.6|mit 46.6|god_d 0.033|god_m 0.037|card_d -0.090|card_m 0.092
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|8|L6|dps 62.6/55.3/61.8|mit 8.9/10.2/8.8|god_d 0.117|god_m -0.139|card_d 0.014|card_m 0.014|gcards 4
+GP963 CP|sun|4|8|L12|dps 55.0/46.9/51.7|mit 17.2/17.5/17.2|god_d 0.146|god_m -0.020|card_d 0.060|card_m -0.003|gcards 8
+GP963 CP|sun|4|8|L18|dps 73.7/52.2/55.4|mit 24.5/25.4/24.6|god_d 0.291|god_m -0.037|card_d 0.247|card_m -0.006|gcards 10
+GP963 CP|sun|4|8|L24|dps 55.0/33.9/38.1|mit 44.7/40.0/40.4|god_d 0.383|god_m 0.106|card_d 0.307|card_m 0.097|gcards 12
+GP963 CP|sun|4|8|L30|dps 0.6/43.0/49.5|mit 26.0/36.8/40.6|god_d -65.985|god_m -0.416|card_d -76.127|card_m -0.563|gcards 14
+GP963 LOO|sun|4|8|god_sun_dusk=-0.030/0.031;god_sun_veil=-0.075/0.033;god_sun_dusklight=0.000/0.000;god_sun_contrast=-0.000/0.001;god_sun_noon=0.000/0.000;god_sun_miracle=0.000/0.000;god_sun_dawnlight=-0.015/0.013;god_sun_contrast_up=-0.000/0.002;god_sun_humble=-0.111/0.019;god_sun_eclipse=-63.198/-0.644;god_sun_faster=-0.008/0.006;god_sun_sunbath=-0.151/0.077;god_sun_longday=-0.023/0.023;god_sun_rest=-114.436/-0.931
+GP963 RUN|sun|4|8|kit frost_dragoon_lance,grand_magus_staff,knight_plate,legion_tower_shield|wins 16/20|dps 11.7|mit 27.0|god_d -2.597|god_m -0.218|card_d -3.019|card_m -0.264
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|9|L6|dps 131.8/131.8/131.8|mit 6.3/6.3/6.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|sun|4|9|L12|dps 105.6/95.5/105.6|mit 9.8/11.4/9.8|god_d 0.096|god_m -0.159|card_d 0.000|card_m 0.000|gcards 7
+GP963 CP|sun|4|9|L18|dps 113.8/97.9/104.1|mit 24.1/23.6/22.8|god_d 0.140|god_m 0.019|card_d 0.085|card_m 0.054|gcards 8
+GP963 CP|sun|4|9|L24|dps 123.8/116.2/116.2|mit 56.1/53.8/53.8|god_d 0.062|god_m 0.042|card_d 0.062|card_m 0.042|gcards 12
+GP963 CP|sun|4|9|L30|dps 51.7/97.8/105.5|mit 39.5/43.4/45.2|god_d -0.892|god_m -0.101|card_d -1.040|card_m -0.144|gcards 14
+GP963 LOO|sun|4|9|god_sun_moonbath=0.001/-0.002;god_sun_noon=0.005/0.000;god_sun_miracle=0.000/0.000;god_sun_shift=-0.002/-0.000;god_sun_fullmoon=-0.003/-0.001;god_sun_dawnlight=-0.003/0.029;god_sun_dawn=-0.115/-0.065;god_sun_lunar=0.000/-0.025;god_sun_humble=-0.047/0.022;god_sun_faster=-1.701/-0.254;god_sun_longday=0.407/0.114;god_sun_rest=-1.701/-0.254;god_sun_longnight=-1.701/-0.254;god_sun_dusk=0.000/0.000
+GP963 RUN|sun|4|9|kit flame_meteor_maul,flame_bonesteel_spear,dragonscale_armor,riposte_buckler|wins 19/20|dps 87.0|mit 35.8|god_d -0.206|god_m 0.009|card_d -0.268|card_m -0.003
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|10|L6|dps 46.3/46.3/46.3|mit 11.5/11.5/11.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|sun|4|10|L12|dps 55.3/45.4/48.7|mit 18.2/20.8/20.6|god_d 0.180|god_m -0.144|card_d 0.119|card_m -0.134|gcards 6
+GP963 CP|sun|4|10|L18|dps 54.5/42.4/43.6|mit 27.0/24.5/25.1|god_d 0.221|god_m 0.093|card_d 0.199|card_m 0.072|gcards 9
+GP963 CP|sun|4|10|L24|dps 0.0/38.7/42.5|mit 34.1/40.0/40.7|god_d 0.000|god_m -0.173|card_d 0.000|card_m -0.192|gcards 10
+GP963 CP|sun|4|10|L30|dps 0.0/42.0/44.2|mit 29.3/34.8/36.2|god_d 0.000|god_m -0.190|card_d 0.000|card_m -0.239|gcards 12
+GP963 LOO|sun|4|10|god_sun_frost=0.000/-0.018;god_sun_dusklight=0.000/0.000;god_sun_frost_up=0.000/-0.045;god_sun_slower=0.000/0.006;god_sun_miracle=0.000/0.000;god_sun_eclipse=0.000/-0.040;god_sun_humble=0.000/-0.032;god_sun_faster=0.000/0.005;god_sun_sunbath=0.000/-0.028;god_sun_rest=0.000/-0.244;god_sun_longnight=0.000/0.017;god_sun_shift=0.000/-0.033
+GP963 RUN|sun|4|10|kit frost_bonesteel_greatsword,flame_berserker_twin_axes,knight_plate,riposte_buckler|wins 12/20|dps 14.7|mit 28.2|god_d -1.872|god_m -0.065|card_d -2.033|card_m -0.092
+GP963 放不下包 bag_leather
+GP963 CP|sun|4|11|L6|dps 64.7/64.7/67.0|mit 9.0/9.0/9.3|god_d 0.000|god_m 0.000|card_d -0.035|card_m -0.035|gcards 5
+GP963 CP|sun|4|11|L12|dps 27.0/59.7/63.2|mit 20.1/17.2/17.7|god_d -1.211|god_m 0.147|card_d -1.341|card_m 0.121|gcards 8
+GP963 CP|sun|4|11|L18|dps 22.7/74.7/80.8|mit 23.5/18.3/17.3|god_d -2.289|god_m 0.224|card_d -2.555|card_m 0.265|gcards 11
+GP963 CP|sun|4|11|L24|dps 0.1/75.1/81.5|mit 20.9/36.0/34.1|god_d -1366.984|god_m -0.726|card_d -1483.025|card_m -0.636|gcards 14
+GP963 CP|sun|4|11|L30|dps 0.1/70.2/74.0|mit 30.7/49.6/49.5|god_d -1365.006|god_m -0.614|card_d -1438.209|card_m -0.611|gcards 15
+GP963 LOO|sun|4|11|god_sun_moonbath=-0.018/-0.010;god_sun_humble=-0.223/-0.024;god_sun_veil=-0.196/-0.018;god_sun_longnight=0.000/0.000;god_sun_frost=-90.343/-0.014;god_sun_dusklight=0.000/0.000;god_sun_faster=-0.070/-0.011;god_sun_rest=-1712.787/-0.603;god_sun_dawnlight=-0.134/-0.012;god_sun_noon=0.000/0.000;god_sun_dawn=0.000/0.000;god_sun_slower=0.046/0.010;god_sun_longday=-0.004/0.003;god_sun_eclipse=-411.477/-0.291;god_sun_eclipse_up=-0.012/-0.005
+GP963 RUN|sun|4|11|kit imperial_sword,flame_fang,dragonscale_armor,legion_tower_shield|wins 12/20|dps 5.1|mit 25.0|god_d -12.714|god_m -0.267|card_d -13.598|card_m -0.249
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|0|L6|dps 13.4/7.7/7.7|mit 10.2/9.1/9.1|god_d 0.423|god_m 0.112|card_d 0.423|card_m 0.112|gcards 4
+GP963 CP|nature|0|0|L12|dps 10.8/7.7/7.7|mit 13.3/13.0/13.0|god_d 0.284|god_m 0.021|card_d 0.284|card_m 0.021|gcards 7
+GP963 CP|nature|0|0|L18|dps 10.3/7.9/7.9|mit 20.1/19.4/19.4|god_d 0.238|god_m 0.032|card_d 0.238|card_m 0.032|gcards 8
+GP963 CP|nature|0|0|L24|dps 0.4/0.3/0.3|mit 32.0/32.0/32.0|god_d 0.166|god_m -0.000|card_d 0.166|card_m -0.000|gcards 11
+GP963 CP|nature|0|0|L30|dps 0.7/0.5/0.5|mit 20.5/23.3/23.3|god_d 0.344|god_m -0.136|card_d 0.344|card_m -0.136|gcards 13
+GP963 LOO|nature|0|0|god_nature_reap=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_reap_up=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_strong=0.253/0.021;god_nature_guard=0.000/0.000;god_nature_guard_up=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_harvest=0.000/0.000;god_nature_food=0.042/-0.139;god_nature_grow=0.000/0.000
+GP963 RUN|nature|0|0|kit knife,hand_crossbow,leather_armor,tower_shield|wins 7/20|dps 7.5|mit 18.3|god_d 0.223|god_m 0.063|card_d 0.223|card_m 0.063
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|1|L6|dps 10.1/10.5/10.5|mit 11.7/8.8/8.9|god_d -0.032|god_m 0.244|card_d -0.032|card_m 0.235|gcards 6
+GP963 CP|nature|0|1|L12|dps 8.3/8.8/9.0|mit 11.3/7.1/9.4|god_d -0.067|god_m 0.377|card_d -0.084|card_m 0.168|gcards 8
+GP963 CP|nature|0|1|L18|dps 10.3/10.8/10.7|mit 24.7/15.2/21.3|god_d -0.047|god_m 0.386|card_d -0.041|card_m 0.137|gcards 10
+GP963 CP|nature|0|1|L24|dps 8.6/6.2/6.9|mit 26.3/11.2/17.5|god_d 0.276|god_m 0.576|card_d 0.191|card_m 0.337|gcards 13
+GP963 CP|nature|0|1|L30|dps 9.6/6.1/8.7|mit 37.9/12.9/24.9|god_d 0.363|god_m 0.661|card_d 0.099|card_m 0.343|gcards 15
+GP963 LOO|nature|0|1|god_nature_bounty=-0.002/0.002;god_nature_rejuv=0.051/0.191;god_nature_herb_sense=0.000/0.000;god_nature_food=-0.007/0.019;god_nature_poison=0.012/0.014;god_nature_wane=0.000/0.000;god_nature_survive=-0.018/0.074;god_nature_decay=-0.057/0.006;god_nature_sow=0.000/0.000;god_nature_bounty_up=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_talk=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_decay_up=-0.044/0.003
+GP963 RUN|nature|0|1|kit felling_axe,hand_crossbow,leather_armor,brass_plating|wins 15/20|dps 9.3|mit 25.8|god_d 0.106|god_m 0.596|card_d 0.051|card_m 0.305
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|2|L6|dps 4.5/4.5/4.5|mit 13.6/9.7/9.7|god_d 0.011|god_m 0.288|card_d 0.011|card_m 0.288|gcards 5
+GP963 CP|nature|0|2|L12|dps 4.9/4.9/4.9|mit 16.6/10.0/10.8|god_d 0.015|god_m 0.398|card_d 0.009|card_m 0.347|gcards 8
+GP963 CP|nature|0|2|L18|dps 8.9/4.3/4.7|mit 24.0/17.0/19.4|god_d 0.519|god_m 0.290|card_d 0.476|card_m 0.189|gcards 10
+GP963 CP|nature|0|2|L24|dps 6.7/0.3/0.4|mit 33.3/37.1/30.8|god_d 0.948|god_m -0.116|card_d 0.941|card_m 0.075|gcards 12
+GP963 CP|nature|0|2|L30|dps 6.5/0.2/0.9|mit 35.3/30.8/27.2|god_d 0.967|god_m 0.128|card_d 0.859|card_m 0.230|gcards 14
+GP963 LOO|nature|0|2|god_nature_near=0.000/0.000;god_nature_food=0.000/0.000;god_nature_rejuv=-0.425/0.224;god_nature_tough=0.000/0.000;god_nature_wane=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_survive=-0.010/0.008;god_nature_wane_up=0.000/0.000;god_nature_poison=0.805/0.058;god_nature_cycle=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_talk=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_cycle_up=0.000/0.000
+GP963 RUN|nature|0|2|kit hand_crossbow,crude_bow,leather_armor,round_shield|wins 15/20|dps 6.2|mit 25.6|god_d 0.394|god_m 0.399|card_d 0.503|card_m 0.273
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|3|L6|dps 12.8/12.8/12.8|mit 7.0/6.8/6.8|god_d 0.000|god_m 0.038|card_d 0.000|card_m 0.038|gcards 3
+GP963 CP|nature|0|3|L12|dps 13.9/13.6/13.9|mit 16.0/13.1/13.3|god_d 0.021|god_m 0.184|card_d 0.000|card_m 0.172|gcards 5
+GP963 CP|nature|0|3|L18|dps 13.9/13.7/13.8|mit 22.2/17.2/20.1|god_d 0.017|god_m 0.224|card_d 0.005|card_m 0.096|gcards 7
+GP963 CP|nature|0|3|L24|dps 6.9/5.4/6.5|mit 30.1/27.3/29.4|god_d 0.217|god_m 0.096|card_d 0.055|card_m 0.026|gcards 9
+GP963 CP|nature|0|3|L30|dps 8.9/5.7/8.8|mit 18.0/16.1/13.8|god_d 0.365|god_m 0.103|card_d 0.016|card_m 0.231|gcards 10
+GP963 LOO|nature|0|3|god_nature_harvest=0.000/0.000;god_nature_rejuv=-0.222/0.020;god_nature_harvest_up=0.000/0.000;god_nature_food=0.000/0.000;god_nature_wane=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_guard=-0.145/-0.163;god_nature_poison=0.141/0.116;god_nature_bounty=-0.004/-0.020;god_nature_near=0.000/0.000
+GP963 RUN|nature|0|3|kit hand_axe,club,leather_armor,round_shield|wins 12/20|dps 10.4|mit 19.8|god_d 0.006|god_m 0.223|card_d -0.055|card_m 0.191
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|4|L6|dps 13.4/13.9/13.9|mit 9.4/8.3/8.3|god_d -0.031|god_m 0.120|card_d -0.031|card_m 0.116|gcards 6
+GP963 CP|nature|0|4|L12|dps 14.0/14.5/14.3|mit 17.4/13.6/15.3|god_d -0.035|god_m 0.216|card_d -0.021|card_m 0.120|gcards 7
+GP963 CP|nature|0|4|L18|dps 10.0/9.9/10.0|mit 20.4/8.5/15.8|god_d 0.012|god_m 0.582|card_d -0.004|card_m 0.225|gcards 10
+GP963 CP|nature|0|4|L24|dps 3.6/4.4/3.6|mit 40.1/7.8/29.6|god_d -0.224|god_m 0.804|card_d 0.003|card_m 0.261|gcards 14
+GP963 CP|nature|0|4|L30|dps 12.4/7.2/9.3|mit 36.9/8.8/32.3|god_d 0.418|god_m 0.761|card_d 0.250|card_m 0.124|gcards 15
+GP963 LOO|nature|0|4|god_nature_grow=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_rejuv=0.000/0.020;god_nature_food=0.000/0.028;god_nature_poison=0.233/-0.123;god_nature_wane=0.000/0.000;god_nature_grow_up=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_bounty=0.000/0.001;god_nature_strong=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_guard=0.000/0.019;god_nature_talk=0.000/0.000
+GP963 RUN|nature|0|4|kit felling_axe,shortsword,leather_armor,brass_plating|wins 18/20|dps 7.8|mit 33.2|god_d -0.105|god_m 0.729|card_d 0.026|card_m 0.219
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|5|L6|dps 12.5/6.8/6.8|mit 11.5/8.9/8.9|god_d 0.458|god_m 0.224|card_d 0.458|card_m 0.224|gcards 4
+GP963 CP|nature|0|5|L12|dps 12.3/6.8/6.8|mit 16.7/11.3/11.3|god_d 0.444|god_m 0.325|card_d 0.444|card_m 0.325|gcards 7
+GP963 CP|nature|0|5|L18|dps 10.7/7.1/7.1|mit 18.5/13.8/13.8|god_d 0.331|god_m 0.252|card_d 0.331|card_m 0.252|gcards 11
+GP963 CP|nature|0|5|L24|dps 9.5/3.4/3.4|mit 29.4/30.3/30.3|god_d 0.639|god_m -0.032|card_d 0.639|card_m -0.032|gcards 12
+GP963 CP|nature|0|5|L30|dps 10.4/4.8/4.8|mit 34.2/42.2/42.2|god_d 0.540|god_m -0.234|card_d 0.540|card_m -0.234|gcards 13
+GP963 LOO|nature|0|5|god_nature_harvest=0.000/0.000;god_nature_rejuv=0.480/-0.046;god_nature_poison=0.390/0.088;god_nature_reap=0.020/0.005;god_nature_strong=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_near=0.000/0.000;god_nature_food=0.472/-0.240;god_nature_herb=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_decay=0.000/0.000;god_nature_bounty=0.000/-0.000;god_nature_breed=0.000/0.000
+GP963 RUN|nature|0|5|kit club,crude_bow,leather_armor,round_shield|wins 14/20|dps 10.9|mit 22.2|god_d 0.413|god_m 0.291|card_d 0.413|card_m 0.291
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|6|L6|dps 5.5/5.5/5.5|mit 10.9/11.0/11.0|god_d 0.000|god_m -0.007|card_d 0.000|card_m -0.007|gcards 4
+GP963 CP|nature|0|6|L12|dps 6.1/5.6/5.6|mit 15.5/14.3/14.3|god_d 0.074|god_m 0.077|card_d 0.074|card_m 0.077|gcards 6
+GP963 CP|nature|0|6|L18|dps 7.5/6.0/6.0|mit 27.3/19.6/19.6|god_d 0.202|god_m 0.283|card_d 0.202|card_m 0.283|gcards 8
+GP963 CP|nature|0|6|L24|dps 3.4/0.0/0.0|mit 27.5/23.6/24.2|god_d 1.000|god_m 0.140|card_d 1.000|card_m 0.119|gcards 10
+GP963 CP|nature|0|6|L30|dps 11.4/0.0/0.0|mit 27.7/24.2/23.9|god_d 1.000|god_m 0.126|card_d 1.000|card_m 0.135|gcards 14
+GP963 LOO|nature|0|6|god_nature_bounty=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_survive=-0.040/0.043;god_nature_breed=0.000/0.000;god_nature_strong=-0.002/0.005;god_nature_guard=-0.008/0.074;god_nature_rejuv=0.352/0.138;god_nature_grow=0.000/0.000;god_nature_poison=1.000/0.095;god_nature_wane=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_bounty_up=0.000/0.000
+GP963 RUN|nature|0|6|kit knife,crude_bow,leather_armor,tower_shield|wins 9/20|dps 7.1|mit 21.3|god_d 0.391|god_m 0.225|card_d 0.406|card_m 0.215
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|7|L6|dps 9.4/9.4/9.4|mit 10.2/8.5/8.5|god_d 0.000|god_m 0.160|card_d 0.000|card_m 0.160|gcards 4
+GP963 CP|nature|0|7|L12|dps 9.8/9.8/9.8|mit 16.4/13.9/13.9|god_d 0.000|god_m 0.154|card_d 0.000|card_m 0.154|gcards 7
+GP963 CP|nature|0|7|L18|dps 12.1/11.0/11.0|mit 17.1/12.2/12.2|god_d 0.091|god_m 0.288|card_d 0.091|card_m 0.288|gcards 10
+GP963 CP|nature|0|7|L24|dps 5.7/3.2/3.2|mit 29.5/28.0/28.0|god_d 0.442|god_m 0.050|card_d 0.442|card_m 0.050|gcards 12
+GP963 CP|nature|0|7|L30|dps 8.6/4.4/4.4|mit 28.7/26.6/26.6|god_d 0.486|god_m 0.073|card_d 0.486|card_m 0.073|gcards 13
+GP963 LOO|nature|0|7|god_nature_cycle=-0.037/-0.066;god_nature_strong=0.000/0.000;god_nature_rejuv=0.300/0.073;god_nature_guard=-0.294/0.026;god_nature_food_sense=0.000/0.000;god_nature_food=-0.330/-0.035;god_nature_herb=0.000/0.000;god_nature_poison=0.255/0.057;god_nature_bounty=0.004/0.036;god_nature_tough=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_decay=-0.088/-0.106;god_nature_harvest=0.000/0.000
+GP963 RUN|nature|0|7|kit club,shortsword,leather_armor,tower_shield|wins 14/20|dps 9.4|mit 21.3|god_d 0.078|god_m 0.273|card_d 0.078|card_m 0.273
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|8|L6|dps 14.8/14.8/14.8|mit 8.6/8.6/8.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|nature|0|8|L12|dps 16.1/16.1/16.1|mit 11.1/11.1/11.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|nature|0|8|L18|dps 16.3/16.3/16.3|mit 17.8/17.8/17.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|nature|0|8|L24|dps 9.5/9.7/9.7|mit 24.2/25.2/25.2|god_d -0.023|god_m -0.043|card_d -0.023|card_m -0.043|gcards 10
+GP963 CP|nature|0|8|L30|dps 6.4/6.4/6.4|mit 24.2/24.4/24.4|god_d -0.001|god_m -0.010|card_d -0.001|card_m -0.010|gcards 11
+GP963 LOO|nature|0|8|god_nature_near=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_near_up=0.000/0.000;god_nature_grow=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_food=-0.001/-0.010;god_nature_talk=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_cycle=0.000/0.000;god_nature_cycle_up=0.000/0.000
+GP963 RUN|nature|0|8|kit shortsword,felling_axe,leather_armor,brass_plating|wins 8/20|dps 13.4|mit 15.7|god_d -0.005|god_m -0.009|card_d -0.005|card_m -0.009
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|9|L6|dps 14.6/12.6/12.6|mit 12.3/11.7/11.7|god_d 0.141|god_m 0.054|card_d 0.141|card_m 0.054|gcards 5
+GP963 CP|nature|0|9|L12|dps 15.7/12.9/12.9|mit 20.9/19.2/19.2|god_d 0.179|god_m 0.081|card_d 0.179|card_m 0.081|gcards 8
+GP963 CP|nature|0|9|L18|dps 11.2/10.2/10.2|mit 23.9/18.5/18.5|god_d 0.090|god_m 0.223|card_d 0.090|card_m 0.223|gcards 11
+GP963 CP|nature|0|9|L24|dps 1.1/1.5/1.5|mit 25.9/36.1/36.1|god_d -0.411|god_m -0.395|card_d -0.411|card_m -0.395|gcards 13
+GP963 CP|nature|0|9|L30|dps 1.2/1.0/1.0|mit 31.5/25.7/25.7|god_d 0.152|god_m 0.185|card_d 0.152|card_m 0.185|gcards 14
+GP963 LOO|nature|0|9|god_nature_guard=-0.003/-0.106;god_nature_survive=0.123/-0.021;god_nature_food_sense=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_reap=0.030/0.002;god_nature_herb=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_bounty=0.272/0.064;god_nature_food=0.123/-0.054;god_nature_rejuv=0.454/0.163;god_nature_talk=0.000/0.000;god_nature_poison=-0.451/0.000;god_nature_cycle=0.015/0.001;god_nature_grow=0.000/0.000
+GP963 RUN|nature|0|9|kit knife,hand_axe,leather_armor,round_shield|wins 13/20|dps 4.2|mit 27.1|god_d -1.080|god_m 0.245|card_d -1.080|card_m 0.245
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|10|L6|dps 7.0/7.0/7.0|mit 7.4/7.1/7.1|god_d 0.000|god_m 0.037|card_d 0.000|card_m 0.037|gcards 7
+GP963 CP|nature|0|10|L12|dps 6.6/6.5/6.5|mit 12.8/8.9/8.9|god_d 0.011|god_m 0.310|card_d 0.011|card_m 0.310|gcards 9
+GP963 CP|nature|0|10|L18|dps 6.8/6.7/6.7|mit 20.7/16.3/17.1|god_d 0.008|god_m 0.212|card_d 0.014|card_m 0.175|gcards 12
+GP963 CP|nature|0|10|L24|dps 6.1/3.9/4.8|mit 27.5/20.6/22.8|god_d 0.367|god_m 0.252|card_d 0.209|card_m 0.171|gcards 13
+GP963 CP|nature|0|10|L30|dps 7.9/2.3/3.1|mit 33.4/17.3/24.1|god_d 0.708|god_m 0.482|card_d 0.609|card_m 0.278|gcards 15
+GP963 LOO|nature|0|10|god_nature_near=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_rejuv=0.000/0.127;god_nature_herb=0.000/0.000;god_nature_survive=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_grow=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_talk=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_food=0.000/0.001;god_nature_wane=0.000/0.000;god_nature_cycle=0.000/-0.002;god_nature_poison=0.589/0.080;god_nature_guard=0.000/-0.029
+GP963 RUN|nature|0|10|kit crude_bow,club,leather_armor,round_shield|wins 15/20|dps 7.0|mit 22.6|god_d 0.225|god_m 0.443|card_d 0.262|card_m 0.271
+GP963 放不下包 bag_leather
+GP963 CP|nature|0|11|L6|dps 10.7/10.7/10.7|mit 13.0/12.5/12.5|god_d 0.000|god_m 0.039|card_d 0.000|card_m 0.039|gcards 5
+GP963 CP|nature|0|11|L12|dps 7.1/8.1/8.1|mit 16.2/15.5/15.5|god_d -0.139|god_m 0.040|card_d -0.139|card_m 0.040|gcards 10
+GP963 CP|nature|0|11|L18|dps 10.3/11.2/11.2|mit 25.8/20.7/20.7|god_d -0.086|god_m 0.199|card_d -0.086|card_m 0.199|gcards 12
+GP963 CP|nature|0|11|L24|dps 5.0/4.0/4.0|mit 33.3/35.2/35.2|god_d 0.207|god_m -0.056|card_d 0.207|card_m -0.056|gcards 12
+GP963 CP|nature|0|11|L30|dps 4.3/3.4/3.4|mit 34.4/28.2/28.2|god_d 0.216|god_m 0.179|card_d 0.216|card_m 0.179|gcards 13
+GP963 LOO|nature|0|11|god_nature_guard=0.110/0.038;god_nature_herb=0.000/0.000;god_nature_survive=0.102/0.049;god_nature_food_sense=0.000/0.000;god_nature_bounty=0.034/0.007;god_nature_poison=0.229/0.000;god_nature_tough=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_rejuv=0.179/0.084;god_nature_harvest=0.000/0.000;god_nature_decay=0.000/0.000;god_nature_decay_up=0.000/0.000
+GP963 RUN|nature|0|11|kit hand_axe,hand_crossbow,leather_armor,round_shield|wins 10/20|dps 6.6|mit 27.6|god_d -0.265|god_m 0.290|card_d -0.265|card_m 0.290
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|0|L6|dps 26.3/26.5/26.5|mit 9.7/9.8/9.8|god_d -0.010|god_m -0.010|card_d -0.010|card_m -0.010|gcards 5
+GP963 CP|nature|2|0|L12|dps 29.2/27.7/27.7|mit 11.7/12.3/12.3|god_d 0.051|god_m -0.050|card_d 0.051|card_m -0.050|gcards 8
+GP963 CP|nature|2|0|L18|dps 29.7/26.3/26.3|mit 25.7/25.0/25.0|god_d 0.116|god_m 0.027|card_d 0.116|card_m 0.027|gcards 9
+GP963 CP|nature|2|0|L24|dps 22.3/17.1/18.4|mit 37.8/34.1/35.7|god_d 0.230|god_m 0.098|card_d 0.176|card_m 0.057|gcards 12
+GP963 CP|nature|2|0|L30|dps 25.3/18.0/21.4|mit 35.9/33.1/35.7|god_d 0.292|god_m 0.079|card_d 0.156|card_m 0.006|gcards 14
+GP963 LOO|nature|2|0|god_nature_talk=0.000/0.000;god_nature_poison=0.042/0.026;god_nature_survive=0.000/0.021;god_nature_strong=0.000/0.000;god_nature_bounty=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_cycle=0.007/0.002;god_nature_reap=0.099/0.036;god_nature_tough=0.000/0.000;god_nature_rejuv=0.015/0.069;god_nature_wane=0.000/0.000;god_nature_food=0.000/0.002;god_nature_seed=0.000/0.000
+GP963 RUN|nature|2|0|kit mage_staff,bone_pole_axe,chain_mail,kite_shield|wins 20/20|dps 25.2|mit 31.0|god_d 0.157|god_m 0.120|card_d 0.103|card_m 0.074
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|1|L6|dps 38.7/38.7/38.7|mit 7.9/7.9/7.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|nature|2|1|L12|dps 33.9/34.0/34.0|mit 16.1/16.2/16.2|god_d -0.003|god_m -0.003|card_d -0.003|card_m -0.003|gcards 6
+GP963 CP|nature|2|1|L18|dps 28.7/29.4/29.4|mit 20.8/20.8/20.8|god_d -0.024|god_m -0.003|card_d -0.024|card_m -0.003|gcards 9
+GP963 CP|nature|2|1|L24|dps 26.2/23.6/24.8|mit 25.3/23.5/23.8|god_d 0.099|god_m 0.072|card_d 0.055|card_m 0.060|gcards 11
+GP963 CP|nature|2|1|L30|dps 31.6/25.3/27.2|mit 37.4/27.6/30.6|god_d 0.200|god_m 0.262|card_d 0.140|card_m 0.181|gcards 13
+GP963 LOO|nature|2|1|god_nature_decay=-0.077/-0.041;god_nature_herb_sense=0.000/0.000;god_nature_seed=0.000/0.000;god_nature_food=0.000/0.000;god_nature_poison=0.140/0.165;god_nature_near=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_harvest=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_wane=0.000/0.000;god_nature_survive=0.000/0.021;god_nature_near_up=0.000/0.000
+GP963 RUN|nature|2|1|kit bone_spear,steel_axe,chain_mail,kite_shield|wins 17/20|dps 30.5|mit 24.6|god_d 0.092|god_m 0.101|card_d 0.059|card_m 0.062
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|2|L6|dps 31.6/31.6/31.6|mit 12.8/12.8/12.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|nature|2|2|L12|dps 33.4/29.7/29.7|mit 17.1/15.7/15.7|god_d 0.110|god_m 0.082|card_d 0.110|card_m 0.082|gcards 7
+GP963 CP|nature|2|2|L18|dps 31.8/28.6/28.6|mit 27.7/25.0/25.0|god_d 0.101|god_m 0.099|card_d 0.101|card_m 0.099|gcards 10
+GP963 CP|nature|2|2|L24|dps 20.2/17.7/17.7|mit 28.7/23.9/23.9|god_d 0.128|god_m 0.170|card_d 0.128|card_m 0.170|gcards 12
+GP963 CP|nature|2|2|L30|dps 10.2/11.8/11.9|mit 42.9/39.3/42.0|god_d -0.162|god_m 0.084|card_d -0.167|card_m 0.021|gcards 13
+GP963 LOO|nature|2|2|god_nature_harvest=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_poison=-0.138/0.000;god_nature_reap=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_guard=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_rejuv=0.000/0.000;god_nature_harvest_up=0.000/0.000;god_nature_survive=0.000/0.001;god_nature_reap_up=0.000/0.000;god_nature_wane=0.000/0.000
+GP963 RUN|nature|2|2|kit bonefang_twin_blades,bone_twin_axes,studded_leather,kite_shield|wins 14/20|dps 24.5|mit 27.0|god_d 0.062|god_m 0.126|card_d 0.062|card_m 0.112
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|3|L6|dps 26.0/27.3/27.3|mit 8.2/8.1/8.1|god_d -0.051|god_m 0.017|card_d -0.051|card_m 0.017|gcards 5
+GP963 CP|nature|2|3|L12|dps 28.4/29.0/29.0|mit 17.5/17.9/17.9|god_d -0.022|god_m -0.022|card_d -0.022|card_m -0.022|gcards 9
+GP963 CP|nature|2|3|L18|dps 29.7/31.1/31.1|mit 26.4/27.0/27.0|god_d -0.047|god_m -0.023|card_d -0.047|card_m -0.023|gcards 11
+GP963 CP|nature|2|3|L24|dps 12.6/13.3/13.3|mit 34.6/36.3/36.3|god_d -0.050|god_m -0.049|card_d -0.050|card_m -0.049|gcards 13
+GP963 CP|nature|2|3|L30|dps 10.3/12.2/12.4|mit 30.5/34.4/34.0|god_d -0.191|god_m -0.130|card_d -0.203|card_m -0.115|gcards 14
+GP963 LOO|nature|2|3|god_nature_bounty=0.000/0.000;god_nature_poison=-0.125/-0.006;god_nature_survive=-0.034/-0.103;god_nature_sow=0.000/0.000;god_nature_bounty_up=0.000/0.000;god_nature_food=-0.048/-0.069;god_nature_strong=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_decay=0.014/0.000;god_nature_tough=0.000/0.000;god_nature_grow=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_breed=0.000/0.000;god_nature_wane=0.000/0.000
+GP963 RUN|nature|2|3|kit bone_twin_axes,bone_battle_axe,studded_leather,kite_shield|wins 13/20|dps 17.3|mit 27.3|god_d -0.215|god_m 0.005|card_d -0.202|card_m 0.002
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|4|L6|dps 27.2/27.2/27.2|mit 7.4/7.4/7.4|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|nature|2|4|L12|dps 27.8/27.8/27.8|mit 13.5/13.5/13.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|nature|2|4|L18|dps 32.4/32.6/32.6|mit 20.5/19.3/19.3|god_d -0.005|god_m 0.059|card_d -0.005|card_m 0.059|gcards 9
+GP963 CP|nature|2|4|L24|dps 21.8/20.4/20.4|mit 26.9/26.9/26.9|god_d 0.064|god_m 0.000|card_d 0.064|card_m 0.000|gcards 11
+GP963 CP|nature|2|4|L30|dps 21.0/18.9/18.9|mit 31.2/39.5/39.5|god_d 0.103|god_m -0.267|card_d 0.103|card_m -0.267|gcards 14
+GP963 LOO|nature|2|4|god_nature_harvest=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_survive=-0.061/-0.054;god_nature_herb=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_seed=0.000/0.000;god_nature_strong=0.121/0.039;god_nature_decay=0.000/0.000;god_nature_harvest_up=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_near=0.000/0.000;god_nature_food=-0.082/-0.176;god_nature_sow=0.000/0.000;god_nature_near_up=0.000/0.000
+GP963 RUN|nature|2|4|kit bone_great_club,steel_crossbow,studded_leather,steel_round_shield|wins 11/20|dps 25.0|mit 23.1|god_d -0.002|god_m 0.005|card_d -0.002|card_m 0.005
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|5|L6|dps 24.4/24.4/24.4|mit 12.0/12.0/12.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|nature|2|5|L12|dps 22.9/22.9/22.9|mit 15.6/15.6/15.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 7
+GP963 CP|nature|2|5|L18|dps 27.6/27.5/27.5|mit 18.5/18.4/18.4|god_d 0.003|god_m 0.003|card_d 0.003|card_m 0.003|gcards 8
+GP963 CP|nature|2|5|L24|dps 24.4/20.2/20.2|mit 18.7/20.7/20.7|god_d 0.172|god_m -0.104|card_d 0.172|card_m -0.104|gcards 11
+GP963 CP|nature|2|5|L30|dps 25.2/22.0/22.0|mit 22.6/23.3/23.3|god_d 0.128|god_m -0.029|card_d 0.128|card_m -0.029|gcards 13
+GP963 LOO|nature|2|5|god_nature_harvest=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_bounty=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_food=0.049/-0.029;god_nature_near=0.000/0.000;god_nature_reap=0.082/0.051;god_nature_herb=0.000/0.000;god_nature_poison=-0.083/-0.042;god_nature_near_up=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_bounty_up=0.000/0.000
+GP963 RUN|nature|2|5|kit horn_bow,granite_maul,studded_leather,steel_round_shield|wins 15/20|dps 25.0|mit 18.4|god_d 0.076|god_m -0.030|card_d 0.076|card_m -0.030
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|6|L6|dps 26.9/26.9/26.9|mit 8.8/8.8/8.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 2
+GP963 CP|nature|2|6|L12|dps 23.2/23.8/23.8|mit 27.1/24.1/24.1|god_d -0.024|god_m 0.111|card_d -0.024|card_m 0.111|gcards 7
+GP963 CP|nature|2|6|L18|dps 31.6/25.8/25.8|mit 30.0/29.8/29.8|god_d 0.182|god_m 0.007|card_d 0.182|card_m 0.007|gcards 9
+GP963 CP|nature|2|6|L24|dps 25.2/21.1/21.1|mit 45.3/44.6/44.6|god_d 0.163|god_m 0.015|card_d 0.163|card_m 0.015|gcards 11
+GP963 CP|nature|2|6|L30|dps 28.6/20.4/20.4|mit 42.6/34.6/34.6|god_d 0.289|god_m 0.187|card_d 0.289|card_m 0.187|gcards 14
+GP963 LOO|nature|2|6|god_nature_guard=0.056/0.049;god_nature_guard_up=-0.008/0.011;god_nature_sow=0.000/0.000;god_nature_survive=-0.005/0.008;god_nature_strong=0.136/0.050;god_nature_rejuv=0.038/0.060;god_nature_cycle=-0.010/0.042;god_nature_herb=0.000/0.000;god_nature_cycle_up=-0.006/0.002;god_nature_herb_sense=0.000/0.000;god_nature_near=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_poison=0.114/0.019;god_nature_seed=0.000/0.000
+GP963 RUN|nature|2|6|kit ironwood_broadsword,steel_greatsword,plate_cuirass,kite_shield|wins 16/20|dps 26.9|mit 34.6|god_d 0.147|god_m 0.128|card_d 0.147|card_m 0.128
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|7|L6|dps 36.0/36.0/36.0|mit 10.9/10.9/10.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|nature|2|7|L12|dps 30.6/30.6/30.6|mit 20.5/20.5/20.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|nature|2|7|L18|dps 33.0/25.4/25.4|mit 31.0/26.5/26.5|god_d 0.230|god_m 0.146|card_d 0.230|card_m 0.146|gcards 10
+GP963 CP|nature|2|7|L24|dps 26.6/22.3/22.3|mit 35.8/29.3/29.3|god_d 0.162|god_m 0.183|card_d 0.162|card_m 0.183|gcards 13
+GP963 CP|nature|2|7|L30|dps 34.2/23.3/23.3|mit 37.8/28.4/28.4|god_d 0.318|god_m 0.250|card_d 0.318|card_m 0.250|gcards 16
+GP963 LOO|nature|2|7|god_nature_cycle=0.000/0.000;god_nature_strong=0.030/0.012;god_nature_near=0.000/0.000;god_nature_food=-0.018/-0.019;god_nature_food_sense=0.000/0.000;god_nature_grow=0.000/0.000;god_nature_survive=-0.011/0.001;god_nature_tough=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_reap=0.184/0.074;god_nature_herb=0.000/0.000;god_nature_rejuv=-0.005/0.070;god_nature_bounty=0.000/-0.002;god_nature_poison=0.130/0.048;god_nature_herb_sense=0.000/0.000;god_nature_harvest=0.000/0.000
+GP963 RUN|nature|2|7|kit iron_spear,pendulum_blade,chain_mail,kite_shield|wins 18/20|dps 30.9|mit 32.1|god_d 0.198|god_m 0.171|card_d 0.198|card_m 0.171
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|8|L6|dps 14.4/14.4/14.4|mit 10.2/10.2/10.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|nature|2|8|L12|dps 15.4/15.4/15.4|mit 16.9/16.9/16.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|nature|2|8|L18|dps 12.6/11.7/11.5|mit 21.5/21.7/21.7|god_d 0.070|god_m -0.010|card_d 0.090|card_m -0.008|gcards 9
+GP963 CP|nature|2|8|L24|dps 5.3/5.6/5.3|mit 28.9/28.9/28.9|god_d -0.062|god_m 0.000|card_d 0.000|card_m 0.000|gcards 10
+GP963 CP|nature|2|8|L30|dps 4.5/4.7/4.5|mit 29.6/36.5/36.5|god_d -0.045|god_m -0.232|card_d -0.007|card_m -0.232|gcards 12
+GP963 LOO|nature|2|8|god_nature_harvest=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_harvest_up=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_near=0.000/0.000;god_nature_food=-0.007/-0.232;god_nature_herb_sense=0.000/0.000;god_nature_breed=0.000/0.000;god_nature_seed=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_talk=0.000/0.000
+GP963 RUN|nature|2|8|kit horn_bow,mage_staff,plate_cuirass,kite_shield|wins 11/20|dps 9.8|mit 22.7|god_d -0.032|god_m -0.025|card_d -0.015|card_m -0.025
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|9|L6|dps 26.9/27.2/27.2|mit 11.8/12.0/12.0|god_d -0.011|god_m -0.011|card_d -0.011|card_m -0.011|gcards 3
+GP963 CP|nature|2|9|L12|dps 27.5/27.5/27.5|mit 22.5/22.5/22.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|nature|2|9|L18|dps 24.6/18.2/18.2|mit 19.4/17.5/17.5|god_d 0.258|god_m 0.096|card_d 0.258|card_m 0.096|gcards 9
+GP963 CP|nature|2|9|L24|dps 18.7/13.3/13.3|mit 22.5/20.0/20.0|god_d 0.287|god_m 0.110|card_d 0.287|card_m 0.110|gcards 11
+GP963 CP|nature|2|9|L30|dps 20.4/14.3/14.3|mit 35.0/35.8/35.8|god_d 0.299|god_m -0.022|card_d 0.299|card_m -0.022|gcards 14
+GP963 LOO|nature|2|9|god_nature_near=0.000/0.000;god_nature_poison=0.314/-0.023;god_nature_cycle=0.163/-0.019;god_nature_survive=0.221/-0.011;god_nature_herb_sense=0.000/0.000;god_nature_food=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_reap=0.091/-0.008;god_nature_guard=0.187/-0.004;god_nature_herb=0.000/0.000;god_nature_decay=-0.021/-0.008;god_nature_sow=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_bounty=0.000/0.000
+GP963 RUN|nature|2|9|kit steel_crossbow,halberd,chain_mail,steel_round_shield|wins 14/20|dps 22.3|mit 23.8|god_d 0.201|god_m 0.076|card_d 0.201|card_m 0.076
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|10|L6|dps 21.8/21.8/21.8|mit 15.8/15.8/15.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|nature|2|10|L12|dps 23.1/23.1/23.1|mit 22.7/22.7/22.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|nature|2|10|L18|dps 27.0/27.0/27.0|mit 35.1/33.8/35.1|god_d 0.000|god_m 0.039|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|nature|2|10|L24|dps 28.2/20.3/25.7|mit 37.6/29.3/34.7|god_d 0.279|god_m 0.220|card_d 0.089|card_m 0.077|gcards 13
+GP963 CP|nature|2|10|L30|dps 39.7/23.1/29.6|mit 41.1/28.2/36.7|god_d 0.417|god_m 0.313|card_d 0.254|card_m 0.106|gcards 15
+GP963 LOO|nature|2|10|god_nature_guard=0.011/0.001;god_nature_tough=0.000/0.000;god_nature_guard_up=0.000/0.004;god_nature_herb_sense=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_wane=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_wane_up=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_rejuv=-0.000/-0.001;god_nature_food=0.000/-0.002;god_nature_strong=0.208/0.024;god_nature_harvest=0.000/0.000;god_nature_poison=0.048/0.036;god_nature_breed=0.000/0.000
+GP963 RUN|nature|2|10|kit bloodletter,bone_greatsword,chain_mail,kite_shield|wins 17/20|dps 28.8|mit 32.0|god_d 0.210|god_m 0.165|card_d 0.102|card_m 0.047
+GP963 放不下包 bag_leather
+GP963 CP|nature|2|11|L6|dps 20.3/20.3/20.3|mit 7.7/7.7/7.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|nature|2|11|L12|dps 23.1/22.0/23.1|mit 24.4/21.6/22.5|god_d 0.050|god_m 0.116|card_d 0.000|card_m 0.078|gcards 8
+GP963 CP|nature|2|11|L18|dps 25.0/23.5/25.7|mit 34.2/32.1/33.6|god_d 0.060|god_m 0.061|card_d -0.027|card_m 0.019|gcards 9
+GP963 CP|nature|2|11|L24|dps 31.2/22.0/27.9|mit 46.2/38.2/42.2|god_d 0.293|god_m 0.172|card_d 0.105|card_m 0.087|gcards 11
+GP963 CP|nature|2|11|L30|dps 29.7/22.6/26.9|mit 35.7/26.3/32.1|god_d 0.240|god_m 0.262|card_d 0.094|card_m 0.099|gcards 13
+GP963 LOO|nature|2|11|god_nature_tough=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_poison=0.103/0.043;god_nature_wane=0.000/0.000;god_nature_rejuv=0.035/0.049;god_nature_survive=0.031/0.021;god_nature_cycle=0.010/0.008;god_nature_food_sense=0.000/0.000;god_nature_cycle_up=0.009/0.006;god_nature_herb_sense=0.000/0.000;god_nature_decay=-0.011/0.001;god_nature_sow=0.000/0.000;god_nature_grow=0.000/0.000
+GP963 RUN|nature|2|11|kit bloodletter,bone_great_axe,plate_cuirass,kite_shield|wins 19/20|dps 27.3|mit 33.2|god_d 0.186|god_m 0.170|card_d 0.058|card_m 0.067
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|0|L6|dps 22.5/22.5/22.5|mit 12.2/11.7/11.7|god_d 0.000|god_m 0.042|card_d 0.000|card_m 0.042|gcards 4
+GP963 CP|nature|4|0|L12|dps 35.4/35.4/35.4|mit 17.2/16.5/16.5|god_d 0.000|god_m 0.039|card_d 0.000|card_m 0.039|gcards 6
+GP963 CP|nature|4|0|L18|dps 41.7/41.7/41.7|mit 20.8/19.0/19.0|god_d 0.000|god_m 0.086|card_d 0.000|card_m 0.086|gcards 8
+GP963 CP|nature|4|0|L24|dps 65.6/65.6/65.6|mit 41.5/38.8/38.8|god_d 0.000|god_m 0.066|card_d 0.000|card_m 0.066|gcards 9
+GP963 CP|nature|4|0|L30|dps 18.6/24.1/24.1|mit 29.9/33.3/33.3|god_d -0.291|god_m -0.112|card_d -0.291|card_m -0.112|gcards 12
+GP963 LOO|nature|4|0|god_nature_guard=0.000/0.000;god_nature_poison=0.133/0.043;god_nature_rejuv=-0.185/-0.093;god_nature_guard_up=0.000/0.000;god_nature_food=0.000/0.000;god_nature_talk=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_reap=0.015/-0.020;god_nature_bounty=0.054/-0.016;god_nature_herb=0.052/0.019;god_nature_survive=0.000/0.004;god_nature_harvest=0.000/0.000
+GP963 RUN|nature|4|0|kit grand_magus_staff,flame_execution_blade,knight_plate,legion_tower_shield|wins 20/20|dps 29.6|mit 27.1|god_d -0.174|god_m 0.008|card_d -0.174|card_m 0.008
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|1|L6|dps 112.9/112.9/112.9|mit 5.2/5.2/5.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|nature|4|1|L12|dps 88.1/88.1/88.1|mit 13.5/13.5/13.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 7
+GP963 CP|nature|4|1|L18|dps 90.1/90.1/90.1|mit 25.2/24.7/24.7|god_d 0.000|god_m 0.019|card_d 0.000|card_m 0.019|gcards 10
+GP963 CP|nature|4|1|L24|dps 71.7/72.8/72.8|mit 39.9/39.2/39.2|god_d -0.016|god_m 0.019|card_d -0.016|card_m 0.019|gcards 11
+GP963 CP|nature|4|1|L30|dps 81.3/82.4/82.4|mit 34.7/33.8/33.8|god_d -0.014|god_m 0.024|card_d -0.014|card_m 0.024|gcards 12
+GP963 LOO|nature|4|1|god_nature_talk=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_cycle=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_rejuv=0.000/0.037;god_nature_herb=0.000/0.000;god_nature_poison=-0.014/-0.013;god_nature_near=0.000/0.000;god_nature_food=0.000/0.000;god_nature_harvest=0.000/0.000;god_nature_decay=0.000/0.000
+GP963 RUN|nature|4|1|kit flame_composite_bow,thunder_heavy_crossbow,dragonscale_armor,riposte_buckler|wins 20/20|dps 82.2|mit 30.9|god_d -0.010|god_m 0.022|card_d -0.010|card_m 0.022
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|2|L6|dps 35.0/35.0/35.0|mit 10.1/9.7/9.7|god_d 0.000|god_m 0.036|card_d 0.000|card_m 0.036|gcards 4
+GP963 CP|nature|4|2|L12|dps 38.5/38.5/38.5|mit 17.7/16.7/16.7|god_d 0.000|god_m 0.055|card_d 0.000|card_m 0.055|gcards 6
+GP963 CP|nature|4|2|L18|dps 48.9/47.8/48.9|mit 43.3/41.1/42.0|god_d 0.022|god_m 0.051|card_d 0.000|card_m 0.030|gcards 7
+GP963 CP|nature|4|2|L24|dps 79.4/78.1/82.1|mit 50.4/43.5/47.6|god_d 0.016|god_m 0.137|card_d -0.033|card_m 0.057|gcards 9
+GP963 CP|nature|4|2|L30|dps 80.1/70.4/83.0|mit 45.0/37.0/40.5|god_d 0.121|god_m 0.178|card_d -0.036|card_m 0.099|gcards 12
+GP963 LOO|nature|4|2|god_nature_guard=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_rejuv=0.000/0.096;god_nature_harvest=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_grow=0.000/0.000;god_nature_wane=0.000/0.000;god_nature_food=0.000/0.002;god_nature_decay=-0.036/0.000;god_nature_herb=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_talk=0.000/0.000
+GP963 RUN|nature|4|2|kit imperial_sword,flame_execution_blade,knight_plate,riposte_buckler|wins 20/20|dps 58.8|mit 35.1|god_d 0.039|god_m 0.107|card_d -0.021|card_m 0.063
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|3|L6|dps 60.8/60.8/60.8|mit 9.8/9.8/9.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|nature|4|3|L12|dps 64.2/64.0/64.0|mit 9.9/9.6/9.6|god_d 0.002|god_m 0.026|card_d 0.002|card_m 0.026|gcards 7
+GP963 CP|nature|4|3|L18|dps 74.4/74.6/74.6|mit 26.1/25.8/25.8|god_d -0.003|god_m 0.010|card_d -0.003|card_m 0.010|gcards 10
+GP963 CP|nature|4|3|L24|dps 58.7/58.8/58.8|mit 60.2/56.7/56.7|god_d -0.001|god_m 0.059|card_d -0.001|card_m 0.059|gcards 12
+GP963 CP|nature|4|3|L30|dps 70.7/68.4/68.4|mit 65.8/61.6/61.6|god_d 0.032|god_m 0.063|card_d 0.032|card_m 0.063|gcards 15
+GP963 LOO|nature|4|3|god_nature_harvest=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_reap=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_food=0.000/-0.012;god_nature_poison=0.041/0.023;god_nature_decay=-0.002/0.007;god_nature_strong=0.000/0.000;god_nature_rejuv=0.000/0.016;god_nature_guard=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_seed=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_survive=0.000/0.000;god_nature_cycle=0.000/0.000
+GP963 RUN|nature|4|3|kit thunder_bloodthirst_twin_blades,frost_fang,knight_plate,legion_tower_shield|wins 20/20|dps 65.3|mit 47.3|god_d 0.010|god_m 0.041|card_d 0.010|card_m 0.041
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|4|L6|dps 47.3/47.3/47.3|mit 11.2/11.2/11.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|nature|4|4|L12|dps 45.7/45.7/45.7|mit 13.2/12.9/12.9|god_d 0.000|god_m 0.023|card_d 0.000|card_m 0.023|gcards 8
+GP963 CP|nature|4|4|L18|dps 51.5/51.4/51.4|mit 24.2/23.2/23.2|god_d 0.001|god_m 0.040|card_d 0.001|card_m 0.040|gcards 10
+GP963 CP|nature|4|4|L24|dps 47.8/40.3/41.6|mit 44.5/38.1/39.6|god_d 0.157|god_m 0.145|card_d 0.130|card_m 0.111|gcards 11
+GP963 CP|nature|4|4|L30|dps 44.5/42.5/44.9|mit 46.2/32.3/43.6|god_d 0.047|god_m 0.302|card_d -0.009|card_m 0.057|gcards 14
+GP963 LOO|nature|4|4|god_nature_survive=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_guard=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_rejuv=0.000/0.056;god_nature_cycle=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_poison=-0.009/0.002;god_nature_reap=0.000/0.000;god_nature_wane=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_wane_up=0.000/0.000
+GP963 RUN|nature|4|4|kit flame_composite_bow,flame_berserker_twin_axes,dragonscale_armor,riposte_buckler|wins 20/20|dps 47.1|mit 34.3|god_d 0.059|god_m 0.208|card_d 0.037|card_m 0.091
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|5|L6|dps 68.9/68.9/68.9|mit 4.7/4.7/4.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 2
+GP963 CP|nature|4|5|L12|dps 78.4/78.4/78.4|mit 21.8/21.8/21.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|nature|4|5|L18|dps 72.4/72.4/72.4|mit 32.5/31.7/31.7|god_d 0.000|god_m 0.024|card_d 0.000|card_m 0.024|gcards 9
+GP963 CP|nature|4|5|L24|dps 78.4/78.4/78.4|mit 45.0/43.6/43.6|god_d 0.000|god_m 0.032|card_d 0.000|card_m 0.032|gcards 12
+GP963 CP|nature|4|5|L30|dps 74.8/74.8/74.8|mit 45.5/44.5/44.5|god_d 0.000|god_m 0.023|card_d 0.000|card_m 0.023|gcards 14
+GP963 LOO|nature|4|5|god_nature_reap=0.000/0.000;god_nature_bounty=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_near=0.000/0.000;god_nature_food=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_rejuv=0.000/0.023;god_nature_tough=0.000/0.000;god_nature_talk=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_bounty_up=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_grow=0.000/0.000
+GP963 RUN|nature|4|5|kit thunder_heavy_crossbow,flame_fang,knight_plate,riposte_buckler|wins 20/20|dps 75.4|mit 36.2|god_d 0.000|god_m 0.025|card_d 0.000|card_m 0.025
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|6|L6|dps 40.7/40.7/40.7|mit 6.2/6.2/6.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|nature|4|6|L12|dps 57.4/57.2/57.2|mit 14.2/14.2/14.2|god_d 0.002|god_m 0.002|card_d 0.002|card_m 0.002|gcards 5
+GP963 CP|nature|4|6|L18|dps 58.8/58.8/58.8|mit 23.7/23.4/23.4|god_d 0.000|god_m 0.016|card_d 0.000|card_m 0.016|gcards 10
+GP963 CP|nature|4|6|L24|dps 71.1/70.1/70.1|mit 44.6/43.6/43.6|god_d 0.015|god_m 0.023|card_d 0.015|card_m 0.023|gcards 12
+GP963 CP|nature|4|6|L30|dps 69.2/69.2/69.2|mit 51.9/50.6/50.6|god_d 0.000|god_m 0.025|card_d 0.000|card_m 0.025|gcards 13
+GP963 LOO|nature|4|6|god_nature_bounty=0.000/0.000;god_nature_poison=0.000/0.000;god_nature_talk=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_reap=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_rejuv=0.000/0.025;god_nature_herb_sense=0.000/0.000;god_nature_breed=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_decay=0.000/0.000;god_nature_talk_up=0.000/0.000
+GP963 RUN|nature|4|6|kit flame_meteor_maul,flame_executioner_axe,dragonscale_armor,legion_tower_shield|wins 20/20|dps 62.2|mit 32.9|god_d 0.005|god_m 0.021|card_d 0.005|card_m 0.021
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|7|L6|dps 110.1/110.1/110.1|mit 5.9/5.9/5.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|nature|4|7|L12|dps 130.2/130.2/130.2|mit 12.5/12.5/12.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 8
+GP963 CP|nature|4|7|L18|dps 110.8/110.8/110.8|mit 21.4/21.2/21.2|god_d 0.000|god_m 0.014|card_d 0.000|card_m 0.014|gcards 9
+GP963 CP|nature|4|7|L24|dps 77.0/76.9/76.9|mit 54.0/53.0/53.0|god_d 0.001|god_m 0.018|card_d 0.001|card_m 0.018|gcards 12
+GP963 CP|nature|4|7|L30|dps 77.1/77.1/77.1|mit 45.0/42.1/42.1|god_d 0.000|god_m 0.066|card_d 0.000|card_m 0.066|gcards 13
+GP963 LOO|nature|4|7|god_nature_decay=0.000/0.000;god_nature_rejuv=0.000/0.065;god_nature_food_sense=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_guard=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_poison=0.000/0.001;god_nature_harvest=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_survive=0.000/0.000;god_nature_cycle=0.000/0.000;god_nature_food=0.000/0.000;god_nature_talk=0.000/0.000
+GP963 RUN|nature|4|7|kit flame_bonesteel_spear,flame_fang,knight_plate,riposte_buckler|wins 19/20|dps 89.3|mit 38.5|god_d 0.000|god_m 0.037|card_d 0.000|card_m 0.037
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|8|L6|dps 51.2/51.2/51.2|mit 8.4/8.4/8.4|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|nature|4|8|L12|dps 49.6/49.6/49.6|mit 15.0/15.0/15.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|nature|4|8|L18|dps 41.9/44.5/44.5|mit 17.3/18.3/18.3|god_d -0.060|god_m -0.057|card_d -0.060|card_m -0.057|gcards 10
+GP963 CP|nature|4|8|L24|dps 47.6/47.6/47.6|mit 43.6/43.6/43.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 12
+GP963 CP|nature|4|8|L30|dps 46.8/45.7/45.7|mit 47.4/48.7/48.7|god_d 0.025|god_m -0.029|card_d 0.025|card_m -0.029|gcards 13
+GP963 LOO|nature|4|8|god_nature_decay=0.000/0.000;god_nature_food=0.000/0.000;god_nature_grow=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_decay_up=0.000/0.000;god_nature_food_sense=0.000/0.000;god_nature_poison=0.050/0.003;god_nature_herb=0.000/0.000;god_nature_near=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_grow_up=0.000/0.000;god_nature_near_up=0.000/0.000
+GP963 RUN|nature|4|8|kit frost_bonesteel_greatsword,flame_fang,dragonscale_armor,legion_tower_shield|wins 20/20|dps 47.2|mit 32.7|god_d -0.002|god_m -0.017|card_d -0.002|card_m -0.017
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|9|L6|dps 68.0/61.4/61.4|mit 5.9/7.0/7.0|god_d 0.097|god_m -0.170|card_d 0.097|card_m -0.170|gcards 5
+GP963 CP|nature|4|9|L12|dps 75.5/68.2/68.2|mit 7.1/6.3/6.4|god_d 0.097|god_m 0.105|card_d 0.097|card_m 0.093|gcards 10
+GP963 CP|nature|4|9|L18|dps 90.4/70.0/70.0|mit 34.8/30.1/31.5|god_d 0.226|god_m 0.135|card_d 0.226|card_m 0.096|gcards 11
+GP963 CP|nature|4|9|L24|dps 68.7/57.5/63.1|mit 53.8/44.2/50.7|god_d 0.164|god_m 0.178|card_d 0.081|card_m 0.058|gcards 12
+GP963 CP|nature|4|9|L30|dps 85.8/68.4/75.4|mit 56.8/43.8/50.6|god_d 0.202|god_m 0.230|card_d 0.121|card_m 0.109|gcards 13
+GP963 LOO|nature|4|9|god_nature_wane=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_food=0.000/0.000;god_nature_survive=0.000/0.000;god_nature_bounty=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_rejuv=0.000/0.041;god_nature_herb=0.000/0.000;god_nature_poison=0.121/0.050;god_nature_talk=0.000/0.000;god_nature_reap=0.000/0.000;god_nature_reap_up=0.000/0.000;god_nature_breed=0.000/0.000
+GP963 RUN|nature|4|9|kit flame_executioner_axe,flame_berserker_twin_axes,dragonscale_armor,riposte_buckler|wins 19/20|dps 77.8|mit 41.3|god_d 0.170|god_m 0.188|card_d 0.120|card_m 0.097
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|10|L6|dps 41.8/41.8/41.8|mit 9.2/9.2/9.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|nature|4|10|L12|dps 42.4/43.3/43.3|mit 17.7/18.1/18.1|god_d -0.021|god_m -0.021|card_d -0.021|card_m -0.021|gcards 7
+GP963 CP|nature|4|10|L18|dps 42.8/42.8/42.8|mit 34.3/34.3/34.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 10
+GP963 CP|nature|4|10|L24|dps 34.7/34.4/34.4|mit 40.3/39.6/39.6|god_d 0.008|god_m 0.018|card_d 0.008|card_m 0.018|gcards 11
+GP963 CP|nature|4|10|L30|dps 43.6/41.5/41.5|mit 40.2/40.2/40.2|god_d 0.049|god_m -0.000|card_d 0.049|card_m -0.000|gcards 14
+GP963 LOO|nature|4|10|god_nature_seed=0.000/0.000;god_nature_herb_sense=0.000/0.000;god_nature_food=0.013/-0.011;god_nature_decay=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_poison=-0.023/-0.005;god_nature_cycle=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_talk=0.000/0.000;god_nature_reap=0.075/0.019;god_nature_food_sense=0.000/0.000;god_nature_sow=0.000/0.000;god_nature_guard=0.000/0.000
+GP963 RUN|nature|4|10|kit grand_magus_staff,flame_fang,knight_plate,riposte_buckler|wins 17/20|dps 40.3|mit 32.4|god_d 0.015|god_m 0.001|card_d 0.015|card_m 0.001
+GP963 放不下包 bag_leather
+GP963 CP|nature|4|11|L6|dps 37.7/37.7/37.7|mit 7.0/7.0/7.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|nature|4|11|L12|dps 46.7/46.7/46.7|mit 14.9/14.9/14.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|nature|4|11|L18|dps 64.5/64.5/64.5|mit 28.9/27.7/27.7|god_d 0.000|god_m 0.040|card_d 0.000|card_m 0.040|gcards 9
+GP963 CP|nature|4|11|L24|dps 70.3/70.3/70.3|mit 44.0/42.8/42.8|god_d 0.000|god_m 0.027|card_d 0.000|card_m 0.027|gcards 11
+GP963 CP|nature|4|11|L30|dps 71.8/72.1/72.1|mit 49.1/46.6/46.6|god_d -0.004|god_m 0.050|card_d -0.004|card_m 0.050|gcards 13
+GP963 LOO|nature|4|11|god_nature_near=0.000/0.000;god_nature_food=0.000/0.000;god_nature_grow=0.000/0.000;god_nature_strong=0.000/0.000;god_nature_herb=0.000/0.000;god_nature_near_up=0.000/0.000;god_nature_tough=0.000/0.000;god_nature_rejuv=0.000/0.037;god_nature_grow_up=0.000/0.000;god_nature_survive=0.000/0.014;god_nature_reap=0.011/0.001;god_nature_poison=-0.004/-0.000;god_nature_talk=0.000/0.000
+GP963 RUN|nature|4|11|kit frost_bonesteel_greatsword,flame_meteor_maul,knight_plate,riposte_buckler|wins 20/20|dps 62.4|mit 34.2|god_d 0.000|god_m 0.039|card_d 0.000|card_m 0.039
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|0|L6|dps 10.7/9.4/10.3|mit 13.6/13.1/13.5|god_d 0.127|god_m 0.032|card_d 0.042|card_m 0.005|gcards 4
+GP963 CP|skill|0|0|L12|dps 10.4/6.9/7.6|mit 10.9/10.6/10.5|god_d 0.337|god_m 0.022|card_d 0.272|card_m 0.034|gcards 7
+GP963 CP|skill|0|0|L18|dps 15.5/8.5/8.8|mit 29.2/27.9/26.3|god_d 0.450|god_m 0.045|card_d 0.431|card_m 0.101|gcards 9
+GP963 CP|skill|0|0|L24|dps 19.6/1.5/1.8|mit 32.0/27.4/27.3|god_d 0.922|god_m 0.145|card_d 0.910|card_m 0.148|gcards 12
+GP963 CP|skill|0|0|L30|dps 19.9/2.0/2.4|mit 31.9/23.0/23.1|god_d 0.901|god_m 0.279|card_d 0.878|card_m 0.275|gcards 13
+GP963 LOO|skill|0|0|god_skill_gap=0.020/0.010;god_skill_cloud=0.046/0.021;god_skill_breath=0.007/0.006;god_skill_zanshin=0.046/0.026;god_skill_stream=0.277/0.129;god_skill_ready=0.064/0.033;god_skill_zanshin_up=0.001/0.003;god_skill_see=0.456/0.114;god_skill_soft=-0.046/0.008;god_skill_parry=0.019/0.018;god_skill_vigor=0.000/0.046;god_skill_qigong=0.053/0.073;god_skill_clumsy=0.061/0.022
+GP963 RUN|skill|0|0|kit hand_crossbow,knife,leather_armor,brass_plating|wins 18/20|dps 15.8|mit 24.6|god_d 0.674|god_m 0.155|card_d 0.674|card_m 0.132
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|1|L6|dps 9.7/8.7/9.3|mit 7.6/7.5/7.6|god_d 0.108|god_m 0.019|card_d 0.040|card_m 0.009|gcards 4
+GP963 CP|skill|0|1|L12|dps 9.4/7.9/8.4|mit 13.4/12.1/13.1|god_d 0.156|god_m 0.097|card_d 0.104|card_m 0.024|gcards 8
+GP963 CP|skill|0|1|L18|dps 11.6/9.4/9.9|mit 25.6/23.7/24.8|god_d 0.191|god_m 0.076|card_d 0.144|card_m 0.032|gcards 10
+GP963 CP|skill|0|1|L24|dps 12.2/4.0/4.4|mit 35.7/33.0/33.7|god_d 0.669|god_m 0.076|card_d 0.643|card_m 0.055|gcards 11
+GP963 CP|skill|0|1|L30|dps 12.0/4.3/5.8|mit 31.7/35.2/29.8|god_d 0.638|god_m -0.110|card_d 0.513|card_m 0.059|gcards 13
+GP963 LOO|skill|0|1|god_skill_zanshin=0.000/0.000;god_skill_vigor=0.000/0.000;god_skill_ready=0.036/-0.016;god_skill_edge=0.000/0.000;god_skill_stream=0.145/0.008;god_skill_steady=0.000/0.000;god_skill_parry=0.000/0.004;god_skill_edge_up=0.000/0.000;god_skill_see=0.490/0.040;god_skill_clumsy=0.000/0.000;god_skill_qigong=0.020/-0.033;god_skill_breath=0.000/0.000;god_skill_soft=-0.138/-0.040
+GP963 RUN|skill|0|1|kit club,hand_crossbow,leather_armor,round_shield|wins 11/20|dps 11.0|mit 23.3|god_d 0.367|god_m 0.065|card_d 0.330|card_m 0.028
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|2|L6|dps 11.2/9.6/9.9|mit 10.0/10.0/10.1|god_d 0.139|god_m 0.007|card_d 0.111|card_m -0.008|gcards 5
+GP963 CP|skill|0|2|L12|dps 11.6/9.3/10.0|mit 17.8/16.7/16.8|god_d 0.203|god_m 0.062|card_d 0.136|card_m 0.060|gcards 10
+GP963 CP|skill|0|2|L18|dps 12.8/9.0/10.5|mit 27.4/24.9/26.8|god_d 0.294|god_m 0.093|card_d 0.181|card_m 0.022|gcards 13
+GP963 CP|skill|0|2|L24|dps 12.9/5.1/6.1|mit 28.9/31.8/28.1|god_d 0.604|god_m -0.099|card_d 0.526|card_m 0.028|gcards 14
+GP963 CP|skill|0|2|L30|dps 14.2/4.7/7.3|mit 36.7/42.8/33.9|god_d 0.668|god_m -0.168|card_d 0.482|card_m 0.076|gcards 15
+GP963 LOO|skill|0|2|god_skill_gap=0.050/0.006;god_skill_ready=0.089/0.010;god_skill_poise=0.000/0.000;god_skill_vigor=0.000/0.000;god_skill_edge=0.000/0.000;god_skill_stream=0.074/0.015;god_skill_steady=0.000/0.000;god_skill_see=0.417/0.067;god_skill_cloud=0.000/0.000;god_skill_clumsy=0.000/0.000;god_skill_parry=0.047/-0.024;god_skill_breath=0.000/0.000;god_skill_soft=-0.149/-0.017;god_skill_zanshin=0.000/0.000;god_skill_edge_up=0.000/0.000
+GP963 RUN|skill|0|2|kit club,hand_crossbow,leather_armor,round_shield|wins 15/20|dps 12.8|mit 26.2|god_d 0.390|god_m 0.058|card_d 0.335|card_m 0.043
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|3|L6|dps 11.1/9.4/10.9|mit 13.0/12.4/12.8|god_d 0.154|god_m 0.045|card_d 0.018|card_m 0.018|gcards 3
+GP963 CP|skill|0|3|L12|dps 12.4/9.7/11.5|mit 15.6/14.6/15.4|god_d 0.216|god_m 0.064|card_d 0.071|card_m 0.010|gcards 7
+GP963 CP|skill|0|3|L18|dps 14.2/10.0/11.3|mit 17.6/17.7/18.2|god_d 0.294|god_m -0.004|card_d 0.201|card_m -0.030|gcards 9
+GP963 CP|skill|0|3|L24|dps 24.8/2.6/2.9|mit 37.8/32.9/32.1|god_d 0.896|god_m 0.130|card_d 0.881|card_m 0.152|gcards 11
+GP963 CP|skill|0|3|L30|dps 22.5/2.5/3.1|mit 37.7/23.7/25.5|god_d 0.888|god_m 0.371|card_d 0.864|card_m 0.323|gcards 12
+GP963 LOO|skill|0|3|god_skill_gap=0.096/0.016;god_skill_see=0.582/0.196;god_skill_fist=0.000/0.000;god_skill_ready=0.058/0.008;god_skill_poise=0.014/0.009;god_skill_parry=0.067/0.056;god_skill_clumsy=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_stance=0.328/0.127;god_skill_cloud=-0.100/-0.006;god_skill_stance_up=0.194/0.035;god_skill_clumsy_up=0.000/0.000
+GP963 RUN|skill|0|3|kit hand_axe,crude_bow,leather_armor,brass_plating|wins 13/20|dps 17.5|mit 25.5|god_d 0.649|god_m 0.179|card_d 0.628|card_m 0.107
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|4|L6|dps 9.3/8.0/9.3|mit 10.2/10.2/10.2|god_d 0.141|god_m -0.003|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|skill|0|4|L12|dps 11.7/4.0/4.0|mit 15.2/12.2/13.2|god_d 0.658|god_m 0.199|card_d 0.659|card_m 0.130|gcards 7
+GP963 CP|skill|0|4|L18|dps 10.5/8.3/10.1|mit 28.6/26.7/28.5|god_d 0.210|god_m 0.068|card_d 0.042|card_m 0.003|gcards 9
+GP963 CP|skill|0|4|L24|dps 10.3/0.4/0.3|mit 39.6/39.3/40.6|god_d 0.965|god_m 0.008|card_d 0.973|card_m -0.025|gcards 10
+GP963 CP|skill|0|4|L30|dps 9.4/0.7/1.0|mit 24.7/22.7/22.9|god_d 0.930|god_m 0.083|card_d 0.898|card_m 0.074|gcards 11
+GP963 LOO|skill|0|4|god_skill_fist=0.000/0.000;god_skill_vigor=-0.021/-0.018;god_skill_parry=-0.033/-0.015;god_skill_fist_up=0.000/0.000;god_skill_ready=-0.018/0.013;god_skill_see=0.408/0.018;god_skill_gap=0.030/0.004;god_skill_breath=0.100/-0.009;god_skill_soft=-0.043/-0.012;god_skill_clumsy=0.091/0.005;god_skill_qigong=0.161/-0.001
+GP963 RUN|skill|0|4|kit knife,hand_crossbow,leather_armor,tower_shield|wins 13/20|dps 10.1|mit 24.4|god_d 0.616|god_m 0.185|card_d 0.631|card_m 0.133
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|5|L6|dps 10.3/9.6/10.0|mit 8.7/8.6/8.6|god_d 0.069|god_m 0.008|card_d 0.028|card_m 0.015|gcards 2
+GP963 CP|skill|0|5|L12|dps 11.4/9.2/10.0|mit 13.5/12.4/13.1|god_d 0.191|god_m 0.086|card_d 0.117|card_m 0.029|gcards 7
+GP963 CP|skill|0|5|L18|dps 11.6/8.4/8.6|mit 28.6/25.9/28.0|god_d 0.272|god_m 0.094|card_d 0.253|card_m 0.024|gcards 9
+GP963 CP|skill|0|5|L24|dps 15.1/5.2/7.4|mit 28.0/26.9/23.9|god_d 0.658|god_m 0.041|card_d 0.509|card_m 0.148|gcards 12
+GP963 CP|skill|0|5|L30|dps 16.5/3.3/3.3|mit 33.4/35.8/34.1|god_d 0.797|god_m -0.072|card_d 0.798|card_m -0.021|gcards 14
+GP963 LOO|skill|0|5|god_skill_qigong=0.075/-0.061;god_skill_carry=0.289/0.004;god_skill_cloud=0.000/0.000;god_skill_poise=0.055/0.009;god_skill_see=0.548/0.085;god_skill_steady=0.000/0.000;god_skill_clumsy=0.000/0.000;god_skill_stream=0.123/-0.020;god_skill_guard=0.018/0.011;god_skill_parry=-0.002/-0.001;god_skill_vigor=0.000/0.000;god_skill_zanshin=0.000/0.000;god_skill_ready=0.033/-0.014;god_skill_carry_up=0.000/0.000
+GP963 RUN|skill|0|5|kit hand_crossbow,club,leather_armor,brass_plating|wins 12/20|dps 13.4|mit 24.0|god_d 0.464|god_m 0.085|card_d 0.422|card_m 0.065
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|6|L6|dps 16.2/15.2/16.1|mit 11.4/11.0/11.3|god_d 0.064|god_m 0.038|card_d 0.007|card_m 0.012|gcards 5
+GP963 CP|skill|0|6|L12|dps 20.6/16.1/17.1|mit 18.1/17.0/17.7|god_d 0.220|god_m 0.063|card_d 0.170|card_m 0.025|gcards 10
+GP963 CP|skill|0|6|L18|dps 26.2/15.4/15.2|mit 23.9/22.3/23.0|god_d 0.413|god_m 0.065|card_d 0.419|card_m 0.037|gcards 11
+GP963 CP|skill|0|6|L24|dps 33.2/7.7/9.4|mit 41.2/33.4/32.1|god_d 0.769|god_m 0.189|card_d 0.717|card_m 0.221|gcards 13
+GP963 CP|skill|0|6|L30|dps 41.4/6.7/7.5|mit 33.7/28.9/29.4|god_d 0.838|god_m 0.143|card_d 0.820|card_m 0.128|gcards 14
+GP963 LOO|skill|0|6|god_skill_carry=0.199/0.065;god_skill_stream=0.138/0.077;god_skill_vigor=0.000/0.023;god_skill_ready=0.076/0.045;god_skill_guard=0.000/0.000;god_skill_breath=0.013/-0.019;god_skill_parry=0.000/0.000;god_skill_poise=0.047/0.014;god_skill_cloud=0.107/0.001;god_skill_gap=0.092/0.002;god_skill_stance=0.225/0.083;god_skill_see=0.458/0.056;god_skill_qigong=-0.000/0.010;god_skill_carry_up=0.000/0.000
+GP963 RUN|skill|0|6|kit felling_axe,hand_axe,leather_armor,round_shield|wins 20/20|dps 29.3|mit 28.6|god_d 0.612|god_m 0.133|card_d 0.594|card_m 0.100
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|7|L6|dps 10.3/8.9/9.7|mit 14.0/13.6/14.0|god_d 0.141|god_m 0.029|card_d 0.064|card_m -0.001|gcards 4
+GP963 CP|skill|0|7|L12|dps 13.5/9.2/10.3|mit 17.7/16.0/16.8|god_d 0.316|god_m 0.097|card_d 0.242|card_m 0.050|gcards 7
+GP963 CP|skill|0|7|L18|dps 16.8/9.4/11.0|mit 27.9/21.0/22.5|god_d 0.438|god_m 0.246|card_d 0.341|card_m 0.193|gcards 8
+GP963 CP|skill|0|7|L24|dps 16.0/5.9/8.3|mit 32.7/32.2/33.7|god_d 0.635|god_m 0.017|card_d 0.484|card_m -0.028|gcards 9
+GP963 CP|skill|0|7|L30|dps 18.3/4.7/5.6|mit 45.4/43.1/45.4|god_d 0.744|god_m 0.050|card_d 0.692|card_m -0.001|gcards 11
+GP963 LOO|skill|0|7|god_skill_clumsy=0.104/0.000;god_skill_poise=0.003/0.000;god_skill_stream=0.106/0.013;god_skill_carry=0.087/0.026;god_skill_see=0.361/0.000;god_skill_steady=0.020/0.000;god_skill_stance=0.306/0.020;god_skill_guard=-0.014/0.005;god_skill_carry_up=0.000/0.000;god_skill_ready=0.002/-0.002;god_skill_zanshin=0.050/0.005
+GP963 RUN|skill|0|7|kit crude_bow,felling_axe,leather_armor,round_shield|wins 13/20|dps 15.3|mit 28.8|god_d 0.494|god_m 0.142|card_d 0.408|card_m 0.053
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|8|L6|dps 10.7/9.1/10.0|mit 9.2/9.2/9.3|god_d 0.145|god_m -0.003|card_d 0.059|card_m -0.008|gcards 4
+GP963 CP|skill|0|8|L12|dps 12.5/9.7/11.1|mit 17.6/17.7/18.1|god_d 0.223|god_m -0.009|card_d 0.111|card_m -0.028|gcards 7
+GP963 CP|skill|0|8|L18|dps 10.4/8.0/9.0|mit 26.6/24.3/25.7|god_d 0.230|god_m 0.089|card_d 0.132|card_m 0.035|gcards 8
+GP963 CP|skill|0|8|L24|dps 10.8/1.2/1.5|mit 27.1/28.8/27.7|god_d 0.891|god_m -0.064|card_d 0.865|card_m -0.023|gcards 11
+GP963 CP|skill|0|8|L30|dps 27.1/2.6/3.0|mit 32.1/21.4/21.8|god_d 0.906|god_m 0.335|card_d 0.889|card_m 0.322|gcards 13
+GP963 LOO|skill|0|8|god_skill_gap=0.238/0.100;god_skill_parry=0.000/0.013;god_skill_poise=0.005/0.005;god_skill_fist=0.000/0.000;god_skill_vigor=0.000/0.023;god_skill_stream=0.309/0.144;god_skill_fist_up=0.000/0.000;god_skill_carry=0.492/0.195;god_skill_breath=0.032/0.014;god_skill_cloud=0.269/0.111;god_skill_press=0.616/0.227;god_skill_see=0.492/0.192;god_skill_clumsy=0.423/0.175
+GP963 RUN|skill|0|8|kit shortsword,crude_bow,leather_armor,round_shield|wins 17/20|dps 14.2|mit 24.9|god_d 0.652|god_m 0.136|card_d 0.647|card_m 0.106
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|9|L6|dps 18.6/14.8/15.3|mit 10.0/9.6/10.0|god_d 0.203|god_m 0.045|card_d 0.175|card_m 0.005|gcards 4
+GP963 CP|skill|0|9|L12|dps 20.4/11.1/13.3|mit 17.5/18.5/18.0|god_d 0.455|god_m -0.056|card_d 0.349|card_m -0.028|gcards 8
+GP963 CP|skill|0|9|L18|dps 30.9/12.7/14.5|mit 36.9/28.3/29.2|god_d 0.589|god_m 0.234|card_d 0.531|card_m 0.209|gcards 9
+GP963 CP|skill|0|9|L24|dps 33.2/8.5/11.5|mit 30.9/22.2/22.9|god_d 0.745|god_m 0.280|card_d 0.655|card_m 0.258|gcards 10
+GP963 CP|skill|0|9|L30|dps 43.0/6.5/9.2|mit 41.5/30.6/29.6|god_d 0.848|god_m 0.262|card_d 0.786|card_m 0.287|gcards 12
+GP963 LOO|skill|0|9|god_skill_press=0.313/0.130;god_skill_ready=0.058/0.044;god_skill_stream=0.168/0.081;god_skill_edge=0.033/0.025;god_skill_breath=0.000/0.000;god_skill_parry=0.001/0.012;god_skill_cloud=0.000/0.000;god_skill_fist=0.000/0.000;god_skill_stance=0.431/0.191;god_skill_clumsy=0.000/0.000;god_skill_see=0.275/0.090;god_skill_stance_up=0.211/0.105
+GP963 RUN|skill|0|9|kit felling_axe,hand_axe,leather_armor,brass_plating|wins 19/20|dps 30.1|mit 28.6|god_d 0.664|god_m 0.198|card_d 0.594|card_m 0.171
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|10|L6|dps 16.2/10.9/12.3|mit 10.4/10.2/10.4|god_d 0.331|god_m 0.016|card_d 0.244|card_m -0.000|gcards 5
+GP963 CP|skill|0|10|L12|dps 21.2/8.4/8.8|mit 16.6/14.1/13.3|god_d 0.605|god_m 0.156|card_d 0.586|card_m 0.204|gcards 9
+GP963 CP|skill|0|10|L18|dps 26.2/9.3/9.6|mit 33.9/27.7/29.1|god_d 0.643|god_m 0.182|card_d 0.634|card_m 0.141|gcards 10
+GP963 CP|skill|0|10|L24|dps 34.5/3.3/4.2|mit 31.5/27.6/27.4|god_d 0.903|god_m 0.123|card_d 0.879|card_m 0.131|gcards 13
+GP963 CP|skill|0|10|L30|dps 39.1/4.4/5.6|mit 35.0/24.8/23.2|god_d 0.889|god_m 0.290|card_d 0.856|card_m 0.337|gcards 14
+GP963 LOO|skill|0|10|god_skill_guard=0.037/0.017;god_skill_cloud=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_ready=0.054/0.018;god_skill_press=0.454/0.140;god_skill_steady=0.000/0.000;god_skill_see=0.272/0.080;god_skill_breath=0.000/0.000;god_skill_carry=0.330/0.108;god_skill_gap=0.039/0.017;god_skill_poise=0.008/0.006;god_skill_vigor=0.000/0.000;god_skill_fist=0.000/0.000;god_skill_qigong=0.044/0.013
+GP963 RUN|skill|0|10|kit club,knife,leather_armor,round_shield|wins 18/20|dps 29.1|mit 27.2|god_d 0.766|god_m 0.222|card_d 0.744|card_m 0.207
+GP963 放不下包 bag_leather
+GP963 CP|skill|0|11|L6|dps 14.8/10.8/11.8|mit 14.7/14.5/14.7|god_d 0.267|god_m 0.015|card_d 0.201|card_m 0.003|gcards 3
+GP963 CP|skill|0|11|L12|dps 19.0/8.6/9.5|mit 20.1/14.7/15.6|god_d 0.546|god_m 0.269|card_d 0.499|card_m 0.223|gcards 7
+GP963 CP|skill|0|11|L18|dps 20.4/10.1/10.5|mit 17.3/19.0/18.0|god_d 0.502|god_m -0.098|card_d 0.483|card_m -0.040|gcards 9
+GP963 CP|skill|0|11|L24|dps 26.7/4.2/5.8|mit 36.0/36.2/31.6|god_d 0.843|god_m -0.005|card_d 0.783|card_m 0.123|gcards 12
+GP963 CP|skill|0|11|L30|dps 25.6/3.7/5.5|mit 33.3/28.6/27.1|god_d 0.855|god_m 0.141|card_d 0.787|card_m 0.186|gcards 13
+GP963 LOO|skill|0|11|god_skill_press=0.236/0.093;god_skill_ready=0.074/0.051;god_skill_zanshin=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_parry=0.000/0.003;god_skill_vigor=0.000/0.000;god_skill_qigong=0.016/-0.027;god_skill_see=0.286/0.074;god_skill_clumsy=0.000/0.000;god_skill_poise=0.010/-0.001;god_skill_breath=0.000/0.000;god_skill_edge=0.058/0.015;god_skill_edge_up=0.030/0.009
+GP963 RUN|skill|0|11|kit knife,club,leather_armor,brass_plating|wins 18/20|dps 22.2|mit 26.0|god_d 0.670|god_m 0.153|card_d 0.639|card_m 0.139
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|0|L6|dps 28.1/27.5/27.7|mit 7.9/8.6/8.7|god_d 0.022|god_m -0.096|card_d 0.014|card_m -0.105|gcards 5
+GP963 CP|skill|2|0|L12|dps 34.8/30.5/29.2|mit 9.1/9.4/9.4|god_d 0.123|god_m -0.038|card_d 0.160|card_m -0.033|gcards 6
+GP963 CP|skill|2|0|L18|dps 35.9/26.1/28.6|mit 32.4/29.3/31.0|god_d 0.274|god_m 0.096|card_d 0.203|card_m 0.043|gcards 10
+GP963 CP|skill|2|0|L24|dps 28.9/15.1/16.5|mit 28.2/27.1/28.5|god_d 0.480|god_m 0.040|card_d 0.432|card_m -0.010|gcards 11
+GP963 CP|skill|2|0|L30|dps 50.2/23.9/25.6|mit 44.6/33.8/34.5|god_d 0.524|god_m 0.242|card_d 0.491|card_m 0.225|gcards 13
+GP963 LOO|skill|2|0|god_skill_zanshin=0.000/0.000;god_skill_vigor=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_ready=0.090/0.042;god_skill_gap=0.054/0.033;god_skill_carry=0.244/0.100;god_skill_poise=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_guard=0.000/0.000;god_skill_press=0.189/0.083;god_skill_stream=0.010/0.022;god_skill_carry_up=0.000/0.000
+GP963 RUN|skill|2|0|kit steel_spear,bone_great_axe,studded_leather,steel_round_shield|wins 19/20|dps 36.1|mit 28.0|god_d 0.368|god_m 0.060|card_d 0.332|card_m 0.035
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|1|L6|dps 21.6/21.6/21.6|mit 11.4/11.4/11.4|god_d 0.002|god_m 0.002|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|skill|2|1|L12|dps 25.9/25.6/25.9|mit 16.8/16.6/16.8|god_d 0.012|god_m 0.012|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|skill|2|1|L18|dps 27.8/25.4/26.3|mit 21.0/20.5/20.8|god_d 0.086|god_m 0.023|card_d 0.054|card_m 0.008|gcards 8
+GP963 CP|skill|2|1|L24|dps 31.4/23.4/24.3|mit 37.2/34.0/35.7|god_d 0.255|god_m 0.086|card_d 0.225|card_m 0.040|gcards 11
+GP963 CP|skill|2|1|L30|dps 34.8/21.9/24.6|mit 36.9/35.4/34.7|god_d 0.369|god_m 0.041|card_d 0.293|card_m 0.060|gcards 12
+GP963 LOO|skill|2|1|god_skill_gap=0.081/0.016;god_skill_poise=0.065/0.012;god_skill_cloud=0.000/0.000;god_skill_soft=-0.016/0.000;god_skill_steady=0.000/0.000;god_skill_soft_up=0.069/0.012;god_skill_stream=0.073/0.008;god_skill_zanshin=0.000/0.000;god_skill_see=0.101/0.016;god_skill_ready=0.101/0.018;god_skill_gap_up=0.049/0.009;god_skill_press=0.037/0.009
+GP963 RUN|skill|2|1|kit bone_greatsword,steel_great_axe,studded_leather,kite_shield|wins 16/20|dps 29.9|mit 28.3|god_d 0.212|god_m 0.039|card_d 0.171|card_m 0.015
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|2|L6|dps 41.7/39.8/40.0|mit 7.2/7.9/7.9|god_d 0.045|god_m -0.099|card_d 0.040|card_m -0.104|gcards 3
+GP963 CP|skill|2|2|L12|dps 47.4/38.9/39.7|mit 21.2/22.8/22.4|god_d 0.180|god_m -0.072|card_d 0.164|card_m -0.055|gcards 7
+GP963 CP|skill|2|2|L18|dps 51.8/34.3/37.8|mit 29.3/26.0/28.0|god_d 0.338|god_m 0.113|card_d 0.270|card_m 0.044|gcards 8
+GP963 CP|skill|2|2|L24|dps 54.1/21.8/25.3|mit 48.6/35.3/35.7|god_d 0.596|god_m 0.275|card_d 0.531|card_m 0.266|gcards 12
+GP963 CP|skill|2|2|L30|dps 56.5/20.8/24.5|mit 42.1/31.7/34.3|god_d 0.633|god_m 0.246|card_d 0.567|card_m 0.186|gcards 14
+GP963 LOO|skill|2|2|god_skill_carry=0.084/0.004;god_skill_cloud=0.000/0.000;god_skill_gap=0.028/0.005;god_skill_ready=0.030/0.033;god_skill_see=0.388/0.116;god_skill_steady=0.000/0.000;god_skill_guard=0.000/0.009;god_skill_fist=0.000/0.000;god_skill_stream=0.038/0.023;god_skill_parry=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_gap_up=0.000/0.000;god_skill_poise=0.000/0.000;god_skill_fist_up=0.000/0.000
+GP963 RUN|skill|2|2|kit steel_twin_axes,bone_pole_axe,studded_leather,steel_round_shield|wins 20/20|dps 52.3|mit 35.4|god_d 0.499|god_m 0.160|card_d 0.441|card_m 0.116
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|3|L6|dps 24.1/23.7/24.1|mit 11.1/10.9/11.1|god_d 0.014|god_m 0.021|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|skill|2|3|L12|dps 26.0/20.9/22.5|mit 13.7/12.4/12.9|god_d 0.195|god_m 0.095|card_d 0.135|card_m 0.059|gcards 7
+GP963 CP|skill|2|3|L18|dps 25.7/22.7/23.4|mit 18.4/17.7/17.5|god_d 0.117|god_m 0.034|card_d 0.091|card_m 0.048|gcards 10
+GP963 CP|skill|2|3|L24|dps 38.1/14.6/16.8|mit 42.1/27.0/26.9|god_d 0.617|god_m 0.359|card_d 0.560|card_m 0.361|gcards 11
+GP963 CP|skill|2|3|L30|dps 40.0/12.3/12.0|mit 33.1/20.6/20.1|god_d 0.693|god_m 0.377|card_d 0.700|card_m 0.394|gcards 13
+GP963 LOO|skill|2|3|god_skill_edge=0.026/0.016;god_skill_parry=0.000/0.000;god_skill_see=0.177/0.063;god_skill_edge_up=0.014/0.014;god_skill_steady=0.000/0.000;god_skill_ready=0.053/0.029;god_skill_press=0.213/0.115;god_skill_breath=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_soft=-0.129/-0.065;god_skill_stance=0.342/0.118;god_skill_stream=0.160/-0.007;god_skill_fist=0.000/0.000
+GP963 RUN|skill|2|3|kit granite_maul,horn_bow,chain_mail,steel_round_shield|wins 20/20|dps 32.7|mit 26.8|god_d 0.511|god_m 0.236|card_d 0.494|card_m 0.233
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|4|L6|dps 37.4/31.3/34.0|mit 10.5/11.1/11.0|god_d 0.164|god_m -0.055|card_d 0.092|card_m -0.046|gcards 5
+GP963 CP|skill|2|4|L12|dps 40.8/32.5/36.4|mit 15.7/15.6/15.9|god_d 0.204|god_m 0.007|card_d 0.109|card_m -0.015|gcards 7
+GP963 CP|skill|2|4|L18|dps 46.9/35.1/39.7|mit 17.5/18.3/18.5|god_d 0.252|god_m -0.043|card_d 0.155|card_m -0.055|gcards 10
+GP963 CP|skill|2|4|L24|dps 68.6/17.4/23.6|mit 59.9/39.8/42.7|god_d 0.746|god_m 0.336|card_d 0.656|card_m 0.287|gcards 13
+GP963 CP|skill|2|4|L30|dps 65.0/13.8/15.1|mit 48.0/39.3/39.2|god_d 0.787|god_m 0.180|card_d 0.767|card_m 0.183|gcards 14
+GP963 LOO|skill|2|4|god_skill_edge=0.009/-0.037;god_skill_vigor=0.000/0.000;god_skill_stream=0.655/0.245;god_skill_parry=0.000/0.010;god_skill_stance=0.294/0.057;god_skill_see=0.720/0.188;god_skill_soft=-0.098/0.013;god_skill_breath=0.000/0.000;god_skill_ready=0.019/-0.008;god_skill_zanshin=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_guard=0.001/0.039;god_skill_stance_up=0.120/-0.037
+GP963 RUN|skill|2|4|kit bone_broadsword,bone_twin_axes,studded_leather,kite_shield|wins 20/20|dps 55.9|mit 36.5|god_d 0.589|god_m 0.182|card_d 0.539|card_m 0.112
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|5|L6|dps 46.4/45.2/46.4|mit 12.1/11.3/12.1|god_d 0.024|god_m 0.066|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|skill|2|5|L12|dps 47.0/42.6/47.0|mit 23.1/24.4/23.1|god_d 0.095|god_m -0.055|card_d 0.000|card_m 0.000|gcards 7
+GP963 CP|skill|2|5|L18|dps 55.4/42.2/48.3|mit 27.0/28.7/27.6|god_d 0.239|god_m -0.063|card_d 0.129|card_m -0.021|gcards 10
+GP963 CP|skill|2|5|L24|dps 67.9/31.3/41.6|mit 59.1/44.3/44.8|god_d 0.539|god_m 0.250|card_d 0.387|card_m 0.243|gcards 11
+GP963 CP|skill|2|5|L30|dps 53.8/31.9/40.7|mit 47.4/37.5/44.1|god_d 0.408|god_m 0.209|card_d 0.244|card_m 0.068|gcards 12
+GP963 LOO|skill|2|5|god_skill_guard=0.000/0.064;god_skill_cloud=0.000/0.000;god_skill_fist=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_see=0.196/-0.012;god_skill_poise=0.000/0.000;god_skill_clumsy=0.000/0.000;god_skill_parry=0.000/0.011;god_skill_vigor=0.000/0.000;god_skill_gap=0.073/-0.038;god_skill_edge=0.009/0.009;god_skill_soft=-0.163/-0.067
+GP963 RUN|skill|2|5|kit iron_spear,steel_broadsword,studded_leather,kite_shield|wins 20/20|dps 56.0|mit 39.6|god_d 0.355|god_m 0.143|card_d 0.225|card_m 0.080
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|6|L6|dps 34.9/34.2/34.9|mit 11.1/10.9/11.1|god_d 0.018|god_m 0.018|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|skill|2|6|L12|dps 40.4/38.5/40.0|mit 14.2/13.2/13.4|god_d 0.048|god_m 0.070|card_d 0.010|card_m 0.060|gcards 5
+GP963 CP|skill|2|6|L18|dps 41.0/33.5/31.5|mit 37.1/34.4/38.3|god_d 0.183|god_m 0.072|card_d 0.232|card_m -0.034|gcards 8
+GP963 CP|skill|2|6|L24|dps 33.5/19.5/22.8|mit 37.6/34.1/33.5|god_d 0.418|god_m 0.093|card_d 0.319|card_m 0.108|gcards 11
+GP963 CP|skill|2|6|L30|dps 59.8/10.7/13.8|mit 43.4/31.9/32.0|god_d 0.821|god_m 0.264|card_d 0.770|card_m 0.262|gcards 15
+GP963 LOO|skill|2|6|god_skill_qigong=-0.021/0.011;god_skill_vigor=0.000/0.000;god_skill_zanshin=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_gap=0.078/-0.031;god_skill_cloud=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_stance=0.222/0.041;god_skill_ready=0.021/0.025;god_skill_poise=0.000/0.000;god_skill_gap_up=0.038/-0.008;god_skill_see=0.597/0.123;god_skill_steady=0.000/0.000;god_skill_stream=0.069/0.002;god_skill_zanshin_up=0.000/0.000
+GP963 RUN|skill|2|6|kit bone_battle_axe,bonefang_twin_blades,chain_mail,kite_shield|wins 19/20|dps 42.2|mit 34.0|god_d 0.510|god_m 0.116|card_d 0.471|card_m 0.090
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|7|L6|dps 27.5/26.3/26.9|mit 8.8/8.4/8.7|god_d 0.046|god_m 0.046|card_d 0.021|card_m 0.021|gcards 4
+GP963 CP|skill|2|7|L12|dps 22.8/20.1/20.8|mit 12.8/11.0/11.8|god_d 0.118|god_m 0.140|card_d 0.085|card_m 0.076|gcards 8
+GP963 CP|skill|2|7|L18|dps 33.7/27.6/28.6|mit 26.1/27.1/27.0|god_d 0.183|god_m -0.035|card_d 0.150|card_m -0.034|gcards 10
+GP963 CP|skill|2|7|L24|dps 45.0/11.8/15.1|mit 33.8/31.9/30.0|god_d 0.738|god_m 0.056|card_d 0.665|card_m 0.111|gcards 12
+GP963 CP|skill|2|7|L30|dps 49.6/15.1/18.4|mit 44.4/26.6/29.9|god_d 0.696|god_m 0.401|card_d 0.629|card_m 0.327|gcards 14
+GP963 LOO|skill|2|7|god_skill_gap=0.028/-0.012;god_skill_ready=0.038/-0.004;god_skill_cloud=0.000/0.000;god_skill_zanshin=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_parry=0.000/0.005;god_skill_vigor=0.000/0.000;god_skill_fist=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_press=0.227/0.101;god_skill_see=0.194/0.114;god_skill_stance=0.227/0.085;god_skill_stream=0.061/0.076;god_skill_qigong=-0.059/0.014
+GP963 RUN|skill|2|7|kit bone_twin_axes,steel_crossbow,studded_leather,steel_round_shield|wins 20/20|dps 36.9|mit 27.2|god_d 0.529|god_m 0.106|card_d 0.475|card_m 0.067
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|8|L6|dps 27.5/26.9/27.2|mit 12.3/12.7/12.1|god_d 0.025|god_m -0.036|card_d 0.014|card_m 0.014|gcards 3
+GP963 CP|skill|2|8|L12|dps 35.0/31.9/32.6|mit 12.2/12.5/11.8|god_d 0.087|god_m -0.024|card_d 0.068|card_m 0.030|gcards 5
+GP963 CP|skill|2|8|L18|dps 40.6/32.7/35.2|mit 22.2/23.6/23.1|god_d 0.194|god_m -0.059|card_d 0.133|card_m -0.041|gcards 9
+GP963 CP|skill|2|8|L24|dps 47.7/29.8/31.4|mit 49.4/37.6/39.4|god_d 0.376|god_m 0.240|card_d 0.342|card_m 0.203|gcards 11
+GP963 CP|skill|2|8|L30|dps 47.8/30.9/32.2|mit 48.8/37.9/39.5|god_d 0.354|god_m 0.223|card_d 0.327|card_m 0.190|gcards 12
+GP963 LOO|skill|2|8|god_skill_stance=0.200/0.129;god_skill_breath=0.000/0.000;god_skill_qigong=0.011/0.022;god_skill_see=0.074/0.045;god_skill_fist=0.000/0.000;god_skill_stream=0.118/0.087;god_skill_cloud=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_press=0.049/0.020;god_skill_poise=0.024/0.007;god_skill_soft=-0.005/-0.000;god_skill_qigong_up=-0.008/-0.035
+GP963 RUN|skill|2|8|kit decapitator_blade,bone_pole_axe,plate_cuirass,steel_round_shield|wins 20/20|dps 41.5|mit 33.0|god_d 0.264|god_m 0.107|card_d 0.231|card_m 0.085
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|9|L6|dps 28.2/26.2/27.7|mit 12.7/12.8/12.7|god_d 0.072|god_m -0.008|card_d 0.018|card_m 0.001|gcards 5
+GP963 CP|skill|2|9|L12|dps 28.9/23.6/25.1|mit 17.6/18.7/19.2|god_d 0.185|god_m -0.060|card_d 0.132|card_m -0.089|gcards 8
+GP963 CP|skill|2|9|L18|dps 32.3/29.5/32.0|mit 29.9/29.4/29.8|god_d 0.085|god_m 0.016|card_d 0.008|card_m 0.005|gcards 10
+GP963 CP|skill|2|9|L24|dps 34.7/21.0/23.7|mit 46.2/33.9/36.9|god_d 0.395|god_m 0.266|card_d 0.316|card_m 0.200|gcards 12
+GP963 CP|skill|2|9|L30|dps 40.6/20.5/24.5|mit 46.6/34.8/35.4|god_d 0.495|god_m 0.253|card_d 0.396|card_m 0.240|gcards 14
+GP963 LOO|skill|2|9|god_skill_qigong=0.039/0.076;god_skill_ready=0.024/0.031;god_skill_steady=0.000/0.000;god_skill_see=0.317/0.151;god_skill_qigong_up=0.051/0.066;god_skill_breath=0.000/0.000;god_skill_vigor=0.000/0.000;god_skill_soft=-0.136/-0.063;god_skill_poise=0.000/0.000;god_skill_carry=0.062/0.034;god_skill_cloud=0.000/0.000;god_skill_zanshin=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_gap=0.043/-0.012
+GP963 RUN|skill|2|9|kit pendulum_blade,bonefang_dagger,chain_mail,steel_round_shield|wins 19/20|dps 34.3|mit 35.3|god_d 0.342|god_m 0.148|card_d 0.257|card_m 0.112
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|10|L6|dps 33.3/31.7/33.3|mit 7.6/7.6/7.6|god_d 0.047|god_m 0.004|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|skill|2|10|L12|dps 41.9/37.4/39.9|mit 25.5/24.7/28.2|god_d 0.107|god_m 0.029|card_d 0.048|card_m -0.108|gcards 7
+GP963 CP|skill|2|10|L18|dps 53.3/39.2/43.4|mit 26.9/27.7/27.9|god_d 0.264|god_m -0.030|card_d 0.185|card_m -0.037|gcards 9
+GP963 CP|skill|2|10|L24|dps 55.5/20.6/27.2|mit 42.8/31.6/33.8|god_d 0.629|god_m 0.263|card_d 0.510|card_m 0.212|gcards 11
+GP963 CP|skill|2|10|L30|dps 59.0/20.9/27.4|mit 48.6/32.1/33.2|god_d 0.646|god_m 0.339|card_d 0.535|card_m 0.316|gcards 13
+GP963 LOO|skill|2|10|god_skill_soft=0.000/0.001;god_skill_poise=0.003/-0.012;god_skill_breath=0.000/0.000;god_skill_fist=0.000/0.000;god_skill_parry=0.000/0.006;god_skill_ready=0.028/0.015;god_skill_press=0.241/0.086;god_skill_vigor=0.000/0.000;god_skill_press_up=0.097/0.048;god_skill_cloud=0.000/0.000;god_skill_guard=0.000/0.010;god_skill_see=0.172/0.065;god_skill_soft_up=0.004/-0.011
+GP963 RUN|skill|2|10|kit steel_broadsword,steel_greatsword,studded_leather,steel_round_shield|wins 20/20|dps 51.2|mit 34.8|god_d 0.505|god_m 0.169|card_d 0.396|card_m 0.126
+GP963 放不下包 bag_leather
+GP963 CP|skill|2|11|L6|dps 32.4/30.4/32.4|mit 11.5/11.3/11.5|god_d 0.062|god_m 0.012|card_d 0.000|card_m 0.000|gcards 3
+GP963 CP|skill|2|11|L12|dps 33.3/32.2/32.3|mit 24.2/23.5/24.9|god_d 0.033|god_m 0.030|card_d 0.031|card_m -0.029|gcards 6
+GP963 CP|skill|2|11|L18|dps 40.2/37.1/39.8|mit 19.6/20.7/19.1|god_d 0.076|god_m -0.056|card_d 0.011|card_m 0.023|gcards 8
+GP963 CP|skill|2|11|L24|dps 35.4/28.8/30.4|mit 33.4/28.2/30.8|god_d 0.185|god_m 0.155|card_d 0.139|card_m 0.077|gcards 10
+GP963 CP|skill|2|11|L30|dps 35.1/22.2/25.6|mit 31.4/27.1/29.2|god_d 0.370|god_m 0.138|card_d 0.271|card_m 0.072|gcards 12
+GP963 LOO|skill|2|11|god_skill_clumsy=0.000/0.000;god_skill_parry=0.000/0.002;god_skill_fist=0.000/0.000;god_skill_poise=0.030/0.021;god_skill_stream=0.088/-0.001;god_skill_guard=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_qigong=-0.049/-0.033;god_skill_vigor=0.000/0.000;god_skill_carry=0.056/-0.023;god_skill_breath=0.000/0.000;god_skill_guard_up=0.000/0.000
+GP963 RUN|skill|2|11|kit siege_hammer,bone_pole_axe,studded_leather,kite_shield|wins 19/20|dps 35.4|mit 27.6|god_d 0.209|god_m 0.097|card_d 0.147|card_m 0.037
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|0|L6|dps 39.9/38.8/39.6|mit 9.3/9.0/9.2|god_d 0.028|god_m 0.028|card_d 0.008|card_m 0.008|gcards 5
+GP963 CP|skill|4|0|L12|dps 46.4/40.4/41.6|mit 13.5/12.9/12.4|god_d 0.128|god_m 0.044|card_d 0.103|card_m 0.077|gcards 6
+GP963 CP|skill|4|0|L18|dps 55.3/49.5/51.7|mit 32.3/30.6/30.8|god_d 0.106|god_m 0.052|card_d 0.066|card_m 0.046|gcards 9
+GP963 CP|skill|4|0|L24|dps 66.7/41.6/43.4|mit 40.5/38.7/39.2|god_d 0.376|god_m 0.045|card_d 0.349|card_m 0.032|gcards 11
+GP963 CP|skill|4|0|L30|dps 71.7/41.6/44.8|mit 57.9/50.1/51.5|god_d 0.419|god_m 0.134|card_d 0.375|card_m 0.110|gcards 13
+GP963 LOO|skill|4|0|god_skill_fist=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_see=0.261/0.053;god_skill_steady=0.000/0.000;god_skill_carry=0.131/0.007;god_skill_zanshin=0.000/0.000;god_skill_ready=0.010/0.010;god_skill_vigor=0.000/0.000;god_skill_qigong=0.000/-0.015;god_skill_cloud=0.000/0.000;god_skill_guard=0.000/0.000;god_skill_poise=0.000/0.000;god_skill_carry_up=0.000/0.000
+GP963 RUN|skill|4|0|kit flame_fang,flame_berserker_twin_axes,dragonscale_armor,legion_tower_shield|wins 20/20|dps 58.3|mit 33.7|god_d 0.274|god_m -0.002|card_d 0.239|card_m -0.010
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|1|L6|dps 45.6/45.2/45.5|mit 14.1/13.9/14.0|god_d 0.010|god_m 0.010|card_d 0.002|card_m 0.002|gcards 3
+GP963 CP|skill|4|1|L12|dps 52.7/50.0/50.5|mit 17.1/17.1/17.3|god_d 0.051|god_m -0.000|card_d 0.041|card_m -0.011|gcards 7
+GP963 CP|skill|4|1|L18|dps 54.2/51.2/51.6|mit 37.2/37.5/36.9|god_d 0.056|god_m -0.007|card_d 0.049|card_m 0.008|gcards 8
+GP963 CP|skill|4|1|L24|dps 83.9/76.6/77.6|mit 65.1/65.0/65.5|god_d 0.087|god_m 0.003|card_d 0.076|card_m -0.005|gcards 10
+GP963 CP|skill|4|1|L30|dps 87.6/80.9/82.1|mit 53.0/60.6/62.3|god_d 0.077|god_m -0.143|card_d 0.063|card_m -0.175|gcards 13
+GP963 LOO|skill|4|1|god_skill_carry=-0.053/-0.019;god_skill_steady=0.000/0.000;god_skill_guard=0.000/0.000;god_skill_see=0.000/-0.001;god_skill_ready=-0.038/-0.153;god_skill_vigor=0.000/0.000;god_skill_gap=0.000/0.000;god_skill_qigong=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_fist=0.000/0.000;god_skill_stream=0.006/0.006;god_skill_cloud=0.000/0.000;god_skill_gap_up=0.000/0.000
+GP963 RUN|skill|4|1|kit flame_executioner_axe,thunder_boneiron_club,dragonscale_armor,riposte_buckler|wins 20/20|dps 66.1|mit 38.4|god_d 0.057|god_m -0.059|card_d 0.047|card_m -0.070
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|2|L6|dps 136.7/136.7/136.7|mit 7.0/6.7/6.7|god_d 0.000|god_m 0.049|card_d 0.000|card_m 0.049|gcards 4
+GP963 CP|skill|4|2|L12|dps 84.8/81.0/83.0|mit 10.0/9.3/9.6|god_d 0.044|god_m 0.068|card_d 0.021|card_m 0.045|gcards 7
+GP963 CP|skill|4|2|L18|dps 96.5/82.8/81.3|mit 19.8/22.2/22.2|god_d 0.142|god_m -0.123|card_d 0.158|card_m -0.123|gcards 9
+GP963 CP|skill|4|2|L24|dps 132.4/86.1/89.5|mit 51.2/64.5/61.0|god_d 0.350|god_m -0.262|card_d 0.324|card_m -0.193|gcards 11
+GP963 CP|skill|4|2|L30|dps 137.8/85.9/92.8|mit 39.4/44.7/45.8|god_d 0.377|god_m -0.135|card_d 0.327|card_m -0.163|gcards 13
+GP963 LOO|skill|4|2|god_skill_qigong=-0.014/-0.098;god_skill_breath=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_qigong_up=-0.004/-0.043;god_skill_stream=0.058/0.019;god_skill_see=0.041/-0.055;god_skill_carry=0.064/0.025;god_skill_poise=0.000/0.000;god_skill_stance=0.048/0.008;god_skill_ready=0.024/0.008;god_skill_edge=0.077/-0.070;god_skill_vigor=0.000/0.000;god_skill_zanshin=0.000/0.000
+GP963 RUN|skill|4|2|kit thunder_heavy_crossbow,flame_bonesteel_broadsword,knight_plate,riposte_buckler|wins 20/20|dps 118.7|mit 31.2|god_d 0.263|god_m -0.289|card_d 0.235|card_m -0.254
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|3|L6|dps 48.4/48.4/48.4|mit 9.5/9.5/9.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|skill|4|3|L12|dps 69.9/69.1/69.4|mit 10.6/10.4/10.5|god_d 0.012|god_m 0.012|card_d 0.007|card_m 0.007|gcards 7
+GP963 CP|skill|4|3|L18|dps 66.9/66.1/66.4|mit 23.9/23.6/23.8|god_d 0.012|god_m 0.012|card_d 0.007|card_m 0.007|gcards 10
+GP963 CP|skill|4|3|L24|dps 81.4/74.1/71.2|mit 53.2/50.9/52.9|god_d 0.090|god_m 0.043|card_d 0.125|card_m 0.005|gcards 12
+GP963 CP|skill|4|3|L30|dps 84.6/67.8/63.5|mit 54.4/51.7/53.2|god_d 0.199|god_m 0.048|card_d 0.249|card_m 0.022|gcards 13
+GP963 LOO|skill|4|3|god_skill_qigong=0.000/-0.000;god_skill_poise=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_clumsy=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_ready=0.016/0.016;god_skill_qigong_up=0.000/-0.003;god_skill_parry=0.000/0.000;god_skill_vigor=0.000/0.000;god_skill_fist=0.000/0.000;god_skill_see=0.044/-0.046;god_skill_stance=0.077/0.012;god_skill_press=0.000/0.001
+GP963 RUN|skill|4|3|kit thunder_heavy_crossbow,thunder_boneiron_club,knight_plate,riposte_buckler|wins 20/20|dps 74.3|mit 37.1|god_d 0.093|god_m 0.002|card_d 0.122|card_m -0.036
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|4|L6|dps 26.7/25.4/25.6|mit 9.8/9.8/9.6|god_d 0.049|god_m -0.002|card_d 0.043|card_m 0.016|gcards 3
+GP963 CP|skill|4|4|L12|dps 45.6/37.9/38.1|mit 25.6/24.8/24.4|god_d 0.168|god_m 0.032|card_d 0.165|card_m 0.050|gcards 6
+GP963 CP|skill|4|4|L18|dps 40.0/36.7/37.0|mit 35.6/35.9/34.5|god_d 0.082|god_m -0.010|card_d 0.075|card_m 0.029|gcards 9
+GP963 CP|skill|4|4|L24|dps 79.3/71.2/71.2|mit 54.7/54.1/54.1|god_d 0.103|god_m 0.012|card_d 0.103|card_m 0.012|gcards 11
+GP963 CP|skill|4|4|L30|dps 71.6/76.8/76.8|mit 46.1/46.2/46.2|god_d -0.073|god_m -0.004|card_d -0.073|card_m -0.004|gcards 12
+GP963 LOO|skill|4|4|god_skill_fist=0.000/0.000;god_skill_ready=0.016/0.016;god_skill_stance=-0.174/-0.004;god_skill_see=-0.122/0.018;god_skill_poise=-0.084/0.020;god_skill_gap=-0.196/0.004;god_skill_breath=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_press=-0.084/0.020;god_skill_vigor=0.000/0.000;god_skill_zanshin=0.000/0.000;god_skill_edge=-0.084/0.020
+GP963 RUN|skill|4|4|kit thunder_boneiron_club,flame_execution_blade,dragonscale_armor,riposte_buckler|wins 20/20|dps 53.9|mit 35.6|god_d 0.062|god_m 0.014|card_d 0.059|card_m 0.024
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|5|L6|dps 77.5/77.5/77.5|mit 9.6/9.6/9.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|skill|4|5|L12|dps 75.9/71.9/73.6|mit 24.0/22.8/23.3|god_d 0.052|god_m 0.052|card_d 0.031|card_m 0.031|gcards 7
+GP963 CP|skill|4|5|L18|dps 92.5/77.4/79.5|mit 22.6/22.2/22.5|god_d 0.164|god_m 0.017|card_d 0.141|card_m 0.004|gcards 9
+GP963 CP|skill|4|5|L24|dps 107.5/65.3/73.0|mit 50.0/55.1/54.6|god_d 0.393|god_m -0.101|card_d 0.321|card_m -0.091|gcards 10
+GP963 CP|skill|4|5|L30|dps 119.4/77.0/80.2|mit 48.2/47.7/48.6|god_d 0.355|god_m 0.009|card_d 0.329|card_m -0.008|gcards 12
+GP963 LOO|skill|4|5|god_skill_zanshin=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_stream=0.075/-0.030;god_skill_qigong=0.015/-0.065;god_skill_see=0.156/-0.024;god_skill_vigor=0.000/0.000;god_skill_clumsy=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_stance=0.099/-0.017;god_skill_carry=0.061/-0.065;god_skill_poise=0.000/0.000;god_skill_zanshin_up=0.000/0.000
+GP963 RUN|skill|4|5|kit thunder_horse_halberd,flame_berserker_twin_axes,dragonscale_armor,riposte_buckler|wins 20/20|dps 98.5|mit 35.1|god_d 0.261|god_m -0.111|card_d 0.221|card_m -0.103
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|6|L6|dps 83.4/83.4/83.4|mit 11.1/11.1/11.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|skill|4|6|L12|dps 81.6/79.1/79.6|mit 12.4/12.1/12.1|god_d 0.031|god_m 0.031|card_d 0.024|card_m 0.024|gcards 9
+GP963 CP|skill|4|6|L18|dps 104.5/91.0/91.3|mit 27.2/29.2/27.8|god_d 0.129|god_m -0.073|card_d 0.127|card_m -0.022|gcards 11
+GP963 CP|skill|4|6|L24|dps 118.2/88.2/89.7|mit 48.1/42.8/42.0|god_d 0.254|god_m 0.110|card_d 0.241|card_m 0.127|gcards 14
+GP963 CP|skill|4|6|L30|dps 114.7/96.1/96.5|mit 49.1/48.0/47.4|god_d 0.162|god_m 0.023|card_d 0.159|card_m 0.035|gcards 15
+GP963 LOO|skill|4|6|god_skill_qigong=0.000/0.000;god_skill_stream=0.035/0.011;god_skill_cloud=0.000/0.000;god_skill_see=0.038/0.028;god_skill_fist=0.000/0.000;god_skill_poise=0.000/0.000;god_skill_vigor=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_stance=0.049/0.025;god_skill_steady=0.000/0.000;god_skill_press=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_ready=0.014/0.002;god_skill_soft=0.033/0.015;god_skill_zanshin=0.000/0.000
+GP963 RUN|skill|4|6|kit flame_meteor_maul,flame_bonesteel_spear,dragonscale_armor,riposte_buckler|wins 20/20|dps 104.1|mit 33.7|god_d 0.145|god_m 0.001|card_d 0.139|card_m 0.022
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|7|L6|dps 250.1/250.1/250.1|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|skill|4|7|L12|dps 382.5/382.5/382.5|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 7
+GP963 CP|skill|4|7|L18|dps 422.8/422.8/422.8|mit 7.5/7.5/7.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 10
+GP963 CP|skill|4|7|L24|dps 129.2/117.2/117.2|mit 57.0/57.2/57.7|god_d 0.093|god_m -0.003|card_d 0.093|card_m -0.012|gcards 12
+GP963 CP|skill|4|7|L30|dps 118.4/115.0/115.0|mit 58.6/57.1/57.1|god_d 0.029|god_m 0.024|card_d 0.029|card_m 0.024|gcards 13
+GP963 LOO|skill|4|7|god_skill_gap=0.029/0.016;god_skill_vigor=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_ready=-0.001/-0.001;god_skill_parry=0.000/0.000;god_skill_stance=0.029/0.032;god_skill_qigong=0.024/-0.001;god_skill_see=0.029/0.016;god_skill_stream=0.024/0.014;god_skill_fist=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_stance_up=0.029/0.010;god_skill_zanshin=0.000/0.000
+GP963 RUN|skill|4|7|kit flame_bonesteel_broadsword,thunder_siege_spear,dragonscale_armor,riposte_buckler|wins 20/20|dps 157.0|mit 49.7|god_d 0.050|god_m 0.005|card_d 0.050|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|8|L6|dps 293.2/293.2/293.2|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|skill|4|8|L12|dps 371.2/371.2/371.2|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 6
+GP963 CP|skill|4|8|L18|dps 132.3/122.2/122.2|mit 35.4/37.3/38.3|god_d 0.076|god_m -0.054|card_d 0.076|card_m -0.082|gcards 7
+GP963 CP|skill|4|8|L24|dps 151.0/130.9/130.9|mit 50.8/50.9/50.9|god_d 0.133|god_m -0.001|card_d 0.133|card_m -0.001|gcards 10
+GP963 CP|skill|4|8|L30|dps 151.7/118.3/119.1|mit 31.0/33.2/33.5|god_d 0.220|god_m -0.073|card_d 0.215|card_m -0.080|gcards 11
+GP963 LOO|skill|4|8|god_skill_fist=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_clumsy=0.000/0.000;god_skill_see=0.080/-0.036;god_skill_soft=0.095/-0.005;god_skill_gap=0.077/-0.039;god_skill_ready=0.026/0.026;god_skill_cloud=0.000/0.000;god_skill_soft_up=0.061/-0.026;god_skill_stance=0.082/-0.031
+GP963 RUN|skill|4|8|kit flame_bonesteel_broadsword,thunder_siege_spear,dragonscale_armor,riposte_buckler|wins 20/20|dps 163.9|mit 36.7|god_d 0.139|god_m -0.033|card_d 0.137|card_m -0.041
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|9|L6|dps 52.2/45.6/46.5|mit 5.7/6.1/6.2|god_d 0.127|god_m -0.074|card_d 0.110|card_m -0.095|gcards 3
+GP963 CP|skill|4|9|L12|dps 57.6/47.9/50.7|mit 10.5/9.6/10.2|god_d 0.170|god_m 0.081|card_d 0.121|card_m 0.028|gcards 6
+GP963 CP|skill|4|9|L18|dps 69.0/54.9/57.6|mit 30.6/34.5/33.6|god_d 0.204|god_m -0.127|card_d 0.165|card_m -0.098|gcards 9
+GP963 CP|skill|4|9|L24|dps 83.7/48.9/50.9|mit 43.4/42.5/44.6|god_d 0.416|god_m 0.020|card_d 0.392|card_m -0.029|gcards 11
+GP963 CP|skill|4|9|L30|dps 91.9/45.2/48.2|mit 45.4/47.3/49.5|god_d 0.508|god_m -0.041|card_d 0.475|card_m -0.089|gcards 12
+GP963 LOO|skill|4|9|god_skill_stance=0.076/-0.080;god_skill_ready=0.034/0.027;god_skill_press=0.145/-0.059;god_skill_poise=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_guard=0.000/0.000;god_skill_cloud=0.000/0.000;god_skill_stream=0.038/-0.082;god_skill_qigong=0.026/-0.001;god_skill_see=0.246/-0.120;god_skill_clumsy=0.000/0.000;god_skill_carry=0.130/-0.098
+GP963 RUN|skill|4|9|kit flame_berserker_twin_axes,flame_composite_bow,dragonscale_armor,riposte_buckler|wins 20/20|dps 73.9|mit 30.6|god_d 0.345|god_m -0.126|card_d 0.312|card_m -0.163
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|10|L6|dps 336.4/336.4/336.4|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 4
+GP963 CP|skill|4|10|L12|dps 337.5/337.5/337.5|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 7
+GP963 CP|skill|4|10|L18|dps 267.9/267.9/267.9|mit 12.7/12.7/12.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 11
+GP963 CP|skill|4|10|L24|dps 127.2/125.1/125.9|mit 41.5/40.8/41.0|god_d 0.016|god_m 0.016|card_d 0.010|card_m 0.010|gcards 12
+GP963 CP|skill|4|10|L30|dps 152.6/151.0/151.7|mit 44.4/44.0/44.2|god_d 0.010|god_m 0.010|card_d 0.006|card_m 0.006|gcards 13
+GP963 LOO|skill|4|10|god_skill_press=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_see=0.000/0.000;god_skill_press_up=0.000/0.000;god_skill_steady=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_clumsy=0.000/0.000;god_skill_ready=0.006/0.006;god_skill_vigor=0.000/0.000;god_skill_poise=0.000/0.000;god_skill_guard=0.000/0.000;god_skill_edge=0.000/0.000;god_skill_guard_up=0.000/0.000
+GP963 RUN|skill|4|10|kit thunder_siege_spear,flame_executioner_axe,dragonscale_armor,riposte_buckler|wins 20/20|dps 177.0|mit 34.3|god_d 0.010|god_m 0.010|card_d 0.006|card_m 0.006
+GP963 放不下包 bag_leather
+GP963 CP|skill|4|11|L6|dps 60.8/60.8/60.8|mit 9.3/9.3/9.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 5
+GP963 CP|skill|4|11|L12|dps 80.9/77.8/79.0|mit 9.1/8.8/8.9|god_d 0.039|god_m 0.039|card_d 0.023|card_m 0.023|gcards 8
+GP963 CP|skill|4|11|L18|dps 90.4/85.5/89.7|mit 29.2/29.6/29.0|god_d 0.054|god_m -0.013|card_d 0.008|card_m 0.008|gcards 10
+GP963 CP|skill|4|11|L24|dps 117.7/91.9/93.0|mit 43.9/42.2/41.7|god_d 0.220|god_m 0.038|card_d 0.210|card_m 0.049|gcards 12
+GP963 CP|skill|4|11|L30|dps 123.3/94.5/98.7|mit 44.5/48.6/46.0|god_d 0.234|god_m -0.093|card_d 0.200|card_m -0.034|gcards 14
+GP963 LOO|skill|4|11|god_skill_carry=0.036/-0.033;god_skill_see=0.148/-0.096;god_skill_stream=0.037/-0.045;god_skill_steady=0.000/0.000;god_skill_guard=0.000/0.000;god_skill_poise=0.000/0.000;god_skill_vigor=0.000/0.000;god_skill_zanshin=0.000/0.000;god_skill_parry=0.000/0.000;god_skill_clumsy=0.000/0.000;god_skill_breath=0.000/0.000;god_skill_edge=0.033/-0.038;god_skill_ready=0.025/-0.044;god_skill_fist=0.000/0.000
+GP963 RUN|skill|4|11|kit frost_bonesteel_greatsword,thunder_bloodthirst_twin_blades,dragonscale_armor,riposte_buckler|wins 20/20|dps 101.4|mit 31.4|god_d 0.149|god_m -0.074|card_d 0.127|card_m -0.038
+GP963 放不下包 bag_leather
+GP963 CP||4|0|L6|dps 57.8/57.8/57.8|mit 8.7/8.7/8.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|0|L12|dps 52.4/52.4/52.4|mit 10.1/10.1/10.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|0|L18|dps 77.3/77.3/77.3|mit 17.6/17.6/17.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|0|L24|dps 101.3/101.3/101.3|mit 35.6/35.6/35.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|0|L30|dps 85.4/85.4/85.4|mit 49.0/49.0/49.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|0|kit flame_meteor_maul,thunder_horse_halberd,knight_plate,riposte_buckler|wins 20/20|dps 78.6|mit 28.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|1|L6|dps 76.7/76.7/76.7|mit 6.0/6.0/6.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|1|L12|dps 70.4/70.4/70.4|mit 15.5/15.5/15.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|1|L18|dps 77.9/77.9/77.9|mit 26.4/26.4/26.4|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|1|L24|dps 84.4/84.4/84.4|mit 40.3/40.3/40.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|1|L30|dps 75.0/75.0/75.0|mit 39.3/39.3/39.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|1|kit frost_dragoon_lance,frost_bloodoath_axe,knight_plate,riposte_buckler|wins 20/20|dps 77.6|mit 31.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|2|L6|dps 61.5/61.5/61.5|mit 7.9/7.9/7.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|2|L12|dps 78.3/78.3/78.3|mit 20.3/20.3/20.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|2|L18|dps 70.4/70.4/70.4|mit 26.3/26.3/26.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|2|L24|dps 79.7/79.7/79.7|mit 37.1/37.1/37.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|2|L30|dps 90.1/90.1/90.1|mit 40.8/40.8/40.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|2|kit frost_bonesteel_greatsword,flame_bonesteel_broadsword,dragonscale_armor,riposte_buckler|wins 19/20|dps 78.2|mit 31.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|3|L6|dps 61.4/61.4/61.4|mit 10.5/10.5/10.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|3|L12|dps 81.4/81.4/81.4|mit 13.9/13.9/13.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|3|L18|dps 69.0/69.0/69.0|mit 33.7/33.7/33.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|3|L24|dps 76.6/76.6/76.6|mit 41.6/41.6/41.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|3|L30|dps 82.3/82.3/82.3|mit 47.6/47.6/47.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|3|kit flame_composite_bow,frost_dragoon_lance,knight_plate,riposte_buckler|wins 19/20|dps 75.3|mit 35.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|4|L6|dps 35.3/35.3/35.3|mit 10.4/10.4/10.4|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|4|L12|dps 34.0/34.0/34.0|mit 13.3/13.3/13.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|4|L18|dps 39.0/39.0/39.0|mit 35.3/35.3/35.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|4|L24|dps 17.9/17.9/17.9|mit 26.0/26.0/26.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|4|L30|dps 27.7/27.7/27.7|mit 35.9/35.9/35.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|4|kit grand_magus_staff,flame_berserker_twin_axes,knight_plate,legion_tower_shield|wins 19/20|dps 25.0|mit 28.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|5|L6|dps 62.5/62.5/62.5|mit 9.4/9.4/9.4|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|5|L12|dps 72.6/72.6/72.6|mit 11.8/11.8/11.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|5|L18|dps 71.8/71.8/71.8|mit 25.2/25.2/25.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|5|L24|dps 64.4/64.4/64.4|mit 46.2/46.2/46.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|5|L30|dps 70.8/70.8/70.8|mit 38.7/38.7/38.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|5|kit thunder_heavy_crossbow,flame_berserker_twin_axes,knight_plate,riposte_buckler|wins 19/20|dps 68.3|mit 32.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|6|L6|dps 85.6/85.6/85.6|mit 6.3/6.3/6.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|6|L12|dps 67.9/67.9/67.9|mit 15.9/15.9/15.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|6|L18|dps 80.1/80.1/80.1|mit 25.6/25.6/25.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|6|L24|dps 63.5/63.5/63.5|mit 47.2/47.2/47.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|6|L30|dps 64.1/64.1/64.1|mit 44.1/44.1/44.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|6|kit thunder_horse_halberd,grand_magus_staff,knight_plate,legion_tower_shield|wins 20/20|dps 67.7|mit 36.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|7|L6|dps 151.7/151.7/151.7|mit 7.9/7.9/7.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|7|L12|dps 144.2/144.2/144.2|mit 10.7/10.7/10.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|7|L18|dps 140.6/140.6/140.6|mit 22.1/22.1/22.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|7|L24|dps 118.9/118.9/118.9|mit 42.7/42.7/42.7|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|7|L30|dps 105.6/105.6/105.6|mit 45.5/45.5/45.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|7|kit thunder_bloodthirst_twin_blades,flame_bonesteel_spear,knight_plate,riposte_buckler|wins 20/20|dps 121.8|mit 35.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|8|L6|dps 40.6/40.6/40.6|mit 8.4/8.4/8.4|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|8|L12|dps 44.4/44.4/44.4|mit 8.8/8.8/8.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|8|L18|dps 55.3/55.3/55.3|mit 24.9/24.9/24.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|8|L24|dps 74.0/74.0/74.0|mit 45.0/45.0/45.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|8|L30|dps 59.4/59.4/59.4|mit 42.1/42.1/42.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|8|kit frost_bloodoath_axe,flame_meteor_maul,dragonscale_armor,legion_tower_shield|wins 20/20|dps 57.0|mit 30.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|9|L6|dps 26.3/26.3/26.3|mit 12.6/12.6/12.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|9|L12|dps 30.8/30.8/30.8|mit 12.3/12.3/12.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|9|L18|dps 50.2/50.2/50.2|mit 33.2/33.2/33.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|9|L24|dps 91.4/91.4/91.4|mit 43.1/43.1/43.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|9|L30|dps 88.4/88.4/88.4|mit 52.8/52.8/52.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|9|kit flame_execution_blade,flame_composite_bow,knight_plate,riposte_buckler|wins 20/20|dps 57.0|mit 30.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|10|L6|dps 68.3/68.3/68.3|mit 11.6/11.6/11.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|10|L12|dps 97.7/97.7/97.7|mit 10.6/10.6/10.6|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|10|L18|dps 94.7/94.7/94.7|mit 27.3/27.3/27.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|10|L24|dps 102.4/102.4/102.4|mit 41.1/41.1/41.1|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|10|L30|dps 112.6/112.6/112.6|mit 50.5/50.5/50.5|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|10|kit thunder_bloodthirst_twin_blades,frost_bonesteel_greatsword,dragonscale_armor,riposte_buckler|wins 20/20|dps 99.2|mit 33.9|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 放不下包 bag_leather
+GP963 CP||4|11|L6|dps 255.9/255.9/255.9|mit 0.0/0.0/0.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|11|L12|dps 167.5/167.5/167.5|mit 14.3/14.3/14.3|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|11|L18|dps 123.0/123.0/123.0|mit 22.0/22.0/22.0|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|11|L24|dps 127.3/127.3/127.3|mit 35.2/35.2/35.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 CP||4|11|L30|dps 122.1/122.1/122.1|mit 56.8/56.8/56.8|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000|gcards 0
+GP963 RUN||4|11|kit thunder_horse_halberd,flame_bonesteel_spear,knight_plate,legion_tower_shield|wins 20/20|dps 133.4|mit 36.2|god_d 0.000|god_m 0.000|card_d 0.000|card_m 0.000
+GP963 完 979 秒
+EXIT=0
