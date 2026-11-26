@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_fist_edge",
+  "display_name": "拳锋",
+  "display_names": {
+    "en": "Fist Edge"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "damage": 1
+      }
+    }
+  ]
+}

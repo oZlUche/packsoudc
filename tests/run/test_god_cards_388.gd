@@ -279,8 +279,8 @@ static func run_brute_cards(t: TestCase) -> void:
 				quals += 1
 			else:
 				bases += 1
-	t.eq(quals, 21, "质变 11 张 + 升级 10 张（396：怒意延绵没有升级）")
-	t.eq(bases, 11, "基础牌 11 张（396：怒气磅礴删掉、加献祭）")
+	t.eq(quals, 20, "质变 10 张 + 升级 10 张（作者 11-26：怒意延绵移到专属牌）")
+	t.eq(bases, 13, "基础牌 10 张 + 专属牌 3 张（作者 11-26：余怒、怒意延绵、血色桂冠）")
 	t.check(lv.card_text(&"god_brute_break").contains("2%"), "牌面按数写：%s" % lv.card_text(&"god_brute_break"))
 	var perk := BruteRagePerk.new()
 	var bare := perk.effect_for(lv)
@@ -483,7 +483,7 @@ static func run_skill_cards(t: TestCase) -> void:
 			else:
 				bases += 1
 	t.eq(quals, 22, "质变 11 张 + 升级 11 张")
-	t.eq(bases, 9, "基础牌 9 张")
+	t.eq(bases, 14, "基础牌 7 张 + 拳头牌 4 张 + 专属牌 3 张（作者 11-26：回气、气血、收式）")
 	t.check(lv.has_qual_pool(), "开局质变位出技巧之神的牌")
 	t.check(Pantheon.temple_ready(&"skill"), "万神院：技巧之神的神殿可以解锁")
 	t.check(Pantheon.temple_ready(&"brute"), "蛮神照常")
@@ -548,7 +548,7 @@ static func run_sun_cards(t: TestCase) -> void:
 			else:
 				bases += 1
 	t.eq(quals, 28, "质变 14 张 + 升级 14 张")
-	t.eq(bases, 11, "基础牌 11 张")
+	t.eq(bases, 12, "基础牌 9 张 + 专属牌 3 张（作者 11-26：黎明、黄昏、众星）")
 	var perk := SunCyclePerk.new()
 	t.eq(SunCyclePerk.durations(lv, perk), Vector2(6.0, 6.0), "没拿牌：各 6 秒")
 	lv.taken["god_sun_longday"] = 2
@@ -631,8 +631,8 @@ static func run_nature_cards(t: TestCase) -> void:
 				quals += 1
 			else:
 				bases += 1
-	t.eq(quals, 23, "12 张质变 + 11 张升级（初种没有升级，靠新生进化）")
-	t.eq(bases, 10, "基础牌 10 张")
+	t.eq(quals, 21, "11 张质变 + 10 张升级（初种没有升级，靠新生进化；作者 11-26：动物交谈移到专属牌）")
+	t.eq(bases, 10, "基础牌 8 张 + 专属牌 2 张（作者 11-26：去掉强壮）")
 	t.eq(hidden, 5, "不进池的 5 张：幼芽、新蕊、硕果、继续培育、采摘")
 	var perk := NatureCyclePerk.new()
 	t.eq(perk.effect_for(lv).decay_percent, 0.0, "没拿凋零")
@@ -662,7 +662,7 @@ static func run_nature_cards(t: TestCase) -> void:
 		if (m as StatModifier).stat == BattleStats.MAX_HP:
 			add += (m as StatModifier).amount
 	t.check(is_equal_approx(add, 3.5 * cells), "食补：%d 格 × 3.5 = %.1f" % [cells, add])
-	t.check(lv.card_text(&"god_nature_strong").contains("4"), "强壮：负重 +4（%s）" % lv.card_text(&"god_nature_strong"))
+	t.check(LevelRules.load_rules().card(&"god_nature_strong").is_empty(), "强壮：作者 11-26 去掉了")
 	run.dispose()
 
 
@@ -816,3 +816,52 @@ static func run_nature_run(t: TestCase) -> void:
 
 static func r_requires(lv: LevelModule) -> String:
 	return String(lv.rules().card(&"god_nature_breed").get("requires", ""))
+
+
+static func run_exclusive_1126(t: TestCase) -> void:
+	t.begin("作者 11-26 · 专属牌一局只拿一次；徒手大师以后每次普通选牌保底一张拳头牌、拳势叠满 5 张不再出；拳头牌加在拳头上；血色桂冠、众星")
+	var run := _start(61, &"skill")
+	var lv := LevelModule.of(run)
+	if lv == null:
+		t.check(false, "开局奉技巧之神")
+		return
+	var r := lv.rules()
+	for cid in [&"god_brute_linger", &"god_brute_persist", &"god_brute_laurel", &"god_sun_dawnlight", &"god_sun_dusklight", &"god_sun_stars",
+			&"god_nature_survive", &"god_nature_talk", &"god_skill_breath", &"god_skill_vigor", &"god_skill_finish"]:
+		t.check(bool(r.card(cid).get("once", false)) and not r.is_qual(cid), "%s 是专属牌" % cid)
+	t.check(r.card(&"god_nature_talk_up").is_empty(), "动物交谈没有升级版了")
+	t.check(lv.eligible(&"god_skill_breath"), "回气进池")
+	lv.taken["god_skill_breath"] = 1
+	t.check(not lv.eligible(&"god_skill_breath"), "拿过一次不再出")
+	t.check(not lv.eligible(&"god_skill_fist_edge"), "没拿徒手大师：拳头牌不出")
+	lv.taken["god_skill_fist"] = 1
+	var all_fist := true
+	for i in 12:
+		var cards := lv._draw(3, [] as Array[String])
+		if not cards.any(func(c: String) -> bool: return c.begins_with("god_skill_fist_")):
+			all_fist = false
+	t.check(all_fist, "拿了徒手大师：每一批至少一张拳头牌")
+	lv.taken["god_skill_fist_flow"] = 5
+	t.check(not lv.eligible(&"god_skill_fist_flow"), "拳势 5 张（100%）不再出")
+	lv.taken["god_skill_fist_edge"] = 2
+	lv.taken["god_skill_fist_shadow"] = 1
+	lv.taken["god_skill_fist_intent"] = 1
+	var fist := SkillMomentumPerk.fist_def(lv)
+	var bs := fist.combat.base_stats
+	t.check(is_equal_approx(float(bs["damage"]), 7.0), "拳锋两张：伤害 5 + 2")
+	t.check(is_equal_approx(float(bs["crit_chance"]), 0.12) and is_equal_approx(float(bs["crit_damage"]), 1.54), "拳意：暴击率 10% + 2%、暴击伤害 150% + 4%")
+	var cd := (fist.combat.rules[0].cadence as CooldownCadence).seconds
+	t.check(is_equal_approx(cd, 1.0 / 1.1), "拳影：每秒 1.1 下（冷却 %.3f 秒）" % cd)
+	t.check(is_equal_approx(SkillMomentumPerk.new().effect_for(lv).fist_extra_pct, 100.0), "拳势 5 张：100%")
+	# 血色桂冠：打赢一场，生命上限或耐力上限 + 基础值 10%
+	lv.taken["god_brute_laurel"] = 1
+	var before: Dictionary = run.god_stat_bonus()
+	var stat := BruteRagePerk.laurel_win(lv)
+	var after: Dictionary = run.god_stat_bonus()
+	var base := float(run.player_baseline.base_stats.get(stat, 0.0)) if run.player_baseline != null else 0.0
+	t.check(stat in [BattleStats.MAX_HP, BattleStats.MAX_STAMINA] and is_equal_approx(float(after.get(stat, 0.0)) - float(before.get(stat, 0.0)), base * 0.1), "血色桂冠：%s +%.1f（基础 %.0f 的 10%%）" % [stat, float(after.get(stat, 0.0)) - float(before.get(stat, 0.0)), base])
+	# 众星：每变换一次一颗，结算换钱
+	lv.taken["god_sun_stars"] = 1
+	lv.god_state[SunCyclePerk.STARS_KEY] = 7
+	t.eq(SunCyclePerk.stars_funds(lv), 14, "众星：7 颗 × 2 = 14 枚")
+	run.dispose()

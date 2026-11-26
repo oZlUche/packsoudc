@@ -26,6 +26,9 @@ const STEP := 1.0
 ## 护佑（0 = 没拿）
 @export var guard_every: float = 0.0
 @export var guard_percent: float = 0.0
+## 护佑（升级，报告 399 第六节）：每次消耗新生的百分之几（向下取整，剩下的留给生长、收获），每消耗 1 层给几点护甲（0 = 按 [member guard_percent]）
+@export var guard_share: float = 100.0
+@export var guard_per: float = 0.0
 ## 收割（0 = 没拿）
 @export var harvest_at: float = 0.0
 @export var harvest_percent: float = 0.0
@@ -149,10 +152,10 @@ func _tick(ctx: RuleContext) -> void:
 		if poison > 0 and foe != null and not foe.dead and buff_of(POISON) != null:
 			ApplyStatus.give(ctx, foe, buff_of(POISON), poison)
 	if guard_every > 0.0 and sec > 0 and sec % maxi(1, roundi(guard_every)) == 0:
-		var n := int(st.get("renewal", 0))
+		var n := floori(int(st.get("renewal", 0)) * guard_share / 100.0)
 		if n > 0:
-			st["renewal"] = 0
-			var gain := StatMath.from_float(n * guard_percent / 100.0)
+			st["renewal"] = int(st.get("renewal", 0)) - n
+			var gain := StatMath.from_float(n * guard_per if guard_per > 0.0 else n * guard_percent / 100.0)
 			if gain > 0:
 				me.add_max(BattleStats.RES_ARMOR, gain)
 			ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, me.side, {"effect": SkillMomentum.MECHANIC, "key": "nature_guard_armor", "count": n})

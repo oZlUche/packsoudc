@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_h5csg"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_s0jvb"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_cj7p7"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_f3440"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_udjne"]
+
+[sub_resource type="Resource" id="Resource_6tbmx"]
+script = ExtResource("2_s0jvb")
+values = {
+"gold": 2
+}
+
+[resource]
+script = ExtResource("5_udjne")
+id = &"god_sun_stars"
+display_name = "众星"
+display_names = {
+"en": "Myriad Stars"
+}
+effects = Array[ExtResource("1_h5csg")]([SubResource("Resource_6tbmx")])

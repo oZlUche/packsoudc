@@ -39,6 +39,12 @@ const BREATH := &"god_skill_breath"
 const VIGOR := &"god_skill_vigor"
 const POISE := &"god_skill_poise"
 const SEE := &"god_skill_see"
+## 作者 11-26：拳头牌（拿了徒手大师才出，之后每次普通选牌保底一张）与专属牌【收式】
+const FIST_EDGE := &"god_skill_fist_edge"
+const FIST_SHADOW := &"god_skill_fist_shadow"
+const FIST_FLOW := &"god_skill_fist_flow"
+const FIST_INTENT := &"god_skill_fist_intent"
+const FINISH := &"god_skill_finish"
 ## 一气呵成：上一场留下几层（记在 [member LevelModule.god_state]）
 const CARRY_KEY := "skill_carry"
 ## 【拳头】（代码里拼的道具，不进内容表、不掉落）
@@ -93,6 +99,8 @@ func effect_for(lv: LevelModule) -> SkillMomentum:
 		e.poise_sec = lv.god_value(POISE, "sec", 3.0) / lv.count_of(POISE)
 		e.poise_pct = lv.god_value(POISE, "pct")
 	e.see_per = lv.god_value(SEE, "per")
+	e.fist_extra_pct = minf(100.0, lv.god_value(FIST_FLOW, "pct"))
+	e.finish_sec = lv.card_value(FINISH, "sec", 10.0) if lv.has_card(FINISH) else 0.0
 	if lv.has_card(GAP):
 		e.gap_every = roundi(_pick(lv, GAP, GAP_UP, "every", 5.0))
 		e.gap_pct = _pick(lv, GAP, GAP_UP, "pct")
@@ -113,6 +121,7 @@ func effect_for(lv: LevelModule) -> SkillMomentum:
 		e.edge_crit_damage = lv.god_value(EDGE_UP, "crit_damage")
 	if lv.has_card(CLUMSY):
 		e.clumsy_pct = _pick(lv, CLUMSY, CLUMSY_UP, "pct")
+		e.clumsy_refire = lv.has_card(CLUMSY_UP)
 	if lv.has_card(SOFT):
 		e.soft_pct = _pick(lv, SOFT, SOFT_UP, "pct")
 	return e
@@ -145,19 +154,23 @@ static func fist_due(run: RunState, spec: CombatantSpec) -> bool:
 	return true
 
 
-## 【拳头】：伤害 5、耐力 1、每秒一下，吃效果加成（作者备注）；升级版两连击
+## 【拳头】：伤害 5、耐力 1、每秒一下，吃效果加成（作者备注）；升级版两连击；拳锋 / 拳影 / 拳意加在这里
 static func fist_def(lv: LevelModule) -> ItemDef:
 	var d := ItemDef.new()
 	d.id = FIST_ID
 	d.display_name = UiText.t("skill.fist")
-	d.tags = [&"weapon", &"melee"] as Array[StringName]
+	d.tags = [&"weapon", &"melee", SkillMomentum.FIST_TAG] as Array[StringName]
 	d.shape = ItemShape.new()     # 默认一格
 	var c := CombatProfile.new()
-	c.base_stats = {"damage": lv.god_value(FIST, "damage", 5.0)}
+	c.base_stats = {"damage": lv.god_value(FIST, "damage", 5.0) + lv.god_value(FIST_EDGE, "damage")}
+	if lv.has_card(FIST_INTENT):     # 拳意：只加在拳头上（物品的暴击是自己的底数，没写就是默认值）
+		c.base_stats[String(BattleStats.CRIT_CHANCE)] = float(BattleStats.DEFAULT_BASE[BattleStats.CRIT_CHANCE]) + lv.god_value(FIST_INTENT, "crit") / 100.0
+		c.base_stats[String(BattleStats.CRIT_DAMAGE)] = float(BattleStats.DEFAULT_BASE[BattleStats.CRIT_DAMAGE]) + lv.god_value(FIST_INTENT, "crit_damage") / 100.0
 	var r := AbilityRule.new()
 	r.trigger = OnSchedule.new()
 	var cad := CooldownCadence.new()
-	cad.seconds = lv.god_value(FIST, "sec", 1.0)
+	# 拳影：攻速（次 / 秒）加上去，冷却 = 1 / 攻速
+	cad.seconds = 1.0 / (1.0 / lv.god_value(FIST, "sec", 1.0) + lv.god_value(FIST_SHADOW, "rate"))
 	r.cadence = cad
 	var cost := ResourceCost.new()
 	cost.amount = lv.god_value(FIST, "stamina", 1.0)

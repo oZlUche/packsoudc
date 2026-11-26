@@ -9,7 +9,8 @@
       "type": "god_card",
       "values": {
         "sec": 8,
-        "pct": 100
+        "share": 50,
+        "per": 2
       }
     }
   ]

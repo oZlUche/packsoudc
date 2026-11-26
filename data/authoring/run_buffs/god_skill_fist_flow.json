@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_fist_flow",
+  "display_name": "拳势",
+  "display_names": {
+    "en": "Fist Momentum"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 20
+      }
+    }
+  ]
+}
