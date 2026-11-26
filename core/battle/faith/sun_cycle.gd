@@ -91,7 +91,7 @@ func _defs() -> void:
 	_day_def = _own(DAY, [StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 0.0), StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, 0.0)] as Array[StatModifier])
 	var night_mods: Array[StatModifier] = [StatModifier.make(BattleStats.HASTE, StatModifier.Mode.MULT, 0.0), StatModifier.make(BattleStats.DAMAGE, StatModifier.Mode.MULT, 0.0)]
 	if veil > 0.0:
-		night_mods.append(StatModifier.make(BattleStats.BLOCK, StatModifier.Mode.MULT, veil))     # 【夜幕】（作者 11-26 09:54）：黑夜时盾的格挡值 +几成
+		night_mods.append(StatModifier.make(BattleStats.BLOCK, StatModifier.Mode.ADD, 0.0))     # 【夜幕】（作者 11-26 09:54）：黑夜时盾的格挡值 +几成；格挡要整数（305），按生效那面盾折成整点在 _sync 里填
 	_night_def = _own(NIGHT, night_mods)
 	_light_def = _load(SUN_LIGHT)
 	_moon_def = _load(MOON_LIGHT)
@@ -357,6 +357,8 @@ func _sync(ctx: RuleContext, st: Dictionary, s: Vector2i) -> void:
 	if _night_def != null:
 		_night_def.mods[0].amount = (night_haste + eclipse_sun_haste) * (1.0 + float(st.get("dawn_acc", 0.0)) / 100.0)
 		_night_def.mods[1].amount = ramp * r_secs
+		if _night_def.mods.size() > 2:
+			_night_def.mods[2].amount = roundi(StatMath.to_float(me.block_effective_layer()) * veil / 100.0)
 	_hold(ctx, me, _day_def, s.x == 1)
 	_hold(ctx, me, _night_def, s.y == 1)
 	if _eternal_def != null and (eternal_day > 0.0 or eternal_night > 0.0):

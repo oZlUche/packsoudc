@@ -184,6 +184,28 @@ func _rebuild() -> void:
 	_sync_resource_maxes()
 
 
+## 作者 11-26 17:03：不是盾给的格挡来源（技巧之神【以攻待守】）也是一层，和盾一起取最高。[param value]（定点）≤ 0 = 拿掉。变了才重排、标脏
+func set_block_layer(id: StringName, value: int) -> void:
+	var at := -1
+	for i in block_layers.size():
+		if block_layers[i]["id"] == id and int(block_layers[i]["uid"]) < 0:
+			at = i
+			break
+	if value <= 0:
+		if at < 0:
+			return
+		block_layers.remove_at(at)
+	elif at >= 0:
+		if int(block_layers[at]["value"]) == value:
+			return
+		block_layers[at]["value"] = value
+	else:
+		block_layers.append({"uid": -1, "id": id, "value": value})
+	block_layers.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["value"]) > int(b["value"]) or (int(a["value"]) == int(b["value"]) and int(a["uid"]) < int(b["uid"])))
+	mark_dirty()
+
+
 ## 153：生效的那层格挡（最高；没有层 = 0）
 func block_effective_layer() -> int:
 	return maxi(0, int(block_layers[0]["value"])) if not block_layers.is_empty() else 0
