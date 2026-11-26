@@ -49,8 +49,12 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 	var gated := victim.only_damage_type != &""     # 281：只受一种伤害的（寂灭的试炼）
 
 	# --- 2. 受伤前效果。同步派发，不入队 —— 排队就赶不上这次结算了 ---
-	if not pure:
-		ctx.dispatch_before_damage(packet)
+	# 真实伤害（作者 11-26）：也派发，但只有【免疫伤害】那类效果听得到（[OnBeforeDamage]）；类型照原样
+	var type_in := packet.type
+	ctx.dispatch_before_damage(packet)
+	if pure:
+		packet.type = type_in
+		packet.inverted = false
 	td = packet.def()     # 132：受伤前可能改了类型（convert_damage_type）；之后按新类型通知
 	# 281：类型（改过之后的）不对、或是真实伤害，减 100%
 	if gated and packet.raw > 0 and (pure or packet.type != victim.only_damage_type):
@@ -66,6 +70,11 @@ static func resolve(ctx: BattleContext, packet: DamagePacket) -> int:
 
 	# --- 3. 计算受伤量 ---
 	var amount := packet.pending()
+	if pure:
+		# 作者 11-26 15:07：真实伤害不受任何增幅与衰减、减伤与增伤，也无视护甲（格挡按无视，等作者定）—— 原值直接落血
+		packet.percent = 0
+		packet.flat = 0
+		amount = packet.pending()
 	if packet.percent < 0 and packet.ignore_reduction > 0:
 		packet.percent = StatMath.mul(packet.percent, StatMath.from_percent(maxi(0, 100 - packet.ignore_reduction)))     # 388 破甲升级：减伤少算几成
 	if packet.percent != 0:

@@ -12,8 +12,8 @@ func subscribed_events() -> Array[StringName]:
 	return events
 
 
-func matches(_ctx: RuleContext, _event: BattleEvent) -> bool:
-	return true
+func matches(_ctx: RuleContext, event: BattleEvent) -> bool:
+	return not (event.name == BattleEvent.BEFORE_DAMAGE and event.get_bool(&"pure"))     # 作者 11-26：神的机制不改真实伤害
 
 
 func is_self_driven() -> bool:
