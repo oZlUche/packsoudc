@@ -9,6 +9,7 @@
 [sub_resource type="Resource" id="Resource_wakt8"]
 script = ExtResource("2_i8pca")
 values = {
+"cells": 4,
 "stacks": 1
 }
 

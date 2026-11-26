@@ -86,7 +86,7 @@ func effect_for(lv: LevelModule) -> SkillMomentum:
 		e.light_pct = lv.god_value(CLOUD, "pct")
 	if lv.has_card(PARRY):
 		e.parry_every = roundi(lv.god_value(PARRY, "every", 10.0) / lv.count_of(PARRY))
-		e.parry_armor = lv.god_value(PARRY, "armor")
+		e.parry_pct = lv.god_value(PARRY, "pct")
 	e.breath_per = lv.god_value(BREATH, "per")
 	e.vigor_per = lv.god_value(VIGOR, "per")
 	if lv.has_card(POISE):

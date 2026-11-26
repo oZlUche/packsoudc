@@ -71,9 +71,14 @@ func compile_into(input: CompileInput, board: GridInventory, run: RunState) -> v
 	if part != 0:
 		return
 	var lv := LevelModule.of(run)
-	input.rules.append(rule_for(lv))
+	var rule := rule_for(lv)
+	input.rules.append(rule)
 	if lv == null:
 		return
+	# 【回春】（作者 11-26 09:54）：背包里每 4 格药品或药材，每张再多 1 层（每张自己算，多张相加）
+	if lv.has_card(REJUV):
+		var per_cells := maxf(1.0, lv.god_value(REJUV, "cells", 4.0) / lv.count_of(REJUV))
+		(rule.effects[0] as NatureCycle).rejuv += lv.count_of(REJUV) * floori(cells_of(board, [&"remedy"], true) / per_cells)
 	# 食补 / 药补：开战时按棋盘上的格子数加上限
 	var food := lv.god_value(FOOD, "hp")
 	var herb := lv.god_value(HERB, "stamina")
