@@ -335,9 +335,22 @@ static func run_goals(t: TestCase) -> void:
 	cm.rows.clear()
 	if s.phase == RunState.Phase.PICK_SPAWN:
 		f.pick_spawn(s.map.entry_ids[0])
+	var b0 := MetaState.from_dict(f.meta.to_dict(), c.items, GameFlow.load_meta_rules())
 	s.force_extract()
 	f._settle_run()
-	t.eq(f.meta.commissions.state_of(&"pantheon_first_rite"), CommissionBook.READY, "撤离：可以交了")
+	t.eq(f.meta.commissions.state_of(&"pantheon_first_rite"), CommissionBook.TAKEN, "v8.99 测试：一步没走就结束的不算正式的一局，不记")
+	f.meta = b0
+	f.result = null
+	f._settled = false
+	s = f.begin_direct(c.chapter, 72)
+	if s.phase == RunState.Phase.PICK_SPAWN:
+		f.pick_spawn(s.map.entry_ids[0])
+	var moves := s.travel.available_moves()
+	if not moves.is_empty():
+		s.travel.step_to(moves[0])
+	s.force_extract()
+	f._settle_run()
+	t.eq(f.meta.commissions.state_of(&"pantheon_first_rite"), CommissionBook.READY, "走过一步再结束：可以交了")
 	f.claim_commission(&"pantheon_first_rite")
 	t.eq(f.meta.commissions.state_of(&"pantheon_first_rite"), CommissionBook.DONE, "点【完成】：办成")
 	t.eq(f.meta.commissions.rep_of(Pantheon.FACTION), 10, "+10")
