@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_toil",
+  "display_name": "苦劳",
+  "display_names": {
+    "en": "Toil"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 100
+      }
+    }
+  ]
+}

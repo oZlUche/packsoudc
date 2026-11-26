@@ -826,7 +826,7 @@ func set_character(ch: CharacterDef) -> void:
 #region 负重（129）
 ## 负重：作战棋盘上每件（含包本身）的重量之和。地上、保险箱、仓库不算。派生，不存档
 func carry_weight() -> int:
-	return ItemWeight.total_scaled(board, buff_context().weight_pct)     # 256：操练的武器减重
+	return ItemWeight.total_scaled(board, buff_context().weight_pct) + EarthHeavenPerk.extra_weight(self)     # 256：操练的武器减重；大地之神【磐石】大地加重
 
 
 ## 负重上限 = 角色的 ×（1 + 科技的百分比）+ 加算（[method RunContext.carry_capacity_of]，149）。0 = 不算负重（没角色、角色没配）

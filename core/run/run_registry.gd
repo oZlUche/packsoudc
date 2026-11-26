@@ -181,7 +181,7 @@ const FAITH_PERKS := {
 	&"altar_bless": "res://core/run/faith/perks/altar_bless_perk.gd",
 	&"skill_momentum": "res://core/run/faith/perks/skill_momentum_perk.gd",     # 信仰重构 C
 	&"hunt_dismantle": "res://core/run/faith/perks/hunt_dismantle_perk.gd",
-	&"earth_support": "res://core/run/faith/perks/earth_support_perk.gd",
+	&"earth_heaven": "res://core/run/faith/perks/earth_heaven_perk.gd",     # 大地之神【天地】（11-26）
 	&"brute_rage": "res://core/run/faith/perks/brute_rage_perk.gd",     # 信仰重构 D
 	&"sun_cycle": "res://core/run/faith/perks/sun_cycle_perk.gd",
 	&"nature_regrowth": "res://core/run/faith/perks/nature_regrowth_perk.gd",

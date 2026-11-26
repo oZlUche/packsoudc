@@ -1,0 +1,16 @@
+{
+  "id": "god_earth_rock",
+  "display_name": "磐石",
+  "display_names": {
+    "en": "Bedrock"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "armor": 8,
+        "weight": 50
+      }
+    }
+  ]
+}

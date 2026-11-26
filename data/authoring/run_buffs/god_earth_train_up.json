@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_train_up",
+  "display_name": "锻炼（升级）",
+  "display_names": {
+    "en": "Tempering+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 100
+      }
+    }
+  ]
+}

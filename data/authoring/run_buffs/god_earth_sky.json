@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_sky",
+  "display_name": "天光",
+  "display_names": {
+    "en": "Skylight"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "damage": 5
+      }
+    }
+  ]
+}

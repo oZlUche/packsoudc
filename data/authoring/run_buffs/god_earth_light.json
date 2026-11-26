@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_light",
+  "display_name": "举重若轻",
+  "display_names": {
+    "en": "Heavy Made Light"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "cost": 2
+      }
+    }
+  ]
+}

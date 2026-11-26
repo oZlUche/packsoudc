@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_practice_up",
+  "display_name": "修行（升级）",
+  "display_names": {
+    "en": "Discipline+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 200
+      }
+    }
+  ]
+}

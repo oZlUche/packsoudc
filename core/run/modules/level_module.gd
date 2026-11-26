@@ -106,6 +106,9 @@ func install(run: RunState) -> void:
 			run.events.battle_finished.connect(_on_battle)
 		if not run.events.search_opened.is_connected(_on_search_opened):
 			run.events.search_opened.connect(_on_search_opened)
+	if run.wallet != null:
+		run.wallet.bonus_pct = func(reason: StringName) -> float:
+			return EarthHeavenPerk.gold_pct(self) if EarthHeavenPerk.GOLD_REASONS.has(reason) else 0.0     # 大地之神【万象】
 	if run.travel != null and not run.travel.moved.is_connected(_on_moved):
 		run.travel.moved.connect(_on_moved)
 	if depth_reached < 0:
@@ -147,6 +150,9 @@ func mult() -> float:
 	var m := rules().mult(tier)
 	if _run != null and _run.faith_xp_bonus > 0.0 and not _humanist():
 		m *= 1.0 + _run.faith_xp_bonus
+	var earth := EarthHeavenPerk.xp_pct(self)     # 大地之神【万象】
+	if earth > 0.0:
+		m *= 1.0 + earth / 100.0
 	return m
 
 

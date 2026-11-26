@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_vital",
+  "display_name": "生机",
+  "display_names": {
+    "en": "Living Soil"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 50
+      }
+    }
+  ]
+}

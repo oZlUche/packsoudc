@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_5voqy"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_34uh7"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_680jv"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_jwhi3"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_8o3us"]
+
+[sub_resource type="Resource" id="Resource_rynrb"]
+script = ExtResource("2_34uh7")
+values = {
+"armor": 8,
+"weight": 50
+}
+
+[resource]
+script = ExtResource("5_8o3us")
+id = &"god_earth_rock"
+display_name = "磐石"
+display_names = {
+"en": "Bedrock"
+}
+effects = Array[ExtResource("1_5voqy")]([SubResource("Resource_rynrb")])

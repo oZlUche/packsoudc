@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_xy4r2"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_a25ap"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_qrvmg"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_fd2re"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_r25n8"]
+
+[sub_resource type="Resource" id="Resource_7ycpm"]
+script = ExtResource("2_a25ap")
+values = {
+"pct": 50
+}
+
+[resource]
+script = ExtResource("5_r25n8")
+id = &"god_earth_train"
+display_name = "锻炼"
+display_names = {
+"en": "Tempering"
+}
+effects = Array[ExtResource("1_xy4r2")]([SubResource("Resource_7ycpm")])

@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://core/run/faith/deeds/mechanic_deed.gd" id="6_2gic1"]
 [ext_resource type="Script" path="res://core/run/faith/offering_rule.gd" id="7_gfojj"]
 [ext_resource type="Script" path="res://core/run/faith/faith_perk.gd" id="8_81xyc"]
-[ext_resource type="Script" path="res://core/run/faith/perks/earth_support_perk.gd" id="9_bd1g6"]
+[ext_resource type="Script" path="res://core/run/faith/perks/earth_heaven_perk.gd" id="9_bd1g6"]
 [ext_resource type="Script" path="res://core/run/faith/perks/altar_bless_perk.gd" id="10_5xycn"]
 [ext_resource type="Script" path="res://core/run/faith/perks/altar_train_board_perk.gd" id="11_rcova"]
 [ext_resource type="Script" path="res://core/run/faith/faith_def.gd" id="12_xhs8b"]
@@ -72,13 +72,12 @@ faith_bonuses = Array[ExtResource("2_poydk")]([SubResource("Resource_rexqm"), Su
 
 [sub_resource type="Resource" id="Resource_tr00d"]
 script = ExtResource("6_2gic1")
-key = &"earth_support"
+key = &"earth_ground"
 amount = 2
 
 [sub_resource type="Resource" id="Resource_uajvw"]
 script = ExtResource("6_2gic1")
-key = &"earth_support"
-at_least = 2
+key = &"earth_dome"
 amount = 2
 
 [sub_resource type="Resource" id="Resource_eoqlt"]
@@ -95,17 +94,8 @@ tier = 0
 script = ExtResource("10_5xycn")
 
 [sub_resource type="Resource" id="Resource_udmsc"]
-script = ExtResource("9_bd1g6")
-part = 1
-
-[sub_resource type="Resource" id="Resource_mgcyf"]
 script = ExtResource("11_rcova")
 tier = 2
-
-[sub_resource type="Resource" id="Resource_7l3a5"]
-script = ExtResource("9_bd1g6")
-part = 3
-tier = 3
 
 [resource]
 script = ExtResource("12_xhs8b")
@@ -122,8 +112,12 @@ description = "帝国祭祀的主神之一，但信徒很少，对应种族也�
 descriptions = {
 "en": "One of the chief gods in the Empire's rites, but with very few followers; its people keep a very low profile."
 }
+core_line = "天地：边缘贴近棋盘边界的道具成为【大地】，非【大地】道具中贴近棋盘中央的道具成为【穹顶】"
+core_lines = {
+"en": "Heaven and Earth: items whose edge touches the Board's border become Earth; of the rest, items near the Board's centre become Dome"
+}
 thresholds = Array[int]([42, 117, 217])
 deeds = Array[ExtResource("5_texte")]([SubResource("Resource_tr00d"), SubResource("Resource_uajvw")])
 offerings = Array[ExtResource("7_gfojj")]([SubResource("Resource_eoqlt")])
-perks = Array[ExtResource("8_81xyc")]([SubResource("Resource_iqm5g"), SubResource("Resource_72j3p"), SubResource("Resource_udmsc"), SubResource("Resource_mgcyf"), SubResource("Resource_7l3a5")])
+perks = Array[ExtResource("8_81xyc")]([SubResource("Resource_iqm5g"), SubResource("Resource_72j3p"), SubResource("Resource_udmsc")])
 blessings = Array[ExtResource("1_vdpjj")]([SubResource("Resource_cb8j2"), SubResource("Resource_2fhbu")])

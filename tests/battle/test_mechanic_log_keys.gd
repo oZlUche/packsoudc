@@ -3,7 +3,7 @@
 extends RefCounted
 
 ## 拼出来的 key（代码里不是字面量）
-const BUILT: Array[String] = ["nature_heal", "nature_wither", "hunt_stage1", "hunt_stage2"]
+const BUILT: Array[String] = ["nature_heal", "nature_wither", "hunt_stage1", "hunt_stage2", "earth_ram", "earth_heavy", "earth_jade"]
 
 
 static func _scan(dir: String, out: Dictionary) -> void:

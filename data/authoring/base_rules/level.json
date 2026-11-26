@@ -775,6 +775,142 @@
     "god_nature_sow": {
       "kind": "god",
       "god": "nature"
+    },
+    "god_earth_toil": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_toil_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_toil"
+    },
+    "god_earth_train": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_train_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_train"
+    },
+    "god_earth_rock": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_rock_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_rock"
+    },
+    "god_earth_sky": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_sky_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_sky"
+    },
+    "god_earth_pillar": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_pillar_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_pillar"
+    },
+    "god_earth_light": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_light_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_light"
+    },
+    "god_earth_practice": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_practice_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_practice"
+    },
+    "god_earth_myriad": {
+      "kind": "god",
+      "god": "earth",
+      "qual": true
+    },
+    "god_earth_myriad_up": {
+      "kind": "god",
+      "god": "earth",
+      "upgrade_of": "god_earth_myriad"
+    },
+    "god_earth_grounded": {
+      "kind": "god",
+      "god": "earth"
+    },
+    "god_earth_vital": {
+      "kind": "god",
+      "god": "earth"
+    },
+    "god_earth_strive": {
+      "kind": "god",
+      "god": "earth"
+    },
+    "god_earth_ram": {
+      "kind": "god",
+      "god": "earth",
+      "once": true
+    },
+    "god_earth_heavy": {
+      "kind": "god",
+      "god": "earth",
+      "once": true
+    },
+    "god_earth_thick": {
+      "kind": "god",
+      "god": "earth",
+      "once": true
+    },
+    "god_earth_quake": {
+      "kind": "god",
+      "god": "earth",
+      "once": true
+    },
+    "god_earth_jade": {
+      "kind": "god",
+      "god": "earth",
+      "once": true,
+      "weight": 0.5
+    },
+    "god_earth_pillar_sky": {
+      "kind": "god",
+      "god": "earth",
+      "once": true
+    },
+    "god_earth_ranges": {
+      "kind": "god",
+      "god": "earth",
+      "once": true
+    },
+    "god_earth_sisyphus": {
+      "kind": "god",
+      "god": "earth",
+      "once": true
     }
-  }
+  },
+  "closed_gods": [
+    "earth"
+  ]
 }

@@ -1,0 +1,16 @@
+{
+  "id": "god_earth_rock_up",
+  "display_name": "磐石（升级）",
+  "display_names": {
+    "en": "Bedrock+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "armor": 16,
+        "weight": 50
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_grounded",
+  "display_name": "脚踏实地",
+  "display_names": {
+    "en": "Feet on the Ground"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 1
+      }
+    }
+  ]
+}

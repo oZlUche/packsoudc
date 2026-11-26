@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_heavy",
+  "display_name": "万钧",
+  "display_names": {
+    "en": "Crushing Weight"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}
