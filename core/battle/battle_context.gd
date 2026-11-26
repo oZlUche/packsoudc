@@ -225,6 +225,8 @@ func dispatch_before_damage(packet: DamagePacket) -> void:
 			"uid": packet.source_uid,
 		}
 	)
+	if packet.pure or packet.def().pure:
+		e.payload["pure"] = true     # 作者 11-26：真实伤害只让【免疫伤害】那类效果碰（[OnBeforeDamage]）
 	e.seq = seq
 	RuleEngine.dispatch(self, e)
 	_damage_stack.pop_back()

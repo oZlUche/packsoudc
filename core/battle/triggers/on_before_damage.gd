@@ -18,3 +18,21 @@ func subscribed_events() -> Array[StringName]:
 
 func _phase() -> int:
 	return PHASE_BEFORE
+
+
+## 作者 11-26 14:14：真实伤害不被来源以外的效果影响，只有【免疫伤害】类效果能免疫它 ——
+## 真实伤害这一下只放行带 [member ModifyDamage.cancel] 的规则（别的减伤、反转、改类型都不碰，也不扣它们的消耗）
+func matches(ctx: RuleContext, event: BattleEvent) -> bool:
+	if event.get_bool(&"pure") and not _immunity(ctx):
+		return false
+	return super.matches(ctx, event)
+
+
+static func _immunity(ctx: RuleContext) -> bool:
+	var rule := ctx.runtime.rule if ctx.runtime != null else null
+	if rule == null:
+		return false
+	for fx in rule.effects:
+		if fx is ModifyDamage and (fx as ModifyDamage).cancel:
+			return true
+	return false
