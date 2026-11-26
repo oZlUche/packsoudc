@@ -1,0 +1,39 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+GS975 日神 黎明 ×1，穿骑士板甲：放下 ["knife", "knight_plate"]；护甲回复 2 次共 132；受击 137 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 日神 黎明 ×2，穿骑士板甲：放下 ["knife", "knight_plate"]；护甲回复 2 次共 265；受击 137 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 日神 黎明 ×1，穿皮甲：放下 ["knife", "leather_armor"]；护甲回复 2 次共 52；受击 137 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 日神 黎明 ×1，没穿防具：放下 ["knife"]；护甲回复 0 次共 0；受击 137 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 日神 对照（没黎明），穿骑士板甲：放下 ["knife", "knight_plate"]；护甲回复 0 次共 0；受击 137 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 日神 夜幕 ×1，鸢盾：放下 ["knife", "kite_shield"]；护甲回复 0 次共 0；受击 137 下、被格挡共 621；回春最多 0 层，前几次 []；30.0 秒
+GS975 日神 夜幕 ×2，鸢盾：放下 ["knife", "kite_shield"]；护甲回复 0 次共 0；受击 137 下、被格挡共 641；回春最多 0 层，前几次 []；30.0 秒
+GS975 日神 对照（没夜幕），鸢盾：放下 ["knife", "kite_shield"]；护甲回复 0 次共 0；受击 137 下、被格挡共 605；回春最多 0 层，前几次 []；30.0 秒
+GS975 日神 夜幕 ×1，没盾：放下 ["knife"]；护甲回复 0 次共 0；受击 137 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 　　护甲变化 ["10.0s absorbed -7", "11.1s heal +7", "13.3s absorbed -7", "15.9s heal +7"]
+GS975 技巧 招架 ×1，骑士板甲：放下 ["knife", "knight_plate"]；护甲回复 2 次共 15；受击 137 下、被格挡共 733；回春最多 0 层，前几次 []；30.0 秒
+GS975 　　护甲变化 ["10.0s absorbed -7", "11.1s heal +7", "13.3s absorbed -7", "15.9s heal +7"]
+GS975 技巧 招架 ×2，骑士板甲：放下 ["knife", "knight_plate"]；护甲回复 2 次共 15；受击 137 下、被格挡共 733；回春最多 0 层，前几次 []；30.0 秒
+GS975 技巧 招架 ×1，没穿防具：放下 ["knife"]；护甲回复 0 次共 0；受击 137 下、被格挡共 733；回春最多 0 层，前几次 []；30.0 秒
+GS975 　　护甲变化 ["10.0s absorbed -7", "13.3s absorbed -7"]
+GS975 技巧 对照（没招架），骑士板甲：放下 ["knife", "knight_plate"]；护甲回复 0 次共 0；受击 137 下、被格挡共 733；回春最多 0 层，前几次 []；30.0 秒
+GS975 　　生命回复共 212；开战时回复轴 {  }
+GS975 自然 回春 ×1，没药：放下 ["knife"]；护甲回复 0 次共 0；受击 136 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 　　生命回复共 424；开战时回复轴 {  }
+GS975 自然 回春 ×1，绷带 4 卷：放下 ["knife", "bandage", "bandage", "bandage", "bandage"]；护甲回复 0 次共 0；受击 126 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 　　生命回复共 636；开战时回复轴 {  }
+GS975 自然 回春 ×1，绷带 8 卷：放下 ["knife", "bandage", "bandage", "bandage", "bandage", "bandage", "bandage", "bandage", "bandage"]；护甲回复 0 次共 0；受击 126 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 　　生命回复共 424；开战时回复轴 {  }
+GS975 自然 回春 ×1，干草药 4 束：放下 ["knife", "dried_herbs", "dried_herbs", "dried_herbs", "dried_herbs"]；护甲回复 0 次共 0；受击 136 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 　　生命回复共 748；开战时回复轴 {  }
+GS975 自然 回春 ×2，绷带 8 卷：放下 ["knife", "bandage", "bandage", "bandage", "bandage", "bandage", "bandage", "bandage", "bandage"]；护甲回复 0 次共 0；受击 126 下、被格挡共 0；回春最多 0 层，前几次 []；30.0 秒
+GS975 牌面 zh god_sun_dawnlight：进入白昼时，回复身上防具护甲上限 25% 的护甲
+GS975 牌面 zh god_sun_veil：黑夜状态下，盾的格挡值 +20%（多张连乘）
+GS975 牌面 zh god_skill_parry：每累积 10 层连击，回复身上防具护甲上限 3% 的护甲
+GS975 牌面 zh god_nature_rejuv：战斗中，每 2 秒对自身施加 1 层回春；背包里每 4 格药品或药材再多 1 层
+GS975 牌面 zh god_brute_blood：每累积获得 30 层怒气，随机一把武器立即发动一次攻击（不耗耐力，不影响出手倒计时）
+GS975 牌面 en god_sun_dawnlight：On entering Day, restore Armor equal to 25% of your armor's max Armor
+GS975 牌面 en god_sun_veil：During Night, shield Block +20% (multiple cards multiply)
+GS975 牌面 en god_skill_parry：Every 10 Combo gained, restore Armor equal to 3% of your armor's max Armor
+GS975 牌面 en god_nature_rejuv：In battle, apply 1 Rejuvenation to yourself every 2s, plus 1 more for every 4 cells of Remedy or Herb in your pack
+GS975 牌面 en god_brute_blood：Every 30 Rage gained, a random weapon attacks at once (no Stamina, its timer is untouched)
+GS975 完
