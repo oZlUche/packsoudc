@@ -1,0 +1,15 @@
+{
+  "id": "god_brute_laurel",
+  "display_name": "血色桂冠",
+  "display_names": {
+    "en": "Crimson Laurel"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 10
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_fist_shadow",
+  "display_name": "拳影",
+  "display_names": {
+    "en": "Fist Shadow"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "rate": 0.1
+      }
+    }
+  ]
+}

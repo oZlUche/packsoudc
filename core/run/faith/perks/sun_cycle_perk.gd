@@ -52,6 +52,16 @@ const NOON := &"god_sun_noon"
 const VEIL := &"god_sun_veil"
 const HUMBLE := &"god_sun_humble"
 const MIRACLE := &"god_sun_miracle"
+## 作者 11-26 专属牌【众星】：每变换一次点亮一颗【星辰】（记在 [member LevelModule.god_state] 这一格），整局结算时每颗换 gold 枚钱，不论胜负
+const STARS := &"god_sun_stars"
+const STARS_KEY := "sun_stars"
+
+
+## 众星：这一局点亮的星辰换多少钱（没拿 = 0）
+static func stars_funds(lv: LevelModule) -> int:
+	if lv == null or not lv.has_card(STARS):
+		return 0
+	return int(lv.god_state.get(STARS_KEY, 0)) * roundi(lv.card_value(STARS, "gold", 2.0))
 
 
 func compile_into(input: CompileInput, _board: GridInventory, run: RunState) -> void:

@@ -42,6 +42,8 @@ var shop_refresh_coins: int = 0
 var lore: Lore = null
 ## 撤离时剩多少钱（战败为 0：钱也没了）
 var balance: int = 0
+## 作者 11-26 日神【众星】：星辰换的钱，不论胜负都进局外（不算在 [member balance] 里）
+var star_funds: int = 0
 ## 背出去的：撤离时棋盘上的全部（含包）。战败为空
 var carried: Array[ItemInstance] = []
 ## 棋盘多大（带回局外时原样重建）
@@ -124,6 +126,7 @@ static func _count(state: RunState, extracted: bool) -> RunResult:
 	var lv := LevelModule.of(state)
 	if lv != null:
 		r.run_level = lv.level()
+		r.star_funds = SunCyclePerk.stars_funds(lv)
 		r.cards = lv.taken_list()
 		if state.selected_faith != &"":
 			r.faith_top = {"id": String(state.selected_faith), "power": int(lv.xp)}

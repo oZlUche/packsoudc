@@ -87,6 +87,13 @@ static func run_cards(t: TestCase) -> void:
 	var guard := BattleSim.run(_me({"guard_every": 10.0, "guard_percent": 100.0}, 5.0, 1000.0), _hitter(8.0), _rng(3), 10.5)
 	t.eq(_mech(guard, "nature_guard_armor"), 1, "第 10 秒换了一次护甲")
 	t.check(_final(guard, 0, NatureCycle.RENEWAL) < 5, "新生清零后只剩半秒积的（%d）" % _final(guard, 0, NatureCycle.RENEWAL))
+	# 护佑（升级，报告 399 第六节）：每 8 秒消耗一半新生，每层 2 点护甲；剩下的一半留着
+	var half := BattleSim.run(_me({"guard_every": 8.0, "guard_share": 50.0, "guard_per": 2.0}, 5.0, 1000.0), _hitter(8.0), _rng(3), 8.5)
+	var full := BattleSim.run(_me({}, 5.0, 1000.0), _hitter(8.0), _rng(3), 8.5)
+	t.eq(_mech(half, "nature_guard_armor"), 1, "升级：第 8 秒换了一次")
+	var left := _final(half, 0, NatureCycle.RENEWAL)
+	var had := _final(full, 0, NatureCycle.RENEWAL)
+	t.check(left > 0 and absi(left - (had - floori(had * 0.5))) <= 3, "升级：剩下约一半新生（%d / 不拿 %d）" % [left, had])
 	# 收割：第 10 秒按枯萎给收割，敌人生命不高于它就死
 	var reap := BattleSim.run(_me({"harvest_at": 10.0, "harvest_percent": 100.0}, 0.0, 1000.0, 40.0), FX._spec(500.0, []), _rng(4), 20.0)
 	t.eq(_mech(reap, "nature_reap"), 1, "收割斩了一次")

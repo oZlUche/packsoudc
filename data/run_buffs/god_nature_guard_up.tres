@@ -9,8 +9,9 @@
 [sub_resource type="Resource" id="Resource_1en61"]
 script = ExtResource("2_b7gal")
 values = {
-"pct": 100,
-"sec": 8
+"per": 2,
+"sec": 8,
+"share": 50
 }
 
 [resource]

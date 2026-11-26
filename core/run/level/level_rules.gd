@@ -62,7 +62,9 @@ const ONESHOT_SACRIFICE := &"sacrifice"
 ## after: 拿过这张之后才进池, once: 拿过就不再出, echo: 元素回响的哪一张, oneshot: 一次性效果}。
 ## 388 神的牌另有：god: 哪位神的（只在奉这位神时进池）、qual: 质变牌（只在质变位出，拿过就不再出）、
 ## upgrade_of: 这是哪张质变牌的升级版（拿过原牌才进池）、excludes: 互斥的牌（拿过其中一张就不出）、
-## when: 满足条件才入池（条件由各位神的代码登记，[method LevelModule.register_when]）
+## when: 满足条件才入池（条件由各位神的代码登记，[method LevelModule.register_when]）、
+## max: 最多拿几张、guaranteed_by: 拿过那张以后每次普通选牌至少出一张这类牌（作者 11-26：徒手大师 → 拳头牌）。
+## once 也是作者 11-26 的【专属牌】：和通用牌一个池子，一局只能拿一次
 @export var cards: Dictionary = {}
 ## 396：牌写好了但还不开放的神（万神院里当「神殿尚未落成」，[method Pantheon.temple_ready]）—— 架构设计 11-25：技巧之神先不开
 @export var closed_gods: Array[StringName] = []

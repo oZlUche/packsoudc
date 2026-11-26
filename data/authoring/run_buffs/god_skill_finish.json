@@ -1,0 +1,15 @@
+{
+  "id": "god_skill_finish",
+  "display_name": "收式",
+  "display_names": {
+    "en": "Closing Form"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "sec": 10
+      }
+    }
+  ]
+}

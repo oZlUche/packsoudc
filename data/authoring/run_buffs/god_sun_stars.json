@@ -1,0 +1,15 @@
+{
+  "id": "god_sun_stars",
+  "display_name": "众星",
+  "display_names": {
+    "en": "Myriad Stars"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "gold": 2
+      }
+    }
+  ]
+}

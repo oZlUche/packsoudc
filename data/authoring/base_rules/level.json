@@ -183,7 +183,7 @@
     "god_brute_persist": {
       "kind": "god",
       "god": "brute",
-      "qual": true
+      "once": true
     },
     "god_brute_duration": {
       "kind": "god",
@@ -219,7 +219,13 @@
     },
     "god_brute_linger": {
       "kind": "god",
-      "god": "brute"
+      "god": "brute",
+      "once": true
+    },
+    "god_brute_laurel": {
+      "kind": "god",
+      "god": "brute",
+      "once": true
     },
     "god_brute_cornered_more": {
       "kind": "god",
@@ -370,11 +376,18 @@
     },
     "god_skill_breath": {
       "kind": "god",
-      "god": "skill"
+      "god": "skill",
+      "once": true
     },
     "god_skill_vigor": {
       "kind": "god",
-      "god": "skill"
+      "god": "skill",
+      "once": true
+    },
+    "god_skill_finish": {
+      "kind": "god",
+      "god": "skill",
+      "once": true
     },
     "god_skill_poise": {
       "kind": "god",
@@ -383,6 +396,31 @@
     "god_skill_see": {
       "kind": "god",
       "god": "skill"
+    },
+    "god_skill_fist_edge": {
+      "kind": "god",
+      "god": "skill",
+      "after": "god_skill_fist",
+      "guaranteed_by": "god_skill_fist"
+    },
+    "god_skill_fist_shadow": {
+      "kind": "god",
+      "god": "skill",
+      "after": "god_skill_fist",
+      "guaranteed_by": "god_skill_fist"
+    },
+    "god_skill_fist_flow": {
+      "kind": "god",
+      "god": "skill",
+      "after": "god_skill_fist",
+      "guaranteed_by": "god_skill_fist",
+      "max": 5
+    },
+    "god_skill_fist_intent": {
+      "kind": "god",
+      "god": "skill",
+      "after": "god_skill_fist",
+      "guaranteed_by": "god_skill_fist"
     },
     "god_sun_sunbath": {
       "kind": "god",
@@ -572,11 +610,18 @@
     },
     "god_sun_dawnlight": {
       "kind": "god",
-      "god": "sun"
+      "god": "sun",
+      "once": true
     },
     "god_sun_dusklight": {
       "kind": "god",
-      "god": "sun"
+      "god": "sun",
+      "once": true
+    },
+    "god_sun_stars": {
+      "kind": "god",
+      "god": "sun",
+      "once": true
     },
     "god_sun_noon": {
       "kind": "god",
@@ -673,11 +718,8 @@
     },
     "god_nature_survive": {
       "kind": "god",
-      "god": "nature"
-    },
-    "god_nature_strong": {
-      "kind": "god",
-      "god": "nature"
+      "god": "nature",
+      "once": true
     },
     "god_nature_wane": {
       "kind": "god",
@@ -718,12 +760,7 @@
     "god_nature_talk": {
       "kind": "god",
       "god": "nature",
-      "qual": true
-    },
-    "god_nature_talk_up": {
-      "kind": "god",
-      "god": "nature",
-      "upgrade_of": "god_nature_talk"
+      "once": true
     },
     "god_nature_harvest": {
       "kind": "god",

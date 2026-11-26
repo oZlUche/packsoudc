@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_k82yt"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_fm5h8"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_g6slj"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_oxnf8"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_obwbt"]
+
+[sub_resource type="Resource" id="Resource_4qnkl"]
+script = ExtResource("2_fm5h8")
+values = {
+"damage": 1
+}
+
+[resource]
+script = ExtResource("5_obwbt")
+id = &"god_skill_fist_edge"
+display_name = "拳锋"
+display_names = {
+"en": "Fist Edge"
+}
+effects = Array[ExtResource("1_k82yt")]([SubResource("Resource_4qnkl")])
