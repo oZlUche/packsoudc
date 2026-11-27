@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1200" viewBox="0 0 1440 1200" role="img" aria-labelledby="title" aria-describedby="desc">
+  <title id="title">背包搜打撤 · 一局如何结算</title>
+  <desc id="desc">RunState 记录本局结束，RunResult 盘点，MetaState 按撤离、战败和保险箱规则入账，GameFlow 更新营地、写入存档并显示结算。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M2 2L10 6L2 10" fill="none" stroke="#EFEEE7" stroke-width="1.4"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", "PingFang SC", sans-serif; fill: #EFEEE7 }
+    .title { font-size: 51px; font-weight: 600 }
+    .subtitle { font-size: 23px; fill: #B0B2A8 }
+    .heading { font-size: 27px; font-weight: 600 }
+    .body { font-size: 22px }
+    .note { font-size: 19px; fill: #B0B2A8 }
+    .source { font-size: 17px; fill: #B0B2A8 }
+    .node { fill: #272925; stroke: #686E63; stroke-width: 1.5 }
+    .edge { fill: none; stroke: #EFEEE7; stroke-width: 1.8; marker-end: url(#arrow) }
+  </style>
+  <rect data-decoration="background" width="1440" height="1200" fill="#191A18"/>
+  <text class="title" x="74" y="96">背包搜打撤 · 一局如何结算</text>
+  <text class="subtitle" x="76" y="139">How a run settles</text>
+
+  <g text-anchor="middle">
+    <path class="edge" id="run-to-count" data-edge="" data-from="run" data-to="count" d="M720 359V413"/>
+    <path class="edge" id="count-to-extract" data-edge="" data-from="count" data-to="extract" d="M550 500V527A12 12 0 0 1 538 539H326A12 12 0 0 0 314 551V585"/>
+    <path class="edge" id="count-to-safe" data-edge="" data-from="count" data-to="safe" d="M720 500V585"/>
+    <path class="edge" id="count-to-defeat" data-edge="" data-from="count" data-to="defeat" d="M890 500V527A12 12 0 0 0 902 539H1114A12 12 0 0 1 1126 551V585"/>
+    <path class="edge" id="extract-to-meta" data-edge="" data-from="extract" data-to="meta" d="M314 717V751A12 12 0 0 0 326 763H538A12 12 0 0 1 550 775V807"/>
+    <path class="edge" id="safe-to-meta" data-edge="" data-from="safe" data-to="meta" d="M720 717V807"/>
+    <path class="edge" id="defeat-to-meta" data-edge="" data-from="defeat" data-to="meta" d="M1126 717V751A12 12 0 0 1 1114 763H902A12 12 0 0 0 890 775V807"/>
+    <path class="edge" id="meta-to-flow" data-edge="" data-from="meta" data-to="flow" d="M720 894V938"/>
+    <rect class="node" id="run" data-node="" x="410" y="245" width="620" height="114" rx="12"/>
+    <text class="heading" x="720" y="284" data-in-node="run" data-padding="10">RunState · 记录本局如何结束</text>
+    <text class="note" x="720" y="316" data-in-node="run" data-padding="10">撤离点须开放并付得起费用；符合配置的首领战可直接撤离</text>
+    <text class="note" x="720" y="342" data-in-node="run" data-padding="10">战斗判负并终止本局、倒计时归零等情况进入战败</text>
+
+    <rect class="node" id="count" data-node="" x="448" y="414" width="544" height="86" rx="12"/>
+    <text class="heading" x="720" y="453" data-in-node="count" data-padding="10">RunResult · 盘点本局结果</text>
+    <text class="note" x="720" y="483" data-in-node="count" data-padding="10">结局、战绩、作战区携带物和保险箱内容</text>
+
+    <rect class="node" id="extract" data-node="" x="130" y="586" width="368" height="131" rx="12"/>
+    <text class="heading" x="314" y="625" data-in-node="extract" data-padding="10">撤离成功</text>
+    <text class="body" x="314" y="666" data-in-node="extract" data-padding="10">作战区可带出的物品回营</text>
+    <text class="note" x="314" y="692" data-in-node="extract" data-padding="10">钱包余额计入营地资金</text>
+
+    <rect class="node" id="safe" data-node="" x="536" y="586" width="368" height="131" rx="12"/>
+    <text class="heading" x="720" y="625" data-in-node="safe" data-padding="10">保险箱 · 两种结局都盘点</text>
+    <text class="body" x="720" y="666" data-in-node="safe" data-padding="10">撤离时优先放入带回棋盘</text>
+    <text class="note" x="720" y="692" data-in-node="safe" data-padding="10">战败时优先入包架或仓库</text>
+
+    <rect class="node" id="defeat" data-node="" x="942" y="586" width="368" height="131" rx="12"/>
+    <text class="heading" x="1126" y="625" data-in-node="defeat" data-padding="10">战败</text>
+    <text class="body" x="1126" y="666" data-in-node="defeat" data-padding="10">作战区物品丢失</text>
+    <text class="note" x="1126" y="692" data-in-node="defeat" data-padding="10">符合规则的局外奖励仍可入账</text>
+
+    <rect class="node" id="meta" data-node="" x="410" y="808" width="620" height="86" rx="12"/>
+    <text class="heading" x="720" y="847" data-in-node="meta" data-padding="10">MetaState · 写入营地状态</text>
+    <text class="note" x="720" y="877" data-in-node="meta" data-padding="10">按对局 ID 防重复入账，更新物品、图鉴、战绩与得分</text>
+
+    <rect class="node" id="flow" data-node="" x="312" y="939" width="816" height="114" rx="12"/>
+    <text class="heading" x="720" y="978" data-in-node="flow" data-padding="10">GameFlow · 完成营地结算并打开结算屏</text>
+    <text class="note" x="720" y="1010" data-in-node="flow" data-padding="10">合并适用的委托进度，刷新集市；符合条件的正式对局推进苗圃</text>
+    <text class="note" x="720" y="1036" data-in-node="flow" data-padding="10">可写模式下，局外档写成后才删本局档；写入失败时本局档保留</text>
+  </g>
+
+  <text class="source" x="76" y="1158">依据 68fe541b 的 core/run/run_state.gd、run_result.gd、game_flow.gd 和 core/meta/meta_state.gd。图示覆盖结算主干。</text>
+</svg>
