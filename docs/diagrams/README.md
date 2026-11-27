@@ -7,6 +7,7 @@
 | 2026-11-27 | [模块关系](2026-11-27-module-relations.png)（[SVG](2026-11-27-module-relations.svg)） | 样张：营地各设施、出征三屏、局内循环、结算之间东西和流程怎么走（v9.20） |
 | 2026-11-27 | [一局如何结算](2026-11-27-run-settlement.png)（[SVG](2026-11-27-run-settlement.svg)） | 展开总览的「结算」节点，沿代码追踪撤离、战败、保险箱和局外存档。总览中的战败损失描述适用于作战区，保险箱规则见本图。 |
 | 2026-11-27 | [局内循环](2026-11-27-in-run-loop.png)（[SVG](2026-11-27-in-run-loop.svg)） | 展开总览的「局内」部分，追踪走图、搜刮、战斗、背包与撤离，标出体力、倒计时和侵蚀的触发位置。 |
+| 2026-11-27 | [存量与回流](2026-11-27-module-flows.png)（[SVG](2026-11-27-module-flows.svg)） | 按 skill 完整流程重画的模块关系：选「检查积累与回流」，仓库是存量，出征是关口，一局是循环，撤离回流、战败流失；四个提问对着成型速度。生成脚本 `src/module_flows.py` |
 
 总览可用 `python3 docs/diagrams/src/module_relations.py out.svg` 重画。结算图和局内循环图直接编辑 SVG。各图都可用 skill 的 `scripts/render-svg.cjs` 渲染 PNG。
 
