@@ -15,7 +15,7 @@ const BRACKETS: Array[int] = [0, 2]
 const GODS: Array[StringName] = [&"", &"skill", &"hunt", &"earth", &"brute", &"sun", &"nature"]
 const TIERS: Array[int] = [0, 3]
 ## 开战那一刻就有、不算「触发」的战记
-const OPENING_KEYS: Array[String] = ["hunt_mark", "sun_open", "sun_close", "earth_support"]
+const OPENING_KEYS: Array[String] = ["hunt_mark", "sun_open", "sun_close", "earth_ground", "earth_dome"]
 const BUFFS := {&"skill": &"skill_momentum", &"hunt": &"hunt_dismantle", &"brute": &"brute_rage", &"nature": &"nature_renewal"}
 
 
@@ -129,7 +129,7 @@ static func _spec(snap: Dictionary, items: ItemDatabase, god: StringName, tier: 
 		&"hunt":
 			input.rules.append(HuntDismantlePerk.new().rule_at(tier))
 		&"earth":
-			EarthSupportPerk.new().compile_at(input, board, tier)
+			input.rules.append(EarthHeavenPerk.new().rule_for(null, board))     # 11-26：核心【天地】只分层；牌在局里拿
 		&"brute":
 			input.rules.append(BruteRagePerk.new().rule_for(null))     # 388：核心；牌在局里拿
 		&"sun":
@@ -157,8 +157,8 @@ static func _tally(acc: Dictionary, res: BattleResult, god: StringName, def: Fai
 		var hit := false
 		if e.name == BattleEvent.EFFECT_RESOLVED and e.side == 0 and String(e.payload.get("effect", "")) == SkillMomentum.MECHANIC:
 			hit = not OPENING_KEYS.has(String(e.payload.get("key", "")))
-			if god == &"earth" and String(e.payload.get("key", "")) == "earth_support" and int(e.payload.get("count", 0)) > 0:
-				hit = true     # 大地是静态的：开战有大件受承托就算
+			if god == &"earth" and String(e.payload.get("key", "")) == "earth_ground" and int(e.payload.get("count", 0)) > 0:
+				hit = true     # 大地是静态的：开战有大地就算
 		elif buff != &"" and e.name == BattleEvent.STATUS_STACKED and e.get_name(&"buff") == buff and e.get_int(&"delta") > 0 and e.time > 0:
 			hit = true
 		if hit:

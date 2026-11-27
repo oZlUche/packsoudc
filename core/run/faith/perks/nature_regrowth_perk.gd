@@ -33,9 +33,16 @@ static func food_on(board: GridInventory) -> int:
 	var tag := FaithState.board_tag(board)
 	for raw in board.items():
 		var inst := raw as ItemInstance
-		if inst.def != null and inst.def.tags.has(&"food") and EarthSupport.counts(board, inst, tag):
+		if inst.def != null and inst.def.tags.has(&"food") and _counts(board, inst, tag):
 			n += 1
 	return n
+
+
+## 有效的道具：有战斗定义、不是包、没标不参战、没整件休眠
+static func _counts(board: GridInventory, inst: ItemInstance, active_faith: StringName) -> bool:
+	if inst == null or inst.def == null or inst.def.combat == null or board.acts_as_bag(inst.def) or inst.is_benched():
+		return false
+	return not FaithState.is_inert(inst.def, active_faith)
 
 
 func rule_at(at_tier: int, food: int = 0) -> AbilityRule:

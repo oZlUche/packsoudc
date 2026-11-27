@@ -405,6 +405,15 @@ static func draw_honor(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor:
 const HONOR_TEXT := 12
 
 
+## 大地结晶这类叠成一摞的：右下角「×N」（一个不画）
+static func draw_stack(canvas: CanvasItem, inst: ItemInstance, rot: int, anchor: Vector2, cell: float, modulate: Color = Color.WHITE) -> void:
+	if inst == null or inst.def == null or inst.def.shape == null or inst.stack_count() <= 1:
+		return
+	var best := corner_cell(inst.def.shape, rot, true, true)
+	var slot := Rect2(anchor + Vector2(best) * cell, Vector2.ONE * cell)
+	draw_badge(canvas, "×%d" % inst.stack_count(), slot, int(HONOR_TEXT * cell / InventoryView.CELL), modulate)
+
+
 ## 包架的数字牌（浅石小牌，墨字）贴在 [param slot] 右下角。[param must_fit] 真且牌比格子宽：不画、返回 false
 static func draw_badge(canvas: CanvasItem, text: String, slot: Rect2, size: int = BagRackView.BADGE_TEXT, modulate: Color = Color.WHITE, must_fit: bool = false) -> bool:
 	var font := UiPalette.numeral_font() if text.is_valid_int() or text.begins_with("×") else UiPalette.cjk_font()

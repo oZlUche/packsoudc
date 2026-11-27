@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_select_2",
+  "display_name": "甄选",
+  "display_names": {
+    "en": "Pick of the Lode"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "slot": 2
+      }
+    }
+  ]
+}

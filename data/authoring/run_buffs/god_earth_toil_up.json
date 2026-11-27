@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_toil_up",
+  "display_name": "苦劳（升级）",
+  "display_names": {
+    "en": "Toil+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 200
+      }
+    }
+  ]
+}

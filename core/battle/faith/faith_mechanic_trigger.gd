@@ -6,6 +6,8 @@ extends Trigger
 
 @export var events: Array[StringName] = []
 @export var pulse: bool = false
+## 大地之神【层峦】：受伤前也听真实伤害（只拿来整下取消 —— 抵挡攻击视为这一下没发生，作者 11-26 15:15）
+@export var sees_pure: bool = false
 
 
 func subscribed_events() -> Array[StringName]:
@@ -13,7 +15,7 @@ func subscribed_events() -> Array[StringName]:
 
 
 func matches(_ctx: RuleContext, event: BattleEvent) -> bool:
-	return not (event.name == BattleEvent.BEFORE_DAMAGE and event.get_bool(&"pure"))     # 作者 11-26：神的机制不改真实伤害
+	return sees_pure or not (event.name == BattleEvent.BEFORE_DAMAGE and event.get_bool(&"pure"))     # 作者 11-26：神的机制不改真实伤害
 
 
 func is_self_driven() -> bool:

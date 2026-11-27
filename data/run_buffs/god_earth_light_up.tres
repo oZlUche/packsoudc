@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_rx8kq"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_2klpa"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_kxdeh"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_025o5"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_r1pc1"]
+
+[sub_resource type="Resource" id="Resource_hyd7p"]
+script = ExtResource("2_2klpa")
+values = {
+"cost": 2,
+"haste": 1
+}
+
+[resource]
+script = ExtResource("5_r1pc1")
+id = &"god_earth_light_up"
+display_name = "举重若轻（升级）"
+display_names = {
+"en": "Heavy Made Light+"
+}
+effects = Array[ExtResource("1_rx8kq")]([SubResource("Resource_hyd7p")])

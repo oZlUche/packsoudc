@@ -98,7 +98,7 @@ static func run_deeds(t: TestCase) -> void:
 		t.eq(_gain(d, &"battle", {"won": true, "node_type": "battle", "mechanic": {}}), 0, "%s：光打赢不记神的账" % fid)
 	t.eq(_gain(defs[&"skill"], &"battle", {"won": false, "mechanic": {"skill_momentum": 3}}), 4, "技巧：输了也保留攒到的巧劲 +2 +2")
 	t.eq(_gain(defs[&"hunt"], &"battle", {"won": true, "mechanic": {"hunt_stage1": 1}}), 2, "狩猎：拆到第一档 2")
-	t.eq(_gain(defs[&"earth"], &"battle", {"won": true, "mechanic": {"earth_support": 2}}), 4, "大地：两件受承托 2 + 2")
+	t.eq(_gain(defs[&"earth"], &"battle", {"won": true, "mechanic": {"earth_ground": 2, "earth_dome": 1}}), 4, "大地：有大地 2 + 有穹顶 2")
 	# 往返
 	var text := ContentExporter.to_json(ContentExporter.dump(defs[&"skill"]))
 	var back := ContentImporter.import_faith(JSON.parse_string(text), ContentImporter.Context.new(), ImportReport.new())

@@ -1,0 +1,16 @@
+{
+  "id": "god_earth_light_up",
+  "display_name": "举重若轻（升级）",
+  "display_names": {
+    "en": "Heavy Made Light+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "cost": 2,
+        "haste": 1
+      }
+    }
+  ]
+}

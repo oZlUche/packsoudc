@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_compress",
+  "display_name": "压缩",
+  "display_names": {
+    "en": "Compress"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "value": 5
+      }
+    }
+  ]
+}

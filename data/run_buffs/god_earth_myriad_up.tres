@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_k6f5m"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_eucm1"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_tkuur"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_3jy24"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_h6bax"]
+
+[sub_resource type="Resource" id="Resource_rwe3k"]
+script = ExtResource("2_eucm1")
+values = {
+"pct": 20
+}
+
+[resource]
+script = ExtResource("5_h6bax")
+id = &"god_earth_myriad_up"
+display_name = "万象（升级）"
+display_names = {
+"en": "All Things+"
+}
+effects = Array[ExtResource("1_k6f5m")]([SubResource("Resource_rwe3k")])

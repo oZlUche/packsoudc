@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_cxih8"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_0j6gq"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_08xkl"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_rbpal"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_re50m"]
+
+[sub_resource type="Resource" id="Resource_12j4w"]
+script = ExtResource("2_0j6gq")
+values = {
+"n": 1
+}
+
+[resource]
+script = ExtResource("5_re50m")
+id = &"god_earth_ram"
+display_name = "冲撞"
+display_names = {
+"en": "Charge"
+}
+effects = Array[ExtResource("1_cxih8")]([SubResource("Resource_12j4w")])

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_jkey6"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_hunjv"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_36ti0"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_m2ahl"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_p367m"]
+
+[sub_resource type="Resource" id="Resource_8neob"]
+script = ExtResource("2_hunjv")
+values = {
+"cost": 2
+}
+
+[resource]
+script = ExtResource("5_p367m")
+id = &"god_earth_light"
+display_name = "举重若轻"
+display_names = {
+"en": "Heavy Made Light"
+}
+effects = Array[ExtResource("1_jkey6")]([SubResource("Resource_8neob")])

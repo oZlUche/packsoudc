@@ -2009,9 +2009,21 @@ func use_belt(skill_id: StringName) -> String:
 		return UiText.t("log.no_run")
 	var had_battle := not run.events.pending_battle.is_empty()
 	var why := run.hooks.belt_use(skill_id)
-	if why == "" and had_battle and run.events.pending_battle.is_empty():
-		_flush()
+	if why == "" and ((had_battle and run.events.pending_battle.is_empty()) or run.events.pending_event() != null):
+		save()
+		_flush()     # 大地之神【扎营】：脚下变成休息点、当场休息（休息点的事件屏）
 	return why
+
+
+## 大地之神【穿行】：攒着那一次时点 3 步之内的点 = 传过去（计一步、和走过去一样进点）。走不了返回 false
+func earth_walk(id: int) -> bool:
+	if run == null or not EarthHeavenPerk.walk_to(run, id):
+		return false
+	if recorder != null:
+		recorder.record(run)
+	save()
+	_flush()
+	return true
 
 
 ## 093（蛮神 3 级）：战前准备屏上秒杀这一场（效果构件自己查条件、扣体力）

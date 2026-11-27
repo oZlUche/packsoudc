@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_sisyphus",
+  "display_name": "西西弗斯",
+  "display_names": {
+    "en": "Sisyphus"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 1
+      }
+    }
+  ]
+}

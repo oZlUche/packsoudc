@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_strive",
+  "display_name": "自强不息",
+  "display_names": {
+    "en": "Unceasing"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 1
+      }
+    }
+  ]
+}
