@@ -18,7 +18,6 @@ class FakeFlow:
 class FakeScreen:
 	extends Control
 	var flow := FakeFlow.new()
-	var _tip: HoverTip = null
 
 
 static func run_split(t: TestCase) -> void:

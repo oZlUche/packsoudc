@@ -2186,10 +2186,10 @@ func system_settings_open() -> bool:
 
 
 ## 百科嵌进系统菜单（同设置的嵌法）
-func system_encyclopedia(page: String = "") -> void:
+func system_encyclopedia(p_page: String = "") -> void:
 	if _sys_menu == null or _sys_book != null:
 		return
-	_sys_book = _embed_in_system(EncyclopediaScreenScript, GameFlow.Screen.ENCYCLOPEDIA, {"page": page} if page != "" else {}, close_system_encyclopedia)
+	_sys_book = _embed_in_system(EncyclopediaScreenScript, GameFlow.Screen.ENCYCLOPEDIA, {"page": p_page} if p_page != "" else {}, close_system_encyclopedia)
 
 
 func close_system_encyclopedia() -> void:
