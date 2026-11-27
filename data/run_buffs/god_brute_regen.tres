@@ -10,7 +10,7 @@
 script = ExtResource("2_yvnbp")
 values = {
 "per": 10,
-"regen": 1,
+"regen": 1.8,
 "step": 0
 }
 

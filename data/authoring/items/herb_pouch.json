@@ -23,7 +23,7 @@
   "bag_mods": [
     {
       "stat": "regen_hp",
-      "amount": 0.5
+      "amount": 0.9
     }
   ]
 }

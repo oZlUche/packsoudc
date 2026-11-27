@@ -23,7 +23,7 @@
   "material": "bone",
   "combat": {
     "base_stats": {
-      "damage": 5,
+      "damage": 6,
       "crit_chance": 15,
       "crit_damage": 190
     },
@@ -37,14 +37,14 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 3.0
+            "amount": 4.0
           }
         ],
         "effects": [
           "@deal_damage",
           {
             "type": "deal_damage",
-            "amount": 4.0,
+            "amount": 5.0,
             "damage_stat": "",
             "pure": true
           },

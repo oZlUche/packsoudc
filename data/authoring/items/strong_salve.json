@@ -31,7 +31,7 @@
         "effects": [
           {
             "type": "change_resource",
-            "amount": 40.0
+            "amount": 72.0
           }
         ]
       }

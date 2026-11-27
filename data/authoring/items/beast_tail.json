@@ -21,7 +21,7 @@
   "material": "leather",
   "wild": {
     "base_stats": {
-      "damage": 8
+      "damage": 10
     },
     "rules": [
       {
@@ -33,7 +33,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 6.0
+            "amount": 7.0
           }
         ],
         "effects": [

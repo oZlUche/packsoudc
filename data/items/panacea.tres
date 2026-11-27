@@ -31,6 +31,7 @@ stacks = 2
 
 [sub_resource type="Resource" id="Resource_fte87"]
 script = ExtResource("8_bytdc")
+amount = 9.0
 
 [sub_resource type="Resource" id="Resource_esiq3"]
 script = ExtResource("9_ds2ls")

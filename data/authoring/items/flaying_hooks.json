@@ -22,7 +22,7 @@
   "material": "bone",
   "combat": {
     "base_stats": {
-      "damage": 5
+      "damage": 6
     },
     "rules": [
       {
@@ -34,7 +34,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 4
+            "amount": 5
           }
         ],
         "effects": [

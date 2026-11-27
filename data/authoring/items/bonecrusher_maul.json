@@ -24,7 +24,7 @@
   "material": "stone",
   "combat": {
     "base_stats": {
-      "damage": 68
+      "damage": 82
     },
     "rules": [
       {
@@ -36,7 +36,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 12
+            "amount": 14
           }
         ],
         "effects": [

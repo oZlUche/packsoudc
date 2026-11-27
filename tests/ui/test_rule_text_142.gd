@@ -17,7 +17,7 @@ static func run_six_items(t: TestCase) -> void:
 		&"bloodhound_sigil": "[你给对手施加流血时] 强攻 1 层",
 		&"bloodlust_bracer": "[你给对手施加流血时] 加速 1 层",
 		&"festering_blade": "[每 1.4 秒] 造成物理伤害，并施加 1 层流血",
-		&"bloodletter": "[每 1.1 秒] 造成物理伤害，并施加 1 层流血 / [出手时] 若对手流血至少 6 层，对手每层流血造成 3 点物理伤害",
+		&"bloodletter": "[每 1.1 秒] 造成物理伤害，并施加 1 层流血 / [出手时] 若对手流血至少 6 层，对手每层流血造成 4 点物理伤害",
 		&"wound_salt": "[造成物理伤害前] 若对手有流血，伤害 +20%",
 		&"viper_gland": "[你给对手施加中毒时] 施加 1 层剧毒",
 	}

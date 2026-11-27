@@ -4,11 +4,13 @@
 ## 带回来的背包没清空之前「再来一局」是灰的（作者：提示玩家清空背包再配置）。
 ##
 ## 164（作者定）：三列 —— 左列（[constant LEFT_W]）：「基地」、四个页签竖排（图鉴、成就、出售、科技；再点一次选中的回「家」），
-## 左下角「再来一局」（主档）与「回主菜单」；中列：当前页，默认「家」（这一局、战绩、带回来的背包与一键置入 / 整理）；
+## 左下角「再来一局」（主档）；中列：当前页，默认「家」（这一局、战绩、带回来的背包与一键置入 / 整理）；
 ## 右半边：仓库（163 的 [WarehousePages]）常驻，10 × 8 整块可见（格子按宽高取小，40 ～ 80）。双击仓库一件按当前页：家 → 置入带回来的背包、
 ## 出售 → 卖、科技 → 上交、图鉴 / 成就 → 不做事。整屏一层拖拽，中列与右半边之间能拖。背景、按钮、文本框、仓库木架用「家」套件（`assets/ui/home/`）
 extends GameScreen
 
+const SettingsScreenScript := preload("res://ui/game/settings_screen.gd")
+const EncyclopediaScreenScript := preload("res://ui/game/encyclopedia_screen.gd")
 const WarehousePanelScript := preload("res://ui/game/warehouse_panel.gd")
 const TechPanelScript := preload("res://ui/game/tech_panel.gd")
 const MarketPanelScript := preload("res://ui/game/market_panel.gd")     # 251
@@ -150,7 +152,7 @@ func open(payload: Dictionary) -> void:
 	_drag = DragLayer.new()
 	_drag.label_font = font
 
-	# 左列：标题、五个页签竖排；底下「再来一局」「回主菜单」
+	# 左列：五个页签竖排
 	var left := _vbox(12)
 	left.custom_minimum_size.x = LEFT_W
 	_cols.add_child(left)
@@ -186,19 +188,7 @@ func open(payload: Dictionary) -> void:
 	left.add_child(spacer)
 	# 226 批二：左下「带回来的背包还有 N 件……」那句删了（[method pending_text] 留给「仓库」页签的悬浮窗）
 	# 264：左下「再来一局」搬进出征页改叫【开始探索】
-	# 280 B：「回主菜单」钉在屏幕右下 —— 和开局屏「返回」、结算「继续」同一个角
-	var menu_btn := UiTheme.make_stone_button(UiText.t("setup.main_menu"), flow.to_main_menu)
-	menu_btn.name = "MainMenuButton"
-	menu_btn.custom_minimum_size = Vector2(LEFT_W * 0.8, 56)
-	var menu_size := menu_btn.get_combined_minimum_size()
-	menu_btn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	menu_btn.offset_left = -MARGIN - menu_size.x
-	menu_btn.offset_right = -MARGIN
-	menu_btn.offset_top = -MARGIN - menu_size.y
-	menu_btn.offset_bottom = -MARGIN
-	menu_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	menu_btn.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	add_child(menu_btn)
+	# 作者 2026-11-27：右下「回主菜单」删了，回主菜单走 Esc 的系统菜单（[method toggle_system_menu]）
 
 	# 中列：当前页
 	_middle = _vbox(10)
@@ -1317,11 +1307,6 @@ func _ensure_tech() -> void:
 	var col := _vbox(0)
 	_tech_cloth.add_child(col)
 	_build_tech(col)
-	var foot := Control.new()     # 右下钉着「回主菜单」：科技页底下让出它那一截，【升级】【追踪】不被压住
-	var menu := get_node_or_null("MainMenuButton") as Control
-	foot.custom_minimum_size.y = menu.get_combined_minimum_size().y if menu != null else 56.0
-	foot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(foot)
 
 
 ## 科技页（测试看）
@@ -2127,8 +2112,18 @@ func page() -> String:
 	return _sub if _tab == "logistics" else _tab
 
 
-## 090：Esc = 返回上一级 —— 在别的页先回出征页（264 前是家），出征页再回主菜单
+## 090：Esc = 返回上一级 —— 在别的页先回出征页（264 前是家）；出征页呼出系统菜单（作者 2026-11-27，原来直接回主菜单）。
+## 系统菜单开着：先关它里面嵌的设置 / 百科，再关菜单
 func escape() -> bool:
+	if _sys_book != null:
+		close_system_encyclopedia()
+		return true
+	if _sys_settings != null:
+		close_system_settings()
+		return true
+	if _sys_menu != null:
+		toggle_system_menu()
+		return true
 	if sell_mode():     # 268：先退出售模式
 		set_sell_mode(false)
 		return true
@@ -2138,8 +2133,85 @@ func escape() -> bool:
 	if _tab != "expedition":
 		show_tab("expedition")
 		return true
-	flow.to_main_menu()
+	toggle_system_menu()
 	return true
+
+
+#region 作者 2026-11-27：基地的系统菜单（Esc 呼出）—— 【返回主菜单】【设置】【百科】；和地图暂停菜单同一套石板窗 + 纸卷键
+var _sys_menu: Control = null
+var _sys_settings: Control = null
+var _sys_book: Control = null
+
+
+func toggle_system_menu() -> void:
+	if _sys_menu != null:
+		close_system_settings()
+		close_system_encyclopedia()
+		_sys_menu.queue_free()
+		_sys_menu = null
+		return
+	notice_layer().clear()
+	_sys_menu = _shade(0.72, true)
+	_sys_menu.name = "SystemMenu"
+	var panel := _modal_panel(UiText.t("meta.system_title"), 28)
+	_sys_menu.get_child(0).add_child(panel)
+	var col := _vbox(12)
+	panel.content.add_child(col)
+	col.add_child(ScrollKey.make(UiText.t("meta.system_main_menu"), flow.to_main_menu))
+	col.add_child(ScrollKey.make(UiText.t("map.pause_settings"), system_settings))
+	col.add_child(ScrollKey.make(UiText.t("map.pause_encyclopedia"), func(): system_encyclopedia()))
+
+
+func system_menu_open() -> bool:
+	return _sys_menu != null
+
+
+## 设置嵌进系统菜单：它的「返回」回系统菜单
+func system_settings() -> void:
+	if _sys_menu == null or _sys_settings != null:
+		return
+	_sys_settings = _embed_in_system(SettingsScreenScript, GameFlow.Screen.SETTINGS, {}, close_system_settings)
+
+
+func close_system_settings() -> void:
+	if _sys_settings == null:
+		return
+	_sys_settings.queue_free()
+	_sys_settings = null
+	refresh_backdrop()     # 设置里可能换了底色
+
+
+func system_settings_open() -> bool:
+	return _sys_settings != null
+
+
+## 百科嵌进系统菜单（同设置的嵌法）
+func system_encyclopedia(page: String = "") -> void:
+	if _sys_menu == null or _sys_book != null:
+		return
+	_sys_book = _embed_in_system(EncyclopediaScreenScript, GameFlow.Screen.ENCYCLOPEDIA, {"page": page} if page != "" else {}, close_system_encyclopedia)
+
+
+func close_system_encyclopedia() -> void:
+	if _sys_book != null:
+		_sys_book.queue_free()
+		_sys_book = null
+
+
+func system_encyclopedia_open() -> bool:
+	return _sys_book != null
+
+
+func _embed_in_system(script: GDScript, screen_id: int, payload: Dictionary, on_close: Callable) -> GameScreen:
+	var s = script.new()
+	s.screen = screen_id
+	s.flow = flow
+	s.font = font
+	s.back = on_close
+	_sys_menu.add_child(s)
+	s.open(payload)
+	return s
+#endregion
 
 
 ## 178：「再来一局」上面那句 —— 带回来的背包还没清空就指向「仓库」页（点一下过去）

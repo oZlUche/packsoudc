@@ -40,7 +40,7 @@ mods = Array[ExtResource("2_x8wwh")]([SubResource("Resource_r6mgn")])
 [sub_resource type="Resource" id="Resource_3bkie"]
 script = ExtResource("2_x8wwh")
 stat = &"regen_hp"
-amount = 1.0
+amount = 1.8
 
 [sub_resource type="Resource" id="Resource_6ln58"]
 script = ExtResource("7_20hx8")
