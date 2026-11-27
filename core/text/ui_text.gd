@@ -995,7 +995,6 @@ const TEXT := {
 	"ledger.total": {"zh": "总分", "en": "Score"},
 	"ledger.score_parts": {"zh": "战利 %d · 战绩 %d · 探索 %d", "en": "Loot %d · Battles %d · Exploration %d"},
 	"ledger.level": {"zh": "等级", "en": "Level"},     # 372
-	"ledger.level_fmt": {"zh": "Lv.%d", "en": "Lv.%d"},
 	"ledger.score_growth": {"zh": " · 成长 %d", "en": " · Growth %d"},
 	"ledger.score_mult": {"zh": " · 难度 ×%s", "en": " · Difficulty ×%s"},
 	"ledger.dot": {"zh": "%d · %d", "en": "%d · %d"},
